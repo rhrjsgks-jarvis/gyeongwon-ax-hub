@@ -1,0 +1,47 @@
+{
+  "name": "경원 AX 허브",
+  "short_name": "AX 허브",
+  "description": "경원영업팀 AI 영업지원 도구 통합 플랫폼",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1428A0",
+  "theme_color": "#1428A0",
+  "lang": "ko",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "모델파인더",
+      "url": "/finder",
+      "description": "CE·MX 전 제품 키워드 검색"
+    },
+    {
+      "name": "AI Care",
+      "url": "/care",
+      "description": "구독케어 서비스 항목 검색"
+    },
+    {
+      "name": "레벨업테스트",
+      "url": "/test",
+      "description": "제품 전문가 역량 평가"
+    },
+    {
+      "name": "AI 생성기",
+      "url": "/compare",
+      "description": "타사비교 가이드 · 퀴즈 자동 생성"
+    }
+  ]
+}
