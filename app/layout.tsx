@@ -5,6 +5,13 @@ import Navigation from '@/components/Navigation'
 export const metadata: Metadata = {
   title: '경원 AX 허브',
   description: '경원영업팀 AI 영업지원 도구 통합 플랫폼',
+  manifest: '/manifest.json',
+  themeColor: '#1428A0',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '경원 AX 허브',
+  },
 }
 
 export default function RootLayout({
@@ -16,7 +23,6 @@ export default function RootLayout({
     <html lang="ko">
       <body>
         <Navigation />
-        {/* 헤더 높이 + 데스크탑 사이드바 여백 */}
         <main
           className="pt-[60px] md:pl-56 min-h-screen"
           style={{ background: 'var(--color-bg)' }}
