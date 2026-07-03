@@ -1,12 +1,16 @@
-import ModulePage from '@/components/ModulePage'
-
-export const metadata = { title: '레벨업테스트 · 경원 AX 허브' }
+'use client'
 
 export default function TestPage() {
   return (
-    <ModulePage
-      icon="📝" title="레벨업테스트" color="#7C3AED" bg="#F5F3FF"
-      desc="2026 제품 전문가 역량 평가 · 25문항 · 30분"
-    />
+    <div
+      className="-m-4 md:-m-6"
+      style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
+    >
+      <iframe
+        src="https://leveluptest.vercel.app"
+        className="w-full h-full border-0"
+        title="경원영업팀 레벨업테스트 2026"
+      />
+    </div>
   )
 }
