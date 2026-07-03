@@ -1,12 +1,16 @@
-import ModulePage from '@/components/ModulePage'
-
-export const metadata = { title: 'URL 퀴즈 생성기 · 경원 AX 허브' }
+'use client'
 
 export default function QuizPage() {
   return (
-    <ModulePage
-      icon="🎯" title="URL 퀴즈 생성기" color="#0891B2" bg="#ECFEFF"
-      desc="제품 페이지 URL로 직원 교육용 인터랙티브 퀴즈 자동 생성"
-    />
+    <div
+      className="-m-4 md:-m-6"
+      style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
+    >
+      <iframe
+        src="/quiz-app.html"
+        className="w-full h-full border-0"
+        title="URL 퀴즈 생성기"
+      />
+    </div>
   )
 }
