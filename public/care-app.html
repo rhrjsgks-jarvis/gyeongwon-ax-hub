@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Samsung AI Care</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#e9ebef;min-height:100vh}
+body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#16181b}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:460px;margin:0 auto;min-height:100vh;background:#f3f4f7;padding-bottom:64px;position:relative;overflow-x:hidden}
+.hd{position:sticky;top:0;z-index:60;background:#fff;padding:16px 18px 14px;border-bottom:1px solid #ecedf1}
+.hd-row{display:flex;align-items:center;gap:11px}
+.hd-ico{width:40px;height:40px;border-radius:12px;background:#1428A0;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.hd-t{font-size:17px;font-weight:800;letter-spacing:-.01em;color:#16181b}
+.hd-s{font-size:11px;color:#8a9099;margin-top:1px}
+.hd-pill{margin-top:11px;background:#f1f3f6;border-radius:10px;padding:8px 11px;font-size:10px;color:#6b7280;line-height:1.6}
+.hd-pill b{color:#1428A0}
+.cat-wrap{padding:14px 16px 0;position:relative;z-index:50}
+.cat-btn{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-radius:16px;background:#fff;border:1.5px solid #ecedf1;cursor:pointer;box-shadow:0 1px 2px rgba(20,30,60,.04);transition:border-color .18s}
+.cat-btn.open{border-color:#1259c3}
+.cat-btn-l{display:flex;align-items:center;gap:11px}
+.cat-ico{font-size:24px}.cat-nm{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.cat-dc{font-size:11.5px;color:#8a9099;margin-top:1px}
+.cat-arr{font-size:11px;color:#aab0b8;transition:transform .2s;flex-shrink:0}
+.cat-arr.open{transform:rotate(180deg)}
+.drop{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#fff;border-radius:16px;box-shadow:0 14px 36px rgba(20,30,60,.18);overflow:hidden;overflow-y:auto;max-height:320px;z-index:50;animation:dropIn .18s ease;display:none}
+.drop-row{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid #f3f4f7;cursor:pointer;transition:background .12s}
+.drop-row:last-child{border:none}
+.drop-row:active,.drop-row:hover{background:#f7f8fa}
+.drop-row.sel{background:#f2f6fd}
+.drop-row-l{display:flex;align-items:center;gap:10px}
+.drop-ico{font-size:19px}.drop-nm{font-size:13.5px;font-weight:700}
+.st{font-size:9.5px;padding:3px 8px;border-radius:7px;font-weight:700}
+.st-done{color:#16a34a;background:rgba(22,163,74,.1)}.st-todo{color:#9aa0a6;background:#f1f3f6}
+.bd{padding:0 16px}
+.sumrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 0 0}
+.si{background:#fff;border-radius:14px;padding:12px 8px;text-align:center;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.sl{font-size:10px;color:#9aa0a6;margin-bottom:4px}.sv{font-size:12.5px;font-weight:800;letter-spacing:-.01em}
+.plan-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 0 0}
+.plan-tab{position:relative;border:2px solid #ececf0;background:#fff;border-radius:16px;padding:16px 8px 13px;text-align:center;cursor:pointer;transition:all .18s}
+.plan-tab.blue{border-color:#1259c3;background:#f2f6fd}
+.plan-tab.teal{border-color:#0d9488;background:#eefaf8}
+.ptag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);color:#fff;font-size:9.5px;font-weight:800;padding:3px 10px;border-radius:9px;white-space:nowrap}
+.pico{font-size:21px;margin-bottom:4px}.pnm{font-size:14px;font-weight:800}
+.psub{font-size:10.5px;color:#9aa0a6;line-height:1.5;margin-top:3px}
+.plan-tab.blue .psub,.plan-tab.teal .psub{color:#475569}
+.type-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 0 0}
+.type-tab{position:relative;border:2px solid #ececf0;background:#fff;border-radius:16px;padding:15px 8px 12px;text-align:center;cursor:pointer;transition:all .18s}
+.type-tab.blue{border-color:#1259c3;background:#f2f6fd}
+.type-tab.teal{border-color:#0d9488;background:#eefaf8}
+.ttag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);color:#fff;font-size:9.5px;font-weight:800;padding:3px 10px;border-radius:9px;white-space:nowrap}
+.tnm{font-size:16px;font-weight:900;margin-bottom:3px}.tlbl{font-size:11px;font-weight:700;color:#6b7280;margin-bottom:3px}
+.tmo{font-size:9px;color:#9aa0a6;line-height:1.4}
+.vtabs{display:flex;gap:8px;padding:16px 0 0}
+.vtab{flex:1;border:2px solid #ececf0;background:#fff;border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .18s}
+.vtab.on{border-color:#1259c3;background:#f2f6fd}
+.vtn{font-size:12.5px;font-weight:800;margin-bottom:1px}.vtm{font-size:10px;color:#9aa0a6}
+.vtab.on .vtm{color:#475569}
+.card{background:#fff;border-radius:18px;overflow:hidden;margin-top:12px;box-shadow:0 1px 2px rgba(20,30,60,.04)}
+.card-hd{padding:12px 15px;display:flex;justify-content:space-between;align-items:center}
+.chd-t{font-size:13px;font-weight:800;color:#fff}
+.chip{font-size:9px;padding:3px 9px;border-radius:8px;font-weight:700;background:rgba(255,255,255,.18);color:#fff}
+.items{padding:4px 15px 13px}
+.item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #f3f4f7;align-items:flex-start}
+.item:last-child{border:none;padding-bottom:0}
+.iico{font-size:13px;flex-shrink:0;margin-top:1px}
+.inm{font-size:12.5px;font-weight:700;line-height:1.35;margin-bottom:2px}
+.idet{font-size:11px;color:#8a9099;line-height:1.55}
+.itag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:5px;margin-top:3px;font-weight:700;background:rgba(18,89,195,.1);color:#1259c3}
+.note{margin:0 15px 13px;background:#f7f8fa;border-radius:10px;padding:9px 11px;font-size:10.5px;color:#6b7280;line-height:1.6;border-left:3px solid}
+.cmp{background:#f7f8fa;border-radius:14px;padding:13px;margin-top:12px}
+.cmp-t{font-size:10.5px;font-weight:700;color:#8a9099;margin-bottom:10px;text-align:center}
+.cmp-g{display:grid;grid-template-columns:1fr auto 1fr;gap:6px}
+.cmp-hd{font-size:10px;font-weight:700;padding:4px 7px;border-radius:8px;margin-bottom:5px;text-align:center}
+.cmp-i{font-size:10px;color:#8a9099;padding:2px 5px;line-height:1.4}
+.cmp-i::before{content:'· '}
+.vs{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#c8ccd4;padding-top:28px}
+.be{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:13px}
+.be-hd{font-size:11.5px;font-weight:700;margin-bottom:7px}
+.be-i{font-size:11px;color:#6b7280;padding:2px 0;line-height:1.55}
+.be-i::before{content:'· '}
+.lgd{padding:13px}.lgd-t{font-size:10.5px;font-weight:700;color:#8a9099;margin-bottom:8px}
+.lgd-i{font-size:11px;color:#6b7280;padding:2px 0;line-height:1.6}
+.src-wrap{padding:4px 0 12px}
+.src-row{display:flex;gap:7px;font-size:10px;color:#8a9099;padding:3px 0;line-height:1.5;align-items:flex-start}
+.src-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px;background:#1428A0}
+.src-dot2{background:#f59e0b}
+.todo-card{background:#fff;border-radius:18px;padding:34px 22px;text-align:center;margin-top:14px;border:1.5px dashed #d7dae1}
+.todo-ico{font-size:38px;margin-bottom:12px}
+.todo-t{font-size:14px;font-weight:700;color:#6b7280;margin-bottom:8px}
+.todo-s{font-size:11.5px;color:#9aa0a6;line-height:1.7}
+.round-pills{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 4px}
+.round-pill{font-size:10px;background:#f1f3f6;color:#475569;border-radius:8px;padding:3px 9px;font-weight:600}
+.round-pill.star{background:#fff8e1;color:#b45309}
+.btm{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;background:#fff;border-top:1px solid #ecedf1;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#8a9099;z-index:100}
+.btm b{color:#1428A0;font-weight:700}
+</style>
+</head>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="hd-row">
+      <div class="hd-ico">🛡️</div>
+      <div>
+        <div class="hd-t">삼성 AI구독 방문케어</div>
+        <div class="hd-s">전 품목 케어 서비스 정보 · 12개월형 / 36개월형</div>
+      </div>
+    </div>
+    <div class="hd-pill">📎 <b>삼성닷컴 공식</b> + <b>AI구독클럽 브로슈어 2026.06</b> 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
+  </div>
+  <div class="cat-wrap">
+    <div class="cat-btn" id="catBtn">
+      <div class="cat-btn-l">
+        <span class="cat-ico" id="selIco">❄️</span>
+        <div>
+          <div class="cat-nm" id="selNm">에어컨</div>
+          <div class="cat-dc" id="selDc">비스포크 AI 무풍콤보 갤러리 프로</div>
+        </div>
+      </div>
+      <span class="cat-arr" id="catArr">▼</span>
+    </div>
+    <div class="drop" id="catDrop"></div>
+  </div>
+  <div class="bd" id="body"></div>
+</div>
+<div class="btm">
+  <span>2026.06.20 기준</span>
+  <b>📞 1588-6084</b>
+</div>
+<script>
+const PRODUCTS = [
+  {key:"aircon",   name:"에어컨",    icon:"❄️", desc:"비스포크 AI 무풍콤보 갤러리 프로", st:"done"},
+  {key:"aicombo",  name:"AI콤보",    icon:"🧺", desc:"비스포크 AI 콤보 세탁건조기",      st:"done"},
+  {key:"washer",   name:"세탁기",    icon:"🫧", desc:"비스포크 AI 세탁기 25kg (WF90F25ADY)", st:"done"},
+  {key:"dryer",    name:"건조기",    icon:"♨️", desc:"비스포크 AI 건조기 20kg",          st:"done"},
+  {key:"fridge",   name:"냉장고",    icon:"🧊", desc:"비스포크 AI 냉장고 (일반형/양문형)", st:"done"},
+  {key:"dish",     name:"식기세척기",icon:"🍽️", desc:"비스포크 AI 식기세척기 빌트인 14인용 (DW90F79P1USWS)", st:"done"},
+  {key:"dresser",  name:"에어드레서",icon:"👗", desc:"비스포크 AI 에어드레서 대용량 5~9벌 (DF90H24R5C)", st:"done"},
+  {key:"airpur_reusable", name:"공기청정기(리유저블)", icon:"💨", desc:"Infinite AI 공기청정기 100㎡ 리유저블 필터 (AP90H10198UDD)", st:"done"},
+  {key:"airpur_s",        name:"공기청정기(S필터)",    icon:"🌬️", desc:"Infinite AI 공기청정기 100㎡ S필터 (AP90H10163UDD)", st:"done"},
+  {key:"purifier_under", name:"언더싱크 정수기", icon:"💧", desc:"비스포크 언더싱크 정수기 일체형 냉/온/정수 (RWP54421BF6M)", st:"done"},
+  {key:"purifier_counter", name:"카운터탑 정수기", icon:"🚰", desc:"비스포크 AI 카운터탑 정수기", st:"todo"},
+  {key:"vacuum",   name:"로봇청소기", icon:"🤖", desc:"비스포크 AI 스팀 울트라 자동 급배수 (VR90F01SAG)", st:"done"},
+  {key:"kimchi",   name:"김치냉장고",icon:"🥬", desc:"비스포크 AI 김치플러스 4도어 (RK80F42E2A)", st:"done"},
+];
+
+const DATA = {
+  dryer:{
+    name:"건조기", icon:"♨️",
+    contract:"72개월(6년형)", total36:"총 2회",
+    onlyPlan:"36",
+    src:"✅ samsung.com AI구독 건조기 공식 제품 페이지 (DV80H20DDSN)",
+    plan12:{
+      singleType:true,
+      typeA:{
+        label:"전 회차", sub:"종합점검·필터 교체",
+        color:"#6366f1", grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)",
+        rounds:["1회차(12개월)","2회차(24개월)","3회차(36개월)","4회차(48개월)","5회차(60개월)","6회차(72개월)"],
+        badge:"6회 전 회차 동일", bc:"bbl",
+        items:[
+          {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 건조기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"열교환기 세척 (브러시/청소기)",det:"열교환기 브러시 및 청소기로 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"건조통 내부 연무",det:"건조통 내부 연무제 분사로 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"올인원 먼지필터 교체",det:"올인원 먼지필터 신규 교체 (소모품 포함)",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"내외부 UV 케어",det:"자외선 장비로 건조기 내부 및 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+        ],
+        note:{c:"#6366f1",t:"12개월형 전 회차(1~6회) 동일하게 '종합점검·필터 교체' 진행\n에어컨과 달리 A/B 타입 구분 없이 매 회차 동일 서비스"}
+      }
+    },
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 건조기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"열교환기 세척 (브러시/청소기)",det:"열교환기 브러시 및 청소기로 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"건조통 내부 연무",det:"건조통 내부 연무제 분사로 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"올인원 먼지필터 교체",det:"올인원 먼지필터 신규 교체 (소모품 포함)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 UV 케어",det:"자외선 장비로 건조기 내부 및 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월) 서비스 내용이 동일합니다."}
+        },
+        {
+          label:"2회차", month:"72개월차",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"종합점검·필터 교체", bc:"btl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 건조기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"열교환기 세척 (브러시/청소기)",det:"열교환기 브러시 및 청소기로 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"건조통 내부 연무",det:"건조통 내부 연무제 분사로 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"올인원 먼지필터 교체",det:"올인원 먼지필터 신규 교체 (소모품 포함)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 UV 케어",det:"자외선 장비로 건조기 내부 및 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)도 1회차와 동일하게 '종합점검·필터 교체' 진행"}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","올인원 먼지필터 교체 포함 (매 방문)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["올인원 먼지필터 외 소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)"]
+  },
+
+  /* ▼ 수정: aircon: { 키 추가 (기존 코드에서 누락되어 SyntaxError 발생) */
+  aircon:{
+    name:"에어컨", icon:"❄️",
+    contract:"72개월(6년형)", total12:"총 6회", total36:"총 2회",
+    src:"✅ samsung.com AI구독 에어컨 공식 제품 페이지 (AF90H19D35WRT)",
+    plan12:{
+      typeA:{
+        label:"A타입", sub:"기본점검·케어",
+        color:"#6366f1", grad:"linear-gradient(90deg,#1d4ed8,#3730a3)",
+        rounds:["1회차(12개월)","2회차(24개월)","4회차(48개월)","5회차(60개월)"],
+        badge:"4회 동일", bc:"bbl",
+        items:[
+          {ico:"✅",nm:"에어컨 냉매 및 누수 점검",det:"냉매 압력 정상 범위 측정, 냉매 누수 여부 점검",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"필터 클리닝",det:"에어필터 탈거 후 세척·건조, 재장착 완료",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"실내기 외관 UV 케어",det:"자외선 장비로 실내기 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+        ],
+        note:{c:"#6366f1",t:"1·2·4·5회차(12·24·48·60개월차) 동일하게 '기본점검·케어' 진행"}
+      },
+      typeB:{
+        label:"B타입", sub:"기본 세척",
+        color:"#0d9488", grad:"linear-gradient(90deg,#0d9488,#1d4ed8)",
+        rounds:["3회차(36개월)","6회차(72개월)"],
+        badge:"2회 동일", bc:"btl",
+        items:[
+          {ico:"✅",nm:"기본 점검",det:"에어컨 냉난방 기본 작동 상태 및 주요 기능 점검",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"송풍구 클리닝",det:"실내기 토출구(송풍구) 오염물·먼지 제거",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"냉방 팬 클리닝",det:"냉방 팬 표면 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+        ],
+        note:{c:"#f59e0b",t:"3·6회차(36·72개월차) 동일하게 '기본 세척' 진행\n⚠️ 전문 분해 세척이 아닌 기본 세척 서비스입니다."}
+      }
+    },
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·케어", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴을 이용한 에어컨 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"에어컨 냉매 및 누수 점검",det:"냉매 압력 정상 범위 측정, 냉매 누수 여부 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 클리닝",det:"에어필터 탈거 후 세척·건조, 재장착 완료",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"실내기 외관 UV 케어",det:"자외선 장비로 실내기 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월) 케어 내용이 다릅니다."}
+        },
+        {
+          label:"2회차", month:"72개월차",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"전문 세척", bc:"btl",
+          items:[
+            {ico:"✅",nm:"냉각 팬 세척",det:"실내기 냉각 팬 전문 세척으로 이물질·오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"열교환기 고압세척",det:"열교환기에 흡착된 먼지·곰팡이 고압 세정, 냉방 효율 복원",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)는 '전문 세척'으로 냉각 팬 세척 + 열교환기 고압세척이 수행됩니다."}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","재설치 서비스 (구독 기간 내 1회)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["냉매 재충전 비용 (자연소모 분)","소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)"]
+  },
+
+  fridge:{
+    name:"냉장고", icon:"🧊",
+    contract:"72개월(6년형)", total36:"총 2회",
+    onlyPlan:"36",
+    src:"✅ samsung.com AI구독 냉장고 공식 제품 페이지 (RM90H64P2W) · 2026.06.12",
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·케어", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 냉장고 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"Door 단차 점검 및 조정",det:"냉장고 도어 단차 상태 점검 및 필요 시 조정",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"소음/약냉/과냉 진단",det:"냉장고 이상 소음, 냉각 불량(약냉/과냉) 상태 진단",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"도어 외관 광택/클리닝",det:"도어 외관 오염물 제거 및 광택 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월)의 케어 내용이 다릅니다.\n전문세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        },
+        {
+          label:"2회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"전문세척", bc:"btl",
+          items:[
+            {ico:"✅",nm:"기계실 청소",det:"냉장고 기계실(컴프레서 주변) 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"선반 세척",det:"냉장고 내부 선반 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 스팀 세척",det:"냉장고 내부 스팀 세척으로 오염물·세균 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"UV 케어",det:"자외선 장비로 냉장고 내외부 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"도어 외관 광택/클리닝",det:"도어 외관 오염물 제거 및 광택 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)는 '전문세척(내부 및 후면)'이 수행됩니다.\n전문세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","제품 본체에 한해 무상수리 제공 (소모품/액세서리 제외)","전문세척 회차에 종합점검·케어 미제공"]
+  },
+
+  kimchi:{
+    name:"김치냉장고", icon:"🥬",
+    contract:"72개월(6년형)", total36:"총 2회",
+    onlyPlan:"36",
+    src:"✅ samsung.com AI구독 김치냉장고 공식 제품 페이지 (RK80F42E2A) · 2026.06.12",
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·케어", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 김치냉장고 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"Door 단차 점검 및 조정",det:"김치냉장고 도어 단차 상태 점검 및 필요 시 조정",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"소음/약냉/과냉 진단",det:"김치냉장고 이상 소음, 냉각 불량(약냉/과냉) 상태 진단",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"도어 외관 광택/클리닝",det:"도어 외관 오염물 제거 및 광택 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월)의 케어 내용이 다릅니다.\n전문세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        },
+        {
+          label:"2회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"전문세척", bc:"btl",
+          items:[
+            {ico:"✅",nm:"기계실 청소",det:"김치냉장고 기계실(컴프레서 주변) 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"선반 세척",det:"김치냉장고 내부 선반 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 스팀 세척",det:"김치냉장고 내부 스팀 세척으로 오염물·세균 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"UV 케어",det:"자외선 장비로 김치냉장고 내외부 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"도어 외관 광택/클리닝",det:"도어 외관 오염물 제거 및 광택 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)는 '전문세척(내부 및 후면)'이 수행됩니다.\n전문세척 회차에는 종합점검·케어가 제공되지 않습니다.\n⚠️ 셀프케어(필터 배송)는 12개월형 전용 — 36개월형에는 방문케어만 제공됩니다."}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["셀프케어(필터 정기배송) 미제공 (12개월형 전용)","소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","제품 본체에 한해 무상수리 제공 (소모품/액세서리 제외)","전문세척 회차에 종합점검·케어 미제공"]
+  },
+
+  dish:{
+    name:"식기세척기", icon:"🍽️",
+    contract:"72개월(6년형)", total12:"총 6회", total36:"총 2회",
+    src:"✅ samsung.com AI구독 식기세척기 공식 제품 페이지 (DW90F79P1USWS) · 2026.06.26",
+    plan12:{
+      rounds:[
+        {
+          label:"1회차", month:"12개월차 (1년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다."}
+        },
+        {
+          label:"2회차", month:"24개월차 (2년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다."}
+        },
+        {
+          label:"3회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다."}
+        },
+        {
+          label:"4회차", month:"48개월차 (4년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다."}
+        },
+        {
+          label:"5회차", month:"60개월차 (5년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다."}
+        },
+        {
+          label:"6회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다."}
+        },
+      ]
+    },
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(36개월)은 3년차·6년차 각 1회씩 총 2회 방문케어가 제공됩니다."}
+        },
+        {
+          label:"2회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 식기세척기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"음식물 거름망 필터 세척",det:"식기세척기 음식물 거름망 필터 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세척 날개 세척",det:"상단·하단 세척 날개 탈거 후 노즐 막힘 제거 및 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"마이크로 필터 교체",det:"식기세척기 마이크로 필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수 필터 교체",det:"정수 필터 장착 대상 모델 해당, 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 노즐 클리닝 및 UV 케어",det:"내부 노즐 클리닝 후 자외선(UV) 장비로 내외부 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"6년형(36개월)은 3년차·6년차 각 1회씩 총 2회 방문케어가 제공됩니다."}
+        },
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","제품 본체에 한해 무상수리 제공 (소모품/액세서리 제외)"]
+  },
+
+  airpur_reusable:{
+    name:"공기청정기(리유저블)", icon:"💨",
+    contract:"72개월(6년형)", total12:"총 6회",
+    onlyPlan:"12",
+    src:"✅ samsung.com AI구독 공기청정기 공식 제품 페이지 (AP90H10198UDD) · 2026.06.26",
+    plan12:{
+      rounds:[
+        {
+          label:"1회차", month:"12개월차 (1년차)",
+          grad:"linear-gradient(90deg,#10b981,#06b6d4)", badge:"종합점검·필터 세척", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"리유저블 필터 세척",det:"워셔블 살균 집진 필터 및 광분해 탈취 필터 전문 세척 (교체 없이 재사용)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스·CO₂ 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#10b981",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 세척이 제공됩니다.\n⚠️ 리유저블 모델은 셀프케어 선택 불가 — 방문케어 전용입니다."}
+        },
+        {
+          label:"2회차", month:"24개월차 (2년차)",
+          grad:"linear-gradient(90deg,#10b981,#06b6d4)", badge:"종합점검·필터 세척", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"리유저블 필터 세척",det:"워셔블 살균 집진 필터 및 광분해 탈취 필터 전문 세척 (교체 없이 재사용)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스·CO₂ 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#10b981",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 세척이 제공됩니다.\n⚠️ 리유저블 모델은 셀프케어 선택 불가 — 방문케어 전용입니다."}
+        },
+        {
+          label:"3회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#10b981,#06b6d4)", badge:"종합점검·필터 세척", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"리유저블 필터 세척",det:"워셔블 살균 집진 필터 및 광분해 탈취 필터 전문 세척 (교체 없이 재사용)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스·CO₂ 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#10b981",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 세척이 제공됩니다.\n⚠️ 리유저블 모델은 셀프케어 선택 불가 — 방문케어 전용입니다."}
+        },
+        {
+          label:"4회차", month:"48개월차 (4년차)",
+          grad:"linear-gradient(90deg,#10b981,#06b6d4)", badge:"종합점검·필터 세척", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"리유저블 필터 세척",det:"워셔블 살균 집진 필터 및 광분해 탈취 필터 전문 세척 (교체 없이 재사용)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스·CO₂ 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#10b981",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 세척이 제공됩니다.\n⚠️ 리유저블 모델은 셀프케어 선택 불가 — 방문케어 전용입니다."}
+        },
+        {
+          label:"5회차", month:"60개월차 (5년차)",
+          grad:"linear-gradient(90deg,#10b981,#06b6d4)", badge:"종합점검·필터 세척", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"리유저블 필터 세척",det:"워셔블 살균 집진 필터 및 광분해 탈취 필터 전문 세척 (교체 없이 재사용)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스·CO₂ 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#10b981",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 세척이 제공됩니다.\n⚠️ 리유저블 모델은 셀프케어 선택 불가 — 방문케어 전용입니다."}
+        },
+        {
+          label:"6회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#10b981,#06b6d4)", badge:"종합점검·필터 세척", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"리유저블 필터 세척",det:"워셔블 살균 집진 필터 및 광분해 탈취 필터 전문 세척 (교체 없이 재사용)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스·CO₂ 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#10b981",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 세척이 제공됩니다.\n⚠️ 리유저블 모델은 셀프케어 선택 불가 — 방문케어 전용입니다."}
+        },
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["셀프케어 선택 불가 (방문케어 전용)","소모성 부품 실비","고객 과실 손상","제품 본체에 한해 무상수리 제공 (소모품/액세서리 제외)"]
+  },
+
+  airpur_s:{
+    name:"공기청정기(S필터)", icon:"🌬️",
+    contract:"72개월(6년형)", total12:"총 6회",
+    onlyPlan:"12",
+    src:"✅ samsung.com AI구독 공기청정기 공식 제품 페이지 (AP90H10163UDD) · 2026.06.26",
+    plan12:{
+      rounds:[
+        {
+          label:"1회차", month:"12개월차 (1년차)",
+          grad:"linear-gradient(90deg,#06b6d4,#0ea5e9)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"S필터 교체",det:"극세 필터·항균 집진 필터·숯 탈취 강화 필터 일체형 S필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다.\n셀프케어(S필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"2회차", month:"24개월차 (2년차)",
+          grad:"linear-gradient(90deg,#06b6d4,#0ea5e9)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"S필터 교체",det:"극세 필터·항균 집진 필터·숯 탈취 강화 필터 일체형 S필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다.\n셀프케어(S필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"3회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#06b6d4,#0ea5e9)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"S필터 교체",det:"극세 필터·항균 집진 필터·숯 탈취 강화 필터 일체형 S필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다.\n셀프케어(S필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"4회차", month:"48개월차 (4년차)",
+          grad:"linear-gradient(90deg,#06b6d4,#0ea5e9)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"S필터 교체",det:"극세 필터·항균 집진 필터·숯 탈취 강화 필터 일체형 S필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다.\n셀프케어(S필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"5회차", month:"60개월차 (5년차)",
+          grad:"linear-gradient(90deg,#06b6d4,#0ea5e9)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"S필터 교체",det:"극세 필터·항균 집진 필터·숯 탈취 강화 필터 일체형 S필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다.\n셀프케어(S필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"6회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#06b6d4,#0ea5e9)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 공기청정기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"S필터 교체",det:"극세 필터·항균 집진 필터·숯 탈취 강화 필터 일체형 S필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서부 점검 및 클리닝",det:"미세먼지·가스 센서 작동 점검 및 센서부 오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 팬 클리닝",det:"팝업 청정 부스터 팬 및 본체 팬 이물질·먼지 제거 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝",det:"공기청정기 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 종합점검·필터 교체가 제공됩니다.\n셀프케어(S필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","셀프케어(S필터 배송) 연 1회·총 6회","일정 변경 가능 (60일 이내)"],
+    excludes:["소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","제품 본체에 한해 무상수리 제공 (소모품/액세서리 제외)"]
+  },
+
+  purifier_under:{
+    name:"언더싱크 정수기", icon:"💧",
+    contract:"72개월(6년형)", total12:"총 6회",
+    onlyPlan:"12",
+    src:"✅ samsung.com AI구독 언더싱크 정수기 공식 제품 페이지 (RWP54421BF6M) · 2026.06.26",
+    plan12:{
+      rounds:[
+        {
+          label:"1회차", month:"12개월차 (1년차)",
+          grad:"linear-gradient(90deg,#0ea5e9,#1d4ed8)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 정수기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수필터 교체",det:"정수기 정수필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"모듈 클리닝",det:"정수기 내부 모듈 전문 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"토출구 코크 세척",det:"물이 나오는 토출구 코크 분해 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 클리닝",det:"정수기 내외부 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 커버 세척",det:"정수기 필터 커버 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서 및 누수 진단",det:"수위·유량 센서 작동 확인 및 누수 여부 진단",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 방문케어가 제공됩니다.\n셀프케어(정수필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"2회차", month:"24개월차 (2년차)",
+          grad:"linear-gradient(90deg,#0ea5e9,#1d4ed8)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 정수기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수필터 교체",det:"정수기 정수필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"모듈 클리닝",det:"정수기 내부 모듈 전문 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"토출구 코크 세척",det:"물이 나오는 토출구 코크 분해 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 클리닝",det:"정수기 내외부 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 커버 세척",det:"정수기 필터 커버 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서 및 누수 진단",det:"수위·유량 센서 작동 확인 및 누수 여부 진단",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 방문케어가 제공됩니다.\n셀프케어(정수필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"3회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#0ea5e9,#1d4ed8)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 정수기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수필터 교체",det:"정수기 정수필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"모듈 클리닝",det:"정수기 내부 모듈 전문 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"토출구 코크 세척",det:"물이 나오는 토출구 코크 분해 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 클리닝",det:"정수기 내외부 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 커버 세척",det:"정수기 필터 커버 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서 및 누수 진단",det:"수위·유량 센서 작동 확인 및 누수 여부 진단",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 방문케어가 제공됩니다.\n셀프케어(정수필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"4회차", month:"48개월차 (4년차)",
+          grad:"linear-gradient(90deg,#0ea5e9,#1d4ed8)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 정수기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수필터 교체",det:"정수기 정수필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"모듈 클리닝",det:"정수기 내부 모듈 전문 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"토출구 코크 세척",det:"물이 나오는 토출구 코크 분해 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 클리닝",det:"정수기 내외부 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 커버 세척",det:"정수기 필터 커버 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서 및 누수 진단",det:"수위·유량 센서 작동 확인 및 누수 여부 진단",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 방문케어가 제공됩니다.\n셀프케어(정수필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"5회차", month:"60개월차 (5년차)",
+          grad:"linear-gradient(90deg,#0ea5e9,#1d4ed8)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 정수기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수필터 교체",det:"정수기 정수필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"모듈 클리닝",det:"정수기 내부 모듈 전문 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"토출구 코크 세척",det:"물이 나오는 토출구 코크 분해 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 클리닝",det:"정수기 내외부 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 커버 세척",det:"정수기 필터 커버 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서 및 누수 진단",det:"수위·유량 센서 작동 확인 및 누수 여부 진단",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 방문케어가 제공됩니다.\n셀프케어(정수필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+        {
+          label:"6회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#0ea5e9,#1d4ed8)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 정수기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"정수필터 교체",det:"정수기 정수필터 신품 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"모듈 클리닝",det:"정수기 내부 모듈 전문 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"토출구 코크 세척",det:"물이 나오는 토출구 코크 분해 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내외부 클리닝",det:"정수기 내외부 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 커버 세척",det:"정수기 필터 커버 탈거 후 전문 세척",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"센서 및 누수 진단",det:"수위·유량 센서 작동 확인 및 누수 여부 진단",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0ea5e9",t:"6년형(12개월)은 매년 1회씩 총 6회 방문케어가 제공됩니다.\n셀프케어(정수필터 배송 연 1회, 총 6회)도 함께 제공됩니다."}
+        },
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","셀프케어(정수필터 배송) 연 1회·총 6회","재설치 서비스 구독기간 내 1회","일정 변경 가능 (60일 이내)"],
+    excludes:["소모성 부품 실비 (필터 외)","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","제품 본체에 한해 무상수리 제공 (소모품/액세서리 제외)"]
+  },
+
+  washer:{
+    name:"세탁기", icon:"🫧",
+    contract:"72개월(6년형)", total36:"총 2회",
+    onlyPlan:"36",
+    src:"✅ samsung.com AI구독 세탁기 공식 제품 페이지 (WF90F25ADY)",
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·케어", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 세탁기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세탁조 관리 (UV 케어)",det:"세탁조 자외선 UV 살균 케어로 세균·오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"도어 고무패킹 클리닝",det:"도어 실링 고무패킹 오염물 제거 및 상태 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세제함/배수필터 클리닝",det:"세제함 잔여 세제 및 배수필터 이물질 제거, 배수 경로 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"피톤치드 연무",det:"피톤치드 연무제 분사로 세탁기 내부 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월)의 케어 내용이 다릅니다.\n⚠️ 초음파 세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        },
+        {
+          label:"2회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"초음파 세척", bc:"btl",
+          items:[
+            {ico:"✅",nm:"세탁조 초음파 세척",det:"초음파 진동으로 세탁조 내부 오염물·세균 제거 (분해 없는 방식)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 고압세척",det:"고압 세정으로 세탁조 내부 이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세탁조 탈취",det:"세탁조 내부 전문 탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)는 '초음파 세척'이 수행됩니다.\n⚠️ 초음파 세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","초음파 세척 회차에 종합점검·케어 미제공"]
+  },
+
+  aicombo:{
+    name:"AI콤보", icon:"🧺",
+    contract:"72개월(6년형)", total36:"총 2회",
+    onlyPlan:"36",
+    src:"✅ samsung.com AI구독 AI콤보 공식 제품 페이지 (WD90H25AHS)",
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·케어", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 세탁기·건조기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세탁·건조통 관리 (UV 케어)",det:"세탁조 및 건조통 자외선 UV 살균 케어",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"도어 고무패킹 클리닝",det:"도어 실링 고무패킹 오염물 제거 및 상태 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"배수필터 클리닝",det:"배수필터 이물질 제거 및 배수 경로 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"열교환기 클리닝 (브러시/청소기)",det:"열교환기 브러시 및 청소기로 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"피톤치드 연무",det:"피톤치드 연무제 분사로 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월)의 케어 내용이 다릅니다.\n초음파 세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        },
+        {
+          label:"2회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"초음파 세척", bc:"btl",
+          items:[
+            {ico:"✅",nm:"세탁조 초음파 세척",det:"초음파 진동으로 세탁조 내부 오염물·세균 제거 (분해 없는 방식)",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 고압세척",det:"고압 세정으로 세탁조 내부 이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"세탁조 탈취",det:"세탁조 내부 전문 탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"열교환기 클리닝 (브러시/청소기)",det:"열교환기 브러시 및 청소기로 먼지·이물질 제거",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)는 '초음파 세척'이 수행됩니다.\n⚠️ 초음파 세척 회차에는 종합점검·케어가 제공되지 않습니다."}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","재설치 서비스 (구독 기간 내 1회)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)"],
+    excludes:["소모성 부품 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)","철거·운반 별도 비용 발생","초음파 세척 회차에 종합점검·케어 미제공"]
+  },
+
+  /* ▼ 에어드레서 (DF90H24R5C) — 삼성닷컴 공식 페이지 직접 확인 */
+  dresser:{
+    name:"에어드레서", icon:"👗",
+    contract:"72개월(6년형)", total12:"총 6회", total36:"총 2회",
+    src:"✅ samsung.com AI구독 에어드레서 공식 제품 페이지 (DF90H24R5C)",
+    plan12:{
+      singleType:true,
+      typeA:{
+        label:"전 회차", sub:"종합점검·필터 교체",
+        color:"#6366f1", grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)",
+        rounds:["1회차(12개월)","2회차(24개월)","3회차(36개월)","4회차(48개월)","5회차(60개월)","6회차(72개월)"],
+        badge:"6회 전 회차 동일", bc:"bbl",
+        items:[
+          {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 에어드레서 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"필터 교체",det:"미세먼지 집진필터 세척 및 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"내부 스팀 및 UV 케어",det:"에어드레서 내부 스팀 살균 처리 및 자외선 UV 케어",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"외관 클리닝 및 UV 케어",det:"본체 외관 오염물 제거·광택 처리 및 외부 UV 살균 케어",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"피톤치드 연무",det:"피톤치드 연무제 분사로 에어드레서 내부 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"급배수통 세척",det:"급수통 및 배수통 내부 세척·위생 점검",tag:"to",tt:"삼성닷컴 공식"},
+        ],
+        note:{c:"#6366f1",t:"12개월형 전 회차(1~6회) 동일하게 '종합점검·필터 교체' 진행\n건조기와 동일하게 A/B 타입 구분 없이 매 회차 동일 서비스"}
+      }
+    },
+    plan36:{
+      rounds:[
+        {
+          label:"1회차", month:"36개월차 (3년차)",
+          grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)", badge:"종합점검·필터 교체", bc:"bbl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 에어드레서 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 교체",det:"미세먼지 집진필터 세척 및 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 스팀 및 UV 케어",det:"에어드레서 내부 스팀 살균 처리 및 자외선 UV 케어",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝 및 UV 케어",det:"본체 외관 오염물 제거·광택 처리 및 외부 UV 살균 케어",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"피톤치드 연무",det:"피톤치드 연무제 분사로 에어드레서 내부 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"급배수통 세척",det:"급수통 및 배수통 내부 세척·위생 점검",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#6366f1",t:"1회차(36개월)와 2회차(72개월) 서비스 내용이 동일합니다."}
+        },
+        {
+          label:"2회차", month:"72개월차 (6년차)",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"종합점검·필터 교체", bc:"btl",
+          items:[
+            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 에어드레서 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"필터 교체",det:"미세먼지 집진필터 세척 및 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"내부 스팀 및 UV 케어",det:"에어드레서 내부 스팀 살균 처리 및 자외선 UV 케어",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"외관 클리닝 및 UV 케어",det:"본체 외관 오염물 제거·광택 처리 및 외부 UV 살균 케어",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"피톤치드 연무",det:"피톤치드 연무제 분사로 에어드레서 내부 항균·탈취 처리",tag:"to",tt:"삼성닷컴 공식"},
+            {ico:"✅",nm:"급배수통 세척",det:"급수통 및 배수통 내부 세척·위생 점검",tag:"to",tt:"삼성닷컴 공식"},
+          ],
+          note:{c:"#0d9488",t:"2회차(72개월)도 1회차와 동일하게 '종합점검·필터 교체' 진행"}
+        }
+      ]
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","공임비 무상 (전 회차)","일정 변경 가능 (60일 이내)","셀프케어 소모품 정기 배송 별도 제공 (미세먼지 집진필터 1세트·아로마시트 20매)"],
+    excludes:["소모성 부품 외 실비","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)"]
+  },
+
+  /* ▼ 로봇청소기 (VR90F01SAG) */
+  vacuum:{
+    name:"로봇청소기", icon:"🤖",
+    contract:"60개월(5년형)", total12:"총 5회",
+    onlyPlan:"12",
+    src:"✅ samsung.com AI구독 로봇청소기 공식 제품 페이지 (VR90F01SAG)",
+    plan12:{
+      singleType:true,
+      typeA:{
+        label:"전 회차", sub:"종합점검·소모품 교체",
+        color:"#6366f1", grad:"linear-gradient(90deg,#1d4ed8,#7c3aed)",
+        rounds:["1회차(12개월)","2회차(24개월)","3회차(36개월)★","4회차(48개월)","5회차(60개월)"],
+        badge:"매 12개월 동일", bc:"bbl",
+        items:[
+          {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴로 로봇청소기 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 먼지통 클리닝 및 필터 교체",det:"먼지통 내부 클리닝 및 모터 필터 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 바퀴 클리닝",det:"메인 휠·보조 휠 이물질 제거 및 구동 상태 점검",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 롤러 소모품 교체",det:"듀오 클리어 브러시(롤러) 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 스팀용 물걸레 교체 및 추가 제공",det:"스팀 물걸레 신규 교체 + 여분 물걸레 추가 제공",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 외관 클리닝",det:"로봇청소기 본체 외관 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 사이드 브러시 교체",det:"사이드 브러시 마모 확인 후 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[본체] 배터리 교체 ★3년차 1회 한정",det:"구독 기간 내 총 1회 — 3년차(36개월) 방문 시에만 배터리 신규 교체 제공",tag:"to",tt:"삼성닷컴 공식"},
+          {ico:"✅",nm:"[스테이션] 먼지봉투 교체",det:"자동 급배수 스팀 청정스테이션 먼지봉투 신규 교체",tag:"to",tt:"삼성닷컴 공식"},
+        ],
+        note:{c:"#6366f1",t:"매 12개월마다 동일한 '종합점검·소모품 교체' 진행\n★ 배터리 교체는 3년차(36개월) 방문 시에만 제공 (구독 기간 내 총 1회 한정)\n⚠️ 36개월형 방문케어 없음 — 로봇청소기는 12개월형(연 1회)만 운영"}
+      }
+    },
+    includes:["무상수리서비스 (구독 기간 전체)","배터리 교체 1회 포함 (3년차 방문 시)","공임비 무상 (전 회차)","셀프케어 소모품 정기 배송 별도 제공 (먼지봉투 5매·물걸레 2쌍 4매)"],
+    excludes:["36개월형 방문케어 미운영 (12개월형 전용)","소모성 부품 외 실비","고객 과실 손상","변색으로 인한 노즐 교체 미제공","서비스 유형 변경 불가 (방문↔셀프)"]
+  }
+};
+</script>
+<script>
+/* ── 상태 ── */
+let curCat = 'aircon', curPlan = '12', curTypeA = true, curRound = 0, isOpen = false;
+
+/* ────────────────── 헬퍼 ────────────────── */
+function gradStyle(g){ return 'background:' + g; }
+
+function stBadge(st){
+  if(st==='done') return '<span class="st st-done">완료</span>';
+  return '<span class="st st-todo">분석예정</span>';
+}
+
+function itemsHtml(list){
+  return list.map(it =>
+    `<div class="item">
+      <span class="iico">${it.ico}</span>
+      <div>
+        <div class="inm">${it.nm}</div>
+        <div class="idet">${it.det}</div>
+        <span class="itag">${it.tt}</span>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function noteHtml(n){
+  if(!n) return '';
+  return `<div class="note" style="border-color:${n.c}">ℹ️ ${n.t.replace(/\n/g,'<br>')}</div>`;
+}
+
+/* ────────────────── 드롭다운 ────────────────── */
+function buildDropHtml(){
+  return PRODUCTS.map(p =>
+    `<div class="drop-row${p.key===curCat?' sel':''}" data-key="${p.key}">
+      <div class="drop-row-l">
+        <span class="drop-ico">${p.icon}</span>
+        <span class="drop-nm">${p.name}</span>
+      </div>
+      ${stBadge(p.st)}
+    </div>`
+  ).join('');
+}
+
+function openDrop(){
+  isOpen = true;
+  document.getElementById('catBtn').classList.add('open');
+  document.getElementById('catArr').classList.add('open');
+  document.getElementById('catDrop').style.display = 'block';
+}
+function closeDrop(){
+  isOpen = false;
+  document.getElementById('catBtn').classList.remove('open');
+  document.getElementById('catArr').classList.remove('open');
+  document.getElementById('catDrop').style.display = 'none';
+}
+
+/* ────────────────── 요약 타일 ────────────────── */
+function buildSummary(d){
+  if(d.onlyPlan === '12') return [
+    {l:'계약기간', v:d.contract},
+    {l:'총 방문',  v:d.total12},
+    {l:'방문 주기',v:'매 12개월'}
+  ];
+  if(d.onlyPlan === '36') return [
+    {l:'계약기간', v:d.contract},
+    {l:'총 방문',  v:d.total36},
+    {l:'방문 주기',v:'매 36개월'}
+  ];
+  return [
+    {l:'계약기간', v:d.contract},
+    {l:'12개월형', v:d.total12},
+    {l:'36개월형', v:d.total36}
+  ];
+}
+
+/* ────────────────── 12개월형 ────────────────── */
+function render12(d){
+  /* rounds[] 배열 구조 (dish·airpur_s·purifier_under 등) → render36과 동일 방식 */
+  if(d.plan12.rounds){
+    const rr = d.plan12.rounds;
+    let out = '';
+    out += '<div class="vtabs">';
+    rr.forEach((r,i) => {
+      out += `<div class="vtab${curRound===i?' on':''}" data-round="${i}">
+        <div class="vtn">${r.label}</div>
+        <div class="vtm">${r.month}</div>
+      </div>`;
+    });
+    out += '</div>';
+    const cr = rr[curRound];
+    out += `<div class="card">
+      <div class="card-hd" style="${gradStyle(cr.grad)}">
+        <span class="chd-t">🔧 ${cr.label} — ${cr.month}</span>
+        <span class="chip">${cr.badge}</span>
+      </div>
+      <div class="items">${itemsHtml(cr.items)}</div>
+      ${noteHtml(cr.note)}
+    </div>`;
+    return out;
+  }
+
+  const isSingle = d.plan12.singleType;
+  const tA = d.plan12.typeA;
+  const tB = isSingle ? null : d.plan12.typeB;
+  const ct = isSingle ? tA : (curTypeA ? tA : tB);
+  let out = '';
+
+  if(!isSingle){
+    // A/B 타입 탭
+    out += '<div class="type-tabs">';
+    [{t:tA,isA:true},{t:tB,isA:false}].forEach(({t,isA})=>{
+      const active = isA ? curTypeA : !curTypeA;
+      const cls    = active ? (isA?'blue':'teal') : '';
+      const tagBg  = isA
+        ? 'linear-gradient(90deg,#1d4ed8,#3730a3)'
+        : 'linear-gradient(90deg,#0d9488,#1d4ed8)';
+      const nmColor = isA ? '#1259c3' : '#0d9488';
+      out += `<div class="type-tab ${cls}" data-type="${isA?'A':'B'}">
+        <div class="ttag" style="background:${tagBg}">${t.badge}</div>
+        <div class="tnm" style="color:${nmColor}">${isA?'A타입':'B타입'}</div>
+        <div class="tlbl">${t.sub}</div>
+        <div class="tmo">${t.rounds.join(' · ')}</div>
+      </div>`;
+    });
+    out += '</div>';
+
+    // A/B 비교 카드
+    out += `<div class="card"><div class="cmp">
+      <div class="cmp-t">📊 12개월형 방문 구성</div>
+      <div class="cmp-g">
+        <div>
+          <div class="cmp-hd" style="background:rgba(18,89,195,.1);color:#1259c3">A타입 (4회)</div>
+          ${tA.rounds.map(r=>`<div class="cmp-i" style="color:${curTypeA?'#16181b':'#9aa0a6'}">${r}</div>`).join('')}
+          <div style="font-size:9px;color:#1259c3;padding:3px 5px">→ 기본점검·케어</div>
+        </div>
+        <div class="vs">VS</div>
+        <div>
+          <div class="cmp-hd" style="background:rgba(13,148,136,.1);color:#0d9488">B타입 (2회)</div>
+          ${tB.rounds.map(r=>`<div class="cmp-i" style="color:${!curTypeA?'#16181b':'#9aa0a6'}">${r}</div>`).join('')}
+          <div style="font-size:9px;color:#0d9488;padding:3px 5px">→ 기본 세척</div>
+        </div>
+      </div>
+    </div></div>`;
+  } else {
+    // 단일 타입 — 회차 pill 요약
+    out += `<div class="card"><div style="padding:13px">
+      <div class="cmp-t" style="text-align:left;margin-bottom:8px">📊 12개월형 방문 구성 (${tA.rounds.length}회)</div>
+      <div class="round-pills">
+        ${tA.rounds.map(r=>`<span class="round-pill${r.includes('★')?' star':''}">${r}</span>`).join('')}
+      </div>
+      <div style="font-size:9px;color:#1259c3;margin-top:4px">→ ${tA.sub} (전 회차 동일)</div>
+    </div></div>`;
+  }
+
+  // 서비스 상세 카드
+  out += `<div class="card">
+    <div class="card-hd" style="${gradStyle(ct.grad)}">
+      <span class="chd-t">🔧 ${ct.label} — ${ct.sub}</span>
+      <span class="chip">${ct.badge}</span>
+    </div>
+    <div class="items">${itemsHtml(ct.items)}</div>
+    ${noteHtml(ct.note)}
+  </div>`;
+  return out;
+}
+
+/* ────────────────── 36개월형 ────────────────── */
+function render36(d){
+  const rr = d.plan36.rounds;
+  let out = '';
+
+  // 회차 탭
+  out += '<div class="vtabs">';
+  rr.forEach((r,i) => {
+    out += `<div class="vtab${curRound===i?' on':''}" data-round="${i}">
+      <div class="vtn">${r.label}</div>
+      <div class="vtm">${r.month}</div>
+    </div>`;
+  });
+  out += '</div>';
+
+  const cr = rr[curRound];
+  out += `<div class="card">
+    <div class="card-hd" style="${gradStyle(cr.grad)}">
+      <span class="chd-t">🔧 ${cr.label} — ${cr.month}</span>
+      <span class="chip">${cr.badge}</span>
+    </div>
+    <div class="items">${itemsHtml(cr.items)}</div>
+    ${noteHtml(cr.note)}
+  </div>`;
+
+  if(rr.length >= 2){
+    out += `<div class="card"><div class="cmp">
+      <div class="cmp-t">📊 36개월형 — 1회차 vs 2회차</div>
+      <div class="cmp-g">
+        <div>
+          <div class="cmp-hd" style="background:rgba(18,89,195,.1);color:#1259c3">1회차 (${rr[0].month})</div>
+          ${rr[0].items.map(it=>`<div class="cmp-i">${it.nm}</div>`).join('')}
+        </div>
+        <div class="vs">VS</div>
+        <div>
+          <div class="cmp-hd" style="background:rgba(13,148,136,.1);color:#0d9488">2회차 (${rr[1].month})</div>
+          ${rr[1].items.map(it=>`<div class="cmp-i">${it.nm}</div>`).join('')}
+        </div>
+      </div>
+    </div></div>`;
+  }
+  return out;
+}
+
+/* ────────────────── 포함/제외·범례·출처 ────────────────── */
+function buildTail(d){
+  return `
+  <div class="card">
+    <div class="be">
+      <div>
+        <div class="be-hd" style="color:#16a34a">✅ 포함</div>
+        ${d.includes.map(x=>`<div class="be-i">${x}</div>`).join('')}
+      </div>
+      <div>
+        <div class="be-hd" style="color:#dc2626">❌ 제외·주의</div>
+        ${d.excludes.map(x=>`<div class="be-i">${x}</div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="lgd">
+      <div class="lgd-t">아이콘 범례</div>
+      <div class="lgd-i">✅ <span class="itag">삼성닷컴 공식</span> 공식 페이지 직접 확인</div>
+      <div class="lgd-i" style="margin-top:4px">🔵 <span class="itag" style="background:rgba(13,148,136,.1);color:#0d9488">현장 확인 필요</span> 내부 자료 확인 후 업데이트 필요</div>
+    </div>
+  </div>
+  <div class="src-wrap">
+    <div class="src-row"><span class="src-dot"></span>${d.src}</div>
+    <div class="src-row"><span class="src-dot src-dot2"></span>🔵 항목: 고객센터 1588-6084 확인 권장</div>
+  </div>`;
+}
+
+/* ────────────────── 메인 렌더 ────────────────── */
+function render(){
+  const d = DATA[curCat];
+  const p = PRODUCTS.find(x => x.key === curCat);
+
+  // 드롭다운 콘텐츠 갱신
+  document.getElementById('catDrop').innerHTML = buildDropHtml();
+  document.querySelectorAll('.drop-row').forEach(el => {
+    el.addEventListener('click', () => {
+      curCat  = el.dataset.key;
+      curRound = 0; curTypeA = true;
+      const dd = DATA[curCat];
+      curPlan = dd?.onlyPlan || '12';
+      closeDrop();
+      render();
+    });
+  });
+
+  // 헤더 갱신
+  document.getElementById('selIco').textContent = p.icon;
+  document.getElementById('selNm').textContent  = p.name;
+  document.getElementById('selDc').textContent  = p.desc;
+
+  const body = document.getElementById('body');
+  let out = '';
+
+  /* TODO 상태 */
+  if(!d){
+    body.innerHTML = `<div class="todo-card">
+      <div class="todo-ico">${p.icon}</div>
+      <div class="todo-t">${p.name} — 분석 예정</div>
+      <div class="todo-s">삼성닷컴 공식 구독 제품 페이지 URL을 붙여주시면<br>동일한 방식으로 분석·업데이트 가능합니다.</div>
+    </div>`;
+    return;
+  }
+
+  /* 요약 타일 */
+  const cells = buildSummary(d);
+  out += `<div class="sumrow">
+    ${cells.map(c=>`<div class="si"><div class="sl">${c.l}</div><div class="sv">${c.v}</div></div>`).join('')}
+  </div>`;
+
+  /* 플랜 탭 (12·36 둘 다 있을 때) */
+  if(!d.onlyPlan){
+    const tabs = [
+      {id:'12', tag:'총 6회 방문', tagBg:'linear-gradient(90deg,#1d4ed8,#7c3aed)', pico:'📅', name:'12개월형', sub1:'매 12개월 방문', sub2:'A타입 4회+B타입 2회'},
+      {id:'36', tag:'총 2회 방문', tagBg:'linear-gradient(90deg,#0d9488,#1d4ed8)', pico:'🗓️', name:'36개월형', sub1:'매 36개월 방문', sub2:'1·2회차 케어 상이'}
+    ];
+    out += '<div class="plan-tabs">';
+    tabs.forEach(t => {
+      const active = curPlan === t.id;
+      const cls = active ? (t.id==='12' ? 'blue' : 'teal') : '';
+      out += `<div class="plan-tab ${cls}" data-plan="${t.id}">
+        <div class="ptag" style="background:${t.tagBg}">${t.tag}</div>
+        <div class="pico">${t.pico}</div>
+        <div class="pnm">${t.name}</div>
+        <div class="psub">${t.sub1}<br>${t.sub2}</div>
+      </div>`;
+    });
+    out += '</div>';
+  }
+
+  /* 본문 */
+  out += curPlan === '12' ? render12(d) : render36(d);
+  out += buildTail(d);
+
+  body.innerHTML = out;
+
+  /* 이벤트 바인딩 */
+  document.querySelectorAll('.plan-tab').forEach(el => {
+    el.addEventListener('click', () => {
+      curPlan = el.dataset.plan; curRound = 0; curTypeA = true; render();
+    });
+  });
+  document.querySelectorAll('.type-tab').forEach(el => {
+    el.addEventListener('click', () => {
+      curTypeA = el.dataset.type === 'A'; render();
+    });
+  });
+  document.querySelectorAll('.vtab').forEach(el => {
+    el.addEventListener('click', () => {
+      curRound = +el.dataset.round; render();
+    });
+  });
+}
+
+/* ────────────────── 초기화 (DOM 준비 후) ────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  /* 드롭다운 토글 */
+  document.getElementById('catBtn').addEventListener('click', () => {
+    isOpen ? closeDrop() : openDrop();
+  });
+  document.addEventListener('click', e => {
+    if(isOpen && !document.getElementById('catBtn').contains(e.target)
+               && !document.getElementById('catDrop').contains(e.target)){
+      closeDrop();
+    }
+  });
+
+  /* 초기 렌더 */
+  const initD = DATA[curCat];
+  curPlan = initD?.onlyPlan || '12';
+  render();
+});
+
+</script>
+</body>
+</html>
