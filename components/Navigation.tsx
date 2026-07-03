@@ -4,13 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV_ITEMS = [
-  { href: '/',        label: '허브',     icon: '🏠' },
+  { href: '/',        label: '허브',      icon: '🏠' },
   { href: '/finder',  label: '모델파인더', icon: '🔍' },
   { href: '/care',    label: 'AI Care',   icon: '💚' },
   { href: '/test',    label: '레벨업테스트', icon: '📝' },
-  { href: '/compare', label: '타사비교',   icon: '⚖️' },
-  { href: '/quiz',    label: '퀴즈생성',   icon: '🎯' },
-  { href: '/admin',   label: '현황판',     icon: '📊' },
+  { href: '/compare', label: 'AI 생성기',  icon: '⚡' },
 ]
 
 export default function Navigation() {
@@ -18,7 +16,6 @@ export default function Navigation() {
 
   return (
     <>
-      {/* 상단 헤더 */}
       <header
         style={{ height: 'var(--nav-height)', background: 'var(--color-primary)' }}
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 shadow-md"
@@ -35,18 +32,18 @@ export default function Navigation() {
         <span className="text-white text-xs opacity-60">경원영업팀</span>
       </header>
 
-      {/* 하단 탭 내비게이션 (모바일) */}
+      {/* 하단 탭 — 5개 전체 표시 (slice 제거) */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        {NAV_ITEMS.slice(0, 5).map((item) => {
-          const active = pathname === item.href
+        {NAV_ITEMS.map((item) => {
+          const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
           return (
             <Link
               key={item.href}
               href={item.href}
-              className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-center no-underline transition-colors"
+              className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-center no-underline transition-colors relative"
               style={{ color: active ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
             >
               <span className="text-lg leading-none">{item.icon}</span>
@@ -63,12 +60,10 @@ export default function Navigation() {
       </nav>
 
       {/* 사이드바 (데스크탑) */}
-      <aside
-        className="hidden md:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40"
-      >
+      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
         <div className="px-3 py-4 flex flex-col gap-1">
           {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href
+            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
             return (
               <Link
                 key={item.href}
