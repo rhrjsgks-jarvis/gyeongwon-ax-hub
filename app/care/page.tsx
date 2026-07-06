@@ -1,6 +1,11 @@
 'use client'
 
+import { useEffect } from 'react'
+import { logEvent } from '@/lib/logEvent'
+
 export default function CarePage() {
+  useEffect(() => { logEvent('care', 'page_view') }, [])
+
   return (
     <div
       className="-m-4 md:-m-6"
