@@ -145,7 +145,7 @@ const PRODUCTS = [
   {key:"airpur_reusable", name:"공기청정기(리유저블)", icon:"💨", desc:"Infinite AI 공기청정기 100㎡ 리유저블 필터 (AP90H10198UDD)", st:"done"},
   {key:"airpur_s",        name:"공기청정기(S필터)",    icon:"🌬️", desc:"Infinite AI 공기청정기 100㎡ S필터 (AP90H10163UDD)", st:"done"},
   {key:"purifier_under", name:"언더싱크 정수기", icon:"💧", desc:"비스포크 언더싱크 정수기 일체형 냉/온/정수 (RWP54421BF6M)", st:"done"},
-  {key:"purifier_counter", name:"카운터탑 정수기", icon:"🚰", desc:"비스포크 AI 카운터탑 정수기", st:"todo"},
+  {key:"purifier_counter", name:"카운터탑·얼음 정수기", icon:"🚰", desc:"RWP70F15 카운터탑 / RWP90H15 얼음정수기 — 자가관리 방식", st:"na"},
   {key:"vacuum",   name:"로봇청소기", icon:"🤖", desc:"비스포크 AI 스팀 울트라 자동 급배수 (VR90F01SAG)", st:"done"},
   {key:"kimchi",   name:"김치냉장고",icon:"🥬", desc:"비스포크 AI 김치플러스 4도어 (RK80F42E2A)", st:"done"},
 ];
@@ -893,6 +893,7 @@ function gradStyle(g){ return 'background:' + g; }
 
 function stBadge(st){
   if(st==='done') return '<span class="st st-done">완료</span>';
+  if(st==='na')   return '<span class="st st-na">자가관리</span>';
   return '<span class="st st-todo">분석예정</span>';
 }
 
@@ -1148,7 +1149,11 @@ function render(){
   const body = document.getElementById('body');
   let out = '';
 
-  /* TODO 상태 */
+  if(!d && p.st==='na'){
+    body.innerHTML = '<div class="todo-card"><div class="todo-ico">'+p.icon+'</div><div class="todo-t" style="color:#6366f1">'+p.name+' — 자가관리 전용 제품</div><div class="todo-s">이 제품은 <b>AI구독 자가관리 방식</b>으로 방문 케어가 제공되지 않습니다.<br><br>📌 RWP70F15 (카운터탑) — 자가관리<br>📌 RWP90H15 (얼음정수기) — 자가관리<br><br>✅ 필터 교체 셀프케어 / ✅ 구독 시 필터 정기배송 / ❌ 방문 엔지니어 미포함</div></div>';
+    return;
+  }
+    /* TODO 상태 */
   if(!d){
     body.innerHTML = `<div class="todo-card">
       <div class="todo-ico">${p.icon}</div>
