@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { logEvent } from '@/lib/logEvent'
 
 const PROJECT_START = new Date('2026-06-30')
 const TOTAL_DAYS = 30
+const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
 
 const MODULES = [
   {
@@ -67,6 +68,13 @@ const TIPS = [
   { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'AI 생성기 → 퀴즈 탭', href: '/compare' },
 ]
 
+const GUIDE = [
+  { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX 전 제품 검색' },
+  { step: '02', text: 'AI Care — 구독케어 조건·항목 즉시 조회' },
+  { step: '03', text: 'AI 생성기 — 타사비교 가이드·퀴즈 URL 입력으로 자동 생성' },
+  { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },
+]
+
 function StatusBadge({ status }: { status: string }) {
   if (status === 'live') {
     return (
@@ -83,7 +91,16 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function Home() {
+  const [copied, setCopied] = useState(false)
+
   useEffect(() => { logEvent('hub', 'page_view') }, [])
+
+  function handleCopy() {
+    navigator.clipboard.writeText(HUB_URL).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   const today = new Date()
   const dayNum = Math.max(1, Math.floor((today.getTime() - PROJECT_START.getTime()) / (1000 * 60 * 60 * 24)) + 1)
@@ -164,6 +181,47 @@ export default function Home() {
                 </div>
               </div>
             </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* 팀 공유 */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+        <h3 className="font-bold text-sm text-gray-700 mb-3">📤 팀에 공유하기</h3>
+        <div className="flex gap-4 items-center">
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(HUB_URL)}`}
+            alt="QR코드"
+            className="w-[88px] h-[88px] rounded-xl border border-gray-100 shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-gray-400 mb-0.5">경원영업팀 전용 AI 허브</p>
+            <p className="text-xs font-semibold text-gray-700 mb-3 truncate">gyeongwon-ax-hub.vercel.app</p>
+            <button
+              onClick={handleCopy}
+              className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-colors"
+              style={{ background: copied ? '#059669' : '#1428A0' }}
+            >
+              {copied ? '✓ 복사됨!' : '🔗 링크 복사'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 빠른 시작 가이드 */}
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+        <h3 className="font-bold text-sm text-gray-700 mb-3">🚀 처음이이이이이면 — 4가 도구</h3>
+        <div className="flex flex-col gap-2">
+          {GUIDE.map((g) => (
+            <div key={g.step} className="flex items-start gap-3">
+              <span
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white"
+                style={{ background: '#1428A0' }}
+              >
+                {g.step}
+              </span>
+              <p className="text-xs text-gray-600 leading-relaxed pt-0.5">{g.text}</p>
+            </div>
           ))}
         </div>
       </div>
