@@ -210,7 +210,7 @@ export default function Home() {
 
       {/* 빠른 시작 가이드 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-bold text-sm text-gray-700 mb-3">🚀 처음이이이이이면 — 4가 도구</h3>
+        <h3 className="font-bold text-sm text-gray-700 mb-3">🚀 처음이라면 — 4가지 도구</h3>
         <div className="flex flex-col gap-2">
           {GUIDE.map((g) => (
             <div key={g.step} className="flex items-start gap-3">
