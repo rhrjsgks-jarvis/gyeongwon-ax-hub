@@ -1,0 +1,6652 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>경원영업팀 레벨업테스트 2026</title>
+<style>
+:root{--blue:#1428A0;--blue-dark:#0c1b6b;--blue-light:#EEF1FB;--correct:#1a7f4b;--correct-bg:#E6F4EC;--wrong:#C0392B;--wrong-bg:#FDECEA;--warn:#d97706;--border:#E2E8F0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;background:#F4F6FB;color:#222;min-height:100vh}
+#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#0c1b6b 0%,var(--blue) 60%,#2a4fcc 100%);padding:24px 16px}
+.login-card{background:#fff;border-radius:24px;padding:40px 32px;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.brand-badge{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:700;letter-spacing:3px;padding:6px 16px;border-radius:4px;margin-bottom:20px}
+.login-title{font-size:26px;font-weight:800;color:var(--blue);line-height:1.3;margin-bottom:6px}
+.login-sub{font-size:13px;color:#888;margin-bottom:24px}
+.info-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.info-chip{background:var(--blue-light);color:var(--blue);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:13px;font-weight:600;color:#555;margin-bottom:8px}
+.form-input{width:100%;padding:14px 16px;font-size:16px;border:2px solid var(--border);border-radius:12px;outline:none;transition:border .2s}
+.form-input:focus{border-color:var(--blue)}
+.form-err{font-size:12px;color:#e53e3e;margin-top:6px;min-height:16px}
+.start-btn{width:100%;margin-top:8px;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;letter-spacing:.5px}
+.start-btn:hover{background:var(--blue-dark)}
+.start-btn:active{transform:scale(.98)}
+#quizHeader{position:sticky;top:0;z-index:100;background:var(--blue);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 10px rgba(20,40,160,.4)}
+.h-left .h-title{font-size:14px;font-weight:700}
+.h-left .h-prog{font-size:12px;opacity:.8;margin-top:2px}
+#timer{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.15);padding:6px 16px;border-radius:8px;min-width:90px;text-align:center;transition:background .3s}
+#timer.warn{background:rgba(251,191,36,.35);color:#FDE68A}
+#timer.danger{background:rgba(220,38,38,.4);color:#FCA5A5;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+#quizContent{max-width:740px;margin:0 auto;padding:24px 16px 120px}
+.q-card{background:#fff;border-radius:16px;padding:26px 22px;margin-bottom:20px;box-shadow:0 2px 12px rgba(20,40,160,.07);border:2px solid transparent;transition:border-color .2s}
+.q-card.answered{border-color:var(--blue)}
+.q-meta{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.q-num{background:var(--blue);color:#fff;font-size:11px;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:20px}
+.q-cat{background:var(--blue-light);color:var(--blue);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.q-cat.essay-cat{background:#FFF7ED;color:#C2410C}
+.q-text{font-size:15px;font-weight:700;line-height:1.65;color:#111;margin-bottom:18px}
+.options{display:flex;flex-direction:column;gap:9px}
+.opt-btn{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border:2px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;color:#333;line-height:1.5;transition:all .15s;text-align:left;width:100%}
+.opt-btn:hover{border-color:var(--blue);background:var(--blue-light);color:var(--blue)}
+.opt-btn.selected{border-color:var(--blue);background:var(--blue-light);color:var(--blue);font-weight:600}
+.opt-btn.correct{border-color:var(--correct);background:var(--correct-bg);color:var(--correct);font-weight:600}
+.opt-btn.wrong{border-color:var(--wrong);background:var(--wrong-bg);color:var(--wrong);font-weight:600}
+.opt-btn:disabled{cursor:default}
+.opt-circle{min-width:26px;height:26px;border-radius:50%;background:#F1F5F9;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#888;flex-shrink:0;transition:all .15s}
+.opt-btn.selected .opt-circle{background:var(--blue);border-color:var(--blue);color:#fff}
+.opt-btn.correct .opt-circle{background:var(--correct);border-color:var(--correct);color:#fff}
+.opt-btn.wrong .opt-circle{background:var(--wrong);border-color:var(--wrong);color:#fff}
+.essay-textarea{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:10px;font-size:14px;line-height:1.7;resize:vertical;outline:none;transition:border .2s;font-family:inherit}
+.essay-textarea:focus{border-color:var(--blue)}
+.essay-count{text-align:right;font-size:12px;color:#aaa;margin-top:6px}
+#submitWrap{position:fixed;bottom:0;left:0;right:0;background:rgba(244,246,251,.95);backdrop-filter:blur(8px);padding:12px 20px;border-top:1px solid var(--border);display:none}
+#submitWrap.visible{display:block}
+#submitBtn{max-width:740px;width:100%;margin:0 auto;display:block;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+#submitBtn:disabled{background:#B0BEC5;cursor:not-allowed}
+#submitBtn:not(:disabled):hover{background:var(--blue-dark)}
+#resultScreen{max-width:740px;margin:0 auto;padding:24px 16px 60px;display:none}
+.res-header{background:linear-gradient(135deg,var(--blue-dark),var(--blue));color:#fff;border-radius:20px;padding:32px 28px;text-align:center;margin-bottom:20px}
+.res-brand{font-size:11px;letter-spacing:3px;opacity:.7;margin-bottom:8px}
+.res-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.res-meta-info{font-size:13px;opacity:.75;line-height:1.7}
+.score-card{background:#fff;border-radius:20px;padding:32px 24px;text-align:center;box-shadow:0 4px 20px rgba(20,40,160,.1);margin-bottom:16px}
+.score-main{font-size:60px;font-weight:900;color:var(--blue);line-height:1}
+.score-main span{font-size:22px;color:#aaa;font-weight:400}
+.score-pct{font-size:24px;font-weight:700;color:#555;margin-top:4px;margin-bottom:16px}
+.score-grade{display:inline-block;font-size:17px;font-weight:700;padding:10px 24px;border-radius:30px;margin-bottom:24px}
+.grade-s{background:#DBEAFE;color:var(--blue)}
+.grade-a{background:var(--correct-bg);color:var(--correct)}
+.grade-b{background:#FEF3C7;color:#92400E}
+.grade-c{background:var(--wrong-bg);color:var(--wrong)}
+.score-breakdown{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.score-box{flex:1;min-width:130px;max-width:200px;background:var(--blue-light);border-radius:12px;padding:14px;text-align:center}
+.score-box-label{font-size:11px;color:#666;margin-bottom:6px}
+.score-box-val{font-size:24px;font-weight:800;color:var(--blue)}
+.score-box-max{font-size:13px;color:#999}
+.drive-status{background:#fff;border-radius:12px;padding:14px 20px;margin-bottom:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);font-size:14px;font-weight:600}
+.drive-saving{color:#888}.drive-ok{color:var(--correct)}.drive-err{color:var(--wrong)}.drive-skip{color:var(--warn)}
+.wrong-section{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.wrong-section h3{font-size:16px;font-weight:700;color:#111;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #f3f4f6}
+.wrong-item{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #f3f4f6}
+.wrong-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.wrong-qnum{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px}
+.wrong-q{font-size:14px;font-weight:700;color:#222;margin-bottom:12px;line-height:1.55}
+.wrong-my{font-size:13px;color:var(--wrong);margin-bottom:4px}
+.wrong-correct{font-size:13px;color:var(--correct);margin-bottom:8px;font-weight:600}
+.wrong-exp{font-size:12px;color:#555;background:#F8FAFF;border-left:3px solid var(--blue);padding:10px 14px;border-radius:0 8px 8px 0;line-height:1.7}
+.all-correct{background:var(--correct-bg);border-radius:16px;padding:32px;text-align:center;font-size:18px;font-weight:700;color:var(--correct);margin-bottom:16px}
+.essay-review{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.essay-review h3{font-size:15px;font-weight:700;color:#111;margin-bottom:14px}
+.essay-review p{font-size:14px;color:#444;line-height:1.8;white-space:pre-wrap;background:#F8FAFF;padding:16px;border-radius:10px}
+button,.opt-btn,.start-btn,#submitBtn{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+input{-webkit-tap-highlight-color:transparent}
+#submitWrap{padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+#quizContent{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+#modalOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:20px}
+#modalOverlay.active{display:flex}
+.modal-box{background:#fff;border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-msg{font-size:15px;font-weight:600;color:#222;line-height:1.7;margin-bottom:24px;white-space:pre-line}
+.modal-btns{display:flex;gap:10px}
+.modal-cancel{flex:1;padding:13px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;font-size:15px;font-weight:600;cursor:pointer;color:#555;touch-action:manipulation}
+.modal-ok{flex:1;padding:13px;border:none;border-radius:10px;background:#1428A0;color:#fff;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation}
+@media(max-width:600px){.login-card{padding:28px 18px}.login-title{font-size:21px}.q-text{font-size:14px}.opt-btn{padding:12px 14px;font-size:13px}.q-card{padding:20px 16px}#quizHeader{padding:10px 14px}#timer{font-size:17px;padding:5px 12px;min-width:76px}.score-main{font-size:46px}.score-box{min-width:110px}.wrong-exp{font-size:12px}.res-header{padding:24px 20px}}
+</style>
+</head>
+<body>
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand-badge">SAMSUNG</div>
+    <div class="login-title">경원영업팀<br>레벨업테스트</div>
+    <div class="login-sub">2026 제품 전문가 역량 평가 v2.0</div>
+    <div class="info-chips">
+      <span class="info-chip">📋 총 25문항</span>
+      <span class="info-chip">⏱ 30분</span>
+      <span class="info-chip">📺 CE · 📱 MX · 🏠 Smart</span>
+      <span class="info-chip">문제은행 574문항</span>
+    </div>
+    <div class="form-group">
+      <label>사번 (8자리 숫자)</label>
+      <input id="empId" class="form-input" type="text" maxlength="8" inputmode="numeric" placeholder="00000000">
+      <div class="form-err" id="empErr"></div>
+    </div>
+    <div class="form-group">
+      <label>이름</label>
+      <input id="empName" class="form-input" type="text" placeholder="홍길동">
+      <div class="form-err" id="nameErr"></div>
+    </div>
+    <button class="start-btn" onclick="startQuiz()">시험 시작하기 →</button>
+  </div>
+</div>
+<div id="quizScreen" style="display:none">
+  <header id="quizHeader">
+    <div class="h-left">
+      <div class="h-title">경원영업팀 레벨업테스트</div>
+      <div class="h-prog" id="progressText">0 / 24 답변 완료</div>
+    </div>
+    <div id="timer">30:00</div>
+  </header>
+  <div id="quizContent"></div>
+  <div id="submitWrap">
+    <button id="submitBtn" disabled onclick="handleSubmit()">모든 문항 답변 후 제출 가능합니다</button>
+  </div>
+</div>
+<div id="resultScreen"></div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwxNcwFNDvN2bA1U2SB6PlY89M8X8Aq1NZ5VUPzSB1arE0LIJVGll6K4zlBPi0HuaI/exec';
+const QB={
+"TV": [
+{
+"q": "삼성 Micro RGB RH95에 적용된 기술로 알맞지 않은 것은?",
+"opts": [
+"Micro RGB AI 엔진 Pro",
+"Micro RGB Precision Color 100",
+"오토 캘리브레이션(Auto Calibration)",
+"무반사(Glare Free) 기술"
+],
+"ans": 2,
+"exp": "오토 캘리브레이션은 LG TV의 기능입니다. 삼성 Micro RGB RH95는 Micro RGB AI 엔진 Pro, Micro RGB Precision Color 100(VDE 인증), UL 인증 무반사 기술을 탑재합니다."
+},
+{
+"q": "삼성 Micro RGB AI 엔진 Pro의 NPU 성능은 26년형 Neo QLED 4K 대비 최대 몇 배 빠른가?",
+"opts": [
+"최대 1.5배",
+"최대 2배",
+"최대 3배",
+"최대 4.2배"
+],
+"ans": 1,
+"exp": "삼성 Micro RGB AI 엔진 Pro는 26년형 Neo QLED 4K 대비 NPU 최대 2배, GPU 최대 4.2배, CPU 최대 67% 빠릅니다. GPU(4.2배)와 혼동하지 않도록 주의하세요."
+},
+{
+"q": "삼성 Micro RGB RH95의 Micro RGB Precision Color 100 인증 기관과 기준 표준으로 올바른 것은?",
+"opts": [
+"UL · BT.709",
+"VDE · BT.709",
+"VDE · BT.2020",
+"팬톤 · BT.2020"
+],
+"ans": 2,
+"exp": "ITU가 제정한 UHD 컬러 표준 BT.2020 기준으로 VDE(독일 품질인증기관) 인증을 획득했습니다. UL은 Glare Free 인증 기관입니다."
+},
+{
+"q": "삼성 Micro RGB RH95의 '4K AI 업스케일링 Pro'에 활용되는 AI 뉴럴 네트워크 수는?",
+"opts": [
+"64개",
+"96개",
+"128개",
+"256개"
+],
+"ans": 2,
+"exp": "Micro RGB AI 엔진 Pro는 128개의 AI 뉴럴 네트워크를 활용해 다양한 콘텐츠를 4K에 가까운 해상도로 정교하게 보정합니다."
+},
+{
+"q": "삼성 Micro RGB RH95의 'AI 사운드 컨트롤 Pro'가 분리하는 오디오 트랙 구성은?",
+"opts": [
+"음성/배경음악 — 2트랙",
+"음성/배경음악/효과음 — 3트랙",
+"음성/배경음악/효과음/저음 — 4트랙",
+"자동 최적화만 지원"
+],
+"ans": 1,
+"exp": "AI 사운드 컨트롤 Pro는 음성·배경음악·효과음 3가지 트랙으로 분리하며, 각 트랙 볼륨을 개별 조절할 수 있습니다."
+},
+{
+"q": "삼성 Micro RGB RH95의 무반사(Glare Free) 기술 인증 기관은?",
+"opts": [
+"VDE",
+"UL (UL Solutions)",
+"ITU",
+"팬톤"
+],
+"ans": 1,
+"exp": "Glare Free는 UL(UL Solutions)로부터 인증받은 명칭이며, UGR 테스트 기준에 따라 실내 표준조명 조건에서 측정·인증되었습니다."
+},
+{
+"q": "삼성 Micro RGB RH95가 VRR 게임 실행 시 지원하는 최대 주사율은?",
+"opts": [
+"4K @ 120Hz",
+"4K @ 144Hz",
+"4K @ 165Hz",
+"4K @ 240Hz"
+],
+"ans": 2,
+"exp": "삼성의 독자적인 모션 터보 165Hz 기술이 적용되어 VRR 게임 실행 시 최대 4K 165Hz 주사율을 구현합니다(PC 연결 게임 기준)."
+},
+{
+"q": "삼성 Micro RGB RH95의 팬톤(Pantone) 인증 내용으로 올바른 것은?",
+"opts": [
+"1,000가지 팬톤 컬러·50가지 피부톤",
+"1,500가지 팬톤 컬러·80가지 피부톤",
+"2,140가지 팬톤 컬러·110가지 피부톤",
+"3,000가지 팬톤 컬러·150가지 피부톤"
+],
+"ans": 2,
+"exp": "삼성 TV는 2,140가지 팬톤 컬러와 110가지 피부 톤 표현력을 팬톤으로부터 공식 인증받았습니다(HDR 화면 기준)."
+},
+{
+"q": "삼성 Micro RGB RH95의 One UI Tizen OS 업그레이드 최대 지원 기간은?",
+"opts": [
+"최대 3년",
+"최대 5년",
+"최대 7년",
+"최대 10년"
+],
+"ans": 2,
+"exp": "삼성 Micro RGB RH95는 One UI Tizen OS 업그레이드를 2026년 출시 기준 최대 7년간 지원합니다. 장기간 최신 앱·서비스 이용이 가능합니다."
+},
+{
+"q": "삼성 Micro RGB RH95의 사운드 기술로 알맞지 않은 것은?",
+"opts": [
+"Dolby Atmos 서라운드 사운드",
+"Q 심포니",
+"무빙 사운드+ OTS+ (4.2.2ch)",
+"webOS 사운드 AI"
+],
+"ans": 3,
+"exp": "webOS 사운드 AI는 LG TV의 기술입니다. 삼성 Micro RGB RH95는 Dolby Atmos, Q 심포니, 무빙 사운드+(OTS+, 4.2.2ch)를 탑재합니다."
+},
+{
+"q": "삼성 Neo QLED와 일반 QLED의 가장 큰 기술적 차이점은?",
+"opts": [
+"OLED vs LCD 패널 방식 차이",
+"미니 LED 백라이트 vs 일반 LED 백라이트",
+"해상도(4K vs 8K) 차이",
+"프로세서 세대 차이"
+],
+"ans": 1,
+"exp": "Neo QLED는 수천 개의 미니 LED를 사용하는 Quantum Matrix Technology가 핵심입니다. 미니 LED는 기존 LED보다 1/40 크기로 정밀한 로컬 디밍과 우수한 명암비를 실현합니다."
+},
+{
+"q": "삼성 The Frame TV의 예술 모드(Art Mode)에서 제공하는 기능이 아닌 것은?",
+"opts": [
+"900점 이상의 아트워크 제공",
+"모션 센서로 사람 감지 시 자동 켜짐",
+"마치 실제 액자처럼 보이는 매트 디스플레이",
+"사용자의 그림을 AI가 자동으로 생성"
+],
+"ans": 3,
+"exp": "Art Mode에서 AI가 그림을 자동 생성하는 기능은 없습니다. The Frame은 900점+ 아트워크 제공, 모션 감지 자동 on/off, 마치 실제 액자 같은 매트 디스플레이가 특징입니다."
+},
+{
+"q": "삼성 TV의 Quantum Matrix Technology Pro(양자 매트릭스 기술 프로)의 특징으로 올바른 것은?",
+"opts": [
+"OLED 자발광 패널을 사용해 완전한 블랙을 구현",
+"수천 개의 미니 LED를 수백 개의 영역으로 나누어 정밀 제어",
+"단일 LED로 전체 화면을 균일하게 제어",
+"QLED 필름만으로 색 정확도를 높임"
+],
+"ans": 1,
+"exp": "Quantum Matrix Technology Pro는 수천 개의 미니 LED를 수백~수천 개의 딤밍 존으로 나누어 각 영역을 독립적으로 정밀 제어합니다. 깊은 블랙과 높은 피크 밝기를 동시에 구현합니다."
+},
+{
+"q": "삼성 TV에서 ALLM(Auto Low Latency Mode)이 지원되는 경우 입력 지연(Input Lag)은 어떻게 변화하는가?",
+"opts": [
+"자동으로 최대 주사율로 전환해 지연이 증가한다",
+"TV가 게임기 신호를 감지하면 자동으로 게임 모드(저지연)로 전환한다",
+"ALLM은 사운드 지연만 줄여준다",
+"ALLM은 PC 연결 시에만 동작한다"
+],
+"ans": 1,
+"exp": "ALLM(Auto Low Latency Mode)은 HDMI 2.1 표준 기능으로, Xbox·PS5 등 게임기 연결 시 TV가 자동으로 게임 모드를 활성화해 입력 지연을 최소화합니다. 별도 메뉴 설정 없이 자동으로 동작합니다."
+},
+{
+"q": "삼성 Q-Symphony(Q 심포니) 기능의 특징으로 올바른 것은?",
+"opts": [
+"TV 스피커를 끄고 사운드바만 사용하는 모드",
+"TV 내장 스피커와 삼성 사운드바가 동시에 협력해 더 풍부한 사운드 출력",
+"사운드바 없이 TV만으로 7.1채널 사운드 구현",
+"HDMI ARC를 통해 사운드를 TV로 역전송"
+],
+"ans": 1,
+"exp": "Q-Symphony는 TV 내장 스피커와 연결된 삼성 사운드바가 동시에 작동해 공간 전체를 풍부한 사운드로 채웁니다. 경쟁사 TV는 ARC 연결 시 TV 스피커가 꺼지지만 삼성만의 차별점입니다."
+},
+{
+"q": "삼성 게이밍 허브(Gaming Hub)에서 지원하는 클라우드 게임 서비스가 아닌 것은?",
+"opts": [
+"Xbox Cloud Gaming",
+"NVIDIA GeForce NOW",
+"PlayStation Plus 스트리밍",
+"Amazon Luna"
+],
+"ans": 2,
+"exp": "게이밍 허브는 Xbox Cloud Gaming, NVIDIA GeForce NOW, Amazon Luna 등을 지원합니다. PlayStation Plus 스트리밍(PS5 Remote Play 포함)은 삼성 TV 게이밍 허브에 지원되지 않습니다."
+},
+{
+"q": "삼성 Smart TV의 Ambient Mode+(앰비언트 모드+)의 기능 설명으로 옳은 것은?",
+"opts": [
+"TV 화면이 꺼지면 검은 화면 대신 주변 환경에 어울리는 배경을 표시",
+"TV가 켜져 있을 때만 작동하는 스크린 세이버 기능",
+"Ambient Mode는 에너지 소비가 일반 시청 모드와 동일하다",
+"오직 The Frame TV에만 적용되는 기능"
+],
+"ans": 0,
+"exp": "Ambient Mode+는 TV 화면이 꺼진 상태에서 벽지와 조화를 이루는 배경, 시계, 날씨, 사진 등을 표시해 TV가 인테리어의 일부가 됩니다. 일반 시청보다 훨씬 낮은 에너지로 작동합니다."
+},
+{
+"q": "삼성 TV의 Object Tracking Sound(OTS) 기술 설명으로 올바른 것은?",
+"opts": [
+"화면 속 움직이는 객체를 AI가 추적해 해당 방향의 스피커에서 소리를 출력",
+"단순히 볼륨을 자동으로 조절하는 기술",
+"외부 소음을 차단하는 노이즈 캔슬링 기술",
+"사운드바와 TV가 연동되어야만 동작"
+],
+"ans": 0,
+"exp": "OTS(Object Tracking Sound)는 화면 속 이동하는 물체를 AI가 인식하고, 그 위치와 방향에 맞는 스피커에서 소리가 나도록 해 화면과 소리가 일치하는 몰입감 있는 시청 경험을 제공합니다."
+},
+{
+"q": "삼성 TV의 EcoSensor(에코 센서) 기능 설명으로 올바른 것은?",
+"opts": [
+"실내 온도를 감지해 에어컨과 연동",
+"주변 빛의 밝기를 감지해 화면 밝기를 자동 조절해 에너지 절약",
+"VOC 오염 물질을 감지해 공기청정기와 연동",
+"TV 사용 패턴을 학습해 절전 시간을 자동 설정"
+],
+"ans": 1,
+"exp": "EcoSensor는 주변 조도를 실시간으로 감지해 화면 밝기를 자동으로 최적화합니다. 어두운 환경에서는 밝기를 낮춰 눈부심을 방지하고 에너지를 절약합니다."
+},
+{
+"q": "삼성 8K TV의 8K 해상도(7,680×4,320)는 4K(3,840×2,160) 대비 화소 수가 몇 배인가?",
+"opts": [
+"2배",
+"4배",
+"8배",
+"16배"
+],
+"ans": 1,
+"exp": "8K(7,680×4,320)는 총 약 3,317만 화소로, 4K(3,840×2,160, 약 829만 화소)의 정확히 4배에 해당합니다. 8K AI 업스케일링으로 FHD나 4K 콘텐츠도 8K에 가깝게 변환합니다."
+},
+{
+"q": "삼성 TV와 LG TV의 패널 기술 비교로 올바른 것은?",
+"opts": [
+"삼성은 OLED가 주력, LG는 QLED가 주력",
+"삼성은 QLED/Neo QLED(LCD 기반)가 주력, LG는 OLED가 주력",
+"두 회사 모두 OLED와 QLED를 동등하게 판매",
+"삼성은 마이크로 LED만 판매"
+],
+"ans": 1,
+"exp": "삼성의 주력 TV는 QLED와 Neo QLED(LCD+양자점+미니LED)입니다. LG의 주력은 OLED(자발광)입니다. 두 기술은 각각 장단점이 있으며 삼성도 QD-OLED를 일부 라인업에 탑재합니다."
+},
+{
+"q": "삼성 Smart TV의 Samsung TV Plus 서비스 특징으로 올바른 것은?",
+"opts": [
+"월 구독료를 내야 사용 가능한 OTT 서비스",
+"별도 요금 없이 무료로 이용 가능한 채널 스트리밍 서비스",
+"인터넷 연결 없이도 시청 가능한 서비스",
+"한국에서만 제공되는 서비스"
+],
+"ans": 1,
+"exp": "Samsung TV Plus는 인터넷 연결만 되면 별도 구독료 없이 무료로 이용 가능한 FAST(Free Ad-Supported Streaming) 서비스입니다. 글로벌 24개국 이상에서 제공되며 수백 개 채널을 무료로 시청할 수 있습니다."
+},
+{
+"q": "삼성 TV의 HDR10+ 기술과 Dolby Vision의 차이점으로 올바른 것은?",
+"opts": [
+"HDR10+는 삼성이 주도하는 개방형 무료 규격, Dolby Vision은 돌비의 유료 라이선스 기술",
+"Dolby Vision이 HDR10+보다 무조건 화질이 우수하다",
+"삼성 TV는 Dolby Vision만 지원한다",
+"두 기술은 완전히 동일하다"
+],
+"ans": 0,
+"exp": "HDR10+는 삼성·Amazon·Panasonic 등이 주도하는 개방형 무료 규격으로 장면별 다이나믹 메타데이터를 사용합니다. Dolby Vision은 돌비가 개발한 유료 라이선스 기술입니다. 삼성 TV는 HDR10+를 기본 지원하며 일부 모델에 Dolby Vision 호환 기능도 있습니다."
+},
+{
+"q": "삼성 TV의 Multi View(멀티 뷰) 기능으로 동시에 볼 수 있는 최대 화면 수는?",
+"opts": [
+"2개",
+"4개",
+"6개",
+"8개"
+],
+"ans": 1,
+"exp": "Multi View는 최대 4개의 화면을 동시에 표시할 수 있습니다. 게임 스트리밍을 보면서 스마트폰 화면 미러링, 유튜브, PC 화면 등을 동시에 볼 수 있어 멀티태스킹이 가능합니다."
+},
+{
+"q": "삼성 TV의 Remote Access(리모트 액세스) 기능에 대한 설명으로 옳은 것은?",
+"opts": [
+"스마트폰으로 TV 리모컨을 대체하는 기능",
+"TV를 통해 PC·스마트폰 화면에 원격으로 접속하는 기능",
+"TV가 꺼진 상태에서도 인터넷을 사용하는 기능",
+"다른 방의 TV로 화면을 전송하는 기능"
+],
+"ans": 1,
+"exp": "Remote Access는 삼성 스마트 TV를 통해 윈도우 PC, Mac, 스마트폰 등에 원격으로 접속해 작업을 이어갈 수 있는 기능입니다. TV를 업무용 모니터로도 활용할 수 있습니다."
+},
+{
+"q": "삼성 The Freestyle 프로젝터의 특징으로 올바른 것은?",
+"opts": [
+"360도 회전 가능, 천장·벽·바닥 어디든 투사, 내장 스피커 탑재",
+"오직 천장에만 투사 가능, 외부 스피커 필요",
+"최대 30인치 화면만 지원",
+"외부 전원 없이 배터리만으로 4시간 작동"
+],
+"ans": 0,
+"exp": "The Freestyle은 180도(상하) 회전이 가능해 천장·벽·바닥 어디든 투사할 수 있습니다. 내장 360도 스피커가 탑재되어 있으며 Smart TV 기능도 내장되어 있습니다. 최대 100인치 화면 투사가 가능합니다."
+},
+{
+"q": "삼성 TV의 One Connect Box의 기능 설명으로 옳은 것은?",
+"opts": [
+"TV와 별도로 분리된 박스에 외부 입력 단자를 모아 케이블 정리를 깔끔하게 함",
+"TV와 사운드바를 무선으로 연결하는 동글",
+"외장 HDD를 TV에 연결하기 위한 별도 저장장치",
+"스마트 기능만 담당하는 보조 프로세서"
+],
+"ans": 0,
+"exp": "One Connect Box는 HDMI·USB·광케이블 등 모든 외부 입력 단자를 별도 박스에 모은 것으로, TV와는 얇은 One Invisible Connection 케이블 하나만 연결됩니다. 케이블 정리가 깔끔해지고 TV를 업그레이드해도 박스를 재사용할 수 있습니다."
+},
+{
+"q": "삼성 Neo QLED 8K QN900 시리즈의 스피커 채널 구성으로 올바른 것은?",
+"opts": [
+"2.1채널 (80W)",
+"4.2.2채널 (80W)",
+"6.2.4채널 (92W)",
+"9.1.4채널 (100W)"
+],
+"ans": 2,
+"exp": "Neo QLED 8K QN900은 6.2.4채널 92W의 강력한 내장 사운드 시스템을 갖추고 있습니다. 4K Neo QLED 최상위 모델이 4.2.2채널인 것과 차별화됩니다."
+},
+{
+"q": "삼성 TV와 스마트폰의 SmartThings 연동으로 가능한 기능이 아닌 것은?",
+"opts": [
+"TV 화면에서 스마트폰 알림 확인",
+"스마트폰으로 TV 전원·볼륨 제어",
+"TV를 SmartThings IoT 허브로 활용",
+"스마트폰 배터리를 TV로 무선 충전"
+],
+"ans": 3,
+"exp": "SmartThings 연동으로 TV 화면에서 스마트폰 알림 확인, 스마트폰 리모컨, TV를 IoT 기기 허브로 활용 등이 가능합니다. 단, TV로 스마트폰 무선 충전은 지원하지 않습니다."
+},
+{
+"q": "삼성 OLED TV(S95 시리즈)의 패널 기술 명칭으로 올바른 것은?",
+"opts": [
+"W-OLED (White OLED)",
+"QD-OLED (Quantum Dot OLED)",
+"AMOLED",
+"Micro RGB"
+],
+"ans": 1,
+"exp": "삼성 OLED TV는 삼성 디스플레이가 제조하는 QD-OLED(양자점 OLED) 패널을 사용합니다. LG OLED TV의 W-OLED와는 다른 방식으로, 자발광 OLED에 양자점 기술을 결합해 색 표현 영역이 더 넓습니다."
+},
+{
+"q": "삼성 TV의 Auto Game Mode(자동 게임 모드)의 활성화 조건은?",
+"opts": [
+"사용자가 수동으로 게임 모드를 켤 때",
+"게임기나 PC를 HDMI 2.1 포트에 연결할 때 자동 감지·전환",
+"SmartThings 앱에서 설정해야만 활성화",
+"TV 내장 게임 앱 실행 시에만 활성화"
+],
+"ans": 1,
+"exp": "Auto Game Mode는 HDMI 2.1 포트에 연결된 게임기(PS5, Xbox Series X 등)나 PC의 신호를 자동 감지해 게임 모드(최저 지연)로 전환합니다. 별도 설정 없이 자동으로 동작합니다."
+},
+{
+"q": "삼성 TV의 Eye Comfort Mode(아이 컴포트 모드)의 주요 기능은?",
+"opts": [
+"청색광 차단과 화면 밝기 자동 조절로 눈의 피로 감소",
+"수분 감지 센서로 눈 건강 모니터링",
+"4시간마다 자동으로 휴식 알림 표시",
+"화면과의 최적 거리를 계산해 알려주는 기능"
+],
+"ans": 0,
+"exp": "Eye Comfort Mode는 청색광을 줄이고 주변 조도에 맞춰 화면 밝기를 자동 조절해 장시간 시청 시 눈의 피로를 줄여줍니다. 삼성의 Eye Care 기술로 VDE 눈 건강 인증을 받은 모델도 있습니다."
+},
+{
+"q": "삼성 Frame TV 2026년형의 주요 업그레이드 내용으로 올바른 것은?",
+"opts": [
+"처음으로 OLED 패널 채택",
+"마치 실제 액자처럼 보이는 매트 베젤 업그레이드와 고해상도 아트워크 추가",
+"8K 해상도로 업그레이드",
+"프리미엄 스피커 12채널로 확장"
+],
+"ans": 1,
+"exp": "2026년형 Frame TV는 더욱 실제 액자에 가깝게 개선된 매트 베젤 디자인과 더 많은 고해상도 아트워크를 추가했습니다. Matte Display로 반사 최소화, 아트 스토어 아티스트도 확대되었습니다."
+},
+{
+"q": "삼성 Neo QLED 8K TV의 'Neural Quantum Processor 8K'가 수행하는 주요 기능은?",
+"opts": [
+"4K 영상을 8K로 업스케일링",
+"HDMI 신호를 무선으로 변환",
+"블루투스 음향을 처리",
+"스마트홈 허브 역할"
+],
+"ans": 0,
+"exp": "Neural Quantum Processor 8K는 AI 기반으로 4K 이하 영상을 8K 해상도로 업스케일링한다."
+},
+{
+"q": "삼성 OLED TV에서 '1억 자발광 픽셀'의 의미는?",
+"opts": [
+"각 픽셀이 개별적으로 빛을 내고 끔",
+"백라이트 LED가 1억 개",
+"명암비가 1억:1",
+"패널 해상도가 1억 화소"
+],
+"ans": 0,
+"exp": "OLED는 각 픽셀이 자체 발광하므로 완전한 블랙 표현과 무한 명암비를 구현한다."
+},
+{
+"q": "삼성 Frame TV의 '매트 디스플레이' 기술의 핵심 효과는?",
+"opts": [
+"반사를 줄여 실제 그림 액자처럼 보임",
+"밝기를 2배 높임",
+"전력소비를 절반으로 줄임",
+"패널 두께를 얇게 함"
+],
+"ans": 0,
+"exp": "매트 디스플레이는 무반사 코팅으로 주변 조명 반사를 최소화해 실제 액자처럼 느껴지게 한다."
+},
+{
+"q": "삼성 TV의 'Object Tracking Sound+'에 대한 설명으로 옳은 것은?",
+"opts": [
+"화면 속 물체 움직임에 따라 음향이 이동",
+"화면 물체를 인식해 자동 화질 조정",
+"사물인터넷으로 TV를 제어",
+"물체 색상에 맞춰 화면 보정"
+],
+"ans": 0,
+"exp": "OTS+는 화면의 움직이는 객체를 추적해 내장 스피커로 3D 입체 음향을 구현한다."
+},
+{
+"q": "삼성 QLED TV의 'Quantum Dot' 기술이 개선하는 것은?",
+"opts": [
+"색 순도와 밝기",
+"패널 응답속도",
+"소비전력",
+"패널 두께"
+],
+"ans": 0,
+"exp": "양자점 필터는 나노 입자가 정확한 파장의 빛을 방출해 DCI-P3 100% 색역을 구현한다."
+},
+{
+"q": "삼성 TV 'Motion Xcelerator Turbo Pro'의 주요 스펙은?",
+"opts": [
+"144Hz 주사율",
+"8K 해상도",
+"돌비애트모스 지원",
+"Wi-Fi 6E 내장"
+],
+"ans": 0,
+"exp": "Motion Xcelerator Turbo Pro는 144Hz 주사율을 지원해 게이밍과 스포츠 영상에서 선명한 움직임을 제공한다."
+},
+{
+"q": "삼성 TV 'Ambient Mode'에서 제공하지 않는 기능은?",
+"opts": [
+"실시간 날씨 정보",
+"미술작품 전시",
+"집 인테리어와 조화",
+"4K 스트리밍 콘텐츠 재생"
+],
+"ans": 3,
+"exp": "Ambient Mode는 TV를 끈 상태에서 날씨, 시계, 예술작품, 배경 패턴을 표시하지만 스트리밍 재생은 지원하지 않는다."
+},
+{
+"q": "삼성 TV의 'Gaming Hub'에서 클라우드 게이밍 서비스로 제공되지 않는 것은?",
+"opts": [
+"Xbox Game Pass",
+"NVIDIA GeForce NOW",
+"PlayStation Now",
+"Amazon Luna"
+],
+"ans": 2,
+"exp": "Gaming Hub는 Xbox, NVIDIA GeForce NOW, Amazon Luna 등을 지원하며 PlayStation Now는 포함되지 않는다."
+},
+{
+"q": "삼성 Neo QLED의 'Mini LED' 기술에서 기존 QLED 대비 LED 크기 차이는?",
+"opts": [
+"약 40배 작음",
+"약 2배 작음",
+"동일하지만 배열 방식이 다름",
+"약 10배 큼"
+],
+"ans": 0,
+"exp": "Mini LED는 기존 LED 대비 약 1/40 크기로, 더 정밀한 로컬 디밍 존 구성이 가능하다."
+},
+{
+"q": "삼성 TV 'Real Depth Enhancer'가 개선하는 화질 요소는?",
+"opts": [
+"원근감과 입체감",
+"색 온도",
+"프레임 보간",
+"HDR 밝기"
+],
+"ans": 0,
+"exp": "Real Depth Enhancer는 AI가 전경·배경을 분리해 깊이감과 원근감을 강조한다."
+},
+{
+"q": "삼성 MICRO LED TV의 장점으로 올바른 것은?",
+"opts": [
+"번인 걱정 없이 자발광 화질 구현",
+"OLED보다 저렴한 가격",
+"소형화에 최적화",
+"별도 백라이트 필요"
+],
+"ans": 0,
+"exp": "MICRO LED는 무기물 소재로 번인이 없으며 자발광으로 OLED 수준의 화질과 밝기를 동시에 구현한다."
+},
+{
+"q": "삼성 TV의 'Solar Cell Remote'가 충전하는 방법이 아닌 것은?",
+"opts": [
+"실내 형광등 빛",
+"태양광",
+"USB-C 직접 연결",
+"근거리 무선 충전(NFC)"
+],
+"ans": 3,
+"exp": "Solar Cell Remote는 태양광과 실내 조명으로 충전되며, 일부 모델은 USB-C도 지원하지만 NFC 충전은 지원하지 않는다."
+},
+{
+"q": "삼성 'Q-Symphony'가 작동하려면 반드시 필요한 조건은?",
+"opts": [
+"삼성 사운드바와 TV 동시 사용",
+"HDMI ARC 케이블 연결",
+"Dolby Atmos 콘텐츠",
+"외부 서브우퍼 연결"
+],
+"ans": 0,
+"exp": "Q-Symphony는 삼성 사운드바와 삼성 TV를 함께 사용할 때 TV 내장 스피커와 사운드바가 동시에 작동하는 기술이다."
+},
+{
+"q": "삼성 TV 'EyeComfort Mode'의 주요 기능은?",
+"opts": [
+"블루라이트 자동 감소",
+"음량 자동 조절",
+"화면 자동 밝기",
+"절전 모드 자동 전환"
+],
+"ans": 0,
+"exp": "EyeComfort Mode는 일몰 후 자동으로 블루라이트를 줄이고 색 온도를 따뜻하게 조정한다."
+},
+{
+"q": "삼성 Neo QLED 8K 2026 모델에서 지원하는 AI 기능 중 가장 핵심적인 것은?",
+"opts": [
+"AI 업스케일링 8K",
+"AI 자동 화면 크기 조절",
+"AI 자막 자동 생성",
+"AI 채널 자동 선택"
+],
+"ans": 0,
+"exp": "Neo QLED 8K의 핵심은 Neural Quantum Processor가 어떤 해상도 입력도 8K 수준으로 업스케일링하는 AI 화질 기술이다."
+},
+{
+"q": "삼성 TV 'Ultra Viewing Angle' 기술이 해결하는 문제는?",
+"opts": [
+"측면에서 볼 때 색상 왜곡",
+"빠른 화면 잔상",
+"고주사율에서 깜빡임",
+"HDR 과다 밝기"
+],
+"ans": 0,
+"exp": "Ultra Viewing Angle은 VA 패널의 측면 시야각 색상 저하를 개선해 어디서 봐도 정확한 색 재현을 한다."
+},
+{
+"q": "삼성 스마트 TV의 'Bixby' 음성 명령으로 할 수 없는 것은?",
+"opts": [
+"타 브랜드 스마트홈 기기 직접 제어",
+"채널 변경",
+"볼륨 조절",
+"앱 실행"
+],
+"ans": 0,
+"exp": "Bixby는 SmartThings 연동 기기를 제어할 수 있으나, 타 브랜드 비연동 기기를 직접 제어하기는 어렵다."
+}
+],
+"냉장고": [
+{
+"q": "삼성 Bespoke AI 패밀리허브 키친핏 Max에 탑재된 터치스크린 크기로 올바른 것은?",
+"opts": [
+"7인치 (17.8cm)",
+"9인치 (22.5cm)",
+"12인치 (30.5cm)",
+"32인치 (81.3cm)"
+],
+"ans": 1,
+"exp": "삼성 패밀리허브 키친핏 Max에는 22.5cm(약 9인치) 터치스크린이 탑재되어 있습니다. AI 푸드매니저, Now brief, Samsung TV Plus, Spotify 등을 바로 이용할 수 있습니다."
+},
+{
+"q": "삼성 키친핏 Max 냉장고의 최소 설치 간격(좌·우 각각)으로 올바른 것은?",
+"opts": [
+"12mm",
+"24mm",
+"4mm",
+"47mm"
+],
+"ans": 2,
+"exp": "키친핏 Max는 좌·우 단 4mm의 간격만으로도 냉장고 문을 90도 이상 열 수 있습니다. 이전 세대 키친핏의 최소 설치 간격 12mm에서 대폭 줄어 인테리어 완성도가 향상됐습니다."
+},
+{
+"q": "삼성 AI 푸드매니저에서 식재료 인식 정확도를 높이기 위해 AI 비전과 결합한 기술은?",
+"opts": [
+"ChatGPT (OpenAI)",
+"Google Gemini",
+"Bixby AI",
+"Naver HyperCLOVA"
+],
+"ans": 1,
+"exp": "삼성 AI 푸드매니저는 AI 비전에 Google Gemini를 결합하여 신선식품·가공식품·손글씨 라벨까지 광범위하게 인식합니다. SmartThings 앱의 푸드노트·밀 플래너와 연동해 레시피 추천·보관 기한 알림도 제공합니다."
+},
+{
+"q": "삼성 키친핏 Max의 '하이브리드 쿨링'에 사용되는 두 가지 냉각 방식은?",
+"opts": [
+"컴프레서 + 열전모듈(펠티어 소자)",
+"트윈 컴프레서 + 매직스페이스",
+"리니어 컴프레서 + 노크온 글래스",
+"인버터 컴프레서 + 진공 단열재"
+],
+"ans": 0,
+"exp": "삼성 하이브리드 쿨링은 평소엔 컴프레서로 효율적으로 냉각하고, 도어를 자주 열거나 대량 식재료를 넣는 상황에서 펠티어 소자(반도체 소자)가 추가로 작동해 온도를 20% 더 빠르게 회복합니다."
+},
+{
+"q": "삼성 AI 절약 모드를 최고 단계(2단계)로 설정했을 때 최대 에너지 절약 효과는?",
+"opts": [
+"최대 10%",
+"최대 18%",
+"최대 25%",
+"최대 40%"
+],
+"ans": 2,
+"exp": "삼성 AI 절약 모드는 1단계(최대 12~18%)와 2단계(최대 20~25%)로 나뉩니다. AI가 사용 패턴을 학습해 자동으로 모터 속도와 온도를 조절합니다."
+},
+{
+"q": "삼성 키친핏 Max의 도어 단열재 두께를 줄인 결과, 도어빈 깊이는 기존 대비 얼마나 넓어졌나?",
+"opts": [
+"단열재 50% 감소 → 도어빈 10% 증가",
+"단열재 66% 감소 → 도어빈 22% 증가",
+"단열재 30% 감소 → 도어빈 15% 증가",
+"단열재 80% 감소 → 도어빈 30% 증가"
+],
+"ans": 1,
+"exp": "도어 단열재 두께를 기존 24mm에서 8mm로 약 66.7% 줄이면서도 동일한 단열 성능을 유지했습니다. 그 결과 도어빈 깊이가 기존 129mm에서 158mm로 약 22% 증가했습니다."
+},
+{
+"q": "삼성 AI 인버터 컴프레서의 무상수리 보증기간은?",
+"opts": [
+"3년",
+"5년",
+"7년",
+"10년"
+],
+"ans": 3,
+"exp": "삼성 AI 인버터 컴프레서는 10년 무상수리 보증을 제공합니다. 일반 제품 품질 보증은 1년이지만 컴프레서는 별도 10년 보증입니다."
+},
+{
+"q": "삼성 키친핏 Max의 '빅 아이스메이커'에 대한 설명으로 올바른 것은?",
+"opts": [
+"급수관 필수 연결 / 최대 저빙량 2.0kg",
+"급수관·필터 없이 냉장실 급수통으로 최대 1.4kg 큐브 아이스 자동 제조",
+"냉동실 직접 물 투입 / 원형 아이스 전용 / 최대 0.8kg",
+"정수 필터 내장 / 얼음·냉수 동시 디스펜서"
+],
+"ans": 1,
+"exp": "삼성 빅 아이스메이커는 별도 급수관이나 필터 없이 냉장실 내부 급수통에 물만 넣으면 자동으로 큐브 아이스를 만들어줍니다. 일간 제빙량 1.3kg/day, 최대 저빙량 1.4kg입니다."
+},
+{
+"q": "LG 디오스 STEM 노크온과 삼성 키친핏 Max의 가장 큰 차이점으로 올바른 것은?",
+"opts": [
+"LG는 스크린 탑재, 삼성은 노크온으로 내부 확인",
+"삼성은 9인치 패밀리허브 스크린+AI 푸드매니저, LG는 스크린 없이 노크온으로 차별화",
+"두 제품 모두 동일한 터치스크린 탑재",
+"LG는 AI 기반 식재료 관리 앱 탑재, 삼성은 노크온 기능만"
+],
+"ans": 1,
+"exp": "삼성 패밀리허브 키친핏 Max는 22.5cm 터치스크린에 AI 푸드매니저(Google Gemini 결합)가 핵심입니다. LG 노크온은 터치스크린 없이 문을 두드리면 내부 조명이 켜지며 투명하게 보이는 기능입니다."
+},
+{
+"q": "삼성 키친핏 Max의 '오토 도어' 기능 설명으로 올바른 것은?",
+"opts": [
+"센서 터치로 자동 열림 + 빅스비 음성으로도 열고 닫기 가능",
+"도어 열림 기능만 있고 자동 닫힘은 없음",
+"냉장·냉동 모든 칸에 오토 도어 센서 적용",
+"오토 도어는 LG 노크온과 동일한 원리"
+],
+"ans": 0,
+"exp": "삼성 오토 도어는 냉장실 도어부 센서 터치로 자동 열림, 빅스비 음성 인식으로 열림, 소프트 클로즈(부드러운 자동 닫힘), 안심 클로즈(설정 시간 경과 후 자동 닫힘) 기능을 갖추고 있습니다."
+},
+{
+"q": "삼성 Bespoke 냉장고의 디자인 시스템 특징으로 올바른 것은?",
+"opts": [
+"색상과 소재를 개인 취향에 맞게 맞춤 선택 가능",
+"오직 흰색과 검은색만 제공",
+"도어 패널은 교체 불가능한 일체형",
+"단일 용량만 지원"
+],
+"ans": 0,
+"exp": "Bespoke 냉장고는 도어 패널의 색상(핑크·화이트·그레이·블랙·베이지 등)과 소재(글래스·스틸·패브릭 등)를 자유롭게 선택할 수 있습니다. 패널 교체가 가능해 인테리어 변경 시 냉장고도 바꿀 수 있습니다."
+},
+{
+"q": "삼성 냉장고의 Twin Cooling Plus(트윈 쿨링 플러스) 기술의 핵심 특징은?",
+"opts": [
+"냉장실과 냉동실이 하나의 공기 흐름을 공유해 에너지 효율 향상",
+"냉장실과 냉동실을 완전히 독립된 냉각 시스템으로 운영해 냄새 이동 방지",
+"두 개의 컴프레서를 동시에 작동시켜 냉각 속도 향상",
+"냉동실을 -40도까지 낮추는 급속 냉동 기술"
+],
+"ans": 1,
+"exp": "Twin Cooling Plus는 냉장실과 냉동실을 각각 독립된 냉각 시스템으로 운영합니다. 공기가 서로 섞이지 않아 음식 냄새가 옮겨가지 않으며, 냉장실의 최적 습도를 유지해 식재료가 더 신선하게 보관됩니다."
+},
+{
+"q": "삼성 냉장고의 Metal Cooling(메탈 쿨링) 기능 설명으로 올바른 것은?",
+"opts": [
+"냉장실 내벽을 금속 재질로 제작해 온도를 더 오래 유지",
+"냉동실에만 적용되는 급속 냉동 기술",
+"도어를 자주 열어도 온도 변화가 없다는 의미",
+"메탈 소재 외장 도어에 쿨링 기능을 넣은 것"
+],
+"ans": 0,
+"exp": "Metal Cooling은 냉장실 내벽을 금속 재질로 제작해 외부 온도 변화에도 식재료 보관 온도를 더 안정적으로 유지합니다. 열 전도율이 높은 금속이 내부 온도를 균일하게 유지해 식재료 신선도가 높아집니다."
+},
+{
+"q": "삼성 냉장고의 SpaceMax(스페이스 맥스) 기술의 핵심은?",
+"opts": [
+"냉장고 외관 크기는 유지하면서 벽체 두께를 줄여 내부 용량을 극대화",
+"냉장고 외관을 최대한 크게 만들어 용량 증가",
+"냉동실을 없애고 냉장 공간만으로 운영",
+"가변 선반으로 내부 공간을 자유롭게 활용"
+],
+"ans": 0,
+"exp": "SpaceMax는 냉장고 벽체에 초슬림 단열재(진공 단열재 등)를 적용해 외부 사이즈는 그대로 유지하면서 내부 용량을 기존 대비 최대 10% 이상 늘린 기술입니다."
+},
+{
+"q": "삼성 냉장고의 Power Freeze(파워 프리즈)와 Power Cool(파워 쿨)의 차이점으로 올바른 것은?",
+"opts": [
+"Power Freeze는 냉장실 급속 냉각, Power Cool은 냉동실 급속 냉동",
+"Power Freeze는 냉동실 급속 냉동, Power Cool은 냉장실 급속 냉각",
+"두 기능 모두 냉장실과 냉동실에 동시 적용",
+"두 기능은 동일하며 단순히 명칭이 다름"
+],
+"ans": 1,
+"exp": "Power Freeze는 냉동실을 빠르게 냉동시키는 기능(예: 아이스크림 빠른 보관), Power Cool은 냉장실을 빠르게 냉각시키는 기능(예: 따뜻한 음식 넣었을 때)입니다. 각각 독립적으로 작동합니다."
+},
+{
+"q": "삼성 4도어 냉장고의 알뜰칸(Flex Zone) 온도 설정 범위로 올바른 것은?",
+"opts": [
+"-23°C ~ 7°C",
+"-8°C ~ 6°C",
+"-5°C ~ 3°C",
+"-2°C ~ 10°C"
+],
+"ans": 0,
+"exp": "알뜰칸은 -23°C ~ 7°C로 온도를 설정할 수 있어 냉장(야채·과일 신선 보관)부터 냉동(아이스크림 보관)까지 다양한 용도로 활용 가능합니다. 냉동 모드로 설정하면 큰 냉동 식품도 보관할 수 있습니다."
+},
+{
+"q": "삼성 냉장고에 사용되는 R600a 냉매의 특징으로 올바른 것은?",
+"opts": [
+"기존 R134a보다 지구온난화지수(GWP)가 높다",
+"R134a보다 GWP가 약 1/7 수준인 친환경 냉매",
+"오존층 파괴 지수(ODP)가 높아 규제 대상",
+"에너지 효율이 낮지만 가격이 저렴해 사용"
+],
+"ans": 1,
+"exp": "R600a(이소부탄)은 R134a(GWP=1,430) 대비 GWP가 약 3으로 약 1/477 수준이며, ODP=0으로 오존층에도 무해한 친환경 냉매입니다. 유럽 등 선진국 시장에서 주로 사용됩니다."
+},
+{
+"q": "삼성 BESPOKE 냉장고에서 Show Case(쇼 케이스) 기능의 설명으로 올바른 것은?",
+"opts": [
+"냉장고 문을 열지 않고도 내부를 볼 수 있는 투명 패널 도어",
+"냉장고를 전시용으로 사용할 때 조명만 켜두는 기능",
+"외부 스마트폰 앱으로 냉장고 내부 카메라 확인",
+"냉장고 문에 전자 잉크 디스플레이를 탑재한 기능"
+],
+"ans": 0,
+"exp": "Show Case는 냉장고 도어 일부가 투명하게 되어 있어 문을 열지 않고도 자주 꺼내는 음식을 확인하고 꺼낼 수 있는 기능입니다. 냉기 유출을 줄여 에너지 절약에도 도움이 됩니다."
+},
+{
+"q": "삼성 AI 비전 기능을 통해 냉장고 내부 카메라가 제공하는 기능으로 올바른 것은?",
+"opts": [
+"냉장고 문을 열지 않고 스마트폰으로 내부 확인 및 식재료 인식",
+"냉장고 온도를 자동으로 조절하는 센서 역할",
+"도어 오픈 시 알림을 보내는 보안 카메라 역할",
+"전기 사용량을 실시간 모니터링"
+],
+"ans": 0,
+"exp": "AI 비전의 내장 카메라는 외출 중 스마트폰으로 냉장고 내부를 실시간 확인하고, AI가 식재료를 인식해 필요한 물품을 알려주거나 레시피를 추천합니다. SmartThings 앱과 연동됩니다."
+},
+{
+"q": "삼성 냉장고의 '위스키 스토리지(Whisky Storage)' 기능에 대한 설명으로 옳은 것은?",
+"opts": [
+"위스키 전용 -10°C 급속 냉각 기능",
+"15°C ~ 18°C의 위스키 최적 보관 온도를 유지하는 별도 공간",
+"냉장고 문에 위스키 디스펜서를 설치한 기능",
+"위스키잔을 냉각하는 별도 칸"
+],
+"ans": 1,
+"exp": "위스키 스토리지는 위스키 최적 보관 온도인 15~18°C를 유지하는 별도 칸입니다. 단순히 냉장 온도(4°C)로 보관하면 위스키 맛이 변할 수 있어, 최적 온도 관리로 품질을 유지합니다."
+},
+{
+"q": "삼성 냉장고의 가변 선반(SpaceMax 선반) 특징으로 올바른 것은?",
+"opts": [
+"접이식으로 큰 용기도 쉽게 보관, 높이 조절 가능",
+"고정형으로 내구성이 우선이며 높이 조절 불가",
+"유리 재질로만 제공",
+"냉동실 전용 기능"
+],
+"ans": 0,
+"exp": "삼성 냉장고의 가변 선반은 앞뒤로 미끄러지는 슬라이딩 구조와 높이 조절이 가능해 수박, 케이크 등 큰 용기도 쉽게 보관할 수 있습니다. 강화유리 소재로 내구성도 뛰어납니다."
+},
+{
+"q": "삼성 Bespoke AI 냉장고 4도어(RF85 시리즈)의 총 용량으로 올바른 것은?",
+"opts": [
+"846리터",
+"866리터",
+"892리터",
+"905리터"
+],
+"ans": 1,
+"exp": "삼성 Bespoke AI 냉장고 4도어(RF85H10AAPW2)는 총 866리터 용량으로 국내 최대 수준의 4도어 냉장고 중 하나입니다(냉장 616L+냉동 250L 구성)."
+},
+{
+"q": "삼성과 LG 냉장고의 양문형 제품 비교에서 삼성의 차별점으로 올바른 것은?",
+"opts": [
+"LG는 Twin Cooling, 삼성은 Linear Cooling 적용",
+"삼성은 SpaceMax + Metal Cooling + 하이브리드 쿨링, LG는 노크온이 핵심 차별 기능",
+"두 회사 모두 동일한 냉각 기술 사용",
+"삼성은 냉동실이 없는 풀 냉장 모드 지원"
+],
+"ans": 1,
+"exp": "삼성 양문형 냉장고는 SpaceMax(최대 내부 용량), Metal Cooling(안정된 온도), 하이브리드 쿨링(빠른 온도 회복)이 주요 차별점입니다. LG의 핵심 차별점은 노크온(투명 도어)과 Linear Cooling입니다."
+},
+{
+"q": "삼성 냉장고 도어 경보(Door Alarm) 기능의 작동 방식으로 올바른 것은?",
+"opts": [
+"도어가 일정 시간(보통 2분) 이상 열려 있으면 경보음과 함께 앱 알림 발송",
+"도어를 열 때마다 무조건 경보음 발생",
+"냉동실 도어에만 적용",
+"스마트폰 앱 설정 시에만 동작"
+],
+"ans": 0,
+"exp": "삼성 냉장고 도어 경보는 문이 약 2분 이상 열려 있을 경우 경보음을 울리고 SmartThings 앱으로 알림을 보냅니다. 외출 시 도어를 닫지 않은 경우 원격으로 확인하고 가족에게 알릴 수 있습니다."
+},
+{
+"q": "삼성 냉장고 AI 절약 모드의 작동 방식으로 올바른 것은?",
+"opts": [
+"SmartThings 앱에서만 설정 가능, AI가 사용 패턴 학습 후 자동 에너지 절약",
+"냉장고 전면 버튼으로만 설정 가능",
+"AI 절약 모드는 음식 보관 품질을 희생하며 전기를 줄임",
+"모든 삼성 냉장고에 기본 탑재"
+],
+"ans": 0,
+"exp": "삼성 AI 절약 모드는 SmartThings 앱에서 설정합니다. AI가 가구의 냉장고 사용 패턴(열고 닫는 빈도, 시간대 등)을 학습해 최적의 컴프레서 작동 스케줄을 자동으로 조정합니다. 음식 보관 품질은 유지됩니다."
+},
+{
+"q": "삼성 키친핏 냉장고가 일반 냉장고 대비 키친 인테리어 측면에서 유리한 이유는?",
+"opts": [
+"가격이 매우 저렴해 교체 부담이 없어서",
+"빌트인 제품과 동일한 외관을 위해 주방 가구에 딱 맞게 설계된 표준 치수로 제공",
+"키친핏은 반드시 빌트인 시공이 필요",
+"키친핏은 문이 없는 오픈형 냉장고"
+],
+"ans": 1,
+"exp": "키친핏 냉장고는 유럽 및 국내 주방 가구 표준 치수(폭 90cm, 깊이 60cm)에 맞게 설계되어 빌트인처럼 보이는 완성도 높은 인테리어를 만들 수 있습니다. 빌트인 시공 없이 스탠드얼론으로 설치해도 깔끔합니다."
+},
+{
+"q": "삼성 냉장고 '하이브리드 쿨링'의 구성 요소 조합은?",
+"opts": [
+"컴프레서 냉각 + 열전소자 냉각",
+"가스 냉각 + 공기 냉각",
+"냉기 분리 + 습도 분리",
+"냉각팬 + 제습기"
+],
+"ans": 0,
+"exp": "하이브리드 쿨링은 컴프레서와 열전소자(TEC)를 결합해 정밀한 온도 제어와 저진동을 실현한다."
+},
+{
+"q": "삼성 비스포크 냉장고의 '패밀리허브'에서 제공하지 않는 기능은?",
+"opts": [
+"내부 식품 자동 주문",
+"화상통화",
+"식재료 관리",
+"메모 및 캘린더"
+],
+"ans": 0,
+"exp": "패밀리허브는 메모, 캘린더, 화상통화, 식재료 관리 등을 지원하지만 자동 주문은 별도 서비스 연동이 필요하다."
+},
+{
+"q": "삼성 냉장고 'AI 에너지 모드'가 절전하는 원리는?",
+"opts": [
+"AI가 사용 패턴 학습 후 냉각 강도 최적화",
+"냉각팬 속도를 항상 최저로 유지",
+"컴프레서 동작을 1시간 간격으로 제한",
+"문 열림 감지 시 냉각 중단"
+],
+"ans": 0,
+"exp": "AI 에너지 모드는 가족의 냉장고 사용 패턴을 학습해 적정 시간에 예냉·절전을 자동으로 수행한다."
+},
+{
+"q": "삼성 냉장고 'SpaceMax' 기술의 특징은?",
+"opts": [
+"벽 두께를 줄여 동일 외형에서 내부 용량 증대",
+"냉각 공간을 2개 독립 구역으로 분리",
+"외관을 더 두껍게 만들어 단열 강화",
+"용량 대비 소비전력을 50% 절감"
+],
+"ans": 0,
+"exp": "SpaceMax는 진공 단열재를 사용해 외관 크기는 유지하면서 내부 수납 공간을 최대화하는 기술이다."
+},
+{
+"q": "삼성 냉장고 '오토 드로어(Auto Door)'의 작동 조건은?",
+"opts": [
+"손이 핸들에 가까이 가면 자동으로 드로어 개방",
+"목소리 명령으로 개방",
+"앱에서 원격 개방",
+"내부 중량 감지 시 자동 개방"
+],
+"ans": 0,
+"exp": "오토 드로어는 핸들 근접 센서를 통해 손이 가까이 가면 자동으로 서랍을 열어준다."
+},
+{
+"q": "삼성 비스포크 냉장고 4도어 모델에서 '플렉스 존'의 온도 범위는?",
+"opts": [
+"-23°C ~ 7°C",
+"0°C ~ 10°C",
+"-18°C ~ 3°C",
+"-5°C ~ 15°C"
+],
+"ans": 0,
+"exp": "플렉스 존은 -23°C에서 7°C까지 설정 가능해 냉동·냉장·와인 보관 등 다용도로 활용된다."
+},
+{
+"q": "삼성 냉장고 '쇼케이스 도어'의 주요 장점은?",
+"opts": [
+"내부를 열지 않고 음료 꺼내기 가능",
+"냉동 성능 강화",
+"외관 디자인 개선",
+"내부 조명 자동 조절"
+],
+"ans": 0,
+"exp": "쇼케이스 도어는 메인 도어 안에 별도 공간을 두어 자주 꺼내는 음료를 냉기 손실 없이 접근할 수 있게 한다."
+},
+{
+"q": "삼성 냉장고의 '금속 냉각판(Metal Cooling)' 기술의 효과는?",
+"opts": [
+"온도 변화를 줄이고 신선도 오래 유지",
+"습도를 높여 야채 보존",
+"냉각 시간 단축",
+"소음 감소"
+],
+"ans": 0,
+"exp": "금속 냉각판은 열용량이 커서 문 개폐 시 온도 변화를 최소화해 식품 신선도를 오래 유지한다."
+},
+{
+"q": "삼성 냉장고에서 '인버터 컴프레서'의 장점이 아닌 것은?",
+"opts": [
+"냉각 속도가 일정 속도 방식보다 항상 빠름",
+"소음 감소",
+"소비전력 절감",
+"진동 감소"
+],
+"ans": 0,
+"exp": "인버터 컴프레서는 소음·진동·전력을 줄이지만, 초기 냉각 속도는 단순히 on/off 방식과 비교하면 항상 빠르지는 않다."
+},
+{
+"q": "삼성 냉장고 'All-Around Cooling'의 작동 방식은?",
+"opts": [
+"상·하·측면 모든 방향에서 냉기 공급",
+"냉기를 빠르게 순환",
+"특정 구역만 집중 냉각",
+"외부 온도에 따라 냉각 강도 조절"
+],
+"ans": 0,
+"exp": "All-Around Cooling은 선반 위아래와 측면에 위치한 다수의 냉각 구멍을 통해 냉기를 골고루 공급한다."
+},
+{
+"q": "삼성 냉장고 '빅 아이스메이커'가 만드는 얼음 형태가 아닌 것은?",
+"opts": [
+"크러쉬드 아이스(부순 얼음)",
+"큐브 아이스",
+"볼 아이스",
+"트윈 아이스"
+],
+"ans": 2,
+"exp": "빅 아이스메이커는 큐브와 크러쉬드 아이스를 제공하며 볼 아이스 기능은 기본 내장되어 있지 않다."
+},
+{
+"q": "삼성 냉장고 'UV 살균 탈취'가 주로 살균하는 부위는?",
+"opts": [
+"냉기 순환 팬 및 필터 주변",
+"야채칸 내부 전체",
+"냉동실 도어 안쪽",
+"외부 손잡이"
+],
+"ans": 0,
+"exp": "UV 살균은 냉기를 순환시키는 팬과 필터 주변에 UV LED를 설치해 세균과 곰팡이를 억제한다."
+},
+{
+"q": "삼성 비스포크 냉장고의 패널 교체 특징은?",
+"opts": [
+"소비자가 직접 교체 가능한 착탈식 패널",
+"공장에서만 교체 가능",
+"교체 불가, 색상은 주문 시 선택",
+"삼성 서비스센터 방문 필수"
+],
+"ans": 0,
+"exp": "비스포크는 소비자가 직접 원하는 색상·소재의 패널로 교체할 수 있는 커스터마이징 설계를 적용했다."
+},
+{
+"q": "삼성 냉장고 '와이드 모이스처 존'의 기능은?",
+"opts": [
+"과일·채소 신선도 유지를 위한 고습도 보관",
+"고기 숙성을 위한 저습도 공간",
+"냉동 식품의 해동 공간",
+"가공식품의 장기 보관 공간"
+],
+"ans": 0,
+"exp": "와이드 모이스처 존은 습도를 높게 유지해 과일과 채소가 수분을 잃지 않고 신선하게 보관된다."
+},
+{
+"q": "삼성 냉장고 'AI 비전 인사이드 카메라'로 할 수 없는 것은?",
+"opts": [
+"식재료 유통기한 자동 알림",
+"냉장고 문 밖에서 내부 확인",
+"삼성 앱 연동 식재료 현황",
+"식재료 정렬 자동화"
+],
+"ans": 3,
+"exp": "AI 비전 카메라는 내부 촬영, 앱 연동, 유통기한 알림 등을 지원하지만 물리적 정렬은 자동화되지 않는다."
+},
+{
+"q": "삼성 냉장고의 '스마트 절전 모드'가 발동되는 조건은?",
+"opts": [
+"오랫동안 문을 열지 않을 때",
+"주변 온도가 낮을 때",
+"냉장고 가득 찼을 때",
+"밤 11시 이후 자동"
+],
+"ans": 0,
+"exp": "스마트 절전은 일정 시간 문 열림이 없는 경우 냉각 강도를 낮춰 소비전력을 절감한다."
+},
+{
+"q": "삼성 냉장고의 'Precise Temperature Control' 정밀도는?",
+"opts": [
+"±0.5°C",
+"±2°C",
+"±1°C",
+"±3°C"
+],
+"ans": 0,
+"exp": "정밀 온도 제어는 ±0.5°C 수준으로 식품 보관 최적 온도를 유지한다."
+},
+{
+"q": "삼성 냉장고 '직냉식'과 '간냉식'의 차이로 옳은 것은?",
+"opts": [
+"간냉식은 서리 제거(성에 없음), 직냉식은 성에 발생",
+"직냉식이 항상 더 고급",
+"간냉식이 야채 신선도에 더 유리",
+"직냉식이 소비전력이 더 적음"
+],
+"ans": 0,
+"exp": "간냉식은 팬으로 냉기를 순환시켜 성에가 생기지 않고 자동으로 제상되며, 직냉식은 벽면이 직접 냉각되어 성에가 발생한다."
+},
+{
+"q": "삼성 냉장고 1등급 모델의 연간 소비전력은 일반적으로 어느 수준인가?",
+"opts": [
+"약 200~400kWh",
+"약 800~1000kWh",
+"약 1200kWh 이상",
+"약 50~100kWh"
+],
+"ans": 0,
+"exp": "삼성 냉장고 에너지 1등급 모델은 연간 약 200~400kWh 수준이며, 이는 월 약 3,000~5,000원의 전기료에 해당한다."
+},
+{
+"q": "삼성 냉장고 'Deodorizing Filter'의 탈취 원리는?",
+"opts": [
+"활성탄 흡착 + UV 살균",
+"오존 발생",
+"향기 물질 주입",
+"냉기 고속 순환"
+],
+"ans": 0,
+"exp": "탈취 필터는 활성탄이 냄새 입자를 흡착하고 UV LED로 세균을 사멸시켜 냉장고 내부 냄새를 제거한다."
+},
+{
+"q": "삼성 냉장고의 '투명 쇼케이스 패널'이 주로 제공하는 이점은?",
+"opts": [
+"문을 열지 않고 내용물 확인",
+"냉기 밀봉 강화",
+"디스플레이 정보 표시",
+"인테리어 조명 역할"
+],
+"ans": 0,
+"exp": "투명 패널은 문을 열지 않고도 내부를 볼 수 있어 냉기 손실을 줄이고 편의성을 높인다."
+},
+{
+"q": "삼성 비스포크 냉장고의 '모듈형 설계'란?",
+"opts": [
+"상·하 독립 유닛을 조합해 구성 가능",
+"냉각 모듈만 교체 가능",
+"앱으로 냉각 구조 변경",
+"공장 단위 주문 제작"
+],
+"ans": 0,
+"exp": "비스포크 모듈형 설계는 상단 냉장·하단 냉장, 상단 냉장·하단 냉동 등 유닛을 자유롭게 조합할 수 있다."
+},
+{
+"q": "삼성 냉장고 'Twin Cooling Plus'에서 냉장과 냉동이 분리되는 이유는?",
+"opts": [
+"냄새 교차 방지 및 최적 습도 유지",
+"비용 절감",
+"냉각 속도 향상",
+"컴프레서 수명 연장"
+],
+"ans": 0,
+"exp": "Twin Cooling Plus는 냉장·냉동 독립 냉각으로 냄새가 서로 섞이지 않고 각 공간에 최적 습도를 유지한다."
+},
+{
+"q": "삼성 냉장고 '급속 냉동(Super Freeze)'의 주요 활용 사례는?",
+"opts": [
+"갓 구입한 식품 빠르게 냉동",
+"기존 냉동 식품 해동",
+"야채 신선도 유지",
+"아이스크림 부드럽게 유지"
+],
+"ans": 0,
+"exp": "Super Freeze는 온도를 급격히 낮춰 식품 세포 손상을 최소화하면서 빠르게 냉동시킨다."
+}
+],
+"에어컨": [
+{
+"q": "삼성 Bespoke AI 무풍콤보 갤러리 프로의 무풍홀 개수로 올바른 것은?",
+"opts": [
+"약 10만 개",
+"약 20만 개",
+"약 32만 개",
+"약 50만 개"
+],
+"ans": 2,
+"exp": "약 32만 개의 무풍홀에서 0.15m/s 이하의 직바람 없는 무풍 냉방을 제공하며, 무풍 모드 소음은 최소 28dB 이하입니다."
+},
+{
+"q": "삼성 AI·모션 바람의 구성으로 올바른 것은?",
+"opts": [
+"AI 직접·AI 간접 + MAX·순환·원거리·무풍",
+"AI 쾌적·AI 절전 + MAX·순환·강풍·무풍",
+"AI 직접·AI 간접·AI 순환 + MAX·원거리·무풍",
+"AI 직접·AI 간접 + MAX·순환·강풍·선풍"
+],
+"ans": 0,
+"exp": "AI·모션 바람은 AI 바람 2종(AI직접·AI간접)과 모션 바람 4종(MAX·순환·원거리·무풍)으로 총 6가지입니다. AI직접/AI간접은 레이더 센서 기반 AI 기술이 적용된 바람입니다."
+},
+{
+"q": "삼성 에어컨의 모션 레이더 센서가 감지하는 항목이 아닌 것은?",
+"opts": [
+"사용자 위치",
+"사용자 부재 여부",
+"사용자 활동량",
+"실내 CO₂ 농도"
+],
+"ans": 3,
+"exp": "모션 레이더는 사용자의 위치·부재·활동량을 정밀하게 감지해 AI 직접/간접 바람을 제어합니다. CO₂ 농도 감지는 모션 레이더의 기능이 아닙니다."
+},
+{
+"q": "삼성 모션 디스플레이의 Always on Display(AoD) 기능으로 확인할 수 없는 정보는?",
+"opts": [
+"실내 온도·습도·청정도",
+"날씨 및 외부 온도",
+"에어컨 가동 시간 및 전기 사용량",
+"에어컨이 꺼진 상태에서도 실내 공기 실시간 모니터링"
+],
+"ans": 2,
+"exp": "AoD는 에어컨이 꺼진 상태에서도 실내 온도·습도·청정도, 날씨·외부 온도를 모니터링합니다. 가동 시간 및 전기 사용량 표시는 SmartThings 앱을 통해 별도로 확인할 수 있습니다."
+},
+{
+"q": "삼성 쾌적제습의 최대 절전 효과로 올바른 것은?",
+"opts": [
+"최대 10%",
+"최대 20%",
+"최대 30%",
+"최대 50%"
+],
+"ans": 2,
+"exp": "쾌적제습은 열교환기의 최소 필요 면적만 활용해 불필요한 온도 강하 없이 습도를 조절합니다. 기존 제습 대비 최대 30% 절전이 가능하며, 춥지 않게 습도를 관리하는 것이 LG 대비 핵심 차별점입니다."
+},
+{
+"q": "삼성 이지케어 셀프(Easy Care Self)에 해당하지 않는 기능은?",
+"opts": [
+"이지오픈패널 – 원터치 메탈 패널 분리",
+"이지오픈도어 – 팬까지 열어 직접 관리",
+"워셔블 필터 – 흐르는 물에 세척 가능",
+"워시클린 – 열교환기 동결 후 자동 세척"
+],
+"ans": 3,
+"exp": "워시클린은 이지케어 '스마트'의 기능입니다. 이지케어 셀프는 이지오픈패널·이지오픈도어·워셔블 필터로, 사용자가 직접 손으로 관리하는 기능들입니다."
+},
+{
+"q": "삼성 UV LED 살균 기능의 적용 범위와 살균율로 올바른 것은?",
+"opts": [
+"바람팬 2개에 99% 살균",
+"바람팬 2개에 99.9% 살균",
+"4개 팬(바람팬+서큘레이터 팬)에 99% 살균",
+"4개 팬(바람팬+서큘레이터 팬)에 99.9% 살균"
+],
+"ans": 3,
+"exp": "UV LED는 상·하부 바람팬과 서큘레이터 팬을 포함한 총 4개의 팬에 조사되어 99.9% 살균합니다(Intertek 검증). 손이 닿지 않는 서큘레이터 팬까지 살균하는 점이 경쟁사 대비 강점입니다."
+},
+{
+"q": "삼성 AI 에너지 절약 모드의 단계별 소비 전력 절약 효과로 올바른 것은?",
+"opts": [
+"1단계 최대 5%, 2단계 최대 15%",
+"1단계 최대 10%, 2단계 최대 30%",
+"1단계 최대 15%, 2단계 최대 35%",
+"1단계 최대 20%, 2단계 최대 40%"
+],
+"ans": 1,
+"exp": "SmartThings 앱에서 AI 절약 모드 실행 후 1단계 최대 10%, 2단계 최대 30%까지 소비 전력을 절약할 수 있습니다."
+},
+{
+"q": "삼성 워시클린의 열교환기 유해세균 제균 효과로 올바른 것은?",
+"opts": [
+"70% 제균",
+"80% 제균",
+"90% 제균",
+"99% 제균"
+],
+"ans": 2,
+"exp": "워시클린은 열교환기를 동결(-20℃ 아이스캡슐 생성)한 후 해동·세정·자동건조하는 과정으로 유해세균을 90% 제균합니다(Intertek 검증)."
+},
+{
+"q": "삼성 vs LG 에어컨 자가 관리 기능 비교 설명으로 올바르지 않은 것은?",
+"opts": [
+"삼성은 이지오픈패널로 원터치 메탈 패널을 분리해 내부를 직접 관리 가능",
+"삼성 워셔블 필터는 반영구적으로 물 세척 가능해 필터 교체 비용 없음",
+"LG 휘센 타워I도 삼성과 동일하게 열교환기 자동 워시클린 기능 탑재",
+"삼성은 AI 진단 기능으로 냉매량·모터·센서 상태를 전문가 없이 자가 점검 가능"
+],
+"ans": 2,
+"exp": "LG 휘센 타워I에는 삼성의 워시클린(열교환기 동결 후 자동 세척)과 동일한 기능이 없습니다. 삼성의 이지케어 스마트(워시클린·UV LED 살균·AI 진단)는 자가 관리 측면에서 차별화된 경쟁력입니다."
+},
+{
+"q": "삼성 에어컨의 무풍 냉방 모드에서 바람 속도 기준은?",
+"opts": [
+"0.5m/s 이하",
+"0.3m/s 이하",
+"0.2m/s 이하",
+"0.15m/s 이하"
+],
+"ans": 3,
+"exp": "삼성 무풍 냉방은 0.15m/s 이하의 바람 속도를 기준으로 하며, 이는 미국 냉공조학회(ASHRAE) 기준으로 무풍에 해당합니다. 직접적인 냉기 바람 없이 시원함을 느낄 수 있습니다."
+},
+{
+"q": "삼성 에어컨의 PM1.0 필터의 특징으로 올바른 것은?",
+"opts": [
+"PM2.5까지만 여과 가능",
+"PM1.0 이하의 초미세먼지까지 99.97% 이상 여과",
+"PM0.1까지 여과하는 헤파 필터와 동일",
+"화학 물질만 흡착하는 활성탄 필터"
+],
+"ans": 1,
+"exp": "삼성 에어컨의 PM1.0 필터는 지름 1마이크로미터 이하의 초미세먼지를 99.97% 이상 포집합니다. PM2.5보다 더 미세한 입자까지 차단해 실내 공기질 개선에 효과적입니다."
+},
+{
+"q": "삼성 AI 에어컨의 '이지케어 스마트'에 포함된 기능으로 올바른 것은?",
+"opts": [
+"워시클린 + UV LED 살균 + AI 진단",
+"워셔블 필터 + 이지오픈패널 + 이지오픈도어",
+"워시클린 + 워셔블 필터 + 이지오픈패널",
+"UV LED 살균 + 워셔블 필터 + AI 진단"
+],
+"ans": 0,
+"exp": "이지케어 스마트는 ① 워시클린(열교환기 자동 세척) ② UV LED 살균(4개 팬 99.9%) ③ AI 진단(전문가 없이 스스로 점검)의 3가지 기능으로 구성됩니다."
+},
+{
+"q": "삼성 에어컨의 에너지 소비효율 등급에 대한 설명으로 올바른 것은?",
+"opts": [
+"삼성 AI 무풍콤보는 모든 모델이 에너지 3등급",
+"무풍콤보 갤러리 프로 전 모델이 에너지 1·2등급",
+"삼성 에어컨은 에너지 등급이 적용되지 않음",
+"에너지 1등급은 2등급 대비 약 5% 에너지 절약"
+],
+"ans": 1,
+"exp": "삼성 무풍콤보 갤러리 프로 전 모델은 에너지 소비효율 1등급 또는 2등급을 획득했습니다. 에너지 1등급은 기준 대비 약 20~30% 이상 효율적입니다."
+},
+{
+"q": "삼성 무풍 에어컨의 서큘레이터 팬의 역할로 올바른 것은?",
+"opts": [
+"직바람을 강하게 내보내 빠른 냉각",
+"냉기를 천장으로 분사해 공기를 순환시켜 균일한 온도 분포 유지",
+"필터를 자동으로 청소하는 팬",
+"사운드를 위한 스피커 역할"
+],
+"ans": 1,
+"exp": "서큘레이터 팬은 냉기를 천장 방향으로 분사해 방 전체의 공기를 순환시킵니다. 직바람 없이 방 구석구석까지 시원한 공기가 고르게 퍼져 쾌적한 냉방 환경을 만들어줍니다."
+},
+{
+"q": "삼성 에어컨의 AI 스마트 진단 기능으로 점검할 수 없는 것은?",
+"opts": [
+"냉매 부족 여부",
+"실외기 팬 모터 이상",
+"벽 내부 배관 누수",
+"컴프레서 이상"
+],
+"ans": 2,
+"exp": "AI 스마트 진단은 냉매 부족, 팬 모터 이상, 컴프레서 이상, 센서 오류 등을 자가 점검할 수 있습니다. 단, 벽 내부 배관 누수처럼 물리적으로 접근할 수 없는 부분은 AI 진단으로 확인이 불가합니다."
+},
+{
+"q": "삼성 Bespoke AI 에어컨의 갤러리 디자인 특징으로 올바른 것은?",
+"opts": [
+"박스형 기존 에어컨 디자인에 다양한 색상만 추가",
+"벽면에 완전히 일체화되는 갤러리 디자인으로 예술 작품처럼 보이는 슬림 패널",
+"스마트폰 앱에서만 제어 가능한 IoT 에어컨",
+"창문형 에어컨 전용 디자인"
+],
+"ans": 1,
+"exp": "Bespoke AI 무풍콤보 갤러리는 마치 그림 액자처럼 벽면과 자연스럽게 어울리는 갤러리 디자인으로 제작됩니다. 슬림한 패널이 인테리어를 해치지 않아 디자인을 중시하는 고객에게 어필할 수 있습니다."
+},
+{
+"q": "삼성 에어컨의 스마트싱스 에너지 모니터링 기능으로 확인할 수 있는 정보는?",
+"opts": [
+"전력 소비량 실시간 모니터링 및 월별 전기요금 추정",
+"에어컨 필터 교체 시기 자동 주문",
+"실외기 냉매 자동 충전 기능",
+"에어컨 가동 시 인근 전력망 상태 확인"
+],
+"ans": 0,
+"exp": "SmartThings 앱의 에너지 모니터링으로 에어컨 전력 소비량을 실시간으로 확인하고, 누적 사용량 기반으로 예상 전기요금을 추정할 수 있습니다. AI 절약 모드 적용 전후 효과 비교도 가능합니다."
+},
+{
+"q": "삼성 에어컨의 냉방 면적과 실외기 관계에 대한 설명으로 올바른 것은?",
+"opts": [
+"1개의 실내기에는 반드시 1개의 실외기가 필요",
+"삼성 멀티 에어컨은 1개의 실외기에 최대 9대의 실내기를 연결 가능",
+"실외기 없이 실내기만으로 냉방 가능",
+"실외기는 실내기와 같은 층에만 설치 가능"
+],
+"ans": 1,
+"exp": "삼성 멀티(Multi-Split) 에어컨 시스템은 1개의 실외기에 최대 9대의 실내기를 연결할 수 있습니다. 실외기 설치 공간이 제한된 환경에서도 여러 방을 효율적으로 냉방할 수 있습니다."
+},
+{
+"q": "삼성 에어컨이 AI 바람 제어 시 사용하는 레이더 센서의 특징으로 옳은 것은?",
+"opts": [
+"카메라로 사람의 얼굴을 인식해 방향을 조절",
+"전파를 이용해 벽 너머도 사람의 움직임을 감지",
+"열화상 카메라로 체온을 측정",
+"초음파로 방의 부피를 측정"
+],
+"ans": 1,
+"exp": "삼성 에어컨의 모션 레이더 센서는 전파(레이더파)를 이용해 사람의 위치와 움직임을 감지합니다. 시야 각도가 넓어 소파 뒤나 움직임이 적어도 사람의 존재를 인식할 수 있습니다."
+},
+{
+"q": "삼성 에어컨의 히트펌프 난방 방식의 특징으로 올바른 것은?",
+"opts": [
+"전기 히터로 직접 공기를 가열하는 방식",
+"외부 공기에서 열을 흡수해 실내로 전달하는 방식으로 소비 전력보다 많은 열에너지 공급",
+"가스를 연소시켜 난방하는 방식",
+"태양광 에너지를 직접 이용하는 방식"
+],
+"ans": 1,
+"exp": "히트펌프 난방은 외부 냉기에서 열에너지를 흡수해 실내로 전달합니다. 소비 전력 대비 최대 3~4배의 열에너지를 공급할 수 있어 전기 히터 난방보다 훨씬 효율적입니다."
+},
+{
+"q": "삼성 Bespoke AI 에어컨의 '갤러리 프로' 라인업과 '갤러리' 라인업의 차이점으로 올바른 것은?",
+"opts": [
+"갤러리 프로는 무풍 기능 없음",
+"갤러리 프로는 서큘레이터 팬, 모션 디스플레이, UV LED 살균이 추가",
+"두 라인업은 기능 차이 없이 디자인만 다름",
+"갤러리는 스탠드형, 갤러리 프로는 벽걸이형"
+],
+"ans": 1,
+"exp": "갤러리 프로는 갤러리 대비 서큘레이터 팬(더 강력한 공기 순환), 모션 디스플레이(AoD 지원), UV LED 살균(4개 팬 전체)이 추가된 최상위 라인업입니다."
+},
+{
+"q": "삼성 무풍에어컨 '무풍 모드'에서 공기가 나오는 방식은?",
+"opts": [
+"수만 개의 마이크로 홀을 통해 부드럽게 확산",
+"일반 토출구를 매우 느리게 작동",
+"냉기가 바닥에서 올라옴",
+"외부 공기를 직접 유입"
+],
+"ans": 0,
+"exp": "무풍 모드는 패널의 수만 개 마이크로 홀을 통해 냉기를 부드럽게 확산시켜 직풍 없이 쾌적한 냉방을 구현한다."
+},
+{
+"q": "삼성 에어컨 'AI 에너지 모드'가 절전하는 방법은?",
+"opts": [
+"사용 패턴 학습 후 운전 강도 최적화",
+"항상 최저 출력으로 운전",
+"실내 인원 감지 시 자동 꺼짐",
+"지정된 온도 도달 즉시 정지"
+],
+"ans": 0,
+"exp": "AI 에너지 모드는 가족의 생활 패턴을 AI가 학습해 필요한 시간과 강도로만 운전해 에너지를 절약한다."
+},
+{
+"q": "삼성 에어컨 '청정' 기능에 포함되지 않는 것은?",
+"opts": [
+"이산화탄소 농도 조절",
+"e-HEPA 필터",
+"PM1.0 초미세먼지 제거",
+"바이러스 닥터"
+],
+"ans": 0,
+"exp": "삼성 에어컨 청정 기능에는 e-HEPA, PM1.0 제거, 바이러스 닥터 등이 포함되며 CO2 조절은 환기 시스템 기능이다."
+},
+{
+"q": "삼성 에어컨 'AI 모션 센서'의 주요 역할은?",
+"opts": [
+"사람 위치 감지 후 냉기 방향 자동 조절",
+"실내 먼지 감지",
+"리모컨 없이 손짓으로 제어",
+"문 개폐 감지"
+],
+"ans": 0,
+"exp": "AI 모션 센서는 실내 사람 위치를 파악해 냉기가 직접 닿지 않도록 또는 집중 냉방하도록 바람 방향을 자동 조절한다."
+},
+{
+"q": "삼성 에어컨 설치 시 '표준 배관 거리'는 일반적으로 얼마인가?",
+"opts": [
+"4m",
+"10m",
+"15m",
+"20m"
+],
+"ans": 0,
+"exp": "에어컨 표준 설치 배관 거리는 4m가 기본이며, 추가 배관은 별도 비용이 발생한다."
+},
+{
+"q": "삼성 에어컨 'Wind-Free Cooling'이 바람을 직접 쏘지 않는 이유는?",
+"opts": [
+"체감 불쾌감과 감기 예방을 위해",
+"냉방 성능이 더 좋아서",
+"필터 수명 연장을 위해",
+"소음을 줄이기 위해"
+],
+"ans": 0,
+"exp": "직풍은 체감 불쾌감과 면역 저하를 유발할 수 있어, 무풍은 부드러운 확산으로 쾌적한 환경을 만든다."
+},
+{
+"q": "삼성 에어컨 인버터 방식의 특징이 아닌 것은?",
+"opts": [
+"냉각 능력이 항상 일정",
+"압축기 회전수 가변",
+"절전 효과",
+"소음 감소"
+],
+"ans": 0,
+"exp": "인버터는 필요에 따라 압축기 회전수를 조절하기 때문에 냉각 능력은 가변적이며 이로 인해 절전·소음 감소가 가능하다."
+},
+{
+"q": "삼성 에어컨 '무빙 아이(AI 모션)' 센서가 감지하지 못하는 것은?",
+"opts": [
+"정지한 상태의 수면 중 사람",
+"움직이는 사람",
+"방 안 인원 수",
+"주로 활동하는 위치"
+],
+"ans": 0,
+"exp": "모션 기반 센서는 움직임으로 사람을 감지하므로, 수면처럼 장시간 정지 상태에서는 감지가 어려울 수 있다."
+},
+{
+"q": "삼성 에어컨 'Triple Protection Plus'가 보호하는 대상은?",
+"opts": [
+"실외기 부품 내구성",
+"실내기 필터",
+"리모컨 배터리",
+"배관 단열재"
+],
+"ans": 0,
+"exp": "Triple Protection Plus는 실외기 컴프레서와 핵심 부품을 부식·충격·먼지로부터 보호하는 기술이다."
+},
+{
+"q": "삼성 에어컨 에너지 소비효율 등급 1등급 기준으로 올바른 것은?",
+"opts": [
+"냉방 효율(EER) 일정 수준 이상",
+"단순히 최저 전력 소비",
+"소음 기준 35dB 이하",
+"인버터 탑재 여부"
+],
+"ans": 0,
+"exp": "에너지 소비효율 1등급은 에너지소비효율(EER 또는 COP) 지수가 정부 고시 기준 이상인 제품에 부여된다."
+},
+{
+"q": "삼성 에어컨의 'Auto Clean' 기능이 완료되는 데 걸리는 시간은?",
+"opts": [
+"약 30분",
+"약 5분",
+"약 2시간",
+"약 10초"
+],
+"ans": 0,
+"exp": "Auto Clean은 에어컨 내부를 고온 건조시켜 곰팡이를 예방하며 약 30분 정도 소요된다."
+},
+{
+"q": "삼성 에어컨 필터 자동 청소 기능의 원리는?",
+"opts": [
+"브러시가 필터를 자동으로 털어 먼지통에 수집",
+"물로 자동 세척",
+"UV로 먼지 분해",
+"압축 공기로 불어냄"
+],
+"ans": 0,
+"exp": "자동 청소 기능은 브러시가 필터 표면을 자동으로 털어 내장 먼지통에 모아주는 방식이다."
+},
+{
+"q": "삼성 에어컨 '바이러스 닥터' 기능의 살균 원리는?",
+"opts": [
+"플라즈마 방전으로 바이러스·세균 분해",
+"UV-C 램프 조사",
+"오존 발생",
+"고온 열풍"
+],
+"ans": 0,
+"exp": "바이러스 닥터는 플라즈마 방전 기술로 공기 중 바이러스, 세균, 알레르겐을 분해·제거한다."
+},
+{
+"q": "삼성 시스템에어컨과 일반 벽걸이 에어컨의 주요 차이점은?",
+"opts": [
+"시스템에어컨은 실내기 매립으로 공간 효율 극대화",
+"시스템에어컨이 항상 냉방 성능이 더 높음",
+"벽걸이가 더 조용함",
+"시스템에어컨은 설치 간단"
+],
+"ans": 0,
+"exp": "시스템에어컨은 천장 매립형으로 공간 효율과 인테리어가 유리하며, 대공간 또는 다실 제어에 적합하다."
+},
+{
+"q": "삼성 에어컨 'SmartThings' 연동으로 가능한 것은?",
+"opts": [
+"스마트폰으로 외부에서 원격 제어",
+"다른 브랜드 에어컨과 연동",
+"냉방 성능 자동 업그레이드",
+"냉매 자동 보충"
+],
+"ans": 0,
+"exp": "SmartThings 연동으로 외출 시 스마트폰 앱으로 에어컨 전원·온도·모드를 원격 제어할 수 있다."
+},
+{
+"q": "삼성 에어컨 '무풍갤러리'의 디자인 특징은?",
+"opts": [
+"액자처럼 벽에 걸리는 슬림한 디자인",
+"천장 매립형",
+"원통형 타워 디자인",
+"바닥 스탠드형"
+],
+"ans": 0,
+"exp": "무풍갤러리는 그림 액자 스타일의 슬림한 벽걸이 디자인으로 인테리어와 조화되는 것이 특징이다."
+},
+{
+"q": "삼성 에어컨의 '제습 모드' 작동 방식은?",
+"opts": [
+"냉방 후 재가열하여 온도 유지하며 습도만 제거",
+"냉방 기능 완전 중단 후 팬만 작동",
+"히터를 켜서 습기 증발",
+"외부 공기 직접 배출"
+],
+"ans": 0,
+"exp": "제습 모드는 냉방으로 공기 중 수분을 응결·제거한 뒤 약하게 가열해 실내 온도 변화를 최소화하며 제습한다."
+},
+{
+"q": "삼성 에어컨 '스텝리스 베인'의 기능은?",
+"opts": [
+"풍향을 매우 세밀하게 단계 없이 조절",
+"자동 청소 시 베인 잠금",
+"고속 회전으로 냉기 확산",
+"결로 방지 코팅"
+],
+"ans": 0,
+"exp": "스텝리스 베인은 단계적 움직임 없이 연속적으로 풍향을 조절해 원하는 방향으로 정밀하게 냉기를 보낼 수 있다."
+},
+{
+"q": "삼성 에어컨 R32 냉매의 특징은?",
+"opts": [
+"기존 R410A 대비 지구온난화지수(GWP)가 낮음",
+"독성이 강함",
+"R22 대체제로 오존층 파괴",
+"효율이 R410A보다 낮음"
+],
+"ans": 0,
+"exp": "R32는 GWP가 675로 R410A(2088)보다 약 70% 낮은 친환경 냉매이며 효율도 우수하다."
+},
+{
+"q": "삼성 에어컨 '제자리 냉방'과 '이동 냉방' 중 무풍 모드가 적합한 상황은?",
+"opts": [
+"온 가족이 거실에 있는 경우",
+"가족 중 한 명만 이동 중인 경우",
+"취침 전 빠르게 냉방해야 할 때",
+"빠른 제습이 필요한 경우"
+],
+"ans": 0,
+"exp": "무풍 모드는 직풍 없이 넓게 확산하므로 여러 명이 거실에 함께 있는 경우 쾌적한 환경에 적합하다."
+},
+{
+"q": "삼성 에어컨 'e-HEPA 필터'로 제거 가능한 최소 입자 크기는?",
+"opts": [
+"PM1.0 (1μm 이하)",
+"PM10 (10μm)",
+"PM2.5 (2.5μm)",
+"PM0.1 (0.1μm)"
+],
+"ans": 0,
+"exp": "e-HEPA 필터는 PM1.0, 즉 1μm 이하의 초미세 입자까지 99% 이상 제거할 수 있다."
+},
+{
+"q": "삼성 에어컨 실외기의 '방진 패드' 설치 목적은?",
+"opts": [
+"진동 및 소음 감소",
+"냉매 누출 방지",
+"실외기 부식 방지",
+"전기 안전"
+],
+"ans": 0,
+"exp": "방진 패드는 실외기 작동 시 발생하는 진동이 벽과 바닥에 전달되는 것을 줄여 소음을 감소시킨다."
+},
+{
+"q": "삼성 에어컨 'AI 쾌적 추천'이 자동 설정하는 것이 아닌 것은?",
+"opts": [
+"가스(냉매) 보충 시기",
+"냉방 온도",
+"운전 시간",
+"풍향"
+],
+"ans": 0,
+"exp": "AI 쾌적 추천은 온도, 풍향, 운전 시간을 자동 최적화하지만 냉매는 기계적 소모 부품으로 별도 점검이 필요하다."
+},
+{
+"q": "삼성 에어컨 '냉난방 겸용(히트펌프)' 방식의 난방 원리는?",
+"opts": [
+"실외 공기 열을 흡수해 실내 방출",
+"전기 히터로 공기 직접 가열",
+"온수 파이프를 공기와 열교환",
+"가스 버너 연소"
+],
+"ans": 0,
+"exp": "히트펌프는 냉방의 역방향으로 실외 열에너지를 흡수해 실내로 방출하므로 전기히터보다 훨씬 효율적이다."
+},
+{
+"q": "삼성 에어컨의 소비전력 표기 'kW'와 냉방 능력 표기 'kW(BTU)'의 차이는?",
+"opts": [
+"소비전력은 전기 투입량, 냉방 능력은 열 제거량으로 냉방 능력이 더 큼",
+"동일한 값",
+"소비전력이 항상 더 큼",
+"단위 환산 차이만 있음"
+],
+"ans": 0,
+"exp": "에너지 효율(COP)이 1 이상이므로 냉방 능력(kW)은 소비전력(kW)보다 일반적으로 2~5배 크다."
+},
+{
+"q": "삼성 에어컨 '베란다형 실외기'와 '옥상형 실외기'의 설치 기준으로 틀린 것은?",
+"opts": [
+"베란다형은 반드시 실내에 설치해야 함",
+"옥상형이 방열 효율이 더 좋음",
+"베란다형은 통풍 확보 필수",
+"옥상형은 더 큰 용량에 적합"
+],
+"ans": 0,
+"exp": "베란다형 실외기는 베란다 같은 반외부 공간에 설치되며, 실내에 설치할 수 없다."
+},
+{
+"q": "삼성 에어컨 'Clean Care' 패키지에 포함된 것이 아닌 것은?",
+"opts": [
+"냉매 자동 보충 서비스",
+"필터 자동 청소",
+"바이러스 닥터",
+"e-HEPA 필터"
+],
+"ans": 0,
+"exp": "냉매는 자동 보충이 불가능하며 서비스 기사 방문이 필요하다. Clean Care는 필터와 살균 기능 중심의 패키지다."
+}
+],
+"세탁기": [
+{
+"q": "삼성 Bespoke AI 콤보(WD90H25AHS)의 세탁·건조 용량으로 올바른 것은?",
+"opts": [
+"세탁 20kg, 건조 16kg",
+"세탁 25kg, 건조 20kg",
+"세탁 22kg, 건조 18kg",
+"세탁 25kg, 건조 16kg"
+],
+"ans": 1,
+"exp": "삼성 AI 콤보 WD90H25AHS는 세탁 25kg·건조 20kg으로, 2026년 3월 기준 국내 최대 용량 세탁건조기입니다."
+},
+{
+"q": "삼성 AI 콤보의 쾌속 코스(세탁+건조 완료)에 소요되는 시간은?",
+"opts": [
+"55분",
+"69분",
+"79분",
+"90분"
+],
+"ans": 1,
+"exp": "삼성 AI 콤보는 쾌속 코스 기준 세탁부터 건조까지 단 69분에 완료됩니다(Intertek 검증). 79분은 KATRI 검증 기준이며, 69분은 업계 최고 수준의 속도입니다."
+},
+{
+"q": "삼성 AI 맞춤+ 코스에서 감지하는 옷감 종류가 아닌 것은?",
+"opts": [
+"타월",
+"아웃도어",
+"실크",
+"데님"
+],
+"ans": 2,
+"exp": "AI 맞춤+는 일반(면)·타월·섬세·데님·아웃도어 5종의 옷감을 자동 감지합니다. '실크'는 감지 대상에 포함되지 않습니다."
+},
+{
+"q": "삼성 AI 콤보의 오토 오픈 도어+에 대한 설명으로 알맞지 않은 것은?",
+"opts": [
+"코스 종료 후 자동으로 도어가 열린다",
+"세탁 후 송풍으로 내부 습기를 빠르게 제거한다",
+"세탁 후 송풍은 세탁+건조 완료 후에도 동작한다",
+"'바로 열기·5분 후 열기·사용 안함' 중 선택 설정 가능"
+],
+"ans": 2,
+"exp": "세탁 후 송풍 기능은 '세탁 단독 행정 종료 후'에만 동작합니다. 세탁+건조가 함께 진행된 경우에는 동작하지 않습니다."
+},
+{
+"q": "삼성 AI 콤보의 세제자동투입 기능에 대한 설명으로 올바른 것은?",
+"opts": [
+"세탁물 무게와 관계없이 항상 동일한 양의 세제 투입",
+"비농축 액체 세제 완충 시 주 3회 사용 기준 약 7주간 사용 가능",
+"세제와 유연제만 투입 가능하며 별도 선택세제함은 없음",
+"세제함 용량은 약 3주치"
+],
+"ans": 1,
+"exp": "세제자동투입은 세탁물의 무게와 오염도에 맞춰 적정량을 자동 투입합니다. 대용량 세제함 완충 시 주 3회 기준 약 7주(총 22회) 사용 가능합니다."
+},
+{
+"q": "삼성 AI 콤보의 히트펌프 건조 시 드럼 내부 최고 온도로 올바른 것은?",
+"opts": [
+"70℃ 이하",
+"65℃ 이하",
+"60℃ 이하",
+"55℃ 이하"
+],
+"ans": 2,
+"exp": "삼성 AI 콤보는 히트펌프 방식으로 드럼 내부 최고 온도가 60℃를 넘지 않습니다(실측 58℃). 70℃ 대비 60℃에서는 수축률이 2배 감소합니다(KATRI 시험)."
+},
+{
+"q": "삼성 AI 콤보의 AI 에너지 절약 기능에 대한 설명으로 올바른 것은?",
+"opts": [
+"에너지 소비효율 2등급",
+"AI 절약 모드로 에너지 사용량 최대 30% 절감 가능",
+"AI 절약 모드로 세탁 시 에너지 사용량 최대 60% 절감 가능",
+"에너지 소비효율 1등급이나 절약 모드 미지원"
+],
+"ans": 2,
+"exp": "삼성 AI 콤보는 에너지 소비효율 1등급(24.9Wh/kg)으로, 여기에 AI 절약 모드를 추가 활용하면 세탁 시 에너지를 최대 60%까지 절감할 수 있습니다."
+},
+{
+"q": "삼성 AI 콤보의 직수 파워 오토 클린에 대한 설명으로 알맞지 않은 것은?",
+"opts": [
+"열교환기에 쌓인 먼지를 강력한 직수로 자동 세척",
+"건조 단독 시에는 건조 시작 전에 진행",
+"세탁+건조 시에는 세탁 행정 후에 진행",
+"세탁 단독 행정 시에도 자동으로 진행"
+],
+"ans": 3,
+"exp": "직수 파워 오토 클린은 세탁 단독 행정 시에는 진행되지 않습니다. 세탁+건조 시에는 세탁 후, 건조 단독 시에는 건조 시작 전에 매번 자동 진행됩니다."
+},
+{
+"q": "삼성 AI 콤보의 에어워시 기능에 포함되지 않는 것은?",
+"opts": [
+"에어살균/탈취",
+"패딩케어",
+"이불/먼지털기",
+"스팀살균"
+],
+"ans": 3,
+"exp": "에어워시 기능에는 에어살균/탈취·패딩케어·이불/먼지털기 코스가 포함됩니다. 스팀살균은 에어워시가 아닌 별도 기능입니다."
+},
+{
+"q": "삼성 AI 콤보의 스마트 스크린 크기와 음성 인식 기능으로 올바른 것은?",
+"opts": [
+"127mm LCD, AI 스피커 연동",
+"152.4mm LCD, 구글 어시스턴트",
+"177.8mm LCD, 빅스비",
+"203.2mm LCD, 빅스비"
+],
+"ans": 2,
+"exp": "삼성 AI 콤보는 177.8mm(약 7인치) 대형 LCD 스마트 스크린을 탑재하였습니다. 빅스비 음성인식으로 손이 가득 찬 상황에서도 편리하게 조작할 수 있습니다."
+},
+{
+"q": "삼성 Bespoke AI 세탁기(WF세탁 단독)의 Crystal Blue 드럼 특징으로 올바른 것은?",
+"opts": [
+"크리스탈 블루 코팅으로 항균 기능 강화",
+"다이아몬드 패턴의 드럼으로 세탁물 마찰을 최소화하고 물 사용량 절감",
+"드럼 내부를 블루 라이트로 살균하는 기능",
+"드럼이 크리스탈 소재로 제작되어 음이온 방출"
+],
+"ans": 1,
+"exp": "Crystal Blue 드럼은 다이아몬드형 패턴으로 세탁물과의 마찰을 줄이고 물이 드럼 전면에 고르게 퍼지게 하여 세탁 효율을 높이고 세탁물 손상을 최소화합니다."
+},
+{
+"q": "삼성 AI 콤보의 스팀살균 코스에 대한 설명으로 올바른 것은?",
+"opts": [
+"세탁 없이 스팀만으로 99.9% 살균 가능",
+"스팀은 반드시 세탁 행정과 함께만 사용 가능",
+"스팀은 건조 행정에서만 사용",
+"스팀살균은 빈대 제거에 효과 없음"
+],
+"ans": 0,
+"exp": "삼성 AI 콤보의 스팀살균은 세탁 없이 스팀만으로 99.9% 살균이 가능하며, 빈대 제거도 지원합니다. 세탁 시 스팀 추가도 가능합니다."
+},
+{
+"q": "삼성 AI 세탁기의 AI 맞춤+ 기능이 옷감 소재를 감지하는 방법으로 올바른 것은?",
+"opts": [
+"카메라로 옷의 색상을 인식",
+"드럼이 회전하면서 세탁물 무게와 마찰 특성을 AI가 분석",
+"사용자가 앱에서 직접 소재를 입력",
+"세탁물에 부착된 QR 코드를 스캔"
+],
+"ans": 1,
+"exp": "AI 맞춤+는 드럼이 회전하면서 세탁물의 무게, 마찰 특성, 수분 흡수율 등을 AI가 실시간으로 분석해 일반·타월·섬세·데님·아웃도어 중 가장 적합한 세탁 방법을 자동 선택합니다."
+},
+{
+"q": "삼성 AI 세탁기 vs LG 트롬 세탁기 비교에서 삼성의 차별점으로 올바른 것은?",
+"opts": [
+"LG는 스팀살균 기능 없음",
+"삼성은 AI 맞춤+로 5종 옷감 자동 감지, LG 트롬은 DD 모터가 핵심 차별점",
+"두 제품 모두 동일한 용량과 기능",
+"삼성은 히트펌프 건조 미지원"
+],
+"ans": 1,
+"exp": "삼성 AI 세탁기는 AI 맞춤+(5종 옷감 자동 감지), 스팀살균, 에어워시가 핵심 차별점입니다. LG 트롬의 핵심은 DD(Direct Drive) 모터, 트루스팀, 컨빌 건조입니다."
+},
+{
+"q": "삼성 AI 콤보 세탁건조기의 건조 방식으로 올바른 것은?",
+"opts": [
+"가스 히터 + 컴프레서",
+"전기 히터(Heater)",
+"히트펌프(Heat Pump) + 부스터 열교환기",
+"냉풍 건조"
+],
+"ans": 2,
+"exp": "삼성 AI 콤보는 히트펌프 방식에 부스터 열교환기를 추가해 건조 속도와 효율을 모두 높입니다. 전기 히터 방식 대비 에너지 소비가 크게 줄고 옷감 손상도 최소화됩니다."
+},
+{
+"q": "삼성 세탁기의 버블샷(Bubble Shot) 기술 설명으로 올바른 것은?",
+"opts": [
+"세탁물에 강력한 물줄기를 직접 분사하는 기술",
+"세제를 물과 공기로 미세 거품으로 만들어 옷감에 빠르게 침투시키는 기술",
+"초음파로 세균을 제거하는 기술",
+"세탁통에 오존을 주입하는 기술"
+],
+"ans": 1,
+"exp": "버블샷은 세제를 물과 공기로 미세한 거품으로 만들어 찬물에서도 세탁 효율을 높이는 기술입니다. 찬물 세탁에서도 따뜻한 물 세탁에 준하는 세척력을 발휘하고 에너지도 절약됩니다."
+},
+{
+"q": "삼성 AI 콤보의 'Wobble Technology(워블 테크놀로지)' 드럼 기능 설명으로 올바른 것은?",
+"opts": [
+"드럼이 좌우로 흔들려 세탁물을 고르게 분산",
+"드럼 하단의 세제 분사 방향을 조절하는 기술",
+"드럼 속도를 AI가 최적화하는 기술",
+"드럼의 방진·방음 기술"
+],
+"ans": 0,
+"exp": "Wobble Technology는 드럼 내부 돌기 패턴이 세탁물을 360도 모든 방향으로 움직이게 해 세탁물이 엉키지 않고 세제가 고르게 분산됩니다. 세탁물 손상도 줄어듭니다."
+},
+{
+"q": "삼성 세탁기에서 SmartThings를 통해 사용할 수 있는 기능으로 올바른 것은?",
+"opts": [
+"외부에서 세탁 코스를 시작·중지할 수 있음",
+"세탁기 고장 시 자동으로 수리 기사가 예약됨",
+"세탁이 끝나면 자동으로 건조기로 세탁물이 이동",
+"Wi-Fi 없이도 스마트폰으로 제어 가능"
+],
+"ans": 0,
+"exp": "SmartThings 연동으로 외출 중에도 스마트폰으로 세탁 코스 시작·일시정지, 완료 알림 수신, 에너지 사용량 모니터링 등이 가능합니다. 물론 인터넷(Wi-Fi) 연결이 필요합니다."
+},
+{
+"q": "삼성 AI 세탁기의 Self Clean+(셀프 클린 플러스) 기능 설명으로 올바른 것은?",
+"opts": [
+"세탁통을 고온 스팀으로 살균하는 기능",
+"세탁통 내부를 물과 세제 없이 세탁통 클리닝 코스로 자가 세척",
+"드럼 내부를 UV로 살균",
+"세제 자동 투입장치를 세척"
+],
+"ans": 1,
+"exp": "Self Clean+는 세탁통(드럼) 내부에 물을 강하게 분사하고 고속 회전으로 세탁통 벽면의 이물질과 세균을 제거하는 자가 세척 기능입니다. 표준 세탁통 클리너 사용보다 더 효과적입니다."
+},
+{
+"q": "삼성 AI 콤보의 통합 세탁·건조 행정에서 추가 건조가 필요할 때 어떻게 하는가?",
+"opts": [
+"처음부터 다시 세탁 행정을 실행해야 함",
+"스마트폰 앱 또는 도어 버튼으로 '추가 건조'를 선택 가능",
+"추가 건조는 불가하며 별도 단독 건조기 필요",
+"추가 건조를 위해서는 전원을 껐다 켜야 함"
+],
+"ans": 1,
+"exp": "삼성 AI 콤보는 세탁+건조 완료 후 의류가 덜 건조되었다고 판단될 경우 스마트폰 앱 또는 제품 버튼으로 '추가 건조'를 간편하게 선택해 건조만 추가 실행할 수 있습니다."
+},
+{
+"q": "삼성 세탁기의 진동·소음 감지 기술(VRT Plus) 특징으로 올바른 것은?",
+"opts": [
+"세탁물이 한쪽으로 쏠리면 자동으로 다시 분배해 진동·소음 최소화",
+"세탁기를 고정대에 볼트로 고정하는 기술",
+"방음 소재로 드럼 외부를 감싸는 기술",
+"진동이 감지되면 세탁을 자동으로 멈추는 기술"
+],
+"ans": 0,
+"exp": "VRT Plus(Vibration Reduction Technology Plus)는 세탁물이 한쪽으로 편중되면 드럼이 자동으로 세탁물을 재배분해 진동과 소음을 최소화합니다. 층간 소음에 민감한 가정에서 특히 유용합니다."
+},
+{
+"q": "삼성 AI 세탁기 AI 에너지 기능으로 SmartThings 앱에서 설정할 수 있는 에너지 절약 방법은?",
+"opts": [
+"전기요금이 저렴한 시간대(심야)에 자동으로 예약 세탁",
+"세탁 온도를 30℃ 이상으로 고정",
+"스피드 코스로만 세탁해 시간 단축",
+"세제를 자동으로 최소량 투입"
+],
+"ans": 0,
+"exp": "SmartThings 에너지 기능으로 전기요금이 저렴한 심야 시간대를 자동으로 감지해 해당 시간에 세탁이 완료되도록 예약할 수 있습니다. AI 에너지 절감과 연동하면 전기료 절약 효과가 배가됩니다."
+},
+{
+"q": "삼성 세탁기와 건조기를 연결하는 '세탁건조 자동화(WashLink)' 기능의 특징은?",
+"opts": [
+"세탁이 끝나면 건조기가 자동으로 최적 코스를 설정해 건조 시작",
+"세탁기에서 건조기로 세탁물이 자동으로 이동",
+"세탁기와 건조기가 동시에 가동되어 시간 단축",
+"세탁기와 건조기가 완전히 일체형으로 합쳐진 기능"
+],
+"ans": 0,
+"exp": "SmartThings 연동 시, 세탁이 완료되면 건조기가 세탁 정보를 전달받아 해당 세탁물에 최적화된 건조 코스를 자동 설정합니다. 사용자는 건조기 도어를 열고 세탁물을 넣은 후 시작 버튼만 누르면 됩니다."
+},
+{
+"q": "삼성 세탁기 'AI 맞춤 세탁'이 자동으로 설정하는 것은?",
+"opts": [
+"세탁 코스·물 양·세탁 시간",
+"세제 종류 자동 선택",
+"빨래 건조 시간",
+"배수 방향"
+],
+"ans": 0,
+"exp": "AI 맞춤 세탁은 세탁물 무게와 오염도를 감지해 최적의 코스, 물 양, 세탁 시간을 자동으로 설정한다."
+},
+{
+"q": "삼성 버블샷 세탁기에서 버블을 생성하는 원리는?",
+"opts": [
+"세제와 물을 혼합해 공기 주입으로 버블 생성",
+"초음파로 버블 발생",
+"세탁조 회전 시 거품 생성",
+"특수 세제 자동 투입"
+],
+"ans": 0,
+"exp": "버블샷은 세제와 물을 공기와 혼합해 미세 버블을 생성하고 이를 세탁물에 빠르게 침투시켜 세탁 효과를 높인다."
+},
+{
+"q": "삼성 세탁기 'QuickDrive' 기술의 특징은?",
+"opts": [
+"드럼 앞뒤 + 패들 동시 회전으로 세탁 시간 50% 단축",
+"초고속 원심분리",
+"세탁과 건조 동시 진행",
+"냉수로만 세탁"
+],
+"ans": 0,
+"exp": "QuickDrive는 드럼이 앞뒤로 회전하는 동시에 내부 패들이 독립 회전해 세탁 시간을 최대 50% 줄인다."
+},
+{
+"q": "삼성 세탁기 '에코버블(EcoBubble)'의 냉수 세탁 효과는?",
+"opts": [
+"버블로 세제가 냉수에서도 빠르게 침투",
+"냉수 가열 없이 온수 효과",
+"냉수 사용으로 색 바램 방지",
+"냉수 세탁으로 에너지만 절약"
+],
+"ans": 0,
+"exp": "에코버블은 미세 버블로 세제가 찬물에서도 옷감 깊숙이 빠르게 침투해 온수와 유사한 세탁 효과를 낸다."
+},
+{
+"q": "삼성 세탁기 '오토 디스펜서'의 기능은?",
+"opts": [
+"세제·섬유유연제 자동 적정량 투입",
+"세탁 후 세제통 자동 세척",
+"세제 잔량 자동 주문",
+"세제 종류 자동 인식"
+],
+"ans": 0,
+"exp": "오토 디스펜서는 세탁물 양에 따라 세제와 섬유유연제를 정확한 양만큼 자동으로 투입한다."
+},
+{
+"q": "삼성 드럼세탁기 'AddWash'의 기능은?",
+"opts": [
+"세탁 도중 추가 세탁물 투입 가능",
+"세탁 중 세제 추가 투입",
+"문을 잠그지 않고 세탁",
+"실시간 세탁 현황 확인"
+],
+"ans": 0,
+"exp": "AddWash는 세탁 도중 소형 도어를 통해 잊은 빨래나 추가 세탁물을 넣을 수 있는 기능이다."
+},
+{
+"q": "삼성 세탁기 '버블소크' 코스가 적합한 세탁물은?",
+"opts": [
+"심하게 오염된 의류",
+"울·실크 섬세 의류",
+"운동화·신발",
+"세탁 시간을 급히 줄여야 할 때"
+],
+"ans": 0,
+"exp": "버블소크는 오염이 심한 의류를 버블에 충분히 담가 오염이 불어나도록 한 후 세탁해 제거율을 높인다."
+},
+{
+"q": "삼성 세탁기 'Digital Inverter Motor' 장점이 아닌 것은?",
+"opts": [
+"세탁 성능이 브러시 모터보다 항상 우수",
+"소음 감소",
+"진동 감소",
+"에너지 효율 향상"
+],
+"ans": 0,
+"exp": "인버터 모터는 소음·진동·에너지 효율 면에서 우수하지만, 세탁 성능 자체는 세탁 프로그램과 버블 등 다른 요소에도 크게 의존한다."
+},
+{
+"q": "삼성 세탁기 'Hygiene Steam' 기능의 효과는?",
+"opts": [
+"고온 스팀으로 세균·알레르겐 제거",
+"냉각 스팀으로 주름 제거",
+"스팀으로 세제 용해",
+"저온 스팀으로 섬세 의류 세탁"
+],
+"ans": 0,
+"exp": "하이진 스팀은 세탁 중 또는 후에 고온 스팀을 투입해 세균, 바이러스, 집먼지진드기 등을 효과적으로 제거한다."
+},
+{
+"q": "삼성 세탁기 'AI 에코버블'이 기존 에코버블보다 개선된 점은?",
+"opts": [
+"AI가 세탁물 종류·오염도 분석 후 버블 강도 자동 조절",
+"버블 크기가 더 작아짐",
+"냉수 온도를 더 낮게 설정",
+"세탁 시간이 2배 단축"
+],
+"ans": 0,
+"exp": "AI 에코버블은 AI가 세탁물을 분석해 오염 정도와 소재에 최적화된 버블 강도로 자동 조절한다."
+},
+{
+"q": "삼성 세탁기 '미세플라스틱 필터'가 잡아내는 대상은?",
+"opts": [
+"세탁 중 옷감에서 나오는 미세플라스틱 섬유",
+"세제 잔류물",
+"금속 이물질",
+"머리카락"
+],
+"ans": 0,
+"exp": "합성 섬유 세탁 시 발생하는 미세플라스틱이 배수에 섞이지 않도록 전용 필터로 포집한다."
+},
+{
+"q": "삼성 드럼세탁기와 통돌이 세탁기의 세탁 원리 차이는?",
+"opts": [
+"드럼은 낙차 방식, 통돌이는 와류(소용돌이) 방식",
+"드럼이 물을 더 많이 사용",
+"통돌이가 항상 세탁 시간이 짧음",
+"드럼은 냉수만 사용"
+],
+"ans": 0,
+"exp": "드럼세탁기는 드럼 회전으로 의류를 들어올렸다 떨어뜨리는 낙차 방식, 통돌이는 물을 회전시켜 마찰로 세탁한다."
+},
+{
+"q": "삼성 세탁기 'WashGenie(AI 코스 추천)'의 작동 방식은?",
+"opts": [
+"빨래 무게·소재·오염 감지 후 최적 코스 추천",
+"사용자 음성 명령으로 코스 선택",
+"인터넷 날씨 정보로 코스 변경",
+"과거 세탁 기록만으로 추천"
+],
+"ans": 0,
+"exp": "WashGenie는 빨래 무게, 소재, 오염도를 분석해 AI가 최적의 세탁 코스를 자동으로 추천한다."
+},
+{
+"q": "삼성 세탁기 '스마트 체크' 기능으로 확인 가능한 것은?",
+"opts": [
+"세탁기 자가 진단 및 오류 코드 원인",
+"세탁 잔여 시간",
+"세제 종류 확인",
+"인근 서비스센터 위치"
+],
+"ans": 0,
+"exp": "스마트 체크는 세탁기 내부 센서로 자가 진단을 수행하고 이상 원인을 스마트폰 앱으로 알려준다."
+},
+{
+"q": "삼성 세탁기 '맞춤형 린스(Rinse+)' 옵션의 목적은?",
+"opts": [
+"민감성 피부를 위해 헹굼 횟수 추가",
+"세제 사용량 줄이기",
+"세탁 시간 단축",
+"온수 사용량 절감"
+],
+"ans": 0,
+"exp": "Rinse+는 일반 헹굼 후 추가로 한 번 더 헹구어 세제 잔류를 최소화해 민감성 피부에 적합한 세탁 결과를 제공한다."
+},
+{
+"q": "삼성 세탁기 '15분 급속 세탁'이 가능한 최대 용량은?",
+"opts": [
+"약 2kg",
+"약 6kg",
+"약 10kg",
+"제한 없음"
+],
+"ans": 0,
+"exp": "급속 세탁 코스는 가볍게 오염된 소량(약 2kg 이하)의 세탁물에 최적화되어 있다."
+},
+{
+"q": "삼성 세탁기 'Pet Care' 코스가 제거하는 주요 대상은?",
+"opts": [
+"반려동물 털과 냄새",
+"먼지와 꽃가루",
+"기름때와 음식물 오염",
+"세탁 후 정전기"
+],
+"ans": 0,
+"exp": "Pet Care 코스는 반려동물 털을 효과적으로 제거하고 동물 냄새를 줄이기 위해 세탁 방식을 최적화한다."
+},
+{
+"q": "삼성 세탁기 'VRT+(Vibration Reduction Technology+)' 기술의 효과는?",
+"opts": [
+"다방향 센서로 세탁조 균형 유지하여 진동·소음 최소화",
+"세탁 시간 단축",
+"에너지 소비 절감",
+"세탁 성능 향상"
+],
+"ans": 0,
+"exp": "VRT+는 세탁조 내부에 복수의 진동 감지 센서를 두어 불균형 감지 시 자동으로 세탁물을 재분배한다."
+},
+{
+"q": "삼성 세탁기 세탁조 자동 청소 코스의 권장 주기는?",
+"opts": [
+"한 달에 1회 이상",
+"매 세탁 후",
+"1년에 1회",
+"필요 시에만"
+],
+"ans": 0,
+"exp": "세탁조 청소는 세균과 곰팡이 번식을 방지하기 위해 매월 1회 이상 실행을 권장한다."
+},
+{
+"q": "삼성 세탁기에서 '울 코스'와 '일반 코스'의 차이는?",
+"opts": [
+"울 코스는 저속 회전과 낮은 온도로 섬세 소재 보호",
+"울 코스가 더 긴 시간 세탁",
+"울 코스만 온수 사용",
+"울 코스는 탈수를 하지 않음"
+],
+"ans": 0,
+"exp": "울 코스는 울·실크 같은 섬세 소재를 위해 저속 회전, 낮은 수온, 부드러운 세탁 동작으로 소재를 보호한다."
+},
+{
+"q": "삼성 세탁기 'SmartThings 연동'으로 가능한 것이 아닌 것은?",
+"opts": [
+"세탁물 자동 분류",
+"세탁 완료 알림",
+"원격 세탁 시작",
+"에너지 사용량 확인"
+],
+"ans": 0,
+"exp": "SmartThings는 원격 제어, 완료 알림, 에너지 확인 등이 가능하지만 물리적 세탁물 분류는 지원하지 않는다."
+},
+{
+"q": "삼성 세탁기 '오버로드 감지' 기능이 작동하면?",
+"opts": [
+"과부하 경고 후 일부 세탁물 꺼내도록 안내",
+"세탁기 자동 종료",
+"전원 차단",
+"경고 무시하고 강제 진행"
+],
+"ans": 0,
+"exp": "오버로드 감지는 무게 초과 시 경고를 표시해 사용자가 세탁물 일부를 꺼낸 후 정상 작동하도록 유도한다."
+},
+{
+"q": "삼성 세탁기 '냉수 세탁'의 장점이 아닌 것은?",
+"opts": [
+"모든 종류의 얼룩을 더 잘 제거",
+"에너지 절약",
+"색상 유지",
+"민감 소재 보호"
+],
+"ans": 0,
+"exp": "단백질 계열 얼룩(혈액, 달걀 등)은 온수보다 냉수 세탁이 더 효과적이나, 기름때 등 일부 얼룩은 온수가 필요하다."
+},
+{
+"q": "삼성 세탁기 AI 절전 기능으로 절감 가능한 에너지는 일반 대비 얼마나 되나?",
+"opts": [
+"약 70%",
+"약 10%",
+"약 30%",
+"약 50%"
+],
+"ans": 0,
+"exp": "삼성 AI 에코버블 절전 세탁은 일반 세탁 대비 최대 약 70%까지 에너지를 절감할 수 있다."
+}
+],
+"건조기": [
+{
+"q": "삼성 Bespoke AI 건조기의 히트펌프 방식이 기존 전기히터 방식 대비 에너지 절감 효과는?",
+"opts": [
+"약 10%",
+"약 30%",
+"최대 50%",
+"최대 70%"
+],
+"ans": 2,
+"exp": "삼성 히트펌프 건조기는 전기히터 방식 대비 에너지를 최대 50% 절감합니다. 외부 공기의 열에너지를 활용하기 때문에 소비 전력 대비 더 많은 열에너지를 공급할 수 있습니다."
+},
+{
+"q": "삼성 AI 건조기의 'Optimal Dry(최적건조)' 기능의 원리로 올바른 것은?",
+"opts": [
+"건조 시간을 고정 타이머로 설정",
+"습도 센서로 의류 건조 상태를 실시간 감지해 건조 완료 시 자동 정지",
+"온도 센서로 열 손상 방지",
+"사용자가 앱에서 건조도를 직접 설정"
+],
+"ans": 1,
+"exp": "Optimal Dry는 드럼 내부의 습도 센서가 의류의 건조 상태를 실시간으로 감지해 최적의 건조 완료 시점에 자동으로 정지합니다. 과건조로 인한 의류 손상과 불필요한 에너지 낭비를 방지합니다."
+},
+{
+"q": "삼성 건조기의 'Air Wash(에어워시)' 기능으로 가능한 것은?",
+"opts": [
+"세탁 기능 대신 고온 스팀으로 세탁",
+"세탁 없이 뜨거운 공기로 냄새·주름 제거 및 살균",
+"찬 공기로 의류를 냉각해 구김 방지",
+"물 없이 드라이클리닝 효과 제공"
+],
+"ans": 1,
+"exp": "에어워시는 물 없이 뜨거운 공기를 순환시켜 가벼운 냄새 제거, 주름 완화, 살균(99.9%)을 제공합니다. 땀 냄새가 밴 옷이나 세탁이 어려운 의류(수트, 패딩 등)를 관리할 때 유용합니다."
+},
+{
+"q": "삼성 건조기의 'Multi Control(멀티 컨트롤)' 기능으로 올바른 것은?",
+"opts": [
+"여러 명의 가족이 각자 세탁 코스를 저장하는 기능",
+"건조기에서 연결된 세탁기를 동시에 제어하는 기능",
+"건조기 여러 대를 한 번에 제어하는 기능",
+"세탁기와 건조기의 건조 코스를 통합 관리"
+],
+"ans": 1,
+"exp": "Multi Control은 건조기 패널에서 연결된 삼성 세탁기의 전원·코스·시작·일시정지까지 제어할 수 있는 기능입니다. 세탁기와 건조기를 각각 조작하지 않고 건조기 하나에서 통합 제어가 가능합니다."
+},
+{
+"q": "삼성 Bespoke AI 건조기의 건조 용량 라인업 중 최대 용량은?",
+"opts": [
+"14kg",
+"17kg",
+"20kg",
+"25kg"
+],
+"ans": 2,
+"exp": "삼성 Bespoke AI 건조기 단독형의 최대 용량은 20kg입니다. 대가족이나 침구·대용량 세탁물을 자주 건조하는 가정에 적합합니다."
+},
+{
+"q": "삼성 건조기에서 'AI 맞춤 건조' 기능이 감지하는 옷감 종류로 올바른 것은?",
+"opts": [
+"면·폴리에스터 2종",
+"면·폴리·실크·울·데님 5종",
+"일반·타월·아웃도어·섬세·데님 5종",
+"모든 소재를 AI가 자동 구분"
+],
+"ans": 2,
+"exp": "삼성 AI 건조기의 AI 맞춤 건조는 일반(면)·타월·아웃도어·섬세(울/실크)·데님 5종의 옷감을 자동 감지해 최적의 건조 온도와 시간을 조정합니다."
+},
+{
+"q": "삼성 건조기의 히트펌프 건조 방식의 최대 건조 온도로 올바른 것은?",
+"opts": [
+"최대 50℃",
+"최대 60℃",
+"최대 70℃",
+"최대 85℃"
+],
+"ans": 1,
+"exp": "삼성 히트펌프 건조기의 드럼 내부 최대 온도는 약 60℃입니다. 전기히터 방식(70~85℃)보다 낮은 온도로 의류 수축과 손상을 최소화하면서도 완벽한 건조를 구현합니다."
+},
+{
+"q": "삼성 건조기와 LG 건조기의 비교 설명으로 올바른 것은?",
+"opts": [
+"LG 트롬 건조기는 히트펌프 방식이 없음",
+"삼성 건조기는 'Multi Control'로 세탁기를 건조기에서 직접 제어 가능, LG에는 없는 기능",
+"두 브랜드 모두 동일한 건조 방식 사용",
+"삼성은 에너지 소비효율 1등급 건조기가 없음"
+],
+"ans": 1,
+"exp": "삼성 건조기의 Multi Control은 건조기 패널에서 세탁기를 직접 제어하는 기능으로 LG에는 없습니다. LG 트롬도 히트펌프 건조기를 제공하지만 통합 제어 편의성에서 삼성이 차별화됩니다."
+},
+{
+"q": "삼성 건조기의 '순환 여과 시스템'의 특징으로 올바른 것은?",
+"opts": [
+"건조 중 발생하는 습기를 외부로 배출하지 않고 내부에서 제습해 재사용",
+"외부 공기를 강하게 흡입해 건조 속도 향상",
+"건조 중 생성된 린트(섬유 먼지)를 자동으로 외부 배출",
+"냉각 컨덴서로 습기를 응결시켜 물통에 수집"
+],
+"ans": 3,
+"exp": "삼성 히트펌프 건조기의 순환 여과 시스템은 건조 공기를 냉각해 습기를 물로 응결·수집하고, 제습된 공기를 다시 가열해 재사용합니다. 배기 덕트 없이 실내 어디에나 설치 가능합니다."
+},
+{
+"q": "삼성 건조기의 '린트 필터' 관리 방법으로 올바른 것은?",
+"opts": [
+"3개월에 1번 교체 필요",
+"매 건조 사용 후 꺼내어 청소 권장",
+"1년에 1번 전문가 청소 필요",
+"린트 필터는 자동으로 청소됨"
+],
+"ans": 1,
+"exp": "삼성 건조기의 린트 필터는 매 사용 후 꺼내서 청소하는 것을 권장합니다. 린트가 필터에 쌓이면 건조 효율이 떨어지고 화재 위험도 있으므로 정기적인 청소가 중요합니다."
+},
+{
+"q": "삼성 AI 건조기의 SmartThings 앱 연동 기능으로 올바른 것은?",
+"opts": [
+"건조 완료 후 알림 수신 및 원격으로 건조 시작",
+"건조기가 고장 시 자동 수리 예약",
+"세탁물이 건조기로 자동 이동",
+"AI가 날씨를 분석해 최적 건조 시간 추천"
+],
+"ans": 0,
+"exp": "SmartThings 앱으로 외출 중 건조 완료 알림을 받고, 원격으로 건조 시작·일시정지, 에너지 사용량 확인이 가능합니다. 심야 전기료 절약을 위한 예약 건조도 지원합니다."
+},
+{
+"q": "삼성 건조기 설치 방법으로 올바른 것은?",
+"opts": [
+"반드시 배기 덕트를 외부로 연결해야 함",
+"세탁기와 반드시 일체형 스택 설치만 가능",
+"히트펌프 방식은 배기 덕트 없이 실내 어디에나 설치 가능",
+"가스 배관이 필요한 가스 건조기 전용"
+],
+"ans": 2,
+"exp": "삼성 히트펌프 건조기는 냉매 방식으로 습기를 물통에 수집하므로 외부 배기 덕트가 필요 없습니다. 콘센트만 있으면 어디에나 설치 가능하며, 세탁기 위에 스택 설치하거나 별도로 설치할 수 있습니다."
+},
+{
+"q": "삼성 건조기의 에너지 소비효율 1등급 제품의 특징으로 올바른 것은?",
+"opts": [
+"연간 에너지 비용이 2등급 대비 약 5% 절감",
+"에너지 1등급은 기준 대비 30~40% 이상 효율적",
+"에너지 1등급은 히트펌프 방식에서만 가능",
+"모든 삼성 건조기가 에너지 1등급"
+],
+"ans": 1,
+"exp": "에너지 소비효율 1등급은 기준 대비 30~40% 이상 효율적인 제품에 부여됩니다. 히트펌프 방식 건조기가 에너지 1등급을 달성하기 용이하지만, 등급은 제품별로 다를 수 있습니다."
+},
+{
+"q": "삼성 건조기의 '저온 스팀(Steam Sanitize+)' 기능 설명으로 올바른 것은?",
+"opts": [
+"100℃ 고온 스팀으로 세균을 제거",
+"저온 스팀으로 의류 손상 없이 99.9% 살균·탈취",
+"스팀으로 물 없이 세탁 효과",
+"스팀으로 의류에 광택 부여"
+],
+"ans": 1,
+"exp": "Steam Sanitize+(저온 스팀)는 의류 손상 없이 세균·알레르기 유발 물질을 99.9% 제거합니다. 고온 스팀이 아닌 저온 스팀을 사용해 울, 실크 같은 섬세한 소재도 안전하게 살균할 수 있습니다."
+},
+{
+"q": "삼성 건조기의 '패딩 케어(Padding Care)' 코스 특징으로 올바른 것은?",
+"opts": [
+"패딩 충전재가 뭉치지 않게 저온으로 서서히 건조",
+"패딩 충전재를 분리해 세탁",
+"패딩에만 적용되는 별도 온도계 내장",
+"패딩의 충전재를 새것으로 교체"
+],
+"ans": 0,
+"exp": "패딩 케어 코스는 패딩 충전재(솜·거위털 등)가 뭉치지 않도록 저온으로 천천히 건조합니다. 중간중간 충전재를 풀어주는 텀블링 동작으로 패딩의 볼륨감을 유지합니다."
+},
+{
+"q": "삼성 건조기의 물통 용량 및 관리 방법으로 올바른 것은?",
+"opts": [
+"물통은 사용 전에 비워야 함",
+"건조 중 수집된 물은 자동으로 배수됨",
+"약 4~5L의 물통이 가득 차면 건조를 정지하므로 주기적으로 비워야 함",
+"물통이 없고 물은 모두 외부로 배출됨"
+],
+"ans": 2,
+"exp": "삼성 히트펌프 건조기는 약 4~5L 용량의 물통에 건조 중 제거된 수분을 수집합니다. 물통이 가득 차면 건조가 정지되므로 주기적으로 비워줘야 합니다. 배수 호스를 연결하면 자동 배수도 가능합니다."
+},
+{
+"q": "삼성 건조기에서 제공하는 '이불 건조' 코스의 특징으로 올바른 것은?",
+"opts": [
+"이불은 건조기로 건조 불가",
+"대용량(16kg 이상) 건조기에서만 이불 건조 가능",
+"고온으로 진드기·세균을 제거하면서 이불 건조",
+"저온으로 이불 충전재가 손상되지 않게 건조"
+],
+"ans": 2,
+"exp": "이불 건조 코스는 고온(약 70~80℃ 이상)으로 집먼지 진드기(99%+ 제거)와 세균을 제거하면서 이불을 완전히 건조합니다. 황사·꽃가루 시즌에 이불 위생 관리로 어필할 수 있습니다."
+},
+{
+"q": "삼성 세탁기+건조기 스택 설치 시 주의사항으로 올바른 것은?",
+"opts": [
+"세탁기 위에 건조기를 설치하는 방법만 가능",
+"건조기 위에 세탁기를 설치하는 방법만 가능",
+"두 순서 모두 가능하며 편의에 따라 선택",
+"스택 설치는 삼성 제품끼리만 지원하며 전용 스택 키트 필요"
+],
+"ans": 3,
+"exp": "삼성 세탁기와 건조기 스택 설치는 삼성 전용 스택 키트를 사용해야 안전하게 설치할 수 있습니다. 일반적으로 세탁기 위에 건조기를 올리는 방식이며, 삼성 호환 모델끼리만 스택 설치를 지원합니다."
+},
+{
+"q": "삼성 건조기의 '구김 방지(Wrinkle Prevent)' 기능 설명으로 올바른 것은?",
+"opts": [
+"건조 완료 후 저온·저속 텀블링을 주기적으로 반복해 구김 방지",
+"고온 스팀을 분사해 구김 제거",
+"건조 중 드럼이 반대 방향으로 회전해 구김 방지",
+"건조 완료 즉시 자동으로 의류를 접는 기능"
+],
+"ans": 0,
+"exp": "구김 방지 기능은 건조 완료 후 곧바로 의류를 꺼내지 않아도 저온·저속으로 드럼을 주기적으로 회전시켜 의류가 뭉쳐 구겨지는 것을 방지합니다."
+},
+{
+"q": "삼성 AI 건조기의 '진단 서비스' 기능으로 올바른 것은?",
+"opts": [
+"AI가 건조기 상태를 스스로 점검하고 이상 시 스마트폰 앱으로 알림 발송",
+"전문 기사가 원격으로 건조기를 수리",
+"건조기 오류 코드를 수리 기사에게 자동 전송",
+"건조기 상태는 서비스 센터 방문으로만 확인 가능"
+],
+"ans": 0,
+"exp": "삼성 AI 건조기는 AI 스마트 진단 기능으로 주요 부품 상태를 스스로 점검하고 이상이 감지되면 SmartThings 앱으로 알림을 보냅니다. 오류 코드와 예상 원인도 앱에서 확인할 수 있습니다."
+},
+{
+"q": "삼성 건조기 '히트펌프 건조' 방식의 장점은?",
+"opts": [
+"저온 건조로 옷감 손상 최소화 및 에너지 절약",
+"고온으로 빠른 건조",
+"세탁기와 동시에 작동 가능",
+"소음이 기존 방식보다 큼"
+],
+"ans": 0,
+"exp": "히트펌프 건조는 냉매로 공기를 순환시켜 저온(약 55°C 이하)으로 건조해 의류 손상이 적고 에너지 효율이 높다."
+},
+{
+"q": "삼성 건조기 '에너지 효율 1등급'의 기준은?",
+"opts": [
+"에너지 소비 효율 지수가 정부 고시 1등급 기준 이상",
+"단순히 소비전력이 가장 낮음",
+"건조 시간이 가장 짧음",
+"히트펌프 방식이면 자동 1등급"
+],
+"ans": 0,
+"exp": "에너지 효율 1등급은 정부가 고시하는 에너지 효율 지수를 초과하는 제품에 부여되며 히트펌프 방식이 유리하다."
+},
+{
+"q": "삼성 건조기 'AI 건조 최적화'가 자동으로 판단하는 요소는?",
+"opts": [
+"세탁물 종류와 무게에 따른 건조 시간 및 온도",
+"날씨에 따른 건조 방식",
+"전기 요금에 따른 작동 시간",
+"사용자 선호 색깔에 따른 설정"
+],
+"ans": 0,
+"exp": "AI 건조 최적화는 세탁물 무게와 소재를 감지해 최적 온도와 건조 시간을 자동으로 설정한다."
+},
+{
+"q": "삼성 건조기 '수분 감지 건조'의 원리는?",
+"opts": [
+"드럼 내 전극 센서가 의류 수분 감지 후 자동 종료",
+"타이머로 시간 설정",
+"적외선 센서로 습도 감지",
+"무게 변화로 건조 완료 판단"
+],
+"ans": 0,
+"exp": "수분 감지 건조는 드럼 내부 전극 센서가 의류의 수분량을 직접 측정해 적정 건조 시 자동으로 정지한다."
+},
+{
+"q": "삼성 건조기에서 '덕트리스(콘덴서) 방식'의 특징은?",
+"opts": [
+"배기관 없이 실내 설치 가능",
+"외부 공기 직접 배출",
+"별도 환기 필요",
+"창문 근처 설치 필수"
+],
+"ans": 0,
+"exp": "덕트리스 방식은 수분을 응결수로 모아 배수하므로 배기관 없이도 어디서나 설치 가능하다."
+},
+{
+"q": "삼성 건조기 '정전기 방지' 기능의 원리는?",
+"opts": [
+"건조 마지막 단계에서 스팀 분사로 정전기 억제",
+"특수 코팅 드럼 사용",
+"건조 완료 후 찬 공기 투입",
+"섬유유연제 자동 투입"
+],
+"ans": 0,
+"exp": "건조 마지막 단계에 스팀을 분사해 의류 표면의 정전기를 효과적으로 방지하고 구김도 줄인다."
+},
+{
+"q": "삼성 건조기 '에어워시' 기능의 역할은?",
+"opts": [
+"스팀으로 냄새·주름 제거 (세탁 없이 리프레시)",
+"먼지만 제거",
+"탈취제 자동 분사",
+"의류 건조 후 자동 접기"
+],
+"ans": 0,
+"exp": "에어워시는 고온 스팀으로 옷을 직접 세탁하지 않고도 냄새를 제거하고 주름을 펴주는 리프레시 기능이다."
+},
+{
+"q": "삼성 건조기 필터 청소 권장 주기는?",
+"opts": [
+"매 사용 후",
+"매주 1회",
+"한 달에 1회",
+"1년에 1회"
+],
+"ans": 0,
+"exp": "건조기 필터는 사용할 때마다 청소해야 건조 성능이 유지되고 화재 위험을 예방할 수 있다."
+},
+{
+"q": "삼성 건조기 '하이진 케어' 기능의 목적은?",
+"opts": [
+"고온 스팀으로 세균·알레르겐 살균",
+"먼지 제거",
+"냄새 흡착",
+"의류 주름 제거"
+],
+"ans": 0,
+"exp": "하이진 케어는 100°C 이상의 고온 스팀으로 세균, 집먼지진드기, 알레르겐을 효과적으로 제거한다."
+},
+{
+"q": "삼성 건조기 '맞춤 건조 코스'를 저장할 수 있는 최대 개수는?",
+"opts": [
+"최대 5개",
+"1개",
+"10개",
+"무제한"
+],
+"ans": 0,
+"exp": "삼성 건조기는 자주 사용하는 세탁물 종류에 맞게 최대 5가지 맞춤 코스를 저장할 수 있다."
+},
+{
+"q": "삼성 건조기 '울·섬세 코스'에서 사용되는 건조 온도는?",
+"opts": [
+"저온(약 35~45°C)",
+"고온(80°C 이상)",
+"중온(60°C)",
+"온도 없이 바람만"
+],
+"ans": 0,
+"exp": "울과 섬세 소재는 고온에 약하므로 35~45°C의 저온으로 건조해 소재 손상을 방지한다."
+},
+{
+"q": "삼성 건조기 '스팀 세탁(건조 전 스팀)' 기능의 효과가 아닌 것은?",
+"opts": [
+"새 의류 화학 물질 완전 제거",
+"주름 감소",
+"새 옷 냄새 완화",
+"정전기 억제"
+],
+"ans": 0,
+"exp": "스팀은 주름, 냄새, 정전기에 효과적이지만, 화학 물질(포름알데히드 등)을 완전히 제거하려면 세탁이 필요하다."
+},
+{
+"q": "삼성 건조기 열교환기(이베퍼레이터) 청소가 필요한 이유는?",
+"opts": [
+"먼지 축적 시 건조 효율 저하 및 고장 원인",
+"소음 증가",
+"전력 소비 증가만",
+"디스플레이 오작동"
+],
+"ans": 0,
+"exp": "열교환기에 먼지가 쌓이면 열 교환 효율이 떨어져 건조 시간이 길어지고 부품 고장으로 이어질 수 있다."
+},
+{
+"q": "삼성 건조기와 삼성 세탁기 'SmartThings 연동' 시 가능한 기능은?",
+"opts": [
+"세탁 완료 후 건조기 자동 시작",
+"세탁기가 건조기 코스를 자동 설정",
+"두 기기 동시 원격 종료만 가능",
+"연동 불가"
+],
+"ans": 0,
+"exp": "SmartThings 연동으로 세탁기 완료 신호를 건조기가 받아 자동으로 건조를 시작하는 연속 작동이 가능하다."
+},
+{
+"q": "삼성 건조기 '응결수 통' 관리 권장 방법은?",
+"opts": [
+"매 사용 후 비우기",
+"가득 찼을 때만 비우기",
+"자동 배수 설정 후 방치",
+"월 1회 비우기"
+],
+"ans": 0,
+"exp": "응결수 통이 가득 차면 건조가 멈추므로 매 사용 후 비우거나 별도 배수관을 연결하는 것을 권장한다."
+},
+{
+"q": "삼성 건조기 'AI 에너지 리포트'의 기능은?",
+"opts": [
+"에너지 사용 패턴 분석 후 절전 팁 제공",
+"자동 절전 모드 전환",
+"에너지 사용량 정부 신고",
+"전기 요금 자동 계산 및 납부"
+],
+"ans": 0,
+"exp": "AI 에너지 리포트는 건조기의 에너지 사용 패턴을 분석해 사용자에게 절전 방법과 에너지 절약 팁을 제공한다."
+},
+{
+"q": "삼성 건조기 드럼의 '다이아몬드 드럼' 내부 구조의 특징은?",
+"opts": [
+"다이아몬드 형태 돌기가 의류 손상 줄이고 건조 효율 향상",
+"드럼 재질이 다이아몬드 코팅",
+"드럼에 다이아몬드 색상 적용",
+"특수 내열 소재 적용"
+],
+"ans": 0,
+"exp": "다이아몬드 드럼은 드럼 내벽의 다이아몬드 패턴 돌기로 의류가 부드럽게 움직여 손상을 줄이고 건조를 균일하게 한다."
+},
+{
+"q": "삼성 건조기 '리버스 텀블링(Reversing)' 기능의 효과는?",
+"opts": [
+"드럼 회전 방향 교대로 의류 엉킴 방지",
+"역회전으로 빠른 건조",
+"역회전 후 주름 제거",
+"섬세 소재 전용 기능"
+],
+"ans": 0,
+"exp": "리버스 텀블링은 드럼이 앞뒤로 번갈아 회전해 의류가 한 방향으로 뭉치지 않아 엉킴을 방지한다."
+},
+{
+"q": "삼성 건조기 구매 시 고려해야 할 '배기 방식'으로 옳은 것은?",
+"opts": [
+"덕트형은 외부 배기 필요, 콘덴서형은 배기관 불필요",
+"두 방식 모두 배기관 필수",
+"콘덴서형이 항상 더 빠름",
+"덕트형이 에너지 효율이 높음"
+],
+"ans": 0,
+"exp": "덕트형은 습기를 외부로 배출하므로 배기관이 필요하며, 콘덴서형은 응결수로 처리해 배기관 없이 설치 가능하다."
+},
+{
+"q": "삼성 건조기 '표준 건조 시간'은 일반적으로 얼마인가?",
+"opts": [
+"약 60~90분 (기종·용량에 따라 다름)",
+"약 10~20분",
+"약 3~4시간",
+"24시간 저온 건조"
+],
+"ans": 0,
+"exp": "히트펌프 건조기 표준 용량 기준으로 약 60~90분이 일반적이며, 히터 방식은 더 짧고 용량과 소재에 따라 달라진다."
+}
+],
+"식기세척기": [
+{
+"q": "삼성 Bespoke AI 식기세척기의 '100℃ 열풍 건조' 기능의 특징으로 올바른 것은?",
+"opts": [
+"100℃ 스팀으로 세균을 살균하면서 건조",
+"100℃ 고온 열풍으로 세균·유해물질을 99.999% 제거하고 완전 건조",
+"100℃ 열풍은 건조만 가능하며 살균 기능은 없음",
+"100℃ 열풍은 도자기·유리 제품에만 적용"
+],
+"ans": 1,
+"exp": "삼성 식기세척기의 100℃ 열풍 건조는 고온 열풍으로 세균·바이러스·유해물질을 99.999% 제거하면서 완전 건조합니다. 물기가 남지 않고 위생적으로 식기를 보관할 수 있습니다."
+},
+{
+"q": "삼성 식기세척기의 '트리플 워시 존(Triple Wash Zone)' 기술의 특징으로 올바른 것은?",
+"opts": [
+"상·중·하 3개 랙에 각각 독립된 세척 노즐로 균일한 세척력",
+"3개의 세척 암(Arm)이 동시에 회전해 세척",
+"상·중·하 랙의 물 압력을 개별 조절 가능",
+"트리플 워시는 세제를 3회 나누어 투입하는 기술"
+],
+"ans": 0,
+"exp": "트리플 워시 존은 상·중·하 3개 랙에 각각 독립된 세척 노즐을 배치해 구석구석 균일한 세척력을 제공합니다. 위아래 모두 완벽하게 세척되어 재세척 필요성을 없애줍니다."
+},
+{
+"q": "삼성 식기세척기의 'Auto Door(오토 도어)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"문을 손으로 누르면 자동으로 열리는 기능",
+"세척 완료 후 도어가 자동으로 열려 빠른 건조를 도와주는 기능",
+"세척 중에도 도어를 열 수 있는 안전 기능",
+"원격으로 도어를 열고 닫는 스마트 기능"
+],
+"ans": 1,
+"exp": "오토 도어는 세척이 완료되면 도어가 자동으로 열려 내부 습기를 빠르게 제거하고 열풍 건조와 함께 완전 건조를 도와줍니다. 손으로 문을 열 필요 없이 자동으로 최적 건조 환경이 만들어집니다."
+},
+{
+"q": "삼성 식기세척기의 'AI 워시(AI Wash)' 기능의 설명으로 올바른 것은?",
+"opts": [
+"AI가 식기의 재질(유리·플라스틱·금속)을 구분해 세척",
+"AI가 오염도를 감지해 물 사용량과 세척 시간을 자동 최적화",
+"AI가 세제를 자동으로 주문하는 기능",
+"AI가 식기를 식별해 적합한 세제를 추천"
+],
+"ans": 1,
+"exp": "AI 워시는 탁도 센서로 세척수의 오염도를 실시간 감지해 물 사용량과 세척 시간을 자동으로 최적화합니다. 오염이 심하면 더 많은 물로 더 강하게 세척하고, 가벼운 오염 시엔 물과 에너지를 절약합니다."
+},
+{
+"q": "삼성 식기세척기의 'Steam Clean(스팀 클린)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"스팀으로 식기를 소독하면서 세척",
+"스팀 전처리로 음식물 찌꺼기를 불려 세척력 향상",
+"스팀으로 식기의 수분을 건조",
+"스팀은 외부 전용 소독 장치에서 주입"
+],
+"ans": 1,
+"exp": "Steam Clean은 세척 전 스팀으로 그을린 음식물 찌꺼기나 굳은 기름기를 불려 더 쉽게 제거할 수 있게 합니다. 강한 물리적 세척력 없이도 완벽한 세척이 가능해집니다."
+},
+{
+"q": "삼성 Bespoke AI 식기세척기의 최대 식기 수용 용량(식기 수)으로 올바른 것은?",
+"opts": [
+"8인분",
+"10인분",
+"14인분",
+"18인분"
+],
+"ans": 2,
+"exp": "삼성 Bespoke AI 식기세척기는 최대 14인분의 식기를 수용할 수 있습니다. 4인 가족이 3끼 식기를 한꺼번에 세척할 수 있는 용량으로, 대가족에게도 충분합니다."
+},
+{
+"q": "삼성 식기세척기의 '3단 랙(3-Rack)' 구조의 장점으로 올바른 것은?",
+"opts": [
+"식기를 3번에 나눠서 세척해 세척력 향상",
+"커트러리(수저·포크·나이프)를 별도 3단 랙에 넣어 분리 세척, 전체 공간 활용 향상",
+"3단 랙은 대형 냄비 세척을 위한 전용 랙",
+"3단 랙이 없는 기존 모델 대비 전력 소비 절감"
+],
+"ans": 1,
+"exp": "3단 랙 구조는 상단에 별도의 커트러리 전용 랙이 추가되어 수저·포크·나이프를 분리 배치합니다. 덕분에 하단·중단 랙에 더 많은 식기를 넣을 수 있어 전체 수용 용량이 증가합니다."
+},
+{
+"q": "삼성 식기세척기와 LG 디오스 식기세척기의 비교에서 삼성의 차별점으로 올바른 것은?",
+"opts": [
+"LG는 100℃ 열풍 건조 기능 없음",
+"삼성 100℃ 열풍 건조 + 트리플 워시 존 + 오토 도어가 핵심 차별점",
+"두 제품 모두 동일한 세척 기술 사용",
+"삼성 식기세척기는 LG 대비 용량이 작음"
+],
+"ans": 1,
+"exp": "삼성 식기세척기의 핵심 차별점은 100℃ 열풍 건조(99.999% 살균), 트리플 워시 존(균일한 세척), 오토 도어(자동 건조)입니다. LG 디오스도 자동 문열림과 스팀 기능을 제공하지만 100℃ 열풍의 완전 살균은 삼성만의 기술입니다."
+},
+{
+"q": "삼성 식기세척기의 에너지·물 절약 효과로 올바른 것은?",
+"opts": [
+"손 설거지 대비 에너지는 더 사용하지만 물은 절약",
+"손 설거지 대비 물을 최대 1/6(약 83%), 에너지도 절약",
+"손 설거지와 비교해 물·에너지 모두 동일하게 사용",
+"식기세척기는 에너지는 절약하지만 물은 더 사용"
+],
+"ans": 1,
+"exp": "삼성 식기세척기는 손 설거지 대비 물 사용량을 최대 1/6 수준으로 줄일 수 있습니다(손 설거지 약 50~60L vs 식기세척기 약 9~10L). 에너지도 절약되며 세척력도 더 우수합니다."
+},
+{
+"q": "삼성 식기세척기의 '빠른 세척(Quick Wash)' 코스에서 세척 완료 시간으로 올바른 것은?",
+"opts": [
+"약 15분",
+"약 30분",
+"약 45분",
+"약 60분"
+],
+"ans": 1,
+"exp": "삼성 식기세척기의 빠른 세척(Quick Wash) 코스는 약 30분에 가벼운 오염 식기를 세척할 수 있습니다. 바쁜 일상에서 빠르게 식기를 세척해야 할 때 유용합니다."
+},
+{
+"q": "삼성 식기세척기의 SmartThings 앱 연동 기능으로 올바른 것은?",
+"opts": [
+"원격으로 세척 코스 시작·완료 알림 수신",
+"식기세척기가 고장 시 자동으로 세제를 주문",
+"AI가 세척 코스를 자동으로 최적화해 설정",
+"세척 중 실시간으로 내부 카메라 확인"
+],
+"ans": 0,
+"exp": "SmartThings 앱으로 외출 중 세척 코스 원격 시작, 완료 알림, 에너지·물 사용량 모니터링이 가능합니다. AI 절약 모드와 연동해 심야 등 전기요금이 저렴한 시간에 예약 세척도 가능합니다."
+},
+{
+"q": "삼성 식기세척기 설치 방법으로 올바른 것은?",
+"opts": [
+"반드시 빌트인 시공이 필요",
+"주방 하부장에 빌트인 또는 독립형(프리스탠딩) 모두 설치 가능",
+"전용 배수 시설 공사가 필수",
+"항상 1층에만 설치 가능"
+],
+"ans": 1,
+"exp": "삼성 식기세척기는 주방 하부장에 빌트인으로 설치하거나 독립형(프리스탠딩)으로 설치할 수 있습니다. 냉·온수 연결과 배수 연결만 있으면 별도 공사 없이 설치가 가능합니다."
+},
+{
+"q": "삼성 식기세척기의 '저소음' 운전 수준으로 올바른 것은?",
+"opts": [
+"약 70dB (청소기 수준)",
+"약 60dB (일반 대화 수준)",
+"약 44dB (도서관 수준)",
+"약 30dB (속삭임 수준)"
+],
+"ans": 2,
+"exp": "삼성 식기세척기는 표준 코스 기준 약 44dB의 저소음으로 운전됩니다. 이는 도서관 수준의 조용한 소음으로, 심야나 이른 아침에도 불편 없이 사용할 수 있습니다."
+},
+{
+"q": "삼성 식기세척기의 'Zone Wash(존 워시)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"상단·하단 랙 중 원하는 영역만 선택해 세척, 물·에너지 절약",
+"3개 구역을 순서대로 돌아가며 세척",
+"구역별로 세척 온도를 달리 적용",
+"오직 하단 랙에서만 지원"
+],
+"ans": 0,
+"exp": "Zone Wash는 상단 랙 또는 하단 랙 중 오염된 영역만 선택해 세척할 수 있습니다. 식기가 절반만 찼거나 한쪽만 오염된 경우 불필요한 물·에너지 낭비를 막을 수 있습니다."
+},
+{
+"q": "삼성 식기세척기에서 세척 불가한 식기류로 올바른 것은?",
+"opts": [
+"스테인리스 냄비",
+"내열 유리 그릇",
+"나무 도마 및 나무 수저",
+"도자기 컵"
+],
+"ans": 2,
+"exp": "나무로 만든 식기(도마, 나무 수저, 나무 젓가락 등)는 식기세척기 세척 시 변형·갈라짐이 생기므로 넣어서는 안 됩니다. 스테인리스, 내열 유리, 도자기는 대부분 식기세척기 사용이 가능합니다."
+},
+{
+"q": "삼성 식기세척기 '100°C 스팀 세척'의 장점은?",
+"opts": [
+"고온 스팀으로 기름때와 세균 동시 제거",
+"저온 세척으로 식기 손상 방지",
+"물 사용량 감소",
+"세제 사용량 절감"
+],
+"ans": 0,
+"exp": "100°C 스팀은 강력한 열과 증기로 기름때를 분해하고 세균·대장균을 사멸해 위생적인 세척 결과를 만든다."
+},
+{
+"q": "삼성 식기세척기 '정수 기능'의 역할은?",
+"opts": [
+"필터로 세척수의 이물질 제거",
+"연수기 기능으로 수돗물 정화",
+"식기 소독",
+"잔류 세제 제거"
+],
+"ans": 0,
+"exp": "정수 기능은 세척 중 세척수를 필터로 재처리해 오염된 물이 식기에 재부착되는 것을 방지한다."
+},
+{
+"q": "삼성 식기세척기 '오토 오픈 건조'의 원리는?",
+"opts": [
+"세척 완료 후 도어가 자동으로 열려 자연 건조",
+"히터로 내부 공기 가열",
+"송풍 팬 강제 건조",
+"냉각수로 식기 냉각"
+],
+"ans": 0,
+"exp": "오토 오픈 건조는 세척 완료 시 도어가 자동으로 살짝 열려 습한 공기가 빠져나가고 외부 공기로 식기가 자연 건조된다."
+},
+{
+"q": "삼성 식기세척기 'AI 세척 추천'이 감지하는 요소는?",
+"opts": [
+"식기 양과 오염도",
+"사용자 선호도",
+"수도 수압",
+"세제 종류"
+],
+"ans": 0,
+"exp": "AI 세척 추천은 내부 센서로 식기의 양과 오염도를 감지해 물 온도, 물 양, 세척 시간을 자동으로 최적화한다."
+},
+{
+"q": "삼성 식기세척기 표준 용량 '13인용'의 의미는?",
+"opts": [
+"13인분 식기(약 130피스)를 수납 가능",
+"13명이 동시에 사용",
+"세척 사이클이 13번",
+"13kg 식기 수납"
+],
+"ans": 0,
+"exp": "13인용은 국제 표준(IEC 60436)으로 약 13인분의 식기 세트(130피스)를 수납해 세척할 수 있는 용량이다."
+},
+{
+"q": "삼성 식기세척기 '3단 랙' 구성의 장점은?",
+"opts": [
+"수저·소형 도구를 상단 랙에 배치해 수납 효율 극대화",
+"하단 랙 용량 2배 증가",
+"세척 성능 향상",
+"고온 세척 가능"
+],
+"ans": 0,
+"exp": "3단 랙은 최상단에 수저·소형 도구 전용 랙을 추가해 하단 2개 랙의 공간을 대형 식기에 활용할 수 있다."
+},
+{
+"q": "삼성 식기세척기 '에코(Eco) 코스'의 특징은?",
+"opts": [
+"저온·장시간 세척으로 에너지 절약",
+"고온 단시간 세척",
+"수압을 높여 강력 세척",
+"세제 사용량 증가"
+],
+"ans": 0,
+"exp": "에코 코스는 세척 온도를 낮추고 시간을 늘려 에너지와 물 사용량을 줄이면서도 만족스러운 세척 결과를 낸다."
+},
+{
+"q": "삼성 식기세척기 '식기 배치 가이드'가 중요한 이유는?",
+"opts": [
+"물 분사 각도와 범위에 맞게 배치해야 세척 효율 최대화",
+"식기 파손 방지",
+"세제 절약",
+"건조 시간 단축"
+],
+"ans": 0,
+"exp": "분사 암(Water Arm)의 물이 모든 식기 표면에 닿아야 세척되므로 서로 겹치지 않도록 올바르게 배치해야 한다."
+},
+{
+"q": "삼성 식기세척기 '하이진 코스'가 적합한 경우는?",
+"opts": [
+"유아 식기, 면역 취약자 식기 세척",
+"일반 그릇 빠른 세척",
+"냄비·프라이팬 기름때 제거",
+"크리스탈 유리 세척"
+],
+"ans": 0,
+"exp": "하이진 코스는 70°C 이상의 고온과 스팀으로 세균을 완벽히 사멸해 아기 식기나 면역 취약자용 식기에 적합하다."
+},
+{
+"q": "삼성 식기세척기 '리필 알림' 기능이 알려주는 대상은?",
+"opts": [
+"소금·린스·세제 잔량 부족",
+"필터 교체 시기",
+"세척 완료 시간",
+"수도 연결 오류"
+],
+"ans": 0,
+"exp": "리필 알림은 식기세척기 소금(연수제), 린스, 세제의 잔량이 부족할 때 사용자에게 보충을 알려준다."
+},
+{
+"q": "삼성 식기세척기 '소금 투입'의 목적은?",
+"opts": [
+"경수를 연수로 바꿔 세척 성능 유지",
+"세척력 직접 향상",
+"세척 후 식기에 광택 부여",
+"세균 살균"
+],
+"ans": 0,
+"exp": "식기세척기 전용 소금은 이온 교환 수지를 재생시켜 수도물을 연수로 바꿔 스케일 생성을 방지하고 세척 성능을 유지한다."
+},
+{
+"q": "삼성 식기세척기 '반건조' 식기의 원인이 아닌 것은?",
+"opts": [
+"세척 수온이 너무 높아서",
+"린스 부족",
+"플라스틱 식기 표면 특성",
+"세척 완료 후 즉시 도어 열지 않음"
+],
+"ans": 0,
+"exp": "플라스틱은 열을 빨리 방출해 반건조가 흔히 발생하며, 린스 부족이나 도어를 너무 늦게 여는 것도 원인이다. 수온이 높으면 오히려 건조에 유리하다."
+},
+{
+"q": "삼성 식기세척기 내부 스테인리스 재질의 장점은?",
+"opts": [
+"냄새 흡수 없이 위생적, 내구성 우수",
+"가벼움",
+"소음 감소",
+"세척 성능 향상"
+],
+"ans": 0,
+"exp": "스테인리스 내조는 냄새와 세균이 흡수되지 않고 고온 세척에도 변형 없이 장기간 위생적으로 사용 가능하다."
+},
+{
+"q": "삼성 식기세척기 '주간(Weekly) 코스'의 활용 시점은?",
+"opts": [
+"1주일 정도 묵은 오염 식기 집중 세척",
+"매일 사용하는 일반 세척",
+"빠른 처리가 필요한 경우",
+"새 식기 초기 세척"
+],
+"ans": 0,
+"exp": "주간 코스는 오래 방치된 묵은 오염을 장시간 고온으로 강력하게 세척하는 데 적합하다."
+},
+{
+"q": "삼성 식기세척기 설치 시 '고정형'과 '빌트인형'의 차이는?",
+"opts": [
+"빌트인은 캐비닛에 매립, 독립형은 별도 설치",
+"고정형이 항상 더 큼",
+"독립형이 성능이 더 우수",
+"빌트인은 이동 가능"
+],
+"ans": 0,
+"exp": "빌트인은 주방 캐비닛에 매립해 인테리어와 일체화되고, 독립형(프리스탠딩)은 별도 공간에 자유롭게 설치한다."
+},
+{
+"q": "삼성 식기세척기 '터보 존(TurboBlow)'의 기능은?",
+"opts": [
+"특정 구역에 강력한 물 분사로 집중 세척",
+"식기 건조를 위한 터보 팬",
+"내부 청소 기능",
+"음식 찌꺼기 자동 분쇄"
+],
+"ans": 0,
+"exp": "터보 존은 냄비 등 심하게 오염된 식기가 위치하는 하단 특정 구역에 더 강한 수압으로 집중 세척한다."
+}
+],
+"에어드레서": [
+{
+"q": "삼성 Bespoke AI 에어드레서의 핵심 기술 'Jet Air(젯에어)'의 기능으로 올바른 것은?",
+"opts": [
+"강력한 초음파로 먼지를 분해",
+"고속 에어로 의류 먼지·냄새 제거 및 살균",
+"UV 자외선으로 세균 살균",
+"스팀 다리미 기능"
+],
+"ans": 1,
+"exp": "삼성 에어드레서의 젯에어 기술은 강력한 고속 바람으로 의류 표면과 섬유 사이에 낀 먼지와 이물질을 털어내고, 동시에 스팀으로 세균·냄새를 제거합니다."
+},
+{
+"q": "삼성 에어드레서의 '무빙행거(Moving Hanger)'의 역할로 올바른 것은?",
+"opts": [
+"옷을 자동으로 접어주는 기능",
+"옷걸이가 앞뒤로 움직이며 의류 전체에 균일하게 스팀·에어 전달",
+"옷을 회전시켜 360도 살균",
+"옷의 무게를 측정해 건조 시간 조정"
+],
+"ans": 1,
+"exp": "무빙행거는 의류가 걸린 행거가 앞뒤로 자동으로 움직이면서 젯에어와 스팀이 의류 전체에 균일하게 도달하도록 합니다. 겨드랑이 부분, 뒷면 등 손이 닿기 어려운 부분까지 관리됩니다."
+},
+{
+"q": "삼성 에어드레서의 스팀 기능이 제거하는 항목으로 올바른 것은?",
+"opts": [
+"먼지만 제거",
+"세균·바이러스·냄새 제거 및 주름 완화",
+"물로 세탁한 것과 동일한 세척 효과",
+"옷의 원단을 살균하고 색상도 밝게"
+],
+"ans": 1,
+"exp": "삼성 에어드레서의 스팀은 세균·바이러스·집먼지진드기를 99.9% 이상 살균하고, 담배 연기·땀 냄새 등의 냄새를 제거하며, 주름을 완화합니다. 단, 물로 세탁한 것과 동일한 세척 효과는 아닙니다."
+},
+{
+"q": "삼성 에어드레서에서 '기본 코스' 한 사이클의 소요 시간으로 올바른 것은?",
+"opts": [
+"약 10분",
+"약 20분",
+"약 35분",
+"약 60분"
+],
+"ans": 2,
+"exp": "삼성 에어드레서의 기본 코스(젯에어+스팀+건조)는 약 35분 소요됩니다. 외출 전 빠르게 의류를 관리하거나 귀가 후 다음날 착용할 옷을 준비하는 데 적합한 시간입니다."
+},
+{
+"q": "삼성 Bespoke AI 에어드레서의 최대 수용 의류 수로 올바른 것은?",
+"opts": [
+"3벌",
+"5벌",
+"7벌",
+"10벌"
+],
+"ans": 1,
+"exp": "삼성 Bespoke AI 에어드레서는 최대 5벌의 의류를 동시에 관리할 수 있습니다. 수트 재킷, 코트, 원피스 등 다양한 종류의 의류를 함께 넣을 수 있습니다."
+},
+{
+"q": "삼성 에어드레서의 '하의 관리(Bottom Care)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"하의 전용 별도 공간에 바지 거치대 제공",
+"바지 길이에 맞게 자동으로 행거 높이 조절",
+"하의 세탁 기능 탑재",
+"하의 전용 스팀 노즐 추가"
+],
+"ans": 0,
+"exp": "삼성 에어드레서는 하의(바지·스커트) 전용 거치대를 제공해 주름 없이 펼쳐서 관리할 수 있습니다. 일반 행거에 걸면 접힌 부분에 주름이 생기지만 하의 거치대로 완벽하게 관리됩니다."
+},
+{
+"q": "삼성 에어드레서와 LG 스타일러의 주요 기능 비교로 올바른 것은?",
+"opts": [
+"LG 스타일러에는 스팀 기능 없음",
+"삼성 에어드레서는 젯에어+무빙행거, LG 스타일러는 트루스팀+무빙행거가 핵심 차별점",
+"두 제품 모두 동일한 기능 제공",
+"삼성 에어드레서만 냄새 제거 기능 탑재"
+],
+"ans": 1,
+"exp": "삼성 에어드레서의 핵심은 젯에어(강력 바람) + 무빙행거 + 스팀이고, LG 스타일러의 핵심은 트루스팀(고온 스팀) + 무빙행거 + 스팀 스프레이입니다. 두 제품 모두 무빙행거를 탑재하고 있습니다."
+},
+{
+"q": "삼성 에어드레서의 '필터 시스템'의 특징으로 올바른 것은?",
+"opts": [
+"HEPA 필터로 PM0.3 먼지 99.97% 포집",
+"2단계 필터(프리 필터 + 제균 필터)로 먼지와 세균 제거",
+"활성탄 필터로 냄새만 제거",
+"필터 교체 없이 평생 사용 가능"
+],
+"ans": 1,
+"exp": "삼성 에어드레서는 2단계 필터(프리 필터: 큰 먼지 포집, 제균 필터: 미세먼지·세균 제거)로 의류에서 제거된 먼지와 세균을 포집합니다. 제균 필터는 주기적 교체가 필요합니다."
+},
+{
+"q": "삼성 에어드레서가 집먼지 진드기를 제거하는 방법으로 올바른 것은?",
+"opts": [
+"UV 자외선으로 집먼지 진드기 사멸",
+"고온 스팀(120℃ 이상)으로 사멸",
+"젯에어로 물리적으로 털어내고 스팀으로 사멸",
+"냉동 처리로 사멸"
+],
+"ans": 2,
+"exp": "삼성 에어드레서는 젯에어로 의류 표면의 집먼지 진드기를 물리적으로 털어내고, 스팀(100℃)의 고온 열기로 남은 진드기를 사멸합니다. 두 가지 방법이 함께 작용해 효과적으로 제거됩니다."
+},
+{
+"q": "삼성 에어드레서의 Bespoke 디자인 적용 범위로 올바른 것은?",
+"opts": [
+"색상 선택은 불가하며 단일 화이트만 제공",
+"도어 패널의 색상과 소재를 선택해 인테리어에 맞게 커스터마이징 가능",
+"냉장고처럼 패널 교체는 불가",
+"한국 외 해외에서만 Bespoke 디자인 적용"
+],
+"ans": 1,
+"exp": "삼성 Bespoke AI 에어드레서는 Bespoke 디자인 시스템을 적용해 도어 패널의 색상(코라 핑크, 코튼 화이트, 샤인 실버 등)과 소재를 선택할 수 있습니다. 주방·침실 인테리어와 조화를 이룰 수 있습니다."
+},
+{
+"q": "삼성 에어드레서의 SmartThings 앱 연동 기능으로 올바른 것은?",
+"opts": [
+"원격으로 코스 시작·완료 알림 수신",
+"에어드레서가 자동으로 세탁 코스를 결정",
+"실내 의류 상태를 카메라로 확인",
+"SmartThings 앱과는 연동되지 않음"
+],
+"ans": 0,
+"exp": "SmartThings 앱과 연동해 원격으로 에어드레서 코스 시작, 완료 알림 수신, 필터 교체 주기 알림 등을 확인할 수 있습니다."
+},
+{
+"q": "삼성 에어드레서의 설치 장소로 올바른 것은?",
+"opts": [
+"반드시 옥외(발코니)에만 설치 가능",
+"실내 어디에나 설치 가능하나 수도·배수 배관 연결 필요",
+"드럼세탁기 옆에만 설치 가능",
+"전용 에어드레서 룸(별도 공간)이 반드시 필요"
+],
+"ans": 1,
+"exp": "삼성 에어드레서는 실내 어디에나 설치할 수 있지만, 스팀 생성을 위한 급수 연결과 습기 배출을 위한 배수 연결이 필요합니다. 별도 공간이나 건물 외부 연결은 필요 없습니다."
+},
+{
+"q": "삼성 에어드레서의 '냄새 제거' 성능 인증 기관으로 올바른 것은?",
+"opts": [
+"ISO 국제 표준",
+"SGS(스위스 국제공인시험기관)",
+"Intertek",
+"IEC(국제전기기술위원회)"
+],
+"ans": 1,
+"exp": "삼성 에어드레서의 냄새 제거 성능은 SGS(스위스 국제공인시험기관)로부터 검증받았습니다. 담배 연기, 음식 냄새 등을 일정 비율 이상 제거하는 것을 공식적으로 인증합니다."
+},
+{
+"q": "삼성 에어드레서 '에어' 코스의 주요 기능은?",
+"opts": [
+"스팀과 바람으로 냄새·먼지 제거 (세탁 없이 리프레시)",
+"완전 세탁",
+"건조만 수행",
+"살충 처리"
+],
+"ans": 0,
+"exp": "에어 코스는 고온 스팀과 바람으로 의류의 냄새와 미세먼지를 제거해 드라이클리닝 없이 리프레시한다."
+},
+{
+"q": "삼성 에어드레서 '하이진 케어'가 제거하는 것은?",
+"opts": [
+"세균·바이러스·집먼지진드기",
+"기름 얼룩",
+"먹을 수 있는 오염",
+"옷감 구김"
+],
+"ans": 0,
+"exp": "하이진 케어는 99°C 이상의 스팀으로 의류의 세균, 바이러스, 집먼지진드기를 99.9% 사멸한다."
+},
+{
+"q": "삼성 에어드레서 '제트 에어'의 역할은?",
+"opts": [
+"강력한 바람으로 의류 미세먼지 분리·제거",
+"냉각 건조",
+"스팀 분사",
+"향기 주입"
+],
+"ans": 0,
+"exp": "제트 에어는 강한 기류를 발생시켜 의류에 붙어 있는 미세먼지와 꽃가루를 물리적으로 털어낸다."
+},
+{
+"q": "삼성 에어드레서 '구김 완화' 기능의 원리는?",
+"opts": [
+"스팀 후 움직이는 바람으로 자연스럽게 펴줌",
+"프레스로 눌러 펴줌",
+"고온 공기로 열처리",
+"냉각 후 압력 적용"
+],
+"ans": 0,
+"exp": "스팀이 옷감 섬유를 이완시키고 이후 바람이 의류를 부드럽게 움직여 구김을 자연스럽게 완화시킨다."
+},
+{
+"q": "삼성 에어드레서에서 관리 가능한 의류 종류가 아닌 것은?",
+"opts": [
+"젖은 상태의 수영복 즉시 건조",
+"정장 재킷",
+"드레스",
+"캐시미어 코트"
+],
+"ans": 0,
+"exp": "에어드레서는 리프레시와 관리 목적이며 젖은 수영복 건조는 건조기나 자연 건조가 적합하다."
+},
+{
+"q": "삼성 에어드레서 문의 '도어 행거'가 지탱할 수 있는 최대 의류 수는?",
+"opts": [
+"5~7벌 (기종별 상이)",
+"1벌",
+"10벌 이상",
+"제한 없음"
+],
+"ans": 0,
+"exp": "에어드레서 내부 공간에 따라 다르지만 일반적으로 5~7벌 정도의 의류를 동시에 관리할 수 있다."
+},
+{
+"q": "삼성 에어드레서 '스팀 리프레시 코스' 소요 시간은?",
+"opts": [
+"약 20~40분 (코스별 상이)",
+"약 2~3시간",
+"약 5분",
+"하루 종일"
+],
+"ans": 0,
+"exp": "빠른 리프레시는 약 20분, 표준 리프레시는 약 40분으로 드라이클리닝보다 훨씬 빠르게 의류를 관리한다."
+},
+{
+"q": "삼성 에어드레서 '신발 관리' 액세서리가 별도 있는 이유는?",
+"opts": [
+"바닥의 분리 가능한 거치대로 신발 탈취·살균",
+"신발이 기본 행거에 걸리지 않아서",
+"신발이 의류보다 더 강한 스팀 필요",
+"신발 전용 코스 별도 존재"
+],
+"ans": 0,
+"exp": "신발용 액세서리는 내부 바닥에 설치해 신발을 안정적으로 거치하고 스팀·바람이 신발 내부까지 전달되도록 한다."
+},
+{
+"q": "삼성 에어드레서 '향기 패치' 기능의 역할은?",
+"opts": [
+"원하는 향기 카트리지 삽입으로 의류에 은은한 향 부여",
+"탈취제 자동 분사",
+"방향제 연소",
+"향기 세제 자동 투입"
+],
+"ans": 0,
+"exp": "향기 패치는 사용자가 원하는 향기 카트리지를 에어드레서에 삽입하면 관리 과정에서 의류에 은은한 향이 배도록 한다."
+},
+{
+"q": "삼성 에어드레서를 구입할 때 고려해야 할 설치 조건이 아닌 것은?",
+"opts": [
+"전용 수도 배관 필요 여부",
+"전원 220V 콘센트",
+"바닥 수평",
+"환기 가능 공간"
+],
+"ans": 0,
+"exp": "에어드레서는 내부 물통에 물을 직접 채우는 방식이라 전용 수도 배관 없이 설치 가능하다."
+},
+{
+"q": "삼성 에어드레서 '어린이 의류 코스'의 특징은?",
+"opts": [
+"저온 스팀으로 아이 의류 살균, 유해물질 제거",
+"고온 살균 집중",
+"건조 없이 향기만 부여",
+"먼지만 제거"
+],
+"ans": 0,
+"exp": "어린이 코스는 아기 피부에 맞게 저온 스팀으로 세균을 제거하고 새 옷의 유해 화학 물질을 완화한다."
+},
+{
+"q": "삼성 에어드레서 물통 관리 방법으로 올바른 것은?",
+"opts": [
+"매 사용 후 응결수 비우고 건조",
+"한 달에 한 번 세척",
+"사용 전날 물 미리 채워두기",
+"소독제 넣어 살균"
+],
+"ans": 0,
+"exp": "물통(응결수 통)은 매 사용 후 물을 버리고 통 내부를 건조해야 세균 번식과 냄새를 방지할 수 있다."
+},
+{
+"q": "삼성 에어드레서 'SmartThings 연동' 으로 가능한 것은?",
+"opts": [
+"스마트폰으로 원격 코스 시작 및 완료 알림",
+"의류 자동 분류",
+"에어드레서 위치 GPS 추적",
+"의류 손상 자동 보고"
+],
+"ans": 0,
+"exp": "SmartThings 연동으로 외출 중에도 스마트폰으로 에어드레서 코스를 시작하거나 완료 알림을 받을 수 있다."
+},
+{
+"q": "삼성 에어드레서 '미세먼지 집중 케어' 코스가 효과적인 상황은?",
+"opts": [
+"황사·미세먼지 심한 날 외출 후 의류 관리",
+"일반 먼지 제거",
+"빗물에 젖은 의류 건조",
+"냄새 제거 집중"
+],
+"ans": 0,
+"exp": "미세먼지 집중 케어는 황사나 미세먼지 농도가 높은 날 외출 후 의류에 붙은 초미세 입자 제거에 최적화되어 있다."
+},
+{
+"q": "삼성 에어드레서 내부 '활성탄 필터'의 역할은?",
+"opts": [
+"의류에서 제거된 냄새 입자 흡착 및 공기 정화",
+"스팀 생성",
+"바람 필터링",
+"온도 조절"
+],
+"ans": 0,
+"exp": "활성탄 필터는 의류에서 분리된 담배 냄새, 음식 냄새 등 냄새 분자를 흡착해 에어드레서 내부 공기를 정화한다."
+},
+{
+"q": "삼성 에어드레서와 건조기의 가장 큰 차이점은?",
+"opts": [
+"에어드레서는 세탁 없이 리프레시·관리, 건조기는 세탁 후 건조",
+"에어드레서가 더 큰 용량",
+"건조기가 살균 기능 우수",
+"에어드레서가 소비전력이 낮음"
+],
+"ans": 0,
+"exp": "에어드레서는 세탁이 어려운 정장, 코트, 유니폼을 스팀·바람으로 관리하며, 건조기는 세탁 완료 후 건조하는 제품이다."
+},
+{
+"q": "삼성 에어드레서 '무빙 행거' 기능의 효과는?",
+"opts": [
+"행거가 앞뒤로 움직여 의류에 스팀이 고르게 침투",
+"행거 자동 승강",
+"의류 자동 정렬",
+"의류 흘러내림 방지"
+],
+"ans": 0,
+"exp": "무빙 행거는 의류를 앞뒤로 흔들어 스팀과 바람이 의류 전체에 고르게 닿도록 해 관리 효과를 높인다."
+}
+],
+"청소기": [
+{
+"q": "삼성 Bespoke AI 스팀 제트의 '5-in-1' 기능이 아닌 것은?",
+"opts": [
+"진공 청소",
+"스팀 청소",
+"물걸레 청소",
+"UV 살균"
+],
+"ans": 3,
+"exp": "삼성 Bespoke AI 스팀 제트의 5-in-1은 진공청소·스팀청소·물걸레청소·자동세제투입·열풍건조입니다. UV 살균은 Bespoke 스팀 제트의 5-in-1 기능에 포함되지 않습니다."
+},
+{
+"q": "삼성 Bespoke AI 청소기의 '자동 먼지 비움 스테이션'의 특징으로 올바른 것은?",
+"opts": [
+"청소기를 스테이션에 거치하면 먼지통이 자동으로 비워짐",
+"청소기 내부를 물로 자동 세척",
+"먼지통을 수동으로 비워야 하는 공간을 제공",
+"스테이션이 먼지를 완전히 분해·소각"
+],
+"ans": 0,
+"exp": "삼성 자동 먼지 비움 스테이션은 청소기를 거치하면 강력한 흡입력으로 먼지통의 먼지를 자동으로 스테이션 내 먼지봉투에 옮겨 담습니다. 먼지통을 직접 비울 필요가 없어 위생적입니다."
+},
+{
+"q": "삼성 청소기의 'AI 오브젝트 감지(AI Object Detection)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"장애물을 감지하면 자동으로 청소기 방향을 전환",
+"바닥에 떨어진 강아지 배변, 양말 등 작은 물체를 감지해 사용자에게 알림",
+"AI가 방의 구조를 학습해 최적 청소 경로 생성",
+"AI가 스스로 먼지 농도를 감지해 흡입력 조절"
+],
+"ans": 1,
+"exp": "삼성 AI 오브젝트 감지는 카메라와 AI로 바닥에 떨어진 배변, 양말 등 장애물을 사전에 감지해 스마트폰으로 알림을 보냅니다. 로봇청소기가 오염물 위를 지나가는 것을 방지해 2차 오염을 막습니다."
+},
+{
+"q": "삼성 Bespoke AI 제트 스틱 청소기의 최대 흡입력(Pa 기준)으로 올바른 것은?",
+"opts": [
+"100Pa",
+"150Pa",
+"210Pa",
+"280Pa"
+],
+"ans": 2,
+"exp": "삼성 Bespoke AI 제트의 최대 흡입력은 210W(최대 모드 기준)으로 강력한 흡입력을 제공합니다. 강력한 흡입력과 가벼운 무게의 균형을 맞추는 것이 핵심입니다."
+},
+{
+"q": "삼성 로봇청소기 제트 봇 AI의 '맵 뷰(Map View)' 기능으로 올바른 것은?",
+"opts": [
+"청소기 내부 먼지를 3D로 시각화",
+"스마트폰에서 집 구조 지도를 확인하고 구역별 청소 명령 가능",
+"청소 경로를 실시간으로 TV 화면에 표시",
+"청소 완료 후 먼지량을 지도로 표시"
+],
+"ans": 1,
+"exp": "Map View는 스마트폰 앱에서 집 구조를 지도로 확인하고 특정 방이나 구역만 선택해 청소 명령을 내릴 수 있습니다. '거실만 청소', '주방 제외 청소' 등 정밀한 구역 청소가 가능합니다."
+},
+{
+"q": "삼성 로봇청소기의 'AI 플로어 센싱(AI Floor Sensing)'의 기능으로 올바른 것은?",
+"opts": [
+"바닥 재질(마루·카펫·타일)을 자동 감지해 흡입력·물걸레 방식 최적화",
+"바닥의 색상을 감지해 청소기 색상을 맞춤",
+"경사도를 감지해 낙상 방지",
+"바닥 온도를 감지해 난방 연동"
+],
+"ans": 0,
+"exp": "AI 플로어 센싱은 마루, 카펫, 타일 등 바닥 재질을 실시간으로 감지해 각 재질에 최적화된 흡입력과 물걸레 동작 방식을 자동으로 조절합니다. 카펫에서는 물걸레를 들어올려 카펫이 젖지 않게 합니다."
+},
+{
+"q": "삼성 Bespoke AI 스팀 제트의 스팀 살균 온도로 올바른 것은?",
+"opts": [
+"60℃",
+"80℃",
+"100℃",
+"120℃"
+],
+"ans": 2,
+"exp": "삼성 Bespoke AI 스팀 제트는 100℃의 고온 스팀으로 바닥의 세균·집먼지 진드기를 99.9% 이상 살균합니다. 스팀 청소와 진공 청소를 동시에 수행해 한 번에 청결한 바닥을 만들 수 있습니다."
+},
+{
+"q": "삼성 청소기의 '자동 세제 투입(Auto Detergent Dosing)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"청소 구역에 따라 세제를 자동으로 더 많이 또는 적게 투입",
+"매 청소마다 동일한 양의 세제 투입",
+"세제는 반드시 수동으로 넣어야 하며 자동 투입은 리필형 세제 전용",
+"세제를 희석해서 물걸레 전용 탱크에 자동 투입"
+],
+"ans": 0,
+"exp": "자동 세제 투입 기능은 오염된 구역에서는 세제를 더 많이, 가벼운 오염 구역에서는 적게 자동으로 투입합니다. 세제 낭비를 막고 최적의 청소 효과를 냅니다."
+},
+{
+"q": "삼성 로봇청소기와 일반(스틱) 청소기의 '에어워시 Station' 기능 차이로 올바른 것은?",
+"opts": [
+"로봇청소기 전용 기능으로 스틱 청소기에는 없음",
+"스틱 청소기 전용 기능으로 로봇청소기에는 없음",
+"두 제품 모두 스테이션에서 걸레를 자동 세척·건조하는 기능 제공",
+"에어워시 Station은 먼지봉투 교체 전용 스테이션"
+],
+"ans": 2,
+"exp": "삼성 에어워시 Station은 로봇청소기와 스틱 청소기 모두에서 사용 가능하며, 사용 후 물걸레 패드를 스테이션에 거치하면 자동으로 세척하고 열풍으로 건조합니다. 매번 손으로 세척할 필요가 없습니다."
+},
+{
+"q": "삼성 로봇청소기의 '직배수(Direct Drain)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"청소 중 먼지를 직접 하수구로 배출",
+"물탱크를 수도에 직접 연결해 물이 떨어지지 않음",
+"먼지봉투를 없애고 집진통에 직접 먼지 수집",
+"스테이션에서 자동으로 배수해 물탱크를 비워줌"
+],
+"ans": 3,
+"exp": "직배수 기능은 스테이션에서 물걸레용 물탱크의 오폐수를 자동으로 배수관에 배출하고, 깨끗한 물을 자동으로 보충합니다. 물탱크를 매번 비우고 채울 필요가 없어 편리합니다."
+},
+{
+"q": "삼성 청소기의 HEPA 필터 역할로 올바른 것은?",
+"opts": [
+"냄새만 제거하는 활성탄 필터",
+"PM0.3 미세먼지를 99.97% 이상 포집하는 고성능 필터",
+"집먼지 진드기만 제거하는 전용 필터",
+"청소기 모터를 보호하는 먼지 필터"
+],
+"ans": 1,
+"exp": "HEPA(High Efficiency Particulate Air) 필터는 직경 0.3마이크로미터 크기의 미세먼지를 99.97% 이상 포집합니다. 청소기로 빨아들인 미세먼지가 배기구로 다시 방출되지 않아 실내 공기질을 개선합니다."
+},
+{
+"q": "삼성 스틱 청소기의 배터리 교체 방식의 특징으로 올바른 것은?",
+"opts": [
+"배터리가 기기에 고정되어 교체 불가",
+"배터리를 분리해 여분 배터리로 교체해 사용 시간 연장 가능",
+"배터리는 서비스 센터에서만 교체 가능",
+"무선 충전으로만 충전 가능"
+],
+"ans": 1,
+"exp": "삼성 스틱 청소기는 배터리를 탈착할 수 있어 충전된 여분 배터리로 바꿔 연속 사용이 가능합니다. 한 배터리 충전 중 다른 배터리로 청소를 이어갈 수 있어 넓은 공간 청소에 유용합니다."
+},
+{
+"q": "삼성 로봇청소기의 탈출 감지 기능(Escape Detection)의 설명으로 올바른 것은?",
+"opts": [
+"외부 침입자를 감지해 알림",
+"청소기가 가구 밑에 끼인 상황을 감지해 스스로 빠져나오거나 앱에 알림",
+"가스 누출을 감지해 경보",
+"낙하 방지를 위해 계단 감지"
+],
+"ans": 1,
+"exp": "탈출 감지 기능은 로봇청소기가 가구나 문 밑에 끼인 상황을 감지해 다양한 방향으로 시도해 스스로 빠져나오거나, 빠져나오지 못할 경우 SmartThings 앱으로 위치와 함께 알림을 보냅니다."
+},
+{
+"q": "삼성 비스포크 AI 스팀 청소기의 '스팀 살균'이 적합한 바닥재는?",
+"opts": [
+"타일·마루 등 딱딱한 바닥",
+"카펫·러그",
+"소파·패브릭",
+"커튼"
+],
+"ans": 0,
+"exp": "스팀은 고온 증기로 딱딱한 바닥의 세균과 집먼지진드기를 살균하며, 카펫이나 패브릭에는 다른 방법이 적합하다."
+},
+{
+"q": "삼성 로봇청소기 '직진 주행 + 지그재그' 청소 방식의 장점은?",
+"opts": [
+"중복 청소 최소화로 효율적 전체 면적 커버",
+"장애물 회피에 특화",
+"배터리 소모 절감",
+"소음 감소"
+],
+"ans": 0,
+"exp": "직선과 지그재그를 결합한 체계적 주행은 중복 구역을 최소화하면서 방 전체를 빠짐없이 청소한다."
+},
+{
+"q": "삼성 로봇청소기 '3D 센서'가 감지하는 것은?",
+"opts": [
+"장애물의 크기·높이·위치",
+"냄새",
+"습도",
+"바닥 재질"
+],
+"ans": 0,
+"exp": "3D 센서는 장애물의 3차원 정보를 파악해 충돌 없이 회피하거나 필요한 경우 넘어가도록 판단한다."
+},
+{
+"q": "삼성 청소기 '사이클론 분리' 방식의 원리는?",
+"opts": [
+"원심력으로 먼지를 공기와 분리하여 먼지통에 수집",
+"필터로 먼지 걸러냄",
+"물로 먼지 포집",
+"진공압으로 먼지 흡착"
+],
+"ans": 0,
+"exp": "사이클론 방식은 강한 회전 기류를 이용해 원심력으로 먼지를 공기와 분리해 별도 통에 수집한다."
+},
+{
+"q": "삼성 로봇청소기 '자동 먼지 비움 스테이션'의 기능은?",
+"opts": [
+"청소 완료 후 로봇이 귀환하면 먼지통 자동 흡입 비움",
+"로봇청소기 자동 충전",
+"물걸레 자동 세척",
+"배터리 자동 교체"
+],
+"ans": 0,
+"exp": "자동 비움 스테이션은 로봇이 귀환 시 강한 흡입력으로 로봇 내부 먼지통을 비워 집진 백에 수집한다."
+},
+{
+"q": "삼성 무선 청소기 'Jet' 시리즈의 핵심 기술은?",
+"opts": [
+"디지털 인버터 모터로 강력한 흡입력과 긴 배터리",
+"유선 방식",
+"물걸레 전용",
+"소형 청소 전용"
+],
+"ans": 0,
+"exp": "Jet 시리즈는 디지털 인버터 모터로 강한 흡입력을 내면서도 배터리 효율을 높여 장시간 사용이 가능하다."
+},
+{
+"q": "삼성 청소기 'AI 자동 청정' 기능은?",
+"opts": [
+"공기질 센서 감지 후 자동으로 청소 강도 조절",
+"AI가 청소 구역 자동 설정",
+"AI가 음악 재생",
+"AI가 청소 일정 자동 등록"
+],
+"ans": 0,
+"exp": "AI 자동 청정은 내장 공기질 센서가 먼지·오염을 감지해 흡입력을 자동으로 높이거나 낮춘다."
+},
+{
+"q": "삼성 로봇청소기 '정밀 지도 작성(LiDAR)'의 역할은?",
+"opts": [
+"레이저로 공간 3D 지도를 정확하게 작성하여 효율적 청소",
+"장애물 제거",
+"음성 인식",
+"카메라 촬영"
+],
+"ans": 0,
+"exp": "LiDAR(라이다)는 레이저 펄스로 공간을 360도 스캔해 정밀한 지도를 작성하고 최적 경로로 청소한다."
+},
+{
+"q": "삼성 청소기 '물걸레 진동 모듈'의 작동 방식은?",
+"opts": [
+"패드가 고속 진동하며 바닥을 닦아 오염 제거",
+"물을 스프레이로 분사",
+"스팀으로 바닥 살균",
+"회전 브러시로 먼지 제거"
+],
+"ans": 0,
+"exp": "물걸레 진동 모듈은 분당 수백 회 이상 진동하는 패드로 바닥의 묵은 오염을 효과적으로 닦아낸다."
+},
+{
+"q": "삼성 청소기 '헤파(HEPA) 필터'가 걸러내는 최소 입자는?",
+"opts": [
+"0.3μm 이상 입자 99.97% 포집",
+"10μm",
+"PM2.5만 포집",
+"냄새 분자"
+],
+"ans": 0,
+"exp": "HEPA 필터(H13 등급 이상)는 0.3μm 이상 입자를 99.97% 이상 포집해 알레르겐, 꽃가루 등을 효과적으로 제거한다."
+},
+{
+"q": "삼성 로봇청소기 '구역 청소' 기능의 사용 방법은?",
+"opts": [
+"앱에서 지도에 특정 구역을 설정해 해당 구역만 청소",
+"음성으로 구역 지정",
+"로봇 손으로 밀어 구역 지정",
+"자동으로 구역 나눔"
+],
+"ans": 0,
+"exp": "SmartThings 앱에서 작성된 지도에 청소할 구역을 직접 지정하면 로봇이 해당 구역만 집중 청소한다."
+},
+{
+"q": "삼성 청소기 배터리 '리튬이온 vs 니켈수소'에서 리튬이온의 장점은?",
+"opts": [
+"가볍고 에너지 밀도 높아 긴 사용 시간",
+"충전 횟수 무제한",
+"발열 없음",
+"더 저렴한 가격"
+],
+"ans": 0,
+"exp": "리튬이온 배터리는 에너지 밀도가 높고 가벼워 동일 무게 대비 더 오래 사용할 수 있으며 메모리 효과도 없다."
+},
+{
+"q": "삼성 로봇청소기 '카펫 부스트' 기능이 작동하는 조건은?",
+"opts": [
+"카펫 감지 시 자동으로 흡입력 강화",
+"항상 최강 모드",
+"사용자 수동 설정만 가능",
+"카펫에서는 작동 중단"
+],
+"ans": 0,
+"exp": "카펫 부스트는 바닥 감지 센서가 카펫을 인식하면 자동으로 흡입력을 높여 카펫 깊숙한 먼지를 제거한다."
+},
+{
+"q": "삼성 청소기 '먼지 자동 배출 스테이션' 집진 백의 교체 주기는?",
+"opts": [
+"약 1~3개월 (사용 빈도에 따라)",
+"매주",
+"1년에 한 번",
+"교체 불필요"
+],
+"ans": 0,
+"exp": "자동 비움 스테이션의 집진 백은 사용 빈도에 따라 약 1~3개월 간격으로 교체해야 성능을 유지할 수 있다."
+},
+{
+"q": "삼성 청소기 '흡입력 단위 Pa(파스칼)'가 높을수록 의미하는 것은?",
+"opts": [
+"흡착 압력이 강해 더 잘 빨아들임",
+"소음이 작아짐",
+"배터리 소모가 줄어듦",
+"필터 수명 연장"
+],
+"ans": 0,
+"exp": "Pa(파스칼) 수치는 흡착 압력을 나타내며, 수치가 높을수록 먼지를 강하게 빨아들인다."
+},
+{
+"q": "삼성 로봇청소기 '귀환 충전' 기능의 작동 조건은?",
+"opts": [
+"배터리 잔량 부족 시 충전 스테이션으로 자동 귀환",
+"청소 완료 시에만 귀환",
+"항상 30분마다 귀환",
+"소음 감지 시 귀환"
+],
+"ans": 0,
+"exp": "배터리 잔량이 일정 수준 이하로 떨어지면 자동으로 충전 스테이션을 찾아 귀환하고, 충전 완료 후 청소를 재개한다."
+},
+{
+"q": "삼성 청소기 '투 트랙(Two-track) 모터' 기술의 특징은?",
+"opts": [
+"흡입과 브러시를 독립 모터로 구동해 각각 최적화",
+"동시에 두 구역 청소",
+"배터리 이중 구조",
+"필터 이중 구조"
+],
+"ans": 0,
+"exp": "흡입 모터와 브러시 모터를 분리해 각각 최적 회전수로 운전하므로 흡입 성능과 브러시 성능을 동시에 극대화한다."
+},
+{
+"q": "삼성 로봇청소기 '금지 구역(No-Go Zone)' 설정 방법은?",
+"opts": [
+"SmartThings 앱 지도에서 가상 경계 설정",
+"스티커 부착",
+"물리적 차단막 설치",
+"목소리로 지시"
+],
+"ans": 0,
+"exp": "SmartThings 앱에서 지도에 가상 경계선 또는 금지 구역을 그리면 로봇이 해당 구역에 진입하지 않는다."
+},
+{
+"q": "삼성 청소기 'Multi-surface Brush'가 적합한 바닥재는?",
+"opts": [
+"딱딱한 바닥과 카펫 모두 사용 가능",
+"카펫 전용",
+"타일 전용",
+"나무 바닥 전용"
+],
+"ans": 0,
+"exp": "멀티 서피스 브러시는 딱딱한 마루, 타일, 카펫 등 다양한 바닥에서 효율적으로 먼지를 수거하도록 설계됐다."
+},
+{
+"q": "삼성 청소기 '스팀 물걸레 자동 세척' 기능의 장점은?",
+"opts": [
+"걸레 패드를 스테이션에서 자동 세척해 위생 유지",
+"물 사용량 절감",
+"청소 시간 단축",
+"배터리 충전 속도 향상"
+],
+"ans": 0,
+"exp": "자동 세척 스테이션은 청소 완료 후 걸레 패드를 뜨거운 물로 자동 세척해 세균 번식 없이 위생적으로 관리된다."
+},
+{
+"q": "삼성 청소기 '레이저 슬림' 헤드의 특징은?",
+"opts": [
+"레이저로 어두운 곳 먼지 가시화 + 바닥 밀착 설계",
+"레이저로 먼지 살균",
+"레이저로 경로 안내",
+"레이저로 먼지 측정"
+],
+"ans": 0,
+"exp": "레이저 슬림 헤드는 레이저 빔으로 어두운 공간의 먼지를 빛으로 보이게 하고 낮은 높이로 소파 아래도 청소 가능하다."
+}
+],
+"휴대폰": [
+{
+"q": "Galaxy S26 Ultra의 디스플레이 크기(대각선)로 올바른 것은?",
+"opts": [
+"15.9cm (6.27\")",
+"169.1mm (6.66\")",
+"174.9mm (6.9\")",
+"160.3mm (6.31\")"
+],
+"ans": 2,
+"exp": "Galaxy S26 Ultra는 174.9mm Dynamic AMOLED 2X 디스플레이를 탑재했습니다."
+},
+{
+"q": "Galaxy S26 Ultra 광각 카메라의 최대 조리개 값은?",
+"opts": [
+"f/1.7",
+"f/1.78",
+"f/1.4",
+"f/1.5"
+],
+"ans": 2,
+"exp": "S26 Ultra의 광각 카메라는 F1.4로 빛을 47% 더 많이 받아들여 야간 촬영 성능이 크게 향상됩니다."
+},
+{
+"q": "Galaxy S26 Ultra에만 탑재된 '모바일 세계 최초' 기능은?",
+"opts": [
+"S펜 내장",
+"내장형 프라이버시 디스플레이",
+"100배 스페이스 줌",
+"200MP 카메라"
+],
+"ans": 1,
+"exp": "S26 Ultra는 모바일 최초로 내장형 프라이버시 디스플레이를 탑재했습니다. 별도 필름 없이 픽셀을 제어해 측면 시야를 차단합니다."
+},
+{
+"q": "Galaxy S26 Ultra에 탑재된 프로세서는?",
+"opts": [
+"A19 Pro 칩",
+"갤럭시용 스냅드래곤 8 Elite 5세대",
+"갤럭시용 스냅드래곤 8 Gen 3",
+"Exynos 2500"
+],
+"ans": 1,
+"exp": "S26 Ultra는 갤럭시를 위해 맞춤 설계된 최신 스냅드래곤 8 Elite 5세대를 탑재했습니다."
+},
+{
+"q": "Galaxy S26 Ultra와 iPhone 17 Pro의 차이점으로 올바른 것은?",
+"opts": [
+"iPhone 17 Pro는 S펜을 지원한다",
+"Galaxy S26 Ultra에는 S펜이 내장되어 있다",
+"두 기기 모두 S펜을 지원한다",
+"Galaxy S26 Ultra는 별매 S펜을 사용한다"
+],
+"ans": 1,
+"exp": "S26 Ultra는 S펜을 기기 내부에 슬롯 형태로 내장해 언제든 꺼내 쓸 수 있습니다. iPhone 17 Pro에는 이런 기능이 없습니다."
+},
+{
+"q": "Galaxy S26 Ultra의 최대 줌 배율은?",
+"opts": [
+"50배 스페이스 줌",
+"30배 스페이스 줌",
+"100배 스페이스 줌",
+"200배 스페이스 줌"
+],
+"ans": 2,
+"exp": "S26 Ultra는 광학 줌 수준의 10배 줌과 AI 기반 디지털 줌이 결합된 100배 스페이스 줌을 제공합니다."
+},
+{
+"q": "Galaxy S26 Ultra 광각(메인) 카메라의 화소 수는?",
+"opts": [
+"48MP",
+"108MP",
+"200MP",
+"50MP"
+],
+"ans": 2,
+"exp": "S26 Ultra는 업계 최고 수준인 200MP 광각 카메라를 탑재했습니다. iPhone 17 Pro의 48MP 대비 약 4배 높은 해상도입니다."
+},
+{
+"q": "Galaxy S26 Ultra의 초고속 충전 3.0으로 약 30분 만에 충전 가능한 비율은?",
+"opts": [
+"50%",
+"69%",
+"75%",
+"90%"
+],
+"ans": 2,
+"exp": "S26 Ultra는 초고속 충전 3.0 기술로 약 30분 만에 최대 75%까지 충전됩니다."
+},
+{
+"q": "Galaxy S26 Ultra의 두께는?",
+"opts": [
+"8.75mm",
+"8.6mm",
+"8.0mm",
+"7.9mm"
+],
+"ans": 3,
+"exp": "S26 Ultra는 7.9mm의 슬림한 두께로 iPhone 17 Pro(8.75mm)보다 0.85mm 더 얇습니다."
+},
+{
+"q": "Galaxy S26 Ultra의 NPU(AI) 성능은 갤럭시 S25 Ultra 대비 몇 % 향상되었나?",
+"opts": [
+"24%",
+"19%",
+"30%",
+"39%"
+],
+"ans": 3,
+"exp": "S26 Ultra의 맞춤형 프로세서는 S25 Ultra 대비 NPU 39%, GPU 24%, CPU 19% 향상됐습니다."
+},
+{
+"q": "Galaxy S26의 Galaxy AI 기능 중 'Now Brief'의 설명으로 올바른 것은?",
+"opts": [
+"즉각적인 번역을 제공하는 통역 기능",
+"일정·알림·날씨·교통 등을 분석해 AI가 선제적으로 필요한 정보를 요약해 보여주는 기능",
+"AI가 사진을 자동 편집하는 기능",
+"실시간으로 뉴스를 요약해 제공하는 기능"
+],
+"ans": 1,
+"exp": "Now Brief는 캘린더, 이메일, 날씨, 교통 정보 등을 AI가 분석해 현재 상황에서 필요한 정보를 선제적으로 요약해 보여주는 기능입니다. 예: '출근 30분 전, 현재 교통 지연 15분 예상'"
+},
+{
+"q": "Galaxy S26 시리즈의 'Galaxy AI' 기능 중 통화 중 실시간 번역을 제공하는 기능은?",
+"opts": [
+"Live Translate(실시간 통역)",
+"Circle to Search",
+"Now Brief",
+"Sketch to Image"
+],
+"ans": 0,
+"exp": "Live Translate(실시간 통역)는 전화 통화 중 상대방의 말을 실시간으로 번역해 자막과 음성으로 제공합니다. 언어 장벽 없이 외국어로 통화할 수 있습니다."
+},
+{
+"q": "삼성 Galaxy S26의 'Circle to Search' 기능의 특징으로 올바른 것은?",
+"opts": [
+"화면에 원을 그려 그 안의 이미지·텍스트를 즉시 Google 검색",
+"화면 캡처 후 수동으로 검색해야 함",
+"오직 삼성 인터넷 앱에서만 사용 가능",
+"QR 코드를 원으로 스캔하는 기능"
+],
+"ans": 0,
+"exp": "Circle to Search는 화면에서 원을 그리거나 스크리블(낙서)해 이미지, 텍스트, 주소 등을 즉시 Google에서 검색합니다. 앱 전환 없이 어느 화면에서든 바로 검색할 수 있습니다."
+},
+{
+"q": "Galaxy S26 Ultra의 S펜으로 작성한 손글씨를 텍스트로 변환하는 Galaxy AI 기능은?",
+"opts": [
+"Note Assist",
+"Note Translation",
+"Handwriting to Text",
+"AI Scribble"
+],
+"ans": 2,
+"exp": "Galaxy S26 Ultra의 S펜으로 메모 앱에 손글씨를 쓰면 'Handwriting to Text' 기능으로 자동으로 텍스트로 변환됩니다. 여러 언어 손글씨도 인식 가능합니다."
+},
+{
+"q": "Galaxy S26 시리즈의 OS 업데이트 지원 기간으로 올바른 것은?",
+"opts": [
+"3년 OS 업데이트 + 4년 보안 패치",
+"5년 OS 업데이트 + 5년 보안 패치",
+"7년 OS 업데이트 + 7년 보안 패치",
+"무제한 업데이트"
+],
+"ans": 2,
+"exp": "삼성 Galaxy S26 시리즈는 7년간 OS 버전 업데이트와 7년간 보안 패치를 제공합니다. Apple iPhone의 5~6년 지원보다 길며, 오랜 기간 최신 기능과 보안을 유지할 수 있습니다."
+},
+{
+"q": "Galaxy S26 시리즈의 IP 등급으로 올바른 것은?",
+"opts": [
+"IP67",
+"IP68",
+"IP69",
+"IP69K"
+],
+"ans": 1,
+"exp": "Galaxy S26 시리즈는 IP68 등급으로 최대 수심 2m에서 30분간 방수가 가능합니다."
+},
+{
+"q": "Galaxy S26+ (플러스)의 특징으로 올바른 것은?",
+"opts": [
+"S26 Ultra와 동일한 200MP 카메라 탑재",
+"S펜을 기본 내장",
+"S26 대비 더 큰 화면(6.7\")과 더 큰 배터리, S Ultra 없는 고객층에 적합",
+"S26 Ultra와 동일한 프라이버시 디스플레이 탑재"
+],
+"ans": 2,
+"exp": "Galaxy S26+는 S26(6.2\") 대비 더 큰 6.7인치 화면과 더 큰 배터리를 제공합니다. S Ultra의 200MP 카메라, S펜, 100배 줌은 없지만 더 큰 화면을 원하면서 Ultra보다 가벼운 제품을 원하는 고객에게 적합합니다."
+},
+{
+"q": "삼성 Galaxy S26 시리즈의 공식 보증 무게(S26 Ultra 기준)로 올바른 것은?",
+"opts": [
+"195g",
+"214g",
+"228g",
+"245g"
+],
+"ans": 1,
+"exp": "Galaxy S26 Ultra의 무게는 214g으로 S24 Ultra(232g) 대비 18g 가벼워졌습니다."
+},
+{
+"q": "Galaxy Z Fold6의 폴딩 방식의 특징으로 올바른 것은?",
+"opts": [
+"좌우로 접히는 클램셸(조개) 방식",
+"위아래로 접히는 플립 방식",
+"안쪽으로 접히는 인폴딩 방식",
+"세 번 접히는 트라이폴드 방식"
+],
+"ans": 2,
+"exp": "Galaxy Z Fold6는 화면이 안쪽으로 접히는 인폴딩 방식을 사용합니다. 펼치면 태블릿처럼 사용 가능하고(7.6인치), 접으면 커버 화면(6.3인치)으로 스마트폰처럼 사용할 수 있습니다."
+},
+{
+"q": "Galaxy Z Flip6의 커버 화면(플렉스 창) 크기로 올바른 것은?",
+"opts": [
+"1.9인치",
+"3.4인치",
+"3.9인치",
+"4.2인치"
+],
+"ans": 2,
+"exp": "Galaxy Z Flip6는 3.9인치 플렉스 창을 탑재해 기기를 열지 않고도 앱 실행, 메시지 확인, 카메라 사용 등을 할 수 있습니다."
+},
+{
+"q": "Galaxy S26 시리즈의 무선 충전 방식으로 올바른 것은?",
+"opts": [
+"Qi 표준만 지원",
+"삼성 고속 무선 충전 2.0만 지원",
+"삼성 고속 무선 충전 2.0(최대 15W) + Qi 호환",
+"무선 충전 미지원"
+],
+"ans": 2,
+"exp": "Galaxy S26 시리즈는 삼성 고속 무선 충전 2.0(최대 15W)을 지원하며 일반 Qi 무선 충전 패드와도 호환됩니다."
+},
+{
+"q": "Galaxy S26 Ultra의 Quad Camera 구성으로 올바른 것은?",
+"opts": [
+"200MP 광각 + 10MP 망원 + 50MP 초광각 + ToF 센서",
+"200MP 광각 + 50MP 광각 + 10MP 망원(3x) + 50MP 망원(5x)",
+"200MP 광각 + 12MP 초광각 + 10MP 망원(3x) + 10MP 망원(10x)",
+"200MP 광각 + 10MP 망원(3x) + 10MP 망원(10x) + 50MP 초광각"
+],
+"ans": 3,
+"exp": "Galaxy S26 Ultra는 200MP 광각 + 10MP 3x 망원 + 10MP 10x 망원 + 50MP 초광각의 쿼드 카메라 시스템을 갖추고 있습니다."
+},
+{
+"q": "삼성 Galaxy AI의 'Generative Edit(생성형 편집)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"사진 속 특정 인물을 AI가 자동으로 삭제",
+"사진에서 피사체를 이동·제거·확장한 후 AI가 자연스럽게 배경 채움",
+"사진을 흑백으로 변환하는 필터 기능",
+"AI가 자동으로 여러 사진을 하나로 합성"
+],
+"ans": 1,
+"exp": "생성형 편집은 사진 속 피사체를 이동하거나 원치 않는 객체를 삭제했을 때 비어있는 배경을 AI가 자연스럽게 채워줍니다."
+},
+{
+"q": "Galaxy S26 시리즈가 지원하는 S펜의 최소 잠복 시간(latency)으로 올바른 것은?",
+"opts": [
+"9ms",
+"5ms",
+"2.8ms",
+"1ms"
+],
+"ans": 2,
+"exp": "Galaxy S26 Ultra의 S펜은 약 2.8ms의 초저지연 응답속도를 제공합니다. 거의 실제 펜으로 쓰는 것처럼 자연스럽게 필기할 수 있습니다."
+},
+{
+"q": "Galaxy S26 시리즈와 Apple iPhone 17 Pro의 RAM 비교로 올바른 것은?",
+"opts": [
+"S26 Ultra 12GB vs iPhone 17 Pro 8GB",
+"S26 Ultra 8GB vs iPhone 17 Pro 12GB",
+"S26 Ultra 16GB vs iPhone 17 Pro 12GB",
+"두 제품 모두 동일한 8GB"
+],
+"ans": 0,
+"exp": "Galaxy S26 Ultra는 12GB RAM을 탑재해 멀티태스킹 성능이 우수합니다. iPhone 17 Pro는 8GB RAM으로 S26 Ultra의 온디바이스 AI 처리 능력이 더 강점입니다."
+},
+{
+"q": "삼성 갤럭시 S26 Ultra의 S펜 수납 방식은?",
+"opts": [
+"본체 하단 슬롯에 내장 수납",
+"별도 케이스 필요",
+"자석 부착",
+"블루투스 페어링 후 사용"
+],
+"ans": 0,
+"exp": "S26 Ultra는 S펜을 본체 하단 슬롯에 내장해 별도 액세서리 없이 항상 함께 사용할 수 있다."
+},
+{
+"q": "삼성 갤럭시 S26 울트라의 카메라 최고 줌 배율은?",
+"opts": [
+"100배 스페이스 줌",
+"50배",
+"200배",
+"30배"
+],
+"ans": 0,
+"exp": "갤럭시 S26 Ultra는 100배 스페이스 줌을 지원해 멀리 있는 피사체를 망원경처럼 촬영할 수 있다."
+},
+{
+"q": "삼성 갤럭시의 '갤럭시 AI' 기능 중 통화 실시간 번역의 명칭은?",
+"opts": [
+"Live Translate",
+"Circle to Search",
+"Generative Edit",
+"Chat Assist"
+],
+"ans": 0,
+"exp": "Live Translate는 전화 통화 중 실시간으로 대화를 번역해 서로 다른 언어를 사용하는 사람끼리도 대화할 수 있게 한다."
+},
+{
+"q": "삼성 갤럭시 S26의 'ProVisual Engine'의 역할은?",
+"opts": [
+"AI 기반 카메라 화질 향상 엔진",
+"프로세서 성능 관리",
+"배터리 절약",
+"디스플레이 색상 처리"
+],
+"ans": 0,
+"exp": "ProVisual Engine은 촬영, 처리, 출력 전 과정에 AI를 적용해 색상, 밝기, 노이즈 등 화질을 통합 최적화한다."
+},
+{
+"q": "삼성 갤럭시 폴더블폰 'Z Fold6'의 힌지 기술 특징은?",
+"opts": [
+"IPX8 방수 지원 힌지",
+"5G 안테나 내장 힌지",
+"충전 단자 내장 힌지",
+"카메라 탑재 힌지"
+],
+"ans": 0,
+"exp": "Z Fold6는 힌지 부분도 IPX8 방수를 지원해 물에 젖어도 안전하며, 내구성이 향상된 힌지 설계를 채택했다."
+},
+{
+"q": "삼성 갤럭시 'Circle to Search'의 사용 방법은?",
+"opts": [
+"화면 어디서나 길게 누른 후 원을 그려 검색",
+"홈 버튼 더블 클릭",
+"S펜으로만 사용 가능",
+"별도 앱 설치 필요"
+],
+"ans": 0,
+"exp": "Circle to Search는 화면 하단을 길게 누른 후 검색하고 싶은 대상에 원을 그리면 즉시 구글 검색 결과를 보여준다."
+},
+{
+"q": "삼성 갤럭시 S26 시리즈의 'Armor Aluminum' 프레임의 특징은?",
+"opts": [
+"기존 대비 강도가 높은 항공우주급 알루미늄 합금",
+"순금 코팅",
+"티타늄 소재",
+"카본 파이버 소재"
+],
+"ans": 0,
+"exp": "Armor Aluminum은 항공우주 등급의 알루미늄 합금으로 기존 스마트폰 프레임 대비 뛰어난 강도와 경량성을 제공한다."
+},
+{
+"q": "삼성 갤럭시 'Generative Edit'로 할 수 있는 것은?",
+"opts": [
+"AI로 사진 속 객체를 이동·제거·배경 생성",
+"영상 자동 편집",
+"음악 자동 생성",
+"연락처 자동 정리"
+],
+"ans": 0,
+"exp": "Generative Edit는 사진 속 객체를 AI로 이동시키거나 삭제하고 빈 배경을 자연스럽게 채우는 생성형 AI 편집 기능이다."
+},
+{
+"q": "삼성 갤럭시의 'DeX 모드' 사용 시 필요한 것은?",
+"opts": [
+"USB-C to HDMI 케이블 또는 DeX 스테이션",
+"별도 PC",
+"전용 앱 구독",
+"Wi-Fi 6 이상 연결"
+],
+"ans": 0,
+"exp": "DeX는 USB-C to HDMI 케이블이나 DeX 스테이션으로 모니터에 연결하면 스마트폰이 데스크톱처럼 작동하는 모드다."
+},
+{
+"q": "삼성 갤럭시 폰의 '위성 긴급 통신' 기능이 필요한 상황은?",
+"opts": [
+"통신 인프라가 없는 오지에서 긴급 메시지 전송",
+"배터리 부족 시 충전",
+"해외 로밍 대체",
+"가족 위치 공유"
+],
+"ans": 0,
+"exp": "위성 통신은 기지국과 Wi-Fi가 전혀 없는 지역에서 위성으로 긴급 구조 메시지와 위치를 전송할 수 있다."
+},
+{
+"q": "삼성 갤럭시 'Now Brief'의 기능은?",
+"opts": [
+"하루 일정과 상황에 맞는 정보를 AI가 요약 제공",
+"실시간 뉴스 브리핑",
+"날씨만 요약",
+"주식 정보 요약"
+],
+"ans": 0,
+"exp": "Now Brief는 갤럭시 AI가 사용자의 일정, 위치, 시간대를 파악해 맥락에 맞는 정보를 자동으로 정리해 보여준다."
+},
+{
+"q": "삼성 갤럭시 S26 Ultra 배터리 용량은?",
+"opts": [
+"5000mAh",
+"3000mAh",
+"6000mAh",
+"4000mAh"
+],
+"ans": 0,
+"exp": "갤럭시 S26 Ultra는 5000mAh 배터리를 탑재해 하루 이상의 사용을 지원한다."
+},
+{
+"q": "삼성 갤럭시의 '노이즈 캔슬링 통화(Voice Focus)'의 원리는?",
+"opts": [
+"AI가 주변 소음을 분리·제거하고 목소리만 전달",
+"이어폰 필수 착용",
+"마이크를 물리적으로 막음",
+"통화 음질 향상 앱 필요"
+],
+"ans": 0,
+"exp": "Voice Focus는 AI가 통화 중 주변 소음 패턴을 분석해 제거하고 사용자의 목소리만 선명하게 전달한다."
+},
+{
+"q": "삼성 갤럭시 Z Flip6의 '플렉스 윈도우' 활용 방법이 아닌 것은?",
+"opts": [
+"전체 화면 앱 실행",
+"시간·날씨 확인",
+"문자 빠른 답장",
+"카메라 미리보기"
+],
+"ans": 0,
+"exp": "플렉스 윈도우는 폴더폰을 접은 상태에서 커버 디스플레이로 사용하지만, 전체 화면 앱 실행은 펼친 상태에서만 가능하다."
+},
+{
+"q": "삼성 갤럭시의 '통역사(Interpreter) 기능' 사용 방법은?",
+"opts": [
+"갤럭시 AI로 대화 중 실시간 통역 화면 분할 표시",
+"네이버 통역 앱 연동",
+"전화 통화만 지원",
+"서면 번역만 가능"
+],
+"ans": 0,
+"exp": "인터프리터는 화면을 분할해 두 언어 사용자가 마주보며 대화할 때 각자의 언어로 자동 통역 텍스트를 보여준다."
+},
+{
+"q": "삼성 갤럭시 S26의 나이트로그래피 기능에 사용되는 기술은?",
+"opts": [
+"멀티프레임 합성 + AI 노이즈 제거",
+"광학 줌 강화",
+"물리 조리개 확장",
+"OIS 제거"
+],
+"ans": 0,
+"exp": "나이트로그래피는 여러 장의 노출 사진을 합성하고 AI로 노이즈를 제거해 어두운 환경에서도 밝고 선명한 사진을 만든다."
+},
+{
+"q": "삼성 갤럭시 폰의 'IP68' 등급이 의미하는 것은?",
+"opts": [
+"수심 1.5m에서 30분 방수",
+"완전 방수 (모든 깊이)",
+"방수 없음",
+"생활방수만 (물 튀김 정도)"
+],
+"ans": 0,
+"exp": "IP68은 수심 1.5m(제조사 따라 최대 2m)에서 30분간 방수 성능을 보장하며 일상적 물 접촉에서 안전하다."
+},
+{
+"q": "삼성 갤럭시 'Samsung Pay'의 결제 방식이 아닌 것은?",
+"opts": [
+"바코드 결제",
+"NFC 결제",
+"MST(마그네틱) 결제",
+"QR코드 결제"
+],
+"ans": 0,
+"exp": "Samsung Pay는 NFC와 MST 방식을 지원하며 바코드 결제는 MST나 NFC와 다른 별도 방식이다."
+},
+{
+"q": "삼성 갤럭시 S26의 AP(Application Processor)는?",
+"opts": [
+"스냅드래곤 8 Elite for Galaxy (Qualcomm)",
+"엑시노스 2500",
+"미디어텍 디멘시티",
+"Apple A18"
+],
+"ans": 0,
+"exp": "갤럭시 S26 시리즈는 퀄컴 스냅드래곤 8 Elite의 삼성 갤럭시 전용 최적화 버전을 탑재한다."
+},
+{
+"q": "삼성 갤럭시의 'One UI'가 안드로이드 순정 대비 차별화하는 주요 기능은?",
+"opts": [
+"한 손 조작 UI, 갤럭시 AI, DeX, 삼성 생태계 연동",
+"아이폰 UI 모방",
+"구글 앱 제거",
+"배터리 용량 증가"
+],
+"ans": 0,
+"exp": "One UI는 한 손 조작, 대화면 분할, 갤럭시 AI, 삼성 기기 간 생태계 연동 등 삼성 고유 사용 경험을 제공한다."
+},
+{
+"q": "삼성 갤럭시 스마트폰의 '보안 폴더' 기능의 목적은?",
+"opts": [
+"Knox 기반 암호화 공간에 개인 파일·앱 별도 저장",
+"사진 화질 향상",
+"앱 배터리 절약",
+"폴더 자동 정리"
+],
+"ans": 0,
+"exp": "보안 폴더는 Knox 보안 플랫폼 기반으로 별도 암호화된 공간에 앱과 파일을 격리해 개인정보를 보호한다."
+},
+{
+"q": "삼성 갤럭시 폰의 '빠른 충전' 방식으로 올바른 것은?",
+"opts": [
+"25W~45W 유선 급속충전 지원",
+"무선 충전만 지원",
+"USB-A 전용",
+"충전 속도 일정"
+],
+"ans": 0,
+"exp": "갤럭시 S26 Ultra는 45W 유선 급속충전을 지원하며 별도 충전기 구입 시 빠른 충전이 가능하다."
+},
+{
+"q": "삼성 갤럭시 S26 울트라의 디스플레이 기술이 아닌 것은?",
+"opts": [
+"Mini LED 패널",
+"Dynamic AMOLED 2X",
+"120Hz 가변 주사율",
+"1750 nits 피크 밝기"
+],
+"ans": 0,
+"exp": "S26 Ultra는 Dynamic AMOLED 2X 패널을 사용하며, Mini LED는 Neo QLED TV에 사용되는 기술이다."
+},
+{
+"q": "삼성 갤럭시 폰에서 '에너지 절약 모드' 활성화 시 제한되는 기능은?",
+"opts": [
+"5G 통신·고주사율·배경 앱 제한",
+"Wi-Fi 완전 차단",
+"카메라 촬영 불가",
+"전화 수신 불가"
+],
+"ans": 0,
+"exp": "에너지 절약 모드는 5G를 4G로 전환, 120Hz를 60Hz로 낮추고, 백그라운드 앱 활동을 제한해 배터리를 절약한다."
+},
+{
+"q": "삼성 갤럭시 Z Fold6 펼쳤을 때 화면 크기는?",
+"opts": [
+"약 7.6인치",
+"약 5.5인치",
+"약 9인치",
+"약 6.1인치"
+],
+"ans": 0,
+"exp": "Z Fold6는 펼치면 약 7.6인치의 태블릿급 대형 화면으로 변환되어 생산성과 미디어 사용에 최적화된다."
+}
+],
+"웨어러블": [
+{
+"q": "Galaxy Watch Ultra (2025)의 절전 모드 최대 배터리 사용 시간으로 올바른 것은?",
+"opts": [
+"최대 60시간",
+"최대 80시간",
+"최대 100시간",
+"최대 120시간"
+],
+"ans": 2,
+"exp": "갤럭시 워치 울트라 2025는 절전 모드 최대 100시간, 운동 중 절전 모드 최대 48시간 배터리를 제공합니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)의 방수 등급으로 올바른 것은?",
+"opts": [
+"5 ATM / IP67",
+"10 ATM / IP68",
+"10 ATM / IP69K",
+"5 ATM / IP68"
+],
+"ans": 1,
+"exp": "갤럭시 워치 울트라 2025는 10 ATM / IP68 방수 등급으로 수심 100m에서 10분 방수가 가능합니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)가 견딜 수 있는 최대 고도와 작동 온도 범위로 올바른 것은?",
+"opts": [
+"5,000m / -10°C ~ 45°C",
+"7,000m / -15°C ~ 50°C",
+"9,000m / -20°C ~ 55°C",
+"9,000m / -10°C ~ 60°C"
+],
+"ans": 2,
+"exp": "갤럭시 워치 울트라 2025는 최대 9,000m 고도에서 저항 가능하며 -20°C ~ 55°C의 작동 온도 범위를 지원합니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)에서 수면 중 착용해 측정하는 삼성 고유의 건강 지표는?",
+"opts": [
+"혈당 지수(GI)",
+"최종당화산물 지수(AGEs)",
+"혈중 케톤 지수",
+"체내 염증 지수"
+],
+"ans": 1,
+"exp": "갤럭시 워치 울트라 2025는 수면 중 착용 시 최종당화산물 지수(AGEs)를 측정합니다. 식단과 생활 습관을 반영하는 건강 지표로 Apple Watch Ultra 3에는 없는 삼성만의 기능입니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)에서 수면 중 심혈관 건강을 추적하는 삼성 고유의 기능은?",
+"opts": [
+"혈압 연속 모니터링",
+"혈관 스트레스 모니터링",
+"동맥 경화도 측정",
+"심혈관 나이 측정"
+],
+"ans": 1,
+"exp": "갤럭시 워치 울트라 2025는 수면 중 혈관에 가해지는 스트레스를 추적하는 '혈관 스트레스 모니터링' 기능을 제공합니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)의 퀵 버튼을 5초간 길게 누르면 작동하는 긴급 사이렌의 최대 음량과 전달 거리는?",
+"opts": [
+"80dB / 최대 100m",
+"86dB / 최대 180m",
+"90dB / 최대 200m",
+"86dB / 최대 150m"
+],
+"ans": 1,
+"exp": "갤럭시 워치 울트라 2025는 최대 86dB의 강력한 사이렌이 작동하여 최대 180m 떨어진 곳까지 소리가 전달됩니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)의 내부 저장 공간 용량으로 올바른 것은?",
+"opts": [
+"16GB",
+"32GB",
+"64GB",
+"128GB"
+],
+"ans": 2,
+"exp": "갤럭시 워치 울트라 2025는 64GB 내부 저장 공간을 제공하여 GPX 경로 데이터, 음악 등을 넉넉하게 저장할 수 있습니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)의 듀얼 GPS가 활용하는 이중 주파수 대역으로 올바른 것은?",
+"opts": [
+"L1과 L2",
+"L1과 L5",
+"L2와 L5",
+"L1과 L3"
+],
+"ans": 1,
+"exp": "갤럭시 워치 울트라 2025는 L1과 L5의 이중 주파수 대역을 활용하여 핀포인트 GPS 정확도를 제공합니다."
+},
+{
+"q": "Galaxy Watch Ultra (2025)의 바이오 액티브 센서로 지원하지 않는 기능은?",
+"opts": [
+"체성분(BIA) 측정",
+"심전도(ECG) 측정",
+"혈당 직접 측정",
+"혈압 측정"
+],
+"ans": 2,
+"exp": "갤럭시 워치 울트라 2025는 체성분(BIA), 심전도(ECG), 혈압 측정을 지원합니다. 단, 혈당을 직접 측정하는 기능은 없습니다."
+},
+{
+"q": "Galaxy Watch Ultra vs Apple Watch Ultra 3 배터리 비교로 올바른 것은?",
+"opts": [
+"삼성 80시간 / 애플 60시간",
+"삼성 100시간 / 애플 72시간",
+"삼성 72시간 / 애플 100시간",
+"삼성 100시간 / 애플 80시간"
+],
+"ans": 1,
+"exp": "갤럭시 워치 울트라 2025는 절전 모드에서 최대 100시간, Apple Watch Ultra 3는 저전력 모드에서 최대 72시간 배터리를 지원합니다."
+},
+{
+"q": "Galaxy Watch8 시리즈(일반 모델)의 주요 새 건강 기능으로 올바른 것은?",
+"opts": [
+"혈당 측정 기능",
+"혈관 스트레스 + AGEs 측정 기능",
+"혈중 산소 측정 기능 신규 추가",
+"수면 무호흡증 감지 기능 신규 추가"
+],
+"ans": 3,
+"exp": "Galaxy Watch8(일반 모델)의 새 기능 중 하나는 수면 무호흡증(Sleep Apnea) 감지 기능입니다. FDA 승인을 받은 기능으로, 수면 중 호흡 패턴을 분석해 수면 무호흡 징후를 감지합니다."
+},
+{
+"q": "Galaxy Watch의 '심전도(ECG)' 측정 방법으로 올바른 것은?",
+"opts": [
+"워치를 차고 있으면 24시간 자동 측정",
+"디지털 왕관(크라운)이나 홈 버튼을 30초간 손가락으로 누르면 측정",
+"NFC를 통해 병원 기기와 연동해서만 측정",
+"손목에 가볍게 터치하면 자동 측정"
+],
+"ans": 1,
+"exp": "갤럭시 워치의 ECG 측정은 디지털 왕관(베젤 버튼)을 반대편 손가락으로 가볍게 30초간 누르면 측정됩니다. 완전한 ECG 파형을 기록해 심방세동(AFib) 등 불규칙한 심장 리듬을 감지합니다."
+},
+{
+"q": "Galaxy Watch8의 'Energy Score' 기능의 설명으로 올바른 것은?",
+"opts": [
+"하루 소모 칼로리를 점수로 표현",
+"수면 품질, 심박수, 활동량 등 전반적인 회복 상태를 0~100점으로 표현",
+"배터리 잔량을 에너지 점수로 표시",
+"운동 강도를 측정하는 점수"
+],
+"ans": 1,
+"exp": "Energy Score는 전날 밤 수면 품질, 심박수 변이도(HRV), 활동량 등을 종합 분석해 오늘 하루 몸 상태와 회복 수준을 0~100점으로 표현합니다. 운동 강도를 조절하는 데 참고할 수 있습니다."
+},
+{
+"q": "Galaxy Watch의 혈압 측정 기능의 제한 사항으로 올바른 것은?",
+"opts": [
+"제한 없이 모든 국가에서 사용 가능",
+"한국 등 일부 국가에서만 사용 가능하며, 보정(cuffless calibration) 후 사용 필요",
+"혈압계 없이도 완전히 정확한 절대 수치 측정",
+"혈압은 24시간 연속 자동으로 측정"
+],
+"ans": 1,
+"exp": "갤럭시 워치의 혈압 측정은 의료 기기 허가 국가(한국 포함 일부 국가)에서만 사용 가능합니다. 또한 표준 혈압계로 먼저 보정(calibration)을 완료해야 하며, 절대 수치보다는 변화 추이를 모니터링하는 용도입니다."
+},
+{
+"q": "Galaxy Buds3 Pro의 노이즈 캔슬링(ANC) 성능으로 올바른 것은?",
+"opts": [
+"최대 10dB 소음 감소",
+"최대 20dB 소음 감소",
+"최대 30dB 소음 감소",
+"최대 40dB 소음 감소"
+],
+"ans": 2,
+"exp": "Galaxy Buds3 Pro는 최대 30dB의 능동 노이즈 캔슬링(ANC) 성능을 제공합니다. 양방향(피드포워드 + 피드백) 마이크로 더욱 정밀하게 소음을 차단합니다."
+},
+{
+"q": "Galaxy Buds3 Pro의 주요 특징으로 올바른 것은?",
+"opts": [
+"ANC 없음, 오픈이어 디자인",
+"날개 없는 오픈이어 + ANC 탑재",
+"블레이드 라이트(LED 발광) + 날개형 이어팁 + ANC 30dB",
+"완전 무선 이어버드로 스템(Stem) 없는 원형 디자인"
+],
+"ans": 2,
+"exp": "Galaxy Buds3 Pro는 블레이드 라이트(측면 LED 조명) 디자인, 날개형 이어팁(안정적인 착용감), 최대 30dB ANC가 특징입니다."
+},
+{
+"q": "Galaxy Watch8 Classic(클래식)의 특징으로 올바른 것은?",
+"opts": [
+"터치 베젤만 지원",
+"물리적 회전 베젤(Rotating Bezel) 탑재",
+"스포츠 에디션으로 배터리 강화",
+"일반 Watch8과 동일한 디자인에 색상만 다름"
+],
+"ans": 1,
+"exp": "Galaxy Watch8 Classic은 물리적 회전 베젤을 탑재해 클래식한 시계 느낌을 주면서도 스크롤, 메뉴 탐색 등을 베젤을 돌려 조작할 수 있습니다. 고급스러운 스테인리스 소재를 사용합니다."
+},
+{
+"q": "Galaxy Watch의 'Sleep Coaching(수면 코칭)' 기능에 대한 설명으로 올바른 것은?",
+"opts": [
+"매일 밤 수면 중 코치가 전화해 기상을 알림",
+"수면 데이터를 분석해 개인화된 수면 개선 프로그램(4~5주 과정)을 제공",
+"침대에 눕는 순간 자동으로 최적 수면 모드로 전환",
+"수면 코칭은 의사의 처방이 있어야 사용 가능"
+],
+"ans": 1,
+"exp": "Sleep Coaching은 수면 패턴(수면 시간, 단계, 심박수 등)을 분석해 개인화된 4~5주 수면 개선 프로그램을 제공합니다. 수면 습관 개선 팁과 목표를 단계별로 안내합니다."
+},
+{
+"q": "Galaxy Watch와 iPhone의 호환성에 대한 설명으로 올바른 것은?",
+"opts": [
+"Galaxy Watch는 iPhone과 완전히 호환됨",
+"Galaxy Watch는 Android 전용이며 iPhone에서는 사용 불가",
+"Galaxy Watch는 iPhone에서 기본 기능만 사용 가능하며 일부 기능은 제한됨",
+"Galaxy Watch는 iPhone에서 삼성 헬스 앱으로 모든 기능 사용 가능"
+],
+"ans": 1,
+"exp": "Galaxy Watch는 Android 기반의 스마트워치로 iPhone(iOS)과는 호환되지 않습니다. iPhone 사용자는 Apple Watch를 사용해야 합니다. 이 점을 고객에게 명확히 안내해야 합니다."
+},
+{
+"q": "Galaxy Ring의 가장 큰 특징으로 올바른 것은?",
+"opts": [
+"삼성 최초의 스마트시계",
+"구독 없이 착용만 하면 24시간 건강 데이터(수면·활동·심박) 수집",
+"반지 내부에 디스플레이 탑재",
+"NFC만 지원하는 결제 전용 반지"
+],
+"ans": 1,
+"exp": "Galaxy Ring은 반지 형태의 웨어러블로 구독료 없이 수면·활동량·심박수 등 24시간 건강 데이터를 수집합니다. 디스플레이 없이 최소한의 방해로 건강 모니터링이 가능합니다."
+},
+{
+"q": "Galaxy Buds3 Pro의 '통역(Interpret)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"폰 없이 이어버드만으로 실시간 번역 가능",
+"스마트폰의 Galaxy AI와 연동해 실시간 언어 번역을 이어버드에서 제공",
+"오직 영어-한국어만 지원",
+"인터넷 없이도 오프라인 번역 지원"
+],
+"ans": 1,
+"exp": "Galaxy Buds3 Pro의 통역(Interpret) 기능은 연결된 Galaxy 스마트폰의 Galaxy AI와 연동해 실시간 언어 번역을 제공합니다. 회의나 여행 중 언어 장벽을 극복하는 데 유용합니다."
+},
+{
+"q": "Galaxy Watch8 Series의 체성분 분석(BIA) 측정 방법으로 올바른 것은?",
+"opts": [
+"워치를 차기만 하면 자동으로 측정",
+"워치 뒷면 센서에 반대편 손가락을 대고 약 15~20초간 측정",
+"SmartThings 앱의 분석 기능으로만 측정 가능",
+"삼성 체중계와 반드시 연동해야 측정 가능"
+],
+"ans": 1,
+"exp": "체성분(BIA) 측정은 워치 뒷면 센서에 반대편 손가락을 가볍게 대고 약 15~20초간 유지하면 됩니다. 골격근량, 체지방률, 체수분 등을 측정합니다."
+},
+{
+"q": "Galaxy Watch의 'Irregular Heart Rhythm Notification(불규칙 심장리듬 알림)' 기능에 대한 설명으로 올바른 것은?",
+"opts": [
+"심방세동(AFib)을 24시간 연속으로 자동 모니터링해 불규칙 심장리듬 감지 시 알림",
+"사용자가 수동으로 ECG를 측정했을 때만 분석 가능",
+"혈압이 높을 때 자동으로 감지",
+"심박수가 100bpm 이상이면 항상 알림"
+],
+"ans": 0,
+"exp": "불규칙 심장리듬 알림은 PPG 광학 센서로 24시간 연속 심박 패턴을 분석해 심방세동(AFib) 의심 징후가 감지되면 사용자에게 알림을 보냅니다. FDA·식약처 허가를 받은 기능입니다."
+},
+{
+"q": "삼성 Galaxy Watch와 Apple Watch의 운동 추적 기능 비교로 올바른 것은?",
+"opts": [
+"Galaxy Watch는 GPS가 없어 운동 경로 추적 불가",
+"Galaxy Watch는 100가지 이상 운동 종목 자동 감지, Apple Watch도 유사한 수준",
+"Galaxy Watch는 골프 코스 지원이 없음",
+"Apple Watch는 AGEs 측정이 가능"
+],
+"ans": 1,
+"exp": "Galaxy Watch와 Apple Watch 모두 100가지 이상의 운동 종목을 자동으로 감지하고 추적하는 수준입니다. 다만 AGEs 측정, 혈관 스트레스 모니터링 등 일부 기능은 Galaxy Watch만의 차별점입니다."
+},
+{
+"q": "삼성 갤럭시 워치8 Ultra의 'BioActive Sensor'가 측정하는 것이 아닌 것은?",
+"opts": [
+"혈당 수치",
+"심박수",
+"혈중산소",
+"체지방"
+],
+"ans": 0,
+"exp": "BioActive Sensor는 심박수, 혈중산소, 체성분(체지방 등)을 측정하지만 혈당 직접 측정은 현재 지원하지 않는다."
+},
+{
+"q": "삼성 갤럭시 워치의 '수면 코칭' 기능이 분석하는 요소는?",
+"opts": [
+"수면 단계, 심박수 변화, 움직임, 혈중산소",
+"꿈 내용",
+"체온 변화만",
+"코골이 소리"
+],
+"ans": 0,
+"exp": "수면 코칭은 수면 단계(REM, 깊은 수면 등), 심박수, 움직임, 혈중산소를 분석해 수면 품질 점수와 개선 방법을 제공한다."
+},
+{
+"q": "삼성 갤럭시 워치 'ECG 측정'의 의미와 한계는?",
+"opts": [
+"심전도 참고 데이터 제공, 의학적 진단 불가",
+"정확한 의학 진단 가능",
+"의사 처방 필요",
+"한국에서는 사용 불가"
+],
+"ans": 0,
+"exp": "ECG(심전도) 측정은 심방세동 등을 감지하는 참고 자료로 활용되나, 의료기기가 아니므로 의학적 진단을 대체할 수 없다."
+},
+{
+"q": "삼성 갤럭시 링의 주요 소재는?",
+"opts": [
+"티타늄",
+"스테인리스스틸",
+"알루미늄",
+"플라스틱"
+],
+"ans": 0,
+"exp": "갤럭시 링은 경량 고강도 티타늄 소재로 제작해 오랜 착용에도 편안하고 내구성이 뛰어나다."
+},
+{
+"q": "삼성 갤럭시 버즈4 Pro의 'Adaptive ANC'의 작동 원리는?",
+"opts": [
+"외부 소음 수준에 따라 노이즈 캔슬링 강도 자동 조절",
+"사용자 귀 모양 인식",
+"배터리 잔량에 따라 조절",
+"음악 장르에 따라 조절"
+],
+"ans": 0,
+"exp": "Adaptive ANC는 주변 소음의 종류와 크기를 분석해 최적의 노이즈 캔슬링 강도를 자동으로 조정한다."
+},
+{
+"q": "삼성 갤럭시 워치 '낙상 감지' 기능의 작동 방식은?",
+"opts": [
+"가속도·자이로 센서로 낙상 패턴 감지 후 긴급 연락",
+"카메라로 감지",
+"GPS로 위치 이탈 감지",
+"혈압 급변 감지"
+],
+"ans": 0,
+"exp": "낙상 감지는 가속도계와 자이로스코프로 낙상 특유의 급격한 동작 패턴을 인식해 자동으로 긴급 연락처에 알린다."
+},
+{
+"q": "삼성 갤럭시 워치의 '운동 자동 감지' 기능이 인식하는 운동 종류는?",
+"opts": [
+"걷기, 달리기, 자전거, 수영 등 주요 운동 자동 인식",
+"모든 운동 종류 인식",
+"심장박동만으로 운동 감지",
+"GPS 위치로만 판단"
+],
+"ans": 0,
+"exp": "갤럭시 워치는 센서 데이터 분석으로 걷기, 달리기, 자전거, 수영, 로잉 등 주요 운동을 자동으로 인식하고 기록한다."
+},
+{
+"q": "삼성 갤럭시 워치 Ultra의 '티타늄 케이스' 선택 이유는?",
+"opts": [
+"가벼우면서도 스테인리스보다 강도 높음",
+"더 저렴",
+"자기적 특성",
+"충전 속도 향상"
+],
+"ans": 0,
+"exp": "티타늄은 스테인리스스틸 대비 강도가 높으면서도 무게는 가벼워 스포츠·아웃도어 착용에 최적화된다."
+},
+{
+"q": "삼성 갤럭시 버즈의 '360 오디오' 기능의 효과는?",
+"opts": [
+"머리를 회전해도 음향이 고정된 방향에서 들리는 입체 효과",
+"배터리 절약",
+"마이크 성능 향상",
+"이퀄라이저 자동 설정"
+],
+"ans": 0,
+"exp": "360 오디오는 머리 움직임을 추적해 음향이 실제 공간에 고정된 것처럼 들리는 공간 음향 경험을 제공한다."
+},
+{
+"q": "삼성 갤럭시 링의 배터리 수명은 일반적으로 얼마인가?",
+"opts": [
+"약 7일",
+"약 1일",
+"약 30일",
+"약 3일"
+],
+"ans": 0,
+"exp": "갤럭시 링은 소형 배터리에도 불구하고 효율적인 설계로 약 7일 사용이 가능하다."
+},
+{
+"q": "삼성 갤럭시 워치 '스트레스 관리' 기능의 측정 방법은?",
+"opts": [
+"HRV(심박수 변동성) 분석으로 스트레스 지수 측정",
+"혈압 측정",
+"코르티솔 측정",
+"표정 인식"
+],
+"ans": 0,
+"exp": "갤럭시 워치는 심박수 변동성(HRV)을 분석해 자율신경계 상태를 평가하고 스트레스 수준을 수치화한다."
+},
+{
+"q": "삼성 갤럭시 버즈 'Conversation Mode'의 작동 방식은?",
+"opts": [
+"말하려는 순간 외부 소리를 증폭해 대화 가능",
+"자동 통화 연결",
+"음악 자동 일시정지",
+"말하기 버튼 누름 필요"
+],
+"ans": 0,
+"exp": "Conversation Mode는 착용자의 목소리를 마이크가 감지하면 자동으로 외부 소리를 증폭해 이어폰을 빼지 않고 대화할 수 있게 한다."
+},
+{
+"q": "삼성 갤럭시 워치 '산소 포화도(SpO2)' 측정의 정상 범위는?",
+"opts": [
+"95~100%",
+"80~85%",
+"70~75%",
+"60~70%"
+],
+"ans": 0,
+"exp": "정상 혈중산소 포화도는 95~100%이며, 95% 미만이면 저산소증을 의심해 의사 상담이 필요하다."
+},
+{
+"q": "삼성 갤럭시 워치가 갤럭시 폰과 '연동'될 때 기본적으로 필요한 앱은?",
+"opts": [
+"Galaxy Wearable 앱",
+"삼성 헬스만 있으면 됨",
+"별도 앱 불필요",
+"SmartThings만으로 가능"
+],
+"ans": 0,
+"exp": "갤럭시 워치와 스마트폰 연결은 Galaxy Wearable 앱을 통해 초기 설정하고 관리한다."
+},
+{
+"q": "삼성 갤럭시 버즈 충전 케이스의 충전 방식이 아닌 것은?",
+"opts": [
+"솔라(태양광) 충전",
+"USB-C 유선 충전",
+"Qi 무선 충전",
+"갤럭시 폰 후면 무선 역충전"
+],
+"ans": 0,
+"exp": "갤럭시 버즈 케이스는 USB-C, Qi 무선, 갤럭시 폰 역충전을 지원하지만 태양광 충전은 지원하지 않는다."
+},
+{
+"q": "삼성 갤럭시 워치의 '혈압 측정' 사용 조건은?",
+"opts": [
+"처음 사용 시 스마트폰 혈압계로 기준값 보정 필요",
+"언제든 바로 사용 가능",
+"병원에서만 사용 가능",
+"특정 국가만 지원"
+],
+"ans": 0,
+"exp": "갤럭시 워치 혈압 기능은 첫 사용 전 일반 혈압계로 기준값을 보정해야 하며 이후 상대적 변화를 추적한다."
+},
+{
+"q": "삼성 갤럭시 링이 갤럭시 워치와 함께 사용 시 장점은?",
+"opts": [
+"더 정확한 수면·건강 데이터 통합 분석",
+"링만으로 충분하여 워치 불필요",
+"두 기기가 서로 배터리 공유",
+"두 기기 중 하나만 착용 가능"
+],
+"ans": 0,
+"exp": "갤럭시 링과 워치 데이터를 Samsung Health가 통합 분석해 더 정확하고 종합적인 건강 인사이트를 제공한다."
+},
+{
+"q": "삼성 갤럭시 워치 'Ultra'와 일반 모델의 차이점은?",
+"opts": [
+"티타늄 케이스, 더 큰 배터리, MIL-SPEC 내구성",
+"색상만 다름",
+"가격만 차이",
+"소프트웨어만 다름"
+],
+"ans": 0,
+"exp": "갤럭시 워치 Ultra는 티타늄 케이스, 대용량 배터리, 군용 규격(MIL-STD-810H) 내구성 인증으로 극한 환경 사용에 적합하다."
+},
+{
+"q": "삼성 갤럭시 버즈 '윙팁' 이어팁의 역할은?",
+"opts": [
+"격렬한 활동 중에도 이어폰이 빠지지 않도록 고정",
+"소음 차단 강화",
+"마이크 성능 향상",
+"충전 속도 개선"
+],
+"ans": 0,
+"exp": "윙팁은 귓속 돌출 부위에 걸쳐 고정력을 높여 달리기, 운동 중에도 이어폰이 흔들리거나 빠지지 않게 한다."
+},
+{
+"q": "삼성 갤럭시 워치 '산악 모드'의 주요 기능은?",
+"opts": [
+"고도계, 기압계, 나침반, 일출몰 시간 제공",
+"지도 다운로드",
+"구조 신호 발신",
+"뱀·해충 감지"
+],
+"ans": 0,
+"exp": "산악 모드는 고도계, 기압계, 나침반, 일출몰 시간 등을 제공해 등산 시 안전하고 효율적인 이동을 지원한다."
+},
+{
+"q": "삼성 갤럭시 워치 '에너지 스코어'의 의미는?",
+"opts": [
+"수면·활동·심박 등을 종합해 당일 에너지 수준 수치화",
+"칼로리 소모량",
+"배터리 잔량",
+"운동 점수"
+],
+"ans": 0,
+"exp": "에너지 스코어는 수면 품질, 전날 활동, 심박수 변동 등을 AI가 분석해 그날의 신체 에너지 준비 상태를 수치로 표현한다."
+},
+{
+"q": "삼성 갤럭시 워치의 수영 방수 등급은?",
+"opts": [
+"5ATM(수심 50m)",
+"IPX4(물 튀김)",
+"IP68(1.5m 30분)",
+"방수 없음"
+],
+"ans": 0,
+"exp": "갤럭시 워치는 5ATM(수압 5기압, 약 50m) 방수 등급으로 수영, 다이빙 등 물속 활동이 가능하다."
+},
+{
+"q": "삼성 갤럭시 버즈4 Pro의 마이크 개수는?",
+"opts": [
+"총 5개 마이크",
+"1개",
+"2개",
+"8개"
+],
+"ans": 0,
+"exp": "갤럭시 버즈4 Pro는 5개의 마이크를 통해 통화 품질과 노이즈 캔슬링 성능을 극대화한다."
+},
+{
+"q": "삼성 갤럭시 워치의 '체성분 측정' 방식은?",
+"opts": [
+"생체전기저항(BIA) 방식으로 체지방·근육량 추정",
+"MRI 수준 정밀 측정",
+"음파 분석",
+"피부 두께 측정"
+],
+"ans": 0,
+"exp": "체성분 측정은 미약한 전류를 신체에 흘려 저항값으로 체지방률, 골격근량, 체수분 등을 추정하는 BIA 방식을 사용한다."
+},
+{
+"q": "삼성 갤럭시 링의 수면 추적이 갤럭시 워치와 다른 장점은?",
+"opts": [
+"반지 형태로 수면 중 착용 불편함이 적어 정확도 향상",
+"배터리 30일 이상",
+"더 많은 센서 탑재",
+"디스플레이 내장"
+],
+"ans": 0,
+"exp": "반지 형태는 수면 중 무게와 압박감이 거의 없어 자연스럽게 착용하게 되어 장시간 수면 데이터를 더 정확하게 수집한다."
+},
+{
+"q": "삼성 갤럭시 버즈4 Pro '실시간 번역' 기능 사용 시 필요한 것은?",
+"opts": [
+"갤럭시 AI 연동 스마트폰 필요",
+"별도 번역 앱",
+"Wi-Fi 연결만으로 가능",
+"전용 SIM 카드"
+],
+"ans": 0,
+"exp": "실시간 번역은 버즈 자체보다는 연결된 갤럭시 AI 탑재 스마트폰이 번역을 처리하므로 AI 지원 갤럭시 폰이 필요하다."
+}
+],
+"갤럭시탭": [
+{
+"q": "Galaxy Tab S11 Ultra의 디스플레이 크기로 올바른 것은?",
+"opts": [
+"12.4인치",
+"13인치",
+"14.6인치",
+"15인치"
+],
+"ans": 2,
+"exp": "Galaxy Tab S11 Ultra는 14.6인치 Dynamic AMOLED 2X 디스플레이를 탑재하고 있습니다. 노트북에 가까운 대화면으로 생산성 작업, 영상 감상, 그래픽 작업에 최적화되어 있습니다."
+},
+{
+"q": "Galaxy Tab S11 Ultra의 S펜 포함 여부로 올바른 것은?",
+"opts": [
+"별매 액세서리로 구입 필요",
+"기기 내에 슬롯에 내장",
+"기본 구성품으로 포함, 별도 보관 케이스 제공",
+"모든 Tab S11 시리즈에 기본 포함"
+],
+"ans": 1,
+"exp": "Galaxy Tab S11 Ultra는 S펜이 기기 내부에 슬롯 형태로 내장되어 있습니다. Tab S11 Pro와 S11+는 S펜이 기본 포함이지만 탭에 내장되어 있지 않고 별도 케이스나 뒷면에 부착됩니다."
+},
+{
+"q": "Galaxy Tab의 'DeX 모드'의 특징으로 올바른 것은?",
+"opts": [
+"태블릿 화면이 PC처럼 창 기반 멀티태스킹 UI로 전환",
+"외부 모니터에만 연결 가능하며 태블릿 화면은 비어있음",
+"DeX는 폴더블 폰에서만 사용 가능",
+"DeX 모드에서는 터치가 비활성화되고 마우스만 사용 가능"
+],
+"ans": 0,
+"exp": "DeX 모드는 태블릿을 PC처럼 사용할 수 있는 모드로, 창 기반 멀티태스킹, 파일 관리자, 마우스·키보드 지원 등을 제공합니다. 외부 모니터에 연결하거나 태블릿 화면 자체에서 사용 가능합니다."
+},
+{
+"q": "Galaxy Tab S11 시리즈에 탑재된 프로세서로 올바른 것은?",
+"opts": [
+"Exynos 2400",
+"갤럭시용 스냅드래곤 8 Elite",
+"MediaTek Dimensity 9300",
+"Apple A18 Bionic"
+],
+"ans": 1,
+"exp": "Galaxy Tab S11 시리즈는 갤럭시를 위한 스냅드래곤 8 Elite 프로세서를 탑재합니다. 전작 대비 AI 처리 성능이 크게 향상되어 Galaxy AI 기능을 더욱 강력하게 구동합니다."
+},
+{
+"q": "Galaxy Tab S11 Ultra의 최대 RAM 구성으로 올바른 것은?",
+"opts": [
+"8GB",
+"12GB",
+"16GB",
+"24GB"
+],
+"ans": 2,
+"exp": "Galaxy Tab S11 Ultra는 최대 16GB RAM(256GB/512GB 스토리지 구성)을 지원합니다. 멀티태스킹과 전문 작업에 충분한 메모리를 제공합니다."
+},
+{
+"q": "Galaxy Tab S11 Ultra의 디스플레이 주사율로 올바른 것은?",
+"opts": [
+"60Hz 고정",
+"최대 90Hz",
+"최대 120Hz",
+"최대 144Hz"
+],
+"ans": 2,
+"exp": "Galaxy Tab S11 Ultra는 최대 120Hz의 가변 주사율(LTPO)을 지원합니다. 콘텐츠에 따라 1Hz ~ 120Hz 사이에서 자동 조절되어 배터리를 효율적으로 관리합니다."
+},
+{
+"q": "Galaxy Tab에서 'Book Cover Keyboard(북 커버 키보드)'를 사용할 때의 특징으로 올바른 것은?",
+"opts": [
+"별도 충전이 필요한 블루투스 키보드",
+"POGO PIN으로 태블릿과 연결, 별도 충전 불필요, 노트북처럼 사용 가능",
+"DeX 모드에서만 사용 가능",
+"영어만 지원, 한글 키보드 없음"
+],
+"ans": 1,
+"exp": "Book Cover Keyboard는 태블릿 하단의 POGO PIN으로 연결되어 별도 충전이 필요 없습니다. 노트북처럼 태블릿을 세워 사용할 수 있으며 DeX 모드와 결합하면 PC에 가까운 생산성 환경이 만들어집니다."
+},
+{
+"q": "Galaxy Tab S11 Ultra의 배터리 용량과 충전 방식으로 올바른 것은?",
+"opts": [
+"8,000mAh / 최대 15W 충전",
+"11,200mAh / 최대 45W 충전",
+"13,020mAh / 최대 45W 충전",
+"15,000mAh / 최대 65W 충전"
+],
+"ans": 1,
+"exp": "Galaxy Tab S11 Ultra는 11,200mAh 배터리와 최대 45W 초고속 충전을 지원합니다. 대화면 태블릿에서도 빠른 충전으로 하루 종일 사용할 수 있습니다."
+},
+{
+"q": "Galaxy Tab과 Galaxy 스마트폰의 연동 기능으로 올바른 것은?",
+"opts": [
+"Tab과 폰은 독립적으로만 사용 가능",
+"Second Screen(확장 화면)으로 탭을 폰의 보조 디스플레이로 활용 가능",
+"Tab에서 폰 화면을 미러링만 가능, 역방향은 불가",
+"폰과 탭의 파일 공유는 USB 케이블로만 가능"
+],
+"ans": 1,
+"exp": "Galaxy Tab은 Second Screen 기능으로 Galaxy 스마트폰의 확장 디스플레이로 활용하거나, Quick Share로 파일을 무선으로 즉시 전송하고, 통화 연동, 문자 연동 등 다양한 갤럭시 생태계 기능을 지원합니다."
+},
+{
+"q": "Galaxy Tab S11에서 지원하는 'AI 요약(Note Assist)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"삼성 노트 앱에서 필기 및 텍스트 내용을 AI가 자동으로 요약·정리",
+"인터넷 기사를 자동으로 저장하고 요약",
+"갤러리 사진을 AI로 설명하는 기능",
+"영상 자막을 텍스트로 변환"
+],
+"ans": 0,
+"exp": "Note Assist는 삼성 노트 앱에서 작성한 필기·텍스트 내용을 Galaxy AI가 자동으로 요약하고, 중요 항목을 정리하거나 번역해줍니다. 긴 강의 노트나 회의록을 빠르게 정리하는 데 유용합니다."
+},
+{
+"q": "Galaxy Tab S11의 Wi-Fi 6E 지원의 장점으로 올바른 것은?",
+"opts": [
+"5G 셀룰러 연결 속도 향상",
+"6GHz 대역을 추가 지원해 혼잡한 환경에서도 빠르고 안정적인 Wi-Fi 연결",
+"Wi-Fi 범위가 2배로 확대",
+"모든 공공 Wi-Fi와 자동 연결"
+],
+"ans": 1,
+"exp": "Wi-Fi 6E는 기존 Wi-Fi 6(2.4GHz/5GHz) 외에 6GHz 주파수 대역을 추가로 지원합니다. 6GHz 대역은 기기 간 혼선이 적어 혼잡한 환경(카페, 사무실)에서도 빠르고 안정적인 연결을 제공합니다."
+},
+{
+"q": "Galaxy Tab S11 Ultra의 후면 카메라 구성으로 올바른 것은?",
+"opts": [
+"단일 12MP 카메라",
+"12MP 광각 + 12MP 울트라와이드 듀얼",
+"13MP 광각 + 8MP 초광각 + ToF 센서",
+"200MP 카메라 단일"
+],
+"ans": 1,
+"exp": "Galaxy Tab S11 Ultra는 13MP 광각 + 8MP 초광각의 듀얼 카메라를 탑재하고 있습니다."
+},
+{
+"q": "Galaxy Tab의 'Multi-Active Window(멀티 활성 창)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"한 번에 최대 2개 앱만 동시 실행",
+"화면을 3개 영역으로 분할해 3개 앱 동시 실행",
+"팝업 창 포함해 최대 5개 앱 동시 활성화 가능",
+"멀티윈도우는 DeX 모드에서만 가능"
+],
+"ans": 2,
+"exp": "Galaxy Tab은 분할 화면 2개 + 팝업 창 최대 3개를 포함해 동시에 최대 5개의 앱을 활성화할 수 있습니다. 생산성 작업 중 여러 앱을 오가며 멀티태스킹이 가능합니다."
+},
+{
+"q": "Galaxy Tab S11 Ultra의 무게로 올바른 것은?",
+"opts": [
+"575g",
+"628g",
+"685g",
+"718g"
+],
+"ans": 2,
+"exp": "Galaxy Tab S11 Ultra의 무게는 약 685g입니다. 14.6인치 대화면 탭치고는 상당히 가볍지만, 장시간 손으로 들고 사용하기에는 거치대나 케이스 스탠드를 사용하는 것이 편리합니다."
+},
+{
+"q": "Galaxy Tab S11 FE(Fan Edition)와 S11 Ultra의 가장 큰 차이점으로 올바른 것은?",
+"opts": [
+"FE는 안드로이드가 아닌 다른 OS 사용",
+"FE는 보급형(가성비) 라인으로 LCD 디스플레이·중간급 프로세서 탑재",
+"FE는 S펜 미지원",
+"FE와 Ultra는 동일한 하드웨어에 소프트웨어만 다름"
+],
+"ans": 1,
+"exp": "Tab S11 FE(Fan Edition)는 삼성 탭의 보급형 라인으로, Ultra/Pro 대비 LCD 디스플레이(또는 낮은 급 AMOLED), 중간급 프로세서를 탑재하며 가격이 낮습니다. 초기 태블릿 구매자나 예산이 한정된 고객에게 추천합니다."
+},
+{
+"q": "삼성 갤럭시 탭 S11 Ultra의 화면 크기와 소재는?",
+"opts": [
+"14.6인치 Dynamic AMOLED 2X",
+"12인치 LCD",
+"11인치 OLED",
+"13인치 IPS"
+],
+"ans": 0,
+"exp": "탭 S11 Ultra는 14.6인치 Dynamic AMOLED 2X 디스플레이로 태블릿 최고 수준의 화질을 제공한다."
+},
+{
+"q": "삼성 갤럭시 탭의 'S펜 지연율(Latency)'이 낮은 이유는?",
+"opts": [
+"9ms 지연율로 실제 펜처럼 자연스러운 필기감",
+"블루투스 없이 EMR 방식 사용",
+"에어리얼 뷰 기능",
+"무선 충전 지원"
+],
+"ans": 0,
+"exp": "갤럭시 탭의 S펜은 EMR(전자기 공명) 방식으로 9ms의 매우 낮은 지연율을 구현해 실제 펜에 가까운 필기감을 제공한다."
+},
+{
+"q": "삼성 갤럭시 탭 'DeX 모드'의 주요 활용은?",
+"opts": [
+"태블릿을 외부 모니터에 연결해 PC처럼 사용",
+"게임 성능 향상",
+"배터리 절약",
+"카메라 품질 향상"
+],
+"ans": 0,
+"exp": "DeX 모드는 태블릿을 HDMI 또는 무선으로 모니터에 연결해 키보드·마우스와 함께 데스크톱 환경으로 사용하는 기능이다."
+},
+{
+"q": "삼성 갤럭시 탭 S11 시리즈에서 S펜이 기본 포함된 모델은?",
+"opts": [
+"S11 Ultra만 기본 포함",
+"모든 S11 모델 포함",
+"S11+ 이상 포함",
+"별매품만"
+],
+"ans": 0,
+"exp": "갤럭시 탭 S11 Ultra만 S펜이 본체에 기본 포함되며, 다른 모델은 별도로 구입해야 한다."
+},
+{
+"q": "삼성 갤럭시 탭의 '다중 작업(Multi-Active Window)' 기능은?",
+"opts": [
+"화면에 최대 3개 앱을 동시에 분할 실행",
+"하나의 앱만 전체 화면 사용",
+"두 기기 화면 연동",
+"앱 자동 전환"
+],
+"ans": 0,
+"exp": "Multi-Active Window는 태블릿 화면에 앱 3개를 동시에 분할해 문서 작성·인터넷 검색·동영상을 동시에 볼 수 있다."
+},
+{
+"q": "삼성 갤럭시 탭 S11 Ultra의 주요 생산성 기능이 아닌 것은?",
+"opts": [
+"SIM 카드 없이 5G 연결",
+"S펜 노트",
+"DeX 모드",
+"Book Cover Keyboard"
+],
+"ans": 0,
+"exp": "탭 S11 Ultra는 Wi-Fi와 LTE/5G 모델이 있으며, SIM 없이 5G를 사용하려면 eSIM이나 SIM 카드 슬롯이 필요하다."
+},
+{
+"q": "삼성 갤럭시 탭에서 '갤럭시 북과 연동' 시 가능한 기능은?",
+"opts": [
+"탭을 노트북 두 번째 화면으로 활용 (Second Screen)",
+"두 기기 배터리 공유",
+"노트북 데이터 탭으로 자동 백업",
+"노트북 키보드로 탭 직접 제어"
+],
+"ans": 0,
+"exp": "Second Screen 기능으로 갤럭시 탭을 갤럭시 북의 확장 모니터로 사용할 수 있어 멀티 태스킹이 용이하다."
+},
+{
+"q": "삼성 갤럭시 탭 AMOLED와 TFT LCD 차이로 옳은 것은?",
+"opts": [
+"AMOLED가 완전한 블랙 표현, 더 선명한 색감",
+"LCD가 배터리를 덜 사용",
+"AMOLED가 항상 더 저렴",
+"LCD가 더 얇음"
+],
+"ans": 0,
+"exp": "AMOLED는 각 픽셀이 자체 발광해 완전한 블랙과 뛰어난 색 재현이 가능하며 야외 시인성도 우수하다."
+},
+{
+"q": "삼성 갤럭시 탭 S11 시리즈의 배터리 용량(S11 Ultra)은?",
+"opts": [
+"11200mAh",
+"5000mAh",
+"8000mAh",
+"15000mAh"
+],
+"ans": 0,
+"exp": "탭 S11 Ultra는 11200mAh 대용량 배터리로 종일 사용에도 충분한 배터리 수명을 제공한다."
+},
+{
+"q": "삼성 갤럭시 탭 '키보드 케이스(Book Cover Keyboard)' 사용 시 추가 기능은?",
+"opts": [
+"트랙패드 내장으로 마우스 없이 PC처럼 사용",
+"배터리 보조",
+"추가 카메라",
+"외장 스피커"
+],
+"ans": 0,
+"exp": "Book Cover Keyboard는 트랙패드를 내장해 별도 마우스 없이도 탭을 노트북처럼 사용할 수 있다."
+},
+{
+"q": "삼성 갤럭시 탭의 '어린이 모드' 기능은?",
+"opts": [
+"전용 UI로 교육 콘텐츠 제한·관리",
+"화면 밝기 고정",
+"알림 차단만",
+"Wi-Fi 차단"
+],
+"ans": 0,
+"exp": "어린이 모드는 아이 전용 UI를 제공하고 콘텐츠 시청 시간, 앱 접근을 부모가 관리할 수 있도록 한다."
+},
+{
+"q": "삼성 갤럭시 탭에서 '삼성 노트' 앱의 특징이 아닌 것은?",
+"opts": [
+"실시간 타인과 협업 편집",
+"S펜 손글씨 필기",
+"손글씨-텍스트 변환",
+"PDF 주석"
+],
+"ans": 0,
+"exp": "삼성 노트는 개인 메모 앱으로 실시간 협업 편집은 기본 기능이 아니며, 구글 독스 등 협업 도구와 차별화된다."
+},
+{
+"q": "삼성 갤럭시 탭 S11+의 화면 크기는?",
+"opts": [
+"12.4인치",
+"14.6인치",
+"11인치",
+"10.5인치"
+],
+"ans": 0,
+"exp": "갤럭시 탭 S11+는 12.4인치 화면으로 S11(11인치)과 S11 Ultra(14.6인치) 사이의 중간 크기다."
+},
+{
+"q": "삼성 갤럭시 탭의 'AR 기능'을 활용한 대표 앱은?",
+"opts": [
+"AR Zone (증강현실 스티커·효과)",
+"삼성 헬스",
+"Samsung Pay",
+"빅스비 루틴"
+],
+"ans": 0,
+"exp": "AR Zone은 카메라 앱에 증강현실 효과, 이모지, 미니 게임을 추가해 창의적인 콘텐츠 제작이 가능하다."
+},
+{
+"q": "삼성 갤럭시 탭의 '방수 등급'은?",
+"opts": [
+"IP68 (수심 1.5m 30분)",
+"IP67",
+"IPX4",
+"방수 없음"
+],
+"ans": 0,
+"exp": "갤럭시 탭 S11 시리즈는 IP68 방수 등급으로 실수로 물에 빠져도 안전하다."
+},
+{
+"q": "삼성 갤럭시 탭 외부 디스플레이 연결 시 사용하는 포트는?",
+"opts": [
+"USB-C (DisplayPort 지원)",
+"HDMI 전용",
+"Micro USB",
+"3.5mm 잭"
+],
+"ans": 0,
+"exp": "갤럭시 탭은 USB-C 포트가 DisplayPort Alt Mode를 지원해 USB-C to HDMI 케이블로 외부 모니터에 연결된다."
+},
+{
+"q": "삼성 갤럭시 탭 S11 시리즈의 AP 성능이 중요한 이유는?",
+"opts": [
+"갤럭시 AI 기능 실행에 충분한 성능이 필요",
+"AP는 화질에만 영향",
+"배터리 용량과 무관",
+"네트워크 속도만 결정"
+],
+"ans": 0,
+"exp": "탭 S11은 갤럭시 AI 기능(텍스트 요약, 번역, 이미지 편집 등)을 로컬에서 실행하기 위해 고성능 AP가 필요하다."
+},
+{
+"q": "삼성 갤럭시 탭 '화면 녹화' 기능으로 가능한 것은?",
+"opts": [
+"앱 튜토리얼 제작, 게임 플레이 공유",
+"실시간 스트리밍만 가능",
+"오디오 없이 화면만 녹화",
+"외부 카메라 연동 필요"
+],
+"ans": 0,
+"exp": "화면 녹화는 내부 오디오·마이크와 함께 화면을 녹화해 튜토리얼, 게임 영상, 회의 내용 등을 저장·공유할 수 있다."
+},
+{
+"q": "삼성 갤럭시 탭 'Wi-Fi 6E' 지원의 장점은?",
+"opts": [
+"6GHz 대역 지원으로 더 빠르고 간섭 없는 연결",
+"5G 통신 대체",
+"배터리 소비 절감",
+"Wi-Fi 범위 2배 확대"
+],
+"ans": 0,
+"exp": "Wi-Fi 6E는 6GHz 주파수 대역을 추가로 활용해 혼잡한 환경에서도 빠르고 안정적인 무선 연결을 제공한다."
+},
+{
+"q": "삼성 갤럭시 탭의 'Samsung DeX on PC' 기능은?",
+"opts": [
+"PC에서 탭 화면을 미러링·원격 제어",
+"탭을 PC로 백업",
+"PC에서 탭 충전",
+"PC 파일을 탭으로 전송만"
+],
+"ans": 0,
+"exp": "Samsung DeX on PC는 Windows/Mac에서 갤럭시 탭 화면을 창으로 띄워 앱을 실행하고 파일을 공유하는 기능이다."
+},
+{
+"q": "삼성 갤럭시 탭 S11 FE의 의미는?",
+"opts": [
+"Fan Edition — 보급형 가성비 모델",
+"특별 에디션",
+"전면 카메라 강화 모델",
+"패브릭 디자인 모델"
+],
+"ans": 0,
+"exp": "FE(Fan Edition)는 플래그십 기능을 합리적인 가격에 제공하는 보급형 라인업으로 학생·가성비 사용자를 위한 모델이다."
+},
+{
+"q": "삼성 갤럭시 탭에서 S펜 '에어 액션' 기능은?",
+"opts": [
+"S펜을 허공에서 제스처로 기기 원격 제어",
+"종이에 쓰기",
+"음성 인식 활성화",
+"NFC 결제"
+],
+"ans": 0,
+"exp": "에어 액션은 S펜을 허공에서 흔들거나 버튼을 눌러 카메라 셔터, 음악 제어, 앱 전환 등을 원격으로 수행한다."
+},
+{
+"q": "삼성 갤럭시 탭 S11의 전면 카메라 특징으로 세로 화면 촬영 최적화 기능은?",
+"opts": [
+"Auto Framing — 움직임에 따라 화각 자동 조절",
+"셀카 보정 자동",
+"4K 전면 촬영",
+"야간 전면 촬영"
+],
+"ans": 0,
+"exp": "Auto Framing은 전면 카메라가 화상회의 중 사람의 움직임을 추적해 화각을 자동으로 조절해 항상 화면 중앙에 있도록 한다."
+},
+{
+"q": "삼성 갤럭시 탭의 '오디오 조망(SoundAlive+)'의 기능은?",
+"opts": [
+"콘텐츠 유형에 따라 음향 자동 최적화",
+"외부 스피커 자동 감지",
+"마이크 소음 제거",
+"배터리 절약 음향"
+],
+"ans": 0,
+"exp": "SoundAlive+는 영화, 음악, 게임 등 재생 중인 콘텐츠를 자동 분석해 최적화된 음향 프로파일을 적용한다."
+}
+],
+"갤럭시북": [
+{
+"q": "Galaxy Book6 Ultra의 디스플레이 규격으로 올바른 것은?",
+"opts": [
+"16인치 QLED 144Hz",
+"16인치 AMOLED 120Hz",
+"14인치 OLED 60Hz",
+"15.6인치 OLED 120Hz"
+],
+"ans": 1,
+"exp": "Galaxy Book6 Ultra는 16인치 Dynamic AMOLED 2X 120Hz 디스플레이를 탑재합니다. 노트북에서 AMOLED 디스플레이는 탁월한 색 표현과 완전한 블랙 표현으로 영상·디자인 작업에 최적화되어 있습니다."
+},
+{
+"q": "Galaxy Book6 Ultra에 탑재된 프로세서로 올바른 것은?",
+"opts": [
+"Intel Core Ultra 9 (Arrow Lake)",
+"AMD Ryzen AI 9",
+"Snapdragon X Elite",
+"Apple M4 Pro"
+],
+"ans": 0,
+"exp": "Galaxy Book6 Ultra는 Intel Core Ultra 9 (Arrow Lake) 프로세서를 탑재합니다. Intel의 NPU를 활용해 AI 기능(AI 지우개, 실시간 번역 등)을 온디바이스로 처리합니다."
+},
+{
+"q": "Galaxy Book6 Pro 360의 특징으로 올바른 것은?",
+"opts": [
+"일반 클램쉘 노트북",
+"360도 회전 힌지로 노트북·텐트·태블릿 모드 전환 가능, S펜 지원",
+"터치스크린 없는 기업용 노트북",
+"ARM 기반 Copilot+ PC"
+],
+"ans": 1,
+"exp": "Galaxy Book6 Pro 360은 360도 회전 힌지를 탑재해 노트북·스탠드·텐트·태블릿 4가지 모드로 활용할 수 있습니다. S펜도 지원해 그림 그리기, 필기 등 다양한 창작 활동이 가능합니다."
+},
+{
+"q": "Galaxy Book6 시리즈의 'Galaxy AI' 기능 중 'AI Photo Remaster'의 설명으로 올바른 것은?",
+"opts": [
+"사진을 AI가 완전히 새로운 스타일로 변환",
+"오래된 저화질 사진을 AI로 고화질로 복원·개선",
+"AI가 자동으로 사진을 분류·정리",
+"웹에서 비슷한 사진을 자동으로 검색"
+],
+"ans": 1,
+"exp": "AI Photo Remaster는 오래되거나 저화질의 사진을 AI로 분석해 노이즈 제거, 해상도 향상, 색상 복원 등을 수행해 더 선명하고 생동감 있는 사진으로 개선합니다."
+},
+{
+"q": "Galaxy Book6 Ultra의 무게로 올바른 것은?",
+"opts": [
+"약 1.2kg",
+"약 1.55kg",
+"약 1.86kg",
+"약 2.1kg"
+],
+"ans": 2,
+"exp": "Galaxy Book6 Ultra는 약 1.86kg으로 16인치 고성능 노트북으로는 상당히 가벼운 편입니다. 알루미늄 바디를 적용해 내구성과 경량을 동시에 달성했습니다."
+},
+{
+"q": "Galaxy Book과 Galaxy 스마트폰 연동 기능으로 올바른 것은?",
+"opts": [
+"연동 기능이 없으며 독립적으로만 사용",
+"Phone Link로 스마트폰 화면을 노트북에서 제어, 통화·문자·파일 공유 가능",
+"노트북에서 스마트폰 앱을 직접 실행 가능",
+"연동은 삼성 클라우드(Samsung Cloud)를 통해서만 가능"
+],
+"ans": 1,
+"exp": "Phone Link(또는 Link to Windows) 기능으로 Galaxy 스마트폰을 Galaxy Book과 연동하면 노트북 화면에서 스마트폰 화면 미러링, 통화 응답, 문자 전송, 파일 공유를 모두 할 수 있습니다."
+},
+{
+"q": "Galaxy Book6 시리즈의 배터리 지속 시간으로 올바른 것은?",
+"opts": [
+"최대 8시간",
+"최대 12시간",
+"최대 18시간",
+"최대 22시간"
+],
+"ans": 2,
+"exp": "Galaxy Book6 Pro 기준 최대 약 18시간의 배터리 지속 시간을 제공합니다. Intel의 저전력 설계와 AI 전력 관리 기술이 결합되어 하루 종일 충전 없이 사용할 수 있습니다."
+},
+{
+"q": "Galaxy Book6 Pro의 포트 구성으로 올바른 것은?",
+"opts": [
+"USB-A만 탑재",
+"Thunderbolt 4 × 2 + USB-A × 2 + HDMI + MicroSD",
+"USB-C × 1만 탑재",
+"USB-C × 4 + Thunderbolt × 2"
+],
+"ans": 1,
+"exp": "Galaxy Book6 Pro는 Thunderbolt 4 포트(100W PD 충전 지원) 2개, USB-A 2개, HDMI, MicroSD 등 다양한 포트를 탑재해 별도 도킹 스테이션 없이도 다양한 기기를 연결할 수 있습니다."
+},
+{
+"q": "Galaxy Book6 시리즈의 RAM 최대 용량으로 올바른 것은?",
+"opts": [
+"8GB",
+"16GB",
+"32GB",
+"64GB"
+],
+"ans": 2,
+"exp": "Galaxy Book6 Ultra는 최대 32GB LPDDR5 RAM을 지원합니다. 고성능 크리에이터 작업, 가상화, 영상 편집 등에 충분한 메모리를 제공합니다."
+},
+{
+"q": "Galaxy Book6 시리즈의 'Copilot+ PC' 인증의 의미로 올바른 것은?",
+"opts": [
+"Microsoft Copilot AI 서비스가 무료로 제공되는 PC",
+"Microsoft가 지정한 최소 NPU 성능(40 TOPS) 이상을 갖춘 AI 최적화 PC",
+"Microsoft Office가 기본 탑재된 PC",
+"클라우드 전용 노트북"
+],
+"ans": 1,
+"exp": "Copilot+ PC는 Microsoft가 제정한 새로운 PC 카테고리로, 최소 40 TOPS 이상의 NPU 성능을 갖춰 AI 작업을 로컬에서 빠르게 처리할 수 있는 PC입니다. Galaxy Book6 시리즈 중 NPU 기준을 만족하는 모델이 인증을 받았습니다."
+},
+{
+"q": "Galaxy Book6와 Apple MacBook Air의 비교에서 Galaxy Book의 장점으로 올바른 것은?",
+"opts": [
+"MacBook Air보다 무조건 가벼움",
+"AMOLED 디스플레이, Windows OS, 갤럭시 생태계 연동, 다양한 포트",
+"MacBook Air보다 배터리가 2배 길게 지속",
+"MacBook Air와 완전히 호환되는 macOS 지원"
+],
+"ans": 1,
+"exp": "Galaxy Book의 장점은 AMOLED 디스플레이(MacBook Air는 Liquid Retina LCD), Windows OS(호환성), 갤럭시 폰·탭·워치와의 생태계 연동, Thunderbolt + USB-A 등 다양한 포트입니다. MacBook의 장점은 macOS 생산성, Apple 생태계 연동입니다."
+},
+{
+"q": "Galaxy Book6 시리즈에서 'AI 라이브 번역(AI Live Translate)' 기능의 특징으로 올바른 것은?",
+"opts": [
+"화상 회의에서 상대방 말을 실시간으로 번역해 자막으로 표시",
+"웹 브라우저에서만 사용 가능",
+"인터넷 연결 없이 오프라인 번역 지원",
+"영어-한국어만 지원"
+],
+"ans": 0,
+"exp": "AI 라이브 번역은 화상 회의(Zoom, Teams 등)에서 상대방의 발화를 실시간으로 번역해 자막으로 표시합니다. 언어 장벽 없는 글로벌 회의가 가능합니다."
+},
+{
+"q": "Galaxy Book6 Pro 360에서 S펜을 사용할 때의 특징으로 올바른 것은?",
+"opts": [
+"S펜은 별매 액세서리이며 Bluetooth 연결이 필요",
+"S펜이 기기 내부에 내장",
+"S펜은 충전 없이 EMR 방식으로 즉시 사용 가능하며 필압 4,096단계 지원",
+"360 모델에서만 S펜 사용 가능하며 일반 Pro 모델은 불가"
+],
+"ans": 2,
+"exp": "Galaxy Book6 Pro 360의 S펜은 전자기 공명(EMR) 방식으로 별도 충전 없이 즉시 사용 가능합니다. 4,096단계 필압을 지원해 그림 그리기나 세밀한 필기에 최적화되어 있습니다."
+},
+{
+"q": "Galaxy Book6 시리즈의 Windows Studio Effects 기능으로 올바른 것은?",
+"opts": [
+"게임용 그래픽 효과를 실시간으로 적용",
+"화상 회의 시 배경 흐림, 시선 교정, 자동 프레이밍, 목소리 집중 등 AI 기능 제공",
+"화면 녹화 시 특수 효과 추가",
+"HD 웹캠 품질을 8K로 업스케일링"
+],
+"ans": 1,
+"exp": "Windows Studio Effects는 Copilot+ PC에서 제공하는 AI 화상 회의 기능으로 배경 흐림(블러), 시선 교정(눈맞춤), 자동 프레이밍(얼굴 추적), 마이크 노이즈 캔슬링 등을 실시간으로 적용합니다."
+},
+{
+"q": "삼성 갤럭시북6 Pro의 디스플레이 특징은?",
+"opts": [
+"Dynamic AMOLED 2X, 120Hz",
+"TN 패널 60Hz",
+"IPS 60Hz",
+"Mini LED 144Hz"
+],
+"ans": 0,
+"exp": "갤럭시북6 Pro는 Dynamic AMOLED 2X 패널에 120Hz 주사율로 선명한 색상과 부드러운 화면을 제공한다."
+},
+{
+"q": "삼성 갤럭시북 'Copilot+ PC' 인증의 의미는?",
+"opts": [
+"NPU 40TOPS 이상으로 AI 기능 로컬 실행 가능",
+"가장 빠른 프로세서",
+"최고 배터리 수명",
+"방수 기능 포함"
+],
+"ans": 0,
+"exp": "Copilot+ PC는 NPU(신경망처리장치)가 40 TOPS 이상 성능을 갖춰 AI 작업을 로컬에서 빠르게 실행할 수 있는 인증이다."
+},
+{
+"q": "삼성 갤럭시북의 'Intel EVO' 인증이 보장하는 것은?",
+"opts": [
+"빠른 부팅, 긴 배터리, 빠른 충전, Thunderbolt 4",
+"최고 게이밍 성능",
+"방수 기능",
+"5G 통신 지원"
+],
+"ans": 0,
+"exp": "Intel EVO 인증은 1초 내 웨이크업, 9시간 이상 배터리, 빠른 충전(30분 충전으로 4시간 사용), Thunderbolt 4를 보장한다."
+},
+{
+"q": "삼성 갤럭시북6 Ultra의 주요 특징이 아닌 것은?",
+"opts": [
+"배터리 교체 가능",
+"NVIDIA RTX 그래픽",
+"AMOLED 디스플레이",
+"Arc 인텔 그래픽 옵션"
+],
+"ans": 0,
+"exp": "갤럭시북6 Ultra는 NVIDIA RTX 그래픽과 AMOLED 디스플레이가 핵심이며, 배터리는 내장형으로 사용자 교체 불가이다."
+},
+{
+"q": "삼성 갤럭시북 '폰 링크(Phone Link)' 연동으로 가능한 것은?",
+"opts": [
+"갤럭시 폰 화면을 PC에서 미러링 및 앱 실행",
+"갤럭시 폰 배터리 PC로 충전",
+"폰 통화를 PC 스피커로 자동 전환",
+"갤럭시 폰 GPS PC에서 사용"
+],
+"ans": 0,
+"exp": "Phone Link(구 Your Phone)는 갤럭시 폰 화면을 PC 창에 띄워 앱을 실행하고 통화, 문자, 알림을 PC에서 관리할 수 있게 한다."
+},
+{
+"q": "삼성 갤럭시북의 'Samsung Studios' 기능이 개선하는 것은?",
+"opts": [
+"웹캠 화질·마이크 성능 AI 향상으로 화상회의 최적화",
+"게임 프레임 향상",
+"배터리 수명 연장",
+"디스플레이 색 보정"
+],
+"ans": 0,
+"exp": "Samsung Studios는 AI로 웹캠 화질을 개선하고 마이크 노이즈를 제거해 화상회의에서 선명한 화면과 음성을 제공한다."
+},
+{
+"q": "삼성 갤럭시북6 Pro 360의 '360° 힌지' 특징은?",
+"opts": [
+"태블릿, 텐트, 스탠드, 노트북 4가지 모드 지원",
+"배터리 보조",
+"추가 포트 제공",
+"접을 때 화면 보호만"
+],
+"ans": 0,
+"exp": "360° 힌지는 화면을 완전히 뒤로 접어 태블릿 모드, 텐트 모드, 스탠드 모드, 일반 노트북 모드를 모두 지원한다."
+},
+{
+"q": "삼성 갤럭시북에서 'Galaxy AI' 기능 중 문서 작업에 유용한 것은?",
+"opts": [
+"Note Assist (긴 텍스트 요약, 회의록 정리)",
+"Circle to Search",
+"Live Translate 통화",
+"에너지 스코어"
+],
+"ans": 0,
+"exp": "Note Assist는 긴 문서를 AI가 요약하거나 불릿 포인트로 정리하고, 회의록을 자동으로 작성해 업무 생산성을 높인다."
+},
+{
+"q": "삼성 갤럭시북 '다중 기기 연속성(Multi-device Continuity)' 기능은?",
+"opts": [
+"갤럭시 폰·탭·북 간 파일·클립보드·작업 이어받기",
+"여러 노트북 동시 사용",
+"다른 사람 PC와 연결",
+"클라우드 자동 동기화만"
+],
+"ans": 0,
+"exp": "다중 기기 연속성은 갤럭시 생태계 기기 간 클립보드 공유, 파일 드래그 앤 드롭, 앱 연속 실행을 지원한다."
+},
+{
+"q": "삼성 갤럭시북 무게가 중요한 이유는?",
+"opts": [
+"이동성과 편의성에 직결되어 휴대 피로도 결정",
+"화면 화질 결정",
+"배터리 용량 결정",
+"성능 수준 결정"
+],
+"ans": 0,
+"exp": "노트북 무게는 매일 들고 다니는 피로도에 직접 영향을 미치며, 갤럭시북4 Pro 14형은 1.23kg으로 경쟁 제품 대비 가볍다."
+},
+{
+"q": "삼성 갤럭시북 'Thunderbolt 4' 포트의 최대 데이터 전송 속도는?",
+"opts": [
+"최대 40Gbps",
+"최대 10Gbps",
+"최대 5Gbps",
+"최대 480Mbps"
+],
+"ans": 0,
+"exp": "Thunderbolt 4는 최대 40Gbps 데이터 전송과 최대 8K 외부 디스플레이 출력, 100W 충전을 하나의 포트에서 지원한다."
+},
+{
+"q": "삼성 갤럭시북의 '지문 인식 전원 버튼' 기능은?",
+"opts": [
+"전원 켬과 동시에 지문으로 Windows Hello 로그인",
+"별도 버튼 필요",
+"안면 인식만 지원",
+"핀 번호 입력 대체 불가"
+],
+"ans": 0,
+"exp": "전원 버튼 통합 지문 센서로 노트북을 켜는 순간 지문 인식으로 바로 Windows에 로그인돼 편의성이 향상된다."
+},
+{
+"q": "삼성 갤럭시북 'Quick Share' 기능은?",
+"opts": [
+"갤럭시 기기 간 파일을 Wi-Fi로 빠르게 공유",
+"USB 없이 PC 간 파일 공유",
+"인터넷 없이 원격 공유",
+"전 세계 어디서든 공유"
+],
+"ans": 0,
+"exp": "Quick Share는 갤럭시 기기 간 Wi-Fi Direct로 대용량 파일을 케이블 없이 빠르게 전송하는 기능이다."
+},
+{
+"q": "삼성 갤럭시북 'Eye Comfort Shield'의 기능은?",
+"opts": [
+"블루라이트 자동 조절로 눈 피로 감소",
+"화면 밝기 고정",
+"자외선 차단 필터",
+"안경 착용 보정"
+],
+"ans": 0,
+"exp": "Eye Comfort Shield는 시간대와 조명에 따라 디스플레이 블루라이트를 자동으로 조절해 눈 피로를 줄인다."
+},
+{
+"q": "삼성 갤럭시북 배터리의 '고속 충전'으로 30분 충전 시 사용 가능한 시간은?",
+"opts": [
+"약 4시간",
+"약 1시간",
+"약 30분",
+"완충"
+],
+"ans": 0,
+"exp": "갤럭시북 Pro는 30분 급속 충전으로 약 4시간 사용 가능한 충전량을 보충해 빠른 출장·이동 시 유용하다."
+},
+{
+"q": "삼성 갤럭시북6 Pro에서 지원하는 Wi-Fi 표준은?",
+"opts": [
+"Wi-Fi 6E",
+"Wi-Fi 4",
+"Wi-Fi 5 (ac)",
+"Wi-Fi 7"
+],
+"ans": 0,
+"exp": "갤럭시북6 Pro는 Wi-Fi 6E를 지원해 6GHz 대역에서 빠르고 안정적인 무선 연결이 가능하다."
+},
+{
+"q": "삼성 갤럭시북 '스냅드래곤 X Elite' 탑재 모델의 장점은?",
+"opts": [
+"ARM 기반 저전력으로 배터리 수명 극대화 + AI NPU 강화",
+"인텔보다 무조건 빠름",
+"오직 게이밍에 최적화",
+"macOS와 호환"
+],
+"ans": 0,
+"exp": "스냅드래곤 X Elite는 ARM 아키텍처로 전력 효율이 높아 배터리 수명이 길고, 온디바이스 AI에 최적화된 강력한 NPU를 내장한다."
+},
+{
+"q": "삼성 갤럭시북에서 '삼성 링크(Samsung Link)'의 역할은?",
+"opts": [
+"갤럭시 생태계 기기 간 파일·클립보드 자동 연동",
+"외부 링크 관리",
+"삼성 계정 로그인",
+"유료 구독 서비스"
+],
+"ans": 0,
+"exp": "삼성 링크 기능은 갤럭시 폰, 탭, 북 간 복사한 텍스트·이미지·파일을 자동으로 공유해 연속적인 작업 환경을 만든다."
+},
+{
+"q": "삼성 갤럭시북 '고성능 모드'로 전환 시 달라지는 것은?",
+"opts": [
+"CPU/GPU 최대 성능 발휘 (팬 소음 증가 가능)",
+"화면 밝기 자동 증가",
+"Wi-Fi 속도 향상",
+"배터리 급속 충전"
+],
+"ans": 0,
+"exp": "고성능 모드는 TDP를 최대로 올려 CPU·GPU 성능을 극대화하지만 발열이 증가하고 팬 소음이 커질 수 있다."
+},
+{
+"q": "삼성 갤럭시북 'OEM 화면 보정(True Color Technology)'의 의미는?",
+"opts": [
+"공장 출고 시 전문 장비로 색 정확도 보정",
+"자동 밝기 조절",
+"화면 깜빡임 방지",
+"HDR 지원"
+],
+"ans": 0,
+"exp": "갤럭시북 Pro OLED는 출고 전 dE 평균 1 이하의 전문 색 보정으로 편집·디자인 작업에서도 정확한 색상을 보장한다."
+},
+{
+"q": "삼성 갤럭시북에서 'Second Screen' 사용 방법은?",
+"opts": [
+"갤럭시 탭을 USB-C 또는 무선으로 연결해 서브 모니터",
+"외부 모니터 필수 연결",
+"타 브랜드 태블릿 연결 가능",
+"전용 앱 유료 구매 필요"
+],
+"ans": 0,
+"exp": "Second Screen은 갤럭시 탭을 무선 또는 USB-C로 갤럭시북에 연결해 추가 모니터로 사용하는 삼성 생태계 전용 기능이다."
+},
+{
+"q": "삼성 갤럭시북6 Pro 16형의 메모리 최대 구성은?",
+"opts": [
+"32GB LPDDR5X",
+"16GB LPDDR4",
+"8GB DDR4",
+"64GB DDR5 (사용자 업그레이드)"
+],
+"ans": 0,
+"exp": "갤럭시북6 Pro 16형은 최대 32GB LPDDR5X 온보드 메모리를 지원해 다중 작업과 AI 처리에 충분한 성능을 제공한다."
+},
+{
+"q": "삼성 갤럭시북의 '기업(B2B) 보안' 특징은?",
+"opts": [
+"삼성 Knox로 하드웨어 수준 보안 + 원격 관리",
+"일반 제품과 동일",
+"소프트웨어만으로 보안",
+"별도 보안 칩 구매 필요"
+],
+"ans": 0,
+"exp": "삼성 Knox는 칩셋 수준의 하드웨어 보안과 MDM 원격 관리를 지원해 기업 IT 환경에서 강력한 보안을 제공한다."
+},
+{
+"q": "삼성 갤럭시북 S 시리즈의 특징은?",
+"opts": [
+"Snapdragon 탑재 초경량·장시간 배터리 특화",
+"게이밍 특화",
+"화면 크기 15인치 이상",
+"최고 성능 특화"
+],
+"ans": 0,
+"exp": "갤럭시북 S 시리즈는 Snapdragon 프로세서 기반으로 가벼운 무게와 하루 이상 배터리 수명에 특화된 라인업이다."
+},
+{
+"q": "삼성 갤럭시북의 'HDMI 2.1' 지원 장점은?",
+"opts": [
+"8K@30Hz 또는 4K@120Hz 출력 가능",
+"USB-C 대체",
+"배터리 충전 가능",
+"고속 데이터 전송"
+],
+"ans": 0,
+"exp": "HDMI 2.1은 최대 8K@30Hz 또는 4K@120Hz 외부 디스플레이 출력을 지원해 고해상도·고주사율 모니터 연결이 가능하다."
+},
+{
+"q": "삼성 갤럭시북 '에코 패키지'의 의미는?",
+"opts": [
+"재활용 소재로 만든 친환경 포장",
+"저전력 모드 이름",
+"재활용 보상 프로그램",
+"에코 디자인 색상"
+],
+"ans": 0,
+"exp": "에코 패키지는 재활용 가능 소재와 최소한의 플라스틱으로 만든 갤럭시북 포장재로 환경 영향을 줄이기 위한 취지다."
+}
+],
+"갤럭시링": [
+{
+"q": "Samsung Galaxy Ring의 사이즈 라인업으로 올바른 것은?",
+"opts": [
+"5~9호",
+"5~13호",
+"4~12호",
+"6~14호"
+],
+"ans": 1,
+"exp": "Samsung Galaxy Ring은 5호~13호의 9가지 사이즈로 제공됩니다. 구매 전 Galaxy Ring 사이즈 키트를 사용해 정확한 사이즈를 측정하는 것이 중요합니다."
+},
+{
+"q": "Samsung Galaxy Ring의 배터리 지속 시간으로 올바른 것은?",
+"opts": [
+"최대 3일",
+"최대 5일",
+"최대 7일",
+"최대 10일"
+],
+"ans": 2,
+"exp": "Samsung Galaxy Ring은 최대 7일의 배터리 지속 시간을 제공합니다(일반 사용 기준). 작은 형태에도 불구하고 일주일 내내 건강 데이터를 측정하고 기록할 수 있습니다."
+},
+{
+"q": "Samsung Galaxy Ring의 방수 등급으로 올바른 것은?",
+"opts": [
+"IPX4 (생활 방수)",
+"IP67",
+"IP68",
+"IP69K"
+],
+"ans": 2,
+"exp": "Samsung Galaxy Ring은 IP68 방수 등급을 보유해 수영·샤워 등 물속에서도 착용 가능합니다. 수심 최대 30m, 30분간 방수가 가능합니다."
+},
+{
+"q": "Samsung Galaxy Ring의 주요 건강 측정 기능이 아닌 것은?",
+"opts": [
+"심박수 모니터링",
+"수면 추적(수면 단계)",
+"혈당 직접 측정",
+"활동량(걸음 수·칼로리) 추적"
+],
+"ans": 2,
+"exp": "Galaxy Ring은 심박수, 수면, 활동량, 체온(피부 온도)을 측정합니다. 혈당을 직접 측정하는 기능은 없습니다."
+},
+{
+"q": "Samsung Galaxy Ring 사용 시 구독 요금에 대한 설명으로 올바른 것은?",
+"opts": [
+"매월 구독료가 필요",
+"연간 구독료가 필요",
+"Galaxy Ring 하드웨어 구매만으로 모든 기능을 구독 없이 이용 가능",
+"삼성 헬스 프리미엄 구독이 별도 필요"
+],
+"ans": 2,
+"exp": "Samsung Galaxy Ring은 별도의 구독료 없이 하드웨어 구입 가격만으로 모든 건강 추적 기능을 평생 이용할 수 있습니다. 이는 Oura Ring(구독제)과 비교한 핵심 차별점입니다."
+},
+{
+"q": "Samsung Galaxy Ring과 Oura Ring4 비교에서 Galaxy Ring의 차별점으로 올바른 것은?",
+"opts": [
+"Oura Ring보다 더 많은 건강 센서 탑재",
+"구독료 없음, Galaxy 기기와의 생태계 연동",
+"더 긴 배터리 지속 시간",
+"더 저렴한 구매 가격"
+],
+"ans": 1,
+"exp": "Galaxy Ring의 핵심 차별점은 ①구독료 없음(Oura Ring은 월 5.99달러 구독) ②Galaxy 생태계(스마트폰·워치·탭)와의 완벽한 연동입니다. Oura Ring이 더 긴 배터리(7~8일)와 더 많은 건강 인사이트를 제공하는 측면도 있습니다."
+},
+{
+"q": "Samsung Galaxy Ring이 측정하는 '피부 온도'는 어떤 방식으로 측정하는가?",
+"opts": [
+"레이저로 체온 측정",
+"반지 내부의 온도 센서로 손가락 피부 온도를 24시간 측정",
+"적외선 센서로 핵심 체온 측정",
+"손가락 혈관의 혈류 온도 측정"
+],
+"ans": 1,
+"exp": "Galaxy Ring은 반지 내부에 장착된 온도 센서로 손가락 피부 온도를 24시간 연속 측정합니다. 피부 온도 변화 패턴은 수면의 질, 월경 주기, 초기 감염 징후 등을 파악하는 데 활용됩니다."
+},
+{
+"q": "Samsung Galaxy Ring의 소재로 올바른 것은?",
+"opts": [
+"스테인리스 스틸",
+"플라스틱",
+"티타늄",
+"알루미늄"
+],
+"ans": 2,
+"exp": "Samsung Galaxy Ring은 티타늄 소재로 제작되어 가볍고 내구성이 뛰어납니다. 티타늄은 알레르기 반응이 적고 스테인리스 대비 가벼워 장시간 착용에 최적입니다."
+},
+{
+"q": "Samsung Galaxy Ring을 충전하는 방식으로 올바른 것은?",
+"opts": [
+"손목 워치형 충전 케이블",
+"Qi 무선 충전 패드",
+"전용 케이스(케이스 자체가 배터리 역할) + USB-C 케이스 충전",
+"일반 USB-C 케이블 직접 연결"
+],
+"ans": 2,
+"exp": "Galaxy Ring은 전용 충전 케이스를 통해 충전합니다. 반지를 케이스에 넣으면 충전되고, 케이스 자체는 USB-C로 충전합니다. 케이스를 함께 휴대하면 외출 중 추가 충전도 가능합니다."
+},
+{
+"q": "Samsung Galaxy Ring의 '수면 점수(Sleep Score)' 산출 기준으로 올바른 것은?",
+"opts": [
+"수면 시간만을 기준으로 산출",
+"수면 시간·수면 단계(REM·깊은 수면·얕은 수면)·심박수·뒤척임을 종합 분석해 0~100점 산출",
+"스마트폰 화면 꺼짐 시간부터 켜짐 시간을 수면 시간으로 간주",
+"체온만을 기준으로 산출"
+],
+"ans": 1,
+"exp": "Galaxy Ring의 수면 점수는 총 수면 시간, REM·깊은 수면·얕은 수면 단계 비율, 심박수 변이도(HRV), 뒤척임 빈도 등을 종합 분석해 0~100점으로 산출합니다."
+},
+{
+"q": "Samsung Galaxy Ring과 Galaxy Watch를 함께 사용할 때의 장점으로 올바른 것은?",
+"opts": [
+"Ring과 Watch 데이터를 합산해 더 정확한 건강 지수를 제공하는 기능",
+"동일한 데이터를 두 번 측정해 정확도 향상",
+"Ring과 Watch를 동시에 충전하는 전용 스테이션 포함",
+"Ring의 배터리를 Watch로 무선 전송"
+],
+"ans": 0,
+"exp": "Galaxy Ring과 Watch를 함께 착용하면 Samsung Health 앱에서 두 기기의 데이터를 통합 분석해 더 정밀한 Energy Score와 건강 인사이트를 제공합니다."
+},
+{
+"q": "Samsung Galaxy Ring이 호환되는 기기로 올바른 것은?",
+"opts": [
+"삼성 Galaxy 스마트폰(Android 14, One UI 6.1 이상) 전용",
+"모든 Android 스마트폰",
+"iPhone과도 완전 호환",
+"PC에서 USB 연결로 데이터 동기화만 가능"
+],
+"ans": 0,
+"exp": "Galaxy Ring은 Android 14 이상, One UI 6.1 이상이 설치된 삼성 Galaxy 스마트폰에서만 완전한 기능을 사용할 수 있습니다."
+},
+{
+"q": "삼성 갤럭시 링이 건강 데이터를 수집하는 주요 센서는?",
+"opts": [
+"PPG(광혈류측정) 센서",
+"ECG 센서",
+"혈압 센서",
+"체온 센서"
+],
+"ans": 0,
+"exp": "갤럭시 링은 PPG(광혈류측정) 센서로 심박수, 혈중산소, 수면 데이터를 측정하며 이 데이터를 AI로 분석한다."
+},
+{
+"q": "삼성 갤럭시 링의 주요 강점으로 갤럭시 워치와 차별화되는 점은?",
+"opts": [
+"착용감 부담 없이 24시간 지속 착용 가능",
+"더 많은 센서 탑재",
+"가격이 더 저렴",
+"디스플레이 내장"
+],
+"ans": 0,
+"exp": "반지 형태는 수면 중에도 부담 없이 착용해 더 정확한 장기 건강 데이터를 수집할 수 있는 것이 가장 큰 강점이다."
+},
+{
+"q": "삼성 갤럭시 링 사이즈 선택 방법은?",
+"opts": [
+"구매 전 삼성스토어에서 사이즈 킷으로 측정",
+"손가락 둘레 cm로 계산",
+"스마트폰 AR로 측정",
+"온라인 차트로 추정"
+],
+"ans": 0,
+"exp": "갤럭시 링은 핏 잘못된 착용 시 정확도가 떨어지므로 삼성스토어에서 제공하는 사이즈 킷으로 정확한 사이즈를 확인해야 한다."
+},
+{
+"q": "삼성 갤럭시 링이 측정하는 '에너지 스코어'의 구성 요소는?",
+"opts": [
+"수면 품질 + 심박수 변동성 + 활동량",
+"걸음 수만",
+"칼로리만",
+"수면 시간만"
+],
+"ans": 0,
+"exp": "에너지 스코어는 전날 수면 품질, 심박수 변동성(HRV), 활동 데이터를 종합해 당일 신체 준비도를 100점 만점으로 표시한다."
+},
+{
+"q": "삼성 갤럭시 링의 배터리를 소모하지 않는 절전 방법은?",
+"opts": [
+"수면 중 심박 측정 간격 자동 조절",
+"화면을 끔",
+"5G 차단",
+"백그라운드 앱 종료"
+],
+"ans": 0,
+"exp": "갤럭시 링은 디스플레이가 없어 상시 절전 상태이며, 수면 중 측정 간격 최적화로 약 7일의 배터리를 유지한다."
+},
+{
+"q": "삼성 갤럭시 링에서 '생리 주기 추적' 기능이 활용하는 데이터는?",
+"opts": [
+"체온·심박·수면 패턴 변화",
+"GPS 위치",
+"습도 데이터",
+"스트레스 입력값"
+],
+"ans": 0,
+"exp": "생리 주기 추적은 체온(피부 온도), 심박수 변화, 수면 패턴을 분석해 생리 예정일과 가임기를 예측한다."
+},
+{
+"q": "삼성 갤럭시 링의 충전 방식은?",
+"opts": [
+"전용 충전 케이스 사용",
+"무선 충전 패드",
+"USB-C 직접 연결",
+"솔라 충전"
+],
+"ans": 0,
+"exp": "갤럭시 링은 전용 충전 케이스에 넣어 충전하며, 충전 케이스 자체는 USB-C로 충전한다."
+},
+{
+"q": "삼성 갤럭시 링이 갤럭시 AI와 연동 시 제공하는 기능은?",
+"opts": [
+"건강 데이터 AI 분석·개인화 코칭",
+"실시간 번역",
+"사진 편집",
+"음성 비서"
+],
+"ans": 0,
+"exp": "갤럭시 AI는 링에서 수집한 건강 데이터를 분석해 개인화된 수면 개선, 운동 권장, 스트레스 관리 코칭을 제공한다."
+},
+{
+"q": "삼성 갤럭시 링의 IP 방수 등급은?",
+"opts": [
+"IP68",
+"IPX4",
+"IP67",
+"방수 없음"
+],
+"ans": 0,
+"exp": "갤럭시 링은 IP68 방수 등급으로 수영이나 샤워 중에도 착용 가능하다."
+},
+{
+"q": "삼성 갤럭시 링 착용 시 정확도가 높은 손가락 위치는?",
+"opts": [
+"집게손가락, 중지, 약지 (제조사 권장 기준)",
+"새끼손가락",
+"엄지손가락",
+"어느 손가락이나 동일"
+],
+"ans": 0,
+"exp": "삼성은 PPG 센서 접촉 면적과 신호 품질을 위해 집게손가락, 중지, 약지 착용을 권장한다."
+},
+{
+"q": "삼성 갤럭시 링이 수집한 데이터가 저장되는 앱은?",
+"opts": [
+"Samsung Health",
+"Galaxy Wearable",
+"SmartThings",
+"Samsung Notes"
+],
+"ans": 0,
+"exp": "갤럭시 링의 모든 건강 데이터는 Samsung Health 앱에 저장·분석되어 종합적인 건강 관리 대시보드를 제공한다."
+},
+{
+"q": "삼성 갤럭시 링 '여러 개를 동시에 같은 계정으로' 사용할 수 있는가?",
+"opts": [
+"아니오, 하나의 계정에 하나의 링만 등록 가능",
+"가능",
+"사이즈별 각각 가능",
+"프리미엄 플랜 시 가능"
+],
+"ans": 0,
+"exp": "갤럭시 링은 Samsung Health 계정 하나에 하나의 링만 등록할 수 있어 여러 개 동시 사용은 지원하지 않는다."
+},
+{
+"q": "삼성 갤럭시 링의 크기(사이즈)는 어떻게 표기되는가?",
+"opts": [
+"내경 mm 기준 5~13까지 번호로 표기",
+"L/M/S",
+"손가락 둘레 cm",
+"무게 기준"
+],
+"ans": 0,
+"exp": "갤럭시 링은 내경 크기에 따라 5~13까지 번호로 표기되며, 사이즈 킷으로 자신에게 맞는 번호를 확인한다."
+},
+{
+"q": "삼성 갤럭시 링의 '수면 무호흡 경고' 기능의 원리는?",
+"opts": [
+"혈중산소 급격한 변화 + 호흡 패턴 분석으로 이상 감지",
+"소리로 코골이 감지",
+"카메라로 촬영",
+"압력 센서 사용"
+],
+"ans": 0,
+"exp": "갤럭시 링은 수면 중 혈중산소 변화와 호흡 패턴을 분석해 수면 무호흡 가능성이 있을 때 알림을 제공한다."
+},
+{
+"q": "삼성 갤럭시 링과 갤럭시 워치를 함께 사용할 때 Samsung Health의 데이터 처리 방식은?",
+"opts": [
+"두 기기 데이터를 통합해 더 정확한 분석 제공",
+"둘 중 하나 데이터만 사용",
+"별도 앱에 분리 저장",
+"자동으로 하나 선택"
+],
+"ans": 0,
+"exp": "Samsung Health는 갤럭시 링과 워치 데이터를 모두 수집해 통합 분석하므로 단독 사용보다 더 정확한 건강 인사이트를 제공한다."
+},
+{
+"q": "삼성 갤럭시 링의 금 이온 도금 버전이 특별한 이유는?",
+"opts": [
+"티타늄 베이스에 18K 금 도금으로 프리미엄 디자인",
+"성능이 더 우수",
+"방수 등급이 더 높음",
+"배터리가 더 오래 지속"
+],
+"ans": 0,
+"exp": "골드 버전은 티타늄 재질에 18K 금 도금을 더해 고급스러운 외관을 제공하지만 기능적 성능은 동일하다."
+},
+{
+"q": "삼성 갤럭시 링 구매 시 월 구독료 여부는?",
+"opts": [
+"없음 — 삼성 헬스는 무료, 기기 비용만",
+"월 9,900원",
+"월 4,900원",
+"갤럭시 AI 구독 필요"
+],
+"ans": 0,
+"exp": "갤럭시 링의 Samsung Health 기능은 별도 구독료 없이 무료로 사용 가능하며 기기 구매 비용만 지불하면 된다."
+},
+{
+"q": "삼성 갤럭시 링이 감지하는 '피부 온도' 측정의 활용 방법은?",
+"opts": [
+"수면 중 체온 변화로 컨디션·생리 주기 추적",
+"정확한 체온(섭씨) 측정",
+"발열 감지",
+"외부 온도 측정"
+],
+"ans": 0,
+"exp": "피부 온도 센서는 수면 중 피부 온도의 미세한 변화 패턴을 추적해 신체 컨디션 변화와 여성 건강 모니터링에 활용된다."
+},
+{
+"q": "삼성 갤럭시 링의 내구성 인증은?",
+"opts": [
+"IP68 방수 + 티타늄 소재 내구성",
+"MIL-SPEC 군용 인증",
+"낙하 테스트 1.5m",
+"스크래치 방지 코팅 인증"
+],
+"ans": 0,
+"exp": "갤럭시 링은 IP68 방수와 티타늄 소재 내구성으로 일상적인 충격과 물 접촉에 안전하게 설계됐다."
+},
+{
+"q": "삼성 갤럭시 링의 '마음 챙기기(Mindfulness)' 기능은?",
+"opts": [
+"심박수·HRV 기반 스트레스 감지 후 호흡 가이드 제공",
+"명상 음악 자동 재생",
+"수면 유도 향기 기능",
+"진동으로 명상 타이머"
+],
+"ans": 0,
+"exp": "마음 챙기기는 실시간 스트레스 수치를 감지해 호흡 조절 가이드와 명상 연습을 통해 즉각적인 스트레스 완화를 돕는다."
+},
+{
+"q": "삼성 갤럭시 링 크기 5와 13의 내경 차이는 대략 얼마인가?",
+"opts": [
+"약 4~5mm 차이",
+"약 1mm 차이",
+"약 10mm 차이",
+"모두 동일한 내경"
+],
+"ans": 0,
+"exp": "갤럭시 링은 사이즈 번호당 약 0.5~0.7mm씩 내경이 증가하며, 5와 13 사이에는 약 4~5mm의 내경 차이가 있다."
+}
+],
+"SmartThings": [
+{
+"q": "SmartThings의 'Map View(맵 뷰)' 기능의 설명으로 올바른 것은?",
+"opts": [
+"스마트폰 지도에 삼성 매장 위치 표시",
+"집 구조도를 기반으로 연결된 기기 위치를 시각화하고 기기별 상태 확인·제어",
+"SmartThings 허브의 신호 강도를 지도로 표시",
+"Wi-Fi 공유기 위치를 최적화하는 기능"
+],
+"ans": 1,
+"exp": "Map View는 집 평면도를 불러오거나 직접 그려서 연결된 SmartThings 기기의 위치를 시각적으로 배치합니다. 방별로 어떤 기기가 있는지 한눈에 확인하고 제어할 수 있습니다."
+},
+{
+"q": "SmartThings의 'AI 에너지 절약 모드'가 지원하는 기기로 올바른 것은?",
+"opts": [
+"스마트폰만 지원",
+"TV만 지원",
+"삼성 냉장고·에어컨·세탁기 등 주요 가전 연동",
+"스마트 전구만 지원"
+],
+"ans": 2,
+"exp": "SmartThings AI 에너지 절약 모드는 삼성 냉장고, 에어컨, 세탁기, 건조기 등 주요 가전과 연동해 각 기기의 에너지 사용 패턴을 AI가 학습하고 최적화합니다."
+},
+{
+"q": "SmartThings의 'Matter' 프로토콜 지원의 의미로 올바른 것은?",
+"opts": [
+"삼성 기기끼리만 연동 가능",
+"Apple HomeKit, Google Home, Amazon Alexa와의 크로스 플랫폼 연동 지원",
+"보안 카메라 전용 표준",
+"유선 연결만 지원하는 스마트홈 표준"
+],
+"ans": 1,
+"exp": "Matter는 CSA(Connectivity Standards Alliance)가 만든 스마트홈 통합 표준으로, SmartThings에서 Matter를 지원하면 Apple HomeKit, Google Home, Amazon Alexa 기기도 SmartThings 앱에서 통합 제어할 수 있습니다."
+},
+{
+"q": "SmartThings의 'AI 루틴(AI Routine)' 기능의 설명으로 올바른 것은?",
+"opts": [
+"사용자가 매일 수동으로 설정해야 하는 고정 루틴",
+"AI가 사용자의 생활 패턴을 학습해 선제적으로 자동화 루틴을 제안",
+"외출 버튼을 누르면 모든 기기가 꺼지는 단순 기능",
+"스마트폰 알람에 연동된 기상 루틴만 지원"
+],
+"ans": 1,
+"exp": "AI 루틴은 SmartThings AI가 사용자의 생활 패턴(귀가 시간, 에어컨 사용 습관, TV 시청 패턴 등)을 분석해 최적화된 자동화 루틴을 선제적으로 제안합니다. 사용자가 승인하면 자동으로 적용됩니다."
+},
+{
+"q": "SmartThings 앱에서 'Energy(에너지)' 기능으로 확인할 수 없는 것은?",
+"opts": [
+"기기별 실시간 전력 소비량",
+"월별 에너지 사용량 및 전기요금 추정",
+"전력 소비가 많은 기기 순위",
+"스마트 미터와 연동한 실시간 전체 가정 전력 소비"
+],
+"ans": 3,
+"exp": "SmartThings Energy는 연결된 기기별 실시간 전력 소비량, 월별 누적 사용량, 예상 전기요금, 기기별 소비 순위를 제공합니다. 단, 스마트 미터(전력 계량기)와의 연동은 일부 국가의 특정 서비스에서만 지원됩니다."
+},
+{
+"q": "SmartThings에서 지원하는 연결 프로토콜로 올바른 것은?",
+"opts": [
+"Wi-Fi, Zigbee, Z-Wave, Bluetooth, Thread, Matter",
+"Wi-Fi와 Bluetooth만 지원",
+"오직 Wi-Fi 5GHz만 지원",
+"유선 이더넷만 지원"
+],
+"ans": 0,
+"exp": "SmartThings는 Wi-Fi, Zigbee, Z-Wave, Bluetooth, Thread, Matter 등 다양한 스마트홈 프로토콜을 지원합니다. 타사 스마트홈 기기와의 폭넓은 호환성이 특징입니다."
+},
+{
+"q": "SmartThings의 'Home Monitor(홈 모니터)' 기능의 설명으로 올바른 것은?",
+"opts": [
+"삼성 TV만을 모니터로 활용하는 기능",
+"연결된 카메라·도어락·모션 감지 센서로 집을 실시간 모니터링하고 이상 감지 시 알림",
+"삼성 서버에서 집 내부를 모니터링하는 기능",
+"에너지 사용량만 모니터링"
+],
+"ans": 1,
+"exp": "SmartThings Home Monitor는 연결된 스마트 카메라, 도어락, 동작 감지 센서, 문열림 센서 등을 통합 관리합니다. 이상 감지 시 스마트폰 알림을 보내고, 특정 기기와 연동해 자동 대응할 수 있습니다."
+},
+{
+"q": "SmartThings의 'SmartThings Hub' 역할로 올바른 것은?",
+"opts": [
+"스마트폰 앱 전용 허브 기능",
+"Zigbee, Z-Wave, Thread 등 무선 프로토콜을 Wi-Fi에 브릿지해 더 많은 기기 연결 가능",
+"삼성 제품끼리만 연결하는 전용 허브",
+"인터넷 없이도 스마트홈을 운영하는 서버"
+],
+"ans": 1,
+"exp": "SmartThings Hub는 Zigbee, Z-Wave, Thread 프로토콜을 지원하지 않는 Wi-Fi 전용 환경에서 이 프로토콜을 사용하는 기기를 SmartThings에 연결할 수 있게 해주는 게이트웨이입니다."
+},
+{
+"q": "삼성 TV가 SmartThings 허브 역할을 할 수 있는 기능에 대한 설명으로 올바른 것은?",
+"opts": [
+"삼성 TV는 SmartThings 허브 기능 없음",
+"최신 삼성 스마트 TV는 SmartThings 허브로 작동해 별도 허브 없이 Zigbee·Thread 기기 연결 가능",
+"TV가 허브가 되면 인터넷 연결이 불필요해짐",
+"TV 허브 기능은 오직 8K TV에서만 지원"
+],
+"ans": 1,
+"exp": "최신 삼성 스마트 TV(2022년 이후 일부 모델)는 SmartThings 허브 기능을 내장해 별도 허브 없이 Zigbee·Thread 프로토콜의 스마트홈 기기를 직접 연결할 수 있습니다."
+},
+{
+"q": "SmartThings에서 '귀가 자동화' 루틴을 설정할 때 트리거로 활용할 수 있는 것은?",
+"opts": [
+"스마트폰 GPS 위치(집 반경 100m 진입 감지)",
+"집 현관 초인종 소리",
+"냉장고 도어 열림 감지",
+"TV 리모컨 신호 감지"
+],
+"ans": 0,
+"exp": "SmartThings 자동화의 귀가 루틴은 스마트폰 GPS 위치를 기반으로 집 근처에 도착했을 때 자동으로 에어컨·조명·도어락 등을 제어할 수 있습니다."
+},
+{
+"q": "SmartThings에 연결할 수 있는 타사 브랜드 기기가 아닌 것은?",
+"opts": [
+"Philips Hue 스마트 전구",
+"Amazon Echo 스피커",
+"Nest 온도 조절기",
+"Apple HomePod mini"
+],
+"ans": 3,
+"exp": "SmartThings는 Philips Hue, Amazon Echo, Nest, IFTTT 연동 기기 등 다양한 타사 기기와 호환됩니다. Apple HomePod mini는 Apple의 HomeKit 생태계에 속해 있어 SmartThings에 직접 연결되지 않습니다."
+},
+{
+"q": "SmartThings의 '스마트 태그 2(SmartTag 2)' 기능으로 올바른 것은?",
+"opts": [
+"스마트폰 잃어버렸을 때 찾아주는 기기",
+"삼성 Find 네트워크(수억 대의 Galaxy 기기)를 활용해 물건의 위치를 추적",
+"Bluetooth만 지원하여 30m 이내에서만 위치 추적 가능",
+"SmartThings 허브와 반드시 연동해야만 사용 가능"
+],
+"ans": 1,
+"exp": "SmartTag 2는 삼성의 Find 네트워크(수억 대의 Galaxy 기기가 협력)를 활용해 분실 물건의 위치를 원거리에서도 추적합니다. UWB(초광대역) 기술로 방향과 거리도 정밀하게 확인할 수 있습니다."
+},
+{
+"q": "SmartThings의 'Pet Care(반려동물 케어)' 기능의 설명으로 올바른 것은?",
+"opts": [
+"반려동물 전용 카메라가 자동으로 예약 구매됨",
+"연결된 카메라와 AI로 반려동물 움직임을 감지하고 모니터링, 먹이 주는 기기와 연동 가능",
+"반려동물의 체온을 자동으로 측정",
+"반려동물 산책 경로를 SmartTag로 추적"
+],
+"ans": 1,
+"exp": "SmartThings Pet Care는 연결된 카메라로 반려동물의 움직임을 AI가 감지해 알림을 보내고, 스마트 자동 급식기와 연동해 먹이를 원격으로 줄 수 있습니다."
+},
+{
+"q": "SmartThings AI가 '에너지 피크 타임'에 자동 대응하는 방식으로 올바른 것은?",
+"opts": [
+"전기를 완전히 차단해 기기를 보호",
+"에어컨 온도를 소폭 조절하거나 세탁기 예약을 변경해 전력 사용 분산",
+"스마트폰 배터리를 충전하지 않음",
+"냉장고를 일시 정지"
+],
+"ans": 1,
+"exp": "SmartThings AI는 전력 피크 타임을 인식해 에어컨 설정 온도를 1~2도 조절하거나, 세탁기·식기세척기 등의 예약 시간을 피크 타임 이후로 자동 변경해 전력 사용을 분산시킵니다."
+},
+{
+"q": "삼성 SmartThings의 '루틴(Routine)' 기능은?",
+"opts": [
+"조건(시간·위치·기기 상태) 충족 시 여러 기기 자동 실행",
+"단일 기기 수동 제어",
+"앱 자동 업데이트",
+"배터리 자동 최적화"
+],
+"ans": 0,
+"exp": "SmartThings 루틴은 '귀가 시 조명 켜기 + 에어컨 켜기 + TV 켜기'처럼 여러 기기를 조건에 따라 자동으로 제어한다."
+},
+{
+"q": "삼성 SmartThings 'Energy' 기능의 역할은?",
+"opts": [
+"연동 가전의 에너지 사용량 모니터링·절전 제안",
+"충전 관리",
+"배터리 현황",
+"전기 요금 자동 납부"
+],
+"ans": 0,
+"exp": "SmartThings Energy는 냉장고, 세탁기, 에어컨 등 연동 기기의 전력 소비를 실시간 모니터링하고 에너지 절감 방법을 제안한다."
+},
+{
+"q": "삼성 SmartThings에서 '외부 브랜드 기기' 연동 방법은?",
+"opts": [
+"Matter 표준 또는 브랜드별 SmartThings 연동 인증",
+"삼성 기기만 연동 가능",
+"별도 허브 기기 구매 필수",
+"개발자 코딩 필요"
+],
+"ans": 0,
+"exp": "SmartThings는 Matter 표준 기기와 파트너사 인증 기기를 연동 지원해 삼성 외 다른 브랜드 스마트홈 기기도 통합 제어 가능하다."
+},
+{
+"q": "삼성 SmartThings 'Find(기기 찾기)' 기능의 작동 원리는?",
+"opts": [
+"오프라인 갤럭시 기기도 주변 기기 UWB/BLE로 위치 추정",
+"GPS만으로 위치 확인",
+"Wi-Fi 연결 필수",
+"카메라로 탐색"
+],
+"ans": 0,
+"exp": "SmartThings Find는 연결 끊긴 기기도 주변에 있는 다른 갤럭시 기기들의 BLE/UWB 신호를 익명으로 활용해 위치를 파악한다."
+},
+{
+"q": "삼성 SmartThings '지오펜싱(Geofencing)' 기능은?",
+"opts": [
+"집 근처 도착/출발 감지로 자동 기기 제어",
+"Wi-Fi 자동 연결",
+"GPS 로그 기록",
+"보안 알림 발송"
+],
+"ans": 0,
+"exp": "지오펜싱은 스마트폰 GPS로 집 반경을 설정해, 귀가 시 자동 조명 켜기·외출 시 에어컨 끄기 등을 자동 실행한다."
+},
+{
+"q": "삼성 SmartThings 'Map View'의 기능은?",
+"opts": [
+"실제 집 구조도에 기기를 배치해 시각적으로 제어",
+"기기 위치 GPS 추적",
+"집 도면 자동 생성",
+"기기 배치 설계 도구"
+],
+"ans": 0,
+"exp": "Map View는 집 평면도 위에 스마트홈 기기를 배치해 어떤 방의 어떤 기기인지 직관적으로 파악하고 제어할 수 있다."
+},
+{
+"q": "삼성 SmartThings와 빅스비(Bixby)의 연동으로 가능한 것은?",
+"opts": [
+"'빅스비야, 거실 불 켜줘'처럼 음성으로 스마트홈 제어",
+"빅스비가 SmartThings 설정 변경",
+"빅스비로 타 브랜드 허브 제어",
+"자동 번역 기능"
+],
+"ans": 0,
+"exp": "SmartThings와 빅스비 연동으로 삼성 TV, 스마트폰, 냉장고 등에서 음성 명령만으로 집 안 기기를 제어할 수 있다."
+},
+{
+"q": "삼성 SmartThings Hub의 역할은?",
+"opts": [
+"Zigbee·Z-Wave 기기를 Wi-Fi 환경에 연결하는 브릿지 역할",
+"인터넷 라우터",
+"보안 카메라 저장소",
+"NFC 리더기"
+],
+"ans": 0,
+"exp": "SmartThings Hub는 Zigbee·Z-Wave 프로토콜을 사용하는 스마트홈 기기를 Wi-Fi 네트워크에 연결하는 중계 허브 역할을 한다."
+},
+{
+"q": "삼성 SmartThings에서 '자동화(Automation)'와 '루틴(Routine)'의 차이는?",
+"opts": [
+"자동화는 특정 트리거에 반응, 루틴은 복합 시나리오 실행",
+"동일한 기능",
+"루틴이 더 단순",
+"자동화는 유료"
+],
+"ans": 0,
+"exp": "자동화는 단일 트리거(문 열림 시 조명 켜기)에 반응하고, 루틴은 여러 조건과 복수 기기 동작을 시나리오로 묶어 실행한다."
+},
+{
+"q": "삼성 SmartThings의 'Family Care' 기능은?",
+"opts": [
+"가족 구성원의 귀가·외출·기기 이용 패턴 확인",
+"가족 채팅",
+"가족 공유 앨범",
+"가족 건강 기록"
+],
+"ans": 0,
+"exp": "Family Care는 어르신이나 어린이의 귀가 여부, 기기 사용 등을 간접적으로 파악해 안부를 확인하는 기능이다."
+},
+{
+"q": "삼성 SmartThings와 'Google Home' 연동 시 가능한 것은?",
+"opts": [
+"구글 어시스턴트로 SmartThings 기기 제어",
+"데이터 자동 공유",
+"기기 구매 공동 진행",
+"구글 캘린더 자동 연동"
+],
+"ans": 0,
+"exp": "Google Home과 연동하면 구글 어시스턴트 음성 명령으로 SmartThings에 등록된 삼성 및 연동 기기를 제어할 수 있다."
+},
+{
+"q": "삼성 SmartThings가 '에너지 절감 모드' 진입 조건으로 감지하는 것은?",
+"opts": [
+"전기요금 피크 시간대 또는 사용량 목표 초과 시",
+"집에 아무도 없을 때만",
+"밤 11시 이후",
+"계절 변화 감지"
+],
+"ans": 0,
+"exp": "에너지 절감 모드는 전기요금 피크 시간대나 월 사용량 목표를 초과할 때 스마트 기기의 에너지 소비를 자동으로 줄인다."
+},
+{
+"q": "삼성 SmartThings 앱을 새 스마트폰으로 이전하는 방법은?",
+"opts": [
+"삼성 계정 로그인 시 모든 기기·루틴·설정 자동 복원",
+"USB로 데이터 직접 이전",
+"기기를 모두 재등록",
+"고객센터 신청"
+],
+"ans": 0,
+"exp": "SmartThings는 모든 기기, 루틴, 설정이 삼성 계정에 저장되므로 새 기기에서 동일 계정으로 로그인하면 자동 복원된다."
+},
+{
+"q": "삼성 SmartThings '보안 알림'이 발송되는 상황은?",
+"opts": [
+"외출 시 문이 잠기지 않았거나 이상 움직임 감지",
+"배터리 부족",
+"Wi-Fi 연결 끊김",
+"앱 업데이트 필요"
+],
+"ans": 0,
+"exp": "SmartThings 보안 기능은 스마트 도어락 미잠금, 보안 카메라 이상 움직임 등을 감지해 즉시 스마트폰으로 알림을 보낸다."
+},
+{
+"q": "삼성 SmartThings '기기 그룹(Group)' 기능의 활용 예는?",
+"opts": [
+"'거실 조명' 그룹으로 여러 전구 한 번에 제어",
+"기기 카테고리 분류만",
+"동일 종류 기기만 묶기 가능",
+"그룹 생성 유료 기능"
+],
+"ans": 0,
+"exp": "기기 그룹은 여러 스마트 조명, 콘센트 등을 하나로 묶어 단일 명령으로 동시에 켜고 끄고 설정할 수 있게 한다."
+},
+{
+"q": "삼성 SmartThings의 'Matter' 표준 지원이 중요한 이유는?",
+"opts": [
+"애플·구글·아마존 등 타 플랫폼 기기와 호환성 확보",
+"빠른 인터넷 속도 제공",
+"보안 강화만을 위한 기술",
+"삼성 전용 표준"
+],
+"ans": 0,
+"exp": "Matter는 애플 홈, 구글 홈, 아마존 알렉사, 삼성 SmartThings가 공동으로 채택한 표준으로 플랫폼 간 상호 운용을 가능하게 한다."
+},
+{
+"q": "삼성 SmartThings를 통한 'A/S 스마트 케어' 서비스의 기능은?",
+"opts": [
+"AI가 기기 이상 감지 후 자동으로 삼성 서비스센터에 진단 데이터 전송",
+"즉시 수리 기사 파견",
+"부품 자동 주문",
+"소프트웨어 자동 수리"
+],
+"ans": 0,
+"exp": "SmartThings AI 기반 스마트 케어는 연결된 가전에서 이상 징후를 감지하면 진단 데이터를 삼성 서비스센터에 자동으로 전달한다."
+}
+]
+};
+
+/* ── 카테고리 구분 ── */
+const CE_CORE=['TV','냉장고','에어컨','세탁기'];
+const CE_BONUS=['건조기','식기세척기','에어드레서','청소기'];
+const MX_CORE=['휴대폰','웨어러블'];
+const MX_BONUS=['갤럭시탭','갤럭시북','갤럭시링','SmartThings'];
+const ALL_CE=[...CE_CORE,...CE_BONUS];
+const ALL_MX=[...MX_CORE,...MX_BONUS];
+
+let st={empId:'',name:'',questions:[],answers:{},essay:'',timerSec:1800,timerInterval:null,startTime:null,submitted:false};
+
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function pickN(arr,n){return shuffle(arr||[]).slice(0,n)}
+function prepareQ(q,cat){const order=shuffle([0,1,2,3]);return{...q,cat,shuffledOpts:order.map(i=>q.opts[i]),shuffledAns:order.indexOf(q.ans)}}
+
+function startQuiz(){
+  const id=document.getElementById('empId').value.trim();
+  const nm=document.getElementById('empName').value.trim();
+  document.getElementById('empErr').textContent='';
+  document.getElementById('nameErr').textContent='';
+  if(!/^\d{8}$/.test(id)){document.getElementById('empErr').textContent='사번은 숫자 8자리로 입력해주세요.';return}
+  if(!nm){document.getElementById('nameErr').textContent='이름을 입력해주세요.';return}
+  st.empId=id;st.name=nm;
+
+  /* 24문항 선택: CE 16 (8카테고리×2) + MX 8 (4카테고리×2) */
+  const ceQs=shuffle(ALL_CE).map(cat=>pickN(QB[cat],2).map(q=>prepareQ(q,cat))).flat();
+  const mxQs=shuffle(ALL_MX).map(cat=>pickN(QB[cat],2).map(q=>prepareQ(q,cat))).flat();
+  st.questions=shuffle([...ceQs,...mxQs]).slice(0,24);
+  st.startTime=Date.now();
+
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('quizScreen').style.display='block';
+  document.getElementById('submitWrap').classList.add('visible');
+  renderQuiz();startTimer();
+}
+
+function renderQuiz(){
+  const content=document.getElementById('quizContent');
+  const LABELS=['①','②','③','④'];
+  let html='';
+  st.questions.forEach((q,qi)=>{
+    const isCE=[...CE_CORE,...CE_BONUS].includes(q.cat);
+    html+=`<div class="q-card" id="qcard-${qi}">
+      <div class="q-meta"><span class="q-num">Q${qi+1}</span><span class="q-cat">${isCE?'CE':'MX'} · ${q.cat}</span></div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${q.shuffledOpts.map((opt,oi)=>`<button class="opt-btn" id="opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})"><span class="opt-circle">${LABELS[oi]}</span><span>${opt}</span></button>`).join('')}</div>
+    </div>`;
+  });
+  html+=`<div class="q-card"><div class="q-meta"><span class="q-num">Q25</span><span class="q-cat essay-cat">주관식</span></div>
+    <div class="q-text">AI를 활용하여 현장에서 사용경험 또는 AI활용하여 현장에서 사용했으면 하는 기능을 서술하시오.</div>
+    <textarea id="essayInput" class="essay-textarea" rows="8" maxlength="1000" placeholder="내용을 입력해주세요. (최대 1,000자)"></textarea>
+    <div class="essay-count"><span id="essayCount">0</span> / 1,000자</div></div>`;
+  content.innerHTML=html;
+  document.getElementById('essayInput').addEventListener('input',function(){st.essay=this.value;document.getElementById('essayCount').textContent=this.value.length});
+}
+
+function selectOpt(qi,oi){
+  if(st.submitted)return;
+  const prev=st.answers[qi];
+  if(prev!==undefined){document.getElementById(`opt-${qi}-${prev}`).classList.remove('selected');document.getElementById(`qcard-${qi}`).classList.remove('answered')}
+  st.answers[qi]=oi;
+  document.getElementById(`opt-${qi}-${oi}`).classList.add('selected');
+  document.getElementById(`qcard-${qi}`).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress(){
+  const done=Object.keys(st.answers).length;
+  document.getElementById('progressText').textContent=`${done} / 24 답변 완료`;
+  const btn=document.getElementById('submitBtn');
+  if(done>=24){btn.disabled=false;btn.textContent='제출하기'}
+  else{btn.disabled=true;btn.textContent=`모든 문항 답변 후 제출 가능합니다 (${done}/24)`}
+}
+
+function startTimer(){
+  updateTimerDisplay();
+  st.timerInterval=setInterval(()=>{st.timerSec--;updateTimerDisplay();if(st.timerSec<=0){clearInterval(st.timerInterval);handleSubmit(true)}},1000);
+}
+
+function updateTimerDisplay(){
+  const m=Math.floor(st.timerSec/60),s=st.timerSec%60;
+  const el=document.getElementById('timer');
+  el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.className='';
+  if(st.timerSec<=300)el.className='danger';
+  else if(st.timerSec<=600)el.className='warn';
+}
+
+async function handleSubmit(forced=false){
+  if(st.submitted)return;
+  if(!forced&&Object.keys(st.answers).length<24)return;
+  if(!forced){const u=24-Object.keys(st.answers).length;if(u>0){const ok=await showModal(`아직 ${u}문항에 답변하지 않았습니다.\n그대로 제출하시겠습니까?`);if(!ok)return}}
+  st.submitted=true;clearInterval(st.timerInterval);
+  const elapsed=Date.now()-st.startTime;
+  const em=Math.floor(elapsed/60000),es=Math.floor((elapsed%60000)/1000);
+  let ceScore=0,mxScore=0;
+  const results=st.questions.map((q,qi)=>{
+    const chosen=st.answers[qi];
+    const correct=(chosen===q.shuffledAns);
+    const isCE=[...CE_CORE,...CE_BONUS].includes(q.cat);
+    if(correct){if(isCE)ceScore++;else mxScore++}
+    return{q,qi,chosen,correct,isCE};
+  });
+  const essayScore=st.essay&&st.essay.trim()?4:0;
+  showResults(results,ceScore,mxScore,essayScore,em,es);
+  saveToGoogle({timestamp:new Date().toLocaleString('ko-KR'),employeeId:st.empId,name:st.name,ceScore:ceScore*4,mxScore:mxScore*4,essayScore,totalScore:ceScore*4+mxScore*4+essayScore,timeTaken:`${em}분 ${es}초`,essay:st.essay});
+}
+
+function showResults(results,ceScore,mxScore,essayScore,em,es){
+  document.getElementById('quizScreen').style.display='none';
+  const rs=document.getElementById('resultScreen');rs.style.display='block';
+  const total=ceScore*4+mxScore*4+essayScore;
+  let gradeMsg,gradeClass;
+  if(total>=90){gradeMsg='S등급 — 완벽한 제품 전문가!';gradeClass='grade-s'}
+  else if(total>=75){gradeMsg='A등급 — 우수합니다!';gradeClass='grade-a'}
+  else if(total>=60){gradeMsg='B등급 — 양호합니다. 조금 더 학습하세요!';gradeClass='grade-b'}
+  else{gradeMsg='C등급 — 더 학습이 필요합니다.';gradeClass='grade-c'}
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+  const wrongResults=results.filter(r=>!r.correct);
+  rs.innerHTML=`
+  <div class="res-header"><div class="res-brand">SAMSUNG · 경원영업팀</div><div class="res-title">레벨업테스트 결과</div><div class="res-meta-info">${st.name} (${st.empId})<br>${dateStr} · 소요시간 ${em}분 ${es}초</div></div>
+  <div class="score-card">
+    <div class="score-main">${total}<span>/100</span></div>
+    <div class="score-pct">${total}점</div>
+    <div class="score-grade ${gradeClass}">${gradeMsg}</div>
+    <div class="score-breakdown">
+      <div class="score-box"><div class="score-box-label">가전 CE (16문항)</div><div class="score-box-val">${ceScore*4}</div><div class="score-box-max">/ 64점</div></div>
+      <div class="score-box"><div class="score-box-label">MX/Smart (8문항)</div><div class="score-box-val">${mxScore*4}</div><div class="score-box-max">/ 32점</div></div>
+      <div class="score-box"><div class="score-box-label">AI활용서술 (Q25)</div><div class="score-box-val">${essayScore}</div><div class="score-box-max">/ 4점</div></div>
+    </div>
+  </div>
+  <div class="drive-status" id="driveStatus"><span class="drive-saving">저장 중...</span></div>
+  ${wrongResults.length>0?`<div class="wrong-section"><h3>오답 풀이 (${wrongResults.length}문항 오답)</h3>${wrongResults.map(r=>`<div class="wrong-item"><div class="wrong-qnum">Q${r.qi+1} · ${r.isCE?'CE':'MX'} · ${r.q.cat}</div><div class="wrong-q">${r.q.q}</div><div class="wrong-my">내 답변: ${r.chosen!==undefined?r.q.shuffledOpts[r.chosen]:'(미응답)'}</div><div class="wrong-correct">정답: ${r.q.shuffledOpts[r.q.shuffledAns]}</div><div class="wrong-exp">${r.q.exp}</div></div>`).join('')}</div>`:`<div class="all-correct">객관식 24문항 전부 정답! 완벽한 제품 전문가입니다.</div>`}
+  <div class="essay-review"><h3>AI 활용 서술 (Q25)</h3><p>${st.essay||'(미작성)'}</p></div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function saveToGoogle(data){
+  if(!SCRIPT_URL){document.getElementById('driveStatus').innerHTML='<span class="drive-skip">Google Apps Script URL 미설정</span>';return}
+  const iframeName='gs_'+Date.now();
+  const iframe=document.createElement('iframe');iframe.name=iframeName;iframe.style.display='none';document.body.appendChild(iframe);
+  const form=document.createElement('form');form.method='POST';form.action=SCRIPT_URL;form.target=iframeName;
+  const input=document.createElement('input');input.type='hidden';input.name='data';input.value=JSON.stringify(data);
+  form.appendChild(input);document.body.appendChild(form);form.submit();
+  setTimeout(()=>{if(form.parentNode)document.body.removeChild(form);if(iframe.parentNode)document.body.removeChild(iframe)},10000);
+  const el=document.getElementById('driveStatus');
+  if(el)el.innerHTML='<span class="drive-ok">Google Drive에 저장되었습니다!</span>';
+}
+
+let _modalCb=null;
+function showModal(msg){return new Promise(resolve=>{_modalCb=resolve;document.getElementById('modalMsg').textContent=msg;document.getElementById('modalOverlay').classList.add('active')})}
+function closeModal(val){document.getElementById('modalOverlay').classList.remove('active');if(_modalCb){_modalCb(val);_modalCb=null}}
+document.getElementById('empId').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('empName').focus()});
+document.getElementById('empName').addEventListener('keydown',e=>{if(e.key==='Enter')startQuiz()});
+</script>
+<div id="modalOverlay"><div class="modal-box"><p id="modalMsg" class="modal-msg"></p><div class="modal-btns"><button class="modal-cancel" onclick="closeModal(false)">취소</button><button class="modal-ok" onclick="closeModal(true)">제출하기</button></div></div></div>
+</body></html>
