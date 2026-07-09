@@ -50,6 +50,16 @@ const MODULES = [
     status: 'live',
   },
   {
+    href: '/planner',
+    icon: '📦',
+    title: '패키지 플래너',
+    desc: '평형별 입주패키지 · 예산 내 최적 추천 · 삼성닷컴 할인 반영',
+    color: '#0891B2',
+    bg: '#ECFEFF',
+    updated: '2026.07',
+    status: 'live',
+  },
+  {
     href: '/admin',
     icon: '📊',
     title: 'AX 현황 대시보드',
