@@ -7,34 +7,34 @@
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Pretendard',system-ui,sans-serif;background:#f4f6fb;color:#111;min-height:100vh;padding-bottom:32px}
+body{font-family:'Pretendard',system-ui,sans-serif;background:#f4f6fb;color:#111;min-height:100vh;padding-bottom:40px}
 .topbar{background:linear-gradient(135deg,#1428A0,#2563EB);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:10px}
 .topbar-back{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit}
 .topbar-title{font-size:15px;font-weight:700}
 .topbar-sub{font-size:10px;color:rgba(255,255,255,.75);margin-top:1px}
-section{padding:0 14px;margin-top:16px}
-.card{background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+section{padding:0 14px;margin-top:14px}
+.card{background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
 .section-title{font-size:13px;font-weight:700;color:#1428A0;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .step-badge{background:#1428A0;color:#fff;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mode-btn{border:2px solid #e8eaf0;border-radius:14px;padding:16px 12px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;font-family:inherit}
 .mode-btn.active{border-color:#1428A0;background:#f0f3ff}
-.mode-btn .mode-icon{font-size:28px;margin-bottom:6px}
-.mode-btn .mode-label{font-size:12px;font-weight:700;color:#111}
-.mode-btn .mode-desc{font-size:10px;color:#666;margin-top:3px;line-height:1.4}
+.mode-icon{font-size:28px;margin-bottom:6px}
+.mode-label{font-size:12px;font-weight:700;color:#111}
+.mode-desc{font-size:10px;color:#666;margin-top:3px;line-height:1.4}
 .pyeong-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .pyeong-btn{border:1.5px solid #e8eaf0;border-radius:10px;padding:8px 4px;background:#fff;cursor:pointer;text-align:center;font-family:inherit;transition:all .2s}
 .pyeong-btn.active{border-color:#1428A0;background:#f0f3ff}
-.pyeong-btn .pyeong-num{font-size:14px;font-weight:800;color:#1428A0}
-.pyeong-btn .pyeong-label{font-size:9px;color:#888;margin-top:1px}
+.pyeong-num{font-size:14px;font-weight:800;color:#1428A0}
+.pyeong-label{font-size:9px;color:#888;margin-top:1px}
 .apt-input{width:100%;border:1.5px solid #e8eaf0;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;margin-bottom:10px}
 .apt-input:focus{border-color:#1428A0}
 .cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .cat-item{border:1.5px solid #e8eaf0;border-radius:12px;padding:10px 6px;background:#fff;cursor:pointer;text-align:center;transition:all .2s;user-select:none}
 .cat-item.selected{border-color:#1428A0;background:#f0f3ff}
-.cat-item .cat-icon{font-size:22px;margin-bottom:4px}
-.cat-item .cat-name{font-size:10px;font-weight:600;color:#333}
-.cat-item .cat-rec{font-size:9px;color:#1428A0;margin-top:2px;font-weight:600;line-height:1.3}
+.cat-icon{font-size:22px;margin-bottom:4px}
+.cat-name{font-size:10px;font-weight:600;color:#333}
+.cat-rec{font-size:9px;color:#1428A0;margin-top:2px;font-weight:600;line-height:1.3}
 .budget-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .budget-row label{font-size:12px;font-weight:600;color:#444;white-space:nowrap}
 .budget-input{flex:1;border:1.5px solid #e8eaf0;border-radius:10px;padding:9px 12px;font-size:16px;font-family:inherit;outline:none;text-align:right;font-weight:700}
@@ -46,43 +46,94 @@ input[type=range]{flex:1;-webkit-appearance:none;height:5px;border-radius:3px;ba
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#1428A0;cursor:pointer}
 .slider-val{font-size:14px;font-weight:800;color:#1428A0;width:32px;text-align:right}
 .discount-note{font-size:9px;color:#888;margin-top:6px;line-height:1.4}
-.rec-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#1428A0,#2563EB);color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px;letter-spacing:.3px}
+.rec-btn{width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#1428A0,#2563EB);color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px}
 .rec-btn:active{opacity:.85}
-.summary-card{background:linear-gradient(135deg,#1428A0,#2563EB);border-radius:16px;padding:16px;color:#fff;margin-bottom:12px}
-.summary-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
-.summary-label{font-size:12px;color:rgba(255,255,255,.75)}
-.summary-price{font-size:22px;font-weight:800}
-.summary-price small{font-size:12px;font-weight:400;margin-left:2px}
-.summary-save{background:rgba(255,255,255,.2);border-radius:8px;padding:6px 12px;font-size:12px;text-align:center;font-weight:600}
-.result-card{background:#fff;border-radius:16px;border:1px solid #e8eaf0;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
-.result-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.result-icon{font-size:20px}
-.result-cat{font-size:13px;font-weight:700;color:#333}
-.model-name{font-size:13px;font-weight:700;color:#111;margin-bottom:2px}
-.model-sub{font-size:11px;color:#666;margin-bottom:10px}
-.price-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.price-original{font-size:12px;color:#999;text-decoration:line-through}
-.price-discounted{font-size:20px;font-weight:800;color:#1428A0}
-.price-discounted small{font-size:11px;font-weight:500;margin-left:2px}
-.price-save-badge{background:#dcfce7;color:#15803d;font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px}
-.specs-wrap{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
-.spec-tag{background:#f4f6fb;border-radius:6px;padding:3px 8px;font-size:10px;color:#444;font-weight:500}
-.spec-tag.flagship{background:#1428A0;color:#fff}
-.flagship-section{border-top:1px solid #f0f3f8;padding-top:8px}
-.flagship-title{font-size:10px;color:#888;margin-bottom:6px;font-weight:600}
-.missing-wrap{display:flex;flex-wrap:wrap;gap:4px}
-.missing-tag{background:#fff0f0;border:1px solid #fecaca;border-radius:6px;padding:2px 8px;font-size:9px;color:#dc2626;font-weight:600}
-.flagship-info{font-size:10px;color:#888;margin-top:4px}
-.flagship-price{color:#1428A0;font-weight:700}
-.over-budget{border:1.5px solid #fed7aa}
-.over-badge{background:#fff7ed;color:#ea580c;font-size:9px;font-weight:700;border-radius:6px;padding:2px 7px}
-.best-badge{background:#dcfce7;color:#15803d;font-size:9px;font-weight:700;border-radius:6px;padding:2px 7px}
 .pyeong-rec-note{background:#f0f3ff;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:10px;color:#3b5bdb;line-height:1.5}
 .hidden{display:none}
 .reset-btn{width:100%;padding:12px;border-radius:12px;border:1.5px solid #e8eaf0;background:#fff;color:#666;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:8px}
+
+/* 요약 카드 */
+.summary-card{background:linear-gradient(135deg,#1428A0,#2563EB);border-radius:16px;padding:16px;color:#fff;margin-bottom:12px}
+.summary-total{font-size:26px;font-weight:800;margin:2px 0}
+.summary-label{font-size:11px;color:rgba(255,255,255,.7)}
+.summary-pill{display:inline-block;background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;margin-top:6px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.summary-item{background:rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
+.summary-item-num{font-size:16px;font-weight:800}
+.summary-item-label{font-size:9px;color:rgba(255,255,255,.7);margin-top:2px}
+
+/* 카테고리 결과 카드 */
+.cat-result{background:#fff;border-radius:18px;border:1px solid #e8eaf0;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.cat-result-header{display:flex;align-items:center;gap:10px;padding:14px 14px 10px}
+.cat-result-icon{font-size:22px}
+.cat-result-name{font-size:14px;font-weight:800;color:#111}
+.cat-result-rule{font-size:10px;color:#888;margin-top:1px}
+.tier-tabs{display:flex;border-bottom:1px solid #f0f3f8;padding:0 14px}
+.tier-tab{flex:1;text-align:center;padding:7px 0;font-size:11px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;color:#aaa}
+.tier-tab.active{color:#1428A0;border-bottom-color:#1428A0}
+.tier-tab.gold{color:#B45309}
+.tier-tab.gold.active{color:#92400E;border-bottom-color:#D97706}
+.tier-tab.green{color:#057A55}
+.tier-tab.green.active{color:#065F46;border-bottom-color:#059669}
+.tier-content{padding:12px 14px 14px}
+
+/* 티어 카드 내부 */
+.tier-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;border-radius:7px;padding:3px 9px;margin-bottom:8px}
+.badge-flagship{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A}
+.badge-rec{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
+.badge-budget{background:#F3F4F6;color:#374151;border:1px solid #E5E7EB}
+.model-title{font-size:13px;font-weight:700;color:#111;margin-bottom:1px;line-height:1.4}
+.model-code{font-size:10px;color:#999;margin-bottom:8px}
+
+/* 핵심 스펙 하이라이트 */
+.key-stat-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.key-stat{background:#f0f3ff;border-radius:8px;padding:4px 10px;text-align:center}
+.key-stat-val{font-size:16px;font-weight:800;color:#1428A0}
+.key-stat-label{font-size:9px;color:#666;margin-top:1px}
+
+/* 가격 */
+.price-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.price-orig{font-size:11px;color:#bbb;text-decoration:line-through}
+.price-disc{font-size:20px;font-weight:800;color:#1428A0}
+.price-disc small{font-size:11px;font-weight:500}
+.price-save{background:#ECFDF5;color:#065F46;font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px}
+
+/* 스펙 태그 */
+.spec-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.spec-tag{background:#f4f6fb;border-radius:6px;padding:3px 8px;font-size:10px;color:#444;font-weight:500}
+.spec-tag.flagship{background:#1428A0;color:#fff}
+.spec-tag.flagonly{background:#FEF3C7;color:#92400E;border:1px solid #FDE68A}
+
+/* 빠진 기능 */
+.missing-section{border-top:1px dashed #f0f3f8;padding-top:8px;margin-top:4px}
+.missing-title{font-size:10px;color:#888;font-weight:600;margin-bottom:5px}
+.missing-tags{display:flex;flex-wrap:wrap;gap:4px}
+.missing-tag{background:#FFF5F5;border:1px solid #FED7D7;border-radius:6px;padding:2px 8px;font-size:9px;color:#C53030;font-weight:600}
+.flagship-ref{font-size:10px;color:#888;margin-top:6px}
+.flagship-ref span{color:#1428A0;font-weight:700}
+
+/* 플래그십 탭 특수 */
+.tier-content.gold-bg{background:#FFFBF0}
+.tier-content.green-bg{background:#F0FFF8}
+.flagship-crown{font-size:11px;color:#92400E;font-weight:700;margin-bottom:6px}
+
+/* 비교 비율 바 */
+.compare-bar-wrap{margin-top:8px}
+.compare-bar-label{font-size:10px;color:#888;margin-bottom:3px;display:flex;justify-content:space-between}
+.compare-bar-track{height:6px;background:#f0f3f8;border-radius:3px;overflow:hidden}
+.compare-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* 에어컨 등급 뱃지 */
+.grade-badge{display:inline-block;font-size:10px;font-weight:700;border-radius:6px;padding:2px 8px;margin-left:6px}
+.grade-1{background:#dcfce7;color:#166534}
+.grade-2{background:#fef9c3;color:#854d0e}
+
+/* 접기/펼치기 버튼 */
+.toggle-btn{width:100%;padding:8px;border:none;background:#f4f6fb;color:#666;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border-top:1px solid #f0f3f8}
 </style>
 </head>
 <body>
+
 <div class="topbar">
   <button class="topbar-back" onclick="history.back()">← 뒤로</button>
   <div>
@@ -98,12 +149,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="mode-btn" id="btn-apt" onclick="selectMode('apt')">
         <div class="mode-icon">🏠</div>
         <div class="mode-label">입주 아파트 패키지</div>
-        <div class="mode-desc">평형수 기반으로 딱 맞는 용량·크기 자동 설정</div>
+        <div class="mode-desc">평형수 기반으로 용량·크기 자동 설정</div>
       </div>
       <div class="mode-btn" id="btn-budget" onclick="selectMode('budget')">
         <div class="mode-icon">💰</div>
         <div class="mode-label">금액대별 추천</div>
-        <div class="mode-desc">원하는 예산 안에서 최적 모델 추천</div>
+        <div class="mode-desc">예산 안에서 3단계 옵션 제시</div>
       </div>
     </div>
   </div>
@@ -137,7 +188,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     <div class="section-title"><span id="budget-step-badge" class="step-badge">STEP 3</span> 예산 &amp; 삼성닷컴 할인율</div>
     <div class="budget-row">
       <label>총 예산</label>
-      <input type="number" class="budget-input" id="budget-input" placeholder="0" min="0" step="10">
+      <input type="number" class="budget-input" id="budget-input" placeholder="0" min="0" step="50">
       <span class="budget-unit">만원</span>
     </div>
     <div style="height:10px"></div>
@@ -148,7 +199,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     </div>
     <div class="discount-note">※ 삼성닷컴 카드혜택·기기변경할인·추가쿠폰 등 실제 적용 할인율을 입력하세요</div>
     <div style="height:14px"></div>
-    <button class="rec-btn" onclick="recommend()">추천받기 →</button>
+    <button class="rec-btn" onclick="recommend()">STEP 4 — 추천 결과 보기 →</button>
   </div>
 </section>
 
@@ -159,34 +210,37 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 </section>
 
 <script>
+// ===== 카테고리 정의 =====
 const CATEGORIES=[
-  {id:'fridge',icon:'🧊',name:'냉장고',step:true},
-  {id:'washer',icon:'🫧',name:'세탁기/콤보',step:true},
-  {id:'dryer',icon:'💨',name:'건조기(별도)',step:false},
-  {id:'tv',icon:'📺',name:'TV',step:true},
-  {id:'aircon',icon:'❄️',name:'에어컨',step:true},
-  {id:'dishwasher',icon:'🍽️',name:'식기세척기',step:false},
-  {id:'airdresser',icon:'👔',name:'에어드레서',step:false},
-  {id:'robot',icon:'🤖',name:'로봇청소기',step:false},
-  {id:'vacuum',icon:'🌀',name:'무선청소기',step:false},
+  {id:'fridge',icon:'🧊',name:'냉장고',step:true,keyAttr:{key:'cap',unit:'L',label:'용량'}},
+  {id:'washer',icon:'🫧',name:'세탁기/콤보',step:true,keyAttr:{fn:p=>p.cap+'kg',label:'세탁용량'}},
+  {id:'dryer',icon:'💨',name:'건조기(별도)',step:false,keyAttr:{key:'cap',unit:'kg',label:'건조용량'}},
+  {id:'tv',icon:'📺',name:'TV',step:true,keyAttr:{fn:p=>p.size+'인치',label:'화면크기'}},
+  {id:'aircon',icon:'❄️',name:'에어컨',step:true,keyAttr:{fn:p=>p.cov+'평형',label:'냉방평수'}},
+  {id:'dishwasher',icon:'🍽️',name:'식기세척기',step:false,keyAttr:{fn:p=>p.induction||'14인용',label:'수납용량'}},
+  {id:'airdresser',icon:'👔',name:'에어드레서',step:false,keyAttr:{fn:p=>p.name.includes('9벌')?'5~9벌':p.name.includes('5벌')?'최대5벌':'3~5벌',label:'의류수납'}},
+  {id:'robot',icon:'🤖',name:'로봇청소기',step:false,keyAttr:{fn:p=>p.specs.includes('직배수전용')?'직배수':'자동급배수',label:'배수방식'}},
+  {id:'vacuum',icon:'🌀',name:'무선청소기',step:false,keyAttr:{fn:p=>(p.specs[0]||'').split('고출력')[0].split('W')[0]+'W',label:'모터출력'}},
 ];
 
+// ===== 플래그십 정의 =====
 const FLAGSHIP={
-  fridge:{model:'RM90H91B1W',name:'패밀리허브 864L',price:584,specs:['AI하이브리드쿨링','패밀리허브(터치스크린)','AI비전인사이드','UV살균탈취','오토오픈도어','메탈쿨링','위스키볼아이스']},
+  fridge:{model:'RM90H91B1W',name:'패밀리허브 864L',price:584,specs:['AI하이브리드쿨링','패밀리허브(터치스크린+AI)','AI비전인사이드','UV살균탈취','오토오픈도어','메탈쿨링','위스키볼아이스']},
   washer:{model:'WH90F2522AAHY',name:'AI원바디 Top-Fit 25/22kg',price:435,specs:['7인치LCD터치','세제자동투입','오토오픈도어','AI세탁건조','AI소음저감','펫케어코스']},
-  dryer:{model:'DV20CB8890BW',name:'20kg 히트펌프건조',price:189,specs:['AI맞춤건조','히트펌프건조','오토오픈도어','공간제습','세탁기연동컨트롤']},
-  tv:{model:'KQ77SH95AFXKR',name:'OLED SH95 77인치',price:590,specs:['OLED패널','AI프로세서','돌비애트모스','오브젝트트래킹사운드','무반사매트']},
-  aircon:{model:'AF90H23D27SS',name:'갤러리프로 스탠드 23평',price:499,specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-  dishwasher:{model:'DW80F75K1UWW',name:'100℃열풍건조+ 정수필터',price:149,specs:['100℃열풍건조+','정수필터내장','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성']},
-  airdresser:{model:'DF90H24R5C',name:'AI에어드레서 크리스탈미러',price:250,specs:['주름집중케어존','듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD터치','미러도어','트리플필터']},
-  robot:{model:'VR90F01SAGS',name:'AI스팀 울트라 직배수',price:204,specs:['스팀물걸레살균','자동급배수','직배수전용','AI바닥인식','AI사물인식','사이드팝아웃','청정스테이션스팀','먼지자동비움']},
-  vacuum:{model:'VS90F40CSG',name:'AI제트 400W 고온물걸레 스테이션+',price:165,specs:['400W고출력','AI제트','고온물걸레','먼지자동비움스테이션','2.5kg경량']},
+  dryer:{model:'DV20DG8890BW',name:'20kg 히트펌프건조 2025',price:199,specs:['AI맞춤건조','히트펌프건조','오토오픈도어','공간제습','세탁기연동컨트롤']},
+  tv:{model:'KQ77SH95AFXKR',name:'OLED SH95 77인치',price:590,specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드','무반사매트디스플레이']},
+  aircon:{model:'AF90H23D27SS',name:'갤러리프로 스탠드 23평 1등급',price:499,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+  dishwasher:{model:'DW80F75K1UWW',name:'100℃열풍건조+ 정수필터 14인용',price:149,specs:['100℃열풍건조+','정수필터내장','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성인식','히든터치']},
+  airdresser:{model:'DF90H24R5C',name:'AI에어드레서 크리스탈미러 H2026',price:250,specs:['주름집중케어존(2026신기술)','듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD중앙터치','크리스탈미러도어','트리플집진필터']},
+  robot:{model:'VR90F01SAGS',name:'AI스팀 울트라 직배수 VR90F',price:204,specs:['스팀물걸레살균','자동급배수','직배수(별도배관)','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
+  vacuum:{model:'VS90F40CSG',name:'AI제트 400W 고온물걸레 스테이션+',price:165,specs:['400W고출력모터','AI제트(맞춤흡입)','고온물걸레기능','먼지자동비움스테이션','2.5kg경량']},
 };
 
+// ===== 제품 DB =====
 const DB={
   fridge:[
-    {model:'RM90H91B1W',name:'패밀리허브 864L',cap:864,price:584,year:'2026',specs:['AI하이브리드쿨링','패밀리허브(터치스크린)','AI비전인사이드','UV살균탈취','오토오픈도어','메탈쿨링','위스키볼아이스']},
-    {model:'RM90H64P2W',name:'패밀리허브 쇼케이스 602L',cap:602,price:464,year:'2026',specs:['AI하이브리드쿨링','패밀리허브(터치스크린)','AI비전인사이드','푸드쇼케이스','UV살균탈취','오토오픈도어','메탈쿨링']},
+    {model:'RM90H91B1W',name:'패밀리허브 864L',cap:864,price:584,year:'2026',specs:['AI하이브리드쿨링','패밀리허브(터치스크린+AI)','AI비전인사이드','UV살균탈취','오토오픈도어','메탈쿨링','위스키볼아이스']},
+    {model:'RM90H64P2W',name:'패밀리허브 쇼케이스 602L',cap:602,price:464,year:'2026',specs:['AI하이브리드쿨링','패밀리허브(터치스크린+AI)','AI비전인사이드','푸드쇼케이스','UV살균탈취','오토오픈도어','메탈쿨링']},
     {model:'RM70H91RMA',name:'AI하이브리드 H시리즈 901L',cap:901,price:369,year:'2026',specs:['AI하이브리드쿨링','UV살균탈취','메탈쿨링']},
     {model:'RM80F91H1X',name:'AI하이브리드 F2025 874L',cap:874,price:365,year:'2025',specs:['AI하이브리드쿨링','푸드쇼케이스','UV살균탈취','오토오픈도어','메탈쿨링']},
     {model:'RM80F64L2A',name:'AI하이브리드 F2025 623L',cap:623,price:349,year:'2025',specs:['AI하이브리드쿨링','푸드쇼케이스','UV살균탈취','메탈쿨링']},
@@ -195,15 +249,16 @@ const DB={
     {model:'RM70F64Q1A',name:'AI하이브리드 키친핏 623L',cap:623,price:250,year:'2025',specs:['AI하이브리드쿨링','UV살균탈취','메탈쿨링']},
     {model:'RM70F64R1A',name:'키친핏 Max 4도어 637L',cap:637,price:249,year:'2025',specs:['AI하이브리드쿨링','UV살균탈취']},
     {model:'RM70F63R2A',name:'키친핏 4도어 640L',cap:640,price:239,year:'2025',specs:['UV살균탈취']},
-    {model:'RM70F90R1ZD',name:'AI 4도어 프리스탠딩 905L',cap:905,price:219,year:'2025',specs:[]},
+    {model:'RM70F90R2ZD',name:'AI 4도어 905L',cap:905,price:199,year:'2025',specs:[]},
+    {model:'RM70F90R1ZD',name:'AI 4도어 905L (스탠드)',cap:905,price:219,year:'2025',specs:[]},
   ],
   washer:[
-    {model:'WH90F2522AAHY',name:'AI원바디 Top-Fit 25/22kg',cap:25,price:435,year:'2025',specs:['7인치LCD터치','세제자동투입','오토오픈도어','AI세탁건조','AI소음저감','펫케어코스']},
     {model:'WD99F25AHR',name:'Infinite AI콤보 25/18kg',cap:25,price:499,year:'2025',specs:['7인치LCD터치','세제자동투입','오토오픈도어','AI세탁건조','AI소음저감','펫케어코스']},
+    {model:'WH90F2522AAHY',name:'AI원바디 Top-Fit 25/22kg',cap:25,price:435,year:'2025',specs:['7인치LCD터치','세제자동투입','오토오픈도어','AI세탁건조','AI소음저감','펫케어코스']},
     {model:'WF2420HCWWC',name:'AI원바디 Top-Fit 2026 24/20kg',cap:24,price:350,year:'2026',specs:['7인치LCD터치','세제자동투입','AI세탁건조','펫케어코스']},
-    {model:'WD90H25AHS',name:'AI콤보 WDH 25/20kg 7인치LCD',cap:25,price:349,year:'2026',specs:['7인치LCD터치','세제자동투입','선택세제함','오토오픈도어','프리히트건조','AI세탁건조','AI소음저감','펫케어코스','미세플라스틱']},
+    {model:'WD90H25AHS',name:'AI콤보 WDH 25/20kg 7인치LCD',cap:25,price:349,year:'2026',specs:['7인치LCD터치','세제자동투입','선택세제함','오토오픈도어','프리히트건조','AI세탁건조','AI소음저감','펫케어코스','미세플라스틱저감']},
     {model:'WH90F2120GBHW',name:'AI원바디 Top-Fit 21/20kg',cap:21,price:329,year:'2025',specs:['7인치LCD터치','세제자동투입','AI세탁건조','AI소음저감','펫케어코스']},
-    {model:'WD90H25BHW',name:'AI콤보 WDH 25/20kg',cap:25,price:299,year:'2026',specs:['세제자동투입','프리히트건조','AI세탁건조','AI소음저감','펫케어코스','미세플라스틱']},
+    {model:'WD90H25BHW',name:'AI콤보 WDH 25/20kg',cap:25,price:299,year:'2026',specs:['세제자동투입','프리히트건조','AI세탁건조','AI소음저감','펫케어코스','미세플라스틱저감']},
     {model:'WD80H25BHY',name:'AI콤보 WDH 25/18kg',cap:25,price:269,year:'2026',specs:['세제자동투입','프리히트건조','AI세탁건조','AI소음저감','펫케어코스']},
     {model:'WF25CB8895BW',name:'그랑데 AI 드럼 25kg',cap:25,price:199,year:'2023',specs:['7인치LCD터치','세제자동투입','오토오픈도어','AI세탁','버블워시','펫케어코스']},
     {model:'WF21DG6650BW',name:'그랑데 AI 드럼 21kg',cap:21,price:169,year:'2025',specs:['AI세탁','버블워시']},
@@ -216,90 +271,183 @@ const DB={
     {model:'DV14BA7500H',name:'14kg 히트펌프건조',cap:14,price:119,year:'2022',specs:['AI맞춤건조','히트펌프건조']},
   ],
   tv:[
-    {model:'KMR85RH95AFXKR',name:'Micro RGB 8K 85인치',size:85,price:990,year:'2025',specs:['MicroRGB패널','8K해상도','AI프로세서','돌비애트모스','오브젝트트래킹사운드','무반사매트']},
-    {model:'KQ83SH95AFXKR',name:'OLED SH95 83인치',size:83,price:890,year:'2025',specs:['OLED패널','AI프로세서','돌비애트모스','오브젝트트래킹사운드','무반사매트']},
-    {model:'KQ85QNH80AFXKR',name:'Neo QLED 4K 85인치',size:85,price:469,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ85LSH03AFXKR',name:'더프레임 프로 85인치',size:85,price:349,year:'2025',specs:['울트라슬림','아트모드']},
-    {model:'KQ85QNH70AFXKR',name:'Neo QLED 4K 85인치',size:85,price:359,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
+    // 85인치+
+    {model:'KMR85RH95AFXKR',name:'Micro RGB 8K 85인치',size:85,price:990,year:'2025',specs:['MicroRGB패널','8K해상도','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드','무반사매트디스플레이']},
+    {model:'KQ83SH95AFXKR',name:'OLED SH95 83인치',size:83,price:890,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드','무반사매트디스플레이']},
+    {model:'KQ85QNH80AFXKR',name:'Neo QLED 4K 85인치',size:85,price:469,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ85QNH70AFXKR',name:'Neo QLED 4K 85인치',size:85,price:359,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ85LSH03AFXKR',name:'더프레임 프로 85인치',size:85,price:349,year:'2025',specs:['울트라슬림(30mm)','아트모드']},
     {model:'KQ85LF03DAFXKR',name:'더프레임 85인치',size:85,price:249,year:'2024',specs:['아트모드']},
-    {model:'KQ77SH95AFXKR',name:'OLED SH95 77인치',size:77,price:590,year:'2025',specs:['OLED패널','AI프로세서','돌비애트모스','오브젝트트래킹사운드','무반사매트']},
-    {model:'KQ75QNH80AFXKR',name:'Neo QLED 4K 75인치',size:75,price:339,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ75QNH70AFXKR',name:'Neo QLED 4K 75인치',size:75,price:279,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ75LSH03AFXKR',name:'더프레임 프로 75인치',size:75,price:269,year:'2025',specs:['울트라슬림','아트모드']},
+    // 77/75인치
+    {model:'KQ77SH95AFXKR',name:'OLED SH95 77인치',size:77,price:590,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드','무반사매트디스플레이']},
+    {model:'KQ77SH93AFXKR',name:'OLED SH93 77인치',size:77,price:459,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ75QNH80AFXKR',name:'Neo QLED 4K 75인치',size:75,price:339,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ75QNH70AFXKR',name:'Neo QLED 4K 75인치',size:75,price:279,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ75LSH03AFXKR',name:'더프레임 프로 75인치',size:75,price:269,year:'2025',specs:['울트라슬림(30mm)','아트모드']},
     {model:'KQ75LF03DAFXKR',name:'더프레임 75인치',size:75,price:199,year:'2024',specs:['아트모드']},
-    {model:'KQ65SH95AFXKR',name:'OLED SH95 65인치',size:65,price:449,year:'2025',specs:['OLED패널','AI프로세서','돌비애트모스','오브젝트트래킹사운드','무반사매트']},
-    {model:'KQ65QNH80AFXKR',name:'Neo QLED 4K 65인치',size:65,price:249,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ65QNH70AFXKR',name:'Neo QLED 4K 65인치',size:65,price:199,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ65LSH03AFXKR',name:'더프레임 프로 65인치',size:65,price:219,year:'2025',specs:['울트라슬림','아트모드']},
+    // 65인치
+    {model:'KQ65SH95AFXKR',name:'OLED SH95 65인치',size:65,price:449,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드','무반사매트디스플레이']},
+    {model:'KQ65SH93AFXKR',name:'OLED SH93 65인치',size:65,price:339,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ65QNH80AFXKR',name:'Neo QLED 4K 65인치',size:65,price:249,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ65QNH70AFXKR',name:'Neo QLED 4K 65인치',size:65,price:199,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ65LSH03AFXKR',name:'더프레임 프로 65인치',size:65,price:219,year:'2025',specs:['울트라슬림(30mm)','아트모드']},
     {model:'KQ65LF03DAFXKR',name:'더프레임 65인치',size:65,price:159,year:'2024',specs:['아트모드']},
-    {model:'KQ55SH93AFXKR',name:'OLED SH93 55인치',size:55,price:259,year:'2025',specs:['OLED패널','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ55QNH80AFXKR',name:'Neo QLED 4K 55인치',size:55,price:189,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스','오브젝트트래킹사운드']},
-    {model:'KQ55SH90AFXKR',name:'OLED SH90 55인치',size:55,price:199,year:'2025',specs:['OLED패널','AI프로세서','돌비애트모스']},
-    {model:'KQ55QNH70AFXKR',name:'Neo QLED 4K 55인치',size:55,price:149,year:'2025',specs:['NeoQLED','AI프로세서','돌비애트모스']},
-    {model:'KQ55LSH03AFXKR',name:'더프레임 프로 55인치',size:55,price:169,year:'2025',specs:['울트라슬림','아트모드']},
+    // 55인치
+    {model:'KQ55SH93AFXKR',name:'OLED SH93 55인치',size:55,price:259,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ55SH90AFXKR',name:'OLED SH90 55인치',size:55,price:199,year:'2025',specs:['OLED패널','AI프로세서(NQ8)','돌비애트모스']},
+    {model:'KQ55QNH80AFXKR',name:'Neo QLED 4K 55인치',size:55,price:189,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스','오브젝트트래킹사운드']},
+    {model:'KQ55QNH70AFXKR',name:'Neo QLED 4K 55인치',size:55,price:149,year:'2025',specs:['NeoQLED(미니LED)','AI프로세서(NQ8)','돌비애트모스']},
+    {model:'KQ55LSH03AFXKR',name:'더프레임 프로 55인치',size:55,price:169,year:'2025',specs:['울트라슬림(30mm)','아트모드']},
     {model:'KQ55LF03DAFXKR',name:'더프레임 55인치',size:55,price:119,year:'2024',specs:['아트모드']},
   ],
   aircon:[
-    {model:'AF90H22D35WRS',name:'갤러리프로 2in1 22+6평 1등급',cov:22,price:500,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','e-HEPA필터','AI음성인식','쾌적제습']},
-    {model:'AF90H23D27SS',name:'갤러리프로 스탠드 23평 1등급',cov:23,price:499,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF90H19D27SRS',name:'갤러리프로 2in1 19+6평 1등급',cov:19,price:419,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF90H19D27SS',name:'갤러리프로 스탠드 19평 1등급',cov:19,price:399,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF90H17D24GRS',name:'갤러리프로 2in1 17+6평',cov:17,price:319,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF90H19D24SS',name:'갤러리프로 스탠드 19평 2등급',cov:19,price:329,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF90H17D27SS',name:'갤러리프로 스탠드 17평 1등급',cov:17,price:302,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF90H17D24SS',name:'갤러리프로 스탠드 17평 2등급',cov:17,price:249,year:'2026',specs:['무풍냉방','AI모션바람','AI열교환기세척','UV팬살균','AI음성인식','쾌적제습']},
-    {model:'AF23CG6500WSD',name:'갤러리 스탠드 23평 (2024)',cov:23,price:249,year:'2024',specs:['무풍냉방']},
-    {model:'AF18CG6500WSD',name:'갤러리 스탠드 18평 (2024)',cov:18,price:199,year:'2024',specs:['무풍냉방']},
-    {model:'AR60F18D11WS',name:'무풍 벽걸이 18평',cov:18,price:149,year:'2025',specs:['무풍냉방','AI열교환기세척']},
-    {model:'AR50F14D11WS',name:'무풍 벽걸이 14평',cov:14,price:119,year:'2025',specs:['무풍냉방','AI열교환기세척']},
-    {model:'AR40F11D11WS',name:'무풍 벽걸이 11평',cov:11,price:141,year:'2025',specs:['무풍냉방','AI열교환기세척']},
+    {model:'AF90H22D35WRS',name:'갤러리프로 2in1 22+6평',cov:22,price:500,year:'2026',grade:1,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','e-HEPA필터(PM1.0)','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H23D27SS',name:'갤러리프로 스탠드 23평',cov:23,price:499,year:'2026',grade:1,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H19D27SRS',name:'갤러리프로 2in1 19+6평',cov:19,price:419,year:'2026',grade:1,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H19D27SS',name:'갤러리프로 스탠드 19평',cov:19,price:399,year:'2026',grade:1,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H17D24GRS',name:'갤러리프로 2in1 17+6평',cov:17,price:319,year:'2026',grade:2,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H19D24SS',name:'갤러리프로 스탠드 19평 2등급',cov:19,price:329,year:'2026',grade:2,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H17D27SS',name:'갤러리프로 스탠드 17평',cov:17,price:302,year:'2026',grade:1,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF90H17D24SS',name:'갤러리프로 스탠드 17평 2등급',cov:17,price:249,year:'2026',grade:2,specs:['무풍냉방','AI모션바람(재실자감지)','AI열교환기세척','UV팬살균','AI음성인식(빅스비)','쾌적제습']},
+    {model:'AF23CG6500WSD',name:'갤러리 스탠드 23평 (구형)',cov:23,price:249,year:'2024',grade:2,specs:['무풍냉방']},
+    {model:'AF18CG6500WSD',name:'갤러리 스탠드 18평 (구형)',cov:18,price:199,year:'2024',grade:2,specs:['무풍냉방']},
+    {model:'AR07DG9700WQK',name:'무풍 벽걸이 프로 7평',cov:7,price:172,year:'2025',grade:1,specs:['무풍냉방','AI열교환기세척','UV팬살균','AI음성인식(빅스비)']},
+    {model:'AR60F18D11WS',name:'무풍 벽걸이 18평',cov:18,price:149,year:'2025',grade:1,specs:['무풍냉방','AI열교환기세척']},
+    {model:'AR50F14D11WS',name:'무풍 벽걸이 14평',cov:14,price:119,year:'2025',grade:1,specs:['무풍냉방','AI열교환기세척']},
+    {model:'AR40F11D11WS',name:'무풍 벽걸이 11평',cov:11,price:141,year:'2025',grade:1,specs:['무풍냉방','AI열교환기세척']},
   ],
   dishwasher:[
-    {model:'DW80F75K1UWW',name:'100℃열풍건조+ 정수필터 14인용',price:149,year:'2025',specs:['100℃열풍건조+','정수필터내장','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성']},
-    {model:'DW90F79P1USWS',name:'100℃열풍건조+ 정수필터 14인용',price:139,year:'2025',specs:['100℃열풍건조+','정수필터내장','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성']},
-    {model:'DW80F75L1U01S',name:'100℃열풍건조+ 14인용',price:129,year:'2025',specs:['100℃열풍건조+','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성']},
-    {model:'DW80F73Y1UWW',name:'AI 빌트인 14인용',price:119,year:'2025',specs:['AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성']},
-    {model:'DW70F71Y1UWW',name:'AI 빌트인 12인용',price:99,year:'2025',specs:['AI맞춤세척','오토오픈도어','3단선반','빅스비음성']},
-    {model:'DW80F73Y1FEW',name:'프리스탠딩 14인용',price:129,year:'2025',specs:['AI맞춤세척','오토오픈도어','3단선반']},
-    {model:'DW60BB800UTET',name:'AI 빌트인 14인용',price:109,year:'2023',specs:['AI맞춤세척','오토오픈도어','3단선반']},
-    {model:'DW60A6092FW',name:'빌트인 12인용',price:79,year:'2023',specs:['AI맞춤세척']},
+    {model:'DW80F75K1UWW',name:'100℃열풍건조+ 정수필터 14인용',induction:'14인용',price:149,year:'2025',specs:['100℃열풍건조+','정수필터내장','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성인식','히든터치']},
+    {model:'DW90F79P1USWS',name:'100℃열풍건조+ 정수필터 14인용',induction:'14인용',price:139,year:'2025',specs:['100℃열풍건조+','정수필터내장','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성인식','히든터치']},
+    {model:'DW80F75L1U01S',name:'100℃열풍건조+ 14인용',induction:'14인용',price:129,year:'2025',specs:['100℃열풍건조+','AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성인식','히든터치']},
+    {model:'DW80F73Y1UWW',name:'AI 빌트인 14인용',induction:'14인용',price:119,year:'2025',specs:['AI맞춤세척','오토오픈도어','스팀살균','3단선반','빅스비음성인식','히든터치']},
+    {model:'DW70F71Y1UWW',name:'AI 빌트인 12인용',induction:'12인용',price:99,year:'2025',specs:['AI맞춤세척','오토오픈도어','3단선반','빅스비음성인식','히든터치']},
+    {model:'DW80F73Y1FEW',name:'프리스탠딩 14인용',induction:'14인용',price:129,year:'2025',specs:['AI맞춤세척','오토오픈도어','3단선반','프리스탠딩']},
+    {model:'DW60BB800UTET',name:'AI 빌트인 14인용',induction:'14인용',price:109,year:'2023',specs:['AI맞춤세척','오토오픈도어','3단선반']},
+    {model:'DW60A6092FW',name:'빌트인 12인용',induction:'12인용',price:79,year:'2023',specs:['AI맞춤세척']},
   ],
   airdresser:[
-    {model:'DF90H24R5C',name:'AI에어드레서 크리스탈미러 5~9벌',price:250,year:'2026',specs:['주름집중케어존','듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD터치','미러도어','트리플필터']},
-    {model:'DF90H24R4D',name:'AI에어드레서 다크메탈 5~9벌',price:205,year:'2026',specs:['주름집중케어존','듀얼에어워시','듀얼제트스팀','AI건조','LCD터치','트리플필터']},
-    {model:'DF24CB9900CR',name:'비스포크 AI 크리스탈미러 5~9벌',price:195,year:'2023',specs:['듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD터치','미러도어','UV살균']},
+    {model:'DF90H24R5C',name:'AI에어드레서 크리스탈미러 5~9벌 H2026',price:250,year:'2026',specs:['주름집중케어존(2026신기술)','듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD중앙터치','크리스탈미러도어','트리플집진필터']},
+    {model:'DF90H24R4D',name:'AI에어드레서 다크메탈 5~9벌 H2026',price:205,year:'2026',specs:['주름집중케어존(2026신기술)','듀얼에어워시','듀얼제트스팀','AI건조','LCD중앙터치','트리플집진필터']},
+    {model:'DF24CB9900CR',name:'비스포크 AI 크리스탈미러 5~9벌',price:195,year:'2023',specs:['듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD중앙터치','크리스탈미러도어','UV살균']},
     {model:'DF24CB9600WR',name:'비스포크 AI 화이트 5벌',price:100,year:'2023',specs:['듀얼에어워시','듀얼제트스팀','AI건조']},
-    {model:'DF18CB8600WR',name:'비스포크 AI 일반용량 3~5벌',price:85,year:'2023',specs:['듀얼에어워시','듀얼제트스팀','AI건조','LCD터치']},
+    {model:'DF18CB8600WR',name:'비스포크 AI 일반용량 3~5벌',price:85,year:'2023',specs:['듀얼에어워시','듀얼제트스팀','AI건조','LCD중앙터치']},
   ],
   robot:[
-    {model:'VR90F01SAGS',name:'AI스팀 울트라 직배수',price:204,year:'2026',specs:['스팀물걸레살균','자동급배수','직배수전용','AI바닥인식','AI사물인식','사이드팝아웃','청정스테이션스팀','먼지자동비움']},
-    {model:'VR80F01ADG',name:'AI스팀 플러스 자동급배수',price:194,year:'2026',specs:['스팀물걸레살균','자동급배수','AI바닥인식','AI사물인식','사이드팝아웃','청정스테이션스팀','먼지자동비움']},
-    {model:'VR90F01SAG',name:'AI스팀 울트라 자동급배수',price:186,year:'2026',specs:['스팀물걸레살균','자동급배수','AI바닥인식','AI사물인식','사이드팝아웃','청정스테이션스팀','먼지자동비움']},
-    {model:'VR80F01SDG',name:'AI스팀 플러스 직배수',price:176,year:'2026',specs:['스팀물걸레살균','직배수전용','AI바닥인식','AI사물인식','사이드팝아웃','청정스테이션스팀','먼지자동비움']},
-    {model:'VR70F00AGG',name:'AI스팀 일반형 자동급배수',price:159,year:'2026',specs:['스팀물걸레살균','자동급배수','AI바닥인식','AI사물인식','청정스테이션스팀','먼지자동비움']},
-    {model:'VR70F00SGG',name:'AI스팀 일반형',price:141,year:'2026',specs:['스팀물걸레살균','AI바닥인식','AI사물인식','청정스테이션스팀','먼지자동비움']},
+    {model:'VR90F01SAGS',name:'AI스팀 울트라 직배수 VR90F',price:204,year:'2026',specs:['스팀물걸레살균','자동급배수','직배수(별도배관)','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
+    {model:'VR80F01ADG',name:'AI스팀 플러스 자동급배수 VR80F',price:194,year:'2026',specs:['스팀물걸레살균','자동급배수','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
+    {model:'VR90F01SAG',name:'AI스팀 울트라 자동급배수 VR90F',price:186,year:'2026',specs:['스팀물걸레살균','자동급배수','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
+    {model:'VR80F01SDG',name:'AI스팀 플러스 직배수 VR80F',price:176,year:'2026',specs:['스팀물걸레살균','직배수(별도배관)','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
+    {model:'VR70F00AGG',name:'AI스팀 일반형 자동급배수 VR70F',price:159,year:'2026',specs:['스팀물걸레살균','자동급배수','AI바닥인식','AI사물인식(장애물회피)','청정스테이션스팀세척','먼지자동비움']},
+    {model:'VR70F00SGG',name:'AI스팀 일반형 VR70F',price:141,year:'2026',specs:['스팀물걸레살균','AI바닥인식','AI사물인식(장애물회피)','청정스테이션스팀세척','먼지자동비움']},
     {model:'VR7MD97716G',name:'AI스팀 2024',price:139,year:'2024',specs:['스팀물걸레살균','AI바닥인식','먼지자동비움']},
+    {model:'VR5000CB96K',name:'제트봇 콤보 2024',price:189,year:'2024',specs:['스팀물걸레','먼지자동비움']},
   ],
   vacuum:[
     {model:'VS90F40CSG',name:'AI제트 400W 고온물걸레 스테이션+',price:165,year:'2026',specs:['400W고출력','AI제트','고온물걸레','먼지자동비움스테이션','2.5kg경량']},
     {model:'VS90F40CNG',name:'AI제트 400W 펫브러시 패키지',price:136,year:'2026',specs:['400W고출력','AI제트','펫브러시','먼지자동비움스테이션','2.5kg경량']},
-    {model:'VS70H28GZC',name:'제트 280W 초경량',price:76,year:'2026',specs:['280W','제트','2.3kg경량','먼지자동비움스테이션']},
+    {model:'VS70H28GZC',name:'제트 280W 초경량 스테이션',price:76,year:'2026',specs:['280W','제트','2.3kg경량','먼지자동비움스테이션']},
     {model:'VS70H18GZG',name:'제트 핏 180W 최경량',price:63,year:'2026',specs:['180W','제트핏','1.96kg최경량']},
     {model:'VS20B956AXE',name:'비스포크 제트 220W',price:49,year:'2022',specs:['220W','제트']},
   ],
 };
 
+// ===== 평형별 필터 기준 =====
 const PYEONG_RULES={
-  20:{label:'20평 (59~66㎡)',rec:'신혼·1인가구·원룸형',fridge:{minCap:500,maxCap:650,note:'500~650L'},washer:{minCap:21,maxCap:21,note:'21kg급'},dryer:{minCap:14,maxCap:17,note:'14~17kg'},tv:{minSize:55,maxSize:65,note:'55~65인치'},aircon:{minCov:11,maxCov:17,note:'11~17평'},dishwasher:{note:'12~14인용'},airdresser:{note:'일반용량'},robot:{note:'전 모델'},vacuum:{note:'전 모델'}},
-  25:{label:'25평 (82~85㎡)',rec:'국민평형·신혼·3인가족',fridge:{minCap:600,maxCap:750,note:'600~750L'},washer:{minCap:21,maxCap:25,note:'21~25kg'},dryer:{minCap:17,maxCap:20,note:'17~20kg'},tv:{minSize:65,maxSize:77,note:'65~77인치'},aircon:{minCov:17,maxCov:19,note:'17~19평'},dishwasher:{note:'14인용'},airdresser:{note:'대용량(5~9벌)'},robot:{note:'전 모델'},vacuum:{note:'전 모델'}},
-  33:{label:'33평 (108~115㎡)',rec:'4인가족·넓은 주방·거실',fridge:{minCap:700,maxCap:905,note:'700~900L'},washer:{minCap:24,maxCap:25,note:'24~25kg'},dryer:{minCap:17,maxCap:20,note:'17~20kg'},tv:{minSize:75,maxSize:85,note:'75~85인치'},aircon:{minCov:19,maxCov:23,note:'19~23평'},dishwasher:{note:'14인용 100℃열풍'},airdresser:{note:'대용량'},robot:{note:'AI스팀 이상'},vacuum:{note:'전 모델'}},
-  40:{label:'40평 (132~145㎡)',rec:'4~5인가족·대형 거실',fridge:{minCap:850,maxCap:9999,note:'850L+ (패밀리허브 권장)'},washer:{minCap:25,maxCap:25,note:'25kg'},dryer:{minCap:20,maxCap:20,note:'20kg'},tv:{minSize:83,maxSize:999,note:'83인치+'},aircon:{minCov:22,maxCov:99,note:'22~23평+'},dishwasher:{note:'100℃열풍+정수필터'},airdresser:{note:'H시리즈 9벌'},robot:{note:'AI스팀 울트라'},vacuum:{note:'400W급'}},
-  50:{label:'50평+ (165㎡+)',rec:'프리미엄 대형 주거 풀패키지',fridge:{minCap:850,maxCap:9999,note:'패밀리허브 적극 권장'},washer:{minCap:25,maxCap:25,note:'25kg 원바디 최상위'},dryer:{minCap:20,maxCap:20,note:'20kg'},tv:{minSize:83,maxSize:999,note:'83인치+ OLED 권장'},aircon:{minCov:22,maxCov:99,note:'23평+ 갤러리프로'},dishwasher:{note:'100℃열풍+정수필터'},airdresser:{note:'크리스탈미러'},robot:{note:'직배수 울트라'},vacuum:{note:'400W 고온물걸레'}},
+  20:{label:'20평 (59~66㎡)',rec:'신혼·1인가구',fridge:{minCap:500,maxCap:660},washer:{minCap:21,maxCap:25},dryer:{minCap:14,maxCap:17},tv:{minSize:55,maxSize:65},aircon:{minCov:11,maxCov:17},note:{fridge:'500~660L',washer:'21kg급',dryer:'14~17kg',tv:'55~65인치',aircon:'11~17평'}},
+  25:{label:'25평 (82~85㎡)',rec:'국민평형·신혼·3인',fridge:{minCap:600,maxCap:760},washer:{minCap:21,maxCap:25},dryer:{minCap:17,maxCap:20},tv:{minSize:65,maxSize:77},aircon:{minCov:17,maxCov:19},note:{fridge:'600~760L',washer:'21~25kg',dryer:'17~20kg',tv:'65~77인치',aircon:'17~19평'}},
+  33:{label:'33평 (108~115㎡)',rec:'4인가족·넓은 거실',fridge:{minCap:700,maxCap:910},washer:{minCap:24,maxCap:25},dryer:{minCap:17,maxCap:20},tv:{minSize:75,maxSize:85},aircon:{minCov:19,maxCov:23},note:{fridge:'700~910L',washer:'24~25kg',dryer:'17~20kg',tv:'75~85인치',aircon:'19~23평'}},
+  40:{label:'40평 (132~145㎡)',rec:'4~5인·대형 주거',fridge:{minCap:850,maxCap:9999},washer:{minCap:25,maxCap:25},dryer:{minCap:20,maxCap:20},tv:{minSize:83,maxSize:9999},aircon:{minCov:22,maxCov:99},note:{fridge:'850L+ 패밀리허브권장',washer:'25kg',dryer:'20kg',tv:'83인치+',aircon:'22~23평+'}},
+  50:{label:'50평+ (165㎡+)',rec:'프리미엄 대형 풀패키지',fridge:{minCap:850,maxCap:9999},washer:{minCap:25,maxCap:25},dryer:{minCap:20,maxCap:20},tv:{minSize:83,maxSize:9999},aircon:{minCov:22,maxCov:99},note:{fridge:'패밀리허브 적극권장',washer:'25kg 원바디 최상위',dryer:'20kg',tv:'83인치+ OLED권장',aircon:'23평+ 갤러리프로'}},
 };
 
+// 카테고리별 예산 비율
 const WEIGHTS={fridge:.22,washer:.20,dryer:.09,tv:.18,aircon:.13,dishwasher:.06,airdresser:.07,robot:.06,vacuum:.05};
-let state={mode:null,pyeong:null,selected:new Set(),budget:0,discount:0};
 
+let state={mode:null,pyeong:null,selected:new Set(),budget:0,discount:0};
+let activeTiers={};
+
+// ===== 헬퍼 =====
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+
+function getCatBudget(id){
+  if(state.budget<=0)return Infinity;
+  const sel=[...state.selected];
+  const tw=sel.reduce((s,k)=>s+(WEIGHTS[k]||.07),0);
+  return Math.round(state.budget*((WEIGHTS[id]||.07)/tw));
+}
+
+function applyFilter(catId,products){
+  const rule=state.pyeong?PYEONG_RULES[state.pyeong]:null;
+  if(!rule)return products;
+  let f=null;
+  if(catId==='fridge'&&rule.fridge) f=products.filter(p=>p.cap>=rule.fridge.minCap&&p.cap<=rule.fridge.maxCap);
+  else if(catId==='washer'&&rule.washer) f=products.filter(p=>p.cap>=rule.washer.minCap&&p.cap<=rule.washer.maxCap);
+  else if(catId==='dryer'&&rule.dryer) f=products.filter(p=>p.cap>=rule.dryer.minCap&&p.cap<=rule.dryer.maxCap);
+  else if(catId==='tv'&&rule.tv) f=products.filter(p=>p.size>=rule.tv.minSize&&p.size<=rule.tv.maxSize);
+  else if(catId==='aircon'&&rule.aircon) f=products.filter(p=>p.cov>=rule.aircon.minCov&&p.cov<=rule.aircon.maxCov);
+  return(f&&f.length>0)?f:products;
+}
+
+function getKeyStat(cat,product){
+  const a=cat.keyAttr;
+  if(a.key&&product[a.key]!=null)return product[a.key]+a.unit;
+  if(a.fn)return a.fn(product);
+  return '';
+}
+
+function discPrice(p){return Math.round(p*(1-state.discount/100));}
+
+function getMissingSpecs(rec,flagship){
+  if(!flagship)return[];
+  const s=new Set(rec.specs||[]);
+  return flagship.specs.filter(sp=>!s.has(sp));
+}
+
+// TV 사이즈별 플래그십
+function getTvFlagship(){
+  const r=state.pyeong?PYEONG_RULES[state.pyeong]:null;
+  const min=r?r.tv.minSize:55;
+  if(min>=83)return{...FLAGSHIP.tv,model:'KQ83SH95AFXKR',name:'OLED SH95 83인치',price:890};
+  if(min>=75)return FLAGSHIP.tv; // 77인치 SH95
+  if(min>=65)return{...FLAGSHIP.tv,model:'KQ65SH95AFXKR',name:'OLED SH95 65인치',price:449};
+  return{...FLAGSHIP.tv,model:'KQ55SH93AFXKR',name:'OLED SH93 55인치',price:259};
+}
+
+// 3티어 추출
+function getThreeTiers(catId){
+  const products=DB[catId];
+  if(!products)return null;
+  const flagship=catId==='tv'?getTvFlagship():FLAGSHIP[catId];
+  const cands=applyFilter(catId,products).sort((a,b)=>b.price-a.price);
+  const catBudget=getCatBudget(catId);
+  const disc=state.discount/100;
+
+  const premium=cands[0];
+  const budgetPick=cands[cands.length-1];
+  const affordable=cands.filter(p=>p.price*(1-disc)<=catBudget);
+  let recommended;
+  if(affordable.length>0){
+    recommended=affordable[0];
+  }else{
+    recommended=budgetPick;
+  }
+
+  // 3개가 같지 않게
+  let trio=[premium,recommended,budgetPick];
+  // recommended = premium인 경우 중간에서 하나 선택
+  if(trio[0].model===trio[1].model && cands.length>1){
+    trio[1]=cands[Math.min(1,cands.length-1)];
+  }
+  if(trio[1].model===trio[2].model && cands.length>1){
+    trio[2]=cands[cands.length-1];
+  }
+
+  return {premium:trio[0],recommended:trio[1],budget:trio[2],flagship,catBudget,cands};
+}
+
+// ===== UI =====
 function selectMode(m){
   state.mode=m;
   document.getElementById('btn-apt').classList.toggle('active',m==='apt');
@@ -308,12 +456,12 @@ function selectMode(m){
     show('sec-apt');
     document.getElementById('cat-step-badge').textContent='STEP 3';
     document.getElementById('budget-step-badge').textContent='STEP 4';
-  } else {
+  }else{
     hide('sec-apt');
     document.getElementById('cat-step-badge').textContent='STEP 2';
     document.getElementById('budget-step-badge').textContent='STEP 3';
     state.pyeong=null;
-    buildCatGrid(null);
+    buildCatGrid();
     show('sec-cat');show('sec-budget');
   }
   hide('sec-result');
@@ -321,27 +469,23 @@ function selectMode(m){
 
 function selectPyeong(p){
   state.pyeong=p;
-  document.querySelectorAll('.pyeong-btn').forEach((b,i)=>{
-    b.classList.toggle('active',[20,25,33,40,50][i]===p);
-  });
+  document.querySelectorAll('.pyeong-btn').forEach((b,i)=>b.classList.toggle('active',[20,25,33,40,50][i]===p));
   const rule=PYEONG_RULES[p];
-  const note=document.getElementById('pyeong-rec-note');
-  note.innerHTML='<b>📐 '+rule.label+'</b><br>'+rule.rec;
-  note.classList.remove('hidden');
-  buildCatGrid(p);
+  document.getElementById('pyeong-rec-note').innerHTML='<b>📐 '+rule.label+'</b> — '+rule.rec;
+  document.getElementById('pyeong-rec-note').classList.remove('hidden');
+  buildCatGrid(true);
   show('sec-cat');show('sec-budget');hide('sec-result');
 }
 
-function buildCatGrid(pyeong){
-  const rule=pyeong?PYEONG_RULES[pyeong]:null;
-  if(pyeong){state.selected.clear();}
+function buildCatGrid(resetSel){
+  if(resetSel){state.selected.clear();}
+  const r=state.pyeong?PYEONG_RULES[state.pyeong]:null;
   const grid=document.getElementById('cat-grid');
   grid.innerHTML=CATEGORIES.map(c=>{
-    const def=pyeong&&c.step;
-    if(def)state.selected.add(c.id);
+    if(resetSel&&c.step)state.selected.add(c.id);
     const sel=state.selected.has(c.id);
-    const recNote=rule&&rule[c.id]?rule[c.id].note:'';
-    return '<div class="cat-item'+(sel?' selected':'')+'" id="cat-'+c.id+'" onclick="toggleCat(\''+c.id+'\')"><div class="cat-icon">'+c.icon+'</div><div class="cat-name">'+c.name+'</div>'+(recNote?'<div class="cat-rec">'+recNote+'</div>':'')+'</div>';
+    const note=r&&r.note&&r.note[c.id]?r.note[c.id]:'';
+    return '<div class="cat-item'+(sel?' selected':'')+'" id="cat-'+c.id+'" onclick="toggleCat(\''+c.id+'\')"><div class="cat-icon">'+c.icon+'</div><div class="cat-name">'+c.name+'</div>'+(note?'<div class="cat-rec">'+note+'</div>':'')+'</div>';
   }).join('');
 }
 
@@ -357,117 +501,188 @@ function updateDiscount(){
   state.discount=+v;
 }
 
-function show(id){document.getElementById(id).classList.remove('hidden');}
-function hide(id){document.getElementById(id).classList.add('hidden');}
-
-function getCatBudget(id,total){
-  const sel=[...state.selected];
-  const tw=sel.reduce((s,k)=>s+(WEIGHTS[k]||.07),0);
-  return Math.round(total*((WEIGHTS[id]||.07)/tw));
-}
-
-function pickFlagshipForSize(pyeong){
-  // TV 플래그십을 평형에 맞는 사이즈의 OLED로 결정
-  const rule=pyeong?PYEONG_RULES[pyeong].tv:null;
-  if(!rule) return FLAGSHIP.tv;
-  const minS=rule.minSize||55;
-  if(minS>=83) return {model:'KQ83SH95AFXKR',name:'OLED SH95 83인치',price:890,specs:FLAGSHIP.tv.specs};
-  if(minS>=75) return {model:'KQ77SH95AFXKR',name:'OLED SH95 77인치',price:590,specs:FLAGSHIP.tv.specs};
-  if(minS>=65) return {model:'KQ65SH95AFXKR',name:'OLED SH95 65인치',price:449,specs:FLAGSHIP.tv.specs};
-  return {model:'KQ55SH93AFXKR',name:'OLED SH93 55인치',price:259,specs:FLAGSHIP.tv.specs};
-}
-
+// ===== STEP 4 렌더 =====
 function recommend(){
   state.budget=+(document.getElementById('budget-input').value)||0;
   if(state.selected.size===0){alert('품목을 1개 이상 선택해주세요');return;}
-  const disc=state.discount/100;
-  const results=[];
+  activeTiers={};
+  CATEGORIES.forEach(c=>{if(state.selected.has(c.id))activeTiers[c.id]=1;});
 
+  const results=[];
+  let totO=0,totD=0,totS=0;
   CATEGORIES.forEach(cat=>{
     if(!state.selected.has(cat.id))return;
-    const products=DB[cat.id];
-    if(!products)return;
-    const flagship=cat.id==='tv'?pickFlagshipForSize(state.pyeong):FLAGSHIP[cat.id];
-    let candidates=[...products];
-    const rule=state.pyeong?PYEONG_RULES[state.pyeong][cat.id]:null;
-    if(rule){
-      let f=null;
-      if(cat.id==='fridge'&&rule.minCap) f=products.filter(p=>p.cap>=rule.minCap&&p.cap<=rule.maxCap);
-      else if(cat.id==='washer'&&rule.minCap) f=products.filter(p=>p.cap>=rule.minCap&&p.cap<=rule.maxCap);
-      else if(cat.id==='dryer'&&rule.minCap) f=products.filter(p=>p.cap>=rule.minCap&&p.cap<=rule.maxCap);
-      else if(cat.id==='tv'&&rule.minSize) f=products.filter(p=>p.size>=rule.minSize&&p.size<=rule.maxSize);
-      else if(cat.id==='aircon'&&rule.minCov) f=products.filter(p=>p.cov>=rule.minCov&&p.cov<=rule.maxCov);
-      if(f&&f.length>0) candidates=f;
-    }
-    const catBudget=state.budget>0?getCatBudget(cat.id,state.budget):Infinity;
-    const affordable=candidates.filter(p=>p.price*(1-disc)<=catBudget);
-    let rec=null;
-    if(affordable.length>0) rec=affordable.reduce((b,p)=>p.price>b.price?p:b,affordable[0]);
-    else rec=candidates.reduce((b,p)=>p.price<b.price?p:b,candidates[0]);
-    if(!rec)return;
-    const recSpecs=new Set(rec.specs||[]);
-    const missingSpecs=(flagship?flagship.specs:[]).filter(s=>!recSpecs.has(s));
-    const isFlagship=flagship&&rec.model===flagship.model;
-    const overBudget=catBudget<Infinity&&rec.price*(1-disc)>catBudget;
-    results.push({cat,rec,flagship,missingSpecs,isFlagship,overBudget,disc,catBudget});
+    const tiers=getThreeTiers(cat.id);
+    if(!tiers)return;
+    const rec=tiers.recommended;
+    totO+=rec.price;
+    totD+=discPrice(rec.price);
+    results.push({cat,tiers});
   });
+  totS=totO-totD;
 
-  renderResults(results);
+  // 요약
+  let sh='<div class="summary-card">';
+  sh+='<div class="summary-label">추천 기준 총 출시가 합계</div>';
+  if(state.discount>0){
+    sh+='<div style="font-size:13px;color:rgba(255,255,255,.6);text-decoration:line-through;margin-top:2px">'+totO.toLocaleString()+'만원</div>';
+    sh+='<div class="summary-total">'+totD.toLocaleString()+'<span style="font-size:13px;font-weight:400">만원</span></div>';
+    sh+='<div class="summary-pill">💰 '+state.discount+'% 할인 → '+totS.toLocaleString()+'만원 절약</div>';
+  }else{
+    sh+='<div class="summary-total">'+totO.toLocaleString()+'<span style="font-size:13px;font-weight:400">만원</span></div>';
+  }
+  if(state.budget>0){
+    const diff=totD-state.budget;
+    const ok=diff<=0;
+    sh+='<div style="margin-top:8px;background:rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:600;color:'+(ok?'#86efac':'#fca5a5')+'">'+(ok?'✅ 예산보다 '+Math.round(-diff).toLocaleString()+'만원 여유':'⚠️ 예산 대비 '+Math.round(diff).toLocaleString()+'만원 초과')+'</div>';
+  }
+  // 카테고리 요약 그리드
+  sh+='<div class="summary-grid">';
+  sh+='<div class="summary-item"><div class="summary-item-num">'+results.length+'종</div><div class="summary-item-label">선택 품목</div></div>';
+  sh+='<div class="summary-item"><div class="summary-item-num">'+(state.discount>0?totD.toLocaleString():totO.toLocaleString())+'</div><div class="summary-item-label">합계(만원)</div></div>';
+  sh+='<div class="summary-item"><div class="summary-item-num">'+(state.budget>0?state.budget.toLocaleString():'무제한')+'</div><div class="summary-item-label">설정 예산</div></div>';
+  sh+='</div></div>';
+  document.getElementById('summary-card').innerHTML=sh;
+
+  // 카테고리 카드
+  const aptName=(state.mode==='apt'&&document.getElementById('apt-name').value)||'';
+  let cards='';
+  if(aptName){
+    cards+='<div style="font-size:11px;color:#888;text-align:center;margin-bottom:8px">🏠 '+aptName+(state.pyeong?' '+state.pyeong+'평':'')+'</div>';
+  }
+  cards+=results.map(({cat,tiers})=>renderCatCard(cat,tiers)).join('');
+  document.getElementById('result-cards').innerHTML=cards;
+
   show('sec-result');
   document.getElementById('sec-result').scrollIntoView({behavior:'smooth'});
 }
 
-function renderResults(results){
-  let totO=0,totD=0;
-  results.forEach(r=>{totO+=r.rec.price;totD+=r.rec.price*(1-r.disc);});
-  const saved=totO-totD;
-  let sh='<div class="summary-card"><div class="summary-row"><div class="summary-label">총 출시가 합계</div><div style="font-size:13px;color:rgba(255,255,255,.7);text-decoration:line-through">'+Math.round(totO).toLocaleString()+'만원</div></div><div class="summary-row"><div class="summary-label">삼성닷컴 할인 적용가</div><div class="summary-price">'+Math.round(totD).toLocaleString()+'<small>만원</small></div></div>';
-  if(state.discount>0) sh+='<div class="summary-save">💰 '+state.discount+'% 할인 → '+Math.round(saved).toLocaleString()+'만원 절약</div>';
-  if(state.budget>0){
-    const diff=totD-state.budget;
-    const col=diff<=0?'#86efac':'#fca5a5';
-    const msg=diff<=0?'✅ 예산보다 '+Math.round(-diff).toLocaleString()+'만원 여유':'⚠️ 예산 대비 '+Math.round(diff).toLocaleString()+'만원 초과';
-    sh+='<div style="margin-top:8px;background:rgba(255,255,255,.15);border-radius:8px;padding:6px 12px;font-size:11px;color:'+col+';font-weight:600">'+msg+'</div>';
+function renderCatCard(cat,tiers){
+  const {premium,recommended,budget,flagship,catBudget,cands}=tiers;
+  const disc=state.discount/100;
+  const ruleNote=state.pyeong&&PYEONG_RULES[state.pyeong]&&PYEONG_RULES[state.pyeong].note?PYEONG_RULES[state.pyeong].note[cat.id]:'';
+
+  let h='<div class="cat-result">';
+  h+='<div class="cat-result-header">';
+  h+='<span class="cat-result-icon">'+cat.icon+'</span>';
+  h+='<div><div class="cat-result-name">'+cat.name+'</div>';
+  if(ruleNote)h+='<div class="cat-result-rule">📐 권장: '+ruleNote+' · '+cands.length+'개 모델 중 선택</div>';
+  h+='</div></div>';
+
+  // 탭
+  const tId='tier_'+cat.id;
+  h+='<div class="tier-tabs">';
+  h+='<div class="tier-tab gold active" id="tab_'+cat.id+'_0" onclick="switchTier(\''+cat.id+'\',0)">🏆 프리미엄</div>';
+  h+='<div class="tier-tab green" id="tab_'+cat.id+'_1" onclick="switchTier(\''+cat.id+'\',1)">✅ 추천</div>';
+  h+='<div class="tier-tab" id="tab_'+cat.id+'_2" onclick="switchTier(\''+cat.id+'\',2)">💡 알뜰</div>';
+  h+='</div>';
+
+  // 프리미엄 탭 내용
+  h+='<div id="tc_'+cat.id+'_0" class="tier-content gold-bg">';
+  h+=renderTierContent(cat,premium,flagship,'flagship',disc,catBudget);
+  h+='</div>';
+
+  // 추천 탭 내용
+  h+='<div id="tc_'+cat.id+'_1" class="tier-content green-bg hidden">';
+  h+=renderTierContent(cat,recommended,flagship,'recommended',disc,catBudget);
+  h+='</div>';
+
+  // 알뜰 탭 내용
+  h+='<div id="tc_'+cat.id+'_2" class="tier-content hidden">';
+  h+=renderTierContent(cat,budget,flagship,'budget',disc,catBudget);
+  h+='</div>';
+
+  h+='</div>';
+  return h;
+}
+
+function renderTierContent(cat,product,flagship,tier,disc,catBudget){
+  const dp=discPrice(product.price);
+  const isFlagshipModel=flagship&&product.model===flagship.model;
+  const missing=getMissingSpecs(product,flagship);
+  const overBudget=catBudget<Infinity&&dp>catBudget;
+
+  let h='';
+  // 뱃지
+  if(tier==='flagship') h+='<div class="tier-badge badge-flagship">🏆 프리미엄 (최고사양)</div>';
+  else if(tier==='recommended') h+='<div class="tier-badge badge-rec">✅ 추천 (예산 최적)</div>';
+  else h+='<div class="tier-badge badge-budget">💡 알뜰 (최소 조건)</div>';
+  if(overBudget) h+='<span style="font-size:9px;background:#fff7ed;color:#c2410c;border-radius:6px;padding:2px 7px;font-weight:700;margin-left:4px">예산초과</span>';
+  if(isFlagshipModel) h+='<span style="font-size:9px;background:#fef3c7;color:#92400e;border-radius:6px;padding:2px 7px;font-weight:700;margin-left:4px">= 플래그십</span>';
+
+  // 모델명
+  h+='<div class="model-title">'+product.name+'</div>';
+  h+='<div class="model-code">'+product.model+' · '+product.year+'년형</div>';
+
+  // 핵심 스펙 수치 하이라이트
+  h+='<div class="key-stat-row">';
+  const stat=getKeyStat(cat,product);
+  if(stat){
+    h+='<div class="key-stat"><div class="key-stat-val">'+stat+'</div><div class="key-stat-label">'+cat.keyAttr.label+'</div></div>';
   }
-  sh+='</div>';
-  document.getElementById('summary-card').innerHTML=sh;
+  // 에어컨 에너지 등급
+  if(cat.id==='aircon'&&product.grade){
+    h+='<div class="key-stat"><div class="key-stat-val" style="color:'+(product.grade===1?'#166534':'#854d0e')+'">'+(product.grade===1?'1등급':'2등급')+'</div><div class="key-stat-label">에너지등급</div></div>';
+  }
+  // TV 인치 + 패널
+  if(cat.id==='tv'){
+    const panel=product.specs.find(s=>s.includes('OLED')||s.includes('QLED')||s.includes('RGB'))||'LCD';
+    const ptype=panel.includes('OLED')?'OLED':panel.includes('Micro')?'MicroRGB':panel.includes('Neo')?'NeoQLED':'QLED';
+    h+='<div class="key-stat"><div class="key-stat-val" style="font-size:12px">'+ptype+'</div><div class="key-stat-label">패널타입</div></div>';
+  }
+  h+='</div>';
 
-  const aptName=state.mode==='apt'?(document.getElementById('apt-name').value||''):'';
-  const titleNote=aptName?'<div style="font-size:11px;color:#888;margin-bottom:8px">🏠 '+aptName+(state.pyeong?' · '+state.pyeong+'평':'')+'</div>':'';
+  // 가격
+  h+='<div class="price-row">';
+  if(disc>0) h+='<span class="price-orig">'+product.price+'만원</span>';
+  h+='<span class="price-disc">'+dp+'<small>만원</small></span>';
+  if(disc>0) h+='<span class="price-save">'+state.discount+'%↓</span>';
+  if(catBudget<Infinity) h+='<span style="font-size:10px;color:#888">예산내 '+catBudget+'만</span>';
+  h+='</div>';
 
-  document.getElementById('result-cards').innerHTML=titleNote+results.map(r=>{
-    const {cat,rec,flagship,missingSpecs,isFlagship,overBudget,disc}=r;
-    const dp=Math.round(rec.price*(1-disc));
-    let h='<div class="result-card'+(overBudget?' over-budget':'')+'"><div class="result-header"><span class="result-icon">'+cat.icon+'</span><span class="result-cat">'+cat.name+'</span>';
-    if(isFlagship) h+='<span class="best-badge">🏆 플래그십</span>';
-    if(overBudget) h+='<span class="over-badge">예산초과</span>';
-    h+='</div><div class="model-name">'+rec.name+'</div><div class="model-sub">'+rec.model+' · '+rec.year+'년형</div><div class="price-row">';
-    if(disc>0) h+='<span class="price-original">'+rec.price+'만원</span>';
-    h+='<span class="price-discounted">'+dp+'<small>만원</small></span>';
-    if(disc>0) h+='<span class="price-save-badge">'+state.discount+'%↓</span>';
+  // 스펙 태그
+  if(product.specs&&product.specs.length>0){
+    h+='<div class="spec-tags">';
+    product.specs.forEach(s=>{
+      const isF=flagship&&flagship.specs.includes(s);
+      h+='<span class="spec-tag'+(isF?' flagship':'')+'">'+s+'</span>';
+    });
     h+='</div>';
-    if(rec.specs&&rec.specs.length>0){
-      h+='<div class="specs-wrap">';
-      rec.specs.forEach(s=>{
-        const isF=flagship&&flagship.specs.includes(s);
-        h+='<span class="spec-tag'+(isF?' flagship':'')+'">'+s+'</span>';
-      });
-      h+='</div>';
-    }
-    if(!isFlagship&&flagship&&missingSpecs.length>0){
-      h+='<div class="flagship-section"><div class="flagship-title">'+flagship.name+' 대비 없는 기능</div><div class="missing-wrap">';
-      missingSpecs.forEach(s=>{h+='<span class="missing-tag">✕ '+s+'</span>';});
-      h+='</div><div class="flagship-info">플래그십 출시가: <span class="flagship-price">'+flagship.price+'만원</span>'+(disc>0?' (할인 시 약 '+Math.round(flagship.price*(1-disc))+'만원)':'')+'</div></div>';
-    } else if(isFlagship){
-      h+='<div class="flagship-section"><div style="font-size:10px;color:#1428A0;font-weight:600">🏆 카테고리 최고 사양 선택됨</div></div>';
-    }
+  }
+
+  // 플래그십 대비 빠진 기능 (프리미엄 탭에선 숨김, 플래그십 모델이면 숨김)
+  if(!isFlagshipModel && missing.length>0){
+    h+='<div class="missing-section"><div class="missing-title">'+flagship.name+' 대비 없는 기능 ('+missing.length+'개)</div>';
+    h+='<div class="missing-tags">';
+    missing.forEach(s=>h+='<span class="missing-tag">✕ '+s+'</span>');
     h+='</div>';
-    return h;
-  }).join('');
+    h+='<div class="flagship-ref">플래그십 출시가 <span>'+flagship.price+'만원</span>'+(disc>0?' → 할인가 '+discPrice(flagship.price)+'만원':'')+'</div>';
+    // 가격 비교 바
+    const ratio=Math.round((product.price/flagship.price)*100);
+    h+='<div class="compare-bar-wrap"><div class="compare-bar-label"><span>이 모델 가격 비율</span><span>'+ratio+'%</span></div>';
+    h+='<div class="compare-bar-track"><div class="compare-bar-fill" style="width:'+ratio+'%;background:'+(tier==='recommended'?'#059669':tier==='budget'?'#6b7280':'#1428A0')+'"></div></div></div>';
+    h+='</div>';
+  }else if(isFlagshipModel){
+    h+='<div class="missing-section" style="border-color:transparent"><div style="font-size:10px;color:#92400E;font-weight:700">🏆 카테고리 최고 사양 — 빠진 기능 없음</div></div>';
+  }
+
+  return h;
+}
+
+function switchTier(catId,idx){
+  [0,1,2].forEach(i=>{
+    document.getElementById('tc_'+catId+'_'+i).classList.toggle('hidden',i!==idx);
+    const tab=document.getElementById('tab_'+catId+'_'+i);
+    tab.classList.toggle('active',i===idx);
+    if(i===0){tab.classList.toggle('gold',true);tab.classList.toggle('green',false);}
+    else if(i===1){tab.classList.toggle('green',true);tab.classList.toggle('gold',false);}
+    else{tab.classList.toggle('gold',false);tab.classList.toggle('green',false);}
+  });
 }
 
 function resetAll(){
   state={mode:null,pyeong:null,selected:new Set(),budget:0,discount:0};
+  activeTiers={};
   ['btn-apt','btn-budget'].forEach(id=>document.getElementById(id).classList.remove('active'));
   document.getElementById('budget-input').value='';
   document.getElementById('discount-slider').value=0;
