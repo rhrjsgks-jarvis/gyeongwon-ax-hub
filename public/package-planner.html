@@ -221,6 +221,15 @@ const CATEGORIES=[
   {id:'airdresser',icon:'👔',name:'에어드레서',step:false,keyAttr:{fn:p=>p.name.includes('9벌')?'5~9벌':p.name.includes('5벌')?'최대5벌':'3~5벌',label:'의류수납'}},
   {id:'robot',icon:'🤖',name:'로봇청소기',step:false,keyAttr:{fn:p=>p.specs.includes('직배수전용')?'직배수':'자동급배수',label:'배수방식'}},
   {id:'vacuum',icon:'🌀',name:'무선청소기',step:false,keyAttr:{fn:p=>(p.specs[0]||'').split('고출력')[0].split('W')[0]+'W',label:'모터출력'}},
+  // ── CE 신규 ──
+  {id:'airpurifier',icon:'🌬️',name:'공기청정기',step:false,keyAttr:{fn:p=>p.area+'㎡',label:'적용면적'}},
+  {id:'microwave',icon:'🍳',name:'전자레인지/오븐',step:false,keyAttr:{fn:p=>p.vol+'L',label:'용량'}},
+  {id:'soundbar',icon:'🔊',name:'사운드바',step:false,keyAttr:{fn:p=>p.ch,label:'채널구성'}},
+  // ── MX 신규 ──
+  {id:'laptop',icon:'💻',name:'PC/노트북',step:false,keyAttr:{fn:p=>p.size+'인치',label:'화면크기'}},
+  {id:'tablet',icon:'📱',name:'태블릿',step:false,keyAttr:{fn:p=>p.size+'인치',label:'화면크기'}},
+  {id:'phone',icon:'📲',name:'휴대폰',step:false,keyAttr:{fn:p=>p.name.split(' ')[0],label:'시리즈'}},
+  {id:'wearable',icon:'⌚',name:'웨어러블',step:false,keyAttr:{fn:p=>p.type,label:'구성'}},
 ];
 
 // ===== 플래그십 정의 =====
@@ -234,6 +243,15 @@ const FLAGSHIP={
   airdresser:{model:'DF90H24R5C',name:'AI에어드레서 크리스탈미러 H2026',price:250,specs:['주름집중케어존(2026신기술)','듀얼에어워시','듀얼제트스팀','AI건조','폴딩멀티행어','LCD중앙터치','크리스탈미러도어','트리플집진필터']},
   robot:{model:'VR90F01SAGS',name:'AI스팀 울트라 직배수 VR90F',price:204,specs:['스팀물걸레살균','자동급배수','직배수(별도배관)','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
   vacuum:{model:'VS90F40CSG',name:'AI제트 400W 고온물걸레 스테이션+',price:165,specs:['400W고출력모터','AI제트(맞춤흡입)','고온물걸레기능','먼지자동비움스테이션','2.5kg경량']},
+  // ── CE 신규 플래그십 ──
+  airpurifier:{model:'AX90A9500WD',name:'블루스카이 9000 90㎡',price:89,specs:['PM1.0 99.9%필터','UV살균','AI공기질모니터링','무풍청정모드','삼성헬스연동','Wi-Fi스마트제어']},
+  microwave:{model:'MC35R8085CC',name:'비스포크 35L 컨벡션 오븐레인지',price:50,specs:['컨벡션+그릴+마이크로웨이브','에어프라이어기능','AI요리','스마트다이얼']},
+  soundbar:{model:'HW-Q990F',name:'Q990F 11.1.4ch Dolby Atmos',price:180,specs:['11.1.4ch','돌비애트모스','DTS:X','SpaceFit Sound+','Q-Symphony','무선리어스피커+서브우퍼']},
+  // ── MX 신규 플래그십 ──
+  laptop:{model:'NP960X',name:'갤럭시북6 Ultra 16인치',price:390,specs:['16인치 AMOLED','Intel Core Ultra 9 275H','32GB RAM','Copilot+ PC','Wi-Fi 7','1.86kg']},
+  tablet:{model:'SM-X930',name:'갤럭시탭 S11 Ultra 14.6인치',price:190,specs:['14.6인치 AMOLED','S펜 포함','DeX 모드','앤티글레어','Wi-Fi 7','692g']},
+  phone:{model:'SM-Q990B',name:'갤럭시 Z TriFold',price:350,specs:['트리폴딩 구조','1TB 스토리지','S펜 지원','AI통역','위성통신','방수IPX8']},
+  wearable:{model:'SM-L705N+SM-R630N',name:'Watch8 Ultra + Buds4 Pro',price:100,specs:['혈당(당화산물)측정','항산화지수','ECG+혈압측정','군용규격(MIL-STD)','ANC+실시간통역','360도오디오','사파이어크리스탈']},
 };
 
 // ===== 제품 DB =====
@@ -350,6 +368,64 @@ const DB={
     {model:'VS70H18GZG',name:'제트 핏 180W 최경량',price:63,year:'2026',specs:['180W','제트핏','1.96kg최경량']},
     {model:'VS20B956AXE',name:'비스포크 제트 220W',price:49,year:'2022',specs:['220W','제트']},
   ],
+  // ── CE 신규 ──
+  airpurifier:[
+    {model:'AX90A9500WD',name:'블루스카이 9000 90㎡',area:90,price:89,year:'2025',specs:['PM1.0 99.9%필터','UV살균','AI공기질모니터링','무풍청정모드','삼성헬스연동','Wi-Fi스마트제어']},
+    {model:'AX60A9500WD',name:'블루스카이 7000 60㎡',area:60,price:59,year:'2025',specs:['PM1.0 99.9%필터','UV살균','AI공기질모니터링','Wi-Fi스마트제어']},
+    {model:'AX47A9350WD',name:'블루스카이 5000 47㎡',area:47,price:45,year:'2025',specs:['PM1.0 99.9%필터','UV살균','Wi-Fi스마트제어']},
+    {model:'AX33A7700WD',name:'블루스카이 3000 33㎡',area:33,price:29,year:'2024',specs:['PM2.5필터','Wi-Fi스마트제어']},
+    {model:'AX23B3500WD',name:'블루스카이 1000 23㎡',area:23,price:15,year:'2024',specs:['PM2.5필터']},
+  ],
+  microwave:[
+    {model:'MC35R8085CC',name:'비스포크 35L 컨벡션 오븐레인지',vol:35,price:50,year:'2025',specs:['컨벡션+그릴+마이크로웨이브','에어프라이어기능','AI요리','스마트다이얼']},
+    {model:'MC28M6075CS',name:'28L 그릴+컨벡션',vol:28,price:39,year:'2024',specs:['컨벡션+그릴+마이크로웨이브','스마트다이얼']},
+    {model:'MC23T9015CK',name:'23L 컨벡션',vol:23,price:25,year:'2023',specs:['컨벡션+그릴+마이크로웨이브']},
+    {model:'MS23DG4504WT',name:'23L 기본형',vol:23,price:15,year:'2025',specs:['마이크로웨이브']},
+    {model:'MS19DG2514EW',name:'19L 소형',vol:19,price:9,year:'2025',specs:['마이크로웨이브']},
+  ],
+  soundbar:[
+    {model:'HW-Q990F',name:'Q990F 11.1.4ch Dolby Atmos',ch:'11.1.4ch',price:180,year:'2025',specs:['돌비애트모스','DTS:X','SpaceFit Sound+','Q-Symphony','무선리어스피커']},
+    {model:'HW-Q800F',name:'Q800F 5.1.2ch',ch:'5.1.2ch',price:100,year:'2025',specs:['돌비애트모스','DTS:X','SpaceFit Sound','Q-Symphony']},
+    {model:'HW-S801D',name:'S801D Dolby Atmos 슬림',ch:'3.0.2ch',price:59,year:'2024',specs:['돌비애트모스','초슬림디자인']},
+    {model:'HW-B550D',name:'B550D 2.1ch 410W',ch:'2.1ch',price:49,year:'2024',specs:['돌비오디오','DTS Virtual:X']},
+    {model:'HW-B450',name:'B450 2.1ch 300W',ch:'2.1ch',price:35,year:'2024',specs:['돌비오디오']},
+  ],
+  // ── MX 신규 ──
+  laptop:[
+    {model:'NP960X',name:'갤럭시북6 Ultra 16인치',size:16,price:390,year:'2026',specs:['16인치 AMOLED','Intel Core Ultra 9 275H','32GB RAM','Copilot+ PC','Wi-Fi 7','1.86kg']},
+    {model:'NP960X-Pro16',name:'갤럭시북6 Pro 16인치',size:16,price:280,year:'2026',specs:['16인치 AMOLED','Intel Core Ultra 7 258V','16GB RAM','Copilot+ PC','1.55kg']},
+    {model:'NP940X',name:'갤럭시북6 Pro 14인치',size:14,price:250,year:'2026',specs:['14인치 AMOLED','Intel Core Ultra 7 258V','16GB RAM','Copilot+ PC','1.23kg']},
+    {model:'NP750Q-15',name:'갤럭시북6 360 15인치',size:15,price:190,year:'2026',specs:['15.6인치 AMOLED','터치+360도힌지','S펜지원','Copilot+ PC','1.61kg']},
+    {model:'NP730Q',name:'갤럭시북6 360 13인치',size:13,price:170,year:'2026',specs:['13.3인치 AMOLED','터치+360도힌지','S펜지원','Copilot+ PC','1.26kg']},
+    {model:'NP750X',name:'갤럭시북6 15인치',size:15,price:150,year:'2026',specs:['15.6인치 FHD','Copilot+ PC','1.66kg']},
+  ],
+  tablet:[
+    {model:'SM-X930',name:'갤럭시탭 S11 Ultra',size:14.6,price:190,year:'2025',specs:['14.6인치 AMOLED','S펜포함','DeX모드','앤티글레어','Wi-Fi 7']},
+    {model:'SM-X810',name:'갤럭시탭 S11',size:11,price:100,year:'2025',specs:['11인치 AMOLED','S펜별도','DeX모드','Wi-Fi 7']},
+    {model:'SM-X620',name:'갤럭시탭 S10 FE+',size:12.4,price:90,year:'2025',specs:['12.4인치 LCD','S펜포함','DeX모드']},
+    {model:'SM-X520',name:'갤럭시탭 S10 FE',size:10.9,price:70,year:'2025',specs:['10.9인치 LCD','S펜포함']},
+  ],
+  phone:[
+    {model:'SM-Q990B',name:'Z TriFold',price:350,year:'2025',specs:['트리폴딩','1TB스토리지','S펜지원','AI통역','위성통신']},
+    {model:'SM-F968B',name:'Z Fold7',price:240,year:'2025',specs:['폴더블 7.6인치','DeX지원','AI통역','IPX8방수','위성통신']},
+    {model:'SM-S938B',name:'S26 Ultra',price:174,year:'2026',specs:['S펜내장','AI agentic','10배줌','1TB지원','위성통신','IP68']},
+    {model:'SM-F731B',name:'Z Flip7',price:140,year:'2025',specs:['플립폴더블','Flex Window+','AI기능','컴팩트디자인']},
+    {model:'SM-S936B',name:'S26+',price:140,year:'2026',specs:['6.7인치 AMOLED','AI agentic','3배줌','IP68','위성통신']},
+    {model:'SM-S931B',name:'S26',price:122,year:'2026',specs:['6.2인치 AMOLED','AI agentic','3배줌','IP68']},
+    {model:'SM-F721B',name:'Z Flip7 FE',price:100,year:'2025',specs:['플립폴더블','Flex Window','AI기능']},
+    {model:'SM-E556B',name:'S25 FE',price:80,year:'2025',specs:['6.7인치 AMOLED','AI기능','IP68']},
+    {model:'SM-A576B',name:'A57',price:70,year:'2025',specs:['AMOLED','6400만화소','5G','IP54']},
+    {model:'SM-A366B',name:'A36',price:50,year:'2025',specs:['AMOLED','IP54','5G']},
+    {model:'SM-A266B',name:'A26',price:40,year:'2025',specs:['AMOLED','5G']},
+    {model:'SM-A166B',name:'A16',price:25,year:'2024',specs:['LCD','4G']},
+  ],
+  wearable:[
+    {model:'SM-L705N+SM-R630N',name:'Watch8 Ultra + Buds4 Pro',type:'워치+버즈',price:100,year:'2025',specs:['혈당(당화산물)측정','항산화지수','ECG+혈압측정','군용규격(MIL-STD)','ANC+실시간통역','360도오디오','사파이어크리스탈']},
+    {model:'SM-L700N+SM-R660N',name:'Watch8 Classic + Buds4',type:'워치+버즈',price:63,year:'2025',specs:['ECG+혈압측정','물리회전베젤','사파이어크리스탈','360도오디오','AI통역']},
+    {model:'SM-L705N',name:'Watch8 Ultra (워치)',type:'워치',price:75,year:'2025',specs:['ECG+혈압측정','혈당측정','항산화지수','군용규격','사파이어크리스탈']},
+    {model:'SM-L700N-40+SM-R400N',name:'Watch8 40mm + Buds3 FE',type:'워치+버즈',price:49,year:'2025',specs:['ECG+혈압측정','혈당측정','ANC기능','알루미늄케이스']},
+    {model:'SM-R630N',name:'Buds4 Pro (버즈)',type:'버즈',price:25,year:'2025',specs:['ANC','360도오디오','AI통역','AI보이스포커스','IP57방수']},
+  ],
 };
 
 // ===== 평형별 필터 기준 =====
@@ -362,7 +438,7 @@ const PYEONG_RULES={
 };
 
 // 카테고리별 예산 비율
-const WEIGHTS={fridge:.22,washer:.20,dryer:.09,tv:.18,aircon:.13,dishwasher:.06,airdresser:.07,robot:.06,vacuum:.05};
+const WEIGHTS={fridge:.22,washer:.20,dryer:.09,tv:.18,aircon:.13,dishwasher:.06,airdresser:.07,robot:.06,vacuum:.05,airpurifier:.05,microwave:.03,soundbar:.04,laptop:.10,tablet:.07,phone:.08,wearable:.05};
 
 let state={mode:null,pyeong:null,selected:new Set(),budget:0,discount:0};
 let activeTiers={};
