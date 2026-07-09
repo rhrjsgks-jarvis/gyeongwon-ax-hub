@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react'
 import { readLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
 
+const ROI_DATA = [
+  { key: 'finder',  icon: '🔍', label: '모델파인더 — 제품 검색',    before: '5분/건',    after: '15초/건',  saving: 95 },
+  { key: 'compare', icon: '⚖️', label: '타사비교 가이드 생성',       before: '30분/건',   after: '3분/건',   saving: 90 },
+  { key: 'quiz',    icon: '🎯', label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
+  { key: 'care',    icon: '💚', label: 'AI Care 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
+  { key: 'test',    icon: '📝', label: '레벨업테스트 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
+]
+
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
   hub:     { label: '허브 메인',       icon: '🏠', color: '#1428A0' },
   finder:  { label: '모델파인더',      icon: '🔍', color: '#2563EB' },
@@ -155,6 +163,79 @@ export default function AdminPage() {
       <p className="text-[10px] text-gray-400 text-center mt-3">
         이 데이터는 현재 기기 브라우저에만 저장됩니다 · Google Apps Script 연동 시 팀 전체 집계 가능
       </p>
+
+      {/* AI 효과 정량화 섹션 */}
+      <div className="mt-5">
+        <div
+          className="rounded-2xl p-4 mb-3 text-white"
+          style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
+        >
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xl">📈</span>
+            <span className="font-bold text-base">AI 업무 효율화 효과</span>
+          </div>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
+            경원 AX 허브 도입 전·후 업무 시간 비교 (팀원 1인 기준)
+          </p>
+        </div>
+
+        <div className="space-y-2.5">
+          {ROI_DATA.map((item) => (
+            <div key={item.key} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm font-bold text-gray-800">{item.label}</span>
+                </div>
+                <span
+                  className="text-sm font-bold rounded-full px-2.5 py-0.5"
+                  style={{ background: '#dcfce7', color: '#15803d' }}
+                >
+                  {item.saving}% 절감
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-red-400">⏱</span>
+                  <span>기존: <b className="text-gray-700">{item.before}</b></span>
+                </div>
+                <span className="text-gray-300">→</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-green-500">⚡</span>
+                  <span>AI: <b className="text-green-700">{item.after}</b></span>
+                </div>
+              </div>
+              <div className="mt-2.5 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: item.saving + '%', background: 'linear-gradient(90deg, #059669, #34d399)' }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 누적 절감 추산 */}
+        <div
+          className="rounded-2xl p-4 mt-3"
+          style={{ background: 'linear-gradient(135deg, #1e3a5f, #1428A0)' }}
+        >
+          <p className="text-xs font-bold text-blue-200 mb-2">💡 팀 기준 월간 절감 추산</p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { num: '36h+', label: '월 절감 시간', sub: '팀원 1인' },
+              { num: '5종', label: 'AI 도구', sub: '즉시 현장 투입' },
+              { num: '574문', label: '문제은행', sub: '자동 생성·관리' },
+            ].map((s) => (
+              <div key={s.label} className="text-center">
+                <p className="text-xl font-bold text-white">{s.num}</p>
+                <p className="text-[10px] text-blue-200 mt-0.5">{s.label}</p>
+                <p className="text-[9px] text-blue-300">{s.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

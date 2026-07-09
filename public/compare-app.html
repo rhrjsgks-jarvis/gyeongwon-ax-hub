@@ -75,6 +75,43 @@
     margin-bottom: 14px;
   }
 
+  /* 빠른시작 프리셋 */
+  .preset-section { margin-bottom: 14px; }
+  .preset-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 8px; }
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+  }
+  .preset-btn {
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary-mid);
+    border-radius: 9px;
+    padding: 8px 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .preset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .preset-btn .p-icon { font-size: 16px; display: block; margin-bottom: 3px; }
+  .preset-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .preset-divider span { font-size: 11px; color: var(--gray); flex-shrink: 0; }
+  .preset-divider::before, .preset-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
   label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
   label span { font-weight: 400; color: var(--gray); font-size: 12px; margin-left: 4px; }
   input[type="url"], input[type="text"] {
@@ -124,6 +161,34 @@
     margin-top: 2px;
   }
   .add-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+  /* 포인트 체크박스 */
+  .focus-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 12px;
+  }
+  .focus-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #f8f9fb;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    padding: 8px 11px;
+    cursor: pointer;
+    font-size: 12.5px;
+    transition: all 0.15s;
+  }
+  .focus-chip input { display: none; }
+  .focus-chip.checked {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .focus-chip .fc-ico { font-size: 14px; }
 
   .generate-btn {
     width: 100%;
@@ -180,22 +245,20 @@
     gap: 8px;
     margin-bottom: 6px;
     flex-wrap: wrap;
+    align-items: center;
   }
   .v-badge {
     border-radius: 6px;
     padding: 2px 9px;
     font-size: 11.5px;
     font-weight: 600;
+    white-space: nowrap;
   }
   .v-badge.ok { background: #dcfce7; color: #166534; }
   .v-badge.mid { background: #fef3c7; color: #92400e; }
   .v-badge.warn { background: #fee2e2; color: #991b1b; }
 
-  /* Result section */
-  #result-section {
-    display: none;
-    margin-top: 0;
-  }
+  #result-section { display: none; margin-top: 0; }
   #result-section.visible { display: block; }
 
   .prompt-box {
@@ -208,7 +271,7 @@
     font-family: 'SF Mono', 'Fira Code', monospace;
     white-space: pre-wrap;
     word-break: break-all;
-    max-height: 200px;
+    max-height: 220px;
     overflow-y: auto;
     margin-bottom: 12px;
   }
@@ -255,6 +318,21 @@
     margin-top: 12px;
   }
 
+  /* 히스토리 */
+  .history-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .history-row:last-child { border-bottom: none; }
+  .history-cat { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-light); border-radius: 5px; padding: 2px 7px; flex-shrink: 0; }
+  .history-url { font-size: 11.5px; color: var(--gray); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-load { font-size: 11px; color: var(--primary); font-weight: 600; flex-shrink: 0; }
+  .no-history { font-size: 12.5px; color: var(--gray); text-align: center; padding: 12px 0; }
+
   footer {
     text-align: center;
     padding: 24px 20px;
@@ -289,8 +367,22 @@
   <div class="card">
     <div class="card-title">📌 제품 URL 입력</div>
 
+    <!-- 빠른시작 프리셋 -->
+    <div class="preset-section">
+      <div class="preset-label">⚡ 빠른시작 — 자사 제품 카테고리 선택</div>
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
+        <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
+        <button class="preset-btn" onclick="loadPreset('aircon')"><span class="p-icon">❄️</span>에어컨</button>
+        <button class="preset-btn" onclick="loadPreset('tv')"><span class="p-icon">📺</span>TV</button>
+        <button class="preset-btn" onclick="loadPreset('phone')"><span class="p-icon">📱</span>갤럭시 S</button>
+        <button class="preset-btn" onclick="loadPreset('vacuum')"><span class="p-icon">🤖</span>청소기</button>
+      </div>
+      <div class="preset-divider"><span>또는 직접 입력</span></div>
+    </div>
+
     <label>자사 제품 URL <span>삼성닷컴 제품 페이지</span></label>
-    <input type="url" id="own-url" placeholder="https://www.samsung.com/sec/refrigerators/..." />
+    <input type="url" id="own-url" placeholder="https://www.samsung.com/sec/..." />
 
     <label>경쟁사 제품 URL <span>최대 4개</span></label>
     <div id="competitor-list">
@@ -301,13 +393,19 @@
     <button class="add-btn" onclick="addCompetitor()">+ 경쟁사 추가</button>
   </div>
 
-  <!-- 옵션 -->
+  <!-- 강조 포인트 체크박스 -->
   <div class="card">
-    <div class="card-title">⚙️ 가이드 옵션</div>
+    <div class="card-title">🎯 강조 포인트 선택</div>
+    <div class="focus-grid" id="focus-grid">
+      <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="에너지 효율·소비전력"><span class="fc-ico">⚡</span>에너지 효율</label>
+      <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="A/S·무상보증 기간"><span class="fc-ico">🛡️</span>A/S·무상보증</label>
+      <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="AI 기능·스마트 연동"><span class="fc-ico">🤖</span>AI 기능</label>
+      <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="디자인·컬러 옵션"><span class="fc-ico">🎨</span>디자인</label>
+      <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="용량·치수·설치 편의성"><span class="fc-ico">📐</span>용량·치수</label>
+      <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="가격 대비 성능(가성비)"><span class="fc-ico">💰</span>가성비</label>
+    </div>
     <label>브랜드명 <span>고객 응대 스크립트에 표시</span></label>
     <input type="text" id="brand" placeholder="삼성전자" value="삼성전자" />
-    <label>강조할 포인트 <span>선택사항</span></label>
-    <input type="text" id="focus" placeholder="예: 에너지 효율, A/S, 무상보증 기간" />
   </div>
 
   <button class="generate-btn" onclick="generate()">⚡ 세일즈가이드 프롬프트 생성</button>
@@ -323,21 +421,27 @@
     </div>
   </div>
 
+  <!-- 최근 사용 히스토리 -->
+  <div class="card">
+    <div class="card-title">🕐 최근 비교 이력</div>
+    <div id="history-list"></div>
+  </div>
+
   <!-- 사용법 -->
   <div class="card">
     <div class="card-title">📖 사용 방법</div>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-text"><strong>URL 입력</strong> — 삼성닷컴 자사 제품 페이지 + 비교할 경쟁사 URL(LG·다이슨 등)</div>
+        <div class="step-text"><strong>카테고리 선택 또는 URL 직접 입력</strong> — 삼성닷컴 자사 제품 + 비교 경쟁사 URL</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text"><strong>프롬프트 생성</strong> — 위 버튼을 눌러 최적화된 Claude 프롬프트 생성</div>
+        <div class="step-text"><strong>강조 포인트 체크</strong> — 고객이 자주 묻는 항목 선택 시 스크립트가 더 구체적으로 생성됩니다</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-text"><strong>Claude 붙여넣기</strong> — claude.ai 또는 Cowork에서 실행 → 완성형 HTML 가이드 다운로드</div>
+        <div class="step-text"><strong>프롬프트 생성 → Claude 붙여넣기</strong> — AI가 페이지 분석 후 완성형 가이드 생성</div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
@@ -374,6 +478,29 @@
 <footer>경원 AX 허브 · 타사비교 세일즈가이드 · 경원영업팀</footer>
 
 <script>
+// 카테고리별 삼성 기본 URL 프리셋
+const PRESETS = {
+  fridge:  { own: 'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp: 'https://www.lge.co.kr/refrigerators' },
+  washer:  { own: 'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp: 'https://www.lge.co.kr/washing-machines' },
+  aircon:  { own: 'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp: 'https://www.lge.co.kr/air-conditioners' },
+  tv:      { own: 'https://www.samsung.com/sec/tvs/all-tvs/', comp: 'https://www.lge.co.kr/tv' },
+  phone:   { own: 'https://www.samsung.com/sec/smartphones/all-smartphones/', comp: 'https://www.apple.com/kr/iphone/' },
+  vacuum:  { own: 'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp: 'https://www.dyson.co.kr/vacuum-cleaners' },
+};
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  document.getElementById('own-url').value = p.own;
+  const rows = document.querySelectorAll('#competitor-list .competitor-row');
+  rows[0].querySelector('input').value = p.comp;
+}
+
+function toggleChip(el) {
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+
 function addCompetitor() {
   const list = document.getElementById('competitor-list');
   if (list.children.length >= 4) {
@@ -389,17 +516,24 @@ function addCompetitor() {
   list.appendChild(row);
 }
 
+function getCheckedFocus() {
+  const chips = document.querySelectorAll('#focus-grid .focus-chip.checked input');
+  return Array.from(chips).map(i => i.value);
+}
+
 function generate() {
   const ownUrl = document.getElementById('own-url').value.trim();
   const brand = document.getElementById('brand').value.trim() || '삼성전자';
-  const focus = document.getElementById('focus').value.trim();
+  const focuses = getCheckedFocus();
   const competitorInputs = document.querySelectorAll('#competitor-list input[type="url"]');
   const competitors = Array.from(competitorInputs).map(i => i.value.trim()).filter(Boolean);
 
   if (!ownUrl) { alert('자사 제품 URL을 입력해주세요.'); return; }
   if (competitors.length === 0) { alert('경쟁사 URL을 최소 1개 입력해주세요.'); return; }
 
-  const focusLine = focus ? `\n강조 포인트: ${focus}` : '';
+  const focusLine = focuses.length > 0
+    ? `\n강조 포인트: ${focuses.join(', ')}`
+    : '';
   const competitorLines = competitors.map((url, i) => `- 경쟁사 ${i+1}: ${url}`).join('\n');
 
   const prompt = `타사비교 세일즈가이드를 만들어주세요.
@@ -407,17 +541,32 @@ function generate() {
 자사(${brand}): ${ownUrl}
 ${competitorLines}${focusLine}
 
-각 URL의 제품 페이지를 분석해서 아래 형식으로 완성형 HTML 세일즈가이드를 생성해주세요:
-1. 스펙 비교표 (검증 배지 포함: ✅공식/🔶이차출처/⚠️미검증)
-2. 우위/동급/열위 전략 분류
-3. 고객 응대 스크립트 (상황별)
-4. 모바일 최적화 단일 HTML 파일로 출력`;
+각 URL의 제품 페이지를 분석해서 아래 형식의 완성형 모바일 HTML 세일즈가이드를 생성해주세요:
+
+【출력 형식】
+1. 핵심 스펙 비교표
+   - 각 데이터에 검증 배지 표시: ✅공식(제조사 공식페이지) / 🔶이차출처(다나와·뉴스) / ⚠️미검증(추정)
+   - 배지 옆에 출처명·날짜 병기
+
+2. 경쟁 포지셔닝 분석
+   - 우위 항목 (자사가 명확히 앞서는 스펙/기능)
+   - 동급 항목 (비슷한 수준 — 가격·디자인으로 차별화)
+   - 보완 항목 (열위 시 전환 전략 포함)
+
+3. 고객 응대 스크립트 (상황별 3가지)
+   - 가격 비교 질문 시 / 브랜드 선호 질문 시 / 타사 기능 언급 시
+
+4. 모바일 최적화 단일 HTML 파일로 출력 (Pretendard 폰트, 딥네이비 헤더)`;
 
   document.getElementById('prompt-output').textContent = prompt;
   document.getElementById('result-section').classList.add('visible');
   document.getElementById('copy-btn').textContent = '📋 프롬프트 복사';
   document.getElementById('copy-btn').classList.remove('copied');
   document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // 히스토리 저장
+  saveHistory(ownUrl, competitors[0]);
+  renderHistory();
 }
 
 function copyPrompt() {
@@ -432,6 +581,46 @@ function copyPrompt() {
     }, 2500);
   });
 }
+
+// 히스토리 (localStorage)
+const HIST_KEY = 'compare_history_v1';
+function saveHistory(ownUrl, compUrl) {
+  try {
+    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    const entry = { own: ownUrl, comp: compUrl, ts: Date.now() };
+    const filtered = hist.filter(h => h.own !== ownUrl);
+    filtered.unshift(entry);
+    localStorage.setItem(HIST_KEY, JSON.stringify(filtered.slice(0, 5)));
+  } catch(e) {}
+}
+function loadHistory(entry) {
+  document.getElementById('own-url').value = entry.own;
+  const rows = document.querySelectorAll('#competitor-list .competitor-row');
+  rows[0].querySelector('input').value = entry.comp || '';
+}
+function renderHistory() {
+  try {
+    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    const el = document.getElementById('history-list');
+    if (hist.length === 0) {
+      el.innerHTML = '<div class="no-history">아직 비교 이력이 없습니다</div>';
+      return;
+    }
+    const cats = { samsung: '삼성', lge: 'LG', dyson: '다이슨', apple: '애플', lg: 'LG', roborock: '로보락' };
+    el.innerHTML = hist.map(h => {
+      const short = h.own.replace('https://www.samsung.com/sec/','').replace(/\/$/, '').split('/')[0] || '삼성';
+      const compBrand = Object.entries(cats).find(([k]) => h.comp && h.comp.includes(k))?.[1] || '경쟁사';
+      const d = new Date(h.ts);
+      const when = `${d.getMonth()+1}/${d.getDate()}`;
+      return `<div class="history-row" onclick='loadHistory(${JSON.stringify(h)})'>
+        <span class="history-cat">${when}</span>
+        <span class="history-url">${short} vs ${compBrand}</span>
+        <span class="history-load">불러오기 ›</span>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+renderHistory();
 </script>
 </body>
 </html>

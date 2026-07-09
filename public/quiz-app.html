@@ -45,14 +45,15 @@
   .hero-stats {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 14px;
     margin-top: 16px;
+    flex-wrap: wrap;
   }
   .stat {
     text-align: center;
     background: rgba(255,255,255,0.15);
     border-radius: 10px;
-    padding: 10px 16px;
+    padding: 10px 14px;
   }
   .stat-num { font-size: 22px; font-weight: 800; }
   .stat-label { font-size: 11px; opacity: 0.8; margin-top: 2px; }
@@ -75,6 +76,43 @@
     margin-bottom: 14px;
   }
 
+  /* 빠른시작 프리셋 */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .preset-btn {
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary-mid);
+    border-radius: 9px;
+    padding: 8px 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--primary);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .preset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .preset-btn .p-icon { font-size: 16px; display: block; margin-bottom: 3px; }
+  .preset-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 8px; }
+  .preset-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+  }
+  .preset-divider span { font-size: 11px; color: var(--gray); flex-shrink: 0; }
+  .preset-divider::before, .preset-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
   label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
   label span { font-weight: 400; color: var(--gray); font-size: 12px; margin-left: 4px; }
   input[type="url"], input[type="number"], input[type="text"], select {
@@ -88,7 +126,7 @@
     outline: none;
     transition: border-color 0.15s;
     margin-bottom: 12px;
-    appearance: none;
+    -webkit-appearance: none;
   }
   input:focus, select:focus { border-color: var(--primary); background: #fff; }
 
@@ -130,10 +168,59 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
+    margin-bottom: 12px;
   }
-  .options-grid > div { }
-  .options-grid label { margin-bottom: 4px; }
-  .options-grid input, .options-grid select { margin-bottom: 0; }
+  .options-grid label { margin-bottom: 5px; }
+  .options-grid select { margin-bottom: 0; }
+
+  /* 난이도 선택 */
+  .level-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin-bottom: 12px;
+  }
+  .level-btn {
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 8px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: all 0.15s;
+    background: #f8f9fb;
+  }
+  .level-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .level-btn .lv-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+  .level-btn .lv-desc { font-size: 10.5px; font-weight: 400; color: var(--gray); margin-top: 2px; }
+
+  /* 유형 체크박스 */
+  .type-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+    margin-bottom: 12px;
+  }
+  .type-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: #f8f9fb;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    padding: 8px 11px;
+    cursor: pointer;
+    font-size: 12.5px;
+    transition: all 0.15s;
+  }
+  .type-chip input { display: none; }
+  .type-chip.checked {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+  }
 
   .generate-btn {
     width: 100%;
@@ -178,7 +265,6 @@
   .step-text { font-size: 13px; line-height: 1.6; padding-top: 4px; }
   .step-text strong { color: var(--text); }
 
-  /* Result section */
   #result-section { display: none; margin-top: 0; }
   #result-section.visible { display: block; }
 
@@ -192,7 +278,7 @@
     font-family: 'SF Mono', 'Fira Code', monospace;
     white-space: pre-wrap;
     word-break: break-all;
-    max-height: 200px;
+    max-height: 220px;
     overflow-y: auto;
     margin-bottom: 12px;
   }
@@ -235,14 +321,9 @@
     font-size: 12.5px;
     line-height: 1.7;
   }
-  .q-num {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 4px;
-  }
+  .q-num { font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
   .q-text { font-weight: 600; margin-bottom: 8px; font-size: 13px; }
-  .options { display: flex; flex-direction: column; gap: 5px; }
+  .q-options { display: flex; flex-direction: column; gap: 5px; }
   .opt {
     background: #fff;
     border: 1.5px solid var(--primary-mid);
@@ -306,9 +387,20 @@
 
 <main>
 
-  <!-- URL 입력 폼 -->
+  <!-- URL 입력 -->
   <div class="card">
     <div class="card-title">📌 제품 URL 입력</div>
+
+    <div class="preset-label">⚡ 빠른시작 — 카테고리 선택</div>
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
+      <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
+      <button class="preset-btn" onclick="loadPreset('aircon')"><span class="p-icon">❄️</span>에어컨</button>
+      <button class="preset-btn" onclick="loadPreset('tv')"><span class="p-icon">📺</span>TV</button>
+      <button class="preset-btn" onclick="loadPreset('phone')"><span class="p-icon">📱</span>갤럭시 S</button>
+      <button class="preset-btn" onclick="loadPreset('vacuum')"><span class="p-icon">🤖</span>청소기</button>
+    </div>
+    <div class="preset-divider"><span>또는 직접 입력</span></div>
 
     <label>자사 제품 URL <span>삼성닷컴 제품 페이지</span></label>
     <input type="url" id="own-url" placeholder="https://www.samsung.com/sec/..." />
@@ -325,6 +417,32 @@
   <!-- 퀴즈 설정 -->
   <div class="card">
     <div class="card-title">⚙️ 퀴즈 설정</div>
+
+    <label>난이도</label>
+    <div class="level-row">
+      <div class="level-btn" onclick="setLevel(this, 'basic')">
+        <span class="lv-icon">🌱</span>기초
+        <div class="lv-desc">스펙·용량 중심</div>
+      </div>
+      <div class="level-btn active" onclick="setLevel(this, 'mid')">
+        <span class="lv-icon">🔥</span>중급
+        <div class="lv-desc">기능+비교 혼합</div>
+      </div>
+      <div class="level-btn" onclick="setLevel(this, 'adv')">
+        <span class="lv-icon">⚡</span>심화
+        <div class="lv-desc">고객 대응 상황</div>
+      </div>
+    </div>
+    <input type="hidden" id="level" value="mid" />
+
+    <label>문항 유형 <span>복수 선택 가능</span></label>
+    <div class="type-grid" id="type-grid">
+      <label class="type-chip checked" onclick="toggleType(this)"><input type="checkbox" value="제품 스펙·수치" checked>📊 스펙 수치</label>
+      <label class="type-chip checked" onclick="toggleType(this)"><input type="checkbox" value="경쟁사 비교" checked>⚔️ 경쟁 비교</label>
+      <label class="type-chip" onclick="toggleType(this)"><input type="checkbox" value="AI·스마트 기능">🤖 AI 기능</label>
+      <label class="type-chip" onclick="toggleType(this)"><input type="checkbox" value="A/S·보증·정책">🛡️ A/S 정책</label>
+    </div>
+
     <div class="options-grid">
       <div>
         <label>문항 수 <span>랜덤 출제</span></label>
@@ -345,7 +463,7 @@
         </select>
       </div>
     </div>
-    <label>회사명 <span>퀴즈 표지에 표시</span></label>
+    <label>팀·조직명 <span>퀴즈 표지에 표시</span></label>
     <input type="text" id="company" placeholder="경원영업팀" value="경원영업팀" />
   </div>
 
@@ -368,19 +486,19 @@
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-text"><strong>URL 입력</strong> — 삼성닷컴 자사 제품 + 비교 경쟁사 URL 붙여넣기</div>
+        <div class="step-text"><strong>카테고리 선택 또는 URL 직접 입력</strong> — 삼성닷컴 자사 + 경쟁사 URL</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text"><strong>설정 선택</strong> — 문항 수·제한 시간 조정 (기본 25문항·30분)</div>
+        <div class="step-text"><strong>난이도·유형 설정</strong> — 신입 교육에는 기초, 경진대회형은 심화 선택</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-text"><strong>프롬프트 생성 → Claude에 붙여넣기</strong> — AI가 페이지 분석 후 문제은행 자동 생성</div>
+        <div class="step-text"><strong>프롬프트 생성 → Claude 붙여넣기</strong> — AI가 문제은행 40문항 자동 생성</div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
-        <div class="step-text"><strong>HTML 파일 배포</strong> — Netlify나 팀 드라이브에 공유해 팀원 평가 실시</div>
+        <div class="step-text"><strong>HTML 파일 배포</strong> — 팀 드라이브·카카오톡 공유해 팀원 평가 실시</div>
       </div>
     </div>
   </div>
@@ -390,15 +508,15 @@
     <div class="card-title">📝 생성되는 퀴즈 예시</div>
     <div class="quiz-preview">
       <div class="q-num">Q 12 / 25</div>
-      <div class="q-text">삼성 비스포크 AI 콤보의 세탁 용량은?</div>
-      <div class="options">
-        <div class="opt"><span class="opt-label">A</span> 20 kg</div>
-        <div class="opt correct"><span class="opt-label">B</span> 25 kg ✅</div>
-        <div class="opt"><span class="opt-label">C</span> 21 kg</div>
-        <div class="opt"><span class="opt-label">D</span> 24 kg</div>
+      <div class="q-text">삼성 비스포크 AI 콤보의 세탁 용량과 LG 트롬 오브제 대비 차별화 포인트는?</div>
+      <div class="q-options">
+        <div class="opt"><span class="opt-label">A</span> 세탁 20kg / AI 자동 코스</div>
+        <div class="opt correct"><span class="opt-label">B</span> 세탁 25kg / 세탁건조 일체형 + SmartThings 연동 ✅</div>
+        <div class="opt"><span class="opt-label">C</span> 세탁 21kg / 무풍건조</div>
+        <div class="opt"><span class="opt-label">D</span> 세탁 24kg / 스팀 코스</div>
       </div>
       <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--primary-mid); font-size:12px; color:#0e7490;">
-        ✏️ 해설: AI 콤보는 세탁 25kg / 건조 17kg의 대용량 복합 세탁건조기입니다.
+        ✏️ 해설: AI 콤보는 세탁 25kg/건조 17kg 일체형으로, SmartThings 자동화로 LG 대비 스마트 연동이 강점입니다.
       </div>
     </div>
   </div>
@@ -408,18 +526,39 @@
 <footer>경원 AX 허브 · URL 퀴즈 생성기 · 경원영업팀</footer>
 
 <script>
+const PRESETS = {
+  fridge:  { own: 'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp: 'https://www.lge.co.kr/refrigerators' },
+  washer:  { own: 'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp: 'https://www.lge.co.kr/washing-machines' },
+  aircon:  { own: 'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp: 'https://www.lge.co.kr/air-conditioners' },
+  tv:      { own: 'https://www.samsung.com/sec/tvs/all-tvs/', comp: 'https://www.lge.co.kr/tv' },
+  phone:   { own: 'https://www.samsung.com/sec/smartphones/all-smartphones/', comp: 'https://www.apple.com/kr/iphone/' },
+  vacuum:  { own: 'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp: 'https://www.dyson.co.kr/vacuum-cleaners' },
+};
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  document.getElementById('own-url').value = p.own;
+  document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value = p.comp;
+}
+
+function setLevel(el, val) {
+  document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('level').value = val;
+}
+
+function toggleType(el) {
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+
 function addCompetitor() {
   const list = document.getElementById('competitor-list');
-  if (list.children.length >= 4) {
-    alert('경쟁사는 최대 4개까지 입력 가능합니다.');
-    return;
-  }
+  if (list.children.length >= 4) { alert('경쟁사는 최대 4개까지 입력 가능합니다.'); return; }
   const row = document.createElement('div');
   row.className = 'competitor-row';
-  row.innerHTML = `
-    <input type="url" placeholder="https://..." />
-    <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
-  `;
+  row.innerHTML = `<input type="url" placeholder="https://..." /><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
   list.appendChild(row);
 }
 
@@ -428,30 +567,40 @@ function generate() {
   const company = document.getElementById('company').value.trim() || '경원영업팀';
   const qCount = document.getElementById('q-count').value;
   const timeLimit = document.getElementById('time-limit').value;
+  const level = document.getElementById('level').value;
   const competitorInputs = document.querySelectorAll('#competitor-list input[type="url"]');
   const competitors = Array.from(competitorInputs).map(i => i.value.trim()).filter(Boolean);
+  const types = Array.from(document.querySelectorAll('#type-grid .type-chip.checked input')).map(i => i.value);
 
   if (!ownUrl) { alert('자사 제품 URL을 입력해주세요.'); return; }
   if (competitors.length === 0) { alert('경쟁사 URL을 최소 1개 입력해주세요.'); return; }
 
+  const levelMap = { basic:'기초 (스펙·수치 중심, 신입 교육용)', mid:'중급 (기능+타사 비교 혼합)', adv:'심화 (고객 이의 응대·상황형 문제 포함)' };
   const competitorLines = competitors.map((url, i) => `- 경쟁사 ${i+1}: ${url}`).join('\n');
+  const typeStr = types.length > 0 ? types.join(', ') : '전체 균등';
 
   const prompt = `직원 역량 평가용 제품 퀴즈를 만들어주세요.
 
 자사 제품 URL: ${ownUrl}
 ${competitorLines}
 
-설정:
+【설정】
+- 난이도: ${levelMap[level]}
+- 문항 유형: ${typeStr}
 - 출제 문항: ${qCount}문항 (문제은행 40문항 생성 후 랜덤 출제)
 - 제한 시간: ${timeLimit}분
 - 주관사: ${company}
 
-요청사항:
-1. 각 URL의 제품 스펙을 분석해 4지선다 퀴즈 40문항 생성
-2. 스펙·기능·비교 비중 균등하게 배분
-3. 각 문항에 해설 포함
-4. 인터랙티브 HTML 파일로 출력 (타이머, 점수 표시, 결과 화면 포함)
-5. 모바일 최적화`;
+【요청사항】
+1. 각 URL의 제품 스펙을 분석해 4지선다 문제은행 40문항 생성
+   - 설정 유형 비중에 맞게 출제 (선택 유형 위주로 편중)
+   - 해설은 삼성 제품 우위를 자연스럽게 강조
+2. 각 문항에 정답·오답 해설 포함 (오답도 왜 틀린지 설명)
+3. 인터랙티브 HTML 파일로 출력:
+   - 타이머 (카운트다운)
+   - 즉시 피드백 (정답 선택 후 해설 표시)
+   - 결과 화면 (점수·등급·취약 유형 분석)
+   - 모바일 최적화 (Pretendard 폰트, 딥네이비 헤더)`;
 
   document.getElementById('prompt-output').textContent = prompt;
   document.getElementById('result-section').classList.add('visible');
@@ -466,10 +615,7 @@ function copyPrompt() {
     const btn = document.getElementById('copy-btn');
     btn.textContent = '✅ 복사 완료!';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = '📋 프롬프트 복사';
-      btn.classList.remove('copied');
-    }, 2500);
+    setTimeout(() => { btn.textContent = '📋 프롬프트 복사'; btn.classList.remove('copied'); }, 2500);
   });
 }
 </script>
