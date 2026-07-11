@@ -148,6 +148,9 @@ const PRODUCTS = [
   {key:"purifier_counter", name:"카운터탑·얼음 정수기", icon:"🚰", desc:"RWP70F15 카운터탑 / RWP90H15 얼음정수기 — 자가관리 방식", st:"na"},
   {key:"vacuum",   name:"로봇청소기", icon:"🤖", desc:"비스포크 AI 스팀 울트라 자동 급배수 (VR90F01SAG)", st:"done"},
   {key:"kimchi",   name:"김치냉장고",icon:"🥬", desc:"비스포크 AI 김치플러스 4도어 (RK80F42E2A)", st:"done"},
+  {key:"induction", name:"인덕션/전기레인지", icon:"🔥", desc:"비스포크 인피니트라인 3구·더 플레이트 시리즈", st:"na"},
+  {key:"microwave", name:"전자레인지/오븐",    icon:"📻", desc:"큐커 오븐 MC 시리즈·세라믹 MS 시리즈", st:"na"},
+  {key:"soundbar",  name:"사운드바",          icon:"🔊", desc:"HW-Q990H / Q900H / QS90H / Q800H 2026년형", st:"na"},
 ];
 
 const DATA = {
@@ -882,6 +885,111 @@ const DATA = {
     includes:["무상수리서비스 (구독 기간 전체)","배터리 교체 1회 포함 (3년차 방문 시)","공임비 무상 (전 회차)","셀프케어 소모품 정기 배송 별도 제공 (먼지봉투 5매·물걸레 2쌍 4매)"],
     excludes:["36개월형 방문케어 미운영 (12개월형 전용)","소모성 부품 외 실비","고객 과실 손상","변색으로 인한 노즐 교체 미제공","서비스 유형 변경 불가 (방문↔셀프)"]
   }
+  ,induction:{
+    name:"인덕션/전기레인지", icon:"🔥",
+    contract:"자가관리", total36:"AI구독 미해당",
+    onlyPlan:"36",
+    src:"ℹ️ 삼성 인덕션/전기레인지는 AI구독 케어 미대상 제품 — 자가관리 가이드 제공",
+    plan36:{
+      rounds:[
+        {
+          label:"일상 관리", month:"사용 후 매회",
+          grad:"linear-gradient(90deg,#f59e0b,#ef4444)", badge:"자가관리", bc:"bbl",
+          items:[
+            {ico:"🧽",nm:"표면 냉각 후 전용 클리너로 닦기",det:"인덕션 표면은 유리 세라믹 소재 — 완전 냉각 후 전용 스크레이퍼·클리너를 사용해 눌어붙은 음식물 제거",tag:"na",tt:"자가관리 권장"},
+            {ico:"🔍",nm:"잔열 표시등(HOT) 확인 후 커버",det:"HOT 표시등 점등 중에는 절대 만지지 않도록 주의. 냉각 후 보호 커버 장착 권장",tag:"na",tt:"안전 주의"},
+            {ico:"✅",nm:"플렉스존 작동 점검",det:"2구 통합 플렉스존 사용 시 균등 가열 여부 확인. 이상 발생 시 삼성서비스센터 연락",tag:"na",tt:"자가점검"},
+            {ico:"✅",nm:"SmartThings 연동 확인 (Wi-Fi 모델)",det:"NZ63DB857CAV 등 Wi-Fi 탑재 모델은 SmartThings 앱 연결 상태 주기적 확인",tag:"na",tt:"자가점검"},
+          ],
+          note:{c:"#f59e0b",t:"인덕션/전기레인지는 삼성 AI구독 케어 서비스 미대상 제품입니다.
+이상 발생 시 삼성전자서비스센터(1588-3366) 또는 SmartThings 앱 원격 진단을 활용하세요."}
+        },
+        {
+          label:"정기 점검", month:"연 1~2회 권장",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"주기 점검", bc:"btl",
+          items:[
+            {ico:"✅",nm:"부스터 화력 정상 작동 확인",det:"부스터(Boost) 모드 정상 가열 여부 점검. 최대 화력 미달 시 서비스센터 점검 필요",tag:"na",tt:"자가점검"},
+            {ico:"✅",nm:"전원 케이블·접지 상태 점검",det:"전원 코드 피복 손상·접지 연결 상태 확인. 손상 시 즉시 사용 중단 및 서비스센터 연락",tag:"na",tt:"안전 필수"},
+            {ico:"🔧",nm:"서비스센터 정기 점검 의뢰",det:"2~3년 주기로 삼성전자서비스센터 방문 점검 권장. 냉각팬·내부 청결 상태 확인",tag:"na",tt:"서비스센터"},
+          ],
+          note:{c:"#0d9488",t:"이상 소음, 화력 저하, 오류 코드 발생 시
+삼성전자서비스센터(1588-3366)에 문의하세요."}
+        }
+      ]
+    },
+    includes:["삼성전자서비스센터 유상 수리 (AI구독 미해당)","스마트폰 앱(SmartThings) 원격 진단 지원 (Wi-Fi 모델)","제품 보증기간 내 무상 수리"],
+    excludes:["삼성 AI구독 케어 대상 제품 아님 (방문 케어 미제공)","소모성 부품 실비","고객 과실 손상"]
+  }
+  ,microwave:{
+    name:"전자레인지/오븐", icon:"📻",
+    contract:"자가관리", total36:"AI구독 미해당",
+    onlyPlan:"36",
+    src:"ℹ️ 삼성 전자레인지/오븐은 AI구독 케어 미대상 제품 — 자가관리 가이드 제공",
+    plan36:{
+      rounds:[
+        {
+          label:"일상 관리", month:"사용 후 매회",
+          grad:"linear-gradient(90deg,#f59e0b,#ef4444)", badge:"자가관리", bc:"bbl",
+          items:[
+            {ico:"🧽",nm:"내부 세라믹 코팅 클리닝",det:"세라믹 내부(MS 시리즈) — 음식물 튀김 즉시 젖은 헝겊으로 닦기. 굳으면 따뜻한 물 적신 천으로 불린 후 제거",tag:"na",tt:"자가관리"},
+            {ico:"🧹",nm:"그릴 히터·컨벡션 팬 점검",det:"그릴 히터에 음식 찌꺼기 탄화 시 불쾌한 냄새 원인 — 냉각 후 부드러운 솔로 제거",tag:"na",tt:"자가관리"},
+            {ico:"✅",nm:"도어 고무 패킹 상태 확인",det:"도어 패킹 손상 시 전자파 누설 위험 — 균열·변형 발견 시 즉시 사용 중단 후 서비스센터 연락",tag:"na",tt:"안전 필수"},
+            {ico:"✅",nm:"비스포크 패널 오염 확인 (MC32B7388CC)",det:"비스포크 패널 교체 가능 모델 — 패널 탈거 전 전원 차단 후 중성 세제로 닦기",tag:"na",tt:"자가관리"},
+          ],
+          note:{c:"#f59e0b",t:"전자레인지/오븐은 삼성 AI구독 케어 미대상 제품입니다.
+도어 패킹 손상·이상 소음 발생 시 즉시 사용 중단하고 삼성서비스센터에 문의하세요."}
+        },
+        {
+          label:"정기 점검", month:"연 1회 권장",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"주기 점검", bc:"btl",
+          items:[
+            {ico:"✅",nm:"스팀 조리 기능 점검 (MC32B7388CC)",det:"스팀 노즐·물통 세척. 석회질 축적 시 구연산 수용액으로 제거",tag:"na",tt:"자가점검"},
+            {ico:"✅",nm:"직화열풍 히터 상태 확인 (MC35A8599CT)",det:"직화열풍 히터 주변 탄화물 제거. 코팅 손상 발견 시 서비스센터 점검 의뢰",tag:"na",tt:"자가점검"},
+            {ico:"🔧",nm:"서비스센터 정기 점검 의뢰",det:"3~4년 주기 삼성전자서비스센터 방문 점검 권장. 마그네트론·트랜스포머 상태 확인",tag:"na",tt:"서비스센터"},
+          ],
+          note:{c:"#0d9488",t:"오류코드 표시, 가열 불량, 불꽃(스파크) 발생 시
+즉시 전원 차단 후 삼성전자서비스센터(1588-3366)에 문의하세요."}
+        }
+      ]
+    },
+    includes:["제품 보증기간 내 무상 수리","삼성전자서비스센터 유상 수리 (AI구독 미해당)"],
+    excludes:["삼성 AI구독 케어 대상 제품 아님 (방문 케어 미제공)","소모성 부품 실비","고객 과실 손상","도어 패킹·회전판 등 소모성 부품 유상"]
+  }
+  ,soundbar:{
+    name:"사운드바", icon:"🔊",
+    contract:"자가관리", total36:"AI구독 미해당",
+    onlyPlan:"36",
+    src:"ℹ️ 삼성 사운드바는 AI구독 케어 미대상 제품 — 자가관리 가이드 제공",
+    plan36:{
+      rounds:[
+        {
+          label:"일상 관리", month:"수시",
+          grad:"linear-gradient(90deg,#6366f1,#0d9488)", badge:"자가관리", bc:"bbl",
+          items:[
+            {ico:"🧹",nm:"그릴 먼지 제거",det:"사운드바 전면 그릴 천과 후면 포트에 먼지 축적 시 소음·음질 저하 원인 — 마른 부드러운 솔로 주기적 청소",tag:"na",tt:"자가관리"},
+            {ico:"✅",nm:"Q심포니 연동 상태 확인",det:"삼성 TV와 Q심포니 연동 — SmartThings 앱에서 'TV 스피커+사운드바 동시 사용' 설정 정상 여부 확인",tag:"na",tt:"자가점검"},
+            {ico:"✅",nm:"eARC 연결 상태 점검",det:"HDMI eARC 포트 연결 불량 시 음질 저하 — HDMI 케이블 교체 또는 포트 접점 청소",tag:"na",tt:"자가점검"},
+            {ico:"✅",nm:"무선 리어 스피커 연결 확인 (Q990H/Q900H)",det:"무선 리어 스피커 연결 끊김 시 사운드바 전원 OFF/ON 재시도. 5GHz Wi-Fi 간섭 환경에서는 배치 변경",tag:"na",tt:"자가점검"},
+          ],
+          note:{c:"#6366f1",t:"사운드바는 삼성 AI구독 케어 미대상 제품입니다.
+SmartThings 앱 원격 진단(AI 사운드 최적화·SpaceFit Sound)을 활용해 음장 상태를 확인하세요."}
+        },
+        {
+          label:"정기 점검", month:"연 1회 권장",
+          grad:"linear-gradient(90deg,#0d9488,#1d4ed8)", badge:"주기 점검", bc:"btl",
+          items:[
+            {ico:"✅",nm:"펌웨어 업데이트 확인",det:"SmartThings 앱 또는 사운드바 설정 메뉴에서 최신 펌웨어 업데이트 적용. 음질·연결 안정성 개선",tag:"na",tt:"자가점검"},
+            {ico:"✅",nm:"SmartThings 자동화 규칙 점검",det:"TV 켜면 사운드바 자동 켜짐 등 SmartThings 자동화 정상 동작 확인",tag:"na",tt:"자가점검"},
+            {ico:"🔧",nm:"음질 이상·연결 불량 지속 시 서비스센터",det:"소리 끊김, 한쪽 채널 무음, 서브우퍼 미작동 등 지속 발생 시 삼성전자서비스센터(1588-3366) 점검",tag:"na",tt:"서비스센터"},
+          ],
+          note:{c:"#0d9488",t:"사운드바 소리 완전 무음·물리적 손상 시
+삼성전자서비스센터(1588-3366)에 문의하세요."}
+        }
+      ]
+    },
+    includes:["제품 보증기간 내 무상 수리","SmartThings 앱 AI 사운드 최적화·SpaceFit Sound 자동 보정"],
+    excludes:["삼성 AI구독 케어 대상 제품 아님 (방문 케어 미제공)","소모성 부품 실비","고객 과실 손상","HDMI 케이블 등 액세서리 미포함"]
+  }
 };
 </script>
 <script>
@@ -1150,7 +1258,7 @@ function render(){
   let out = '';
 
   if(!d && p.st==='na'){
-    body.innerHTML = '<div class="todo-card"><div class="todo-ico">'+p.icon+'</div><div class="todo-t" style="color:#6366f1">'+p.name+' — 자가관리 전용 제품</div><div class="todo-s">이 제품은 <b>AI구독 자가관리 방식</b>으로 방문 케어가 제공되지 않습니다.<br><br>📌 RWP70F15 (카운터탑) — 자가관리<br>📌 RWP90H15 (얼음정수기) — 자가관리<br><br>✅ 필터 교체 셀프케어 / ✅ 구독 시 필터 정기배송 / ❌ 방문 엔지니어 미포함</div></div>';
+    body.innerHTML = '<div class="todo-card"><div class="todo-ico">'+p.icon+'</div><div class="todo-t" style="color:#6366f1">'+p.name+' — 자가관리 가이드</div><div class="todo-s">'+p.desc+'<br><br>이 제품은 <b>삼성 AI구독 케어 미대상</b> 제품입니다. 자가관리 가이드를 참조하거나 삼성전자서비스센터(1588-3366)에 문의하세요.</div></div>';
     return;
   }
     /* TODO 상태 */
