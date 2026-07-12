@@ -13,7 +13,7 @@ const MODULES = [
     href: '/finder',
     icon: '🔍',
     title: '모델파인더',
-    desc: '키워드 한 줄로 CE·MX 전 제품(206종) 검색',
+    desc: '키워드 한 줄로 CE·MX·Harman 전 제품(297종) 검색',
     color: '#1428A0',
     bg: '#EEF2FF',
     updated: '2026.06',
@@ -79,7 +79,7 @@ const TIPS = [
 ]
 
 const GUIDE = [
-  { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX 전 제품 검색' },
+  { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX·Harman 전 제품 검색' },
   { step: '02', text: 'AI Care — 구독케어 조건·항목 즉시 조회' },
   { step: '03', text: 'AI 생성기 — 타사비교 가이드·퀴즈 URL 입력으로 자동 생성' },
   { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },

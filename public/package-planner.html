@@ -222,6 +222,8 @@ const CATEGORIES=[
   {id:'robot',icon:'🤖',name:'로봇청소기',step:false,keyAttr:{fn:p=>p.specs.includes('직배수전용')?'직배수':'자동급배수',label:'배수방식'}},
   {id:'vacuum',icon:'🌀',name:'무선청소기',step:false,keyAttr:{fn:p=>(p.specs[0]||'').split('고출력')[0].split('W')[0]+'W',label:'모터출력'}},
   // ── CE 신규 ──
+  {id:'kimchi',icon:'🥬',name:'김치냉장고',step:false,keyAttr:{fn:p=>p.cap+'L',label:'용량'}},
+  {id:'induction',icon:'🔥',name:'인덕션/전기레인지',step:false,keyAttr:{fn:p=>p.burner+'구',label:'구성'}},
   {id:'airpurifier',icon:'🌬️',name:'공기청정기',step:false,keyAttr:{fn:p=>p.area+'㎡',label:'적용면적'}},
   {id:'microwave',icon:'🍳',name:'전자레인지/오븐',step:false,keyAttr:{fn:p=>p.vol+'L',label:'용량'}},
   {id:'soundbar',icon:'🔊',name:'사운드바',step:false,keyAttr:{fn:p=>p.ch,label:'채널구성'}},
@@ -244,6 +246,8 @@ const FLAGSHIP={
   robot:{model:'VR90F01SAGS',name:'AI스팀 울트라 직배수 VR90F',price:204,specs:['스팀물걸레살균','자동급배수','직배수(별도배관)','AI바닥인식','AI사물인식(장애물회피)','사이드팝아웃브러시','청정스테이션스팀세척','먼지자동비움']},
   vacuum:{model:'VS90F40CSG',name:'AI제트 400W 고온물걸레 스테이션+',price:165,specs:['400W고출력모터','AI제트(맞춤흡입)','고온물걸레기능','먼지자동비움스테이션','2.5kg경량']},
   // ── CE 신규 플래그십 ──
+  kimchi:{model:'RQ49DG90X24E',name:'AI 김치플러스 4도어 490L',price:200,specs:['5면 메탈쿨링','AI 정온모드','냄새케어','SmartThings 연동']},
+  induction:{model:'NZ63DB857CAV',name:'비스포크 인피니트라인 3구 플렉스존',price:200,specs:['플렉스존(2구통합)','부스터화력','Wi-Fi/SmartThings','빌트인']},
   airpurifier:{model:'AX060CG500GBD',name:'블루스카이 5500 60㎡',price:55,specs:['PM1.0 헤파필터','숯탈취필터','SmartThings 연동','자동청정모드','360×783×318mm']},
   microwave:{model:'MC35A8599CT',name:'큐커 오븐 35L 직화열풍',price:75,specs:['컨벡션+그릴+마이크로웨이브','직화열풍(direct_flame)','에어프라이어기능','530×366×508mm']},
   soundbar:{model:'HW-Q990H',name:'Q990H 11.1.4ch [2026 NEW]',price:220,specs:['11.1.4ch','돌비애트모스','Q심포니','무선리어스피커+서브우퍼','eARC','SmartThings 연동']},
@@ -369,6 +373,22 @@ const DB={
     {model:'VS20B956AXE',name:'비스포크 제트 220W',price:49,year:'2022',specs:['220W','제트']},
   ],
   // ── CE 신규 ──
+  kimchi:[
+    {model:'RQ49DG90X24E',name:'AI 김치플러스 4도어 490L',cap:490,price:200,year:'2025',specs:['5면메탈쿨링','AI정온모드','냄새케어','SmartThings연동']},
+    {model:'RQ49DB94H2AP',name:'AI 김치플러스 4도어 490L',cap:490,price:187,year:'2025',specs:['5면메탈쿨링','SmartThings연동']},
+    {model:'RQ32C7B84AP',name:'김치플러스 4도어 320L',cap:320,price:130,year:'2025',specs:['5면메탈쿨링','인버터컴프레서']},
+    {model:'RP22C3111S9',name:'김치플러스 뚜껑형 220L',cap:220,price:79,year:'2024',specs:['뚜껑형','5면메탈쿨링','인버터컴프레서']},
+    {model:'RP20C3111EG',name:'김치플러스 뚜껑형 200L',cap:200,price:72,year:'2024',specs:['뚜껑형','5면메탈쿨링','인버터컴프레서']},
+  ],
+  induction:[
+    {model:'NZ63DB857CAV',name:'인피니트라인 3구 플렉스존 [NEW]',burner:3,price:200,year:'2025',specs:['플렉스존','부스터화력','Wi-Fi/SmartThings연동','빌트인']},
+    {model:'NZ63DB553CFT',name:'인피니트라인 3구 빌트인',burner:3,price:150,year:'2025',specs:['플렉스존','부스터화력','빌트인']},
+    {model:'NZ63B5056AK',name:'인피니트라인 3구 빌트인',burner:3,price:120,year:'2024',specs:['플렉스존','부스터화력','빌트인']},
+    {model:'NZ60R7703PW',name:'더플레이트 2구 프리스탠딩',burner:2,price:55,year:'2024',specs:['부스터화력','이동형']},
+    {model:'NZ60R3703PK',name:'더플레이트 2구 프리스탠딩',burner:2,price:45,year:'2024',specs:['이동형']},
+    {model:'NZ31DG200CFH',name:'더플레이트 1구 프리스탠딩',burner:1,price:18,year:'2025',specs:['부스터화력','이동형']},
+    {model:'NZ31T3703PW',name:'더플레이트 1구 프리스탠딩',burner:1,price:14,year:'2024',specs:['이동형']},
+  ],
   airpurifier:[
     {model:'AX99N4020WWD',name:'블루스카이 4000 벽걸이 85㎡',area:85,price:45,year:'2025',specs:['헤파필터','벽걸이형','SmartThings연동']},
     {model:'AX85N4020WWD',name:'블루스카이 4000 벽걸이 85㎡',area:85,price:39,year:'2025',specs:['헤파필터','벽걸이형']},
@@ -444,7 +464,7 @@ const PYEONG_RULES={
 };
 
 // 카테고리별 예산 비율
-const WEIGHTS={fridge:.22,washer:.20,dryer:.09,tv:.18,aircon:.13,dishwasher:.06,airdresser:.07,robot:.06,vacuum:.05,airpurifier:.05,microwave:.03,soundbar:.04,laptop:.10,tablet:.07,phone:.08,wearable:.05};
+const WEIGHTS={fridge:.22,washer:.20,dryer:.09,kimchi:.04,induction:.03,tv:.18,aircon:.13,dishwasher:.06,airdresser:.07,robot:.06,vacuum:.05,airpurifier:.05,microwave:.03,soundbar:.04,laptop:.10,tablet:.07,phone:.08,wearable:.05};
 
 let state={mode:null,pyeong:null,selected:new Set(),budget:0,discount:0};
 let activeTiers={};
