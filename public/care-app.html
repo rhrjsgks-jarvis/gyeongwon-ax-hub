@@ -130,24 +130,6 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .tl-date{font-size:11px;color:#9aa0a6}
 .tl-badge-sm{font-size:9px;padding:2px 7px;border-radius:6px;margin-top:3px;display:inline-block;font-weight:700;background:rgba(18,89,195,.1);color:#1259c3}
 /* === 계산기 === */
-.calc-wrap{padding:14px 16px}
-.calc-card{background:#fff;border-radius:18px;padding:18px;margin-bottom:12px}
-.calc-t{font-size:13px;font-weight:800;margin-bottom:14px;color:#16181b}
-.calc-field{margin-bottom:12px}
-.calc-label{font-size:11px;color:#8a9099;margin-bottom:5px;font-weight:600}
-.calc-input{width:100%;background:#f7f8fa;border:1.5px solid #ecedf1;border-radius:12px;padding:11px 13px;font-size:15px;font-family:inherit;font-weight:700;color:#16181b;box-sizing:border-box}
-.calc-input:focus{outline:none;border-color:#1259c3}
-.calc-plan-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.calc-plan-tab{padding:11px 8px;border-radius:12px;border:1.5px solid #ecedf1;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:#9aa0a6;transition:all .15s}
-.calc-plan-tab.on{border-color:#1259c3;background:#f2f6fd;color:#1259c3}
-.res-card{background:linear-gradient(135deg,#1428A0,#1d4ed8);border-radius:18px;padding:18px;color:#fff;margin-bottom:12px}
-.res-t{font-size:12px;font-weight:700;opacity:.8;margin-bottom:14px}
-.res-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12)}
-.res-row:last-child{border:none;padding-top:12px}
-.res-lbl{font-size:12px;opacity:.85}
-.res-val{font-size:15px;font-weight:900}
-.res-val.pos{color:#6ee7b7}
-.res-val.neg{color:#fca5a5}
 .bar-wrap{margin-top:14px}
 .bar-lbl{font-size:10px;opacity:.7;margin-bottom:5px}
 .bar-track{background:rgba(255,255,255,.2);border-radius:8px;height:10px;overflow:hidden}
@@ -191,11 +173,9 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
   <div class="mode-tab on" data-mode="care" onclick="setMode('care')"><span class="mt-ico">🛡️</span>케어정보</div>
   <div class="mode-tab" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
   <div class="mode-tab" data-mode="timeline" onclick="setMode('timeline')"><span class="mt-ico">📅</span>타임라인</div>
-  <div class="mode-tab" data-mode="calc" onclick="setMode('calc')"><span class="mt-ico">💰</span>계산기</div>
 </div>
 <div id="overviewPane" style="display:none"></div>
 <div id="timelinePane" style="display:none"></div>
-<div id="calcPane" style="display:none"></div>
   <div class="cat-wrap">
     <div class="cat-btn" id="catBtn">
       <div class="cat-btn-l">
@@ -1604,10 +1584,8 @@ function setMode(m){
   document.getElementById('body').style.display = m==='care' ? '' : 'none';
   document.getElementById('overviewPane').style.display = m==='overview' ? '' : 'none';
   document.getElementById('timelinePane').style.display = m==='timeline' ? '' : 'none';
-  document.getElementById('calcPane').style.display = m==='calc' ? '' : 'none';
   if(m==='overview') renderOverview();
   if(m==='timeline') renderTimeline();
-  if(m==='calc') renderCalc();
 }
 
 /* ═══════════════ OVERVIEW ═══════════════ */
@@ -1734,62 +1712,6 @@ function renderTimeline(){
     '<div class="tl-list">'+listHtml+'</div>';
 }
 
-/* ═══════════════ CALC ═══════════════ */
-const PRICE_DEFAULTS = {
-  aircon:2.5, aicombo:4.5, washer:2.5, dryer:2.5, fridge:3.0,
-  kimchi:2.0, dish:2.0, dresser:2.0, airpur_reusable:1.5, airpur_s:1.5,
-  purifier_under:2.0, vacuum:1.5
-};
-const CARE_VALUE_PER_VISIT = 15;
-const REPAIR_VALUE = 7;
-
-let calcKey='aircon', calcPlan='12', calcMonthly=2.5;
-
-function renderCalc(){
-  const done = PRODUCTS.filter(p=>p.st==='done');
-  const d = DATA[calcKey]||{};
-  const plans = [];
-  if(!d.onlyPlan||d.onlyPlan==='12') plans.push({id:'12',label:'12개월형 (매년 방문)'});
-  if(d.plan36 && (!d.onlyPlan||d.onlyPlan==='36')) plans.push({id:'36',label:'36개월형 (3년에 1회)'});
-
-  const totalMonths = 72;
-  const totalSub = calcMonthly * totalMonths;
-  const visits = calcPlan==='12' ? 6 : 2;
-  const careVal = visits * CARE_VALUE_PER_VISIT;
-  const repairVal = REPAIR_VALUE * (totalMonths/12);
-  const totalBenefit = careVal + repairVal;
-  const saving = totalBenefit - totalSub;
-  const benefitRatio = Math.min(100, Math.round(totalBenefit / Math.max(totalSub,1) * 100));
-
-  let prodOpts = done.map(p=>'<option value="'+p.key+'" '+(p.key===calcKey?'selected':'')+'>'+p.icon+' '+p.name+'</option>').join('');
-  let planTabsHtml = plans.map(pl=>'<div class="calc-plan-tab '+(pl.id===calcPlan?'on':'')+'" onclick="calcPlan=\''+pl.id+'\';renderCalc()">'+pl.label+'</div>').join('');
-
-  document.getElementById('calcPane').innerHTML =
-    '<div class="calc-wrap">' +
-    '<div class="calc-card">' +
-      '<div class="calc-t">💰 구독케어 ROI 계산기</div>' +
-      '<div class="calc-field"><div class="calc-label">품목 선택</div>' +
-        '<select class="calc-input" style="background:#f7f8fa" onchange="calcKey=this.value;calcMonthly=PRICE_DEFAULTS[this.value]||2.0;calcPlan=\'12\';renderCalc()">'+prodOpts+'</select></div>' +
-      '<div class="calc-field"><div class="calc-label">구독 플랜</div>' +
-        '<div class="calc-plan-tabs">'+planTabsHtml+'</div></div>' +
-      '<div class="calc-field"><div class="calc-label">월 구독료 (만원)</div>' +
-        '<input class="calc-input" type="number" value="'+calcMonthly+'" step="0.5" min="0.5" max="10" oninput="calcMonthly=+this.value;renderCalc()" style="background:#f7f8fa"></div>' +
-    '</div>' +
-    '<div class="res-card">' +
-      '<div class="res-t">6년(72개월) 기준 분석 결과</div>' +
-      '<div class="res-row"><span class="res-lbl">총 구독 비용</span><span class="res-val">'+totalSub.toFixed(1)+'만원</span></div>' +
-      '<div class="res-row"><span class="res-lbl">방문케어 가치 ('+visits+'회 × 15만)</span><span class="res-val">'+careVal+'만원</span></div>' +
-      '<div class="res-row"><span class="res-lbl">무상수리 절감 추정</span><span class="res-val">'+repairVal+'만원</span></div>' +
-      '<div class="res-row"><span class="res-lbl" style="font-weight:800">총 혜택 대비 절감</span><span class="res-val '+(saving>=0?'pos':'neg')+'">'+(saving>=0?'+':'')+saving.toFixed(1)+'만원</span></div>' +
-      '<div class="bar-wrap"><div class="bar-lbl">혜택/비용 비율 '+benefitRatio+'%</div>' +
-        '<div class="bar-track"><div class="bar-fill" style="width:'+benefitRatio+'%;background:'+(saving>=0?'#6ee7b7':'#fca5a5')+'"></div></div></div>' +
-    '</div>' +
-    '<div style="font-size:10px;color:#9aa0a6;padding:0 2px 16px;line-height:1.7">' +
-      '※ 방문케어 가치는 외부 전문 서비스 평균 기준<br>' +
-      '※ 무상수리 절감은 업계 평균 추정치 (연 7만원)<br>' +
-      '※ 실제 혜택은 제품·사용환경에 따라 다를 수 있음' +
-    '</div></div>';
-}
 
 /* ═══════════════ SELLING POINTS RENDER ═══════════════ */
 function renderSelling(key){
