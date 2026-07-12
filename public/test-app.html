@@ -105,6 +105,13 @@ input{-webkit-tap-highlight-color:transparent}
 .modal-cancel{flex:1;padding:13px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;font-size:15px;font-weight:600;cursor:pointer;color:#555;touch-action:manipulation}
 .modal-ok{flex:1;padding:13px;border:none;border-radius:10px;background:#1428A0;color:#fff;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation}
 @media(max-width:600px){.login-card{padding:28px 18px}.login-title{font-size:21px}.q-text{font-size:14px}.opt-btn{padding:12px 14px;font-size:13px}.q-card{padding:20px 16px}#quizHeader{padding:10px 14px}#timer{font-size:17px;padding:5px 12px;min-width:76px}.score-main{font-size:46px}.score-box{min-width:110px}.wrong-exp{font-size:12px}.res-header{padding:24px 20px}}
+
+.mode-select{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.mode-option{display:flex;align-items:center;gap:10px;padding:11px 14px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:border .2s,background .2s;user-select:none}
+.mode-option:has(input:checked){border-color:#1428A0;background:#f0f3ff}
+.mode-option input[type=radio]{accent-color:#1428A0;width:18px;height:18px;flex-shrink:0}
+.mode-label{font-size:14px;font-weight:700;color:#222}
+.mode-desc{font-size:11px;color:#888;margin-left:auto}
 </style>
 </head>
 <body>
@@ -120,8 +127,28 @@ input{-webkit-tap-highlight-color:transparent}
       <span class="info-chip">문제은행 574문항</span>
     </div>
     <div class="form-group">
-      <label>사번 (8자리 숫자)</label>
-      <input id="empId" class="form-input" type="text" maxlength="8" inputmode="numeric" placeholder="00000000">
+      <label>시험 유형</label>
+      <div class="mode-select">
+        <label class="mode-option" for="modeCeMx">
+          <input type="radio" id="modeCeMx" name="testMode" value="cemx" checked>
+          <span class="mode-label">📺 CE + 📱 MX 통합</span>
+          <span class="mode-desc">CE 16 + MX 8문항</span>
+        </label>
+        <label class="mode-option" for="modeCe">
+          <input type="radio" id="modeCe" name="testMode" value="ce">
+          <span class="mode-label">📺 CE 가전만</span>
+          <span class="mode-desc">CE 전체 풀 24문항</span>
+        </label>
+        <label class="mode-option" for="modeMx">
+          <input type="radio" id="modeMx" name="testMode" value="mx">
+          <span class="mode-label">📱 MX만</span>
+          <span class="mode-desc">MX 전체 풀 24문항</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>지점명</label>
+      <input id="empId" class="form-input" type="text" placeholder="수원점">
       <div class="form-err" id="empErr"></div>
     </div>
     <div class="form-group">
@@ -6751,7 +6778,7 @@ const MX_BONUS=['갤럭시탭','갤럭시북','갤럭시링','SmartThings'];
 const ALL_CE=[...CE_CORE,...CE_BONUS];
 const ALL_MX=[...MX_CORE,...MX_BONUS];
 
-let st={empId:'',name:'',questions:[],answers:{},essay:'',timerSec:1800,timerInterval:null,startTime:null,submitted:false};
+let st={empId:'',name:'',mode:'cemx',questions:[],answers:{},essay:'',timerSec:1800,timerInterval:null,startTime:null,submitted:false};
 
 function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function pickN(arr,n){return shuffle(arr||[]).slice(0,n)}
@@ -6762,16 +6789,27 @@ function startQuiz(){
   const nm=document.getElementById('empName').value.trim();
   document.getElementById('empErr').textContent='';
   document.getElementById('nameErr').textContent='';
-  if(!/^\d{8}$/.test(id)){document.getElementById('empErr').textContent='사번은 숫자 8자리로 입력해주세요.';return}
+  if(!id){document.getElementById('empErr').textContent='지점명을 입력해주세요.';return}
   if(!nm){document.getElementById('nameErr').textContent='이름을 입력해주세요.';return}
-  st.empId=id;st.name=nm;
+  const mode=document.querySelector('input[name="testMode"]:checked').value;
+  st.empId=id;st.name=nm;st.mode=mode;
 
-  /* 24문항 선택: CE 전체 풀 랜덤 16문항 + MX 전체 풀 랜덤 8문항 */
-  const cePool=ALL_CE.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
-  const mxPool=ALL_MX.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
-  const ceQs=pickN(cePool,16);
-  const mxQs=pickN(mxPool,8);
-  st.questions=shuffle([...ceQs,...mxQs]);
+  let qs;
+  if(mode==='ce'){
+    /* CE 전체 풀 24문항 */
+    const cePool=ALL_CE.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
+    qs=shuffle(pickN(cePool,24));
+  }else if(mode==='mx'){
+    /* MX 전체 풀 24문항 */
+    const mxPool=ALL_MX.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
+    qs=shuffle(pickN(mxPool,24));
+  }else{
+    /* CE+MX: CE 전체 풀 16문항 + MX 전체 풀 8문항 */
+    const cePool=ALL_CE.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
+    const mxPool=ALL_MX.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
+    qs=shuffle([...pickN(cePool,16),...pickN(mxPool,8)]);
+  }
+  st.questions=qs;
   st.startTime=Date.now();
 
   document.getElementById('loginScreen').style.display='none';
@@ -6849,13 +6887,14 @@ async function handleSubmit(forced=false){
   });
   const essayScore=st.essay&&st.essay.trim()?4:0;
   showResults(results,ceScore,mxScore,essayScore,em,es);
-  saveToGoogle({timestamp:new Date().toLocaleString('ko-KR'),employeeId:st.empId,name:st.name,ceScore:ceScore*4,mxScore:mxScore*4,essayScore,totalScore:ceScore*4+mxScore*4+essayScore,timeTaken:`${em}분 ${es}초`,essay:st.essay});
+  const totalScore=(st.mode==='ce')?ceScore*4+essayScore:(st.mode==='mx')?mxScore*4+essayScore:ceScore*4+mxScore*4+essayScore;
+  saveToGoogle({timestamp:new Date().toLocaleString('ko-KR'),branchName:st.empId,name:st.name,mode:st.mode||'cemx',ceScore:ceScore*4,mxScore:mxScore*4,essayScore,totalScore,timeTaken:`${em}분 ${es}초`,essay:st.essay});
 }
 
 function showResults(results,ceScore,mxScore,essayScore,em,es){
   document.getElementById('quizScreen').style.display='none';
   const rs=document.getElementById('resultScreen');rs.style.display='block';
-  const total=ceScore*4+mxScore*4+essayScore;
+  const total=(st.mode==='ce')?ceScore*4+essayScore:(st.mode==='mx')?mxScore*4+essayScore:ceScore*4+mxScore*4+essayScore;
   let gradeMsg,gradeClass;
   if(total>=90){gradeMsg='S등급 — 완벽한 제품 전문가!';gradeClass='grade-s'}
   else if(total>=75){gradeMsg='A등급 — 우수합니다!';gradeClass='grade-a'}
@@ -6871,8 +6910,7 @@ function showResults(results,ceScore,mxScore,essayScore,em,es){
     <div class="score-pct">${total}점</div>
     <div class="score-grade ${gradeClass}">${gradeMsg}</div>
     <div class="score-breakdown">
-      <div class="score-box"><div class="score-box-label">가전 CE (16문항)</div><div class="score-box-val">${ceScore*4}</div><div class="score-box-max">/ 64점</div></div>
-      <div class="score-box"><div class="score-box-label">MX/Smart (8문항)</div><div class="score-box-val">${mxScore*4}</div><div class="score-box-max">/ 32점</div></div>
+      ${st.mode==='ce'?`<div class="score-box"><div class="score-box-label">가전 CE (24문항)</div><div class="score-box-val">${ceScore*4}</div><div class="score-box-max">/ 96점</div></div>`:st.mode==='mx'?`<div class="score-box"><div class="score-box-label">MX/Smart (24문항)</div><div class="score-box-val">${mxScore*4}</div><div class="score-box-max">/ 96점</div></div>`:`<div class="score-box"><div class="score-box-label">가전 CE (16문항)</div><div class="score-box-val">${ceScore*4}</div><div class="score-box-max">/ 64점</div></div><div class="score-box"><div class="score-box-label">MX/Smart (8문항)</div><div class="score-box-val">${mxScore*4}</div><div class="score-box-max">/ 32점</div></div>`}
       <div class="score-box"><div class="score-box-label">AI활용서술 (Q25)</div><div class="score-box-val">${essayScore}</div><div class="score-box-max">/ 4점</div></div>
     </div>
   </div>
