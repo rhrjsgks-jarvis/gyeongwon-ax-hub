@@ -140,8 +140,9 @@ table.spec tr:last-child td{border-bottom:none}
 .cat-selector-title{font-size:14px;font-weight:700;color:#333;margin-bottom:10px}
 .cat-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .cat-chip{display:flex;align-items:center;gap:6px;padding:8px 13px;border:2px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;color:#444;transition:all .15s;user-select:none}
+.cat-chip.on{border-color:#1428A0;background:#f0f3ff;color:#1428A0;font-weight:700;box-shadow:0 0 0 2px #1428A040}
 .cat-chip:has(input:checked){border-color:#1428A0;background:#f0f3ff;color:#1428A0}
-.cat-chip input{display:none}
+/* cat-chip input removed */
 .cat-src{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:2px}
 .cat-src-ce{background:#e8f4ff;color:#0066cc}
 .cat-src-mx{background:#fff0e8;color:#cc4400}
@@ -163,7 +164,7 @@ table.spec tr:last-child td{border-bottom:none}
 .feat-title{font-size:12px;font-weight:600;color:#888;margin-bottom:6px}
 .feat-grid{display:flex;flex-wrap:wrap;gap:6px}
 .feat-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border:1.5px solid #ddd;border-radius:16px;cursor:pointer;font-size:12px;color:#555;transition:all .15s;user-select:none}
-.feat-chip:has(input:checked){border-color:#1428A0;background:#f0f3ff;color:#1428A0;font-weight:700}
+.feat-chip.on{border-color:#1428A0;background:#f0f3ff;color:#1428A0;font-weight:700}
 .feat-chip input{display:none}
 .total-bar{position:sticky;bottom:0;background:#1428A0;color:#fff;padding:14px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;margin-top:4px}
 .total-bar-label{font-size:13px;opacity:.85}
@@ -717,125 +718,125 @@ const AI_CATS = [
   {label:'이어폰',cat:'버즈',emoji:'🎧',src:'MX'},
 ];
 
-function renderCatSelector(detected, budget){
-  $("aiHost").innerHTML=""; $("parseBar").innerHTML=""; $("noticeHost").innerHTML=""; $("sortRow").classList.add("hidden"); lastResults=[];
-  const budgetHtml = budget
-    ? `<div class="ai-budget">💰 감지된 예산 <b>${budget.toLocaleString()}만원</b> — 각 품목별 예산을 자동 배분합니다</div>`
-    : `<div class="ai-budget" style="border-color:#aaa;background:#f8f8f8;color:#555">예산을 입력하면 품목별 자동 배분됩니다 (예: 1000만원)</div>`;
+
+let selectedCats = new Set();
+let aiParsedBudget = null;
+
+/* ── Step 1: 카테고리 선택 ── */
+function renderCatSelector(preSelected, budget){
+  selectedCats = preSelected instanceof Set ? new Set(preSelected) : new Set();
+  aiParsedBudget = (typeof budget === 'number') ? budget : aiParsedBudget;
+  $("aiHost").innerHTML=""; $("parseBar").innerHTML="";
+  $("noticeHost").innerHTML=""; $("sortRow").classList.add("hidden"); lastResults=[];
+
+  const budgetHtml = aiParsedBudget
+    ? `<div class="ai-budget">💰 감지된 예산 <b>${aiParsedBudget.toLocaleString()}만원</b></div>`
+    : `<div class="ai-budget" style="border-color:#bbb;background:#f8f8f8;color:#666">예산을 함께 입력하면 품목별 입력이 편리합니다 (예: 1000만원)</div>`;
+
   const chips = AI_CATS.map(c=>`
-    <label class="cat-chip">
-      <input type="checkbox" value="${c.cat}" ${detected.has(c.cat)?'checked':''}>
-      ${c.emoji} ${c.label} <span class="cat-src cat-src-${c.src.toLowerCase()}">${c.src}</span>
-    </label>`).join('');
+    <button class="cat-chip${selectedCats.has(c.cat)?' on':''}"
+            data-cat="${c.cat}" onclick="toggleCat('${c.cat.replace(/'/g,"\\'")}')" type="button">
+      ${c.emoji} ${c.label}
+      <span class="cat-src cat-src-${c.src.toLowerCase()}">${c.src}</span>
+    </button>`).join('');
+
   $("rHost").innerHTML=`
     ${budgetHtml}
     <div class="cat-selector-title">📋 필요한 품목을 선택하세요</div>
-    <div class="cat-grid">${chips}</div>
-    <button class="cat-search-btn" onclick="runAiSearch()">선택 품목 추천받기 →</button>`;
+    <div class="cat-grid" id="catGrid">${chips}</div>
+    <button class="cat-search-btn" onclick="goStep2()" type="button" style="margin-top:14px">다음: 세부 설정 →</button>`;
 }
 
+function toggleCat(cat){
+  if(selectedCats.has(cat)) selectedCats.delete(cat);
+  else selectedCats.add(cat);
+  document.querySelectorAll('#catGrid [data-cat]').forEach(el=>{
+    el.classList.toggle('on', selectedCats.has(el.dataset.cat));
+  });
+}
 
-/* ── 카테고리별 핵심 기능 목록 ── */
-const CAT_FEATURES = {
-  '냉장고':        ['AI 하이브리드 쿨링','AI 패밀리허브','AI 비전 인사이드','UV 청정살균 탈취','오토오픈도어','메탈쿨링 도어/커버','푸드쇼케이스 홈바','빅아이스메이커'],
-  '세탁기·콤보':   ['세건 일체형(콤보)','세제 자동투입','오토오픈도어+','AI 세탁건조','펫케어 코스','7인치 LCD 풀터치 디스플레이','미세플라스틱 저감 코스'],
-  '건조기':        ['인버터 히트펌프 건조','AI 맞춤건조','오토오픈도어','공간제습'],
-  'TV':            ['OLED 패널','Neo QLED','8K 해상도','Micro LED RGB 패널','돌비 애트모스','무반사 매트 디스플레이','오브젝트 트래킹 사운드'],
-  '에어컨':        ['무풍 냉방','AI모션바람','e-HEPA 살균필터','UV-LED 팬살균','AI 열교환기 자동세척','PM1.0 공기청정 센서','쾌적제습'],
-  '식기세척기':    ['100℃ 열풍건조+','정수필터 내장','오토오픈도어','스팀 살균','AI 맞춤 세척','3단 선반','빅스비 음성인식'],
-  '에어드레서':    ['듀얼 에어워시','듀얼 제트스팀','AI 건조','UV 살균','폴딩 멀티행어','주름집중케어 존','트리플 집진 필터'],
-  '청소기':        ['자동 급배수','직배수 전용','청정스테이션 먼지 자동비움','청정스테이션 스팀 걸레 세척','AI 바닥인식','AI 사물인식 장애물 회피','스팀 물걸레 살균'],
-  '공기청정기':    ['PM1.0 센서','대용량(60㎡+)','SmartThings 연동'],
-  '김치냉장고':    ['AI 김치플러스','5면 메탈쿨링','AI 정온모드','스탠드형'],
-  '사운드바':      ['돌비 애트모스','Q심포니','eARC','무선 리어스피커'],
-  '인덕션/전기레인지': ['3구 플렉스존','빌트인 설치','더 플레이트 디자인'],
-  '스마트폰':      ['S펜 내장','AI 에이전틱','위성통신','10배 광학줌','언더디스플레이 카메라'],
-  '노트북':        ['OLED 디스플레이','터치스크린','S펜 호환','Snapdragon X Elite'],
-  '태블릿':        ['S펜 포함','AMOLED','5G/LTE','키보드 커버 호환'],
-  '워치':          ['혈압 측정','ECG 심전도','체지방 분석','항산화 지수','밀스펙 방수'],
-  '버즈':          ['노이즈캔슬링(ANC)','360 오디오','실시간 통역','IP57 방수'],
-};
+/* ── Step 2: 카테고리별 예산·기능 설정 ── */
+function goStep2(){
+  if(!selectedCats.size){ toast("품목을 1개 이상 선택하세요"); return; }
+  const catList=[...selectedCats];
 
-/* ── Step 2: 카테고리별 예산·기능 설정 화면 ── */
-function runAiSearch(){
-  const checked=[...document.querySelectorAll('.cat-grid input:checked')].map(el=>el.value);
-  if(!checked.length){toast("품목을 1개 이상 선택하세요");return;}
-
-  let cards = checked.map(cat=>{
+  const cards = catList.map(cat=>{
     const feats = CAT_FEATURES[cat]||[];
-    const featChips = feats.map(f=>`
-      <label class="feat-chip">
-        <input type="checkbox" data-cat="${cat}" data-feat="${f}">
-        ${f}
-      </label>`).join('');
-    return `
-      <div class="cat-config-card">
-        <div class="cat-config-head">
-          <span class="cat-config-name">${AI_CATS.find(c=>c.cat===cat)?.emoji||''} ${cat}</span>
-        </div>
-        <div class="cat-budget-wrap">
-          <label>예산</label>
-          <input class="cat-budget-input" type="number" inputmode="numeric"
-                 data-cat="${cat}" placeholder="0" min="0" step="10"
-                 oninput="updateTotal()">
-          <span class="cat-budget-unit">만원 이하</span>
-        </div>
-        ${feats.length ? `<div class="feat-title">원하는 기능 (선택)</div><div class="feat-grid">${featChips}</div>` : ''}
-      </div>`;
+    const safeId = cat.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+    const featChips = feats.map((f,i)=>`
+      <button class="feat-chip" data-cat="${cat}" data-feat="${f}"
+              onclick="toggleFeat(this)" type="button">${f}</button>`).join('');
+    const info = AI_CATS.find(c=>c.cat===cat);
+    return `<div class="cat-config-card">
+      <div class="cat-config-head">
+        <span class="cat-config-name">${info?.emoji||''} ${cat}</span>
+      </div>
+      <div class="cat-budget-wrap">
+        <label>예산</label>
+        <input class="cat-budget-input" type="number" inputmode="numeric"
+               id="budget_${safeId}" data-cat="${cat}"
+               placeholder="제한없음" min="0" step="10" oninput="updateTotal()">
+        <span class="cat-budget-unit">만원 이하</span>
+      </div>
+      ${feats.length?`<div class="feat-title">원하는 기능 (선택)</div><div class="feat-grid">${featChips}</div>`:''}
+    </div>`;
   }).join('');
 
-  $("aiHost").innerHTML = '';
-  $("parseBar").innerHTML = '';
-  $("noticeHost").innerHTML = '';
+  $("aiHost").innerHTML='';
+  $("parseBar").innerHTML='';
+  $("noticeHost").innerHTML='';
   $("sortRow").classList.add('hidden');
-  lastResults = [];
+  lastResults=[];
 
-  $("rHost").innerHTML = `
-    <button class="step-back-btn" onclick="renderCatSelector(new Set(${JSON.stringify([...checked])}), aiParsedBudget)">← 품목 다시 선택</button>
+  $("rHost").innerHTML=`
+    <button class="step-back-btn" onclick="renderCatSelector(selectedCats, aiParsedBudget)" type="button">← 품목 다시 선택</button>
     <div class="step2-wrap">${cards}</div>
-    <button class="cat-search-btn" onclick="runAiFinal()" style="margin-top:14px">추천받기 →</button>
-    <div class="total-bar" id="totalBar"><span class="total-bar-label">합산 예산</span><span class="total-bar-price" id="totalBarPrice">0만원</span></div>`;
+    <button class="cat-search-btn" onclick="runAiFinal()" type="button" style="margin-top:14px">추천받기 →</button>
+    <div class="total-bar"><span class="total-bar-label">선택 품목 합산</span><span class="total-bar-price" id="totalBarPrice">0만원</span></div>`;
+}
+
+function toggleFeat(btn){
+  btn.classList.toggle('on');
 }
 
 function updateTotal(){
-  const inputs=[...document.querySelectorAll('.cat-budget-input')];
-  const sum=inputs.reduce((s,el)=>s+(parseInt(el.value)||0),0);
+  const sum=[...document.querySelectorAll('.cat-budget-input')]
+    .reduce((s,el)=>s+(parseInt(el.value)||0),0);
   const el=$("totalBarPrice");
   if(el) el.textContent=sum.toLocaleString()+'만원';
 }
 
-/* ── Step 3: 카테고리별 검색 실행 ── */
+/* ── Step 3: 추천 실행 ── */
 function runAiFinal(){
   const inputs=[...document.querySelectorAll('.cat-budget-input')];
-  if(inputs.every(el=>!(parseInt(el.value)||0))){
-    toast("품목별 예산을 1개 이상 입력하세요"); return;
-  }
-  const results=[];
-  let totalBudget=0, totalPick=0;
+  const results=[]; let totalPick=0, totalBudget=0;
+
   for(const el of inputs){
     const cat=el.dataset.cat;
     const budget=parseInt(el.value)||0;
     totalBudget+=budget;
-    // 선택된 기능
-    const featEls=[...document.querySelectorAll(`.feat-chip input[data-cat="${CSS.escape(cat)}"]:checked`)];
-    const wantedFeats=featEls.map(f=>f.dataset.feat);
-    // 후보 필터
+    const wantedFeats=[...document.querySelectorAll(`.feat-chip.on[data-cat="${cat}"]`)]
+      .map(b=>b.dataset.feat);
+
     let items=PRODUCTS.filter(p=>p.cat===cat);
     if(budget>0) items=items.filter(p=>p.price<=budget);
-    if(!items.length) items=PRODUCTS.filter(p=>p.cat===cat); // 예산 내 없으면 전체
-    // 기능 매칭 스코어
+    if(!items.length) items=PRODUCTS.filter(p=>p.cat===cat);
+
     items=items.map(p=>{
       const onStr=(p.on||[]).join(' ');
-      const sc=wantedFeats.reduce((s,f)=>s+(onStr.includes(f)?2:0),0)+(p.isnew?1:0);
+      const sc=wantedFeats.reduce((s,f)=>s+(onStr.includes(f)?3:0),0)+(p.isnew?1:0);
       return{p,sc};
-    }).sort((a,b)=>b.sc-a.sc||(b.p.price-a.p.price));
+    }).sort((a,b)=>b.sc-a.sc||b.p.price-a.p.price);
+
     if(items.length){
-      const pick=items[0];
-      totalPick+=pick.p.price;
-      results.push({p:pick.p, sc:pick.sc+10, hits:wantedFeats.length?wantedFeats:['AI추천']});
+      totalPick+=items[0].p.price;
+      results.push({p:items[0].p,sc:items[0].sc+10,hits:wantedFeats.length?wantedFeats:['AI추천']});
     }
   }
-  if(!results.length){$("rHost").innerHTML=`<div class="empty">조건에 맞는 제품을 찾지 못했습니다.</div>`;return;}
+
+  if(!results.length){
+    $("rHost").innerHTML=`<div class="empty">조건에 맞는 제품을 찾지 못했습니다.</div>`; return;
+  }
   lastResults=results; sortMode="rank";
   $("aiHost").innerHTML=`
     <div class="ai-result-total">
@@ -846,7 +847,9 @@ function runAiFinal(){
   renderSortRow(); renderResults();
 }
 
-function runAiSearch_old_compat(){}
+/* ── Step 1 진입점 (runAI → renderCatSelector) ── */
+function runAiSearch(){ goStep2(); }
+
 
 let activeBrandCat = '전체';
 let brandQuery = '';
