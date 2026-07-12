@@ -98,6 +98,79 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .round-pill.star{background:#fff8e1;color:#b45309}
 .btm{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;background:#fff;border-top:1px solid #ecedf1;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:#8a9099;z-index:100}
 .btm b{color:#1428A0;font-weight:700}
+/* === 모드 탭 === */
+.mode-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:#fff;border-bottom:1px solid #ecedf1;position:sticky;top:72px;z-index:55}
+.mode-tab{padding:10px 4px 9px;text-align:center;cursor:pointer;font-size:9.5px;font-weight:700;color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s}
+.mode-tab.on{color:#1428A0;border-bottom-color:#1428A0}
+.mode-tab .mt-ico{font-size:16px;display:block;margin-bottom:2px}
+/* === 전체품목 뷰 === */
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.ov-card{background:#fff;border-radius:16px;padding:14px 12px;cursor:pointer;border:1.5px solid #ecedf1;transition:all .15s;position:relative}
+.ov-card.done:hover{border-color:#1259c3;box-shadow:0 2px 12px rgba(18,89,195,.12)}
+.ov-card.na-card{opacity:.65;cursor:default}
+.ov-ico{font-size:26px;margin-bottom:7px}
+.ov-nm{font-size:13px;font-weight:800;margin-bottom:5px}
+.ov-pills{display:flex;flex-wrap:wrap;gap:4px}
+.ov-pill{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700}
+.ov-pill.p12{background:rgba(18,89,195,.1);color:#1259c3}
+.ov-pill.p36{background:rgba(13,148,136,.1);color:#0d9488}
+.ov-pill.pna{background:#f1f3f6;color:#9aa0a6}
+/* === 타임라인 === */
+.tl-ctrl{padding:14px 16px 0}
+.tl-row{display:flex;gap:8px;margin-bottom:10px}
+.tl-sel{flex:1;background:#fff;border:1.5px solid #ecedf1;border-radius:12px;padding:10px 12px;font-size:13px;font-family:inherit;color:#16181b;font-weight:700;-webkit-appearance:none;appearance:none;cursor:pointer}
+.tl-bar{padding:14px 16px;overflow-x:auto}
+.tl-svg-wrap{min-width:600px}
+.tl-list{padding:0 16px 16px}
+.tl-item{background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;gap:12px;align-items:center}
+.tl-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.tl-dot.p12c{background:linear-gradient(135deg,#1d4ed8,#7c3aed)}
+.tl-dot.p36c{background:linear-gradient(135deg,#0d9488,#1d4ed8)}
+.tl-round{font-size:12.5px;font-weight:800;margin-bottom:1px}
+.tl-date{font-size:11px;color:#9aa0a6}
+.tl-badge-sm{font-size:9px;padding:2px 7px;border-radius:6px;margin-top:3px;display:inline-block;font-weight:700;background:rgba(18,89,195,.1);color:#1259c3}
+/* === 계산기 === */
+.calc-wrap{padding:14px 16px}
+.calc-card{background:#fff;border-radius:18px;padding:18px;margin-bottom:12px}
+.calc-t{font-size:13px;font-weight:800;margin-bottom:14px;color:#16181b}
+.calc-field{margin-bottom:12px}
+.calc-label{font-size:11px;color:#8a9099;margin-bottom:5px;font-weight:600}
+.calc-input{width:100%;background:#f7f8fa;border:1.5px solid #ecedf1;border-radius:12px;padding:11px 13px;font-size:15px;font-family:inherit;font-weight:700;color:#16181b;box-sizing:border-box}
+.calc-input:focus{outline:none;border-color:#1259c3}
+.calc-plan-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.calc-plan-tab{padding:11px 8px;border-radius:12px;border:1.5px solid #ecedf1;text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:#9aa0a6;transition:all .15s}
+.calc-plan-tab.on{border-color:#1259c3;background:#f2f6fd;color:#1259c3}
+.res-card{background:linear-gradient(135deg,#1428A0,#1d4ed8);border-radius:18px;padding:18px;color:#fff;margin-bottom:12px}
+.res-t{font-size:12px;font-weight:700;opacity:.8;margin-bottom:14px}
+.res-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12)}
+.res-row:last-child{border:none;padding-top:12px}
+.res-lbl{font-size:12px;opacity:.85}
+.res-val{font-size:15px;font-weight:900}
+.res-val.pos{color:#6ee7b7}
+.res-val.neg{color:#fca5a5}
+.bar-wrap{margin-top:14px}
+.bar-lbl{font-size:10px;opacity:.7;margin-bottom:5px}
+.bar-track{background:rgba(255,255,255,.2);border-radius:8px;height:10px;overflow:hidden}
+.bar-fill{height:100%;border-radius:8px;transition:width .5s ease}
+/* === 영업 멘트 카드 === */
+.sell-card{background:#fff;border-radius:18px;margin-top:12px;overflow:hidden;border:1.5px solid #ecedf1}
+.sell-hd{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;cursor:pointer;background:#fafbfd}
+.sell-t{font-size:12.5px;font-weight:800;color:#16181b}
+.sell-arr{font-size:11px;color:#aab0b8;transition:transform .2s}
+.sell-arr.open{transform:rotate(180deg)}
+.sell-body{display:none;padding:0 15px 14px}
+.sell-pt{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid #f3f4f7;align-items:flex-start}
+.sell-pt:last-child{border:none}
+.sell-num{width:20px;height:20px;border-radius:50%;background:#1428A0;color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sell-text{font-size:11.5px;line-height:1.6;color:#374151}
+.sell-obj{background:#f7f8fa;border-radius:12px;padding:11px 13px;margin-top:8px}
+.sell-obj-t{font-size:10.5px;font-weight:700;color:#6b7280;margin-bottom:7px}
+.sell-qa{margin-bottom:8px}
+.sell-qa:last-child{margin-bottom:0}
+.sell-q{font-size:11px;font-weight:700;color:#1259c3;margin-bottom:3px}
+.sell-q::before{content:"Q. "}
+.sell-a{font-size:11px;color:#6b7280;line-height:1.55}
+.sell-a::before{content:"A. ";font-weight:700;color:#059669}
 </style>
 </head>
 
@@ -114,6 +187,15 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
     </div>
     <div class="hd-pill">📎 <b>삼성닷컴 공식</b> + <b>AI구독클럽 브로슈어 2026.06</b> 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
   </div>
+<div class="mode-tabs" id="modeTabs">
+  <div class="mode-tab on" data-mode="care" onclick="setMode('care')"><span class="mt-ico">🛡️</span>케어정보</div>
+  <div class="mode-tab" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
+  <div class="mode-tab" data-mode="timeline" onclick="setMode('timeline')"><span class="mt-ico">📅</span>타임라인</div>
+  <div class="mode-tab" data-mode="calc" onclick="setMode('calc')"><span class="mt-ico">💰</span>계산기</div>
+</div>
+<div id="overviewPane" style="display:none"></div>
+<div id="timelinePane" style="display:none"></div>
+<div id="calcPane" style="display:none"></div>
   <div class="cat-wrap">
     <div class="cat-btn" id="catBtn">
       <div class="cat-btn-l">
@@ -1301,6 +1383,7 @@ function render(){
   out += curPlan === '12' ? render12(d) : render36(d);
   out += buildTail(d);
 
+  out += renderSelling(curCat);
   body.innerHTML = out;
 
   /* 이벤트 바인딩 */
@@ -1340,6 +1423,405 @@ document.addEventListener('DOMContentLoaded', () => {
   render();
 });
 
+
+/* ═══════════════ SELLING POINTS ═══════════════ */
+const SELLING = {
+  aircon: {
+    points: [
+      "매 12개월 방문 시 무풍 날개·열교환기 전문 세척 → 냉방 효율 유지",
+      "A타입 기본점검 + B타입 전문 분해세척 교차 제공 — 스스로 하기 어려운 내부 세척 포함",
+      "구독기간 전체 무상수리 → 에어컨은 여름 갑자기 고장나면 수리비 30~50만 발생 가능"
+    ],
+    objections: [
+      {q:"이미 보증기간 있는데 왜 가입해요?", a:"보증기간은 부품 결함만 무상, 청소·점검·UV 살균은 별도 비용입니다. 구독케어는 청소+점검+무상수리를 모두 포함합니다."},
+      {q:"셀프로 청소하면 안 되나요?", a:"표면 청소는 가능하지만 열교환기 분해세척·UV 살균은 전용 장비 필요. 전문 세척 1회 비용이 구독료와 비슷합니다."}
+    ]
+  },
+  aicombo: {
+    points: [
+      "세탁·건조 두 기능 모두 케어 — 세탁조 UV 케어 + 건조통 연무 + 열교환기 세척 한 번에",
+      "초음파 세척 (2회차) 포함 — 세탁조 내부 깊숙한 이물질·세균 제거",
+      "콤보 특성상 고장 시 수리비 고액 → 무상수리 포함 구독이 보험 역할"
+    ],
+    objections: [
+      {q:"AI콤보는 너무 비싸지 않나요?", a:"AI콤보는 고가 제품이라 수리비도 높습니다. 무상수리만으로도 구독료 이상 가치가 있습니다."},
+      {q:"36개월형이 낫나요 12개월형이 낫나요?", a:"자주 점검받고 싶으면 12개월형(매년 방문), 비용 부담 줄이고 싶으면 36개월형(3년에 한 번 전문 세척) 추천드립니다."}
+    ]
+  },
+  washer: {
+    points: [
+      "매 12개월 세탁조 UV 케어 + 초음파 세척(2회차) — 눈에 안 보이는 세탁조 내부 세균 제거",
+      "세탁기 수리비 평균 15~25만원 → 6년간 무상수리 포함",
+      "SmartThings 연동 스마트 진단으로 이상 조기 발견"
+    ],
+    objections: [
+      {q:"세탁기 청소제 쓰면 되지 않나요?", a:"시중 청소제는 세탁조 표면만 케어됩니다. 전문 초음파 세척은 세탁조 전체 분해 없이 내부 깊숙이 진동으로 세균·이물질 제거합니다."},
+      {q:"6년은 너무 긴 것 같아요", a:"12개월형도 1년 단위 갱신이라 부담 없습니다. 실제로 가전 평균 사용 기간이 10년 이상이라 6년 보장이 오히려 안심입니다."}
+    ]
+  },
+  dryer: {
+    points: [
+      "열교환기 세척 필수 — 막히면 건조 효율 급락·화재 위험, 전문 장비로 브러시+청소기 세척",
+      "올인원 먼지필터 교체 포함 (소모품 값 포함) — 별도 구매 시 2~3만원",
+      "건조기는 구조상 내부 청소가 어려워 전문 서비스 가치 高"
+    ],
+    objections: [
+      {q:"건조기 필터는 제가 교체해요", a:"일반 링형 필터는 셀프 가능하지만 올인원 먼지필터(내장형)는 전문 교체가 필요합니다. 구독케어에 소모품 포함입니다."},
+      {q:"건조기는 별로 안 고장나지 않나요?", a:"건조기 특성상 열교환기 막히면 효율 50% 이하로 떨어지고 전기세가 크게 올라갑니다. 청소 비용 절감 효과가 큽니다."}
+    ]
+  },
+  fridge: {
+    points: [
+      "UV 케어 + 내부 및 후면 전문세척(2회차) — 냉장고 뒷면 먼지 쌓이면 압축기 과부하",
+      "냉장고 고장 시 수리비 20~50만원 + 식품 손실 → 무상수리가 가장 가치 있는 품목",
+      "빌트인·일체형 냉장고는 이사 시 재설치 포함(정수기)"
+    ],
+    objections: [
+      {q:"냉장고는 잘 안 고장나요", a:"냉장고는 고장이 드문 대신 한 번 고장나면 수리비 30~60만원, 식품 손실까지 발생합니다. 6년 무상수리 가치가 가장 높은 품목입니다."},
+      {q:"뒷면 청소는 왜 필요해요?", a:"냉장고 후면 응축기에 먼지가 쌓이면 냉각 효율이 떨어져 전기세 상승 + 압축기 수명 단축됩니다. 2회차 전문세척에 후면 청소가 포함됩니다."}
+    ]
+  },
+  dish: {
+    points: [
+      "내부 노즐 클리닝 + UV 케어 매 회차 제공 — 노즐 막히면 세척력 급감",
+      "식기세척기는 내부에 물이 항상 있어 세균·물때 번식 → UV 살균 정기 관리 필수",
+      "12개월형 6회 + 36개월형 2회 모두 지원 — 사용 빈도에 맞게 선택 가능"
+    ],
+    objections: [
+      {q:"식기세척기는 물로 씻으니까 자체 청소 되지 않나요?", a:"세척수가 닿지 않는 내부 노즐·필터·도어 패킹에 물때와 세균이 번식합니다. 전문 노즐 클리닝 + UV 살균이 필요합니다."},
+      {q:"식기세척기 구독 가성비가 있나요?", a:"노즐 클리닝 외부 서비스 1회당 8~12만원입니다. 12개월형 기준 6회면 구독료 대비 충분한 가치입니다."}
+    ]
+  },
+  dresser: {
+    points: [
+      "내부 스팀 + UV 케어 — 에어드레서 내부는 고온 습기로 세균 번식 쉬움",
+      "외관 클리닝 포함 — 도어·외장 패널 광택·UV 살균으로 제품 컨디션 유지",
+      "소모품(미세먼지필터+아로마시트) 정기 배송 별도 제공"
+    ],
+    objections: [
+      {q:"에어드레서는 옷을 케어하는 기기 아닌가요?", a:"맞습니다. 그래서 기기 내부가 항상 깨끗해야 옷에 세균·냄새가 옮겨가지 않습니다. 스팀 살균 + UV 케어가 핵심입니다."},
+      {q:"에어드레서 고장 잘 나나요?", a:"에어드레서는 스팀·모터·히터 복합 제품으로 수리 시 10~30만원입니다. 구독케어로 예방 점검이 중요합니다."}
+    ]
+  },
+  airpur_reusable: {
+    points: [
+      "리유저블 필터라 소모품 비용 없음 — 방문케어로 필터 전문 세척만 포함",
+      "방문케어 전용 (셀프케어 선택 불가) — 전문 장비로 필터 완전 세척",
+      "매 12개월 필터 세척 + 종합점검으로 공기질 유지"
+    ],
+    objections: [
+      {q:"리유저블이라 셀프 세척 가능하지 않나요?", a:"물 세척은 가능하지만 전용 장비로 하는 전문 세척이 훨씬 효과적입니다. 또한 필터 이외 내부 부품 점검이 별도로 필요합니다."},
+      {q:"공기청정기 구독케어가 필요한가요?", a:"공기질 관리 목적의 제품이므로 필터와 내부 청결이 성능을 결정합니다. 방치 시 오히려 공기를 오염시킬 수 있습니다."}
+    ]
+  },
+  airpur_s: {
+    points: [
+      "S필터 배송(연 1회) + 방문케어 선택 가능 — 셀프케어로 편리하게 필터 교체",
+      "필터 구매 비용 포함 → 별도 S필터 구매 시 연간 3~5만원",
+      "리유저블 모델 대비 필터 교체형은 방문케어 옵션도 있어 선택 유연"
+    ],
+    objections: [
+      {q:"S필터 배송이 포함이면 그게 전부인가요?", a:"배송 외에도 방문케어 선택 시 필터 설치 + 내부 점검 + 종합 진단이 포함됩니다. 두 옵션 중 선택 가능합니다."},
+      {q:"공기청정기 AS는 무상 아닌가요?", a:"무상 보증기간 이후(보통 1년)에는 유상입니다. 구독케어는 6년간 무상수리를 포함하므로 장기 사용자에게 유리합니다."}
+    ]
+  },
+  purifier_under: {
+    points: [
+      "정수필터 배송(연 1회) + 방문케어 선택 가능 — 필터 교체 잊어버리면 수질 문제 발생",
+      "재설치 서비스 구독기간 내 1회 포함 — 이사 시 언더싱크 재설치 비용 절감",
+      "정수기는 위생이 핵심 — 전문 내부 세척 + UV 케어 포함"
+    ],
+    objections: [
+      {q:"정수기 필터는 인터넷에서 사면 되지 않나요?", a:"맞습니다. 하지만 설치가 번거롭고, 교체 시기를 놓치는 경우가 많습니다. 구독케어는 정기 배송 + 방문 설치까지 포함됩니다."},
+      {q:"정수기 이사 시 재설치 비용이 얼마예요?", a:"일반 재설치 비용은 5~15만원입니다. 구독케어에는 구독기간 내 1회 재설치가 포함되어 있습니다."}
+    ]
+  },
+  vacuum: {
+    points: [
+      "배터리 교체 1회 포함(3년차) — 로봇청소기 배터리는 3~5년 후 성능 급락, 교체 비용 8~15만원",
+      "소모품(먼지봉투+물걸레) 정기 배송 포함",
+      "12개월형 전용 (매년 방문케어) — 로봇청소기는 36개월형 없음"
+    ],
+    objections: [
+      {q:"로봇청소기는 혼자 청소하는데 케어가 필요한가요?", a:"내부 먼지통·브러시·흡입로 청소는 사용자가 하기 어렵습니다. 전문 분해 점검 + 소모품 교체가 필요합니다."},
+      {q:"배터리 교체가 왜 중요해요?", a:"로봇청소기 배터리는 약 3년 후 성능이 70% 이하로 감소합니다. 별도 배터리 교체 비용은 8~15만원으로 구독료 가치의 큰 부분을 차지합니다."}
+    ]
+  },
+  kimchi: {
+    points: [
+      "UV 케어 + 내부 및 후면 전문세척(2회차) — 김치 냄새·발효 부산물로 내부 오염 빠름",
+      "셀프케어(필터 정기배송)는 12개월형 전용 — 필터 교체로 탈취 성능 유지",
+      "김치냉장고는 냄새 관리가 핵심 → 전문 UV 살균 정기 관리 효과 높음"
+    ],
+    objections: [
+      {q:"김치냉장고는 김치만 넣는데 왜 케어가 필요해요?", a:"김치 발효 과정에서 냄새와 유산균이 내부에 퍼집니다. UV 케어와 전문 세척으로 위생과 냄새 관리가 필요합니다."},
+      {q:"36개월형은 셀프케어 없다고요?", a:"네, 김치냉장고 36개월형은 방문케어만 있습니다. 셀프케어(필터 배송)는 12개월형 전용입니다. 필터 정기 교체 원하시면 12개월형이 유리합니다."}
+    ]
+  },
+  induction: {
+    points: [
+      "삼성 AI구독 케어 미대상 제품 — 자가관리 가이드로 관리 방법 안내",
+      "세라믹 상판 크리너로 주 1회 이상 닦기 권장",
+      "플렉스존 영역 주기적 점검으로 성능 유지"
+    ],
+    objections: [
+      {q:"인덕션은 케어 안 해줘요?", a:"현재 삼성 AI구독 케어 대상이 아닙니다. 자가관리 방법을 안내해 드릴 수 있습니다. 다른 케어 대상 가전과 함께 패키지 제안 시 활용하세요."}
+    ]
+  },
+  microwave: {
+    points: [
+      "삼성 AI구독 케어 미대상 제품 — 자가관리 가이드 제공",
+      "세라믹 코팅 관리 주기적 필요",
+      "도어 패킹 상태 정기 점검 권장"
+    ],
+    objections: [
+      {q:"전자레인지도 케어 안 해줘요?", a:"현재 삼성 AI구독 케어 대상이 아닙니다. 자가관리 방법을 안내해 드리겠습니다."}
+    ]
+  },
+  soundbar: {
+    points: [
+      "삼성 AI구독 케어 미대상 제품 — 자가관리 가이드 제공",
+      "그릴 먼지 제거 주기적 필요",
+      "Q심포니·eARC 연동 상태 점검"
+    ],
+    objections: [
+      {q:"사운드바도 케어 안 해줘요?", a:"현재 삼성 AI구독 케어 대상이 아닙니다. 자가관리 방법을 안내해 드리겠습니다."}
+    ]
+  },
+  purifier_counter: {
+    points: [
+      "자가관리 방식 정수기 — 카운터탑·얼음 정수기는 사용자 직접 필터 교체",
+      "정기 필터 교체 일정 관리 필요",
+      "얼음 정수기는 얼음 라인 청소 주기적 필요"
+    ],
+    objections: [
+      {q:"이 정수기는 케어 안 해줘요?", a:"카운터탑·얼음 정수기는 자가관리 방식입니다. 필터 교체 방법을 안내해 드리겠습니다."}
+    ]
+  }
+};
+
+/* ═══════════════ MODE ═══════════════ */
+let curMode = 'care';
+
+function setMode(m){
+  curMode = m;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('on', t.dataset.mode === m));
+  document.querySelector('.cat-wrap').style.display = m==='care' ? '' : 'none';
+  document.getElementById('body').style.display = m==='care' ? '' : 'none';
+  document.getElementById('overviewPane').style.display = m==='overview' ? '' : 'none';
+  document.getElementById('timelinePane').style.display = m==='timeline' ? '' : 'none';
+  document.getElementById('calcPane').style.display = m==='calc' ? '' : 'none';
+  if(m==='overview') renderOverview();
+  if(m==='timeline') renderTimeline();
+  if(m==='calc') renderCalc();
+}
+
+/* ═══════════════ OVERVIEW ═══════════════ */
+function renderOverview(){
+  const el = document.getElementById('overviewPane');
+  let html = '<div class="ov-grid">';
+  PRODUCTS.forEach(p => {
+    const d = DATA[p.key];
+    const isDone = p.st==='done';
+    let pills = '';
+    if(isDone && d){
+      if(d.onlyPlan==='12') pills += '<span class="ov-pill p12">12개월형</span>';
+      else if(d.onlyPlan==='36') pills += '<span class="ov-pill p36">36개월형</span>';
+      else {
+        if(d.plan12) pills += '<span class="ov-pill p12">12개월형</span>';
+        if(d.plan36) pills += '<span class="ov-pill p36">36개월형</span>';
+      }
+    } else {
+      pills = '<span class="ov-pill pna">자가관리</span>';
+    }
+    html += '<div class="ov-card ' + (isDone?'done':'na-card') + '" ' + (isDone?'onclick="switchToCare(\''+p.key+'\')"':'') + '>' +
+      '<div class="ov-ico">' + p.icon + '</div>' +
+      '<div class="ov-nm">' + p.name + '</div>' +
+      '<div class="ov-pills">' + pills + '</div>' +
+      '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function switchToCare(key){
+  const idx = PRODUCTS.findIndex(p=>p.key===key);
+  if(idx>=0){
+    curCat = key;
+    curPlan = DATA[key]?.onlyPlan || '12';
+    curRound = 0;
+    curTypeA = true;
+  }
+  setMode('care');
+  render();
+}
+
+/* ═══════════════ TIMELINE ═══════════════ */
+const TL_MONTHS = {
+  aircon:   {12:[12,24,48,60], '12b':[36,72], 36:[36,72]},
+  aicombo:  {12:[12,24,36,48,60,72], 36:[36,72]},
+  washer:   {12:[12,24,36,48,60,72], 36:[36,72]},
+  dryer:    {12:[12,24,36,48,60,72], 36:[36,72]},
+  fridge:   {12:[36,72], 36:[36,72]},
+  kimchi:   {12:[36,72], 36:[36,72]},
+  dish:     {12:[12,24,36,48,60,72], 36:[12,24,36,48,60,72]},
+  dresser:  {12:[12,24,36,48,60,72]},
+  airpur_reusable:{12:[12,24,36,48,60,72]},
+  airpur_s:       {12:[12,24,36,48,60,72]},
+  purifier_under: {12:[12,24,36,48,60,72]},
+  vacuum:         {12:[12,24,36,48,60,72]},
+};
+
+let tlKey='aircon', tlPlan='12', tlYear=2026, tlMonth=7;
+
+function renderTimeline(){
+  const done = PRODUCTS.filter(p=>p.st==='done');
+  const d = DATA[tlKey]||{};
+  const plans = [];
+  if(!d.onlyPlan||d.onlyPlan==='12') plans.push('12');
+  if(d.plan36 && (!d.onlyPlan||d.onlyPlan==='36')) plans.push('36');
+
+  let prodOpts = done.map(p=>'<option value="'+p.key+'" '+(p.key===tlKey?'selected':'')+'>'+p.icon+' '+p.name+'</option>').join('');
+  let planOpts = plans.map(pl=>'<option value="'+pl+'" '+(pl===tlPlan?'selected':'')+'>매 '+pl+'개월형</option>').join('');
+  let yearOpts = [2024,2025,2026,2027,2028,2029,2030].map(y=>'<option value="'+y+'" '+(y===tlYear?'selected':'')+'>'+y+'년</option>').join('');
+  let monthOpts = Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===tlMonth?'selected':'')+'>'+(i+1)+'월</option>').join('');
+
+  const months = ((TL_MONTHS[tlKey]||{})[tlPlan]) || [];
+  const now = new Date(2026,6,12);
+  const startDate = new Date(tlYear, tlMonth-1, 1);
+  const nowOffsetMonths = Math.max(0, (now.getFullYear()-startDate.getFullYear())*12 + (now.getMonth()-startDate.getMonth()));
+
+  const SVG_W = 680, SVG_H = 80, PAD = 30, INNER = SVG_W - PAD*2;
+  const MON_W = INNER / 72;
+  let svgDots = '';
+  for(let i=0;i<=72;i+=6){
+    const x = PAD + i*MON_W;
+    svgDots += '<text x="'+x+'" y="'+(SVG_H-5)+'" font-size="9" fill="#aab0b8" text-anchor="middle">'+i+'M</text>';
+    svgDots += '<line x1="'+x+'" y1="12" x2="'+x+'" y2="'+(SVG_H-18)+'" stroke="#ecedf1" stroke-width="1"/>';
+  }
+  if(nowOffsetMonths<=72){
+    const nx = PAD + nowOffsetMonths*MON_W;
+    svgDots += '<line x1="'+nx+'" y1="8" x2="'+nx+'" y2="'+(SVG_H-20)+'" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2"/>';
+    svgDots += '<text x="'+nx+'" y="7" font-size="8" fill="#ef4444" text-anchor="middle">현재</text>';
+  }
+  svgDots += '<line x1="'+PAD+'" y1="40" x2="'+(SVG_W-PAD)+'" y2="40" stroke="#dde1e9" stroke-width="2"/>';
+  months.forEach((m,i)=>{
+    const x = PAD + m*MON_W;
+    const col = tlPlan==='12' ? '#1d4ed8' : '#0d9488';
+    svgDots += '<circle cx="'+x+'" cy="40" r="12" fill="'+col+'"/>';
+    svgDots += '<text x="'+x+'" y="44" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">'+(i+1)+'회</text>';
+  });
+  const svg = '<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" style="min-width:600px">'+svgDots+'</svg>';
+
+  let listHtml = '';
+  months.forEach((m,i)=>{
+    const dt = new Date(tlYear, tlMonth-1+m, 1);
+    const isPast = dt < now;
+    const col = tlPlan==='12'?'p12c':'p36c';
+    listHtml += '<div class="tl-item" style="'+(isPast?'opacity:.5':'')+'">' +
+      '<div class="tl-dot '+col+'">'+(i+1)+'</div>' +
+      '<div>' +
+        '<div class="tl-round">'+(i+1)+'회차 방문케어 '+(isPast?'✓ 완료':'')+'</div>' +
+        '<div class="tl-date">'+dt.getFullYear()+'년 '+(dt.getMonth()+1)+'월 (구독 '+m+'개월차)</div>' +
+      '</div></div>';
+  });
+  if(!listHtml) listHtml = '<div style="text-align:center;color:#9aa0a6;font-size:12px;padding:20px">선택한 플랜에 타임라인 정보가 없습니다</div>';
+
+  document.getElementById('timelinePane').innerHTML =
+    '<div class="tl-ctrl">' +
+      '<div class="tl-row"><select class="tl-sel" onchange="tlKey=this.value;renderTimeline()">'+prodOpts+'</select>' +
+      '<select class="tl-sel" style="flex:.6" onchange="tlPlan=this.value;renderTimeline()">'+planOpts+'</select></div>' +
+      '<div class="tl-row"><div style="font-size:11px;color:#8a9099;padding-bottom:6px;font-weight:600">📆 구독 시작월</div></div>' +
+      '<div class="tl-row"><select class="tl-sel" onchange="tlYear=+this.value;renderTimeline()">'+yearOpts+'</select>' +
+      '<select class="tl-sel" style="flex:.5" onchange="tlMonth=+this.value;renderTimeline()">'+monthOpts+'</select></div>' +
+    '</div>' +
+    '<div class="tl-bar" style="overflow-x:auto">'+svg+'</div>' +
+    '<div style="padding:0 16px 6px;font-size:10px;color:#9aa0a6">● 빨간 점선 = 오늘(2026.07.12) 기준</div>' +
+    '<div class="tl-list">'+listHtml+'</div>';
+}
+
+/* ═══════════════ CALC ═══════════════ */
+const PRICE_DEFAULTS = {
+  aircon:2.5, aicombo:4.5, washer:2.5, dryer:2.5, fridge:3.0,
+  kimchi:2.0, dish:2.0, dresser:2.0, airpur_reusable:1.5, airpur_s:1.5,
+  purifier_under:2.0, vacuum:1.5
+};
+const CARE_VALUE_PER_VISIT = 15;
+const REPAIR_VALUE = 7;
+
+let calcKey='aircon', calcPlan='12', calcMonthly=2.5;
+
+function renderCalc(){
+  const done = PRODUCTS.filter(p=>p.st==='done');
+  const d = DATA[calcKey]||{};
+  const plans = [];
+  if(!d.onlyPlan||d.onlyPlan==='12') plans.push({id:'12',label:'12개월형 (매년 방문)'});
+  if(d.plan36 && (!d.onlyPlan||d.onlyPlan==='36')) plans.push({id:'36',label:'36개월형 (3년에 1회)'});
+
+  const totalMonths = 72;
+  const totalSub = calcMonthly * totalMonths;
+  const visits = calcPlan==='12' ? 6 : 2;
+  const careVal = visits * CARE_VALUE_PER_VISIT;
+  const repairVal = REPAIR_VALUE * (totalMonths/12);
+  const totalBenefit = careVal + repairVal;
+  const saving = totalBenefit - totalSub;
+  const benefitRatio = Math.min(100, Math.round(totalBenefit / Math.max(totalSub,1) * 100));
+
+  let prodOpts = done.map(p=>'<option value="'+p.key+'" '+(p.key===calcKey?'selected':'')+'>'+p.icon+' '+p.name+'</option>').join('');
+  let planTabsHtml = plans.map(pl=>'<div class="calc-plan-tab '+(pl.id===calcPlan?'on':'')+'" onclick="calcPlan=\''+pl.id+'\';renderCalc()">'+pl.label+'</div>').join('');
+
+  document.getElementById('calcPane').innerHTML =
+    '<div class="calc-wrap">' +
+    '<div class="calc-card">' +
+      '<div class="calc-t">💰 구독케어 ROI 계산기</div>' +
+      '<div class="calc-field"><div class="calc-label">품목 선택</div>' +
+        '<select class="calc-input" style="background:#f7f8fa" onchange="calcKey=this.value;calcMonthly=PRICE_DEFAULTS[this.value]||2.0;calcPlan=\'12\';renderCalc()">'+prodOpts+'</select></div>' +
+      '<div class="calc-field"><div class="calc-label">구독 플랜</div>' +
+        '<div class="calc-plan-tabs">'+planTabsHtml+'</div></div>' +
+      '<div class="calc-field"><div class="calc-label">월 구독료 (만원)</div>' +
+        '<input class="calc-input" type="number" value="'+calcMonthly+'" step="0.5" min="0.5" max="10" oninput="calcMonthly=+this.value;renderCalc()" style="background:#f7f8fa"></div>' +
+    '</div>' +
+    '<div class="res-card">' +
+      '<div class="res-t">6년(72개월) 기준 분석 결과</div>' +
+      '<div class="res-row"><span class="res-lbl">총 구독 비용</span><span class="res-val">'+totalSub.toFixed(1)+'만원</span></div>' +
+      '<div class="res-row"><span class="res-lbl">방문케어 가치 ('+visits+'회 × 15만)</span><span class="res-val">'+careVal+'만원</span></div>' +
+      '<div class="res-row"><span class="res-lbl">무상수리 절감 추정</span><span class="res-val">'+repairVal+'만원</span></div>' +
+      '<div class="res-row"><span class="res-lbl" style="font-weight:800">총 혜택 대비 절감</span><span class="res-val '+(saving>=0?'pos':'neg')+'">'+(saving>=0?'+':'')+saving.toFixed(1)+'만원</span></div>' +
+      '<div class="bar-wrap"><div class="bar-lbl">혜택/비용 비율 '+benefitRatio+'%</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:'+benefitRatio+'%;background:'+(saving>=0?'#6ee7b7':'#fca5a5')+'"></div></div></div>' +
+    '</div>' +
+    '<div style="font-size:10px;color:#9aa0a6;padding:0 2px 16px;line-height:1.7">' +
+      '※ 방문케어 가치는 외부 전문 서비스 평균 기준<br>' +
+      '※ 무상수리 절감은 업계 평균 추정치 (연 7만원)<br>' +
+      '※ 실제 혜택은 제품·사용환경에 따라 다를 수 있음' +
+    '</div></div>';
+}
+
+/* ═══════════════ SELLING POINTS RENDER ═══════════════ */
+function renderSelling(key){
+  if(!SELLING || !SELLING[key]) return '';
+  const s = SELLING[key];
+  if(!s||!s.points) return '';
+  const pts = s.points.map((p,i)=>'<div class="sell-pt"><div class="sell-num">'+(i+1)+'</div><div class="sell-text">'+p+'</div></div>').join('');
+  const qas = (s.objections||[]).map(o=>'<div class="sell-qa"><div class="sell-q">'+o.q+'</div><div class="sell-a">'+o.a+'</div></div>').join('');
+  const objSec = qas ? '<div class="sell-obj"><div class="sell-obj-t">💬 자주 묻는 반론 대응</div>'+qas+'</div>' : '';
+  return '<div class="sell-card" id="sellCard">' +
+    '<div class="sell-hd" onclick="toggleSell()">' +
+      '<div class="sell-t">🎯 영업 핵심 멘트</div>' +
+      '<span class="sell-arr" id="sellArr">▼</span>' +
+    '</div>' +
+    '<div class="sell-body" id="sellBody">'+pts+objSec+'</div>' +
+    '</div>';
+}
+
+let _sellOpen = false;
+function toggleSell(){
+  _sellOpen = !_sellOpen;
+  const b = document.getElementById('sellBody');
+  const a = document.getElementById('sellArr');
+  if(b) b.style.display = _sellOpen?'block':'none';
+  if(a) a.classList.toggle('open',_sellOpen);
+}
 </script>
 </body>
 </html>
