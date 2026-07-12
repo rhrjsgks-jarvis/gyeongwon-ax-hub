@@ -135,6 +135,21 @@ table.spec tr:last-child td{border-bottom:none}
 .bsearch .bgo:active{background:#CC5500}
 .bempty{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;line-height:1.7}
 
+/* ── AI 카테고리 선택기 ── */
+.ai-budget{background:#f0f3ff;border:1.5px solid #1428A0;border-radius:10px;padding:10px 14px;font-size:14px;color:#1428A0;margin-bottom:14px}
+.cat-selector-title{font-size:14px;font-weight:700;color:#333;margin-bottom:10px}
+.cat-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.cat-chip{display:flex;align-items:center;gap:6px;padding:8px 13px;border:2px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;color:#444;transition:all .15s;user-select:none}
+.cat-chip:has(input:checked){border-color:#1428A0;background:#f0f3ff;color:#1428A0}
+.cat-chip input{display:none}
+.cat-src{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:2px}
+.cat-src-ce{background:#e8f4ff;color:#0066cc}
+.cat-src-mx{background:#fff0e8;color:#cc4400}
+.cat-search-btn{width:100%;padding:14px;background:#1428A0;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.cat-search-btn:active{background:#0f1f80}
+.ai-result-header{background:#f8f9fb;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.ai-total{font-size:15px;font-weight:800;color:#1428A0}
+
 </style>
 </head>
 <body>
@@ -636,71 +651,91 @@ async function runAI(){
   const q = ($("aq").value||"").trim();
   if(!q){ toast("상황을 입력하세요"); return; }
 
-  /* ─── 자체 자연어 파싱 엔진 ─── */
-  const keywords = [];
+  // 예산 파싱
+  const bm = q.match(/(\d[\d,]*)\s*만\s*원?/);
+  aiParsedBudget = bm ? parseInt(bm[1].replace(/,/g,"")) : null;
 
-  // 1. 패키지 감지 → 신혼가전 패키지 검색
-  if(/신혼|혼수|이사|입주|패키지|결혼|전세/.test(q)) keywords.push("신혼가전 패키지");
-
-  // 2. 카테고리 키워드 추출
-  const catMap = [
-    [/냉장고|냉장|fridge/i, "냉장고"],
-    [/세탁기|세탁|빨래/i, "세탁기"],
-    [/건조기|건조/i, "건조기"],
-    [/TV|텔레비전|티비/i, "TV"],
-    [/에어컨|냉방/i, "에어컨"],
-    [/식기세척기|식세기|그릇 세척/i, "식기세척기"],
-    [/에어드레서|스타일러|의류관리/i, "에어드레서"],
-    [/로봇청소기|로봇 청소/i, "로봇청소기 직배수"],
-    [/청소기/i, "청소기"],
-    [/갤럭시|핸드폰|스마트폰|폰/i, "갤럭시"],
-    [/워치|스마트워치/i, "워치"],
-    [/노트북|랩탑/i, "노트북"],
-    [/태블릿|탭/i, "태블릿"],
-    [/이어폰|버즈|무선이어폰/i, "이어폰"],
-    [/모니터/i, "모니터"],
-    [/공기청정기/i, "공기청정기"],
-    [/김치냉장고|김치/i, "김치냉장고"],
-    [/사운드바|스피커/i, "사운드바"],
+  // 자동 감지 카테고리
+  const detected = new Set();
+  if(/신혼|혼수|이사|입주|결혼|전세/.test(q))
+    ['냉장고','세탁기·콤보','건조기','TV','에어컨','식기세척기','에어드레서','청소기'].forEach(c=>detected.add(c));
+  const catDetect=[
+    [/냉장고/,'냉장고'],[/세탁기|빨래/,'세탁기·콤보'],[/건조기/,'건조기'],
+    [/TV|텔레비전|티비/i,'TV'],[/에어컨|냉방/,'에어컨'],[/식기세척기|식세기/,'식기세척기'],
+    [/에어드레서|스타일러/,'에어드레서'],[/청소기/,'청소기'],[/공기청정기/,'공기청정기'],
+    [/김치냉장고|김치/,'김치냉장고'],[/사운드바|스피커/,'사운드바'],[/인덕션/,'인덕션/전기레인지'],
+    [/갤럭시|핸드폰|스마트폰|폰/,'스마트폰'],[/노트북|랩탑/,'노트북'],
+    [/태블릿|탭/,'태블릿'],[/워치|스마트워치/,'워치'],[/이어폰|버즈/,'버즈'],
   ];
-  for(const [reg, kw] of catMap){
-    if(reg.test(q) && !keywords.includes(kw)) keywords.push(kw);
-  }
+  catDetect.forEach(([r,c])=>{ if(r.test(q)) detected.add(c); });
 
-  // 3. 특성 키워드 추출
-  if(/가성비|저렴|싸|저가/.test(q)) keywords.push("가성비");
-  if(/프리미엄|고급|최고급/.test(q)) keywords.push("프리미엄");
-  if(/무풍/.test(q)) keywords.push("무풍");
-  if(/S펜/.test(q)) keywords.push("S펜");
-  if(/혈압|혈당|건강/.test(q)) keywords.push("혈압 측정 워치");
-  if(/게임|게이밍/.test(q)) keywords.push("게이밍");
-  if(/부모|효도/.test(q)) keywords.push("부모님 효도 워치");
-  if(/학생/.test(q)) keywords.push("가성비 태블릿 학생");
-  if(/크리에이터|유튜버/.test(q)) keywords.push("크리에이터 노트북");
-  if(/신형|최신|2026/.test(q)) keywords.push("2026 신형");
-
-  // 4. 예산 추출
-  const budgetMatch = q.match(/(\d+)\s*만\s*원?/);
-  if(budgetMatch) keywords.push(`${budgetMatch[1]}만 이하`);
-
-  // 5. 키워드가 없으면 원문 그대로 사용
-  const finalKw = keywords.length ? keywords.join(" ") : q;
-
-  // 6. AI 탭에서 직접 파싱·검색·렌더 (탭 전환 없음)
-  $("aiHost").innerHTML = `<div class="aicomment"><b>🔍 분석된 키워드</b> ${esc(finalKw)}</div>`;
-  $("parseBar").innerHTML = "";
-  $("noticeHost").innerHTML = "";
-  $("sortRow").classList.add("hidden");
-  const P = parseQuery(finalKw);
-  lastResults = search(P);
-  sortMode = "rank";
-  if(!lastResults.length){
-    $("rHost").innerHTML = `<div class="empty"><b>조건에 맞는 제품을 찾지 못했습니다.</b><br>다른 표현으로 다시 입력해 보세요.</div>`;
-  } else {
-    renderSortRow();
-    renderResults();
-  }
+  renderCatSelector(detected, aiParsedBudget);
 }
+
+let aiParsedBudget = null;
+
+const AI_CATS = [
+  {label:'냉장고',cat:'냉장고',emoji:'🧊',src:'CE'},
+  {label:'세탁기',cat:'세탁기·콤보',emoji:'👕',src:'CE'},
+  {label:'건조기',cat:'건조기',emoji:'💨',src:'CE'},
+  {label:'TV',cat:'TV',emoji:'📺',src:'CE'},
+  {label:'에어컨',cat:'에어컨',emoji:'❄️',src:'CE'},
+  {label:'식기세척기',cat:'식기세척기',emoji:'🍽️',src:'CE'},
+  {label:'에어드레서',cat:'에어드레서',emoji:'👔',src:'CE'},
+  {label:'청소기',cat:'청소기',emoji:'🧹',src:'CE'},
+  {label:'공기청정기',cat:'공기청정기',emoji:'🌬️',src:'CE'},
+  {label:'김치냉장고',cat:'김치냉장고',emoji:'🥬',src:'CE'},
+  {label:'사운드바',cat:'사운드바',emoji:'🔊',src:'CE'},
+  {label:'인덕션',cat:'인덕션/전기레인지',emoji:'🍳',src:'CE'},
+  {label:'스마트폰',cat:'스마트폰',emoji:'📱',src:'MX'},
+  {label:'노트북',cat:'노트북',emoji:'💻',src:'MX'},
+  {label:'태블릿',cat:'태블릿',emoji:'📋',src:'MX'},
+  {label:'워치',cat:'워치',emoji:'⌚',src:'MX'},
+  {label:'이어폰',cat:'버즈',emoji:'🎧',src:'MX'},
+];
+
+function renderCatSelector(detected, budget){
+  $("aiHost").innerHTML=""; $("parseBar").innerHTML=""; $("noticeHost").innerHTML=""; $("sortRow").classList.add("hidden"); lastResults=[];
+  const budgetHtml = budget
+    ? `<div class="ai-budget">💰 감지된 예산 <b>${budget.toLocaleString()}만원</b> — 각 품목별 예산을 자동 배분합니다</div>`
+    : `<div class="ai-budget" style="border-color:#aaa;background:#f8f8f8;color:#555">예산을 입력하면 품목별 자동 배분됩니다 (예: 1000만원)</div>`;
+  const chips = AI_CATS.map(c=>`
+    <label class="cat-chip">
+      <input type="checkbox" value="${c.cat}" ${detected.has(c.cat)?'checked':''}>
+      ${c.emoji} ${c.label} <span class="cat-src cat-src-${c.src.toLowerCase()}">${c.src}</span>
+    </label>`).join('');
+  $("rHost").innerHTML=`
+    ${budgetHtml}
+    <div class="cat-selector-title">📋 필요한 품목을 선택하세요</div>
+    <div class="cat-grid">${chips}</div>
+    <button class="cat-search-btn" onclick="runAiSearch()">선택 품목 추천받기 →</button>`;
+}
+
+function runAiSearch(){
+  const checked=[...document.querySelectorAll('.cat-grid input:checked')].map(el=>el.value);
+  if(!checked.length){toast("품목을 1개 이상 선택하세요");return;}
+  const perBudget = aiParsedBudget ? Math.floor(aiParsedBudget/checked.length) : null;
+  const results=[];
+  for(const cat of checked){
+    let items=PRODUCTS.filter(p=>p.cat===cat);
+    if(perBudget){
+      const inB=items.filter(p=>p.price<=perBudget);
+      if(inB.length) items=inB;
+    }
+    items.sort((a,b)=>b.price-a.price);
+    if(items.length) results.push({p:items[Math.min(1,items.length-1)],sc:10,hits:['AI추천']});
+  }
+  if(!results.length){$("rHost").innerHTML=`<div class="empty">조건에 맞는 제품을 찾지 못했습니다.</div>`;return;}
+  lastResults=results; sortMode="rank";
+  const total=results.reduce((s,r)=>s+r.p.price,0);
+  const budgetBar=aiParsedBudget
+    ?`<div class="ai-result-header"><span>${checked.length}개 품목 추천</span><span class="ai-total">${total.toLocaleString()}만원 / ${aiParsedBudget.toLocaleString()}만원 예산</span></div>`
+    :`<div class="ai-result-header"><span>${checked.length}개 품목 추천</span><span class="ai-total">합계 ${total.toLocaleString()}만원</span></div>`;
+  $("aiHost").innerHTML=budgetBar;
+  $("rHost").innerHTML="";
+  renderSortRow(); renderResults();
+}
+
 
 let activeBrandCat = '전체';
 let brandQuery = '';
