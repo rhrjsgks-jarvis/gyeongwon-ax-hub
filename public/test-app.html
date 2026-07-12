@@ -6766,10 +6766,12 @@ function startQuiz(){
   if(!nm){document.getElementById('nameErr').textContent='이름을 입력해주세요.';return}
   st.empId=id;st.name=nm;
 
-  /* 24문항 선택: CE 16 (8카테고리×2) + MX 8 (4카테고리×2) */
-  const ceQs=shuffle(ALL_CE).map(cat=>pickN(QB[cat],2).map(q=>prepareQ(q,cat))).flat();
-  const mxQs=shuffle(ALL_MX).map(cat=>pickN(QB[cat],2).map(q=>prepareQ(q,cat))).flat();
-  st.questions=shuffle([...ceQs,...mxQs]).slice(0,24);
+  /* 24문항 선택: CE 전체 풀 랜덤 16문항 + MX 전체 풀 랜덤 8문항 */
+  const cePool=ALL_CE.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
+  const mxPool=ALL_MX.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
+  const ceQs=pickN(cePool,16);
+  const mxQs=pickN(mxPool,8);
+  st.questions=shuffle([...ceQs,...mxQs]);
   st.startTime=Date.now();
 
   document.getElementById('loginScreen').style.display='none';
