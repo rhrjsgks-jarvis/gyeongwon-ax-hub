@@ -686,10 +686,20 @@ async function runAI(){
   // 5. 키워드가 없으면 원문 그대로 사용
   const finalKw = keywords.length ? keywords.join(" ") : q;
 
-  // 6. 키워드 탭으로 전환 후 검색
-  $("q").value = finalKw;
-  setMode("kw");
-  runSearch();
+  // 6. AI 탭에서 직접 파싱·검색·렌더 (탭 전환 없음)
+  $("aiHost").innerHTML = `<div class="aicomment"><b>🔍 분석된 키워드</b> ${esc(finalKw)}</div>`;
+  $("parseBar").innerHTML = "";
+  $("noticeHost").innerHTML = "";
+  $("sortRow").classList.add("hidden");
+  const P = parseQuery(finalKw);
+  lastResults = search(P);
+  sortMode = "rank";
+  if(!lastResults.length){
+    $("rHost").innerHTML = `<div class="empty"><b>조건에 맞는 제품을 찾지 못했습니다.</b><br>다른 표현으로 다시 입력해 보세요.</div>`;
+  } else {
+    renderSortRow();
+    renderResults();
+  }
 }
 
 let activeBrandCat = '전체';
