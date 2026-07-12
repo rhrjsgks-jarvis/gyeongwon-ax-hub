@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>경원영업팀 레벨업테스트 2026</title>
+<title>SAMSUNG STORE 레벨업 챌린지 2026</title>
 <style>
 :root{--blue:#1428A0;--blue-dark:#0c1b6b;--blue-light:#EEF1FB;--correct:#1a7f4b;--correct-bg:#E6F4EC;--wrong:#C0392B;--wrong-bg:#FDECEA;--warn:#d97706;--border:#E2E8F0}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -117,9 +117,9 @@ input{-webkit-tap-highlight-color:transparent}
 <body>
 <div id="loginScreen">
   <div class="login-card">
-    <div class="brand-badge">SAMSUNG</div>
-    <div class="login-title">경원영업팀<br>레벨업테스트</div>
-    <div class="login-sub">2026 제품 전문가 역량 평가 v2.0</div>
+    <div class="brand-badge">SAMSUNG STORE</div>
+    <div class="login-title">레벨업 챌린지</div>
+    <div class="login-sub">2026 삼성 제품 전문가 성장 프로그램</div>
     <div class="info-chips">
       <span class="info-chip">📋 총 25문항</span>
       <span class="info-chip">⏱ 30분</span>
@@ -162,7 +162,7 @@ input{-webkit-tap-highlight-color:transparent}
 <div id="quizScreen" style="display:none">
   <header id="quizHeader">
     <div class="h-left">
-      <div class="h-title">경원영업팀 레벨업테스트</div>
+      <div class="h-title">레벨업 챌린지</div>
       <div class="h-prog" id="progressText">0 / 24 답변 완료</div>
     </div>
     <div id="timer">30:00</div>
@@ -6904,7 +6904,7 @@ function showResults(results,ceScore,mxScore,essayScore,em,es){
   const dateStr=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
   const wrongResults=results.filter(r=>!r.correct);
   rs.innerHTML=`
-  <div class="res-header"><div class="res-brand">SAMSUNG · 경원영업팀</div><div class="res-title">레벨업테스트 결과</div><div class="res-meta-info">${st.name} (${st.empId})<br>${dateStr} · 소요시간 ${em}분 ${es}초</div></div>
+  <div class="res-header"><div class="res-brand">SAMSUNG STORE</div><div class="res-title">레벨업 챌린지 결과</div><div class="res-meta-info">${st.name} (${st.empId})<br>${dateStr} · 소요시간 ${em}분 ${es}초</div></div>
   <div class="score-card">
     <div class="score-main">${total}<span>/100</span></div>
     <div class="score-pct">${total}점</div>
