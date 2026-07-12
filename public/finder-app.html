@@ -474,7 +474,7 @@ function parseQuery(raw){
 function search(P){
   /* ─── 패키지 모드 (신혼/혼수/이사/입주) ─── */
   if(P.pkg){
-    const PKG_CATS=['냉장고','세탁기','건조기','TV','에어컨','식기세척기','에어드레서','청소기'];
+    const PKG_CATS=['냉장고','세탁기·콤보','건조기','TV','에어컨','식기세척기','에어드레서','청소기'];
     const out=[];
     for(const cat of PKG_CATS){
       let items=PRODUCTS.filter(p=>p.src==='CE'&&p.cat===cat);
