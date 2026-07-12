@@ -472,6 +472,25 @@ function parseQuery(raw){
 
 /* ─── 스코어링 (정확 일치 가중치 개선) ─── */
 function search(P){
+  /* ─── 패키지 모드 (신혼/혼수/이사/입주) ─── */
+  if(P.pkg){
+    const PKG_CATS=['냉장고','세탁기','건조기','TV','에어컨','식기세척기','에어드레서','청소기'];
+    const out=[];
+    for(const cat of PKG_CATS){
+      let items=PRODUCTS.filter(p=>p.src==='CE'&&p.cat===cat);
+      if(P.budgetMax!==null){
+        // 예산 내 제품 우선, 없으면 전체에서 선택
+        const inBudget=items.filter(p=>p.price<=P.budgetMax);
+        if(inBudget.length) items=inBudget;
+      }
+      if(!items.length) continue;
+      // 중간가 제품 선택 (플래그십보다 현실적인 라인)
+      items.sort((a,b)=>b.price-a.price);
+      const pick=items[Math.min(1,items.length-1)]; // 2번째 제품(중고가)
+      out.push({p:pick, sc:10, hits:['패키지추천']});
+    }
+    return out;
+  }
   const out = [];
   for(const p of PRODUCTS){
     if(P.budgetMax!==null && p.price > P.budgetMax) continue;
@@ -606,7 +625,7 @@ function setMode(m){
   $("kwBox").classList.toggle("hidden", m!=="kw"); $("aiBox").classList.toggle("hidden", m!=="ai");
   $("heroTitle").textContent = m==="kw" ? "키워드 한 줄이면 됩니다." : "상황을 문장으로 말해주세요.";
   $("heroSub").textContent = m==="kw" ? "기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요. 전사 제품 DB 297종에서 찾아드립니다. (삼성 243종 + Harman 54종)"
-    : "고객 상황을 그대로 입력하면 AI가 전 라인업에서 조합 추천합니다.";
+    : "고객 상황을 문장으로 입력하면 자동으로 키워드를 추출해 전 DB에서 검색합니다.";
   $("parseBar").innerHTML=""; $("noticeHost").innerHTML=""; $("aiHost").innerHTML=""; $("rHost").innerHTML=""; $("sortRow").classList.add("hidden");
   lastResults=[];
 }
@@ -616,44 +635,61 @@ function catalogText(){
 async function runAI(){
   const q = ($("aq").value||"").trim();
   if(!q){ toast("상황을 입력하세요"); return; }
-  $("rHost").innerHTML = `<div class="loading"><span class="spin"></span>전 라인업 297종을 검토하는 중…</div>`;
-  $("aiHost").innerHTML=""; $("parseBar").innerHTML=""; $("noticeHost").innerHTML=""; $("sortRow").classList.add("hidden");
-  const prompt = `당신은 삼성 제품 추천 엔진입니다. 아래 카탈로그(id|카테고리|이름|출시가|주요기능)에 있는 제품만 추천할 수 있습니다.
 
-[카탈로그]
-${catalogText()}
+  /* ─── 자체 자연어 파싱 엔진 ─── */
+  const keywords = [];
 
-[고객 상황]
-${q}
+  // 1. 패키지 감지 → 신혼가전 패키지 검색
+  if(/신혼|혼수|이사|입주|패키지|결혼|전세/.test(q)) keywords.push("신혼가전 패키지");
 
-규칙:
-1. 카탈로그에 실재하는 id만 사용. 카탈로그 밖 제품·기능을 지어내지 말 것.
-2. 최대 5개 추천. 예산 언급 시 합계/단가를 준수.
-3. 필요하면 카테고리 조합(패키지) 추천 가능.
-4. 적합한 제품이 없으면 picks를 빈 배열로 하고 comment에 이유를 쓸 것.
-응답은 아래 JSON만 출력 (다른 텍스트·마크다운 금지):
-{"picks":[{"id":숫자,"why":"추천 이유 한 줄(한국어)"}],"comment":"전체 코멘트 한두 문장(한국어)"}`;
-  try{
-    const res = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:1000, messages:[{role:"user",content:prompt}]})
-    });
-    const data = await res.json();
-    const text = (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
-    const clean = text.replace(/```json|```/g,"").trim();
-    const js = JSON.parse(clean.slice(clean.indexOf("{"), clean.lastIndexOf("}")+1));
-    const picks = (js.picks||[]).map(pk=>{
-      const p = PRODUCTS.find(x=>x.id===pk.id);
-      return p ? {p, sc:0, hits:[], aiWhy:pk.why||""} : null;
-    }).filter(Boolean);
-    lastResults = picks; sortMode="rank";
-    $("aiHost").innerHTML = `<div class="aicomment"><b>AI 추천 코멘트</b>${esc(js.comment||"")}</div>`;
-    if(!picks.length){
-      $("rHost").innerHTML = `<div class="empty"><b>조건에 맞는 제품을 찾지 못했습니다.</b><br>${esc(js.comment||"조건을 완화해 다시 시도해 보세요.")}</div>`;
-    } else { renderSortRow(); renderResults(); }
-  }catch(err){
-    $("rHost").innerHTML = `<div class="empty"><b>AI 연결 실패</b><br>이 기능은 Claude 환경(아티팩트 미리보기)에서 동작합니다.<br>오프라인에서는 상단 [키워드] 모드를 사용하세요 — 동일 DB로 검색됩니다.</div>`;
+  // 2. 카테고리 키워드 추출
+  const catMap = [
+    [/냉장고|냉장|fridge/i, "냉장고"],
+    [/세탁기|세탁|빨래/i, "세탁기"],
+    [/건조기|건조/i, "건조기"],
+    [/TV|텔레비전|티비/i, "TV"],
+    [/에어컨|냉방/i, "에어컨"],
+    [/식기세척기|식세기|그릇 세척/i, "식기세척기"],
+    [/에어드레서|스타일러|의류관리/i, "에어드레서"],
+    [/로봇청소기|로봇 청소/i, "로봇청소기 직배수"],
+    [/청소기/i, "청소기"],
+    [/갤럭시|핸드폰|스마트폰|폰/i, "갤럭시"],
+    [/워치|스마트워치/i, "워치"],
+    [/노트북|랩탑/i, "노트북"],
+    [/태블릿|탭/i, "태블릿"],
+    [/이어폰|버즈|무선이어폰/i, "이어폰"],
+    [/모니터/i, "모니터"],
+    [/공기청정기/i, "공기청정기"],
+    [/김치냉장고|김치/i, "김치냉장고"],
+    [/사운드바|스피커/i, "사운드바"],
+  ];
+  for(const [reg, kw] of catMap){
+    if(reg.test(q) && !keywords.includes(kw)) keywords.push(kw);
   }
+
+  // 3. 특성 키워드 추출
+  if(/가성비|저렴|싸|저가/.test(q)) keywords.push("가성비");
+  if(/프리미엄|고급|최고급/.test(q)) keywords.push("프리미엄");
+  if(/무풍/.test(q)) keywords.push("무풍");
+  if(/S펜/.test(q)) keywords.push("S펜");
+  if(/혈압|혈당|건강/.test(q)) keywords.push("혈압 측정 워치");
+  if(/게임|게이밍/.test(q)) keywords.push("게이밍");
+  if(/부모|효도/.test(q)) keywords.push("부모님 효도 워치");
+  if(/학생/.test(q)) keywords.push("가성비 태블릿 학생");
+  if(/크리에이터|유튜버/.test(q)) keywords.push("크리에이터 노트북");
+  if(/신형|최신|2026/.test(q)) keywords.push("2026 신형");
+
+  // 4. 예산 추출
+  const budgetMatch = q.match(/(\d+)\s*만\s*원?/);
+  if(budgetMatch) keywords.push(`${budgetMatch[1]}만 이하`);
+
+  // 5. 키워드가 없으면 원문 그대로 사용
+  const finalKw = keywords.length ? keywords.join(" ") : q;
+
+  // 6. 키워드 탭으로 전환 후 검색
+  $("q").value = finalKw;
+  setMode("kw");
+  runSearch();
 }
 
 let activeBrandCat = '전체';
