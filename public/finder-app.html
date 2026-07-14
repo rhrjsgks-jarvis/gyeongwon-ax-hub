@@ -175,7 +175,7 @@ table.spec tr:last-child td{border-bottom:none}
 .ai-result-total-price{font-size:17px;font-weight:800}
 
 
-/* ── AI추천 근거 강화 CSS ── */
+
 .ai-reason-block { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px; }
 .why-reason { background:#eaf4ff; color:#1428A0; border:1px solid #b3d4f5; border-radius:10px; padding:2px 9px; font-size:11.5px; font-weight:700; }
 .why-match { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9 !important; }
@@ -186,6 +186,68 @@ table.spec tr:last-child td{border-bottom:none}
 .ai-budget-track { flex:1; height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden; }
 .ai-budget-fill { height:100%; border-radius:3px; transition:width .4s; }
 .ai-budget-pct { font-size:11.5px; font-weight:700; white-space:nowrap; }
+
+/* ═══ AI추천 v3 CSS ═══ */
+.auto-dist-btn{display:block;width:100%;margin:8px 0 4px;padding:10px;background:#e8f5e9;border:1.5px solid #4caf50;border-radius:10px;color:#2e7d32;font-size:14px;font-weight:700;cursor:pointer;text-align:center;}
+.auto-dist-btn:active{background:#c8e6c9;}
+
+/* 카테고리 그룹 */
+.ai-cat-group{margin-bottom:20px;}
+.ai-cat-group-head{font-size:15px;font-weight:800;color:#1428A0;padding:8px 0 6px;border-bottom:2px solid #1428A0;margin-bottom:10px;}
+
+/* 3티어 가로 행 */
+.ai-tier-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+.ai-tier-row::-webkit-scrollbar{height:4px;}
+.ai-tier-row::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+
+/* 티어 카드 */
+.ai-tier-card{flex:0 0 calc(33.3% - 7px);min-width:200px;background:#fff;border:1.5px solid #e0e0e0;border-radius:14px;padding:14px 12px 10px;cursor:pointer;transition:box-shadow .2s,border-color .2s;}
+.ai-tier-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.12);border-color:#1428A0;}
+.ai-card-name{font-size:13px;font-weight:700;color:#111;margin-bottom:3px;line-height:1.3;}
+.ai-card-model{font-size:11px;color:#888;margin-bottom:6px;font-family:monospace;}
+.ai-card-price{font-size:20px;font-weight:900;color:#1428A0;margin-bottom:8px;}
+
+/* 티어 배지 */
+.tier-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:800;letter-spacing:.3px;}
+.tier-premium{background:#1428A0;color:#fff;}
+.tier-standard{background:#37474f;color:#fff;}
+.tier-value{background:#e65100;color:#fff;}
+.tier-legend{display:flex;align-items:center;gap:6px;margin:8px 0 14px;flex-wrap:wrap;}
+
+/* 셀링포인트 */
+.sell-pts{display:flex;flex-direction:column;gap:2px;margin:6px 0;}
+.sell-pt{font-size:11.5px;color:#444;line-height:1.4;}
+
+/* 추천 이유 */
+.ai-reason-block{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 4px;}
+.why-reason{background:#eaf4ff;color:#1428A0;border:1px solid #b3d4f5;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;}
+.ai-feat-block{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;}
+.why-match{background:#e8f5e9;color:#2e7d32;border:1px solid #c8e6c9 !important;font-size:10.5px;}
+.why-miss{background:#fce4ec;color:#b71c1c;border:1px solid #f8bbd0 !important;font-size:10.5px;}
+
+/* 예산 바 */
+.ai-budget-bar{display:flex;align-items:center;gap:5px;margin-top:8px;}
+.ai-budget-label{font-size:10.5px;color:#555;white-space:nowrap;flex-shrink:0;}
+.ai-budget-track{flex:1;height:5px;background:#e0e0e0;border-radius:3px;overflow:hidden;min-width:40px;}
+.ai-budget-fill{height:100%;border-radius:3px;transition:width .4s;}
+.ai-budget-pct{font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+
+/* 상세 스펙 토글 */
+.ai-detail-toggle{margin-top:10px;font-size:11.5px;color:#1428A0;text-align:center;padding:5px 0 0;}
+.ai-detail-body{margin-top:8px;border-top:1px solid #eee;padding-top:8px;}
+.spec-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid #f5f5f5;gap:8px;}
+.spec-row span{color:#777;}
+.spec-row b{color:#111;text-align:right;}
+.spec-row-full{margin-top:6px;}
+.spec-on-label{font-size:10.5px;color:#2e7d32;font-weight:700;display:block;margin-bottom:3px;}
+.spec-off-label{font-size:10.5px;color:#b71c1c;font-weight:700;display:block;margin-top:4px;margin-bottom:3px;}
+
+/* 모바일 반응형 */
+@media(max-width:520px){
+  .ai-tier-row{flex-direction:column;}
+  .ai-tier-card{min-width:unset;flex:none;}
+}
+
 </style>
 </head>
 <body>
@@ -682,81 +744,114 @@ function rdetail(p){
 }
 function toggleDetail(id){ openId = (openId===id? null : id); renderResults(); }
 
-/* ===== AI 자연어 추천 (Claude API) ===== */
+/* ===== AI 추천 엔진 v3 ===== */
+
+/* CAT_FEATURES: 카테고리별 선택 가능 기능 (DB 실측 기반) */
+const CAT_FEATURES = {
+  '냉장고':             ['UV 청정살균 탈취','AI 하이브리드 쿨링','오토오픈도어','푸드쇼케이스 홈바','AI 패밀리허브','AI 비전 인사이드','빅아이스메이커','메탈쿨링'],
+  '세탁기·콤보':        ['세제 자동투입','펫케어 코스','프리히트 건조','미세플라스틱 저감','AI 진동소음 저감','오토오픈도어+','7인치 LCD 디스플레이','AI 세탁건조'],
+  '건조기':             ['인버터 히트펌프','AI 맞춤건조','오토오픈도어','세탁기 연동','공간제습'],
+  'TV':                 ['Neo QLED(미니LED)','OLED 패널','8K 해상도','돌비 애트모스','무반사 코팅','AI 프로세서','오브젝트 트래킹 사운드'],
+  '에어컨':             ['무풍 냉방','AI 열교환기 자동세척','UV-LED 팬살균','AI 음성인식','AI모션바람','쾌적제습','e-HEPA 살균필터','PM1.0 공기청정 센서'],
+  '식기세척기':         ['100도 열풍건조','오토오픈도어','3단 선반','AI 맞춤 세척','스팀 살균','정수필터 내장','빅스비 음성인식'],
+  '에어드레서':         ['듀얼 에어워시','듀얼 제트스팀','AI 건조','주름집중케어','미러 도어','LCD 디스플레이'],
+  '청소기':             ['스팀 물걸레 살균','청정스테이션 자동비움','AI 바닥인식','AI 사물인식 회피','청정스테이션 스팀 세척','자동 급배수','직배수'],
+  '공기청정기':         ['PM1.0 극초미세먼지 센서','SmartThings 연동','자동청정모드','벽걸이형','숯 탈취필터'],
+  '김치냉장고':         ['5면 메탈쿨링','AI 정온모드','SmartThings 연동','냄새케어','인버터 컴프레서','뚜껑형'],
+  '사운드바':           ['돌비 애트모스','Q심포니(삼성TV 연동)','무선 서브우퍼','무선 리어 스피커','eARC 지원','SmartThings 연동'],
+  '인덕션/전기레인지':  ['플렉스존(2구 통합)','부스터 화력','빌트인','Wi-Fi SmartThings 연동','이동형'],
+  '스마트폰':           ['S펜 내장','10배 광학 줌','에이전틱 AI','프라이버시 디스플레이','위성 긴급통신','UWB 초광대역','5배 광학 줌','IP68 방수방진'],
+  '노트북':             ['AMOLED 디스플레이','터치 디스플레이','360도 힌지','S펜 지원','Copilot+ PC','스냅드래곤 ARM AP'],
+  '태블릿':             ['S펜 동봉','S펜 별매 지원','AMOLED/OLED 디스플레이','키보드 커버 지원','DeX 모드','LTE/5G 지원','반사방지 코팅'],
+  '워치':               ['심전도 측정','혈압 측정','혈당 비침습 측정','항산화지수 측정','사파이어 크리스탈','MIL-STD-810 군용규격','물리 회전 베젤'],
+  '버즈':               ['능동 소음 제거','실시간 통역','360도 오디오','AI 보이스 포커스','IP57 방수'],
+};
+
+/* 카테고리별 예산 권장 가중치 */
+const CAT_BUDGET_WEIGHT = {
+  '냉장고':25,'세탁기·콤보':20,'건조기':15,'TV':15,'에어컨':20,
+  '식기세척기':10,'에어드레서':10,'청소기':10,'공기청정기':5,
+  '김치냉장고':8,'사운드바':8,'인덕션/전기레인지':7,
+  '스마트폰':20,'노트북':25,'태블릿':15,'워치':8,'버즈':4,
+};
+
 function setMode(m){
-  $("mKw").classList.toggle("on", m==="kw"); $("mAi").classList.toggle("on", m==="ai");
-  $("kwBox").classList.toggle("hidden", m!=="kw"); $("aiBox").classList.toggle("hidden", m!=="ai");
+  $("mKw").classList.toggle("on",m==="kw"); $("mAi").classList.toggle("on",m==="ai");
+  $("kwBox").classList.toggle("hidden",m!=="kw"); $("aiBox").classList.toggle("hidden",m!=="ai");
   $("heroTitle").textContent = m==="kw" ? "키워드 한 줄이면 됩니다." : "상황을 문장으로 말해주세요.";
-  $("heroSub").textContent = m==="kw" ? "기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요. 전사 제품 DB 297종에서 찾아드립니다. (삼성 243종 + Harman 54종)"
-    : "고객 상황을 문장으로 입력하면 자동으로 키워드를 추출해 전 DB에서 검색합니다.";
+  $("heroSub").textContent = m==="kw"
+    ? "기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요. 전사 제품 DB 297종에서 찾아드립니다. (삼성 243종 + Harman 54종)"
+    : "고객 상황을 문장으로 입력하면 품목·예산을 자동 분석해 카테고리별 3티어로 추천합니다.";
   $("parseBar").innerHTML=""; $("noticeHost").innerHTML=""; $("aiHost").innerHTML=""; $("rHost").innerHTML=""; $("sortRow").classList.add("hidden");
   lastResults=[];
 }
-function catalogText(){
-  return PRODUCTS.map(p=>`${p.id}|${p.cat}|${p.group} ${p.model}|${p.price}만${p.price_lab?"("+p.price_lab+")":""}|${p.on.slice(0,4).join(",")}`).join("\n");
-}
+
+let aiParsedBudget = null;
+let selectedCats = new Set();
+
+/* Step 0: 자연어 파싱 → Step1 */
 async function runAI(){
-  const q = ($("aq").value||"").trim();
+  const q=($("aq").value||"").trim();
   if(!q){ toast("상황을 입력하세요"); return; }
 
-  // 예산 파싱
-  const bm = q.match(/(\d[\d,]*)\s*만\s*원?/);
-  aiParsedBudget = bm ? parseInt(bm[1].replace(/,/g,"")) : null;
+  const bm=q.match(/(\d[\d,]*)\s*만\s*원?/);
+  aiParsedBudget=bm?parseInt(bm[1].replace(/,/g,"")):null;
 
-  // 자동 감지 카테고리
-  const detected = new Set();
-  if(/신혼|혼수|이사|입주|결혼|전세/.test(q))
+  const detected=new Set();
+  // 용도별 자동 감지
+  if(/신혼|혼수|결혼|입주|이사|전세/.test(q))
     ['냉장고','세탁기·콤보','건조기','TV','에어컨','식기세척기','에어드레서','청소기'].forEach(c=>detected.add(c));
-  const catDetect=[
-    [/냉장고/,'냉장고'],[/세탁기|빨래/,'세탁기·콤보'],[/건조기/,'건조기'],
-    [/TV|텔레비전|티비/i,'TV'],[/에어컨|냉방/,'에어컨'],[/식기세척기|식세기/,'식기세척기'],
-    [/에어드레서|스타일러/,'에어드레서'],[/청소기/,'청소기'],[/공기청정기/,'공기청정기'],
-    [/김치냉장고|김치/,'김치냉장고'],[/사운드바|스피커/,'사운드바'],[/인덕션/,'인덕션/전기레인지'],
-    [/갤럭시|핸드폰|스마트폰|폰/,'스마트폰'],[/노트북|랩탑/,'노트북'],
-    [/태블릿|탭/,'태블릿'],[/워치|스마트워치/,'워치'],[/이어폰|버즈/,'버즈'],
-  ];
-  catDetect.forEach(([r,c])=>{ if(r.test(q)) detected.add(c); });
+  if(/1인가구|혼자|자취|원룸/.test(q))
+    ['냉장고','세탁기·콤보','TV','청소기'].forEach(c=>detected.add(c));
+  if(/학생|캠퍼스|대학|학교/.test(q))
+    ['노트북','스마트폰','태블릿','버즈'].forEach(c=>detected.add(c));
+  if(/재택|홈오피스|업무|사무/.test(q))
+    ['노트북','스마트폰','워치'].forEach(c=>detected.add(c));
+  if(/건강|운동|피트니스|헬스/.test(q))
+    ['워치','스마트폰'].forEach(c=>detected.add(c));
+  if(/게임|게이밍/.test(q))
+    ['노트북','스마트폰'].forEach(c=>detected.add(c));
+  if(/부모님|엄마|아빠|어른|선물/.test(q))
+    ['TV','스마트폰','워치'].forEach(c=>detected.add(c));
+  // 개별 품목 키워드
+  [
+    [/냉장고/,'냉장고'],[/세탁기|콤보세탁|드럼세탁|빨래/,'세탁기·콤보'],[/건조기/,'건조기'],
+    [/TV|텔레비전|티비/i,'TV'],[/에어컨|냉방기/,'에어컨'],[/식기세척기|식세기/,'식기세척기'],
+    [/에어드레서|스타일러/,'에어드레서'],[/청소기|로봇청소기/,'청소기'],
+    [/공기청정기|공청기/,'공기청정기'],[/김치냉장고|김치/,'김치냉장고'],
+    [/사운드바|홈시어터/,'사운드바'],[/인덕션|전기레인지|하이라이트/,'인덕션/전기레인지'],
+    [/갤럭시|핸드폰|스마트폰|폰|휴대폰/,'스마트폰'],[/노트북|랩탑/i,'노트북'],
+    [/태블릿|갤탭|탭/,'태블릿'],[/워치|스마트워치|갤럭시워치/,'워치'],
+    [/이어폰|버즈|에어팟|무선이어폰/,'버즈'],
+  ].forEach(([r,c])=>{ if(r.test(q)) detected.add(c); });
 
   renderCatSelector(detected, aiParsedBudget);
 }
 
-let aiParsedBudget = null;
-
+/* Step 1: 카테고리 선택 */
 const AI_CATS = [
-  {label:'냉장고',cat:'냉장고',emoji:'🧊',src:'CE'},
-  {label:'세탁기',cat:'세탁기·콤보',emoji:'👕',src:'CE'},
-  {label:'건조기',cat:'건조기',emoji:'💨',src:'CE'},
-  {label:'TV',cat:'TV',emoji:'📺',src:'CE'},
-  {label:'에어컨',cat:'에어컨',emoji:'❄️',src:'CE'},
-  {label:'식기세척기',cat:'식기세척기',emoji:'🍽️',src:'CE'},
-  {label:'에어드레서',cat:'에어드레서',emoji:'👔',src:'CE'},
-  {label:'청소기',cat:'청소기',emoji:'🧹',src:'CE'},
-  {label:'공기청정기',cat:'공기청정기',emoji:'🌬️',src:'CE'},
-  {label:'김치냉장고',cat:'김치냉장고',emoji:'🥬',src:'CE'},
-  {label:'사운드바',cat:'사운드바',emoji:'🔊',src:'CE'},
-  {label:'인덕션',cat:'인덕션/전기레인지',emoji:'🍳',src:'CE'},
-  {label:'스마트폰',cat:'스마트폰',emoji:'📱',src:'MX'},
-  {label:'노트북',cat:'노트북',emoji:'💻',src:'MX'},
-  {label:'태블릿',cat:'태블릿',emoji:'📋',src:'MX'},
-  {label:'워치',cat:'워치',emoji:'⌚',src:'MX'},
+  {label:'냉장고',cat:'냉장고',emoji:'🧊',src:'CE'},{label:'세탁기',cat:'세탁기·콤보',emoji:'👕',src:'CE'},
+  {label:'건조기',cat:'건조기',emoji:'💨',src:'CE'},{label:'TV',cat:'TV',emoji:'📺',src:'CE'},
+  {label:'에어컨',cat:'에어컨',emoji:'❄️',src:'CE'},{label:'식기세척기',cat:'식기세척기',emoji:'🍽️',src:'CE'},
+  {label:'에어드레서',cat:'에어드레서',emoji:'👔',src:'CE'},{label:'청소기',cat:'청소기',emoji:'🧹',src:'CE'},
+  {label:'공기청정기',cat:'공기청정기',emoji:'🌬️',src:'CE'},{label:'김치냉장고',cat:'김치냉장고',emoji:'🥬',src:'CE'},
+  {label:'사운드바',cat:'사운드바',emoji:'🔊',src:'CE'},{label:'인덕션',cat:'인덕션/전기레인지',emoji:'🍳',src:'CE'},
+  {label:'스마트폰',cat:'스마트폰',emoji:'📱',src:'MX'},{label:'노트북',cat:'노트북',emoji:'💻',src:'MX'},
+  {label:'태블릿',cat:'태블릿',emoji:'📋',src:'MX'},{label:'워치',cat:'워치',emoji:'⌚',src:'MX'},
   {label:'이어폰',cat:'버즈',emoji:'🎧',src:'MX'},
 ];
 
-
-let selectedCats = new Set();
-
-/* ── Step 1: 카테고리 선택 ── */
 function renderCatSelector(preSelected, budget){
-  selectedCats = preSelected instanceof Set ? new Set(preSelected) : new Set();
-  aiParsedBudget = (typeof budget === 'number') ? budget : aiParsedBudget;
+  selectedCats=preSelected instanceof Set?new Set(preSelected):new Set();
+  aiParsedBudget=(typeof budget==='number')?budget:aiParsedBudget;
   $("aiHost").innerHTML=""; $("parseBar").innerHTML="";
   $("noticeHost").innerHTML=""; $("sortRow").classList.add("hidden"); lastResults=[];
 
-  const budgetHtml = aiParsedBudget
-    ? `<div class="ai-budget">💰 감지된 예산 <b>${aiParsedBudget.toLocaleString()}만원</b></div>`
-    : `<div class="ai-budget" style="border-color:#bbb;background:#f8f8f8;color:#666">예산을 함께 입력하면 품목별 입력이 편리합니다 (예: 1000만원)</div>`;
+  const budgetHtml=aiParsedBudget
+    ?`<div class="ai-budget">💰 감지된 예산 <b>${aiParsedBudget.toLocaleString()}만원</b> — Step2에서 자동 분배 가능</div>`
+    :`<div class="ai-budget" style="border-color:#bbb;background:#f8f8f8;color:#666">💡 상황 입력에 예산을 포함하면 품목별 자동 분배됩니다 (예: 신혼가전 1500만원)</div>`;
 
-  const chips = AI_CATS.map(c=>`
+  const chips=AI_CATS.map(c=>`
     <button class="cat-chip${selectedCats.has(c.cat)?' on':''}"
             data-cat="${c.cat}" onclick="toggleCat('${c.cat.replace(/'/g,"\\'")}')" type="button">
       ${c.emoji} ${c.label}
@@ -767,7 +862,8 @@ function renderCatSelector(preSelected, budget){
     ${budgetHtml}
     <div class="cat-selector-title">📋 필요한 품목을 선택하세요</div>
     <div class="cat-grid" id="catGrid">${chips}</div>
-    <button id="aiNextBtn" class="cat-search-btn" onclick="goStep2()" type="button" style="margin-top:14px;opacity:${selectedCats.size?'1':'0.4'}">
+    <button id="aiNextBtn" class="cat-search-btn" onclick="goStep2()" type="button"
+            style="margin-top:14px;opacity:${selectedCats.size?'1':'0.4'}">
       ${selectedCats.size?`다음: ${selectedCats.size}개 품목 세부 설정 →`:'품목을 선택하세요'}
     </button>`;
 }
@@ -776,33 +872,31 @@ function toggleCat(cat){
   if(selectedCats.has(cat)) selectedCats.delete(cat);
   else selectedCats.add(cat);
   document.querySelectorAll('#catGrid [data-cat]').forEach(el=>{
-    el.classList.toggle('on', selectedCats.has(el.dataset.cat));
+    el.classList.toggle('on',selectedCats.has(el.dataset.cat));
   });
-  // 다음 버튼 활성화 상태 동적 업데이트
-  const nextBtn = document.getElementById('aiNextBtn');
+  const nextBtn=document.getElementById('aiNextBtn');
   if(nextBtn){
-    const cnt = selectedCats.size;
-    nextBtn.disabled = cnt === 0;
-    nextBtn.style.opacity = cnt ? '1' : '0.4';
-    nextBtn.textContent = cnt ? `다음: ${cnt}개 품목 세부 설정 →` : '품목을 선택하세요';
+    const cnt=selectedCats.size;
+    nextBtn.style.opacity=cnt?'1':'0.4';
+    nextBtn.textContent=cnt?`다음: ${cnt}개 품목 세부 설정 →`:'품목을 선택하세요';
   }
 }
 
-/* ── Step 2: 카테고리별 예산·기능 설정 ── */
+/* Step 2: 예산·기능 설정 */
 function goStep2(){
   if(!selectedCats.size){ toast("품목을 1개 이상 선택하세요"); return; }
   const catList=[...selectedCats];
 
-  const cards = catList.map(cat=>{
-    const feats = CAT_FEATURES[cat]||[];
-    const safeId = cat.replace(/[^a-zA-Z0-9가-힣]/g,'_');
-    const featChips = feats.map((f,i)=>`
-      <button class="feat-chip" data-cat="${cat}" data-feat="${f}"
-              onclick="toggleFeat(this)" type="button">${f}</button>`).join('');
-    const info = AI_CATS.find(c=>c.cat===cat);
+  const cards=catList.map(cat=>{
+    const feats=CAT_FEATURES[cat]||[];
+    const safeId=cat.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+    const info=AI_CATS.find(c=>c.cat===cat);
+    const featChips=feats.map(f=>`
+      <button class="feat-chip" data-cat="${cat}" data-feat="${esc(f)}"
+              onclick="toggleFeat(this)" type="button">${esc(f)}</button>`).join('');
     return `<div class="cat-config-card">
       <div class="cat-config-head">
-        <span class="cat-config-name">${info?.emoji||''} ${cat}</span>
+        <span class="cat-config-name">${info?info.emoji:''} ${cat}</span>
       </div>
       <div class="cat-budget-wrap">
         <label>예산</label>
@@ -811,90 +905,215 @@ function goStep2(){
                placeholder="제한없음" min="0" step="10" oninput="updateTotal()">
         <span class="cat-budget-unit">만원 이하</span>
       </div>
-      ${feats.length?`<div class="feat-title">원하는 기능 (선택)</div><div class="feat-grid">${featChips}</div>`:''}
+      ${feats.length?`<div class="feat-title">원하는 기능 (복수 선택)</div><div class="feat-grid">${featChips}</div>`:''}
     </div>`;
   }).join('');
 
-  $("aiHost").innerHTML='';
-  $("parseBar").innerHTML='';
-  $("noticeHost").innerHTML='';
-  $("sortRow").classList.add('hidden');
-  lastResults=[];
+  const autoBtn=aiParsedBudget
+    ?`<button class="auto-dist-btn" onclick="autoDistributeBudget()" type="button">
+        💰 ${aiParsedBudget.toLocaleString()}만원 자동 분배
+      </button>`:'';
+
+  $("aiHost").innerHTML=''; $("parseBar").innerHTML='';
+  $("noticeHost").innerHTML=''; $("sortRow").classList.add('hidden'); lastResults=[];
 
   $("rHost").innerHTML=`
-    <button class="step-back-btn" onclick="renderCatSelector(selectedCats, aiParsedBudget)" type="button">← 품목 다시 선택</button>
+    <button class="step-back-btn" onclick="renderCatSelector(selectedCats,aiParsedBudget)" type="button">← 품목 다시 선택</button>
+    ${autoBtn}
     <div class="step2-wrap">${cards}</div>
-    <button class="cat-search-btn" onclick="runAiFinal()" type="button" style="margin-top:14px">추천받기 →</button>
-    <div class="total-bar"><span class="total-bar-label">선택 품목 합산</span><span class="total-bar-price" id="totalBarPrice">0만원</span></div>`;
+    <button class="cat-search-btn" onclick="runAiFinal()" type="button" style="margin-top:14px">🔍 추천받기 →</button>
+    <div class="total-bar"><span class="total-bar-label">선택 품목 예산 합산</span><span class="total-bar-price" id="totalBarPrice">0만원</span></div>`;
 }
 
-function toggleFeat(btn){
-  btn.classList.toggle('on');
-}
+function toggleFeat(btn){ btn.classList.toggle('on'); }
 
 function updateTotal(){
-  const sum=[...document.querySelectorAll('.cat-budget-input')]
-    .reduce((s,el)=>s+(parseInt(el.value)||0),0);
+  const sum=[...document.querySelectorAll('.cat-budget-input')].reduce((s,el)=>s+(parseInt(el.value)||0),0);
   const el=$("totalBarPrice");
   if(el) el.textContent=sum.toLocaleString()+'만원';
 }
 
-/* ── Step 3: 추천 실행 ── */
+/* 예산 자동 분배 */
+function autoDistributeBudget(){
+  if(!aiParsedBudget){ toast("예산 정보가 없습니다. 상황 입력에 예산을 포함해주세요."); return; }
+  const cats=[...selectedCats];
+  const totalW=cats.reduce((s,c)=>s+(CAT_BUDGET_WEIGHT[c]||10),0);
+  cats.forEach(cat=>{
+    const w=CAT_BUDGET_WEIGHT[cat]||10;
+    const alloc=Math.max(10,Math.round(aiParsedBudget*w/totalW/10)*10);
+    const safeId=cat.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+    const inp=document.getElementById('budget_'+safeId);
+    if(inp) inp.value=alloc;
+  });
+  updateTotal();
+  toast("예산이 카테고리별로 자동 분배됐습니다.");
+}
+
+/* 스코어링 */
+function scoreProduct(p, wantedFeats, budget){
+  let score=0;
+  const onArr=p.on||[];
+  const onStr=onArr.join(' ');
+  for(const feat of wantedFeats){
+    const featKey=feat.replace(/[()（）]/g,'').slice(0,8);
+    if(onArr.some(o=>o===feat)) score+=5;
+    else if(onStr.includes(featKey)) score+=2;
+    else if(onStr.includes(feat.slice(0,4))) score+=1;
+  }
+  if(p.isnew) score+=3;
+  if(budget>0){
+    const pct=p.price/budget;
+    if(pct>=0.85&&pct<=1.0) score+=2;
+    else if(pct>=0.6&&pct<0.85) score+=1;
+  }
+  score+=Math.min((onArr.length)*0.15,2);
+  return score;
+}
+
+/* Step 3: 3티어 추천 */
 function runAiFinal(){
   const inputs=[...document.querySelectorAll('.cat-budget-input')];
-  const results=[]; let totalPick=0, totalBudget=0;
+  const allResults=[]; let totalBudget=0;
 
   for(const el of inputs){
     const cat=el.dataset.cat;
     const budget=parseInt(el.value)||0;
     totalBudget+=budget;
-    const wantedFeats=[...document.querySelectorAll(`.feat-chip.on[data-cat="${cat}"]`)]
-      .map(b=>b.dataset.feat);
 
-    let items=PRODUCTS.filter(p=>p.cat===cat);
-    if(budget>0) items=items.filter(p=>p.price<=budget);
-    if(!items.length) items=PRODUCTS.filter(p=>p.cat===cat);
+    // 기능 선택 (data-feat 직접 읽기)
+    const wantedFeats=[];
+    document.querySelectorAll('.feat-chip.on').forEach(b=>{
+      if(b.dataset.cat===cat) wantedFeats.push(b.dataset.feat);
+    });
 
-    items=items.map(p=>{
-      const onStr=(p.on||[]).join(' ');
-      const sc=wantedFeats.reduce((s,f)=>s+(onStr.includes(f)?3:0),0)+(p.isnew?1:0);
-      return{p,sc};
-    }).sort((a,b)=>b.sc-a.sc||b.p.price-a.p.price);
+    let pool=PRODUCTS.filter(p=>p.cat===cat);
+    let budgetPool=budget>0?pool.filter(p=>p.price<=budget):pool;
+    if(!budgetPool.length) budgetPool=pool;
 
-    if(items.length){
-      const best=items[0].p;
-      totalPick+=best.price;
-      const onStr=(best.on||[]).join(' ');
-      const matchedFeats=wantedFeats.filter(f=>onStr.includes(f));
-      const missingFeats=wantedFeats.filter(f=>!onStr.includes(f));
-      const budgetPct=budget>0?Math.round(best.price/budget*100):null;
-      // 추천 이유 자동 생성
+    const scored=budgetPool.map(p=>({p,sc:scoreProduct(p,wantedFeats,budget)}))
+      .sort((a,b)=>b.sc-a.sc||b.p.price-a.p.price);
+    if(!scored.length) continue;
+
+    // 가격 기반 3티어 분리
+    const byPrice=budgetPool.slice().sort((a,b)=>b.price-a.price);
+    const n=byPrice.length;
+    const premIds=new Set(byPrice.slice(0,Math.max(1,Math.ceil(n*0.34))).map(p=>p.id));
+    const valIds=new Set(byPrice.slice(Math.floor(n*0.66)).map(p=>p.id));
+    const premScored=scored.filter(r=>premIds.has(r.p.id));
+    const valScored=scored.filter(r=>valIds.has(r.p.id));
+    const stdScored=scored.filter(r=>!premIds.has(r.p.id)&&!valIds.has(r.p.id));
+
+    const makeTier=(r,tier,label)=>{
+      if(!r) return null;
+      const onArr=r.p.on||[];
+      const onStr=onArr.join(' ');
+      const matchedFeats=wantedFeats.filter(f=>{
+        const k=f.replace(/[()（）]/g,'').slice(0,8);
+        return onArr.some(o=>o===f)||onStr.includes(k)||onStr.includes(f.slice(0,4));
+      });
+      const missingFeats=wantedFeats.filter(f=>!matchedFeats.includes(f));
+      const budgetPct=budget>0?Math.round(r.p.price/budget*100):null;
       const reasons=[];
-      if(wantedFeats.length>0 && matchedFeats.length===wantedFeats.length) reasons.push(`선택 기능 ${matchedFeats.length}개 전부 탑재`);
-      else if(matchedFeats.length>0) reasons.push(`선택 기능 ${matchedFeats.length}/${wantedFeats.length}개 탑재`);
-      if(best.isnew) reasons.push('2026 신모델');
-      if(budget>0 && best.price<=budget*0.8) reasons.push('예산 20% 이상 여유');
-      else if(budget>0 && best.price>budget*0.9) reasons.push('예산 내 최고사양');
-      if(reasons.length===0) reasons.push('카테고리 최우선 추천');
-      results.push({p:best,sc:items[0].sc+10,hits:matchedFeats,missingFeats,reasons,budgetPct,catBudget:budget});
-    }
+      if(wantedFeats.length>0&&matchedFeats.length===wantedFeats.length) reasons.push('선택 기능 전부 탑재');
+      else if(matchedFeats.length>0) reasons.push('선택 기능 '+matchedFeats.length+'/'+wantedFeats.length+'개 탑재');
+      if(r.p.isnew) reasons.push('2026 신모델');
+      if(budget>0&&r.p.price<=budget*0.8) reasons.push('예산 여유');
+      else if(budget>0&&r.p.price>budget*0.9) reasons.push('예산 내 최고사양');
+      if(tier==='premium'&&!reasons.length) reasons.push('최고사양 라인업');
+      if(tier==='value'&&!reasons.length) reasons.push('합리적 가격');
+      if(!reasons.length) reasons.push('최적 추천');
+      const sellPts=[...matchedFeats.slice(0,2),...onArr.filter(o=>!matchedFeats.includes(o)).slice(0,Math.max(0,3-matchedFeats.slice(0,2).length))];
+      return {p:r.p,sc:r.sc,tier,tierLabel:label,hits:matchedFeats,missingFeats,reasons,budgetPct,catBudget:budget,sellPts};
+    };
+
+    const premium=makeTier(premScored[0],'premium','프리미엄');
+    const std=makeTier(stdScored[0]||scored[Math.floor(scored.length/2)]||null,'standard','스탠다드');
+    const val=makeTier(valScored[valScored.length-1]||scored[scored.length-1]||null,'value','가성비');
+
+    const seen=new Set();
+    [premium,std,val].forEach(r=>{
+      if(!r||seen.has(r.p.id)) return;
+      seen.add(r.p.id);
+      allResults.push(r);
+    });
   }
 
-  if(!results.length){
-    $("rHost").innerHTML=`<div class="empty">조건에 맞는 제품을 찾지 못했습니다.</div>`; return;
+  if(!allResults.length){
+    $("rHost").innerHTML='<div class="empty">조건에 맞는 제품을 찾지 못했습니다.</div>'; return;
   }
-  lastResults=results; sortMode="rank";
+
+  const premResults=allResults.filter(r=>r.tier==='premium');
+  const premTotal=premResults.reduce((s,r)=>s+r.p.price,0);
+  lastResults=allResults; sortMode="rank";
+
   $("aiHost").innerHTML=`
     <div class="ai-result-total">
-      <span class="ai-result-total-label">🛒 ${results.length}개 품목 합산</span>
-      <span class="ai-result-total-price">${totalPick.toLocaleString()}만원${totalBudget?` / 예산 ${totalBudget.toLocaleString()}만원`:''}</span>
+      <span class="ai-result-total-label">🛒 ${premResults.length}개 품목 (프리미엄 기준)</span>
+      <span class="ai-result-total-price">${premTotal.toLocaleString()}만원${totalBudget?' / 예산 '+totalBudget.toLocaleString()+'만원':''}</span>
+    </div>
+    <div class="tier-legend">
+      <span class="tier-badge tier-premium">프리미엄</span>
+      <span class="tier-badge tier-standard">스탠다드</span>
+      <span class="tier-badge tier-value">가성비</span>
+      <span style="font-size:11px;color:#888;margin-left:6px">— 카테고리별 3티어 비교</span>
     </div>`;
   $("rHost").innerHTML='';
-  renderSortRow(); renderResults();
+  renderAiResults(allResults);
 }
 
-/* ── Step 1 진입점 (runAI → renderCatSelector) ── */
-function runAiSearch(){ goStep2(); }
+function renderAiResults(results){
+  const catMap={};
+  results.forEach(r=>{ if(!catMap[r.p.cat]) catMap[r.p.cat]=[]; catMap[r.p.cat].push(r); });
+  $("rHost").innerHTML=Object.entries(catMap).map(([cat,tiers])=>{
+    const info=AI_CATS.find(c=>c.cat===cat);
+    return `<div class="ai-cat-group">
+      <div class="ai-cat-group-head">${info?info.emoji:''} ${cat}</div>
+      <div class="ai-tier-row">${tiers.map(r=>aiTierCard(r)).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function aiTierCard(r){
+  const p=r.p;
+  const tierClass={'premium':'tier-premium','standard':'tier-standard','value':'tier-value'}[r.tier]||'';
+  const reasonHtml=r.reasons.map(rs=>'<span class="why-reason">'+esc(rs)+'</span>').join('');
+  const matchHtml=(r.hits||[]).map(h=>'<span class="why why-match">✅ '+esc(h)+'</span>').join('');
+  const missHtml=(r.missingFeats||[]).map(h=>'<span class="why why-miss">❌ '+esc(h)+'</span>').join('');
+  const budgetBar=r.catBudget>0?`
+    <div class="ai-budget-bar">
+      <span class="ai-budget-label">예산 ${r.catBudget.toLocaleString()}만 중 <b>${p.price.toLocaleString()}만</b></span>
+      <div class="ai-budget-track"><div class="ai-budget-fill" style="width:${Math.min(r.budgetPct,100)}%;background:${r.budgetPct>100?'#e53935':r.budgetPct>90?'#fb8c00':'#1428A0'}"></div></div>
+      <span class="ai-budget-pct" style="color:${r.budgetPct>100?'#e53935':'#555'}">${r.budgetPct}%</span>
+    </div>`:'';
+  const sellHtml=(r.sellPts||[]).slice(0,3).map(s=>'<span class="sell-pt">• '+esc(s)+'</span>').join('');
+  return `<div class="ai-tier-card" onclick="toggleAiDetail(this)">
+    <div class="tier-badge ${tierClass}" style="margin-bottom:7px">${r.tierLabel}</div>
+    <div class="ai-card-name">${esc(p.group||p.cat)}</div>
+    <div class="ai-card-model">${esc(p.model)}</div>
+    <div class="ai-card-price">${p.price.toLocaleString()}<span style="font-size:12px">만원</span>${p.isnew?'<span class="rnew" style="margin-left:5px">2026</span>':''}</div>
+    ${sellHtml?'<div class="sell-pts">'+sellHtml+'</div>':''}
+    <div class="ai-reason-block">${reasonHtml}</div>
+    ${matchHtml||missHtml?'<div class="ai-feat-block">'+matchHtml+missHtml+'</div>':''}
+    ${budgetBar}
+    <div class="ai-detail-toggle">▼ 상세 스펙</div>
+    <div class="ai-detail-body" style="display:none">
+      ${(p.fx||[]).filter(([k])=>k!=='등급').map(([k,v])=>`<div class="spec-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}
+      ${p.on&&p.on.length?'<div class="spec-row-full"><span class="spec-on-label">탑재 기능</span>'+p.on.map(f=>'<span class="flg">'+esc(f)+'</span>').join('')+'</div>':''}
+      ${p.off&&p.off.length?'<div class="spec-row-full"><span class="spec-off-label">미탑재</span>'+p.off.map(f=>'<span class="flg no">'+esc(f)+'</span>').join('')+'</div>':''}
+    </div>
+  </div>`;
+}
+
+function toggleAiDetail(card){
+  const body=card.querySelector('.ai-detail-body');
+  const toggle=card.querySelector('.ai-detail-toggle');
+  if(!body) return;
+  const isHidden=body.style.display==='none'||body.style.display==='';
+  body.style.display=isHidden?'block':'none';
+  if(toggle) toggle.textContent=isHidden?'▲ 닫기':'▼ 상세 스펙';
+}
+
+
 
 
 let activeBrandCat = '전체';
