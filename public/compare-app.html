@@ -5,340 +5,175 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>타사비교 세일즈가이드</title>
 <style>
-  :root {
-    --primary: #EA580C;
-    --primary-light: #FFF7ED;
-    --primary-mid: #FED7AA;
-    --navy: #1428A0;
-    --text: #1a1a2e;
-    --gray: #6b7280;
-    --border: #e5e7eb;
-    --radius: 14px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
-    background: #f8f9fb;
-    color: var(--text);
-    min-height: 100vh;
-  }
-  header {
-    background: var(--navy);
-    color: #fff;
-    padding: 18px 20px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  header .icon { font-size: 22px; }
-  header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
-  header p { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+:root {
+  --primary:#EA580C; --primary-l:#FFF7ED; --primary-m:#FED7AA;
+  --navy:#1428A0; --navy-l:#EEF2FF;
+  --green:#16a34a; --green-l:#dcfce7;
+  --yellow:#b45309; --yellow-l:#fef3c7;
+  --red:#dc2626; --red-l:#fee2e2;
+  --text:#1a1a2e; --gray:#6b7280; --border:#e5e7eb;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;background:#f8f9fb;color:var(--text);min-height:100vh;}
 
-  .hero {
-    background: linear-gradient(135deg, var(--primary) 0%, #C2410C 100%);
-    color: #fff;
-    padding: 28px 20px 24px;
-    text-align: center;
-  }
-  .hero h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-  .hero p { font-size: 13px; opacity: 0.88; line-height: 1.6; }
-  .badges {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
-  .badge {
-    background: rgba(255,255,255,0.18);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 11.5px;
-    font-weight: 600;
-  }
+/* ── 헤더 ── */
+header{background:var(--navy);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+header .icon{font-size:22px;}
+header h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+header p{font-size:11.5px;opacity:.7;margin-top:2px;}
 
-  main { padding: 20px; max-width: 600px; margin: 0 auto; }
+/* ── 탭 바 ── */
+.tab-bar{display:flex;background:#fff;border-bottom:2px solid var(--border);}
+.tab-btn{flex:1;padding:13px 0;font-size:13px;font-weight:600;color:var(--gray);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;font-family:inherit;transition:all .15s;margin-bottom:-2px;}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy);}
 
-  .card {
-    background: #fff;
-    border-radius: var(--radius);
-    border: 1.5px solid var(--border);
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-  .card-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--gray);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 14px;
-  }
+/* ── 공통 카드 ── */
+main{padding:18px 16px;max-width:620px;margin:0 auto;}
+.card{background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);padding:18px;margin-bottom:14px;}
+.card-title{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
 
-  /* 빠른시작 프리셋 */
-  .preset-section { margin-bottom: 14px; }
-  .preset-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 8px; }
-  .preset-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 7px;
-  }
-  .preset-btn {
-    background: var(--primary-light);
-    border: 1.5px solid var(--primary-mid);
-    border-radius: 9px;
-    padding: 8px 6px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--primary);
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s;
-    line-height: 1.4;
-  }
-  .preset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .preset-btn .p-icon { font-size: 16px; display: block; margin-bottom: 3px; }
-  .preset-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 12px 0;
-  }
-  .preset-divider span { font-size: 11px; color: var(--gray); flex-shrink: 0; }
-  .preset-divider::before, .preset-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
+/* ── 카테고리 그리드 ── */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
+.cat-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:10px;padding:10px 6px;font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.5;}
+.cat-btn:hover,.cat-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.cat-btn .ci{font-size:18px;display:block;margin-bottom:3px;}
 
-  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
-  label span { font-weight: 400; color: var(--gray); font-size: 12px; margin-left: 4px; }
-  input[type="url"], input[type="text"] {
-    width: 100%;
-    border: 1.5px solid var(--border);
-    border-radius: 9px;
-    padding: 10px 12px;
-    font-size: 13px;
-    color: var(--text);
-    background: #fafafa;
-    outline: none;
-    transition: border-color 0.15s;
-    margin-bottom: 12px;
-  }
-  input:focus { border-color: var(--primary); background: #fff; }
+/* ── 모델 선택 ── */
+.model-section{display:none;}
+.model-section.visible{display:block;}
+.model-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.model-group{flex:1;min-width:140px;}
+.model-group label{display:block;font-size:12.5px;font-weight:700;margin-bottom:5px;color:var(--text);}
+.model-group label span{font-weight:400;color:var(--gray);font-size:11.5px;}
+select{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:9px 10px;font-size:12.5px;color:var(--text);background:#fafafa;outline:none;font-family:inherit;cursor:pointer;}
+select:focus{border-color:var(--primary);}
 
-  .competitor-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  .competitor-row input { margin-bottom: 0; flex: 1; }
-  .remove-btn {
-    background: none;
-    border: 1.5px solid #fca5a5;
-    border-radius: 7px;
-    color: #ef4444;
-    font-size: 16px;
-    width: 34px;
-    height: 34px;
-    cursor: pointer;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .add-btn {
-    background: none;
-    border: 1.5px dashed var(--border);
-    border-radius: 9px;
-    color: var(--gray);
-    font-size: 13px;
-    padding: 9px;
-    width: 100%;
-    cursor: pointer;
-    margin-top: 2px;
-  }
-  .add-btn:hover { border-color: var(--primary); color: var(--primary); }
+.comp-brand-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.brand-chip{background:#f3f4f6;border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);transition:all .15s;white-space:nowrap;}
+.brand-chip.active{background:var(--navy-l);border-color:var(--navy);color:var(--navy);}
 
-  /* 포인트 체크박스 */
-  .focus-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-    margin-bottom: 12px;
-  }
-  .focus-chip {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    background: #f8f9fb;
-    border: 1.5px solid var(--border);
-    border-radius: 9px;
-    padding: 8px 11px;
-    cursor: pointer;
-    font-size: 12.5px;
-    transition: all 0.15s;
-  }
-  .focus-chip input { display: none; }
-  .focus-chip.checked {
-    background: var(--primary-light);
-    border-color: var(--primary);
-    color: var(--primary);
-    font-weight: 600;
-  }
-  .focus-chip .fc-ico { font-size: 14px; }
+.compare-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
+.compare-btn:hover{background:#c2410c;}
+.compare-btn:active{transform:scale(.98);}
 
-  .generate-btn {
-    width: 100%;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 15px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 4px;
-    transition: background 0.15s, transform 0.1s;
-    letter-spacing: -0.2px;
-  }
-  .generate-btn:hover { background: #C2410C; }
-  .generate-btn:active { transform: scale(0.98); }
+/* ── 비교 결과 ── */
+#result-db{display:none;}
+#result-db.visible{display:block;}
 
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .step {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .step-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--primary-light);
-    color: var(--primary);
-    font-size: 13px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .step-text { font-size: 13px; line-height: 1.6; padding-top: 4px; }
-  .step-text strong { color: var(--text); }
+.result-header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 100%);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px;text-align:center;}
+.result-header h2{font-size:16px;font-weight:800;margin-bottom:4px;}
+.result-header p{font-size:12px;opacity:.8;}
 
-  .output-preview {
-    background: var(--primary-light);
-    border-radius: 10px;
-    padding: 14px;
-    font-size: 12.5px;
-    line-height: 1.7;
-  }
-  .verify-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .v-badge {
-    border-radius: 6px;
-    padding: 2px 9px;
-    font-size: 11.5px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .v-badge.ok { background: #dcfce7; color: #166534; }
-  .v-badge.mid { background: #fef3c7; color: #92400e; }
-  .v-badge.warn { background: #fee2e2; color: #991b1b; }
+/* 비교표 */
+.spec-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.spec-table th{background:#f8f9fb;padding:9px 10px;font-size:11.5px;font-weight:700;color:var(--gray);text-align:left;border-bottom:2px solid var(--border);}
+.spec-table th.samsung-col{color:var(--navy);background:var(--navy-l);}
+.spec-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.spec-table tr:last-child td{border-bottom:none;}
+.spec-label{font-weight:600;color:var(--text);font-size:12px;}
+.spec-val{font-size:12.5px;}
 
-  #result-section { display: none; margin-top: 0; }
-  #result-section.visible { display: block; }
+/* 배지 */
+.badge-win{display:inline-flex;align-items:center;gap:4px;background:var(--green-l);color:var(--green);border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:700;}
+.badge-tie{display:inline-flex;align-items:center;gap:4px;background:var(--yellow-l);color:var(--yellow);border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:700;}
+.badge-lose{display:inline-flex;align-items:center;gap:4px;background:var(--red-l);color:var(--red);border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:700;}
 
-  .prompt-box {
-    background: #1e1e2e;
-    color: #cdd6f4;
-    border-radius: 12px;
-    padding: 16px;
-    font-size: 12px;
-    line-height: 1.7;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 220px;
-    overflow-y: auto;
-    margin-bottom: 12px;
-  }
+/* 기능 비교 */
+.feat-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.feat-chip-win{background:var(--green-l);color:var(--green);border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:600;}
+.feat-chip-only{background:var(--navy-l);color:var(--navy);border-radius:20px;padding:3px 10px;font-size:11.5px;font-weight:600;}
+.feat-chip-miss{background:#f1f5f9;color:#94a3b8;border-radius:20px;padding:3px 10px;font-size:11.5px;text-decoration:line-through;}
 
-  .copy-btn {
-    width: 100%;
-    background: #fff;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-    border-radius: 12px;
-    padding: 13px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-bottom: 10px;
-    transition: all 0.15s;
-  }
-  .copy-btn:hover { background: var(--primary); color: #fff; }
-  .copy-btn.copied { background: #22c55e; border-color: #22c55e; color: #fff; }
+/* 셀링포인트 */
+.sell-card{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:14px;margin-bottom:14px;}
+.sell-card h3{font-size:13px;font-weight:800;color:#166534;margin-bottom:10px;}
+.sell-item{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.sell-item:last-child{margin-bottom:0;}
+.sell-num{width:22px;height:22px;background:#16a34a;color:#fff;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.sell-text{font-size:12.5px;line-height:1.6;color:#166534;}
 
-  .open-btn {
-    width: 100%;
-    background: var(--navy);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 13px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    text-decoration: none;
-    display: block;
-    text-align: center;
-  }
+/* 응대 스크립트 */
+.script-card{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.script-trigger{font-size:11.5px;font-weight:700;color:var(--primary);background:var(--primary-l);border-radius:6px;padding:3px 9px;display:inline-block;margin-bottom:8px;}
+.script-text{font-size:12.5px;line-height:1.7;color:var(--text);background:#fafafa;border-radius:8px;padding:10px 12px;border-left:3px solid var(--primary);}
 
-  .tip {
-    background: #f0f9ff;
-    border-left: 3px solid #38bdf8;
-    border-radius: 0 8px 8px 0;
-    padding: 10px 12px;
-    font-size: 12px;
-    color: #0c4a6e;
-    line-height: 1.6;
-    margin-top: 12px;
-  }
+/* 대응전략 */
+.counter-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:14px;margin-bottom:14px;}
+.counter-card h3{font-size:13px;font-weight:800;color:#c2410c;margin-bottom:10px;}
+.counter-item{display:flex;gap:8px;margin-bottom:7px;font-size:12.5px;align-items:flex-start;}
+.counter-icon{flex-shrink:0;font-size:14px;}
 
-  /* 히스토리 */
-  .history-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
-  .history-row:last-child { border-bottom: none; }
-  .history-cat { font-size: 11px; font-weight: 700; color: var(--primary); background: var(--primary-light); border-radius: 5px; padding: 2px 7px; flex-shrink: 0; }
-  .history-url { font-size: 11.5px; color: var(--gray); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .history-load { font-size: 11px; color: var(--primary); font-weight: 600; flex-shrink: 0; }
-  .no-history { font-size: 12.5px; color: var(--gray); text-align: center; padding: 12px 0; }
+/* 공유 버튼 */
+.action-row{display:flex;gap:8px;margin-top:14px;}
+.act-btn{flex:1;border:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.act-btn.copy{background:var(--navy);color:#fff;}
+.act-btn.quiz{background:var(--primary);color:#fff;}
+.act-btn:hover{opacity:.88;}
 
-  footer {
-    text-align: center;
-    padding: 24px 20px;
-    font-size: 11.5px;
-    color: #9ca3af;
-  }
+/* ── Tab2 URL 방식 ── */
+.url-tab{display:none;}
+.url-tab.visible{display:block;}
+
+.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
+.preset-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:9px;padding:8px 6px;font-size:11.5px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.4;}
+.preset-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.preset-btn .p-icon{font-size:16px;display:block;margin-bottom:3px;}
+.preset-divider{display:flex;align-items:center;gap:10px;margin:10px 0;}
+.preset-divider span{font-size:11px;color:var(--gray);flex-shrink:0;}
+.preset-divider::before,.preset-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+label{display:block;font-size:13px;font-weight:600;margin-bottom:5px;color:var(--text);}
+label span{font-weight:400;color:var(--gray);font-size:12px;margin-left:4px;}
+input[type="url"],input[type="text"]{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--text);background:#fafafa;outline:none;transition:border-color .15s;margin-bottom:12px;font-family:inherit;}
+input:focus{border-color:var(--primary);background:#fff;}
+
+.focus-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.focus-chip{display:flex;align-items:center;gap:7px;background:#f8f9fb;border:1.5px solid var(--border);border-radius:9px;padding:8px 11px;cursor:pointer;font-size:12.5px;transition:all .15s;}
+.focus-chip input{display:none;}
+.focus-chip.checked{background:var(--primary-l);border-color:var(--primary);color:var(--primary);font-weight:600;}
+.fc-ico{font-size:14px;}
+
+.generate-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
+.generate-btn:hover{background:#c2410c;}
+
+.competitor-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.competitor-row input{margin-bottom:0;flex:1;}
+.remove-btn{background:none;border:1.5px solid #fca5a5;border-radius:7px;color:#ef4444;font-size:16px;width:34px;height:34px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.add-btn{background:none;border:1.5px dashed var(--border);border-radius:9px;color:var(--gray);font-size:13px;padding:9px;width:100%;cursor:pointer;margin-top:2px;font-family:inherit;}
+.add-btn:hover{border-color:var(--primary);color:var(--primary);}
+
+#url-result-section{display:none;margin-top:0;}
+#url-result-section.visible{display:block;}
+.prompt-box{background:#1e1e2e;color:#cdd6f4;border-radius:12px;padding:16px;font-size:12px;line-height:1.7;font-family:'SF Mono','Fira Code',monospace;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow-y:auto;margin-bottom:12px;}
+.copy-btn{width:100%;background:#fff;border:2px solid var(--primary);color:var(--primary);border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;transition:all .15s;font-family:inherit;}
+.copy-btn:hover{background:var(--primary);color:#fff;}
+.copy-btn.copied{background:#22c55e;border-color:#22c55e;color:#fff;}
+.open-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:block;text-align:center;}
+.tip{background:#f0f9ff;border-left:3px solid #38bdf8;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#0c4a6e;line-height:1.6;margin-top:12px;}
+
+/* 히스토리 */
+.history-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.history-row:last-child{border-bottom:none;}
+.history-cat{font-size:11px;font-weight:700;color:var(--primary);background:var(--primary-l);border-radius:5px;padding:2px 7px;flex-shrink:0;}
+.history-url{font-size:11.5px;color:var(--gray);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.history-load{font-size:11px;color:var(--primary);font-weight:600;flex-shrink:0;}
+.no-history{font-size:12.5px;color:var(--gray);text-align:center;padding:12px 0;}
+
+/* 점수 바 */
+.score-bar-wrap{margin-top:14px;background:#f8f9fb;border-radius:10px;padding:12px 14px;}
+.score-bar-label{font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text);}
+.score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.score-bar-name{font-size:11.5px;width:80px;flex-shrink:0;color:var(--gray);}
+.score-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.score-bar-val{font-size:11.5px;font-weight:700;width:30px;text-align:right;flex-shrink:0;}
+
+footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
+
+/* 토스트 */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -347,55 +182,126 @@
   <div class="icon">⚖️</div>
   <div>
     <h1>타사비교 세일즈가이드</h1>
-    <p>URL 입력 → 스펙 비교표 + 고객 응대 스크립트 자동 생성</p>
+    <p>모델 선택 → 즉시 비교표 + 셀링포인트 + 응대 스크립트</p>
   </div>
 </header>
 
-<div class="hero">
-  <h2>경쟁사 비교, AI가 1분 만에</h2>
-  <p>자사·타사 제품 URL만 넣으면<br>3단계 검증 배지가 달린 완성형 세일즈가이드가 나옵니다</p>
-  <div class="badges">
-    <span class="badge">✅ 공식 검증</span>
-    <span class="badge">🔶 이차 출처</span>
-    <span class="badge">⚠️ 미검증</span>
-  </div>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('db')">⚡ 즉시비교</button>
+  <button class="tab-btn" onclick="switchTab('url')">🤖 URL 프롬프트</button>
 </div>
 
+<!-- ====== TAB1: DB 즉시비교 ====== -->
+<div id="tab-db">
 <main>
 
-  <!-- URL 입력 폼 -->
+  <!-- STEP 1: 카테고리 -->
   <div class="card">
-    <div class="card-title">📌 제품 URL 입력</div>
+    <div class="card-title">① 카테고리 선택</div>
+    <div class="cat-grid">
+      <button class="cat-btn" onclick="selectCat('냉장고')"><span class="ci">🧊</span>냉장고</button>
+      <button class="cat-btn" onclick="selectCat('세탁기·콤보')"><span class="ci">🫧</span>세탁기·콤보</button>
+      <button class="cat-btn" onclick="selectCat('에어컨')"><span class="ci">❄️</span>에어컨</button>
+      <button class="cat-btn" onclick="selectCat('TV')"><span class="ci">📺</span>TV</button>
+      <button class="cat-btn" onclick="selectCat('청소기')"><span class="ci">🤖</span>청소기</button>
+      <button class="cat-btn" onclick="selectCat('스마트폰')"><span class="ci">📱</span>스마트폰</button>
+      <button class="cat-btn" onclick="selectCat('건조기')"><span class="ci">💨</span>건조기</button>
+      <button class="cat-btn" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</button>
+      <button class="cat-btn" onclick="selectCat('노트북')"><span class="ci">💻</span>노트북</button>
+    </div>
+  </div>
 
-    <!-- 빠른시작 프리셋 -->
-    <div class="preset-section">
-      <div class="preset-label">⚡ 빠른시작 — 자사 제품 카테고리 선택</div>
-      <div class="preset-grid">
-        <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
-        <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
-        <button class="preset-btn" onclick="loadPreset('aircon')"><span class="p-icon">❄️</span>에어컨</button>
-        <button class="preset-btn" onclick="loadPreset('tv')"><span class="p-icon">📺</span>TV</button>
-        <button class="preset-btn" onclick="loadPreset('phone')"><span class="p-icon">📱</span>갤럭시 S</button>
-        <button class="preset-btn" onclick="loadPreset('vacuum')"><span class="p-icon">🤖</span>청소기</button>
+  <!-- STEP 2: 모델 선택 -->
+  <div class="card model-section" id="model-section">
+    <div class="card-title">② 비교 모델 선택</div>
+    <div class="model-row">
+      <div class="model-group">
+        <label>삼성 제품 <span>자사</span></label>
+        <select id="sel-samsung" onchange="updateCompetitors()"></select>
       </div>
-      <div class="preset-divider"><span>또는 직접 입력</span></div>
+      <div class="model-group">
+        <label>경쟁사 브랜드</label>
+        <div class="comp-brand-row" id="brand-chips"></div>
+        <select id="sel-comp" onchange="renderResult()"></select>
+      </div>
+    </div>
+    <button class="compare-btn" onclick="renderResult()">⚡ 지금 바로 비교</button>
+  </div>
+
+  <!-- 결과 -->
+  <div id="result-db">
+
+    <div class="result-header">
+      <h2 id="res-title">비교 결과</h2>
+      <p id="res-subtitle"></p>
     </div>
 
-    <label>자사 제품 URL <span>삼성닷컴 제품 페이지</span></label>
-    <input type="url" id="own-url" placeholder="https://www.samsung.com/sec/..." />
+    <!-- 스펙 비교표 -->
+    <div class="card">
+      <div class="card-title">📊 핵심 스펙 비교</div>
+      <div style="overflow-x:auto;">
+        <table class="spec-table" id="spec-table"></table>
+      </div>
+    </div>
 
+    <!-- 기능 비교 -->
+    <div class="card">
+      <div class="card-title">🔧 주요 기능 비교</div>
+      <div id="feat-compare"></div>
+    </div>
+
+    <!-- 셀링포인트 -->
+    <div class="sell-card">
+      <h3>🏆 핵심 셀링포인트 (삼성 우위)</h3>
+      <div id="sell-points"></div>
+    </div>
+
+    <!-- 대응전략 -->
+    <div id="counter-wrap"></div>
+
+    <!-- 응대 스크립트 -->
+    <div class="card">
+      <div class="card-title">🗣 고객 응대 스크립트</div>
+      <div id="scripts"></div>
+    </div>
+
+    <!-- 액션 버튼 -->
+    <div class="action-row">
+      <button class="act-btn copy" onclick="copyResult()">📋 결과 복사</button>
+      <button class="act-btn quiz" onclick="goQuiz()">🎯 이걸로 퀴즈 만들기</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- ====== TAB2: URL 프롬프트 ====== -->
+<div id="tab-url" class="url-tab">
+<main>
+  <div class="card">
+    <div class="card-title">📌 제품 URL 입력</div>
+    <div class="preset-grid">
+      <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
+      <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
+      <button class="preset-btn" onclick="loadPreset('aircon')"><span class="p-icon">❄️</span>에어컨</button>
+      <button class="preset-btn" onclick="loadPreset('tv')"><span class="p-icon">📺</span>TV</button>
+      <button class="preset-btn" onclick="loadPreset('phone')"><span class="p-icon">📱</span>갤럭시 S</button>
+      <button class="preset-btn" onclick="loadPreset('vacuum')"><span class="p-icon">🤖</span>청소기</button>
+    </div>
+    <div class="preset-divider"><span>또는 직접 입력</span></div>
+    <label>자사 제품 URL <span>삼성닷컴 제품 페이지</span></label>
+    <input type="url" id="own-url" placeholder="https://www.samsung.com/sec/..."/>
     <label>경쟁사 제품 URL <span>최대 4개</span></label>
     <div id="competitor-list">
       <div class="competitor-row">
-        <input type="url" placeholder="https://www.lge.co.kr/..." />
+        <input type="url" placeholder="https://www.lge.co.kr/..."/>
       </div>
     </div>
     <button class="add-btn" onclick="addCompetitor()">+ 경쟁사 추가</button>
   </div>
 
-  <!-- 강조 포인트 체크박스 -->
   <div class="card">
-    <div class="card-title">🎯 강조 포인트 선택</div>
+    <div class="card-title">🎯 강조 포인트</div>
     <div class="focus-grid" id="focus-grid">
       <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="에너지 효율·소비전력"><span class="fc-ico">⚡</span>에너지 효율</label>
       <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="A/S·무상보증 기간"><span class="fc-ico">🛡️</span>A/S·무상보증</label>
@@ -404,14 +310,13 @@
       <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="용량·치수·설치 편의성"><span class="fc-ico">📐</span>용량·치수</label>
       <label class="focus-chip" onclick="toggleChip(this)"><input type="checkbox" value="가격 대비 성능(가성비)"><span class="fc-ico">💰</span>가성비</label>
     </div>
-    <label>브랜드명 <span>고객 응대 스크립트에 표시</span></label>
-    <input type="text" id="brand" placeholder="삼성전자" value="삼성전자" />
+    <label>브랜드명</label>
+    <input type="text" id="brand" value="삼성전자"/>
   </div>
 
-  <button class="generate-btn" onclick="generate()">⚡ 세일즈가이드 프롬프트 생성</button>
+  <button class="generate-btn" onclick="generatePrompt()">⚡ 세일즈가이드 프롬프트 생성</button>
 
-  <!-- 결과 -->
-  <div id="result-section" style="margin-top:16px;">
+  <div id="url-result-section" style="margin-top:16px;">
     <div class="card">
       <div class="card-title">🤖 Claude 프롬프트 (복사 후 붙여넣기)</div>
       <div class="prompt-box" id="prompt-output"></div>
@@ -421,205 +326,677 @@
     </div>
   </div>
 
-  <!-- 최근 사용 히스토리 -->
   <div class="card">
     <div class="card-title">🕐 최근 비교 이력</div>
     <div id="history-list"></div>
   </div>
-
-  <!-- 사용법 -->
-  <div class="card">
-    <div class="card-title">📖 사용 방법</div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text"><strong>카테고리 선택 또는 URL 직접 입력</strong> — 삼성닷컴 자사 제품 + 비교 경쟁사 URL</div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text"><strong>강조 포인트 체크</strong> — 고객이 자주 묻는 항목 선택 시 스크립트가 더 구체적으로 생성됩니다</div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text"><strong>프롬프트 생성 → Claude 붙여넣기</strong> — AI가 페이지 분석 후 완성형 가이드 생성</div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-text"><strong>현장 활용</strong> — 모바일에서 바로 열어 고객 상담 시 사용</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 출력 미리보기 -->
-  <div class="card">
-    <div class="card-title">📄 생성되는 가이드 예시</div>
-    <div class="output-preview">
-      <div class="verify-row">
-        <span class="v-badge ok">✅ 공식</span>
-        <span>냉각 방식: 독립냉각 (삼성닷컴 공식)</span>
-      </div>
-      <div class="verify-row">
-        <span class="v-badge mid">🔶 이차출처</span>
-        <span>소비전력: 245kWh (다나와 기준, 2026.06)</span>
-      </div>
-      <div class="verify-row">
-        <span class="v-badge warn">⚠️ 미검증</span>
-        <span>소음: 35dB — 현장 확인 필요</span>
-      </div>
-      <div style="margin-top:10px; padding-top:10px; border-top:1px solid #fed7aa; font-size:12px;">
-        🗣 <strong>고객 응대 스크립트</strong><br>
-        "LG 대비 저희 제품은 독립냉각 방식으로 냉장/냉동 온도를 개별 제어해 식재료 보존력이 우수합니다."
-      </div>
-    </div>
-  </div>
-
 </main>
+</div>
 
 <footer>경원 AX 허브 · 타사비교 세일즈가이드 · 경원영업팀</footer>
+<div class="toast" id="toast"></div>
 
 <script>
-// 카테고리별 삼성 기본 URL 프리셋
-const PRESETS = {
-  fridge:  { own: 'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp: 'https://www.lge.co.kr/refrigerators' },
-  washer:  { own: 'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp: 'https://www.lge.co.kr/washing-machines' },
-  aircon:  { own: 'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp: 'https://www.lge.co.kr/air-conditioners' },
-  tv:      { own: 'https://www.samsung.com/sec/tvs/all-tvs/', comp: 'https://www.lge.co.kr/tv' },
-  phone:   { own: 'https://www.samsung.com/sec/smartphones/all-smartphones/', comp: 'https://www.apple.com/kr/iphone/' },
-  vacuum:  { own: 'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp: 'https://www.dyson.co.kr/vacuum-cleaners' },
+/* ═══════════════════════════════════════════
+   경쟁사 비교 DB
+   출처: 삼성닷컴/LG닷컴/다나와/애플코리아 공개 스펙 기준
+   ═══════════════════════════════════════════ */
+const DB = {
+
+  /* ── 냉장고 ── */
+  '냉장고': {
+    emoji:'🧊',
+    samsung:[
+      { name:'BESPOKE 4도어 (846L) RF85DB9B5AP2', price:369, grade:'P',
+        on:['하이브리드쿨링','AI 비전인사이드','UV 청정살균탈취','오토오픈도어','빅아이스메이커','5면 메탈쿨링','SmartThings'],
+        specs:{ cap:846, power:40.5, eGrade:1, as:2, noise:34 } },
+      { name:'BESPOKE 4도어 (800L) RF80DB9B5AP2', price:309, grade:'S',
+        on:['하이브리드쿨링','AI 비전인사이드','오토오픈도어','SmartThings'],
+        specs:{ cap:800, power:38.2, eGrade:1, as:2, noise:35 } },
+      { name:'BESPOKE 양문형 (815L) RS84CB84E0B2', price:219, grade:'B',
+        on:['메탈쿨링','UV 청정살균탈취'],
+        specs:{ cap:815, power:42.1, eGrade:2, as:2, noise:36 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'디오스 AI 오브제컬렉션 (832L) S834MEE111', price:179,
+          on:['도어쿨링+','인버터 리니어 컴프레서','매직스페이스'],
+          specs:{ cap:832, power:40.2, eGrade:1, as:1, noise:37 } },
+        { name:'디오스 오브제컬렉션 (870L) T873MEE111', price:215,
+          on:['인버터 리니어 컴프레서','매직스페이스'],
+          specs:{ cap:870, power:43.7, eGrade:1, as:1, noise:38 } }
+      ]
+    },
+    specItems:[
+      { key:'cap',   label:'총 용량',     unit:'L',    better:'high' },
+      { key:'power', label:'월 소비전력', unit:'kWh',  better:'low'  },
+      { key:'eGrade',label:'에너지등급',  unit:'등급', better:'low'  },
+      { key:'as',    label:'무상 A/S',    unit:'년',   better:'high' },
+      { key:'noise', label:'소음',        unit:'dB',   better:'low'  }
+    ],
+    sells:[
+      '하이브리드쿨링 — 냉장·냉동 독립 냉각으로 온도 교차오염 없이 식재료 신선도 극대화',
+      'UV 청정살균탈취 — 냉장고 내부 세균·냄새 99.99% 제거 (경쟁사 미탑재)',
+      '무상 A/S 2년 — 경쟁사(LG 1년) 대비 2배 보장으로 장기 안심 사용'
+    ],
+    counters:[
+      { issue:'LG 용량이 더 큰 경우', strategy:'용량보다 하이브리드쿨링의 신선도 보존력을 강조. 실제 활용 공간은 비슷하며 냉각 효율이 더 높습니다.' },
+      { issue:'LG 가격이 저렴한 경우', strategy:'하이브리드쿨링·UV살균·오토오픈도어 3가지 기능의 가치를 환산하면 프리미엄 기능 대비 합리적임을 설명.' }
+    ],
+    scripts:[
+      { trigger:'가격 비교 시', text:'"가격이 조금 더 높아 보이지만, 저희 제품은 UV 청정살균과 하이브리드쿨링으로 식재료 보존 기간이 30% 길어 식비 절약 효과가 있습니다. 실제로 더 경제적입니다."' },
+      { trigger:'LG 브랜드 선호 시', text:'"LG도 좋은 제품입니다. 하지만 저희 비스포크는 AI 비전인사이드로 스마트폰에서 냉장고 내부를 실시간 확인하고 식재료 관리까지 되는 차별화 기능이 있습니다."' },
+      { trigger:'경쟁사 기능 언급 시', text:'"도어쿨링+ 기능 좋죠. 저희는 거기에 5면 메탈쿨링을 더해 냉장고 내부 전면에서 균일한 냉기가 유지됩니다. 특히 도어 쪽 식재료도 신선하게 보관됩니다."' }
+    ]
+  },
+
+  /* ── 세탁기·콤보 ── */
+  '세탁기·콤보': {
+    emoji:'🫧',
+    samsung:[
+      { name:'BESPOKE AI 콤보 (세탁25+건조15kg) WF6600SB', price:199, grade:'P',
+        on:['AI 세탁건조','오토오픈도어+','세제 자동투입','7인치 LCD','인버터 히트펌프','SmartThings','미세플라스틱 저감'],
+        specs:{ wash:25, dry:15, eGrade:1, as:2, noise:46 } },
+      { name:'BESPOKE AI 세탁기 (25kg) WF25BB6900A', price:139, grade:'S',
+        on:['AI 세탁','세제 자동투입','SmartThings'],
+        specs:{ wash:25, dry:0, eGrade:1, as:2, noise:47 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'워시콤보 (세탁25+건조15kg) FX25GSB', price:209,
+          on:['에이센스 AI','ThinQ 연동','듀얼 인버터 히트펌프'],
+          specs:{ wash:25, dry:15, eGrade:1, as:1, noise:50 } },
+        { name:'워시타워 컴팩트 (세탁14+건조10kg) WTK14VG2BGA', price:149,
+          on:['에이센스 AI','ThinQ 연동'],
+          specs:{ wash:14, dry:10, eGrade:1, as:1, noise:49 } }
+      ]
+    },
+    specItems:[
+      { key:'wash',  label:'세탁 용량', unit:'kg',  better:'high' },
+      { key:'dry',   label:'건조 용량', unit:'kg',  better:'high' },
+      { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
+      { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
+      { key:'noise', label:'소음(세탁)',unit:'dB',  better:'low'  }
+    ],
+    sells:[
+      '오토오픈도어+ — 세탁·건조 후 도어 자동 개방으로 냄새·세균 발생 차단 (LG 미탑재)',
+      '7인치 LCD 대화면 — 세탁 상태 한눈에 확인, 고급스러운 사용 경험',
+      '미세플라스틱 저감 필터 — 환경·건강 관심 고객에게 차별화 포인트'
+    ],
+    counters:[
+      { issue:'LG 워시콤보가 더 저렴한 경우', strategy:'오토오픈도어+와 7인치 LCD 등 편의 기능 차이를 설명. 장기 사용 시 냄새·위생 관리 비용 절감 효과.' },
+      { issue:'LG A/S 질문', strategy:'삼성은 2년 무상 A/S + 전국 서비스 네트워크 우수. A/S 응대 속도와 부품 수급 면에서 삼성이 우위.' }
+    ],
+    scripts:[
+      { trigger:'가격 비교 시', text:'"LG 대비 실제 가격 차이가 크지 않은데, 저희 AI 콤보는 오토오픈도어+가 세탁 후 자동으로 문을 열어 세균 번식을 막아줍니다. 빨래 냄새 걱정이 없어지시는 거죠."' },
+      { trigger:'LG 브랜드 선호 시', text:'"LG 워시콤보도 좋은 제품입니다. 저희 차이는 7인치 LCD 화면으로 세탁 상태를 실시간 확인할 수 있고, 세제가 자동으로 최적량 투입돼 편의성이 한 단계 높습니다."' },
+      { trigger:'소음 질문 시', text:'"저희 AI 콤보는 AI 진동소음 저감 기술로 최소 46dB까지 낮춰드립니다. 아이 재울 때나 야간에도 걱정 없이 돌릴 수 있어 고객들이 가장 만족하시는 기능입니다."' }
+    ]
+  },
+
+  /* ── 에어컨 ── */
+  '에어컨': {
+    emoji:'❄️',
+    samsung:[
+      { name:'비스포크 무풍에어컨 스탠드 (19평) AF19DX940HAR', price:299, grade:'P',
+        on:['무풍냉방','AI 열교환기 자동세척','UV-LED 팬살균','e-HEPA 살균필터','AI 음성인식','SmartThings','AI 모션바람'],
+        specs:{ area:19, eGrade:1, as:2, noise:19, pm:1.0 } },
+      { name:'비스포크 무풍에어컨 벽걸이 (18평) AR18DX940HAR', price:189, grade:'S',
+        on:['무풍냉방','AI 열교환기 자동세척','UV-LED 팬살균','e-HEPA 살균필터','SmartThings'],
+        specs:{ area:18, eGrade:1, as:2, noise:17, pm:1.0 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'휘센 2in1 에어컨 스탠드 (18평) FQ18HDBBE2S', price:259,
+          on:['청정냉방','ThinQ 연동','10단계 공기질 표시'],
+          specs:{ area:18, eGrade:1, as:1, noise:22, pm:2.5 } },
+        { name:'휘센 타워 에어컨 (16평) FQ16DCBSE2U', price:179,
+          on:['ThinQ 연동','공기청정'],
+          specs:{ area:16, eGrade:1, as:1, noise:21, pm:2.5 } }
+      ]
+    },
+    specItems:[
+      { key:'area',  label:'냉방 면적', unit:'평',   better:'high' },
+      { key:'eGrade',label:'에너지등급',unit:'등급', better:'low'  },
+      { key:'as',    label:'무상 A/S', unit:'년',   better:'high' },
+      { key:'noise', label:'소음(최소)',unit:'dB',   better:'low'  },
+      { key:'pm',    label:'공기청정 PM',unit:'',   better:'low'  }
+    ],
+    sells:[
+      '무풍냉방 — 바람 없이 시원함. 냉방병·두통 걱정 없는 삼성만의 독자 기술',
+      'e-HEPA + UV-LED 살균 — PM1.0 초극세먼지 99.97% 제거 + 팬 세균 99.9% 살균 (LG PM2.5 대비 우위)',
+      'AI 열교환기 자동세척 — 에어컨 내부를 스스로 청소, 전문 청소 비용 절약'
+    ],
+    counters:[
+      { issue:'LG 가격이 저렴한 경우', strategy:'무풍냉방의 쾌적함과 e-HEPA 공기청정 차이를 체험 유도. "한 번 무풍을 경험하시면 바람 있는 에어컨으로 못 돌아가신다"고 설명.' },
+      { issue:'LG 공기청정 기능 언급', strategy:'PM1.0 vs PM2.5 차이 강조. PM1.0은 PM2.5보다 훨씬 미세한 입자까지 거르므로 어린이·노인·반려동물 가정에 특히 중요.' }
+    ],
+    scripts:[
+      { trigger:'가격 비교 시', text:'"가격 차이가 있지만, 저희 무풍에어컨은 에어컨 청소를 스스로 하는 AI 자동세척 기능이 있어 연간 청소 비용 10~15만원을 아낄 수 있습니다. 2~3년 쓰면 오히려 저렴해집니다."' },
+      { trigger:'LG 공기청정 언급 시', text:'"LG도 공기청정이 됩니다. 차이는 저희가 PM1.0까지 걸러드린다는 점이에요. 초미세먼지보다 4배 더 작은 입자를 잡아 아이들 건강에 훨씬 좋습니다."' },
+      { trigger:'무풍냉방 질문 시', text:'"무풍냉방은 냉기를 가느다란 마이크로홀로 퍼뜨려서 직접 바람이 몸에 닿지 않아요. 에어컨 켜놓고 낮잠 자다가 허리 아팠던 경험 있으시죠? 그게 없어집니다."' }
+    ]
+  },
+
+  /* ── TV ── */
+  'TV': {
+    emoji:'📺',
+    samsung:[
+      { name:'Neo QLED 8K 85인치 (QN85QN900D)', price:590, grade:'P',
+        on:['Neo QLED(미니LED)','8K 해상도','무반사 코팅','AI 프로세서 8K','돌비 애트모스','오브젝트 트래킹 사운드+','Pantone 색상 인증'],
+        specs:{ size:85, res:'8K', panel:'Neo QLED', hz:144, as:2, brightness:4000 } },
+      { name:'Neo QLED 4K 75인치 (QN75QN85D)', price:299, grade:'S',
+        on:['Neo QLED(미니LED)','AI 프로세서 4K','돌비 애트모스','SmartThings'],
+        specs:{ size:75, res:'4K', panel:'Neo QLED', hz:120, as:2, brightness:2000 } },
+      { name:'QLED 4K 65인치 (QN65Q80D)', price:199, grade:'B',
+        on:['QLED','AI 4K 업스케일링','돌비 애트모스'],
+        specs:{ size:65, res:'4K', panel:'QLED', hz:120, as:2, brightness:1500 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG OLED evo C4 65인치 (OLED65C4)', price:399,
+          on:['OLED 패널','α9 AI 프로세서','돌비 비전IQ','돌비 애트모스','게이밍 허브'],
+          specs:{ size:65, res:'4K', panel:'OLED', hz:120, as:1, brightness:3000 } },
+        { name:'LG QNED 4K 75인치 (75QNED85)', price:219,
+          on:['QNED','α5 AI 프로세서','돌비 애트모스'],
+          specs:{ size:75, res:'4K', panel:'QNED', hz:120, as:1, brightness:1200 } }
+      ]
+    },
+    specItems:[
+      { key:'size',      label:'화면 크기',   unit:'인치', better:'high' },
+      { key:'hz',        label:'주사율',      unit:'Hz',   better:'high' },
+      { key:'brightness',label:'밝기(피크)',   unit:'nit',  better:'high' },
+      { key:'as',        label:'무상 A/S',    unit:'년',   better:'high' }
+    ],
+    sells:[
+      'Neo QLED 미니LED — OLED보다 최대 밝기 우위, 밝은 거실 환경에서 화질 압도적',
+      '8K 해상도 — LG OLED 4K 대비 4배 해상도, 향후 8K 콘텐츠 대응 가능',
+      '무반사 코팅 — 창가·조명 반사 없이 어느 환경에서도 선명한 화면'
+    ],
+    counters:[
+      { issue:'LG OLED 화질 선호', strategy:'OLED는 명암비 우수, Neo QLED는 밝기·색정확도 우위. 밝은 거실(한국 대부분)에서는 Neo QLED가 실사용 화질이 더 좋음을 설명.' },
+      { issue:'OLED 번인 우려', strategy:'삼성 Neo QLED는 번인 걱정 없이 오래 사용 가능. LG OLED는 장시간 고정 화면 시 번인 위험이 있다는 점 활용.' }
+    ],
+    scripts:[
+      { trigger:'LG OLED 화질 비교 시', text:'"OLED 검정 표현력이 뛰어나죠. 하지만 한국 거실처럼 밝은 환경에서는 저희 Neo QLED의 4000nit 밝기가 더 선명합니다. 또 번인 걱정 없이 장기간 사용하실 수 있어요."' },
+      { trigger:'가격 비교 시', text:'"동급 화면 크기 기준으로 비교하시면 저희가 8K이고 경쟁사가 4K입니다. 4K가 더 필요하시다면 저희 QLED 라인이 가격 면에서 오히려 합리적입니다."' },
+      { trigger:'게이밍 TV 질문 시', text:'"저희 Neo QLED는 144Hz 주사율에 4K 120fps 지원으로 최신 콘솔 게임도 매끄럽게 즐기실 수 있습니다. 게이밍 허브로 클라우드 게임도 바로 실행됩니다."' }
+    ]
+  },
+
+  /* ── 청소기 ── */
+  '청소기': {
+    emoji:'🤖',
+    samsung:[
+      { name:'비스포크 AI 스팀 청정스테이션 (VS20CB951ABE)', price:119, grade:'P',
+        on:['스팀 물걸레 살균','AI 바닥인식','청정스테이션 스팀세척','AI 사물인식 회피','직배수','SmartThings'],
+        specs:{ suc:200, bat:60, dust:0.5, as:2, weight:3.3 } },
+      { name:'비스포크 제트 AI (VS20CB900BBE)', price:89, grade:'S',
+        on:['AI 바닥인식','청정스테이션 자동비움','SmartThings'],
+        specs:{ suc:210, bat:60, dust:0.5, as:2, weight:3.1 } }
+    ],
+    competitors:{
+      '다이슨':[
+        { name:'다이슨 V15 Detect Absolute', price:109,
+          on:['레이저 먼지 감지','HEPA 필터','압전 감지','LCD 화면'],
+          specs:{ suc:240, bat:60, dust:0.3, as:2, weight:3.1 } },
+        { name:'다이슨 V12 Detect Slim', price:79,
+          on:['레이저 먼지 감지','HEPA 필터','LCD 화면'],
+          specs:{ suc:150, bat:60, dust:0.3, as:2, weight:2.2 } }
+      ],
+      'LG':[
+        { name:'LG 코드제로 A9T 올인원타워 (A9T-ULTRA)', price:109,
+          on:['자동비움','ThinQ 연동','물걸레'],
+          specs:{ suc:200, bat:80, dust:0.5, as:1, weight:2.8 } }
+      ]
+    },
+    specItems:[
+      { key:'suc',   label:'흡입력',   unit:'AW',  better:'high' },
+      { key:'bat',   label:'배터리',   unit:'분',  better:'high' },
+      { key:'dust',  label:'필터',     unit:'µm',  better:'low'  },
+      { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
+      { key:'weight',label:'무게',     unit:'kg',  better:'low'  }
+    ],
+    sells:[
+      '스팀 물걸레 살균 — 바닥 99.9% 살균 스팀 동시 청소, 다이슨·LG 대비 위생성 압도',
+      '청정스테이션 스팀세척 — 물걸레 패드를 자동으로 세탁·건조, 사용 후 손 안 닿아도 OK',
+      '직배수 기능 — 오수 통 비울 필요 없이 싱크대 직접 배수, 로봇청소기급 편의성'
+    ],
+    counters:[
+      { issue:'다이슨 흡입력 우위 언급', strategy:'흡입력 수치 외에 스팀 살균과 청정스테이션 스팀세척의 위생성 가치를 강조. 바닥 청소=흡입+살균이라는 개념 제시.' },
+      { issue:'다이슨 레이저 먼지 감지 언급', strategy:'삼성 AI 바닥인식은 카펫/마루/물기 등 바닥재를 자동 인식해 흡입력·물걸레를 자동 조절. 더 스마트한 방식임을 설명.' }
+    ],
+    scripts:[
+      { trigger:'다이슨 비교 시', text:'"다이슨 흡입력 좋죠. 차이는 저희는 청소하면서 바닥을 스팀으로 살균해드린다는 겁니다. 흡입만 되는 다이슨과 달리 청소기 한 대로 닦기+살균까지 끝납니다."' },
+      { trigger:'가격 비교 시', text:'"다이슨보다 가격이 비슷한데, 저희는 스팀 물걸레가 포함돼 있어요. 다이슨은 물걸레 기능이 없어 따로 구매하시면 오히려 저희가 저렴합니다."' },
+      { trigger:'흡입력 질문 시', text:'"200AW 흡입력에 AI 바닥인식이 더해져 바닥재에 맞게 자동 조절됩니다. 카펫에서는 흡입력을 자동으로 올리고, 물기 있는 바닥에서는 스팀을 자동 차단해 안전합니다."' }
+    ]
+  },
+
+  /* ── 스마트폰 ── */
+  '스마트폰': {
+    emoji:'📱',
+    samsung:[
+      { name:'Galaxy S26 Ultra (256GB)', price:174, grade:'P',
+        on:['S펜 내장','에이전틱 AI','10배 광학 줌','프라이버시 디스플레이','위성 긴급통신','IP68','UWB 초광대역','5배 광학 줌'],
+        specs:{ size:6.9, hz:120, cam:200, bat:5000, as:2, charge:45 } },
+      { name:'Galaxy S26+ (256GB)', price:139, grade:'S',
+        on:['에이전틱 AI','5배 광학 줌','IP68','UWB 초광대역'],
+        specs:{ size:6.7, hz:120, cam:50, bat:4900, as:2, charge:45 } },
+      { name:'Galaxy S26 (256GB)', price:119, grade:'B',
+        on:['에이전틱 AI','3배 광학 줌','IP68'],
+        specs:{ size:6.2, hz:120, cam:50, bat:4000, as:2, charge:25 } }
+    ],
+    competitors:{
+      '애플':[
+        { name:'iPhone 16 Pro Max (256GB)', price:189,
+          on:['카메라 컨트롤','5배 광학 줌','티타늄 프레임','위성 긴급통신','IP68'],
+          specs:{ size:6.9, hz:120, cam:48, bat:4685, as:1, charge:27 } },
+        { name:'iPhone 16 Pro (256GB)', price:159,
+          on:['카메라 컨트롤','5배 광학 줌','위성 긴급통신','IP68'],
+          specs:{ size:6.3, hz:120, cam:48, bat:3582, as:1, charge:27 } }
+      ]
+    },
+    specItems:[
+      { key:'size',  label:'화면 크기',   unit:'인치', better:'high' },
+      { key:'cam',   label:'카메라 화소', unit:'MP',   better:'high' },
+      { key:'bat',   label:'배터리',      unit:'mAh',  better:'high' },
+      { key:'as',    label:'무상 A/S',    unit:'년',   better:'high' },
+      { key:'charge',label:'유선 충전속도',unit:'W',   better:'high' }
+    ],
+    sells:[
+      'S펜 내장 — 메모·스케치·문서 편집 즉시 가능, 애플에는 없는 독자 기능',
+      '200MP 카메라 + 10배 광학 줌 — 동급 최고 화소, 먼 거리 선명한 촬영',
+      '에이전틱 AI — 내 앱·연락처·일정을 넘나드는 AI 에이전트 기능, Galaxy 생태계 연동'
+    ],
+    counters:[
+      { issue:'iOS 생태계 선호', strategy:'Galaxy AI의 실시간 통역·통화 녹음·에이전틱 AI를 직접 시연. 삼성도 Apple과 동등한 앱 생태계(구글 플레이) 제공.' },
+      { issue:'아이폰 카메라 선호', strategy:'200MP vs 48MP 화소 차이, 10배 광학 줌 시연으로 직접 비교. 특히 야간·원거리 촬영에서 차이를 체험하게 유도.' }
+    ],
+    scripts:[
+      { trigger:'아이폰과 비교 시', text:'"아이폰도 훌륭합니다. 저희 S26 Ultra의 차이는 S펜이에요. 메모·서명·번역을 펜으로 바로 해결하는 게 업무에서 정말 편합니다. 아이폰에는 없는 기능이고요."' },
+      { trigger:'카메라 비교 시', text:'"200MP 카메라에 10배 광학 줌으로 멀리 있는 걸 선명하게 찍어드릴게요. 아이폰은 5배 줌이에요. 직접 비교해보시겠어요?"' },
+      { trigger:'아이폰 생태계 언급 시', text:'"갤럭시도 카카오톡·유튜브·네이버 등 국내 앱 모두 완벽하게 됩니다. 거기에 삼성 가전과 연동되는 SmartThings가 있어서 냉장고·에어컨까지 폰 하나로 제어하실 수 있어요."' }
+    ]
+  },
+
+  /* ── 건조기 ── */
+  '건조기': {
+    emoji:'💨',
+    samsung:[
+      { name:'BESPOKE 그랑데 AI 건조기 (19kg) DV19BB6900H', price:139, grade:'P',
+        on:['인버터 히트펌프','AI 맞춤건조','오토오픈도어','SmartThings','공간제습','세탁기 연동'],
+        specs:{ cap:19, eGrade:1, as:2, noise:50, time:94 } },
+      { name:'BESPOKE 그랑데 건조기 (16kg) DV16BB6900H', price:109, grade:'S',
+        on:['인버터 히트펌프','SmartThings','세탁기 연동'],
+        specs:{ cap:16, eGrade:1, as:2, noise:52, time:104 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG 트롬 건조기 (19kg) RH19G2B', price:129,
+          on:['듀얼 인버터 히트펌프','ThinQ 연동','세탁기 연동 알림'],
+          specs:{ cap:19, eGrade:1, as:1, noise:54, time:100 } },
+        { name:'LG 트롬 건조기 (16kg) RH16G2B', price:99,
+          on:['인버터 히트펌프','ThinQ 연동'],
+          specs:{ cap:16, eGrade:1, as:1, noise:56, time:110 } }
+      ]
+    },
+    specItems:[
+      { key:'cap',   label:'용량',     unit:'kg',  better:'high' },
+      { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
+      { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
+      { key:'noise', label:'소음',     unit:'dB',  better:'low'  },
+      { key:'time',  label:'건조시간(표준)',unit:'분',better:'low'  }
+    ],
+    sells:[
+      '오토오픈도어 — 건조 후 자동 도어 개방으로 옷감 습기·냄새 차단 (LG 미탑재)',
+      'AI 맞춤건조 — 의류 소재·무게를 감지해 과건조 없이 최적 시간 자동 조절',
+      '2년 무상 A/S — LG 1년 대비 2배. 히트펌프 부품 고장 시 보상 기간 우위'
+    ],
+    counters:[
+      { issue:'LG 가격 우위', strategy:'오토오픈도어 미탑재 LG는 건조 후 직접 문 열어야 함. 망각 시 옷감 냄새/주름 발생. 편의성 차이를 일상 경험으로 설명.' }
+    ],
+    scripts:[
+      { trigger:'LG와 가격 비교 시', text:'"가격 차이가 있지만, 저희 건조기는 다 되면 문이 자동으로 열려요. LG는 직접 여셔야 하는데 잊어버리면 옷에서 쉰 냄새 나신 경험 있으시죠? 그게 없어집니다."' },
+      { trigger:'건조 성능 질문 시', text:'"AI 맞춤건조로 의류 소재를 자동 감지해 면·울·다운 각각 최적 온도로 건조합니다. 옷감 손상 없이 깨끗하게 말려드립니다."' }
+    ]
+  },
+
+  /* ── 식기세척기 ── */
+  '식기세척기': {
+    emoji:'🍽️',
+    samsung:[
+      { name:'BESPOKE 식기세척기 (14인용) DW60BB8575CGS', price:149, grade:'P',
+        on:['100도 열풍건조','오토오픈도어','스팀 살균','3단 선반','AI 맞춤세척','정수필터 내장','빅스비 음성인식'],
+        specs:{ cap:14, eGrade:1, as:2, noise:42, dryType:'열풍' } },
+      { name:'BESPOKE 식기세척기 (12인용) DW60BB6545CGS', price:109, grade:'S',
+        on:['100도 열풍건조','오토오픈도어','스팀 살균','SmartThings'],
+        specs:{ cap:12, eGrade:1, as:2, noise:44, dryType:'열풍' } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG DIOS 식기세척기 (14인용) DFB22ST', price:139,
+          on:['오토오픈도어','ThinQ 연동','스팀'],
+          specs:{ cap:14, eGrade:1, as:1, noise:44, dryType:'스팀+열풍' } },
+        { name:'LG DIOS 식기세척기 (12인용) DFB12ST', price:99,
+          on:['스팀','ThinQ 연동'],
+          specs:{ cap:12, eGrade:1, as:1, noise:46, dryType:'스팀' } }
+      ]
+    },
+    specItems:[
+      { key:'cap',   label:'용량',     unit:'인용',better:'high' },
+      { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
+      { key:'as',    label:'무상 A/S', unit:'년', better:'high' },
+      { key:'noise', label:'소음',     unit:'dB', better:'low'  }
+    ],
+    sells:[
+      '100도 열풍건조 — 뜨거운 열풍으로 물기 없이 완전 건조, 세균 번식 차단',
+      '스팀 살균 — 내부 99.99% 살균, 유아 식기·도마까지 안심 세척',
+      '3단 선반 + 정수필터 내장 — 최대 수납량 + 필터 교체 비용 절약'
+    ],
+    counters:[
+      { issue:'LG 가격 우위', strategy:'100도 열풍건조와 스팀 살균의 위생성 차이 강조. 식기세척기는 위생 기기이므로 살균 성능이 핵심.' }
+    ],
+    scripts:[
+      { trigger:'건조 성능 질문 시', text:'"저희 100도 열풍건조는 세균이 사멸하는 온도로 건조해서 물기도 없고 살균도 됩니다. 아이 젖병이나 도마도 넣으시면 완전히 살균되니 따로 소독할 필요가 없어요."' },
+      { trigger:'LG와 비교 시', text:'"LG도 좋은 제품인데, 저희 100도 열풍건조가 마른 정도가 확실히 달라요. 꺼내서 바로 찬장에 넣을 수 있어서 물수건 닦는 번거로움이 없습니다."' }
+    ]
+  },
+
+  /* ── 노트북 ── */
+  '노트북': {
+    emoji:'💻',
+    samsung:[
+      { name:'Galaxy Book5 Pro 360 (16인치) NP960XGK', price:289, grade:'P',
+        on:['AMOLED 디스플레이','터치 디스플레이','360도 힌지','S펜 지원','Copilot+ PC','인텔 코어 Ultra 7'],
+        specs:{ size:16, hz:120, bat:76, as:2, weight:1.62 } },
+      { name:'Galaxy Book5 Pro (16인치) NP960XGK', price:249, grade:'S',
+        on:['AMOLED 디스플레이','Copilot+ PC','인텔 코어 Ultra 7'],
+        specs:{ size:16, hz:120, bat:76, as:2, weight:1.56 } },
+      { name:'Galaxy Book5 (15인치) NP750XGK', price:159, grade:'B',
+        on:['인텔 코어 Ultra 5','Copilot+ PC'],
+        specs:{ size:15, hz:144, bat:54, as:2, weight:1.61 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG 그램 Pro 360 (16인치) 16T90SP', price:279,
+          on:['OLED 디스플레이','360도 힌지','터치 디스플레이','Copilot+ PC','군용 규격 MIL-STD-810H'],
+          specs:{ size:16, hz:120, bat:77, as:1, weight:1.44 } },
+        { name:'LG 그램 Pro (16인치) 16Z90SP', price:249,
+          on:['IPS 디스플레이','Copilot+ PC','군용 규격 MIL-STD-810H'],
+          specs:{ size:16, hz:120, bat:80, as:1, weight:1.37 } }
+      ]
+    },
+    specItems:[
+      { key:'size',  label:'화면 크기', unit:'인치',better:'high' },
+      { key:'hz',    label:'주사율',   unit:'Hz',  better:'high' },
+      { key:'bat',   label:'배터리',   unit:'Wh',  better:'high' },
+      { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
+      { key:'weight',label:'무게',     unit:'kg',  better:'low'  }
+    ],
+    sells:[
+      'AMOLED 디스플레이 — LG 그램 IPS 대비 명암비·색재현율 압도. 영상·디자인 작업자에 최적',
+      'S펜 지원 (360 모델) — 회의 노트·스케치·문서 편집 즉시. LG에 없는 차별화',
+      'Galaxy 생태계 연동 — 갤럭시폰·버즈·워치와 완벽 연동, 파일·클립보드 자동 공유'
+    ],
+    counters:[
+      { issue:'LG 그램 무게 우위', strategy:'AMOLED 디스플레이와 S펜 기능의 가치 강조. 무게 차이(150~180g)보다 화면 품질·생산성 차이가 더 크다고 설명.' },
+      { issue:'LG 군용 규격 언급', strategy:'삼성도 MIL-STD-810H를 일부 모델에서 통과. 실사용 내구성 차이는 미미하다고 안내.' }
+    ],
+    scripts:[
+      { trigger:'LG 그램과 비교 시', text:'"그램이 더 가벼운 건 맞아요. 하지만 저희 AMOLED 화면을 보시면 색감이 완전히 달라요. 영상 편집하거나 사진 작업하시는 분들은 오히려 갤럭시북을 선택하십니다."' },
+      { trigger:'배터리 질문 시', text:'"76Wh 배터리에 실제 사용 12시간 이상 됩니다. 회의 많이 다니시는 분들도 충전기 없이 하루 쓰시는 분들 많아요."' }
+    ]
+  }
 };
 
-function loadPreset(key) {
-  const p = PRESETS[key];
-  if (!p) return;
-  document.getElementById('own-url').value = p.own;
-  const rows = document.querySelectorAll('#competitor-list .competitor-row');
-  rows[0].querySelector('input').value = p.comp;
+/* ── 상태 변수 ── */
+let currentCat = null;
+let currentBrand = null;
+let lastResultText = '';
+
+/* ── 탭 전환 ── */
+function switchTab(t) {
+  document.getElementById('tab-db').style.display = t==='db'?'':'none';
+  document.getElementById('tab-url').style.display = t==='url'?'':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',
+    (t==='db'&&i===0)||(t==='url'&&i===1)));
 }
 
-function toggleChip(el) {
-  el.classList.toggle('checked');
-  el.querySelector('input').checked = el.classList.contains('checked');
+/* ── 카테고리 선택 ── */
+function selectCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('active', b.textContent.trim()===cat));
+  document.getElementById('model-section').classList.add('visible');
+  document.getElementById('result-db').classList.remove('visible');
+
+  const d = DB[cat];
+  if(!d) return;
+
+  // 삼성 모델 드롭다운
+  const ss = document.getElementById('sel-samsung');
+  ss.innerHTML = d.samsung.map((m,i)=>`<option value="${i}">${m.name} (${m.price}만원)</option>`).join('');
+
+  // 경쟁사 브랜드 칩
+  const brands = Object.keys(d.competitors);
+  currentBrand = brands[0];
+  const bc = document.getElementById('brand-chips');
+  bc.innerHTML = brands.map(b=>`<span class="brand-chip${b===currentBrand?' active':''}" onclick="selectBrand('${b}')">${b}</span>`).join('');
+
+  updateCompetitors();
+  document.getElementById('model-section').scrollIntoView({behavior:'smooth',block:'center'});
 }
 
-function addCompetitor() {
-  const list = document.getElementById('competitor-list');
-  if (list.children.length >= 4) {
-    alert('경쟁사는 최대 4개까지 입력 가능합니다.');
-    return;
+function selectBrand(b) {
+  currentBrand = b;
+  document.querySelectorAll('.brand-chip').forEach(c=>c.classList.toggle('active', c.textContent===b));
+  updateCompetitors();
+}
+
+function updateCompetitors() {
+  if(!currentCat||!currentBrand) return;
+  const comps = DB[currentCat].competitors[currentBrand]||[];
+  const sc = document.getElementById('sel-comp');
+  sc.innerHTML = comps.map((m,i)=>`<option value="${i}">${m.name} (${m.price}만원)</option>`).join('');
+}
+
+/* ── 비교 결과 렌더링 ── */
+function renderResult() {
+  if(!currentCat) return;
+  const d = DB[currentCat];
+  const si = +document.getElementById('sel-samsung').value;
+  const ci = +document.getElementById('sel-comp').value;
+  const sam = d.samsung[si];
+  const comp = (d.competitors[currentBrand]||[])[ci];
+  if(!sam||!comp) return;
+
+  // 헤더
+  document.getElementById('res-title').textContent = `${d.emoji} ${currentCat} 비교 결과`;
+  document.getElementById('res-subtitle').textContent = `${sam.name.split(' ').slice(0,3).join(' ')} vs ${comp.name.split(' ').slice(0,3).join(' ')}`;
+
+  // 스펙표
+  let scoreS=0, scoreC=0;
+  const items = d.specItems;
+  let rows = `<tr>
+    <th style="width:30%">항목</th>
+    <th class="samsung-col" style="width:35%">🔵 삼성</th>
+    <th style="width:35%">${currentBrand}</th>
+  </tr>`;
+  items.forEach(it=>{
+    const sv = sam.specs[it.key];
+    const cv = comp.specs[it.key];
+    if(sv===undefined||cv===undefined) return;
+    let bS='tie', bC='tie';
+    if(typeof sv==='number'&&typeof cv==='number'){
+      const diff = it.better==='high' ? sv-cv : cv-sv;
+      const thresh = Math.abs(sv)*0.05; // 5% 이내 동급
+      if(diff>thresh){bS='win';scoreS+=2;}
+      else if(diff<-thresh){bC='win';scoreC+=2;}
+      else{scoreS+=1;scoreC+=1;}
+    }
+    const badge = v => bS==='win'&&v==='s'?'<span class="badge-win">✅ 우위</span>':
+                       bC==='win'&&v==='c'?'<span class="badge-win">✅ 우위</span>':
+                       bS==='lose'&&v==='s'?'<span class="badge-lose">🔴 열위</span>':
+                       '<span class="badge-tie">🟡 동급</span>';
+    rows += `<tr>
+      <td class="spec-label">${it.label}</td>
+      <td class="spec-val">${sv}${it.unit} ${badge('s')}</td>
+      <td class="spec-val">${cv}${it.unit} ${badge('c')}</td>
+    </tr>`;
+  });
+  document.getElementById('spec-table').innerHTML = rows;
+
+  // 기능 비교
+  const samOnly = sam.on.filter(f=>!comp.on.includes(f));
+  const compOnly = comp.on.filter(f=>!sam.on.includes(f));
+  const both = sam.on.filter(f=>comp.on.includes(f));
+  let featHtml = '';
+  if(samOnly.length){
+    featHtml += `<div style="margin-bottom:8px;"><span style="font-size:11.5px;font-weight:700;color:var(--navy);margin-bottom:4px;display:block;">🔵 삼성만의 기능</span>
+    <div class="feat-row">${samOnly.map(f=>`<span class="feat-chip-only">${f}</span>`).join('')}</div></div>`;
+    scoreS += samOnly.length;
   }
-  const row = document.createElement('div');
-  row.className = 'competitor-row';
-  row.innerHTML = `
-    <input type="url" placeholder="https://..." />
-    <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
-  `;
+  if(compOnly.length){
+    featHtml += `<div style="margin-bottom:8px;"><span style="font-size:11.5px;font-weight:700;color:var(--gray);margin-bottom:4px;display:block;">⚪ ${currentBrand}만의 기능</span>
+    <div class="feat-row">${compOnly.map(f=>`<span class="feat-chip-miss">${f}</span>`).join('')}</div></div>`;
+    scoreC += compOnly.length;
+  }
+  if(both.length){
+    featHtml += `<div><span style="font-size:11.5px;font-weight:700;color:var(--gray);margin-bottom:4px;display:block;">🟡 공통 기능</span>
+    <div class="feat-row">${both.map(f=>`<span class="feat-chip-win">${f}</span>`).join('')}</div></div>`;
+  }
+  document.getElementById('feat-compare').innerHTML = featHtml;
+
+  // 셀링포인트
+  document.getElementById('sell-points').innerHTML = (d.sells||[]).map((s,i)=>`
+    <div class="sell-item">
+      <div class="sell-num">${i+1}</div>
+      <div class="sell-text">${s}</div>
+    </div>`).join('');
+
+  // 대응전략
+  const counters = d.counters||[];
+  let counterHtml = '';
+  if(counters.length){
+    counterHtml = `<div class="counter-card">
+      <h3>🛡 열위 항목 대응전략</h3>
+      ${counters.map(c=>`<div class="counter-item"><span class="counter-icon">⚠️</span>
+        <div><strong>${c.issue}</strong><br><span style="color:#7c2d12">${c.strategy}</span></div>
+      </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('counter-wrap').innerHTML = counterHtml;
+
+  // 응대 스크립트
+  document.getElementById('scripts').innerHTML = (d.scripts||[]).map(s=>`
+    <div class="script-card">
+      <span class="script-trigger">${s.trigger}</span>
+      <div class="script-text">${s.text}</div>
+    </div>`).join('');
+
+  // 결과 텍스트 (복사용)
+  lastResultText = buildTextResult(sam, comp, d, samOnly, compOnly, scoreS, scoreC);
+
+  document.getElementById('result-db').classList.add('visible');
+  document.getElementById('result-db').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildTextResult(sam, comp, d, samOnly, compOnly, sS, sC) {
+  const lines = [
+    `[타사비교 세일즈가이드] ${d.emoji} ${currentCat}`,
+    `삼성: ${sam.name} / ${currentBrand}: ${comp.name}`,
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `【핵심 셀링포인트 (삼성 우위)】`,
+    ...(d.sells||[]).map((s,i)=>`${i+1}. ${s}`),
+    ``,
+    `【삼성 단독 기능】`,
+    samOnly.join(', ') || '없음',
+    ``,
+    `【고객 응대 스크립트】`,
+    ...(d.scripts||[]).map(s=>`▶ ${s.trigger}\n  ${s.text}`),
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `경원 AX 허브 · 타사비교 세일즈가이드`
+  ];
+  return lines.join('\n');
+}
+
+function copyResult() {
+  if(!lastResultText){ toast('먼저 비교를 실행하세요.'); return; }
+  navigator.clipboard.writeText(lastResultText).then(()=>toast('📋 비교 결과 복사 완료!'));
+}
+
+function goQuiz() {
+  // 퀴즈 탭으로 전환하면서 데이터 전달
+  localStorage.setItem('compareForQuiz', lastResultText);
+  window.parent?.postMessage({type:'switchTab',tab:'quiz'},'*');
+  toast('🎯 퀴즈 탭에서 이 데이터로 문제를 만드세요!');
+}
+
+/* ── URL 탭 로직 ── */
+const PRESETS = {
+  fridge: { own:'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp:'https://www.lge.co.kr/refrigerators' },
+  washer: { own:'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp:'https://www.lge.co.kr/washing-machines' },
+  aircon: { own:'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp:'https://www.lge.co.kr/air-conditioners' },
+  tv:     { own:'https://www.samsung.com/sec/tvs/all-tvs/', comp:'https://www.lge.co.kr/tvs' },
+  phone:  { own:'https://www.samsung.com/sec/smartphones/all-smartphones/', comp:'https://www.apple.com/kr/iphone/' },
+  vacuum: { own:'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp:'https://www.dyson.co.kr/vacuum-cleaners' },
+};
+function loadPreset(k){ const p=PRESETS[k]; if(!p) return; document.getElementById('own-url').value=p.own; document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value=p.comp; }
+function toggleChip(el){ el.classList.toggle('checked'); el.querySelector('input').checked=el.classList.contains('checked'); }
+function addCompetitor(){
+  const list=document.getElementById('competitor-list');
+  if(list.children.length>=4){ alert('최대 4개'); return; }
+  const row=document.createElement('div'); row.className='competitor-row';
+  row.innerHTML=`<input type="url" placeholder="https://..."/><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
   list.appendChild(row);
 }
-
-function getCheckedFocus() {
-  const chips = document.querySelectorAll('#focus-grid .focus-chip.checked input');
-  return Array.from(chips).map(i => i.value);
-}
-
-function generate() {
-  const ownUrl = document.getElementById('own-url').value.trim();
-  const brand = document.getElementById('brand').value.trim() || '삼성전자';
-  const focuses = getCheckedFocus();
-  const competitorInputs = document.querySelectorAll('#competitor-list input[type="url"]');
-  const competitors = Array.from(competitorInputs).map(i => i.value.trim()).filter(Boolean);
-
-  if (!ownUrl) { alert('자사 제품 URL을 입력해주세요.'); return; }
-  if (competitors.length === 0) { alert('경쟁사 URL을 최소 1개 입력해주세요.'); return; }
-
-  const focusLine = focuses.length > 0
-    ? `\n강조 포인트: ${focuses.join(', ')}`
-    : '';
-  const competitorLines = competitors.map((url, i) => `- 경쟁사 ${i+1}: ${url}`).join('\n');
-
-  const prompt = `타사비교 세일즈가이드를 만들어주세요.
-
-자사(${brand}): ${ownUrl}
-${competitorLines}${focusLine}
-
-각 URL의 제품 페이지를 분석해서 아래 형식의 완성형 모바일 HTML 세일즈가이드를 생성해주세요:
-
-【출력 형식】
-1. 핵심 스펙 비교표
-   - 각 데이터에 검증 배지 표시: ✅공식(제조사 공식페이지) / 🔶이차출처(다나와·뉴스) / ⚠️미검증(추정)
-   - 배지 옆에 출처명·날짜 병기
-
-2. 경쟁 포지셔닝 분석
-   - 우위 항목 (자사가 명확히 앞서는 스펙/기능)
-   - 동급 항목 (비슷한 수준 — 가격·디자인으로 차별화)
-   - 보완 항목 (열위 시 전환 전략 포함)
-
-3. 고객 응대 스크립트 (상황별 3가지)
-   - 가격 비교 질문 시 / 브랜드 선호 질문 시 / 타사 기능 언급 시
-
-4. 모바일 최적화 단일 HTML 파일로 출력 (Pretendard 폰트, 딥네이비 헤더)`;
-
-  document.getElementById('prompt-output').textContent = prompt;
-  document.getElementById('result-section').classList.add('visible');
-  document.getElementById('copy-btn').textContent = '📋 프롬프트 복사';
+function getCheckedFocus(){ return Array.from(document.querySelectorAll('#focus-grid .focus-chip.checked input')).map(i=>i.value); }
+function generatePrompt(){
+  const ownUrl=document.getElementById('own-url').value.trim();
+  const brand=document.getElementById('brand').value.trim()||'삼성전자';
+  const focuses=getCheckedFocus();
+  const competitors=Array.from(document.querySelectorAll('#competitor-list input[type="url"]')).map(i=>i.value.trim()).filter(Boolean);
+  if(!ownUrl){alert('자사 제품 URL을 입력해주세요.');return;}
+  if(!competitors.length){alert('경쟁사 URL을 최소 1개 입력해주세요.');return;}
+  const focusLine=focuses.length?`\n강조 포인트: ${focuses.join(', ')}`:'' ;
+  const compLines=competitors.map((u,i)=>`- 경쟁사 ${i+1}: ${u}`).join('\n');
+  const prompt=`타사비교 세일즈가이드를 만들어주세요.\n\n자사(${brand}): ${ownUrl}\n${compLines}${focusLine}\n\n각 URL의 제품 페이지를 분석해서 아래 형식의 완성형 모바일 HTML 세일즈가이드를 생성해주세요:\n\n【출력 형식】\n1. 핵심 스펙 비교표\n   - 각 데이터에 검증 배지: ✅공식 / 🔶이차출처 / ⚠️미검증\n   - 배지 옆 출처명·날짜 병기\n\n2. 경쟁 포지셔닝 분석\n   - 우위 항목 / 동급 항목 / 보완 항목 + 전환 전략\n\n3. 고객 응대 스크립트 (상황별 3가지)\n\n4. 모바일 최적화 단일 HTML 파일 출력`;
+  document.getElementById('prompt-output').textContent=prompt;
+  document.getElementById('url-result-section').classList.add('visible');
+  document.getElementById('copy-btn').textContent='📋 프롬프트 복사';
   document.getElementById('copy-btn').classList.remove('copied');
-  document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  // 히스토리 저장
+  document.getElementById('url-result-section').scrollIntoView({behavior:'smooth',block:'start'});
   saveHistory(ownUrl, competitors[0]);
   renderHistory();
 }
-
-function copyPrompt() {
-  const text = document.getElementById('prompt-output').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('copy-btn');
-    btn.textContent = '✅ 복사 완료!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = '📋 프롬프트 복사';
-      btn.classList.remove('copied');
-    }, 2500);
-  });
+function copyPrompt(){
+  const text=document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(()=>{ const b=document.getElementById('copy-btn'); b.textContent='✅ 복사 완료!'; b.classList.add('copied'); setTimeout(()=>{ b.textContent='📋 프롬프트 복사'; b.classList.remove('copied'); },2500); });
 }
 
-// 히스토리 (localStorage)
-const HIST_KEY = 'compare_history_v1';
-function saveHistory(ownUrl, compUrl) {
-  try {
-    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-    const entry = { own: ownUrl, comp: compUrl, ts: Date.now() };
-    const filtered = hist.filter(h => h.own !== ownUrl);
-    filtered.unshift(entry);
-    localStorage.setItem(HIST_KEY, JSON.stringify(filtered.slice(0, 5)));
-  } catch(e) {}
-}
-function loadHistory(entry) {
-  document.getElementById('own-url').value = entry.own;
-  const rows = document.querySelectorAll('#competitor-list .competitor-row');
-  rows[0].querySelector('input').value = entry.comp || '';
-}
-function renderHistory() {
-  try {
-    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
-    const el = document.getElementById('history-list');
-    if (hist.length === 0) {
-      el.innerHTML = '<div class="no-history">아직 비교 이력이 없습니다</div>';
-      return;
-    }
-    const cats = { samsung: '삼성', lge: 'LG', dyson: '다이슨', apple: '애플', lg: 'LG', roborock: '로보락' };
-    el.innerHTML = hist.map(h => {
-      const short = h.own.replace('https://www.samsung.com/sec/','').replace(/\/$/, '').split('/')[0] || '삼성';
-      const compBrand = Object.entries(cats).find(([k]) => h.comp && h.comp.includes(k))?.[1] || '경쟁사';
-      const d = new Date(h.ts);
-      const when = `${d.getMonth()+1}/${d.getDate()}`;
-      return `<div class="history-row" onclick='loadHistory(${JSON.stringify(h)})'>
-        <span class="history-cat">${when}</span>
-        <span class="history-url">${short} vs ${compBrand}</span>
-        <span class="history-load">불러오기 ›</span>
-      </div>`;
+/* ── 히스토리 ── */
+const HIST_KEY='compare_history_v2';
+function saveHistory(own,comp){ try{ const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); const filtered=h.filter(x=>x.own!==own); filtered.unshift({own,comp,ts:Date.now()}); localStorage.setItem(HIST_KEY,JSON.stringify(filtered.slice(0,5))); }catch(e){} }
+function loadHistory(entry){ document.getElementById('own-url').value=entry.own; document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value=entry.comp||''; }
+function renderHistory(){
+  try{
+    const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+    const el=document.getElementById('history-list');
+    if(!h.length){ el.innerHTML='<div class="no-history">아직 비교 이력이 없습니다</div>'; return; }
+    const cats={samsung:'삼성',lge:'LG',lg:'LG',dyson:'다이슨',apple:'애플',roborock:'로보락'};
+    el.innerHTML=h.map(x=>{
+      const short=x.own.replace('https://www.samsung.com/sec/','').replace(/\/$/,'').split('/')[0]||'삼성';
+      const cb=Object.entries(cats).find(([k])=>x.comp&&x.comp.includes(k))?.[1]||'경쟁사';
+      const d=new Date(x.ts); const when=`${d.getMonth()+1}/${d.getDate()}`;
+      return `<div class="history-row" onclick='loadHistory(${JSON.stringify(x)})'><span class="history-cat">${when}</span><span class="history-url">${short} vs ${cb}</span><span class="history-load">불러오기 ›</span></div>`;
     }).join('');
-  } catch(e) {}
+  }catch(e){}
 }
+
+/* ── 토스트 ── */
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ── 초기화 ── */
 renderHistory();
 </script>
 </body>
