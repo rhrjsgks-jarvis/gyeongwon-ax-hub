@@ -161,13 +161,24 @@ input:focus{border-color:var(--primary);background:#fff;}
 .no-history{font-size:12.5px;color:var(--gray);text-align:center;padding:12px 0;}
 
 /* 점수 바 */
-.score-bar-wrap{margin-top:14px;background:#f8f9fb;border-radius:10px;padding:12px 14px;}
-.score-bar-label{font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text);}
-.score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.score-bar-name{font-size:11.5px;width:80px;flex-shrink:0;color:var(--gray);}
-.score-bar-bg{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
-.score-bar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
-.score-bar-val{font-size:11.5px;font-weight:700;width:30px;text-align:right;flex-shrink:0;}
+.score-bar-wrap{margin-top:12px;background:rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;}
+.score-bar-label{font-size:11px;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;}
+.score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.score-bar-name{font-size:11.5px;width:72px;flex-shrink:0;color:rgba(255,255,255,.85);}
+.score-bar-bg{flex:1;height:9px;background:rgba(255,255,255,.2);border-radius:5px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:5px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+.score-bar-val{font-size:12px;font-weight:800;width:34px;text-align:right;flex-shrink:0;color:#fff;}
+
+/* 종합 판정 배너 */
+.verdict-banner{display:inline-block;margin-top:10px;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:800;letter-spacing:.3px;}
+.verdict-win{background:rgba(16,185,129,.3);color:#d1fae5;border:1px solid rgba(16,185,129,.4);}
+.verdict-draw{background:rgba(234,179,8,.3);color:#fef9c3;border:1px solid rgba(234,179,8,.4);}
+.verdict-lose{background:rgba(239,68,68,.3);color:#fecaca;border:1px solid rgba(239,68,68,.4);}
+
+/* 스펙 행 배경 */
+.spec-row-win>td{background:#f0fdf4!important;}
+.spec-row-lose>td{background:#fff1f2!important;}
+.spec-row-tie>td{background:transparent;}
 
 footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
@@ -235,6 +246,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
     <div class="result-header">
       <h2 id="res-title">비교 결과</h2>
       <p id="res-subtitle"></p>
+      <div id="score-wrap"></div>
     </div>
 
     <!-- 스펙 비교표 -->
@@ -907,11 +919,13 @@ function renderResult() {
       else if(diff<-thresh){bC='win';scoreC+=2;}
       else{scoreS+=1;scoreC+=1;}
     }
+    const rowClass = bS==='win'?'spec-row-win':bC==='win'?'spec-row-lose':'spec-row-tie';
     const badge = v => bS==='win'&&v==='s'?'<span class="badge-win">✅ 우위</span>':
                        bC==='win'&&v==='c'?'<span class="badge-win">✅ 우위</span>':
-                       bS==='lose'&&v==='s'?'<span class="badge-lose">🔴 열위</span>':
+                       bC==='win'&&v==='s'?'<span class="badge-lose">🔴 열위</span>':
+                       bS==='win'&&v==='c'?'<span class="badge-lose">🔴 열위</span>':
                        '<span class="badge-tie">🟡 동급</span>';
-    rows += `<tr>
+    rows += `<tr class="${rowClass}">
       <td class="spec-label">${it.label}</td>
       <td class="spec-val">${sv}${it.unit} ${badge('s')}</td>
       <td class="spec-val">${cv}${it.unit} ${badge('c')}</td>
@@ -940,12 +954,17 @@ function renderResult() {
   }
   document.getElementById('feat-compare').innerHTML = featHtml;
 
-  // 셀링포인트
-  document.getElementById('sell-points').innerHTML = (d.sells||[]).map((s,i)=>`
-    <div class="sell-item">
-      <div class="sell-num">${i+1}</div>
-      <div class="sell-text">${s}</div>
-    </div>`).join('');
+  // 셀링포인트 — 타이틀/설명 분리
+  const sellIcons = ['🥇','🥈','🥉'];
+  document.getElementById('sell-points').innerHTML = (d.sells||[]).map((s,i)=>{
+    const sep = s.indexOf(' — ');
+    const title = sep>=0 ? s.slice(0,sep) : s;
+    const desc  = sep>=0 ? s.slice(sep+3)  : '';
+    return `<div class="sell-item">
+      <div class="sell-num">${sellIcons[i]||i+1}</div>
+      <div class="sell-text"><strong style="color:#14532d;display:block;margin-bottom:2px;">${title}</strong>${desc}</div>
+    </div>`;
+  }).join('');
 
   // 대응전략
   const counters = d.counters||[];
@@ -965,38 +984,4 @@ function renderResult() {
     <div class="script-card">
       <span class="script-trigger">${s.trigger}</span>
       <div class="script-text">${s.text}</div>
-    </div>`).join('');
-
-  // 결과 텍스트 (복사용)
-  lastResultText = buildTextResult(sam, comp, d, samOnly, compOnly, scoreS, scoreC);
-
-  document.getElementById('result-db').classList.add('visible');
-  document.getElementById('result-db').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function buildTextResult(sam, comp, d, samOnly, compOnly, sS, sC) {
-  const lines = [
-    `[타사비교 세일즈가이드] ${d.emoji} ${currentCat}`,
-    `삼성: ${sam.name} / ${currentBrand}: ${comp.name}`,
-    `━━━━━━━━━━━━━━━━━━━━━`,
-    `【핵심 셀링포인트 (삼성 우위)】`,
-    ...(d.sells||[]).map((s,i)=>`${i+1}. ${s}`),
-    ``,
-    `【삼성 단독 기능】`,
-    samOnly.join(', ') || '없음',
-    ``,
-    `【고객 응대 스크립트】`,
-    ...(d.scripts||[]).map(s=>`▶ ${s.trigger}\n  ${s.text}`),
-    `━━━━━━━━━━━━━━━━━━━━━`,
-    `경원 AX 허브 · 타사비교 세일즈가이드`
-  ];
-  return lines.join('\n');
-}
-
-function copyResult() {
-  if(!lastResultText){ toast('먼저 비교를 실행하세요.'); return; }
-  navigator.clipboard.writeText(lastResultText).then(()=>toast('📋 비교 결과 복사 완료!'));
-}
-
-function goQuiz() {
-  // 퀴즈 탭으로 전환하�
+    </div>`).jo
