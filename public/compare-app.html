@@ -615,6 +615,14 @@ const DB = {
         specs:{ suc:6500, bat:120, noise:57, as:2, docktype:2 } }
     ],
     competitors:{
+      'LG':[
+        { name:'LG 홈봇 AI 로니 히든스테이션 (2026 신제품)', price:219,
+          on:['100℃ 스팀 물걸레 직분사 (업계 최초)','거치대 100℃ 살균스팀+온수세척','온풍건조 97% 악취제거','분당 180회 물걸레 회전','AI 사물인식','ThinQ 연동','자동급배수(싱크대 히든)'],
+          specs:{ suc:7000, bat:150, noise:58, as:1, docktype:5 } },
+        { name:'LG 코드제로 로보킹 AI 올인원 직배수 (B95AWBTH)', price:199,
+          on:['10,000Pa 흡입력','직배수','자동급수','먼지자동비움','온풍건조','세제자동투입','ThinQ 연동'],
+          specs:{ suc:10000, bat:180, noise:58, as:1, docktype:5 } }
+      ],
       '로보락':[
         { name:'로보락 S8 MaxV Ultra', price:169,
           on:['10,000Pa 흡입력','라이다+카메라 3D맵핑','8-in-1 도크(온수세척+온풍건조)','자동급수·자동배수·세제투입','AI 장애물인식 73종'],
@@ -642,19 +650,19 @@ const DB = {
       { key:'docktype',label:'도크 기능', unit:'종',   better:'high' }
     ],
     sells:[
-      'SmartThings 생태계 연동 — 삼성 갤럭시·비스포크 가전과 연계 자동화, 로보락·에코백스·드리미 불가',
-      '국내 2년 무상 A/S + 직영 서비스센터 — 중국 브랜드 대비 AS 접근성·부품 수급 안정성 압도',
-      'AI 사물인식 80종 (신발·양말·케이블 등) — 청소 회피 정밀도 업계 최고 수준'
+      'SmartThings 연동 + 가격 우위 — LG 로니(219만)·로보락(169만) 대비 삼성 콤보 139만, 성능 동급 이상에 최대 80만원 절약',
+      '국내 2년 무상 A/S — LG 1년·로보락·에코백스·드리미 모두 1년 대비 2배 보장, 전국 직영 서비스센터 즉시 처리',
+      'AI 사물인식 80종 + SmartThings 생태계 — 갤럭시·비스포크 가전과 완전 연동 자동화, 경쟁사 모두 불가'
     ],
     counters:[
-      { issue:'로보락 흡입력(10,000Pa) 우위', strategy:'흡입력 수치보다 AI 사물인식 정확도·SmartThings 연동·국내 A/S 안정성이 실사용에서 더 중요. 10,000Pa은 마케팅 수치이며, 카펫이 없는 한국 주거환경에서 6,000Pa 이상이면 충분함을 설명.' },
-      { issue:'드리미·로보락 온수세척 도크 언급', strategy:'삼성 청정스테이션 스팀세척(95℃ 고온스팀) vs 경쟁사 온수(40~70℃) 비교. 삼성이 더 높은 온도로 위생성이 우위.' },
-      { issue:'에코백스·드리미 가격 우위', strategy:'중국 브랜드 A/S 문제(부품 단종, 센터 미접근) 실사례 언급. 2~3년 후 수리 불가 리스크 vs 삼성 2년 무상+유상수리 인프라 비교.' }
+      { issue:'LG 홈봇 로니 100℃ 스팀 기능 언급', strategy:'LG 로니 219만원 vs 삼성 콤보 139만원 — 80만원 차이. 삼성도 청정스테이션 스팀세척 제공 + SmartThings 연동 + A/S 2년으로 실사용 가치 우위. 가격 대비 효용이 삼성이 압도적.' },
+      { issue:'LG·로보락 흡입력(10,000Pa) 우위', strategy:'카펫 없는 한국 주거환경에서 7,000Pa 이상이면 충분. 흡입력 수치보다 AI 사물인식 정확도·A/S 안정성·SmartThings 연동이 실사용 만족도에 더 큰 영향을 미침.' },
+      { issue:'중국 브랜드(로보락·에코백스·드리미) 가격 우위', strategy:'1년 A/S 후 부품 단종·수리 불가 리스크 실사례 언급. 2~3년 후 배터리·브러시 교체가 안 되면 통째로 교체해야 함. 삼성은 2년 무상 + 장기 유상수리 인프라 보장.' }
     ],
     scripts:[
-      { trigger:'로보락 S8 MaxV Ultra 비교 시', text:'"로보락 흡입력이 수치상 높죠. 그런데 저희 보트 콤보는 직배수에 SmartThings 연동이 돼서 출퇴근 시간에 자동으로 청소 스케줄을 짤 수 있어요. 로보락은 앱이 따로 분리돼 있거든요."' },
-      { trigger:'A/S 우려 시', text:'"로보락·드리미는 중국 브랜드라 한국 A/S센터가 많지 않습니다. 2년 지나면 부품 수급이 불안해지는 경우도 있어요. 저희는 전국 삼성직영센터에서 바로 처리됩니다."' },
-      { trigger:'가격 비교 시', text:'"로보락이 169만 원인데 저희 콤보가 139만 원이에요. 더 저렴하고, 직배수·SmartThings·AI 사물인식 80종까지 포함되어 있습니다. 가성비 측면에서도 저희가 더 좋습니다."' }
+      { trigger:'LG 홈봇 로니 100℃ 스팀 언급 시', text:'"로니 스팀 기능 인상적이죠. 근데 219만 원이에요. 저희 콤보가 139만 원인데 직배수, SmartThings 연동, AI 사물인식 80종이 다 포함돼 있어요. 80만 원 차이면 저도 삼성 선택합니다."' },
+      { trigger:'로보락·로보킹 흡입력 비교 시', text:'"10,000Pa 수치 높죠. 근데 한국 주거환경에 카펫 거의 없어서 7,000Pa이면 충분해요. 저희는 거기다 SmartThings로 퇴근 30분 전에 자동 청소 시작, 이런 거 다 돼요. 로보락은 별도 앱이라 그게 안 됩니다."' },
+      { trigger:'중국 브랜드 가격 우위 언급 시', text:'"처음엔 싸 보이죠. 1년 지나면 A/S가 문제가 생기는 경우가 있어요. 저희는 2년 무상에 전국 직영센터에서 바로 처리되고, 부품도 오래 공급됩니다. 청소기는 10년 쓰는 제품이에요."' }
     ]
   },
 
@@ -959,29 +967,4 @@ function renderResult() {
   document.getElementById('sell-points').innerHTML = (d.sells||[]).map((s,i)=>{
     const sep = s.indexOf(' — ');
     const title = sep>=0 ? s.slice(0,sep) : s;
-    const desc  = sep>=0 ? s.slice(sep+3)  : '';
-    return `<div class="sell-item">
-      <div class="sell-num">${sellIcons[i]||i+1}</div>
-      <div class="sell-text"><strong style="color:#14532d;display:block;margin-bottom:2px;">${title}</strong>${desc}</div>
-    </div>`;
-  }).join('');
-
-  // 대응전략
-  const counters = d.counters||[];
-  let counterHtml = '';
-  if(counters.length){
-    counterHtml = `<div class="counter-card">
-      <h3>🛡 열위 항목 대응전략</h3>
-      ${counters.map(c=>`<div class="counter-item"><span class="counter-icon">⚠️</span>
-        <div><strong>${c.issue}</strong><br><span style="color:#7c2d12">${c.strategy}</span></div>
-      </div>`).join('')}
-    </div>`;
-  }
-  document.getElementById('counter-wrap').innerHTML = counterHtml;
-
-  // 응대 스크립트
-  document.getElementById('scripts').innerHTML = (d.scripts||[]).map(s=>`
-    <div class="script-card">
-      <span class="script-trigger">${s.trigger}</span>
-      <div class="script-text">${s.text}</div>
-    </div>`).jo
+    const desc  = sep
