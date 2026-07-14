@@ -105,11 +105,13 @@ select:focus{border-color:var(--primary);}
 .counter-icon{flex-shrink:0;font-size:14px;}
 
 /* 공유 버튼 */
-.action-row{display:flex;gap:8px;margin-top:14px;}
-.act-btn{flex:1;border:none;border-radius:10px;padding:12px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+.act-btn{flex:1;border:none;border-radius:10px;padding:12px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;}
 .act-btn.copy{background:var(--navy);color:#fff;}
 .act-btn.quiz{background:var(--primary);color:#fff;}
-.act-btn:hover{opacity:.88;}
+.act-btn.kakao{background:#FEE500;color:#3A1D1D;}
+.act-btn.save{background:#6366f1;color:#fff;}
+.act-btn:hover{opacity:.85;transform:translateY(-1px);}
 
 /* ── Tab2 URL 방식 ── */
 .url-tab{display:none;}
@@ -186,6 +188,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -280,8 +283,10 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
     <!-- 액션 버튼 -->
     <div class="action-row">
-      <button class="act-btn copy" onclick="copyResult()">📋 결과 복사</button>
-      <button class="act-btn quiz" onclick="goQuiz()">🎯 이걸로 퀴즈 만들기</button>
+      <button class="act-btn copy"  onclick="copyResult()">📋 결과 복사</button>
+      <button class="act-btn kakao" onclick="shareKakao()">💬 카카오 공유</button>
+      <button class="act-btn save"  onclick="savePng()">📸 PNG 저장</button>
+      <button class="act-btn quiz"  onclick="goQuiz()">🎯 퀴즈 연동</button>
     </div>
   </div>
 
@@ -958,13 +963,4 @@ function renderResult() {
   }
   if(both.length){
     featHtml += `<div><span style="font-size:11.5px;font-weight:700;color:var(--gray);margin-bottom:4px;display:block;">🟡 공통 기능</span>
-    <div class="feat-row">${both.map(f=>`<span class="feat-chip-win">${f}</span>`).join('')}</div></div>`;
-  }
-  document.getElementById('feat-compare').innerHTML = featHtml;
-
-  // 셀링포인트 — 타이틀/설명 분리
-  const sellIcons = ['🥇','🥈','🥉'];
-  document.getElementById('sell-points').innerHTML = (d.sells||[]).map((s,i)=>{
-    const sep = s.indexOf(' — ');
-    const title = sep>=0 ? s.slice(0,sep) : s;
-    const desc  = sep
+    <div class="feat
