@@ -42,7 +42,7 @@ const MODULES = [
   {
     href: '/compare',
     icon: '⚡',
-    title: 'AI 생성기',
+    title: '타사비교',
     desc: '타사비교 가이드 · URL 퀴즈 — URL 입력으로 즉시 생성',
     color: '#EA580C',
     bg: '#FFF7ED',
@@ -72,16 +72,16 @@ const MODULES = [
 ]
 
 const TIPS = [
-  { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: 'AI 생성기', href: '/compare' },
+  { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
   { emoji: '📋', situation: '케어십 서비스 항목을 안내할 때', tool: 'AI Care 검색기', href: '/care' },
   { emoji: '🔎', situation: '제품 스펙을 빠르게 확인할 때', tool: '모델파인더', href: '/finder' },
-  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'AI 생성기 → 퀴즈 탭', href: '/compare' },
+  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: '타사비교 → 퀴즈 탭', href: '/compare' },
 ]
 
 const GUIDE = [
   { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX·Harman 전 제품 검색' },
   { step: '02', text: 'AI Care — 구독케어 조건·항목 즉시 조회' },
-  { step: '03', text: 'AI 생성기 — 타사비교 가이드·퀴즈 URL 입력으로 자동 생성' },
+  { step: '03', text: '타사비교 — 가이드·퀴즈 URL 입력으로 자동 생성' },
   { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },
 ]
 
