@@ -174,6 +174,18 @@ table.spec tr:last-child td{border-bottom:none}
 .ai-result-total-label{font-size:13px;opacity:.85}
 .ai-result-total-price{font-size:17px;font-weight:800}
 
+
+/* ── AI추천 근거 강화 CSS ── */
+.ai-reason-block { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px; }
+.why-reason { background:#eaf4ff; color:#1428A0; border:1px solid #b3d4f5; border-radius:10px; padding:2px 9px; font-size:11.5px; font-weight:700; }
+.why-match { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9 !important; }
+.why-miss  { background:#fce4ec; color:#b71c1c; border:1px solid #f8bbd0 !important; }
+.ai-feat-block { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px; }
+.ai-budget-bar { display:flex; align-items:center; gap:6px; margin-top:6px; }
+.ai-budget-label { font-size:11.5px; color:#555; white-space:nowrap; }
+.ai-budget-track { flex:1; height:6px; background:#e0e0e0; border-radius:3px; overflow:hidden; }
+.ai-budget-fill { height:100%; border-radius:3px; transition:width .4s; }
+.ai-budget-pct { font-size:11.5px; font-weight:700; white-space:nowrap; }
 </style>
 </head>
 <body>
@@ -633,8 +645,19 @@ function renderResults(){
 function rcard(r, i){
   const p = r.p, d = getDims(p);
   const open = openId === p.id;
-  const why = r.hits.slice(0,4).map(h=>`<span class="why">${esc(h)}</span>`).join("");
-  const aiWhy = r.aiWhy ? `<span class="why ai">AI: ${esc(r.aiWhy)}</span>` : "";
+  // AI추천 모드 근거 렌더링
+  let why="", aiWhy="";
+  if(r.reasons){
+    // AI추천 모드
+    const reasonHtml=r.reasons.map(rs=>`<span class="why-reason">✔ ${esc(rs)}</span>`).join("");
+    const matchHtml=(r.hits||[]).map(h=>`<span class="why why-match">✅ ${esc(h)}</span>`).join("");
+    const missHtml=(r.missingFeats||[]).map(h=>`<span class="why why-miss">❌ ${esc(h)}</span>`).join("");
+    const budgetBar=r.catBudget>0?`<div class="ai-budget-bar"><span class="ai-budget-label">예산 ${r.catBudget.toLocaleString()}만 중 <b>${r.p.price.toLocaleString()}만</b> 사용</span><div class="ai-budget-track"><div class="ai-budget-fill" style="width:${Math.min(r.budgetPct,100)}%;background:${r.budgetPct>100?'#e53935':r.budgetPct>90?'#fb8c00':'#1428A0'}"></div></div><span class="ai-budget-pct" style="color:${r.budgetPct>100?'#e53935':'#555'}">${r.budgetPct}%</span></div>`:"";
+    aiWhy=`<div class="ai-reason-block">${reasonHtml}</div>${matchHtml||missHtml?`<div class="ai-feat-block">${matchHtml}${missHtml}</div>`:""}${budgetBar}`;
+  } else {
+    why=r.hits.slice(0,4).map(h=>`<span class="why">${esc(h)}</span>`).join("");
+    aiWhy=r.aiWhy?`<span class="why ai">AI: ${esc(r.aiWhy)}</span>`:"";
+  }
   return `<div class="rcard">
     <button class="rmain" onclick="toggleDetail(${p.id})" aria-expanded="${open}">
       <div class="rtop"><span class="rcat">${esc(p.cat)}</span>${p.isnew?'<span class="rnew">2026</span>':''}<span class="rrank">#${String(i+1).padStart(2,"0")}</span></div>
@@ -839,8 +862,21 @@ function runAiFinal(){
     }).sort((a,b)=>b.sc-a.sc||b.p.price-a.p.price);
 
     if(items.length){
-      totalPick+=items[0].p.price;
-      results.push({p:items[0].p,sc:items[0].sc+10,hits:wantedFeats.length?wantedFeats:['AI추천']});
+      const best=items[0].p;
+      totalPick+=best.price;
+      const onStr=(best.on||[]).join(' ');
+      const matchedFeats=wantedFeats.filter(f=>onStr.includes(f));
+      const missingFeats=wantedFeats.filter(f=>!onStr.includes(f));
+      const budgetPct=budget>0?Math.round(best.price/budget*100):null;
+      // 추천 이유 자동 생성
+      const reasons=[];
+      if(wantedFeats.length>0 && matchedFeats.length===wantedFeats.length) reasons.push(`선택 기능 ${matchedFeats.length}개 전부 탑재`);
+      else if(matchedFeats.length>0) reasons.push(`선택 기능 ${matchedFeats.length}/${wantedFeats.length}개 탑재`);
+      if(best.isnew) reasons.push('2026 신모델');
+      if(budget>0 && best.price<=budget*0.8) reasons.push('예산 20% 이상 여유');
+      else if(budget>0 && best.price>budget*0.9) reasons.push('예산 내 최고사양');
+      if(reasons.length===0) reasons.push('카테고리 최우선 추천');
+      results.push({p:best,sc:items[0].sc+10,hits:matchedFeats,missingFeats,reasons,budgetPct,catBudget:budget});
     }
   }
 
