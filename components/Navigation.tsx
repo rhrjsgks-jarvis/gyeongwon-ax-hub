@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { href: '/finder',  label: '모델파인더', icon: '🔍' },
   { href: '/care',    label: 'AI Care',   icon: '💚' },
   { href: '/test',    label: '레벨업테스트', icon: '📝' },
-  { href: '/compare', label: 'AI 생성기',  icon: '⚡' },
+  { href: '/compare', label: '타사비교',  icon: '⚡' },
 ]
 
 export default function Navigation() {
