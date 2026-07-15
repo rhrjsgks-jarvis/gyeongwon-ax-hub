@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/care',    label: 'AI Care',   icon: '💚' },
   { href: '/test',    label: '레벨업테스트', icon: '📝' },
   { href: '/compare', label: '타사비교',  icon: '⚡' },
+  { href: '/install', label: '설치환경',  icon: '🛠️' },
 ]
 
 export default function Navigation() {
