@@ -89,7 +89,6 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .img-badge{display:inline-block;background:var(--navy-l);color:var(--navy);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;margin-bottom:6px;}
 .source-link-btn{display:block;width:100%;text-align:center;background:#fff;border:1.5px solid var(--navy);color:var(--navy);border-radius:10px;padding:11px;font-size:12.5px;font-weight:700;text-decoration:none;margin-bottom:14px;transition:all .15s;}
 .source-link-btn:hover{background:var(--navy);color:#fff;}
-.no-image-note{font-size:12px;color:var(--gray);line-height:1.6;padding:4px 2px 10px;}
 
 .action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
 .act-btn{border:none;border-radius:10px;padding:12px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;}
@@ -170,7 +169,6 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <div class="card" id="image-card">
         <div class="sec-title">🖼️ 삼성닷컴 공식 설치가이드 이미지</div>
         <div class="img-gallery" id="img-gallery"></div>
-        <div class="no-image-note" id="no-image-note"></div>
       </div>
       <a class="source-link-btn" id="source-link-btn" href="#" target="_blank" rel="noopener">🔗 삼성닷컴 원본 설치가이드 페이지 열기</a>
 
@@ -274,18 +272,18 @@ const INSTALL_DB = {
 
   '냉장고 4도어 키친핏 Max': {
     emoji:'🧊',
-    subtitle:'키친핏보다 더 깊은 냉장고장에 설치하는 대용량 빌트인 라인업 · 예: RM70F63R2A',
+    subtitle:'키친핏보다 더 깊은 냉장고장에 설치하는 대용량 빌트인 라인업 · 예: RM90H64P2W(602L)',
     types:['키친핏 Max 단독 설치'],
     space:[
+      ['좌우 이격(Max 전용)','좌/우 단 4mm만 있으면 설치 가능 (RM90H64P2W 기준) — 2025년 이전 출시 일반 키친핏 냉장고(RF60DB9KF2AP 기준 좌/우 12mm, 상단 47mm) 대비 대폭 축소'],
       ['냉장고장 규격(Max)','키친핏 대비 깊이가 더 깊은 전용 냉장고장 필요 (정확한 깊이는 모델별 스펙 확인 필요)'],
-      ['좌우 이격','키친핏과 유사하게 냉장고장 내측 이격 확보 필요 (모델별 상이)'],
       ['진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
     ],
     utility:[
       ['전원','전용 콘센트 필요, 냉장고장 내 콘센트 위치 사전 확인'],
     ],
     checklist:[
-      '키친핏 Max 전용 냉장고장 규격(일반 키친핏과 상이) 사전 확인',
+      '키친핏 Max 전용 냉장고장 규격(일반 키친핏과 상이, 좌우 4mm 이격 기준) 사전 확인',
       '냉장고장(가구장)의 뒤틀림·기울어짐 여부 확인',
       '설치 전 서비스센터(1588-3366) 또는 판매처를 통한 모델별 정확한 규격 확인',
     ],
@@ -293,8 +291,13 @@ const INSTALL_DB = {
       '키친핏 Max는 일반 키친핏 대비 깊이·규격이 크므로, 기존 일반 키친핏용 냉장고장에는 호환되지 않을 수 있습니다.',
       '모델별 정확한 설치 규격은 삼성닷컴 해당 제품 페이지 또는 서비스센터 확인이 필요합니다.',
     ],
-    source:'삼성닷컴 키친핏 Max 라인업(samsung.com/sec/refrigerators — 예: Bespoke AI 냉장고 4도어 키친핏 Max 640L RM70F63R2A). 치수가 표기된 별도 설치가이드 이미지는 확인하지 못해 텍스트 안내로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/all-refrigerators/?kitchen-fit+kitchen-fit-max',
+    source:'삼성닷컴 키친핏 Max 제품 페이지(samsung.com/sec/refrigerators — Bespoke AI 패밀리허브 4도어 키친핏 Max 602L RM90H64P2W). 좌우 4mm 이격 스펙은 제품 페이지 명시 문구 기준이며, 치수 도면 이미지는 확인하지 못해 실제 제품 사진으로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/refrigerators/french-door-rm90h64p2w-d2c/RM90H64P2W/',
+    images:[
+      {src:'https://images.samsung.com/kdp/goods/2026/03/11/71ffeb5e-057f-4fc1-b906-e74308ad059c.png', alt:'키친핏 Max 냉장고 정면 이미지', cap:'Bespoke AI 4도어 키친핏 Max 602L(RM90H64P2W) 정면 · samsung.com (제품 이미지, 치수 도면 아님)'},
+      {src:'https://images.samsung.com/kdp/goods/2026/03/11/e9f6877f-6a49-49ca-b2f3-ff26a11f74a2.png', alt:'키친핏 Max 냉장고 상칸 도어 오픈 이미지', cap:'RM90H64P2W 상칸 도어 오픈 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/goods/2026/03/11/8350dc8f-fce5-4746-81a8-8cfbf61d84a5.png', alt:'키친핏 Max 냉장고 좌측면 이미지', cap:'RM90H64P2W 좌측면 · samsung.com'},
+    ]
   },
 
   '냉장고 2도어': {
@@ -371,10 +374,13 @@ const INSTALL_DB = {
     cautions:[
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 냉장고 구매가이드(samsung.com/sec/refrigerators). 양문형 전용 치수 설치가이드 이미지는 확인하지 못해 대표 제품 이미지로 제공합니다.',
+    source:'삼성닷컴 양문형 냉장고 설치가이드(samsung.com/sec/refrigerators?scrollTo=install-guide), 용량대별 실측 치수 도면 기준.',
     sourceUrl:'https://www.samsung.com/sec/refrigerators/all-refrigerators/?side-by-side',
     images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/buying-guide/PCD_purchase_01_pc_04_v2.jpg', alt:'양문형 냉장고 제품 이미지', cap:'양문형 냉장고 도어 닫힘/열림 제품 이미지 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_845_852_.jpg', alt:'양문형 냉장고 845~852L 설치 규격도', cap:'845~852L급(RS84B508115 기준) 설치 규격도 — 후면 이격 50mm, 도어 오픈 최대 170도, 도어 오픈 시 전체 길이 1,780mm · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_814_841_v2.jpg', alt:'양문형 냉장고 814~841L 설치 규격도', cap:'814~841L급(RH81R9151S8 기준) 설치 규격도 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_805.jpg', alt:'양문형 냉장고 805L 설치 규격도', cap:'805L급(RS84B508115 기준) 설치 규격도 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_635_796.jpg', alt:'양문형 냉장고 635~796L 설치 규격도', cap:'635~796L급(RS63R557EB4 기준) 설치 규격도 · samsung.com'},
     ]
   },
 
@@ -754,10 +760,10 @@ function selectCat(cat) {
 
     document.getElementById('source-box').innerHTML = `<b>출처</b> · ${d.source}`;
 
-    // 삼성닷컴 원본 이미지 (검증된 URL만 사용, 로드 실패 시 자동 숨김)
+    // 삼성닷컴 원본 이미지 (검증된 URL만 사용, 로드 실패 시 자동 숨김) — 이미지가 없는 카테고리는 카드 자체를 숨기고 원본 링크 버튼만 노출
     const images = d.images || [];
     const gallery = document.getElementById('img-gallery');
-    const noImgNote = document.getElementById('no-image-note');
+    const imageCard = document.getElementById('image-card');
     if (images.length) {
       gallery.innerHTML = images.map((img, i) => `
         <div class="img-card" id="img-card-${i}">
@@ -765,11 +771,10 @@ function selectCat(cat) {
                onerror="document.getElementById('img-card-${i}').innerHTML='<div class=&quot;img-fallback&quot;>⚠️ 이미지를 불러올 수 없습니다. 아래 원본 페이지 링크를 확인해주세요.</div>'">
           <div class="img-cap"><span class="img-badge">삼성닷컴 공식</span><br>${img.cap}</div>
         </div>`).join('');
-      noImgNote.textContent = '';
-      gallery.style.display = '';
+      imageCard.style.display = '';
     } else {
       gallery.innerHTML = '';
-      noImgNote.textContent = '이 카테고리는 아직 임베드된 공식 이미지가 없습니다. 아래 링크에서 삼성닷컴 원본 설치가이드를 확인해주세요.';
+      imageCard.style.display = 'none';
     }
     const srcBtn = document.getElementById('source-link-btn');
     srcBtn.href = d.sourceUrl || 'https://www.samsung.com/sec/buying-guide/';
