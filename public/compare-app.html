@@ -187,6 +187,16 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 /* 토스트 */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
+
+/* 퀴즈 프롬프트 모달 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:10000;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.visible{display:flex;}
+.modal-box{background:#fff;border-radius:16px;max-width:480px;width:100%;max-height:86vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1.5px solid var(--border);position:sticky;top:0;background:#fff;border-radius:16px 16px 0 0;}
+.modal-title{font-size:15px;font-weight:800;color:var(--navy);}
+.modal-close{background:none;border:none;font-size:22px;line-height:1;color:var(--gray);cursor:pointer;padding:2px 6px;}
+.modal-body{padding:16px 18px;}
+.modal-desc{font-size:12.5px;color:var(--gray);line-height:1.6;margin-bottom:12px;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
@@ -353,7 +363,20 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
 <footer>경원 AX 허브 · 타사비교 세일즈가이드 · 경원영업팀</footer>
 <div class="toast" id="toast"></div>
-
+<div class="modal-overlay" id="quiz-modal-overlay" onclick="closeQuizModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">🎯 이 비교로 퀴즈 만들기</div>
+      <button class="modal-close" onclick="closeQuizModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">아래 프롬프트를 복사해 Claude(claude.ai) 또는 Cowork에 붙여넣으면, 방금 확인한 정확한 스펙·셀링포인트·응대스크립트를 그대로 활용한 직원 평가용 인터랙티브 퀴즈 HTML이 생성됩니다. URL 재입력이 필요 없습니다.</p>
+      <div class="prompt-box" id="quiz-prompt-output"></div>
+      <button class="copy-btn" id="quiz-copy-btn" onclick="copyQuizPrompt()">📋 퀴즈 프롬프트 복사</button>
+      <a class="open-btn" href="https://claude.ai" target="_blank">Claude에서 열기 →</a>
+    </div>
+  </div>
+</div>
 <script>
 /* ═══════════════════════════════════════════
    경쟁사 비교 DB
@@ -852,6 +875,7 @@ const DB = {
 let currentCat = null;
 let currentBrand = null;
 let lastResultText = '';
+let lastComparison = null;
 
 /* ── 탭 전환 ── */
 function switchTab(t) {
@@ -963,4 +987,250 @@ function renderResult() {
   }
   if(both.length){
     featHtml += `<div><span style="font-size:11.5px;font-weight:700;color:var(--gray);margin-bottom:4px;display:block;">🟡 공통 기능</span>
-    <div class="feat
+    <div class="feat-row">${both.map(f=>`<span class="feat-chip-win">${f}</span>`).join('')}</div></div>`;
+  }
+  document.getElementById('feat-compare').innerHTML = featHtml;
+
+  // 점수 게이지 + 종합판정 배너
+  const total = scoreS + scoreC;
+  const pctS = total ? Math.round(scoreS/total*100) : 50;
+  const pctC = 100 - pctS;
+  let verdictClass='verdict-draw', verdictText='🟡 팽팽한 접전';
+  if(scoreS - scoreC >= 3){ verdictClass='verdict-win'; verdictText='🔵 삼성 우위'; }
+  else if(scoreC - scoreS >= 3){ verdictClass='verdict-lose'; verdictText='🔴 열위 주의 — 대응전략 확인'; }
+  document.getElementById('score-wrap').innerHTML = `
+    <div class="score-bar-wrap">
+      <div class="score-bar-label">종합 스코어</div>
+      <div class="score-bar-row">
+        <span class="score-bar-name">🔵 삼성</span>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pctS}%;background:#4ade80;"></div></div>
+        <span class="score-bar-val">${scoreS}</span>
+      </div>
+      <div class="score-bar-row">
+        <span class="score-bar-name">${currentBrand}</span>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pctC}%;background:#f87171;"></div></div>
+        <span class="score-bar-val">${scoreC}</span>
+      </div>
+    </div>
+    <span class="verdict-banner ${verdictClass}">${verdictText}</span>
+  `;
+
+  // 셀링포인트
+  document.getElementById('sell-points').innerHTML = (d.sells||[]).map((s,i)=>`
+    <div class="sell-item">
+      <div class="sell-num">${i+1}</div>
+      <div class="sell-text">${s}</div>
+    </div>`).join('');
+
+  // 대응전략
+  const counters = d.counters||[];
+  let counterHtml = '';
+  if(counters.length){
+    counterHtml = `<div class="counter-card">
+      <h3>🛡 열위 항목 대응전략</h3>
+      ${counters.map(c=>`<div class="counter-item"><span class="counter-icon">⚠️</span>
+        <div><strong>${c.issue}</strong><br><span style="color:#7c2d12">${c.strategy}</span></div>
+      </div>`).join('')}
+    </div>`;
+  }
+  document.getElementById('counter-wrap').innerHTML = counterHtml;
+
+  // 응대 스크립트
+  document.getElementById('scripts').innerHTML = (d.scripts||[]).map(s=>`
+    <div class="script-card">
+      <span class="script-trigger">${s.trigger}</span>
+      <div class="script-text">${s.text}</div>
+    </div>`).join('');
+
+  // 결과 텍스트 (복사·공유용) + 퀴즈 연동용 데이터 저장
+  lastResultText = buildTextResult(sam, comp, d, samOnly, compOnly, scoreS, scoreC);
+  lastComparison = { cat: currentCat, brand: currentBrand, d, sam, comp, samOnly, compOnly, scoreS, scoreC };
+
+  document.getElementById('result-db').classList.add('visible');
+  document.getElementById('result-db').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildTextResult(sam, comp, d, samOnly, compOnly, sS, sC) {
+  const specLines = d.specItems.map(it=>{
+    const sv = sam.specs[it.key], cv = comp.specs[it.key];
+    if(sv===undefined||cv===undefined) return null;
+    return `- ${it.label}: 삼성 ${sv}${it.unit} vs ${currentBrand} ${cv}${it.unit}`;
+  }).filter(Boolean).join('\n');
+  const lines = [
+    `[타사비교 세일즈가이드] ${d.emoji} ${currentCat}`,
+    `삼성: ${sam.name} / ${currentBrand}: ${comp.name}`,
+    `종합 스코어: 삼성 ${sS} : ${currentBrand} ${sC}`,
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `【핵심 스펙 비교】`,
+    specLines,
+    ``,
+    `【핵심 셀링포인트 (삼성 우위)】`,
+    ...(d.sells||[]).map((s,i)=>`${i+1}. ${s}`),
+    ``,
+    `【삼성 단독 기능】`,
+    samOnly.join(', ') || '없음',
+    ``,
+    `【고객 응대 스크립트】`,
+    ...(d.scripts||[]).map(s=>`▶ ${s.trigger}\n  ${s.text}`),
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `경원 AX 허브 · 타사비교 세일즈가이드`
+  ];
+  return lines.join('\n');
+}
+
+function copyResult() {
+  if(!lastResultText){ toast('먼저 비교를 실행하세요.'); return; }
+  navigator.clipboard.writeText(lastResultText).then(()=>toast('📋 비교 결과 복사 완료!'));
+}
+
+/* ── 카카오 공유 (Web Share API, 모바일에서 카카오톡 선택 가능) ── */
+function shareKakao() {
+  if(!lastResultText){ toast('먼저 비교를 실행하세요.'); return; }
+  if(navigator.share){
+    navigator.share({ title:'타사비교 세일즈가이드', text:lastResultText })
+      .catch(()=>{ /* 사용자가 공유 취소 시 무시 */ });
+  } else {
+    navigator.clipboard.writeText(lastResultText)
+      .then(()=>toast('📋 복사 완료! 카카오톡에 붙여넣기 해주세요.'));
+  }
+}
+
+/* ── PNG 저장 (html2canvas) ── */
+function savePng() {
+  const el = document.getElementById('result-db');
+  if(!el || !el.classList.contains('visible')){ toast('먼저 비교를 실행하세요.'); return; }
+  if(typeof html2canvas === 'undefined'){ toast('⚠️ 이미지 생성 모듈 로드 실패'); return; }
+  toast('📸 이미지 생성 중...');
+  html2canvas(el, { backgroundColor:'#f8f9fb', scale:2, useCORS:true }).then(canvas=>{
+    const link = document.createElement('a');
+    link.download = `타사비교_${currentCat||'결과'}_${Date.now()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    toast('✅ PNG 저장 완료!');
+  }).catch(()=>toast('⚠️ 이미지 생성 실패'));
+}
+
+/* ── 퀴즈 연동: 비교 결과 → 퀴즈 생성 프롬프트 자동 생성 (Task #68) ── */
+function goQuiz() {
+  if(!lastComparison){ toast('먼저 비교를 실행하세요.'); return; }
+  const { cat, brand, d, sam, comp, samOnly, compOnly } = lastComparison;
+
+  const specLines = d.specItems.map(it=>{
+    const sv = sam.specs[it.key], cv = comp.specs[it.key];
+    if(sv===undefined||cv===undefined) return null;
+    return `- ${it.label}: 삼성 ${sv}${it.unit} / ${brand} ${cv}${it.unit}`;
+  }).filter(Boolean).join('\n');
+  const sellLines = (d.sells||[]).map((s,i)=>`${i+1}. ${s}`).join('\n');
+  const scriptLines = (d.scripts||[]).map(s=>`▶ ${s.trigger}\n  ${s.text}`).join('\n');
+
+  const prompt = `직원 역량 평가용 제품 퀴즈를 만들어주세요. 아래는 이미 확정된 비교 데이터이니 URL 조회 없이 이 내용만 근거로 출제해주세요.
+
+【비교 대상】
+- 카테고리: ${cat}
+- 삼성: ${sam.name}
+- ${brand}: ${comp.name}
+
+【스펙 비교】
+${specLines}
+
+【삼성 단독 기능】
+${samOnly.join(', ') || '없음'}
+
+【${brand} 단독 기능】
+${compOnly.join(', ') || '없음'}
+
+【핵심 셀링포인트 (삼성 우위)】
+${sellLines}
+
+【고객 응대 스크립트】
+${scriptLines}
+
+【요청사항】
+1. 위 데이터만 근거로 4지선다 문제은행 25~40문항 생성 (스펙 수치·경쟁 비교·응대 스크립트 유형을 균등 배분)
+2. 각 문항에 정답·오답 해설 포함, 해설에서 삼성 우위를 자연스럽게 강조
+3. 인터랙티브 HTML 퀴즈 파일로 출력 — 타이머(카운트다운), 즉시 피드백, 결과 화면(점수·등급), 모바일 최적화(Pretendard 폰트·딥네이비 헤더)`;
+
+  document.getElementById('quiz-prompt-output').textContent = prompt;
+  document.getElementById('quiz-modal-overlay').classList.add('visible');
+}
+function closeQuizModal() {
+  document.getElementById('quiz-modal-overlay').classList.remove('visible');
+}
+function copyQuizPrompt() {
+  const text = document.getElementById('quiz-prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const b = document.getElementById('quiz-copy-btn');
+    b.textContent = '✅ 복사 완료!'; b.classList.add('copied');
+    setTimeout(()=>{ b.textContent = '📋 퀴즈 프롬프트 복사'; b.classList.remove('copied'); }, 2500);
+  });
+}
+
+/* ── URL 탭 로직 ── */
+const PRESETS = {
+  fridge: { own:'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp:'https://www.lge.co.kr/refrigerators' },
+  washer: { own:'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp:'https://www.lge.co.kr/washing-machines' },
+  aircon: { own:'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp:'https://www.lge.co.kr/air-conditioners' },
+  tv:     { own:'https://www.samsung.com/sec/tvs/all-tvs/', comp:'https://www.lge.co.kr/tvs' },
+  phone:  { own:'https://www.samsung.com/sec/smartphones/all-smartphones/', comp:'https://www.apple.com/kr/iphone/' },
+  vacuum: { own:'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp:'https://www.dyson.co.kr/vacuum-cleaners' },
+};
+function loadPreset(k){ const p=PRESETS[k]; if(!p) return; document.getElementById('own-url').value=p.own; document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value=p.comp; }
+function toggleChip(el){ el.classList.toggle('checked'); el.querySelector('input').checked=el.classList.contains('checked'); }
+function addCompetitor(){
+  const list=document.getElementById('competitor-list');
+  if(list.children.length>=4){ alert('경쟁사는 최대 4개까지 입력 가능합니다.'); return; }
+  const row=document.createElement('div'); row.className='competitor-row';
+  row.innerHTML=`<input type="url" placeholder="https://..."/><button class="remove-btn" onclick="this.parentElement.remove()">×</button>`;
+  list.appendChild(row);
+}
+function getCheckedFocus(){ return Array.from(document.querySelectorAll('#focus-grid .focus-chip.checked input')).map(i=>i.value); }
+function generatePrompt(){
+  const ownUrl=document.getElementById('own-url').value.trim();
+  const brand=document.getElementById('brand').value.trim()||'삼성전자';
+  const focuses=getCheckedFocus();
+  const competitors=Array.from(document.querySelectorAll('#competitor-list input[type="url"]')).map(i=>i.value.trim()).filter(Boolean);
+  if(!ownUrl){alert('자사 제품 URL을 입력해주세요.');return;}
+  if(!competitors.length){alert('경쟁사 URL을 최소 1개 입력해주세요.');return;}
+  const focusLine=focuses.length?`\n강조 포인트: ${focuses.join(', ')}`:'';
+  const compLines=competitors.map((u,i)=>`- 경쟁사 ${i+1}: ${u}`).join('\n');
+  const prompt=`타사비교 세일즈가이드를 만들어주세요.\n\n자사(${brand}): ${ownUrl}\n${compLines}${focusLine}\n\n각 URL의 제품 페이지를 분석해서 아래 형식의 완성형 모바일 HTML 세일즈가이드를 생성해주세요:\n\n【출력 형식】\n1. 핵심 스펙 비교표\n   - 각 데이터에 검증 배지: ✅공식 / 🔶이차출처 / ⚠️미검증\n   - 배지 옆 출처명·날짜 병기\n\n2. 경쟁 포지셔닝 분석\n   - 우위 항목 / 동급 항목 / 보완 항목 + 전환 전략\n\n3. 고객 응대 스크립트 (상황별 3가지)\n\n4. 모바일 최적화 단일 HTML 파일 출력`;
+  document.getElementById('prompt-output').textContent=prompt;
+  document.getElementById('url-result-section').classList.add('visible');
+  document.getElementById('copy-btn').textContent='📋 프롬프트 복사';
+  document.getElementById('copy-btn').classList.remove('copied');
+  document.getElementById('url-result-section').scrollIntoView({behavior:'smooth',block:'start'});
+  saveHistory(ownUrl, competitors[0]);
+  renderHistory();
+}
+function copyPrompt(){
+  const text=document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(()=>{ const b=document.getElementById('copy-btn'); b.textContent='✅ 복사 완료!'; b.classList.add('copied'); setTimeout(()=>{ b.textContent='📋 프롬프트 복사'; b.classList.remove('copied'); },2500); });
+}
+
+/* ── 히스토리 ── */
+const HIST_KEY='compare_history_v2';
+function saveHistory(own,comp){ try{ const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); const filtered=h.filter(x=>x.own!==own); filtered.unshift({own,comp,ts:Date.now()}); localStorage.setItem(HIST_KEY,JSON.stringify(filtered.slice(0,5))); }catch(e){} }
+function loadHistory(entry){ document.getElementById('own-url').value=entry.own; document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value=entry.comp||''; }
+function renderHistory(){
+  try{
+    const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
+    const el=document.getElementById('history-list');
+    if(!h.length){ el.innerHTML='<div class="no-history">아직 비교 이력이 없습니다</div>'; return; }
+    const cats={samsung:'삼성',lge:'LG',lg:'LG',dyson:'다이슨',apple:'애플',roborock:'로보락'};
+    el.innerHTML=h.map(x=>{
+      const short=x.own.replace('https://www.samsung.com/sec/','').replace(/\/$/,'').split('/')[0]||'삼성';
+      const cb=Object.entries(cats).find(([k])=>x.comp&&x.comp.includes(k))?.[1]||'경쟁사';
+      const d=new Date(x.ts); const when=`${d.getMonth()+1}/${d.getDate()}`;
+      return `<div class="history-row" onclick='loadHistory(${JSON.stringify(x)})'><span class="history-cat">${when}</span><span class="history-url">${short} vs ${cb}</span><span class="history-load">불러오기 ›</span></div>`;
+    }).join('');
+  }catch(e){}
+}
+
+/* ── 토스트 ── */
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ── 초기화 ── */
+renderHistory();
+</script>
+</body>
+</html>
