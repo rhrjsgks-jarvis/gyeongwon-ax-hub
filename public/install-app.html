@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제품별 설치환경 가이드</title>
+<style>
+:root {
+  --primary:#0891B2; --primary-l:#ECFEFF; --primary-m:#A5F3FC;
+  --navy:#1428A0; --navy-l:#EEF2FF;
+  --green:#16a34a; --green-l:#dcfce7;
+  --yellow:#b45309; --yellow-l:#fef3c7;
+  --red:#dc2626; --red-l:#fee2e2;
+  --text:#1a1a2e; --gray:#6b7280; --border:#e5e7eb;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard Variable',Pretendard,-apple-system,sans-serif;background:#f8f9fb;color:var(--text);min-height:100vh;}
+
+header{background:var(--navy);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+header .icon{font-size:22px;}
+header h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+header p{font-size:11.5px;opacity:.7;margin-top:2px;}
+
+main{padding:18px 16px;max-width:620px;margin:0 auto;}
+.card{background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);padding:18px;margin-bottom:14px;}
+.card-title{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
+
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
+.cat-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:10px;padding:10px 6px;font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.5;}
+.cat-btn:hover,.cat-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.cat-btn .ci{font-size:18px;display:block;margin-bottom:3px;}
+
+#result{display:none;}
+#result.visible{display:block;}
+
+.result-header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 100%);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px;}
+.result-header h2{font-size:16px;font-weight:800;margin-bottom:4px;}
+.result-header p{font-size:12px;opacity:.85;line-height:1.5;}
+
+.na-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:16px;margin-bottom:14px;font-size:13px;color:#7c2d12;line-height:1.6;}
+
+.sec-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.spec-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px;}
+.spec-table th{background:#f8f9fb;padding:9px 10px;font-size:11.5px;font-weight:700;color:var(--gray);text-align:left;border-bottom:2px solid var(--border);width:38%;}
+.spec-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55;}
+.spec-table tr:last-child td, .spec-table tr:last-child th{border-bottom:none;}
+
+.type-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.type-chip{background:var(--navy-l);color:var(--navy);border-radius:20px;padding:4px 12px;font-size:11.5px;font-weight:700;}
+
+.check-list{list-style:none;}
+.check-item{display:flex;gap:8px;margin-bottom:9px;font-size:12.5px;line-height:1.6;align-items:flex-start;}
+.check-item:last-child{margin-bottom:0;}
+.check-ico{flex-shrink:0;font-size:14px;margin-top:1px;}
+
+.caution-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:14px;margin-bottom:14px;}
+.caution-card h3{font-size:13px;font-weight:800;color:#c2410c;margin-bottom:10px;}
+.caution-item{display:flex;gap:8px;margin-bottom:7px;font-size:12.5px;align-items:flex-start;line-height:1.55;}
+.caution-item:last-child{margin-bottom:0;}
+.caution-icon{flex-shrink:0;font-size:14px;}
+
+.source-box{background:#f8f9fb;border-radius:10px;padding:12px 14px;font-size:11.5px;color:var(--gray);line-height:1.6;margin-bottom:14px;}
+.source-box b{color:var(--text);}
+
+.action-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.act-btn{border:none;border-radius:10px;padding:12px 6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;}
+.act-btn.copy{background:var(--navy);color:#fff;}
+.act-btn.kakao{background:#FEE500;color:#3A1D1D;}
+.act-btn:hover{opacity:.85;transform:translateY(-1px);}
+
+.disclaimer{background:#f0f9ff;border-left:3px solid #38bdf8;border-radius:0 8px 8px 0;padding:10px 12px;font-size:11.5px;color:#0c4a6e;line-height:1.6;margin-top:14px;}
+
+footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="icon">🛠️</div>
+  <div>
+    <h1>제품별 설치환경 가이드</h1>
+    <p>카테고리 선택 → 설치 공간·전기/급배수 요건 확인</p>
+  </div>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="card-title">① 카테고리 선택</div>
+    <div class="cat-grid">
+      <button class="cat-btn" onclick="selectCat('냉장고')"><span class="ci">🧊</span>냉장고</button>
+      <button class="cat-btn" onclick="selectCat('세탁기·콤보')"><span class="ci">🫧</span>세탁기·콤보</button>
+      <button class="cat-btn" onclick="selectCat('에어컨')"><span class="ci">❄️</span>에어컨</button>
+      <button class="cat-btn" onclick="selectCat('TV')"><span class="ci">📺</span>TV</button>
+      <button class="cat-btn" onclick="selectCat('청소기')"><span class="ci">💨</span>무선청소기</button>
+      <button class="cat-btn" onclick="selectCat('로봇청소기')"><span class="ci">🤖</span>로봇청소기</button>
+      <button class="cat-btn" onclick="selectCat('스마트폰')"><span class="ci">📱</span>스마트폰</button>
+      <button class="cat-btn" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</button>
+      <button class="cat-btn" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</button>
+      <button class="cat-btn" onclick="selectCat('노트북')"><span class="ci">💻</span>노트북</button>
+    </div>
+  </div>
+
+  <div id="result">
+    <div class="result-header">
+      <h2 id="res-title">설치환경 안내</h2>
+      <p id="res-subtitle"></p>
+    </div>
+
+    <div id="na-wrap"></div>
+
+    <div id="main-content">
+      <div class="card">
+        <div class="sec-title">📐 설치 유형·공간 요건</div>
+        <div class="type-chip-row" id="type-chips"></div>
+        <table class="spec-table" id="space-table"></table>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">🔌 전기·급배수 요건</div>
+        <table class="spec-table" id="utility-table"></table>
+      </div>
+
+      <div class="card">
+        <div class="sec-title">✅ 설치 전 확인 체크리스트</div>
+        <ul class="check-list" id="check-list"></ul>
+      </div>
+
+      <div id="caution-wrap"></div>
+
+      <div class="source-box" id="source-box"></div>
+
+      <div class="action-row">
+        <button class="act-btn copy" onclick="copyChecklist()">📋 체크리스트 복사</button>
+        <button class="act-btn kakao" onclick="shareChecklist()">💬 카카오 공유</button>
+      </div>
+
+      <div class="disclaimer">💡 실제 설치 가능 여부는 현장 환경(진입로·전기·급배수·바닥 상태 등)에 따라 달라질 수 있으며, 최종 확정은 삼성전자 로지텍 방문 실측 후 안내됩니다. 정확한 견적·상담은 삼성전자서비스(1588-3366)로 문의하세요.</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>경원 AX 허브 · 제품별 설치환경 가이드 · 경원영업팀</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════
+   설치환경 DB — 출처: samsung.com 구매/설치가이드,
+   samsungsvc.co.kr(삼성전자서비스) 공식 안내 (2026.07 기준)
+   ═══════════════════════════════════════════ */
+const INSTALL_DB = {
+  '냉장고': {
+    emoji:'🧊',
+    subtitle:'프리스탠딩 vs 키친핏(냉장고장 내장) — 설치 유형에 따라 요구 공간이 다릅니다',
+    types:['프리스탠딩','키친핏(빌트인)','페어(2대 이상) 설치'],
+    space:[
+      ['프리스탠딩 이격거리','좌우 각 50mm 이상 확보 권장'],
+      ['키친핏 냉장고장 규격','높이 1,900mm 이상 · 깊이 700mm 이상(콘센트 있을 시 720mm 이상)'],
+      ['키친핏 좌우 이격','각 12mm (냉장고장 내부 기준)'],
+      ['페어(2대 이상) 설치','제품 간 간격 10mm 필요'],
+      ['진입로(현관·복도·엘리베이터)','제품 가로 사이즈보다 넓어야 진입 가능 · 협소 시 사다리차 이용(창문이 제품보다 커야 함)'],
+    ],
+    utility:[
+      ['전원','전용 콘센트 필요 (문어발 콘센트 비권장)'],
+    ],
+    checklist:[
+      '냉장고장(가구장)의 뒤틀림·기울어짐 여부 확인',
+      '설치 위치 바닥 수평 확인',
+      '진입 경로(현관문·복도·엘리베이터·계단) 폭이 제품 가로 사이즈보다 넓은지 확인',
+      '진입 불가 시 사다리차 이용 가능한 창문 위치·사이즈 확인',
+    ],
+    cautions:[
+      '냉장고장을 너무 타이트하게 시공하면 실제 제품 설치 시 문 개폐 간섭 등 예상치 못한 문제가 발생할 수 있습니다.',
+      '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
+    ],
+    source:'삼성닷컴 냉장고 구매가이드·설치가이드(samsung.com/sec/refrigerators)'
+  },
+
+  '세탁기·콤보': {
+    emoji:'🫧',
+    subtitle:'세탁기·콤보 및 세탁기+건조기 적층(스태킹) 설치 요건',
+    types:['일반 설치','수직 적층(건조기 스태킹)'],
+    space:[
+      ['세탁실 진입로 폭','최소 700mm 이상(710mm 이상 권장) — 미만 시 설치 불가할 수 있음'],
+      ['세탁실 공간','너비 최소 710mm · 높이 최소 1,000mm'],
+      ['적층(스태킹) 설치 조건','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 스태킹 키트로 수직 설치 가능. 그 외 조합은 각도형 거치대 이용'],
+    ],
+    utility:[
+      ['급수호스','규격 1.25m, 연결기 내경 10.2×외경 16.2mm'],
+      ['급/배수 거리','제품과 급·배수부가 3m 이내 위치 권장(초과 시 수압 약화·오동작 우려)'],
+      ['배수호스','배수구보다 낮게 설치, 연장 길이 3m 이내'],
+    ],
+    checklist:[
+      '급수전·배수구가 제품 설치 위치에서 3m 이내인지 확인',
+      '세탁실 진입로 폭 700mm 이상 확보 여부 확인',
+      '건조기 적층 설치 시 세탁기·건조기 용량 호환 여부(16kg+14kg 이상) 및 전용 스태킹 키트 필요 여부 확인',
+      '설치 전 삼성전자서비스(1588-3366) 사전 상담 권장',
+    ],
+    cautions:[
+      '급·배수 길이가 3m를 초과하면 수압 저하 또는 건조 시 오동작이 발생할 수 있습니다.',
+      '비규격 조합(용량 미달)으로 적층 설치 시 전도·소음 위험이 있어 별도 확인이 필요합니다.',
+    ],
+    source:'삼성전자서비스 공식 안내(samsungsvc.co.kr) · 삼성닷컴 세탁기·건조기(samsung.com/sec/washers-and-dryers)'
+  },
+
+  '에어컨': {
+    emoji:'❄️',
+    subtitle:'실내기·실외기 설치 공간 및 배관 길이 기준 (스탠드형 기준)',
+    types:['스탠드형','벽걸이형'],
+    space:[
+      ['실외기 벽·장애물 이격','최소 10cm 이상'],
+      ['실외기 전면 공간','흡배기를 위해 약 50cm 이상 권장'],
+      ['실외기 후면 공간','자연 환기를 위해 10~15cm 이상'],
+      ['실외기 설치 바닥','하중·진동을 견딜 수 있는 견고한 바닥, 서비스 접근 공간 확보 필요'],
+    ],
+    utility:[
+      ['배관 길이(장배관)','25~45m (모델·용량별 상이)'],
+      ['고낙차 허용 거리','7.5~15m (모델·용량별 상이)'],
+      ['최적 효율 구간','실내외기 연결 배관 5m 내외에서 효율 100%'],
+    ],
+    checklist:[
+      '실외기 설치 위치의 벽·장애물 이격거리(전/후/좌/우) 확보 여부 확인',
+      '실외기 하중을 지지할 수 있는 견고한 바닥·거치대 여부 확인',
+      '배관 길이가 모델별 허용 범위(장배관/고낙차) 내인지 확인',
+      '실외기 서비스 점검 접근 공간 확보 여부 확인',
+    ],
+    cautions:[
+      '배관이 짧아지면 오히려 운전 소음이 증가할 수 있습니다.',
+      '실외기 하중·진동을 견디지 못하는 위치(옥상 경량구조물 등)는 별도 보강이 필요합니다.',
+    ],
+    source:'삼성전자서비스 공식 안내(samsungsvc.co.kr) · 삼성닷컴 에어컨(samsung.com/sec/air-conditioners)'
+  },
+
+  'TV': {
+    emoji:'📺',
+    subtitle:'벽걸이형 vs 스탠드형 — 벽면 재질·두께·주변 환경 확인이 핵심입니다',
+    types:['벽걸이형','스탠드형'],
+    space:[
+      ['벽면 재질(설치 가능)','일반 콘크리트 · 대리석/타일 · 산호석'],
+      ['벽면 재질(낙하 우려)','석고보드/합판 · 샌드위치판넬 · 흙벽 — 보강 없이는 비권장'],
+      ['벽면 재질(고정 불가)','돌출벽면 · 인테리어 소품 · 스위치 간섭 부위'],
+      ['벽면 두께','단일 벽면 최소 25mm(보강목 있을 시 10mm) · 아트월 가벽 10mm+내벽 30mm 이상 (24mm 이하 단일벽·30mm 이하 아트월 내벽은 설치 불가)'],
+      ['제품 주변 공간','제품-벽 사이 최소 1.5cm, 상하좌우 10cm씩 유지 · 15도 이상 기울여 설치 불가'],
+      ['스탠드형 하부장','화면 가로폭 이상 너비의 하부장 권장, 전도 방지 끈 고정 가능'],
+    ],
+    utility:[
+      ['전원','일반 콘센트(벽걸이 시 배선 은폐 여부 사전 확인)'],
+    ],
+    checklist:[
+      '벽면 재질이 설치 가능 등급(콘크리트·대리석/타일·산호석)인지 확인',
+      '벽면 두께가 최소 기준(25mm, 보강목 시 10mm) 이상인지 확인',
+      '벽 내부 배선(전화선/LAN 단자) 유무로 벽체 구조 사전 확인',
+      '스탠드형은 화면 가로폭 이상의 하부장 확보 여부 확인',
+    ],
+    cautions:[
+      '설치 가능한 벽면 재질이라도 외벽·내벽 간 거리가 20cm 이상이면 설치가 불가할 수 있습니다.',
+      '삼성 제공 구성품 외 다른 자재로 설치 시 통풍 불량으로 화재·고장 위험이 있습니다.',
+      '벽걸이 고정이 어려운 벽체(석고보드 등)는 반드시 전문업체 확인이 필요합니다.',
+    ],
+    source:'삼성닷컴 TV 구매가이드/설치가이드(samsung.com/sec/buying-guide)'
+  },
+
+  '청소기': {
+    emoji:'💨',
+    subtitle:'무선(스틱) 청소기는 설치 제약이 적은 편입니다',
+    types:['무선 스틱형','거치대(벽부착) 옵션'],
+    space:[
+      ['거치대 설치 공간','벽부착형 거치대 사용 시 콘센트 인접 벽면 공간 필요(선택 사항)'],
+    ],
+    utility:[
+      ['전원','거치대(충전 스탠드) 인접 콘센트 필요'],
+    ],
+    checklist:[
+      '거치대(충전 스탠드) 근처 콘센트 위치 확인',
+      '청정스테이션 포함 모델은 스테이션 주변 최소 여유 공간 확인',
+    ],
+    cautions:[
+      '청정스테이션 자동비움 기능 포함 모델은 스테이션 주변 통풍 공간이 필요합니다.',
+    ],
+    source:'삼성닷컴 청소기(samsung.com/sec/vacuum-cleaners) · 삼성전자서비스 안내'
+  },
+
+  '로봇청소기': {
+    emoji:'🤖',
+    subtitle:'자동 급배수 모델은 가구장·배관 요건이 까다로우니 사전 확인이 중요합니다',
+    types:['일반 프리스탠딩(수동 급배수)','자동 급배수 프리스탠딩','자동 급배수 빌트인(가구장 내장)'],
+    space:[
+      ['프리스탠딩 주변 공간','좌우 각 0.5m · 전면 0.8m (반사재질 벽이면 1m 이상)'],
+      ['빌트인 가구장 내측 규격','폭 420~440mm 이상 · 높이 330~335mm 이상 · 깊이 600mm 이상'],
+      ['가구장 로봇 출입구','개방 높이 135mm 이상'],
+      ['설치 바닥','전/후·좌/우 기울기 1도 이내, 내/외부 단차 2mm 이내'],
+    ],
+    utility:[
+      ['급/배수 호스 길이(자동급배수)','기본 6.0m / 최대 8.0m'],
+      ['배수관 높이','바닥 기준 0.4m 이하'],
+      ['수압','정압 1.0~8.4kgf/cm² (냉수관 연결, 지하수·가압펌프 환경은 설치 어려움)'],
+      ['Wi-Fi','SmartThings 연동을 위해 설치 공간에 Wi-Fi 필요(미설치 시 일부 기능 제한)'],
+      ['전원','스테이션 인접 콘센트 필요'],
+    ],
+    checklist:[
+      '자동 급배수 모델은 수전 상태·수압(1.0~8.4kgf/cm²) 확인',
+      '가구장 내장형은 내측 폭·높이·깊이 규격 충족 여부 확인',
+      '설치 공간 Wi-Fi 신호 확인(SmartThings 연동 필요)',
+      '베란다 등 동파 위험 지역이 아닌지 확인(설치 불가)',
+    ],
+    cautions:[
+      '겨울철 동파 위험으로 베란다·식당·카페 등 외부 노출 공간은 설치가 불가합니다.',
+      '지하수 사용 환경, 노후 수전, 가압펌프 환경은 설치가 제한될 수 있습니다.',
+      '설치 위치 상단에서 물이 떨어질 수 있는 환경(식기건조대 하단 등)은 설치 불가합니다.',
+    ],
+    source:'삼성닷컴 Bespoke AI 스팀 설치가이드(samsung.com/sec/vacuum-cleaners) · 삼성전자서비스 안내'
+  },
+
+  '스마트폰': { notApplicable:true, emoji:'📱' },
+
+  '건조기': {
+    emoji:'🌀',
+    subtitle:'세탁기 위 적층(스태킹) 설치가 일반적이며, 모델별 호환 확인이 필요합니다',
+    types:['단독 설치','세탁기 위 수직 적층(스태킹)'],
+    space:[
+      ['적층 설치 조건','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 스태킹 키트로 수직 설치 가능'],
+      ['비규격 조합','용량 미달 조합은 각도형 거치대(엔젤 스탠드 등) 이용'],
+      ['세탁실 공간','세탁기 기준과 동일하게 진입로 폭 700mm 이상, 높이 1,000mm 이상 권장'],
+    ],
+    utility:[
+      ['배기/환기','배기식 모델은 별도 배기덕트 필요 — 히트펌프(응축식) 모델은 덕트 불필요한 경우가 많으나 모델별 확인 필수'],
+      ['전원','전용 콘센트 필요'],
+    ],
+    checklist:[
+      '세탁기 위 적층 설치 시 세탁기·건조기 용량 호환 여부 및 전용 스태킹 키트 필요 여부 확인',
+      '배기식 모델의 경우 배기덕트·환기 경로 확보 여부 확인(모델별 상이)',
+      '설치 전 삼성전자서비스(1588-3366) 사전 상담 권장',
+    ],
+    cautions:[
+      '비규격 조합으로 무리하게 적층 설치 시 전도·소음 위험이 있습니다.',
+      '배기식 모델의 배기덕트 요건은 모델별 사용설명서 확인이 필요합니다(본 안내는 일반 정보이며 모델별 정확한 스펙은 별도 확인 필요).',
+    ],
+    source:'삼성전자서비스 공식 안내(samsungsvc.co.kr) · 삼성닷컴 세탁기·건조기(samsung.com/sec/washers-and-dryers)'
+  },
+
+  '식기세척기': {
+    emoji:'🍽️',
+    subtitle:'설치 유형(빌트인/트루빌트인/세미빌트인/프리스탠딩/카운터탑)별로 요구 규격이 상세히 정해져 있습니다',
+    types:['빌트인','트루빌트인','세미빌트인','프리스탠딩','카운터탑(6인용)'],
+    space:[
+      ['빌트인/트루빌트인/세미빌트인','설치 공간 최소 폭×높이×깊이 600×815~900×575mm 이상'],
+      ['프리스탠딩','설치 공간 최소 폭×높이×깊이 600×845~895×600mm 이상'],
+      ['카운터탑(6인용)','설치 공간 최소 폭×높이×깊이 555×470×510mm 이상'],
+      ['걸레받이(빌트인)','깊이·높이 조합에 따라 커팅 필요 여부가 달라짐(예: 깊이 90mm일 때 높이 97mm 이상이면 커팅 필요)'],
+    ],
+    utility:[
+      ['급수호스','기본 3.0m / 최대 4.0~5.0m (유형별 상이)'],
+      ['배수호스','기본 2.0~2.5m / 최대 2.0~4.5m (유형별 상이)'],
+      ['전원선 길이','1.5m — 콘센트가 이 범위 내에 있어야 함'],
+      ['수압','0.04~1.0 MPa 필요'],
+      ['콘센트 규격(멀티탭 사용 시)','개별스위치 없음 · 2구 이하 · 접지단자 있음 · 과부하/누전차단 기능 · 16A 이상, 식기세척기 1대만 연결 권장'],
+    ],
+    checklist:[
+      '설치 유형(빌트인/트루빌트인/세미빌트인/프리스탠딩/카운터탑)에 맞는 최소 공간 규격 충족 여부 확인',
+      '급·배수 호스 최대 길이 내 설치 가능 여부 확인',
+      '하부장(또는 싱크대 상단) 콘센트 위치·규격 확인',
+      '전기레인지·가스레인지 등 열원과 이격 거리(30cm 이상) 확인',
+      '빌트인 걸레받이 커팅 필요 여부 사전 확인',
+    ],
+    cautions:[
+      '베란다·식당·카페 등 외부 노출 공간은 겨울철 동결·손상 우려로 설치가 불가합니다.',
+      '키큰장 내부는 습증기로 인한 가구 부식·낙하 위험으로 설치가 불가합니다.',
+      '싱크대 상판 위(카운터 위)는 도어 개폐 시 전도 위험으로 설치가 불가합니다.',
+      '특수 재질 싱크대(천연대리석·엔지니어드스톤·세라믹 등)는 타공 시 추가 비용이 발생합니다.',
+    ],
+    source:'삼성닷컴 식기세척기 설치가이드(samsung.com/sec/dishwashers/dishwashers-install-guide)'
+  },
+
+  '노트북': { notApplicable:true, emoji:'💻' }
+
+};
+
+let currentCat = null;
+
+function selectCat(cat) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('active', b.textContent.trim()===cat));
+  const d = INSTALL_DB[cat];
+  document.getElementById('res-title').textContent = `${d ? d.emoji : ''} ${cat} 설치환경`;
+
+  if (!d || d.notApplicable) {
+    document.getElementById('res-subtitle').textContent = '설치 공간 규격이 적용되지 않는 제품군입니다';
+    document.getElementById('main-content').style.display = 'none';
+    document.getElementById('na-wrap').innerHTML = `<div class="na-card">📱 ${cat}은(는) 벽면·배관·전기 등 물리적 설치 공간 요건이 적용되지 않는 휴대·개인용 제품군입니다. 별도의 설치환경 확인이 필요하지 않습니다.</div>`;
+  } else {
+    document.getElementById('na-wrap').innerHTML = '';
+    document.getElementById('main-content').style.display = 'block';
+    document.getElementById('res-subtitle').textContent = d.subtitle || '';
+
+    document.getElementById('type-chips').innerHTML = (d.types||[]).map(t=>`<span class="type-chip">${t}</span>`).join('');
+    document.getElementById('space-table').innerHTML = (d.space||[]).map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('');
+    document.getElementById('utility-table').innerHTML = (d.utility||[]).map(r=>`<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('');
+    document.getElementById('check-list').innerHTML = (d.checklist||[]).map(c=>`<li class="check-item"><span class="check-ico">☑️</span><span>${c}</span></li>`).join('');
+
+    const cautions = d.cautions || [];
+    document.getElementById('caution-wrap').innerHTML = cautions.length ? `
+      <div class="caution-card">
+        <h3>⚠️ 설치 불가·주의 사항</h3>
+        ${cautions.map(c=>`<div class="caution-item"><span class="caution-icon">⚠️</span><span>${c}</span></div>`).join('')}
+      </div>` : '';
+
+    document.getElementById('source-box').innerHTML = `<b>출처</b> · ${d.source}`;
+  }
+
+  document.getElementById('result').classList.add('visible');
+  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildChecklistText() {
+  const d = INSTALL_DB[currentCat];
+  if (!d || d.notApplicable) return '';
+  const lines = [
+    `[제품별 설치환경 가이드] ${d.emoji} ${currentCat}`,
+    d.subtitle || '',
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `【설치 유형】`,
+    (d.types||[]).join(' · '),
+    ``,
+    `【공간 요건】`,
+    ...(d.space||[]).map(r=>`- ${r[0]}: ${r[1]}`),
+    ``,
+    `【전기·급배수 요건】`,
+    ...(d.utility||[]).map(r=>`- ${r[0]}: ${r[1]}`),
+    ``,
+    `【설치 전 체크리스트】`,
+    ...(d.checklist||[]).map(c=>`☑ ${c}`),
+    ``,
+    `【설치 불가·주의사항】`,
+    ...(d.cautions||[]).map(c=>`⚠ ${c}`),
+    `━━━━━━━━━━━━━━━━━━━━━`,
+    `출처: ${d.source}`,
+    `경원 AX 허브 · 제품별 설치환경 가이드`
+  ];
+  return lines.filter(l=>l!==undefined).join('\n');
+}
+
+function copyChecklist() {
+  const text = buildChecklistText();
+  if (!text) { toast('먼저 카테고리를 선택하세요.'); return; }
+  navigator.clipboard.writeText(text).then(()=>toast('📋 체크리스트 복사 완료!'));
+}
+
+function shareChecklist() {
+  const text = buildChecklistText();
+  if (!text) { toast('먼저 카테고리를 선택하세요.'); return; }
+  if (navigator.share) {
+    navigator.share({ title:'제품별 설치환경 가이드', text }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(text).then(()=>toast('📋 복사 완료! 카카오톡에 붙여넣기 해주세요.'));
+  }
+}
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+</script>
+</body>
+</html>

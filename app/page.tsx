@@ -60,6 +60,16 @@ const MODULES = [
     status: 'live',
   },
   {
+    href: '/install',
+    icon: '🛠️',
+    title: '설치환경 가이드',
+    desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
+    color: '#B45309',
+    bg: '#FFFBEB',
+    updated: '2026.07',
+    status: 'live',
+  },
+  {
     href: '/admin',
     icon: '📊',
     title: 'AX 현황 대시보드',
@@ -76,6 +86,7 @@ const TIPS = [
   { emoji: '📋', situation: '케어십 서비스 항목을 안내할 때', tool: 'AI Care 검색기', href: '/care' },
   { emoji: '🔎', situation: '제품 스펙을 빠르게 확인할 때', tool: '모델파인더', href: '/finder' },
   { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: '타사비교 → 퀴즈 탭', href: '/compare' },
+  { emoji: '🛠️', situation: '설치 가능 여부를 확인할 때', tool: '설치환경 가이드', href: '/install' },
 ]
 
 const GUIDE = [
