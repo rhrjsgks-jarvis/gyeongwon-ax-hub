@@ -117,7 +117,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <main>
 
   <div class="card">
-    <div class="card-title">① 카테고리 검색 · 선택 (17종)</div>
+    <div class="card-title">① 카테고리 검색 · 선택 (20종)</div>
     <div class="cat-select">
       <input type="text" class="cat-search" id="cat-search" placeholder="🔍 키워드 검색 (예: 키친핏, 4도어, 페어, 로봇청소기)"
              oninput="filterCatDrop(this.value)" onfocus="openCatDrop()">
@@ -142,10 +142,13 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
         <div class="cat-drop-row" data-cat="TV" data-kw="tv 티비 벽걸이 스탠드 텔레비전" onclick="selectCat('TV')"><span class="ci">📺</span>TV</div>
         <div class="cat-drop-row" data-cat="청소기" data-kw="청소기 무선청소기 스틱 거치대" onclick="selectCat('청소기')"><span class="ci">💨</span>무선청소기</div>
         <div class="cat-drop-row" data-cat="로봇청소기" data-kw="로봇청소기 자동급배수 빌트인 프리스탠딩 물걸레" onclick="selectCat('로봇청소기')"><span class="ci">🤖</span>로봇청소기</div>
-        <div class="cat-drop-row" data-cat="스마트폰" data-kw="스마트폰 갤럭시 휴대폰 폰" onclick="selectCat('스마트폰')"><span class="ci">📱</span>스마트폰</div>
         <div class="cat-drop-row" data-cat="건조기" data-kw="건조기 dryer 적층 스태킹" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</div>
         <div class="cat-drop-row" data-cat="식기세척기" data-kw="식기세척기 빌트인 트루빌트인 프리스탠딩 카운터탑" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</div>
-        <div class="cat-drop-row" data-cat="노트북" data-kw="노트북 갤럭시북 랩탑" onclick="selectCat('노트북')"><span class="ci">💻</span>노트북</div>
+        <div class="cat-drop-row" data-cat="인덕션" data-kw="인덕션 electric range 쿡탑 하이라이트 빌트인" onclick="selectCat('인덕션')"><span class="ci">🍳</span>인덕션</div>
+        <div class="cat-drop-row" data-cat="김치냉장고" data-kw="김치냉장고 김치플러스 스탠드형 뚜껑형 딤채" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</div>
+        <div class="cat-drop-row" data-cat="정수기" data-kw="정수기 카운터탑 빌트인 직수 냉온정수" onclick="selectCat('정수기')"><span class="ci">💧</span>정수기</div>
+        <div class="cat-drop-row" data-cat="전자레인지" data-kw="전자레인지 microwave 빌트인 카운터탑" onclick="selectCat('전자레인지')"><span class="ci">🍱</span>전자레인지</div>
+        <div class="cat-drop-row" data-cat="공기청정기" data-kw="공기청정기 air cleaner 청정기" onclick="selectCat('공기청정기')"><span class="ci">🌬️</span>공기청정기</div>
       </div>
       <div class="cat-search-empty" id="cat-search-empty" style="display:none;">검색 결과가 없습니다.</div>
     </div>
@@ -441,11 +444,12 @@ const INSTALL_DB = {
 
   '세탁기·콤보': {
     emoji:'🫧',
-    subtitle:'세탁기·콤보 및 세탁기+건조기 적층(스태킹) 설치 요건',
-    types:['일반 설치','수직 적층(건조기 스태킹)'],
+    subtitle:'일반 세탁기와 AI콤보(일체형 세탁건조기)는 요구 공간 기준이 다릅니다',
+    types:['일반 세탁기 단독 설치','AI콤보(일체형) 단독 설치','수직 적층(건조기 스태킹)'],
     space:[
       ['세탁실 진입로 폭','최소 700mm 이상(710mm 이상 권장) — 미만 시 설치 불가할 수 있음'],
-      ['세탁실 공간','너비 최소 710mm · 높이 최소 1,000mm'],
+      ['세탁실 공간(일반)','너비 최소 710mm · 높이 최소 1,000mm'],
+      ['세탁실 공간(AI콤보 일체형)','너비 최소 1,000mm 이상, 높이 최소 1,120mm 이상, 측면 이격 최소 300mm 필요(단, 실외에서 조립 후 반입 시 측면 이격 완화 가능)'],
       ['적층(스태킹) 설치 조건','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 스태킹 키트로 수직 설치 가능. 그 외 조합은 각도형 거치대 이용'],
     ],
     utility:[
@@ -456,14 +460,16 @@ const INSTALL_DB = {
     checklist:[
       '급수전·배수구가 제품 설치 위치에서 3m 이내인지 확인',
       '세탁실 진입로 폭 700mm 이상 확보 여부 확인',
+      'AI콤보(일체형) 설치 시 일반 세탁기보다 넓은 공간(폭 1,000mm↑·높이 1,120mm↑·측면 300mm) 필요 여부 확인',
       '건조기 적층 설치 시 세탁기·건조기 용량 호환 여부(16kg+14kg 이상) 및 전용 스태킹 키트 필요 여부 확인',
       '설치 전 삼성전자서비스(1588-3366) 사전 상담 권장',
     ],
     cautions:[
       '급·배수 길이가 3m를 초과하면 수압 저하 또는 건조 시 오동작이 발생할 수 있습니다.',
       '비규격 조합(용량 미달)으로 적층 설치 시 전도·소음 위험이 있어 별도 확인이 필요합니다.',
+      'AI콤보(일체형)는 일반 세탁기 대비 설치 공간 요구치가 커서, 협소한 세탁실에서는 사전 실측이 특히 중요합니다.',
     ],
-    source:'삼성전자서비스 공식 안내(samsungsvc.co.kr) · 삼성닷컴 세탁기·건조기(samsung.com/sec/washers-and-dryers)',
+    source:'삼성전자서비스 공식 안내(samsungsvc.co.kr) · 삼성닷컴 세탁기·건조기(samsung.com/sec/washers-and-dryers), AI콤보 설치 공간 기준 포함',
     sourceUrl:'https://www.samsung.com/sec/washers-and-dryers/'
   },
 
@@ -595,8 +601,6 @@ const INSTALL_DB = {
     sourceUrl:'https://www.samsung.com/sec/vacuum-cleaners/bespoke_ai_steam_interior_fit/'
   },
 
-  '스마트폰': { notApplicable:true, emoji:'📱' },
-
   '건조기': {
     emoji:'🌀',
     subtitle:'세탁기 위 적층(스태킹) 설치가 일반적이며, 모델별 호환 확인이 필요합니다',
@@ -666,7 +670,144 @@ const INSTALL_DB = {
     ]
   },
 
-  '노트북': { notApplicable:true, emoji:'💻' }
+  '인덕션': {
+    emoji:'🍳',
+    subtitle:'빌트인 설치 시 상판 타공 규격과 전기 용량(직결식 vs 콘센트식) 확인이 핵심입니다',
+    types:['빌트인 설치(오픈형 하부장)','전기공사 후 직결식 설치'],
+    space:[
+      ['상판 타공 사이즈','모델별 상이 (예: 올플렉스존 모델 기준 가로×세로 560×480mm, 코너부 25R)'],
+      ['하부 공간','인덕션 하단 7~10cm 이상 확보 시 밀착 빌트인 설치 가능'],
+      ['가스레인지 교체 설치','기존 타공 사이즈와 신제품 규격이 다르면 확장 타공 공사(자재비·공사비 발생) 필요'],
+    ],
+    utility:[
+      ['전원(전기공사 시)','직결식 설치 시 전체 화구 동시 사용 최대 7,400W까지 사용 가능'],
+      ['전원(전기공사 미실시)','콘센트 연결 시 4,000W로 제한 — 여러 화구 동시 사용 시 이 한도 내에서 자동 출력 조정'],
+      ['접지','감전 방지를 위한 접지 배선 필수'],
+    ],
+    checklist:[
+      '상판 타공 사이즈(가로×세로)·코너 R값이 구매 모델 규격과 일치하는지 확인',
+      '인덕션 하부 공간 7~10cm 이상 확보 여부 확인(밀착 빌트인 가능 여부)',
+      '기존 가스레인지 철거 후 교체 설치 시 배관 마감·추가 타공 공사비 발생 가능성 확인',
+      '전기공사 여부(7,400W 직결 vs 4,000W 콘센트 제한) 사전 확인',
+    ],
+    cautions:[
+      '전기공사 미실시 시 전체 화구 동시 최대 출력이 4,000W로 제한되어, 다화구 동시 사용 시 화력이 자동으로 조정됩니다.',
+      '기존 가스레인지 철거 후 인덕션 교체 시 가스배관 마감 공사가 별도로 필요할 수 있습니다.',
+      '자성에 반응하지 않는 조리 용기(알루미늄·유리 등)는 사용이 불가합니다.',
+      '모델별 정확한 타공 규격은 제품 상세페이지 또는 서비스센터(1588-3366) 확인이 필요합니다.',
+    ],
+    source:'삼성닷컴 인덕션(samsung.com/sec/electric-range) — 타공 규격은 모델별 상세페이지 기준, 전기 용량은 올플렉스존 안내 문구 기준. 치수가 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/electric-range/all-electric-range/',
+  },
+
+  '김치냉장고': {
+    emoji:'🥬',
+    subtitle:'스탠드형·뚜껑형은 프리스탠딩 냉장고와 유사한 이격 기준, 키친핏 Max 빌트인 조합은 별도 규격이 적용됩니다',
+    types:['스탠드형 프리스탠딩 설치','뚜껑형 설치','4도어 키친핏 Max 빌트인 설치(냉장고 조합)'],
+    space:[
+      ['스탠드형 벽면 이격','좌우·후면 각 최소 50mm'],
+      ['뚜껑형 벽면 이격','좌우·후면 각 최소 50mm (RP22A3251Z3, RP20A32417Z 모델 기준)'],
+      ['키친핏 Max 빌트인 조합','냉장고장 가로 916mm 이상 · 높이 1,873mm 이상 · 깊이 700mm 이상 필요, 좌우 이격 4mm (RK80F42C2A 등 모델 기준)'],
+      ['진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
+    ],
+    utility:[
+      ['전원','전용 콘센트 필요'],
+    ],
+    checklist:[
+      '설치 형태(스탠드형/뚜껑형/키친핏 빌트인)를 먼저 확인한 뒤 그에 맞는 이격거리 적용',
+      '뚜껑형은 상부 개폐 공간(뚜껑 열림 높이) 확보 여부 확인',
+      '스탠드형 김치냉장고는 전문 설치기사 방문 설치 및 시운전 점검이 필수',
+      '키친핏 Max 빌트인 조합 설치 시 냉장고장 규격(가로·높이·깊이) 사전 확인',
+    ],
+    cautions:[
+      '뚜껑형은 상부 개폐형이므로 선반·조명 등 상부 장애물이 없는 위치에만 설치 가능합니다.',
+      '스탠드형과 뚜껑형은 이격 기준이 유사하나 도어 개폐 방식이 달라 진입로·설치 위치 요건이 다릅니다.',
+      '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
+    ],
+    source:'삼성닷컴 김치냉장고(samsung.com/sec/kimchi-refrigerators) 및 삼성전자서비스(samsungsvc.co.kr) 공식 안내. 스탠드형·뚜껑형 단독 치수 도면 이미지는 확인하지 못해 텍스트로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/kimchi-refrigerators/',
+  },
+
+  '정수기': {
+    emoji:'💧',
+    subtitle:'카운터탑형은 급배수 호스 연결, 빌트인형은 싱크대 상판 타공이 필요합니다',
+    types:['카운터탑형(급수관 연결)','빌트인형(싱크대 하부 설치)'],
+    space:[
+      ['카운터탑형 타공','급수용 10mm + 배수용 10mm (상판 두께 40mm 이하 기준)'],
+      ['빌트인형 타공','메인 파우셋용 25mm(상판 두께 40mm 이하) + 서브 파우셋용 15mm(상판 두께 30mm 이하)'],
+      ['설치 위치','필터·본체 유지보수 접근이 가능한 싱크대 하부 공간(빌트인) 또는 조리대 위(카운터탑)'],
+    ],
+    utility:[
+      ['급수','직수 연결(정수기 전용 분기 또는 급수전 필요)'],
+      ['수질','UF(초미세여과) 필터 사용 — 지하수는 필터 성능상 부적합'],
+      ['전원','냉/온수 기능 모델은 전용 콘센트 필요'],
+    ],
+    checklist:[
+      '급수전 위치와 정수기 설치 위치 간 거리(호스 연결 가능 여부) 확인',
+      '상판 타공이 필요한 빌트인/카운터탑 모델은 타공 규격·상판 두께 사전 확인',
+      '지하수 사용 여부 확인(UF 필터는 지하수 부적합)',
+      '자동 살균 기능(직수관 3일 주기 전기분해 살균) 탑재 여부 확인',
+    ],
+    cautions:[
+      '지하수를 급수원으로 사용하는 환경에서는 설치가 부적합합니다.',
+      '상판이 천연대리석·세라믹 등 특수 재질인 경우 타공 시 추가 비용이 발생할 수 있습니다.',
+      '정확한 타공 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
+    ],
+    source:'삼성닷컴 정수기(samsung.com/sec/water-purifier) 및 정수기 FAQ 공식 안내. 타공 규격이 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/water-purifier/all-water-purifier/',
+  },
+
+  '전자레인지': {
+    emoji:'🍱',
+    subtitle:'빌트인 설치 시 흡배기구 주변 이격거리 확보가 핵심입니다',
+    types:['빌트인 설치','카운터탑(단독) 설치'],
+    space:[
+      ['후면·측면 이격','최소 10cm (후면에 콘센트·멀티탭이 있는 경우 15cm 이상)'],
+      ['상단 이격','최소 20cm'],
+      ['벽면 이격(빌트인)','최소 5cm'],
+      ['흡배기구 위치','측면·후면의 흡기구·배기구가 가벽·수납장 등으로 막히지 않는 위치에 설치'],
+    ],
+    utility:[
+      ['전원','전용 콘센트 필요(문어발 배선 금지)'],
+    ],
+    checklist:[
+      '후면·측면·상단 이격거리 기준 충족 여부 확인',
+      '흡배기구가 가벽·수납장 등으로 막히지 않는지 확인',
+      '빌트인 설치 시 상부장/수납장 내부 규격이 제품 사이즈보다 여유 있는지 확인',
+    ],
+    cautions:[
+      '흡배기구가 막히면 과열로 인한 고장·오작동 위험이 있습니다.',
+      '모델별 정확한 이격 기준은 사용설명서 확인이 필요합니다(본 안내는 대표 기준입니다).',
+    ],
+    source:'삼성닷컴 전자레인지 FAQ(samsung.com/sec/home-appliances/faq-micro-wave-ovens) 및 제품 안내. 치수가 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/micro-wave-ovens/all-micro-wave-ovens/',
+  },
+
+  '공기청정기': {
+    emoji:'🌬️',
+    subtitle:'설치 제약은 적으나 흡입구 주변 이격거리와 배치 위치가 청정 효율을 좌우합니다',
+    types:['거실·침실 등 실내 자유 배치형'],
+    space:[
+      ['벽면 이격','최소 60cm 권장 (비스포크 양측면 흡입 모델은 벽에 근접 설치해도 효율 저하가 적음)'],
+      ['흡입구 이격','약 25cm 권장'],
+      ['설치 바닥','경사 없는 평평한 바닥'],
+    ],
+    utility:[
+      ['전원','일반 콘센트'],
+      ['설치 환경','습기가 적고 인화물질이 없는 위치'],
+    ],
+    checklist:[
+      '흡입구·배출구를 막는 장애물이 없는지 확인',
+      '습기가 많은 공간(욕실 인접 등) 회피 여부 확인',
+      '권장 위치 참고: 거실은 소파 옆/중앙, 침실은 침대 옆벽, 서재는 책상 대각선 방향',
+    ],
+    cautions:[
+      '흡입구·배출구가 가구·커튼 등으로 막히면 청정 효율이 크게 저하됩니다.',
+      '습기·인화물질이 많은 공간(주방 가스레인지 인접 등)은 설치를 피해야 합니다.',
+    ],
+    source:'삼성뉴스룸 「슬기로운 공청생활」 및 삼성전자서비스 공식 안내. 치수가 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/air-cleaner/all-air-cleaner/',
+  }
 
 };
 
