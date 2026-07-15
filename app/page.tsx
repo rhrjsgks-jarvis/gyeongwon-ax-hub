@@ -10,6 +10,16 @@ const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
 
 const MODULES = [
   {
+    href: '/install',
+    icon: '🛠️',
+    title: '설치환경 가이드',
+    desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
+    color: '#B45309',
+    bg: '#FFFBEB',
+    updated: '2026.07',
+    status: 'live',
+  },
+  {
     href: '/finder',
     icon: '🔍',
     title: '모델파인더',
@@ -56,16 +66,6 @@ const MODULES = [
     desc: '평형별 입주패키지 · 예산 내 최적 추천 · 삼성닷컴 할인 반영',
     color: '#0891B2',
     bg: '#ECFEFF',
-    updated: '2026.07',
-    status: 'live',
-  },
-  {
-    href: '/install',
-    icon: '🛠️',
-    title: '설치환경 가이드',
-    desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
-    color: '#B45309',
-    bg: '#FFFBEB',
     updated: '2026.07',
     status: 'live',
   },
