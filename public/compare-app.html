@@ -117,6 +117,7 @@ select:focus{border-color:var(--primary);}
 .url-tab{display:none;}
 .url-tab.visible{display:block;}
 
+.url-intro{font-size:12px;color:var(--gray);line-height:1.6;margin-bottom:12px;}
 .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
 .preset-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:9px;padding:8px 6px;font-size:11.5px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.4;}
 .preset-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
@@ -212,7 +213,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('db')">⚡ 즉시비교</button>
-  <button class="tab-btn" onclick="switchTab('url')">🤖 URL 프롬프트</button>
+  <button class="tab-btn" onclick="switchTab('url')">🔗 URL 즉시비교</button>
 </div>
 
 <!-- ====== TAB1: DB 즉시비교 ====== -->
@@ -303,11 +304,12 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 </main>
 </div>
 
-<!-- ====== TAB2: URL 프롬프트 ====== -->
+<!-- ====== TAB2: URL 즉시비교 ====== -->
 <div id="tab-url" class="url-tab">
 <main>
   <div class="card">
-    <div class="card-title">📌 제품 URL 입력</div>
+    <div class="card-title">📌 자사·타사 URL 입력</div>
+    <p class="url-intro">자사 URL과 경쟁사 URL을 넣고 "지금 바로 비교하기"를 누르면 냉장고·세탁기·에어컨·TV·청소기·로봇청소기·스마트폰·건조기·식기세척기·노트북 10개 카테고리는 즉시비교 결과로 바로 연결됩니다. 목록에 없는 조합은 AI 프롬프트 생성으로 자동 전환됩니다.</p>
     <div class="preset-grid">
       <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
       <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
@@ -342,15 +344,15 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
     <input type="text" id="brand" value="삼성전자"/>
   </div>
 
-  <button class="generate-btn" onclick="generatePrompt()">⚡ 세일즈가이드 프롬프트 생성</button>
+  <button class="generate-btn" onclick="tryInstantCompare()">⚡ 지금 바로 비교하기</button>
 
   <div id="url-result-section" style="margin-top:16px;">
     <div class="card">
-      <div class="card-title">🤖 Claude 프롬프트 (복사 후 붙여넣기)</div>
+      <div class="card-title">🤖 DB 미보유 조합 — AI 프롬프트로 생성</div>
       <div class="prompt-box" id="prompt-output"></div>
       <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">📋 프롬프트 복사</button>
       <a class="open-btn" href="https://claude.ai" target="_blank">Claude에서 열기 →</a>
-      <div class="tip">💡 복사 후 Claude(claude.ai) 또는 Cowork에 붙여넣으면 완성형 HTML 가이드가 생성됩니다</div>
+      <div class="tip">💡 위 조합은 DB에 없어 즉시비교가 불가능합니다. 복사 후 Claude(claude.ai) 또는 Cowork에 붙여넣으면 완성형 HTML 가이드가 생성됩니다</div>
     </div>
   </div>
 
@@ -1163,6 +1165,74 @@ function copyQuizPrompt() {
     b.textContent = '✅ 복사 완료!'; b.classList.add('copied');
     setTimeout(()=>{ b.textContent = '📋 퀴즈 프롬프트 복사'; b.classList.remove('copied'); }, 2500);
   });
+}
+
+/* ── URL 탭 로직: 카테고리·브랜드 자동 매칭 → DB 즉시비교 연결 ── */
+function detectCategory(text) {
+  const s = (text||'').toLowerCase();
+  const rules = [
+    ['냉장고', ['refrigerator','냉장고']],
+    ['세탁기·콤보', ['washing-machine','세탁기','콤보']],
+    ['에어컨', ['air-conditioner','에어컨','aircon']],
+    ['TV', ['/tvs','/tv','television','qled','oled','미니led','miniled']],
+    ['로봇청소기', ['robot-vacuum','robotvacuum','로봇청소기']],
+    ['청소기', ['vacuum-cleaner','vacuum','청소기']],
+    ['스마트폰', ['smartphone','galaxy-s','iphone','스마트폰']],
+    ['건조기', ['dryer','건조기']],
+    ['식기세척기', ['dishwasher','식기세척기']],
+    ['노트북', ['laptop','notebook','galaxybook','그램','노트북']],
+  ];
+  for (const [cat, kws] of rules) {
+    if (kws.some(k => s.includes(k))) return cat;
+  }
+  return null;
+}
+function detectBrand(text) {
+  const s = (text||'').toLowerCase();
+  const rules = [
+    ['로보락', ['roborock']],
+    ['에코백스', ['ecovacs']],
+    ['드리미', ['dreame']],
+    ['다이슨', ['dyson']],
+    ['하이센스', ['hisense']],
+    ['TCL', ['tcl']],
+    ['애플', ['apple']],
+    ['LG', ['lge.co.kr','lg.com','lge.']],
+  ];
+  for (const [brand, kws] of rules) {
+    if (kws.some(k => s.includes(k))) return brand;
+  }
+  return null;
+}
+function tryInstantCompare() {
+  const ownUrl = document.getElementById('own-url').value.trim();
+  const competitors = Array.from(document.querySelectorAll('#competitor-list input[type="url"]')).map(i=>i.value.trim()).filter(Boolean);
+  if (!ownUrl) { alert('자사 제품 URL을 입력해주세요.'); return; }
+  if (!competitors.length) { alert('경쟁사 URL을 최소 1개 입력해주세요.'); return; }
+
+  const firstComp = competitors[0];
+  const brand = detectBrand(firstComp);
+  let cat;
+  if (brand === '로보락' || brand === '에코백스' || brand === '드리미') {
+    cat = '로봇청소기';
+  } else {
+    cat = detectCategory(ownUrl) || detectCategory(firstComp);
+    if (cat === '청소기' && (ownUrl.toLowerCase().includes('robot') || firstComp.toLowerCase().includes('robot'))) cat = '로봇청소기';
+  }
+
+  saveHistory(ownUrl, firstComp);
+  renderHistory();
+
+  if (cat && DB[cat] && brand && DB[cat].competitors[brand]) {
+    switchTab('db');
+    selectCat(cat);
+    selectBrand(brand);
+    renderResult();
+    toast(`🔗 ${DB[cat].emoji} ${cat} · ${brand} 즉시비교로 자동 연결되었습니다`);
+  } else {
+    generatePrompt();
+    toast('⚠️ DB에 없는 조합이라 AI 프롬프트 생성으로 전환했습니다');
+  }
 }
 
 /* ── URL 탭 로직 ── */
