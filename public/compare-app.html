@@ -712,12 +712,12 @@ const DB = {
     ],
     competitors:{
       '애플':[
-        { name:'iPhone 16 Pro Max (256GB)', price:189,
-          on:['카메라 컨트롤','5배 광학 줌','티타늄 프레임','위성 긴급통신','IP68'],
-          specs:{ size:6.9, hz:120, cam:48, bat:4685, as:1, charge:27 } },
-        { name:'iPhone 16 Pro (256GB)', price:159,
-          on:['카메라 컨트롤','5배 광학 줌','위성 긴급통신','IP68'],
-          specs:{ size:6.3, hz:120, cam:48, bat:3582, as:1, charge:27 } }
+        { name:'iPhone 17 Pro Max (256GB)', price:199,
+          on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
+          specs:{ size:6.9, hz:120, cam:48, bat:4832, as:1, charge:40 } },
+        { name:'iPhone 17 Pro (256GB)', price:179,
+          on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
+          specs:{ size:6.3, hz:120, cam:48, bat:4252, as:1, charge:40 } }
       ]
     },
     specItems:[
@@ -1281,18 +1281,23 @@ function copyPrompt(){
 const HIST_KEY='compare_history_v2';
 function saveHistory(own,comp){ try{ const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); const filtered=h.filter(x=>x.own!==own); filtered.unshift({own,comp,ts:Date.now()}); localStorage.setItem(HIST_KEY,JSON.stringify(filtered.slice(0,5))); }catch(e){} }
 function loadHistory(entry){ document.getElementById('own-url').value=entry.own; document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value=entry.comp||''; }
+function escHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function renderHistory(){
   try{
     const h=JSON.parse(localStorage.getItem(HIST_KEY)||'[]');
     const el=document.getElementById('history-list');
     if(!h.length){ el.innerHTML='<div class="no-history">아직 비교 이력이 없습니다</div>'; return; }
     const cats={samsung:'삼성',lge:'LG',lg:'LG',dyson:'다이슨',apple:'애플',roborock:'로보락'};
-    el.innerHTML=h.map(x=>{
+    el.innerHTML=h.map((x,i)=>{
       const short=x.own.replace('https://www.samsung.com/sec/','').replace(/\/$/,'').split('/')[0]||'삼성';
       const cb=Object.entries(cats).find(([k])=>x.comp&&x.comp.includes(k))?.[1]||'경쟁사';
       const d=new Date(x.ts); const when=`${d.getMonth()+1}/${d.getDate()}`;
-      return `<div class="history-row" onclick='loadHistory(${JSON.stringify(x)})'><span class="history-cat">${when}</span><span class="history-url">${short} vs ${cb}</span><span class="history-load">불러오기 ›</span></div>`;
+      return `<div class="history-row" data-hist-idx="${i}"><span class="history-cat">${when}</span><span class="history-url">${escHtml(short)} vs ${escHtml(cb)}</span><span class="history-load">불러오기 ›</span></div>`;
     }).join('');
+    el.querySelectorAll('.history-row').forEach(row=>{
+      row.addEventListener('click', ()=>{ loadHistory(h[Number(row.dataset.histIdx)]); });
+    });
   }catch(e){}
 }
 

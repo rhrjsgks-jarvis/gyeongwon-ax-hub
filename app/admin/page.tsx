@@ -3,6 +3,60 @@
 import { useEffect, useState } from 'react'
 import { readLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
 
+const ADMIN_PW_HASH = 'e5433d3450baf8f33d4a3a62bc87797cbc5adb5749c4388a3bf7c15b698a5d17'
+const ADMIN_SESSION_KEY = 'ax_admin_unlocked'
+
+async function sha256(text: string) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+function AdminGate({ onUnlock }: { onUnlock: () => void }) {
+  const [pw, setPw] = useState('')
+  const [error, setError] = useState(false)
+  const [checking, setChecking] = useState(false)
+
+  const submit = async () => {
+    setChecking(true)
+    const hash = await sha256(pw)
+    if (hash === ADMIN_PW_HASH) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, '1')
+      onUnlock()
+    } else {
+      setError(true)
+    }
+    setChecking(false)
+  }
+
+  return (
+    <div className="max-w-sm mx-auto pt-24 px-4">
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
+        <div className="text-2xl mb-2">🔒</div>
+        <h1 className="font-bold text-gray-800 mb-1">관리자 인증</h1>
+        <p className="text-xs text-gray-400 mb-4">AX 현황 대시보드는 비밀번호로 보호됩니다</p>
+        <input
+          type="password"
+          value={pw}
+          onChange={e => { setPw(e.target.value); setError(false) }}
+          onKeyDown={e => { if (e.key === 'Enter') submit() }}
+          placeholder="비밀번호"
+          autoFocus
+          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:border-blue-400"
+        />
+        {error && <p className="text-xs text-red-500 mb-2">비밀번호가 올바르지 않습니다</p>}
+        <button
+          onClick={submit}
+          disabled={checking || !pw}
+          className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+          style={{ background: '#1428A0' }}
+        >
+          입장하기
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const ROI_DATA = [
   { key: 'finder',  icon: '🔍', label: '모델파인더 — 제품 검색',    before: '5분/건',    after: '15초/건',  saving: 95 },
   { key: 'compare', icon: '⚖️', label: '타사비교 가이드 생성',       before: '30분/건',   after: '3분/건',   saving: 90 },
@@ -23,15 +77,25 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
 }
 
 export default function AdminPage() {
-  const [logs, setLogs]     = useState<LogEvent[]>([])
-  const [loaded, setLoaded] = useState(false)
+  const [logs, setLogs]         = useState<LogEvent[]>([])
+  const [loaded, setLoaded]     = useState(false)
+  const [unlocked, setUnlocked] = useState(false)
+  const [gateChecked, setGateChecked] = useState(false)
 
   useEffect(() => {
+    if (sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') setUnlocked(true)
+    setGateChecked(true)
+  }, [])
+
+  useEffect(() => {
+    if (!unlocked) return
     logEvent('hub', 'page_view')
     setLogs(readLogs())
     setLoaded(true)
-  }, [])
+  }, [unlocked])
 
+  if (!gateChecked) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
+  if (!unlocked) return <AdminGate onUnlock={() => setUnlocked(true)} />
   if (!loaded) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
 
   const byModule   = aggregateByModule(logs)

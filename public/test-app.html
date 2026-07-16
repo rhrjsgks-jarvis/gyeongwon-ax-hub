@@ -6891,6 +6891,8 @@ async function handleSubmit(forced=false){
   saveToGoogle({timestamp:new Date().toLocaleString('ko-KR'),branchName:st.empId,name:st.name,mode:st.mode||'cemx',ceScore:ceScore*4,mxScore:mxScore*4,essayScore,totalScore,timeTaken:`${em}분 ${es}초`,essay:st.essay});
 }
 
+function escHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
 function showResults(results,ceScore,mxScore,essayScore,em,es){
   document.getElementById('quizScreen').style.display='none';
   const rs=document.getElementById('resultScreen');rs.style.display='block';
@@ -6916,7 +6918,7 @@ function showResults(results,ceScore,mxScore,essayScore,em,es){
   </div>
   <div class="drive-status" id="driveStatus"><span class="drive-saving">저장 중...</span></div>
   ${wrongResults.length>0?`<div class="wrong-section"><h3>오답 풀이 (${wrongResults.length}문항 오답)</h3>${wrongResults.map(r=>`<div class="wrong-item"><div class="wrong-qnum">Q${r.qi+1} · ${r.isCE?'CE':'MX'} · ${r.q.cat}</div><div class="wrong-q">${r.q.q}</div><div class="wrong-my">내 답변: ${r.chosen!==undefined?r.q.shuffledOpts[r.chosen]:'(미응답)'}</div><div class="wrong-correct">정답: ${r.q.shuffledOpts[r.q.shuffledAns]}</div><div class="wrong-exp">${r.q.exp}</div></div>`).join('')}</div>`:`<div class="all-correct">객관식 24문항 전부 정답! 완벽한 제품 전문가입니다.</div>`}
-  <div class="essay-review"><h3>AI 활용 서술 (Q25)</h3><p>${st.essay||'(미작성)'}</p></div>`;
+  <div class="essay-review"><h3>AI 활용 서술 (Q25)</h3><p>${escHtml(st.essay||'(미작성)')}</p></div>`;
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -6926,10 +6928,26 @@ function saveToGoogle(data){
   const iframe=document.createElement('iframe');iframe.name=iframeName;iframe.style.display='none';document.body.appendChild(iframe);
   const form=document.createElement('form');form.method='POST';form.action=SCRIPT_URL;form.target=iframeName;
   const input=document.createElement('input');input.type='hidden';input.name='data';input.value=JSON.stringify(data);
-  form.appendChild(input);document.body.appendChild(form);form.submit();
-  setTimeout(()=>{if(form.parentNode)document.body.removeChild(form);if(iframe.parentNode)document.body.removeChild(iframe)},10000);
+  form.appendChild(input);document.body.appendChild(form);
   const el=document.getElementById('driveStatus');
-  if(el)el.innerHTML='<span class="drive-ok">Google Drive에 저장되었습니다!</span>';
+  let settled=false;
+  const cleanup=()=>{if(form.parentNode)document.body.removeChild(form);if(iframe.parentNode)document.body.removeChild(iframe)};
+  iframe.addEventListener('load',()=>{
+    if(settled)return; settled=true;
+    if(el)el.innerHTML='<span class="drive-ok">Google Drive에 저장되었습니다!</span>';
+    cleanup();
+  });
+  iframe.addEventListener('error',()=>{
+    if(settled)return; settled=true;
+    if(el)el.innerHTML='<span class="drive-skip">저장 실패 — 네트워크 연결을 확인하세요</span>';
+    cleanup();
+  });
+  setTimeout(()=>{
+    if(settled)return; settled=true;
+    if(el)el.innerHTML='<span class="drive-skip">저장 확인 시간 초과 — 네트워크 연결을 확인하세요</span>';
+    cleanup();
+  },10000);
+  form.submit();
 }
 
 let _modalCb=null;

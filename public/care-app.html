@@ -1659,7 +1659,7 @@ function renderTimeline(){
   let monthOpts = Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===tlMonth?'selected':'')+'>'+(i+1)+'월</option>').join('');
 
   const months = ((TL_MONTHS[tlKey]||{})[tlPlan]) || [];
-  const now = new Date(2026,6,12);
+  const now = new Date();
   const startDate = new Date(tlYear, tlMonth-1, 1);
   const nowOffsetMonths = Math.max(0, (now.getFullYear()-startDate.getFullYear())*12 + (now.getMonth()-startDate.getMonth()));
 
@@ -1708,7 +1708,7 @@ function renderTimeline(){
       '<select class="tl-sel" style="flex:.5" onchange="tlMonth=+this.value;renderTimeline()">'+monthOpts+'</select></div>' +
     '</div>' +
     '<div class="tl-bar" style="overflow-x:auto">'+svg+'</div>' +
-    '<div style="padding:0 16px 6px;font-size:10px;color:#9aa0a6">● 빨간 점선 = 오늘(2026.07.12) 기준</div>' +
+    '<div style="padding:0 16px 6px;font-size:10px;color:#9aa0a6">● 빨간 점선 = 오늘('+now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+String(now.getDate()).padStart(2,'0')+') 기준</div>' +
     '<div class="tl-list">'+listHtml+'</div>';
 }
 
