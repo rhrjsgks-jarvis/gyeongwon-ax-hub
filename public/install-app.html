@@ -662,8 +662,13 @@ const INSTALL_DB = {
       '설치 위치 상단에서 물이 떨어질 수 있는 환경(식기건조대 하단 등)은 설치 불가합니다.',
       '타사 오븐 아래에는 설치가 불가하며, 삼성 오븐 아래에만 설치 가능합니다.',
     ],
-    source:'삼성닷컴 Bespoke AI 스팀 설치가이드(samsung.com/sec/vacuum-cleaners/bespoke_ai_steam_interior_fit) — 자동급배수 빌트인/프리스탠딩 설치 공간·프로세스 상세 확인. 치수가 표기된 임베드 가능한 다이어그램 이미지는 확인하지 못해 텍스트 표로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/vacuum-cleaners/bespoke_ai_steam_interior_fit/'
+    source:'삼성닷컴 Bespoke AI 스팀 설치가이드(samsung.com/sec/vacuum-cleaners/bespoke_ai_steam_interior_fit) — 자동급배수 빌트인/프리스탠딩 설치 공간·프로세스 상세 확인, 페이지 내 배경이미지(CSS background-image)로 삽입된 실제 설치가이드 일러스트 3장 직접 확인',
+    sourceUrl:'https://www.samsung.com/sec/vacuum-cleaners/bespoke_ai_steam_interior_fit/',
+    images:[
+      {src:'https://images.samsung.com/kdp/static/pcd/vacuum-cleaners/bespoke_ai_steam_interior_fit/guide_pic01_pc.jpg', alt:'자동 급배수 빌트인 설치가이드 일러스트', cap:'자동 급배수 빌트인 — 스테이션 가로410·세로513·높이320mm, 벽 후면 이격 20mm · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/vacuum-cleaners/bespoke_ai_steam_interior_fit/guide_pic02_pc_v2.jpg', alt:'자동 급배수 프리스탠딩 설치가이드 일러스트', cap:'자동 급배수 프리스탠딩 — 스테이션 가로230·세로513·높이410mm(다리 높이조절 가능), 벽 후면 이격 20mm · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/vacuum-cleaners/bespoke_ai_steam_interior_fit/reform_pic01_pc_v2.jpg', alt:'로봇청소기 가구장 리폼 예시', cap:'가구장 리폼 — 하부장 가로폭 450mm 이상 시 하부판 해체·걸레받이 절단만으로 리폼 가능 · samsung.com'},
+    ]
   },
 
 
@@ -717,7 +722,7 @@ const INSTALL_DB = {
   '인덕션': {
     emoji:'🍳',
     subtitle:'빌트인 설치 시 상판 타공 규격과 전기 용량(직결식 vs 콘센트식) 확인이 핵심입니다',
-    types:['빌트인 설치(오픈형 하부장)','전기공사 후 직결식 설치'],
+    types:['빌트인 설치(오픈형 하부장)','전기공사 후 직결식 설치','스탠딩형(프리스탠딩 케이스)'],
     space:[
       ['상판 타공 사이즈','모델별 상이 (예: 올플렉스존 모델 기준 가로×세로 560×480mm, 코너부 25R)'],
       ['하부 공간','인덕션 하단 7~10cm 이상 확보 시 밀착 빌트인 설치 가능'],
@@ -733,6 +738,7 @@ const INSTALL_DB = {
       '인덕션 하부 공간 7~10cm 이상 확보 여부 확인(밀착 빌트인 가능 여부)',
       '기존 가스레인지 철거 후 교체 설치 시 배관 마감·추가 타공 공사비 발생 가능성 확인',
       '전기공사 여부(7,400W 직결 vs 4,000W 콘센트 제한) 사전 확인',
+      '기존 가스레인지가 스탠딩(테이블탑) 형태인 경우, 프리스탠딩 케이스 사용으로 빌트인 타공 공사 없이 설치 가능한지 확인',
     ],
     cautions:[
       '전기공사 미실시 시 전체 화구 동시 최대 출력이 4,000W로 제한되어, 다화구 동시 사용 시 화력이 자동으로 조정됩니다.',
@@ -740,8 +746,18 @@ const INSTALL_DB = {
       '자성에 반응하지 않는 조리 용기(알루미늄·유리 등)는 사용이 불가합니다.',
       '모델별 정확한 타공 규격은 제품 상세페이지 또는 서비스센터(1588-3366) 확인이 필요합니다.',
     ],
-    source:'삼성닷컴 인덕션(samsung.com/sec/electric-range) — 타공 규격은 모델별 상세페이지 기준, 전기 용량은 올플렉스존 안내 문구 기준. 치수가 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/electric-range/all-electric-range/',
+    source:'삼성닷컴 인덕션 설치가이드 팝업(samsung.com/sec/buying-guide/#electric-ranges-installation-faq) — 하단 여유공간·높이부족·폭초과·스탠딩 4가지 시나리오별 Before/After 실사진 확인, 타공 규격은 모델별 상세페이지 기준',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/#electric-ranges-installation-faq',
+    images:[
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set1.png', alt:'하단에 다른 제품이 있어요(Before)', cap:'밀착 빌트인 — Before: 하단에 다른 제품이 있는 경우 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set2.png', alt:'충분한 여유 공간으로 빌트인 설치 완료(After)', cap:'밀착 빌트인 — After: 인덕션 높이 포함 7~10cm 공간만 있으면 밀착 빌트인 설치 가능 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set3.png', alt:'가스레인지 하단에 여유공간이 부족해요(Before)', cap:'띄움 설치 — Before: 설치 공간 높이가 부족한 경우 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set4.png', alt:'띄움 설치 자재로 빌트인 설치 완료(After)', cap:'띄움 설치 — After: 부족한 높이는 띄움 설치 자재로 보완해 빌트인 설치 가능 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set5.png', alt:'기존 가스레인지의 좌우 폭이 넓어요(Before)', cap:'메움 설치 — Before: 기존 타공 너비가 신제품보다 넓은 경우 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set6.png', alt:'메움 설치 자재로 빌트인 설치 완료(After)', cap:'메움 설치 — After: 넓은 좌우 폭은 메움 설치 자재로 보완해 빌트인 설치 가능 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set7.png', alt:'스탠딩 형태의 가스레인지를 사용하고 있어요(Before)', cap:'스탠딩형 설치 — Before: 스탠딩 형태 가스레인지 사용 중인 경우 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set8.png', alt:'프리스탠딩 케이스로 스탠드형 설치 완료(After)', cap:'스탠딩형 설치 — After: 프리스탠딩 케이스를 사용하면 스탠딩 형태로도 설치 가능 · samsung.com'},
+    ]
   },
 
   '김치냉장고': {
