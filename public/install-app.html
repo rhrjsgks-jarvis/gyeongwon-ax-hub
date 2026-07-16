@@ -138,11 +138,11 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
         <div class="cat-drop-row" data-cat="냉장고 일반형" data-kw="냉장고 일반형 소형 1인가구" onclick="selectCat('냉장고 일반형')"><span class="ci">🧊</span>냉장고 일반형</div>
         <div class="cat-drop-row" data-cat="냉장고 페어(2대 이상) 설치" data-kw="냉장고 페어 2대 조합 페어키트" onclick="selectCat('냉장고 페어(2대 이상) 설치')"><span class="ci">🧊</span>냉장고 페어(2대 이상) 설치</div>
         <div class="cat-drop-row" data-cat="세탁기·콤보" data-kw="세탁기 콤보 세탁 washer" onclick="selectCat('세탁기·콤보')"><span class="ci">🫧</span>세탁기·콤보</div>
+        <div class="cat-drop-row" data-cat="건조기" data-kw="건조기 dryer 적층 스태킹" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</div>
         <div class="cat-drop-row" data-cat="에어컨" data-kw="에어컨 냉방 실외기 무풍 스탠드 벽걸이" onclick="selectCat('에어컨')"><span class="ci">❄️</span>에어컨</div>
         <div class="cat-drop-row" data-cat="TV" data-kw="tv 티비 벽걸이 스탠드 텔레비전" onclick="selectCat('TV')"><span class="ci">📺</span>TV</div>
         <div class="cat-drop-row" data-cat="청소기" data-kw="청소기 무선청소기 스틱 거치대" onclick="selectCat('청소기')"><span class="ci">💨</span>무선청소기</div>
         <div class="cat-drop-row" data-cat="로봇청소기" data-kw="로봇청소기 자동급배수 빌트인 프리스탠딩 물걸레" onclick="selectCat('로봇청소기')"><span class="ci">🤖</span>로봇청소기</div>
-        <div class="cat-drop-row" data-cat="건조기" data-kw="건조기 dryer 적층 스태킹" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</div>
         <div class="cat-drop-row" data-cat="식기세척기" data-kw="식기세척기 빌트인 트루빌트인 프리스탠딩 카운터탑" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</div>
         <div class="cat-drop-row" data-cat="인덕션" data-kw="인덕션 electric range 쿡탑 하이라이트 빌트인" onclick="selectCat('인덕션')"><span class="ci">🍳</span>인덕션</div>
         <div class="cat-drop-row" data-cat="김치냉장고" data-kw="김치냉장고 김치플러스 스탠드형 뚜껑형 딤채" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</div>
@@ -444,15 +444,17 @@ const INSTALL_DB = {
 
   '세탁기·콤보': {
     emoji:'🫧',
-    subtitle:'일반 세탁기와 AI콤보(일체형 세탁건조기)는 요구 공간 기준이 다르며, 모델·용량별 정확한 치수는 삼성닷컴 설치가이드에서 실시간 확인 가능합니다',
-    types:['Bespoke AI 세탁기(일반형)','Bespoke AI 콤보(일체형)','Bespoke AI 원바디(적층 일체형)','통버블 세탁기','아가사랑·플렉스워시'],
+    subtitle:'일반 세탁기와 AI콤보(일체형 세탁건조기)는 요구 공간 기준이 다르며, 6개 세부 유형 전체에 삼성닷컴 실측 설치가이드 이미지를 매칭했습니다',
+    types:['Bespoke AI 세탁기(일반형)','Bespoke AI 콤보(일체형)','Bespoke AI 원바디(적층 일체형)','통버블 세탁기','아가사랑(소형세탁기)','플렉스워시'],
     space:[
       ['세탁실 진입로 폭','최소 700mm 이상(710mm 이상 권장) — 미만 시 설치 불가할 수 있음'],
       ['Bespoke AI 세탁기(25/24kg급)','폭 686mm · 높이 984mm · 양옆 이격 각 20mm · 깊이 850~875mm(모델별) · 후면 이격 25~50mm · 설치 최소 거리 769mm (WF*0F25***/WF*0F21*** 기준)'],
       ['Bespoke AI 콤보(일체형)','폭 686mm · 높이 1,110mm · 양옆 이격 각 20mm · 깊이 875mm(도어 오픈 시 1,430mm) · 후면 이격 50mm · 설치 최소 거리 820mm (WD90F25***/WD25DB****** 기준)'],
-      ['Bespoke AI 원바디(적층 일체형)','폭 686mm · 전체 높이 1,890mm · 양옆 이격 각 50mm · 천장 이격 150mm — 하단 세탁기·상단 건조기 조합 모델별 깊이 상이(WF*0F25***+DV*0F22*** 기준 세탁기 깊이 875mm/건조기 깊이 872mm)'],
+      ['Bespoke AI 원바디(적층 일체형)','폭 686mm · 전체 높이 1,890mm · 양옆 이격 각 50mm · 천장 이격 150mm — 하단 세탁기·상단 건조기 조합 모델별 깊이 상이(WF*0F25***+DV*0F22*** 기준 세탁기 깊이 875mm/건조기 깊이 872mm, 설치 최소 거리 769mm)'],
       ['통버블 세탁기(25~19kg)','폭 700mm · 양옆 이격 각 50mm · 깊이 748mm · 후면 이격 100mm · 도어 오픈 높이 1,480~1,510mm(모델별)'],
-      ['적층(스태킹) 설치 조건','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 상단 설치 키트로 수직 설치 가능(직렬설치 전체 높이 약 1,968~1,998mm). 그 외 조합은 전용 앵글(별매) 이용'],
+      ['아가사랑(소형세탁기)','폭 450mm · 양옆 이격 각 50mm · 깊이 540mm · 후면 이격 100mm · 제품 높이 809mm(도어 오픈 시 1,150mm) (WA30DG2120**/WA30T2101** 기준)'],
+      ['플렉스워시','폭 686mm · 높이 1,192mm · 양옆 이격 각 20mm · 깊이 864mm(도어 오픈 시 1,377mm, 상단 오픈 시 1,550mm) · 후면 이격 100mm · 설치 최소 거리 765mm (WV26R9980KV 기준)'],
+      ['적층(스태킹) 설치 조건','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 상단 설치 키트로 수직 설치 가능(직렬설치 전체 높이 약 1,968~1,998mm). 그 외 조합은 전용 앵글(별매) 이용 — 통버블·아가사랑·플렉스워시는 상단 설치키트 대상 아님'],
     ],
     utility:[
       ['급수호스','규격 1.25m, 연결기 내경 10.2×외경 16.2mm'],
@@ -476,12 +478,52 @@ const INSTALL_DB = {
     source:'삼성닷컴 세탁기 설치 가이드(samsung.com/sec/washing-machines, 세탁기 종류·출시년도·용량별 상세 다이어그램 확인, 2026년 7월 기준)',
     sourceUrl:'https://www.samsung.com/sec/buying-guide/#setting-washing-machines',
     images:[
+      {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_03_01.jpg', alt:"'25년도 Bespoke AI 세탁기 설치가이드", cap:"Bespoke AI 세탁기(일반형) — 폭686·높이984·양옆20mm·후면25~50mm·최소거리769mm (WF*0F25***/WF*0F21***) · samsung.com"},
       {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/aicombo_guide_pc_v3.jpg', alt:'Bespoke AI 콤보 설치가이드', cap:'Bespoke AI 콤보(일체형) — 폭686·높이1110·깊이875(도어오픈1430)·후면50mm·최소거리820mm (WD90F25***) · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_03_01.jpg', alt:"'25년도 Bespoke AI 세탁기 설치가이드", cap:"'25년도 Bespoke AI 세탁기 — 폭686·높이984·양옆20mm·후면25~50mm·최소거리769mm (WF*0F25***/WF*0F21***) · samsung.com"},
+      {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_02_01.jpg', alt:"'25년도 Bespoke AI 원바디 설치가이드", cap:"Bespoke AI 원바디(적층 일체형) — 폭686·전체높이1890·양옆50mm·천장이격150mm (WF*0F25***+DV*0F22*** 등) · samsung.com"},
       {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_05_01.jpg', alt:'통버블 세탁기 25kg~19kg 설치가이드', cap:'통버블 세탁기 25~19kg — 폭700·양옆50mm·깊이748·후면100mm (WA25*/WA23*8* 등) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_06_01.jpg', alt:'아가사랑 설치가이드', cap:'아가사랑(소형세탁기) — 폭450·양옆50mm·깊이540·후면100mm·높이809(도어오픈1150) (WA30DG2120**) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_07_01.jpg', alt:'플렉스워시 설치가이드', cap:'플렉스워시 — 폭686·높이1192·양옆20mm·깊이864·후면100mm·최소거리765mm (WV26R9980KV) · samsung.com'},
     ]
   },
 
+  '건조기': {
+    emoji:'🌀',
+    subtitle:'세탁기 위 적층(스태킹) 설치가 일반적이며, 응축식(물통 내장)은 직배수 없이도 실내 설치가 가능합니다',
+    types:['단독 설치(직배수)','세탁기 위 직렬 설치(상단 설치 키트)','세탁기 위 직렬 설치(전용 앵글)','세탁기 옆 병렬 설치'],
+    space:[
+      ['단독 설치(직배수) — Bespoke AI 건조기','폭 686mm · 높이 984mm · 양옆 이격 각 20mm · 깊이 840mm(DV*0F20***) 또는 872mm(DV*0F22***) · 후면 이격 20mm · 설치 최소 거리 722~754mm'],
+      ['직렬 설치(상단 설치 키트) — Bespoke AI','전체 높이 약 1,968mm(폭 686mm·양옆 이격 각 20mm) · 천장 이격 150mm 필요 · 세탁기 16kg 이상 + 건조기 조합 시 전용 상단 설치 키트(SKK 시리즈) 사용'],
+      ['병렬 설치 — Bespoke AI','세탁기+건조기+양옆 이격 포함 전체 폭 1,432mm · 세탁기-건조기 사이 간격 20mm · 양옆 벽 이격 각 20mm'],
+      ['적층 설치 조건(일반)','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 상단 설치 키트로 수직 설치 가능. 호환 불가 조합은 전용 앵글(별매, 약 14.3만원)로 직렬 설치'],
+      ['세탁실 공간(단독 설치 기준)','진입로 폭 700mm 이상, 높이 1,000mm 이상 권장(세탁기 기준과 동일)'],
+    ],
+    utility:[
+      ['배기/환기','응축식(물통 내장) AI 건조기는 별도 배기덕트 없이 직배수 불가 공간(주방·거실·드레스룸 등)에도 실내 설치 가능 — 구형 배기식 모델은 배기덕트 필요'],
+      ['전원','전용 콘센트 필요'],
+    ],
+    checklist:[
+      '세탁기 위 적층 설치 시 세탁기·건조기 용량 호환 여부(16kg+14kg 이상) 및 전용 상단 설치 키트 모델 확인',
+      '상단 설치 키트 비호환 조합은 전용 앵글(별매) 필요 여부 확인',
+      '병렬 설치 시 전체 폭 1,432mm(세탁기+건조기+양옆 이격) 확보 여부 확인',
+      '응축식(물통 내장) 모델인지, 배기덕트가 필요한 구형 배기식 모델인지 확인',
+      '모델·설치방법별 정확한 치수는 삼성닷컴 "건조기 설치 가이드"에서 건조기 종류/출시년도/설치방법 선택 후 재확인',
+      '설치 전 삼성전자서비스(1588-3366) 사전 상담 권장',
+    ],
+    cautions:[
+      '비규격 조합으로 무리하게 적층 설치 시 전도·소음 위험이 있습니다.',
+      '상단 설치 키트는 세탁기·건조기 LCD 스크린 크기가 같아야 올인원 컨트롤이 가능한 조합이 있습니다(예: WF90F*·DV90F* 끼리만 호환).',
+      '미용실·피부관리실·정비소·병원 등 가연성/인화성 물질 취급 업체는 안전상 판매·설치가 불가합니다.',
+    ],
+    source:'삼성닷컴 건조기 설치 가이드(samsung.com/sec/dryers, 건조기 종류·출시년도·설치방법별 상세 다이어그램 확인, 2026년 7월 기준)',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/#setting-check-dryers',
+    images:[
+      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/solo_set_2025.jpg', alt:"'25년도 Bespoke AI 단독설치(직배수) 설치가이드", cap:"'25년도 Bespoke AI 단독설치(직배수) — 폭686·높이984·양옆20mm·깊이840~872mm·후면20mm·최소거리722~754mm · samsung.com"},
+      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/col-kit_set_2025.jpg', alt:"'25년도 Bespoke AI 건조기&세탁기 직렬설치(상단 설치 키트) 설치가이드", cap:"직렬설치(상단 설치 키트) — 전체높이 1,968mm·양옆20mm·천장이격150mm · samsung.com"},
+      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/col-angle_set_2025_v2.jpg', alt:"'25년도 Bespoke AI 건조기&세탁기 직렬설치(앵글) 설치가이드", cap:"직렬설치(전용 앵글) — 앵글 포함 폭800mm·전체높이2,154mm·상단 건조기 후면이격52mm (별매 앵글 약14.3만원) · samsung.com"},
+      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/row_set_2025.jpg', alt:"'25년도 Bespoke AI 건조기 병렬설치 설치가이드", cap:"병렬설치 — 전체폭1,432mm·세탁기-건조기 간격20mm·양옆20mm · samsung.com"},
+    ]
+  },
   '에어컨': {
     emoji:'❄️',
     subtitle:'실내기·실외기 설치 공간 및 배관 길이 기준 (스탠드형 기준)',
@@ -610,42 +652,6 @@ const INSTALL_DB = {
     sourceUrl:'https://www.samsung.com/sec/vacuum-cleaners/bespoke_ai_steam_interior_fit/'
   },
 
-  '건조기': {
-    emoji:'🌀',
-    subtitle:'세탁기 위 적층(스태킹) 설치가 일반적이며, 응축식(물통 내장)은 직배수 없이도 실내 설치가 가능합니다',
-    types:['단독 설치(직배수)','세탁기 위 직렬 설치(상단 설치 키트)','세탁기 위 직렬 설치(전용 앵글)','세탁기 옆 병렬 설치'],
-    space:[
-      ['단독 설치(직배수) — Bespoke AI 건조기','폭 686mm · 높이 984mm · 양옆 이격 각 20mm · 깊이 840mm(DV*0F20***) 또는 872mm(DV*0F22***) · 후면 이격 20mm · 설치 최소 거리 722~754mm'],
-      ['직렬 설치(상단 설치 키트) — Bespoke AI','전체 높이 약 1,968mm(폭 686mm·양옆 이격 각 20mm) · 천장 이격 150mm 필요 · 세탁기 16kg 이상 + 건조기 조합 시 전용 상단 설치 키트(SKK 시리즈) 사용'],
-      ['병렬 설치 — Bespoke AI','세탁기+건조기+양옆 이격 포함 전체 폭 1,432mm · 세탁기-건조기 사이 간격 20mm · 양옆 벽 이격 각 20mm'],
-      ['적층 설치 조건(일반)','드럼세탁기 16kg 이상 + 건조기 14kg 이상 조합 시 전용 상단 설치 키트로 수직 설치 가능. 호환 불가 조합은 전용 앵글(별매, 약 14.3만원)로 직렬 설치'],
-      ['세탁실 공간(단독 설치 기준)','진입로 폭 700mm 이상, 높이 1,000mm 이상 권장(세탁기 기준과 동일)'],
-    ],
-    utility:[
-      ['배기/환기','응축식(물통 내장) AI 건조기는 별도 배기덕트 없이 직배수 불가 공간(주방·거실·드레스룸 등)에도 실내 설치 가능 — 구형 배기식 모델은 배기덕트 필요'],
-      ['전원','전용 콘센트 필요'],
-    ],
-    checklist:[
-      '세탁기 위 적층 설치 시 세탁기·건조기 용량 호환 여부(16kg+14kg 이상) 및 전용 상단 설치 키트 모델 확인',
-      '상단 설치 키트 비호환 조합은 전용 앵글(별매) 필요 여부 확인',
-      '병렬 설치 시 전체 폭 1,432mm(세탁기+건조기+양옆 이격) 확보 여부 확인',
-      '응축식(물통 내장) 모델인지, 배기덕트가 필요한 구형 배기식 모델인지 확인',
-      '모델·설치방법별 정확한 치수는 삼성닷컴 "건조기 설치 가이드"에서 건조기 종류/출시년도/설치방법 선택 후 재확인',
-      '설치 전 삼성전자서비스(1588-3366) 사전 상담 권장',
-    ],
-    cautions:[
-      '비규격 조합으로 무리하게 적층 설치 시 전도·소음 위험이 있습니다.',
-      '상단 설치 키트는 세탁기·건조기 LCD 스크린 크기가 같아야 올인원 컨트롤이 가능한 조합이 있습니다(예: WF90F*·DV90F* 끼리만 호환).',
-      '미용실·피부관리실·정비소·병원 등 가연성/인화성 물질 취급 업체는 안전상 판매·설치가 불가합니다.',
-    ],
-    source:'삼성닷컴 건조기 설치 가이드(samsung.com/sec/dryers, 건조기 종류·출시년도·설치방법별 상세 다이어그램 확인, 2026년 7월 기준)',
-    sourceUrl:'https://www.samsung.com/sec/buying-guide/#setting-check-dryers',
-    images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/solo_set_2025.jpg', alt:"'25년도 Bespoke AI 단독설치(직배수) 설치가이드", cap:"'25년도 Bespoke AI 단독설치(직배수) — 폭686·높이984·양옆20mm·깊이840~872mm·후면20mm·최소거리722~754mm · samsung.com"},
-      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/col-kit_set_2025.jpg', alt:"'25년도 Bespoke AI 건조기&세탁기 직렬설치(상단 설치 키트) 설치가이드", cap:"직렬설치(상단 설치 키트) — 전체높이 1,968mm·양옆20mm·천장이격150mm · samsung.com"},
-      {src:'https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/row_set_2025.jpg', alt:"'25년도 Bespoke AI 건조기 병렬설치 설치가이드", cap:"병렬설치 — 전체폭1,432mm·세탁기-건조기 간격20mm·양옆20mm · samsung.com"},
-    ]
-  },
 
   '식기세척기': {
     emoji:'🍽️',
