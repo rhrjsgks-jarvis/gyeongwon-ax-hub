@@ -6906,7 +6906,7 @@ function showResults(results,ceScore,mxScore,essayScore,em,es){
   const dateStr=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
   const wrongResults=results.filter(r=>!r.correct);
   rs.innerHTML=`
-  <div class="res-header"><div class="res-brand">SAMSUNG STORE</div><div class="res-title">레벨업 챌린지 결과</div><div class="res-meta-info">${st.name} (${st.empId})<br>${dateStr} · 소요시간 ${em}분 ${es}초</div></div>
+  <div class="res-header"><div class="res-brand">SAMSUNG STORE</div><div class="res-title">레벨업 챌린지 결과</div><div class="res-meta-info">${escHtml(st.name)} (${escHtml(st.empId)})<br>${dateStr} · 소요시간 ${em}분 ${es}초</div></div>
   <div class="score-card">
     <div class="score-main">${total}<span>/100</span></div>
     <div class="score-pct">${total}점</div>
