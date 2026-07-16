@@ -137,6 +137,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
         <div class="cat-drop-row" data-cat="냉장고 양문형" data-kw="냉장고 양문형 사이드바이사이드 side-by-side" onclick="selectCat('냉장고 양문형')"><span class="ci">🧊</span>냉장고 양문형</div>
         <div class="cat-drop-row" data-cat="냉장고 일반형" data-kw="냉장고 일반형 소형 1인가구" onclick="selectCat('냉장고 일반형')"><span class="ci">🧊</span>냉장고 일반형</div>
         <div class="cat-drop-row" data-cat="냉장고 페어(2대 이상) 설치" data-kw="냉장고 페어 2대 조합 페어키트" onclick="selectCat('냉장고 페어(2대 이상) 설치')"><span class="ci">🧊</span>냉장고 페어(2대 이상) 설치</div>
+        <div class="cat-drop-row" data-cat="김치냉장고" data-kw="김치냉장고 김치플러스 스탠드형 뚜껑형 딤채" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</div>
         <div class="cat-drop-row" data-cat="세탁기·콤보" data-kw="세탁기 콤보 세탁 washer" onclick="selectCat('세탁기·콤보')"><span class="ci">🫧</span>세탁기·콤보</div>
         <div class="cat-drop-row" data-cat="건조기" data-kw="건조기 dryer 적층 스태킹" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</div>
         <div class="cat-drop-row" data-cat="에어컨" data-kw="에어컨 냉방 실외기 무풍 스탠드 벽걸이" onclick="selectCat('에어컨')"><span class="ci">❄️</span>에어컨</div>
@@ -145,7 +146,6 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
         <div class="cat-drop-row" data-cat="로봇청소기" data-kw="로봇청소기 자동급배수 빌트인 프리스탠딩 물걸레" onclick="selectCat('로봇청소기')"><span class="ci">🤖</span>로봇청소기</div>
         <div class="cat-drop-row" data-cat="식기세척기" data-kw="식기세척기 빌트인 트루빌트인 프리스탠딩 카운터탑" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</div>
         <div class="cat-drop-row" data-cat="인덕션" data-kw="인덕션 electric range 쿡탑 하이라이트 빌트인" onclick="selectCat('인덕션')"><span class="ci">🍳</span>인덕션</div>
-        <div class="cat-drop-row" data-cat="김치냉장고" data-kw="김치냉장고 김치플러스 스탠드형 뚜껑형 딤채" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</div>
         <div class="cat-drop-row" data-cat="정수기" data-kw="정수기 카운터탑 빌트인 직수 냉온정수" onclick="selectCat('정수기')"><span class="ci">💧</span>정수기</div>
         <div class="cat-drop-row" data-cat="전자레인지" data-kw="전자레인지 microwave 빌트인 카운터탑" onclick="selectCat('전자레인지')"><span class="ci">🍱</span>전자레인지</div>
         <div class="cat-drop-row" data-cat="공기청정기" data-kw="공기청정기 air cleaner 청정기" onclick="selectCat('공기청정기')"><span class="ci">🌬️</span>공기청정기</div>
@@ -439,6 +439,41 @@ const INSTALL_DB = {
     sourceUrl:'https://www.samsung.com/sec/refrigerators/',
     images:[
       {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-01-02-v2.jpg', alt:'냉장고 페어 조합 설치 규격도', cap:'Infinite Line 4도어+김치플러스 키친핏 페어 조합 설치 규격 안내도(제품 간 10mm) · samsung.com'},
+    ]
+  },
+
+  '김치냉장고': {
+    emoji:'🥬',
+    subtitle:'스탠드형·뚜껑형은 프리스탠딩 냉장고와 유사한 이격 기준, 키친핏 Max 빌트인 조합은 별도 규격이 적용됩니다',
+    types:['스탠드형 프리스탠딩 설치','뚜껑형 설치','4도어 키친핏 Max 빌트인 설치(냉장고 조합)'],
+    space:[
+      ['스탠드형 벽면 이격','후면 벽과의 거리 100mm, 냉장고장과의 거리(양측) 각 50mm (김치플러스 4도어 RQ48A9001S9 · 3도어 RQ33C71G1S9 모델 기준)'],
+      ['뚜껑형 벽면 이격','제품 양면·후면 벽과의 거리 각 최소 50mm (RP22A3251Z3, RP20A32417Z 모델 기준)'],
+      ['키친핏 Max 빌트인 조합','냉장고장 가로 803mm 이상 · 높이 1,873mm 이상 · 깊이 700mm 이상 필요(콘센트 설치 시 깊이 720mm 이상), 좌우 이격 4mm (Bespoke 김치플러스 4도어 키친핏 RK**F42* 모델 기준)'],
+      ['진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
+    ],
+    utility:[
+      ['전원','전용 콘센트 필요'],
+    ],
+    checklist:[
+      '설치 형태(스탠드형/뚜껑형/키친핏 빌트인)를 먼저 확인한 뒤 그에 맞는 이격거리 적용',
+      '뚜껑형은 상부 개폐 공간(뚜껑 열림 높이) 확보 여부 확인',
+      '스탠드형 김치냉장고는 전문 설치기사 방문 설치 및 시운전 점검이 필수',
+      '키친핏 Max 빌트인 조합 설치 시 냉장고장 규격(가로·높이·깊이) 사전 확인',
+    ],
+    cautions:[
+      '뚜껑형은 상부 개폐형이므로 선반·조명 등 상부 장애물이 없는 위치에만 설치 가능합니다.',
+      '스탠드형과 뚜껑형은 이격 기준이 유사하나 도어 개폐 방식이 달라 진입로·설치 위치 요건이 다릅니다.',
+      '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
+    ],
+    source:'삼성닷컴 김치냉장고 공식 설치가이드(samsung.com/sec/kimchi-refrigerators 및 samsung.com/sec/buying-guide 설치가이드 위젯 — 김치플러스 스탠드형/뚜껑형/키친핏 Max 단독 설치가이드 이미지 확인)',
+    sourceUrl:'https://www.samsung.com/sec/kimchi-refrigerators/',
+    images:[
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-02-03-01.jpg', alt:'김치플러스 스탠드형 4도어 설치가이드 이미지', cap:'김치플러스 스탠드형 4도어 — 후면 벽과의 거리 100mm, 도어 오픈 130°, 제품 높이 1,825mm·가로 795mm, 냉장고장과의 거리(양측) 50mm(RQ48A9001S9 모델 기준) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-02-03-02.jpg', alt:'김치플러스 스탠드형 3도어 설치가이드 이미지', cap:'김치플러스 스탠드형 3도어 — 후면 벽과의 거리 100mm, 제품 높이 1,797mm·가로 693mm, 냉장고장과의 거리(양측) 50mm(RQ33C71G1S9 모델 기준) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-02-04-02.jpg', alt:'김치플러스 뚜껑형 RP22* 모델 설치가이드 이미지', cap:'김치플러스 뚜껑형 RP22A3251Z3 — 도어 오픈 92°, 제품 높이 973mm·가로 925mm, 벽과의 거리(양면·후면) 각 50mm(221L) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-02-04-01.jpg', alt:'김치플러스 뚜껑형 RP20* 모델 설치가이드 이미지', cap:'김치플러스 뚜껑형 RP20A32417Z — 도어 오픈 92°, 제품 높이 923mm·가로 925mm, 벽과의 거리(양면·후면) 각 50mm(202L) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc_01_02_02_02_4door_kf_f42_max_v2.jpg', alt:'Bespoke 김치플러스 4도어 키친핏(키친핏 Max) 설치가이드 이미지', cap:'Bespoke 김치플러스 4도어 키친핏 Max RK**F42* — 냉장고장 가로 803mm·높이 1,873mm·깊이 700mm 이상 필요, 좌우 이격 4mm, 도어 오픈 108° · samsung.com'},
     ]
   },
 
@@ -758,34 +793,6 @@ const INSTALL_DB = {
       {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set7.png', alt:'스탠딩 형태의 가스레인지를 사용하고 있어요(Before)', cap:'스탠딩형 설치 — Before: 스탠딩 형태 가스레인지 사용 중인 경우 · samsung.com'},
       {src:'https://images.samsung.com/kdp/pcd/104466/range_induction_set8.png', alt:'프리스탠딩 케이스로 스탠드형 설치 완료(After)', cap:'스탠딩형 설치 — After: 프리스탠딩 케이스를 사용하면 스탠딩 형태로도 설치 가능 · samsung.com'},
     ]
-  },
-
-  '김치냉장고': {
-    emoji:'🥬',
-    subtitle:'스탠드형·뚜껑형은 프리스탠딩 냉장고와 유사한 이격 기준, 키친핏 Max 빌트인 조합은 별도 규격이 적용됩니다',
-    types:['스탠드형 프리스탠딩 설치','뚜껑형 설치','4도어 키친핏 Max 빌트인 설치(냉장고 조합)'],
-    space:[
-      ['스탠드형 벽면 이격','좌우·후면 각 최소 50mm'],
-      ['뚜껑형 벽면 이격','좌우·후면 각 최소 50mm (RP22A3251Z3, RP20A32417Z 모델 기준)'],
-      ['키친핏 Max 빌트인 조합','냉장고장 가로 916mm 이상 · 높이 1,873mm 이상 · 깊이 700mm 이상 필요, 좌우 이격 4mm (RK80F42C2A 등 모델 기준)'],
-      ['진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
-    ],
-    utility:[
-      ['전원','전용 콘센트 필요'],
-    ],
-    checklist:[
-      '설치 형태(스탠드형/뚜껑형/키친핏 빌트인)를 먼저 확인한 뒤 그에 맞는 이격거리 적용',
-      '뚜껑형은 상부 개폐 공간(뚜껑 열림 높이) 확보 여부 확인',
-      '스탠드형 김치냉장고는 전문 설치기사 방문 설치 및 시운전 점검이 필수',
-      '키친핏 Max 빌트인 조합 설치 시 냉장고장 규격(가로·높이·깊이) 사전 확인',
-    ],
-    cautions:[
-      '뚜껑형은 상부 개폐형이므로 선반·조명 등 상부 장애물이 없는 위치에만 설치 가능합니다.',
-      '스탠드형과 뚜껑형은 이격 기준이 유사하나 도어 개폐 방식이 달라 진입로·설치 위치 요건이 다릅니다.',
-      '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
-    ],
-    source:'삼성닷컴 김치냉장고(samsung.com/sec/kimchi-refrigerators) 및 삼성전자서비스(samsungsvc.co.kr) 공식 안내. 스탠드형·뚜껑형 단독 치수 도면 이미지는 확인하지 못해 텍스트로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/kimchi-refrigerators/',
   },
 
   '정수기': {
