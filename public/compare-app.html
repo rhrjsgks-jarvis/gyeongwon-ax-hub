@@ -919,9 +919,28 @@ function selectBrand(b) {
 
 function updateCompetitors() {
   if(!currentCat||!currentBrand) return;
-  const comps = DB[currentCat].competitors[currentBrand]||[];
+  const d = DB[currentCat];
+  const comps = d.competitors[currentBrand]||[];
   const sc = document.getElementById('sel-comp');
   sc.innerHTML = comps.map((m,i)=>`<option value="${i}">${m.name} (${m.price}만원)</option>`).join('');
+
+  // 선택된 삼성 모델과 등급(용량·화면크기 등 specItems[0])이 가장 가까운 경쟁모델을 기본 선택
+  // — 그렇지 않으면 항상 각 배열의 0번(최상위 모델)끼리만 비교돼 85인치 vs 65인치처럼
+  //   등급이 안 맞는 조합이 기본값으로 노출된다.
+  const primaryKey = d.specItems && d.specItems[0] && d.specItems[0].key;
+  const si = +document.getElementById('sel-samsung').value || 0;
+  const samsungSpec = d.samsung[si] && d.samsung[si].specs && d.samsung[si].specs[primaryKey];
+  if (primaryKey && typeof samsungSpec === 'number' && comps.length) {
+    let bestIdx = 0, bestDiff = Infinity;
+    comps.forEach((m, i) => {
+      const v = m.specs && m.specs[primaryKey];
+      if (typeof v === 'number') {
+        const diff = Math.abs(v - samsungSpec);
+        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+      }
+    });
+    sc.value = String(bestIdx);
+  }
 }
 
 /* ── 비교 결과 렌더링 ── */
