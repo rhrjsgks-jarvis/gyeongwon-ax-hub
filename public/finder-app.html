@@ -104,36 +104,6 @@ table.spec tr:last-child td{border-bottom:none}
 .footer{margin-top:26px;text-align:center;font-size:11px;color:#93A3B8;line-height:1.7}
 .footer b{font-family:var(--mono)}
 
-/* ── JBL 브랜드관 ── */
-.brand-hero{padding:20px 2px 8px}
-.brand-hero .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:#FF6B00;font-weight:700}
-.brand-hero h1{font-size:22px;font-weight:800;letter-spacing:-.03em;margin:6px 0 4px}
-.brand-hero p{color:var(--sub);font-size:13px}
-.bfilter{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 12px}
-.bchip{font-size:12px;font-weight:700;padding:7px 14px;border-radius:99px;background:var(--surface);border:1.5px solid var(--line);color:var(--sub);cursor:pointer;transition:all .15s}
-.bchip.on{background:#FF6B00;border-color:#FF6B00;color:#fff}
-.brand-grid{display:flex;flex-direction:column;gap:10px}
-.bcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.bcard-head{padding:13px 15px 10px;width:100%;text-align:left;display:block;cursor:pointer}
-.bcard-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.brand-badge{font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:6px;letter-spacing:.06em}
-.badge-jbl{background:#FF6B00;color:#fff}
-.badge-hk{background:#1A1A2E;color:#fff}
-.badge-akg{background:#003087;color:#fff}
-.bcat{font-size:10.5px;font-weight:700;color:var(--sub);letter-spacing:.05em}
-.bname{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink);margin-top:2px}
-.bmeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;font-size:12px;color:var(--sub)}
-.bmeta b{color:var(--ink);font-weight:800;font-size:13px}
-.bprice{font-size:17px;font-weight:800;color:#FF6B00;margin-top:4px}
-.bfeats{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.bfeat{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:6px;background:#FFF0E6;color:#C45200}
-.bdetail{border-top:1px dashed var(--line);padding:12px 15px 13px;background:#FAFCFE;animation:fadein .18s ease}
-.bsearch{display:flex;gap:8px;margin-bottom:10px}
-.bsearch input{flex:1;font-family:var(--sans);font-size:14px;padding:10px 14px;border-radius:var(--r);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600}
-.bsearch input:focus{outline:none;border-color:#FF6B00}
-.bsearch .bgo{background:#FF6B00;color:#fff;font-size:13px;font-weight:800;padding:0 16px;border-radius:var(--r)}
-.bsearch .bgo:active{background:#CC5500}
-.bempty{text-align:center;color:var(--sub);font-size:13px;padding:30px 0;line-height:1.7}
 
 /* ── AI 카테고리 선택기 ── */
 .ai-budget{background:#f0f3ff;border:1.5px solid #1428A0;border-radius:10px;padding:10px 14px;font-size:14px;color:#1428A0;margin-bottom:14px}
@@ -282,20 +252,6 @@ table.spec tr:last-child td{border-bottom:none}
       <button class="go" onclick="runAI()">추천</button>
     </div>
 
-  <!-- JBL 브랜드관 뷰 -->
-  <div id="brandBox" class="hidden">
-    <div class="brand-hero">
-      <div class="eyebrow">HARMAN BRAND HALL</div>
-      <h1>🎵 JBL 브랜드관</h1>
-      <p>JBL · Harman Kardon · AKG — Samsung Harman International 全 라인업</p>
-    </div>
-    <div class="bsearch">
-      <input id="bq" placeholder="예: JBL 사운드바, AKG 헤드폰, 노이즈캔슬링..." oninput="filterBrand()" onkeydown="if(event.key==='Enter')filterBrand()">
-      <button class="bgo" onclick="filterBrand()">검색</button>
-    </div>
-    <div class="bfilter" id="bfilterRow"></div>
-    <div class="brand-grid" id="brandGrid"></div>
-  </div>
     <div class="aihint">자연어 문장을 AI가 해석해 전 라인업에서 추천합니다. (Claude 환경에서 동작 — 오프라인 시 키워드 모드 사용)</div>
   </div>
 
@@ -479,7 +435,7 @@ const SYN = {
   "프리미엄":["__PREMIUM__"],"최고급":["__PREMIUM__"],"플래그십":["__PREMIUM__","플래그"],
   /* 패키지 */
   "신혼":["__PKG__"],"혼수":["__PKG__"],"이사":["__PKG__"],"입주":["__PKG__"],
-  "가전패키지":["__PKG__"],"생태계":["smartthings","연동","갤럭시"],
+  "가전패키지":["__PKG__"],"신혼가전":["__PKG__"],"생태계":["smartthings","연동","갤럭시"],
   /* AI */
   "음성인식":["음성","ai","빅스비"],"빅스비":["bixby","음성"],
   "AI기능":["ai","agentic"],"인공지능":["ai","neural"]
@@ -1115,92 +1071,6 @@ function toggleAiDetail(card){
 }
 
 
-
-
-let activeBrandCat = '전체';
-let brandQuery = '';
-let openBrandId = null;
-
-function initBrandView(){
-  const row = $("bfilterRow");
-  row.innerHTML = Object.keys(BRAND_CATS).map(k =>
-    `<button class="bchip${k==='전체'?' on':''}" onclick="setBrandCat('${k}')">${k}</button>`
-  ).join('');
-  renderBrandGrid();
-}
-
-function setBrandCat(cat){
-  activeBrandCat = cat;
-  document.querySelectorAll('.bchip').forEach(el => {
-    el.classList.toggle('on', el.textContent.trim() === cat);
-  });
-  renderBrandGrid();
-}
-
-function filterBrand(){
-  brandQuery = ($("bq").value||'').trim().toLowerCase();
-  renderBrandGrid();
-}
-
-function renderBrandGrid(){
-  const catFn = BRAND_CATS[activeBrandCat];
-  let prods = typeof HARMAN_PRODUCTS !== 'undefined' ? HARMAN_PRODUCTS : [];
-  if(catFn) prods = prods.filter(catFn);
-  if(brandQuery){
-    const toks = brandQuery.split(/\s+/);
-    prods = prods.filter(p => toks.every(t => (p.kw||'').includes(t) || (p.model||'').toLowerCase().includes(t) || (p.brand||'').toLowerCase().includes(t)));
-  }
-  const grid = $("brandGrid");
-  if(!prods.length){
-    grid.innerHTML = '<div class="bempty">검색 결과가 없습니다.<br>카테고리나 검색어를 바꿔보세요.</div>';
-    return;
-  }
-  grid.innerHTML = prods.map(p => renderBrandCard(p)).join('');
-}
-
-function getBrandBadge(brand){
-  if(brand==='JBL') return '<span class="brand-badge badge-jbl">JBL</span>';
-  if(brand==='Harman Kardon') return '<span class="brand-badge badge-hk">HARMAN KARDON</span>';
-  if(brand==='AKG') return '<span class="brand-badge badge-akg">AKG</span>';
-  return '';
-}
-
-function renderBrandCard(p){
-  const isOpen = openBrandId === p.id;
-  const feat = (p.on||[]).slice(0,5).map(f=>`<span class="bfeat">${esc(f)}</span>`).join('');
-  const metaExtras = (p.fx||[]).slice(0,3).map(([k,v])=>`<span>${esc(k)}: <b>${esc(v)}</b></span>`).join('');
-  
-  let detail = '';
-  if(isOpen){
-    const allOn = (p.on||[]).map(f=>`<span class="flg">${esc(f)}</span>`).join('');
-    const allOff = (p.off||[]).map(f=>`<span class="flg no">${esc(f)}</span>`).join('');
-    const extras = (p.fx||[]).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('');
-    detail = `<div class="bdetail">
-      ${allOn ? `<h5>탑재 기능</h5><div class="flagrow">${allOn}</div>` : ''}
-      ${allOff ? `<h5>미탑재</h5><div class="flagrow">${allOff}</div>` : ''}
-      ${extras ? `<h5>상세 스펙</h5><table class="spec"><tbody>${extras}</tbody></table>` : ''}
-    </div>`;
-  }
-  
-  return `<div class="bcard">
-    <div class="bcard-head" onclick="toggleBrand(${p.id})">
-      <div class="bcard-top">
-        ${getBrandBadge(p.brand)}
-        <span class="bcat">${esc(p.cat||p.rawcat||'')}</span>
-      </div>
-      <div class="bname">${esc(p.model||'')}</div>
-      <div class="bmeta">${metaExtras}</div>
-      <div class="bprice">${p.price ? p.price.toLocaleString()+'만원' : '가격문의'}</div>
-      <div class="bfeats">${feat}</div>
-    </div>
-    ${detail}
-  </div>`;
-}
-
-function toggleBrand(id){
-  openBrandId = openBrandId===id ? null : id;
-  renderBrandGrid();
-}
 
 
 
