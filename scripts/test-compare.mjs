@@ -198,7 +198,8 @@ function resetUrlTabInputs() {
 
   // ── 데이터 최신화 회귀 방지 (TV 세대, 아이폰 배터리) ──
   const tv = DB['TV'];
-  assertTrue(tv.samsung.every((m) => m.name.includes('QNH80')), 'TV 회귀: 삼성 라인업이 QNH80(2026)이 아닌 구세대로 되돌아감');
+  assertTrue(tv.samsung.some((m) => m.name.includes('QNH80')), 'TV 회귀: 삼성 라인업에 QNH80(2026) 플래그십이 없음');
+  assertTrue(tv.samsung.every((m) => /QNH80|QNH70/.test(m.name)), 'TV 회귀: 삼성 라인업이 QNH70/80(2026) 계열이 아닌 구세대로 되돌아감');
   assertTrue(!tv.samsung.some((m) => /QN9\d\dD|QN85D|QN80D/.test(m.name)), 'TV 회귀: 2024년형 D접미사 구모델이 되살아남');
   assertTrue(tv.competitors['LG'].some((m) => m.name.includes('C6')), 'TV 회귀: LG OLED가 C6(2026)이 아닌 구세대로 되돌아감');
   assertTrue(!tv.competitors['LG'].some((m) => /C4|C3/.test(m.name)), 'TV 회귀: LG OLED 구세대(C4/C3) 모델이 되살아남');
