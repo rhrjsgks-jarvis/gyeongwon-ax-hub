@@ -7,7 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:install": "node scripts/test-install.mjs"
+    "test:install": "node scripts/test-install.mjs",
+    "test:finder": "node scripts/test-finder.mjs",
+    "test:care": "node scripts/test-care.mjs",
+    "test:planner": "node scripts/test-planner.mjs",
+    "test:compare": "node scripts/test-compare.mjs",
+    "test:levelup": "node scripts/test-levelup.mjs",
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:planner && npm run test:compare && npm run test:levelup"
   },
   "dependencies": {
     "next": "^14.2.35",
