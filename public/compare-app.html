@@ -467,16 +467,21 @@ const DB = {
      LG는 기존 "FX25GSB"가 실존 모델코드가 아니라 실제 워시콤보 라인(FH25ESE/FH25ESEFX)으로 교체,
      단독세탁기 2종(FX21GAC·FX25GNC) 추가. 표시 안 된 noise는 콤보 확인값(51.7dB)을 잠정 준용 — 재검증 필요.
      출처: samsung.com(WD25DB8695BC, WD25DB8995BZ), samsungsvc.co.kr 스펙시트(51.7dB),
-     lge.co.kr(fh25ese, fh25esefx, fx25wac 페이지) */
+     lge.co.kr(fh25ese, fh25esefx, fx25wac 페이지)
+     2026-07-22 리서치: 삼성이 2026년형 "비스포크 AI 콤보 프리히트"를 국내 일체형 세탁건조기 중
+     최대 용량(세탁25+건조20kg)으로 공식 발표(가격 319.9만~429.9만원, 7형 LCD·2.8형 다이얼 2개 라인업 —
+     기존 WD25DB8995BZ/WD25DB8695BC와 가격이 거의 일치해 동일 제품의 2026년형 리프레시로 판단)해
+     건조용량을 15kg→20kg으로 정정. 정확한 신규 모델코드는 보도자료에 노출되지 않아 기존 코드 유지.
+     출처: news.samsung.com(2026년형 비스포크 AI 콤보 출시 보도자료, 25+20kg·프리히트) */
   '세탁기·콤보': {
     emoji:'🫧',
     samsung:[
-      { name:'BESPOKE AI 콤보 7인치 LCD (세탁25+건조15kg) WD25DB8995BZ', price:430, grade:'P',
-        on:['AI 세탁건조','오토오픈도어+','세제 자동투입','7인치 LCD','인버터 히트펌프','SmartThings','AI 진동소음저감'],
-        specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7 } },
-      { name:'BESPOKE AI 콤보 2.8인치 다이얼 (세탁25+건조15kg) WD25DB8695BC', price:320, grade:'S',
-        on:['AI 세탁건조','AI 이불세탁건조','세제자동투입(11단계)','오토오픈도어','통세척'],
-        specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7 } },
+      { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (세탁25+건조20kg) WD25DB8995BZ', price:430, grade:'P',
+        on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','오토오픈도어+','세제 자동투입','7인치 LCD','SmartThings','AI 진동소음저감','국내 일체형 최대용량'],
+        specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7 } },
+      { name:'BESPOKE AI 콤보 프리히트 2.8인치 다이얼 (세탁25+건조20kg) WD25DB8695BC', price:320, grade:'S',
+        on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','AI 이불세탁건조','세제자동투입(11단계)','오토오픈도어','통세척','국내 일체형 최대용량'],
+        specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7 } },
       { name:'BESPOKE AI 세탁기 올인원컨트롤 (25kg) WF25CB8895BV', price:137, grade:'S',
         on:['올인원컨트롤','오토오픈도어','디지털인버터모터'],
         specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7 } },
@@ -951,78 +956,51 @@ const DB = {
   },
 
   /* ── 건조기 ── */
-  /* 2026-07-21 리서치: 삼성전자서비스 공식 기준상 건조기는 일반가전으로 무상보증 1년이 표준(에어컨만 예외 2년) —
-     기존 "삼성 2년 vs LG 1년" 차별화는 근거 없어 삼성쪽 as를 1로 정정, 관련 셀링포인트 문구도 삭제.
-     삼성 19kg 실제가는 다나와 기준 103.9만원(DB 139만원보다 낮음)이나 모델코드 자체는 검증 못해
-     가격은 잠정 유지 — 재검증 필요. 출처: samsungsvc.co.kr/info/fee?tab=assure, danawa.com(pcode=14808248) */
-  /* 2026-07-21 브랜드별 라인업 확장 리서치: 삼성 19kg 실제가 104만원으로 정정(다나와 확인, 기존 139만원은 오류),
-     17/20/21kg 신규 추가. 기존 LG 모델코드 RH19G2B/RH16G2B는 실존하지 않는 코드로 확인돼
-     실제 현행 모델(RG19EN·RG18WNW·RD20VN·RD21ESE)로 전면 교체. noise(소음)·time(건조시간)은
-     신규 모델 상당수가 이번에도 확인 못해 인접 용량대 기존값을 잠정 준용 — 재검증 필요.
-     출처: danawa.com(pcode=30766139 DV17CB6600BW, pcode=20259134 DV20CB8800BE),
-     11st.co.kr(DV21DG8600BV), lge.co.kr(rg18wnw, rg19en, rd20vn, rd21ese) */
-  /* 2026-07-21 최신화 리서치: "DV16BB6900H"/"DV19BB6900H"(BB시리즈)는 국내 유통채널 어디서도
-     검색되지 않는 미확인 모델코드이자, 설령 실존해도 명명규칙상 CB(2023)·DG(2024)보다 앞선
-     구형 세대로 확인돼 삭제. 해당 16~17kg·19~22kg 용량 구간은 이미 있는 CB/DG세대 3개
-     (17kg·20kg·21kg)가 삼성의 실제 드럼 설계 구간과 정확히 일치해 커버리지 손실 없음.
-     출처: danawa.com 등록일 비교, nosearch.com(삼성 건조기 모델명 규칙)
-     2026-07-22 리서치: 건조기는 2문자 세대코드라 알파벳 단순비교가 틀렸음을 확인 — 다나와 등록일 기준
-     DV21DG8600BV(DG)는 2025년형, DV20CB8800BE/DV17CB6600BW(CB)는 그보다 앞선 세대로 확인돼
-     DG를 최상위(P)로 재배치. 22kg급 DV22DB8890BV(DB세대, 2024년형, 다나와 최저가 189.4만원)도
-     신규 추가 — 정확한 기능 구성은 확인 못해 동일 라인(그랑데 AI) 인접값을 잠정 준용. 2026년형 단독
-     건조기는 삼성이 2026년 발표한 신제품 보도자료에서 모델코드가 노출되지 않아 확인불가
-     (WebSearch만으로는 확정 불가 — 브라우저 기반 후속 재조사 필요).
-     출처: news.samsung.com(2026년 신제품 보도자료, 모델코드 미노출), danawa.com(DV22DB8890BV 189.4만원) */
+  /* 2026-07-22 방침 변경: 삼성 건조기 라인업의 진짜 2026년형 플래그십은 단독형이 아니라 일체형
+     "비스포크 AI 콤보 프리히트"(세탁25+건조20kg, 국내 일체형 최대용량, 뉴스룸 공식 발표)로 확인됨에 따라
+     단독형 건조기(DV21DG8600BV 등 CB/DG세대)를 전면 배제하고 콤보로 교체 — "최신 기술을 가장 빠르게
+     보여준다"는 방침에 따라 단독형은 더 이상 비교 대상에 포함하지 않음. 세탁기·콤보 카테고리와 동일 제품이며
+     (동일 가격 확인) 건조 성능 중심으로 재구성. LG도 동일하게 워시콤보(FH25ESE/FH25ESEFX, 세탁기·콤보에서
+     기확인)로 교체해 콤보 대 콤보 동일 등급 비교를 유지.
+     출처: news.samsung.com(2026년형 비스포크 AI 콤보 출시 보도자료), samsung.com(WD25DB8995BZ/WD25DB8695BC),
+     lge.co.kr(fh25ese, fh25esefx) */
   '건조기': {
     emoji:'💨',
     samsung:[
-      { name:'AI 건조기 (21kg) DV21DG8600BV', price:110, grade:'P',
-        on:['정밀센서 AI 맞춤건조','AI 절약모드','으뜸효율 환급대상'],
-        specs:{ cap:21, eGrade:1, as:1, noise:50, time:94 } },
-      { name:'BESPOKE 그랑데 AI 건조기 (22kg) DV22DB8890BV', price:189, grade:'S',
-        on:['인버터 히트펌프(인접값 잠정)','AI 맞춤건조(인접값 잠정)','SmartThings(인접값 잠정)'],
-        specs:{ cap:22, eGrade:1, as:1, noise:50, time:94 } },
-      { name:'BESPOKE 그랑데 AI 건조기 (17kg) DV17CB6600BW', price:158, grade:'S',
-        on:['인버터 히트펌프','AI 맞춤건조','AI 절약모드','SmartThings','패딩리프레쉬','아웃도어리프레쉬','통살균'],
-        specs:{ cap:17, eGrade:1, as:1, noise:51, time:97 } },
-      { name:'BESPOKE 그랑데 AI 건조기 올인원컨트롤 (20kg) DV20CB8800BE', price:119, grade:'B',
-        on:['하이브리드(히트펌프+히터)','올인원컨트롤','쾌속코스(39분)','AI 맞춤건조','SmartThings'],
-        specs:{ cap:20, eGrade:1, as:1, noise:50, time:94 } }
+      { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (일체형, 세탁25+건조20kg) WD25DB8995BZ', price:430, grade:'P',
+        on:['프리히트(하이브리드 히트펌프 진화형)','국내 일체형 최대용량(건조 20kg)','AI 세탁건조','오토오픈도어+','7인치 LCD','SmartThings'],
+        specs:{ cap:20, eGrade:1, as:1, noise:51.7 } },
+      { name:'BESPOKE AI 콤보 프리히트 2.8인치 다이얼 (일체형, 세탁25+건조20kg) WD25DB8695BC', price:320, grade:'S',
+        on:['프리히트(하이브리드 히트펌프 진화형)','국내 일체형 최대용량(건조 20kg)','AI 세탁건조','AI 이불세탁건조','세제자동투입(11단계)'],
+        specs:{ cap:20, eGrade:1, as:1, noise:51.7 } }
     ],
     competitors:{
       'LG':[
-        { name:'LG 트롬 오브제컬렉션 건조기 (18kg) RG18WNW', price:105,
-          on:['듀얼 인버터 DD모터','AI건조','패딩리프레쉬','6모션건조','아웃도어리프레쉬','통살균','콘덴서 자동세척'],
-          specs:{ cap:18, eGrade:1, as:1, noise:54, time:100 } },
-        { name:'LG 트롬 오브제컬렉션 건조기 (19kg) RG19EN', price:104,
-          on:['듀얼 인버터 DD모터','AI건조','패딩리프레쉬','6모션건조','아웃도어리프레쉬','통살균'],
-          specs:{ cap:19, eGrade:1, as:1, noise:54, time:100 } },
-        { name:'LG 트롬 오브제컬렉션 건조기 (20kg) RD20VN', price:137,
-          on:['듀얼 인버터 DD모터','AI건조','스마트폰페어링','콘덴서케어','통살균','콘덴서 자동세척'],
-          specs:{ cap:20, eGrade:1, as:1, noise:54, time:100 } },
-        { name:'LG 트롬 오브제컬렉션 건조기 (21kg) RD21ESE', price:140,
-          on:['듀얼 인버터 히트펌프','콘덴서 자동세척','통살균(99.99%)','으뜸효율 대상'],
-          specs:{ cap:21, eGrade:1, as:1, noise:54, time:100 } }
+        { name:'LG 트롬 오브제컬렉션 워시콤보 (일체형, 세탁25+건조15kg) FH25ESE', price:445,
+          on:['AI 세탁건조','트루스팀살균','통살균케어','6모션'],
+          specs:{ cap:15, eGrade:1, as:1, noise:51.7 } },
+        { name:'LG 트롬 오브제컬렉션 워시콤보+미니워시 (일체형, 세탁25+건조15kg) FH25ESEFX', price:517,
+          on:['AI 세탁건조','트루스팀살균','미니워시 4kg 별도','6모션'],
+          specs:{ cap:15, eGrade:1, as:1, noise:51.7 } }
       ]
     },
     specItems:[
-      { key:'cap',   label:'용량',     unit:'kg',  better:'high' },
+      { key:'cap',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
-      { key:'noise', label:'소음',     unit:'dB',  better:'low'  },
-      { key:'time',  label:'건조시간(표준)',unit:'분',better:'low'  }
+      { key:'noise', label:'소음',     unit:'dB',  better:'low'  }
     ],
     sells:[
-      '하이브리드(히트펌프+히터) + 쾌속코스 39분 — LG 대비 압도적으로 빠른 건조 시간, LG 미탑재 기능',
-      'AI 맞춤건조 — 의류 소재·무게를 감지해 과건조 없이 최적 시간 자동 조절',
-      '올인원컨트롤 — 세탁부터 건조까지 한 화면에서 통합 제어, LG 대비 직관적인 사용성'
+      '국내 일체형 최대용량(건조 20kg) — LG(15kg) 대비 한 번에 더 많은 빨래를 건조, 세탁부터 건조까지 공간·시간 절약',
+      '프리히트 — 건조 초기 내부 온도를 빠르게 올리는 신기술로 기존 히트펌프 방식보다 진화된 건조 효율',
+      'AI 세탁건조 — 의류 소재·무게를 감지해 세탁부터 건조까지 최적 코스 자동 설정'
     ],
     counters:[
-      { issue:'LG 가격 우위', strategy:'쾌속코스(39분)와 하이브리드 건조 방식의 시간 절약 가치를 강조. LG는 히트펌프 단독 방식이라 건조 시간이 더 길다는 점을 자연스럽게 설명.' }
+      { issue:'LG 가격 우위', strategy:'LG는 건조 용량이 15kg으로 더 작다는 점을 먼저 안내. 대용량 이불·아웃도어 빨래를 한 번에 처리할 수 있는 20kg의 실사용 가치를 강조.' }
     ],
     scripts:[
-      { trigger:'LG와 가격 비교 시', text:'"가격 차이가 있지만, 저희 건조기는 정밀센서가 의류 소재·무게를 감지해 과건조 없이 최적 시간으로 맞춰줍니다. LG 대비 전기료·의류 손상 걱정을 줄여드립니다."' },
-      { trigger:'건조 성능 질문 시', text:'"AI 맞춤건조로 의류 소재를 자동 감지해 면·울·다운 각각 최적 온도로 건조합니다. 옷감 손상 없이 깨끗하게 말려드립니다."' }
+      { trigger:'LG와 가격 비교 시', text:'"가격 차이가 있지만, 저희는 건조 용량이 20kg으로 LG(15kg)보다 커서 이불 빨래도 한 번에 건조하실 수 있습니다. 프리히트 기술로 건조 효율도 한 단계 높였고요."' },
+      { trigger:'건조 성능 질문 시', text:'"프리히트가 건조 초기에 내부 온도를 빠르게 올려주는 신기술이라, 기존 히트펌프 방식보다 건조 효율이 더 좋습니다. AI가 의류 소재·무게도 자동 감지해서 옷감 손상 걱정도 없으세요."' }
     ]
   },
 
