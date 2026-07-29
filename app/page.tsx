@@ -55,11 +55,6 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.07',
         status: 'live',
       },
-    ],
-  },
-  {
-    title: '📦 설치·구성 도구',
-    modules: [
       {
         href: '/install',
         icon: '🛠️',
@@ -67,16 +62,6 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
         color: '#B45309',
         bg: '#FFFBEB',
-        updated: '2026.07',
-        status: 'live',
-      },
-      {
-        href: '/planner',
-        icon: '📦',
-        title: '패키지 플래너',
-        desc: '평형별 입주패키지 · 예산 내 최적 추천 · 삼성닷컴 할인 반영',
-        color: '#0891B2',
-        bg: '#ECFEFF',
         updated: '2026.07',
         status: 'live',
       },
@@ -210,6 +195,45 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
   )
 }
 
+function LinkListCard({
+  id, icon, title, subtitle, links, logKey,
+}: {
+  id: string
+  icon: string
+  title: string
+  subtitle: string
+  links: { href: string; icon: string; label: string; desc: string }[]
+  logKey: LogModule
+}) {
+  return (
+    <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
+      <h3 className="font-bold text-sm text-gray-700 mb-0.5">{icon} {title}</h3>
+      <p className="text-[10px] text-gray-300 font-medium mb-3">{subtitle}</p>
+      <div className="flex flex-col gap-1">
+        {links.map((l) => (
+          <a
+            key={l.href}
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="no-underline"
+            onClick={() => logEvent(logKey, 'page_view')}
+          >
+            <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
+              <span className="text-base flex-shrink-0">{l.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800">{l.label}</p>
+                <p className="text-xs text-gray-400">{l.desc}</p>
+              </div>
+              <span className="text-gray-300 text-xs">↗</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [copied, setCopied] = useState(false)
 
@@ -272,62 +296,28 @@ export default function Home() {
               <ModuleTile key={mod.href} mod={mod} />
             ))}
           </div>
+          {group.title === '📚 교육·운영 도구' && (
+            <div className="flex flex-col gap-3 mt-3">
+              <LinkListCard
+                id="concierge"
+                icon="🎫"
+                title="컨시어지 프로그램"
+                subtitle="스타필드 수원 매장 대기접수 시스템"
+                links={CONCIERGE_LINKS}
+                logKey="concierge"
+              />
+              <LinkListCard
+                id="coupon"
+                icon="🎁"
+                title="쿠폰 배포프로그램"
+                subtitle="매장 쿠폰 재고·발급현황 관리"
+                links={COUPON_LINKS}
+                logKey="coupon"
+              />
+            </div>
+          )}
         </div>
       ))}
-
-      {/* 컨시어지 프로그램 */}
-      <div id="concierge" className="bg-white rounded-2xl p-4 border border-gray-100 mb-4 scroll-mt-20">
-        <h3 className="font-bold text-sm text-gray-700 mb-0.5">🎫 컨시어지 프로그램</h3>
-        <p className="text-[10px] text-gray-300 font-medium mb-3">스타필드 수원 매장 대기접수 시스템</p>
-        <div className="flex flex-col gap-1">
-          {CONCIERGE_LINKS.map((c) => (
-            <a
-              key={c.href}
-              href={c.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline"
-              onClick={() => logEvent('concierge', 'page_view')}
-            >
-              <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
-                <span className="text-base flex-shrink-0">{c.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">{c.label}</p>
-                  <p className="text-xs text-gray-400">{c.desc}</p>
-                </div>
-                <span className="text-gray-300 text-xs">↗</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* 쿠폰 배포프로그램 */}
-      <div id="coupon" className="bg-white rounded-2xl p-4 border border-gray-100 mb-4 scroll-mt-20">
-        <h3 className="font-bold text-sm text-gray-700 mb-0.5">🎁 쿠폰 배포프로그램</h3>
-        <p className="text-[10px] text-gray-300 font-medium mb-3">매장 쿠폰 재고·발급현황 관리</p>
-        <div className="flex flex-col gap-1">
-          {COUPON_LINKS.map((c) => (
-            <a
-              key={c.href}
-              href={c.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline"
-              onClick={() => logEvent('coupon', 'page_view')}
-            >
-              <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
-                <span className="text-base flex-shrink-0">{c.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">{c.label}</p>
-                  <p className="text-xs text-gray-400">{c.desc}</p>
-                </div>
-                <span className="text-gray-300 text-xs">↗</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
 
       {/* 상황별 도구 추천 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
