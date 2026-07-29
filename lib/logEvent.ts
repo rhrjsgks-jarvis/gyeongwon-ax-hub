@@ -89,10 +89,14 @@ export function aggregateByDay(logs: LogEvent[], days = 14) {
   return result
 }
 
+function csvField(v: string): string {
+  return /["\n,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v
+}
+
 export function exportCsv(logs: LogEvent[]): void {
   const header = 'ts,date,module,action,uid,extra'
   const rows = logs.map(
-    (e) => `${e.ts},${e.date},${e.module},${e.action},${e.uid},"${e.extra || ''}"`
+    (e) => [e.ts, e.date, e.module, e.action, e.uid, csvField(e.extra || '')].join(',')
   )
   const blob = new Blob([header + '\n' + rows.join('\n')], { type: 'text/csv' })
   const a = document.createElement('a')

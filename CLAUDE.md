@@ -59,12 +59,13 @@ node scripts/test-care.mjs      # AI Care: 16개 제품 전수, 12/36개월 플�
 node scripts/test-planner.mjs   # 패키지 플래너: 18개 카테고리 × 5개 평형, 할인율·예산배분 계산
 node scripts/test-compare.mjs   # 타사비교: 70개 카테고리×브랜드×모델 조합, escHtml/history XSS 회귀
 node scripts/test-levelup.mjs   # 레벨업테스트: 25문항 구성, 채점(CE/MX/에세이), 이름·사번·에세이 XSS 회귀
+node --experimental-strip-types scripts/test-admin.mjs   # AX 대시보드: lib/logEvent.ts 집계·CSV 내보내기 회귀
 npx tsc --noEmit                # 타입체크
 ```
 
 새 카테고리·제품을 추가하거나 이미지 개수가 바뀌면 각 스크립트의 기대값(예: `test-install.mjs`의 `expectedImageCounts`)을 반드시 함께 갱신할 것 — 안 하면 테스트가 실패한다. `compare-app.html`/`test-app.html`은 XSS 회귀 가드가 포함돼 있으므로 이스케이프 로직(`escHtml`)을 건드릴 때 특히 주의.
 
-AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클라이언트 컴포넌트라 위 jsdom 패턴을 그대로 쓸 수 없다 — 아직 자동 회귀테스트 없음.
+AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클라이언트 컴포넌트라 다른 모듈과 같은 jsdom-전체페이지 패턴은 쓸 수 없다. 대신 실제 로직이 몰려 있는 `lib/logEvent.ts`(집계·CSV 내보내기)를 Node의 `--experimental-strip-types`로 직접 임포트해 순수 함수 단위로 검증한다(`scripts/test-admin.mjs`) — 컴포넌트 자체의 렌더링/인증 게이트는 아직 커버하지 않음.
 
 커밋 전 실수로 생성되는 `tsconfig.tsbuildinfo`, `package-lock.json`은 `.gitignore`에 등록되어 있으니 git에 올라가지 않는지 확인할 것 (과거 여러 번 실수로 커밋되었다가 별도 정리 커밋이 필요했음).
 
