@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -45,6 +46,19 @@ const ADMIN_LINK = { href: '/admin', label: 'AX 현황 대시보드', icon: '�
 
 export default function Navigation() {
   const pathname = usePathname()
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    NAV_GROUPS.forEach((group) => {
+      initial[group.title] = group.items.some(
+        (item) => pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
+      )
+    })
+    return initial
+  })
+
+  function toggleGroup(title: string) {
+    setOpenGroups((prev) => ({ ...prev, [title]: !prev[title] }))
+  }
 
   return (
     <>
@@ -114,31 +128,48 @@ export default function Navigation() {
           })}
         </div>
         <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex-1 overflow-y-auto flex flex-col gap-3">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.title}>
-              <p className="px-3 mb-1 text-[10px] font-semibold text-gray-300 uppercase tracking-wide">{group.title}</p>
-              <div className="flex flex-col gap-0.5">
-                {group.items.map((item) => {
-                  const active = pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className="flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-xl text-[13px] font-medium no-underline transition-all"
-                      style={{
-                        background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
-                        color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                        fontWeight: active ? 700 : 500,
-                      }}
-                    >
-                      <span className="text-sm">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                  )
-                })}
+          {NAV_GROUPS.map((group) => {
+            const isOpen = !!openGroups[group.title]
+            return (
+              <div key={group.title}>
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.title)}
+                  className="w-full flex items-center justify-between px-3 mb-1 py-1 rounded-lg text-[10px] font-semibold text-gray-400 uppercase tracking-wide hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                >
+                  <span>{group.title}</span>
+                  <span
+                    className="text-[9px] transition-transform"
+                    style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                  >
+                    ▶
+                  </span>
+                </button>
+                {isOpen && (
+                  <div className="flex flex-col gap-0.5">
+                    {group.items.map((item) => {
+                      const active = pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-xl text-[13px] font-medium no-underline transition-all"
+                          style={{
+                            background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                            color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                            fontWeight: active ? 700 : 500,
+                          }}
+                        >
+                          <span className="text-sm">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 노출 */}
           <div className="pt-2 border-t border-gray-100">
