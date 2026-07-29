@@ -14,7 +14,8 @@
     "test:compare": "node scripts/test-compare.mjs",
     "test:levelup": "node scripts/test-levelup.mjs",
     "test:admin": "node --experimental-strip-types scripts/test-admin.mjs",
-    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:planner && npm run test:compare && npm run test:levelup && npm run test:admin"
+    "test:consistency": "node scripts/test-consistency.mjs",
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:planner && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency"
   },
   "dependencies": {
     "next": "^14.2.35",
