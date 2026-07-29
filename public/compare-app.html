@@ -1584,6 +1584,17 @@ function renderHistory(){
 /* ── 토스트 ── */
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
+/* ── 라우트 모드(mode 쿼리파라미터) — 허브에서 타사비교(url 전용) / 즉시비교(db 전용, 개선중)로 분리 진입 ── */
+const ROUTE_MODE = new URLSearchParams(location.search).get('mode') || 'url';
+document.querySelector('.tab-bar').style.display = 'none';
+if (ROUTE_MODE === 'db') {
+  document.querySelector('header h1').textContent = '즉시비교 (개선중)';
+  document.querySelector('header p').textContent = '카테고리·모델 선택 → 즉시 비교표 (UX 개선 진행중)';
+} else {
+  switchTab('url');
+  document.querySelector('header p').textContent = 'URL 입력 → 즉시 비교표 + 셀링포인트 + 응대 스크립트';
+}
+
 /* ── 초기화 ── */
 renderHistory();
 </script>

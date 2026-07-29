@@ -47,13 +47,23 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       },
       {
         href: '/compare',
-        icon: '⚡',
+        icon: '🔗',
         title: '타사비교',
-        desc: '타사비교 가이드 · URL 퀴즈 — URL 입력으로 즉시 생성',
+        desc: 'URL 입력으로 즉시 비교표 + 셀링포인트 + 응대 스크립트 생성',
         color: '#EA580C',
         bg: '#FFF7ED',
         updated: '2026.07',
         status: 'live',
+      },
+      {
+        href: '/compare-instant',
+        icon: '⚡',
+        title: '즉시비교 (개선중)',
+        desc: '카테고리·모델 드롭다운 선택형 즉시비교 — UX 개선 진행중',
+        color: '#B45309',
+        bg: '#FFFBEB',
+        updated: '2026.07',
+        status: 'beta',
       },
       {
         href: '/install',
@@ -68,7 +78,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
     ],
   },
   {
-    title: '📚 교육·운영 도구',
+    title: '📚 교육',
     modules: [
       {
         href: '/test',
@@ -80,6 +90,21 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.06',
         status: 'live',
       },
+      {
+        href: '/quiz',
+        icon: '🎯',
+        title: 'URL 퀴즈 생성',
+        desc: '자사·경쟁사 URL 입력 → 직원 평가용 인터랙티브 퀴즈 즉시 생성',
+        color: '#0891B2',
+        bg: '#ECFEFF',
+        updated: '2026.07',
+        status: 'live',
+      },
+    ],
+  },
+  {
+    title: '🏬 매장운영 도구',
+    modules: [
       {
         href: '/admin',
         icon: '📊',
@@ -128,14 +153,14 @@ const TIPS = [
   { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
   { emoji: '📋', situation: '케어십 서비스 항목을 안내할 때', tool: 'AI Care 검색기', href: '/care' },
   { emoji: '🔎', situation: '제품 스펙을 빠르게 확인할 때', tool: '모델파인더', href: '/finder' },
-  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: '타사비교 → 퀴즈 탭', href: '/compare' },
+  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'URL 퀴즈 생성', href: '/quiz' },
   { emoji: '🛠️', situation: '설치 가능 여부를 확인할 때', tool: '설치환경 가이드', href: '/install' },
 ]
 
 const GUIDE = [
   { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX·Harman 전 제품 검색' },
   { step: '02', text: 'AI Care — 구독케어 조건·항목 즉시 조회' },
-  { step: '03', text: '타사비교 — 가이드·퀴즈 URL 입력으로 자동 생성' },
+  { step: '03', text: '타사비교 — URL 입력으로 비교표 자동 생성' },
   { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },
 ]
 
@@ -296,7 +321,7 @@ export default function Home() {
               <ModuleTile key={mod.href} mod={mod} />
             ))}
           </div>
-          {group.title === '📚 교육·운영 도구' && (
+          {group.title === '🏬 매장운영 도구' && (
             <div className="flex flex-col gap-3 mt-3">
               <LinkListCard
                 id="concierge"
