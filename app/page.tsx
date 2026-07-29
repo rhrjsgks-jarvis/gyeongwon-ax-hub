@@ -2,13 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { logEvent } from '@/lib/logEvent'
+import { logEvent, LogModule } from '@/lib/logEvent'
 
 const PROJECT_START = new Date('2026-06-30')
 const TOTAL_DAYS = 30
 const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
 
-const MODULES = [
+type ModuleCard = {
+  href: string
+  icon: string
+  title: string
+  desc: string
+  color: string
+  bg: string
+  updated: string
+  status: string
+  external?: boolean
+  logKey?: LogModule
+}
+
+const MODULES: ModuleCard[] = [
   {
     href: '/install',
     icon: '🛠️',
@@ -78,6 +91,54 @@ const MODULES = [
     bg: '#F8FAFC',
     updated: '2026.07',
     status: 'live',
+  },
+  {
+    href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?s=ZN01',
+    icon: '🎫',
+    title: '컨시어지 접수',
+    desc: '성함·연락처로 대기접수 · 대기번호 발급 (스타필드 수원)',
+    color: '#DB2777',
+    bg: '#FDF2F8',
+    updated: '2026.07',
+    status: 'live',
+    external: true,
+    logKey: 'concierge',
+  },
+  {
+    href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?page=admin&s=ZN01',
+    icon: '📟',
+    title: '컨시어지 관리자',
+    desc: '대기 호출 · 완료처리 (직원용, 스타필드 수원)',
+    color: '#9333EA',
+    bg: '#FAF5FF',
+    updated: '2026.07',
+    status: 'live',
+    external: true,
+    logKey: 'concierge',
+  },
+  {
+    href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?page=board&s=ZN01',
+    icon: '📺',
+    title: '매장 전광판',
+    desc: '대기 현황 실시간 안내판 (스타필드 수원)',
+    color: '#0EA5E9',
+    bg: '#F0F9FF',
+    updated: '2026.07',
+    status: 'live',
+    external: true,
+    logKey: 'concierge',
+  },
+  {
+    href: 'https://script.google.com/macros/s/AKfycbzXMz57Vo-w15z_FOI2lg4iOMQBBoRW0p2JQIiB1kKXWs5cEKquVt_-Qug2r3MemA/exec',
+    icon: '🎁',
+    title: '시크릿쿠폰',
+    desc: '매장별 쿠폰 재고 · 발급현황 조회',
+    color: '#DC2626',
+    bg: '#FEF2F2',
+    updated: '2026.07',
+    status: 'live',
+    external: true,
+    logKey: 'coupon',
   },
 ]
 
@@ -166,8 +227,8 @@ export default function Home() {
 
       {/* 모듈 그리드 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-        {MODULES.map((mod) => (
-          <Link key={mod.href} href={mod.href} className="no-underline">
+        {MODULES.map((mod) => {
+          const cardBody = (
             <div className="module-card group">
               <div className="flex items-start justify-between mb-3">
                 <div
@@ -179,13 +240,34 @@ export default function Home() {
                 <StatusBadge status={mod.status} />
               </div>
               <h2 className="font-bold text-base mb-1 group-hover:text-[#1428A0] transition-colors">
-                {mod.title}
+                {mod.title}{mod.external && <span className="text-gray-300 text-xs font-normal"> ↗</span>}
               </h2>
               <p className="text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
               <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
             </div>
-          </Link>
-        ))}
+          )
+
+          if (mod.external) {
+            return (
+              <a
+                key={mod.href}
+                href={mod.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-underline"
+                onClick={() => mod.logKey && logEvent(mod.logKey, 'page_view')}
+              >
+                {cardBody}
+              </a>
+            )
+          }
+
+          return (
+            <Link key={mod.href} href={mod.href} className="no-underline">
+              {cardBody}
+            </Link>
+          )
+        })}
       </div>
 
       {/* 상황별 도구 추천 */}

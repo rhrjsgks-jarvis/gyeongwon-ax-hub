@@ -74,6 +74,9 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   compare: { label: '타사비교 가이드', icon: '⚖️', color: '#D97706' },
   quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
   planner: { label: '패키지 플래너',    icon: '📦', color: '#0891B2' },
+  install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
+  concierge: { label: '컨시어지 프로그램', icon: '🎫', color: '#DB2777' },
+  coupon:  { label: '시크릿쿠폰',      icon: '🎁', color: '#DC2626' },
 }
 
 export default function AdminPage() {
