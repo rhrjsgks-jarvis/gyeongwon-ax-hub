@@ -405,12 +405,16 @@ const DB = {
      값이었다. 동일 스펙(864L, 냉장509L+냉동355L, 프리스탠딩 584만원/키친핏맥스 464만원)의 2026년형
      최신 세대문자 "H" 모델 RM90H91B1W로 교체. 냉장고 채번규칙상 'RF'가 구형, 'RM'이 AI 패밀리허브
      현재 라인 채번임을 확인(내부 판매채널 기준). 출처: danawa.com(pcode=109599752), news.samsung.com. */
+  /* 2026-07-29 스펙 재검증: RM90H91B1W의 월간 소비전력을 다나와/삼성닷컴 에너지소비효율 등급 표기로
+     확인(1등급, 26.03kWh) — 기존 잠정값(42.7)을 실측치로 교체. RM70F90M1GD·RF85DB90F1AP·
+     RS84DB5002CW의 power·noise는 개별 확인 못해 기존 잠정값 유지 — 재검증 필요.
+     출처: danawa.com(pcode=109599752), nosearch.com(RM90F91B1W 스펙분석) */
   '냉장고': {
     emoji:'🧊',
     samsung:[
       { name:'BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W', price:584, grade:'P',
         on:['AI Vision(제미나이 연동, 37종 식재료 인식)','32형 대형 터치스크린','하이브리드쿨링','음성인식 제어'],
-        specs:{ cap:864, power:42.7, eGrade:1, as:1, noise:34 } },
+        specs:{ cap:864, power:26.03, eGrade:1, as:1, noise:34 } },
       { name:'BESPOKE AI 4도어 (902L) RM70F90M1GD', price:230, grade:'S',
         on:['푸드쇼케이스 홈바','AI절약모드','하이브리드쿨링','AI 비전인사이드'],
         specs:{ cap:902, power:39, eGrade:1, as:1, noise:34 } },
@@ -747,6 +751,7 @@ const DB = {
      가격은 다나와 단품 최저가(72만원, VS90F40CSG) 기준 — 청정스테이션 포함 풀패키지(코스트코 139.9만원)는
      정확한 모델코드 미확인으로 보류. 무상보증(as)은 확인 못해 기존 인접값 잠정 준용 — 재검증 필요.
      출처: news.samsung.com(비스포크 AI 제트 400W 출시 보도자료), danawa.com(VS90F40CSG) */
+  /* 2026-07-29 재검증: VS90F40CSG 무상보증(as) 1년 확인 — 기존 잠정값(1년)과 일치, 재검증 완료. */
   '청소기': {
     emoji:'🤖',
     samsung:[
@@ -911,6 +916,9 @@ const DB = {
      출처: samsung.com/sec/smartphones/galaxy-a36-5g, news.samsung.com(A36 49.94만원),
      zdnet.co.kr(퀀텀6 61.82만원), apple.com/kr/newsroom(iPhone 17 129만원), munhwa.com(iPhone Air 159만원),
      clien.net(iPhone 17e 99만원) */
+  /* 2026-07-29 재검증: iPhone 17e·iPhone Air의 실제 유선충전은 20W(17 Pro와 동일한 40W가 아님 —
+     Air·17e는 얇은 두께/보급형 포지셔닝으로 저전력 충전만 지원)로 확인돼 정정. iPhone 17(기본형)은
+     40W가 맞음(Pro와 동일 지원). 출처: belkin.com(iPhone 17 Air Charging Guide), anker.com(iPhone 17 Charger Guide) */
   '스마트폰': {
     emoji:'📱',
     samsung:[
@@ -934,13 +942,13 @@ const DB = {
       '애플':[
         { name:'iPhone 17e (256GB)', price:99,
           on:['Action Button','A19 칩','48MP 단일카메라(2배 무손실 줌)','Qi2 15W 무선충전'],
-          specs:{ size:6.1, hz:60, cam:48, bat:4005, as:2, charge:40 } },
+          specs:{ size:6.1, hz:60, cam:48, bat:4005, as:2, charge:20 } },
         { name:'iPhone 17 (256GB)', price:129,
           on:['ProMotion 120Hz(기본형 최초 탑재)','48MP 듀얼카메라','카메라 컨트롤','MagSafe 25W 무선충전'],
           specs:{ size:6.3, hz:120, cam:48, bat:3692, as:2, charge:40 } },
         { name:'iPhone Air (256GB)', price:159,
           on:['역대 최슬림 아이폰(5.6mm)','A19 Pro 칩','48MP Fusion 카메라','ProMotion 120Hz'],
-          specs:{ size:6.5, hz:120, cam:48, bat:3149, as:2, charge:40 } },
+          specs:{ size:6.5, hz:120, cam:48, bat:3149, as:2, charge:20 } },
         { name:'iPhone 17 Pro (256GB)', price:179,
           on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
           specs:{ size:6.3, hz:120, cam:48, bat:3998, as:2, charge:40 } },
@@ -1038,6 +1046,8 @@ const DB = {
      반영). 2026년형 후속 세대(G 등)는 검색에서 확인되지 않아 F세대를 현재 최신으로 판단.
      as·noise는 확인 못해 기존 인접값 잠정 준용 — 재검증 필요.
      출처: samsung.com/sec 제품페이지(DW90F79P1U01S, 에너지1등급·소비전력2050W·치수595x815x572mm 확인), danawa.com */
+  /* 2026-07-29 재검증: DW90F79P1U01S 무상보증(as) 1년(디지털인버터모터만 10년 별도) 확인 — 기존
+     잠정값(1년)과 일치, 재검증 완료. noise(소음)는 확인 못해 잠정값 유지 — 재검증 필요. */
   '식기세척기': {
     emoji:'🍽️',
     samsung:[
