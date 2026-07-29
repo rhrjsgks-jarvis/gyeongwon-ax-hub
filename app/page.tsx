@@ -104,20 +104,21 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   },
   {
     title: '🏬 매장운영 도구',
-    modules: [
-      {
-        href: '/admin',
-        icon: '📊',
-        title: 'AX 현황 대시보드',
-        desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기',
-        color: '#475569',
-        bg: '#F8FAFC',
-        updated: '2026.07',
-        status: 'live',
-      },
-    ],
+    modules: [],
   },
 ]
+
+// AX 현황 대시보드는 그룹에 속하지 않고 허브 최하단에 별도 섹션으로 운영
+const ADMIN_MODULE: ModuleCard = {
+  href: '/admin',
+  icon: '📊',
+  title: 'AX 현황 대시보드',
+  desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기',
+  color: '#475569',
+  bg: '#F8FAFC',
+  updated: '2026.07',
+  status: 'live',
+}
 
 const CONCIERGE_LINKS = [
   {
@@ -343,6 +344,14 @@ export default function Home() {
           )}
         </div>
       ))}
+
+      {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 운영 */}
+      <div className="mb-5">
+        <h3 className="font-bold text-sm text-gray-700 mb-2 px-1">📊 AX 현황 대시보드</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <ModuleTile mod={ADMIN_MODULE} />
+        </div>
+      </div>
 
       {/* 상황별 도구 추천 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">

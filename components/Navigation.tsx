@@ -12,11 +12,36 @@ const NAV_ITEMS = [
   { href: '/install', label: '설치환경',  icon: '🛠️' },
 ]
 
-// 데스크탑 사이드바 전용 바로가기 (모바일 하단탭에는 미노출)
-const QUICK_LINKS = [
-  { href: '/#concierge', label: '컨시어지',      icon: '🎫' },
-  { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: '🎁' },
+// 데스크탑 사이드바 전용 그룹 — 허브 메인 섹션 구성과 동일하게 유지
+const NAV_GROUPS = [
+  {
+    title: '🔍 제품 상담 도구',
+    items: [
+      { href: '/finder',          label: '모델파인더',       icon: '🔍' },
+      { href: '/care',            label: 'AI Care',         icon: '💚' },
+      { href: '/compare',         label: '타사비교',         icon: '🔗' },
+      { href: '/compare-instant', label: '즉시비교 (개선중)', icon: '⚡' },
+      { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
+    ],
+  },
+  {
+    title: '📚 교육',
+    items: [
+      { href: '/test', label: '레벨업테스트',   icon: '📝' },
+      { href: '/quiz', label: 'URL 퀴즈 생성', icon: '🎯' },
+    ],
+  },
+  {
+    title: '🏬 매장운영 도구',
+    items: [
+      { href: '/#concierge', label: '컨시어지',        icon: '🎫' },
+      { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: '🎁' },
+    ],
+  },
 ]
+
+// AX 현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
+const ADMIN_LINK = { href: '/admin', label: 'AX 현황 대시보드', icon: '📊' }
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -88,28 +113,50 @@ export default function Navigation() {
             )
           })}
         </div>
-        <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex flex-col gap-1">
-          <p className="px-3 mb-1 text-[10px] font-semibold text-gray-300 uppercase tracking-wide">바로가기</p>
-          {[...NAV_ITEMS.filter((item) => item.href !== '/'), ...QUICK_LINKS].map((item) => {
-            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
-                style={{
-                  background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
-                  color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                  fontWeight: active ? 700 : 500,
-                }}
-              >
-                <span className="text-base">{item.icon}</span>
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
+        <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex-1 overflow-y-auto flex flex-col gap-3">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title}>
+              <p className="px-3 mb-1 text-[10px] font-semibold text-gray-300 uppercase tracking-wide">{group.title}</p>
+              <div className="flex flex-col gap-0.5">
+                {group.items.map((item) => {
+                  const active = pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-xl text-[13px] font-medium no-underline transition-all"
+                      style={{
+                        background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                        color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                        fontWeight: active ? 700 : 500,
+                      }}
+                    >
+                      <span className="text-sm">{item.icon}</span>
+                      <span>{item.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 노출 */}
+          <div className="pt-2 border-t border-gray-100">
+            <Link
+              href={ADMIN_LINK.href}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
+              style={{
+                background: pathname.startsWith(ADMIN_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                color: pathname.startsWith(ADMIN_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                fontWeight: pathname.startsWith(ADMIN_LINK.href) ? 700 : 500,
+              }}
+            >
+              <span className="text-base">{ADMIN_LINK.icon}</span>
+              <span>{ADMIN_LINK.label}</span>
+            </Link>
+          </div>
         </div>
-        <div className="mt-auto px-4 py-3 mx-3 rounded-xl bg-gray-50 text-xs text-gray-400 text-center">
+        <div className="mt-auto px-4 py-3 mx-3 rounded-xl bg-gray-50 text-xs text-gray-400 text-center shrink-0">
           경원영업팀 AX 경진대회<br />
           <span className="font-semibold text-gray-500">2026</span>
         </div>
