@@ -29,11 +29,12 @@ export default function FeedbackButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="건의사항 보내기"
-        className="fixed z-40 rounded-full shadow-lg flex items-center justify-center text-white text-xl w-12 h-12 bottom-24 right-4 md:bottom-6 md:right-6"
+        aria-label="개발자에게 문의하기"
+        className="fixed z-40 rounded-full shadow-lg flex items-center gap-1.5 text-white whitespace-nowrap bottom-24 right-3 md:bottom-6 md:right-6 px-3.5 py-3 md:px-4 md:py-3 min-h-[44px]"
         style={{ background: '#1428A0' }}
       >
-        💬
+        <span className="text-base leading-none">💬</span>
+        <span className="text-xs md:text-sm font-semibold leading-none">개발자에게 문의하기</span>
       </button>
 
       {open && (
