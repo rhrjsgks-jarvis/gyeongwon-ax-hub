@@ -12,6 +12,12 @@ const NAV_ITEMS = [
   { href: '/install', label: '설치환경',  icon: '🛠️' },
 ]
 
+// 데스크탑 사이드바 전용 바로가기 (모바일 하단탭에는 미노출)
+const QUICK_LINKS = [
+  { href: '/#concierge', label: '컨시어지',      icon: '🎫' },
+  { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: '🎁' },
+]
+
 export default function Navigation() {
   const pathname = usePathname()
 
@@ -81,6 +87,19 @@ export default function Navigation() {
               </Link>
             )
           })}
+        </div>
+        <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex flex-col gap-1">
+          <p className="px-3 mb-1 text-[10px] font-semibold text-gray-300 uppercase tracking-wide">바로가기</p>
+          {QUICK_LINKS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline text-gray-500 hover:bg-gray-50 transition-all"
+            >
+              <span className="text-base">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ))}
         </div>
         <div className="mt-auto px-4 py-3 mx-3 rounded-xl bg-gray-50 text-xs text-gray-400 text-center">
           경원영업팀 AX 경진대회<br />
