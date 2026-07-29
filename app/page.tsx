@@ -21,76 +21,91 @@ type ModuleCard = {
   logKey?: LogModule
 }
 
-const MODULES: ModuleCard[] = [
+const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   {
-    href: '/install',
-    icon: '🛠️',
-    title: '설치환경 가이드',
-    desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
-    color: '#B45309',
-    bg: '#FFFBEB',
-    updated: '2026.07',
-    status: 'live',
+    title: '🔍 제품 상담 도구',
+    modules: [
+      {
+        href: '/finder',
+        icon: '🔍',
+        title: '모델파인더',
+        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(297종) 검색',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.06',
+        status: 'live',
+      },
+      {
+        href: '/care',
+        icon: '💚',
+        title: 'AI Care 검색기',
+        desc: '구독케어 서비스 항목·조건 즉시 조회',
+        color: '#059669',
+        bg: '#ECFDF5',
+        updated: '2026.06',
+        status: 'live',
+      },
+      {
+        href: '/compare',
+        icon: '⚡',
+        title: '타사비교',
+        desc: '타사비교 가이드 · URL 퀴즈 — URL 입력으로 즉시 생성',
+        color: '#EA580C',
+        bg: '#FFF7ED',
+        updated: '2026.07',
+        status: 'live',
+      },
+    ],
   },
   {
-    href: '/finder',
-    icon: '🔍',
-    title: '모델파인더',
-    desc: '키워드 한 줄로 CE·MX·Harman 전 제품(297종) 검색',
-    color: '#1428A0',
-    bg: '#EEF2FF',
-    updated: '2026.06',
-    status: 'live',
+    title: '📦 설치·구성 도구',
+    modules: [
+      {
+        href: '/install',
+        icon: '🛠️',
+        title: '설치환경 가이드',
+        desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
+        color: '#B45309',
+        bg: '#FFFBEB',
+        updated: '2026.07',
+        status: 'live',
+      },
+      {
+        href: '/planner',
+        icon: '📦',
+        title: '패키지 플래너',
+        desc: '평형별 입주패키지 · 예산 내 최적 추천 · 삼성닷컴 할인 반영',
+        color: '#0891B2',
+        bg: '#ECFEFF',
+        updated: '2026.07',
+        status: 'live',
+      },
+    ],
   },
   {
-    href: '/care',
-    icon: '💚',
-    title: 'AI Care 검색기',
-    desc: '구독케어 서비스 항목·조건 즉시 조회',
-    color: '#059669',
-    bg: '#ECFDF5',
-    updated: '2026.06',
-    status: 'live',
-  },
-  {
-    href: '/test',
-    icon: '📝',
-    title: '레벨업테스트',
-    desc: '2026 제품 전문가 역량 평가 · 25문항 · 30분',
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    updated: '2026.06',
-    status: 'live',
-  },
-  {
-    href: '/compare',
-    icon: '⚡',
-    title: '타사비교',
-    desc: '타사비교 가이드 · URL 퀴즈 — URL 입력으로 즉시 생성',
-    color: '#EA580C',
-    bg: '#FFF7ED',
-    updated: '2026.07',
-    status: 'live',
-  },
-  {
-    href: '/planner',
-    icon: '📦',
-    title: '패키지 플래너',
-    desc: '평형별 입주패키지 · 예산 내 최적 추천 · 삼성닷컴 할인 반영',
-    color: '#0891B2',
-    bg: '#ECFEFF',
-    updated: '2026.07',
-    status: 'live',
-  },
-  {
-    href: '/admin',
-    icon: '📊',
-    title: 'AX 현황 대시보드',
-    desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기',
-    color: '#475569',
-    bg: '#F8FAFC',
-    updated: '2026.07',
-    status: 'live',
+    title: '📚 교육·운영 도구',
+    modules: [
+      {
+        href: '/test',
+        icon: '📝',
+        title: '레벨업테스트',
+        desc: '2026 제품 전문가 역량 평가 · 25문항 · 30분',
+        color: '#7C3AED',
+        bg: '#F5F3FF',
+        updated: '2026.06',
+        status: 'live',
+      },
+      {
+        href: '/admin',
+        icon: '📊',
+        title: 'AX 현황 대시보드',
+        desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기',
+        color: '#475569',
+        bg: '#F8FAFC',
+        updated: '2026.07',
+        status: 'live',
+      },
+    ],
   },
 ]
 
@@ -154,6 +169,47 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+function ModuleTile({ mod }: { mod: ModuleCard }) {
+  const cardBody = (
+    <div className="module-card group">
+      <div className="flex items-start justify-between mb-3">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+          style={{ background: mod.bg }}
+        >
+          {mod.icon}
+        </div>
+        <StatusBadge status={mod.status} />
+      </div>
+      <h2 className="font-bold text-base mb-1 group-hover:text-[#1428A0] transition-colors">
+        {mod.title}{mod.external && <span className="text-gray-300 text-xs font-normal"> ↗</span>}
+      </h2>
+      <p className="text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
+      <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
+    </div>
+  )
+
+  if (mod.external) {
+    return (
+      <a
+        href={mod.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="no-underline"
+        onClick={() => mod.logKey && logEvent(mod.logKey, 'page_view')}
+      >
+        {cardBody}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={mod.href} className="no-underline">
+      {cardBody}
+    </Link>
+  )
+}
+
 export default function Home() {
   const [copied, setCopied] = useState(false)
 
@@ -207,50 +263,17 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 모듈 그리드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-        {MODULES.map((mod) => {
-          const cardBody = (
-            <div className="module-card group">
-              <div className="flex items-start justify-between mb-3">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-                  style={{ background: mod.bg }}
-                >
-                  {mod.icon}
-                </div>
-                <StatusBadge status={mod.status} />
-              </div>
-              <h2 className="font-bold text-base mb-1 group-hover:text-[#1428A0] transition-colors">
-                {mod.title}{mod.external && <span className="text-gray-300 text-xs font-normal"> ↗</span>}
-              </h2>
-              <p className="text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
-              <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
-            </div>
-          )
-
-          if (mod.external) {
-            return (
-              <a
-                key={mod.href}
-                href={mod.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="no-underline"
-                onClick={() => mod.logKey && logEvent(mod.logKey, 'page_view')}
-              >
-                {cardBody}
-              </a>
-            )
-          }
-
-          return (
-            <Link key={mod.href} href={mod.href} className="no-underline">
-              {cardBody}
-            </Link>
-          )
-        })}
-      </div>
+      {/* 모듈 그리드 (섹션별) */}
+      {MODULE_GROUPS.map((group) => (
+        <div key={group.title} className="mb-5">
+          <h3 className="font-bold text-sm text-gray-700 mb-2 px-1">{group.title}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {group.modules.map((mod) => (
+              <ModuleTile key={mod.href} mod={mod} />
+            ))}
+          </div>
+        </div>
+      ))}
 
       {/* 컨시어지 프로그램 */}
       <div id="concierge" className="bg-white rounded-2xl p-4 border border-gray-100 mb-4 scroll-mt-20">

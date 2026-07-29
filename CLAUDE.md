@@ -26,8 +26,8 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 
 새 모듈을 추가하거나 기존 모듈을 수정할 때:
 - 실제 로직/데이터는 대부분 `public/*.html` 안의 인라인 `<script>`에 있다 (React 컴포넌트가 아님). 이 정적 HTML을 직접 편집하는 것이 일반적인 작업 방식이다.
-- `app/page.tsx`의 `MODULES` 배열이 허브 메인 카드 노출 순서를 결정한다.
-- 사이드바/하단 내비게이션 `NAV_ITEMS`도 함께 확인.
+- `app/page.tsx`의 `MODULE_GROUPS` 배열(섹션별 그룹핑, 각 그룹 안에 `modules[]`)이 허브 메인 카드 노출 순서·섹션 구성을 결정한다. 컨시어지·쿠폰 배포프로그램처럼 외부 링크 묶음은 `CONCIERGE_LINKS`/`COUPON_LINKS` 같은 별도 섹션으로 관리한다.
+- 사이드바/하단 내비게이션 `NAV_ITEMS`(+ 데스크탑 사이드바 전용 `QUICK_LINKS`)도 함께 확인.
 - `lib/logEvent.ts`의 `LogModule` 유니온 타입에 새 모듈 키를 추가해야 로깅이 정상 동작한다.
 
 ## 설치환경 가이드 모듈 (`public/install-app.html`)
