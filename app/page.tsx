@@ -141,6 +141,12 @@ const CONCIERGE_LINKS = [
   },
 ]
 
+const CONCIERGE_USAGE = [
+  { step: '1', text: '고객이 매장 방문 시 "컨시어지 접수"에서 성함·연락처를 입력해 대기 등록 → 대기번호가 발급됩니다.' },
+  { step: '2', text: '"매장 전광판"을 매장 내 모니터·태블릿에 항상 띄워두면 대기번호·순번이 고객에게 실시간으로 보입니다.' },
+  { step: '3', text: '상담 가능해지면 담당 직원이 "컨시어지 관리자"에서 해당 대기번호를 호출·완료 처리합니다.' },
+]
+
 const COUPON_LINKS = [
   {
     href: 'https://script.google.com/macros/s/AKfycbzXMz57Vo-w15z_FOI2lg4iOMQBBoRW0p2JQIiB1kKXWs5cEKquVt_-Qug2r3MemA/exec',
@@ -222,7 +228,7 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
 }
 
 function LinkListCard({
-  id, icon, title, subtitle, links, logKey,
+  id, icon, title, subtitle, links, logKey, usage,
 }: {
   id: string
   icon: string
@@ -230,6 +236,7 @@ function LinkListCard({
   subtitle: string
   links: { href: string; icon: string; label: string; desc: string }[]
   logKey: LogModule
+  usage?: { step: string; text: string }[]
 }) {
   return (
     <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
@@ -256,6 +263,24 @@ function LinkListCard({
           </a>
         ))}
       </div>
+      {usage && usage.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-[10px] font-bold text-gray-400 mb-1.5">📖 사용 방법</p>
+          <div className="flex flex-col gap-1">
+            {usage.map((u) => (
+              <div key={u.step} className="flex items-start gap-2">
+                <span
+                  className="shrink-0 mt-0.5 text-[9px] font-bold text-white rounded-full w-4 h-4 flex items-center justify-center"
+                  style={{ background: '#1428A0' }}
+                >
+                  {u.step}
+                </span>
+                <p className="text-xs text-gray-500 leading-relaxed">{u.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -331,6 +356,7 @@ export default function Home() {
                 subtitle="스타필드 수원 매장 대기접수 시스템"
                 links={CONCIERGE_LINKS}
                 logKey="concierge"
+                usage={CONCIERGE_USAGE}
               />
               <LinkListCard
                 id="coupon"
