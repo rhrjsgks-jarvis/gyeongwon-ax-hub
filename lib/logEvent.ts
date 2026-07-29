@@ -3,7 +3,7 @@
  * localStorage 적재 + Google Apps Script 웹훅(옵션)
  */
 
-export type LogModule = 'finder' | 'care' | 'test' | 'compare' | 'quiz' | 'hub' | 'planner' | 'install' | 'concierge' | 'coupon'
+export type LogModule = 'finder' | 'care' | 'test' | 'compare' | 'compareInstant' | 'quiz' | 'hub' | 'planner' | 'install' | 'concierge' | 'coupon'
 export type LogAction = 'page_view' | 'search' | 'result_open' | 'generate' | 'tab_switch'
 
 export interface LogEvent {

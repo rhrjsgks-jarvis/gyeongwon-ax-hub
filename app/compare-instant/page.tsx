@@ -3,8 +3,8 @@
 import { useEffect } from 'react'
 import { logEvent } from '@/lib/logEvent'
 
-export default function QuizPage() {
-  useEffect(() => { logEvent('quiz', 'page_view') }, [])
+export default function CompareInstantPage() {
+  useEffect(() => { logEvent('compareInstant', 'page_view') }, [])
 
   return (
     <div
@@ -12,9 +12,9 @@ export default function QuizPage() {
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     >
       <iframe
-        src="/quiz-app.html"
+        src="/compare-app.html?mode=db"
         className="w-full h-full border-0"
-        title="URL 퀴즈 생성기"
+        title="즉시비교 (개선중)"
       />
     </div>
   )
