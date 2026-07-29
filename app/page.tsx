@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { logEvent, LogModule } from '@/lib/logEvent'
 
-const PROJECT_START = new Date('2026-06-30')
-const TOTAL_DAYS = 30
 const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
 
 type ModuleCard = {
@@ -332,21 +330,9 @@ export default function Home() {
     })
   }
 
-  const today = new Date()
-  const dayNum = Math.max(1, Math.floor((today.getTime() - PROJECT_START.getTime()) / (1000 * 60 * 60 * 24)) + 1)
-  const clampedDay = Math.min(dayNum, TOTAL_DAYS)
-  const progress = (clampedDay / TOTAL_DAYS) * 100
-
-  const todayStr = today.toLocaleDateString('ko-KR', {
+  const todayStr = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
   })
-
-  const weeks = [
-    { label: '1주차', desc: '기반 구축',    active: clampedDay <= 7 },
-    { label: '2주차', desc: '콘텐츠 고도화', active: clampedDay > 7  && clampedDay <= 14 },
-    { label: '3주차', desc: '실사용 검증',  active: clampedDay > 14 && clampedDay <= 21 },
-    { label: '4주차', desc: '완성·발표',    active: clampedDay > 21 },
-  ]
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -355,22 +341,6 @@ export default function Home() {
         <p className="text-xs text-gray-400 mb-1">{todayStr}</p>
         <h1 className="text-2xl font-black text-gray-900">경원 AX 허브</h1>
         <p className="text-sm text-gray-500 mt-1">영업지원 AI 도구 통합 플랫폼</p>
-      </div>
-
-      {/* 공지 배너 */}
-      <div
-        className="rounded-2xl p-4 mb-6 text-white text-sm"
-        style={{ background: 'linear-gradient(135deg, #1428A0, #2563EB)' }}
-      >
-        <div className="flex items-start gap-3">
-          <span className="text-xl">🚀</span>
-          <div>
-            <p className="font-bold mb-0.5">AX 허브 구축 30일 플랜 · Day {clampedDay}</p>
-            <p className="opacity-80 text-xs">
-              4개 AI 영업지원 도구 운영 중 · 매일 업데이트 예정
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* 모듈 그리드 (섹션별) — 모바일: 클릭해야 펼쳐지는 아코디언 / 데스크탑: 항상 펼침 */}
@@ -490,43 +460,6 @@ export default function Home() {
               <p className="text-xs text-gray-600 leading-relaxed pt-0.5">{g.text}</p>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* 진행 현황 */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100">
-        <AccordionHeader
-          title="📅 30일 실행 현황"
-          isOpen={!!openSections['progress']}
-          onClick={() => toggleSection('progress')}
-        />
-        <div className={`${openSections['progress'] ? 'block' : 'hidden'} md:block`}>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex-1 bg-gray-100 rounded-full h-2">
-              <div
-                className="h-2 rounded-full transition-all"
-                style={{ width: `${progress}%`, background: 'var(--color-primary)' }}
-              />
-            </div>
-            <span className="text-xs font-semibold text-gray-500">Day {clampedDay} / {TOTAL_DAYS}</span>
-          </div>
-          <div className="grid grid-cols-4 gap-2 text-center mt-3">
-            {weeks.map((w) => (
-              <div
-                key={w.label}
-                className="rounded-xl py-2 px-1"
-                style={{
-                  background: w.active ? 'rgba(20,40,160,0.08)' : '#F9FAFB',
-                  border: w.active ? '1.5px solid rgba(20,40,160,0.2)' : '1.5px solid transparent',
-                }}
-              >
-                <p className="text-xs font-bold" style={{ color: w.active ? 'var(--color-primary)' : '#9CA3AF' }}>
-                  {w.label}
-                </p>
-                <p className="text-[10px] text-gray-400 mt-0.5">{w.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
