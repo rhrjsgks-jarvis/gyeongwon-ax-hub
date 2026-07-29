@@ -228,7 +228,7 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
 }
 
 function LinkListCard({
-  id, icon, title, subtitle, links, logKey, usage,
+  id, icon, title, subtitle, links, logKey, usage, note,
 }: {
   id: string
   icon: string
@@ -237,6 +237,7 @@ function LinkListCard({
   links: { href: string; icon: string; label: string; desc: string }[]
   logKey: LogModule
   usage?: { step: string; text: string }[]
+  note?: string
 }) {
   return (
     <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
@@ -279,6 +280,11 @@ function LinkListCard({
               </div>
             ))}
           </div>
+        </div>
+      )}
+      {note && (
+        <div className="mt-3 rounded-xl px-3 py-2.5" style={{ background: '#EFF6FF' }}>
+          <p className="text-xs text-blue-700 leading-relaxed">💡 {note}</p>
         </div>
       )}
     </div>
@@ -357,6 +363,7 @@ export default function Home() {
                 links={CONCIERGE_LINKS}
                 logKey="concierge"
                 usage={CONCIERGE_USAGE}
+                note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
               />
               <LinkListCard
                 id="coupon"
