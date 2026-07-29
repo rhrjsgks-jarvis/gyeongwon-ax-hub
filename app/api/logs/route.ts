@@ -15,7 +15,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(url, { cache: 'no-store' })
+    const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) })
     if (!res.ok) {
       return NextResponse.json({ logs: [], connected: false, error: `GAS ${res.status}` })
     }

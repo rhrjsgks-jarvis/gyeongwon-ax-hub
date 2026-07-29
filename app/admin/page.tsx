@@ -3,13 +3,7 @@
 import { useEffect, useState } from 'react'
 import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
 
-const ADMIN_PW_HASH = '60fe74406e7f353ed979f350f2fbb6a2e8690a5fa7d1b0c32983d1d8b3f95f67'
 const ADMIN_SESSION_KEY = 'ax_admin_unlocked'
-
-async function sha256(text: string) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
-}
 
 function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
@@ -18,11 +12,20 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
 
   const submit = async () => {
     setChecking(true)
-    const hash = await sha256(pw)
-    if (hash === ADMIN_PW_HASH) {
-      sessionStorage.setItem(ADMIN_SESSION_KEY, '1')
-      onUnlock()
-    } else {
+    try {
+      const res = await fetch('/api/admin-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        localStorage.setItem(ADMIN_SESSION_KEY, '1')
+        onUnlock()
+      } else {
+        setError(true)
+      }
+    } catch {
       setError(true)
     }
     setChecking(false)
@@ -88,7 +91,7 @@ export default function AdminPage() {
   const [gateChecked, setGateChecked] = useState(false)
 
   useEffect(() => {
-    if (sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') setUnlocked(true)
+    if (localStorage.getItem(ADMIN_SESSION_KEY) === '1') setUnlocked(true)
     setGateChecked(true)
   }, [])
 

@@ -7,7 +7,7 @@ export default function FeedbackButton() {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [contact, setContact] = useState('')
-  const [status, setStatus] = useState<'idle' | 'sent'>('idle')
+  const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   function close() {
     setOpen(false)
@@ -16,12 +16,17 @@ export default function FeedbackButton() {
     setContact('')
   }
 
-  function submit() {
+  async function submit() {
     const trimmed = message.trim()
     if (!trimmed) return
-    sendFeedback(trimmed, contact.trim() || undefined)
-    setStatus('sent')
-    setTimeout(close, 1500)
+    setStatus('sending')
+    const ok = await sendFeedback(trimmed, contact.trim() || undefined)
+    if (ok) {
+      setStatus('sent')
+      setTimeout(close, 1500)
+    } else {
+      setStatus('error')
+    }
   }
 
   return (
@@ -64,30 +69,38 @@ export default function FeedbackButton() {
                   placeholder="예: 파인더에서 OO 검색이 잘 안 돼요 / OO 기능이 있으면 좋겠어요"
                   rows={4}
                   autoFocus
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 resize-none focus:outline-none focus:border-blue-400"
+                  disabled={status === 'sending'}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 resize-none focus:outline-none focus:border-blue-400 disabled:opacity-60"
                 />
                 <input
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   placeholder="연락처 (선택, 회신이 필요하면)"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:border-blue-400"
+                  disabled={status === 'sending'}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:border-blue-400 disabled:opacity-60"
                 />
+                {status === 'error' && (
+                  <p className="text-xs text-red-500 mb-3">
+                    ⚠️ 전송에 실패했습니다. 네트워크를 확인하고 다시 시도해주세요.
+                  </p>
+                )}
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={close}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 border border-gray-200"
+                    disabled={status === 'sending'}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 border border-gray-200 disabled:opacity-50"
                   >
                     취소
                   </button>
                   <button
                     type="button"
                     onClick={submit}
-                    disabled={!message.trim()}
+                    disabled={!message.trim() || status === 'sending'}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
                     style={{ background: '#1428A0' }}
                   >
-                    보내기
+                    {status === 'sending' ? '전송 중…' : status === 'error' ? '다시 시도' : '보내기'}
                   </button>
                 </div>
               </>
