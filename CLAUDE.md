@@ -57,7 +57,7 @@ node scripts/test-install.mjs   # 설치환경가이드: 21개 카테고리 전�
 node scripts/test-finder.mjs    # 모델파인더: 41개 카테고리 전수 검색, AI추천/브랜드뷰 흐름, 패키지모드
 node scripts/test-care.mjs      # AI Care: 16개 제품 전수, 12/36개월 플랜전환, overview/timeline 모드
 node scripts/test-planner.mjs   # 패키지 플래너: 18개 카테고리 × 5개 평형, 할인율·예산배분 계산
-node scripts/test-compare.mjs   # 타사비교: 70개 카테고리×브랜드×모델 조합, escHtml/history XSS 회귀
+node scripts/test-compare.mjs   # 타사비교: 13개 카테고리 × 브랜드 × 모델 268개 조합, escHtml/history XSS 회귀
 node scripts/test-levelup.mjs   # 레벨업테스트: 25문항 구성, 채점(CE/MX/에세이), 이름·사번·에세이 XSS 회귀
 node --experimental-strip-types scripts/test-admin.mjs   # AX 대시보드: lib/logEvent.ts 집계·CSV 내보내기 회귀
 node scripts/test-consistency.mjs   # 크로스파일 모델코드 일관성: 골든 모델코드 4파일 존재·최상위 SKU 동일성 회귀

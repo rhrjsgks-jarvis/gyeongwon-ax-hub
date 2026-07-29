@@ -234,6 +234,9 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <button class="cat-btn" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</button>
       <button class="cat-btn" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</button>
       <button class="cat-btn" onclick="selectCat('노트북')"><span class="ci">💻</span>노트북</button>
+      <button class="cat-btn" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</button>
+      <button class="cat-btn" onclick="selectCat('에어드레서')"><span class="ci">👗</span>에어드레서</button>
+      <button class="cat-btn" onclick="selectCat('인덕션')"><span class="ci">🍳</span>인덕션</button>
     </div>
   </div>
 
@@ -309,7 +312,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <main>
   <div class="card">
     <div class="card-title">📌 자사·타사 URL 입력</div>
-    <p class="url-intro">자사 URL과 경쟁사 URL을 넣고 "지금 바로 비교하기"를 누르면 냉장고·세탁기·에어컨·TV·청소기·로봇청소기·스마트폰·건조기·식기세척기·노트북 10개 카테고리는 즉시비교 결과로 바로 연결됩니다. 목록에 없는 조합은 AI 프롬프트 생성으로 자동 전환됩니다.</p>
+    <p class="url-intro">자사 URL과 경쟁사 URL을 넣고 "지금 바로 비교하기"를 누르면 냉장고·세탁기·에어컨·TV·청소기·로봇청소기·스마트폰·건조기·식기세척기·노트북·김치냉장고·에어드레서·인덕션 13개 카테고리는 즉시비교 결과로 바로 연결됩니다. 목록에 없는 조합은 AI 프롬프트 생성으로 자동 전환됩니다.</p>
     <div class="preset-grid">
       <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
       <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
@@ -1161,6 +1164,136 @@ const DB = {
       { trigger:'LG 그램과 비교 시', text:'"그램이 더 가벼운 건 맞아요, 290g 정도 차이 나거든요. 하지만 저희 AMOLED 화면을 보시면 색감이 완전히 달라요. 영상 편집하거나 사진 작업하시는 분들은 오히려 갤럭시북을 선택하십니다."' },
       { trigger:'배터리 질문 시', text:'"76Wh 배터리에 실제 사용 12시간 이상 됩니다. 회의 많이 다니시는 분들도 충전기 없이 하루 쓰시는 분들 많아요."' }
     ]
+  },
+
+  /* 2026-07-29 신규 추가(김치냉장고·에어드레서·인덕션): 삼성 쪽은 모델파인더/패키지플래너에서
+     이미 검증된 모델·가격·기능 데이터를 그대로 재사용. LG 경쟁모델은 이 세션에서 samsung.com·
+     lge.co.kr 직접 브라우저 접근이 네트워크 정책으로 차단되어(WebFetch 403) WebSearch 스니펫으로만
+     교차확인함 — 실제 lge.co.kr 스펙 페이지 원문 대조는 못했으니 재검증 권장.
+     출처: lge.co.kr 각 모델 페이지 제목(검색결과 노출) + danawa.com/가전나우(ganow.co.kr) 가격.
+     정수기·공기청정기는 (1) 삼성·경쟁사 가격 표시 방식이 렌탈 위주라 스키마가 다르거나
+     (2) 동급 경쟁모델을 확인하지 못해 이번엔 제외. */
+  '김치냉장고': {
+    emoji:'🥬',
+    samsung:[
+      { name:'AI 김치플러스 4도어 490L(냄새케어 김치통) RK70F49F1DD', price:208, grade:'P',
+        on:['5면 메탈쿨링','AI 정온모드','냄새케어 김치통(냄새저감 필터)','SmartThings 연동'],
+        specs:{ cap:490, as:1 } },
+      { name:'AI 김치플러스 4도어 490L RQ49DB94H2AP', price:187, grade:'S',
+        on:['5면 메탈쿨링','SmartThings 연동'],
+        specs:{ cap:490, as:1 } },
+      { name:'김치플러스 4도어 324L RQ32C7B84AP', price:130, grade:'B',
+        on:['5면 메탈쿨링','인버터 컴프레서'],
+        specs:{ cap:324, as:1 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'디오스 오브제컬렉션 김치톡톡 4도어 491L(1등급) Z499MEEF11', price:260,
+          on:['다용도 분리벽','3단계 냉기케어 시스템','New 유산균김치+','AI 맞춤보관'],
+          specs:{ cap:491, as:1 } },
+        { name:'디오스 오브제컬렉션 김치톡톡 4도어 491L(2등급) Z499MEEF12', price:214,
+          on:['다용도 분리벽','3단계 냉기케어 시스템','New 유산균김치+'],
+          specs:{ cap:491, as:1 } }
+      ]
+    },
+    specItems:[
+      { key:'cap', label:'총 용량',   unit:'L', better:'high' },
+      { key:'as',  label:'무상 A/S', unit:'년', better:'high' }
+    ],
+    sells:[
+      '5면 메탈쿨링 — 냉기가 상하좌우 전면에서 균일하게 전달돼 김치 발효 편차 최소화',
+      'AI 정온모드 — 온도 변화를 자동 감지해 최적 발효 온도 유지',
+      '냄새케어 김치통 — 냄새저감 필터로 다른 칸에 김치 냄새 배는 것 방지'
+    ],
+    counters:[
+      { issue:'LG 용량이 더 큰 경우(491L vs 490L)', strategy:'용량 차이는 1L로 사실상 동급. 대신 냄새케어 김치통과 5면 메탈쿨링의 균일 냉각을 강조.' },
+      { issue:'LG 유산균김치+ 기능 언급 시', strategy:'LG의 발효 기능도 좋지만, 삼성은 AI 정온모드로 온도 변화 자체를 실시간 억제해 발효 편차가 더 적다는 점을 강조.' }
+    ],
+    scripts:[
+      { trigger:'가격 비교 시', text:'"LG 1등급 모델이 260만원대인데, 저희 같은 490L급은 208만원입니다. 용량은 거의 같은데 50만원 이상 차이 나요."' },
+      { trigger:'김치 냄새 걱정할 때', text:'"저희는 냄새케어 김치통이 따로 있어서, 김치 냄새가 다른 칸 반찬에 배는 걸 막아줍니다."' }
+    ]
+  },
+
+  '에어드레서': {
+    emoji:'👗',
+    samsung:[
+      { name:'Bespoke AI 에어드레서 대용량 5~9벌 DF90H24R5C', price:250, grade:'P',
+        on:['주름집중케어 존(2026 신기능)','듀얼 에어워시(2방향 에어)','듀얼 제트스팀(2방향 스팀)','AI 건조','폴딩 멀티행어','LCD 중앙 터치 디스플레이','미러 도어','트리플 집진 필터'],
+        specs:{ cap:9, as:1 } },
+      { name:'비스포크 AI 에어드레서 대용량 5~9벌 DF24CB9900CR', price:195, grade:'S',
+        on:['듀얼 에어워시(2방향 에어)','듀얼 제트스팀(2방향 스팀)','AI 건조','폴딩 멀티행어','LCD 중앙 터치 디스플레이','미러 도어','UV 살균'],
+        specs:{ cap:9, as:1 } },
+      { name:'비스포크 AI 에어드레서 일반용량 3~5벌 DF18CG3100TR', price:89, grade:'B',
+        on:['듀얼 에어워시(2방향 에어)','듀얼 제트스팀(2방향 스팀)','AI 건조'],
+        specs:{ cap:5, as:1 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG 스타일러 오브제컬렉션(2026 NEW)+스티머 SC5MBR80S', price:259,
+          on:['트루스팀','바지관리기(별도 1벌)','무빙행어'],
+          specs:{ cap:5, as:1 } },
+        { name:'LG 스타일러 오브제컬렉션(ALL NEW) SC5GMR52', price:162,
+          on:['트루스팀','바지관리기(별도 1벌)'],
+          specs:{ cap:5, as:1 } }
+      ]
+    },
+    specItems:[
+      { key:'cap', label:'상의 수납',  unit:'벌', better:'high' },
+      { key:'as',  label:'무상 A/S',  unit:'년', better:'high' }
+    ],
+    sells:[
+      '주름집중케어 존(2026 신기능) — 자켓·셔츠 등 주름이 잘 지는 부위만 집중 케어',
+      '듀얼 에어워시·듀얼 제트스팀 — 양방향으로 에어·스팀을 분사해 케어 효율 향상',
+      '최대 9벌(상의) 수납 — LG 스타일러(5벌) 대비 넉넉한 대용량'
+    ],
+    counters:[
+      { issue:'LG 스타일러가 더 유명하다는 인식', strategy:'LG가 먼저 시장을 연 건 맞지만, 삼성 플래그십은 수납량(9벌 vs 5벌)에서 확실한 우위가 있다는 점을 강조.' },
+      { issue:'LG 바지관리기 언급 시', strategy:'LG 바지관리기는 별도 1벌 전용 공간. 삼성은 폴딩 멀티행어로 상의 공간 자체를 유연하게 확장 가능하다는 점으로 대응.' }
+    ],
+    scripts:[
+      { trigger:'가격 비교 시', text:'"LG 스타일러 최신형이 259만원대인데, 저희 플래그십은 250만원이면서 수납량은 오히려 더 큽니다(9벌 vs 5벌)."' },
+      { trigger:'수납량 질문 시', text:'"저희는 상의 기준 최대 9벌까지 걸 수 있어서, 온 가족 옷을 한 번에 케어하기 더 좋습니다."' }
+    ]
+  },
+
+  '인덕션': {
+    emoji:'🍳',
+    samsung:[
+      { name:'비스포크 인피니트라인 3구 플렉스존 NZ63DB857CAV', price:200, grade:'P',
+        on:['플렉스존(2구통합)','부스터화력','Wi-Fi/SmartThings 연동','빌트인'],
+        specs:{ burner:3, as:1 } },
+      { name:'비스포크 인피니트라인 3구 빌트인 NZ63DB553CFT', price:150, grade:'S',
+        on:['플렉스존(2구통합)','부스터화력','빌트인'],
+        specs:{ burner:3, as:1 } },
+      { name:'비스포크 인피니트라인 3구 빌트인 NZ63B5056AK', price:120, grade:'B',
+        on:['부스터화력','빌트인'],
+        specs:{ burner:3, as:1 } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG 디오스 오브제컬렉션 인덕션 빌트인(와이드존) BEF3AMB4', price:194,
+          on:['와이드존','부스터'],
+          specs:{ burner:3, as:1 } },
+        { name:'LG 디오스 인덕션 빌트인 BEI3QEBLO', price:90,
+          on:['부스터','잠금·온도·시간·출력 제어'],
+          specs:{ burner:3, as:1 } }
+      ]
+    },
+    specItems:[
+      { key:'burner', label:'화구 수',   unit:'구', better:'high' },
+      { key:'as',     label:'무상 A/S', unit:'년', better:'high' }
+    ],
+    sells:[
+      '플렉스존 — 2개 화구를 하나로 합쳐 큰 냄비·팬도 균일 가열',
+      'Wi-Fi/SmartThings 연동 — 스마트폰으로 원격 제어·모니터링'
+    ],
+    counters:[
+      { issue:'LG 와이드존 언급 시', strategy:'LG 와이드존도 넓은 조리 공간을 제공하지만, 삼성 플렉스존은 2구를 하나로 통합해 화력을 그대로 유지한다는 점을 강조.' }
+    ],
+    scripts:[
+      { trigger:'가격 비교 시', text:'"LG 와이드존 모델이 194만원대인데, 저희 플렉스존 플래그십은 200만원으로 비슷한 가격대에 스마트싱스 연동까지 됩니다."' }
+    ]
   }
 };
 
@@ -1491,6 +1624,9 @@ function detectCategory(text) {
     ['건조기', ['dryer','건조기']],
     ['식기세척기', ['dishwasher','식기세척기']],
     ['노트북', ['laptop','notebook','galaxybook','그램','노트북']],
+    ['김치냉장고', ['kimchi-refrigerator','kimchi','김치냉장고','김치톡톡','딤채']],
+    ['에어드레서', ['airdresser','에어드레서','styler','스타일러']],
+    ['인덕션', ['electric-range','induction','인덕션']],
   ];
   for (const [cat, kws] of rules) {
     if (kws.some(k => s.includes(k))) return cat;

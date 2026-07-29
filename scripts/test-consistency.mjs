@@ -37,9 +37,7 @@ const fileContents = Object.fromEntries(FILES.map((f) => [f, read(f)]));
 const GOLDEN = [
   { label: '냉장고 패밀리허브 최상위(2026)', code: 'RM90H91B1W', files: FILES },
   { label: '세탁기 AI콤보 최상위(2026)', code: 'WD90H25AHS', files: FILES },
-  // compare-app.html은 10개 핵심 카테고리만 다뤄 김치냉장고 자체가 없음 — 3개 파일만 검사
-  { label: '김치냉장고 최상위 프리미엄 라인(2026)', code: 'RK70F49F1DD',
-    files: ['test-app.html', 'finder-app.html', 'package-planner.html'] },
+  { label: '김치냉장고 최상위 프리미엄 라인(2026)', code: 'RK70F49F1DD', files: FILES },
 ];
 for (const g of GOLDEN) {
   const missing = g.files.filter((f) => !fileContents[f].includes(g.code));
@@ -72,6 +70,7 @@ const EXACT_MATCH = [
   ['냉장고', 'fridge'],
   ['청소기', 'vacuum'],
   ['노트북', 'laptop'],
+  ['김치냉장고', 'kimchi'],
 ];
 for (const [krCat, enCat] of EXACT_MATCH) {
   const cName = (DB[krCat].samsung.find((s) => s.grade === 'P') || DB[krCat].samsung[0]).name;
