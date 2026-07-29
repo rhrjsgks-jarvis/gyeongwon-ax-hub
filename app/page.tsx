@@ -291,8 +291,37 @@ function LinkListCard({
   )
 }
 
+function AccordionHeader({
+  title, isOpen, onClick,
+}: {
+  title: string
+  isOpen: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center justify-between mb-2 px-1 text-left"
+    >
+      <h3 className="font-bold text-sm text-gray-700">{title}</h3>
+      <span
+        className="text-[10px] text-gray-400 transition-transform md:hidden"
+        style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+      >
+        ▼
+      </span>
+    </button>
+  )
+}
+
 export default function Home() {
   const [copied, setCopied] = useState(false)
+  // 모바일에서는 클릭해야 펼쳐지는 아코디언, md 이상(데스크탑)에서는 항상 펼침 — 기본은 전부 접힘
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+  function toggleSection(key: string) {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
   useEffect(() => { logEvent('hub', 'page_view') }, [])
 
@@ -344,52 +373,63 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 모듈 그리드 (섹션별) */}
-      {MODULE_GROUPS.map((group) => (
-        <div key={group.title} className="mb-5">
-          <h3 className="font-bold text-sm text-gray-700 mb-2 px-1">{group.title}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {group.modules.map((mod) => (
-              <ModuleTile key={mod.href} mod={mod} />
-            ))}
-          </div>
-          {group.title === '🏬 매장운영 도구' && (
-            <div className="flex flex-col gap-3 mt-3">
-              <LinkListCard
-                id="concierge"
-                icon="🎫"
-                title="컨시어지 프로그램"
-                subtitle="스타필드 수원 매장 대기접수 시스템"
-                links={CONCIERGE_LINKS}
-                logKey="concierge"
-                usage={CONCIERGE_USAGE}
-                note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
-              />
-              <LinkListCard
-                id="coupon"
-                icon="🎁"
-                title="쿠폰 배포프로그램"
-                subtitle="매장 쿠폰 재고·발급현황 관리"
-                links={COUPON_LINKS}
-                logKey="coupon"
-              />
+      {/* 모듈 그리드 (섹션별) — 모바일: 클릭해야 펼쳐지는 아코디언 / 데스크탑: 항상 펼침 */}
+      {MODULE_GROUPS.map((group) => {
+        const isOpen = !!openSections[group.title]
+        return (
+          <div key={group.title} className="mb-5">
+            <AccordionHeader title={group.title} isOpen={isOpen} onClick={() => toggleSection(group.title)} />
+            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+              {group.modules.map((mod) => (
+                <ModuleTile key={mod.href} mod={mod} />
+              ))}
             </div>
-          )}
-        </div>
-      ))}
+            {group.title === '🏬 매장운영 도구' && (
+              <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
+                <LinkListCard
+                  id="concierge"
+                  icon="🎫"
+                  title="컨시어지 프로그램"
+                  subtitle="스타필드 수원 매장 대기접수 시스템"
+                  links={CONCIERGE_LINKS}
+                  logKey="concierge"
+                  usage={CONCIERGE_USAGE}
+                  note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
+                />
+                <LinkListCard
+                  id="coupon"
+                  icon="🎁"
+                  title="쿠폰 배포프로그램"
+                  subtitle="매장 쿠폰 재고·발급현황 관리"
+                  links={COUPON_LINKS}
+                  logKey="coupon"
+                />
+              </div>
+            )}
+          </div>
+        )
+      })}
 
       {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 운영 */}
       <div className="mb-5">
-        <h3 className="font-bold text-sm text-gray-700 mb-2 px-1">📊 AX 현황 대시보드</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <AccordionHeader
+          title="📊 AX 현황 대시보드"
+          isOpen={!!openSections['admin']}
+          onClick={() => toggleSection('admin')}
+        />
+        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 gap-3`}>
           <ModuleTile mod={ADMIN_MODULE} />
         </div>
       </div>
 
       {/* 상황별 도구 추천 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-bold text-sm text-gray-700 mb-3">💡 상황별 도구 추천</h3>
-        <div className="flex flex-col gap-1">
+        <AccordionHeader
+          title="💡 상황별 도구 추천"
+          isOpen={!!openSections['tips']}
+          onClick={() => toggleSection('tips')}
+        />
+        <div className={`${openSections['tips'] ? 'flex' : 'hidden'} md:flex flex-col gap-1`}>
           {TIPS.map((tip, i) => (
             <Link key={i} href={tip.href} className="no-underline">
               <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
@@ -406,8 +446,12 @@ export default function Home() {
 
       {/* 팀 공유 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-bold text-sm text-gray-700 mb-3">📤 팀에 공유하기</h3>
-        <div className="flex gap-4 items-center">
+        <AccordionHeader
+          title="📤 팀에 공유하기"
+          isOpen={!!openSections['qr']}
+          onClick={() => toggleSection('qr')}
+        />
+        <div className={`${openSections['qr'] ? 'flex' : 'hidden'} md:flex gap-4 items-center`}>
           <img
             src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(HUB_URL)}`}
             alt="QR코드"
@@ -429,8 +473,12 @@ export default function Home() {
 
       {/* 빠른 시작 가이드 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
-        <h3 className="font-bold text-sm text-gray-700 mb-3">🚀 처음이라면 — 4가지 도구</h3>
-        <div className="flex flex-col gap-2">
+        <AccordionHeader
+          title="🚀 처음이라면 — 4가지 도구"
+          isOpen={!!openSections['guide']}
+          onClick={() => toggleSection('guide')}
+        />
+        <div className={`${openSections['guide'] ? 'flex' : 'hidden'} md:flex flex-col gap-2`}>
           {GUIDE.map((g) => (
             <div key={g.step} className="flex items-start gap-3">
               <span
@@ -447,32 +495,38 @@ export default function Home() {
 
       {/* 진행 현황 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100">
-        <h3 className="font-bold text-sm text-gray-700 mb-3">📅 30일 실행 현황</h3>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="flex-1 bg-gray-100 rounded-full h-2">
-            <div
-              className="h-2 rounded-full transition-all"
-              style={{ width: `${progress}%`, background: 'var(--color-primary)' }}
-            />
-          </div>
-          <span className="text-xs font-semibold text-gray-500">Day {clampedDay} / {TOTAL_DAYS}</span>
-        </div>
-        <div className="grid grid-cols-4 gap-2 text-center mt-3">
-          {weeks.map((w) => (
-            <div
-              key={w.label}
-              className="rounded-xl py-2 px-1"
-              style={{
-                background: w.active ? 'rgba(20,40,160,0.08)' : '#F9FAFB',
-                border: w.active ? '1.5px solid rgba(20,40,160,0.2)' : '1.5px solid transparent',
-              }}
-            >
-              <p className="text-xs font-bold" style={{ color: w.active ? 'var(--color-primary)' : '#9CA3AF' }}>
-                {w.label}
-              </p>
-              <p className="text-[10px] text-gray-400 mt-0.5">{w.desc}</p>
+        <AccordionHeader
+          title="📅 30일 실행 현황"
+          isOpen={!!openSections['progress']}
+          onClick={() => toggleSection('progress')}
+        />
+        <div className={`${openSections['progress'] ? 'block' : 'hidden'} md:block`}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex-1 bg-gray-100 rounded-full h-2">
+              <div
+                className="h-2 rounded-full transition-all"
+                style={{ width: `${progress}%`, background: 'var(--color-primary)' }}
+              />
             </div>
-          ))}
+            <span className="text-xs font-semibold text-gray-500">Day {clampedDay} / {TOTAL_DAYS}</span>
+          </div>
+          <div className="grid grid-cols-4 gap-2 text-center mt-3">
+            {weeks.map((w) => (
+              <div
+                key={w.label}
+                className="rounded-xl py-2 px-1"
+                style={{
+                  background: w.active ? 'rgba(20,40,160,0.08)' : '#F9FAFB',
+                  border: w.active ? '1.5px solid rgba(20,40,160,0.2)' : '1.5px solid transparent',
+                }}
+              >
+                <p className="text-xs font-bold" style={{ color: w.active ? 'var(--color-primary)' : '#9CA3AF' }}>
+                  {w.label}
+                </p>
+                <p className="text-[10px] text-gray-400 mt-0.5">{w.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
