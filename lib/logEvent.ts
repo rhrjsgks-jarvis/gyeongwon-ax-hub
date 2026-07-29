@@ -44,19 +44,26 @@ export function readLogs(): LogEvent[] {
   }
 }
 
+function buildEvent(module: LogModule, action: LogAction, extra?: string): LogEvent {
+  const ts = Date.now()
+  return { ts, date: kstDate(ts), module, action, uid: getUid(), extra }
+}
+
+function saveLocal(ev: LogEvent): void {
+  const logs = readLogs()
+  logs.push(ev)
+  if (logs.length > MAX_LOGS) logs.splice(0, logs.length - MAX_LOGS)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs))
+}
+
 export function logEvent(
   module: LogModule,
   action: LogAction,
   extra?: string
 ): void {
   if (typeof localStorage === 'undefined') return
-  const ts  = Date.now()
-  const ev: LogEvent = { ts, date: kstDate(ts), module, action, uid: getUid(), extra }
-
-  const logs = readLogs()
-  logs.push(ev)
-  if (logs.length > MAX_LOGS) logs.splice(0, logs.length - MAX_LOGS)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs))
+  const ev = buildEvent(module, action, extra)
+  saveLocal(ev)
 
   if (GAS_URL) {
     fetch(GAS_URL, {
@@ -68,13 +75,28 @@ export function logEvent(
   }
 }
 
-// 사용자 건의사항을 기록·전송한다. logEvent와 동일한 파이프라인(localStorage 적재 +
-// GAS_URL 연동 시 구글시트 저장)을 그대로 타되, action:'feedback'으로 남겨 관리자
-// 대시보드 "최근 활동"에서 일반 로그와 구분되도록 한다. Apps Script(Code.gs)가
-// action:'feedback' 이벤트를 받으면 이메일도 함께 발송한다(NEXT_PUBLIC_GAS_URL 연동 시).
-export function sendFeedback(message: string, contact?: string): void {
+// 사용자 건의사항을 기록·전송한다. 일반 로그(logEvent)와 달리 사용자에게 성공/실패를
+// 보여줘야 하므로, 응답을 읽을 수 없는 no-cors 직접 호출 대신 서버 라우트(/api/feedback)를
+// 경유해 Google Apps Script(Code.gs)의 실제 응답 결과를 그대로 돌려받는다. action:'feedback'
+// 이벤트를 받으면 Apps Script가 이메일 알림도 함께 발송한다.
+export async function sendFeedback(message: string, contact?: string): Promise<boolean> {
   const extra = contact ? `${message} [연락처: ${contact}]` : message
-  logEvent('hub', 'feedback', extra)
+  const ev = buildEvent('hub', 'feedback', extra)
+  if (typeof localStorage !== 'undefined') saveLocal(ev)
+
+  if (!GAS_CONNECTED) return false
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ev),
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    return !!data.ok
+  } catch {
+    return false
+  }
 }
 
 export function aggregateByModule(logs: LogEvent[]) {
@@ -112,7 +134,7 @@ export const GAS_CONNECTED = !!GAS_URL
 export async function fetchTeamLogs(): Promise<LogEvent[] | null> {
   if (!GAS_CONNECTED) return null
   try {
-    const res = await fetch('/api/logs', { cache: 'no-store' })
+    const res = await fetch('/api/logs', { cache: 'no-store', signal: AbortSignal.timeout(10000) })
     if (!res.ok) return null
     const data = await res.json()
     return Array.isArray(data.logs) ? data.logs : null

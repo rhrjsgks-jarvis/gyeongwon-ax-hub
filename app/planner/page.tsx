@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { logEvent } from '@/lib/logEvent'
+import IframeModule from '@/components/IframeModule'
 
 export default function PlannerPage() {
   useEffect(() => {
@@ -9,12 +10,10 @@ export default function PlannerPage() {
   }, [])
 
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      <iframe
-        src="/package-planner.html"
-        style={{ width: '100%', height: '100%', border: 'none' }}
-        title="패키지 플래너"
-      />
-    </div>
+    <IframeModule
+      src="/package-planner.html"
+      title="패키지 플래너"
+      style={{ width: '100%', height: '100vh' }}
+    />
   )
 }
