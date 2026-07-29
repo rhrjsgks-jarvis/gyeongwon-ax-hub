@@ -76,43 +76,6 @@
     margin-bottom: 14px;
   }
 
-  /* 빠른시작 프리셋 */
-  .preset-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 7px;
-    margin-bottom: 14px;
-  }
-  .preset-btn {
-    background: var(--primary-light);
-    border: 1.5px solid var(--primary-mid);
-    border-radius: 9px;
-    padding: 8px 6px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--primary);
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.15s;
-    line-height: 1.4;
-  }
-  .preset-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .preset-btn .p-icon { font-size: 16px; display: block; margin-bottom: 3px; }
-  .preset-label { font-size: 12px; font-weight: 600; color: var(--gray); margin-bottom: 8px; }
-  .preset-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 12px 0;
-  }
-  .preset-divider span { font-size: 11px; color: var(--gray); flex-shrink: 0; }
-  .preset-divider::before, .preset-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
   label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text); }
   label span { font-weight: 400; color: var(--gray); font-size: 12px; margin-left: 4px; }
   input[type="url"], input[type="number"], input[type="text"], select {
@@ -164,15 +127,6 @@
   }
   .add-btn:hover { border-color: var(--primary); color: var(--primary); }
 
-  .options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .options-grid label { margin-bottom: 5px; }
-  .options-grid select { margin-bottom: 0; }
-
   /* 난이도 선택 */
   .level-row {
     display: grid;
@@ -194,33 +148,6 @@
   .level-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
   .level-btn .lv-icon { font-size: 18px; display: block; margin-bottom: 3px; }
   .level-btn .lv-desc { font-size: 10.5px; font-weight: 400; color: var(--gray); margin-top: 2px; }
-
-  /* 유형 체크박스 */
-  .type-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-    margin-bottom: 12px;
-  }
-  .type-chip {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    background: #f8f9fb;
-    border: 1.5px solid var(--border);
-    border-radius: 9px;
-    padding: 8px 11px;
-    cursor: pointer;
-    font-size: 12.5px;
-    transition: all 0.15s;
-  }
-  .type-chip input { display: none; }
-  .type-chip.checked {
-    background: var(--primary-light);
-    border-color: var(--primary);
-    color: var(--primary);
-    font-weight: 600;
-  }
 
   .generate-btn {
     width: 100%;
@@ -371,16 +298,12 @@
   <p>자사·경쟁사 제품 페이지를 AI가 분석해<br>실전형 역량 평가 퀴즈를 즉시 생성합니다</p>
   <div class="hero-stats">
     <div class="stat">
-      <div class="stat-num">40</div>
-      <div class="stat-label">문항 생성</div>
+      <div class="stat-num">20</div>
+      <div class="stat-label">무작위 출제</div>
     </div>
     <div class="stat">
-      <div class="stat-num">25</div>
-      <div class="stat-label">랜덤 출제</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">30분</div>
-      <div class="stat-label">제한 시간</div>
+      <div class="stat-num">4</div>
+      <div class="stat-label">지선다형</div>
     </div>
   </div>
 </div>
@@ -390,17 +313,6 @@
   <!-- URL 입력 -->
   <div class="card">
     <div class="card-title">📌 제품 URL 입력</div>
-
-    <div class="preset-label">⚡ 빠른시작 — 카테고리 선택</div>
-    <div class="preset-grid">
-      <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
-      <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
-      <button class="preset-btn" onclick="loadPreset('aircon')"><span class="p-icon">❄️</span>에어컨</button>
-      <button class="preset-btn" onclick="loadPreset('tv')"><span class="p-icon">📺</span>TV</button>
-      <button class="preset-btn" onclick="loadPreset('phone')"><span class="p-icon">📱</span>갤럭시 S</button>
-      <button class="preset-btn" onclick="loadPreset('vacuum')"><span class="p-icon">🤖</span>청소기</button>
-    </div>
-    <div class="preset-divider"><span>또는 직접 입력</span></div>
 
     <label>자사 제품 URL <span>삼성닷컴 제품 페이지</span></label>
     <input type="url" id="own-url" placeholder="https://www.samsung.com/sec/..." />
@@ -434,37 +346,6 @@
       </div>
     </div>
     <input type="hidden" id="level" value="mid" />
-
-    <label>문항 유형 <span>복수 선택 가능</span></label>
-    <div class="type-grid" id="type-grid">
-      <label class="type-chip checked" onclick="toggleType(this)"><input type="checkbox" value="제품 스펙·수치" checked>📊 스펙 수치</label>
-      <label class="type-chip checked" onclick="toggleType(this)"><input type="checkbox" value="경쟁사 비교" checked>⚔️ 경쟁 비교</label>
-      <label class="type-chip" onclick="toggleType(this)"><input type="checkbox" value="AI·스마트 기능">🤖 AI 기능</label>
-      <label class="type-chip" onclick="toggleType(this)"><input type="checkbox" value="A/S·보증·정책">🛡️ A/S 정책</label>
-    </div>
-
-    <div class="options-grid">
-      <div>
-        <label>문항 수 <span>랜덤 출제</span></label>
-        <select id="q-count">
-          <option value="15">15문항</option>
-          <option value="25" selected>25문항</option>
-          <option value="30">30문항</option>
-          <option value="40">40문항</option>
-        </select>
-      </div>
-      <div>
-        <label>제한 시간</label>
-        <select id="time-limit">
-          <option value="20">20분</option>
-          <option value="30" selected>30분</option>
-          <option value="45">45분</option>
-          <option value="60">60분</option>
-        </select>
-      </div>
-    </div>
-    <label>팀·조직명 <span>퀴즈 표지에 표시</span></label>
-    <input type="text" id="company" placeholder="경원영업팀" value="경원영업팀" />
   </div>
 
   <button class="generate-btn" onclick="generate()">🎯 퀴즈 생성 프롬프트 만들기</button>
@@ -486,15 +367,15 @@
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-text"><strong>카테고리 선택 또는 URL 직접 입력</strong> — 삼성닷컴 자사 + 경쟁사 URL</div>
+        <div class="step-text"><strong>자사·경쟁사 URL 입력</strong> — 삼성닷컴 자사 + 경쟁사 URL</div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text"><strong>난이도·유형 설정</strong> — 신입 교육에는 기초, 경진대회형은 심화 선택</div>
+        <div class="step-text"><strong>난이도 설정</strong> — 신입 교육에는 기초, 경진대회형은 심화 선택</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-text"><strong>프롬프트 생성 → Claude 붙여넣기</strong> — AI가 문제은행 40문항 자동 생성</div>
+        <div class="step-text"><strong>프롬프트 생성 → Claude 붙여넣기</strong> — AI가 무작위 20문항 자동 생성</div>
       </div>
       <div class="step">
         <div class="step-num">4</div>
@@ -507,7 +388,7 @@
   <div class="card">
     <div class="card-title">📝 생성되는 퀴즈 예시</div>
     <div class="quiz-preview">
-      <div class="q-num">Q 12 / 25</div>
+      <div class="q-num">Q 12 / 20</div>
       <div class="q-text">삼성 비스포크 AI 콤보의 세탁 용량과 LG 트롬 오브제 대비 차별화 포인트는?</div>
       <div class="q-options">
         <div class="opt"><span class="opt-label">A</span> 세탁 20kg / AI 자동 코스</div>
@@ -526,31 +407,10 @@
 <footer>경원 AX 허브 · URL 퀴즈 생성기 · 경원영업팀</footer>
 
 <script>
-const PRESETS = {
-  fridge:  { own: 'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp: 'https://www.lge.co.kr/refrigerators' },
-  washer:  { own: 'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp: 'https://www.lge.co.kr/washing-machines' },
-  aircon:  { own: 'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp: 'https://www.lge.co.kr/air-conditioners' },
-  tv:      { own: 'https://www.samsung.com/sec/tvs/all-tvs/', comp: 'https://www.lge.co.kr/tv' },
-  phone:   { own: 'https://www.samsung.com/sec/smartphones/all-smartphones/', comp: 'https://www.apple.com/kr/iphone/' },
-  vacuum:  { own: 'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp: 'https://www.dyson.co.kr/vacuum-cleaners' },
-};
-
-function loadPreset(key) {
-  const p = PRESETS[key];
-  if (!p) return;
-  document.getElementById('own-url').value = p.own;
-  document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value = p.comp;
-}
-
 function setLevel(el, val) {
   document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('level').value = val;
-}
-
-function toggleType(el) {
-  el.classList.toggle('checked');
-  el.querySelector('input').checked = el.classList.contains('checked');
 }
 
 function addCompetitor() {
@@ -564,20 +424,15 @@ function addCompetitor() {
 
 function generate() {
   const ownUrl = document.getElementById('own-url').value.trim();
-  const company = document.getElementById('company').value.trim() || '경원영업팀';
-  const qCount = document.getElementById('q-count').value;
-  const timeLimit = document.getElementById('time-limit').value;
   const level = document.getElementById('level').value;
   const competitorInputs = document.querySelectorAll('#competitor-list input[type="url"]');
   const competitors = Array.from(competitorInputs).map(i => i.value.trim()).filter(Boolean);
-  const types = Array.from(document.querySelectorAll('#type-grid .type-chip.checked input')).map(i => i.value);
 
   if (!ownUrl) { alert('자사 제품 URL을 입력해주세요.'); return; }
   if (competitors.length === 0) { alert('경쟁사 URL을 최소 1개 입력해주세요.'); return; }
 
   const levelMap = { basic:'기초 (스펙·수치 중심, 신입 교육용)', mid:'중급 (기능+타사 비교 혼합)', adv:'심화 (고객 이의 응대·상황형 문제 포함)' };
   const competitorLines = competitors.map((url, i) => `- 경쟁사 ${i+1}: ${url}`).join('\n');
-  const typeStr = types.length > 0 ? types.join(', ') : '전체 균등';
 
   const prompt = `직원 역량 평가용 제품 퀴즈를 만들어주세요.
 
@@ -586,14 +441,12 @@ ${competitorLines}
 
 【설정】
 - 난이도: ${levelMap[level]}
-- 문항 유형: ${typeStr}
-- 출제 문항: ${qCount}문항 (문제은행 40문항 생성 후 랜덤 출제)
-- 제한 시간: ${timeLimit}분
-- 주관사: ${company}
+- 출제 문항: 20문항 (무작위 순서)
+- 주관사: 경원영업팀
 
 【요청사항】
-1. 각 URL의 제품 스펙을 분석해 4지선다 문제은행 40문항 생성
-   - 설정 유형 비중에 맞게 출제 (선택 유형 위주로 편중)
+1. 각 URL의 제품 스펙을 분석해 4지선다 문제 20개를 무작위 순서로 생성
+   - 스펙·수치, 경쟁사 비교, AI·스마트 기능, A/S·보증·정책 등 유형을 고루 섞어 출제
    - 해설은 삼성 제품 우위를 자연스럽게 강조
 2. 각 문항에 정답·오답 해설 포함 (오답도 왜 틀린지 설명)
 3. 인터랙티브 HTML 파일로 출력:
