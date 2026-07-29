@@ -21,7 +21,7 @@ globalThis.document = { createElement: () => ({ ...fakeAnchor }) };
 globalThis.URL.createObjectURL = (blob) => { lastBlob = blob; return 'blob:fake'; };
 
 const {
-  readLogs, logEvent, aggregateByModule, aggregateByDay, exportCsv,
+  readLogs, logEvent, aggregateByModule, aggregateByDay, exportCsv, fetchTeamLogs, GAS_CONNECTED,
 } = await import('../lib/logEvent.ts');
 
 let ok = true;
@@ -116,6 +116,16 @@ const parsed = parseCsvLine(commaRow);
 if (parsed.length !== 6) fail(`exportCsv 회귀: extra 필드의 콤마/따옴표 이스케이프가 깨져 컬럼 수 = ${parsed.length}, 기대값 6 — "${commaRow}"`);
 else if (parsed[5] !== '건조기, 20kg "특가"') fail(`exportCsv 회귀: extra 필드 왕복 결과 = "${parsed[5]}", 기대값 '건조기, 20kg "특가"'`);
 else console.log('OK: exportCsv — extra 필드 콤마·따옴표 포함 시에도 CSV 왕복 파싱 정상(RFC4180 이스케이프 확인)');
+
+// ── 6. fetchTeamLogs: NEXT_PUBLIC_GAS_URL 미설정 시 안전하게 null(로컬 폴백 신호) ──
+if (process.env.NEXT_PUBLIC_GAS_URL) {
+  fail('테스트 환경에 NEXT_PUBLIC_GAS_URL이 설정돼 있음 — GAS_CONNECTED=false 전제가 깨짐(테스트 환경 오염 확인 필요)');
+} else {
+  if (GAS_CONNECTED !== false) fail(`GAS_CONNECTED = ${GAS_CONNECTED}, 기대값 false(env 미설정)`);
+  const teamLogs = await fetchTeamLogs();
+  if (teamLogs !== null) fail(`fetchTeamLogs(): GAS 미연동 상태인데 null이 아닌 값 반환 = ${JSON.stringify(teamLogs)}`);
+  else console.log('OK: fetchTeamLogs — NEXT_PUBLIC_GAS_URL 미설정 시 fetch 시도 없이 null 반환(로컬 폴백 신호)');
+}
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
