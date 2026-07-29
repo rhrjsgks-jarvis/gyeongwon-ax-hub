@@ -17,7 +17,9 @@ export interface LogEvent {
 
 const STORAGE_KEY = 'axhub_logs'
 const MAX_LOGS    = 2000
-const GAS_URL     = ''            // Google Apps Script 웹훅 URL (필요시)
+// Google Apps Script 웹훅 URL. Vercel/로컬 .env에 NEXT_PUBLIC_GAS_URL로 설정하면 활성화된다.
+// (미설정 시 로그는 이 기기 localStorage에만 쌓이고 팀 전체 집계는 비활성 — 기존 동작과 동일)
+const GAS_URL = process.env.NEXT_PUBLIC_GAS_URL || ''
 
 function getUid(): string {
   if (typeof sessionStorage === 'undefined') return 'server'
@@ -91,6 +93,23 @@ export function aggregateByDay(logs: LogEvent[], days = 14) {
 
 function csvField(v: string): string {
   return /["\n,]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v
+}
+
+export const GAS_CONNECTED = !!GAS_URL
+
+// 팀 전체 로그를 가져온다. /api/logs(서버 라우트)가 Apps Script doGet을 서버 사이드에서
+// 대신 호출해주므로 브라우저 CORS 문제 없이 읽을 수 있다. 연동 전이거나 실패 시 null 반환
+// — 호출부(admin 대시보드)는 null이면 이 기기 로그(readLogs())로 폴백해야 한다.
+export async function fetchTeamLogs(): Promise<LogEvent[] | null> {
+  if (!GAS_CONNECTED) return null
+  try {
+    const res = await fetch('/api/logs', { cache: 'no-store' })
+    if (!res.ok) return null
+    const data = await res.json()
+    return Array.isArray(data.logs) ? data.logs : null
+  } catch {
+    return null
+  }
 }
 
 export function exportCsv(logs: LogEvent[]): void {

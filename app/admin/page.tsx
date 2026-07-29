@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
 
 const ADMIN_PW_HASH = '60fe74406e7f353ed979f350f2fbb6a2e8690a5fa7d1b0c32983d1d8b3f95f67'
 const ADMIN_SESSION_KEY = 'ax_admin_unlocked'
@@ -82,6 +82,7 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
 
 export default function AdminPage() {
   const [logs, setLogs]         = useState<LogEvent[]>([])
+  const [teamWide, setTeamWide] = useState(false)
   const [loaded, setLoaded]     = useState(false)
   const [unlocked, setUnlocked] = useState(false)
   const [gateChecked, setGateChecked] = useState(false)
@@ -94,8 +95,17 @@ export default function AdminPage() {
   useEffect(() => {
     if (!unlocked) return
     logEvent('hub', 'page_view')
-    setLogs(readLogs())
-    setLoaded(true)
+    ;(async () => {
+      const team = await fetchTeamLogs()
+      if (team) {
+        setLogs(team)
+        setTeamWide(true)
+      } else {
+        setLogs(readLogs())
+        setTeamWide(false)
+      }
+      setLoaded(true)
+    })()
   }, [unlocked])
 
   if (!gateChecked) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
@@ -120,7 +130,7 @@ export default function AdminPage() {
           <span className="font-bold text-base">AX 현황 대시보드</span>
         </div>
         <p className="text-xs text-blue-200">
-          경원 AX 허브 · 사용 현황 · localStorage 기반 · 이 기기에서 누적
+          경원 AX 허브 · 사용 현황 · {teamWide ? '팀 전체 집계 (Google Sheets 연동)' : 'localStorage 기반 · 이 기기에서만 누적'}
         </p>
       </div>
 
@@ -217,21 +227,25 @@ export default function AdminPage() {
         >
           📥 CSV 내보내기 ({logs.length}건)
         </button>
-        <button
-          onClick={() => {
-            if (confirm('모든 로그를 삭제할까요?')) {
-              localStorage.removeItem('axhub_logs')
-              setLogs([])
-            }
-          }}
-          className="py-2.5 px-4 rounded-xl text-sm font-semibold text-red-600 border border-red-200 bg-red-50"
-        >
-          🗑️ 초기화
-        </button>
+        {!teamWide && (
+          <button
+            onClick={() => {
+              if (confirm('이 기기에 저장된 로그를 삭제할까요?')) {
+                localStorage.removeItem('axhub_logs')
+                setLogs([])
+              }
+            }}
+            className="py-2.5 px-4 rounded-xl text-sm font-semibold text-red-600 border border-red-200 bg-red-50"
+          >
+            🗑️ 초기화
+          </button>
+        )}
       </div>
 
       <p className="text-[10px] text-gray-400 text-center mt-3">
-        이 데이터는 현재 기기 브라우저에만 저장됩니다 · Google Apps Script 연동 시 팀 전체 집계 가능
+        {teamWide
+          ? '팀원 전체 기기의 사용 로그를 Google Sheets에서 집계한 데이터입니다.'
+          : '이 데이터는 현재 기기 브라우저에만 저장됩니다 · Google Apps Script 연동 시 팀 전체 집계 가능'}
       </p>
 
       {/* AI 효과 정량화 섹션 */}
