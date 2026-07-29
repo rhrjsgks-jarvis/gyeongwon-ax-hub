@@ -13,7 +13,8 @@
     "test:planner": "node scripts/test-planner.mjs",
     "test:compare": "node scripts/test-compare.mjs",
     "test:levelup": "node scripts/test-levelup.mjs",
-    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:planner && npm run test:compare && npm run test:levelup"
+    "test:admin": "node --experimental-strip-types scripts/test-admin.mjs",
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:planner && npm run test:compare && npm run test:levelup && npm run test:admin"
   },
   "dependencies": {
     "next": "^14.2.35",
