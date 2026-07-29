@@ -401,10 +401,14 @@ const DB = {
      구글 제미나이 연동 AI Vision(37종 식재료 인식), 32형 터치스크린 확인. 무상보증(as)·소음(noise)은 검색 스니펫에
      명시가 없어 기존 인접값을 잠정 준용 — 재검증 필요.
      출처: news.samsung.com(2026-03-19), mt.co.kr, busan.com, newscj.com, samsung.com/sec 제품페이지(RM90F91B1W) */
+  /* 2026-07-29 재검증: 위에서 확정한 RM90F91B1W도 모델코드 세대문자 "F"였음이 재확인돼 한 세대 더 지난
+     값이었다. 동일 스펙(864L, 냉장509L+냉동355L, 프리스탠딩 584만원/키친핏맥스 464만원)의 2026년형
+     최신 세대문자 "H" 모델 RM90H91B1W로 교체. 냉장고 채번규칙상 'RF'가 구형, 'RM'이 AI 패밀리허브
+     현재 라인 채번임을 확인(내부 판매채널 기준). 출처: danawa.com(pcode=109599752), news.samsung.com. */
   '냉장고': {
     emoji:'🧊',
     samsung:[
-      { name:'BESPOKE AI 패밀리허브 4도어 (864L) RM90F91B1W', price:584, grade:'P',
+      { name:'BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W', price:584, grade:'P',
         on:['AI Vision(제미나이 연동, 37종 식재료 인식)','32형 대형 터치스크린','하이브리드쿨링','음성인식 제어'],
         specs:{ cap:864, power:42.7, eGrade:1, as:1, noise:34 } },
       { name:'BESPOKE AI 4도어 (902L) RM70F90M1GD', price:230, grade:'S',
@@ -473,13 +477,18 @@ const DB = {
      기존 WD25DB8995BZ/WD25DB8695BC와 가격이 거의 일치해 동일 제품의 2026년형 리프레시로 판단)해
      건조용량을 15kg→20kg으로 정정. 정확한 신규 모델코드는 보도자료에 노출되지 않아 기존 코드 유지.
      출처: news.samsung.com(2026년형 비스포크 AI 콤보 출시 보도자료, 25+20kg·프리히트) */
+  /* 2026-07-29 재검증: 위 "WD25DB8995BZ/WD25DB8695BC"는 실제로는 존재가 확인되지 않는 모델코드였음
+     (samsung.com 어디에도 WD25 프리픽스 콤보 제품 없음). 세탁기·건조기 채번은 항상 'WD90'이 25kg급
+     콤보의 실제 채번이며, 'WD25'는 오기/미확인 코드였던 것으로 판단. 실존 확인된 2026년형 코드로 교체:
+     7형 LCD 상위 트림 WD90H25AHS(430만~429.9만원), 기본형(다이얼 조작) WD90H25BHY(319.9만원대)로 정정.
+     출처: samsung.com/sec/laundry-combo/combo-wd90h25ahs-d2c, danawa.com, news.samsung.com(2026-03-26) */
   '세탁기·콤보': {
     emoji:'🫧',
     samsung:[
-      { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (세탁25+건조20kg) WD25DB8995BZ', price:430, grade:'P',
+      { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (세탁25+건조20kg) WD90H25AHS', price:430, grade:'P',
         on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','오토오픈도어+','세제 자동투입','7인치 LCD','SmartThings','AI 진동소음저감','국내 일체형 최대용량'],
         specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7 } },
-      { name:'BESPOKE AI 콤보 프리히트 2.8인치 다이얼 (세탁25+건조20kg) WD25DB8695BC', price:320, grade:'S',
+      { name:'BESPOKE AI 콤보 프리히트 기본형 (세탁25+건조20kg) WD90H25BHY', price:320, grade:'S',
         on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','AI 이불세탁건조','세제자동투입(11단계)','오토오픈도어','통세척','국내 일체형 최대용량'],
         specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7 } },
       { name:'BESPOKE AI 세탁기 올인원컨트롤 (25kg) WF25CB8895BV', price:137, grade:'S',
@@ -617,10 +626,19 @@ const DB = {
      동세대 QNH80과 패널기술을 공유한다는 가정하에 잠정 동일값 적용 — 재검증 필요.
      LG OLED evo C6 77인치도 신규 추가(가격 확인). 출처: samsung.com(QNH70 시리즈 페이지),
      prod.danawa.com(pcode=122628974), lge.co.kr(oled77c6sna) */
+  /* 2026-07-29 리서치: 기존 P등급이었던 Neo QLED(KQ 채번, LED 기반)는 2026년 3월 출시된 진짜 최상위
+     플래그십 "Micro RGB R95H"(국내 채번 KMR85RH95AFXKR, R95H가 신규 채번 체계) 대비 하위 라인임이
+     확인돼 Micro RGB를 신규 P등급으로 추가하고 기존 KQ85QNH80은 S등급으로 하향. Neo QLED(KQ) 자체는
+     단종된 구형이 아니라 여전히 판매 중인 상위-중급 라인이며, Micro RGB만이 2026년 현재의 진짜
+     플래그십 채번(KQ/KU와 별개 체계)임에 유의. 출고가 929만원(85인치), 밝기 약 2,300nit(10% 윈도우).
+     출처: samsung.com/sec/tvs/micro-rgb-rh95-d2c(KMR85RH95AFXKR), rtings.com, danawa.com(pcode=122632284) */
   'TV': {
     emoji:'📺',
     samsung:[
-      { name:'2026 Neo QLED QNH80 85인치 (KQ85QNH80)', price:449, grade:'P',
+      { name:'2026 Micro RGB R95H 85인치 (KMR85RH95AFXKR)', price:929, grade:'P',
+        on:['Micro RGB(초정밀 RGB 백라이트)','Micro RGB AI 엔진 Pro','Micro RGB Precision Color 100(VDE 인증)','무반사 코팅(UL 인증)','165Hz VRR','돌비 애트모스'],
+        specs:{ size:85, res:'4K', panel:'Micro RGB', hz:165, as:2, brightness:2300 } },
+      { name:'2026 Neo QLED QNH80 85인치 (KQ85QNH80)', price:449, grade:'S',
         on:['Neo QLED(미니LED)','AI 프로세서 4K','모션 익셀러레이터 144Hz','돌비 애트모스','오브젝트 트래킹 사운드+','Pantone 색상 인증'],
         specs:{ size:85, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500 } },
       { name:'2026 Neo QLED QNH70 85인치 (KQ85QNH70)', price:369, grade:'S',
@@ -964,13 +982,15 @@ const DB = {
      기확인)로 교체해 콤보 대 콤보 동일 등급 비교를 유지.
      출처: news.samsung.com(2026년형 비스포크 AI 콤보 출시 보도자료), samsung.com(WD25DB8995BZ/WD25DB8695BC),
      lge.co.kr(fh25ese, fh25esefx) */
+  /* 2026-07-29 재검증: "WD25DB8995BZ/WD25DB8695BC"는 실존이 확인되지 않는 모델코드였음. 세탁기·콤보
+     카테고리와 동일하게 실존 확인된 WD90H25AHS(7형 LCD)·WD90H25BHY(기본형)로 정정. */
   '건조기': {
     emoji:'💨',
     samsung:[
-      { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (일체형, 세탁25+건조20kg) WD25DB8995BZ', price:430, grade:'P',
+      { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (일체형, 세탁25+건조20kg) WD90H25AHS', price:430, grade:'P',
         on:['프리히트(하이브리드 히트펌프 진화형)','국내 일체형 최대용량(건조 20kg)','AI 세탁건조','오토오픈도어+','7인치 LCD','SmartThings'],
         specs:{ cap:20, eGrade:1, as:1, noise:51.7 } },
-      { name:'BESPOKE AI 콤보 프리히트 2.8인치 다이얼 (일체형, 세탁25+건조20kg) WD25DB8695BC', price:320, grade:'S',
+      { name:'BESPOKE AI 콤보 프리히트 기본형 (일체형, 세탁25+건조20kg) WD90H25BHY', price:320, grade:'S',
         on:['프리히트(하이브리드 히트펌프 진화형)','국내 일체형 최대용량(건조 20kg)','AI 세탁건조','AI 이불세탁건조','세제자동투입(11단계)'],
         specs:{ cap:20, eGrade:1, as:1, noise:51.7 } }
     ],
