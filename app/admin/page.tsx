@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { readLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
 
-const ADMIN_PW_HASH = 'e5433d3450baf8f33d4a3a62bc87797cbc5adb5749c4388a3bf7c15b698a5d17'
+const ADMIN_PW_HASH = '60fe74406e7f353ed979f350f2fbb6a2e8690a5fa7d1b0c32983d1d8b3f95f67'
 const ADMIN_SESSION_KEY = 'ax_admin_unlocked'
 
 async function sha256(text: string) {
