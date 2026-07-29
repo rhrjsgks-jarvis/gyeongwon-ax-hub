@@ -92,18 +92,6 @@ const MODULES: ModuleCard[] = [
     updated: '2026.07',
     status: 'live',
   },
-  {
-    href: 'https://script.google.com/macros/s/AKfycbzXMz57Vo-w15z_FOI2lg4iOMQBBoRW0p2JQIiB1kKXWs5cEKquVt_-Qug2r3MemA/exec',
-    icon: '🎁',
-    title: '시크릿쿠폰',
-    desc: '매장별 쿠폰 재고 · 발급현황 조회',
-    color: '#DC2626',
-    bg: '#FEF2F2',
-    updated: '2026.07',
-    status: 'live',
-    external: true,
-    logKey: 'coupon',
-  },
 ]
 
 const CONCIERGE_LINKS = [
@@ -124,6 +112,15 @@ const CONCIERGE_LINKS = [
     icon: '📺',
     label: '매장 전광판',
     desc: '대기 현황 실시간 안내판',
+  },
+]
+
+const COUPON_LINKS = [
+  {
+    href: 'https://script.google.com/macros/s/AKfycbzXMz57Vo-w15z_FOI2lg4iOMQBBoRW0p2JQIiB1kKXWs5cEKquVt_-Qug2r3MemA/exec',
+    icon: '🎁',
+    label: '시크릿쿠폰',
+    desc: '매장별 쿠폰 재고 · 발급현황 조회',
   },
 ]
 
@@ -256,7 +253,7 @@ export default function Home() {
       </div>
 
       {/* 컨시어지 프로그램 */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+      <div id="concierge" className="bg-white rounded-2xl p-4 border border-gray-100 mb-4 scroll-mt-20">
         <h3 className="font-bold text-sm text-gray-700 mb-0.5">🎫 컨시어지 프로그램</h3>
         <p className="text-[10px] text-gray-300 font-medium mb-3">스타필드 수원 매장 대기접수 시스템</p>
         <div className="flex flex-col gap-1">
@@ -268,6 +265,33 @@ export default function Home() {
               rel="noopener noreferrer"
               className="no-underline"
               onClick={() => logEvent('concierge', 'page_view')}
+            >
+              <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
+                <span className="text-base flex-shrink-0">{c.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800">{c.label}</p>
+                  <p className="text-xs text-gray-400">{c.desc}</p>
+                </div>
+                <span className="text-gray-300 text-xs">↗</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* 쿠폰 배포프로그램 */}
+      <div id="coupon" className="bg-white rounded-2xl p-4 border border-gray-100 mb-4 scroll-mt-20">
+        <h3 className="font-bold text-sm text-gray-700 mb-0.5">🎁 쿠폰 배포프로그램</h3>
+        <p className="text-[10px] text-gray-300 font-medium mb-3">매장 쿠폰 재고·발급현황 관리</p>
+        <div className="flex flex-col gap-1">
+          {COUPON_LINKS.map((c) => (
+            <a
+              key={c.href}
+              href={c.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="no-underline"
+              onClick={() => logEvent('coupon', 'page_view')}
             >
               <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
                 <span className="text-base flex-shrink-0">{c.icon}</span>
