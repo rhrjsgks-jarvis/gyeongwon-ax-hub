@@ -35,8 +35,8 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 - 데이터: `INSTALL_DB` 객체, 한글 카테고리명을 키로 사용. 각 엔트리 구조:
   `emoji, subtitle, types[], space[][2], utility[][2], checklist[], cautions[], source, sourceUrl, images?[{src,alt,cap}]`
 - 이미지 카드 표시 여부는 JS에서 `images.length` 기준으로 토글 (`imageCard.style.display`).
-- 현재 20개 카테고리 (드롭다운 순서 = `INSTALL_DB` 객체 순서, 둘 다 항상 동기화 유지):
-  냉장고 4도어 프리스탠딩 → 4도어 키친핏 → 4도어 키친핏 Max → 2도어 → 1도어 → 양문형 → 일반형 → 페어(2대 이상) 설치 → 김치냉장고 → 세탁기·콤보 → 건조기 → 에어컨 → TV → 청소기(무선청소기) → 로봇청소기 → 식기세척기 → 인덕션 → 정수기 → 전자레인지 → 공기청정기
+- 현재 21개 카테고리 (드롭다운 순서 = `INSTALL_DB` 객체 순서, 둘 다 항상 동기화 유지):
+  냉장고 4도어 프리스탠딩 → 4도어 키친핏 → 4도어 키친핏 Max → 2도어 → 1도어 → 양문형 → 일반형 → 페어(2대 이상) 설치 → 김치냉장고 → 세탁기·콤보 → 건조기 → 에어컨 → TV → 청소기(무선청소기) → 로봇청소기 → 식기세척기 → 에어드레서 → 인덕션 → 정수기 → 전자레인지 → 공기청정기
 - 스마트폰/노트북은 설치환경이 적용되지 않아 카테고리에서 완전히 제거됨 (드롭다운·DB 모두에 없음). 되살리지 말 것.
 
 ### 핵심 원칙 — 절대 타협 금지
@@ -53,7 +53,7 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 6개 모듈 전부에 `scripts/test-*.mjs` 회귀 테스트가 있다 (jsdom으로 `public/*.html`을 `runScripts:'dangerously'`로 로드해 인라인 스크립트의 전역 함수를 직접 호출·검증하는 동일 패턴, 매 세션 재작성할 필요 없음). 변경 후 항상 관련 스크립트 + 전체를 실행:
 
 ```bash
-node scripts/test-install.mjs   # 설치환경가이드: 20개 카테고리 전체 렌더링, 이미지 개수/카드노출/링크 유효성, 키워드 검색
+node scripts/test-install.mjs   # 설치환경가이드: 21개 카테고리 전체 렌더링, 이미지 개수/카드노출/링크 유효성, 키워드 검색
 node scripts/test-finder.mjs    # 모델파인더: 41개 카테고리 전수 검색, AI추천/브랜드뷰 흐름, 패키지모드
 node scripts/test-care.mjs      # AI Care: 16개 제품 전수, 12/36개월 플랜전환, overview/timeline 모드
 node scripts/test-planner.mjs   # 패키지 플래너: 18개 카테고리 × 5개 평형, 할인율·예산배분 계산
