@@ -61,7 +61,7 @@ function sendFeedbackEmail_(body) {
     '내용: ' + (body.extra || '(내용 없음)') + '\n' +
     '접수 시각: ' + when + '\n' +
     '세션 ID(익명): ' + (body.uid || '-') + '\n';
-  MailApp.sendEmail(FEEDBACK_EMAIL, subject, bodyText);
+  GmailApp.sendEmail(FEEDBACK_EMAIL, subject, bodyText);
 }
 
 function doGet(e) {
