@@ -69,8 +69,8 @@ export default function Navigation() {
       {/* 사이드바 (데스크탑) */}
       <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
         <div className="px-3 py-4 flex flex-col gap-1">
-          {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+          {NAV_ITEMS.filter((item) => item.href === '/').map((item) => {
+            const active = pathname === item.href
             return (
               <Link
                 key={item.href}
@@ -90,16 +90,24 @@ export default function Navigation() {
         </div>
         <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex flex-col gap-1">
           <p className="px-3 mb-1 text-[10px] font-semibold text-gray-300 uppercase tracking-wide">바로가기</p>
-          {QUICK_LINKS.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline text-gray-500 hover:bg-gray-50 transition-all"
-            >
-              <span className="text-base">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+          {[...NAV_ITEMS.filter((item) => item.href !== '/'), ...QUICK_LINKS].map((item) => {
+            const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
+                style={{
+                  background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                  color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                  fontWeight: active ? 700 : 500,
+                }}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
         </div>
         <div className="mt-auto px-4 py-3 mx-3 rounded-xl bg-gray-50 text-xs text-gray-400 text-center">
           경원영업팀 AX 경진대회<br />
