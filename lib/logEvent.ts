@@ -4,7 +4,7 @@
  */
 
 export type LogModule = 'finder' | 'care' | 'test' | 'compare' | 'compareInstant' | 'quiz' | 'hub' | 'planner' | 'install' | 'concierge' | 'coupon'
-export type LogAction = 'page_view' | 'search' | 'result_open' | 'generate' | 'tab_switch'
+export type LogAction = 'page_view' | 'search' | 'result_open' | 'generate' | 'tab_switch' | 'feedback'
 
 export interface LogEvent {
   ts: number          // Unix ms
@@ -66,6 +66,15 @@ export function logEvent(
       body: JSON.stringify(ev),
     }).catch(() => {})
   }
+}
+
+// 사용자 건의사항을 기록·전송한다. logEvent와 동일한 파이프라인(localStorage 적재 +
+// GAS_URL 연동 시 구글시트 저장)을 그대로 타되, action:'feedback'으로 남겨 관리자
+// 대시보드 "최근 활동"에서 일반 로그와 구분되도록 한다. Apps Script(Code.gs)가
+// action:'feedback' 이벤트를 받으면 이메일도 함께 발송한다(NEXT_PUBLIC_GAS_URL 연동 시).
+export function sendFeedback(message: string, contact?: string): void {
+  const extra = contact ? `${message} [연락처: ${contact}]` : message
+  logEvent('hub', 'feedback', extra)
 }
 
 export function aggregateByModule(logs: LogEvent[]) {
