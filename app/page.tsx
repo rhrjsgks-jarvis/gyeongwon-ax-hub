@@ -224,6 +224,15 @@ const COUPON_LINKS = [
   },
 ]
 
+const CATALOG_LINKS = [
+  {
+    href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110',
+    icon: '📱',
+    label: '모바일 카탈로그',
+    desc: '삼성스토어 제품 카탈로그 모바일 열람',
+  },
+]
+
 const TIPS = [
   { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
   { emoji: '📋', situation: '케어십 서비스 항목을 안내할 때', tool: 'AI Care 검색기', href: '/care' },
@@ -467,6 +476,14 @@ export default function Home() {
                   subtitle="매장 쿠폰 재고·발급현황 관리"
                   links={COUPON_LINKS}
                   logKey="coupon"
+                />
+                <LinkListCard
+                  id="catalog"
+                  icon="📱"
+                  title="모바일 카탈로그"
+                  subtitle="고객 응대 시 모바일로 바로 열람하는 제품 카탈로그"
+                  links={CATALOG_LINKS}
+                  logKey="catalog"
                 />
               </div>
             )}
