@@ -139,6 +139,76 @@ const CONCIERGE_LINKS = [
   },
 ]
 
+// 매장별 확인하기 드롭다운 — 지점명 선택 시 컨시어지 접수/관리자/전광판 링크의 s= 파라미터가
+// 해당 지점코드로 자동 치환된다. 기본값(첫 항목)은 이 허브가 실제 운영 중인 스타필드 수원(ZN01).
+const STORE_LIST = [
+  { code: 'ZN01', name: '스타필드 수원' },
+  { code: 'ZHA7', name: '현대판교모바일' },
+  { code: 'Z279', name: '오산' },
+  { code: 'Z047', name: '수지' },
+  { code: 'Z150', name: '강릉옥천' },
+  { code: 'Z205', name: '단구' },
+  { code: 'Z206', name: '석사' },
+  { code: 'Z227', name: '속초' },
+  { code: 'Z243', name: '평택' },
+  { code: 'Z324', name: '분당' },
+  { code: 'Z343', name: '북수원' },
+  { code: 'Z378', name: '광주' },
+  { code: 'Z383', name: '안성' },
+  { code: 'Z398', name: '평택고덕' },
+  { code: 'Z399', name: '이천증포' },
+  { code: 'Z405', name: '평촌' },
+  { code: 'Z418', name: '안양모바일' },
+  { code: 'Z426', name: '용인구성' },
+  { code: 'Z451', name: '서수원' },
+  { code: 'Z509', name: '영통' },
+  { code: 'Z539', name: '디지털시티모바일' },
+  { code: 'Z541', name: '광명소하' },
+  { code: 'Z557', name: '성남' },
+  { code: 'Z567', name: 'AK분당' },
+  { code: 'Z579', name: '원주' },
+  { code: 'Z583', name: '춘천' },
+  { code: 'Z586', name: '평택세교' },
+  { code: 'Z607', name: '용인처인모바일' },
+  { code: 'Z608', name: '권선' },
+  { code: 'Z617', name: '안양본' },
+  { code: 'Z619', name: '수원' },
+  { code: 'Z621', name: '동탄' },
+  { code: 'Z624', name: '강릉' },
+  { code: 'Z640', name: '단계' },
+  { code: 'Z663', name: '하남미사' },
+  { code: 'Z666', name: '용인기흥' },
+  { code: 'ZH35', name: '롯데평촌' },
+  { code: 'ZH36', name: '롯데수원' },
+  { code: 'ZH57', name: '현대판교' },
+  { code: 'ZH64', name: '신세계사우스시티' },
+  { code: 'ZH73', name: 'AK수원' },
+  { code: 'ZH74', name: 'AK평택' },
+  { code: 'ZH75', name: 'AK원주' },
+  { code: 'ZH77', name: '신세계하남' },
+  { code: 'ZH96', name: '갤러리아광교' },
+  { code: 'ZH97', name: 'AK분당모바일' },
+  { code: 'ZHA1', name: '롯데동탄' },
+  { code: 'ZHA2', name: '롯데동탄모바일' },
+  { code: 'ZHB4', name: '타임빌라스수원' },
+  { code: 'ZIN5', name: '남양모바일' },
+  { code: 'ZMF6', name: '이마트안양' },
+  { code: 'ZR42', name: '기흥캠퍼스모바일' },
+  { code: 'ZR60', name: '화성캠퍼스모바일' },
+  { code: 'ZR65', name: '수원삼성전기모바일' },
+  { code: 'ZR78', name: '광명기아자동차모바일' },
+  { code: 'ZRA0', name: '화성DSR모바일' },
+  { code: 'ZRD0', name: '미래기술캠퍼스모바일' },
+  { code: 'ZRD2', name: '디지털시티2모바일' },
+  { code: 'ZRE0', name: '용인에버랜드모바일' },
+  { code: 'ZRE4', name: '평택캠퍼스모바일' },
+  { code: 'ZRE6', name: '기흥삼성SDI모바일' },
+  { code: 'ZRF7', name: '현대기아차연구소모바일' },
+  { code: 'ZRF8', name: '판교SDS모바일' },
+  { code: 'ZRF9', name: '기흥SDR모바일' },
+  { code: 'ZRG1', name: 'KGM평택모바일' },
+]
+
 const CONCIERGE_USAGE = [
   { step: '1', text: '고객이 매장 방문 시 "컨시어지 접수"에서 성함·연락처를 입력해 대기 등록 → 대기번호가 발급됩니다.' },
   { step: '2', text: '"매장 전광판"을 매장 내 모니터·태블릿에 항상 띄워두면 대기번호·순번이 고객에게 실시간으로 보입니다.' },
@@ -225,8 +295,14 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
   )
 }
 
+function withStoreCode(href: string, code: string): string {
+  const url = new URL(href)
+  url.searchParams.set('s', code)
+  return url.toString()
+}
+
 function LinkListCard({
-  id, icon, title, subtitle, links, logKey, usage, note,
+  id, icon, title, subtitle, links, logKey, usage, note, stores,
 }: {
   id: string
   icon: string
@@ -236,16 +312,33 @@ function LinkListCard({
   logKey: LogModule
   usage?: { step: string; text: string }[]
   note?: string
+  stores?: { code: string; name: string }[]
 }) {
+  const [storeCode, setStoreCode] = useState(stores?.[0]?.code ?? '')
+
   return (
     <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
       <h3 className="font-bold text-sm text-gray-700 mb-0.5">{icon} {title}</h3>
       <p className="text-[10px] text-gray-300 font-medium mb-3">{subtitle}</p>
+      {stores && stores.length > 0 && (
+        <div className="mb-3 pb-3 border-b border-gray-100">
+          <p className="text-[10px] font-bold text-gray-400 mb-1.5">🏬 매장별로 확인하기</p>
+          <select
+            value={storeCode}
+            onChange={(e) => setStoreCode(e.target.value)}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+          >
+            {stores.map((s) => (
+              <option key={s.code} value={s.code}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         {links.map((l) => (
           <a
             key={l.href}
-            href={l.href}
+            href={stores ? withStoreCode(l.href, storeCode) : l.href}
             target="_blank"
             rel="noopener noreferrer"
             className="no-underline"
@@ -365,6 +458,7 @@ export default function Home() {
                   logKey="concierge"
                   usage={CONCIERGE_USAGE}
                   note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
+                  stores={STORE_LIST}
                 />
                 <LinkListCard
                   id="coupon"
