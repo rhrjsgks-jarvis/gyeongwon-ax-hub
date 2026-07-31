@@ -21,9 +21,7 @@ const NAV_GROUPS = [
       { href: '/finder',          label: '모델파인더',       icon: '🔍' },
       { href: '/care',            label: 'AI Care',         icon: '💚' },
       { href: '/compare',         label: '타사비교',         icon: '🔗' },
-      { href: '/compare-instant', label: '즉시비교 (개선중)', icon: '⚡' },
       { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
-      { href: '/#catalog',        label: '모바일 카탈로그',   icon: '📱' },
     ],
   },
   {

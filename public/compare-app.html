@@ -38,6 +38,13 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .cat-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:10px;padding:10px 6px;font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.5;}
 .cat-btn:hover,.cat-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
 .cat-btn .ci{font-size:18px;display:block;margin-bottom:3px;}
+/* 모바일: 카테고리 13개가 세로로 길어져 스크롤 부담이 커지므로 아이콘·여백을 절반 수준으로
+   줄여 그리드 전체 높이를 낮춘다(데스크탑은 기존 크기 유지). */
+@media (max-width:480px){
+  .cat-grid{gap:6px;}
+  .cat-btn{padding:6px 4px;font-size:11px;line-height:1.35;}
+  .cat-btn .ci{font-size:11px;margin-bottom:1px;}
+}
 
 /* ── 모델 선택 ── */
 .model-section{display:none;}
@@ -122,6 +129,12 @@ select:focus{border-color:var(--primary);}
 .preset-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:9px;padding:8px 6px;font-size:11.5px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.4;}
 .preset-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
 .preset-btn .p-icon{font-size:16px;display:block;margin-bottom:3px;}
+/* 모바일: 카테고리 그리드와 같은 기준으로 프리셋 버튼도 축소 (이 규칙은 위 .preset-btn
+   정의보다 뒤에 와야 동일 특이도에서 우선 적용된다) */
+@media (max-width:480px){
+  .preset-btn{padding:6px 4px;font-size:11px;line-height:1.35;}
+  .preset-btn .p-icon{font-size:11px;margin-bottom:1px;}
+}
 .preset-divider{display:flex;align-items:center;gap:10px;margin:10px 0;}
 .preset-divider span{font-size:11px;color:var(--gray);flex-shrink:0;}
 .preset-divider::before,.preset-divider::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -207,7 +220,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   <div class="icon">⚖️</div>
   <div>
     <h1>타사비교 세일즈가이드</h1>
-    <p>모델 선택 → 즉시 비교표 + 셀링포인트 + 응대 스크립트</p>
+    <p>모델 선택 또는 URL 입력 → 즉시 비교표 + 셀링포인트 + 응대 스크립트</p>
   </div>
 </header>
 
@@ -1750,16 +1763,11 @@ function renderHistory(){
 /* ── 토스트 ── */
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
-/* ── 라우트 모드(mode 쿼리파라미터) — 허브에서 타사비교(url 전용) / 즉시비교(db 전용, 개선중)로 분리 진입 ── */
-const ROUTE_MODE = new URLSearchParams(location.search).get('mode') || 'url';
-document.querySelector('.tab-bar').style.display = 'none';
-if (ROUTE_MODE === 'db') {
-  document.querySelector('header h1').textContent = '즉시비교 (개선중)';
-  document.querySelector('header p').textContent = '카테고리·모델 선택 → 즉시 비교표 (UX 개선 진행중)';
-} else {
-  switchTab('url');
-  document.querySelector('header p').textContent = 'URL 입력 → 즉시 비교표 + 셀링포인트 + 응대 스크립트';
-}
+/* ── 초기 탭 — 타사비교 하나로 통합되어 탭바를 항상 노출한다(과거에는 /compare(url 전용)와
+   /compare-instant(db 전용)로 라우트를 나눠 탭바를 숨겼으나, 두 화면이 사실상 같은 기능이라
+   한 모듈로 합쳤다). ?mode=db로 진입하면 즉시비교 탭이 먼저 열린다(기존 링크 호환). ── */
+const ROUTE_MODE = new URLSearchParams(location.search).get('mode') || 'db';
+switchTab(ROUTE_MODE === 'url' ? 'url' : 'db');
 
 /* ── 초기화 ── */
 renderHistory();

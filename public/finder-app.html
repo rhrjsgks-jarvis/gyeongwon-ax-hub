@@ -28,6 +28,11 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 .mode{display:flex;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:3px}
 .mode button{font-size:12px;font-weight:700;padding:6px 11px;border-radius:7px;color:#A9BBD8;white-space:nowrap}
 .mode button.on{background:#fff;color:var(--deep)}
+/* 카탈로그 바로가기 — 모델파인더와 같은 제품 정보 도구라 모듈을 합치면서 상단바로 편입 */
+.catalog-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:7px 11px;border-radius:9px;
+  color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);white-space:nowrap;text-decoration:none;margin-left:8px}
+.catalog-link:hover{background:rgba(255,255,255,.24)}
+@media (max-width:480px){.catalog-link{font-size:11px;padding:6px 9px;margin-left:6px}}
 
 /* 검색 히어로 */
 .shero{padding:24px 2px 6px}
@@ -224,10 +229,13 @@ table.spec tr:last-child td{border-bottom:none}
 
 <div class="topbar"><div class="topbar-in">
   <div class="brand"><b>모델 파인더</b><span>키워드 제품 추천 · 297종 전 라인업 (삼성 243+Harman 54)</span></div>
-  <div class="mode">
-    <button id="mKw" class="on" onclick="setMode('kw')">키워드</button>
-    <button id="mAi" onclick="setMode('ai')">AI 추천</button>
-
+  <div style="display:flex;align-items:center">
+    <div class="mode">
+      <button id="mKw" class="on" onclick="setMode('kw')">키워드</button>
+      <button id="mAi" onclick="setMode('ai')">AI 추천</button>
+    </div>
+    <a class="catalog-link" href="https://www.samsungstore.com/event/catalog.sesc?menu=w110"
+       target="_blank" rel="noopener noreferrer">📱 카탈로그 <span style="opacity:.6">↗</span></a>
   </div>
 </div></div>
 

@@ -75,7 +75,8 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   care:    { label: 'AI Care',         icon: '🛠️', color: '#059669' },
   test:    { label: '레벨업테스트',    icon: '📝', color: '#7C3AED' },
   compare: { label: '타사비교 가이드', icon: '⚖️', color: '#D97706' },
-  compareInstant: { label: '즉시비교 (개선중)', icon: '⚡', color: '#B45309' },
+  // 타사비교로 통합된 구 모듈 — 통합 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
+  compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309' },
   quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
   planner: { label: '패키지 플래너',    icon: '📦', color: '#0891B2' },
   install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
