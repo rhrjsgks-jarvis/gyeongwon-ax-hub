@@ -47,21 +47,11 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/compare',
         icon: '🔗',
         title: '타사비교',
-        desc: 'URL 입력으로 즉시 비교표 + 셀링포인트 + 응대 스크립트 생성',
+        desc: '모델 선택 또는 URL 입력으로 즉시 비교표 + 셀링포인트 + 응대 스크립트 생성',
         color: '#EA580C',
         bg: '#FFF7ED',
         updated: '2026.07',
         status: 'live',
-      },
-      {
-        href: '/compare-instant',
-        icon: '⚡',
-        title: '즉시비교 (개선중)',
-        desc: '카테고리·모델 드롭다운 선택형 즉시비교 — UX 개선 진행중',
-        color: '#B45309',
-        bg: '#FFFBEB',
-        updated: '2026.07',
-        status: 'beta',
       },
       {
         href: '/install',
@@ -72,6 +62,18 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         bg: '#FFFBEB',
         updated: '2026.07',
         status: 'live',
+      },
+      {
+        href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110',
+        icon: '📱',
+        title: '모바일 카탈로그',
+        desc: '삼성스토어 제품 카탈로그를 모바일로 바로 열람',
+        color: '#0EA5E9',
+        bg: '#F0F9FF',
+        updated: '2026.07',
+        status: 'live',
+        external: true,
+        logKey: 'catalog',
       },
     ],
   },
@@ -221,15 +223,6 @@ const COUPON_LINKS = [
     icon: '🎁',
     label: '시크릿쿠폰',
     desc: '매장별 쿠폰 재고 · 발급현황 조회',
-  },
-]
-
-const CATALOG_LINKS = [
-  {
-    href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110',
-    icon: '📱',
-    label: '모바일 카탈로그',
-    desc: '삼성스토어 제품 카탈로그 모바일 열람',
   },
 ]
 
@@ -456,18 +449,6 @@ export default function Home() {
                 <ModuleTile key={mod.href} mod={mod} />
               ))}
             </div>
-            {group.title === '🔍 제품 상담 도구' && (
-              <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
-                <LinkListCard
-                  id="catalog"
-                  icon="📱"
-                  title="모바일 카탈로그"
-                  subtitle="고객 응대 시 모바일로 바로 열람하는 제품 카탈로그"
-                  links={CATALOG_LINKS}
-                  logKey="catalog"
-                />
-              </div>
-            )}
             {group.title === '🏬 매장운영 도구' && (
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
                 <LinkListCard
