@@ -456,6 +456,18 @@ export default function Home() {
                 <ModuleTile key={mod.href} mod={mod} />
               ))}
             </div>
+            {group.title === '🔍 제품 상담 도구' && (
+              <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
+                <LinkListCard
+                  id="catalog"
+                  icon="📱"
+                  title="모바일 카탈로그"
+                  subtitle="고객 응대 시 모바일로 바로 열람하는 제품 카탈로그"
+                  links={CATALOG_LINKS}
+                  logKey="catalog"
+                />
+              </div>
+            )}
             {group.title === '🏬 매장운영 도구' && (
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
                 <LinkListCard
@@ -476,14 +488,6 @@ export default function Home() {
                   subtitle="매장 쿠폰 재고·발급현황 관리"
                   links={COUPON_LINKS}
                   logKey="coupon"
-                />
-                <LinkListCard
-                  id="catalog"
-                  icon="📱"
-                  title="모바일 카탈로그"
-                  subtitle="고객 응대 시 모바일로 바로 열람하는 제품 카탈로그"
-                  links={CATALOG_LINKS}
-                  logKey="catalog"
                 />
               </div>
             )}
