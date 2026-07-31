@@ -22,7 +22,6 @@ const NAV_GROUPS = [
       { href: '/care',            label: 'AI Care',         icon: '💚' },
       { href: '/compare',         label: '타사비교',         icon: '🔗' },
       { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
-      { href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110', label: '모바일 카탈로그', icon: '📱', external: true },
     ],
   },
   {
@@ -148,27 +147,20 @@ export default function Navigation() {
                 {isOpen && (
                   <div className="flex flex-col gap-0.5">
                     {group.items.map((item) => {
-                      const external = 'external' in item && item.external
-                      const active = !external && (pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href)))
-                      const cls = 'flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-xl text-[13px] font-medium no-underline transition-all'
-                      const style = {
-                        background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
-                        color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                        fontWeight: active ? 700 : 500,
-                      }
-                      const body = (
-                        <>
+                      const active = pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-xl text-[13px] font-medium no-underline transition-all"
+                          style={{
+                            background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                            color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                            fontWeight: active ? 700 : 500,
+                          }}
+                        >
                           <span className="text-sm">{item.icon}</span>
-                          <span>{item.label}{external && <span className="text-gray-300"> ↗</span>}</span>
-                        </>
-                      )
-                      return external ? (
-                        <a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer" className={cls} style={style}>
-                          {body}
-                        </a>
-                      ) : (
-                        <Link key={item.href} href={item.href} className={cls} style={style}>
-                          {body}
+                          <span>{item.label}</span>
                         </Link>
                       )
                     })}
