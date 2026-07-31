@@ -23,6 +23,7 @@ const NAV_GROUPS = [
       { href: '/compare',         label: '타사비교',         icon: '🔗' },
       { href: '/compare-instant', label: '즉시비교 (개선중)', icon: '⚡' },
       { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
+      { href: '/#catalog',        label: '모바일 카탈로그',   icon: '📱' },
     ],
   },
   {
@@ -37,7 +38,6 @@ const NAV_GROUPS = [
     items: [
       { href: '/#concierge', label: '컨시어지',        icon: '🎫' },
       { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: '🎁' },
-      { href: '/#catalog',   label: '모바일 카탈로그',  icon: '📱' },
     ],
   },
 ]
