@@ -440,6 +440,14 @@ export default function Home() {
             {group.title === '🏬 매장운영 도구' && (
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
                 <LinkListCard
+                  id="coupon"
+                  icon="🎁"
+                  title="쿠폰 배포프로그램"
+                  subtitle="매장 쿠폰 재고·발급현황 관리"
+                  links={COUPON_LINKS}
+                  logKey="coupon"
+                />
+                <LinkListCard
                   id="concierge"
                   icon="🎫"
                   title="컨시어지 프로그램"
@@ -449,14 +457,6 @@ export default function Home() {
                   usage={CONCIERGE_USAGE}
                   note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
                   stores={STORE_LIST}
-                />
-                <LinkListCard
-                  id="coupon"
-                  icon="🎁"
-                  title="쿠폰 배포프로그램"
-                  subtitle="매장 쿠폰 재고·발급현황 관리"
-                  links={COUPON_LINKS}
-                  logKey="coupon"
                 />
               </div>
             )}
