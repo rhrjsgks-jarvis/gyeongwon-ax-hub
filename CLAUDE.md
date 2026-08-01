@@ -48,13 +48,30 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 - 삼성닷컴 페이지는 종종 이미지가 lazy-load(`lozad.js`)되거나 라디오버튼 탭 위젯(`new-set-guide`, 패널 ID `guidePanel0X-0X-...`)·JS 모달 안에 있어 단순 fetch로는 `<>`(빈 src) 또는 아예 누락된다. **브라우저 도구(Playwright MCP, Chrome DevTools 등)로 렌더링된 DOM을 직접 조회**해 `data-src`나 모달 내부 `<img>`의 실제 src를 확인해야 한다. (단순 fetch/curl만으로 "이미지 없음"이라 단정한 뒤 나중에 브라우저로 재조사해 실제로는 있었던 사례가 로봇청소기·인덕션에서 있었음.)
 - 캡션(`cap`)에 들어가는 치수·모델명은 반드시 해당 페이지에서 직접 확인한 값만 기재하고 출처(`samsung.com`)를 명시한다.
 
+## 모델파인더 — 삼성스토어 카탈로그 기준 정합성
+
+모델파인더 DB는 **삼성스토어 카탈로그(`samsungstore.com/event/catalog.sesc`)를 기준**으로 맞춘다.
+사용자가 구글드라이브로 카탈로그 PDF(mobile/it/md/dp)를 공유해주면 대조·갱신한다.
+
+- 카탈로그에는 **가격이 없다**(4개 PDF 전수 확인). 모델코드·치수·스펙만 있으므로, 카탈로그에서
+  새로 추가한 제품은 `price: null`로 두고 기존 제품의 가격은 유지한다.
+- `price: null` 처리 규칙(파인더 로직에 반영됨): JS에서 `null <= 300`이 참이라 그대로 두면
+  가격 미상 제품이 최저가처럼 예산검색 상단에 뜨는 왜곡이 생긴다. 따라서 ①예산 조건이 걸린
+  검색에서 제외 ②가격 정렬 시 항상 뒤로 ③패키지/AI 예산배분 후보에서 제외 ④카드에는
+  "가격 문의"로 표시한다. 새 제품을 가격 없이 추가할 때 이 규칙이 유지되는지 확인할 것.
+- PRODUCTS 배열(CE+MX)과 별도로 **HARMAN 배열(54종)이 런타임에 합쳐진다**. 화면 문구의
+  "OOO종"은 둘의 합이므로 제품을 추가하면 `finder-app.html`의 표기 2곳과 `app/page.tsx`
+  모델파인더 카드 설명도 함께 갱신해야 한다(과거 실제 수량과 표기가 어긋나 있었음).
+- 2026-07-31 카탈로그 대조로 발견·정정한 오류: **S26+의 모델번호가 SM-S936N(실제로는 S25+의
+  코드)으로 잘못 들어가 있었다 → SM-S947N**. S26/S26+ 치수도 카탈로그 실측값으로 정정.
+
 ## 테스트 & 검증 워크플로우
 
 6개 모듈 전부에 `scripts/test-*.mjs` 회귀 테스트가 있다 (jsdom으로 `public/*.html`을 `runScripts:'dangerously'`로 로드해 인라인 스크립트의 전역 함수를 직접 호출·검증하는 동일 패턴, 매 세션 재작성할 필요 없음). 변경 후 항상 관련 스크립트 + 전체를 실행:
 
 ```bash
 node scripts/test-install.mjs   # 설치환경가이드: 21개 카테고리 전체 렌더링, 이미지 개수/카드노출/링크 유효성, 키워드 검색
-node scripts/test-finder.mjs    # 모델파인더: 41개 카테고리 전수 검색, AI추천/브랜드뷰 흐름, 패키지모드
+node scripts/test-finder.mjs    # 모델파인더: 41개 카테고리 전수 검색(309종), AI추천/브랜드뷰 흐름, 패키지모드
 node scripts/test-care.mjs      # AI Care: 16개 제품 전수, 12/36개월 플랜전환, overview/timeline 모드
 node scripts/test-planner.mjs   # 패키지 플래너: 18개 카테고리 × 5개 평형, 할인율·예산배분 계산
 node scripts/test-compare.mjs   # 타사비교: 13개 카테고리 × 브랜드 × 모델 268개 조합, escHtml/history XSS 회귀

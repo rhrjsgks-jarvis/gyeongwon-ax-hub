@@ -27,7 +27,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/finder',
         icon: '🔍',
         title: '모델파인더',
-        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(297종) 검색 · 모바일 카탈로그 바로가기',
+        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(309종) 검색 · 모바일 카탈로그 바로가기',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
@@ -304,7 +304,12 @@ function LinkListCard({
   note?: string
   stores?: { code: string; name: string }[]
 }) {
-  const [storeCode, setStoreCode] = useState(stores?.[0]?.code ?? '')
+  // 기본값을 특정 지점(스타필드 수원)으로 두면 다른 매장 사용자가 선택 없이 눌렀을 때 남의
+  // 매장 정보가 열리므로, 처음에는 빈 값으로 두고 지점 선택을 먼저 유도한다.
+  const [storeCode, setStoreCode] = useState('')
+  const storeReady = !stores || !!storeCode
+  // 지점명 ㄱ~ㅎ 순 정렬 (영문·숫자로 시작하는 매장명은 한글 앞에 배치됨)
+  const sortedStores = stores ? [...stores].sort((a, b) => a.name.localeCompare(b.name, 'ko')) : []
 
   return (
     <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
@@ -316,9 +321,12 @@ function LinkListCard({
           <select
             value={storeCode}
             onChange={(e) => setStoreCode(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-blue-400"
+            className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 ${
+              storeCode ? 'border-gray-200 text-gray-700' : 'border-blue-300 text-blue-700 font-semibold'
+            }`}
           >
-            {stores.map((s) => (
+            <option value="">👆 지점명 선택하기</option>
+            {sortedStores.map((s) => (
               <option key={s.code} value={s.code}>{s.name}</option>
             ))}
           </select>
@@ -328,10 +336,11 @@ function LinkListCard({
         {links.map((l) => (
           <a
             key={l.href}
-            href={stores ? withStoreCode(l.href, storeCode) : l.href}
+            href={stores ? (storeCode ? withStoreCode(l.href, storeCode) : undefined) : l.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="no-underline"
+            className={`no-underline ${storeReady ? '' : 'pointer-events-none opacity-40'}`}
+            aria-disabled={!storeReady}
             onClick={() => logEvent(logKey, 'page_view')}
           >
             <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
@@ -344,6 +353,11 @@ function LinkListCard({
             </div>
           </a>
         ))}
+        {!storeReady && (
+          <p className="text-[11px] text-blue-600 px-3 pt-1">
+            위에서 지점명을 먼저 선택하면 해당 매장 정보로 연결됩니다.
+          </p>
+        )}
       </div>
       {usage && usage.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100">
@@ -440,6 +454,14 @@ export default function Home() {
             {group.title === '🏬 매장운영 도구' && (
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
                 <LinkListCard
+                  id="coupon"
+                  icon="🎁"
+                  title="쿠폰 배포프로그램"
+                  subtitle="매장 쿠폰 재고·발급현황 관리"
+                  links={COUPON_LINKS}
+                  logKey="coupon"
+                />
+                <LinkListCard
                   id="concierge"
                   icon="🎫"
                   title="컨시어지 프로그램"
@@ -449,14 +471,6 @@ export default function Home() {
                   usage={CONCIERGE_USAGE}
                   note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
                   stores={STORE_LIST}
-                />
-                <LinkListCard
-                  id="coupon"
-                  icon="🎁"
-                  title="쿠폰 배포프로그램"
-                  subtitle="매장 쿠폰 재고·발급현황 관리"
-                  links={COUPON_LINKS}
-                  logKey="coupon"
                 />
               </div>
             )}

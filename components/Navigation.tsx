@@ -34,8 +34,8 @@ const NAV_GROUPS = [
   {
     title: '🏬 매장운영 도구',
     items: [
-      { href: '/#concierge', label: '컨시어지',        icon: '🎫' },
       { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: '🎁' },
+      { href: '/#concierge', label: '컨시어지',        icon: '🎫' },
     ],
   },
 ]
