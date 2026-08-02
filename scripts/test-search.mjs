@@ -77,6 +77,31 @@ for (const e of entries) {
 }
 console.log('OK: 인덱스 내부 링크가 모두 실제 라우트를 가리킴');
 
+// ── ③-1 화면에 보이는 워딩으로 검색되는지 ──
+// 인덱스가 모듈 이름만 담고 섹션명·카드 설명을 빠뜨려 "교육"을 검색해도 📚 교육 섹션의
+// 레벨업테스트·URL 퀴즈가 안 나오던 문제가 있었다. 허브 화면의 모든 모듈과 섹션명이
+// 인덱스에 들어갔는지 소스와 직접 대조한다.
+{
+  const pageSrc = fs.readFileSync(path.join(root, 'app', 'page.tsx'), 'utf8');
+  const gb = pageSrc.match(/const MODULE_GROUPS[^=]*=\s*\[([\s\S]*?)\n\]\n/);
+  if (!gb) fail('app/page.tsx에서 MODULE_GROUPS를 찾지 못함 — 인덱스 생성기도 함께 확인할 것');
+  else {
+    const hubHrefs = new Set(entries.filter((e) => e.m === 'hub').map((e) => e.href));
+    for (const m of gb[1].matchAll(/href: '([^']+)',\s*\n\s*icon: '[^']*',\s*\n\s*title: '([^']+)'/g)) {
+      if (!hubHrefs.has(m[1])) fail(`허브 카드 "${m[2]}"(${m[1]})가 검색 인덱스에 없음`);
+    }
+    // 섹션명(📚 교육 등)의 한글 부분으로 검색이 되어야 한다
+    for (const g of gb[1].matchAll(/title: '([^']+)',\s*\n\s*modules: \[/g)) {
+      // 이모지·기호를 뺀 한글 단어 단위로 본다(공백까지 지우면 "제품상담도구"가 되어 오탐)
+      const words = g[1].match(/[가-힣]+/g) || [];
+      if (!words.length) continue;
+      const missing = words.filter((w) => !entries.some((e) => e.m === 'hub' && e.kw.includes(w.toLowerCase())));
+      if (missing.length) fail(`섹션명 "${g[1]}"의 "${missing.join(', ')}"로 검색되는 허브 항목이 없음 — 그룹명이 kw에 빠졌는지 확인`);
+      else console.log(`OK: 섹션명 "${words.join(' ')}"으로 허브 항목 검색됨`);
+    }
+  }
+}
+
 // ── ③-2 앵커 링크(/#coupon 등)가 실제로 그 위치로 이동하는지 ──
 // 위 ③은 해시를 잘라내고 라우트만 보므로, 앵커가 깨져도 통과한다(실제로 "쿠폰" 검색 결과를
 // 눌러도 아무 일이 없던 버그를 놓쳤다). 앵커는 ①대상 id가 존재하고 ②그 id가 속한 섹션을
