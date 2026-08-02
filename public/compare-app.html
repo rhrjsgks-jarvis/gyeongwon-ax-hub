@@ -1327,7 +1327,12 @@ function switchTab(t) {
 /* ── 카테고리 선택 ── */
 function selectCat(cat) {
   currentCat = cat;
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('active', b.textContent.trim()===cat));
+  // 버튼 안에 아이콘 <span>이 있어 textContent가 "🧊냉장고" 형태라 카테고리명과 직접 비교하면
+  // 항상 불일치했다(선택 강조가 동작하지 않던 버그). onclick의 인자를 읽어 정확히 비교한다.
+  document.querySelectorAll('.cat-btn').forEach(b=>{
+    const m=(b.getAttribute('onclick')||'').match(/selectCat\('([^']+)'\)/);
+    b.classList.toggle('active', !!m && m[1]===cat);
+  });
   document.getElementById('model-section').classList.add('visible');
   document.getElementById('result-db').classList.remove('visible');
 
@@ -1768,6 +1773,12 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
    한 모듈로 합쳤다). ?mode=db로 진입하면 즉시비교 탭이 먼저 열린다(기존 링크 호환). ── */
 const ROUTE_MODE = new URLSearchParams(location.search).get('mode') || 'db';
 switchTab(ROUTE_MODE === 'url' ? 'url' : 'db');
+
+/* 허브 통합검색(/search)에서 넘어온 ?cat= 딥링크 — 즉시비교 탭에서 해당 카테고리를 바로 연다 */
+(function(){
+  const cat = new URLSearchParams(location.search).get('cat');
+  if(cat && DB[cat]){ switchTab('db'); selectCat(cat); }
+})();
 
 /* ── 초기화 ── */
 renderHistory();

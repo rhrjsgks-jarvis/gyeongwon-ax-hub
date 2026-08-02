@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 
 const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
@@ -27,7 +28,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/finder',
         icon: '🔍',
         title: '모델파인더',
-        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(309종) 검색 · 모바일 카탈로그 바로가기',
+        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(309종) 검색',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
@@ -52,6 +53,18 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         bg: '#FFF7ED',
         updated: '2026.07',
         status: 'live',
+      },
+      {
+        href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110',
+        icon: '📱',
+        title: '모바일 카탈로그',
+        desc: '삼성스토어 제품 카탈로그를 모바일로 바로 열람',
+        color: '#0EA5E9',
+        bg: '#F0F9FF',
+        updated: '2026.07',
+        status: 'live',
+        external: true,
+        logKey: 'catalog',
       },
       {
         href: '/install',
@@ -247,19 +260,19 @@ function StatusBadge({ status }: { status: string }) {
 function ModuleTile({ mod }: { mod: ModuleCard }) {
   const cardBody = (
     <div className="module-card group">
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2 md:mb-3 gap-1">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-base md:text-xl shrink-0"
           style={{ background: mod.bg }}
         >
           {mod.icon}
         </div>
         <StatusBadge status={mod.status} />
       </div>
-      <h2 className="font-bold text-base mb-1 group-hover:text-[#1428A0] transition-colors">
+      <h2 className="font-bold text-sm md:text-base mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
         {mod.title}{mod.external && <span className="text-gray-300 text-xs font-normal"> ↗</span>}
       </h2>
-      <p className="text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
+      <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
       <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
     </div>
   )
@@ -411,6 +424,8 @@ function AccordionHeader({
 }
 
 export default function Home() {
+  const router = useRouter()
+  const [query, setQuery] = useState('')
   const [copied, setCopied] = useState(false)
   // 모바일에서는 클릭해야 펼쳐지는 아코디언, md 이상(데스크탑)에서는 항상 펼침 — 기본은 전부 접힘
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
@@ -434,11 +449,35 @@ export default function Home() {
   return (
     <div className="max-w-3xl mx-auto">
       {/* 헤더 */}
-      <div className="mb-6">
+      <div className="mb-4">
         <p className="text-xs text-gray-400 mb-1">{todayStr}</p>
         <h1 className="text-2xl font-black text-gray-900">경원 AX 허브</h1>
         <p className="text-sm text-gray-500 mt-1">영업지원 AI 도구 통합 플랫폼</p>
       </div>
+
+      {/* 통합검색 — 제품·카테고리·기능을 한 번에 찾아 해당 모듈로 연결한다 */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          const v = query.trim()
+          if (v) router.push(`/search?q=${encodeURIComponent(v)}`)
+        }}
+        className="flex gap-2 mb-6"
+      >
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="🔎 통합검색 — 제품명·모델코드·기능 (예: 무풍, 김치냉장고, RM90H91B1W)"
+          className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-400"
+        />
+        <button
+          type="submit"
+          className="px-4 md:px-5 rounded-xl text-sm font-bold text-white shrink-0"
+          style={{ background: '#1428A0' }}
+        >
+          검색
+        </button>
+      </form>
 
       {/* 모듈 그리드 (섹션별) — 모바일: 클릭해야 펼쳐지는 아코디언 / 데스크탑: 항상 펼침 */}
       {MODULE_GROUPS.map((group) => {
@@ -446,7 +485,7 @@ export default function Home() {
         return (
           <div key={group.title} className="mb-5">
             <AccordionHeader title={group.title} isOpen={isOpen} onClick={() => toggleSection(group.title)} />
-            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-2 gap-2.5 md:gap-3`}>
               {group.modules.map((mod) => (
                 <ModuleTile key={mod.href} mod={mod} />
               ))}
@@ -485,7 +524,7 @@ export default function Home() {
           isOpen={!!openSections['admin']}
           onClick={() => toggleSection('admin')}
         />
-        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-2 gap-2.5 md:gap-3`}>
           <ModuleTile mod={ADMIN_MODULE} />
         </div>
       </div>

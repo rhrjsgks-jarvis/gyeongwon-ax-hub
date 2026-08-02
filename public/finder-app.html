@@ -1095,6 +1095,12 @@ function toggleAiDetail(card){
 /* ===== 초기화 ===== */
 renderExamples();
 $("q").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(); });
+
+/* 허브 통합검색(/search)에서 넘어온 ?q= 딥링크 — 검색어를 채우고 즉시 실행한다 */
+(function(){
+  const q = new URLSearchParams(location.search).get('q');
+  if(q){ $("q").value = q; runSearch(); }
+})();
 </script>
 </body>
 </html>
