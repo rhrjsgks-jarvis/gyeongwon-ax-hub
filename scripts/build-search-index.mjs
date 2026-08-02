@@ -36,7 +36,7 @@ const add = (e) => entries.push(e);
     add({
       t: 'product', m: 'finder', title: p.model,
       sub: `${p.cat}${p.group ? ' · ' + p.group : ''}`,
-      kw: [p.model, p.cat, p.group, ...(p.on || []), ...(p.fx || []).flat()].filter(Boolean).join(' '),
+      kw: [p.model, p.cat, p.group, ...(p.on || []), ...(p.fx || []).flat(), ...(p.usp || [])].filter(Boolean).join(' '),
       href: `/finder?q=${encodeURIComponent(p.model)}`,
       // 통합검색에서 카탈로그를 열지 않고 바로 상세 스펙을 펼쳐보기 위한 데이터
       spec: (p.fx || []).filter((f) => f[1]),
@@ -44,6 +44,7 @@ const add = (e) => entries.push(e);
       off: p.off || [],
       price: p.price ?? null,
       note: p.note || '',
+      usp: p.usp || [],
     });
   }
   for (const c of cats) {
