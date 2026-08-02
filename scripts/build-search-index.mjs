@@ -90,28 +90,68 @@ const add = (e) => entries.push(e);
 // ── 5. 허브 모듈·외부 링크 (수동 정의 — 소스가 app/page.tsx라 여기서 별도 관리) ──
 // 쿠폰 프로그램 URL만은 app/page.tsx의 COUPON_LINKS에서 직접 읽는다.
 // 여기에 URL을 복사해두면 한쪽만 바뀌었을 때 검색 결과가 죽은 링크를 가리키게 된다.
+const readSrc = (p) => fs.readFileSync(path.join(__dirname, '..', ...p.split('/')), 'utf8');
 function couponHref() {
-  const src = fs.readFileSync(path.join(__dirname, '..', 'app', 'page.tsx'), 'utf8');
+  const src = readSrc('app/page.tsx');
   const block = src.match(/const COUPON_LINKS = \[([\s\S]*?)\n\]/);
   const m = block && block[1].match(/href:\s*'([^']+)'/);
   if (!m) throw new Error('app/page.tsx의 COUPON_LINKS에서 쿠폰 URL을 찾지 못했습니다');
   return m[1];
 }
 
+// 허브 모듈은 손으로 적지 않고 app/page.tsx의 MODULE_GROUPS에서 그대로 뽑는다.
+// 손으로 적으면 화면에 보이는 워딩(섹션명·카드 설명)이 인덱스에 빠져 검색이 안 된다
+// — 실제로 "교육"을 검색해도 📚 교육 섹션의 레벨업테스트·URL 퀴즈가 안 나왔다.
+function hubModulesFromSource() {
+  const src = readSrc('app/page.tsx');
+  const block = src.match(/const MODULE_GROUPS[^=]*=\s*\[([\s\S]*?)\n\]\n/);
+  if (!block) throw new Error('app/page.tsx에서 MODULE_GROUPS를 찾지 못했습니다');
+  const body = block[1];
+  const groups = [...body.matchAll(/title: '([^']+)',\s*\n\s*modules: \[/g)]
+    .map((m) => ({ at: m.index, title: m[1] }));
+  const mods = [...body.matchAll(
+    /href: '([^']+)',\s*\n\s*icon: '([^']*)',\s*\n\s*title: '([^']+)',\s*\n\s*desc: '([^']+)'/g)];
+  if (!groups.length || !mods.length) throw new Error('MODULE_GROUPS 파싱 실패 — 형식이 바뀌었는지 확인할 것');
+  const out = mods.map((m) => {
+    const group = [...groups].reverse().find((g) => g.at < m.index);
+    return { href: m[1], title: m[3], desc: m[4], group: group ? group.title : '' };
+  });
+  // AX 현황 대시보드는 그룹에 속하지 않고 허브 최하단 별도 섹션에 있어 위 블록에 없다
+  const admin = src.match(
+    /const ADMIN_MODULE[^=]*=\s*\{\s*\n\s*href: '([^']+)',\s*\n\s*icon: '[^']*',\s*\n\s*title: '([^']+)',\s*\n\s*desc: '([^']+)'/);
+  if (!admin) throw new Error('app/page.tsx에서 ADMIN_MODULE을 찾지 못했습니다');
+  out.push({ href: admin[1], title: admin[2], desc: admin[3], group: '📊 AX 현황' });
+  return out;
+}
+
+// 사이드바/하단 내비 라벨과 그 그룹명도 검색어가 되어야 한다
+function navLabelsFromSource() {
+  const src = readSrc('components/Navigation.tsx');
+  const out = new Map(); // href → 라벨·그룹명 모음
+  const push = (href, ...words) => out.set(href, [...(out.get(href) || []), ...words]);
+  for (const m of src.matchAll(/\{ href: '([^']+)',\s*label: '([^']+)'/g)) push(m[1], m[2]);
+  const groups = [...src.matchAll(/title: '([^']+)',\s*\n\s*items: \[([\s\S]*?)\n\s*\],/g)];
+  for (const g of groups) {
+    for (const i of g[2].matchAll(/href: '([^']+)'/g)) push(i[1], g[1]);
+  }
+  if (!out.size) throw new Error('components/Navigation.tsx에서 내비 라벨을 찾지 못했습니다');
+  return out;
+}
+
+const navWords = navLabelsFromSource();
 const MODULES = [
-  { title: '모델파인더', sub: '키워드로 전 제품 검색', kw: '모델파인더 제품검색 키워드 finder', href: '/finder' },
-  { title: '모바일 카탈로그', sub: '삼성스토어 제품 카탈로그', kw: '카탈로그 catalog 모바일카탈로그 삼성스토어', href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110', ext: true },
-  { title: 'AI Care 검색기', sub: '구독케어 항목·조건 조회', kw: 'aicare 케어십 구독 care', href: '/care' },
-  { title: '타사비교', sub: '비교표·셀링포인트·응대 스크립트', kw: '타사비교 경쟁사 비교 compare', href: '/compare' },
-  { title: '설치환경 가이드', sub: '설치 공간·전기/급배수 요건', kw: '설치환경 설치 install 치수', href: '/install' },
-  { title: '레벨업테스트', sub: '제품 전문가 역량 평가', kw: '레벨업테스트 시험 평가 test 문제', href: '/test' },
-  { title: 'URL 퀴즈 생성', sub: '직원 평가용 퀴즈 자동 생성', kw: 'url퀴즈 퀴즈 quiz 문제생성', href: '/quiz' },
-  { title: '패키지 플래너', sub: '평형별 패키지 구성·견적', kw: '패키지 플래너 견적 혼수 신혼 planner 평형', href: '/planner' },
-  { title: 'AX 현황 대시보드', sub: '사용 현황·통계·CSV', kw: '대시보드 통계 admin 현황', href: '/admin' },
+  ...hubModulesFromSource().map((m) => ({
+    title: m.title, sub: m.desc, href: m.href, ext: /^https?:/.test(m.href),
+    // 카드 설명·섹션명·사이드바 라벨을 모두 키워드에 넣어 화면에 보이는 워딩이면 검색되게 한다
+    kw: [m.desc, m.group, ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].join(' '),
+  })),
   // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
-  { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge', href: '/#concierge' },
-  { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급', href: couponHref(), ext: true },
+  // 패키지 플래너는 /planner 라우트가 살아 있으나 허브 카드·사이드바 어디에도 링크가 없어
+  // 통합검색이 유일한 진입로다. 화면 워딩을 뽑아올 곳이 없으므로 여기서 직접 정의한다.
+  { title: '패키지 플래너', sub: '평형별 패키지 구성·견적 (허브 카드에는 없는 모듈)', kw: '패키지 플래너 견적 혼수 신혼 planner 평형 구성', href: '/planner' },
+  { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge 🏬 매장운영 도구', href: '/#concierge' },
+  { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true },
 ];
 for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });
