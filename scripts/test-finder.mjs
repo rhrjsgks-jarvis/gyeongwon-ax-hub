@@ -9,7 +9,7 @@
 // 따라서 DB 원본은 이 파일 자체에서 정규식/JSON.parse로 직접 추출하고, 검색 로직 검증은
 // window.parseQuery()/window.search() 같은 노출된 함수 호출로 수행한다.
 //
-// DB(CE+MX+리빙+Harman 440종, 51개 카테고리)가 바뀌면 아래 TOTAL_PRODUCTS / CAT_QUERIES /
+// DB(CE+MX+리빙+Harman 568종, 57개 카테고리)가 바뀌면 아래 TOTAL_PRODUCTS / CAT_QUERIES /
 // expectedCatCounts 등을 함께 갱신할 것 — 안 하면 테스트가 실패한다.
 
 import { JSDOM } from 'jsdom';
@@ -37,7 +37,7 @@ function extractArray(varDeclPrefix) {
 }
 const CE_MX = extractArray('let PRODUCTS');
 const HARMAN = extractArray('const HARMAN_PRODUCTS');
-const TOTAL_PRODUCTS = CE_MX.length + HARMAN.length; // 386 + 54 = 440
+const TOTAL_PRODUCTS = CE_MX.length + HARMAN.length; // 514 + 54 = 568
 
 // 카테고리별 매칭 대표 검색어. CE/MX는 CATSYN 단일 매핑 토큰을 사용해 정확히 그 카테고리만
 // 걸리도록 했고, Harman 14종은 CATSYN과 충돌하지 않는(예: "사운드바"/"홈시어터"/"돌비애트모스"
@@ -54,6 +54,13 @@ const CAT_QUERIES = {
   '리빙 선풍기': '선풍기',
   '리빙 밥솥': '밥솥',
   '데이코 빌트인': '데이코',
+  // 2026 dp 카탈로그 반영으로 추가된 카테고리
+  '업소용 냉장고': '업소용',
+  '냉동고': '냉동고',
+  '정수기': '정수기',
+  '슈드레서': '슈드레서',
+  '시스템에어컨': '시스템에어컨',
+  '제습기': '제습기',
   '냉장고': '냉장고',
   '세탁기·콤보': '세탁기',
   '건조기': '건조기',
@@ -308,7 +315,7 @@ const CAT_QUERIES = {
   console.log('── 10. 카테고리 전수 검색 (50개) ──');
   const catNames = Object.keys(CAT_QUERIES);
   console.log('총 카테고리 수:', catNames.length, '(기대: 51 = CE/MX 27 + 리빙 9 + 데이코 1 + Harman 14)');
-  if (catNames.length !== 51) fail(`CAT_QUERIES 카테고리 수 = ${catNames.length}, 기대값 51 — DB에 카테고리가 추가/삭제되었다면 CAT_QUERIES를 갱신할 것`);
+  if (catNames.length !== 57) fail(`CAT_QUERIES 카테고리 수 = ${catNames.length}, 기대값 57 — DB에 카테고리가 추가/삭제되었다면 CAT_QUERIES를 갱신할 것`);
   for (const [cat, q] of Object.entries(CAT_QUERIES)) {
     try {
       const P = window.parseQuery(q);
