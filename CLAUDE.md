@@ -65,6 +65,22 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 - 2026-07-31 카탈로그 대조로 발견·정정한 오류: **S26+의 모델번호가 SM-S936N(실제로는 S25+의
   코드)으로 잘못 들어가 있었다 → SM-S947N**. S26/S26+ 치수도 카탈로그 실측값으로 정정.
 
+## 허브 통합검색 (`/search`)
+
+허브 메인 상단 검색창에서 **제품명·모델코드·카테고리·기능**을 한 번에 찾아 해당 모듈로 보낸다.
+
+- 각 모듈 데이터는 `public/*.html` 인라인 스크립트 안에 있어 React 페이지가 직접 읽을 수 없다.
+  그래서 `scripts/build-search-index.mjs`가 정적으로 추출해 **`public/search-index.json`**(약 430건)을
+  만들고, `/search` 페이지는 그 JSON만 fetch해서 검색한다.
+- **모듈 데이터(제품·카테고리)를 수정하면 `npm run build:index`를 다시 돌리고 커밋해야 한다.**
+  `scripts/test-search.mjs`가 "커밋된 인덱스 == 지금 재생성한 인덱스"를 검사하므로 빠뜨리면 테스트가 실패한다.
+- 검색 결과 클릭 시 딥링크로 이동한다: 파인더 `?q=`, 설치환경 `?cat=`, 타사비교 `?cat=`.
+  **중요**: 이 쿼리는 Next 라우트에 붙는 것이라 그냥 두면 iframe 안 정적 앱까지 전달되지 않는다.
+  `components/IframeModule.tsx`가 마운트 후 `ref.current.src`에 현재 쿼리스트링을 합쳐 넣어 전달한다
+  (hydration은 속성 불일치를 DOM에 반영하지 않으므로 useState 초기화나 src prop만으로는 동작하지 않음).
+- 모델파인더 자체 검색은 예산·치수 필터 등 고급 기능이 있어 그대로 둔다. 허브 통합검색은 "빠른 진입점",
+  파인더는 "전문 검색"으로 역할을 나눈다.
+
 ## 테스트 & 검증 워크플로우
 
 6개 모듈 전부에 `scripts/test-*.mjs` 회귀 테스트가 있다 (jsdom으로 `public/*.html`을 `runScripts:'dangerously'`로 로드해 인라인 스크립트의 전역 함수를 직접 호출·검증하는 동일 패턴, 매 세션 재작성할 필요 없음). 변경 후 항상 관련 스크립트 + 전체를 실행:
@@ -78,6 +94,8 @@ node scripts/test-compare.mjs   # 타사비교: 13개 카테고리 × 브랜드 
 node scripts/test-levelup.mjs   # 레벨업테스트: 25문항 구성, 채점(CE/MX/에세이), 이름·사번·에세이 XSS 회귀
 node --experimental-strip-types scripts/test-admin.mjs   # AX 대시보드: lib/logEvent.ts 집계·CSV 내보내기 회귀
 node scripts/test-consistency.mjs   # 크로스파일 모델코드 일관성: 골든 모델코드 4파일 존재·최상위 SKU 동일성 회귀
+node scripts/test-search.mjs    # 통합검색: 인덱스 최신성(재생성 대조), 대표 검색어 모듈 매칭, 딥링크 처리 존재
+node scripts/build-search-index.mjs   # (테스트 아님) 통합검색 인덱스 재생성 — 모듈 데이터 수정 후 필수
 npx tsc --noEmit                # 타입체크
 ```
 (`npm test`로 위 전체를 한 번에 실행 가능)

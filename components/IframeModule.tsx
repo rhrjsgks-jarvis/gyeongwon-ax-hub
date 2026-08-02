@@ -13,6 +13,21 @@ export default function IframeModule({
   const [loaded, setLoaded] = useState(false)
   const ref = useRef<HTMLIFrameElement>(null)
 
+  // 허브 통합검색의 딥링크(/finder?q=..., /install?cat=...)는 Next 라우트에 붙는 쿼리라
+  // 그대로 두면 iframe 안의 정적 앱까지 전달되지 않는다. 최초 렌더 시 현재 쿼리스트링을
+  // iframe src에 합쳐 넘겨, 모듈이 자기 파라미터를 읽고 해당 화면을 바로 열 수 있게 한다.
+  // 서버 렌더 HTML에는 쿼리가 없고, hydration은 속성 불일치를 DOM에 반영하지 않으므로
+  // 마운트 후 ref로 직접 src를 교체한다(딥링크로 들어온 경우에만 한 번 더 로드됨).
+  useEffect(() => {
+    const qs = typeof window === 'undefined' ? '' : window.location.search.slice(1)
+    if (!qs || !ref.current) return
+    const next = src + (src.includes('?') ? '&' : '?') + qs
+    if (!ref.current.src.endsWith(next)) {
+      setLoaded(false)
+      ref.current.src = next
+    }
+  }, [src])
+
   useEffect(() => {
     // 로컬 정적 파일은 로딩이 아주 빨라, React가 onLoad 리스너를 붙이기 전에 브라우저의
     // load 이벤트가 이미 끝나버리는 경우가 실제로 발생한다(그 경우 onLoad는 영원히 호출되지
@@ -46,6 +61,7 @@ export default function IframeModule({
         title={title}
         onLoad={() => setLoaded(true)}
         className="w-full h-full border-0"
+        suppressHydrationWarning
       />
     </div>
   )

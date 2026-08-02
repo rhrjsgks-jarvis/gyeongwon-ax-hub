@@ -1084,6 +1084,12 @@ function shareChecklist() {
 }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* 허브 통합검색(/search)에서 넘어온 ?cat= 딥링크 — 해당 카테고리를 바로 연다 */
+(function(){
+  const cat = new URLSearchParams(location.search).get('cat');
+  if(cat && INSTALL_DB[cat]) selectCat(cat);
+})();
 </script>
 </body>
 </html>

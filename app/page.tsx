@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 
 const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
@@ -27,7 +28,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/finder',
         icon: '🔍',
         title: '모델파인더',
-        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(309종) 검색 · 모바일 카탈로그 바로가기',
+        desc: '키워드 한 줄로 CE·MX·Harman 전 제품(309종) 검색',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
@@ -52,6 +53,18 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         bg: '#FFF7ED',
         updated: '2026.07',
         status: 'live',
+      },
+      {
+        href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110',
+        icon: '📱',
+        title: '모바일 카탈로그',
+        desc: '삼성스토어 제품 카탈로그를 모바일로 바로 열람',
+        color: '#0EA5E9',
+        bg: '#F0F9FF',
+        updated: '2026.07',
+        status: 'live',
+        external: true,
+        logKey: 'catalog',
       },
       {
         href: '/install',
@@ -411,6 +424,8 @@ function AccordionHeader({
 }
 
 export default function Home() {
+  const router = useRouter()
+  const [query, setQuery] = useState('')
   const [copied, setCopied] = useState(false)
   // 모바일에서는 클릭해야 펼쳐지는 아코디언, md 이상(데스크탑)에서는 항상 펼침 — 기본은 전부 접힘
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
@@ -434,11 +449,35 @@ export default function Home() {
   return (
     <div className="max-w-3xl mx-auto">
       {/* 헤더 */}
-      <div className="mb-6">
+      <div className="mb-4">
         <p className="text-xs text-gray-400 mb-1">{todayStr}</p>
         <h1 className="text-2xl font-black text-gray-900">경원 AX 허브</h1>
         <p className="text-sm text-gray-500 mt-1">영업지원 AI 도구 통합 플랫폼</p>
       </div>
+
+      {/* 통합검색 — 제품·카테고리·기능을 한 번에 찾아 해당 모듈로 연결한다 */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          const v = query.trim()
+          if (v) router.push(`/search?q=${encodeURIComponent(v)}`)
+        }}
+        className="flex gap-2 mb-6"
+      >
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="🔎 통합검색 — 제품명·모델코드·기능 (예: 무풍, 김치냉장고, RM90H91B1W)"
+          className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-400"
+        />
+        <button
+          type="submit"
+          className="px-4 md:px-5 rounded-xl text-sm font-bold text-white shrink-0"
+          style={{ background: '#1428A0' }}
+        >
+          검색
+        </button>
+      </form>
 
       {/* 모듈 그리드 (섹션별) — 모바일: 클릭해야 펼쳐지는 아코디언 / 데스크탑: 항상 펼침 */}
       {MODULE_GROUPS.map((group) => {
