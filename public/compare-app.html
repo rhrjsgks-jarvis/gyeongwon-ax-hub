@@ -1285,33 +1285,47 @@ const DB = {
      출처: lge.co.kr 각 모델 페이지 제목(검색결과 노출) + danawa.com/가전나우(ganow.co.kr) 가격.
      정수기·공기청정기는 (1) 삼성·경쟁사 가격 표시 방식이 렌탈 위주라 스키마가 다르거나
      (2) 동급 경쟁모델을 확인하지 못해 이번엔 제외. */
+  /* 2026-08-02 LG 베스트샵 카탈로그(20260708_best_catalogue, 71~78쪽) 대조.
+     LG 표는 "라벨 → 값 N개"가 코드 수와 정확히 일치해 삼성 dp 카탈로그 같은 열 병합 보정이 필요 없다.
+     치수·김치통 수량·에너지등급을 양쪽 브랜드 모두에서 확보해 비교항목을 3 → 6행으로 늘렸다.
+     삼성값은 dp 카탈로그(모델파인더 DB와 동일 출처), LG값은 위 카탈로그 스펙표.
+     Z499MEEF11/12는 이번 LG 카탈로그에 없는 구세대라 lge.co.kr·nosearch 확인값만 채웠고,
+     Z499MEEF12는 치수·김치통을 끝내 확인하지 못해 비워 뒀다(그 모델 선택 시 해당 행은 표시되지 않는다).
+     출처: 20260708_best_catalogue.pdf(Z495GBB271), lge.co.kr/kimchi-refrigerators/z499meef11,
+     samsung.com dp 카탈로그(RK70F49F1DD 김치통 상3/중4/하2 = 9개) */
   '김치냉장고': {
     emoji:'🥬',
     samsung:[
       { name:'AI 김치플러스 4도어 490L(냄새케어 김치통) RK70F49F1DD', price:208, grade:'P',
         on:['5면 메탈쿨링','AI 정온모드','냄새케어 김치통(냄새저감 필터)','SmartThings 연동'],
-        specs:{ cap:490, as:1 } },
+        specs:{ cap:490, as:1, eGrade:1, bins:9, size:'799 × 1,825 × 787' } },
       { name:'AI 김치플러스 4도어 490L RQ49DB94H2AP', price:187, grade:'S',
         on:['5면 메탈쿨링','SmartThings 연동'],
-        specs:{ cap:490, as:1 } },
+        specs:{ cap:490, as:1, size:'950 × 1,820 × 765' } },
       { name:'김치플러스 4도어 324L RQ32C7B84AP', price:130, grade:'B',
         on:['5면 메탈쿨링','인버터 컴프레서'],
-        specs:{ cap:324, as:1 } }
+        specs:{ cap:324, as:1, size:'670 × 1,865 × 790' } }
     ],
     competitors:{
       'LG':[
+        { name:'디오스 AI 오브제컬렉션 김치톡톡 4도어 491L Z495GBB271', price:380,
+          on:['NEW 유산균김치+','AI 맞춤보관','신선정온 3단계','냉기케어 시스템(냉기지킴가드·쿨링케어)','LCD 디스플레이','인버터 컴프레서','ThinQ 연동'],
+          specs:{ cap:491, as:1, eGrade:1, bins:16, size:'835 × 1,860 × 838' } },
         { name:'디오스 오브제컬렉션 김치톡톡 4도어 491L(1등급) Z499MEEF11', price:260,
           on:['다용도 분리벽','3단계 냉기케어 시스템','New 유산균김치+','AI 맞춤보관'],
-          specs:{ cap:491, as:1 } },
+          specs:{ cap:491, as:1, eGrade:1, bins:8, size:'835 × 1,787 × 838' } },
         { name:'디오스 오브제컬렉션 김치톡톡 4도어 491L(2등급) Z499MEEF12', price:214,
           on:['다용도 분리벽','3단계 냉기케어 시스템','New 유산균김치+'],
-          specs:{ cap:491, as:1 } }
+          specs:{ cap:491, as:1, eGrade:2 } }
       ]
     },
     specItems:[
       { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
-      { key:'cap', label:'총 용량',   unit:'L', better:'high' },
-      { key:'as',  label:'무상 A/S', unit:'년', better:'high' }
+      { key:'cap',   label:'총 용량',    unit:'L',   better:'high' },
+      { key:'bins',  label:'김치통 수량', unit:'개',  better:'high' },
+      { key:'eGrade',label:'에너지등급',  unit:'등급', better:'low'  },
+      { key:'as',    label:'무상 A/S',   unit:'년',  better:'high' },
+      { key:'size',  label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
     ],
     sells:[
       '5면 메탈쿨링 — 냉기가 상하좌우 전면에서 균일하게 전달돼 김치 발효 편차 최소화',
@@ -1320,6 +1334,7 @@ const DB = {
     ],
     counters:[
       { issue:'LG 용량이 더 큰 경우(491L vs 490L)', strategy:'용량 차이는 1L로 사실상 동급. 대신 냄새케어 김치통과 5면 메탈쿨링의 균일 냉각을 강조.' },
+      { issue:'LG 김치통 수량이 더 많은 경우(16개 vs 9개)', strategy:'개수가 아니라 용기 성능으로 옮겨갈 것. 삼성은 냄새저감 필터가 들어간 냄새케어 김치통으로 다른 칸에 냄새가 배는 것을 막고, 하칸은 19.5L 대용량 용기라 김장철 통김치 보관에 유리합니다. 작은 통이 여러 개인 것과 큰 통이 있는 것은 쓰임이 다르다는 점을 설명.' },
       { issue:'LG 유산균김치+ 기능 언급 시', strategy:'LG의 발효 기능도 좋지만, 삼성은 AI 정온모드로 온도 변화 자체를 실시간 억제해 발효 편차가 더 적다는 점을 강조.' }
     ],
     scripts:[
