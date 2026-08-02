@@ -247,19 +247,19 @@ function StatusBadge({ status }: { status: string }) {
 function ModuleTile({ mod }: { mod: ModuleCard }) {
   const cardBody = (
     <div className="module-card group">
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex items-start justify-between mb-2 md:mb-3 gap-1">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-base md:text-xl shrink-0"
           style={{ background: mod.bg }}
         >
           {mod.icon}
         </div>
         <StatusBadge status={mod.status} />
       </div>
-      <h2 className="font-bold text-base mb-1 group-hover:text-[#1428A0] transition-colors">
+      <h2 className="font-bold text-sm md:text-base mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
         {mod.title}{mod.external && <span className="text-gray-300 text-xs font-normal"> ↗</span>}
       </h2>
-      <p className="text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
+      <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
       <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
     </div>
   )
@@ -446,7 +446,7 @@ export default function Home() {
         return (
           <div key={group.title} className="mb-5">
             <AccordionHeader title={group.title} isOpen={isOpen} onClick={() => toggleSection(group.title)} />
-            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-2 gap-2.5 md:gap-3`}>
               {group.modules.map((mod) => (
                 <ModuleTile key={mod.href} mod={mod} />
               ))}
@@ -485,7 +485,7 @@ export default function Home() {
           isOpen={!!openSections['admin']}
           onClick={() => toggleSection('admin')}
         />
-        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-1 sm:grid-cols-2 gap-3`}>
+        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-2 gap-2.5 md:gap-3`}>
           <ModuleTile mod={ADMIN_MODULE} />
         </div>
       </div>
