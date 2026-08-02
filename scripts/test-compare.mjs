@@ -420,6 +420,61 @@ function resetUrlTabInputs() {
   }
 
   // ══════════════════════════════════════════
+  // 10-b. LG 베스트샵 카탈로그 반영 회귀
+  //   - 에어드레서(스타일러) 비교항목이 3행에서 늘어났는지
+  //   - 카탈로그에는 가격이 없어 price를 비운 모델이 "가격 문의"로 표기되는지
+  //     (undefined만원으로 새는 것을 막는 가드)
+  // ══════════════════════════════════════════
+  {
+    window.switchTab('db');
+    window.selectCat('에어드레서');
+    window.selectBrand('LG');
+    val('sel-samsung').value = String(
+      [...val('sel-samsung').querySelectorAll('option')].findIndex((o) => o.textContent.includes('DF80H24R1D')));
+    val('sel-comp').value = String(
+      [...val('sel-comp').querySelectorAll('option')].findIndex((o) => o.textContent.includes('SC5MBR80S')));
+    window.renderResult();
+    const dressLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+    // DF80H24R1D는 카탈로그에 가격이 없어 가격 행이 빠지므로 5행(수납·하의·A/S·조작부·크기)이 정상
+    assertTrue(dressLabels.length >= 5, `에어드레서 비교표가 ${dressLabels.length}행 — 카탈로그 반영 전(3행)으로 되돌아갔다`);
+    ['하의 전용 관리', '조작부', '제품 크기'].forEach((t) => {
+      assertTrue(dressLabels.some((l) => l.includes(t)), `에어드레서 비교표에 "${t}" 행이 없음`);
+    });
+    const dressVals = [...val('spec-table').querySelectorAll('.spec-val')].map((td) => td.textContent).join(' ');
+    assertTrue(dressVals.includes('595 × 1,960 × 595'), '삼성 DF80H24R1D 치수(dp 카탈로그)가 렌더되지 않음');
+    assertTrue(dressVals.includes('600 × 1,965 × 620'), 'LG SC5MBR80S 치수(LG 카탈로그)가 렌더되지 않음');
+
+    // 가격 미확인 모델: 드롭다운은 "가격 문의", 비교표에는 가격 행이 아예 없어야 한다
+    const optTexts = [...val('sel-comp').querySelectorAll('option')].map((o) => o.textContent);
+    assertTrue(optTexts.some((t) => t.includes('SC5GMR60S') && t.includes('가격 문의')),
+      '가격 미확인 모델이 "가격 문의"로 표기되지 않음');
+    assertTrue(!optTexts.some((t) => t.includes('undefined')), '드롭다운에 undefined가 새어 나옴');
+    val('sel-comp').value = String(optTexts.findIndex((t) => t.includes('SC5GMR60S')));
+    window.renderResult();
+    assertTrue(![...val('spec-table').querySelectorAll('.spec-label')].some((td) => td.textContent.includes('가격')),
+      '가격이 없는 모델인데 가격 행이 렌더됨');
+
+    // 로봇청소기 진공도 / 무선청소기 최대 흡입력 행
+    window.selectCat('로봇청소기');
+    window.selectBrand('LG');
+    val('sel-samsung').value = '0';
+    val('sel-comp').value = String(
+      [...val('sel-comp').querySelectorAll('option')].findIndex((o) => o.textContent.includes('B95AWBTH')));
+    window.renderResult();
+    const robotLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+    assertTrue(robotLabels.some((t) => t.includes('진공도')), '로봇청소기 비교표에 진공도 행이 없음');
+
+    window.selectCat('청소기');
+    window.selectBrand('LG');
+    val('sel-samsung').value = '0';
+    val('sel-comp').value = '0';
+    window.renderResult();
+    const vacLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+    assertTrue(vacLabels.some((t) => t.includes('최대 흡입력')), '무선청소기 비교표에 최대 흡입력 행이 없음');
+    console.log('[10-b] LG 카탈로그 반영(에어드레서·로봇청소기·무선청소기) + 가격 문의 처리 OK');
+  }
+
+  // ══════════════════════════════════════════
   // 11. 즉시비교 직접등록 — 저장 → DB 병합 → 결과 렌더 → 삭제
   // ══════════════════════════════════════════
   // 주의: 위 `DB`는 HTML 원문을 파싱한 별도 사본이라 런타임 등록이 반영되지 않는다.
