@@ -435,6 +435,28 @@ export default function Home() {
 
   useEffect(() => { logEvent('hub', 'page_view') }, [])
 
+  // 통합검색에서 /#coupon · /#concierge 같은 앵커로 들어오는 경로 처리.
+  // 모바일은 섹션이 접힌 채로 시작해 대상 요소가 hidden이라 브라우저가 스크롤 대상으로 잡지
+  // 못하고, 클릭해도 아무 일이 없는 것처럼 보인다. 앵커가 속한 섹션을 먼저 펼친 뒤 스크롤한다.
+  // (Next 클라이언트 네비게이션에서는 해시가 있어도 브라우저 기본 스크롤이 일어나지 않는
+  //  경우가 있어 직접 scrollIntoView를 호출한다)
+  const ANCHOR_SECTION: Record<string, string> = {
+    coupon: '🏬 매장운영 도구',
+    concierge: '🏬 매장운영 도구',
+  }
+  useEffect(() => {
+    const id = window.location.hash.slice(1)
+    if (!id) return
+    const section = ANCHOR_SECTION[id]
+    if (section) setOpenSections((prev) => (prev[section] ? prev : { ...prev, [section]: true }))
+    // 섹션이 펼쳐져 레이아웃이 잡힌 다음 프레임에 스크롤
+    const t = setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 60)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleCopy() {
     navigator.clipboard.writeText(HUB_URL).then(() => {
       setCopied(true)

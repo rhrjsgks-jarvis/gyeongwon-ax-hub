@@ -77,6 +77,24 @@ for (const e of entries) {
 }
 console.log('OK: 인덱스 내부 링크가 모두 실제 라우트를 가리킴');
 
+// ── ③-2 앵커 링크(/#coupon 등)가 실제로 그 위치로 이동하는지 ──
+// 위 ③은 해시를 잘라내고 라우트만 보므로, 앵커가 깨져도 통과한다(실제로 "쿠폰" 검색 결과를
+// 눌러도 아무 일이 없던 버그를 놓쳤다). 앵커는 ①대상 id가 존재하고 ②그 id가 속한 섹션을
+// 자동으로 펼치도록 등록돼 있어야 한다 — 모바일은 섹션이 접힌 채 시작해 대상이 hidden이면
+// 브라우저가 스크롤 대상으로 잡지 못하기 때문이다.
+{
+  const pageSrc = fs.readFileSync(path.join(root, 'app', 'page.tsx'), 'utf8');
+  const anchors = [...new Set(entries.filter((e) => !e.ext && e.href.includes('#'))
+    .map((e) => e.href.split('#')[1]).filter(Boolean))];
+  if (anchors.length === 0) fail('앵커 링크가 하나도 없음 — 인덱스 생성기가 바뀌었는지 확인할 것');
+  for (const a of anchors) {
+    if (!pageSrc.includes(`id="${a}"`)) fail(`앵커 대상이 없음: /#${a} — app/page.tsx에 id="${a}" 요소가 필요`);
+    else if (!new RegExp(`\\b${a}:\\s*'`).test(pageSrc)) {
+      fail(`앵커 "${a}"가 ANCHOR_SECTION에 없음 — 모바일에서 섹션이 접혀 있으면 이동이 동작하지 않음`);
+    } else console.log(`OK: 앵커 /#${a} — 대상 id 존재 + 섹션 자동 펼침 등록됨`);
+  }
+}
+
 // ── ④ 딥링크 파라미터 처리기가 각 모듈에 실제로 붙어 있는지 ──
 const deepLinks = [
   ['finder-app.html', "get('q')"],
