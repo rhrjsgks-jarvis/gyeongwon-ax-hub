@@ -45,6 +45,7 @@ const add = (e) => entries.push(e);
       price: p.price ?? null,
       note: p.note || '',
       usp: p.usp || [],
+      catOk: !!p.cat_ok,
     });
   }
   for (const c of cats) {
