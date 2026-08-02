@@ -20,6 +20,7 @@ type Entry = {
   price?: number | null
   note?: string
   usp?: string[]
+  catOk?: boolean
 }
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -45,7 +46,14 @@ function SpecDetail({ e }: { e: Entry }) {
       <div className="px-3 py-2.5 border-b border-blue-100 flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-[11px] text-gray-400">{e.sub}</p>
-          <p className="text-base font-bold text-gray-800 break-all">{e.title}</p>
+          <p className="text-base font-bold text-gray-800 break-all">
+            {e.title}
+            {e.catOk && (
+              <span className="ml-2 align-middle text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-700">
+                카탈로그 동일모델
+              </span>
+            )}
+          </p>
         </div>
         <span className="text-sm font-bold shrink-0" style={{ color: '#1428A0' }}>
           {e.price == null ? '가격 문의' : `${e.price}만원`}
