@@ -88,6 +88,16 @@ const add = (e) => entries.push(e);
 }
 
 // ── 5. 허브 모듈·외부 링크 (수동 정의 — 소스가 app/page.tsx라 여기서 별도 관리) ──
+// 쿠폰 프로그램 URL만은 app/page.tsx의 COUPON_LINKS에서 직접 읽는다.
+// 여기에 URL을 복사해두면 한쪽만 바뀌었을 때 검색 결과가 죽은 링크를 가리키게 된다.
+function couponHref() {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'app', 'page.tsx'), 'utf8');
+  const block = src.match(/const COUPON_LINKS = \[([\s\S]*?)\n\]/);
+  const m = block && block[1].match(/href:\s*'([^']+)'/);
+  if (!m) throw new Error('app/page.tsx의 COUPON_LINKS에서 쿠폰 URL을 찾지 못했습니다');
+  return m[1];
+}
+
 const MODULES = [
   { title: '모델파인더', sub: '키워드로 전 제품 검색', kw: '모델파인더 제품검색 키워드 finder', href: '/finder' },
   { title: '모바일 카탈로그', sub: '삼성스토어 제품 카탈로그', kw: '카탈로그 catalog 모바일카탈로그 삼성스토어', href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110', ext: true },
@@ -98,8 +108,10 @@ const MODULES = [
   { title: 'URL 퀴즈 생성', sub: '직원 평가용 퀴즈 자동 생성', kw: 'url퀴즈 퀴즈 quiz 문제생성', href: '/quiz' },
   { title: '패키지 플래너', sub: '평형별 패키지 구성·견적', kw: '패키지 플래너 견적 혼수 신혼 planner 평형', href: '/planner' },
   { title: 'AX 현황 대시보드', sub: '사용 현황·통계·CSV', kw: '대시보드 통계 admin 현황', href: '/admin' },
-  { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판', kw: '컨시어지 대기 접수 전광판 concierge', href: '/#concierge' },
-  { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급', href: '/#coupon' },
+  // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
+  // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
+  { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge', href: '/#concierge' },
+  { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급', href: couponHref(), ext: true },
 ];
 for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });
