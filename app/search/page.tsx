@@ -19,6 +19,7 @@ type Entry = {
   off?: string[]
   price?: number | null
   note?: string
+  usp?: string[]
 }
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -80,6 +81,17 @@ function SpecDetail({ e }: { e: Entry }) {
           <div className="flex flex-wrap gap-1">
             {e.off.map((f, i) => (
               <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">{f}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!!(e.usp && e.usp.length) && (
+        <div className="px-3 py-2.5 border-t border-blue-100">
+          <p className="text-[11px] font-bold text-amber-600 mb-1.5">⭐ 핵심 키워드 · USP</p>
+          <div className="flex flex-wrap gap-1">
+            {e.usp.map((f, i) => (
+              <span key={i} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
             ))}
           </div>
         </div>
