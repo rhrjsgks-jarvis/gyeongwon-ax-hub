@@ -38,6 +38,12 @@ const GOLDEN = [
   { label: '냉장고 패밀리허브 최상위(2026)', code: 'RM90H91B1W', files: FILES },
   { label: '세탁기 AI콤보 최상위(2026)', code: 'WD90H25AHS', files: FILES },
   { label: '김치냉장고 최상위 프리미엄 라인(2026)', code: 'RK70F49F1DD', files: FILES },
+  // 노트북: finder만 구형 NP 접두 코드로 남아 Book6 Ultra/Pro16이 같은 "NP960X"로 중복돼 있었다
+  // (2026-08-02 IT 카탈로그 대조로 발견). compare/planner/finder 3파일에 NT 코드 존재를 강제한다.
+  { label: '노트북 북6 울트라', code: 'NT960UJH',
+    files: ['finder-app.html', 'package-planner.html', 'compare-app.html'] },
+  { label: '노트북 북6 프로 16', code: 'NT960XJG',
+    files: ['finder-app.html', 'compare-app.html'] },
 ];
 for (const g of GOLDEN) {
   const missing = g.files.filter((f) => !fileContents[f].includes(g.code));
