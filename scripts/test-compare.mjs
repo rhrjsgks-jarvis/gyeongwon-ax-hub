@@ -355,6 +355,39 @@ function resetUrlTabInputs() {
   console.log('[8] goQuiz / copyQuizPrompt 검증 OK');
 
   // ══════════════════════════════════════════
+  // 9. URL 즉시비교 — 카테고리 판정 + URL 모델코드 매칭 회귀
+  // ══════════════════════════════════════════
+  // 실제 사고: 삼성 로봇청소기(jetbot-…)와 LG 로봇청소기(n95tho) URL 어디에도 'robot'이
+  // 없어서 무선청소기로 판정됐고, 모델코드를 읽지 않아 항상 각 카테고리 0번 모델만 비교됐다.
+  {
+    const SAMSUNG_ROBOT = 'https://www.samsung.com/sec/vacuum-cleaners/jetbot-vr90f01sag-d2c/VR90F01SAG/';
+    const LG_ROBOT = 'https://www.lge.co.kr/product/vacuum-cleaners/n95tho?modelId=MD10730837&pdpType=PURCHASE';
+
+    assertEq(window.detectCategory(SAMSUNG_ROBOT), '로봇청소기',
+      'detectCategory(): 삼성 제트봇 URL이 로봇청소기로 판정되지 않음');
+    assertEq(window.detectCategory('https://www.samsung.com/sec/vacuum-cleaners/bespoke-jet-ai-vs28d952hcb/'), '청소기',
+      'detectCategory(): 무선청소기 URL이 로봇청소기로 잘못 승격됨');
+    assertEq(window.detectBrand(LG_ROBOT), 'LG', 'detectBrand(): LG URL 판정 실패');
+
+    resetUrlTabInputs();
+    val('own-url').value = SAMSUNG_ROBOT;
+    firstCompInput().value = LG_ROBOT;
+    window.tryInstantCompare();
+    await wait(10);
+
+    assertEq(val('res-title').textContent, `${DB['로봇청소기'].emoji} 로봇청소기 비교 결과`,
+      'tryInstantCompare(): 로봇청소기 결과로 연결되지 않음');
+
+    const samIdx = +val('sel-samsung').value;
+    const compIdx = +val('sel-comp').value;
+    assertTrue(DB['로봇청소기'].samsung[samIdx].name.includes('VR90F01SAG'),
+      `tryInstantCompare(): URL의 삼성 모델(VR90F01SAG)이 선택되지 않음 — 선택된 값: ${DB['로봇청소기'].samsung[samIdx].name}`);
+    assertTrue(DB['로봇청소기'].competitors['LG'][compIdx].name.includes('N95THO'),
+      `tryInstantCompare(): URL의 LG 모델(N95THO)이 선택되지 않음 — 선택된 값: ${DB['로봇청소기'].competitors['LG'][compIdx].name}`);
+    console.log('[9] URL 즉시비교 카테고리·모델 매칭 OK');
+  }
+
+  // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
