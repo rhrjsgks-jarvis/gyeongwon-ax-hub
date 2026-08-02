@@ -13,6 +13,12 @@ type Entry = {
   kw: string     // 소문자 정규화된 검색 키워드
   href: string
   ext?: boolean
+  // 제품 항목 전용 — 카탈로그를 열지 않고 검색 화면에서 바로 펼쳐보는 상세 스펙
+  spec?: [string, string][]
+  on?: string[]
+  off?: string[]
+  price?: number | null
+  note?: string
 }
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -31,14 +37,74 @@ function match(e: Entry, tokens: string[]) {
   return tokens.every((t) => e.kw.includes(t))
 }
 
+// 검색 결과에서 바로 펼쳐보는 상세 스펙 — 카탈로그 PDF를 열지 않고 확인하기 위한 화면
+function SpecDetail({ e }: { e: Entry }) {
+  return (
+    <div className="mx-2.5 mb-2 rounded-xl border border-blue-100 overflow-hidden" style={{ background: '#F8FAFF' }}>
+      <div className="px-3 py-2.5 border-b border-blue-100 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] text-gray-400">{e.sub}</p>
+          <p className="text-base font-bold text-gray-800 break-all">{e.title}</p>
+        </div>
+        <span className="text-sm font-bold shrink-0" style={{ color: '#1428A0' }}>
+          {e.price == null ? '가격 문의' : `${e.price}만원`}
+        </span>
+      </div>
+
+      {e.note && <p className="px-3 pt-2 text-[11px] text-amber-700">⚠️ {e.note}</p>}
+
+      <table className="w-full text-[13px]">
+        <tbody>
+          {(e.spec || []).map(([k, v], i) => (
+            <tr key={i} className="border-b border-blue-50 last:border-0">
+              <th className="text-left align-top font-semibold text-gray-500 px-3 py-1.5 w-[38%] break-keep">{k}</th>
+              <td className="text-gray-800 px-3 py-1.5 break-all">{v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {!!(e.on && e.on.length) && (
+        <div className="px-3 py-2.5 border-t border-blue-100">
+          <p className="text-[11px] font-bold text-gray-400 mb-1.5">✅ 지원 기능</p>
+          <div className="flex flex-wrap gap-1">
+            {e.on.map((f, i) => (
+              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-blue-200 text-blue-700">{f}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {!!(e.off && e.off.length) && (
+        <div className="px-3 pb-2.5">
+          <p className="text-[11px] font-bold text-gray-400 mb-1.5">✖ 미지원</p>
+          <div className="flex flex-wrap gap-1">
+            {e.off.map((f, i) => (
+              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">{f}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="px-3 pb-3">
+        <Link href={e.href} className="no-underline">
+          <span className="inline-block text-[12px] font-semibold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1428A0' }}>
+            모델파인더에서 열기 →
+          </span>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 function SearchResults() {
   const params = useSearchParams()
   const router = useRouter()
   const q = params.get('q') || ''
   const [input, setInput] = useState(q)
   const [index, setIndex] = useState<Entry[] | null>(null)
+  const [openKey, setOpenKey] = useState<string | null>(null)
 
-  useEffect(() => { setInput(q) }, [q])
+  useEffect(() => { setInput(q); setOpenKey(null) }, [q])
 
   useEffect(() => {
     fetch('/search-index.json')
@@ -118,6 +184,33 @@ function SearchResults() {
                   </h2>
                   <div className="flex flex-col gap-0.5">
                     {shown.map((e, i) => {
+                      // 스펙이 있는 제품은 페이지 이동 대신 그 자리에서 상세를 펼친다
+                      // (카탈로그 PDF를 뒤지지 않고 검색 화면에서 바로 확인하기 위함)
+                      const key = `${g.m}-${i}`
+                      const hasDetail = !!(e.spec && e.spec.length)
+                      if (hasDetail) {
+                        const open = openKey === key
+                        return (
+                          <div key={key}>
+                            <button
+                              type="button"
+                              onClick={() => setOpenKey(open ? null : key)}
+                              className="w-full text-left"
+                            >
+                              <div className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors ${open ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-800 truncate">{e.title}</p>
+                                  <p className="text-[11px] text-gray-400 truncate">{e.sub}</p>
+                                </div>
+                                <span className="text-gray-400 text-[11px] shrink-0">
+                                  {open ? '닫기 ▲' : '상세 ▼'}
+                                </span>
+                              </div>
+                            </button>
+                            {open && <SpecDetail e={e} />}
+                          </div>
+                        )
+                      }
                       const body = (
                         <div className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-gray-50 transition-colors">
                           <div className="flex-1 min-w-0">
@@ -130,9 +223,9 @@ function SearchResults() {
                         </div>
                       )
                       return e.ext ? (
-                        <a key={i} href={e.href} target="_blank" rel="noopener noreferrer" className="no-underline">{body}</a>
+                        <a key={key} href={e.href} target="_blank" rel="noopener noreferrer" className="no-underline">{body}</a>
                       ) : (
-                        <Link key={i} href={e.href} className="no-underline">{body}</Link>
+                        <Link key={key} href={e.href} className="no-underline">{body}</Link>
                       )
                     })}
                   </div>
