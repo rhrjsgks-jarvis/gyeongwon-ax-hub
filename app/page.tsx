@@ -28,7 +28,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/finder',
         icon: '🔍',
         title: '모델파인더',
-        desc: '키워드 한 줄로 CE·MX·리빙·Harman 전 제품(438종) 검색',
+        desc: '키워드 한 줄로 CE·MX·리빙·Harman 전 제품(440종) 검색',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
