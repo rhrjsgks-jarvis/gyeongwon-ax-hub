@@ -388,6 +388,120 @@ function resetUrlTabInputs() {
   }
 
   // ══════════════════════════════════════════
+  // 10. 비교항목 확충 — 가격 행 전 카테고리 + 데이터에만 있던 항목 노출
+  // ══════════════════════════════════════════
+  {
+    for (const cat of Object.keys(DB)) {
+      assertTrue(DB[cat].specItems.some((it) => it.key === 'price'),
+        `specItems: "${cat}"에 가격 항목이 없음`);
+      assertTrue(DB[cat].specItems.length >= 3,
+        `specItems: "${cat}" 비교 항목이 ${DB[cat].specItems.length}개뿐 — 최소 3개`);
+    }
+    const has = (cat, key) => DB[cat].specItems.some((it) => it.key === key);
+    assertTrue(has('TV', 'res') && has('TV', 'panel'), 'TV 해상도·패널 항목 누락');
+    assertTrue(has('스마트폰', 'hz'), '스마트폰 주사율 항목 누락');
+    assertTrue(has('식기세척기', 'dryType'), '식기세척기 건조 방식 항목 누락');
+    assertTrue(has('인덕션', 'kw') && has('인덕션', 'cutout'), '인덕션 출력·타공 항목 누락');
+
+    // 가격은 참고 행이라 종합 스코어를 흔들면 안 된다
+    const priceItem = DB['냉장고'].specItems.find((it) => it.key === 'price');
+    assertEq(priceItem.score, false, '가격 항목이 score:false가 아님 — 프리미엄 모델이 비싸다는 이유로 열위가 된다');
+
+    window.switchTab('db');
+    window.selectCat('인덕션');
+    window.selectBrand('LG');
+    val('sel-samsung').value = '0';
+    val('sel-comp').value = '0';
+    window.renderResult();
+    const rowLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+    assertTrue(rowLabels.some((t) => t.includes('가격')), '비교표에 가격 행이 렌더되지 않음');
+    assertTrue(rowLabels.some((t) => t.includes('전체 출력')), '비교표에 전체 출력 행이 렌더되지 않음');
+    console.log(`[10] 비교항목 확충 OK — 인덕션 ${rowLabels.length}행 렌더`);
+  }
+
+  // ══════════════════════════════════════════
+  // 11. 즉시비교 직접등록 — 저장 → DB 병합 → 결과 렌더 → 삭제
+  // ══════════════════════════════════════════
+  // 주의: 위 `DB`는 HTML 원문을 파싱한 별도 사본이라 런타임 등록이 반영되지 않는다.
+  // 등록 결과는 실제로 화면에 나타나는 DOM(드롭다운·브랜드칩·비교표)으로 검증한다.
+  {
+    window.localStorage.removeItem('gw_compare_custom_v1');
+    window.rebuildCustom();
+    window.switchTab('db');
+    window.selectCat('로봇청소기');
+    const baseSamsung = val('sel-samsung').querySelectorAll('option').length;
+    const baseBrands = doc.querySelectorAll('#brand-chips .brand-chip').length;
+
+    window.openRegisterModal();
+    assertTrue(val('reg-modal-overlay').classList.contains('visible'), 'openRegisterModal(): 모달이 열리지 않음');
+
+    val('reg-cat').value = '로봇청소기';
+    window.renderRegSpecInputs();
+    val('reg-brand').value = '나르왈';
+    val('reg-sam-name').value = '테스트 삼성 로봇 (VR99TEST)';
+    val('reg-sam-price').value = '150';
+    val('reg-sam-on').value = '자동급배수\n스팀살균';
+    val('reg-comp-name').value = '나르왈 프리오 (TEST-N1)';
+    val('reg-comp-price').value = '130';
+    val('reg-comp-on').value = '스팀살균';
+
+    // 카테고리 기본 비교항목(배터리) 입력칸이 자동 생성되는지
+    const batS = val('reg-spec-inputs').querySelector('input[data-spec="bat"][data-side="s"]');
+    const batC = val('reg-spec-inputs').querySelector('input[data-spec="bat"][data-side="c"]');
+    assertTrue(!!batS && !!batC, 'renderRegSpecInputs(): 카테고리 비교항목 입력칸이 만들어지지 않음');
+    batS.value = '220'; batC.value = '180';
+
+    // 커스텀 비교 항목 추가
+    window.addRegCustomItem();
+    const cx = val('reg-custom-inputs').querySelector('.reg-item');
+    cx.querySelector('.cx-label').value = '물걸레 회전수';
+    cx.querySelector('.cx-unit').value = 'rpm';
+    cx.querySelector('.cx-s').value = '200';
+    cx.querySelector('.cx-c').value = '180';
+
+    window.submitRegister();
+    await wait(10);
+
+    assertTrue(!val('reg-modal-overlay').classList.contains('visible'), 'submitRegister(): 모달이 닫히지 않음');
+    assertEq(JSON.parse(window.localStorage.getItem('gw_compare_custom_v1')).length, 1,
+      'submitRegister(): localStorage에 등록이 저장되지 않음');
+
+    const labels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+    assertTrue(labels.some((t) => t.includes('물걸레 회전수')), '등록 직후 비교표에 커스텀 항목이 없음');
+    assertTrue(labels.some((t) => t.includes('배터리')), '등록 직후 비교표에 카테고리 기본 항목이 없음');
+    assertTrue(val('res-subtitle').innerHTML.includes('직접등록'), '등록 모델인데 직접등록 배지가 없음');
+
+    // 드롭다운·브랜드칩에 반영됐는지 (카테고리를 다시 열어 확인)
+    window.selectCat('로봇청소기');
+    assertEq(val('sel-samsung').querySelectorAll('option').length, baseSamsung + 1,
+      'submitRegister(): 삼성 모델 드롭다운에 등록 모델이 추가되지 않음');
+    const brandNames = [...doc.querySelectorAll('#brand-chips .brand-chip')].map((c) => c.textContent);
+    assertTrue(brandNames.includes('나르왈'), 'submitRegister(): 새 브랜드 칩이 만들어지지 않음');
+
+    // 재적용해도 중복되지 않아야 한다 (등록·삭제를 반복해도 안전)
+    window.rebuildCustom();
+    window.selectCat('로봇청소기');
+    assertEq(val('sel-samsung').querySelectorAll('option').length, baseSamsung + 1,
+      'rebuildCustom(): 재적용 시 모델이 중복 추가됨');
+
+    // 삭제하면 DB·화면에서 완전히 빠져야 한다
+    window.confirm = () => true;
+    const id = JSON.parse(window.localStorage.getItem('gw_compare_custom_v1'))[0].id;
+    window.deleteCustom(id);
+    window.selectCat('로봇청소기');
+    assertEq(val('sel-samsung').querySelectorAll('option').length, baseSamsung,
+      'deleteCustom(): 등록 모델이 드롭다운에서 제거되지 않음');
+    assertEq(doc.querySelectorAll('#brand-chips .brand-chip').length, baseBrands,
+      'deleteCustom(): 빈 브랜드 칩이 남아 있음');
+    window.selectBrand('LG');
+    val('sel-samsung').value = '0'; val('sel-comp').value = '0';
+    window.renderResult();
+    const afterLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+    assertTrue(!afterLabels.some((t) => t.includes('물걸레 회전수')), 'deleteCustom(): 커스텀 비교 항목이 남아 있음');
+    console.log('[11] 즉시비교 직접등록 등록·병합·삭제 OK');
+  }
+
+  // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

@@ -83,6 +83,7 @@ select:focus{border-color:var(--primary);}
 
 /* 배지 */
 .badge-win{display:inline-flex;align-items:center;gap:4px;background:var(--green-l);color:var(--green);border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:700;}
+.spec-note{display:inline-block;margin-left:5px;font-size:9.5px;font-weight:700;color:var(--gray);background:#f1f5f9;border-radius:5px;padding:1px 5px;vertical-align:middle;}
 .badge-tie{display:inline-flex;align-items:center;gap:4px;background:var(--yellow-l);color:var(--yellow);border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:700;}
 .badge-lose{display:inline-flex;align-items:center;gap:4px;background:var(--red-l);color:var(--red);border-radius:6px;padding:3px 8px;font-size:11.5px;font-weight:700;}
 
@@ -152,6 +153,33 @@ input:focus{border-color:var(--primary);background:#fff;}
 
 .generate-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
 .generate-btn:hover{background:#c2410c;}
+
+/* ── 즉시비교 직접등록 폼 ── */
+input[type="number"],select,textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--text);background:#fafafa;outline:none;transition:border-color .15s;margin-bottom:12px;font-family:inherit;}
+textarea{resize:vertical;min-height:62px;line-height:1.6;}
+select:focus,textarea:focus,input[type="number"]:focus{border-color:var(--primary);background:#fff;}
+.reg-sec{border:1.5px solid var(--border);border-radius:11px;padding:12px;margin-bottom:12px;background:#fbfcfe;}
+.reg-sec h4{font-size:12.5px;font-weight:800;margin:0 0 9px;color:var(--navy);letter-spacing:-.2px;}
+.reg-sec h4.comp{color:var(--gray);}
+.reg-2col{display:grid;grid-template-columns:1fr 96px;gap:8px;}
+.reg-2col input{margin-bottom:8px;}
+.reg-item{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;margin-bottom:8px;}
+.reg-item-label{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--text);margin-bottom:-2px;}
+.reg-item input{margin-bottom:0;}
+/* 390px 화면에서 3열로 두면 항목명 칸이 눌려 사라진다 — 항목명은 한 줄 전체를 쓴다 */
+.reg-custom{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;}
+.reg-custom .cx-label{grid-column:1/-1;}
+/* 커스텀 항목 헤더(항목명·단위·우열)는 삼성/경쟁사 값 두 칸 위에 통째로 놓인다 */
+.reg-item .reg-custom{grid-column:1/-1;}
+.reg-custom input,.reg-custom select{margin-bottom:0;font-size:12px;padding:8px 9px;}
+.reg-hint{font-size:11.5px;color:var(--gray);line-height:1.6;margin:-4px 0 10px;}
+.reg-badge{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:800;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:5px;padding:1px 5px;vertical-align:middle;}
+.reg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);padding:9px 0;font-size:12.5px;}
+.reg-row:last-child{border-bottom:none;}
+.reg-row .rr-main{flex:1;min-width:0;line-height:1.5;}
+.reg-row .rr-sub{color:var(--gray);font-size:11.5px;}
+.reg-del{background:none;border:1.5px solid var(--border);border-radius:8px;color:var(--red);font-size:11.5px;font-weight:700;padding:5px 9px;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.reg-empty{font-size:12px;color:var(--gray);padding:10px 0;}
 
 .competitor-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .competitor-row input{margin-bottom:0;flex:1;}
@@ -369,7 +397,15 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">📋 프롬프트 복사</button>
       <a class="open-btn" href="https://claude.ai" target="_blank">Claude에서 열기 →</a>
       <div class="tip">💡 위 조합은 DB에 없어 즉시비교가 불가능합니다. 복사 후 Claude(claude.ai) 또는 Cowork에 붙여넣으면 완성형 HTML 가이드가 생성됩니다</div>
+      <button class="add-btn" style="margin-top:10px;" onclick="openRegisterModal()">➕ 이 조합을 즉시비교에 직접 등록</button>
     </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📝 즉시비교 직접등록</div>
+    <p class="url-intro">URL로 찾은 조합을 즉시비교 DB에 등록해 두면, 다음부터는 URL 없이 즉시비교 탭에서 바로 꺼내 쓸 수 있습니다. 비교 항목도 직접 추가할 수 있습니다.<br>등록 내용은 <b>이 브라우저에만</b> 저장되므로, 팀 전체에 반영하려면 아래 "내보내기"로 복사해 개발자에게 전달해 주세요.</p>
+    <button class="add-btn" onclick="openRegisterModal()">➕ 새 비교 조합 등록</button>
+    <div id="custom-list" style="margin-top:10px;"></div>
   </div>
 
   <div class="card">
@@ -392,6 +428,53 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <div class="prompt-box" id="quiz-prompt-output"></div>
       <button class="copy-btn" id="quiz-copy-btn" onclick="copyQuizPrompt()">📋 퀴즈 프롬프트 복사</button>
       <a class="open-btn" href="https://claude.ai" target="_blank">Claude에서 열기 →</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reg-modal-overlay" onclick="closeRegisterModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">📝 즉시비교에 등록</div>
+      <button class="modal-close" onclick="closeRegisterModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">자사·경쟁사 모델을 입력하면 즉시비교 DB에 추가되어, 다음부터는 URL 없이 바로 비교할 수 있습니다. 비교 항목이 부족하면 아래에서 직접 추가하세요.</p>
+
+      <label>카테고리</label>
+      <select id="reg-cat" onchange="renderRegSpecInputs()"></select>
+
+      <label>경쟁 브랜드 <span>기존 브랜드를 고르거나 새로 입력</span></label>
+      <input type="text" id="reg-brand" list="reg-brand-list" placeholder="예: LG"/>
+      <datalist id="reg-brand-list"></datalist>
+
+      <div class="reg-sec">
+        <h4>🔵 자사(삼성) 모델</h4>
+        <div class="reg-2col">
+          <input type="text" id="reg-sam-name" placeholder="모델명 (예: 비스포크 AI … VR90F01SAG)"/>
+          <input type="number" id="reg-sam-price" placeholder="가격(만원)" min="0" step="1"/>
+        </div>
+        <textarea id="reg-sam-on" placeholder="핵심 기능 — 한 줄에 하나씩&#10;예)&#10;22,000W 흡입력&#10;자동급배수 스테이션"></textarea>
+      </div>
+
+      <div class="reg-sec">
+        <h4 class="comp">⚪ 경쟁사 모델</h4>
+        <div class="reg-2col">
+          <input type="text" id="reg-comp-name" placeholder="모델명 (예: LG 홈봇 … N95THO)"/>
+          <input type="number" id="reg-comp-price" placeholder="가격(만원)" min="0" step="1"/>
+        </div>
+        <textarea id="reg-comp-on" placeholder="핵심 기능 — 한 줄에 하나씩"></textarea>
+      </div>
+
+      <div class="reg-sec">
+        <h4>📊 비교 항목</h4>
+        <p class="reg-hint">비워 둔 항목은 비교표에 나오지 않습니다. 양쪽 값을 모두 채운 항목만 표시됩니다.</p>
+        <div id="reg-spec-inputs"></div>
+        <div id="reg-custom-inputs"></div>
+        <button class="add-btn" onclick="addRegCustomItem()">+ 비교 항목 직접 추가</button>
+      </div>
+
+      <button class="generate-btn" onclick="submitRegister()">✅ 등록하고 바로 비교</button>
     </div>
   </div>
 </div>
@@ -458,6 +541,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'총 용량',     unit:'L',    better:'high' },
       { key:'power', label:'월 소비전력', unit:'kWh',  better:'low'  },
       { key:'eGrade',label:'에너지등급',  unit:'등급', better:'low'  },
@@ -541,6 +625,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'wash',  label:'세탁 용량', unit:'kg',  better:'high' },
       { key:'dry',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
@@ -618,6 +703,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'area',  label:'냉방 면적', unit:'평',   better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급', better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',   better:'high' },
@@ -723,7 +809,10 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'size',      label:'화면 크기',   unit:'인치', better:'high' },
+      { key:'res',       label:'해상도',      unit:'',     better:'high' },
+      { key:'panel',     label:'패널 방식',   unit:'',     better:'high' },
       { key:'hz',        label:'주사율',      unit:'Hz',   better:'high' },
       { key:'brightness',label:'밝기(피크)',   unit:'nit',  better:'high' },
       { key:'as',        label:'무상 A/S',    unit:'년',   better:'high' }
@@ -805,6 +894,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'bat',   label:'배터리',   unit:'분',  better:'high' },
       { key:'dust',  label:'필터',     unit:'µm',  better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
@@ -897,6 +987,7 @@ const DB = {
        동일 Pa 표기 브랜드 간에도 측정 프로토콜이 상이함 — 소비자원 실측 결과 표기Pa와 실제 흡입일(W) 순위가
        뒤바뀐 사례 확인). 대신 각 모델의 흡입력 표기값은 on[] 배열에 "제조사 발표" 단서를 달아 참고용으로만 노출. */
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'bat',     label:'배터리',    unit:'분',   better:'high' },
       { key:'noise',   label:'소음',      unit:'dB',   better:'low'  },
       { key:'as',      label:'무상 A/S',  unit:'년',   better:'high' },
@@ -976,7 +1067,9 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'size',  label:'화면 크기',   unit:'인치', better:'high' },
+      { key:'hz',    label:'주사율',      unit:'Hz',   better:'high' },
       { key:'cam',   label:'카메라 화소', unit:'MP',   better:'high' },
       { key:'bat',   label:'배터리',      unit:'mAh',  better:'high' },
       { key:'as',    label:'무상 A/S',    unit:'년',   better:'high' },
@@ -1031,6 +1124,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
@@ -1090,7 +1184,9 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'용량',     unit:'인용',better:'high' },
+      { key:'dryType',label:'건조 방식',unit:'',   better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년', better:'high' },
       { key:'noise', label:'소음',     unit:'dB', better:'low'  }
@@ -1160,6 +1256,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'size',  label:'화면 크기', unit:'인치',better:'high' },
       { key:'hz',    label:'주사율',   unit:'Hz',  better:'high' },
       { key:'bat',   label:'배터리',   unit:'Wh',  better:'high' },
@@ -1212,6 +1309,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap', label:'총 용량',   unit:'L', better:'high' },
       { key:'as',  label:'무상 A/S', unit:'년', better:'high' }
     ],
@@ -1254,6 +1352,7 @@ const DB = {
       ]
     },
     specItems:[
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap', label:'상의 수납',  unit:'벌', better:'high' },
       { key:'as',  label:'무상 A/S',  unit:'년', better:'high' }
     ],
@@ -1272,32 +1371,41 @@ const DB = {
     ]
   },
 
+  /* 2026-08-02 비교항목 확충 리서치: 화구 수·A/S 2개뿐이던 표에 전체 출력·상판 타공·제품 크기를 추가.
+     5개 모델 모두 정격 출력 3.4 kW, 타공 560 × 480 mm로 동일했고 본체 폭만 삼성 600 mm / LG 575 mm로 갈렸다.
+     타공·크기는 우열이 아니라 설치 적합성 판단용이라 score:false(참고)로 둔다.
+     출처: samsung.com(NZ63DB857CAV·NZ63DB553CFT 제품페이지), danawa.com(pcode=16774883 NZ63B5056AK),
+     lge.co.kr/electric-ranges(bef3amb4, bei3qeblo), danawa.com(pcode=74006870 BEI3QEBLO) */
   '인덕션': {
     emoji:'🍳',
     samsung:[
       { name:'비스포크 인피니트라인 3구 플렉스존 NZ63DB857CAV', price:200, grade:'P',
         on:['플렉스존(2구통합)','부스터화력','Wi-Fi/SmartThings 연동','빌트인'],
-        specs:{ burner:3, as:1 } },
+        specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'600 × 520 × 48' } },
       { name:'비스포크 인피니트라인 3구 빌트인 NZ63DB553CFT', price:150, grade:'S',
         on:['플렉스존(2구통합)','부스터화력','빌트인'],
-        specs:{ burner:3, as:1 } },
+        specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'600 × 520 × 48' } },
       { name:'비스포크 인피니트라인 3구 빌트인 NZ63B5056AK', price:120, grade:'B',
         on:['부스터화력','빌트인'],
-        specs:{ burner:3, as:1 } }
+        specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'600 × 520 × 48' } }
     ],
     competitors:{
       'LG':[
         { name:'LG 디오스 오브제컬렉션 인덕션 빌트인(와이드존) BEF3AMB4', price:194,
           on:['와이드존','부스터'],
-          specs:{ burner:3, as:1 } },
+          specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'575 × 515 × 59' } },
         { name:'LG 디오스 인덕션 빌트인 BEI3QEBLO', price:90,
           on:['부스터','잠금·온도·시간·출력 제어'],
-          specs:{ burner:3, as:1 } }
+          specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'575 × 515 × 59' } }
       ]
     },
     specItems:[
-      { key:'burner', label:'화구 수',   unit:'구', better:'high' },
-      { key:'as',     label:'무상 A/S', unit:'년', better:'high' }
+      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
+      { key:'burner', label:'화구 수',   unit:'구',  better:'high' },
+      { key:'kw',     label:'전체 출력', unit:'kW',  better:'high' },
+      { key:'as',     label:'무상 A/S', unit:'년',  better:'high' },
+      { key:'cutout', label:'상판 타공 (W×D)', unit:'mm', better:'high', score:false },
+      { key:'size',   label:'제품 크기 (W×D×H)', unit:'mm', better:'high', score:false }
     ],
     sells:[
       '플렉스존 — 2개 화구를 하나로 합쳐 큰 냄비·팬도 균일 가열',
@@ -1343,7 +1451,7 @@ function selectCat(cat) {
 
   // 삼성 모델 드롭다운
   const ss = document.getElementById('sel-samsung');
-  ss.innerHTML = d.samsung.map((m,i)=>`<option value="${i}">${m.name} (${m.price}만원)</option>`).join('');
+  ss.innerHTML = d.samsung.map((m,i)=>`<option value="${i}">${m.custom?'📝 ':''}${m.name} (${m.price}만원)</option>`).join('');
 
   // 경쟁사 브랜드 칩
   const brands = Object.keys(d.competitors);
@@ -1366,7 +1474,7 @@ function updateCompetitors() {
   const d = DB[currentCat];
   const comps = d.competitors[currentBrand]||[];
   const sc = document.getElementById('sel-comp');
-  sc.innerHTML = comps.map((m,i)=>`<option value="${i}">${m.name} (${m.price}만원)</option>`).join('');
+  sc.innerHTML = comps.map((m,i)=>`<option value="${i}">${m.custom?'📝 ':''}${m.name} (${m.price}만원)</option>`).join('');
 
   // 선택된 삼성 모델과 등급(용량·화면크기 등 specItems[0])이 가장 가까운 경쟁모델을 기본 선택
   // — 그렇지 않으면 항상 각 배열의 0번(최상위 모델)끼리만 비교돼 85인치 vs 65인치처럼
@@ -1387,6 +1495,13 @@ function updateCompetitors() {
   }
 }
 
+/* 스펙 값 조회. price는 specs가 아니라 모델 객체 최상위에 있어 따로 읽는다
+   (모든 모델이 이미 갖고 있는 값이라 전 카테고리 비교표에 바로 쓸 수 있다). */
+function specValue(model, key) {
+  if (key === 'price') return model.price;
+  return model.specs ? model.specs[key] : undefined;
+}
+
 /* ── 비교 결과 렌더링 ── */
 function renderResult() {
   if(!currentCat) return;
@@ -1399,7 +1514,9 @@ function renderResult() {
 
   // 헤더
   document.getElementById('res-title').textContent = `${d.emoji} ${currentCat} 비교 결과`;
-  document.getElementById('res-subtitle').textContent = `${sam.name.split(' ').slice(0,3).join(' ')} vs ${comp.name.split(' ').slice(0,3).join(' ')}`;
+  const short = n => n.split(' ').slice(0,3).join(' ');
+  const customTag = (sam.custom || comp.custom) ? '<span class="reg-badge">직접등록</span>' : '';
+  document.getElementById('res-subtitle').innerHTML = `${escHtml(short(sam.name))} vs ${escHtml(short(comp.name))}${customTag}`;
 
   // 스펙표
   let scoreS=0, scoreC=0;
@@ -1410,27 +1527,32 @@ function renderResult() {
     <th style="width:35%">${currentBrand}</th>
   </tr>`;
   items.forEach(it=>{
-    const sv = sam.specs[it.key];
-    const cv = comp.specs[it.key];
+    const sv = specValue(sam, it.key);
+    const cv = specValue(comp, it.key);
     if(sv===undefined||cv===undefined) return;
     let bS='tie', bC='tie';
     if(typeof sv==='number'&&typeof cv==='number'){
       const diff = it.better==='high' ? sv-cv : cv-sv;
       const thresh = Math.abs(sv)*0.05; // 5% 이내 동급
-      if(diff>thresh){bS='win';scoreS+=2;}
-      else if(diff<-thresh){bC='win';scoreC+=2;}
-      else{scoreS+=1;scoreC+=1;}
+      if(diff>thresh) bS='win';
+      else if(diff<-thresh) bC='win';
+      // score:false 항목(가격·치수 등)은 제품력 점수에 넣지 않는다 —
+      // 넣으면 프리미엄 모델이 비싸다는 이유만으로 "열위"로 뒤집힌다.
+      if(it.score !== false){
+        if(bS==='win') scoreS+=2; else if(bC==='win') scoreC+=2; else { scoreS+=1; scoreC+=1; }
+      }
     }
     const rowClass = bS==='win'?'spec-row-win':bC==='win'?'spec-row-lose':'spec-row-tie';
-    const badge = v => bS==='win'&&v==='s'?'<span class="badge-win">✅ 우위</span>':
+    const badge = v => it.score===false ? '' :
+                       bS==='win'&&v==='s'?'<span class="badge-win">✅ 우위</span>':
                        bC==='win'&&v==='c'?'<span class="badge-win">✅ 우위</span>':
                        bC==='win'&&v==='s'?'<span class="badge-lose">🔴 열위</span>':
                        bS==='win'&&v==='c'?'<span class="badge-lose">🔴 열위</span>':
                        '<span class="badge-tie">🟡 동급</span>';
-    rows += `<tr class="${rowClass}">
-      <td class="spec-label">${it.label}</td>
-      <td class="spec-val">${sv}${it.unit} ${badge('s')}</td>
-      <td class="spec-val">${cv}${it.unit} ${badge('c')}</td>
+    rows += `<tr class="${it.score===false?'spec-row-tie':rowClass}">
+      <td class="spec-label">${escHtml(it.label)}${it.score===false?'<span class="spec-note">참고</span>':''}</td>
+      <td class="spec-val">${escHtml(String(sv))}${escHtml(it.unit||'')} ${badge('s')}</td>
+      <td class="spec-val">${escHtml(String(cv))}${escHtml(it.unit||'')} ${badge('c')}</td>
     </tr>`;
   });
   document.getElementById('spec-table').innerHTML = rows;
@@ -1517,9 +1639,9 @@ function renderResult() {
 
 function buildTextResult(sam, comp, d, samOnly, compOnly, sS, sC) {
   const specLines = d.specItems.map(it=>{
-    const sv = sam.specs[it.key], cv = comp.specs[it.key];
+    const sv = specValue(sam, it.key), cv = specValue(comp, it.key);
     if(sv===undefined||cv===undefined) return null;
-    return `- ${it.label}: 삼성 ${sv}${it.unit} vs ${currentBrand} ${cv}${it.unit}`;
+    return `- ${it.label}: 삼성 ${sv}${it.unit||''} vs ${currentBrand} ${cv}${it.unit||''}`;
   }).filter(Boolean).join('\n');
   const lines = [
     `[타사비교 세일즈가이드] ${d.emoji} ${currentCat}`,
@@ -1832,14 +1954,218 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 const ROUTE_MODE = new URLSearchParams(location.search).get('mode') || 'db';
 switchTab(ROUTE_MODE === 'url' ? 'url' : 'db');
 
+/* ═══════════════════════════════════════════
+   즉시비교 직접등록 — URL로 찾은 조합을 DB에 얹어 다음부터 바로 쓰게 한다.
+   백엔드가 없는 정적 앱이라 저장소는 localStorage다(= 그 브라우저에만 남는다).
+   팀 전체 반영은 "내보내기"로 뽑은 JSON을 소스 DB에 반영하는 경로를 쓴다.
+   ═══════════════════════════════════════════ */
+const CUSTOM_KEY = 'gw_compare_custom_v1';
+
+function loadCustom(){ try{ return JSON.parse(localStorage.getItem(CUSTOM_KEY)||'[]'); }catch(e){ return []; } }
+function saveCustomList(list){ try{ localStorage.setItem(CUSTOM_KEY, JSON.stringify(list)); }catch(e){ alert('저장 공간이 가득 차 등록하지 못했습니다.'); } }
+
+/* 저장본을 DB에 다시 얹는다. 먼저 custom 표시가 붙은 것을 전부 걷어내고 새로 적용하므로
+   여러 번 불러도 중복되지 않는다(등록·삭제 후 그대로 재호출하면 된다). */
+function rebuildCustom(){
+  for(const cat of Object.keys(DB)){
+    const d = DB[cat];
+    d.samsung = d.samsung.filter(m=>!m.custom);
+    for(const b of Object.keys(d.competitors)){
+      d.competitors[b] = d.competitors[b].filter(m=>!m.custom);
+      if(!d.competitors[b].length) delete d.competitors[b];
+    }
+    d.specItems = d.specItems.filter(it=>!it.custom);
+  }
+  for(const e of loadCustom()){
+    const d = DB[e.cat];
+    if(!d) continue;
+    if(!d.samsung.some(m=>m.name===e.sam.name)) d.samsung.push(Object.assign({}, e.sam, {custom:true, cid:e.id}));
+    if(!d.competitors[e.brand]) d.competitors[e.brand] = [];
+    if(!d.competitors[e.brand].some(m=>m.name===e.comp.name)) d.competitors[e.brand].push(Object.assign({}, e.comp, {custom:true, cid:e.id}));
+    for(const it of (e.items||[])){
+      if(!d.specItems.some(x=>x.key===it.key)) d.specItems.push(Object.assign({}, it, {custom:true}));
+    }
+  }
+}
+
+function renderCustomList(){
+  const host = document.getElementById('custom-list');
+  if(!host) return;
+  const list = loadCustom();
+  if(!list.length){ host.innerHTML = '<div class="reg-empty">아직 등록한 조합이 없습니다.</div>'; return; }
+  host.innerHTML = list.map(e=>`
+    <div class="reg-row">
+      <div class="rr-main">
+        <b>${escHtml(DB[e.cat] ? DB[e.cat].emoji : '')} ${escHtml(e.cat)}</b> · ${escHtml(e.brand)}
+        <div class="rr-sub">${escHtml(e.sam.name)} vs ${escHtml(e.comp.name)}</div>
+      </div>
+      <button class="reg-del" onclick="deleteCustom('${escHtml(e.id)}')">삭제</button>
+    </div>`).join('')
+    + `<button class="add-btn" style="margin-top:10px;" onclick="exportCustom()">📤 등록 내용 내보내기 (개발자 전달용)</button>`;
+}
+
+function deleteCustom(id){
+  if(!confirm('이 등록을 삭제할까요?')) return;
+  saveCustomList(loadCustom().filter(e=>e.id!==id));
+  rebuildCustom();
+  renderCustomList();
+  toast('🗑 등록을 삭제했습니다');
+}
+
+function exportCustom(){
+  const list = loadCustom();
+  if(!list.length){ toast('내보낼 등록이 없습니다'); return; }
+  const text = JSON.stringify(list, null, 2);
+  navigator.clipboard.writeText(text).then(()=>toast('📤 등록 내용을 복사했습니다 — 개발자에게 전달해 주세요'))
+    .catch(()=>{ alert(text); });
+}
+
+/* ── 등록 모달 ── */
+function slugKey(label){
+  return 'cx_' + String(label).trim().toLowerCase().replace(/[^0-9a-z가-힣]+/g,'_').slice(0,24);
+}
+function urlModelGuess(url){
+  const toks = urlTokens(url).filter(t=>/[A-Z]/.test(t) && /[0-9]/.test(t) && t.length>=6);
+  return toks.length ? toks[toks.length-1] : '';
+}
+
+function openRegisterModal(){
+  const sel = document.getElementById('reg-cat');
+  sel.innerHTML = Object.keys(DB).map(c=>`<option value="${escHtml(c)}">${escHtml(DB[c].emoji)} ${escHtml(c)}</option>`).join('');
+
+  // URL 탭 입력값이 있으면 카테고리·브랜드·모델명을 미리 채워 준다
+  const ownUrl = (document.getElementById('own-url').value||'').trim();
+  const compEl = document.querySelectorAll('#competitor-list input[type="url"]')[0];
+  const compUrl = compEl ? (compEl.value||'').trim() : '';
+  let cat = detectCategory(ownUrl) || detectCategory(compUrl);
+  if(cat === '청소기' && (looksRobot(ownUrl) || looksRobot(compUrl))) cat = '로봇청소기';
+  if(cat && DB[cat]) sel.value = cat;
+
+  document.getElementById('reg-brand').value = detectBrand(compUrl) || '';
+  document.getElementById('reg-sam-name').value = urlModelGuess(ownUrl);
+  document.getElementById('reg-comp-name').value = urlModelGuess(compUrl);
+  document.getElementById('reg-sam-price').value = '';
+  document.getElementById('reg-comp-price').value = '';
+  document.getElementById('reg-sam-on').value = '';
+  document.getElementById('reg-comp-on').value = '';
+  document.getElementById('reg-custom-inputs').innerHTML = '';
+
+  renderRegSpecInputs();
+  document.getElementById('reg-modal-overlay').classList.add('visible');
+}
+function closeRegisterModal(){ document.getElementById('reg-modal-overlay').classList.remove('visible'); }
+
+/* 선택한 카테고리의 비교 항목을 그대로 입력칸으로 펼친다 — 가격은 위에서 이미 받으므로 뺀다 */
+function renderRegSpecInputs(){
+  const cat = document.getElementById('reg-cat').value;
+  const d = DB[cat];
+  document.getElementById('reg-brand-list').innerHTML =
+    d ? Object.keys(d.competitors).map(b=>`<option value="${escHtml(b)}"></option>`).join('') : '';
+  const items = d ? d.specItems.filter(it=>it.key!=='price') : [];
+  document.getElementById('reg-spec-inputs').innerHTML = items.map(it=>`
+    <div class="reg-item">
+      <div class="reg-item-label">${escHtml(it.label)}${it.unit?` <span style="font-weight:400;color:#64748b">(${escHtml(it.unit)})</span>`:''}</div>
+      <input type="text" data-spec="${escHtml(it.key)}" data-side="s" placeholder="삼성"/>
+      <input type="text" data-spec="${escHtml(it.key)}" data-side="c" placeholder="경쟁사"/>
+    </div>`).join('');
+}
+
+function addRegCustomItem(){
+  const host = document.getElementById('reg-custom-inputs');
+  const row = document.createElement('div');
+  row.className = 'reg-item';
+  row.innerHTML = `
+    <div class="reg-custom">
+      <input type="text" class="cx-label" placeholder="항목명 (예: 물걸레 회전수)"/>
+      <input type="text" class="cx-unit" placeholder="단위"/>
+      <select class="cx-better"><option value="high">높을수록 우위</option><option value="low">낮을수록 우위</option><option value="none">참고(우열 없음)</option></select>
+    </div>
+    <input type="text" class="cx-s" placeholder="삼성 값"/>
+    <input type="text" class="cx-c" placeholder="경쟁사 값"/>`;
+  host.appendChild(row);
+}
+
+/* 숫자로 읽히면 숫자로 저장한다 — 그래야 비교표가 우위/열위를 판정할 수 있다 */
+function numOrText(v){
+  const t = String(v).trim();
+  if(t === '') return undefined;
+  const n = Number(t.replace(/,/g,''));
+  return (t !== '' && isFinite(n) && /^[-\d.,]+$/.test(t)) ? n : t;
+}
+
+function submitRegister(){
+  const cat = document.getElementById('reg-cat').value;
+  const brand = document.getElementById('reg-brand').value.trim();
+  const samName = document.getElementById('reg-sam-name').value.trim();
+  const compName = document.getElementById('reg-comp-name').value.trim();
+  if(!DB[cat]){ alert('카테고리를 선택해주세요.'); return; }
+  if(!brand){ alert('경쟁 브랜드를 입력해주세요.'); return; }
+  if(!samName || !compName){ alert('자사·경쟁사 모델명을 모두 입력해주세요.'); return; }
+
+  const samPrice = numOrText(document.getElementById('reg-sam-price').value);
+  const compPrice = numOrText(document.getElementById('reg-comp-price').value);
+  const splitOn = id => document.getElementById(id).value.split('\n').map(x=>x.trim()).filter(Boolean);
+
+  const samSpecs = {}, compSpecs = {};
+  document.querySelectorAll('#reg-spec-inputs input[data-spec]').forEach(inp=>{
+    const v = numOrText(inp.value);
+    if(v === undefined) return;
+    (inp.dataset.side === 's' ? samSpecs : compSpecs)[inp.dataset.spec] = v;
+  });
+
+  const items = [];
+  document.querySelectorAll('#reg-custom-inputs .reg-item').forEach(row=>{
+    const label = row.querySelector('.cx-label').value.trim();
+    if(!label) return;
+    const key = slugKey(label);
+    const better = row.querySelector('.cx-better').value;
+    items.push({ key, label, unit: row.querySelector('.cx-unit').value.trim(),
+      better: better === 'low' ? 'low' : 'high', score: better === 'none' ? false : undefined });
+    const sv = numOrText(row.querySelector('.cx-s').value);
+    const cv = numOrText(row.querySelector('.cx-c').value);
+    if(sv !== undefined) samSpecs[key] = sv;
+    if(cv !== undefined) compSpecs[key] = cv;
+  });
+
+  const entry = {
+    id: 'c' + Date.now().toString(36),
+    at: new Date().toISOString().slice(0,10),
+    cat, brand,
+    sam:  { name: samName,  price: samPrice  === undefined ? 0 : samPrice,  on: splitOn('reg-sam-on'),  specs: samSpecs },
+    comp: { name: compName, price: compPrice === undefined ? 0 : compPrice, on: splitOn('reg-comp-on'), specs: compSpecs },
+    items,
+  };
+
+  const list = loadCustom();
+  list.unshift(entry);
+  saveCustomList(list);
+  rebuildCustom();
+  renderCustomList();
+  closeRegisterModal();
+
+  // 등록한 조합을 바로 띄워 준다
+  switchTab('db');
+  selectCat(cat);
+  selectBrand(brand);
+  const si = DB[cat].samsung.findIndex(m=>m.name===samName);
+  const ci = (DB[cat].competitors[brand]||[]).findIndex(m=>m.name===compName);
+  if(si>=0) document.getElementById('sel-samsung').value = String(si);
+  if(ci>=0) document.getElementById('sel-comp').value = String(ci);
+  renderResult();
+  toast('📝 즉시비교에 등록했습니다 — 다음부터 URL 없이 바로 쓸 수 있습니다');
+}
+
+/* ── 초기화 ── */
+// 등록분을 DB에 먼저 얹어야 아래 딥링크 처리에서 드롭다운에 함께 노출된다
+rebuildCustom();
+renderCustomList();
+renderHistory();
+
 /* 허브 통합검색(/search)에서 넘어온 ?cat= 딥링크 — 즉시비교 탭에서 해당 카테고리를 바로 연다 */
 (function(){
   const cat = new URLSearchParams(location.search).get('cat');
   if(cat && DB[cat]){ switchTab('db'); selectCat(cat); }
 })();
-
-/* ── 초기화 ── */
-renderHistory();
 </script>
 </body>
 </html>
