@@ -513,7 +513,7 @@ const DB = {
     samsung:[
       { name:'BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W', price:584, grade:'P',
         on:['AI Vision(제미나이 연동, 37종 식재료 인식)','32형 대형 터치스크린','하이브리드쿨링','음성인식 제어'],
-        specs:{ cap:864, power:26.03, eGrade:1, as:1, noise:34 } },
+        specs:{ cap:864, power:26.03, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 916' } },
       { name:'BESPOKE AI 4도어 (902L) RM70F90M1GD', price:230, grade:'S',
         on:['푸드쇼케이스 홈바','AI절약모드','하이브리드쿨링','AI 비전인사이드'],
         specs:{ cap:902, power:39, eGrade:1, as:1, noise:34 } },
@@ -525,7 +525,20 @@ const DB = {
         specs:{ cap:852, power:40, eGrade:2, as:1, noise:36 } }
     ],
     competitors:{
+      /* 2026-08-03 LG 베스트샵 카탈로그(디오스 4도어 지면, M876/H876 스펙표) 대조.
+         M876GGA431 계열 4종은 871ℓ(냉장 504 / 냉동 367), H876 계열 3종은 860~870ℓ이며 전 모델
+         914 × 1,860 × 918 ㎜ · 1등급 · 인버터 리니어 컴프레서로 동일하다. 상위 M876만 오토 클로징이
+         상/하 양쪽이고(H876은 상칸만) 노크온 블랙글래스 매직스페이스·UV청정탈취필터+·이지 아이스가 들어간다.
+         월 소비전력은 LG 카탈로그에 없어 신규 반영분에 넣지 않았다(해당 행이 렌더되지 않는다).
+         카탈로그에 가격이 없어 price를 비웠다.
+         출처: 20260708_best_catalogue.pdf(M876GGA431·H876GBB111 스펙표), dp 카탈로그(RM90H91B1W 치수) */
       'LG':[
+        { name:'디오스 AI 오브제컬렉션 4도어 (871L, 노크온 매직스페이스) M876GGA431',
+          on:['노크온 블랙글래스 매직스페이스 2개','오토 클로징(상/하)','인버터 리니어 컴프레서','24시간 자동정온','UV청정탈취필터+','도어쿨링+','이지 아이스','멀티 수납 코너 / 접이 선반','패널 교체 가능'],
+          specs:{ cap:871, eGrade:1, as:1, size:'914 × 1,860 × 918' } },
+        { name:'디오스 AI 오브제컬렉션 4도어 (870L, 베이직) H876GBB031',
+          on:['오토 클로징(상)','인버터 리니어 컴프레서','24시간 자동정온','UV청정탈취필터+','접이 선반','트레이 아이스메이커'],
+          specs:{ cap:870, eGrade:1, as:1, size:'914 × 1,860 × 918' } },
         { name:'디오스 AI 오브제컬렉션 (832L) S834MEE111', price:179,
           on:['도어쿨링+','인버터 리니어 컴프레서','매직스페이스'],
           specs:{ cap:832, power:40.2, eGrade:1, as:1, noise:37 } },
@@ -546,7 +559,8 @@ const DB = {
       { key:'power', label:'월 소비전력', unit:'kWh',  better:'low'  },
       { key:'eGrade',label:'에너지등급',  unit:'등급', better:'low'  },
       { key:'as',    label:'무상 A/S',    unit:'년',   better:'high' },
-      { key:'noise', label:'소음',        unit:'dB',   better:'low'  }
+      { key:'noise', label:'소음',        unit:'dB',   better:'low'  },
+      { key:'size',  label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
     ],
     sells:[
       '하이브리드쿨링 — 냉장·냉동 독립 냉각으로 온도 교차오염 없이 식재료 신선도 극대화',
@@ -590,23 +604,39 @@ const DB = {
     emoji:'🫧',
     samsung:[
       { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (세탁25+건조20kg) WD90H25AHS', price:430, grade:'P',
-        on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','오토오픈도어+','세제 자동투입','7인치 LCD','SmartThings','AI 진동소음저감','국내 일체형 최대용량'],
-        specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7 } },
+        on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','오토오픈도어+','세제 자동투입','7인치 LCD(177.8㎜ 스마트 스크린)','SmartThings','AI 진동소음저감'],
+        specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7, size:'686 × 1,110 × 875' } },
       { name:'BESPOKE AI 콤보 프리히트 기본형 (세탁25+건조20kg) WD90H25BHY', price:320, grade:'S',
-        on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','AI 이불세탁건조','세제자동투입(11단계)','오토오픈도어','통세척','국내 일체형 최대용량'],
-        specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7 } },
+        on:['AI 세탁건조','프리히트(하이브리드 히트펌프 진화형)','AI 이불세탁건조','세제자동투입(11단계)','오토오픈도어','통세척'],
+        specs:{ wash:25, dry:20, eGrade:1, as:1, noise:51.7, size:'686 × 1,110 × 875' } },
       { name:'BESPOKE AI 세탁기 올인원컨트롤 (25kg) WF25CB8895BV', price:137, grade:'S',
         on:['올인원컨트롤','오토오픈도어','디지털인버터모터'],
-        specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7 } },
+        specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7, size:'686 × 984 × 875' } },
       { name:'BESPOKE 그랑데 AI 세탁기 (21kg) WF21CB6650BW', price:125, grade:'S',
         on:['AI 맞춤세탁','앱연동','AI 절약모드','강화유리 도어'],
-        specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 } },
+        specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7, size:'686 × 984 × 796' } },
       { name:'AI 세탁기 (21kg) WF21DG6650BW', price:87, grade:'B',
         on:['AI 세탁','AI 절약모드','DD모터','워터샷','버블워시'],
         specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 } }
     ],
     competitors:{
+      /* 2026-08-03 LG 베스트샵 카탈로그(107~110쪽 워시콤보 / 세탁기 지면) 대조.
+         2026년형 LG 워시콤보 FC2521*X6C는 세탁 25kg + 건조 21kg으로, 삼성 프리히트 콤보(건조 20kg)보다
+         건조 용량이 1kg 크다. 기존에 삼성 쪽 셀링포인트로 적혀 있던 "국내 일체형 최대용량"은
+         이 카탈로그 기준으로 더 이상 성립하지 않아 삭제했다(현장에서 반박당하면 신뢰를 잃는 문구다).
+         구세대 FH25ESE(25/15kg, 인버터 히트펌프·자동세제함 없음)는 지우지 않고 그대로 둔다.
+         카탈로그에 가격이 없어 신규 반영분은 price를 비웠다.
+         출처: 20260708_best_catalogue.pdf(FC2521SX6C·FC2521SX6CX·FX24ENER 스펙표) */
       'LG':[
+        { name:'트롬 AI 오브제컬렉션 워시콤보 (세탁25+건조21kg) FC2521SX6C',
+          on:['AI 세탁+건조','듀얼 인버터 히트펌프 건조','트루스팀','인버터 DD모터(10년 무상보증)','6모션 / 5방향 터보샷','자동세제함','와이드 디스플레이(7인치 LCD)','건조맞춤 탈수 / 통살균'],
+          specs:{ wash:25, dry:21, eGrade:1, as:1, size:'700 × 990 × 885' } },
+        { name:'트롬 AI 오브제컬렉션 워시콤보+미니워시 (세탁25+건조21kg+미니 4kg) FC2521SX6CX',
+          on:['AI 세탁+건조','듀얼 인버터 히트펌프 건조','미니워시 4kg 일체형','트루스팀','인버터 DD모터(10년 무상보증)','와이드 디스플레이(7인치 LCD)'],
+          specs:{ wash:25, dry:21, eGrade:1, as:1, size:'700 × 1,360 × 885' } },
+        { name:'트롬 오브제컬렉션 세탁기 (24kg) FX24ENER',
+          on:['인공지능 세탁','인버터 DD모터(10년 무상보증)','6모션 / 5방향 터보샷','이지서클컨트롤','빨래추가 / 건조맞춤 탈수 / 통살균'],
+          specs:{ wash:24, dry:0, eGrade:1, as:1, size:'700 × 990 × 830' } },
         { name:'트롬 오브제컬렉션 세탁기 (21kg) FX21GAC', price:183,
           on:['AI 세탁','인버터DD','6모션','5방향터보샷','통살균'],
           specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 } },
@@ -618,7 +648,7 @@ const DB = {
           specs:{ wash:14, dry:10, eGrade:1, as:1, noise:49 } },
         { name:'트롬 오브제컬렉션 워시콤보 (세탁25+건조15kg) FH25ESE', price:445,
           on:['AI 세탁건조','트루스팀살균','통살균케어','6모션'],
-          specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7 } },
+          specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7, size:'700 × 990 × 830' } },
         { name:'트롬 오브제컬렉션 워시콤보+미니워시 (세탁25+건조15kg) FH25ESEFX', price:517,
           on:['AI 세탁건조','트루스팀살균','미니워시 4kg 별도','6모션'],
           specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7 } }
@@ -630,14 +660,17 @@ const DB = {
       { key:'dry',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
-      { key:'noise', label:'소음(세탁)',unit:'dB',  better:'low'  }
+      { key:'noise', label:'소음(세탁)',unit:'dB',  better:'low'  },
+      { key:'size',  label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
     ],
     sells:[
-      '오토오픈도어+ — 세탁·건조 후 도어 자동 개방으로 냄새·세균 발생 차단 (LG 미탑재)',
-      '7인치 LCD 대화면 — 세탁 상태 한눈에 확인, 고급스러운 사용 경험',
-      '미세플라스틱 저감 필터 — 환경·건강 관심 고객에게 차별화 포인트'
+      '오토오픈도어+ — 세탁·건조 후 도어 자동 개방으로 냄새·세균 발생 차단',
+      '프리히트(하이브리드 히트펌프 진화형) — 예열로 건조 시간을 줄이면서 1등급 유지',
+      '세제 자동투입 11단계 + 미세플라스틱 저감 필터',
+      '설치 폭 686㎜ — LG 워시콤보(700㎜)보다 좁아 좁은 세탁실·팬트리 진입에 유리'
     ],
     counters:[
+      { issue:'LG 워시콤보 건조 용량이 더 크다는 지적(21kg vs 20kg)', strategy:'사실입니다 — 2026년형 LG 워시콤보(FC2521 계열)는 건조 21kg입니다. 1kg 차이는 실사용에서 체감이 거의 없다는 점을 말씀드리고, 대신 오토오픈도어+·세제 자동투입 11단계, 그리고 폭 686㎜(LG 700㎜)로 설치 자유도가 높다는 쪽으로 옮겨가세요. "국내 최대용량"이라는 표현은 쓰지 마세요.' },
       { issue:'LG 워시콤보가 더 저렴한 경우', strategy:'오토오픈도어+와 7인치 LCD 등 편의 기능 차이를 설명. 장기 사용 시 냄새·위생 관리 비용 절감 효과. (판매처별 가격 편차가 크므로 실시간 가격 확인 권장)' },
       { issue:'LG A/S 질문', strategy:'전국 서비스 네트워크와 A/S 응대 속도 등 서비스 접근성 위주로 설명 — 보증기간 자체의 우위를 단정하지 말 것(카테고리별 재확인 필요).' }
     ],
@@ -669,7 +702,10 @@ const DB = {
     samsung:[
       { name:'BESPOKE AI 무풍콤보 갤러리 프로 스탠드 (19평) AF90H19D27SRT', price:402, grade:'P',
         on:['무풍모드 소음 28dB 이하','모션레이더 개인 맞춤바람','최대 77% 절전(MAX 냉방 대비, 제조사 발표)','빅스비 음성비서','무풍 10주년 기념 2026년형'],
-        specs:{ area:19, eGrade:2, as:1, noise:28, pm:1.0 } },
+        specs:{ area:19, eGrade:2, as:1, noise:28, pm:1.0, size:'492 × 1,910 × 307' } },
+      { name:'BESPOKE AI 무풍갤러리 스탠드 (17평, 1등급) AF90H17D38EN', grade:'P',
+        on:['에너지소비효율 1등급(dp 카탈로그)','메탈 패널 + 엣지라이팅','모션레이더 / 모션디스플레이','무풍냉방 / 무풍청정','대용량 강력 제습 / 쾌적 제습'],
+        specs:{ area:17, eGrade:1, as:1, pm:1.0, size:'492 × 1,910 × 307' } },
       { name:'비스포크 무풍에어컨 벽걸이 (15평) AR60F15D12WS', price:171, grade:'S',
         on:['무풍냉방','AI 열교환기 자동세척','SmartThings'],
         specs:{ area:15, eGrade:2, as:1, noise:23, pm:1.0 } },
@@ -687,7 +723,22 @@ const DB = {
        "삼성 2년 vs LG 1년" 차별화 근거가 없음 — 다만 2026-07-21 후속 브랜드확장 리서치에서 삼성전자서비스
        공식 기준(일반가전 표준 1년)과 상충 확인, 두 출처가 엇갈려 as는 1로 보수적으로 통일. */
     competitors:{
+      /* 2026-08-03 LG 베스트샵 카탈로그(휘센 스탠드 지면) 대조. LG 모델코드의 숫자가 그대로 평형이고
+         냉방면적과 일치한다(FQ25→81.8㎡=약 25평, FQ22→74.5㎡, FQ18→58.5㎡, FQ20→65.9㎡, FQ17→56.9㎡).
+         2026년형 FQ**GN9 라인은 전 모델 1등급이며, 삼성 AF90H는 19평(62.6㎡)이 2등급 / 17평(56.9㎡)이
+         1등급이다(dp 카탈로그 스펙표 확인) — 같은 평형끼리 비교하도록 삼성 17평 1등급 모델을 함께 넣었다.
+         소음·PM 등급은 LG 카탈로그에 없어 기존 조사값을 신규 모델에 옮겨 적지 않았다(행이 빠진다).
+         출처: 20260708_best_catalogue.pdf(FQ25GN9BE1 외 스펙표), dp 카탈로그(AF90H19D35*·AF90H17D38*) */
       'LG':[
+        { name:'휘센 오브제컬렉션 스탠드 (25평, 81.8㎡) FQ25GN9BE1',
+          on:['에너지소비효율 1등급','냉방능력 9,800W','6.8" LCD 디스플레이','무드 라이팅','레이더센서 외출절전','AI 콜드프리','AI바람 공간인식','냉매 R32'],
+          specs:{ area:25, eGrade:1, as:1, size:'380 × 1,915 × 295' } },
+        { name:'휘센 오브제컬렉션 스탠드 (22평, 74.5㎡) FQ22GN9BE1',
+          on:['에너지소비효율 1등급','냉방능력 8,200W','6.8" LCD 디스플레이','AI 콜드프리','AI바람 공간인식','냉매 R32'],
+          specs:{ area:22, eGrade:1, as:1, size:'380 × 1,915 × 295' } },
+        { name:'휘센 오브제컬렉션 스탠드 (18평, 58.5㎡) FQ18GN9BE1',
+          on:['에너지소비효율 1등급','냉방능력 7,200W','6.8" LCD 디스플레이','AI 콜드프리','AI바람 공간인식','냉매 R32'],
+          specs:{ area:18, eGrade:1, as:1, size:'380 × 1,915 × 295' } },
         { name:'휘센 벽걸이에어컨 (9평) SQ09GJ1WAS', price:95, grade:'B',
           on:['ThinQ 연동'],
           specs:{ area:9, eGrade:1, as:1, noise:21, pm:2.5 } },
@@ -708,7 +759,8 @@ const DB = {
       { key:'eGrade',label:'에너지등급',unit:'등급', better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',   better:'high' },
       { key:'noise', label:'소음(최소)',unit:'dB',   better:'low'  },
-      { key:'pm',    label:'공기청정 PM',unit:'',   better:'low'  }
+      { key:'pm',    label:'공기청정 PM',unit:'',   better:'low'  },
+      { key:'size',  label:'실내기 크기 (W×H×D)', unit:'mm', better:'high', score:false }
     ],
     sells:[
       '무풍냉방 — 바람 없이 시원함. 냉방병·두통 걱정 없는 삼성만의 독자 기술',
@@ -717,7 +769,9 @@ const DB = {
     ],
     counters:[
       { issue:'LG 가격이 저렴한 경우', strategy:'무풍냉방의 쾌적함과 AI 열교환기 자동세척으로 절감되는 청소 비용을 체험 유도. "한 번 무풍을 경험하시면 바람 있는 에어컨으로 못 돌아가신다"고 설명.' },
-      { issue:'LG 공기청정 기능 언급', strategy:'PM1.0 vs PM2.5 차이 강조. PM1.0은 PM2.5보다 훨씬 미세한 입자까지 거르므로 어린이·노인·반려동물 가정에 특히 중요.' }
+      { issue:'LG 공기청정 기능 언급', strategy:'PM1.0 vs PM2.5 차이 강조. PM1.0은 PM2.5보다 훨씬 미세한 입자까지 거르므로 어린이·노인·반려동물 가정에 특히 중요.' },
+      { issue:'LG 2026년형이 1등급인데 삼성 19평은 2등급이라는 지적', strategy:'평형을 맞춰 이야기하세요. 카탈로그 기준 삼성도 17평(AF90H17D38*)은 1등급입니다. 19평·23평 대형 스탠드에서 등급이 갈리는 것이므로, 설치 면적을 먼저 확인해 같은 등급끼리 제안하면 됩니다. 등급 차이를 부정하지 말고 평형을 조정해 제안하는 편이 신뢰를 얻습니다.' },
+      { issue:'LG 실내기가 더 슬림하다는 지적(380㎜ vs 492㎜)', strategy:'폭 차이는 사실입니다. 삼성 폭이 넓은 것은 무풍 마이크로홀 패널 면적을 확보하기 위해서라는 점을 설명하고, 설치 공간이 빠듯한 현장이면 벽걸이·무풍콤보 구성을 대안으로 제시하세요.' }
     ],
     scripts:[
       { trigger:'가격 비교 시', text:'"가격 차이가 있지만, 저희 무풍에어컨은 에어컨 청소를 스스로 하는 AI 자동세척 기능이 있어 연간 청소 비용 10~15만원을 아낄 수 있습니다. 2~3년 쓰면 오히려 저렴해집니다."' },
@@ -743,7 +797,7 @@ const DB = {
     samsung:[
       { name:'2026 Micro RGB R95H 85인치 (KMR85RH95AFXKR)', price:929, grade:'P',
         on:['Micro RGB(초정밀 RGB 백라이트)','Micro RGB AI 엔진 Pro','Micro RGB Precision Color 100(VDE 인증)','무반사 코팅(UL 인증)','165Hz VRR','돌비 애트모스'],
-        specs:{ size:85, res:'4K', panel:'Micro RGB', hz:165, as:2, brightness:2300 } },
+        specs:{ size:85, res:'4K', panel:'Micro RGB', hz:165, as:2, brightness:2300, dim:'1,880.6 × 1,077.0 × 29.9' } },
       { name:'2026 Neo QLED QNH80 85인치 (KQ85QNH80)', price:449, grade:'S',
         on:['Neo QLED(미니LED)','AI 프로세서 4K','모션 익셀러레이터 144Hz','돌비 애트모스','오브젝트 트래킹 사운드+','Pantone 색상 인증'],
         specs:{ size:85, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500 } },
@@ -771,7 +825,25 @@ const DB = {
        nosearch.com/tcl.com(TCL 85C855), danawa/enuri(하이센스 85U8Q).
        as·brightness 일부는 국내 공식 스펙시트로 확정 못해 같은 브랜드 인접 모델값을 잠정 적용 — 재검증 필요. */
     competitors:{
+      /* 2026-08-03 LG 베스트샵 카탈로그(TV 지면) 대조. 중요한 사실 하나 — LG도 2026년형에서
+         Micro RGB 라인(100MRGB96BK / 86MRGB96BKA / 75MRGB96BKA)을 냈다. 삼성 Micro RGB를
+         "삼성만의 기술"로 소개하면 현장에서 바로 반박당하므로 셀링포인트·대응전략을 수정했다.
+         주사율·피크 밝기는 LG 카탈로그 스펙표에 항목 자체가 없어 신규 반영분에 넣지 않았다
+         (해당 행은 렌더되지 않는다). 치수는 스탠드 제외 기준이다.
+         출처: 20260708_best_catalogue.pdf(86MRGB96BKA·75MRGB96BKA·OLED97G6KNA·OLED83G6KNA 스펙표) */
       'LG':[
+        { name:'LG Micro RGB 86인치 (86MRGB96BKA)',
+          on:['Micro RGB 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','40W 2.2ch 돌비 애트모스','3면 시네마 스크린(갤러리 스타일)','AI 매직 리모컨','원거리 음성인식'],
+          specs:{ size:86, res:'4K', panel:'Micro RGB', as:2, eGrade:3, dim:'1,925 × 1,105 × 46.1' } },
+        { name:'LG Micro RGB 75인치 (75MRGB96BKA)',
+          on:['Micro RGB 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','40W 2.2ch 돌비 애트모스','3면 시네마 스크린(갤러리 스타일)'],
+          specs:{ size:75, res:'4K', panel:'Micro RGB', as:2, dim:'1,673 × 963 × 44.9' } },
+        { name:'LG 올레드 evo G6 97인치 (OLED97G6KNA)',
+          on:['올레드 evo 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','60W 4.2ch 돌비 애트모스','갤러리 디자인 · 4면 시네마 스크린','AI 매직 리모컨'],
+          specs:{ size:97, res:'4K', panel:'OLED evo', as:2, dim:'2,155 × 1,230 × 28.2' } },
+        { name:'LG 올레드 evo G6 83인치 (OLED83G6KNA)',
+          on:['올레드 evo 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','60W 4.2ch 돌비 애트모스','갤러리 디자인 · 4면 시네마 스크린'],
+          specs:{ size:83, res:'4K', panel:'OLED evo', as:2, eGrade:4, dim:'1,847 × 1,057 × 28' } },
         { name:'LG QNED evo AI 86인치 (86QNED86AKA)', price:508,
           on:['QNED 미니LED','α7 5세대 AI 프로세서','돌비비전IQ','돌비 애트모스','HDMI 2.1','VRR 144Hz'],
           specs:{ size:86, res:'4K', panel:'QNED(미니LED)', hz:120, as:2, brightness:1200 } },
@@ -815,14 +887,18 @@ const DB = {
       { key:'panel',     label:'패널 방식',   unit:'',     better:'high' },
       { key:'hz',        label:'주사율',      unit:'Hz',   better:'high' },
       { key:'brightness',label:'밝기(피크)',   unit:'nit',  better:'high' },
-      { key:'as',        label:'무상 A/S',    unit:'년',   better:'high' }
+      { key:'eGrade',    label:'에너지등급',   unit:'등급', better:'low'  },
+      { key:'as',        label:'무상 A/S',    unit:'년',   better:'high' },
+      { key:'dim',       label:'제품 크기 (스탠드 제외)', unit:'mm', better:'high', score:false }
     ],
     sells:[
-      'Neo QLED 미니LED + 삼성 독자 기술 — TCL·하이센스 대비 패널 균일도·색정확도·Pantone 인증 우위',
-      '모션 익셀러레이터 144Hz + AI 프로세서 4K — 게이밍·화질 업스케일링 모두 대응, LG OLED 대비 번인 걱정 없는 밝기',
+      'Micro RGB R95H — 초정밀 RGB 백라이트에 무반사 코팅(UL 인증)·Precision Color 100(VDE 인증)·165Hz VRR까지. 밝은 거실에서 반사 없이 보는 화면',
+      'Neo QLED 미니LED — TCL·하이센스 대비 패널 균일도·색정확도·Pantone 인증 우위',
+      '모션 익셀러레이터 144Hz + AI 프로세서 4K — 게이밍·화질 업스케일링 모두 대응, OLED 대비 번인 걱정 없는 밝기',
       '2년 무상 A/S + 국내 직영 서비스 망 — TCL·하이센스 1년 + AS센터 접근성 비교 우위'
     ],
     counters:[
+      { issue:'LG도 Micro RGB를 낸다는 지적', strategy:'맞습니다 — LG도 2026년형에 Micro RGB(100·86·75인치)를 냈습니다. "Micro RGB는 삼성만 한다"고 말하지 마세요. 차별점은 패널 종류가 아니라 무반사 코팅(UL 인증)·Precision Color 100(VDE 인증)·165Hz VRR 같은 검증된 세부 사양이며, 매장 조명 아래에서 반사 차이를 직접 보여주는 것이 가장 효과적입니다.' },
       { issue:'LG OLED 화질 선호', strategy:'OLED는 명암비 우수, Neo QLED는 밝기·색정확도 우위. 밝은 거실(한국 대부분)에서는 Neo QLED가 실사용 화질이 더 좋음을 설명.' },
       { issue:'TCL·하이센스 가격 우위', strategy:'브랜드 A/S 신뢰도, 삼성 스마트싱스 생태계 연동, Pantone 색 인증, 화이트밸런스 정밀도 등 "눈에 보이지 않는" 품질 차이 강조.' },
       { issue:'OLED 번인 우려', strategy:'삼성 Neo QLED는 번인 걱정 없이 오래 사용 가능. LG OLED는 장시간 고정 화면 시 번인 위험이 있다는 점 활용.' }
@@ -1124,17 +1200,27 @@ const DB = {
     emoji:'💨',
     samsung:[
       { name:'BESPOKE AI 콤보 프리히트 7인치 LCD (일체형, 세탁25+건조20kg) WD90H25AHS', price:430, grade:'P',
-        on:['프리히트(하이브리드 히트펌프 진화형)','국내 일체형 최대용량(건조 20kg)','AI 세탁건조','오토오픈도어+','7인치 LCD','SmartThings'],
-        specs:{ cap:20, eGrade:1, as:1, noise:51.7 } },
+        on:['프리히트(하이브리드 히트펌프 진화형)','AI 세탁건조','오토오픈도어+','7인치 LCD','SmartThings'],
+        specs:{ cap:20, eGrade:1, as:1, noise:51.7, size:'686 × 1,110 × 875' } },
       { name:'BESPOKE AI 콤보 프리히트 기본형 (일체형, 세탁25+건조20kg) WD90H25BHY', price:320, grade:'S',
-        on:['프리히트(하이브리드 히트펌프 진화형)','국내 일체형 최대용량(건조 20kg)','AI 세탁건조','AI 이불세탁건조','세제자동투입(11단계)'],
-        specs:{ cap:20, eGrade:1, as:1, noise:51.7 } }
+        on:['프리히트(하이브리드 히트펌프 진화형)','AI 세탁건조','AI 이불세탁건조','세제자동투입(11단계)'],
+        specs:{ cap:20, eGrade:1, as:1, noise:51.7, size:'686 × 1,110 × 875' } }
     ],
+    /* 2026-08-03 LG 카탈로그 대조: 2026년형 LG 워시콤보(FC2521 계열)는 건조 21kg으로 삼성 20kg보다 크다.
+       기존 삼성 셀링포인트의 "국내 일체형 최대용량(건조 20kg)"은 성립하지 않아 삭제했다.
+       LG 단독 건조기(RD25 계열)는 25kg이지만 일체형 콤보가 아니라 별도 기기라 이 카테고리에 넣지 않는다.
+       출처: 20260708_best_catalogue.pdf(FC2521SX6C 스펙표, 용량(세탁/건조) 25/21kg) */
     competitors:{
       'LG':[
+        { name:'LG 트롬 AI 오브제컬렉션 워시콤보 (일체형, 세탁25+건조21kg) FC2521SX6C',
+          on:['AI 세탁+건조','듀얼 인버터 히트펌프 건조','트루스팀','인버터 DD모터(10년 무상보증)','자동세제함','와이드 디스플레이(7인치 LCD)'],
+          specs:{ cap:21, eGrade:1, as:1, size:'700 × 990 × 885' } },
+        { name:'LG 트롬 AI 오브제컬렉션 워시콤보+미니워시 (세탁25+건조21kg+미니 4kg) FC2521SX6CX',
+          on:['AI 세탁+건조','듀얼 인버터 히트펌프 건조','미니워시 4kg 일체형','트루스팀','와이드 디스플레이(7인치 LCD)'],
+          specs:{ cap:21, eGrade:1, as:1, size:'700 × 1,360 × 885' } },
         { name:'LG 트롬 오브제컬렉션 워시콤보 (일체형, 세탁25+건조15kg) FH25ESE', price:445,
           on:['AI 세탁건조','트루스팀살균','통살균케어','6모션'],
-          specs:{ cap:15, eGrade:1, as:1, noise:51.7 } },
+          specs:{ cap:15, eGrade:1, as:1, noise:51.7, size:'700 × 990 × 830' } },
         { name:'LG 트롬 오브제컬렉션 워시콤보+미니워시 (일체형, 세탁25+건조15kg) FH25ESEFX', price:517,
           on:['AI 세탁건조','트루스팀살균','미니워시 4kg 별도','6모션'],
           specs:{ cap:15, eGrade:1, as:1, noise:51.7 } }
@@ -1145,7 +1231,8 @@ const DB = {
       { key:'cap',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
-      { key:'noise', label:'소음',     unit:'dB',  better:'low'  }
+      { key:'noise', label:'소음',     unit:'dB',  better:'low'  },
+      { key:'size',  label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
     ],
     sells:[
       '국내 일체형 최대용량(건조 20kg) — LG(15kg) 대비 한 번에 더 많은 빨래를 건조, 세탁부터 건조까지 공간·시간 절약',
@@ -1188,16 +1275,30 @@ const DB = {
         specs:{ cap:12, eGrade:1, as:1, noise:38, dryType:'열풍' } },
       { name:'Bespoke AI 식기세척기 빌트인 (14인용) DW80F73Y1UEWS', price:102, grade:'S',
         on:['AI 맞춤세척+','4단 입체 물살','99.999% 파워살균','야간저소음 코스'],
-        specs:{ cap:14, eGrade:1, as:1, noise:30, dryType:'열풍' } }
+        specs:{ cap:14, eGrade:1, as:1, noise:30, dryType:'열풍' } },
+      { name:'Bespoke AI 식기세척기 빌트인 (14인용, dp 카탈로그 스펙표) DW90F79F1UAP', grade:'S',
+        on:['AI 맞춤세척+','100℃ 열풍건조(3단계)','오토 오픈 도어','대화형 알림창(LCD) 조작부','정수필터 내장','세척코스 15개','컵 맞춤 세척(최상단)','물사용량 1.1L/인용(표준코스)','패널 교체 지원'],
+        specs:{ cap:14, eGrade:1, as:1, dryType:'열풍', install:'빌트인', size:'595 × 815 × 572' } }
     ],
+    /* 2026-08-03 LG 베스트샵 카탈로그(86쪽 디오스 오브제컬렉션 식기세척기 스펙표) 대조.
+       LG 14인용 8종은 스펙이 사실상 동일하고 걸레받이 높이(100/150㎜)·설치타입(빌트인 / 프리스탠딩 겸용)·
+       컬러만 갈린다. DEE6·DUE6는 건조가 "응축+자동문열림 / 열풍" 둘 다, 5시리즈(DUE5·DFE5)는 열풍이 빠진다.
+       소음(dB)은 LG 카탈로그에 없어 기존 조사값을 유지했다. 카탈로그에 가격이 없어 신규분은 price를 비웠다.
+       출처: 20260708_best_catalogue.pdf(DEE6BGE·DUE6BGE·DFE6BGE·DUE5BGE 스펙표), dp 카탈로그(DW90F79F1UAP) */
     competitors:{
       'LG':[
+        { name:'LG 디오스 오브제컬렉션 식기세척기 (14인용, 걸레받이 100㎜) DEE6BGE',
+          on:['100℃ 트루스팀','연수장치','토네이도 세척날개','건조 응축+자동문열림 / 열풍','최상단선반·스마트선반','글라이드레일·내부조명','프라이팬·칼가위 거치대','음성안내'],
+          specs:{ cap:14, eGrade:1, as:1, dryType:'스팀+열풍', install:'빌트인(걸레받이 100㎜)', size:'598 × 815 × 567' } },
+        { name:'LG 디오스 오브제컬렉션 식기세척기 (14인용) DUE6BGE', price:219,
+          on:['100℃ 트루스팀','연수장치','토네이도 세척날개','건조 응축+자동문열림 / 열풍','최상단선반·스마트선반','음성안내','ThinQ 연동'],
+          specs:{ cap:14, eGrade:1, as:1, noise:44, dryType:'스팀+열풍', install:'빌트인(걸레받이 150㎜)', size:'598 × 815 × 567' } },
+        { name:'LG 디오스 오브제컬렉션 식기세척기 (14인용, 프리스탠딩 겸용) DFE6BGE',
+          on:['100℃ 트루스팀','연수장치','토네이도 세척날개','건조 응축+자동문열림 / 열풍','프리스탠딩 겸용 설치'],
+          specs:{ cap:14, eGrade:1, as:1, dryType:'스팀+열풍', install:'프리스탠딩 겸용', size:'598 × 815 × 567' } },
         { name:'LG 디오스 오브제컬렉션 식기세척기 (12인용) DUBJ4EL', price:119,
           on:['스팀','ThinQ 연동'],
-          specs:{ cap:12, eGrade:1, as:1, noise:46, dryType:'스팀' } },
-        { name:'LG 디오스 오브제컬렉션 식기세척기 (14인용) DUE6BGE', price:219,
-          on:['오토오픈도어','ThinQ 연동','스팀'],
-          specs:{ cap:14, eGrade:1, as:1, noise:44, dryType:'스팀+열풍' } }
+          specs:{ cap:12, eGrade:1, as:1, noise:46, dryType:'스팀' } }
       ]
     },
     specItems:[
@@ -1206,7 +1307,9 @@ const DB = {
       { key:'dryType',label:'건조 방식',unit:'',   better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년', better:'high' },
-      { key:'noise', label:'소음',     unit:'dB', better:'low'  }
+      { key:'noise', label:'소음',     unit:'dB', better:'low'  },
+      { key:'install',label:'설치 타입', unit:'',  better:'high', score:false },
+      { key:'size',  label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
     ],
     sells:[
       '99.999% 파워살균 + AI 맞춤세척+ — 오염도를 자동 감지해 세척 강도 최적화, 유아 식기까지 안심',
@@ -1260,7 +1363,19 @@ const DB = {
         specs:{ size:15, hz:144, bat:59.1, as:2, weight:1.61 } }
     ],
     competitors:{
+      /* 2026-08-03 LG 베스트샵 카탈로그(LG 그램 지면) 대조. 2026년형 그램에는 OLED 패널 모델
+         (16Z90U-KU7HK, WQXGA+ 2880×1800 OLED VRR)이 있어 "그램은 IPS라 삼성 AMOLED가 우위"라는
+         기존 셀링포인트가 더 이상 전 라인업에 통하지 않는다 — 셀링포인트를 모델 확인 전제로 수정했다.
+         17Z90TR-ED7HK는 RTX 5050 외장 GPU + 90Wh 배터리를 얹은 상위 트림이다.
+         주사율은 카탈로그에 표기가 없어 신규 반영분에 넣지 않았다.
+         출처: 20260708_best_catalogue.pdf(그램 스펙표 — CPU·디스플레이·메모리·배터리·무게) */
       'LG':[
+        { name:'LG 그램 Pro (16인치, OLED) 16Z90U-KU7HK',
+          on:['WQXGA+ 2880×1800 OLED VRR','인텔 코어 Ultra X7 358H','인텔 ARC Graphics','32GB LPDDR5x','1TB NVMe + 확장 슬롯 1','Wi-Fi 7','백라이트 키보드'],
+          specs:{ size:16, bat:77, as:2, weight:1.199 } },
+        { name:'LG 그램 (17인치, RTX 5050) 17Z90TR-ED7HK',
+          on:['NVIDIA GeForce RTX 5050 외장 GPU','인텔 코어 Ultra 7 255H','WQXGA 2560×1600 IPS','32GB LPDDR5x','1TB NVMe + 확장 슬롯 1','90Wh 배터리','Wi-Fi 7'],
+          specs:{ size:17, bat:90, as:2, weight:1.479 } },
         { name:'LG 그램 Pro (16인치) 16Z90SP', price:249,
           on:['IPS 디스플레이','Copilot+ PC','군용 규격 MIL-STD-810H'],
           specs:{ size:16, hz:120, bat:80, as:2, weight:1.199 } },
@@ -1281,7 +1396,7 @@ const DB = {
       { key:'weight',label:'무게',     unit:'kg',  better:'low'  }
     ],
     sells:[
-      'AMOLED 디스플레이 — LG 그램 IPS 대비 명암비·색재현율 압도. 영상·디자인 작업자에 최적',
+      'AMOLED 디스플레이 — 그램 IPS 모델 대비 명암비·색재현율 우위 (단, 그램에도 OLED 트림 16Z90U-KU7HK가 있으니 고객이 보는 모델을 먼저 확인할 것)',
       'S펜 지원 (360 모델) — 회의 노트·스케치·문서 편집 즉시. LG에 없는 차별화',
       'Galaxy 생태계 연동 — 갤럭시폰·버즈·워치와 완벽 연동, 파일·클립보드 자동 공유'
     ],
@@ -1449,7 +1564,14 @@ const DB = {
         specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'600 × 520 × 48' } }
     ],
     competitors:{
+      /* 2026-08-03 LG 베스트샵 카탈로그(전기레인지 지면) 대조. BEF3ANHLE/BEF3ANBLE는
+         "인덕션 3구(와이드존 + 인덕션 1구)"에 총출력 3.4kW로 삼성 NZ63DB 계열과 같고,
+         조리대 타공도 560 × 480 ㎜로 동일하다. 본체는 삼성 600㎜ / LG 580㎜로 폭만 갈린다.
+         출처: 20260708_best_catalogue.pdf(BEF3ANHLE 스펙표 — 총출력·타공·제품 치수) */
       'LG':[
+        { name:'LG 디오스 오브제컬렉션 인덕션 3구 (와이드존, 쿼드인버터) BEF3ANHLE',
+          on:['와이드존 + 인덕션 1구','쿼드인버터','터보 3.4 / 2.2 / 2.2 kW','세라믹 글라스','원터치 다이렉트 컨트롤','끓음알림 / 레시피쿡 / 인공지능쿡','음성안내 / 자동용기감지','ThinQ UP가전'],
+          specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'580 × 520 × 59' } },
         { name:'LG 디오스 오브제컬렉션 인덕션 빌트인(와이드존) BEF3AMB4', price:194,
           on:['와이드존','부스터'],
           specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'575 × 515 × 59' } },
@@ -1538,19 +1660,27 @@ function updateCompetitors() {
   // 선택된 삼성 모델과 등급(용량·화면크기 등 specItems[0])이 가장 가까운 경쟁모델을 기본 선택
   // — 그렇지 않으면 항상 각 배열의 0번(최상위 모델)끼리만 비교돼 85인치 vs 65인치처럼
   //   등급이 안 맞는 조합이 기본값으로 노출된다.
-  const primaryKey = d.specItems && d.specItems[0] && d.specItems[0].key;
+  // 기준은 "가격을 뺀 첫 비교항목"이다. 전 카테고리에 가격 행을 추가하면서 specItems[0]이
+  // 'price'가 됐는데, 가격은 specs가 아니라 모델 최상위에 있어 이 블록이 통째로 죽어 있었다
+  // (등급 자동매칭이 동작하지 않아 늘 0번끼리 비교됐다). specValue로 읽고 price는 건너뛴다.
+  const primaryItem = (d.specItems || []).find((it) => it.key !== 'price');
+  const primaryKey = primaryItem && primaryItem.key;
   const si = +document.getElementById('sel-samsung').value || 0;
-  const samsungSpec = d.samsung[si] && d.samsung[si].specs && d.samsung[si].specs[primaryKey];
+  const samsungSpec = d.samsung[si] && specValue(d.samsung[si], primaryKey);
   if (primaryKey && typeof samsungSpec === 'number' && comps.length) {
-    let bestIdx = 0, bestDiff = Infinity;
+    let bestIdx = -1, bestDiff = Infinity, bestHasPrice = false;
     comps.forEach((m, i) => {
-      const v = m.specs && m.specs[primaryKey];
-      if (typeof v === 'number') {
-        const diff = Math.abs(v - samsungSpec);
-        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+      const v = specValue(m, primaryKey);
+      if (typeof v !== 'number') return;
+      const diff = Math.abs(v - samsungSpec);
+      const hasPrice = m.price !== undefined && m.price !== null;
+      // 등급이 같으면 가격이 확인된 모델을 기본값으로 — 가격 미상 모델이 기본이면
+      // 상담 화면을 열자마자 가격 행이 사라져 비교가 반쪽이 된다.
+      if (diff < bestDiff || (diff === bestDiff && hasPrice && !bestHasPrice)) {
+        bestDiff = diff; bestIdx = i; bestHasPrice = hasPrice;
       }
     });
-    sc.value = String(bestIdx);
+    if (bestIdx >= 0) sc.value = String(bestIdx);
   }
 }
 
