@@ -483,10 +483,24 @@ function resetUrlTabInputs() {
   {
     // (1) 삼성 콤보의 "국내 일체형 최대용량" 문구는 삭제됐어야 한다 —
     //     2026년형 LG 워시콤보(FC2521 계열)가 건조 21kg으로 삼성 20kg보다 크다.
+    // on(기능칩)뿐 아니라 sells·counters·scripts까지 전부 훑는다 —
+    // 처음엔 on만 검사해 건조기 sells에 같은 문구가 그대로 남아 배포까지 나간 적이 있다.
     ['세탁기·콤보', '건조기'].forEach((cat) => {
-      DB[cat].samsung.forEach((m) => {
-        assertTrue(!m.on.some((f) => f.includes('최대용량')),
-          `${cat} "${m.name}"에 "최대용량" 문구가 남아 있음 — LG 21kg 대비 사실이 아니다`);
+      const d = DB[cat];
+      const texts = [
+        ...d.samsung.flatMap((m) => m.on),
+        ...(d.sells || []),
+        ...(d.counters || []).flatMap((c) => [c.issue, c.strategy]),
+        ...(d.scripts || []).flatMap((c) => [c.trigger, c.text]),
+      ];
+      texts.forEach((t) => {
+        // 대응전략의 "'국내 최대용량'이라는 표현은 쓰지 마세요"는 금지 지시문이라 통과시킨다
+        if (/쓰지 마세요/.test(t)) return;
+        assertTrue(!/최대용량/.test(t),
+          `${cat}에 "최대용량" 문구가 남아 있음 — LG 21kg 대비 사실이 아니다: ${t.slice(0, 60)}`);
+        // "LG는 15kg" 같은 단정도 금지 — 2026년형은 21kg이라 구세대만 15kg이다
+        assertTrue(!/LG\(15kg\)|LG는 건조 용량이 15kg/.test(t),
+          `${cat}에 "LG=15kg" 단정이 남아 있음 — 2026년형 LG는 21kg이다: ${t.slice(0, 60)}`);
       });
     });
     const lgCombo = DB['세탁기·콤보'].competitors['LG'].find((m) => m.name.includes('FC2521SX6C'));
