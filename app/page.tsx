@@ -113,8 +113,8 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
 const ADMIN_MODULE: ModuleCard = {
   href: '/admin',
   icon: '📊',
-  title: 'AX 현황 대시보드',
-  desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기',
+  title: 'AX 현황 대시보드[관리자용]',
+  desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기 (비밀번호 필요)',
   color: '#475569',
   bg: '#F8FAFC',
   updated: '2026.07',
@@ -433,7 +433,9 @@ export default function Home() {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
-  useEffect(() => { logEvent('hub', 'page_view') }, [])
+  // 허브 메인 페이지뷰는 더 이상 기록하지 않는다 — 모든 모듈의 진입점이라
+  // 링크를 타고 들어오거나 카드를 누르기만 해도 조회수가 쌓여 집계를 왜곡했다.
+  // 통합검색(hub/search)·건의(hub/feedback)는 의도적인 행동이라 그대로 기록한다.
 
   // 통합검색에서 /#coupon · /#concierge 같은 앵커로 들어오는 경로 처리.
   // 모바일은 섹션이 접힌 채로 시작해 대상 요소가 hidden이라 브라우저가 스크롤 대상으로 잡지
@@ -542,7 +544,7 @@ export default function Home() {
       {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 운영 */}
       <div className="mb-5">
         <AccordionHeader
-          title="📊 AX 현황 대시보드"
+          title="📊 AX 현황 대시보드[관리자용]"
           isOpen={!!openSections['admin']}
           onClick={() => toggleSection('admin')}
         />

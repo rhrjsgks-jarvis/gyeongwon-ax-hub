@@ -1,9 +1,35 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, exportCsv, logEvent, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
 
-const ADMIN_SESSION_KEY = 'ax_admin_unlocked'
+// 인증 상태는 sessionStorage에 만료시각과 함께 둔다.
+// 이전에는 localStorage에 '1'만 저장해 한 번 통과한 기기는 브라우저를 껐다 켜도 영구히
+// 열려 있었다(비밀번호를 걸어 둔 의미가 없었다). 지금은 ①탭/브라우저를 닫으면 잠기고
+// ②같은 세션이라도 2시간이 지나면 다시 물어본다.
+const ADMIN_SESSION_KEY = 'ax_admin_unlocked_until'
+const LEGACY_KEY = 'ax_admin_unlocked'
+const UNLOCK_TTL_MS = 2 * 60 * 60 * 1000
+
+function isUnlocked(): boolean {
+  try {
+    const until = Number(sessionStorage.getItem(ADMIN_SESSION_KEY) || 0)
+    return Number.isFinite(until) && until > Date.now()
+  } catch {
+    return false
+  }
+}
+
+function markUnlocked(): void {
+  try { sessionStorage.setItem(ADMIN_SESSION_KEY, String(Date.now() + UNLOCK_TTL_MS)) } catch {}
+}
+
+function lockNow(): void {
+  try {
+    sessionStorage.removeItem(ADMIN_SESSION_KEY)
+    localStorage.removeItem(LEGACY_KEY)
+  } catch {}
+}
 
 function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
@@ -20,7 +46,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
       })
       const data = await res.json()
       if (data.ok) {
-        localStorage.setItem(ADMIN_SESSION_KEY, '1')
+        markUnlocked()
         onUnlock()
       } else {
         setError(true)
@@ -36,7 +62,10 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
         <div className="text-2xl mb-2">🔒</div>
         <h1 className="font-bold text-gray-800 mb-1">관리자 인증</h1>
-        <p className="text-xs text-gray-400 mb-4">AX 현황 대시보드는 비밀번호로 보호됩니다</p>
+        <p className="text-xs text-gray-400 mb-4">
+          AX 현황 대시보드[관리자용]는 비밀번호로 보호됩니다<br />
+          <span className="text-[10px]">인증은 브라우저를 닫으면 해제되고, 2시간 뒤 다시 물어봅니다</span>
+        </p>
         <input
           type="password"
           value={pw}
@@ -70,7 +99,8 @@ const ROI_DATA = [
 ]
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
-  hub:     { label: '허브 메인',       icon: '🏠', color: '#1428A0' },
+  // 허브 메인 페이지뷰는 집계에서 제외되므로 여기 남는 건 통합검색·건의뿐이다
+  hub:     { label: '허브 검색·건의',   icon: '🔎', color: '#1428A0' },
   finder:  { label: '모델파인더',      icon: '🔍', color: '#2563EB' },
   care:    { label: 'AI Care',         icon: '🛠️', color: '#059669' },
   test:    { label: '레벨업테스트',    icon: '📝', color: '#7C3AED' },
@@ -93,20 +123,24 @@ export default function AdminPage() {
   const [gateChecked, setGateChecked] = useState(false)
 
   useEffect(() => {
-    if (localStorage.getItem(ADMIN_SESSION_KEY) === '1') setUnlocked(true)
+    // 예전 방식(localStorage에 영구 저장)으로 열려 있던 기기는 여기서 정리해 다시 잠근다.
+    try { localStorage.removeItem(LEGACY_KEY) } catch {}
+    if (isUnlocked()) setUnlocked(true)
     setGateChecked(true)
   }, [])
 
   useEffect(() => {
     if (!unlocked) return
-    logEvent('hub', 'page_view')
+    // 관리자 대시보드 조회 자체는 로그로 남기지 않는다 — 이 페이지를 열 때마다
+    // hub 페이지뷰가 1건씩 늘어 집계가 부풀려졌다.
     ;(async () => {
+      // 화면·CSV 모두 허브 메인 페이지뷰를 뺀 로그로 통일한다(집계와 내보내기가 어긋나지 않게).
       const team = await fetchTeamLogs()
       if (team) {
-        setLogs(team)
+        setLogs(excludeHubViews(team))
         setTeamWide(true)
       } else {
-        setLogs(readLogs())
+        setLogs(excludeHubViews(readLogs()))
         setTeamWide(false)
       }
       setLoaded(true)
@@ -132,10 +166,20 @@ export default function AdminPage() {
       >
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xl">📊</span>
-          <span className="font-bold text-base">AX 현황 대시보드</span>
+          <span className="font-bold text-base">AX 현황 대시보드[관리자용]</span>
+          <button
+            onClick={() => { lockNow(); setUnlocked(false) }}
+            className="ml-auto text-[11px] font-semibold rounded-lg px-2.5 py-1"
+            style={{ background: 'rgba(255,255,255,0.18)' }}
+          >
+            🔒 잠그기
+          </button>
         </div>
         <p className="text-xs text-blue-200">
           경원 AX 허브 · 사용 현황 · {teamWide ? '팀 전체 집계 (Google Sheets 연동)' : 'localStorage 기반 · 이 기기에서만 누적'}
+        </p>
+        <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          허브 메인화면 조회수는 집계에서 제외됩니다 (모든 모듈의 진입점이라 실사용 신호가 아님)
         </p>
       </div>
 

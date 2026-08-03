@@ -99,6 +99,16 @@ export async function sendFeedback(message: string, contact?: string): Promise<b
   }
 }
 
+/**
+ * 허브 메인화면 페이지뷰를 집계에서 제외한다.
+ * 허브는 모든 모듈의 진입점이라 링크를 타고 들어오거나 카드를 누르기만 해도 조회수가 쌓여
+ * "실제로 도구를 썼다"는 신호가 아니다. 반면 hub/search(통합검색)·hub/feedback(건의)은
+ * 사용자가 의도적으로 한 행동이라 그대로 남긴다.
+ */
+export function excludeHubViews(logs: LogEvent[]): LogEvent[] {
+  return logs.filter((e) => !(e.module === 'hub' && e.action === 'page_view'))
+}
+
 export function aggregateByModule(logs: LogEvent[]) {
   const map: Record<string, number> = {}
   for (const ev of logs) {
