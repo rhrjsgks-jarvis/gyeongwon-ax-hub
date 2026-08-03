@@ -16,7 +16,8 @@
     "test:consistency": "node scripts/test-consistency.mjs",
     "test:search": "node scripts/test-search.mjs",
     "build:index": "node scripts/build-search-index.mjs",
-    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search"
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search",
+    "test:e2e": "node scripts/test-e2e.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",
@@ -31,6 +32,7 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "jsdom": "^24.1.0",
+    "playwright": "^1.48.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

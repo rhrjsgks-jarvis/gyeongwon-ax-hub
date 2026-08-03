@@ -260,6 +260,7 @@ node scripts/test-levelup.mjs   # 레벨업테스트: 25문항 구성, 채점(CE
 node --experimental-strip-types scripts/test-admin.mjs   # AX 대시보드: lib/logEvent.ts 집계·CSV 내보내기 회귀
 node scripts/test-consistency.mjs   # 크로스파일 모델코드 일관성: 골든 모델코드 4파일 존재·최상위 SKU 동일성 회귀
 node scripts/test-search.mjs    # 통합검색: 인덱스 최신성(재생성 대조), 대표 검색어 모듈 매칭, 딥링크 처리 존재
+node scripts/test-e2e.mjs       # (브라우저) 프로덕션 빌드를 띄워 렌더·인증 게이트·지연 로드 확인
 node scripts/build-search-index.mjs   # (테스트 아님) 통합검색 인덱스 재생성 — 모듈 데이터 수정 후 필수
 npx tsc --noEmit                # 타입체크
 ```
@@ -267,7 +268,25 @@ npx tsc --noEmit                # 타입체크
 
 새 카테고리·제품을 추가하거나 이미지 개수가 바뀌면 각 스크립트의 기대값(예: `test-install.mjs`의 `expectedImageCounts`)을 반드시 함께 갱신할 것 — 안 하면 테스트가 실패한다. `compare-app.html`/`test-app.html`은 XSS 회귀 가드가 포함돼 있으므로 이스케이프 로직(`escHtml`)을 건드릴 때 특히 주의.
 
-AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클라이언트 컴포넌트라 다른 모듈과 같은 jsdom-전체페이지 패턴은 쓸 수 없다. 대신 실제 로직이 몰려 있는 `lib/logEvent.ts`(집계·CSV 내보내기)를 Node의 `--experimental-strip-types`로 직접 임포트해 순수 함수 단위로 검증한다(`scripts/test-admin.mjs`) — 컴포넌트 자체의 렌더링/인증 게이트는 아직 커버하지 않음.
+AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클라이언트 컴포넌트라 다른 모듈과 같은 jsdom-전체페이지 패턴은 쓸 수 없다. 대신 실제 로직이 몰려 있는 `lib/logEvent.ts`(집계·CSV 내보내기)를 Node의 `--experimental-strip-types`로 직접 임포트해 순수 함수 단위로 검증한다(`scripts/test-admin.mjs`).
+
+### 브라우저 E2E (`scripts/test-e2e.mjs`) — `npm run test:e2e`
+
+위 8개 스위트는 전부 **데이터와 순수 함수**만 본다. React 페이지(`/`, `/admin`, `/search`)의 실제
+렌더링·인증 게이트·네트워크 요청은 아무도 검사하지 않아, 실제로 두 번 사고가 났다 —
+①관리자 인증이 `localStorage`에 영구 저장돼 비밀번호가 무력화된 채 배포됐고
+②건조기 셀링포인트에 사실이 아닌 문구가 남은 채 배포됐다. 둘 다 사람이 브라우저로 열어보고 나서야
+발견했다. 그 확인을 CI가 대신한다.
+
+- **프로덕션 빌드**를 띄워서 검사한다(개발 서버가 아니라 실제 배포 형태). `.next`가 없으면 먼저 빌드한다.
+- 검사 항목: 허브 렌더 + 허브 페이지뷰 미기록 / 6개 모듈 iframe 로드 / 관리자 인증 게이트(레거시 키가
+  있어도 잠김·오답 시 잠김 유지·localStorage 미저장) / 통합검색 지연 로드(진입 시 경량본만, 펼칠 때 상세) /
+  `/planner` 404 / 전 페이지 콘솔 오류·4xx 응답 없음.
+- 콘솔의 "Failed to load resource"는 **URL을 담고 있지 않아** 버리고, `response` 리스너로 실제 URL과 함께
+  4xx/5xx를 따로 수집한다. 일부러 404를 요청하는 구간(`/planner`)에서는 수집을 잠시 끈다.
+- CI에서는 브라우저 설치·빌드가 필요해 **별도 잡(`e2e`)**으로 돌린다. 로컬에서는
+  `PLAYWRIGHT_CHROMIUM=/opt/pw-browsers/chromium npm run test:e2e`처럼 실행 파일을 지정할 수 있다.
+- `playwright`가 설치돼 있지 않으면 실패가 아니라 **SKIP**으로 빠진다(데이터 테스트만 돌리는 환경 배려).
 
 같은 제품의 모델코드가 test-app.html/finder-app.html/compare-app.html에 각각 독립적으로 박혀 있어
 한 파일만 고치고 나머지를 놓치는 사고가 실제로 여러 번 있었다(냉장고 RF→RM, 세탁기 WD25→WD90,

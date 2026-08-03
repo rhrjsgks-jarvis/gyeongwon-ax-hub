@@ -24,3 +24,26 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+  # 브라우저 E2E는 빌드 + 브라우저 설치가 필요해 위 데이터 테스트와 분리한다.
+  # (데이터 회귀는 빠르게 돌고, 화면 회귀는 여기서 별도로 확인된다)
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Browser E2E (렌더·인증 게이트·지연 로드)
+        run: npm run test:e2e
