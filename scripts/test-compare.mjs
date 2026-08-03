@@ -411,7 +411,9 @@ function resetUrlTabInputs() {
     window.selectCat('인덕션');
     window.selectBrand('LG');
     val('sel-samsung').value = '0';
-    val('sel-comp').value = '0';
+    // sel-comp는 건드리지 않는다 — 등급 자동매칭이 고른 기본값(가격이 확인된 동급 모델)을
+    // 그대로 검증해야 "상담 화면을 열자마자 가격 행이 보이는가"를 실제로 확인할 수 있다.
+    window.updateCompetitors();
     window.renderResult();
     const rowLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
     assertTrue(rowLabels.some((t) => t.includes('가격')), '비교표에 가격 행이 렌더되지 않음');
@@ -472,6 +474,66 @@ function resetUrlTabInputs() {
     const vacLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
     assertTrue(vacLabels.some((t) => t.includes('최대 흡입력')), '무선청소기 비교표에 최대 흡입력 행이 없음');
     console.log('[10-b] LG 카탈로그 반영(에어드레서·로봇청소기·무선청소기) + 가격 문의 처리 OK');
+  }
+
+  // ══════════════════════════════════════════
+  // 10-c. LG 카탈로그 2차 반영 회귀 (세탁기·건조기·식기세척기·에어컨·냉장고·TV·노트북·인덕션)
+  //   핵심은 "현장에서 반박당하는 문구"가 되살아나지 않게 막는 것이다.
+  // ══════════════════════════════════════════
+  {
+    // (1) 삼성 콤보의 "국내 일체형 최대용량" 문구는 삭제됐어야 한다 —
+    //     2026년형 LG 워시콤보(FC2521 계열)가 건조 21kg으로 삼성 20kg보다 크다.
+    ['세탁기·콤보', '건조기'].forEach((cat) => {
+      DB[cat].samsung.forEach((m) => {
+        assertTrue(!m.on.some((f) => f.includes('최대용량')),
+          `${cat} "${m.name}"에 "최대용량" 문구가 남아 있음 — LG 21kg 대비 사실이 아니다`);
+      });
+    });
+    const lgCombo = DB['세탁기·콤보'].competitors['LG'].find((m) => m.name.includes('FC2521SX6C'));
+    assertTrue(!!lgCombo, '세탁기·콤보에 LG 워시콤보 FC2521SX6C가 없음');
+    assertEq(lgCombo.specs.dry, 21, 'LG FC2521SX6C 건조 용량이 카탈로그값(21kg)이 아님');
+
+    // (2) TV — LG도 Micro RGB를 내므로 "삼성만의 기술" 류 문구가 있으면 안 된다
+    const lgTv = DB['TV'].competitors['LG'];
+    assertTrue(lgTv.some((m) => m.specs.panel === 'Micro RGB'),
+      'TV 경쟁사에 LG Micro RGB가 없음 — 카탈로그 반영이 되돌아갔다');
+    assertTrue(!DB['TV'].sells.some((t) => t.includes('삼성 독자 기술')),
+      'TV 셀링포인트에 "삼성 독자 기술" 문구가 남아 있음 — LG도 Micro RGB를 낸다');
+
+    // (3) 노트북 — 그램에도 OLED 트림이 있으므로 "그램 IPS" 단정 금지
+    assertTrue(DB['노트북'].competitors['LG'].some((m) => m.name.includes('16Z90U-KU7HK')),
+      '노트북에 LG 그램 OLED 트림(16Z90U-KU7HK)이 없음');
+
+    // (4) 각 카테고리 비교표가 실제로 렌더되고 신규 행이 나오는지 (DOM)
+    const cases = [
+      ['세탁기·콤보', 'FC2521SX6C', ['건조 용량', '제품 크기'], '700 × 990 × 885'],
+      ['식기세척기', 'DEE6BGE',     ['설치 타입', '제품 크기'], '598 × 815 × 567'],
+      ['에어컨',     'FQ25GN9BE1',  ['냉방 면적', '실내기 크기'], '380 × 1,915 × 295'],
+      ['냉장고',     'M876GGA431',  ['총 용량', '제품 크기'], '914 × 1,860 × 918'],
+      ['TV',        '86MRGB96BKA', ['패널 방식', '제품 크기'], '1,925 × 1,105 × 46.1'],
+      ['인덕션',     'BEF3ANHLE',   ['전체 출력', '상판 타공'], '580 × 520 × 59'],
+    ];
+    cases.forEach(([cat, code, labels, dim]) => {
+      window.selectCat(cat);
+      window.selectBrand('LG');
+      const opts = [...val('sel-comp').querySelectorAll('option')].map((o) => o.textContent);
+      const idx = opts.findIndex((t) => t.includes(code));
+      assertTrue(idx >= 0, `${cat} 경쟁사 드롭다운에 ${code}가 없음`);
+      val('sel-comp').value = String(idx);
+      // 삼성 쪽도 해당 스펙을 가진 모델을 골라야 행이 렌더된다
+      const sOpts = val('sel-samsung').querySelectorAll('option');
+      let rendered = null;
+      for (let i = 0; i < sOpts.length; i++) {
+        val('sel-samsung').value = String(i);
+        window.renderResult();
+        const ls = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
+        if (labels.every((l) => ls.some((t) => t.includes(l)))) { rendered = ls; break; }
+      }
+      assertTrue(!!rendered, `${cat}(${code}) 비교표에 ${labels.join('·')} 행이 어떤 조합에서도 렌더되지 않음`);
+      const vals = [...val('spec-table').querySelectorAll('.spec-val')].map((td) => td.textContent).join(' ');
+      assertTrue(vals.includes(dim), `${cat}(${code}) 카탈로그 치수 "${dim}"가 렌더되지 않음`);
+    });
+    console.log(`[10-c] LG 카탈로그 2차 반영 ${cases.length}개 카테고리 + 과장문구 가드 OK`);
   }
 
   // ══════════════════════════════════════════
