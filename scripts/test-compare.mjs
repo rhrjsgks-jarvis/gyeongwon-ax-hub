@@ -73,7 +73,7 @@ function resetUrlTabInputs() {
   // 0. 초기 렌더 — 에러 없이 로드되는지
   // ══════════════════════════════════════════
   assertTrue(doc.getElementById('tab-db') !== null, '초기 렌더 실패: #tab-db 없음');
-  assertEq(doc.querySelectorAll('.cat-btn').length, 13, '카테고리 버튼 개수가 13개가 아님');
+  assertEq(doc.querySelectorAll('.cat-btn').length, 15, '카테고리 버튼 개수가 15개가 아님');
   console.log('[0] 초기 렌더 OK');
 
   // 비교 실행 전 가드: copyResult/goQuiz가 예외 없이 안내만 하는지
@@ -139,7 +139,7 @@ function resetUrlTabInputs() {
   // 3. DB 전 카테고리 × 전 브랜드 × 전 모델 조합 순회 렌더 검증
   // ══════════════════════════════════════════
   const CATS = Object.keys(DB);
-  assertEq(CATS.length, 13, 'DB 카테고리 개수가 13개가 아님 (카테고리 추가/삭제 시 이 테스트도 함께 확인할 것)');
+  assertEq(CATS.length, 15, 'DB 카테고리 개수가 15개가 아님 (카테고리 추가/삭제 시 이 테스트도 함께 확인할 것)');
 
   // 카테고리 그리드 버튼과 DB 키가 1:1로 매칭되는지 (드리프트 방지)
   const gridCats = [...doc.querySelectorAll('.cat-btn')].map((b) => {

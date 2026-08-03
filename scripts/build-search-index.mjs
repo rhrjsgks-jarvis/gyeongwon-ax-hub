@@ -149,9 +149,7 @@ const MODULES = [
   })),
   // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
-  // 패키지 플래너는 /planner 라우트가 살아 있으나 허브 카드·사이드바 어디에도 링크가 없어
-  // 통합검색이 유일한 진입로다. 화면 워딩을 뽑아올 곳이 없으므로 여기서 직접 정의한다.
-  { title: '패키지 플래너', sub: '평형별 패키지 구성·견적 (허브 카드에는 없는 모듈)', kw: '패키지 플래너 견적 혼수 신혼 planner 평형 구성', href: '/planner' },
+  // (패키지 플래너는 2026-08-03 운영 종료 — 라우트·정적앱·인덱스 항목 모두 제거했다.)
   { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge 🏬 매장운영 도구', href: '/#concierge' },
   { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true },
 ];
@@ -159,28 +157,42 @@ for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });
 }
 
-// ── 6. 패키지 플래너 카테고리 ──
-{
-  const html = read('package-planner.html');
-  const block = html.match(/const DB=\{([\s\S]*?)\n\};/);
-  const KO = { fridge: '냉장고', washer: '세탁기', dryer: '건조기', tv: 'TV', aircon: '에어컨',
-    dishwasher: '식기세척기', airdresser: '에어드레서', robot: '로봇청소기', vacuum: '청소기',
-    kimchi: '김치냉장고', induction: '인덕션', airpurifier: '공기청정기', microwave: '전자레인지',
-    soundbar: '사운드바', laptop: '노트북', tablet: '태블릿', phone: '스마트폰', wearable: '웨어러블' };
-  if (block) {
-    for (const k of [...new Set([...block[1].matchAll(/^\s+(\w+):\[/gm)].map((x) => x[1]))]) {
-      const ko = KO[k] || k;
-      add({ t: 'category', m: 'planner', title: ko, sub: '패키지 플래너 · 평형별 구성·견적',
-        kw: `${ko} ${k} 패키지 견적 혼수`, href: '/planner' });
-    }
-  }
+// 키워드는 소문자로 정규화해 검색 시 비교 비용을 줄인다.
+// 같은 토큰이 여러 번 반복되는 경우가 많아(제품 하나에 "지원"이 20번씩) 중복을 없앤다 —
+// 검색은 질의를 공백으로 쪼갠 뒤 kw.includes(토큰)로 판정하므로 토큰이 한 번씩만 남아도
+// 결과가 동일하고, 인덱스는 90KB 가까이 줄어든다.
+for (const e of entries) {
+  e.kw = [...new Set(e.kw.toLowerCase().split(/\s+/).filter(Boolean))].join(' ');
 }
 
-// 키워드는 소문자로 정규화해 검색 시 비교 비용을 줄인다
-for (const e of entries) e.kw = e.kw.toLowerCase();
+// ── 인덱스를 "검색용 경량본"과 "상세 스펙"으로 분리해 내보낸다 ──
+// /search는 첫 진입에 경량본만 받고, 사용자가 결과를 펼칠 때 상세를 한 번 더 받는다.
+// 매장에서 폰으로 쓰는 도구라 첫 로딩에 상세 스펙(160KB 이상)까지 받을 이유가 없다.
+// 두 파일의 배열 인덱스가 같은 항목을 가리키므로(i 필드) 순서를 바꾸지 말 것.
+const DETAIL_KEYS = ['spec', 'on', 'off', 'price', 'note', 'usp'];
+const light = [];
+const detail = [];
+entries.forEach((e, i) => {
+  const d = {};
+  for (const k of DETAIL_KEYS) {
+    const v = e[k];
+    if (v === undefined || v === null) continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    d[k] = v;
+  }
+  const hasDetail = Object.keys(d).length > 0;
+  const l = { i, t: e.t, m: e.m, title: e.title, sub: e.sub, kw: e.kw, href: e.href };
+  if (e.ext) l.ext = 1;
+  if (e.catOk) l.catOk = 1;
+  if (hasDetail) { l.d = 1; detail.push({ i, ...d }); }
+  light.push(l);
+});
 
-const out = { generatedFrom: 'scripts/build-search-index.mjs', count: entries.length, entries };
+const out = { generatedFrom: 'scripts/build-search-index.mjs', count: entries.length, entries: light };
 fs.writeFileSync(pub('search-index.json'), JSON.stringify(out));
+fs.writeFileSync(pub('search-detail.json'), JSON.stringify({ count: detail.length, entries: detail }));
+const kb = (f) => Math.round(fs.statSync(pub(f)).size / 1024);
+console.log(`  경량 인덱스 ${kb('search-index.json')}KB / 상세 ${kb('search-detail.json')}KB (${detail.length}건, 펼칠 때 지연 로드)`);
 
 const byModule = {};
 for (const e of entries) byModule[e.m] = (byModule[e.m] || 0) + 1;

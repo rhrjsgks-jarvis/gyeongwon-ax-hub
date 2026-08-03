@@ -33,7 +33,7 @@ function lockNow(): void {
 
 function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<'' | 'wrong' | 'locked'>('')
   const [checking, setChecking] = useState(false)
 
   const submit = async () => {
@@ -49,10 +49,10 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         markUnlocked()
         onUnlock()
       } else {
-        setError(true)
+        setError(res.status === 429 ? 'locked' : 'wrong')
       }
     } catch {
-      setError(true)
+      setError('wrong')
     }
     setChecking(false)
   }
@@ -69,13 +69,18 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         <input
           type="password"
           value={pw}
-          onChange={e => { setPw(e.target.value); setError(false) }}
+          onChange={e => { setPw(e.target.value); setError('') }}
           onKeyDown={e => { if (e.key === 'Enter') submit() }}
           placeholder="비밀번호"
           autoFocus
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:border-blue-400"
         />
-        {error && <p className="text-xs text-red-500 mb-2">비밀번호가 올바르지 않습니다</p>}
+        {error === 'wrong' && <p className="text-xs text-red-500 mb-2">비밀번호가 올바르지 않습니다</p>}
+        {error === 'locked' && (
+          <p className="text-xs text-red-500 mb-2">
+            시도 횟수를 초과했습니다. 10분 뒤에 다시 시도해 주세요
+          </p>
+        )}
         <button
           onClick={submit}
           disabled={checking || !pw}
@@ -95,7 +100,6 @@ const ROI_DATA = [
   { key: 'quiz',    icon: '🎯', label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
   { key: 'care',    icon: '💚', label: 'AI Care 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
   { key: 'test',    icon: '📝', label: '레벨업테스트 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
-  { key: 'planner', icon: '📦', label: '입주패키지 구성·견적',            before: '20분/건',   after: '1분/건',   saving: 95 },
 ]
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -108,7 +112,8 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   // 타사비교로 통합된 구 모듈 — 통합 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
   compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309' },
   quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
-  planner: { label: '패키지 플래너',    icon: '📦', color: '#0891B2' },
+  // 운영 종료된 모듈 — 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
+  planner: { label: '패키지 플래너 (운영 종료)', icon: '📦', color: '#0891B2' },
   install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
   concierge: { label: '컨시어지 프로그램', icon: '🎫', color: '#DB2777' },
   coupon:  { label: '시크릿쿠폰',      icon: '🎁', color: '#DC2626' },

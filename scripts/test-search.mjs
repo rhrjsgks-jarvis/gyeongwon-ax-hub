@@ -14,6 +14,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 const indexPath = path.join(root, 'public', 'search-index.json');
+const detailPath = path.join(root, 'public', 'search-detail.json');
 
 let ok = true;
 const fail = (m) => { console.log('ERROR:', m); ok = false; };
@@ -36,13 +37,62 @@ const { entries } = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
 console.log(`인덱스 항목 수: ${entries.length}`);
 if (entries.length < 300) fail(`인덱스 항목이 비정상적으로 적음(${entries.length}) — 추출 로직 확인 필요`);
 
+// ── 경량 인덱스 / 상세 스펙 분리 회귀 ──
+// /search는 첫 진입에 경량본만 받고 펼칠 때 상세를 따로 받는다. 두 파일이 `i`로 연결되므로
+// 정렬이 어긋나면 엉뚱한 제품의 스펙이 뜬다 — 실제로 상담 사고가 될 수 있어 강하게 검사한다.
+{
+  if (!fs.existsSync(detailPath)) {
+    fail('public/search-detail.json이 없음 — `node scripts/build-search-index.mjs` 실행 필요');
+  } else {
+    const detail = JSON.parse(fs.readFileSync(detailPath, 'utf8')).entries;
+    const kb = (f) => Math.round(fs.statSync(f).size / 1024);
+    console.log(`  경량 ${kb(indexPath)}KB / 상세 ${kb(detailPath)}KB (${detail.length}건, 지연 로드)`);
+
+    // 첫 진입 로딩량 가드 — 상세 스펙이 다시 경량본으로 새어 들어오면 여기서 걸린다
+    const DETAIL_KEYS = ['spec', 'on', 'off', 'price', 'note', 'usp'];
+    const leaked = entries.find((e) => DETAIL_KEYS.some((k) => e[k] !== undefined));
+    if (leaked) fail(`경량 인덱스에 상세 필드가 섞임(${leaked.title}) — 첫 로딩량이 다시 늘어난다`);
+    else console.log('OK: 경량 인덱스에 상세 스펙 필드가 없음');
+
+    // i 정합성: 상세의 i가 경량본의 같은 자리를 가리켜야 한다
+    const byI = new Map(entries.map((e) => [e.i, e]));
+    const bad = detail.find((d) => !byI.has(d.i));
+    if (bad) fail(`search-detail.json의 i=${bad.i}에 대응하는 경량 인덱스 항목이 없음`);
+    else if (entries.some((e, idx) => e.i !== idx)) fail('경량 인덱스의 i가 배열 순서와 어긋남 — 두 파일 연결이 깨진다');
+    else console.log('OK: 경량↔상세 인덱스(i) 정합성');
+
+    // d 플래그와 상세 존재가 일치해야 "상세 ▼" 버튼이 헛돌지 않는다
+    const detailIds = new Set(detail.map((d) => d.i));
+    const flagged = entries.filter((e) => e.d).map((e) => e.i);
+    const mismatch = flagged.filter((i) => !detailIds.has(i))
+      .concat([...detailIds].filter((i) => !flagged.includes(i)));
+    if (mismatch.length) fail(`d 플래그와 상세 데이터 불일치 ${mismatch.length}건 (예: i=${mismatch[0]})`);
+    else console.log(`OK: 상세 보유 표시(d) ${flagged.length}건이 상세 파일과 일치`);
+  }
+}
+
+// 서비스워커 — 매장 전파 불량 대비 오프라인 캐시
+{
+  const sw = path.join(root, 'public', 'sw.js');
+  if (!fs.existsSync(sw)) fail('public/sw.js가 없음 — 오프라인 캐시가 동작하지 않는다');
+  else {
+    const src = fs.readFileSync(sw, 'utf8');
+    if (!/search-\(index\|detail\)/.test(src)) fail('sw.js가 검색 인덱스를 캐시 대상에 넣지 않음');
+    else if (!src.includes("startsWith('/api/')")) fail('sw.js가 /api 요청을 캐시에서 제외하지 않음 — 로그·인증이 굳는다');
+    else console.log('OK: 서비스워커 캐시 규칙(인덱스 포함 / API 제외)');
+    const reg = fs.readFileSync(path.join(root, 'components', 'ServiceWorker.tsx'), 'utf8');
+    if (!reg.includes("register('/sw.js')")) fail('ServiceWorker.tsx가 sw.js를 등록하지 않음');
+    else console.log('OK: 서비스워커 등록 컴포넌트');
+  }
+}
+
 // ── ② 대표 검색어 → 기대 모듈 매칭 ──
 const search = (q) => {
   const tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
   return entries.filter((e) => tokens.every((t) => e.kw.includes(t)));
 };
 const CASES = [
-  { q: '김치냉장고', modules: ['finder', 'install', 'compare', 'care', 'planner'] },
+  { q: '김치냉장고', modules: ['finder', 'install', 'compare', 'care'] },
   { q: '무풍', modules: ['finder'] },
   { q: 'RM90H91B1W', modules: ['finder'] },
   { q: '에어드레서', modules: ['finder', 'install', 'compare'] },

@@ -21,7 +21,6 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 | `/compare` | `compare-app.html` (타사비교) |
 | `/finder` | `finder-app.html` |
 | `/care` | `care-app.html` |
-| `/planner` | `package-planner.html` |
 | `/quiz` | `quiz-app.html` |
 
 새 모듈을 추가하거나 기존 모듈을 수정할 때:
@@ -179,6 +178,26 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
 - 비교표는 **양쪽 모두 값이 있어야** 그 행을 렌더한다. 한쪽에만 스펙을 넣으면 그 행은 조용히 사라지므로,
   새 항목을 추가할 때는 삼성 쪽 대응 값이 있는지 먼저 확인할 것.
 
+## 오프라인 캐시 (`public/sw.js`)
+
+매장에서 전파가 약하거나 끊겨도 한 번 본 화면은 열리게 하는 것이 목적이다. `components/ServiceWorker.tsx`가
+**프로덕션에서만** 등록한다(개발 중에는 캐시가 수정 내용을 가려 디버깅을 방해한다).
+
+- 네비게이션(HTML 문서)은 **네트워크 우선** — 배포 직후에도 Next 페이지가 최신이어야 한다.
+- 모듈 미니앱(`*-app.html`)·검색 인덱스는 **stale-while-revalidate** — 캐시를 즉시 보여주고 뒤에서 갱신.
+  데이터가 하루 늦는 것보다 "안 열리는" 쪽이 영업 현장에서 훨씬 치명적이다.
+- `_next/static/`은 캐시 우선(파일명에 해시가 있어 내용이 바뀌면 URL이 바뀐다).
+- `/api/*`는 **캐시하지 않는다** — 로그·인증이 굳는다.
+- 배포 시 캐시 무효화가 필요하면 `CACHE_VERSION`을 올린다. `activate`에서 옛 캐시를 지운다.
+
+## 운영 종료된 모듈
+
+- **패키지 플래너**(2026-08-03 종료) — `/planner` 라우트·`package-planner.html`·`test-planner.mjs`를
+  삭제했다. 종료 시점에 이미 허브 카드·사이드바 어디에도 링크가 없어 통합검색이 유일한 진입로였다.
+  `lib/logEvent.ts`의 `LogModule` 유니온에는 `'planner'`를 **남겨 둔다** — 구글 시트에 과거 로그가
+  남아 있어 타입에서 빼면 집계 코드가 타입 에러를 낸다. 대시보드 라벨도 "(운영 종료)"로 표기해 유지한다.
+  `'compareInstant'`(타사비교로 통합)도 같은 이유로 유지 중이다.
+
 ## AX 현황 대시보드 (`/admin`) — 관리자용
 
 허브 메인·사이드바 표기는 **"AX 현황 대시보드[관리자용]"**로 통일한다(3곳: `app/page.tsx` 카드+섹션 제목,
@@ -188,6 +207,12 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
   한 번 통과한 기기가 브라우저를 껐다 켜도 영구히 열려 있었다(비밀번호를 건 의미가 없었다).
   레거시 키 `ax_admin_unlocked`는 마운트 시 제거해 이미 열려 있던 기기를 다시 잠근다.
   비밀번호 해시는 `app/api/admin-auth/route.ts`(서버)에만 두고 검증 결과만 돌려준다 — 클라이언트로 옮기지 말 것.
+- **해시는 환경변수 `ADMIN_PW_HASH`로 주입한다**(서버 전용 — `NEXT_PUBLIC_` 접두사 금지). 이 저장소는
+  public이라 소스에 해시를 두면 누구나 받아 오프라인 대입이 가능하다. 미설정 시 폴백 해시로 동작하되
+  프로덕션에서 경고를 남기므로, **Vercel 환경변수에 `ADMIN_PW_HASH`를 등록하고 비밀번호를 교체**해야 완료다.
+- 인증 API에 **10분 / 10회 시도 제한**(IP 기준)과 `timingSafeEqual` 상수시간 비교를 넣었다. 초과 시
+  429를 돌려주고 화면에 "10분 뒤 다시 시도"로 표시된다. 서버리스라 인스턴스별 카운트지만 단일 기기
+  무차별 대입은 실질적으로 막힌다.
 - **허브 메인화면 페이지뷰는 집계에서 제외한다.** 허브는 모든 모듈의 진입점이라 링크를 타고 들어오거나
   카드를 누르기만 해도 조회수가 쌓여 "실제로 도구를 썼다"는 신호가 아니다.
   ① `app/page.tsx`가 아예 로그를 남기지 않고 ② 이미 쌓인 로그는 `excludeHubViews()`로 걸러낸다.
@@ -203,6 +228,12 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
 - 각 모듈 데이터는 `public/*.html` 인라인 스크립트 안에 있어 React 페이지가 직접 읽을 수 없다.
   그래서 `scripts/build-search-index.mjs`가 정적으로 추출해 **`public/search-index.json`**(약 430건)을
   만들고, `/search` 페이지는 그 JSON만 fetch해서 검색한다.
+- **인덱스는 두 파일로 나뉜다**(2026-08-03). `search-index.json`은 검색에 필요한 필드만 담은 경량본
+  (411KB)이고, 펼쳐볼 때 쓰는 상세 스펙은 `search-detail.json`(454KB)에 따로 나가 **사용자가 처음
+  "상세 ▼"를 누를 때만** 받는다. 두 파일은 `i` 필드로 연결되므로 **배열 순서를 바꾸지 말 것** —
+  어긋나면 엉뚱한 제품의 스펙이 뜬다(`test-search.mjs`가 정합성·`d` 플래그를 검사한다).
+  `kw`는 토큰 중복을 제거해 저장한다(검색은 공백 분리 토큰의 `includes` 판정이라 결과가 동일하고
+  90KB가 줄었다). 상세 필드가 경량본에 다시 새어 들어가면 테스트가 실패한다.
 - **모듈 데이터(제품·카테고리)를 수정하면 `npm run build:index`를 다시 돌리고 커밋해야 한다.**
   `scripts/test-search.mjs`가 "커밋된 인덱스 == 지금 재생성한 인덱스"를 검사하므로 빠뜨리면 테스트가 실패한다.
 - 검색 결과 클릭 시 딥링크로 이동한다: 파인더 `?q=`, 설치환경 `?cat=`, 타사비교 `?cat=`.
@@ -224,8 +255,7 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
 node scripts/test-install.mjs   # 설치환경가이드: 21개 카테고리 전체 렌더링, 이미지 개수/카드노출/링크 유효성, 키워드 검색
 node scripts/test-finder.mjs    # 모델파인더: 50개 카테고리 전수 검색(350종), AI추천/브랜드뷰 흐름, 패키지모드
 node scripts/test-care.mjs      # AI Care: 16개 제품 전수, 12/36개월 플랜전환, overview/timeline 모드
-node scripts/test-planner.mjs   # 패키지 플래너: 18개 카테고리 × 5개 평형, 할인율·예산배분 계산
-node scripts/test-compare.mjs   # 타사비교: 13개 카테고리 × 브랜드 × 모델 268개 조합, escHtml/history XSS 회귀
+node scripts/test-compare.mjs   # 타사비교: 15개 카테고리 × 브랜드 × 모델 413개 조합, escHtml/history XSS 회귀
 node scripts/test-levelup.mjs   # 레벨업테스트: 25문항 구성, 채점(CE/MX/에세이), 이름·사번·에세이 XSS 회귀
 node --experimental-strip-types scripts/test-admin.mjs   # AX 대시보드: lib/logEvent.ts 집계·CSV 내보내기 회귀
 node scripts/test-consistency.mjs   # 크로스파일 모델코드 일관성: 골든 모델코드 4파일 존재·최상위 SKU 동일성 회귀
@@ -239,14 +269,16 @@ npx tsc --noEmit                # 타입체크
 
 AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클라이언트 컴포넌트라 다른 모듈과 같은 jsdom-전체페이지 패턴은 쓸 수 없다. 대신 실제 로직이 몰려 있는 `lib/logEvent.ts`(집계·CSV 내보내기)를 Node의 `--experimental-strip-types`로 직접 임포트해 순수 함수 단위로 검증한다(`scripts/test-admin.mjs`) — 컴포넌트 자체의 렌더링/인증 게이트는 아직 커버하지 않음.
 
-같은 제품의 모델코드가 test-app.html/finder-app.html/package-planner.html/compare-app.html
-4개 파일에 각각 독립적으로 박혀 있어 한 파일만 고치고 나머지를 놓치는 사고가 실제로 여러 번
-있었다(냉장고 RF→RM, 세탁기 WD25→WD90, 김치냉장고 RQ→RK 등). `scripts/test-consistency.mjs`가
-이를 감지하는 안전망이다 — 단, compare-app.html의 "P등급"과 package-planner.html의 FLAGSHIP은
-목적이 달라 항상 같은 SKU를 가리키지 않으므로(세탁기·건조기는 콤보 vs 별도기기, TV는 Micro RGB vs
-OLED, 식기세척기는 다른 F세대 티어 — 모두 조사로 확인된 의도된 선택) 정확히 같아야 하는 카테고리와
-세대 접두사만 같으면 되는 카테고리를 스크립트 내에서 구분해 검사한다. 새로 검증한 모델코드를
-GOLDEN 배열에 추가할 때 이 구분을 참고할 것.
+같은 제품의 모델코드가 test-app.html/finder-app.html/compare-app.html에 각각 독립적으로 박혀 있어
+한 파일만 고치고 나머지를 놓치는 사고가 실제로 여러 번 있었다(냉장고 RF→RM, 세탁기 WD25→WD90,
+김치냉장고 RQ→RK 등). `scripts/test-consistency.mjs`가 이를 감지하는 안전망이다.
+
+- **PART A**: 골든 모델코드가 대상 파일 전부에 존재하는지 (문자열 존재 확인)
+- **PART B**: 타사비교의 P등급(최상위) 모델코드가 **모델파인더 DB에도 있는지**. 없으면 상담 중
+  고객이 되물었을 때 파인더에서 스펙·가격을 확인할 수 없다. 이 검사를 넣자마자 에어컨
+  `AF90H19D27SRT`(→`SRS` 오타)와 식기세척기 코드 불일치를 실제로 잡아냈다.
+- 어느 쪽이 맞는지 확정하지 못한 코드는 `UNRESOLVED` 맵에 **이유와 함께** 넣어 TODO로 출력한다.
+  추정으로 한쪽에 맞추면 틀린 모델코드를 고객에게 안내하게 되므로 불일치를 드러낸 채로 둔다.
 
 커밋 전 실수로 생성되는 `tsconfig.tsbuildinfo`, `package-lock.json`은 `.gitignore`에 등록되어 있으니 git에 올라가지 않는지 확인할 것 (과거 여러 번 실수로 커밋되었다가 별도 정리 커밋이 필요했음).
 

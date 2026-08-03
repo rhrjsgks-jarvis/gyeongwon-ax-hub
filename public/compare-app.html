@@ -278,6 +278,8 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <button class="cat-btn" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</button>
       <button class="cat-btn" onclick="selectCat('에어드레서')"><span class="ci">👗</span>에어드레서</button>
       <button class="cat-btn" onclick="selectCat('인덕션')"><span class="ci">🍳</span>인덕션</button>
+      <button class="cat-btn" onclick="selectCat('공기청정기')"><span class="ci">🌬️</span>공기청정기</button>
+      <button class="cat-btn" onclick="selectCat('정수기')"><span class="ci">💧</span>정수기</button>
     </div>
   </div>
 
@@ -353,7 +355,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <main>
   <div class="card">
     <div class="card-title">📌 자사·타사 URL 입력</div>
-    <p class="url-intro">자사 URL과 경쟁사 URL을 넣고 "지금 바로 비교하기"를 누르면 냉장고·세탁기·에어컨·TV·청소기·로봇청소기·스마트폰·건조기·식기세척기·노트북·김치냉장고·에어드레서·인덕션 13개 카테고리는 즉시비교 결과로 바로 연결됩니다. 목록에 없는 조합은 AI 프롬프트 생성으로 자동 전환됩니다.</p>
+    <p class="url-intro">자사 URL과 경쟁사 URL을 넣고 "지금 바로 비교하기"를 누르면 냉장고·세탁기·에어컨·TV·청소기·로봇청소기·스마트폰·건조기·식기세척기·노트북·김치냉장고·에어드레서·인덕션·공기청정기·정수기 15개 카테고리는 즉시비교 결과로 바로 연결됩니다. 목록에 없는 조합은 AI 프롬프트 생성으로 자동 전환됩니다.</p>
     <div class="preset-grid">
       <button class="preset-btn" onclick="loadPreset('fridge')"><span class="p-icon">🧊</span>냉장고</button>
       <button class="preset-btn" onclick="loadPreset('washer')"><span class="p-icon">🫧</span>세탁기</button>
@@ -700,9 +702,16 @@ const DB = {
   '에어컨': {
     emoji:'❄️',
     samsung:[
-      { name:'BESPOKE AI 무풍콤보 갤러리 프로 스탠드 (19평) AF90H19D27SRT', price:402, grade:'P',
-        on:['무풍모드 소음 28dB 이하','모션레이더 개인 맞춤바람','최대 77% 절전(MAX 냉방 대비, 제조사 발표)','빅스비 음성비서','무풍 10주년 기념 2026년형'],
-        specs:{ area:19, eGrade:2, as:1, noise:28, pm:1.0, size:'492 × 1,910 × 307' } },
+      /* 2026-08-03 크로스파일 대조로 발견·정정: 모델코드가 AF90H19D27SR"T"로 적혀 있었으나
+         실제 채번은 AF90H19D27SR"S"다(모델파인더 DB 기준, 19+6평 = 스탠드+벽걸이 무풍콤보라
+         제품명과도 일치). 마지막 한 글자 오타로 파인더에서 검색되지 않는 상태였다.
+         에너지등급은 파인더(1등급, samsung.com 조사)와 기존 표기(2등급, 잠정 준용)가 엇갈려
+         확정하지 못했으므로 값을 비워 뒀다 — 등급 행은 이 모델 선택 시 렌더되지 않는다.
+         (dp 카탈로그에 스펙표가 있는 스탠드 단품 AF90H19D35* 계열은 19평 2등급으로 확인된
+         별개 라인이며, 아래 AF90H17D38EN이 카탈로그 확인 1등급 모델이다.) */
+      { name:'BESPOKE AI 무풍콤보 갤러리 프로 스탠드 (19평) AF90H19D27SRS', price:402, grade:'P',
+        on:['무풍모드 소음 28dB 이하','모션레이더 개인 맞춤바람','최대 77% 절전(MAX 냉방 대비, 제조사 발표)','빅스비 음성비서','무풍 10주년 기념 2026년형','스탠드 19평 + 벽걸이 6평 콤보'],
+        specs:{ area:19, as:1, noise:28, pm:1.0, size:'492 × 1,910 × 307' } },
       { name:'BESPOKE AI 무풍갤러리 스탠드 (17평, 1등급) AF90H17D38EN', grade:'P',
         on:['에너지소비효율 1등급(dp 카탈로그)','메탈 패널 + 엣지라이팅','모션레이더 / 모션디스플레이','무풍냉방 / 무풍청정','대용량 강력 제습 / 쾌적 제습'],
         specs:{ area:17, eGrade:1, as:1, pm:1.0, size:'492 × 1,910 × 307' } },
@@ -770,7 +779,7 @@ const DB = {
     counters:[
       { issue:'LG 가격이 저렴한 경우', strategy:'무풍냉방의 쾌적함과 AI 열교환기 자동세척으로 절감되는 청소 비용을 체험 유도. "한 번 무풍을 경험하시면 바람 있는 에어컨으로 못 돌아가신다"고 설명.' },
       { issue:'LG 공기청정 기능 언급', strategy:'PM1.0 vs PM2.5 차이 강조. PM1.0은 PM2.5보다 훨씬 미세한 입자까지 거르므로 어린이·노인·반려동물 가정에 특히 중요.' },
-      { issue:'LG 2026년형이 1등급인데 삼성 19평은 2등급이라는 지적', strategy:'평형을 맞춰 이야기하세요. 카탈로그 기준 삼성도 17평(AF90H17D38*)은 1등급입니다. 19평·23평 대형 스탠드에서 등급이 갈리는 것이므로, 설치 면적을 먼저 확인해 같은 등급끼리 제안하면 됩니다. 등급 차이를 부정하지 말고 평형을 조정해 제안하는 편이 신뢰를 얻습니다.' },
+      { issue:'LG 2026년형이 1등급인데 삼성은 2등급이라는 지적', strategy:'어느 모델을 보고 하는 말인지 먼저 확인하세요. dp 카탈로그 기준 삼성 스탠드 단품은 19평(AF90H19D35*)이 2등급, 17평(AF90H17D38*)이 1등급으로 갈립니다. 설치 면적을 확인해 같은 등급끼리 제안하면 됩니다. 등급 차이를 부정하지 말고 평형을 조정해 제안하는 편이 신뢰를 얻습니다.' },
       { issue:'LG 실내기가 더 슬림하다는 지적(380㎜ vs 492㎜)', strategy:'폭 차이는 사실입니다. 삼성 폭이 넓은 것은 무풍 마이크로홀 패널 면적을 확보하기 위해서라는 점을 설명하고, 설치 공간이 빠듯한 현장이면 벽걸이·무풍콤보 구성을 대안으로 제시하세요.' }
     ],
     scripts:[
@@ -1602,6 +1611,115 @@ const DB = {
     scripts:[
       { trigger:'가격 비교 시', text:'"LG 와이드존 모델이 194만원대인데, 저희 플렉스존 플래그십은 200만원으로 비슷한 가격대에 스마트싱스 연동까지 됩니다."' }
     ]
+
+  },
+
+  /* 2026-08-03 신규 카테고리 — 공기청정기·정수기.
+     그동안 "삼성 쪽이 렌탈 위주 가격 체계라 비교 스키마가 안 맞는다"는 이유로 빠져 있었으나,
+     실제 상담에서 LG와 가장 자주 붙는 카테고리다. 가격은 판매처·렌탈 조건에 따라 편차가 커서
+     넣지 않고("가격 문의") 스펙만으로 비교한다 — 추정 가격을 넣지 않는 기존 원칙과 같다.
+     삼성값은 dp 카탈로그(모델파인더 DB와 동일 출처), LG값은 LG 베스트샵 카탈로그 스펙표.
+     출처: dp 카탈로그(AX060CG500GBD·AP90H03193EGD·RWP70F15ANW),
+           20260708_best_catalogue.pdf(AS356NSMA·AS206NSHA·WD722RK 스펙표) */
+  '공기청정기': {
+    emoji:'🌬️',
+    samsung:[
+      { name:'비스포크 큐브 Air 공기청정기 (60㎡) AX060CG500GBD', price:55, grade:'P',
+        on:['극세필터 + 미세먼지 집진필터 + 숯 탈취필터','SmartThings 연동'],
+        specs:{ area:60, as:1, size:'360 × 783 × 318' } },
+      { name:'비스포크 AI 공기청정기 (33㎡, UV LED 살균) AP90H03193EGD', grade:'S',
+        on:['UV LED 살균','구리 항균 처리 극세필터','PM1.0 / 2.5 / 10 · 가스 · 종합 청정도 표시','부스터 청정'],
+        specs:{ area:33, uv:'UV LED', pm:1.0, as:1, size:'320 × 545 × 320' } },
+      { name:'무풍 큐브 Air 벽걸이형 (85㎡) AX99N4020WWD', price:45, grade:'S',
+        on:['벽걸이 설치','무풍 청정'],
+        specs:{ area:85, as:1, size:'1,050 × 600 × 130' } },
+      { name:'비스포크 큐브 Air 공기청정기 (33㎡) AX033CG310GBD', price:29, grade:'B',
+        on:['극세필터 + 미세먼지 집진필터 + 숯 탈취필터'],
+        specs:{ area:33, as:1, size:'349 × 499 × 236' } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG 퓨리케어 AI 360˚ 공기청정기 (114㎡) AS356NSMA',
+          on:['360˚ 강력탈취청정 M7 필터 2개','UVnano UV공기살균 + UV팬살균','AI 공기질 센서','PM1.0 레이저 센서','듀얼청정 / 클린부스터 모드','펫 모드(ThinQ)','청정세기 5단계'],
+          specs:{ area:114, uv:'UV공기살균+UV팬살균', pm:1.0, eGrade:2, as:1, size:'377 × 1,100 × 377' } },
+        { name:'LG 퓨리케어 AI 360˚ 공기청정기 (66㎡) AS206NSHA',
+          on:['360˚ 강력탈취청정 M5 필터','UV팬살균','AI 공기질 센서','PM1.0 레이저 센서','클린부스터 모드','청정세기 5단계'],
+          specs:{ area:66, uv:'UV팬살균', pm:1.0, eGrade:2, as:1, size:'347 × 612 × 347' } },
+        { name:'LG 퓨리케어 AI 360˚ 공기청정기 플러스 (100㎡) AS305DWWA',
+          on:['360˚ 청정','AI 공기질 센서'],
+          specs:{ area:100, as:1 } }
+      ]
+    },
+    specItems:[
+      { key:'price',  label:'가격',        unit:'만원', better:'low',  score:false },
+      { key:'area',   label:'청정 면적',    unit:'㎡',  better:'high' },
+      { key:'pm',     label:'감지 최소입자', unit:'PM', better:'low'  },
+      { key:'uv',     label:'UV 살균',      unit:'',   better:'high', score:false },
+      { key:'eGrade', label:'에너지등급',   unit:'등급', better:'low'  },
+      { key:'as',     label:'무상 A/S',    unit:'년',  better:'high' },
+      { key:'size',   label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
+    ],
+    sells:[
+      'UV LED 살균 + 구리 항균 처리 극세필터 — 필터에 잡힌 오염까지 관리',
+      'PM1.0 / 2.5 / 10 · 가스 · 종합 청정도를 따로 표시 — 무엇이 나쁜지 바로 보인다',
+      '벽걸이형(85㎡, 두께 130㎜) 선택지 — 바닥 면적을 쓰지 않는 설치가 가능',
+      'SmartThings 연동 — 에어컨·제습기와 함께 자동화'
+    ],
+    counters:[
+      { issue:'LG 청정면적이 훨씬 넓다는 지적(114㎡ vs 60㎡)', strategy:'사실입니다. 대신 "몇 평에 놓을 것인지"로 대화를 옮기세요. 거실 단독 배치면 LG 대형기가 유리하고, 방마다 두는 구성이면 삼성 33㎡급 여러 대가 총액·소음 면에서 낫습니다. 큰 기기 한 대는 문이 닫힌 방의 공기를 정화하지 못한다는 점도 함께 설명하세요.' },
+      { issue:'LG UVnano 살균 언급', strategy:'삼성 AP90H 계열도 UV LED 살균이 들어갑니다. 살균 유무가 아니라 "어디를 살균하는가"(LG는 팬·공기, 삼성은 필터 유입부)로 설명하고, 필터 교체 주기·비용을 함께 비교하는 편이 설득력 있습니다.' },
+      { issue:'가격을 물어볼 때', strategy:'두 브랜드 모두 렌탈·일시불 조건에 따라 편차가 커서 이 표에는 넣지 않았습니다. 반드시 당일 판매가로 확인해 안내하세요.' }
+    ],
+    scripts:[
+      { trigger:'설치 위치 상담 시', text:'"거실에 한 대만 두실 건가요, 방마다 두실 건가요? 방마다 두시면 문 닫힌 공간까지 관리돼서 오히려 체감이 좋습니다. 저희는 벽걸이형도 있어서 바닥을 안 차지합니다."' },
+      { trigger:'살균 기능 질문 시', text:'"저희는 UV LED로 필터 유입부를 살균하고, 극세필터 자체를 구리로 항균 처리했습니다. 청정도도 PM1.0·2.5·10과 가스를 따로 보여드려서 지금 무엇이 나쁜지 바로 아실 수 있어요."' }
+    ]
+  },
+
+  '정수기': {
+    emoji:'💧',
+    samsung:[
+      { name:'비스포크 AI 정수기 (4단계 2중필터, 상하 설치) RWP70F15ANW', grade:'P',
+        on:['4단계 2중필터','직수관 자동 살균','Bixby 음성 출수 · 온도 설정','정량출수 120/260/500/1,000㎖·연속','SmartThings에서 10㎖ 단위 설정','필터 잔여량(%) 표시'],
+        specs:{ stages:4, sterilize:'직수관 자동 살균', voice:'Bixby', as:1, size:'170 × 395 × 480' } },
+      { name:'비스포크 정수기 (4단계 UF 로터스 필터) RWP54421BF*M', grade:'S',
+        on:['4단계 필터 시스템(프리카본 UF복합 + PLUS 카본)','직수관 자동 살균','정량출수 120/260/500/1,000㎖·연속','필터 잔여량(%) 표시'],
+        specs:{ stages:4, sterilize:'직수관 자동 살균', as:1, size:'170 × 386 × 445' } }
+    ],
+    competitors:{
+      'LG':[
+        { name:'LG 퓨리케어 오브제컬렉션 정수기 (얼음·냉·온·정수, 음성인식) WD722RK',
+          on:['얼음 / 냉수 / 온수 / 정수','직수관 & 출수구 고온살균','스테인리스 직수관','중금속 9종 흡착필터 + 바이러스 클리어 필터','UVnano 살균','음성인식','맞춤 출수 / 미세출수','방문관리'],
+          specs:{ sterilize:'직수관·출수구 고온살균 + UVnano', voice:'LG 음성인식', ice:1, as:1, size:'240 × 465 × 497' } },
+        { name:'LG 퓨리케어 오브제컬렉션 정수기(음성인식) WD524VC',
+          on:['냉수 / 온수 / 정수','직수관 & 출수구 고온살균','스테인리스 직수관','UVnano 살균','음성인식','방문관리'],
+          specs:{ sterilize:'직수관·출수구 고온살균 + UVnano', voice:'LG 음성인식', as:1 } }
+      ]
+    },
+    specItems:[
+      { key:'price',     label:'가격',      unit:'만원', better:'low',  score:false },
+      { key:'stages',    label:'필터 단계',  unit:'단계', better:'high' },
+      { key:'sterilize', label:'살균 방식',  unit:'',    better:'high', score:false },
+      { key:'voice',     label:'음성 제어',  unit:'',    better:'high', score:false },
+      { key:'as',        label:'무상 A/S',  unit:'년',  better:'high' },
+      { key:'size',      label:'제품 크기 (W×H×D)', unit:'mm', better:'high', score:false }
+    ],
+    sells:[
+      '폭 170㎜ — LG(240㎜)보다 70㎜ 좁아 싱크대 옆 자투리 공간에 들어간다',
+      'Bixby 음성 출수 + SmartThings에서 10㎖ 단위 정량 설정 — 분유·커피 계량이 정확',
+      '직수관 자동 살균 + 필터 잔여량(%) 표시 — 언제 갈아야 하는지 숫자로 보인다',
+      '상하 분리 설치 지원 — 주방 구조에 맞춰 배치 자유도가 높다'
+    ],
+    counters:[
+      { issue:'LG는 얼음까지 나온다는 지적', strategy:'맞습니다 — WD722 계열은 제빙이 됩니다. 얼음이 꼭 필요한 고객이면 인정하고, 대신 얼음 기능이 들어가면 본체가 커지고(240 × 465 × 497) 관리 포인트가 늘어난다는 점을 설명하세요. 냉장고에 제빙기가 있는 집이면 정수기까지 제빙을 넣을 이유가 크지 않습니다.' },
+      { issue:'LG 방문관리 서비스 언급', strategy:'관리 방식의 차이입니다. LG는 방문 관리, 삼성은 자가관리 + 직수관 자동 살균으로 방문 없이 유지하는 구조입니다. 집을 비우는 시간이 많거나 방문이 부담스러운 고객에게는 오히려 장점이라는 점을 짚어주세요.' },
+      { issue:'가격을 물어볼 때', strategy:'정수기는 렌탈·일시불·약정 기간에 따라 총액이 크게 달라져 이 표에는 넣지 않았습니다. 반드시 당일 조건으로 계산해 안내하세요.' }
+    ],
+    scripts:[
+      { trigger:'설치 공간이 좁을 때', text:'"저희 정수기는 폭이 170㎜입니다. LG가 240㎜니까 7㎝ 가까이 좁아요. 싱크대 옆에 딱 붙여 놓으실 수 있습니다."' },
+      { trigger:'분유·이유식 문의 시', text:'"정량출수가 120·260·500·1,000㎖로 되고, 스마트싱스에서 10㎖ 단위로 맞추실 수 있어요. 빅스비로 \"40도 200㎖\" 하면 그대로 나옵니다."' }
+    ]
+  
   }
 };
 
@@ -1993,6 +2111,8 @@ function detectCategory(text) {
     ['김치냉장고', ['kimchi-refrigerator','kimchi','김치냉장고','김치톡톡','딤채']],
     ['에어드레서', ['airdresser','에어드레서','styler','스타일러']],
     ['인덕션', ['electric-range','induction','인덕션']],
+    ['공기청정기', ['air-purifier','airpurifier','공기청정기','퓨리케어','puricare','큐브에어','cube-air']],
+    ['정수기', ['water-purifier','waterpurifier','정수기','청정수기']],
   ];
   for (const [cat, kws] of rules) {
     if (kws.some(k => s.includes(k))) return cat;

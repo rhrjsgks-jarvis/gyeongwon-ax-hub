@@ -5,22 +5,31 @@ import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { logEvent } from '@/lib/logEvent'
 
+// 인덱스는 두 파일로 나뉜다(scripts/build-search-index.mjs 참고).
+//  - search-index.json  : 검색에 필요한 필드만 담은 경량본. 첫 진입에 받는다.
+//  - search-detail.json : 펼쳐볼 때만 쓰는 상세 스펙. 사용자가 처음 결과를 펼칠 때 한 번 받는다.
+// 매장에서 폰으로 쓰는 도구라 첫 로딩에 상세까지 받을 이유가 없다. 두 파일은 `i`로 연결된다.
 type Entry = {
+  i: number      // 상세 파일과 연결되는 인덱스
   t: string      // product | category | care | module
   m: string      // 모듈 키
   title: string
   sub: string
-  kw: string     // 소문자 정규화된 검색 키워드
+  kw: string     // 소문자 정규화된 검색 키워드(토큰 중복 제거됨)
   href: string
-  ext?: boolean
-  // 제품 항목 전용 — 카탈로그를 열지 않고 검색 화면에서 바로 펼쳐보는 상세 스펙
+  ext?: boolean | number
+  catOk?: boolean | number
+  d?: number     // 1이면 상세 스펙이 있다(내용은 search-detail.json에)
+}
+
+// 제품 항목 전용 — 카탈로그를 열지 않고 검색 화면에서 바로 펼쳐보는 상세 스펙
+type Detail = {
   spec?: [string, string][]
   on?: string[]
   off?: string[]
   price?: number | null
   note?: string
   usp?: string[]
-  catOk?: boolean
 }
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -28,10 +37,9 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   install: { label: '설치환경 가이드',   icon: '🛠️', color: '#B45309' },
   compare: { label: '타사비교',         icon: '🔗', color: '#EA580C' },
   care:    { label: 'AI Care',         icon: '💚', color: '#059669' },
-  planner: { label: '패키지 플래너',     icon: '📦', color: '#0891B2' },
   hub:     { label: '허브 기능',        icon: '🏠', color: '#475569' },
 }
-const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'care', 'planner']
+const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'care']
 const MAX_PER_MODULE = 12
 
 // 공백으로 나눈 모든 토큰을 포함해야 매칭(AND) — "무풍 에어컨"처럼 조합 검색이 되게 한다.
@@ -40,7 +48,18 @@ function match(e: Entry, tokens: string[]) {
 }
 
 // 검색 결과에서 바로 펼쳐보는 상세 스펙 — 카탈로그 PDF를 열지 않고 확인하기 위한 화면
-function SpecDetail({ e }: { e: Entry }) {
+function SpecDetail({ e, detail }: { e: Entry; detail: Detail | null }) {
+  if (!detail) {
+    return (
+      <div className="mx-2.5 mb-2 rounded-xl border border-blue-100 px-3 py-4 text-center text-xs text-gray-400" style={{ background: '#F8FAFF' }}>
+        상세 스펙 불러오는 중…
+      </div>
+    )
+  }
+  return <SpecDetailBody e={e} d={detail} />
+}
+
+function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
   return (
     <div className="mx-2.5 mb-2 rounded-xl border border-blue-100 overflow-hidden" style={{ background: '#F8FAFF' }}>
       <div className="px-3 py-2.5 border-b border-blue-100 flex items-center justify-between gap-2">
@@ -56,15 +75,15 @@ function SpecDetail({ e }: { e: Entry }) {
           </p>
         </div>
         <span className="text-sm font-bold shrink-0" style={{ color: '#1428A0' }}>
-          {e.price == null ? '가격 문의' : `${e.price}만원`}
+          {d.price == null ? '가격 문의' : `${d.price}만원`}
         </span>
       </div>
 
-      {e.note && <p className="px-3 pt-2 text-[11px] text-amber-700">⚠️ {e.note}</p>}
+      {d.note && <p className="px-3 pt-2 text-[11px] text-amber-700">⚠️ {d.note}</p>}
 
       <table className="w-full text-[13px]">
         <tbody>
-          {(e.spec || []).map(([k, v], i) => (
+          {(d.spec || []).map(([k, v], i) => (
             <tr key={i} className="border-b border-blue-50 last:border-0">
               <th className="text-left align-top font-semibold text-gray-500 px-3 py-1.5 w-[38%] break-keep">{k}</th>
               <td className="text-gray-800 px-3 py-1.5 break-all">{v}</td>
@@ -73,32 +92,32 @@ function SpecDetail({ e }: { e: Entry }) {
         </tbody>
       </table>
 
-      {!!(e.on && e.on.length) && (
+      {!!(d.on && d.on.length) && (
         <div className="px-3 py-2.5 border-t border-blue-100">
           <p className="text-[11px] font-bold text-gray-400 mb-1.5">✅ 지원 기능</p>
           <div className="flex flex-wrap gap-1">
-            {e.on.map((f, i) => (
+            {d.on.map((f, i) => (
               <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-blue-200 text-blue-700">{f}</span>
             ))}
           </div>
         </div>
       )}
-      {!!(e.off && e.off.length) && (
+      {!!(d.off && d.off.length) && (
         <div className="px-3 pb-2.5">
           <p className="text-[11px] font-bold text-gray-400 mb-1.5">✖ 미지원</p>
           <div className="flex flex-wrap gap-1">
-            {e.off.map((f, i) => (
+            {d.off.map((f, i) => (
               <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">{f}</span>
             ))}
           </div>
         </div>
       )}
 
-      {!!(e.usp && e.usp.length) && (
+      {!!(d.usp && d.usp.length) && (
         <div className="px-3 py-2.5 border-t border-blue-100">
           <p className="text-[11px] font-bold text-amber-600 mb-1.5">⭐ 핵심 키워드 · USP</p>
           <div className="flex flex-wrap gap-1">
-            {e.usp.map((f, i) => (
+            {d.usp.map((f, i) => (
               <span key={i} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
             ))}
           </div>
@@ -123,6 +142,9 @@ function SearchResults() {
   const [input, setInput] = useState(q)
   const [index, setIndex] = useState<Entry[] | null>(null)
   const [openKey, setOpenKey] = useState<string | null>(null)
+  // 상세 스펙은 첫 "상세 ▼" 클릭 때 한 번만 받아 인덱스별로 캐시한다
+  const [details, setDetails] = useState<Record<number, Detail> | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => { setInput(q); setOpenKey(null) }, [q])
 
@@ -132,6 +154,21 @@ function SearchResults() {
       .then((d) => setIndex(d.entries || []))
       .catch(() => setIndex([]))
   }, [])
+
+  // 상세 스펙 파일은 사용자가 실제로 펼칠 때만 받는다(첫 진입 로딩량을 줄이기 위함).
+  const loadDetails = () => {
+    if (details || detailLoading) return
+    setDetailLoading(true)
+    fetch('/search-detail.json')
+      .then((r) => r.json())
+      .then((d: { entries: (Detail & { i: number })[] }) => {
+        const map: Record<number, Detail> = {}
+        for (const { i, ...rest } of d.entries || []) map[i] = rest
+        setDetails(map)
+      })
+      .catch(() => setDetails({}))
+      .finally(() => setDetailLoading(false))
+  }
 
   useEffect(() => { if (q) logEvent('hub', 'search', q) }, [q])
 
@@ -207,14 +244,14 @@ function SearchResults() {
                       // 스펙이 있는 제품은 페이지 이동 대신 그 자리에서 상세를 펼친다
                       // (카탈로그 PDF를 뒤지지 않고 검색 화면에서 바로 확인하기 위함)
                       const key = `${g.m}-${i}`
-                      const hasDetail = !!(e.spec && e.spec.length)
+                      const hasDetail = !!e.d
                       if (hasDetail) {
                         const open = openKey === key
                         return (
                           <div key={key}>
                             <button
                               type="button"
-                              onClick={() => setOpenKey(open ? null : key)}
+                              onClick={() => { loadDetails(); setOpenKey(open ? null : key) }}
                               className="w-full text-left"
                             >
                               <div className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors ${open ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
@@ -227,7 +264,7 @@ function SearchResults() {
                                 </span>
                               </div>
                             </button>
-                            {open && <SpecDetail e={e} />}
+                            {open && <SpecDetail e={e} detail={details ? details[e.i] || {} : null} />}
                           </div>
                         )
                       }

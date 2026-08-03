@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navigation from '@/components/Navigation'
 import FeedbackButton from '@/components/FeedbackButton'
+import ServiceWorker from '@/components/ServiceWorker'
 
 export const metadata: Metadata = {
   title: '경원 AX 허브',
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
+        <ServiceWorker />
         <Navigation />
         <FeedbackButton />
         <main
