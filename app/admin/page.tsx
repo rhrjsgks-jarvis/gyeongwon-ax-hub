@@ -33,7 +33,7 @@ function lockNow(): void {
 
 function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   const [pw, setPw] = useState('')
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<'' | 'wrong' | 'locked'>('')
   const [checking, setChecking] = useState(false)
 
   const submit = async () => {
@@ -49,10 +49,10 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         markUnlocked()
         onUnlock()
       } else {
-        setError(true)
+        setError(res.status === 429 ? 'locked' : 'wrong')
       }
     } catch {
-      setError(true)
+      setError('wrong')
     }
     setChecking(false)
   }
@@ -69,13 +69,18 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         <input
           type="password"
           value={pw}
-          onChange={e => { setPw(e.target.value); setError(false) }}
+          onChange={e => { setPw(e.target.value); setError('') }}
           onKeyDown={e => { if (e.key === 'Enter') submit() }}
           placeholder="비밀번호"
           autoFocus
           className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:border-blue-400"
         />
-        {error && <p className="text-xs text-red-500 mb-2">비밀번호가 올바르지 않습니다</p>}
+        {error === 'wrong' && <p className="text-xs text-red-500 mb-2">비밀번호가 올바르지 않습니다</p>}
+        {error === 'locked' && (
+          <p className="text-xs text-red-500 mb-2">
+            시도 횟수를 초과했습니다. 10분 뒤에 다시 시도해 주세요
+          </p>
+        )}
         <button
           onClick={submit}
           disabled={checking || !pw}

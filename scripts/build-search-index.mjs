@@ -157,11 +157,42 @@ for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });
 }
 
-// 키워드는 소문자로 정규화해 검색 시 비교 비용을 줄인다
-for (const e of entries) e.kw = e.kw.toLowerCase();
+// 키워드는 소문자로 정규화해 검색 시 비교 비용을 줄인다.
+// 같은 토큰이 여러 번 반복되는 경우가 많아(제품 하나에 "지원"이 20번씩) 중복을 없앤다 —
+// 검색은 질의를 공백으로 쪼갠 뒤 kw.includes(토큰)로 판정하므로 토큰이 한 번씩만 남아도
+// 결과가 동일하고, 인덱스는 90KB 가까이 줄어든다.
+for (const e of entries) {
+  e.kw = [...new Set(e.kw.toLowerCase().split(/\s+/).filter(Boolean))].join(' ');
+}
 
-const out = { generatedFrom: 'scripts/build-search-index.mjs', count: entries.length, entries };
+// ── 인덱스를 "검색용 경량본"과 "상세 스펙"으로 분리해 내보낸다 ──
+// /search는 첫 진입에 경량본만 받고, 사용자가 결과를 펼칠 때 상세를 한 번 더 받는다.
+// 매장에서 폰으로 쓰는 도구라 첫 로딩에 상세 스펙(160KB 이상)까지 받을 이유가 없다.
+// 두 파일의 배열 인덱스가 같은 항목을 가리키므로(i 필드) 순서를 바꾸지 말 것.
+const DETAIL_KEYS = ['spec', 'on', 'off', 'price', 'note', 'usp'];
+const light = [];
+const detail = [];
+entries.forEach((e, i) => {
+  const d = {};
+  for (const k of DETAIL_KEYS) {
+    const v = e[k];
+    if (v === undefined || v === null) continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    d[k] = v;
+  }
+  const hasDetail = Object.keys(d).length > 0;
+  const l = { i, t: e.t, m: e.m, title: e.title, sub: e.sub, kw: e.kw, href: e.href };
+  if (e.ext) l.ext = 1;
+  if (e.catOk) l.catOk = 1;
+  if (hasDetail) { l.d = 1; detail.push({ i, ...d }); }
+  light.push(l);
+});
+
+const out = { generatedFrom: 'scripts/build-search-index.mjs', count: entries.length, entries: light };
 fs.writeFileSync(pub('search-index.json'), JSON.stringify(out));
+fs.writeFileSync(pub('search-detail.json'), JSON.stringify({ count: detail.length, entries: detail }));
+const kb = (f) => Math.round(fs.statSync(pub(f)).size / 1024);
+console.log(`  경량 인덱스 ${kb('search-index.json')}KB / 상세 ${kb('search-detail.json')}KB (${detail.length}건, 펼칠 때 지연 로드)`);
 
 const byModule = {};
 for (const e of entries) byModule[e.m] = (byModule[e.m] || 0) + 1;
