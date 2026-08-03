@@ -21,8 +21,11 @@ globalThis.document = { createElement: () => ({ ...fakeAnchor }) };
 globalThis.URL.createObjectURL = (blob) => { lastBlob = blob; return 'blob:fake'; };
 
 const {
-  readLogs, logEvent, aggregateByModule, aggregateByDay, exportCsv, fetchTeamLogs, GAS_CONNECTED,
+  readLogs, logEvent, aggregateByModule, aggregateByDay, exportCsv, excludeHubViews,
+  fetchTeamLogs, GAS_CONNECTED,
 } = await import('../lib/logEvent.ts');
+
+import fs from 'fs';
 
 let ok = true;
 const fail = (msg) => { console.log('ERROR:', msg); ok = false; };
@@ -125,6 +128,60 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const teamLogs = await fetchTeamLogs();
   if (teamLogs !== null) fail(`fetchTeamLogs(): GAS 미연동 상태인데 null이 아닌 값 반환 = ${JSON.stringify(teamLogs)}`);
   else console.log('OK: fetchTeamLogs — NEXT_PUBLIC_GAS_URL 미설정 시 fetch 시도 없이 null 반환(로컬 폴백 신호)');
+}
+
+// ── 7. excludeHubViews: 허브 메인 페이지뷰만 걸러내고 검색·건의는 남긴다 ──
+{
+  const sample = [
+    { ts: 1, date: '2026-08-03', module: 'hub',     action: 'page_view', uid: 'a' },
+    { ts: 2, date: '2026-08-03', module: 'hub',     action: 'search',    uid: 'a', extra: '냉장고' },
+    { ts: 3, date: '2026-08-03', module: 'hub',     action: 'feedback',  uid: 'a', extra: '건의' },
+    { ts: 4, date: '2026-08-03', module: 'finder',  action: 'page_view', uid: 'b' },
+  ];
+  const kept = excludeHubViews(sample);
+  if (kept.length !== 3) fail(`excludeHubViews(): ${kept.length}건 남음, 기대값 3`);
+  else if (kept.some((e) => e.module === 'hub' && e.action === 'page_view'))
+    fail('excludeHubViews(): 허브 메인 페이지뷰가 걸러지지 않음');
+  else if (!kept.some((e) => e.module === 'hub' && e.action === 'search'))
+    fail('excludeHubViews(): 허브 통합검색까지 함께 지워짐 — 의도적 행동이라 남아야 한다');
+  else if (aggregateByModule(kept).hub !== 2)
+    fail(`excludeHubViews() 후 hub 집계 = ${aggregateByModule(kept).hub}, 기대값 2(검색·건의)`);
+  else console.log('OK: excludeHubViews — 허브 메인 페이지뷰만 제외, 검색·건의는 유지');
+}
+
+// ── 8. 소스 회귀: 허브 메인이 다시 page_view를 남기거나 인증이 영구 저장되지 않는지 ──
+{
+  const hubSrc = fs.readFileSync(new URL('../app/page.tsx', import.meta.url), 'utf8');
+  if (/logEvent\(\s*'hub'\s*,\s*'page_view'\s*\)/.test(hubSrc))
+    fail("app/page.tsx가 다시 logEvent('hub','page_view')를 호출함 — 허브 메인은 집계에서 제외 대상이다");
+  else console.log('OK: 허브 메인화면이 페이지뷰 로그를 남기지 않음');
+
+  const adminSrc = fs.readFileSync(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
+  if (/logEvent\(\s*'hub'\s*,\s*'page_view'\s*\)/.test(adminSrc))
+    fail("app/admin/page.tsx가 자기 조회를 hub page_view로 기록함 — 집계가 부풀려진다");
+  else console.log('OK: 관리자 대시보드 조회가 집계에 잡히지 않음');
+
+  // 인증 상태를 localStorage에 영구 저장하면 한 번 통과한 기기가 계속 열려 있게 된다
+  if (/localStorage\.setItem\(\s*ADMIN_SESSION_KEY/.test(adminSrc))
+    fail('관리자 인증이 localStorage에 영구 저장됨 — 브라우저를 닫아도 잠기지 않는다');
+  else if (!/sessionStorage\.setItem\(\s*ADMIN_SESSION_KEY/.test(adminSrc))
+    fail('관리자 인증이 sessionStorage에 저장되지 않음 — 세션 종료 시 잠기지 않는다');
+  else if (!/UNLOCK_TTL_MS/.test(adminSrc))
+    fail('관리자 인증에 만료(TTL)가 없음');
+  else console.log('OK: 관리자 인증 — sessionStorage + 만료(TTL) 적용, 영구 저장 없음');
+
+  if (!/excludeHubViews\(/.test(adminSrc))
+    fail('대시보드가 excludeHubViews를 적용하지 않음 — 허브 메인 조회수가 집계에 섞인다');
+  else console.log('OK: 대시보드가 화면·CSV 모두 허브 메인 페이지뷰를 제외한 로그를 사용');
+
+  // 명칭
+  const navSrc = fs.readFileSync(new URL('../components/Navigation.tsx', import.meta.url), 'utf8');
+  [['app/page.tsx', hubSrc], ['app/admin/page.tsx', adminSrc], ['components/Navigation.tsx', navSrc]]
+    .forEach(([name, src]) => {
+      if (!src.includes('AX 현황 대시보드[관리자용]'))
+        fail(`${name}에 "AX 현황 대시보드[관리자용]" 명칭이 없음`);
+    });
+  if (ok) console.log('OK: "AX 현황 대시보드[관리자용]" 명칭이 허브·사이드바·대시보드 3곳에 반영됨');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

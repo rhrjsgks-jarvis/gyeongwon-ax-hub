@@ -41,7 +41,7 @@ const NAV_GROUPS = [
 ]
 
 // AX 현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
-const ADMIN_LINK = { href: '/admin', label: 'AX 현황 대시보드', icon: '📊' }
+const ADMIN_LINK = { href: '/admin', label: 'AX 현황 대시보드[관리자용]', icon: '📊' }
 
 export default function Navigation() {
   const pathname = usePathname()
