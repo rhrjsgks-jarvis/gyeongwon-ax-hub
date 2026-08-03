@@ -21,7 +21,6 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 | `/compare` | `compare-app.html` (타사비교) |
 | `/finder` | `finder-app.html` |
 | `/care` | `care-app.html` |
-| `/planner` | `package-planner.html` |
 | `/quiz` | `quiz-app.html` |
 
 새 모듈을 추가하거나 기존 모듈을 수정할 때:
@@ -179,6 +178,14 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
 - 비교표는 **양쪽 모두 값이 있어야** 그 행을 렌더한다. 한쪽에만 스펙을 넣으면 그 행은 조용히 사라지므로,
   새 항목을 추가할 때는 삼성 쪽 대응 값이 있는지 먼저 확인할 것.
 
+## 운영 종료된 모듈
+
+- **패키지 플래너**(2026-08-03 종료) — `/planner` 라우트·`package-planner.html`·`test-planner.mjs`를
+  삭제했다. 종료 시점에 이미 허브 카드·사이드바 어디에도 링크가 없어 통합검색이 유일한 진입로였다.
+  `lib/logEvent.ts`의 `LogModule` 유니온에는 `'planner'`를 **남겨 둔다** — 구글 시트에 과거 로그가
+  남아 있어 타입에서 빼면 집계 코드가 타입 에러를 낸다. 대시보드 라벨도 "(운영 종료)"로 표기해 유지한다.
+  `'compareInstant'`(타사비교로 통합)도 같은 이유로 유지 중이다.
+
 ## AX 현황 대시보드 (`/admin`) — 관리자용
 
 허브 메인·사이드바 표기는 **"AX 현황 대시보드[관리자용]"**로 통일한다(3곳: `app/page.tsx` 카드+섹션 제목,
@@ -224,7 +231,6 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
 node scripts/test-install.mjs   # 설치환경가이드: 21개 카테고리 전체 렌더링, 이미지 개수/카드노출/링크 유효성, 키워드 검색
 node scripts/test-finder.mjs    # 모델파인더: 50개 카테고리 전수 검색(350종), AI추천/브랜드뷰 흐름, 패키지모드
 node scripts/test-care.mjs      # AI Care: 16개 제품 전수, 12/36개월 플랜전환, overview/timeline 모드
-node scripts/test-planner.mjs   # 패키지 플래너: 18개 카테고리 × 5개 평형, 할인율·예산배분 계산
 node scripts/test-compare.mjs   # 타사비교: 13개 카테고리 × 브랜드 × 모델 268개 조합, escHtml/history XSS 회귀
 node scripts/test-levelup.mjs   # 레벨업테스트: 25문항 구성, 채점(CE/MX/에세이), 이름·사번·에세이 XSS 회귀
 node --experimental-strip-types scripts/test-admin.mjs   # AX 대시보드: lib/logEvent.ts 집계·CSV 내보내기 회귀
@@ -239,14 +245,16 @@ npx tsc --noEmit                # 타입체크
 
 AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클라이언트 컴포넌트라 다른 모듈과 같은 jsdom-전체페이지 패턴은 쓸 수 없다. 대신 실제 로직이 몰려 있는 `lib/logEvent.ts`(집계·CSV 내보내기)를 Node의 `--experimental-strip-types`로 직접 임포트해 순수 함수 단위로 검증한다(`scripts/test-admin.mjs`) — 컴포넌트 자체의 렌더링/인증 게이트는 아직 커버하지 않음.
 
-같은 제품의 모델코드가 test-app.html/finder-app.html/package-planner.html/compare-app.html
-4개 파일에 각각 독립적으로 박혀 있어 한 파일만 고치고 나머지를 놓치는 사고가 실제로 여러 번
-있었다(냉장고 RF→RM, 세탁기 WD25→WD90, 김치냉장고 RQ→RK 등). `scripts/test-consistency.mjs`가
-이를 감지하는 안전망이다 — 단, compare-app.html의 "P등급"과 package-planner.html의 FLAGSHIP은
-목적이 달라 항상 같은 SKU를 가리키지 않으므로(세탁기·건조기는 콤보 vs 별도기기, TV는 Micro RGB vs
-OLED, 식기세척기는 다른 F세대 티어 — 모두 조사로 확인된 의도된 선택) 정확히 같아야 하는 카테고리와
-세대 접두사만 같으면 되는 카테고리를 스크립트 내에서 구분해 검사한다. 새로 검증한 모델코드를
-GOLDEN 배열에 추가할 때 이 구분을 참고할 것.
+같은 제품의 모델코드가 test-app.html/finder-app.html/compare-app.html에 각각 독립적으로 박혀 있어
+한 파일만 고치고 나머지를 놓치는 사고가 실제로 여러 번 있었다(냉장고 RF→RM, 세탁기 WD25→WD90,
+김치냉장고 RQ→RK 등). `scripts/test-consistency.mjs`가 이를 감지하는 안전망이다.
+
+- **PART A**: 골든 모델코드가 대상 파일 전부에 존재하는지 (문자열 존재 확인)
+- **PART B**: 타사비교의 P등급(최상위) 모델코드가 **모델파인더 DB에도 있는지**. 없으면 상담 중
+  고객이 되물었을 때 파인더에서 스펙·가격을 확인할 수 없다. 이 검사를 넣자마자 에어컨
+  `AF90H19D27SRT`(→`SRS` 오타)와 식기세척기 코드 불일치를 실제로 잡아냈다.
+- 어느 쪽이 맞는지 확정하지 못한 코드는 `UNRESOLVED` 맵에 **이유와 함께** 넣어 TODO로 출력한다.
+  추정으로 한쪽에 맞추면 틀린 모델코드를 고객에게 안내하게 되므로 불일치를 드러낸 채로 둔다.
 
 커밋 전 실수로 생성되는 `tsconfig.tsbuildinfo`, `package-lock.json`은 `.gitignore`에 등록되어 있으니 git에 올라가지 않는지 확인할 것 (과거 여러 번 실수로 커밋되었다가 별도 정리 커밋이 필요했음).
 

@@ -28,10 +28,9 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   install: { label: '설치환경 가이드',   icon: '🛠️', color: '#B45309' },
   compare: { label: '타사비교',         icon: '🔗', color: '#EA580C' },
   care:    { label: 'AI Care',         icon: '💚', color: '#059669' },
-  planner: { label: '패키지 플래너',     icon: '📦', color: '#0891B2' },
   hub:     { label: '허브 기능',        icon: '🏠', color: '#475569' },
 }
-const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'care', 'planner']
+const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'care']
 const MAX_PER_MODULE = 12
 
 // 공백으로 나눈 모든 토큰을 포함해야 매칭(AND) — "무풍 에어컨"처럼 조합 검색이 되게 한다.

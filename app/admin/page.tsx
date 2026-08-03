@@ -95,7 +95,6 @@ const ROI_DATA = [
   { key: 'quiz',    icon: '🎯', label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
   { key: 'care',    icon: '💚', label: 'AI Care 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
   { key: 'test',    icon: '📝', label: '레벨업테스트 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
-  { key: 'planner', icon: '📦', label: '입주패키지 구성·견적',            before: '20분/건',   after: '1분/건',   saving: 95 },
 ]
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
@@ -108,7 +107,8 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   // 타사비교로 통합된 구 모듈 — 통합 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
   compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309' },
   quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
-  planner: { label: '패키지 플래너',    icon: '📦', color: '#0891B2' },
+  // 운영 종료된 모듈 — 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
+  planner: { label: '패키지 플래너 (운영 종료)', icon: '📦', color: '#0891B2' },
   install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
   concierge: { label: '컨시어지 프로그램', icon: '🎫', color: '#DB2777' },
   coupon:  { label: '시크릿쿠폰',      icon: '🎁', color: '#DC2626' },

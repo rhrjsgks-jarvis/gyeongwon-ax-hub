@@ -42,7 +42,7 @@ const search = (q) => {
   return entries.filter((e) => tokens.every((t) => e.kw.includes(t)));
 };
 const CASES = [
-  { q: '김치냉장고', modules: ['finder', 'install', 'compare', 'care', 'planner'] },
+  { q: '김치냉장고', modules: ['finder', 'install', 'compare', 'care'] },
   { q: '무풍', modules: ['finder'] },
   { q: 'RM90H91B1W', modules: ['finder'] },
   { q: '에어드레서', modules: ['finder', 'install', 'compare'] },

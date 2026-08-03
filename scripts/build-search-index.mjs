@@ -149,31 +149,12 @@ const MODULES = [
   })),
   // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
-  // 패키지 플래너는 /planner 라우트가 살아 있으나 허브 카드·사이드바 어디에도 링크가 없어
-  // 통합검색이 유일한 진입로다. 화면 워딩을 뽑아올 곳이 없으므로 여기서 직접 정의한다.
-  { title: '패키지 플래너', sub: '평형별 패키지 구성·견적 (허브 카드에는 없는 모듈)', kw: '패키지 플래너 견적 혼수 신혼 planner 평형 구성', href: '/planner' },
+  // (패키지 플래너는 2026-08-03 운영 종료 — 라우트·정적앱·인덱스 항목 모두 제거했다.)
   { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge 🏬 매장운영 도구', href: '/#concierge' },
   { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true },
 ];
 for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });
-}
-
-// ── 6. 패키지 플래너 카테고리 ──
-{
-  const html = read('package-planner.html');
-  const block = html.match(/const DB=\{([\s\S]*?)\n\};/);
-  const KO = { fridge: '냉장고', washer: '세탁기', dryer: '건조기', tv: 'TV', aircon: '에어컨',
-    dishwasher: '식기세척기', airdresser: '에어드레서', robot: '로봇청소기', vacuum: '청소기',
-    kimchi: '김치냉장고', induction: '인덕션', airpurifier: '공기청정기', microwave: '전자레인지',
-    soundbar: '사운드바', laptop: '노트북', tablet: '태블릿', phone: '스마트폰', wearable: '웨어러블' };
-  if (block) {
-    for (const k of [...new Set([...block[1].matchAll(/^\s+(\w+):\[/gm)].map((x) => x[1]))]) {
-      const ko = KO[k] || k;
-      add({ t: 'category', m: 'planner', title: ko, sub: '패키지 플래너 · 평형별 구성·견적',
-        kw: `${ko} ${k} 패키지 견적 혼수`, href: '/planner' });
-    }
-  }
 }
 
 // 키워드는 소문자로 정규화해 검색 시 비교 비용을 줄인다
