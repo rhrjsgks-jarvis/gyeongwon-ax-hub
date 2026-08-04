@@ -92,7 +92,7 @@ const add = (e) => entries.push(e);
 // ── 5. 허브 모듈·외부 링크 (수동 정의 — 소스가 app/page.tsx라 여기서 별도 관리) ──
 // 쿠폰 프로그램 URL만은 app/page.tsx의 COUPON_LINKS에서 직접 읽는다.
 // 여기에 URL을 복사해두면 한쪽만 바뀌었을 때 검색 결과가 죽은 링크를 가리키게 된다.
-const readSrc = (p) => fs.readFileSync(path.join(__dirname, '..', ...p.split('/')), 'utf8');
+const readSrc = (p) => fs.readFileSync(path.join(__dirname, '..', ...p.split('/')), 'utf8').replace(/\r\n/g, '\n');
 function couponHref() {
   const src = readSrc('app/page.tsx');
   const block = src.match(/const COUPON_LINKS = \[([\s\S]*?)\n\]/);

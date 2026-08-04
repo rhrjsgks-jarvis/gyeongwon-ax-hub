@@ -132,7 +132,7 @@ console.log('OK: 인덱스 내부 링크가 모두 실제 라우트를 가리킴
 // 레벨업테스트·URL 퀴즈가 안 나오던 문제가 있었다. 허브 화면의 모든 모듈과 섹션명이
 // 인덱스에 들어갔는지 소스와 직접 대조한다.
 {
-  const pageSrc = fs.readFileSync(path.join(root, 'app', 'page.tsx'), 'utf8');
+  const pageSrc = fs.readFileSync(path.join(root, 'app', 'page.tsx'), 'utf8').replace(/\r\n/g, '\n');
   const gb = pageSrc.match(/const MODULE_GROUPS[^=]*=\s*\[([\s\S]*?)\n\]\n/);
   if (!gb) fail('app/page.tsx에서 MODULE_GROUPS를 찾지 못함 — 인덱스 생성기도 함께 확인할 것');
   else {

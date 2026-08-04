@@ -39,14 +39,19 @@ try {
 // ── 프로덕션 빌드 ──
 if (!fs.existsSync(path.join(root, '.next', 'BUILD_ID'))) {
   console.log('· .next 빌드 없음 → npm run build');
-  execFileSync('npm', ['run', 'build'], { cwd: root, stdio: 'inherit' });
+  execFileSync('npm', ['run', 'build'], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' });
 }
 
 // ── 서버 기동 ──
 const server = spawn('npx', ['next', 'start', '-p', String(PORT)], {
-  cwd: root, stdio: 'ignore', detached: true,
+  cwd: root, stdio: 'ignore', detached: process.platform !== 'win32', shell: process.platform === 'win32',
 });
-const stopServer = () => { try { process.kill(-server.pid, 'SIGKILL'); } catch {} };
+const stopServer = () => {
+  try {
+    if (process.platform === 'win32') execFileSync('taskkill', ['/pid', String(server.pid), '/t', '/f']);
+    else process.kill(-server.pid, 'SIGKILL');
+  } catch {}
+};
 process.on('exit', stopServer);
 
 const browser = await chromium.launch({
