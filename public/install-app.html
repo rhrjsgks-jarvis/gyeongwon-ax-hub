@@ -219,6 +219,7 @@ const INSTALL_DB = {
       ['설치 높이','천장고 1,900mm 이상 필요 (제품 자체 높이는 모델별 1,778~1,870mm대로 상이)'],
       ['설치 깊이','최소 700mm 이상 (도어 제외 본체 기준 약 748~810mm, 모델별 상이)'],
       ['도어 측면 최소 여유','약 246~295mm (모델별 상이, 도어 오픈 시 간섭 방지용)'],
+      ['도어 오픈 각도','125° (Bespoke 4도어 프리스탠딩 RM/RF9*·8* 계열 공통, samsung.com 설치가이드 다이어그램 확인)'],
       ['진입로(현관·복도·엘리베이터)','제품 가로 사이즈(약 908~916mm대)보다 넓어야 진입 가능 · 협소 시 사다리차 이용(창문이 제품보다 커야 함)'],
     ],
     utility:[
@@ -234,11 +235,12 @@ const INSTALL_DB = {
       '프리스탠딩 모델은 페어·키친핏 방식으로 설치할 수 없습니다 (삼성닷컴 공식 설치가이드 명시 사항).',
       '정확한 설치 규격은 모델별(RF91/RF90/RF85/RF84/RF80/RF75C 등)로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 냉장고 공식 설치가이드(samsung.com/sec/refrigerators — 4도어 프리스탠딩 모델별 설치가이드 이미지 확인)',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "냉장고 설치가이드" 팝업 — 2026-08-04 Playwright로 Infinite Line/Bespoke × 도어유형 위저드를 전체 순회해 재확인. Bespoke 라인은 RM/RF 9*·8* 등 용량별로 여러 장의 다이어그램이 있으며 후면 이격 50mm·도어오픈각 125°는 확인한 용량대에서 공통, 높이는 1,853~1,870mm로 모델별 상이.',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
       {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc-set-one-refri-infinite-4door-fs.jpg', alt:'냉장고 4도어 프리스탠딩 단독 설치 규격도', cap:'Infinite Line 4도어 프리스탠딩 단독 설치 규격 안내도(벽면 이격 50mm 등) · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/buying-guide/PCD_purchase_01_pc_01_v3.jpg', alt:'4도어 냉장고 제품 이미지', cap:'Bespoke 4도어 냉장고 도어 닫힘/열림 제품 이미지 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc-set-one-refri-bespoke-4doorFs-rm_f91_f90_v4.jpg', alt:'Bespoke 4도어 프리스탠딩 RM/RF91·RF90 설치가이드', cap:'Bespoke 4도어 프리스탠딩(RM/RF91·RF90 계열) — 후면 이격 50mm·도어오픈각 125°·폭 916(912)mm·높이 1,853mm·도어오픈 시 전체폭 1,498mm · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc-set-one-refri-bespoke-4doorFs-rf91_v3.jpg', alt:'Bespoke 4도어 프리스탠딩 RF91 설치가이드', cap:'Bespoke 4도어 프리스탠딩(RF91 계열) — 후면 이격 50mm·도어오픈각 125°·폭 916(912)mm·높이 1,870mm · samsung.com 설치가이드'},
     ]
   },
 
@@ -248,7 +250,8 @@ const INSTALL_DB = {
     types:['키친핏 단독 설치','키친핏 페어(2대) 조합 설치'],
     space:[
       ['냉장고장 규격','높이 1,900mm 이상 · 깊이 700mm 이상(콘센트 있을 시 720mm 이상)'],
-      ['좌우 이격(냉장고장 내측)','각 12mm (Infinite Line 4도어 기준, 모델별 상이)'],
+      ['좌우 이격(냉장고장 내측)','Infinite Line: 각 12mm · Bespoke: 4mm 또는 12mm (용량대별로 상이 — samsung.com 설치가이드 위저드에 두 수치 모두 존재, 모델코드는 이미지에 표기되지 않아 어느 용량대가 4mm인지는 판매처·서비스센터 확인 필요)'],
+      ['도어 오픈 각도','105~108° (Infinite Line·Bespoke 공통 범위)'],
       ['페어(2대) 조합 설치 간격','제품 간 10mm — 전용 페어키트(별매)로 연결 필요'],
       ['가구장 로봇 출입구 등 진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
     ],
@@ -266,11 +269,12 @@ const INSTALL_DB = {
       '4도어와 1도어 간 페어 설치는 불가합니다 (동일 도어타입 조합만 가능).',
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 냉장고 공식 설치가이드(samsung.com/sec/refrigerators — 4도어 키친핏 모델별 설치가이드 이미지 확인)',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "냉장고 설치가이드" 팝업 — 2026-08-04 Playwright로 Infinite Line/Bespoke 위저드를 전체 순회해 재확인. Bespoke 4도어 키친핏은 좌우 4mm짜리와 12mm짜리 두 다이어그램이 모두 있었으나 이미지에 모델코드가 없어 어느 용량대가 어느 값인지는 확정하지 못했다(값 자체는 실제 확인).',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-01-02-v2.jpg', alt:'냉장고 4도어 키친핏 설치 규격도', cap:'Infinite Line 4도어 키친핏 + 김치플러스 조합 설치 규격 안내도(좌우 이격 12mm·제품간 10mm) · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/buying-guide/PCD_purchase_02-2_pc_01_v2.jpg', alt:'Bespoke 4도어 키친핏 제품 이미지', cap:'Bespoke 4도어 키친핏 냉장고장 설치 제품 이미지 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-01-02-v2.jpg', alt:'냉장고 4도어 키친핏 설치 규격도', cap:'Infinite Line 4도어 키친핏 + 김치플러스 조합 설치 규격 안내도(좌우 이격 12mm·제품간 10mm·도어오픈각 105°) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-02-01_v4.jpg', alt:'Bespoke 4도어 키친핏 설치 규격도(좌우 4mm)', cap:'Bespoke 4도어 키친핏 — 좌우 이격 4mm·상단 20mm·도어오픈각 108°·폭 908(냉장고장 내측)/916mm·높이 1,853mm(제품)/1,873mm(냉장고장) · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-02_v2.jpg', alt:'Bespoke 4도어 키친핏 설치 규격도(좌우 12mm)', cap:'Bespoke 4도어 키친핏 — 좌우 이격 12mm·도어오픈각 105°·냉장고장 높이 1,900mm 이상·폭 912mm·높이 1,853mm · samsung.com 설치가이드'},
     ]
   },
 
@@ -279,8 +283,8 @@ const INSTALL_DB = {
     subtitle:'키친핏보다 더 깊은 냉장고장에 설치하는 대용량 빌트인 라인업 · 예: RM90H64P2W(602L)',
     types:['키친핏 Max 단독 설치'],
     space:[
-      ['좌우 이격(Max 전용)','좌/우 단 4mm만 있으면 설치 가능 (RM90H64P2W 기준) — 2025년 이전 출시 일반 키친핏 냉장고(RF60DB9KF2AP 기준 좌/우 12mm, 상단 47mm) 대비 대폭 축소'],
-      ['냉장고장 규격(Max)','키친핏 대비 깊이가 더 깊은 전용 냉장고장 필요 (정확한 깊이는 모델별 스펙 확인 필요)'],
+      ['좌우 이격(Max 전용)','좌/우 단 4mm만 있으면 설치 가능 (RM90H64P2W 기준) — 냉장고+김치냉장고 키친핏 Max 조합 설치가이드 다이어그램에서 실측 확인(냉장고 908mm+김치냉장고 795mm, 제품간 6mm)'],
+      ['냉장고장 규격(Max)','높이 1,873mm 이상 · 깊이 700mm 이상 — samsung.com 설치가이드 다이어그램 확인'],
       ['진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
     ],
     utility:[
@@ -295,12 +299,11 @@ const INSTALL_DB = {
       '키친핏 Max는 일반 키친핏 대비 깊이·규격이 크므로, 기존 일반 키친핏용 냉장고장에는 호환되지 않을 수 있습니다.',
       '모델별 정확한 설치 규격은 삼성닷컴 해당 제품 페이지 또는 서비스센터 확인이 필요합니다.',
     ],
-    source:'삼성닷컴 키친핏 Max 제품 페이지(samsung.com/sec/refrigerators — Bespoke AI 패밀리허브 4도어 키친핏 Max 602L RM90H64P2W). 좌우 4mm 이격 스펙은 제품 페이지 명시 문구 기준이며, 치수 도면 이미지는 확인하지 못해 실제 제품 사진으로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/french-door-rm90h64p2w-d2c/RM90H64P2W/',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "냉장고 설치가이드" 팝업 → 조합(페어) 설치 위저드 → Bespoke 키친핏 Max — 2026-08-04 Playwright로 실제 치수 다이어그램을 확인했다(파일명에 "max"가 명시된 이미지 기준). 이전에는 이 다이어그램을 찾지 못해 RM90H64P2W 제품페이지 사진으로 대체했었는데, 이번에 찾은 다이어그램 수치(좌우 4mm)가 제품페이지 문구와 일치해 교차 검증됐다.',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
-      {src:'https://images.samsung.com/kdp/goods/2026/03/11/71ffeb5e-057f-4fc1-b906-e74308ad059c.png', alt:'키친핏 Max 냉장고 정면 이미지', cap:'Bespoke AI 4도어 키친핏 Max 602L(RM90H64P2W) 정면 · samsung.com (제품 이미지, 치수 도면 아님)'},
-      {src:'https://images.samsung.com/kdp/goods/2026/03/11/e9f6877f-6a49-49ca-b2f3-ff26a11f74a2.png', alt:'키친핏 Max 냉장고 상칸 도어 오픈 이미지', cap:'RM90H64P2W 상칸 도어 오픈 · samsung.com'},
-      {src:'https://images.samsung.com/kdp/goods/2026/03/11/8350dc8f-fce5-4746-81a8-8cfbf61d84a5.png', alt:'키친핏 Max 냉장고 좌측면 이미지', cap:'RM90H64P2W 좌측면 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc_02_02_01_4+4door_max_v5.jpg', alt:'키친핏 Max 냉장고+김치냉장고 조합 설치 규격도', cap:'Bespoke 키친핏 Max(냉장고 908mm+김치냉장고 795mm 조합) — 좌우 이격 4mm(외곽)·제품간 6mm·냉장고장 높이 1,873mm·깊이 700mm·제품 높이 1,853mm · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/goods/2026/03/11/71ffeb5e-057f-4fc1-b906-e74308ad059c.png', alt:'키친핏 Max 냉장고 정면 이미지', cap:'Bespoke AI 4도어 키친핏 Max 602L(RM90H64P2W) 정면 제품 이미지 · samsung.com'},
     ]
   },
 
@@ -310,6 +313,10 @@ const INSTALL_DB = {
     types:['2도어 설치'],
     space:[
       ['설치 형태','대부분 키친핏(빌트인) 위주 — 냉장고장 규격은 4도어 대비 슬림'],
+      ['냉장고장 규격','높이 1,900mm 이상 · 깊이 최소 700mm'],
+      ['좌우 이격(냉장고장 내측)','12mm (Bespoke 2도어 키친핏 기준, samsung.com 설치가이드 다이어그램 확인)'],
+      ['도어 오픈 각도','105°'],
+      ['제품 규격','폭 595mm · 높이 1,853mm (Bespoke 2도어 키친핏 기준)'],
       ['진입로','제품 가로 사이즈보다 넓은 진입 경로 필요 · 협소 시 사다리차'],
     ],
     utility:[
@@ -323,10 +330,10 @@ const INSTALL_DB = {
     cautions:[
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 냉장고 구매가이드(samsung.com/sec/refrigerators). 4도어·1도어 대비 2도어 전용 치수 설치가이드 이미지는 확인하지 못해 대표 제품 이미지로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/all-refrigerators/?2door_top-mount+2door_bottom-mount+2door_side-by-side+bespoke',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "냉장고 설치가이드" 팝업 — 2026-08-04 Playwright로 위저드를 순회해 실제 치수 다이어그램을 찾았다. 이전에는 이 다이어그램을 찾지 못해 대표 제품 이미지로 대체했었다.',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/buying-guide/PCD_purchase_01_pc_02_v2.jpg', alt:'2도어 냉장고 제품 이미지', cap:'Bespoke 2도어 냉장고 도어 닫힘/열림 제품 이미지 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-03.jpg', alt:'냉장고 2도어 키친핏 설치 규격도', cap:'Bespoke 2도어 키친핏 — 좌우 이격 12mm·냉장고장 깊이 최소 700mm·도어오픈각 105°·폭 595mm·높이 1,853mm(냉장고장 높이 1,900mm 이상) · samsung.com 설치가이드'},
     ]
   },
 
@@ -336,7 +343,8 @@ const INSTALL_DB = {
     types:['1도어 단독 설치','1도어 페어(2대) 조합 설치'],
     space:[
       ['냉장고장 규격','높이 1,900mm 이상 · 깊이 700mm 이상'],
-      ['좌우 이격(냉장고장 내측)','각 5mm (Infinite Line 1도어 기준, 모델별 상이)'],
+      ['좌우 이격(냉장고장 내측)','Infinite Line: 각 5mm · Bespoke: 각 12mm (samsung.com 설치가이드 다이어그램에서 라인별로 직접 확인)'],
+      ['도어 오픈 각도','Infinite Line 115° · Bespoke 105°'],
       ['페어(2대) 조합 설치 간격','제품 간 10mm — 전용 페어키트(별매)로 연결 필요'],
     ],
     utility:[
@@ -351,11 +359,11 @@ const INSTALL_DB = {
       '1도어와 4도어 간 페어 설치는 불가합니다.',
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 냉장고 공식 설치가이드(samsung.com/sec/refrigerators — 1도어 키친핏 모델별 설치가이드 이미지 확인)',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/all-refrigerators/?bespoke+1door+bespoke-Infinite-Line',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "냉장고 설치가이드" 팝업 — 2026-08-04 Playwright로 Infinite Line/Bespoke 위저드를 전체 순회해 재확인.',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-01-03.jpg', alt:'냉장고 1도어 키친핏 설치 규격도', cap:'Infinite Line 1도어 키친핏 단독 설치 규격 안내도(좌우 이격 5mm) · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/buying-guide/PCD_purchase_01_pc_03_v2.jpg', alt:'1도어 조합 제품 이미지', cap:'Bespoke 냉동고+냉장고+김치냉장고 1도어 조합 제품 이미지 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-01-03.jpg', alt:'냉장고 1도어 키친핏 설치 규격도', cap:'Infinite Line 1도어 키친핏 단독 설치 규격 안내도 — 좌우 이격 5mm·도어오픈각 115°·폭 595mm·높이 1,855mm · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-04-01_v3.jpg', alt:'Bespoke 1도어 키친핏 2대 조합 설치 규격도', cap:'Bespoke 1도어 키친핏(2대 조합) — 좌우 이격 12mm(외곽)·제품간 10mm·도어오픈각 105°·폭 595mm(1대)·높이 1,858mm · samsung.com 설치가이드'},
     ]
   },
 
@@ -378,13 +386,13 @@ const INSTALL_DB = {
     cautions:[
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 양문형 냉장고 설치가이드(samsung.com/sec/refrigerators?scrollTo=install-guide), 용량대별 실측 치수 도면 기준.',
+    source:'삼성닷컴 양문형 냉장고 설치가이드(samsung.com/sec/refrigerators — side-by-side/popup 경로), 용량대별 실측 치수 도면 기준. 2026-08-04 4개 이미지를 모두 다시 다운받아 직접 확인 — 그 과정에서 845~852L 이미지의 기존 "도어 오픈 시 전체 길이 1,780mm" 캡션이 실제로는 제품 높이였던 오기임을 발견해 정정했다. 삼성닷컴 구매가이드의 별도 "냉장고 설치가이드" 위저드에서도 양문형 RS70*/RS84*/RS80F* 다이어그램을 교차 확인했다(RS63*는 위저드에서 선택지가 사라져 단종 가능성 있음, 위 캡션에 명시).',
     sourceUrl:'https://www.samsung.com/sec/refrigerators/all-refrigerators/?side-by-side',
     images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_845_852_.jpg', alt:'양문형 냉장고 845~852L 설치 규격도', cap:'845~852L급(RS84B508115 기준) 설치 규격도 — 후면 이격 50mm, 도어 오픈 최대 170도, 도어 오픈 시 전체 길이 1,780mm · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_814_841_v2.jpg', alt:'양문형 냉장고 814~841L 설치 규격도', cap:'814~841L급(RH81R9151S8 기준) 설치 규격도 · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_805.jpg', alt:'양문형 냉장고 805L 설치 규격도', cap:'805L급(RS84B508115 기준) 설치 규격도 · samsung.com'},
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_635_796.jpg', alt:'양문형 냉장고 635~796L 설치 규격도', cap:'635~796L급(RS63R557EB4 기준) 설치 규격도 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_845_852_.jpg', alt:'양문형 냉장고 845~852L 설치 규격도', cap:'845~852L급(RS84B508115 기준) 설치 규격도 — 후면 이격 50mm·도어 오픈 최대 170도·전체 높이 1,780mm·폭 912mm·도어 오픈 시 전체 폭 1,726mm(2026-08-04 재확인, 기존 "도어 오픈 시 전체 길이 1,780mm" 표기는 실제로는 제품 높이였던 오기라 정정) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_814_841_v2.jpg', alt:'양문형 냉장고 814~841L 설치 규격도', cap:'814~841L급(RH81R9151S8 기준) 설치 규격도 — 후면 이격 50mm·전체 높이 1,774mm·폭 912mm·도어 오픈 시 전체 폭 1,670mm(2026-08-04 수치 보강) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_805.jpg', alt:'양문형 냉장고 805L 설치 규격도', cap:'805L급(RS84B508115 기준) 설치 규격도 — 후면 이격 50mm·전체 높이 1,780mm·폭 912mm·도어 오픈 시 전체 폭 1,726mm(2026-08-04 수치 보강) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_635_796.jpg', alt:'양문형 냉장고 635~796L 설치 규격도', cap:'635~796L급(RS63R557EB4 기준) 설치 규격도 — 후면 이격 50mm·전체 높이 1,780mm·폭 912mm·도어 오픈 시 전체 폭 1,726mm(2026-08-04 수치 보강). RS63* 계열은 2026-08-04 기준 samsung.com 구매가이드 설치가이드 위저드의 "양문형" 선택지에서 더 이상 노출되지 않아(RS70*/RS84*/RS80F*만 선택 가능) 단종·후순위 가능성이 있다 — 신규 상담 시 현재 판매 여부를 먼저 확인할 것 · samsung.com'},
     ]
   },
 
@@ -418,9 +426,9 @@ const INSTALL_DB = {
     subtitle:'냉장고+김치냉장고 등 2대 이상을 나란히 조합 설치 — 키친핏 모델 간에만 가능',
     types:['4도어 페어 조합','1도어 페어 조합'],
     space:[
-      ['제품 간 간격','10mm — 전용 페어키트(별매)로 연결'],
+      ['제품 간 간격','Infinite Line·구형 Bespoke: 10mm · 신형 Bespoke 키친핏 Max(냉장고+김치냉장고 조합): 6mm — 전용 페어키트(별매)로 연결'],
       ['적용 가능 조합','키친핏 모델 간에만 가능 — 프리스탠딩은 페어 설치 불가'],
-      ['냉장고장 규격','높이 1,900mm 이상 · 깊이 700mm 이상(4도어 12mm·1도어 5mm 좌우 이격)'],
+      ['냉장고장 규격(외곽 이격)','Infinite Line·구형 Bespoke: 좌우 각 12mm(4도어)·5mm(1도어) · 신형 Bespoke 키친핏 Max: 좌우 각 4mm — 냉장고장 높이 1,873~1,900mm · 깊이 700mm 이상'],
     ],
     utility:[
       ['전원','제품별 전용 콘센트 필요'],
@@ -436,10 +444,11 @@ const INSTALL_DB = {
       '4도어와 1도어 간 페어 설치는 불가합니다.',
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 냉장고 공식 설치가이드(samsung.com/sec/refrigerators — 페어 설치 유의사항 및 설치가이드 이미지 확인)',
-    sourceUrl:'https://www.samsung.com/sec/refrigerators/',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "냉장고 설치가이드" 팝업 → 조합(페어) 설치 위저드 — 2026-08-04 Playwright로 Infinite Line·Bespoke 조합 다이어그램을 전체 순회해 확인. 이전에는 개별 설치용 다이어그램(4도어 키친핏)을 페어 카테고리에 잘못 재사용하고 있었는데, 이번에 조합 설치 전용 다이어그램을 찾아 교체했다.',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
-      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-01-02-v2.jpg', alt:'냉장고 페어 조합 설치 규격도', cap:'Infinite Line 4도어+김치플러스 키친핏 페어 조합 설치 규격 안내도(제품 간 10mm) · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc02-01-01.jpg', alt:'Infinite Line 키친핏 조합(냉장고4도어+김치플러스4도어) 설치 규격도', cap:'Infinite Line 키친핏 조합(냉장고 4도어 912mm+김치플러스 4도어 795mm) — 좌우 이격 12mm(외곽)·제품간 10mm·냉장고장 높이 1,900mm·깊이 700mm 이상 · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc_02_02_01_4+4door_max_v5.jpg', alt:'Bespoke 키친핏 Max 조합(냉장고+김치냉장고) 설치 규격도', cap:'Bespoke 키친핏 Max 조합(냉장고 908mm+김치냉장고 795mm) — 좌우 이격 4mm(외곽)·제품간 6mm·냉장고장 높이 1,873mm·깊이 700mm 이상 · samsung.com 설치가이드'},
     ]
   },
 
@@ -673,7 +682,7 @@ const INSTALL_DB = {
     cautions:[
       '청정스테이션 자동비움 기능 포함 모델은 스테이션 주변 통풍 공간이 필요합니다.',
     ],
-    source:'삼성닷컴 청소기(samsung.com/sec/vacuum-cleaners) · 삼성전자서비스 안내',
+    source:'삼성닷컴 청소기 구매가이드(samsung.com/sec/home-appliances/buying-guide/vacuum-cleaners-buying-guide) 및 무선청소기 FAQ(samsung.com/sec/home-appliances/faq-cordless-vacuum-cleaners) — 2026-08-04 Playwright로 페이지 전체(지연로드 이미지·배경이미지 포함)를 렌더링해 직접 확인. 두 페이지 모두 흡입력·사용시간·AI기능 등 제품 소개 이미지만 있을 뿐, 치수가 표기된 설치가이드 다이어그램은 존재하지 않아(무선 스틱형 특성상 고정 설치 규격이 없음) 기존과 동일하게 텍스트로만 제공.',
     sourceUrl:'https://www.samsung.com/sec/vacuum-cleaners/'
   },
 
@@ -769,14 +778,18 @@ const INSTALL_DB = {
 
   '에어드레서': {
     emoji:'👗',
-    subtitle:'세탁기와 달리 별도 배수 시설이 필요 없어 실내 어디든 설치 가능하나, 좌우/상단/후면 이격거리는 반드시 지켜야 합니다',
-    types:['프리스탠딩 설치'],
+    subtitle:'세탁기와 달리 별도 배수 시설이 필요 없어 실내 어디든 설치 가능하나, 좌우/상단/후면 이격거리는 반드시 지켜야 합니다 — 좌우 이격은 모델 라인업에 따라 2.5mm 또는 14mm로 갈립니다',
+    types:['Bespoke AI 대용량','Bespoke AI 일반용량','에어드레서 대용량','에어드레서 일반용량'],
     space:[
-      ['좌우 이격','옆면 2.5mm 이상, 2대 이상 나란히 붙여 설치할 때도 사이 간격 2.5mm 이상 (삼성닷컴 에어드레서 FAQ·DF90H24R5C 제품페이지 기준)'],
-      ['상단/후면 이격','상단 25mm 이상, 후면 15mm 이상'],
-      ['제품 규격(대용량 5~9벌형)','가로 595mm · 높이 1,960mm · 깊이 595mm — DF80H24R1D는 2026 dp 카탈로그 스펙표로 확인된 값이고, DF90H24R5C도 동일 규격이다'],
+      ['좌우 이격','2.5mm — 현재 판매 라인업인 DF*0H24R**(DF90H24R5C·DF80H24R1D·DF90H24R4D 등)·DF24CB******·DF18CB****** 기준. 단, 구형 Bespoke 라인(DF10A9500CG·DF60A8500CG)은 14mm로 더 넓게 필요하다 — 삼성닷컴 설치가이드 다이어그램에서 색상별(파란색/빨간색)로 모델코드와 함께 명시된 값을 직접 확인'],
+      ['상단 이격','25mm — 대용량·일반용량, Bespoke·비Bespoke 전 라인업 공통'],
+      ['후면 이격','15mm — 전 라인업 공통'],
+      ['제품 규격(Bespoke AI 대용량)','가로 595mm · 높이 1,960mm (DF10A9500CG·DF*0H24R**/DF24CB****** 공통) · 깊이는 2026 dp 카탈로그 DF80H24R1D 스펙표 기준 595mm'],
+      ['제품 규격(Bespoke AI 일반용량)','가로 445mm · 높이 1,850mm(DF60A8500CG) 또는 1,960mm(DF18CB8700CR) — 색상/모델별로 전체 높이가 다르므로 반드시 모델코드로 재확인'],
+      ['제품 규격(에어드레서 대용량, 비Bespoke)','가로 595mm · 높이 1,960mm (DF10T9700BG 기준)'],
+      ['제품 규격(에어드레서 일반용량, 비Bespoke)','가로 445mm · 높이 1,850mm (DF60T8700BG 기준)'],
       ['수납 구성','상의 5~9벌 + 하의 1벌 (DF80H24R1D 카탈로그 기준). 하의 전용 공간이 따로 있어 바지 걸이 자리를 별도로 계산하지 않아도 된다'],
-      ['진입로','제품 세로 사이즈(약 1,960mm)보다 낮은 현관문·엘리베이터·복도가 있으면 진입이 불가하므로 사전 확인 필요'],
+      ['진입로','제품 세로 사이즈(약 1,850~1,960mm, 모델별 상이)보다 낮은 현관문·엘리베이터·복도가 있으면 진입이 불가하므로 사전 확인 필요(삼성닷컴 설치가이드 공통 안내 문구)'],
       ['타사 교체 설치 시','LG 스타일러 5벌형은 600 × 1,965 × 620mm(LG 카탈로그)라 폭·깊이가 각각 5mm·25mm 더 크다. 스타일러를 쓰던 자리라면 에어드레서가 그대로 들어간다'],
     ],
     utility:[
@@ -786,17 +799,23 @@ const INSTALL_DB = {
     checklist:[
       '설치 위치의 주변 온도가 10~35℃ 범위인지 확인(공식 권장 범위)',
       '진입로(현관문·엘리베이터·계단 등)가 제품 높이보다 확보되는지 사전 확인',
-      '2대 이상 나란히 설치 시 사이 간격(2.5mm 이상) 확보',
+      '판매 모델코드로 좌우 이격이 2.5mm인지 14mm인지 먼저 확인(구형 Bespoke 블루 라인만 14mm)',
       '붙박이장과 유사한 깊이(약 595~600mm)의 공간 확보',
       '하의를 함께 관리할 고객이면 하의 1벌 공간이 있는 모델(DF80H24R1D 등)인지 확인',
     ],
     cautions:[
       '별도 배수 시설이 필요 없어 실내 어디든 설치 가능하지만, 이격거리를 지키지 않으면 냉각·제습 성능이 떨어지고 외벽에 결로가 생길 수 있습니다.',
-      '이격거리는 출시 시기별로 다를 수 있으므로 보유 모델의 출시년도를 먼저 확인하세요.',
+      '좌우 이격거리는 출시 시기·색상 라인(구형 Bespoke 블루 14mm vs 현재 판매 라인 2.5mm)에 따라 다르므로 반드시 판매 중인 모델코드 기준으로 확인하세요.',
       '정확한 설치 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 에어드레서 FAQ(samsung.com/sec/home-appliances/faq-airdresser) + DF90H24R5C 제품페이지 — 이격거리(옆면 2.5mm / 윗면 25mm / 뒷면 15mm)는 두 출처에서 교차확인했다. 이전 표기였던 "좌우 14mm"는 출처가 확인되지 않아 삼성닷컴 값으로 정정. 제품 규격·수납 구성·조작부는 2026 dp 카탈로그 DF80H24R1D 스펙표, LG 스타일러 치수는 LG 베스트샵 카탈로그(타사비교 전용 자료).',
-    sourceUrl:'https://www.samsung.com/sec/airdresser/airdresser-df90h24r5c-d2c/DF90H24R5C/'
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "리빙가전" 섹션 → 설치가이드 탭 → 에어드레서 설치가이드 팝업 — Bespoke AI/일반 라인 × 대용량/일반용량 4개 조합 다이어그램을 직접 렌더링해 확인(각 다이어그램에 모델코드별 색상 구분 치수가 명시됨). 수납 구성·조작부는 2026 dp 카탈로그 DF80H24R1D 스펙표, LG 스타일러 치수는 LG 베스트샵 카탈로그(타사비교 전용 자료).',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
+    images:[
+      {src:'https://images.samsung.com/kdp/static/pcd/air-dresser/PC_Bespoke_airdresser_big_v3.jpg', alt:'Bespoke AI 에어드레서 대용량 설치가이드', cap:'Bespoke AI 에어드레서 대용량 — 상단이격 25mm·후면이격 15mm·좌우이격 14mm(DF10A9500CG)/2.5mm(DF*0H24R**·DF24CB******), 전체 높이 1,960mm·폭 595mm(두 모델 공통) · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/air-dresser/PC_Bespoke_airdresser_nomal_v4.jpg', alt:'Bespoke AI 에어드레서 일반용량 설치가이드', cap:'Bespoke AI 에어드레서 일반용량 — 상단이격 25mm·후면이격 15mm·좌우이격 14mm(DF60A8500CG)/2.5mm(DF18CB8700CR), 전체 높이 1,850mm(DF60A8500CG)/1,960mm(DF18CB8700CR)·폭 445mm(공통) · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/air-dresser/airdresser_popguide3_pc_v2.jpg', alt:'에어드레서 대용량(비Bespoke) 설치가이드', cap:'에어드레서 대용량(비Bespoke 라인) — 상단이격 25mm·후면이격 15mm·좌우이격 2.5mm, 전체 높이 1,960mm·폭 595mm (DF10T9700BG 기준) · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/air-dresser/airdresser_popguide4_pc_v2.jpg', alt:'에어드레서 일반용량(비Bespoke) 설치가이드', cap:'에어드레서 일반용량(비Bespoke 라인) — 상단이격 25mm·후면이격 15mm·좌우이격 2.5mm, 전체 높이 1,850mm·폭 445mm (DF60T8700BG 기준) · samsung.com 설치가이드'},
+    ]
   },
 
   '인덕션': {
@@ -849,6 +868,11 @@ const INSTALL_DB = {
       ['빌트인형 타공','메인 파우셋용 25mm(상판 두께 40mm 이하) + 서브 파우셋용 15mm(상판 두께 30mm 이하)'],
       ['메인 파우셋(음용수) 거리','본체와의 거리 최대 1.5m'],
       ['서브 파우셋(조리수) 거리','본체와의 거리 최대 8m (선택 사양)'],
+      ['본체 규격(빌트인, 상하 설치)','폭 170mm · 깊이 490mm · 높이 405mm (2026-08-04 samsung.com 설치가이드 확인)'],
+      ['본체 규격(빌트인, 좌우 설치)','폭 340mm · 깊이 490mm · 높이 230mm — 하부장 폭이 좁을 때 좌우 배치로 대체 가능'],
+      ['본체 규격(빌트인, 소형)','폭 170mm · 깊이 445mm · 높이 386mm (별도 라인업 기준)'],
+      ['본체 규격(카운터탑 일체형)','폭 480mm · 깊이 170mm · 높이 395mm, 또는 폭 495mm · 깊이 240mm · 높이 475mm(디스플레이 탑재형) — 조리대 위에 바로 올려 사용'],
+      ['설치 불가 환경','배수관이 없는 독립 아일랜드 식탁 · 급배수관이 외부 환경에 노출되는 주방 구조(예: 독립 아일랜드 식탁형)'],
       ['설치 위치','필터·본체 유지보수 접근이 가능한 싱크대 하부 공간(빌트인) 또는 조리대 위(카운터탑)'],
     ],
     utility:[
@@ -868,10 +892,14 @@ const INSTALL_DB = {
       '상판이 천연대리석·세라믹 등 특수 재질인 경우 타공 시 추가 비용이 발생할 수 있습니다.',
       '정확한 타공 규격은 모델별로 상이하므로 서비스센터(1588-3366) 사전 확인을 권장합니다.',
     ],
-    source:'삼성닷컴 정수기(samsung.com/sec/water-purifier) "정수기 쉽게 알아보기" 구성도 및 정수기 FAQ 공식 안내 — 실제 임베드 이미지 확인',
-    sourceUrl:'https://www.samsung.com/sec/water-purifier/all-water-purifier/',
+    source:'삼성닷컴 구매가이드(samsung.com/sec/buying-guide) "정수기 설치가이드" 탭 및 정수기(samsung.com/sec/water-purifier) "정수기 쉽게 알아보기" 구성도 — 2026-08-04 Playwright로 정수기 설치가이드 탭을 열어 파우셋·본체 규격 다이어그램 4종(라인업별)과 설치불가 환경 안내를 직접 확인했다. 기존에는 개략적인 구성도 1장만 있었는데, 실제 치수가 표기된 다이어그램을 새로 찾아 대폭 보강했다.',
+    sourceUrl:'https://www.samsung.com/sec/buying-guide/',
     images:[
       {src:'https://images.samsung.com/kdp/pf/water_purifier_easylearn1.jpg', alt:'정수기 구성 — 파우셋(메인/서브)과 본체(정수모듈/냉온수모듈) 배치도', cap:'정수기 구성도 — 메인 파우셋(음용수)은 본체와 최대 1.5m, 서브 파우셋(조리수)은 최대 8m 이내 배치. 정수 모듈은 필수, 냉/온수 모듈·서브 파우셋은 선택 사양 · samsung.com'},
+      {src:'https://images.samsung.com/kdp/static/pcd/hubpage/images/purifier_guide01_v7.png', alt:'정수기 파우셋·본체 설치 규격도(빌트인 상하형)', cap:'빌트인형 — 파우셋 165×278mm, 본체(상하 설치) 폭170×깊이445×높이386mm. 설치 불가 환경(배수관 없는 독립 아일랜드 식탁, 급배수관 외부노출 구조)도 함께 안내 · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/hubpage/images/purifier_guide02_v5.png', alt:'정수기 파우셋·본체 설치 규격도(빌트인 상하/좌우형)', cap:'빌트인형(다른 라인업) — 파우셋 130×245mm 또는 185×295mm, 본체 상하 설치 시 490×170×405mm · 좌우 설치 시 490×340×230mm(하부장 폭이 좁을 때 좌우 배치로 대체) · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/hubpage/images/purifier_guide03_v5.png', alt:'정수기 카운터탑 일체형 설치 규격도 A', cap:'카운터탑 일체형 — 폭 480mm·깊이 170mm·높이 395mm, 조리대 위에 바로 설치 · samsung.com 설치가이드'},
+      {src:'https://images.samsung.com/kdp/static/pcd/hubpage/images/purifier_guide04_v3.png', alt:'정수기 카운터탑 일체형 설치 규격도 B(디스플레이형)', cap:'카운터탑 일체형(디스플레이 탑재형) — 폭 495mm·깊이 240mm·높이 475mm · samsung.com 설치가이드'},
     ]
   },
 
@@ -880,25 +908,25 @@ const INSTALL_DB = {
     subtitle:'빌트인 설치 시 흡배기구 주변 이격거리 확보가 핵심입니다',
     types:['빌트인 설치','카운터탑(단독) 설치'],
     space:[
-      ['후면·측면 이격','최소 10cm (후면에 콘센트·멀티탭이 있는 경우 15cm 이상)'],
-      ['상단 이격','최소 20cm'],
-      ['벽면 이격(빌트인)','최소 5cm'],
+      ['후면 이격','10cm 이상 (제품 후면에 콘센트·멀티탭이 있는 경우 15cm 이상)'],
+      ['좌우 이격','10cm 이상'],
+      ['상단 이격','20cm 이상'],
       ['흡배기구 위치','측면·후면의 흡기구·배기구가 가벽·수납장 등으로 막히지 않는 위치에 설치'],
     ],
     utility:[
       ['전원','전용 콘센트 필요(문어발 배선 금지)'],
     ],
     checklist:[
-      '후면·측면·상단 이격거리 기준 충족 여부 확인',
+      '후면·좌우·상단 이격거리 기준 충족 여부 확인',
       '흡배기구가 가벽·수납장 등으로 막히지 않는지 확인',
       '빌트인 설치 시 상부장/수납장 내부 규격이 제품 사이즈보다 여유 있는지 확인',
     ],
     cautions:[
       '흡배기구가 막히면 과열로 인한 고장·오작동 위험이 있습니다.',
-      '모델별 정확한 이격 기준은 사용설명서 확인이 필요합니다(본 안내는 대표 기준입니다).',
+      '모델에 따라 요구 사항이 다를 수 있으니 사용설명서로 재확인하세요(삼성닷컴 FAQ 문구).',
     ],
-    source:'삼성닷컴 전자레인지 FAQ(samsung.com/sec/home-appliances/faq-micro-wave-ovens) 및 제품 안내. 치수가 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
-    sourceUrl:'https://www.samsung.com/sec/micro-wave-ovens/all-micro-wave-ovens/',
+    source:'삼성닷컴 전자레인지 FAQ(samsung.com/sec/home-appliances/faq-micro-wave-ovens) "Q. 전자레인지를 설치하려면 어느 정도의 공간이 필요한가요?" 답변 전문을 2026-08-04 Playwright로 아코디언을 펼쳐 직접 확인 — "전자레인지 뒷면과 10cm(콘센트·멀티탭 있을 경우 15cm), 윗면과 20cm, 좌우 10cm 이상". 이전에 있던 "벽면 이격(빌트인) 5cm" 항목은 이 FAQ나 제품페이지에서 재확인되지 않아 삭제했다. 치수가 표기된 임베드 가능한 설치가이드 다이어그램 이미지는 이 페이지·구매가이드 페이지 모두에서 확인하지 못해 텍스트로 제공합니다.',
+    sourceUrl:'https://www.samsung.com/sec/home-appliances/faq-micro-wave-ovens',
   },
 
   '공기청정기': {
@@ -906,9 +934,10 @@ const INSTALL_DB = {
     subtitle:'설치 제약은 적으나 흡입구 주변 이격거리와 배치 위치가 청정 효율을 좌우합니다',
     types:['거실·침실 등 실내 자유 배치형'],
     space:[
-      ['벽면 이격','최소 60cm 권장 (비스포크 양측면 흡입 모델은 벽에 근접 설치해도 효율 저하가 적음)'],
-      ['흡입구 이격','약 25cm 권장'],
+      ['벽면 이격','최소 60cm 권장 (비스포크 양측면 흡입 모델은 벽에 근접 설치해도 효율 저하가 적음) — 출처: 삼성뉴스룸 「슬기로운 공청생활」, 2026-08-04 재접속 시도 시 사이트 연결 실패로 오늘 재확인은 못 했다'],
+      ['흡입구 이격','약 25cm 권장 — 위와 동일 출처, 동일 사유로 오늘 재확인 못 함'],
       ['설치 바닥','경사 없는 평평한 바닥'],
+      ['제품 바닥면적(참고)','Bespoke 큐브™ Air 380×406mm(가로×세로) / Infinite AI 320×320mm(가로×세로) — AP90H10198UDD2 제품페이지에서 2026-08-04 직접 확인. 벽 이격거리와는 별개로 바닥에 두는 발판 공간 계산용'],
     ],
     utility:[
       ['전원','일반 콘센트'],
@@ -923,7 +952,7 @@ const INSTALL_DB = {
       '흡입구·배출구가 가구·커튼 등으로 막히면 청정 효율이 크게 저하됩니다.',
       '습기·인화물질이 많은 공간(주방 가스레인지 인접 등)은 설치를 피해야 합니다.',
     ],
-    source:'삼성뉴스룸 「슬기로운 공청생활」 및 삼성전자서비스 공식 안내. 치수가 표기된 임베드 가능한 설치가이드 이미지는 확인하지 못해 텍스트로 제공합니다.',
+    source:'삼성뉴스룸 「슬기로운 공청생활」 및 삼성전자서비스 공식 안내(벽면·흡입구 이격거리 — 2026-08-04 사이트 접속 실패로 재검증은 못 함, 기존 값 유지). 제품 바닥면적은 AP90H10198UDD2 제품페이지(samsung.com/sec/air-cleaner)에서 2026-08-04 직접 확인. 삼성닷컴 공기청정기 구매/제품 목록 페이지, 플래그십 제품 상세페이지를 Playwright로 렌더링해 확인했으나 치수가 표기된 임베드 가능한 설치가이드 다이어그램 이미지는 존재하지 않아 텍스트로 제공합니다.',
     sourceUrl:'https://www.samsung.com/sec/air-cleaner/all-air-cleaner/',
   }
 
