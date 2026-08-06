@@ -494,7 +494,10 @@ function cleanCanvas(mask, m){
 /** 밝은 영역을 4방향으로 채운다. 도면 바깥까지 새어 나가면 방이 아니라고 판단한다. */
 function floodRegion(mask, sx, sy){
   const { w, h, dark } = mask;
-  if (sx < 0 || sy < 0 || sx >= w || sy >= h || dark[sy * w + sx]) return null;
+  // 도면이 그려진 범위 밖(여백)은 벽으로 본다. 여백까지 채우면 방 하나가 도면 전체가 된다.
+  const bb = mask.bbox || { x0:0, y0:0, x1:w-1, y1:h-1 };
+  const blocked = (x, y) => x < bb.x0 || y < bb.y0 || x > bb.x1 || y > bb.y1 || !!dark[y*w + x];
+  if (sx < 0 || sy < 0 || sx >= w || sy >= h || blocked(sx, sy)) return null;
   const seen = new Uint8Array(w * h);
   const stack = [sy * w + sx];
   seen[sy * w + sx] = 1;
@@ -503,13 +506,13 @@ function floodRegion(mask, sx, sy){
     const p = stack.pop();
     const x = p % w, y = (p - x) / w;
     count++;
-    if (x === 0 || y === 0 || x === w - 1 || y === h - 1) border++;
+    if (x === bb.x0 || y === bb.y0 || x === bb.x1 || y === bb.y1) border++;
     if (x < minX) minX = x; if (x > maxX) maxX = x;
     if (y < minY) minY = y; if (y > maxY) maxY = y;
-    if (x > 0     && !seen[p - 1] && !dark[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
-    if (x < w - 1 && !seen[p + 1] && !dark[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
-    if (y > 0     && !seen[p - w] && !dark[p - w]) { seen[p - w] = 1; stack.push(p - w); }
-    if (y < h - 1 && !seen[p + w] && !dark[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+    if (x > 0     && !seen[p - 1] && !blocked(x-1, y)) { seen[p - 1] = 1; stack.push(p - 1); }
+    if (x < w - 1 && !seen[p + 1] && !blocked(x+1, y)) { seen[p + 1] = 1; stack.push(p + 1); }
+    if (y > 0     && !seen[p - w] && !blocked(x, y-1)) { seen[p - w] = 1; stack.push(p - w); }
+    if (y < h - 1 && !seen[p + w] && !blocked(x, y+1)) { seen[p + w] = 1; stack.push(p + w); }
   }
   return { seen, minX, maxX, minY, maxY, count, border };
 }
@@ -579,8 +582,21 @@ function ensureBase(){
   const mask = state.mask || (state.mask = buildMask());
   const { openR } = cleanRadii(mask);
   const m = cleanWalls(mask, openR, 0);
-  state.baseInfo = { openR };
-  return (state.baseMask = { w:mask.w, h:mask.h, S:mask.S, dark:m });
+  // 도면이 실제로 그려진 범위. 이걸 벗어난 여백까지 채우면 "새어 나갔다"를 판정할 수 없다.
+  let x0 = mask.w, y0 = mask.h, x1 = -1, y1 = -1;
+  for (let y = 0; y < mask.h; y++) for (let x = 0; x < mask.w; x++) {
+    if (m[y*mask.w + x]) {
+      if (x < x0) x0 = x; if (x > x1) x1 = x;
+      if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+  }
+  const pad = 2;
+  const bbox = x1 < 0
+    ? { x0:0, y0:0, x1:mask.w-1, y1:mask.h-1 }
+    : { x0:Math.max(0,x0-pad), y0:Math.max(0,y0-pad),
+        x1:Math.min(mask.w-1,x1+pad), y1:Math.min(mask.h-1,y1+pad) };
+  state.baseInfo = { openR, bbox };
+  return (state.baseMask = { w:mask.w, h:mask.h, S:mask.S, dark:m, bbox });
 }
 
 /** 지정한 반경으로 틈을 메운 마스크 (반경별로 캐시) */
@@ -591,7 +607,7 @@ function sealedMask(closeR){
   const m = closeR > 0
     ? boxMorph(boxMorph(base.dark, base.w, base.h, closeR, 'max'), base.w, base.h, closeR, 'min')
     : base.dark;
-  return (state.sealCache[closeR] = { w:base.w, h:base.h, S:base.S, dark:m });
+  return (state.sealCache[closeR] = { w:base.w, h:base.h, S:base.S, dark:m, bbox:base.bbox });
 }
 
 function ensureClean(){
@@ -671,22 +687,29 @@ function detectRoomAt(imgX, imgY){
 
   // 새어 나가지 않는 **가장 작은** 닫기 반경을 찾는다. 크게 잡을수록 창문 표시나
   // 가까운 선이 뭉쳐 검은 덩어리가 되므로, 막을 수 있는 최소한만 막는다.
-  const area = base.w * base.h;
-  const leakLimit = (base.w + base.h) * 0.3;
-  let used = null, reg = null, mask = null;
+  const bb = base.bbox;
+  const planArea = (bb.x1 - bb.x0 + 1) * (bb.y1 - bb.y0 + 1);
+  const leakLimit = ((bb.x1-bb.x0) + (bb.y1-bb.y0)) * 0.3;
+  let used = null, reg = null, mask = null, tooBig = false;
   for (const r of closeSteps) {
     const m = sealedMask(r);
     if (m.dark[sy*m.w + sx]) continue;              // 이 반경에서는 누른 자리가 벽에 먹혔다
     const g = floodRegion(m, sx, sy);
     if (!g) continue;
-    if (g.count < area * 0.002) continue;
+    if (g.count < planArea * 0.004) continue;
     if (g.border > leakLimit) continue;
+    // 새어 나갔는지는 위의 border 검사(도면 범위 가장자리 접촉)가 판정한다.
+    // 면적 비율은 최후 안전장치로만 쓴다 — 기준을 낮추면 안 된다. 요즘 평면은 거실·주방·
+    // 식당·알파공간이 하나로 트여 있어 그 자체로 도면의 3~4할을 차지하는 것이 정상이고,
+    // 방 하나짜리 도면에서는 8할에 가깝다.
+    if (g.count > planArea * 0.95){ tooBig = true; continue; }
     used = r; reg = g; mask = m;
     state.cleanInfo = { openR: state.baseInfo.openR, closeR: r };
     break;
   }
   if (!reg) {
     if (base.dark[sy*base.w + sx]) return { error: '누른 자리가 벽 위입니다. 방 안쪽의 빈 곳을 눌러주세요.' };
+    if (tooBig) return { error: '벽이 끊겨 여러 방이 하나로 이어졌습니다. 방 사이가 뚫려 있으면 자동으로 가를 수 없습니다 — 벽 그리기로 직접 그려주세요.' };
     return { error: '이 방은 문·창이 넓게 열려 있어 경계를 닫지 못했습니다. 다른 방을 누르거나 벽 그리기로 직접 그려주세요.' };
   }
 
@@ -1279,12 +1302,12 @@ async function openSelect(room){
             <input type="checkbox" data-cat="${esc(c)}"${pre?' checked':''}>
             <span class="nm">${esc(c)}</span>
             <select data-size="${esc(c)}">
-              ${rows.map((r,i)=>{
-                const p0 = r.options[0].parts[0];
+              ${rows.flatMap((r,i)=> r.options.map((o,k)=>{
+                const p0 = o.parts[0];
                 const dim = `${Math.round(p0.w)}×${Math.round(p0.h)}×${Math.round(p0.d)}`;
                 const tail = r.specs.length ? ` · ${esc(r.specs[0])}` : '';
-                return `<option value="${i}">${dim}mm${tail}</option>`;
-              }).join('')}
+                return `<option value="${i}:${k}">${dim}mm${tail}</option>`;
+              })).join('')}
             </select>
             <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" title="수량">
             <span class="unit">대</span></label>
@@ -1292,20 +1315,26 @@ async function openSelect(room){
         }).join('');
         // 고른 사이즈의 모델코드·이격거리를 한 줄로 보여준다.
         // 폭만 보이면 "이게 들어가나"를 판단할 수 없어 가로·높이·깊이를 모두 적는다.
-        const info = (cat)=>{
+        const pickOf = (cat)=>{
           const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
-          const el  = document.querySelector(`p[data-info="${CSS.escape(cat)}"]`);
-          if (!sel || !el) return;
-          const r = state.reps.filter((x)=>x.cat===cat)[+sel.value||0];
-          const o = r.options[0], p0 = o.parts[0];
+          const [i,k] = String(sel.value || '0:0').split(':').map(Number);
+          const r = state.reps.filter((x)=>x.cat===cat)[i||0];
+          return { r, o: r.options[k||0] };
+        };
+        const info = (cat)=>{
+          const el = document.querySelector(`p[data-info="${CSS.escape(cat)}"]`);
+          if (!el) return;
+          const { r, o } = pickOf(cat);
+          const p0 = o.parts[0];
           const cl = clearFor(cat, p0.part, o.model);
           const extra = o.parts.length>1
             ? ' · ' + o.parts.slice(1).map((q)=>`${esc(q.part)} ${Math.round(q.w)}×${Math.round(q.h)}×${Math.round(q.d)}`).join(' · ')
             : '';
+          const dz = doorZoneFor({ cat, group:o.group });
           el.innerHTML = `<b>가로 ${Math.round(p0.w)} · 높이 ${Math.round(p0.h)} · 깊이 ${Math.round(p0.d)}mm</b>`
-            + ` — ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}`
+            + ` — ${esc(r.size)} · ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}`
             + ` · 이격 후면 ${cl.back}·좌우 ${cl.side}${cl.front?`·전면 ${cl.front}`:''}mm`
-            + (r.options.length>1 ? ` · 같은 사이즈 발자국 ${r.options.length}종` : '')
+            + (dz ? ` · 도어 오픈 좌우 각 ${dz.side}mm` : '')
             + extra;
         };
         cats.forEach(info);
@@ -1329,8 +1358,9 @@ async function openSelect(room){
           const cat = cb.dataset.cat;
           const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
           const qtyEl = document.querySelector(`input[data-qty="${CSS.escape(cat)}"]`);
-          const r = state.reps.filter((x)=>x.cat===cat)[+sel.value||0];
-          const o = r.options[0], p = o.parts[0];
+          const [si,ki] = String(sel.value || '0:0').split(':').map(Number);
+          const r = state.reps.filter((x)=>x.cat===cat)[si||0];
+          const o = r.options[ki||0], p = o.parts[0];
           const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
           for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0 });
         }
@@ -1414,26 +1444,53 @@ function roomCenter(){
 function findSpot(item, placed){
   const center = roomCenter();
   if (!center) return null;
-  const walls = [...state.walls].sort((a,b)=>
+  // 개구부(문·창)는 벽이 아니므로 가전을 붙이지 않는다. 붙이면 문이 안 열린다.
+  const walls = state.walls.filter((w)=>!w.open).sort((a,b)=>
     Math.hypot(b.x2-b.x1,b.y2-b.y1) - Math.hypot(a.x2-a.x1,a.y2-a.y1));
+  const dz = doorZoneFor(item);
+  const openings = state.walls.filter((w)=>w.open);
 
-  for (const w of walls){
-    const L = Math.hypot(w.x2-w.x1, w.y2-w.y1);
-    const need = item.w + item.clear.side*2;
-    if (L < need) continue;                       // 이 벽에는 폭이 안 들어간다
-    const { nx, ny, ang } = inwardNormal(w, center);
-    const ux = (w.x2-w.x1)/L, uy = (w.y2-w.y1)/L;
-    for (let t = need/2; t <= L - need/2; t += 50){
-      const px = w.x1 + ux*t + nx*item.clear.back;
-      const py = w.y1 + uy*t + ny*item.clear.back;
-      const cand = { ...item, bx:px, by:py, a:Math.atan2(ny,nx) - Math.PI/2 };
-      const body = corners(cand), cl = corners(cand, cand.clear);
-      if (body.some(([x,y])=>!insideRoom(x,y))) continue;
-      let clash = false;
-      for (const o of placed){
-        if (overlaps(body, corners(o)) || overlaps(cl, corners(o, o.clear))){ clash = true; break; }
+  /** 이 자리가 쓸 만한가. strict면 도어 오픈 공간까지 비어 있어야 한다. */
+  const okAt = (cand, strict) => {
+    const body = corners(cand), cl = corners(cand, cand.clear);
+    if (body.some(([x,y])=>!insideRoom(x,y))) return false;
+    for (const o of placed){
+      if (overlaps(body, corners(o)) || overlaps(cl, corners(o, o.clear))) return false;
+    }
+    for (const op of openings){ if (segHitsPoly(op, body)) return false; }   // 문·창 앞 막기 금지
+    if (!strict) return true;
+    // 도어가 열리는 공간이 벽·다른 가전과 부딪히지 않는 자리를 먼저 찾는다
+    if (dz){
+      const zone = corners(cand, { back:0, side:dz.side, front:0 });
+      if (zone.some(([x,y])=>!insideRoom(x,y))) return false;
+      for (const o of placed){ if (overlaps(zone, corners(o))) return false; }
+    }
+    // 도어가 앞으로 열리는 제품(콤보 등)은 전면 여유도 방 안에 들어와야 한다
+    if (item.clear.front > 0){
+      const front = corners(cand, { back:0, side:0, front:item.clear.front });
+      if (front.some(([x,y])=>!insideRoom(x,y))) return false;
+    }
+    return true;
+  };
+
+  // 1차: 도어 열림까지 고려한 자리를 찾는다. 없으면 2차로 조건을 완화한다.
+  // (완화해서 놓은 것은 evaluate()가 "도어 오픈 공간 …" 주의로 표시한다)
+  for (const strict of [true, false]){
+    for (const w of walls){
+      const L = Math.hypot(w.x2-w.x1, w.y2-w.y1);
+      const need = item.w + item.clear.side*2;
+      if (L < need) continue;                       // 이 벽에는 폭이 안 들어간다
+      const { nx, ny } = inwardNormal(w, center);
+      const ux = (w.x2-w.x1)/L, uy = (w.y2-w.y1)/L;
+      for (let t = need/2; t <= L - need/2; t += 50){
+        const cand = {
+          ...item,
+          bx: w.x1 + ux*t + nx*item.clear.back,
+          by: w.y1 + uy*t + ny*item.clear.back,
+          a: Math.atan2(ny,nx) - Math.PI/2,
+        };
+        if (okAt(cand, strict)) return cand;
       }
-      if (!clash) return cand;
     }
   }
   return null;

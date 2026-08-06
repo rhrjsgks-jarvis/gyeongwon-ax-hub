@@ -537,5 +537,41 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   }
 }
 
+// ── [15] 자동 배치가 도어 열림·개구부를 고려하는지 ──
+{
+  const st = P.state;
+  const room = (w, h) => [
+    { x1: 0, y1: 0, x2: w, y2: 0 }, { x1: w, y1: 0, x2: w, y2: h },
+    { x1: w, y1: h, x2: 0, y2: h }, { x1: 0, y1: h, x2: 0, y2: 0 },
+  ];
+  const pickSbs = () => {
+    const r = reps.filter((x) => x.cat === '냉장고').find((x) => x.options.some((o) => /양문형/.test(o.group)));
+    const o = r.options.find((q) => /양문형/.test(q.group));
+    return { cat: '냉장고', size: r.size, model: o.model, group: o.group, part: o.parts[0] };
+  };
+
+  // 넓은 방: 양문형(도어 오픈 좌우 407mm)을 놓아도 주의가 없어야 한다
+  st.walls = room(6000, 4000); st.items = [];
+  P.autoPlace([pickSbs()]);
+  if (!st.items.length) fail('6×4m 방에 양문형을 놓지 못함');
+  else if (st.items[0].soft.some((w) => w.includes('도어 오픈'))) {
+    fail(`넓은 방인데 도어 오픈 주의가 남음 — 도어 공간을 피해 놓지 않았다: ${st.items[0].soft.join(', ')}`);
+  } else pass('자동 배치가 도어 오픈 공간까지 비워 놓음');
+
+  // 개구부(문) 앞에는 놓지 않는다
+  st.walls = room(3000, 3000); st.items = [];
+  st.walls[0].open = true;                       // 위쪽 벽 전체가 문·창이라고 가정
+  P.autoPlace([{ cat: '건조기', size: '', model: 'X', group: '',
+    part: { part: '본체', w: 600, h: 1800, d: 600 } }]);
+  const onOpening = st.items.some((it) => st.walls.filter((w) => w.open)
+    .some((w) => P.segHitsPoly(w, P.corners(it))));
+  if (!st.items.length) fail('3×3m 방인데 아무 데도 놓지 못함');
+  else if (onOpening) fail('문·창(개구부) 앞에 가전을 붙였다 — 문이 안 열린다');
+  else pass('개구부 앞은 피해서 배치');
+  st.walls.forEach((w) => { delete w.open; });
+
+  st.items = []; st.walls = [];
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
