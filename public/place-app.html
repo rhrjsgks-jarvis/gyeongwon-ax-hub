@@ -396,9 +396,10 @@ function draw(){
     ctx.drawImage(state.img, x, y, state.imgW*state.mmPerPx*state.zoom, state.imgH*state.mmPerPx*state.zoom);
     ctx.globalAlpha=1;
   } else if (state.img){
-    // 축척 보정 전에는 이미지 픽셀을 그대로 화면 픽셀로 본다
+    // 축척 확정 전 — 이미지 1px을 화면 zoom px로 그린다(월드 단위가 아직 mm가 아니다)
+    const [x,y] = toScreen(0,0);
     ctx.globalAlpha=.85;
-    ctx.drawImage(state.img, state.panX, state.panY, state.imgW*state.zoom*4, state.imgH*state.zoom*4);
+    ctx.drawImage(state.img, x, y, state.imgW*state.zoom, state.imgH*state.zoom);
     ctx.globalAlpha=1;
   }
 
@@ -599,6 +600,11 @@ $('#file').onchange = (e)=>{
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
     state.mmPerPx=null; state.scalePts=[];
+    // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
+    // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
+    const r = cv.getBoundingClientRect();
+    state.zoom = Math.min(r.width/state.imgW, r.height/state.imgH) * 0.92;
+    state.panX = 12; state.panY = 12;
     $('#empty').style.display='none';
     setStep(2); setMode('scale'); draw();
   };
@@ -619,7 +625,7 @@ function setStep(n){ document.querySelectorAll('.step').forEach((s)=>{
 
 function askScale(){
   const [[x1,y1],[x2,y2]] = state.scalePts;
-  const px = Math.hypot(x2-x1,y2-y1) / state.zoom / 4;   // 화면 px → 이미지 px
+  const px = Math.hypot(x2-x1,y2-y1) / state.zoom;   // 화면 px → 도면 이미지 px
   sheet(`<h2>축척 맞추기</h2>
     <p class="hint">방금 누른 두 점 사이의 <b>실제 길이</b>를 입력하세요. 도면에 적힌 치수선을 쓰면 가장 정확합니다.</p>
     <label class="pickers"><span class="hint">실제 길이 (mm)</span>
@@ -636,7 +642,7 @@ function askScale(){
         const r = cv.getBoundingClientRect();
         state.zoom = Math.min(r.width/(state.imgW*state.mmPerPx), r.height/(state.imgH*state.mmPerPx)) * 0.9;
         state.panX = 20; state.panY = 20;
-        state.scalePts=[]; closeSheet(); setMode('idle'); setStep(3); draw();
+        state.scalePts=[]; state.wallPts=[]; closeSheet(); setMode('wall'); setStep(3); draw();
       };
       $('#c').onclick = ()=>{ state.scalePts=[]; closeSheet(); setMode('idle'); draw(); };
     });
