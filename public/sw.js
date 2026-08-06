@@ -17,7 +17,7 @@ const CACHE_VERSION = 'axhub-v1';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
-const SWR = /\/(finder|compare|install|care|quiz|test)-app\.html$|\/search-(index|detail)\.json$/;
+const SWR = /\/(finder|compare|install|care|quiz|test|place)-app\.html$|\/(search-(index|detail)|size-reps)\.json$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.
