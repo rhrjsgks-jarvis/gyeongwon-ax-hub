@@ -16,6 +16,7 @@
 import { spawn, execFileSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -184,6 +185,58 @@ try {
       else pass(`상세 스펙 표 렌더 (${rows}행)`);
     }
     page.off('response', onRes);
+  }
+
+  // ── 4-b. 배치 시뮬레이터: 도면 업로드 → 축척 보정 ──
+  // 이 경로는 파일 업로드와 canvas 좌표가 얽혀 있어 jsdom으로 검사할 수 없다.
+  // 실제로 두 번 막혔던 지점이라 브라우저에서 지킨다:
+  //   ① 도면이 화면보다 크게 그려져 치수선 한쪽 끝을 클릭할 수 없었다
+  //   ② 축척 확정 후 단계 표시는 "벽 그리기"인데 모드가 idle이라 클릭이 먹지 않았다
+  {
+    const fixture = path.join(os.tmpdir(), 'e2e-plan.svg');
+    fs.writeFileSync(fixture,
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100">' +
+      '<rect width="1600" height="1100" fill="#fff"/>' +
+      '<line x1="200" y1="100" x2="1400" y2="100" stroke="#c00" stroke-width="3"/></svg>');
+
+    await page.goto(BASE + '/place', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1200);
+    const f = page.frameLocator('iframe');
+    await f.locator('#file').setInputFiles(fixture);
+    await page.waitForTimeout(900);
+
+    const st = await page.evaluate(() => {
+      const w = document.querySelector('iframe').contentWindow;
+      const r = w.document.querySelector('#cv').getBoundingClientRect();
+      return { ...w.__place.state, cw: r.width, ch: r.height, mode: w.__place.state.mode };
+    });
+    // 1,600×1,100 도면이 캔버스 안에 들어와야 한다
+    if (st.imgW * st.zoom > st.cw + 1 || st.imgH * st.zoom > st.ch + 1) {
+      fail(`업로드한 도면이 캔버스를 넘어감 (${(st.imgW * st.zoom).toFixed(0)}×${(st.imgH * st.zoom).toFixed(0)} > ${st.cw.toFixed(0)}×${st.ch.toFixed(0)}) — 치수선 끝을 클릭할 수 없다`);
+    } else pass('도면 업로드 시 화면에 맞춰 표시');
+    if (st.mode !== 'scale') fail(`업로드 후 모드가 ${st.mode} (기대 scale)`);
+
+    // 치수선 두 끝(이미지 200,100 ~ 1400,100 = 1,200px)을 클릭해 6,000mm로 확정 → 1px = 5mm
+    const cvbox = await f.locator('#cv').boundingBox();
+    const sx = (ix) => ix * st.zoom + st.panX, sy = (iy) => iy * st.zoom + st.panY;
+    await f.locator('#cv').click({ position: { x: sx(200), y: sy(100) } });
+    await page.waitForTimeout(150);
+    await f.locator('#cv').click({ position: { x: sx(1400), y: sy(100) } });
+    await page.waitForTimeout(500);
+    await f.locator('#mm').fill('6000');
+    await f.locator('#sheet .primary').click();
+    await page.waitForTimeout(500);
+
+    const after = await page.evaluate(() => {
+      const w = document.querySelector('iframe').contentWindow;
+      return { mmPerPx: w.__place.state.mmPerPx, scaled: w.__place.state.scaled, mode: w.__place.state.mode };
+    });
+    if (!after.scaled) fail('축척 확정 후에도 scaled 플래그가 false');
+    else if (Math.abs(after.mmPerPx - 5) > 0.05) fail(`축척이 1px = ${after.mmPerPx?.toFixed(3)}mm (기대 5.000)`);
+    else pass(`축척 보정 정확 (1,200px = 6,000mm → 1px = ${after.mmPerPx.toFixed(2)}mm)`);
+    if (after.mode !== 'wall') fail(`축척 확정 후 모드가 ${after.mode} (기대 wall) — 단계 표시와 어긋나 클릭이 먹지 않는다`);
+    else pass('축척 확정 후 벽 그리기 모드로 자동 전환');
+    void cvbox;
   }
 
   // ── 5. 운영 종료된 라우트 ──
