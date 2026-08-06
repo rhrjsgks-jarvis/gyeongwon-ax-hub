@@ -162,6 +162,7 @@
     <button id="btn-detect">벽 자동 인식</button>
     <button id="btn-clean" class="ghost" title="벽만 남긴 정리본 보기">◧</button>
     <button id="btn-wall">벽 그리기</button>
+    <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
     <button id="btn-add">가전 선택</button>
     <button id="btn-auto" class="primary">주방 배치 추천</button>
     <span class="grow"></span>
@@ -296,7 +297,7 @@ const state = {
   mode:'idle',           // idle | scale | wall | place
   scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, draft:null, draftEdges:null,
   pending:null,          // 배치 대기중인 가전
-  sel:null, drag:null,
+  sel:null, drag:null, editSel:null,
 };
 
 /* ── 좌표 변환 ── */
@@ -448,6 +449,77 @@ function syncWalls(){
 }
 // 방 구분색 — 도면 위에 옅게 얹어 선이 묻히지 않게 한다
 const ROOM_FILL = ['#1428A0','#0F7A5A','#B45309','#7C3AED','#0E7490','#BE185D'];
+/* ── 경계 직접 수정 ────────────────────────────────────────────────
+   자동 인식은 초안이다. 도면 표기가 관례를 벗어나면 어떤 규칙으로도 정확히 맞출 수 없으므로,
+   **사용자가 벽을 끌어 고칠 수 있어야 한다.** 이것이 마지막 안전망이다.
+     · 모서리(점)를 끌면 그 점이 움직인다 — 이웃 벽과 축이 거의 맞으면 맞춰 준다
+     · 벽(선)을 끌면 그 벽이 수직 방향으로 밀리고 양옆 벽이 따라 늘어난다
+     · 벽을 그냥 누르면 벽 ↔ 개구부(문·창)가 바뀐다
+──────────────────────────────────────────────────────────────── */
+function partPoints(part){ return loopOfWalls(part.walls); }
+function setPartPoints(part, pts){
+  const open = part.walls.map((w)=>!!w.open);
+  const n = pts.length;
+  part.walls = pts.map((a,i)=>({
+    x1:a[0], y1:a[1], x2:pts[(i+1)%n][0], y2:pts[(i+1)%n][1], open: !!open[i],
+  }));
+}
+/** 화면에서 누른 자리에 걸리는 모서리·벽을 찾는다 */
+function hitBoundary(wx, wy){
+  const tol = 14 / state.zoom;
+  let best = null;
+  for (const rm of state.rooms) rm.parts.forEach((part, pi)=>{
+    const pts = partPoints(part); if (!pts) return;
+    pts.forEach((p,i)=>{
+      const d = Math.hypot(p[0]-wx, p[1]-wy);
+      if (d < tol && (!best || d < best.d)) best = { kind:'v', room:rm.id, part:pi, idx:i, d };
+    });
+  });
+  if (best) return best;
+  for (const rm of state.rooms) rm.parts.forEach((part, pi)=>{
+    part.walls.forEach((w,i)=>{
+      const q = nearestOnSeg(wx, wy, w);
+      if (q.dist < tol && (!best || q.dist < best.d)) best = { kind:'e', room:rm.id, part:pi, idx:i, d:q.dist };
+    });
+  });
+  return best;
+}
+/** 모서리를 옮긴다 — 이웃과 축이 거의 맞으면 맞춰 준다(도면은 대부분 직각이다) */
+function moveVertex(sel, wx, wy){
+  const rm = roomById(sel.room); if (!rm) return;
+  const part = rm.parts[sel.part]; const pts = partPoints(part); if (!pts) return;
+  const n = pts.length, i = sel.idx;
+  const snap = 120;                                   // 이 안이면 축을 맞춘다 (mm)
+  let x = wx, y = wy;
+  for (const j of [(i-1+n)%n, (i+1)%n]) {
+    if (Math.abs(pts[j][0] - x) < snap) x = pts[j][0];
+    if (Math.abs(pts[j][1] - y) < snap) y = pts[j][1];
+  }
+  pts[i] = [x, y];
+  setPartPoints(part, pts); syncWalls();
+}
+/** 벽을 수직 방향으로 민다 — 양옆 벽이 따라 늘어난다 */
+function moveEdge(sel, dx, dy){
+  const rm = roomById(sel.room); if (!rm) return;
+  const part = rm.parts[sel.part]; const pts = partPoints(part); if (!pts) return;
+  const n = pts.length, i = sel.idx, j = (i+1)%n;
+  const ex = pts[j][0]-pts[i][0], ey = pts[j][1]-pts[i][1];
+  const L = Math.hypot(ex, ey); if (!L) return;
+  const nx = -ey/L, ny = ex/L;                        // 벽의 법선
+  const off = dx*nx + dy*ny;                          // 법선 방향 성분만 쓴다
+  pts[i] = [pts[i][0] + nx*off, pts[i][1] + ny*off];
+  pts[j] = [pts[j][0] + nx*off, pts[j][1] + ny*off];
+  setPartPoints(part, pts); syncWalls();
+}
+/** 벽 ↔ 개구부(문·창) */
+function toggleEdgeOpen(sel){
+  const rm = roomById(sel.room); if (!rm) return;
+  const w = rm.parts[sel.part].walls[sel.idx]; if (!w) return;
+  w.open = !w.open; syncWalls();
+  toast(w.open ? '이 구간을 개구부(문·창)로 바꿨습니다 — 앞을 막는 가전에 주의가 붙습니다'
+               : '이 구간을 벽으로 바꿨습니다 — 가전을 붙일 수 있습니다');
+}
+
 const ROOM_NAME_POOL = ['거실','주방','안방','침실1','침실2','침실3','드레스룸','세탁실','현관','발코니','서재','다용도실'];
 function nextRoomName(){
   const used = new Set(state.rooms.map((r)=>r.name));
@@ -777,14 +849,15 @@ function regionPolygon(mask, reg, minJog){
  * 건물의 벽은 전부 이어져 하나의 큰 덩어리를 이루고, 치수선 마커·글씨는 작은 조각이다.
  * 그래서 **가장 큰 덩어리**와 그에 견줄 만한 덩어리만 남겨 그 범위를 쓴다.
  */
-function structureBox(dark, w, h){
-  const seen = new Uint8Array(w * h);
+function components(dark, w, h){
+  const lab = new Int32Array(w * h).fill(-1);
   const comps = [];
   const stack = new Int32Array(w * h);
   for (let p0 = 0; p0 < w * h; p0++) {
-    if (!dark[p0] || seen[p0]) continue;
+    if (!dark[p0] || lab[p0] >= 0) continue;
+    const id = comps.length;
     let sp = 0;
-    stack[sp++] = p0; seen[p0] = 1;
+    stack[sp++] = p0; lab[p0] = id;
     let n = 0, x0 = w, y0 = h, x1 = -1, y1 = -1;
     while (sp) {
       const p = stack[--sp];
@@ -796,11 +869,39 @@ function structureBox(dark, w, h){
         const nx = x + dx, ny = y + dy;
         if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
         const q = ny * w + nx;
-        if (dark[q] && !seen[q]) { seen[q] = 1; stack[sp++] = q; }
+        if (dark[q] && lab[q] < 0) { lab[q] = id; stack[sp++] = q; }
       }
     }
-    comps.push({ n, x0, y0, x1, y1 });
+    comps.push({ id, n, x0, y0, x1, y1 });
   }
+  return { lab, comps };
+}
+
+/**
+ * **떨어져 있는 작은 조각을 지운다** — 실명 글씨("거실"·"침실2"), 방위 표시, 범례, 치수 숫자.
+ * 굵게 인쇄된 글씨는 열기(얇은 선 제거)로도 안 지워져 그대로 벽이 되고, 방 한가운데에
+ * 벽이 생기면 방이 갈라진다. 사용자가 "방 이름 텍스트가 벽으로 인식된다"고 지적한 것이 이것이다.
+ *
+ * 지우는 기준은 **길이**다 — 가로·세로 어느 쪽도 maxSpan(기본 800mm)에 못 미치는 조각만
+ * 지운다. 글씨 한 덩이는 그보다 작고, 벽은 아무리 짧아도 그보다 길다. 픽셀 수만 보고
+ * 지웠더니 짧은 벽 토막까지 사라져 방이 붙어 버렸다(실제로 그랬다).
+ * 벽에 닿아 있는 가구(싱크대·붙박이장)는 큰 덩어리의 일부라 지우지 않는다 —
+ * 그건 실제로 그 자리를 차지하고 있어 가전을 놓을 수 없는 곳이 맞다.
+ */
+function dropSpecks(dark, w, h, maxSpan){
+  const { lab, comps } = components(dark, w, h);
+  if (!comps.length) return dark;
+  const big = comps.reduce((a, c) => (c.n > a.n ? c : a));
+  const keep = comps.map((c) => c === big
+    || Math.max(c.x1 - c.x0, c.y1 - c.y0) + 1 >= maxSpan);
+  if (keep.every(Boolean)) return dark;
+  const out = new Uint8Array(w * h);
+  for (let p = 0; p < w * h; p++) out[p] = (lab[p] >= 0 && keep[lab[p]]) ? 1 : 0;
+  return out;
+}
+
+function structureBox(dark, w, h){
+  const { comps } = components(dark, w, h);
   if (!comps.length) return { x0:0, y0:0, x1:w-1, y1:h-1 };
   const big = comps.reduce((a, c) => (c.n > a.n ? c : a));
   // 가장 큰 덩어리의 1할이 넘는 것만 건물의 일부로 본다. 치수선 마커·글씨는 훨씬 작다.
@@ -861,6 +962,12 @@ function ensureBase(){
   let a0 = 0, a1 = 0;
   for (let p = 0; p < mask.dark.length; p++) { if (mask.dark[p]) a0++; if (m[p]) a1++; }
   if (a0 && a1 < a0 * 0.4) { m = mask.dark; usedOpen = 0; }
+  // 떨어져 있는 작은 조각(실명 글씨·범례·치수 숫자)을 지운다. 방 한가운데에 남으면
+  // 그 자리가 벽이 되어 방이 갈라진다. 기준은 800mm — 벽은 아무리 짧아도 그보다 길다.
+  const speckPx = state.mmPerPx
+    ? Math.max(4, Math.round((800 / state.mmPerPx) * mask.S))
+    : Math.max(6, Math.round(Math.max(mask.w, mask.h) * 0.03));
+  m = dropSpecks(m, mask.w, mask.h, speckPx);
   const bbox = structureBox(m, mask.w, mask.h);
   // 건물 안쪽 — 창의 유리선이 살아 있는 **원본** 마스크로 잡는다. 근거를 못 찾으면 null.
   const bboxArea = (bbox.x1 - bbox.x0 + 1) * (bbox.y1 - bbox.y0 + 1);
@@ -1434,6 +1541,27 @@ function draw(){
       ctx.fillText(`${w.open?'개구부 ':''}${Math.round(L).toLocaleString()}mm`, mx, my-6);
     }
   }
+  // 경계 수정 손잡이 — 어디를 끌 수 있는지 보여야 끌 수 있다
+  if (state.mode==='edit'){
+    const sel = state.editSel;
+    for (const rm of state.rooms) rm.parts.forEach((part, pi)=>{
+      const pts = partPoints(part); if (!pts) return;
+      part.walls.forEach((w,i)=>{
+        const on = sel && sel.room===rm.id && sel.part===pi && sel.kind==='e' && sel.idx===i;
+        if (!on) return;
+        const [ax,ay]=toScreen(w.x1,w.y1), [bx,by]=toScreen(w.x2,w.y2);
+        ctx.strokeStyle='#1428A0'; ctx.lineWidth=7; ctx.globalAlpha=.28;
+        ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke(); ctx.globalAlpha=1;
+      });
+      pts.forEach((q,i)=>{
+        const [sx,sy]=toScreen(q[0],q[1]);
+        const on = sel && sel.room===rm.id && sel.part===pi && sel.kind==='v' && sel.idx===i;
+        ctx.fillStyle = on ? '#1428A0' : '#fff';
+        ctx.strokeStyle = '#1428A0'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.rect(sx-4, sy-4, 8, 8); ctx.fill(); ctx.stroke();
+      });
+    });
+  }
   // 그리는 중인 벽
   if (state.mode==='wall' && state.wallPts.length){
     ctx.strokeStyle='#1428A0'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
@@ -1545,6 +1673,7 @@ function renderSide(){
     idle:'가전을 끌어 옮기고, 두 번 누르면 90° 회전 · 겹치는 자리에는 놓이지 않습니다',
     scale:'도면에서 길이를 아는 두 점을 차례로 누르세요',
     wall:'벽 모서리를 차례로 누르고, 시작점을 다시 누르면 닫힙니다',
+    edit:'벽을 끌면 밀리고, 모서리를 끌면 그 점이 움직입니다 · 벽을 그냥 누르면 개구부(문·창)로 바뀝니다',
     detect: state.rooms.length
       ? `공간 ${state.rooms.length}곳 지정됨 — 다른 방 안쪽을 눌러 계속 추가하세요`
       : '배치할 방 안쪽의 빈 곳을 한 번 누르세요 — 벽을 자동으로 잡습니다',
@@ -1628,6 +1757,14 @@ cv.addEventListener('pointerdown', (e)=>{
   if (state.mode==='place' && state.pending){
     placeAt(wx,wy); return;
   }
+  if (state.mode==='edit'){
+    const hit = hitBoundary(wx, wy);
+    if (!hit){ toast('벽이나 모서리 위를 눌러주세요'); return; }
+    state.editSel = hit;
+    state.drag = { edit: hit, lx: wx, ly: wy, moved: false };
+    cv.setPointerCapture(e.pointerId);
+    draw(); return;
+  }
 
   // 선택 / 드래그
   const hit = [...state.items].reverse().find((it)=>pointIn(corners(it), wx, wy));
@@ -1653,6 +1790,15 @@ cv.addEventListener('pointermove', (e)=>{
     state.panY = state.drag.py + (sy-state.drag.sy);
     draw(); return;
   }
+  if (state.drag.edit){
+    const [wx,wy] = toWorld(sx,sy);
+    const d = state.drag;
+    if (Math.hypot(wx-d.lx, wy-d.ly) * state.zoom > 3) d.moved = true;
+    if (d.edit.kind==='v') moveVertex(d.edit, wx, wy);
+    else moveEdge(d.edit, wx-d.lx, wy-d.ly);
+    d.lx = wx; d.ly = wy;
+    evaluate(); draw(); return;
+  }
   const it = state.items.find((x)=>x.id===state.drag.id); if (!it) return;
   const [wx,wy] = toWorld(sx,sy);
   const prev = { bx:it.bx, by:it.by, a:it.a };
@@ -1668,7 +1814,14 @@ cv.addEventListener('pointermove', (e)=>{
   if (clash){ Object.assign(it, prev); toast(clash); }
   evaluate(); draw();
 });
-cv.addEventListener('pointerup', ()=>{ state.drag=null; });
+cv.addEventListener('pointerup', ()=>{
+  const d = state.drag;
+  if (d && d.edit){
+    if (!d.moved && d.edit.kind==='e') toggleEdgeOpen(d.edit);
+    renderSide(); evaluate(); draw();
+  }
+  state.drag=null;
+});
 cv.addEventListener('wheel', (e)=>{
   e.preventDefault();
   const r = cv.getBoundingClientRect(), sx=e.clientX-r.left, sy=e.clientY-r.top;
@@ -1719,6 +1872,10 @@ $('#file').onchange = (e)=>{
 };
 $('#btn-scale').onclick = ()=>{ state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
 $('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
+$('#btn-edit').onclick  = ()=>{
+  if (!state.rooms.length){ toast('먼저 공간을 하나 이상 지정해주세요'); return; }
+  hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
+};
 $('#btn-detect').onclick= ()=> startDetect();
 $('#btn-clean').onclick = ()=>{
   if (!state.img){ toast('도면을 먼저 올려주세요'); return; }
@@ -2141,9 +2298,10 @@ loadReps();
 window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
   findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
-  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, classifyEdges, segHitsPoly, sealedMask,
+  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
+  hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
