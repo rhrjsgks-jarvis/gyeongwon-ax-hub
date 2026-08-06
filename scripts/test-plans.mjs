@@ -137,6 +137,76 @@ for (const plan of PLANS) {
   else pass(`범위 조절 동작 (더 넓게 ${r.wide.toFixed(1)}㎡ ◂ ${r.base.toFixed(1)}㎡ ▸ 더 좁게 ${r.narr.toFixed(1)}㎡)`);
 }
 
+// ── 공간 지정 UI ──
+// 방을 누르면 이름을 붙여 등록하고, 두 번째부터는 "이미 잡은 방에 이어 붙이기"를 고를 수 있어야 한다.
+// 자동 인식이 방을 절반만 잡는 경우의 유일한 해법이라 UI가 실제로 붙어 있는지 확인한다.
+{
+  const plan = PLANS[0];
+  const b64 = Buffer.from(plan.svg, 'utf8').toString('base64');
+  const r = await page.evaluate(async ({ b64, mmPerImgPx }) => {
+    const P = window.__place;
+    const img = new Image();
+    await new Promise((res) => { img.onload = res; img.src = 'data:image/svg+xml;base64,' + b64; });
+    P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+    P.state.mmPerPx = mmPerImgPx; P.state.scaled = true;
+    P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
+    P.state.rooms = []; P.state.walls = []; P.state.items = []; P.state.mode = 'detect';
+    P.state.zoom = 0.05; P.state.panX = 20; P.state.panY = 20;
+
+    const cv = document.querySelector('#cv');
+    const rect = cv.getBoundingClientRect();
+    const tap = (mmx, mmy) => {
+      const sx = mmx * P.state.zoom + P.state.panX, sy = mmy * P.state.zoom + P.state.panY;
+      cv.dispatchEvent(new PointerEvent('pointerdown', {
+        clientX: rect.left + sx, clientY: rect.top + sy, bubbles: true, pointerId: 1 }));
+    };
+    const out = {};
+
+    tap(5800, 3300);                                   // 거실
+    out.sheet1 = !!document.querySelector('#rname');
+    out.hasJoin1 = !!document.querySelector('#join');  // 첫 방에는 이어 붙일 대상이 없다
+    out.hasAdjust = !!document.querySelector('#wide') && !!document.querySelector('#narrow');
+    if (out.sheet1) {
+      document.querySelector('#rname').value = '거실';
+      document.querySelector('#ok').click();
+    }
+    out.rooms1 = P.state.rooms.map((x) => x.name);
+
+    P.state.mode = 'detect';
+    tap(1600, 3000);                                   // 침실1
+    out.hasJoin2 = !!document.querySelector('#join');  // 두 번째부터는 이어 붙이기가 있어야 한다
+    if (document.querySelector('#rname')) {
+      document.querySelector('#rname').value = '침실1';
+      document.querySelector('#ok').click();
+    }
+    out.rooms2 = P.state.rooms.map((x) => x.name);
+    out.parts = P.state.rooms.map((x) => x.parts.length);
+
+    // 이어 붙이기 — 안방을 거실 조각으로 붙여 본다
+    P.state.mode = 'detect';
+    tap(10000, 3000);
+    const jn = document.querySelector('#join');
+    if (jn) {
+      const opt = [...jn.options].find((o) => /거실/.test(o.textContent));
+      if (opt) jn.value = opt.value;
+      document.querySelector('#ok').click();
+    }
+    out.roomsAfterJoin = P.state.rooms.map((x) => `${x.name}(${x.parts.length})`);
+    out.sideRows = document.querySelectorAll('#rooms .room').length;
+    return out;
+  }, { b64, mmPerImgPx: plan.mmPerImgPx });
+
+  if (!r.sheet1) fail('방을 눌렀는데 이름 입력이 뜨지 않음');
+  else if (r.hasJoin1) fail('첫 방인데 "이어 붙이기" 선택이 뜬다 — 붙일 대상이 없다');
+  else if (!r.hasAdjust) fail('범위 조절(더 넓게/더 좁게) 버튼이 없다');
+  else if (r.rooms1.join() !== '거실') fail(`첫 방 등록 결과가 [${r.rooms1}] (기대 거실)`);
+  else if (!r.hasJoin2) fail('두 번째 방인데 "이어 붙이기" 선택이 없다');
+  else if (r.rooms2.join() !== '거실,침실1') fail(`두 방 등록 결과가 [${r.rooms2}]`);
+  else if (r.roomsAfterJoin.join() !== '거실(2),침실1(1)') fail(`이어 붙이기 결과가 [${r.roomsAfterJoin}] (기대 거실(2),침실1(1))`);
+  else if (r.sideRows !== 2) fail(`사이드 공간 목록이 ${r.sideRows}행 (기대 2행)`);
+  else pass(`공간 지정 UI (이름 붙여 2곳 등록 · 세 번째는 거실에 이어 붙임 → ${r.roomsAfterJoin.join(' / ')})`);
+}
+
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
 else pass('전 도면에서 스크립트 오류 없음');
 

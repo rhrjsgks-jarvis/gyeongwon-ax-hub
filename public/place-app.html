@@ -74,6 +74,13 @@
     cursor:pointer;
   }
   .row.sel{border-color:var(--brand);box-shadow:0 0 0 2px rgba(20,40,160,.1)}
+  .room{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin:0 10px 6px;cursor:pointer}
+  .room.sel{border-color:var(--brand);box-shadow:0 0 0 2px rgba(20,40,160,.1)}
+  .room .swatch{width:10px;height:10px;border-radius:3px;flex:none}
+  .room .rn{flex:1;min-width:0;border:0;background:transparent;font:600 13px system-ui;color:var(--ink);padding:2px 0}
+  .room .rn:focus{outline:0;border-bottom:1px solid var(--brand)}
+  .room .m{font-size:11px;color:var(--muted);flex:none}
+  .room .del{border:0;background:transparent;color:var(--muted);font-size:13px;padding:0 2px;cursor:pointer;flex:none}
   .row .t{font-weight:650;font-size:13px;display:flex;justify-content:space-between;gap:6px;align-items:center}
   .row .m{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
   .row .w{font-size:11.5px;color:var(--bad)}
@@ -157,6 +164,8 @@
     </div>
 
     <aside id="side">
+      <h3>공간</h3>
+      <div id="rooms"></div>
       <h3>배치 목록</h3>
       <div id="list"></div>
       <div id="report"></div>
@@ -261,8 +270,10 @@ const state = {
   mmPerPx:null,          // 도면 이미지 1px이 몇 mm인가 (축척 보정 결과)
   scaled:false,          // 월드 좌표가 실제 mm로 확정되었는가
   zoom:0.22, panX:60, panY:60,
-  walls:[],              // [{x1,y1,x2,y2}] 월드(mm)
-  items:[],              // 배치된 가전
+  walls:[],              // [{x1,y1,x2,y2,open}] 월드(mm) — 모든 방의 경계를 합친 것
+  rooms:[],              // [{id,name,parts:[{walls:[]}]}] 이름을 붙인 공간들
+  roomSel:null,          // 사이드에서 고른 방
+  items:[],              // 배치된 가전 (it.room = 방 id)
   reps:[],               // size-reps.json
   mode:'idle',           // idle | scale | wall | place
   scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, draft:null, draftEdges:null,
@@ -340,9 +351,27 @@ function snapToWall(px,py,item){
 }
 
 /** 방(닫힌 벽 폴리곤) 안에 점이 있는가 */
-function insideRoom(x,y){
-  const pts = wallLoop();
-  if (!pts) return true;                       // 닫힌 방이 없으면 판정하지 않는다
+/* ── 방(공간) 모델 ───────────────────────────────────────────────
+   한 세대에는 방이 여럿이고, 가전은 "어느 방에 놓을 것인가"가 정해져 있어야 한다.
+   냉장고를 침실에 배치 추천하면 안 되고, 침실2가 꽉 찼다고 거실까지 못 쓴다고
+   말해서도 안 된다. 그래서 방마다 이름과 경계를 따로 들고, 가전은 `it.room`으로
+   자기가 속한 방을 가리킨다.
+
+   **한 방이 여러 덩어리일 수 있다**(`parts`). 자동 인식이 방을 절반만 잡는 경우가
+   실제로 있다 — 붙박이장 선이나 확장 창호선이 방을 가르기 때문이다. 그때는
+   나머지 절반을 눌러 **같은 방에 이어 붙인다**. 다각형을 합치지 않고 조각으로
+   들고 있으므로 경계가 뭉개지지 않는다.
+
+   방이 하나도 없으면 예전처럼 `state.walls` 하나만 보고 판정한다(직접 그리기 경로).
+──────────────────────────────────────────────────────────────── */
+function loopOfWalls(w){
+  if (!w || w.length < 3) return null;
+  const pts=[[w[0].x1,w[0].y1]];
+  for (const s of w) pts.push([s.x2,s.y2]);
+  const [fx,fy]=pts[0], [lx,ly]=pts[pts.length-1];
+  return Math.hypot(fx-lx,fy-ly) < 1 ? pts.slice(0,-1) : null;
+}
+function inLoop(pts,x,y){
   let inside=false;
   for (let i=0,j=pts.length-1;i<pts.length;j=i++){
     const [xi,yi]=pts[i], [xj,yj]=pts[j];
@@ -350,14 +379,66 @@ function insideRoom(x,y){
   }
   return inside;
 }
-/** 벽이 하나의 닫힌 고리를 이루면 그 정점 목록을 돌려준다 */
-function wallLoop(){
-  const w = state.walls;
-  if (w.length < 3) return null;
-  const pts=[[w[0].x1,w[0].y1]];
-  for (const s of w) pts.push([s.x2,s.y2]);
-  const [fx,fy]=pts[0], [lx,ly]=pts[pts.length-1];
-  return Math.hypot(fx-lx,fy-ly) < 1 ? pts.slice(0,-1) : null;
+/** 벽이 하나의 닫힌 고리를 이루면 그 정점 목록을 돌려준다 (방이 없을 때의 경로) */
+function wallLoop(){ return loopOfWalls(state.walls); }
+function insideRoom(x,y){
+  const pts = wallLoop();
+  if (!pts) return true;                       // 닫힌 방이 없으면 판정하지 않는다
+  return inLoop(pts,x,y);
+}
+
+const roomById = (id) => state.rooms.find((r)=>r.id===id) || null;
+/** 방 안인가 — 조각 중 하나에만 들어 있으면 된다 */
+function inRoom(room, x, y){
+  return room.parts.some((p)=>{ const L = loopOfWalls(p.walls); return L && inLoop(L,x,y); });
+}
+/** 이 점을 품는 방 (여러 개면 첫 번째) */
+function roomAt(x,y){ return state.rooms.find((r)=>inRoom(r,x,y)) || null; }
+/** 가전이 속한 방. 지정하지 않았으면 null */
+const itemRoom = (it) => (it && it.room ? roomById(it.room) : null);
+/** 가전 기준 "방 안인가" — 방을 지정했으면 그 방, 아니면 아무 방이나 / 방이 없으면 레거시 */
+function insideFor(it, x, y){
+  const r = itemRoom(it);
+  if (r) return inRoom(r, x, y);
+  if (state.rooms.length) return state.rooms.some((rm)=>inRoom(rm, x, y));
+  return insideRoom(x, y);
+}
+/** 이 가전에 대해 "방 밖" 판정을 할 수 있는가 */
+function canJudge(it){
+  const r = itemRoom(it);
+  if (r) return r.parts.some((p)=>!!loopOfWalls(p.walls));
+  if (state.rooms.length) return true;
+  return !!wallLoop();
+}
+function partCenter(p){
+  const L = loopOfWalls(p.walls);
+  if (!L) return null;
+  return [L.reduce((s,q)=>s+q[0],0)/L.length, L.reduce((s,q)=>s+q[1],0)/L.length];
+}
+function loopArea(L){
+  let a=0;
+  for (let i=0;i<L.length;i++){ const b=L[(i+1)%L.length]; a += L[i][0]*b[1] - b[0]*L[i][1]; }
+  return Math.abs(a/2);
+}
+function roomArea(room){
+  return room.parts.reduce((s,p)=>{ const L=loopOfWalls(p.walls); return s + (L?loopArea(L):0); }, 0);
+}
+/** 모든 방의 경계를 합쳐 state.walls로 둔다 — 그리기·벽 스냅·개구부 검사가 이걸 쓴다 */
+function syncWalls(){
+  if (!state.rooms.length) return;
+  state.walls = state.rooms.flatMap((r)=>r.parts.flatMap((p)=>p.walls));
+}
+// 방 구분색 — 도면 위에 옅게 얹어 선이 묻히지 않게 한다
+const ROOM_FILL = ['#1428A0','#0F7A5A','#B45309','#7C3AED','#0E7490','#BE185D'];
+const ROOM_NAME_POOL = ['거실','주방','안방','침실1','침실2','침실3','드레스룸','세탁실','현관','발코니','서재','다용도실'];
+function nextRoomName(){
+  const used = new Set(state.rooms.map((r)=>r.name));
+  return ROOM_NAME_POOL.find((n)=>!used.has(n)) || `공간 ${state.rooms.length+1}`;
+}
+function addRoom(name, walls){
+  const room = { id:'r'+Math.random().toString(36).slice(2,8), name, parts:[{ walls }] };
+  state.rooms.push(room); state.roomSel = room.id; syncWalls();
+  return room;
 }
 
 /* ── 벽 자동 인식 ────────────────────────────────────────────────
@@ -922,8 +1003,14 @@ function detectRoomAt(imgX, imgY, forceR){
   };
 }
 
-/** 인식한 다각형(도면 픽셀)을 실제 벽으로 확정한다 */
-function applyDetected(polyImg, edges){
+/**
+ * 인식한 다각형(도면 픽셀)을 방으로 확정한다.
+ * opts.name    — 새 방 이름
+ * opts.appendTo — 기존 방 id. 주면 그 방의 **조각으로 이어 붙인다**
+ *   (자동 인식이 방을 절반만 잡는 경우가 있어 나머지를 더할 수 있어야 한다)
+ */
+function applyDetected(polyImg, edges, opts){
+  const o = opts || {};
   const k = state.mmPerPx || 1;                 // 축척이 없으면 나중에 벽 길이로 환산한다
   let segs;
   if (edges && edges.length) {
@@ -937,11 +1024,14 @@ function applyDetected(polyImg, edges){
       segs.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] });
     }
   }
-  state.walls = [];
-  if (!state.scaled) { askWallLength(segs); return; }
-  state.walls.push(...segs);
+  if (!state.scaled) { state.walls = []; askWallLength(segs, o); return; }
+  const room = o.appendTo ? roomById(o.appendTo) : null;
+  if (room) { room.parts.push({ walls: segs }); state.roomSel = room.id; syncWalls(); }
+  else addRoom(o.name || nextRoomName(), segs);
   state.showClean = false;
-  setMode('idle'); setStep(4); evaluate(); draw();
+  // 방을 더 잡을 수 있게 인식 모드를 유지한다 — 한 세대에는 방이 여럿이다
+  setMode('detect'); setStep(4); evaluate(); draw();
+  toast(`${(roomById(state.roomSel)||{}).name || '공간'} 확정 — 다른 방을 이어서 누르거나 '가전 선택'으로 넘어가세요`);
 }
 
 function startDetect(){
@@ -986,6 +1076,7 @@ function confirmDetected(auto){
     + (opens.length
       ? `<br>개구부(문·창) <b>${opens.length}곳</b>${state.scaled?` · 합계 ${Math.round(openLen).toLocaleString()}mm`:''} — 주황 선으로 표시됩니다`
       : '');
+
   // 방 범위 조절 — 자동 판정은 도면 관례를 전제로 한 추정이다. 트인 주방까지 한 방으로
   // 볼지, 문에서 끊을지는 도면마다 다르므로 사용자가 넓히거나 좁힐 수 있어야 한다.
   const step = state.draftStep || {};
@@ -1004,31 +1095,53 @@ function confirmDetected(auto){
          <button id="narrow" ${step.narrow == null ? 'disabled' : ''}>더 좁게 ▸</button>
        </div>`
     : '';
-  sheet(`<h2>이 방으로 잡을까요?</h2>
+  // 이미 잡아 둔 방이 있으면 "그 방에 이어 붙이기"를 고를 수 있다.
+  // 자동 인식이 방을 절반만 잡는 경우(붙박이장 선·확장 창호선이 방을 가른다)의 해법이다.
+  const joinable = state.rooms;
+  const joinSel = joinable.length
+    ? `<label class="pickers" style="margin-top:6px"><span class="hint">이미 잡은 방에 이어 붙이기</span>
+         <select id="join"><option value="">— 새 방으로 추가 —</option>
+           ${joinable.map((r)=>`<option value="${r.id}">${esc(r.name)}에 이어 붙이기</option>`).join('')}
+         </select></label>`
+    : '';
+  sheet(`<h2>이 공간을 무엇으로 부를까요?</h2>
     <p class="hint">${auto ? '도면 가운데를 기준으로 자동 인식했습니다. ' : ''}파란 굵은 선이 인식된 벽입니다.
-      도면과 다르면 <b>더 넓게·더 좁게</b>로 범위를 바꾸거나, <b>다시 누르기</b>로 다른 방을 고르세요.</p>
+      범위가 다르면 <b>더 넓게·더 좁게</b>로 바꾸고, <b>절반만 잡혔으면</b> 확정한 뒤 나머지를 눌러
+      같은 방에 이어 붙이세요.</p>
     <div class="spec">${areaM2 != null ? `넓이 <b>${areaM2.toFixed(1)}㎡</b> · ` : ''}${sizeTxt}</div>
     ${adjust}
+    <label class="pickers"><span class="hint">방 이름</span>
+      <input type="text" id="rname" value="${esc(nextRoomName())}" maxlength="12" placeholder="예: 침실2"></label>
+    ${joinSel}
     <p class="src">벽 모양만 자동으로 잡습니다. 실제 치수는 축척 보정(또는 벽 길이 입력)에서 온 값을 씁니다 —
       도면 선을 추측해서 치수를 만들지 않습니다.</p>
     <div class="modal-actions">
       <button id="draw">직접 그리기</button>
       <button id="again">다시 누르기</button>
-      <button class="primary" id="ok">이 방으로 확정</button>
+      <button class="primary" id="ok">이 공간으로 확정</button>
     </div>`,
     ()=>{
-      $('#ok').onclick   = ()=>{ closeSheet(); const p=state.draft, e=state.draftEdges;
-        state.draft=null; state.draftEdges=null; applyDetected(p, e); };
+      $('#ok').onclick   = ()=>{
+        const join = $('#join') ? $('#join').value : '';
+        const name = ($('#rname').value || '').trim() || nextRoomName();
+        closeSheet();
+        const p=state.draft, e=state.draftEdges;
+        state.draft=null; state.draftEdges=null;
+        applyDetected(p, e, join ? { appendTo: join } : { name });
+      };
       $('#again').onclick= ()=>{ closeSheet(); state.draft=null; setMode('detect'); draw(); };
       $('#draw').onclick = ()=>{ closeSheet(); state.draft=null; state.wallPts=[]; setMode('wall'); draw(); };
       const redo = (r) => {
         if (r == null || !state.draftAt) return;
+        const keep = $('#rname').value, joinKeep = $('#join') ? $('#join').value : '';
         const res = detectRoomAt(state.draftAt[0], state.draftAt[1], r);
         if (res.error){ toast(res.error); return; }
         closeSheet();
         state.draft = res.poly; state.draftEdges = res.edges; state.draftCloseR = res.closeR;
         state.draftStep = { wider: res.wider, narrow: res.narrow };
         draw(); confirmDetected();
+        if ($('#rname')) $('#rname').value = keep;
+        if ($('#join') && joinKeep) $('#join').value = joinKeep;
       };
       if ($('#wide'))   $('#wide').onclick   = ()=> redo(step.wider);
       if ($('#narrow')) $('#narrow').onclick = ()=> redo(step.narrow);
@@ -1053,7 +1166,10 @@ function toast(msg){
  */
 function collisionAt(it){
   const body = corners(it), clear = corners(it, it.clear);
-  if (wallLoop() && body.some(([x,y]) => !insideRoom(x,y))) return '방 밖으로 나갑니다';
+  if (canJudge(it) && body.some(([x,y]) => !insideFor(it,x,y))) {
+    const r = itemRoom(it);
+    return r ? `${r.name} 밖으로 나갑니다` : '방 밖으로 나갑니다';
+  }
   for (const o of state.items){
     if (o === it) continue;
     if (overlaps(body, corners(o))) return `${o.label}와 겹칩니다`;
@@ -1080,12 +1196,15 @@ function segHitsPoly(seg, poly){
 function evaluate(){
   const items = state.items;
   for (const it of items){ it.warn = []; it.soft = []; }
-  const closed = !!wallLoop();
   for (let i=0;i<items.length;i++){
     const A = items[i];
+    const closed = canJudge(A);
     const Abody = corners(A), Aclear = corners(A, A.clear);
     // 방 밖으로 나가는가
-    if (closed && Abody.some(([x,y]) => !insideRoom(x,y))) A.warn.push('방 밖으로 나감');
+    if (closed && Abody.some(([x,y]) => !insideFor(A,x,y))) {
+      const r = itemRoom(A);
+      A.warn.push(r ? `${r.name} 밖으로 나감` : '방 밖으로 나감');
+    }
     for (let j=i+1;j<items.length;j++){
       const B = items[j];
       const Bbody = corners(B), Bclear = corners(B, B.clear);
@@ -1099,7 +1218,7 @@ function evaluate(){
     const dz = doorZoneFor(A);
     if (dz){
       const zone = corners(A, { back:0, side:dz.side, front:0 });
-      if (closed && zone.some(([x,y]) => !insideRoom(x,y))) {
+      if (closed && zone.some(([x,y]) => !insideFor(A,x,y))) {
         A.soft.push(`도어 오픈 공간(좌우 ${dz.side}mm)이 벽에 닿습니다 — 실측 확인`);
       }
       for (const B of items){
@@ -1142,6 +1261,35 @@ function draw(){
     ctx.drawImage(shown, x, y, state.imgW*state.zoom, state.imgH*state.zoom);
     ctx.globalAlpha=1;
   }
+
+  // 방 — 이름과 넓이를 도면 위에 적는다. 어느 방에 무엇을 놓는지가 이 도구의 핵심이라
+  // 화면만 보고도 방을 구분할 수 있어야 한다.
+  ROOM_FILL.length && state.rooms.forEach((rm, i)=>{
+    const col = ROOM_FILL[i % ROOM_FILL.length];
+    const on = state.roomSel === rm.id;
+    for (const part of rm.parts){
+      const L = loopOfWalls(part.walls);
+      if (!L) continue;
+      ctx.beginPath();
+      L.forEach(([x,y],j)=>{ const [sx,sy]=toScreen(x,y); j?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy); });
+      ctx.closePath();
+      ctx.fillStyle = col + (on ? '2e' : '18');
+      ctx.fill();
+    }
+    const big = rm.parts.map((q)=>({ q, L:loopOfWalls(q.walls) })).filter((q)=>q.L)
+      .sort((a,b)=>loopArea(b.L)-loopArea(a.L))[0];
+    if (big){
+      const c = partCenter(big.q);
+      const [sx,sy] = toScreen(c[0], c[1]);
+      ctx.font = `600 ${on?14:13}px system-ui,sans-serif`;
+      ctx.textAlign='center'; ctx.fillStyle = col;
+      ctx.fillText(rm.name, sx, sy - 2);
+      if (state.scaled){
+        ctx.font='11px ui-monospace,monospace'; ctx.fillStyle='#6B7280';
+        ctx.fillText(`${(roomArea(rm)/1e6).toFixed(1)}㎡`, sx, sy + 13);
+      }
+    }
+  });
 
   // 벽
   ctx.lineCap='round';
@@ -1243,13 +1391,14 @@ function draw(){
 
 /* ── 사이드 목록 ── */
 function renderSide(){
+  renderRooms();
   const list = $('#list');
   if (!state.items.length){
     list.innerHTML = '<p class="hint" style="padding:10px">아직 배치한 가전이 없습니다.</p>';
   } else {
     list.innerHTML = state.items.map((it)=>`
       <div class="row ${state.sel===it.id?'sel':''}" data-id="${it.id}">
-        <div class="t">${esc(it.label)}<span class="pill">${esc(it.size)}</span></div>
+        <div class="t">${esc(it.label)}<span class="pill">${esc(it.size)}</span>${itemRoom(it)?`<span class="pill">${esc(itemRoom(it).name)}</span>`:''}</div>
         <div class="m">${esc(it.model)} · ${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm</div>
         <div class="m">이격 후면 ${it.clear.back} · 좌우 ${it.clear.side}${it.clear.front?` · 전면 ${it.clear.front}`:''}mm</div>
         <div class="w ${it.warn&&it.warn.length?'':'ok'}">${it.warn&&it.warn.length?esc(it.warn.join(' / ')):'배치 가능'}</div>
@@ -1259,9 +1408,14 @@ function renderSide(){
   const bad = state.items.filter((i)=>i.warn&&i.warn.length).length;
   const soft = state.items.filter((i)=>i.soft&&i.soft.length).length;
   const loop = wallLoop();
+  const opensN = state.walls.filter((w)=>w.open).length;
+  const roomLine = state.rooms.length
+    ? row('ok', `공간 ${state.rooms.length}곳 — ` + state.rooms.map((r)=>`${r.name} ${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?`(${r.parts.length}조각)`:''}`).join(' · ')
+        + (opensN?` · 개구부 ${opensN}곳`:''))
+    : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가'));
   $('#report').innerHTML = [
     row(state.scaled?'ok':'warn', state.mmPerPx ? `축척 확정 (도면 1px = ${state.mmPerPx.toFixed(2)}mm)` : (state.scaled ? '축척 확정 (벽 실제 길이 입력 기준)' : '축척 미확정 — 벽을 그리고 실제 길이를 입력하세요')),
-    row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${state.walls.filter((w)=>w.open).length?` · 개구부 ${state.walls.filter((w)=>w.open).length}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가')),
+    roomLine,
     row(bad?'bad':'ok', bad ? `문제 ${bad}건` : `배치 ${state.items.length}건 · 문제 없음`),
     ...(soft ? [row('warn', `도어 오픈 등 확인 필요 ${soft}건 — 주황 점선 구역`)] : []),
   ].join('');
@@ -1269,10 +1423,50 @@ function renderSide(){
     idle:'가전을 끌어 옮기고, 두 번 누르면 90° 회전 · 겹치는 자리에는 놓이지 않습니다',
     scale:'도면에서 길이를 아는 두 점을 차례로 누르세요',
     wall:'벽 모서리를 차례로 누르고, 시작점을 다시 누르면 닫힙니다',
-    detect:'배치할 방 안쪽의 빈 곳을 한 번 누르세요 — 벽을 자동으로 잡습니다',
+    detect: state.rooms.length
+      ? `공간 ${state.rooms.length}곳 지정됨 — 다른 방 안쪽을 눌러 계속 추가하세요`
+      : '배치할 방 안쪽의 빈 곳을 한 번 누르세요 — 벽을 자동으로 잡습니다',
     place:'놓을 위치를 누르세요 — 가까운 벽에 붙습니다',
   }[state.mode];
 }
+/** 잡아 둔 공간 목록 — 이름을 고치고 지울 수 있어야 한다 */
+function renderRooms(){
+  const box = $('#rooms');
+  if (!box) return;
+  if (!state.rooms.length){
+    box.innerHTML = '<p class="hint" style="padding:8px 10px">아직 지정한 공간이 없습니다. <b>벽 자동 인식</b>으로 방 안쪽을 누르면 이름을 붙여 등록됩니다.</p>';
+    return;
+  }
+  box.innerHTML = state.rooms.map((r,i)=>`
+    <div class="room ${state.roomSel===r.id?'sel':''}" data-room="${r.id}">
+      <span class="swatch" style="background:${ROOM_FILL[i%ROOM_FILL.length]}"></span>
+      <input type="text" class="rn" data-rename="${r.id}" value="${esc(r.name)}" maxlength="12">
+      <span class="m">${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?` · ${r.parts.length}조각`:''}</span>
+      <button class="del" data-del="${r.id}" title="삭제">✕</button>
+    </div>`).join('');
+  box.querySelectorAll('input[data-rename]').forEach((el)=>{
+    el.onchange = ()=>{
+      const r = roomById(el.dataset.rename);
+      if (r) { r.name = (el.value||'').trim() || r.name; renderSide(); draw(); }
+    };
+    el.onclick = (e)=> e.stopPropagation();
+  });
+  box.querySelectorAll('button[data-del]').forEach((el)=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();
+      const id = el.dataset.del;
+      state.rooms = state.rooms.filter((r)=>r.id!==id);
+      state.items.forEach((it)=>{ if (it.room===id) it.room = null; });
+      if (state.roomSel===id) state.roomSel = state.rooms.length ? state.rooms[0].id : null;
+      if (!state.rooms.length) state.walls = [];
+      syncWalls(); evaluate(); renderSide(); draw();
+    };
+  });
+  box.querySelectorAll('.room').forEach((el)=>{
+    el.onclick = ()=>{ state.roomSel = el.dataset.room; renderSide(); draw(); };
+  });
+}
+
 const COLOR = { ok:'#0F7A5A', warn:'#B45309', bad:'#B42318' };
 const row = (k,t) => `<div class="r"><span class="dot" style="background:${COLOR[k]}"></span><span>${esc(t)}</span></div>`;
 const esc = (s) => String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1389,7 +1583,8 @@ $('#file').onchange = (e)=>{
   const img = new Image();
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
-    state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.baseMask=null; state.sealCache=null; state.cleanCv=null; state.showClean=false; state.walls=[];
+    state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.baseMask=null; state.sealCache=null; state.cleanCv=null; state.showClean=false;
+    state.walls=[]; state.rooms=[]; state.roomSel=null;
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
     const r = cv.getBoundingClientRect();
@@ -1458,11 +1653,11 @@ function commitWalls(){
   // "2,227mm" 같은 숫자가 화면에 뜨는데, 상담 중에 그걸 실제 치수로 읽으면 사고다.
   // 그래서 방금 그린 벽 중 가장 긴 것의 실제 길이를 받아 전체를 환산한다.
   if (!state.scaled) askWallLength(segs);
-  else { state.walls.push(...segs); setMode('idle'); setStep(4); evaluate(); draw(); }
+  else { addRoom(nextRoomName(), segs); setMode('idle'); setStep(4); evaluate(); draw(); }
 }
 
 /** 그린 벽 중 가장 긴 것의 실제 길이를 받아 전체 좌표를 실제 mm로 환산한다 */
-function askWallLength(segs){
+function askWallLength(segs, opts){
   let li=0, lmax=0;
   segs.forEach((s,i)=>{ const L=Math.hypot(s.x2-s.x1,s.y2-s.y1); if(L>lmax){lmax=L;li=i;} });
   sheet(`<h2>방 크기 확정</h2>
@@ -1478,8 +1673,11 @@ function askWallLength(segs){
         if (!(mm>0)) return;
         const k = mm / lmax;
         for (const s of segs){ s.x1*=k; s.y1*=k; s.x2*=k; s.y2*=k; }
-        state.walls.push(...segs);
         state.scaled = true;
+        const o = opts || {};
+        const room = o.appendTo ? roomById(o.appendTo) : null;
+        if (room){ room.parts.push({ walls: segs }); state.roomSel = room.id; syncWalls(); }
+        else addRoom(o.name || nextRoomName(), segs);
         state.zoom /= k; state.panX = 24; state.panY = 24;
         closeSheet(); setMode('idle'); setStep(4); evaluate(); draw();
       };
@@ -1501,6 +1699,26 @@ async function loadReps(){
  * room을 주면 그 용도에 맞는 카테고리만 보여주고 미리 체크해 둔다(배치 추천).
  * room이 없으면 전체 카테고리를 체크 없이 보여준다(가전 선택).
  */
+/**
+ * 이 카테고리를 기본으로 어느 방에 놓을 것인가.
+ * 잡아 둔 방 이름이 ROOM_PLAN의 용도와 맞으면 그 방을 고른다(주방 가전 → '주방').
+ * 맞는 방이 없으면 첫 번째 방. 어디까지나 기본값이고 사용자가 바꿀 수 있다.
+ */
+function defaultRoomFor(cat){
+  if (!state.rooms.length) return null;
+  for (const [use, cats] of Object.entries(ROOM_PLAN)){
+    if (!cats.includes(cat)) continue;
+    const hit = state.rooms.find((r)=>r.name.includes(use) || use.includes(r.name));
+    if (hit) return hit.id;
+  }
+  // 침실은 '안방/침실N' 어느 쪽이든 침실로 본다
+  if (ROOM_PLAN['침실'].includes(cat)){
+    const hit = state.rooms.find((r)=>/침실|안방/.test(r.name));
+    if (hit) return hit.id;
+  }
+  return state.rooms[0].id;
+}
+
 async function openSelect(room){
   await loadReps();
   const allCats = [...new Set(state.reps.map((r)=>r.cat))];
@@ -1539,7 +1757,10 @@ async function openSelect(room){
               })).join('')}
             </select>
             <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" title="수량">
-            <span class="unit">대</span></label>
+            <span class="unit">대</span>
+            ${state.rooms.length ? `<select data-room="${esc(c)}" title="배치할 방">
+              ${state.rooms.map((rm)=>`<option value="${rm.id}"${rm.id===defaultRoomFor(c)?' selected':''}>${esc(rm.name)}</option>`).join('')}
+            </select>` : ''}</label>
             <p class="pickinfo" data-info="${esc(c)}"></p>`;
         }).join('');
         // 고른 사이즈의 모델코드·이격거리를 한 줄로 보여준다.
@@ -1591,11 +1812,13 @@ async function openSelect(room){
           const r = state.reps.filter((x)=>x.cat===cat)[si||0];
           const o = r.options[ki||0], p = o.parts[0];
           const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
-          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0 });
+          const roomEl = document.querySelector(`select[data-room="${CSS.escape(cat)}"]`);
+          const rid = roomEl ? roomEl.value : null;
+          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0, room:rid });
         }
         if (!picks.length){ toast('가전을 하나 이상 체크해주세요'); return; }
         closeSheet();
-        if (!wallLoop()){ needRoom(); return; }
+        if (!state.rooms.length && !wallLoop()){ needRoom(); return; }
         autoPlace(picks);
       };
     });
@@ -1671,18 +1894,21 @@ function roomCenter(){
  * 유효 = 본체가 방 안 + 다른 가전과 본체/이격 모두 겹치지 않음.
  */
 function findSpot(item, placed){
-  const center = roomCenter();
-  if (!center) return null;
-  // 개구부(문·창)는 벽이 아니므로 가전을 붙이지 않는다. 붙이면 문이 안 열린다.
-  const walls = state.walls.filter((w)=>!w.open).sort((a,b)=>
-    Math.hypot(b.x2-b.x1,b.y2-b.y1) - Math.hypot(a.x2-a.x1,a.y2-a.y1));
+  // 가전이 속한 방 안에서만 찾는다. 방을 지정하지 않았으면 예전처럼 전체를 본다.
+  // 한 방이 여러 조각일 수 있으므로(자동 인식이 절반만 잡은 방을 이어 붙인 경우)
+  // 조각마다 따로 훑는다.
+  const room = itemRoom(item);
+  const groups = room
+    ? room.parts.map((p)=>({ walls:p.walls, center:partCenter(p) })).filter((g)=>g.center)
+    : (wallLoop() ? [{ walls: state.walls, center: roomCenter() }] : []);
+  if (!groups.length) return null;
   const dz = doorZoneFor(item);
   const openings = state.walls.filter((w)=>w.open);
 
   /** 이 자리가 쓸 만한가. strict면 도어 오픈 공간까지 비어 있어야 한다. */
   const okAt = (cand, strict) => {
     const body = corners(cand), cl = corners(cand, cand.clear);
-    if (body.some(([x,y])=>!insideRoom(x,y))) return false;
+    if (body.some(([x,y])=>!insideFor(item,x,y))) return false;
     for (const o of placed){
       if (overlaps(body, corners(o)) || overlaps(cl, corners(o, o.clear))) return false;
     }
@@ -1691,13 +1917,13 @@ function findSpot(item, placed){
     // 도어가 열리는 공간이 벽·다른 가전과 부딪히지 않는 자리를 먼저 찾는다
     if (dz){
       const zone = corners(cand, { back:0, side:dz.side, front:0 });
-      if (zone.some(([x,y])=>!insideRoom(x,y))) return false;
+      if (zone.some(([x,y])=>!insideFor(item,x,y))) return false;
       for (const o of placed){ if (overlaps(zone, corners(o))) return false; }
     }
     // 도어가 앞으로 열리는 제품(콤보 등)은 전면 여유도 방 안에 들어와야 한다
     if (item.clear.front > 0){
       const front = corners(cand, { back:0, side:0, front:item.clear.front });
-      if (front.some(([x,y])=>!insideRoom(x,y))) return false;
+      if (front.some(([x,y])=>!insideFor(item,x,y))) return false;
     }
     return true;
   };
@@ -1705,20 +1931,25 @@ function findSpot(item, placed){
   // 1차: 도어 열림까지 고려한 자리를 찾는다. 없으면 2차로 조건을 완화한다.
   // (완화해서 놓은 것은 evaluate()가 "도어 오픈 공간 …" 주의로 표시한다)
   for (const strict of [true, false]){
-    for (const w of walls){
-      const L = Math.hypot(w.x2-w.x1, w.y2-w.y1);
-      const need = item.w + item.clear.side*2;
-      if (L < need) continue;                       // 이 벽에는 폭이 안 들어간다
-      const { nx, ny } = inwardNormal(w, center);
-      const ux = (w.x2-w.x1)/L, uy = (w.y2-w.y1)/L;
-      for (let t = need/2; t <= L - need/2; t += 50){
-        const cand = {
-          ...item,
-          bx: w.x1 + ux*t + nx*item.clear.back,
-          by: w.y1 + uy*t + ny*item.clear.back,
-          a: Math.atan2(ny,nx) - Math.PI/2,
-        };
-        if (okAt(cand, strict)) return cand;
+    for (const g of groups){
+      // 개구부(문·창)는 벽이 아니므로 가전을 붙이지 않는다. 붙이면 문이 안 열린다.
+      const walls = g.walls.filter((w)=>!w.open).sort((a,b)=>
+        Math.hypot(b.x2-b.x1,b.y2-b.y1) - Math.hypot(a.x2-a.x1,a.y2-a.y1));
+      for (const w of walls){
+        const L = Math.hypot(w.x2-w.x1, w.y2-w.y1);
+        const need = item.w + item.clear.side*2;
+        if (L < need) continue;                       // 이 벽에는 폭이 안 들어간다
+        const { nx, ny } = inwardNormal(w, g.center);
+        const ux = (w.x2-w.x1)/L, uy = (w.y2-w.y1)/L;
+        for (let t = need/2; t <= L - need/2; t += 50){
+          const cand = {
+            ...item,
+            bx: w.x1 + ux*t + nx*item.clear.back,
+            by: w.y1 + uy*t + ny*item.clear.back,
+            a: Math.atan2(ny,nx) - Math.PI/2,
+          };
+          if (okAt(cand, strict)) return cand;
+        }
       }
     }
   }
@@ -1729,7 +1960,7 @@ function autoPlace(picks){
   // 폭이 큰 것부터 — 자리를 많이 먹는 제품이 먼저 벽을 잡아야 나머지가 틈에 들어간다
   const list = picks.map((q)=>({
     id:'i'+Math.random().toString(36).slice(2,8),
-    cat:q.cat, size:q.size, model:q.model, group:q.group,
+    cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null,
     label:`${q.cat} ${q.size}${q.seq?` #${q.seq}`:''}`,
     w:q.part.w, h:q.part.h, d:q.part.d,
     clear:clearFor(q.cat, q.part.part, q.model), bx:0, by:0, a:0, warn:[],
@@ -1740,7 +1971,7 @@ function autoPlace(picks){
   for (const it of list){
     const spot = findSpot(it, placed);
     if (spot){ Object.assign(it, {bx:spot.bx, by:spot.by, a:spot.a}); placed.push(it); state.items.push(it); }
-    else failed.push(it.label);
+    else failed.push(it.label + (itemRoom(it) ? ` (${itemRoom(it).name})` : ''));
   }
   $('#empty').style.display='none';
   evaluate(); draw();
@@ -1761,6 +1992,7 @@ function placeAt(wx,wy){
     label:`${q.cat} ${q.size}${q.part.part!=='본체'?` (${q.part.part})`:''}`,
     w:q.part.w, h:q.part.h, d:q.part.d,
     clear:q.clear, bx:wx, by:wy, a:0, warn:[],
+    room: q.room || (roomAt(wx,wy)||{}).id || null,
   };
   const snap = snapToWall(wx,wy,it);
   if (snap && snap.dist < 2000){ it.bx=snap.bx; it.by=snap.by; it.a=snap.a; }
@@ -1789,6 +2021,8 @@ window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, w
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
+  addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
+  syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
 </script>
 </body>

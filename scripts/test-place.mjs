@@ -684,6 +684,96 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.mmPerPx = keep;
 }
 
+// ── [16] 방(공간) 모델 — 여러 방 · 이름 · 방별 배치 ──
+// 한 세대에는 방이 여럿이고, 가전은 "어느 방에 놓을 것인가"가 정해져 있어야 한다.
+// 침실2가 꽉 찼다고 거실까지 못 쓴다고 말하면 안 되고, 냉장고를 침실에 놓아서도 안 된다.
+{
+  const st = P.state;
+  const rect = (x, y, w, h) => [
+    { x1: x, y1: y, x2: x + w, y2: y }, { x1: x + w, y1: y, x2: x + w, y2: y + h },
+    { x1: x + w, y1: y + h, x2: x, y2: y + h }, { x1: x, y1: y + h, x2: x, y2: y },
+  ];
+  st.items = []; st.walls = []; st.rooms = []; st.roomSel = null;
+
+  const a = P.addRoom('거실', rect(0, 0, 5000, 4000));
+  const b = P.addRoom('침실2', rect(6000, 0, 3000, 3000));
+  if (st.rooms.length !== 2) fail(`방이 ${st.rooms.length}개 (기대 2개)`);
+  else if (st.walls.length !== 8) fail(`합쳐진 경계가 ${st.walls.length}구간 (기대 8구간) — syncWalls가 안 돌았다`);
+  else pass('방 2개 등록 · 경계 합산 (거실 20.0㎡ · 침실2 9.0㎡)');
+
+  if (Math.abs(P.roomArea(a) / 1e6 - 20) > 0.1) fail(`거실 넓이 ${(P.roomArea(a)/1e6).toFixed(1)}㎡ (기대 20.0)`);
+  else if (Math.abs(P.roomArea(b) / 1e6 - 9) > 0.1) fail(`침실2 넓이 ${(P.roomArea(b)/1e6).toFixed(1)}㎡ (기대 9.0)`);
+  else pass('방별 넓이 계산');
+
+  // 방 판정 — 점이 어느 방에 속하는가
+  if (!P.inRoom(a, 2500, 2000) || P.inRoom(a, 7000, 1500)) fail('inRoom이 방 경계를 잘못 본다');
+  else if ((P.roomAt(7000, 1500) || {}).name !== '침실2') fail('roomAt이 엉뚱한 방을 돌려준다');
+  else pass('점 → 방 판정 (roomAt)');
+
+  // 가전이 자기 방을 벗어나면 그 방 이름으로 경고한다
+  const fridge = { id: 'x1', label: '냉장고', room: b.id, w: 900, h: 1850, d: 700,
+    clear: { back: 50, side: 0, front: 0 }, bx: 7500, by: 100, a: 0, warn: [] };
+  st.items = [fridge];
+  if (P.collisionAt(fridge)) fail(`침실2 안인데 막혔다 (${P.collisionAt(fridge)})`);
+  else {
+    const out = { ...fridge, bx: 2500, by: 2000 };            // 거실 한가운데 = 침실2 밖
+    const why = P.collisionAt(out);
+    if (!why) fail('다른 방으로 넘어갔는데 막지 않음');
+    else if (!/침실2/.test(why)) fail(`경고에 방 이름이 없다 ("${why}")`);
+    else pass(`방 밖 판정에 방 이름이 붙는다 ("${why}")`);
+  }
+
+  // 자동 배치는 지정한 방 안에서만 자리를 찾는다
+  {
+    const it = { id: 'x2', label: 'TV', room: a.id, w: 1200, h: 700, d: 300,
+      clear: { back: 15, side: 100, front: 0 }, bx: 0, by: 0, a: 0, warn: [] };
+    st.items = [];
+    const spot = P.findSpot(it, []);
+    if (!spot) fail('거실에 자리가 있는데 못 찾음');
+    else if (!P.inRoom(a, spot.bx, spot.by)) fail(`거실을 지정했는데 (${spot.bx.toFixed(0)},${spot.by.toFixed(0)})에 놓았다`);
+    else pass('자동 배치가 지정한 방 안에서만 자리를 찾는다');
+  }
+
+  // 한 방이 여러 조각일 수 있다 — 자동 인식이 절반만 잡았을 때 나머지를 이어 붙인다
+  {
+    b.parts.push({ walls: rect(6000, 3000, 3000, 2000) });    // 침실2에 발코니 조각을 이어 붙임
+    P.syncWalls();
+    if (!P.inRoom(b, 7500, 4000)) fail('이어 붙인 조각이 방으로 인정되지 않는다');
+    else if (Math.abs(P.roomArea(b) / 1e6 - 15) > 0.1) fail(`이어 붙인 뒤 넓이 ${(P.roomArea(b)/1e6).toFixed(1)}㎡ (기대 15.0)`);
+    else pass('방 조각 이어 붙이기 (9.0 + 6.0 = 15.0㎡)');
+
+    const big = { id: 'x3', label: '장롱', room: b.id, w: 2400, h: 2300, d: 600,
+      clear: { back: 0, side: 0, front: 0 }, bx: 0, by: 0, a: 0, warn: [] };
+    st.items = [];
+    const spot = P.findSpot(big, []);
+    if (!spot) fail('이어 붙인 조각을 포함하면 자리가 있는데 못 찾음');
+    else pass('이어 붙인 조각에서도 자리를 찾는다');
+  }
+
+  // 카테고리 → 기본 방 (이름으로 맞춘다)
+  {
+    st.rooms = [];
+    const kitchen = P.addRoom('주방', rect(0, 0, 4000, 3000));
+    const bed = P.addRoom('침실1', rect(5000, 0, 3000, 3000));
+    if (P.defaultRoomFor('냉장고') !== kitchen.id) fail('냉장고의 기본 방이 주방이 아니다');
+    else if (P.defaultRoomFor('에어드레서') !== bed.id) fail('에어드레서의 기본 방이 침실이 아니다');
+    else pass('가전 카테고리별 기본 방 (냉장고 → 주방 · 에어드레서 → 침실1)');
+  }
+
+  // 방이 없으면 예전 그대로 state.walls만 본다 (직접 그리기 경로)
+  {
+    st.rooms = []; st.roomSel = null;
+    st.walls = rect(0, 0, 4000, 3000);
+    const it = { id: 'x4', label: 'TV', w: 1200, h: 700, d: 300,
+      clear: { back: 0, side: 0, front: 0 }, bx: 2000, by: 100, a: 0, warn: [] };
+    st.items = [it];
+    if (P.collisionAt(it)) fail('방 없이 벽만 있을 때 판정이 달라졌다');
+    else if (!P.collisionAt({ ...it, bx: 9000 })) fail('방 없이 벽만 있을 때 방 밖 판정이 안 된다');
+    else pass('방을 안 만든 경우(직접 그리기)는 예전과 동일하게 동작');
+  }
+  st.items = []; st.walls = []; st.rooms = []; st.roomSel = null;
+}
+
 // ── [15] 자동 배치가 도어 열림·개구부를 고려하는지 ──
 {
   const st = P.state;
