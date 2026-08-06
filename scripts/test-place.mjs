@@ -400,7 +400,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   else if (reg.border > 0) fail(`방 안에서 채웠는데 도면 바깥까지 새어 나감 (border=${reg.border})`);
   else pass(`방 내부 채우기 (${reg.count.toLocaleString()}px · 바깥 유출 없음)`);
 
-  const poly = P.regionPolygon(mask, reg, 3, 8);
+  const poly = P.regionPolygon(mask, reg, 8);
   if (!poly) fail('방 윤곽을 만들지 못함');
   else {
     const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
@@ -422,6 +422,65 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   else pass(`벽이 끊긴 도면 — 바깥 유출 감지 (border=${leak.border})`);
 
   st.items = []; st.walls = [];
+}
+
+// ── [13-b] 윤곽 추적 — 안쪽으로 파인 벽을 건너뛰지 않는가 ──
+// 예전에는 줄마다 좌·우 끝점만 읽어 계단으로 압축했다. 그러면 ㄱ자·ㄷ자처럼 파인 부분을
+// 직선으로 가로질러 **벽이 실제와 다른 자리에 그려졌다.** 방 안으로 튀어나온 벽이나
+// 붙박이장·기둥이 있는 실제 도면에서 그대로 사고가 된다.
+{
+  const W = 300, H = 200;
+  const build = (stub) => {
+    const m = new Uint8Array(W * H);
+    const box = (x0, y0, x1, y1) => {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) m[y * W + x] = 1;
+    };
+    box(40, 40, 260, 46); box(40, 154, 260, 160);      // 위·아래 벽
+    box(40, 40, 46, 160); box(254, 40, 260, 160);      // 좌·우 벽
+    stub(box);
+    return { w: W, h: H, S: 1, dark: m };
+  };
+  // 점이 다각형 안에 있는가 (짝홀 판정)
+  const inPoly = (poly, x, y) => {
+    let hit = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [xi, yi] = poly[i], [xj, yj] = poly[j];
+      if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit;
+    }
+    return hit;
+  };
+
+  // ㄷ자 — 오른쪽 벽에서 방 안으로 벽이 튀어나온 형태
+  {
+    const mask = build((box) => box(150, 90, 254, 110));
+    const reg = P.floodRegion(mask, 60, 100);
+    const poly = reg && P.regionPolygon(mask, reg, 6);
+    if (!poly) fail('ㄷ자 방의 윤곽을 만들지 못함');
+    else if (poly.length !== 8) fail(`ㄷ자 방 모서리가 ${poly.length}개 (기대 8개) — 파인 부분을 가로질렀다`);
+    else if (inPoly(poly, 200, 100)) fail('방 안으로 튀어나온 벽(200,100)이 방 안쪽으로 잡혔다 — 여기에 가전을 놓게 된다');
+    else pass(`ㄷ자 방 윤곽 인식 (모서리 8개 · 튀어나온 벽을 방에서 제외)`);
+  }
+
+  // ㄱ자 — 한쪽 모서리가 통째로 잘린 형태
+  {
+    const mask = build((box) => box(180, 40, 254, 100));
+    const reg = P.floodRegion(mask, 60, 130);
+    const poly = reg && P.regionPolygon(mask, reg, 6);
+    if (!poly) fail('ㄱ자 방의 윤곽을 만들지 못함');
+    else if (poly.length !== 6) fail(`ㄱ자 방 모서리가 ${poly.length}개 (기대 6개)`);
+    else if (inPoly(poly, 220, 70)) fail('잘려 나간 모서리(220,70)가 방 안쪽으로 잡혔다');
+    else pass('ㄱ자 방 윤곽 인식 (모서리 6개)');
+  }
+
+  // 1~2px 요철은 도면 표기(치수선·해칭)이므로 흡수해야 한다
+  {
+    const mask = build((box) => box(120, 47, 123, 49));   // 위 벽에 붙은 2px 돌기
+    const reg = P.floodRegion(mask, 150, 100);
+    const poly = reg && P.regionPolygon(mask, reg, 6);
+    if (!poly) fail('요철이 있는 방의 윤곽을 만들지 못함');
+    else if (poly.length !== 4) fail(`2px 돌기 때문에 모서리가 ${poly.length}개가 됨 — 도면 표기를 벽으로 봤다`);
+    else pass('작은 요철은 흡수 (모서리 4개)');
+  }
 }
 
 // ── [14] 도면 정리(벽만 남기기) ──
@@ -535,6 +594,94 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     if (solids.length < 3) fail(`실제 벽 구간이 ${solids.length}개 — 벽까지 개구부로 본다`);
     else pass(`벽 구간 ${solids.length}개는 벽으로 유지`);
   }
+}
+
+// ── [14-b] 개구부 판정 근거 — "메운 자리"로 가른다 ──
+// 예전에는 경계에서 바깥으로 7px 훑어 어두운 것이 없으면 개구부로 봤다. 경계선이 몇 px만
+// 밀려도 판정이 뒤집혀 **엉뚱한 자리에 주황 점선이 떴다.** 지금은 닫기가 실제로 메운
+// 자리인지를 보고, 근거가 없으면 벽으로 둔다(없는 개구부를 만들지 않는다).
+{
+  const st = P.state;
+  const keep = st.mmPerPx;
+  const W = 300, H = 200;
+  const raw = new Uint8Array(W * H);
+  const box = (x0, y0, x1, y1) => {
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) raw[y * W + x] = 1;
+  };
+  box(40, 40, 260, 46); box(40, 154, 260, 160);
+  box(40, 40, 46, 160);
+  box(254, 40, 260, 90); box(254, 130, 260, 160);       // 우 벽 90~130 = 문(40px)
+  const rawMask = { w: W, h: H, S: 1, dark: raw };
+  const base   = { w: W, h: H, S: 1, dark: P.cleanWalls(rawMask, 1, 0) };
+  const sealed = { w: W, h: H, S: 1, dark: P.cleanWalls(rawMask, 1, 25) };
+
+  st.mmPerPx = 20;   // 1px = 20mm → 개구부 최소 500mm = 25px, 문 40px는 살아남는다
+
+  // ① 경계선이 4px 안쪽으로 밀려 있어도 판정이 유지돼야 한다
+  {
+    const poly = [[51, 51], [51, 149], [249, 149], [249, 51]];
+    const edges = P.classifyEdges(poly, base, sealed);
+    const opens = edges.filter((e) => e.open);
+    if (opens.length !== 1) {
+      fail(`경계선이 4px 밀렸을 때 개구부가 ${opens.length}곳 (기대 1곳) — 판정이 위치에 흔들린다`);
+    } else {
+      const o = opens[0];
+      const onRight = Math.abs(o.x1 - 249) < 3 && Math.abs(o.x2 - 249) < 3;
+      const yMin = Math.min(o.y1, o.y2), yMax = Math.max(o.y1, o.y2);
+      if (!onRight) fail(`개구부가 우측 변이 아님 (x=${o.x1.toFixed(0)})`);
+      else if (yMin > 95 || yMax < 125) fail(`개구부 구간이 문(90~130)과 어긋남 (${yMin.toFixed(0)}~${yMax.toFixed(0)})`);
+      else pass(`경계선이 밀려도 문 자리를 정확히 짚음 (${yMin.toFixed(0)}~${yMax.toFixed(0)}px, 1곳)`);
+    }
+  }
+
+  // ② 한 벽이 여러 줄로 쪼개져 보고되지 않아야 한다 (모서리를 낀 벽은 별개로 센다)
+  {
+    const poly = [[47, 47], [47, 153], [253, 153], [253, 47]];
+    const edges = P.classifyEdges(poly, base, sealed);
+    const solids = edges.filter((e) => !e.open);
+    // 위·아래·좌 3개 + 문에 잘린 우측 벽 2개 = 5개.
+    // 같은 방향으로 이어지는 같은 종류가 두 줄로 남아 있으면 쪼개진 것이다.
+    let split = 0, gap = 0;
+    for (let i = 0; i < edges.length; i++) {
+      const a = edges[i], b = edges[(i + 1) % edges.length];
+      if (Math.hypot(b.x1 - a.x2, b.y1 - a.y2) > 0.6) gap++;
+      const cr = (a.x2 - a.x1) * (b.y2 - b.y1) - (a.y2 - a.y1) * (b.x2 - b.x1);
+      if (a.open === b.open && Math.abs(cr) < 1e-6) split++;
+    }
+    if (solids.length !== 5) fail(`벽 구간이 ${solids.length}개 (기대 5개)`);
+    else if (split) fail(`같은 벽이 ${split}군데에서 두 줄로 쪼개짐`);
+    else if (gap) fail(`구간 사이에 ${gap}군데 빈틈 — 방 경계가 닫히지 않는다`);
+    else pass(`벽 구간 ${solids.length}개 · 빈틈 없이 이어짐`);
+  }
+
+  // ③ 닫기가 실제 벽 옆에 남긴 얇은 테두리를 개구부로 오해하면 안 된다
+  //    (ㄱ자 도면에서 멀쩡한 벽 1,300mm가 통째로 개구부로 뜬 실제 사고)
+  {
+    const halo = sealed.dark.slice();
+    for (let y = 47; y <= 153; y++) halo[y * W + 253] = 1;   // 벽 안쪽 면에 1px 테두리
+    const poly = [[47, 47], [47, 153], [253, 153], [253, 47]];
+    const edges = P.classifyEdges(poly, base, { w: W, h: H, S: 1, dark: halo });
+    const wrong = edges.filter((e) => e.open && Math.abs(e.x1 - 253) < 2
+      && Math.min(e.y1, e.y2) > 130);                        // 문(90~130) 바깥의 우측 벽
+    if (wrong.length) fail('벽에 남은 1px 테두리를 개구부로 판정 — 멀쩡한 벽이 문이 된다');
+    else pass('벽 옆 테두리는 벽으로 유지 (테두리를 지나 실제 벽에 닿는지 끝까지 본다)');
+  }
+
+  // ③ 문이라기엔 너무 짧은 틈은 개구부로 보고하지 않는다
+  {
+    const raw2 = raw.slice();
+    for (let y = 40; y <= 46; y++) for (let x = 120; x <= 129; x++) raw2[y * W + x] = 0;  // 위 벽에 10px(=200mm) 틈
+    const m2 = { w: W, h: H, S: 1, dark: raw2 };
+    const b2 = { w: W, h: H, S: 1, dark: P.cleanWalls(m2, 1, 0) };
+    const s2 = { w: W, h: H, S: 1, dark: P.cleanWalls(m2, 1, 25) };
+    const poly = [[47, 47], [47, 153], [253, 153], [253, 47]];
+    const edges = P.classifyEdges(poly, b2, s2);
+    const top = edges.filter((e) => e.open && Math.abs(e.y1 - 47) < 3 && Math.abs(e.y2 - 47) < 3);
+    if (top.length) fail(`200mm짜리 틈을 개구부로 보고함 — 문·창이 아니다 (${top.length}곳)`);
+    else pass('문·창이라기엔 짧은 틈(200mm)은 벽으로 유지');
+  }
+
+  st.mmPerPx = keep;
 }
 
 // ── [15] 자동 배치가 도어 열림·개구부를 고려하는지 ──

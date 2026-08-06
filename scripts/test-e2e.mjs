@@ -244,6 +244,90 @@ try {
     void cvbox;
   }
 
+  // ── 4-c. 배치 시뮬레이터: 실제 도면 형태의 벽 자동 인식 ──
+  // 실제 분양 도면은 ①거실·주방이 ㄱ자로 트여 있고 ②방 안으로 기둥·붙박이장이 튀어나오며
+  // ③창과 문이 뚫려 있다. 예전 윤곽 추출은 줄마다 좌·우 끝점만 읽어 **파인 부분을 직선으로
+  // 가로질렀고**, 개구부 판정은 닫기가 벽에 남긴 1px 테두리에 속아 멀쩡한 벽을 문으로 봤다.
+  // 둘 다 상담 중에 "여기 들어갑니다"를 틀리게 만드는 사고라 브라우저에서 지킨다.
+  {
+    const fixture = path.join(os.tmpdir(), 'e2e-plan-L.svg');
+    fs.writeFileSync(fixture,
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100">' +
+      '<rect width="1600" height="1100" fill="#fff"/><g fill="#111">' +
+      '<rect x="200" y="150" width="1100" height="14"/>' +      // 위
+      '<rect x="200" y="150" width="14" height="700"/>' +       // 좌
+      '<rect x="200" y="836" width="700" height="14"/>' +       // 아래(왼쪽)
+      '<rect x="886" y="560" width="14" height="290"/>' +       // ㄱ자 세로
+      '<rect x="886" y="560" width="414" height="14"/>' +       // ㄱ자 가로
+      '<rect x="1286" y="150" width="14" height="424"/>' +      // 우
+      '<rect x="600" y="150" width="120" height="90"/>' +       // 방 안으로 튀어나온 기둥
+      '</g>' +
+      '<rect x="700" y="150" width="240" height="14" fill="#fff"/>' +   // 창 1,200mm
+      '<rect x="200" y="640" width="14" height="180" fill="#fff"/>' +   // 문 900mm
+      '<g fill="none" stroke="#111" stroke-width="2">' +                // 가구(가는 선)
+      '<rect x="320" y="300" width="220" height="120"/><circle cx="1050" cy="330" r="60"/></g></svg>');
+
+    await page.goto(BASE + '/place', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1200);
+    const f = page.frameLocator('iframe');
+    await f.locator('#file').setInputFiles(fixture);
+    await page.waitForTimeout(900);
+
+    const r = await page.evaluate(() => {
+      const w = document.querySelector('iframe').contentWindow;
+      const P = w.__place;
+      P.state.mmPerPx = 5; P.state.scaled = true;              // 1px = 5mm로 확정한 셈
+      P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
+      const d = P.detectRoomAt(450, 400);                       // 거실 한가운데
+      if (d.error) return { error: d.error };
+      const inPoly = (poly, x, y) => {
+        let hit = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const [xi, yi] = poly[i], [xj, yj] = poly[j];
+          if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit;
+        }
+        return hit;
+      };
+      const seg = (e) => ({
+        open: !!e.open, mm: Math.round(Math.hypot(e.x2 - e.x1, e.y2 - e.y1) * 5),
+        vert: Math.abs(e.x2 - e.x1) < 2, x: e.x1, y: Math.min(e.y1, e.y2),
+      });
+      return {
+        corners: d.poly.length,
+        pillar: inPoly(d.poly, 660, 200),      // 기둥 속
+        cut:    inPoly(d.poly, 1100, 700),     // ㄱ자로 잘려 나간 부분
+        seat:   inPoly(d.poly, 450, 400),      // 누른 자리
+        edges:  d.edges.map(seg),
+      };
+    });
+
+    if (r.error) fail(`ㄱ자 도면 자동 인식 실패: ${r.error}`);
+    else {
+      if (r.corners !== 10) fail(`ㄱ자+기둥 도면 모서리가 ${r.corners}개 (기대 10개) — 파인 부분을 가로질렀다`);
+      else if (r.pillar) fail('방 안으로 튀어나온 기둥이 방 안쪽으로 잡혔다 — 그 자리에 가전을 놓게 된다');
+      else if (r.cut) fail('ㄱ자로 잘려 나간 부분이 방 안쪽으로 잡혔다');
+      else if (!r.seat) fail('누른 자리가 인식된 방 밖에 있다');
+      else pass(`ㄱ자 도면 벽 인식 (모서리 10개 · 기둥/잘린 부분 제외)`);
+
+      const opens = r.edges.filter((e) => e.open);
+      // 창(1,100mm 노출)과 문(900mm) 딱 두 곳. 벽이 개구부로 뜨면 개수가 늘어난다.
+      if (opens.length !== 2) {
+        fail(`개구부가 ${opens.length}곳 (기대 2곳: 창·문) — ${opens.map((o) => o.mm + 'mm').join(', ')}`);
+      } else {
+        const win  = opens.find((o) => !o.vert), door = opens.find((o) => o.vert);
+        if (!win || !door) fail('개구부 2곳이 창(가로)·문(세로) 조합이 아님');
+        else if (Math.abs(win.mm - 1100) > 120) fail(`창 개구부가 ${win.mm}mm (기대 1,100 ±120)`);
+        else if (Math.abs(door.mm - 900) > 120) fail(`문 개구부가 ${door.mm}mm (기대 900 ±120)`);
+        else pass(`개구부 2곳 정확 (창 ${win.mm}mm · 문 ${door.mm}mm)`);
+      }
+      // ㄱ자 안쪽 세로벽(1,380mm)은 벽으로 남아야 한다 — 여기가 개구부로 뜨던 자리다
+      const inner = r.edges.find((e) => e.vert && Math.abs(e.x - 885) < 8 && e.mm > 1000);
+      if (!inner) fail('ㄱ자 안쪽 세로벽 구간을 찾지 못함');
+      else if (inner.open) fail('ㄱ자 안쪽 세로벽이 개구부로 판정됨 — 멀쩡한 벽이 문·창이 된다');
+      else pass(`ㄱ자 안쪽 세로벽 ${inner.mm}mm는 벽으로 유지`);
+    }
+  }
+
   // ── 5. 운영 종료된 라우트 ──
   {
     collecting = false;   // 404는 의도한 결과라 콘솔 오류로 세지 않는다
