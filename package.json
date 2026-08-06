@@ -16,8 +16,10 @@
     "test:consistency": "node scripts/test-consistency.mjs",
     "test:search": "node scripts/test-search.mjs",
     "build:index": "node scripts/build-search-index.mjs",
-    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search",
-    "test:e2e": "node scripts/test-e2e.mjs"
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search && npm run test:sizereps",
+    "test:e2e": "node scripts/test-e2e.mjs",
+    "build:sizereps": "node scripts/build-size-reps.mjs",
+    "test:sizereps": "node scripts/test-sizereps.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",
