@@ -135,6 +135,7 @@
       <canvas id="cv"></canvas>
       <div id="empty">
         <strong>도면을 올리고 축척을 맞추면 시작합니다</strong>
+        <span>방을 그린 뒤 <b>배치 추천</b>을 누르면, 고른 가전을 이격거리에 맞춰 자동으로 놓아 드립니다.</span>
         <span>도면이 없으면 <b>벽 그리기</b>로 방 크기를 직접 입력해도 됩니다.</span>
       </div>
       <div id="modal"><div class="sheet" id="sheet"></div></div>
@@ -777,22 +778,29 @@ async function openAuto(){
           const rows = state.reps.filter((r)=>r.cat===c);
           return `<label style="flex-direction:row;align-items:center;gap:8px">
             <input type="checkbox" data-cat="${esc(c)}" checked style="width:auto">
-            <span style="color:var(--ink);min-width:112px">${esc(c)}</span>
-            <select data-size="${esc(c)}" style="flex:1">
+            <span style="color:var(--ink);min-width:96px">${esc(c)}</span>
+            <select data-size="${esc(c)}" style="flex:1;min-width:0">
               ${rows.map((r,i)=>`<option value="${i}">${esc(r.size)}${r.specs.length?` — ${esc(r.specs[0])}`:''}</option>`).join('')}
-            </select></label>`;
+            </select>
+            <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" style="width:56px" title="수량">
+            <span style="flex:none">대</span></label>`;
         }).join('');
       };
       room.onchange = fill; fill();
       $('#c').onclick = closeSheet;
       $('#ok').onclick = ()=>{
-        const picks = [...document.querySelectorAll('#a-list input:checked')].map((cb)=>{
+        const picks = [];
+        for (const cb of document.querySelectorAll('#a-list input[type=checkbox]:checked')){
           const cat = cb.dataset.cat;
           const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
+          const qtyEl = document.querySelector(`input[data-qty="${CSS.escape(cat)}"]`);
           const r = state.reps.filter((x)=>x.cat===cat)[+sel.value||0];
           const o = r.options[0], p = o.parts[0];
-          return { cat, size:r.size, model:o.model, part:p };
-        });
+          const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
+          // 같은 제품을 여러 대 놓을 때는 각각을 별도 물체로 만든다.
+          // 2대째부터 이름에 번호를 붙여 목록에서 구분되게 한다.
+          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, part:p, seq:qty>1?n:0 });
+        }
         closeSheet();
         autoPlace(picks);
       };
@@ -804,7 +812,7 @@ function autoPlace(picks){
   const list = picks.map((q)=>({
     id:'i'+Math.random().toString(36).slice(2,8),
     cat:q.cat, size:q.size, model:q.model,
-    label:`${q.cat} ${q.size}`,
+    label:`${q.cat} ${q.size}${q.seq?` #${q.seq}`:''}`,
     w:q.part.w, h:q.part.h, d:q.part.d,
     clear:clearFor(q.cat, q.part.part), bx:0, by:0, a:0, warn:[],
   })).sort((a,b)=> b.w - a.w);

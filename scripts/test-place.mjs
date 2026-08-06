@@ -252,6 +252,15 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   else if (!P.ROOM_PLAN['세탁실'].includes('건조기')) fail('세탁실 추천 목록에 건조기가 없음');
   else pass('방 용도별 후보 카테고리 구성');
 
+  // 같은 제품 여러 대 — 서로 겹치지 않고 목록에서 구분되어야 한다
+  st.walls = room(6000, 3000); st.items = [];
+  const ac = pick('공기청정기');
+  P.autoPlace([{ ...ac, seq: 1 }, { ...ac, seq: 2 }, { ...ac, seq: 3 }]);
+  if (st.items.length !== 3) fail(`같은 제품 3대를 넣었는데 ${st.items.length}대만 배치됨`);
+  else if (st.items.some((i) => i.warn.length)) fail(`같은 제품 3대가 서로 겹침: ${st.items.map((i) => i.warn).flat()}`);
+  else if (new Set(st.items.map((i) => i.label)).size !== 3) fail(`3대의 이름이 겹침: ${st.items.map((i) => i.label)}`);
+  else pass(`같은 제품 3대 — 겹치지 않게 배치되고 이름이 구분됨 (${st.items.map((i) => i.label.split(' ').pop()).join(' ')})`);
+
   st.walls = []; st.items = [];
 }
 

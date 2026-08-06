@@ -80,7 +80,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/place',
         icon: '📐',
         title: '가전 배치 시뮬레이터',
-        desc: '도면 위에 가전을 놓고 이격거리·간섭까지 판정 — 카탈로그 실측 103개 사이즈',
+        desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 103개 사이즈)',
         color: '#0F766E',
         bg: '#F0FDFA',
         updated: '2026.08',
