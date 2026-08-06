@@ -15,8 +15,12 @@
     "test:admin": "node --experimental-strip-types scripts/test-admin.mjs",
     "test:consistency": "node scripts/test-consistency.mjs",
     "test:search": "node scripts/test-search.mjs",
+    "test:plans": "node scripts/test-plans.mjs",
+    "test:floorplan": "node scripts/test-floorplan.mjs",
     "build:index": "node scripts/build-search-index.mjs",
-    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search",
+    "build:plans": "node scripts/fixtures/plans-real/build.mjs",
+    "build:placement": "node scripts/build-placement.mjs",
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search && npm run test:plans && npm run test:floorplan",
     "test:e2e": "node scripts/test-e2e.mjs"
   },
   "dependencies": {

@@ -1,0 +1,731 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>도면 배치 시뮬레이터</title>
+<style>
+:root{
+  --blue:#1428A0; --ink:#0E1C30; --sub:#6B7683; --line:#E5E8EC; --bg:#F8F9FB;
+  --wall:#2B3543; --win:#2F7DD1; --door:#E08A2B; --open:#9AA4B0;
+  --r:14px; --shadow:0 1px 2px rgba(14,28,48,.05),0 6px 18px rgba(14,28,48,.06);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55}
+.wrap{max-width:980px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:18px;margin:0 0 2px}
+.lede{color:var(--sub);font-size:13px;margin:0 0 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:7px}
+.step{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
+  background:var(--blue);color:#fff;font-size:11px;font-weight:700;flex:none}
+.btn{appearance:none;border:1px solid var(--line);background:#fff;color:var(--ink);font-family:inherit;
+  font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;cursor:pointer}
+.btn:hover{background:#F3F5F8}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.drop{border:2px dashed var(--line);border-radius:var(--r);padding:28px 16px;text-align:center;color:var(--sub);cursor:pointer}
+.drop.on{border-color:var(--blue);background:#F5F7FF}
+#stage{position:relative;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+#cv{display:block;max-width:100%;cursor:crosshair}
+.hint{font-size:12px;color:var(--sub);margin-top:8px}
+.warn{background:#FFF6E8;border:1px solid #F2D9AE;color:#7A5410;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:10px}
+.err{background:#FDEEEE;border:1px solid #F3C9C9;color:#8A2B2B;border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--sub);font-weight:600;white-space:nowrap}
+select{font-family:inherit;font-size:12.5px;padding:5px 7px;border:1px solid var(--line);border-radius:7px;background:#fff}
+input[type=number]{font-family:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;width:120px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--sub);margin-top:9px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#EEF1F6;color:var(--sub)}
+.tag.ok{background:#E8F5EC;color:#1E7A3C}
+.tag.no{background:#FDEEEE;color:#8A2B2B}
+.muted{color:var(--sub)}
+.hide{display:none}
+</style>
+
+<div class="wrap">
+  <h1>도면 배치 시뮬레이터</h1>
+  <p class="lede">평면도를 올리면 벽·창문·문을 인식해 방을 잡고, 그 방에 들어가는 가전을 치수·이격거리 기준으로 추천합니다.
+    <b>상담 중 대략적인 확인용</b>이며, 실제 설치 가부는 현장 실측으로 확정해야 합니다.</p>
+
+  <div class="card">
+    <h2><span class="step">1</span> 도면 올리기</h2>
+    <div class="drop" id="drop">
+      평면도 이미지를 끌어다 놓거나 클릭해 선택하세요 <span class="muted">(PNG · JPG)</span>
+      <input type="file" id="file" accept="image/*" class="hide">
+    </div>
+    <div class="hint">분양 도면처럼 가구·치수선·글자가 많은 도면은 인식률이 떨어질 수 있습니다. 인식 결과는 아래에서 직접 보정할 수 있습니다.</div>
+  </div>
+
+  <div class="card hide" id="calCard">
+    <h2><span class="step">2</span> 축척 맞추기</h2>
+    <div class="row">
+      <button class="btn" id="calBtn">기준선 두 점 찍기</button>
+      <span class="muted">→</span>
+      <label>실제 길이 <input type="number" id="calMm" placeholder="mm" min="1" step="10"></label>
+      <button class="btn" id="calApply">적용</button>
+      <span id="calState" class="muted">미설정</span>
+    </div>
+    <div class="hint">현관문 폭(약 900mm)이나 도면에 적힌 치수선처럼 <b>길이를 아는 구간</b>을 찍으세요. 축척이 없으면 치수 판정을 할 수 없습니다.</div>
+  </div>
+
+  <div class="card hide" id="planCard">
+    <h2><span class="step">3</span> 인식 결과 · 방 이름</h2>
+    <div id="stage"><canvas id="cv"></canvas></div>
+    <div class="legend">
+      <span><i style="background:var(--wall)"></i>벽</span>
+      <span><i style="background:var(--win)"></i>창문(가상벽)</span>
+      <span><i style="background:var(--door)"></i>문(가상벽)</span>
+      <span><i style="background:var(--open)"></i>개구부(가상벽)</span>
+    </div>
+    <div id="roomList"></div>
+  </div>
+
+  <div class="card hide" id="recCard">
+    <h2><span class="step">4</span> 추천 배치 <span class="muted" style="font-weight:400;font-size:12px">— 공간 최대활용 기준</span></h2>
+    <div id="recOut"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   FP — 도면 인식 엔진 (순수 함수)
+
+   캔버스·DOM 을 일절 쓰지 않는다. jsdom 에는 캔버스가 없어서, 이렇게 분리해야
+   scripts/test-floorplan.mjs 가 합성 도면으로 회귀 테스트를 돌릴 수 있다.
+   모든 마스크는 Uint8Array(w*h), 값 1 = 해당 픽셀이 그 성질을 가짐.
+   ══════════════════════════════════════════════════════════════════════════ */
+const FP = {};
+
+/** RGBA 이미지 → 잉크 마스크(1=선). 도면은 흰 바탕에 검은 선이라 밝기 임계로 충분하다. */
+FP.binarize = function (img, threshold) {
+  const t = threshold == null ? 170 : threshold;
+  const { w, h, data } = img;
+  const ink = new Uint8Array(w * h);
+  for (let i = 0, p = 0; i < w * h; i++, p += 4) {
+    // 알파가 낮은 픽셀(투명 배경)은 선이 아니다
+    if (data[p + 3] < 32) continue;
+    const gray = 0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2];
+    if (gray < t) ink[i] = 1;
+  }
+  return ink;
+};
+
+/* 정사각 커널은 분리 가능하므로 가로 1패스 + 세로 1패스로 쪼갠다.
+   (2r+1)² 이 2(2r+1) 이 되어 r=6·720×720 기준 8,700만 연산이 1,300만으로 준다. */
+function pass1D(src, w, h, r, horizontal, isDilate, borderValue) {
+  const out = new Uint8Array(w * h);
+  const n = horizontal ? w : h;
+  const outer = horizontal ? h : w;
+  for (let o = 0; o < outer; o++) {
+    for (let i = 0; i < n; i++) {
+      let acc = isDilate ? 0 : 1;
+      for (let k = -r; k <= r; k++) {
+        const j = i + k;
+        let v;
+        if (j < 0 || j >= n) v = borderValue;
+        else v = src[horizontal ? o * w + j : j * w + o];
+        if (isDilate) { if (v) { acc = 1; break; } }
+        else if (!v) { acc = 0; break; }
+      }
+      out[horizontal ? o * w + i : i * w + o] = acc;
+    }
+  }
+  return out;
+}
+
+/**
+ * 반경 r 의 정사각 커널 침식.
+ * @param borderValue 이미지 밖을 무엇으로 볼지. 0=배경(열림용), 1=전경(닫힘용).
+ *   닫힘에서 0 을 쓰면 테두리 벽이 깎여 나가고, 그러면 외벽이 뚫려 flood fill 이
+ *   도면 밖으로 새어 방이 하나도 잡히지 않는다.
+ */
+FP.erode = function (m, w, h, r, borderValue) {
+  const bv = borderValue == null ? 0 : borderValue;
+  return pass1D(pass1D(m, w, h, r, true, false, bv), w, h, r, false, false, bv);
+};
+
+/** 반경 r 의 정사각 커널 팽창. 팽창은 이미지 밖을 배경으로 봐도 무해하다. */
+FP.dilate = function (m, w, h, r) {
+  return pass1D(pass1D(m, w, h, r, true, true, 0), w, h, r, false, true, 0);
+};
+
+/** 열림 — 커널보다 얇은 것(글자·치수선·해칭)을 지운다. 바깥은 배경. */
+FP.open = (m, w, h, r) => FP.dilate(FP.erode(m, w, h, r, 0), w, h, r);
+/** 닫힘 — 커널보다 좁은 틈(창문·문 자리)을 메운다. 바깥은 전경. */
+FP.close = (m, w, h, r) => FP.erode(FP.dilate(m, w, h, r), w, h, r, 1);
+
+/**
+ * 잉크에서 벽만 남긴다. 벽은 도면에서 가장 두꺼운 선이므로, 열림(open) 연산으로
+ * 커널보다 얇은 것(글자·치수선·해칭·가구선)을 전부 지운다.
+ * @param thin 지울 선의 반경(px). 벽 두께의 절반보다 작아야 벽이 살아남는다.
+ */
+FP.detectWalls = function (ink, w, h, opts) {
+  const thin = (opts && opts.thin) || 1;
+  return FP.open(ink, w, h, thin);
+};
+
+/** 4-이웃 연결성분. pred(i)가 참인 픽셀들을 묶는다. */
+FP.components = function (w, h, pred) {
+  const seen = new Uint8Array(w * h);
+  const out = [];
+  const stack = new Int32Array(w * h);
+  for (let s = 0; s < w * h; s++) {
+    if (seen[s] || !pred(s)) continue;
+    let sp = 0;
+    stack[sp++] = s;
+    seen[s] = 1;
+    const cells = [];
+    let minX = w, maxX = -1, minY = h, maxY = -1;
+    let touchesBorder = false;
+    while (sp > 0) {
+      const i = stack[--sp];
+      cells.push(i);
+      const x = i % w, y = (i / w) | 0;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) touchesBorder = true;
+      if (x < minX) minX = x; if (x > maxX) maxX = x;
+      if (y < minY) minY = y; if (y > maxY) maxY = y;
+      if (x > 0 && !seen[i - 1] && pred(i - 1)) { seen[i - 1] = 1; stack[sp++] = i - 1; }
+      if (x < w - 1 && !seen[i + 1] && pred(i + 1)) { seen[i + 1] = 1; stack[sp++] = i + 1; }
+      if (y > 0 && !seen[i - w] && pred(i - w)) { seen[i - w] = 1; stack[sp++] = i - w; }
+      if (y < h - 1 && !seen[i + w] && pred(i + w)) { seen[i + w] = 1; stack[sp++] = i + w; }
+    }
+    out.push({ cells, bbox: { minX, maxX, minY, maxY }, touchesBorder, area: cells.length });
+  }
+  return out;
+};
+
+/**
+ * 창문 검출 — 벽과 나란히 벽 사이를 잇는 얇은 선.
+ *
+ * 실제 도면에서 창문은 "빈 틈"이 아니라 개구부를 가로지르는 이중선·삼중선으로 그려진다.
+ * 그 선은 얇아서 detectWalls 의 열림 연산에 지워지므로, 잉크에서 따로 되살려야 한다.
+ * 닫힘 연산으로 메우려 들면 안 된다 — 닫힘 반경 r 은 폭 2r 까지만 메우는데, 발코니 창
+ * 2,400mm 를 메우려면 방보다 큰 커널이 필요해져서 방이 통째로 사라진다.
+ *
+ * 가구선(예: 벽에서 벽까지 이어진 싱크대 상판)을 창문으로 오인하지 않기 위해,
+ * 양 끝의 벽이 이 선과 **같은 방향으로** runOn 픽셀 이상 이어지는지 확인한다.
+ * 창문은 벽선의 연장선상에 있지만, 가구선은 직교하는 벽에 부딪히므로 벽 두께만큼만 이어진다.
+ */
+FP.bridgeLines = function (ink, wall, w, h, opts) {
+  const maxLen = (opts && opts.maxBridge) || Math.round(w / 2);
+  const runOn = (opts && opts.runOn) || 5;
+  const out = new Uint8Array(w * h);
+
+  const scan = (horizontal) => {
+    const n = horizontal ? w : h;
+    const outer = horizontal ? h : w;
+    const at = (o, i) => (horizontal ? o * w + i : i * w + o);
+    for (let o = 0; o < outer; o++) {
+      let i = 0;
+      while (i < n) {
+        if (wall[at(o, i)] || !ink[at(o, i)]) { i++; continue; }
+        const s = i;
+        while (i < n && ink[at(o, i)] && !wall[at(o, i)]) i++;
+        const e = i - 1;
+        if (e - s + 1 > maxLen || s === 0 || e === n - 1) continue;
+        // 양 끝이 벽이고, 그 벽이 이 선과 같은 방향으로 runOn 이상 이어져야 한다
+        let leftOk = true, rightOk = true;
+        for (let k = 1; k <= runOn; k++) {
+          if (s - k < 0 || !wall[at(o, s - k)]) { leftOk = false; break; }
+        }
+        for (let k = 1; k <= runOn; k++) {
+          if (e + k >= n || !wall[at(o, e + k)]) { rightOk = false; break; }
+        }
+        if (leftOk && rightOk) for (let j = s; j <= e; j++) out[at(o, j)] = 1;
+      }
+    }
+  };
+  scan(true);
+  scan(false);
+  return out;
+};
+
+/**
+ * 개구부(창문·문) 검출 — 요구사항 1. 둘은 도면에서 그려지는 방식이 달라 따로 잡는다.
+ *
+ *   창문 : 개구부를 가로지르는 얇은 선이 그려져 있다 → bridgeLines 로 되살린다
+ *   문   : 벽이 실제로 끊겨 있고 열림 호만 성기게 있다 → 모폴로지 닫힘으로 메운다
+ *
+ * `닫힘(벽) AND NOT 벽` 이 곧 메워진 틈이라, 가상벽과 음영으로 표시할 영역이
+ * 같은 객체로 떨어진다.
+ *
+ * @param gapR 메울 최대 틈의 반경(px). 문 폭의 절반 이상이어야 한다(폭 2r 까지 메워짐).
+ */
+FP.findOpenings = function (wall, ink, w, h, opts) {
+  const gapR = (opts && opts.gapR) || 6;
+  const minArea = (opts && opts.minOpeningArea) || 6;
+  const openings = [];
+
+  const mk = (c, type, extra) => {
+    const b = c.bbox;
+    const bw = b.maxX - b.minX + 1, bh = b.maxY - b.minY + 1;
+    return Object.assign({
+      id: openings.length, type, area: c.area, cells: c.cells, bbox: b,
+      orient: bw >= bh ? 'h' : 'v', lenPx: Math.max(bw, bh),
+    }, extra || {});
+  };
+
+  // ① 창문 — 벽을 잇는 얇은 선
+  const bridges = FP.bridgeLines(ink, wall, w, h, opts);
+  for (const c of FP.components(w, h, (i) => bridges[i] === 1)) {
+    if (c.area >= 2) openings.push(mk(c, 'window'));
+  }
+
+  // ② 문·개구부 — 창문까지 반영한 벽에서 여전히 남아 있는 틈
+  const base = Uint8Array.from(wall);
+  for (const o of openings) for (const i of o.cells) base[i] = 1;
+  const closed = FP.close(base, w, h, gapR);
+  for (const c of FP.components(w, h, (i) => closed[i] === 1 && base[i] === 0)) {
+    if (c.area < minArea) continue;
+    // 열림 호가 남아 있으면 문, 아무것도 없으면 그냥 뚫린 개구부
+    let inkCount = 0;
+    for (const i of c.cells) if (ink[i]) inkCount++;
+    const ratio = inkCount / c.area;
+    openings.push(mk(c, ratio >= 0.02 ? 'door' : 'opening', { inkRatio: ratio }));
+  }
+
+  return { closed, openings };
+};
+
+/** 개구부를 가상벽으로 합친 최종 폐합 마스크. 방 검출은 이걸 경계로 쓴다. */
+FP.sealWalls = function (wall, openings, w, h) {
+  const sealed = Uint8Array.from(wall);
+  for (const o of openings) for (const i of o.cells) sealed[i] = 1;
+  return sealed;
+};
+
+/**
+ * 방 검출 — 폐합된 벽을 경계로 flood fill.
+ * 이미지 테두리에 닿는 성분은 실외이므로 버리고, 너무 작은 것(벽장·노이즈)도 버린다.
+ */
+FP.detectRooms = function (sealed, w, h, opts) {
+  const minAreaPx = (opts && opts.minAreaPx) || 40;
+  return FP.components(w, h, (i) => sealed[i] === 0)
+    .filter((c) => !c.touchesBorder && c.area >= minAreaPx)
+    .map((c, idx) => {
+      const mask = new Uint8Array(w * h);
+      for (const i of c.cells) mask[i] = 1;
+      return { id: idx, mask, cells: c.cells, area: c.area, bbox: c.bbox };
+    });
+};
+
+/**
+ * 라벨 위치 — 최대 내접원의 중심.
+ *
+ * 무게중심을 쓰면 ㄱ자·ㄷ자 방에서 중심이 방 바깥으로 나가 라벨이 벽 밖에 뜬다.
+ * 아파트 평면도에 흔한 형태라 반드시 걸린다. 경계에서 가장 먼 점을 쓰면 항상 방 안이다.
+ * 다중 소스 BFS 로 거리변환을 구한다(4-이웃 거리).
+ */
+FP.labelPoint = function (room, w, h) {
+  const dist = new Int32Array(w * h).fill(-1);
+  const q = new Int32Array(room.cells.length);
+  let qs = 0, qe = 0;
+  for (const i of room.cells) {
+    const x = i % w, y = (i / w) | 0;
+    let edge = false;
+    if (x === 0 || y === 0 || x === w - 1 || y === h - 1) edge = true;
+    else if (!room.mask[i - 1] || !room.mask[i + 1] || !room.mask[i - w] || !room.mask[i + w]) edge = true;
+    if (edge) { dist[i] = 0; q[qe++] = i; }
+  }
+  let best = room.cells[0], bestD = 0;
+  while (qs < qe) {
+    const i = q[qs++];
+    const d = dist[i];
+    if (d > bestD) { bestD = d; best = i; }
+    const x = i % w, y = (i / w) | 0;
+    const nb = [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1];
+    for (const j of nb) {
+      if (j < 0 || !room.mask[j] || dist[j] !== -1) continue;
+      dist[j] = d + 1;
+      q[qe++] = j;
+    }
+  }
+  return { x: best % w, y: (best / w) | 0, r: bestD };
+};
+
+/**
+ * 방 경계를 직선 구간(벽면)으로 쪼갠다. 각 구간에는 맞닿은 것이 실벽인지
+ * 창문·문인지 표시한다 — 창문 앞에는 가전을 붙일 수 없기 때문이다.
+ */
+FP.wallRuns = function (room, openings, w, h) {
+  const openType = new Uint8Array(w * h); // 0 없음, 1 window, 2 door, 3 opening
+  for (const o of openings) {
+    const code = o.type === 'window' ? 1 : o.type === 'door' ? 2 : 3;
+    for (const i of o.cells) openType[i] = code;
+  }
+  const NAMES = [null, 'window', 'door', 'opening'];
+  const runs = [];
+  const b = room.bbox;
+
+  // 위·아래(수평 벽면)와 좌·우(수직 벽면)를 각각 훑는다
+  const scan = (orient, sideDelta, sideName) => {
+    const along = orient === 'h' ? 'x' : 'y';
+    const outer = orient === 'h' ? [b.minY, b.maxY] : [b.minX, b.maxX];
+    const inner = orient === 'h' ? [b.minX, b.maxX] : [b.minY, b.maxY];
+    for (let o1 = outer[0]; o1 <= outer[1]; o1++) {
+      let start = -1, curType = -2;
+      for (let i1 = inner[0]; i1 <= inner[1] + 1; i1++) {
+        const x = orient === 'h' ? i1 : o1;
+        const y = orient === 'h' ? o1 : i1;
+        let t = -1;
+        if (i1 <= inner[1] && x >= 0 && x < w && y >= 0 && y < h && room.mask[y * w + x]) {
+          const nx = orient === 'h' ? x : x + sideDelta;
+          const ny = orient === 'h' ? y + sideDelta : y;
+          if (nx >= 0 && nx < w && ny >= 0 && ny < h && !room.mask[ny * w + nx]) {
+            t = openType[ny * w + nx];      // 경계에 맞닿음 → 그 종류
+          }
+        }
+        if (t !== curType) {
+          if (curType >= 0 && start >= 0) {
+            runs.push({
+              orient, side: sideName, type: NAMES[curType] || 'wall',
+              a: start, b: i1 - 1, at: o1, lenPx: i1 - start,
+              along,
+            });
+          }
+          start = i1; curType = t;
+        }
+      }
+    }
+  };
+  scan('h', -1, 'top');
+  scan('h', +1, 'bottom');
+  scan('v', -1, 'left');
+  scan('v', +1, 'right');
+
+  // 같은 벽면의 짧은 조각이 잔뜩 나오므로, 실제로 쓸 만한 길이만 남긴다
+  return runs.filter((r) => r.lenPx >= 3);
+};
+
+/**
+ * 벽면 구간 한가운데에서 방 안쪽으로 비어 있는 깊이(px)를 잰다.
+ * 냉장고 깊이·도어 오픈 시 필요한 정면 통로를 판정하는 데 쓴다.
+ */
+FP.freeDepth = function (room, run, w, h) {
+  const mid = ((run.a + run.b) / 2) | 0;
+  let x = run.orient === 'h' ? mid : run.at;
+  let y = run.orient === 'h' ? run.at : mid;
+  const dx = run.orient === 'h' ? 0 : (run.side === 'left' ? 1 : -1);
+  const dy = run.orient === 'h' ? (run.side === 'top' ? 1 : -1) : 0;
+  let d = 0;
+  while (x >= 0 && x < w && y >= 0 && y < h && room.mask[y * w + x]) { d++; x += dx; y += dy; }
+  return d;
+};
+
+/**
+ * 한 제품이 한 벽면 구간에 들어가는지 판정한다.
+ * 실패 사유를 문자열로 돌려주는 것이 중요하다 — 상담에서 "왜 안 되는지"를 바로 말해야 한다.
+ */
+FP.fitProduct = function (product, rule, run, room, mmPerPx, w, h) {
+  const [W, , D] = product.dims;
+  const side = rule.side || 0, rear = rule.rear || 0;
+  const runMm = run.lenPx * mmPerPx;
+  const needW = W + side * 2;
+  if (runMm < needW) {
+    return { ok: false, reason: `벽면 ${Math.round(runMm)}mm < 필요 ${Math.round(needW)}mm (제품 ${W} + 좌우이격 ${side}×2)` };
+  }
+  const depthMm = FP.freeDepth(room, run, w, h) * mmPerPx;
+  const needD = D + rear;
+  if (depthMm < needD) {
+    return { ok: false, reason: `방 깊이 ${Math.round(depthMm)}mm < 필요 ${Math.round(needD)}mm (제품 ${D} + 후면이격 ${rear})` };
+  }
+  // 도어를 연 상태의 전체 폭 — 본체만 보고 배치하면 문이 안 열린다
+  if (rule.doorSwing && depthMm < rule.doorSwing) {
+    return { ok: false, reason: `정면 통로 ${Math.round(depthMm)}mm < 도어 오픈 시 필요 ${rule.doorSwing}mm` };
+  }
+  if (rule.front && depthMm < rule.front) {
+    return { ok: false, reason: `전면 여유 ${Math.round(depthMm)}mm < 필요 ${rule.front}mm` };
+  }
+  return { ok: true, runMm, depthMm };
+};
+
+/**
+ * 방 하나에 대한 추천 배치 — 공간 최대활용 기준.
+ *
+ * 들어가는 것 중 가장 큰 용량을 고른다. 가격은 정렬에 쓰지 않는다(가격 미상 제품이
+ * 240종 중 상당수라 가격을 기준으로 삼으면 후보가 절반으로 줄기 때문). 다만 CLAUDE.md
+ * 규칙대로 가격이 없는 제품은 화면에서 "가격 문의"로 표시한다.
+ */
+FP.recommend = function (room, runs, db, ruleNames, mmPerPx, w, h) {
+  const byRule = new Map();
+  for (const r of db.clearance) byRule.set(r.category, r);
+
+  // 창문·문에 맞닿은 구간은 가전을 붙일 수 없다
+  const usable = runs.filter((r) => r.type === 'wall');
+  const out = [];
+
+  for (const name of ruleNames) {
+    const rule = byRule.get(name);
+    if (!rule) continue;
+    const cands = db.products.filter((p) => p.rule === name);
+    if (!cands.length) continue;
+
+    // 정렬 기준을 후보 전체를 보고 한 번에 정한다. 일부만 용량이 있거나 단위가 섞여 있으면
+    // (L 과 kg 을 나란히 비교하는 꼴) 용량 비교가 무의미하므로 부피로 대체한다.
+    const units = new Set(cands.filter((p) => p.capacity).map((p) => p.capacity.unit));
+    const byCapacity = units.size === 1 && cands.every((p) => p.capacity);
+    const scoreOf = (p) => (byCapacity ? p.capacity.value : p.dims[0] * p.dims[1] * p.dims[2]);
+
+    let best = null;
+    let firstReason = null;
+    for (const p of cands) {
+      for (const run of usable) {
+        const fit = FP.fitProduct(p, rule, run, room, mmPerPx, w, h);
+        if (!fit.ok) { if (!firstReason) firstReason = fit.reason; continue; }
+        const score = scoreOf(p);
+        if (!best || score > best.score) best = { product: p, run, fit, score, byCapacity };
+      }
+    }
+    if (best) out.push({ rule: name, ok: true, ...best });
+    else out.push({ rule: name, ok: false, reason: firstReason || '치수 정보가 있는 후보 없음', tried: cands.length });
+  }
+  return out;
+};
+
+/* ── 방 종류 ↔ 배치 가능 가전 ─────────────────────────────────────────────
+   드롭다운 항목이 곧 배치 규칙의 키다. 자유 입력이면 "주방"과 "부엌"이 섞여
+   규칙 매칭이 조용히 깨지므로 고정 목록으로 둔다. */
+const ROOM_TYPES = [
+  { key: 'unknown', name: '(미지정)', rules: [] },
+  { key: 'kitchen', name: '주방', rules: ['냉장고 4도어 프리스탠딩', '냉장고 4도어 키친핏', '냉장고 4도어 키친핏 Max', '냉장고 양문형', '김치냉장고', '식기세척기', '인덕션', '전자레인지', '정수기'] },
+  { key: 'living', name: '거실', rules: ['TV', '에어컨', '공기청정기', '김치냉장고'] },
+  { key: 'bedroom', name: '침실', rules: ['TV', '에어컨', '공기청정기', '에어드레서'] },
+  { key: 'utility', name: '다용도실·베란다', rules: ['세탁기·콤보', '건조기', '정수기', '냉장고 1도어'] },
+  { key: 'dress', name: '드레스룸', rules: ['에어드레서'] },
+  { key: 'bath', name: '욕실', rules: [] },
+  { key: 'entry', name: '현관', rules: [] },
+  { key: 'etc', name: '기타', rules: [] },
+];
+
+/** 자동 추정 — 면적이 가장 큰 방을 거실로, 개구부가 없고 가장 작은 방을 욕실로 본다.
+ *  틀려도 클릭 한 번으로 고칠 수 있으므로, 매장에서 방 8~10개를 일일이 지정하는
+ *  수고를 더는 쪽이 이득이다. */
+FP.guessRoomTypes = function (rooms) {
+  if (!rooms.length) return [];
+  const sorted = [...rooms].sort((a, b) => b.area - a.area);
+  const guess = new Map();
+  sorted.forEach((r, i) => guess.set(r.id, i === 0 ? 'living' : i === 1 ? 'kitchen' : 'bedroom'));
+  const smallest = sorted[sorted.length - 1];
+  if (sorted.length > 2) guess.set(smallest.id, 'bath');
+  return rooms.map((r) => guess.get(r.id) || 'unknown');
+};
+
+if (typeof window !== 'undefined') {
+  window.FP = FP;
+  window.ROOM_TYPES = ROOM_TYPES;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   UI — 브라우저에서만 동작. jsdom 로드 시에는 아무것도 실행되지 않게 이벤트
+   핸들러 안에서만 캔버스를 만진다(jsdom 에는 canvas 구현이 없다).
+   ══════════════════════════════════════════════════════════════════════════ */
+(function () {
+  if (typeof document === 'undefined') return;
+  const $ = (id) => document.getElementById(id);
+  const S = { img: null, w: 0, h: 0, ink: null, wall: null, openings: [], sealed: null,
+              rooms: [], types: [], mmPerPx: 0, db: null, calPts: [], calMode: false };
+
+  let dbPromise = null;
+  const loadDb = () => (dbPromise = dbPromise || fetch('placement-db.json').then((r) => r.json()));
+
+  const drop = $('drop'), file = $('file');
+  if (!drop) return;
+  drop.addEventListener('click', () => file.click());
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('on'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('on'));
+  drop.addEventListener('drop', (e) => {
+    e.preventDefault(); drop.classList.remove('on');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+  file.addEventListener('change', () => file.files[0] && handleFile(file.files[0]));
+
+  function handleFile(f) {
+    const img = new Image();
+    img.onload = () => { analyze(img); };
+    img.onerror = () => alert('이미지를 열 수 없습니다.');
+    img.src = URL.createObjectURL(f);
+  }
+
+  function analyze(img) {
+    // 인식은 축소본에서 한다(속도). 축척은 축소 비율을 함께 반영한다.
+    const MAX = 720;
+    const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(img, 0, 0, w, h);
+    const id = ctx.getImageData(0, 0, w, h);
+
+    S.img = img; S.w = w; S.h = h; S.viewScale = scale;
+    S.ink = FP.binarize({ w, h, data: id.data });
+    S.wall = FP.detectWalls(S.ink, w, h, { thin: 1 });
+    detectRooms();
+
+    $('calCard').classList.remove('hide');
+    $('planCard').classList.remove('hide');
+    loadDb().then((db) => { S.db = db; draw(); renderRooms(); });
+  }
+
+  /**
+   * 개구부·방 검출. 축척이 정해지면 다시 부른다.
+   *
+   * 문을 메울 닫힘 반경은 "문 폭이 몇 픽셀인가"에 달렸고 그건 축척을 알아야 정해지는데,
+   * 축척은 사용자가 2단계에서 지정한다(순환 의존). 그래서 축척 전에는 이미지 크기 기준의
+   * 어림값으로 한 번 돌려 화면을 보여주고, 축척이 확정되면 실측 기준으로 다시 돌린다.
+   */
+  function detectRooms() {
+    const gapR = S.mmPerPx
+      // 문 최대폭 1,200mm 를 메울 반경(폭 2r 까지 메워진다). 방이 통째로 메워지지 않도록 상한을 둔다.
+      ? Math.min(40, Math.max(3, Math.round(1200 / S.mmPerPx / 2)))
+      : Math.max(4, Math.round(S.w / 90));
+    S.gapR = gapR;
+    const found = FP.findOpenings(S.wall, S.ink, S.w, S.h, { gapR });
+    S.openings = found.openings;
+    S.sealed = FP.sealWalls(S.wall, S.openings, S.w, S.h);
+    S.rooms = FP.detectRooms(S.sealed, S.w, S.h, { minAreaPx: Math.round(S.w * S.h / 400) });
+    S.types = FP.guessRoomTypes(S.rooms);
+  }
+
+  function draw() {
+    const cv = $('cv'), ctx = cv.getContext && cv.getContext('2d');
+    if (!ctx) return;
+    cv.width = S.w; cv.height = S.h;
+    ctx.clearRect(0, 0, S.w, S.h);
+    ctx.globalAlpha = 0.25;
+    ctx.drawImage(S.img, 0, 0, S.w, S.h);
+    ctx.globalAlpha = 1;
+
+    const px = ctx.createImageData(S.w, S.h);
+    const put = (i, r, g, b, a) => { const p = i * 4; px.data[p] = r; px.data[p + 1] = g; px.data[p + 2] = b; px.data[p + 3] = a; };
+    S.rooms.forEach((room, idx) => {
+      const hue = (idx * 47) % 360;
+      const c = hslToRgb(hue / 360, 0.55, 0.65);
+      for (const i of room.cells) put(i, c[0], c[1], c[2], 70);
+    });
+    for (let i = 0; i < S.w * S.h; i++) if (S.wall[i]) put(i, 43, 53, 67, 235);
+    for (const o of S.openings) {
+      const c = o.type === 'window' ? [47, 125, 209] : o.type === 'door' ? [224, 138, 43] : [154, 164, 176];
+      for (const i of o.cells) put(i, c[0], c[1], c[2], 210);
+    }
+    ctx.putImageData(px, 0, 0);
+
+    ctx.font = '600 11px sans-serif';
+    ctx.textAlign = 'center';
+    S.rooms.forEach((room, idx) => {
+      const lp = FP.labelPoint(room, S.w, S.h);
+      const t = ROOM_TYPES.find((r) => r.key === S.types[idx]);
+      const label = (t && t.key !== 'unknown' ? t.name : '방 ' + (idx + 1)) + areaText(room);
+      ctx.fillStyle = 'rgba(255,255,255,.85)';
+      const tw = ctx.measureText(label).width + 8;
+      ctx.fillRect(lp.x - tw / 2, lp.y - 9, tw, 15);
+      ctx.fillStyle = '#0E1C30';
+      ctx.fillText(label, lp.x, lp.y + 2);
+    });
+
+    if (S.calPts.length) {
+      ctx.strokeStyle = '#E0245E'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(S.calPts[0].x, S.calPts[0].y);
+      const p2 = S.calPts[1] || S.calPts[0];
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+  }
+
+  function areaText(room) {
+    if (!S.mmPerPx) return '';
+    const m2 = room.area * (S.mmPerPx / 1000) ** 2;
+    return `  ${m2.toFixed(1)}㎡`;
+  }
+
+  function hslToRgb(h, s, l) {
+    const f = (n) => {
+      const k = (n + h * 12) % 12;
+      const a = s * Math.min(l, 1 - l);
+      return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))));
+    };
+    return [f(0), f(8), f(4)];
+  }
+
+  /* ── 축척 ── */
+  $('calBtn').addEventListener('click', () => { S.calMode = true; S.calPts = []; $('calState').textContent = '캔버스에서 두 점을 클릭하세요'; });
+  $('cv').addEventListener('click', (e) => {
+    if (!S.calMode) return;
+    const r = e.target.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (S.w / r.width);
+    const y = (e.clientY - r.top) * (S.h / r.height);
+    S.calPts.push({ x, y });
+    if (S.calPts.length === 2) { S.calMode = false; $('calState').textContent = '두 점 선택됨 — 실제 길이를 입력하고 적용하세요'; }
+    draw();
+  });
+  $('calApply').addEventListener('click', () => {
+    const mm = parseFloat($('calMm').value);
+    if (S.calPts.length < 2 || !(mm > 0)) { $('calState').textContent = '두 점과 실제 길이가 모두 필요합니다'; return; }
+    const dx = S.calPts[0].x - S.calPts[1].x, dy = S.calPts[0].y - S.calPts[1].y;
+    const distPx = Math.hypot(dx, dy);
+    if (distPx < 3) { $('calState').textContent = '두 점이 너무 가깝습니다'; return; }
+    S.mmPerPx = mm / distPx;
+    // 축척이 정해졌으니 문 폭 기준으로 개구부·방을 다시 잡는다
+    detectRooms();
+    $('calState').textContent = `축척 확정 — 1px ≈ ${S.mmPerPx.toFixed(1)}mm (문 메움 반경 ${S.gapR}px)`;
+    draw(); renderRooms(); recommend();
+  });
+
+  /* ── 방 목록 · 이름 드롭다운 ── */
+  function renderRooms() {
+    const el = $('roomList');
+    if (!S.rooms.length) { el.innerHTML = '<div class="err">방을 찾지 못했습니다. 도면이 너무 흐리거나 벽이 얇을 수 있습니다.</div>'; return; }
+    const opts = (sel) => ROOM_TYPES.map((t) => `<option value="${t.key}"${t.key === sel ? ' selected' : ''}>${t.name}</option>`).join('');
+    const rows = S.rooms.map((room, i) => `<tr>
+        <td>방 ${i + 1}</td>
+        <td>${S.mmPerPx ? (room.area * (S.mmPerPx / 1000) ** 2).toFixed(1) + '㎡' : '<span class="muted">축척 필요</span>'}</td>
+        <td><select data-room="${i}">${opts(S.types[i])}</select></td>
+      </tr>`).join('');
+    el.innerHTML = `<table style="margin-top:12px"><tr><th>방</th><th>면적</th><th>방 이름</th></tr>${rows}</table>
+      ${S.mmPerPx ? '' : '<div class="warn">축척이 없어 면적·치수 판정을 할 수 없습니다. 2단계에서 기준선을 먼저 지정하세요.</div>'}`;
+    el.querySelectorAll('select').forEach((sel) => sel.addEventListener('change', () => {
+      S.types[+sel.dataset.room] = sel.value;
+      draw(); recommend();
+    }));
+  }
+
+  /* ── 추천 배치 ── */
+  function recommend() {
+    if (!S.mmPerPx || !S.db) return;
+    $('recCard').classList.remove('hide');
+    const parts = [];
+    S.rooms.forEach((room, i) => {
+      const t = ROOM_TYPES.find((r) => r.key === S.types[i]);
+      if (!t || !t.rules.length) return;
+      const runs = FP.wallRuns(room, S.openings, S.w, S.h);
+      const res = FP.recommend(room, runs, S.db, t.rules, S.mmPerPx, S.w, S.h);
+      const rows = res.map((r) => {
+        if (!r.ok) return `<tr><td>${r.rule}</td><td colspan="4" class="muted">${r.reason}</td><td><span class="tag no">불가</span></td></tr>`;
+        const p = r.product;
+        // 표시는 대표 모델의 실제 카탈로그 치수(repDims). dims 는 통합 시의 축별 최대값이라
+        // 합성값이므로 특정 모델의 스펙으로 보여주면 안 된다.
+        const shown = p.repDims || p.dims;
+        const cap = p.capacity
+          ? (p.capacityMin ? `${p.capacityMin.value}~${p.capacity.value}${p.capacity.unit}` : p.capacity.value + p.capacity.unit)
+          : '<span class="muted">—</span>';
+        const more = p.mergedCount > 1
+          ? `<div class="muted" title="${p.mergedModels.join(', ')}">같은 치수 ${p.mergedCount}종 대표</div>` : '';
+        return `<tr><td>${r.rule}</td><td><b>${p.model}</b><div class="muted">${p.group}</div>${more}</td>
+             <td>${shown[0]}×${shown[1]}×${shown[2]}</td>
+             <td>${cap}</td>
+             <td>${p.price == null ? '<span class="muted">가격 문의</span>' : p.price + '만원'}</td>
+             <td><span class="tag ok">배치 가능</span></td></tr>`;
+      }).join('');
+      parts.push(`<h3 style="font-size:13px;margin:14px 0 6px">방 ${i + 1} · ${t.name}</h3>
+        <table><tr><th>설치 유형</th><th>추천 모델</th><th>W×H×D</th><th>용량</th><th>가격</th><th></th></tr>${rows}</table>`);
+    });
+    $('recOut').innerHTML = parts.length ? parts.join('')
+      : '<div class="muted">방 이름을 지정하면 그 방에 들어가는 가전을 추천합니다.</div>';
+  }
+})();
+</script>

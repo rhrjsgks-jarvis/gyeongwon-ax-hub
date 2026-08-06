@@ -1,0 +1,2207 @@
+{
+  "description": "도면 배치 엔진용 DB — 이격거리 규칙(INSTALL_DB) + 제품 치수(모델파인더 PRODUCTS)",
+  "unit": "mm",
+  "policy": "이격 범위·조건부 값은 보수적으로(더 큰 이격) 채택한다. 안 들어가는데 된다고 하는 것이 설치 당일 사고이기 때문이다.",
+  "generatedFrom": [
+    "public/install-app.html",
+    "public/finder-app.html"
+  ],
+  "generatedAt": "2026-08-06",
+  "consolidation": {
+    "dimToleranceMm": 50,
+    "dimTolerancePct": 0.05,
+    "toleranceRule": "축별 허용오차 = max(50mm, 해당 축 값의 5%)",
+    "rule": "같은 설치유형에서 축별 치수차가 허용오차 이내면 용량이 달라도 하나로 묶는다. dims 는 묶인 모델들의 축별 최대값(배치 판정용, 합성값), repDims 는 대표 모델의 실제 카탈로그 치수(표시용)다.",
+    "before": 240,
+    "after": 68
+  },
+  "clearanceCount": 18,
+  "productCount": 68,
+  "clearance": [
+    {
+      "category": "냉장고 4도어 프리스탠딩",
+      "rear": 50,
+      "side": 295,
+      "minDepth": 700,
+      "minCeiling": 1900,
+      "doorAngle": 125,
+      "doorSwing": 1498,
+      "note": "도어 측면 최소 여유 246~295mm 중 보수값 295 채택. doorSwing 은 설치가이드 도면의 \"도어오픈 시 전체폭 1,498mm\".",
+      "verify": [
+        "50mm",
+        "246~295mm",
+        "125°",
+        "700mm",
+        "1,900mm",
+        "1,498mm"
+      ]
+    },
+    {
+      "category": "냉장고 4도어 키친핏",
+      "side": 12,
+      "top": 20,
+      "doorAngle": 108,
+      "note": "Infinite Line 각 12mm · Bespoke 4mm 또는 12mm 중 보수값 12 채택. 도어 오픈 각도 105~108° 중 108 채택.",
+      "verify": [
+        "12mm",
+        "105~108°",
+        "20mm"
+      ]
+    },
+    {
+      "category": "냉장고 4도어 키친핏 Max",
+      "side": 4,
+      "note": "Max 전용 좌우 4mm (RM90H64P2W 기준). 키친핏 Max 는 이 값이 확정치라 보수 보정 없음.",
+      "verify": [
+        "4mm"
+      ]
+    },
+    {
+      "category": "냉장고 2도어",
+      "side": 12,
+      "doorAngle": 105,
+      "note": "Bespoke 2도어 키친핏 기준 확정치.",
+      "verify": [
+        "12mm",
+        "105°"
+      ]
+    },
+    {
+      "category": "냉장고 1도어",
+      "side": 12,
+      "doorAngle": 115,
+      "note": "Infinite Line 각 5mm · Bespoke 각 12mm 중 보수값 12 채택. 도어각은 Infinite 115° · Bespoke 105° 중 큰 값.",
+      "verify": [
+        "12mm",
+        "115°"
+      ]
+    },
+    {
+      "category": "냉장고 양문형",
+      "rear": 50,
+      "minCeiling": 1900,
+      "doorSwing": 1726,
+      "note": "doorSwing 은 845~852L급 설치 규격도의 \"도어 오픈 시 전체 폭 1,726mm\".",
+      "verify": [
+        "50mm",
+        "1,900mm",
+        "1,726mm"
+      ]
+    },
+    {
+      "category": "김치냉장고",
+      "rear": 100,
+      "side": 50,
+      "doorAngle": 130,
+      "note": "스탠드형 기준(후면 100mm·양측 각 50mm). 뚜껑형은 양면·후면 각 50mm 라 스탠드형이 보수값.",
+      "verify": [
+        "100mm",
+        "50mm",
+        "130°"
+      ]
+    },
+    {
+      "category": "세탁기·콤보",
+      "rear": 50,
+      "side": 20,
+      "minDepth": 875,
+      "note": "space 에 이격 항목이 없어 설치가이드 도면 캡션에서 확정 — 세탁기 양옆 20mm·후면 25~50mm 중 보수값 50. 깊이는 콤보 875mm.",
+      "verify": [
+        "양옆20mm",
+        "후면25~50mm",
+        "875"
+      ]
+    },
+    {
+      "category": "건조기",
+      "minDepth": 700,
+      "note": "단독 설치 기준 진입로 폭 700mm 이상. 직렬(적층) 설치는 천장 이격이 별도로 필요해 여기서는 단독 기준만 쓴다.",
+      "verify": [
+        "700mm"
+      ]
+    },
+    {
+      "category": "식기세척기",
+      "side": 3,
+      "minDepth": 595,
+      "note": "트루빌트인 14인용 기준 — 제품 폭 595 대비 설치공간 최소 600 이므로 좌우 합 5mm, 한쪽 보수값 3mm. 깊이는 설치공간 595.",
+      "verify": [
+        "600×815~900×595",
+        "폭595"
+      ]
+    },
+    {
+      "category": "에어드레서",
+      "side": 2.5,
+      "top": 25,
+      "rear": 15,
+      "note": "현재 판매 라인업 공통 확정치. 좌우 2.5mm 는 2026-08 세션에서 14mm 오기를 정정한 값이다.",
+      "verify": [
+        "2.5mm",
+        "25mm",
+        "15mm"
+      ]
+    },
+    {
+      "category": "인덕션",
+      "bottom": 100,
+      "note": "하부 공간 7~10cm 중 보수값 10cm=100mm. 빌트인 상판 하단 여유라 평면 배치에는 제약이 없고 경고용으로만 쓴다.",
+      "verify": [
+        "7~10cm"
+      ]
+    },
+    {
+      "category": "전자레인지",
+      "rear": 150,
+      "side": 100,
+      "top": 200,
+      "note": "후면 10cm 이상이되 콘센트·멀티탭이 있으면 15cm 이상 — 보수값 150mm 채택.",
+      "verify": [
+        "10cm",
+        "20cm",
+        "15cm"
+      ]
+    },
+    {
+      "category": "공기청정기",
+      "side": 600,
+      "note": "벽면 최소 60cm 권장. 비스포크 양측면 흡입 모델은 완화되지만 라인 구분 없이 보수값을 쓴다.",
+      "verify": [
+        "60cm",
+        "25cm"
+      ]
+    },
+    {
+      "category": "로봇청소기",
+      "front": 800,
+      "note": "프리스탠딩 전면 0.8m 이내 장애물 없어야 함. 도킹스테이션 전면 통로 확보 판정에 쓴다.",
+      "verify": [
+        "0.8m"
+      ]
+    },
+    {
+      "category": "에어컨",
+      "rear": 150,
+      "front": 500,
+      "side": 100,
+      "note": "실외기 기준 — 후면 10~15cm 중 보수값 150, 전면 약 50cm, 벽·장애물 10cm. 실내기가 아니라 실외기 공간 판정용이다.",
+      "verify": [
+        "10cm",
+        "50cm",
+        "10~15cm"
+      ]
+    },
+    {
+      "category": "TV",
+      "rear": 15,
+      "side": 100,
+      "note": "제품-벽 최소 1.5cm, 상하좌우 10cm. 벽걸이·스탠드 공통.",
+      "verify": [
+        "1.5cm",
+        "10cm"
+      ]
+    },
+    {
+      "category": "정수기",
+      "faucetMainMax": 1500,
+      "faucetSubMax": 8000,
+      "note": "이격이 아니라 배관 제약 — 본체와 메인 파우셋 최대 1.5m, 서브 파우셋 최대 8m. 주방 내 배치 가능 범위 판정에 쓴다.",
+      "verify": [
+        "1.5m",
+        "8m"
+      ]
+    }
+  ],
+  "products": [
+    {
+      "rule": "건조기",
+      "cat": "건조기",
+      "group": "스펙 정의 (건조기)",
+      "model": "DV20CB8890BW",
+      "dims": [
+        686,
+        984,
+        875
+      ],
+      "repDims": [
+        686,
+        984,
+        875
+      ],
+      "dimsFrom": "dims",
+      "price": 189,
+      "capacity": {
+        "value": 22,
+        "unit": "kg"
+      },
+      "capacityMin": {
+        "value": 16,
+        "unit": "kg"
+      },
+      "mergedCount": 10,
+      "mergedModels": [
+        "DV20CB8890BW",
+        "DV20DG8890BW",
+        "DV17CB6600BW",
+        "DV16CB6500BW",
+        "DV80H22CDS",
+        "DV90F22CDT",
+        "DV90F22CDS",
+        "DV90F22CDY",
+        "DV20CB8890BV",
+        "DV20CB8890BE"
+      ]
+    },
+    {
+      "rule": "건조기",
+      "cat": "건조기",
+      "group": "스펙 정의 (건조기)",
+      "model": "DV14BA7500H",
+      "dims": [
+        686,
+        984,
+        752
+      ],
+      "repDims": [
+        686,
+        984,
+        752
+      ],
+      "dimsFrom": "dims",
+      "price": 119,
+      "capacity": {
+        "value": 14,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "DV14BA7500H"
+      ]
+    },
+    {
+      "rule": "건조기",
+      "cat": "건조기",
+      "group": "스펙 정의 (건조기)",
+      "model": "DV09BA6500H",
+      "dims": [
+        600,
+        855,
+        600
+      ],
+      "repDims": [
+        600,
+        855,
+        600
+      ],
+      "dimsFrom": "dims",
+      "price": 89,
+      "capacity": {
+        "value": 9,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "DV09BA6500H"
+      ]
+    },
+    {
+      "rule": "공기청정기",
+      "cat": "공기청정기",
+      "group": "블루스카이 4000 벽걸이형 (85㎡)",
+      "model": "AX99N4020WWD",
+      "dims": [
+        1050,
+        600,
+        130
+      ],
+      "repDims": [
+        1050,
+        600,
+        130
+      ],
+      "dimsFrom": "dims",
+      "price": 45,
+      "capacity": {
+        "value": 85,
+        "unit": "㎡"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "AX99N4020WWD",
+        "AX85N4020WWD"
+      ]
+    },
+    {
+      "rule": "공기청정기",
+      "cat": "공기청정기",
+      "group": "블루스카이 5500 (60㎡, 2026 카탈로그)",
+      "model": "AX060CG500GBD",
+      "dims": [
+        360,
+        783,
+        318
+      ],
+      "repDims": [
+        360,
+        783,
+        318
+      ],
+      "dimsFrom": "dims",
+      "price": 55,
+      "capacity": {
+        "value": 60,
+        "unit": "㎡"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "AX060CG500GBD",
+        "AX060CG500GND"
+      ]
+    },
+    {
+      "rule": "공기청정기",
+      "cat": "공기청정기",
+      "group": "블루스카이 3100 (33㎡, 2026 카탈로그)",
+      "model": "AX033CG310GBD",
+      "dims": [
+        349,
+        499,
+        236
+      ],
+      "repDims": [
+        349,
+        499,
+        236
+      ],
+      "dimsFrom": "dims",
+      "price": 29,
+      "capacity": {
+        "value": 33,
+        "unit": "㎡"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "AX033CG310GBD",
+        "AP70F03102RTD"
+      ]
+    },
+    {
+      "rule": "공기청정기",
+      "cat": "공기청정기",
+      "group": "Bespoke AI 공기청정기 33㎡ (2026 카탈로그)",
+      "model": "AP90H03193EGD",
+      "dims": [
+        320,
+        545,
+        320
+      ],
+      "repDims": [
+        320,
+        545,
+        320
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 5,
+      "mergedModels": [
+        "AP90H03193EGD",
+        "AP90H03193UGD",
+        "AP90H03193MGD",
+        "AP90H03163EGD",
+        "AP90H03163UGD"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "AI 김치플러스 4도어 스탠드형 490L (냄새케어 김치통) 2026",
+      "model": "RK70F49F1DD",
+      "dims": [
+        799,
+        1853,
+        794
+      ],
+      "repDims": [
+        799,
+        1825,
+        787
+      ],
+      "dimsFrom": "dims",
+      "price": 208,
+      "capacity": {
+        "value": 490,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "RK70F49F1DD",
+        "RK80F49E1A"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "AI 김치플러스 4도어 스탠드형 490L (이전 세대)",
+      "model": "RQ49DG90X24E",
+      "dims": [
+        950,
+        1820,
+        765
+      ],
+      "repDims": [
+        950,
+        1820,
+        765
+      ],
+      "dimsFrom": "dims",
+      "price": 200,
+      "capacity": {
+        "value": 490,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "RQ49DG90X24E",
+        "RQ49DB94H2AP"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "카탈로그 수록 모델 (2026)",
+      "model": "RQ34C8945APG",
+      "dims": [
+        595,
+        1855,
+        688
+      ],
+      "repDims": [
+        595,
+        1855,
+        688
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 347,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "RQ34C8945APG"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "김치플러스 4도어 스탠드형 중형",
+      "model": "RQ32C7B84AP",
+      "dims": [
+        670,
+        1865,
+        790
+      ],
+      "repDims": [
+        670,
+        1865,
+        790
+      ],
+      "dimsFrom": "dims",
+      "price": 130,
+      "capacity": {
+        "value": 324,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "RQ32C7B84AP"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "키친핏 313L (2026 카탈로그)",
+      "model": "RQ33HB7411A",
+      "dims": [
+        695,
+        1853,
+        600
+      ],
+      "repDims": [
+        695,
+        1853,
+        600
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 313,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 5,
+      "mergedModels": [
+        "RQ33HB7411A",
+        "RQ33DB7441AP",
+        "RQ33DB7411AP",
+        "RQ33DB74B1AP",
+        "RQ33DB74B1EW"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "뚜껑형 221L (2026 카탈로그)",
+      "model": "RP22C3111S9",
+      "dims": [
+        925,
+        973,
+        702
+      ],
+      "repDims": [
+        925,
+        973,
+        702
+      ],
+      "dimsFrom": "dims",
+      "price": 79,
+      "capacity": {
+        "value": 221,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "RP22C3111S9",
+        "RP22C3231Z3"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "김치플러스 뚜껑형 (RP 시리즈)",
+      "model": "RP20C3111EG",
+      "dims": [
+        527,
+        857,
+        1040
+      ],
+      "repDims": [
+        527,
+        857,
+        1040
+      ],
+      "dimsFrom": "dims",
+      "price": 72,
+      "capacity": {
+        "value": 202,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "RP20C3111EG"
+      ]
+    },
+    {
+      "rule": "김치냉장고",
+      "cat": "김치냉장고",
+      "group": "뚜껑형 126L (2026 카탈로그)",
+      "model": "RP13C1022Z1",
+      "dims": [
+        650,
+        920,
+        575
+      ],
+      "repDims": [
+        650,
+        920,
+        575
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 126,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "RP13C1022Z1"
+      ]
+    },
+    {
+      "rule": "냉장고 1도어",
+      "cat": "냉장고",
+      "group": "1도어 냉장 키친핏 (2026 카탈로그)",
+      "model": "RR40C8995APG",
+      "dims": [
+        595,
+        1855,
+        688
+      ],
+      "repDims": [
+        595,
+        1855,
+        688
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 408,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "RR40C8995APG"
+      ]
+    },
+    {
+      "rule": "냉장고 4도어 키친핏",
+      "cat": "냉장고",
+      "group": "1도어 냉장 키친핏 (2026 카탈로그)",
+      "model": "RR40C8995APG",
+      "dims": [
+        595,
+        1855,
+        688
+      ],
+      "repDims": [
+        595,
+        1855,
+        688
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 408,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "RR40C8995APG"
+      ]
+    },
+    {
+      "rule": "냉장고 4도어 키친핏 Max",
+      "cat": "냉장고",
+      "group": "키친핏 Max 4도어",
+      "model": "RM70F63R2A",
+      "dims": [
+        912,
+        1853,
+        697
+      ],
+      "repDims": [
+        912,
+        1853,
+        697
+      ],
+      "dimsFrom": "dims",
+      "price": 239,
+      "capacity": {
+        "value": 640,
+        "unit": "L"
+      },
+      "capacityMin": {
+        "value": 636,
+        "unit": "L"
+      },
+      "mergedCount": 3,
+      "mergedModels": [
+        "RM70F63R2A",
+        "RM70F63M2A",
+        "RM70F64R1A"
+      ]
+    },
+    {
+      "rule": "냉장고 4도어 프리스탠딩",
+      "cat": "냉장고",
+      "group": "AI 4도어 프리스탠딩 905L/902L/884L",
+      "model": "RM70F90R2W",
+      "dims": [
+        912,
+        1853,
+        930
+      ],
+      "repDims": [
+        912,
+        1853,
+        930
+      ],
+      "dimsFrom": "dims",
+      "price": 219,
+      "capacity": {
+        "value": 905,
+        "unit": "L"
+      },
+      "capacityMin": {
+        "value": 884,
+        "unit": "L"
+      },
+      "mergedCount": 7,
+      "mergedModels": [
+        "RM70F90R1ZD",
+        "RM70F90R2ZD",
+        "RM70F90R2GD",
+        "RM70F90R2W",
+        "RM70F90M1ZD",
+        "RM70F90M1GD",
+        "RM70F90Q2ZG"
+      ]
+    },
+    {
+      "rule": "냉장고 양문형",
+      "cat": "냉장고",
+      "group": "양문형 2도어",
+      "model": "RS84DB5002WW",
+      "dims": [
+        912,
+        1786,
+        915
+      ],
+      "repDims": [
+        912,
+        1780,
+        915
+      ],
+      "dimsFrom": "dims",
+      "price": 199,
+      "capacity": {
+        "value": 852,
+        "unit": "L"
+      },
+      "capacityMin": {
+        "value": 846,
+        "unit": "L"
+      },
+      "mergedCount": 3,
+      "mergedModels": [
+        "RS84DB5602CW",
+        "RS84DB5002WW",
+        "RS84DG5002WW"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "AI 콤보 WDH 2026 (2026.03.26 출시)",
+      "model": "WD90H25AHS",
+      "dims": [
+        686,
+        1110,
+        875
+      ],
+      "repDims": [
+        686,
+        1110,
+        875
+      ],
+      "dimsFrom": "dims",
+      "price": 349,
+      "capacity": {
+        "value": 25,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 11,
+      "mergedModels": [
+        "WD90H25AHS",
+        "WD90H25AHT",
+        "WD90H25AHY",
+        "WD90H25BHW",
+        "WD90H25BHY",
+        "WD80H25BHY",
+        "WD99F25AHR",
+        "WD25DB8995BB",
+        "WD25DB8995BZ",
+        "WD80H25BHS",
+        "WD90H25AHW"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "그랑데 AI 드럼 세탁기 (단독)",
+      "model": "WF25CB8895BW",
+      "dims": [
+        686,
+        984,
+        875
+      ],
+      "repDims": [
+        686,
+        984,
+        875
+      ],
+      "dimsFrom": "dims",
+      "price": 199,
+      "capacity": {
+        "value": 25,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 7,
+      "mergedModels": [
+        "WF25CB8895BW",
+        "WF80H24ADW",
+        "WF90F25ADS",
+        "WF90F25ADT",
+        "WF90F25ADY",
+        "WF25CB8895BE",
+        "WF25CB8895BV"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "그랑데 AI 드럼 세탁기 (단독)",
+      "model": "WF21DG6650BW",
+      "dims": [
+        686,
+        984,
+        796
+      ],
+      "repDims": [
+        686,
+        984,
+        796
+      ],
+      "dimsFrom": "dims",
+      "price": 169,
+      "capacity": {
+        "value": 21,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "WF21DG6650BW",
+        "WF21CB6650BW"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "통버블 일반세탁기",
+      "model": "WA16CB6540K",
+      "dims": [
+        637,
+        1093,
+        701
+      ],
+      "repDims": [
+        637,
+        1093,
+        701
+      ],
+      "dimsFrom": "dims",
+      "price": 79,
+      "capacity": {
+        "value": 16,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "WA16CB6540K"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "Bespoke AI 세탁기 13kg (2026 카탈로그)",
+      "model": "WW13BB844DGB",
+      "dims": [
+        600,
+        850,
+        725
+      ],
+      "repDims": [
+        600,
+        850,
+        725
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 13,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "WW13BB844DGB"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "통버블 일반세탁기",
+      "model": "WA12CB5400K",
+      "dims": [
+        562,
+        1020,
+        620
+      ],
+      "repDims": [
+        562,
+        1020,
+        620
+      ],
+      "dimsFrom": "dims",
+      "price": 59,
+      "capacity": {
+        "value": 12,
+        "unit": "kg"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "WA12CB5400K"
+      ]
+    },
+    {
+      "rule": "세탁기·콤보",
+      "cat": "세탁기·콤보",
+      "group": "AI 원바디 Top-Fit 2025 — WH90F2522 25/22kg (삼성닷컴 현행 판매)",
+      "model": "WH90F2522AAHY",
+      "dims": [
+        686,
+        1890,
+        875
+      ],
+      "repDims": [
+        686,
+        1890,
+        875
+      ],
+      "dimsFrom": "dims",
+      "price": 435,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 7,
+      "mergedModels": [
+        "WF2420HCWWC",
+        "WF2420HCEEC",
+        "WF2420HCVVC",
+        "WH90F2522AAHY",
+        "WH90F2522AAHS",
+        "WH90F2522AAHT",
+        "WH90F2120GBHW"
+      ]
+    },
+    {
+      "rule": "식기세척기",
+      "cat": "식기세척기",
+      "group": "빌트인 슬림 / 프리스탠딩",
+      "model": "DW80F73Y1FEW",
+      "dims": [
+        598,
+        845,
+        600
+      ],
+      "repDims": [
+        598,
+        845,
+        600
+      ],
+      "dimsFrom": "group",
+      "price": 129,
+      "capacity": {
+        "value": 14,
+        "unit": "인용"
+      },
+      "capacityMin": {
+        "value": 12,
+        "unit": "인용"
+      },
+      "mergedCount": 12,
+      "mergedModels": [
+        "DW90F79F1UAP",
+        "DW90F79F1U01",
+        "DW90F79P1USWS",
+        "DW80F75L1U01S",
+        "DW80F75K1UW6FF",
+        "DW80F73Y1UWW",
+        "DW60BB800UTET",
+        "DW60BB800ULWT",
+        "DW70F71Y1UWW",
+        "DW60A6092FW",
+        "DW80F73Y1FEW",
+        "DW60T7045FS"
+      ]
+    },
+    {
+      "rule": "식기세척기",
+      "cat": "식기세척기",
+      "group": "빌트인 슬림 / 프리스탠딩",
+      "model": "DW50T6065FW",
+      "dims": [
+        448,
+        815,
+        575
+      ],
+      "repDims": [
+        448,
+        815,
+        575
+      ],
+      "dimsFrom": "dims",
+      "price": 59,
+      "capacity": {
+        "value": 9,
+        "unit": "인용"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "DW50T6065FW"
+      ]
+    },
+    {
+      "rule": "식기세척기",
+      "cat": "식기세척기",
+      "group": "카운터탑 6인용 (2026 카탈로그)",
+      "model": "DW30FB305CW0",
+      "dims": [
+        555,
+        450,
+        500
+      ],
+      "repDims": [
+        555,
+        450,
+        500
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 6,
+        "unit": "인용"
+      },
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "DW30FB305CW0",
+        "DW30FB305CE0"
+      ]
+    },
+    {
+      "rule": "에어드레서",
+      "cat": "에어드레서",
+      "group": "비스포크 AI DF18 일반용량 (445×1960×595mm ✅)",
+      "model": "DF18CB8600WR",
+      "dims": [
+        445,
+        1960,
+        595
+      ],
+      "repDims": [
+        445,
+        1960,
+        595
+      ],
+      "dimsFrom": "group",
+      "price": 85,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "DF18CB8600WR",
+        "DF18CG3100TR"
+      ]
+    },
+    {
+      "rule": "에어드레서",
+      "cat": "에어드레서",
+      "group": "구형 (445×1850×615mm ✅)",
+      "model": "DF60R8300WG",
+      "dims": [
+        445,
+        1850,
+        615
+      ],
+      "repDims": [
+        445,
+        1850,
+        615
+      ],
+      "dimsFrom": "group",
+      "price": 49,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "DF60R8300WG"
+      ]
+    },
+    {
+      "rule": "에어드레서",
+      "cat": "에어드레서",
+      "group": "AI 에어드레서 DF90H 2026 (2026.03.03 출시 — 595×1960×595mm ✅)",
+      "model": "DF90H24R5C",
+      "dims": [
+        595,
+        1960,
+        595
+      ],
+      "repDims": [
+        595,
+        1960,
+        595
+      ],
+      "dimsFrom": "group",
+      "price": 250,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 6,
+      "mergedModels": [
+        "DF90H24R5C",
+        "DF90H24R4D",
+        "DF24CB9900CR",
+        "DF24CB9600WR",
+        "DF80H24R1D",
+        "DF80H24R1B"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "갤러리 스탠드 구형 (2024) / 창문형",
+      "model": "AF23CG6500WSD",
+      "dims": [
+        492,
+        1910,
+        307
+      ],
+      "repDims": [
+        480,
+        1839,
+        289
+      ],
+      "dimsFrom": "dims",
+      "price": 249,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 4,
+      "mergedModels": [
+        "AF23CG6500WSD",
+        "AF18CG6500WSD",
+        "AF80F25D28BN",
+        "AF80F20D28WN"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "무풍콤보 갤러리 스탠드 AF80F (2026 카탈로그)",
+      "model": "AF80F25D29WN",
+      "dims": [
+        492,
+        1910,
+        356
+      ],
+      "repDims": [
+        492,
+        1910,
+        356
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "AF80F25D29WN"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "갤러리 프로 2in1 AF90H (2026 신제품)",
+      "model": "AF90H22D35WRS",
+      "dims": [
+        363,
+        1930,
+        332
+      ],
+      "repDims": [
+        360,
+        1930,
+        332
+      ],
+      "dimsFrom": "group",
+      "price": 500,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 31,
+      "mergedModels": [
+        "AF70F19D25BN",
+        "AF70F17D25BN",
+        "AF70F19D24RN",
+        "AF60F19D11BN",
+        "AF60F17D11BN",
+        "AF60F19D11GN",
+        "AF60F17D11GN",
+        "AF90H23D27SS",
+        "AF90H19D27SS",
+        "AF90H19D24SS",
+        "AF90H17D27SS",
+        "AF90H17D24SS",
+        "AF90H17D24GS",
+        "AF90H22D35WRS",
+        "AF90H19D27SRS",
+        "AF90H19D24SRS",
+        "AF90H17D24GRS",
+        "AF90H19D35EN",
+        "AF70F19D25WN",
+        "AF90H17D38WN",
+        "AF70F17D25WN",
+        "AF70F19D24LN",
+        "AF70F17D24LN",
+        "AF60F19D12WN",
+        "AF60F17D12WN",
+        "AF60F19D11WN",
+        "AF60F17D11WN",
+        "AF90H19D35WN",
+        "AF90H19D24SN",
+        "AF90H19D24GN",
+        "AF90H17D38EN"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "무풍 벽걸이 프로 (2025)",
+      "model": "AR07DG9700WQK",
+      "dims": [
+        820,
+        307,
+        235
+      ],
+      "repDims": [
+        799,
+        307,
+        235
+      ],
+      "dimsFrom": "dims",
+      "price": 172,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 4,
+      "mergedModels": [
+        "AR07DG9700WQK",
+        "AR25F07D11WS",
+        "AR60F07D11WNKO",
+        "AR60F07D12WNKO"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "무풍 벽걸이 F시리즈 (2025)",
+      "model": "AR30F09D11WS",
+      "dims": [
+        889,
+        299,
+        215
+      ],
+      "repDims": [
+        889,
+        299,
+        215
+      ],
+      "dimsFrom": "dims",
+      "price": 136,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "AR30F09D11WS",
+        "AR60F09D11WNKO"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "무풍 벽걸이 F시리즈 (2025)",
+      "model": "AR60F18D11WS",
+      "dims": [
+        1099,
+        299,
+        215
+      ],
+      "repDims": [
+        1099,
+        292,
+        215
+      ],
+      "dimsFrom": "dims",
+      "price": 149,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 6,
+      "mergedModels": [
+        "AR60F18D11WS",
+        "AR50F14D11WS",
+        "AR40F11D11WS",
+        "AR60F11D11WNKO",
+        "AR60F13D12WNKO",
+        "AR60F15D12WNKO"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "무풍 벽걸이 (2026 카탈로그)",
+      "model": "AR80F07D21WNKO",
+      "dims": [
+        820,
+        364,
+        215
+      ],
+      "repDims": [
+        820,
+        364,
+        215
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "AR80F07D21WNKO"
+      ]
+    },
+    {
+      "rule": "에어컨",
+      "cat": "에어컨",
+      "group": "갤러리 스탠드 구형 (2024) / 창문형",
+      "model": "AW25CG6700WZK",
+      "dims": [
+        402,
+        750,
+        288
+      ],
+      "repDims": [
+        402,
+        750,
+        288
+      ],
+      "dimsFrom": "dims",
+      "price": 89,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 5,
+      "mergedModels": [
+        "AW25CG6700WZK",
+        "AW06C7155GWA",
+        "AW06C7155WWA",
+        "AW06C7155TWA",
+        "AW06C7155EWA"
+      ]
+    },
+    {
+      "rule": "인덕션",
+      "cat": "인덕션/전기레인지",
+      "group": "더 플레이트 1구 프리스탠딩",
+      "model": "NZ31T3703PW",
+      "dims": [
+        320,
+        46,
+        310
+      ],
+      "repDims": [
+        320,
+        46,
+        310
+      ],
+      "dimsFrom": "dims",
+      "price": 14,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 2,
+      "mergedModels": [
+        "NZ31DG200CFH",
+        "NZ31T3703PW"
+      ]
+    },
+    {
+      "rule": "인덕션",
+      "cat": "인덕션/전기레인지",
+      "group": "더 플레이트 2구 프리스탠딩",
+      "model": "NZ60R7703PW",
+      "dims": [
+        597,
+        46,
+        320
+      ],
+      "repDims": [
+        597,
+        46,
+        320
+      ],
+      "dimsFrom": "dims",
+      "price": 55,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 3,
+      "mergedModels": [
+        "NZ60R7703PW",
+        "NZ60R3703PK",
+        "NZ62DG300CFW"
+      ]
+    },
+    {
+      "rule": "인덕션",
+      "cat": "인덕션/전기레인지",
+      "group": "빌트인 63cm (2026 카탈로그)",
+      "model": "NZ63DB553CFT",
+      "dims": [
+        600,
+        56,
+        520
+      ],
+      "repDims": [
+        600,
+        48,
+        520
+      ],
+      "dimsFrom": "dims",
+      "price": 150,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 6,
+      "mergedModels": [
+        "NZ63DB857CAV",
+        "NZ63DB553CFT",
+        "NZ63B5056AK",
+        "NZ63DB503CFT",
+        "CC99F63G1DS",
+        "CC99F63U1DS"
+      ]
+    },
+    {
+      "rule": "전자레인지",
+      "cat": "전자레인지/오븐",
+      "group": "큐커 오븐 MC 시리즈 (프리미엄)",
+      "model": "MC35A8599CT",
+      "dims": [
+        530,
+        366,
+        508
+      ],
+      "repDims": [
+        530,
+        366,
+        508
+      ],
+      "dimsFrom": "dims",
+      "price": 75,
+      "capacity": {
+        "value": 35,
+        "unit": "L"
+      },
+      "capacityMin": {
+        "value": 32,
+        "unit": "L"
+      },
+      "mergedCount": 3,
+      "mergedModels": [
+        "MC35A8599CT",
+        "MC32B7388CC",
+        "MC32B7055CC"
+      ]
+    },
+    {
+      "rule": "전자레인지",
+      "cat": "전자레인지/오븐",
+      "group": "그릴 전자레인지 MG 시리즈",
+      "model": "MG23A5378CC",
+      "dims": [
+        489,
+        279,
+        351
+      ],
+      "repDims": [
+        489,
+        279,
+        351
+      ],
+      "dimsFrom": "dims",
+      "price": 23,
+      "capacity": {
+        "value": 23,
+        "unit": "L"
+      },
+      "capacityMin": null,
+      "mergedCount": 3,
+      "mergedModels": [
+        "MG23A5378CC",
+        "MS23C3535AW",
+        "MS23C3535AK"
+      ]
+    },
+    {
+      "rule": "정수기",
+      "cat": "정수기",
+      "group": "카운터탑 직수 (2026 카탈로그)",
+      "model": "RWP70F15ANW",
+      "dims": [
+        170,
+        395,
+        480
+      ],
+      "repDims": [
+        170,
+        395,
+        480
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": null,
+      "capacityMin": null,
+      "mergedCount": 6,
+      "mergedModels": [
+        "RWP70F15ANW",
+        "RWP70F15ANB",
+        "RWP70F15ANC",
+        "RWP54421BF*M",
+        "RWP54220BF*M",
+        "RWP54120BF*M"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Micro RGB (2026)",
+      "model": "KMR115MRF95XKR",
+      "dims": [
+        2570.4,
+        1478,
+        35.7
+      ],
+      "repDims": [
+        2570.4,
+        1478,
+        35.7
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 115,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KMR115MRF95XKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "The Frame LSH03 (2026)",
+      "model": "KQ98LSH03EFXKR",
+      "dims": [
+        2195,
+        1250.3,
+        30.9
+      ],
+      "repDims": [
+        2195,
+        1250.3,
+        30.9
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 98,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ98LSH03EFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Micro RGB (2026)",
+      "model": "KMR85RH95AFXKR",
+      "dims": [
+        1910.2,
+        1122.4,
+        52.5
+      ],
+      "repDims": [
+        1880.6,
+        1077,
+        29.9
+      ],
+      "dimsFrom": "dims",
+      "price": 990,
+      "capacity": {
+        "value": 85,
+        "unit": "형"
+      },
+      "capacityMin": {
+        "value": 83,
+        "unit": "형"
+      },
+      "mergedCount": 5,
+      "mergedModels": [
+        "KMR85RH95AFXKR",
+        "KMR85RH9GAFXKR",
+        "KQ83SH95AEXKR",
+        "KQ85QNH70AFXKR",
+        "KQ85LSH03EFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Mini LED MH70 (2026)",
+      "model": "KU85MH70AFXKR",
+      "dims": [
+        1889.9,
+        1083.5,
+        77
+      ],
+      "repDims": [
+        1889.9,
+        1083.5,
+        77
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 85,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 3,
+      "mergedModels": [
+        "KU85MH70AFXKR",
+        "KU85UH8070FXKR",
+        "KU85UH8000FXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "OLED SH93 (2026)",
+      "model": "KQ83SH93AEXKR",
+      "dims": [
+        1851,
+        1062.8,
+        44.9
+      ],
+      "repDims": [
+        1851,
+        1062.8,
+        44.9
+      ],
+      "dimsFrom": "dims",
+      "price": 650,
+      "capacity": {
+        "value": 83,
+        "unit": "형"
+      },
+      "capacityMin": {
+        "value": 77,
+        "unit": "형"
+      },
+      "mergedCount": 3,
+      "mergedModels": [
+        "KQ77SH95AFXKR",
+        "KQ83SH93AEXKR",
+        "KQ83SH85AEXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "OLED SH93 (2026)",
+      "model": "KQ77SH93AFXKR",
+      "dims": [
+        1721.4,
+        991.4,
+        44.9
+      ],
+      "repDims": [
+        1718.5,
+        987.6,
+        44.9
+      ],
+      "dimsFrom": "dims",
+      "price": 459,
+      "capacity": {
+        "value": 77,
+        "unit": "형"
+      },
+      "capacityMin": {
+        "value": 75,
+        "unit": "형"
+      },
+      "mergedCount": 5,
+      "mergedModels": [
+        "KMR75RH95AFXKR",
+        "KQ77SH93AFXKR",
+        "KQ77SH85AEXKR",
+        "KQ75QNH70AFXKR",
+        "KQ75LSH03EFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Mini LED MH70 (2026)",
+      "model": "KU75MH70AFXKR",
+      "dims": [
+        1668.1,
+        957.8,
+        77
+      ],
+      "repDims": [
+        1668.1,
+        957.8,
+        77
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 75,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 3,
+      "mergedModels": [
+        "KU75MH70AFXKR",
+        "KU75UH8070FXKR",
+        "KU75UH8000FXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "The Serif LSD01 (2026)",
+      "model": "KQ65LSD01AFXKR",
+      "dims": [
+        1479.1,
+        875.1,
+        280
+      ],
+      "repDims": [
+        1479.1,
+        875.1,
+        280
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 65,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ65LSD01AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Neo QLED QNH80 (2026)",
+      "model": "KQ65QNH80AFXKR",
+      "dims": [
+        1456.8,
+        831.9,
+        52
+      ],
+      "repDims": [
+        1442.9,
+        831.2,
+        52
+      ],
+      "dimsFrom": "dims",
+      "price": 249,
+      "capacity": {
+        "value": 65,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 5,
+      "mergedModels": [
+        "KMR65RH95AFXKR",
+        "KQ65SH85AEXKR",
+        "KQ65QNH80AFXKR",
+        "KQ65QNH70AFXKR",
+        "KQ65LSH03EFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "OLED SH95 (2026)",
+      "model": "KQ65SH95AFXKR",
+      "dims": [
+        1509.5,
+        894.9,
+        26.4
+      ],
+      "repDims": [
+        1509.5,
+        894.9,
+        26.4
+      ],
+      "dimsFrom": "dims",
+      "price": 449,
+      "capacity": {
+        "value": 65,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ65SH95AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Mini LED MH75 (2026)",
+      "model": "KU65MH75AFXKR",
+      "dims": [
+        1444.1,
+        831.2,
+        76.8
+      ],
+      "repDims": [
+        1444.1,
+        831.2,
+        76.8
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 65,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 4,
+      "mergedModels": [
+        "KU65MH75AFXKR",
+        "KU65MH70AFXKR",
+        "KU65UH8070FXKR",
+        "KU65UH8000FXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "The Serif LSD01 (2026)",
+      "model": "KQ55LSD01AFXKR",
+      "dims": [
+        1254.9,
+        748.3,
+        221
+      ],
+      "repDims": [
+        1254.9,
+        748.3,
+        221
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 55,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ55LSD01AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Neo QLED QNH80 (2026)",
+      "model": "KQ55QNH80AFXKR",
+      "dims": [
+        1237.9,
+        708.8,
+        52
+      ],
+      "repDims": [
+        1224,
+        708,
+        52
+      ],
+      "dimsFrom": "dims",
+      "price": 189,
+      "capacity": {
+        "value": 55,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 4,
+      "mergedModels": [
+        "KQ55SH85AEXKR",
+        "KQ55QNH80AFXKR",
+        "KQ55QNH70AFXKR",
+        "KQ55LSH03EFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "OLED SH95 (2026)",
+      "model": "KQ55SH95AFXKR",
+      "dims": [
+        1290.6,
+        771.9,
+        27.9
+      ],
+      "repDims": [
+        1290.6,
+        771.9,
+        27.9
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 55,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ55SH95AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Mini LED MH75 (2026)",
+      "model": "KU55MH75AFXKR",
+      "dims": [
+        1224.6,
+        707.8,
+        76.6
+      ],
+      "repDims": [
+        1224.6,
+        707.8,
+        76.6
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 55,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 4,
+      "mergedModels": [
+        "KU55MH75AFXKR",
+        "KU55MH70AFXKR",
+        "KU55UH8070FXKR",
+        "KU55UH8000FXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "The Serif LSD01 (2026)",
+      "model": "KQ50LSD01AFXKR",
+      "dims": [
+        1143.2,
+        685.4,
+        206.5
+      ],
+      "repDims": [
+        1143.2,
+        685.4,
+        206.5
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 50,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ50LSD01AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Neo QLED QNH70 (2026)",
+      "model": "KQ50QNH70AFXKR",
+      "dims": [
+        1118.3,
+        644.1,
+        39.6
+      ],
+      "repDims": [
+        1118.3,
+        644.1,
+        25.7
+      ],
+      "dimsFrom": "dims",
+      "price": 119,
+      "capacity": {
+        "value": 50,
+        "unit": "형"
+      },
+      "capacityMin": {
+        "value": 48,
+        "unit": "형"
+      },
+      "mergedCount": 3,
+      "mergedModels": [
+        "KQ48SH90AEXKR",
+        "KQ48SH85AEXKR",
+        "KQ50QNH70AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Mini LED MH70 (2026)",
+      "model": "KU50MH70AFXKR",
+      "dims": [
+        1110.8,
+        643.8,
+        76.4
+      ],
+      "repDims": [
+        1110.8,
+        643.8,
+        76.4
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 50,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 3,
+      "mergedModels": [
+        "KU50MH70AFXKR",
+        "KU50UH8070FXKR",
+        "KU50UH8000FXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "OLED SH90 (2026)",
+      "model": "KQ42SH90AEXKR",
+      "dims": [
+        969.5,
+        559.4,
+        39.5
+      ],
+      "repDims": [
+        934.4,
+        542.6,
+        39.5
+      ],
+      "dimsFrom": "dims",
+      "price": 159,
+      "capacity": {
+        "value": 43,
+        "unit": "형"
+      },
+      "capacityMin": {
+        "value": 42,
+        "unit": "형"
+      },
+      "mergedCount": 3,
+      "mergedModels": [
+        "KQ42SH90AEXKR",
+        "KQ43QNH70AFXKR",
+        "KQ43LSH03EFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "The Serif LSD01 (2026)",
+      "model": "KQ43LSD01AFXKR",
+      "dims": [
+        986.3,
+        597.3,
+        197
+      ],
+      "repDims": [
+        986.3,
+        597.3,
+        197
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 43,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 1,
+      "mergedModels": [
+        "KQ43LSD01AFXKR"
+      ]
+    },
+    {
+      "rule": "TV",
+      "cat": "TV",
+      "group": "Mini LED MH70 (2026)",
+      "model": "KU43MH70AFXKR",
+      "dims": [
+        957.8,
+        558.8,
+        76.3
+      ],
+      "repDims": [
+        957.8,
+        558.8,
+        76.3
+      ],
+      "dimsFrom": "dims",
+      "price": null,
+      "capacity": {
+        "value": 43,
+        "unit": "형"
+      },
+      "capacityMin": null,
+      "mergedCount": 3,
+      "mergedModels": [
+        "KU43MH70AFXKR",
+        "KU43UH8070FXKR",
+        "KU43UH8000FXKR"
+      ]
+    }
+  ]
+}

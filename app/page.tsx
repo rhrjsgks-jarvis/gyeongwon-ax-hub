@@ -76,6 +76,16 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.07',
         status: 'live',
       },
+      {
+        href: '/floorplan',
+        icon: '📐',
+        title: '도면 배치 시뮬레이터',
+        desc: '평면도에서 방·창문을 인식해 들어가는 가전을 치수로 판정',
+        color: '#7C3AED',
+        bg: '#F5F3FF',
+        updated: '2026.08',
+        status: 'beta',
+      },
     ],
   },
   {

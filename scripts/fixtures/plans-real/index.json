@@ -1,0 +1,393 @@
+{
+  "description": "설치환경가이드(public/install-app.html)가 참조하는 실제 삼성닷컴 설치 규격도 스냅샷",
+  "source": "samsung.com (images.samsung.com)",
+  "capturedAt": "2026-08-06",
+  "note": "재배포용이 아니라 회귀 테스트 대조용 스냅샷이다. 원본이 바뀌면 npm run test:plans 가 알려준다.",
+  "count": 15,
+  "items": [
+    {
+      "id": "refri-4door-fs-bespoke",
+      "category": "냉장고 4도어 프리스탠딩",
+      "file": "refri-4door-fs-bespoke.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc-set-one-refri-bespoke-4doorFs-rm_f91_f90_v4.jpg",
+      "alt": "Bespoke 4도어 프리스탠딩 RM/RF91·RF90 설치가이드",
+      "cap": "Bespoke 4도어 프리스탠딩(RM/RF91·RF90 계열) — 후면 이격 50mm·도어오픈각 125°·폭 916(912)mm·높이 1,853mm·도어오픈 시 전체폭 1,498mm · samsung.com 설치가이드",
+      "dims": [
+        "50mm",
+        "125°",
+        "1,853mm",
+        "1,498mm",
+        "이격50",
+        "폭916",
+        "높이1,853",
+        "폭1,498"
+      ],
+      "bytes": 60863,
+      "sha256": "e82b51e3b1f2d39f173c417bfde95938949c70754078e882621f4fbdf2880a8f",
+      "format": "jpeg",
+      "width": 1280,
+      "height": 574,
+      "usedInCategories": [
+        "냉장고 4도어 프리스탠딩"
+      ]
+    },
+    {
+      "id": "refri-4door-kitchenfit",
+      "category": "냉장고 4도어 키친핏",
+      "file": "refri-4door-kitchenfit.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-02-01_v4.jpg",
+      "alt": "Bespoke 4도어 키친핏 설치 규격도(좌우 4mm)",
+      "cap": "Bespoke 4도어 키친핏 — 좌우 이격 4mm·상단 20mm·도어오픈각 108°·폭 908(냉장고장 내측)/916mm·높이 1,853mm(제품)/1,873mm(냉장고장) · samsung.com 설치가이드",
+      "dims": [
+        "4mm",
+        "20mm",
+        "108°",
+        "916mm",
+        "1,853mm",
+        "1,873mm",
+        "이격4",
+        "폭908",
+        "높이1,853"
+      ],
+      "bytes": 59677,
+      "sha256": "670ad3d6b8d20c825ee21bf8c2518dc21c22c519707b6f29ff9ef6e0f255b9cf",
+      "format": "jpeg",
+      "width": 1280,
+      "height": 574,
+      "usedInCategories": [
+        "냉장고 4도어 키친핏"
+      ]
+    },
+    {
+      "id": "refri-4door-kitchenfit-max",
+      "category": "냉장고 4도어 키친핏 Max",
+      "file": "refri-4door-kitchenfit-max.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc_02_02_01_4+4door_max_v5.jpg",
+      "alt": "키친핏 Max 냉장고+김치냉장고 조합 설치 규격도",
+      "cap": "Bespoke 키친핏 Max(냉장고 908mm+김치냉장고 795mm 조합) — 좌우 이격 4mm(외곽)·제품간 6mm·냉장고장 높이 1,873mm·깊이 700mm·제품 높이 1,853mm · samsung.com 설치가이드",
+      "dims": [
+        "908mm",
+        "795mm",
+        "4mm",
+        "6mm",
+        "1,873mm",
+        "700mm",
+        "1,853mm",
+        "이격4",
+        "높이1,873",
+        "깊이700",
+        "높이1,853"
+      ],
+      "bytes": 63057,
+      "sha256": "37aeb083a31a11fcce59fdb1d4b7fc08456477742d54a6870f26e89009fb716f",
+      "format": "jpeg",
+      "width": 1280,
+      "height": 574,
+      "usedInCategories": [
+        "냉장고 4도어 키친핏 Max",
+        "냉장고 페어(2대 이상) 설치"
+      ]
+    },
+    {
+      "id": "refri-2door-kitchenfit",
+      "category": "냉장고 2도어",
+      "file": "refri-2door-kitchenfit.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-03.jpg",
+      "alt": "냉장고 2도어 키친핏 설치 규격도",
+      "cap": "Bespoke 2도어 키친핏 — 좌우 이격 12mm·냉장고장 깊이 최소 700mm·도어오픈각 105°·폭 595mm·높이 1,853mm(냉장고장 높이 1,900mm 이상) · samsung.com 설치가이드",
+      "dims": [
+        "12mm",
+        "700mm",
+        "105°",
+        "595mm",
+        "1,853mm",
+        "1,900mm",
+        "이격12",
+        "폭595",
+        "높이1,853",
+        "높이1,900"
+      ],
+      "bytes": 50335,
+      "sha256": "3245d9f78567eafa894b4289172b775b81f6da3d58eba3ab01f3e69de763c447",
+      "format": "jpeg",
+      "width": 1280,
+      "height": 574,
+      "usedInCategories": [
+        "냉장고 2도어"
+      ]
+    },
+    {
+      "id": "refri-1door-kitchenfit",
+      "category": "냉장고 1도어",
+      "file": "refri-1door-kitchenfit.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-01-02-04-01_v3.jpg",
+      "alt": "Bespoke 1도어 키친핏 2대 조합 설치 규격도",
+      "cap": "Bespoke 1도어 키친핏(2대 조합) — 좌우 이격 12mm(외곽)·제품간 10mm·도어오픈각 105°·폭 595mm(1대)·높이 1,858mm · samsung.com 설치가이드",
+      "dims": [
+        "12mm",
+        "10mm",
+        "105°",
+        "595mm",
+        "1,858mm",
+        "이격12",
+        "폭595",
+        "높이1,858"
+      ],
+      "bytes": 130662,
+      "sha256": "2c7b8ceb618e2517c0a1c91308b0cb0a92d6a520b118e2451a1ee80b7a84128f",
+      "format": "jpeg",
+      "width": 1920,
+      "height": 861,
+      "usedInCategories": [
+        "냉장고 1도어"
+      ]
+    },
+    {
+      "id": "refri-sbs-845-852",
+      "category": "냉장고 양문형",
+      "file": "refri-sbs-845-852.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/side-by-side/popup/popup_pc_845_852_.jpg",
+      "alt": "양문형 냉장고 845~852L 설치 규격도",
+      "cap": "845~852L급(RS84B508115 기준) 설치 규격도 — 후면 이격 50mm·도어 오픈 최대 170도·전체 높이 1,780mm·폭 912mm·도어 오픈 시 전체 폭 1,726mm(2026-08-04 재확인, 기존 \"도어 오픈 시 전체 길이 1,780mm\" 표기는 실제로는 제품 높이였던 오기라 정정) · samsung.com",
+      "dims": [
+        "50mm",
+        "1,780mm",
+        "912mm",
+        "1,726mm",
+        "이격50",
+        "높이1,780",
+        "폭912",
+        "폭1,726"
+      ],
+      "bytes": 48232,
+      "sha256": "5f3d3499d27bcadc6edd6b3b803825a417334a929eb654c1c2f39abb4ef927ad",
+      "format": "jpeg",
+      "width": 860,
+      "height": 400,
+      "usedInCategories": [
+        "냉장고 양문형"
+      ]
+    },
+    {
+      "id": "refri-pair-infinite",
+      "category": "냉장고 페어(2대 이상) 설치",
+      "file": "refri-pair-infinite.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc02-01-01.jpg",
+      "alt": "Infinite Line 키친핏 조합(냉장고4도어+김치플러스4도어) 설치 규격도",
+      "cap": "Infinite Line 키친핏 조합(냉장고 4도어 912mm+김치플러스 4도어 795mm) — 좌우 이격 12mm(외곽)·제품간 10mm·냉장고장 높이 1,900mm·깊이 700mm 이상 · samsung.com 설치가이드",
+      "dims": [
+        "912mm",
+        "795mm",
+        "12mm",
+        "10mm",
+        "1,900mm",
+        "700mm",
+        "이격12",
+        "높이1,900",
+        "깊이700"
+      ],
+      "bytes": 58851,
+      "sha256": "6f05b95e2c26b5ff29085160fdb439951abe49bbe86a591dfff8645100596ef5",
+      "format": "jpeg",
+      "width": 1280,
+      "height": 574,
+      "usedInCategories": [
+        "냉장고 페어(2대 이상) 설치"
+      ]
+    },
+    {
+      "id": "kimchi-stand-4door",
+      "category": "김치냉장고",
+      "file": "kimchi-stand-4door.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/refrigerators/new-set-guide/guide/pc01-02-03-01.jpg",
+      "alt": "김치플러스 스탠드형 4도어 설치가이드 이미지",
+      "cap": "김치플러스 스탠드형 4도어 — 후면 벽과의 거리 100mm, 도어 오픈 130°, 제품 높이 1,825mm·가로 795mm, 냉장고장과의 거리(양측) 50mm(RQ48A9001S9 모델 기준) · samsung.com",
+      "dims": [
+        "100mm",
+        "130°",
+        "1,825mm",
+        "795mm",
+        "50mm",
+        "높이1,825",
+        "가로795"
+      ],
+      "bytes": 59137,
+      "sha256": "259a660bd5f09b308ba07d3bbeaafffef3ff2ab545613fae4a9f8de3bbb9066e",
+      "format": "jpeg",
+      "width": 1280,
+      "height": 574,
+      "usedInCategories": [
+        "김치냉장고"
+      ]
+    },
+    {
+      "id": "washer-bespoke-ai",
+      "category": "세탁기·콤보",
+      "file": "washer-bespoke-ai.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/washingmachines_pcd_web_03_01.jpg",
+      "alt": "'25년도 Bespoke AI 세탁기 설치가이드",
+      "cap": "Bespoke AI 세탁기(일반형) — 폭686·높이984·양옆20mm·후면25~50mm·최소거리769mm (WF*0F25***/WF*0F21***) · samsung.com",
+      "dims": [
+        "20mm",
+        "25~50mm",
+        "769mm",
+        "폭686",
+        "높이984"
+      ],
+      "bytes": 54625,
+      "sha256": "5d50b82ec859d6d4eb16b170b2ae47f3641f840a5ddec2b3ce5b673f784a6320",
+      "format": "jpeg",
+      "width": 940,
+      "height": 422,
+      "usedInCategories": [
+        "세탁기·콤보"
+      ]
+    },
+    {
+      "id": "washer-ai-combo",
+      "category": "세탁기·콤보",
+      "file": "washer-ai-combo.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/washing-machines/set-guide/aicombo_guide_pc_v3.jpg",
+      "alt": "Bespoke AI 콤보 설치가이드",
+      "cap": "Bespoke AI 콤보(일체형) — 폭686·높이1110·깊이875(도어오픈1430)·후면50mm·최소거리820mm (WD90F25***) · samsung.com",
+      "dims": [
+        "50mm",
+        "820mm",
+        "폭686",
+        "높이1110",
+        "깊이875"
+      ],
+      "bytes": 42892,
+      "sha256": "02ed022a7eabddc687ae0c0592542640dd9f8c9b709d6cae2f0639eb5829600a",
+      "format": "jpeg",
+      "width": 940,
+      "height": 422,
+      "usedInCategories": [
+        "세탁기·콤보"
+      ]
+    },
+    {
+      "id": "dryer-stack-kit",
+      "category": "건조기",
+      "file": "dryer-stack-kit.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/dryers/set-guide/bspk-grande-ai-23/col-kit_set_2025.jpg",
+      "alt": "'25년도 Bespoke AI 건조기&세탁기 직렬설치(상단 설치 키트) 설치가이드",
+      "cap": "직렬설치(상단 설치 키트) — 전체높이 1,968mm·양옆20mm·천장이격150mm · samsung.com",
+      "dims": [
+        "1,968mm",
+        "20mm",
+        "150mm",
+        "높이1,968",
+        "이격150"
+      ],
+      "bytes": 69274,
+      "sha256": "41cc7917c79d7c55f69c2d4d157214a8bbf5d6da7a340c7c7fa4e20b9c8eef6d",
+      "format": "jpeg",
+      "width": 940,
+      "height": 422,
+      "usedInCategories": [
+        "건조기"
+      ]
+    },
+    {
+      "id": "robot-builtin-drain",
+      "category": "로봇청소기",
+      "file": "robot-builtin-drain.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/vacuum-cleaners/bespoke_ai_steam_interior_fit/guide_pic01_pc.jpg",
+      "alt": "자동 급배수 빌트인 설치가이드 일러스트",
+      "cap": "자동 급배수 빌트인 — 스테이션 가로410·세로513·높이320mm, 벽 후면 이격 20mm · samsung.com",
+      "dims": [
+        "320mm",
+        "20mm",
+        "가로410",
+        "세로513",
+        "높이320",
+        "이격20"
+      ],
+      "bytes": 29927,
+      "sha256": "086a1969747d084afb0bf5a048d435c2e433f3710f73e782ede13fbfeef4de8a",
+      "format": "jpeg",
+      "width": 644,
+      "height": 372,
+      "usedInCategories": [
+        "로봇청소기"
+      ]
+    },
+    {
+      "id": "dishwasher-true-builtin",
+      "category": "식기세척기",
+      "file": "dishwasher-true-builtin.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/dishwashers/dishwashers-install-guide/guide_true_pc_v6.jpg",
+      "alt": "트루빌트인 설치 규격도",
+      "cap": "트루빌트인(14인용) — 폭595·깊이572·높이815~895·도어패널포함높이665~730 · 설치공간 최소 600×815~900×595 (DW99F79E1B00) · samsung.com",
+      "dims": [
+        "폭595",
+        "깊이572",
+        "높이815~895",
+        "높이665~730",
+        "600×815~900×595"
+      ],
+      "bytes": 76793,
+      "sha256": "578389a3fd5fb5f6ce29d79ce92491c9cf827654958e25846df4261809db2383",
+      "format": "jpeg",
+      "width": 1200,
+      "height": 581,
+      "usedInCategories": [
+        "식기세척기"
+      ]
+    },
+    {
+      "id": "airdresser-large",
+      "category": "에어드레서",
+      "file": "airdresser-large.jpg",
+      "src": "https://images.samsung.com/kdp/static/pcd/air-dresser/PC_Bespoke_airdresser_big_v3.jpg",
+      "alt": "Bespoke AI 에어드레서 대용량 설치가이드",
+      "cap": "Bespoke AI 에어드레서 대용량 — 상단이격 25mm·후면이격 15mm·좌우이격 14mm(DF10A9500CG)/2.5mm(DF*0H24R**·DF24CB******), 전체 높이 1,960mm·폭 595mm(두 모델 공통) · samsung.com 설치가이드",
+      "dims": [
+        "25mm",
+        "15mm",
+        "14mm",
+        "5mm",
+        "1,960mm",
+        "595mm",
+        "이격25",
+        "이격15",
+        "이격14",
+        "높이1,960",
+        "폭595"
+      ],
+      "bytes": 46255,
+      "sha256": "eece84b2e89a1008265ff41f8b1cc7d8b87df784655053f463b207552b0d5ae0",
+      "format": "jpeg",
+      "width": 870,
+      "height": 452,
+      "usedInCategories": [
+        "에어드레서"
+      ]
+    },
+    {
+      "id": "purifier-builtin",
+      "category": "정수기",
+      "file": "purifier-builtin.png",
+      "src": "https://images.samsung.com/kdp/static/pcd/hubpage/images/purifier_guide01_v7.png",
+      "alt": "정수기 파우셋·본체 설치 규격도(빌트인 상하형)",
+      "cap": "빌트인형 — 파우셋 165×278mm, 본체(상하 설치) 폭170×깊이445×높이386mm. 설치 불가 환경(배수관 없는 독립 아일랜드 식탁, 급배수관 외부노출 구조)도 함께 안내 · samsung.com 설치가이드",
+      "dims": [
+        "278mm",
+        "386mm",
+        "폭170",
+        "깊이445",
+        "높이386",
+        "165×278"
+      ],
+      "bytes": 360897,
+      "sha256": "7438f4cef0c64e559f5e69855802c89ddf105893b97f3144cd0a81755e63dbe3",
+      "format": "png",
+      "width": 1868,
+      "height": 1761,
+      "usedInCategories": [
+        "정수기"
+      ]
+    }
+  ]
+}

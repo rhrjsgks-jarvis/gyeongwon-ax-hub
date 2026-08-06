@@ -22,6 +22,7 @@ const NAV_GROUPS = [
       { href: '/care',            label: 'AI Care',         icon: '💚' },
       { href: '/compare',         label: '타사비교',         icon: '🔗' },
       { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
+      { href: '/floorplan',       label: '도면 배치',        icon: '📐' },
     ],
   },
   {
