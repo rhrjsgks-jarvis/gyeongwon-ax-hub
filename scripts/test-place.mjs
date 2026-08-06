@@ -490,17 +490,50 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     else pass(`정리 후 — 문이 뚫린 방도 인식 (${reg.count.toLocaleString()}px, 유출 없음)`);
   }
 
-  // 반경 산정: 열기는 화면 픽셀, 닫기는 실제 치수(mm) 기준
+  // 반경 산정: 열기는 화면 픽셀, 닫기는 실제 치수(mm) 기준으로 여러 단계
   {
     const st = P.state;
     const keep = st.mmPerPx;
     st.mmPerPx = 7.35;
     const r = P.cleanRadii({ w: 900, h: 640, S: 0.75 });
     if (r.openR > 2) fail(`열기 반경이 ${r.openR}px — 도면 선 굵기(5~10px)보다 크면 벽이 지워진다`);
-    else if (Math.abs(r.closeR - Math.round((500 / 7.35) * 0.75)) > 1) {
-      fail(`닫기 반경이 ${r.closeR}px — 문 폭 절반(500mm)에서 나와야 한다`);
-    } else pass(`정리 반경 (열기 ${r.openR}px · 닫기 ${r.closeR}px = 문 ${Math.round(r.closeR * 2 * 7.35 / 0.75)}mm까지)`);
+    else if (!Array.isArray(r.closeSteps) || r.closeSteps[0] !== 0) {
+      fail('닫기 반경이 0(메우지 않음)부터 시작하지 않음 — 큰 반경부터 쓰면 창문·가까운 선이 뭉갠다');
+    } else if (r.closeSteps.length < 4) fail(`닫기 단계가 ${r.closeSteps.length}개 — 너무 성기다`);
+    else pass(`정리 반경 (열기 ${r.openR}px · 닫기 단계 ${r.closeSteps.join('/')}px — 작은 것부터 시도)`);
     st.mmPerPx = keep;
+  }
+
+  // 개구부(문·창) 분류 — 메워서 만든 구간은 벽이 아니라 문·창으로 표시돼야 한다
+  {
+    const W2 = 300, H2 = 200;
+    const m = new Uint8Array(W2 * H2);
+    const box = (x0, y0, x1, y1) => {
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) m[y * W2 + x] = 1;
+    };
+    box(40, 40, 260, 46);      // 위 벽
+    box(40, 154, 260, 160);    // 아래 벽
+    box(40, 40, 46, 160);      // 좌 벽
+    box(254, 40, 260, 90);     // 우 벽 위쪽
+    box(254, 130, 260, 160);   // 우 벽 아래쪽 → 90~130이 문
+    const base = { w: W2, h: H2, S: 1, dark: m };
+    // 방 안쪽 사각형(벽 안쪽 면) — 실제 인식 결과와 같은 형태
+    const poly = [[47, 47], [47, 153], [253, 153], [253, 47]];
+    const edges = P.classifyEdges(poly, base);
+    const opens = edges.filter((e) => e.open);
+    if (!opens.length) fail('문 자리를 개구부로 분류하지 못함 — 문이 벽으로 인식된다');
+    else {
+      // 문은 우측 변(x≈253)의 y 90~130 구간이어야 한다
+      const o = opens[0];
+      const onRight = Math.abs(o.x1 - 253) < 3 && Math.abs(o.x2 - 253) < 3;
+      const yMin = Math.min(o.y1, o.y2), yMax = Math.max(o.y1, o.y2);
+      if (!onRight) fail(`개구부가 우측 변이 아님 (x=${o.x1.toFixed(0)}~${o.x2.toFixed(0)})`);
+      else if (yMin > 95 || yMax < 125) fail(`개구부 구간이 문 위치(90~130)와 어긋남 (${yMin.toFixed(0)}~${yMax.toFixed(0)})`);
+      else pass(`문 자리를 개구부로 분류 (우측 변 ${yMin.toFixed(0)}~${yMax.toFixed(0)}px, 총 ${opens.length}곳)`);
+    }
+    const solids = edges.filter((e) => !e.open);
+    if (solids.length < 3) fail(`실제 벽 구간이 ${solids.length}개 — 벽까지 개구부로 본다`);
+    else pass(`벽 구간 ${solids.length}개는 벽으로 유지`);
   }
 }
 
