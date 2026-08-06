@@ -732,6 +732,80 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   }
 }
 
+// ── [15-c] 경계 직접 수정 — 벽을 끌어서 고친다 ──
+// 자동 인식은 초안이다. 도면 표기가 관례를 벗어나면 어떤 규칙으로도 정확히 맞출 수 없으므로
+// 사용자가 벽을 끌어 고칠 수 있어야 한다. 이것이 마지막 안전망이다.
+{
+  const st = P.state;
+  const rect = (x, y, w, h) => [
+    { x1: x, y1: y, x2: x + w, y2: y }, { x1: x + w, y1: y, x2: x + w, y2: y + h },
+    { x1: x + w, y1: y + h, x2: x, y2: y + h }, { x1: x, y1: y + h, x2: x, y2: y },
+  ];
+  st.items = []; st.walls = []; st.rooms = []; st.roomSel = null; st.zoom = 0.1;
+  const rm = P.addRoom('침실2', rect(0, 0, 3000, 4000));
+  const part = rm.parts[0];
+
+  // 모서리를 끌면 그 점이 움직인다
+  {
+    const hit = P.hitBoundary(0, 0);
+    if (!hit || hit.kind !== 'v') fail(`모서리(0,0)를 못 잡는다 (${hit && hit.kind})`);
+    else {
+      P.moveVertex(hit, -500, -300);
+      const pts = P.partPoints(part);
+      const moved = pts[hit.idx];
+      if (Math.abs(moved[0] + 500) > 1 || Math.abs(moved[1] + 300) > 1) {
+        fail(`모서리가 (${moved[0].toFixed(0)},${moved[1].toFixed(0)})로 갔다 (기대 -500,-300)`);
+      } else pass('모서리를 끌면 그 점이 움직인다');
+      P.moveVertex(hit, 0, 0);
+    }
+  }
+
+  // 이웃과 축이 거의 맞으면 맞춰 준다 (도면은 대부분 직각이다)
+  {
+    const hit = P.hitBoundary(0, 0);
+    P.moveVertex(hit, 60, 4000 - 70);                  // 아래 모서리와 x·y가 조금씩 어긋나게
+    const pts = P.partPoints(part);
+    const nb = pts[(hit.idx - 1 + pts.length) % pts.length];
+    const cur = pts[hit.idx];
+    if (Math.abs(cur[0] - 0) > 1 && Math.abs(cur[0] - nb[0]) > 1) fail('축 스냅이 걸리지 않았다');
+    else pass('모서리를 옮길 때 이웃과 축을 맞춰 준다 (120mm 이내)');
+    P.moveVertex(hit, 0, 0);
+  }
+
+  // 벽을 끌면 수직 방향으로 밀리고 양옆 벽이 따라 늘어난다
+  {
+    const before = P.roomArea(rm) / 1e6;
+    const hit = P.hitBoundary(1500, 4000);             // 아래 벽 한가운데
+    if (!hit || hit.kind !== 'e') fail(`벽을 못 잡는다 (${hit && hit.kind})`);
+    else {
+      P.moveEdge(hit, 800, 1000);                      // 벽과 나란한 성분(800)은 무시돼야 한다
+      const pts = P.partPoints(part);
+      const after = P.roomArea(rm) / 1e6;
+      const grew = Math.abs(after - (before + 3.0)) < 0.2;   // 3m 폭 × 1m = 3㎡
+      const straight = Math.abs(pts[hit.idx][1] - pts[(hit.idx + 1) % pts.length][1]) < 1;
+      if (!grew) fail(`벽을 1m 밀었는데 넓이가 ${before.toFixed(1)} → ${after.toFixed(1)}㎡ (기대 +3.0)`);
+      else if (!straight) fail('벽을 밀었더니 기울어졌다 — 법선 방향으로만 움직여야 한다');
+      else pass(`벽을 끌면 수직으로만 밀린다 (${before.toFixed(1)} → ${after.toFixed(1)}㎡)`);
+      P.moveEdge(hit, 0, -1000);
+    }
+  }
+
+  // 벽을 그냥 누르면 개구부(문·창)로 바뀐다
+  {
+    const hit = P.hitBoundary(1500, 4000);
+    const was = !!part.walls[hit.idx].open;
+    P.toggleEdgeOpen(hit);
+    if (part.walls[hit.idx].open === was) fail('벽 ↔ 개구부 전환이 안 된다');
+    else {
+      const synced = P.state.walls.some((w) => w.open);
+      if (!synced) fail('개구부로 바꿨는데 전체 경계에 반영되지 않았다 (syncWalls)');
+      else pass('벽을 누르면 개구부(문·창)로 바뀐다');
+      P.toggleEdgeOpen(hit);
+    }
+  }
+  st.items = []; st.walls = []; st.rooms = []; st.roomSel = null;
+}
+
 // ── [16] 방(공간) 모델 — 여러 방 · 이름 · 방별 배치 ──
 // 한 세대에는 방이 여럿이고, 가전은 "어느 방에 놓을 것인가"가 정해져 있어야 한다.
 // 침실2가 꽉 찼다고 거실까지 못 쓴다고 말하면 안 되고, 냉장고를 침실에 놓아서도 안 된다.
