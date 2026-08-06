@@ -288,5 +288,56 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.walls = []; st.items = [];
 }
 
+// ── [11] 도어 오픈 공간 ──
+// 하드 판정이 아니라 주의 경고여야 한다. 이걸 이격처럼 걸면 실제 주방 대부분이
+// "배치 불가"가 되어 도구가 쓸모없어진다.
+{
+  const st = P.state;
+  const install = fs.readFileSync(path.join(root, 'public', 'install-app.html'), 'utf8');
+
+  // 근거 대조 — 양문형 1,726 − 912 = 좌우 각 407
+  const sbs = P.doorZoneFor({ cat: '냉장고', group: '양문형 2도어' });
+  const four = P.doorZoneFor({ cat: '냉장고', group: '4도어 (2026 카탈로그)' });
+  if (!sbs || sbs.side !== 407) fail(`양문형 도어 오픈 좌우가 ${sbs && sbs.side} (기대 407 = (1726−912)/2)`);
+  else if (!install.includes('도어 오픈 시 전체 폭 1,726mm')) fail('양문형 1,726mm 근거가 설치환경 가이드에 없음');
+  else if (!four || four.side !== 295) fail(`4도어 도어 측면 여유가 ${four && four.side} (기대 295)`);
+  else if (!install.includes('246~295mm')) fail('4도어 246~295mm 근거가 설치환경 가이드에 없음');
+  else pass('도어 오픈 좌우 여유 (양문형 407mm · 4도어 295mm) — 원문 대조');
+
+  // 위로 열리는 유형은 평면 구역을 만들지 않는다
+  const lid = P.topOpenFor({ cat: '김치냉장고', group: '김치플러스 뚜껑형 (RP 시리즈)' });
+  if (!lid) fail('뚜껑형 김치냉장고에 상부 개폐 안내가 없음');
+  else if (P.doorZoneFor({ cat: '김치냉장고', group: '김치플러스 뚜껑형 (RP 시리즈)' })) {
+    fail('뚜껑형인데 평면 도어 구역을 만듦 — 위로 열리므로 평면에는 영향이 없다');
+  } else pass('뚜껑형·통버블은 평면 도어 구역 없음 (상부 개폐 안내만)');
+
+  // 좁은 방에 양문형을 놓으면 하드 실패가 아니라 주의로 잡혀야 한다
+  st.walls = [
+    { x1: 0, y1: 0, x2: 1400, y2: 0 }, { x1: 1400, y1: 0, x2: 1400, y2: 2000 },
+    { x1: 1400, y1: 2000, x2: 0, y2: 2000 }, { x1: 0, y1: 2000, x2: 0, y2: 0 },
+  ];
+  st.items = [{
+    id: 'sbs', label: '양문형', cat: '냉장고', group: '양문형 2도어', size: '', model: 'RS84DB5002WW',
+    w: 912, h: 1780, d: 915, clear: P.clearFor('냉장고', '본체'), bx: 700, by: 50, a: 0, warn: [], soft: [],
+  }];
+  P.evaluate();
+  const it = st.items[0];
+  if (it.warn.length) fail(`도어 오픈이 하드 실패로 잡힘: ${it.warn.join(', ')}`);
+  else if (!it.soft.some((w) => w.includes('도어 오픈'))) fail(`1.4m 폭 방에 양문형(도어 오픈 1,726mm)인데 주의가 없음: ${JSON.stringify(it.soft)}`);
+  else pass(`좁은 방의 양문형 — 하드 실패 아닌 주의로 보고 ("${it.soft[0]}")`);
+
+  // 넉넉한 방이면 주의도 없어야 한다
+  st.walls = [
+    { x1: 0, y1: 0, x2: 4000, y2: 0 }, { x1: 4000, y1: 0, x2: 4000, y2: 3000 },
+    { x1: 4000, y1: 3000, x2: 0, y2: 3000 }, { x1: 0, y1: 3000, x2: 0, y2: 0 },
+  ];
+  st.items[0].bx = 2000;
+  P.evaluate();
+  if (st.items[0].soft.length) fail(`4m 폭 방인데 도어 오픈 주의가 남음: ${st.items[0].soft.join(', ')}`);
+  else pass('넉넉한 방 — 도어 오픈 주의 없음');
+
+  st.items = []; st.walls = [];
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
