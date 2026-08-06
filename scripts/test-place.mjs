@@ -339,5 +339,90 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.items = []; st.walls = [];
 }
 
+// ── [12] 중첩 차단 ──
+// 겹친 채로 놓이는 상태 자체를 만들지 않는다. 설치할 수 없는 배치를 화면에 그려 두면
+// 상담 중에 그대로 읽힌다.
+{
+  const st = P.state;
+  st.walls = [
+    { x1: 0, y1: 0, x2: 4000, y2: 0 }, { x1: 4000, y1: 0, x2: 4000, y2: 3000 },
+    { x1: 4000, y1: 3000, x2: 0, y2: 3000 }, { x1: 0, y1: 3000, x2: 0, y2: 0 },
+  ];
+  const mk = (id, cat, bx) => ({
+    id, label: id, cat, group: '', size: '', model: '',
+    w: 600, h: 1800, d: 600, clear: P.clearFor(cat, '본체'),
+    bx, by: (P.clearFor(cat, '본체').back || 0), a: 0, warn: [], soft: [],
+  });
+  st.items = [mk('A', '건조기', 1000), mk('B', '건조기', 2500)];
+
+  // 떨어져 있으면 놓을 수 있다
+  if (P.collisionAt(st.items[1])) fail(`1,500mm 떨어져 있는데 막힘: ${P.collisionAt(st.items[1])}`);
+  else pass('떨어진 자리 — 배치 허용');
+
+  // 본체가 겹치는 자리는 막는다
+  const probe = { ...st.items[1], bx: 1200 };
+  const why = P.collisionAt(probe);
+  if (!why || !why.includes('겹칩')) fail(`본체가 겹치는데 막지 않음 (${why})`);
+  else pass(`본체 겹침 차단 ("${why}")`);
+
+  // 이격거리만 침범해도 막는다 (건조기 좌우 각 20mm → 중심 간 640mm 미만이면 침범)
+  const probe2 = { ...st.items[1], bx: 1000 + 610 };
+  const why2 = P.collisionAt(probe2);
+  if (!why2) fail('이격거리를 침범했는데 막지 않음');
+  else pass(`이격 침범 차단 ("${why2}")`);
+
+  // 방 밖도 막는다
+  const probe3 = { ...st.items[1], bx: 3900 };
+  if (!P.collisionAt(probe3)) fail('방 밖으로 나가는데 막지 않음');
+  else pass('방 밖 이탈 차단');
+
+  st.items = []; st.walls = [];
+}
+
+// ── [13] 벽 자동 인식 ──
+// 도면 선을 추측해 그리지 않고, 밝은 영역을 채워 그 경계를 벽으로 삼는지 확인한다.
+{
+  const st = P.state;
+  const W = 400, H = 300;
+  // 흰 바탕에 굵은 검은 사각형 테두리(=벽) 하나. 안쪽은 방.
+  const dark = new Uint8Array(W * H);
+  const mark = (x0, y0, x1, y1) => {
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) dark[y * W + x] = 1;
+  };
+  mark(50, 40, 350, 48);     // 위 벽
+  mark(50, 240, 350, 248);   // 아래 벽
+  mark(50, 40, 58, 248);     // 좌 벽
+  mark(342, 40, 350, 248);   // 우 벽
+  const mask = { w: W, h: H, S: 1, dark };
+
+  const reg = P.floodRegion(mask, 200, 150);      // 방 한가운데
+  if (!reg) fail('방 안쪽인데 채우기가 실패');
+  else if (reg.border > 0) fail(`방 안에서 채웠는데 도면 바깥까지 새어 나감 (border=${reg.border})`);
+  else pass(`방 내부 채우기 (${reg.count.toLocaleString()}px · 바깥 유출 없음)`);
+
+  const poly = P.regionPolygon(mask, reg, 3, 8);
+  if (!poly) fail('방 윤곽을 만들지 못함');
+  else {
+    const xs = poly.map((p) => p[0]), ys = poly.map((p) => p[1]);
+    const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+    // 벽 안쪽 면 기준 283 × 191 (59~341, 49~239)
+    if (Math.abs(w - 283) > 6 || Math.abs(h - 191) > 6) {
+      fail(`인식된 방 크기가 ${w}×${h} (기대 283×191 ±6) — 벽 안쪽 면을 따라가지 않았다`);
+    } else pass(`방 윤곽 인식 ${w}×${h}px (벽 안쪽 면 기준, 모서리 ${poly.length}개)`);
+  }
+
+  // 벽 위를 누르면 거부해야 한다
+  if (P.floodRegion(mask, 54, 150)) fail('벽 위를 눌렀는데 방으로 인식');
+  else pass('벽·글씨 위를 누르면 거부');
+
+  // 벽이 끊긴 도면에서는 바깥으로 새어 나가는 것을 감지해야 한다
+  for (let y = 100; y < 140; y++) for (let x = 50; x <= 58; x++) dark[y * W + x] = 0;  // 좌 벽에 구멍
+  const leak = P.floodRegion(mask, 200, 150);
+  if (!leak || leak.border === 0) fail('벽이 끊겼는데 바깥 유출을 감지하지 못함');
+  else pass(`벽이 끊긴 도면 — 바깥 유출 감지 (border=${leak.border})`);
+
+  st.items = []; st.walls = [];
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

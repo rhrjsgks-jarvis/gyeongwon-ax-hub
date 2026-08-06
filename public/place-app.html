@@ -99,7 +99,16 @@
     display:flex;flex-direction:column;gap:3px}
   .spec b{color:var(--ink);font-variant-numeric:tabular-nums}
   .src{font-size:11px;color:#8A9099;line-height:1.4}
-  .modal-actions{display:flex;gap:8px;justify-content:flex-end}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .picklist{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow:auto;
+    border:1px solid var(--line);border-radius:8px;padding:6px}
+  .pick{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer}
+  .pick:hover{background:#F4F6F9}
+  .pick input[type=checkbox]{width:17px;height:17px;flex:none;accent-color:var(--brand);margin:0}
+  .pick .nm{flex:none;min-width:104px;font-size:13px;color:var(--ink)}
+  .pick select{flex:1;min-width:0;padding:5px 7px;font-size:12px}
+  .pick input[type=number]{width:52px;padding:5px 6px;font-size:12px;text-align:center}
+  .pick .unit{flex:none;font-size:12px;color:var(--muted)}
 
   @media (max-width:760px){
     #side{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
@@ -115,7 +124,7 @@
   <div id="steps">
     <div class="step on" data-step="1"><b>1</b>도면 올리기</div>
     <div class="step" data-step="2"><b>2</b>축척 맞추기</div>
-    <div class="step" data-step="3"><b>3</b>벽 그리기</div>
+    <div class="step" data-step="3"><b>3</b>벽 인식</div>
     <div class="step" data-step="4"><b>4</b>가전 배치</div>
   </div>
 
@@ -123,9 +132,10 @@
     <input type="file" id="file" accept="image/*" hidden>
     <button id="btn-img">도면 이미지</button>
     <button id="btn-scale">축척 맞추기</button>
+    <button id="btn-detect">벽 자동 인식</button>
     <button id="btn-wall">벽 그리기</button>
-    <button id="btn-add">가전 추가</button>
-    <button id="btn-auto" class="primary">배치 추천</button>
+    <button id="btn-add">가전 선택</button>
+    <button id="btn-auto" class="primary">주방 배치 추천</button>
     <span class="grow"></span>
     <span class="hint" id="status">도면 없이 벽만 그려도 됩니다</span>
     <button id="btn-side" class="ghost" title="목록">☰</button>
@@ -136,7 +146,7 @@
       <canvas id="cv"></canvas>
       <div id="empty">
         <strong>도면을 올리고 축척을 맞추면 시작합니다</strong>
-        <span>방을 그린 뒤 <b>배치 추천</b>을 누르면, 고른 가전을 이격거리에 맞춰 자동으로 놓아 드립니다.</span>
+        <span>도면을 올리면 <b>벽을 자동으로 인식</b>합니다. 그 뒤 가전을 체크해 고르면 이격거리에 맞춰 놓아 드립니다.</span>
         <span>도면이 없으면 <b>벽 그리기</b>로 방 크기를 직접 입력해도 됩니다.</span>
       </div>
       <div id="modal"><div class="sheet" id="sheet"></div></div>
@@ -251,7 +261,7 @@ const state = {
   items:[],              // 배치된 가전
   reps:[],               // size-reps.json
   mode:'idle',           // idle | scale | wall | place
-  scalePts:[], wallPts:[],
+  scalePts:[], wallPts:[], mask:null, draft:null,
   pending:null,          // 배치 대기중인 가전
   sel:null, drag:null,
 };
@@ -346,6 +356,238 @@ function wallLoop(){
   return Math.hypot(fx-lx,fy-ly) < 1 ? pts.slice(0,-1) : null;
 }
 
+/* ── 벽 자동 인식 ────────────────────────────────────────────────
+   도면에서 방 하나를 눌러 벽을 자동으로 잡는다.
+
+   **선을 추측해서 그리지 않는다.** 하는 일은 "밝은 영역을 채우고 그 경계를 따라가는 것"
+   뿐이다. 도면에서 벽은 굵고 어두운 선이고 방 안은 밝으므로, 방 안쪽을 채우면 그 경계가
+   곧 벽 안쪽 면이 된다. 어떤 선이 벽인지 판단하지 않으므로 "벽을 몇 cm 틀리게 잡는" 종류의
+   오차가 생기지 않는다.
+
+   **축척은 여전히 사용자가 확정한 값을 쓴다.** 자동 인식은 모양만 잡고, mm는 치수선 보정
+   (또는 가장 긴 벽 길이 입력)에서 온다. 그래서 판정 근거는 그대로 사용자가 확인한 치수다.
+
+   결과는 확정이 아니라 초안이다 — 마음에 들지 않으면 '벽 그리기'로 직접 그리면 된다.
+──────────────────────────────────────────────────────────────── */
+const DETECT_MAX = 900;      // 인식 해상도 상한(픽셀). 큰 도면도 1초 안에 끝나게 한다
+const DARK_LUM   = 125;      // 이 밝기 미만이면 벽·글씨 같은 '어두운 것'으로 본다
+
+function buildMask(){
+  const S = Math.min(1, DETECT_MAX / Math.max(state.imgW, state.imgH));
+  const w = Math.max(1, Math.round(state.imgW * S));
+  const h = Math.max(1, Math.round(state.imgH * S));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h);      // 투명 배경은 흰색으로 본다
+  cx.drawImage(state.img, 0, 0, w, h);
+  const d = cx.getImageData(0, 0, w, h).data;
+  const dark = new Uint8Array(w * h);
+  for (let i = 0, p = 0; p < w * h; i += 4, p++) {
+    const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    dark[p] = lum < DARK_LUM ? 1 : 0;
+  }
+  return { w, h, S, dark };
+}
+
+/** 밝은 영역을 4방향으로 채운다. 도면 바깥까지 새어 나가면 방이 아니라고 판단한다. */
+function floodRegion(mask, sx, sy){
+  const { w, h, dark } = mask;
+  if (sx < 0 || sy < 0 || sx >= w || sy >= h || dark[sy * w + sx]) return null;
+  const seen = new Uint8Array(w * h);
+  const stack = [sy * w + sx];
+  seen[sy * w + sx] = 1;
+  let minX = sx, maxX = sx, minY = sy, maxY = sy, count = 0, border = 0;
+  while (stack.length) {
+    const p = stack.pop();
+    const x = p % w, y = (p - x) / w;
+    count++;
+    if (x === 0 || y === 0 || x === w - 1 || y === h - 1) border++;
+    if (x < minX) minX = x; if (x > maxX) maxX = x;
+    if (y < minY) minY = y; if (y > maxY) maxY = y;
+    if (x > 0     && !seen[p - 1] && !dark[p - 1]) { seen[p - 1] = 1; stack.push(p - 1); }
+    if (x < w - 1 && !seen[p + 1] && !dark[p + 1]) { seen[p + 1] = 1; stack.push(p + 1); }
+    if (y > 0     && !seen[p - w] && !dark[p - w]) { seen[p - w] = 1; stack.push(p - w); }
+    if (y < h - 1 && !seen[p + w] && !dark[p + w]) { seen[p + w] = 1; stack.push(p + w); }
+  }
+  return { seen, minX, maxX, minY, maxY, count, border };
+}
+
+/**
+ * 채워진 영역의 좌·우 윤곽을 계단으로 압축해 직교 다각형을 만든다.
+ * 아파트 도면은 대부분 직각이라 이 방식으로 ㄱ자·ㄷ자 방까지 잡힌다.
+ */
+function regionPolygon(mask, reg, tol, minRun){
+  const { w } = mask;
+  const ys = [], lefts = [], rights = [];
+  for (let y = reg.minY; y <= reg.maxY; y++) {
+    let l = -1, r = -1;
+    for (let x = reg.minX; x <= reg.maxX; x++) {
+      if (reg.seen[y * w + x]) { if (l < 0) l = x; r = x; }
+    }
+    if (l >= 0) { ys.push(y); lefts.push(l); rights.push(r); }
+  }
+  if (ys.length < minRun) return null;
+
+  // 같은 값이 이어지는 구간(계단)으로 묶는다
+  const steps = (prof) => {
+    const out = [];
+    let s = 0;
+    for (let i = 1; i <= prof.length; i++) {
+      if (i === prof.length || Math.abs(prof[i] - prof[s]) > tol) {
+        const seg = prof.slice(s, i).slice().sort((a, b) => a - b);
+        out.push({ y0: ys[s], y1: ys[i - 1], v: seg[seg.length >> 1] });
+        s = i;
+      }
+    }
+    // 짧은 계단은 노이즈(치수 글씨·가구 표기)라 앞 계단에 흡수시킨다
+    const merged = [];
+    for (const st of out) {
+      const prev = merged[merged.length - 1];
+      if (prev && (st.y1 - st.y0) < minRun) { prev.y1 = st.y1; continue; }
+      merged.push({ ...st });
+    }
+    return merged;
+  };
+
+  const L = steps(lefts), R = steps(rights);
+  if (!L.length || !R.length) return null;
+
+  const pts = [];
+  for (const s of L) { pts.push([s.v, s.y0]); pts.push([s.v, s.y1]); }   // 왼쪽 위→아래
+  for (let i = R.length - 1; i >= 0; i--) {                              // 오른쪽 아래→위
+    const s = R[i];
+    pts.push([s.v, s.y1]); pts.push([s.v, s.y0]);
+  }
+  // 같은 점 연속 제거
+  const out = [];
+  for (const p of pts) {
+    const q = out[out.length - 1];
+    if (!q || Math.abs(q[0] - p[0]) > 0.5 || Math.abs(q[1] - p[1]) > 0.5) out.push(p);
+  }
+  return out.length >= 4 ? out : null;
+}
+
+/**
+ * 도면의 (imgX, imgY) 지점이 속한 방을 인식해 벽 후보를 돌려준다.
+ * 실패 사유를 문자열로 함께 돌려줘 화면에 그대로 보여준다.
+ */
+function detectRoomAt(imgX, imgY){
+  if (!state.img) return { error: '도면을 먼저 올려주세요.' };
+  const mask = state.mask || (state.mask = buildMask());
+  const sx = Math.round(imgX * mask.S), sy = Math.round(imgY * mask.S);
+  const reg = floodRegion(mask, sx, sy);
+  if (!reg) return { error: '누른 자리가 벽·글씨 위입니다. 방 안쪽의 빈 곳을 눌러주세요.' };
+
+  const area = mask.w * mask.h;
+  if (reg.count < area * 0.002) return { error: '인식된 공간이 너무 작습니다. 방 한가운데를 눌러주세요.' };
+  if (reg.border > (mask.w + mask.h) * 0.3) {
+    return { error: '도면 바깥까지 이어져 있습니다 — 벽이 끊긴 곳으로 새어 나갔습니다. 방 안쪽을 누르거나 벽 그리기로 직접 그려주세요.' };
+  }
+
+  const tol = Math.max(2, Math.round(Math.max(mask.w, mask.h) * 0.006));
+  const minRun = Math.max(4, Math.round(Math.max(mask.w, mask.h) * 0.02));
+  const poly = regionPolygon(mask, reg, tol, minRun);
+  if (!poly) return { error: '방 모양을 잡지 못했습니다. 벽 그리기로 직접 그려주세요.' };
+
+  // 인식 해상도 → 도면 이미지 픽셀
+  return { poly: poly.map(([x, y]) => [x / mask.S, y / mask.S]), reg, mask };
+}
+
+/** 인식한 다각형(도면 픽셀)을 실제 벽으로 확정한다 */
+function applyDetected(polyImg){
+  const k = state.mmPerPx || 1;                 // 축척이 없으면 나중에 벽 길이로 환산한다
+  const pts = polyImg.map(([x, y]) => [x * k, y * k]);
+  const segs = [];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    segs.push({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] });
+  }
+  state.walls = [];
+  if (!state.scaled) { askWallLength(segs); return; }
+  state.walls.push(...segs);
+  setMode('idle'); setStep(4); evaluate(); draw();
+}
+
+function startDetect(){
+  if (!state.img){
+    sheet(`<h2>도면을 먼저 올려주세요</h2>
+      <p class="hint">벽 자동 인식은 도면 이미지에서 방을 찾아냅니다. 도면이 없으면
+        <b>벽 그리기</b>로 방 크기를 직접 입력하시면 됩니다.</p>
+      <div class="modal-actions"><button id="c">벽 그리기</button><button class="primary" id="ok">도면 올리기</button></div>`,
+      ()=>{ $('#ok').onclick=()=>{closeSheet(); $('#btn-img').click();};
+            $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
+    return;
+  }
+  state.draft = null; setMode('detect'); setStep(3); draw();
+}
+
+/** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
+function autoDetectCenter(){
+  const r = detectRoomAt(state.imgW/2, state.imgH/2);
+  if (r.error){ setMode('detect'); toast('가운데 자동 인식이 안 됐습니다 — 방 안쪽을 눌러주세요'); draw(); return; }
+  state.draft = r.poly; setMode('detect'); draw();
+  confirmDetected(true);
+}
+
+function confirmDetected(auto){
+  const poly = state.draft;
+  if (!poly) return;
+  // 면적과 최장변을 미리 보여줘 사용자가 눈으로 검산할 수 있게 한다
+  const k = state.mmPerPx || 1;
+  let long = 0;
+  for (let i=0;i<poly.length;i++){
+    const a=poly[i], b=poly[(i+1)%poly.length];
+    long = Math.max(long, Math.hypot(b[0]-a[0], b[1]-a[1]) * k);
+  }
+  const sizeTxt = state.scaled
+    ? `가장 긴 벽 <b>${Math.round(long).toLocaleString()}mm</b> · 모서리 ${poly.length}개`
+    : `모서리 ${poly.length}개 — 실제 길이는 다음 단계에서 입력합니다`;
+  sheet(`<h2>이 방으로 잡을까요?</h2>
+    <p class="hint">${auto ? '도면 가운데를 기준으로 자동 인식했습니다. ' : ''}파란 굵은 선이 인식된 벽입니다.
+      도면과 다르면 <b>다시 누르기</b>로 다른 방을 고르거나 <b>직접 그리기</b>로 그리세요.</p>
+    <div class="spec">${sizeTxt}</div>
+    <p class="src">벽 모양만 자동으로 잡습니다. 실제 치수는 축척 보정(또는 벽 길이 입력)에서 온 값을 씁니다 —
+      도면 선을 추측해서 치수를 만들지 않습니다.</p>
+    <div class="modal-actions">
+      <button id="draw">직접 그리기</button>
+      <button id="again">다시 누르기</button>
+      <button class="primary" id="ok">이 방으로 확정</button>
+    </div>`,
+    ()=>{
+      $('#ok').onclick   = ()=>{ closeSheet(); const p=state.draft; state.draft=null; applyDetected(p); };
+      $('#again').onclick= ()=>{ closeSheet(); state.draft=null; setMode('detect'); draw(); };
+      $('#draw').onclick = ()=>{ closeSheet(); state.draft=null; state.wallPts=[]; setMode('wall'); draw(); };
+    });
+}
+
+/* 짧은 안내 — 모달을 띄울 만큼은 아닌 것들 */
+let toastTimer = null;
+function toast(msg){
+  $('#status').textContent = msg;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(renderSide, 4000);
+}
+
+/**
+ * 이 위치에 놓을 수 없는 이유를 돌려준다(놓을 수 있으면 null).
+ * 드래그 중에 호출해 "겹친 채로 놓이는 상태" 자체를 만들지 않는다 —
+ * 설치할 수 없는 배치를 화면에 그려 두면 상담 중에 그대로 읽힌다.
+ *
+ * 본체 겹침과 이격 침범은 막고, 도어 오픈은 막지 않는다. 힌지 방향(좌/우)을 알 수 없어
+ * 양쪽에 그리기 때문에, 막아 버리면 실제로는 열리는 자리도 못 놓게 된다. 대신 경고로 남긴다.
+ */
+function collisionAt(it){
+  const body = corners(it), clear = corners(it, it.clear);
+  if (wallLoop() && body.some(([x,y]) => !insideRoom(x,y))) return '방 밖으로 나갑니다';
+  for (const o of state.items){
+    if (o === it) continue;
+    if (overlaps(body, corners(o))) return `${o.label}와 겹칩니다`;
+    if (overlaps(clear, corners(o, o.clear))) return `${o.label}와 이격거리가 부족합니다`;
+  }
+  return null;
+}
+
 /* ── 판정 ── */
 function evaluate(){
   const items = state.items;
@@ -424,6 +666,16 @@ function draw(){
     for (const [x,y] of state.wallPts){ const [sx,sy]=toScreen(x,y);
       ctx.fillStyle='#1428A0'; ctx.beginPath(); ctx.arc(sx,sy,4,0,7); ctx.fill(); }
   }
+  // 자동 인식 초안
+  if (state.draft && state.draft.length){
+    const k = state.mmPerPx || 1;
+    ctx.strokeStyle='#1428A0'; ctx.lineWidth=5; ctx.lineJoin='round';
+    ctx.beginPath();
+    state.draft.forEach(([ix,iy],i)=>{ const [sx,sy]=toScreen(ix*k, iy*k); i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy); });
+    ctx.closePath(); ctx.stroke();
+    ctx.fillStyle='rgba(20,40,160,.06)'; ctx.fill();
+  }
+
   // 축척 보정 점
   for (const [x,y] of state.scalePts){
     ctx.fillStyle='#B45309'; ctx.beginPath(); ctx.arc(x,y,5,0,7); ctx.fill();
@@ -497,9 +749,10 @@ function renderSide(){
     ...(soft ? [row('warn', `도어 오픈 등 확인 필요 ${soft}건 — 주황 점선 구역`)] : []),
   ].join('');
   $('#status').textContent = {
-    idle:'가전을 눌러 옮기고, 두 번 누르면 90° 돌아갑니다',
+    idle:'가전을 끌어 옮기고, 두 번 누르면 90° 회전 · 겹치는 자리에는 놓이지 않습니다',
     scale:'도면에서 길이를 아는 두 점을 차례로 누르세요',
     wall:'벽 모서리를 차례로 누르고, 시작점을 다시 누르면 닫힙니다',
+    detect:'배치할 방 안쪽의 빈 곳을 한 번 누르세요 — 벽을 자동으로 잡습니다',
     place:'놓을 위치를 누르세요 — 가까운 벽에 붙습니다',
   }[state.mode];
 }
@@ -514,6 +767,16 @@ cv.addEventListener('pointerdown', (e)=>{
   const sx = e.clientX-r.left, sy = e.clientY-r.top;
   const [wx,wy] = toWorld(sx,sy);
 
+  if (state.mode==='detect'){
+    // 화면 → 도면 이미지 픽셀
+    const k = state.mmPerPx || 1;
+    const ix = wx / k, iy = wy / k;
+    const r = detectRoomAt(ix, iy);
+    if (r.error){ toast(r.error); return; }
+    state.draft = r.poly; draw();
+    confirmDetected();
+    return;
+  }
   if (state.mode==='scale'){
     state.scalePts.push([sx,sy]);
     if (state.scalePts.length===2) askScale();
@@ -557,9 +820,17 @@ cv.addEventListener('pointermove', (e)=>{
   }
   const it = state.items.find((x)=>x.id===state.drag.id); if (!it) return;
   const [wx,wy] = toWorld(sx,sy);
+  const prev = { bx:it.bx, by:it.by, a:it.a };
+
+  // 자유 이동이 기본이고, 벽에 아주 가까이 가져갔을 때만 붙는다(예전 600mm는 너무 넓어
+  // 방 한가운데에 두려 해도 자꾸 벽으로 끌려갔다).
   const snap = snapToWall(wx-state.drag.ox, wy-state.drag.oy, it);
-  if (snap && snap.dist < 600){ it.bx=snap.bx; it.by=snap.by; it.a=snap.a; }
+  if (snap && snap.dist < 180){ it.bx=snap.bx; it.by=snap.by; it.a=snap.a; }
   else { it.bx = wx-state.drag.ox; it.by = wy-state.drag.oy; }
+
+  // 겹치면 그 자리에 놓지 않는다 — 설치할 수 없는 배치를 화면에 만들지 않기 위함.
+  const clash = collisionAt(it);
+  if (clash){ Object.assign(it, prev); toast(clash); }
   evaluate(); draw();
 });
 cv.addEventListener('pointerup', ()=>{ state.drag=null; });
@@ -599,7 +870,7 @@ $('#file').onchange = (e)=>{
   const img = new Image();
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
-    state.mmPerPx=null; state.scalePts=[];
+    state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.walls=[];
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
     const r = cv.getBoundingClientRect();
@@ -612,12 +883,13 @@ $('#file').onchange = (e)=>{
 };
 $('#btn-scale').onclick = ()=>{ state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
 $('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
-$('#btn-add').onclick   = ()=> openPicker();
-$('#btn-auto').onclick  = ()=> openAuto();
+$('#btn-detect').onclick= ()=> startDetect();
+$('#btn-add').onclick   = ()=> openSelect(null);
+$('#btn-auto').onclick  = ()=> openSelect('주방');
 $('#btn-side').onclick  = ()=> $('#side').classList.toggle('on');
 $('#steps').onclick = (e)=>{ const s=e.target.closest('.step'); if(!s) return;
   const n=+s.dataset.step; if(n===1)$('#btn-img').click(); if(n===2)$('#btn-scale').click();
-  if(n===3)$('#btn-wall').click(); if(n===4)openPicker(); };
+  if(n===3)$('#btn-detect').click(); if(n===4)openSelect(null); };
 
 function setMode(m){ state.mode=m; renderSide(); }
 function setStep(n){ document.querySelectorAll('.step').forEach((s)=>{
@@ -642,7 +914,8 @@ function askScale(){
         const r = cv.getBoundingClientRect();
         state.zoom = Math.min(r.width/(state.imgW*state.mmPerPx), r.height/(state.imgH*state.mmPerPx)) * 0.9;
         state.panX = 20; state.panY = 20;
-        state.scalePts=[]; state.wallPts=[]; closeSheet(); setMode('wall'); setStep(3); draw();
+        state.scalePts=[]; state.wallPts=[]; closeSheet(); setStep(3); draw();
+        autoDetectCenter();
       };
       $('#c').onclick = ()=>{ state.scalePts=[]; closeSheet(); setMode('idle'); draw(); };
     });
@@ -692,65 +965,92 @@ async function loadReps(){
   const r = await fetch('size-reps.json');
   state.reps = await r.json();
 }
-async function openPicker(){
+/**
+ * 가전 선택 — 체크박스로 여러 종을 한 번에 고른다.
+ * 예전에는 드롭다운으로 한 번에 한 종만 골라 도면에 놓는 방식이라, 주방 6종을 넣으려면
+ * 같은 절차를 여섯 번 반복해야 했다.
+ *
+ * room을 주면 그 용도에 맞는 카테고리만 보여주고 미리 체크해 둔다(배치 추천).
+ * room이 없으면 전체 카테고리를 체크 없이 보여준다(가전 선택).
+ */
+async function openSelect(room){
   await loadReps();
-  const cats = [...new Set(state.reps.map((r)=>r.cat))];
-  sheet(`<h2>가전 추가</h2>
+  const allCats = [...new Set(state.reps.map((r)=>r.cat))];
+  const rooms = ['전체', ...Object.keys(ROOM_PLAN)];
+  const start = room || '전체';
+
+  sheet(`<h2>가전 선택</h2>
     <div class="pickers">
-      <label>카테고리<select id="p-cat">${cats.map((c)=>`<option>${esc(c)}</option>`).join('')}</select></label>
-      <label>사이즈<select id="p-size"></select></label>
-      <label>모델<select id="p-model"></select></label>
-      <label>배치할 부분<select id="p-part"></select></label>
+      <label>방 용도<select id="a-room">${rooms.map((r)=>`<option${r===start?' selected':''}>${esc(r)}</option>`).join('')}</select></label>
     </div>
-    <div class="spec" id="p-spec"></div>
-    <div class="modal-actions"><button id="c">취소</button><button class="primary" id="ok">도면에 놓기</button></div>`,
+    <div id="a-list" class="picklist"></div>
+    <p class="src">체크한 가전을 폭이 큰 것부터 긴 벽을 따라 놓습니다. 이격거리와 방 경계를 지키는
+      자리를 못 찾으면 억지로 놓지 않고 "자리 없음"으로 알려드립니다. 놓은 뒤에는 끌어서 옮길 수 있고,
+      겹치는 자리에는 놓이지 않습니다.</p>
+    <div class="modal-actions">
+      <button id="c">취소</button>
+      <button class="primary" id="ok">도면에 배치</button>
+    </div>`,
     ()=>{
-      const cat=$('#p-cat'), size=$('#p-size'), model=$('#p-model'), part=$('#p-part');
-      const fillSize = ()=>{
-        const rows = state.reps.filter((r)=>r.cat===cat.value);
-        size.innerHTML = rows.map((r,i)=>`<option value="${i}">${esc(r.size)}${r.specs.length?` — ${esc(r.specs[0])}`:''}</option>`).join('');
-        fillModel();
-      };
-      const cur = ()=> state.reps.filter((r)=>r.cat===cat.value)[+size.value||0];
-      const fillModel = ()=>{
-        const r = cur(); if(!r) return;
-        model.innerHTML = r.options.map((o,i)=>{
-          const p=o.parts[0];
-          return `<option value="${i}">${esc(o.model)} — ${Math.round(p.w)}×${Math.round(p.h)}×${Math.round(p.d)}</option>`;
+      const roomSel = $('#a-room');
+      const fill = ()=>{
+        const v = roomSel.value;
+        const cats = v==='전체' ? allCats : ROOM_PLAN[v].filter((c)=>allCats.includes(c));
+        const pre  = v!=='전체';
+        $('#a-list').innerHTML = cats.map((c)=>{
+          const rows = state.reps.filter((r)=>r.cat===c);
+          return `<label class="pick">
+            <input type="checkbox" data-cat="${esc(c)}"${pre?' checked':''}>
+            <span class="nm">${esc(c)}</span>
+            <select data-size="${esc(c)}">
+              ${rows.map((r,i)=>`<option value="${i}">${esc(r.size)}${r.specs.length?` — ${esc(r.specs[0])}`:''}</option>`).join('')}
+            </select>
+            <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" title="수량">
+            <span class="unit">대</span></label>`;
         }).join('');
-        fillPart();
+        // 체크박스 외의 곳(사이즈·수량)을 눌렀을 때 체크가 토글되지 않게 한다
+        $('#a-list').querySelectorAll('select,input[type=number]').forEach((el)=>{
+          el.addEventListener('click',(e)=>e.stopPropagation());
+          el.addEventListener('change',(e)=>{
+            e.stopPropagation();
+            const box = el.closest('.pick').querySelector('input[type=checkbox]');
+            box.checked = true;      // 사이즈를 고르면 쓰겠다는 뜻이다
+          });
+        });
       };
-      const fillPart = ()=>{
-        const r=cur(); if(!r) return;
-        const o = r.options[+model.value||0];
-        part.innerHTML = o.parts.map((p,i)=>`<option value="${i}">${esc(p.part)} — ${Math.round(p.w)}×${Math.round(p.h)}×${Math.round(p.d)}</option>`).join('');
-        showSpec();
-      };
-      const showSpec = ()=>{
-        const r=cur(); if(!r) return;
-        const o=r.options[+model.value||0], p=o.parts[+part.value||0];
-        const cl = clearFor(r.cat, p.part, o.model);
-        $('#p-spec').innerHTML =
-          `<div>치수 <b>${Math.round(p.w)} × ${Math.round(p.h)} × ${Math.round(p.d)}mm</b> <span class="hint">(W×H×D · ${esc(p.label)})</span></div>
-           <div>이격 <b>후면 ${cl.back} · 좌우 ${cl.side}${cl.front?` · 전면 ${cl.front}`:''}mm</b></div>
-           <p class="src">${cl.src ? esc(cl.src) : '설치환경 가이드에 이 카테고리의 이격거리 수치가 없어 0으로 둡니다 — 추정값을 넣지 않습니다.'}</p>
-           ${(()=>{ const probe={cat:r.cat,group:o.group};
-              const dz=doorZoneFor(probe), to=topOpenFor(probe);
-              if (dz) return `<div>도어 오픈 <b>좌우 각 ${dz.side}mm</b></div><p class="src">${esc(dz.src)}</p>`;
-              if (to) return `<p class="src">${esc(to.note)}</p>`;
-              return ''; })()}
-           ${r.note?`<p class="src">출처: ${esc(r.note)}</p>`:''}`;
-      };
-      cat.onchange=fillSize; size.onchange=fillModel; model.onchange=fillPart; part.onchange=showSpec;
-      fillSize();
+      roomSel.onchange = fill; fill();
       $('#c').onclick = closeSheet;
       $('#ok').onclick = ()=>{
-        const r=cur(); const o=r.options[+model.value||0]; const p=o.parts[+part.value||0];
-        state.pending = { cat:r.cat, size:r.size, model:o.model, group:o.group, part:p, clear:clearFor(r.cat,p.part,o.model) };
-        closeSheet(); setMode('place'); setStep(4); draw();
+        const picks = [];
+        for (const cb of document.querySelectorAll('#a-list input[type=checkbox]:checked')){
+          const cat = cb.dataset.cat;
+          const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
+          const qtyEl = document.querySelector(`input[data-qty="${CSS.escape(cat)}"]`);
+          const r = state.reps.filter((x)=>x.cat===cat)[+sel.value||0];
+          const o = r.options[0], p = o.parts[0];
+          const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
+          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0 });
+        }
+        if (!picks.length){ toast('가전을 하나 이상 체크해주세요'); return; }
+        closeSheet();
+        if (!wallLoop()){ needRoom(); return; }
+        autoPlace(picks);
       };
     });
 }
+
+function needRoom(){
+  sheet(`<h2>먼저 방을 잡아주세요</h2>
+    <p class="hint">배치하려면 닫힌 방이 필요합니다. 도면을 올렸다면 <b>벽 자동 인식</b>으로
+      방 안쪽을 한 번 누르면 되고, 도면이 없으면 <b>벽 그리기</b>로 직접 그리시면 됩니다.</p>
+    <div class="modal-actions">
+      <button id="c">벽 그리기</button>
+      <button class="primary" id="ok">벽 자동 인식</button>
+    </div>`,
+    ()=>{ $('#ok').onclick=()=>{closeSheet(); startDetect();};
+          $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
+}
+
 /* 같은 카테고리인데 모델 세대에 따라 이격이 달라지는 경우.
    에어드레서 구형 Bespoke(DF10A9500CG·DF60A8500CG)는 좌우 14mm가 필요하고 현행
    라인업은 2.5mm다 — 삼성닷컴 설치가이드 다이어그램에 색상별로 모델코드와 함께 표기돼 있다.
@@ -836,62 +1136,6 @@ function findSpot(item, placed){
   return null;
 }
 
-async function openAuto(){
-  await loadReps();
-  if (!wallLoop()){
-    sheet(`<h2>먼저 방을 그려주세요</h2>
-      <p class="hint">배치를 추천하려면 닫힌 방이 필요합니다. <b>벽 그리기</b>로 모서리를 차례로 누르고,
-        마지막에 시작점을 다시 눌러 방을 닫아주세요.</p>
-      <div class="modal-actions"><button class="primary" id="ok">벽 그리기</button></div>`,
-      ()=>{ $('#ok').onclick = ()=>{ closeSheet(); $('#btn-wall').click(); }; });
-    return;
-  }
-  const rooms = Object.keys(ROOM_PLAN);
-  sheet(`<h2>배치 추천</h2>
-    <div class="pickers">
-      <label>방 용도<select id="a-room">${rooms.map((r)=>`<option>${esc(r)}</option>`).join('')}</select></label>
-    </div>
-    <div id="a-list" class="pickers"></div>
-    <p class="src">체크한 가전을 긴 벽부터 차례로 놓습니다. 이격거리와 방 경계를 지키는 자리를
-      못 찾으면 억지로 놓지 않고 "자리 없음"으로 알려드립니다.</p>
-    <div class="modal-actions"><button id="c">취소</button><button class="primary" id="ok">배치하기</button></div>`,
-    ()=>{
-      const room = $('#a-room');
-      const fill = ()=>{
-        const cats = ROOM_PLAN[room.value].filter((c)=>state.reps.some((r)=>r.cat===c));
-        $('#a-list').innerHTML = cats.map((c)=>{
-          const rows = state.reps.filter((r)=>r.cat===c);
-          return `<label style="flex-direction:row;align-items:center;gap:8px">
-            <input type="checkbox" data-cat="${esc(c)}" checked style="width:auto">
-            <span style="color:var(--ink);min-width:96px">${esc(c)}</span>
-            <select data-size="${esc(c)}" style="flex:1;min-width:0">
-              ${rows.map((r,i)=>`<option value="${i}">${esc(r.size)}${r.specs.length?` — ${esc(r.specs[0])}`:''}</option>`).join('')}
-            </select>
-            <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" style="width:56px" title="수량">
-            <span style="flex:none">대</span></label>`;
-        }).join('');
-      };
-      room.onchange = fill; fill();
-      $('#c').onclick = closeSheet;
-      $('#ok').onclick = ()=>{
-        const picks = [];
-        for (const cb of document.querySelectorAll('#a-list input[type=checkbox]:checked')){
-          const cat = cb.dataset.cat;
-          const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
-          const qtyEl = document.querySelector(`input[data-qty="${CSS.escape(cat)}"]`);
-          const r = state.reps.filter((x)=>x.cat===cat)[+sel.value||0];
-          const o = r.options[0], p = o.parts[0];
-          const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
-          // 같은 제품을 여러 대 놓을 때는 각각을 별도 물체로 만든다.
-          // 2대째부터 이름에 번호를 붙여 목록에서 구분되게 한다.
-          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0 });
-        }
-        closeSheet();
-        autoPlace(picks);
-      };
-    });
-}
-
 function autoPlace(picks){
   // 폭이 큰 것부터 — 자리를 많이 먹는 제품이 먼저 벽을 잡아야 나머지가 틈에 들어간다
   const list = picks.map((q)=>({
@@ -953,6 +1197,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
   findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
+  collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
 </script>
 </body>
