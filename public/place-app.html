@@ -93,6 +93,23 @@
   #report .dot{width:7px;height:7px;border-radius:99px;margin-top:5px;flex:none}
 
   /* ── 모달 ── */
+  /* 인식한 범위를 **도면 위에서** 조절한다. 모달을 띄우면 도면이 가려져 무엇이
+     바뀌는지 볼 수가 없다 — 실제로 "더 넓게/더 좁게가 뭐가 바뀌는지 모르겠다"는 지적을 받았다. */
+  #draftbar{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;z-index:12;display:none;
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;
+    box-shadow:0 8px 28px rgba(0,0,0,.14);max-width:min(94%,660px)}
+  #draftbar.on{display:block}
+  #draftbar .dl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  #draftbar .dl+.dl{margin-top:8px}
+  #draftbar .area{font:700 20px/1 system-ui;color:var(--brand);font-variant-numeric:tabular-nums}
+  #draftbar .prev{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  #draftbar .meta{font-size:12px;color:var(--muted)}
+  #draftbar .lvl{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;
+    background:#F2F4F8;border-radius:99px;padding:3px 9px;flex:none}
+  #draftbar .grow{flex:1}
+  #draftbar button{padding:6px 11px;font-size:12px}
+  @keyframes flash{0%{background:#FEF3C7}100%{background:transparent}}
+  #draftbar.bump .area{animation:flash .6s ease-out}
   #modal{position:absolute;inset:0;background:rgba(15,18,22,.42);display:none;align-items:center;
     justify-content:center;padding:16px;z-index:20}
   #modal.on{display:flex}
@@ -160,6 +177,7 @@
         <span>도면을 올리면 <b>벽을 자동으로 인식</b>합니다. 그 뒤 가전을 체크해 고르면 이격거리에 맞춰 놓아 드립니다.</span>
         <span>도면이 없으면 <b>벽 그리기</b>로 방 크기를 직접 입력해도 됩니다.</span>
       </div>
+      <div id="draftbar"></div>
       <div id="modal"><div class="sheet" id="sheet"></div></div>
     </div>
 
@@ -1064,7 +1082,7 @@ function detectRoomAt(imgX, imgY, forceR){
     return { error: '이 방은 문·창이 넓게 열려 있어 경계를 닫지 못했습니다. 다른 방을 누르거나 벽 그리기로 직접 그려주세요.' };
   }
 
-  // 사용자가 조절할 수 있도록 인접 단계도 함께 알려준다
+  // 사용자가 조절할 수 있도록 인접 단계와 몇 번째 단계인지도 알려준다
   const all = cleanRadii(base).closeSteps;
   const at = all.indexOf(used);
   return {
@@ -1073,6 +1091,7 @@ function detectRoomAt(imgX, imgY, forceR){
     closeR: used, reg, mask,
     wider:  at > 0 ? all[at - 1] : null,                        // 덜 막는다 = 더 넓게
     narrow: at >= 0 && at + 1 < all.length ? all[at + 1] : null, // 더 막는다 = 더 좁게
+    step: at + 1, steps: all.length,
   };
 }
 
@@ -1117,7 +1136,7 @@ function startDetect(){
             $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
     return;
   }
-  state.draft = null; ensureClean(); state.showClean = true; setMode('detect'); setStep(3); draw();
+  state.draft = null; hideDraftBar(); ensureClean(); state.showClean = true; setMode('detect'); setStep(3); draw();
 }
 
 /** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
@@ -1126,21 +1145,88 @@ function autoDetectCenter(){
   const r = detectRoomAt(state.imgW/2, state.imgH/2);
   if (r.error){ setMode('detect'); toast('가운데 자동 인식이 안 됐습니다 — 방 안쪽을 눌러주세요'); draw(); return; }
   state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
-  state.draftAt = [state.imgW/2, state.imgH/2]; state.draftStep = { wider: r.wider, narrow: r.narrow };
+  state.draftAt = [state.imgW/2, state.imgH/2]; state.draftStep = { wider: r.wider, narrow: r.narrow, step: r.step, steps: r.steps };
   setMode('detect'); draw();
   confirmDetected(true);
 }
 
-function confirmDetected(auto){
+/** 인식한 초안의 넓이(㎡) — 축척이 확정된 뒤에만 의미가 있다 */
+function draftAreaM2(poly){
+  if (!state.scaled || !poly) return null;
+  const k = state.mmPerPx || 1;
+  let a2 = 0;
+  for (let i=0;i<poly.length;i++){
+    const a=poly[i], b=poly[(i+1)%poly.length];
+    a2 += (a[0]*k)*(b[1]*k) - (b[0]*k)*(a[1]*k);
+  }
+  return Math.abs(a2/2)/1e6;
+}
+
+/**
+ * 인식한 범위를 **도면 위에서** 확인하고 조절한다.
+ *
+ * 예전에는 모달로 물었는데, 모달이 도면을 덮어 버려서 "더 넓게/더 좁게를 눌러도
+ * 무엇이 바뀌는지 모르겠다"는 지적을 받았다. 바뀌는 것은 도면 위 파란 영역인데
+ * 그게 안 보였던 것이다. 그래서 조절은 도면 위 막대에서 하고, 이름은 확정할 때 묻는다.
+ */
+function showDraftBar(auto, prevArea){
+  const bar = $('#draftbar');
+  if (!state.draft){ bar.classList.remove('on'); return; }
+  const st = state.draftStep || {};
+  const area = draftAreaM2(state.draft);
+  const opens = (state.draftEdges || []).filter((e)=>e.open).length;
+  const lvl = st.step ? `범위 ${st.step}/${st.steps}` : '';
+  const delta = (prevArea != null && area != null && Math.abs(prevArea - area) > 0.05)
+    ? `<span class="prev">${prevArea.toFixed(1)}㎡ → ${area > prevArea ? '넓어짐' : '좁아짐'}</span>` : '';
+  bar.innerHTML = `
+    <div class="dl">
+      ${area != null ? `<span class="area">${area.toFixed(1)}㎡</span>` : '<span class="area">범위 확인</span>'}
+      ${delta}
+      <span class="meta">모서리 ${state.draft.length}개${opens?` · 개구부 ${opens}곳`:''}</span>
+      <span class="grow"></span>
+      ${auto ? '<span class="meta">가운데를 기준으로 자동 인식했습니다</span>' : ''}
+    </div>
+    <div class="dl">
+      <button id="d-wide" ${st.wider  == null ? 'disabled' : ''}>◂ 더 넓게</button>
+      <span class="lvl">${esc(lvl)}</span>
+      <button id="d-narrow" ${st.narrow == null ? 'disabled' : ''}>더 좁게 ▸</button>
+      <span class="grow"></span>
+      <button id="d-again">다시 누르기</button>
+      <button id="d-draw">직접 그리기</button>
+      <button id="d-ok" class="primary">이 공간 확정</button>
+    </div>`;
+  bar.classList.add('on');
+  if (delta){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); }
+
+  const redo = (r) => {
+    if (r == null || !state.draftAt) return;
+    const before = draftAreaM2(state.draft);
+    const res = detectRoomAt(state.draftAt[0], state.draftAt[1], r);
+    if (res.error){ toast(res.error); return; }
+    state.draft = res.poly; state.draftEdges = res.edges; state.draftCloseR = res.closeR;
+    state.draftStep = { wider: res.wider, narrow: res.narrow, step: res.step, steps: res.steps };
+    draw();
+    showDraftBar(false, before);
+  };
+  $('#d-wide').onclick   = ()=> redo(st.wider);
+  $('#d-narrow').onclick = ()=> redo(st.narrow);
+  $('#d-again').onclick  = ()=>{ hideDraftBar(); state.draft=null; setMode('detect'); draw(); };
+  $('#d-draw').onclick   = ()=>{ hideDraftBar(); state.draft=null; state.wallPts=[]; setMode('wall'); draw(); };
+  $('#d-ok').onclick     = ()=> nameRoomSheet();
+}
+function hideDraftBar(){ $('#draftbar').classList.remove('on'); }
+
+/** 확정 직전 — 이름을 붙이거나 이미 잡은 방에 이어 붙인다 */
+function nameRoomSheet(){
   const poly = state.draft;
   if (!poly) return;
-  // 면적과 최장변을 미리 보여줘 사용자가 눈으로 검산할 수 있게 한다
   const k = state.mmPerPx || 1;
   let long = 0;
   for (let i=0;i<poly.length;i++){
     const a=poly[i], b=poly[(i+1)%poly.length];
     long = Math.max(long, Math.hypot(b[0]-a[0], b[1]-a[1]) * k);
   }
+  const area = draftAreaM2(poly);
   const opens = (state.draftEdges || []).filter((e)=>e.open);
   const openLen = opens.reduce((s,e)=>s+Math.hypot(e.x2-e.x1,e.y2-e.y1)*k, 0);
   const sizeTxt = (state.scaled
@@ -1149,77 +1235,40 @@ function confirmDetected(auto){
     + (opens.length
       ? `<br>개구부(문·창) <b>${opens.length}곳</b>${state.scaled?` · 합계 ${Math.round(openLen).toLocaleString()}mm`:''} — 주황 선으로 표시됩니다`
       : '');
-
-  // 방 범위 조절 — 자동 판정은 도면 관례를 전제로 한 추정이다. 트인 주방까지 한 방으로
-  // 볼지, 문에서 끊을지는 도면마다 다르므로 사용자가 넓히거나 좁힐 수 있어야 한다.
-  const step = state.draftStep || {};
-  const areaM2 = (() => {
-    if (!state.scaled) return null;
-    let a2 = 0;
-    for (let i=0;i<poly.length;i++){
-      const a=poly[i], b=poly[(i+1)%poly.length];
-      a2 += (a[0]*k)*(b[1]*k) - (b[0]*k)*(a[1]*k);
-    }
-    return Math.abs(a2/2)/1e6;
-  })();
-  const adjust = (state.draftAt && (step.wider != null || step.narrow != null))
-    ? `<div class="modal-actions" style="margin-bottom:6px">
-         <button id="wide" ${step.wider  == null ? 'disabled' : ''}>◂ 더 넓게</button>
-         <button id="narrow" ${step.narrow == null ? 'disabled' : ''}>더 좁게 ▸</button>
-       </div>`
-    : '';
   // 이미 잡아 둔 방이 있으면 "그 방에 이어 붙이기"를 고를 수 있다.
   // 자동 인식이 방을 절반만 잡는 경우(붙박이장 선·확장 창호선이 방을 가른다)의 해법이다.
-  const joinable = state.rooms;
-  const joinSel = joinable.length
+  const joinSel = state.rooms.length
     ? `<label class="pickers" style="margin-top:6px"><span class="hint">이미 잡은 방에 이어 붙이기</span>
          <select id="join"><option value="">— 새 방으로 추가 —</option>
-           ${joinable.map((r)=>`<option value="${r.id}">${esc(r.name)}에 이어 붙이기</option>`).join('')}
+           ${state.rooms.map((r)=>`<option value="${r.id}">${esc(r.name)}에 이어 붙이기</option>`).join('')}
          </select></label>`
     : '';
   sheet(`<h2>이 공간을 무엇으로 부를까요?</h2>
-    <p class="hint">${auto ? '도면 가운데를 기준으로 자동 인식했습니다. ' : ''}파란 굵은 선이 인식된 벽입니다.
-      범위가 다르면 <b>더 넓게·더 좁게</b>로 바꾸고, <b>절반만 잡혔으면</b> 확정한 뒤 나머지를 눌러
-      같은 방에 이어 붙이세요.</p>
-    <div class="spec">${areaM2 != null ? `넓이 <b>${areaM2.toFixed(1)}㎡</b> · ` : ''}${sizeTxt}</div>
-    ${adjust}
+    <div class="spec">${area != null ? `넓이 <b>${area.toFixed(1)}㎡</b> · ` : ''}${sizeTxt}</div>
     <label class="pickers"><span class="hint">방 이름</span>
       <input type="text" id="rname" value="${esc(nextRoomName())}" maxlength="12" placeholder="예: 침실2"></label>
     ${joinSel}
     <p class="src">벽 모양만 자동으로 잡습니다. 실제 치수는 축척 보정(또는 벽 길이 입력)에서 온 값을 씁니다 —
-      도면 선을 추측해서 치수를 만들지 않습니다.</p>
+      도면 선을 추측해서 치수를 만들지 않습니다. 범위를 더 바꾸려면 <b>범위 다시 조절</b>로 돌아가세요.</p>
     <div class="modal-actions">
-      <button id="draw">직접 그리기</button>
-      <button id="again">다시 누르기</button>
-      <button class="primary" id="ok">이 공간으로 확정</button>
+      <button id="back">범위 다시 조절</button>
+      <button class="primary" id="ok">확정</button>
     </div>`,
     ()=>{
+      $('#back').onclick = ()=>{ closeSheet(); showDraftBar(false); };
       $('#ok').onclick   = ()=>{
         const join = $('#join') ? $('#join').value : '';
         const name = ($('#rname').value || '').trim() || nextRoomName();
-        closeSheet();
+        closeSheet(); hideDraftBar();
         const p=state.draft, e=state.draftEdges;
         state.draft=null; state.draftEdges=null;
         applyDetected(p, e, join ? { appendTo: join } : { name });
       };
-      $('#again').onclick= ()=>{ closeSheet(); state.draft=null; setMode('detect'); draw(); };
-      $('#draw').onclick = ()=>{ closeSheet(); state.draft=null; state.wallPts=[]; setMode('wall'); draw(); };
-      const redo = (r) => {
-        if (r == null || !state.draftAt) return;
-        const keep = $('#rname').value, joinKeep = $('#join') ? $('#join').value : '';
-        const res = detectRoomAt(state.draftAt[0], state.draftAt[1], r);
-        if (res.error){ toast(res.error); return; }
-        closeSheet();
-        state.draft = res.poly; state.draftEdges = res.edges; state.draftCloseR = res.closeR;
-        state.draftStep = { wider: res.wider, narrow: res.narrow };
-        draw(); confirmDetected();
-        if ($('#rname')) $('#rname').value = keep;
-        if ($('#join') && joinKeep) $('#join').value = joinKeep;
-      };
-      if ($('#wide'))   $('#wide').onclick   = ()=> redo(step.wider);
-      if ($('#narrow')) $('#narrow').onclick = ()=> redo(step.narrow);
     });
 }
+
+/** 예전 이름 — 초안을 띄우는 진입점 */
+function confirmDetected(auto){ showDraftBar(auto); }
 
 /* 짧은 안내 — 모달을 띄울 만큼은 아닌 것들 */
 let toastTimer = null;
@@ -1558,7 +1607,7 @@ cv.addEventListener('pointerdown', (e)=>{
     const r = detectRoomAt(ix, iy);
     if (r.error){ toast(r.error); return; }
     state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
-    state.draftAt = [ix, iy]; state.draftStep = { wider: r.wider, narrow: r.narrow };
+    state.draftAt = [ix, iy]; state.draftStep = { wider: r.wider, narrow: r.narrow, step: r.step, steps: r.steps };
     draw();
     confirmDetected();
     return;
@@ -1657,7 +1706,7 @@ $('#file').onchange = (e)=>{
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
     state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.baseMask=null; state.sealCache=null; state.cleanCv=null; state.showClean=false;
-    state.walls=[]; state.rooms=[]; state.roomSel=null;
+    state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; hideDraftBar();
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
     const r = cv.getBoundingClientRect();
@@ -2094,6 +2143,7 @@ window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, w
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
+  showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
