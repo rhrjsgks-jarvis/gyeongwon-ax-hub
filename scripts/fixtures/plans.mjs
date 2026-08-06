@@ -68,8 +68,10 @@ function unit84(opts = {}) {
   const {
     color = false, partitionThin = false, outline = false,
     bg = '#fff', ink = '#111', ppm = 0.12, floor = null,
+    dimTicks = false,      // 도면 바깥 치수선 + 굵은 화살표 마커 (실제 분양 도면 표기)
+    openWindow = false,    // 거실 남측 창을 벽에 뚫린 틈으로 그린다(유리선은 가늘어 지워진다)
   } = opts;
-  const M = 300;                                   // 도면 여백
+  const M = dimTicks ? 1800 : 300;                 // 도면 여백 (치수선을 그리면 넓어진다)
   const W = 12000, H = 9000;                       // 세대 외곽
   const wallT = partitionThin ? T_PART : 150;
   return planSvg({
@@ -135,6 +137,37 @@ function unit84(opts = {}) {
       a.text(M + 1200, M + 3000, '침실1');
       a.text(M + 9000, M + 3000, '안방');
       a.text(M + 700, M + 8200, '주방');
+
+      // 실제 분양 도면의 치수선 — 가는 선이지만 **끝 마커가 굵어 열기에도 살아남는다.**
+      // 이걸 건물의 일부로 보면 도면 범위가 통째로 커져, 건물 밖으로 새어 나가도
+      // "새어 나갔다"를 판정할 수 없게 된다. 실제로 그 사고가 났다.
+      if (dimTicks) {
+        const tick = (x, y, vert) => vert
+          ? a.wall(x - 45, y - 260, 90, 520)        // 세로 치수선의 굵은 마커
+          : a.wall(x - 260, y - 45, 520, 90);
+        const dimRow = (y, xs) => {
+          thin(`M${a.px(xs[0])} ${a.px(y)} H${a.px(xs[xs.length-1])}`, 1.2);
+          xs.forEach((x)=> tick(x, y, true));
+          for (let i=0;i<xs.length-1;i++)
+            a.text((xs[i]+xs[i+1])/2 - 300, y - 160, String(Math.round(xs[i+1]-xs[i])), 260);
+        };
+        const dimCol = (x, ys) => {
+          thin(`M${a.px(x)} ${a.px(ys[0])} V${a.px(ys[ys.length-1])}`, 1.2);
+          ys.forEach((y)=> tick(x, y, false));
+        };
+        const L = M, R = M + W, T = M, B = M + H;
+        dimRow(T - 700,  [L, L+1700, L+4290, L+7290, L+8940, R]);
+        dimRow(B + 700,  [L, L+3600, L+7000, L+9700, R]);
+        dimCol(L - 700,  [T, T+1410, T+3110, T+4610, T+8210, B]);
+        dimCol(R + 700,  [T, T+2710, T+4910, T+7310, B]);
+      }
+
+      // 거실 남측 창을 **벽에 뚫린 틈**으로 그린다. 유리선은 가늘어 정리 단계에서 지워지고
+      // 그 자리가 구멍으로 남는다 — 실제 도면에서 이 경로로 바깥으로 새어 나갔다.
+      if (openWindow) {
+        cut(3800, 0, 4000, T_BEAR);
+        thin(`M${X(3800)} ${Y(70)} H${X(7800)} M${X(3800)} ${Y(130)} H${X(7800)}`);
+      }
     },
   });
 }
@@ -227,6 +260,24 @@ export const PLANS = [
     probes: [
       { at: [3300, 2500], areaM2: [21, 25], opens: [2, 2],
         note: '5,600×4,100 = 23㎡. 뚫린 창(1,600)·문(900) 딱 2곳이 개구부로 잡혀야 한다' },
+    ],
+  },
+  {
+    // 실제 분양 도면 그대로 — 바깥에 치수선이 있고, 거실 창이 벽에 뚫린 틈으로 그려진다.
+    // 치수선의 굵은 마커를 건물로 보면 도면 범위가 커져 **건물 밖으로 새어 나가도
+    // 감지하지 못한다.** 실제로 거실이 세대 전체(92㎡)로 잡히고 파란 영역이 치수선
+    // 구역까지 뻗어 나가는 사고가 났다.
+    name: '84타입 (치수선 + 창이 뚫린 도면)',
+    svg: unit84({ dimTicks: true, openWindow: true }),
+    mmPerImgPx: 1 / 0.12,
+    // 이 평면만 여백이 1,800이라 누르는 자리도 +1,500만큼 밀린다
+    probes: [
+      { at: [5800 + 1500, 3300 + 1500], areaM2: OPEN_AREA,
+        note: '거실+발코니+복도+주방+현관. 90㎡ 위로 뜨면 창으로 새어 나가 세대 전체가 잡힌 것이고, '
+            + '그건 치수선 마커를 건물로 봐서 "새어 나갔다"를 판정하지 못했기 때문이다' },
+      { at: [1600 + 1500, 3000 + 1500], areaM2: BED1, note: '치수선이 있어도 침실1은 그대로' },
+      { at: [10000 + 1500, 3000 + 1500], areaM2: MASTER, note: '치수선이 있어도 안방은 그대로' },
+      { at: [5300 + 1500, 7800 + 1500], areaM2: BATH, note: '치수선이 있어도 욕실은 그대로' },
     ],
   },
   {
