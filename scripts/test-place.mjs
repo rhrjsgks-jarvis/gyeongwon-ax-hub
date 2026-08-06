@@ -213,5 +213,47 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   pass(`size-reps 카테고리 ${cats.length}개 전부 clearFor 처리 가능`);
 }
 
+// ── [10] 배치 추천 ──
+// 자동 배치가 "억지로 넣고 들어간다고 말하는" 실패를 하지 않는지가 핵심이다.
+{
+  const st = P.state;
+  const room = (w, h) => [
+    { x1: 0, y1: 0, x2: w, y2: 0 }, { x1: w, y1: 0, x2: w, y2: h },
+    { x1: w, y1: h, x2: 0, y2: h }, { x1: 0, y1: h, x2: 0, y2: 0 },
+  ];
+  const pick = (cat, sizeIdx = 0) => {
+    const r = reps.filter((x) => x.cat === cat)[sizeIdx];
+    return { cat, size: r.size, model: r.options[0].model, part: r.options[0].parts[0] };
+  };
+
+  // 3,600 × 2,600mm 주방 — 냉장고 + 김치냉장고 + 식기세척기
+  st.walls = room(3600, 2600); st.items = [];
+  P.autoPlace([pick('냉장고', 2), pick('김치냉장고'), pick('식기세척기')]);
+  if (st.items.length !== 3) fail(`3.6×2.6m 방에 3종을 넣었는데 ${st.items.length}종만 배치됨`);
+  else if (st.items.some((i) => i.warn.length)) {
+    fail(`자동 배치인데 경고가 남음: ${st.items.filter((i) => i.warn.length).map((i) => `${i.label}(${i.warn})`).join(', ')}`);
+  } else pass('3.6×2.6m 주방에 냉장고·김치냉장고·식기세척기 3종 자동 배치 — 경고 없음');
+
+  // 좁은 방에서는 억지로 놓지 않아야 한다
+  st.walls = room(1000, 1000); st.items = [];
+  P.autoPlace([pick('냉장고', 2), pick('김치냉장고')]);
+  if (st.items.some((i) => i.warn.length)) fail('좁은 방에 억지로 놓아 경고가 발생 — 자리가 없으면 놓지 않아야 한다');
+  else if (st.items.length >= 2) fail(`1×1m 방에 폭 912+595를 둘 다 놓음 — 자리 없음 판정이 동작하지 않는다`);
+  else pass(`1×1m 방 — ${st.items.length}종만 배치하고 나머지는 자리 없음으로 남김`);
+
+  // 방을 그리지 않으면 자리를 찾지 못한다(스냅과 달리 방 경계가 필수)
+  st.walls = []; st.items = [];
+  const it = { w: 600, d: 700, clear: { back: 50, side: 20, front: 0 } };
+  if (P.findSpot(it, [])) fail('방이 없는데 자리를 찾았다고 응답');
+  else pass('방(닫힌 벽)이 없으면 자동 배치를 하지 않음');
+
+  // 방 용도별 후보에 엉뚱한 카테고리가 섞이지 않는지
+  if (P.ROOM_PLAN['주방'].includes('세탁기·콤보')) fail('주방 추천 목록에 세탁기가 들어 있음');
+  else if (!P.ROOM_PLAN['세탁실'].includes('건조기')) fail('세탁실 추천 목록에 건조기가 없음');
+  else pass('방 용도별 후보 카테고리 구성');
+
+  st.walls = []; st.items = [];
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
