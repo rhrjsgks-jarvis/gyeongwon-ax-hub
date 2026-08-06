@@ -5,7 +5,7 @@
 
 // 'compareInstant'·'planner'는 운영이 끝난 모듈이다. 새로 기록되지는 않지만 과거 로그(구글 시트 포함)에
 // 남아 있어 타입에서 빼면 집계 코드가 타입 에러를 낸다 — 유니온에는 유지하고 화면 라벨로 구분한다.
-export type LogModule = 'finder' | 'care' | 'test' | 'compare' | 'compareInstant' | 'quiz' | 'hub' | 'planner' | 'install' | 'concierge' | 'coupon' | 'catalog'
+export type LogModule = 'finder' | 'care' | 'test' | 'compare' | 'compareInstant' | 'quiz' | 'hub' | 'planner' | 'install' | 'place' | 'concierge' | 'coupon' | 'catalog'
 export type LogAction = 'page_view' | 'search' | 'result_open' | 'generate' | 'tab_switch' | 'feedback'
 
 export interface LogEvent {
