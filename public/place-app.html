@@ -106,9 +106,12 @@
   .pick:hover{background:#F4F6F9}
   .pick input[type=checkbox]{width:17px;height:17px;flex:none;accent-color:var(--brand);margin:0}
   .pick .nm{flex:none;min-width:104px;font-size:13px;color:var(--ink)}
+  .pick select{font-variant-numeric:tabular-nums}
   .pick select{flex:1;min-width:0;padding:5px 7px;font-size:12px}
   .pick input[type=number]{width:52px;padding:5px 6px;font-size:12px;text-align:center}
   .pick .unit{flex:none;font-size:12px;color:var(--muted)}
+  .pickinfo{margin:0 0 6px 31px;font-size:11px;color:var(--muted);line-height:1.4}
+  .pickinfo b{color:var(--ink);font-variant-numeric:tabular-nums}
 
   @media (max-width:760px){
     #side{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
@@ -133,6 +136,7 @@
     <button id="btn-img">도면 이미지</button>
     <button id="btn-scale">축척 맞추기</button>
     <button id="btn-detect">벽 자동 인식</button>
+    <button id="btn-clean" class="ghost" title="벽만 남긴 정리본 보기">◧</button>
     <button id="btn-wall">벽 그리기</button>
     <button id="btn-add">가전 선택</button>
     <button id="btn-auto" class="primary">주방 배치 추천</button>
@@ -261,7 +265,7 @@ const state = {
   items:[],              // 배치된 가전
   reps:[],               // size-reps.json
   mode:'idle',           // idle | scale | wall | place
-  scalePts:[], wallPts:[], mask:null, draft:null,
+  scalePts:[], wallPts:[], mask:null, cleanMask:null, cleanCv:null, cleanInfo:null, showClean:false, draft:null,
   pending:null,          // 배치 대기중인 가전
   sel:null, drag:null,
 };
@@ -390,6 +394,100 @@ function buildMask(){
   return { w, h, S, dark };
 }
 
+/* ── 도면 정리 ────────────────────────────────────────────────────
+   실제 분양 도면에는 벽 말고도 가구 그림·치수 글씨·해칭이 잔뜩 있고, 무엇보다
+   **문 자리가 뚫려 있다**. 그대로 채우면 방 → 복도 → 도면 바깥으로 새어 나가
+   "방을 못 찾겠다"가 된다. 실제로 그렇게 실패했다.
+
+   그래서 인식 전에 두 단계로 정리한다. 둘 다 형태학 연산이라 선의 "굵기"만 보고,
+   무엇이 벽인지 해석하지 않는다.
+     ① 열기(erode→dilate) — 얇은 것을 지운다. 가구 윤곽·글씨는 가늘고 벽은 굵다.
+     ② 닫기(dilate→erode) — 좁은 틈을 메운다. 문 자리가 여기서 막힌다.
+   닫기는 벽을 부풀렸다가 다시 깎으므로 **벽 두께와 방 크기가 그대로 유지된다**.
+   틈만 메워진다 — 이게 중요하다. 한쪽만 하면 방이 통째로 작아진다.
+──────────────────────────────────────────────────────────────── */
+
+/** 가로·세로 박스 필터. mode 'max'=팽창(dilate), 'min'=침식(erode) */
+function boxMorph(src, w, h, r, mode){
+  if (r <= 0) return src;
+  const tmp = new Uint8Array(w * h), out = new Uint8Array(w * h);
+  const want = mode === 'min';
+  for (let y = 0; y < h; y++) {                      // 가로 방향
+    let sum = 0;
+    const row = y * w;
+    for (let x = -r; x <= r; x++) if (x >= 0 && x < w) sum += src[row + x];
+    for (let x = 0; x < w; x++) {
+      const n = Math.min(x + r, w - 1) - Math.max(x - r, 0) + 1;
+      tmp[row + x] = want ? (sum === n ? 1 : 0) : (sum > 0 ? 1 : 0);
+      const drop = x - r, add = x + r + 1;
+      if (drop >= 0) sum -= src[row + drop];
+      if (add < w)  sum += src[row + add];
+    }
+  }
+  for (let x = 0; x < w; x++) {                      // 세로 방향
+    let sum = 0;
+    for (let y = -r; y <= r; y++) if (y >= 0 && y < h) sum += tmp[y * w + x];
+    for (let y = 0; y < h; y++) {
+      const n = Math.min(y + r, h - 1) - Math.max(y - r, 0) + 1;
+      out[y * w + x] = want ? (sum === n ? 1 : 0) : (sum > 0 ? 1 : 0);
+      const drop = y - r, add = y + r + 1;
+      if (drop >= 0) sum -= tmp[drop * w + x];
+      if (add < h)  sum += tmp[add * w + x];
+    }
+  }
+  return out;
+}
+
+/**
+ * 원본 마스크에서 벽만 남긴다.
+ * openR  : 이보다 얇은 선(가구·글씨)은 사라진다
+ * closeR : 이 두 배까지의 틈(문 자리)이 메워진다
+ */
+function cleanWalls(mask, openR, closeR){
+  const { w, h } = mask;
+  let m = mask.dark;
+  m = boxMorph(m, w, h, openR, 'min');    // 열기 1/2 — 얇은 것 제거
+  m = boxMorph(m, w, h, openR, 'max');    // 열기 2/2 — 굵기 복원
+  m = boxMorph(m, w, h, closeR, 'max');   // 닫기 1/2 — 틈 메우기
+  m = boxMorph(m, w, h, closeR, 'min');   // 닫기 2/2 — 두께 복원
+  return m;
+}
+
+/**
+ * 정리 반경을 정한다.
+ *
+ * openR(얇은 선 제거)은 **화면 픽셀 기준**이다. 도면의 벽은 실제 두께가 아니라 "선 굵기"로
+ * 그려지기 때문이다. mm로 잡았다가 벽(7px)보다 큰 반경(8px)이 나와 벽이 통째로 지워지고
+ * 인식이 실패한 적이 있다. 가구선·글씨는 1~2px, 벽은 5px 이상이라 1~2px만 깎으면 된다.
+ *
+ * closeR(문 자리 메우기)은 **실제 치수 기준**이다. 문 폭은 700~900mm이므로 그 절반인
+ * 500mm를 반경으로 잡으면 1,000mm까지의 틈이 메워진다. 1.2m 이상 열린 개구부는
+ * 그대로 두는 것이 맞다 — 그건 문이 아니라 통로다.
+ */
+function cleanRadii(mask){
+  const dim = Math.max(mask.w, mask.h);
+  const openR  = Math.max(1, Math.round(dim / 900));
+  const closeR = state.mmPerPx
+    ? Math.max(3, Math.min(80, Math.round((500 / state.mmPerPx) * mask.S)))
+    : Math.max(3, Math.min(80, Math.round(dim * 0.05)));
+  return { openR, closeR };
+}
+
+/** 정리된 벽 마스크를 캔버스로 만들어 화면에 보여줄 수 있게 한다 */
+function cleanCanvas(mask, m){
+  const c = document.createElement('canvas');
+  c.width = mask.w; c.height = mask.h;
+  const cx = c.getContext('2d');
+  const img = cx.createImageData(mask.w, mask.h);
+  for (let p = 0, i = 0; p < mask.w * mask.h; p++, i += 4) {
+    const v = m[p] ? 24 : 255;
+    img.data[i] = img.data[i+1] = img.data[i+2] = v;
+    img.data[i+3] = 255;
+  }
+  cx.putImageData(img, 0, 0);
+  return c;
+}
+
 /** 밝은 영역을 4방향으로 채운다. 도면 바깥까지 새어 나가면 방이 아니라고 판단한다. */
 function floodRegion(mask, sx, sy){
   const { w, h, dark } = mask;
@@ -472,17 +570,27 @@ function regionPolygon(mask, reg, tol, minRun){
  * 도면의 (imgX, imgY) 지점이 속한 방을 인식해 벽 후보를 돌려준다.
  * 실패 사유를 문자열로 함께 돌려줘 화면에 그대로 보여준다.
  */
+function ensureClean(){
+  if (state.cleanMask) return state.cleanMask;
+  const mask = state.mask || (state.mask = buildMask());
+  const { openR, closeR } = cleanRadii(mask);
+  const m = cleanWalls(mask, openR, closeR);
+  state.cleanCv = cleanCanvas(mask, m);
+  state.cleanInfo = { openR, closeR };
+  return (state.cleanMask = { w:mask.w, h:mask.h, S:mask.S, dark:m });
+}
+
 function detectRoomAt(imgX, imgY){
   if (!state.img) return { error: '도면을 먼저 올려주세요.' };
-  const mask = state.mask || (state.mask = buildMask());
+  const mask = ensureClean();
   const sx = Math.round(imgX * mask.S), sy = Math.round(imgY * mask.S);
   const reg = floodRegion(mask, sx, sy);
-  if (!reg) return { error: '누른 자리가 벽·글씨 위입니다. 방 안쪽의 빈 곳을 눌러주세요.' };
+  if (!reg) return { error: '누른 자리가 벽 위입니다. 방 안쪽의 빈 곳을 눌러주세요.' };
 
   const area = mask.w * mask.h;
   if (reg.count < area * 0.002) return { error: '인식된 공간이 너무 작습니다. 방 한가운데를 눌러주세요.' };
   if (reg.border > (mask.w + mask.h) * 0.3) {
-    return { error: '도면 바깥까지 이어져 있습니다 — 벽이 끊긴 곳으로 새어 나갔습니다. 방 안쪽을 누르거나 벽 그리기로 직접 그려주세요.' };
+    return { error: '도면 바깥까지 이어져 있습니다 — 문·창 자리가 넓게 열려 있어 새어 나갔습니다. 다른 방을 누르거나 벽 그리기로 직접 그려주세요.' };
   }
 
   const tol = Math.max(2, Math.round(Math.max(mask.w, mask.h) * 0.006));
@@ -506,6 +614,7 @@ function applyDetected(polyImg){
   state.walls = [];
   if (!state.scaled) { askWallLength(segs); return; }
   state.walls.push(...segs);
+  state.showClean = false;
   setMode('idle'); setStep(4); evaluate(); draw();
 }
 
@@ -519,11 +628,12 @@ function startDetect(){
             $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
     return;
   }
-  state.draft = null; setMode('detect'); setStep(3); draw();
+  state.draft = null; ensureClean(); state.showClean = true; setMode('detect'); setStep(3); draw();
 }
 
 /** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
 function autoDetectCenter(){
+  ensureClean(); state.showClean = true;
   const r = detectRoomAt(state.imgW/2, state.imgH/2);
   if (r.error){ setMode('detect'); toast('가운데 자동 인식이 안 됐습니다 — 방 안쪽을 눌러주세요'); draw(); return; }
   state.draft = r.poly; setMode('detect'); draw();
@@ -632,16 +742,17 @@ function draw(){
   const W = cv.width/(window.devicePixelRatio||1), H = cv.height/(window.devicePixelRatio||1);
   ctx.clearRect(0,0,W,H);
 
+  const shown = (state.showClean && state.cleanCv) ? state.cleanCv : state.img;
   if (state.img && state.mmPerPx){
     const [x,y] = toScreen(0,0);
     ctx.globalAlpha=.85;
-    ctx.drawImage(state.img, x, y, state.imgW*state.mmPerPx*state.zoom, state.imgH*state.mmPerPx*state.zoom);
+    ctx.drawImage(shown, x, y, state.imgW*state.mmPerPx*state.zoom, state.imgH*state.mmPerPx*state.zoom);
     ctx.globalAlpha=1;
   } else if (state.img){
     // 축척 확정 전 — 이미지 1px을 화면 zoom px로 그린다(월드 단위가 아직 mm가 아니다)
     const [x,y] = toScreen(0,0);
     ctx.globalAlpha=.85;
-    ctx.drawImage(state.img, x, y, state.imgW*state.zoom, state.imgH*state.zoom);
+    ctx.drawImage(shown, x, y, state.imgW*state.zoom, state.imgH*state.zoom);
     ctx.globalAlpha=1;
   }
 
@@ -870,7 +981,7 @@ $('#file').onchange = (e)=>{
   const img = new Image();
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
-    state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.walls=[];
+    state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.cleanMask=null; state.cleanCv=null; state.showClean=false; state.walls=[];
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
     const r = cv.getBoundingClientRect();
@@ -884,6 +995,15 @@ $('#file').onchange = (e)=>{
 $('#btn-scale').onclick = ()=>{ state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
 $('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
 $('#btn-detect').onclick= ()=> startDetect();
+$('#btn-clean').onclick = ()=>{
+  if (!state.img){ toast('도면을 먼저 올려주세요'); return; }
+  ensureClean();
+  state.showClean = !state.showClean;
+  toast(state.showClean
+    ? `정리본 — 가구·글씨를 지우고 문 자리를 메운 벽만 보입니다 (얇은선 ${state.cleanInfo.openR}px 제거 · 틈 ${state.cleanInfo.closeR*2}px 메움)`
+    : '원본 도면');
+  draw();
+};
 $('#btn-add').onclick   = ()=> openSelect(null);
 $('#btn-auto').onclick  = ()=> openSelect('주방');
 $('#btn-side').onclick  = ()=> $('#side').classList.toggle('on');
@@ -1003,11 +1123,37 @@ async function openSelect(room){
             <input type="checkbox" data-cat="${esc(c)}"${pre?' checked':''}>
             <span class="nm">${esc(c)}</span>
             <select data-size="${esc(c)}">
-              ${rows.map((r,i)=>`<option value="${i}">${esc(r.size)}${r.specs.length?` — ${esc(r.specs[0])}`:''}</option>`).join('')}
+              ${rows.map((r,i)=>{
+                const p0 = r.options[0].parts[0];
+                const dim = `${Math.round(p0.w)}×${Math.round(p0.h)}×${Math.round(p0.d)}`;
+                const tail = r.specs.length ? ` · ${esc(r.specs[0])}` : '';
+                return `<option value="${i}">${dim}mm${tail}</option>`;
+              }).join('')}
             </select>
             <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" title="수량">
-            <span class="unit">대</span></label>`;
+            <span class="unit">대</span></label>
+            <p class="pickinfo" data-info="${esc(c)}"></p>`;
         }).join('');
+        // 고른 사이즈의 모델코드·이격거리를 한 줄로 보여준다.
+        // 폭만 보이면 "이게 들어가나"를 판단할 수 없어 가로·높이·깊이를 모두 적는다.
+        const info = (cat)=>{
+          const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
+          const el  = document.querySelector(`p[data-info="${CSS.escape(cat)}"]`);
+          if (!sel || !el) return;
+          const r = state.reps.filter((x)=>x.cat===cat)[+sel.value||0];
+          const o = r.options[0], p0 = o.parts[0];
+          const cl = clearFor(cat, p0.part, o.model);
+          const extra = o.parts.length>1
+            ? ' · ' + o.parts.slice(1).map((q)=>`${esc(q.part)} ${Math.round(q.w)}×${Math.round(q.h)}×${Math.round(q.d)}`).join(' · ')
+            : '';
+          el.innerHTML = `<b>가로 ${Math.round(p0.w)} · 높이 ${Math.round(p0.h)} · 깊이 ${Math.round(p0.d)}mm</b>`
+            + ` — ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}`
+            + ` · 이격 후면 ${cl.back}·좌우 ${cl.side}${cl.front?`·전면 ${cl.front}`:''}mm`
+            + (r.options.length>1 ? ` · 같은 사이즈 발자국 ${r.options.length}종` : '')
+            + extra;
+        };
+        cats.forEach(info);
+
         // 체크박스 외의 곳(사이즈·수량)을 눌렀을 때 체크가 토글되지 않게 한다
         $('#a-list').querySelectorAll('select,input[type=number]').forEach((el)=>{
           el.addEventListener('click',(e)=>e.stopPropagation());
@@ -1015,6 +1161,7 @@ async function openSelect(room){
             e.stopPropagation();
             const box = el.closest('.pick').querySelector('input[type=checkbox]');
             box.checked = true;      // 사이즈를 고르면 쓰겠다는 뜻이다
+            if (el.tagName==='SELECT') info(el.dataset.size);
           });
         });
       };
@@ -1198,6 +1345,7 @@ loadReps();
 window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
   findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
+  boxMorph, cleanWalls, cleanRadii, ensureClean,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
 </script>
 </body>

@@ -424,5 +424,85 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.items = []; st.walls = [];
 }
 
+// ── [14] 도면 정리(벽만 남기기) ──
+// 실제 도면에는 가구·글씨가 있고 문 자리가 뚫려 있다. 정리 없이 채우면 복도를 거쳐
+// 도면 바깥까지 새어 나가 "방을 못 찾겠다"가 된다 — 실제로 그렇게 실패했다.
+{
+  const W = 300, H = 200;
+  const mk = () => new Uint8Array(W * H);
+  const line = (m, x0, y0, x1, y1, t) => {
+    for (let y = y0 - t; y <= y1 + t; y++) for (let x = x0 - t; x <= x1 + t; x++) {
+      if (x >= 0 && y >= 0 && x < W && y < H) m[y * W + x] = 1;
+    }
+  };
+
+  // 굵은 벽(반두께 3 → 7px)과 얇은 가구선(반두께 0 → 1px)
+  {
+    const m = mk();
+    line(m, 100, 100, 200, 100, 3);   // 벽
+    line(m, 100, 60, 200, 60, 0);     // 가구선
+    const cleaned = P.cleanWalls({ w: W, h: H, dark: m }, 1, 0);
+    const wallLeft = cleaned.slice(100 * W, 101 * W).some((v) => v);
+    const thinGone = !cleaned.slice(60 * W, 61 * W).some((v) => v);
+    if (!wallLeft) fail('열기 반경 1px에 굵은 벽(7px)이 지워짐 — 반경이 벽보다 크면 인식이 통째로 실패한다');
+    else if (!thinGone) fail('얇은 가구선(1px)이 남음');
+    else pass('열기 — 얇은 선 제거 · 굵은 벽 유지');
+  }
+
+  // 닫기로 문 자리를 메운다
+  {
+    const m = mk();
+    line(m, 50, 50, 120, 50, 3);      // 벽 앞부분
+    line(m, 160, 50, 250, 50, 3);     // 벽 뒷부분 (120~160 = 40px 틈 = 문 자리)
+    const before = P.cleanWalls({ w: W, h: H, dark: m }, 1, 0);
+    const after  = P.cleanWalls({ w: W, h: H, dark: m }, 1, 25);
+    const gapOpen   = !before[50 * W + 140];
+    const gapSealed =  after[50 * W + 140];
+    if (!gapOpen) fail('닫기 없이도 틈이 메워져 있음 — 테스트 전제가 틀렸다');
+    else if (!gapSealed) fail('닫기 반경 25px로 40px 틈이 메워지지 않음');
+    else pass('닫기 — 문 자리(40px) 메움');
+
+    // 닫기가 방을 좁히면 안 된다 (팽창 뒤 침식이라 벽 두께가 보존돼야 한다)
+    const thickBefore = [...Array(H).keys()].filter((y) => before[y * W + 80]).length;
+    const thickAfter  = [...Array(H).keys()].filter((y) => after[y * W + 80]).length;
+    if (Math.abs(thickAfter - thickBefore) > 1) {
+      fail(`닫기 후 벽 두께가 ${thickBefore} → ${thickAfter}로 변함 — 방 크기가 왜곡된다`);
+    } else pass(`닫기 후에도 벽 두께 유지 (${thickAfter}px)`);
+  }
+
+  // 문이 뚫린 방도 인식된다
+  {
+    const m = mk();
+    line(m, 40, 40, 260, 40, 3);      // 위
+    line(m, 40, 160, 260, 160, 3);    // 아래
+    line(m, 40, 40, 40, 160, 3);      // 좌
+    line(m, 260, 40, 260, 90, 3);     // 우 위쪽
+    line(m, 260, 130, 260, 160, 3);   // 우 아래쪽 (90~130 = 40px 문)
+    const raw = { w: W, h: H, S: 1, dark: m };
+    const leak = P.floodRegion(raw, 150, 100);
+    if (!leak || leak.border === 0) fail('문이 뚫렸는데 원본에서 유출이 감지되지 않음 — 테스트 전제가 틀렸다');
+    else pass(`정리 전 — 문으로 유출 (border=${leak.border})`);
+
+    const sealed = { w: W, h: H, S: 1, dark: P.cleanWalls(raw, 1, 25) };
+    const reg = P.floodRegion(sealed, 150, 100);
+    if (!reg) fail('정리 후 방을 채우지 못함');
+    else if (reg.border > 0) fail(`정리 후에도 유출 (border=${reg.border}) — 문이 메워지지 않았다`);
+    else pass(`정리 후 — 문이 뚫린 방도 인식 (${reg.count.toLocaleString()}px, 유출 없음)`);
+  }
+
+  // 반경 산정: 열기는 화면 픽셀, 닫기는 실제 치수(mm) 기준
+  {
+    const st = P.state;
+    const keep = st.mmPerPx;
+    st.mmPerPx = 7.35;
+    const r = P.cleanRadii({ w: 900, h: 640, S: 0.75 });
+    if (r.openR > 2) fail(`열기 반경이 ${r.openR}px — 도면 선 굵기(5~10px)보다 크면 벽이 지워진다`);
+    else if (Math.abs(r.closeR - Math.round((500 / 7.35) * 0.75)) > 1) {
+      fail(`닫기 반경이 ${r.closeR}px — 문 폭 절반(500mm)에서 나와야 한다`);
+    } else pass(`정리 반경 (열기 ${r.openR}px · 닫기 ${r.closeR}px = 문 ${Math.round(r.closeR * 2 * 7.35 / 0.75)}mm까지)`);
+    st.mmPerPx = keep;
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
