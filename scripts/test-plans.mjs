@@ -162,18 +162,35 @@ for (const plan of PLANS) {
     };
     const out = {};
 
+    // 방을 누르면 **도면 위 막대**가 뜬다(모달이 아니다 — 모달은 도면을 가려서
+    // 더 넓게/더 좁게가 무엇을 바꾸는지 볼 수 없었다)
     tap(5800, 3300);                                   // 거실
+    const bar = document.querySelector('#draftbar');
+    out.barShown = !!bar && bar.classList.contains('on');
+    out.hasAdjust = !!document.querySelector('#d-wide') && !!document.querySelector('#d-narrow');
+    out.areaShown = bar ? (bar.querySelector('.area') || {}).textContent : '';
+    // 넓게 → 도면 위 넓이가 실제로 커져야 한다
+    const a0 = P.draftAreaM2(P.state.draft);
+    if (!document.querySelector('#d-wide').disabled) document.querySelector('#d-wide').click();
+    out.wideArea = P.draftAreaM2(P.state.draft);
+    out.wideGrew = out.wideArea > a0 + 0.05;
+    out.deltaShown = /→/.test(document.querySelector('#draftbar').textContent);
+    if (!document.querySelector('#d-narrow').disabled) document.querySelector('#d-narrow').click();
+    out.backArea = P.draftAreaM2(P.state.draft);
+
+    document.querySelector('#d-ok').click();           // 확정 → 이름 시트
     out.sheet1 = !!document.querySelector('#rname');
     out.hasJoin1 = !!document.querySelector('#join');  // 첫 방에는 이어 붙일 대상이 없다
-    out.hasAdjust = !!document.querySelector('#wide') && !!document.querySelector('#narrow');
     if (out.sheet1) {
       document.querySelector('#rname').value = '거실';
       document.querySelector('#ok').click();
     }
     out.rooms1 = P.state.rooms.map((x) => x.name);
+    out.barHidden = !document.querySelector('#draftbar').classList.contains('on');
 
     P.state.mode = 'detect';
     tap(1600, 3000);                                   // 침실1
+    document.querySelector('#d-ok').click();
     out.hasJoin2 = !!document.querySelector('#join');  // 두 번째부터는 이어 붙이기가 있어야 한다
     if (document.querySelector('#rname')) {
       document.querySelector('#rname').value = '침실1';
@@ -185,6 +202,7 @@ for (const plan of PLANS) {
     // 이어 붙이기 — 안방을 거실 조각으로 붙여 본다
     P.state.mode = 'detect';
     tap(10000, 3000);
+    document.querySelector('#d-ok').click();
     const jn = document.querySelector('#join');
     if (jn) {
       const opt = [...jn.options].find((o) => /거실/.test(o.textContent));
@@ -196,15 +214,20 @@ for (const plan of PLANS) {
     return out;
   }, { b64, mmPerImgPx: plan.mmPerImgPx });
 
-  if (!r.sheet1) fail('방을 눌렀는데 이름 입력이 뜨지 않음');
-  else if (r.hasJoin1) fail('첫 방인데 "이어 붙이기" 선택이 뜬다 — 붙일 대상이 없다');
+  if (!r.barShown) fail('방을 눌렀는데 도면 위 범위 막대가 뜨지 않음');
   else if (!r.hasAdjust) fail('범위 조절(더 넓게/더 좁게) 버튼이 없다');
+  else if (!/㎡/.test(r.areaShown || '')) fail(`막대에 넓이가 안 보인다 ("${r.areaShown}")`);
+  else if (!r.wideGrew) fail(`"더 넓게"를 눌러도 넓이가 안 커진다 (→ ${r.wideArea?.toFixed(1)}㎡)`);
+  else if (!r.deltaShown) fail('넓이가 바뀌었는데 "얼마에서 얼마로"가 표시되지 않는다');
+  else if (!r.sheet1) fail('확정을 눌렀는데 이름 입력이 뜨지 않음');
+  else if (r.hasJoin1) fail('첫 방인데 "이어 붙이기" 선택이 뜬다 — 붙일 대상이 없다');
   else if (r.rooms1.join() !== '거실') fail(`첫 방 등록 결과가 [${r.rooms1}] (기대 거실)`);
+  else if (!r.barHidden) fail('확정한 뒤에도 범위 막대가 남아 있다');
   else if (!r.hasJoin2) fail('두 번째 방인데 "이어 붙이기" 선택이 없다');
   else if (r.rooms2.join() !== '거실,침실1') fail(`두 방 등록 결과가 [${r.rooms2}]`);
   else if (r.roomsAfterJoin.join() !== '거실(2),침실1(1)') fail(`이어 붙이기 결과가 [${r.roomsAfterJoin}] (기대 거실(2),침실1(1))`);
   else if (r.sideRows !== 2) fail(`사이드 공간 목록이 ${r.sideRows}행 (기대 2행)`);
-  else pass(`공간 지정 UI (이름 붙여 2곳 등록 · 세 번째는 거실에 이어 붙임 → ${r.roomsAfterJoin.join(' / ')})`);
+  else pass(`공간 지정 UI (도면 위에서 ${r.wideArea.toFixed(1)}㎡로 넓혔다가 되돌리고 · 이름 붙여 2곳 등록 · 세 번째는 거실에 이어 붙임 → ${r.roomsAfterJoin.join(' / ')})`);
 }
 
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
