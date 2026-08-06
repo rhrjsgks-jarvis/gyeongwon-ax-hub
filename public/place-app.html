@@ -377,6 +377,17 @@ function wallLoop(){
 // 900에서는 원본 2,000px 도면의 5px 벽이 2.2px가 돼 열기 연산에 지워질 수 있었다.
 const DETECT_MAX = 1200;
 const DARK_LUM   = 125;      // 이 밝기 미만이면 벽·글씨 같은 '어두운 것'으로 본다
+// 요즘 분양 도면은 컬러 렌더링이라 바닥에 색이 깔리고, 복사본은 배경이 회색이다.
+// 임계를 하나로 고정하면 어두운 바닥이 통째로 벽이 되어 "누른 자리가 벽 위입니다"가 뜬다.
+// 그래서 **어두운 것의 비율이 도면답지 않으면 임계를 옮긴다**. 도면에서 선이 차지하는
+// 넓이는 아무리 빽빽해도 4할을 넘지 않고, 아무리 성겨도 0.4%는 된다.
+const DARK_DOWN  = [100, 80, 62, 48];    // 어두운 것이 너무 많을 때 내려 볼 값
+const DARK_UP    = [150, 175, 200];      // 너무 적을 때 올려 볼 값
+const DARK_MAX_FRAC = 0.40, DARK_MIN_FRAC = 0.004;
+// 방을 가르려고 막아도 되는 최대 폭 = 실내 문 유효폭(900~1,000mm)에 여유를 준 값.
+// 이보다 넓은 자리를 막았다면 문을 막은 것이 아니라 트인 통로(주방 개구부 2m,
+// 현관 개구부 1.85m, 발코니 확장 4.5m)를 자른 것이다.
+const MAX_SEAL_MM = 1500;
 
 function buildMask(){
   const S = Math.min(1, DETECT_MAX / Math.max(state.imgW, state.imgH));
@@ -388,12 +399,21 @@ function buildMask(){
   cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h);      // 투명 배경은 흰색으로 본다
   cx.drawImage(state.img, 0, 0, w, h);
   const d = cx.getImageData(0, 0, w, h).data;
-  const dark = new Uint8Array(w * h);
-  for (let i = 0, p = 0; p < w * h; i += 4, p++) {
-    const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    dark[p] = lum < DARK_LUM ? 1 : 0;
+  const n = w * h;
+  const lum = new Uint8Array(n);
+  for (let i = 0, p = 0; p < n; i += 4, p++) {
+    lum[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
   }
-  return { w, h, S, dark };
+  const fracAt = (t) => { let c2 = 0; for (let p = 0; p < n; p++) if (lum[p] < t) c2++; return c2 / n; };
+  let thr = DARK_LUM, f = fracAt(thr);
+  if (f > DARK_MAX_FRAC) {
+    for (const t of DARK_DOWN) { thr = t; f = fracAt(t); if (f <= DARK_MAX_FRAC) break; }
+  } else if (f < DARK_MIN_FRAC) {
+    for (const t of DARK_UP) { thr = t; f = fracAt(t); if (f >= DARK_MIN_FRAC) break; }
+  }
+  const dark = new Uint8Array(n);
+  for (let p = 0; p < n; p++) dark[p] = lum[p] < thr ? 1 : 0;
+  return { w, h, S, dark, thr };
 }
 
 /* ── 도면 정리 ────────────────────────────────────────────────────
@@ -473,8 +493,12 @@ function cleanRadii(mask){
   // 문·창이 통째로 벽이 되어 버린다(실제로 그렇게 됐다). 그래서 하나로 정하지 않고
   // 작은 것부터 시도해 "새어 나가지 않는 가장 작은 값"을 쓴다.
   const px = (mm) => state.mmPerPx ? Math.round((mm / state.mmPerPx) * mask.S) : Math.round(dim * mm / 12000);
-  const steps = [0, px(150), px(300), px(500), px(800), px(1200)]
-    .map((v) => Math.max(0, Math.min(120, v)));
+  // 상한은 도면 크기에 비례해 잡는다. 고정 픽셀값(120)으로 잡았더니 창 1,600mm가
+  // 반경 부족으로 못 막혀 개구부로 잡히지 않았다. 실제 창은 1.5~1.8m, 거실 확장
+  // 개구부는 4~5m다 — 1.8m까지는 막아 보고 그보다 넓으면 통로로 남긴다.
+  const cap = Math.max(8, Math.round(Math.min(mask.w, mask.h) * 0.22));
+  const steps = [0, px(150), px(300), px(500), px(800), px(1200), px(1800)]
+    .map((v) => Math.max(0, Math.min(cap, v)));
   return { openR, closeSteps: [...new Set(steps)] };
 }
 
@@ -648,7 +672,14 @@ function ensureBase(){
   if (state.baseMask) return state.baseMask;
   const mask = state.mask || (state.mask = buildMask());
   const { openR } = cleanRadii(mask);
-  const m = cleanWalls(mask, openR, 0);
+  let usedOpen = openR;
+  let m = cleanWalls(mask, openR, 0);
+  // 벽을 칠하지 않고 **윤곽선만** 그린 도면이 있다. 그런 도면에서 열기는 벽을 통째로
+  // 지워 인식이 전부 실패한다. 열기로 그림의 절반 넘게 사라지면 선으로 그린 도면이라
+  // 보고 열기를 건너뛴다 — 가구·글씨가 남지만, 벽이 없는 것보다는 낫다.
+  let a0 = 0, a1 = 0;
+  for (let p = 0; p < mask.dark.length; p++) { if (mask.dark[p]) a0++; if (m[p]) a1++; }
+  if (a0 && a1 < a0 * 0.4) { m = mask.dark; usedOpen = 0; }
   // 도면이 실제로 그려진 범위. 이걸 벗어난 여백까지 채우면 "새어 나갔다"를 판정할 수 없다.
   let x0 = mask.w, y0 = mask.h, x1 = -1, y1 = -1;
   for (let y = 0; y < mask.h; y++) for (let x = 0; x < mask.w; x++) {
@@ -662,7 +693,7 @@ function ensureBase(){
     ? { x0:0, y0:0, x1:mask.w-1, y1:mask.h-1 }
     : { x0:Math.max(0,x0-pad), y0:Math.max(0,y0-pad),
         x1:Math.min(mask.w-1,x1+pad), y1:Math.min(mask.h-1,y1+pad) };
-  state.baseInfo = { openR, bbox };
+  state.baseInfo = { openR: usedOpen, bbox, thr: mask.thr };
   return (state.baseMask = { w:mask.w, h:mask.h, S:mask.S, dark:m, bbox });
 }
 
@@ -801,10 +832,15 @@ function classifyEdges(poly, base, sealed){
   return joined;
 }
 
-function detectRoomAt(imgX, imgY){
+/**
+ * forceR을 주면 그 반경을 그대로 쓴다 — 사용자가 "더 넓게/더 좁게"로 조절할 때.
+ * 자동 판정은 도면 관례를 전제로 한 추정이라, 전제를 벗어나는 도면에서는 사람이 고쳐야 한다.
+ */
+function detectRoomAt(imgX, imgY, forceR){
   if (!state.img) return { error: '도면을 먼저 올려주세요.' };
   const base = ensureBase();
-  const { closeSteps } = cleanRadii(base);
+  let { closeSteps } = cleanRadii(base);
+  if (forceR != null) closeSteps = [forceR];
   const sx = Math.round(imgX * base.S), sy = Math.round(imgY * base.S);
 
   // 새어 나가지 않는 **가장 작은** 닫기 반경을 찾는다. 크게 잡을수록 창문 표시나
@@ -812,7 +848,8 @@ function detectRoomAt(imgX, imgY){
   const bb = base.bbox;
   const planArea = (bb.x1 - bb.x0 + 1) * (bb.y1 - bb.y0 + 1);
   const leakLimit = ((bb.x1-bb.x0) + (bb.y1-bb.y0)) * 0.3;
-  let used = null, reg = null, mask = null, tooBig = false;
+  let tooBig = false;
+  const cands = [];
   for (const r of closeSteps) {
     const m = sealedMask(r);
     if (m.dark[sy*m.w + sx]) continue;              // 이 반경에서는 누른 자리가 벽에 먹혔다
@@ -825,29 +862,63 @@ function detectRoomAt(imgX, imgY){
     // 식당·알파공간이 하나로 트여 있어 그 자체로 도면의 3~4할을 차지하는 것이 정상이고,
     // 방 하나짜리 도면에서는 8할에 가깝다.
     if (g.count > planArea * 0.95){ tooBig = true; continue; }
-    used = r; reg = g; mask = m;
-    state.cleanInfo = { openR: state.baseInfo.openR, closeR: r };
-    break;
+    cands.push({ r, g, m });
   }
-  if (!reg) {
+
+  // 어느 반경을 쓸 것인가. 예전에는 "새지 않는 가장 작은 값"을 썼는데, 실제 세대 평면도는
+  // 도면 안에서 완전히 닫혀 있고 문이 전부 열린 채 그려져 있어 **반경 0에서 세대 전체가
+  // 방 하나로 잡혔다**. 어느 방을 눌러도 90㎡가 나온다. 세 단계로 고른다.
+  let used = null, reg = null, mask = null, poly = null, edges = null;
+  if (cands.length) {
+    // ① 경계가 도면 가장자리에 닿지 않는 것을 먼저 쓴다. 닿아 있으면 그건 방의 경계가
+    //    아니라 도면이 잘린 자리이고, 그 구간은 개구부로도 보고되지 않는다.
+    const closed = cands.filter((c) => c.g.border === 0);
+    const pool = closed.length ? closed : cands;
+    // ② 그 중 **처음으로 크게 줄어든 지점**을 쓴다. 반경을 키우면 문이 막히며 옆방이
+    //    통째로 떨어져 나가 면적이 확 준다. 더 키우면 문보다 넓은 개구부(주방 2m·현관
+    //    1.85m)까지 막혀 트인 공간이 잘리므로, 처음 갈라진 자리에서 멈춘다.
+    //    '마지막' 지점을 쓰면 계속 잘려 나가고, 필요한 반경이 도면 해상도에 따라
+    //    0.5~0.9배로 달라져 절대 기준으로는 가를 수 없다(실제로 저해상도에서 어긋났다).
+    let pick = 0;
+    for (let i = 0; i + 1 < pool.length; i++) {
+      if (pool[i].g.count > pool[i + 1].g.count * 1.25) { pick = i + 1; break; }
+    }
+    // ③ **막은 것이 문·창이 맞는지 확인한다.** 반경을 더 키우면 트인 주방(개구부 2m)까지
+    //    막혀 거실이 통째로 잘린다. 막아 놓은 자리는 개구부로 보고되므로, 문·창이라기엔
+    //    너무 넓은 개구부가 생겼다면 그건 통로를 자른 것이다 — 한 단계 물러선다.
+    //    반경 상한을 픽셀로 정하지 않고 이렇게 결과로 판정하는 이유는, 같은 900mm 문이라도
+    //    도면 해상도에 따라 필요한 반경이 0.5~0.9배로 달라지기 때문이다.
+    const jogOf = (m) => (state.mmPerPx
+      ? Math.max(3, Math.round((300 / state.mmPerPx) * m.S))
+      : Math.max(4, Math.round(Math.max(m.w, m.h) * 0.012)));
+    for (let i = pick; i >= 0; i--) {
+      const c = pool[i];
+      const pg = regionPolygon(c.m, c.g, jogOf(c.m));
+      if (!pg) continue;
+      const eg = classifyEdges(pg, base, c.m);
+      const widest = eg.reduce((mx, e) => (e.open
+        ? Math.max(mx, Math.hypot(e.x2 - e.x1, e.y2 - e.y1) / c.m.S * (state.mmPerPx || 0)) : mx), 0);
+      used = c.r; reg = c.g; mask = c.m; poly = pg; edges = eg;
+      if (!state.mmPerPx || widest <= MAX_SEAL_MM || i === 0) break;
+    }
+    if (reg) state.cleanInfo = { openR: state.baseInfo.openR, closeR: used, thr: state.baseInfo.thr };
+  }
+  if (!reg || !poly) {
     if (base.dark[sy*base.w + sx]) return { error: '누른 자리가 벽 위입니다. 방 안쪽의 빈 곳을 눌러주세요.' };
     if (tooBig) return { error: '벽이 끊겨 여러 방이 하나로 이어졌습니다. 방 사이가 뚫려 있으면 자동으로 가를 수 없습니다 — 벽 그리기로 직접 그려주세요.' };
+    if (cands.length) return { error: '방 모양을 잡지 못했습니다. 벽 그리기로 직접 그려주세요.' };
     return { error: '이 방은 문·창이 넓게 열려 있어 경계를 닫지 못했습니다. 다른 방을 누르거나 벽 그리기로 직접 그려주세요.' };
   }
 
-  // 요철을 지우는 기준도 축척을 알면 실제 치수로 잡는다. 300mm보다 작은 굴곡은
-  // 도면 표기(치수선·해칭)이지 벽이 아니다. 이보다 크면 실제 벽감·기둥이라 살려야 한다.
-  const minJog = state.mmPerPx
-    ? Math.max(3, Math.round((300 / state.mmPerPx) * mask.S))
-    : Math.max(4, Math.round(Math.max(mask.w, mask.h) * 0.012));
-  const poly = regionPolygon(mask, reg, minJog);
-  if (!poly) return { error: '방 모양을 잡지 못했습니다. 벽 그리기로 직접 그려주세요.' };
-
-  const edges = classifyEdges(poly, base, mask);
+  // 사용자가 조절할 수 있도록 인접 단계도 함께 알려준다
+  const all = cleanRadii(base).closeSteps;
+  const at = all.indexOf(used);
   return {
     poly: poly.map(([x, y]) => [x / mask.S, y / mask.S]),
     edges: edges.map((e) => ({ ...e, x1:e.x1/mask.S, y1:e.y1/mask.S, x2:e.x2/mask.S, y2:e.y2/mask.S })),
     closeR: used, reg, mask,
+    wider:  at > 0 ? all[at - 1] : null,                        // 덜 막는다 = 더 넓게
+    narrow: at >= 0 && at + 1 < all.length ? all[at + 1] : null, // 더 막는다 = 더 좁게
   };
 }
 
@@ -892,6 +963,7 @@ function autoDetectCenter(){
   const r = detectRoomAt(state.imgW/2, state.imgH/2);
   if (r.error){ setMode('detect'); toast('가운데 자동 인식이 안 됐습니다 — 방 안쪽을 눌러주세요'); draw(); return; }
   state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
+  state.draftAt = [state.imgW/2, state.imgH/2]; state.draftStep = { wider: r.wider, narrow: r.narrow };
   setMode('detect'); draw();
   confirmDetected(true);
 }
@@ -914,10 +986,29 @@ function confirmDetected(auto){
     + (opens.length
       ? `<br>개구부(문·창) <b>${opens.length}곳</b>${state.scaled?` · 합계 ${Math.round(openLen).toLocaleString()}mm`:''} — 주황 선으로 표시됩니다`
       : '');
+  // 방 범위 조절 — 자동 판정은 도면 관례를 전제로 한 추정이다. 트인 주방까지 한 방으로
+  // 볼지, 문에서 끊을지는 도면마다 다르므로 사용자가 넓히거나 좁힐 수 있어야 한다.
+  const step = state.draftStep || {};
+  const areaM2 = (() => {
+    if (!state.scaled) return null;
+    let a2 = 0;
+    for (let i=0;i<poly.length;i++){
+      const a=poly[i], b=poly[(i+1)%poly.length];
+      a2 += (a[0]*k)*(b[1]*k) - (b[0]*k)*(a[1]*k);
+    }
+    return Math.abs(a2/2)/1e6;
+  })();
+  const adjust = (state.draftAt && (step.wider != null || step.narrow != null))
+    ? `<div class="modal-actions" style="margin-bottom:6px">
+         <button id="wide" ${step.wider  == null ? 'disabled' : ''}>◂ 더 넓게</button>
+         <button id="narrow" ${step.narrow == null ? 'disabled' : ''}>더 좁게 ▸</button>
+       </div>`
+    : '';
   sheet(`<h2>이 방으로 잡을까요?</h2>
     <p class="hint">${auto ? '도면 가운데를 기준으로 자동 인식했습니다. ' : ''}파란 굵은 선이 인식된 벽입니다.
-      도면과 다르면 <b>다시 누르기</b>로 다른 방을 고르거나 <b>직접 그리기</b>로 그리세요.</p>
-    <div class="spec">${sizeTxt}</div>
+      도면과 다르면 <b>더 넓게·더 좁게</b>로 범위를 바꾸거나, <b>다시 누르기</b>로 다른 방을 고르세요.</p>
+    <div class="spec">${areaM2 != null ? `넓이 <b>${areaM2.toFixed(1)}㎡</b> · ` : ''}${sizeTxt}</div>
+    ${adjust}
     <p class="src">벽 모양만 자동으로 잡습니다. 실제 치수는 축척 보정(또는 벽 길이 입력)에서 온 값을 씁니다 —
       도면 선을 추측해서 치수를 만들지 않습니다.</p>
     <div class="modal-actions">
@@ -930,6 +1021,17 @@ function confirmDetected(auto){
         state.draft=null; state.draftEdges=null; applyDetected(p, e); };
       $('#again').onclick= ()=>{ closeSheet(); state.draft=null; setMode('detect'); draw(); };
       $('#draw').onclick = ()=>{ closeSheet(); state.draft=null; state.wallPts=[]; setMode('wall'); draw(); };
+      const redo = (r) => {
+        if (r == null || !state.draftAt) return;
+        const res = detectRoomAt(state.draftAt[0], state.draftAt[1], r);
+        if (res.error){ toast(res.error); return; }
+        closeSheet();
+        state.draft = res.poly; state.draftEdges = res.edges; state.draftCloseR = res.closeR;
+        state.draftStep = { wider: res.wider, narrow: res.narrow };
+        draw(); confirmDetected();
+      };
+      if ($('#wide'))   $('#wide').onclick   = ()=> redo(step.wider);
+      if ($('#narrow')) $('#narrow').onclick = ()=> redo(step.narrow);
     });
 }
 
@@ -1188,7 +1290,9 @@ cv.addEventListener('pointerdown', (e)=>{
     const ix = wx / k, iy = wy / k;
     const r = detectRoomAt(ix, iy);
     if (r.error){ toast(r.error); return; }
-    state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR; draw();
+    state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
+    state.draftAt = [ix, iy]; state.draftStep = { wider: r.wider, narrow: r.narrow };
+    draw();
     confirmDetected();
     return;
   }
