@@ -183,7 +183,7 @@ const cv = $('#cv'), ctx = cv.getContext('2d');
 ──────────────────────────────────────────────────────────────── */
 const CLEAR = {
   '냉장고':        { back:50, side:0, front:0,
-    src:'프리스탠딩 후면 최소 50mm (설치환경 가이드 · 냉장고 4도어 프리스탠딩). 키친핏은 냉장고장 내측 좌우 12mm, 키친핏 Max는 4mm, 1도어는 5mm로 별도다.' },
+    src:'프리스탠딩 후면 최소 50mm (설치환경 가이드 · 냉장고 4도어 프리스탠딩) 기준. 키친핏(빌트인)은 벽이 아니라 냉장고장 내측 이격이라 값이 다르다 — 4도어 키친핏은 Infinite Line 각 12mm, Bespoke는 4mm 또는 12mm(용량대별로 상이해 확정되지 않음), 키친핏 Max는 4mm, 1도어는 Infinite 5mm·Bespoke 12mm. 빌트인 상담은 설치환경 가이드에서 해당 유형을 직접 확인할 것.' },
   '김치냉장고':    { back:100, side:50, front:0,
     src:'스탠드형 후면 100mm · 냉장고장과 양측 각 50mm (RQ48A9001S9 · RQ33C71G1S9 기준). 뚜껑형은 양면·후면 각 50mm.' },
   '세탁기·콤보':   { back:50, side:20, front:555,
@@ -191,12 +191,12 @@ const CLEAR = {
   '건조기':        { back:20, side:20, front:0,
     src:'양옆 각 20mm · 후면 20mm (Bespoke AI 건조기 직배수 단독 설치 기준).' },
   '에어드레서':    { back:15, side:2.5, front:0,
-    src:'옆면 2.5mm · 후면 15mm · 상단 25mm (삼성닷컴 에어드레서 FAQ · DF90H24R5C 제품페이지).' },
+    src:'좌우 이격 2.5mm · 상단 이격 25mm · 후면 이격 15mm. 좌우 2.5mm는 현재 판매 라인업(DF*0H24R**·DF24CB******·DF18CB******) 기준이고, 구형 Bespoke 라인은 14mm가 필요하다 — 아래 모델별 예외 참조.' },
   '슈드레서':      { back:15, side:2.5, front:0, src:'에어드레서 기준을 준용(전용 수치 미확인).' , weak:true },
   '전자레인지/오븐':{ back:100, side:100, front:0,
-    src:'후면·측면 최소 100mm(콘센트 있으면 150mm) · 상단 200mm.' },
+    src:'후면 이격 10cm 이상(후면에 콘센트·멀티탭이 있으면 15cm 이상) · 좌우 이격 10cm 이상 · 상단 이격 20cm 이상.' },
   '공기청정기':    { back:600, side:0, front:0,
-    src:'벽면 최소 600mm 권장. 다만 비스포크 양측면 흡입 모델은 벽에 붙여도 효율 저하가 적다.' },
+    src:'벽면 이격 최소 60cm 권장. 비스포크 양측면 흡입 모델은 벽에 근접해도 효율 저하가 적다. (출처인 삼성뉴스룸이 2026-08-04 재접속에 실패해 그날 재확인은 되지 않았다)' },
   'TV':            { back:15, side:100, front:0,
     src:'제품–벽 최소 15mm · 상하좌우 100mm (벽걸이 기준).' },
   '청소기':        { back:20, side:0, front:800,
@@ -663,7 +663,7 @@ async function openPicker(){
       const showSpec = ()=>{
         const r=cur(); if(!r) return;
         const o=r.options[+model.value||0], p=o.parts[+part.value||0];
-        const cl = clearFor(r.cat, p.part);
+        const cl = clearFor(r.cat, p.part, o.model);
         $('#p-spec').innerHTML =
           `<div>치수 <b>${Math.round(p.w)} × ${Math.round(p.h)} × ${Math.round(p.d)}mm</b> <span class="hint">(W×H×D · ${esc(p.label)})</span></div>
            <div>이격 <b>후면 ${cl.back} · 좌우 ${cl.side}${cl.front?` · 전면 ${cl.front}`:''}mm</b></div>
@@ -675,13 +675,27 @@ async function openPicker(){
       $('#c').onclick = closeSheet;
       $('#ok').onclick = ()=>{
         const r=cur(); const o=r.options[+model.value||0]; const p=o.parts[+part.value||0];
-        state.pending = { cat:r.cat, size:r.size, model:o.model, part:p, clear:clearFor(r.cat,p.part) };
+        state.pending = { cat:r.cat, size:r.size, model:o.model, part:p, clear:clearFor(r.cat,p.part,o.model) };
         closeSheet(); setMode('place'); setStep(4); draw();
       };
     });
 }
-function clearFor(cat, part){
+/* 같은 카테고리인데 모델 세대에 따라 이격이 달라지는 경우.
+   에어드레서 구형 Bespoke(DF10A9500CG·DF60A8500CG)는 좌우 14mm가 필요하고 현행
+   라인업은 2.5mm다 — 삼성닷컴 설치가이드 다이어그램에 색상별로 모델코드와 함께 표기돼 있다.
+   현재 size-reps에는 현행 모델만 들어 있지만, 나중에 구형이 추가돼도 2.5mm로 계산되지
+   않도록 여기서 잡는다. 5.5배 차이라 나란히 설치할 때 결과가 뒤집힌다. */
+const CLEAR_BY_MODEL = [
+  { match: /^DF(10A9500CG|60A8500CG)/, clear: { back:15, side:14, front:0,
+    src:'구형 Bespoke 에어드레서(DF10A9500CG·DF60A8500CG)는 좌우 이격 14mm가 필요하다 — 현행 라인업(2.5mm)과 다르다. 삼성닷컴 설치가이드 다이어그램에서 모델코드와 함께 확인된 값.' } },
+];
+
+function clearFor(cat, part, model){
   if (part==='실외기') return OUTDOOR;
+  if (model) {
+    const hit = CLEAR_BY_MODEL.find((r)=>r.match.test(model));
+    if (hit) return hit.clear;
+  }
   return CLEAR[cat] || { back:0, side:0, front:0, src:'' };
 }
 
@@ -814,7 +828,7 @@ function autoPlace(picks){
     cat:q.cat, size:q.size, model:q.model,
     label:`${q.cat} ${q.size}${q.seq?` #${q.seq}`:''}`,
     w:q.part.w, h:q.part.h, d:q.part.d,
-    clear:clearFor(q.cat, q.part.part), bx:0, by:0, a:0, warn:[],
+    clear:clearFor(q.cat, q.part.part, q.model), bx:0, by:0, a:0, warn:[],
   })).sort((a,b)=> b.w - a.w);
 
   const placed = [...state.items];
