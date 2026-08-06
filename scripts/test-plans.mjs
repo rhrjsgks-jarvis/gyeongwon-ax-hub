@@ -97,6 +97,74 @@ for (const plan of PLANS) {
   void loaded;
 }
 
+// ── 실제 도면 (scripts/fixtures/plans-real/) ──
+// 합성 평면은 "이런 표기 유형에서 깨지지 않는다"까지만 보증한다. 진짜 도면에서 어디가
+// 깨지는지는 진짜 도면으로만 알 수 있다. 이미지는 public repo라 커밋하지 않으므로
+// (저작권) 파일을 가진 로컬에서만 이 구간이 돈다. 자세한 절차는 그 폴더의 README 참고.
+{
+  const dir = path.join(__dirname, 'fixtures', 'plans-real');
+  const idx = path.join(dir, 'index.json');
+  let entries = [];
+  try { entries = JSON.parse(fs.readFileSync(idx, 'utf8')); } catch { entries = []; }
+  const present = entries.filter((e) => e && e.file && fs.existsSync(path.join(dir, e.file)));
+  const missing = entries.length - present.length;
+
+  if (!entries.length) {
+    console.log('SKIP: 실제 도면 코퍼스가 비어 있습니다 — scripts/fixtures/plans-real/README.md 참고');
+  } else if (!present.length) {
+    console.log(`SKIP: 실제 도면 ${missing}벌이 index.json에 있지만 파일이 없습니다 (public repo라 이미지는 커밋하지 않습니다)`);
+  } else {
+    const MIME = { '.png':'image/png', '.jpg':'image/jpeg', '.jpeg':'image/jpeg',
+      '.webp':'image/webp', '.gif':'image/gif', '.svg':'image/svg+xml' };
+    for (const e of present) {
+      const ext = path.extname(e.file).toLowerCase();
+      const b64 = fs.readFileSync(path.join(dir, e.file)).toString('base64');
+      const uri = `data:${MIME[ext] || 'image/png'};base64,${b64}`;
+      if (!(e.mmPerImgPx > 0)) { fail(`${e.file}: mmPerImgPx가 없습니다 (도면 1px = 몇 mm인가)`); continue; }
+
+      const loaded = await page.evaluate(async ({ uri, mmPerImgPx }) => {
+        const P = window.__place;
+        const img = new Image();
+        const ok = await new Promise((res) => { img.onload = () => res(true); img.onerror = () => res(false); img.src = uri; });
+        if (!ok) return { error: '이미지를 열지 못했습니다' };
+        P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+        P.state.mmPerPx = mmPerImgPx; P.state.scaled = true;
+        P.state.mask = P.state.baseMask = P.state.cleanCv = null;
+        P.state.sealCache = null; P.state.walls = []; P.state.rooms = []; P.state.items = [];
+        return { w: img.naturalWidth, h: img.naturalHeight };
+      }, { uri, mmPerImgPx: e.mmPerImgPx });
+      if (loaded.error) { fail(`${e.file}: ${loaded.error}`); continue; }
+
+      for (const pr of (e.probes || [])) {
+        const [px0, py0] = pr.atPx || [];
+        if (!Number.isFinite(px0) || !Number.isFinite(py0)) { fail(`${e.file}: atPx가 없는 probe`); continue; }
+        const r = await page.evaluate(({ px0, py0, k }) => {
+          const P = window.__place;
+          const d = P.detectRoomAt(px0, py0);
+          if (d.error) return { error: d.error };
+          let a2 = 0;
+          for (let i = 0; i < d.poly.length; i++) {
+            const [x1, y1] = d.poly[i], [x2, y2] = d.poly[(i + 1) % d.poly.length];
+            a2 += (x1 * k) * (y2 * k) - (x2 * k) * (y1 * k);
+          }
+          return { areaM2: Math.abs(a2 / 2) / 1e6, corners: d.poly.length,
+            opens: d.edges.filter((x) => x.open).length, closeR: d.closeR };
+        }, { px0, py0, k: e.mmPerImgPx });
+
+        const label = `[실측] ${e.file} ${pr.label || `@(${px0},${py0})`}`;
+        if (r.error) { fail(`${label}: ${r.error}`); continue; }
+        const [lo, hi] = pr.areaM2 || [0, Infinity];
+        if (r.areaM2 < lo || r.areaM2 > hi) {
+          fail(`${label}: 넓이 ${r.areaM2.toFixed(1)}㎡ (도면 치수 기준 기대 ${lo}~${hi}㎡)`);
+        } else {
+          pass(`${label} → ${r.areaM2.toFixed(1)}㎡ · 모서리 ${r.corners} · 개구부 ${r.opens}`);
+        }
+      }
+    }
+    if (missing) console.log(`SKIP: 실제 도면 ${missing}벌은 파일이 없어 건너뜁니다`);
+  }
+}
+
 // ── 방 범위 조절 ──
 // 자동 판정은 도면 관례를 전제로 한 추정이다. 전제를 벗어나는 도면이 반드시 나오므로
 // 사용자가 넓히고 좁힐 수 있어야 한다. 그 손잡이가 실제로 동작하는지 검사한다.
