@@ -373,7 +373,9 @@ function wallLoop(){
 
    결과는 확정이 아니라 초안이다 — 마음에 들지 않으면 '벽 그리기'로 직접 그리면 된다.
 ──────────────────────────────────────────────────────────────── */
-const DETECT_MAX = 900;      // 인식 해상도 상한(픽셀). 큰 도면도 1초 안에 끝나게 한다
+// 인식 해상도 상한(픽셀). 낮추면 벽 위치가 그만큼 뭉개져 그대로 배치 판정 오차가 된다.
+// 900에서는 원본 2,000px 도면의 5px 벽이 2.2px가 돼 열기 연산에 지워질 수 있었다.
+const DETECT_MAX = 1200;
 const DARK_LUM   = 125;      // 이 밝기 미만이면 벽·글씨 같은 '어두운 것'으로 본다
 
 function buildMask(){
@@ -466,13 +468,13 @@ function cleanWalls(mask, openR, closeR){
  */
 function cleanRadii(mask){
   const dim = Math.max(mask.w, mask.h);
-  const openR = Math.max(1, Math.round(dim / 900));
+  const openR = Math.max(1, Math.round(dim / DETECT_MAX));
   // 닫기는 **가능한 한 작게**. 크게 잡으면 창문 표시나 가까운 선들이 뭉쳐 검은 덩어리가 되고
   // 문·창이 통째로 벽이 되어 버린다(실제로 그렇게 됐다). 그래서 하나로 정하지 않고
   // 작은 것부터 시도해 "새어 나가지 않는 가장 작은 값"을 쓴다.
   const px = (mm) => state.mmPerPx ? Math.round((mm / state.mmPerPx) * mask.S) : Math.round(dim * mm / 12000);
   const steps = [0, px(150), px(300), px(500), px(800), px(1200)]
-    .map((v) => Math.max(0, Math.min(90, v)));
+    .map((v) => Math.max(0, Math.min(120, v)));
   return { openR, closeSteps: [...new Set(steps)] };
 }
 
@@ -518,58 +520,123 @@ function floodRegion(mask, sx, sy){
 }
 
 /**
- * 채워진 영역의 좌·우 윤곽을 계단으로 압축해 직교 다각형을 만든다.
- * 아파트 도면은 대부분 직각이라 이 방식으로 ㄱ자·ㄷ자 방까지 잡힌다.
+ * 채워진 영역의 바깥 경계를 픽셀 격자를 따라 그대로 추적한다.
+ *
+ * 예전에는 줄마다 좌·우 끝점만 읽어 계단으로 압축했다. 그러면 **안쪽으로 파인 부분을
+ * 통째로 건너뛴다** — ㄷ자 방이나 방 사이로 튀어나온 벽·기둥·붙박이장이 있으면 그 위를
+ * 직선으로 가로질러 벽이 실제와 다른 자리에 그려졌다. 격자 추적은 경계를 한 픽셀씩
+ * 따라가므로 파인 부분도 그대로 따라간다.
+ *
+ * 진행 방향의 **오른쪽이 항상 방 안쪽**이 되도록 돌기 때문에 결과는 항상 닫힌 직교 다각형이다.
+ * 좌표는 픽셀의 모서리(격자점)라 벽 안쪽 면과 정확히 일치한다.
  */
-function regionPolygon(mask, reg, tol, minRun){
-  const { w } = mask;
-  const ys = [], lefts = [], rights = [];
-  for (let y = reg.minY; y <= reg.maxY; y++) {
-    let l = -1, r = -1;
-    for (let x = reg.minX; x <= reg.maxX; x++) {
-      if (reg.seen[y * w + x]) { if (l < 0) l = x; r = x; }
-    }
-    if (l >= 0) { ys.push(y); lefts.push(l); rights.push(r); }
-  }
-  if (ys.length < minRun) return null;
+function traceContour(reg, w, h){
+  const seen = reg.seen;
+  const inside = (x, y) => x >= 0 && y >= 0 && x < w && y < h && !!seen[y * w + x];
+  let sx = -1, sy = -1;
+  outer:
+  for (let y = reg.minY; y <= reg.maxY; y++)
+    for (let x = reg.minX; x <= reg.maxX; x++)
+      if (seen[y * w + x]) { sx = x; sy = y; break outer; }
+  if (sx < 0) return null;
 
-  // 같은 값이 이어지는 구간(계단)으로 묶는다
-  const steps = (prof) => {
-    const out = [];
-    let s = 0;
-    for (let i = 1; i <= prof.length; i++) {
-      if (i === prof.length || Math.abs(prof[i] - prof[s]) > tol) {
-        const seg = prof.slice(s, i).slice().sort((a, b) => a - b);
-        out.push({ y0: ys[s], y1: ys[i - 1], v: seg[seg.length >> 1] });
-        s = i;
-      }
-    }
-    // 짧은 계단은 노이즈(치수 글씨·가구 표기)라 앞 계단에 흡수시킨다
-    const merged = [];
-    for (const st of out) {
-      const prev = merged[merged.length - 1];
-      if (prev && (st.y1 - st.y0) < minRun) { prev.y1 = st.y1; continue; }
-      merged.push({ ...st });
-    }
-    return merged;
+  // 격자점에서 각 방향으로 갈 수 있는가 = 그 변의 오른쪽 픽셀만 방 안쪽인가
+  const DIR = [[1, 0], [0, 1], [-1, 0], [0, -1]];     // 0=→ 1=↓ 2=← 3=↑
+  const canGo = (x, y, d) => {
+    if (d === 0) return  inside(x, y)         && !inside(x, y - 1);
+    if (d === 1) return  inside(x - 1, y)     && !inside(x, y);
+    if (d === 2) return  inside(x - 1, y - 1) && !inside(x - 1, y);
+    return               inside(x, y - 1)     && !inside(x - 1, y - 1);
   };
 
-  const L = steps(lefts), R = steps(rights);
-  if (!L.length || !R.length) return null;
-
   const pts = [];
-  for (const s of L) { pts.push([s.v, s.y0]); pts.push([s.v, s.y1]); }   // 왼쪽 위→아래
-  for (let i = R.length - 1; i >= 0; i--) {                              // 오른쪽 아래→위
-    const s = R[i];
-    pts.push([s.v, s.y1]); pts.push([s.v, s.y0]);
+  let px = sx, py = sy, d = 0;                        // 최상단 왼쪽 픽셀의 좌상단에서 오른쪽으로
+  const limit = reg.count * 8 + 64;                   // 무한루프 방지
+  for (let step = 0; step < limit; step++) {
+    pts.push([px, py]);
+    let nd = -1;
+    // 왼쪽 → 직진 → 오른쪽 순으로 시도한다. 왼쪽을 먼저 보면 대각선으로만 맞닿은
+    // 두 덩어리를 잇지 않고 바깥 윤곽만 따라간다(채우기가 4방향이라 둘은 다른 방이다).
+    for (const t of [3, 0, 1, 2]) {
+      const c = (d + t) & 3;
+      if (canGo(px, py, c)) { nd = c; break; }
+    }
+    if (nd < 0) return null;
+    d = nd;
+    px += DIR[d][0]; py += DIR[d][1];
+    if (px === sx && py === sy) break;
   }
-  // 같은 점 연속 제거
-  const out = [];
-  for (const p of pts) {
-    const q = out[out.length - 1];
-    if (!q || Math.abs(q[0] - p[0]) > 0.5 || Math.abs(q[1] - p[1]) > 0.5) out.push(p);
+  return pts.length >= 4 ? pts : null;
+}
+
+/**
+ * 같은 방향으로 이어지는 점과 겹친 점을 지운다.
+ * **닫힌 고리로** 보고 지워야 한다 — 앞에서 뒤로만 훑으면 시작점과 끝점 사이에 1px짜리
+ * 가짜 변이 남고, 그걸 요철로 오인해 지우다가 다각형이 무너졌다(실제로 그랬다).
+ */
+function mergeCollinear(poly){
+  let pts = poly.slice();
+  for (let guard = 0; guard < 8; guard++) {
+    if (pts.length <= 3) break;
+    const n = pts.length;
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const a = pts[(i - 1 + n) % n], b = pts[i], c = pts[(i + 1) % n];
+      const dup = Math.abs(b[0]-a[0]) < 1e-9 && Math.abs(b[1]-a[1]) < 1e-9;
+      const cr  = (b[0]-a[0])*(c[1]-b[1]) - (b[1]-a[1])*(c[0]-b[0]);
+      if (dup || Math.abs(cr) < 1e-9) continue;     // b는 없어도 같은 모양
+      out.push(b);
+    }
+    if (out.length === n || out.length < 3) break;
+    pts = out;
   }
-  return out.length >= 4 ? out : null;
+  return pts;
+}
+
+/**
+ * 짧은 계단(요철)을 없앤다. 치수 글씨·해칭 때문에 생긴 1~2px 요철을 벽으로 착각하지 않게.
+ * 계단을 지울 때는 양옆 벽을 **길이로 가중평균한 자리**로 모은다 — 긴 벽이 이긴다.
+ * minJog보다 긴 요철은 그대로 둔다. 실제 벽감·기둥을 지워 버리면 벽이 틀린 자리에 그려진다.
+ */
+function simplifyRect(poly, minJog){
+  let pts = mergeCollinear(poly);
+  for (let guard = 0; guard < 400 && pts.length > 4; guard++) {
+    const n = pts.length;
+    let worst = -1, worstLen = minJog;
+    for (let i = 0; i < n; i++) {
+      const a = pts[i], b = pts[(i + 1) % n];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (len < worstLen) { worstLen = len; worst = i; }
+    }
+    if (worst < 0) break;
+    const i0 = (worst - 1 + n) % n, i1 = worst, i2 = (worst + 1) % n, i3 = (worst + 2) % n;
+    const A = pts[i0], B = pts[i1], C = pts[i2], D = pts[i3];
+    const lenA = Math.hypot(B[0] - A[0], B[1] - A[1]);
+    const lenD = Math.hypot(D[0] - C[0], D[1] - C[1]);
+    const wA = lenA + 1e-6, wD = lenD + 1e-6;
+    const horiz = Math.abs(C[1] - B[1]) < Math.abs(C[0] - B[0]);   // 지울 계단이 가로변인가
+    if (horiz) {
+      const x = (B[0] * wA + C[0] * wD) / (wA + wD);
+      A[0] = x; D[0] = x;
+    } else {
+      const y = (B[1] * wA + C[1] * wD) / (wA + wD);
+      A[1] = y; D[1] = y;
+    }
+    const drop = new Set([i1, i2]);
+    pts = mergeCollinear(pts.filter((_, k) => !drop.has(k)));
+    if (pts.length < 4) return null;
+  }
+  return pts.length >= 4 ? pts : null;
+}
+
+/**
+ * 채워진 영역에서 방 윤곽(직교 다각형)을 만든다.
+ * minJog보다 짧은 요철은 도면 노이즈로 보고 흡수한다.
+ */
+function regionPolygon(mask, reg, minJog){
+  const raw = traceContour(reg, mask.w, mask.h);
+  if (!raw) return null;
+  return simplifyRect(raw, Math.max(2, minJog || 2));
 }
 
 /**
@@ -621,22 +688,51 @@ function ensureClean(){
 
 /**
  * 경계선의 각 구간이 실제 벽인지, 메워서 만든 개구부(문·창)인지 가른다.
- * 기본 마스크(문·창이 뚫린 상태)에서 그 자리 바깥쪽에 벽이 있는지 본다.
- * 창문이 "사라졌다"가 아니라 "여기가 창문이다"로 보이게 하는 것이 목적이다.
+ *
+ * 판정 근거를 **바깥에 벽이 안 보인다**에서 **닫기가 여기를 메웠다**로 바꿨다.
+ * 예전에는 경계에서 바깥으로 7px 훑어 어두운 것이 없으면 개구부로 봤는데,
+ * ①경계선이 단순화 과정에서 몇 px 밀리면 판정이 뒤집히고 ②복도 건너편 벽이
+ * 7px 안에 있으면 문이 벽이 되고 ③해칭이 성긴 벽은 개구부가 됐다.
+ * 지금은 바깥으로 나가며 **처음 만나는 것**을 본다 —
+ *   도면에 실제로 그려진 벽이면 벽, 닫기로 메운 자리면 개구부.
+ * 어느 쪽 근거도 못 찾으면 벽으로 둔다. 없는 개구부를 만들어 내지 않는다.
+ *
+ * sealed를 넘기지 않으면(단위 테스트 등) 예전처럼 "바깥에 벽이 없으면 개구부"로 판정한다.
  */
-function classifyEdges(poly, base){
-  const { w, h, dark } = base;
+function classifyEdges(poly, base, sealed){
+  const { w, h } = base;
+  const bd = base.dark, sd = sealed ? sealed.dark : null;
   const cx = poly.reduce((s,p)=>s+p[0],0)/poly.length;
   const cy = poly.reduce((s,p)=>s+p[1],0)/poly.length;
-  const solidAt = (x, y, nx, ny) => {
-    for (let d = 1; d <= 7; d++) {
+
+  // 길이 기준은 축척을 알면 실제 치수(mm)로 잡는다. 도면 크기에 따라 기준이 달라지면
+  // 같은 문이 어떤 도면에서는 개구부, 어떤 도면에서는 벽이 된다.
+  const S = base.S || 1;
+  const pxPerMm = state.mmPerPx ? S / state.mmPerPx : 0;
+  const mmPx = (mm, fb) => (pxPerMm ? Math.max(1, Math.round(mm * pxPerMm)) : fb);
+  const span = Math.max(w, h);
+  const probe   = Math.max(6, mmPx(400, Math.round(span * 0.012)));   // 경계선이 밀린 만큼은 더 본다
+  const minOpen = mmPx(500, Math.max(4, Math.round(span * 0.012)));   // 이보다 짧으면 문·창이 아니다
+  const noise   = Math.max(2, Math.round(probe / 3));                 // 표본 몇 개짜리 깜빡임
+
+  // 닫기는 실제 벽 옆에도 1~2px짜리 얇은 테두리를 남긴다. 그 한 겹만 보고 판정하면
+  // 멀쩡한 벽이 통째로 개구부가 된다(ㄱ자 도면에서 실제로 그렇게 됐다).
+  // 그래서 **메운 자리를 지나 빈 곳이 나올 때까지** 나가 본다 —
+  // 도중에 그려진 벽에 닿으면 벽, 메운 자리를 뚫고 빈 곳이 나오면 개구부.
+  const fillMax = Math.max(3, mmPx(300, 4));   // 문·창을 메운 두께는 벽 두께 수준이다
+  const kindAt = (x, y, nx, ny) => {
+    let fill = 0;
+    for (let d = 0; d <= probe; d++) {
       const px = Math.round(x + nx*d), py = Math.round(y + ny*d);
-      if (px < 0 || py < 0 || px >= w || py >= h) return true;   // 도면 밖은 벽으로 본다
-      if (dark[py*w + px]) return true;
+      if (px < 0 || py < 0 || px >= w || py >= h) return 1;   // 도면 밖은 벽으로 본다
+      const p = py*w + px;
+      if (bd[p]) return 1;                                    // 도면에 그려진 벽
+      if (sd && sd[p]) { if (++fill > fillMax) return 0; continue; }   // 닫기로 메운 자리
+      if (fill) return 0;                                     // 메운 자리를 지나 빈 곳 = 문·창
     }
-    return false;
+    return sd && !fill ? 1 : 0;
   };
-  const minRun = Math.max(4, Math.round(Math.max(w,h) * 0.012));  // 이보다 짧은 구간은 잡음
+
   const out = [];
   for (let i = 0; i < poly.length; i++) {
     const a = poly[i], b = poly[(i+1) % poly.length];
@@ -651,21 +747,22 @@ function classifyEdges(poly, base){
     const flags = [];
     for (let k = 0; k <= n; k++) {
       const t = k/n;
-      flags.push(solidAt(a[0]+dx*t, a[1]+dy*t, nx, ny) ? 1 : 0);
+      flags.push(kindAt(a[0]+dx*t, a[1]+dy*t, nx, ny));
     }
-    // 연속 구간으로 묶고 짧은 구간은 앞에 흡수
+    // 구간은 **빈틈 없이** 이어져야 한다. 한 표본씩 비우면 벽 사이에 미세한 구멍이 생겨
+    // 방이 닫히지 않은 것으로 보인다.
     let s0 = 0;
     const runs = [];
     for (let k = 1; k <= flags.length; k++) {
       if (k === flags.length || flags[k] !== flags[s0]) {
-        runs.push({ t0: s0/n, t1: (k-1)/n, solid: !!flags[s0] });
+        runs.push({ t0: s0/n, t1: Math.min(k, n)/n, solid: !!flags[s0] });
         s0 = k;
       }
     }
     const merged = [];
     for (const r of runs) {
       const prev = merged[merged.length-1];
-      if (prev && (r.t1 - r.t0) * L < minRun) { prev.t1 = r.t1; continue; }
+      if (prev && (r.t1 - r.t0) * L < noise) { prev.t1 = r.t1; continue; }
       merged.push({ ...r });
     }
     for (const r of merged) {
@@ -676,7 +773,32 @@ function classifyEdges(poly, base){
       });
     }
   }
-  return out;
+
+  // 문·창이라기엔 너무 짧은 개구부는 벽으로 되돌린다. 모서리에서 한두 표본이 뒤집혀
+  // 엉뚱한 자리에 주황 점선이 뜨던 것이 이것 때문이었다.
+  for (const e of out) {
+    if (e.open && Math.hypot(e.x2-e.x1, e.y2-e.y1) < minOpen) e.open = false;
+  }
+  // 같은 종류로 이어지는 구간은 하나로 합친다 (한 벽이 여러 줄로 쪼개져 보고되지 않게)
+  const joined = [];
+  for (const e of out) {
+    const p = joined[joined.length-1];
+    if (p && p.open === e.open
+        && Math.abs(p.x2-e.x1) < 0.6 && Math.abs(p.y2-e.y1) < 0.6
+        && Math.abs((p.x2-p.x1)*(e.y2-e.y1) - (p.y2-p.y1)*(e.x2-e.x1)) < 1e-6) {
+      p.x2 = e.x2; p.y2 = e.y2; continue;
+    }
+    joined.push({ ...e });
+  }
+  if (joined.length > 1) {
+    const f = joined[0], l = joined[joined.length-1];
+    if (f.open === l.open
+        && Math.abs(l.x2-f.x1) < 0.6 && Math.abs(l.y2-f.y1) < 0.6
+        && Math.abs((l.x2-l.x1)*(f.y2-f.y1) - (l.y2-l.y1)*(f.x2-f.x1)) < 1e-6) {
+      f.x1 = l.x1; f.y1 = l.y1; joined.pop();
+    }
+  }
+  return joined;
 }
 
 function detectRoomAt(imgX, imgY){
@@ -713,12 +835,15 @@ function detectRoomAt(imgX, imgY){
     return { error: '이 방은 문·창이 넓게 열려 있어 경계를 닫지 못했습니다. 다른 방을 누르거나 벽 그리기로 직접 그려주세요.' };
   }
 
-  const tol = Math.max(2, Math.round(Math.max(mask.w, mask.h) * 0.006));
-  const minRun = Math.max(4, Math.round(Math.max(mask.w, mask.h) * 0.02));
-  const poly = regionPolygon(mask, reg, tol, minRun);
+  // 요철을 지우는 기준도 축척을 알면 실제 치수로 잡는다. 300mm보다 작은 굴곡은
+  // 도면 표기(치수선·해칭)이지 벽이 아니다. 이보다 크면 실제 벽감·기둥이라 살려야 한다.
+  const minJog = state.mmPerPx
+    ? Math.max(3, Math.round((300 / state.mmPerPx) * mask.S))
+    : Math.max(4, Math.round(Math.max(mask.w, mask.h) * 0.012));
+  const poly = regionPolygon(mask, reg, minJog);
   if (!poly) return { error: '방 모양을 잡지 못했습니다. 벽 그리기로 직접 그려주세요.' };
 
-  const edges = classifyEdges(poly, base);
+  const edges = classifyEdges(poly, base, mask);
   return {
     poly: poly.map(([x, y]) => [x / mask.S, y / mask.S]),
     edges: edges.map((e) => ({ ...e, x1:e.x1/mask.S, y1:e.y1/mask.S, x2:e.x2/mask.S, y2:e.y2/mask.S })),
@@ -1559,6 +1684,7 @@ window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, w
   findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, classifyEdges, segHitsPoly, sealedMask,
+  traceContour, simplifyRect, mergeCollinear,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
 </script>
 </body>
