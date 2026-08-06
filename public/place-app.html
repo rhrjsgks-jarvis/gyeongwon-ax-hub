@@ -841,6 +841,82 @@ function regionPolygon(mask, reg, minJog){
  * 실패 사유를 문자열로 함께 돌려줘 화면에 그대로 보여준다.
  */
 /**
+ * 한 줄(가로 또는 세로) 방향으로만 형태학 연산을 한다. boxMorph의 1방향 판.
+ */
+function lineMorph(src, w, h, r, mode, vert){
+  if (r <= 0) return src;
+  const out = new Uint8Array(w * h);
+  const want = mode === 'min';
+  const N = vert ? w : h;                       // 줄 개수
+  const M = vert ? h : w;                       // 줄 길이
+  const at = vert ? (a, b) => b * w + a : (a, b) => a * w + b;
+  for (let a = 0; a < N; a++) {
+    let sum = 0;
+    for (let k = -r; k <= r; k++) if (k >= 0 && k < M) sum += src[at(a, k)];
+    for (let b = 0; b < M; b++) {
+      const n = Math.min(b + r, M - 1) - Math.max(b - r, 0) + 1;
+      out[at(a, b)] = want ? (sum === n ? 1 : 0) : (sum > 0 ? 1 : 0);
+      const drop = b - r, add = b + r + 1;
+      if (drop >= 0) sum -= src[at(a, drop)];
+      if (add < M)   sum += src[at(a, add)];
+    }
+  }
+  return out;
+}
+
+/**
+ * **벽만 남긴다 — "두께보다 긴, 곧은 띠"만 벽으로 본다.**
+ *
+ * 도면 인식 문헌이 공통으로 쓰는 벽의 정의다(Heras et al., *Unsupervised Wall Detector in
+ * Architectural Floor Plans*; Lv et al., CVPR 2021). 표기법은 도면마다 제각각이지만
+ * "직교하는 두 방향으로 놓인, 두께보다 긴 곧은 선"이라는 성질은 공통이라, 가로·세로
+ * 방향의 선형 열기(directional opening)로 뽑아내는 것이 표준적인 방법이다.
+ *
+ * 이 기준으로 확실히 걸러지는 것들 — 사용자가 "벽으로 인식된다"고 지적한 것들이 여기 있다:
+ *   · 실명 글씨·치수 숫자·범례 (어느 방향으로도 길지 않다)
+ *   · 문 열림 호 (굽어 있어 곧은 구간이 짧다)
+ *   · 변기·세면대·둥근 식탁·의자 같은 뭉툭한 기물
+ *   · 해칭·점묘 패턴, 치수선 끝 마커
+ * 반대로 벽은 아무리 짧아도 문 옆 토막이 600mm는 되므로 그대로 남는다.
+ *
+ * 대각선 벽은 이 기준에서 빠진다. 그래서 **이 연산으로 절반 넘게 사라지면 쓰지 않는다** —
+ * 직각이 아닌 도면에서 벽을 통째로 잃는 것보다 가구가 좀 섞이는 편이 낫다.
+ */
+function keepBands(dark, w, h, r, thickR){
+  if (r <= 0) return dark;
+  const hor = lineMorph(lineMorph(dark, w, h, r, 'min', false), w, h, r, 'max', false);
+  const ver = lineMorph(lineMorph(dark, w, h, r, 'min', true),  w, h, r, 'max', true);
+  const band = new Uint8Array(w * h);
+  for (let p = 0; p < w * h; p++) band[p] = (hor[p] || ver[p]) ? 1 : 0;
+
+  // **두께보다 길어야 벽이다.** 가로·세로 모두 두꺼운 덩어리(정사각형에 가까운 기물,
+  // 600mm 깊이 싱크대, 욕조, 침대)는 아무리 길어도 벽이 아니다. 상자 열기로 걸러낸다.
+  // 아파트 내력벽은 150~250mm라 이 기준(450mm)에 걸리지 않는다.
+  //
+  // 단, **벽 그물망에 붙어 있는 것은 남긴다.** 기둥·벽감·마감벽처럼 방을 실제로 둘러싸는
+  // 구조물은 두꺼워도 벽이다(ㄷ자 방의 기둥 900×1,400mm이 여기 해당한다). 떨어져 있는
+  // 두꺼운 덩어리만 가구로 본다.
+  let blob = null;
+  if (thickR > 0) blob = boxMorph(boxMorph(dark, w, h, thickR, 'min'), w, h, thickR, 'max');
+  let main = null;
+  if (blob) {
+    const { lab, comps } = components(band, w, h);
+    if (comps.length) {
+      const big = comps.reduce((a, c) => (c.n > a.n ? c : a));
+      main = (p) => lab[p] === big.id;
+    }
+  }
+  const out = new Uint8Array(w * h);
+  let before = 0, after = 0;
+  for (let p = 0; p < w * h; p++) {
+    if (dark[p]) before++;
+    out[p] = (band[p] && !(blob && blob[p] && main && !main(p))) ? 1 : 0;
+    if (out[p]) after++;
+  }
+  return (before && after < before * 0.45) ? dark : out;
+}
+
+/**
  * **건물이 그려진 범위**를 찾는다. 도면 바깥에는 치수선이 둘러 있고, 그 끝 마커는
  * 굵어서 열기에도 살아남는다. 어두운 픽셀 전부를 감싸는 상자를 쓰면 범위가 치수선까지
  * 커져 **건물 밖으로 새어 나가도 "새어 나갔다"를 판정할 수 없다.**
@@ -962,8 +1038,15 @@ function ensureBase(){
   let a0 = 0, a1 = 0;
   for (let p = 0; p < mask.dark.length; p++) { if (mask.dark[p]) a0++; if (m[p]) a1++; }
   if (a0 && a1 < a0 * 0.4) { m = mask.dark; usedOpen = 0; }
-  // 떨어져 있는 작은 조각(실명 글씨·범례·치수 숫자)을 지운다. 방 한가운데에 남으면
-  // 그 자리가 벽이 되어 방이 갈라진다. 기준은 800mm — 벽은 아무리 짧아도 그보다 길다.
+  // **벽만 남긴다** — 두께보다 긴 곧은 띠(가로·세로)만 벽으로 본다. 글씨·문 열림 호·
+  // 변기·둥근 기물·해칭·치수 마커가 여기서 전부 걸러진다.
+  const mmPx = (v, fb) => (state.mmPerPx
+    ? Math.max(2, Math.round((v / state.mmPerPx) * mask.S / 2))
+    : Math.max(2, Math.round(Math.max(mask.w, mask.h) * fb)));
+  // 띠 길이 기준 500mm — 문 옆 벽 토막·600mm 기둥은 남고, 실명 글씨 한 덩이(400~460mm)와
+  // 해칭 빗금은 걸러진다. 이보다 올리면 작은 기둥·벽감이 사라져 그 자리에 가전을 놓게 된다.
+  m = keepBands(m, mask.w, mask.h, mmPx(500, 0.010), mmPx(450, 0.009));
+  // 그래도 떨어져 남은 작은 조각을 지운다. 기준은 800mm — 벽은 아무리 짧아도 그보다 길다.
   const speckPx = state.mmPerPx
     ? Math.max(4, Math.round((800 / state.mmPerPx) * mask.S))
     : Math.max(6, Math.round(Math.max(mask.w, mask.h) * 0.03));
@@ -2298,7 +2381,7 @@ loadReps();
 window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
   findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
-  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, classifyEdges, segHitsPoly, sealedMask,
+  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
