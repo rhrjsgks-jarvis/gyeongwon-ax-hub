@@ -164,11 +164,14 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
 {
   const install = fs.readFileSync(path.join(root, 'public', 'install-app.html'), 'utf8');
   const CHECK = [
-    ['에어드레서', 'side', 2.5, '옆면 2.5mm'],
-    ['에어드레서', 'back', 15, '후면 15mm'],
+    ['에어드레서', 'side', 2.5, "['좌우 이격','2.5mm — 현재 판매 라인업"],
+    ['에어드레서', 'back', 15, "['후면 이격','15mm — 전 라인업 공통"],
     ['세탁기·콤보', 'side', 20, '양옆 이격 각 20mm'],
     ['김치냉장고', 'back', 100, '후면 벽과의 거리 100mm'],
     ['건조기', 'back', 20, '후면 이격 20mm'],
+    ['전자레인지/오븐', 'side', 100, "['좌우 이격','10cm 이상"],
+    ['전자레인지/오븐', 'back', 100, "['후면 이격','10cm 이상"],
+    ['공기청정기', 'back', 600, "['벽면 이격','최소 60cm 권장"],
   ];
   let bad = 0;
   for (const [cat, key, val, evidence] of CHECK) {
@@ -188,6 +191,27 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   }
   const weak = Object.entries(P.CLEAR).filter(([, c]) => c.weak).map(([k]) => k);
   pass(`출처 표기 완비 · 준용(추정) 표시: ${weak.join(', ') || '없음'}`);
+}
+
+// ── [7-b] 모델 세대에 따라 이격이 달라지는 경우 ──
+// 에어드레서는 현행 라인업 2.5mm / 구형 Bespoke 14mm로 5.5배 차이가 난다.
+// 나란히 설치할 때 결과가 뒤집히므로 모델코드로 갈라져야 한다.
+{
+  const install = fs.readFileSync(path.join(root, 'public', 'install-app.html'), 'utf8');
+  const cur = P.clearFor('에어드레서', '본체', 'DF80H24R1D');
+  const old = P.clearFor('에어드레서', '본체', 'DF10A9500CG');
+  if (cur.side !== 2.5) fail(`현행 에어드레서(DF80H24R1D) 좌우 이격이 ${cur.side} (기대 2.5)`);
+  else if (old.side !== 14) fail(`구형 Bespoke 에어드레서(DF10A9500CG) 좌우 이격이 ${old.side} (기대 14)`);
+  else if (!install.includes('DF10A9500CG') || !install.includes('14mm')) {
+    fail('구형 14mm 근거가 설치환경 가이드에 없음');
+  } else pass('에어드레서 모델 세대별 좌우 이격 (현행 2.5mm / 구형 Bespoke 14mm)');
+
+  // size-reps에 실린 에어드레서가 어느 쪽인지 확인 — 지금은 전부 현행 라인업이어야 한다
+  const ad = reps.filter((r) => r.cat === '에어드레서')
+    .flatMap((r) => r.options.flatMap((o) => [o.model, ...o.also]));
+  const legacy = ad.filter((m) => P.clearFor('에어드레서', '본체', m).side !== 2.5);
+  if (legacy.length) console.log(`NOTE: size-reps의 에어드레서 중 구형 라인 ${legacy.join(', ')} — 좌우 14mm로 계산됨`);
+  else pass(`size-reps 에어드레서 ${ad.length}종 전부 현행 라인업 (${ad.join(', ')})`);
 }
 
 // ── [8] 실외기는 실내기와 다른 이격을 쓴다 ──
