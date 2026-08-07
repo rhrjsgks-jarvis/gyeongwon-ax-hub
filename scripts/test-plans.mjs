@@ -483,6 +483,62 @@ for (const plan of PLANS) {
   else pass(`공간 복수선택 — 두 곳을 담아 한 공간으로 확정 (${r.rooms[0]} · ${r.areaM2}㎡)`);
 }
 
+// ── 가전 선택: 큰 사이즈부터 · 평형별 추천 ──
+// 상담은 큰 것에서 시작해 안 들어가면 줄이는 순서로 진행되고, 목록 맨 위가 곧 기본값이다.
+// 추천은 근거를 댈 수 있는 것만 미리 고른다 — 근거 없이 체크돼 있으면 그대로 상담에 나간다.
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    P.state.reps = await (await fetch('size-reps.json')).json();
+    P.state.rooms = []; P.state.items = [];
+    P.state.exclusiveM2 = 84.9;                 // 84타입 세대를 불러온 상황
+    P.state.mmPerPx = 10; P.state.scaled = true;
+
+    const out = { area: P.planAreaM2() };
+    const rec = P.recommendPicks();
+    out.recCats = Object.keys(rec);
+    out.tv = rec['TV'] ? P.state.reps[rec['TV'].i].size : null;
+    out.fridge = rec['냉장고'] ? P.state.reps[rec['냉장고'].i] : null;
+    out.fridgeLine = out.fridge ? out.fridge.line : null;
+    out.fridgeSize = out.fridge ? out.fridge.size : null;
+    // 방을 안 잡았으면 냉방면적은 계산할 근거가 없다
+    out.acWithoutRoom = !!rec['에어컨'];
+
+    // 목록이 큰 것부터인지 — 가전 선택 시트를 열어 실제 select 를 본다
+    P.state.rooms = [];
+    document.querySelector('#btn-add').click();
+    // openSelect 는 size-reps 를 받아 오는 비동기 함수라 클릭 직후에는 아직 안 그려져 있다
+    let sel = null;
+    for (let t = 0; t < 60 && !sel; t++) {
+      await new Promise((res) => setTimeout(res, 50));
+      sel = document.querySelector('select[data-size="TV"]');
+    }
+    out.opened = !!sel;
+    if (sel) {
+      out.first = sel.options[0].textContent;
+      out.widths = [...sel.options].map((o) => {
+        const m = /(\d+)×/.exec(o.textContent);
+        return m ? +m[1] : 0;
+      });
+      out.desc = out.widths.every((w, i, a) => i === 0 || a[i - 1] >= w);
+      out.selectedIsRec = sel.selectedIndex >= 0 && /형/.test(sel.options[sel.selectedIndex].textContent);
+      out.noteShown = /기준|미리 고른/.test((document.querySelector('#a-rec') || {}).textContent || '');
+    }
+    const c = document.querySelector('#c'); if (c) c.click();
+    return out;
+  });
+
+  if (!r.opened) fail('가전 선택 시트에 사이즈 목록이 없다');
+  else if (!r.desc) fail(`사이즈 목록이 큰 것부터가 아니다 (폭 ${r.widths.slice(0, 5)}…)`);
+  else if (!/×/.test(r.first || '')) fail(`목록에 치수가 안 보인다 ("${r.first}")`);
+  else if (!r.recCats.length) fail('전용면적을 아는데도 미리 고른 가전이 하나도 없다');
+  else if (!r.tv) fail('평형별 추천에 TV가 없다');
+  else if (r.fridgeLine !== '프리스탠딩') fail(`추천 냉장고가 ${r.fridgeLine} — 기본은 프리스탠딩이어야 한다`);
+  else if (r.acWithoutRoom) fail('방을 안 잡았는데 에어컨이 추천됐다 — 냉방면적은 방 넓이로 계산하는 값이다');
+  else if (!r.noteShown) fail('무엇을 근거로 미리 골랐는지 화면에 안 밝힌다');
+  else pass(`가전 선택 — 큰 사이즈부터 · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
+}
+
 // ── 단지 평면 라이브러리 ──
 // 매장에서 고객 단지를 고르면 도면 없이 바로 배치를 시작하는 것이 목적이다.
 // 도면 이미지는 저작권 때문에 저장할 수 없으므로 방 경계(mm 좌표)만 남기는데,

@@ -168,14 +168,26 @@ const SIZE_KEY = {
   '공기청정기': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '청정면적' } : null),
 };
 
+/*
+ * 냉장고·김치냉장고는 **설치 방식이 배치 판정을 가른다.**
+ * 프리스탠딩은 벽에서 후면 50mm 를 띄워야 하고, 키친핏(빌트인)은 벽이 아니라 냉장고장
+ * 내측 이격이라 4~12mm 다. 폭이 같아도 같은 물건이 아니다 —
+ * 실제로 키친핏 Max(912×1853×697)가 프리스탠딩 4도어(912×1853×683)에 통합돼 버렸다.
+ * 그래서 라인업을 사이즈 키에 넣어 애초에 섞이지 않게 한다.
+ */
+const LINEUP_CATS = new Set(['냉장고', '김치냉장고']);
+const lineupOf = (r) => (LINEUP_CATS.has(r.cat)
+  ? (/키친핏|빌트인/.test(r.group || '') ? '키친핏' : '프리스탠딩') : '');
+
 const groups = new Map();
 for (const r of rows) {
   const base = baseOf(r);
   const fn = SIZE_KEY[r.cat];
   const k = (fn && fn(r)) || { key: `폭 ${round5(base.w)}mm`, label: '본체 폭(W)' };
-  const gk = `${r.cat}|${k.key}`;
+  const line = lineupOf(r);
+  const gk = `${r.cat}|${line}|${k.key}`;
   if (!groups.has(gk)) {
-    groups.set(gk, { cat: r.cat, size: k.key, sizeLabel: k.label, specs: [], options: new Map() });
+    groups.set(gk, { cat: r.cat, line, size: k.key, sizeLabel: k.label, specs: [], options: new Map() });
   }
   const g = groups.get(gk);
   if (r.size) {
@@ -197,6 +209,7 @@ const sized = [...groups.values()].map((g) => {
   const options = [...g.options.values()];
   return {
     cat: g.cat,
+    line: g.line,
     size: g.size,
     sizeLabel: g.sizeLabel,
     specs: g.specs,          // 용량·화면크기 등 카탈로그 표기 (여러 개일 수 있음)
@@ -238,8 +251,10 @@ function footprintOf(rec) {
 const numOf = (s) => parseFloat(String(s).replace(/[^\d.]/g, '')) || 0;
 
 const merged = [];
-for (const cat of [...new Set(sized.map((r) => r.cat))]) {
-  const list = sized.filter((r) => r.cat === cat)
+// 통합은 **카테고리 + 라인업** 안에서만 한다. 프리스탠딩과 키친핏은 폭이 같아도 섞으면 안 된다.
+for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))]) {
+  const [cat, line] = part.split('|');
+  const list = sized.filter((r) => r.cat === cat && (r.line || '') === line)
     .map((r) => ({ ...r, _fp: footprintOf(r) }))
     .sort((a, b) => a._fp.w - b._fp.w);
   let bucket = [];
@@ -273,7 +288,7 @@ for (const cat of [...new Set(sized.map((r) => r.cat))]) {
       seen.add(key); options.push(o);
     }
     merged.push({
-      cat, size, sizeLabel: rep.sizeLabel,
+      cat, line: line || undefined, size, sizeLabel: rep.sizeLabel,
       specs: [...new Set(bucket.flatMap((r) => r.specs))],
       model: rep.model, parts: rep.parts, group: rep.group, note: rep.note,
       options,
