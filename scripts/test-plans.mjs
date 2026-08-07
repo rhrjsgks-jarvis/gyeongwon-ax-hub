@@ -165,6 +165,75 @@ for (const plan of PLANS) {
   }
 }
 
+// ── 도면 라이브러리 (지역 → 아파트 → 타입) ──
+// 상담 현장에서 도면을 매번 찾아 올릴 수는 없다. 세 번 눌러 불러오고, 축척이 확인된
+// 도면은 축척 단계를 건너뛰고 바로 벽 인식까지 가야 한다.
+{
+  const plan = PLANS[0];
+  const b64 = Buffer.from(plan.svg, 'utf8').toString('base64');
+  const lib = [
+    { region: '경기 남양주', apt: '가상 A단지', note: '테스트용',
+      types: [{ name: '84A (확장형)', file: 'a-84A.svg', mmPerImgPx: plan.mmPerImgPx },
+              { name: '59C', file: 'a-59C.svg' }] },
+    { region: '강원 원주', apt: '가상 B단지',
+      types: [{ name: '74B', file: 'b-74B.svg', mmPerImgPx: plan.mmPerImgPx }] },
+  ];
+  await page.route('**/plan-library.json', (r) =>
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify(lib) }));
+  await page.route('**/plans/*.svg', (r) =>
+    r.fulfill({ contentType: 'image/svg+xml', body: Buffer.from(b64, 'base64').toString('utf8') }));
+
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    P.state.lib = null; P.state.img = null; P.state.rooms = []; P.state.walls = [];
+    P.state.mmPerPx = null; P.state.scaled = false;
+    P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
+    await P.openLibrary();
+    const out = {};
+    const $ = (q) => document.querySelector(q);
+    out.hasSelects = !!$('#lib-region') && !!$('#lib-apt') && !!$('#lib-type');
+    if (!out.hasSelects) return out;
+    out.regions = [...$('#lib-region').options].map((o) => o.textContent);
+    out.apts1 = [...$('#lib-apt').options].map((o) => o.textContent);
+    out.types1 = [...$('#lib-type').options].map((o) => o.textContent);
+    out.info1 = $('#lib-info').textContent;
+    // 축척이 없는 타입을 고르면 안내가 바뀌어야 한다
+    $('#lib-type').value = '1'; $('#lib-type').dispatchEvent(new Event('change'));
+    out.info2 = $('#lib-info').textContent;
+    // 지역을 바꾸면 아파트·타입 목록이 따라 바뀌어야 한다
+    $('#lib-region').value = '강원 원주'; $('#lib-region').dispatchEvent(new Event('change'));
+    out.apts2 = [...$('#lib-apt').options].map((o) => o.textContent);
+    out.types2 = [...$('#lib-type').options].map((o) => o.textContent);
+    // 축척이 확인된 도면을 불러오면 축척 단계를 건너뛰고 바로 인식까지 가야 한다
+    $('#ok').click();
+    await new Promise((res) => setTimeout(res, 1200));
+    out.scaled = P.state.scaled;
+    out.mmPerPx = P.state.mmPerPx;
+    out.mode = P.state.mode;
+    out.hasDraft = !!(P.state.draft && P.state.draft.length);
+    out.step = document.querySelector('.step.on') ? document.querySelector('.step.on').textContent : '';
+    return out;
+  });
+
+  if (!r.hasSelects) fail('도면 라이브러리에 지역/아파트/타입 선택이 없다');
+  else if (r.regions.join() !== '경기 남양주,강원 원주') fail(`지역 목록이 [${r.regions}]`);
+  else if (r.apts1.join() !== '가상 A단지') fail(`아파트 목록이 [${r.apts1}]`);
+  else if (r.types1.length !== 2) fail(`타입 목록이 ${r.types1.length}개 (기대 2개)`);
+  else if (!/축척 확인됨/.test(r.info1)) fail(`축척 확인된 도면인데 안내가 "${r.info1}"`);
+  else if (!/축척이 확인되지 않았습니다/.test(r.info2)) fail(`축척 없는 도면인데 안내가 "${r.info2}"`);
+  else if (r.apts2.join() !== '가상 B단지') fail(`지역을 바꿨는데 아파트가 [${r.apts2}]`);
+  else if (r.types2.join() !== '74B') fail(`지역을 바꿨는데 타입이 [${r.types2}]`);
+  else if (!r.scaled || Math.abs(r.mmPerPx - plan.mmPerImgPx) > 0.01) {
+    fail(`불러온 뒤 축척이 확정되지 않았다 (scaled=${r.scaled}, mmPerPx=${r.mmPerPx})`);
+  } else if (!r.hasDraft) {
+    fail('축척이 확인된 도면인데 벽 인식까지 자동으로 가지 않았다');
+  } else {
+    pass(`도면 라이브러리 (지역 2곳 → 아파트 → 타입 · 축척 확인본은 1px=${r.mmPerPx}mm로 바로 벽 인식)`);
+  }
+  await page.unroute('**/plan-library.json');
+  await page.unroute('**/plans/*.svg');
+}
+
 // ── 방 범위 조절 ──
 // 자동 판정은 도면 관례를 전제로 한 추정이다. 전제를 벗어나는 도면이 반드시 나오므로
 // 사용자가 넓히고 좁힐 수 있어야 한다. 그 손잡이가 실제로 동작하는지 검사한다.

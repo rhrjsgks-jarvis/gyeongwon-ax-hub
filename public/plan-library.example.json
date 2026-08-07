@@ -1,0 +1,18 @@
+[
+  {
+    "region": "경기 남양주",
+    "apt": "예시 아파트",
+    "note": "형식 예시 — 실제 등록은 public/plans/README.md 참고",
+    "types": [
+      {
+        "name": "84A (확장형)",
+        "file": "gg-namyangju-example-84A.png",
+        "mmPerImgPx": 7.35
+      },
+      {
+        "name": "59C",
+        "file": "gg-namyangju-example-59C.png"
+      }
+    ]
+  }
+]

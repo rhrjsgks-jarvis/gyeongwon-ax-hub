@@ -17,3 +17,10 @@ scripts/fixtures/plans-real/*.jpg
 scripts/fixtures/plans-real/*.jpeg
 scripts/fixtures/plans-real/*.webp
 scripts/fixtures/plans-real/*.gif
+
+# 분양 도면 이미지는 기본적으로 커밋하지 않는다 (public repo · 저작권).
+# 사내 배포본에 넣기로 결정하면 이 블록을 지운다 — public/plans/README.md 참고.
+public/plans/*.png
+public/plans/*.jpg
+public/plans/*.jpeg
+public/plans/*.webp

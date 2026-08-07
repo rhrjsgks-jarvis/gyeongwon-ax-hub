@@ -157,6 +157,7 @@
 
   <div id="bar">
     <input type="file" id="file" accept="image/*" hidden>
+    <button id="btn-lib">도면 불러오기</button>
     <button id="btn-img">도면 이미지</button>
     <button id="btn-scale">축척 맞추기</button>
     <button id="btn-detect">벽 자동 인식</button>
@@ -297,7 +298,7 @@ const state = {
   mode:'idle',           // idle | scale | wall | place
   scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, draft:null, draftEdges:null,
   pending:null,          // 배치 대기중인 가전
-  sel:null, drag:null, editSel:null,
+  sel:null, drag:null, editSel:null, lib:null,
 };
 
 /* ── 좌표 변환 ── */
@@ -1936,23 +1937,125 @@ document.addEventListener('keydown',(e)=>{
 
 /* ── 단계별 동작 ── */
 $('#btn-img').onclick = ()=> $('#file').click();
+$('#btn-lib').onclick = ()=> openLibrary();
+/**
+ * 도면 이미지를 올린다. 라이브러리에서 고른 도면은 축척(mmPerImgPx)이 이미 확인돼 있으므로
+ * 축척 단계를 건너뛰고 바로 벽 인식으로 간다 — 상담 중에 치수선을 두 번 누를 시간이 없다.
+ * 축척값은 **사람이 도면 치수선으로 확인해 라이브러리에 적어 둔 값**이다. 추측이 아니다.
+ */
+function loadPlanImage(img, mmPerImgPx){
+  state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
+  state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.baseMask=null;
+  state.sealCache=null; state.cleanCv=null; state.showClean=false;
+  state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; hideDraftBar();
+  // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
+  // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
+  const r = cv.getBoundingClientRect();
+  const k = mmPerImgPx > 0 ? mmPerImgPx : 1;
+  state.zoom = Math.min(r.width/(state.imgW*k), r.height/(state.imgH*k)) * 0.92;
+  state.panX = 12; state.panY = 12;
+  $('#empty').style.display='none';
+  if (mmPerImgPx > 0){
+    state.mmPerPx = mmPerImgPx; state.scaled = true;
+    setStep(3); autoDetectCenter();
+  } else {
+    state.zoom = Math.min(r.width/state.imgW, r.height/state.imgH) * 0.92;
+    setStep(2); setMode('scale'); draw();
+  }
+}
+
 $('#file').onchange = (e)=>{
   const f = e.target.files[0]; if(!f) return;
   const img = new Image();
-  img.onload = ()=>{
-    state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
-    state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.baseMask=null; state.sealCache=null; state.cleanCv=null; state.showClean=false;
-    state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; hideDraftBar();
-    // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
-    // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
-    const r = cv.getBoundingClientRect();
-    state.zoom = Math.min(r.width/state.imgW, r.height/state.imgH) * 0.92;
-    state.panX = 12; state.panY = 12;
-    $('#empty').style.display='none';
-    setStep(2); setMode('scale'); draw();
-  };
+  img.onload = ()=> loadPlanImage(img, 0);
   img.src = URL.createObjectURL(f);
 };
+
+/* ── 도면 라이브러리 (지역 → 아파트 → 타입) ──────────────────────────
+   상담 현장에서 도면을 매번 찾아 올릴 수는 없다. 담당 지역 아파트 도면을 미리 모아 두고
+   **지역 → 아파트명 → 타입** 세 번만 눌러 불러온다. 축척이 확인된 도면은 축척 단계를
+   건너뛰고 바로 벽 인식까지 간다.
+
+   목록은 public/plan-library.json이고, 이미지는 public/plans/에 둔다.
+   축척(mmPerImgPx)은 **사람이 도면 치수선으로 확인해 적어 둔 값**만 넣는다 —
+   비워 두면 앱이 축척 맞추기 단계를 띄운다. 추측한 값을 넣지 말 것. */
+async function loadLibrary(){
+  if (state.lib) return state.lib;
+  try {
+    const r = await fetch('plan-library.json');
+    state.lib = r.ok ? await r.json() : [];
+  } catch { state.lib = []; }
+  return state.lib;
+}
+
+async function openLibrary(){
+  const lib = await loadLibrary();
+  if (!lib.length){
+    sheet(`<h2>도면 라이브러리가 비어 있습니다</h2>
+      <p class="hint">담당 지역 아파트 도면을 모아 두면 <b>지역 → 아파트 → 타입</b>으로 골라
+        바로 불러올 수 있습니다. 지금은 <b>도면 이미지</b>로 파일을 직접 올려주세요.</p>
+      <p class="src">등록 방법은 저장소의 <code>public/plans/README.md</code>에 있습니다.</p>
+      <div class="modal-actions"><button id="c">닫기</button>
+        <button class="primary" id="ok">도면 올리기</button></div>`,
+      ()=>{ $('#ok').onclick=()=>{closeSheet(); $('#btn-img').click();};
+            $('#c').onclick =closeSheet; });
+    return;
+  }
+  const regions = [...new Set(lib.map((x)=>x.region))];
+  sheet(`<h2>도면 불러오기</h2>
+    <p class="hint">담당 지역 아파트 도면을 골라 바로 불러옵니다. 축척이 확인된 도면은
+      축척 맞추기를 건너뛰고 <b>벽 인식까지 자동</b>으로 진행됩니다.</p>
+    <div class="pickers">
+      <label>지역<select id="lib-region">${regions.map((r)=>`<option>${esc(r)}</option>`).join('')}</select></label>
+      <label>아파트<select id="lib-apt"></select></label>
+      <label>타입<select id="lib-type"></select></label>
+    </div>
+    <p class="src" id="lib-info"></p>
+    <div class="modal-actions">
+      <button id="c">취소</button>
+      <button id="up">파일로 올리기</button>
+      <button class="primary" id="ok">불러오기</button>
+    </div>`,
+    ()=>{
+      const $r = $('#lib-region'), $a = $('#lib-apt'), $t = $('#lib-type');
+      const aptsOf = () => lib.filter((x)=>x.region===$r.value);
+      const cur = () => aptsOf().find((x)=>x.apt===$a.value) || aptsOf()[0];
+      const fillApt = ()=>{
+        $a.innerHTML = aptsOf().map((x)=>`<option>${esc(x.apt)}</option>`).join('');
+        fillType();
+      };
+      const fillType = ()=>{
+        const c = cur();
+        $t.innerHTML = (c ? c.types : []).map((t,i)=>`<option value="${i}">${esc(t.name)}</option>`).join('');
+        info();
+      };
+      const pick = ()=>{
+        const c = cur(); if (!c) return null;
+        return { apt: c, type: c.types[+$t.value || 0] };
+      };
+      const info = ()=>{
+        const p = pick();
+        if (!p || !p.type){ $('#lib-info').textContent = ''; return; }
+        $('#lib-info').innerHTML = (p.type.mmPerImgPx > 0
+          ? `축척 확인됨 (도면 1px = ${p.type.mmPerImgPx}mm) — 불러오면 바로 벽 인식까지 진행합니다.`
+          : '이 도면은 축척이 확인되지 않았습니다 — 불러온 뒤 치수선 두 점으로 맞춰주세요.')
+          + (p.apt.note ? `<br>${esc(p.apt.note)}` : '');
+      };
+      $r.onchange = fillApt; $a.onchange = fillType; $t.onchange = info;
+      fillApt();
+      $('#c').onclick = closeSheet;
+      $('#up').onclick = ()=>{ closeSheet(); $('#btn-img').click(); };
+      $('#ok').onclick = ()=>{
+        const p = pick();
+        if (!p || !p.type){ toast('도면을 고르지 못했습니다'); return; }
+        closeSheet();
+        const img = new Image();
+        img.onload = ()=> loadPlanImage(img, p.type.mmPerImgPx || 0);
+        img.onerror = ()=> toast(`도면 파일을 열지 못했습니다 (plans/${p.type.file})`);
+        img.src = 'plans/' + p.type.file;
+      };
+    });
+}
 $('#btn-scale').onclick = ()=>{ state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
 $('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
 $('#btn-edit').onclick  = ()=>{
@@ -1973,7 +2076,7 @@ $('#btn-add').onclick   = ()=> openSelect(null);
 $('#btn-auto').onclick  = ()=> openSelect('주방');
 $('#btn-side').onclick  = ()=> $('#side').classList.toggle('on');
 $('#steps').onclick = (e)=>{ const s=e.target.closest('.step'); if(!s) return;
-  const n=+s.dataset.step; if(n===1)$('#btn-img').click(); if(n===2)$('#btn-scale').click();
+  const n=+s.dataset.step; if(n===1)$('#btn-lib').click(); if(n===2)$('#btn-scale').click();
   if(n===3)$('#btn-detect').click(); if(n===4)openSelect(null); };
 
 function setMode(m){ state.mode=m; renderSide(); }
@@ -2383,7 +2486,7 @@ window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, w
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
-  showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
+  showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, loadPlanImage, openLibrary, loadLibrary,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
