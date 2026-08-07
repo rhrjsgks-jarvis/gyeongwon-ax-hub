@@ -2108,8 +2108,8 @@ document.addEventListener('keydown',(e)=>{
 $('#btn-lib').onclick = ()=> openLibrary();
 $('#btn-save').onclick = ()=> askSaveComplex();
 $('#btn-img').onclick = ()=> $('#file').click();
-$('#file').onchange = (e)=>{
-  const f = e.target.files[0]; if(!f) return;
+/** 도면 이미지를 화면에 올린다 (파일 선택·라이브러리 공용) */
+function useImage(src, after){
   const img = new Image();
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
@@ -2122,8 +2122,14 @@ $('#file').onchange = (e)=>{
     state.panX = 12; state.panY = 12;
     $('#empty').style.display='none';
     setStep(2); setMode('scale'); draw();
+    if (after) after();
   };
-  img.src = URL.createObjectURL(f);
+  img.onerror = ()=> toast('도면을 열지 못했습니다');
+  img.src = src;
+}
+$('#file').onchange = (e)=>{
+  const f = e.target.files[0]; if(!f) return;
+  useImage(URL.createObjectURL(f));
 };
 $('#btn-scale').onclick = ()=>{ state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
 $('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
@@ -2297,53 +2303,92 @@ function loadFromLibrary(entry){
   toast(`${entry.complex} ${entry.type} — 방 ${entry.rooms.length}곳 불러옴`);
 }
 
+let planIndex = null;
+async function loadPlanIndex(){
+  if (planIndex) return planIndex;
+  try {
+    const r = await fetch('plan-index.json');
+    const j = await r.json();
+    planIndex = Array.isArray(j.complexes) ? j.complexes : [];
+  } catch { planIndex = []; }
+  return planIndex;
+}
+
 /**
- * 단지 고르기 — **지역 → 단지명 → 타입** 순으로 좁혀 간다.
+ * 단지 고르기 — **지역 → 단지 → 도면** 순으로 좁혀 간다.
  * 매장에서 고객에게 묻는 순서 그대로다("어느 지역이세요" → "어느 단지" → "몇 평형").
- * 목록이 늘어나도 한 화면에 쏟아지지 않는다.
+ *
+ * 도면을 고르면 그 단지의 평면도가 화면에 올라오고 축척 맞추기부터 시작한다.
+ * 그 타입의 방을 전에 저장해 두었다면 도면 없이 방까지 그대로 복원한다.
  */
 async function openLibrary(){
-  const all = await libraryAll();
-  let lv = 'region', region = null, complex = null;
+  const [idx, saved] = await Promise.all([loadPlanIndex(), libraryAll()]);
+  let lv = 'region', region = null, cx = null;
 
   const uniq = (a) => [...new Set(a)].sort((x, y) => x.localeCompare(y, 'ko'));
-  const regions = () => uniq(all.map((e) => e.region || '지역 미지정'));
-  const complexes = () => uniq(all.filter((e) => (e.region || '지역 미지정') === region).map((e) => e.complex));
-  const types = () => all.filter((e) => (e.region || '지역 미지정') === region && e.complex === complex);
+  // 도면이 있는 단지 + 방만 저장된 단지를 함께 보여 준다
+  const savedOnly = saved.filter((e) => !idx.some((c) => c.complex === e.complex));
+  const regions = () => uniq([...idx.map((c) => c.region), ...savedOnly.map((e) => e.region || '지역 미지정')]);
+  const inRegion = () => idx.filter((c) => c.region === region);
+  const savedIn = (complex) => saved.filter((e) => e.complex === complex);
 
   const render = () => {
     const body = $('#libbody'), crumb = $('#libcrumb');
     if (!body) return;
     crumb.innerHTML = lv === 'region' ? '<b>지역</b>'
       : lv === 'complex' ? `<a href="#" data-go="region">지역</a> › <b>${esc(region)}</b>`
-      : `<a href="#" data-go="region">지역</a> › <a href="#" data-go="complex">${esc(region)}</a> › <b>${esc(complex)}</b>`;
+      : `<a href="#" data-go="region">지역</a> › <a href="#" data-go="complex">${esc(region)}</a> › <b>${esc(cx.complex)}</b>`;
 
-    let items;
+    let items = [];
     if (lv === 'region') {
       items = regions().map((r) => {
-        const n = all.filter((e) => (e.region || '지역 미지정') === r).length;
+        const cs = idx.filter((c) => c.region === r);
+        const n = cs.reduce((s, c) => s + c.plans.length, 0)
+          + savedOnly.filter((e) => (e.region || '지역 미지정') === r).length;
         return `<button class="libitem" data-v="${esc(r)}"><b>${esc(r)}</b>
-          <span class="hint">단지 ${uniq(all.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length}곳 · 타입 ${n}종</span></button>`;
+          <span class="hint">단지 ${cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length}곳 · 도면 ${n}장</span></button>`;
       });
     } else if (lv === 'complex') {
-      items = complexes().map((c) => {
-        const n = all.filter((e) => (e.region || '지역 미지정') === region && e.complex === c).length;
-        return `<button class="libitem" data-v="${esc(c)}"><b>${esc(c)}</b>
-          <span class="hint">타입 ${n}종</span></button>`;
-      });
+      items = inRegion().map((c) => `<button class="libitem" data-id="${esc(c.id)}"><b>${esc(c.complex)}</b>
+        <span class="hint">도면 ${c.plans.length}장${savedIn(c.complex).length ? ` · 저장된 방 ${savedIn(c.complex).length}종` : ''}</span></button>`);
+      for (const e of savedOnly.filter((x) => (x.region || '지역 미지정') === region)) {
+        items.push(`<button class="libitem" data-saved="${esc(e.complex)}"><b>${esc(e.complex)}</b>
+          <span class="hint">저장된 방만 있음</span></button>`);
+      }
     } else {
-      items = types().map((e) => `<button class="libitem" data-i="${all.indexOf(e)}">
-        <b>${esc(e.type || '(타입 미지정)')}</b>
-        <span class="hint">방 ${e.rooms.length}곳 · ${esc(e._src)}${e.addedAt ? ' · ' + esc(e.addedAt) : ''}</span></button>`);
+      items = cx.plans.map((p) => {
+        const s = saved.find((e) => e.complex === cx.complex && e.type === p.type);
+        return `<button class="libitem" data-file="${esc(p.file)}" data-type="${esc(p.type)}">
+          <b>${esc(p.type)}</b>${p.exclusiveM2 ? `<span class="ty">전용 ${p.exclusiveM2}㎡</span>` : ''}
+          <span class="hint">${p.w}×${p.h}px · ${p.kb}KB${s ? ` · <b>저장된 방 ${s.rooms.length}곳</b>` : ''}</span></button>`;
+      });
     }
     body.innerHTML = items.length ? items.join('')
-      : '<p class="hint">아직 등록된 것이 없습니다. 도면을 올려 방을 잡은 뒤 <b>이 단지 저장</b>을 누르세요.</p>';
+      : '<p class="hint">등록된 것이 없습니다. 도면을 올려 방을 잡은 뒤 <b>이 단지 저장</b>을 누르세요.</p>';
 
     body.querySelectorAll('.libitem').forEach((b) => {
       b.onclick = () => {
         if (lv === 'region') { region = b.dataset.v; lv = 'complex'; render(); }
-        else if (lv === 'complex') { complex = b.dataset.v; lv = 'type'; render(); }
-        else { closeSheet(); loadFromLibrary(all[+b.dataset.i]); }
+        else if (lv === 'complex') {
+          if (b.dataset.saved) {                       // 도면 없이 방만 저장된 단지
+            const e = saved.find((x) => x.complex === b.dataset.saved);
+            closeSheet(); if (e) loadFromLibrary(e);
+            return;
+          }
+          cx = idx.find((c) => c.id === b.dataset.id); lv = 'plan'; render();
+        } else {
+          const type = b.dataset.type;
+          const s = saved.find((e) => e.complex === cx.complex && e.type === type);
+          closeSheet();
+          // 도면을 올리고, 저장해 둔 방이 있으면 그 위에 그대로 되살린다
+          useImage(b.dataset.file, s ? () => {
+            const keep = { img: state.img, imgW: state.imgW, imgH: state.imgH };
+            loadFromLibrary(s);
+            state.img = keep.img; state.imgW = keep.imgW; state.imgH = keep.imgH;
+            draw();
+          } : null);
+          toast(`${cx.complex} ${type}${s ? ' — 저장된 방까지 복원' : ' — 축척을 맞춰 주세요'}`);
+        }
       };
     });
     crumb.querySelectorAll('a[data-go]').forEach((a) => {
@@ -2352,7 +2397,7 @@ async function openLibrary(){
   };
 
   sheet(`<h2>단지 고르기</h2>
-    <p class="hint">지역 → 단지 → 타입 순으로 고르면 도면 없이 바로 배치를 시작합니다.</p>
+    <p class="hint">지역 → 단지 → 도면 순으로 고릅니다. 전에 방을 저장해 둔 도면은 방까지 그대로 복원됩니다.</p>
     <div id="libcrumb" class="crumb"></div>
     <div id="libbody" class="liblist"></div>
     <div class="modal-actions"><button id="libexp">내보내기(JSON)</button><button id="c">닫기</button></div>`,
@@ -2726,7 +2771,7 @@ window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, w
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
-  libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex,
+  libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, loadPlanIndex, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,

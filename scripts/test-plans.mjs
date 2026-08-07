@@ -484,8 +484,11 @@ for (const plan of PLANS) {
     };
     out.picked1 = pick('경기 수원');
     out.lv2 = step();                                   // 그 지역의 단지 목록
-    out.picked2 = pick('테스트 단지');
-    out.lv3 = step();                                   // 그 단지의 타입 목록
+    // 도면이 있는 단지를 골라 3단계(도면 목록)까지 들어간다.
+    // "저장된 방만 있는 단지"는 고르는 즉시 불러오므로 3단계가 없다 — 그건 아래에서 따로 본다.
+    out.picked2 = pick('매교역 팰루시드');
+    out.lv3 = step();                                   // 그 단지의 도면 목록
+    out.savedOnlyShown = out.lv2.some((t) => t.includes('테스트 단지') && t.includes('저장된 방만'));
     out.crumb = (document.querySelector('#libcrumb') || {}).textContent || '';
     return out;
   }, { b64, mmPerImgPx: plan.mmPerImgPx });
@@ -507,17 +510,50 @@ for (const plan of PLANS) {
       `(넓이 ${r.afterArea.join('·')}㎡ 그대로, 이미지 미포함)`);
   }
 
+  // ── 단지 도면 색인 (public/plan-index.json) ──
+  // 지역 → 단지 → 도면 순으로 고르는 것이 이 기능의 전부다. 색인이 비어 있거나
+  // 이미지 경로가 깨지면 매장에서 아무것도 못 고른다.
+  {
+    const idxRes = await page.evaluate(async () => {
+      const P = window.__place;
+      const idx = await P.loadPlanIndex();
+      const flat = idx.flatMap((c) => c.plans.map((p) => ({ ...p, region: c.region, complex: c.complex })));
+      // 실제로 받아지는지 몇 장 확인한다 (경로 오타·대소문자 사고를 잡는다)
+      const probe = [flat[0], flat[Math.floor(flat.length / 2)], flat[flat.length - 1]].filter(Boolean);
+      const oks = [];
+      for (const p of probe) {
+        try { const r = await fetch(p.file); oks.push(r.ok); } catch { oks.push(false); }
+      }
+      return {
+        complexes: idx.length,
+        plans: flat.length,
+        regions: [...new Set(idx.map((c) => c.region))],
+        noRegion: idx.filter((c) => !/^(경기|강원)/.test(c.region)).map((c) => c.region),
+        badPath: flat.filter((p) => !/^plans\/c\d+\//.test(p.file)).length,
+        fetched: oks,
+      };
+    });
+
+    if (!idxRes.complexes) fail('단지 도면 색인이 비어 있다 — npm run build:plans 로 만든다');
+    else if (idxRes.noRegion.length) fail(`경원 밖 지역이 색인에 있음: ${[...new Set(idxRes.noRegion)]}`);
+    else if (idxRes.badPath) fail(`이미지 경로 형식이 어긋난 항목 ${idxRes.badPath}개`);
+    else if (idxRes.fetched.some((x) => !x)) fail(`색인의 도면 이미지를 받지 못함 (${idxRes.fetched})`);
+    else pass(`단지 도면 색인 — ${idxRes.regions.length}개 지역 · 단지 ${idxRes.complexes}곳 · 도면 ${idxRes.plans}장 (경로 확인 ${idxRes.fetched.length}장)`);
+  }
+
   // 3단계 좁혀 가기
   if (!r.lv1 || r.lv1.length < 2) fail(`1단계에 지역이 ${r.lv1 ? r.lv1.length : 0}개 — 지역부터 고르게 해야 한다`);
   else if (!r.lv1.some((t) => t.includes('경기 수원')) || !r.lv1.some((t) => t.includes('강원 원주'))) {
     fail(`1단계 지역 목록이 이상함: ${r.lv1}`);
   } else if (!r.picked1) fail('지역을 고를 수 없음');
-  else if (!r.lv2.some((t) => t.includes('테스트 단지'))) fail(`2단계에 그 지역의 단지가 없음: ${r.lv2}`);
+  else if (!r.lv2.some((t) => t.includes('매교역 팰루시드'))) fail(`2단계에 그 지역의 단지가 없음: ${r.lv2}`);
   else if (r.lv2.some((t) => t.includes('다른 단지'))) fail('2단계에 다른 지역의 단지가 섞여 있음');
+  else if (!r.savedOnlyShown) fail('방만 저장해 둔 단지가 2단계에 보이지 않음 — 도면이 없어도 고를 수 있어야 한다');
   else if (!r.picked2) fail('단지를 고를 수 없음');
-  else if (!r.lv3.some((t) => t.includes('84A'))) fail(`3단계에 타입이 없음: ${r.lv3}`);
+  else if (!r.lv3.some((t) => t.includes('84A'))) fail(`3단계에 도면이 없음: ${r.lv3}`);
+  else if (!r.lv3.some((t) => /전용\s*\d+㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
   else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
-  else pass(`지역 → 단지 → 타입 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 타입 ${r.lv3.length}종 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
+  else pass(`지역 → 단지 → 도면 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
 }
 
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
