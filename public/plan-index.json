@@ -4,7 +4,7 @@
  "generatedAt": "2026-08-07",
  "complexCount": 143,
  "planCount": 658,
- "scaledCount": 9,
+ "scaledCount": 15,
  "complexes": [
   {
    "id": "c01",
@@ -15,11 +15,11 @@
     {
      "type": "60",
      "file": "plans/c01/60.jpg",
-     "w": 892,
-     "h": 1200,
+     "w": 801,
+     "h": 461,
      "exclusiveM2": 59.67,
      "rooms": 5,
-     "kb": 70
+     "kb": 54
     }
    ]
   },
@@ -36,7 +36,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 58
+     "kb": 55
     },
     {
      "type": "19",
@@ -45,7 +45,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 69
+     "kb": 66
     },
     {
      "type": "22",
@@ -54,7 +54,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 52
+     "kb": 48
     },
     {
      "type": "25",
@@ -63,7 +63,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 72
+     "kb": 66
     },
     {
      "type": "T1",
@@ -72,7 +72,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 52
+     "kb": 49
     },
     {
      "type": "T2",
@@ -81,7 +81,7 @@
      "h": 784,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 57
+     "kb": 53
     },
     {
      "type": "T4",
@@ -90,7 +90,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 68
+     "kb": 64
     },
     {
      "type": "T5",
@@ -99,7 +99,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 48
+     "kb": 45
     }
    ]
   },
@@ -112,11 +112,11 @@
     {
      "type": "85",
      "file": "plans/c03/85.jpg",
-     "w": 1200,
-     "h": 1179,
+     "w": 836,
+     "h": 556,
      "exclusiveM2": 84.98,
      "rooms": 6,
-     "kb": 97
+     "kb": 63
     }
    ]
   },
@@ -129,137 +129,137 @@
     {
      "type": "75",
      "file": "plans/c04/75.jpg",
-     "w": 759,
-     "h": 1200,
+     "w": 863,
+     "h": 585,
      "exclusiveM2": 74.83,
      "rooms": 7,
-     "kb": 95
+     "kb": 87
     },
     {
      "type": "85",
      "file": "plans/c04/85.jpg",
-     "w": 724,
-     "h": 1200,
+     "w": 929,
+     "h": 623,
      "exclusiveM2": 84.98,
      "rooms": 7,
-     "kb": 97
+     "kb": 96
     },
     {
      "type": "85-2",
      "file": "plans/c04/85-2.jpg",
-     "w": 717,
-     "h": 1200,
+     "w": 906,
+     "h": 635,
      "exclusiveM2": 84.98,
      "rooms": 7,
-     "kb": 95
+     "kb": 96
     },
     {
      "type": "85-3",
      "file": "plans/c04/85-3.jpg",
-     "w": 693,
+     "w": 1140,
      "h": 1200,
      "exclusiveM2": 84.98,
      "rooms": 7,
-     "kb": 92
+     "kb": 110
     },
     {
      "type": "117",
      "file": "plans/c04/117.jpg",
-     "w": 704,
-     "h": 1200,
+     "w": 1200,
+     "h": 672,
      "exclusiveM2": 117.15,
      "rooms": 8,
-     "kb": 102
+     "kb": 97
     },
     {
      "type": "117-2",
      "file": "plans/c04/117-2.jpg",
-     "w": 724,
-     "h": 1200,
+     "w": 1200,
+     "h": 673,
      "exclusiveM2": 117.15,
      "rooms": 7,
-     "kb": 106
+     "kb": 97
     },
     {
      "type": "117-3",
      "file": "plans/c04/117-3.jpg",
-     "w": 712,
-     "h": 1200,
+     "w": 1200,
+     "h": 672,
      "exclusiveM2": 117.15,
      "rooms": 7,
-     "kb": 102
+     "kb": 97
     },
     {
      "type": "131",
      "file": "plans/c04/131.jpg",
-     "w": 768,
-     "h": 1200,
+     "w": 1200,
+     "h": 588,
      "exclusiveM2": 130.56,
      "rooms": 8,
-     "kb": 102
+     "kb": 88
     },
     {
      "type": "137-2",
      "file": "plans/c04/137-2.jpg",
-     "w": 745,
-     "h": 1200,
+     "w": 1200,
+     "h": 629,
      "exclusiveM2": 137,
      "rooms": 7,
-     "kb": 102
+     "kb": 92
     },
     {
      "type": "137",
      "file": "plans/c04/137.jpg",
-     "w": 757,
-     "h": 1200,
+     "w": 1200,
+     "h": 625,
      "exclusiveM2": 137.23,
      "rooms": 8,
-     "kb": 105
+     "kb": 89
     },
     {
      "type": "143",
      "file": "plans/c04/143.jpg",
-     "w": 698,
-     "h": 1200,
+     "w": 904,
+     "h": 636,
      "exclusiveM2": 143.49,
      "rooms": 7,
-     "kb": 101
+     "kb": 95
     },
     {
      "type": "147",
      "file": "plans/c04/147.jpg",
-     "w": 703,
-     "h": 1200,
+     "w": 908,
+     "h": 636,
      "exclusiveM2": 147.23,
      "rooms": 8,
-     "kb": 104
+     "kb": 96
     },
     {
      "type": "149",
      "file": "plans/c04/149.jpg",
-     "w": 712,
-     "h": 1200,
+     "w": 927,
+     "h": 620,
      "exclusiveM2": 148.76,
      "rooms": 7,
-     "kb": 106
+     "kb": 97
     },
     {
      "type": "184",
      "file": "plans/c04/184.jpg",
-     "w": 701,
-     "h": 1200,
+     "w": 1199,
+     "h": 744,
      "exclusiveM2": 183.76,
      "rooms": 7,
-     "kb": 113
+     "kb": 122
     },
     {
      "type": "T1",
      "file": "plans/c04/T1.jpg",
-     "w": 712,
-     "h": 1200,
+     "w": 1197,
+     "h": 743,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 103
+     "kb": 121
     }
    ]
   },
@@ -272,47 +272,47 @@
     {
      "type": "85",
      "file": "plans/c05/85.jpg",
-     "w": 813,
-     "h": 1200,
+     "w": 233,
+     "h": 471,
      "exclusiveM2": 84.95,
      "rooms": 8,
-     "kb": 109
+     "kb": 23
     },
     {
      "type": "113",
      "file": "plans/c05/113.jpg",
-     "w": 903,
-     "h": 1200,
+     "w": 1093,
+     "h": 440,
      "exclusiveM2": 113.46,
      "rooms": 9,
-     "kb": 135
+     "kb": 75
     },
     {
      "type": "115",
      "file": "plans/c05/115.jpg",
-     "w": 885,
-     "h": 1200,
+     "w": 1086,
+     "h": 425,
      "exclusiveM2": 115.4,
      "rooms": 8,
-     "kb": 128
+     "kb": 74
     },
     {
      "type": "162",
      "file": "plans/c05/162.jpg",
-     "w": 800,
-     "h": 1200,
+     "w": 984,
+     "h": 856,
      "exclusiveM2": 161.94,
      "rooms": 6,
-     "kb": 92
+     "kb": 87
     },
     {
      "type": "T2",
      "file": "plans/c05/T2.jpg",
-     "w": 865,
-     "h": 1200,
+     "w": 1075,
+     "h": 470,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 130
+     "kb": 75
     }
    ]
   },
@@ -325,47 +325,47 @@
     {
      "type": "15",
      "file": "plans/c06/15.jpg",
-     "w": 1200,
-     "h": 837,
+     "w": 143,
+     "h": 186,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 71
+     "kb": 8
     },
     {
      "type": "23",
      "file": "plans/c06/23.jpg",
-     "w": 1200,
-     "h": 837,
+     "w": 200,
+     "h": 186,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 70
+     "kb": 9
     },
     {
      "type": "27",
      "file": "plans/c06/27.jpg",
-     "w": 1200,
-     "h": 837,
+     "w": 873,
+     "h": 312,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 55
+     "kb": 49
     },
     {
      "type": "T2",
      "file": "plans/c06/T2.jpg",
-     "w": 1200,
-     "h": 837,
+     "w": 600,
+     "h": 180,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 76
+     "kb": 24
     },
     {
      "type": "T3",
      "file": "plans/c06/T3.jpg",
-     "w": 1200,
-     "h": 837,
+     "w": 357,
+     "h": 188,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 68
+     "kb": 15
     }
    ]
   },
@@ -378,11 +378,11 @@
     {
      "type": "T1",
      "file": "plans/c07/T1.jpg",
-     "w": 760,
-     "h": 650,
+     "w": 746,
+     "h": 167,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 85
+     "kb": 33
     }
    ]
   },
@@ -395,56 +395,56 @@
     {
      "type": "60",
      "file": "plans/c08/60.jpg",
-     "w": 416,
-     "h": 1200,
+     "w": 288,
+     "h": 488,
      "exclusiveM2": 59.93,
      "rooms": 9,
-     "kb": 58
+     "kb": 8
     },
     {
      "type": "75",
      "file": "plans/c08/75.jpg",
-     "w": 447,
-     "h": 1200,
+     "w": 702,
+     "h": 537,
      "exclusiveM2": 74.95,
      "rooms": 9,
-     "kb": 65
+     "kb": 45
     },
     {
      "type": "85",
      "file": "plans/c08/85.jpg",
-     "w": 370,
-     "h": 1200,
+     "w": 290,
+     "h": 489,
      "exclusiveM2": 84.98,
      "rooms": 8,
-     "kb": 48
+     "kb": 8
     },
     {
      "type": "108",
      "file": "plans/c08/108.jpg",
-     "w": 416,
-     "h": 1200,
+     "w": 288,
+     "h": 488,
      "exclusiveM2": 108.31,
      "rooms": 9,
-     "kb": 62
+     "kb": 8
     },
     {
      "type": "T1",
      "file": "plans/c08/T1.jpg",
-     "w": 447,
-     "h": 1200,
+     "w": 698,
+     "h": 512,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 67
+     "kb": 44
     },
     {
      "type": "T2",
      "file": "plans/c08/T2.jpg",
-     "w": 447,
-     "h": 1200,
+     "w": 716,
+     "h": 541,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 68
+     "kb": 48
     }
    ]
   },
@@ -457,20 +457,22 @@
     {
      "type": "T1",
      "file": "plans/c09/T1.jpg",
-     "w": 244,
+     "w": 957,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 55
+     "kb": 179
     },
     {
      "type": "T2",
      "file": "plans/c09/T2.jpg",
-     "w": 244,
-     "h": 1200,
+     "w": 1200,
+     "h": 986,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 57
+     "kb": 93,
+     "mmPerPx": 22.238,
+     "scaleConf": "확실"
     }
    ]
   },
@@ -483,20 +485,22 @@
     {
      "type": "T1",
      "file": "plans/c10/T1.jpg",
-     "w": 415,
+     "w": 112,
      "h": 1200,
      "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 61
+     "rooms": 9,
+     "kb": 31
     },
     {
      "type": "T2",
      "file": "plans/c10/T2.jpg",
-     "w": 109,
-     "h": 1200,
+     "w": 580,
+     "h": 453,
      "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 33
+     "rooms": 8,
+     "kb": 44,
+     "mmPerPx": 19.521,
+     "scaleConf": "보통"
     }
    ]
   },
@@ -509,11 +513,13 @@
     {
      "type": "T1",
      "file": "plans/c11/T1.jpg",
-     "w": 372,
-     "h": 1200,
+     "w": 591,
+     "h": 461,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 63
+     "kb": 43,
+     "mmPerPx": 24.152,
+     "scaleConf": "보통"
     }
    ]
   },
@@ -526,11 +532,11 @@
     {
      "type": "T1",
      "file": "plans/c12/T1.jpg",
-     "w": 1200,
-     "h": 535,
+     "w": 614,
+     "h": 414,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 56
+     "kb": 52
     }
    ]
   },
@@ -543,56 +549,56 @@
     {
      "type": "131",
      "file": "plans/c13/131.jpg",
-     "w": 319,
-     "h": 1200,
+     "w": 1095,
+     "h": 566,
      "exclusiveM2": 130.74,
      "rooms": 8,
-     "kb": 60
+     "kb": 94
     },
     {
      "type": "T1",
      "file": "plans/c13/T1.jpg",
-     "w": 301,
-     "h": 1200,
+     "w": 1093,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 51
+     "kb": 95
     },
     {
      "type": "T2",
      "file": "plans/c13/T2.jpg",
-     "w": 330,
-     "h": 1200,
+     "w": 1098,
+     "h": 564,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 58
+     "kb": 95
     },
     {
      "type": "T3",
      "file": "plans/c13/T3.jpg",
-     "w": 324,
-     "h": 1200,
+     "w": 1094,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 59
+     "kb": 94
     },
     {
      "type": "T5",
      "file": "plans/c13/T5.jpg",
-     "w": 1075,
-     "h": 1200,
+     "w": 1098,
+     "h": 400,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 144
+     "kb": 74
     },
     {
      "type": "T6",
      "file": "plans/c13/T6.jpg",
-     "w": 1075,
-     "h": 1200,
+     "w": 1098,
+     "h": 400,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 144
+     "kb": 74
     }
    ]
   },
@@ -605,11 +611,11 @@
     {
      "type": "95",
      "file": "plans/c14/95.jpg",
-     "w": 461,
-     "h": 1200,
+     "w": 781,
+     "h": 484,
      "exclusiveM2": 95,
      "rooms": 6,
-     "kb": 61
+     "kb": 71
     }
    ]
   },
@@ -622,38 +628,38 @@
     {
      "type": "60",
      "file": "plans/c15/60.jpg",
-     "w": 664,
-     "h": 1200,
+     "w": 720,
+     "h": 552,
      "exclusiveM2": 59.97,
      "rooms": 8,
-     "kb": 89
+     "kb": 58
     },
     {
      "type": "85-2",
      "file": "plans/c15/85-2.jpg",
-     "w": 869,
-     "h": 1200,
+     "w": 1084,
+     "h": 163,
      "exclusiveM2": 84.87,
      "rooms": 7,
-     "kb": 97
+     "kb": 22
     },
     {
      "type": "85",
      "file": "plans/c15/85.jpg",
-     "w": 664,
-     "h": 1200,
+     "w": 759,
+     "h": 506,
      "exclusiveM2": 84.94,
      "rooms": 8,
-     "kb": 96
+     "kb": 62
     },
     {
      "type": "T3",
      "file": "plans/c15/T3.jpg",
-     "w": 642,
-     "h": 1200,
+     "w": 1122,
+     "h": 649,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 98
+     "kb": 84
     }
    ]
   },
@@ -670,7 +676,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 64
+     "kb": 59
     },
     {
      "type": "T2",
@@ -679,7 +685,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 67
+     "kb": 63
     },
     {
      "type": "T3",
@@ -688,7 +694,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 82
+     "kb": 75
     }
    ]
   },
@@ -705,7 +711,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 44
+     "kb": 41
     },
     {
      "type": "19",
@@ -714,7 +720,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 69
+     "kb": 65
     },
     {
      "type": "22",
@@ -723,7 +729,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 59
+     "kb": 55
     },
     {
      "type": "25",
@@ -732,7 +738,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 55
+     "kb": 52
     },
     {
      "type": "T1",
@@ -741,7 +747,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 54
+     "kb": 52
     },
     {
      "type": "T2",
@@ -750,7 +756,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 68
+     "kb": 64
     },
     {
      "type": "T3",
@@ -759,7 +765,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 58
+     "kb": 53
     },
     {
      "type": "T4",
@@ -768,7 +774,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 53
+     "kb": 49
     }
    ]
   },
@@ -785,7 +791,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 66
+     "kb": 61
     },
     {
      "type": "T2",
@@ -794,7 +800,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 58
+     "kb": 54
     },
     {
      "type": "T3",
@@ -803,7 +809,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 68
+     "kb": 63
     },
     {
      "type": "T4",
@@ -812,7 +818,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 58
+     "kb": 54
     }
    ]
   },
@@ -825,20 +831,20 @@
     {
      "type": "85",
      "file": "plans/c19/85.jpg",
-     "w": 1200,
-     "h": 1169,
+     "w": 1025,
+     "h": 628,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 120
+     "kb": 94
     },
     {
      "type": "T1",
      "file": "plans/c19/T1.jpg",
-     "w": 1200,
-     "h": 1126,
+     "w": 940,
+     "h": 634,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 115
+     "kb": 89
     }
    ]
   },
@@ -851,38 +857,38 @@
     {
      "type": "60",
      "file": "plans/c20/60.jpg",
-     "w": 1143,
-     "h": 1200,
+     "w": 1198,
+     "h": 328,
      "exclusiveM2": 59.97,
      "rooms": 3,
-     "kb": 102
+     "kb": 62
     },
     {
      "type": "T1",
      "file": "plans/c20/T1.jpg",
-     "w": 1143,
-     "h": 1200,
+     "w": 1198,
+     "h": 328,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 108
+     "kb": 62
     },
     {
      "type": "T2",
      "file": "plans/c20/T2.jpg",
-     "w": 1143,
-     "h": 1200,
+     "w": 1198,
+     "h": 328,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 109
+     "kb": 62
     },
     {
      "type": "T3",
      "file": "plans/c20/T3.jpg",
-     "w": 1143,
-     "h": 1200,
+     "w": 1198,
+     "h": 328,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 111
+     "kb": 61
     }
    ]
   },
@@ -895,11 +901,11 @@
     {
      "type": "T1",
      "file": "plans/c21/T1.jpg",
-     "w": 1160,
-     "h": 1200,
+     "w": 411,
+     "h": 907,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 75
+     "kb": 67
     }
    ]
   },
@@ -912,11 +918,11 @@
     {
      "type": "T1",
      "file": "plans/c22/T1.jpg",
-     "w": 543,
-     "h": 1200,
+     "w": 1200,
+     "h": 348,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 76
+     "kb": 39
     }
    ]
   },
@@ -929,83 +935,83 @@
     {
      "type": "40",
      "file": "plans/c23/40.jpg",
-     "w": 1100,
-     "h": 1045,
+     "w": 600,
+     "h": 533,
      "exclusiveM2": 39.98,
      "rooms": 5,
-     "kb": 99
+     "kb": 37
     },
     {
      "type": "49",
      "file": "plans/c23/49.jpg",
-     "w": 1100,
-     "h": 1074,
+     "w": 292,
+     "h": 441,
      "exclusiveM2": 49,
      "rooms": 5,
-     "kb": 105
+     "kb": 21
     },
     {
      "type": "50",
      "file": "plans/c23/50.jpg",
-     "w": 1100,
-     "h": 1094,
+     "w": 600,
+     "h": 583,
      "exclusiveM2": 49.81,
      "rooms": 5,
-     "kb": 100
+     "kb": 38
     },
     {
      "type": "75",
      "file": "plans/c23/75.jpg",
-     "w": 814,
-     "h": 1200,
+     "w": 1099,
+     "h": 571,
      "exclusiveM2": 74.95,
      "rooms": 6,
-     "kb": 71
+     "kb": 48
     },
     {
      "type": "85",
      "file": "plans/c23/85.jpg",
-     "w": 654,
-     "h": 1200,
+     "w": 1099,
+     "h": 805,
      "exclusiveM2": 84.52,
      "rooms": 6,
-     "kb": 56
+     "kb": 55
     },
     {
      "type": "85-2",
      "file": "plans/c23/85-2.jpg",
-     "w": 835,
-     "h": 1200,
+     "w": 1098,
+     "h": 536,
      "exclusiveM2": 84.82,
      "rooms": 3,
-     "kb": 73
+     "kb": 49
     },
     {
      "type": "113",
      "file": "plans/c23/113.jpg",
-     "w": 815,
-     "h": 1200,
+     "w": 618,
+     "h": 389,
      "exclusiveM2": 112.66,
      "rooms": 6,
-     "kb": 76
+     "kb": 42
     },
     {
      "type": "T4",
      "file": "plans/c23/T4.jpg",
-     "w": 914,
+     "w": 940,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 112
+     "kb": 106
     },
     {
      "type": "T8",
      "file": "plans/c23/T8.jpg",
-     "w": 374,
+     "w": 467,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 77
+     "kb": 64
     }
    ]
   },
@@ -1018,65 +1024,65 @@
     {
      "type": "34A",
      "file": "plans/c24/34A.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": 34.07,
      "rooms": 5,
-     "kb": 77
+     "kb": 45
     },
     {
      "type": "34",
      "file": "plans/c24/34.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": 34.27,
      "rooms": 3,
-     "kb": 79
+     "kb": 45
     },
     {
      "type": "59A",
      "file": "plans/c24/59A.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": 59.27,
      "rooms": 7,
-     "kb": 88
+     "kb": 45
     },
     {
      "type": "T2",
      "file": "plans/c24/T2.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 92
+     "kb": 44
     },
     {
      "type": "T4",
      "file": "plans/c24/T4.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 78
+     "kb": 45
     },
     {
      "type": "T5",
      "file": "plans/c24/T5.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 81
+     "kb": 45
     },
     {
      "type": "T6",
      "file": "plans/c24/T6.jpg",
-     "w": 1100,
-     "h": 981,
+     "w": 1099,
+     "h": 295,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 83
+     "kb": 44
     }
    ]
   },
@@ -1089,20 +1095,20 @@
     {
      "type": "T1",
      "file": "plans/c25/T1.jpg",
-     "w": 584,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 89
+     "kb": 56
     },
     {
      "type": "T2",
      "file": "plans/c25/T2.jpg",
-     "w": 536,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 73
+     "kb": 57
     }
    ]
   },
@@ -1115,110 +1121,110 @@
     {
      "type": "60-2",
      "file": "plans/c26/60-2.jpg",
-     "w": 536,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": 59.78,
      "rooms": 6,
-     "kb": 70
+     "kb": 60
     },
     {
      "type": "60",
      "file": "plans/c26/60.jpg",
-     "w": 540,
-     "h": 1200,
+     "w": 1097,
+     "h": 565,
      "exclusiveM2": 59.98,
      "rooms": 7,
-     "kb": 71
+     "kb": 60
     },
     {
      "type": "T1",
      "file": "plans/c26/T1.jpg",
-     "w": 584,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 88
+     "kb": 56
     },
     {
      "type": "T10",
      "file": "plans/c26/T10.jpg",
-     "w": 552,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 67
+     "kb": 55
     },
     {
      "type": "T11",
      "file": "plans/c26/T11.jpg",
-     "w": 695,
-     "h": 1200,
+     "w": 1097,
+     "h": 1194,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 100
+     "kb": 139
     },
     {
      "type": "T2",
      "file": "plans/c26/T2.jpg",
-     "w": 584,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 89
+     "kb": 56
     },
     {
      "type": "T3",
      "file": "plans/c26/T3.jpg",
-     "w": 563,
-     "h": 1200,
+     "w": 1099,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 84
+     "kb": 57
     },
     {
      "type": "T4",
      "file": "plans/c26/T4.jpg",
-     "w": 540,
-     "h": 1200,
+     "w": 1097,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 71
+     "kb": 57
     },
     {
      "type": "T6",
      "file": "plans/c26/T6.jpg",
-     "w": 536,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 75
+     "kb": 55
     },
     {
      "type": "T7",
      "file": "plans/c26/T7.jpg",
-     "w": 536,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 73
+     "kb": 57
     },
     {
      "type": "T8",
      "file": "plans/c26/T8.jpg",
-     "w": 552,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 64
+     "kb": 55
     },
     {
      "type": "T9",
      "file": "plans/c26/T9.jpg",
-     "w": 695,
-     "h": 1200,
+     "w": 1097,
+     "h": 1194,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 100
+     "kb": 139
     }
    ]
   },
@@ -1231,20 +1237,20 @@
     {
      "type": "T1",
      "file": "plans/c27/T1.jpg",
-     "w": 1100,
-     "h": 1146,
+     "w": 1099,
+     "h": 1126,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 167
+     "kb": 178
     },
     {
      "type": "T2",
      "file": "plans/c27/T2.jpg",
-     "w": 539,
+     "w": 538,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 117
+     "kb": 106
     }
    ]
   },
@@ -1257,65 +1263,65 @@
     {
      "type": "60",
      "file": "plans/c28/60.jpg",
-     "w": 756,
-     "h": 1200,
+     "w": 1098,
+     "h": 330,
      "exclusiveM2": 59.92,
      "rooms": 9,
-     "kb": 74
+     "kb": 40
     },
     {
      "type": "60-3",
      "file": "plans/c28/60-3.jpg",
-     "w": 756,
-     "h": 1200,
+     "w": 736,
+     "h": 481,
      "exclusiveM2": 59.95,
      "rooms": 8,
-     "kb": 71
+     "kb": 47
     },
     {
      "type": "60-2",
      "file": "plans/c28/60-2.jpg",
-     "w": 756,
-     "h": 1200,
+     "w": 766,
+     "h": 485,
      "exclusiveM2": 60,
      "rooms": 8,
-     "kb": 75
+     "kb": 54
     },
     {
      "type": "T1",
      "file": "plans/c28/T1.jpg",
-     "w": 756,
-     "h": 1200,
+     "w": 750,
+     "h": 485,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 73
+     "kb": 51
     },
     {
      "type": "T5",
      "file": "plans/c28/T5.jpg",
-     "w": 641,
-     "h": 1200,
+     "w": 1098,
+     "h": 316,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 58
+     "kb": 37
     },
     {
      "type": "T6",
      "file": "plans/c28/T6.jpg",
-     "w": 763,
+     "w": 776,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 107
+     "kb": 99
     },
     {
      "type": "T7",
      "file": "plans/c28/T7.jpg",
-     "w": 406,
+     "w": 533,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 84
+     "kb": 76
     }
    ]
   },
@@ -1328,65 +1334,65 @@
     {
      "type": "T1",
      "file": "plans/c29/T1.jpg",
-     "w": 817,
-     "h": 1200,
+     "w": 362,
+     "h": 319,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 63
+     "kb": 11
     },
     {
      "type": "T2",
      "file": "plans/c29/T2.jpg",
-     "w": 915,
-     "h": 1200,
+     "w": 362,
+     "h": 318,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 82
+     "kb": 12
     },
     {
      "type": "T3",
      "file": "plans/c29/T3.jpg",
-     "w": 994,
-     "h": 1200,
+     "w": 362,
+     "h": 319,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 83
+     "kb": 12
     },
     {
      "type": "T4",
      "file": "plans/c29/T4.jpg",
-     "w": 1078,
-     "h": 1200,
+     "w": 362,
+     "h": 319,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 95
+     "kb": 12
     },
     {
      "type": "T5",
      "file": "plans/c29/T5.jpg",
-     "w": 984,
-     "h": 1200,
+     "w": 362,
+     "h": 468,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 90
+     "kb": 17
     },
     {
      "type": "T6",
      "file": "plans/c29/T6.jpg",
-     "w": 817,
-     "h": 1200,
+     "w": 362,
+     "h": 319,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 74
+     "kb": 12
     },
     {
      "type": "T7",
      "file": "plans/c29/T7.jpg",
-     "w": 885,
-     "h": 1200,
+     "w": 362,
+     "h": 318,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 79
+     "kb": 12
     }
    ]
   },
@@ -1399,11 +1405,11 @@
     {
      "type": "T1",
      "file": "plans/c30/T1.jpg",
-     "w": 1160,
-     "h": 1000,
+     "w": 946,
+     "h": 687,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 94
+     "kb": 93
     }
    ]
   },
@@ -1416,11 +1422,11 @@
     {
      "type": "T1",
      "file": "plans/c31/T1.jpg",
-     "w": 1200,
-     "h": 674,
+     "w": 820,
+     "h": 816,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 52
+     "kb": 55
     }
    ]
   },
@@ -1433,11 +1439,11 @@
     {
      "type": "T1",
      "file": "plans/c32/T1.jpg",
-     "w": 762,
-     "h": 1200,
+     "w": 1200,
+     "h": 1058,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 99
+     "kb": 97
     }
    ]
   },
@@ -1450,20 +1456,20 @@
     {
      "type": "17",
      "file": "plans/c33/17.jpg",
-     "w": 944,
-     "h": 803,
+     "w": 836,
+     "h": 751,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 71
+     "kb": 75
     },
     {
      "type": "18",
      "file": "plans/c33/18.jpg",
      "w": 1200,
-     "h": 787,
+     "h": 816,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 68
+     "kb": 71
     }
    ]
   },
@@ -1476,20 +1482,20 @@
     {
      "type": "67",
      "file": "plans/c34/67.jpg",
-     "w": 585,
-     "h": 1200,
+     "w": 439,
+     "h": 1125,
      "exclusiveM2": 66.91,
      "rooms": 8,
-     "kb": 84
+     "kb": 49
     },
     {
      "type": "67-2",
      "file": "plans/c34/67-2.jpg",
-     "w": 585,
-     "h": 1200,
+     "w": 346,
+     "h": 641,
      "exclusiveM2": 66.91,
      "rooms": 5,
-     "kb": 85
+     "kb": 37
     }
    ]
   },
@@ -1502,17 +1508,17 @@
     {
      "type": "T1",
      "file": "plans/c35/T1.jpg",
-     "w": 1200,
-     "h": 720,
+     "w": 1172,
+     "h": 490,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 128
+     "kb": 102
     },
     {
      "type": "T2",
      "file": "plans/c35/T2.jpg",
-     "w": 1200,
-     "h": 465,
+     "w": 518,
+     "h": 411,
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 30
@@ -1528,29 +1534,29 @@
     {
      "type": "85",
      "file": "plans/c36/85.jpg",
-     "w": 428,
-     "h": 1200,
+     "w": 679,
+     "h": 481,
      "exclusiveM2": 84.61,
      "rooms": 10,
-     "kb": 64
+     "kb": 54
     },
     {
      "type": "T1",
      "file": "plans/c36/T1.jpg",
-     "w": 430,
-     "h": 1200,
+     "w": 455,
+     "h": 209,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 60
+     "kb": 15
     },
     {
      "type": "T2",
      "file": "plans/c36/T2.jpg",
-     "w": 432,
-     "h": 1200,
+     "w": 686,
+     "h": 474,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 64
+     "kb": 58
     }
    ]
   },
@@ -1563,92 +1569,92 @@
     {
      "type": "84",
      "file": "plans/c37/84.jpg",
-     "w": 314,
-     "h": 1200,
+     "w": 597,
+     "h": 896,
      "exclusiveM2": 84,
      "rooms": 8,
-     "kb": 40
+     "kb": 21
     },
     {
      "type": "T1",
      "file": "plans/c37/T1.jpg",
-     "w": 540,
-     "h": 1200,
+     "w": 744,
+     "h": 643,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 55
+     "kb": 43
     },
     {
      "type": "T10",
      "file": "plans/c37/T10.jpg",
-     "w": 314,
-     "h": 1200,
+     "w": 1200,
+     "h": 796,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 41
+     "kb": 71
     },
     {
      "type": "T2",
      "file": "plans/c37/T2.jpg",
-     "w": 314,
+     "w": 851,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 38
+     "kb": 71
     },
     {
      "type": "T3",
      "file": "plans/c37/T3.jpg",
-     "w": 211,
+     "w": 493,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 38
+     "kb": 56
     },
     {
      "type": "T4",
      "file": "plans/c37/T4.jpg",
-     "w": 540,
-     "h": 1200,
+     "w": 823,
+     "h": 601,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 62
+     "kb": 49
     },
     {
      "type": "T6",
      "file": "plans/c37/T6.jpg",
-     "w": 467,
-     "h": 1200,
+     "w": 338,
+     "h": 398,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 57
+     "kb": 18
     },
     {
      "type": "T7",
      "file": "plans/c37/T7.jpg",
-     "w": 267,
-     "h": 1200,
+     "w": 591,
+     "h": 788,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 39
+     "kb": 34
     },
     {
      "type": "T8",
      "file": "plans/c37/T8.jpg",
-     "w": 370,
+     "w": 278,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 50
+     "kb": 36
     },
     {
      "type": "T9",
      "file": "plans/c37/T9.jpg",
-     "w": 540,
-     "h": 1200,
+     "w": 875,
+     "h": 587,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 67
+     "kb": 54
     }
    ]
   },
@@ -1661,11 +1667,11 @@
     {
      "type": "71B",
      "file": "plans/c38/71B.jpg",
-     "w": 445,
-     "h": 1200,
+     "w": 765,
+     "h": 1165,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 44
+     "kb": 91
     }
    ]
   },
@@ -1678,74 +1684,74 @@
     {
      "type": "85",
      "file": "plans/c39/85.jpg",
-     "w": 1200,
-     "h": 1080,
+     "w": 1100,
+     "h": 246,
      "exclusiveM2": 84.99,
      "rooms": 7,
-     "kb": 64
+     "kb": 19
     },
     {
      "type": "85-2",
      "file": "plans/c39/85-2.jpg",
-     "w": 1200,
-     "h": 1063,
+     "w": 1100,
+     "h": 244,
      "exclusiveM2": 84.99,
      "rooms": 7,
-     "kb": 58
+     "kb": 18
     },
     {
      "type": "85-3",
      "file": "plans/c39/85-3.jpg",
-     "w": 1200,
-     "h": 1112,
+     "w": 1100,
+     "h": 245,
      "exclusiveM2": 84.99,
      "rooms": 6,
-     "kb": 63
+     "kb": 17
     },
     {
      "type": "85-4",
      "file": "plans/c39/85-4.jpg",
-     "w": 1200,
-     "h": 1048,
+     "w": 1102,
+     "h": 244,
      "exclusiveM2": 84.99,
      "rooms": 6,
-     "kb": 56
+     "kb": 18
     },
     {
      "type": "105",
      "file": "plans/c39/105.jpg",
-     "w": 1200,
-     "h": 1086,
+     "w": 1100,
+     "h": 245,
      "exclusiveM2": 105.01,
      "rooms": 6,
-     "kb": 61
+     "kb": 18
     },
     {
      "type": "106",
      "file": "plans/c39/106.jpg",
-     "w": 1200,
-     "h": 1050,
+     "w": 1100,
+     "h": 245,
      "exclusiveM2": 105.91,
      "rooms": 6,
-     "kb": 60
+     "kb": 20
     },
     {
      "type": "106-2",
      "file": "plans/c39/106-2.jpg",
-     "w": 1200,
-     "h": 1074,
+     "w": 1100,
+     "h": 244,
      "exclusiveM2": 105.92,
      "rooms": 4,
-     "kb": 57
+     "kb": 18
     },
     {
      "type": "T4",
      "file": "plans/c39/T4.jpg",
-     "w": 1200,
-     "h": 1063,
+     "w": 1100,
+     "h": 244,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 58
+     "kb": 18
     }
    ]
   },
@@ -1758,69 +1764,67 @@
     {
      "type": "84",
      "file": "plans/c40/84.jpg",
-     "w": 528,
-     "h": 1200,
+     "w": 957,
+     "h": 1096,
      "exclusiveM2": 84.37,
      "rooms": 7,
-     "kb": 57,
-     "mmPerPx": 46.12,
-     "scaleConf": "확실"
+     "kb": 102,
+     "mmPerPx": 17.369,
+     "scaleConf": "보통"
     },
     {
      "type": "85",
      "file": "plans/c40/85.jpg",
-     "w": 528,
-     "h": 1200,
+     "w": 815,
+     "h": 495,
      "exclusiveM2": 84.85,
      "rooms": 7,
-     "kb": 56
+     "kb": 41
     },
     {
      "type": "85-2",
      "file": "plans/c40/85-2.jpg",
-     "w": 451,
-     "h": 1200,
+     "w": 665,
+     "h": 557,
      "exclusiveM2": 84.98,
      "rooms": 5,
-     "kb": 43
+     "kb": 38
     },
     {
      "type": "116A",
      "file": "plans/c40/116A.jpg",
-     "w": 560,
-     "h": 1200,
+     "w": 1200,
+     "h": 937,
      "exclusiveM2": 115.89,
      "rooms": 8,
-     "kb": 64,
-     "mmPerPx": 46.845,
-     "scaleConf": "확실"
+     "kb": 87
     },
     {
      "type": "117B",
      "file": "plans/c40/117B.jpg",
-     "w": 458,
-     "h": 1200,
+     "w": 599,
+     "h": 677,
      "exclusiveM2": 116.9,
      "rooms": 5,
-     "kb": 46
+     "kb": 35
     },
     {
      "type": "140A",
      "file": "plans/c40/140A.jpg",
-     "w": 575,
-     "h": 1200,
+     "w": 1200,
+     "h": 892,
      "exclusiveM2": 139.73,
      "rooms": 7,
-     "kb": 66
+     "kb": 86
     },
     {
      "type": "141B",
      "file": "plans/c40/141B.jpg",
-     "w": 452,
-     "h": 1200,
+     "w": 549,
+     "h": 477,
      "exclusiveM2": 141.32,
      "rooms": 7,
-     "kb": 44
+     "kb": 32
     }
    ]
   },
@@ -1833,11 +1837,11 @@
     {
      "type": "T1",
      "file": "plans/c41/T1.jpg",
-     "w": 837,
-     "h": 1200,
+     "w": 548,
+     "h": 604,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 142
+     "kb": 52
     }
    ]
   },
@@ -1850,11 +1854,11 @@
     {
      "type": "T1",
      "file": "plans/c42/T1.jpg",
-     "w": 938,
-     "h": 1200,
+     "w": 700,
+     "h": 560,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 113
+     "kb": 44
     }
    ]
   },
@@ -1867,56 +1871,56 @@
     {
      "type": "75",
      "file": "plans/c43/75.jpg",
-     "w": 447,
-     "h": 1200,
+     "w": 961,
+     "h": 589,
      "exclusiveM2": 74.98,
      "rooms": 9,
-     "kb": 71
+     "kb": 64
     },
     {
-     "type": "T2",
-     "file": "plans/c43/T2.jpg",
-     "w": 424,
-     "h": 1200,
+     "type": "T1",
+     "file": "plans/c43/T1.jpg",
+     "w": 1042,
+     "h": 554,
      "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 71
+     "rooms": 10,
+     "kb": 67
     },
     {
      "type": "T3",
      "file": "plans/c43/T3.jpg",
-     "w": 422,
-     "h": 1200,
+     "w": 946,
+     "h": 610,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 78
+     "kb": 60
     },
     {
      "type": "T4",
      "file": "plans/c43/T4.jpg",
-     "w": 419,
-     "h": 1200,
+     "w": 1035,
+     "h": 591,
      "exclusiveM2": null,
-     "rooms": 10,
-     "kb": 74
+     "rooms": 9,
+     "kb": 88
     },
     {
      "type": "T5",
      "file": "plans/c43/T5.jpg",
-     "w": 418,
-     "h": 1200,
+     "w": 1057,
+     "h": 568,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 73
+     "kb": 85
     },
     {
      "type": "T6",
      "file": "plans/c43/T6.jpg",
-     "w": 428,
-     "h": 1200,
+     "w": 1070,
+     "h": 353,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 73
+     "kb": 54
     }
    ]
   },
@@ -1929,83 +1933,83 @@
     {
      "type": "17",
      "file": "plans/c44/17.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 289,
+     "h": 421,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 26
+     "kb": 23
     },
     {
      "type": "20",
      "file": "plans/c44/20.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 324,
+     "h": 422,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 26
+    },
+    {
+     "type": "23",
+     "file": "plans/c44/23.jpg",
+     "w": 463,
+     "h": 312,
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 29
     },
     {
-     "type": "23",
-     "file": "plans/c44/23.jpg",
-     "w": 570,
-     "h": 540,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 32
-    },
-    {
      "type": "26",
      "file": "plans/c44/26.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 463,
+     "h": 310,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 31
+     "kb": 29
     },
     {
      "type": "29",
      "file": "plans/c44/29.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 469,
+     "h": 316,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 32
+     "kb": 30
     },
     {
      "type": "32",
      "file": "plans/c44/32.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 497,
+     "h": 341,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 34
+     "kb": 32
     },
     {
      "type": "35",
      "file": "plans/c44/35.jpg",
-     "w": 570,
-     "h": 540,
-     "exclusiveM2": null,
-     "rooms": 6,
-     "kb": 32
-    },
-    {
-     "type": "38",
-     "file": "plans/c44/38.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 470,
+     "h": 335,
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 31
     },
     {
+     "type": "38",
+     "file": "plans/c44/38.jpg",
+     "w": 462,
+     "h": 334,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 29
+    },
+    {
      "type": "T4",
      "file": "plans/c44/T4.jpg",
-     "w": 570,
-     "h": 540,
+     "w": 399,
+     "h": 355,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 28
+     "kb": 26
     }
    ]
   },
@@ -2018,56 +2022,56 @@
     {
      "type": "T1",
      "file": "plans/c45/T1.jpg",
-     "w": 909,
-     "h": 1200,
+     "w": 1199,
+     "h": 572,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 81
+     "kb": 62
     },
     {
      "type": "T2",
      "file": "plans/c45/T2.jpg",
-     "w": 909,
-     "h": 1200,
+     "w": 1199,
+     "h": 572,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 81
+     "kb": 62
     },
     {
      "type": "T3",
      "file": "plans/c45/T3.jpg",
-     "w": 1041,
-     "h": 1200,
+     "w": 1199,
+     "h": 558,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 90
+     "kb": 66
     },
     {
      "type": "T4",
      "file": "plans/c45/T4.jpg",
-     "w": 1041,
-     "h": 1200,
+     "w": 1199,
+     "h": 558,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 84
+     "kb": 66
     },
     {
      "type": "T5",
      "file": "plans/c45/T5.jpg",
-     "w": 1041,
-     "h": 1200,
+     "w": 1199,
+     "h": 558,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 86
+     "kb": 67
     },
     {
      "type": "T6",
      "file": "plans/c45/T6.jpg",
-     "w": 1041,
-     "h": 1200,
+     "w": 1199,
+     "h": 558,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 88
+     "kb": 66
     }
    ]
   },
@@ -2080,110 +2084,110 @@
     {
      "type": "75",
      "file": "plans/c46/75.jpg",
-     "w": 1200,
-     "h": 1109,
+     "w": 763,
+     "h": 426,
      "exclusiveM2": 74.95,
      "rooms": 7,
-     "kb": 86
+     "kb": 45
     },
     {
      "type": "85-3",
      "file": "plans/c46/85-3.jpg",
-     "w": 1200,
-     "h": 1133,
+     "w": 1113,
+     "h": 488,
      "exclusiveM2": 84.7,
      "rooms": 5,
-     "kb": 98
+     "kb": 62
     },
     {
      "type": "85-2",
      "file": "plans/c46/85-2.jpg",
-     "w": 1137,
-     "h": 1200,
+     "w": 985,
+     "h": 529,
      "exclusiveM2": 84.78,
      "rooms": 7,
-     "kb": 102
+     "kb": 59
     },
     {
      "type": "85",
      "file": "plans/c46/85.jpg",
-     "w": 971,
-     "h": 1200,
+     "w": 350,
+     "h": 808,
      "exclusiveM2": 84.92,
      "rooms": 8,
-     "kb": 103
+     "kb": 17
     },
     {
      "type": "93-2",
      "file": "plans/c46/93-2.jpg",
-     "w": 1106,
-     "h": 1200,
+     "w": 1200,
+     "h": 542,
      "exclusiveM2": 92.88,
      "rooms": 6,
-     "kb": 102
+     "kb": 56
     },
     {
      "type": "93",
      "file": "plans/c46/93.jpg",
-     "w": 1068,
-     "h": 1200,
+     "w": 961,
+     "h": 619,
      "exclusiveM2": 92.91,
      "rooms": 7,
-     "kb": 93
+     "kb": 66
     },
     {
      "type": "93-3",
      "file": "plans/c46/93-3.jpg",
-     "w": 853,
-     "h": 1200,
+     "w": 663,
+     "h": 797,
      "exclusiveM2": 92.93,
      "rooms": 6,
-     "kb": 65
+     "kb": 59
     },
     {
      "type": "107",
      "file": "plans/c46/107.jpg",
-     "w": 1125,
-     "h": 1200,
+     "w": 1030,
+     "h": 545,
      "exclusiveM2": 106.93,
      "rooms": 8,
-     "kb": 103
+     "kb": 72
     },
     {
      "type": "113",
      "file": "plans/c46/113.jpg",
-     "w": 1048,
-     "h": 1200,
+     "w": 1107,
+     "h": 586,
      "exclusiveM2": 112.97,
      "rooms": 8,
-     "kb": 95
+     "kb": 73
     },
     {
      "type": "T11",
      "file": "plans/c46/T11.jpg",
-     "w": 759,
-     "h": 1200,
+     "w": 349,
+     "h": 299,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 80
+     "kb": 8
     },
     {
      "type": "T6",
      "file": "plans/c46/T6.jpg",
-     "w": 1187,
-     "h": 1200,
+     "w": 349,
+     "h": 696,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 123
+     "kb": 16
     },
     {
      "type": "T8",
      "file": "plans/c46/T8.jpg",
-     "w": 1006,
-     "h": 1200,
+     "w": 1200,
+     "h": 875,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 106
+     "kb": 77
     }
    ]
   },
@@ -2196,110 +2200,110 @@
     {
      "type": "75",
      "file": "plans/c47/75.jpg",
-     "w": 1200,
-     "h": 1109,
+     "w": 763,
+     "h": 426,
      "exclusiveM2": 74.95,
      "rooms": 7,
-     "kb": 86
+     "kb": 45
     },
     {
      "type": "85-3",
      "file": "plans/c47/85-3.jpg",
-     "w": 1200,
-     "h": 1133,
+     "w": 1113,
+     "h": 488,
      "exclusiveM2": 84.7,
      "rooms": 5,
-     "kb": 98
+     "kb": 62
     },
     {
      "type": "85-2",
      "file": "plans/c47/85-2.jpg",
-     "w": 1137,
-     "h": 1200,
+     "w": 985,
+     "h": 529,
      "exclusiveM2": 84.78,
      "rooms": 7,
-     "kb": 102
+     "kb": 59
     },
     {
      "type": "85",
      "file": "plans/c47/85.jpg",
-     "w": 971,
-     "h": 1200,
+     "w": 350,
+     "h": 808,
      "exclusiveM2": 84.92,
      "rooms": 8,
-     "kb": 103
+     "kb": 17
     },
     {
      "type": "93-2",
      "file": "plans/c47/93-2.jpg",
-     "w": 1106,
-     "h": 1200,
+     "w": 1200,
+     "h": 542,
      "exclusiveM2": 92.88,
      "rooms": 6,
-     "kb": 102
+     "kb": 56
     },
     {
      "type": "93",
      "file": "plans/c47/93.jpg",
-     "w": 1068,
-     "h": 1200,
+     "w": 961,
+     "h": 619,
      "exclusiveM2": 92.91,
      "rooms": 7,
-     "kb": 93
+     "kb": 66
     },
     {
      "type": "93-3",
      "file": "plans/c47/93-3.jpg",
-     "w": 853,
-     "h": 1200,
+     "w": 663,
+     "h": 797,
      "exclusiveM2": 92.93,
      "rooms": 6,
-     "kb": 65
+     "kb": 59
     },
     {
      "type": "107",
      "file": "plans/c47/107.jpg",
-     "w": 1125,
-     "h": 1200,
+     "w": 1030,
+     "h": 545,
      "exclusiveM2": 106.93,
      "rooms": 8,
-     "kb": 103
+     "kb": 72
     },
     {
      "type": "113",
      "file": "plans/c47/113.jpg",
-     "w": 1048,
-     "h": 1200,
+     "w": 1107,
+     "h": 586,
      "exclusiveM2": 112.97,
      "rooms": 8,
-     "kb": 95
+     "kb": 73
     },
     {
      "type": "T11",
      "file": "plans/c47/T11.jpg",
-     "w": 759,
-     "h": 1200,
+     "w": 349,
+     "h": 299,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 80
+     "kb": 8
     },
     {
      "type": "T6",
      "file": "plans/c47/T6.jpg",
-     "w": 1187,
-     "h": 1200,
+     "w": 349,
+     "h": 696,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 123
+     "kb": 16
     },
     {
      "type": "T8",
      "file": "plans/c47/T8.jpg",
-     "w": 1006,
-     "h": 1200,
+     "w": 1200,
+     "h": 875,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 106
+     "kb": 77
     }
    ]
   },
@@ -2312,47 +2316,47 @@
     {
      "type": "T1",
      "file": "plans/c48/T1.jpg",
-     "w": 719,
-     "h": 1200,
+     "w": 1099,
+     "h": 294,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 103
+     "kb": 40
     },
     {
      "type": "T2",
      "file": "plans/c48/T2.jpg",
-     "w": 719,
-     "h": 1200,
+     "w": 1099,
+     "h": 294,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 107
+     "kb": 41
     },
     {
      "type": "T3",
      "file": "plans/c48/T3.jpg",
-     "w": 719,
-     "h": 1200,
+     "w": 1099,
+     "h": 294,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 107
+     "kb": 40
     },
     {
      "type": "T4",
      "file": "plans/c48/T4.jpg",
-     "w": 719,
-     "h": 1200,
+     "w": 1099,
+     "h": 294,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 100
+     "kb": 40
     },
     {
      "type": "T5",
      "file": "plans/c48/T5.jpg",
-     "w": 719,
-     "h": 1200,
+     "w": 1099,
+     "h": 294,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 97
+     "kb": 40
     }
    ]
   },
@@ -2365,29 +2369,29 @@
     {
      "type": "T1",
      "file": "plans/c49/T1.jpg",
-     "w": 986,
-     "h": 1200,
+     "w": 1098,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 105
+     "kb": 67
     },
     {
      "type": "T2",
      "file": "plans/c49/T2.jpg",
-     "w": 759,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 74
+     "kb": 67
     },
     {
      "type": "T3",
      "file": "plans/c49/T3.jpg",
-     "w": 986,
-     "h": 1200,
+     "w": 1098,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 103
+     "kb": 67
     },
     {
      "type": "T4",
@@ -2396,16 +2400,16 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 96
+     "kb": 86
     },
     {
      "type": "T5",
      "file": "plans/c49/T5.jpg",
-     "w": 965,
-     "h": 1200,
+     "w": 1099,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 101
+     "kb": 67
     },
     {
      "type": "T6",
@@ -2414,7 +2418,7 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 96
+     "kb": 86
     }
    ]
   },
@@ -2431,7 +2435,7 @@
      "h": 773,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 79
+     "kb": 75
     },
     {
      "type": "T2",
@@ -2440,7 +2444,7 @@
      "h": 773,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 81
+     "kb": 77
     },
     {
      "type": "T3",
@@ -2449,7 +2453,7 @@
      "h": 773,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 85
+     "kb": 80
     },
     {
      "type": "T4",
@@ -2458,7 +2462,7 @@
      "h": 773,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 83
+     "kb": 78
     }
    ]
   },
@@ -2471,11 +2475,11 @@
     {
      "type": "85",
      "file": "plans/c51/85.jpg",
-     "w": 1068,
-     "h": 1200,
+     "w": 1200,
+     "h": 969,
      "exclusiveM2": 84.95,
      "rooms": 5,
-     "kb": 81
+     "kb": 121
     }
    ]
   },
@@ -2488,11 +2492,11 @@
     {
      "type": "T1",
      "file": "plans/c52/T1.jpg",
-     "w": 194,
-     "h": 1200,
+     "w": 701,
+     "h": 638,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 38
+     "kb": 31
     }
    ]
   },
@@ -2505,29 +2509,29 @@
     {
      "type": "T1",
      "file": "plans/c53/T1.jpg",
-     "w": 588,
-     "h": 1200,
+     "w": 774,
+     "h": 983,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 87
+     "kb": 86
     },
     {
      "type": "T2",
      "file": "plans/c53/T2.jpg",
-     "w": 596,
-     "h": 1200,
+     "w": 750,
+     "h": 561,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 88
+     "kb": 59
     },
     {
      "type": "T3",
      "file": "plans/c53/T3.jpg",
-     "w": 532,
-     "h": 1200,
+     "w": 623,
+     "h": 1105,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 60
+     "kb": 68
     }
    ]
   },
@@ -2540,20 +2544,20 @@
     {
      "type": "85",
      "file": "plans/c54/85.jpg",
-     "w": 759,
-     "h": 1200,
+     "w": 908,
+     "h": 672,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 118
+     "kb": 87
     },
     {
      "type": "T2",
      "file": "plans/c54/T2.jpg",
-     "w": 242,
+     "w": 240,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 45
+     "kb": 42
     }
    ]
   },
@@ -2566,11 +2570,11 @@
     {
      "type": "T1",
      "file": "plans/c55/T1.jpg",
-     "w": 438,
-     "h": 1200,
+     "w": 590,
+     "h": 395,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 62
+     "kb": 39
     }
    ]
   },
@@ -2583,29 +2587,29 @@
     {
      "type": "85-2",
      "file": "plans/c56/85-2.jpg",
-     "w": 251,
-     "h": 1200,
+     "w": 1192,
+     "h": 517,
      "exclusiveM2": 84.95,
      "rooms": 7,
-     "kb": 43
+     "kb": 42
     },
     {
      "type": "85",
      "file": "plans/c56/85.jpg",
-     "w": 251,
-     "h": 1200,
+     "w": 1192,
+     "h": 517,
      "exclusiveM2": 84.97,
      "rooms": 8,
-     "kb": 43
+     "kb": 40
     },
     {
      "type": "T3",
      "file": "plans/c56/T3.jpg",
-     "w": 285,
-     "h": 1200,
+     "w": 1194,
+     "h": 521,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 42
+     "kb": 41
     }
    ]
   },
@@ -2618,20 +2622,20 @@
     {
      "type": "85",
      "file": "plans/c57/85.jpg",
-     "w": 242,
-     "h": 1200,
+     "w": 502,
+     "h": 416,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 44
+     "kb": 28
     },
     {
      "type": "85-2",
      "file": "plans/c57/85-2.jpg",
-     "w": 242,
+     "w": 855,
      "h": 1200,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 45
+     "kb": 116
     }
    ]
   },
@@ -2648,7 +2652,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 59
+     "kb": 54
     },
     {
      "type": "19",
@@ -2657,7 +2661,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 60
+     "kb": 57
     },
     {
      "type": "22",
@@ -2666,7 +2670,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 60
+     "kb": 57
     },
     {
      "type": "25",
@@ -2675,7 +2679,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 60
+     "kb": 55
     },
     {
      "type": "T4",
@@ -2684,7 +2688,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 43
+     "kb": 40
     },
     {
      "type": "T6",
@@ -2693,7 +2697,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 43
+     "kb": 40
     },
     {
      "type": "T7",
@@ -2702,7 +2706,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 43
+     "kb": 40
     },
     {
      "type": "T8",
@@ -2711,7 +2715,7 @@
      "h": 783,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 41
+     "kb": 39
     }
    ]
   },
@@ -2724,65 +2728,65 @@
     {
      "type": "50",
      "file": "plans/c59/50.jpg",
-     "w": 634,
-     "h": 1200,
+     "w": 490,
+     "h": 516,
      "exclusiveM2": 49.96,
      "rooms": 9,
-     "kb": 84
+     "kb": 46
     },
     {
      "type": "50-2",
      "file": "plans/c59/50-2.jpg",
-     "w": 562,
-     "h": 1200,
+     "w": 350,
+     "h": 486,
      "exclusiveM2": 49.98,
      "rooms": 9,
-     "kb": 75
+     "kb": 28
     },
     {
      "type": "50-3",
      "file": "plans/c59/50-3.jpg",
-     "w": 677,
-     "h": 1200,
+     "w": 381,
+     "h": 267,
      "exclusiveM2": 49.98,
      "rooms": 7,
-     "kb": 88
+     "kb": 20
     },
     {
      "type": "60-2",
      "file": "plans/c59/60-2.jpg",
-     "w": 647,
-     "h": 1200,
+     "w": 417,
+     "h": 338,
      "exclusiveM2": 59.97,
      "rooms": 8,
-     "kb": 89
+     "kb": 25
     },
     {
      "type": "60",
      "file": "plans/c59/60.jpg",
-     "w": 647,
-     "h": 1200,
+     "w": 452,
+     "h": 294,
      "exclusiveM2": 59.98,
      "rooms": 9,
-     "kb": 91
+     "kb": 21
     },
     {
      "type": "60-3",
      "file": "plans/c59/60-3.jpg",
-     "w": 654,
-     "h": 1200,
+     "w": 377,
+     "h": 359,
      "exclusiveM2": 59.99,
      "rooms": 7,
-     "kb": 83
+     "kb": 21
     },
     {
      "type": "74",
      "file": "plans/c59/74.jpg",
-     "w": 547,
-     "h": 1200,
+     "w": 344,
+     "h": 507,
      "exclusiveM2": 73.95,
      "rooms": 10,
-     "kb": 69
+     "kb": 29
     }
    ]
   },
@@ -2795,119 +2799,119 @@
     {
      "type": "50",
      "file": "plans/c60/50.jpg",
-     "w": 552,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": 49.99,
      "rooms": 8,
-     "kb": 50
+     "kb": 48
     },
     {
      "type": "50-2",
      "file": "plans/c60/50-2.jpg",
-     "w": 547,
-     "h": 1200,
+     "w": 1098,
+     "h": 565,
      "exclusiveM2": 49.99,
      "rooms": 7,
-     "kb": 45
+     "kb": 48
     },
     {
      "type": "50-3",
      "file": "plans/c60/50-3.jpg",
-     "w": 556,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": 49.99,
      "rooms": 7,
-     "kb": 50
+     "kb": 48
     },
     {
      "type": "60",
      "file": "plans/c60/60.jpg",
-     "w": 583,
-     "h": 1200,
+     "w": 1098,
+     "h": 567,
      "exclusiveM2": 59.99,
      "rooms": 8,
-     "kb": 65
+     "kb": 48
     },
     {
      "type": "60-2",
      "file": "plans/c60/60-2.jpg",
-     "w": 637,
-     "h": 1200,
+     "w": 1099,
+     "h": 567,
      "exclusiveM2": 59.99,
      "rooms": 6,
-     "kb": 70
+     "kb": 48
     },
     {
      "type": "60-3",
      "file": "plans/c60/60-3.jpg",
-     "w": 582,
-     "h": 1200,
+     "w": 1098,
+     "h": 567,
      "exclusiveM2": 59.99,
      "rooms": 6,
-     "kb": 67
+     "kb": 48
     },
     {
      "type": "60-4",
      "file": "plans/c60/60-4.jpg",
-     "w": 517,
-     "h": 1200,
+     "w": 1098,
+     "h": 564,
      "exclusiveM2": 59.99,
      "rooms": 6,
-     "kb": 50
+     "kb": 48
     },
     {
      "type": "85",
      "file": "plans/c60/85.jpg",
-     "w": 500,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": 84.99,
      "rooms": 7,
-     "kb": 53
+     "kb": 48
     },
     {
      "type": "85-2",
      "file": "plans/c60/85-2.jpg",
-     "w": 601,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": 84.99,
      "rooms": 6,
-     "kb": 73
+     "kb": 48
     },
     {
      "type": "T10",
      "file": "plans/c60/T10.jpg",
-     "w": 510,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 53
+     "kb": 48
     },
     {
      "type": "T12",
      "file": "plans/c60/T12.jpg",
-     "w": 1019,
+     "w": 1018,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 114
+     "kb": 113
     },
     {
      "type": "T13",
      "file": "plans/c60/T13.jpg",
-     "w": 1019,
+     "w": 1018,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 114
+     "kb": 113
     },
     {
      "type": "T6",
      "file": "plans/c60/T6.jpg",
-     "w": 595,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 72
+     "kb": 47
     }
    ]
   },
@@ -2920,11 +2924,11 @@
     {
      "type": "85",
      "file": "plans/c61/85.jpg",
-     "w": 534,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": 84.84,
      "rooms": 11,
-     "kb": 66
+     "kb": 80
     },
     {
      "type": "T10",
@@ -2947,74 +2951,74 @@
     {
      "type": "T2",
      "file": "plans/c61/T2.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 11,
-     "kb": 93
+     "kb": 76
     },
     {
      "type": "T3",
      "file": "plans/c61/T3.jpg",
-     "w": 623,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 11,
-     "kb": 82
+     "kb": 80
     },
     {
      "type": "T4",
      "file": "plans/c61/T4.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 92
+     "kb": 80
     },
     {
      "type": "T5",
      "file": "plans/c61/T5.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 89
+     "kb": 77
     },
     {
      "type": "T6",
      "file": "plans/c61/T6.jpg",
-     "w": 706,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 99
+     "kb": 79
     },
     {
      "type": "T7",
      "file": "plans/c61/T7.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 89
+     "kb": 76
     },
     {
      "type": "T8",
      "file": "plans/c61/T8.jpg",
-     "w": 653,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 87
+     "kb": 77
     },
     {
      "type": "T9",
      "file": "plans/c61/T9.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1097,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 83
+     "kb": 79
     }
    ]
   },
@@ -3027,20 +3031,20 @@
     {
      "type": "T1",
      "file": "plans/c62/T1.jpg",
-     "w": 640,
-     "h": 873,
+     "w": 137,
+     "h": 346,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 38
+     "kb": 11
     },
     {
      "type": "T2",
      "file": "plans/c62/T2.jpg",
-     "w": 880,
-     "h": 1200,
+     "w": 233,
+     "h": 515,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 62
+     "kb": 24
     }
    ]
   },
@@ -3053,65 +3057,65 @@
     {
      "type": "59",
      "file": "plans/c63/59.jpg",
-     "w": 596,
-     "h": 1200,
+     "w": 1097,
+     "h": 519,
      "exclusiveM2": 59,
      "rooms": 7,
-     "kb": 73
+     "kb": 56
     },
     {
      "type": "60",
      "file": "plans/c63/60.jpg",
-     "w": 664,
-     "h": 1200,
+     "w": 1097,
+     "h": 519,
      "exclusiveM2": 60,
      "rooms": 7,
-     "kb": 76
+     "kb": 55
     },
     {
      "type": "74",
      "file": "plans/c63/74.jpg",
-     "w": 645,
-     "h": 1200,
+     "w": 1099,
+     "h": 519,
      "exclusiveM2": 74,
      "rooms": 11,
-     "kb": 75
+     "kb": 55
     },
     {
      "type": "74-2",
      "file": "plans/c63/74-2.jpg",
-     "w": 645,
-     "h": 1200,
+     "w": 1098,
+     "h": 518,
      "exclusiveM2": 74,
      "rooms": 10,
-     "kb": 77
+     "kb": 55
     },
     {
      "type": "74-3",
      "file": "plans/c63/74-3.jpg",
-     "w": 645,
-     "h": 1200,
+     "w": 1097,
+     "h": 519,
      "exclusiveM2": 74,
      "rooms": 8,
-     "kb": 77
+     "kb": 55
     },
     {
      "type": "T6",
      "file": "plans/c63/T6.jpg",
-     "w": 661,
+     "w": 1088,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 106
+     "kb": 128
     },
     {
      "type": "T7",
      "file": "plans/c63/T7.jpg",
-     "w": 661,
+     "w": 1088,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 106
+     "kb": 128
     }
    ]
   },
@@ -3124,119 +3128,119 @@
     {
      "type": "74",
      "file": "plans/c64/74.jpg",
-     "w": 925,
-     "h": 1200,
+     "w": 1099,
+     "h": 566,
      "exclusiveM2": 74,
      "rooms": 5,
-     "kb": 107
+     "kb": 89
     },
     {
      "type": "75A",
      "file": "plans/c64/75A.jpg",
-     "w": 920,
-     "h": 1200,
+     "w": 1099,
+     "h": 566,
      "exclusiveM2": 74.9,
      "rooms": 6,
-     "kb": 110
+     "kb": 89
     },
     {
      "type": "85",
      "file": "plans/c64/85.jpg",
-     "w": 933,
-     "h": 1200,
+     "w": 1099,
+     "h": 566,
      "exclusiveM2": 84.95,
      "rooms": 6,
-     "kb": 106
+     "kb": 90
     },
     {
      "type": "126",
      "file": "plans/c64/126.jpg",
-     "w": 726,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": 126.25,
      "rooms": 4,
-     "kb": 102
+     "kb": 89
     },
     {
      "type": "127P",
      "file": "plans/c64/127P.jpg",
-     "w": 717,
-     "h": 1200,
+     "w": 1098,
+     "h": 567,
      "exclusiveM2": 127.33,
      "rooms": 6,
-     "kb": 98
+     "kb": 90
     },
     {
      "type": "T1",
      "file": "plans/c64/T1.jpg",
-     "w": 925,
-     "h": 1200,
+     "w": 1099,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 110
+     "kb": 89
     },
     {
      "type": "T11",
      "file": "plans/c64/T11.jpg",
-     "w": 932,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 109
+     "kb": 90
     },
     {
      "type": "T12",
      "file": "plans/c64/T12.jpg",
-     "w": 905,
-     "h": 1200,
+     "w": 1099,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 108
+     "kb": 90
     },
     {
      "type": "T2",
      "file": "plans/c64/T2.jpg",
-     "w": 805,
-     "h": 1200,
+     "w": 1081,
+     "h": 816,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 104
+     "kb": 82
     },
     {
      "type": "T3",
      "file": "plans/c64/T3.jpg",
-     "w": 938,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 109
+     "kb": 90
     },
     {
      "type": "T4",
      "file": "plans/c64/T4.jpg",
-     "w": 805,
-     "h": 1200,
+     "w": 1081,
+     "h": 816,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 104
+     "kb": 82
     },
     {
      "type": "T5",
      "file": "plans/c64/T5.jpg",
-     "w": 957,
-     "h": 1200,
+     "w": 1099,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 110
+     "kb": 90
     },
     {
      "type": "T6",
      "file": "plans/c64/T6.jpg",
-     "w": 835,
-     "h": 1200,
+     "w": 1099,
+     "h": 565,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 102
+     "kb": 89
     }
    ]
   },
@@ -3249,11 +3253,11 @@
     {
      "type": "85",
      "file": "plans/c67/85.jpg",
-     "w": 759,
-     "h": 1200,
+     "w": 908,
+     "h": 672,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 118
+     "kb": 87
     }
    ]
   },
@@ -3266,11 +3270,11 @@
     {
      "type": "T1",
      "file": "plans/c68/T1.jpg",
-     "w": 428,
-     "h": 1200,
+     "w": 597,
+     "h": 473,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 66
+     "kb": 50
     }
    ]
   },
@@ -3283,11 +3287,11 @@
     {
      "type": "T1",
      "file": "plans/c69/T1.jpg",
-     "w": 1106,
-     "h": 1200,
+     "w": 1200,
+     "h": 103,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 191
+     "kb": 18
     }
    ]
   },
@@ -3300,11 +3304,11 @@
     {
      "type": "T1",
      "file": "plans/c70/T1.jpg",
-     "w": 951,
-     "h": 880,
+     "w": 660,
+     "h": 492,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 58
+     "kb": 39
     }
    ]
   },
@@ -3317,11 +3321,11 @@
     {
      "type": "T1",
      "file": "plans/c65/T1.jpg",
-     "w": 834,
-     "h": 1200,
+     "w": 837,
+     "h": 1040,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 104
+     "kb": 85
     }
    ]
   },
@@ -3334,11 +3338,11 @@
     {
      "type": "T1",
      "file": "plans/c66/T1.jpg",
-     "w": 834,
-     "h": 1200,
+     "w": 837,
+     "h": 1040,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 104
+     "kb": 85
     }
    ]
   },
@@ -3351,11 +3355,11 @@
     {
      "type": "T1",
      "file": "plans/c71/T1.jpg",
-     "w": 444,
-     "h": 1200,
+     "w": 558,
+     "h": 449,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 58
+     "kb": 42
     }
    ]
   },
@@ -3368,47 +3372,47 @@
     {
      "type": "59",
      "file": "plans/c72/59.jpg",
-     "w": 596,
-     "h": 1200,
+     "w": 1097,
+     "h": 519,
      "exclusiveM2": 59,
      "rooms": 7,
-     "kb": 73
+     "kb": 56
     },
     {
      "type": "60",
      "file": "plans/c72/60.jpg",
-     "w": 664,
-     "h": 1200,
+     "w": 1097,
+     "h": 519,
      "exclusiveM2": 60,
      "rooms": 7,
-     "kb": 76
+     "kb": 55
     },
     {
      "type": "74",
      "file": "plans/c72/74.jpg",
-     "w": 645,
-     "h": 1200,
+     "w": 1099,
+     "h": 519,
      "exclusiveM2": 74,
      "rooms": 11,
-     "kb": 75
+     "kb": 55
     },
     {
      "type": "74-2",
      "file": "plans/c72/74-2.jpg",
-     "w": 645,
-     "h": 1200,
+     "w": 1098,
+     "h": 518,
      "exclusiveM2": 74,
      "rooms": 10,
-     "kb": 77
+     "kb": 55
     },
     {
      "type": "74-3",
      "file": "plans/c72/74-3.jpg",
-     "w": 645,
-     "h": 1200,
+     "w": 1097,
+     "h": 519,
      "exclusiveM2": 74,
      "rooms": 8,
-     "kb": 77
+     "kb": 55
     }
    ]
   },
@@ -3421,20 +3425,20 @@
     {
      "type": "T1",
      "file": "plans/c73/T1.jpg",
-     "w": 751,
+     "w": 766,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 98
+     "kb": 91
     },
     {
      "type": "T2",
      "file": "plans/c73/T2.jpg",
-     "w": 751,
+     "w": 766,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 98
+     "kb": 91
     }
    ]
   },
@@ -3447,20 +3451,20 @@
     {
      "type": "T1",
      "file": "plans/c74/T1.jpg",
-     "w": 751,
+     "w": 766,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 98
+     "kb": 91
     },
     {
      "type": "T2",
      "file": "plans/c74/T2.jpg",
-     "w": 751,
+     "w": 766,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 98
+     "kb": 91
     }
    ]
   },
@@ -3473,11 +3477,11 @@
     {
      "type": "59",
      "file": "plans/c76/59.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 457,
+     "h": 694,
      "exclusiveM2": 59,
      "rooms": 4,
-     "kb": 69
+     "kb": 34
     }
    ]
   },
@@ -3490,11 +3494,11 @@
     {
      "type": "59",
      "file": "plans/c75/59.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 457,
+     "h": 694,
      "exclusiveM2": 59,
      "rooms": 4,
-     "kb": 69
+     "kb": 34
     }
    ]
   },
@@ -3507,11 +3511,11 @@
     {
      "type": "T1",
      "file": "plans/c77/T1.jpg",
-     "w": 827,
-     "h": 1200,
+     "w": 758,
+     "h": 526,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 83
+     "kb": 57
     }
    ]
   },
@@ -3524,20 +3528,20 @@
     {
      "type": "60",
      "file": "plans/c78/60.jpg",
-     "w": 1172,
-     "h": 1200,
+     "w": 1180,
+     "h": 766,
      "exclusiveM2": 59.98,
      "rooms": 5,
-     "kb": 116
+     "kb": 104
     },
     {
      "type": "75",
      "file": "plans/c78/75.jpg",
-     "w": 1129,
-     "h": 1200,
+     "w": 1113,
+     "h": 1164,
      "exclusiveM2": 74.95,
      "rooms": 3,
-     "kb": 100
+     "kb": 122
     }
    ]
   },
@@ -3550,83 +3554,83 @@
     {
      "type": "85",
      "file": "plans/c79/85.jpg",
-     "w": 776,
-     "h": 1200,
+     "w": 1097,
+     "h": 329,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 77
+     "kb": 60
     },
     {
      "type": "85-2",
      "file": "plans/c79/85-2.jpg",
-     "w": 749,
-     "h": 1200,
+     "w": 1099,
+     "h": 329,
      "exclusiveM2": 84.99,
      "rooms": 7,
-     "kb": 70
+     "kb": 60
     },
     {
      "type": "121",
      "file": "plans/c79/121.jpg",
-     "w": 695,
-     "h": 1200,
+     "w": 1098,
+     "h": 329,
      "exclusiveM2": 120.81,
      "rooms": 10,
-     "kb": 82
+     "kb": 60
     },
     {
      "type": "145",
      "file": "plans/c79/145.jpg",
-     "w": 824,
-     "h": 1200,
+     "w": 1098,
+     "h": 329,
      "exclusiveM2": 144.87,
      "rooms": 7,
-     "kb": 95
+     "kb": 60
     },
     {
      "type": "156",
      "file": "plans/c79/156.jpg",
-     "w": 841,
-     "h": 1200,
+     "w": 1099,
+     "h": 330,
      "exclusiveM2": 155.76,
      "rooms": 9,
-     "kb": 103
+     "kb": 60
     },
     {
      "type": "T3",
      "file": "plans/c79/T3.jpg",
-     "w": 725,
-     "h": 1200,
+     "w": 1098,
+     "h": 330,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 73
+     "kb": 60
     },
     {
      "type": "T7",
      "file": "plans/c79/T7.jpg",
-     "w": 863,
-     "h": 1200,
+     "w": 1098,
+     "h": 306,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 150
+     "kb": 71
     },
     {
      "type": "T8",
      "file": "plans/c79/T8.jpg",
-     "w": 434,
-     "h": 1200,
+     "w": 637,
+     "h": 228,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 102
+     "kb": 31
     },
     {
      "type": "T9",
      "file": "plans/c79/T9.jpg",
-     "w": 711,
-     "h": 1200,
+     "w": 1098,
+     "h": 330,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 74
+     "kb": 60
     }
    ]
   },
@@ -3639,38 +3643,38 @@
     {
      "type": "85",
      "file": "plans/c80/85.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": 84.85,
      "rooms": 5,
-     "kb": 103
+     "kb": 110
     },
     {
      "type": "110",
      "file": "plans/c80/110.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": 110.36,
      "rooms": 3,
-     "kb": 99
+     "kb": 105
     },
     {
      "type": "T1",
      "file": "plans/c80/T1.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 77
+     "kb": 81
     },
     {
      "type": "T2",
      "file": "plans/c80/T2.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 93
+     "kb": 99
     }
    ]
   },
@@ -3683,11 +3687,11 @@
     {
      "type": "T1",
      "file": "plans/c81/T1.jpg",
-     "w": 1055,
-     "h": 1200,
+     "w": 706,
+     "h": 273,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 122
+     "kb": 31
     }
    ]
   },
@@ -3700,11 +3704,11 @@
     {
      "type": "T1",
      "file": "plans/c82/T1.jpg",
-     "w": 396,
-     "h": 1200,
+     "w": 626,
+     "h": 429,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 61
+     "kb": 48
     }
    ]
   },
@@ -3717,56 +3721,56 @@
     {
      "type": "60",
      "file": "plans/c83/60.jpg",
-     "w": 450,
-     "h": 1200,
+     "w": 665,
+     "h": 448,
      "exclusiveM2": 59.98,
      "rooms": 9,
-     "kb": 61
+     "kb": 42
     },
     {
      "type": "130",
      "file": "plans/c83/130.jpg",
-     "w": 440,
-     "h": 1200,
+     "w": 517,
+     "h": 444,
      "exclusiveM2": 130,
      "rooms": 9,
-     "kb": 62
+     "kb": 18
     },
     {
      "type": "T2",
      "file": "plans/c83/T2.jpg",
-     "w": 414,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 49
-    },
-    {
-     "type": "T3",
-     "file": "plans/c83/T3.jpg",
-     "w": 435,
-     "h": 1200,
+     "w": 709,
+     "h": 510,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 57
+     "kb": 42
+    },
+    {
+     "type": "T4",
+     "file": "plans/c83/T4.jpg",
+     "w": 568,
+     "h": 606,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 37
     },
     {
      "type": "T5",
      "file": "plans/c83/T5.jpg",
-     "w": 434,
-     "h": 1200,
+     "w": 734,
+     "h": 512,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 56
+     "kb": 43
     },
     {
      "type": "T6",
      "file": "plans/c83/T6.jpg",
-     "w": 379,
-     "h": 1200,
+     "w": 599,
+     "h": 742,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 49
+     "kb": 44
     }
    ]
   },
@@ -3779,53 +3783,53 @@
     {
      "type": "60A",
      "file": "plans/c84/60A.jpg",
-     "w": 288,
-     "h": 1200,
+     "w": 542,
+     "h": 351,
      "exclusiveM2": 59.98,
      "rooms": 9,
-     "kb": 44
+     "kb": 24
     },
     {
-     "type": "T10",
-     "file": "plans/c84/T10.jpg",
-     "w": 277,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 7,
-     "kb": 44
-    },
-    {
-     "type": "T2",
-     "file": "plans/c84/T2.jpg",
-     "w": 443,
-     "h": 1200,
+     "type": "T1",
+     "file": "plans/c84/T1.jpg",
+     "w": 1000,
+     "h": 759,
      "exclusiveM2": null,
      "rooms": 10,
      "kb": 65
     },
     {
+     "type": "T10",
+     "file": "plans/c84/T10.jpg",
+     "w": 552,
+     "h": 373,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 24
+    },
+    {
      "type": "T3",
      "file": "plans/c84/T3.jpg",
-     "w": 461,
-     "h": 1200,
+     "w": 966,
+     "h": 684,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 64
+     "kb": 60
     },
     {
      "type": "T4",
      "file": "plans/c84/T4.jpg",
-     "w": 277,
-     "h": 1200,
+     "w": 568,
+     "h": 383,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 44
+     "kb": 25
     },
     {
      "type": "T5",
      "file": "plans/c84/T5.jpg",
-     "w": 447,
-     "h": 1200,
+     "w": 1012,
+     "h": 685,
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 63
@@ -3833,38 +3837,38 @@
     {
      "type": "T6",
      "file": "plans/c84/T6.jpg",
-     "w": 233,
-     "h": 1200,
+     "w": 529,
+     "h": 675,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 37
+     "kb": 33
     },
     {
      "type": "T7",
      "file": "plans/c84/T7.jpg",
-     "w": 399,
-     "h": 1200,
+     "w": 818,
+     "h": 1021,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 53
+     "kb": 70
     },
     {
      "type": "T8",
      "file": "plans/c84/T8.jpg",
-     "w": 224,
-     "h": 1200,
+     "w": 733,
+     "h": 1023,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 40
+     "kb": 65
     },
     {
      "type": "T9",
      "file": "plans/c84/T9.jpg",
-     "w": 376,
+     "w": 696,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 54
+     "kb": 55
     }
    ]
   },
@@ -3877,53 +3881,53 @@
     {
      "type": "60A",
      "file": "plans/c85/60A.jpg",
-     "w": 288,
-     "h": 1200,
+     "w": 542,
+     "h": 351,
      "exclusiveM2": 59.98,
      "rooms": 9,
-     "kb": 44
+     "kb": 24
     },
     {
-     "type": "T10",
-     "file": "plans/c85/T10.jpg",
-     "w": 277,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 7,
-     "kb": 44
-    },
-    {
-     "type": "T2",
-     "file": "plans/c85/T2.jpg",
-     "w": 443,
-     "h": 1200,
+     "type": "T1",
+     "file": "plans/c85/T1.jpg",
+     "w": 1000,
+     "h": 759,
      "exclusiveM2": null,
      "rooms": 10,
      "kb": 65
     },
     {
-     "type": "T3",
-     "file": "plans/c85/T3.jpg",
-     "w": 461,
-     "h": 1200,
+     "type": "T10",
+     "file": "plans/c85/T10.jpg",
+     "w": 552,
+     "h": 373,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 24
+    },
+    {
+     "type": "T2",
+     "file": "plans/c85/T2.jpg",
+     "w": 966,
+     "h": 684,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 64
+     "kb": 60
     },
     {
      "type": "T4",
      "file": "plans/c85/T4.jpg",
-     "w": 277,
-     "h": 1200,
+     "w": 568,
+     "h": 383,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 44
+     "kb": 25
     },
     {
      "type": "T5",
      "file": "plans/c85/T5.jpg",
-     "w": 447,
-     "h": 1200,
+     "w": 1012,
+     "h": 685,
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 63
@@ -3931,38 +3935,38 @@
     {
      "type": "T6",
      "file": "plans/c85/T6.jpg",
-     "w": 399,
-     "h": 1200,
+     "w": 818,
+     "h": 1021,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 53
+     "kb": 70
     },
     {
      "type": "T7",
      "file": "plans/c85/T7.jpg",
-     "w": 233,
-     "h": 1200,
+     "w": 529,
+     "h": 675,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 37
+     "kb": 33
     },
     {
      "type": "T8",
      "file": "plans/c85/T8.jpg",
-     "w": 224,
-     "h": 1200,
+     "w": 733,
+     "h": 1023,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 40
+     "kb": 65
     },
     {
      "type": "T9",
      "file": "plans/c85/T9.jpg",
-     "w": 376,
+     "w": 696,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 54
+     "kb": 55
     }
    ]
   },
@@ -3975,164 +3979,164 @@
     {
      "type": "81",
      "file": "plans/c86/81.jpg",
-     "w": 419,
-     "h": 1200,
+     "w": 739,
+     "h": 493,
      "exclusiveM2": 80.97,
-     "rooms": 9,
-     "kb": 43
-    },
-    {
-     "type": "85",
-     "file": "plans/c86/85.jpg",
-     "w": 402,
-     "h": 1200,
-     "exclusiveM2": 84.79,
-     "rooms": 10,
-     "kb": 44
-    },
-    {
-     "type": "85-2",
-     "file": "plans/c86/85-2.jpg",
-     "w": 417,
-     "h": 1200,
-     "exclusiveM2": 84.9,
-     "rooms": 9,
-     "kb": 44
-    },
-    {
-     "type": "85-3",
-     "file": "plans/c86/85-3.jpg",
-     "w": 394,
-     "h": 1200,
-     "exclusiveM2": 84.97,
      "rooms": 9,
      "kb": 40
     },
     {
+     "type": "85",
+     "file": "plans/c86/85.jpg",
+     "w": 653,
+     "h": 682,
+     "exclusiveM2": 84.79,
+     "rooms": 10,
+     "kb": 53
+    },
+    {
+     "type": "85-2",
+     "file": "plans/c86/85-2.jpg",
+     "w": 830,
+     "h": 527,
+     "exclusiveM2": 84.9,
+     "rooms": 9,
+     "kb": 40
+    },
+    {
+     "type": "85-3",
+     "file": "plans/c86/85-3.jpg",
+     "w": 563,
+     "h": 700,
+     "exclusiveM2": 84.97,
+     "rooms": 9,
+     "kb": 48
+    },
+    {
      "type": "135-2",
      "file": "plans/c86/135-2.jpg",
-     "w": 398,
-     "h": 1200,
+     "w": 1056,
+     "h": 683,
      "exclusiveM2": 134.94,
      "rooms": 10,
-     "kb": 45
+     "kb": 57
     },
     {
      "type": "135-3",
      "file": "plans/c86/135-3.jpg",
-     "w": 307,
-     "h": 1200,
+     "w": 647,
+     "h": 325,
      "exclusiveM2": 134.96,
      "rooms": 8,
-     "kb": 34
+     "kb": 25
     },
     {
      "type": "135",
      "file": "plans/c86/135.jpg",
-     "w": 398,
-     "h": 1200,
+     "w": 1027,
+     "h": 679,
      "exclusiveM2": 135,
      "rooms": 10,
-     "kb": 43
+     "kb": 51
     },
     {
      "type": "16",
      "file": "plans/c86/16.jpg",
-     "w": 299,
-     "h": 1200,
+     "w": 612,
+     "h": 395,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 34
+     "kb": 27
     },
     {
      "type": "17",
      "file": "plans/c86/17.jpg",
-     "w": 413,
-     "h": 1200,
+     "w": 1136,
+     "h": 572,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 46
+     "kb": 58
     },
     {
      "type": "T1",
      "file": "plans/c86/T1.jpg",
-     "w": 419,
-     "h": 1200,
+     "w": 739,
+     "h": 519,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 43
+     "kb": 41
     },
     {
      "type": "T10",
      "file": "plans/c86/T10.jpg",
-     "w": 266,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 34
-    },
-    {
-     "type": "T11",
-     "file": "plans/c86/T11.jpg",
-     "w": 396,
-     "h": 1200,
+     "w": 552,
+     "h": 578,
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 41
     },
     {
+     "type": "T11",
+     "file": "plans/c86/T11.jpg",
+     "w": 655,
+     "h": 679,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 52
+    },
+    {
      "type": "T13",
      "file": "plans/c86/T13.jpg",
-     "w": 298,
-     "h": 1200,
+     "w": 646,
+     "h": 427,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 38
+     "kb": 39
     },
     {
      "type": "T14",
      "file": "plans/c86/T14.jpg",
-     "w": 258,
-     "h": 1200,
+     "w": 543,
+     "h": 672,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 32
+     "kb": 42
     },
     {
      "type": "T16",
      "file": "plans/c86/T16.jpg",
-     "w": 265,
-     "h": 1200,
+     "w": 552,
+     "h": 570,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 33
+     "kb": 39
     },
     {
      "type": "T17",
      "file": "plans/c86/T17.jpg",
-     "w": 299,
-     "h": 1200,
+     "w": 635,
+     "h": 418,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 35
+     "kb": 28
     },
     {
      "type": "T7",
      "file": "plans/c86/T7.jpg",
-     "w": 294,
-     "h": 1200,
+     "w": 645,
+     "h": 452,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 38
+     "kb": 32
     },
     {
      "type": "T8",
      "file": "plans/c86/T8.jpg",
-     "w": 294,
-     "h": 1200,
+     "w": 639,
+     "h": 404,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 35
+     "kb": 36
     }
    ]
   },
@@ -4145,56 +4149,56 @@
     {
      "type": "85-2",
      "file": "plans/c87/85-2.jpg",
-     "w": 298,
-     "h": 1200,
+     "w": 745,
+     "h": 437,
      "exclusiveM2": 84.98,
      "rooms": 7,
-     "kb": 45
+     "kb": 27
     },
     {
      "type": "85-3",
      "file": "plans/c87/85-3.jpg",
-     "w": 298,
-     "h": 1200,
+     "w": 745,
+     "h": 437,
      "exclusiveM2": 84.98,
      "rooms": 7,
-     "kb": 44
+     "kb": 26
     },
     {
      "type": "85-4",
      "file": "plans/c87/85-4.jpg",
-     "w": 365,
-     "h": 1200,
+     "w": 1117,
+     "h": 808,
      "exclusiveM2": 84.98,
      "rooms": 7,
-     "kb": 55
+     "kb": 77
     },
     {
      "type": "85",
      "file": "plans/c87/85.jpg",
-     "w": 365,
-     "h": 1200,
+     "w": 1117,
+     "h": 788,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 56
+     "kb": 78
     },
     {
      "type": "T2",
      "file": "plans/c87/T2.jpg",
-     "w": 365,
-     "h": 1200,
+     "w": 1122,
+     "h": 793,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 57
+     "kb": 80
     },
     {
      "type": "T3",
      "file": "plans/c87/T3.jpg",
-     "w": 298,
-     "h": 1200,
+     "w": 745,
+     "h": 437,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 44
+     "kb": 27
     }
    ]
   },
@@ -4207,146 +4211,146 @@
     {
      "type": "85",
      "file": "plans/c88/85.jpg",
-     "w": 545,
-     "h": 1200,
+     "w": 470,
+     "h": 646,
      "exclusiveM2": 84.68,
      "rooms": 6,
-     "kb": 61
+     "kb": 52
     },
     {
      "type": "117",
      "file": "plans/c88/117.jpg",
-     "w": 294,
-     "h": 1200,
+     "w": 763,
+     "h": 507,
      "exclusiveM2": 116.64,
-     "rooms": 6,
-     "kb": 59
-    },
-    {
-     "type": "15",
-     "file": "plans/c88/15.jpg",
-     "w": 602,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 6,
-     "kb": 89
-    },
-    {
-     "type": "16",
-     "file": "plans/c88/16.jpg",
-     "w": 290,
-     "h": 1200,
-     "exclusiveM2": null,
      "rooms": 6,
      "kb": 58
     },
     {
-     "type": "T1",
-     "file": "plans/c88/T1.jpg",
-     "w": 563,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 75
-    },
-    {
-     "type": "T10",
-     "file": "plans/c88/T10.jpg",
-     "w": 319,
-     "h": 1200,
+     "type": "15",
+     "file": "plans/c88/15.jpg",
+     "w": 704,
+     "h": 579,
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 61
     },
     {
+     "type": "16",
+     "file": "plans/c88/16.jpg",
+     "w": 634,
+     "h": 522,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 56
+    },
+    {
+     "type": "T1",
+     "file": "plans/c88/T1.jpg",
+     "w": 580,
+     "h": 713,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 67
+    },
+    {
+     "type": "T10",
+     "file": "plans/c88/T10.jpg",
+     "w": 680,
+     "h": 368,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 47
+    },
+    {
      "type": "T14",
      "file": "plans/c88/T14.jpg",
-     "w": 641,
-     "h": 1200,
+     "w": 168,
+     "h": 356,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 85
+     "kb": 10
     },
     {
      "type": "T15",
      "file": "plans/c88/T15.jpg",
-     "w": 339,
-     "h": 1200,
+     "w": 743,
+     "h": 491,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 58
+     "kb": 52
     },
     {
      "type": "T16",
      "file": "plans/c88/T16.jpg",
-     "w": 307,
-     "h": 1200,
+     "w": 898,
+     "h": 675,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 63
+     "kb": 67
     },
     {
      "type": "T2",
      "file": "plans/c88/T2.jpg",
-     "w": 629,
-     "h": 1200,
+     "w": 651,
+     "h": 478,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 84
+     "kb": 58
     },
     {
      "type": "T3",
      "file": "plans/c88/T3.jpg",
-     "w": 353,
-     "h": 1200,
+     "w": 578,
+     "h": 398,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 62
+     "kb": 43
     },
     {
      "type": "T4",
      "file": "plans/c88/T4.jpg",
-     "w": 612,
-     "h": 1200,
+     "w": 759,
+     "h": 502,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 95
+     "kb": 67
     },
     {
      "type": "T5",
      "file": "plans/c88/T5.jpg",
-     "w": 658,
-     "h": 1200,
+     "w": 760,
+     "h": 411,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 97
+     "kb": 57
     },
     {
      "type": "T6",
      "file": "plans/c88/T6.jpg",
-     "w": 623,
-     "h": 1200,
+     "w": 691,
+     "h": 503,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 96
+     "kb": 65
     },
     {
      "type": "T7",
      "file": "plans/c88/T7.jpg",
-     "w": 271,
-     "h": 1200,
+     "w": 300,
+     "h": 301,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 53
+     "kb": 17
     },
     {
      "type": "T9",
      "file": "plans/c88/T9.jpg",
-     "w": 306,
-     "h": 1200,
+     "w": 561,
+     "h": 553,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 52
+     "kb": 41
     }
    ]
   },
@@ -4359,24 +4363,24 @@
     {
      "type": "T1",
      "file": "plans/c89/T1.jpg",
-     "w": 554,
-     "h": 443,
+     "w": 553,
+     "h": 442,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 32,
-     "mmPerPx": 45.497,
-     "scaleConf": "보통"
+     "kb": 34,
+     "mmPerPx": 45.54,
+     "scaleConf": "확실"
     },
     {
      "type": "T2",
      "file": "plans/c89/T2.jpg",
-     "w": 554,
-     "h": 443,
+     "w": 553,
+     "h": 442,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 30,
-     "mmPerPx": 41.616,
-     "scaleConf": "보통"
+     "kb": 33,
+     "mmPerPx": 45.039,
+     "scaleConf": "확실"
     }
    ]
   },
@@ -4389,29 +4393,29 @@
     {
      "type": "124",
      "file": "plans/c90/124.jpg",
-     "w": 215,
-     "h": 1200,
+     "w": 1163,
+     "h": 515,
      "exclusiveM2": 123.82,
      "rooms": 8,
-     "kb": 40
+     "kb": 58
     },
     {
      "type": "T1",
      "file": "plans/c90/T1.jpg",
-     "w": 285,
-     "h": 1200,
+     "w": 1169,
+     "h": 512,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 40
+     "kb": 54
     },
     {
      "type": "T2",
      "file": "plans/c90/T2.jpg",
-     "w": 285,
-     "h": 1200,
+     "w": 1169,
+     "h": 512,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 40
+     "kb": 46
     }
    ]
   },
@@ -4424,11 +4428,11 @@
     {
      "type": "T1",
      "file": "plans/c91/T1.jpg",
-     "w": 559,
-     "h": 1200,
+     "w": 484,
+     "h": 656,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 46
+     "kb": 47
     }
    ]
   },
@@ -4441,47 +4445,47 @@
     {
      "type": "T1",
      "file": "plans/c92/T1.jpg",
-     "w": 406,
-     "h": 1200,
+     "w": 1048,
+     "h": 583,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 68
+     "kb": 82
     },
     {
      "type": "T2",
      "file": "plans/c92/T2.jpg",
-     "w": 395,
-     "h": 1200,
+     "w": 1107,
+     "h": 767,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 65
+     "kb": 99
     },
     {
      "type": "T3",
      "file": "plans/c92/T3.jpg",
-     "w": 397,
-     "h": 1200,
+     "w": 999,
+     "h": 834,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 55
+     "kb": 80
     },
     {
      "type": "T4",
      "file": "plans/c92/T4.jpg",
-     "w": 449,
-     "h": 1200,
+     "w": 817,
+     "h": 550,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 66
+     "kb": 62
     },
     {
      "type": "T5",
      "file": "plans/c92/T5.jpg",
-     "w": 440,
-     "h": 1200,
+     "w": 829,
+     "h": 560,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 63
+     "kb": 61
     }
    ]
   },
@@ -4495,100 +4499,100 @@
      "type": "15",
      "file": "plans/c93/15.jpg",
      "w": 1200,
-     "h": 574,
+     "h": 570,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 78
+     "kb": 74
     },
     {
      "type": "16",
      "file": "plans/c93/16.jpg",
-     "w": 935,
-     "h": 1200,
+     "w": 628,
+     "h": 799,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 120
+     "kb": 45
     },
     {
      "type": "T1",
      "file": "plans/c93/T1.jpg",
      "w": 1200,
-     "h": 817,
+     "h": 794,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 83
+     "kb": 81
     },
     {
      "type": "T10",
      "file": "plans/c93/T10.jpg",
-     "w": 1033,
-     "h": 1200,
+     "w": 576,
+     "h": 674,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 103
+     "kb": 33
     },
     {
      "type": "T11",
      "file": "plans/c93/T11.jpg",
      "w": 1200,
-     "h": 574,
+     "h": 570,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 78
+     "kb": 73
     },
     {
      "type": "T2",
      "file": "plans/c93/T2.jpg",
      "w": 1200,
-     "h": 817,
+     "h": 794,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 79
+     "kb": 77
     },
     {
      "type": "T3",
      "file": "plans/c93/T3.jpg",
      "w": 1200,
-     "h": 954,
+     "h": 961,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 87
+     "kb": 85
     },
     {
      "type": "T5",
      "file": "plans/c93/T5.jpg",
      "w": 1200,
-     "h": 954,
+     "h": 959,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 90
+     "kb": 86
     },
     {
      "type": "T6",
      "file": "plans/c93/T6.jpg",
      "w": 1200,
-     "h": 703,
+     "h": 745,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 74
+     "kb": 76
     },
     {
      "type": "T7",
      "file": "plans/c93/T7.jpg",
      "w": 1200,
-     "h": 703,
+     "h": 745,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 75
+     "kb": 78
     },
     {
      "type": "T8",
      "file": "plans/c93/T8.jpg",
-     "w": 972,
-     "h": 1200,
+     "w": 576,
+     "h": 735,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 97
+     "kb": 37
     }
    ]
   },
@@ -4601,47 +4605,47 @@
     {
      "type": "79",
      "file": "plans/c94/79.jpg",
-     "w": 789,
-     "h": 1200,
+     "w": 1189,
+     "h": 522,
      "exclusiveM2": 78.99,
      "rooms": 8,
-     "kb": 98
+     "kb": 85
     },
     {
      "type": "85",
      "file": "plans/c94/85.jpg",
-     "w": 789,
-     "h": 1200,
+     "w": 521,
+     "h": 322,
      "exclusiveM2": 84.93,
      "rooms": 8,
-     "kb": 97
+     "kb": 32
     },
     {
      "type": "100",
      "file": "plans/c94/100.jpg",
-     "w": 789,
-     "h": 1200,
+     "w": 493,
+     "h": 316,
      "exclusiveM2": 99.71,
      "rooms": 7,
-     "kb": 98
+     "kb": 30
     },
     {
      "type": "T3",
      "file": "plans/c94/T3.jpg",
-     "w": 789,
-     "h": 1200,
+     "w": 1189,
+     "h": 459,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 97
+     "kb": 59
     },
     {
      "type": "T4",
      "file": "plans/c94/T4.jpg",
-     "w": 789,
-     "h": 1200,
+     "w": 460,
+     "h": 318,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 96
+     "kb": 27
     }
    ]
   },
@@ -4654,11 +4658,11 @@
     {
      "type": "T1",
      "file": "plans/c95/T1.jpg",
-     "w": 935,
-     "h": 1200,
+     "w": 636,
+     "h": 480,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 103
+     "kb": 41
     }
    ]
   },
@@ -4671,11 +4675,11 @@
     {
      "type": "T1",
      "file": "plans/c96/T1.jpg",
-     "w": 820,
-     "h": 1200,
+     "w": 1198,
+     "h": 299,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 94
+     "kb": 34
     }
    ]
   },
@@ -4688,47 +4692,47 @@
     {
      "type": "T1",
      "file": "plans/c97/T1.jpg",
-     "w": 406,
-     "h": 1200,
+     "w": 1048,
+     "h": 583,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 68
+     "kb": 82
     },
     {
      "type": "T2",
      "file": "plans/c97/T2.jpg",
-     "w": 395,
-     "h": 1200,
+     "w": 1107,
+     "h": 767,
      "exclusiveM2": null,
      "rooms": 10,
-     "kb": 65
+     "kb": 99
     },
     {
      "type": "T3",
      "file": "plans/c97/T3.jpg",
-     "w": 397,
-     "h": 1200,
+     "w": 999,
+     "h": 834,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 55
+     "kb": 80
     },
     {
      "type": "T4",
      "file": "plans/c97/T4.jpg",
-     "w": 449,
-     "h": 1200,
+     "w": 817,
+     "h": 550,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 66
+     "kb": 62
     },
     {
      "type": "T5",
      "file": "plans/c97/T5.jpg",
-     "w": 440,
-     "h": 1200,
+     "w": 829,
+     "h": 560,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 63
+     "kb": 61
     }
    ]
   },
@@ -4741,29 +4745,29 @@
     {
      "type": "85-2",
      "file": "plans/c98/85-2.jpg",
-     "w": 1074,
-     "h": 1200,
+     "w": 1120,
+     "h": 341,
      "exclusiveM2": 84.94,
      "rooms": 6,
-     "kb": 95
+     "kb": 40
     },
     {
      "type": "85",
      "file": "plans/c98/85.jpg",
-     "w": 1200,
-     "h": 1148,
+     "w": 883,
+     "h": 656,
      "exclusiveM2": 84.96,
      "rooms": 7,
-     "kb": 116
+     "kb": 62
     },
     {
      "type": "85-3",
      "file": "plans/c98/85-3.jpg",
-     "w": 1200,
-     "h": 1148,
+     "w": 1121,
+     "h": 342,
      "exclusiveM2": 84.96,
      "rooms": 5,
-     "kb": 116
+     "kb": 40
     }
    ]
   },
@@ -4776,65 +4780,65 @@
     {
      "type": "118",
      "file": "plans/c99/118.jpg",
-     "w": 680,
-     "h": 1200,
+     "w": 1097,
+     "h": 379,
      "exclusiveM2": 117.99,
      "rooms": 8,
-     "kb": 88
+     "kb": 33
     },
     {
      "type": "T1",
      "file": "plans/c99/T1.jpg",
-     "w": 680,
-     "h": 1200,
+     "w": 1097,
+     "h": 379,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 91
+     "kb": 34
     },
     {
      "type": "T2",
      "file": "plans/c99/T2.jpg",
-     "w": 680,
-     "h": 1200,
+     "w": 1097,
+     "h": 379,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 90
+     "kb": 34
     },
     {
      "type": "T3",
      "file": "plans/c99/T3.jpg",
-     "w": 680,
-     "h": 1200,
+     "w": 1097,
+     "h": 379,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 84
+     "kb": 34
     },
     {
      "type": "T5",
      "file": "plans/c99/T5.jpg",
-     "w": 608,
-     "h": 1200,
+     "w": 1097,
+     "h": 379,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 84
+     "kb": 34
     },
     {
      "type": "T6",
      "file": "plans/c99/T6.jpg",
-     "w": 880,
-     "h": 1200,
+     "w": 1048,
+     "h": 742,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 90
+     "kb": 69
     },
     {
      "type": "T7",
      "file": "plans/c99/T7.jpg",
-     "w": 301,
-     "h": 1200,
+     "w": 638,
+     "h": 589,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 46
+     "kb": 35
     }
    ]
   },
@@ -4847,56 +4851,56 @@
     {
      "type": "T1",
      "file": "plans/c100/T1.jpg",
-     "w": 572,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 59
+     "kb": 45
     },
     {
      "type": "T2",
      "file": "plans/c100/T2.jpg",
-     "w": 649,
-     "h": 1200,
+     "w": 1098,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 67
+     "kb": 45
     },
     {
      "type": "T3",
      "file": "plans/c100/T3.jpg",
-     "w": 629,
-     "h": 1200,
+     "w": 1097,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 71
+     "kb": 44
     },
     {
      "type": "T4",
      "file": "plans/c100/T4.jpg",
-     "w": 649,
-     "h": 1200,
+     "w": 1098,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 67
+     "kb": 45
     },
     {
      "type": "T5",
      "file": "plans/c100/T5.jpg",
-     "w": 591,
-     "h": 1200,
+     "w": 1098,
+     "h": 566,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 71
+     "kb": 44
     },
     {
      "type": "T6",
      "file": "plans/c100/T6.jpg",
-     "w": 649,
-     "h": 1200,
+     "w": 1098,
+     "h": 567,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 70
+     "kb": 45
     }
    ]
   },
@@ -4909,74 +4913,74 @@
     {
      "type": "60",
      "file": "plans/c101/60.jpg",
-     "w": 784,
-     "h": 1200,
+     "w": 1098,
+     "h": 374,
      "exclusiveM2": 59.95,
      "rooms": 7,
-     "kb": 112
+     "kb": 73
     },
     {
      "type": "60-2",
      "file": "plans/c101/60-2.jpg",
-     "w": 784,
-     "h": 1200,
+     "w": 1023,
+     "h": 490,
      "exclusiveM2": 59.99,
      "rooms": 6,
-     "kb": 109
+     "kb": 72
     },
     {
      "type": "85-3",
      "file": "plans/c101/85-3.jpg",
-     "w": 621,
-     "h": 1200,
+     "w": 288,
+     "h": 525,
      "exclusiveM2": 84.89,
      "rooms": 7,
-     "kb": 83
+     "kb": 25
     },
     {
      "type": "85",
      "file": "plans/c101/85.jpg",
-     "w": 717,
-     "h": 1200,
+     "w": 988,
+     "h": 537,
      "exclusiveM2": 84.93,
      "rooms": 9,
-     "kb": 133
+     "kb": 56
     },
     {
      "type": "85-2",
      "file": "plans/c101/85-2.jpg",
-     "w": 730,
-     "h": 1200,
+     "w": 1093,
+     "h": 607,
      "exclusiveM2": 84.98,
      "rooms": 8,
-     "kb": 107
+     "kb": 77
     },
     {
      "type": "103",
      "file": "plans/c101/103.jpg",
-     "w": 703,
-     "h": 1200,
+     "w": 1081,
+     "h": 635,
      "exclusiveM2": 102.78,
      "rooms": 7,
-     "kb": 108
+     "kb": 63
     },
     {
      "type": "108",
      "file": "plans/c101/108.jpg",
-     "w": 703,
-     "h": 1200,
+     "w": 747,
+     "h": 630,
      "exclusiveM2": 107.87,
      "rooms": 9,
-     "kb": 129
+     "kb": 71
     },
     {
      "type": "T8",
      "file": "plans/c101/T8.jpg",
-     "w": 800,
-     "h": 1200,
+     "w": 1098,
+     "h": 405,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 113
+     "kb": 69
     }
    ]
   },
@@ -4989,29 +4993,31 @@
     {
      "type": "T1",
      "file": "plans/c102/T1.jpg",
-     "w": 436,
-     "h": 1200,
+     "w": 639,
+     "h": 495,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 62
+     "kb": 51,
+     "mmPerPx": 22.331,
+     "scaleConf": "보통"
     },
     {
      "type": "T2",
      "file": "plans/c102/T2.jpg",
-     "w": 428,
-     "h": 1200,
+     "w": 669,
+     "h": 634,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 60
+     "kb": 55
     },
     {
      "type": "T3",
      "file": "plans/c102/T3.jpg",
-     "w": 112,
+     "w": 111,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 32
+     "kb": 29
     }
    ]
   },
@@ -5024,11 +5030,13 @@
     {
      "type": "T1",
      "file": "plans/c103/T1.jpg",
-     "w": 399,
-     "h": 1200,
+     "w": 624,
+     "h": 552,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 56
+     "kb": 49,
+     "mmPerPx": 23.058,
+     "scaleConf": "보통"
     },
     {
      "type": "T2",
@@ -5037,7 +5045,7 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 43
+     "kb": 39
     }
    ]
   },
@@ -5050,11 +5058,11 @@
     {
      "type": "T1",
      "file": "plans/c104/T1.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 399,
+     "h": 268,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 93
+     "kb": 25
     }
    ]
   },
@@ -5067,11 +5075,11 @@
     {
      "type": "T1",
      "file": "plans/c105/T1.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 399,
+     "h": 268,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 93
+     "kb": 25
     }
    ]
   },
@@ -5084,38 +5092,38 @@
     {
      "type": "T1",
      "file": "plans/c106/T1.jpg",
-     "w": 680,
-     "h": 1200,
+     "w": 1095,
+     "h": 487,
      "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 100
+     "rooms": 9,
+     "kb": 62
     },
     {
      "type": "T2",
      "file": "plans/c106/T2.jpg",
-     "w": 675,
-     "h": 1200,
+     "w": 712,
+     "h": 628,
      "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 97
+     "rooms": 8,
+     "kb": 46
     },
     {
      "type": "T3",
      "file": "plans/c106/T3.jpg",
-     "w": 633,
-     "h": 1200,
+     "w": 1095,
+     "h": 376,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 80
+     "kb": 55
     },
     {
      "type": "T4",
      "file": "plans/c106/T4.jpg",
-     "w": 679,
-     "h": 1200,
+     "w": 1097,
+     "h": 481,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 98
+     "kb": 63
     }
    ]
   },
@@ -5128,38 +5136,38 @@
     {
      "type": "85",
      "file": "plans/c107/85.jpg",
-     "w": 528,
-     "h": 1200,
+     "w": 870,
+     "h": 295,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 75
+     "kb": 22
     },
     {
      "type": "102",
      "file": "plans/c107/102.jpg",
-     "w": 571,
-     "h": 1200,
+     "w": 414,
+     "h": 293,
      "exclusiveM2": 102,
      "rooms": 10,
-     "kb": 99
+     "kb": 10
     },
     {
      "type": "T2",
      "file": "plans/c107/T2.jpg",
-     "w": 576,
-     "h": 1200,
+     "w": 414,
+     "h": 295,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 88
+     "kb": 11
     },
     {
      "type": "T3",
      "file": "plans/c107/T3.jpg",
-     "w": 576,
-     "h": 1200,
+     "w": 415,
+     "h": 293,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 96
+     "kb": 11
     }
    ]
   },
@@ -5172,38 +5180,38 @@
     {
      "type": "85",
      "file": "plans/c108/85.jpg",
-     "w": 528,
-     "h": 1200,
+     "w": 870,
+     "h": 295,
      "exclusiveM2": 84.99,
      "rooms": 8,
-     "kb": 75
+     "kb": 22
     },
     {
      "type": "102",
      "file": "plans/c108/102.jpg",
-     "w": 571,
-     "h": 1200,
+     "w": 414,
+     "h": 293,
      "exclusiveM2": 102,
      "rooms": 10,
-     "kb": 99
+     "kb": 10
     },
     {
      "type": "T2",
      "file": "plans/c108/T2.jpg",
-     "w": 576,
-     "h": 1200,
+     "w": 414,
+     "h": 295,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 88
+     "kb": 11
     },
     {
      "type": "T3",
      "file": "plans/c108/T3.jpg",
-     "w": 576,
-     "h": 1200,
+     "w": 415,
+     "h": 293,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 96
+     "kb": 11
     }
    ]
   },
@@ -5216,20 +5224,20 @@
     {
      "type": "T1",
      "file": "plans/c109/T1.jpg",
-     "w": 536,
-     "h": 1200,
+     "w": 638,
+     "h": 649,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 95
+     "kb": 66
     },
     {
      "type": "T2",
      "file": "plans/c109/T2.jpg",
-     "w": 1100,
-     "h": 1019,
+     "w": 1099,
+     "h": 486,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 125
+     "kb": 67
     }
    ]
   },
@@ -5242,56 +5250,56 @@
     {
      "type": "T1",
      "file": "plans/c110/T1.jpg",
-     "w": 840,
-     "h": 848,
+     "w": 588,
+     "h": 538,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 66
+     "kb": 53
     },
     {
      "type": "T2",
      "file": "plans/c110/T2.jpg",
-     "w": 840,
-     "h": 900,
+     "w": 693,
+     "h": 820,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 63
+     "kb": 68
     },
     {
      "type": "T3",
      "file": "plans/c110/T3.jpg",
-     "w": 630,
-     "h": 1200,
+     "w": 656,
+     "h": 606,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 80
+     "kb": 59
     },
     {
      "type": "T4",
      "file": "plans/c110/T4.jpg",
-     "w": 840,
-     "h": 843,
+     "w": 698,
+     "h": 801,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 58
+     "kb": 62
     },
     {
      "type": "T5",
      "file": "plans/c110/T5.jpg",
-     "w": 840,
-     "h": 814,
+     "w": 716,
+     "h": 775,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 77
+     "kb": 80
     },
     {
      "type": "T6",
      "file": "plans/c110/T6.jpg",
-     "w": 840,
-     "h": 865,
+     "w": 699,
+     "h": 802,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 66
+     "kb": 70
     }
    ]
   },
@@ -5304,38 +5312,38 @@
     {
      "type": "85",
      "file": "plans/c111/85.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": 84.85,
      "rooms": 5,
-     "kb": 103
+     "kb": 110
     },
     {
      "type": "110",
      "file": "plans/c111/110.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": 110.36,
      "rooms": 3,
-     "kb": 99
+     "kb": 105
     },
     {
      "type": "T1",
      "file": "plans/c111/T1.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 77
+     "kb": 81
     },
     {
      "type": "T2",
      "file": "plans/c111/T2.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 93
+     "kb": 99
     }
    ]
   },
@@ -5348,38 +5356,38 @@
     {
      "type": "T1",
      "file": "plans/c112/T1.jpg",
-     "w": 646,
-     "h": 1200,
+     "w": 607,
+     "h": 424,
      "exclusiveM2": null,
-     "rooms": 6,
-     "kb": 63
+     "rooms": 7,
+     "kb": 45
     },
     {
      "type": "T2",
      "file": "plans/c112/T2.jpg",
-     "w": 662,
-     "h": 1200,
+     "w": 607,
+     "h": 423,
      "exclusiveM2": null,
-     "rooms": 7,
-     "kb": 67
+     "rooms": 6,
+     "kb": 45
     },
     {
      "type": "T3",
      "file": "plans/c112/T3.jpg",
-     "w": 662,
-     "h": 1200,
+     "w": 629,
+     "h": 477,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 68
+     "kb": 48
     },
     {
      "type": "T4",
      "file": "plans/c112/T4.jpg",
-     "w": 662,
-     "h": 1200,
+     "w": 765,
+     "h": 904,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 69
+     "kb": 92
     }
    ]
   },
@@ -5392,105 +5400,101 @@
     {
      "type": "60",
      "file": "plans/c113/60.jpg",
-     "w": 613,
-     "h": 1200,
+     "w": 331,
+     "h": 213,
      "exclusiveM2": 59.52,
      "rooms": 8,
-     "kb": 69
+     "kb": 15
     },
     {
      "type": "73",
      "file": "plans/c113/73.jpg",
-     "w": 576,
-     "h": 1200,
+     "w": 612,
+     "h": 474,
      "exclusiveM2": 72.64,
      "rooms": 9,
-     "kb": 71
+     "kb": 36
     },
     {
      "type": "76",
      "file": "plans/c113/76.jpg",
-     "w": 578,
-     "h": 1200,
+     "w": 537,
+     "h": 535,
      "exclusiveM2": 75.71,
      "rooms": 7,
-     "kb": 64
+     "kb": 30
     },
     {
      "type": "85",
      "file": "plans/c113/85.jpg",
-     "w": 535,
-     "h": 1200,
+     "w": 295,
+     "h": 185,
      "exclusiveM2": 84.53,
      "rooms": 10,
-     "kb": 70
+     "kb": 13
     },
     {
      "type": "85-2",
      "file": "plans/c113/85-2.jpg",
-     "w": 535,
-     "h": 1200,
+     "w": 367,
+     "h": 237,
      "exclusiveM2": 84.53,
      "rooms": 10,
-     "kb": 72
+     "kb": 18
     },
     {
      "type": "85-3",
      "file": "plans/c113/85-3.jpg",
-     "w": 535,
-     "h": 1200,
+     "w": 399,
+     "h": 238,
      "exclusiveM2": 84.62,
      "rooms": 9,
-     "kb": 70
+     "kb": 19
     },
     {
      "type": "103",
      "file": "plans/c113/103.jpg",
-     "w": 599,
-     "h": 1200,
+     "w": 419,
+     "h": 139,
      "exclusiveM2": 103.25,
      "rooms": 8,
-     "kb": 78,
-     "mmPerPx": 23.624,
-     "scaleConf": "보통"
+     "kb": 14
     },
     {
-     "type": "T5",
-     "file": "plans/c113/T5.jpg",
-     "w": 535,
-     "h": 1200,
+     "type": "T1",
+     "file": "plans/c113/T1.jpg",
+     "w": 651,
+     "h": 396,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 33
+    },
+    {
+     "type": "T10",
+     "file": "plans/c113/T10.jpg",
+     "w": 446,
+     "h": 146,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 14
+    },
+    {
+     "type": "T6",
+     "file": "plans/c113/T6.jpg",
+     "w": 349,
+     "h": 194,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 71
-    },
-    {
-     "type": "T7",
-     "file": "plans/c113/T7.jpg",
-     "w": 643,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 78,
-     "mmPerPx": 23,
-     "scaleConf": "보통"
-    },
-    {
-     "type": "T8",
-     "file": "plans/c113/T8.jpg",
-     "w": 599,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 77
+     "kb": 16
     },
     {
      "type": "T9",
      "file": "plans/c113/T9.jpg",
-     "w": 598,
-     "h": 1200,
+     "w": 411,
+     "h": 134,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 75
+     "kb": 14
     }
    ]
   },
@@ -5503,29 +5507,29 @@
     {
      "type": "T1",
      "file": "plans/c114/T1.jpg",
-     "w": 654,
-     "h": 1200,
+     "w": 1097,
+     "h": 258,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 77
+     "kb": 21
     },
     {
      "type": "T2",
      "file": "plans/c114/T2.jpg",
-     "w": 699,
-     "h": 1200,
+     "w": 1097,
+     "h": 258,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 81
+     "kb": 20
     },
     {
      "type": "T3",
      "file": "plans/c114/T3.jpg",
-     "w": 463,
-     "h": 1200,
+     "w": 1097,
+     "h": 257,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 54
+     "kb": 20
     }
    ]
   },
@@ -5538,29 +5542,29 @@
     {
      "type": "104",
      "file": "plans/c115/104.jpg",
-     "w": 676,
-     "h": 1200,
+     "w": 1097,
+     "h": 273,
      "exclusiveM2": 103.86,
      "rooms": 9,
-     "kb": 85
+     "kb": 28
     },
     {
      "type": "T2",
      "file": "plans/c115/T2.jpg",
-     "w": 795,
-     "h": 1200,
+     "w": 1098,
+     "h": 271,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 93
+     "kb": 28
     },
     {
      "type": "T3",
      "file": "plans/c115/T3.jpg",
-     "w": 706,
-     "h": 1200,
+     "w": 1098,
+     "h": 272,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 88
+     "kb": 29
     }
    ]
   },
@@ -5573,20 +5577,20 @@
     {
      "type": "T1",
      "file": "plans/c116/T1.jpg",
-     "w": 769,
-     "h": 1200,
+     "w": 987,
+     "h": 736,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 104
+     "kb": 76
     },
     {
      "type": "T2",
      "file": "plans/c116/T2.jpg",
-     "w": 769,
-     "h": 1200,
+     "w": 987,
+     "h": 878,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 92
+     "kb": 71
     }
    ]
   },
@@ -5599,65 +5603,65 @@
     {
      "type": "23",
      "file": "plans/c117/23.jpg",
-     "w": 675,
+     "w": 674,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 70
+     "kb": 68
     },
     {
      "type": "T1",
      "file": "plans/c117/T1.jpg",
-     "w": 450,
-     "h": 379,
+     "w": 435,
+     "h": 273,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 19
+     "kb": 20
     },
     {
      "type": "T2",
      "file": "plans/c117/T2.jpg",
-     "w": 450,
-     "h": 379,
+     "w": 412,
+     "h": 328,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 23
+    },
+    {
+     "type": "T3",
+     "file": "plans/c117/T3.jpg",
+     "w": 385,
+     "h": 324,
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 22
     },
     {
-     "type": "T3",
-     "file": "plans/c117/T3.jpg",
-     "w": 450,
-     "h": 379,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 21
-    },
-    {
      "type": "T4",
      "file": "plans/c117/T4.jpg",
-     "w": 450,
-     "h": 379,
+     "w": 393,
+     "h": 282,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 18
+     "kb": 19
     },
     {
      "type": "T5",
      "file": "plans/c117/T5.jpg",
-     "w": 450,
-     "h": 379,
+     "w": 402,
+     "h": 300,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 20
+     "kb": 21
     },
     {
      "type": "T6",
      "file": "plans/c117/T6.jpg",
-     "w": 450,
-     "h": 379,
+     "w": 400,
+     "h": 286,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 21
+     "kb": 22
     }
    ]
   },
@@ -5670,56 +5674,56 @@
     {
      "type": "85",
      "file": "plans/c118/85.jpg",
-     "w": 1159,
-     "h": 1200,
+     "w": 1199,
+     "h": 655,
      "exclusiveM2": 84.67,
      "rooms": 3,
-     "kb": 87
+     "kb": 75
     },
     {
      "type": "104",
      "file": "plans/c118/104.jpg",
-     "w": 1194,
-     "h": 1200,
+     "w": 1199,
+     "h": 666,
      "exclusiveM2": 104.22,
      "rooms": 3,
-     "kb": 89
+     "kb": 74
     },
     {
      "type": "120",
      "file": "plans/c118/120.jpg",
-     "w": 1026,
-     "h": 1200,
+     "w": 1199,
+     "h": 645,
      "exclusiveM2": 119.6,
      "rooms": 7,
-     "kb": 92
+     "kb": 75
     },
     {
      "type": "T2",
      "file": "plans/c118/T2.jpg",
-     "w": 1167,
-     "h": 1200,
+     "w": 1198,
+     "h": 635,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 80
+     "kb": 64
     },
     {
      "type": "T3",
      "file": "plans/c118/T3.jpg",
-     "w": 1165,
-     "h": 1200,
+     "w": 1199,
+     "h": 677,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 72
+     "kb": 57
     },
     {
      "type": "T4",
      "file": "plans/c118/T4.jpg",
-     "w": 1170,
-     "h": 1200,
+     "w": 1198,
+     "h": 653,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 92
+     "kb": 81
     }
    ]
   },
@@ -5732,29 +5736,29 @@
     {
      "type": "T1",
      "file": "plans/c119/T1.jpg",
-     "w": 553,
-     "h": 1200,
+     "w": 792,
+     "h": 554,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 78
+     "kb": 69
     },
     {
      "type": "T2",
      "file": "plans/c119/T2.jpg",
-     "w": 553,
-     "h": 1200,
+     "w": 260,
+     "h": 461,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 74
+     "kb": 26
     },
     {
      "type": "T3",
      "file": "plans/c119/T3.jpg",
-     "w": 553,
-     "h": 1200,
+     "w": 792,
+     "h": 572,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 80
+     "kb": 72
     }
    ]
   },
@@ -5767,38 +5771,38 @@
     {
      "type": "85B",
      "file": "plans/c120/85B.jpg",
-     "w": 611,
-     "h": 1200,
+     "w": 1033,
+     "h": 355,
      "exclusiveM2": 84.96,
      "rooms": 9,
-     "kb": 83
+     "kb": 53
     },
     {
      "type": "85",
      "file": "plans/c120/85.jpg",
-     "w": 615,
-     "h": 1200,
+     "w": 854,
+     "h": 436,
      "exclusiveM2": 84.99,
      "rooms": 9,
-     "kb": 85
+     "kb": 53
     },
     {
      "type": "85-2",
      "file": "plans/c120/85-2.jpg",
-     "w": 587,
-     "h": 1200,
+     "w": 842,
+     "h": 504,
      "exclusiveM2": 85,
      "rooms": 9,
-     "kb": 80
+     "kb": 53
     },
     {
      "type": "T1",
      "file": "plans/c120/T1.jpg",
-     "w": 602,
-     "h": 1200,
+     "w": 1020,
+     "h": 389,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 84
+     "kb": 54
     }
    ]
   },
@@ -5811,47 +5815,47 @@
     {
      "type": "85-2",
      "file": "plans/c121/85-2.jpg",
-     "w": 769,
-     "h": 1200,
+     "w": 1014,
+     "h": 813,
      "exclusiveM2": 84.93,
      "rooms": 5,
-     "kb": 99
+     "kb": 78
     },
     {
      "type": "85",
      "file": "plans/c121/85.jpg",
-     "w": 769,
-     "h": 1200,
+     "w": 787,
+     "h": 527,
      "exclusiveM2": 84.99,
      "rooms": 6,
-     "kb": 95
+     "kb": 57
     },
     {
-     "type": "T2",
-     "file": "plans/c121/T2.jpg",
-     "w": 769,
-     "h": 1200,
+     "type": "T1",
+     "file": "plans/c121/T1.jpg",
+     "w": 743,
+     "h": 490,
      "exclusiveM2": null,
-     "rooms": 6,
-     "kb": 101
+     "rooms": 8,
+     "kb": 50
     },
     {
      "type": "T3",
      "file": "plans/c121/T3.jpg",
-     "w": 769,
-     "h": 1200,
+     "w": 410,
+     "h": 237,
      "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 86
+     "rooms": 6,
+     "kb": 10
     },
     {
      "type": "T5",
      "file": "plans/c121/T5.jpg",
-     "w": 769,
-     "h": 1200,
+     "w": 410,
+     "h": 235,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 89
+     "kb": 10
     }
    ]
   },
@@ -5864,47 +5868,47 @@
     {
      "type": "T1",
      "file": "plans/c122/T1.jpg",
-     "w": 1007,
-     "h": 1200,
+     "w": 1098,
+     "h": 963,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 113
+     "kb": 127
     },
     {
      "type": "T2",
      "file": "plans/c122/T2.jpg",
-     "w": 956,
-     "h": 1200,
+     "w": 1099,
+     "h": 203,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 102
+     "kb": 23
     },
     {
      "type": "T3",
      "file": "plans/c122/T3.jpg",
-     "w": 1017,
-     "h": 1200,
+     "w": 1099,
+     "h": 950,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 103
+     "kb": 116
     },
     {
      "type": "T4",
      "file": "plans/c122/T4.jpg",
-     "w": 1030,
-     "h": 1200,
+     "w": 1099,
+     "h": 934,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 109
+     "kb": 119
     },
     {
      "type": "T5",
      "file": "plans/c122/T5.jpg",
-     "w": 866,
-     "h": 1200,
+     "w": 1032,
+     "h": 1178,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 85
+     "kb": 113
     }
    ]
   },
@@ -5917,11 +5921,11 @@
     {
      "type": "T1",
      "file": "plans/c123/T1.jpg",
-     "w": 1100,
-     "h": 1027,
+     "w": 703,
+     "h": 474,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 104
+     "kb": 58
     }
    ]
   },
@@ -5934,20 +5938,20 @@
     {
      "type": "T1",
      "file": "plans/c124/T1.jpg",
-     "w": 751,
-     "h": 540,
+     "w": 750,
+     "h": 509,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 50
+     "kb": 52
     },
     {
      "type": "T2",
      "file": "plans/c124/T2.jpg",
-     "w": 750,
-     "h": 540,
+     "w": 683,
+     "h": 467,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 34
+     "kb": 36
     }
    ]
   },
@@ -5996,56 +6000,56 @@
     {
      "type": "20",
      "file": "plans/c125/20.jpg",
-     "w": 1132,
-     "h": 1200,
+     "w": 762,
+     "h": 623,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 88
+     "kb": 71
     },
     {
      "type": "21",
      "file": "plans/c125/21.jpg",
-     "w": 1063,
-     "h": 1200,
+     "w": 761,
+     "h": 761,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 98
+     "kb": 93
     },
     {
      "type": "22",
      "file": "plans/c125/22.jpg",
-     "w": 1093,
-     "h": 1200,
+     "w": 1200,
+     "h": 1182,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 85
+     "kb": 104
     },
     {
      "type": "23",
      "file": "plans/c125/23.jpg",
-     "w": 1076,
+     "w": 1143,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 92
+     "kb": 108
     },
     {
      "type": "24",
      "file": "plans/c125/24.jpg",
-     "w": 1089,
+     "w": 1166,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 101
+     "kb": 114
     },
     {
      "type": "25",
      "file": "plans/c125/25.jpg",
-     "w": 1100,
+     "w": 1152,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 116
+     "kb": 127
     }
    ]
   },
@@ -6058,47 +6062,47 @@
     {
      "type": "T1",
      "file": "plans/c126/T1.jpg",
-     "w": 792,
-     "h": 1200,
+     "w": 448,
+     "h": 244,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 95
+     "kb": 23
     },
     {
      "type": "T2",
      "file": "plans/c126/T2.jpg",
-     "w": 792,
-     "h": 1200,
+     "w": 447,
+     "h": 299,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 99
+     "kb": 26
     },
     {
      "type": "T3",
      "file": "plans/c126/T3.jpg",
-     "w": 792,
-     "h": 1200,
+     "w": 455,
+     "h": 311,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 107
+     "kb": 30
     },
     {
      "type": "T4",
      "file": "plans/c126/T4.jpg",
-     "w": 792,
-     "h": 1200,
+     "w": 447,
+     "h": 379,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 103
+     "kb": 33
     },
     {
      "type": "T5",
      "file": "plans/c126/T5.jpg",
-     "w": 792,
-     "h": 1200,
+     "w": 416,
+     "h": 317,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 95
+     "kb": 26
     }
    ]
   },
@@ -6111,11 +6115,11 @@
     {
      "type": "T1",
      "file": "plans/c127/T1.jpg",
-     "w": 1200,
-     "h": 479,
+     "w": 327,
+     "h": 739,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 23
+     "kb": 18
     }
    ]
   },
@@ -6128,17 +6132,17 @@
     {
      "type": "103",
      "file": "plans/c130/103.jpg",
-     "w": 712,
-     "h": 1200,
+     "w": 292,
+     "h": 446,
      "exclusiveM2": 102.74,
      "rooms": 8,
-     "kb": 67
+     "kb": 9
     },
     {
      "type": "115",
      "file": "plans/c130/115.jpg",
-     "w": 650,
-     "h": 1200,
+     "w": 703,
+     "h": 1004,
      "exclusiveM2": 115.2,
      "rooms": 8,
      "kb": 56
@@ -6146,47 +6150,47 @@
     {
      "type": "115-2",
      "file": "plans/c130/115-2.jpg",
-     "w": 677,
-     "h": 1200,
+     "w": 1097,
+     "h": 256,
      "exclusiveM2": 115.2,
      "rooms": 7,
-     "kb": 61
+     "kb": 24
     },
     {
      "type": "116",
      "file": "plans/c130/116.jpg",
-     "w": 581,
-     "h": 1200,
+     "w": 1097,
+     "h": 328,
      "exclusiveM2": 116.48,
      "rooms": 4,
-     "kb": 50
+     "kb": 35
     },
     {
      "type": "118",
      "file": "plans/c130/118.jpg",
-     "w": 666,
-     "h": 1200,
+     "w": 711,
+     "h": 570,
      "exclusiveM2": 118.15,
      "rooms": 8,
-     "kb": 58
+     "kb": 35
     },
     {
      "type": "T2",
      "file": "plans/c130/T2.jpg",
-     "w": 676,
-     "h": 1200,
+     "w": 1097,
+     "h": 256,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 58
+     "kb": 23
     },
     {
      "type": "T6",
      "file": "plans/c130/T6.jpg",
-     "w": 660,
-     "h": 1200,
+     "w": 1098,
+     "h": 256,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 58
+     "kb": 23
     }
    ]
   },
@@ -6199,65 +6203,65 @@
     {
      "type": "85-2",
      "file": "plans/c131/85-2.jpg",
-     "w": 892,
-     "h": 1200,
+     "w": 148,
+     "h": 330,
      "exclusiveM2": 84.73,
      "rooms": 6,
-     "kb": 133
+     "kb": 3
     },
     {
      "type": "85",
      "file": "plans/c131/85.jpg",
-     "w": 884,
-     "h": 1200,
+     "w": 149,
+     "h": 355,
      "exclusiveM2": 84.95,
      "rooms": 7,
-     "kb": 115
+     "kb": 3
     },
     {
      "type": "T2",
      "file": "plans/c131/T2.jpg",
-     "w": 847,
-     "h": 1200,
+     "w": 149,
+     "h": 356,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 111
+     "kb": 3
     },
     {
      "type": "T3",
      "file": "plans/c131/T3.jpg",
-     "w": 901,
-     "h": 1200,
+     "w": 1041,
+     "h": 587,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 114
+     "kb": 81
     },
     {
      "type": "T4",
      "file": "plans/c131/T4.jpg",
-     "w": 886,
-     "h": 1200,
+     "w": 149,
+     "h": 354,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 113
+     "kb": 3
     },
     {
      "type": "T5",
      "file": "plans/c131/T5.jpg",
-     "w": 892,
-     "h": 1200,
+     "w": 148,
+     "h": 330,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 137
+     "kb": 3
     },
     {
      "type": "T7",
      "file": "plans/c131/T7.jpg",
-     "w": 847,
-     "h": 1200,
+     "w": 149,
+     "h": 356,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 105
+     "kb": 3
     }
    ]
   },
@@ -6270,128 +6274,128 @@
     {
      "type": "85",
      "file": "plans/c132/85.jpg",
-     "w": 728,
-     "h": 1200,
+     "w": 732,
+     "h": 490,
      "exclusiveM2": 84.65,
      "rooms": 8,
-     "kb": 78
+     "kb": 43
     },
     {
      "type": "85-2",
      "file": "plans/c132/85-2.jpg",
-     "w": 424,
-     "h": 1200,
+     "w": 747,
+     "h": 325,
      "exclusiveM2": 84.78,
      "rooms": 7,
-     "kb": 58
+     "kb": 27
     },
     {
      "type": "85-3",
      "file": "plans/c132/85-3.jpg",
-     "w": 418,
-     "h": 1200,
+     "w": 747,
+     "h": 323,
      "exclusiveM2": 84.78,
      "rooms": 6,
-     "kb": 57
+     "kb": 27
     },
     {
      "type": "85C",
      "file": "plans/c132/85C.jpg",
-     "w": 728,
-     "h": 1200,
+     "w": 1200,
+     "h": 331,
      "exclusiveM2": 84.78,
      "rooms": 6,
-     "kb": 71
+     "kb": 29
     },
     {
      "type": "85-4",
      "file": "plans/c132/85-4.jpg",
-     "w": 396,
-     "h": 1200,
+     "w": 748,
+     "h": 323,
      "exclusiveM2": 84.88,
      "rooms": 6,
-     "kb": 56
+     "kb": 27
     },
     {
      "type": "98-2",
      "file": "plans/c132/98-2.jpg",
-     "w": 431,
-     "h": 1200,
+     "w": 747,
+     "h": 325,
      "exclusiveM2": 97.62,
      "rooms": 6,
-     "kb": 62
+     "kb": 27
     },
     {
      "type": "98-3",
      "file": "plans/c132/98-3.jpg",
-     "w": 431,
-     "h": 1200,
+     "w": 686,
+     "h": 415,
      "exclusiveM2": 97.62,
      "rooms": 6,
-     "kb": 60
+     "kb": 34
     },
     {
      "type": "98A",
      "file": "plans/c132/98A.jpg",
-     "w": 701,
-     "h": 1200,
+     "w": 881,
+     "h": 576,
      "exclusiveM2": 97.62,
      "rooms": 7,
-     "kb": 69
+     "kb": 52
     },
     {
      "type": "98",
      "file": "plans/c132/98.jpg",
-     "w": 701,
-     "h": 1200,
+     "w": 986,
+     "h": 1005,
      "exclusiveM2": 97.76,
      "rooms": 7,
-     "kb": 69
+     "kb": 81
     },
     {
      "type": "143P",
      "file": "plans/c132/143P.jpg",
-     "w": 737,
-     "h": 1200,
+     "w": 1200,
+     "h": 405,
      "exclusiveM2": 142.98,
      "rooms": 8,
-     "kb": 82
+     "kb": 53
     },
     {
-     "type": "T12",
-     "file": "plans/c132/T12.jpg",
-     "w": 413,
-     "h": 1200,
+     "type": "T3",
+     "file": "plans/c132/T3.jpg",
+     "w": 680,
+     "h": 457,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 58
+     "kb": 39
     },
     {
-     "type": "T14",
-     "file": "plans/c132/T14.jpg",
+     "type": "T5",
+     "file": "plans/c132/T5.jpg",
+     "w": 1200,
+     "h": 329,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 29
+    },
+    {
+     "type": "T8",
+     "file": "plans/c132/T8.jpg",
      "w": 728,
-     "h": 1200,
+     "h": 237,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 28
+    },
+    {
+     "type": "T9",
+     "file": "plans/c132/T9.jpg",
+     "w": 1200,
+     "h": 331,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 71
-    },
-    {
-     "type": "T4",
-     "file": "plans/c132/T4.jpg",
-     "w": 701,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 7,
-     "kb": 61
-    },
-    {
-     "type": "T6",
-     "file": "plans/c132/T6.jpg",
-     "w": 475,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 7,
-     "kb": 64
+     "kb": 28
     }
    ]
   },
@@ -6404,110 +6408,110 @@
     {
      "type": "85",
      "file": "plans/c128/85.jpg",
-     "w": 860,
-     "h": 1200,
+     "w": 302,
+     "h": 592,
      "exclusiveM2": 84.65,
      "rooms": 7,
-     "kb": 112
+     "kb": 19
     },
     {
      "type": "91",
      "file": "plans/c128/91.jpg",
-     "w": 856,
-     "h": 1200,
+     "w": 301,
+     "h": 506,
      "exclusiveM2": 90.81,
      "rooms": 8,
-     "kb": 136
+     "kb": 20
     },
     {
      "type": "100-2",
      "file": "plans/c128/100-2.jpg",
-     "w": 858,
-     "h": 1200,
+     "w": 302,
+     "h": 507,
      "exclusiveM2": 99.63,
      "rooms": 9,
-     "kb": 143
-    },
-    {
-     "type": "100-6",
-     "file": "plans/c128/100-6.jpg",
-     "w": 860,
-     "h": 1200,
-     "exclusiveM2": 99.63,
-     "rooms": 9,
-     "kb": 126
-    },
-    {
-     "type": "100",
-     "file": "plans/c128/100.jpg",
-     "w": 859,
-     "h": 1200,
-     "exclusiveM2": 99.75,
-     "rooms": 9,
-     "kb": 139
-    },
-    {
-     "type": "100-5",
-     "file": "plans/c128/100-5.jpg",
-     "w": 856,
-     "h": 1200,
-     "exclusiveM2": 99.83,
-     "rooms": 9,
-     "kb": 120
+     "kb": 20
     },
     {
      "type": "100-3",
      "file": "plans/c128/100-3.jpg",
-     "w": 854,
-     "h": 1200,
-     "exclusiveM2": 99.92,
+     "w": 301,
+     "h": 506,
+     "exclusiveM2": 99.63,
      "rooms": 9,
-     "kb": 131
+     "kb": 19
+    },
+    {
+     "type": "100",
+     "file": "plans/c128/100.jpg",
+     "w": 300,
+     "h": 517,
+     "exclusiveM2": 99.75,
+     "rooms": 9,
+     "kb": 19
+    },
+    {
+     "type": "100-6",
+     "file": "plans/c128/100-6.jpg",
+     "w": 301,
+     "h": 533,
+     "exclusiveM2": 99.83,
+     "rooms": 9,
+     "kb": 19
     },
     {
      "type": "100-4",
      "file": "plans/c128/100-4.jpg",
-     "w": 857,
-     "h": 1200,
+     "w": 300,
+     "h": 520,
      "exclusiveM2": 99.92,
      "rooms": 9,
-     "kb": 126
+     "kb": 20
+    },
+    {
+     "type": "100-5",
+     "file": "plans/c128/100-5.jpg",
+     "w": 301,
+     "h": 520,
+     "exclusiveM2": 99.92,
+     "rooms": 9,
+     "kb": 20
     },
     {
      "type": "109B",
      "file": "plans/c128/109B.jpg",
-     "w": 859,
-     "h": 1200,
+     "w": 300,
+     "h": 596,
      "exclusiveM2": 109.36,
      "rooms": 9,
-     "kb": 116
+     "kb": 23
     },
     {
      "type": "110A",
      "file": "plans/c128/110A.jpg",
-     "w": 857,
-     "h": 1200,
+     "w": 301,
+     "h": 508,
      "exclusiveM2": 109.85,
      "rooms": 9,
-     "kb": 127
+     "kb": 20
+    },
+    {
+     "type": "T1",
+     "file": "plans/c128/T1.jpg",
+     "w": 301,
+     "h": 508,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 19
     },
     {
      "type": "T11",
      "file": "plans/c128/T11.jpg",
-     "w": 856,
-     "h": 1200,
+     "w": 301,
+     "h": 536,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 116
-    },
-    {
-     "type": "T8",
-     "file": "plans/c128/T8.jpg",
-     "w": 860,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 122
+     "kb": 18
     }
    ]
   },
@@ -6520,110 +6524,110 @@
     {
      "type": "85",
      "file": "plans/c129/85.jpg",
-     "w": 860,
-     "h": 1200,
+     "w": 302,
+     "h": 592,
      "exclusiveM2": 84.65,
      "rooms": 7,
-     "kb": 112
+     "kb": 19
     },
     {
      "type": "91",
      "file": "plans/c129/91.jpg",
-     "w": 856,
-     "h": 1200,
+     "w": 301,
+     "h": 506,
      "exclusiveM2": 90.81,
      "rooms": 8,
-     "kb": 136
+     "kb": 20
     },
     {
      "type": "100-2",
      "file": "plans/c129/100-2.jpg",
-     "w": 858,
-     "h": 1200,
+     "w": 302,
+     "h": 507,
      "exclusiveM2": 99.63,
      "rooms": 9,
-     "kb": 143
-    },
-    {
-     "type": "100-6",
-     "file": "plans/c129/100-6.jpg",
-     "w": 860,
-     "h": 1200,
-     "exclusiveM2": 99.63,
-     "rooms": 9,
-     "kb": 126
-    },
-    {
-     "type": "100",
-     "file": "plans/c129/100.jpg",
-     "w": 859,
-     "h": 1200,
-     "exclusiveM2": 99.75,
-     "rooms": 9,
-     "kb": 139
-    },
-    {
-     "type": "100-5",
-     "file": "plans/c129/100-5.jpg",
-     "w": 856,
-     "h": 1200,
-     "exclusiveM2": 99.83,
-     "rooms": 9,
-     "kb": 120
+     "kb": 20
     },
     {
      "type": "100-3",
      "file": "plans/c129/100-3.jpg",
-     "w": 857,
-     "h": 1200,
-     "exclusiveM2": 99.92,
+     "w": 301,
+     "h": 506,
+     "exclusiveM2": 99.63,
      "rooms": 9,
-     "kb": 126
+     "kb": 19
+    },
+    {
+     "type": "100",
+     "file": "plans/c129/100.jpg",
+     "w": 300,
+     "h": 517,
+     "exclusiveM2": 99.75,
+     "rooms": 9,
+     "kb": 19
+    },
+    {
+     "type": "100-6",
+     "file": "plans/c129/100-6.jpg",
+     "w": 301,
+     "h": 533,
+     "exclusiveM2": 99.83,
+     "rooms": 9,
+     "kb": 19
     },
     {
      "type": "100-4",
      "file": "plans/c129/100-4.jpg",
-     "w": 854,
-     "h": 1200,
+     "w": 301,
+     "h": 520,
      "exclusiveM2": 99.92,
      "rooms": 9,
-     "kb": 131
+     "kb": 20
+    },
+    {
+     "type": "100-5",
+     "file": "plans/c129/100-5.jpg",
+     "w": 300,
+     "h": 520,
+     "exclusiveM2": 99.92,
+     "rooms": 9,
+     "kb": 20
     },
     {
      "type": "109B",
      "file": "plans/c129/109B.jpg",
-     "w": 859,
-     "h": 1200,
+     "w": 300,
+     "h": 596,
      "exclusiveM2": 109.36,
      "rooms": 9,
-     "kb": 116
+     "kb": 23
     },
     {
      "type": "110A",
      "file": "plans/c129/110A.jpg",
-     "w": 857,
-     "h": 1200,
+     "w": 301,
+     "h": 508,
      "exclusiveM2": 109.85,
      "rooms": 9,
-     "kb": 127
+     "kb": 20
+    },
+    {
+     "type": "T1",
+     "file": "plans/c129/T1.jpg",
+     "w": 301,
+     "h": 508,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 19
     },
     {
      "type": "T11",
      "file": "plans/c129/T11.jpg",
-     "w": 856,
-     "h": 1200,
+     "w": 301,
+     "h": 536,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 116
-    },
-    {
-     "type": "T8",
-     "file": "plans/c129/T8.jpg",
-     "w": 860,
-     "h": 1200,
-     "exclusiveM2": null,
-     "rooms": 9,
-     "kb": 122
+     "kb": 18
     }
    ]
   },
@@ -6636,34 +6640,34 @@
     {
      "type": "T1",
      "file": "plans/c134/T1.jpg",
-     "w": 881,
+     "w": 1155,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 104,
-     "mmPerPx": 25.25,
+     "kb": 102,
+     "mmPerPx": 16.63,
      "scaleConf": "확실"
     },
     {
      "type": "T2",
      "file": "plans/c134/T2.jpg",
-     "w": 881,
+     "w": 1143,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 106,
-     "mmPerPx": 25.292,
+     "kb": 102,
+     "mmPerPx": 16.909,
      "scaleConf": "확실"
     },
     {
      "type": "T3",
      "file": "plans/c134/T3.jpg",
-     "w": 881,
+     "w": 1141,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 106,
-     "mmPerPx": 25.25,
+     "kb": 102,
+     "mmPerPx": 16.893,
      "scaleConf": "확실"
     }
    ]
@@ -6677,47 +6681,47 @@
     {
      "type": "75",
      "file": "plans/c133/75.jpg",
-     "w": 1200,
-     "h": 1046,
+     "w": 581,
+     "h": 502,
      "exclusiveM2": 74.97,
      "rooms": 7,
-     "kb": 101
+     "kb": 41
     },
     {
      "type": "75-2",
      "file": "plans/c133/75-2.jpg",
-     "w": 1200,
-     "h": 1046,
+     "w": 578,
+     "h": 493,
      "exclusiveM2": 74.97,
      "rooms": 5,
-     "kb": 100
+     "kb": 41
     },
     {
      "type": "85",
      "file": "plans/c133/85.jpg",
-     "w": 1200,
-     "h": 1119,
+     "w": 594,
+     "h": 496,
      "exclusiveM2": 84.98,
      "rooms": 8,
-     "kb": 110
+     "kb": 41
     },
     {
      "type": "85-2",
      "file": "plans/c133/85-2.jpg",
-     "w": 1200,
-     "h": 1034,
+     "w": 590,
+     "h": 492,
      "exclusiveM2": 84.98,
      "rooms": 6,
-     "kb": 101
+     "kb": 41
     },
     {
      "type": "85-3",
      "file": "plans/c133/85-3.jpg",
-     "w": 1200,
-     "h": 1016,
+     "w": 539,
+     "h": 500,
      "exclusiveM2": 84.98,
      "rooms": 4,
-     "kb": 97
+     "kb": 36
     }
    ]
   },
@@ -6730,11 +6734,11 @@
     {
      "type": "T1",
      "file": "plans/c135/T1.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1200,
+     "h": 1023,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 168
+     "kb": 221
     }
    ]
   },
@@ -6747,38 +6751,38 @@
     {
      "type": "85",
      "file": "plans/c136/85.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": 84.85,
      "rooms": 5,
-     "kb": 103
+     "kb": 110
     },
     {
      "type": "110",
      "file": "plans/c136/110.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": 110.36,
      "rooms": 3,
-     "kb": 99
+     "kb": 105
     },
     {
      "type": "T1",
      "file": "plans/c136/T1.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 77
+     "kb": 81
     },
     {
      "type": "T3",
      "file": "plans/c136/T3.jpg",
-     "w": 1200,
-     "h": 950,
+     "w": 1149,
+     "h": 911,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 93
+     "kb": 99
     }
    ]
   },
@@ -6791,47 +6795,51 @@
     {
      "type": "85",
      "file": "plans/c137/85.jpg",
-     "w": 426,
-     "h": 1200,
+     "w": 622,
+     "h": 389,
      "exclusiveM2": 84.97,
      "rooms": 9,
-     "kb": 65
+     "kb": 41
     },
     {
      "type": "85-2",
      "file": "plans/c137/85-2.jpg",
-     "w": 426,
-     "h": 1200,
+     "w": 551,
+     "h": 359,
      "exclusiveM2": 84.98,
      "rooms": 9,
-     "kb": 61
+     "kb": 37
     },
     {
      "type": "T1",
      "file": "plans/c137/T1.jpg",
-     "w": 426,
-     "h": 1200,
+     "w": 651,
+     "h": 446,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 59
+     "kb": 41
     },
     {
-     "type": "T4",
-     "file": "plans/c137/T4.jpg",
-     "w": 425,
-     "h": 1200,
+     "type": "T2",
+     "file": "plans/c137/T2.jpg",
+     "w": 618,
+     "h": 636,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 56
+     "kb": 45,
+     "mmPerPx": 26.531,
+     "scaleConf": "보통"
     },
     {
-     "type": "T5",
-     "file": "plans/c137/T5.jpg",
-     "w": 424,
-     "h": 1200,
+     "type": "T3",
+     "file": "plans/c137/T3.jpg",
+     "w": 642,
+     "h": 855,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 56
+     "kb": 53,
+     "mmPerPx": 26.422,
+     "scaleConf": "보통"
     }
    ]
   },
@@ -6844,16 +6852,18 @@
     {
      "type": "T1",
      "file": "plans/c138/T1.jpg",
-     "w": 437,
-     "h": 1200,
+     "w": 610,
+     "h": 486,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 66
+     "kb": 39,
+     "mmPerPx": 23.602,
+     "scaleConf": "보통"
     },
     {
      "type": "T2",
      "file": "plans/c138/T2.jpg",
-     "w": 121,
+     "w": 119,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 9,
@@ -6870,83 +6880,83 @@
     {
      "type": "60",
      "file": "plans/c139/60.jpg",
-     "w": 750,
-     "h": 1200,
+     "w": 207,
+     "h": 293,
      "exclusiveM2": 59.99,
      "rooms": 9,
-     "kb": 108
+     "kb": 14
     },
     {
      "type": "60-2",
      "file": "plans/c139/60-2.jpg",
-     "w": 793,
-     "h": 1200,
+     "w": 454,
+     "h": 268,
      "exclusiveM2": 59.99,
      "rooms": 9,
-     "kb": 113
+     "kb": 23
     },
     {
      "type": "85-2",
      "file": "plans/c139/85-2.jpg",
-     "w": 750,
-     "h": 1200,
+     "w": 465,
+     "h": 280,
      "exclusiveM2": 84.99,
      "rooms": 11,
-     "kb": 133
+     "kb": 23
     },
     {
      "type": "85-3",
      "file": "plans/c139/85-3.jpg",
-     "w": 750,
-     "h": 1200,
+     "w": 152,
+     "h": 491,
      "exclusiveM2": 84.99,
      "rooms": 10,
-     "kb": 105
+     "kb": 8
     },
     {
      "type": "85-4",
      "file": "plans/c139/85-4.jpg",
-     "w": 733,
-     "h": 1200,
+     "w": 368,
+     "h": 588,
      "exclusiveM2": 84.99,
      "rooms": 10,
-     "kb": 113
+     "kb": 42
     },
     {
      "type": "85",
      "file": "plans/c139/85.jpg",
-     "w": 750,
-     "h": 1200,
+     "w": 442,
+     "h": 299,
      "exclusiveM2": 85,
      "rooms": 11,
-     "kb": 131
+     "kb": 23
     },
     {
      "type": "102-2",
      "file": "plans/c139/102-2.jpg",
-     "w": 842,
-     "h": 1200,
+     "w": 505,
+     "h": 243,
      "exclusiveM2": 101.61,
      "rooms": 10,
-     "kb": 115
+     "kb": 22
     },
     {
      "type": "102",
      "file": "plans/c139/102.jpg",
-     "w": 750,
-     "h": 1200,
+     "w": 485,
+     "h": 239,
      "exclusiveM2": 101.62,
      "rooms": 10,
-     "kb": 114
+     "kb": 21
     },
     {
      "type": "113",
      "file": "plans/c139/113.jpg",
-     "w": 665,
-     "h": 1200,
+     "w": 940,
+     "h": 519,
      "exclusiveM2": 112.97,
      "rooms": 10,
-     "kb": 102
+     "kb": 73
     },
     {
      "type": "T10",
@@ -6955,7 +6965,7 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 118
+     "kb": 120
     },
     {
      "type": "T11",
@@ -6964,7 +6974,7 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 118
+     "kb": 120
     }
    ]
   },
@@ -6977,20 +6987,20 @@
     {
      "type": "T1",
      "file": "plans/c140/T1.jpg",
-     "w": 789,
-     "h": 1200,
+     "w": 1198,
+     "h": 298,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 111
+     "kb": 28
     },
     {
      "type": "T2",
      "file": "plans/c140/T2.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 1083,
+     "h": 366,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 55
+     "kb": 57
     }
    ]
   },
@@ -7003,29 +7013,29 @@
     {
      "type": "124",
      "file": "plans/c141/124.jpg",
-     "w": 215,
-     "h": 1200,
+     "w": 1160,
+     "h": 513,
      "exclusiveM2": 123.82,
      "rooms": 8,
-     "kb": 39
+     "kb": 102
     },
     {
      "type": "T1",
      "file": "plans/c141/T1.jpg",
-     "w": 285,
-     "h": 1200,
+     "w": 1169,
+     "h": 512,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 40
+     "kb": 90
     },
     {
      "type": "T2",
      "file": "plans/c141/T2.jpg",
-     "w": 285,
-     "h": 1200,
+     "w": 1169,
+     "h": 512,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 40
+     "kb": 87
     }
    ]
   },
@@ -7038,29 +7048,31 @@
     {
      "type": "53",
      "file": "plans/c142/53.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 947,
+     "h": 1068,
      "exclusiveM2": 52.98,
      "rooms": 7,
-     "kb": 60
+     "kb": 96
     },
     {
      "type": "85",
      "file": "plans/c142/85.jpg",
-     "w": 472,
-     "h": 1200,
+     "w": 1200,
+     "h": 799,
      "exclusiveM2": 84.95,
      "rooms": 6,
-     "kb": 56
+     "kb": 87
     },
     {
      "type": "T2",
      "file": "plans/c142/T2.jpg",
-     "w": 482,
-     "h": 1200,
+     "w": 1200,
+     "h": 757,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 68
+     "kb": 84,
+     "mmPerPx": 20.942,
+     "scaleConf": "확실"
     }
    ]
   },
@@ -7073,20 +7085,20 @@
     {
      "type": "T1",
      "file": "plans/c143/T1.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 1099,
+     "h": 429,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 94
+     "kb": 52
     },
     {
      "type": "T2",
      "file": "plans/c143/T2.jpg",
-     "w": 670,
-     "h": 1200,
+     "w": 943,
+     "h": 287,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 97
+     "kb": 30
     }
    ]
   }

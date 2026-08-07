@@ -2,6 +2,21 @@
  * 단지 도면을 앱에서 쓸 수 있게 public/plans/ 로 옮기고 색인을 만든다.
  * 실행: npm run build:plans
  *
+ * ── 수집 파이프라인 (도면을 더 모을 때도 이 순서 그대로) ──────────
+ *   1. .scratch/applyhome-list.mjs    청약홈에서 공고 목록 (경기·강원 → 경원 담당분)
+ *   2. .scratch/applyhome-detail.mjs  공고마다 주소·분양 홈페이지 주소
+ *   3. .scratch/grab-batch.mjs        홈페이지에서 큰 이미지 수집
+ *   4. .scratch/classify-plans.mjs    평면도인지 가림 (방 이름 3종류 이상)
+ *   5. .scratch/crop-plans.mjs        **시트에서 필요한 도면 한 장만 잘라냄**  ← 반드시 거칠 것
+ *   6. .scratch/scan-plans.mjs        잘라 낸 도면에서 축척(mm/px) 판독
+ *   7. .scratch/read-types.mjs        주택형·전용면적 판독
+ *   8. npm run build:plans            이 스크립트 — 색인과 배포용 이미지 생성
+ *
+ * 5번을 건너뛰면 안 된다. 분양 시트 한 장에는 치수 있는 도면·기본형·키맵·옵션 안내·범례가
+ * 함께 실려서(오산세교 우미린: 한 파일에 도면 셋 + 설명 둘), 자르지 않으면 ①매장에서
+ * 쓸 도면을 고를 수 없고 ②도면이 화면의 8%만 차지해 벽 인식이 무너지고 ③치수 글씨가 작아
+ * 축척을 못 읽는다. 자른 뒤 6·7번을 돌려야 축척·주택형이 그 도면 기준으로 맞는다.
+ *
  * ── 무엇을 싣는가 ──────────────────────────────────────────────
  * **평면도면 싣는다. 치수가 인쇄돼 있을 필요는 없다.**
  *
@@ -29,8 +44,15 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
-const SRC = path.join(ROOT, '.scratch', 'plans');
+// 잘라 낸 도면이 있으면 그것을 싣는다. 원본 시트를 그대로 실으면 한 파일에 도면이 여럿이라
+// 매장에서 쓸 수가 없다(사용자 지적: "3개가 필요없습니다. 수치가있는 1개만 필요할뿐입니다").
+const CROPS = path.join(ROOT, '.scratch', 'crops');
+const RAW = path.join(ROOT, '.scratch', 'plans');
+const CROPLOG = path.join(ROOT, '.scratch', 'crop-plans.json');
 const CLASSIFY = path.join(ROOT, '.scratch', 'classify-plans.json');
+// 축척은 **잘라 낸 도면에서 잰 것**을 먼저 쓴다 — 배포되는 바로 그 이미지에서 읽은 값이라야
+// 화면에 뜨는 치수와 어긋나지 않는다.
+const SCAN_CROPS = path.join(ROOT, '.scratch', 'scan-crops.json');
 const SCAN = path.join(ROOT, '.scratch', 'scan-plans.json');
 const TYPES = path.join(ROOT, '.scratch', 'read-types.json');
 const GRAB = path.join(ROOT, '.scratch', 'grab-state.json');
@@ -44,7 +66,11 @@ if (!fs.existsSync(CLASSIFY)) {
 }
 
 const classify = JSON.parse(fs.readFileSync(CLASSIFY, 'utf8'));
-const scan = fs.existsSync(SCAN) ? JSON.parse(fs.readFileSync(SCAN, 'utf8')) : [];
+const scan = fs.existsSync(SCAN_CROPS) ? JSON.parse(fs.readFileSync(SCAN_CROPS, 'utf8'))
+  : (fs.existsSync(SCAN) ? JSON.parse(fs.readFileSync(SCAN, 'utf8')) : []);
+// 잘라 낸 도면의 원본 파일명 대응. 크롭은 확장자를 .jpg 로 통일하므로 이름이 달라진다.
+const crops = fs.existsSync(CROPLOG) ? JSON.parse(fs.readFileSync(CROPLOG, 'utf8')) : [];
+const cropBy = new Map(crops.filter((r) => r.out).map((r) => [`${r.dir}/${r.file}`, r]));
 const grab = fs.existsSync(GRAB) ? JSON.parse(fs.readFileSync(GRAB, 'utf8')) : {};
 // 주택형·전용면적은 별도 패스에서 전 평면도에 대해 읽는다(read-types.mjs). 축척 판독은
 // 8% 만 통과하는데 이름은 전부에 필요해서다 — 화면에 "T1·T2·T3" 만 뜨면 고를 수가 없다.
@@ -123,10 +149,19 @@ for (const [dir, g] of [...groups.entries()].sort()) {
   });
 
   for (const it of items) {
-    const src = path.join(SRC, dir, it.file);
+    // 잘라 낸 도면이 있으면 그것을 싣는다 (없으면 원본 시트).
+    // 축척·주택형 기록도 잘라 낸 파일명으로 남아 있으므로 조회 키를 맞춘다.
+    const cp = cropBy.get(`${dir}/${it.file}`);
+    const src = cp ? path.join(CROPS, dir, cp.out) : path.join(RAW, dir, it.file);
     if (!fs.existsSync(src)) continue;
-    const s = scanBy.get(`${dir}/${it.file}`) || {};
-    const ty = typeBy.get(`${dir}/${it.file}`) || {};
+    const skey = cp ? `${dir}/${cp.out}` : `${dir}/${it.file}`;
+    const s = scanBy.get(skey) || scanBy.get(`${dir}/${it.file}`) || {};
+    const ty = typeBy.get(skey) || typeBy.get(`${dir}/${it.file}`) || {};
+    /*
+     * 전용면적·주택형은 **원본 시트에서 읽은 값(read-types)을 먼저** 쓴다.
+     * 자르고 나면 머리말("84B · 351세대 · 전용면적 84.3693㎡")이 잘려 나가기 때문이다 —
+     * 도면만 남기는 것이 자르기의 목적이라 그게 맞고, 대신 이름은 원본에서 가져온다.
+     */
     const excl = ty.excl || s.excl || null;
 
     // 주택형 이름 — OCR 로 읽은 것이 가장 믿을 만하고, 없으면 파일명, 그것도 없으면 순번.
