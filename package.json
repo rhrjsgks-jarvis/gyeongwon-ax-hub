@@ -21,7 +21,8 @@
     "build:sizereps": "node scripts/build-size-reps.mjs",
     "test:sizereps": "node scripts/test-sizereps.mjs",
     "test:place": "node scripts/test-place.mjs",
-    "test:plans": "node scripts/test-plans.mjs"
+    "test:plans": "node scripts/test-plans.mjs",
+    "build:plans": "node scripts/build-plan-index.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

@@ -1,0 +1,592 @@
+{
+ "version": 1,
+ "note": "단지 도면 색인. 지역 → 단지 → 도면 순으로 고른다. 원본 수집은 로컬(.scratch/plans)에서 하고 이 색인과 이미지는 npm run build:plans 로 만든다.",
+ "generatedAt": "2026-08-07",
+ "complexCount": 9,
+ "planCount": 65,
+ "complexes": [
+  {
+   "id": "c01",
+   "region": "강원 강릉",
+   "complex": "강릉 롯데캐슬 시그니처",
+   "plans": [
+    {
+     "type": "84A",
+     "file": "plans/c01/84A.jpg",
+     "w": 760,
+     "h": 866,
+     "exclusiveM2": 84,
+     "kb": 191
+    },
+    {
+     "type": "84B",
+     "file": "plans/c01/84B.jpg",
+     "w": 760,
+     "h": 868,
+     "exclusiveM2": 84,
+     "kb": 200
+    },
+    {
+     "type": "84C",
+     "file": "plans/c01/84C.jpg",
+     "w": 762,
+     "h": 521,
+     "exclusiveM2": 84,
+     "kb": 53
+    },
+    {
+     "type": "93A",
+     "file": "plans/c01/93A.jpg",
+     "w": 760,
+     "h": 876,
+     "exclusiveM2": 93,
+     "kb": 190
+    },
+    {
+     "type": "93B",
+     "file": "plans/c01/93B.jpg",
+     "w": 760,
+     "h": 881,
+     "exclusiveM2": 93,
+     "kb": 202
+    },
+    {
+     "type": "94",
+     "file": "plans/c01/94.jpg",
+     "w": 762,
+     "h": 521,
+     "exclusiveM2": 94,
+     "kb": 57
+    },
+    {
+     "type": "114A",
+     "file": "plans/c01/114A.jpg",
+     "w": 761,
+     "h": 1000,
+     "exclusiveM2": 114,
+     "kb": 243
+    },
+    {
+     "type": "114B",
+     "file": "plans/c01/114B.jpg",
+     "w": 762,
+     "h": 1000,
+     "exclusiveM2": 114,
+     "kb": 229
+    },
+    {
+     "type": "T-135",
+     "file": "plans/c01/T-135.jpg",
+     "w": 760,
+     "h": 848,
+     "exclusiveM2": 135,
+     "kb": 209
+    },
+    {
+     "type": "T-136",
+     "file": "plans/c01/T-136.jpg",
+     "w": 762,
+     "h": 521,
+     "exclusiveM2": 136,
+     "kb": 76
+    },
+    {
+     "type": "T-137",
+     "file": "plans/c01/T-137.jpg",
+     "w": 760,
+     "h": 843,
+     "exclusiveM2": 137,
+     "kb": 213
+    }
+   ]
+  },
+  {
+   "id": "c02",
+   "region": "강원 원주",
+   "complex": "원주 롯데캐슬 시그니처",
+   "plans": [
+    {
+     "type": "84A",
+     "file": "plans/c02/84A.jpg",
+     "w": 760,
+     "h": 650,
+     "exclusiveM2": 84,
+     "kb": 112
+    },
+    {
+     "type": "84B",
+     "file": "plans/c02/84B.jpg",
+     "w": 760,
+     "h": 660,
+     "exclusiveM2": 84,
+     "kb": 90
+    },
+    {
+     "type": "84C",
+     "file": "plans/c02/84C.jpg",
+     "w": 760,
+     "h": 640,
+     "exclusiveM2": 84,
+     "kb": 110
+    },
+    {
+     "type": "84D",
+     "file": "plans/c02/84D.jpg",
+     "w": 760,
+     "h": 750,
+     "exclusiveM2": 84,
+     "kb": 101
+    },
+    {
+     "type": "96",
+     "file": "plans/c02/96.jpg",
+     "w": 760,
+     "h": 750,
+     "exclusiveM2": 96,
+     "kb": 110
+    },
+    {
+     "type": "99A",
+     "file": "plans/c02/99A.jpg",
+     "w": 760,
+     "h": 721,
+     "exclusiveM2": 99,
+     "kb": 121
+    },
+    {
+     "type": "99B",
+     "file": "plans/c02/99B.jpg",
+     "w": 760,
+     "h": 721,
+     "exclusiveM2": 99,
+     "kb": 121
+    },
+    {
+     "type": "114A",
+     "file": "plans/c02/114A.jpg",
+     "w": 760,
+     "h": 800,
+     "exclusiveM2": 114,
+     "kb": 115
+    },
+    {
+     "type": "114B",
+     "file": "plans/c02/114B.jpg",
+     "w": 760,
+     "h": 665,
+     "exclusiveM2": 114,
+     "kb": 101
+    },
+    {
+     "type": "114C",
+     "file": "plans/c02/114C.jpg",
+     "w": 760,
+     "h": 768,
+     "exclusiveM2": 114,
+     "kb": 113
+    },
+    {
+     "type": "120",
+     "file": "plans/c02/120.jpg",
+     "w": 760,
+     "h": 768,
+     "exclusiveM2": 120,
+     "kb": 115
+    },
+    {
+     "type": "132",
+     "file": "plans/c02/132.jpg",
+     "w": 760,
+     "h": 768,
+     "exclusiveM2": 132,
+     "kb": 133
+    },
+    {
+     "type": "148P",
+     "file": "plans/c02/148P.jpg",
+     "w": 760,
+     "h": 768,
+     "exclusiveM2": 148,
+     "kb": 122
+    },
+    {
+     "type": "165",
+     "file": "plans/c02/165.jpg",
+     "w": 760,
+     "h": 769,
+     "exclusiveM2": 165,
+     "kb": 117
+    },
+    {
+     "type": "202P",
+     "file": "plans/c02/202P.jpg",
+     "w": 760,
+     "h": 769,
+     "exclusiveM2": 202,
+     "kb": 115
+    }
+   ]
+  },
+  {
+   "id": "c03",
+   "region": "경기 광명",
+   "complex": "광명 롯데캐슬 시그니처",
+   "plans": [
+    {
+     "type": "49",
+     "file": "plans/c03/49.jpg",
+     "w": 1160,
+     "h": 1056,
+     "exclusiveM2": 49,
+     "kb": 116
+    },
+    {
+     "type": "59A",
+     "file": "plans/c03/59A.jpg",
+     "w": 1160,
+     "h": 1056,
+     "exclusiveM2": 59,
+     "kb": 128
+    },
+    {
+     "type": "59C",
+     "file": "plans/c03/59C.jpg",
+     "w": 1160,
+     "h": 1200,
+     "exclusiveM2": 59,
+     "kb": 132
+    }
+   ]
+  },
+  {
+   "id": "c04",
+   "region": "경기 광명",
+   "complex": "트리우스 광명",
+   "plans": [
+    {
+     "type": "59A",
+     "file": "plans/c04/59A.jpg",
+     "w": 760,
+     "h": 731,
+     "exclusiveM2": 59,
+     "kb": 40
+    },
+    {
+     "type": "84A",
+     "file": "plans/c04/84A.jpg",
+     "w": 760,
+     "h": 699,
+     "exclusiveM2": 84,
+     "kb": 44
+    },
+    {
+     "type": "102A",
+     "file": "plans/c04/102A.jpg",
+     "w": 760,
+     "h": 663,
+     "exclusiveM2": 102,
+     "kb": 43
+    },
+    {
+     "type": "102B",
+     "file": "plans/c04/102B.jpg",
+     "w": 760,
+     "h": 896,
+     "exclusiveM2": 102,
+     "kb": 52
+    }
+   ]
+  },
+  {
+   "id": "c05",
+   "region": "경기 광주",
+   "complex": "경기광주역 롯데캐슬 시그니처",
+   "plans": [
+    {
+     "type": "59A",
+     "file": "plans/c05/59A.jpg",
+     "w": 1160,
+     "h": 1000,
+     "exclusiveM2": 59,
+     "kb": 110
+    },
+    {
+     "type": "59B",
+     "file": "plans/c05/59B.jpg",
+     "w": 1160,
+     "h": 1325,
+     "exclusiveM2": 59,
+     "kb": 133
+    },
+    {
+     "type": "59C",
+     "file": "plans/c05/59C.jpg",
+     "w": 1160,
+     "h": 1000,
+     "exclusiveM2": 59,
+     "kb": 109
+    },
+    {
+     "type": "84B",
+     "file": "plans/c05/84B.jpg",
+     "w": 1160,
+     "h": 1000,
+     "exclusiveM2": 84,
+     "kb": 111
+    },
+    {
+     "type": "84C",
+     "file": "plans/c05/84C.jpg",
+     "w": 1160,
+     "h": 1325,
+     "exclusiveM2": 84,
+     "kb": 141
+    },
+    {
+     "type": "84D",
+     "file": "plans/c05/84D.jpg",
+     "w": 1160,
+     "h": 1000,
+     "exclusiveM2": 84,
+     "kb": 121
+    },
+    {
+     "type": "114B",
+     "file": "plans/c05/114B.jpg",
+     "w": 1160,
+     "h": 1325,
+     "exclusiveM2": 114,
+     "kb": 134
+    },
+    {
+     "type": "170",
+     "file": "plans/c05/170.png",
+     "w": 1160,
+     "h": 1751,
+     "exclusiveM2": 170,
+     "kb": 1069
+    },
+    {
+     "type": "250",
+     "file": "plans/c05/250.png",
+     "w": 1160,
+     "h": 2137,
+     "exclusiveM2": 250,
+     "kb": 1262
+    },
+    {
+     "type": "260",
+     "file": "plans/c05/260.png",
+     "w": 1160,
+     "h": 2680,
+     "exclusiveM2": 260,
+     "kb": 1401
+    }
+   ]
+  },
+  {
+   "id": "c06",
+   "region": "경기 수원",
+   "complex": "매교역 팰루시드",
+   "plans": [
+    {
+     "type": "71A",
+     "file": "plans/c06/71A.jpg",
+     "w": 1200,
+     "h": 3234,
+     "exclusiveM2": 71,
+     "kb": 786
+    },
+    {
+     "type": "84A",
+     "file": "plans/c06/84A.jpg",
+     "w": 1200,
+     "h": 3319,
+     "exclusiveM2": 84,
+     "kb": 856
+    },
+    {
+     "type": "101",
+     "file": "plans/c06/101.jpg",
+     "w": 1200,
+     "h": 3322,
+     "exclusiveM2": 101,
+     "kb": 880
+    }
+   ]
+  },
+  {
+   "id": "c07",
+   "region": "경기 오산",
+   "complex": "롯데캐슬 위너스포레",
+   "plans": [
+    {
+     "type": "59A",
+     "file": "plans/c07/59A.jpg",
+     "w": 760,
+     "h": 542,
+     "exclusiveM2": 59,
+     "kb": 59
+    },
+    {
+     "type": "59B",
+     "file": "plans/c07/59B.jpg",
+     "w": 760,
+     "h": 838,
+     "exclusiveM2": 59,
+     "kb": 71
+    },
+    {
+     "type": "59C",
+     "file": "plans/c07/59C.jpg",
+     "w": 760,
+     "h": 982,
+     "exclusiveM2": 59,
+     "kb": 88
+    },
+    {
+     "type": "75A",
+     "file": "plans/c07/75A.jpg",
+     "w": 1160,
+     "h": 812,
+     "exclusiveM2": 75,
+     "kb": 111
+    },
+    {
+     "type": "75B",
+     "file": "plans/c07/75B.jpg",
+     "w": 760,
+     "h": 1117,
+     "exclusiveM2": 75,
+     "kb": 102
+    },
+    {
+     "type": "84A",
+     "file": "plans/c07/84A.jpg",
+     "w": 760,
+     "h": 525,
+     "exclusiveM2": 84,
+     "kb": 61
+    },
+    {
+     "type": "84B",
+     "file": "plans/c07/84B.jpg",
+     "w": 760,
+     "h": 476,
+     "exclusiveM2": 84,
+     "kb": 57
+    },
+    {
+     "type": "84C",
+     "file": "plans/c07/84C.jpg",
+     "w": 760,
+     "h": 528,
+     "exclusiveM2": 84,
+     "kb": 62
+    },
+    {
+     "type": "103A",
+     "file": "plans/c07/103A.jpg",
+     "w": 760,
+     "h": 531,
+     "exclusiveM2": 103,
+     "kb": 64
+    },
+    {
+     "type": "103B",
+     "file": "plans/c07/103B.jpg",
+     "w": 760,
+     "h": 428,
+     "exclusiveM2": 103,
+     "kb": 53
+    }
+   ]
+  },
+  {
+   "id": "c08",
+   "region": "경기 이천",
+   "complex": "이천 롯데캐슬 센트럴 페라즈 스카이",
+   "plans": [
+    {
+     "type": "84A",
+     "file": "plans/c08/84A.jpg",
+     "w": 1160,
+     "h": 750,
+     "exclusiveM2": 84,
+     "kb": 81
+    },
+    {
+     "type": "84B",
+     "file": "plans/c08/84B.jpg",
+     "w": 1160,
+     "h": 1200,
+     "exclusiveM2": 84,
+     "kb": 109
+    },
+    {
+     "type": "84C",
+     "file": "plans/c08/84C.jpg",
+     "w": 1160,
+     "h": 750,
+     "exclusiveM2": 84,
+     "kb": 86
+    },
+    {
+     "type": "122",
+     "file": "plans/c08/122.jpg",
+     "w": 1160,
+     "h": 750,
+     "exclusiveM2": 122,
+     "kb": 97
+    }
+   ]
+  },
+  {
+   "id": "c09",
+   "region": "경기 화성",
+   "complex": "자이 헤리티지",
+   "plans": [
+    {
+     "type": "01",
+     "file": "plans/c09/01.jpg",
+     "w": 735,
+     "h": 2072,
+     "exclusiveM2": 1,
+     "kb": 531
+    },
+    {
+     "type": "02",
+     "file": "plans/c09/02.jpg",
+     "w": 735,
+     "h": 2072,
+     "exclusiveM2": 2,
+     "kb": 604
+    },
+    {
+     "type": "03",
+     "file": "plans/c09/03.jpg",
+     "w": 735,
+     "h": 2075,
+     "exclusiveM2": 3,
+     "kb": 505
+    },
+    {
+     "type": "04",
+     "file": "plans/c09/04.jpg",
+     "w": 735,
+     "h": 2078,
+     "exclusiveM2": 4,
+     "kb": 524
+    },
+    {
+     "type": "05",
+     "file": "plans/c09/05.jpg",
+     "w": 735,
+     "h": 2072,
+     "exclusiveM2": 5,
+     "kb": 560
+    }
+   ]
+  }
+ ]
+}
