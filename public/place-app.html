@@ -124,6 +124,15 @@
   .spec b{color:var(--ink);font-variant-numeric:tabular-nums}
   .src{font-size:11px;color:#8A9099;line-height:1.4}
   .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  .liblist{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  .libitem{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;font-size:13.5px}
+  .libitem:hover{background:#F3F5F8}
+  .libitem .ty{color:var(--blue);font-weight:700;margin-left:4px}
+  .libitem .hint{display:block;margin-top:2px}
+  .crumb{font-size:12.5px;color:var(--sub);margin:8px 0 2px}
+  .crumb a{color:var(--blue);text-decoration:none}
+  .crumb a:hover{text-decoration:underline}
   .picklist{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow:auto;
     border:1px solid var(--line);border-radius:8px;padding:6px}
   .pick{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer}
@@ -149,7 +158,7 @@
 <div id="app">
 
   <div id="steps">
-    <div class="step on" data-step="1"><b>1</b>도면 올리기</div>
+    <div class="step on" data-step="1"><b>1</b>단지 고르기 · 도면 올리기</div>
     <div class="step" data-step="2"><b>2</b>축척 맞추기</div>
     <div class="step" data-step="3"><b>3</b>벽 인식</div>
     <div class="step" data-step="4"><b>4</b>가전 배치</div>
@@ -157,12 +166,14 @@
 
   <div id="bar">
     <input type="file" id="file" accept="image/*" hidden>
+    <button id="btn-lib" class="primary">단지 불러오기</button>
     <button id="btn-img">도면 이미지</button>
     <button id="btn-scale">축척 맞추기</button>
     <button id="btn-detect">벽 자동 인식</button>
     <button id="btn-clean" class="ghost" title="벽만 남긴 정리본 보기">◧</button>
     <button id="btn-wall">벽 그리기</button>
     <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
+    <button id="btn-save" class="ghost" title="지금 잡은 방을 단지로 등록합니다">이 단지 저장</button>
     <button id="btn-add">가전 선택</button>
     <button id="btn-auto" class="primary">주방 배치 추천</button>
     <span class="grow"></span>
@@ -1003,6 +1014,59 @@ function structureBox(dark, w, h){
 }
 
 /**
+ * 한 장에 실린 **도면들을 따로 떼어낸다.**
+ *
+ * 실제 분양 도면은 "한 장 = 한 평면도"가 아니다. 복층은 상부층·하부층이 나란히 있고,
+ * 확장/비확장 비교도면, 옵션 도면, 왼쪽의 마감재 상세컷이 한 장에 같이 실린다.
+ * 그런데 structureBox 는 이것들을 **하나의 건물**로 묶어 버려서, 상부층의 방을 눌러도
+ * 하부층까지 포함한 범위를 기준으로 누수를 판정하게 된다(기준이 통째로 어긋난다).
+ *
+ * 벽을 넉넉히 부풀리면 한 도면 안의 벽들은 한 덩어리로 뭉치고 도면끼리는 떨어진 채 남는다.
+ * 그 덩어리 하나하나가 곧 시트에 실린 개별 도면이다.
+ */
+function sheetBoxes(base){
+  if (base._sheets) return base._sheets;
+  const { comps } = components(base.dark, base.w, base.h);
+  if (!comps.length) return (base._sheets = []);
+  const big0 = comps.reduce((a, c) => (c.n > a.n ? c : a));
+
+  // 벽을 부풀려 뭉치는 방식은 쓰지 않는다. 창·문 자리에서 외벽이 끊겨 한 도면의 벽이
+  // 여러 조각으로 갈라지는데, 그 틈(창 1.8m·문 0.9m)을 이을 만큼 크게 부풀리면
+  // 이번엔 서로 다른 도면끼리 붙어 버린다.
+  //
+  // 대신 **bbox 가 겹치는 조각끼리 합친다.** 한 도면의 벽 조각들은 서로 맞물려 있어
+  // bbox 가 크게 겹치지만, 나란히 놓인 두 도면(복층 상/하부층 등)은 bbox 가 떨어져 있다.
+  let boxes = comps.filter((c) => c.n >= big0.n * 0.02)
+    .map((c) => ({ x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1, n: c.n }));
+  for (let again = true; again; ) {
+    again = false;
+    loop:
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i], b = boxes[j];
+        if (a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1) {
+          boxes[i] = { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0),
+                       x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1), n: a.n + b.n };
+          boxes.splice(j, 1); again = true; break loop;
+        }
+      }
+    }
+  }
+  // 가장 큰 것의 15% 미만은 상세컷·범례·글씨 덩어리로 보고 도면으로 세지 않는다
+  const bigN = boxes.reduce((s, b) => Math.max(s, b.n), 0);
+  return (base._sheets = boxes.filter((b) => b.n >= bigN * 0.15));
+}
+
+/** 누른 자리가 속한 도면의 범위. 못 찾으면 전체 범위로 되돌린다. */
+function sheetBoxAt(base, sx, sy){
+  const sheets = sheetBoxes(base);
+  const inside = sheets.filter((s) => sx >= s.x0 && sx <= s.x1 && sy >= s.y0 && sy <= s.y1);
+  if (!inside.length) return base.bbox;
+  // 겹쳐 있으면 더 작은 쪽(= 더 구체적인 도면)을 쓴다
+  return inside.sort((a, b) => a.n - b.n)[0];
+}
+
+/**
  * **건물 안쪽**을 표시한다. 도면 가장자리에서 배경을 채워 닿지 않는 곳이 건물 안이다.
  *
  * 이때만은 **정리하지 않은 원본 마스크**를 쓴다. 창은 벽에 뚫린 구멍이 아니라 벽 사이에
@@ -1217,7 +1281,9 @@ function detectRoomAt(imgX, imgY, forceR){
 
   // 새어 나가지 않는 **가장 작은** 닫기 반경을 찾는다. 크게 잡을수록 창문 표시나
   // 가까운 선이 뭉쳐 검은 덩어리가 되므로, 막을 수 있는 최소한만 막는다.
-  const bb = base.bbox;
+  // 한 장에 도면이 여럿이면 **누른 자리가 속한 도면**만 기준으로 삼는다.
+  // 시트 전체를 기준으로 재면 상부층 방을 눌러도 하부층까지 포함한 범위로 누수를 판정한다.
+  const bb = sheetBoxAt(base, sx, sy);
   const planArea = (bb.x1 - bb.x0 + 1) * (bb.y1 - bb.y0 + 1);
   const leakLimit = ((bb.x1-bb.x0) + (bb.y1-bb.y0)) * 0.3;
   let tooBig = false;
@@ -1226,7 +1292,9 @@ function detectRoomAt(imgX, imgY, forceR){
   let lastLeak = null, firstWall = null;
   let fallback = null;   // 하나도 통과하지 못했을 때 내놓을 근사치
   const tryRadius = (r) => {
-    const m = sealedMask(r);
+    const m0 = sealedMask(r);
+    // sealedMask 는 반경별로 캐시되므로 bbox 만 이 클릭용으로 갈아 끼운다(복사는 얕게)
+    const m = bb === base.bbox ? m0 : { ...m0, bbox: bb };
     if (m.dark[sy*m.w + sx]) {                      // 이 반경에서는 누른 자리가 벽에 먹혔다
       if (firstWall == null || r < firstWall) firstWall = r;
       return;
@@ -1336,7 +1404,7 @@ function detectRoomAt(imgX, imgY, forceR){
         const lim = Math.max(W, H);
         while (n < lim) {
           const nx = x + dx, ny = y + dy;
-          if (nx < base.bbox.x0 || ny < base.bbox.y0 || nx > base.bbox.x1 || ny > base.bbox.y1) break;
+          if (nx < bb.x0 || ny < bb.y0 || nx > bb.x1 || ny > bb.y1) break;
           if (D[ny * W + nx]) break;
           x = nx; y = ny; n++;
         }
@@ -2037,6 +2105,8 @@ document.addEventListener('keydown',(e)=>{
 });
 
 /* ── 단계별 동작 ── */
+$('#btn-lib').onclick = ()=> openLibrary();
+$('#btn-save').onclick = ()=> askSaveComplex();
 $('#btn-img').onclick = ()=> $('#file').click();
 $('#file').onchange = (e)=>{
   const f = e.target.files[0]; if(!f) return;
@@ -2146,6 +2216,176 @@ function askWallLength(segs, opts){
         closeSheet(); setMode('idle'); setStep(4); evaluate(); draw();
       };
       $('#c').onclick = ()=>{ closeSheet(); setMode('wall'); draw(); };
+    });
+}
+
+/* ── 단지 평면 라이브러리 ────────────────────────────────────────────
+   매장에서 고객 단지를 고르면 업로드·축척·인식을 건너뛰고 바로 배치를 시작한다.
+
+   **도면 이미지는 저장하지 않는다.** 분양 도면은 저작권이 있어 저장소에 둘 수 없다.
+   대신 확인이 끝난 방 경계(mm 좌표)만 남긴다 — 파생 측정값이라 담을 수 있고, 벽이 이미
+   월드 좌표라 이미지 없이 그대로 복원된다. 단지 하나당 몇 KB 밖에 되지 않는다.
+
+   두 곳에서 읽는다:
+     · public/plan-library.json  — 저장소에 커밋된 공용 목록
+     · localStorage              — 이 기기에서 등록한 것 (내보내기로 공용 목록에 합칠 수 있다)
+──────────────────────────────────────────────────────────────── */
+const LIB_KEY = 'place_library_v1';
+let libSeed = null;
+
+async function libraryAll(){
+  if (!libSeed) {
+    try {
+      const r = await fetch('plan-library.json');
+      const j = await r.json();
+      libSeed = Array.isArray(j.entries) ? j.entries : [];
+    } catch { libSeed = []; }
+  }
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch { local = []; }
+  return [...libSeed.map((e) => ({ ...e, _src: '공용' })), ...local.map((e) => ({ ...e, _src: '이 기기' }))];
+}
+
+/** 현재 잡아 놓은 방들을 단지로 등록한다 */
+function saveToLibrary(region, complex, type){
+  if (!state.rooms.length) { toast('먼저 방을 잡아 주세요'); return; }
+  const entry = {
+    region: region || '', complex, type,
+    addedAt: new Date().toISOString().slice(0, 10),
+    rooms: state.rooms.map((r) => ({
+      name: r.name,
+      parts: r.parts.map((p) => ({
+        walls: p.walls.map((w) => ({ x1: Math.round(w.x1), y1: Math.round(w.y1),
+                                     x2: Math.round(w.x2), y2: Math.round(w.y2), open: !!w.open })),
+      })),
+    })),
+  };
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch {}
+  // 같은 단지·타입이 있으면 덮어쓴다
+  local = local.filter((e) => !(e.complex === complex && e.type === type));
+  local.push(entry);
+  localStorage.setItem(LIB_KEY, JSON.stringify(local));
+  toast(`${complex} ${type} 저장됨 (이 기기)`);
+  return entry;
+}
+
+/** 라이브러리 항목을 현재 화면으로 불러온다 — 도면 이미지 없이 방만 복원한다 */
+function loadFromLibrary(entry){
+  state.img = null; state.imgW = state.imgH = 0;
+  state.mask = state.baseMask = state.cleanCv = null; state.sealCache = null;
+  state.items = []; state.rooms = []; state.walls = [];
+  state.mmPerPx = 1; state.scaled = true;        // 좌표가 이미 mm 라 축척 보정이 필요 없다
+  for (const r of entry.rooms) {
+    const room = { id: 'r' + Math.random().toString(36).slice(2, 8), name: r.name,
+                   parts: r.parts.map((p) => ({ walls: p.walls.map((w) => ({ ...w })) })) };
+    state.rooms.push(room);
+  }
+  state.roomSel = state.rooms[0] ? state.rooms[0].id : null;
+  syncWalls();
+  // 화면에 맞춰 배율을 잡는다
+  const xs = state.walls.flatMap((w) => [w.x1, w.x2]), ys = state.walls.flatMap((w) => [w.y1, w.y2]);
+  if (xs.length) {
+    const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
+    const rect = cv.getBoundingClientRect();
+    state.zoom = Math.min(rect.width / (w || 1), rect.height / (h || 1)) * 0.85;
+    state.panX = 40 - Math.min(...xs) * state.zoom;
+    state.panY = 40 - Math.min(...ys) * state.zoom;
+  }
+  setMode('idle'); setStep(4);
+  evaluate(); renderSide(); draw();
+  toast(`${entry.complex} ${entry.type} — 방 ${entry.rooms.length}곳 불러옴`);
+}
+
+/**
+ * 단지 고르기 — **지역 → 단지명 → 타입** 순으로 좁혀 간다.
+ * 매장에서 고객에게 묻는 순서 그대로다("어느 지역이세요" → "어느 단지" → "몇 평형").
+ * 목록이 늘어나도 한 화면에 쏟아지지 않는다.
+ */
+async function openLibrary(){
+  const all = await libraryAll();
+  let lv = 'region', region = null, complex = null;
+
+  const uniq = (a) => [...new Set(a)].sort((x, y) => x.localeCompare(y, 'ko'));
+  const regions = () => uniq(all.map((e) => e.region || '지역 미지정'));
+  const complexes = () => uniq(all.filter((e) => (e.region || '지역 미지정') === region).map((e) => e.complex));
+  const types = () => all.filter((e) => (e.region || '지역 미지정') === region && e.complex === complex);
+
+  const render = () => {
+    const body = $('#libbody'), crumb = $('#libcrumb');
+    if (!body) return;
+    crumb.innerHTML = lv === 'region' ? '<b>지역</b>'
+      : lv === 'complex' ? `<a href="#" data-go="region">지역</a> › <b>${esc(region)}</b>`
+      : `<a href="#" data-go="region">지역</a> › <a href="#" data-go="complex">${esc(region)}</a> › <b>${esc(complex)}</b>`;
+
+    let items;
+    if (lv === 'region') {
+      items = regions().map((r) => {
+        const n = all.filter((e) => (e.region || '지역 미지정') === r).length;
+        return `<button class="libitem" data-v="${esc(r)}"><b>${esc(r)}</b>
+          <span class="hint">단지 ${uniq(all.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length}곳 · 타입 ${n}종</span></button>`;
+      });
+    } else if (lv === 'complex') {
+      items = complexes().map((c) => {
+        const n = all.filter((e) => (e.region || '지역 미지정') === region && e.complex === c).length;
+        return `<button class="libitem" data-v="${esc(c)}"><b>${esc(c)}</b>
+          <span class="hint">타입 ${n}종</span></button>`;
+      });
+    } else {
+      items = types().map((e) => `<button class="libitem" data-i="${all.indexOf(e)}">
+        <b>${esc(e.type || '(타입 미지정)')}</b>
+        <span class="hint">방 ${e.rooms.length}곳 · ${esc(e._src)}${e.addedAt ? ' · ' + esc(e.addedAt) : ''}</span></button>`);
+    }
+    body.innerHTML = items.length ? items.join('')
+      : '<p class="hint">아직 등록된 것이 없습니다. 도면을 올려 방을 잡은 뒤 <b>이 단지 저장</b>을 누르세요.</p>';
+
+    body.querySelectorAll('.libitem').forEach((b) => {
+      b.onclick = () => {
+        if (lv === 'region') { region = b.dataset.v; lv = 'complex'; render(); }
+        else if (lv === 'complex') { complex = b.dataset.v; lv = 'type'; render(); }
+        else { closeSheet(); loadFromLibrary(all[+b.dataset.i]); }
+      };
+    });
+    crumb.querySelectorAll('a[data-go]').forEach((a) => {
+      a.onclick = (ev) => { ev.preventDefault(); lv = a.dataset.go; render(); };
+    });
+  };
+
+  sheet(`<h2>단지 고르기</h2>
+    <p class="hint">지역 → 단지 → 타입 순으로 고르면 도면 없이 바로 배치를 시작합니다.</p>
+    <div id="libcrumb" class="crumb"></div>
+    <div id="libbody" class="liblist"></div>
+    <div class="modal-actions"><button id="libexp">내보내기(JSON)</button><button id="c">닫기</button></div>`,
+    () => {
+      render();
+      $('#libexp').onclick = () => {
+        let local = [];
+        try { local = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch {}
+        const blob = new Blob([JSON.stringify({ version: 1, entries: local }, null, 1)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'plan-library-내보내기.json'; a.click();
+      };
+      $('#c').onclick = closeSheet;
+    });
+}
+
+function askSaveComplex(){
+  if (!state.rooms.length) { toast('먼저 방을 잡아 주세요'); return; }
+  sheet(`<h2>이 단지로 저장</h2>
+    <p class="hint">지금 잡아 놓은 방 ${state.rooms.length}곳을 단지로 등록합니다.
+      도면 이미지는 저장하지 않고 <b>방 경계 좌표만</b> 남습니다.</p>
+    <label class="pickers"><span class="hint">지역</span><input id="sv-region" placeholder="경기 수원"></label>
+    <label class="pickers"><span class="hint">단지명</span><input id="sv-complex" placeholder="매교역 팰루시드"></label>
+    <label class="pickers"><span class="hint">타입</span><input id="sv-type" placeholder="84A"></label>
+    <div class="modal-actions"><button id="c">취소</button><button class="primary" id="ok">저장</button></div>`,
+    () => {
+      $('#ok').onclick = () => {
+        const c = $('#sv-complex').value.trim();
+        if (!c) { toast('단지명을 입력해 주세요'); return; }
+        saveToLibrary($('#sv-region').value.trim(), c, $('#sv-type').value.trim());
+        closeSheet();
+      };
+      $('#c').onclick = closeSheet;
     });
 }
 
@@ -2486,6 +2726,7 @@ window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, w
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
+  libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
