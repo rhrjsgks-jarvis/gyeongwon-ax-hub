@@ -414,6 +414,75 @@ for (const plan of PLANS) {
   else pass(`공간 지정 UI (도면 위에서 ${r.wideArea.toFixed(1)}㎡로 넓혔다가 되돌리고 · 이름 붙여 2곳 등록 · 세 번째는 거실에 이어 붙임 → ${r.roomsAfterJoin.join(' / ')})`);
 }
 
+// ── 공간 복수선택 ──
+// 도면에 따라 거실만 잡히기도 하고 거실+주방이 한 덩어리로 잡히기도 한다. 주방은 냉장고장이
+// 별도 칸으로 그려져 따로 떨어지기도 한다. 가전은 "이 방 안"에서 자리를 찾으므로 여러 조각을
+// 한 공간으로 묶을 수 있어야 하고, 그때마다 이름을 다시 붙이게 하면 매장에서 못 쓴다.
+{
+  const plan = PLANS[0];
+  const b64 = Buffer.from(plan.svg, 'utf8').toString('base64');
+  const r = await page.evaluate(async ({ b64, mmPerImgPx }) => {
+    const P = window.__place;
+    const img = new Image();
+    await new Promise((res) => { img.onload = res; img.src = 'data:image/svg+xml;base64,' + b64; });
+    P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+    P.state.mmPerPx = mmPerImgPx; P.state.scaled = true;
+    P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
+    P.state.rooms = []; P.state.walls = []; P.state.items = []; P.state.mode = 'detect';
+    P.state.draft = null; P.state.draftMore = [];
+    P.state.zoom = 0.05; P.state.panX = 20; P.state.panY = 20;
+
+    const cv = document.querySelector('#cv');
+    const rect = cv.getBoundingClientRect();
+    const tap = (mmx, mmy) => {
+      const sx = mmx * P.state.zoom + P.state.panX, sy = mmy * P.state.zoom + P.state.panY;
+      cv.dispatchEvent(new PointerEvent('pointerdown', {
+        clientX: rect.left + sx, clientY: rect.top + sy, bubbles: true, pointerId: 1 }));
+    };
+    const out = {};
+
+    tap(5800, 3300);                                   // 거실
+    out.hasAdd = !!document.querySelector('#d-add');   // "＋ 이 공간도 함께" 가 있어야 한다
+    const a1 = P.draftAreaM2(P.state.draft);
+    document.querySelector('#d-add').click();          // 담기
+    out.stashed = (P.state.draftMore || []).length;
+    out.draftCleared = !P.state.draft;
+    out.barStillOn = document.querySelector('#draftbar').classList.contains('on');
+    out.waitMsg = /마저 누르세요/.test(document.querySelector('#draftbar').textContent);
+
+    P.state.mode = 'detect';
+    tap(1600, 3000);                                   // 침실1 — 두 번째 조각
+    const a2 = P.draftAreaM2(P.state.draft);
+    out.total = P.draftTotalM2();
+    out.sumOk = Math.abs(out.total - (a1 + a2)) < 0.05;
+    out.pieces = P.draftPieces().length;
+    out.okLabel = (document.querySelector('#d-ok') || {}).textContent;
+
+    document.querySelector('#d-ok').click();           // 확정 → 이름 시트
+    out.sheetSays = /조각/.test(document.querySelector('.sheet, .modal, body').textContent);
+    if (document.querySelector('#rname')) {
+      document.querySelector('#rname').value = '거실+주방';
+      document.querySelector('#ok').click();
+    }
+    out.rooms = P.state.rooms.map((x) => `${x.name}(${x.parts.length})`);
+    out.cleared = (P.state.draftMore || []).length === 0 && !P.state.draft;
+    out.areaM2 = P.state.rooms.length ? +(P.roomArea(P.state.rooms[0]) / 1e6).toFixed(1) : 0;
+    return out;
+  }, { b64, mmPerImgPx: plan.mmPerImgPx });
+
+  if (!r.hasAdd) fail('"＋ 이 공간도 함께" 버튼이 없다 — 복수선택을 시작할 수 없다');
+  else if (r.stashed !== 1) fail(`담기를 눌렀는데 담긴 조각이 ${r.stashed}개`);
+  else if (!r.draftCleared) fail('담은 뒤에도 현재 초안이 남아 있다 — 다음 공간을 누를 수 없다');
+  else if (!r.barStillOn || !r.waitMsg) fail('담은 뒤 막대가 사라져 몇 개를 묶는 중인지 알 수 없다');
+  else if (r.pieces !== 2) fail(`두 번째를 눌렀는데 조각이 ${r.pieces}개`);
+  else if (!r.sumOk) fail(`합계 넓이가 두 조각의 합과 다름 (${r.total})`);
+  else if (!/2개로 확정/.test(r.okLabel || '')) fail(`확정 버튼이 개수를 알리지 않음 ("${r.okLabel}")`);
+  else if (!r.sheetSays) fail('이름 시트가 "조각 N개를 한 공간으로 묶습니다"를 알리지 않음');
+  else if (r.rooms.length !== 1 || !/\(2\)$/.test(r.rooms[0])) fail(`복수선택 결과가 [${r.rooms}] (기대 한 공간 · 조각 2개)`);
+  else if (!r.cleared) fail('확정한 뒤에도 담아 둔 조각이 남아 있다');
+  else pass(`공간 복수선택 — 두 곳을 담아 한 공간으로 확정 (${r.rooms[0]} · ${r.areaM2}㎡)`);
+}
+
 // ── 단지 평면 라이브러리 ──
 // 매장에서 고객 단지를 고르면 도면 없이 바로 배치를 시작하는 것이 목적이다.
 // 도면 이미지는 저작권 때문에 저장할 수 없으므로 방 경계(mm 좌표)만 남기는데,
