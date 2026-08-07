@@ -414,6 +414,112 @@ for (const plan of PLANS) {
   else pass(`공간 지정 UI (도면 위에서 ${r.wideArea.toFixed(1)}㎡로 넓혔다가 되돌리고 · 이름 붙여 2곳 등록 · 세 번째는 거실에 이어 붙임 → ${r.roomsAfterJoin.join(' / ')})`);
 }
 
+// ── 단지 평면 라이브러리 ──
+// 매장에서 고객 단지를 고르면 도면 없이 바로 배치를 시작하는 것이 목적이다.
+// 도면 이미지는 저작권 때문에 저장할 수 없으므로 방 경계(mm 좌표)만 남기는데,
+// 그 좌표만으로 방이 온전히 복원되는지가 이 기능의 전부다. 왕복으로 검사한다.
+{
+  const plan = PLANS[0];
+  const b64 = Buffer.from(plan.svg, 'utf8').toString('base64');
+  const r = await page.evaluate(async ({ b64, mmPerImgPx }) => {
+    const P = window.__place;
+    const img = new Image();
+    await new Promise((res) => { img.onload = res; img.src = 'data:image/svg+xml;base64,' + b64; });
+    P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+    P.state.mmPerPx = mmPerImgPx; P.state.scaled = true;
+    P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
+    P.state.rooms = []; P.state.walls = []; P.state.items = [];
+    localStorage.removeItem('place_library_v1');
+
+    // 방 두 곳을 잡아 이름을 붙인다
+    const mk = (mmx, mmy, name) => {
+      const d = P.detectRoomAt(mmx / mmPerImgPx, mmy / mmPerImgPx);
+      if (d.error) return false;
+      P.applyDetected ? P.applyDetected(d.poly, d.edges, { name }) : null;
+      return true;
+    };
+    const out = {};
+    // applyDetected 가 노출돼 있지 않으면 addRoom 으로 직접 만든다
+    if (!P.applyDetected) {
+      for (const [mmx, mmy, name] of [[5800, 3300, '거실'], [1600, 3000, '침실1']]) {
+        const d = P.detectRoomAt(mmx / mmPerImgPx, mmy / mmPerImgPx);
+        if (d.error) continue;
+        const k = P.state.mmPerPx;
+        const segs = d.edges.map((e) => ({ x1: e.x1 * k, y1: e.y1 * k, x2: e.x2 * k, y2: e.y2 * k, open: !!e.open }));
+        P.addRoom(name, segs);
+      }
+    } else { mk(5800, 3300, '거실'); mk(1600, 3000, '침실1'); }
+
+    out.before = P.state.rooms.map((x) => `${x.name}(${x.parts[0].walls.length}벽)`);
+    out.beforeArea = P.state.rooms.map((x) => Math.round(P.roomArea ? P.roomArea(x) : 0));
+
+    // 저장 → 라이브러리에 들어갔는가
+    P.saveToLibrary('경기 수원', '테스트 단지', '84A');
+    const all = await P.libraryAll();
+    const saved = all.find((e) => e.complex === '테스트 단지' && e.type === '84A');
+    out.saved = !!saved;
+    out.savedRooms = saved ? saved.rooms.length : 0;
+    out.hasImage = saved ? ('img' in saved || 'image' in saved || JSON.stringify(saved).includes('data:image')) : false;
+
+    // 화면을 비우고 → 불러오기
+    P.state.rooms = []; P.state.walls = []; P.state.img = null;
+    P.state.mmPerPx = null; P.state.scaled = false;
+    if (saved) P.loadFromLibrary(saved);
+    out.after = P.state.rooms.map((x) => `${x.name}(${x.parts[0].walls.length}벽)`);
+    out.afterArea = P.state.rooms.map((x) => Math.round(P.roomArea ? P.roomArea(x) : 0));
+    out.scaled = P.state.scaled;
+    out.wallsSynced = P.state.walls.length;
+    out.noImage = !P.state.img;
+
+    // ── 지역 → 단지 → 타입 3단계로 좁혀 가는가 ──
+    // 매장에서 고객에게 묻는 순서 그대로여야 한다. 목록이 늘어나도 한 화면에 쏟아지면 안 된다.
+    P.saveToLibrary('강원 원주', '다른 단지', '59B');   // 지역이 둘이 되도록 하나 더
+    await P.openLibrary();
+    const step = () => [...document.querySelectorAll('#libbody .libitem')].map((b) => b.textContent.replace(/\s+/g, ' ').trim());
+    out.lv1 = step();                                   // 지역 목록
+    const pick = (txt) => {
+      const b = [...document.querySelectorAll('#libbody .libitem')].find((x) => x.textContent.includes(txt));
+      if (b) b.click();
+      return !!b;
+    };
+    out.picked1 = pick('경기 수원');
+    out.lv2 = step();                                   // 그 지역의 단지 목록
+    out.picked2 = pick('테스트 단지');
+    out.lv3 = step();                                   // 그 단지의 타입 목록
+    out.crumb = (document.querySelector('#libcrumb') || {}).textContent || '';
+    return out;
+  }, { b64, mmPerImgPx: plan.mmPerImgPx });
+
+  if (!r.before.length) fail('라이브러리 검사용 방을 잡지 못함');
+  else if (!r.saved) fail('저장했는데 라이브러리에서 찾을 수 없음');
+  else if (r.hasImage) fail('라이브러리 항목에 이미지가 들어 있다 — 저작권 때문에 좌표만 담아야 한다');
+  else if (r.savedRooms !== r.before.length) fail(`저장된 방 수가 다름 (${r.savedRooms} vs ${r.before.length})`);
+  else if (r.after.join() !== r.before.join()) fail(`불러온 방이 다름\n        저장 전: ${r.before}\n        불러온 뒤: ${r.after}`);
+  else if (!r.scaled) fail('불러온 뒤 축척이 확정 상태가 아님 — 좌표가 이미 mm 라 바로 써야 한다');
+  else if (!r.noImage) fail('불러오기가 도면 이미지를 남겼다');
+  else if (!r.wallsSynced) fail('불러온 뒤 state.walls 가 비어 있다');
+  // 저장할 때 좌표를 정수 mm 로 반올림하므로 넓이가 미세하게 달라진다(0.01% 수준).
+  // 상담에서 쓰는 값은 ㎡ 단위라 이 정도는 무해하다 — 완전 일치가 아니라 오차로 본다.
+  else if (r.afterArea.some((a, i) => Math.abs(a - r.beforeArea[i]) > r.beforeArea[i] * 0.005)) {
+    fail(`불러온 방의 넓이가 0.5% 넘게 달라짐 (${r.beforeArea} → ${r.afterArea})`);
+  } else {
+    pass(`단지 라이브러리 왕복 — 저장 ${r.savedRooms}곳 → 도면 없이 복원 ${r.after.join(' / ')} ` +
+      `(넓이 ${r.afterArea.join('·')}㎡ 그대로, 이미지 미포함)`);
+  }
+
+  // 3단계 좁혀 가기
+  if (!r.lv1 || r.lv1.length < 2) fail(`1단계에 지역이 ${r.lv1 ? r.lv1.length : 0}개 — 지역부터 고르게 해야 한다`);
+  else if (!r.lv1.some((t) => t.includes('경기 수원')) || !r.lv1.some((t) => t.includes('강원 원주'))) {
+    fail(`1단계 지역 목록이 이상함: ${r.lv1}`);
+  } else if (!r.picked1) fail('지역을 고를 수 없음');
+  else if (!r.lv2.some((t) => t.includes('테스트 단지'))) fail(`2단계에 그 지역의 단지가 없음: ${r.lv2}`);
+  else if (r.lv2.some((t) => t.includes('다른 단지'))) fail('2단계에 다른 지역의 단지가 섞여 있음');
+  else if (!r.picked2) fail('단지를 고를 수 없음');
+  else if (!r.lv3.some((t) => t.includes('84A'))) fail(`3단계에 타입이 없음: ${r.lv3}`);
+  else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
+  else pass(`지역 → 단지 → 타입 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 타입 ${r.lv3.length}종 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
+}
+
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
 else pass('전 도면에서 스크립트 오류 없음');
 
