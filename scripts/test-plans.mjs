@@ -491,9 +491,14 @@ for (const plan of PLANS) {
     // ("매교역 팰루시드"의 84A 가 OCR 재판독으로 T1 이 됐다) 이름을 박아 두면 수집이 나아질
     // 때마다 테스트가 깨진다 — 검사하려는 건 3단계로 좁혀 가는 동작이지 색인 내용이 아니다.
     const idx = await P.loadPlanIndex();
-    const target = idx.filter((c) => c.region === '경기 수원')
-      .sort((a, b) => b.plans.length - a.plans.length)[0];
-    out.target = target ? { complex: target.complex, plans: target.plans.length } : null;
+    // 전용면적이 읽힌 단지를 우선한다 — 3단계에서 '전용 84.37㎡' 표시를 검사하기 때문이다.
+    // 전용면적은 도면 머리말에서 OCR 로 읽는 것이라 못 읽은 단지가 정상적으로 있다.
+    const inRegion = idx.filter((c) => c.region === '경기 수원');
+    const target = inRegion.filter((c) => c.plans.some((p) => p.exclusiveM2))
+      .sort((a, b) => b.plans.length - a.plans.length)[0]
+      || inRegion.sort((a, b) => b.plans.length - a.plans.length)[0];
+    const targetHasArea = !!(target && target.plans.some((p) => p.exclusiveM2));
+    out.target = target ? { complex: target.complex, plans: target.plans.length, hasArea: targetHasArea } : null;
     out.picked2 = target ? pick(target.complex) : false;
     out.lv3 = step();                                   // 그 단지의 도면 목록
     out.savedOnlyShown = out.lv2.some((t) => t.includes('테스트 단지') && t.includes('저장된 방만'));
@@ -570,7 +575,9 @@ for (const plan of PLANS) {
     fail(`3단계 도면 수가 색인과 다름: 화면 ${r.lv3.length}장 vs 색인 ${r.target.plans}장 (${r.target.complex})`);
   }
   // 전용면적은 소수 두 자리로 뜬다("전용 84.37㎡"). \d+ 만 보면 소수점에서 걸린다.
-  else if (!r.lv3.some((t) => /전용\s*[\d.]+\s*㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
+  // 전용면적은 도면 머리말에서 OCR 로 읽는 것이라 못 읽은 단지가 정상적으로 있다.
+  // 색인에 값이 있는 단지를 골랐을 때만 화면 표시를 검사한다.
+  else if (r.target.hasArea && !r.lv3.some((t) => /전용\s*[\d.]+\s*㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
   else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
   else pass(`지역 → 단지 → 도면 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
 

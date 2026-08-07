@@ -18,8 +18,10 @@
  * 건너뛸 수 있다. 등급(scaleConf)도 함께 실어 화면에서 확신도를 밝힐 수 있게 한다.
  *
  * ── 이미지 크기 ────────────────────────────────────────────────
- * 인식 해상도 상한이 DETECT_MAX(1,200px)이라 그보다 크게 저장할 이유가 없다.
- * 긴 변 1,400px 로 줄여 담는다(약간의 여유는 축척 맞추기 화면에서 치수 글씨를 읽기 위함).
+ * 인식 해상도 상한이 DETECT_MAX(1,200px)이라 그보다 크게 저장하면 인식에는 아무 이득이 없다.
+ * 긴 변 1,200px 로 줄이되 JPEG 품질은 넉넉히 준다 — 줄이는 것보다 **선이 뭉개지는 것**이
+ * 인식에 해롭기 때문이다(벽은 몇 px 짜리 가는 띠라 압축 아티팩트에 민감하다).
+ * 공개 저장소에 담기는 용량이라 장당 60KB 안팎을 목표로 한다.
  */
 import fs from 'fs';
 import path from 'path';
@@ -30,10 +32,11 @@ const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, '.scratch', 'plans');
 const CLASSIFY = path.join(ROOT, '.scratch', 'classify-plans.json');
 const SCAN = path.join(ROOT, '.scratch', 'scan-plans.json');
+const TYPES = path.join(ROOT, '.scratch', 'read-types.json');
 const GRAB = path.join(ROOT, '.scratch', 'grab-state.json');
 const OUT = path.join(ROOT, 'public', 'plans');
 const INDEX = path.join(ROOT, 'public', 'plan-index.json');
-const MAX_LONG = 1400;
+const MAX_LONG = 1200;
 
 if (!fs.existsSync(CLASSIFY)) {
   console.log('SKIP: .scratch/classify-plans.json 이 없습니다 (도면 수집·판별은 로컬에서만 합니다)');
@@ -43,6 +46,10 @@ if (!fs.existsSync(CLASSIFY)) {
 const classify = JSON.parse(fs.readFileSync(CLASSIFY, 'utf8'));
 const scan = fs.existsSync(SCAN) ? JSON.parse(fs.readFileSync(SCAN, 'utf8')) : [];
 const grab = fs.existsSync(GRAB) ? JSON.parse(fs.readFileSync(GRAB, 'utf8')) : {};
+// 주택형·전용면적은 별도 패스에서 전 평면도에 대해 읽는다(read-types.mjs). 축척 판독은
+// 8% 만 통과하는데 이름은 전부에 필요해서다 — 화면에 "T1·T2·T3" 만 뜨면 고를 수가 없다.
+const types = fs.existsSync(TYPES) ? JSON.parse(fs.readFileSync(TYPES, 'utf8')) : [];
+const typeBy = new Map(types.map((r) => [`${r.dir}/${r.file}`, r]));
 const scanBy = new Map(scan.map((r) => [`${r.dir}/${r.file}`, r]));
 const addrBy = new Map(Object.values(grab).map((g) => [`${g.city}_${g.name}`, g.addr]));
 
@@ -95,7 +102,7 @@ async function shrink(srcPath) {
     const cx = cv.getContext('2d');
     cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
     cx.drawImage(img, 0, 0, cv.width, cv.height);
-    return { data: cv.toDataURL('image/jpeg', 0.72).slice(23), w: cv.width, h: cv.height, scale: s };
+    return { data: cv.toDataURL('image/jpeg', 0.78).slice(23), w: cv.width, h: cv.height, scale: s };
   }, { uri, max: MAX_LONG });
   return r && { buf: Buffer.from(r.data, 'base64'), w: r.w, h: r.h, scale: r.scale };
 }
@@ -119,11 +126,13 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     const src = path.join(SRC, dir, it.file);
     if (!fs.existsSync(src)) continue;
     const s = scanBy.get(`${dir}/${it.file}`) || {};
+    const ty = typeBy.get(`${dir}/${it.file}`) || {};
+    const excl = ty.excl || s.excl || null;
 
     // 주택형 이름 — OCR 로 읽은 것이 가장 믿을 만하고, 없으면 파일명, 그것도 없으면 순번.
     // 겹치면 버리지 말고 -2, -3 을 붙인다. 84A~84D 중 하나만 남고 나머지가 사라지는 것보다,
     // 직원이 도면을 보고 구분하는 편이 낫다.
-    let key = (s.type || '').toUpperCase() || typeFromName(it.file) || '';
+    let key = (ty.type || s.type || '').toUpperCase() || typeFromName(it.file) || '';
     if (!key) key = 'T' + (plans.length + 1);
     if (used.has(key)) {
       let i = 2;
@@ -140,10 +149,30 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     bytes += small.buf.length; n++;
 
     const rec = { type: key, file: `plans/${id}/${file}`, w: small.w, h: small.h,
-      exclusiveM2: s.excl ? +s.excl.toFixed(2) : null, rooms: (it.rooms || []).length,
+      exclusiveM2: excl ? +excl.toFixed(2) : null, rooms: (it.rooms || []).length,
       kb: Math.round(small.buf.length / 1024) };
-    // 축척은 원본 픽셀 기준으로 잰 값이다. 이미지를 줄였으니 같은 비율로 키워 준다.
-    if (s.k) { rec.mmPerPx = +(s.k / small.scale).toFixed(3); rec.scaleConf = s.conf; withScale++; }
+    /*
+     * 축척은 확신도가 '확실'(가로·세로 사슬이 8% 안에서 일치) 또는 '보통'(한 축이지만 쌍이
+     * 3개 이상)일 때만 싣는다. '낮음'은 가로와 세로가 어긋나 근거가 많은 쪽을 고른 것이라
+     * 10~40% 틀릴 수 있다. 20% 틀리면 폭 700mm 냉장고를 840mm 로 재는 셈이라
+     * "들어갑니다"가 거짓이 된다 — 축척은 없느니만 못한 값을 실으면 안 된다.
+     * 축척이 없는 도면은 매장에서 사용자가 맞춘다(원래 그렇게 설계돼 있다).
+     *
+     * 잰 값은 원본 픽셀 기준이다. 이미지를 줄였으니 같은 비율로 키워 준다.
+     */
+    if (s.k && (s.conf === '확실' || s.conf === '보통')) {
+      const mmPerPx = s.k / small.scale;
+      /*
+       * 축척이 맞더라도 **그려진 세대가 너무 작으면** 쓸 수 없다. 마케팅 시트는 세로로 길고
+       * 도면은 그 일부만 차지해서, 축척이 119mm/px 로 나온 도면은 세대 폭이 100px 남짓이다.
+       * 그 해상도에서는 벽이 1px 미만이라 인식기가 방을 잡지 못한다(DETECT_MAX 가 1,200px 인
+       * 이유와 같은 이야기다). 세대 폭이 300px 는 돼야 한다 — 3m 방이 75px 쯤 된다.
+       */
+      const unitPx = s.wMm ? s.wMm / mmPerPx : 0;
+      if (unitPx >= 300) {
+        rec.mmPerPx = +mmPerPx.toFixed(3); rec.scaleConf = s.conf; withScale++;
+      }
+    }
     plans.push(rec);
   }
   if (!plans.length) continue;
