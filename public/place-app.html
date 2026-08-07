@@ -572,6 +572,16 @@ const DARK_MAX_FRAC = 0.40, DARK_MIN_FRAC = 0.004;
 const MAX_SEAL_MM = 1500;
 
 function buildMask(){
+  /*
+   * 상한은 **긴 변** 기준이다. 넓이(픽셀 수) 기준으로 바꿔 보았다 — 세로로 긴 마케팅 시트
+   * (1,408×3,202)가 528×1,200으로 줄어 그 안의 평면도가 폭 250px밖에 안 되는 문제 때문이다.
+   * 같은 연산량으로 795×1,810을 볼 수 있어 도면이 1.5배 커진다.
+   *
+   * 그런데 **먼저 고칠 것이 있다.** 해상도를 올리자 84타입 코퍼스에서 거실이 옆방을 삼켜
+   * 64.1㎡(기대 44~56)가 됐다. 닫기 반경 선택이 해상도에 묶여 있어서다 — 같은 900mm 문을
+   * 막는 데 필요한 반경이 해상도에 따라 0.5~0.9배로 달라진다(이 파일 위쪽 주석 참조).
+   * 반경 선택을 해상도와 무관하게 만들기 전에는 해상도를 올릴 때마다 방이 붙었다 떨어졌다 한다.
+   */
   const S = Math.min(1, DETECT_MAX / Math.max(state.imgW, state.imgH));
   const w = Math.max(1, Math.round(state.imgW * S));
   const h = Math.max(1, Math.round(state.imgH * S));
