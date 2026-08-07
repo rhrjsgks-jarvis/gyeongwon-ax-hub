@@ -2,9 +2,26 @@
  * 단지 도면을 앱에서 쓸 수 있게 public/plans/ 로 옮기고 색인을 만든다.
  * 실행: npm run build:plans
  *
- * 원본은 .scratch/plans/<지역>_<단지>/ 에 수집돼 있고(로컬), 그중 **경원지역의 2D 평면도만**
- * 골라 넣는다. 경로에 한글·공백이 섞이면 URL 인코딩 문제가 생기므로 파일은 c01/84A.jpg 처럼
- * 단순한 이름으로 두고, 보여 줄 이름은 색인에 담는다.
+ * ── 무엇을 싣는가 ──────────────────────────────────────────────
+ * **평면도면 싣는다. 치수가 인쇄돼 있을 필요는 없다.**
+ *
+ * 예전에는 "치수가 있는 도면만" 실었는데, 실측해 보니 그런 도면은 4%뿐이었다
+ * (수집 1,185장 중 치수 사슬이 잡힌 것 39장, 모집공고 PDF 12건에는 평면도 자체가 0건).
+ * 분양 마케팅 사이트는 예쁘게 보이려고 치수를 지운다. 그런데 이 앱은 축척을 **사용자가
+ * 확정하게** 돼 있어(CLAUDE.md — "축척은 반드시 사용자가 확정한 값에서 온다") 치수가
+ * 없어도 쓸 수 있다. 치수로 거르면 쓸 수 있는 도면 900장을 버리는 셈이다.
+ *
+ * 그래서 관문은 "**평면도인가**"다 — 방 이름(거실·침실·주방·욕실…)이 3종류 이상 읽히면
+ * 평면도로 본다(.scratch/classify-plans.json). 조감도·인테리어컷·배너에는 안 나온다.
+ *
+ * 치수가 읽힌 도면에는 축척(mmPerPx)을 미리 넣어 둔다 — 그 도면은 매장에서 축척 단계를
+ * 건너뛸 수 있다. 등급(scaleConf)도 함께 실어 화면에서 확신도를 밝힐 수 있게 한다.
+ *
+ * ── 이미지 크기 ────────────────────────────────────────────────
+ * 인식 해상도 상한이 DETECT_MAX(1,200px)이라 그보다 크게 저장하면 인식에는 아무 이득이 없다.
+ * 긴 변 1,200px 로 줄이되 JPEG 품질은 넉넉히 준다 — 줄이는 것보다 **선이 뭉개지는 것**이
+ * 인식에 해롭기 때문이다(벽은 몇 px 짜리 가는 띠라 압축 아티팩트에 민감하다).
+ * 공개 저장소에 담기는 용량이라 장당 60KB 안팎을 목표로 한다.
  */
 import fs from 'fs';
 import path from 'path';
@@ -13,63 +30,192 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, '.scratch', 'plans');
+const CLASSIFY = path.join(ROOT, '.scratch', 'classify-plans.json');
+const SCAN = path.join(ROOT, '.scratch', 'scan-plans.json');
+const TYPES = path.join(ROOT, '.scratch', 'read-types.json');
+const GRAB = path.join(ROOT, '.scratch', 'grab-state.json');
 const OUT = path.join(ROOT, 'public', 'plans');
 const INDEX = path.join(ROOT, 'public', 'plan-index.json');
+const MAX_LONG = 1200;
 
-if (!fs.existsSync(path.join(SRC, 'MANIFEST.json'))) {
-  console.log('SKIP: .scratch/plans/MANIFEST.json 이 없습니다 (도면 수집은 로컬에서만 합니다)');
+if (!fs.existsSync(CLASSIFY)) {
+  console.log('SKIP: .scratch/classify-plans.json 이 없습니다 (도면 수집·판별은 로컬에서만 합니다)');
   process.exit(0);
 }
 
-const manifest = JSON.parse(fs.readFileSync(path.join(SRC, 'MANIFEST.json'), 'utf8'));
+const classify = JSON.parse(fs.readFileSync(CLASSIFY, 'utf8'));
+const scan = fs.existsSync(SCAN) ? JSON.parse(fs.readFileSync(SCAN, 'utf8')) : [];
+const grab = fs.existsSync(GRAB) ? JSON.parse(fs.readFileSync(GRAB, 'utf8')) : {};
+// 주택형·전용면적은 별도 패스에서 전 평면도에 대해 읽는다(read-types.mjs). 축척 판독은
+// 8% 만 통과하는데 이름은 전부에 필요해서다 — 화면에 "T1·T2·T3" 만 뜨면 고를 수가 없다.
+const types = fs.existsSync(TYPES) ? JSON.parse(fs.readFileSync(TYPES, 'utf8')) : [];
+const typeBy = new Map(types.map((r) => [`${r.dir}/${r.file}`, r]));
+const scanBy = new Map(scan.map((r) => [`${r.dir}/${r.file}`, r]));
+const addrBy = new Map(Object.values(grab).map((g) => [`${g.city}_${g.name}`, g.addr]));
+
+/**
+ * 파일명에서 주택형을 읽는다 — "plane_84a_02.jpg" → 84A, "07_84B_ex.png" → 84B.
+ * OCR 로 머리말을 읽는 것이 정확하지만 안 읽히는 도면이 많고, 분양 사이트는 파일명에
+ * 주택형을 넣는 관례가 있어 보조 수단으로 쓸 만하다. (자이처럼 순번만 쓰는 곳은 안 걸린다.)
+ */
+function typeFromName(file) {
+  const m = file.match(/(?:^|[^\d])(\d{2,3})\s*([a-zA-Z])?(?:타입|type)?(?:[_\-.]|$)/i);
+  if (!m) return '';
+  const n = +m[1];
+  if (n < 15 || n > 300) return '';        // 주택형은 전용 15~300㎡ 범위다
+  return String(n) + (m[2] ? m[2].toUpperCase() : '');
+}
+
+// 지역_단지 별로 묶는다
+const groups = new Map();
+for (const c of classify) {
+  if (!c.plan) continue;
+  const [region, ...rest] = c.dir.split('_');
+  const complex = rest.join('_');
+  if (!/^(경기|강원)/.test(region)) continue;          // 경원지역만
+  const key = c.dir;
+  if (!groups.has(key)) groups.set(key, { region, complex, addr: addrBy.get(c.dir) || '', items: [] });
+  groups.get(key).items.push(c);
+}
+
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT, { recursive: true });
 
-const index = [];
-let n = 0, bytes = 0;
+// 이미지를 줄여 담는다. 브라우저 캔버스를 쓰는 이유는 추가 의존성 없이 되기 때문이다.
+const { chromium } = await import('playwright');
+const browser = await chromium.launch();
+const page = await browser.newPage();
+page.on('pageerror', () => {});
+await page.setContent('<!doctype html><html><body><canvas id="c"></canvas></body></html>');
 
-for (const m of manifest) {
-  // 경원지역만 — 매장이 실제로 상담하는 지역이다
-  if (!/^(경기|강원)/.test(m.단지)) continue;
-  const [region, complex] = m.단지.split('_');
-  const id = 'c' + String(index.length + 1).padStart(2, '0');
-  const dir = path.join(OUT, id);
-
-  const plans = [];
-  const seen = new Set();
-  for (const p of m.평면도) {
-    // 파일명 앞부분이 타입이다 (84A_2024... → 84A). 숫자 부분이 곧 전용면적.
-    const mt = p.file.match(/^(T-)?(\d{2,3})([A-Z]?)[_.]/);
-    const type = mt ? `${mt[1] || ''}${mt[2]}${mt[3] || ''}` : path.basename(p.file, path.extname(p.file)).slice(0, 12);
-    if (seen.has(type)) continue;                 // 같은 타입은 대표 한 장만
-    const src = path.join(SRC, m.단지, p.file);
-    if (!fs.existsSync(src)) continue;
-    seen.add(type);
-    fs.mkdirSync(dir, { recursive: true });
-    const ext = path.extname(p.file).toLowerCase() === '.png' ? '.png' : '.jpg';
-    const file = `${type}${ext}`;
-    fs.copyFileSync(src, path.join(dir, file));
-    const size = fs.statSync(src).size;
-    bytes += size; n++;
-    plans.push({ type, file: `plans/${id}/${file}`, w: p.w, h: p.h,
-      exclusiveM2: mt ? +mt[2] : null, kb: Math.round(size / 1024) });
-  }
-  if (!plans.length) continue;
-  plans.sort((a, b) => (a.exclusiveM2 || 0) - (b.exclusiveM2 || 0) || a.type.localeCompare(b.type));
-  index.push({ id, region, complex, plans });
+async function shrink(srcPath) {
+  const ext = path.extname(srcPath).toLowerCase();
+  const uri = `data:${ext === '.png' ? 'image/png' : 'image/jpeg'};base64,${fs.readFileSync(srcPath).toString('base64')}`;
+  const r = await page.evaluate(async ({ uri, max }) => {
+    const img = new Image();
+    await new Promise((res) => { img.onload = res; img.onerror = res; img.src = uri; });
+    if (!img.naturalWidth) return null;
+    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const cv = document.getElementById('c');
+    cv.width = Math.round(img.naturalWidth * s);
+    cv.height = Math.round(img.naturalHeight * s);
+    const cx = cv.getContext('2d');
+    cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+    cx.drawImage(img, 0, 0, cv.width, cv.height);
+    return { data: cv.toDataURL('image/jpeg', 0.78).slice(23), w: cv.width, h: cv.height, scale: s };
+  }, { uri, max: MAX_LONG });
+  return r && { buf: Buffer.from(r.data, 'base64'), w: r.w, h: r.h, scale: r.scale };
 }
 
+const index = [];
+let n = 0, bytes = 0, withScale = 0, dropped = 0;
+
+for (const [dir, g] of [...groups.entries()].sort()) {
+  const id = 'c' + String(index.length + 1).padStart(2, '0');
+  const outDir = path.join(OUT, id);
+  const plans = [];
+  const used = new Set();
+
+  // 치수가 읽힌 것 → 방 이름이 많이 읽힌 것 순으로. 같은 주택형이면 잘 읽힌 쪽이 대표가 된다.
+  const items = [...g.items].sort((a, b) => {
+    const sa = scanBy.get(`${a.dir}/${a.file}`), sb = scanBy.get(`${b.dir}/${b.file}`);
+    return (sb && sb.k ? 1 : 0) - (sa && sa.k ? 1 : 0) || (b.rooms || []).length - (a.rooms || []).length;
+  });
+
+  for (const it of items) {
+    const src = path.join(SRC, dir, it.file);
+    if (!fs.existsSync(src)) continue;
+    const s = scanBy.get(`${dir}/${it.file}`) || {};
+    const ty = typeBy.get(`${dir}/${it.file}`) || {};
+    const excl = ty.excl || s.excl || null;
+
+    // 주택형 이름 — OCR 로 읽은 것이 가장 믿을 만하고, 없으면 파일명, 그것도 없으면 순번.
+    // 겹치면 버리지 말고 -2, -3 을 붙인다. 84A~84D 중 하나만 남고 나머지가 사라지는 것보다,
+    // 직원이 도면을 보고 구분하는 편이 낫다.
+    let key = (ty.type || s.type || '').toUpperCase() || typeFromName(it.file) || '';
+    if (!key) key = 'T' + (plans.length + 1);
+    if (used.has(key)) {
+      let i = 2;
+      while (used.has(`${key}-${i}`)) i++;
+      key = `${key}-${i}`;
+    }
+    used.add(key);
+
+    const small = await shrink(src);
+    if (!small) continue;
+    fs.mkdirSync(outDir, { recursive: true });
+    const file = `${key.replace(/[^\w가-힣-]/g, '')}.jpg`;
+    fs.writeFileSync(path.join(outDir, file), small.buf);
+    bytes += small.buf.length; n++;
+
+    const rec = { type: key, file: `plans/${id}/${file}`, w: small.w, h: small.h,
+      exclusiveM2: excl ? +excl.toFixed(2) : null, rooms: (it.rooms || []).length,
+      kb: Math.round(small.buf.length / 1024) };
+    /*
+     * 축척은 확신도가 '확실'(가로·세로 사슬이 8% 안에서 일치) 또는 '보통'(한 축이지만 쌍이
+     * 3개 이상)일 때만 싣는다. '낮음'은 가로와 세로가 어긋나 근거가 많은 쪽을 고른 것이라
+     * 10~40% 틀릴 수 있다. 20% 틀리면 폭 700mm 냉장고를 840mm 로 재는 셈이라
+     * "들어갑니다"가 거짓이 된다 — 축척은 없느니만 못한 값을 실으면 안 된다.
+     * 축척이 없는 도면은 매장에서 사용자가 맞춘다(원래 그렇게 설계돼 있다).
+     *
+     * 잰 값은 원본 픽셀 기준이다. 이미지를 줄였으니 같은 비율로 키워 준다.
+     */
+    if (s.k && (s.conf === '확실' || s.conf === '보통')) {
+      const mmPerPx = s.k / small.scale;
+      /*
+       * 축척이 맞더라도 **그려진 세대가 너무 작으면** 쓸 수 없다. 마케팅 시트는 세로로 길고
+       * 도면은 그 일부만 차지해서, 축척이 119mm/px 로 나온 도면은 세대 폭이 100px 남짓이다.
+       * 그 해상도에서는 벽이 1px 미만이라 인식기가 방을 잡지 못한다(DETECT_MAX 가 1,200px 인
+       * 이유와 같은 이야기다). 세대 폭이 300px 는 돼야 한다 — 3m 방이 75px 쯤 된다.
+       */
+      const unitPx = s.wMm ? s.wMm / mmPerPx : 0;
+      if (unitPx >= 300) {
+        rec.mmPerPx = +mmPerPx.toFixed(3); rec.scaleConf = s.conf; withScale++;
+      }
+    }
+    plans.push(rec);
+  }
+  if (!plans.length) continue;
+
+  /*
+   * 같은 단지의 도면은 같은 시트 서식으로 만들어져 축척이 비슷하게 나온다
+   * (동탄 대방 엘리움 25.25·25.29·25.25 — 0.2% 안). 한 장만 크게 벗어나면 그 장의 판독이
+   * 틀린 것이다 — 평택 자이에서 23.6·23.0·29.3 사이에 11.98 이 끼어 있었다.
+   * 서로 검산해 주는 공짜 표본이라 쓰지 않을 이유가 없다. 애매하면 뺀다 —
+   * 축척이 없으면 사람이 맞추면 되지만, 틀린 축척은 조용히 잘못된 답을 낸다.
+   */
+  const ks = plans.filter((p) => p.mmPerPx).map((p) => p.mmPerPx).sort((a, b) => a - b);
+  if (ks.length >= 2) {
+    const mid = ks[Math.floor(ks.length / 2)];
+    for (const p of plans) {
+      if (p.mmPerPx && Math.abs(p.mmPerPx - mid) > mid * 0.15) {
+        delete p.mmPerPx; delete p.scaleConf; withScale--; dropped++;
+      }
+    }
+  }
+
+  plans.sort((a, b) => (a.exclusiveM2 || 999) - (b.exclusiveM2 || 999) || a.type.localeCompare(b.type));
+  index.push({ id, region: g.region, complex: g.complex, addr: g.addr, plans });
+}
+
+await browser.close();
 index.sort((a, b) => a.region.localeCompare(b.region, 'ko') || a.complex.localeCompare(b.complex, 'ko'));
 
 fs.writeFileSync(INDEX, JSON.stringify({
-  version: 1,
-  note: '단지 도면 색인. 지역 → 단지 → 도면 순으로 고른다. 원본 수집은 로컬(.scratch/plans)에서 하고 이 색인과 이미지는 npm run build:plans 로 만든다.',
+  version: 3,
+  note: '단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 '
+    + 'mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. '
+    + '수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.',
   generatedAt: new Date().toISOString().slice(0, 10),
   complexCount: index.length,
   planCount: n,
+  scaledCount: withScale,
   complexes: index,
 }, null, 1) + '\n', 'utf8');
 
-console.log(`단지 ${index.length}곳 · 도면 ${n}장 · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
-for (const c of index) console.log(`  ${c.region.padEnd(6)} ${c.complex.slice(0, 24).padEnd(24)} ${c.plans.length}장  [${c.plans.map((p) => p.type).join(' ')}]`);
-console.log(`→ public/plans/ · public/plan-index.json`);
+const byRegion = {};
+for (const c of index) byRegion[c.region] = (byRegion[c.region] || 0) + c.plans.length;
+console.log(`단지 ${index.length}곳 · 도면 ${n}장 (축척 있음 ${withScale}장, 단지 안에서 어긋나 뺀 것 ${dropped}장) · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
+console.log('지역별: ' + Object.entries(byRegion).sort((a, b) => b[1] - a[1])
+  .map(([k, v]) => `${k} ${v}`).join(' · '));
+console.log('→ public/plans/ · public/plan-index.json');

@@ -572,6 +572,16 @@ const DARK_MAX_FRAC = 0.40, DARK_MIN_FRAC = 0.004;
 const MAX_SEAL_MM = 1500;
 
 function buildMask(){
+  /*
+   * 상한은 **긴 변** 기준이다. 넓이(픽셀 수) 기준으로 바꿔 보았다 — 세로로 긴 마케팅 시트
+   * (1,408×3,202)가 528×1,200으로 줄어 그 안의 평면도가 폭 250px밖에 안 되는 문제 때문이다.
+   * 같은 연산량으로 795×1,810을 볼 수 있어 도면이 1.5배 커진다.
+   *
+   * 그런데 **먼저 고칠 것이 있다.** 해상도를 올리자 84타입 코퍼스에서 거실이 옆방을 삼켜
+   * 64.1㎡(기대 44~56)가 됐다. 닫기 반경 선택이 해상도에 묶여 있어서다 — 같은 900mm 문을
+   * 막는 데 필요한 반경이 해상도에 따라 0.5~0.9배로 달라진다(이 파일 위쪽 주석 참조).
+   * 반경 선택을 해상도와 무관하게 만들기 전에는 해상도를 올릴 때마다 방이 붙었다 떨어졌다 한다.
+   */
   const S = Math.min(1, DETECT_MAX / Math.max(state.imgW, state.imgH));
   const w = Math.max(1, Math.round(state.imgW * S));
   const h = Math.max(1, Math.round(state.imgH * S));
@@ -2358,8 +2368,12 @@ async function openLibrary(){
     } else {
       items = cx.plans.map((p) => {
         const s = saved.find((e) => e.complex === cx.complex && e.type === p.type);
-        return `<button class="libitem" data-file="${esc(p.file)}" data-type="${esc(p.type)}">
-          <b>${esc(p.type)}</b>${p.exclusiveM2 ? `<span class="ty">전용 ${p.exclusiveM2}㎡</span>` : ''}
+        // 도면에 인쇄된 치수를 읽어 축척을 미리 구해 둔 도면이 있다. 확신도를 함께 밝힌다 —
+        // 자동으로 구한 값이라 사용자가 눈으로 확인하고 넘어갈 수 있어야 한다.
+        const sc = p.mmPerPx ? `<span class="ty">축척 ${p.scaleConf || '자동'}</span>` : '';
+        return `<button class="libitem" data-file="${esc(p.file)}" data-type="${esc(p.type)}"
+            ${p.mmPerPx ? `data-mmpx="${p.mmPerPx}" data-sconf="${esc(p.scaleConf || '')}"` : ''}>
+          <b>${esc(p.type)}</b>${p.exclusiveM2 ? `<span class="ty">전용 ${p.exclusiveM2}㎡</span>` : ''}${sc}
           <span class="hint">${p.w}×${p.h}px · ${p.kb}KB${s ? ` · <b>저장된 방 ${s.rooms.length}곳</b>` : ''}</span></button>`;
       });
     }
@@ -2379,15 +2393,30 @@ async function openLibrary(){
         } else {
           const type = b.dataset.type;
           const s = saved.find((e) => e.complex === cx.complex && e.type === type);
+          const mmpx = +b.dataset.mmpx || 0;
+          const sconf = b.dataset.sconf || '';
           closeSheet();
           // 도면을 올리고, 저장해 둔 방이 있으면 그 위에 그대로 되살린다
-          useImage(b.dataset.file, s ? () => {
-            const keep = { img: state.img, imgW: state.imgW, imgH: state.imgH };
-            loadFromLibrary(s);
-            state.img = keep.img; state.imgW = keep.imgW; state.imgH = keep.imgH;
+          useImage(b.dataset.file, () => {
+            if (s) {
+              const keep = { img: state.img, imgW: state.imgW, imgH: state.imgH };
+              loadFromLibrary(s);
+              state.img = keep.img; state.imgW = keep.imgW; state.imgH = keep.imgH;
+            } else if (mmpx) {
+              /*
+               * 도면에 인쇄된 치수로 미리 구해 둔 축척이 있으면 채워 놓고 바로 인식 단계로 간다.
+               * 근거 없는 숫자가 아니라 **도면에 실제로 적힌 치수**에서 나온 값이라 원칙에 어긋나지
+               * 않는다. 다만 자동 판독이므로 사용자가 확인하고 넘어갈 수 있어야 한다 —
+               * 도구막대의 '축척'으로 언제든 다시 맞출 수 있고, 확신도를 함께 알린다.
+               */
+              state.mmPerPx = mmpx; state.scaled = true;
+              setMode('room'); setStep(3);
+            }
             draw();
-          } : null);
-          toast(`${cx.complex} ${type}${s ? ' — 저장된 방까지 복원' : ' — 축척을 맞춰 주세요'}`);
+          });
+          toast(s ? `${cx.complex} ${type} — 저장된 방까지 복원`
+            : mmpx ? `${cx.complex} ${type} — 축척 자동 적용(${sconf || '자동'}) · 다르면 '축척'으로 다시 맞추세요`
+            : `${cx.complex} ${type} — 축척을 맞춰 주세요`);
         }
       };
     });
@@ -2768,7 +2797,7 @@ loadReps();
 window.__place = { state, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
   findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
-  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
+  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, loadPlanIndex, useImage,

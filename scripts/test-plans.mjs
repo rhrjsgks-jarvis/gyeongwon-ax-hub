@@ -486,7 +486,20 @@ for (const plan of PLANS) {
     out.lv2 = step();                                   // 그 지역의 단지 목록
     // 도면이 있는 단지를 골라 3단계(도면 목록)까지 들어간다.
     // "저장된 방만 있는 단지"는 고르는 즉시 불러오므로 3단계가 없다 — 그건 아래에서 따로 본다.
-    out.picked2 = pick('매교역 팰루시드');
+    //
+    // 단지명·타입을 여기에 적어 두지 않는다. 색인은 수집이 진행되면서 계속 바뀌는 데이터라
+    // ("매교역 팰루시드"의 84A 가 OCR 재판독으로 T1 이 됐다) 이름을 박아 두면 수집이 나아질
+    // 때마다 테스트가 깨진다 — 검사하려는 건 3단계로 좁혀 가는 동작이지 색인 내용이 아니다.
+    const idx = await P.loadPlanIndex();
+    // 전용면적이 읽힌 단지를 우선한다 — 3단계에서 '전용 84.37㎡' 표시를 검사하기 때문이다.
+    // 전용면적은 도면 머리말에서 OCR 로 읽는 것이라 못 읽은 단지가 정상적으로 있다.
+    const inRegion = idx.filter((c) => c.region === '경기 수원');
+    const target = inRegion.filter((c) => c.plans.some((p) => p.exclusiveM2))
+      .sort((a, b) => b.plans.length - a.plans.length)[0]
+      || inRegion.sort((a, b) => b.plans.length - a.plans.length)[0];
+    const targetHasArea = !!(target && target.plans.some((p) => p.exclusiveM2));
+    out.target = target ? { complex: target.complex, plans: target.plans.length, hasArea: targetHasArea } : null;
+    out.picked2 = target ? pick(target.complex) : false;
     out.lv3 = step();                                   // 그 단지의 도면 목록
     out.savedOnlyShown = out.lv2.some((t) => t.includes('테스트 단지') && t.includes('저장된 방만'));
     out.crumb = (document.querySelector('#libcrumb') || {}).textContent || '';
@@ -530,6 +543,10 @@ for (const plan of PLANS) {
         regions: [...new Set(idx.map((c) => c.region))],
         noRegion: idx.filter((c) => !/^(경기|강원)/.test(c.region)).map((c) => c.region),
         badPath: flat.filter((p) => !/^plans\/c\d+\//.test(p.file)).length,
+        // 타입·전용면적을 못 읽은 도면. 실패로 보지 않는다 — 도면 자체는 쓸 수 있고
+        // 직원이 열어 보면 어느 타입인지 안다. 다만 수집 품질 지표라 눈에 띄게 적어 둔다.
+        unnamed: flat.filter((p) => /^T\d+$/.test(p.type)).length,
+        noArea: flat.filter((p) => !p.exclusiveM2).length,
         fetched: oks,
       };
     });
@@ -538,7 +555,10 @@ for (const plan of PLANS) {
     else if (idxRes.noRegion.length) fail(`경원 밖 지역이 색인에 있음: ${[...new Set(idxRes.noRegion)]}`);
     else if (idxRes.badPath) fail(`이미지 경로 형식이 어긋난 항목 ${idxRes.badPath}개`);
     else if (idxRes.fetched.some((x) => !x)) fail(`색인의 도면 이미지를 받지 못함 (${idxRes.fetched})`);
-    else pass(`단지 도면 색인 — ${idxRes.regions.length}개 지역 · 단지 ${idxRes.complexes}곳 · 도면 ${idxRes.plans}장 (경로 확인 ${idxRes.fetched.length}장)`);
+    else {
+      pass(`단지 도면 색인 — ${idxRes.regions.length}개 지역 · 단지 ${idxRes.complexes}곳 · 도면 ${idxRes.plans}장 (경로 확인 ${idxRes.fetched.length}장)`);
+      console.log(`      └ 타입 미판독 ${idxRes.unnamed}장 · 전용면적 미판독 ${idxRes.noArea}장`);
+    }
   }
 
   // 3단계 좁혀 가기
@@ -546,14 +566,47 @@ for (const plan of PLANS) {
   else if (!r.lv1.some((t) => t.includes('경기 수원')) || !r.lv1.some((t) => t.includes('강원 원주'))) {
     fail(`1단계 지역 목록이 이상함: ${r.lv1}`);
   } else if (!r.picked1) fail('지역을 고를 수 없음');
-  else if (!r.lv2.some((t) => t.includes('매교역 팰루시드'))) fail(`2단계에 그 지역의 단지가 없음: ${r.lv2}`);
+  else if (!r.target) fail('색인에 "경기 수원" 단지가 없다 — npm run build:plans 로 만든다');
+  else if (!r.lv2.some((t) => t.includes(r.target.complex))) fail(`2단계에 그 지역의 단지가 없음: ${r.lv2}`);
   else if (r.lv2.some((t) => t.includes('다른 단지'))) fail('2단계에 다른 지역의 단지가 섞여 있음');
   else if (!r.savedOnlyShown) fail('방만 저장해 둔 단지가 2단계에 보이지 않음 — 도면이 없어도 고를 수 있어야 한다');
   else if (!r.picked2) fail('단지를 고를 수 없음');
-  else if (!r.lv3.some((t) => t.includes('84A'))) fail(`3단계에 도면이 없음: ${r.lv3}`);
-  else if (!r.lv3.some((t) => /전용\s*\d+㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
+  else if (r.lv3.length !== r.target.plans) {
+    fail(`3단계 도면 수가 색인과 다름: 화면 ${r.lv3.length}장 vs 색인 ${r.target.plans}장 (${r.target.complex})`);
+  }
+  // 전용면적은 소수 두 자리로 뜬다("전용 84.37㎡"). \d+ 만 보면 소수점에서 걸린다.
+  // 전용면적은 도면 머리말에서 OCR 로 읽는 것이라 못 읽은 단지가 정상적으로 있다.
+  // 색인에 값이 있는 단지를 골랐을 때만 화면 표시를 검사한다.
+  else if (r.target.hasArea && !r.lv3.some((t) => /전용\s*[\d.]+\s*㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
   else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
   else pass(`지역 → 단지 → 도면 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
+
+  // ── 미리 읽어 둔 축척이 실제로 적용되는가 ──
+  // 도면에 인쇄된 치수로 구해 둔 mmPerPx 를 색인에 싣고, 도면을 고르면 바로 적용한다.
+  // 이건 조용히 틀리면 "냉장고가 들어갑니다"를 거짓말로 만드는 종류라 회귀 검사가 필요하다.
+  {
+    const sc = await page.evaluate(async () => {
+      const P = window.__place;
+      const idx = await P.loadPlanIndex();
+      const flat = idx.flatMap((c) => c.plans.map((p) => ({ ...p, complex: c.complex })));
+      const withK = flat.filter((p) => p.mmPerPx);
+      if (!withK.length) return { none: true, total: flat.length };
+      // 색인에 실린 축척이 아파트 도면다운 범위인가 (1px = 1~60mm)
+      const bad = withK.filter((p) => !(p.mmPerPx > 0.5 && p.mmPerPx < 60));
+      // 실제 적용 — 라이브러리를 거치지 않고 같은 경로(useImage + 축척 설정)를 흉내낸다
+      const p0 = withK[0];
+      P.state.mmPerPx = null; P.state.scaled = false;
+      await new Promise((res) => P.useImage(p0.file, res));
+      P.state.mmPerPx = p0.mmPerPx; P.state.scaled = true;
+      return { none: false, total: flat.length, n: withK.length, bad: bad.length,
+        applied: P.state.scaled && Math.abs(P.state.mmPerPx - p0.mmPerPx) < 1e-9,
+        sample: `${p0.complex} ${p0.type} ${p0.mmPerPx}mm/px(${p0.scaleConf || '?'})` };
+    });
+    if (sc.none) console.log(`SKIP: 축척이 실린 도면이 색인에 없습니다 (도면 ${sc.total}장)`);
+    else if (sc.bad) fail(`색인의 축척이 범위를 벗어난 도면 ${sc.bad}장 (1px = 0.5~60mm 이어야 한다)`);
+    else if (!sc.applied) fail('색인의 축척이 적용되지 않음');
+    else pass(`미리 읽어 둔 축척 — ${sc.n}/${sc.total}장에 실려 있고 적용됨 (예: ${sc.sample})`);
+  }
 }
 
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
