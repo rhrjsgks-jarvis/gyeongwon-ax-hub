@@ -1003,6 +1003,39 @@ function structureBox(dark, w, h){
 }
 
 /**
+ * 한 장에 실린 **도면들을 따로 떼어낸다.**
+ *
+ * 실제 분양 도면은 "한 장 = 한 평면도"가 아니다. 복층은 상부층·하부층이 나란히 있고,
+ * 확장/비확장 비교도면, 옵션 도면, 왼쪽의 마감재 상세컷이 한 장에 같이 실린다.
+ * 그런데 structureBox 는 이것들을 **하나의 건물**로 묶어 버려서, 상부층의 방을 눌러도
+ * 하부층까지 포함한 범위를 기준으로 누수를 판정하게 된다(기준이 통째로 어긋난다).
+ *
+ * 벽을 넉넉히 부풀리면 한 도면 안의 벽들은 한 덩어리로 뭉치고 도면끼리는 떨어진 채 남는다.
+ * 그 덩어리 하나하나가 곧 시트에 실린 개별 도면이다.
+ */
+function sheetBoxes(base){
+  if (base._sheets) return base._sheets;
+  const r = Math.max(4, Math.round(Math.min(base.w, base.h) * 0.02));
+  const blob = boxMorph(base.dark, base.w, base.h, r, 'max');
+  const { comps } = components(blob, base.w, base.h);
+  if (!comps.length) return (base._sheets = []);
+  const big = comps.reduce((a, c) => (c.n > a.n ? c : a));
+  // 가장 큰 것의 15% 미만은 상세컷·범례·글씨 덩어리로 보고 도면으로 세지 않는다
+  const sheets = comps.filter((c) => c.n >= big.n * 0.15)
+    .map((c) => ({ x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1, n: c.n }));
+  return (base._sheets = sheets);
+}
+
+/** 누른 자리가 속한 도면의 범위. 못 찾으면 전체 범위로 되돌린다. */
+function sheetBoxAt(base, sx, sy){
+  const sheets = sheetBoxes(base);
+  const inside = sheets.filter((s) => sx >= s.x0 && sx <= s.x1 && sy >= s.y0 && sy <= s.y1);
+  if (!inside.length) return base.bbox;
+  // 겹쳐 있으면 더 작은 쪽(= 더 구체적인 도면)을 쓴다
+  return inside.sort((a, b) => a.n - b.n)[0];
+}
+
+/**
  * **건물 안쪽**을 표시한다. 도면 가장자리에서 배경을 채워 닿지 않는 곳이 건물 안이다.
  *
  * 이때만은 **정리하지 않은 원본 마스크**를 쓴다. 창은 벽에 뚫린 구멍이 아니라 벽 사이에
@@ -1217,7 +1250,9 @@ function detectRoomAt(imgX, imgY, forceR){
 
   // 새어 나가지 않는 **가장 작은** 닫기 반경을 찾는다. 크게 잡을수록 창문 표시나
   // 가까운 선이 뭉쳐 검은 덩어리가 되므로, 막을 수 있는 최소한만 막는다.
-  const bb = base.bbox;
+  // 한 장에 도면이 여럿이면 **누른 자리가 속한 도면**만 기준으로 삼는다.
+  // 시트 전체를 기준으로 재면 상부층 방을 눌러도 하부층까지 포함한 범위로 누수를 판정한다.
+  const bb = sheetBoxAt(base, sx, sy);
   const planArea = (bb.x1 - bb.x0 + 1) * (bb.y1 - bb.y0 + 1);
   const leakLimit = ((bb.x1-bb.x0) + (bb.y1-bb.y0)) * 0.3;
   let tooBig = false;
@@ -1226,7 +1261,9 @@ function detectRoomAt(imgX, imgY, forceR){
   let lastLeak = null, firstWall = null;
   let fallback = null;   // 하나도 통과하지 못했을 때 내놓을 근사치
   const tryRadius = (r) => {
-    const m = sealedMask(r);
+    const m0 = sealedMask(r);
+    // sealedMask 는 반경별로 캐시되므로 bbox 만 이 클릭용으로 갈아 끼운다(복사는 얕게)
+    const m = bb === base.bbox ? m0 : { ...m0, bbox: bb };
     if (m.dark[sy*m.w + sx]) {                      // 이 반경에서는 누른 자리가 벽에 먹혔다
       if (firstWall == null || r < firstWall) firstWall = r;
       return;
@@ -1336,7 +1373,7 @@ function detectRoomAt(imgX, imgY, forceR){
         const lim = Math.max(W, H);
         while (n < lim) {
           const nx = x + dx, ny = y + dy;
-          if (nx < base.bbox.x0 || ny < base.bbox.y0 || nx > base.bbox.x1 || ny > base.bbox.y1) break;
+          if (nx < bb.x0 || ny < bb.y0 || nx > bb.x1 || ny > bb.y1) break;
           if (D[ny * W + nx]) break;
           x = nx; y = ny; n++;
         }
