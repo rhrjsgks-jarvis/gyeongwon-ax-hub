@@ -1026,24 +1026,35 @@ function structureBox(dark, w, h){
  */
 function sheetBoxes(base){
   if (base._sheets) return base._sheets;
-  const r = Math.max(4, Math.round(Math.min(base.w, base.h) * 0.02));
-  const blob = boxMorph(base.dark, base.w, base.h, r, 'max');
-  const { comps } = components(blob, base.w, base.h);
+  const { comps } = components(base.dark, base.w, base.h);
   if (!comps.length) return (base._sheets = []);
-  const big = comps.reduce((a, c) => (c.n > a.n ? c : a));
-  // 가장 큰 것의 15% 미만은 상세컷·범례·글씨 덩어리로 보고 도면으로 세지 않는다.
+  const big0 = comps.reduce((a, c) => (c.n > a.n ? c : a));
+
+  // 벽을 부풀려 뭉치는 방식은 쓰지 않는다. 창·문 자리에서 외벽이 끊겨 한 도면의 벽이
+  // 여러 조각으로 갈라지는데, 그 틈(창 1.8m·문 0.9m)을 이을 만큼 크게 부풀리면
+  // 이번엔 서로 다른 도면끼리 붙어 버린다.
   //
-  // **부풀린 만큼 다시 줄인다.** 덩어리는 벽을 r 만큼 부풀려 만든 것이라 그 bbox 도 사방으로
-  // r 만큼 크다. 그대로 쓰면 실제 벽과 범위 사이에 빈 테두리 고리가 생기고, 방이 문·창을
-  // 통해 그리로 새어 나가 "누수"로 판정된다(ㄱ자 도면이 그래서 인식 실패했다).
-  const bb0 = base.bbox;
-  const sheets = comps.filter((c) => c.n >= big.n * 0.15)
-    .map((c) => ({
-      x0: Math.max(bb0.x0, c.x0 + r), y0: Math.max(bb0.y0, c.y0 + r),
-      x1: Math.min(bb0.x1, c.x1 - r), y1: Math.min(bb0.y1, c.y1 - r), n: c.n,
-    }))
-    .filter((s) => s.x1 > s.x0 && s.y1 > s.y0);
-  return (base._sheets = sheets);
+  // 대신 **bbox 가 겹치는 조각끼리 합친다.** 한 도면의 벽 조각들은 서로 맞물려 있어
+  // bbox 가 크게 겹치지만, 나란히 놓인 두 도면(복층 상/하부층 등)은 bbox 가 떨어져 있다.
+  let boxes = comps.filter((c) => c.n >= big0.n * 0.02)
+    .map((c) => ({ x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1, n: c.n }));
+  for (let again = true; again; ) {
+    again = false;
+    loop:
+    for (let i = 0; i < boxes.length; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i], b = boxes[j];
+        if (a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1) {
+          boxes[i] = { x0: Math.min(a.x0, b.x0), y0: Math.min(a.y0, b.y0),
+                       x1: Math.max(a.x1, b.x1), y1: Math.max(a.y1, b.y1), n: a.n + b.n };
+          boxes.splice(j, 1); again = true; break loop;
+        }
+      }
+    }
+  }
+  // 가장 큰 것의 15% 미만은 상세컷·범례·글씨 덩어리로 보고 도면으로 세지 않는다
+  const bigN = boxes.reduce((s, b) => Math.max(s, b.n), 0);
+  return (base._sheets = boxes.filter((b) => b.n >= bigN * 0.15));
 }
 
 /** 누른 자리가 속한 도면의 범위. 못 찾으면 전체 범위로 되돌린다. */
