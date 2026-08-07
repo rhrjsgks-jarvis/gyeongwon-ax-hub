@@ -32,8 +32,18 @@ const fail = (m) => { console.log('ERROR:', m); ok = false; };
 const pass = (m) => console.log('OK:', m);
 
 const exe = process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium';
-const browser = await chromium.launch(
-  fs.existsSync(exe) ? { executablePath: exe } : {});
+// 패키지가 있어도 **브라우저 실행 파일**이 없을 수 있다. CI의 test 잡은 chromium을
+// 설치하지 않으므로(설치는 e2e 잡에서만 한다) 여기서 그냥 launch 하면 실패한다.
+// 위의 import 가드는 패키지 부재만 잡으므로, 실행 파일 부재도 같은 SKIP 으로 다룬다.
+let browser;
+try {
+  browser = await chromium.launch(fs.existsSync(exe) ? { executablePath: exe } : {});
+} catch (e) {
+  console.log('SKIP: chromium 실행 파일이 없어 도면 코퍼스 검사를 건너뜁니다 '
+    + '(npx playwright install chromium)');
+  console.log('      ' + String(e.message).split('\n')[0].slice(0, 120));
+  process.exit(0);
+}
 const page = await browser.newPage({ viewport: { width: 900, height: 1000 } });
 
 const errs = [];

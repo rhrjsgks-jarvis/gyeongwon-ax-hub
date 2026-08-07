@@ -47,3 +47,8 @@ jobs:
 
       - name: Browser E2E (렌더·인증 게이트·지연 로드)
         run: npm run test:e2e
+
+      # 도면 코퍼스는 브라우저에서 실제로 인식시켜 검사하므로 chromium 이 필요하다.
+      # 위 test 잡은 브라우저를 설치하지 않아 거기서는 SKIP 되니, 실제 검사는 여기서 돈다.
+      - name: 도면 코퍼스 (합성 평면 전수 인식)
+        run: npm run test:plans
