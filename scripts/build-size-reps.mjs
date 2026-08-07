@@ -193,27 +193,115 @@ for (const r of rows) {
   }
 }
 
-const out = [...groups.values()]
-  .map((g) => {
-    const options = [...g.options.values()];
-    return {
-      cat: g.cat,
-      size: g.size,
-      sizeLabel: g.sizeLabel,
-      specs: g.specs,          // 용량·화면크기 등 카탈로그 표기 (여러 개일 수 있음)
-      // 대표 = 첫 옵션. PRODUCTS가 카테고리마다 플래그십 우선으로 정렬돼 있다
-      // (CLAUDE.md "플래그십 우선 정렬")
-      model: options[0].model,
-      parts: options[0].parts,
-      group: options[0].group,
-      note: options[0].note,
-      options,                 // 같은 사이즈 안의 발자국이 다른 실제 모델들
-      count: options.reduce((n, o) => n + 1 + o.also.length, 0),
-    };
-  })
+const sized = [...groups.values()].map((g) => {
+  const options = [...g.options.values()];
+  return {
+    cat: g.cat,
+    size: g.size,
+    sizeLabel: g.sizeLabel,
+    specs: g.specs,          // 용량·화면크기 등 카탈로그 표기 (여러 개일 수 있음)
+    // 대표 = 첫 옵션. PRODUCTS가 카테고리마다 플래그십 우선으로 정렬돼 있다
+    // (CLAUDE.md "플래그십 우선 정렬")
+    model: options[0].model,
+    parts: options[0].parts,
+    group: options[0].group,
+    note: options[0].note,
+    options,                 // 같은 사이즈 안의 발자국이 다른 실제 모델들
+    count: options.reduce((n, o) => n + 1 + o.also.length, 0),
+  };
+});
+
+/* ── 비슷한 사이즈 통합 ──────────────────────────────────────────
+ * 이 도구는 **배치 판정**만 한다. 그러면 통합 기준은 용량이나 모델이 아니라 **발자국**이다.
+ * 실제로 에어컨 냉방 34.1·42.3·48.8㎡는 실내기가 1055×299×215 로 완전히 같다 —
+ * 배치상 구분할 이유가 없는데 목록만 세 줄 차지한다.
+ *
+ * 게다가 한 카테고리에 기준이 두 가지로 섞여 있었다. 에어컨은 냉방면적으로 묶기로 해 놓고,
+ * DB 에 냉방면적이 없는 벽걸이는 폭으로 떨어져 나가 **같은 물건이 "냉방 24.4㎡"와
+ * "폭 820mm"로 두 번** 실렸다. 발자국으로 묶으면 이것도 자연히 합쳐진다.
+ *
+ * 묶는 폭은 10% — 가장 작은 것의 1.1배까지 한 무리로 본다. 이러면 TV 42·43형은 묶이고
+ * 48형(10.8% 차이)은 따로 남는다. 폭을 더 키우면 55형과 65형까지 붙어 상담에서 못 쓴다.
+ *
+ * **대표 치수는 무리 중 가장 큰 것을 쓴다.** 이 도구에서 가장 위험한 실패는 "들어갑니다"를
+ * 거짓으로 말하는 것이므로, 애매하면 크게 재는 쪽이 안전하다.
+ */
+const MERGE_SPAN = 1.10;
+
+/** 배치에 쓰는 발자국 — 바닥에 놓이는 덩어리의 폭·깊이 */
+function footprintOf(rec) {
+  const ps = rec.parts || [];
+  const p = ps.find((x) => /본체|실내기|스탠드 설치/.test(x.part || '')) || ps[0];
+  return p ? { w: +p.w || 0, d: +p.d || 0 } : { w: 0, d: 0 };
+}
+/** "폭 650mm" → 650 · "냉방 34.1㎡" → 34.1 · "65형" → 65 */
+const numOf = (s) => parseFloat(String(s).replace(/[^\d.]/g, '')) || 0;
+
+const merged = [];
+for (const cat of [...new Set(sized.map((r) => r.cat))]) {
+  const list = sized.filter((r) => r.cat === cat)
+    .map((r) => ({ ...r, _fp: footprintOf(r) }))
+    .sort((a, b) => a._fp.w - b._fp.w);
+  let bucket = [];
+  const flush = () => {
+    if (!bucket.length) return;
+    // 발자국이 가장 큰 것을 대표로 — 그 치수로 배치를 판정한다
+    const rep = bucket.reduce((a, b) => (a._fp.w * a._fp.d >= b._fp.w * b._fp.d ? a : b));
+    const values = [...new Set(bucket.map((r) => r.size))].sort((a, b) => numOf(a) - numOf(b));
+    /*
+     * 라벨은 **한 단위로만** 만든다. 한 무리에 "냉방 34.1㎡"와 "폭 1055mm"가 섞여 들어오기
+     * 때문이다(같은 벽걸이가 DB 에 냉방면적이 있는 것과 없는 것으로 나뉘어 있다).
+     * 섞은 채 범위를 만들었더니 "폭 34.1~1100mm" 같은 말이 안 되는 라벨이 나왔다.
+     * 카테고리가 정한 기준(에어컨=냉방면적, TV=인치)을 가진 항목만으로 범위를 잡고,
+     * 그런 항목이 없을 때만 폭으로 적는다.
+     */
+    const pickUnit = (test) => values.filter((v) => test.test(v));
+    const family = pickUnit(/㎡/).length ? pickUnit(/㎡/)
+      : pickUnit(/형/).length ? pickUnit(/형/)
+      : values;
+    const lo = family[0], hi = family[family.length - 1];
+    const unit = /㎡/.test(hi) ? '㎡' : /형/.test(hi) ? '형' : /mm/.test(hi) ? 'mm' : '';
+    const head = /^냉방/.test(hi) ? '냉방 ' : /^폭/.test(hi) ? '폭 ' : '';
+    const size = family.length > 1
+      ? `${head}${numOf(lo)}~${numOf(hi)}${unit}`      // 여러 개면 범위 — "내 평형이 없다"가 안 되게
+      : hi;
+    const options = [];
+    const seen = new Set();
+    for (const r of bucket) for (const o of r.options) {
+      const key = `${o.model}|${(o.parts || []).map((p) => `${p.w}x${p.h}x${p.d}`).join(',')}`;
+      if (seen.has(key)) continue;
+      seen.add(key); options.push(o);
+    }
+    merged.push({
+      cat, size, sizeLabel: rep.sizeLabel,
+      specs: [...new Set(bucket.flatMap((r) => r.specs))],
+      model: rep.model, parts: rep.parts, group: rep.group, note: rep.note,
+      options,
+      count: bucket.reduce((n, r) => n + r.count, 0),
+      // 무엇을 묶었는지 남긴다 — 화면에서 "650·670mm 통합"으로 밝힐 수 있어야 한다
+      mergedFrom: values.length > 1 ? values : undefined,
+    });
+    bucket = [];
+  };
+  for (const r of list) {
+    if (bucket.length && (r._fp.w > bucket[0]._fp.w * MERGE_SPAN || !r._fp.w)) flush();
+    bucket.push(r);
+  }
+  flush();
+}
+
+/*
+ * 정렬은 **맨 앞 숫자**로 한다. 숫자를 전부 이어 붙여 쓰던 방식은 범위 라벨이 생기면서
+ * 깨졌다 — "42~43형"이 4243 이 되어 115형보다 뒤로 갔다.
+ * 같은 카테고리에 단위가 섞이면(TV 인치 ↔ 프로젝터 폭) 인치·면적을 앞에 둔다.
+ */
+const lead = (s) => parseFloat((String(s).match(/[\d.]+/) || [0])[0]) || 0;
+const unitRank = (s) => (/형|㎡/.test(s) ? 0 : 1);
+const out = merged
   .sort((a, b) =>
     a.cat.localeCompare(b.cat, 'ko')
-    || (parseFloat(a.size.replace(/[^\d.]/g, '')) || 0) - (parseFloat(b.size.replace(/[^\d.]/g, '')) || 0));
+    || unitRank(a.size) - unitRank(b.size)
+    || lead(a.size) - lead(b.size));
 
 fs.writeFileSync(pub('size-reps.json'), JSON.stringify(out, null, 0) + '\n');
 

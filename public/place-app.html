@@ -1505,7 +1505,7 @@ function startDetect(){
             $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
     return;
   }
-  state.draft = null; hideDraftBar(); ensureClean(); state.showClean = true; setMode('detect'); setStep(3); draw();
+  state.draft = null; state.draftMore = []; hideDraftBar(); ensureClean(); state.showClean = true; setMode('detect'); setStep(3); draw();
 }
 
 /** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
@@ -1538,11 +1538,56 @@ function draftAreaM2(poly){
  * 무엇이 바뀌는지 모르겠다"는 지적을 받았다. 바뀌는 것은 도면 위 파란 영역인데
  * 그게 안 보였던 것이다. 그래서 조절은 도면 위 막대에서 하고, 이름은 확정할 때 묻는다.
  */
+/**
+ * 지금 고르는 중인 조각들 — 확정 전 초안. 방금 누른 것(state.draft)과 앞서 담아 둔 것들.
+ *
+ * **한 공간이 여러 조각으로 잡히는 것이 정상이다.** 도면에 따라 거실만 잡히기도 하고
+ * 거실과 주방이 한 덩어리로 잡히기도 한다. 주방은 냉장고장이 별도 칸으로 그려져 따로 떨어지고,
+ * 붙박이장 선이 방을 가르기도 한다. 가전은 "이 방 안"을 기준으로 자리를 찾으므로,
+ * 거실과 주방을 한 공간으로 묶어야 그 사이에 놓을 자리를 찾는다.
+ */
+function draftPieces(){
+  const more = state.draftMore || [];
+  return state.draft ? [...more, { poly: state.draft, edges: state.draftEdges }] : more.slice();
+}
+/** 초안 조각들의 넓이 합 */
+function draftTotalM2(){
+  let t = 0, any = false;
+  for (const p of draftPieces()){
+    const a = draftAreaM2(p.poly);
+    if (a != null){ t += a; any = true; }
+  }
+  return any ? t : null;
+}
+
 function showDraftBar(auto, prevArea){
   const bar = $('#draftbar');
-  if (!state.draft){ bar.classList.remove('on'); return; }
+  const more = state.draftMore || [];
+  if (!state.draft && !more.length){ bar.classList.remove('on'); return; }
+
+  // 조각을 담아 두고 다음 공간을 기다리는 상태 — 도면을 가리지 않게 막대만 남긴다
+  if (!state.draft){
+    const t = draftTotalM2();
+    bar.innerHTML = `
+      <div class="dl">
+        <span class="area">${t != null ? t.toFixed(1) + '㎡' : '조각 담김'}</span>
+        <span class="meta">조각 ${more.length}개 담김 — <b>함께 묶을 공간을 마저 누르세요</b></span>
+        <span class="grow"></span>
+      </div>
+      <div class="dl">
+        <span class="grow"></span>
+        <button id="d-cancel">담은 것 비우기</button>
+        <button id="d-ok" class="primary">${more.length}개로 확정</button>
+      </div>`;
+    bar.classList.add('on');
+    $('#d-cancel').onclick = ()=>{ state.draftMore = []; hideDraftBar(); setMode('detect'); draw(); };
+    $('#d-ok').onclick = ()=> nameRoomSheet();
+    return;
+  }
+
   const st = state.draftStep || {};
   const area = draftAreaM2(state.draft);
+  const total = draftTotalM2();
   const opens = (state.draftEdges || []).filter((e)=>e.open).length;
   const lvl = st.step ? `범위 ${st.step}/${st.steps}` : '';
   const delta = (prevArea != null && area != null && Math.abs(prevArea - area) > 0.05)
@@ -1551,6 +1596,7 @@ function showDraftBar(auto, prevArea){
     <div class="dl">
       ${area != null ? `<span class="area">${area.toFixed(1)}㎡</span>` : '<span class="area">범위 확인</span>'}
       ${delta}
+      ${more.length ? `<span class="meta">조각 ${more.length + 1}개 · 합계 <b>${total != null ? total.toFixed(1) + '㎡' : '—'}</b></span>` : ''}
       <span class="meta">모서리 ${state.draft.length}개${opens?` · 개구부 ${opens}곳`:''}</span>
       ${st.approx ? '<span class="meta">경계가 깔끔히 닫히지 않아 <b>대략</b>으로 잡았습니다 — 넓게/좁게로 맞춰 주세요</span>' : ''}
       <span class="grow"></span>
@@ -1561,9 +1607,10 @@ function showDraftBar(auto, prevArea){
       <span class="lvl">${esc(lvl)}</span>
       <button id="d-narrow" ${st.narrow == null ? 'disabled' : ''}>더 좁게 ▸</button>
       <span class="grow"></span>
+      <button id="d-add">＋ 이 공간도 함께</button>
       <button id="d-again">다시 누르기</button>
       <button id="d-draw">직접 그리기</button>
-      <button id="d-ok" class="primary">이 공간 확정</button>
+      <button id="d-ok" class="primary">${more.length ? `${more.length + 1}개로 확정` : '이 공간 확정'}</button>
     </div>`;
   bar.classList.add('on');
   if (delta){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); }
@@ -1580,28 +1627,41 @@ function showDraftBar(auto, prevArea){
   };
   $('#d-wide').onclick   = ()=> redo(st.wider);
   $('#d-narrow').onclick = ()=> redo(st.narrow);
-  $('#d-again').onclick  = ()=>{ hideDraftBar(); state.draft=null; setMode('detect'); draw(); };
-  $('#d-draw').onclick   = ()=>{ hideDraftBar(); state.draft=null; state.wallPts=[]; setMode('wall'); draw(); };
+  // 지금 조각을 담아 두고 다음 공간을 누르게 한다. 거실 + 주방처럼 한 공간이 여러 덩어리로
+  // 잡히는 도면에서, 이름 붙이기를 반복하지 않고 한 번에 묶기 위한 것이다.
+  $('#d-add').onclick    = ()=>{
+    (state.draftMore = state.draftMore || []).push({ poly: state.draft, edges: state.draftEdges });
+    state.draft = null; state.draftEdges = null; state.draftStep = null;
+    setMode('detect'); draw(); showDraftBar(false);
+    toast('담았습니다 — 함께 묶을 공간을 마저 누르세요');
+  };
+  $('#d-again').onclick  = ()=>{ state.draft=null; state.draftEdges=null; setMode('detect'); draw(); showDraftBar(false); };
+  $('#d-draw').onclick   = ()=>{ hideDraftBar(); state.draft=null; state.draftMore=[]; state.wallPts=[]; setMode('wall'); draw(); };
   $('#d-ok').onclick     = ()=> nameRoomSheet();
 }
 function hideDraftBar(){ $('#draftbar').classList.remove('on'); }
 
 /** 확정 직전 — 이름을 붙이거나 이미 잡은 방에 이어 붙인다 */
 function nameRoomSheet(){
-  const poly = state.draft;
-  if (!poly) return;
+  const pieces = draftPieces();
+  if (!pieces.length) return;
   const k = state.mmPerPx || 1;
-  let long = 0;
-  for (let i=0;i<poly.length;i++){
-    const a=poly[i], b=poly[(i+1)%poly.length];
-    long = Math.max(long, Math.hypot(b[0]-a[0], b[1]-a[1]) * k);
+  let long = 0, corners = 0;
+  const opens = [];
+  for (const pc of pieces){
+    corners += pc.poly.length;
+    for (let i=0;i<pc.poly.length;i++){
+      const a=pc.poly[i], b=pc.poly[(i+1)%pc.poly.length];
+      long = Math.max(long, Math.hypot(b[0]-a[0], b[1]-a[1]) * k);
+    }
+    for (const e of (pc.edges || [])) if (e.open) opens.push(e);
   }
-  const area = draftAreaM2(poly);
-  const opens = (state.draftEdges || []).filter((e)=>e.open);
+  const area = draftTotalM2();
   const openLen = opens.reduce((s,e)=>s+Math.hypot(e.x2-e.x1,e.y2-e.y1)*k, 0);
-  const sizeTxt = (state.scaled
-    ? `가장 긴 벽 <b>${Math.round(long).toLocaleString()}mm</b> · 모서리 ${poly.length}개`
-    : `모서리 ${poly.length}개 — 실제 길이는 다음 단계에서 입력합니다`)
+  const sizeTxt = (pieces.length > 1 ? `조각 <b>${pieces.length}개</b>를 한 공간으로 묶습니다 · ` : '')
+    + (state.scaled
+      ? `가장 긴 벽 <b>${Math.round(long).toLocaleString()}mm</b> · 모서리 ${corners}개`
+      : `모서리 ${corners}개 — 실제 길이는 다음 단계에서 입력합니다`)
     + (opens.length
       ? `<br>개구부(문·창) <b>${opens.length}곳</b>${state.scaled?` · 합계 ${Math.round(openLen).toLocaleString()}mm`:''} — 주황 선으로 표시됩니다`
       : '');
@@ -1630,9 +1690,14 @@ function nameRoomSheet(){
         const join = $('#join') ? $('#join').value : '';
         const name = ($('#rname').value || '').trim() || nextRoomName();
         closeSheet(); hideDraftBar();
-        const p=state.draft, e=state.draftEdges;
-        state.draft=null; state.draftEdges=null;
-        applyDetected(p, e, join ? { appendTo: join } : { name });
+        const list = draftPieces();
+        state.draft=null; state.draftEdges=null; state.draftMore=[];
+        // 첫 조각이 방을 만들고 나머지는 그 방에 이어 붙는다 (state.rooms[].parts)
+        let target = join;
+        for (const pc of list){
+          applyDetected(pc.poly, pc.edges, target ? { appendTo: target } : { name });
+          target = target || state.roomSel;
+        }
       };
     });
 }
@@ -1833,6 +1898,17 @@ function draw(){
     ctx.stroke(); ctx.setLineDash([]);
     for (const [x,y] of state.wallPts){ const [sx,sy]=toScreen(x,y);
       ctx.fillStyle='#1428A0'; ctx.beginPath(); ctx.arc(sx,sy,4,0,7); ctx.fill(); }
+  }
+  // 함께 묶으려고 담아 둔 조각 — 지금 고르는 것과 구분되게 옅게 채워 둔다.
+  // 담긴 것이 눈에 보여야 "몇 개를 묶는 중인지" 알 수 있다.
+  for (const pc of (state.draftMore || [])){
+    if (!pc.poly || !pc.poly.length) continue;
+    const k = state.mmPerPx || 1;
+    ctx.beginPath();
+    pc.poly.forEach(([ix,iy],i)=>{ const [sx,sy]=toScreen(ix*k, iy*k); i?ctx.lineTo(sx,sy):ctx.moveTo(sx,sy); });
+    ctx.closePath();
+    ctx.fillStyle='rgba(20,40,160,.10)'; ctx.fill();
+    ctx.strokeStyle='#1428A0'; ctx.lineWidth=2; ctx.setLineDash([5,4]); ctx.stroke(); ctx.setLineDash([]);
   }
   // 자동 인식 초안
   if (state.draft && state.draft.length){
@@ -2124,7 +2200,7 @@ function useImage(src, after){
   img.onload = ()=>{
     state.img=img; state.imgW=img.naturalWidth; state.imgH=img.naturalHeight;
     state.mmPerPx=null; state.scaled=false; state.scalePts=[]; state.mask=null; state.baseMask=null; state.sealCache=null; state.cleanCv=null; state.showClean=false;
-    state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; hideDraftBar();
+    state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; state.draftMore=[]; hideDraftBar();
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
     const r = cv.getBoundingClientRect();
@@ -2559,8 +2635,12 @@ async function openSelect(room){
             ? ' · ' + o.parts.slice(1).map((q)=>`${esc(q.part)} ${Math.round(q.w)}×${Math.round(q.h)}×${Math.round(q.d)}`).join(' · ')
             : '';
           const dz = doorZoneFor({ cat, group:o.group });
+          // 비슷한 발자국끼리 묶은 사이즈는 그 사실을 밝힌다. 무리 중 **가장 큰 치수**로
+          // 판정하므로, 고객 제품이 그보다 작으면 실제로는 더 여유가 있다는 뜻이다.
+          const mg = r.mergedFrom && r.mergedFrom.length > 1
+            ? ` · <span class="hint">${esc(r.mergedFrom.join(' · '))} 통합 — 큰 치수 기준</span>` : '';
           el.innerHTML = `<b>가로 ${Math.round(p0.w)} · 높이 ${Math.round(p0.h)} · 깊이 ${Math.round(p0.d)}mm</b>`
-            + ` — ${esc(r.size)} · ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}`
+            + ` — ${esc(r.size)} · ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}${mg}`
             + ` · 이격 후면 ${cl.back}·좌우 ${cl.side}${cl.front?`·전면 ${cl.front}`:''}mm`
             + (dz ? ` · 도어 오픈 좌우 각 ${dz.side}mm` : '')
             + extra;
@@ -2801,7 +2881,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, insideR
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
-  showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2,
+  showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, draftPieces, draftTotalM2, applyDetected,
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, loadPlanIndex, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
