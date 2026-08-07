@@ -1224,6 +1224,7 @@ function detectRoomAt(imgX, imgY, forceR){
   const cands = [];
   // 실패했을 때 되짚어 볼 구간을 기억한다 — 새어 나간 가장 큰 반경과 방이 메워진 가장 작은 반경
   let lastLeak = null, firstWall = null;
+  let fallback = null;   // 하나도 통과하지 못했을 때 내놓을 근사치
   const tryRadius = (r) => {
     const m = sealedMask(r);
     if (m.dark[sy*m.w + sx]) {                      // 이 반경에서는 누른 자리가 벽에 먹혔다
@@ -1235,6 +1236,9 @@ function detectRoomAt(imgX, imgY, forceR){
     if (g.count < planArea * 0.004) return;
     if (g.border > leakLimit) {
       if (lastLeak == null || r > lastLeak) lastLeak = r;
+      // 하나도 통과하지 못했을 때 내놓을 근사치 후보로 가장 작은 것을 기억해 둔다.
+      // 이 도구는 상담 중 대략을 보는 용도라, 아무것도 못 내놓는 것이 제일 나쁘다.
+      if (g.count < planArea * 0.6 && (!fallback || g.count < fallback.g.count)) fallback = { r, g, m };
       return;
     }
     // 새어 나갔는지는 위의 border 검사(도면 범위 가장자리 접촉)가 판정한다.
@@ -1302,6 +1306,53 @@ function detectRoomAt(imgX, imgY, forceR){
     }
     if (reg) state.cleanInfo = { openR: state.baseInfo.openR, closeR: used, thr: state.baseInfo.thr };
   }
+  // 깔끔히 닫힌 것을 못 찾았으면 **근사치라도 내놓는다.**
+  //
+  // 이 도구는 상담 중 "대략 들어가느냐"를 보는 용도다. 아무것도 못 내놓고 오류만 띄우는 것이
+  // 제일 나쁘다 — 사용자는 이미 "더 넓게/더 좁게" 손잡이를 갖고 있으니 출발점만 주면 된다.
+  // 실제 분양 도면에는 마감재 범례나 "공간옵션" 별도 도면이 한 장에 같이 실려 있어
+  // 경계가 깔끔히 닫히지 않는 경우가 흔하다.
+  let approx = false;
+  if ((!reg || !poly) && !base.dark[sy*base.w + sx]) {
+    // ① 새어 나갔지만 방 크기라 할 만한 것이 있으면 그것을 쓴다
+    if (fallback) {
+      const jog = state.mmPerPx
+        ? Math.max(3, Math.round((300 / state.mmPerPx) * fallback.m.S))
+        : Math.max(4, Math.round(Math.max(fallback.m.w, fallback.m.h) * 0.012));
+      const pg = regionPolygon(fallback.m, fallback.g, jog);
+      if (pg) {
+        used = fallback.r; reg = fallback.g; mask = fallback.m; poly = pg;
+        edges = classifyEdges(pg, base, fallback.m);
+        approx = true;
+      }
+    }
+    // ② 그것도 없으면 **누른 자리에서 사방으로 벽까지 재어 사각형**을 만든다.
+    //    범위는 대충이지만 방 크기는 맞아, 가전이 들어가는지 보는 데는 충분하다.
+    //    아무것도 못 내놓는 것보다 낫다 — 사용자가 넓게/좁게로 다듬을 수 있다.
+    if (!poly) {
+      const W = base.w, H = base.h, D = base.dark;
+      const ray = (dx, dy) => {
+        let x = sx, y = sy, n = 0;
+        const lim = Math.max(W, H);
+        while (n < lim) {
+          const nx = x + dx, ny = y + dy;
+          if (nx < base.bbox.x0 || ny < base.bbox.y0 || nx > base.bbox.x1 || ny > base.bbox.y1) break;
+          if (D[ny * W + nx]) break;
+          x = nx; y = ny; n++;
+        }
+        return n;
+      };
+      const l = ray(-1, 0), r2 = ray(1, 0), u = ray(0, -1), d2 = ray(0, 1);
+      if (l + r2 > 2 && u + d2 > 2) {
+        poly = [[sx - l, sy - u], [sx + r2, sy - u], [sx + r2, sy + d2], [sx - l, sy + d2]];
+        mask = sealedMask(0); reg = null; used = 0;
+        edges = classifyEdges(poly, base, mask);
+        approx = true;
+      }
+    }
+    if (poly) state.cleanInfo = { openR: state.baseInfo.openR, closeR: used, thr: state.baseInfo.thr };
+  }
+
   if (!reg || !poly) {
     if (base.dark[sy*base.w + sx]) return { error: '누른 자리가 벽 위입니다. 방 안쪽의 빈 곳을 눌러주세요.' };
     if (tooBig) return { error: '벽이 끊겨 여러 방이 하나로 이어졌습니다. 방 사이가 뚫려 있으면 자동으로 가를 수 없습니다 — 벽 그리기로 직접 그려주세요.' };
@@ -1331,6 +1382,7 @@ function detectRoomAt(imgX, imgY, forceR){
     wider: widerR,     // 덜 막는다 = 더 넓게
     narrow: narrowR,   // 더 막는다 = 더 좁게
     step: at + 1, steps: all.length,
+    approx,            // 경계가 깔끔히 닫히지 않아 근사로 잡은 것 — 화면에 그렇게 알린다
   };
 }
 
@@ -1422,6 +1474,7 @@ function showDraftBar(auto, prevArea){
       ${area != null ? `<span class="area">${area.toFixed(1)}㎡</span>` : '<span class="area">범위 확인</span>'}
       ${delta}
       <span class="meta">모서리 ${state.draft.length}개${opens?` · 개구부 ${opens}곳`:''}</span>
+      ${st.approx ? '<span class="meta">경계가 깔끔히 닫히지 않아 <b>대략</b>으로 잡았습니다 — 넓게/좁게로 맞춰 주세요</span>' : ''}
       <span class="grow"></span>
       ${auto ? '<span class="meta">가운데를 기준으로 자동 인식했습니다</span>' : ''}
     </div>
