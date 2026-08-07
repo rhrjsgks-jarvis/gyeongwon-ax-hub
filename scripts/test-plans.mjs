@@ -13,6 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import http from 'http';
 import { fileURLToPath } from 'url';
 import { PLANS } from './fixtures/plans.mjs';
 
@@ -31,20 +32,42 @@ const fail = (m) => { console.log('ERROR:', m); ok = false; };
 const pass = (m) => console.log('OK:', m);
 
 const exe = process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium';
-const browser = await chromium.launch(
-  fs.existsSync(exe) ? { executablePath: exe } : {});
+// 패키지가 있어도 **브라우저 실행 파일**이 없을 수 있다. CI의 test 잡은 chromium을
+// 설치하지 않으므로(설치는 e2e 잡에서만 한다) 여기서 그냥 launch 하면 실패한다.
+// 위의 import 가드는 패키지 부재만 잡으므로, 실행 파일 부재도 같은 SKIP 으로 다룬다.
+let browser;
+try {
+  browser = await chromium.launch(fs.existsSync(exe) ? { executablePath: exe } : {});
+} catch (e) {
+  console.log('SKIP: chromium 실행 파일이 없어 도면 코퍼스 검사를 건너뜁니다 '
+    + '(npx playwright install chromium)');
+  console.log('      ' + String(e.message).split('\n')[0].slice(0, 120));
+  process.exit(0);
+}
 const page = await browser.newPage({ viewport: { width: 900, height: 1000 } });
 
 const errs = [];
 page.on('pageerror', (e) => errs.push(String(e.message || e)));
 
-// 미니앱을 파일에서 직접 띄운다 (Next 서버 없이도 돌게)
-const appHtml = fs.readFileSync(path.join(root, 'public', 'place-app.html'), 'utf8');
-const tmp = path.join(os.tmpdir(), 'place-corpus.html');
-fs.writeFileSync(tmp, appHtml);
-const reps = fs.readFileSync(path.join(root, 'public', 'size-reps.json'), 'utf8');
-await page.route('**/size-reps.json', (r) => r.fulfill({ contentType: 'application/json', body: reps }));
-await page.goto('file://' + tmp, { waitUntil: 'domcontentloaded' });
+// 미니앱을 정적 서버로 띄운다 (Next 서버 없이도 돌게).
+//
+// 예전에는 file:// 로 띄웠는데, place-app.html 이 size-reps.json 을 상대경로로 fetch 하므로
+// 가전 목록을 불러오는 지점에서 항상 "Failed to fetch" 가 났다. fetch() 규격이 file: 스킴을
+// 지원하지 않아(http(s)/data/blob 만 가능) 파일을 나란히 놓아도, --allow-file-access-from-files
+// 를 줘도, page.route() 로 가로채려 해도 해결되지 않는다. http 로 띄우는 것이 유일한 해법이고
+// 실제 배포 형태와도 같다.
+const MIME_STATIC = { '.html': 'text/html; charset=utf-8', '.json': 'application/json',
+  '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+const server = http.createServer((req, res) => {
+  const rel = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
+  const file = path.join(root, 'public', path.normalize(rel).replace(/^([/\\])+/, ''));
+  if (!file.startsWith(path.join(root, 'public')) || !fs.existsSync(file)) { res.writeHead(404); return res.end(); }
+  res.writeHead(200, { 'content-type': MIME_STATIC[path.extname(file).toLowerCase()] || 'application/octet-stream' });
+  fs.createReadStream(file).pipe(res);
+});
+await new Promise((r) => server.listen(0, '127.0.0.1', r));
+const origin = `http://127.0.0.1:${server.address().port}`;
+await page.goto(`${origin}/place-app.html`, { waitUntil: 'domcontentloaded' });
 await page.waitForTimeout(400);
 
 for (const plan of PLANS) {
@@ -162,6 +185,99 @@ for (const plan of PLANS) {
       }
     }
     if (missing) console.log(`SKIP: 실제 도면 ${missing}벌은 파일이 없어 건너뜁니다`);
+  }
+}
+
+// ── 축척 맞추기 ──
+// 도면에 치수가 적혀 있지 않아도 아는 길이 하나만 입력하면 전체가 비례로 맞춰지는 것이
+// 이 도구의 전제다. 그런데 위 검사들은 전부 state.mmPerPx 를 직접 대입해 이 UI 를 건너뛰므로,
+// 정작 사용자가 매번 거치는 경로가 아무 검증도 받지 않았다. 실제로 두 점을 찍고 길이를
+// 입력하는 흐름을 그대로 태워서, 나온 축척이 정확한지와 그 축척으로 잰 넓이가 맞는지 본다.
+{
+  const plan = PLANS[0];
+  const b64 = Buffer.from(plan.svg, 'utf8').toString('base64');
+  const r = await page.evaluate(async ({ b64, trueMmPerPx }) => {
+    const P = window.__place;
+    const img = new Image();
+    await new Promise((res) => { img.onload = res; img.src = 'data:image/svg+xml;base64,' + b64; });
+    P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+    // 축척 미확정 상태에서 시작 — 사용자가 도면을 막 올린 직후와 같다
+    P.state.mmPerPx = null; P.state.scaled = false; P.state.scalePts = [];
+    P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
+    P.state.rooms = []; P.state.walls = []; P.state.items = [];
+    P.state.zoom = 1; P.state.panX = 0; P.state.panY = 0;
+
+    const out = {};
+    document.querySelector('#btn-scale').click();
+    out.mode = P.state.mode;
+
+    // 도면 이미지에서 가로로 정확히 400px 떨어진 두 점을 찍는다.
+    // zoom=1·pan=0 이라 화면 좌표와 이미지 좌표가 1:1 이다.
+    const cv = document.querySelector('#cv');
+    const rect = cv.getBoundingClientRect();
+    const GAP_PX = 400;
+    const tap = (x, y) => cv.dispatchEvent(new PointerEvent('pointerdown', {
+      clientX: rect.left + x, clientY: rect.top + y, bubbles: true, pointerId: 1 }));
+    tap(100, 100);
+    tap(100 + GAP_PX, 100);
+    out.pts = P.state.scalePts.length;
+    out.sheetShown = !!document.querySelector('#mm');
+    if (!out.sheetShown) return out;
+
+    // 그 400px 이 실제로 몇 mm 인지는 합성 도면의 진짜 축척으로 계산한다.
+    // 사용자가 도면 치수선을 보고 입력하는 값에 해당한다.
+    const realMm = Math.round(GAP_PX * trueMmPerPx);
+    out.enteredMm = realMm;
+    document.querySelector('#mm').value = String(realMm);
+    document.querySelector('#ok').click();
+
+    out.scaled = P.state.scaled;
+    out.mmPerPx = P.state.mmPerPx;
+    // closeSheet() 는 #modal 의 on 클래스만 떼고 내용은 DOM 에 남긴다 — 요소 존재로 판단하면 안 된다
+    out.sheetClosed = !document.querySelector('#modal').classList.contains('on');
+    return out;
+  }, { b64, trueMmPerPx: plan.mmPerImgPx });
+
+  if (r.mode !== 'scale') fail(`"축척 맞추기"를 눌렀는데 모드가 ${r.mode}`);
+  else if (r.pts !== 2) fail(`두 점을 찍었는데 scalePts가 ${r.pts}개`);
+  else if (!r.sheetShown) fail('두 점을 찍었는데 길이 입력 창이 뜨지 않음');
+  else if (!r.scaled) fail('길이를 입력하고 확정했는데 축척이 확정되지 않음');
+  else if (!r.sheetClosed) fail('확정했는데 입력 창이 닫히지 않음');
+  else {
+    // 입력한 mm ÷ 찍은 픽셀거리 = 축척. 합성 도면의 진짜 축척과 일치해야 한다.
+    const err = Math.abs(r.mmPerPx - plan.mmPerImgPx) / plan.mmPerImgPx;
+    if (err > 0.01) {
+      fail(`축척이 어긋남 — 입력 ${r.enteredMm}mm/400px → ${r.mmPerPx.toFixed(3)}mm/px, ` +
+        `도면 실제 ${plan.mmPerImgPx}mm/px (오차 ${(err * 100).toFixed(1)}%)`);
+    } else {
+      pass(`축척 맞추기 — 두 점(400px)에 ${r.enteredMm}mm 입력 → ${r.mmPerPx.toFixed(3)}mm/px ` +
+        `(도면 실제 ${plan.mmPerImgPx}mm/px, 오차 ${(err * 100).toFixed(2)}%)`);
+    }
+  }
+
+  // 축척이 UI 로 확정된 상태에서 잰 넓이가 맞는지 — 여기까지 맞아야 "정상 작동"이다
+  if (r.scaled) {
+    const probe = plan.probes[0];
+    const a = await page.evaluate(({ mx, my }) => {
+      const P = window.__place;
+      const k = P.state.mmPerPx;
+      const d = P.detectRoomAt(mx / k, my / k);
+      if (d.error) return { error: d.error };
+      let a2 = 0;
+      for (let i = 0; i < d.poly.length; i++) {
+        const [x1, y1] = d.poly[i], [x2, y2] = d.poly[(i + 1) % d.poly.length];
+        a2 += (x1 * k) * (y2 * k) - (x2 * k) * (y1 * k);
+      }
+      return { areaM2: Math.abs(a2 / 2) / 1e6 };
+    }, { mx: probe.at[0], my: probe.at[1] });
+
+    const [lo, hi] = probe.areaM2;
+    if (a.error) fail(`축척 확정 후 방 인식 실패: ${a.error}`);
+    else if (a.areaM2 < lo || a.areaM2 > hi) {
+      fail(`UI 로 맞춘 축척에서 넓이 ${a.areaM2.toFixed(1)}㎡ (기대 ${lo}~${hi}㎡) — 축척이 넓이에 잘못 반영된다`);
+    } else {
+      pass(`UI 로 맞춘 축척으로 잰 넓이 ${a.areaM2.toFixed(1)}㎡ (기대 ${lo}~${hi}㎡)`);
+    }
   }
 }
 
@@ -302,5 +418,6 @@ if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: 
 else pass('전 도면에서 스크립트 오류 없음');
 
 await browser.close();
+server.close();
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
