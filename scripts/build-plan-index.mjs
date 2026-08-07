@@ -108,7 +108,7 @@ async function shrink(srcPath) {
 }
 
 const index = [];
-let n = 0, bytes = 0, withScale = 0;
+let n = 0, bytes = 0, withScale = 0, dropped = 0;
 
 for (const [dir, g] of [...groups.entries()].sort()) {
   const id = 'c' + String(index.length + 1).padStart(2, '0');
@@ -176,6 +176,24 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     plans.push(rec);
   }
   if (!plans.length) continue;
+
+  /*
+   * 같은 단지의 도면은 같은 시트 서식으로 만들어져 축척이 비슷하게 나온다
+   * (동탄 대방 엘리움 25.25·25.29·25.25 — 0.2% 안). 한 장만 크게 벗어나면 그 장의 판독이
+   * 틀린 것이다 — 평택 자이에서 23.6·23.0·29.3 사이에 11.98 이 끼어 있었다.
+   * 서로 검산해 주는 공짜 표본이라 쓰지 않을 이유가 없다. 애매하면 뺀다 —
+   * 축척이 없으면 사람이 맞추면 되지만, 틀린 축척은 조용히 잘못된 답을 낸다.
+   */
+  const ks = plans.filter((p) => p.mmPerPx).map((p) => p.mmPerPx).sort((a, b) => a - b);
+  if (ks.length >= 2) {
+    const mid = ks[Math.floor(ks.length / 2)];
+    for (const p of plans) {
+      if (p.mmPerPx && Math.abs(p.mmPerPx - mid) > mid * 0.15) {
+        delete p.mmPerPx; delete p.scaleConf; withScale--; dropped++;
+      }
+    }
+  }
+
   plans.sort((a, b) => (a.exclusiveM2 || 999) - (b.exclusiveM2 || 999) || a.type.localeCompare(b.type));
   index.push({ id, region: g.region, complex: g.complex, addr: g.addr, plans });
 }
@@ -197,7 +215,7 @@ fs.writeFileSync(INDEX, JSON.stringify({
 
 const byRegion = {};
 for (const c of index) byRegion[c.region] = (byRegion[c.region] || 0) + c.plans.length;
-console.log(`단지 ${index.length}곳 · 도면 ${n}장 (축척 있음 ${withScale}장) · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
+console.log(`단지 ${index.length}곳 · 도면 ${n}장 (축척 있음 ${withScale}장, 단지 안에서 어긋나 뺀 것 ${dropped}장) · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
 console.log('지역별: ' + Object.entries(byRegion).sort((a, b) => b[1] - a[1])
   .map(([k, v]) => `${k} ${v}`).join(' · '));
 console.log('→ public/plans/ · public/plan-index.json');

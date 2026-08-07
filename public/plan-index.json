@@ -4,7 +4,7 @@
  "generatedAt": "2026-08-07",
  "complexCount": 143,
  "planCount": 658,
- "scaledCount": 11,
+ "scaledCount": 9,
  "complexes": [
   {
    "id": "c01",
@@ -5481,9 +5481,7 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 77,
-     "mmPerPx": 29.278,
-     "scaleConf": "보통"
+     "kb": 77
     },
     {
      "type": "T9",
@@ -5492,9 +5490,7 @@
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 75,
-     "mmPerPx": 11.977,
-     "scaleConf": "보통"
+     "kb": 75
     }
    ]
   },
