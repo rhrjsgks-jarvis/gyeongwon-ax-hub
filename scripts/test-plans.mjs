@@ -573,6 +573,33 @@ for (const plan of PLANS) {
   else if (!r.lv3.some((t) => /전용\s*[\d.]+\s*㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
   else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
   else pass(`지역 → 단지 → 도면 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
+
+  // ── 미리 읽어 둔 축척이 실제로 적용되는가 ──
+  // 도면에 인쇄된 치수로 구해 둔 mmPerPx 를 색인에 싣고, 도면을 고르면 바로 적용한다.
+  // 이건 조용히 틀리면 "냉장고가 들어갑니다"를 거짓말로 만드는 종류라 회귀 검사가 필요하다.
+  {
+    const sc = await page.evaluate(async () => {
+      const P = window.__place;
+      const idx = await P.loadPlanIndex();
+      const flat = idx.flatMap((c) => c.plans.map((p) => ({ ...p, complex: c.complex })));
+      const withK = flat.filter((p) => p.mmPerPx);
+      if (!withK.length) return { none: true, total: flat.length };
+      // 색인에 실린 축척이 아파트 도면다운 범위인가 (1px = 1~60mm)
+      const bad = withK.filter((p) => !(p.mmPerPx > 0.5 && p.mmPerPx < 60));
+      // 실제 적용 — 라이브러리를 거치지 않고 같은 경로(useImage + 축척 설정)를 흉내낸다
+      const p0 = withK[0];
+      P.state.mmPerPx = null; P.state.scaled = false;
+      await new Promise((res) => P.useImage(p0.file, res));
+      P.state.mmPerPx = p0.mmPerPx; P.state.scaled = true;
+      return { none: false, total: flat.length, n: withK.length, bad: bad.length,
+        applied: P.state.scaled && Math.abs(P.state.mmPerPx - p0.mmPerPx) < 1e-9,
+        sample: `${p0.complex} ${p0.type} ${p0.mmPerPx}mm/px(${p0.scaleConf || '?'})` };
+    });
+    if (sc.none) console.log(`SKIP: 축척이 실린 도면이 색인에 없습니다 (도면 ${sc.total}장)`);
+    else if (sc.bad) fail(`색인의 축척이 범위를 벗어난 도면 ${sc.bad}장 (1px = 0.5~60mm 이어야 한다)`);
+    else if (!sc.applied) fail('색인의 축척이 적용되지 않음');
+    else pass(`미리 읽어 둔 축척 — ${sc.n}/${sc.total}장에 실려 있고 적용됨 (예: ${sc.sample})`);
+  }
 }
 
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
