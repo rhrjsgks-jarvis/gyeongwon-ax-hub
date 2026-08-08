@@ -371,13 +371,23 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
  * 한 벌을 만드는 상품이다. 상담에서 자리를 재는 단위도 한 대가 아니라 그 한 벌이므로,
  * 모듈 하나짜리 줄만 두면 "냉장+냉동+김치 넣을 자리 있습니까"에 답할 수 없다.
  *
- * **치수는 지어내지 않는다.** 폭·높이·깊이를 전부 DB 에 실제로 있는 모듈에서 가져와
- * 구성대로 더한다. 다만 DB(2026 카탈로그)에 **냉장·김치 모듈만** 실려 있어 냉동·와인은
- * 냉장 모듈 규격을 대신 쓴다 — 1도어 키친핏은 같은 캐비닛으로 열을 맞추는 상품이라
- * 규격이 같다는 전제이며, 그 사실을 `note` 로 화면에 밝히고 `weak` 로 실측 확인을 붙인다.
+ * **치수는 지어내지 않는다.** 근거는 전부 설치환경 가이드(`install-app.html` '냉장고 1도어',
+ * 출처: 삼성닷컴 구매가이드 설치가이드 팝업)와 모델파인더 DB 에 있다.
+ *  - 1도어 키친핏은 **냉장·냉동·김치·와인이 같은 캐비닛**으로 나온다
+ *    (가이드 소제목 "냉장·냉동·김치·와인 등 원하는 조합으로 구성",
+ *     규격도 캡션 "폭 595mm·높이 1,855mm"). DB 가 두 모듈로 이를 뒷받침한다 —
+ *    냉장 `RR40C8995APG` 595×1855×688 과 김치 `RQ34C8945APG` 595×1855×688 이 **완전히 같다.**
+ *  - 조합 설치의 **제품 간 간격은 10㎜**다
+ *    (가이드 "페어(2대) 조합 설치 간격 — 제품 간 10mm, 전용 페어키트(별매)로 연결 필요").
+ *    좌우 이격 5㎜(Infinite)는 **한 대 기준 한쪽** 값이라 두 대가 나란히 서면 5+5=10 —
+ *    가이드의 "제품 간 10mm"와 맞아떨어진다. 사이에 5 를 쓰면 한쪽만 센 것이다.
  *
- * 모듈 사이 간격은 **설치 이격**이다(CLAUDE.md: 1도어 Infinite 5mm / Bespoke 12mm).
- * 바깥 이격은 `place-app.html` 의 `CLEAR_BY_LINE` 이 따로 붙이므로 여기서는 사이만 더한다.
+ * **처음 판은 두 군데가 틀렸고 사용자가 잡아냈다.** ①김치 모듈을 695㎜(키친핏 313L, RQ33)로
+ * 잡았는데 그 제품은 1도어 조합 모듈이 아니다 ②모듈 사이를 5·12㎜로 뒀는데 그 값은 모듈
+ * 사이가 아니라 **냉장고장 내측 좌우(외곽) 이격**이다. 외곽 이격은 `place-app.html` 의
+ * `CLEAR_BY_LINE` 이 따로 붙이므로 여기서 더하면 이중 계산이기도 했다.
+ *
+ * 조합은 **같은 라인업끼리만** 가능하다(가이드 주의: "1도어와 4도어 간 페어 설치는 불가").
  */
 const modRec = (model) => {
   const r = rows.find((x) => x.model === model);
@@ -386,41 +396,47 @@ const modRec = (model) => {
   if (!p) throw new Error(`세트 구성 모듈 ${model} 에 본체 치수가 없다`);
   return { w: +p.w, h: +p.h, d: +p.d, group: r.group, label: p.label, raw: p.raw };
 };
-// 어느 모듈의 치수를 쓰는가. `self:false` = DB 에 그 모듈이 없어 냉장 모듈 규격을 준용한 것
-const MODULES = {
-  냉장: { from: 'RR40C8995APG', self: true },
-  냉동: { from: 'RR40C8995APG', self: false },
-  김치: { from: 'RQ33DB7441AP', self: true },
-  와인: { from: 'RR40C8995APG', self: false },
-};
+const ONE_DOOR = 'RR40C8995APG';   // 1도어 냉장 키친핏 — 595×1855×688 · 408L
+const ONE_DOOR_KIM = 'RQ34C8945APG'; // 1도어 김치 키친핏 — 595×1855×688 · 347L (냉장과 동일 규격)
+const PAIR_GAP = 10;               // 제품 간 간격(페어키트) — 설치환경 가이드 '냉장고 1도어'
 const SETS = [
-  { names: ['냉장', '냉동'], gap: 12, lineup: 'Bespoke' },
-  { names: ['냉장', '냉동', '김치'], gap: 12, lineup: 'Bespoke' },
-  { names: ['냉장', '냉동', '와인', '김치'], gap: 5, lineup: 'Infinite' },
+  { names: ['냉장', '냉동'], lineup: 'Bespoke' },
+  { names: ['냉장', '냉동', '김치'], lineup: 'Bespoke' },
+  { names: ['냉장', '냉동', '와인', '김치'], lineup: 'Infinite' },
 ];
+/*
+ * 두 모듈이 정말 같은 규격인지 여기서 확인한다. 카탈로그가 갱신되며 어긋나면
+ * "같은 캐비닛"이라는 전제가 깨진 것이니 조용히 넘어가면 안 된다.
+ */
+{
+  const a = modRec(ONE_DOOR), b = modRec(ONE_DOOR_KIM);
+  if (a.w !== b.w || a.h !== b.h || a.d !== b.d) {
+    throw new Error(`1도어 키친핏 냉장(${a.w}×${a.h}×${a.d})과 김치(${b.w}×${b.h}×${b.d})의 규격이 달라졌다`
+      + ' — 세트 폭을 모듈별로 다시 계산해야 한다');
+  }
+}
 for (const s of SETS) {
-  const mods = s.names.map((n) => ({ n, ...MODULES[n], ...modRec(MODULES[n].from) }));
-  const w = mods.reduce((t, m) => t + m.w, 0) + s.gap * (mods.length - 1);
-  const h = Math.max(...mods.map((m) => m.h));
-  const d = Math.max(...mods.map((m) => m.d));
-  const borrowed = mods.filter((m) => !m.self).map((m) => m.n);
-  const base = modRec(MODULES['냉장'].from);
+  const m = modRec(ONE_DOOR);
+  const n = s.names.length;
+  const w = m.w * n + PAIR_GAP * (n - 1);
   merged.push({
     cat: '냉장고', home: true, line: '키친핏', set: true,
-    size: `1도어 ${mods.length}세트 (${s.names.join('+')})`,
+    size: `1도어 ${n}세트 (${s.names.join('+')})`,
     sizeLabel: '세트 구성',
-    specs: [`${mods.length}대 1세트`],
-    model: MODULES['냉장'].from,
+    specs: [`${n}대 1세트`],
+    model: ONE_DOOR,
     parts: [{
-      part: '본체(세트 전체)', w, h, d,
+      part: '본체(세트 전체)', w, h: m.h, d: m.d,
       label: '세트 폭 합계',
-      raw: `${mods.map((m) => m.w).join(' + ')} + 모듈 사이 ${s.gap}㎜ × ${mods.length - 1}`,
+      raw: `${m.w}㎜ × ${n}대 + 제품 간 ${PAIR_GAP}㎜ × ${n - 1}`,
     }],
-    group: `${s.lineup} 1도어 키친핏 ${mods.length}세트`,
-    note: mods.map((m) => `${m.n} ${m.w}㎜`).join(' + ')
-      + ` · 모듈 사이 이격 ${s.gap}㎜(${s.lineup})`
-      + (borrowed.length ? ` · ${borrowed.join('·')} 모듈은 카탈로그에 치수가 없어 냉장 모듈(${base.w}×${base.h}×${base.d}㎜) 규격을 준용 — 실측 확인` : ''),
-    options: [], spreadW: 0, spreadD: 0, count: mods.length,
+    group: `${s.lineup} 1도어 키친핏 ${n}세트`,
+    note: `1도어 키친핏 ${m.w}㎜ × ${n}대 + 제품 간 ${PAIR_GAP}㎜ × ${n - 1} = ${w}㎜`
+      + ` · 냉장(${ONE_DOOR})과 김치(${ONE_DOOR_KIM})가 같은 ${m.w}×${m.h}×${m.d}㎜ 캐비닛이라 냉동·와인도 같은 폭으로 본다`
+      + ` · 여기에 냉장고장 내측 좌우 이격(${s.lineup === 'Infinite' ? '각 5' : '각 12'}㎜)이 더 붙는다`
+      + ` — 필요한 냉장고장 내경 가로 약 ${w + (s.lineup === 'Infinite' ? 10 : 24)}㎜ · 높이 1,900㎜ 이상 · 깊이 700㎜ 이상`
+      + ` · 같은 라인업(${s.lineup})끼리만 조합 가능(1도어-4도어 페어 불가) · 페어키트(별매) 필요`,
+    options: [], spreadW: 0, spreadD: 0, count: n,
   });
   // 옵션은 자기 자신 하나 — 화면이 `options[0]` 을 쓰므로 비워 두면 안 된다
   const self = merged[merged.length - 1];
