@@ -209,11 +209,18 @@ for (const r of rows) {
   // 발자국이 같으면 한 옵션으로 합친다(색상 변형 등)
   const ok = `${round5(base.w)}×${round5(base.h)}×${round5(base.d)}`;
   if (!g.options.has(ok)) {
+    // 용량은 **옵션마다** 담는다. 사이즈 단위로만 모으면 화면에서 "뚜껑형 126L" 줄에
+    // 126~347L 이 뜬다 — 그 줄은 126L 짜리인데 사이즈 전체의 범위를 보여주는 것이다.
     g.options.set(ok, {
-      model: r.model, group: r.group, parts: r.parts, note: r.note, also: [],
+      model: r.model, group: r.group, parts: r.parts, note: r.note, also: [], specs: [],
     });
   } else {
     g.options.get(ok).also.push(r.model);
+  }
+  if (r.size) {
+    const v = normSize(r.size);
+    const os = g.options.get(ok).specs;
+    if (!os.includes(v)) os.push(v);
   }
 }
 
@@ -299,11 +306,28 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
       if (seen.has(key)) continue;
       seen.add(key); options.push(o);
     }
+    /*
+     * **옵션을 발자국이 큰 것부터 정렬한다.**
+     * 화면에서는 사이즈당 한 줄만 보여주고 그 줄이 options[0] 을 쓰는데, 같은 사이즈 안에서
+     * 깊이가 크게 다르다 — 냉장고 폭 910mm 는 683~930mm(247mm 차이), TV 55형은 218~483mm.
+     * 카탈로그 순서(플래그십 우선)의 첫 항목을 쓰면 실제로 더 깊은 모델이 24.7cm 더
+     * 튀어나오는데 "들어갑니다"가 된다. 애매하면 크게 재는 쪽이 안전하므로 큰 것을 대표로 둔다.
+     */
+    const foot = (o) => {
+      const p = (o.parts || []).find((q) => /본체|실내기|스탠드 설치/.test(q.part || '')) || (o.parts || [])[0];
+      return p ? { w: +p.w || 0, d: +p.d || 0 } : { w: 0, d: 0 };
+    };
+    options.sort((a, b) => foot(b).w * foot(b).d - foot(a).w * foot(a).d);
+    // 사이즈 안에서 발자국이 얼마나 벌어지는지 — 화면이 "모델을 골라야 하는가"를 이걸로 판단한다
+    const fs2 = options.map(foot);
+    const spreadW = Math.round(Math.max(...fs2.map((f) => f.w)) - Math.min(...fs2.map((f) => f.w)));
+    const spreadD = Math.round(Math.max(...fs2.map((f) => f.d)) - Math.min(...fs2.map((f) => f.d)));
     merged.push({
       cat, home: isHome(cat) || undefined, line: line || undefined, size, sizeLabel: rep.sizeLabel,
       specs: [...new Set(bucket.flatMap((r) => r.specs))],
-      model: rep.model, parts: rep.parts, group: rep.group, note: rep.note,
-      options,
+      // 대표는 **옵션 중 발자국이 가장 큰 것**이다 (위에서 정렬해 뒀다)
+      model: options[0].model, parts: options[0].parts, group: options[0].group, note: options[0].note,
+      options, spreadW, spreadD,
       count: bucket.reduce((n, r) => n + r.count, 0),
       // 무엇을 묶었는지 남긴다 — 화면에서 "650·670mm 통합"으로 밝힐 수 있어야 한다
       mergedFrom: values.length > 1 ? values : undefined,

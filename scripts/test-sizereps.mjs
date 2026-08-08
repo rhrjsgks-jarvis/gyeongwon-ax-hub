@@ -93,11 +93,17 @@ const GOLDEN = [
   ['세탁기·콤보', '폭 635~685mm', 'WD90H25AHS', '본체', [686, 1110, 875]],
 ];
 let goldBad = 0;
+/*
+ * 검사하려는 것은 **카탈로그 원문 치수가 그대로 실렸는가**이지 "그 모델이 대표 슬롯에
+ * 있는가"가 아니다. 대표는 정렬 규칙(발자국이 큰 것 우선)에 따라 바뀔 수 있으므로
+ * 모델을 옵션 안에서 찾는다 — 그렇게 해야 치수 파싱이 깨졌을 때만 실패한다.
+ */
 for (const [cat, size, model, part, [w, h, d]] of GOLDEN) {
   const r = reps.find((x) => x.cat === cat && x.size === size);
   if (!r) { fail(`골든: ${cat} ${size} 사이즈가 없음`); goldBad++; continue; }
-  if (r.model !== model) { fail(`골든: ${cat} ${size} 대표가 ${r.model} (기대 ${model})`); goldBad++; continue; }
-  const p = r.parts.find((x) => x.part === part);
+  const o = [r, ...(r.options || [])].find((x) => x.model === model);
+  if (!o) { fail(`골든: ${cat} ${size} 에 ${model} 이 없음`); goldBad++; continue; }
+  const p = o.parts.find((x) => x.part === part);
   if (!p) { fail(`골든: ${cat} ${size} ${model}에 '${part}' 파트가 없음`); goldBad++; continue; }
   if (p.w !== w || p.h !== h || p.d !== d) {
     fail(`골든: ${model} ${part} = ${p.w}×${p.h}×${p.d} (기대 ${w}×${h}×${d})`);
