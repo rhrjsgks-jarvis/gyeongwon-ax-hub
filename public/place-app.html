@@ -2649,16 +2649,35 @@ async function openSelect(room){
         $('#a-list').innerHTML = cats.map((c)=>{
           const rows = state.reps.filter((r)=>r.cat===c);
           /*
-           * **사이즈당 한 줄만 보여준다.** 예전에는 사이즈 안의 모델 변형(2단)까지 같은
-           * 목록에 펼쳐서 TV 가 44줄이었다 — 고를 수가 없다는 지적을 받았다.
-           * 지금은 사이즈를 발자국 10% 이내로 묶었으므로 그 변형들은 배치상 사실상 같다.
-           * 대표(첫 옵션) 하나만 걸고, 몇 종을 묶었는지는 아래 정보줄에 밝힌다.
+           * **발자국이 다르면 다른 줄, 같으면 한 줄.**
            *
-           * **큰 사이즈부터** 보여준다. 상담은 큰 것에서 시작해 안 들어가면 줄이는 순서로
-           * 진행되고, 목록 맨 위가 곧 기본값이라 위쪽이 추천에 가까워야 한다.
+           * 예전에는 사이즈 안의 모델 변형을 전부 펼쳐 TV 가 44줄이었다(고를 수 없다는 지적).
+           * 그렇다고 사이즈당 한 줄로 접으면 이번엔 **깊이가 뭉개진다** — 같은 65형인데
+           * 스탠드 깊이가 222~499mm 이고, 냉장고 폭 910mm 는 683~930mm 다. 어느 하나를
+           * 골라 쓰면 나머지 모델에서 최대 24.7cm 를 틀리게 재고, 그게 "들어갑니다" 거짓말이 된다.
+           * 가장 큰 것을 대표로 써 봤더니 43형 TV 가 The Sero(986mm)로 나왔다 — 그것도 틀렸다.
+           *
+           * 그래서 **발자국이 비슷한 것끼리만 묶어** 한 줄로 만든다. 줄이 늘어나는 곳은
+           * 실제로 배치 결과가 달라지는 곳뿐이다(가정 배치 대상 기준 47 → 73줄).
            */
-          const opts = rows.map((r,i)=>({ r, i, o: r.options[0], k: 0 }))
-            .sort((a,b)=> (b.o.parts[0].w||0) - (a.o.parts[0].w||0));
+          const foot = (o)=>{
+            const p = (o.parts||[]).find((q)=>/본체|실내기|스탠드 설치/.test(q.part||'')) || o.parts[0];
+            return p ? { w:+p.w||0, d:+p.d||0 } : { w:0, d:0 };
+          };
+          const opts = [];
+          rows.forEach((r,i)=>{
+            let head = null;
+            // options 는 발자국이 큰 것부터 정렬돼 있다. 무리의 첫 항목(가장 큰 것)을 대표로 쓴다 —
+            // 무리 안에서는 15% 이내라 애매하면 크게 재는 쪽이 안전하다.
+            r.options.forEach((o,k)=>{
+              const f = foot(o);
+              if (head && f.w >= head.w/1.15 && f.d >= head.d/1.15) return;   // 같은 무리
+              head = f;
+              opts.push({ r, i, o, k, n:1 });
+            });
+          });
+          // **큰 사이즈부터** — 상담은 큰 것에서 시작해 안 들어가면 줄이는 순서로 진행된다
+          opts.sort((a,b)=> foot(b.o).w - foot(a.o).w);
           const pick = rec[c];
           return `<label class="pick">
             <input type="checkbox" data-cat="${esc(c)}"${pick?' checked':''}>
@@ -2668,9 +2687,27 @@ async function openSelect(room){
                 const p0 = o.parts[0];
                 const dim = `${Math.round(p0.w)}×${Math.round(p0.h)}×${Math.round(p0.d)}`;
                 const head = (r.line ? `${r.line} ` : '') + r.size;
-                const tail = r.specs.length ? ` · ${esc(r.specs[0])}` : '';
+                /*
+                 * 한 사이즈가 여러 줄로 나뉘면 **무엇이 다른지**를 밝혀야 고를 수 있다.
+                 * 제품군 이름(Neo QLED·The Sero·4도어…)이 그 구분이다. 연도 괄호는 뗀다.
+                 */
+                const fam = r.options.length > 1
+                  ? ` · ${esc(String(o.group||'').replace(/\s*\(.*$/, '').slice(0, 16))}` : '';
+                /*
+                 * 용량은 **묶인 범위**로 적는다. 예전에는 첫 값만 보여줘서, 602~905L 가 섞인
+                 * 냉장고 폭 910mm 묶음이 "609L" 하나로 표시됐다 — 사용자가 잡아낸 오류다.
+                 */
+                // 이 줄에 해당하는 옵션의 용량만 쓴다. 사이즈 전체 범위를 쓰면 "뚜껑형 126L"
+                // 줄에 126~347L 이 뜬다 — 그 줄은 126L 짜리다.
+                const sp = (o.specs && o.specs.length) ? o.specs : r.specs;
+                const nums = sp.map((v)=>parseFloat(v)).filter((v)=>isFinite(v));
+                const unit = (String(sp[0]||'').match(/[^\d.,\s]+$/)||[''])[0];
+                const tail = !sp.length ? ''
+                  : nums.length > 1 && Math.max(...nums) > Math.min(...nums)
+                    ? ` · ${Math.min(...nums)}~${Math.max(...nums)}${esc(unit)}`
+                    : ` · ${esc(sp[0])}`;
                 const on = pick && pick.i===i && pick.k===k ? ' selected' : '';
-                return `<option value="${i}:${k}"${on}>${esc(head)} — ${dim}mm${tail}</option>`;
+                return `<option value="${i}:${k}"${on}>${esc(head)}${fam} — ${dim}mm${tail}</option>`;
               }).join('')}
             </select>
             <input type="number" data-qty="${esc(c)}" value="1" min="1" max="6" title="수량">
@@ -2808,7 +2845,14 @@ function recommendPicks(){
     const list = state.reps.filter((r)=>r.cat===cat);
     const i = list.findIndex(test);
     if (i < 0) return null;
-    return { i: state.reps.indexOf(list[i]), k: 0, size: list[i].size, why: null };
+    const r = list[i];
+    /*
+     * 옵션은 발자국이 큰 것부터 정렬돼 있다. 추천에 첫 항목(가장 큰 것)을 쓰면 65형 추천이
+     * 스탠드 깊이 499mm 짜리 특수 모델이 된다 — 추천은 **흔한 것**이어야 하므로 가운데를 쓴다.
+     * (안 들어가면 직원이 더 작은 줄로 바꾸면 된다.)
+     */
+    return { i: state.reps.indexOf(r), k: Math.floor((r.options.length - 1) / 2),
+      size: r.size, why: null };
   };
   // 계산 — 냉방·청정 면적이 방을 덮는 가장 작은 것
   const room = state.rooms.find((r)=>/거실|주방/.test(r.name)) || state.rooms[0];
