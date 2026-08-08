@@ -476,15 +476,30 @@ export default function Home() {
     })
   }
 
-  const todayStr = new Date().toLocaleDateString('ko-KR', {
-    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
-  })
+  /*
+   * 날짜는 **하이드레이션이 끝난 뒤에** 채운다.
+   *
+   * 서버에서 그린 날짜와 브라우저가 하이드레이션할 때의 날짜가 다르면 React 가
+   * hydration mismatch(#418·#425)를 내고 화면이 통째로 다시 그려진다. 이 페이지는 빌드
+   * 시점에 미리 그려지므로, 빌드와 접속 사이에 날이 바뀌면 반드시 어긋난다 —
+   * 실제로 CI 가 00:00 UTC 를 넘기며 돌다가 이 오류로 실패했다. 매장에서도 자정을 넘겨
+   * 열어 두면 어제 날짜가 남는다.
+   *
+   * 첫 렌더에는 비워 두고(서버와 같은 결과) useEffect 에서 채운다. 자리를 미리 잡아 두어
+   * 글자가 나타날 때 아래 내용이 밀리지 않게 한다.
+   */
+  const [todayStr, setTodayStr] = useState('')
+  useEffect(() => {
+    setTodayStr(new Date().toLocaleDateString('ko-KR', {
+      year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
+    }))
+  }, [])
 
   return (
     <div className="max-w-3xl mx-auto">
       {/* 헤더 */}
       <div className="mb-4">
-        <p className="text-xs text-gray-400 mb-1">{todayStr}</p>
+        <p className="text-xs text-gray-400 mb-1 min-h-4">{todayStr}</p>
         <h1 className="text-2xl font-black text-gray-900">경원 AX 허브</h1>
         <p className="text-sm text-gray-500 mt-1">영업지원 AI 도구 통합 플랫폼</p>
       </div>
