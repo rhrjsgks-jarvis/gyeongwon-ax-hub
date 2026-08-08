@@ -2649,33 +2649,24 @@ async function openSelect(room){
         $('#a-list').innerHTML = cats.map((c)=>{
           const rows = state.reps.filter((r)=>r.cat===c);
           /*
-           * **발자국이 다르면 다른 줄, 같으면 한 줄.**
+           * **사이즈 하나에 줄 하나.**
            *
-           * 예전에는 사이즈 안의 모델 변형을 전부 펼쳐 TV 가 44줄이었다(고를 수 없다는 지적).
-           * 그렇다고 사이즈당 한 줄로 접으면 이번엔 **깊이가 뭉개진다** — 같은 65형인데
-           * 스탠드 깊이가 222~499mm 이고, 냉장고 폭 910mm 는 683~930mm 다. 어느 하나를
-           * 골라 쓰면 나머지 모델에서 최대 24.7cm 를 틀리게 재고, 그게 "들어갑니다" 거짓말이 된다.
-           * 가장 큰 것을 대표로 써 봤더니 43형 TV 가 The Sero(986mm)로 나왔다 — 그것도 틀렸다.
+           * 여기까지 세 번 바뀌었으니 이유를 남긴다.
+           *  ① 처음엔 사이즈 안의 모델 변형을 전부 펼쳤다 → TV 44줄. 고를 수 없다는 지적.
+           *  ② 발자국이 비슷한 것끼리 묶어 봤다 → 73줄. 깊이 편차(65형 222~499mm)는 살렸지만
+           *     여전히 길고, 한 사이즈가 여러 줄로 나뉘어 무엇을 고를지 알기 어려웠다.
+           *  ③ **사용자 판단으로 ①의 단위(사이즈당 1줄)로 돌아왔다.** 대표모델을 두는 목적이
+           *     "도면에 넣었을 때 대략적인 느낌을 보는 것이지 정확히 이렇다고 표시하려는 게
+           *     아니다"라는 것 — 즉 깊이 편차는 이 도구가 감당할 오차 범위 안이다.
            *
-           * 그래서 **발자국이 비슷한 것끼리만 묶어** 한 줄로 만든다. 줄이 늘어나는 곳은
-           * 실제로 배치 결과가 달라지는 곳뿐이다(가정 배치 대상 기준 47 → 73줄).
+           * 그래도 편차를 숨기지는 않는다. `options[0]` 은 **발자국이 가장 큰 것**이고
+           * (애매하면 크게 재는 쪽이 안전하다), 아래 정보줄이 사이즈 안의 편차를 함께 적는다.
            */
           const foot = (o)=>{
             const p = (o.parts||[]).find((q)=>/본체|실내기|스탠드 설치/.test(q.part||'')) || o.parts[0];
             return p ? { w:+p.w||0, d:+p.d||0 } : { w:0, d:0 };
           };
-          const opts = [];
-          rows.forEach((r,i)=>{
-            let head = null;
-            // options 는 발자국이 큰 것부터 정렬돼 있다. 무리의 첫 항목(가장 큰 것)을 대표로 쓴다 —
-            // 무리 안에서는 15% 이내라 애매하면 크게 재는 쪽이 안전하다.
-            r.options.forEach((o,k)=>{
-              const f = foot(o);
-              if (head && f.w >= head.w/1.15 && f.d >= head.d/1.15) return;   // 같은 무리
-              head = f;
-              opts.push({ r, i, o, k, n:1 });
-            });
-          });
+          const opts = rows.map((r,i)=>({ r, i, o:r.options[0], k:0 }));
           // **큰 사이즈부터** — 상담은 큰 것에서 시작해 안 들어가면 줄이는 순서로 진행된다
           opts.sort((a,b)=> foot(b.o).w - foot(a.o).w);
           const pick = rec[c];
@@ -2687,12 +2678,9 @@ async function openSelect(room){
                 const p0 = o.parts[0];
                 const dim = `${Math.round(p0.w)}×${Math.round(p0.h)}×${Math.round(p0.d)}`;
                 const head = (r.line ? `${r.line} ` : '') + r.size;
-                /*
-                 * 한 사이즈가 여러 줄로 나뉘면 **무엇이 다른지**를 밝혀야 고를 수 있다.
-                 * 제품군 이름(Neo QLED·The Sero·4도어…)이 그 구분이다. 연도 괄호는 뗀다.
-                 */
-                const fam = r.options.length > 1
-                  ? ` · ${esc(String(o.group||'').replace(/\s*\(.*$/, '').slice(0, 16))}` : '';
+                // 사이즈당 한 줄이므로 제품군으로 구분할 필요가 없다. 어느 모델의 치수인지는
+                // 아래 정보줄이 모델코드·제품군으로 밝힌다 — 드롭다운은 짧을수록 고르기 쉽다.
+                const fam = '';
                 /*
                  * 용량은 **묶인 범위**로 적는다. 예전에는 첫 값만 보여줘서, 602~905L 가 섞인
                  * 냉장고 폭 910mm 묶음이 "609L" 하나로 표시됐다 — 사용자가 잡아낸 오류다.
@@ -2739,12 +2727,23 @@ async function openSelect(room){
           // 판정하므로, 고객 제품이 그보다 작으면 실제로는 더 여유가 있다는 뜻이다.
           const mg = r.mergedFrom && r.mergedFrom.length > 1
             ? ` · <span class="hint">${esc(r.mergedFrom.join(' · '))} 통합 — 큰 치수 기준</span>` : '';
+          /*
+           * 사이즈당 한 줄로 접었으므로 **접으면서 뭉갠 편차를 여기서 밝힌다.**
+           * 같은 65형인데 스탠드 깊이가 222~499mm 다. 화면은 가장 큰 값으로 판정하니
+           * 고객 모델이 그보다 얕으면 실제로는 여유가 더 있다 — 그 사실을 말해 줘야
+           * "왜 안 들어간다고 나오지"를 상담에서 설명할 수 있다.
+           */
+          const sp = (r.spreadW > 30 || r.spreadD > 30)
+            ? ` · <span class="hint">이 사이즈 안 ${r.options.length}종 편차 폭 ±${Math.round(r.spreadW)}·깊이 ±${Math.round(r.spreadD)}mm</span>` : '';
+          // 세트 구성처럼 근거를 밝혀야 하는 항목은 note 를 그대로 띄운다
+          const nt = r.set && r.note ? `<br><span class="hint">${esc(r.note)}</span>` : '';
+          const gp = o.group ? ` <span class="hint">${esc(String(o.group).replace(/\s*\(.*$/, ''))}</span>` : '';
           el.innerHTML = `<b>가로 ${Math.round(p0.w)} · 높이 ${Math.round(p0.h)} · 깊이 ${Math.round(p0.d)}mm</b>`
-            + ` — ${esc(r.size)} · ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}${mg}`
+            + ` — ${esc(r.size)} ·${gp} ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}${mg}${sp}`
             + ` · 이격 후면 ${cl.back}·좌우 ${cl.side}${cl.front?`·전면 ${cl.front}`:''}mm`
             + (dz ? ` · 도어 오픈 좌우 각 ${dz.side}mm` : '')
             + (cl.weak ? ' · <span class="hint">확정되지 않은 값이 섞여 있어 실측 확인 필요</span>' : '')
-            + extra;
+            + extra + nt;
         };
         cats.forEach(info);
 
@@ -2818,11 +2817,17 @@ const CLEAR_BY_MODEL = [
        구성이다. 계산으로 나오는 값이 아니므로 화면에 "관례"임을 밝힌다.
 
    평형 구간은 주택형 표기 그대로 쓴다(59·84·114㎡가 분양 표기의 경계다). */
+/*
+ * 냉장고·김치냉장고는 **용량**으로 적는다. 1단 기준을 폭에서 용량으로 바꿨기 때문이기도 하고,
+ * 애초에 상담이 "34평이면 900리터급"으로 진행되지 "폭 910"으로 진행되지 않는다.
+ * 여기 적힌 사이즈 이름이 `size-reps.json` 에 없으면 그 카테고리는 조용히 추천에서 빠지므로,
+ * 대표모델을 다시 만들면 `test-plans.mjs` 의 추천 검사가 이름이 어긋난 것을 잡아 준다.
+ */
 const BY_AREA = [
-  { upTo: 60,       label: '59㎡ 이하',  tv: '55형',    fridge: '폭 700mm', wash: '폭 560~600mm', kimchi: '폭 595~650mm' },
-  { upTo: 85,       label: '59~84㎡',   tv: '65형',    fridge: '폭 910mm', wash: '폭 635~685mm', kimchi: '폭 670mm' },
-  { upTo: 115,      label: '84~114㎡',  tv: '75~77형', fridge: '폭 910mm', wash: '폭 635~685mm', kimchi: '폭 800mm' },
-  { upTo: Infinity, label: '114㎡ 초과', tv: '83~85형', fridge: '폭 910mm', wash: '폭 635~685mm', kimchi: '폭 925~950mm' },
+  { upTo: 60,       label: '59㎡ 이하',  tv: '55형',    fridge: '602~640L', wash: '폭 560~600mm', kimchi: '126L' },
+  { upTo: 85,       label: '59~84㎡',   tv: '65형',    fridge: '602~640L', wash: '폭 635~685mm', kimchi: '324~347L' },
+  { upTo: 115,      label: '84~114㎡',  tv: '75~77형', fridge: '845~905L', wash: '폭 635~685mm', kimchi: '490L' },
+  { upTo: Infinity, label: '114㎡ 초과', tv: '83~85형', fridge: '845~905L', wash: '폭 635~685mm', kimchi: '490L' },
 ];
 
 /** 상담 기준이 되는 세대 넓이(㎡) — 색인의 전용면적이 있으면 그것, 없으면 잡아 둔 방의 합 */
@@ -2847,12 +2852,12 @@ function recommendPicks(){
     if (i < 0) return null;
     const r = list[i];
     /*
-     * 옵션은 발자국이 큰 것부터 정렬돼 있다. 추천에 첫 항목(가장 큰 것)을 쓰면 65형 추천이
-     * 스탠드 깊이 499mm 짜리 특수 모델이 된다 — 추천은 **흔한 것**이어야 하므로 가운데를 쓴다.
-     * (안 들어가면 직원이 더 작은 줄로 바꾸면 된다.)
+     * **드롭다운이 쓰는 옵션과 같은 것(k=0)을 가리켜야 한다.**
+     * 한때 여기서 가운데 옵션을 골랐는데, 목록이 사이즈당 한 줄(k=0)로 바뀌면서
+     * 추천이 가리키는 줄이 목록에 없는 상태가 됐다 — 미리 체크가 조용히 안 됐다.
+     * 추천 단위와 표시 단위는 반드시 같아야 한다.
      */
-    return { i: state.reps.indexOf(r), k: Math.floor((r.options.length - 1) / 2),
-      size: r.size, why: null };
+    return { i: state.reps.indexOf(r), k: 0, size: r.size, why: null };
   };
   // 계산 — 냉방·청정 면적이 방을 덮는 가장 작은 것
   const room = state.rooms.find((r)=>/거실|주방/.test(r.name)) || state.rooms[0];

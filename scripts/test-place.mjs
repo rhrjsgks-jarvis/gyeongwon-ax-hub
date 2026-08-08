@@ -256,14 +256,21 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     { x1: 0, y1: 0, x2: w, y2: 0 }, { x1: w, y1: 0, x2: w, y2: h },
     { x1: w, y1: h, x2: 0, y2: h }, { x1: 0, y1: h, x2: 0, y2: 0 },
   ];
-  const pick = (cat, sizeIdx = 0) => {
-    const r = reps.filter((x) => x.cat === cat)[sizeIdx];
+  /*
+   * 사이즈는 **이름으로** 고른다. 예전에는 배열 인덱스를 썼는데, size-reps 에 항목이
+   * 하나 늘거나 정렬 기준이 바뀔 때마다 엉뚱한 제품이 뽑혀 테스트가 무관한 이유로 깨졌다
+   * (냉장고에 키친핏 세트 3종이 들어오면서 인덱스 2가 폭 2,495mm 세트가 됐다).
+   */
+  const pick = (cat, size) => {
+    const list = reps.filter((x) => x.cat === cat);
+    const r = size ? list.find((x) => x.size === size) : list[0];
+    if (!r) throw new Error(`테스트가 찾는 사이즈가 없다: ${cat} ${size} (있는 것: ${list.map((x) => x.size).join(', ')})`);
     return { cat, size: r.size, model: r.options[0].model, part: r.options[0].parts[0] };
   };
 
   // 3,600 × 2,600mm 주방 — 냉장고 + 김치냉장고 + 식기세척기
   st.walls = room(3600, 2600); st.items = [];
-  P.autoPlace([pick('냉장고', 2), pick('김치냉장고'), pick('식기세척기')]);
+  P.autoPlace([pick('냉장고', '602~640L'), pick('김치냉장고', '126L'), pick('식기세척기', '폭 450mm')]);
   if (st.items.length !== 3) fail(`3.6×2.6m 방에 3종을 넣었는데 ${st.items.length}종만 배치됨`);
   else if (st.items.some((i) => i.warn.length)) {
     fail(`자동 배치인데 경고가 남음: ${st.items.filter((i) => i.warn.length).map((i) => `${i.label}(${i.warn})`).join(', ')}`);
@@ -271,7 +278,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
 
   // 좁은 방에서는 억지로 놓지 않아야 한다
   st.walls = room(1000, 1000); st.items = [];
-  P.autoPlace([pick('냉장고', 2), pick('김치냉장고')]);
+  P.autoPlace([pick('냉장고', '602~640L'), pick('김치냉장고', '126L')]);
   if (st.items.some((i) => i.warn.length)) fail('좁은 방에 억지로 놓아 경고가 발생 — 자리가 없으면 놓지 않아야 한다');
   else if (st.items.length >= 2) fail(`1×1m 방에 폭 912+595를 둘 다 놓음 — 자리 없음 판정이 동작하지 않는다`);
   else pass(`1×1m 방 — ${st.items.length}종만 배치하고 나머지는 자리 없음으로 남김`);

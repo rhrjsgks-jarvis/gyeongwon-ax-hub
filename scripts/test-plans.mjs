@@ -516,11 +516,10 @@ for (const plan of PLANS) {
     out.opened = !!sel;
     if (sel) {
       /*
-       * 줄 수와 **치수 중복**을 함께 본다.
-       * 예전에는 모델 변형을 전부 펼쳐 TV 가 44줄이었고, 사이즈당 한 줄로 접었더니 이번엔
-       * 같은 65형 안에서 깊이 222~499mm 가 한 값으로 뭉개졌다. 지금은 발자국이 비슷한 것만
-       * 묶으므로 — 줄 수는 사이즈 수보다 많고 옵션 수보다 적으며, 같은 치수가 두 줄에
-       * 나오지 않아야 한다(그러면 쪼갤 이유가 없는 것을 쪼갠 것이다).
+       * **인치 하나에 줄 하나.** 사용자가 정한 단위다 — 대표모델을 두는 목적이 "도면에
+       * 넣었을 때 대략적인 느낌"이라 사이즈 안의 깊이 편차(65형 222~499mm)는 감당할
+       * 오차로 본다. 예전에 모델 변형을 다 펼쳐 44줄이던 것과, 발자국으로 쪼개 21줄이던
+       * 것 둘 다 되돌린 결과이므로 **정확히 사이즈 수와 같은지**로 못 박는다.
        */
       out.tvRows = sel.options.length;
       out.tvSizes = P.state.reps.filter((r) => r.cat === 'TV').length;
@@ -528,6 +527,23 @@ for (const plan of PLANS) {
         .reduce((s, r) => s + r.options.length, 0);
       const dims = [...sel.options].map((o) => (/(\d+)×(\d+)×(\d+)mm/.exec(o.textContent) || [])[0]);
       out.dupDims = dims.length - new Set(dims).size;
+      /*
+       * 키친핏 1도어는 한 대만 놓는 물건이 아니라 같은 캐비닛을 나란히 붙이는 상품이라
+       * 2·3·4세트 구성이 목록에 있어야 한다. 그리고 세트 폭은 **계산값**이므로
+       * 무엇을 더했는지(모듈 폭 + 이격, 준용한 모듈)가 화면에 나와야 한다.
+       */
+      const fsel = document.querySelector('select[data-size="냉장고"]');
+      out.setRows = fsel ? [...fsel.options].filter((o) => /1도어 \d세트/.test(o.textContent)).length : 0;
+      if (fsel) {
+        const si = [...fsel.options].findIndex((o) => /1도어 4세트/.test(o.textContent));
+        if (si >= 0) {
+          fsel.selectedIndex = si;
+          fsel.dispatchEvent(new Event('change', { bubbles: true }));
+          const txt = (document.querySelector('p[data-info="냉장고"]') || {}).textContent || '';
+          out.setNote = /이격 5㎜/.test(txt) && /준용/.test(txt);
+          out.setInfo = txt.slice(0, 200);
+        }
+      }
       // 기본 목록에 업소용·빌트인·리빙이 섞이지 않는가
       const catBoxes = [...document.querySelectorAll('#a-list input[data-cat]')].map((b) => b.dataset.cat);
       out.cats = catBoxes.length;
@@ -552,9 +568,10 @@ for (const plan of PLANS) {
   });
 
   if (!r.opened) fail('가전 선택 시트에 사이즈 목록이 없다');
-  else if (r.tvRows < r.tvSizes) fail(`TV 드롭다운이 ${r.tvRows}줄 — 사이즈 ${r.tvSizes}종보다 적을 수 없다`);
-  else if (r.tvRows > r.tvOptions * 0.6) fail(`TV 드롭다운이 ${r.tvRows}줄 — 옵션 ${r.tvOptions}개를 거의 그대로 펼쳤다`);
-  else if (r.dupDims) fail(`TV 목록에 같은 치수가 ${r.dupDims}줄 중복 — 쪼갤 이유가 없는 것을 쪼갰다`);
+  else if (r.tvRows !== r.tvSizes) fail(`TV 드롭다운이 ${r.tvRows}줄 — 사이즈 ${r.tvSizes}종과 같아야 한다(인치당 한 줄)`);
+  else if (r.dupDims) fail(`TV 목록에 같은 치수가 ${r.dupDims}줄 중복 — 사이즈가 중복 생성됐다`);
+  else if (r.setRows !== 3) fail(`냉장고 목록의 키친핏 1도어 세트가 ${r.setRows}줄 — 2·3·4세트 3줄이어야 한다`);
+  else if (!r.setNote) fail('세트 구성의 근거(모듈 폭·이격·준용 사실)가 화면에 안 나온다');
   else if (r.hasNonHome) fail('기본 목록에 업소용·빌트인·리빙 상품이 섞여 있다');
   else if (!r.hasToggle) fail('"업소용·빌트인·리빙도 보기" 토글이 없다 — 아예 못 고르게 되면 안 된다');
   else if (r.catsAll <= r.cats) fail(`토글을 켜도 카테고리가 안 늘어난다 (${r.cats} → ${r.catsAll})`);
@@ -565,7 +582,7 @@ for (const plan of PLANS) {
   else if (r.fridgeLine !== '프리스탠딩') fail(`추천 냉장고가 ${r.fridgeLine} — 기본은 프리스탠딩이어야 한다`);
   else if (r.acWithoutRoom) fail('방을 안 잡았는데 에어컨이 추천됐다 — 냉방면적은 방 넓이로 계산하는 값이다');
   else if (!r.noteShown) fail('무엇을 근거로 미리 골랐는지 화면에 안 밝힌다');
-  else pass(`가전 선택 — 카테고리 ${r.cats}개(토글 시 ${r.catsAll}개) · TV ${r.tvRows}줄(사이즈 ${r.tvSizes}종·옵션 ${r.tvOptions}개) · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
+  else pass(`가전 선택 — 카테고리 ${r.cats}개(토글 시 ${r.catsAll}개) · TV ${r.tvRows}줄(사이즈당 1줄, 원본 옵션 ${r.tvOptions}개) · 키친핏 세트 ${r.setRows}줄 · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
 }
 
 // ── 단지 평면 라이브러리 ──

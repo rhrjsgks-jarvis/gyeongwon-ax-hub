@@ -166,7 +166,18 @@ const SIZE_KEY = {
   '에어컨': (r) => (r.size ? { key: `냉방 ${normSize(r.size)}㎡`, label: '냉방면적' } : null),
   '시스템에어컨': (r) => (r.size ? { key: `냉방 ${normSize(r.size)}㎡`, label: '냉방면적' } : null),
   '공기청정기': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '청정면적' } : null),
+  // 냉장고·김치냉장고는 **용량**으로 고른다. 상담이 "몇 리터짜리"로 진행되고,
+  // 폭으로 묶으면 602~905L 가 한 줄이 되어 용량 표시가 무의미해진다(사용자 지적).
+  '냉장고': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '용량' } : null),
+  '김치냉장고': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '용량' } : null),
 };
+
+/*
+ * 무엇을 기준으로 비슷한 것끼리 묶을 것인가.
+ * 기본은 발자국 폭이지만, 용량으로 고르는 카테고리는 **용량**으로 묶어야 한다 —
+ * 폭으로 묶으면 "용량별 대표 1개"라는 목적과 어긋난다.
+ */
+const MERGE_AXIS = { '냉장고': 'cap', '김치냉장고': 'cap' };
 
 /*
  * 냉장고·김치냉장고는 **설치 방식이 배치 판정을 가른다.**
@@ -273,9 +284,17 @@ const merged = [];
 // 통합은 **카테고리 + 라인업** 안에서만 한다. 프리스탠딩과 키친핏은 폭이 같아도 섞으면 안 된다.
 for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))]) {
   const [cat, line] = part.split('|');
+  /*
+   * 묶는 축은 카테고리가 정한다. 냉장고·김치냉장고는 **용량**, 나머지는 발자국 폭.
+   * 용량이 DB 에 없는 항목은 폭 키로 떨어지므로(`폭 700mm`) 두 종류가 한 목록에 섞인다 —
+   * 640(L)과 700(mm)을 같은 수직선에 놓으면 아무 의미 없는 통합이 되니 종류가 다르면 안 묶는다.
+   */
+  const axis = MERGE_AXIS[cat] || 'w';
+  const kindOf = (r) => (axis === 'cap' && /L$/.test(r.size) ? 'cap' : 'w');
+  const keyOf = (r) => (kindOf(r) === 'cap' ? numOf(r.size) : r._fp.w);
   const list = sized.filter((r) => r.cat === cat && (r.line || '') === line)
     .map((r) => ({ ...r, _fp: footprintOf(r) }))
-    .sort((a, b) => a._fp.w - b._fp.w);
+    .sort((a, b) => (kindOf(a) === kindOf(b) ? keyOf(a) - keyOf(b) : kindOf(a) === 'cap' ? -1 : 1));
   let bucket = [];
   const flush = () => {
     if (!bucket.length) return;
@@ -294,7 +313,7 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
       : pickUnit(/형/).length ? pickUnit(/형/)
       : values;
     const lo = family[0], hi = family[family.length - 1];
-    const unit = /㎡/.test(hi) ? '㎡' : /형/.test(hi) ? '형' : /mm/.test(hi) ? 'mm' : '';
+    const unit = /㎡/.test(hi) ? '㎡' : /형/.test(hi) ? '형' : /L$/.test(hi) ? 'L' : /mm/.test(hi) ? 'mm' : '';
     const head = /^냉방/.test(hi) ? '냉방 ' : /^폭/.test(hi) ? '폭 ' : '';
     const size = family.length > 1
       ? `${head}${numOf(lo)}~${numOf(hi)}${unit}`      // 여러 개면 범위 — "내 평형이 없다"가 안 되게
@@ -335,10 +354,77 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
     bucket = [];
   };
   for (const r of list) {
-    if (bucket.length && (r._fp.w > bucket[0]._fp.w * MERGE_SPAN || !r._fp.w)) flush();
+    const brk = bucket.length && (
+      kindOf(r) !== kindOf(bucket[0])
+      || keyOf(r) > keyOf(bucket[0]) * MERGE_SPAN
+      || !keyOf(r)
+    );
+    if (brk) flush();
     bucket.push(r);
   }
   flush();
+}
+
+/*
+ * ── 키친핏 1도어 **세트 구성** ──────────────────────────────────────────────
+ * 1도어 키친핏은 한 대만 놓는 물건이 아니라 **같은 규격의 캐비닛을 나란히 붙여** 냉장고장
+ * 한 벌을 만드는 상품이다. 상담에서 자리를 재는 단위도 한 대가 아니라 그 한 벌이므로,
+ * 모듈 하나짜리 줄만 두면 "냉장+냉동+김치 넣을 자리 있습니까"에 답할 수 없다.
+ *
+ * **치수는 지어내지 않는다.** 폭·높이·깊이를 전부 DB 에 실제로 있는 모듈에서 가져와
+ * 구성대로 더한다. 다만 DB(2026 카탈로그)에 **냉장·김치 모듈만** 실려 있어 냉동·와인은
+ * 냉장 모듈 규격을 대신 쓴다 — 1도어 키친핏은 같은 캐비닛으로 열을 맞추는 상품이라
+ * 규격이 같다는 전제이며, 그 사실을 `note` 로 화면에 밝히고 `weak` 로 실측 확인을 붙인다.
+ *
+ * 모듈 사이 간격은 **설치 이격**이다(CLAUDE.md: 1도어 Infinite 5mm / Bespoke 12mm).
+ * 바깥 이격은 `place-app.html` 의 `CLEAR_BY_LINE` 이 따로 붙이므로 여기서는 사이만 더한다.
+ */
+const modRec = (model) => {
+  const r = rows.find((x) => x.model === model);
+  if (!r) throw new Error(`세트 구성 모듈 ${model} 이 모델파인더 DB에 없다 — 카탈로그 갱신 후 확인할 것`);
+  const p = (r.parts || []).find((q) => /본체/.test(q.part || '')) || (r.parts || [])[0];
+  if (!p) throw new Error(`세트 구성 모듈 ${model} 에 본체 치수가 없다`);
+  return { w: +p.w, h: +p.h, d: +p.d, group: r.group, label: p.label, raw: p.raw };
+};
+// 어느 모듈의 치수를 쓰는가. `self:false` = DB 에 그 모듈이 없어 냉장 모듈 규격을 준용한 것
+const MODULES = {
+  냉장: { from: 'RR40C8995APG', self: true },
+  냉동: { from: 'RR40C8995APG', self: false },
+  김치: { from: 'RQ33DB7441AP', self: true },
+  와인: { from: 'RR40C8995APG', self: false },
+};
+const SETS = [
+  { names: ['냉장', '냉동'], gap: 12, lineup: 'Bespoke' },
+  { names: ['냉장', '냉동', '김치'], gap: 12, lineup: 'Bespoke' },
+  { names: ['냉장', '냉동', '와인', '김치'], gap: 5, lineup: 'Infinite' },
+];
+for (const s of SETS) {
+  const mods = s.names.map((n) => ({ n, ...MODULES[n], ...modRec(MODULES[n].from) }));
+  const w = mods.reduce((t, m) => t + m.w, 0) + s.gap * (mods.length - 1);
+  const h = Math.max(...mods.map((m) => m.h));
+  const d = Math.max(...mods.map((m) => m.d));
+  const borrowed = mods.filter((m) => !m.self).map((m) => m.n);
+  const base = modRec(MODULES['냉장'].from);
+  merged.push({
+    cat: '냉장고', home: true, line: '키친핏', set: true,
+    size: `1도어 ${mods.length}세트 (${s.names.join('+')})`,
+    sizeLabel: '세트 구성',
+    specs: [`${mods.length}대 1세트`],
+    model: MODULES['냉장'].from,
+    parts: [{
+      part: '본체(세트 전체)', w, h, d,
+      label: '세트 폭 합계',
+      raw: `${mods.map((m) => m.w).join(' + ')} + 모듈 사이 ${s.gap}㎜ × ${mods.length - 1}`,
+    }],
+    group: `${s.lineup} 1도어 키친핏 ${mods.length}세트`,
+    note: mods.map((m) => `${m.n} ${m.w}㎜`).join(' + ')
+      + ` · 모듈 사이 이격 ${s.gap}㎜(${s.lineup})`
+      + (borrowed.length ? ` · ${borrowed.join('·')} 모듈은 카탈로그에 치수가 없어 냉장 모듈(${base.w}×${base.h}×${base.d}㎜) 규격을 준용 — 실측 확인` : ''),
+    options: [], spreadW: 0, spreadD: 0, count: mods.length,
+  });
+  // 옵션은 자기 자신 하나 — 화면이 `options[0]` 을 쓰므로 비워 두면 안 된다
+  const self = merged[merged.length - 1];
+  self.options = [{ model: self.model, group: self.group, parts: self.parts, note: self.note, also: [], specs: self.specs }];
 }
 
 /*
@@ -351,6 +437,9 @@ const unitRank = (s) => (/형|㎡/.test(s) ? 0 : 1);
 const out = merged
   .sort((a, b) =>
     a.cat.localeCompare(b.cat, 'ko')
+    // 세트 구성은 카테고리 **맨 뒤**로. 이름의 첫 숫자가 '1도어'의 1 이라 그냥 두면
+    // 333L 보다 앞에 서서, 인덱스로 고르는 쪽(테스트·외부 사용)이 조용히 어긋난다.
+    || (a.set ? 1 : 0) - (b.set ? 1 : 0)
     || unitRank(a.size) - unitRank(b.size)
     || lead(a.size) - lead(b.size));
 
