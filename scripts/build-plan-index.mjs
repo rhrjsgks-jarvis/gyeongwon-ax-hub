@@ -46,6 +46,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 // 잘라 낸 도면이 있으면 그것을 싣는다. 원본 시트를 그대로 실으면 한 파일에 도면이 여럿이라
 // 매장에서 쓸 수가 없다(사용자 지적: "3개가 필요없습니다. 수치가있는 1개만 필요할뿐입니다").
+/*
+ * 자르기는 두 판이 있다. **crops2(recrop.mjs)를 먼저 쓴다.**
+ *   crops  — 치수 사슬·벽선으로 블록을 골랐다. 표본 40장 중 16장(40%)이 평면도가 아닌 것
+ *            (사진 배너·제공품목 표·3D 조감도)으로 잘렸다.
+ *   crops2 — **후보 블록마다 인식기를 돌려 방이 가장 많이 나오는 블록**을 고른다.
+ *            같은 표본에서 8장(20%)으로 줄었고, 방 3곳 이상이 679장 중 636장이 됐다.
+ * 고르는 기준을 "매장에서 방을 잡을 수 있는 그림인가"로 바꾼 것이 전부다 —
+ * 판정과 목적이 어긋나지 않으니 대리 지표를 튜닝할 일이 없다.
+ */
+const CROPS2 = path.join(ROOT, '.scratch', 'crops2');
+const RECROP = path.join(ROOT, '.scratch', 'recrop.json');
 const CROPS = path.join(ROOT, '.scratch', 'crops');
 const RAW = path.join(ROOT, '.scratch', 'plans');
 const CROPLOG = path.join(ROOT, '.scratch', 'crop-plans.json');
@@ -69,8 +80,19 @@ const classify = JSON.parse(fs.readFileSync(CLASSIFY, 'utf8'));
 const scan = fs.existsSync(SCAN_CROPS) ? JSON.parse(fs.readFileSync(SCAN_CROPS, 'utf8'))
   : (fs.existsSync(SCAN) ? JSON.parse(fs.readFileSync(SCAN, 'utf8')) : []);
 // 잘라 낸 도면의 원본 파일명 대응. 크롭은 확장자를 .jpg 로 통일하므로 이름이 달라진다.
+const recrop = fs.existsSync(RECROP) ? JSON.parse(fs.readFileSync(RECROP, 'utf8')) : [];
 const crops = fs.existsSync(CROPLOG) ? JSON.parse(fs.readFileSync(CROPLOG, 'utf8')) : [];
-const cropBy = new Map(crops.filter((r) => r.out).map((r) => [`${r.dir}/${r.file}`, r]));
+const cropBy = new Map();
+for (const r of crops) if (r.out) cropBy.set(`${r.dir}/${r.file}`, { ...r, dirOf: CROPS });
+// 뒤에 넣어 덮어쓴다 — crops2 가 우선이다
+for (const r of recrop) if (r.out) cropBy.set(`${r.dir}/${r.file}`, { ...r, dirOf: CROPS2 });
+
+/*
+ * **방을 3곳도 못 잡는 그림은 싣지 않는다.** 매장에서 열어 봐야 쓸 수 없고, 그런 그림은
+ * 대개 설명글·면적표·3D 렌더다. 인식기가 직접 센 값이라 판정과 목적이 같다.
+ * 자르기 기록에 방 개수가 없는 옛 항목은 통과시킨다(예전 방식으로 자른 것).
+ */
+const ROOM_GATE = 3;
 const grab = fs.existsSync(GRAB) ? JSON.parse(fs.readFileSync(GRAB, 'utf8')) : {};
 // 주택형·전용면적은 별도 패스에서 전 평면도에 대해 읽는다(read-types.mjs). 축척 판독은
 // 8% 만 통과하는데 이름은 전부에 필요해서다 — 화면에 "T1·T2·T3" 만 뜨면 고를 수가 없다.
@@ -152,7 +174,8 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     // 잘라 낸 도면이 있으면 그것을 싣는다 (없으면 원본 시트).
     // 축척·주택형 기록도 잘라 낸 파일명으로 남아 있으므로 조회 키를 맞춘다.
     const cp = cropBy.get(`${dir}/${it.file}`);
-    const src = cp ? path.join(CROPS, dir, cp.out) : path.join(RAW, dir, it.file);
+    if (cp && cp.rooms != null && cp.rooms < ROOM_GATE) continue;   // 방을 못 잡는 그림은 싣지 않는다
+    const src = cp ? path.join(cp.dirOf, dir, cp.out) : path.join(RAW, dir, it.file);
     if (!fs.existsSync(src)) continue;
     const skey = cp ? `${dir}/${cp.out}` : `${dir}/${it.file}`;
     const s = scanBy.get(skey) || scanBy.get(`${dir}/${it.file}`) || {};

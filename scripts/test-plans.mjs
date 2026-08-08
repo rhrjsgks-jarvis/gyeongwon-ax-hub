@@ -626,6 +626,14 @@ for (const plan of PLANS) {
     out.target = target ? { complex: target.complex, plans: target.plans.length, hasArea: targetHasArea } : null;
     out.picked2 = target ? pick(target.complex) : false;
     out.lv3 = step();                                   // 그 단지의 도면 목록
+    // 미리보기가 붙어 있고 실제로 받아지는가 — 자동 선별이 가끔 설명글·조감도를 고르는데,
+    // 그림이 보여야 직원이 건너뛸 수 있다. src 만 있고 안 받아지면 빈 칸이 되어 소용없다.
+    const thumbs = [...document.querySelectorAll('#libbody .libitem img.thumb')];
+    out.thumbCount = thumbs.length;
+    out.thumbOk = thumbs.length
+      ? (await Promise.all(thumbs.slice(0, 3).map((im) => fetch(im.getAttribute('src'))
+        .then((r) => r.ok).catch(() => false)))).every(Boolean)
+      : false;
     out.savedOnlyShown = out.lv2.some((t) => t.includes('테스트 단지') && t.includes('저장된 방만'));
     out.crumb = (document.querySelector('#libcrumb') || {}).textContent || '';
     return out;
@@ -704,6 +712,8 @@ for (const plan of PLANS) {
   // 색인에 값이 있는 단지를 골랐을 때만 화면 표시를 검사한다.
   else if (r.target.hasArea && !r.lv3.some((t) => /전용\s*[\d.]+\s*㎡/.test(t))) fail(`3단계에 전용면적 표시가 없음: ${r.lv3}`);
   else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
+  else if (r.thumbCount !== r.lv3.length) fail(`도면 ${r.lv3.length}장 중 미리보기가 ${r.thumbCount}장에만 있다`);
+  else if (!r.thumbOk) fail('미리보기 이미지를 받지 못함 — 목록에 빈 칸이 뜬다');
   else pass(`지역 → 단지 → 도면 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
 
   // ── 미리 읽어 둔 축척이 실제로 적용되는가 ──

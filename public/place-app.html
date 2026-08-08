@@ -130,6 +130,12 @@
   .libitem:hover{background:#F3F5F8}
   .libitem .ty{color:var(--blue);font-weight:700;margin-left:4px}
   .libitem .hint{display:block;margin-top:2px}
+  /* 도면 목록의 미리보기 — 자동 선별이 가끔 설명글·조감도를 고르는데, 그림이 보이면
+     직원이 곧바로 건너뛴다. 분류기를 더 정교하게 만드는 것보다 확실하고 값이 싸다. */
+  .libitem.withthumb{display:flex;align-items:center;gap:10px}
+  .libitem .thumb{flex:none;width:76px;height:76px;object-fit:contain;background:#fff;
+    border:1px solid var(--line);border-radius:6px}
+  .libitem .body{min-width:0;flex:1}
   .crumb{font-size:12.5px;color:var(--sub);margin:8px 0 2px}
   .crumb a{color:var(--blue);text-decoration:none}
   .crumb a:hover{text-decoration:underline}
@@ -563,7 +569,12 @@ const DARK_LUM   = 125;      // 이 밝기 미만이면 벽·글씨 같은 '어�
 // 임계를 하나로 고정하면 어두운 바닥이 통째로 벽이 되어 "누른 자리가 벽 위입니다"가 뜬다.
 // 그래서 **어두운 것의 비율이 도면답지 않으면 임계를 옮긴다**. 도면에서 선이 차지하는
 // 넓이는 아무리 빽빽해도 4할을 넘지 않고, 아무리 성겨도 0.4%는 된다.
-const DARK_DOWN  = [100, 80, 62, 48];    // 어두운 것이 너무 많을 때 내려 볼 값
+// 어두운 것이 너무 많을 때 내려 볼 값.
+// **48 에서 끊지 말 것.** 짙은 회색 바탕에 도면을 그리는 브랜드가 있는데(강릉 오션시티·
+// 춘천 레이크시티) 그 바탕 밝기가 43 이라, 48 이 마지막이면 배경이 통째로 벽으로 잡힌다.
+// 그러면 세대 전체가 검은 덩어리가 되어 방이 하나도 안 나온다 — 실제로 그런 도면들이
+// "평면도가 아닌 것"처럼 보였다. 벽은 진짜 검정(0~20)이므로 더 내려가면 배경과 갈라진다.
+const DARK_DOWN  = [100, 80, 62, 48, 38, 30, 22];
 const DARK_UP    = [150, 175, 200];      // 너무 적을 때 올려 볼 값
 const DARK_MAX_FRAC = 0.40, DARK_MIN_FRAC = 0.004;
 // 방을 가르려고 막아도 되는 최대 폭 = 실내 문 유효폭(900~1,000mm)에 여유를 준 값.
@@ -2447,10 +2458,19 @@ async function openLibrary(){
         // 도면에 인쇄된 치수를 읽어 축척을 미리 구해 둔 도면이 있다. 확신도를 함께 밝힌다 —
         // 자동으로 구한 값이라 사용자가 눈으로 확인하고 넘어갈 수 있어야 한다.
         const sc = p.mmPerPx ? `<span class="ty">축척 ${p.scaleConf || '자동'}</span>` : '';
-        return `<button class="libitem" data-file="${esc(p.file)}" data-type="${esc(p.type)}" data-excl="${p.exclusiveM2 || ''}"
+        /*
+         * 미리보기를 함께 보여준다. 도면 고르기는 자동 선별에 기대는데, 그 선별이 가끔
+         * 설명글·면적표·3D 조감도를 고른다(표본 40장 중 8장). 어느 판별식으로도 깨끗이
+         * 갈리지 않아 — 방 이름 OCR·색 가짓수·벽 그물망을 다 시도했다 — 사람이 눈으로
+         * 건너뛸 수 있게 하는 편이 확실하다. 이 앱이 "자동은 초안, 확정은 사람"인 것과 같다.
+         */
+        return `<button class="libitem withthumb" data-file="${esc(p.file)}" data-type="${esc(p.type)}" data-excl="${p.exclusiveM2 || ''}"
             ${p.mmPerPx ? `data-mmpx="${p.mmPerPx}" data-sconf="${esc(p.scaleConf || '')}"` : ''}>
-          <b>${esc(p.type)}</b>${p.exclusiveM2 ? `<span class="ty">전용 ${p.exclusiveM2}㎡</span>` : ''}${sc}
-          <span class="hint">${p.w}×${p.h}px · ${p.kb}KB${s ? ` · <b>저장된 방 ${s.rooms.length}곳</b>` : ''}</span></button>`;
+          <img class="thumb" src="${esc(p.file)}" alt="" loading="lazy">
+          <span class="body">
+            <b>${esc(p.type)}</b>${p.exclusiveM2 ? `<span class="ty">전용 ${p.exclusiveM2}㎡</span>` : ''}${sc}
+            <span class="hint">${p.w}×${p.h}px · ${p.kb}KB${s ? ` · <b>저장된 방 ${s.rooms.length}곳</b>` : ''}</span>
+          </span></button>`;
       });
     }
     body.innerHTML = items.length ? items.join('')
