@@ -1345,7 +1345,7 @@ function detectRoomAt(imgX, imgY, forceR){
   // 정상 경로에는 손대지 않으므로 이미 잘 되던 도면의 판정은 그대로다.
   if (!cands.length && lastLeak != null && firstWall != null && firstWall - lastLeak > 2) {
     let lo = lastLeak, hi = firstWall;
-    for (let i = 0; i < 6 && hi - lo > 2 && !cands.length; i++) {
+    for (let i = 0; i < 12 && hi - lo > 1 && !cands.length; i++) {
       const mid = Math.round((lo + hi) / 2);
       const before = cands.length;
       tryRadius(mid);
