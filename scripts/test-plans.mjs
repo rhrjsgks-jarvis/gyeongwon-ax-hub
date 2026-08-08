@@ -515,6 +515,19 @@ for (const plan of PLANS) {
     }
     out.opened = !!sel;
     if (sel) {
+      // 사이즈당 한 줄인가 — 예전에는 사이즈 안의 모델 변형까지 펼쳐 TV 가 44줄이었다
+      out.tvRows = sel.options.length;
+      out.tvSizes = P.state.reps.filter((r) => r.cat === 'TV').length;
+      // 기본 목록에 업소용·빌트인·리빙이 섞이지 않는가
+      const catBoxes = [...document.querySelectorAll('#a-list input[data-cat]')].map((b) => b.dataset.cat);
+      out.cats = catBoxes.length;
+      out.hasNonHome = catBoxes.some((c) => /^리빙|업소용|데이코|시스템에어컨/.test(c));
+      // 토글을 켜면 늘어나는가
+      const all = document.querySelector('#a-all');
+      out.hasToggle = !!all;
+      if (all) { all.checked = true; all.dispatchEvent(new Event('change')); }
+      out.catsAll = [...document.querySelectorAll('#a-list input[data-cat]')].length;
+      if (all) { all.checked = false; all.dispatchEvent(new Event('change')); }
       out.first = sel.options[0].textContent;
       out.widths = [...sel.options].map((o) => {
         const m = /(\d+)×/.exec(o.textContent);
@@ -529,6 +542,10 @@ for (const plan of PLANS) {
   });
 
   if (!r.opened) fail('가전 선택 시트에 사이즈 목록이 없다');
+  else if (r.tvRows !== r.tvSizes) fail(`TV 드롭다운이 ${r.tvRows}줄 — 사이즈 ${r.tvSizes}종당 한 줄이어야 한다`);
+  else if (r.hasNonHome) fail('기본 목록에 업소용·빌트인·리빙 상품이 섞여 있다');
+  else if (!r.hasToggle) fail('"업소용·빌트인·리빙도 보기" 토글이 없다 — 아예 못 고르게 되면 안 된다');
+  else if (r.catsAll <= r.cats) fail(`토글을 켜도 카테고리가 안 늘어난다 (${r.cats} → ${r.catsAll})`);
   else if (!r.desc) fail(`사이즈 목록이 큰 것부터가 아니다 (폭 ${r.widths.slice(0, 5)}…)`);
   else if (!/×/.test(r.first || '')) fail(`목록에 치수가 안 보인다 ("${r.first}")`);
   else if (!r.recCats.length) fail('전용면적을 아는데도 미리 고른 가전이 하나도 없다');
@@ -536,7 +553,7 @@ for (const plan of PLANS) {
   else if (r.fridgeLine !== '프리스탠딩') fail(`추천 냉장고가 ${r.fridgeLine} — 기본은 프리스탠딩이어야 한다`);
   else if (r.acWithoutRoom) fail('방을 안 잡았는데 에어컨이 추천됐다 — 냉방면적은 방 넓이로 계산하는 값이다');
   else if (!r.noteShown) fail('무엇을 근거로 미리 골랐는지 화면에 안 밝힌다');
-  else pass(`가전 선택 — 큰 사이즈부터 · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
+  else pass(`가전 선택 — 카테고리 ${r.cats}개(토글 시 ${r.catsAll}개) · TV ${r.tvRows}줄 · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
 }
 
 // ── 단지 평면 라이브러리 ──

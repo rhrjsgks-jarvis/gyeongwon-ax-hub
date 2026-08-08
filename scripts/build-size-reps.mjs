@@ -175,6 +175,18 @@ const SIZE_KEY = {
  * 실제로 키친핏 Max(912×1853×697)가 프리스탠딩 4도어(912×1853×683)에 통합돼 버렸다.
  * 그래서 라인업을 사이즈 키에 넣어 애초에 섞이지 않게 한다.
  */
+/*
+ * 매장에서 **가정 배치 상담에 실제로 올리는 카테고리**만 기본으로 보여준다.
+ * 아래 것들은 목록만 채우고 상담에는 거의 안 쓴다:
+ *   업소용 냉장고 — 상업용이다
+ *   데이코 빌트인 — 주방 가구와 함께 설계하는 것이라 배치 시뮬레이션 대상이 아니다
+ *   시스템에어컨   — 천장 매립이라 바닥·벽 자리를 차지하지 않는다
+ *   리빙(제휴상품) — 비데·욕실케어·안마기·선풍기. 배치 상담 품목이 아니다
+ * 데이터에서 지우지는 않고 home:false 로 표시만 한다 — 나중에 필요하면 화면에서 켜면 된다.
+ */
+const HOME_OFF = new Set(['업소용 냉장고', '데이코 빌트인', '시스템에어컨', '냉동고']);
+const isHome = (cat) => !HOME_OFF.has(cat) && !/^리빙/.test(cat);
+
 const LINEUP_CATS = new Set(['냉장고', '김치냉장고']);
 const lineupOf = (r) => (LINEUP_CATS.has(r.cat)
   ? (/키친핏|빌트인/.test(r.group || '') ? '키친핏' : '프리스탠딩') : '');
@@ -288,7 +300,7 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
       seen.add(key); options.push(o);
     }
     merged.push({
-      cat, line: line || undefined, size, sizeLabel: rep.sizeLabel,
+      cat, home: isHome(cat) || undefined, line: line || undefined, size, sizeLabel: rep.sizeLabel,
       specs: [...new Set(bucket.flatMap((r) => r.specs))],
       model: rep.model, parts: rep.parts, group: rep.group, note: rep.note,
       options,
