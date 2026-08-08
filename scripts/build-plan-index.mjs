@@ -107,11 +107,28 @@ const addrBy = new Map(Object.values(grab).map((g) => [`${g.city}_${g.name}`, g.
  * 주택형을 넣는 관례가 있어 보조 수단으로 쓸 만하다. (자이처럼 순번만 쓰는 곳은 안 걸린다.)
  */
 function typeFromName(file) {
-  const m = file.match(/(?:^|[^\d])(\d{2,3})\s*([a-zA-Z])?(?:타입|type)?(?:[_\-.]|$)/i);
-  if (!m) return '';
-  const n = +m[1];
-  if (n < 15 || n > 300) return '';        // 주택형은 전용 15~300㎡ 범위다
-  return String(n) + (m[2] ? m[2].toUpperCase() : '');
+  /*
+   * **맨 앞 순번을 주택형으로 읽지 말 것.** 수집기가 "01_", "16_" 같은 순번을 붙여 저장하는데,
+   * 예전 정규식은 맨 앞부터 잡아 "16_plane_84d_02.jpg" 를 84D 가 아니라 16 으로 읽었다
+   * (강릉 오션시티가 통째로 16·19·22·25 로 실렸다).
+   * 순번을 떼고, **숫자 뒤에 글자가 붙은 것(84a·59b)을 먼저** 찾는다 — 그게 주택형 표기다.
+   */
+  const body = file
+    .replace(/^\d{1,3}[_-]/, '')            // 수집기가 붙인 순번
+    .replace(/\.[a-z0-9]+$/i, '')           // 확장자
+    .replace(/(jpe?g|png)$/i, '');          // "84bjpg" 처럼 확장자가 붙어 저장된 것
+  /*
+   * **해시 파일명에서 주택형을 만들어 내지 말 것.** 사이트가 "2bc26f1106124e569a86c357.jpg"
+   * 처럼 이름을 주면 그 안의 "26f" 가 주택형 26F 로 둔갑한다. 16자 넘는 16진 문자열이
+   * 있으면 이름이 아니라 해시다.
+   */
+  if (/[0-9a-f]{16,}/i.test(body)) return '';
+  const ok = (n) => n >= 15 && n <= 300;    // 주택형은 전용 15~300㎡ 범위다
+  const letter = [...body.matchAll(/(?:^|[^\d])(\d{2,3})\s*([a-hpts])(?![a-z])/gi)]
+    .find((m) => ok(+m[1]));
+  if (letter) return String(+letter[1]) + letter[2].toUpperCase();
+  const plain = [...body.matchAll(/(?:^|[^\d])(\d{2,3})(?![\d])/g)].find((m) => ok(+m[1]));
+  return plain ? String(+plain[1]) : '';
 }
 
 // 지역_단지 별로 묶는다
