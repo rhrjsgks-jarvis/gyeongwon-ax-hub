@@ -198,6 +198,17 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
 // 나란히 설치할 때 결과가 뒤집히므로 모델코드로 갈라져야 한다.
 {
   const install = fs.readFileSync(path.join(root, 'public', 'install-app.html'), 'utf8');
+  // 냉장고 라인업 — 프리스탠딩은 벽 이격, 키친핏은 냉장고장 내측 이격이라 값이 완전히 다르다.
+  // 키친핏에 벽 이격 50mm 를 적용하면 실제 주방 대부분이 "안 들어감"이 되어 정반대로 틀린다.
+  {
+    const free = P.clearFor('냉장고', '본체', 'RM80H64S2A', '4도어 (2026 카탈로그)');
+    const fit = P.clearFor('냉장고', '본체', 'RM70F63R2A', '키친핏 Max 4도어');
+    if (free.back !== 50) fail(`프리스탠딩 냉장고 후면 이격이 ${free.back}mm (기대 50)`);
+    else if (fit.back >= free.back) fail(`키친핏 후면 이격이 ${fit.back}mm — 프리스탠딩(${free.back}mm)보다 작아야 한다`);
+    else if (!fit.weak) fail('키친핏 이격에 미확정 표시(weak)가 없다 — 용량대별로 값이 갈린다');
+    else pass(`냉장고 라인업 이격 구분 (프리스탠딩 후면 ${free.back}mm · 키친핏 내측 ${fit.back}mm)`);
+  }
+
   const cur = P.clearFor('에어드레서', '본체', 'DF80H24R1D');
   const old = P.clearFor('에어드레서', '본체', 'DF10A9500CG');
   if (cur.side !== 2.5) fail(`현행 에어드레서(DF80H24R1D) 좌우 이격이 ${cur.side} (기대 2.5)`);
