@@ -217,6 +217,30 @@
      */
     .sheet{max-height:94%;padding:14px}
     .liblist{max-height:none;flex:1;min-height:34vh}
+    /*
+     * **가전 목록도 같은 처방이 필요하다.** 시트가 flex-column 이라 최소 높이를 안 주면
+     * 위아래 설명글에 밀려 목록이 통째로 찌부러진다 — 실측 높이 14px 로 눌려
+     * 16줄이 있는데도 하나도 안 보였다(사용자 지적). 단지 목록만 고치고 여기를 빠뜨렸다.
+     */
+    .picklist{max-height:none;flex:1;min-height:52vh}
+    /*
+     * 좁은 화면에서는 **목록이 주인공**이다. 위쪽 안내가 화면 절반을 먹으면 한 줄 반만
+     * 보여 고를 수가 없다. 간격과 글자를 줄여 한 화면에 더 담는다.
+     */
+    .sheet{gap:8px}
+    .sheet h2{font-size:15px}
+    .pickers label{gap:2px}
+    #a-rec{font-size:11px;line-height:1.4}
+    #a-rec .recn{font-size:14px}
+    .pick{padding:4px}
+    /*
+     * 항목마다 붙는 정보줄(치수·모델·편차·이격)이 세 줄씩이라 한 줄이 100px 을 먹었다.
+     * 두 줄로 잘라 한 화면에 더 담는다 — 고른 뒤에는 하단 요약 띠가 전체를 보여준다.
+     */
+    .pickinfo{font-size:10.5px;line-height:1.35;margin:0 0 4px 4px;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    /* 설명글이 화면을 먹지 않게 — 좁은 화면에서는 목록이 먼저다 */
+    .sheet .src{display:none}
     .libitem{padding:13px 12px}
     #side{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
       transition:transform .2s;z-index:15;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
@@ -3473,9 +3497,9 @@ async function openSelect(room){
           const lines = cats.filter((c)=>rec[c]).map((c)=>`${c} ${rec[c].size}`);
           const area = planAreaM2();
           recNote.innerHTML = lines.length
-            ? `<b class="recn">${label ? esc(label) + ' ' : ''}추천 가전 ${lines.length}종</b>을 미리 골라 뒀습니다`
+            ? `<b class="recn">${label ? esc(label) + ' ' : ''}추천 가전 ${lines.length}종</b>`
               + `<br><span class="hint">${area && state.typeName ? `전용 ${area.toFixed(0)}㎡ 기준 · ` : ''}`
-              + `필요 없는 것은 체크를 풀고, 대수는 옆 칸에서 조절하세요</span>`
+              + `미리 골라 뒀습니다 — 필요 없는 것은 체크를 풀고, 대수는 옆 칸에서 조절하세요</span>`
               + `<br><span class="hint">${esc(lines.join(' · '))}</span>`
             : '<b>미리 고른 것이 없습니다</b><br><span class="hint">평형을 알아야 골라 드릴 수 있습니다 — 단지를 불러오거나 도면의 축척을 맞춰 방을 잡아 주세요.</span>';
         }
