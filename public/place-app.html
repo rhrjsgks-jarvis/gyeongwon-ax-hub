@@ -3598,7 +3598,17 @@ async function openSelect(room){
            * 폭으로 줄세우면 벽걸이(1099) → 와이드형(492) → 창문형(402) 순이 되어
            * 스탠드 사이에 창문형이 끼어든다. 그런 카테고리는 데이터 순서를 그대로 쓴다.
            */
-          if (!rows.some((r)=>r.named)) opts.sort((a,b)=> foot(b.o).w - foot(a.o).w);
+          /*
+           * 벽에 거는·창에 끼우는 것은 **맨 뒤로**. 바닥에 놓는 것이 상담의 기본인데
+           * 발자국 폭으로 줄세우면 벽걸이가 맨 위로 온다 — 공기청정기 벽걸이형(1050×130)이
+           * 목록 첫 줄에 서서 도면에 긴 막대로 놓였다(사용자 지적).
+           */
+          const hangs = (r)=> (/벽걸이|창문형/.test(r.size) ? 1 : 0);
+          // **전부** 이름일 때만 데이터 순서를 쓴다. 한 줄만 이름인 카테고리(김치냉장고의
+          // 설치가이드 전용 줄)까지 정렬을 건너뛰면 나머지가 작은 것부터로 뒤집힌다.
+          if (!rows.every((r)=>r.named)) {
+            opts.sort((a,b)=> hangs(a.r) - hangs(b.r) || foot(b.o).w - foot(a.o).w);
+          }
           const pick = rec[c];
           return `<label class="pick">
             <input type="checkbox" data-cat="${esc(c)}"${pick?' checked':''}>
@@ -3607,7 +3617,11 @@ async function openSelect(room){
               ${opts.map(({ r, i, o, k })=>{
                 const p0 = o.parts[0];
                 const dim = `${Math.round(p0.w)}×${Math.round(p0.h)}×${Math.round(p0.d)}`;
-                const head = (r.line ? `${r.line} ` : '') + sizeText(c, r.size);
+                /*
+                 * 라인업 접두는 사이즈 이름이 **이미 설치 방식을 담고 있으면** 붙이지 않는다 —
+                 * `프리스탠딩 4도어 프리스탠딩` 이 된다. `named` 가 그 표시다.
+                 */
+                const head = (r.line && !r.named ? `${r.line} ` : '') + sizeText(c, r.size);
                 // 사이즈당 한 줄이므로 제품군으로 구분할 필요가 없다. 어느 모델의 치수인지는
                 // 아래 정보줄이 모델코드·제품군으로 밝힌다 — 드롭다운은 짧을수록 고르기 쉽다.
                 const fam = '';
@@ -3628,8 +3642,14 @@ async function openSelect(room){
                 // 사이즈가 범위면(83~85형) 그 안의 값도 되풀이로 본다 — "85형 (214cm)"
                 const sizeNums = (String(r.size).match(/[\d.]+/g) || []).map(Number);
                 const specNum = +((String(sp[0] || '').match(/[\d.]+/) || [])[0]);
-                const echo = sizeNums.length && Number.isFinite(specNum)
-                  && specNum >= Math.min(...sizeNums) && specNum <= Math.max(...sizeNums);
+                /*
+                 * 에어컨은 냉방면적을 적지 않는다(2026-08-09 사용자: *"에어컨의 경우
+                 * 냉방면적은 없어도 됩니다"*). 고르는 기준이 설치 형태로 바뀌었으니
+                 * 면적은 상담을 헷갈리게만 한다. **데이터에는 남긴다** — 추천이 그 값으로
+                 * 평형을 맞춘다.
+                 */
+                const echo = c === '에어컨' || (sizeNums.length && Number.isFinite(specNum)
+                  && specNum >= Math.min(...sizeNums) && specNum <= Math.max(...sizeNums));
                 const tail = (!sp.length || echo) ? ''
                   : nums.length > 1 && Math.max(...nums) > Math.min(...nums)
                     ? ` · ${Math.min(...nums)}~${Math.max(...nums)}${esc(unit)}`
@@ -3811,18 +3831,23 @@ const CLEAR_BY_MODEL = [
 
    평형 구간은 주택형 표기 그대로 쓴다(59·84·114㎡가 분양 표기의 경계다). */
 /*
- * 냉장고·김치냉장고는 **용량**으로 적는다. 1단 기준을 폭에서 용량으로 바꿨기 때문이기도 하고,
- * 애초에 상담이 "34평이면 900리터급"으로 진행되지 "폭 910"으로 진행되지 않는다.
- * 여기 적힌 사이즈 이름이 `size-reps.json` 에 없으면 그 카테고리는 조용히 추천에서 빠지므로,
+ * 여기 적힌 사이즈 이름이 `size-reps.json` 에 없으면 **그 카테고리가 조용히 추천에서 빠진다.**
  * 대표모델을 다시 만들면 `test-plans.mjs` 의 추천 검사가 이름이 어긋난 것을 잡아 준다.
+ *
+ * 냉장고는 평형과 무관하게 **4도어 프리스탠딩**이다. 1단이 용량에서 도어 구성으로 바뀌면서
+ * (2026-08-09) 4도어가 한 줄이 됐기 때문인데, 그래도 상담이 어긋나지 않는다 —
+ * 매장에서 냉장고 상담은 형태부터 정하고, 작은 주방에 912×930 이 안 들어가면
+ * `fitAlternative` 가 **같은 4도어 중 912×716 규격이면 들어갑니다**로 이어 준다.
+ * 평형별로 용량을 단정하는 것보다 이쪽이 근거가 분명하다.
+ * 김치냉장고는 아직 용량이 1단이라 그대로 용량으로 적는다.
  */
 /** 추천에 쓰는 기본 라인업 — 상담의 출발점이지 유일한 답은 아니다 */
 const DEFAULT_LINE = { '냉장고':'프리스탠딩', '김치냉장고':'프리스탠딩', '세탁기·콤보':'세탁기' };
 const BY_AREA = [
-  { upTo: 60,       label: '59㎡ 이하',  tv: '55형',    fridge: '602~640L', wash: '폭 560~600mm', kimchi: '126L' },
-  { upTo: 85,       label: '59~84㎡',   tv: '65형',    fridge: '602~640L', wash: '폭 635~685mm', kimchi: '324~347L' },
-  { upTo: 115,      label: '84~114㎡',  tv: '75~77형', fridge: '845~905L', wash: '폭 635~685mm', kimchi: '490L' },
-  { upTo: Infinity, label: '114㎡ 초과', tv: '83~85형', fridge: '845~905L', wash: '폭 635~685mm', kimchi: '490L' },
+  { upTo: 60,       label: '59㎡ 이하',  tv: '55형',    fridge: '4도어 프리스탠딩', wash: '폭 560~600mm', kimchi: '126L' },
+  { upTo: 85,       label: '59~84㎡',   tv: '65형',    fridge: '4도어 프리스탠딩', wash: '폭 635~685mm', kimchi: '324~347L' },
+  { upTo: 115,      label: '84~114㎡',  tv: '75~77형', fridge: '4도어 프리스탠딩', wash: '폭 635~685mm', kimchi: '490L' },
+  { upTo: Infinity, label: '114㎡ 초과', tv: '83~85형', fridge: '4도어 프리스탠딩', wash: '폭 635~685mm', kimchi: '490L' },
 ];
 
 /*
@@ -3893,13 +3918,16 @@ function recommendPicks(){
         .filter((v)=>/㎡/.test(v))
         .map((v)=> parseFloat(String(v).split('~').pop().replace(/[^\d.]/g,'')) || 0));
       /*
-       * **거실 에어컨은 스탠드다.** 추천이 보는 방은 거실(없으면 첫 방)인데, 설치 형태별로
-       * 줄이 갈리면서 냉방면적만 보면 작은 거실에 **창문형**이 추천된다 — 창에 끼우는
-       * 물건이라 거실 상담에 올릴 것이 아니다. 벽걸이는 침실 몫인데 방별 추천이 아직 없다.
-       * 상담사가 체크를 풀거나 다른 줄을 고를 수 있으므로 시작점만 스탠드로 둔다.
+       * **거실에 미리 골라 두는 것은 바닥에 놓는 것이다.** 추천이 보는 방은 거실(없으면
+       * 첫 방)인데, 설치 형태별로 줄이 갈리면서 면적만 보면 엉뚱한 것이 올라온다:
+       *  · 작은 거실에 에어컨 **창문형** — 창에 끼우는 물건이다
+       *  · 큰 거실에 공기청정기 **벽걸이형** — 청정면적이 가장 커서 뽑혔는데,
+       *    1050×130 이라 도면에 긴 막대로 놓인다(사용자 지적)
+       * 벽걸이는 침실 몫인데 방별 추천이 아직 없다. 상담사가 체크를 풀거나 다른 줄을
+       * 고를 수 있으므로 **시작점만** 바닥에 놓는 것으로 둔다.
        */
-      const pool = (cat === '에어컨' && list.some((r)=>/스탠드/.test(r.size)))
-        ? list.filter((r)=>/스탠드/.test(r.size)) : list;
+      const floorOnly = list.filter((r)=> !/벽걸이|창문형/.test(r.size));
+      const pool = floorOnly.length ? floorOnly : list;
       const fit = pool.filter((r)=>cover(r) >= roomM2).sort((a,b)=>cover(a)-cover(b))[0]
         || pool.slice().sort((a,b)=>cover(b)-cover(a))[0];
       if (fit) out[cat] = { i: state.reps.indexOf(fit), k: 0, size: fit.size,
@@ -4071,18 +4099,42 @@ function findSpot(item, placed){
 function fitAlternative(it, placed){
   const reps = (state.reps || []).filter((r)=> r.cat === it.cat);
   if (!reps.length) return null;
-  const foot = (r)=>{ const q = r.options[0].parts[0]; return q.w * q.d; };
+  const foot = (q)=> q.w * q.d;
   const mine = reps.find((r)=> r.size === it.size);
   const line = mine ? mine.line : null;
-  const cands = reps
-    .filter((r)=> r.size !== it.size && (!line || r.line === line))
-    .filter((r)=> foot(r) < (mine ? foot(mine) : Infinity))
-    .sort((a,b)=> foot(b) - foot(a));            // 큰 것부터 — 되는 것 중 가장 큰 것이 답이다
-  for (const r of cands){
-    const o = r.options[0], q = o.parts[0];
+  const myFoot = it.w * it.d;
+  /*
+   * 후보는 **사이즈 줄이 아니라 옵션 단위**로 만든다. 한 줄 안에서도 발자국이 크게 다르다 —
+   * 냉장고 1단이 도어 구성으로 바뀌면서 '4도어 프리스탠딩' 한 줄에 깊이 683~930mm 가
+   * 함께 들어왔다(247mm 차이). 줄 대표(`options[0]`, 가장 큰 것)만 보면
+   * **"같은 4도어인데 얕은 모델이면 들어갑니다"** 를 말할 수 없는데,
+   * 상담에서 가장 쓸모 있는 답이 그것이다.
+   * 자기보다 발자국이 작은 것만 담으므로 자기 자신은 저절로 빠진다.
+   */
+  const cands = [];
+  for (const r of reps){
+    if (line && r.line !== line) continue;
+    for (const o of (r.options || [])){
+      const q = (o.parts || [])[0];
+      if (!q || foot(q) >= myFoot) continue;
+      /*
+       * 같은 줄 안의 대안은 **눈에 띄게 작아야** 말할 값어치가 있다.
+       * 그냥 "발자국이 더 작은 것"으로 두면 912×930 대신 **912×922** 를 내민다 —
+       * 8mm 차이는 사실상 같은 제품이라 상담에서 아무 도움이 안 된다.
+       * 기준은 대표모델을 묶을 때 쓴 것과 같은 10%(`MERGE_SPAN`) — 그보다 가까우면
+       * 애초에 한 사이즈로 묶는 거리다. 다른 줄은 이름이 이미 다르므로 그대로 둔다.
+       */
+      if (r.size === it.size && q.w > it.w / 1.1 && q.d > it.d / 1.1) continue;
+      cands.push({ r, o, q });
+    }
+  }
+  cands.sort((a,b)=> foot(b.q) - foot(a.q));    // 큰 것부터 — 되는 것 중 가장 큰 것이 답이다
+  for (const { r, o, q } of cands){
     const trial = { ...it, w:q.w, h:q.h, d:q.d, size:r.size, model:o.model, group:o.group,
       clear: clearFor(it.cat, q.part, o.model, o.group) };
-    if (findSpot(trial, placed)) return { size:r.size, model:o.model, w:q.w, d:q.d, line:r.line };
+    if (findSpot(trial, placed)) {
+      return { size:r.size, model:o.model, w:q.w, d:q.d, line:r.line, same: r.size === it.size };
+    }
   }
   return null;
 }
@@ -4109,6 +4161,7 @@ function autoPlace(picks){
       const alt = fitAlternative(it, placed);
       failed.push({
         label: it.label + (itemRoom(it) ? ` (${itemRoom(it).name})` : ''),
+        cat: it.cat,          // 대안 문구가 `sizeText` 로 표기를 맞추는 데 쓴다
         alt,
       });
       const q = picks.find((x)=> x.cat===it.cat && x.size===it.size && x.model===it.model);
@@ -4137,8 +4190,10 @@ function autoPlace(picks){
         억지로 놓지 않았습니다.</p>
       <ul style="margin:0;padding-left:18px">${failed.map((f)=>`<li>${esc(f.label)}
         ${f.alt
-          ? `<br><span style="color:#166534">→ <b>${esc(f.alt.size)}</b>는 들어갑니다
-              (${Math.round(f.alt.w)}×${Math.round(f.alt.d)}mm · ${esc(f.alt.model)})</span>`
+          ? `<br><span style="color:#166534">→ ${f.alt.same
+              // 같은 줄 안의 더 작은 모델 — 이름이 같으므로 무엇이 다른지를 말해야 한다
+              ? `같은 <b>${esc(sizeText(f.cat, f.alt.size))}</b> 중 <b>${Math.round(f.alt.w)}×${Math.round(f.alt.d)}mm</b> 규격이면 들어갑니다`
+              : `<b>${esc(sizeText(f.cat, f.alt.size))}</b>이면 들어갑니다 (${Math.round(f.alt.w)}×${Math.round(f.alt.d)}mm)`}</span>`
           : '<br><span class="hint">더 작은 사이즈로도 자리가 없습니다 — 방을 넓히거나 다른 방을 보셔야 합니다</span>'}
       </li>`).join('')}</ul>
       <p class="hint">도면 옆에 꺼내 두면 직접 끌어다 놓을 수 있습니다 — 이격이 모자라면 그대로 경고로 알려드립니다.</p>

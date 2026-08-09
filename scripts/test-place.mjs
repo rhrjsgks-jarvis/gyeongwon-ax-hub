@@ -295,7 +295,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
 
   // 3,600 × 2,600mm 주방 — 냉장고 + 김치냉장고 + 식기세척기
   st.walls = room(3600, 2600); st.items = [];
-  P.autoPlace([pick('냉장고', '602~640L'), pick('김치냉장고', '126L'), pick('식기세척기', '폭 450mm')]);
+  P.autoPlace([pick('냉장고', '4도어 프리스탠딩'), pick('김치냉장고', '126L'), pick('식기세척기', '폭 450mm')]);
   if (st.items.length !== 3) fail(`3.6×2.6m 방에 3종을 넣었는데 ${st.items.length}종만 배치됨`);
   else if (st.items.some((i) => i.warn.length)) {
     fail(`자동 배치인데 경고가 남음: ${st.items.filter((i) => i.warn.length).map((i) => `${i.label}(${i.warn})`).join(', ')}`);
@@ -309,7 +309,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
    */
   st.walls = room(3600, 2600); st.items = [];
   P.state.mode = 'detect';
-  P.autoPlace([pick('냉장고', '602~640L')]);
+  P.autoPlace([pick('냉장고', '4도어 프리스탠딩')]);
   if (P.state.mode !== 'idle') fail(`자동 배치 뒤 모드가 '${P.state.mode}' — idle 이어야 가전을 끌 수 있다`);
   else if (P.state.showClean) fail('자동 배치 뒤에도 정리본(마스크)을 보여준다 — 원본 도면으로 돌아와야 한다');
   else pass('자동 배치 뒤 idle 모드 · 원본 도면 — 가전을 끌 수 있는 상태');
@@ -323,7 +323,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.walls = room(4000, 3000); st.items = [];
   {
     const box = P.planBox();
-    const made = P.stageOutside([pick('냉장고', '602~640L'), pick('TV', '65형')]);
+    const made = P.stageOutside([pick('냉장고', '4도어 프리스탠딩'), pick('TV', '65형')]);
     if (made.length !== 2) fail(`꺼내기 2대를 요청했는데 ${made.length}대`);
     else if (!made.every((i) => i.staged)) fail('꺼내 둔 가전에 대기 표시(staged)가 없다');
     else if (!made.every((i) => P.bodyCenter(i)[0] > box.x2)) fail('꺼내 둔 가전이 도면 범위 안에 있다 — 밖에 세워야 한다');
@@ -390,11 +390,11 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     st.walls = room(4000, 3000); st.items = [];
     const wasScaled = P.state.scaled, wasMm = P.state.mmPerPx;
     P.state.scaled = false; P.state.mmPerPx = null;
-    const made = P.stageOutside([pick('냉장고', '602~640L')]);
+    const made = P.stageOutside([pick('냉장고', '4도어 프리스탠딩')]);
     if (made.length || st.items.length) fail(`축척 미확정인데 가전 ${st.items.length}대가 올라갔다`);
     else {
       st.items = [];
-      P.autoPlace([pick('냉장고', '602~640L')]);
+      P.autoPlace([pick('냉장고', '4도어 프리스탠딩')]);
       if (st.items.length) fail('축척 미확정인데 자동 배치가 됐다');
       else pass('축척 미확정이면 가전을 올리지 않는다 (꺼내기·자동 배치 둘 다)');
     }
@@ -408,7 +408,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
    */
   st.walls = room(4000, 3000); st.items = [];
   {
-    const q = pick('냉장고', '602~640L');
+    const q = pick('냉장고', '4도어 프리스탠딩');
     P.stageOutside([q]);
     const it = st.items[0];
     it.staged = false; it.a = 0;
@@ -449,7 +449,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
    * 한 번 누를 때 한 대씩 놓이고, 대기열이 끝나면 idle 로 돌아와야 한다.
    */
   st.walls = room(6000, 4000); st.items = [];
-  const q3 = [pick('냉장고', '602~640L'), pick('김치냉장고', '126L'), pick('식기세척기', '폭 450mm')];
+  const q3 = [pick('냉장고', '4도어 프리스탠딩'), pick('김치냉장고', '126L'), pick('식기세척기', '폭 450mm')];
   P.startManual(q3);
   if (P.state.mode !== 'place') fail(`직접 놓기를 시작했는데 모드가 '${P.state.mode}'`);
   else if (!P.state.pending) fail('직접 놓기인데 놓을 제품(pending)이 없다');
@@ -469,7 +469,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
 
   // 좁은 방에서는 억지로 놓지 않아야 한다
   st.walls = room(1000, 1000); st.items = [];
-  P.autoPlace([pick('냉장고', '602~640L'), pick('김치냉장고', '126L')]);
+  P.autoPlace([pick('냉장고', '4도어 프리스탠딩'), pick('김치냉장고', '126L')]);
   if (st.items.some((i) => i.warn.length)) fail('좁은 방에 억지로 놓아 경고가 발생 — 자리가 없으면 놓지 않아야 한다');
   else if (st.items.length >= 2) fail(`1×1m 방에 폭 912+595를 둘 다 놓음 — 자리 없음 판정이 동작하지 않는다`);
   else pass(`1×1m 방 — ${st.items.length}종만 배치하고 나머지는 자리 없음으로 남김`);
@@ -483,18 +483,27 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   {
     // 대안 찾기는 `state.reps` 를 뒤진다. 앱에서는 가전 선택 시트가 채우지만 여기서는 직접 넣는다.
     P.state.reps = reps;
-    st.walls = room(1500, 1500); st.items = [];
-    const big = pick('냉장고', '845~905L');          // 912×930 — 이 방에는 이격까지 지킬 수 없다
-    const it = { ...big, w: big.part.w, d: big.part.d, cat: '냉장고', size: '845~905L',
+    st.walls = room(1200, 1200); st.items = [];   // 8mm 차이로 갈리지 않게 넉넉히 좁힌다
+    const big = pick('냉장고', '4도어 프리스탠딩');          // 912×930 — 이 방에는 이격까지 지킬 수 없다
+    const it = { ...big, w: big.part.w, d: big.part.d, cat: '냉장고', size: '4도어 프리스탠딩',
       clear: P.clearFor('냉장고', '본체', big.model, big.group), bx: 0, by: 0, a: 0 };
     const alt = P.fitAlternative(it, []);
-    if (!alt) fail('1.5×1.5m 방에 냉장고가 안 들어가는데 대안 사이즈를 못 찾았다 (333L 은 들어가야 한다)');
-    else if (alt.size === '845~905L') fail('대안이 원래 사이즈와 같다');
-    // 폭만 보면 안 된다 — 폭이 같고 **깊이가 줄어** 들어가는 경우가 실제로 있다
-    // (845~905L 912×930 → 602~640L 912×716). 자리를 정하는 것은 발자국 넓이다.
+    /*
+     * **이름이 같아도 답이 될 수 있다.** 냉장고 1단이 도어 구성으로 바뀌면서 '4도어
+     * 프리스탠딩' 한 줄에 깊이 683~930mm 가 함께 들어왔다. 같은 줄의 얕은 규격이
+     * 들어가면 그것이 상담에서 가장 쓸모 있는 답이므로, 이름이 같으면 `same` 으로
+     * 표시하고 화면이 "같은 4도어 중 912×716 규격이면 들어갑니다"로 말한다.
+     * 검사할 것은 이름이 아니라 **발자국이 실제로 줄었는가**다.
+     */
+    if (!alt) fail('1.5×1.5m 방에 냉장고가 안 들어가는데 대안을 못 찾았다 (더 작은 규격이 있다)');
     else if (alt.w * alt.d >= big.part.w * big.part.d) {
       fail(`대안(${alt.size} ${alt.w}×${alt.d})의 발자국이 원래(${big.part.w}×${big.part.d})보다 작지 않다`);
-    } else pass(`안 들어갈 때 대안 제시 — 845~905L(${big.part.w}×${big.part.d}) 대신 ${alt.size}(${Math.round(alt.w)}×${Math.round(alt.d)}mm)`);
+    } else if ((alt.size === it.size) !== !!alt.same) {
+      fail(`대안의 same 표시가 어긋난다 — size='${alt.size}' same=${alt.same}`);
+    } else {
+      pass(`안 들어갈 때 대안 제시 — 4도어 프리스탠딩(${big.part.w}×${big.part.d}) 대신 `
+        + `${alt.same ? '같은 줄의 ' : ''}${alt.size}(${Math.round(alt.w)}×${Math.round(alt.d)}mm)`);
+    }
 
     // 아무리 줄여도 안 되는 방에서는 **없는 답을 지어내지 않아야** 한다
     st.walls = room(300, 300); st.items = [];
@@ -553,7 +562,7 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
    */
   {
     st.walls = room(6000, 4000); st.items = [];
-    P.stageOutside([pick('냉장고', '602~640L'), pick('TV', '65형')]);
+    P.stageOutside([pick('냉장고', '4도어 프리스탠딩'), pick('TV', '65형')]);
     const id = st.items[0].id;
     P.removeItem(id);
     if (st.items.length !== 1) fail(`1대를 지웠는데 ${st.items.length}대 남음`);

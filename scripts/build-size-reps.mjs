@@ -201,10 +201,54 @@ const SIZE_KEY = {
     const m = /(\d+)\s*kg\s*\/\s*(\d+)\s*kg/.exec(normSize(r.size || ''));
     return m ? { key: `${m[1]}/${m[2]}kg`, label: '용량 (세탁/건조)' } : null;
   },
-  '공기청정기': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '청정면적' } : null),
-  // 냉장고·김치냉장고는 **용량**으로 고른다. 상담이 "몇 리터짜리"로 진행되고,
-  // 폭으로 묶으면 602~905L 가 한 줄이 되어 용량 표시가 무의미해진다(사용자 지적).
-  '냉장고': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '용량' } : null),
+  /*
+   * 공기청정기는 청정면적으로 고르되 **벽걸이형은 갈라 놓는다**(2026-08-09 사용자 지적:
+   * *"공기청정기는 치수가 잘못된 건지 길게 나옵니다. 상단에서 바라봤을 때는 작은 네모
+   * 모양이 나오는 게 정상입니다."*).
+   * 치수가 틀린 것이 아니라 `AX99N4020WWD`(블루스카이 4000 **벽걸이형**)가 1050×600×130
+   * 이라 바닥에 1050×130 막대로 그려진 것이다. 청정면적이 85㎡ 로 가장 커서 대표로 뽑혔다.
+   * 벽에 거는 물건은 바닥 발자국이 없으니 스탠드형과 한 줄에 두면 안 된다.
+   */
+  '공기청정기': (r) => (r.size
+    ? { key: `${normSize(r.size)}${/벽걸이/.test(r.group || '') ? ' 벽걸이형' : ''}`, label: '청정면적' }
+    : null),
+  /*
+   * 냉장고는 **도어 구성 + 설치 방식**으로 고른다(2026-08-09 사용자 결정) —
+   * *"냉장고도 4도어 프리스탠딩, 4도어 키친핏, 양문형, 1도어세트(냉장+냉동),
+   *  1도어세트(냉장+냉동+김치), 이런 식으로만 되도 됩니다."*
+   * 용량으로 고르던 때는 한 줄에 4도어와 양문형이 섞였다(845~905L = 912×930 4도어 +
+   * 912×892 양문형). 매장에서 "몇 리터"보다 먼저 정해지는 것은 어느 형태냐이고,
+   * 형태가 곧 발자국이라 배치 판정과도 맞는다.
+   *
+   * 형태는 **제품군 문자열과 모델 접두 둘 다**로 가른다 — 12개 조합 전수 확인 결과
+   * 둘이 완전히 일치하고(RR=1도어 · RS=양문형 · RB/RT=일반형 · RM=4도어),
+   * 제품군이 '카탈로그 수록 모델 (2026)' 처럼 형태를 안 밝히는 항목도 접두로 갈린다.
+   */
+  '냉장고': (r) => {
+    const g = r.group || '', m = r.model || '';
+    let form = (/양문형/.test(g) || /^RS/.test(m)) ? '양문형'
+      : (/일반형/.test(g) || /^R[BT]/.test(m)) ? '일반형'
+      : (/1도어/.test(g) || /^RR/.test(m)) ? '1도어'
+      : (/4도어/.test(g) || /^R[MF]/.test(m)) ? '4도어'
+      : null;
+    if (!form) return null;
+    /*
+     * **접두만으로는 4도어와 상냉장하냉동이 안 갈린다.** 같은 RM 시리즈에 둘 다 있다 —
+     * `RM70F91R1AP`(700×1853×685, 615L)는 제품군이 'AI 하이브리드 F시리즈'라 형태를
+     * 안 밝히는데 폭이 700㎜ 다. 이대로 두면 4도어 줄의 옵션이 되어, 자리가 모자랄 때
+     * "같은 4도어 중 700×685 규격이면 들어갑니다"라는 **없는 제품을 안내하게 된다.**
+     * DB 안에서 검증되는 기준: 4도어로 명시된 것은 전부 912㎜ 이고, '일반형'으로 명시된
+     * 것은 700·595㎜ 다. 그래서 800㎜ 를 경계로 둔다.
+     */
+    if (form === '4도어' && baseOf(r).w < 800) form = '일반형';
+    /*
+     * 설치 방식은 **키친핏일 때, 그리고 짝이 있는 4도어일 때만** 이름에 넣는다.
+     * 양문형·일반형은 키친핏 짝이 없어 '양문형 프리스탠딩' 이 군더더기다.
+     */
+    const kit = /키친핏|빌트인/.test(g);            // lineupOf 와 같은 기준
+    const suffix = kit ? ' 키친핏' : form === '4도어' ? ' 프리스탠딩' : '';
+    return { key: `${form}${suffix}`, label: '도어 구성' };
+  },
   '김치냉장고': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '용량' } : null),
 };
 
@@ -213,7 +257,20 @@ const SIZE_KEY = {
  * 기본은 발자국 폭이지만, 용량으로 고르는 카테고리는 **용량**으로 묶어야 한다 —
  * 폭으로 묶으면 "용량별 대표 1개"라는 목적과 어긋난다.
  */
-const MERGE_AXIS = { '냉장고': 'cap', '김치냉장고': 'cap' };
+/*
+ * 냉장고가 'd'(깊이)인 이유: 1단이 도어 구성으로 바뀌면서 통합 축을 용량으로 둘 수 없게 됐고,
+ * 폭으로 두면 4도어가 전부 912㎜ 라 **깊이 683 과 930 이 한 줄로 합쳐진다**. 247㎜ 차이는
+ * 이 도구가 감당할 오차가 아니다 — "폭이 같고 깊이만 줄어 들어가는" 대안 제시가 통째로
+ * 사라지고, 얕은 4도어가 들어갈 주방에 "안 들어갑니다"를 말하게 된다.
+ */
+const MERGE_AXIS = { '냉장고': 'd', '김치냉장고': 'cap' };
+
+/*
+ * 사이즈 키가 **이름**이라 숫자로 이웃을 판단할 수 없는 카테고리.
+ * 이름이 다르면 발자국이 아무리 닮아도 묶지 않는다 — 4도어와 양문형은 912×916/915 로
+ * 거의 같지만 매장에서 같은 물건이 아니다.
+ */
+const KEY_LOCKED = new Set(['냉장고']);
 
 /*
  * 사이즈 기준이 **숫자가 아니라 이름**인 카테고리는 통합에서 뺀다.
@@ -363,10 +420,13 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
    */
   const axis = MERGE_AXIS[cat] || 'w';
   const kindOf = (r) => (axis === 'cap' && /L$/.test(r.size) ? 'cap' : 'w');
-  const keyOf = (r) => (kindOf(r) === 'cap' ? numOf(r.size) : r._fp.w);
+  const keyOf = (r) => (kindOf(r) === 'cap' ? numOf(r.size)
+    : axis === 'd' ? r._fp.d : r._fp.w);
   const list = sized.filter((r) => r.cat === cat && (r.line || '') === line)
     .map((r) => ({ ...r, _fp: footprintOf(r) }))
-    .sort((a, b) => (kindOf(a) === kindOf(b) ? keyOf(a) - keyOf(b) : kindOf(a) === 'cap' ? -1 : 1));
+    // 사이즈 키가 이름인 카테고리는 **같은 이름끼리 붙여 놓아야** 버킷이 제대로 잡힌다
+    .sort((a, b) => (KEY_LOCKED.has(cat) && a.size !== b.size ? (a.size < b.size ? -1 : 1)
+      : kindOf(a) === kindOf(b) ? keyOf(a) - keyOf(b) : kindOf(a) === 'cap' ? -1 : 1));
   let bucket = [];
   const flush = () => {
     if (!bucket.length) return;
@@ -432,7 +492,7 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
     merged.push({
       cat, home: isHome(cat) || undefined, line: line || undefined, size,
       // 사이즈가 이름이라 폭·용량으로 줄세울 수 없다는 표시 — 화면이 데이터 순서를 그대로 쓴다
-      named: NAMED_SIZE.has(cat) || undefined,
+      named: (NAMED_SIZE.has(cat) || KEY_LOCKED.has(cat)) || undefined,
       // 라벨도 라벨을 만든 단위를 따라간다 — 폭 키로 떨어진 행이 대표가 되면
       // `25/18~20kg` 에 "본체 폭(W)" 이 붙는다
       sizeLabel: (bucket.find((r) => family.includes(r.size)) || rep).sizeLabel,
@@ -449,6 +509,7 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
   for (const r of list) {
     const brk = bucket.length && (
       NAMED_SIZE.has(cat)
+      || (KEY_LOCKED.has(cat) && r.size !== bucket[0].size)
       || kindOf(r) !== kindOf(bucket[0])
       || keyOf(r) > keyOf(bucket[0]) * MERGE_SPAN
       || !keyOf(r)
@@ -518,8 +579,9 @@ for (const s of SETS) {
   const n = s.names.length;
   const w = m.w * n + PAIR_GAP * (n - 1);
   merged.push({
-    cat: '냉장고', home: true, line: '키친핏', set: true,
-    size: `1도어 ${n}세트 (${s.names.join('+')})`,
+    cat: '냉장고', home: true, line: '키친핏', set: true, named: true,
+    // '2세트' 는 "세트 두 벌"로 읽힌다. 대수는 괄호 안 구성이 이미 말한다.
+    size: `1도어 키친핏 세트 (${s.names.join('+')})`,
     sizeLabel: '세트 구성',
     specs: [`${n}대 1세트`],
     model: ONE_DOOR,
@@ -569,7 +631,7 @@ for (const s of SETS) {
   merged.push({
     cat: '김치냉장고', home: true, line: '키친핏', guideOnly: true,
     size: '4도어 키친핏 (폭 795mm)',
-    sizeLabel: '설치 형태',
+    sizeLabel: '설치 형태', named: true,
     specs: [],
     model: '',
     parts: [{
@@ -601,7 +663,8 @@ const unitRank = (s) => (/형|㎡/.test(s) ? 0 : 1);
  * 엉뚱한 값이 잡힌다('Q9000 스탠드' → 9000 이라 맨 뒤로 간다).
  * 상담에서 부르는 순서를 그대로 적어 둔다: 스탠드 넷 → 벽걸이 → 창문형.
  */
-const NAME_ORDER = ['슬림형 스탠드', '와이드형 스탠드', '클래식 스탠드', 'Q9000 스탠드', '벽걸이', '창문형'];
+const NAME_ORDER = ['슬림형 스탠드', '와이드형 스탠드', '클래식 스탠드', 'Q9000 스탠드', '벽걸이', '창문형',
+  '4도어 프리스탠딩', '4도어 키친핏', '양문형', '일반형', '1도어 키친핏'];
 const nameRank = (s) => (NAME_ORDER.indexOf(s) + 1) || 999;
 const out = merged
   .sort((a, b) =>
@@ -612,6 +675,25 @@ const out = merged
     || nameRank(a.size) - nameRank(b.size)
     || unitRank(a.size) - unitRank(b.size)
     || lead(a.size) - lead(b.size));
+
+/*
+ * ── 같은 이름이 둘 이상이면 용량을 붙여 가른다 ──
+ * 도어 구성으로 이름을 붙이면 4도어 프리스탠딩이 **깊이 683 과 930 두 줄**로 남는다
+ * (247㎜ 차이라 합칠 수 없다). 그대로 두면 드롭다운에 같은 이름이 두 번 나온다.
+ * 이름이 하나뿐인 형태에는 붙이지 않는다 — 사용자가 원한 것은 짧은 이름이다.
+ * **정렬이 끝난 뒤에** 한다. 이름이 바뀌면 `NAME_ORDER` 가 못 찾는다.
+ */
+{
+  const seen = new Map();
+  for (const r of out) seen.set(`${r.cat}|${r.size}`, (seen.get(`${r.cat}|${r.size}`) || 0) + 1);
+  for (const r of out) {
+    if (!r.named || seen.get(`${r.cat}|${r.size}`) < 2) continue;
+    const caps = (r.specs || []).filter((v) => /L$/.test(v)).map(numOf).filter(Boolean);
+    if (!caps.length) continue;
+    const lo = Math.min(...caps), hi = Math.max(...caps);
+    r.size += ` ${lo === hi ? `${hi}L` : `${lo}~${hi}L`}`;
+  }
+}
 
 fs.writeFileSync(pub('size-reps.json'), JSON.stringify(out, null, 0) + '\n');
 

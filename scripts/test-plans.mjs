@@ -547,9 +547,9 @@ for (const plan of PLANS) {
        * 무엇을 더했는지(모듈 폭 + 이격, 준용한 모듈)가 화면에 나와야 한다.
        */
       const fsel = document.querySelector('select[data-size="냉장고"]');
-      out.setRows = fsel ? [...fsel.options].filter((o) => /1도어 \d세트/.test(o.textContent)).length : 0;
+      out.setRows = fsel ? [...fsel.options].filter((o) => /1도어 키친핏 세트/.test(o.textContent)).length : 0;
       if (fsel) {
-        const si = [...fsel.options].findIndex((o) => /1도어 4세트/.test(o.textContent));
+        const si = [...fsel.options].findIndex((o) => o.textContent.includes('1도어 키친핏 세트 (냉장+냉동+와인+김치)'));
         if (si >= 0) {
           fsel.selectedIndex = si;
           fsel.dispatchEvent(new Event('change', { bubbles: true }));
