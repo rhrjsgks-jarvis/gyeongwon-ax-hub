@@ -81,6 +81,13 @@
   .room .rn:focus{outline:0;border-bottom:1px solid var(--brand)}
   .room .m{font-size:11px;color:var(--muted);flex:none}
   .room .del{border:0;background:transparent;color:var(--muted);font-size:13px;padding:0 2px;cursor:pointer;flex:none}
+  /* 배치 목록의 삭제 — 매장 기기가 태블릿이면 Delete 키가 없어 이 버튼이 유일한 삭제 수단이다.
+     손가락으로 눌러야 하므로 방 목록의 ✕ 보다 넉넉하게 잡는다. */
+  #list .t{display:flex;align-items:center;gap:6px}
+  #list .t .grow{flex:1}
+  #list .del{border:0;background:transparent;color:var(--muted);font-size:15px;line-height:1;
+    padding:4px 8px;margin:-4px -4px -4px 0;cursor:pointer;flex:none;border-radius:6px}
+  #list .del:hover{background:rgba(180,35,24,.10);color:#B42318}
   .row .t{font-weight:650;font-size:13px;display:flex;justify-content:space-between;gap:6px;align-items:center}
   .row .m{color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
   .row .w{font-size:11.5px;color:var(--bad)}
@@ -182,6 +189,7 @@
     <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
     <button id="btn-save" class="ghost" title="지금 잡은 방을 단지로 등록합니다">이 단지 저장</button>
     <button id="btn-add">가전 선택</button>
+    <button id="btn-share" class="ghost" title="배치 결과를 이미지로 저장하거나 공유합니다">결과 저장</button>
     <button id="btn-auto" class="primary">주방 배치 추천</button>
     <span class="grow"></span>
     <span class="hint" id="status">도면 없이 벽만 그려도 됩니다</span>
@@ -313,7 +321,7 @@ const state = {
   items:[],              // 배치된 가전 (it.room = 방 id)
   reps:[],               // size-reps.json
   mode:'idle',           // idle | scale | wall | place
-  scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, showDims:false, queue:[], draft:null, draftEdges:null,
+  scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, showDims:false, queue:[], complexName:null, typeName:null, draft:null, draftEdges:null,
   pending:null,          // 배치 대기중인 가전
   sel:null, drag:null, editSel:null,
 };
@@ -1858,6 +1866,62 @@ function evaluate(){
   }
 }
 
+/*
+ * ── 위에서 본 제품 실루엣 ──────────────────────────────────────────
+ * 라벨 붙은 사각형만으로는 "여기 이 제품이 놓인다"는 느낌이 안 산다. 도면은 위에서 본
+ * 그림이므로 **위에서 봤을 때 보이는 것**만 그린다 — 냉장고 도어 분할선, 세탁기 원형 도어,
+ * TV 화면 폭, 인덕션 화구. 없는 정보를 그리지 않으므로 치수를 왜곡하지 않는다.
+ * (사용자가 바라는 3D 렌더링의 저비용 대용이다. 3D 로 가면 이 함수는 필요 없어진다.)
+ *
+ * 좌표는 **제품 로컬 mm**로 쓴다 — x 는 -w/2..w/2, y 는 0(뒷면)..d(앞면).
+ * 캔버스 변환을 걸어 두면 회전·배율을 신경 쓰지 않아도 된다.
+ */
+function drawGlyph(it){
+  const [sx,sy] = toScreen(it.bx, it.by);
+  const z = state.zoom;
+  if (it.w * z < 26) return;          // 너무 작으면 지저분하기만 하다
+  ctx.save();
+  ctx.translate(sx, sy); ctx.rotate(it.a); ctx.scale(z, z);
+  ctx.lineWidth = 1.6 / z;
+  ctx.strokeStyle = it.staged ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.78)';
+  const w = it.w, d = it.d, hw = w/2;
+  const line = (x1,y1,x2,y2)=>{ ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); };
+  const circle = (cx,cy,r)=>{ ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke(); };
+  const cat = it.cat, g = String(it.group || '');
+
+  if (/^냉장고$|^김치냉장고$|^냉동고$|^업소용/.test(cat)){
+    // 도어 분할 — 양문형·4도어는 가운데가 갈리고, 1도어·키친핏은 통짜다
+    const twin = /양문형|4도어|3도어|더블/.test(g) || w > 800;
+    if (twin) line(0, d*0.12, 0, d);
+    // 손잡이(앞면 가까이) — 어느 쪽이 앞인지 한눈에 보인다
+    const hy = d*0.86;
+    if (twin){ line(-hw*0.62, hy, -hw*0.18, hy); line(hw*0.18, hy, hw*0.62, hy); }
+    else line(-hw*0.5, hy, hw*0.5, hy);
+  } else if (/세탁기|건조기|에어드레서|슈드레서/.test(cat)){
+    // 원형 도어 — 통버블(상부 개폐)은 위에서 보면 뚜껑이라 사각으로 둔다
+    if (/통버블|일반세탁기/.test(g)) { ctx.strokeRect(-hw*0.72, d*0.16, w*0.72, d*0.68); }
+    else circle(0, d*0.55, Math.min(w, d) * 0.28);
+  } else if (/^TV$|사운드바/.test(cat)){
+    // 화면(앞면) 쪽을 굵게 — 어느 방향을 보고 있는지가 TV 배치의 전부다
+    ctx.lineWidth = 3.2 / z;
+    line(-hw*0.94, d*0.9, hw*0.94, d*0.9);
+    ctx.lineWidth = 1.6 / z;
+    if (/^TV$/.test(cat)) line(-hw*0.3, d*0.9, hw*0.3, d*0.15);   // 스탠드 목
+  } else if (/인덕션|전기레인지/.test(cat)){
+    const r = Math.min(w, d) * 0.17;
+    circle(-hw*0.45, d*0.34, r); circle(hw*0.45, d*0.34, r);
+    circle(-hw*0.45, d*0.72, r); circle(hw*0.45, d*0.72, r);
+  } else if (/식기세척기|전자레인지|오븐|데이코/.test(cat)){
+    ctx.strokeRect(-hw*0.8, d*0.2, w*0.8, d*0.6);
+  } else if (/공기청정기|청소기|정수기|제습기/.test(cat)){
+    circle(0, d*0.5, Math.min(w, d) * 0.3);
+  } else if (/에어컨/.test(cat)){
+    // 바람이 나가는 쪽 — 앞면에 호를 그린다
+    ctx.beginPath(); ctx.arc(0, d*0.2, Math.min(w,d)*0.5, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
+  }
+  ctx.restore();
+}
+
 /* ── 그리기 ── */
 function draw(){
   const W = cv.width/(window.devicePixelRatio||1), H = cv.height/(window.devicePixelRatio||1);
@@ -2043,6 +2107,7 @@ function draw(){
     ctx.strokeStyle = bad ? '#7F1D1D' : (state.sel===it.id ? '#0B1A6B' : '#101C52');
     ctx.lineWidth = state.sel===it.id ? 2 : 1.2; ctx.stroke();
     ctx.setLineDash([]);
+    drawGlyph(it);
 
     // 정면 표시(도어가 열리는 쪽)
     const [f1,f2] = [body[3], body[2]];
@@ -2070,6 +2135,101 @@ function draw(){
   renderSide();
 }
 
+/**
+ * 배치한 가전을 지운다. 키보드(Delete)와 목록의 ✕ 가 같은 길로 지나가야
+ * 한쪽만 고치는 사고가 안 난다. **태블릿에는 Delete 키가 없으므로 버튼이 필수다.**
+ */
+function removeItem(id){
+  const it = state.items.find((x)=>x.id===id);
+  if (!it) return;
+  state.items = state.items.filter((x)=>x!==it);
+  if (state.sel===id) state.sel = null;
+  if (!state.items.length) $('#empty').style.display='';
+  evaluate(); renderSide(); draw();
+  toast(`${it.label} 삭제`);
+}
+
+/*
+ * ── 상담 결과를 이미지 한 장으로 ──────────────────────────────────
+ * **상담이 끝나면 고객 손에 아무것도 안 남는 것이 이 도구의 가장 큰 구멍이었다.**
+ * 고객은 자기 집 도면에 제품이 놓인 그림을 보고 갔는데 가져갈 것이 없다.
+ * 도면 화면 아래에 고른 제품·모델코드·치수·이격을 붙여 한 장으로 만든다 —
+ * 그대로 카톡으로 보내면 집에 가서 다시 보고, 그것이 재방문 명분이 된다.
+ *
+ * 캔버스를 다시 그리지 않고 **화면에 보이는 것을 그대로 복사**한다. 화면과 다른 그림이
+ * 나가면 "내가 본 것과 다르다"가 되기 때문이다.
+ */
+function buildShareCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const W = cv.width / dpr, H = cv.height / dpr;
+  const items = state.items;
+  const lineH = 34, headH = 64, padX = 20;
+  const listH = items.length ? headH + items.length * lineH + 16 : headH;
+  const out = document.createElement('canvas');
+  const S = 2;                                   // 카톡으로 보내도 글자가 뭉개지지 않게
+  out.width = W * S; out.height = (H + listH) * S;
+  const g = out.getContext('2d');
+  g.scale(S, S);
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H + listH);
+  g.drawImage(cv, 0, 0, W, H);                   // 화면 그대로
+
+  g.fillStyle = '#F8FAFC'; g.fillRect(0, H, W, listH);
+  g.strokeStyle = '#E2E8F0'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(0, H + .5); g.lineTo(W, H + .5); g.stroke();
+
+  const title = state.complexName ? `${state.complexName}${state.typeName ? ' ' + state.typeName : ''}` : '가전 배치 상담';
+  g.fillStyle = '#0F172A'; g.font = '700 17px system-ui,sans-serif'; g.textAlign = 'left';
+  g.fillText(title, padX, H + 28);
+  const area = planAreaM2();
+  g.fillStyle = '#64748B'; g.font = '12px system-ui,sans-serif';
+  g.fillText([
+    area ? `전용 ${area.toFixed(1)}㎡` : null,
+    state.rooms.length ? `공간 ${state.rooms.length}곳` : null,
+    `가전 ${items.length}대`,
+    new Date().toLocaleDateString('ko-KR'),
+  ].filter(Boolean).join('  ·  '), padX, H + 48);
+
+  items.forEach((it, i)=>{
+    const y = H + headH + i * lineH + 14;
+    g.fillStyle = it.warn && it.warn.length ? '#B42318' : (it.staged ? '#64748B' : '#1428A0');
+    g.beginPath(); g.arc(padX + 4, y - 4, 4, 0, 7); g.fill();
+    g.fillStyle = '#0F172A'; g.font = '600 13px system-ui,sans-serif';
+    g.fillText(it.label + (it.staged ? ' (미배치)' : ''), padX + 16, y);
+    g.fillStyle = '#475569'; g.font = '12px ui-monospace,monospace';
+    const spec = `${it.model || '모델코드 미수록'}  ${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm  이격 후면 ${it.clear.back}·좌우 ${it.clear.side}mm`;
+    g.fillText(spec, padX + 16, y + 15);
+    if (it.warn && it.warn.length){
+      g.fillStyle = '#B42318'; g.font = '11px system-ui,sans-serif'; g.textAlign = 'right';
+      g.fillText(it.warn.join(' / '), W - padX, y);
+      g.textAlign = 'left';
+    }
+  });
+  g.fillStyle = '#94A3B8'; g.font = '11px system-ui,sans-serif'; g.textAlign = 'right';
+  g.fillText('치수는 삼성스토어 카탈로그 기준 · 설치 규격은 실측 확인 필요', W - padX, H + 28);
+  return out;
+}
+
+async function shareResult(){
+  if (!state.items.length){ toast('배치한 가전이 없습니다'); return; }
+  const out = buildShareCanvas();
+  const name = `가전배치_${state.complexName ? state.complexName.replace(/\s+/g, '') + '_' : ''}${new Date().toISOString().slice(0, 10)}.png`;
+  const blob = await new Promise((r)=> out.toBlob(r, 'image/png'));
+  if (!blob){ toast('이미지를 만들지 못했습니다'); return; }
+  /*
+   * 공유 시트가 있으면 그것으로(매장에서 카톡으로 바로 보내는 것이 목적이다).
+   * 없거나 사용자가 취소하면 내려받기로 떨어진다 — 어느 기기에서도 결과는 남아야 한다.
+   */
+  const file = new File([blob], name, { type: 'image/png' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })){
+    try { await navigator.share({ files: [file], title: '가전 배치 결과' }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }   // 사용자가 취소한 것은 실패가 아니다
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+  toast('이미지로 저장했습니다');
+}
+
 /* ── 사이드 목록 ── */
 function renderSide(){
   renderRooms();
@@ -2079,13 +2239,19 @@ function renderSide(){
   } else {
     list.innerHTML = state.items.map((it)=>`
       <div class="row ${state.sel===it.id?'sel':''}" data-id="${it.id}">
-        <div class="t">${esc(it.label)}<span class="pill">${esc(it.size)}</span>${itemRoom(it)?`<span class="pill">${esc(itemRoom(it).name)}</span>`:''}</div>
+        <div class="t">${esc(it.label)}<span class="pill">${esc(it.size)}</span>${itemRoom(it)?`<span class="pill">${esc(itemRoom(it).name)}</span>`:''}${it.staged?'<span class="pill">대기</span>':''}<span class="grow"></span><button class="del" data-delitem="${it.id}" title="이 가전을 지웁니다">✕</button></div>
         <div class="m">${esc(it.model)} · ${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm</div>
         <div class="m">이격 후면 ${it.clear.back} · 좌우 ${it.clear.side}${it.clear.front?` · 전면 ${it.clear.front}`:''}mm</div>
         <div class="w ${it.warn&&it.warn.length?'':'ok'}">${it.warn&&it.warn.length?esc(it.warn.join(' / ')):'배치 가능'}</div>
         ${it.soft&&it.soft.length?`<div class="s">${esc(it.soft.join(' / '))}</div>`:''}
       </div>`).join('');
   }
+  list.querySelectorAll('button[data-delitem]').forEach((el)=>{
+    el.onclick = (e)=>{
+      e.stopPropagation();          // 줄을 누르면 선택이라 삭제와 겹친다
+      removeItem(el.dataset.delitem);
+    };
+  });
   const bad = state.items.filter((i)=>i.warn&&i.warn.length).length;
   const soft = state.items.filter((i)=>i.soft&&i.soft.length).length;
   const loop = wallLoop();
@@ -2295,7 +2461,7 @@ document.addEventListener('keydown',(e)=>{
   if (!state.sel) return;
   const it = state.items.find((x)=>x.id===state.sel); if(!it) return;
   if (e.key==='r'||e.key==='R'){ it.a += Math.PI/2; evaluate(); draw(); }
-  if (e.key==='Delete'||e.key==='Backspace'){ state.items=state.items.filter((x)=>x!==it); state.sel=null; evaluate(); draw(); }
+  if (e.key==='Delete'||e.key==='Backspace'){ removeItem(it.id); }
 });
 
 /* ── 단계별 동작 ── */
@@ -2332,6 +2498,7 @@ $('#btn-edit').onclick  = ()=>{
   hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
 };
 $('#btn-detect').onclick= ()=> startDetect();
+$('#btn-share').onclick = ()=> shareResult();
 /*
  * 벽 길이(mm)는 기본으로 끈다. 늘 떠 있으면 숫자가 도면을 덮어 "제품이 놓인 느낌"이
  * 안 보인다 — 이 도구가 보여주려는 것이 그것이다. 필요할 때만 켠다.
@@ -2503,6 +2670,9 @@ function loadFromLibrary(entry){
     state.panY = 40 - Math.min(...ys) * state.zoom;
   }
   setMode('idle'); setStep(4);
+  // 어느 단지·주택형인지 남긴다 — 결과 이미지 제목에 쓴다(상담지에 단지명이 없으면 무슨 종이인지 모른다)
+  state.complexName = entry.complex || null;
+  state.typeName = entry.type || null;
   evaluate(); renderSide(); draw();
   toast(`${entry.complex} ${entry.type} — 방 ${entry.rooms.length}곳 불러옴`);
 }
@@ -3158,6 +3328,32 @@ function findSpot(item, placed){
   return null;
 }
 
+/*
+ * ── 안 들어가면 "무엇이면 들어가는지"를 말한다 ──────────────────────
+ * 예전에는 자리를 못 찾으면 "억지로 놓지 않았습니다"로 끝났다. 그러면 상담이 거기서
+ * 멈춘다 — 고객은 "그럼 뭘 사야 하나"를 물을 참인데 도구가 답을 안 준다.
+ * 같은 카테고리·같은 라인업 안에서 **실제로 들어가는 가장 큰 사이즈**를 찾아 준다.
+ * 없는 답을 지어내지 않는다 — `findSpot` 으로 진짜 놓아 보고 되는 것만 말한다.
+ */
+function fitAlternative(it, placed){
+  const reps = (state.reps || []).filter((r)=> r.cat === it.cat);
+  if (!reps.length) return null;
+  const foot = (r)=>{ const q = r.options[0].parts[0]; return q.w * q.d; };
+  const mine = reps.find((r)=> r.size === it.size);
+  const line = mine ? mine.line : null;
+  const cands = reps
+    .filter((r)=> r.size !== it.size && (!line || r.line === line))
+    .filter((r)=> foot(r) < (mine ? foot(mine) : Infinity))
+    .sort((a,b)=> foot(b) - foot(a));            // 큰 것부터 — 되는 것 중 가장 큰 것이 답이다
+  for (const r of cands){
+    const o = r.options[0], q = o.parts[0];
+    const trial = { ...it, w:q.w, h:q.h, d:q.d, size:r.size, model:o.model, group:o.group,
+      clear: clearFor(it.cat, q.part, o.model, o.group) };
+    if (findSpot(trial, placed)) return { size:r.size, model:o.model, w:q.w, d:q.d, line:r.line };
+  }
+  return null;
+}
+
 function autoPlace(picks){
   // 폭이 큰 것부터 — 자리를 많이 먹는 제품이 먼저 벽을 잡아야 나머지가 틈에 들어간다
   const list = picks.map((q)=>({
@@ -3176,7 +3372,11 @@ function autoPlace(picks){
     const spot = findSpot(it, placed);
     if (spot){ Object.assign(it, {bx:spot.bx, by:spot.by, a:spot.a}); placed.push(it); state.items.push(it); }
     else {
-      failed.push(it.label + (itemRoom(it) ? ` (${itemRoom(it).name})` : ''));
+      const alt = fitAlternative(it, placed);
+      failed.push({
+        label: it.label + (itemRoom(it) ? ` (${itemRoom(it).name})` : ''),
+        alt,
+      });
       const q = picks.find((x)=> x.cat===it.cat && x.size===it.size && x.model===it.model);
       if (q) failedPicks.push(q);
     }
@@ -3200,8 +3400,13 @@ function autoPlace(picks){
   if (failed.length){
     sheet(`<h2>자리를 못 찾은 제품이 있습니다</h2>
       <p class="hint">아래 제품은 이격거리와 방 경계를 지키면서 놓을 자리가 없었습니다.
-        억지로 놓지 않았습니다 — 방을 넓히거나 더 작은 사이즈로 바꿔야 합니다.</p>
-      <ul style="margin:0;padding-left:18px">${failed.map((f)=>`<li>${esc(f)}</li>`).join('')}</ul>
+        억지로 놓지 않았습니다.</p>
+      <ul style="margin:0;padding-left:18px">${failed.map((f)=>`<li>${esc(f.label)}
+        ${f.alt
+          ? `<br><span style="color:#166534">→ <b>${esc(f.alt.size)}</b>는 들어갑니다
+              (${Math.round(f.alt.w)}×${Math.round(f.alt.d)}mm · ${esc(f.alt.model)})</span>`
+          : '<br><span class="hint">더 작은 사이즈로도 자리가 없습니다 — 방을 넓히거나 다른 방을 보셔야 합니다</span>'}
+      </li>`).join('')}</ul>
       <p class="hint">도면 옆에 꺼내 두면 직접 끌어다 놓을 수 있습니다 — 이격이 모자라면 그대로 경고로 알려드립니다.</p>
       <div class="modal-actions"><button id="manual">도면 옆에 꺼내기</button><button class="primary" id="ok">확인</button></div>`,
       ()=>{ $('#ok').onclick = closeSheet;
@@ -3376,7 +3581,7 @@ loadReps();
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
-  findSpot, autoPlace, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
+  findSpot, autoPlace, fitAlternative, removeItem, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
