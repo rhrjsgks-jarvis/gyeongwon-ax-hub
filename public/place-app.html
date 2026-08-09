@@ -2735,11 +2735,14 @@ async function openSelect(room){
            */
           const sp = (r.spreadW > 30 || r.spreadD > 30)
             ? ` · <span class="hint">이 사이즈 안 ${r.options.length}종 편차 폭 ±${Math.round(r.spreadW)}·깊이 ±${Math.round(r.spreadD)}mm</span>` : '';
-          // 세트 구성처럼 근거를 밝혀야 하는 항목은 note 를 그대로 띄운다
-          const nt = r.set && r.note ? `<br><span class="hint">${esc(r.note)}</span>` : '';
+          // 세트 구성·설치가이드 전용처럼 근거를 밝혀야 하는 항목은 note 를 그대로 띄운다
+          const nt = (r.set || r.guideOnly) && r.note ? `<br><span class="hint">${esc(r.note)}</span>` : '';
+          // 카탈로그에 없는 항목은 모델코드가 없다(가이드가 와일드카드로만 적는다).
+          // 빈칸을 그대로 두면 " · · " 처럼 뜨므로 자리를 대신 채운다.
+          const mc = o.model ? esc(o.model) : '<span class="hint">모델코드 미수록</span>';
           const gp = o.group ? ` <span class="hint">${esc(String(o.group).replace(/\s*\(.*$/, ''))}</span>` : '';
           el.innerHTML = `<b>가로 ${Math.round(p0.w)} · 높이 ${Math.round(p0.h)} · 깊이 ${Math.round(p0.d)}mm</b>`
-            + ` — ${esc(r.size)} ·${gp} ${esc(o.model)}${o.also.length?` 외 ${o.also.length}종`:''}${mg}${sp}`
+            + ` — ${esc(r.size)} ·${gp} ${mc}${o.also.length?` 외 ${o.also.length}종`:''}${mg}${sp}`
             + ` · 이격 후면 ${cl.back}·좌우 ${cl.side}${cl.front?`·전면 ${cl.front}`:''}mm`
             + (dz ? ` · 도어 오픈 좌우 각 ${dz.side}mm` : '')
             + (cl.weak ? ' · <span class="hint">확정되지 않은 값이 섞여 있어 실측 확인 필요</span>' : '')
