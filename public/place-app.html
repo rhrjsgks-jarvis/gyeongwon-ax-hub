@@ -1977,6 +1977,18 @@ const STACKABLE = [
   { a:/^세탁기·콤보$/, b:/^건조기$/, ok:(w)=>!isCombo(w), why:'건조기를 세탁기 위에 적층합니다' },
 ];
 /** 두 가전이 같은 자리를 차지해도 되는가 — 되면 사유를 돌려준다 */
+/*
+ * 한 번에 도는 각도. 기본은 90°(벽에 붙여 놓는 물건은 네 방향이면 충분하다)이고,
+ * **에어컨은 45°** 다 — *"에어컨의 경우 회전각이 45도 단위로 해주세요. 대각선으로 설치
+ * 많이 합니다."*(2026-08-09 사용자). 스탠드 에어컨은 거실 모서리에 비스듬히 놓는 설치가
+ * 실제로 흔한데, 90° 단위로는 그 자리를 아예 그릴 수 없다.
+ * 45° 는 90° 를 포함하므로 두 번 누르면 예전과 같은 자리가 된다.
+ */
+const ROT_STEP = { '에어컨': Math.PI / 4 };
+const rotStep = (cat)=> ROT_STEP[cat] || Math.PI / 2;
+/** 회전 버튼에 적을 각도 — 실제로 도는 만큼과 어긋나면 안 된다 */
+const rotLabel = (cat)=> Math.round(rotStep(cat) * 180 / Math.PI);
+
 function stackable(A, B){
   for (const s of STACKABLE){
     if (s.a.test(A.cat) && s.b.test(B.cat) && s.ok(A, B)) return s.why;
@@ -2499,7 +2511,7 @@ function renderMini(){
        * 실제로 "더블클릭으로 알고 있다"는 말을 들었다. 손가락으로 정확히 두 번 누르는
        * 것도 쉽지 않다. 버튼이 있으면 헤맬 일이 없다.
        */
-      + ` <button class="act" id="mini-rot">↻ 90°</button>`
+      + ` <button class="act" id="mini-rot">↻ ${rotLabel(it.cat)}°</button>`
       + `<button class="act" id="mini-del">✕ 삭제</button></span>` : '';
   el.innerHTML = `<div class="r">${bits.filter(Boolean).join('<span>·</span>')}`
     + `<span class="more" id="mini-more">자세히</span></div>${sel}`;
@@ -2510,7 +2522,7 @@ function renderMini(){
   if (ro) ro.onclick = ()=>{
     const t = state.items.find((x)=>x.id===state.sel);
     if (!t) return;
-    t.a += Math.PI/2; evaluate(); renderSide(); draw();
+    t.a += rotStep(t.cat); evaluate(); renderSide(); draw();
   };
   const de = $('#mini-del');
   if (de) de.onclick = ()=> removeItem(state.sel);
@@ -2743,7 +2755,7 @@ cv.addEventListener('pointerdown', (e)=>{
   const hit = [...state.items].reverse().find((it)=>pointIn(corners(it), wx, wy));
   if (hit){
     // 손가락 더블탭은 마우스보다 느리다 — 창을 400 → 500ms 로 넓혔다
-    if (state.sel===hit.id && ptr && Date.now()-ptr.t < 500){ hit.a += Math.PI/2; evaluate(); draw(); return; }
+    if (state.sel===hit.id && ptr && Date.now()-ptr.t < 500){ hit.a += rotStep(hit.cat); evaluate(); draw(); return; }
     state.sel = hit.id;
     state.drag = { id:hit.id, ox:wx-hit.bx, oy:wy-hit.by };
     ptr = { t:Date.now() };
@@ -2876,7 +2888,7 @@ document.addEventListener('keydown',(e)=>{
   if (t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.isContentEditable)) return;
   if (!state.sel) return;
   const it = state.items.find((x)=>x.id===state.sel); if(!it) return;
-  if (e.key==='r'||e.key==='R'){ it.a += Math.PI/2; evaluate(); draw(); }
+  if (e.key==='r'||e.key==='R'){ it.a += rotStep(it.cat); evaluate(); draw(); }
   if (e.key==='Delete'||e.key==='Backspace'){ removeItem(it.id); }
 });
 
@@ -4382,7 +4394,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
+window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, clearFor,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,

@@ -13,7 +13,13 @@
  *
  * 배포할 때마다 CACHE_VERSION을 올려 옛 캐시를 정리한다.
  */
-const CACHE_VERSION = 'axhub-v1';
+/*
+ * v2 (2026-08-09) — `size-reps.json` 의 사이즈 이름이 통째로 바뀌었다(냉장고 용량 → 도어
+ * 구성, 에어컨 냉방면적 → 설치 형태). SWR 은 **캐시가 있으면 그걸 먼저 보여주므로**
+ * 배포 직후 한 번은 옛 목록이 뜬다 — 사용자가 "아직도 그대로"라고 보게 된다.
+ * 데이터 표기를 바꿀 때는 버전을 함께 올릴 것.
+ */
+const CACHE_VERSION = 'axhub-v2';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
