@@ -22,7 +22,12 @@ const pass = (m) => console.log('OK:', m);
 const near = (a, b, tol = 0.5) => Math.abs(a - b) <= tol;
 
 const html = fs.readFileSync(path.join(root, 'public', 'place-app.html'), 'utf8');
-const reps = JSON.parse(fs.readFileSync(path.join(root, 'public', 'size-reps.json'), 'utf8'));
+const repsAll = JSON.parse(fs.readFileSync(path.join(root, 'public', 'size-reps.json'), 'utf8'));
+/*
+ * 앱(`loadReps`)이 `hidden` 을 걸러 내므로 **여기서도 같은 목록을 봐야** 검사가 실제
+ * 화면과 어긋나지 않는다. `hidden` 은 이 도구가 다룰 것이 아닌 줄이다(공기청정기 벽걸이형).
+ */
+const reps = repsAll.filter((r) => !r.hidden);
 
 const dom = new JSDOM(html, {
   runScripts: 'dangerously',
@@ -509,6 +514,37 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     st.walls = room(300, 300); st.items = [];
     if (P.fitAlternative(it, [])) fail('30×30cm 방인데 들어가는 사이즈가 있다고 한다');
     else pass('자리가 정말 없으면 대안을 지어내지 않는다');
+  }
+
+  /*
+   * ── 공기청정기는 스탠드형만 ──
+   * 벽걸이형(`AX99N4020WWD` 1050×600×130)이 목록에 있으면 도면에 사운드바 같은 긴 막대가
+   * 놓인다 — *"위에서 바라봤을 때는 작은 네모 모양이 나오는 게 정상"*(사용자).
+   * 치수가 틀린 것이 아니라 벽에 거는 물건이라서 그렇다. 청정면적이 가장 커서 대표로
+   * 뽑히는 바람에 자동 추천이 그것을 골랐다.
+   */
+  {
+    const air = reps.filter((r) => r.cat === '공기청정기');
+    const wall = air.filter((r) => /벽걸이/.test(r.size));
+    if (!air.length) fail('size-reps 에 공기청정기가 없다');
+    else if (wall.length) fail(`공기청정기에 벽걸이형이 ${wall.length}줄 남아 있다 — ${wall.map((r) => r.size).join(', ')}`);
+    else {
+      // 스탠드형은 위에서 보면 네모다. 한 변이 다른 변의 2배를 넘으면 벽걸이가 섞인 것이다
+      const flat = air.filter((r) => {
+        const p = r.parts[0];
+        return Math.max(p.w, p.d) > Math.min(p.w, p.d) * 2;
+      });
+      if (flat.length) fail(`공기청정기 발자국이 길쭉하다 — ${flat.map((r) => `${r.size}(${r.parts[0].w}×${r.parts[0].d})`).join(', ')}`);
+      else pass(`공기청정기 ${air.length}줄 전부 스탠드형 (발자국이 네모)`);
+    }
+    // 데이터에서 지운 것이 아니라 **숨긴 것**이어야 한다 — 치수와 출처는 되짚을 수 있어야 한다
+    const hiddenWall = repsAll.filter((r) => r.cat === '공기청정기' && /벽걸이/.test(r.size));
+    if (!hiddenWall.length) fail('벽걸이형이 데이터에서 통째로 사라졌다 — 숨기기만 해야 한다');
+    else if (!hiddenWall.every((r) => r.hidden === true)) fail('벽걸이형에 hidden 표시가 없다');
+    // 앱이 실제로 거르는지 — 화면에서만 숨기면 대안 제시에서 튀어나온다
+    else if (!/state\.reps = \(await r\.json\(\)\)\.filter\(\(x\)=> !x\.hidden\)/.test(html)) {
+      fail('loadReps 가 hidden 을 거르지 않는다');
+    } else pass(`벽걸이형 ${hiddenWall.length}줄은 데이터에 남고 loadReps 가 거른다`);
   }
 
   /*
