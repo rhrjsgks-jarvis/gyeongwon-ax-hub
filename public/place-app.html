@@ -134,6 +134,14 @@
   .src{font-size:11px;color:#8A9099;line-height:1.4}
   .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
   .liblist{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:10px 0}
+  /* 시·도 칩 — 지역이 17곳이라 휴대폰에서 계속 쓸어내려야 했다. 먼저 걸러 준다. */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  .chips:empty{display:none}
+  .chip{padding:9px 16px;border:1px solid var(--line);border-radius:999px;background:#fff;
+    font:600 14px system-ui;color:var(--ink);cursor:pointer}
+  .chip span{margin-left:6px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+  .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+  .chip.on span{color:rgba(255,255,255,.75)}
   .libitem{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);
     border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;font-size:13.5px}
   .libitem:hover{background:#F3F5F8}
@@ -161,7 +169,51 @@
   .pickinfo{margin:0 0 6px 31px;font-size:11px;color:var(--muted);line-height:1.4}
   .pickinfo b{color:var(--ink);font-variant-numeric:tabular-nums}
 
+  /* ⋯ 안에 접어 둔 보조 버튼 — 펼치면 도구막대 아래로 한 줄 더 내려온다 */
+  #bar-more{display:none;gap:6px;flex-wrap:wrap;width:100%;order:99;
+    padding-top:8px;margin-top:2px;border-top:1px solid var(--line)}
+  #bar.moreopen #bar-more{display:flex}
+  #bar.moreopen #btn-more{background:var(--brand);color:#fff;border-color:var(--brand)}
+  /*
+   * 하단 요약 띠 — 좁은 화면에서 오른쪽 패널이 서랍으로 숨으면 상담 중 볼 것이
+   * 도구막대 힌트 한 줄뿐이었다(사용자 지적). 늘 봐야 하는 것만 추려 상시로 띄운다.
+   * 넓은 화면에서는 오른쪽 패널이 그대로 있으므로 띄우지 않는다.
+   */
+  #mini{display:none;position:absolute;left:0;right:0;bottom:0;z-index:11;
+    background:rgba(255,255,255,.96);border-top:1px solid var(--line);
+    padding:7px 12px calc(7px + env(safe-area-inset-bottom));
+    font:12px system-ui;color:var(--muted);backdrop-filter:blur(6px)}
+  #mini .r{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  #mini b{color:var(--ink);font-size:13px}
+  #mini .warn{color:#B42318;font-weight:600}
+  #mini .ok{color:#166534;font-weight:600}
+  #mini .sel{display:block;margin-top:3px;color:var(--ink);font-variant-numeric:tabular-nums}
+  #mini .more{margin-left:auto;color:var(--brand);font-weight:600;text-decoration:underline;cursor:pointer}
   @media (max-width:760px){
+    #mini{display:block}
+    /* 초안·축척 막대가 요약 띠에 가리지 않게 위로 올린다 */
+    #draftbar{bottom:58px;left:8px;right:8px;transform:none;max-width:none}
+  }
+  @media (max-width:760px){
+    /*
+     * **좁은 화면에서는 위를 최대한 비운다.** 도면이 주인공인데 단계 표시·버튼·안내문이
+     * 화면의 1/4을 먹고 있었다(사용자 지적). 안내문은 하단 요약 띠가 대신하므로 숨기고,
+     * 단계 표시는 한 줄로 눌러 담는다.
+     */
+    #status{display:none}
+    .step{padding:6px 4px;font-size:11px;line-height:1.25}
+    .step b{font-size:10px}
+    #bar{gap:6px;padding:8px 10px}
+    #bar button{padding:9px 12px;font-size:13px}
+    #btn-side{margin-left:auto}
+    /*
+     * 단지 고르기는 **목록을 쓸어 넘기는 화면**이다. 좁은 화면에서 설명·칩·버튼이
+     * 자리를 먹어 목록이 두 칸밖에 안 보였다. 시트를 거의 전체 높이로 열고
+     * 남는 자리를 전부 목록에 준다.
+     */
+    .sheet{max-height:94%;padding:14px}
+    .liblist{max-height:none;flex:1;min-height:34vh}
+    .libitem{padding:13px 12px}
     #side{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
       transition:transform .2s;z-index:15;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
     #side.on{transform:none}
@@ -181,18 +233,26 @@
 
   <div id="bar">
     <input type="file" id="file" accept="image/*" hidden>
+    <!--
+      상담 한 번에 반드시 쓰는 것만 밖에 둔다: 도면을 불러오고(단지·이미지),
+      가전을 고르고, 결과를 남긴다. 나머지는 "가끔 손볼 때" 쓰는 것이라 ⋯ 안으로 넣는다.
+      매장 기기가 휴대폰이면 열두 개가 두 줄로 접혀 도면이 밀려 올라간다.
+    -->
     <button id="btn-lib" class="primary">단지 불러오기</button>
     <button id="btn-img">도면 이미지</button>
-    <button id="btn-scale">축척 맞추기</button>
-    <button id="btn-detect">벽 자동 인식</button>
-    <button id="btn-clean" class="ghost" title="알고리즘이 보고 있는 정리본을 겹쳐 봅니다">◧</button>
-    <button id="btn-dims" class="ghost" title="벽 길이(mm) 표시">↔</button>
-    <button id="btn-wall">벽 그리기</button>
-    <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
-    <button id="btn-save" class="ghost" title="지금 잡은 방을 단지로 등록합니다">이 단지 저장</button>
     <button id="btn-add">가전 선택</button>
-    <button id="btn-share" class="ghost" title="배치 결과를 이미지로 저장하거나 공유합니다">결과 저장</button>
-    <button id="btn-auto" class="primary">주방 배치 추천</button>
+    <button id="btn-share">결과 저장</button>
+    <button id="btn-more" class="ghost" title="도면·벽 손보기">⋯</button>
+    <span class="more" id="bar-more">
+      <button id="btn-scale">축척 맞추기</button>
+      <button id="btn-detect">벽 자동 인식</button>
+      <button id="btn-wall">벽 그리기</button>
+      <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
+      <button id="btn-auto">주방 배치 추천</button>
+      <button id="btn-save" class="ghost" title="지금 잡은 방을 단지로 등록합니다">이 단지 저장</button>
+      <button id="btn-clean" class="ghost" title="알고리즘이 보고 있는 정리본을 겹쳐 봅니다">◧ 정리본</button>
+      <button id="btn-dims" class="ghost" title="벽 길이(mm) 표시">↔ 치수</button>
+    </span>
     <span class="grow"></span>
     <span class="hint" id="status">도면 없이 벽만 그려도 됩니다</span>
     <button id="btn-side" class="ghost" title="목록">☰</button>
@@ -207,6 +267,7 @@
         <span>도면이 없으면 <b>벽 그리기</b>로 방 크기를 직접 입력해도 됩니다.</span>
       </div>
       <div id="draftbar"></div>
+      <div id="mini"></div>
       <div id="modal"><div class="sheet" id="sheet"></div></div>
     </div>
 
@@ -2243,8 +2304,39 @@ async function shareResult(){
 }
 
 /* ── 사이드 목록 ── */
+/*
+ * 하단 요약 — **상담 중 눈을 떼지 않고 확인해야 하는 것만** 넣는다.
+ * 어느 집인지 · 축척이 잡혔는지 · 공간과 가전이 몇인지 · 문제가 있는지.
+ * 고른 가전이 있으면 그 치수와 이격을 한 줄 더 붙인다 — 상담에서 가장 많이 읽는 값이다.
+ */
+function renderMini(){
+  const el = $('#mini'); if (!el) return;
+  const bad = state.items.filter((i)=>i.warn && i.warn.length).length;
+  const soft = state.items.filter((i)=>i.soft && i.soft.length).length;
+  const staged = state.items.filter((i)=>i.staged).length;
+  const area = planAreaM2();
+  const who = planLabel();
+  const bits = [];
+  if (who) bits.push(`<b>${esc(state.complexName ? state.complexName + ' ' + (state.typeName||'') : who)}</b>`);
+  bits.push(state.scaled ? '축척 확정' : '<span class="warn">축척 미확정</span>');
+  if (state.rooms.length) bits.push(`공간 ${state.rooms.length}곳${area ? ` · ${area.toFixed(0)}㎡` : ''}`);
+  bits.push(`가전 ${state.items.length}대${staged ? ` (대기 ${staged})` : ''}`);
+  bits.push(bad ? `<span class="warn">확인 필요 ${bad}건</span>`
+    : (state.items.length ? '<span class="ok">문제 없음</span>' : ''));
+  if (soft) bits.push(`주의 ${soft}건`);
+  const it = state.items.find((x)=>x.id===state.sel);
+  const sel = it ? `<span class="sel">${esc(it.label)} · ${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm`
+      + ` · 이격 후면 ${it.clear.back}·좌우 ${it.clear.side}mm`
+      + `${it.warn && it.warn.length ? ` · <span class="warn">${esc(it.warn.join(' / '))}</span>` : ''}</span>` : '';
+  el.innerHTML = `<div class="r">${bits.filter(Boolean).join('<span>·</span>')}`
+    + `<span class="more" id="mini-more">자세히</span></div>${sel}`;
+  const mo = $('#mini-more');
+  if (mo) mo.onclick = ()=> $('#side').classList.add('on');
+}
+
 function renderSide(){
   renderRooms();
+  renderMini();
   const list = $('#list');
   if (!state.items.length){
     list.innerHTML = '<p class="hint" style="padding:10px">아직 배치한 가전이 없습니다.</p>';
@@ -2524,6 +2616,7 @@ $('#btn-edit').onclick  = ()=>{
   if (!state.rooms.length){ toast('먼저 공간을 하나 이상 지정해주세요'); return; }
   hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
 };
+$('#btn-more').onclick  = ()=> $('#bar').classList.toggle('moreopen');
 $('#btn-detect').onclick= ()=> startDetect();
 $('#btn-share').onclick = ()=> shareResult();
 /*
@@ -2756,6 +2849,14 @@ async function loadPlanIndex(){
 async function openLibrary(){
   const [idx, saved] = await Promise.all([loadPlanIndex(), libraryAll()]);
   let lv = 'region', region = null, cx = null;
+  /*
+   * **시·도를 먼저 고르게 한다.**
+   * 지역이 17곳이라 휴대폰에서는 한 화면에 안 들어가 계속 쓸어내려야 했다
+   * (사용자 지적). 지역 이름이 "경기 평택"·"강원 원주" 꼴이라 앞 토막이 곧 시·도다.
+   * 칩으로 걸러 두면 경기 14곳 / 강원 5곳이 되어 한 화면에 들어온다.
+   */
+  const sidoOf = (r) => (String(r).split(' ')[0] || '기타');
+  let sido = null;
 
   const uniq = (a) => [...new Set(a)].sort((x, y) => x.localeCompare(y, 'ko'));
   // 도면이 있는 단지 + 방만 저장된 단지를 함께 보여 준다
@@ -2772,12 +2873,29 @@ async function openLibrary(){
       : `<a href="#" data-go="region">지역</a> › <a href="#" data-go="complex">${esc(region)}</a> › <b>${esc(cx.complex)}</b>`;
 
     let items = [];
+    // 시·도 칩은 지역 단계에서만 띄운다
+    const chipBox = $('#libchips');
+    if (chipBox) chipBox.innerHTML = '';
     if (lv === 'region') {
-      items = regions().map((r) => {
+      const sidos = [...new Set(regions().map(sidoOf))]
+        .sort((a,b)=> regions().filter((r)=>sidoOf(r)===b).length - regions().filter((r)=>sidoOf(r)===a).length);
+      if (sido === null || !sidos.includes(sido)) sido = sidos[0] || null;
+      if (chipBox && sidos.length > 1) {
+        chipBox.innerHTML = sidos.map((sd)=>{
+          const n = regions().filter((r)=>sidoOf(r)===sd).length;
+          return `<button class="chip${sd===sido?' on':''}" data-sido="${esc(sd)}">${esc(sd)}<span>${n}</span></button>`;
+        }).join('');
+        chipBox.querySelectorAll('.chip').forEach((c)=>{
+          c.onclick = ()=>{ sido = c.dataset.sido; render(); };
+        });
+      }
+      items = regions().filter((r)=> !sido || sidoOf(r) === sido).map((r) => {
         const cs = idx.filter((c) => c.region === r);
         const n = cs.reduce((s, c) => s + c.plans.length, 0)
           + savedOnly.filter((e) => (e.region || '지역 미지정') === r).length;
-        return `<button class="libitem" data-v="${esc(r)}"><b>${esc(r)}</b>
+        // 칩에서 시·도를 이미 골랐으니 목록에는 시·군만 적는다 — 줄이 짧아야 눈에 잘 들어온다
+        const shortName = sido && r.startsWith(sido + ' ') ? r.slice(sido.length + 1) : r;
+        return `<button class="libitem" data-v="${esc(r)}"><b>${esc(shortName)}</b>
           <span class="hint">단지 ${cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length}곳 · 도면 ${n}장</span></button>`;
       });
     } else if (lv === 'complex') {
@@ -2860,8 +2978,9 @@ async function openLibrary(){
   };
 
   sheet(`<h2>단지 고르기</h2>
-    <p class="hint">지역 → 단지 → 도면 순으로 고릅니다. 전에 방을 저장해 둔 도면은 방까지 그대로 복원됩니다.</p>
+    <p class="hint">지역 → 단지 → 도면 순으로 고릅니다. 저장해 둔 도면은 방까지 복원됩니다.</p>
     <div id="libcrumb" class="crumb"></div>
+    <div id="libchips" class="chips"></div>
     <div id="libbody" class="liblist"></div>
     <div class="modal-actions"><button id="libexp">내보내기(JSON)</button><button id="c">닫기</button></div>`,
     () => {
