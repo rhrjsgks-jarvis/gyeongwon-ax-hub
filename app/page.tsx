@@ -500,8 +500,8 @@ export default function Home() {
       {/* 헤더 */}
       <div className="mb-4">
         <p className="text-xs text-gray-400 mb-1 min-h-4">{todayStr}</p>
-        <h1 className="text-2xl font-black text-gray-900">경원 AX 허브</h1>
-        <p className="text-sm text-gray-500 mt-1">영업지원 AI 도구 통합 플랫폼</p>
+        <h1 className="text-2xl font-black text-gray-900">세일즈 코파일럿</h1>
+        <p className="text-sm text-gray-500 mt-1">매장 상담의 모든 답을 한 곳에</p>
       </div>
 
       {/* 통합검색 — 제품·카테고리·기능을 한 번에 찾아 해당 모듈로 연결한다 */}

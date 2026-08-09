@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import SamsungWordmark from './SamsungWordmark'
 
 const NAV_ITEMS = [
   { href: '/',        label: '허브',      icon: '🏠' },
@@ -67,12 +68,13 @@ export default function Navigation() {
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 shadow-md"
       >
         <Link href="/" className="flex items-center gap-2 text-white no-underline">
-          <span className="text-xl font-black tracking-tight">SAMSUNG</span>
+          {/* 공식 워드마크 — 글꼴로 친 "SAMSUNG" 은 글자 모양이 달라 로고가 아니다 */}
+          <SamsungWordmark height={17} />
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded-full"
+            className="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
             style={{ background: 'rgba(255,255,255,0.2)' }}
           >
-            경원 AX 허브
+            세일즈 코파일럿
           </span>
         </Link>
         <span className="text-white text-xs opacity-60">경원영업팀</span>

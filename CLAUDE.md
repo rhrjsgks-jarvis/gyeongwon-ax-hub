@@ -1,6 +1,18 @@
-# 경원 AX 허브 (gyeongwon-ax-hub)
+# 세일즈 코파일럿 (gyeongwon-ax-hub)
 
 경원영업팀(삼성 가전 영업)을 위한 세일즈 지원 도구. Next.js 14 App Router.
+
+**이름은 '세일즈 코파일럿'이다**(2026-08-10 변경, 옛 이름 '경원 AX 허브').
+상담사를 대체하는 것이 아니라 **옆자리에서 같이 나는 부조종사**라는 뜻이고, 이 도구가 실제로
+하는 일이 그렇다 — 답을 대신 말하지 않고 근거를 꺼내 준다. 저장소 이름(`gyeongwon-ax-hub`)과
+Vercel 프로젝트명은 그대로다(주소를 바꾸면 시범운영 중인 매장 링크가 끊긴다).
+화면에 이름이 나오는 곳: `app/layout.tsx`(title·og) · `app/page.tsx`(h1) ·
+`components/Navigation.tsx` · `app/admin/page.tsx` · `components/FeedbackButton.tsx`.
+
+**삼성 워드마크는 글꼴이 아니라 SVG 패스다**(`components/SamsungWordmark.tsx`).
+`font-black` 으로 친 "SAMSUNG" 은 로고가 아니다 — 공식 워드마크는 전용 레터폼이라
+A 에 가로획이 없고 U 가 아래로 열려 있다. 색은 `currentColor` 로 두어 남색 바 위에서는
+흰색, 흰 바탕에서는 삼성 블루(#1428A0, 원본 색과 같다)로 쓴다.
 GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파일은 Claude Code가 세션마다 자동으로 읽는 프로젝트 메모리다.
 
 ## 배포 파이프라인

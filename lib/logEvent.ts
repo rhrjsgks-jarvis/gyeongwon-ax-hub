@@ -1,5 +1,5 @@
 /**
- * 경원 AX 허브 — 사용 로그 유틸리티
+ * 세일즈 코파일럿 — 사용 로그 유틸리티
  * localStorage 적재 + Google Apps Script 웹훅(옵션)
  */
 

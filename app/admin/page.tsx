@@ -181,7 +181,7 @@ export default function AdminPage() {
           </button>
         </div>
         <p className="text-xs text-blue-200">
-          경원 AX 허브 · 사용 현황 · {teamWide ? '팀 전체 집계 (Google Sheets 연동)' : 'localStorage 기반 · 이 기기에서만 누적'}
+          세일즈 코파일럿 · 사용 현황 · {teamWide ? '팀 전체 집계 (Google Sheets 연동)' : 'localStorage 기반 · 이 기기에서만 누적'}
         </p>
         <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
           허브 메인화면 조회수는 집계에서 제외됩니다 (모든 모듈의 진입점이라 실사용 신호가 아님)
@@ -313,7 +313,7 @@ export default function AdminPage() {
             <span className="font-bold text-base">AI 업무 효율화 효과</span>
           </div>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
-            경원 AX 허브 도입 전·후 업무 시간 비교 (팀원 1인 기준)
+            세일즈 코파일럿 도입 전·후 업무 시간 비교 (팀원 1인 기준)
           </p>
         </div>
 

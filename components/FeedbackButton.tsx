@@ -151,7 +151,7 @@ export default function FeedbackButton() {
               <>
                 <h3 className="font-bold text-sm text-gray-800 mb-1">💬 건의사항 보내기</h3>
                 <p className="text-xs text-gray-400 mb-3">
-                  AX 허브 사용 중 불편한 점이나 아이디어를 자유롭게 남겨주세요.
+                  세일즈 코파일럿 사용 중 불편한 점이나 아이디어를 자유롭게 남겨주세요.
                 </p>
                 <textarea
                   value={message}

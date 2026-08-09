@@ -5,14 +5,14 @@ import FeedbackButton from '@/components/FeedbackButton'
 import ServiceWorker from '@/components/ServiceWorker'
 
 export const metadata: Metadata = {
-  title: '경원 AX 허브',
+  title: '세일즈 코파일럿',
   description: '경원영업팀 AI 영업지원 도구 통합 플랫폼',
   manifest: '/manifest.json',
   themeColor: '#1428A0',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: '경원 AX 허브',
+    title: '세일즈 코파일럿',
   },
 }
 
