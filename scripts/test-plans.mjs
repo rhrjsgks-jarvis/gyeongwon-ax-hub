@@ -540,7 +540,7 @@ for (const plan of PLANS) {
           fsel.selectedIndex = si;
           fsel.dispatchEvent(new Event('change', { bubbles: true }));
           const txt = (document.querySelector('p[data-info="냉장고"]') || {}).textContent || '';
-          out.setNote = /595㎜ × 4대/.test(txt) && /제품 간 10㎜/.test(txt) && /냉장고장 내경/.test(txt);
+          out.setNote = /595㎜ × 4대/.test(txt) && /제품 간 6㎜/.test(txt) && /냉장고장 내경/.test(txt);
           out.setInfo = txt.slice(0, 200);
         }
       }
