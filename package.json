@@ -23,6 +23,7 @@
     "test:sizereps": "node scripts/test-sizereps.mjs",
     "test:place": "node scripts/test-place.mjs",
     "test:plans": "node scripts/test-plans.mjs",
+    "test:real": "node scripts/test-real.mjs",
     "build:plans": "node scripts/build-plan-index.mjs"
   },
   "dependencies": {
