@@ -645,70 +645,72 @@ for (const plan of PLANS) {
 }
 
 /*
- * ── 도면을 올리면 가장 넓은 방(거의 언제나 거실)을 잡는가 ──
- * 예전에는 이미지 한가운데 한 점만 찔러 봤다. 도면 가운데가 늘 거실은 아니라
- * **주방이 잡히면 뒤이어 묻는 "가장 긴 벽"도 주방 벽이 되고, 축척이 그 한 값에서 나오므로
- * 도면 전체 치수가 어긋난다**(사용자 지적).
- * 가운데가 주방인 배치를 만들어 놓고, 거실을 고르는지 본다.
+ * ── 축척 기준: 안방의 가로 벽 ──
+ * 사용자가 정한 기준이다 — *"거실 크기는 몰라도 안방 치수는 알고 있다"*,
+ * *"대부분의 도면 기준으로 가로 길이 벽으로 지정한다"*.
+ *
+ * 두 가지가 지켜져야 한다:
+ *  ① **가장 넓은 방(거실)이 아니라 안방**을 기본으로 잡을 것.
+ *     닫힌 주방은 길쭉해서 넓이만 보면 안방보다 클 수 있으므로 **네모난 방**을 앞세운다.
+ *  ② 기준 벽이 **가로**일 것. 안방 치수는 상담에서 가로로 이야기하므로,
+ *     세로 벽을 재면 고객이 아는 숫자와 어긋나 축척이 통째로 틀어진다.
  */
 {
   const r = await page.evaluate(async () => {
     const P = window.__place;
-    // 좌측 큰 거실(폭 ~292px) · 가운데 좁은 주방(폭 ~192px) · 우측 침실 둘
-    // 이미지 한가운데(450,320)는 주방 안에 떨어진다.
+    // 좌측 거실(292×512, 길쭉) · 우측 위 안방(312×292, 네모) · 우측 아래 침실(312×212)
     const c = document.createElement('canvas'); c.width = 900; c.height = 640;
     const g = c.getContext('2d');
     g.fillStyle = '#FFF'; g.fillRect(0, 0, 900, 640);
     g.fillStyle = '#F1EAD9'; g.fillRect(60, 60, 780, 520);
     g.strokeStyle = '#222'; g.lineWidth = 9; g.strokeRect(60, 60, 780, 520);
     g.beginPath(); g.moveTo(360, 60); g.lineTo(360, 580); g.stroke();
-    g.beginPath(); g.moveTo(560, 60); g.lineTo(560, 580); g.stroke();
-    g.beginPath(); g.moveTo(560, 320); g.lineTo(840, 320); g.stroke();
+    g.beginPath(); g.moveTo(520, 60); g.lineTo(520, 580); g.stroke();
+    g.beginPath(); g.moveTo(520, 360); g.lineTo(840, 360); g.stroke();
     const url = c.toDataURL();
     await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 900); }; im.src = url; });
-    await new Promise((res) => setTimeout(res, 2500));
+    await new Promise((res) => setTimeout(res, 2600));
 
     const area = (poly) => { let a = 0; for (let i = 0; i < poly.length; i++){ const [x1,y1]=poly[i],[x2,y2]=poly[(i+1)%poly.length]; a += x1*y2-x2*y1; } return Math.abs(a)/2; };
-    const box = (poly) => { const xs = poly.map((q)=>q[0]); return { w: Math.max(...xs) - Math.min(...xs), x1: Math.min(...xs) }; };
-    const center = P.detectRoomAt(450, 320);          // 예전 방식이 잡던 것
-    const draft = P.state.draft;
+    const bb = (poly) => { const xs = poly.map((q)=>q[0]), ys = poly.map((q)=>q[1]);
+      return { w: Math.max(...xs)-Math.min(...xs), h: Math.max(...ys)-Math.min(...ys), x1: Math.min(...xs) }; };
+    const d = P.state.draft;
     const out = {
-      centerW: center.poly ? Math.round(box(center.poly).w) : null,
-      picked: draft ? { w: Math.round(box(draft).w), x1: Math.round(box(draft).x1), a: Math.round(area(draft)) } : null,
-      centerA: center.poly ? Math.round(area(center.poly)) : null,
       cands: (P.state.roomCands || []).map((c) => Math.round(c.a)),
+      candIdx: P.state.candIdx,
+      draft: d ? { a: Math.round(area(d)), w: Math.round(bb(d).w), h: Math.round(bb(d).h), x1: Math.round(bb(d).x1) } : null,
+      hasNext: !!document.querySelector('#d-next'),
     };
-    /*
-     * 축척 기준을 **다른 방(안방)으로 옮길 수 있어야 한다.**
-     * 고객이 아는 치수는 거실보다 안방인 경우가 많다. 다만 '안방'을 기하학만으로 찍어낼 수는
-     * 없어(주방이 닫힌 도면에서는 2번째로 넓은 방이 주방이다) 넓은 순으로 넘겨 가며 고르게 한다.
-     */
-    const nx = document.querySelector('#d-next');
-    out.hasNext = !!nx;
-    if (nx) {
-      const at0 = JSON.stringify(P.state.draftAt);
-      nx.click();
-      out.stepped = { idx: P.state.candIdx, moved: JSON.stringify(P.state.draftAt) !== at0,
-        a: P.state.draft ? Math.round(area(P.state.draft)) : null };
+    // 확정 → 이름 → 길이 묻기까지 가서 실제 기준 벽을 본다
+    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => x.textContent.trim() === '이 공간 확정');
+    if (ok) {
+      ok.click();
+      await new Promise((res) => setTimeout(res, 500));
+      const nb = document.querySelector('#sheet .modal-actions button.primary');
+      if (nb) nb.click();
+      await new Promise((res) => setTimeout(res, 600));
+      const m = P.state.measureSeg;
+      if (m) out.seg = { dx: Math.round(Math.abs(m.x2 - m.x1)), dy: Math.round(Math.abs(m.y2 - m.y1)) };
     }
     return out;
   });
 
-  if (!r.picked) fail('도면을 올렸는데 초안이 안 잡혔다');
-  else if (r.picked.a <= r.centerA) {
-    fail(`가운데(주방 ${r.centerA}px²)보다 넓은 방을 못 골랐다 (고른 것 ${r.picked.a}px²)`);
-  } else if (r.picked.x1 > 200) {
-    fail(`왼쪽 거실이 아니라 x=${r.picked.x1} 에서 시작하는 방을 골랐다`);
-  } else if (r.cands.length < 3) {
-    fail(`후보 방이 ${r.cands.length}개 — 이 도면은 거실·주방·침실2 로 4곳이라 넘겨 고를 수 있어야 한다`);
-  } else if (r.cands.some((a, i) => i && a > r.cands[i - 1])) {
-    fail(`후보가 넓은 순이 아니다: ${r.cands}`);
-  } else if (!r.hasNext) fail("'다른 방 ▸' 버튼이 없다 — 축척 기준을 안방으로 옮길 방법이 없다");
-  else if (!r.stepped.moved || r.stepped.idx !== 1) {
-    fail(`'다른 방 ▸' 를 눌렀는데 후보가 안 바뀐다 (idx ${r.stepped.idx})`);
+  if (!r.draft) fail('도면을 올렸는데 초안이 안 잡혔다');
+  else if (r.cands.length < 2) fail(`후보 방이 ${r.cands.length}개 — 넘겨 고를 수 있어야 한다`);
+  else if (r.cands.some((a, i) => i && a > r.cands[i - 1])) fail(`후보가 넓은 순이 아니다: ${r.cands}`);
+  else if (r.candIdx === 0) {
+    fail(`가장 넓은 방(거실 ${r.cands[0]}px²)을 기준으로 잡았다 — 안방이어야 한다`);
+  } else if (r.draft.x1 < 400) {
+    fail(`왼쪽 거실(x=${r.draft.x1})을 잡았다 — 오른쪽 안방이어야 한다`);
+  } else if (Math.max(r.draft.w, r.draft.h) / Math.min(r.draft.w, r.draft.h) >= 2) {
+    fail(`잡은 방이 길쭉하다 (${r.draft.w}×${r.draft.h}) — 네모난 안방을 골라야 한다`);
+  } else if (!r.hasNext) fail("'다른 방 ▸' 버튼이 없다 — 자동이 틀렸을 때 바로잡을 수 없다");
+  else if (!r.seg) fail('길이 묻기 단계에서 기준 벽이 표시되지 않았다');
+  else if (r.seg.dx <= r.seg.dy) {
+    fail(`기준 벽이 세로다 (Δx ${r.seg.dx} · Δy ${r.seg.dy}) — 가로 벽이어야 한다`);
   } else {
-    pass(`도면을 올리면 가장 넓은 방을 잡는다 — 가운데는 주방(폭 ${r.centerW}px) 이지만 `
-      + `거실(폭 ${r.picked.w}px)을 골랐고, 후보 ${r.cands.length}곳을 넓은 순으로 넘겨 고를 수 있다`);
+    pass(`축척 기준 = 안방의 가로 벽 — 후보 ${r.cands.length}곳 중 ${r.candIdx + 1}번(${r.draft.w}×${r.draft.h}, 네모)을 잡고 `
+      + `가로 벽 ${r.seg.dx}px 를 잰다 (거실 ${r.cands[0]}px² 는 건너뜀)`);
   }
 }
 
