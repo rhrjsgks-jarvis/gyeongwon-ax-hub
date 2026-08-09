@@ -2005,8 +2005,16 @@ function draw(){
     ctx.drawImage(im, x, y, state.imgW*k, state.imgH*k);
     ctx.globalAlpha = 1;
   };
-  if (state.img) drawPlan(state.img, 1);
-  if (state.showClean && state.cleanCv) drawPlan(state.cleanCv, .55);
+  /*
+   * **이미지와 벽은 반드시 같은 월드 좌표로 그린다.**
+   * `mmPerPx` 를 알면 그것으로, 아직 축척을 안 맞췄으면 이미지 픽셀이 곧 월드 단위다.
+   * 그런데 **축척은 맞췄는데(mm 월드) 이미지의 mm/px 는 모르는** 상태가 있다
+   * (저장된 방만 복원한 경우). 그때 이미지를 그리면 1px=1mm 로 그려져 도면이
+   * 구석 썸네일이 된다 — 그리지 않는 것이 맞다.
+   */
+  const canDrawPlan = state.img && (state.mmPerPx || !state.scaled);
+  if (canDrawPlan) drawPlan(state.img, 1);
+  if (canDrawPlan && state.showClean && state.cleanCv) drawPlan(state.cleanCv, .55);
 
   // 방 — 이름과 넓이를 도면 위에 적는다. 어느 방에 무엇을 놓는지가 이 도구의 핵심이라
   // 화면만 보고도 방을 구분할 수 있어야 한다.
@@ -2360,9 +2368,18 @@ function renderSide(){
   const soft = state.items.filter((i)=>i.soft&&i.soft.length).length;
   const loop = wallLoop();
   const opensN = state.walls.filter((w)=>w.open).length;
+  /*
+   * **한 공간이 세대 전체 크기면 방이 안 나뉜 것이다.**
+   * 문이 전부 열린 채 그려진 도면에서 닫기 반경이 모자라면 세대 전체가 방 하나로 잡힌다
+   * (CLAUDE.md "반경 0에서 세대 전체가 방 하나로 잡혔다"). 그 상태로 이름만 붙여 저장하면
+   * 나중에 "거실 51.9㎡"처럼 보이는데, 52㎡ 세대의 거실이 52㎡일 수는 없다.
+   * 전용면적을 아는 경우에만 짚어 준다 — 근거 없이 경고하지 않는다.
+   */
+  const whole = state.exclusiveM2 && state.rooms.find((r)=> roomArea(r)/1e6 >= state.exclusiveM2 * 0.9);
   const roomLine = state.rooms.length
     ? row('ok', `공간 ${state.rooms.length}곳 — ` + state.rooms.map((r)=>`${r.name} ${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?`(${r.parts.length}조각)`:''}`).join(' · ')
-        + (opensN?` · 개구부 ${opensN}곳`:''))
+        + (opensN?` · 개구부 ${opensN}곳`:'')
+        + (whole?` — <b>${esc(whole.name)}가 세대 전체(전용 ${state.exclusiveM2}㎡) 크기입니다. 방이 나뉘지 않았을 수 있어요 — '더 좁게'로 다시 인식해 보세요</b>`:''))
     : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가'));
   $('#report').innerHTML = [
     row(state.scaled?'ok':'warn', state.mmPerPx ? `축척 확정 (도면 1px = ${state.mmPerPx.toFixed(2)}mm)` : (state.scaled ? '축척 확정 (벽 실제 길이 입력 기준)' : '축척 미확정 — 벽을 그리고 실제 길이를 입력하세요')),
@@ -2789,6 +2806,12 @@ function saveToLibrary(region, complex, type){
   const entry = {
     region: region || '', complex, type,
     addedAt: new Date().toISOString().slice(0, 10),
+    /*
+     * **그때 쓰던 도면 축척을 함께 남긴다.** 방 좌표는 mm 라 그것만으로 복원되지만,
+     * 나중에 같은 도면을 다시 띄우려면 "이 이미지 1px 이 몇 mm 였는지"를 알아야
+     * 방과 도면이 같은 자로 그려진다. 없으면 도면은 못 띄우고 방만 복원한다.
+     */
+    mmPerPx: state.mmPerPx || null,
     rooms: state.rooms.map((r) => ({
       name: r.name,
       parts: r.parts.map((p) => ({
@@ -2812,7 +2835,15 @@ function loadFromLibrary(entry){
   state.img = null; state.imgW = state.imgH = 0;
   state.mask = state.baseMask = state.cleanCv = null; state.sealCache = null;
   state.items = []; state.rooms = []; state.walls = [];
-  state.mmPerPx = 1; state.scaled = true;        // 좌표가 이미 mm 라 축척 보정이 필요 없다
+  /*
+   * **`mmPerPx` 에 1 을 넣지 말 것.**
+   * 이 값의 뜻은 "도면 이미지 1px 이 몇 mm 인가"이지 "월드 단위가 mm 인가"가 아니다.
+   * 1 을 넣으면 1,000px 짜리 도면이 **가로 1m** 로 그려져 화면 구석 썸네일이 된다
+   * (사용자 지적: 도면은 50px 썸네일, 방만 크게). 저장된 좌표가 이미 mm 라는 사실은
+   * `scaled = true` 하나로 충분하다. 도면 이미지의 축척은 **따로** 아는 값이 있을 때만 쓴다.
+   */
+  state.mmPerPx = (entry && +entry.mmPerPx) || null;
+  state.scaled = true;
   for (const r of entry.rooms) {
     const room = { id: 'r' + Math.random().toString(36).slice(2, 8), name: r.name,
                    parts: r.parts.map((p) => ({ walls: p.walls.map((w) => ({ ...w })) })) };
@@ -2960,9 +2991,21 @@ async function openLibrary(){
           useImage(b.dataset.file, () => {
             state.exclusiveM2 = excl || null;
             if (s) {
+              /*
+               * 저장된 방(월드 mm)과 도면 이미지(이미지 px)를 같은 화면에 올리려면
+               * **이 이미지 1px 이 몇 mm 인지**를 알아야 한다. 모르면 이미지를 띄우지
+               * 않는다 — 틀린 크기로 겹쳐 보이는 것이 안 보이는 것보다 나쁘다.
+               * 저장할 때 남긴 값이 가장 정확하고, 없으면 색인의 자동 판독값을 쓴다.
+               */
               const keep = { img: state.img, imgW: state.imgW, imgH: state.imgH };
               loadFromLibrary(s);
-              state.img = keep.img; state.imgW = keep.imgW; state.imgH = keep.imgH;
+              const px = (+s.mmPerPx) || mmpx || 0;
+              if (px) {
+                state.mmPerPx = px;
+                state.img = keep.img; state.imgW = keep.imgW; state.imgH = keep.imgH;
+              } else {
+                toast('저장된 방만 복원했습니다 — 이 도면의 축척을 몰라 이미지는 띄우지 않았습니다');
+              }
             } else if (mmpx) {
               /*
                * 도면에 인쇄된 치수로 미리 구해 둔 축척이 있으면 채워 놓고 바로 인식 단계로 간다.
