@@ -242,6 +242,8 @@
     <button id="btn-img">도면 이미지</button>
     <button id="btn-add">가전 선택</button>
     <button id="btn-share">결과 저장</button>
+    <button id="btn-back" class="ghost" title="뒤로">←</button>
+    <button id="btn-fit" class="ghost" title="도면이 화면에 들어오게 맞춥니다">⤢</button>
     <button id="btn-more" class="ghost" title="도면·벽 손보기">⋯</button>
     <span class="more" id="bar-more">
       <button id="btn-scale">축척 맞추기</button>
@@ -1760,6 +1762,7 @@ function showDraftBar(auto, prevArea){
         <button id="d-cancel">담은 것 비우기</button>
         <button id="d-ok" class="primary">${more.length}개로 확정</button>
       </div>`;
+    if (!bar.classList.contains('on')) pushBack();   // 휴대폰 뒤로가기가 앱이 아니라 이 막대를 닫도록
     bar.classList.add('on');
     $('#d-cancel').onclick = ()=>{ state.draftMore = []; hideDraftBar(); setMode('detect'); draw(); };
     $('#d-ok').onclick = ()=> nameRoomSheet();
@@ -1794,6 +1797,7 @@ function showDraftBar(auto, prevArea){
       <button id="d-draw">직접 그리기</button>
       <button id="d-ok" class="primary">${more.length ? `${more.length + 1}개로 확정` : '이 공간 확정'}</button>
     </div>`;
+  if (!bar.classList.contains('on')) pushBack();   // 휴대폰 뒤로가기가 앱이 아니라 이 막대를 닫도록
   bar.classList.add('on');
   if (delta){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); }
 
@@ -2562,7 +2566,61 @@ const esc = (s) => String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>'
 
 /* ── 입력 ─────────────────────────────────────────────────────── */
 let ptr = null;
+/*
+ * ── 두 손가락으로 확대·축소·이동 ────────────────────────────────
+ * 한 손가락은 **모드가 정한 일**을 한다(방 인식·축척 점 찍기·벽 그리기·가전 끌기).
+ * 그래서 도면을 올린 직후처럼 detect 모드일 때는 한 손가락으로 팬을 할 수가 없어
+ * 도면이 화면 밖으로 나가면 되돌릴 방법이 없었다(사용자 지적).
+ * **두 손가락은 모드와 상관없이 언제나 확대·축소·이동**으로 쓴다 — 지도 앱과 같다.
+ */
+const ptrs = new Map();
+let pinch = null;
+let preTouch = null;      // 첫 손가락이 저지른 것을 되돌리기 위한 직전 상태
+const clampZoom = (z) => Math.max(0.005, Math.min(8, z));
+function pinchStart(){
+  const [a, c] = [...ptrs.values()];
+  const mx = (a.x + c.x) / 2, my = (a.y + c.y) / 2;
+  const [wx, wy] = toWorld(mx, my);
+  pinch = { d0: Math.hypot(a.x - c.x, a.y - c.y) || 1, z0: state.zoom, wx, wy };
+  state.drag = null;                     // 끌던 것이 있으면 놓는다
+  // 첫 손가락이 시작해 버린 것을 되돌린다 — 두 손가락은 확대·이동이지 방 인식이 아니다
+  if (preTouch){
+    state.draft = preTouch.draft; state.draftEdges = preTouch.draftEdges;
+    state.draftStep = preTouch.draftStep; state.draftAt = preTouch.draftAt;
+    state.scalePts = preTouch.scalePts; state.wallPts = preTouch.wallPts;
+    if (!preTouch.barOn) $('#draftbar').classList.remove('on');
+    if (!preTouch.modalOn) $('#modal').classList.remove('on');
+    preTouch = null;
+    draw();
+  }
+}
+function pinchMove(){
+  if (!pinch || ptrs.size < 2) return;
+  const [a, c] = [...ptrs.values()];
+  const mx = (a.x + c.x) / 2, my = (a.y + c.y) / 2;
+  const d = Math.hypot(a.x - c.x, a.y - c.y) || 1;
+  // 처음 두 손가락 가운데에 있던 도면 위 지점이 지금 가운데에 오도록 맞춘다
+  state.zoom = clampZoom(pinch.z0 * (d / pinch.d0));
+  state.panX = mx - pinch.wx * state.zoom;
+  state.panY = my - pinch.wy * state.zoom;
+  draw();
+}
+
 cv.addEventListener('pointerdown', (e)=>{
+  const rc = cv.getBoundingClientRect();
+  ptrs.set(e.pointerId, { x: e.clientX - rc.left, y: e.clientY - rc.top });
+  if (ptrs.size >= 2){ pinchStart(); return; }
+  /*
+   * 두 손가락을 완전히 동시에 대는 사람은 없다. 첫 손가락이 먼저 닿아 **방 인식·축척 점 찍기**
+   * 같은 일을 이미 저질러 놓은 뒤 두 번째 손가락이 온다. 그대로 두면 확대하려던 것뿐인데
+   * 엉뚱한 방이 잡힌다. 되돌릴 수 있게 직전 상태를 떠 둔다.
+   */
+  preTouch = {
+    draft: state.draft, draftEdges: state.draftEdges, draftStep: state.draftStep, draftAt: state.draftAt,
+    scalePts: state.scalePts.slice(), wallPts: state.wallPts.slice(),
+    barOn: $('#draftbar').classList.contains('on'),
+    modalOn: $('#modal').classList.contains('on'),
+  };
   const r = cv.getBoundingClientRect();
   const sx = e.clientX-r.left, sy = e.clientY-r.top;
   const [wx,wy] = toWorld(sx,sy);
@@ -2620,6 +2678,11 @@ cv.addEventListener('pointerdown', (e)=>{
   draw();
 });
 cv.addEventListener('pointermove', (e)=>{
+  if (ptrs.has(e.pointerId)){
+    const rc = cv.getBoundingClientRect();
+    ptrs.set(e.pointerId, { x: e.clientX - rc.left, y: e.clientY - rc.top });
+  }
+  if (ptrs.size >= 2){ pinchMove(); return; }
   if (!state.drag) return;
   const r = cv.getBoundingClientRect();
   const sx = e.clientX-r.left, sy = e.clientY-r.top;
@@ -2668,7 +2731,15 @@ cv.addEventListener('pointermove', (e)=>{
   }
   evaluate(); draw();
 });
-cv.addEventListener('pointerup', ()=>{
+function endPtr(e){
+  if (e) ptrs.delete(e.pointerId);
+  if (ptrs.size < 2) pinch = null;
+  if (ptrs.size === 0) preTouch = null;
+}
+cv.addEventListener('pointercancel', (e)=>{ endPtr(e); state.drag = null; });
+cv.addEventListener('pointerup', (e)=>{
+  endPtr(e);
+  if (pinch) return;                     // 두 손가락 중 하나만 뗀 상태
   const d = state.drag;
   if (d && d.edit){
     if (!d.moved && d.edit.kind==='e') toggleEdgeOpen(d.edit);
@@ -2680,7 +2751,7 @@ cv.addEventListener('wheel', (e)=>{
   e.preventDefault();
   const r = cv.getBoundingClientRect(), sx=e.clientX-r.left, sy=e.clientY-r.top;
   const [wx,wy] = toWorld(sx,sy);
-  state.zoom = Math.max(0.02, Math.min(3, state.zoom * (e.deltaY<0?1.12:1/1.12)));
+  state.zoom = clampZoom(state.zoom * (e.deltaY<0?1.12:1/1.12));
   state.panX = sx - wx*state.zoom; state.panY = sy - wy*state.zoom;
   draw();
 }, {passive:false});
@@ -2754,6 +2825,36 @@ $('#btn-edit').onclick  = ()=>{
   hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
 };
 $('#btn-more').onclick  = ()=> $('#bar').classList.toggle('moreopen');
+/* 도면이 화면 밖으로 나갔을 때 한 번에 되돌린다 — 좁은 화면에서는 이것 말고 방법이 없다 */
+$('#btn-fit').onclick   = ()=>{ fitAll(); draw(); toast('화면에 맞췄습니다'); };
+
+/*
+ * ── 뒤로가기 ────────────────────────────────────────────────────
+ * **휴대폰 뒤로가기를 누르면 앱이 통째로 닫혔다**(사용자 지적).
+ * 열려 있는 것(모달·도면 위 막대)이나 진행 중인 모드를 한 단계씩 물리고,
+ * 물릴 것이 없을 때만 브라우저에 넘긴다.
+ * 막대·모달을 열 때 히스토리를 한 칸 쌓아 두면 휴대폰 뒤로가기가 그것부터 소비한다.
+ */
+let backDepth = 0;
+function pushBack(){
+  backDepth++;
+  try { history.pushState({ place: backDepth }, ''); } catch {}
+}
+/** 한 단계 물린다. 물릴 것이 있었으면 true */
+function stepBack(){
+  if ($('#modal').classList.contains('on')){ closeSheet(); return true; }
+  if ($('#draftbar').classList.contains('on')){
+    state.queue = []; state.pending = null; state.measureSeg = null;
+    state.draft = null; state.draftMore = [];
+    $('#draftbar').classList.remove('on');
+    setMode(state.img ? 'detect' : 'idle'); draw(); return true;
+  }
+  if (state.mode !== 'idle'){ setMode('idle'); draw(); return true; }
+  if (state.sel){ state.sel = null; renderSide(); draw(); return true; }
+  return false;
+}
+$('#btn-back').onclick  = ()=>{ if (!stepBack()) toast('더 물러설 곳이 없습니다'); };
+window.addEventListener('popstate', ()=>{ if (backDepth > 0){ backDepth--; stepBack(); } });
 $('#btn-detect').onclick= ()=> startDetect();
 $('#btn-share').onclick = ()=> shareResult();
 /*
@@ -2924,6 +3025,7 @@ function askWallLength(segs, opts){
     + "<button class='primary' id='wl-ok'>확정</button></div>"
     + "<div class='dl'><span class='prev'><b style='color:#B45309'>주황색으로 표시된 벽</b>입니다 — "
     + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다. 침실1(안방) 가로는 보통 3,000~3,600mm.</span></div>";
+  if (!bar.classList.contains('on')) pushBack();   // 휴대폰 뒤로가기가 앱이 아니라 이 막대를 닫도록
   bar.classList.add("on");
   const wl = $("#wl");
   wl.focus(); wl.select();
@@ -4017,6 +4119,7 @@ function showPlaceBar(){
     + "<div class='dl'><span class='prev'>놓을 자리를 도면에서 누르세요 — 가까운 벽에 자동으로 붙습니다</span>"
     + "<span class='grow'></span>"
     + "<button id='p-skip'>건너뛰기</button><button id='p-stop'>그만</button></div>";
+  if (!bar.classList.contains('on')) pushBack();   // 휴대폰 뒤로가기가 앱이 아니라 이 막대를 닫도록
   bar.classList.add("on");
   $("#p-skip").onclick = ()=> nextPending();
   $("#p-stop").onclick = ()=>{ state.queue=[]; state.pending=null; setMode("idle"); hidePlaceBar(); draw(); };
@@ -4047,7 +4150,9 @@ function placeAt(wx,wy){
 /* ── 모달 ── */
 function sheet(html, after){
   $('#sheet').innerHTML = html;
+  const wasOpen = $('#modal').classList.contains('on');
   $('#modal').classList.add('on');
+  if (!wasOpen) pushBack();      // 휴대폰 뒤로가기가 앱이 아니라 이 창을 닫도록
   if (after) after();
 }
 function closeSheet(){ $('#modal').classList.remove('on'); }

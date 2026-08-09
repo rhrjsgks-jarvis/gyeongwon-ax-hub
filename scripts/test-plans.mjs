@@ -645,6 +645,57 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 휴대폰: 두 손가락으로 확대·이동 ──
+ * 한 손가락은 모드가 정한 일(방 인식·축척 점 찍기·가전 끌기)을 하므로, 도면을 올린 직후처럼
+ * `detect` 모드에서는 한 손가락으로 팬을 할 수가 없었다. **도면이 화면 밖으로 나가면 되돌릴
+ * 방법이 없어 방 선택도 배치도 못 했다**(사용자 지적).
+ * 두 손가락은 모드와 무관하게 언제나 확대·이동이어야 하고, 그때 **첫 손가락이 저지른 일은
+ * 되돌려야** 한다 — 두 손가락을 정확히 동시에 대는 사람은 없기 때문이다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const c = document.createElement('canvas'); c.width = 900; c.height = 640;
+    const g = c.getContext('2d');
+    g.fillStyle = '#FFF'; g.fillRect(0, 0, 900, 640);
+    g.fillStyle = '#EFE6D6'; g.fillRect(60, 60, 780, 520);
+    g.strokeStyle = '#222'; g.lineWidth = 9; g.strokeRect(60, 60, 780, 520);
+    g.beginPath(); g.moveTo(400, 60); g.lineTo(400, 580); g.stroke();
+    const url = c.toDataURL();
+    await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 900); }; im.src = url; });
+    await new Promise((res) => setTimeout(res, 1800));
+
+    const cv = document.querySelector('#cv');
+    const bx = cv.getBoundingClientRect();
+    const ev = (t, id, x, y) => cv.dispatchEvent(new PointerEvent(t, {
+      pointerId: id, clientX: bx.left + x, clientY: bx.top + y, bubbles: true, pointerType: 'touch', isPrimary: id === 1 }));
+    const cx = bx.width / 2, cy = bx.height / 2;
+    const out = { mode: P.state.mode, z0: P.state.zoom, at0: JSON.stringify(P.state.draftAt), rooms0: P.state.rooms.length };
+
+    ev('pointerdown', 1, cx - 40, cy); ev('pointerdown', 2, cx + 40, cy);
+    ev('pointermove', 1, cx - 140, cy); ev('pointermove', 2, cx + 140, cy);
+    ev('pointerup', 1, cx - 140, cy);   ev('pointerup', 2, cx + 140, cy);
+    out.zPinch = P.state.zoom;
+    out.atPinch = JSON.stringify(P.state.draftAt);
+    out.roomsPinch = P.state.rooms.length;
+
+    const px = P.state.panX, py = P.state.panY;
+    ev('pointerdown', 3, cx - 60, cy); ev('pointerdown', 4, cx + 60, cy);
+    ev('pointermove', 3, cx + 60, cy + 70); ev('pointermove', 4, cx + 180, cy + 70);
+    ev('pointerup', 3, cx + 60, cy + 70);   ev('pointerup', 4, cx + 180, cy + 70);
+    out.moved = Math.abs(P.state.panX - px) > 20 || Math.abs(P.state.panY - py) > 20;
+    return out;
+  });
+
+  if (r.mode !== 'detect') fail(`도면을 올린 뒤 모드가 ${r.mode} — 이 검사는 detect 상태를 전제로 한다`);
+  else if (!(r.zPinch > r.z0 * 1.5)) fail(`두 손가락을 벌렸는데 확대가 안 된다 (${r.z0.toFixed(3)} → ${r.zPinch.toFixed(3)})`);
+  else if (r.atPinch !== r.at0 || r.roomsPinch !== r.rooms0) {
+    fail('두 손가락 제스처인데 첫 손가락이 방을 인식해 버렸다 — 되돌려야 한다');
+  } else if (!r.moved) fail('두 손가락으로 끌었는데 도면이 안 움직인다');
+  else pass(`휴대폰 두 손가락 — 확대 ${r.z0.toFixed(2)}→${r.zPinch.toFixed(2)} · 이동 됨 · detect 모드에서도 방이 잘못 잡히지 않음`);
+}
+
+/*
  * ── 축척 기준: 안방의 가로 벽 ──
  * 사용자가 정한 기준이다 — *"거실 크기는 몰라도 안방 치수는 알고 있다"*,
  * *"대부분의 도면 기준으로 가로 길이 벽으로 지정한다"*.
