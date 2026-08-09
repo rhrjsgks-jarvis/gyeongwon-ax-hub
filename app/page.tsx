@@ -6,7 +6,13 @@ import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 
-const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
+/*
+ * 배포 주소. **`salescopilot.vercel.app` 이 아니다** — 그 이름은 이미 다른 사람이 쓰고 있어
+ * Vercel 이 `slaescopilot`(sales → slaes) 로 잡았다. 옛 주소 `gyeongwon-ax-hub` 는
+ * 307 로 여기 넘어오지만, 팀에 공유하는 링크는 실제 주소여야 한다.
+ * 프로젝트 이름을 바꾸면 이 상수와 아래 표시 문구를 함께 고칠 것.
+ */
+const HUB_URL = 'https://slaescopilot.vercel.app'
 
 type ModuleCard = {
   href: string
@@ -626,8 +632,8 @@ export default function Home() {
             className="w-[88px] h-[88px] rounded-xl border border-gray-100 shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-400 mb-0.5">경원영업팀 전용 AI 허브</p>
-            <p className="text-xs font-semibold text-gray-700 mb-3 truncate">gyeongwon-ax-hub.vercel.app</p>
+            <p className="text-xs text-gray-400 mb-0.5">경원영업팀 세일즈 코파일럿</p>
+            <p className="text-xs font-semibold text-gray-700 mb-3 truncate">{HUB_URL.replace('https://', '')}</p>
             <button
               onClick={handleCopy}
               className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-colors"

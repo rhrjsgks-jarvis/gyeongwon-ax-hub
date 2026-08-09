@@ -38,7 +38,12 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 
 - 저장소: `https://github.com/rhrjsgks-jarvis/gyeongwon-ax-hub` (main 브랜치, public repo)
 - 배포: main에 push하면 Vercel이 자동 빌드/배포 (별도 CLI 배포 불필요)
-- 프로덕션 URL: `https://gyeongwon-ax-hub.vercel.app`
+- 프로덕션 URL: **`https://slaescopilot.vercel.app`**
+  - `salescopilot.vercel.app` 은 **남의 앱이다**("Sales Copilot - Video Meeting"). 그 이름이
+    이미 쓰이고 있어 Vercel 이 `slaescopilot`(sales → slaes) 로 잡았다. 오타처럼 보이지만
+    이것이 실제 주소다.
+  - 옛 주소 `gyeongwon-ax-hub.vercel.app` 은 307 로 넘어오지만, **팀에 공유하는 링크는
+    실제 주소를 쓴다**(`app/page.tsx` 의 `HUB_URL`).
 - Vercel projectId: `prj_JskGnqqArCARl3mNBm6tp1dmdu46` / teamId: `team_o104cKtnAQcEaKospwGIAt9N`
 - git push 인증은 로컬에 SSH 키 또는 `gh auth login`으로 한 번만 설정해두면 이후 세션에서 재설정 불필요 (Cowork 샌드박스 환경과 달리 로컬 환경은 인증정보가 세션 간 유지됨).
 
