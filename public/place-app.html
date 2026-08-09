@@ -2606,6 +2606,38 @@ let ptr = null;
 const ptrs = new Map();
 let pinch = null;
 let preTouch = null;      // 첫 손가락이 저지른 것을 되돌리기 위한 직전 상태
+const TAP_MODES = new Set(['detect', 'scale', 'wall', 'place']);
+let tap = null;           // 누르기인지 끌기인지 가리는 중
+const TAP_SLOP = 6;       // 이보다 더 움직이면 끌기로 본다(손가락은 가만히 있지 못한다)
+
+/** 눌렀다 뗀 자리에서 모드가 정한 일을 한다 */
+function modeTap(sx, sy, wx, wy, mode){
+  if (mode === 'detect'){
+    const k = state.mmPerPx || 1;
+    const ix = wx / k, iy = wy / k;
+    const r = detectRoomAt(ix, iy);
+    if (r.error){ toast(r.error); return; }
+    state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
+    state.draftAt = [ix, iy]; state.draftStep = { wider: r.wider, narrow: r.narrow, step: r.step, steps: r.steps };
+    draw();
+    confirmDetected();
+    return;
+  }
+  if (mode === 'scale'){
+    state.scalePts.push([sx, sy]);
+    if (state.scalePts.length === 2) askScale();
+    draw(); return;
+  }
+  if (mode === 'wall'){
+    const first = state.wallPts[0];
+    if (first && state.wallPts.length > 2){
+      const [fx, fy] = toScreen(first[0], first[1]);
+      if (Math.hypot(fx - sx, fy - sy) < 14){ state.wallPts.push([first[0], first[1]]); commitWalls(); return; }
+    }
+    state.wallPts.push([wx, wy]); draw(); return;
+  }
+  if (mode === 'place' && state.pending){ placeAt(wx, wy); return; }
+}
 const clampZoom = (z) => Math.max(0.005, Math.min(8, z));
 function pinchStart(){
   const [a, c] = [...ptrs.values()];
@@ -2613,6 +2645,7 @@ function pinchStart(){
   const [wx, wy] = toWorld(mx, my);
   pinch = { d0: Math.hypot(a.x - c.x, a.y - c.y) || 1, z0: state.zoom, wx, wy };
   state.drag = null;                     // 끌던 것이 있으면 놓는다
+  tap = null;                            // 누르려던 것도 취소 — 두 손가락은 확대·이동이다
   // 첫 손가락이 시작해 버린 것을 되돌린다 — 두 손가락은 확대·이동이지 방 인식이 아니다
   if (preTouch){
     state.draft = preTouch.draft; state.draftEdges = preTouch.draftEdges;
@@ -2655,33 +2688,18 @@ cv.addEventListener('pointerdown', (e)=>{
   const sx = e.clientX-r.left, sy = e.clientY-r.top;
   const [wx,wy] = toWorld(sx,sy);
 
-  if (state.mode==='detect'){
-    // 화면 → 도면 이미지 픽셀
-    const k = state.mmPerPx || 1;
-    const ix = wx / k, iy = wy / k;
-    const r = detectRoomAt(ix, iy);
-    if (r.error){ toast(r.error); return; }
-    state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
-    state.draftAt = [ix, iy]; state.draftStep = { wider: r.wider, narrow: r.narrow, step: r.step, steps: r.steps };
-    draw();
-    confirmDetected();
+  /*
+   * **누르기와 끌기를 가른다.**
+   * 이 모드들에서 한 손가락(마우스)은 원래 누르는 즉시 일을 했다. 그래서 끌어서 도면을
+   * 옮길 방법이 없었다 — PC 는 포인터가 하나뿐이라 아예 옮길 수가 없었다(사용자 지적).
+   * 이제 여기서는 자리만 기억해 두고, **뗄 때 움직이지 않았으면** 그때 일을 한다.
+   * 끌면 아래 pointermove 가 팬으로 바꾼다.
+   */
+  if (TAP_MODES.has(state.mode) && !(state.mode==='place' && !state.pending)){
+    tap = { sx, sy, wx, wy, mode: state.mode, moved: false,
+            px: state.panX, py: state.panY };
+    try { cv.setPointerCapture(e.pointerId); } catch {}
     return;
-  }
-  if (state.mode==='scale'){
-    state.scalePts.push([sx,sy]);
-    if (state.scalePts.length===2) askScale();
-    draw(); return;
-  }
-  if (state.mode==='wall'){
-    const first = state.wallPts[0];
-    if (first && state.wallPts.length>2){
-      const [fx,fy] = toScreen(first[0],first[1]);
-      if (Math.hypot(fx-sx,fy-sy) < 14){ state.wallPts.push([first[0],first[1]]); commitWalls(); return; }
-    }
-    state.wallPts.push([wx,wy]); draw(); return;
-  }
-  if (state.mode==='place' && state.pending){
-    placeAt(wx,wy); return;
   }
   if (state.mode==='edit'){
     const hit = hitBoundary(wx, wy);
@@ -2713,6 +2731,20 @@ cv.addEventListener('pointermove', (e)=>{
     ptrs.set(e.pointerId, { x: e.clientX - rc.left, y: e.clientY - rc.top });
   }
   if (ptrs.size >= 2){ pinchMove(); return; }
+  /*
+   * 누르기인 줄 알았는데 움직였다 → **도면 이동**으로 바꾼다.
+   * 한 손가락(마우스)으로도 옮길 수 있어야 한다.
+   */
+  if (tap){
+    const rc2 = cv.getBoundingClientRect();
+    const mx = e.clientX - rc2.left, my = e.clientY - rc2.top;
+    if (!tap.moved && Math.hypot(mx - tap.sx, my - tap.sy) < TAP_SLOP) return;
+    tap.moved = true;
+    state.panX = tap.px + (mx - tap.sx);
+    state.panY = tap.py + (my - tap.sy);
+    draw();
+    return;
+  }
   if (!state.drag) return;
   const r = cv.getBoundingClientRect();
   const sx = e.clientX-r.left, sy = e.clientY-r.top;
@@ -2764,12 +2796,18 @@ cv.addEventListener('pointermove', (e)=>{
 function endPtr(e){
   if (e) ptrs.delete(e.pointerId);
   if (ptrs.size < 2) pinch = null;
-  if (ptrs.size === 0) preTouch = null;
+  if (ptrs.size === 0){ preTouch = null; }
 }
-cv.addEventListener('pointercancel', (e)=>{ endPtr(e); state.drag = null; });
+cv.addEventListener('pointercancel', (e)=>{ endPtr(e); state.drag = null; tap = null; });
 cv.addEventListener('pointerup', (e)=>{
   endPtr(e);
   if (pinch) return;                     // 두 손가락 중 하나만 뗀 상태
+  if (tap){
+    const t = tap; tap = null;
+    // 끌었으면 이미 도면을 옮긴 것이고, 안 움직였으면 그것이 곧 "누르기"다
+    if (!t.moved) modeTap(t.sx, t.sy, t.wx, t.wy, t.mode);
+    return;
+  }
   const d = state.drag;
   if (d && d.edit){
     if (!d.moved && d.edit.kind==='e') toggleEdgeOpen(d.edit);

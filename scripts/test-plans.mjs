@@ -216,8 +216,16 @@ for (const plan of PLANS) {
     const cv = document.querySelector('#cv');
     const rect = cv.getBoundingClientRect();
     const GAP_PX = 400;
-    const tap = (x, y) => cv.dispatchEvent(new PointerEvent('pointerdown', {
-      clientX: rect.left + x, clientY: rect.top + y, bubbles: true, pointerId: 1 }));
+    /*
+     * **누르고 떼야 한 번의 탭이다.** 도면 위 조작은 이제 뗄 때 일어난다 —
+     * 그래야 끌기를 "도면 이동"으로 쓸 수 있다(마우스는 포인터가 하나뿐이다).
+     */
+    const tap = (x, y) => {
+      for (const t of ['pointerdown', 'pointerup']) {
+        cv.dispatchEvent(new PointerEvent(t, {
+          clientX: rect.left + x, clientY: rect.top + y, bubbles: true, pointerId: 1 }));
+      }
+    };
     tap(100, 100);
     tap(100 + GAP_PX, 100);
     out.pts = P.state.scalePts.length;
@@ -339,10 +347,13 @@ for (const plan of PLANS) {
 
     const cv = document.querySelector('#cv');
     const rect = cv.getBoundingClientRect();
+    // 누르고 떼야 한 번의 탭이다(끌기는 도면 이동으로 쓰인다)
     const tap = (mmx, mmy) => {
       const sx = mmx * P.state.zoom + P.state.panX, sy = mmy * P.state.zoom + P.state.panY;
-      cv.dispatchEvent(new PointerEvent('pointerdown', {
-        clientX: rect.left + sx, clientY: rect.top + sy, bubbles: true, pointerId: 1 }));
+      for (const t of ['pointerdown', 'pointerup']) {
+        cv.dispatchEvent(new PointerEvent(t, {
+          clientX: rect.left + sx, clientY: rect.top + sy, bubbles: true, pointerId: 1 }));
+      }
     };
     const out = {};
 
@@ -434,10 +445,13 @@ for (const plan of PLANS) {
 
     const cv = document.querySelector('#cv');
     const rect = cv.getBoundingClientRect();
+    // 누르고 떼야 한 번의 탭이다(끌기는 도면 이동으로 쓰인다)
     const tap = (mmx, mmy) => {
       const sx = mmx * P.state.zoom + P.state.panX, sy = mmy * P.state.zoom + P.state.panY;
-      cv.dispatchEvent(new PointerEvent('pointerdown', {
-        clientX: rect.left + sx, clientY: rect.top + sy, bubbles: true, pointerId: 1 }));
+      for (const t of ['pointerdown', 'pointerup']) {
+        cv.dispatchEvent(new PointerEvent(t, {
+          clientX: rect.left + sx, clientY: rect.top + sy, bubbles: true, pointerId: 1 }));
+      }
     };
     const out = {};
 
@@ -686,6 +700,58 @@ for (const plan of PLANS) {
   else if (!r.byCanvas) fail('도면을 눌러도 서랍이 안 닫힌다 — 좁은 화면에서 갇힌다');
   else if (!r.byBack) fail('← 뒤로가기로 서랍이 안 닫힌다');
   else pass('목록 서랍 — 닫는 길 4가지(✕ · ☰ 재클릭 · 도면 터치 · 뒤로가기) 모두 동작');
+}
+
+/*
+ * ── 한 포인터(마우스·손가락 하나)로도 도면을 옮길 수 있는가 ──
+ * 한 포인터는 원래 모드가 정한 일에 묶여 있었다(detect=방 인식, scale=점 찍기, wall=꼭짓점).
+ * 그래서 **PC 마우스는 포인터가 하나뿐이라 도면을 옮길 방법이 아예 없었다**(사용자 지적).
+ * 지도 앱처럼 **누르기와 끌기를 가른다** — 끌면 이동, 눌렀다 떼면 모드 동작.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const c = document.createElement('canvas'); c.width = 900; c.height = 640;
+    const g = c.getContext('2d');
+    g.fillStyle = '#FFF'; g.fillRect(0, 0, 900, 640);
+    g.fillStyle = '#EFE6D6'; g.fillRect(60, 60, 780, 520);
+    g.strokeStyle = '#222'; g.lineWidth = 9; g.strokeRect(60, 60, 780, 520);
+    g.beginPath(); g.moveTo(400, 60); g.lineTo(400, 580); g.stroke();
+    const url = c.toDataURL();
+    await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 900); }; im.src = url; });
+    await new Promise((res) => setTimeout(res, 1800));
+
+    const cv = document.querySelector('#cv'), bx = cv.getBoundingClientRect();
+    const ev = (t, id, x, y) => cv.dispatchEvent(new PointerEvent(t, {
+      pointerId: id, clientX: bx.left + x, clientY: bx.top + y, bubbles: true, pointerType: 'mouse' }));
+    const cx = bx.width / 2, cy = bx.height / 2;
+    const out = { mode: P.state.mode, at0: JSON.stringify(P.state.draftAt) };
+
+    const px = P.state.panX, py = P.state.panY;
+    ev('pointerdown', 1, cx, cy);
+    ev('pointermove', 1, cx + 120, cy + 70);
+    ev('pointerup', 1, cx + 120, cy + 70);
+    out.panned = Math.abs(P.state.panX - px) > 50 && Math.abs(P.state.panY - py) > 30;
+    out.atAfterDrag = JSON.stringify(P.state.draftAt);
+
+    // 화면을 되돌린 뒤 도면 왼쪽 방 한가운데를 톡 누른다
+    P.state.panX = px; P.state.panY = py; P.draw();
+    const at1 = JSON.stringify(P.state.draftAt);
+    const k = (P.state.mmPerPx || 1) * P.state.zoom;
+    const ax = P.state.imgW * 0.25 * k + P.state.panX;
+    const ay = P.state.imgH * 0.5 * k + P.state.panY;
+    ev('pointerdown', 2, ax, ay);
+    ev('pointerup', 2, ax, ay);
+    await new Promise((res) => setTimeout(res, 200));
+    out.tapped = JSON.stringify(P.state.draftAt) !== at1;
+    return out;
+  });
+
+  if (r.mode !== 'detect') fail(`도면을 올린 뒤 모드가 ${r.mode} — 이 검사는 detect 를 전제로 한다`);
+  else if (!r.panned) fail('한 포인터로 끌었는데 도면이 안 움직인다 — PC 마우스로는 옮길 방법이 없다');
+  else if (r.atAfterDrag !== r.at0) fail('끌기만 했는데 방이 인식됐다 — 끌기와 누르기가 안 갈린다');
+  else if (!r.tapped) fail('톡 눌렀는데 방이 인식되지 않는다 — 끌기로만 취급하고 있다');
+  else pass('한 포인터 — 끌면 도면 이동, 톡 누르면 모드 동작 (마우스·손가락 하나로 다 됨)');
 }
 
 /*
