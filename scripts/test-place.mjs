@@ -398,6 +398,49 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   else if (st.items.length >= 2) fail(`1×1m 방에 폭 912+595를 둘 다 놓음 — 자리 없음 판정이 동작하지 않는다`);
   else pass(`1×1m 방 — ${st.items.length}종만 배치하고 나머지는 자리 없음으로 남김`);
 
+  /*
+   * ── 안 들어가면 "무엇이면 들어가는지" ──
+   * "억지로 놓지 않았습니다"로 끝나면 상담이 거기서 멈춘다. 같은 카테고리에서 실제로
+   * 들어가는 가장 큰 사이즈를 찾아 줘야 거절이 대안 제시로 바뀐다.
+   * **없는 답을 지어내면 안 되므로** findSpot 으로 진짜 놓아 보고 되는 것만 말한다.
+   */
+  {
+    // 대안 찾기는 `state.reps` 를 뒤진다. 앱에서는 가전 선택 시트가 채우지만 여기서는 직접 넣는다.
+    P.state.reps = reps;
+    st.walls = room(1500, 1500); st.items = [];
+    const big = pick('냉장고', '845~905L');          // 912×930 — 이 방에는 이격까지 지킬 수 없다
+    const it = { ...big, w: big.part.w, d: big.part.d, cat: '냉장고', size: '845~905L',
+      clear: P.clearFor('냉장고', '본체', big.model, big.group), bx: 0, by: 0, a: 0 };
+    const alt = P.fitAlternative(it, []);
+    if (!alt) fail('1.5×1.5m 방에 냉장고가 안 들어가는데 대안 사이즈를 못 찾았다 (333L 은 들어가야 한다)');
+    else if (alt.size === '845~905L') fail('대안이 원래 사이즈와 같다');
+    // 폭만 보면 안 된다 — 폭이 같고 **깊이가 줄어** 들어가는 경우가 실제로 있다
+    // (845~905L 912×930 → 602~640L 912×716). 자리를 정하는 것은 발자국 넓이다.
+    else if (alt.w * alt.d >= big.part.w * big.part.d) {
+      fail(`대안(${alt.size} ${alt.w}×${alt.d})의 발자국이 원래(${big.part.w}×${big.part.d})보다 작지 않다`);
+    } else pass(`안 들어갈 때 대안 제시 — 845~905L(${big.part.w}×${big.part.d}) 대신 ${alt.size}(${Math.round(alt.w)}×${Math.round(alt.d)}mm)`);
+
+    // 아무리 줄여도 안 되는 방에서는 **없는 답을 지어내지 않아야** 한다
+    st.walls = room(300, 300); st.items = [];
+    if (P.fitAlternative(it, [])) fail('30×30cm 방인데 들어가는 사이즈가 있다고 한다');
+    else pass('자리가 정말 없으면 대안을 지어내지 않는다');
+  }
+
+  /*
+   * ── 삭제 ──
+   * 매장 기기가 태블릿이면 Delete 키가 없다. 목록의 ✕ 가 유일한 삭제 수단이므로
+   * 키보드와 버튼이 **같은 함수**를 지나가야 한쪽만 고치는 사고가 안 난다.
+   */
+  {
+    st.walls = room(6000, 4000); st.items = [];
+    P.stageOutside([pick('냉장고', '602~640L'), pick('TV', '65형')]);
+    const id = st.items[0].id;
+    P.removeItem(id);
+    if (st.items.length !== 1) fail(`1대를 지웠는데 ${st.items.length}대 남음`);
+    else if (st.items.some((i) => i.id === id)) fail('지운 가전이 목록에 남아 있다');
+    else { P.removeItem('없는id'); pass('가전 삭제 — 목록에서 빠지고, 없는 id 는 조용히 무시'); }
+  }
+
   // 방을 그리지 않으면 자리를 찾지 못한다(스냅과 달리 방 경계가 필수)
   st.walls = []; st.items = [];
   const it = { w: 600, d: 700, clear: { back: 50, side: 20, front: 0 } };
