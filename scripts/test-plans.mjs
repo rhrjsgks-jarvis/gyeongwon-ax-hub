@@ -645,6 +645,77 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 단지 불러오기: 도면과 방이 같은 자를 쓰는가 ──
+ * `loadFromLibrary` 가 `mmPerPx = 1` 을 넣던 시절, 그 값의 뜻은 "도면 1px 이 몇 mm 인가"라
+ * **1,000px 짜리 도면이 가로 1m 로 그려졌다.** 화면에서는 좌상단 50px 썸네일이 되고
+ * 방 다각형만 크게 남아, 도면 위에 제품을 올릴 수가 없었다.
+ * 겉보기 증상과 원인이 멀어 조용히 재발하므로 두 가지를 못 박는다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const out = {};
+
+    // ① 방만 복원 — mmPerPx 가 1 이면 안 된다(도면 축척과 월드 좌표계를 섞은 것이다)
+    // 저장하려면 방이 있어야 한다. 8×6m 짜리 하나를 mm 좌표로 세워 둔다.
+    P.state.rooms = []; P.state.items = []; P.state.img = null;
+    P.state.mmPerPx = null; P.state.scaled = true;
+    const W = 8000, H = 6000;
+    P.addRoom('거실', [
+      { x1: 0, y1: 0, x2: W, y2: 0 }, { x1: W, y1: 0, x2: W, y2: H },
+      { x1: W, y1: H, x2: 0, y2: H }, { x1: 0, y1: H, x2: 0, y2: 0 },
+    ]);
+    P.saveToLibrary('경기 수원', '축척검사 단지', '52A');
+    const all = await P.libraryAll();
+    const e = all.find((x) => x.complex === '축척검사 단지');
+    if (!e) return { step: '저장한 항목을 못 찾음' };
+    P.loadFromLibrary(e);
+    out.roomsOnly = { mmPerPx: P.state.mmPerPx, scaled: P.state.scaled, img: !!P.state.img };
+
+    // ② 도면 + 저장된 방을 함께 — 화면상 비율이 실제 비율과 맞아야 한다
+    const c = document.createElement('canvas'); c.width = 1000; c.height = 700;
+    const g = c.getContext('2d'); g.fillStyle = '#EEE'; g.fillRect(0, 0, 1000, 700);
+    const url = c.toDataURL();
+    await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 700); }; im.src = url; });
+    const keep = { img: P.state.img, imgW: P.state.imgW, imgH: P.state.imgH };
+    P.loadFromLibrary(e);
+    P.state.mmPerPx = 20;                       // 이 도면 1px = 20mm 라고 알고 있는 상황
+    P.state.img = keep.img; P.state.imgW = keep.imgW; P.state.imgH = keep.imgH;
+    const xs = P.state.walls.flatMap((w) => [w.x1, w.x2]);
+    const roomW = Math.max(...xs) - Math.min(...xs);
+    out.together = {
+      imgWorldW: P.state.imgW * P.state.mmPerPx,   // 20,000mm
+      roomWorldW: roomW,
+      // 화면 폭의 비 == 월드 폭의 비 여야 한다(같은 zoom 을 곱하므로)
+      screenRatio: (P.state.imgW * P.state.mmPerPx * P.state.zoom) / (roomW * P.state.zoom),
+      worldRatio: (P.state.imgW * P.state.mmPerPx) / roomW,
+    };
+
+    // ③ 축척을 모르면 도면을 아예 그리지 않는다 (틀린 크기로 겹치는 것보다 낫다)
+    P.loadFromLibrary(e);
+    P.state.img = keep.img; P.state.imgW = keep.imgW; P.state.imgH = keep.imgH;
+    out.unknownScale = { mmPerPx: P.state.mmPerPx, scaled: P.state.scaled,
+      drawsPlan: !!(P.state.img && (P.state.mmPerPx || !P.state.scaled)) };
+    return out;
+  });
+
+  if (r.step) fail(`라이브러리 축척 검사 준비 실패: ${r.step}`);
+  else if (r.roomsOnly.mmPerPx === 1) {
+    fail('방만 복원했는데 mmPerPx 가 1 — 도면 1px=1mm 가 되어 도면이 썸네일로 쪼그라든다');
+  } else if (r.roomsOnly.mmPerPx != null) {
+    fail(`방만 복원했는데 mmPerPx 가 ${r.roomsOnly.mmPerPx} — 도면이 없으므로 null 이어야 한다`);
+  } else if (!r.roomsOnly.scaled) fail('저장된 좌표는 mm 인데 축척 미확정으로 표시된다');
+  else if (Math.abs(r.together.screenRatio - r.together.worldRatio) > 0.01) {
+    fail(`도면과 방의 화면 비(${r.together.screenRatio.toFixed(2)})가 실제 비(${r.together.worldRatio.toFixed(2)})와 다르다`);
+  } else if (r.unknownScale.drawsPlan) {
+    fail('축척을 모르는데도 도면을 그린다 — 틀린 크기로 겹쳐 보인다');
+  } else {
+    pass('단지 불러오기 축척 — 방만 복원 시 mmPerPx=null · 도면과 함께면 같은 자 '
+      + `(도면 ${Math.round(r.together.imgWorldW)}mm 안에 방 ${Math.round(r.together.roomWorldW)}mm) · 축척 모르면 도면 미표시`);
+  }
+}
+
+/*
  * ── 길이를 입력한 뒤 도면과 벽이 같은 자를 쓰는가 ──
  * `askWallLength` 가 벽 좌표만 mm 로 환산하고 `state.mmPerPx` 를 null 로 두면,
  * 벽은 mm 축에 도면 이미지는 "이미지 픽셀 = 월드 단위" 축에 그려져 **같은 화면에 자가 둘**이 된다.

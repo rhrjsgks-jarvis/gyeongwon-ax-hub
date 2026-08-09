@@ -18,6 +18,7 @@
     "build:index": "node scripts/build-search-index.mjs",
     "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search && npm run test:sizereps && npm run test:place && npm run test:plans",
     "test:e2e": "node scripts/test-e2e.mjs",
+    "test:all": "npm test && npm run test:e2e",
     "build:sizereps": "node scripts/build-size-reps.mjs",
     "test:sizereps": "node scripts/test-sizereps.mjs",
     "test:place": "node scripts/test-place.mjs",

@@ -214,7 +214,27 @@ try {
     if (st.imgW * st.zoom > st.cw + 1 || st.imgH * st.zoom > st.ch + 1) {
       fail(`업로드한 도면이 캔버스를 넘어감 (${(st.imgW * st.zoom).toFixed(0)}×${(st.imgH * st.zoom).toFixed(0)} > ${st.cw.toFixed(0)}×${st.ch.toFixed(0)}) — 치수선 끝을 클릭할 수 없다`);
     } else pass('도면 업로드 시 화면에 맞춰 표시');
-    if (st.mode !== 'scale') fail(`업로드 후 모드가 ${st.mode} (기대 scale)`);
+    /*
+     * **업로드 직후는 이제 `detect` 다.** 예전에는 곧장 치수선 두 점 클릭 모드(`scale`)로
+     * 보냈는데, 두 점 보정은 벽과 벽을 정밀하게 눌러야 해서 손가락으로는 어긋나고
+     * 분양 도면 중 치수가 인쇄된 것도 8%뿐이다. 지금은 방을 자동 인식해 "가장 긴 벽의
+     * 실제 길이"만 묻는다. 이 픽스처는 선 하나뿐이라 인식이 실패하고 detect 로 남는다.
+     */
+    if (st.mode !== 'detect') fail(`업로드 후 모드가 ${st.mode} (기대 detect — 자동 인식을 시도한다)`);
+    else pass('업로드 직후 자동 인식 시도 (치수선 클릭 모드로 보내지 않는다)');
+
+    /*
+     * 치수선이 인쇄된 도면을 위한 두 점 보정은 도구막대 '축척 맞추기'로 들어간다.
+     * 그 버튼은 휴대폰 화면을 비우려고 '⋯' 안에 접어 뒀으므로 먼저 펼쳐야 한다 —
+     * 접힌 버튼이 실제로 눌리는지까지 여기서 함께 확인하는 셈이다.
+     */
+    await f.locator('#btn-more').click();
+    await page.waitForTimeout(200);
+    if (!(await f.locator('#btn-scale').isVisible())) fail("'⋯'를 눌렀는데 접어 둔 버튼이 안 나온다");
+    await f.locator('#btn-scale').click();
+    await page.waitForTimeout(300);
+    const md = await page.evaluate(() => document.querySelector('iframe').contentWindow.__place.state.mode);
+    if (md !== 'scale') fail(`'축척 맞추기'를 눌렀는데 모드가 ${md} (기대 scale)`);
 
     // 치수선 두 끝(이미지 200,100 ~ 1400,100 = 1,200px)을 클릭해 6,000mm로 확정 → 1px = 5mm
     const cvbox = await f.locator('#cv').boundingBox();
