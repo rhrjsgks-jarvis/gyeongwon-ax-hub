@@ -645,6 +645,50 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 목록 서랍을 닫을 수 있는가 ──
+ * 좁은 화면에서 오른쪽 패널은 서랍으로 뜬다. 그런데 하단 요약의 '자세히' 가 **열기만 하고**
+ * 서랍 안에 닫기도 없어서, 한 번 열면 다음 작업을 아예 못 했다(사용자 지적).
+ * 닫는 길이 하나뿐이면 그 하나가 막혔을 때 갇힌다 — 여러 길을 모두 지킨다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const sd = document.querySelector('#side');
+    const on = () => sd.classList.contains('on');
+    const wait = () => new Promise((res) => setTimeout(res, 120));
+    const out = {};
+    const openIt = async () => { document.querySelector('#btn-side').click(); await wait(); };
+
+    await openIt(); out.opens = on();
+    document.querySelector('#side-x').click(); await wait(); out.byX = !on();
+    await openIt();
+    document.querySelector('#btn-side').click(); await wait(); out.byToggle = !on();
+    await openIt();
+    const cv = document.querySelector('#cv'), bx = cv.getBoundingClientRect();
+    /*
+     * 캔버스를 누르면 모드에 따라 방 인식이 돌아 **뒤 검사의 상태를 망친다.**
+     * 여기서 보려는 것은 "서랍이 닫히는가" 하나뿐이므로 idle 로 두고 누른 뒤 되돌린다.
+     */
+    const P = window.__place;
+    const keepMode = P.state.mode;
+    P.state.mode = 'idle';
+    cv.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 91, clientX: bx.left + 20, clientY: bx.top + 20, bubbles: true, pointerType: 'touch' }));
+    cv.dispatchEvent(new PointerEvent('pointerup', { pointerId: 91, clientX: bx.left + 20, clientY: bx.top + 20, bubbles: true, pointerType: 'touch' }));
+    await wait(); out.byCanvas = !on();
+    P.state.mode = keepMode; P.state.drag = null; P.state.sel = null;
+    await openIt();
+    document.querySelector('#btn-back').click(); await wait(); out.byBack = !on();
+    return out;
+  });
+
+  if (!r.opens) fail('☰ 를 눌러도 목록 서랍이 안 열린다');
+  else if (!r.byX) fail('서랍 안 ✕ 로 안 닫힌다');
+  else if (!r.byToggle) fail('☰ 를 다시 눌러도 안 닫힌다');
+  else if (!r.byCanvas) fail('도면을 눌러도 서랍이 안 닫힌다 — 좁은 화면에서 갇힌다');
+  else if (!r.byBack) fail('← 뒤로가기로 서랍이 안 닫힌다');
+  else pass('목록 서랍 — 닫는 길 4가지(✕ · ☰ 재클릭 · 도면 터치 · 뒤로가기) 모두 동작');
+}
+
+/*
  * ── 휴대폰: 두 손가락으로 확대·이동 ──
  * 한 손가락은 모드가 정한 일(방 인식·축척 점 찍기·가전 끌기)을 하므로, 도면을 올린 직후처럼
  * `detect` 모드에서는 한 손가락으로 팬을 할 수가 없었다. **도면이 화면 밖으로 나가면 되돌릴

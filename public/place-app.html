@@ -66,6 +66,10 @@
     width:290px;flex:none;background:var(--card);border-left:1px solid var(--line);
     display:flex;flex-direction:column;min-height:0;
   }
+  /* 좁은 화면 서랍의 닫기 — 넓은 화면에서는 패널이 늘 보이므로 숨긴다 */
+  #side-x{display:none;float:right;border:0;background:transparent;color:var(--muted);
+    font-size:16px;line-height:1;padding:0 2px;cursor:pointer}
+  @media (max-width:760px){ #side-x{display:inline-block} }
   #side h3{margin:0;padding:10px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);
     letter-spacing:.02em}
   #list{flex:1;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
@@ -274,7 +278,8 @@
     </div>
 
     <aside id="side">
-      <h3>공간</h3>
+      <!-- 좁은 화면에서 서랍으로 뜨므로 닫는 길이 안에도 있어야 한다 -->
+      <h3>공간<button id="side-x" title="닫기">✕</button></h3>
       <div id="rooms"></div>
       <h3>배치 목록</h3>
       <div id="list"></div>
@@ -2463,7 +2468,8 @@ function renderMini(){
   el.innerHTML = `<div class="r">${bits.filter(Boolean).join('<span>·</span>')}`
     + `<span class="more" id="mini-more">자세히</span></div>${sel}`;
   const mo = $('#mini-more');
-  if (mo) mo.onclick = ()=> $('#side').classList.add('on');
+  // 열기만 하면 닫을 길이 없어 다음 작업을 못 한다(사용자 지적) — 토글로 둔다
+  if (mo) mo.onclick = ()=> toggleSide();
 }
 
 function renderSide(){
@@ -2658,7 +2664,7 @@ cv.addEventListener('pointerdown', (e)=>{
     if (!hit){ toast('벽이나 모서리 위를 눌러주세요'); return; }
     state.editSel = hit;
     state.drag = { edit: hit, lx: wx, ly: wy, moved: false };
-    cv.setPointerCapture(e.pointerId);
+    try { cv.setPointerCapture(e.pointerId); } catch {}   // 이미 놓인 포인터면 던진다 — 잡기 실패가 조작을 막으면 안 된다
     draw(); return;
   }
 
@@ -2669,11 +2675,11 @@ cv.addEventListener('pointerdown', (e)=>{
     state.sel = hit.id;
     state.drag = { id:hit.id, ox:wx-hit.bx, oy:wy-hit.by };
     ptr = { t:Date.now() };
-    cv.setPointerCapture(e.pointerId);
+    try { cv.setPointerCapture(e.pointerId); } catch {}   // 이미 놓인 포인터면 던진다 — 잡기 실패가 조작을 막으면 안 된다
   } else {
     state.sel = null;
     state.drag = { pan:true, sx, sy, px:state.panX, py:state.panY };
-    cv.setPointerCapture(e.pointerId);
+    try { cv.setPointerCapture(e.pointerId); } catch {}   // 이미 놓인 포인터면 던진다 — 잡기 실패가 조작을 막으면 안 된다
   }
   draw();
 });
@@ -2842,6 +2848,7 @@ function pushBack(){
 }
 /** 한 단계 물린다. 물릴 것이 있었으면 true */
 function stepBack(){
+  if ($('#side').classList.contains('on')){ $('#side').classList.remove('on'); return true; }
   if ($('#modal').classList.contains('on')){ closeSheet(); return true; }
   if ($('#draftbar').classList.contains('on')){
     state.queue = []; state.pending = null; state.measureSeg = null;
@@ -2879,7 +2886,24 @@ $('#btn-clean').onclick = ()=>{
 // 축척이 없으면 시트를 열기 전에 막는다 — 체크를 다 한 뒤에 막으면 헛수고가 된다
 $('#btn-add').onclick   = ()=> (state.scaled ? openSelect(null) : needScale());
 $('#btn-auto').onclick  = ()=> (state.scaled ? openSelect('주방') : needScale());
-$('#btn-side').onclick  = ()=> $('#side').classList.toggle('on');
+/** 서랍 열고 닫기 — 열 때 히스토리를 쌓아야 휴대폰 뒤로가기가 이것부터 닫는다 */
+function toggleSide(){
+  const sd = $('#side');
+  const opening = !sd.classList.contains('on');
+  sd.classList.toggle('on');
+  if (opening) pushBack();
+}
+$('#btn-side').onclick  = ()=> toggleSide();
+$('#side-x').onclick    = ()=> $('#side').classList.remove('on');
+/*
+ * 서랍이 열린 채로는 도면을 만질 수 없다. 도면을 누르면 먼저 서랍을 닫는다 —
+ * 좁은 화면에서 열고 나면 닫을 길이 없어 다음 작업을 못 하던 문제(사용자 지적)의
+ * 마지막 탈출구다. `capture` 로 잡아 캔버스 동작보다 먼저 처리한다.
+ */
+cv.addEventListener('pointerdown', ()=>{
+  const sd = $('#side');
+  if (sd.classList.contains('on')) sd.classList.remove('on');
+}, true);
 $('#steps').onclick = (e)=>{ const s=e.target.closest('.step'); if(!s) return;
   const n=+s.dataset.step; if(n===1)$('#btn-img').click(); if(n===2)$('#btn-scale').click();
   if(n===3)$('#btn-detect').click(); if(n===4)openSelect(null); };
