@@ -703,6 +703,76 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 가전은 모드와 상관없이 만지고 돌릴 수 있어야 한다 ──
+ * 방을 확정하면 "다른 방도 잡을 수 있게" `detect` 모드가 유지된다. 그 상태에서 가전을 누르면
+ * **가전이 아니라 그 자리를 방으로 인식**하려 들어 **이동도 회전도 안 됐다**(사용자 지적).
+ * 화면 맨 위에 그려진 것이 가전인데 손은 그 아래 도면을 만지는 셈이었다.
+ * 회전은 더블탭 말고 **눈에 보이는 버튼**으로도 돼야 한다 — 더블탭은 알기 어렵다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    P.state.reps = await (await fetch('size-reps.json')).json();
+    P.state.img = null; P.state.mmPerPx = 1; P.state.scaled = true;
+    P.state.rooms = []; P.state.items = []; P.state.sel = null;
+    const W = 6000, H = 4000;
+    P.state.walls = [{ x1:0,y1:0,x2:W,y2:0 },{ x1:W,y1:0,x2:W,y2:H },{ x1:W,y1:H,x2:0,y2:H },{ x1:0,y1:H,x2:0,y2:0 }];
+    P.addRoom('거실', P.state.walls.map((w) => ({ ...w })));
+    const rep = P.state.reps.find((x) => x.cat === '냉장고' && x.size === '602~640L');
+    const o = rep.options[0];
+    const made = P.stageOutside([{ cat: '냉장고', size: rep.size, model: o.model, group: o.group, part: o.parts[0] }]);
+    const it = made[0];
+    it.bx = 2000; it.by = 500; it.staged = false;
+    P.state.zoom = 0.1; P.state.panX = 20; P.state.panY = 20;
+    P.evaluate(); P.draw();
+
+    const cv = document.querySelector('#cv'), bx = cv.getBoundingClientRect();
+    const scr = (wx, wy) => [wx * P.state.zoom + P.state.panX, wy * P.state.zoom + P.state.panY];
+    // 캔버스 위치는 **쏘기 직전에** 다시 잰다 — 앞 검사가 화면 배치를 바꿔 놓았을 수 있다
+    const ev = (t, id, x, y) => { const rr = cv.getBoundingClientRect();
+      cv.dispatchEvent(new PointerEvent(t, {
+        pointerId: id, clientX: rr.left + x, clientY: rr.top + y, bubbles: true, pointerType: 'touch' })); };
+    /*
+     * 앞 검사가 남긴 포인터가 있으면 이번 pointerdown 이 **두 번째 손가락**으로 취급돼
+     * 확대 제스처로 빠진다 — 가전이 안 잡힌다. 시작 전에 모두 취소해 둔다.
+     */
+    for (let q = 0; q < 100; q++) cv.dispatchEvent(new PointerEvent('pointercancel', { pointerId: q, bubbles: true }));
+
+    const out = {};
+    let id = 40;
+    for (const mode of ['detect', 'idle', 'wall']) {
+      P.state.mode = mode;
+      /*
+       * 앞 모드에서 이미 골라 둔 상태로 연달아 누르면 **더블탭 회전**으로 먹힌다
+       * (앱 동작은 맞고 검사가 너무 빠른 것이다). 매번 선택을 비우고 시작한다.
+       */
+      P.state.sel = null;
+      it.bx = 2000; it.by = 500; it.a = 0; it.staged = false;   // 매번 같은 자리에서 본다
+      P.evaluate(); P.draw();
+      const c = P.bodyCenter(it); const [ix, iy] = scr(c[0], c[1]);
+      // 보려는 것은 **그 가전이 손에 잡히는가**다. 이동량은 벽 스냅 때문에 흔들린다.
+      ev('pointerdown', ++id, ix, iy);
+      out[mode] = !!(P.state.drag && P.state.drag.id === it.id);
+      ev('pointerup', id, ix, iy);
+    }
+    // 회전 버튼
+    P.state.mode = 'idle'; P.state.sel = it.id; P.draw();
+    await new Promise((res) => setTimeout(res, 150));
+    out.hasRotBtn = !!document.querySelector('#mini-rot');
+    const a0 = it.a;
+    document.querySelector('#mini-rot')?.click();
+    out.deg = Math.round((it.a - a0) * 180 / Math.PI);
+    return out;
+  });
+
+  const stuck = ['detect', 'idle', 'wall'].filter((m) => !r[m]);
+  if (stuck.length) fail(`${stuck.join('·')} 모드에서 가전을 끌 수 없다 — 모드와 상관없이 만져져야 한다`);
+  else if (!r.hasRotBtn) fail('고른 가전에 회전 버튼이 없다 — 더블탭만으로는 아무도 모른다');
+  else if (r.deg !== 90) fail(`회전 버튼이 ${r.deg}° 돌린다 (기대 90)`);
+  else pass('가전 — detect·idle·wall 어디서나 끌리고, 회전 버튼으로 90° 돌아간다');
+}
+
+/*
  * ── 한 포인터(마우스·손가락 하나)로도 도면을 옮길 수 있는가 ──
  * 한 포인터는 원래 모드가 정한 일에 묶여 있었다(detect=방 인식, scale=점 찍기, wall=꼭짓점).
  * 그래서 **PC 마우스는 포인터가 하나뿐이라 도면을 옮길 방법이 아예 없었다**(사용자 지적).
@@ -720,6 +790,11 @@ for (const plan of PLANS) {
     const url = c.toDataURL();
     await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 900); }; im.src = url; });
     await new Promise((res) => setTimeout(res, 1800));
+    /*
+     * 앞 검사에서 꺼내 둔 가전이 남아 있으면 빈 곳인 줄 알고 누른 자리가 가전 위일 수 있다
+     * (가전은 모드와 무관하게 먼저 반응한다). 이 검사는 도면 이동만 보므로 비우고 시작한다.
+     */
+    P.state.items = []; P.state.sel = null;
 
     const cv = document.querySelector('#cv'), bx = cv.getBoundingClientRect();
     const ev = (t, id, x, y) => cv.dispatchEvent(new PointerEvent(t, {
