@@ -63,7 +63,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         <div className="text-2xl mb-2">🔒</div>
         <h1 className="font-bold text-gray-800 mb-1">관리자 인증</h1>
         <p className="text-xs text-gray-400 mb-4">
-          AX 현황 대시보드[관리자용]는 비밀번호로 보호됩니다<br />
+          사용현황 대시보드[관리자용]는 비밀번호로 보호됩니다<br />
           <span className="text-[10px]">인증은 브라우저를 닫으면 해제되고, 2시간 뒤 다시 물어봅니다</span>
         </p>
         <input
@@ -98,16 +98,16 @@ const ROI_DATA = [
   { key: 'finder',  icon: '🔍', label: '모델파인더 — 제품 검색',    before: '5분/건',    after: '15초/건',  saving: 95 },
   { key: 'compare', icon: '⚖️', label: '타사비교 가이드 생성',       before: '30분/건',   after: '3분/건',   saving: 90 },
   { key: 'quiz',    icon: '🎯', label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
-  { key: 'care',    icon: '💚', label: 'AI Care 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
-  { key: 'test',    icon: '📝', label: '레벨업테스트 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
+  { key: 'care',    icon: '💚', label: 'AI구독 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
+  { key: 'test',    icon: '📝', label: '레벨업 챌린지 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
 ]
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
   // 허브 메인 페이지뷰는 집계에서 제외되므로 여기 남는 건 통합검색·건의뿐이다
   hub:     { label: '허브 검색·건의',   icon: '🔎', color: '#1428A0' },
   finder:  { label: '모델파인더',      icon: '🔍', color: '#2563EB' },
-  care:    { label: 'AI Care',         icon: '🛠️', color: '#059669' },
-  test:    { label: '레벨업테스트',    icon: '📝', color: '#7C3AED' },
+  care:    { label: 'AI구독 케어',         icon: '🛠️', color: '#059669' },
+  test:    { label: '레벨업 챌린지',    icon: '📝', color: '#7C3AED' },
   compare: { label: '타사비교 가이드', icon: '⚖️', color: '#D97706' },
   // 타사비교로 통합된 구 모듈 — 통합 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
   compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309' },
@@ -171,7 +171,7 @@ export default function AdminPage() {
       >
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xl">📊</span>
-          <span className="font-bold text-base">AX 현황 대시보드[관리자용]</span>
+          <span className="font-bold text-base">사용현황 대시보드[관리자용]</span>
           <button
             onClick={() => { lockNow(); setUnlocked(false) }}
             className="ml-auto text-[11px] font-semibold rounded-lg px-2.5 py-1"

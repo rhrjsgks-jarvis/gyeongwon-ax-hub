@@ -1,4 +1,4 @@
-// AX 현황 대시보드(app/admin/page.tsx)가 의존하는 lib/logEvent.ts 회귀 테스트
+// 사용현황 대시보드(app/admin/page.tsx)가 의존하는 lib/logEvent.ts 회귀 테스트
 // 실행: node --experimental-strip-types scripts/test-admin.mjs
 // 패턴: 다른 test-*.mjs와 동일하게 순수 함수를 직접 호출·검증한다. admin/page.tsx 자체는
 // React 컴포넌트(인증 게이트 + useState)라 jsdom 스크립트 실행 패턴을 그대로 쓸 수 없으므로,
@@ -178,10 +178,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const navSrc = fs.readFileSync(new URL('../components/Navigation.tsx', import.meta.url), 'utf8');
   [['app/page.tsx', hubSrc], ['app/admin/page.tsx', adminSrc], ['components/Navigation.tsx', navSrc]]
     .forEach(([name, src]) => {
-      if (!src.includes('AX 현황 대시보드[관리자용]'))
-        fail(`${name}에 "AX 현황 대시보드[관리자용]" 명칭이 없음`);
+      if (!src.includes('사용현황 대시보드[관리자용]'))
+        fail(`${name}에 "사용현황 대시보드[관리자용]" 명칭이 없음`);
     });
-  if (ok) console.log('OK: "AX 현황 대시보드[관리자용]" 명칭이 허브·사이드바·대시보드 3곳에 반영됨');
+  if (ok) console.log('OK: "사용현황 대시보드[관리자용]" 명칭이 허브·사이드바·대시보드 3곳에 반영됨');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

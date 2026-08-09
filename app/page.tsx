@@ -37,8 +37,8 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/care',
         icon: '💚',
-        title: 'AI Care 검색기',
-        desc: '구독케어 서비스 항목·조건 즉시 조회',
+        title: 'AI구독 케어 안내',
+        desc: '제품별 구독 기간·주기에 따라 받는 케어 서비스 안내',
         color: '#059669',
         bg: '#ECFDF5',
         updated: '2026.06',
@@ -47,7 +47,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/compare',
         icon: '🔗',
-        title: '타사비교',
+        title: '타사비교 세일즈가이드',
         desc: '모델 선택 또는 URL 입력으로 즉시 비교표 + 셀링포인트 + 응대 스크립트 생성',
         color: '#EA580C',
         bg: '#FFF7ED',
@@ -69,7 +69,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/install',
         icon: '🛠️',
-        title: '설치환경 가이드',
+        title: '제품별 설치환경 가이드',
         desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
         color: '#B45309',
         bg: '#FFFBEB',
@@ -80,7 +80,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/place',
         icon: '📐',
         title: '가전 배치 시뮬레이터',
-        desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 103개 사이즈)',
+        desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 70개 사이즈)',
         color: '#0F766E',
         bg: '#F0FDFA',
         updated: '2026.08',
@@ -94,7 +94,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/test',
         icon: '📝',
-        title: '레벨업테스트',
+        title: '레벨업 챌린지',
         desc: '2026 제품 전문가 역량 평가 · 25문항 · 30분',
         color: '#7C3AED',
         bg: '#F5F3FF',
@@ -104,7 +104,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/quiz',
         icon: '🎯',
-        title: 'URL 퀴즈 생성',
+        title: 'URL 퀴즈 생성기',
         desc: '자사·경쟁사 URL 입력 → 직원 평가용 인터랙티브 퀴즈 즉시 생성',
         color: '#0891B2',
         bg: '#ECFEFF',
@@ -119,11 +119,11 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   },
 ]
 
-// AX 현황 대시보드는 그룹에 속하지 않고 허브 최하단에 별도 섹션으로 운영
+// 사용현황 대시보드는 그룹에 속하지 않고 허브 최하단에 별도 섹션으로 운영
 const ADMIN_MODULE: ModuleCard = {
   href: '/admin',
   icon: '📊',
-  title: 'AX 현황 대시보드[관리자용]',
+  title: '사용현황 대시보드[관리자용]',
   desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기 (비밀번호 필요)',
   color: '#475569',
   bg: '#F8FAFC',
@@ -239,15 +239,15 @@ const COUPON_LINKS = [
 
 const TIPS = [
   { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
-  { emoji: '📋', situation: '케어십 서비스 항목을 안내할 때', tool: 'AI Care 검색기', href: '/care' },
+  { emoji: '📋', situation: 'AI구독 케어 항목을 안내할 때', tool: 'AI구독 케어 안내', href: '/care' },
   { emoji: '🔎', situation: '제품 스펙을 빠르게 확인할 때', tool: '모델파인더', href: '/finder' },
-  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'URL 퀴즈 생성', href: '/quiz' },
+  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'URL 퀴즈 생성기', href: '/quiz' },
   { emoji: '🛠️', situation: '설치 가능 여부를 확인할 때', tool: '설치환경 가이드', href: '/install' },
 ]
 
 const GUIDE = [
   { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX·Harman 전 제품 검색' },
-  { step: '02', text: 'AI Care — 구독케어 조건·항목 즉시 조회' },
+  { step: '02', text: 'AI구독 케어 — 제품별 케어 주기·항목 즉시 조회' },
   { step: '03', text: '타사비교 — URL 입력으로 비교표 자동 생성' },
   { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },
 ]
@@ -566,10 +566,10 @@ export default function Home() {
         )
       })}
 
-      {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 운영 */}
+      {/* 사용현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 운영 */}
       <div className="mb-5">
         <AccordionHeader
-          title="📊 AX 현황 대시보드[관리자용]"
+          title="📊 사용현황 대시보드[관리자용]"
           isOpen={!!openSections['admin']}
           onClick={() => toggleSection('admin')}
         />

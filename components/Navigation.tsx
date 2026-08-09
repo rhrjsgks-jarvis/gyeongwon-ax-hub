@@ -8,8 +8,8 @@ import SamsungWordmark from './SamsungWordmark'
 const NAV_ITEMS = [
   { href: '/',        label: '허브',      icon: '🏠' },
   { href: '/finder',  label: '모델파인더', icon: '🔍' },
-  { href: '/care',    label: 'AI Care',   icon: '💚' },
-  { href: '/test',    label: '레벨업테스트', icon: '📝' },
+  { href: '/care',    label: 'AI구독 케어',   icon: '💚' },
+  { href: '/test',    label: '레벨업 챌린지', icon: '📝' },
   { href: '/compare', label: '타사비교',  icon: '⚡' },
   { href: '/install', label: '설치환경',  icon: '🛠️' },
 ]
@@ -20,7 +20,7 @@ const NAV_GROUPS = [
     title: '🔍 제품 상담 도구',
     items: [
       { href: '/finder',          label: '모델파인더',       icon: '🔍' },
-      { href: '/care',            label: 'AI Care',         icon: '💚' },
+      { href: '/care',            label: 'AI구독 케어',         icon: '💚' },
       { href: '/compare',         label: '타사비교',         icon: '🔗' },
       { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
       { href: '/place',           label: '배치 시뮬레이터',   icon: '📐' },
@@ -29,8 +29,8 @@ const NAV_GROUPS = [
   {
     title: '📚 교육',
     items: [
-      { href: '/test', label: '레벨업테스트',   icon: '📝' },
-      { href: '/quiz', label: 'URL 퀴즈 생성', icon: '🎯' },
+      { href: '/test', label: '레벨업 챌린지',   icon: '📝' },
+      { href: '/quiz', label: 'URL 퀴즈 생성기', icon: '🎯' },
     ],
   },
   {
@@ -42,8 +42,8 @@ const NAV_GROUPS = [
   },
 ]
 
-// AX 현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
-const ADMIN_LINK = { href: '/admin', label: 'AX 현황 대시보드[관리자용]', icon: '📊' }
+// 사용현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
+const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자용]', icon: '📊' }
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -173,7 +173,7 @@ export default function Navigation() {
             )
           })}
 
-          {/* AX 현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 노출 */}
+          {/* 사용현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 노출 */}
           <div className="pt-2 border-t border-gray-100">
             <Link
               href={ADMIN_LINK.href}

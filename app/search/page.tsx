@@ -36,7 +36,7 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   finder:  { label: '모델파인더',       icon: '🔍', color: '#1428A0' },
   install: { label: '설치환경 가이드',   icon: '🛠️', color: '#B45309' },
   compare: { label: '타사비교',         icon: '🔗', color: '#EA580C' },
-  care:    { label: 'AI Care',         icon: '💚', color: '#059669' },
+  care:    { label: 'AI구독 케어',         icon: '💚', color: '#059669' },
   hub:     { label: '허브 기능',        icon: '🏠', color: '#475569' },
 }
 const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'care']

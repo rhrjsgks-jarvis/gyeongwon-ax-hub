@@ -10,7 +10,7 @@ export default function CarePage() {
   return (
     <IframeModule
       src="/care-app.html"
-      title="AI Care 케어십 검색기"
+      title="AI구독 케어 안내"
       className="-m-4 md:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     />
