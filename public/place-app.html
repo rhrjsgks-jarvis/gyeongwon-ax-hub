@@ -321,7 +321,7 @@ const state = {
   items:[],              // 배치된 가전 (it.room = 방 id)
   reps:[],               // size-reps.json
   mode:'idle',           // idle | scale | wall | place
-  scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, showDims:false, queue:[], complexName:null, typeName:null, draft:null, draftEdges:null,
+  scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, showDims:false, queue:[], measureSeg:null, complexName:null, typeName:null, draft:null, draftEdges:null,
   pending:null,          // 배치 대기중인 가전
   sel:null, drag:null, editSel:null,
 };
@@ -1532,7 +1532,7 @@ function startDetect(){
 function autoDetectCenter(){
   ensureClean();
   const r = detectRoomAt(state.imgW/2, state.imgH/2);
-  if (r.error){ setMode('detect'); toast('가운데 자동 인식이 안 됐습니다 — 방 안쪽을 눌러주세요'); draw(); return; }
+  if (r.error){ setMode('detect'); toast('가운데로는 방을 못 잡았습니다 — 거실 안쪽을 한 번 눌러주세요'); draw(); return; }
   state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
   state.draftAt = [state.imgW/2, state.imgH/2]; state.draftStep = { wider: r.wider, narrow: r.narrow, step: r.step, steps: r.steps };
   setMode('detect'); draw();
@@ -2068,6 +2068,16 @@ function draw(){
     ctx.fillStyle='#B45309'; ctx.beginPath(); ctx.arc(x,y,5,0,7); ctx.fill();
   }
 
+  // 지금 길이를 묻고 있는 벽 — 굵은 주황으로 못 박아 어느 것을 재는지 보여준다
+  if (state.measureSeg){
+    const m = state.measureSeg;
+    const [ax,ay] = toScreen(m.x1, m.y1), [bx,by] = toScreen(m.x2, m.y2);
+    ctx.strokeStyle = '#B45309'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
+    ctx.fillStyle = '#B45309'; ctx.font = '700 12px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('이 벽의 길이', (ax+bx)/2, (ay+by)/2 - 10);
+  }
+
   // 가전
   state.items.forEach((it, itIdx)=>{
     const body = corners(it).map(([x,y])=>toScreen(x,y));
@@ -2458,6 +2468,12 @@ $('#list').addEventListener('click',(e)=>{
   state.sel = r.dataset.id; draw();
 });
 document.addEventListener('keydown',(e)=>{
+  /*
+   * **입력칸에 글자를 치는 중에는 단축키를 받지 않는다.**
+   * 가전이 선택된 상태에서 길이를 고치다 Backspace 를 누르면 그 가전이 지워졌다.
+   */
+  const t = e.target;
+  if (t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.isContentEditable)) return;
   if (!state.sel) return;
   const it = state.items.find((x)=>x.id===state.sel); if(!it) return;
   if (e.key==='r'||e.key==='R'){ it.a += Math.PI/2; evaluate(); draw(); }
@@ -2481,8 +2497,17 @@ function useImage(src, after){
     state.zoom = Math.min(r.width/state.imgW, r.height/state.imgH) * 0.92;
     state.panX = 12; state.panY = 12;
     $('#empty').style.display='none';
-    setStep(2); setMode('scale'); draw();
+    /*
+     * **곧장 치수선 두 점 클릭 모드로 보내지 않는다.**
+     * 두 점 보정은 정확하지만 벽과 벽을 정밀하게 눌러야 하고, 손가락으로는 몇 px 씩
+     * 어긋나 축척이 통째로 틀어진다(사용자 지적). 게다가 분양 도면 중 치수가 인쇄된
+     * 것은 8% 뿐이라 대부분은 애초에 찍을 치수선도 없다.
+     * 그래서 **방을 자동으로 인식해 가장 긴 벽을 찾아 두고, 사용자는 길이만 입력**한다.
+     * 치수선이 있는 도면은 도구막대 "축척 맞추기"로 언제든 두 점 보정을 쓸 수 있다.
+     */
+    setStep(2); draw();
     if (after) after();
+    autoDetectCenter();
   };
   img.onerror = ()=> toast('도면을 열지 못했습니다');
   img.src = src;
@@ -2572,31 +2597,59 @@ function commitWalls(){
 function askWallLength(segs, opts){
   let li=0, lmax=0;
   segs.forEach((s,i)=>{ const L=Math.hypot(s.x2-s.x1,s.y2-s.y1); if(L>lmax){lmax=L;li=i;} });
-  sheet(`<h2>방 크기 확정</h2>
-    <p class="hint">지금 잡은 벽은 화면상의 모양일 뿐이라 아직 실제 길이를 모릅니다.
-      <b>가장 긴 벽</b>의 실제 길이를 입력하면 나머지 벽과 도면 전체가 같은 비율로 환산됩니다.</p>
-    <p class="hint">거실이라면 흔히 3,600~4,500mm 입니다. 분양 홍보물·등기부의 전용면적으로도
-      가늠할 수 있고, 나중에 <b>축척 맞추기</b>로 다시 잡을 수 있습니다.</p>
-    <label class="pickers"><span class="hint">가장 긴 벽의 실제 길이 (mm)</span>
-      <input type="number" id="wl" value="3600" min="100" step="10"></label>
-    <p class="src">도면을 올려 축척을 맞춘 경우에는 이 단계가 나오지 않습니다.</p>
-    <div class="modal-actions"><button id="c">다시 그리기</button><button class="primary" id="ok">확정</button></div>`,
-    ()=>{
-      $('#ok').onclick = ()=>{
-        const mm = +$('#wl').value;
-        if (!(mm>0)) return;
-        const k = mm / lmax;
-        for (const s of segs){ s.x1*=k; s.y1*=k; s.x2*=k; s.y2*=k; }
-        state.scaled = true;
-        const o = opts || {};
-        const room = o.appendTo ? roomById(o.appendTo) : null;
-        if (room){ room.parts.push({ walls: segs }); state.roomSel = room.id; syncWalls(); }
-        else addRoom(o.name || nextRoomName(), segs);
-        state.zoom /= k; state.panX = 24; state.panY = 24;
-        closeSheet(); setMode('idle'); setStep(4); evaluate(); draw();
-      };
-      $('#c').onclick = ()=>{ closeSheet(); setMode('wall'); draw(); };
-    });
+  /*
+   * **어느 벽을 재는지 도면 위에 표시한다.**
+   * 가장 긴 벽을 자동으로 고르므로 사용자는 클릭할 필요가 없지만, 어느 벽인지 모르면
+   * 엉뚱한 길이를 넣게 되고 그러면 축척이 통째로 틀어진다. 화면에 보이면 눈으로 검산된다.
+   */
+  state.measureSeg = segs[li];
+  // 이름 붙이기 모달이 열린 채로 올 수 있다. 모달을 닫아야 도면이 보인다 —
+  // 예전에는 sheet() 가 내용을 갈아 끼워 저절로 닫혔지만 이제는 막대를 쓰므로 직접 닫는다.
+  closeSheet();
+  draw();
+  /*
+   * **모달로 묻지 않는다.** 정작 봐야 할 것은 주황으로 표시된 그 벽인데 모달이 그 위를
+   * 덮는다. 초안 조절을 막대로 옮긴 것과 같은 이유다 — 화면이 가려지면 무엇을 재는지
+   * 모르는 채 숫자를 넣게 되고, 축척이 틀어지면 이후 판정이 전부 거짓이 된다.
+   */
+  const bar = $("#draftbar");
+  bar.innerHTML = "<div class='dl'>"
+    + "<span class='area'>지금 이 거리는 몇 mm 입니까?</span></div>"
+    + "<div class='dl'>"
+    + "<input type='number' id='wl' value='3600' min='100' step='10' "
+    + "style='width:120px;padding:6px 8px;font:600 15px ui-monospace,monospace'>"
+    + "<span class='meta'>mm</span>"
+    + "<span class='grow'></span>"
+    + "<button id='wl-again'>" + (state.img ? "다시 인식" : "다시 그리기") + "</button>"
+    + "<button class='primary' id='wl-ok'>확정</button></div>"
+    + "<div class='dl'><span class='prev'>도면 위 <b style='color:#B45309'>주황색 벽</b>의 실제 길이입니다. "
+    + "입력하신 값에 맞춰 도면 비율을 수정하겠습니다 — 거실이라면 흔히 3,600~4,500mm 입니다.</span></div>";
+  bar.classList.add("on");
+  const wl = $("#wl");
+  wl.focus(); wl.select();
+  const commit = ()=>{
+    const mm = +wl.value;
+    if (!(mm>0)) { toast("실제 길이를 mm 로 넣어주세요"); return; }
+    const k = mm / lmax;
+    for (const s of segs){ s.x1*=k; s.y1*=k; s.x2*=k; s.y2*=k; }
+    state.scaled = true;
+    const o = opts || {};
+    const room = o.appendTo ? roomById(o.appendTo) : null;
+    if (room){ room.parts.push({ walls: segs }); state.roomSel = room.id; syncWalls(); }
+    else addRoom(o.name || nextRoomName(), segs);
+    state.zoom /= k; state.panX = 24; state.panY = 24;
+    state.measureSeg = null;
+    bar.classList.remove("on");
+    setMode("idle"); setStep(4); evaluate(); draw();
+    toast(`도면 비율을 맞췄습니다 — 이 벽 ${mm.toLocaleString()}mm 기준`);
+  };
+  $("#wl-ok").onclick = commit;
+  wl.onkeydown = (e)=>{ if (e.key === "Enter"){ e.preventDefault(); commit(); } };
+  $("#wl-again").onclick = ()=>{
+    state.measureSeg = null; bar.classList.remove("on");
+    // 도면이 있으면 다시 그리라고 할 게 아니라 다시 인식시키는 것이 맞다
+    if (state.img) startDetect(); else { setMode("wall"); draw(); }
+  };
 }
 
 /* ── 단지 평면 라이브러리 ────────────────────────────────────────────
