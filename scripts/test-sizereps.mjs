@@ -81,9 +81,22 @@ if (!axisBad) pass('세워 쓰는 가전의 높이 > 폭 (축 뒤바뀜 없음)'
 const finder = fs.readFileSync(path.join(root, 'public', 'finder-app.html'), 'utf8');
 let missing = 0;
 for (const r of reps) {
-  if (!finder.includes(`"${r.model}"`)) { fail(`${r.cat} ${r.size}: ${r.model}이 모델파인더 DB에 없음`); missing++; }
+  /*
+   * `guideOnly` = 카탈로그에 없고 **설치가이드 규격도에만** 있는 항목
+   * (김치냉장고 4도어 키친핏). 가이드가 모델을 와일드카드 `RK**F42*` 로만 적어
+   * 실모델코드를 댈 수 없으므로 빈칸이 정상이다 — 대신 근거를 note 에 남긴다.
+   * 빈칸을 그냥 통과시키면 안 된다: `finder.includes('""')` 는 아무 파일에서나 참이라
+   * 모델코드 검사가 통째로 무력해진다(실제로 그렇게 통과했다).
+   */
+  if (r.guideOnly) {
+    if (r.model) fail(`${r.cat} ${r.size}: guideOnly 인데 모델코드(${r.model})가 있다 — 카탈로그에 실렸으면 guideOnly 를 떼야 한다`);
+    else if (!/설치가이드|규격도/.test(r.note || '')) fail(`${r.cat} ${r.size}: 모델코드가 없는데 근거(note)에 출처가 없다`);
+    continue;
+  }
+  if (!r.model) { fail(`${r.cat} ${r.size}: 모델코드가 비어 있음`); missing++; }
+  else if (!finder.includes(`"${r.model}"`)) { fail(`${r.cat} ${r.size}: ${r.model}이 모델파인더 DB에 없음`); missing++; }
 }
-if (!missing) pass('대표 모델코드 전부 모델파인더 DB에 존재');
+if (!missing) pass(`대표 모델코드 전부 모델파인더 DB에 존재 (설치가이드 전용 ${reps.filter((r) => r.guideOnly).length}건 제외)`);
 
 // ── [5] 골든값 ──
 // dp 카탈로그 원문에서 눈으로 확인한 값. 파서를 손볼 때 이 값이 흔들리면 회귀다.
