@@ -2518,8 +2518,9 @@ $('#btn-clean').onclick = ()=>{
     : '원본 도면');
   draw();
 };
-$('#btn-add').onclick   = ()=> openSelect(null);
-$('#btn-auto').onclick  = ()=> openSelect('주방');
+// 축척이 없으면 시트를 열기 전에 막는다 — 체크를 다 한 뒤에 막으면 헛수고가 된다
+$('#btn-add').onclick   = ()=> (state.scaled ? openSelect(null) : needScale());
+$('#btn-auto').onclick  = ()=> (state.scaled ? openSelect('주방') : needScale());
 $('#btn-side').onclick  = ()=> $('#side').classList.toggle('on');
 $('#steps').onclick = (e)=>{ const s=e.target.closest('.step'); if(!s) return;
   const n=+s.dataset.step; if(n===1)$('#btn-img').click(); if(n===2)$('#btn-scale').click();
@@ -2572,8 +2573,10 @@ function askWallLength(segs, opts){
   let li=0, lmax=0;
   segs.forEach((s,i)=>{ const L=Math.hypot(s.x2-s.x1,s.y2-s.y1); if(L>lmax){lmax=L;li=i;} });
   sheet(`<h2>방 크기 확정</h2>
-    <p class="hint">지금 그린 벽은 화면상의 모양일 뿐이라 아직 실제 길이를 모릅니다.
-      <b>가장 긴 벽</b>의 실제 길이를 입력하면 나머지가 같은 비율로 환산됩니다.</p>
+    <p class="hint">지금 잡은 벽은 화면상의 모양일 뿐이라 아직 실제 길이를 모릅니다.
+      <b>가장 긴 벽</b>의 실제 길이를 입력하면 나머지 벽과 도면 전체가 같은 비율로 환산됩니다.</p>
+    <p class="hint">거실이라면 흔히 3,600~4,500mm 입니다. 분양 홍보물·등기부의 전용면적으로도
+      가늠할 수 있고, 나중에 <b>축척 맞추기</b>로 다시 잡을 수 있습니다.</p>
     <label class="pickers"><span class="hint">가장 긴 벽의 실제 길이 (mm)</span>
       <input type="number" id="wl" value="3600" min="100" step="10"></label>
     <p class="src">도면을 올려 축척을 맞춘 경우에는 이 단계가 나오지 않습니다.</p>
@@ -3083,6 +3086,37 @@ async function openSelect(room){
     });
 }
 
+/*
+ * **축척이 없으면 가전을 올리지 않는다.**
+ * 가전 치수는 언제나 mm 인데 축척 전 도면의 월드 단위는 이미지 픽셀이라, 둘을 같은
+ * 화면에 올리면 크기 관계가 통째로 거짓이 된다(냉장고가 도면보다 커진다).
+ * 화면이 이상해지는 것보다 **"이 자리에 들어갑니다"가 거짓이 되는 것**이 더 큰 문제다.
+ * 축척은 사용자가 확정하는 값이므로(자동으로 만들어 내지 않는다) 여기서 안내만 한다.
+ */
+function needScale(){
+  /*
+   * **거실 길이 입력을 주 경로로 둔다.**
+   * 치수선 두 점 보정이 더 정확하지만, 수집한 분양 도면 중 치수가 인쇄된 것은 8% 뿐이다
+   * (CLAUDE.md 참조). 나머지 92% 에서 안 되는 방법을 먼저 권하면 상담이 막힌다.
+   * 방 하나를 인식시키면 `askWallLength` 가 가장 긴 벽의 실제 길이를 묻고,
+   * 나머지가 같은 비율로 환산된다 — 벽 하나만 알면 도면 전체가 맞춰진다.
+   */
+  sheet(`<h2>축척을 먼저 맞춰주세요</h2>
+    <p class="hint">가전 치수는 mm 이지만, 축척을 정하기 전 도면은 <b>실제 크기를 모르는 그림</b>입니다.
+      그대로 제품을 올리면 크기 관계가 맞지 않아 &ldquo;여기 들어갑니다&rdquo;가 근거를 잃습니다.</p>
+    <p class="hint"><b>거실 한 변의 실제 길이 하나만</b> 알면 됩니다 — 나머지 벽은 같은 비율로 환산됩니다.
+      거실 안쪽을 눌러 방을 잡으면 길이를 여쭤봅니다. 도면에 치수선이 인쇄돼 있으면 두 점을 찍는 쪽이 더 정확합니다.</p>
+    <p class="src">단지 라이브러리에서 불러온 도면은 이미 맞춰져 있어 이 단계가 없습니다.</p>
+    <div class="modal-actions">
+      <button id="lib">단지 불러오기</button>
+      <button id="c">치수선으로 맞추기</button>
+      <button class="primary" id="ok">거실 길이로 맞추기</button>
+    </div>`,
+    ()=>{ $('#ok').onclick =()=>{ closeSheet(); startDetect(); toast('거실 안쪽을 눌러주세요 — 방을 잡으면 실제 길이를 여쭤봅니다'); };
+          $('#c').onclick  =()=>{ closeSheet(); $('#btn-scale').click(); };
+          $('#lib').onclick=()=>{ closeSheet(); $('#btn-lib').click(); }; });
+}
+
 function needRoom(){
   sheet(`<h2>먼저 방을 잡아주세요</h2>
     <p class="hint">배치하려면 닫힌 방이 필요합니다. 도면을 올렸다면 <b>벽 자동 인식</b>으로
@@ -3355,6 +3389,7 @@ function fitAlternative(it, placed){
 }
 
 function autoPlace(picks){
+  if (!state.scaled){ needScale(); return; }
   // 폭이 큰 것부터 — 자리를 많이 먹는 제품이 먼저 벽을 잡아야 나머지가 틈에 들어간다
   const list = picks.map((q)=>({
     id:'i'+Math.random().toString(36).slice(2,8),
@@ -3425,8 +3460,15 @@ function autoPlace(picks){
  */
 /** 도면(이미지가 없으면 벽)이 차지하는 월드 범위 */
 function planBox(){
-  if (state.img && state.mmPerPx){
-    return { x1:0, y1:0, x2: state.imgW*state.mmPerPx, y2: state.imgH*state.mmPerPx };
+  /*
+   * **축척 전에는 월드 단위가 mm 가 아니라 이미지 픽셀이다**(`drawPlan` 이 그렇게 그린다).
+   * 그때도 도면이 차지하는 범위는 이미지 크기 그대로다 — 예전에는 이 경우가 벽 검사로
+   * 떨어졌고, 벽마저 없으면 6000×4000 폴백을 썼다. 900px 짜리 도면 옆에 x=6756 으로
+   * 가전을 꺼내 놓는 바람에 화면 맞춤이 줌아웃해 **도면이 854px → 118px 로 줄었다.**
+   */
+  if (state.img) {
+    const k = state.mmPerPx || 1;
+    return { x1:0, y1:0, x2: state.imgW*k, y2: state.imgH*k };
   }
   const xs = state.walls.flatMap((w)=>[w.x1,w.x2]), ys = state.walls.flatMap((w)=>[w.y1,w.y2]);
   if (!xs.length) return { x1:0, y1:0, x2:6000, y2:4000 };
@@ -3469,6 +3511,8 @@ function bodyCenter(it){
  */
 function stageOutside(picks){
   if (!picks || !picks.length) return [];
+  // 축척 없이 올리면 mm 와 이미지 픽셀이 섞여 크기 관계가 거짓이 된다
+  if (!state.scaled){ needScale(); return []; }
   const box = planBox();
   const gap = Math.max(300, (box.y2-box.y1) * 0.02);
   const already = state.items.filter((i)=>i.staged);
@@ -3513,6 +3557,7 @@ function fitAll(){
 
 function startManual(picks){
   if (!picks || !picks.length) return;
+  if (!state.scaled){ needScale(); return; }
   state.queue = picks.slice();
   nextPending();
 }
@@ -3581,7 +3626,7 @@ loadReps();
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
-  findSpot, autoPlace, fitAlternative, removeItem, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
+  findSpot, autoPlace, fitAlternative, removeItem, needScale, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
