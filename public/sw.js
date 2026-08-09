@@ -19,7 +19,9 @@
  * 배포 직후 한 번은 옛 목록이 뜬다 — 사용자가 "아직도 그대로"라고 보게 된다.
  * 데이터 표기를 바꿀 때는 버전을 함께 올릴 것.
  */
-const CACHE_VERSION = 'axhub-v2';
+// v3 (2026-08-10) — 앱 이름과 아이콘이 바뀌었다(AX 허브 → 세일즈 코파일럿).
+// manifest·아이콘이 캐시에 남아 있으면 옛 이름으로 계속 설치된다.
+const CACHE_VERSION = 'axhub-v3';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

@@ -9,6 +9,14 @@ Vercel 프로젝트명은 그대로다(주소를 바꾸면 시범운영 중인 �
 화면에 이름이 나오는 곳: `app/layout.tsx`(title·og) · `app/page.tsx`(h1) ·
 `components/Navigation.tsx` · `app/admin/page.tsx` · `components/FeedbackButton.tsx`.
 
+**앱 아이콘은 삼성 블루 바탕에 흰 'SC'다**(`public/icons/`, `.scratch/icon-gen.mjs` 로 생성).
+`S` 는 **공식 워드마크의 첫 글자를 그대로 잘라 쓴 것**이고(중첩 `<svg>` 로 viewBox 를 892×1080
+으로 잘라낸다), `C` 는 워드마크에 없는 글자라 **같은 규칙으로 작도했다** — cap height 1080,
+획 두께 30%, 완전한 원, 개구부 반각 38°. 글꼴로 친 C 를 쓰면 S 와 굵기·곡률이 안 맞는다.
+`purpose:"any maskable"` 이라 글자 폭을 캔버스의 62% 로 두어 원형 마스크에서도 잘리지 않는다.
+**아이콘·이름을 바꾸면 `sw.js` 의 `CACHE_VERSION` 을 함께 올릴 것** — manifest 가 캐시에
+남아 있으면 옛 이름으로 계속 설치된다. 이미 설치된 기기는 **삭제 후 재설치**해야 확실히 바뀐다.
+
 **삼성 워드마크는 글꼴이 아니라 SVG 패스다**(`components/SamsungWordmark.tsx`).
 `font-black` 으로 친 "SAMSUNG" 은 로고가 아니다 — 공식 워드마크는 전용 레터폼이라
 A 에 가로획이 없고 U 가 아래로 열려 있다. 색은 `currentColor` 로 두어 남색 바 위에서는

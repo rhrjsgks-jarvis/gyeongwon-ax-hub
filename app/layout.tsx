@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   description: '경원영업팀 AI 영업지원 도구 통합 플랫폼',
   manifest: '/manifest.json',
   themeColor: '#1428A0',
+  // 홈 화면에 추가했을 때 쓰는 아이콘 — iOS 는 manifest 의 icons 를 안 읽고 이것만 본다
+  icons: {
+    icon: '/icons/icon-192.png',
+    apple: '/icons/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

@@ -1,7 +1,7 @@
 {
-  "name": "경원 AX 허브",
-  "short_name": "AX 허브",
-  "description": "경원영업팀 AI 영업지원 도구 통합 플랫폼",
+  "name": "세일즈 코파일럿",
+  "short_name": "세일즈 코파일럿",
+  "description": "경원영업팀 매장 상담 지원 도구 — 매장 상담의 모든 답을 한 곳에",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1428A0",
@@ -29,19 +29,19 @@
       "description": "CE·MX 전 제품 키워드 검색"
     },
     {
-      "name": "AI Care",
-      "url": "/care",
-      "description": "구독케어 서비스 항목 검색"
+      "name": "배치 시뮬레이터",
+      "url": "/place",
+      "description": "도면에 가전을 놓아 들어가는지 확인"
     },
     {
-      "name": "레벨업테스트",
-      "url": "/test",
-      "description": "제품 전문가 역량 평가"
+      "name": "설치환경 가이드",
+      "url": "/install",
+      "description": "설치 전 필요한 것과 이격거리 확인"
     },
     {
-      "name": "AI 생성기",
+      "name": "타사비교",
       "url": "/compare",
-      "description": "타사비교 가이드 · 퀴즈 자동 생성"
+      "description": "타사 대비 우위·대응전략"
     }
   ]
 }
