@@ -2727,6 +2727,15 @@ function askWallLength(segs, opts){
     if (!(mm>0)) { toast("실제 길이를 mm 로 넣어주세요"); return; }
     const k = mm / lmax;
     for (const s of segs){ s.x1*=k; s.y1*=k; s.x2*=k; s.y2*=k; }
+    /*
+     * **도면 이미지도 같은 자로 재야 한다.**
+     * 벽 좌표만 mm 로 환산하고 `mmPerPx` 를 null 로 두면, 벽은 mm 축에 이미지는
+     * "이미지 픽셀 = 월드 단위" 축에 그려져 **같은 화면에 자가 둘**이 된다.
+     * 실제로 방이 도면보다 4.27배 크게 나와 도면 위에 제품을 올릴 수가 없었다
+     * (사용자 지적: "거실 공간만 별도로 크게 나오고 이미지는 작게 줄어듭니다").
+     * 벽이 이미지 픽셀 좌표에서 왔으므로 그 환산 계수가 곧 mm/px 다.
+     */
+    if (state.img) state.mmPerPx = k;
     state.scaled = true;
     const o = opts || {};
     const room = o.appendTo ? roomById(o.appendTo) : null;

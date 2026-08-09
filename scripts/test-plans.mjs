@@ -644,6 +644,63 @@ for (const plan of PLANS) {
   else pass('배치된 가전을 눌러 잡고 끌어서 옮길 수 있다 (detect 모드에서 배치해도 idle 로 복귀)');
 }
 
+/*
+ * ── 길이를 입력한 뒤 도면과 벽이 같은 자를 쓰는가 ──
+ * `askWallLength` 가 벽 좌표만 mm 로 환산하고 `state.mmPerPx` 를 null 로 두면,
+ * 벽은 mm 축에 도면 이미지는 "이미지 픽셀 = 월드 단위" 축에 그려져 **같은 화면에 자가 둘**이 된다.
+ * 실제로 방이 도면보다 4.27배 크게 나와 **도면 위에 제품을 올릴 수가 없었다.**
+ * 눈에 보이는 증상(도면이 작아짐)과 원인(단위 불일치)이 멀어 조용히 재발하기 쉬우므로 못 박는다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    // 방이 뚜렷한 합성 도면 — 자동 인식이 걸려야 한다
+    const c = document.createElement('canvas'); c.width = 900; c.height = 640;
+    const g = c.getContext('2d');
+    g.fillStyle = '#FFF'; g.fillRect(0, 0, 900, 640);
+    g.fillStyle = '#EFE6D6'; g.fillRect(80, 80, 740, 480);
+    g.strokeStyle = '#222'; g.lineWidth = 9; g.strokeRect(80, 80, 740, 480);
+    g.beginPath(); g.moveTo(520, 80); g.lineTo(520, 350); g.stroke();
+    g.beginPath(); g.moveTo(520, 350); g.lineTo(820, 350); g.stroke();
+    const url = c.toDataURL();
+    await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 900); }; im.src = url; });
+    await new Promise((res) => setTimeout(res, 1200));   // 자동 인식이 끝나기를 기다린다
+
+    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => x.textContent.trim() === '이 공간 확정');
+    if (!ok) return { step: '초안 막대에 확정 버튼이 없다' };
+    ok.click();
+    await new Promise((res) => setTimeout(res, 500));
+    const nameOk = document.querySelector('#sheet .modal-actions button.primary');
+    if (nameOk) nameOk.click();
+    await new Promise((res) => setTimeout(res, 500));
+
+    const wl = document.querySelector('#wl');
+    if (!wl) return { step: '길이 입력칸이 안 뜬다' };
+    wl.value = '4200';
+    document.querySelector('#wl-ok').click();
+
+    const xs = P.state.walls.flatMap((w) => [w.x1, w.x2]);
+    const ys = P.state.walls.flatMap((w) => [w.y1, w.y2]);
+    const box = P.planBox();
+    return {
+      mmPerPx: P.state.mmPerPx, scaled: P.state.scaled,
+      wall: { x1: Math.min(...xs), x2: Math.max(...xs), y1: Math.min(...ys), y2: Math.max(...ys) },
+      box, roomM2: +(P.state.rooms[0] ? (P.roomArea(P.state.rooms[0]) / 1e6).toFixed(1) : 0),
+    };
+  });
+
+  if (r.step) fail(`축척 흐름이 끊김: ${r.step}`);
+  else if (!r.scaled) fail('길이를 입력했는데 축척이 확정되지 않았다');
+  else if (!r.mmPerPx) {
+    fail('길이를 입력했는데 mmPerPx 가 비어 있다 — 도면 이미지가 벽과 다른 자로 그려진다');
+  } else if (r.wall.x2 > r.box.x2 * 1.02 || r.wall.y2 > r.box.y2 * 1.02 || r.wall.x1 < -1 || r.wall.y1 < -1) {
+    fail(`벽이 도면 범위를 벗어남 — 벽 ${Math.round(r.wall.x2)}×${Math.round(r.wall.y2)} vs 도면 ${Math.round(r.box.x2)}×${Math.round(r.box.y2)}`);
+  } else {
+    pass(`길이 입력 후 도면과 벽이 같은 자 (1px = ${r.mmPerPx.toFixed(2)}mm · 방 ${r.roomM2}㎡ 가 도면 `
+      + `${Math.round(r.box.x2)}×${Math.round(r.box.y2)}mm 안에 들어감)`);
+  }
+}
+
 // ── 단지 평면 라이브러리 ──
 // 매장에서 고객 단지를 고르면 도면 없이 바로 배치를 시작하는 것이 목적이다.
 // 도면 이미지는 저작권 때문에 저장할 수 없으므로 방 경계(mm 좌표)만 남기는데,
