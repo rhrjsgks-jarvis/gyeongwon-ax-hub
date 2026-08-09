@@ -21,7 +21,7 @@
  */
 // v3 (2026-08-10) — 앱 이름과 아이콘이 바뀌었다(AX 허브 → 세일즈 코파일럿).
 // manifest·아이콘이 캐시에 남아 있으면 옛 이름으로 계속 설치된다.
-const CACHE_VERSION = 'axhub-v4';
+const CACHE_VERSION = 'axhub-v5';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
