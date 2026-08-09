@@ -163,8 +163,44 @@ const SIZE_KEY = {
     const m = /(\d+)\s*형/.exec(r.size || '');
     return m ? { key: `${m[1]}형`, label: '화면크기' } : null;
   },
-  '에어컨': (r) => (r.size ? { key: `냉방 ${normSize(r.size)}㎡`, label: '냉방면적' } : null),
+  /*
+   * 에어컨은 **냉방면적이 아니라 설치 형태**로 고른다(2026-08-09 사용자 결정).
+   * *"에어컨 실내기 크기는 거의 동일하니 슬림형인지 와이드형인지, 클래식인지, Q9000인지
+   *  4가지로만 구분하면 될 것 같습니다."*
+   * 실제로 무풍 클래식(AF70F)과 Q9000 클래식(AF60F)은 363×1,883 으로 발자국이 **완전히 같다** —
+   * 냉방면적으로 묶으면 애초에 구분이 안 되고, 배치에서 달라지는 것도 없다.
+   * 상담에서 스탠드를 부르는 말이 곧 이 넷이므로 그대로 1단으로 쓴다.
+   *
+   * 모델 접두가 설치 형태를 그대로 담고 있다 — AF=스탠드 · AR=벽걸이 · AW=창문형.
+   * 제품군 문자열로 가르면 "갤러리 스탠드 구형 (2024) / 창문형"처럼 둘이 한 칸에 적힌
+   * 항목에서 뒤집힌다.
+   */
+  '에어컨': (r) => {
+    const m = r.model || '', g = r.group || '';
+    if (/^AW/.test(m)) return { key: '창문형', label: '설치 형태' };
+    if (/^AR/.test(m)) return { key: '벽걸이', label: '설치 형태' };
+    if (!/^AF/.test(m)) return null;                      // 알 수 없으면 폭으로 떨어뜨린다
+    if (/Q9000/.test(g)) return { key: 'Q9000 스탠드', label: '설치 형태' };
+    if (/클래식/.test(g)) return { key: '클래식 스탠드', label: '설치 형태' };
+    /*
+     * 갤러리 계열은 이름으로 못 가른다 — AF80F(492㎜)와 AF90H(360㎜)가 둘 다 '무풍콤보 갤러리'다.
+     * 슬림/와이드를 실제로 가르는 것은 **폭**이므로 폭으로 가른다.
+     */
+    return (baseOf(r).w >= 450)
+      ? { key: '와이드형 스탠드', label: '설치 형태' }
+      : { key: '슬림형 스탠드', label: '설치 형태' };
+  },
   '시스템에어컨': (r) => (r.size ? { key: `냉방 ${normSize(r.size)}㎡`, label: '냉방면적' } : null),
+  /*
+   * 콤보는 **세탁/건조 용량**으로 부른다(2026-08-09 사용자 결정) —
+   * *"콤보는 25/21kg 이런 식으로 대략적으로 맥락만 확인하는 걸로."*
+   * 세탁기는 그대로 폭이다. 세탁기 위에 건조기를 적층하는 상담이 폭으로 진행되기 때문이다.
+   */
+  '세탁기·콤보': (r) => {
+    if (lineupOf(r) !== '콤보') return null;
+    const m = /(\d+)\s*kg\s*\/\s*(\d+)\s*kg/.exec(normSize(r.size || ''));
+    return m ? { key: `${m[1]}/${m[2]}kg`, label: '용량 (세탁/건조)' } : null;
+  },
   '공기청정기': (r) => (r.size ? { key: `${normSize(r.size)}`, label: '청정면적' } : null),
   // 냉장고·김치냉장고는 **용량**으로 고른다. 상담이 "몇 리터짜리"로 진행되고,
   // 폭으로 묶으면 602~905L 가 한 줄이 되어 용량 표시가 무의미해진다(사용자 지적).
@@ -178,6 +214,14 @@ const SIZE_KEY = {
  * 폭으로 묶으면 "용량별 대표 1개"라는 목적과 어긋난다.
  */
 const MERGE_AXIS = { '냉장고': 'cap', '김치냉장고': 'cap' };
+
+/*
+ * 사이즈 기준이 **숫자가 아니라 이름**인 카테고리는 통합에서 뺀다.
+ * 에어컨은 슬림(360㎜)·클래식(363㎜)·Q9000(363㎜)이 폭 10% 안에 들어와 한 무리로 묶이는데,
+ * 그러면 라벨이 `슬림형 스탠드~Q9000 스탠드` 가 되고 사용자가 고르려던 구분이 통째로 사라진다.
+ * 이름으로 부르는 카테고리는 그 이름이 곧 한 줄이다.
+ */
+const NAMED_SIZE = new Set(['에어컨']);
 
 /*
  * 냉장고·김치냉장고는 **설치 방식이 배치 판정을 가른다.**
@@ -211,6 +255,19 @@ const lineupOf = (r) => {
   return /키친핏|빌트인/.test(r.group || '') ? '키친핏' : '프리스탠딩';
 };
 
+/*
+ * 화면에 적히는 사양 값. **단위를 여기서 붙인다.**
+ * 에어컨 냉방면적은 DB 에 단위 없는 숫자("62.6")로 들어 있다. 예전에는 사이즈 키가
+ * `냉방 62.6㎡` 라 화면에 단위가 보였는데, 1단이 설치 형태로 바뀌면서 그 통로가 사라졌다.
+ * 이제 `specs` 가 유일하게 냉방면적을 나르므로, 숫자만 뜨면 무엇의 값인지 알 수 없다
+ * ("슬림형 스탠드 — 360×1930×330mm · 56.9~62.6").
+ * 사이즈 단위와 옵션 단위 두 곳에서 쌓으므로 한 함수로 묶는다 — 한쪽만 고치면 어긋난다.
+ */
+function specText(r) {
+  const v = normSize(r.size);
+  return (/에어컨/.test(r.cat) && /^[\d.]+$/.test(v)) ? `${v}㎡` : v;
+}
+
 const groups = new Map();
 for (const r of rows) {
   const base = baseOf(r);
@@ -223,7 +280,13 @@ for (const r of rows) {
   }
   const g = groups.get(gk);
   if (r.size) {
-    const v = normSize(r.size);
+    /*
+     * 에어컨 냉방면적은 DB 에 단위 없는 숫자("62.6")로 들어 있다. 예전에는 사이즈 키가
+     * `냉방 62.6㎡` 라 화면에 단위가 보였는데, 1단이 설치 형태로 바뀌면서 그 통로가 사라졌다.
+     * `specs` 가 유일하게 냉방면적을 나르므로 여기서 단위를 붙인다 — 숫자만 뜨면
+     * "슬림형 스탠드 … · 56.9~62.6" 이 되어 무엇의 값인지 알 수 없다.
+     */
+    const v = specText(r);
     if (!g.specs.includes(v)) g.specs.push(v);
   }
   // 발자국이 같으면 한 옵션으로 합친다(색상 변형 등)
@@ -238,7 +301,7 @@ for (const r of rows) {
     g.options.get(ok).also.push(r.model);
   }
   if (r.size) {
-    const v = normSize(r.size);
+    const v = specText(r);
     const os = g.options.get(ok).specs;
     if (!os.includes(v)) os.push(v);
   }
@@ -318,15 +381,31 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
      * 그런 항목이 없을 때만 폭으로 적는다.
      */
     const pickUnit = (test) => values.filter((v) => test.test(v));
-    const family = pickUnit(/㎡/).length ? pickUnit(/㎡/)
+    /*
+     * 콤보 용량(`25/20kg`)이 여기 먼저 오는 이유: 같은 무리에 **용량이 비어 폭 키로 떨어진 행**이
+     * 섞인다(카탈로그에서 색상 변형이 한 열을 공유해 값을 못 채운 `WD90H25AHS`).
+     * 그대로 두면 라벨이 `685~2520` 이 됐다 — 폭(685)과 용량(25/20 → 2520)을 한 줄에 놓은 것이다.
+     */
+    const family = pickUnit(/^\d+\/\d+kg$/).length ? pickUnit(/^\d+\/\d+kg$/)
+      : pickUnit(/㎡/).length ? pickUnit(/㎡/)
       : pickUnit(/형/).length ? pickUnit(/형/)
       : values;
     const lo = family[0], hi = family[family.length - 1];
     const unit = /㎡/.test(hi) ? '㎡' : /형/.test(hi) ? '형' : /L$/.test(hi) ? 'L' : /mm/.test(hi) ? 'mm' : '';
     const head = /^냉방/.test(hi) ? '냉방 ' : /^폭/.test(hi) ? '폭 ' : '';
-    const size = family.length > 1
-      ? `${head}${numOf(lo)}~${numOf(hi)}${unit}`      // 여러 개면 범위 — "내 평형이 없다"가 안 되게
-      : hi;
+    /*
+     * "25/20kg" 처럼 **한 값 안에 숫자가 둘**인 표기는 자리별로 범위를 잡는다.
+     * 그냥 numOf 를 태우면 "2520~2518kg" 이 나온다(숫자를 이어 붙여 읽는다).
+     */
+    const pair = family.every((v) => /^\d+\/\d+kg$/.test(v))
+      && family.map((v) => v.match(/\d+/g).map(Number));
+    const span = (xs) => (Math.min(...xs) === Math.max(...xs)
+      ? `${Math.min(...xs)}` : `${Math.min(...xs)}~${Math.max(...xs)}`);
+    const size = pair
+      ? `${span(pair.map((p) => p[0]))}/${span(pair.map((p) => p[1]))}kg`
+      : family.length > 1
+        ? `${head}${numOf(lo)}~${numOf(hi)}${unit}`    // 여러 개면 범위 — "내 평형이 없다"가 안 되게
+        : hi;
     const options = [];
     const seen = new Set();
     for (const r of bucket) for (const o of r.options) {
@@ -351,7 +430,12 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
     const spreadW = Math.round(Math.max(...fs2.map((f) => f.w)) - Math.min(...fs2.map((f) => f.w)));
     const spreadD = Math.round(Math.max(...fs2.map((f) => f.d)) - Math.min(...fs2.map((f) => f.d)));
     merged.push({
-      cat, home: isHome(cat) || undefined, line: line || undefined, size, sizeLabel: rep.sizeLabel,
+      cat, home: isHome(cat) || undefined, line: line || undefined, size,
+      // 사이즈가 이름이라 폭·용량으로 줄세울 수 없다는 표시 — 화면이 데이터 순서를 그대로 쓴다
+      named: NAMED_SIZE.has(cat) || undefined,
+      // 라벨도 라벨을 만든 단위를 따라간다 — 폭 키로 떨어진 행이 대표가 되면
+      // `25/18~20kg` 에 "본체 폭(W)" 이 붙는다
+      sizeLabel: (bucket.find((r) => family.includes(r.size)) || rep).sizeLabel,
       specs: [...new Set(bucket.flatMap((r) => r.specs))],
       // 대표는 **옵션 중 발자국이 가장 큰 것**이다 (위에서 정렬해 뒀다)
       model: options[0].model, parts: options[0].parts, group: options[0].group, note: options[0].note,
@@ -364,7 +448,8 @@ for (const part of [...new Set(sized.map((r) => r.cat + '|' + (r.line || '')))])
   };
   for (const r of list) {
     const brk = bucket.length && (
-      kindOf(r) !== kindOf(bucket[0])
+      NAMED_SIZE.has(cat)
+      || kindOf(r) !== kindOf(bucket[0])
       || keyOf(r) > keyOf(bucket[0]) * MERGE_SPAN
       || !keyOf(r)
     );
@@ -511,12 +596,20 @@ for (const s of SETS) {
  */
 const lead = (s) => parseFloat((String(s).match(/[\d.]+/) || [0])[0]) || 0;
 const unitRank = (s) => (/형|㎡/.test(s) ? 0 : 1);
+/*
+ * 이름으로 부르는 사이즈는 숫자 정렬이 통하지 않는다 — 전부 0 이거나(슬림형·벽걸이)
+ * 엉뚱한 값이 잡힌다('Q9000 스탠드' → 9000 이라 맨 뒤로 간다).
+ * 상담에서 부르는 순서를 그대로 적어 둔다: 스탠드 넷 → 벽걸이 → 창문형.
+ */
+const NAME_ORDER = ['슬림형 스탠드', '와이드형 스탠드', '클래식 스탠드', 'Q9000 스탠드', '벽걸이', '창문형'];
+const nameRank = (s) => (NAME_ORDER.indexOf(s) + 1) || 999;
 const out = merged
   .sort((a, b) =>
     a.cat.localeCompare(b.cat, 'ko')
     // 세트 구성은 카테고리 **맨 뒤**로. 이름의 첫 숫자가 '1도어'의 1 이라 그냥 두면
     // 333L 보다 앞에 서서, 인덱스로 고르는 쪽(테스트·외부 사용)이 조용히 어긋난다.
     || (a.set ? 1 : 0) - (b.set ? 1 : 0)
+    || nameRank(a.size) - nameRank(b.size)
     || unitRank(a.size) - unitRank(b.size)
     || lead(a.size) - lead(b.size));
 

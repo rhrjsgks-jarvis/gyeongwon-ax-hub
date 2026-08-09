@@ -503,6 +503,50 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   }
 
   /*
+   * ── 에어컨 추천 ──
+   * 에어컨 1단이 냉방면적에서 **설치 형태**(슬림형/와이드형/클래식/Q9000/벽걸이/창문형)로
+   * 바뀌면서, 냉방면적을 사이즈 이름에서 읽던 코드가 통째로 0 을 내게 됐다.
+   * 이 실패는 **조용하다** — 예외도 경고도 없이 폴백이 엉뚱한 줄을 가리킬 뿐이라
+   * 상담 중에 잘못된 평형이 미리 체크된 채로 나간다. 그래서 여기서 잡는다.
+   */
+  {
+    P.state.reps = reps;
+    const acs = reps.filter((r) => r.cat === '에어컨');
+    if (!acs.length) fail('size-reps 에 에어컨이 없다');
+    else {
+      const m2 = (v) => Math.max(0, ...(v.specs || []).filter((s) => /㎡/.test(s))
+        .map((s) => parseFloat(String(s).split('~').pop().replace(/[^\d.]/g, '')) || 0));
+      // 'Q9000 스탠드' 의 9000 을 냉방면적으로 읽던 버그
+      const absurd = acs.filter((r) => m2(r) > 300);
+      if (absurd.length) fail(`에어컨 냉방면적이 말이 안 되는 값: ${absurd.map((r) => `${r.size}=${m2(r)}㎡`).join(', ')}`);
+      else pass(`에어컨 냉방면적을 ㎡ 값에서만 읽는다 (${acs.map((r) => m2(r)).join('·')}㎡)`);
+
+      st.walls = room(9000, 6000);            // 54㎡ 거실
+      st.items = []; st.rooms = []; st.scaled = true;
+      P.addRoom('거실', st.walls);
+      const rec = P.recommendPicks();
+      const got = rec['에어컨'] && reps[rec['에어컨'].i];
+      if (!got) fail('54㎡ 거실인데 에어컨 추천이 없다');
+      // 거실에 창문형·벽걸이를 내밀면 안 된다 — 창에 끼우거나 벽에 거는 물건이다
+      else if (!/스탠드/.test(got.size)) fail(`거실 에어컨 추천이 '${got.size}' — 스탠드여야 한다`);
+      else if (m2(got) < 54) fail(`거실 54㎡ 에 냉방 ${m2(got)}㎡ 를 추천 — 방을 못 덮는다`);
+      else pass(`거실 54㎡ → 에어컨 '${got.size}' (냉방 ${m2(got)}㎡)`);
+
+      // 가장 큰 거실에서 폴백이 **가장 작은 줄**을 집던 사고(list[length-1] = 창문형)
+      st.walls = room(14000, 9000);           // 126㎡ — 어느 줄도 못 덮는다
+      st.items = []; st.rooms = [];
+      P.addRoom('거실', st.walls);
+      const huge = P.recommendPicks()['에어컨'];
+      const hgot = huge && reps[huge.i];
+      const best = acs.filter((r) => /스탠드/.test(r.size)).sort((a, b) => m2(b) - m2(a))[0];
+      if (!hgot) fail('126㎡ 거실인데 에어컨 추천이 없다');
+      else if (m2(hgot) < m2(best)) fail(`어느 줄도 못 덮는 거실에서 '${hgot.size}'(냉방 ${m2(hgot)}㎡) 를 골랐다 — 가장 큰 '${best.size}'(${m2(best)}㎡) 여야 한다`);
+      else pass(`어느 줄도 못 덮는 거실에서는 가장 큰 것으로 — '${hgot.size}' (냉방 ${m2(hgot)}㎡)`);
+      st.rooms = []; st.items = [];
+    }
+  }
+
+  /*
    * ── 삭제 ──
    * 매장 기기가 태블릿이면 Delete 키가 없다. 목록의 ✕ 가 유일한 삭제 수단이므로
    * 키보드와 버튼이 **같은 함수**를 지나가야 한쪽만 고치는 사고가 안 난다.
