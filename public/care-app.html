@@ -153,6 +153,19 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .sell-q::before{content:"Q. "}
 .sell-a{font-size:11px;color:#6b7280;line-height:1.55}
 .sell-a::before{content:"A. ";font-weight:700;color:#059669}
+
+/* ── 방문케어 현장 사진 ──────────────────────────────────────────
+   글만 있으면 "종합점검·케어"가 무슨 일인지 상담사도 고객도 모른다.
+   삼성닷컴 구독 서비스 페이지의 실제 작업 사진을 라벨과 함께 보여 준다. */
+.cimg-wrap{margin:14px 0 4px}
+.cimg-h{display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;color:#16181b;margin-bottom:4px}
+.cimg-s{font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5}
+.cimg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
+.cimg{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff}
+.cimg img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#f3f4f6}
+.cimg .cap{padding:7px 8px;font-size:11.5px;font-weight:600;color:#374151;line-height:1.35;text-align:center}
+@media(max-width:520px){.cimg-grid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
+  .cimg .cap{font-size:11px;padding:6px}}
 </style>
 </head>
 
@@ -214,6 +227,364 @@ const PRODUCTS = [
   {key:"microwave", name:"전자레인지/오븐",    icon:"📻", desc:"큐커 오븐 MC 시리즈·세라믹 MS 시리즈", st:"na"},
   {key:"soundbar",  name:"사운드바",          icon:"🔊", desc:"HW-Q990H / Q900H / QS90H / Q800H 2026년형", st:"na"},
 ];
+
+
+/*
+ * 방문케어 현장 사진 — 삼성닷컴 구독 서비스 페이지(`images.samsung.com/kdp/static/pd/subscription_service/`)
+ * 에서 **라벨과 함께** 가져온 것이다. 사진만 있고 무엇을 하는 장면인지 모르면 상담에 못 쓴다.
+ *
+ * **DATA 를 건드리지 않고 따로 둔다.** DATA 는 손으로 다듬은 회차별 케어 내용이라
+ * 자동 갱신으로 덮어쓰면 안 된다. 사진은 삼성닷컴이 바꾸면 다시 받으면 그만이다.
+ * 수집: `.scratch/care/imgs.mjs` · 2026-08-10 기준 81장 전부 응답 확인.
+ */
+const CARE_IMGS = {
+ "dryer": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img01.jpg",
+   "l": "열교환기 청소"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img02.jpg",
+   "l": "피톤치드 연무"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img03.jpg",
+   "l": "내부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img04.jpg",
+   "l": "외부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img05.jpg",
+   "l": "스마트 진단"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  }
+ ],
+ "aircon": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img01.jpg",
+   "l": "전문 분해 세척 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img02.jpg",
+   "l": "실외기 냉매 점검 하는 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img03.jpg",
+   "l": "냉각 팬 세척 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img04.jpg",
+   "l": "열교환기 고압 세척 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img05.jpg",
+   "l": "외부 UV 케어 하는 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img06.jpg",
+   "l": "무상수리 서비스 하는 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img07.jpg",
+   "l": "필터 세척 모습"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img08.jpg",
+   "l": "스마트 진단 하는 모습"
+  }
+ ],
+ "fridge": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img01.jpg",
+   "l": "기계실 청소"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg",
+   "l": "스마트 진단"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img03.jpg",
+   "l": "내부 스팀"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img04.jpg",
+   "l": "내부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg",
+   "l": "도어 이물질 클리닝"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg",
+   "l": "외부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img08.jpg",
+   "l": "선반 세척"
+  }
+ ],
+ "kimchi": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img01.jpg",
+   "l": "기계실 청소"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg",
+   "l": "스마트 진단"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img03.jpg",
+   "l": "내부 스팀"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img04.jpg",
+   "l": "내부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg",
+   "l": "도어 이물질 클리닝"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg",
+   "l": "외부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img08.jpg",
+   "l": "선반 세척"
+  }
+ ],
+ "dish": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img01.jpg",
+   "l": "음식물 거름망 필터 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img02.jpg",
+   "l": "마이크로 필터 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img03.jpg",
+   "l": "세척 날개 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img04.jpg",
+   "l": "내부 스팀"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img05.jpg",
+   "l": "정수 필터 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img07.jpg",
+   "l": "내부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img08.jpg",
+   "l": "스마트 진단"
+  }
+ ],
+ "airpur_reusable": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img01.jpg",
+   "l": "부스터 팬 클리닝"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img02.jpg",
+   "l": "상단 토출구 분해 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img03.jpg",
+   "l": "리유저블 필터 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img04.jpg",
+   "l": "센서 부 점검 청소"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img05.jpg",
+   "l": "외부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img08.jpg",
+   "l": "스마트 진단"
+  }
+ ],
+ "airpur_s": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img01.jpg",
+   "l": "부스터 팬 클리닝"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img02.jpg",
+   "l": "상단 토출구 분해 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img03.jpg",
+   "l": "새 S필터 장착"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img04.jpg",
+   "l": "센서 부 점검 청소"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img05.jpg",
+   "l": "외부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img07.jpg",
+   "l": "새 S필터 비닐 제거"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img08.jpg",
+   "l": "스마트 진단"
+  }
+ ],
+ "washer": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img01.jpg",
+   "l": "초음파 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img02.jpg",
+   "l": "세탁조 오염 확인"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img03.jpg",
+   "l": "고압 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img04.jpg",
+   "l": "초음파 세척 장비 설치"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img05.jpg",
+   "l": "스마트 진단"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  }
+ ],
+ "aicombo": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img01.jpg",
+   "l": "초음파 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img02.jpg",
+   "l": "세탁조 오염 확인"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img03.jpg",
+   "l": "고압 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img04.jpg",
+   "l": "열교환기 청소"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img05.jpg",
+   "l": "피톤치드 연무"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  }
+ ],
+ "dresser": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img01.jpg",
+   "l": "필터 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img02.jpg",
+   "l": "내부 스팀"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img03.jpg",
+   "l": "내부 UV 케어"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img04.jpg",
+   "l": "피톤치드 연무"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img05.jpg",
+   "l": "외부 도어 광택"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img06.jpg",
+   "l": "최대 6년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img07.jpg",
+   "l": "필터 세척"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img08.jpg",
+   "l": "스마트 진단"
+  }
+ ],
+ "vacuum": [
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img01.jpg",
+   "l": "배터리 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img02.jpg",
+   "l": "물걸레 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img03.jpg",
+   "l": "사이드 브러시 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img04_v2.jpg",
+   "l": "모터 필터 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img06.jpg",
+   "l": "최대 5년 무상수리 서비스"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img07.jpg",
+   "l": "청정스테이션 먼지봉투 교체"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img08.jpg",
+   "l": "스마트 진단"
+  },
+  {
+   "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img09.jpg",
+   "l": "롤러 교체"
+  }
+ ]
+};
 
 const DATA = {
   dryer:{
@@ -1260,6 +1631,25 @@ function render36(d){
 }
 
 /* ────────────────── 포함/제외·범례·출처 ────────────────── */
+
+/**
+ * 방문케어 현장 사진 갤러리.
+ * 사진이 없는 제품(자가관리 대상 등)은 아무것도 그리지 않는다 — 빈 자리를 만들지 않는다.
+ * 이미지는 삼성닷컴 원본을 그대로 링크한다(설치환경 가이드와 같은 방식).
+ */
+function buildCareImgs(key){
+  const list = CARE_IMGS[key];
+  if (!list || !list.length) return '';
+  return `
+  <div class="card cimg-wrap">
+    <div class="cimg-h">📸 방문케어는 이렇게 진행됩니다</div>
+    <div class="cimg-s">삼성닷컴 구독 서비스 안내의 실제 작업 사진입니다 — 고객에게 그대로 보여 주세요.</div>
+    <div class="cimg-grid">
+      ${list.map(x=>`<div class="cimg"><img src="${x.s}" alt="${x.l}" loading="lazy"><div class="cap">${x.l}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
 function buildTail(d){
   return `
   <div class="card">
@@ -1357,6 +1747,7 @@ function render(){
   out += curPlan === '12' ? render12(d) : render36(d);
   out += buildTail(d);
 
+  out += buildCareImgs(curCat);
   out += renderSelling(curCat);
   body.innerHTML = out;
 
