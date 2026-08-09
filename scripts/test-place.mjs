@@ -209,6 +209,24 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     else pass(`냉장고 라인업 이격 구분 (프리스탠딩 후면 ${free.back}mm · 키친핏 내측 ${fit.back}mm)`);
   }
 
+  /*
+   * **키친핏 안에서도 라인업에 따라 갈려야 한다.**
+   * 한때 키친핏 전체를 12mm 한 값으로 뭉뚱그렸는데, 그러면 키친핏 Max 의 4mm 가 3배로
+   * 부풀려진다 — "이렇게 좁은 자리에도 들어갑니다"가 이 라인업을 파는 이유인데 정반대로
+   * 재는 셈이다(사용자 지적). 프리스탠딩의 방열 이격과 달리 키친핏 이격은 끼움 여유라
+   * 크게 잡는 것이 안전한 방향이 아니다 — 들어갈 자리를 못 들어간다고 말하게 된다.
+   */
+  {
+    const max = P.clearFor('냉장고', '본체', 'RM70F63R2A', '키친핏 Max 4도어');
+    const one = P.clearFor('냉장고', '본체', 'RR40C8995APG', '1도어 냉장 키친핏 (2026 카탈로그)');
+    const old4 = P.clearFor('김치냉장고', '본체', 'RQ33DB7441AP', '키친핏 313L (2026 카탈로그)');
+    if (max.side !== 4) fail(`키친핏 Max 좌우 이격이 ${max.side}mm (기대 4 — 가이드 "좌/우 단 4mm만 있으면 설치 가능")`);
+    else if (one.side !== 4) fail(`1도어 키친핏 좌우 이격이 ${one.side}mm (기대 4 — 신형 Max 기준)`);
+    else if (old4.side !== 12) fail(`Infinite·구형 Bespoke 4도어 키친핏 좌우 이격이 ${old4.side}mm (기대 12)`);
+    else if (!/4mm만 있으면/.test(max.src || '')) fail('키친핏 Max 이격의 근거 문구가 설치환경 가이드 표현과 다르다');
+    else pass(`키친핏 라인업별 이격 (Max·1도어 각 ${max.side}mm · Infinite/구형 4도어 각 ${old4.side}mm)`);
+  }
+
   const cur = P.clearFor('에어드레서', '본체', 'DF80H24R1D');
   const old = P.clearFor('에어드레서', '본체', 'DF10A9500CG');
   if (cur.side !== 2.5) fail(`현행 에어드레서(DF80H24R1D) 좌우 이격이 ${cur.side} (기대 2.5)`);
