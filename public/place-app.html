@@ -609,15 +609,18 @@ function toggleEdgeOpen(sel){
                : '이 구간을 벽으로 바꿨습니다 — 가전을 붙일 수 있습니다');
 }
 
-const ROOM_NAME_POOL = ['거실','주방','안방','침실1','침실2','침실3','드레스룸','세탁실','현관','발코니','서재','다용도실'];
+// 순서 = 이름 제안 순서. 실제 도면 120장 실측에서 '침실1'(58장)이 '안방'(35장)보다 흔해 앞에 둔다.
+const ROOM_NAME_POOL = ['거실','주방','침실1','안방','침실2','침실3','드레스룸','세탁실','현관','발코니','서재','다용도실'];
 function nextRoomName(){
   const used = new Set(state.rooms.map((r)=>r.name));
   /*
    * **자동으로 잡은 첫 방은 안방이다**(축척을 안방 가로로 재기 때문). 그런데 이름 제안은
    * 목록 순서대로 "거실"을 내밀어, 화면이 "거실 가로가 몇 mm 입니까?"라고 되물었다 —
-   * 실제로는 안방을 가리키고 있는데 말이다. 자동 선택이 살아 있는 동안에는 안방을 먼저 준다.
+   * 실제로는 그 방을 가리키고 있는데 말이다. 자동 선택이 살아 있는 동안에는 그 이름을 먼저 준다.
+   * 이름은 **'침실1'** 이다 — 실제 도면 120장을 OCR 로 세어 보니 '침실1' 58장 vs '안방' 35장으로
+   * 침실1 표기가 1.66배 흔했다(2026-08-09 실측). 화면 말이 도면 말과 같아야 상담이 매끄럽다.
    */
-  if (!used.has('안방') && (state.roomCands||[]).length && (state.candIdx||0) > 0) return '안방';
+  if (!used.has('침실1') && (state.roomCands||[]).length && (state.candIdx||0) > 0) return '침실1';
   return ROOM_NAME_POOL.find((n)=>!used.has(n)) || `공간 ${state.rooms.length+1}`;
 }
 function addRoom(name, walls){
@@ -1670,7 +1673,7 @@ function autoDetectCenter(){
   const best = cands.length ? { a: cands[pick].a, r: detectRoomAt(cands[pick].at[0], cands[pick].at[1]), at: cands[pick].at } : null;
   if (!best || best.r.error){
     setMode('detect');
-    toast('방을 자동으로 못 잡았습니다 — 안방 안쪽을 한 번 눌러주세요');
+    toast('방을 자동으로 못 잡았습니다 — 침실1(안방) 안쪽을 한 번 눌러주세요');
     draw(); return;
   }
   const r = best.r;
@@ -1762,7 +1765,7 @@ function showDraftBar(auto, prevArea){
       <span class="meta">모서리 ${state.draft.length}개${opens?` · 개구부 ${opens}곳`:''}</span>
       ${st.approx ? '<span class="meta">경계가 깔끔히 닫히지 않아 <b>대략</b>으로 잡았습니다 — 넓게/좁게로 맞춰 주세요</span>' : ''}
       <span class="grow"></span>
-      ${auto ? '<span class="meta"><b>안방으로 보이는 방</b>을 잡았습니다 — 축척은 이 방의 <b>가로 벽</b>으로 잽니다. 다른 방이면 <b>다른 방 ▸</b></span>' : ''}
+      ${auto ? '<span class="meta"><b>침실1(안방)로 보이는 방</b>을 잡았습니다 — 축척은 이 방의 <b>가로 벽</b>으로 잽니다. 다른 방이면 <b>다른 방 ▸</b></span>' : ''}
     </div>
     <div class="dl">
       <button id="d-wide" ${st.wider  == null ? 'disabled' : ''}>◂ 더 넓게</button>
@@ -2841,7 +2844,7 @@ function askWallLength(segs, opts){
    * 방 이름은 앞 단계에서 사용자가 붙인 것을 쓴다. "안방"으로 못 박으면
    * `다른 방 ▸`로 다른 방을 골랐을 때 화면이 거짓말을 한다.
    */
-  const rn = (opts && opts.name) || (roomById(state.roomSel)||{}).name || '안방';
+  const rn = (opts && opts.name) || (roomById(state.roomSel)||{}).name || '침실1';
   bar.innerHTML = "<div class='dl'>"
     + "<span class='area'>" + esc(rn) + " 가로가 몇 mm 입니까?</span></div>"
     + "<div class='dl'>"
@@ -2852,7 +2855,7 @@ function askWallLength(segs, opts){
     + "<button id='wl-again'>" + (state.img ? "다시 인식" : "다시 그리기") + "</button>"
     + "<button class='primary' id='wl-ok'>확정</button></div>"
     + "<div class='dl'><span class='prev'><b style='color:#B45309'>주황색으로 표시된 벽</b>입니다 — "
-    + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다. 안방 가로는 보통 3,000~3,600mm.</span></div>";
+    + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다. 침실1(안방) 가로는 보통 3,000~3,600mm.</span></div>";
   bar.classList.add("on");
   const wl = $("#wl");
   wl.focus(); wl.select();
@@ -3457,15 +3460,15 @@ function needScale(){
   sheet(`<h2>축척을 먼저 맞춰주세요</h2>
     <p class="hint">가전 치수는 mm 이지만, 축척을 정하기 전 도면은 <b>실제 크기를 모르는 그림</b>입니다.
       그대로 제품을 올리면 크기 관계가 맞지 않아 &ldquo;여기 들어갑니다&rdquo;가 근거를 잃습니다.</p>
-    <p class="hint"><b>안방 가로 한 변의 실제 길이 하나만</b> 알면 됩니다 — 나머지 벽과 도면 전체가 같은 비율로 환산됩니다.
-      고객이 알고 계신 치수가 대개 안방이라 이 쪽을 기준으로 잡습니다. 도면에 치수선이 인쇄돼 있으면 두 점을 찍는 쪽이 더 정확합니다.</p>
+    <p class="hint"><b>침실1(안방) 가로 한 변의 실제 길이 하나만</b> 알면 됩니다 — 나머지 벽과 도면 전체가 같은 비율로 환산됩니다.
+      고객이 알고 계신 치수가 대개 침실1(안방)이라 이 쪽을 기준으로 잡습니다. 도면에 치수선이 인쇄돼 있으면 두 점을 찍는 쪽이 더 정확합니다.</p>
     <p class="src">단지 라이브러리에서 불러온 도면은 이미 맞춰져 있어 이 단계가 없습니다.</p>
     <div class="modal-actions">
       <button id="lib">단지 불러오기</button>
       <button id="c">치수선으로 맞추기</button>
-      <button class="primary" id="ok">안방 길이로 맞추기</button>
+      <button class="primary" id="ok">침실1 길이로 맞추기</button>
     </div>`,
-    ()=>{ $('#ok').onclick =()=>{ closeSheet(); startDetect(); toast('안방 안쪽을 눌러주세요 — 방을 잡으면 가로 길이를 여쭤봅니다'); };
+    ()=>{ $('#ok').onclick =()=>{ closeSheet(); startDetect(); toast('침실1(안방) 안쪽을 눌러주세요 — 방을 잡으면 가로 길이를 여쭤봅니다'); };
           $('#c').onclick  =()=>{ closeSheet(); $('#btn-scale').click(); };
           $('#lib').onclick=()=>{ closeSheet(); $('#btn-lib').click(); }; });
 }
