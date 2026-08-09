@@ -76,7 +76,17 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.07',
         status: 'live',
       },
-      {
+            {
+        href: '/as',
+        icon: '🛡️',
+        title: 'AS기간 확인',
+        desc: '품목별 무상보증·핵심부품·부품보유기간을 한눈에 — 삼성전자서비스 보증기간 산정기준 기준',
+        color: '#0369A1',
+        bg: '#F0F9FF',
+        updated: '2026.08',
+        status: 'live',
+      },
+{
         href: '/place',
         icon: '📐',
         title: '가전 배치 시뮬레이터',

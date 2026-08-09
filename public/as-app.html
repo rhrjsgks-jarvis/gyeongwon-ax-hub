@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AS기간 확인</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'맑은 고딕','Malgun Gothic',-apple-system,system-ui,sans-serif;
+    background:#f6f7fb;color:#16181b;-webkit-text-size-adjust:100%}
+  .wrap{max-width:840px;margin:0 auto;padding:16px 14px 60px}
+  .hd{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .hd .ico{font-size:22px}
+  .hd h1{font-size:19px;font-weight:800;margin:0}
+  .sub{font-size:12.5px;color:#6b7280;line-height:1.55;margin-bottom:14px}
+  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:16px}
+  .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
+    font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:#374151}
+  .cat:hover{border-color:#c7d2fe}
+  .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
+  .card h2{font-size:14px;font-weight:800;margin:0 0 3px;display:flex;align-items:center;gap:6px}
+  .big{font-size:27px;font-weight:800;color:#1428A0;line-height:1.15;margin:4px 0 2px}
+  .why{font-size:12px;color:#6b7280;line-height:1.5}
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+    padding:9px 0;border-bottom:1px solid #f1f2f4}
+  .row:last-child{border-bottom:0}
+  .row .n{font-size:13px;font-weight:700;flex:1}
+  .row .v{font-size:14px;font-weight:800;color:#1428A0;white-space:nowrap}
+  .row .d{font-size:11.5px;color:#6b7280;line-height:1.5;margin-top:2px;font-weight:400}
+  .warn{background:#FFFBEB;border-color:#FDE68A}
+  .warn h2{color:#B45309}
+  .unk{font-size:12.5px;color:#B45309;font-weight:600}
+  .note{font-size:11.5px;color:#6b7280;line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb}
+  .src{font-size:11px;color:#9aa0a6;line-height:1.6;margin-top:14px}
+  .src a{color:#1428A0}
+  .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;
+    background:#EEF2FF;color:#1428A0;margin-left:5px;vertical-align:2px}
+  @media(max-width:520px){.cats{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
+    .big{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd"><span class="ico">🛡️</span><h1>AS기간 확인</h1></div>
+  <div class="sub">품목을 고르면 <b>무상보증 · 핵심부품 · 부품보유기간</b>을 한눈에 봅니다.
+    삼성전자서비스 <b>보증기간 산정기준</b> 원문 그대로이며, 원문에 없는 항목은 비워 둡니다.</div>
+  <div class="cats" id="cats"></div>
+  <div id="body"></div>
+</div>
+
+<script>
+/*
+ * 데이터는 삼성전자서비스 '보증기간 산정기준'(https://www.samsungsvc.co.kr/info/fee?tab=assure) 원문에서만 만든다.
+ * **원문에 없는 것은 넣지 않는다** — AS 기간은 틀리면 그대로 고객 분쟁이다.
+ * 부품보유기간이 원문 표에 없는 품목은 hold:null 로 두고 화면이 "확인 필요"로 알린다.
+ */
+const AS_SRC = "https://www.samsungsvc.co.kr/info/fee?tab=assure";
+const DB = {"냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","냉장고"],["인버터 컴프레서","10년","양문형 냉장고·스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"김치냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","김치독"],["인버터 컴프레서","10년","스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"세탁기·콤보":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"세탁기","core":[["일반모터","3년","세탁기"],["세탁 모터","10년","드럼세탁기 DD MOTOR(2008년 1월 제조분~) · 전자동 10kg 이상(2011년 2월 제조분~)"]]},"건조기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류건조기","core":[["컴프레서","3년","의류건조기"],["모터·컴프레서","정속형 10년 / 인버터형 12년","건조기"]]},"TV":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"TV","core":[["LCD/LED 패널","2년","TV"]]},"모니터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"모니터","core":[["LCD/LED 패널","2년","모니터"]]},"에어컨":{"base":"2년","baseWhy":"계절성 제품 — 냉방 전용","baseNote":"냉난방 겸용은 일반 제품이라 1년","hold":8,"holdAs":"에어컨","core":[["컴프레서","4년","에어컨"],["인버터 컴프레서","10년","2015년 1월 이후 제조분 — 시스템에어컨 제외"]]},"시스템에어컨":{"base":"1년","baseWhy":"일반 제품","hold":8,"holdAs":"시스템에어컨","core":[["컴프레서","4년","시스템에어컨"]],"note":"인버터 컴프레서 10년 적용 대상에서 시스템에어컨은 제외된다"},"에어드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"],["컴프레서","10년","에어드레서"]]},"슈드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"]]},"청소기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전기청소기","core":[["인버터 모터","10년","청소기 — 단, 모션싱크 계열 5년"]]},"공기청정기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[["인버터 모터","10년","공기청정기 — 2018년 향부터"]]},"제습기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"제습기","core":[["인버터 컴프레서","10년","제습기 — 2015년 1월 이후 제조분"]]},"정수기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"정수기","core":[]},"전자레인지/오븐":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전자레인지","core":[["마그네트론","3년","전자레인지"]]},"식기세척기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"인덕션/전기레인지":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"냉동고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"업소용 냉장고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"데이코 빌트인":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"사운드바":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"스마트폰":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"배터리는 1년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"태블릿":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"'25.12.31 까지 구입분은 1년, '26.1.1 이후 구입분부터 2년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"노트북":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[],"note":"노트북 LCD/LED 패널은 핵심부품 2년 적용 대상에서 제외된다"},"데스크탑":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[["메인보드","2년","PC"],["LCD/LED 패널","2년","일체형PC"]]},"프린터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"프린터","core":[]}};
+const ROYAL = {"grade":"로열블루","cond":"2년간 구매 누계 실적 2,000만원 이상 (삼성전자 멤버십 지정매장 기준)","keep":"취득 월로부터 2년간 유효","benefit":"무상수리 서비스 기간 연장 — 추가 구매하신 4대 품목(TV·냉장고·세탁기·에어컨) 대상","unknown":"연장 기간(몇 년)은 삼성닷컴 \"무상수리 서비스 기간 연장\" 안내에서 확인 필요","src":"https://www.samsung.com/sec/membership/membershipLevel/"};
+
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const keys = Object.keys(DB);
+let cur = keys[0];
+
+function renderCats(){
+  document.getElementById('cats').innerHTML = keys.map(k=>
+    `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}">${esc(k)}</div>`).join('');
+  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); });
+}
+
+function renderBody(){
+  const d = DB[cur];
+  let h = '';
+
+  h += `<div class="card"><h2>무상보증기간</h2>
+    <div class="big">${esc(d.base)}</div>
+    <div class="why">원문 구분: <b>${esc(d.baseWhy)}</b>${d.baseNote?' · '+esc(d.baseNote):''}</div></div>`;
+
+  h += '<div class="card"><h2>핵심부품 무상기간</h2>';
+  if (d.core && d.core.length) {
+    h += d.core.map(([nm,yr,why])=>`<div class="row"><div class="n">${esc(nm)}
+      <div class="d">${esc(why)}</div></div><div class="v">${esc(yr)}</div></div>`).join('');
+  } else {
+    h += '<div class="why">이 품목은 원문의 핵심부품 표에 없습니다 — 본체 무상보증기간을 따릅니다.</div>';
+  }
+  h += '</div>';
+
+  h += '<div class="card' + (d.hold?'':' warn') + '"><h2>부품보유기간 <span class="pill">내용연수 동일</span></h2>';
+  if (d.hold) h += `<div class="big">${d.hold}년</div><div class="why">원문 표기: <b>${esc(d.holdAs)}</b></div>`;
+  else h += '<div class="unk">원문 표에 이 품목이 없습니다 — 고객센터 1588-3366 확인 필요</div>';
+  h += '</div>';
+
+  if (d.note) h += `<div class="card warn"><h2>⚠ 주의</h2><div class="why">${esc(d.note)}</div></div>`;
+
+  h += `<div class="card"><h2>멤버십 ${esc(ROYAL.grade)} 혜택</h2>
+    <div class="row"><div class="n">${esc(ROYAL.benefit)}</div></div>
+    <div class="note">선정 조건: ${esc(ROYAL.cond)}<br>유지: ${esc(ROYAL.keep)}<br>
+      <span class="unk">${esc(ROYAL.unknown)}</span></div></div>`;
+
+  h += `<div class="src">출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
+    · 삼성전자 <a href="${ROYAL.src}" target="_blank" rel="noopener">멤버십 등급별 혜택</a><br>
+    2026-08-10 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.</div>`;
+
+  document.getElementById('body').innerHTML = h;
+}
+
+renderCats(); renderBody();
+window.__as = { DB, ROYAL, get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); } };
+</script>
+</body>
+</html>
