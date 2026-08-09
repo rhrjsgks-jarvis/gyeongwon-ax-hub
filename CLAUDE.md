@@ -38,11 +38,11 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
 
 - 저장소: `https://github.com/rhrjsgks-jarvis/gyeongwon-ax-hub` (main 브랜치, public repo)
 - 배포: main에 push하면 Vercel이 자동 빌드/배포 (별도 CLI 배포 불필요)
-- 프로덕션 URL: **`https://slaescopilot.vercel.app`**
+- 프로덕션 URL: **`https://salescopilot-store.vercel.app`**
   - `salescopilot.vercel.app` 은 **남의 앱이다**("Sales Copilot - Video Meeting"). 그 이름이
     이미 쓰이고 있어 Vercel 이 `slaescopilot`(sales → slaes) 로 잡았다. 오타처럼 보이지만
     이것이 실제 주소다.
-  - 옛 주소 `gyeongwon-ax-hub.vercel.app` 은 307 로 넘어오지만, **팀에 공유하는 링크는
+  - 옛 주소 `salescopilot-store.vercel.app` 은 307 로 넘어오지만, **팀에 공유하는 링크는
     실제 주소를 쓴다**(`app/page.tsx` 의 `HUB_URL`).
 - Vercel projectId: `prj_JskGnqqArCARl3mNBm6tp1dmdu46` / teamId: `team_o104cKtnAQcEaKospwGIAt9N`
 - git push 인증은 로컬에 SSH 키 또는 `gh auth login`으로 한 번만 설정해두면 이후 세션에서 재설정 불필요 (Cowork 샌드박스 환경과 달리 로컬 환경은 인증정보가 세션 간 유지됨).
@@ -1190,7 +1190,7 @@ AX 현황 대시보드(`app/admin/page.tsx`)는 정적 HTML이 아닌 React 클�
 
 ## 배포 후 검증
 
-push 후 Vercel 대시보드/CLI로 최신 배포의 커밋 해시가 로컬 HEAD와 일치하고 `READY` 상태인지 확인. 가능하면 실제 배포 URL(`gyeongwon-ax-hub.vercel.app/install`)을 브라우저로 열어 변경한 카테고리를 선택해 이미지가 깨지지 않고 로드되는지 스크린샷으로 육안 확인한다.
+push 후 Vercel 대시보드/CLI로 최신 배포의 커밋 해시가 로컬 HEAD와 일치하고 `READY` 상태인지 확인. 가능하면 실제 배포 URL(`salescopilot-store.vercel.app/install`)을 브라우저로 열어 변경한 카테고리를 선택해 이미지가 깨지지 않고 로드되는지 스크린샷으로 육안 확인한다.
 
 ## 사용자 선호 (항상 준수)
 

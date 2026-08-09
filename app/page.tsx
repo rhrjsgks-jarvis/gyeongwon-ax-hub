@@ -7,12 +7,12 @@ import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 
 /*
- * 배포 주소. **`salescopilot.vercel.app` 이 아니다** — 그 이름은 이미 다른 사람이 쓰고 있어
- * Vercel 이 `slaescopilot`(sales → slaes) 로 잡았다. 옛 주소 `gyeongwon-ax-hub` 는
- * 307 로 여기 넘어오지만, 팀에 공유하는 링크는 실제 주소여야 한다.
- * 프로젝트 이름을 바꾸면 이 상수와 아래 표시 문구를 함께 고칠 것.
+ * 배포 주소. **`salescopilot.vercel.app` 은 쓸 수 없다** — 이미 다른 사람의 앱이 그 이름을
+ * 쓰고 있다("Sales Copilot - Video Meeting"). 그래서 뒤에 `-store` 를 붙였다.
+ * 화면에 적히는 주소도 이 상수에서 나온다 — 두 곳이 어긋난 적이 있다.
+ * 프로젝트 이름을 바꾸면 여기만 고치면 된다.
  */
-const HUB_URL = 'https://slaescopilot.vercel.app'
+const HUB_URL = 'https://salescopilot-store.vercel.app'
 
 type ModuleCard = {
   href: string
