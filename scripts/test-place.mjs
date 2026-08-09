@@ -308,6 +308,64 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   else pass('자동 배치 뒤 idle 모드 · 원본 도면 — 가전을 끌 수 있는 상태');
 
   /*
+   * ── 도면 밖에 꺼내 두기 ──
+   * 이 도구는 상담사가 제품을 도면 안으로 끌고 들어와 설치 느낌을 보여주는 물건이다.
+   * 그래서 고른 가전은 자동으로 밀어 넣지 않고 도면 **오른쪽 바깥**에 대기 상태로 세운다.
+   * 대기 중에는 방 밖·겹침 판정을 하지 않는다 — 아직 놓은 것이 아니라 경고가 나오면 안 된다.
+   */
+  st.walls = room(4000, 3000); st.items = [];
+  {
+    const box = P.planBox();
+    const made = P.stageOutside([pick('냉장고', '602~640L'), pick('TV', '65형')]);
+    if (made.length !== 2) fail(`꺼내기 2대를 요청했는데 ${made.length}대`);
+    else if (!made.every((i) => i.staged)) fail('꺼내 둔 가전에 대기 표시(staged)가 없다');
+    else if (!made.every((i) => P.bodyCenter(i)[0] > box.x2)) fail('꺼내 둔 가전이 도면 범위 안에 있다 — 밖에 세워야 한다');
+    else if (made.some((i) => i.warn.length)) fail(`대기 중인데 경고가 붙었다: ${made.map((i) => i.warn).flat().join(', ')}`);
+    else if (P.bodyCenter(made[0])[1] === P.bodyCenter(made[1])[1]) fail('꺼낸 가전이 같은 자리에 겹쳐 있다 — 세로로 늘어놔야 한다');
+    else pass(`도면 밖 대기 배치 — 2대를 도면 오른쪽(x > ${Math.round(box.x2)})에 세로로 세움 · 경고 없음`);
+  }
+
+  /*
+   * ── 벽을 넘으면 되돌리지 말고 안쪽으로 밀어 넣는다 ──
+   * 예전에는 직전 위치로 되돌려서 벽 근처에서 제품이 손에서 자꾸 빠졌다.
+   * 벽에 설치할 수는 없으므로 안쪽으로 옮겨 주는 것이 맞다(사용자가 정한 동작).
+   */
+  st.walls = room(4000, 3000); st.items = [];
+  {
+    const q = pick('냉장고', '602~640L');
+    P.stageOutside([q]);
+    const it = st.items[0];
+    it.staged = false; it.a = 0;
+    it.bx = 3950; it.by = 1200;          // 오른쪽 벽을 뚫고 나간 자리
+    if (!P.escapesRoom(it)) fail('벽을 넘겼는데 방 밖 판정이 안 된다 — 시험 자체가 성립하지 않는다');
+    else if (!P.nudgeInside(it)) fail('벽 안쪽으로 밀어 넣지 못했다');
+    else if (P.escapesRoom(it)) fail('밀어 넣었다는데 아직 방 밖이다');
+    else pass(`벽을 넘으면 안쪽으로 이동 (x ${3950} → ${Math.round(it.bx)})`);
+  }
+
+  /*
+   * ── 2D 라서 생기는 겹침 예외 ──
+   * 사운드바는 TV 아래, 건조기는 세탁기 위에 놓인다. 콤보는 그 자체가 건조까지 하므로 제외다.
+   * 이 예외가 없으면 **실제로 되는 설치를 "겹칩니다"로 막는다.**
+   */
+  {
+    const mk = (cat, group, model) => ({ cat, group, model, label: cat });
+    const tv = mk('TV', 'Neo QLED', 'KQ65');
+    const bar = mk('사운드바', 'Q-시리즈', 'HW-Q');
+    const wash = mk('세탁기·콤보', 'AI 세탁기', 'WF25');
+    const combo = mk('세탁기·콤보', 'Infinite AI 콤보', 'WD99F25AHR');
+    const dry = mk('건조기', 'AI 건조기', 'DV90');
+    const fridge = mk('냉장고', '4도어', 'RS80');
+    if (!P.stackable(tv, bar)) fail('TV와 사운드바가 겹칠 수 없다고 나온다 — 사운드바는 TV 아래에 단다');
+    else if (!P.stackable(bar, tv)) fail('순서를 바꾸면 판정이 달라진다');
+    else if (!P.stackable(wash, dry)) fail('세탁기와 건조기가 겹칠 수 없다고 나온다 — 적층 설치가 정상이다');
+    else if (P.stackable(combo, dry)) fail('콤보 위에 건조기를 얹을 수 있다고 나온다 — 콤보는 제외해야 한다');
+    else if (P.stackable(tv, fridge)) fail('TV와 냉장고가 겹쳐도 된다고 나온다');
+    else if (P.stackable(wash, fridge)) fail('세탁기와 냉장고가 겹쳐도 된다고 나온다');
+    else pass('겹침 예외 — TV↔사운드바 · 세탁기↔건조기만 허용(콤보 제외)');
+  }
+
+  /*
    * **하나씩 직접 놓기.**
    * 상담에서 보고 싶은 것은 대개 "저 자리에 놓으면 어떤 느낌인가"이고, 자동이 자리를
    * 못 찾았을 때 "안 됩니다"로 끝나면 거기서 막힌다. 이 경로(mode 'place' + pending)는

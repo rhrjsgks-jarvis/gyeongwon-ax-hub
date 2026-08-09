@@ -198,9 +198,18 @@ const MERGE_AXIS = { '냉장고': 'cap', '김치냉장고': 'cap' };
 const HOME_OFF = new Set(['업소용 냉장고', '데이코 빌트인', '시스템에어컨', '냉동고']);
 const isHome = (cat) => !HOME_OFF.has(cat) && !/^리빙/.test(cat);
 
-const LINEUP_CATS = new Set(['냉장고', '김치냉장고']);
-const lineupOf = (r) => (LINEUP_CATS.has(r.cat)
-  ? (/키친핏|빌트인/.test(r.group || '') ? '키친핏' : '프리스탠딩') : '');
+const LINEUP_CATS = new Set(['냉장고', '김치냉장고', '세탁기·콤보']);
+/*
+ * 세탁기와 콤보(세탁+건조 일체형)도 갈라야 한다. 겉보기 폭이 같아 한 줄로 묶이는데,
+ * **설치가 다르다** — 세탁기 위에는 건조기를 적층하지만 콤보 위에는 얹지 않는다.
+ * 묶어 두면 대표가 콤보(WD90H25AHS)로 뽑혀 **세탁기+건조기 적층 상담이 아예 불가능해진다.**
+ * (배치 시뮬레이터의 겹침 예외가 콤보를 제외하기 때문이다.)
+ */
+const lineupOf = (r) => {
+  if (!LINEUP_CATS.has(r.cat)) return '';
+  if (r.cat === '세탁기·콤보') return (/콤보/.test(r.group || '') || /^WD/.test(r.model || '')) ? '콤보' : '세탁기';
+  return /키친핏|빌트인/.test(r.group || '') ? '키친핏' : '프리스탠딩';
+};
 
 const groups = new Map();
 for (const r of rows) {
