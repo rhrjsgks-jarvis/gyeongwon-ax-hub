@@ -706,13 +706,28 @@ for (const plan of PLANS) {
     P.saveToLibrary('강원 원주', '다른 단지', '59B');   // 지역이 둘이 되도록 하나 더
     await P.openLibrary();
     const step = () => [...document.querySelectorAll('#libbody .libitem')].map((b) => b.textContent.replace(/\s+/g, ' ').trim());
-    out.lv1 = step();                                   // 지역 목록
+    out.lv1 = step();                                   // 시·도 칩으로 걸러진 시·군 목록
     const pick = (txt) => {
       const b = [...document.querySelectorAll('#libbody .libitem')].find((x) => x.textContent.includes(txt));
       if (b) b.click();
       return !!b;
     };
-    out.picked1 = pick('경기 수원');
+    /*
+     * **시·도를 먼저 고르고 시·군만 스크롤한다.** 지역이 17곳이라 휴대폰에서 한 화면에
+     * 안 들어갔다. 칩이 실제로 걸러 주는지(경기를 고르면 강원이 안 보이는지) 확인한다.
+     */
+    const chipTxt = () => [...document.querySelectorAll('#libchips .chip')].map((c) => c.textContent.replace(/s+/g, ' ').trim());
+    const chip = (t) => {
+      const c = [...document.querySelectorAll('#libchips .chip')].find((x) => x.textContent.includes(t));
+      if (c) c.click();
+      return !!c;
+    };
+    out.chips = chipTxt();
+    out.chipGw = chip('강원');
+    out.lv1gw = step();
+    chip('경기');
+    out.lv1 = step();
+    out.picked1 = pick('수원');
     out.lv2 = step();                                   // 그 지역의 단지 목록
     // 도면이 있는 단지를 골라 3단계(도면 목록)까지 들어간다.
     // "저장된 방만 있는 단지"는 고르는 즉시 불러오므로 3단계가 없다 — 그건 아래에서 따로 본다.
@@ -800,10 +815,14 @@ for (const plan of PLANS) {
   }
 
   // 3단계 좁혀 가기
-  if (!r.lv1 || r.lv1.length < 2) fail(`1단계에 지역이 ${r.lv1 ? r.lv1.length : 0}개 — 지역부터 고르게 해야 한다`);
-  else if (!r.lv1.some((t) => t.includes('경기 수원')) || !r.lv1.some((t) => t.includes('강원 원주'))) {
-    fail(`1단계 지역 목록이 이상함: ${r.lv1}`);
-  } else if (!r.picked1) fail('지역을 고를 수 없음');
+  if (!r.chips || r.chips.length < 2) fail(`시·도 칩이 ${r.chips ? r.chips.length : 0}개 — 경기·강원을 먼저 고르게 해야 한다`);
+  else if (!r.chips.some((t) => t.includes('경기')) || !r.chips.some((t) => t.includes('강원'))) fail(`시·도 칩이 이상함: ${r.chips}`);
+  else if (!r.chipGw) fail('강원 칩을 누를 수 없음');
+  else if (!r.lv1gw.some((t) => t.includes('원주'))) fail(`강원을 골랐는데 원주가 없음: ${r.lv1gw}`);
+  else if (r.lv1gw.some((t) => t.includes('수원'))) fail(`강원을 골랐는데 경기 시·군이 섞여 있음: ${r.lv1gw}`);
+  else if (!r.lv1 || r.lv1.length < 2) fail(`경기에 시·군이 ${r.lv1 ? r.lv1.length : 0}개`);
+  else if (!r.lv1.some((t) => t.includes('수원'))) fail(`경기 목록에 수원이 없음: ${r.lv1}`);
+  else if (!r.picked1) fail('지역을 고를 수 없음');
   else if (!r.target) fail('색인에 "경기 수원" 단지가 없다 — npm run build:plans 로 만든다');
   else if (!r.lv2.some((t) => t.includes(r.target.complex))) fail(`2단계에 그 지역의 단지가 없음: ${r.lv2}`);
   else if (r.lv2.some((t) => t.includes('다른 단지'))) fail('2단계에 다른 지역의 단지가 섞여 있음');
