@@ -176,7 +176,8 @@
     <button id="btn-img">도면 이미지</button>
     <button id="btn-scale">축척 맞추기</button>
     <button id="btn-detect">벽 자동 인식</button>
-    <button id="btn-clean" class="ghost" title="벽만 남긴 정리본 보기">◧</button>
+    <button id="btn-clean" class="ghost" title="알고리즘이 보고 있는 정리본을 겹쳐 봅니다">◧</button>
+    <button id="btn-dims" class="ghost" title="벽 길이(mm) 표시">↔</button>
     <button id="btn-wall">벽 그리기</button>
     <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
     <button id="btn-save" class="ghost" title="지금 잡은 방을 단지로 등록합니다">이 단지 저장</button>
@@ -312,7 +313,7 @@ const state = {
   items:[],              // 배치된 가전 (it.room = 방 id)
   reps:[],               // size-reps.json
   mode:'idle',           // idle | scale | wall | place
-  scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, draft:null, draftEdges:null,
+  scalePts:[], wallPts:[], mask:null, baseMask:null, baseInfo:null, sealCache:null, cleanCv:null, cleanInfo:null, showClean:false, showDims:false, queue:[], draft:null, draftEdges:null,
   pending:null,          // 배치 대기중인 가전
   sel:null, drag:null, editSel:null,
 };
@@ -1516,12 +1517,12 @@ function startDetect(){
             $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
     return;
   }
-  state.draft = null; state.draftMore = []; hideDraftBar(); ensureClean(); state.showClean = true; setMode('detect'); setStep(3); draw();
+  state.draft = null; state.draftMore = []; hideDraftBar(); ensureClean(); setMode('detect'); setStep(3); draw();
 }
 
 /** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
 function autoDetectCenter(){
-  ensureClean(); state.showClean = true;
+  ensureClean();
   const r = detectRoomAt(state.imgW/2, state.imgH/2);
   if (r.error){ setMode('detect'); toast('가운데 자동 인식이 안 됐습니다 — 방 안쪽을 눌러주세요'); draw(); return; }
   state.draft = r.poly; state.draftEdges = r.edges; state.draftCloseR = r.closeR;
@@ -1816,19 +1817,23 @@ function draw(){
   const W = cv.width/(window.devicePixelRatio||1), H = cv.height/(window.devicePixelRatio||1);
   ctx.clearRect(0,0,W,H);
 
-  const shown = (state.showClean && state.cleanCv) ? state.cleanCv : state.img;
-  if (state.img && state.mmPerPx){
+  /*
+   * **도면이 주인공이다.**
+   * 이 도구가 답하는 것은 "이 집에 이 제품을 놓으면 어떤 느낌인가"이지 "벽이 어디인가"가
+   * 아니다. 예전에는 인식 단계에서 원본을 정리본(흑백 마스크)으로 통째로 갈아 끼우고
+   * 원본마저 85% 로 흐리게 그렸는데, 그러면 도면의 가구·바닥·색이 사라져 **현장감이
+   * 무너진다**(사용자 지적). 원본은 있는 그대로 그리고, 정리본은 ◧ 버튼으로 볼 때만
+   * 흐리게 겹쳐 "알고리즘이 무엇을 보고 있는지"를 확인하는 용도로 쓴다.
+   */
+  const drawPlan = (im, alpha)=>{
     const [x,y] = toScreen(0,0);
-    ctx.globalAlpha=.85;
-    ctx.drawImage(shown, x, y, state.imgW*state.mmPerPx*state.zoom, state.imgH*state.mmPerPx*state.zoom);
-    ctx.globalAlpha=1;
-  } else if (state.img){
-    // 축척 확정 전 — 이미지 1px을 화면 zoom px로 그린다(월드 단위가 아직 mm가 아니다)
-    const [x,y] = toScreen(0,0);
-    ctx.globalAlpha=.85;
-    ctx.drawImage(shown, x, y, state.imgW*state.zoom, state.imgH*state.zoom);
-    ctx.globalAlpha=1;
-  }
+    const k = state.mmPerPx ? state.mmPerPx*state.zoom : state.zoom;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(im, x, y, state.imgW*k, state.imgH*k);
+    ctx.globalAlpha = 1;
+  };
+  if (state.img) drawPlan(state.img, 1);
+  if (state.showClean && state.cleanCv) drawPlan(state.cleanCv, .55);
 
   // 방 — 이름과 넓이를 도면 위에 적는다. 어느 방에 무엇을 놓는지가 이 도구의 핵심이라
   // 화면만 보고도 방을 구분할 수 있어야 한다.
@@ -1859,21 +1864,28 @@ function draw(){
     }
   });
 
-  // 벽
+  /*
+   * 벽 — **도면 위에 얹는 표시지 도면을 대신하는 그림이 아니다.**
+   * 굵은 검정 4px 로 긋고 모든 벽에 mm 를 찍었더니 도면이 안 보이고 선만 보였다
+   * ("너무 벽에 치중된 것 같다" — 사용자 지적). 도면에 이미 벽이 그려져 있으므로
+   * 인식 결과는 **가늘고 반투명하게** 겹치는 것으로 충분하다.
+   * 다만 **개구부(문·창)는 또렷하게** 남긴다 — 도면만 봐서는 알 수 없는 판정 결과이고,
+   * 그 앞을 막는 가전에 경고가 붙기 때문에 근거가 보여야 한다.
+   * 벽 길이(mm)는 **치수 보기(state.showDims)를 켰을 때만** 적는다. 상담에서 필요한 순간이
+   * 있지만 늘 떠 있으면 도면을 덮는다.
+   */
   ctx.lineCap='round';
-  ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--wall').trim()||'#111';
-  ctx.lineWidth=4;
+  const wallCol = getComputedStyle(document.documentElement).getPropertyValue('--wall').trim()||'#111';
   for (const w of state.walls){
     const [ax,ay]=toScreen(w.x1,w.y1), [bx,by]=toScreen(w.x2,w.y2);
     const L=Math.hypot(w.x2-w.x1,w.y2-w.y1);
     ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by);
-    // 개구부(문·창)는 벽과 다르게 그린다. 경계로는 쓰지만 벽이 아니라는 것을 보여준다.
-    ctx.strokeStyle = w.open ? '#B45309' : (getComputedStyle(document.documentElement).getPropertyValue('--wall').trim()||'#111');
-    ctx.lineWidth = w.open ? 3 : 4;
+    ctx.globalAlpha = w.open ? 1 : .45;
+    ctx.strokeStyle = w.open ? '#B45309' : wallCol;
+    ctx.lineWidth = w.open ? 3 : 2;
     ctx.setLineDash(w.open ? [7,5] : []);
-    ctx.stroke(); ctx.setLineDash([]);
-    // 길이 표기 — 짧은 조각은 생략해 화면이 지저분해지지 않게 한다
-    if (L > 400 || state.walls.length <= 8){
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    if (state.showDims && (L > 400 || state.walls.length <= 8)){
       const mx=(ax+bx)/2, my=(ay+by)/2;
       ctx.fillStyle = w.open ? '#B45309' : '#374151';
       ctx.font='11px ui-monospace,monospace'; ctx.textAlign='center';
@@ -1969,22 +1981,31 @@ function draw(){
       ctx.beginPath(); cl.forEach(([x,y],i)=> i?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.closePath(); ctx.stroke();
       ctx.setLineDash([]);
     }
-    // 본체
+    /*
+     * 본체 — **도면 위에서 한눈에 보여야 한다.**
+     * 예전에는 13% 투명도라 컬러 렌더링 도면 위에서 제품이 배경에 묻혔다
+     * ("제품 컬러는 더 진하게 해야 도면 컬러와 겹치지 않게 확인이 가능하다" — 사용자 지적).
+     * 도면을 가리지 않으면서 확실히 읽히도록, 진한 면 + 흰 테두리로 그린다 —
+     * 흰 테두리가 있으면 어두운 도면 위에서도 윤곽이 끊기지 않는다.
+     */
     ctx.beginPath(); body.forEach(([x,y],i)=> i?ctx.lineTo(x,y):ctx.moveTo(x,y)); ctx.closePath();
-    ctx.fillStyle = bad ? 'rgba(180,35,24,.14)' : 'rgba(20,40,160,.13)';
+    ctx.fillStyle = bad ? 'rgba(180,35,24,.72)' : 'rgba(20,40,160,.68)';
     ctx.fill();
-    ctx.strokeStyle = bad ? '#B42318' : (state.sel===it.id ? '#1428A0' : '#334155');
-    ctx.lineWidth = state.sel===it.id ? 2.5 : 1.6; ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = state.sel===it.id ? 3.5 : 2.5; ctx.stroke();
+    ctx.strokeStyle = bad ? '#7F1D1D' : (state.sel===it.id ? '#0B1A6B' : '#101C52');
+    ctx.lineWidth = state.sel===it.id ? 2 : 1.2; ctx.stroke();
 
     // 정면 표시(도어가 열리는 쪽)
     const [f1,f2] = [body[3], body[2]];
     ctx.beginPath(); ctx.moveTo(f1[0],f1[1]); ctx.lineTo(f2[0],f2[1]);
-    ctx.strokeStyle = bad ? '#B42318' : '#1428A0'; ctx.lineWidth=3; ctx.stroke();
+    ctx.strokeStyle = '#FDE68A'; ctx.lineWidth=3.5; ctx.stroke();   // 진한 본체 위에서 도어 쪽이 보이도록
 
     // 라벨
     const cx=(body[0][0]+body[2][0])/2, cy=(body[0][1]+body[2][1])/2;
-    ctx.fillStyle='#111827'; ctx.font='600 11px system-ui'; ctx.textAlign='center';
-    ctx.fillText(it.label, cx, cy+4);
+    ctx.font='700 11px system-ui'; ctx.textAlign='center';
+    // 진한 본체 위에 얹으므로 글자는 흰색. 얇은 어두운 외곽선으로 어떤 배경에서도 읽히게 한다.
+    ctx.lineWidth=3; ctx.strokeStyle='rgba(8,14,40,.85)'; ctx.strokeText(it.label, cx, cy+4);
+    ctx.fillStyle='#fff'; ctx.fillText(it.label, cx, cy+4);
   }
   renderSide();
 }
@@ -2235,6 +2256,16 @@ $('#btn-edit').onclick  = ()=>{
   hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
 };
 $('#btn-detect').onclick= ()=> startDetect();
+/*
+ * 벽 길이(mm)는 기본으로 끈다. 늘 떠 있으면 숫자가 도면을 덮어 "제품이 놓인 느낌"이
+ * 안 보인다 — 이 도구가 보여주려는 것이 그것이다. 필요할 때만 켠다.
+ */
+$('#btn-dims').onclick  = ()=>{
+  state.showDims = !state.showDims;
+  $('#btn-dims').classList.toggle('on', state.showDims);
+  toast(state.showDims ? '벽 길이를 표시합니다' : '벽 길이를 숨겼습니다 — 도면이 잘 보입니다');
+  draw();
+};
 $('#btn-clean').onclick = ()=>{
   if (!state.img){ toast('도면을 먼저 올려주세요'); return; }
   ensureClean();
@@ -2626,7 +2657,8 @@ async function openSelect(room){
       TV·냉장고·세탁기는 평형별로 흔히 나가는 구성입니다. 체크를 풀거나 사이즈를 바꾸면 됩니다.</p>
     <div class="modal-actions">
       <button id="c">취소</button>
-      <button class="primary" id="ok">도면에 배치</button>
+      <button id="manual" title="고른 순서대로 한 대씩 도면을 눌러 놓습니다">직접 놓기</button>
+      <button class="primary" id="ok">자동 배치</button>
     </div>`,
     ()=>{
       const roomSel = $('#a-room');
@@ -2765,7 +2797,8 @@ async function openSelect(room){
       if ($('#a-all')) $('#a-all').onchange = fill;
       fill();
       $('#c').onclick = closeSheet;
-      $('#ok').onclick = ()=>{
+      // 체크한 것을 모으는 일은 자동·수동이 똑같다. 한 곳에서 만든다.
+      const collect = ()=>{
         const picks = [];
         for (const cb of document.querySelectorAll('#a-list input[type=checkbox]:checked')){
           const cat = cb.dataset.cat;
@@ -2779,10 +2812,26 @@ async function openSelect(room){
           const rid = roomEl ? roomEl.value : null;
           for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0, room:rid });
         }
+        return picks;
+      };
+      $('#ok').onclick = ()=>{
+        const picks = collect();
         if (!picks.length){ toast('가전을 하나 이상 체크해주세요'); return; }
         closeSheet();
         if (!state.rooms.length && !wallLoop()){ needRoom(); return; }
         autoPlace(picks);
+      };
+      /*
+       * **직접 놓기** — 방을 안 잡았어도 된다.
+       * 자동 배치는 "방 경계 안에서 이격을 지키는 자리"를 찾아야 하니 방이 필수지만,
+       * 직접 놓기는 사용자가 자리를 지정하므로 도면만 있으면 된다. 상담에서
+       * "여기다 놓으면 어때요"를 바로 보여줄 수 있는 것이 이 경로의 값어치다.
+       */
+      $('#manual').onclick = ()=>{
+        const picks = collect();
+        if (!picks.length){ toast('가전을 하나 이상 체크해주세요'); return; }
+        closeSheet();
+        startManual(picks);
       };
     });
 }
@@ -3039,22 +3088,86 @@ function autoPlace(picks){
 
   const placed = [...state.items];
   const failed = [];
+  // 실패한 것은 **원래 pick 그대로** 들고 있어야 "직접 놓기"로 이어 줄 수 있다
+  const failedPicks = [];
   for (const it of list){
     const spot = findSpot(it, placed);
     if (spot){ Object.assign(it, {bx:spot.bx, by:spot.by, a:spot.a}); placed.push(it); state.items.push(it); }
-    else failed.push(it.label + (itemRoom(it) ? ` (${itemRoom(it).name})` : ''));
+    else {
+      failed.push(it.label + (itemRoom(it) ? ` (${itemRoom(it).name})` : ''));
+      const q = picks.find((x)=> x.cat===it.cat && x.size===it.size && x.model===it.model);
+      if (q) failedPicks.push(q);
+    }
   }
   $('#empty').style.display='none';
+  /*
+   * **배치가 끝나면 도면을 다시 만질 수 있는 상태로 돌려놓는다.**
+   *
+   * 방을 확정한 뒤에는 "한 세대에 방이 여럿이니 더 잡을 수 있게" 일부러 `detect` 모드를
+   * 유지한다. 그런데 그 상태로 가전을 배치하면, 배치된 가전을 누르는 순간 `pointerdown` 이
+   * 드래그 분기까지 가기 전에 **detect 분기에서 return** 해 버린다 — 그 자리를 새 방으로
+   * 인식하는 것이라 **가전을 집을 수가 없었다**(사용자가 지적한 문제다).
+   * 방을 더 잡고 싶으면 '벽 자동 인식'을 다시 누르면 된다.
+   */
+  setMode('idle');
+  state.showClean = false;   // 정리본(마스크)이 아니라 원본 도면을 보여준다
   evaluate(); draw();
+  if (list.length > failed.length){
+    toast('가전을 끌어서 옮길 수 있습니다 — 두 번 누르면 90° 돌아갑니다');
+  }
   if (failed.length){
     sheet(`<h2>자리를 못 찾은 제품이 있습니다</h2>
       <p class="hint">아래 제품은 이격거리와 방 경계를 지키면서 놓을 자리가 없었습니다.
         억지로 놓지 않았습니다 — 방을 넓히거나 더 작은 사이즈로 바꿔야 합니다.</p>
       <ul style="margin:0;padding-left:18px">${failed.map((f)=>`<li>${esc(f)}</li>`).join('')}</ul>
-      <div class="modal-actions"><button class="primary" id="ok">확인</button></div>`,
-      ()=>{ $('#ok').onclick = closeSheet; });
+      <p class="hint">자리를 직접 지정하면 놓을 수 있습니다 — 이격이 모자라면 그대로 경고로 알려드립니다.</p>
+      <div class="modal-actions"><button id="manual">직접 놓기</button><button class="primary" id="ok">확인</button></div>`,
+      ()=>{ $('#ok').onclick = closeSheet;
+            $('#manual').onclick = ()=>{ closeSheet(); startManual(failedPicks); }; });
   }
 }
+/*
+ * ── 하나씩 직접 놓기 ────────────────────────────────────────────────
+ * 자동 배치는 "이격거리와 방 경계를 지키는 자리"를 찾아 주지만, 상담에서 보고 싶은 것은
+ * 대개 **"저 자리에 놓으면 어떤 느낌인가"** 다 — 고객이 가리키는 자리가 따로 있고,
+ * 자동이 자리를 못 찾았을 때 "안 됩니다"로 끝나면 상담이 거기서 막힌다.
+ * 그래서 고른 가전을 대기열에 넣고 **한 대씩 눌러서** 놓는 길을 둔다.
+ *
+ * mode==="place" + state.pending 경로는 처음부터 있었는데 **진입점이 없어 죽어 있었다** —
+ * pending 을 설정하는 코드가 어디에도 없었다. 여기가 그 진입점이다.
+ */
+function startManual(picks){
+  if (!picks || !picks.length) return;
+  state.queue = picks.slice();
+  nextPending();
+}
+function nextPending(){
+  const q = state.queue.shift();
+  if (!q){
+    state.pending = null; setMode("idle"); hidePlaceBar();
+    toast("다 놓았습니다 — 끌어서 옮기거나 두 번 눌러 돌릴 수 있습니다"); draw(); return;
+  }
+  state.pending = Object.assign({}, q, { clear: clearFor(q.cat, q.part.part, q.model, q.group) });
+  setMode("place"); showPlaceBar(); draw();
+}
+/** 무엇을 놓는 중인지 도면 위 막대로 알린다 — 모달로 물으면 도면이 가려진다 */
+function showPlaceBar(){
+  const q = state.pending; if (!q) return;
+  const bar = $("#draftbar");
+  bar.innerHTML = "<div class='dl'>"
+    + "<span class='area'>" + esc(q.cat) + "</span>"
+    + "<span class='meta'>" + esc(q.size) + " · " + Math.round(q.part.w) + "×" + Math.round(q.part.d) + "mm</span>"
+    + "<span class='grow'></span>"
+    + "<span class='lvl'>남은 " + state.queue.length + "개</span></div>"
+    + "<div class='dl'><span class='prev'>놓을 자리를 도면에서 누르세요 — 가까운 벽에 자동으로 붙습니다</span>"
+    + "<span class='grow'></span>"
+    + "<button id='p-skip'>건너뛰기</button><button id='p-stop'>그만</button></div>";
+  bar.classList.add("on");
+  $("#p-skip").onclick = ()=> nextPending();
+  $("#p-stop").onclick = ()=>{ state.queue=[]; state.pending=null; setMode("idle"); hidePlaceBar(); draw(); };
+}
+function hidePlaceBar(){ $("#draftbar").classList.remove("on"); }
+
 function placeAt(wx,wy){
   const q = state.pending;
   const it = {
@@ -3068,9 +3181,12 @@ function placeAt(wx,wy){
   const snap = snapToWall(wx,wy,it);
   if (snap && snap.dist < 2000){ it.bx=snap.bx; it.by=snap.by; it.a=snap.a; }
   state.items.push(it);
-  state.sel = it.id; state.pending=null; setMode('idle');
+  state.sel = it.id; state.pending = null;
   $('#empty').style.display='none';
-  evaluate(); draw();
+  evaluate();
+  // 대기열이 남아 있으면 이어서 다음 제품을 놓는다
+  if (state.queue.length){ nextPending(); return; }
+  setMode('idle'); hidePlaceBar(); draw();
 }
 
 /* ── 모달 ── */
@@ -3090,7 +3206,7 @@ loadReps();
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, insideRoom, wallLoop, clearFor,
-  findSpot, autoPlace, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
+  findSpot, autoPlace, startManual, nextPending, placeAt, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
