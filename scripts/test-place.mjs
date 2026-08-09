@@ -294,6 +294,45 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     fail(`자동 배치인데 경고가 남음: ${st.items.filter((i) => i.warn.length).map((i) => `${i.label}(${i.warn})`).join(', ')}`);
   } else pass('3.6×2.6m 주방에 냉장고·김치냉장고·식기세척기 3종 자동 배치 — 경고 없음');
 
+  /*
+   * **배치가 끝나면 도면을 다시 만질 수 있어야 한다.**
+   * 방을 확정하면 방을 더 잡을 수 있게 `detect` 모드가 유지되는데, 그대로 배치까지 가면
+   * 배치된 가전을 누르는 순간 pointerdown 이 detect 분기에서 return 해 버려
+   * **가전을 집을 수가 없었다.** 자동 배치 뒤에는 반드시 idle 로 돌아와야 한다.
+   */
+  st.walls = room(3600, 2600); st.items = [];
+  P.state.mode = 'detect';
+  P.autoPlace([pick('냉장고', '602~640L')]);
+  if (P.state.mode !== 'idle') fail(`자동 배치 뒤 모드가 '${P.state.mode}' — idle 이어야 가전을 끌 수 있다`);
+  else if (P.state.showClean) fail('자동 배치 뒤에도 정리본(마스크)을 보여준다 — 원본 도면으로 돌아와야 한다');
+  else pass('자동 배치 뒤 idle 모드 · 원본 도면 — 가전을 끌 수 있는 상태');
+
+  /*
+   * **하나씩 직접 놓기.**
+   * 상담에서 보고 싶은 것은 대개 "저 자리에 놓으면 어떤 느낌인가"이고, 자동이 자리를
+   * 못 찾았을 때 "안 됩니다"로 끝나면 거기서 막힌다. 이 경로(mode 'place' + pending)는
+   * 코드에 있었지만 **pending 을 설정하는 진입점이 없어 죽어 있었다.**
+   * 한 번 누를 때 한 대씩 놓이고, 대기열이 끝나면 idle 로 돌아와야 한다.
+   */
+  st.walls = room(6000, 4000); st.items = [];
+  const q3 = [pick('냉장고', '602~640L'), pick('김치냉장고', '126L'), pick('식기세척기', '폭 450mm')];
+  P.startManual(q3);
+  if (P.state.mode !== 'place') fail(`직접 놓기를 시작했는데 모드가 '${P.state.mode}'`);
+  else if (!P.state.pending) fail('직접 놓기인데 놓을 제품(pending)이 없다');
+  else {
+    const order = [P.state.pending.cat];
+    P.placeAt(1000, 1000);
+    order.push(P.state.pending ? P.state.pending.cat : null);
+    P.placeAt(3000, 1000);
+    P.placeAt(5000, 1000);
+    if (st.items.length !== 3) fail(`직접 놓기로 3번 눌렀는데 ${st.items.length}대만 놓였다`);
+    else if (P.state.mode !== 'idle') fail(`다 놓았는데 모드가 '${P.state.mode}' — idle 로 돌아와야 한다`);
+    else if (P.state.pending) fail('다 놓았는데 pending 이 남아 있다');
+    else if (P.state.queue.length) fail(`대기열이 ${P.state.queue.length}개 남았다`);
+    else if (order[0] === order[1]) fail('두 번째로 놓을 제품이 첫 번째와 같다 — 대기열이 안 넘어간다');
+    else pass(`직접 놓기 — 누를 때마다 한 대씩 (${order[0]} → ${order[1]} → …) 3대 배치 후 idle 복귀`);
+  }
+
   // 좁은 방에서는 억지로 놓지 않아야 한다
   st.walls = room(1000, 1000); st.items = [];
   P.autoPlace([pick('냉장고', '602~640L'), pick('김치냉장고', '126L')]);

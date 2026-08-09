@@ -585,6 +585,54 @@ for (const plan of PLANS) {
   else pass(`가전 선택 — 카테고리 ${r.cats}개(토글 시 ${r.catsAll}개) · TV ${r.tvRows}줄(사이즈당 1줄, 원본 옵션 ${r.tvOptions}개) · 키친핏 세트 ${r.setRows}줄 · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
 }
 
+/*
+ * ── 배치한 가전을 마우스로 집을 수 있는가 ──
+ * jsdom 쪽(`test-place.mjs`)은 `state.mode` 만 본다. 정작 사용자가 겪는 것은
+ * **캔버스를 눌렀을 때 가전이 잡히느냐**이고, 그건 pointerdown 핸들러가 detect 분기에서
+ * return 하는지에 달려 있어 실제 이벤트를 쏴 봐야 드러난다. 여기서 그것을 본다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    P.state.reps = await (await fetch('size-reps.json')).json();
+    P.state.rooms = []; P.state.items = []; P.state.img = null;
+    P.state.mmPerPx = 1; P.state.scaled = true;
+    P.state.zoom = 0.1; P.state.panX = 20; P.state.panY = 20;
+    // 4 × 3m 방 하나
+    const W = 4000, H = 3000;
+    P.state.walls = [
+      { x1: 0, y1: 0, x2: W, y2: 0 }, { x1: W, y1: 0, x2: W, y2: H },
+      { x1: W, y1: H, x2: 0, y2: H }, { x1: 0, y1: H, x2: 0, y2: 0 },
+    ];
+    const rep = P.state.reps.find((x) => x.cat === '냉장고' && x.size === '602~640L');
+    const o = rep.options[0];
+    // 방을 확정한 직후처럼 detect 모드로 둔 채 배치한다 — 예전에 여기서 막혔다
+    P.state.mode = 'detect';
+    P.autoPlace([{ cat: '냉장고', size: rep.size, model: o.model, group: o.group, part: o.parts[0] }]);
+    const it = P.state.items[0];
+    if (!it) return { placed: false };
+
+    const cv = document.querySelector('canvas');
+    const rect = cv.getBoundingClientRect();
+    const sx = rect.left + (it.bx * P.state.zoom + P.state.panX);
+    const sy = rect.top + (it.by * P.state.zoom + P.state.panY);
+    cv.dispatchEvent(new PointerEvent('pointerdown', { clientX: sx, clientY: sy, bubbles: true, pointerId: 1 }));
+    const grabbed = !!(P.state.drag && P.state.drag.id === it.id);
+    const before = { x: it.bx, y: it.by };
+    cv.dispatchEvent(new PointerEvent('pointermove', { clientX: sx + 30, clientY: sy, bubbles: true, pointerId: 1 }));
+    cv.dispatchEvent(new PointerEvent('pointerup', { clientX: sx + 30, clientY: sy, bubbles: true, pointerId: 1 }));
+    return { placed: true, mode: P.state.mode, grabbed, moved: it.bx !== before.x || it.by !== before.y,
+      sel: P.state.sel === it.id, rooms: P.state.rooms.length };
+  });
+
+  if (!r.placed) fail('배치 자체가 안 됐다 — 앞 단계를 먼저 확인할 것');
+  else if (r.mode !== 'idle') fail(`자동 배치 뒤 모드가 '${r.mode}' — idle 이어야 도면을 다시 만질 수 있다`);
+  else if (r.rooms) fail(`가전을 누른 것이 새 방으로 인식됐다 (방 ${r.rooms}곳 생김)`);
+  else if (!r.grabbed) fail('배치된 가전을 눌렀는데 잡히지 않는다 — 마우스로 옮길 수 없다');
+  else if (!r.moved) fail('가전을 잡았는데 끌어도 안 움직인다');
+  else pass('배치된 가전을 눌러 잡고 끌어서 옮길 수 있다 (detect 모드에서 배치해도 idle 로 복귀)');
+}
+
 // ── 단지 평면 라이브러리 ──
 // 매장에서 고객 단지를 고르면 도면 없이 바로 배치를 시작하는 것이 목적이다.
 // 도면 이미지는 저작권 때문에 저장할 수 없으므로 방 경계(mm 좌표)만 남기는데,
