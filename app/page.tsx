@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
+import Icon, { IconName } from '@/components/Icon'
 
 const HUB_URL = 'https://gyeongwon-ax-hub.vercel.app'
 
 type ModuleCard = {
   href: string
-  icon: string
+  icon: IconName
   title: string
   desc: string
   color: string
@@ -22,11 +23,11 @@ type ModuleCard = {
 
 const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   {
-    title: '🔍 제품 상담 도구',
+    title: '제품 상담 도구',
     modules: [
       {
         href: '/finder',
-        icon: '🔍',
+        icon: 'finder',
         title: '모델파인더',
         desc: '키워드 한 줄로 CE·MX·리빙·Harman 전 제품(578종) 검색',
         color: '#1428A0',
@@ -36,31 +37,31 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       },
       {
         href: '/care',
-        icon: '💚',
+        icon: 'care',
         title: 'AI구독 케어 안내',
         desc: '제품별 구독 기간·주기에 따라 받는 케어 서비스 안내',
-        color: '#059669',
-        bg: '#ECFDF5',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.06',
         status: 'live',
       },
       {
         href: '/compare',
-        icon: '🔗',
+        icon: 'compare',
         title: '타사비교 세일즈가이드',
         desc: '모델 선택 또는 URL 입력으로 즉시 비교표 + 셀링포인트 + 응대 스크립트 생성',
-        color: '#EA580C',
-        bg: '#FFF7ED',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.07',
         status: 'live',
       },
       {
         href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110',
-        icon: '📱',
+        icon: 'catalog',
         title: '모바일 카탈로그',
         desc: '삼성스토어 제품 카탈로그를 모바일로 바로 열람',
-        color: '#0EA5E9',
-        bg: '#F0F9FF',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.07',
         status: 'live',
         external: true,
@@ -68,63 +69,63 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       },
       {
         href: '/install',
-        icon: '🛠️',
+        icon: 'install',
         title: '제품별 설치환경 가이드',
         desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
-        color: '#B45309',
-        bg: '#FFFBEB',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.07',
         status: 'live',
       },
             {
         href: '/as',
-        icon: '🛡️',
+        icon: 'warranty',
         title: 'AS기간 확인',
         desc: '품목별 무상보증·핵심부품·부품보유기간을 한눈에 — 삼성전자서비스 보증기간 산정기준 기준',
-        color: '#0369A1',
-        bg: '#F0F9FF',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.08',
         status: 'live',
       },
 {
         href: '/place',
-        icon: '📐',
+        icon: 'place',
         title: '가전 배치 시뮬레이터',
         desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 70개 사이즈)',
-        color: '#0F766E',
-        bg: '#F0FDFA',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.08',
         status: 'live',
       },
     ],
   },
   {
-    title: '📚 교육',
+    title: '교육',
     modules: [
       {
         href: '/test',
-        icon: '📝',
+        icon: 'quiz',
         title: '레벨업 챌린지',
         desc: '2026 제품 전문가 역량 평가 · 25문항 · 30분',
-        color: '#7C3AED',
-        bg: '#F5F3FF',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.06',
         status: 'live',
       },
       {
         href: '/quiz',
-        icon: '🎯',
+        icon: 'target',
         title: 'URL 퀴즈 생성기',
         desc: '자사·경쟁사 URL 입력 → 직원 평가용 인터랙티브 퀴즈 즉시 생성',
-        color: '#0891B2',
-        bg: '#ECFEFF',
+        color: '#1428A0',
+        bg: '#EEF2FF',
         updated: '2026.07',
         status: 'live',
       },
     ],
   },
   {
-    title: '🏬 매장운영 도구',
+    title: '매장운영 도구',
     modules: [],
   },
 ]
@@ -132,11 +133,11 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
 // 사용현황 대시보드는 그룹에 속하지 않고 허브 최하단에 별도 섹션으로 운영
 const ADMIN_MODULE: ModuleCard = {
   href: '/admin',
-  icon: '📊',
+  icon: 'dashboard',
   title: '사용현황 대시보드[관리자용]',
   desc: '모듈별 사용 현황 · 팀 AI 활용도 통계 · CSV 내보내기 (비밀번호 필요)',
-  color: '#475569',
-  bg: '#F8FAFC',
+  color: '#1428A0',
+  bg: '#EEF2FF',
   updated: '2026.07',
   status: 'live',
 }
@@ -144,19 +145,19 @@ const ADMIN_MODULE: ModuleCard = {
 const CONCIERGE_LINKS = [
   {
     href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?s=ZN01',
-    icon: '🎫',
+    icon: 'ticket',
     label: '컨시어지 접수',
     desc: '성함·연락처로 대기접수 · 대기번호 발급',
   },
   {
     href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?page=admin&s=ZN01',
-    icon: '📟',
+    icon: 'ticket',
     label: '컨시어지 관리자',
     desc: '대기 호출 · 완료처리 (직원용)',
   },
   {
     href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?page=board&s=ZN01',
-    icon: '📺',
+    icon: 'display',
     label: '매장 전광판',
     desc: '대기 현황 실시간 안내판',
   },
@@ -241,7 +242,7 @@ const CONCIERGE_USAGE = [
 const COUPON_LINKS = [
   {
     href: 'https://script.google.com/macros/s/AKfycbzXMz57Vo-w15z_FOI2lg4iOMQBBoRW0p2JQIiB1kKXWs5cEKquVt_-Qug2r3MemA/exec',
-    icon: '🎁',
+    icon: 'coupon',
     label: '시크릿쿠폰',
     desc: '매장별 쿠폰 재고 · 발급현황 조회',
   },
@@ -283,9 +284,10 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
       <div className="flex items-start justify-between mb-2 md:mb-3 gap-1">
         <div
           className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-base md:text-xl shrink-0"
-          style={{ background: mod.bg }}
+          style={{ background: mod.bg, color: mod.color }}
         >
-          {mod.icon}
+          <Icon name={mod.icon} size={20} className="md:hidden" />
+          <Icon name={mod.icon} size={24} className="hidden md:block" />
         </div>
         <StatusBadge status={mod.status} />
       </div>
@@ -463,8 +465,8 @@ export default function Home() {
   // (Next 클라이언트 네비게이션에서는 해시가 있어도 브라우저 기본 스크롤이 일어나지 않는
   //  경우가 있어 직접 scrollIntoView를 호출한다)
   const ANCHOR_SECTION: Record<string, string> = {
-    coupon: '🏬 매장운영 도구',
-    concierge: '🏬 매장운영 도구',
+    coupon: '매장운영 도구',
+    concierge: '매장운영 도구',
   }
   useEffect(() => {
     const id = window.location.hash.slice(1)
@@ -526,7 +528,7 @@ export default function Home() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="🔎 통합검색 — 제품명·모델코드·기능 (예: 무풍, 김치냉장고, RM90H91B1W)"
+          placeholder="통합검색 — 제품명·모델코드·기능 (예: 무풍, 김치냉장고, RM90H91B1W)"
           className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-400"
         />
         <button
@@ -549,7 +551,7 @@ export default function Home() {
                 <ModuleTile key={mod.href} mod={mod} />
               ))}
             </div>
-            {group.title === '🏬 매장운영 도구' && (
+            {group.title === '매장운영 도구' && (
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
                 <LinkListCard
                   id="coupon"
@@ -579,7 +581,7 @@ export default function Home() {
       {/* 사용현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 운영 */}
       <div className="mb-5">
         <AccordionHeader
-          title="📊 사용현황 대시보드[관리자용]"
+          title="사용현황 대시보드[관리자용]"
           isOpen={!!openSections['admin']}
           onClick={() => toggleSection('admin')}
         />
@@ -591,7 +593,7 @@ export default function Home() {
       {/* 상황별 도구 추천 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
         <AccordionHeader
-          title="💡 상황별 도구 추천"
+          title="상황별 도구 추천"
           isOpen={!!openSections['tips']}
           onClick={() => toggleSection('tips')}
         />
@@ -613,7 +615,7 @@ export default function Home() {
       {/* 팀 공유 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
         <AccordionHeader
-          title="📤 팀에 공유하기"
+          title="팀에 공유하기"
           isOpen={!!openSections['qr']}
           onClick={() => toggleSection('qr')}
         />
@@ -640,7 +642,7 @@ export default function Home() {
       {/* 빠른 시작 가이드 */}
       <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
         <AccordionHeader
-          title="🚀 처음이라면 — 4가지 도구"
+          title="처음이라면 — 4가지 도구"
           isOpen={!!openSections['guide']}
           onClick={() => toggleSection('guide')}
         />

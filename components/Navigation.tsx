@@ -4,47 +4,48 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
+import Icon, { IconName } from './Icon'
 
 const NAV_ITEMS = [
-  { href: '/',        label: '허브',      icon: '🏠' },
-  { href: '/finder',  label: '모델파인더', icon: '🔍' },
-  { href: '/care',    label: 'AI구독 케어',   icon: '💚' },
-  { href: '/test',    label: '레벨업 챌린지', icon: '📝' },
-  { href: '/compare', label: '타사비교',  icon: '⚡' },
-  { href: '/install', label: '설치환경',  icon: '🛠️' },
+  { href: '/',        label: '허브',      icon: 'home' as IconName },
+  { href: '/finder',  label: '모델파인더', icon: 'finder' as IconName },
+  { href: '/care',    label: 'AI구독 케어',   icon: 'care' as IconName },
+  { href: '/test',    label: '레벨업 챌린지', icon: 'quiz' as IconName },
+  { href: '/compare', label: '타사비교',  icon: 'compare' as IconName },
+  { href: '/install', label: '설치환경',  icon: 'install' as IconName },
 ]
 
 // 데스크탑 사이드바 전용 그룹 — 허브 메인 섹션 구성과 동일하게 유지
 const NAV_GROUPS = [
   {
-    title: '🔍 제품 상담 도구',
+    title: '제품 상담 도구',
     items: [
-      { href: '/finder',          label: '모델파인더',       icon: '🔍' },
-      { href: '/care',            label: 'AI구독 케어',         icon: '💚' },
-      { href: '/compare',         label: '타사비교',         icon: '🔗' },
-      { href: '/install',         label: '설치환경 가이드',   icon: '🛠️' },
-      { href: '/as',               label: 'AS기간 확인',      icon: '🛡️' },
-      { href: '/place',           label: '배치 시뮬레이터',   icon: '📐' },
+      { href: '/finder',          label: '모델파인더',       icon: 'finder' as IconName },
+      { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
+      { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
+      { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
+      { href: '/as',               label: 'AS기간 확인',      icon: 'warranty' as IconName },
+      { href: '/place',           label: '배치 시뮬레이터',   icon: 'place' as IconName },
     ],
   },
   {
-    title: '📚 교육',
+    title: '교육',
     items: [
-      { href: '/test', label: '레벨업 챌린지',   icon: '📝' },
-      { href: '/quiz', label: 'URL 퀴즈 생성기', icon: '🎯' },
+      { href: '/test', label: '레벨업 챌린지',   icon: 'quiz' as IconName },
+      { href: '/quiz', label: 'URL 퀴즈 생성기', icon: 'target' as IconName },
     ],
   },
   {
-    title: '🏬 매장운영 도구',
+    title: '매장운영 도구',
     items: [
-      { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: '🎁' },
-      { href: '/#concierge', label: '컨시어지',        icon: '🎫' },
+      { href: '/#coupon',    label: '쿠폰 배포프로그램', icon: 'coupon' as IconName },
+      { href: '/#concierge', label: '컨시어지',        icon: 'ticket' as IconName },
     ],
   },
 ]
 
 // 사용현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
-const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자용]', icon: '📊' }
+const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자용]', icon: 'dashboard' as IconName }
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -95,7 +96,7 @@ export default function Navigation() {
               className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-center no-underline transition-colors relative"
               style={{ color: active ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
             >
-              <span className="text-lg leading-none">{item.icon}</span>
+              <Icon name={item.icon} size={21} />
               <span className="text-[10px] font-medium leading-tight">{item.label}</span>
               {active && (
                 <span
@@ -124,7 +125,7 @@ export default function Navigation() {
                   fontWeight: active ? 700 : 500,
                 }}
               >
-                <span className="text-base">{item.icon}</span>
+                <Icon name={item.icon} size={19} />
                 <span>{item.label}</span>
               </Link>
             )
@@ -163,7 +164,7 @@ export default function Navigation() {
                             fontWeight: active ? 700 : 500,
                           }}
                         >
-                          <span className="text-sm">{item.icon}</span>
+                          <Icon name={item.icon} size={17} />
                           <span>{item.label}</span>
                         </Link>
                       )
@@ -185,7 +186,7 @@ export default function Navigation() {
                 fontWeight: pathname.startsWith(ADMIN_LINK.href) ? 700 : 500,
               }}
             >
-              <span className="text-base">{ADMIN_LINK.icon}</span>
+              <Icon name={ADMIN_LINK.icon} size={19} />
               <span>{ADMIN_LINK.label}</span>
             </Link>
           </div>

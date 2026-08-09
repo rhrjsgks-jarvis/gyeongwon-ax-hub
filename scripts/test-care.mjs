@@ -40,8 +40,18 @@ const ALL_PRODUCTS = [
 const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser','airpur_reusable','airpur_s','purifier_under','vacuum','kimchi'];
 
 (async () => {
-  await wait(200);
+  /*
+   * **고정 대기(200ms)는 취약하다.** 앞 테스트 직후처럼 시스템이 바쁘면 첫 렌더가 그 안에
+   * 안 끝나 "계약기간 타일이 없다"로 헛실패한다 — 케어 사진 갤러리를 붙여 첫 렌더가
+   * 무거워지자 `npm test` 안에서만 실패했다(단독 실행은 통과).
+   * 시간을 늘리는 것은 미봉책이다. **렌더가 끝났는지를 본다.**
+   */
   const doc = window.document;
+  for (let i = 0; i < 120; i++) {
+    const el = doc.getElementById('body');
+    if (el && el.innerHTML.includes('계약기간')) break;
+    await wait(50);
+  }
   let ok = true;
   const fail = (msg) => { console.log('ERROR:', msg); ok = false; };
 

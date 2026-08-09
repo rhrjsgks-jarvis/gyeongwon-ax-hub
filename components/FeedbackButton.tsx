@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { sendFeedback } from '@/lib/logEvent'
+import Icon from './Icon'
 
 /**
  * 버튼을 옮겨 둔 자리. 화면 크기가 달라져도 쓸 수 있게 **비율(0~1)** 로 저장한다 —
@@ -128,7 +129,7 @@ export default function FeedbackButton() {
           ...(pos ? { left: pos.x, top: pos.y } : null),
         }}
       >
-        <span className="text-base leading-none">💬</span>
+        <Icon name="chat" size={17} />
         <span className="text-xs md:text-sm font-semibold leading-none">개발자에게 문의하기</span>
       </button>
 
@@ -149,7 +150,7 @@ export default function FeedbackButton() {
               </div>
             ) : (
               <>
-                <h3 className="font-bold text-sm text-gray-800 mb-1">💬 건의사항 보내기</h3>
+                <h3 className="font-bold text-sm text-gray-800 mb-1 flex items-center gap-1.5"><Icon name="chat" size={15} style={{ color: '#1428A0' }} /> 건의사항 보내기</h3>
                 <p className="text-xs text-gray-400 mb-3">
                   세일즈 코파일럿 사용 중 불편한 점이나 아이디어를 자유롭게 남겨주세요.
                 </p>
