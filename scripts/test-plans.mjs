@@ -561,7 +561,16 @@ for (const plan of PLANS) {
       });
       out.desc = out.widths.every((w, i, a) => i === 0 || a[i - 1] >= w);
       out.selectedIsRec = sel.selectedIndex >= 0 && /형/.test(sel.options[sel.selectedIndex].textContent);
-      out.noteShown = /기준|미리 고른/.test((document.querySelector('#a-rec') || {}).textContent || '');
+      /*
+       * 상담의 첫 문장이 되는 줄이다. **개수**와 **어떤 평형 기준인지**가 둘 다 보여야
+       * "84A는 보통 이 일곱 가지입니다"로 말을 시작할 수 있다. 그리고 무엇을 빼면 되는지
+       * 알려 주지 않으면 미리 체크해 둔 것이 오히려 부담이 된다.
+       */
+      const recTxt = (document.querySelector('#a-rec') || {}).textContent || '';
+      out.recCount = (/추천 가전 (\d+)종/.exec(recTxt) || [])[1] || null;
+      out.recBasis = /타입|전용\s*\d+\s*㎡/.test(recTxt);
+      out.recHowTo = /체크를 풀/.test(recTxt);
+      out.noteShown = !!out.recCount && out.recBasis && out.recHowTo;
     }
     const c = document.querySelector('#c'); if (c) c.click();
     return out;
@@ -581,8 +590,10 @@ for (const plan of PLANS) {
   else if (!r.tv) fail('평형별 추천에 TV가 없다');
   else if (r.fridgeLine !== '프리스탠딩') fail(`추천 냉장고가 ${r.fridgeLine} — 기본은 프리스탠딩이어야 한다`);
   else if (r.acWithoutRoom) fail('방을 안 잡았는데 에어컨이 추천됐다 — 냉방면적은 방 넓이로 계산하는 값이다');
-  else if (!r.noteShown) fail('무엇을 근거로 미리 골랐는지 화면에 안 밝힌다');
-  else pass(`가전 선택 — 카테고리 ${r.cats}개(토글 시 ${r.catsAll}개) · TV ${r.tvRows}줄(사이즈당 1줄, 원본 옵션 ${r.tvOptions}개) · 키친핏 세트 ${r.setRows}줄 · 전용 ${r.area}㎡ 기준 ${r.recCats.length}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
+  else if (!r.recCount) fail('추천 개수를 문장으로 안 밝힌다 ("추천 가전 N종"이 없다)');
+  else if (!r.recBasis) fail('어떤 평형 기준으로 골랐는지 안 밝힌다 (주택형·전용면적 표기 없음)');
+  else if (!r.recHowTo) fail('미리 체크된 것을 어떻게 빼는지 안 알려 준다');
+  else pass(`가전 선택 — 카테고리 ${r.cats}개(토글 시 ${r.catsAll}개) · TV ${r.tvRows}줄(사이즈당 1줄, 원본 옵션 ${r.tvOptions}개) · 키친핏 세트 ${r.setRows}줄 · 전용 ${r.area}㎡ 기준 ${r.recCount}종 추천 (TV ${r.tv} · 냉장고 ${r.fridgeLine} ${r.fridgeSize})`);
 }
 
 /*
