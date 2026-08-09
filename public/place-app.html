@@ -3098,6 +3098,20 @@ function longestHRun(segs){
   return best;
 }
 
+/**
+ * 방 이름에 맞는 **가로 치수 예시**. 상담사가 감을 못 잡을 때 기준이 되는 값이라
+ * 방과 어긋나면 축척이 통째로 틀어진다 — 아는 방만 적고 나머지는 비운다.
+ * 값은 국내 아파트 전용 59~85㎡ 의 통상 범위다(확정 수치가 아니라 "보통 이 정도"의 안내).
+ */
+function wallHint(name){
+  const n = String(name || '');
+  if (/거실/.test(n))            return " 거실 가로는 보통 3,600~5,200mm.";
+  if (/안방|침실1/.test(n))      return " 침실1(안방) 가로는 보통 3,000~3,600mm.";
+  if (/침실/.test(n))            return " 침실 가로는 보통 2,700~3,300mm.";
+  if (/주방|주방·식당|식당/.test(n)) return " 주방 가로는 보통 2,400~3,600mm.";
+  return "";                     // 모르는 방이면 예시를 만들지 않는다
+}
+
 function askWallLength(segs, opts){
   /*
    * 기준 벽은 **가로 벽면 전체**다(사용자 지정).
@@ -3151,8 +3165,14 @@ function askWallLength(segs, opts){
     + "<span class='grow'></span>"
     + "<button id='wl-again'>" + (state.img ? "다시 인식" : "다시 그리기") + "</button>"
     + "<button class='primary' id='wl-ok'>확정</button></div>"
+    /*
+     * 예시 치수는 **지금 잡은 방에 맞춰** 적는다. 예전에는 "침실1(안방) 가로는 보통
+     * 3,000~3,600mm" 로 고정돼 있어, 거실을 잡았는데 "거실 가로가 몇 mm 입니까?" 밑에
+     * 침실 예시가 붙었다 — 상담사가 그 숫자를 그대로 넣으면 축척이 통째로 틀어진다.
+     * 방 이름을 모르면 예시를 아예 적지 않는다(없는 근거를 만들지 않는다).
+     */
     + "<div class='dl'><span class='prev'><b style='color:#B45309'>주황색으로 표시된 벽</b>입니다 — "
-    + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다. 침실1(안방) 가로는 보통 3,000~3,600mm.</span></div>";
+    + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다." + wallHint(rn) + "</span></div>";
   if (!bar.classList.contains('on')) pushBack();   // 휴대폰 뒤로가기가 앱이 아니라 이 막대를 닫도록
   bar.classList.add("on");
   const wl = $("#wl");
