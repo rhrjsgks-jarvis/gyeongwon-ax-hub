@@ -275,6 +275,13 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     { x1: w, y1: h, x2: 0, y2: h }, { x1: 0, y1: h, x2: 0, y2: 0 },
   ];
   /*
+   * 이 스위트는 벽을 mm 좌표로 **직접 꽂아 넣는다.** 실제 앱에서는 벽이 축척 확정을 거쳐
+   * 들어오므로(askWallLength·askScale·단지 불러오기가 scaled 를 세운다) 여기서도 그
+   * 플래그를 같이 세워야 앱과 같은 상태가 된다. 안 세우면 "축척 없이는 가전을 올리지
+   * 않는다"는 안전장치에 걸려 배치 검사가 통째로 무의미해진다.
+   */
+  st.scaled = true;
+  /*
    * 사이즈는 **이름으로** 고른다. 예전에는 배열 인덱스를 썼는데, size-reps 에 항목이
    * 하나 늘거나 정렬 기준이 바뀔 때마다 엉뚱한 제품이 뽑혀 테스트가 무관한 이유로 깨졌다
    * (냉장고에 키친핏 세트 3종이 들어오면서 인덱스 2가 폭 2,495mm 세트가 됐다).
@@ -323,6 +330,28 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     else if (made.some((i) => i.warn.length)) fail(`대기 중인데 경고가 붙었다: ${made.map((i) => i.warn).flat().join(', ')}`);
     else if (P.bodyCenter(made[0])[1] === P.bodyCenter(made[1])[1]) fail('꺼낸 가전이 같은 자리에 겹쳐 있다 — 세로로 늘어놔야 한다');
     else pass(`도면 밖 대기 배치 — 2대를 도면 오른쪽(x > ${Math.round(box.x2)})에 세로로 세움 · 경고 없음`);
+  }
+
+  /*
+   * ── 축척 없이는 가전을 올리지 않는다 ──
+   * 가전 치수는 언제나 mm 인데 **축척 전 도면의 월드 단위는 이미지 픽셀**이다.
+   * 둘을 같은 화면에 올리면 크기 관계가 통째로 거짓이 되고, 화면 맞춤이 줌아웃하면서
+   * 도면이 눈에 띄게 줄어든다(실측: 854px → 118px). 사용자가 잡아낸 문제다.
+   * 화면이 이상해지는 것보다 **"이 자리에 들어갑니다"가 거짓이 되는 것**이 더 큰 문제다.
+   */
+  {
+    st.walls = room(4000, 3000); st.items = [];
+    const wasScaled = P.state.scaled, wasMm = P.state.mmPerPx;
+    P.state.scaled = false; P.state.mmPerPx = null;
+    const made = P.stageOutside([pick('냉장고', '602~640L')]);
+    if (made.length || st.items.length) fail(`축척 미확정인데 가전 ${st.items.length}대가 올라갔다`);
+    else {
+      st.items = [];
+      P.autoPlace([pick('냉장고', '602~640L')]);
+      if (st.items.length) fail('축척 미확정인데 자동 배치가 됐다');
+      else pass('축척 미확정이면 가전을 올리지 않는다 (꺼내기·자동 배치 둘 다)');
+    }
+    P.state.scaled = wasScaled; P.state.mmPerPx = wasMm;
   }
 
   /*
@@ -1079,6 +1108,13 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     { x1: 0, y1: 0, x2: w, y2: 0 }, { x1: w, y1: 0, x2: w, y2: h },
     { x1: w, y1: h, x2: 0, y2: h }, { x1: 0, y1: h, x2: 0, y2: 0 },
   ];
+  /*
+   * 이 스위트는 벽을 mm 좌표로 **직접 꽂아 넣는다.** 실제 앱에서는 벽이 축척 확정을 거쳐
+   * 들어오므로(askWallLength·askScale·단지 불러오기가 scaled 를 세운다) 여기서도 그
+   * 플래그를 같이 세워야 앱과 같은 상태가 된다. 안 세우면 "축척 없이는 가전을 올리지
+   * 않는다"는 안전장치에 걸려 배치 검사가 통째로 무의미해진다.
+   */
+  st.scaled = true;
   const pickSbs = () => {
     const r = reps.filter((x) => x.cat === '냉장고').find((x) => x.options.some((o) => /양문형/.test(o.group)));
     const o = r.options.find((q) => /양문형/.test(q.group));
