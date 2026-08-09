@@ -1,13 +1,89 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { sendFeedback } from '@/lib/logEvent'
+
+/**
+ * 버튼을 옮겨 둔 자리. 화면 크기가 달라져도 쓸 수 있게 **비율(0~1)** 로 저장한다 —
+ * px 로 저장하면 가로/세로를 돌렸을 때 화면 밖으로 나간다.
+ */
+const POS_KEY = 'ax_feedback_pos'
+const EDGE = 8
 
 export default function FeedbackButton() {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [contact, setContact] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+
+  /*
+   * ── 끌어서 옮기기 ──────────────────────────────────────────────────
+   * 기본 자리가 오른쪽 아래인데, 배치 시뮬레이터처럼 화면을 꽉 쓰는 도구에서는
+   * **그 아래 버튼들을 가린다**(사용자 지적). 그렇다고 자리를 옮기면 다른 화면에서
+   * 또 무언가를 가리므로, 쓰는 사람이 직접 옮기게 한다.
+   * 옮긴 자리는 기기에 남겨 다음에도 그대로 쓴다.
+   */
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null)
+
+  /** 비율로 저장된 자리를 지금 화면 크기에 맞춰 px 로 돌려놓는다 */
+  const clamp = useCallback((x: number, y: number) => {
+    const el = btnRef.current
+    const w = el?.offsetWidth ?? 160
+    const h = el?.offsetHeight ?? 44
+    return {
+      x: Math.max(EDGE, Math.min(window.innerWidth - w - EDGE, x)),
+      y: Math.max(EDGE, Math.min(window.innerHeight - h - EDGE, y)),
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(POS_KEY)
+      if (!raw) return
+      const r = JSON.parse(raw) as { rx: number; ry: number }
+      if (typeof r?.rx !== 'number' || typeof r?.ry !== 'number') return
+      setPos(clamp(r.rx * window.innerWidth, r.ry * window.innerHeight))
+    } catch { /* 저장된 자리가 깨졌으면 기본 자리를 쓴다 */ }
+  }, [clamp])
+
+  // 화면을 돌리거나 크기가 바뀌면 밖으로 나가지 않게 다시 안으로 넣는다
+  useEffect(() => {
+    if (!pos) return
+    const onResize = () => setPos((p) => (p ? clamp(p.x, p.y) : p))
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [pos, clamp])
+
+  function onDown(e: React.PointerEvent<HTMLButtonElement>) {
+    const r = e.currentTarget.getBoundingClientRect()
+    drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* 이미 놓인 포인터 */ }
+  }
+  function onMove(e: React.PointerEvent<HTMLButtonElement>) {
+    const d = drag.current
+    if (!d) return
+    const nx = e.clientX - d.dx, ny = e.clientY - d.dy
+    // 손가락이 살짝 흔들린 것까지 이동으로 보면 누르기가 안 된다
+    if (!d.moved && Math.abs(e.movementX) + Math.abs(e.movementY) < 1) return
+    d.moved = true
+    setPos(clamp(nx, ny))
+  }
+  function onUp() {
+    const d = drag.current
+    drag.current = null
+    if (!d) return
+    if (!d.moved) { setOpen(true); return }   // 안 움직였으면 그냥 누른 것이다
+    setPos((p) => {
+      if (p) {
+        try {
+          localStorage.setItem(POS_KEY, JSON.stringify({ rx: p.x / window.innerWidth, ry: p.y / window.innerHeight }))
+        } catch { /* 저장 못 해도 이번 화면에서는 옮겨져 있다 */ }
+      }
+      return p
+    })
+  }
 
   function close() {
     setOpen(false)
@@ -32,11 +108,25 @@ export default function FeedbackButton() {
   return (
     <>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setOpen(true)}
-        aria-label="개발자에게 문의하기"
-        className="fixed z-40 rounded-full shadow-lg flex items-center gap-1.5 text-white whitespace-nowrap bottom-24 right-3 md:bottom-6 md:right-6 px-3.5 py-3 md:px-4 md:py-3 min-h-[44px]"
-        style={{ background: '#1428A0' }}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={() => { drag.current = null }}
+        aria-label="개발자에게 문의하기 (끌어서 옮길 수 있습니다)"
+        title="끌어서 옮길 수 있습니다"
+        className={
+          'z-40 rounded-full shadow-lg flex items-center gap-1.5 text-white whitespace-nowrap px-3.5 py-3 md:px-4 md:py-3 min-h-[44px] select-none ' +
+          // 옮기기 전에는 기본 자리(오른쪽 아래)를 그대로 쓴다
+          (pos ? 'fixed' : 'fixed bottom-24 right-3 md:bottom-6 md:right-6')
+        }
+        style={{
+          background: '#1428A0',
+          touchAction: 'none',            // 끌 때 화면이 같이 스크롤되지 않게
+          cursor: 'grab',
+          ...(pos ? { left: pos.x, top: pos.y } : null),
+        }}
       >
         <span className="text-base leading-none">💬</span>
         <span className="text-xs md:text-sm font-semibold leading-none">개발자에게 문의하기</span>
