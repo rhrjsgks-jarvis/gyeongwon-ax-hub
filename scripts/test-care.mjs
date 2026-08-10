@@ -31,7 +31,8 @@ const ALL_PRODUCTS = [
   { key: 'purifier_under',   name: '언더싱크 정수기',      hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
   { key: 'purifier_counter', name: '카운터탑·얼음 정수기', hasData: false, onlyPlan: null, dual: false },
   { key: 'vacuum',           name: '로봇청소기',           hasData: true,  onlyPlan: '12', dual: false, single12: true },
-  { key: 'kimchi',           name: '김치냉장고',           hasData: true,  onlyPlan: '36', dual: false },
+  // 김치냉장고는 12·36개월형이 다 있다. 예전에 36개월 전용으로 적어 뒀는데 삼성닷컴 대조에서 틀린 것으로 확인됐다
+  { key: 'kimchi',           name: '김치냉장고',           hasData: true,  onlyPlan: null, dual: true  },
   { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  onlyPlan: '36', dual: false },
   { key: 'microwave',        name: '전자레인지/오븐',      hasData: true,  onlyPlan: '36', dual: false },
   { key: 'soundbar',         name: '사운드바',             hasData: true,  onlyPlan: '36', dual: false },
