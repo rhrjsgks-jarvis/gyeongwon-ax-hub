@@ -1717,8 +1717,15 @@ function buildBenefits(d, key){
   const tiles = [];
   const repair = has(/무상수리/);
   if (repair) tiles.push({ t:'무상수리', k: yr? `최대 ${yr}년` : '구독 기간 내', d: repair.replace(/무상수리서비스\s*/,'') || '구독 기간 전체' });
-  const visit = d.total36 || d.total12;
-  if (visit) tiles.push({ t:'방문케어', k: String(visit).replace(/^총\s*/,''), d:'전문가가 방문해 점검·세척' });
+  /*
+   * 방문 주기를 고를 수 있는 제품은 회차가 둘이다(예: 식기세척기 12개월형 6회 / 36개월형 2회).
+   * 한쪽만 띄우면 상담사가 나머지를 못 보고 "2회짜리"로 안내한다 — buildSummary 와 같은 기준으로 나눈다.
+   */
+  const n = (v)=> String(v).replace(/^총\s*/,'');
+  if (d.onlyPlan === '12' && d.total12)      tiles.push({ t:'방문케어', k:n(d.total12), d:'매 12개월 · 전문가 방문 점검·세척' });
+  else if (d.onlyPlan === '36' && d.total36) tiles.push({ t:'방문케어', k:n(d.total36), d:'매 36개월 · 전문가 방문 점검·세척' });
+  else if (d.total12 && d.total36)           tiles.push({ t:'방문케어', k:'주기 선택', d:`12개월형 ${n(d.total12)} · 36개월형 ${n(d.total36)}` });
+  else if (d.total12 || d.total36)           tiles.push({ t:'방문케어', k:n(d.total12 || d.total36), d:'전문가가 방문해 점검·세척' });
   const fee = has(/공임비/);
   if (fee) tiles.push({ t:'공임비 무상', k:'0원', d:'수리 시 출장·기술료 부담 없음' });
   const self = has(/셀프케어|소모품/);
