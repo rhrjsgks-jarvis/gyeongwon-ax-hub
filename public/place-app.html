@@ -1313,8 +1313,22 @@ function classifyEdges(poly, base, sealed){
   // 같은 문이 어떤 도면에서는 개구부, 어떤 도면에서는 벽이 된다.
   const S = base.S || 1;
   const pxPerMm = state.mmPerPx ? S / state.mmPerPx : 0;
-  const mmPx = (mm, fb) => (pxPerMm ? Math.max(1, Math.round(mm * pxPerMm)) : fb);
   const span = Math.max(w, h);
+  /*
+   * **축척을 모를 때가 기본이다.** 자동 인식은 사용자가 길이를 넣기 전에 돌아가므로
+   * `state.mmPerPx` 가 없고, 아래 폴백이 사실상 늘 쓰인다. 그런데 예전 폴백(도면의 1.2%)은
+   * 실제 500mm 의 **1.6~3.7배(중앙값 2.1배) 작았다.** 그래서 짧은 벽 토막까지 개구부로
+   * 판정됐고, 화면에서는 "어디는 벽으로 잡고 어디는 안 잡는" 것처럼 보였다
+   * (실측: 40장 표본에서 개구부 길이비율 중앙값 24.5%, 최악 57%).
+   *
+   * 배율은 **축척이 실린 도면 15장으로 보정**했다 — 1mm ≈ 도면 긴변의 0.0054%.
+   * 도면마다 실제 폭이 11~27m 로 달라 이 환산은 어림이지만, **틀리는 방향이 안전하다** —
+   * 기준이 커지면 개구부로 덜 보고 벽으로 더 본다. 근거를 못 찾으면 벽으로 둔다는
+   * 원칙과 같은 방향이다(없는 개구부를 만들어 내지 않는다).
+   */
+  const mmFb = span * 0.000054;
+  const mmPx = (mm, fb) => (pxPerMm ? Math.max(1, Math.round(mm * pxPerMm))
+                                    : Math.max(fb, Math.round(mm * mmFb)));
   const probe   = Math.max(6, mmPx(400, Math.round(span * 0.012)));   // 경계선이 밀린 만큼은 더 본다
   const minOpen = mmPx(500, Math.max(4, Math.round(span * 0.012)));   // 이보다 짧으면 문·창이 아니다
   const noise   = Math.max(2, Math.round(probe / 3));                 // 표본 몇 개짜리 깜빡임

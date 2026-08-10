@@ -93,6 +93,14 @@ for (const s of sample) {
       short: Math.min(w, h) / Math.min(P.state.imgW, P.state.imgH) * 100,
       roomW: w,
     };
+    // 개구부가 둘레에서 차지하는 비율 — 벽이 마스크에서 사라지면 닫기가 그 자리를 메우고
+    // 그 구간이 개구부로 보고된다. 그래서 이 비율이 곧 "부분 누락" 지표다.
+    const E = P.state.draftEdges;
+    if (E && E.length) {
+      const len = (e) => Math.hypot(e.x2 - e.x1, e.y2 - e.y1);
+      const per = E.reduce((a, e) => a + len(e), 0);
+      if (per > 0) out.openPct = E.filter((e) => e.open).reduce((a, e) => a + len(e), 0) / per * 100;
+    }
     // 기준 벽까지 밀어 본다 — 벽면 전체를 덮는지가 축척 정확도를 좌우한다
     const okBtn = [...document.querySelectorAll('#draftbar button')].find((x) => x.textContent.trim() === '이 공간 확정');
     if (okBtn) {
@@ -144,6 +152,23 @@ else if (withSeg.length) {
   else if (short.length > withSeg.length * 0.15) {
     fail(`벽면의 절반도 못 덮는 도면이 ${short.length}/${withSeg.length}장 — 조각만 잡고 있다`);
   } else pass(`기준 벽 전부 가로 · 방 가로를 덮는 비율 중앙값 ${mc.toFixed(2)}`);
+}
+
+/*
+ * 개구부가 둘레에서 차지하는 비율 — **부분 누락 지표**다.
+ * 벽이 마스크에서 사라지면 닫기가 그 자리를 메우고, 그 구간은 개구부로 보고된다.
+ * 그래서 이 비율이 치솟으면 화면에서 "어디는 벽으로 잡고 어디는 안 잡는" 것처럼 보인다
+ * (2026-08-10 사용자가 실제로 이 증상을 보고했다).
+ *
+ * 방 하나에 문 900mm + 창 1,800mm 면 둘레 14m 기준 19% 안팎이 정상이다.
+ * 축척 폴백을 실측 보정하기 전에는 이 표본에서 24.0%(40장 표본 24.5%, 최악 57%) 였고 보정 후 20.1% 다.
+ * 상한 22% 는 그 사이에 둔 것이라, 폴백을 되돌리면 이 검사가 먼저 깨진다.
+ */
+const withOpen = auto.filter((r) => r.openPct != null);
+if (withOpen.length) {
+  const mo = med(withOpen.map((r) => r.openPct));
+  if (mo > 22) fail(`개구부 길이비율 중앙값 ${mo.toFixed(1)}% — 보정 후 실측 20.1%, 상한 22%. 벽이 개구부로 새고 있다`);
+  else pass(`개구부 길이비율 중앙값 ${mo.toFixed(1)}% (문+창 정상 범위)`);
 }
 
 // 세대 전체가 방 하나로 잡히는 비율 — 지금은 못 고치지만 나빠지는 것은 막는다
