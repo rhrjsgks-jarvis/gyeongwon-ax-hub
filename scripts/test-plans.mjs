@@ -629,7 +629,10 @@ for (const plan of PLANS) {
       { x1: 0, y1: 0, x2: W, y2: 0 }, { x1: W, y1: 0, x2: W, y2: H },
       { x1: W, y1: H, x2: 0, y2: H }, { x1: 0, y1: H, x2: 0, y2: 0 },
     ];
-    const rep = P.state.reps.find((x) => x.cat === '냉장고' && x.size === '602~640L');
+    // 사이즈 이름은 자료가 바뀌면 같이 바뀐다(폭 → 용량 → 도어 구성). 여기서 보는 것은
+    // 이름이 아니므로 아무 냉장고나 집는다.
+    const rep = P.state.reps.find((x) => x.cat === '냉장고' && !x.hidden && x.options && x.options.length);
+    if (!rep) return { placed: false, why: '냉장고 대표 치수가 없다' };
     const o = rep.options[0];
     // 방을 확정한 직후처럼 detect 모드로 둔 채 배치한다 — 예전에 여기서 막혔다
     P.state.mode = 'detect';
@@ -718,7 +721,10 @@ for (const plan of PLANS) {
     const W = 6000, H = 4000;
     P.state.walls = [{ x1:0,y1:0,x2:W,y2:0 },{ x1:W,y1:0,x2:W,y2:H },{ x1:W,y1:H,x2:0,y2:H },{ x1:0,y1:H,x2:0,y2:0 }];
     P.addRoom('거실', P.state.walls.map((w) => ({ ...w })));
-    const rep = P.state.reps.find((x) => x.cat === '냉장고' && x.size === '602~640L');
+    // 사이즈 이름은 자료가 바뀌면 같이 바뀐다(폭 → 용량 → 도어 구성). 여기서 보는 것은
+    // 이름이 아니므로 아무 냉장고나 집는다.
+    const rep = P.state.reps.find((x) => x.cat === '냉장고' && !x.hidden && x.options && x.options.length);
+    if (!rep) return { placed: false, why: '냉장고 대표 치수가 없다' };
     const o = rep.options[0];
     const made = P.stageOutside([{ cat: '냉장고', size: rep.size, model: o.model, group: o.group, part: o.parts[0] }]);
     const it = made[0];
