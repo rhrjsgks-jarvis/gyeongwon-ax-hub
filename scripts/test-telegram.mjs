@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 import {
   parseEnvFile, parseAllowlist, splitMessage, isRiskyPrompt, buildClaudeArgs,
   formatToolLine, formatDuration, validateConfig, explainTelegramError, resolveToolPolicy,
-  resolveClaudeBin, describeSpawnError,
+  resolveClaudeBin, describeSpawnError, resolveConfirmGate,
   DEFAULT_ALLOWED_TOOLS, DEFAULT_DISALLOWED_TOOLS, TOOL_PRESETS,
 } from './telegram-bot.mjs';
 
@@ -161,6 +161,23 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
   let f = 0;
   for (const t of safe) if (isRiskyPrompt(t)) { fail(`평범한 요청을 위험으로 봤다: "${t}"`); f++; }
   if (!f) pass(`평범한 요청 ${safe.length}건은 그대로 실행`);
+}
+
+/* ── [3-b] 확인 문턱 끄기 ──
+ * 되묻기는 보안이 아니라 오타 방지다. 매장에서 폰으로 일할 때 이것이 가장 크게 걸려
+ * 끌 수 있게 했다. **기본은 켜짐이어야 한다** — 설정을 안 건드린 사람이 자기도 모르게
+ * 되묻기 없이 배포하는 일은 없어야 한다.
+ */
+{
+  eq(resolveConfirmGate(undefined), true, '설정이 없으면 확인 문턱은 켜짐');
+  eq(resolveConfirmGate(''), true, '빈 값도 켜짐');
+  eq(resolveConfirmGate('on'), true, 'on 은 켜짐');
+  for (const v of ['off', 'OFF', '0', 'false', 'no', ' off ']) {
+    if (resolveConfirmGate(v)) fail(`${JSON.stringify(v)} 로 껐는데 켜져 있다`);
+  }
+  pass('off·0·false·no 로 끌 수 있다(대소문자·공백 무관)');
+  // 오타로 꺼지면 안 된다 — 모르는 값은 켜진 쪽으로 넘어간다.
+  eq(resolveConfirmGate('offf'), true, '모르는 값은 안전한 쪽(켜짐)으로');
 }
 
 // ── [4] 메시지 길이 — 넘으면 Telegram 이 통째로 거부한다 ──

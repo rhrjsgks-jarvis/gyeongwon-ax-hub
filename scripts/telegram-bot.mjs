@@ -216,6 +216,19 @@ const RISKY_PATTERNS = [
   [/\bdrop\b/i, 'drop'],
 ];
 
+/* 확인 문턱을 끌 수 있게 한다(`TELEGRAM_CONFIRM=off`). 기본은 켜짐.
+ *
+ * **이것은 보안 기능이 아니다** — 사용자가 보낸 글자를 정규식으로 보는 어림짐작이라
+ * "그거 올려줘" 한마디로 우회된다. 목적은 휴대폰에서 오타 한 번에 배포되는 사고를
+ * 막는 것뿐이라, 끄는 것은 편의의 문제이지 경계를 허무는 것이 아니다.
+ * 진짜 경계는 chat_id 화이트리스트와 --allowedTools 다.
+ *
+ * 끄면 '삭제'·'merge' 같은 흔한 말이 들어간 평범한 요청까지 되묻지 않는다 —
+ * 매장에서 폰으로 일할 때 이 되묻기가 실제로 가장 크게 걸린다(사용자 지적). */
+export function resolveConfirmGate(v) {
+  return !/^(off|0|false|no)$/i.test(String(v ?? '').trim());
+}
+
 export function isRiskyPrompt(text) {
   for (const [re, label] of RISKY_PATTERNS) if (re.test(String(text ?? ''))) return label;
   return null;
@@ -374,6 +387,7 @@ async function main() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const allowlist = parseAllowlist(process.env.TELEGRAM_ALLOWED_CHAT_IDS);
   const preset = process.env.TELEGRAM_TOOL_PRESET || 'safe';
+  const confirmGate = resolveConfirmGate(process.env.TELEGRAM_CONFIRM);
   const taskTimeoutMs = Number(process.env.TELEGRAM_TASK_TIMEOUT_MS || 15 * 60 * 1000);
   const claudeBin = resolveClaudeBin();
 
@@ -423,8 +437,14 @@ async function main() {
     console.warn('─────────────────────────────────────────────────────────────\n');
   }
 
+  if (!confirmGate) {
+    console.warn('확인 문턱이 꺼져 있습니다 (TELEGRAM_CONFIRM=off)');
+    console.warn('  — push·배포·삭제도 되묻지 않고 바로 실행합니다.\n');
+  }
+
   const branch = await git(['rev-parse', '--abbrev-ref', 'HEAD']);
-  console.log(`@${me.username} 대기 중 · ${ROOT} · ${branch} · 허용 ${allowlist.length}명 · ${preset}/${permissionMode}`);
+  console.log(`@${me.username} 대기 중 · ${ROOT} · ${branch} · 허용 ${allowlist.length}명 · ${preset}/${permissionMode}`
+    + ` · 확인 ${confirmGate ? '켜짐' : '꺼짐'}`);
   console.log('Ctrl+C 로 종료합니다.\n');
 
   /* 밀려 있던 옛 메시지를 흘려보낸다 — 봇을 껐다 켰더니 몇 시간 전 명령이
@@ -606,6 +626,7 @@ async function main() {
         `상태: ${state.busy ? '작업 중' : '대기'}${state.pending ? ' · 확인 대기 1건' : ''}`,
         // 어느 권한으로 도는지 폰에서 확인할 수 있어야 한다 — full 인 줄 모르고 쓰면 안 된다.
         `권한: ${preset}${preset === 'full' ? ' (push·배포 가능)' : ' (읽기·편집·테스트만)'}`,
+        `확인 문턱: ${confirmGate ? '켜짐 (위험해 보이면 /confirm 을 묻는다)' : '꺼짐 (바로 실행한다)'}`,
       ].join('\n')));
     }
 
@@ -627,7 +648,7 @@ async function main() {
       return void (await send(chatId, '작업이 돌고 있습니다. 끝나면 알려 드립니다. (/stop 으로 중단)'));
     }
 
-    const risky = isRiskyPrompt(text);
+    const risky = confirmGate ? isRiskyPrompt(text) : null;
     if (risky) {
       state.pending = { prompt: text, at: Date.now() };
       return void (await send(chatId, [
