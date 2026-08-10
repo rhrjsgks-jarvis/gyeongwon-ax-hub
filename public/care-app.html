@@ -154,28 +154,18 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .sell-a{font-size:11px;color:#6b7280;line-height:1.55}
 .sell-a::before{content:"A. ";font-weight:700;color:#059669}
 
-/* ── 방문케어 작업 항목 ──────────────────────────────────────────
+/* ── 방문케어 현장 사진 ──────────────────────────────────────────
    글만 있으면 "종합점검·케어"가 무슨 일인지 상담사도 고객도 모른다.
-
-   **사진을 쓰지 않는 이유** — 삼성닷컴 구독 페이지의 작업 사진을 걸었더니
-   제품마다 CDN 폴더를 잘못 짚어 냉장고 사진이 김치냉장고에, 건조기 사진이
-   다른 제품에 붙는 일이 생겼다. 고객 앞에서 제품과 다른 사진이 뜨는 것은
-   아무 그림도 없는 것보다 나쁘다. 그래서 **작업 종류를 뜻하는 아이콘**으로 바꿨다.
-   아이콘은 잘못 붙을 수가 없고(라벨에서 뽑는다), 사이드바 아이콘과 한 가족이다. */
+   삼성닷컴 구독 서비스 페이지의 실제 작업 사진을 라벨과 함께 보여 준다. */
 .cimg-wrap{margin:14px 0 4px}
 .cimg-h{display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;color:#16181b;margin-bottom:4px}
 .cimg-s{font-size:12px;color:#6b7280;margin-bottom:10px;line-height:1.5}
 .cimg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
-.cimg{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:14px 8px 11px;
-  display:flex;flex-direction:column;align-items:center;gap:9px}
-.cimg .ic{width:46px;height:46px;border-radius:50%;background:#eef1fb;color:#1428a0;
-  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.cimg .ic svg{width:26px;height:26px;display:block}
-.cimg .cap{font-size:11.5px;font-weight:600;color:#374151;line-height:1.35;text-align:center}
-@media(max-width:520px){.cimg-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
-  .cimg{padding:11px 6px 9px;gap:7px}
-  .cimg .ic{width:40px;height:40px}.cimg .ic svg{width:23px;height:23px}
-  .cimg .cap{font-size:11px}}
+.cimg{border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff}
+.cimg img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#f3f4f6}
+.cimg .cap{padding:7px 8px;font-size:11.5px;font-weight:600;color:#374151;line-height:1.35;text-align:center}
+@media(max-width:520px){.cimg-grid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
+  .cimg .cap{font-size:11px;padding:6px}}
 
 /* ── AI구독 케어 혜택(첫 화면) ─────────────────────────────────
    상담은 "이 제품 케어가 몇 회차냐"가 아니라 "구독하면 뭘 받느냐"로 시작한다.
@@ -1697,86 +1687,15 @@ function render36(d){
  * 사진이 없는 제품(자가관리 대상 등)은 아무것도 그리지 않는다 — 빈 자리를 만들지 않는다.
  * 이미지는 삼성닷컴 원본을 그대로 링크한다(설치환경 가이드와 같은 방식).
  */
-/*
- * 방문케어 작업 아이콘.
- *
- * 그리는 규칙은 사이드바 아이콘(components/Icon.tsx)과 같다 — 24×24 그리드 · stroke 1.6 ·
- * round cap/join · 채우기 없음 · 사선은 45°만 · 곡선은 정원 호만.
- * 그래야 같은 앱 안에서 한 가족으로 보인다.
- */
-const CARE_ICONS = {
-  /* 세척·청소 — 물방울 (기본값이라 가장 자주 나온다) */
-  clean:    '<path d="M12 4 8.2 9.2a4.7 4.7 0 1 0 7.6 0L12 4Z"/><path d="M4.5 20.5h15"/>',
-  /* UV 케어 — 광원과 조사선 */
-  uv:       '<circle cx="12" cy="12" r="3.6"/><path d="M12 3.2v2.4M12 18.4v2.4M3.2 12h2.4M18.4 12h2.4M5.9 5.9l1.7 1.7M16.4 16.4l1.7 1.7M18.1 5.9l-1.7 1.7M7.6 16.4l-1.7 1.7"/>',
-  /* 스팀·연무 — 그릇에서 올라오는 김 */
-  steam:    '<path d="M4.5 12.5h15"/><path d="M6.5 12.5a5.5 5.5 0 0 0 11 0"/><path d="M9 4.5v3.6M12 3.4v4.7M15 4.5v3.6"/>',
-  /* 진단 — 계기 바늘 */
-  diagnose: '<path d="M4.5 16.5a7.5 7.5 0 0 1 15 0"/><path d="M12 16.5 16 12.5"/><circle cx="12" cy="16.5" r="1"/>',
-  /* 무상수리 — 렌치 (설치환경 가이드와 같은 모양) */
-  repair:   '<path d="M15.5 4.5a4.5 4.5 0 0 0-5.8 5.6l-5.2 5.2a1.6 1.6 0 0 0 0 2.3l1.9 1.9a1.6 1.6 0 0 0 2.3 0l5.2-5.2a4.5 4.5 0 0 0 5.6-5.8l-2.7 2.7-2.5-.6-.6-2.5 2.8-2.6Z"/>',
-  /* 필터 — 격자 */
-  filter:   '<rect x="4.5" y="5.5" width="15" height="13" rx="1.5"/><path d="M4.5 9.8h15M4.5 14.2h15"/><path d="M9.3 5.5v13M14.7 5.5v13"/>',
-  /* 교체 — 순환. 무엇을 바꾸는지 아는 것은 아래에서 따로 그린다 */
-  replace:  '<path d="M19 12a7 7 0 1 1-7-7h3.2"/><path d="M12.6 2.2 15.4 5l-2.8 2.8"/>',
-  /* 배터리 교체 */
-  battery:  '<rect x="3.5" y="7.5" width="14" height="9" rx="1.6"/><path d="M20 10.3v3.4"/><path d="M7 10.5v3M10.5 10.5v3"/>',
-  /* 물걸레 교체 — 밀대와 패드 */
-  mop:      '<path d="M12 3.5v6"/><path d="M8.5 13V9.5h7V13"/><rect x="4" y="13" width="16" height="5.5" rx="1.4"/>',
-  /* 브러시·롤러 교체 */
-  brush:    '<rect x="3.5" y="7" width="17" height="5" rx="2.5"/><path d="M6.5 12v4.5M10.2 12v4.5M13.8 12v4.5M17.5 12v4.5"/>',
-  /* 먼지봉투 교체 */
-  bag:      '<rect x="5.5" y="8" width="13" height="11.5" rx="1.4"/><path d="M9 8V6.2a3 3 0 0 1 6 0V8"/>',
-  /* 고압·초음파 — 한 점에서 퍼져 나가는 파동. 노즐을 그리면 26px 에서 뭉갠다 */
-  spray:    '<circle cx="6.2" cy="12" r="1.7"/><path d="M10.4 8a5.6 5.6 0 0 1 0 8"/><path d="M13.9 5.5a9.2 9.2 0 0 1 0 13"/><path d="M17.4 3a12.8 12.8 0 0 1 0 18"/>',
-  /* 점검·확인 — 돋보기 */
-  inspect:  '<circle cx="10.6" cy="10.6" r="5.6"/><path d="M14.6 14.6 20 20"/>',
-};
-
-/*
- * 라벨 글자로 아이콘을 고른다. 순서가 곧 우선순위다 —
- * "마이크로 필터 교체"는 '교체'보다 '필터'가 더 구체적이라 필터가 먼저 와야 한다.
- */
-const CARE_ICON_RULES = [
-  [/UV/i,                 'uv'],
-  [/스팀|연무/,            'steam'],
-  [/무상수리/,             'repair'],
-  [/진단/,                'diagnose'],
-  [/필터/,                'filter'],
-  /* 로봇청소기는 항목이 거의 다 '교체'다 — 무엇을 바꾸는지로 갈라야 화면이 읽힌다 */
-  [/배터리/,              'battery'],
-  [/물걸레|걸레/,          'mop'],
-  [/브러시|롤러/,          'brush'],
-  [/봉투|먼지통/,          'bag'],
-  [/교체|장착|비닐 제거/,   'replace'],
-  [/고압|초음파|분사/,      'spray'],
-  [/점검|확인/,            'inspect'],
-];
-function careIconName(label){
-  const hit = CARE_ICON_RULES.find(([re])=> re.test(label));
-  return hit ? hit[1] : 'clean';
-}
-function careIcon(label){
-  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
-    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${CARE_ICONS[careIconName(label)]}</svg>`;
-}
-
-/*
- * 방문케어에 무엇을 하는지 — 작업 종류를 아이콘으로 보여 준다.
- * 라벨은 삼성닷컴 구독 페이지의 방문케어 항목 그대로다(`CARE_IMGS[].l`).
- * 같은 자료의 `.s`(작업 사진 URL)는 제품별 폴더가 어긋나 있어 쓰지 않는다 — 위 CSS 주석 참고.
- */
 function buildCareImgs(key){
   const list = CARE_IMGS[key];
   if (!list || !list.length) return '';
-  // "…하는 모습"은 사진 설명이라 작업 항목으로 읽으면 어색하다 — 꼬리만 떼고 나머지는 원문 그대로 둔다
-  const cap = (l)=> l.replace(/\s*하는\s*모습$/, '').replace(/\s*모습$/, '');
   return `
   <div class="card cimg-wrap">
-    <div class="cimg-h">🛠 방문케어에는 이런 작업이 들어갑니다</div>
-    <div class="cimg-s">삼성닷컴 구독 서비스 안내에 적힌 방문케어 항목입니다 — 고객에게 그대로 읽어 주세요.</div>
+    <div class="cimg-h">📸 방문케어는 이렇게 진행됩니다</div>
+    <div class="cimg-s">삼성닷컴 구독 서비스 안내의 실제 작업 사진입니다 — 고객에게 그대로 보여 주세요.</div>
     <div class="cimg-grid">
-      ${list.map(x=>`<div class="cimg"><div class="ic">${careIcon(x.l)}</div><div class="cap">${cap(x.l)}</div></div>`).join('')}
+      ${list.map(x=>`<div class="cimg"><img src="${x.s}" alt="${x.l}" loading="lazy"><div class="cap">${x.l}</div></div>`).join('')}
     </div>
   </div>`;
 }
