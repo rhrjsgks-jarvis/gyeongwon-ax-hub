@@ -94,7 +94,8 @@ try {
   await page.waitForTimeout(1200);
   {
     const title = await page.textContent('header');
-    if (!title || !title.includes('경원 AX 허브')) fail('허브 메인 헤더가 렌더되지 않음');
+    // 이름은 '세일즈 코파일럿'이다(2026-08-10 변경). 저장소·Vercel 프로젝트명만 옛 이름을 쓴다.
+    if (!title || !title.includes('세일즈 코파일럿')) fail('허브 메인 헤더가 렌더되지 않음');
     else pass('허브 메인 렌더');
 
     // 허브 메인 페이지뷰는 집계 왜곡을 막기 위해 기록하지 않아야 한다
