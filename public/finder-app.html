@@ -22,6 +22,11 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 
 .topbar{position:sticky;top:0;z-index:50;background:var(--deep);color:#fff}
 .topbar-in{max-width:780px;margin:0 auto;padding:13px 16px;display:flex;align-items:center;gap:10px}
+/* 아이콘 배지 — 아홉 앱이 같은 머리를 갖도록(남색 바 + 배지 + 제목 + 부제).
+   돋보기는 통합검색 전용이라 여기 쓰지 않는다. 나침반은 "찾아 준다"는 뜻이고
+   다른 앱 아이콘(⚖️ 타사비교 · 🛠️ 설치환경 · 🛡️ AS · 🎯 퀴즈)과도 겹치지 않는다. */
+.brand-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:18px}
 .brand{flex:1;min-width:0}
 .brand b{font-size:16px;font-weight:800;letter-spacing:-.02em;display:block}
 .brand span{font-size:11px;color:#9FB4D4;letter-spacing:.04em}
@@ -234,7 +239,8 @@ table.spec tr:last-child td{border-bottom:none}
 <body>
 
 <div class="topbar"><div class="topbar-in">
-  <div class="brand"><b>모델 파인더</b><span>키워드 제품 추천 · 578종 전 라인업 (삼성·리빙 524+Harman 54)</span></div>
+  <div class="brand-ico">🧭</div>
+  <div class="brand"><b>모델 파인더</b><span>전 라인업 578종</span></div>
   <div style="display:flex;align-items:center">
     <div class="mode">
       <button id="mKw" class="on" onclick="setMode('kw')">키워드</button>
