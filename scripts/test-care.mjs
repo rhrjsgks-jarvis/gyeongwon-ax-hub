@@ -254,24 +254,39 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
   try {
     window.setMode('timeline');
     if (doc.getElementById('timelinePane').style.display === 'none') fail('timeline mode: timelinePane should be visible');
+    // 자가관리 제품(인덕션·전자레인지·사운드바)은 방문 케어가 아니라 타임라인 목록에서 빠진다
     const prodOpts = doc.querySelectorAll('.tl-sel')[0].querySelectorAll('option');
-    if (prodOpts.length !== DONE_KEYS.length) fail(`timeline: expected ${DONE_KEYS.length} product options, got ${prodOpts.length}`);
+    const TL_KEYS = DONE_KEYS.filter((k) => (window.eval(`(DATA['${k}']||{}).contract`) !== '자가관리'));
+    if (prodOpts.length !== TL_KEYS.length) fail(`timeline: expected ${TL_KEYS.length} product options, got ${prodOpts.length}`);
     const circles = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
     if (circles !== 4) fail(`timeline: default aircon/12개월형 expected 4 round circles, got ${circles}`); // TL_MONTHS.aircon[12] = [12,24,48,60]
 
-    // 제품 select 변경 시뮬레이션 (dryer로 전환) — inline onchange 핸들러 검증
+    /*
+     * 36개월 전용 제품으로 넘어가면 **플랜이 36으로 보정돼야 한다.**
+     * 예전에는 tlPlan 이 '12' 로 남아 죽은 TL_MONTHS[dryer][12] 가 그려져 6회로 보였다
+     * (2026-08-11 사용자 보고 — AI콤보에서 같은 증상). 건조기는 onlyPlan:'36' 이라
+     * 12개월형이 없으므로 회차는 2회(36·72개월차)여야 한다.
+     */
     const prodSel = doc.querySelectorAll('.tl-sel')[0];
     prodSel.value = 'dryer';
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
     const circlesDryer = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
-    if (circlesDryer !== 6) fail(`timeline: dryer/12개월형 expected 6 round circles, got ${circlesDryer}`); // [12,24,36,48,60,72]
+    if (circlesDryer !== 2) fail(`timeline: dryer 는 36개월 전용이라 2회여야 하는데 ${circlesDryer}회`);
+    const planOpts = [...doc.querySelectorAll('.tl-sel')[1].querySelectorAll('option')].map((o) => o.value);
+    if (planOpts.length !== 1 || planOpts[0] !== '36') fail(`timeline: dryer 플랜 선택지는 36 하나여야 하는데 ${planOpts.join(',')}`);
 
-    // 플랜 select를 36개월형으로 전환
+    // 36개월 전용 제품에서도 회차는 그대로 2회
     const planSel = doc.querySelectorAll('.tl-sel')[1];
     planSel.value = '36';
     planSel.dispatchEvent(new window.Event('change', { bubbles: true }));
     const circlesDryer36 = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
     if (circlesDryer36 !== 2) fail(`timeline: dryer/36개월형 expected 2 round circles, got ${circlesDryer36}`); // [36,72]
+
+    // 사용자가 신고한 그 조합 — AI콤보 36개월형은 2회여야 한다
+    prodSel.value = 'aicombo';
+    prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
+    const circlesCombo = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
+    if (circlesCombo !== 2) fail(`timeline: AI콤보 36개월형은 2회여야 하는데 ${circlesCombo}회 (구독 6년 ÷ 36개월)`);
 
     console.log('OK: timeline mode (default circles, product/plan select switching)');
   } catch (e) {
@@ -307,6 +322,47 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     console.log(`OK: toggleSell (${before} -> ${after1} -> ${after2})`);
   } catch (e) {
     fail('toggleSell threw: ' + e.message);
+  }
+
+  /*
+   * 타임라인 회차 정합성 — TL_MONTHS 는 DATA 의 rounds 와 반드시 같아야 한다.
+   *
+   * 이 검사가 없어서 다섯 곳이 어긋난 채로 배포돼 있었다(2026-08-11). 화면은 조용히
+   * 틀린 회차를 그렸고 사용자가 "AI콤보 36개월형이 6회로 나온다"고 알려 준 뒤에야 드러났다.
+   * DATA 는 손으로 다듬는 자료라 앞으로도 회차가 바뀔 텐데, 그때 TL_MONTHS 를 같이
+   * 안 고치면 같은 사고가 난다.
+   *
+   * 에어컨 12 만 예외다 — rounds 가 비어 있어 대조할 근거가 없다(별도 확인 대상).
+   */
+  try {
+    const DATA = window.eval('JSON.stringify(DATA)') && JSON.parse(window.eval('JSON.stringify(DATA)'));
+    const TL = JSON.parse(window.eval('JSON.stringify(TL_MONTHS)'));
+    const EXEMPT = new Set(['aircon:12']);   // rounds 가 비어 있어 대조 불가
+    let n = 0;
+    for (const [k, d] of Object.entries(DATA)) {
+      // 자가관리 제품은 방문 케어가 아니다 — rounds 가 "사용 후 매회 / 연 1회 권장" 같은
+      // 관리 안내라 개월수로 대조할 대상이 아니고, 타임라인 목록에서도 빠진다.
+      if (d.contract === '자가관리') continue;
+      for (const pl of ['12', '36']) {
+        if (EXEMPT.has(`${k}:${pl}`)) continue;
+        const plan = d['plan' + pl];
+        const months = (TL[k] || {})[pl];
+        if (!plan && months) { fail(`[${k}] plan${pl} 이 없는데 TL_MONTHS 에 ${months.length}회가 남아 있다 — 플랜을 바꿔도 이 회차가 그려진다`); continue; }
+        if (!plan) continue;
+        const rounds = (plan.rounds || []).length;
+        if (!rounds) continue;                       // 내용이 아직 안 채워진 플랜
+        if (!months) { fail(`[${k}] plan${pl} 은 ${rounds}회인데 TL_MONTHS 에 없다 — 타임라인이 비어 보인다`); continue; }
+        if (months.length !== rounds) { fail(`[${k}] plan${pl} rounds ${rounds}회 ≠ 타임라인 ${months.length}회`); continue; }
+        // 회차 문구의 개월수와 타임라인 값이 같아야 한다 ("36개월차 (3년차)" → 36)
+        const fromRounds = plan.rounds.map((r) => parseInt(String(r.month).replace(/[^0-9]/, '') , 10));
+        const mism = fromRounds.map((m, i) => (m === months[i] ? null : `${i + 1}회차 ${m} vs ${months[i]}`)).filter(Boolean);
+        if (mism.length) fail(`[${k}] plan${pl} 개월이 어긋남 — ${mism.join(', ')}`);
+        else n++;
+      }
+    }
+    if (ok) console.log(`OK: 타임라인 회차 정합성 ${n}개 플랜 (rounds ↔ TL_MONTHS 개월까지 일치)`);
+  } catch (e) {
+    fail('타임라인 정합성 검사 실패: ' + e.message);
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
