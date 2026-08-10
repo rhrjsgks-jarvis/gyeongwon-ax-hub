@@ -164,7 +164,71 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('dish round cycle threw: ' + e.message);
   }
 
-  // ── 6. 모드 전환: overview ──
+  // ── 6. 모드 전환: bluepass (첫 화면) ──
+  /*
+   * 블루패스는 앱을 열면 가장 먼저 보이는 화면이고, 여기 적힌 조건이 빠지면
+   * 상담사가 조건 없이 말하게 되어 그대로 고객 분쟁이 된다. 그래서 문구를
+   * 골든값으로 박아 회귀를 막는다 — test-as.mjs 가 "확인 필요"를 지키는 것과 같다.
+   */
+  try {
+    window.setMode('bluepass');
+    const pane = doc.getElementById('bluepassPane');
+    if (pane.style.display === 'none') fail('bluepass mode: bluepassPane should be visible');
+    if (doc.getElementById('body').style.display !== 'none') fail('bluepass mode: care body should be hidden');
+    if (doc.querySelector('.cat-wrap').style.display !== 'none') fail('bluepass mode: cat-wrap should be hidden');
+    if (doc.getElementById('overviewPane').style.display !== 'none') fail('bluepass mode: overviewPane should be hidden');
+    if (doc.getElementById('timelinePane').style.display !== 'none') fail('bluepass mode: timelinePane should be hidden');
+
+    // 앱을 열었을 때 기본이 블루패스여야 한다 — 탭 순서가 곧 상담 순서다
+    const firstTab = doc.querySelector('.mode-tab');
+    if (firstTab.dataset.mode !== 'bluepass') fail(`bluepass should be the first tab, got '${firstTab.dataset.mode}'`);
+    const tabOrder = [...doc.querySelectorAll('.mode-tab')].map((t) => t.dataset.mode).join(',');
+    if (tabOrder !== 'bluepass,overview,care,timeline') fail(`tab order should be bluepass,overview,care,timeline — got '${tabOrder}'`);
+
+    const html = pane.innerHTML;
+    if (hasBadText(html)) fail('bluepass pane contains undefined/NaN');
+
+    // 6가지 + 에어컨 전용 2가지 = 8장
+    const tiles = pane.querySelectorAll('.bp-i').length;
+    if (tiles !== 8) fail(`bluepass: expected 8 tiles (6 + aircon 2), got ${tiles}`);
+    if (!/모두 <b>6가지<\/b>/.test(html)) fail('bluepass: 개수 문장(6가지)이 데이터와 어긋난다');
+    if (!/에어컨은 <b>2가지<\/b>/.test(html)) fail('bluepass: 에어컨 개수 문장(2가지)이 데이터와 어긋난다');
+
+    // 조건이 라벨로 갈려 화면에 실제로 나오는지 — 뭉쳐 두면 상담 중에 안 읽힌다
+    for (const label of ['대상', '필요', '제외', '비용']) {
+      if (!pane.querySelector(`.bp-cl`)) fail('bluepass: 조건 라벨이 하나도 렌더되지 않았다');
+      if (!html.includes(`>${label}</span>`)) fail(`bluepass: 조건 라벨 '${label}' 이 화면에 없다`);
+    }
+
+    // 빠지면 분쟁이 되는 조건 문구 — 원문 그대로 남아 있어야 한다
+    const MUST = [
+      '하절기(6~9월)는 운영 제외',            // A/S 패스트트랙을 무제한으로 말하면 안 된다
+      'SmartThings 앱 설치 후 제품 연결 필요', // 앱 없이는 사전케어가 동작하지 않는다
+      '유상 옵션 — 추가 비용이 발생합니다',    // 오늘보장 설치는 무료가 아니다
+      '삼성전자 제품에 한함',                  // 하나 더 서비스는 타사 제품 불가
+      'AI 올인원 2.0 구독 고객에게만 제공됩니다', // 스마트 요금제는 블루패스가 없다
+    ];
+    for (const s of MUST) {
+      if (!html.includes(s)) fail(`bluepass: 조건 문구가 사라졌다 — '${s}'`);
+    }
+    /*
+     * curCat 은 'aircon' 으로 **초기화돼 있다**. 그걸 "사용자가 골랐다"로 읽으면
+     * 앱을 열자마자 첫 화면이 고른 적 없는 에어컨을 "이 제품"이라고 부른다.
+     * 고르기 전 → 일반 문구 / 고른 뒤 → "이 제품에는".
+     */
+    if (html.includes('이 제품에는')) fail('bluepass: 품목을 고르기 전인데 "이 제품에는" 이라고 말한다');
+    if (!html.includes('에어컨에만')) fail('bluepass: 고르기 전에는 "에어컨에만 두 가지가 더 붙습니다" 여야 한다');
+
+    window.switchToCare('aircon');
+    window.setMode('bluepass');
+    const picked = doc.getElementById('bluepassPane').innerHTML;
+    if (!picked.includes('이 제품에는')) fail('bluepass: 에어컨을 고른 뒤에는 "이 제품에는" 이어야 한다');
+    console.log('OK: bluepass mode (첫 탭, 8 tiles, 조건 라벨 4종, 골든 문구 5건, 고르기 전/후 문구)');
+  } catch (e) {
+    fail('bluepass mode threw: ' + e.message);
+  }
+
+  // ── 7. 모드 전환: overview ──
   try {
     window.setMode('overview');
     if (doc.getElementById('overviewPane').style.display === 'none') fail('overview mode: overviewPane should be visible');
@@ -186,7 +250,7 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('overview mode threw: ' + e.message);
   }
 
-  // ── 7. 모드 전환: timeline ──
+  // ── 8. 모드 전환: timeline ──
   try {
     window.setMode('timeline');
     if (doc.getElementById('timelinePane').style.display === 'none') fail('timeline mode: timelinePane should be visible');
@@ -214,10 +278,11 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('timeline mode threw: ' + e.message);
   }
 
-  // ── 8. care 모드 복귀 확인 ──
+  // ── 9. care 모드 복귀 확인 ──
   try {
     window.setMode('care');
     if (doc.getElementById('body').style.display === 'none') fail('setMode(care) should show body');
+    if (doc.getElementById('bluepassPane').style.display !== 'none') fail('setMode(care) should hide bluepassPane');
     if (doc.getElementById('overviewPane').style.display !== 'none') fail('setMode(care) should hide overviewPane');
     if (doc.getElementById('timelinePane').style.display !== 'none') fail('setMode(care) should hide timelinePane');
     console.log('OK: setMode back to care');
@@ -225,7 +290,7 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('setMode(care) threw: ' + e.message);
   }
 
-  // ── 9. 셀링포인트 토글 (toggleSell) ──
+  // ── 10. 셀링포인트 토글 (toggleSell) ──
   try {
     window.switchToCare('aircon');
     const sellBody = doc.getElementById('sellBody');

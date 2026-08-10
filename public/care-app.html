@@ -111,8 +111,6 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .mode-tab.on{color:#1428A0;border-bottom-color:#1428A0}
 .mode-tab .mt-ico{font-size:16px;display:block;margin-bottom:2px}
 /* === 전체품목 뷰 === */
-/* 메인 화면의 블루패스는 카드 목록과 같은 좌우 여백을 쓴다 */
-#overviewPane .bp-wrap{margin:14px 16px 0}
 .ov-lead{padding:14px 16px 0;font-size:12.5px;font-weight:700;color:#16181b}
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px 14px}
 .ov-card{background:#fff;border-radius:16px;padding:14px 12px;cursor:pointer;border:1.5px solid #ecedf1;transition:all .15s;position:relative}
@@ -184,14 +182,38 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .bp-t{font-size:12.5px;font-weight:800;line-height:1.35}
 .bp-s{font-size:10.5px;color:#a9b6ef;margin-top:1px;line-height:1.4}
 .bp-d{font-size:11px;color:#e6eaff;line-height:1.5;margin-top:5px}
-.bp-w{font-size:9.5px;color:#ffd9a8;line-height:1.45;margin-top:5px}
 .bp-extra{margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.2)}
 .bp-eh{font-size:11.5px;font-weight:800;color:#ffd9a8;margin-bottom:8px}
 .bp-gate{margin-top:11px;background:rgba(0,0,0,.22);border-radius:10px;padding:9px 11px;
   font-size:10.5px;color:#ffd9a8;line-height:1.55;font-weight:700}
 .bp-src{margin-top:8px;font-size:9.5px;color:#9fabe6;line-height:1.5}
+.bp-sub b{color:#fff;font-weight:800}
+/* 번호 — 상담사가 "여섯 가지 중 세 번째"로 짚어 말할 수 있게 */
+.bp-n{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+  border-radius:5px;background:rgba(255,255,255,.9);color:#1428A0;font-size:9.5px;font-weight:900;
+  margin-right:6px;vertical-align:1px}
+/* 조건 — 대상/필요/제외/비용을 라벨로 갈라 적는다. 한 줄로 뭉치면 상담 중에 못 읽는다 */
+.bp-cond{margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.14);
+  display:flex;flex-direction:column;gap:4px}
+.bp-c{display:flex;gap:7px;align-items:flex-start}
+.bp-cl{flex:0 0 auto;min-width:29px;text-align:center;border-radius:5px;padding:1px 5px;
+  font-size:9px;font-weight:800;line-height:1.5}
+.bp-cl.ok{background:rgba(255,255,255,.16);color:#dbe3ff}
+.bp-cl.need{background:rgba(125,211,252,.18);color:#bae6fd}
+.bp-cl.warn{background:rgba(251,191,36,.16);color:#ffd9a8}
+.bp-cv{font-size:10px;line-height:1.5;color:#dfe5ff;min-width:0}
+/*
+ * 블루패스 전용 탭은 1단이다 — 조건까지 펼치면 2단에서는 글자가 뭉갠다.
+ * 자세히 보여 주는 것이 이 화면의 목적이므로 폭을 글에 준다.
+ */
+#bluepassPane .bp-wrap{margin:14px 16px 4px}
+#bluepassPane .bp-g{grid-template-columns:1fr}
+#bluepassPane .bp-t{font-size:13.5px}
+#bluepassPane .bp-d{font-size:11.5px}
+#bluepassPane .bp-cv{font-size:10.5px}
 @media(max-width:560px){.bp-g{grid-template-columns:1fr}
-  .bp-wrap{padding:15px 13px 12px}.bp-hh{font-size:14px}}
+  .bp-wrap{padding:15px 13px 12px}.bp-hh{font-size:14px}
+  #bluepassPane .bp-wrap{margin:14px 12px 4px}}
 
 /* ── 방문케어 현장 사진 ──────────────────────────────────────────
    글만 있으면 "종합점검·케어"가 무슨 일인지 상담사도 고객도 모른다.
@@ -237,11 +259,18 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
     </div>
     <div class="hd-pill">📎 <b>삼성닷컴 공식</b> + <b>AI구독클럽 브로슈어 2026.06</b> 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
   </div>
+<!--
+  탭 순서가 곧 상담 순서다 — 블루패스(왜 삼성인가) → 전체품목(무엇을 살까)
+  → 케어정보(그 제품은 어떻게 관리되나) → 타임라인(언제 오나).
+  탭이 셋일 때는 4칸 그리드에 3개만 들어가 오른쪽 1/4이 비어 있었다.
+-->
 <div class="mode-tabs" id="modeTabs">
+  <div class="mode-tab on" data-mode="bluepass" onclick="setMode('bluepass')"><span class="mt-ico">🎫</span>블루패스</div>
+  <div class="mode-tab" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
   <div class="mode-tab" data-mode="care" onclick="setMode('care')"><span class="mt-ico">🛡️</span>케어정보</div>
-  <div class="mode-tab on" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
   <div class="mode-tab" data-mode="timeline" onclick="setMode('timeline')"><span class="mt-ico">📅</span>타임라인</div>
 </div>
+<div id="bluepassPane" style="display:none"></div>
 <div id="overviewPane" style="display:none"></div>
 <div id="timelinePane" style="display:none"></div>
   <div class="cat-wrap">
@@ -1541,6 +1570,13 @@ const DATA = {
 <script>
 /* ── 상태 ── */
 let curCat = 'aircon', curPlan = '12', curTypeA = true, curRound = 0, isOpen = false;
+/*
+ * `curCat` 은 **기본값이 이미 들어 있다**('aircon'). 그래서 "지금 무엇을 보고 있나"는
+ * 알려 주지만 "사용자가 골랐나"는 못 알려 준다. 블루패스 화면이 이 둘을 구분해야 한다 —
+ * 안 그러면 앱을 열자마자 고른 적도 없는 에어컨을 "이 제품"이라고 부른다.
+ * 축척 시뮬레이터가 `mmPerPx`(이미지 축척)와 `scaled`(확정 여부)를 따로 드는 것과 같다.
+ */
+let pickedCat = null;
 
 /* ────────────────── 헬퍼 ────────────────── */
 function gradStyle(g){ return 'background:' + g; }
@@ -1782,7 +1818,7 @@ function buildCareImgs(key){
  * 계약기간·방문횟수는 이미 들고 있는 값(`contract`, `total12/36`)을 그대로 쓴다.
  */
 /*
- * 블루패스 — AI구독 케어를 열면 **가장 먼저** 보이는 것.
+ * 블루패스 — AI구독 케어를 열면 **가장 먼저** 보이는 것. 전용 탭 하나를 통째로 쓴다.
  *
  * 상담은 "이 제품 케어가 몇 회차냐"보다 "삼성으로 구독하면 뭐가 다르냐"에서 시작한다.
  * 블루패스가 그 답이고, 다른 브랜드 구독에는 없는 항목이다.
@@ -1790,6 +1826,12 @@ function buildCareImgs(key){
  * 문구는 삼성닷컴 AI 구독클럽 가이드(/sec/ai-subs/guide/)에서 그대로 옮겼다.
  * **조건을 같이 적는다** — 상담사가 조건 없이 말하면 그대로 분쟁이 된다.
  * 특히 ①올인원 2.0 전용 ②A/S 패스트트랙 하절기 제외 ③오늘보장 설치는 유상.
+ *
+ * 조건은 한 줄(`warn`)로 뭉쳐 두지 않고 **대상 / 필요 / 제외 / 비용** 으로 갈라 담는다.
+ * 같은 문장이라도 상담사가 물어보는 것은 늘 넷 중 하나다 — "어느 품목이 되나"(대상),
+ * "뭘 해야 하나"(필요), "언제 안 되나"(제외), "돈이 더 드나"(비용). 뭉쳐 두면 그 답을
+ * 문장에서 다시 찾아야 하고, 상담 중에는 그걸 못 해서 조건을 빼고 말하게 된다.
+ * **문구 자체는 원문 그대로다** — 라벨만 붙였을 뿐 지어낸 말은 없다.
  */
 const BLUEPASS = {
   src: '✅ samsung.com AI 구독클럽 가이드 · 블루패스 서비스 · 2026.08.10 확인',
@@ -1797,31 +1839,47 @@ const BLUEPASS = {
   items: [
     { ic:'fast',  t:'A/S 패스트트랙',   s:'일반 주문 고객보다 빠르게',
       d:'모든 구독 제품을 횟수 제한 없이 일반 주문 고객보다 빠르게 수리받습니다.',
-      warn:'전 품목 대상 · 하절기(6~9월)는 운영 제외' },
+      target:'전 품목',
+      except:'하절기(6~9월)는 운영 제외' },
     { ic:'alert', t:'AI 사전케어 알림',  s:'고장 나기 전에 먼저',
       d:'AI가 매일 점검해 문제가 생기기 전에 알려주고, 수리가 필요하면 전화 안내 후 방문 접수까지 해 줍니다.',
-      warn:'구독케어 대상 중 일부 품목 · SmartThings 앱 설치 후 제품 연결 필요' },
+      target:'구독케어 대상 중 일부 품목',
+      need:'SmartThings 앱 설치 후 제품 연결 필요' },
     { ic:'plus',  t:'하나 더 서비스',    s:'쓰던 제품도 같이 봐 드립니다',
       d:'방문케어를 신청하면 기존에 쓰던 삼성 제품 1개를 추가로 간단 점검해 줍니다. 스마트싱스 연결·제품 점검을 해 드립니다.',
-      warn:'냉장고 · 김치냉장고 · 세탁기 · 건조기 · 에어컨 · TV 중 택 1 · 삼성전자 제품에 한함' },
+      target:'냉장고 · 김치냉장고 · 세탁기 · 건조기 · 에어컨 · TV 중 택 1',
+      need:'삼성전자 제품에 한함' },
     { ic:'clock', t:'시간맞춤 설치',     s:'원하는 시간에, 추가 비용 없이',
       d:'고객이 편한 시간을 지정해 설치해 드립니다.',
-      warn:'냉장고 · 김치냉장고 · 에어드레서 · 건조기 · 세탁기 · TV 중 일부 모델 · 설치 환경에 따라 설치비가 추가될 수 있음' },
+      target:'냉장고 · 김치냉장고 · 에어드레서 · 건조기 · 세탁기 · TV 중 일부 모델',
+      cost:'설치 환경에 따라 설치비가 추가될 수 있음' },
     { ic:'today', t:'오늘보장 설치',     s:'오전에 주문하면 오늘 설치',
       d:'급하게 필요한 제품은 오전에 주문하고 당일에 설치받을 수 있습니다.',
-      warn:'유상 옵션 — 추가 비용이 발생합니다' },
+      cost:'유상 옵션 — 추가 비용이 발생합니다' },
     { ic:'things',t:'스마트싱스 세팅',   s:'설치하고 연결까지',
       d:'설치 후 SmartThings 연결까지 도와드려 AI 홈을 바로 쓸 수 있습니다.',
-      warn:'설치 불가 환경 등 현장 상황에 따라 제공이 어려울 수 있음' },
+      except:'설치 불가 환경 등 현장 상황에 따라 제공이 어려울 수 있음' },
   ],
   /* 에어컨을 보고 있을 때만 덧붙인다 — 에어컨 전용 혜택이다 */
   aircon: [
-    { ic:'clock', t:'최우선 설치',   d:'일반에어컨은 D+1일 내, 가정용 시스템에어컨은 D+5일 내 설치를 보장합니다.',
-      warn:'2026.05.15~ 가입 고객 대상 · 제주 및 도서 산간 제외 · 성수기(5~8월) 일정 변경 가능' },
-    { ic:'fast',  t:'냉매 안심케어', d:'냉매가 새면 구독 기간 내내 무료로 충전해 드립니다. 최대 6년까지 안심입니다.',
-      warn:'설치 이슈로 인한 누설 · 당사가 제품/배관 시공을 완료한 제품에 한함' },
+    { ic:'clock', t:'최우선 설치',   s:'설치 지정일을 보장합니다',
+      d:'일반에어컨은 D+1일 내, 가정용 시스템에어컨은 D+5일 내 설치를 보장합니다.',
+      target:'2026.05.15~ 가입 고객',
+      except:'제주 및 도서 산간 제외 · 성수기(5~8월) 일정 변경 가능' },
+    { ic:'fast',  t:'냉매 안심케어', s:'구독 기간 내내 무료 충전',
+      d:'냉매가 새면 구독 기간 내내 무료로 충전해 드립니다. 최대 6년까지 안심입니다.',
+      target:'설치 이슈로 인한 누설',
+      need:'당사가 제품/배관 시공을 완료한 제품에 한함' },
   ],
 };
+
+/* 조건 라벨 — 순서가 곧 상담 순서다(어느 품목이 → 뭘 해야 → 언제 안 되나 → 돈이 드나) */
+const BP_COND = [
+  { k:'target', l:'대상', c:'ok'   },
+  { k:'need',   l:'필요', c:'need' },
+  { k:'except', l:'제외', c:'warn' },
+  { k:'cost',   l:'비용', c:'warn' },
+];
 
 /* 블루패스 아이콘 — 사이드바와 같은 규칙(24×24 · stroke 1.6 · 45° 사선 · 정원 호) */
 const BP_ICONS = {
@@ -1837,17 +1895,28 @@ function bpIcon(k){
     + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (BP_ICONS[k]||BP_ICONS.plus) + '</svg>';
 }
 
-function buildBluePass(key){
-  const B = BLUEPASS;
-  const tile = (x)=>`<div class="bp-i">
+/* 조건 줄 — 값이 있는 것만 만든다. 빈 라벨을 띄우면 "조건이 없다"로 읽힌다 */
+function bpConds(x){
+  const rows = BP_COND.filter(c => x[c.k]).map(c =>
+    `<div class="bp-c"><span class="bp-cl ${c.c}">${c.l}</span><span class="bp-cv">${x[c.k]}</span></div>`).join('');
+  return rows ? `<div class="bp-cond">${rows}</div>` : '';
+}
+
+/* 번호를 붙인다 — 상담사가 "여섯 가지 중 몇 번째"로 짚어 말할 수 있어야 한다 */
+function bpTile(x, n){
+  return `<div class="bp-i">
       <div class="bp-ic">${bpIcon(x.ic)}</div>
       <div class="bp-tx">
-        <div class="bp-t">${x.t}</div>
+        <div class="bp-t"><span class="bp-n">${n}</span>${x.t}</div>
         ${x.s?`<div class="bp-s">${x.s}</div>`:''}
         <div class="bp-d">${x.d}</div>
-        ${x.warn?`<div class="bp-w">${x.warn}</div>`:''}
+        ${bpConds(x)}
       </div>
     </div>`;
+}
+
+function buildBluePass(key){
+  const B = BLUEPASS;
   /* 에어컨 전용 두 가지 — 에어컨 상세에서도, 품목을 안 고른 메인에서도 보여 준다 */
   const eh = key === 'aircon'
     ? '에어컨 블루패스 — 이 제품에는 두 가지가 더 붙습니다'
@@ -1855,16 +1924,22 @@ function buildBluePass(key){
   const extra = B.aircon.length
     ? `<div class="bp-extra">
          <div class="bp-eh">${eh}</div>
-         <div class="bp-g">${B.aircon.map(tile).join('')}</div>
+         <div class="bp-g">${B.aircon.map((x,i)=>bpTile(x,i+1)).join('')}</div>
        </div>` : '';
+  /*
+   * 개수를 먼저 한 문장으로 말한다 — 배치 시뮬레이터 추천 문구와 같은 이유다.
+   * 카드가 여섯 장 늘어서 있으면 "몇 가지인지"가 안 보이고, 상담은 그 숫자에서 시작한다.
+   * 하드코딩하지 않고 배열 길이에서 뽑는다 — 항목이 늘면 문장이 따라온다.
+   */
   return `
   <div class="card bp-wrap">
     <div class="bp-h">
       <span class="bp-badge">BLUE PASS</span>
       <span class="bp-hh">삼성으로 구독하면 이것이 더 붙습니다</span>
     </div>
-    <div class="bp-sub">설치부터 수리까지 — 다른 곳 구독에는 없는, 삼성전자만의 서비스입니다.</div>
-    <div class="bp-g">${B.items.map(tile).join('')}</div>
+    <div class="bp-sub">설치부터 수리까지 — 다른 곳 구독에는 없는, 삼성전자만의 서비스입니다.
+      모두 <b>${B.items.length}가지</b>이고, 에어컨은 <b>${B.aircon.length}가지</b>가 더 붙습니다.</div>
+    <div class="bp-g">${B.items.map((x,i)=>bpTile(x,i+1)).join('')}</div>
     ${extra}
     <div class="bp-gate">꼭 확인 — ${B.gate}</div>
     <div class="bp-src">${B.src}</div>
@@ -1947,7 +2022,7 @@ function render(){
   document.getElementById('catDrop').innerHTML = buildDropHtml();
   document.querySelectorAll('.drop-row').forEach(el => {
     el.addEventListener('click', () => {
-      curCat  = el.dataset.key;
+      curCat  = pickedCat = el.dataset.key;
       curRound = 0; curTypeA = true;
       const dd = DATA[curCat];
       curPlan = dd?.onlyPlan || '12';
@@ -2052,10 +2127,10 @@ document.addEventListener('DOMContentLoaded', () => {
   curPlan = initD?.onlyPlan || '12';
   render();
   /*
-   * 열면 메인 화면부터 — 블루패스를 먼저 보여 주고 품목을 고르게 한다.
-   * 상담은 "삼성으로 구독하면 뭐가 다르냐"에서 시작하지, 특정 제품 회차표에서 시작하지 않는다.
+   * 열면 블루패스부터 — 상담은 "삼성으로 구독하면 뭐가 다르냐"에서 시작하지,
+   * 특정 제품 회차표에서 시작하지 않는다. 품목 고르기는 바로 옆 탭이다.
    */
-  setMode('overview');
+  setMode('bluepass');
 });
 
 
@@ -2243,23 +2318,37 @@ function setMode(m){
   document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('on', t.dataset.mode === m));
   document.querySelector('.cat-wrap').style.display = m==='care' ? '' : 'none';
   document.getElementById('body').style.display = m==='care' ? '' : 'none';
+  document.getElementById('bluepassPane').style.display = m==='bluepass' ? '' : 'none';
   document.getElementById('overviewPane').style.display = m==='overview' ? '' : 'none';
   document.getElementById('timelinePane').style.display = m==='timeline' ? '' : 'none';
+  if(m==='bluepass') renderBluePass();
   if(m==='overview') renderOverview();
   if(m==='timeline') renderTimeline();
 }
 
+/* ═══════════════ BLUE PASS ═══════════════ */
+/*
+ * 블루패스 전용 탭. 예전에는 전체품목 화면 맨 위에 얹혀 있었는데, 그러면
+ * 내용을 자세히 적을수록 정작 품목 카드가 화면 밖으로 밀린다. 둘을 갈랐다.
+ *
+ * 품목을 **직접 고른** 상태면 그 품목을 넘겨 준다 — 에어컨을 보다 넘어오면
+ * "이 제품에는 두 가지가 더 붙습니다"로 문구가 바뀐다. `curCat` 이 아니라
+ * `pickedCat` 을 쓰는 이유는 위 선언부에 적어 두었다(기본값을 고른 것으로 읽으면 안 된다).
+ */
+function renderBluePass(){
+  document.getElementById('bluepassPane').innerHTML = buildBluePass(pickedCat);
+}
+
 /* ═══════════════ OVERVIEW ═══════════════ */
 /*
- * 메인 화면 — 블루패스를 먼저 보여 주고, 그 아래에서 품목을 고르면 케어 내용으로 들어간다.
+ * 품목 고르기 — 여기서 고르면 그 제품의 케어 내용으로 들어간다.
  *
  * 블루패스는 제품과 무관하게 구독 전체에 붙는 혜택이라 제품 상세마다 반복하면
- * 같은 카드를 열여섯 번 보게 된다. 여기 한 곳에만 둔다.
+ * 같은 카드를 열여섯 번 보게 된다. 전용 탭 한 곳에만 둔다(`renderBluePass`).
  */
 function renderOverview(){
   const el = document.getElementById('overviewPane');
-  let html = buildBluePass(null);
-  html += '<div class="ov-lead">품목을 고르면 그 제품의 케어 내용을 볼 수 있습니다</div>';
+  let html = '<div class="ov-lead">품목을 고르면 그 제품의 케어 내용을 볼 수 있습니다</div>';
   html += '<div class="ov-grid">';
   PRODUCTS.forEach(p => {
     const d = DATA[p.key];
@@ -2288,7 +2377,7 @@ function renderOverview(){
 function switchToCare(key){
   const idx = PRODUCTS.findIndex(p=>p.key===key);
   if(idx>=0){
-    curCat = key;
+    curCat = pickedCat = key;
     curPlan = DATA[key]?.onlyPlan || '12';
     curRound = 0;
     curTypeA = true;
