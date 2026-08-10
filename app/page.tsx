@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
+import QRCode from '@/components/QRCode'
 
 /*
  * 배포 주소. **`salescopilot.vercel.app` 은 쓸 수 없다** — 이미 다른 사람의 앱이 그 이름을
@@ -626,9 +627,8 @@ export default function Home() {
           onClick={() => toggleSection('qr')}
         />
         <div className={`${openSections['qr'] ? 'flex' : 'hidden'} md:flex gap-4 items-center`}>
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(HUB_URL)}`}
-            alt="QR코드"
+          <QRCode
+            text={HUB_URL}
             className="w-[88px] h-[88px] rounded-xl border border-gray-100 shrink-0"
           />
           <div className="flex-1 min-w-0">

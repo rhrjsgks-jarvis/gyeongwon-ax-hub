@@ -17,7 +17,7 @@
     "test:consistency": "node scripts/test-consistency.mjs",
     "test:search": "node scripts/test-search.mjs",
     "build:index": "node scripts/build-search-index.mjs",
-    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:as && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search && npm run test:sizereps && npm run test:place && npm run test:telegram && npm run test:plans",
+    "test": "npm run test:install && npm run test:finder && npm run test:care && npm run test:as && npm run test:compare && npm run test:levelup && npm run test:admin && npm run test:consistency && npm run test:search && npm run test:sizereps && npm run test:place && npm run test:telegram && npm run test:qr && npm run test:plans",
     "test:e2e": "node scripts/test-e2e.mjs",
     "test:all": "npm test && npm run test:e2e",
     "build:sizereps": "node scripts/build-size-reps.mjs",
@@ -27,7 +27,8 @@
     "test:real": "node scripts/test-real.mjs",
     "build:plans": "node scripts/build-plan-index.mjs",
     "bot": "node scripts/telegram-bot.mjs",
-    "test:telegram": "node scripts/test-telegram.mjs"
+    "test:telegram": "node scripts/test-telegram.mjs",
+    "test:qr": "node --experimental-strip-types scripts/test-qr.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",
