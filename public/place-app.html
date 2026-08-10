@@ -3332,7 +3332,7 @@ async function loadPlanIndex(){
 }
 
 /**
- * 단지 고르기 — **지역 → 단지 → 도면** 순으로 좁혀 간다.
+ * 단지 고르기 — **도시 → 단지 → 도면** 순으로 좁혀 간다(2026-08-10 사용자 결정).
  * 매장에서 고객에게 묻는 순서 그대로다("어느 지역이세요" → "어느 단지" → "몇 평형").
  *
  * 도면을 고르면 그 단지의 평면도가 화면에 올라오고 축척 맞추기부터 시작한다.
@@ -3360,9 +3360,15 @@ async function openLibrary(){
   const render = () => {
     const body = $('#libbody'), crumb = $('#libcrumb');
     if (!body) return;
-    crumb.innerHTML = lv === 'region' ? '<b>지역</b>'
-      : lv === 'complex' ? `<a href="#" data-go="region">지역</a> › <b>${esc(region)}</b>`
-      : `<a href="#" data-go="region">지역</a> › <a href="#" data-go="complex">${esc(region)}</a> › <b>${esc(cx.complex)}</b>`;
+    /*
+     * 경로는 **도시명 › 단지명 › 도면타입** 으로 부른다(2026-08-10 사용자 결정).
+     * region 은 "경기 수원"처럼 도가 앞에 붙어 있는데, 도는 이미 위 칩에서 고른 것이라
+     * 경로에 또 적으면 같은 말이 두 번이다. 시·군만 남겨 줄을 짧게 만든다.
+     */
+    const cityOf = (r) => { const sd = sidoOf(r); return r.startsWith(sd + ' ') ? r.slice(sd.length + 1) : r; };
+    crumb.innerHTML = lv === 'region' ? '<b>도시</b>'
+      : lv === 'complex' ? `<a href="#" data-go="region">도시</a> › <b>${esc(cityOf(region))}</b>`
+      : `<a href="#" data-go="region">도시</a> › <a href="#" data-go="complex">${esc(cityOf(region))}</a> › <b>${esc(cx.complex)}</b>`;
 
     let items = [];
     // 시·도 칩은 지역 단계에서만 띄운다
@@ -3386,7 +3392,7 @@ async function openLibrary(){
         const n = cs.reduce((s, c) => s + c.plans.length, 0)
           + savedOnly.filter((e) => (e.region || '지역 미지정') === r).length;
         // 칩에서 시·도를 이미 골랐으니 목록에는 시·군만 적는다 — 줄이 짧아야 눈에 잘 들어온다
-        const shortName = sido && r.startsWith(sido + ' ') ? r.slice(sido.length + 1) : r;
+        const shortName = cityOf(r);
         return `<button class="libitem" data-v="${esc(r)}"><b>${esc(shortName)}</b>
           <span class="hint">단지 ${cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length}곳 · 도면 ${n}장</span></button>`;
       });
@@ -3482,7 +3488,7 @@ async function openLibrary(){
   };
 
   sheet(`<h2>단지 고르기</h2>
-    <p class="hint">지역 → 단지 → 도면 순으로 고릅니다. 저장해 둔 도면은 방까지 복원됩니다.</p>
+    <p class="hint">도시 → 단지 → 도면 순으로 고릅니다. 저장해 둔 도면은 방까지 복원됩니다.</p>
     <div id="libcrumb" class="crumb"></div>
     <div id="libchips" class="chips"></div>
     <div id="libbody" class="liblist"></div>

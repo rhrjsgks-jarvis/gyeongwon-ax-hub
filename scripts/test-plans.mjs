@@ -1278,7 +1278,7 @@ for (const plan of PLANS) {
   else if (!/›/.test(r.crumb)) fail(`되돌아갈 경로 표시가 없음 ("${r.crumb}")`);
   else if (r.thumbCount !== r.lv3.length) fail(`도면 ${r.lv3.length}장 중 미리보기가 ${r.thumbCount}장에만 있다`);
   else if (!r.thumbOk) fail('미리보기 이미지를 받지 못함 — 목록에 빈 칸이 뜬다');
-  else pass(`지역 → 단지 → 도면 3단계 (지역 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
+  else pass(`도시 → 단지 → 도면 3단계 (도시 ${r.lv1.length}곳 → "경기 수원"의 단지 ${r.lv2.length}곳 → 도면 ${r.lv3.length}장 · 경로 "${r.crumb.replace(/\s+/g, ' ').trim()}")`);
 
   // ── 미리 읽어 둔 축척이 실제로 적용되는가 ──
   // 도면에 인쇄된 치수로 구해 둔 mmPerPx 를 색인에 싣고, 도면을 고르면 바로 적용한다.
