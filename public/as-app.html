@@ -31,6 +31,17 @@
   .rl.need{background:#E0F2FE;color:#0D1B7A}
   .rl.warn{background:#FEF3C7;color:#B45309}
   .rv{font-size:12px;line-height:1.6;color:#374151;min-width:0}
+  /* 연락처 — 매장 기기가 폰인 경우가 많아 tel 링크로 바로 걸리게 한다 */
+  .ctg{font-size:11px;font-weight:800;color:#6b7280;margin:12px 0 5px;letter-spacing:.02em}
+  .ctg:first-of-type{margin-top:4px}
+  .ct{display:flex;align-items:center;gap:10px;justify-content:space-between;
+    padding:9px 11px;margin-bottom:5px;border:1px solid #e5e7eb;border-radius:10px;
+    background:#fff;text-decoration:none;color:inherit}
+  .ct:active{background:#EEF2FF}
+  .ct-b{display:flex;flex-direction:column;min-width:0}
+  .ct-b b{font-size:12.5px;font-weight:700}
+  .ct-d{font-size:11px;color:#6b7280;margin-top:1px}
+  .ct-n{flex:0 0 auto;font-size:13px;font-weight:800;color:#1428A0;letter-spacing:-.01em}
   .cat:hover{border-color:#c7d2fe}
   .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
@@ -85,6 +96,34 @@ const ROYAL = {"grade":"로열블루","cond":"2년간 구매 누계 실적 2,000
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const keys = Object.keys(DB);
 let cur = keys[0];
+
+/*
+ * AS 관련 연락처 모음 — 상담 중에 "어디로 전화하죠"가 나오면 그 자리에서 걸 수 있어야 한다.
+ * 그래서 번호는 전부 `tel:` 링크다(매장 기기가 폰인 경우가 많다).
+ *
+ * **공식 페이지에서 확인한 번호만 싣는다.** 연락처는 틀리면 고객을 엉뚱한 곳으로 보내는
+ * 것이라 AS 기간만큼이나 사고가 크다. 확인 못 한 것은 비워 두고 화면이 그 사실을 밝힌다
+ * (원문에 없는 값을 넣지 않는 규칙과 같다).
+ *   · 1588-3366 / 080-719-4031 → samsungsvc.co.kr
+ *   · 02-2255-0114 / 1588-6084 / 1811-9228 → samsung.com/sec 푸터
+ */
+const CONTACTS = [
+  { g: 'AS · 수리', items: [
+    { t: '삼성전자서비스 대표', n: '1588-3366', d: 'AS 접수 · 수리 문의 (통화요금 발신자 부담)' },
+    { t: '서비스 회원문의', n: '080-719-4031', d: '삼성전자서비스 회원 관련' },
+  ]},
+  { g: '구매 · 상담', items: [
+    { t: '삼성닷컴 구매문의', n: '1588-6084', d: '온라인 주문 · 배송 조회' },
+    { t: '제품 · 서비스 · 멤버십', n: '1588-3366', d: '삼성전자 통합 상담' },
+    { t: '삼성전자 대표전화', n: '02-2255-0114', d: '본사 대표번호' },
+    { t: '#삼성 체험 문의', n: '1811-9228', d: '체험 프로그램' },
+  ]},
+];
+
+/* 물류센터·지점 담당처럼 **경원영업팀 내부 연락처**는 공개된 자료로 확인할 수 없다.
+ * 지어내면 고객을 엉뚱한 곳으로 보내므로, 사용자가 알려 줄 때까지 빈 자리로 둔다.
+ * 값을 채우면 위 CONTACTS 와 같은 모양으로 렌더된다. */
+const CONTACTS_TODO = ['물류센터 (배송 · 설치 일정)', '지점 AS 담당', '설치 협력사'];
 
 /* 보증 적용 기준 — 품목과 무관하게 전 품목에 걸리는 규칙이라 항상 보여준다.
  * 상담에서 실제로 갈리는 지점만 골랐다: "언제부터 세나"(구입일) · "영수증이 없다"(생산년월+3개월)
@@ -149,6 +188,16 @@ function renderBody(){
   h += `<div class="card"><h2>보증 적용 기준 <span class="pill">전 품목 공통</span></h2>
     ${RULES.map(r=>`<div class="rule"><span class="rl ${r.c}">${esc(r.l)}</span><span class="rv">${esc(r.t)}</span></div>`).join('')}
     <div class="note">위 문구는 원문 그대로다. 유상수리 사유·출장비·교환환불 기준은 이 문서에 없어 싣지 않았다.</div></div>`;
+
+  h += `<div class="card"><h2>연락처 모음 <span class="pill">눌러서 바로 통화</span></h2>
+    ${CONTACTS.map(g=>`<div class="ctg">${esc(g.g)}</div>
+      ${g.items.map(c=>`<a class="ct" href="tel:${esc(c.n.replace(/-/g,''))}">
+        <span class="ct-b"><b>${esc(c.t)}</b><span class="ct-d">${esc(c.d)}</span></span>
+        <span class="ct-n">${esc(c.n)}</span></a>`).join('')}`).join('')}
+    <div class="ctg">물류 · 내부</div>
+    <div class="unk">아직 등록되지 않았습니다 — ${CONTACTS_TODO.map(esc).join(' · ')}<br>
+      공개 자료로 확인할 수 없는 내부 연락처라 지어내지 않았습니다. 번호를 알려주시면 넣겠습니다.</div>
+    </div>`;
 
   h += `<div class="src">출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
     · 삼성전자 <a href="${ROYAL.src}" target="_blank" rel="noopener">멤버십 등급별 혜택</a><br>
