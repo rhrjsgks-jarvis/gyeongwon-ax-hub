@@ -111,7 +111,10 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .mode-tab.on{color:#1428A0;border-bottom-color:#1428A0}
 .mode-tab .mt-ico{font-size:16px;display:block;margin-bottom:2px}
 /* === 전체품목 뷰 === */
-.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+/* 메인 화면의 블루패스는 카드 목록과 같은 좌우 여백을 쓴다 */
+#overviewPane .bp-wrap{margin:14px 16px 0}
+.ov-lead{padding:14px 16px 0;font-size:12.5px;font-weight:700;color:#16181b}
+.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px 14px}
 .ov-card{background:#fff;border-radius:16px;padding:14px 12px;cursor:pointer;border:1.5px solid #ecedf1;transition:all .15s;position:relative}
 .ov-card.done:hover{border-color:#1259c3;box-shadow:0 2px 12px rgba(18,89,195,.12)}
 .ov-card.na-card{opacity:.65;cursor:default}
@@ -235,8 +238,8 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
     <div class="hd-pill">📎 <b>삼성닷컴 공식</b> + <b>AI구독클럽 브로슈어 2026.06</b> 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
   </div>
 <div class="mode-tabs" id="modeTabs">
-  <div class="mode-tab on" data-mode="care" onclick="setMode('care')"><span class="mt-ico">🛡️</span>케어정보</div>
-  <div class="mode-tab" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
+  <div class="mode-tab" data-mode="care" onclick="setMode('care')"><span class="mt-ico">🛡️</span>케어정보</div>
+  <div class="mode-tab on" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
   <div class="mode-tab" data-mode="timeline" onclick="setMode('timeline')"><span class="mt-ico">📅</span>타임라인</div>
 </div>
 <div id="overviewPane" style="display:none"></div>
@@ -1816,9 +1819,13 @@ function buildBluePass(key){
         ${x.warn?`<div class="bp-w">${x.warn}</div>`:''}
       </div>
     </div>`;
-  const extra = (key === 'aircon' && B.aircon.length)
+  /* 에어컨 전용 두 가지 — 에어컨 상세에서도, 품목을 안 고른 메인에서도 보여 준다 */
+  const eh = key === 'aircon'
+    ? '에어컨 블루패스 — 이 제품에는 두 가지가 더 붙습니다'
+    : '에어컨 블루패스 — 에어컨에만 두 가지가 더 붙습니다';
+  const extra = B.aircon.length
     ? `<div class="bp-extra">
-         <div class="bp-eh">에어컨 블루패스 — 이 제품에는 두 가지가 더 붙습니다</div>
+         <div class="bp-eh">${eh}</div>
          <div class="bp-g">${B.aircon.map(tile).join('')}</div>
        </div>` : '';
   return `
@@ -1943,9 +1950,6 @@ function render(){
     return;
   }
 
-  /* 블루패스 — 모든 것보다 **먼저**. "삼성으로 구독하면 뭐가 다르냐"가 상담의 첫 질문이다 */
-  out += buildBluePass(curCat);
-
   /* 요약 타일 */
   /* 혜택 카드 — 회차표보다 **먼저** 보여준다. 상담은 "구독하면 뭘 받느냐"로 시작한다 */
   out += buildBenefits(d, curCat);
@@ -2018,6 +2022,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const initD = DATA[curCat];
   curPlan = initD?.onlyPlan || '12';
   render();
+  /*
+   * 열면 메인 화면부터 — 블루패스를 먼저 보여 주고 품목을 고르게 한다.
+   * 상담은 "삼성으로 구독하면 뭐가 다르냐"에서 시작하지, 특정 제품 회차표에서 시작하지 않는다.
+   */
+  setMode('overview');
 });
 
 
@@ -2212,9 +2221,17 @@ function setMode(m){
 }
 
 /* ═══════════════ OVERVIEW ═══════════════ */
+/*
+ * 메인 화면 — 블루패스를 먼저 보여 주고, 그 아래에서 품목을 고르면 케어 내용으로 들어간다.
+ *
+ * 블루패스는 제품과 무관하게 구독 전체에 붙는 혜택이라 제품 상세마다 반복하면
+ * 같은 카드를 열여섯 번 보게 된다. 여기 한 곳에만 둔다.
+ */
 function renderOverview(){
   const el = document.getElementById('overviewPane');
-  let html = '<div class="ov-grid">';
+  let html = buildBluePass(null);
+  html += '<div class="ov-lead">품목을 고르면 그 제품의 케어 내용을 볼 수 있습니다</div>';
+  html += '<div class="ov-grid">';
   PRODUCTS.forEach(p => {
     const d = DATA[p.key];
     const isDone = p.st==='done';
