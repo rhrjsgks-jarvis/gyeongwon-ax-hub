@@ -83,6 +83,7 @@
   <div id="body"></div>
 </div>
 
+<script src="prod-symbols.js"></script>
 <script>
 /*
  * 데이터는 삼성전자서비스 '보증기간 산정기준'(https://www.samsungsvc.co.kr/info/fee?tab=assure) 원문에서만 만든다.
@@ -138,21 +139,18 @@ const RULES = [
   { l:'무상수리', c:'ok', t:'정상적인 상태에서 자연 발생한 품질·성능·기능 하자에 대해 무료수리를 해주겠다고 약속한 기간을 말한다.' },
 ];
 
-/* 품목 아이콘 — **같은 품목이면 다른 앱과 같은 아이콘**을 쓴다(타사비교·설치환경과 동기화).
- * 상담사가 앱을 옮겨 다녀도 같은 그림이 같은 품목을 가리켜야 눈이 헤매지 않는다.
- * 타사비교에 없는 품목만 새로 정했고, 서로 헷갈리지 않게 겹치는 그림은 피했다
- * (냉장고 🧊 ↔ 냉동고 🥶, 정수기 🚰 ↔ 제습기 💧, 모니터 🖥️ ↔ 데스크탑 🖱️). */
-const ICONS = {
-  '냉장고':'🧊','김치냉장고':'🥬','세탁기·콤보':'🫧','건조기':'🌀','TV':'📺','모니터':'🖥️',
-  '에어컨':'❄️','시스템에어컨':'🏢','에어드레서':'👗','슈드레서':'👟','청소기':'💨',
-  '공기청정기':'🌬️','제습기':'💧','정수기':'🚰','전자레인지/오븐':'🔥','식기세척기':'🍽️',
-  '인덕션/전기레인지':'🍳','냉동고':'🥶','업소용 냉장고':'🏪','데이코 빌트인':'🏆',
-  '사운드바':'🔊','스마트폰':'📱','태블릿':'🖊️','노트북':'💻','데스크탑':'🖱️','프린터':'🖨️',
-};
+/* 품목 심벌은 미니앱 공용이라 public/prod-symbols.js 에 있다 — 여기서는 품목명만 넘긴다.
+ *
+ * **이모지를 쓰지 않는다.** 이모지는 제품이 아니라 연상되는 물건을 그린다 —
+ * 처음엔 냉장고를 🧊(얼음), 세탁기를 🫧(거품), 전자레인지를 🔥(불)로 넣었는데,
+ * 고객에게 화면을 돌려 보여 주는 도구에서 제품이 제품으로 안 보이면 곤란하다
+ * (2026-08-11 사용자 지적). 공용 모듈의 SVG 심벌이 앱 넷에서 같은 그림을 쓴다.
+ */
+function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, '') : '') || ''; }
 
 function renderCats(){
   document.getElementById('cats').innerHTML = keys.map(k=>
-    `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${ICONS[k]||'▪'}</span>${esc(k)}</div>`).join('');
+    `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
   document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); });
 }
 
