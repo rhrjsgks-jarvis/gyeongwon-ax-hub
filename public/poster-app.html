@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>상담 접수 안내 · A4 편집기</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+:root{
+  --ink:#0E1726; --paper:#F2F4F8; --card:#fff; --queue:#1B4FD8; --signal:#FF6A13;
+  --muted:#6B7686; --rule:#DBE0E9; --tint:#E8EEFD; --wash:#FFF3EB; --burn:#AE4206;
+  --sans:Pretendard,-apple-system,'Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#5A6272;font-family:var(--sans);padding:24px 12px 80px}
+
+/* ── 화면 전용 도구막대 ───────────────────────── */
+.bar{max-width:210mm;margin:0 auto 20px;background:#fff;border-radius:14px;padding:20px 22px}
+.bar h1{font-size:17px;font-weight:800;margin-bottom:4px}
+.bar p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.bar .grid{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.fld{flex:1;min-width:200px}
+.fld label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.fld input[type=text]{width:100%;padding:11px 12px;font-size:15px;font-family:var(--sans);
+  border:1.5px solid var(--rule);border-radius:9px}
+.fld input:focus{outline:none;border-color:var(--queue)}
+.btn{padding:12px 18px;font-size:14px;font-weight:700;font-family:var(--sans);
+  border:0;border-radius:9px;background:var(--ink);color:#fff;cursor:pointer;white-space:nowrap}
+.btn.g{background:#fff;color:var(--ink);border:1.5px solid var(--rule)}
+.btn.p{background:var(--queue)}
+.hint{margin-top:14px;padding:12px 14px;background:var(--paper);border-radius:9px;
+  font-size:12.5px;color:var(--muted);line-height:1.7}
+.hint b{color:var(--ink)}
+
+/* ── A4 지면 ─────────────────────────────────── */
+.sheet{
+  width:210mm;height:297mm;background:var(--paper);margin:0 auto;position:relative;
+  padding:16mm;color:var(--ink);overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;
+}
+.cnr{position:absolute;width:4mm;height:4mm;border:0 solid var(--rule)}
+.cnr.a{top:16mm;left:16mm;border-top-width:.35mm;border-left-width:.35mm}
+.cnr.b{top:16mm;right:16mm;border-top-width:.35mm;border-right-width:.35mm}
+.cnr.c{bottom:16mm;left:16mm;border-bottom-width:.35mm;border-left-width:.35mm}
+.cnr.d{bottom:16mm;right:16mm;border-bottom-width:.35mm;border-right-width:.35mm}
+
+.eyebrow{display:flex;align-items:center;justify-content:center;gap:2.6mm;
+  font-family:var(--mono);font-size:2.6mm;font-weight:600;letter-spacing:.22em;color:var(--muted)}
+.eyebrow i{width:2mm;height:2mm;border-radius:50%;background:var(--signal);flex:0 0 2mm}
+
+h2.mega{text-align:center;font-size:15.6mm;font-weight:900;line-height:1.08;
+  letter-spacing:-.05em;margin:5.4mm 0 3mm}
+p.lead{text-align:center;font-size:4.2mm;font-weight:500;color:var(--muted);margin-bottom:5mm}
+
+.card{background:var(--card);border-radius:2.8mm;overflow:hidden}
+.band{background:var(--queue);color:#fff;display:flex;align-items:center;
+  padding:0 9.5mm;height:12mm}
+.band .t{font-size:6.6mm;font-weight:900;letter-spacing:-.03em}
+.band .ar{margin:0 3.4mm;color:#9AB6FF;font-size:4mm}
+.band .r{margin-left:auto;font-size:2.9mm;color:#B2CAFF;font-weight:500}
+
+.cbody{display:flex;align-items:center;justify-content:center;gap:12.5mm;padding:5mm 9mm 0}
+.qrcol{text-align:center}
+.qrbox{display:block;width:76mm;height:76mm;cursor:pointer;position:relative;border-radius:1.5mm}
+.qrbox img{width:100%;height:100%;object-fit:contain;display:block}
+.qrbox:hover::after{content:'클릭 또는 드래그해서 QR 교체';position:absolute;inset:0;
+  background:rgba(14,23,38,.82);color:#fff;font-size:3.2mm;font-weight:700;
+  display:flex;align-items:center;justify-content:center;border-radius:1.5mm;text-align:center;padding:4mm}
+.tearcap{text-align:center;font-size:5.2mm;font-weight:800;letter-spacing:-.03em;padding:4.6mm 0 5.4mm}
+
+ol.steps{list-style:none;position:relative;padding-top:3.8mm}
+ol.steps::before{content:'';position:absolute;left:2.85mm;top:6.6mm;bottom:9mm;
+  width:.35mm;background:var(--rule)}
+ol.steps li{position:relative;padding-left:11mm;margin-bottom:8.4mm}
+ol.steps li:last-child{margin-bottom:0}
+ol.steps .n{position:absolute;left:0;top:0;width:5.7mm;height:5.7mm;border-radius:50%;
+  background:var(--ink);color:#fff;font-family:var(--mono);font-size:3.1mm;font-weight:600;
+  display:flex;align-items:center;justify-content:center}
+ol.steps b{display:block;font-size:5.6mm;font-weight:900;letter-spacing:-.03em;line-height:1;margin-top:-.4mm}
+ol.steps em{display:block;font-style:normal;font-size:3.2mm;color:var(--muted);margin-top:2.2mm}
+
+.perf{position:relative;height:0;margin:5.5mm 0 0;
+  border-top:.5mm dashed var(--rule)}
+.perf::before,.perf::after{content:'';position:absolute;top:-2.2mm;width:4.4mm;height:4.4mm;
+  background:var(--paper);border-radius:50%}
+.perf::before{left:-2.2mm}
+.perf::after{right:-2.2mm}
+
+.warn{background:var(--wash);border-left:1.2mm solid var(--signal);border-radius:1.8mm;
+  padding:3.2mm 6mm;text-align:center;margin-top:4.4mm;color:var(--burn)}
+.warn strong{display:block;font-size:5.6mm;font-weight:900;letter-spacing:-.03em}
+.warn span{display:block;font-size:3.4mm;margin-top:1.8mm}
+
+.exp{border:.35mm solid var(--rule);border-left:1.2mm solid var(--rule);border-radius:1.8mm;
+  padding:3.2mm 5mm;margin-top:3.6mm;color:var(--muted)}
+.exp strong{display:block;font-size:4mm;font-weight:700}
+.exp span{display:block;font-size:2.9mm;margin-top:1.6mm}
+
+.pv{margin-top:auto;padding-top:3.2mm;border-top:.35mm solid var(--rule)}
+.pv .lb{font-family:var(--mono);font-size:2.1mm;letter-spacing:.18em;color:var(--muted);margin-bottom:2.6mm}
+.pv .row{display:flex;font-size:2.4mm;margin-bottom:1.5mm}
+.pv .row i{font-style:normal;width:17mm;color:var(--muted);flex:0 0 17mm}
+.pv .purge{display:flex;align-items:center;gap:2mm;margin-top:2.6mm;padding:2.2mm 3.4mm;
+  background:var(--tint);border-radius:1.4mm;font-size:2.6mm;font-weight:700;color:var(--queue)}
+.pv .purge em{font-style:normal;font-family:var(--mono);font-size:2.1mm;letter-spacing:.1em}
+.pv .note{font-size:2.2mm;color:var(--muted);margin-top:2.2mm}
+
+/* 편집 가능 표시 (화면에서만) */
+[contenteditable]{outline:none}
+body.edit [contenteditable]:hover{background:rgba(27,79,216,.07);border-radius:1mm}
+body.edit [contenteditable]:focus{background:rgba(27,79,216,.13);border-radius:1mm}
+
+/* ── 인쇄 ────────────────────────────────────── */
+@page{size:A4 portrait;margin:0}
+@media print{
+  body{background:#fff;padding:0}
+  .bar{display:none!important}
+  .sheet{box-shadow:none;margin:0;width:210mm;height:297mm}
+  .qrbox:hover::after{display:none}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body class="edit">
+
+<div class="bar">
+  <h1>상담 접수 안내 · A4 편집기</h1>
+  <p>지점명을 바꾸고 QR을 교체한 뒤 인쇄하세요. 지면의 <b>모든 문구는 직접 클릭해서 수정</b>할 수 있습니다.</p>
+  <div class="grid">
+    <div class="fld">
+      <label>지점 선택 <span style="font-weight:400;color:#888">— 고르면 QR이 자동으로 만들어집니다</span></label>
+      <select id="store" style="width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px">
+        <option value="">지점을 고르세요</option>
+        <option value="ZN01">스타필드 수원</option>
+        <option value="ZHA7">현대판교모바일</option>
+        <option value="Z279">오산</option>
+        <option value="Z047">수지</option>
+        <option value="Z150">강릉옥천</option>
+        <option value="Z205">단구</option>
+        <option value="Z206">석사</option>
+        <option value="Z227">속초</option>
+        <option value="Z243">평택</option>
+        <option value="Z324">분당</option>
+        <option value="Z343">북수원</option>
+        <option value="Z378">광주</option>
+        <option value="Z383">안성</option>
+        <option value="Z398">평택고덕</option>
+        <option value="Z399">이천증포</option>
+        <option value="Z405">평촌</option>
+        <option value="Z418">안양모바일</option>
+        <option value="Z426">용인구성</option>
+        <option value="Z451">서수원</option>
+        <option value="Z509">영통</option>
+        <option value="Z539">디지털시티모바일</option>
+        <option value="Z541">광명소하</option>
+        <option value="Z557">성남</option>
+        <option value="Z567">AK분당</option>
+        <option value="Z579">원주</option>
+        <option value="Z583">춘천</option>
+        <option value="Z586">평택세교</option>
+        <option value="Z607">용인처인모바일</option>
+        <option value="Z608">권선</option>
+        <option value="Z617">안양본</option>
+        <option value="Z619">수원</option>
+        <option value="Z621">동탄</option>
+        <option value="Z624">강릉</option>
+        <option value="Z640">단계</option>
+        <option value="Z663">하남미사</option>
+        <option value="Z666">용인기흥</option>
+        <option value="ZH35">롯데평촌</option>
+        <option value="ZH36">롯데수원</option>
+        <option value="ZH57">현대판교</option>
+        <option value="ZH64">신세계사우스시티</option>
+        <option value="ZH73">AK수원</option>
+        <option value="ZH74">AK평택</option>
+        <option value="ZH75">AK원주</option>
+        <option value="ZH77">신세계하남</option>
+        <option value="ZH96">갤러리아광교</option>
+        <option value="ZH97">AK분당모바일</option>
+        <option value="ZHA1">롯데동탄</option>
+        <option value="ZHA2">롯데동탄모바일</option>
+        <option value="ZHB4">타임빌라스수원</option>
+        <option value="ZIN5">남양모바일</option>
+        <option value="ZMF6">이마트안양</option>
+        <option value="ZR42">기흥캠퍼스모바일</option>
+        <option value="ZR60">화성캠퍼스모바일</option>
+        <option value="ZR65">수원삼성전기모바일</option>
+        <option value="ZR78">광명기아자동차모바일</option>
+        <option value="ZRA0">화성DSR모바일</option>
+        <option value="ZRD0">미래기술캠퍼스모바일</option>
+        <option value="ZRD2">디지털시티2모바일</option>
+        <option value="ZRE0">용인에버랜드모바일</option>
+        <option value="ZRE4">평택캠퍼스모바일</option>
+        <option value="ZRE6">기흥삼성SDI모바일</option>
+        <option value="ZRF7">현대기아차연구소모바일</option>
+        <option value="ZRF8">판교SDS모바일</option>
+        <option value="ZRF9">기흥SDR모바일</option>
+        <option value="ZRG1">KGM평택모바일</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label>지점명 <span style="font-weight:400;color:#888">— 지면에 인쇄될 이름</span></label>
+      <input id="branch" type="text" value="현대판교모바일" placeholder="예: 현대판교모바일">
+    </div>
+    <button class="btn g" id="qr-dl">이 QR 고화질 저장</button>
+<button class="btn g" id="qr-all">전 지점 QR 인쇄</button>
+<button class="btn g" id="pick">QR 이미지 교체</button>
+    <button class="btn g" id="reset">되돌리기</button>
+    <button class="btn p" id="print">인쇄 / PDF 저장</button>
+  </div>
+  <div class="hint">
+    <b>지점 선택</b> — 지점을 고르면 <b>그 매장 접수 QR이 자동으로 만들어지고</b> 지점명도 함께 채워집니다.<br>
+<b>고화질 저장</b> — 「이 QR 고화질 저장」은 모듈 20px(약 1,240px)로 뽑아 현수막에도 쓸 수 있습니다.<br>
+<b>전 지점</b> — 「전 지점 QR 인쇄」는 65개 매장 QR을 한 번에 펼쳐 인쇄·PDF로 저장합니다.<br>
+<b>QR 직접 교체</b> — 다른 QR을 쓰려면 버튼을 누르거나 QR 위에 이미지를 끌어다 놓으세요.<br>
+    <b>인쇄 설정</b> — 용지 A4 · 배율 100% · <b>배경 그래픽 켜기</b>를 꼭 체크하세요. 끄면 파란 밴드와 주황 경고가 사라집니다.<br>
+    <b>PDF 저장</b> — 인쇄 대화상자에서 대상을 「PDF로 저장」으로 바꾸면 됩니다.
+  </div>
+  <div id="over" style="display:none;margin-top:12px;padding:12px 14px;background:#FFF3EB;
+       border-left:4px solid #FF6A13;border-radius:8px;font-size:13px;font-weight:700;color:#AE4206">
+    내용이 A4 한 장을 넘칩니다. 문구를 줄이면 경고가 사라집니다.
+  </div>
+  <input id="file" type="file" accept="image/*" hidden>
+</div>
+
+<div class="sheet" id="sheet">
+  <i class="cnr a"></i><i class="cnr b"></i><i class="cnr c"></i><i class="cnr d"></i>
+
+  <div class="eyebrow"><i></i><span id="eb">현대판교모바일 · 구매 상담 접수</span></div>
+
+  <h2 class="mega" contenteditable>천천히<br>둘러보세요</h2>
+  <p class="lead" contenteditable>순서는 저희가 잡아 드립니다</p>
+
+  <section class="card">
+    <div class="band">
+      <span class="t" contenteditable>구매 상담을 원하시면</span>
+      <span class="ar">▶</span>
+      <span class="r" contenteditable>여기서 접수해 주세요</span>
+    </div>
+
+    <div class="cbody">
+      <div class="qrcol">
+        <label class="qrbox" id="qrbox"><img id="qr" alt="QR"></label>
+      </div>
+      <ol class="steps">
+        <li><span class="n">1</span><b contenteditable>스캔</b><em contenteditable>카메라로 QR을 비춥니다</em></li>
+        <li><span class="n">2</span><b contenteditable>입력</b><em contenteditable>성함 · 연락처 · 상담 품목</em></li>
+        <li><span class="n">3</span><b contenteditable>대기</b><em contenteditable>내 순번이 실시간으로 보입니다</em></li>
+      </ol>
+    </div>
+
+    <div class="perf"></div>
+    <div class="tearcap" contenteditable>카메라를 QR에 비추세요</div>
+  </section>
+
+  <div class="warn">
+    <strong contenteditable>등록 후 화면을 닫지 마세요</strong>
+    <span contenteditable>순서가 되면 화면이 주황색으로 바뀝니다 · 대기 중에는 화면이 꺼지지 않습니다</span>
+  </div>
+
+  <div class="exp">
+    <strong contenteditable>제품을 먼저 체험해 보고 싶으시면</strong>
+    <span contenteditable>접수 없이 자유롭게 둘러보세요. 도움이 필요하시면 직원에게 말씀해 주세요.</span>
+  </div>
+
+  <footer class="pv">
+    <div class="lb">PRIVACY — 개인정보 수집 · 이용 안내</div>
+    <div class="row"><i>수집 항목</i><span contenteditable>성함, 휴대폰 번호, 상담 품목</span></div>
+    <div class="row"><i>이용 목적</i><span contenteditable>상담 대기 순서 관리 및 순서 안내</span></div>
+    <div class="row"><i>보유 기간</i><span contenteditable>접수 당일에 한함</span></div>
+    <div class="purge"><em>PURGE</em><span contenteditable>수집된 데이터는 당일 영업 마감 시 전량 폐기됩니다.</span></div>
+    <div class="note" contenteditable>동의를 원하지 않으시면 카운터 직원에게 말씀해 주세요. 직접 접수해 드립니다.</div>
+  </footer>
+</div>
+
+<script>
+var DEFAULT_QR = 'data:image/png;base64,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ILpND2CL++M5PYSjPu/X9BCO2ra+U6b2lfU9Y2qet91XU7at77b3nbLtft62vttsu684w71xhi9WAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAACi2/QA+K3P+zU9BH5o2/reH8/pIcBfz71xbVPvu21fTdm2n6ds28/b3neK+/nafLECAAAAEAkrAAAAAJGwAgAAABAJKwAAAACRsAIAAAAQCSsAAAAAkbACAAAAEAkrAAAAAJGwAgAAABAJKwAAAACRsAIAAAAQCSsAAAAAkbACAAAAEAkrAAAAAJGwAgAAABAJKwAAAACRsAIAAAAQCSsAAAAAkbACAAAAEAkrAAAAAJGwAgAAABAJKwAAAACRsAIAAAAQCSsAAAAAkbACAAAAEAkrAAAAAJGwAgAAABAJKwAAAACRsAIAAAAQCSsAAAAAkbACAAAAEAkrAAAAAJGwAgAAABAJKwAAAACRsAIAAAAQCSsAAAAAkbACAAAAEAkrAAAAAJGwAgAAABDdpgcAV/B5v0aee388R5479b7b5nnK1DxP2XaOpmw7R1O27att78u1bfs92va+XJsvVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUAAAAgElYAAAAAImEFAAAAIBJWAAAAACJhBQAAACASVgAAAAAiYQUA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';
+var $ = function (id) { return document.getElementById(id); };
+
+$('qr').src = DEFAULT_QR;
+
+/* 지점명 → 상단 문구 */
+function syncBranch() {
+  var v = $('branch').value.trim() || '매장';
+  $('eb').textContent = v + ' · 구매 상담 접수';
+}
+$('branch').addEventListener('input', syncBranch);
+syncBranch();
+
+/* QR 교체 */
+function loadFile(f) {
+  if (!f || f.type.indexOf('image') !== 0) { alert('이미지 파일만 넣을 수 있습니다.'); return; }
+  var r = new FileReader();
+  r.onload = function (e) { $('qr').src = e.target.result; };
+  r.readAsDataURL(f);
+}
+$('pick').onclick = function () { $('file').click(); };
+$('qrbox').onclick = function (e) { e.preventDefault(); $('file').click(); };
+$('file').onchange = function (e) { loadFile(e.target.files[0]); };
+
+['dragenter', 'dragover', 'drop'].forEach(function (t) {
+  $('qrbox').addEventListener(t, function (e) { e.preventDefault(); e.stopPropagation(); });
+});
+$('qrbox').addEventListener('drop', function (e) { loadFile(e.dataTransfer.files[0]); });
+
+$('reset').onclick = function () {
+  if (confirm('처음 상태로 되돌릴까요? 수정한 문구가 사라집니다.')) location.reload();
+};
+
+/* A4 넘침 감시 — 문구를 늘리다 잘리는 사고를 막는다 */
+function checkFit() {
+  var s = $('sheet');
+  $('over').style.display = (s.scrollHeight > s.clientHeight + 3) ? 'block' : 'none';
+}
+document.addEventListener('input', checkFit);
+document.addEventListener('keyup', checkFit);
+$('qr').addEventListener('load', checkFit);
+setInterval(checkFit, 1000);
+checkFit();
+
+$('print').onclick = function () {
+  document.body.classList.remove('edit');
+  window.print();
+  setTimeout(function () { document.body.classList.add('edit'); }, 400);
+};
+</script>
+
+<script>
+/* ────────────────────────────────────────────────────────────────
+   QR 생성기 — 외부 API 없이 이 파일 안에서 직접 그린다.
+   인쇄용 QR 을 남의 서버에 의존하면 그 서버가 죽거나 매장 와이파이가
+   불안할 때 아예 못 뽑는다. 인쇄물은 잘못 나가면 회수가 어렵다.
+   (jsQR 디코더로 되읽어 검증한 구현이다 — 파인더 마스크 제외, EC 레벨 M=0b00)
+   ──────────────────────────────────────────────────────────────── */
+
+/**
+ * QR 코드 생성기 — 외부 API 없이 브라우저에서 직접 그린다.
+ *
+ * **왜 직접 만드나** — 허브 QR 이 `api.qrserver.com` 에 의존하고 있었는데, 매장에서 인쇄할
+ * QR 을 남의 서버에 맡기면 ①그 서버가 죽으면 못 뽑고 ②해상도가 그쪽 정책에 묶이며
+ * ③매장 와이파이가 불안하면 아예 안 나온다. 인쇄물은 한 번 잘못 나가면 회수가 어렵다.
+ *
+ * 범위는 이 용도에 필요한 만큼 — 바이트 모드 · 오류정정 M · 버전 1~10(URL 270자까지).
+ *
+ * **기능 모듈(파인더·타이밍·정렬·형식정보)을 따로 표시해 둔다.** 마스크를 여기에까지
+ * 적용하면 파인더가 뭉개져 **어떤 리더기로도 안 읽힌다** — 실제로 그렇게 만들었다가
+ * 디코더로 검증해서 잡았다. 표준이 요구하는 것은 "데이터 영역에만" 마스크다.
+ */
+/* ── GF(256) — 리드-솔로몬 오류정정 ── */
+const EXP = new Uint8Array(512);
+const LOG = new Uint8Array(256);
+{
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+        EXP[i] = x;
+        LOG[x] = i;
+        x <<= 1;
+        if (x & 0x100)
+            x ^= 0x11d;
+    }
+    for (let i = 255; i < 512; i++)
+        EXP[i] = EXP[i - 255];
+}
+const mul = (a, b) => (a === 0 || b === 0 ? 0 : EXP[LOG[a] + LOG[b]]);
+function ecc(data, n) {
+    let gen = [1];
+    for (let i = 0; i < n; i++) {
+        const next = new Array(gen.length + 1).fill(0);
+        for (let j = 0; j < gen.length; j++) {
+            next[j] ^= gen[j];
+            next[j + 1] ^= mul(gen[j], EXP[i]);
+        }
+        gen = next;
+    }
+    const rem = new Array(n).fill(0);
+    for (const d of data) {
+        const factor = d ^ rem[0];
+        rem.shift();
+        rem.push(0);
+        for (let i = 0; i < n; i++)
+            rem[i] ^= mul(gen[i + 1], factor);
+    }
+    return rem;
+}
+/** 레벨 M — [총 부호어, EC/블록, 그룹1 블록 수, 그룹2 블록 수] */
+const VER_M = {
+    1: [26, 10, 1, 0], 2: [44, 16, 1, 0], 3: [70, 26, 1, 0], 4: [100, 18, 2, 0],
+    5: [134, 24, 2, 0], 6: [172, 16, 4, 0], 7: [196, 18, 4, 0], 8: [242, 22, 2, 2],
+    9: [292, 22, 3, 2], 10: [346, 26, 4, 1],
+};
+const ALIGN = {
+    1: [], 2: [6, 18], 3: [6, 22], 4: [6, 26], 5: [6, 30],
+    6: [6, 34], 7: [6, 22, 38], 8: [6, 24, 42], 9: [6, 26, 46], 10: [6, 28, 50],
+};
+const VER_INFO = { 7: 0x07c94, 8: 0x085bc, 9: 0x09a99, 10: 0x0a4d3 };
+const MASKS = [
+    (r, c) => (r + c) % 2 === 0,
+    (r) => r % 2 === 0,
+    (_r, c) => c % 3 === 0,
+    (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+    (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+    (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+    (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0,
+];
+/** 문자열 → QR 모듈 격자(true = 검정) */
+function qrMatrix(text) {
+    var _a;
+    const bytes = Array.from(new TextEncoder().encode(text));
+    let ver = 0, total = 0, ecPer = 0, g1 = 0, g2 = 0;
+    for (let v = 1; v <= 10; v++) {
+        const [t, e, b1, b2] = VER_M[v];
+        const blocks = b1 + b2;
+        const lenBits = v < 10 ? 8 : 16;
+        if (Math.ceil((4 + lenBits + bytes.length * 8) / 8) <= t - e * blocks) {
+            ver = v;
+            total = t;
+            ecPer = e;
+            g1 = b1;
+            g2 = b2;
+            break;
+        }
+    }
+    if (!ver)
+        throw new Error('QR: 내용이 너무 깁니다(버전 10 초과)');
+    const size = 17 + ver * 4;
+    const blocks = g1 + g2;
+    const dataLen = total - ecPer * blocks;
+    /* ── 비트열 ── */
+    const bits = [];
+    const push = (val, n) => { for (let i = n - 1; i >= 0; i--)
+        bits.push((val >> i) & 1); };
+    push(0b0100, 4);
+    push(bytes.length, ver < 10 ? 8 : 16);
+    for (const b of bytes)
+        push(b, 8);
+    for (let i = 0; i < 4 && bits.length < dataLen * 8; i++)
+        bits.push(0);
+    while (bits.length % 8)
+        bits.push(0);
+    const words = [];
+    for (let i = 0; i < bits.length; i += 8) {
+        let v = 0;
+        for (let j = 0; j < 8; j++)
+            v = (v << 1) | bits[i + j];
+        words.push(v);
+    }
+    const PAD = [0xec, 0x11];
+    for (let i = 0; words.length < dataLen; i++)
+        words.push(PAD[i % 2]);
+    /* ── 블록 분할 → EC → 인터리브 ── */
+    const short = Math.floor(dataLen / blocks);
+    const dataBlocks = [], ecBlocks = [];
+    let at = 0;
+    for (let i = 0; i < blocks; i++) {
+        const n = short + (i >= g1 ? 1 : 0);
+        const blk = words.slice(at, at + n);
+        at += n;
+        dataBlocks.push(blk);
+        ecBlocks.push(ecc(blk, ecPer));
+    }
+    const stream = [];
+    const maxLen = Math.max(...dataBlocks.map((b) => b.length));
+    for (let i = 0; i < maxLen; i++)
+        for (const b of dataBlocks)
+            if (i < b.length)
+                stream.push(b[i]);
+    for (let i = 0; i < ecPer; i++)
+        for (const b of ecBlocks)
+            stream.push(b[i]);
+    /* ── 기능 모듈 배치 ──
+       `fn[r][c] = true` 인 자리는 **마스크를 적용하지 않는다.** */
+    const grid = Array.from({ length: size }, () => new Array(size).fill(false));
+    const fn = Array.from({ length: size }, () => new Array(size).fill(false));
+    const put = (r, c, v) => {
+        if (r < 0 || r >= size || c < 0 || c >= size)
+            return;
+        grid[r][c] = v;
+        fn[r][c] = true;
+    };
+    // 파인더 + 분리자
+    for (const [r0, c0] of [[0, 0], [0, size - 7], [size - 7, 0]]) {
+        for (let r = -1; r <= 7; r++)
+            for (let c = -1; c <= 7; c++) {
+                const inner = r >= 0 && r < 7 && c >= 0 && c < 7;
+                const on = inner && (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+                put(r0 + r, c0 + c, on);
+            }
+    }
+    // 타이밍
+    for (let i = 8; i < size - 8; i++) {
+        put(6, i, i % 2 === 0);
+        put(i, 6, i % 2 === 0);
+    }
+    // 정렬
+    const al = ALIGN[ver];
+    for (const r of al)
+        for (const c of al) {
+            if ((r <= 8 && c <= 8) || (r <= 8 && c >= size - 9) || (r >= size - 9 && c <= 8))
+                continue;
+            for (let dr = -2; dr <= 2; dr++)
+                for (let dc = -2; dc <= 2; dc++)
+                    put(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
+        }
+    put(size - 8, 8, true); // 항상 검정
+    // 형식·버전 정보 자리를 기능 모듈로 예약(값은 마스크 확정 후)
+    for (let i = 0; i <= 8; i++) {
+        fn[8][i] = true;
+        fn[i][8] = true;
+    }
+    for (let i = 0; i < 8; i++) {
+        fn[8][size - 1 - i] = true;
+        fn[size - 1 - i][8] = true;
+    }
+    if (ver >= 7)
+        for (let i = 0; i < 18; i++) {
+            fn[Math.floor(i / 3)][size - 11 + (i % 3)] = true;
+            fn[size - 11 + (i % 3)][Math.floor(i / 3)] = true;
+        }
+    /* ── 데이터 채우기 (오른쪽 아래에서 지그재그) ── */
+    let bit = 0, up = true;
+    for (let col = size - 1; col > 0; col -= 2) {
+        if (col === 6)
+            col--;
+        for (let i = 0; i < size; i++) {
+            const row = up ? size - 1 - i : i;
+            for (const c of [col, col - 1]) {
+                if (fn[row][c])
+                    continue;
+                const byte = (_a = stream[bit >> 3]) !== null && _a !== void 0 ? _a : 0;
+                grid[row][c] = ((byte >> (7 - (bit & 7))) & 1) === 1;
+                bit++;
+            }
+        }
+        up = !up;
+    }
+    /* ── 형식 정보(BCH 15,5) ── */
+    const putFormat = (g, mk) => {
+        /*
+         * **레벨 M 은 `0b00` 이다.** L=01 · M=00 · Q=11 · H=10 — 이름 순서가 아니다.
+         * 0b10(=H)을 쓰면 EC 데이터는 M 으로 만들어 놓고 라벨만 H 가 되어
+         * **어떤 디코더도 못 읽는다**(파인더·타이밍이 멀쩡해도 그렇다).
+         */
+        let fmt = (0b00 << 3) | mk; // 레벨 M
+        let d = fmt << 10;
+        for (let i = 4; i >= 0; i--)
+            if ((d >> (i + 10)) & 1)
+                d ^= 0x537 << i;
+        fmt = ((fmt << 10) | d) ^ 0x5412;
+        const b = (i) => ((fmt >> i) & 1) === 1;
+        // 왼쪽 위 (표준 배치)
+        for (let i = 0; i <= 5; i++)
+            g[8][i] = b(i);
+        g[8][7] = b(6);
+        g[8][8] = b(7);
+        g[7][8] = b(8);
+        for (let i = 9; i <= 14; i++)
+            g[14 - i][8] = b(i);
+        // 오른쪽 위 / 왼쪽 아래
+        for (let i = 0; i <= 7; i++)
+            g[8][size - 1 - i] = b(i);
+        for (let i = 8; i <= 14; i++)
+            g[size - 15 + i][8] = b(i);
+        if (ver >= 7) {
+            const vi = VER_INFO[ver];
+            for (let i = 0; i < 18; i++) {
+                const v = ((vi >> i) & 1) === 1;
+                g[Math.floor(i / 3)][size - 11 + (i % 3)] = v;
+                g[size - 11 + (i % 3)][Math.floor(i / 3)] = v;
+            }
+        }
+    };
+    /* ── 마스크 8가지 중 벌점 최소 ── */
+    const penalty = (g) => {
+        let s = 0;
+        // N1: 같은 색 5개 이상 연속
+        for (let i = 0; i < size; i++) {
+            for (const line of [g[i], g.map((row) => row[i])]) {
+                let run = 1;
+                for (let j = 1; j < size; j++) {
+                    if (line[j] === line[j - 1]) {
+                        run++;
+                        if (run === 5)
+                            s += 3;
+                        else if (run > 5)
+                            s++;
+                    }
+                    else
+                        run = 1;
+                }
+            }
+        }
+        // N2: 2×2 같은 색
+        for (let r = 0; r < size - 1; r++)
+            for (let c = 0; c < size - 1; c++)
+                if (g[r][c] === g[r][c + 1] && g[r][c] === g[r + 1][c] && g[r][c] === g[r + 1][c + 1])
+                    s += 3;
+        // N4: 검정 비율 편향
+        let dark = 0;
+        for (const row of g)
+            for (const v of row)
+                if (v)
+                    dark++;
+        s += Math.floor(Math.abs((dark * 100) / (size * size) - 50) / 5) * 10;
+        return s;
+    };
+    let best = null, bestScore = Infinity;
+    for (let mk = 0; mk < 8; mk++) {
+        const g = grid.map((row) => row.slice());
+        for (let r = 0; r < size; r++)
+            for (let c = 0; c < size; c++)
+                if (!fn[r][c] && MASKS[mk](r, c))
+                    g[r][c] = !g[r][c]; // ← 기능 모듈은 건드리지 않는다
+        putFormat(g, mk);
+        const s = penalty(g);
+        if (s < bestScore) {
+            bestScore = s;
+            best = g;
+        }
+    }
+    return best;
+}
+/**
+ * QR 을 캔버스에 그린다.
+ * `scale` 은 모듈 하나의 픽셀 크기 — 인쇄용이면 12 이상(A4 에 5cm 로 뽑아도 또렷하다).
+ */
+function drawQR(text, scale = 12, quiet = 4, label) {
+    const m = qrMatrix(text);
+    const n = m.length;
+    const w = (n + quiet * 2) * scale;
+    const labelH = label ? Math.round(scale * 7) : 0;
+    const cv = document.createElement('canvas');
+    cv.width = w;
+    cv.height = w + labelH;
+    const x = cv.getContext('2d');
+    x.fillStyle = '#fff';
+    x.fillRect(0, 0, cv.width, cv.height);
+    x.fillStyle = '#000';
+    for (let r = 0; r < n; r++)
+        for (let c = 0; c < n; c++)
+            if (m[r][c])
+                x.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+    if (label) {
+        x.fillStyle = '#111';
+        x.font = `600 ${Math.round(scale * 2.6)}px "맑은 고딕", system-ui, sans-serif`;
+        x.textAlign = 'center';
+        x.textBaseline = 'middle';
+        x.fillText(label, w / 2, w + labelH / 2 - scale * 0.6);
+    }
+    return cv;
+}
+
+
+/* 지점 → 접수 URL */
+var CONCIERGE_BASE = "https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?s=";
+var STORES = [{"code":"ZN01","name":"스타필드 수원"},{"code":"ZHA7","name":"현대판교모바일"},{"code":"Z279","name":"오산"},{"code":"Z047","name":"수지"},{"code":"Z150","name":"강릉옥천"},{"code":"Z205","name":"단구"},{"code":"Z206","name":"석사"},{"code":"Z227","name":"속초"},{"code":"Z243","name":"평택"},{"code":"Z324","name":"분당"},{"code":"Z343","name":"북수원"},{"code":"Z378","name":"광주"},{"code":"Z383","name":"안성"},{"code":"Z398","name":"평택고덕"},{"code":"Z399","name":"이천증포"},{"code":"Z405","name":"평촌"},{"code":"Z418","name":"안양모바일"},{"code":"Z426","name":"용인구성"},{"code":"Z451","name":"서수원"},{"code":"Z509","name":"영통"},{"code":"Z539","name":"디지털시티모바일"},{"code":"Z541","name":"광명소하"},{"code":"Z557","name":"성남"},{"code":"Z567","name":"AK분당"},{"code":"Z579","name":"원주"},{"code":"Z583","name":"춘천"},{"code":"Z586","name":"평택세교"},{"code":"Z607","name":"용인처인모바일"},{"code":"Z608","name":"권선"},{"code":"Z617","name":"안양본"},{"code":"Z619","name":"수원"},{"code":"Z621","name":"동탄"},{"code":"Z624","name":"강릉"},{"code":"Z640","name":"단계"},{"code":"Z663","name":"하남미사"},{"code":"Z666","name":"용인기흥"},{"code":"ZH35","name":"롯데평촌"},{"code":"ZH36","name":"롯데수원"},{"code":"ZH57","name":"현대판교"},{"code":"ZH64","name":"신세계사우스시티"},{"code":"ZH73","name":"AK수원"},{"code":"ZH74","name":"AK평택"},{"code":"ZH75","name":"AK원주"},{"code":"ZH77","name":"신세계하남"},{"code":"ZH96","name":"갤러리아광교"},{"code":"ZH97","name":"AK분당모바일"},{"code":"ZHA1","name":"롯데동탄"},{"code":"ZHA2","name":"롯데동탄모바일"},{"code":"ZHB4","name":"타임빌라스수원"},{"code":"ZIN5","name":"남양모바일"},{"code":"ZMF6","name":"이마트안양"},{"code":"ZR42","name":"기흥캠퍼스모바일"},{"code":"ZR60","name":"화성캠퍼스모바일"},{"code":"ZR65","name":"수원삼성전기모바일"},{"code":"ZR78","name":"광명기아자동차모바일"},{"code":"ZRA0","name":"화성DSR모바일"},{"code":"ZRD0","name":"미래기술캠퍼스모바일"},{"code":"ZRD2","name":"디지털시티2모바일"},{"code":"ZRE0","name":"용인에버랜드모바일"},{"code":"ZRE4","name":"평택캠퍼스모바일"},{"code":"ZRE6","name":"기흥삼성SDI모바일"},{"code":"ZRF7","name":"현대기아차연구소모바일"},{"code":"ZRF8","name":"판교SDS모바일"},{"code":"ZRF9","name":"기흥SDR모바일"},{"code":"ZRG1","name":"KGM평택모바일"}];
+
+(function(){
+  var sel = document.getElementById('store');
+  var branch = document.getElementById('branch');
+  var img = document.getElementById('qr');
+  if (!sel || !img) return;
+
+  /** 인쇄용이라 모듈당 12px 로 크게 뽑는다 — A4 에 76mm 로 앉혀도 또렷하다 */
+  function make(code){
+    var cv = drawQR(CONCIERGE_BASE + code, 12, 4);
+    img.src = cv.toDataURL('image/png');
+    img.dataset.code = code;
+  }
+
+  sel.addEventListener('change', function(){
+    var code = sel.value;
+    if (!code) return;
+    var st = STORES.filter(function(s){ return s.code === code; })[0];
+    if (st && branch) {
+      branch.value = st.name;
+      branch.dispatchEvent(new Event('input', { bubbles:true }));
+    }
+    make(code);
+  });
+
+  /* 전 지점 한 번에 — 65장을 순서대로 인쇄하거나 PNG 로 내려받는다 */
+  var btnAll = document.getElementById('qr-all');
+  if (btnAll) btnAll.addEventListener('click', function(){
+    var w = window.open('', '_blank');
+    if (!w) { alert('팝업이 막혀 있습니다. 이 사이트의 팝업을 허용해 주세요.'); return; }
+    var css = '<style>@page{size:A4;margin:12mm}body{font:14px "맑은 고딕",sans-serif;margin:0}'
+      + '.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10mm}'
+      + '.i{text-align:center;break-inside:avoid;page-break-inside:avoid}'
+      + '.i img{width:100%;border:1px solid #eee}'
+      + '.i b{display:block;margin-top:3mm;font-size:13px}'
+      + '.i s{display:block;font-size:10px;color:#888;text-decoration:none}</style>';
+    var html = '<html><head><meta charset="utf-8"><title>지점별 접수 QR — 전 지점</title>' + css + '</head><body><div class="g">';
+    for (var i = 0; i < STORES.length; i++) {
+      var s = STORES[i];
+      var cv = drawQR(CONCIERGE_BASE + s.code, 8, 3);
+      html += '<div class="i"><img src="' + cv.toDataURL('image/png') + '"><b>' + s.name + '</b><s>' + s.code + '</s></div>';
+    }
+    html += '</div></body></html>';
+    w.document.write(html);
+    w.document.close();
+  });
+
+  /* 지금 QR 을 고화질 PNG 로 내려받기 */
+  var btnDl = document.getElementById('qr-dl');
+  if (btnDl) btnDl.addEventListener('click', function(){
+    var code = img.dataset.code;
+    if (!code) { alert('먼저 지점을 골라 주세요.'); return; }
+    var st = STORES.filter(function(s){ return s.code === code; })[0];
+    var name = st ? st.name : code;
+    var cv = drawQR(CONCIERGE_BASE + code, 20, 4, name);   // 모듈 20px — 현수막에도 쓴다
+    var a = document.createElement('a');
+    a.download = '컨시어지QR_' + name + '_' + code + '.png';
+    a.href = cv.toDataURL('image/png');
+    a.click();
+  });
+})();
+</script>
+</body>
+</html>

@@ -10,6 +10,9 @@ package-lock.json
 next-env.d.ts
 .scratch/
 
+# 파일을 건네받는 임시 함(README 만 있고 내용물은 작업이 끝나면 저장소 안으로 옮긴다).
+업로드/
+
 # 실제 분양 도면 이미지는 커밋하지 않는다 (public repo · 저작권).
 # 측정값만 담긴 index.json은 커밋한다 — scripts/fixtures/plans-real/README.md 참고.
 scripts/fixtures/plans-real/*.png

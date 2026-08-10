@@ -133,7 +133,18 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   },
   {
     title: '매장운영 도구',
-    modules: [],
+    modules: [
+      {
+        href: '/poster',
+        icon: 'qr',
+        title: '컨시어지 접수 포스터',
+        desc: '지점을 고르면 그 매장 접수 QR 이 만들어진다 — 지면 문구는 직접 고쳐 인쇄, 전 지점 일괄 출력도 된다',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.08',
+        status: 'live',
+      },
+    ],
   },
 ]
 

@@ -115,6 +115,8 @@ try {
     ['/test', 'test-app.html'],
     ['/quiz', 'quiz-app.html'],
     ['/place', 'place-app.html'],
+    ['/as', 'as-app.html'],
+    ['/poster', 'poster-app.html'],
   ]) {
     await page.goto(BASE + route, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(900);
@@ -124,7 +126,7 @@ try {
     const inner = await page.frameLocator('iframe').locator('body').innerText().catch(() => '');
     if (!inner || inner.trim().length < 20) fail(`${route}: iframe 내용이 비어 있음`);
   }
-  pass('7개 모듈 페이지 iframe 로드');
+  pass('9개 모듈 페이지 iframe 로드');
 
   // ── 3. 관리자 인증 게이트 ──
   // 예전 방식(localStorage 영구 저장)으로 열려 있던 기기를 흉내 내 접속해도 잠겨 있어야 한다.

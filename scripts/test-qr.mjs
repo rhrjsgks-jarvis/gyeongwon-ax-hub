@@ -17,6 +17,8 @@
  *
  * 실행: node --experimental-strip-types scripts/test-qr.mjs
  */
+import fs from 'fs';
+import vm from 'vm';
 import { qrMatrix } from '../lib/qr.ts';
 
 let ok = true;
@@ -208,6 +210,29 @@ for (const [name, text] of CASES) {
   check(d.syndromesZero, `${name} — 모든 블록의 RS 신드롬이 0이다`);
   check(d.mode === 0b0100, `${name} — 바이트 모드(0100)로 인코딩됐다`);
   check(d.text === text, `${name} — 되읽은 문자열이 원본과 같다`);
+}
+
+/* ── 포스터의 인라인 사본이 갈라지지 않았는가 ──
+ * `public/*.html` 미니앱이 자립형인 것은 이 저장소의 구조라 QR 생성기를 복사해 갖고 있는 것
+ * 자체는 맞다. 문제는 **조용히 갈라지는 것**이다 — 한쪽만 고치면 인쇄물 QR 만 안 읽히는데,
+ * 인쇄물은 회수가 안 된다. 같은 입력에 같은 격자가 나오는지 대조한다
+ * (`test-consistency.mjs` 가 모델코드를 파일 간 대조하는 것과 같은 발상).
+ *
+ * DOM 없이 QR 부분만 떼어 vm 에서 돌린다 — 포스터의 나머지는 캔버스·이벤트라 여기 필요 없다. */
+{
+  const html = fs.readFileSync('public/poster-app.html', 'utf8');
+  const from = html.indexOf('/* ── GF(256)');
+  const to = html.indexOf('function drawQR(');
+
+  if (from < 0 || to < 0 || to < from) {
+    fail('포스터에서 QR 생성기 구간을 못 찾았다 — 표식이 바뀌었으면 이 테스트도 함께 고칠 것');
+  } else {
+    const ctx = vm.createContext({ TextEncoder });
+    const posterQrMatrix = vm.runInContext(html.slice(from, to) + '\nqrMatrix', ctx);
+    const same = CASES.every(([, text]) =>
+      JSON.stringify(posterQrMatrix(text)) === JSON.stringify(qrMatrix(text)));
+    check(same, '포스터의 인라인 QR 생성기가 lib/qr.ts 와 같은 격자를 내놓는다');
+  }
 }
 
 // 범위 밖은 조용히 틀린 QR 을 내놓지 말고 던져야 한다

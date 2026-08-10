@@ -13,7 +13,7 @@
 export type IconName =
   | 'home' | 'finder' | 'care' | 'compare' | 'catalog' | 'install'
   | 'warranty' | 'place' | 'quiz' | 'target' | 'dashboard'
-  | 'ticket' | 'display' | 'coupon' | 'search' | 'chat'
+  | 'ticket' | 'display' | 'coupon' | 'search' | 'chat' | 'qr'
 
 const P: Record<IconName, React.ReactNode> = {
   /* 허브 — 집 */
@@ -46,6 +46,9 @@ const P: Record<IconName, React.ReactNode> = {
   coupon: <><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v1.9a1.8 1.8 0 0 0 0 3.2v1.9A1.5 1.5 0 0 1 18.5 17h-13A1.5 1.5 0 0 1 4 15.5v-1.9a1.8 1.8 0 0 0 0-3.2V8.5Z" /><path d="M9 11.5h6" /></>,
   /* 통합검색 */
   search: <><circle cx="10.5" cy="10.5" r="6" /><path d="M15 15l4.5 4.5" /></>,
+  /* 접수 포스터 — QR. 파인더 사각형 3개가 알아보게 하는 전부이므로 16px 에서도 살아남는다.
+     오른쪽 아래 작은 사각 둘은 데이터 영역의 결을 흉내낸 것이라 뭉개져도 무방하다. */
+  qr: <><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14.5" y="14.5" width="2" height="2" /><rect x="18" y="18" width="2" height="2" /></>,
   /* 개발자 문의 */
   chat: <><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.2-2.9-.5L4.5 20l1.2-3.4A6.4 6.4 0 0 1 4 12.5C4 8.9 7.6 6 12 6s8 2.9 8 6.5Z" /></>,
 }
