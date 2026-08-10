@@ -6,16 +6,21 @@
 <title>AS기간 확인</title>
 <style>
   *{box-sizing:border-box}
-  body{margin:0;font-family:'맑은 고딕','Malgun Gothic',-apple-system,system-ui,sans-serif;
+  body{margin:0;font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     background:#f6f7fb;color:#16181b;-webkit-text-size-adjust:100%}
+  /* 헤더는 다른 미니앱과 같은 남색 바다 — 앱을 넘겨 볼 때 머리가 같아야 한 제품으로 읽힌다 */
+  .topbar{background:#1428A0;color:#fff;padding:14px 16px}
+  .topbar-in{max-width:840px;margin:0 auto;display:flex;align-items:center;gap:10px}
+  .hd-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+  .hd-t{font-size:17px;font-weight:800;line-height:1.25}
+  .hd-s{font-size:11.5px;color:#c7d2fe;margin-top:2px;line-height:1.4}
   .wrap{max-width:840px;margin:0 auto;padding:16px 14px 60px}
-  .hd{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-  .hd .ico{font-size:22px}
-  .hd h1{font-size:19px;font-weight:800;margin:0}
   .sub{font-size:12.5px;color:#6b7280;line-height:1.55;margin-bottom:14px}
   .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:16px}
   .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
     font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:#374151}
+  .cat .ci{font-size:17px;display:block;margin-bottom:3px;line-height:1}
   .cat:hover{border-color:#c7d2fe}
   .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
@@ -41,8 +46,16 @@
 </style>
 </head>
 <body>
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="hd-ico">🛡️</div>
+    <div>
+      <div class="hd-t">AS기간 확인</div>
+      <div class="hd-s">무상보증 · 핵심부품 · 부품보유기간 · 멤버십 연장</div>
+    </div>
+  </div>
+</div>
 <div class="wrap">
-  <div class="hd"><span class="ico">🛡️</span><h1>AS기간 확인</h1></div>
   <div class="sub">품목을 고르면 <b>무상보증 · 핵심부품 · 부품보유기간</b>을 한눈에 봅니다.
     삼성전자서비스 <b>보증기간 산정기준</b> 원문 그대로이며, 원문에 없는 항목은 비워 둡니다.</div>
   <div class="cats" id="cats"></div>
@@ -63,9 +76,21 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 const keys = Object.keys(DB);
 let cur = keys[0];
 
+/* 품목 아이콘 — **같은 품목이면 다른 앱과 같은 아이콘**을 쓴다(타사비교·설치환경과 동기화).
+ * 상담사가 앱을 옮겨 다녀도 같은 그림이 같은 품목을 가리켜야 눈이 헤매지 않는다.
+ * 타사비교에 없는 품목만 새로 정했고, 서로 헷갈리지 않게 겹치는 그림은 피했다
+ * (냉장고 🧊 ↔ 냉동고 🥶, 정수기 🚰 ↔ 제습기 💧, 모니터 🖥️ ↔ 데스크탑 🖱️). */
+const ICONS = {
+  '냉장고':'🧊','김치냉장고':'🥬','세탁기·콤보':'🫧','건조기':'🌀','TV':'📺','모니터':'🖥️',
+  '에어컨':'❄️','시스템에어컨':'🏢','에어드레서':'👗','슈드레서':'👟','청소기':'💨',
+  '공기청정기':'🌬️','제습기':'💧','정수기':'🚰','전자레인지/오븐':'🔥','식기세척기':'🍽️',
+  '인덕션/전기레인지':'🍳','냉동고':'🥶','업소용 냉장고':'🏪','데이코 빌트인':'🏆',
+  '사운드바':'🔊','스마트폰':'📱','태블릿':'🖊️','노트북':'💻','데스크탑':'🖱️','프린터':'🖨️',
+};
+
 function renderCats(){
   document.getElementById('cats').innerHTML = keys.map(k=>
-    `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}">${esc(k)}</div>`).join('');
+    `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${ICONS[k]||'▪'}</span>${esc(k)}</div>`).join('');
   document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); });
 }
 
