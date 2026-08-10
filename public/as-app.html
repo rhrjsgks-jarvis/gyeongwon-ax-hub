@@ -21,6 +21,16 @@
   .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
     font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:#374151}
   .cat .ci{font-size:17px;display:block;margin-bottom:3px;line-height:1}
+  /* 보증 적용 기준 — 라벨로 갈라 적는다. 한 줄로 뭉치면 상담 중에 답을 다시 찾아야 한다
+     (AI구독 케어의 조건 라벨과 같은 방식이다) */
+  .rule{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid #f1f3f6}
+  .rule:first-of-type{border-top:0}
+  .rl{flex:0 0 auto;min-width:56px;text-align:center;border-radius:6px;padding:2px 6px;
+    font-size:10.5px;font-weight:800;line-height:1.5}
+  .rl.ok{background:#EEF2FF;color:#1428A0}
+  .rl.need{background:#E0F2FE;color:#0D1B7A}
+  .rl.warn{background:#FEF3C7;color:#B45309}
+  .rv{font-size:12px;line-height:1.6;color:#374151;min-width:0}
   .cat:hover{border-color:#c7d2fe}
   .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
@@ -76,6 +86,19 @@ const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'
 const keys = Object.keys(DB);
 let cur = keys[0];
 
+/* 보증 적용 기준 — 품목과 무관하게 전 품목에 걸리는 규칙이라 항상 보여준다.
+ * 상담에서 실제로 갈리는 지점만 골랐다: "언제부터 세나"(구입일) · "영수증이 없다"(생산년월+3개월)
+ * · "매장에서 쓰면"(1/2) · "중고로 샀다"(미적용). 넷 다 안 알려주면 그대로 분쟁이 된다.
+ * **문구는 원문 그대로다.** 원문에 없는 것(유상수리 사유·출장비·교환환불 기준)은 넣지 않았고,
+ * 없다는 사실을 화면이 밝힌다 — AS 기간은 지어내면 그대로 고객 분쟁이다. */
+const RULES = [
+  { l:'기준', c:'ok',   t:'제품의 보증기간은 구입일자를 기준으로 산정하며, 구입일자의 확인은 제품 보증서(구입 영수증 포함)에 의해서 한다.' },
+  { l:'영수증 없음', c:'need', t:'보증서가 없는 경우는 생산년월에 3개월 감안(유통기간 반영)하여 구입일자를 적용해 보증기간을 산정한다.' },
+  { l:'영업용', c:'warn', t:'영업용도나 영업장에서 사용할 경우 보증기간이 정상의 1/2로 단축된다. 단, 애초에 영업용으로 나온 제품은 제외.' },
+  { l:'중고품', c:'warn', t:'중고품(전파상 구입·모조품)은 보증기간이 적용되지 않으며, 수리 불가의 경우 피해보상의 책임을 지지 않는다.' },
+  { l:'무상수리', c:'ok', t:'정상적인 상태에서 자연 발생한 품질·성능·기능 하자에 대해 무료수리를 해주겠다고 약속한 기간을 말한다.' },
+];
+
 /* 품목 아이콘 — **같은 품목이면 다른 앱과 같은 아이콘**을 쓴다(타사비교·설치환경과 동기화).
  * 상담사가 앱을 옮겨 다녀도 같은 그림이 같은 품목을 가리켜야 눈이 헤매지 않는다.
  * 타사비교에 없는 품목만 새로 정했고, 서로 헷갈리지 않게 겹치는 그림은 피했다
@@ -122,6 +145,10 @@ function renderBody(){
     <div class="row"><div class="n">${esc(ROYAL.benefit)}</div></div>
     <div class="note">선정 조건: ${esc(ROYAL.cond)}<br>유지: ${esc(ROYAL.keep)}<br>
       <span class="unk">${esc(ROYAL.unknown)}</span></div></div>`;
+
+  h += `<div class="card"><h2>보증 적용 기준 <span class="pill">전 품목 공통</span></h2>
+    ${RULES.map(r=>`<div class="rule"><span class="rl ${r.c}">${esc(r.l)}</span><span class="rv">${esc(r.t)}</span></div>`).join('')}
+    <div class="note">위 문구는 원문 그대로다. 유상수리 사유·출장비·교환환불 기준은 이 문서에 없어 싣지 않았다.</div></div>`;
 
   h += `<div class="src">출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
     · 삼성전자 <a href="${ROYAL.src}" target="_blank" rel="noopener">멤버십 등급별 혜택</a><br>
