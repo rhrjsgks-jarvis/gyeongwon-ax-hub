@@ -275,12 +275,14 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
 // 윈도우에서 PATH 의 claude 는 claude.cmd 셸 스크립트라 spawn 이 ENOENT 로 죽는다.
 // 봇이 메시지는 받는데 답을 못 하는 형태로 나타나 원인을 찾기 어렵다.
 {
-  // 경로는 path.join / path.delimiter 로 짓는다 — 그래야 리눅스 CI 와 윈도우에서
-  // 같은 문자열이 나온다(구분자·구분문자가 플랫폼마다 다르다).
+  /* 폴더 구분자는 `path.join` 으로 짓되(리눅스 CI 와 윈도우에서 양쪽이 같은 함수를 쓰므로
+   * 문자열이 일치한다), **PATH 구분문자는 반드시 `;` 로 박는다.**
+   * `path.delimiter` 를 쓰면 리눅스에서 `:` 가 되는데, 윈도우 경로는 드라이브 문자(`C:`)에
+   * 콜론이 들어 있어 PATH 가 [C, \a, C, \b] 로 부서진다 — 검사가 조용히 무력해진다. */
   const SYS = path.join('C:', 'Windows', 'system32');
   const NPM = path.join('C:', 'Users', 'u', 'AppData', 'Roaming', 'npm');
   const EXE = path.join(NPM, 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe');
-  const winEnv = { PATH: [SYS, NPM].join(path.delimiter) };
+  const winEnv = { PATH: [SYS, NPM].join(';') };
   const has = (set) => (p) => set.has(p);
 
   eq(resolveClaudeBin({ CLAUDE_BIN: '/opt/claude' }, 'linux', () => false), '/opt/claude',

@@ -83,7 +83,12 @@ export function resolveClaudeBin(env = process.env, platform = process.platform,
   if (env.CLAUDE_BIN) return env.CLAUDE_BIN;
   if (platform !== 'win32') return 'claude';
 
-  const dirs = String(env.PATH || env.Path || '').split(path.delimiter).filter(Boolean);
+  /* 구분문자는 **대상 플랫폼**으로 정한다 — `path.delimiter` 는 실행 중인 OS 를 따르므로
+   * 리눅스 CI 에서 윈도우 PATH 를 넣으면 `:` 로 쪼개진다. 그런데 윈도우 경로에는
+   * 드라이브 문자(`C:`)에 콜론이 들어 있어 `C:\a;C:\b` 가 [C, \a, C, \b] 로 부서진다.
+   * 그래서 리눅스에서 이 함수를 검사하면 항상 'claude' 로 떨어졌다(실제로 main 이 red 였다). */
+  const sep = platform === 'win32' ? ';' : path.delimiter;
+  const dirs = String(env.PATH || env.Path || '').split(sep).filter(Boolean);
   for (const d of dirs) {
     const p = path.join(d, 'claude.exe');
     if (exists(p)) return p;
