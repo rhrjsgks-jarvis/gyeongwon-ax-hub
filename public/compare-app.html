@@ -6,7 +6,7 @@
 <title>타사비교 세일즈가이드</title>
 <style>
 :root {
-  --primary:#EA580C; --primary-l:#FFF7ED; --primary-m:#FED7AA;
+  --primary:#1428A0; --primary-l:#EEF2FF; --primary-m:#DCE4FB;
   --navy:#1428A0; --navy-l:#EEF2FF;
   --green:#16a34a; --green-l:#dcfce7;
   --yellow:#b45309; --yellow-l:#fef3c7;
@@ -61,7 +61,7 @@ select:focus{border-color:var(--primary);}
 .brand-chip.active{background:var(--navy-l);border-color:var(--navy);color:var(--navy);}
 
 .compare-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
-.compare-btn:hover{background:#c2410c;}
+.compare-btn:hover{background:#1428A0;}
 .compare-btn:active{transform:scale(.98);}
 
 /* ── 비교 결과 ── */
@@ -107,8 +107,8 @@ select:focus{border-color:var(--primary);}
 .script-text{font-size:12.5px;line-height:1.7;color:var(--text);background:#fafafa;border-radius:8px;padding:10px 12px;border-left:3px solid var(--primary);}
 
 /* 대응전략 */
-.counter-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:14px;margin-bottom:14px;}
-.counter-card h3{font-size:13px;font-weight:800;color:#c2410c;margin-bottom:10px;}
+.counter-card{background:#fff8f0;border:1.5px solid #DCE4FB;border-radius:12px;padding:14px;margin-bottom:14px;}
+.counter-card h3{font-size:13px;font-weight:800;color:#1428A0;margin-bottom:10px;}
 .counter-item{display:flex;gap:8px;margin-bottom:7px;font-size:12.5px;align-items:flex-start;}
 .counter-icon{flex-shrink:0;font-size:14px;}
 
@@ -152,7 +152,7 @@ input:focus{border-color:var(--primary);background:#fff;}
 .fc-ico{font-size:14px;}
 
 .generate-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
-.generate-btn:hover{background:#c2410c;}
+.generate-btn:hover{background:#1428A0;}
 
 /* ── 즉시비교 직접등록 폼 ── */
 input[type="number"],select,textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--text);background:#fafafa;outline:none;transition:border-color .15s;margin-bottom:12px;font-family:inherit;}
@@ -173,7 +173,7 @@ select:focus,textarea:focus,input[type="number"]:focus{border-color:var(--primar
 .reg-item .reg-custom{grid-column:1/-1;}
 .reg-custom input,.reg-custom select{margin-bottom:0;font-size:12px;padding:8px 9px;}
 .reg-hint{font-size:11.5px;color:var(--gray);line-height:1.6;margin:-4px 0 10px;}
-.reg-badge{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:800;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:5px;padding:1px 5px;vertical-align:middle;}
+.reg-badge{display:inline-block;margin-left:6px;font-size:9.5px;font-weight:800;background:#fff7ed;color:#1428A0;border:1px solid #DCE4FB;border-radius:5px;padding:1px 5px;vertical-align:middle;}
 .reg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);padding:9px 0;font-size:12.5px;}
 .reg-row:last-child{border-bottom:none;}
 .reg-row .rr-main{flex:1;min-width:0;line-height:1.5;}
@@ -194,7 +194,7 @@ select:focus,textarea:focus,input[type="number"]:focus{border-color:var(--primar
 .copy-btn:hover{background:var(--primary);color:#fff;}
 .copy-btn.copied{background:#22c55e;border-color:#22c55e;color:#fff;}
 .open-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:block;text-align:center;}
-.tip{background:#f0f9ff;border-left:3px solid #38bdf8;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#0c4a6e;line-height:1.6;margin-top:12px;}
+.tip{background:#f0f9ff;border-left:3px solid #4C7DF0;border-radius:0 8px 8px 0;padding:10px 12px;font-size:12px;color:#0D1B7A;line-height:1.6;margin-top:12px;}
 
 /* 히스토리 */
 .history-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer;}
@@ -1956,7 +1956,7 @@ function renderResult() {
     counterHtml = `<div class="counter-card">
       <h3>🛡 열위 항목 대응전략</h3>
       ${counters.map(c=>`<div class="counter-item"><span class="counter-icon">⚠️</span>
-        <div><strong>${c.issue}</strong><br><span style="color:#7c2d12">${c.strategy}</span></div>
+        <div><strong>${c.issue}</strong><br><span style="color:#0D1B7A">${c.strategy}</span></div>
       </div>`).join('')}
     </div>`;
   }

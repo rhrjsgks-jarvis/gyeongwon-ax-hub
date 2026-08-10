@@ -16,12 +16,13 @@
   --color-text-muted: #6B7280;
   --color-border: #E5E7EB;
 
-  /* 모듈 색상 */
+  /* 모듈 색상 — 전부 삼성 블루다. 모듈 구분은 색이 아니라 아이콘 모양이 한다(CLAUDE.md).
+     여기를 다시 갈라 놓으면 브랜드가 흩어진다. */
   --color-finder: #1428A0;
-  --color-care: #059669;
-  --color-test: #7C3AED;
-  --color-compare: #EA580C;
-  --color-quiz: #0891B2;
+  --color-care: #1428A0;
+  --color-test: #1428A0;
+  --color-compare: #1428A0;
+  --color-quiz: #1428A0;
   --color-admin: #475569;
 
   /* 간격 */
