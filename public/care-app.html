@@ -161,6 +161,35 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .sell-a{font-size:11px;color:#6b7280;line-height:1.55}
 .sell-a::before{content:"A. ";font-weight:700;color:#059669}
 
+/* ── 블루패스 ───────────────────────────────────────────────────
+   AI구독 케어를 열면 가장 먼저 보이는 자리. 삼성 블루를 바탕으로 깔아
+   "다른 구독과 다른 지점"이라는 것을 색으로도 먼저 말한다. */
+.bp-wrap{margin:14px 0 4px;background:linear-gradient(160deg,#1428A0 0%,#0d1b6b 100%);color:#fff;
+  border-radius:18px;padding:18px 16px 14px}
+.bp-h{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+.bp-badge{font-size:10px;font-weight:800;letter-spacing:.09em;background:#fff;color:#1428A0;
+  padding:4px 9px;border-radius:6px;flex-shrink:0}
+.bp-hh{font-size:15px;font-weight:800;line-height:1.35}
+.bp-sub{font-size:11.5px;color:#c7d0f5;line-height:1.55;margin-bottom:13px}
+.bp-g{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.bp-i{display:flex;gap:10px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+  border-radius:13px;padding:11px 11px 10px}
+.bp-ic{width:34px;height:34px;border-radius:10px;background:#fff;color:#1428A0;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center}
+.bp-ic svg{width:20px;height:20px;display:block}
+.bp-tx{min-width:0}
+.bp-t{font-size:12.5px;font-weight:800;line-height:1.35}
+.bp-s{font-size:10.5px;color:#a9b6ef;margin-top:1px;line-height:1.4}
+.bp-d{font-size:11px;color:#e6eaff;line-height:1.5;margin-top:5px}
+.bp-w{font-size:9.5px;color:#ffd9a8;line-height:1.45;margin-top:5px}
+.bp-extra{margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.2)}
+.bp-eh{font-size:11.5px;font-weight:800;color:#ffd9a8;margin-bottom:8px}
+.bp-gate{margin-top:11px;background:rgba(0,0,0,.22);border-radius:10px;padding:9px 11px;
+  font-size:10.5px;color:#ffd9a8;line-height:1.55;font-weight:700}
+.bp-src{margin-top:8px;font-size:9.5px;color:#9fabe6;line-height:1.5}
+@media(max-width:560px){.bp-g{grid-template-columns:1fr}
+  .bp-wrap{padding:15px 13px 12px}.bp-hh{font-size:14px}}
+
 /* ── 방문케어 현장 사진 ──────────────────────────────────────────
    글만 있으면 "종합점검·케어"가 무슨 일인지 상담사도 고객도 모른다.
    삼성닷컴 구독 서비스 페이지의 실제 작업 사진을 라벨과 함께 보여 준다. */
@@ -1720,6 +1749,92 @@ function buildCareImgs(key){
  * 내용은 **그 제품의 `includes` 에서 뽑는다** — 제품마다 다르므로 공통 문구를 지어내지 않는다.
  * 계약기간·방문횟수는 이미 들고 있는 값(`contract`, `total12/36`)을 그대로 쓴다.
  */
+/*
+ * 블루패스 — AI구독 케어를 열면 **가장 먼저** 보이는 것.
+ *
+ * 상담은 "이 제품 케어가 몇 회차냐"보다 "삼성으로 구독하면 뭐가 다르냐"에서 시작한다.
+ * 블루패스가 그 답이고, 다른 브랜드 구독에는 없는 항목이다.
+ *
+ * 문구는 삼성닷컴 AI 구독클럽 가이드(/sec/ai-subs/guide/)에서 그대로 옮겼다.
+ * **조건을 같이 적는다** — 상담사가 조건 없이 말하면 그대로 분쟁이 된다.
+ * 특히 ①올인원 2.0 전용 ②A/S 패스트트랙 하절기 제외 ③오늘보장 설치는 유상.
+ */
+const BLUEPASS = {
+  src: '✅ samsung.com AI 구독클럽 가이드 · 블루패스 서비스 · 2026.08.10 확인',
+  gate: 'AI 올인원 2.0 구독 고객에게만 제공됩니다. AI 스마트로 가입하면 무상수리서비스만 선택할 수 있습니다.',
+  items: [
+    { ic:'fast',  t:'A/S 패스트트랙',   s:'일반 주문 고객보다 빠르게',
+      d:'모든 구독 제품을 횟수 제한 없이 일반 주문 고객보다 빠르게 수리받습니다.',
+      warn:'전 품목 대상 · 하절기(6~9월)는 운영 제외' },
+    { ic:'alert', t:'AI 사전케어 알림',  s:'고장 나기 전에 먼저',
+      d:'AI가 매일 점검해 문제가 생기기 전에 알려주고, 수리가 필요하면 전화 안내 후 방문 접수까지 해 줍니다.',
+      warn:'구독케어 대상 중 일부 품목 · SmartThings 앱 설치 후 제품 연결 필요' },
+    { ic:'plus',  t:'하나 더 서비스',    s:'쓰던 제품도 같이 봐 드립니다',
+      d:'방문케어를 신청하면 기존에 쓰던 삼성 제품 1개를 추가로 간단 점검해 줍니다. 스마트싱스 연결·제품 점검을 해 드립니다.',
+      warn:'냉장고 · 김치냉장고 · 세탁기 · 건조기 · 에어컨 · TV 중 택 1 · 삼성전자 제품에 한함' },
+    { ic:'clock', t:'시간맞춤 설치',     s:'원하는 시간에, 추가 비용 없이',
+      d:'고객이 편한 시간을 지정해 설치해 드립니다.',
+      warn:'냉장고 · 김치냉장고 · 에어드레서 · 건조기 · 세탁기 · TV 중 일부 모델 · 설치 환경에 따라 설치비가 추가될 수 있음' },
+    { ic:'today', t:'오늘보장 설치',     s:'오전에 주문하면 오늘 설치',
+      d:'급하게 필요한 제품은 오전에 주문하고 당일에 설치받을 수 있습니다.',
+      warn:'유상 옵션 — 추가 비용이 발생합니다' },
+    { ic:'things',t:'스마트싱스 세팅',   s:'설치하고 연결까지',
+      d:'설치 후 SmartThings 연결까지 도와드려 AI 홈을 바로 쓸 수 있습니다.',
+      warn:'설치 불가 환경 등 현장 상황에 따라 제공이 어려울 수 있음' },
+  ],
+  /* 에어컨을 보고 있을 때만 덧붙인다 — 에어컨 전용 혜택이다 */
+  aircon: [
+    { ic:'clock', t:'최우선 설치',   d:'일반에어컨은 D+1일 내, 가정용 시스템에어컨은 D+5일 내 설치를 보장합니다.',
+      warn:'2026.05.15~ 가입 고객 대상 · 제주 및 도서 산간 제외 · 성수기(5~8월) 일정 변경 가능' },
+    { ic:'fast',  t:'냉매 안심케어', d:'냉매가 새면 구독 기간 내내 무료로 충전해 드립니다. 최대 6년까지 안심입니다.',
+      warn:'설치 이슈로 인한 누설 · 당사가 제품/배관 시공을 완료한 제품에 한함' },
+  ],
+};
+
+/* 블루패스 아이콘 — 사이드바와 같은 규칙(24×24 · stroke 1.6 · 45° 사선 · 정원 호) */
+const BP_ICONS = {
+  fast:  '<path d="M13 2.5 5.5 13.5h5.5L11 21.5 18.5 10.5H13L13 2.5Z"/>',
+  alert: '<path d="M12 3.5a6 6 0 0 1 6 6c0 4 1.5 5.5 2.5 6.5h-17c1-1 2.5-2.5 2.5-6.5a6 6 0 0 1 6-6Z"/><path d="M10 19.5a2 2 0 0 0 4 0"/>',
+  plus:  '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 2.2"/>',
+  today: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.8h17"/><path d="M8 3.5v3M16 3.5v3"/><path d="M9.5 14.6l1.8 1.8 3.4-3.4"/>',
+  things:'<path d="M12 19.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M8.1 13a5.5 5.5 0 0 1 7.8 0"/><path d="M5 9.6a10.3 10.3 0 0 1 14 0"/>',
+};
+function bpIcon(k){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"'
+    + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (BP_ICONS[k]||BP_ICONS.plus) + '</svg>';
+}
+
+function buildBluePass(key){
+  const B = BLUEPASS;
+  const tile = (x)=>`<div class="bp-i">
+      <div class="bp-ic">${bpIcon(x.ic)}</div>
+      <div class="bp-tx">
+        <div class="bp-t">${x.t}</div>
+        ${x.s?`<div class="bp-s">${x.s}</div>`:''}
+        <div class="bp-d">${x.d}</div>
+        ${x.warn?`<div class="bp-w">${x.warn}</div>`:''}
+      </div>
+    </div>`;
+  const extra = (key === 'aircon' && B.aircon.length)
+    ? `<div class="bp-extra">
+         <div class="bp-eh">에어컨 블루패스 — 이 제품에는 두 가지가 더 붙습니다</div>
+         <div class="bp-g">${B.aircon.map(tile).join('')}</div>
+       </div>` : '';
+  return `
+  <div class="card bp-wrap">
+    <div class="bp-h">
+      <span class="bp-badge">BLUE PASS</span>
+      <span class="bp-hh">삼성으로 구독하면 이것이 더 붙습니다</span>
+    </div>
+    <div class="bp-sub">설치부터 수리까지 — 다른 곳 구독에는 없는, 삼성전자만의 서비스입니다.</div>
+    <div class="bp-g">${B.items.map(tile).join('')}</div>
+    ${extra}
+    <div class="bp-gate">꼭 확인 — ${B.gate}</div>
+    <div class="bp-src">${B.src}</div>
+  </div>`;
+}
+
 function buildBenefits(d, key){
   const inc = d.includes || [];
   const has = (re)=> inc.find(x=>re.test(x));
@@ -1827,6 +1942,9 @@ function render(){
     </div>`;
     return;
   }
+
+  /* 블루패스 — 모든 것보다 **먼저**. "삼성으로 구독하면 뭐가 다르냐"가 상담의 첫 질문이다 */
+  out += buildBluePass(curCat);
 
   /* 요약 타일 */
   /* 혜택 카드 — 회차표보다 **먼저** 보여준다. 상담은 "구독하면 뭘 받느냐"로 시작한다 */
