@@ -1100,10 +1100,38 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
   사실을 확인시켜 준다. 대신 터미널에 `chat_id` 를 찍어 본인이면 등록할 수 있게 한다.
 - **설정이 없으면 아예 뜨지 않는다**(fail closed). 화이트리스트가 비어 있는데 뜨면 봇 사용자명을
   아는 누구나 이 PC 에 명령할 수 있다. `--setup` 만 예외다(화이트리스트를 만들기 전 단계라서).
-- `Bash` 는 **접두 지정으로만** 연다(`Bash(git status:*)`). `Bash` 를 통째로 허용 목록에 넣는
-  순간 나머지 제한이 전부 무의미해진다 — `test-telegram.mjs` 가 이것을 검사한다.
-- 기본 권한 모드는 `acceptEdits`. **`bypassPermissions` 로 두지 말 것** — 텔레그램으로 들어온
-  말이 아무 제한 없이 실행된다는 뜻이다(설정하면 시작할 때 경고가 뜬다).
+- 기본(`safe`)에서 `Bash` 는 **접두 지정으로만** 연다(`Bash(git status:*)`). `Bash` 를 통째로
+  허용 목록에 넣는 순간 나머지 제한이 전부 무의미해진다 — `test-telegram.mjs` 가 검사한다.
+
+### 권한 프리셋 — `TELEGRAM_TOOL_PRESET`
+
+| | `safe`(기본) | `full` |
+|---|---|---|
+| 할 수 있는 것 | 읽기·편집·테스트 | **PC 앞에 앉은 것과 동일** — push·배포·임의 명령 |
+| 보안 경계 | chat_id + 도구 제한 | **chat_id 하나뿐** |
+
+**원격에서 배포까지 하려면 `full` 이 필요하다.** main 에 push 하면 Vercel 이 자동 배포하므로
+휴대폰에서 배포가 된다는 뜻이고, 동시에 토큰이 유출되면 남이 프로덕션에 배포할 수 있다는 뜻이다.
+
+**`full` 의 허용 목록을 비우지 말 것 — 정반대로 동작한다.** 헤드리스에는 물어볼 상대가 없어
+"제한을 안 거는 것"과 "전부 허용하는 것"의 결과가 반대다. 네 가지를 직접 돌려 확인했다:
+
+| 설정 | `git push` |
+|---|---|
+| `--allowedTools` 없음 | ❌ "This command requires approval" |
+| `--allowedTools "*"` | ❌ 와일드카드를 받지 않는다 |
+| `--permission-mode dontAsk` | ❌ `git status` 는 되지만 push 는 거부 |
+| `--permission-mode bypassPermissions` | ❌ root/sudo 환경에서 CLI 가 거절 |
+| **`--allowedTools "Bash,Read,…"`** | ✅ **된다** |
+
+그래서 `FULL_TOOLS` 에 **도구 이름을 하나씩 적는다.** "full 인데 목록이 왜 있지" 하고 비우면
+아무것도 못 하게 된다. `test-telegram.mjs` 가 목록이 비는 것과 `*` 를 둘 다 막는다.
+
+- **접두 지정으로 "main 만 빼고 push 허용"을 만들 수 없다.** 매칭이 **토큰 단위**라
+  `Bash(git push origin claude/:*)` 는 안 맞고(조각), 전체 브랜치명을 적어야 맞는다(실측).
+  브랜치별로 적는 수밖에 없으므로 사실상 push 는 **열거나 닫거나** 둘 중 하나다.
+- `full` 로 뜨면 시작할 때 경고 상자를 띄우고, 휴대폰에서 `/status` 로도 현재 프리셋이 보인다 —
+  full 인 줄 모르고 쓰는 상황을 만들지 말 것.
 - 이 저장소는 **public** 이라 토큰이 커밋되면 즉시 공개된다. 테스트가 `.gitignore` 등재 여부와
   소스·`.example` 안의 토큰 패턴(`숫자:영숫자35자`)을 함께 검사한다.
 

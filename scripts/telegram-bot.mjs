@@ -99,6 +99,45 @@ export const DEFAULT_DISALLOWED_TOOLS = [
   'Bash(curl:*)',
 ];
 
+/* ── 프리셋 ────────────────────────────────────────────────────────────
+ * safe: 읽기·편집·테스트만. push·배포가 막혀 있어 휴대폰 오타가 프로덕션까지 가지 않는다.
+ * full: **PC 앞에 앉은 것과 동일**. push·배포·임의 명령이 전부 된다.
+ *
+ * full 의 목록을 실측으로 정했다. 헤드리스는 물어볼 상대가 없어 "제한을 안 거는 것"과
+ * "전부 허용하는 것"이 정반대 결과를 낸다 — 네 가지를 직접 돌려 확인했다:
+ *   · --allowedTools 없음        → "This command requires approval" (거부)
+ *   · --allowedTools "*"         → 거부 (와일드카드를 받지 않는다)
+ *   · --permission-mode dontAsk  → git status 는 되지만 git push 는 거부
+ *   · --allowedTools "Bash,…"    → **된다**
+ * 그래서 **도구 이름을 하나씩 적는다.** 비워 두면 정반대로 동작한다 — 지우지 말 것.
+ *
+ * 접두 지정(`Bash(git push origin claude/:*)`)으로 "main 만 빼고 허용"을 만들 수는 없다.
+ * 매칭이 토큰 단위라 `claude/` 같은 조각은 안 맞고 전체 브랜치명을 적어야 한다(실측).
+ *
+ * **full 을 쓰면 chat_id 화이트리스트가 유일한 보안 경계가 된다.** 토큰이 유출되면
+ * 그 사람이 이 PC 에서 무엇이든 한다 — 시작할 때 그 사실을 경고한다.
+ */
+export const FULL_TOOLS = [
+  'Bash', 'Read', 'Edit', 'Write', 'Glob', 'Grep', 'TodoWrite',
+  'WebFetch', 'WebSearch', 'Task', 'NotebookEdit', 'BashOutput', 'KillShell',
+];
+
+export const TOOL_PRESETS = {
+  safe: { allowedTools: DEFAULT_ALLOWED_TOOLS, disallowedTools: DEFAULT_DISALLOWED_TOOLS, permissionMode: 'acceptEdits' },
+  full: { allowedTools: FULL_TOOLS, disallowedTools: [], permissionMode: 'acceptEdits' },
+};
+
+export function resolveToolPolicy({ preset = 'safe', permissionMode = '', allowedTools = null, disallowedTools = null } = {}) {
+  const base = TOOL_PRESETS[preset];
+  if (!base) return null;
+  return {
+    preset,
+    allowedTools: allowedTools ?? base.allowedTools,
+    disallowedTools: disallowedTools ?? base.disallowedTools,
+    permissionMode: permissionMode || base.permissionMode,
+  };
+}
+
 /* ── 되돌리기 어려운 요청 가려내기 ────────────────────────────────────
  * 어림짐작이다. 놓치는 표현이 반드시 있으므로 **보안 경계로 쓰지 말 것.**
  * 목적은 "휴대폰에서 오타 한 번에 배포되는" 사고를 막는 것뿐이다.
@@ -187,7 +226,7 @@ export function formatDuration(ms) {
 }
 
 /* ── 시작 전 점검 — 설정이 없으면 뜨지 않는다(fail closed) ───────────── */
-export function validateConfig({ token, allowlist, permissionMode }) {
+export function validateConfig({ token, allowlist, permissionMode, preset }) {
   const errors = [];
   if (!token) errors.push('TELEGRAM_BOT_TOKEN 이 없습니다. @BotFather 에서 발급해 .env.local 에 넣으세요.');
   if (!allowlist || allowlist.length === 0) {
@@ -199,6 +238,9 @@ export function validateConfig({ token, allowlist, permissionMode }) {
   const modes = ['acceptEdits', 'auto', 'manual', 'dontAsk', 'plan', 'bypassPermissions'];
   if (permissionMode && !modes.includes(permissionMode)) {
     errors.push(`TELEGRAM_PERMISSION_MODE 값이 잘못됐습니다: ${permissionMode} (${modes.join(' / ')})`);
+  }
+  if (preset && !TOOL_PRESETS[preset]) {
+    errors.push(`TELEGRAM_TOOL_PRESET 값이 잘못됐습니다: ${preset} (${Object.keys(TOOL_PRESETS).join(' / ')})`);
   }
   return errors;
 }
@@ -277,12 +319,15 @@ async function main() {
   const setupMode = process.argv.includes('--setup');
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const allowlist = parseAllowlist(process.env.TELEGRAM_ALLOWED_CHAT_IDS);
-  const permissionMode = process.env.TELEGRAM_PERMISSION_MODE || 'acceptEdits';
+  const preset = process.env.TELEGRAM_TOOL_PRESET || 'safe';
   const taskTimeoutMs = Number(process.env.TELEGRAM_TASK_TIMEOUT_MS || 15 * 60 * 1000);
   const claudeBin = process.env.CLAUDE_BIN || 'claude';
 
   // --setup 은 화이트리스트를 만들기 전 단계라 chat_id 검사를 건너뛴다. 토큰은 여전히 필요하다.
-  const errors = validateConfig({ token, allowlist: setupMode ? ['0'] : allowlist, permissionMode });
+  const errors = validateConfig({
+    token, allowlist: setupMode ? ['0'] : allowlist,
+    permissionMode: process.env.TELEGRAM_PERMISSION_MODE, preset,
+  });
   if (errors.length) {
     console.error('\n설정이 모자랍니다:\n' + errors.map((e) => '  · ' + e).join('\n') + '\n');
     process.exit(1);
@@ -311,13 +356,21 @@ async function main() {
     }
   }
 
-  if (permissionMode === 'bypassPermissions') {
-    console.warn('\n경고: TELEGRAM_PERMISSION_MODE=bypassPermissions 입니다.');
-    console.warn('      텔레그램으로 들어온 말이 아무 제한 없이 이 PC 에서 실행됩니다. 권장하지 않습니다.\n');
+  const policy = resolveToolPolicy({ preset, permissionMode: process.env.TELEGRAM_PERMISSION_MODE });
+  const permissionMode = policy.permissionMode;
+
+  if (preset === 'full' || permissionMode === 'bypassPermissions') {
+    console.warn('\n─────────────────────────────────────────────────────────────');
+    console.warn(` 전체 권한 모드 (preset=${preset}, ${permissionMode})`);
+    console.warn(' 텔레그램으로 들어온 말이 제한 없이 이 PC 에서 실행됩니다 —');
+    console.warn(' push·배포·파일 삭제까지 PC 앞에 앉은 것과 동일합니다.');
+    console.warn(' 이제 chat_id 화이트리스트가 유일한 보안 경계입니다.');
+    console.warn(' 토큰이 유출되면 그 사람이 이 PC 에서 무엇이든 합니다.');
+    console.warn('─────────────────────────────────────────────────────────────\n');
   }
 
   const branch = await git(['rev-parse', '--abbrev-ref', 'HEAD']);
-  console.log(`@${me.username} 대기 중 · ${ROOT} · ${branch} · 허용 ${allowlist.length}명 · ${permissionMode}`);
+  console.log(`@${me.username} 대기 중 · ${ROOT} · ${branch} · 허용 ${allowlist.length}명 · ${preset}/${permissionMode}`);
   console.log('Ctrl+C 로 종료합니다.\n');
 
   /* 밀려 있던 옛 메시지를 흘려보낸다 — 봇을 껐다 켰더니 몇 시간 전 명령이
@@ -345,7 +398,7 @@ async function main() {
   /* claude 를 한 번 돌린다. stdout 은 NDJSON 이라 줄 단위로 파싱한다. */
   function runClaude(prompt, onProgress) {
     return new Promise((resolve) => {
-      const args = buildClaudeArgs({ sessionId: state.sessionId, permissionMode });
+      const args = buildClaudeArgs({ sessionId: state.sessionId, ...policy });
       const child = spawn(claudeBin, args, { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] });
       state.child = child;
 
@@ -493,6 +546,8 @@ async function main() {
         `변경: ${st ? '\n' + st : '없음 (깨끗)'}`,
         `대화: ${state.sessionId ? '이어짐' : '새 대화'}`,
         `상태: ${state.busy ? '작업 중' : '대기'}${state.pending ? ' · 확인 대기 1건' : ''}`,
+        // 어느 권한으로 도는지 폰에서 확인할 수 있어야 한다 — full 인 줄 모르고 쓰면 안 된다.
+        `권한: ${preset}${preset === 'full' ? ' (push·배포 가능)' : ' (읽기·편집·테스트만)'}`,
       ].join('\n')));
     }
 

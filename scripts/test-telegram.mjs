@@ -17,8 +17,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {
   parseEnvFile, parseAllowlist, splitMessage, isRiskyPrompt, buildClaudeArgs,
-  formatToolLine, formatDuration, validateConfig, explainTelegramError,
-  DEFAULT_ALLOWED_TOOLS, DEFAULT_DISALLOWED_TOOLS,
+  formatToolLine, formatDuration, validateConfig, explainTelegramError, resolveToolPolicy,
+  DEFAULT_ALLOWED_TOOLS, DEFAULT_DISALLOWED_TOOLS, TOOL_PRESETS,
 } from './telegram-bot.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -93,6 +93,50 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
   // Bash 를 통째로 여는 순간 위 제한이 전부 무의미해진다.
   if (DEFAULT_ALLOWED_TOOLS.includes('Bash')) fail('Bash 가 접두 지정 없이 통째로 열려 있다');
   else pass('Bash 는 접두 지정으로만 허용');
+}
+
+/* ── [2-b] 프리셋 ──
+ * safe 가 기본이어야 한다. 설정을 안 건드린 사람이 자기도 모르게 push 권한으로 도는 일은 없어야 한다.
+ * full 은 "PC 앞에 앉은 것과 동일"이 목적이라 제한이 없는 것이 맞다 — 대신 그 사실을 검사로 못박는다.
+ */
+{
+  const safe = resolveToolPolicy({});
+  eq(safe.preset, 'safe', '프리셋 기본값은 safe');
+  eq(safe.permissionMode, 'acceptEdits', 'safe 의 권한 모드는 acceptEdits');
+  if (!safe.allowedTools.length) fail('safe 인데 도구 제한이 없다');
+  else pass('safe 는 도구를 좁힌다');
+
+  /* full 은 **도구를 하나씩 적어야** 동작한다. 실측으로 확인한 것:
+   *   --allowedTools 없음 → 거부 / "*" → 거부 / dontAsk → push 만 거부 / 명시 목록 → 동작.
+   * "제한이 없으니 비워 두자"로 되돌리면 정반대로 아무것도 못 하게 된다. */
+  const full = resolveToolPolicy({ preset: 'full' });
+  eq(full.disallowedTools.length, 0, 'full 은 차단 목록이 없다');
+  if (!full.allowedTools.includes('Bash')) fail('full 에 Bash 가 없다 — push·배포가 안 된다');
+  else pass('full 은 Bash 를 통째로 연다');
+  if (full.allowedTools.some((t) => t.includes('('))) fail('full 에 접두 지정이 남아 있다 — 전부 열리지 않는다');
+  else pass('full 은 접두 지정 없이 도구 이름만');
+  for (const t of ['Read', 'Edit', 'Write', 'Task']) {
+    if (!full.allowedTools.includes(t)) fail(`full 에 ${t} 가 빠졌다`);
+  }
+  pass('full 에 편집·검색·서브에이전트 도구 포함');
+
+  const fullArgs = buildClaudeArgs({ ...full }).join(' ');
+  if (!fullArgs.includes('--allowedTools')) fail('full 인데 허용 목록이 인자에 안 실렸다 — 비우면 전부 거부된다');
+  else pass('full 인자에 허용 목록 반영');
+  if (fullArgs.includes('--disallowedTools')) fail('full 인데 차단 목록이 붙었다');
+  else pass('full 은 차단 목록을 붙이지 않는다');
+  if (fullArgs.includes('--allowedTools *')) fail('와일드카드는 CLI 가 받지 않는다(실측) — 목록을 적어야 한다');
+  else pass('full 은 와일드카드를 쓰지 않는다');
+
+  // 환경변수로 권한 모드를 덮어쓸 수 있어야 한다(프리셋보다 사용자 지정이 우선).
+  eq(resolveToolPolicy({ preset: 'full', permissionMode: 'plan' }).permissionMode, 'plan',
+    '직접 지정한 권한 모드가 프리셋을 이긴다');
+
+  eq(resolveToolPolicy({ preset: '없는프리셋' }), null, '모르는 프리셋은 null');
+  if (validateConfig({ token: 'x', allowlist: ['1'], preset: '없는프리셋' }).length === 0) {
+    fail('잘못된 프리셋이 통과했다');
+  } else pass('잘못된 프리셋 거부');
+  eq(Object.keys(TOOL_PRESETS).sort().join(','), 'full,safe', '프리셋은 safe·full 둘');
 }
 
 // ── [3] 되돌리기 어려운 요청 ──
