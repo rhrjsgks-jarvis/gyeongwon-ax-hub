@@ -66,6 +66,55 @@ export function parseAllowlist(s) {
     .filter((x) => /^-?\d+$/.test(x));
 }
 
+/* ── claude 실행파일 찾기 ──────────────────────────────────────────────
+ * 윈도우에서 PATH 의 `claude` 는 실행파일이 아니라 `claude.cmd` 셸 스크립트라
+ * `spawn('claude')` 가 **ENOENT 로 죽는다**(실측 — 봇이 메시지는 받는데 답을 못 한다).
+ * `.cmd` 를 직접 가리켜도 안 된다 — Node 는 보안 조치 이후 `.cmd`/`.bat` 를
+ * `shell:true` 없이 spawn 하지 못하고, `shell:true` 로 열면 `Bash(git status:*)`
+ * 같은 인자를 cmd.exe 가 다시 해석해 도구 제한이 조용히 어긋난다.
+ *
+ * npm 전역 설치본에는 **네이티브 `claude.exe`** 가 함께 들어 있다. 그것을 직접
+ * 가리키면 셸을 거치지 않아 인자가 그대로 전달된다.
+ *
+ * 순서: CLAUDE_BIN(사람이 지정) → PATH 의 claude.exe → npm 전역의 claude.exe → 'claude'
+ * 리눅스·맥은 첫 줄에서 바로 'claude' 로 빠진다(확장자 없는 실행파일이 정상 동작한다).
+ */
+export function resolveClaudeBin(env = process.env, platform = process.platform, exists = fs.existsSync) {
+  if (env.CLAUDE_BIN) return env.CLAUDE_BIN;
+  if (platform !== 'win32') return 'claude';
+
+  const dirs = String(env.PATH || env.Path || '').split(path.delimiter).filter(Boolean);
+  for (const d of dirs) {
+    const p = path.join(d, 'claude.exe');
+    if (exists(p)) return p;
+  }
+  // npm 전역 폴더(PATH 에 있다)의 셸 스크립트가 실제로 가리키는 대상.
+  for (const d of dirs) {
+    const p = path.join(d, 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe');
+    if (exists(p)) return p;
+  }
+  return 'claude';   // 못 찾으면 그대로 두고, 실패했을 때 안내 문구가 무엇을 할지 알려 준다.
+}
+
+/* claude 를 못 띄웠을 때 무엇을 고쳐야 하는지 알려 준다. 토큰 오류와 같은 이유로,
+ * ENOENT 스택만 보면 세팅을 여기서 포기하게 된다(실제로 그랬다). */
+export function describeSpawnError(err, bin) {
+  const code = err && err.code;
+  if (code === 'ENOENT') {
+    return `claude 를 찾지 못했습니다 (${bin}).\n`
+      + '· 설치 확인:  claude --version\n'
+      + '· 윈도우에서 PATH 의 claude 는 실행파일이 아니라 claude.cmd 라 자동으로 못 찾을 수 있습니다.\n'
+      + '  .env.local 에 실행파일 경로를 직접 적어 주세요:\n'
+      + '  CLAUDE_BIN=C:\\Users\\<사용자>\\AppData\\Roaming\\npm\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude.exe';
+  }
+  if (code === 'EACCES') return `claude 를 실행할 권한이 없습니다 (${bin}).`;
+  if (code === 'EINVAL') {
+    return `claude 를 이 형태로는 띄울 수 없습니다 (${bin}).\n`
+      + 'CLAUDE_BIN 이 .cmd/.bat 를 가리키면 Node 가 거부합니다 — claude.exe 를 가리켜 주세요.';
+  }
+  return `claude 실행 실패: ${err && err.message}`;
+}
+
 /* ── 도구 제한 ─────────────────────────────────────────────────────────
  * Bash 는 접두 지정(`Bash(git diff:*)`)으로 읽기·테스트만 연다. 여기 없는 명령은
  * 헤드리스 모드에서 물어볼 상대가 없어 자동 거부된다.
@@ -321,7 +370,7 @@ async function main() {
   const allowlist = parseAllowlist(process.env.TELEGRAM_ALLOWED_CHAT_IDS);
   const preset = process.env.TELEGRAM_TOOL_PRESET || 'safe';
   const taskTimeoutMs = Number(process.env.TELEGRAM_TASK_TIMEOUT_MS || 15 * 60 * 1000);
-  const claudeBin = process.env.CLAUDE_BIN || 'claude';
+  const claudeBin = resolveClaudeBin();
 
   // --setup 은 화이트리스트를 만들기 전 단계라 chat_id 검사를 건너뛴다. 토큰은 여전히 필요하다.
   const errors = validateConfig({
@@ -453,7 +502,11 @@ async function main() {
           error: code === 0 ? '' : (stderr.trim().split('\n').slice(-5).join('\n') || `종료 코드 ${code}`),
         });
       };
-      child.on('error', (e) => { clearTimeout(timer); state.child = null; resolve({ text: '', ok: false, error: `claude 실행 실패: ${e.message}`, stopped: false }); });
+      child.on('error', (e) => {
+        clearTimeout(timer);
+        state.child = null;
+        resolve({ text: '', ok: false, error: describeSpawnError(e, claudeBin), stopped: false });
+      });
       child.on('close', done);
 
       child.stdin.end(prompt);

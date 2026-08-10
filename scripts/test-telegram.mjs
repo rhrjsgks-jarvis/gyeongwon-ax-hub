@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url';
 import {
   parseEnvFile, parseAllowlist, splitMessage, isRiskyPrompt, buildClaudeArgs,
   formatToolLine, formatDuration, validateConfig, explainTelegramError, resolveToolPolicy,
+  resolveClaudeBin, describeSpawnError,
   DEFAULT_ALLOWED_TOOLS, DEFAULT_DISALLOWED_TOOLS, TOOL_PRESETS,
 } from './telegram-bot.mjs';
 
@@ -268,6 +269,43 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
 
   eq(formatDuration(5000), '5초', '경과 시간 — 초');
   eq(formatDuration(125000), '2분 5초', '경과 시간 — 분');
+}
+
+// ── claude 실행파일 찾기 ──
+// 윈도우에서 PATH 의 claude 는 claude.cmd 셸 스크립트라 spawn 이 ENOENT 로 죽는다.
+// 봇이 메시지는 받는데 답을 못 하는 형태로 나타나 원인을 찾기 어렵다.
+{
+  // 경로는 path.join / path.delimiter 로 짓는다 — 그래야 리눅스 CI 와 윈도우에서
+  // 같은 문자열이 나온다(구분자·구분문자가 플랫폼마다 다르다).
+  const SYS = path.join('C:', 'Windows', 'system32');
+  const NPM = path.join('C:', 'Users', 'u', 'AppData', 'Roaming', 'npm');
+  const EXE = path.join(NPM, 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe');
+  const winEnv = { PATH: [SYS, NPM].join(path.delimiter) };
+  const has = (set) => (p) => set.has(p);
+
+  eq(resolveClaudeBin({ CLAUDE_BIN: '/opt/claude' }, 'linux', () => false), '/opt/claude',
+    'CLAUDE_BIN 을 적었으면 그것을 쓴다');
+  eq(resolveClaudeBin({}, 'linux', () => false), 'claude',
+    '리눅스·맥은 PATH 의 claude 를 그대로 쓴다');
+
+  // .cmd 만 있는 전형적인 윈도우 설치 — npm 전역 폴더의 실행파일까지 찾아 들어가야 한다
+  eq(resolveClaudeBin(winEnv, 'win32', has(new Set([path.join(NPM, 'claude.cmd'), EXE]))), EXE,
+    '윈도우 — .cmd 를 건너뛰고 네이티브 claude.exe 를 찾는다');
+
+  // PATH 에 claude.exe 가 바로 있으면 그것이 우선
+  eq(resolveClaudeBin(winEnv, 'win32', has(new Set([path.join(NPM, 'claude.exe'), EXE]))), path.join(NPM, 'claude.exe'),
+    '윈도우 — PATH 의 claude.exe 가 있으면 그것을 먼저 쓴다');
+
+  eq(resolveClaudeBin(winEnv, 'win32', () => false), 'claude',
+    '못 찾으면 claude 로 두고 실패 안내에 맡긴다');
+
+  // 못 찾았을 때 스택이 아니라 무엇을 고칠지 알려 준다
+  const enoent = describeSpawnError({ code: 'ENOENT', message: 'spawn claude ENOENT' }, 'claude');
+  if (!enoent.includes('CLAUDE_BIN')) fail('ENOENT 안내에 무엇을 고칠지(CLAUDE_BIN)가 없다');
+  else pass('claude 를 못 찾으면 CLAUDE_BIN 을 알려 준다');
+  if (!describeSpawnError({ code: 'EINVAL', message: 'x' }, 'c.cmd').includes('.exe'))
+    fail('EINVAL 안내에 .cmd → .exe 지시가 없다');
+  else pass('.cmd 를 가리켰을 때 .exe 로 바꾸라고 알려 준다');
 }
 
 console.log(ok ? '\n전부 통과' : '\n실패 있음');

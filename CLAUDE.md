@@ -1152,6 +1152,27 @@ public/search-index.json`이 둘 다 0인지 확인할 것.
 - **폴링이 실패해도 죽지 않는다**(지수 백오프, 최대 60초). 매장에서 다시 켜 줄 사람이 없다.
 - 작업은 **한 번에 하나만** 돈다. 같은 작업 트리에서 `claude` 를 둘 돌리면 파일이 서로 엉킨다.
 
+### 윈도우에서 `claude` 를 못 띄우던 문제 (2026-08-10)
+
+**`spawn('claude')` 가 윈도우에서 ENOENT 로 죽는다.** PATH 의 `claude` 는 실행파일이 아니라
+`claude.cmd` 셸 스크립트이고, Node 는 확장자 없는 이름으로 `.cmd` 를 찾지 않는다. 증상이
+고약하다 — **봇은 멀쩡히 뜨고 메시지도 받는데 답만 못 한다.** 봇 문제로 보여 토큰·화이트리스트를
+계속 뒤지게 된다(실제로 그랬다).
+
+- **`.cmd` 를 직접 가리켜도 안 된다.** Node 는 보안 조치 이후 `.cmd`/`.bat` 를 `shell:true`
+  없이 spawn 하지 못한다. 그렇다고 `shell:true` 로 열면 `Bash(git status:*)` 같은 인자를
+  cmd.exe 가 다시 해석해 **도구 제한이 조용히 어긋난다** — 이 봇에서 제일 위험한 종류의 고장이다.
+- npm 전역 설치본에는 **네이티브 `claude.exe`** 가 함께 들어 있다
+  (`<npm전역>/node_modules/@anthropic-ai/claude-code/bin/claude.exe`). `resolveClaudeBin()` 이
+  이것을 찾아 쓴다 — 셸을 거치지 않아 인자가 그대로 전달된다.
+- 찾는 순서: `CLAUDE_BIN` → PATH 의 `claude.exe` → npm 전역의 `claude.exe` → `claude`.
+  **리눅스·맥은 첫 줄에서 바로 `claude` 로 빠진다** — 그쪽은 확장자 없는 실행파일이 정상이다.
+- 그래도 못 찾으면 `describeSpawnError()` 가 **무엇을 고칠지** 알려 준다(ENOENT → `CLAUDE_BIN`,
+  EINVAL → `.cmd` 말고 `.exe`). 토큰 오류를 사람 말로 바꾼 것과 같은 이유다 — 스택만 보면
+  세팅을 여기서 포기한다.
+- 테스트는 경로를 **`path.join`·`path.delimiter` 로 짓는다.** 문자열로 박으면 리눅스 CI 에서
+  구분자가 달라 깨진다.
+
 ## 운영 종료된 모듈
 
 - **패키지 플래너**(2026-08-03 종료) — `/planner` 라우트·`package-planner.html`·`test-planner.mjs`를
