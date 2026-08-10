@@ -447,15 +447,23 @@ function resetUrlTabInputs() {
     assertTrue(dressVals.includes('595 × 1,960 × 595'), '삼성 DF80H24R1D 치수(dp 카탈로그)가 렌더되지 않음');
     assertTrue(dressVals.includes('600 × 1,965 × 620'), 'LG SC5MBR80S 치수(LG 카탈로그)가 렌더되지 않음');
 
-    // 가격 미확인 모델: 드롭다운은 "가격 문의", 비교표에는 가격 행이 아예 없어야 한다
+    assertTrue(![...val('sel-comp').querySelectorAll('option')].some((o) => o.textContent.includes('undefined')),
+      '드롭다운에 undefined가 새어 나옴');
+
+    /*
+     * 가격 미확인 모델: 드롭다운은 "가격 문의", 비교표에는 가격 행이 아예 없어야 한다.
+     * 예전에는 에어드레서 SC5GMR60S 로 봤는데 공식몰 가격을 채우면서 값이 생겼다.
+     * 86MRGB96BKA 는 LG 공식몰에 아예 없는(오프라인 전용으로 보이는) 모델이라 가격을 못 채운다.
+     */
+    window.selectCat('TV');
     const optTexts = [...val('sel-comp').querySelectorAll('option')].map((o) => o.textContent);
-    assertTrue(optTexts.some((t) => t.includes('SC5GMR60S') && t.includes('가격 문의')),
+    assertTrue(optTexts.some((t) => t.includes('86MRGB96BKA') && t.includes('가격 문의')),
       '가격 미확인 모델이 "가격 문의"로 표기되지 않음');
-    assertTrue(!optTexts.some((t) => t.includes('undefined')), '드롭다운에 undefined가 새어 나옴');
-    val('sel-comp').value = String(optTexts.findIndex((t) => t.includes('SC5GMR60S')));
+    val('sel-comp').value = String(optTexts.findIndex((t) => t.includes('86MRGB96BKA')));
     window.renderResult();
     assertTrue(![...val('spec-table').querySelectorAll('.spec-label')].some((td) => td.textContent.includes('가격')),
       '가격이 없는 모델인데 가격 행이 렌더됨');
+    window.selectCat('에어드레서');
 
     // 로봇청소기 진공도 / 무선청소기 최대 흡입력 행
     window.selectCat('로봇청소기');
@@ -524,7 +532,8 @@ function resetUrlTabInputs() {
       ['세탁기·콤보', 'FC2521SX6C', ['건조 용량', '제품 크기'], '700 × 990 × 885'],
       ['식기세척기', 'DEE6BGE',     ['설치 타입', '제품 크기'], '598 × 815 × 567'],
       ['에어컨',     'FQ25GN9BE1',  ['냉방 면적', '실내기 크기'], '380 × 1,915 × 295'],
-      ['냉장고',     'M876GGA431',  ['총 용량', '제품 크기'], '914 × 1,860 × 918'],
+      // M876GGA431 은 단종되어 후속 M876GBB231 로 교체했다(같은 라인·871L·1등급, 치수 동일)
+      ['냉장고',     'M876GBB231',  ['총 용량', '제품 크기'], '914 × 1,860 × 918'],
       ['TV',        '86MRGB96BKA', ['패널 방식', '제품 크기'], '1,925 × 1,105 × 46.1'],
       ['인덕션',     'BEF3ANHLE',   ['전체 출력', '상판 타공'], '580 × 520 × 59'],
     ];
