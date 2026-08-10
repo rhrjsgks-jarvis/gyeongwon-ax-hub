@@ -259,7 +259,15 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const TL_KEYS = DONE_KEYS.filter((k) => (window.eval(`(DATA['${k}']||{}).contract`) !== '자가관리'));
     if (prodOpts.length !== TL_KEYS.length) fail(`timeline: expected ${TL_KEYS.length} product options, got ${prodOpts.length}`);
     const circles = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
-    if (circles !== 4) fail(`timeline: default aircon/12개월형 expected 4 round circles, got ${circles}`); // TL_MONTHS.aircon[12] = [12,24,48,60]
+    /*
+     * 에어컨 12개월형은 **6회**다 — A타입 기본점검·케어 4회(12·24·48·60개월) +
+     * B타입 기본 세척 2회(36·72개월). 예전에는 화면이 A타입만 그려 4회로 보였고
+     * 이 검사도 4를 기대해 그 상태를 정상으로 굳혀 두고 있었다. total12 는 줄곧
+     * "총 6회"라고 말하고 있었으므로 화면이 안내와 어긋나 있던 것이다.
+     */
+    if (circles !== 6) fail(`timeline: 에어컨 12개월형은 6회여야 하는데 ${circles}회 (A타입 4회 + B타입 2회)`);
+    const kinds = [...doc.querySelectorAll('#timelinePane .tl-kind')].map((e) => e.textContent);
+    if (kinds.filter((x) => /세척/.test(x)).length !== 2) fail(`timeline: 에어컨 12개월형에 B타입(기본 세척) 2회가 안 보인다 — ${kinds.join(',')}`);
 
     /*
      * 36개월 전용 제품으로 넘어가면 **플랜이 36으로 보정돼야 한다.**
@@ -323,44 +331,48 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
   } catch (e) {
     fail('toggleSell threw: ' + e.message);
   }
-
   /*
-   * 타임라인 회차 정합성 — TL_MONTHS 는 DATA 의 rounds 와 반드시 같아야 한다.
+   * 타임라인 회차 정합성 — **DATA 하나만 보고 검사한다.**
    *
-   * 이 검사가 없어서 다섯 곳이 어긋난 채로 배포돼 있었다(2026-08-11). 화면은 조용히
-   * 틀린 회차를 그렸고 사용자가 "AI콤보 36개월형이 6회로 나온다"고 알려 준 뒤에야 드러났다.
-   * DATA 는 손으로 다듬는 자료라 앞으로도 회차가 바뀔 텐데, 그때 TL_MONTHS 를 같이
-   * 안 고치면 같은 사고가 난다.
+   * 예전에는 TL_MONTHS 라는 방문시점 표를 DATA 와 따로 들고 있었는데, 둘이 갈라져
+   * 다섯 곳이 어긋난 채 배포돼 있었다(2026-08-11, 사용자가 "AI콤보 36개월형이 6회로
+   * 나온다"고 알려 줘서 드러났다). 표를 없애고 careSchedule() 이 DATA 에서 직접
+   * 만들게 했으므로, 이제 볼 것은 "그 일정이 계약과 맞는가"다.
    *
-   * 에어컨 12 만 예외다 — rounds 가 비어 있어 대조할 근거가 없다(별도 확인 대상).
+   * 규칙: **계약기간 ÷ 주기**. 72개월 계약이면 12개월형 6회·36개월형 2회다.
+   * **계약기간을 72로 못박지 말 것** — 로봇청소기는 60개월(5년형)이라 12개월형이 5회이고,
+   * 처음에 72로 적었다가 멀쩡한 데이터를 오류로 잡았다. contract 문구에서 읽는다.
+   * 회차는 오름차순이고 계약기간을 넘지 않는다. total 문구("총 6회")가 있으면 그 수와도
+   * 맞아야 하고, 모든 회차에 케어 종류가 있어야 한다(무엇이 나가는지 못 적으면 상담에 못 쓴다).
+   * 자가관리 제품은 방문 케어가 아니라 대상이 아니다.
    */
   try {
-    const DATA = window.eval('JSON.stringify(DATA)') && JSON.parse(window.eval('JSON.stringify(DATA)'));
-    const TL = JSON.parse(window.eval('JSON.stringify(TL_MONTHS)'));
-    const EXEMPT = new Set(['aircon:12']);   // rounds 가 비어 있어 대조 불가
+    const DATA = JSON.parse(window.eval('JSON.stringify(DATA)'));
     let n = 0;
     for (const [k, d] of Object.entries(DATA)) {
-      // 자가관리 제품은 방문 케어가 아니다 — rounds 가 "사용 후 매회 / 연 1회 권장" 같은
-      // 관리 안내라 개월수로 대조할 대상이 아니고, 타임라인 목록에서도 빠진다.
       if (d.contract === '자가관리') continue;
       for (const pl of ['12', '36']) {
-        if (EXEMPT.has(`${k}:${pl}`)) continue;
-        const plan = d['plan' + pl];
-        const months = (TL[k] || {})[pl];
-        if (!plan && months) { fail(`[${k}] plan${pl} 이 없는데 TL_MONTHS 에 ${months.length}회가 남아 있다 — 플랜을 바꿔도 이 회차가 그려진다`); continue; }
-        if (!plan) continue;
-        const rounds = (plan.rounds || []).length;
-        if (!rounds) continue;                       // 내용이 아직 안 채워진 플랜
-        if (!months) { fail(`[${k}] plan${pl} 은 ${rounds}회인데 TL_MONTHS 에 없다 — 타임라인이 비어 보인다`); continue; }
-        if (months.length !== rounds) { fail(`[${k}] plan${pl} rounds ${rounds}회 ≠ 타임라인 ${months.length}회`); continue; }
-        // 회차 문구의 개월수와 타임라인 값이 같아야 한다 ("36개월차 (3년차)" → 36)
-        const fromRounds = plan.rounds.map((r) => parseInt(String(r.month).replace(/[^0-9]/, '') , 10));
-        const mism = fromRounds.map((m, i) => (m === months[i] ? null : `${i + 1}회차 ${m} vs ${months[i]}`)).filter(Boolean);
-        if (mism.length) fail(`[${k}] plan${pl} 개월이 어긋남 — ${mism.join(', ')}`);
-        else n++;
+        if (!d['plan' + pl]) continue;
+        const sched = JSON.parse(window.eval(`JSON.stringify(careSchedule(DATA['${k}'],'${pl}'))`));
+        if (!sched.length) { fail(`[${k}] plan${pl} 에서 회차 일정을 못 만들었다 — 타임라인이 비어 보인다`); continue; }
+        const months = sched.map((x) => x.month);
+        const cm = String(d.contract || '').match(/(\d+)\s*개월/);
+        if (!cm) { fail(`[${k}] contract 에서 계약기간을 못 읽는다 — "${d.contract}"`); continue; }
+        const contractM = +cm[1];
+        const expect = Math.floor(contractM / +pl);
+        if (months.some((m, i) => i && m <= months[i - 1])) fail(`[${k}] plan${pl} 회차가 오름차순이 아니다 — ${months.join(',')}`);
+        else if (months[months.length - 1] > contractM) fail(`[${k}] plan${pl} 마지막 회차 ${months[months.length - 1]}개월 — 계약 ${contractM}개월을 넘는다`);
+        else if (months.length !== expect) fail(`[${k}] plan${pl} 은 ${months.length}회 — 계약 ${contractM}개월 ÷ ${pl}개월이면 ${expect}회여야 한다 (${months.join(',')})`);
+        else {
+          const label = d['total' + pl];
+          const said = label && String(label).match(/(\d+)\s*회/);
+          if (said && +said[1] !== months.length) fail(`[${k}] plan${pl} 안내는 "${label}" 인데 일정은 ${months.length}회`);
+          else if (sched.some((x) => !x.kind)) fail(`[${k}] plan${pl} 에 케어 종류가 없는 회차가 있다 — 무엇이 나가는지 못 적는다`);
+          else n++;
+        }
       }
     }
-    if (ok) console.log(`OK: 타임라인 회차 정합성 ${n}개 플랜 (rounds ↔ TL_MONTHS 개월까지 일치)`);
+    if (ok) console.log(`OK: 타임라인 회차 정합성 ${n}개 플랜 (계약 ÷ 주기 · 오름차순 · total 문구 · 케어 종류)`);
   } catch (e) {
     fail('타임라인 정합성 검사 실패: ' + e.message);
   }

@@ -2414,21 +2414,46 @@ function switchToCare(key){
  * [tlPlan] 만 읽어 '12b' 를 그리지 않으므로 4회만 보인다. 추정으로 합치면 없는 회차를
  * 만들어 내는 셈이라 그대로 두고 별도로 확인한다.
  */
-const TL_MONTHS = {
-  aircon:   {12:[12,24,48,60], '12b':[36,72], 36:[36,72]},
-  aicombo:  {36:[36,72]},
-  washer:   {36:[36,72]},
-  dryer:    {36:[36,72]},
-  fridge:   {36:[36,72]},
-  kimchi:   {12:[12,24,36,48,60,72], 36:[36,72]},
-  dish:     {12:[12,24,36,48,60,72], 36:[36,72]},
-  // 에어드레서는 36개월형(36·72개월차 2회)이 DATA 에 있는데 여기 빠져 있어 타임라인이 비어 있었다
-  dresser:  {12:[12,24,36,48,60,72], 36:[36,72]},
-  airpur_reusable:{12:[12,24,36,48,60,72]},
-  airpur_s:       {12:[12,24,36,48,60,72]},
-  purifier_under: {12:[12,24,36,48,60,72]},
-  vacuum:         {12:[12,24,36,48,60,72]},
-};
+/*
+ * 방문 시점 표(TL_MONTHS)를 없앴다 — DATA 와 따로 관리하다 다섯 곳이 어긋났다.
+ * 이제 careSchedule() 이 DATA 에서 직접 만든다. 자료가 한 곳이면 갈라질 수가 없다.
+ */
+
+/*
+ * 회차 일정 — 12개월형·36개월형을 **같은 모양으로** 돌려준다.
+ *
+ * DATA 가 두 가지 모양을 쓴다.
+ *   ① 대부분: plan.rounds = [{month:"36개월차 (3년차)", badge, items, note}, …]
+ *   ② 에어컨 12개월형만: plan.typeA / plan.typeB — 한 타입이 여러 회차를 맡는다
+ *      (A "기본점검·케어" 1·2·4·5회차 = 12·24·48·60개월 / B "기본 세척" 3·6회차 = 36·72개월).
+ *      둘을 합쳐야 6회가 되고 total12 의 "총 6회"와 맞는다.
+ *
+ * 타임라인은 여태 ①만 알아서 에어컨 12개월형에서 typeA 4회만 그리고 typeB 2회를 통째로
+ * 버렸다 — 화면은 4회인데 안내는 6회라고 말하고 있었다(2026-08-11 사용자 요청으로 동기화).
+ * 개월수는 두 모양 모두 문구에서 읽는다("36개월차" · "3회차(36개월)").
+ */
+function careSchedule(d, pl){
+  const plan = (d||{})['plan'+pl];
+  if(!plan) return [];
+  const num = (s)=>{ const m = String(s).match(/(\d+)\s*개월/); return m ? +m[1] : null; };
+  const out = [];
+  if(Array.isArray(plan.rounds) && plan.rounds.length && typeof plan.rounds[0] === 'object'){
+    plan.rounds.forEach(function(r){
+      const m = num(r.month);
+      if(m != null) out.push({month:m, kind:r.badge, items:r.items||[], note:r.note});
+    });
+  } else {
+    ['typeA','typeB'].forEach(function(t){
+      const T = plan[t];
+      if(!T) return;
+      (T.rounds||[]).forEach(function(lbl){
+        const m = num(lbl);
+        if(m != null) out.push({month:m, kind:T.sub||T.label, items:T.items||[], note:T.note});
+      });
+    });
+  }
+  return out.sort(function(a,b){ return a.month - b.month; });
+}
 
 let tlKey='aircon', tlPlan='12', tlYear=2026, tlMonth=7;
 
@@ -2459,7 +2484,9 @@ function renderTimeline(){
   let yearOpts = [2024,2025,2026,2027,2028,2029,2030].map(y=>'<option value="'+y+'" '+(y===tlYear?'selected':'')+'>'+y+'년</option>').join('');
   let monthOpts = Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===tlMonth?'selected':'')+'>'+(i+1)+'월</option>').join('');
 
-  const months = ((TL_MONTHS[tlKey]||{})[tlPlan]) || [];
+  /* 회차·내용은 DATA 에서 직접 만든다 — TL_MONTHS 와 갈라질 여지를 없앤다 */
+  const sched = careSchedule(d, tlPlan);
+  const months = sched.map(function(x){ return x.month; });
   const now = new Date();
   const startDate = new Date(tlYear, tlMonth-1, 1);
   const nowOffsetMonths = Math.max(0, (now.getFullYear()-startDate.getFullYear())*12 + (now.getMonth()-startDate.getMonth()));
@@ -2495,20 +2522,18 @@ function renderTimeline(){
    *
    * months 와 rounds 는 순서·개월수가 일치한다(test-care 가 대조한다). 그래서 i 로 짝지어도 안전하다.
    */
-  const plan = d['plan'+tlPlan] || {};
-  const rounds = plan.rounds || [];
   let listHtml = '';
   months.forEach((m,i)=>{
     const dt = new Date(tlYear, tlMonth-1+m, 1);
     const isPast = dt < now;
     const col = tlPlan==='12'?'p12c':'p36c';
-    const r = rounds[i];
+    const r = sched[i];
     const items = (r && r.items) || [];
     listHtml += '<div class="tl-item" style="'+(isPast?'opacity:.55':'')+'">' +
       '<div class="tl-dot '+col+'">'+(i+1)+'</div>' +
       '<div class="tl-body">' +
         '<div class="tl-round">'+(i+1)+'회차'+
-          (r && r.badge ? '<span class="tl-kind">'+r.badge+'</span>' : '')+
+          (r && r.kind ? '<span class="tl-kind">'+r.kind+'</span>' : '')+
           (isPast?'<span class="tl-done">✓ 완료</span>':'')+'</div>' +
         '<div class="tl-date">'+dt.getFullYear()+'년 '+(dt.getMonth()+1)+'월 · 구독 '+m+'개월차</div>' +
         (items.length
