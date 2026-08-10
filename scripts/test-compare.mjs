@@ -10,10 +10,11 @@ import { JSDOM } from 'jsdom';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readApp } from './lib/read-app.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const htmlPath = path.join(__dirname, '..', 'public', 'compare-app.html');
-const rawHtml = fs.readFileSync(htmlPath, 'utf8');
+const rawHtml = readApp('compare-app.html');
 
 let ok = true;
 function fail(msg) { console.log(`ERROR: ${msg}`); ok = false; }

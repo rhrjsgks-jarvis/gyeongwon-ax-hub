@@ -240,6 +240,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 .modal-body{padding:16px 18px;}
 .modal-desc{font-size:12.5px;color:var(--gray);line-height:1.6;margin-bottom:12px;}
 </style>
+<script src="prod-symbols.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
@@ -2490,6 +2491,18 @@ renderHistory();
 (function(){
   const cat = new URLSearchParams(location.search).get('cat');
   if(cat && DB[cat]){ switchTab('db'); selectCat(cat); }
+})();
+</script>
+<script>
+/* 제품 이모지 자리를 심벌로 갈아 끼운다 — 화면이 다시 그려질 때마다 */
+(function(){
+  if (typeof upgradeProdIcons !== "function") return;
+  var run = function(){ try { upgradeProdIcons(document); } catch(e){} };
+  run();
+  document.addEventListener("DOMContentLoaded", run);
+  new MutationObserver(function(){
+    clearTimeout(window.__psymT); window.__psymT = setTimeout(run, 40);
+  }).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 </body>

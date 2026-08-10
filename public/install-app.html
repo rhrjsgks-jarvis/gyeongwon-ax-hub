@@ -204,6 +204,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <footer>세일즈 코파일럿 · 제품별 설치환경 가이드 · 경원영업팀</footer>
 <div class="toast" id="toast"></div>
 
+<script src="prod-symbols.js"></script>
 <script>
 /* ═══════════════════════════════════════════
    설치환경 DB — 출처: samsung.com 구매/설치가이드,
@@ -1122,6 +1123,18 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 (function(){
   const cat = new URLSearchParams(location.search).get('cat');
   if(cat && INSTALL_DB[cat]) selectCat(cat);
+})();
+</script>
+<script>
+/* 제품 이모지 자리를 심벌로 갈아 끼운다 — 화면이 다시 그려질 때마다 */
+(function(){
+  if (typeof upgradeProdIcons !== "function") return;
+  var run = function(){ try { upgradeProdIcons(document); } catch(e){} };
+  run();
+  document.addEventListener("DOMContentLoaded", run);
+  new MutationObserver(function(){
+    clearTimeout(window.__psymT); window.__psymT = setTimeout(run, 40);
+  }).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 </body>

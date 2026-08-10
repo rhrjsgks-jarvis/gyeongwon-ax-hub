@@ -16,10 +16,11 @@ import { JSDOM } from 'jsdom';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readApp } from './lib/read-app.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const htmlPath = path.join(__dirname, '..', 'public', 'finder-app.html');
-const html = fs.readFileSync(htmlPath, 'utf8');
+const html = readApp('finder-app.html');
 
 const dom = new JSDOM(html, { runScripts: 'dangerously', resources: 'usable', url: 'https://example.com/' });
 const { window } = dom;
