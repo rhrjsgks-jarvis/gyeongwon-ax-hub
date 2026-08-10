@@ -17,7 +17,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import {
   parseEnvFile, parseAllowlist, splitMessage, isRiskyPrompt, buildClaudeArgs,
-  formatToolLine, formatDuration, validateConfig,
+  formatToolLine, formatDuration, validateConfig, explainTelegramError,
   DEFAULT_ALLOWED_TOOLS, DEFAULT_DISALLOWED_TOOLS,
 } from './telegram-bot.mjs';
 
@@ -189,6 +189,27 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
     if (/\b\d{8,12}:[A-Za-z0-9_-]{30,}\b/.test(ex)) fail('.env.local.example 에 진짜 토큰이 들어 있다');
     else pass('.env.local.example 에 항목만 있고 실제 값 없음');
   }
+}
+
+/* ── [7] 세팅 중 오류 안내 ──
+ * 토큰이 틀렸을 때 스택 트레이스가 뜨면 원인을 알 수 없다 — 세팅 단계에서 가장 자주 만나는 상황이다.
+ */
+{
+  const t401 = explainTelegramError(401, 'Unauthorized');
+  if (!t401.includes('TELEGRAM_BOT_TOKEN')) fail('401 안내가 무엇을 고쳐야 하는지 말하지 않는다');
+  else pass('토큰이 틀리면 무엇을 고칠지 알려준다');
+
+  if (!explainTelegramError(409, '').includes('이미')) fail('409(중복 실행) 안내가 없다');
+  else pass('같은 봇 중복 실행 안내');
+
+  // 프록시가 HTML 을 돌려주는 경우 — JSON.parse 가 터지던 자리다.
+  const html = explainTelegramError(403, 'Host not in allowlist<html>...');
+  if (/SyntaxError|JSON/.test(html)) fail('JSON 파싱 오류가 그대로 새어 나온다');
+  if (!html.includes('403')) fail('알 수 없는 오류에 상태 코드가 안 보인다');
+  else pass('JSON 이 아닌 응답도 사람 말로 안내');
+
+  if (explainTelegramError(500, 'x'.repeat(5000)).length > 300) fail('오류 안내가 너무 길다');
+  else pass('오류 안내는 잘라서 보여준다');
 }
 
 // ── 화면 문구 ──

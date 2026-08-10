@@ -193,7 +193,7 @@ export function validateConfig({ token, allowlist, permissionMode }) {
   if (!allowlist || allowlist.length === 0) {
     errors.push(
       'TELEGRAM_ALLOWED_CHAT_IDS 가 비어 있습니다. 화이트리스트 없이 띄우면 누구나 이 PC 에 명령할 수 있습니다.\n' +
-      '  chat_id 를 모르면: npm run bot -- --setup',
+      '  chat_id 를 모르면 토큰을 먼저 넣은 뒤:  npm run bot -- --setup',
     );
   }
   const modes = ['acceptEdits', 'auto', 'manual', 'dontAsk', 'plan', 'bypassPermissions'];
@@ -209,22 +209,45 @@ export function validateConfig({ token, allowlist, permissionMode }) {
 
 const API = (token, method) => `https://api.telegram.org/bot${token}/${method}`;
 
+/* 세팅 중에 가장 자주 만나는 것이 "토큰이 틀렸다"와 "인터넷이 안 된다"인데,
+ * 그때 스택 트레이스가 뜨면 원인을 알 수 없다. 사람이 읽을 수 있는 말로 바꾼다. */
+export function explainTelegramError(status, bodyText) {
+  const head = String(bodyText ?? '').replace(/\s+/g, ' ').trim().slice(0, 120);
+  if (status === 401) return 'TELEGRAM_BOT_TOKEN 이 잘못됐습니다. @BotFather 에서 발급받은 값을 그대로 넣었는지 확인하세요.';
+  if (status === 404) return 'TELEGRAM_BOT_TOKEN 형식이 잘못된 것 같습니다 (숫자:영숫자 꼴이어야 합니다).';
+  if (status === 409) return '같은 봇이 이미 다른 곳에서 돌고 있습니다. 그쪽을 먼저 끄세요.';
+  if (status === 429) return '텔레그램이 요청을 제한하고 있습니다. 잠시 뒤 다시 시도하세요.';
+  return `텔레그램 응답을 이해할 수 없습니다 (HTTP ${status}): ${head}`;
+}
+
 async function tg(token, method, body, timeoutMs = 60000) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
+  let res;
   try {
-    const res = await fetch(API(token, method), {
+    res = await fetch(API(token, method), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body ?? {}),
       signal: ac.signal,
     });
-    const json = await res.json();
-    if (!json.ok) throw new Error(`${method} 실패: ${json.description || res.status}`);
-    return json.result;
+  } catch (e) {
+    // 프록시·방화벽·인터넷 끊김. abort 는 폴링 시간 초과라 그대로 흘려 재시도하게 둔다.
+    throw new Error(
+      e.name === 'AbortError'
+        ? `${method} 응답이 없습니다 (시간 초과)`
+        : `api.telegram.org 에 연결할 수 없습니다: ${e.message}`,
+    );
   } finally {
     clearTimeout(timer);
   }
+
+  // 텔레그램은 오류 때 JSON 이 아닌 본문을 돌려주기도 한다(프록시가 가로채면 특히).
+  const text = await res.text();
+  let json;
+  try { json = JSON.parse(text); } catch { throw new Error(explainTelegramError(res.status, text)); }
+  if (!json.ok) throw new Error(json.error_code ? explainTelegramError(json.error_code, json.description) : `${method} 실패: ${json.description || res.status}`);
+  return json.result;
 }
 
 const HELP = [
@@ -265,7 +288,10 @@ async function main() {
     process.exit(1);
   }
 
-  const me = await tg(token, 'getMe');
+  const me = await tg(token, 'getMe').catch((e) => {
+    console.error(`\n봇에 연결하지 못했습니다.\n  · ${e.message}\n`);
+    process.exit(1);
+  });
 
   if (setupMode) {
     console.log(`\n@${me.username} 에게 아무 메시지나 보내 보세요. chat_id 를 찍어 드립니다. (Ctrl+C 로 종료)\n`);
@@ -536,7 +562,9 @@ async function main() {
 // 직접 실행할 때만 봇을 띄운다. import 하면 위 순수 함수만 쓸 수 있다(테스트용).
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   main().catch((e) => {
-    console.error(e);
+    // 예상 못 한 것만 스택을 보여준다 — 세팅 단계 오류는 위에서 이미 사람 말로 걸러진다.
+    console.error(`\n봇이 멈췄습니다: ${e.message}\n`);
+    if (process.env.DEBUG) console.error(e);
     process.exit(1);
   });
 }
