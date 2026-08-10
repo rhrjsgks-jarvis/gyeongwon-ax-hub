@@ -130,12 +130,21 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .tl-bar{padding:14px 16px;overflow-x:auto}
 .tl-svg-wrap{min-width:600px}
 .tl-list{padding:0 16px 16px}
-.tl-item{background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;gap:12px;align-items:center}
+.tl-item{background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.tl-body{min-width:0;flex:1}
 .tl-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
 .tl-dot.p12c{background:linear-gradient(135deg,#1428A0,#2563EB)}
 .tl-dot.p36c{background:linear-gradient(135deg,#0D1B7A,#1428A0)}
-.tl-round{font-size:12.5px;font-weight:800;margin-bottom:1px}
+.tl-round{font-size:12.5px;font-weight:800;margin-bottom:1px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tl-date{font-size:11px;color:#9aa0a6}
+/* 케어 종류 — 회차마다 무엇이 나가는지가 한눈에 갈려야 한다(AI콤보 종합점검 ↔ 초음파 세척) */
+.tl-kind{background:#EEF2FF;color:#1428A0;border-radius:6px;padding:2px 7px;font-size:10.5px;font-weight:800}
+.tl-done{color:#0D1B7A;font-size:10.5px;font-weight:700}
+.tl-items{list-style:none;margin:7px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.tl-items li{display:flex;flex-direction:column;padding-left:9px;border-left:2px solid #DCE4FB}
+.tl-items b{font-size:11.5px;font-weight:700;color:#16181b}
+.tl-items span{font-size:10.5px;color:#8a9099;line-height:1.45;margin-top:1px}
+.tl-note{margin-top:7px;background:#F4F6FB;border-radius:8px;padding:7px 9px;font-size:10.5px;color:#5b6270;line-height:1.5}
 .tl-badge-sm{font-size:9px;padding:2px 7px;border-radius:6px;margin-top:3px;display:inline-block;font-weight:700;background:rgba(18,89,195,.1);color:#1259c3}
 /* === 계산기 === */
 .bar-wrap{margin-top:14px}
@@ -2477,16 +2486,37 @@ function renderTimeline(){
   });
   const svg = '<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" style="min-width:600px">'+svgDots+'</svg>';
 
+  /*
+   * 회차마다 **어떤 케어가 나가는지**를 함께 적는다(2026-08-11 사용자 요청).
+   * 예전에는 "N회차 방문케어"와 날짜만 찍고 DATA 의 badge·items 를 통째로 버렸다.
+   * 그런데 상담에서 나오는 질문은 "몇 번 오나"가 아니라 **"와서 뭘 해 주나"** 다.
+   * 특히 회차마다 내용이 다른 제품(AI콤보 1회차 종합점검 ↔ 2회차 초음파 세척)은
+   * 그 차이를 못 보여주면 상담사가 회차표를 따로 열어 봐야 한다.
+   *
+   * months 와 rounds 는 순서·개월수가 일치한다(test-care 가 대조한다). 그래서 i 로 짝지어도 안전하다.
+   */
+  const plan = d['plan'+tlPlan] || {};
+  const rounds = plan.rounds || [];
   let listHtml = '';
   months.forEach((m,i)=>{
     const dt = new Date(tlYear, tlMonth-1+m, 1);
     const isPast = dt < now;
     const col = tlPlan==='12'?'p12c':'p36c';
-    listHtml += '<div class="tl-item" style="'+(isPast?'opacity:.5':'')+'">' +
+    const r = rounds[i];
+    const items = (r && r.items) || [];
+    listHtml += '<div class="tl-item" style="'+(isPast?'opacity:.55':'')+'">' +
       '<div class="tl-dot '+col+'">'+(i+1)+'</div>' +
-      '<div>' +
-        '<div class="tl-round">'+(i+1)+'회차 방문케어 '+(isPast?'✓ 완료':'')+'</div>' +
-        '<div class="tl-date">'+dt.getFullYear()+'년 '+(dt.getMonth()+1)+'월 (구독 '+m+'개월차)</div>' +
+      '<div class="tl-body">' +
+        '<div class="tl-round">'+(i+1)+'회차'+
+          (r && r.badge ? '<span class="tl-kind">'+r.badge+'</span>' : '')+
+          (isPast?'<span class="tl-done">✓ 완료</span>':'')+'</div>' +
+        '<div class="tl-date">'+dt.getFullYear()+'년 '+(dt.getMonth()+1)+'월 · 구독 '+m+'개월차</div>' +
+        (items.length
+          ? '<ul class="tl-items">'+items.map(function(it){
+              return '<li><b>'+(it.ico||'·')+' '+it.nm+'</b>'+(it.det?'<span>'+it.det+'</span>':'')+'</li>';
+            }).join('')+'</ul>'
+          : '') +
+        (r && r.note && r.note.t ? '<div class="tl-note">'+r.note.t.replace(/\n/g,'<br>')+'</div>' : '') +
       '</div></div>';
   });
   if(!listHtml) listHtml = '<div style="text-align:center;color:#9aa0a6;font-size:12px;padding:20px">선택한 플랜에 타임라인 정보가 없습니다</div>';
