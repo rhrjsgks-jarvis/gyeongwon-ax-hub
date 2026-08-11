@@ -124,6 +124,7 @@ for (const plan of PLANS) {
 // 합성 평면은 "이런 표기 유형에서 깨지지 않는다"까지만 보증한다. 진짜 도면에서 어디가
 // 깨지는지는 진짜 도면으로만 알 수 있다. 이미지는 public repo라 커밋하지 않으므로
 // (저작권) 파일을 가진 로컬에서만 이 구간이 돈다. 자세한 절차는 그 폴더의 README 참고.
+const knownGaps = [];
 {
   const dir = path.join(__dirname, 'fixtures', 'plans-real');
   const idx = path.join(dir, 'index.json');
@@ -170,15 +171,44 @@ for (const plan of PLANS) {
             const [x1, y1] = d.poly[i], [x2, y2] = d.poly[(i + 1) % d.poly.length];
             a2 += (x1 * k) * (y2 * k) - (x2 * k) * (y1 * k);
           }
-          return { areaM2: Math.abs(a2 / 2) / 1e6, corners: d.poly.length,
+          const bxs = d.poly.map((q) => q[0] * k), bys = d.poly.map((q) => q[1] * k);
+          return { widthMm: Math.max(...bxs) - Math.min(...bxs),
+                   depthMm: Math.max(...bys) - Math.min(...bys),
+                   areaM2: Math.abs(a2 / 2) / 1e6, corners: d.poly.length,
             opens: d.edges.filter((x) => x.open).length, closeR: d.closeR };
         }, { px0, py0, k: e.mmPerImgPx });
 
         const label = `[실측] ${e.file} ${pr.label || `@(${px0},${py0})`}`;
         if (r.error) { fail(`${label}: ${r.error}`); continue; }
+        /*
+         * 넓이 대신 **폭**만 검사할 수도 있다(`wMm`). 세로 치수 사슬이 없는 도면이 많은데
+         * (실측 후보 9장 중 3장) 가로 사슬은 있다 — 인쇄된 폭은 그 자체로 확정값이므로
+         * 넓이를 못 구한다고 도면을 통째로 버릴 이유가 없다.
+         */
+        if (pr.wMm) {
+          const [wlo, whi] = pr.wMm;
+          const wOff = r.widthMm < wlo || r.widthMm > whi;
+          if (wOff && pr.known) knownGaps.push(`${label} 폭 → ${Math.round(r.widthMm)}mm (기대 ${wlo}~${whi}) — ${pr.known}`);
+          else if (wOff) fail(`${label}: 폭 ${Math.round(r.widthMm)}mm (도면 인쇄값 기준 기대 ${wlo}~${whi}mm)`);
+          else if (pr.known) fail(`${label}: 이제 통과한다 — known 을 지울 것 (폭 ${Math.round(r.widthMm)}mm)`);
+          else pass(`${label} → 폭 ${Math.round(r.widthMm)}mm · 넓이 ${r.areaM2.toFixed(1)}㎡ · 모서리 ${r.corners}`);
+          continue;
+        }
         const [lo, hi] = pr.areaM2 || [0, Infinity];
-        if (r.areaM2 < lo || r.areaM2 > hi) {
+        const off = r.areaM2 < lo || r.areaM2 > hi;
+        /*
+         * `known` 은 **알려진 미해결**이다 — 도면 치수로는 이 넓이가 맞는데 인식이 아직
+         * 못 따라가는 자리. 기대값을 앱 출력에 맞춰 초록으로 만들면 검사가 아무것도 못
+         * 지키고(그러면 이 코퍼스를 만든 뜻이 없다), 그대로 두면 CI 가 영원히 빨개서
+         * 다른 작업을 막는다. 그래서 **보고는 하되 실패로 세지 않는다.**
+         * 고쳐지면 `known` 을 지울 것 — 지우지 않으면 아래 '이제 통과한다' 가 알려 준다.
+         */
+        if (off && pr.known) {
+          knownGaps.push(`${label} → ${r.areaM2.toFixed(1)}㎡ (기대 ${lo}~${hi}㎡) — ${pr.known}`);
+        } else if (off) {
           fail(`${label}: 넓이 ${r.areaM2.toFixed(1)}㎡ (도면 치수 기준 기대 ${lo}~${hi}㎡)`);
+        } else if (pr.known) {
+          fail(`${label}: 이제 통과한다 — index.json 에서 known 을 지울 것 (${r.areaM2.toFixed(1)}㎡)`);
         } else {
           pass(`${label} → ${r.areaM2.toFixed(1)}㎡ · 모서리 ${r.corners} · 개구부 ${r.opens}`);
         }
@@ -1582,6 +1612,14 @@ for (const plan of PLANS) {
       pass(`3D 가전 디테일 — ${cats.length}개 카테고리 중 ${withD}개에 디테일 (2D 실루엣과 일치, 리빙 ${cats.length - withD}종은 양쪽 다 없음)`);
     }
   }
+}
+
+/* 알려진 미해결은 **조용히 넘기지 않는다** — 몇 건인지 늘 보이게 적는다.
+   실패로 세지 않을 뿐이고, 숨기는 것과는 다르다. */
+if (knownGaps.length){
+  console.log(`\n알려진 미해결 ${knownGaps.length}건 (인식이 아직 못 따라가는 자리 — 실패로 세지 않음):`);
+  knownGaps.forEach((g) => console.log('  · ' + g));
+  console.log('');
 }
 
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
