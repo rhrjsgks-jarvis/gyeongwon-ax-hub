@@ -136,6 +136,8 @@ function flatten(v, out = []) {
   const html = read('as-app.html');
   const DBA = literal(html, /\nconst DB = (\{[\s\S]*?\});\n/, 'as-app.html 의 DB');
   const CEN = literal(html, /\nconst CENTERS = (\[[\s\S]*?\n\]);/, 'as-app.html 의 CENTERS');
+  const OPS = literal(html, /\nconst OPS = (\{[\s\S]*?\n\});/, 'as-app.html 의 OPS');
+  const VOCHQ = literal(html, /\nconst VOC_HQ = (\{[\s\S]*?\});/, 'as-app.html 의 VOC_HQ');
   const B2B = literal(html, /\nconst B2B = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B');
   const IT = literal(html, /\nconst B2B_IT = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_IT');
   const SINK = literal(html, /\nconst SINK = (\[[\s\S]*?\n\]);/, 'as-app.html 의 SINK');
@@ -149,8 +151,11 @@ function flatten(v, out = []) {
   }
   for (const c of CEN) {
     add({ t: 'contact', m: 'as', title: `${c.t} (물류센터)`, sub: `${c.n} · ${c.a}`,
-      kw: [c.t, c.code, c.n, c.b, c.a, ...c.kw, '물류센터 배송 설치 관할 tc'].join(' '), href: '/as' });
+      kw: [c.t, c.code, c.n, c.b, c.a, ...c.kw, ...flatten(OPS[c.code]),
+        '물류센터 배송 설치 관할 tc 상황실 운영 voc'].join(' '), href: '/as' });
   }
+  add({ t: 'contact', m: 'as', title: '물류 VOC 본사 창구', sub: `${VOCHQ.n} · 배송·설치 VOC 접수`,
+    kw: [VOCHQ.n, ...flatten(VOCHQ.x), 'voc 물류 본사 접수 불만 배송 설치'].join(' '), href: '/as' });
   for (const c of B2B) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (빌트인 이전설치)`, sub: `${c.n} · ${c.a}`,
       kw: [c.p, c.c, c.code, c.n, ...flatten(c.x), c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });

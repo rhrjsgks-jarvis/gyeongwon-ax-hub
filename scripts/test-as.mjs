@@ -215,6 +215,10 @@ if (A.CONTACTS && /물류센터/.test(JSON.stringify(pane.textContent.match(/아
  * 아래 [7-d] 가 그것이 새어 들어오지 않았는지 검사한다.
  * ──────────────────────────────────────────────────────────── */
 const B = A.B2B, S = A.SINK, N = A.B2B_NATION, IT = A.B2B_IT;
+/* 사람 이름 + 직급 패턴. **직급 글자가 회사명 안에 들어 있는 경우를 걸러야 한다** —
+ * '프로서비스'(순천 협력사)가 '프로' 로 잡혔다. 이름 뒤에 붙어 **거기서 끝나는** 것만 본다. */
+const NAME_TITLE = /[가-힣]{2,3}(부장|차장|과장|대리|이사|상무|전무|사원|주임|파트장|센터장|프로)(?![가-힣])/;
+
 
 // [7-a] 표 크기
 if (!B || B.length !== 20) fail(`B2B 빌트인 관할이 ${B ? B.length : 0}행 — 원문은 20행이다`);
@@ -286,7 +290,7 @@ pass('싱크장 리폼 골든 3건');
   const blob = JSON.stringify([B, S, N, IT]);
   const leaks = [];
   if (/@/.test(blob)) leaks.push('이메일 주소');
-  if (/(부장|차장|과장|대리|이사|상무|전무|사원|주임|센터장)/.test(blob)) leaks.push('직급이 붙은 사람 이름');
+  if (NAME_TITLE.test(blob)) leaks.push('직급이 붙은 사람 이름');
   /* **막는 것은 `010`(휴대폰) 하나다**(2026-08-11 사용자 지시: "010번호를 제외한
      나머지번호는 적혀있는대로 적어주세요"). 나머지 국번은 업무 회선이라는 것이
      자료 소유자의 판단이고, 실제로 070 둘은 협력사 대표번호로 확인됐다.
@@ -430,6 +434,105 @@ pass('싱크장 리폼 골든 3건');
     } else continue;
   }
   pass('검색 결과를 누르면 탭 전환 + 묶음 펼침 + 목록 필터가 함께 걸린다 (3건)');
+}
+
+/* ────────────────────────────────────────────────────────────
+ * [9] 센터별 상황실 · 운영 · VOC (운영업무 협조(B2C) · VOC 연락처(B2C) 표)
+ * 두 표 모두 행 단위가 물류센터라 CENTERS 에 코드로 붙였다 — 따로 실으면 같은 센터가
+ * 세 번 나온다. 아래가 그 이어붙임이 어긋나지 않았는지 검사한다.
+ * ──────────────────────────────────────────────────────────── */
+const OPS = A.OPS, VOCHQ = A.VOC_HQ;
+
+// [9-a] 21곳 전부에 붙었는가 — 하나라도 빠지면 그 센터만 정보가 없는 채로 남는다
+{
+  const miss = C.filter((c) => !OPS[c.code]).map((c) => c.t);
+  if (miss.length) fail(`상황실·운영 정보가 없는 센터: ${miss.join(', ')}`);
+  else pass(`센터 ${C.length}곳 전부에 상황실·운영 연락처 연결`);
+  const orphan = Object.keys(OPS).filter((k) => !C.some((c) => c.code === k));
+  if (orphan.length) fail(`CENTERS 에 없는 코드가 OPS 에 있다: ${orphan.join(', ')}`);
+  else pass('OPS 코드가 전부 실제 센터를 가리킴');
+}
+
+// [9-b] **상황실 번호 = 물류 대표번호** — 21곳 중 19곳이 일치한다.
+// 두 자료(‘센터별 배송 서비스지역’ 26.1.2 · ‘B2B 권역현황’ 25.02)가 서로를 검산해 준다.
+// 어긋난 둘만 sitN 으로 따로 싣는다 — 그 예외가 늘어나면 어느 한쪽 표기가 틀린 것이다.
+{
+  const diff = C.filter((c) => OPS[c.code].sitN).map((c) => c.t).sort();
+  if (diff.join(',') !== '울산TC,창원TC') {
+    fail(`상황실 번호가 물류 대표번호와 다른 센터가 [${diff.join(', ')}] — 울산TC·창원TC 둘이어야 한다`);
+  } else pass('상황실 = 물류 대표번호 19/21 (다른 곳은 울산·창원뿐, 양쪽 다 표기)');
+  if (OPS.L128.sitN !== '054-254-0725' || OPS.L127.sitN !== '070-4694-4540') {
+    fail(`울산/창원 상황실 번호가 ${OPS.L128.sitN}/${OPS.L127.sitN} — 054-254-0725/070-4694-4540 이어야 한다`);
+  } else pass('울산·창원 상황실 골든값');
+}
+
+// [9-c] 골든값 — 원문에서 눈으로 옮긴 값
+for (const [code, sit, job, first] of [
+  ['L104', '명일', '가전 AC', '031-922-8544'],
+  ['L113', '삼우 F&G', '가전 AC', '032-678-8074'],
+  ['L133', '지엘', '통합', '031-799-5042'],
+  ['L117', '스마트로지텍', '가전 AC', '044-271-2926'],
+  ['L106', '새론', '통합', '064-724-1735'],
+]) {
+  const o = OPS[code];
+  if (o.sit !== sit || o.job !== job || o.op[0] !== first) {
+    fail(`${code}: ${o.sit}/${o.job}/${o.op[0]} — ${sit}/${job}/${first} 이어야 한다`);
+  }
+}
+pass('상황실·업무·운영 골든 5건');
+
+// 업무 구분은 원문의 두 값뿐이다
+{
+  const bad = Object.entries(OPS).filter(([, o]) => !['가전 AC', '통합'].includes(o.job));
+  if (bad.length) fail(`업무 구분이 원문에 없는 값: ${bad.map(([k, o]) => `${k}=${o.job}`).join(', ')}`);
+  else pass("업무 구분은 '가전 AC' / '통합' 둘뿐");
+}
+
+// [9-d] **010 은 여기서도 막는다.** 원문 VOC 표의 화성·원주는 010 번호밖에 없어 비워 뒀다 —
+// 그 둘에 voc 가 생겼다면 010 을 옮겨 온 것이다.
+{
+  const blob = JSON.stringify([OPS, VOCHQ]);
+  if (/010-\d{3,4}-\d{4}/.test(blob)) fail('상황실·운영·VOC 에 010 번호가 들어 있다');
+  else pass('상황실·운영·VOC 에 010 없음');
+  if (/@/.test(blob)) fail('상황실·운영·VOC 에 이메일이 들어 있다');
+  else if (NAME_TITLE.test(blob)) fail('상황실·운영·VOC 에 직급 붙은 사람 이름이 들어 있다');
+  else pass('담당자 이름·이메일 미포함');
+  for (const code of ['L108', 'L115']) {
+    if ((OPS[code].voc || []).length) fail(`${code}: 원문 VOC 는 010 뿐이라 비어 있어야 한다`);
+  }
+  pass('화성·원주 VOC 는 비움 (원문에 010 뿐)');
+}
+
+// [9-e] VOC 본사 창구 + 화면 렌더 + 번호로 되짚기
+{
+  if (VOCHQ.n !== '031-270-3518') fail(`VOC 본사 번호가 ${VOCHQ.n} — 031-270-3518 이어야 한다`);
+  else pass('물류 VOC 본사 창구 031-270-3518');
+
+  A.tab = 'contact';
+  const pane = doc.querySelector('#contactPane');
+  pane.querySelector('#g-lg').open = true;
+  const lines = pane.querySelectorAll('#lglist .xn');
+  if (lines.length < C.length) fail(`상황실 줄이 ${lines.length}개 — 센터 ${C.length}곳에 다 붙어야 한다`);
+  else pass(`상황실 줄 ${lines.length}개 렌더`);
+
+  // 번호를 보고 어느 센터인지 되짚는 일이 실제로 있다
+  const q = pane.querySelector('#lgq');
+  const type = (v) => { q.value = v; q.dispatchEvent(new window.Event('input')); };
+  type('031-270-3813');
+  const hit = pane.querySelectorAll('#lglist .ct');
+  if (hit.length !== 1 || !/평택TC/.test(hit[0].textContent)) {
+    fail(`운영 번호로 역검색 → ${hit.length}건 — 평택TC 하나여야 한다`);
+  } else pass("운영 번호 '031-270-3813' 로 평택TC 역검색");
+  type('스마트로지텍');
+  const h2 = pane.querySelectorAll('#lglist .ct');
+  if (h2.length !== 1 || !/세종TC/.test(h2[0].textContent)) {
+    fail(`상황실 협력사로 역검색 → ${h2.length}건 — 세종TC 하나여야 한다`);
+  } else pass("상황실 협력사 '스마트로지텍' 으로 세종TC 역검색");
+  type('');
+
+  // 에어컨 동시 발송 주의 — 원문 머리에 적힌 것이라 빠지면 안 된다
+  if (!/수원.*평택TC 주문을 동시/.test(pane.textContent)) fail('에어컨 수원·평택TC 동시 발송 주의가 화면에 없다');
+  else pass('에어컨 동시 발송 주의 노출');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

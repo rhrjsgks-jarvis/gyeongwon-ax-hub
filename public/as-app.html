@@ -324,6 +324,57 @@ const CENTERS = [
     kw:['군산시','김제시','논산시','부안군','부여군','서천군','완주군','익산시','임실군','장수군','전주시','진안군'] }
 ];
 const CBRANCH = ['전체', '서울', '중부', '남부', '서부'];
+/*
+ * 센터별 상황실 · 운영 · VOC 연락처 — 사내 배포본 'B2B+이전설치센터권역현황,연락처'(2025.02)의
+ * **운영업무 협조(B2C)** 표와 **VOC 연락처(B2C)** 표를 옮긴 것이다(2026-08-11 사용자 요청).
+ *
+ * **별도 표로 만들지 않고 `CENTERS` 에 붙인다.** 두 표 모두 행 단위가 물류센터(플랜트 코드)라
+ * 따로 실으면 21줄짜리 목록이 셋이 되어 같은 센터가 세 번 나온다 — 방금 "너무 길어진다"고
+ * 지적받은 그 문제다. 그래서 코드(`L1xx`)로 이어 붙여 **센터 한 줄에 모아** 보여준다.
+ *
+ * 대조하다 확인된 것: **상황실 번호가 물류센터 대표번호와 21곳 중 19곳이 정확히 같다.**
+ * 두 자료(‘센터별 배송 서비스지역’ 26.1.2 · 이 표 25.02)가 서로를 검산해 준 셈이다.
+ * 어긋난 둘은 판이 다른 것이므로 **양쪽 다 싣는다**(`sitN` 이 그 경우에만 채워진다):
+ *   · 울산 — 배송 1577-3967 ↔ 상황실 054-254-0725(동국)
+ *   · 창원 — 배송 1577-3966 ↔ 상황실 070-4694-4540(삼영물류)
+ *
+ * **번호는 010 만 빼고 원문대로 싣는다**(사용자 지시). 담당자 이름·이메일은 싣지 않는다 —
+ * 이 앱은 로그인 없는 공개 주소이고 저장소도 public 이다. 그래서 화성·원주의 VOC 연락처는
+ * 원문에 010 번호밖에 없어 비어 있다(`voc` 없음) — 그 센터는 운영 회선으로 안내한다.
+ *
+ *   job — 원문 '업무' 칸 (가전 AC / 통합)
+ *   sit — 상황실 운영 협력사     sitN — 상황실 번호(물류 대표번호와 다를 때만)
+ *   op  — 운영업무 협조 연락처   voc — VOC 연락처(운영과 다를 때만)
+ */
+const OPS = {
+  L104: { job:'가전 AC', sit:'명일',        op:['031-922-8544','031-922-8546~7'] },
+  L107: { job:'가전 AC', sit:'명일',        op:['070-4160-1037','070-4160-1034'] },
+  L113: { job:'가전 AC', sit:'삼우 F&G',    op:['032-678-8074','032-583-2307'] },
+  L133: { job:'통합',    sit:'지엘',        op:['031-799-5042','031-799-5021','1899-9300'] },
+  L108: { job:'통합',    sit:'삼우 F&G',    op:['031-270-3813','031-270-3807','031-270-3821','031-270-3803','1577-3922'],
+          note:'화성 플랜트가 셋이다 — 수원 L108 · 평택 L140 · AC 전용 L126. 에어컨은 수원·평택TC 주문을 동시에 발송해야 한다.' },
+  L115: { job:'통합',    sit:'선진',        op:['033-732-8035','033-732-0317','1577-3931'] },
+  L116: { job:'통합',    sit:'선진',        op:['033-652-0340','033-652-0348','1577-3932'] },
+  L110: { job:'통합',    sit:'대륙',        op:['055-371-2314','055-371-2319','055-371-2323','055-371-2341'],
+          voc:['055-371-2322'] },
+  L105: { job:'통합',    sit:'다존텍',      op:['053-593-2144'] },
+  L128: { job:'통합',    sit:'동국',        sitN:'054-254-0725', op:['054-254-0725'] },
+  L124: { job:'통합',    sit:'대륙',        op:['054-762-8016'] },
+  L125: { job:'통합',    sit:'다존텍',      op:['054-859-7178'] },
+  L127: { job:'통합',    sit:'삼영물류',    sitN:'070-4694-4540', op:['055-587-9416'] },
+  L129: { job:'통합',    sit:'성광티시엠',  op:['055-853-7114'] },
+  L106: { job:'통합',    sit:'새론',        op:['064-724-1735'] },
+  L118: { job:'통합',    sit:'도림로지스',  op:['070-7010-0220','070-7010-0209'] },
+  L117: { job:'가전 AC', sit:'스마트로지텍', op:['044-271-2926','044-271-2931'] },
+  L109: { job:'통합',    sit:'신한시스템',  op:['062-973-9834'] },
+  L122: { job:'통합',    sit:'프로서비스',  op:['061-723-8031'] },
+  L123: { job:'통합',    sit:'신한시스템',  op:['061-281-8029'] },
+  L121: { job:'통합',    sit:'명일',        op:['070-4146-7421'] },
+};
+
+/* 물류 VOC 본사 창구 — 센터와 무관하게 걸리는 공통 번호다(원문 'VOC 연락처(B2C)' 표 머리) */
+const VOC_HQ = { n:'031-270-3518', x:[['추가 회선','070-7094-3512'],['','070-7094-3569'],['','070-7094-3773']] };
+
 
 /*
  * 이전설치·빌트인 협력사 관할 — 출처는 사내 배포본
@@ -559,6 +610,26 @@ function shareBuild(){
 /* 원문에 따로 적힌 번호(물류전화·후드 등)를 라벨과 함께 한 줄로 붙인다.
  * 번호만 나열하면 어디로 걸어야 하는지 모른다 — 라벨이 곧 용도다. */
 function xtext(o){ return (o.x||[]).map(([l,n])=>`${l} ${n}`).join(' '); }
+/* 검색은 상황실·운영·VOC 번호까지 훑는다 — 번호를 보고 어느 센터인지 되짚는 일이 실제로 있다 */
+function opsText(c){
+  const o = OPS[c.code]; if (!o) return '';
+  return [o.job, o.sit, o.sitN, ...(o.op||[]), ...(o.voc||[]), o.note].filter(Boolean).join(' ');
+}
+/*
+ * 센터 줄에 붙는 상황실·운영·VOC 한 줄. 상황실 번호는 **물류 대표번호와 다를 때만** 적는다 —
+ * 21곳 중 19곳이 같아서, 같은 번호를 한 줄에 두 번 적으면 어느 쪽으로 걸어야 하는지 헷갈린다.
+ */
+function opsLine(c, hl){
+  const o = OPS[c.code]; if (!o) return '';
+  const h = hl || esc;
+  const p = [];
+  p.push(`상황실 <b>${h(o.sit)}</b>${o.sitN ? ` ${h(o.sitN)}` : ''}`);
+  if ((o.op||[]).length)  p.push(`운영 ${o.op.map(n=>`<b>${h(n)}</b>`).join(' · ')}`);
+  if ((o.voc||[]).length) p.push(`VOC ${o.voc.map(n=>`<b>${h(n)}</b>`).join(' · ')}`);
+  return `<br><span class="xn">${p.join(' · ')}</span>`
+    + (o.note ? `<br><span class="xn" style="color:#B45309">${esc(o.note)}</span>` : '');
+}
+
 function xline(o){
   if (!(o.x||[]).length) return '';
   return `<br><span class="xn">${(o.x||[]).map(([l,n])=>
@@ -609,7 +680,12 @@ function renderContacts(){
      <input class="lgq" id="lgq" placeholder="지역 · 센터명 · 번호로 찾기" autocomplete="off">
      <div class="chips" id="lgchips">${CBRANCH.map((b,i)=>
        `<button type="button" class="chip${i?'':' on'}" data-br="${esc(b)}">${esc(b)}</button>`).join('')}</div>
-     <div id="lglist"></div>`);
+     <div id="lglist"></div>
+     <div class="card" style="margin-top:14px"><h2>물류 VOC 본사 창구 <span class="pill">센터 무관</span></h2>
+       <div class="why" style="margin-bottom:9px">센터가 아니라 <b>본사로 접수</b>하는 물류 VOC 번호입니다.</div>
+       <button type="button" class="ct lg" data-tel="${esc(VOC_HQ.n)}" data-tel-name="물류 VOC 본사">
+         <span class="ct-b"><b>VOC 접수</b><span class="ct-d">배송·설치 VOC 접수 창구${xline(VOC_HQ)}</span></span>
+         <span class="ct-n">${esc(VOC_HQ.n)}</span></button></div>`);
 
   /* ③ B2B · 협력사 — **접수 순서를 맨 위에 둔다.** 이전설치는 번호만 알면 사고가 난다:
      싱크대 리폼이 먼저고 가구장이 먼저다. 번호와 절차가 떨어지면 안 된다. */
@@ -645,6 +721,7 @@ function renderContacts(){
 
   h += `<div class="src">AS·구매 연락처 — 삼성전자서비스(samsungsvc.co.kr) · 삼성닷컴(samsung.com/sec) 공식 표기 · 2026-08-11 확인<br>
     물류센터 — 사내 배포본 '센터별 배송 서비스지역'(2026.1.02 시행) 원문 그대로<br>
+    상황실·운영·VOC — 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02)의 운영업무 협조(B2C)·VOC 연락처(B2C) 표<br>
     B2B·협력사 — 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02) 원문 그대로.
     협력사명 · 관할지역 · 전화번호만 옮겼습니다 — 담당자 이름·이메일과 010 번호는 싣지 않습니다.</div>`;
   pane.innerHTML = h;
@@ -686,7 +763,7 @@ function renderCenters(){
   const br = onChip ? onChip.dataset.br : '전체';
   const hit = CENTERS.filter(c =>
     (br === '전체' || c.b === br) &&
-    (!s || (c.t + c.code + c.n + c.a + c.kw.join(' ')).toLowerCase().includes(s)));
+    (!s || (c.t + c.code + c.n + c.a + c.kw.join(' ') + opsText(c)).toLowerCase().includes(s)));
 
   /* 찾은 글자를 표시해 준다 — 왜 이 센터가 나왔는지 눈으로 확인돼야 신뢰가 된다 */
   const hl = t => { const e = esc(t); if (!s) return e;
@@ -694,8 +771,9 @@ function renderCenters(){
 
   list.innerHTML = hit.length ? hit.map(c=>
     `<button type="button" class="ct lg" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
-      <span class="ct-b"><b>${hl(c.t)}<span class="ct-tag">${esc(c.b)} · ${esc(c.code)}</span></b>
-      <span class="ct-d">${hl(c.a)}</span></span>
+      <span class="ct-b"><b>${hl(c.t)}<span class="ct-tag">${esc(c.b)} · ${esc(c.code)}</span>${
+        OPS[c.code] ? `<span class="ct-tag">${esc(OPS[c.code].job)}</span>` : ''}</b>
+      <span class="ct-d">${hl(c.a)}${opsLine(c, hl)}</span></span>
       <span class="ct-n">${hl(c.n)}</span></button>`).join('')
     : `<div class="unk">해당하는 센터가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
   list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
@@ -754,7 +832,7 @@ function searchDocs(){
   }
   for (const c of CENTERS) {
     out.push({ kind:'물류센터', title:c.t, sub:`${c.n} · ${c.a}`,
-      kw:`${c.t} ${c.code} ${c.n} ${c.a} ${c.kw.join(' ')} ${c.b} 물류센터 배송 설치 관할`,
+      kw:`${c.t} ${c.code} ${c.n} ${c.a} ${c.kw.join(' ')} ${c.b} ${opsText(c)} 물류센터 배송 설치 관할 상황실 운영 voc`,
       go(){ openGroup('g-lg'); const q = document.querySelector('#lgq');
             if (q) { q.value = c.t; renderCenters(); } } });
   }
@@ -780,6 +858,9 @@ function searchDocs(){
       kw:`${x.p} ${x.t} ${x.n} ${x.d} ${xtext(x)} 이전설치 전국`,
       go(){ openGroup('g-b2b'); } });
   }
+  out.push({ kind:'연락처', title:'물류 VOC 본사 창구', sub:`${VOC_HQ.n} · 배송·설치 VOC 접수`,
+    kw:`voc 브이오씨 물류 본사 접수 불만 ${VOC_HQ.n} ${xtext(VOC_HQ)}`,
+    go(){ openGroup('g-lg'); } });
   out.push({ kind:'안내', title:'식기세척기 이전설치 순서', sub:'싱크대 리폼이 먼저 — 아비스 1811-7958',
     kw:'식기세척기 식세기 이전설치 순서 싱크대 리폼 아비스 주의 tbi 가구장 빌트인',
     go(){ openGroup('g-b2b'); } });
@@ -865,7 +946,7 @@ function setTab(t){
 renderCats(); renderBody(); wireSearch();
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { DB, ROYAL, CONTACTS, CENTERS, B2B, B2B_IT, SINK, B2B_NATION, GROUPS,
+window.__as = { DB, ROYAL, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, GROUPS,
   openGroup,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },
