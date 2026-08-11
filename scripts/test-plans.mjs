@@ -1368,6 +1368,41 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 도면 전체 인식 ──
+ * *"고객은 어디에 놓을지 정해진 상태가 아니다"* — 그래서 한 번 누르면 온 집을 잡아야 한다.
+ * 지키는 것 둘:
+ *  ① 방을 여럿 잡는가 (하나만 잡으면 예전으로 돌아간 것이다)
+ *  ② **여러 방이 합쳐진 덩어리를 걸러내는가.** 문이 열린 채 그려진 도면에서는 온 집이
+ *    한 영역으로 잡혀 전용 85.5㎡ 세대에서 169.6㎡ 가 나온다. 그걸 등록하면 상담에서
+ *    그대로 읽힌다.
+ */
+{
+  const b64 = fs.readFileSync(path.join(root, 'public', 'plans', 'c129', '86A.jpg')).toString('base64');
+  const r = await page.evaluate(async (b64) => {
+    const P = window.__place;
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = 'data:image/jpeg;base64,' + b64; });
+    P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+    P.state.mmPerPx = 16.9; P.state.scaled = true;
+    P.state.rooms = []; P.state.items = []; P.state.walls = [];
+    /* 도면을 새로 올릴 때 앱이 하는 것과 같이 인식 캐시를 비운다.
+       앞선 검사들이 다른 도면으로 만들어 둔 마스크가 남아 있으면 엉뚱한 그림을 인식한다
+       (실제로 그래서 5곳이 2곳으로 나왔다). */
+    P.state.mask = null; P.state.baseMask = null; P.state.baseInfo = null;
+    P.state.cleanCv = null; P.state.cleanInfo = null; P.state.sealCache = null;
+    const n = P.detectAllRooms();
+    const areas = P.state.rooms.map((rm) => +(P.roomArea(rm) / 1e6).toFixed(1));
+    return { n, areas, loops: P.roomLoops().length };
+  }, b64);
+
+  if (!(r.n >= 3)) fail(`전체 인식: 공간을 ${r.n}곳만 잡았다 — 도면 전체를 잡아야 한다`);
+  else if (r.loops !== r.n) fail(`전체 인식: 잡은 ${r.n}곳 중 3D 가 세울 고리가 ${r.loops}개다`);
+  else if (Math.max(...r.areas) > 90)
+    fail(`전체 인식: ${Math.max(...r.areas)}㎡ 짜리 공간이 섞였다 — 여러 방이 합쳐진 덩어리를 못 걸렀다 (전용 85.5㎡ 세대)`);
+  else pass(`도면 전체 인식 — 공간 ${r.n}곳 (${r.areas.join(' · ')}㎡), 합쳐진 덩어리 없음`);
+}
+
+/*
  * ── 도어 열기 — 열었을 때 부딪히는지 ──
  * 값은 설치가이드 원문 실측에서 온다(양문형 전체폭 1,726 / 4도어 1,498 / 콤보 깊이 1,430).
  * 지키는 것 셋:

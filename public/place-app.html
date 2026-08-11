@@ -768,11 +768,28 @@ function roomLoops(){
 /** 가전이 속한 방. 지정하지 않았으면 null */
 const itemRoom = (it) => (it && it.room ? roomById(it.room) : null);
 /** 가전 기준 "방 안인가" — 방을 지정했으면 그 방, 아니면 아무 방이나 / 방이 없으면 레거시 */
+/*
+ * 이 점이 **놓아도 되는 곳**인가.
+ *
+ * 예전에는 가전에 붙은 방(`it.room`) 안이어야만 허용했다. 그런데 상담에 오는 고객은
+ * **어디에 놓을지 정해 두고 오지 않는다** — 집 전체를 보고 고른다(2026-08-11 사용자).
+ * 그래서 `it.room` 은 **울타리가 아니라 이름표**로 쓴다: 잡힌 공간 어디든 놓을 수 있고,
+ * 다른 방으로 옮기면 소속이 그 방으로 따라간다(`retagRoom`). 그래야 "침실2 밖으로
+ * 나갑니다" 같은 경고가 계속 사실이 된다.
+ *
+ * **집 밖으로 나가는 것은 여전히 막는다** — 그건 놓을 수 없는 자리가 맞다.
+ * 방이 하나도 없으면 예전처럼 `state.walls` 하나만 본다(직접 그리기 경로).
+ */
 function insideFor(it, x, y){
-  const r = itemRoom(it);
-  if (r) return inRoom(r, x, y);
   if (state.rooms.length) return state.rooms.some((rm)=>inRoom(rm, x, y));
   return insideRoom(x, y);
+}
+/** 가전이 실제로 들어가 있는 공간으로 소속을 옮긴다 — 이름표는 사실을 따라야 한다 */
+function retagRoom(it){
+  if (!state.rooms.length || it.staged) return;
+  const [cx, cy] = bodyCenter(it);
+  const r = roomAt(cx, cy);
+  if (r && it.room !== r.id) it.room = r.id;
 }
 /** 이 가전에 대해 "방 밖" 판정을 할 수 있는가 */
 function canJudge(it){
@@ -1874,7 +1891,77 @@ function startDetect(){
             $('#c').onclick =()=>{closeSheet(); $('#btn-wall').click();}; });
     return;
   }
-  state.draft = null; state.draftMore = []; hideDraftBar(); ensureClean(); setMode('detect'); setStep(3); draw();
+  state.draft = null; state.draftMore = []; hideDraftBar(); ensureClean();
+  /*
+   * **도면 전체를 한 번에 잡는다**(2026-08-11 사용자 요청).
+   * 예전에는 방을 하나씩 눌러 잡아야 했고, 그러면 잡은 방 안에만 가전을 놓을 수 있었다.
+   * 그런데 상담에 오는 고객은 **어디에 놓을지 정해 두고 오지 않는다** — 집 전체를 보고
+   * 고른다. 그래서 누르는 순간 온 집을 잡고, 3D 도 집 전체가 선다.
+   * 잘못 잡힌 곳은 그대로 눌러 고칠 수 있게 detect 모드는 유지한다.
+   */
+  const made = detectAllRooms();
+  setMode('detect'); setStep(made ? 4 : 3); draw();
+  if (made) toast(`도면 전체에서 공간 ${made}곳을 잡았습니다 — 빠진 곳은 눌러서 더하세요`);
+  else toast('자동으로 잡지 못했습니다 — 방 안쪽을 눌러 주세요');
+}
+
+/**
+ * 도면 전체를 훑어 방을 **전부** 등록한다.
+ *
+ * `autoDetectCenter` 가 쓰는 격자 탐침을 그대로 쓰되, 하나만 고르는 대신 살아남은 것을
+ * 모두 공간으로 만든다. 같은 방을 여러 번 찔러도 같은 다각형이 나오므로 넓이·중심으로
+ * 중복을 걷어낸다(그쪽과 같은 기준).
+ *
+ * 격자를 6×6 으로 둔 이유 — 4×4 로는 욕실·현관처럼 작은 방이 통째로 빠진다.
+ * 탐침은 `sealedMask` 캐시 덕에 두 번째부터 싸다.
+ *
+ * 너무 작은 조각은 뺀다. 축척 기준을 고를 때(3%)보다 기준을 낮춘 것은 여기서는
+ * **욕실·현관도 잡아야** 하기 때문이고, 그래도 창틀 틈 같은 것은 걸러야 한다.
+ */
+function detectAllRooms(){
+  if (!state.img) return 0;
+  ensureClean();
+  const W = state.imgW, H = state.imgH;
+  const N = 6;
+  const found = [];
+  for (let iy = 1; iy <= N; iy++) for (let ix = 1; ix <= N; ix++){
+    const x = W * ix / (N + 1), y = H * iy / (N + 1);
+    let r; try { r = detectRoomAt(x, y); } catch (_) { continue; }
+    if (!r || r.error || !r.poly) continue;
+    const a = polyAreaPx(r.poly);
+    if (a <= 0) continue;
+    const xs = r.poly.map((q)=>q[0]), ys = r.poly.map((q)=>q[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    const cx = (x0+x1)/2, cy = (y0+y1)/2, w = x1-x0, h = y1-y0;
+    if (found.some((c)=> Math.abs(c.cx-cx) < 20 && Math.abs(c.cy-cy) < 20
+      && Math.abs(c.a-a) < Math.max(c.a, a) * 0.08)) continue;
+    found.push({ a, cx, cy, w, h, poly:r.poly, edges:r.edges });
+  }
+  const planA = (W||1) * (H||1);
+  const minShort = Math.min(W||1, H||1) * 0.05;
+  const keep = found
+    .filter((c)=> c.a >= planA * 0.012 && Math.min(c.w, c.h) >= minShort)
+    .sort((u,v)=> v.a - u.a);
+  /*
+   * **여러 방이 한 덩어리로 잡힌 것은 버린다.**
+   * 문이 다 열린 채 그려진 도면에서는 닫기 반경이 모자라 온 집(때로는 도면 여백까지)이
+   * 한 영역으로 잡힌다. 그걸 '거실'로 등록하면 "거실 169.6㎡"가 된다 — 전용 85.5㎡ 세대에서.
+   *
+   * 넓이 비율(예: 도면의 50%)로 거르려 했더니 도면마다 여백이 달라 흔들렸다(실측 43%로 통과).
+   * **더 확실한 단서는 포함 관계다** — 새어 나간 영역은 다른 방들을 품고 있다.
+   * 어떤 후보가 다른 후보 2곳 이상의 중심을 담으면 그건 방이 아니라 합쳐진 덩어리다.
+   *
+   * **경계상자로 보면 안 된다.** 처음에 상자로 쟀더니 ㄱ자 거실의 상자가 옆 침실 중심을
+   * 품어 **진짜 거실(31㎡)까지 버렸다.** 다각형 자체로 재야 한다 — ㄱ자 거실의 실제 영역은
+   * 옆방 중심을 담지 않는다.
+   */
+  const trimmed = keep.filter((c) => {
+    const inside = keep.filter((o) => o !== c && o.a < c.a * 0.9
+      && inLoop(c.poly, o.cx, o.cy)).length;
+    return inside < 2;
+  });
+  for (const c of trimmed) applyDetected(c.poly, c.edges, { name: nextRoomName() });
+  return trimmed.length;
 }
 
 /** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
@@ -2258,8 +2345,13 @@ function hitsOther(it){
 
 function collisionAt(it){
   if (escapesRoom(it)) {
-    const r = itemRoom(it);
-    return r ? `${r.name} 밖으로 나갑니다` : '방 밖으로 나갑니다';
+    /*
+     * 이제 방은 울타리가 아니므로, 여기까지 왔다는 것은 **잡힌 공간 어디에도 안 들어간다**는
+     * 뜻이다. 그런데 예전 문구는 가전에 붙은 방 이름을 그대로 썼다 — 집 밖에 있는데
+     * "침실2 밖으로 나갑니다"라고 말하게 된다. 화면이 거짓말을 하면 안 된다.
+     */
+    if (state.rooms.length) return state.rooms.length > 1 ? '집 밖으로 나갑니다' : `${state.rooms[0].name} 밖으로 나갑니다`;
+    return '방 밖으로 나갑니다';
   }
   return hitsOther(it);
 }
@@ -3097,6 +3189,8 @@ cv.addEventListener('pointermove', (e)=>{
     // 다른 가전과 부딪히는 것은 여전히 막는다(겹쳐도 되는 조합은 hitsOther 가 걸러 낸다).
     const clash = hitsOther(it);
     if (clash){ Object.assign(it, prev); toast(clash); }
+    /* 다른 방으로 넘어갔으면 소속을 그 방으로 옮긴다 — 이름표는 사실을 따라야 한다 */
+    else retagRoom(it);
   }
   evaluate(); draw();
 });
@@ -4567,8 +4661,19 @@ function planBox(){
  * 끝내 못 넣으면 false 를 돌려주고, 부르는 쪽이 직전 위치로 되돌린다.
  */
 function nudgeInside(it){
-  const r = itemRoom(it) || (state.rooms.length ? state.rooms[0] : null);
-  const target = r ? partCenter(r.parts.reduce((a,q)=> (loopArea(loopOfWalls(q.walls)||[]) >= loopArea(loopOfWalls(a.walls)||[]) ? q : a))) : roomCenter();
+  /*
+   * **가장 가까운 공간으로 밀어 넣는다.** 예전에는 가전에 붙은 방으로만 밀었는데, 이제는
+   * 집 안 어디든 놓을 수 있으므로(`insideFor`) 자기 방으로 끌고 가면 손에서 뺏는 셈이 된다 —
+   * 사용자가 옆방에 놓으려고 끌어다 놨는데 원래 방으로 되돌아가 버린다.
+   */
+  const [bx0, by0] = bodyCenter(it);
+  const centers = state.rooms.map((rm) =>
+    partCenter(rm.parts.reduce((a, q) =>
+      (loopArea(loopOfWalls(q.walls)||[]) >= loopArea(loopOfWalls(a.walls)||[]) ? q : a)))).filter(Boolean);
+  const target = centers.length
+    ? centers.reduce((best, c) =>
+        (Math.hypot(c[0]-bx0, c[1]-by0) < Math.hypot(best[0]-bx0, best[1]-by0) ? c : best))
+    : roomCenter();
   if (!target) return false;
   const step = Math.max(40, Math.min(it.w, it.d) / 6);
   for (let n = 0; n < 60; n++){
@@ -4715,7 +4820,7 @@ loadReps();
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
-  doorOpenFor, doorReach, doorLeaves, doorHits,
+  doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,

@@ -1200,17 +1200,33 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   else if ((P.roomAt(7000, 1500) || {}).name !== '침실2') fail('roomAt이 엉뚱한 방을 돌려준다');
   else pass('점 → 방 판정 (roomAt)');
 
-  // 가전이 자기 방을 벗어나면 그 방 이름으로 경고한다
+  /*
+   * 가전은 **집 안 어디든** 놓을 수 있다 (2026-08-11 사용자 요청으로 규칙이 바뀌었다).
+   *
+   * 예전에는 가전에 붙은 방(`it.room`) 밖으로 나가면 막았다. 그런데 상담에 오는 고객은
+   * 어디에 놓을지 정해 두고 오지 않는다 — 집 전체를 보고 고른다. 그래서 `it.room` 은
+   * 울타리가 아니라 **이름표**가 됐고, 다른 방으로 옮기면 소속이 따라간다.
+   * **집 밖으로 나가는 것은 여전히 막는다** — 그건 놓을 수 없는 자리가 맞다.
+   */
   const fridge = { id: 'x1', label: '냉장고', room: b.id, w: 900, h: 1850, d: 700,
     clear: { back: 50, side: 0, front: 0 }, bx: 7500, by: 100, a: 0, warn: [] };
   st.items = [fridge];
   if (P.collisionAt(fridge)) fail(`침실2 안인데 막혔다 (${P.collisionAt(fridge)})`);
   else {
-    const out = { ...fridge, bx: 2500, by: 2000 };            // 거실 한가운데 = 침실2 밖
+    const other = { ...fridge, bx: 2500, by: 2000 };          // 거실 한가운데 = 침실2 밖이지만 집 안
+    if (P.collisionAt(other)) fail(`다른 방으로 옮겼는데 막는다 — 집 안이면 어디든 놓을 수 있어야 한다 (${P.collisionAt(other)})`);
+    else pass('가전을 다른 방으로 옮길 수 있다 (방은 울타리가 아니라 이름표)');
+
+    // 소속이 실제 위치를 따라간다
+    const moved = { ...fridge, bx: 2500, by: 2000 };
+    P.retagRoom(moved);
+    if (moved.room !== a.id) fail(`거실로 옮겼는데 소속이 안 바뀐다 (room=${moved.room})`);
+    else pass('가전을 옮기면 소속 공간이 따라 바뀐다');
+
+    const out = { ...fridge, bx: 12000, by: 9000 };           // 집 밖
     const why = P.collisionAt(out);
-    if (!why) fail('다른 방으로 넘어갔는데 막지 않음');
-    else if (!/침실2/.test(why)) fail(`경고에 방 이름이 없다 ("${why}")`);
-    else pass(`방 밖 판정에 방 이름이 붙는다 ("${why}")`);
+    if (!why) fail('집 밖으로 나갔는데 막지 않음');
+    else pass(`집 밖은 여전히 막는다 ("${why}")`);
   }
 
   // 자동 배치는 지정한 방 안에서만 자리를 찾는다
