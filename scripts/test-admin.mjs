@@ -243,5 +243,54 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 관리자 비밀번호 환경변수가 클라이언트로 새지 않음');
 }
 
+// ── 대시보드 모듈 목록 (app/admin/page.tsx 의 MODULE_META) ──
+/*
+ * 2026-08-11 발견: AS기간 확인·배치 시뮬레이터·컨시어지 포스터가 MODULE_META 에
+ * 아예 없어 **사용 현황에 한 줄도 안 잡히고 있었다.** 운영 중인 모듈이 통계에서
+ * 통째로 빠지면 "안 쓴다"로 읽힌다 — 모듈을 새로 만들 때마다 반복될 종류의 누락이라
+ * `LogModule` 유니온과 대조해 막는다.
+ */
+{
+  const adminSrc2 = fs.readFileSync(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
+  const logSrc = fs.readFileSync(new URL('../lib/logEvent.ts', import.meta.url), 'utf8');
+
+  /* LogAction 선언 전까지만 자른다 — `\n\n` 로 끊으면 액션(search·generate…)까지 딸려 온다 */
+  const uni = logSrc.match(/export type LogModule =([\s\S]*?)export type LogAction/);
+  const keys = uni ? [...uni[1].matchAll(/'([a-zA-Z]+)'/g)].map((m) => m[1]) : [];
+  const metaBlock = adminSrc2.match(/const MODULE_META[\s\S]*?\n\}/);
+  const metaKeys = metaBlock ? [...metaBlock[0].matchAll(/\n\s{2}(\w+):\s*\{/g)].map((m) => m[1]) : [];
+
+  if (!keys.length || !metaKeys.length) fail('[대시보드] LogModule / MODULE_META 를 읽지 못했다');
+  else {
+    const missing = keys.filter((k) => !metaKeys.includes(k));
+    if (missing.length) fail(`[대시보드] MODULE_META 에 없는 모듈: ${missing.join(', ')} — 사용 현황에 안 잡힌다`);
+    else console.log(`OK: 대시보드가 LogModule ${keys.length}개를 모두 표시 (누락 0)`);
+  }
+
+  // 운영 종료·통합 모듈은 목록에서 감추되 라벨은 남는다
+  for (const k of ['compareInstant', 'planner']) {
+    const re = new RegExp(`${k}:\\s*\\{[^}]*retired:\\s*true`);
+    if (!re.test(adminSrc2)) fail(`[대시보드] ${k} 에 retired 표시가 없다 — 목록에서 감춰야 한다`);
+  }
+  if (!/LIVE_MODULES\s*=\s*Object\.entries\(MODULE_META\)\.filter/.test(adminSrc2))
+    fail('[대시보드] LIVE_MODULES 로 걸러 내지 않는다');
+  else if (!/\{LIVE_MODULES\.map\(/.test(adminSrc2))
+    fail('[대시보드] 사용 현황 목록이 LIVE_MODULES 를 쓰지 않는다');
+  else console.log('OK: 운영 종료·통합 모듈 2개는 목록에서 제외 (라벨은 최근 이벤트·CSV 용으로 유지)');
+
+  // 감춘 만큼 총계와 어긋나 보이므로 화면이 그 사실을 밝혀야 한다
+  if (!/목록에서 제외했습니다/.test(adminSrc2))
+    fail('[대시보드] 감춘 모듈이 있다는 안내가 없다 — 목록 합계와 총계가 어긋나 보인다');
+  /* 가려 달라고 한 이름을 각주로 되살리면 뜻이 없다 — 건수만 밝힌다 */
+  else if (/제외했습니다[\s\S]{0,200}?(즉시비교|패키지 플래너)/.test(adminSrc2))
+    fail('[대시보드] 안내문이 감춘 모듈 이름을 다시 노출한다');
+  else console.log('OK: 감춘 모듈의 로그 건수만 밝히고 이름은 노출하지 않는다');
+
+  // 추적 모듈 수는 운영 중인 것만 센다
+  if (!/value=\{LIVE_MODULES\.length\}/.test(adminSrc2))
+    fail('[대시보드] "추적 모듈 수"가 운영 종료 모듈까지 센다');
+  else console.log('OK: "추적 모듈 수"는 운영 중인 모듈만 집계');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
