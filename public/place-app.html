@@ -3884,7 +3884,28 @@ async function loadPlanIndex(){
  * 그 타입의 방을 전에 저장해 두었다면 도면 없이 방까지 그대로 복원한다.
  */
 async function openLibrary(){
-  const [idx, saved] = await Promise.all([loadPlanIndex(), libraryAll()]);
+  const [rawIdx, saved] = await Promise.all([loadPlanIndex(), libraryAll()]);
+  /*
+   * **도면이 아닌 이미지는 목록에서 뺀다**(2026-08-12 사용자 요청).
+   *
+   * 색인의 관문은 "방 이름이 3종류 이상 읽히는가"라, 아이소메트릭 렌더링 · 인테리어 사진 ·
+   * 품목표 · 단지 배치도가 함께 들어와 있다(617장 중 46장). 그런 이미지를 고르면 글씨·범례가
+   * 벽으로 잡혀 얇은 띠 같은 방이 나오고, 상담사는 그걸 확인하느라 시간을 버린다.
+   * 색인이 실어 준 `axis`(선이 가로·세로에 몰린 정도)로 거른다 — 앱이 이미지를 열었을 때
+   * 다시 재는 값과 같은 계산이라 목록 기준과 화면 경고가 어긋나지 않는다.
+   *
+   * **단, 그 단지의 도면이 전부 걸리면 하나도 빼지 않는다**(실측 4곳).
+   * 도면 한 장을 빼는 것은 "이건 평면도가 아니다"라는 말이지만, 단지가 목록에서 통째로
+   * 사라지면 **"우리는 그 단지 도면이 없다"**는 다른 말이 된다 — 그건 사실이 아니다.
+   * 그런 단지는 그대로 두고 목록에 그 사실을 적는다(열면 화면이 다시 경고한다).
+   * 실제로 두산위브더제니스는 큰 입체도 옆에 **쓸 수 있는 작은 평면도**가 함께 있었다.
+   */
+  const usable = (p) => p.axis == null || p.axis >= AXIS_MIN;
+  const idx = rawIdx.map((c) => {
+    const keep = (c.plans || []).filter(usable);
+    return keep.length ? (keep.length === c.plans.length ? c : { ...c, plans: keep, hidden: c.plans.length - keep.length })
+                       : { ...c, allTilted: true };
+  });
   let lv = 'region', region = null, cx = null;
   /*
    * **시·도를 먼저 고르게 한다.**
@@ -3943,7 +3964,8 @@ async function openLibrary(){
       });
     } else if (lv === 'complex') {
       items = inRegion().map((c) => `<button class="libitem" data-id="${esc(c.id)}"><b>${esc(c.complex)}</b>
-        <span class="hint">도면 ${c.plans.length}장${savedIn(c.complex).length ? ` · 저장된 방 ${savedIn(c.complex).length}종` : ''}</span></button>`);
+        <span class="hint">도면 ${c.plans.length}장${savedIn(c.complex).length ? ` · 저장된 방 ${savedIn(c.complex).length}종` : ''}${
+          c.allTilted ? ' · <b>벽 인식이 어려운 도면만 있습니다</b>' : ''}</span></button>`);
       for (const e of savedOnly.filter((x) => (x.region || '지역 미지정') === region)) {
         items.push(`<button class="libitem" data-saved="${esc(e.complex)}"><b>${esc(e.complex)}</b>
           <span class="hint">저장된 방만 있음</span></button>`);

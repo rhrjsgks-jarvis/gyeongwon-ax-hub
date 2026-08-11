@@ -167,9 +167,45 @@ async function shrink(srcPath) {
     const cx = cv.getContext('2d');
     cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
     cx.drawImage(img, 0, 0, cv.width, cv.height);
-    return { data: cv.toDataURL('image/jpeg', 0.78).slice(23), w: cv.width, h: cv.height, scale: s };
+    const out = { data: cv.toDataURL('image/jpeg', 0.78).slice(23), w: cv.width, h: cv.height, scale: s };
+
+    /*
+     * **이 그림의 선이 가로·세로에 몰려 있는가**를 함께 잰다(0~1).
+     *
+     * 색인의 "평면도"가 다 평면도는 아니다 — 방 이름이 3종류 이상 읽히기만 하면 통과하므로
+     * 아이소메트릭 렌더링 · 인테리어 사진 · 품목표 · 단지 배치도가 함께 들어온다.
+     * 벽 인식은 "벽은 가로·세로로 곧은 띠"라는 전제 위에 서 있어서 그런 이미지에서는
+     * 글씨·범례가 벽이 되고 **얇은 띠 같은 방**이 나온다.
+     *
+     * 재는 법과 크기(420px)는 place-app.html 의 `axisConcentration()` 과 **같아야 한다** —
+     * 다르면 목록에서 숨긴 기준과 열었을 때 뜨는 경고가 어긋난다. 그래서 원본이 아니라
+     * **배포되는 축소본(cv)** 을 잰다. 앱이 실행 중에 보는 것이 그 이미지다.
+     */
+    const A = 420, k2 = Math.min(1, A / Math.max(cv.width, cv.height));
+    const aw = Math.max(8, Math.round(cv.width * k2)), ah = Math.max(8, Math.round(cv.height * k2));
+    const c2 = document.createElement('canvas'); c2.width = aw; c2.height = ah;
+    const x2 = c2.getContext('2d', { willReadFrequently: true });
+    x2.fillStyle = '#fff'; x2.fillRect(0, 0, aw, ah);
+    x2.drawImage(cv, 0, 0, aw, ah);
+    const d2 = x2.getImageData(0, 0, aw, ah).data;
+    const g = new Float32Array(aw * ah);
+    for (let i = 0, p = 0; p < g.length; i += 4, p++) g[p] = (0.299*d2[i] + 0.587*d2[i+1] + 0.114*d2[i+2]) / 255;
+    const bins = new Float64Array(36);
+    let total = 0;
+    for (let y = 1; y < ah - 1; y++) for (let x = 1; x < aw - 1; x++){
+      const o = y*aw + x;
+      const gx = (g[o-aw+1] + 2*g[o+1] + g[o+aw+1]) - (g[o-aw-1] + 2*g[o-1] + g[o+aw-1]);
+      const gy = (g[o+aw-1] + 2*g[o+aw] + g[o+aw+1]) - (g[o-aw-1] + 2*g[o-aw] + g[o-aw+1]);
+      const m = Math.hypot(gx, gy);
+      if (m < 0.35) continue;
+      const a2 = ((Math.atan2(gy, gx) * 180 / Math.PI % 180) + 180) % 180;
+      bins[Math.min(35, Math.floor(a2 / 5))] += m;
+      total += m;
+    }
+    if (total) out.axis = [35, 0, 1, 16, 17, 18].reduce((s2, i) => s2 + bins[i], 0) / total;
+    return out;
   }, { uri, max: MAX_LONG });
-  return r && { buf: Buffer.from(r.data, 'base64'), w: r.w, h: r.h, scale: r.scale };
+  return r && { buf: Buffer.from(r.data, 'base64'), w: r.w, h: r.h, scale: r.scale, axis: r.axis };
 }
 
 const index = [];
@@ -246,6 +282,8 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     const rec = { type: key, file: `plans/${id}/${file}`, w: small.w, h: small.h,
       exclusiveM2: excl ? +excl.toFixed(2) : null, rooms: (it.rooms || []).length,
       kb: Math.round(small.buf.length / 1024) };
+    /* 선이 축(0°·90°)에 몰린 정도 — 앱이 이 값으로 도면 아닌 이미지를 목록에서 숨긴다 */
+    if (small.axis != null) rec.axis = +small.axis.toFixed(3);
     /*
      * 축척은 확신도가 '확실'(가로·세로 사슬이 8% 안에서 일치) 또는 '보통'(한 축이지만 쌍이
      * 3개 이상)일 때만 싣는다. '낮음'은 가로와 세로가 어긋나 근거가 많은 쪽을 고른 것이라

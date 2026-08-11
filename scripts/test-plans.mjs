@@ -1828,6 +1828,50 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   }
 }
 
+/*
+ * ── 단지 불러오기 목록에서 도면 아닌 이미지를 뺐는가 ──────────────────
+ *
+ * 색인의 관문("방 이름 3종류 이상")을 아이소메트릭 렌더링·인테리어 사진·품목표·단지
+ * 배치도가 통과해 들어와 있다. 목록에서 빼되, **단지가 통째로 사라지면 안 된다** —
+ * 도면 한 장을 빼는 것은 "이건 평면도가 아니다"이지만 단지가 사라지면 "그 단지 도면이
+ * 없다"는 다른 말이 되고, 그건 사실이 아니다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const raw = await P.loadPlanIndex();
+    await P.openLibrary();
+    await new Promise((res) => setTimeout(res, 400));
+    const rows = () => [...document.querySelectorAll('#libbody .libitem')];
+    const clickText = async (re) => {
+      const el = rows().find((b) => re.test(b.textContent));
+      if (!el) return false;
+      el.click();
+      await new Promise((res) => setTimeout(res, 350));
+      return true;
+    };
+    const chip = [...document.querySelectorAll('#libchips .chip')].find((c) => /강원/.test(c.textContent));
+    if (chip) { chip.click(); await new Promise((res) => setTimeout(res, 300)); }
+    if (!await clickText(/원주/)) return { err: '도시 목록에서 원주를 못 찾았다' };
+    if (!await clickText(/원주무실/)) return { err: '단지 목록에서 원주무실을 못 찾았다' };
+    const files = rows().map((b) => b.dataset.file);
+    /* 원본 색인에서 이 단지가 원래 몇 장인지 */
+    const c = raw.find((x) => /원주무실/.test(x.complex));
+    return { files, rawFiles: (c.plans || []).map((p) => p.file),
+             lowFiles: (c.plans || []).filter((p) => p.axis != null && p.axis < 0.35).map((p) => p.file) };
+  });
+
+  if (r.err) fail(`단지 목록: ${r.err}`);
+  else if (!r.lowFiles.length) fail('단지 목록 검사용 단지(원주무실)에 0.35 미만 도면이 없다 — 색인에 axis 가 없는 듯');
+  else {
+    const leaked = r.files.filter((f) => r.lowFiles.includes(f));
+    const lost = r.rawFiles.filter((f) => !r.lowFiles.includes(f) && !r.files.includes(f));
+    if (leaked.length) fail(`단지 목록에 도면 아닌 이미지가 남았다 — ${leaked.join(', ')}`);
+    else if (lost.length) fail(`단지 목록에서 멀쩡한 도면이 사라졌다 — ${lost.join(', ')}`);
+    else pass(`단지 목록에서 비-평면도 제외 — 원주무실 ${r.rawFiles.length}장 중 ${r.files.length}장만 보인다`);
+  }
+}
+
 /* 알려진 미해결은 **조용히 넘기지 않는다** — 몇 건인지 늘 보이게 적는다.
    실패로 세지 않을 뿐이고, 숨기는 것과는 다르다. */
 if (knownGaps.length){
