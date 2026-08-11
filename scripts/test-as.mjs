@@ -77,9 +77,58 @@ else {
   else pass(`원문에 없는 ${noHold.length}품목은 "확인 필요"로 표시 (${noHold.slice(0, 3).join(', ')} 외)`);
 }
 
-// 로열블루 연장 기간은 확인하지 못했다 — 숫자를 지어내지 않았는지
-if (/\d+\s*년\s*연장/.test(JSON.stringify(A.ROYAL))) fail('로열블루 연장 기간을 지어냈다 — 원문에서 확인하지 못한 값이다');
-else pass('로열블루: 확인 못 한 연장 기간을 만들어 내지 않음');
+/*
+ * ── [3-b] 멤버십 무상수리 기간 연장 (2026-08-11 원문 확인) ──
+ * 원문: samsung.com/sec/membership/membershipBluecare — "무상수리 서비스 기간을 총 3년으로 연장",
+ * "기존 무상보증기간을 포함한 총 3년간의 무상수리 서비스 제공".
+ *
+ * **여기서 지켜야 할 것은 '3년'이라는 숫자가 아니라 '포함'이다.** 누가 이걸 "3년 연장"
+ * 으로 고치면 기본 보증 2년인 냉방전용 에어컨 고객에게 1년을 더 약속하게 된다.
+ */
+if (A.ROYAL.ext !== '총 3년') fail(`로열블루 연장 기간이 "총 3년"이 아니다 — ${A.ROYAL.ext}`);
+else pass('로열블루: 연장 기간 "총 3년" (원문값)');
+
+const royalTxt = JSON.stringify(A.ROYAL);
+if (!/기존 무상보증기간을 포함한 총 3년/.test(royalTxt))
+  fail('"기존 무상보증기간을 포함한" 문구가 없다 — 3년이 더해지는 것으로 읽힌다');
+else pass('로열블루: 기존 보증기간 "포함"임을 명시');
+
+if (/(\+\s*3\s*년|3년\s*(추가|더))/.test(royalTxt))
+  fail('"3년 추가"로 적었다 — 원문은 기존 보증을 포함한 총 3년이다');
+else pass('로열블루: "3년 추가"로 오독될 표현 없음');
+
+if (!/로열블루/.test(A.ROYAL.grade) || !/프레스티지/.test(A.ROYAL.grade))
+  fail('대상 등급이 로열블루·프레스티지 둘 다가 아니다 — 원문은 둘 다 대상이다');
+else pass('로열블루: 대상 등급 로열블루·프레스티지');
+
+/* 대상 품목에서는 기간이 뜨고, 대상 아닌 품목에서는 뜨지 않아야 한다.
+ * 후자가 핵심이다 — 김치냉장고 화면에 "총 3년"이 떠 있으면 그대로 잘못 안내된다. */
+{
+  const want = Object.entries(A.RB).filter(([, v]) => v[0] === 'ok').map(([k]) => k);
+  const no = Object.entries(A.RB).filter(([, v]) => v[0] === 'no').map(([k]) => k);
+  if (!want.length || !no.length) fail('RB 대상/제외 분류가 비어 있다');
+  let e = 0;
+  for (const k of want) {
+    if (!A.DB[k]) { fail(`RB 에 있는 "${k}" 가 DB 에 없다`); e++; continue; }
+    A.cur = k;
+    const t = doc.querySelector('#body').textContent;
+    if (!/총 3년/.test(t)) { fail(`${k}: 연장 대상인데 "총 3년"이 화면에 없다`); e++; }
+    if (!/대상/.test(t)) { fail(`${k}: 연장 대상 표시가 없다`); e++; }
+  }
+  for (const k of no) {
+    if (!A.DB[k]) { fail(`RB 에 있는 "${k}" 가 DB 에 없다`); e++; continue; }
+    A.cur = k;
+    const t = doc.querySelector('#body').textContent;
+    if (/총 3년/.test(t)) { fail(`${k}: 연장 대상이 아닌데 "총 3년"이 화면에 떠 있다`); e++; }
+    if (!/대상이 아닙니다/.test(t)) { fail(`${k}: 대상이 아니라는 표시가 없다`); e++; }
+  }
+  /* 4대 품목이 아닌 품목(원문이 다루지 않음)도 기간을 말하면 안 된다 */
+  const na = Object.keys(A.DB).find((k) => !A.RB[k]);
+  A.cur = na;
+  const t = doc.querySelector('#body').textContent;
+  if (/총 3년/.test(t)) { fail(`${na}: 4대 품목이 아닌데 "총 3년"이 떠 있다`); e++; }
+  if (!e) pass(`멤버십 연장: 대상 ${want.length}품목만 기간 표시 · 제외 ${no.length}품목과 비대상은 "대상 아님"`);
+}
 
 // ── [4] 출처 ──
 A.cur = '냉장고';

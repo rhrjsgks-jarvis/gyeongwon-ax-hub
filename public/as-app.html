@@ -93,6 +93,8 @@
   .src a{color:#1428A0}
   .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;
     background:#EEF2FF;color:#1428A0;margin-left:5px;vertical-align:2px}
+  .pill.ok{background:#ECFDF5;color:#047857}
+  .pill.no{background:#FEF2F2;color:#B42318}
   @media(max-width:520px){.cats{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}
     .big{font-size:24px}}
 
@@ -209,7 +211,67 @@
  */
 const AS_SRC = "https://www.samsungsvc.co.kr/info/fee?tab=assure";
 const DB = {"냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","냉장고"],["인버터 컴프레서","10년","양문형 냉장고·스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"김치냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","김치독"],["인버터 컴프레서","10년","스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"세탁기·콤보":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"세탁기","core":[["일반모터","3년","세탁기"],["세탁 모터","10년","드럼세탁기 DD MOTOR(2008년 1월 제조분~) · 전자동 10kg 이상(2011년 2월 제조분~)"]]},"건조기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류건조기","core":[["컴프레서","3년","의류건조기"],["모터·컴프레서","정속형 10년 / 인버터형 12년","건조기"]]},"TV":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"TV","core":[["LCD/LED 패널","2년","TV"]]},"모니터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"모니터","core":[["LCD/LED 패널","2년","모니터"]]},"에어컨":{"base":"2년","baseWhy":"계절성 제품 — 냉방 전용","baseNote":"냉난방 겸용은 일반 제품이라 1년","hold":8,"holdAs":"에어컨","core":[["컴프레서","4년","에어컨"],["인버터 컴프레서","10년","2015년 1월 이후 제조분 — 시스템에어컨 제외"]]},"시스템에어컨":{"base":"1년","baseWhy":"일반 제품","hold":8,"holdAs":"시스템에어컨","core":[["컴프레서","4년","시스템에어컨"]],"note":"인버터 컴프레서 10년 적용 대상에서 시스템에어컨은 제외된다"},"에어드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"],["컴프레서","10년","에어드레서"]]},"슈드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"]]},"청소기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전기청소기","core":[["인버터 모터","10년","청소기 — 단, 모션싱크 계열 5년"]]},"공기청정기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[["인버터 모터","10년","공기청정기 — 2018년 향부터"]]},"제습기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"제습기","core":[["인버터 컴프레서","10년","제습기 — 2015년 1월 이후 제조분"]]},"정수기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"정수기","core":[]},"전자레인지/오븐":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전자레인지","core":[["마그네트론","3년","전자레인지"]]},"식기세척기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"인덕션/전기레인지":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"냉동고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"업소용 냉장고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"데이코 빌트인":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"사운드바":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"스마트폰":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"배터리는 1년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"태블릿":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"'25.12.31 까지 구입분은 1년, '26.1.1 이후 구입분부터 2년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"노트북":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[],"note":"노트북 LCD/LED 패널은 핵심부품 2년 적용 대상에서 제외된다"},"데스크탑":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[["메인보드","2년","PC"],["LCD/LED 패널","2년","일체형PC"]]},"프린터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"프린터","core":[]}};
-const ROYAL = {"grade":"로열블루","cond":"2년간 구매 누계 실적 2,000만원 이상 (삼성전자 멤버십 지정매장 기준)","keep":"취득 월로부터 2년간 유효","benefit":"무상수리 서비스 기간 연장 — 추가 구매하신 4대 품목(TV·냉장고·세탁기·에어컨) 대상","unknown":"연장 기간(몇 년)은 삼성닷컴 \"무상수리 서비스 기간 연장\" 안내에서 확인 필요","src":"https://www.samsung.com/sec/membership/membershipLevel/"};
+/*
+ * 멤버십 무상수리 서비스 기간 연장 — 삼성닷컴 원문(membershipBluecare) 그대로다.
+ *
+ * **"총 3년"은 기존 무상보증기간을 포함한 값이다. 3년이 더해지는 것이 아니다.**
+ * 이걸 "3년 연장"으로 말하면 기본 보증이 2년인 냉방전용 에어컨 고객에게 1년을 더
+ * 약속하는 셈이 된다. 그래서 화면은 품목별로 계산하지 않고 원문 문구를 그대로 싣는다
+ * (2026-08-11 사용자 결정 — 에어컨은 냉방전용 2년 / 냉난방겸용 1년으로 한 품목 안에서
+ * 기본 보증이 갈려 계산값이 어느 쪽이든 절반은 틀리기 때문이다).
+ *
+ * 대상 등급은 **로열블루와 프레스티지 둘 다**다. 예전에는 로열블루만 적고 있었다.
+ */
+const ROYAL = {
+  grade: '로열블루 · 프레스티지',
+  cond: '2년간 구매 누계 실적 2,000만원 이상 (삼성전자 멤버십 지정매장 기준)',
+  keep: '취득 월로부터 2년간 유효',
+  title: '무상수리 서비스 기간 연장',
+  ext: '총 3년',
+  what: '등급 유지 기간 내 구매하신 4대 품목(TV·냉장고·세탁기·에어컨) 본체의 무상수리 서비스 기간을 총 3년으로 연장',
+  include: '기존 무상보증기간을 포함한 총 3년입니다 — 3년이 더해지는 것이 아닙니다',
+  only: '고장성 불량에 한함 (파손·긁힘·찍힘 제외)',
+  buy: '삼성전자 멤버십 지정매장에서 구매한 제품에 한함',
+  apply: '4대 품목 수리 서비스 받으실 때, 대상 고객·제품 확인 후 제공',
+  caveat: '무상보증(교환/환불)의 연장을 의미하지 않습니다 — 무상으로 제공되는 수리 서비스입니다',
+  src: 'https://www.samsung.com/sec/membership/membershipBluecare/',
+  srcLevel: 'https://www.samsung.com/sec/membership/membershipLevel/',
+};
+
+/*
+ * 품목이 연장 대상인지 — 원문의 <대상 제품 / 제외 제품> 표 그대로다. 세 가지 상태가 있다:
+ *   ok — 대상. 그 품목의 대상·제외 제품군을 함께 적는다
+ *   no — 원문이 '제외 제품'으로 **명시한** 품목
+ *   na — 4대 품목이 아니라 원문이 아예 다루지 않는 품목 (RB 에 없는 나머지 전부)
+ *
+ * 헷갈리기 쉬운 세 가지를 원문 그대로 옮겼다:
+ *   · **냉동고는 대상이다** — 냉장고 칸에 'Bespoke(냉장고, 냉동고)'와
+ *     '일반(냉장고(300L이상), 냉동고)'로 적혀 있다. 단 업소용은 제외 목록에 있다.
+ *   · **김치냉장고는 제외다** — 같은 칸의 제외 목록에 명시돼 있다.
+ *   · **건조기는 제외지만 '원바디 제외'가 붙는다** — 원문 세탁기 칸이
+ *     '건조기(원바디 제외)'라, 원바디 건조기는 세탁기 쪽 대상 제품이다.
+ */
+const RB = {
+  'TV': ['ok',
+    'Neo QLED(8K 포함) · OLED · QLED · Crystal UHD · Full HD · HD · The Freestyle · The Sero · The Serif · The Frame Pro · The Frame · The Premiere',
+    '브라운관TV · 리모콘 · 자재(벽걸이·스탠드)'],
+  '냉장고': ['ok',
+    'Infinite Line · Bespoke AI(하이브리드·패밀리허브) · Bespoke(냉장고·냉동고) · 양문형 냉장고 · 일반 냉장고(300L 이상)',
+    '소형 냉장고(300L 미만) · 와인 냉장고 · 업소용 냉장고 · 김치냉장고 · 큐브 냉장고 · 비스포크 패널'],
+  '냉동고': ['ok',
+    '원문 냉장고 칸에 Bespoke(냉장고·냉동고) · 일반(냉장고(300L이상)·냉동고)으로 명시',
+    '업소용 냉장고는 제외 목록에 있다'],
+  '세탁기·콤보': ['ok',
+    'Bespoke AI(콤보(세탁건조기)·원바디(세탁기/건조기)·세탁기) · AI 세탁기 · 통버블 세탁기 · 드럼 세탁기 · 소형세탁기',
+    '건조기(원바디 제외) · 받침대 · 키트'],
+  '에어컨': ['ok',
+    '핏홈 에어컨 · 홈멀티 에어컨 · 스탠드 에어컨 · 벽걸이 에어컨 · 중대형에어컨(냉난방)',
+    '창문형 에어컨 · 시스템 에어컨 · OEM 제조 냉난방기 · 리모콘 · 액세서리 · 연장키트 · 배관 자재'],
+  '김치냉장고': ['no', '', '원문 냉장고 칸의 제외 제품으로 명시돼 있습니다'],
+  '업소용 냉장고': ['no', '', '원문 냉장고 칸의 제외 제품으로 명시돼 있습니다'],
+  '건조기': ['no', '', '원문 세탁기 칸에 "건조기(원바디 제외)"로 명시 — 원바디 건조기는 세탁기 쪽 대상 제품입니다'],
+  '시스템에어컨': ['no', '', '원문 에어컨 칸의 제외 제품으로 명시돼 있습니다'],
+};
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const keys = Object.keys(DB);
@@ -603,10 +665,32 @@ function renderBody(){
 
   if (d.note) h += `<div class="card warn"><h2>⚠ 주의</h2><div class="why">${esc(d.note)}</div></div>`;
 
-  h += `<div class="card"><h2>멤버십 ${esc(ROYAL.grade)} 혜택</h2>
-    <div class="row"><div class="n">${esc(ROYAL.benefit)}</div></div>
-    <div class="note">선정 조건: ${esc(ROYAL.cond)}<br>유지: ${esc(ROYAL.keep)}<br>
-      <span class="unk">${esc(ROYAL.unknown)}</span></div></div>`;
+  /* 멤버십 연장 — 대상 품목에서만 기간을 말하고, 아닌 품목에서는 아니라고 분명히 적는다.
+   * 카드를 감추지 않는 이유: 상담사가 "혹시 되나?"를 그 자리에서 확인할 수 있어야 한다. */
+  const rb = RB[cur] || ['na', '', ''];
+  h += `<div class="card"><h2>멤버십 ${esc(ROYAL.title)}` +
+    (rb[0] === 'ok' ? '<span class="pill ok">대상</span>' : '<span class="pill no">대상 아님</span>') + '</h2>';
+  if (rb[0] === 'ok') {
+    h += `<div class="big">${esc(ROYAL.ext)}</div>
+      <div class="why">${esc(ROYAL.what)}</div>
+      <div class="row"><div class="n">대상 제품<div class="d">${esc(rb[1])}</div></div></div>
+      <div class="row"><div class="n">제외 제품<div class="d">${esc(rb[2])}</div></div></div>
+      <div class="note"><b>${esc(ROYAL.include)}</b><br>
+        · ${esc(ROYAL.only)}<br>
+        · ${esc(ROYAL.buy)}<br>
+        · 신청방법: ${esc(ROYAL.apply)}<br>
+        · ${esc(ROYAL.caveat)}<br>
+        대상 등급: <b>${esc(ROYAL.grade)}</b><br>
+        로열블루 선정 조건: ${esc(ROYAL.cond)} · 유지 ${esc(ROYAL.keep)}</div>`;
+  } else {
+    const why = rb[0] === 'no' ? rb[2]
+      : '연장 대상은 TV · 냉장고 · 세탁기 · 에어컨 본체입니다 — 이 품목은 원문이 다루지 않습니다';
+    h += `<div class="unk">✕ 이 품목은 연장 대상이 아닙니다</div>
+      <div class="why" style="margin-top:5px">${esc(why)}</div>
+      <div class="note">연장 대상: TV · 냉장고 · 세탁기 · 에어컨 <b>본체</b>
+        (${esc(ROYAL.grade)} 등급이 삼성전자 멤버십 지정매장에서 구매한 제품)</div>`;
+  }
+  h += '</div>';
 
   h += `<div class="card"><h2>보증 적용 기준 <span class="pill">전 품목 공통</span></h2>
     ${RULES.map(r=>`<div class="rule"><span class="rl ${r.c}">${esc(r.l)}</span><span class="rv">${esc(r.t)}</span></div>`).join('')}
@@ -614,8 +698,9 @@ function renderBody(){
 
 
   h += `<div class="src">출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
-    · 삼성전자 <a href="${ROYAL.src}" target="_blank" rel="noopener">멤버십 등급별 혜택</a><br>
-    2026-08-10 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.</div>`;
+    · 삼성전자 <a href="${ROYAL.srcLevel}" target="_blank" rel="noopener">멤버십 등급별 혜택</a>
+    · <a href="${ROYAL.src}" target="_blank" rel="noopener">무상수리 서비스 기간 연장</a><br>
+    2026-08-11 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.</div>`;
 
   document.getElementById('body').innerHTML = h;
 
@@ -1053,7 +1138,7 @@ function setTab(t){
 renderCats(); renderBody(); wireSearch();
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { DB, ROYAL, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
+window.__as = { DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
   openGroup,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },
