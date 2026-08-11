@@ -102,23 +102,39 @@ const ROI_DATA = [
   { key: 'test',    icon: '📝', label: '레벨업 챌린지 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
 ]
 
-const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
+/*
+ * `retired: true` 는 **운영이 끝났거나 다른 모듈로 통합된** 것이다.
+ *
+ * 라벨은 남기고 **모듈별 사용 현황 목록에서만 감춘다**(2026-08-11 사용자 요청).
+ * 지우지 않는 이유는 두 가지다 — ①구글 시트에 과거 로그가 남아 있어 최근 이벤트
+ * 목록·CSV 에서 여전히 이름이 필요하고 ②지우면 그 자리에 모듈 키(`planner`)가
+ * 그대로 노출된다. 화면에서 빼는 것과 데이터에서 지우는 것은 다른 일이다.
+ */
+const MODULE_META: Record<string, { label: string; icon: string; color: string; retired?: boolean }> = {
   // 허브 메인 페이지뷰는 집계에서 제외되므로 여기 남는 건 통합검색·건의뿐이다
   hub:     { label: '허브 검색·건의',   icon: '🔎', color: '#1428A0' },
   finder:  { label: '모델파인더',      icon: '🔍', color: '#2563EB' },
   care:    { label: 'AI구독 케어',         icon: '🛠️', color: '#059669' },
-  test:    { label: '레벨업 챌린지',    icon: '📝', color: '#7C3AED' },
   compare: { label: '타사비교 가이드', icon: '⚖️', color: '#D97706' },
-  // 타사비교로 통합된 구 모듈 — 통합 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
-  compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309' },
-  quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
-  // 운영 종료된 모듈 — 이전에 쌓인 로그가 남아 있어 라벨은 유지한다
-  planner: { label: '패키지 플래너 (운영 종료)', icon: '📦', color: '#0891B2' },
   install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
+  /* 아래 셋은 MODULE_META 에 아예 없어서 사용 현황에 한 줄도 안 잡히고 있었다
+     (2026-08-11 발견). 운영 중인 모듈이 통계에서 통째로 빠지면 "안 쓴다"로 읽힌다. */
+  as:      { label: 'AS기간 확인',      icon: '🛡️', color: '#0D9488' },
+  place:   { label: '가전 배치 시뮬레이터', icon: '📐', color: '#4F46E5' },
+  test:    { label: '레벨업 챌린지',    icon: '📝', color: '#7C3AED' },
+  quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
   concierge: { label: '컨시어지 프로그램', icon: '🎫', color: '#DB2777' },
+  poster:  { label: '컨시어지 접수 포스터', icon: '🖨️', color: '#9333EA' },
   coupon:  { label: '시크릿쿠폰',      icon: '🎁', color: '#DC2626' },
   catalog: { label: '모바일 카탈로그',  icon: '📱', color: '#0EA5E9' },
+
+  // ── 운영 종료·통합 (목록에서는 감춘다) ──
+  compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309', retired: true },
+  planner: { label: '패키지 플래너 (운영 종료)', icon: '📦', color: '#0891B2', retired: true },
 }
+
+/** 화면에 세우는 모듈 — 운영 중인 것만. */
+const LIVE_MODULES = Object.entries(MODULE_META).filter(([, m]) => !m.retired)
 
 export default function AdminPage() {
   const [logs, setLogs]         = useState<LogEvent[]>([])
@@ -192,14 +208,16 @@ export default function AdminPage() {
         <KpiCard label="총 페이지뷰"   value={totalViews}  icon="👁️" color="#1428A0" />
         <KpiCard label="누적 세션"     value={uniqueUids}  icon="👤" color="#2563EB" />
         <KpiCard label="기록된 이벤트" value={logs.length} icon="📋" color="#059669" />
-        <KpiCard label="추적 모듈 수"  value={Object.keys(MODULE_META).length} icon="🧩" color="#7C3AED" />
+        <KpiCard label="추적 모듈 수"  value={LIVE_MODULES.length} icon="🧩" color="#7C3AED" />
       </div>
 
       <Section title="모듈별 사용 현황">
         <div className="space-y-2.5">
-          {Object.entries(MODULE_META).map(([key, meta]) => {
+          {LIVE_MODULES.map(([key, meta]) => {
             const count = byModule[key] || 0
-            const maxVal = Math.max(...Object.values(byModule), 1)
+            /* 막대 길이는 **보이는 모듈 중** 최대치를 기준으로 잡는다. 감춘 모듈까지
+               넣으면 화면에 없는 값이 기준이 돼 막대가 이유 없이 짧아진다. */
+            const maxVal = Math.max(...LIVE_MODULES.map(([k]) => byModule[k] || 0), 1)
             const pct = Math.round((count / maxVal) * 100)
             return (
               <div key={key}>
@@ -219,6 +237,22 @@ export default function AdminPage() {
             )
           })}
         </div>
+        {/* 감춘 모듈의 로그는 "기록된 이벤트" 총계에는 그대로 들어 있다.
+            밝혀 두지 않으면 목록 합계와 총계가 어긋나 보여 수치를 의심하게 된다. */}
+        {(() => {
+          const n = Object.entries(MODULE_META)
+            .filter(([, m]) => m.retired)
+            .reduce((a, [k]) => a + (byModule[k] || 0), 0)
+          if (!n) return null
+          /* 모듈 이름은 적지 않는다 — 가려 달라고 한 것을 각주로 되살리면 뜻이 없다.
+             건수만 밝혀 "목록 합계 ≠ 총계"가 오류로 보이지 않게 한다. */
+          return (
+            <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
+              운영이 끝났거나 다른 모듈로 통합된 과거 로그 {n}건은 목록에서 제외했습니다 —
+              총계와 CSV 에는 그대로 포함됩니다.
+            </p>
+          )
+        })()}
       </Section>
 
       <Section title="최근 14일 일별 활동">
