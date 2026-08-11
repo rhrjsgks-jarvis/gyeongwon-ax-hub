@@ -6,13 +6,11 @@ import { usePathname } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
 
-const NAV_ITEMS = [
-  { href: '/',        label: '허브',      icon: 'home' as IconName },
-  { href: '/search',  label: '통합검색',   icon: 'search' as IconName },
-  { href: '/care',    label: 'AI구독 케어',   icon: 'care' as IconName },
-  { href: '/test',    label: '레벨업 챌린지', icon: 'quiz' as IconName },
-  { href: '/compare', label: '타사비교',  icon: 'compare' as IconName },
-  { href: '/install', label: '설치환경',  icon: 'install' as IconName },
+// 허브·통합검색은 **그룹 밖 최상단**이다. 둘 다 '도구'가 아니라 진입점이고,
+// 좁은 화면에서는 하단 탭이, 넓은 화면에서는 사이드바 맨 위가 같은 역할을 한다.
+const NAV_ENTRY = [
+  { href: '/',       label: '허브',     icon: 'home' as IconName },
+  { href: '/search', label: '통합검색', icon: 'search' as IconName },
 ]
 
 // 데스크탑 사이드바 전용 그룹 — 허브 메인 섹션 구성과 동일하게 유지
@@ -47,6 +45,18 @@ const NAV_GROUPS = [
 
 // 사용현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
 const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자용]', icon: 'dashboard' as IconName }
+
+/*
+ * 좁은 화면 하단 바로가기 — **사이드바에서 그대로 뽑는다. 손으로 따로 적지 않는다.**
+ * 손으로 적었더니 둘이 어긋나 하단에만 '레벨업 챌린지'(교육 그룹)가 들어가 있고
+ * AS 관련 업무·배치 시뮬레이터·제품 상세검색은 빠져 있었다(2026-08-11 사용자 지적:
+ * *"사이드바 메뉴가 동일하게 하단 바로가기로 나와 있어야 합니다. 하단 바로가기에
+ * 엉뚱한 것들이 있습니다"*). 파생으로 두면 사이드바만 고쳐도 둘이 같이 간다.
+ *
+ * 담는 것은 **진입점 둘 + '제품 상담 도구' 그룹**이다. 하단 바는 한 줄이라 전부는 못 담고,
+ * 상담 중에 손이 가는 것이 그 그룹이다. 교육·매장운영은 허브에서 연다.
+ */
+const NAV_ITEMS = [...NAV_ENTRY, ...NAV_GROUPS[0].items]
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -94,11 +104,11 @@ export default function Navigation() {
             <Link
               key={item.href}
               href={item.href}
-              className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-center no-underline transition-colors relative"
+              className="flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 gap-0.5 text-center no-underline transition-colors relative"
               style={{ color: active ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
             >
-              <Icon name={item.icon} size={21} />
-              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+              <Icon name={item.icon} size={19} />
+              <span className="text-[9px] font-medium leading-tight break-keep px-0.5">{item.label}</span>
               {active && (
                 <span
                   className="absolute bottom-0 w-5 h-0.5 rounded-full"
@@ -112,14 +122,10 @@ export default function Navigation() {
 
       {/* 사이드바 (데스크탑) */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
-        {/*
-          허브·통합검색은 **그룹 밖 최상단**에 둔다. 둘 다 '도구'가 아니라 진입점이고,
-          좁은 화면의 하단 탭이 하는 역할을 넓은 화면에서는 여기가 한다.
-          통합검색을 '제품 상담 도구' 그룹에 넣었더니 상단 검색창·하단 탭과 겹쳐
-          한 화면에 셋이 됐다(2026-08-11 사용자 지적: *"너무 중복입니다"*).
-        */}
+        {/* 통합검색을 '제품 상담 도구' 그룹에 넣었더니 상단 검색창·하단 탭과 겹쳐
+            한 화면에 셋이 됐다(2026-08-11 사용자 지적: *"너무 중복입니다"*). */}
         <div className="px-3 py-4 flex flex-col gap-1">
-          {NAV_ITEMS.filter((item) => item.href === '/' || item.href === '/search').map((item) => {
+          {NAV_ENTRY.map((item) => {
             const active = pathname === item.href
             return (
               <Link
