@@ -514,7 +514,10 @@ const DOOR_OPEN = [
   { cat:'세탁기·콤보', kind:'front', leaves:1, deg:90, openD:1430,
     src:'Bespoke AI 콤보 일체형(WD90F25***/WD25DB) — 깊이 875mm, 도어 오픈 시 1,430mm · samsung.com 설치가이드' },
   { cat:'건조기', kind:'front', leaves:1, deg:90, openD:1430,
-    src:'건조기 단독 실측이 원문에 없어 같은 규격대(폭 686·깊이 875)의 콤보 값을 준용한다 — weak', weak:true },
+    src:'건조기 단독 실측이 원문에 없어 같은 규격대(폭 686·깊이 840~872)의 콤보 값을 준용한다. '
+      + '2026-08-11 삼성닷컴을 직접 뒤졌으나(구매가이드 건조기 절·건조기 전체보기·설치안내 FAQ) '
+      + '도어 오픈 치수가 어디에도 없다 — 설치가이드가 주는 것은 깊이 840~872mm 와 설치 최소 거리 '
+      + '722~754mm 뿐이다. 실측이 나오면 교체할 것. 같은 검색을 반복하지 말 것.', weak:true },
 ];
 const doorOpenFor = (it) => findRule(DOOR_OPEN, it);
 
