@@ -33,16 +33,6 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
     title: '제품 상담 도구',
     modules: [
       {
-        href: '/search',
-        icon: 'search',
-        title: '통합검색',
-        desc: '앱 안의 모든 자료를 한 번에 — 제품·설치·타사비교·구독케어·AS·배치를 조건 여러 개로 좁혀 검색',
-        color: '#1428A0',
-        bg: '#EEF2FF',
-        updated: '2026.08',
-        status: 'live',
-      },
-      {
         href: '/finder',
         icon: 'finder',
         title: '제품 상세검색',

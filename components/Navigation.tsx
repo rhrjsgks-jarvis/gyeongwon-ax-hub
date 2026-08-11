@@ -20,7 +20,6 @@ const NAV_GROUPS = [
   {
     title: '제품 상담 도구',
     items: [
-      { href: '/search',          label: '통합검색',         icon: 'search' as IconName },
       { href: '/finder',          label: '제품 상세검색',     icon: 'finder' as IconName },
       { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
@@ -113,8 +112,14 @@ export default function Navigation() {
 
       {/* 사이드바 (데스크탑) */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
+        {/*
+          허브·통합검색은 **그룹 밖 최상단**에 둔다. 둘 다 '도구'가 아니라 진입점이고,
+          좁은 화면의 하단 탭이 하는 역할을 넓은 화면에서는 여기가 한다.
+          통합검색을 '제품 상담 도구' 그룹에 넣었더니 상단 검색창·하단 탭과 겹쳐
+          한 화면에 셋이 됐다(2026-08-11 사용자 지적: *"너무 중복입니다"*).
+        */}
         <div className="px-3 py-4 flex flex-col gap-1">
-          {NAV_ITEMS.filter((item) => item.href === '/').map((item) => {
+          {NAV_ITEMS.filter((item) => item.href === '/' || item.href === '/search').map((item) => {
             const active = pathname === item.href
             return (
               <Link

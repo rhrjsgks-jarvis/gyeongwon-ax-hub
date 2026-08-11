@@ -136,10 +136,13 @@ function flatten(v, out = []) {
   const html = read('as-app.html');
   const DBA = literal(html, /\nconst DB = (\{[\s\S]*?\});\n/, 'as-app.html 의 DB');
   const CEN = literal(html, /\nconst CENTERS = (\[[\s\S]*?\n\]);/, 'as-app.html 의 CENTERS');
+  const OPS = literal(html, /\nconst OPS = (\{[\s\S]*?\n\});/, 'as-app.html 의 OPS');
+  const VOCHQ = literal(html, /\nconst VOC_HQ = (\{[\s\S]*?\});/, 'as-app.html 의 VOC_HQ');
   const B2B = literal(html, /\nconst B2B = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B');
   const IT = literal(html, /\nconst B2B_IT = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_IT');
   const SINK = literal(html, /\nconst SINK = (\[[\s\S]*?\n\]);/, 'as-app.html 의 SINK');
   const NAT = literal(html, /\nconst B2B_NATION = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_NATION');
+  const MID = literal(html, /\nconst MID = (\[[\s\S]*?\n\]);/, 'as-app.html 의 MID');
 
   for (const [cat, d] of Object.entries(DBA)) {
     add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
@@ -149,8 +152,11 @@ function flatten(v, out = []) {
   }
   for (const c of CEN) {
     add({ t: 'contact', m: 'as', title: `${c.t} (물류센터)`, sub: `${c.n} · ${c.a}`,
-      kw: [c.t, c.code, c.n, c.b, c.a, ...c.kw, '물류센터 배송 설치 관할 tc'].join(' '), href: '/as' });
+      kw: [c.t, c.code, c.n, c.b, c.a, ...c.kw, ...flatten(OPS[c.code]),
+        '물류센터 배송 설치 관할 tc 상황실 운영 voc'].join(' '), href: '/as' });
   }
+  add({ t: 'contact', m: 'as', title: '물류 VOC 본사 창구', sub: `${VOCHQ.n} · 배송·설치 VOC 접수`,
+    kw: [VOCHQ.n, ...flatten(VOCHQ.x), 'voc 물류 본사 접수 불만 배송 설치'].join(' '), href: '/as' });
   for (const c of B2B) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (빌트인 이전설치)`, sub: `${c.n} · ${c.a}`,
       kw: [c.p, c.c, c.code, c.n, ...flatten(c.x), c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });
@@ -166,8 +172,13 @@ function flatten(v, out = []) {
       href: '/as' });
   }
   for (const x of NAT) {
-    add({ t: 'contact', m: 'as', title: `${x.t} — ${x.p}`, sub: `${x.n} · ${x.d}`,
+    add({ t: 'contact', m: 'as', title: `${x.t} 이전설치`, sub: `${x.p} · ${x.n} · ${x.d}`,
       kw: [x.p, x.t, x.n, x.d, ...flatten(x.x), '이전설치 전국 담당'].join(' '), href: '/as' });
+  }
+  // 중앙에너지 설치 지사 — "우리 동네는 어디서 나오나"(접수는 본사콜 하나)
+  for (const m of MID) {
+    add({ t: 'contact', m: 'as', title: `${m.g} (중앙에너지)`, sub: `${m.tc} · ${m.a}`,
+      kw: [m.g, m.tc, m.a, '중앙에너지 인덕션 정수기 후드 지사 설치 관할'].join(' '), href: '/as' });
   }
 }
 
