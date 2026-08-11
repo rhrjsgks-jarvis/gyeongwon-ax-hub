@@ -4804,13 +4804,37 @@ function applianceMesh(it){
 function build(){
   ensure();
   while (root.children.length) root.remove(root.children[0]);
-  culled.length = 0;
+  culled.length = 0; segs2d = []; eyeAt = null;
   const loops = P.roomLoops();
   const box = new THREE.Box3();
+  let bestA = 0;
   for (const L of loops){
     const g = buildRoom(L);
     root.add(g);
     for (const p of L.pts) box.expandByPoint(new THREE.Vector3(M(p[0]), 0, M(p[1])));
+    for (const w of (L.walls || [])) segs2d.push([M(w.x1), M(w.y1), M(w.x2), M(w.y2)]);
+    /*
+     * 눈높이 시점이 설 자리 — **가장 넓은 방 안쪽의 한 점**이다.
+     * 여러 방의 경계상자 중심은 ㄱ자 평면이나 방이 떨어져 있을 때 **아무 방에도 안 들어간다**
+     * (복도 한가운데나 벽 속에 서게 된다). 그래서 방마다 따로 구해 넓은 쪽을 쓴다.
+     */
+    const mp = L.pts.map((p) => [M(p[0]), M(p[1])]);
+    let a2 = 0, cx = 0, cy = 0;
+    for (let i = 0, j = mp.length - 1; i < mp.length; j = i++){
+      const f = mp[j][0] * mp[i][1] - mp[i][0] * mp[j][1];
+      a2 += f; cx += (mp[j][0] + mp[i][0]) * f; cy += (mp[j][1] + mp[i][1]) * f;
+    }
+    const A = Math.abs(a2) / 2;
+    if (A > bestA){
+      let c = a2 ? [cx / (3 * a2), cy / (3 * a2)] : null;
+      /* 무게중심은 오목한 방(ㄱ자)에서 밖으로 나간다 — 그러면 경계상자 중심으로 물러선다 */
+      if (!c || !inPoly(mp, c[0], c[1])){
+        const xs = mp.map((p) => p[0]), ys = mp.map((p) => p[1]);
+        const b = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+        c = inPoly(mp, b[0], b[1]) ? b : mp[0];
+      }
+      bestA = A; eyeAt = c;
+    }
   }
   let n = 0;
   for (const it of P.state.items){
@@ -4820,10 +4844,11 @@ function build(){
   /* 카메라를 방 전체가 보이는 자리로 */
   const c = box.getCenter(new THREE.Vector3());
   const sz = box.getSize(new THREE.Vector3());
+  ctr = [c.x, c.z];
   orb.tx = c.x; orb.tz = c.z;
   fitDist = Math.max(3, Math.hypot(sz.x, sz.z) * 1.15);
   orb.max = Math.max(20, fitDist * 3);
-  view('iso');
+  view(mode3);            // 시점을 고른 채로 방을 바꿔도 그 시점을 유지한다
   return { rooms: loops.length, items: n };
 }
 
@@ -4833,19 +4858,73 @@ function build(){
      눈높이   — 사람이 서서 보는 높이. "우리 집 느낌"이 가장 잘 나는 각도다
      위에서   — 2D 평면도와 같은 구도. 2D ↔ 3D 를 눈으로 잇게 해 준다
    `fit` 은 방 크기에서 다시 계산한다 — 방마다 필요한 거리가 다르다. */
-let fitDist = 8;
+let fitDist = 8, mode3 = 'iso';
+const EYE_MM = 1600;           // 서서 보는 눈높이. 한국 성인 평균 신장에서 눈까지가 대략 이 값이다
 function view(name){
-  if (name === 'eye'){
-    orb.pitch = 0.16; orb.ty = M(1500); orb.dist = fitDist * 0.75;
-  } else if (name === 'top'){
+  mode3 = (name === 'eye' || name === 'top') ? name : 'iso';
+  /* 실내에서는 화각을 넓힌다 — 부동산 실내 사진이 광각으로 찍히는 것과 같은 이유다.
+     52°로는 2m 앞 냉장고가 화면을 다 먹어 방이 안 보인다. */
+  if (cam){ cam.fov = mode3 === 'eye' ? 72 : 52; cam.updateProjectionMatrix(); }
+  if (mode3 === 'eye'){
+    /*
+     * 방 **안**에 서서 둘러보는 시점. 실제 위치는 apply() 가 매 프레임 벽까지 거리로 자른다 —
+     * 한 번 놓아 두기만 하면 사용자가 돌리는 순간 다시 벽을 뚫는다.
+     *
+     * 거리를 크게 넣어 두면 자동으로 **벽 앞까지 물러선다.** 방 한가운데 서면 코앞의
+     * 가전이 화면을 채워 방이 안 보인다 — 실내 사진이 늘 구석에서 찍히는 것과 같은 이유다.
+     * 그 뒤 두 손가락으로 좁히면 앞으로 다가온다.
+     */
+    orb.pitch = 0.06; orb.dist = 1e4;
+    if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; }
+  } else if (mode3 === 'top'){
     orb.pitch = 1.44; orb.ty = 0; orb.dist = fitDist * 0.95; orb.yaw = 0;
+    if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   } else {
     orb.pitch = 0.85; orb.ty = M(WALL_H_MM) * 0.35; orb.dist = fitDist; orb.yaw = -0.7;
+    if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   }
+}
+
+/* ── 눈높이 시점을 방 안에 가둔다 ────────────────────────────────
+   벽 선분을 m 단위로 들고 있다가, 시선 방향으로 광선을 쏴 가장 가까운 벽을 찾는다.
+   궤도 반지름을 그보다 짧게 자르면 **돌려도 확대해도 벽 밖으로 못 나간다.**
+   개구부(문·창)도 벽으로 친다 — 트인 곳으로 카메라가 빠져나가면 옆방이 통째로 보여
+   "우리 집 한 칸"을 보여주려던 뜻이 사라진다.
+──────────────────────────────────────────────────────────────── */
+let segs2d = [], eyeAt = null, ctr = null;
+/** 광선 (px,pz)+t·(dx,dz) 와 선분의 교차 t (없으면 null) */
+function raySeg(px, pz, dx, dz, s){
+  const ex = s[2] - s[0], ez = s[3] - s[1];
+  const den = dx * ez - dz * ex;
+  if (Math.abs(den) < 1e-9) return null;
+  const t = ((s[0] - px) * ez - (s[1] - pz) * ex) / den;
+  const u = ((s[0] - px) * dz - (s[1] - pz) * dx) / den;
+  return (t > 1e-4 && u >= 0 && u <= 1) ? t : null;
+}
+function clampInside(){
+  if (!segs2d.length) return;
+  const cp = Math.max(Math.cos(orb.pitch), 1e-3);
+  const dx = Math.sin(orb.yaw), dz = Math.cos(orb.yaw);
+  let hit = Infinity;
+  for (const s of segs2d){ const t = raySeg(orb.tx, orb.tz, dx, dz, s); if (t != null && t < hit) hit = t; }
+  const rmax = Math.max(M(500), (hit === Infinity ? fitDist : hit) - M(300));
+  orb.dist = Math.min(orb.dist, rmax / cp);
+  /* 카메라가 눈높이에 오도록 바라보는 점의 높이를 거꾸로 맞춘다 */
+  orb.ty = Math.max(M(200), M(EYE_MM) - orb.dist * Math.sin(orb.pitch));
+}
+/** 다각형 안인가 (짝수-홀수) */
+function inPoly(pts, x, y){
+  let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++){
+    const [xi, yi] = pts[i], [xj, yj] = pts[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
 }
 
 /* ── 카메라 적용 ── */
 function apply(){
+  if (mode3 === 'eye') clampInside();     // 돌리는 중에도 매 프레임 다시 자른다
   const cp = Math.cos(orb.pitch), sp = Math.sin(orb.pitch);
   cam.position.set(
     orb.tx + orb.dist * cp * Math.sin(orb.yaw),

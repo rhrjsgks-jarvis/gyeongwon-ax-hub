@@ -19,6 +19,16 @@ window.navigator.clipboard = { writeText: async () => {} };
 window.Element.prototype.scrollIntoView = () => {};
 window.HTMLAnchorElement.prototype.click = () => {};
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+/* 고정 시간이 아니라 "준비됐는가"를 기다린다 — npm test 로 스위트를 연달아 돌리면
+   부하 때문에 200ms 안에 인라인 스크립트가 못 끝난다(test-finder 가 실제로 그렇게 죽었다). */
+async function ready(check, ms = 15000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    try { if (check()) return true; } catch { /* 아직 없다 */ }
+    await wait(25);
+  }
+  return false;
+}
 
 const allCats = [
   '냉장고 4도어 프리스탠딩', '냉장고 4도어 키친핏', '냉장고 4도어 키친핏 Max', '냉장고 2도어',
@@ -36,9 +46,12 @@ const expectedImageCounts = {
 };
 
 (async () => {
-  await wait(200);
   const doc = window.document;
   let ok = true;
+  /* **스크립트가 돌았는지**를 봐야 한다. `.cat-drop-row` 는 정적 HTML 에 이미 있어
+     조건이 즉시 참이 되고, 그러면 예전 고정 대기와 다를 바가 없다(실제로 그렇게 깨졌다). */
+  if (!await ready(() => typeof window.selectCat === 'function'))
+    console.log('ERROR: 인라인 스크립트가 15초 안에 준비되지 않음 (selectCat)');
 
   const rows = doc.querySelectorAll('.cat-drop-row');
   console.log('total rows:', rows.length);

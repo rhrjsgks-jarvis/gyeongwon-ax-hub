@@ -57,6 +57,16 @@ window.Element.prototype.scrollIntoView = () => {};
 window.HTMLAnchorElement.prototype.click = () => {};
 
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+/* 고정 시간이 아니라 "준비됐는가"를 기다린다 — npm test 로 스위트를 연달아 돌리면
+   부하 때문에 200ms 안에 인라인 스크립트가 못 끝난다(test-finder 가 실제로 그렇게 죽었다). */
+async function ready(check, ms = 15000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    try { if (check()) return true; } catch { /* 아직 없다 */ }
+    await wait(25);
+  }
+  return false;
+}
 function val(id) { return doc.getElementById(id); }
 function firstCompInput() { return doc.querySelectorAll('#competitor-list input[type="url"]')[0]; }
 function resetUrlTabInputs() {
@@ -68,7 +78,10 @@ function resetUrlTabInputs() {
 }
 
 (async () => {
-  await wait(200);
+  /* **스크립트가 돌았는지**를 본다. DOM 요소는 정적 HTML 에 이미 있을 수 있어
+     조건이 즉시 참이 되면 예전 고정 대기와 다를 바가 없다. */
+  if (!await ready(() => typeof window.selectCat === 'function' && typeof window.renderHistory === 'function'))
+    console.log('ERROR: 인라인 스크립트가 15초 안에 준비되지 않음 (selectCat/renderHistory)');
 
   // ══════════════════════════════════════════
   // 0. 초기 렌더 — 에러 없이 로드되는지

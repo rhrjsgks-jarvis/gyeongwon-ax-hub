@@ -29,6 +29,24 @@ window.navigator.clipboard = { writeText: async () => {} };
 window.Element.prototype.scrollIntoView = () => {};
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
+/*
+ * 인라인 스크립트가 다 돌 때까지 **조건으로** 기다린다.
+ *
+ * 예전에는 `wait(200)` 이라는 고정 시간이었는데, `npm test` 로 스위트를 연달아 돌리면
+ * 그 200ms 안에 못 끝나 `window.parseQuery is not a function` 으로 죽었다(2026-08-11 두 번).
+ * 단독 실행에서는 늘 통과해 원인을 찾기 어려운 종류다 — finder-app.html 은 제품 578종이
+ * 든 큰 파일이라 부하가 걸리면 파싱·실행이 200ms 를 넘긴다.
+ * 시간이 아니라 "준비됐는가"를 기다리면 느린 기계에서도, 빠른 기계에서도 맞는다.
+ */
+async function ready(check, ms = 15000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    try { if (check()) return true; } catch { /* 아직 없다 */ }
+    await wait(25);
+  }
+  return false;
+}
+
 // ── DB 원본 직접 추출 (window.PRODUCTS는 top-level let이라 접근 불가) ──
 function extractArray(varDeclPrefix) {
   const line = html.split('\n').find((l) => l.trim().startsWith(varDeclPrefix));
@@ -106,10 +124,12 @@ const CAT_QUERIES = {
 };
 
 (async () => {
-  await wait(200);
+  const loaded = await ready(() =>
+    typeof window.parseQuery === 'function' && window.document.querySelectorAll('#exRow .ex').length > 0);
   const doc = window.document;
   let ok = true;
   const fail = (msg) => { console.log('ERROR:', msg); ok = false; };
+  if (!loaded) fail('인라인 스크립트가 15초 안에 준비되지 않음 (parseQuery / #exRow)');
 
   // ═══ 1. 초기 렌더 ═══
   console.log('── 1. 초기 렌더 ──');

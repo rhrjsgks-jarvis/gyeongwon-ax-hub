@@ -292,5 +292,128 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: "추적 모듈 수"는 운영 중인 모듈만 집계');
 }
 
+/*
+ * ── 9. normalizeLogs: **시트가 실제로 보내는 모양**으로 검사한다 ──
+ *
+ * 이 스위트의 다른 검사는 `date: 'YYYY-MM-DD'` 처럼 잘 만들어진 데이터를 쓴다. 그래서
+ * **테스트는 통과하는데 프로덕션은 틀려 있었다** — 2026-08-11 실데이터를 열어 보니
+ *   ① 시트 헤더 행이 이벤트로 섞여 오고(module:'module')
+ *   ② date 가 'Wed Jul 29 2026 00:00:00 GMT+0900 (Korean Standard Time)' 였다.
+ * ②는 aggregateByDay 의 조회 키('YYYY-MM-DD')와 어긋나 **일별 추이가 전부 0** 이었다.
+ * 그래서 여기서는 이상적인 값이 아니라 **그때 받은 원문 그대로**를 넣는다.
+ */
+{
+  const { normalizeLogs } = await import('../lib/logEvent.ts');
+  const raw = [
+    // 시트 1행(헤더)이 그대로 실려 온다 — ts 가 숫자가 아니다
+    { ts: null, date: 'date', module: 'module', action: 'action', uid: 'uid', extra: 'extra' },
+    { ts: 1785321007809, date: 'Wed Jul 29 2026 00:00:00 GMT+0900 (Korean Standard Time)',
+      module: 'hub', action: 'page_view', uid: 'ycv47niq' },
+    { ts: 1785321216210, date: 'Wed Jul 29 2026 00:00:00 GMT+0900 (Korean Standard Time)',
+      module: 'finder', action: 'search', uid: 'bn5idr0h', extra: '무풍' },
+    { ts: '', date: '', module: '', action: '', uid: '' },            // 빈 행
+  ];
+  const norm = normalizeLogs(raw);
+
+  // 4행 중 헤더 1 + 빈 행 1 을 걸러 2건이 남아야 한다
+  if (norm.length !== 2) fail(`normalizeLogs: 2건이어야 하는데 ${norm.length}건 (헤더·빈 행이 안 걸러졌다)`);
+  else console.log('OK: normalizeLogs — 시트 헤더 행과 빈 행을 걸러낸다 (4행 → 2건)');
+
+  if (norm.some((e) => e.module === 'module'))
+    fail('normalizeLogs: 헤더 행이 module="module" 이벤트로 남았다');
+  else console.log('OK: normalizeLogs — module="module" 가짜 이벤트 없음');
+
+  const bad = norm.filter((e) => !/^\d{4}-\d{2}-\d{2}$/.test(e.date));
+  if (bad.length) fail(`normalizeLogs: date 가 YYYY-MM-DD 가 아니다 — ${bad[0].date}`);
+  else console.log('OK: normalizeLogs — date 를 ts 에서 YYYY-MM-DD 로 다시 만든다');
+
+  // 정규화한 로그가 실제로 일별 집계에 잡혀야 한다 (이것이 원래 깨져 있던 것)
+  const day = aggregateByDay(norm, 3650).find((d) => d.date === norm[0].date);
+  if (!day || day.count !== 2)
+    fail(`normalizeLogs: 정규화 후에도 일별 집계에 안 잡힌다 (${norm[0].date} → ${day ? day.count : '없음'}건, 기대 2건)`);
+  else console.log(`OK: normalizeLogs — 일별 추이에 잡힌다 (${norm[0].date} 2건)`);
+
+  // 정규화 전 원본을 그대로 넣으면 0건이어야 한다 — 이 검사가 버그의 존재를 증명한다
+  const before = aggregateByDay(raw.filter((r) => Number(r.ts) > 0), 3650)
+    .reduce((s, d) => s + d.count, 0);
+  if (before !== 0)
+    console.log(`OK: (참고) 정규화 전에도 ${before}건 잡힘`);
+  else console.log('OK: 정규화 전에는 일별 집계 0건 — 이 버그가 실재했음을 확인');
+
+  if (norm[1].extra !== '무풍') fail('normalizeLogs: extra 가 보존되지 않았다');
+  else console.log('OK: normalizeLogs — extra 보존');
+}
+
+/*
+ * ── 10. 전송 대기함(outbox) — 배치·재시도·중복방지 ──
+ *
+ * 매장 500곳으로 늘리기 전에 넣은 장치다. 예전에는 이벤트 1건이 Apps Script 실행 1회였고
+ * `mode:'no-cors'` 라 실패를 알 수도 없었다(하루 실행시간 90분 한도를 넘길 계산이었다).
+ *
+ * GAS_CONNECTED 를 켠 상태가 필요하므로 env 를 세우고 **모듈을 다시 불러온다**
+ * (위쪽 검사들은 미연동 상태를 전제하므로 그대로 둔다).
+ */
+{
+  process.env.NEXT_PUBLIC_GAS_URL = 'https://script.example.invalid/exec';
+  const calls = [];
+  let reply = { ok: true };
+  globalThis.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    calls.push({ url, body, keepalive: !!init.keepalive });
+    return { ok: reply.ok !== false, json: async () => reply };
+  };
+  globalThis.window = { addEventListener() {} };
+  globalThis.document.addEventListener = () => {};
+  localStorage.clear();
+
+  const L = await import('../lib/logEvent.ts?withgas');
+  if (!L.GAS_CONNECTED) fail('outbox: 재로드 후에도 GAS_CONNECTED=false (env 주입 실패)');
+
+  // ① 모았다 보낸다 — 5건을 넣어도 아직 전송되지 않는다
+  for (let i = 0; i < 5; i++) L.logEvent('finder', 'page_view');
+  if (calls.length !== 0) fail(`outbox: 5건에서 이미 ${calls.length}회 전송 (모으지 않는다)`);
+  else console.log('OK: outbox — 이벤트마다 곧장 보내지 않고 모은다');
+
+  await L.flushLogs();
+  if (calls.length !== 1) fail(`outbox: flush 후 전송 ${calls.length}회 (1회여야 한다)`);
+  else if (calls[0].body.events.length !== 5) fail(`outbox: 한 번에 5건이어야 하는데 ${calls[0].body.events.length}건`);
+  else console.log(`OK: outbox — 5건을 요청 1회로 보낸다 (GAS 실행 1/5)`);
+
+  if (!/\/api\/logs$/.test(String(calls[0].url)))
+    fail(`outbox: 서버 라우트가 아니라 ${calls[0].url} 로 보냈다 — 성공 여부를 못 읽는다`);
+  else console.log('OK: outbox — /api/logs 를 거쳐 성공 여부를 확인한다');
+
+  // ② 성공하면 대기함이 빈다
+  if (await L.flushLogs() !== false || calls.length !== 1)
+    fail('outbox: 성공한 배치가 대기함에서 지워지지 않았다');
+  else console.log('OK: outbox — 보낸 것은 대기함에서 지운다');
+
+  // ③ 실패하면 남고, 재시도 때 **같은 batchId** 로 다시 간다
+  calls.length = 0; reply = { ok: false };
+  for (let i = 0; i < 3; i++) L.logEvent('care', 'page_view');
+  await L.flushLogs();
+  const first = calls.length;
+  await L.flushLogs();
+  if (calls.length !== first + 1) fail('outbox: 실패한 배치를 다시 보내지 않았다');
+  else if (calls[0].body.batchId !== calls[1].body.batchId)
+    fail(`outbox: 재시도 batchId 가 다르다 (${calls[0].body.batchId} → ${calls[1].body.batchId}) — 중복이 쌓인다`);
+  else console.log(`OK: outbox — 실패분을 같은 batchId 로 재전송 (중복 방지, id=${calls[0].body.batchId})`);
+
+  // ④ 다시 성공시키면 비워진다
+  reply = { ok: true };
+  await L.flushLogs();
+  calls.length = 0;
+  await L.flushLogs();
+  if (calls.length !== 0) fail('outbox: 성공 후에도 남아서 계속 보낸다');
+  else console.log('OK: outbox — 재전송 성공 후 대기함이 비워진다');
+
+  // ⑤ 한 배치 상한을 채우면 기다리지 않고 바로 보낸다
+  calls.length = 0;
+  for (let i = 0; i < 20; i++) L.logEvent('place', 'page_view');
+  await new Promise((r) => setImmediate(r));
+  if (!calls.length) fail('outbox: 20건이 쌓여도 바로 보내지 않는다 (타이머만 기다리면 상담이 끝난 뒤 나간다)');
+  else console.log(`OK: outbox — 한 배치(20건)가 차면 즉시 전송`);
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
