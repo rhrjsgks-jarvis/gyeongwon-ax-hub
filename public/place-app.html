@@ -481,6 +481,138 @@ const findRule = (list, it) =>
 const doorZoneFor = (it) => findRule(DOOR_ZONE, it);
 const topOpenFor  = (it) => findRule(TOP_OPEN, it);
 
+/* ── 도어 열림 (3D 에서 문을 열어 보는 기능) ──────────────────────────
+ * 설치환경 가이드(`install-app.html`) 원문에 **실측이 적힌 것만** 넣는다. 이격거리와 같은 규칙 —
+ * 없는 값을 지어내면 "문 열면 부딪힙니다"가 거짓이 된다.
+ *
+ * 원문이 값을 주는 방식이 둘이라 그대로 나눠 담는다:
+ *   side  — "도어 오픈 시 **전체 폭**" (냉장고: 옆으로 열린다)  → (전체폭 − 본체폭)/2 가 한쪽 돌출
+ *   front — "**깊이**(도어 오픈 시)"   (세탁기: 앞으로 열린다)  → (오픈깊이 − 본체깊이) 가 돌출
+ *   top   — 위로 열려 평면에 영향이 없다 (TOP_OPEN 이 이미 안내한다)
+ *
+ * `deg` 는 원문에 적힌 도어 오픈 각도다. 3D 에서 문짝을 그 각도로 돌리는 데 쓴다.
+ * `leaves` 는 문짝 수 — 2 면 좌우로 하나씩(양문형·4도어), 1 이면 한쪽만 열린다.
+ *
+ * **힌지 방향은 카탈로그·도면 어디에도 없다.** 문짝이 하나인 제품은 기본을 오른쪽으로 두고
+ * 사용자가 뒤집을 수 있게 한다(`it.hinge`). 좌우를 단정하면 절반은 틀린 그림이 된다.
+ */
+const DOOR_OPEN = [
+  { cat:'냉장고', group:/양문형/, kind:'side', leaves:2, deg:170, openW:1726,
+    src:'845~852L·805L·635~796L급 설치 규격도 — 도어 오픈 시 전체 폭 1,726mm(본체 912) · 도어 오픈 최대 170° · samsung.com' },
+  { cat:'냉장고', group:/4도어|패밀리허브|프리스탠딩/, kind:'side', leaves:2, deg:125, openW:1498,
+    src:'Bespoke 4도어 프리스탠딩(RM/RF91·RF90) — 도어오픈각 125° · 도어오픈 시 전체폭 1,498mm(본체 916) · samsung.com 설치가이드' },
+  { cat:'냉장고', group:/키친핏/, kind:'side', leaves:2, deg:105,
+    src:'Bespoke 4도어 키친핏 — 도어오픈각 105~108°(모델별). 전체폭 실측이 없어 각도만 쓴다 · samsung.com' },
+  { cat:'김치냉장고', group:/뚜껑형/, kind:'top', deg:92,
+    src:'김치플러스 뚜껑형 — 도어 오픈 92°, 상부 개폐라 평면에 영향이 없다 · samsung.com' },
+  { cat:'김치냉장고', kind:'side', leaves:1, deg:130,
+    src:'김치플러스 스탠드형 4도어(RQ48A9001S9) — 도어 오픈 130° · samsung.com' },
+  { cat:'세탁기·콤보', group:/통버블|일반세탁기|통돌이/, kind:'top', deg:90,
+    src:'통버블·통돌이는 상부 개폐 — 도어 오픈 높이 1,480~1,510mm(모델별) · samsung.com' },
+  { cat:'세탁기·콤보', group:/워시타워/, kind:'front', leaves:1, deg:90, openD:1377,
+    src:'워시타워(WV26R9980KV) — 깊이 864mm, 도어 오픈 시 1,377mm · samsung.com' },
+  { cat:'세탁기·콤보', kind:'front', leaves:1, deg:90, openD:1430,
+    src:'Bespoke AI 콤보 일체형(WD90F25***/WD25DB) — 깊이 875mm, 도어 오픈 시 1,430mm · samsung.com 설치가이드' },
+  { cat:'건조기', kind:'front', leaves:1, deg:90, openD:1430,
+    src:'건조기 단독 실측이 원문에 없어 같은 규격대(폭 686·깊이 875)의 콤보 값을 준용한다 — weak', weak:true },
+];
+const doorOpenFor = (it) => findRule(DOOR_OPEN, it);
+
+/**
+ * 문짝 하나가 밖으로 얼마나 나오는지(mm). 원문 실측이 있으면 그 값에서 빼서 구하고,
+ * 없으면 각도와 문짝 폭으로 계산한다 — 옆으로 열리는 문은 문짝 폭 × sin(각도)만큼 옆으로 나온다.
+ */
+function doorReach(it, spec){
+  if (!spec) return 0;
+  if (spec.kind === 'top') return 0;                       // 위로 열려 평면에 영향이 없다
+  if (spec.kind === 'front' && spec.openD) return Math.max(0, spec.openD - it.d);
+  if (spec.kind === 'side'  && spec.openW) return Math.max(0, (spec.openW - it.w) / 2);
+  const leafW = spec.leaves === 2 ? it.w / 2 : it.w;        // 실측이 없으면 각도로
+  return Math.abs(leafW * Math.sin(spec.deg * Math.PI / 180));
+}
+
+/**
+ * 열린 문짝의 실제 다각형(월드 mm). **3D 그림과 충돌 판정이 같은 것을 써야** 화면에
+ * 부딪혀 보이는데 경고가 없거나 그 반대인 일이 생기지 않는다.
+ *
+ * 문짝은 앞면 모서리에 세로축으로 달려 있다. 닫힌 상태에서 앞면을 따라 눕고,
+ * 각도 θ 만큼 열리면 바깥으로 돈다 — 오른쪽 문짝의 방향은 (−cos θ, sin θ) 다
+ * (θ=0 이면 왼쪽으로 누워 있고, θ=90° 면 정면으로, 그보다 크면 옆으로 젖혀진다).
+ *
+ * 문짝 길이는 **원문 실측에서 거꾸로 구한다.** 옆으로 열리는 문은 실측이 '전체 폭'이므로
+ * 한쪽 돌출 ÷ |cos θ| 가 문짝 길이다(170°면 옆으로 거의 다 젖혀져 돌출≈길이).
+ * 앞으로 열리는 문은 실측이 곧 앞 돌출이라 그대로 쓴다.
+ */
+function doorLeaves(it, openFrac){
+  const spec = doorOpenFor(it);
+  if (!spec || spec.kind === 'top') return [];
+  const th = (spec.deg * Math.PI / 180) * (openFrac == null ? 1 : openFrac);
+  const reach = doorReach(it, spec);
+  const geoW = spec.leaves === 2 ? it.w / 2 : it.w;
+  let L = geoW;
+  if (spec.kind === 'front' && spec.openD) L = reach || geoW;
+  else if (spec.kind === 'side' && spec.openW)
+    L = reach / Math.max(Math.abs(Math.cos(spec.deg * Math.PI / 180)), 0.3);
+  if (!(L > 0)) L = geoW;
+
+  const T = 22;                                   // 문짝 두께 — 실측이 아니라 보이기 위한 값
+  const c = Math.cos(it.a), s = Math.sin(it.a);
+  const toWorld = (x, y) => [it.bx + x * c - y * s, it.by + x * s + y * c];
+  /* 힌지 방향 — 카탈로그에 없다. 문짝이 하나면 사용자가 뒤집을 수 있다(기본 오른쪽). */
+  const sides = spec.leaves === 2 ? [1, -1] : [it.hinge === 'left' ? -1 : 1];
+  const out = [];
+  for (const sgn of sides){
+    const hx = sgn * it.w / 2, hy = it.d;         // 힌지: 앞면의 좌우 끝
+    const dx = -sgn * Math.cos(th), dy = Math.sin(th);
+    const nx = -dy * sgn, ny = dx * sgn;          // 두께 방향
+    const p = [[0, 0], [L, 0], [L, T], [0, T]].map(([u, v]) =>
+      toWorld(hx + dx * u + nx * v, hy + dy * u + ny * v));
+    out.push({ poly: p, side: sgn, spec, L });
+  }
+  return out;
+}
+
+/**
+ * 문을 열었을 때 무엇에 부딪히는지 — **여기서는 하드하게 판정한다.**
+ *
+ * 배치 단계의 도어 주의(`DOOR_ZONE` → `it.soft`)는 그대로 주황 안내로 둔다. 힌지 방향을
+ * 몰라 양쪽에 표시하는 값이라 그걸로 배치를 막으면 실제 주방 대부분이 "불가"가 되어
+ * 도구가 쓸모없어지기 때문이다(CLAUDE.md 의 기존 결정).
+ *
+ * 반면 **3D 에서 문을 여는 것은 상담사가 직접 한 행동**이다. 그 자리에서 "이 상태로는
+ * 안 됩니다"라고 분명히 말해야 고객에게 보여줄 수 있다. 그래서 두 단계를 나눈다.
+ */
+function doorHits(it, others, walls){
+  if (!doorOpenFor(it) || !doorLeaves(it).length) return [];
+  /*
+   * **열리는 도중을 봐야 한다.** 다 열린 자세만 보면 놓친다 — 4도어 냉장고 문은 125°까지
+   * 젖혀지면 제품 앞쪽으로 가 있어 옆 제품과 안 겹치지만, 0°에서 125°로 **돌아가는 동안**
+   * 옆을 쓸고 지나간다. 설치가이드가 "측면 최소 여유 246~295mm"를 요구하는 이유가 이것이다.
+   * 그래서 여러 각도에서 재 본다(12등분이면 4도어 기준 약 10°마다다).
+   */
+  const STEPS = 12;
+  const seen = new Set();
+  const hits = [];
+  for (let k = 1; k <= STEPS; k++){
+    for (const lf of doorLeaves(it, k / STEPS)){
+      for (const o of (others || [])){
+        if (o === it || o.staged) continue;
+        if (stackable(it, o)) continue;               // TV↔사운드바처럼 높이가 달라 안 부딪히는 조합
+        const key = 'i' + o.id + lf.side;
+        if (seen.has(key)) continue;
+        if (overlaps(lf.poly, corners(o))){ seen.add(key); hits.push({ kind:'item', with:o, side:lf.side }); }
+      }
+      for (const w of (walls || [])){
+        if (w.open) continue;                         // 개구부는 트인 곳이라 문이 지나갈 수 있다
+        const key = 'w' + lf.side;
+        if (seen.has(key)) continue;
+        if (segHitsPoly(w, lf.poly)){ seen.add(key); hits.push({ kind:'wall', side:lf.side }); }
+      }
+    }
+  }
+  return hits;
+}
+
 const state = {
   img:null, imgW:0, imgH:0,
   mmPerPx:null,          // 도면 이미지 1px이 몇 mm인가 (축척 보정 결과)
@@ -4560,6 +4692,7 @@ loadReps();
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
+  doorOpenFor, doorReach, doorLeaves, doorHits,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
@@ -4745,6 +4878,39 @@ const bodyMat = new THREE.MeshLambertMaterial({ color: 0xFAFBFC });
 const faceMat = new THREE.MeshLambertMaterial({ color: 0xEDF0F4 });
 const darkMat = new THREE.MeshLambertMaterial({ color: 0x2B3440 });
 const blueMat = new THREE.MeshLambertMaterial({ color: 0x1428A0 });
+/* 문을 열었더니 부딪히는 제품 — 빨강. 상담 중에 한눈에 보여야 한다 */
+const badMat  = new THREE.MeshLambertMaterial({ color: 0xE23D3D });
+const doorMat = new THREE.MeshLambertMaterial({ color: 0xE8ECF1, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+const doorBad = new THREE.MeshLambertMaterial({ color: 0xE23D3D, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
+
+let openDoors = false;      // 문을 연 상태인가 (도구막대에서 켠다)
+
+/**
+ * 열린 문짝 하나를 세운다. `doorLeaves` 가 낸 **월드 다각형 그대로** 밑면으로 깔고
+ * 문 높이만큼 올린다 — 판정과 그림이 같은 것을 봐야 한다.
+ * 문 높이는 본체 높이의 8할로 둔다(손잡이·힌지 여유). 실측이 아니라 보이기 위한 값이다.
+ */
+function leafMesh(lf, it, bad){
+  const g = new THREE.Group();
+  const h = M((it.h || 800) * 0.8);
+  const p = lf.poly;
+  /* 사각형이므로 두 삼각형이면 된다. 앞뒤로 보이게 DoubleSide 를 쓴다. */
+  const idx = [[0,1,2],[0,2,3]];
+  const pos = [];
+  for (const t of idx) for (const i of t){ pos.push(M(p[i][0]), 0, M(p[i][1])); }
+  for (const t of idx) for (const i of t){ pos.push(M(p[i][0]), h, M(p[i][1])); }
+  /* 옆면 — 문짝이 판때기로만 보이지 않게 네 변을 세운다 */
+  for (let i = 0; i < 4; i++){
+    const a = p[i], b = p[(i + 1) % 4];
+    pos.push(M(a[0]), 0, M(a[1]), M(b[0]), 0, M(b[1]), M(b[0]), h, M(b[1]));
+    pos.push(M(a[0]), 0, M(a[1]), M(b[0]), h, M(b[1]), M(a[0]), h, M(a[1]));
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.computeVertexNormals();
+  g.add(new THREE.Mesh(geo, bad ? doorBad : doorMat));
+  return g;
+}
 
 function applianceMesh(it){
   const g = new THREE.Group();
@@ -4821,6 +4987,14 @@ function applianceMesh(it){
     plate(w * 0.6, 0.008, 0, h * 0.86, blueMat);              // 토출구 띠
   }
 
+  /*
+   * 열린 문짝 — 고객에게 "문 열면 이만큼 나옵니다"를 보여주는 것이 이 기능의 목적이다.
+   * 다각형은 `doorLeaves` 가 만든 것을 **그대로** 쓴다. 3D 그림과 충돌 판정이 다른 것을
+   * 보면 화면에서는 부딪히는데 경고가 없거나 그 반대가 된다.
+   * 좌표가 이미 월드라 그룹 회전에 딸려 돌지 않도록 나중에 root 에 직접 붙인다.
+   */
+  g.userData.leaves = (openDoors && !it.staged) ? P.doorLeaves(it) : [];
+
   /* 2D 와 같은 자세로 놓는다 — it 는 뒷면 중앙(bx,by)과 각도 a 로 표현되고 로컬 +y 가 정면이다.
      몸통 중심은 로컬 (0, d/2) 이므로 회전시켜 월드로 옮긴다. */
   const c = Math.cos(it.a), s = Math.sin(it.a);
@@ -4867,10 +5041,18 @@ function build(){
       bestA = A; eyeAt = c;
     }
   }
-  let n = 0;
-  for (const it of P.state.items){
-    if (it.staged) continue;                     // 대기 중인 것은 아직 놓은 것이 아니다
-    root.add(applianceMesh(it)); n++;
+  let n = 0, blocked = 0;
+  const placed = P.state.items.filter((i) => !i.staged);
+  for (const it of placed){
+    const mesh = applianceMesh(it);
+    root.add(mesh); n++;
+    /* 문을 열었을 때 부딪히면 **빨갛게** 칠하고 몇 건인지 센다.
+       배치 단계의 주황 주의와 달리 여기서는 하드하게 말한다 — 상담사가 직접 연 것이다. */
+    const hits = openDoors ? P.doorHits(it, placed, P.state.walls) : [];
+    const bad = hits.length > 0;
+    if (bad) blocked++;
+    for (const lf of (mesh.userData.leaves || [])) root.add(leafMesh(lf, it, bad));
+    if (bad) mesh.traverse((o) => { if (o.isMesh && o.material === bodyMat) o.material = badMat; });
   }
   /* 카메라를 방 전체가 보이는 자리로 */
   const c = box.getCenter(new THREE.Vector3());
@@ -4880,7 +5062,7 @@ function build(){
   fitDist = Math.max(3, Math.hypot(sz.x, sz.z) * 1.15);
   orb.max = Math.max(20, fitDist * 3);
   view(mode3);            // 시점을 고른 채로 방을 바꿔도 그 시점을 유지한다
-  return { rooms: loops.length, items: n };
+  return { rooms: loops.length, items: n, blocked };
 }
 
 /* ── 시점 프리셋 ────────────────────────────────────────────────
@@ -5018,21 +5200,32 @@ cv3.addEventListener('wheel', (e) => {
 window.addEventListener('resize', () => { if (on) size(); });
 
 /* ── 열고 닫기 ── */
+function paintBar(info){
+  /* 부딪히는 것이 있으면 **숫자를 먼저** 말한다. 상담 중에 읽는 글자는 짧을수록 좋다. */
+  const warn = info.blocked
+    ? `<span style="color:#FFB4B4;font-weight:700">문이 안 열리는 제품 ${info.blocked}대 — 이 배치로는 안 됩니다</span>`
+    : (openDoors ? `<span style="color:#A7F3D0">문을 다 열어도 부딪히지 않습니다</span>` : '');
+  bar.innerHTML =
+    `<b>3D 보기</b> · 공간 ${info.rooms}곳 · 가전 ${info.items}대` +
+    ` · 층고 ${WALL_H_MM.toLocaleString()}mm` +
+    (warn ? ' · ' + warn : '') +
+    `<span class="sp"></span>` +
+    `<button data-v="iso">둘러보기</button>` +
+    `<button data-v="eye">눈높이</button>` +
+    `<button data-v="top">위에서</button>` +
+    `<button id="d3-door">${openDoors ? '문 닫기' : '문 열기'}</button>` +
+    `<button id="d3-close">2D로</button>`;
+  bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
+  document.getElementById('d3-door').onclick = () => { openDoors = !openDoors; paintBar(build()); };
+  document.getElementById('d3-close').onclick = close;
+}
+
 function open(){
   const info = build();
   on = true;
   document.getElementById('stage').classList.add('on3d');
   size(); if (!raf) loop();
-  const st = P.state;
-  bar.innerHTML =
-    `<b>3D 보기</b> · 공간 ${info.rooms}곳 · 가전 ${info.items}대` +
-    ` · 층고 ${WALL_H_MM.toLocaleString()}mm<span class="sp"></span>` +
-    `<button data-v="iso">둘러보기</button>` +
-    `<button data-v="eye">눈높이</button>` +
-    `<button data-v="top">위에서</button>` +
-    `<button id="d3-close">2D로</button>`;
-  bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
-  document.getElementById('d3-close').onclick = close;
+  paintBar(info);
   return info;
 }
 function close(){
@@ -5044,6 +5237,9 @@ window.Place3D = {
   get isOpen(){ return on; },
   rebuild(){ if (on) build(); },
   view,
+  /** 문 열기/닫기 — 열었을 때 부딪히는 대수를 돌려준다 */
+  doors(open){ openDoors = open == null ? !openDoors : !!open; const i = build(); if (on) paintBar(i); return i; },
+  get doorsOpen(){ return openDoors; },
   get canvas(){ return cv3; },
   /* 테스트가 장면을 직접 들여다볼 수 있게 연다 — 좌표계가 뒤집혔는지는
      화면을 봐서는 알기 어렵고(방이 대칭이면 똑같아 보인다) 정점을 재야 잡힌다. */

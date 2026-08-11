@@ -1368,6 +1368,89 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 도어 열기 — 열었을 때 부딪히는지 ──
+ * 값은 설치가이드 원문 실측에서 온다(양문형 전체폭 1,726 / 4도어 1,498 / 콤보 깊이 1,430).
+ * 지키는 것 셋:
+ *  ① 돌출량이 원문에서 계산한 값과 같은가 — 여기가 틀리면 "들어갑니다"가 거짓이 된다
+ *  ② **열리는 도중**을 보는가 — 다 열린 자세만 보면 놓친다. 4도어 문은 125°까지 젖혀지면
+ *    제품 앞으로 가 있어 옆과 안 겹치지만, 돌아가는 동안 옆을 쓸고 지나간다
+ *  ③ 자유로울 때는 조용한가 — 아무 데서나 "불가"가 뜨면 도구가 쓸모없어진다
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    const W = [[0, 0, 6000, 0], [6000, 0, 6000, 4000], [6000, 4000, 0, 4000], [0, 4000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+    const setup = (fx, front) => {
+      P.state.rooms = []; P.state.items = []; P.state.walls = W;
+      P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+      P.addRoom('주방', W);
+      const f = mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고',
+        w: 912, h: 1853, d: 930, bx: fx, by: 400 });
+      P.state.items.push(f);
+      if (front) P.state.items.push(mk({ id: 'x', cat: '식기세척기', label: '식기세척기',
+        w: 600, h: 815, d: 575, bx: fx, by: 1330 + front }));
+      return f;
+    };
+    const reach = (cat, group, w, d) => {
+      const it = mk({ cat, group, w, d, h: 1000, bx: 0, by: 0 });
+      return Math.round(P.doorReach(it, P.doorOpenFor(it)));
+    };
+    const mid = setup(3000, 0);        const midHits = P.doorHits(mid, P.state.items, P.state.walls).length;
+    const cor = setup(6000 - 456, 0);  const corHits = P.doorHits(cor, P.state.items, P.state.walls).length;
+    const fr  = setup(3000, 150);      const frHits  = P.doorHits(fr, P.state.items, P.state.walls).length;
+
+    /*
+     * **스윕이 없으면 못 잡는 자리.** 125° 문은 90° 를 지날 때 앞으로 가장 많이 나오고
+     * (511mm) 다 열리면 오히려 덜 나온다(419mm). 그 사이(450mm)에 물건을 두면
+     * 최종 자세만 보는 코드는 "안 부딪힌다"고 한다. 힌지 바로 앞에 놓아야 걸린다.
+     */
+    P.state.rooms = []; P.state.items = []; P.state.walls = W;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('주방', W);
+    const sw = mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고',
+      w: 912, h: 1853, d: 930, bx: 3000, by: 400 });
+    P.state.items.push(sw, mk({ id: 'y', cat: '식기세척기', label: '식기세척기',
+      w: 600, h: 815, d: 575, bx: 3000 + 456, by: 1330 + 450 }));
+    const sweepHits = P.doorHits(sw, P.state.items, P.state.walls).length;
+    /* 같은 배치를 '다 열린 자세'로만 재 본다 — 스윕이 없던 시절의 동작 */
+    const finalOnly = P.doorLeaves(sw, 1).some((lf) =>
+      P.state.items.filter((o) => o !== sw).some((o) => P.overlaps(lf.poly, P.corners(o))));
+    return {
+      reachSide: reach('냉장고', '양문형', 912, 930),
+      reach4:    reach('냉장고', '4도어 프리스탠딩', 916, 930),
+      reachCombo:reach('세탁기·콤보', 'AI 콤보', 686, 875),
+      topKimchi: P.doorReach(mk({ cat: '김치냉장고', group: '뚜껑형', w: 925, d: 800 }),
+                             P.doorOpenFor(mk({ cat: '김치냉장고', group: '뚜껑형', w: 925, d: 800 }))),
+      midHits, corHits, frHits, sweepHits, finalOnly,
+    };
+  });
+
+  /* ① 원문에서 계산한 돌출량 */
+  const want = { reachSide: 407, reach4: 291, reachCombo: 555 };
+  const bad = Object.keys(want).filter((k) => Math.abs(r[k] - want[k]) > 1);
+  if (bad.length) fail(`도어 돌출량이 설치가이드 값과 다르다 — ${bad.map((k) => `${k} ${r[k]}(기대 ${want[k]})`).join(' · ')}`);
+  else pass(`도어 돌출 — 양문형 407mm · 4도어 291mm · 콤보 앞 555mm (설치가이드 실측에서 계산)`);
+
+  if (r.topKimchi !== 0) fail(`뚜껑형 김치냉장고는 위로 열려 평면 돌출이 0이어야 하는데 ${r.topKimchi}`);
+  else pass('도어 — 뚜껑형(상부 개폐)은 평면에 영향 없음');
+
+  /* ②③ 판정 */
+  if (r.midHits !== 0) fail(`도어: 방 가운데인데 ${r.midHits}건 부딪힌다고 한다 (아무 데서나 불가가 뜨면 못 쓴다)`);
+  else if (!r.corHits) fail('도어: 벽에 딱 붙였는데 문이 벽에 막히는 것을 못 잡는다');
+  else if (!r.frHits) fail('도어: 앞 150mm 에 제품이 있는데 문이 막히는 것을 못 잡는다 (열리는 도중을 보지 않는다)');
+  else pass(`도어 충돌 — 가운데 0건 · 벽 붙임 ${r.corHits}건 · 앞막힘 ${r.frHits}건`);
+
+  /* 스윕이 실제로 일을 하는지 — 다 열린 자세만 보면 놓치는 자리에서 잡아야 한다 */
+  if (!r.sweepHits)
+    fail('도어: 열리는 도중에만 닿는 자리를 놓친다 (다 열린 자세만 보고 있다)');
+  else if (r.finalOnly)
+    fail('도어 테스트가 무의미하다 — 다 열린 자세로도 걸리는 자리라 스윕을 검증하지 못한다');
+  else pass('도어 — 열리는 도중에만 닿는 자리도 잡는다 (다 열린 자세로는 안 걸리는 배치로 확인)');
+}
+
+/*
  * ── 3D 가전 디테일 — 2D 실루엣과 같은 품목에 붙어 있는가 ──
  * 같은 품목이 앱마다 다른 그림이면 상담사 눈이 헤맨다. 2D `drawGlyph` 가 실루엣을 그리는
  * 품목은 3D 도 흰 상자로 두면 안 된다. 반대로 **2D 에 없는 품목(리빙 4종)은 3D 에도
