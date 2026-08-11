@@ -137,6 +137,7 @@ function flatten(v, out = []) {
   const DBA = literal(html, /\nconst DB = (\{[\s\S]*?\});\n/, 'as-app.html 의 DB');
   const CEN = literal(html, /\nconst CENTERS = (\[[\s\S]*?\n\]);/, 'as-app.html 의 CENTERS');
   const B2B = literal(html, /\nconst B2B = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B');
+  const IT = literal(html, /\nconst B2B_IT = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_IT');
   const SINK = literal(html, /\nconst SINK = (\[[\s\S]*?\n\]);/, 'as-app.html 의 SINK');
   const NAT = literal(html, /\nconst B2B_NATION = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_NATION');
 
@@ -153,6 +154,11 @@ function flatten(v, out = []) {
   for (const c of B2B) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (빌트인 이전설치)`, sub: `${c.n} · ${c.a}`,
       kw: [c.p, c.c, c.code, c.n, c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });
+  }
+  for (const c of IT) {
+    add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (IT 이전설치)`, sub: `${c.n} · ${c.a}`,
+      kw: [c.p, c.c, c.code, c.n, c.d || '', c.a, '이전설치 it b2b 관할 협력사 노트북 모니터 프린터'].join(' '),
+      href: '/as' });
   }
   for (const s of SINK) {
     add({ t: 'contact', m: 'as', title: `${s.p} (싱크장 리폼)`, sub: `${s.n} · ${s.a}`,

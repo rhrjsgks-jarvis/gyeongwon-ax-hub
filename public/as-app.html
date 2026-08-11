@@ -313,9 +313,9 @@ const CBRANCH = ['전체', '서울', '중부', '남부', '서부'];
  * `n` 은 원문의 **'이전설치 문의전화'** 칸이다. 그 칸은 협력사 단위로 병합돼 있어 —
  * 즉 한 협력사가 맡은 센터 전체에 같은 번호가 걸린다 — 센터별로 다른 번호를 쓰지 않는다.
  *
- * 원문의 **B2B IT 부문 표는 넣지 않았다.** 그쪽은 '이전설치 문의전화' 칸이 아예 없고
- * 담당자 이름 옆의 전화만 있어 대표번호인지 직통인지 확정할 수 없다.
- * 확정 못 한 번호를 싣는 것은 고객을 엉뚱한 곳으로 보내는 일이라 비워 뒀다.
+ * 원문의 **B2B IT 부문 표**는 '이전설치 문의전화' 칸이 없고 담당자 이름 옆의 전화만 있어
+ * 대표번호인지 직통인지 확정할 수 없었다. 2026-08-11 사용자가 **대표번호가 맞다**고
+ * 확인해 줘서 `B2B_IT` 로 실었다(이름은 여전히 싣지 않는다).
  */
 const B2B = [
   { p:'경성티에스', c:'인천', code:'L113', n:'032-672-3624',
@@ -355,6 +355,44 @@ const B2B = [
     a:'대구: 전지역  경북: 경산시, 구미시, 김천시, 고령군, 성주군, 청도군, 칠곡군, 군위군  경남: 거창군' },
   { p:'성광티시엠', c:'안동', code:'L125', n:'055-371-2329',
     a:'경북: 문경시, 상주시, 안동시, 영주시, 봉화군, 영양군, 예천군, 의성군, 청송군' },
+  { p:'새론', c:'제주', code:'L106', n:'064-756-3260', a:'제주 전지역' },
+];
+
+/*
+ * B2B IT 부문 관할 — 가전과 **담당 협력사·권역이 다르다.** 같은 지역이라도 가전은 대양빌텍,
+ * IT 는 아이시티인 식이라 표를 합치면 안 된다.
+ *
+ * 원문에서 전화 칸이 담당자 이름 옆에 있어 대표번호인지 직통인지 알 수 없었는데,
+ * 2026-08-11 사용자가 **대표번호가 맞다**고 확인해 줬다. 이름은 싣지 않는다.
+ *
+ * 번호는 협력사 단위가 아니라 **묶음 단위**다 — 원문에서 담당자·전화가 새로 적힌 행부터
+ * 다음 행들이 그 번호를 물려받는다(아이시티가 세종·아산 / 익산·광주 둘로 갈리는 이유).
+ * 디앤아이 원주(033-731-3432)·새론 제주(064-756-3260)가 가전 표의 협력사 대표번호와
+ * **정확히 같다** — 대표번호라는 확인과 맞아떨어진다.
+ */
+const B2B_IT = [
+  { p:'디앤아이', c:'동탄', code:'L111', n:'031-377-9135', d:'031-377-9136 · 9137',
+    a:'서울 : 전지역  인천 : 전지역  경기 : 고양시, 김포시, 파주시, 강화군, 하남시, 의정부시, 구리시, 남양주시, 동두천시, 포천시, 연천군, 광명시, 부천시, 시흥시, 옹진군, 안양시, 안산시, 의왕시, 군포시, 과천시, 화성시, 수원시, 용인시, 오산시, 평택시, 안성시  강원 : 철원군' },
+  { p:'디앤아이', c:'원주', code:'L115', n:'033-731-3432',
+    a:'강원: 원주시, 영월군, 인제군, 횡성군, 춘천시, 홍천군, 화천군, 양구군, 평창군(대관령, 진부면 제외)  경기: 이천시, 양평군, 여주시, 가평시  충북: 충주시, 제천시, 괴산군, 단양군, 음성군' },
+  { p:'디앤아이', c:'강릉', code:'L116', n:'033-731-3432',
+    a:'강원: 강릉시, 동해시, 삼척시, 속초시, 태백시, 고성군, 양양군, 정선군, 평창군(대관령, 진부면 만)' },
+  { p:'다존텍', c:'대구', code:'L105', n:'070-7706-2147',
+    a:'대구: 전지역  경북: 경산시, 영천시, 김천시, 구미시, 칠곡군, 고령군, 성주군, 청도군, 군위군  경남: 거창군' },
+  { p:'다존텍', c:'안동', code:'L125', n:'070-7706-2147',
+    a:'경북: 안동시, 상주시, 문경시, 영주시, 의성군, 영양군, 청송군, 봉화군, 예천군' },
+  { p:'다존텍', c:'양산', code:'L110', n:'070-7706-2147',
+    a:'부산: 전지역  경남: 양산시, 김해시, 밀양시  울산 전지역' },
+  { p:'다존텍', c:'창원', code:'L127', n:'070-7706-2147',
+    a:'경남: 창원시(창원, 마산, 진해), 함안군, 의령군, 합천군, 창녕군, 진주시, 사천시, 통영시, 거제시, 고성군, 남해군, 하동군, 산청군, 함양군' },
+  { p:'아이시티', c:'세종', code:'L117', n:'070-7110-7303',
+    a:'대전: 전지역 / 세종시  전북: 무주군  충남: 공주시, 계룡시, 금산군, 연기군, 청양군  충북: 청주시, 보은시, 영동시, 옥천시, 진천시, 청원시, 증평군, 보령시' },
+  { p:'아이시티', c:'아산', code:'L118', n:'070-7110-7303',
+    a:'충남: 아산시, 천안시, 서산시, 당진군, 예산군, 태안군, 홍성군' },
+  { p:'아이시티', c:'익산', code:'L121', n:'062-972-2118',
+    a:'전북: 전주시, 김제시, 군산시, 익산시, 임실군, 장수군, 진안군, 부안군, 완주군  충남: 서천군, 논산시, 부여시' },
+  { p:'아이시티', c:'광주', code:'L109', n:'062-972-2118',
+    a:'광주: 전지역  전남: 나주시, 화순군, 담양군, 장성군, 곡성군, 영광군, 함평군, 순천시, 광양시, 여수시, 구례군, 고흥군, 보성군, 목포시, 무안군, 해남군, 진도군, 강진군, 영암군, 신안군, 장흥군, 완도군  전북: 고창군, 순창군, 남원시, 정읍시' },
   { p:'새론', c:'제주', code:'L106', n:'064-756-3260', a:'제주 전지역' },
 ];
 
@@ -557,11 +595,19 @@ function renderMove(){
     ${B2B_STEPS.map((t,i)=>`<div class="step"><span class="sn">${i+1}</span><span class="st">${t}</span></div>`).join('')}
     <div class="note">${B2B_CAUTION}</div></div>`;
 
+  /* 검색칸 하나가 가전·IT 두 표를 함께 거른다 — 상담사는 지역을 칠 뿐,
+     그 지역을 가전과 IT 중 어느 협력사가 맡는지 미리 알 이유가 없다 */
   h += `<div class="card"><h2>빌트인 가전 이전설치 관할 <span class="pill">${B2B.length}개 센터</span></h2>
     <div class="why" style="margin-bottom:9px">고객이 <b>이사 갈 주소</b>로 담당 협력사를 찾습니다.
-      <b>지역을 치면 그 협력사만 남습니다</b> — 예: 수원, 청주, 김해.</div>
+      <b>지역을 치면 그 협력사만 남습니다</b> — 예: 수원, 청주, 김해.
+      아래 <b>IT 부문</b>도 함께 걸러집니다.</div>
     <input class="lgq" id="b2bq" placeholder="지역 · 협력사 · 센터명으로 찾기" autocomplete="off">
     <div id="b2blist"></div></div>`;
+
+  h += `<div class="card"><h2>B2B IT 부문 관할 <span class="pill">${B2B_IT.length}개 센터</span></h2>
+    <div class="why" style="margin-bottom:9px"><b>가전과 담당 협력사가 다릅니다</b> —
+      같은 지역이라도 가전과 IT 를 맡는 곳이 갈립니다. 위 검색칸이 이 목록도 함께 거릅니다.</div>
+    <div id="itlist"></div></div>`;
 
   h += `<div class="card"><h2>식기세척기 싱크장 리폼 <span class="pill">전국 ${SINK.length}개 협력사</span></h2>
     <div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> — 위 관할표가 아니라 여기서 찾으세요.</div>
@@ -578,30 +624,36 @@ function renderMove(){
 
   h += `<div class="src">출처 — 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02) 원문 그대로.<br>
     협력사명 · 관할지역 · 대표 문의번호만 옮겼습니다 — 원문의 담당자 이름·개인 연락처는 싣지 않습니다.
-    B2B IT 부문은 대표번호를 확정할 수 없어 넣지 않았습니다.</div>`;
+    IT 부문 번호는 2026-08-11 대표번호로 확인받아 실었습니다.</div>`;
   pane.innerHTML = h;
 
   pane.querySelector('#b2bq').addEventListener('input', renderB2B);
   renderB2B();
 }
 
-/* 관할 검색 — 물류센터와 같은 방식이다(원문 `a` 까지 훑고, 찾은 글자를 표시한다) */
+/* 관할 검색 — 물류센터와 같은 방식이다(원문 `a` 까지 훑고, 찾은 글자를 표시한다).
+ * 가전(`#b2blist`)과 IT(`#itlist`) 두 목록을 **한 검색어로 함께** 거른다. */
 function renderB2B(){
   const pane = document.getElementById('movePane');
-  const list = pane.querySelector('#b2blist'); if (!list) return;
-  const s = (pane.querySelector('#b2bq').value || '').trim().toLowerCase();
-  const hit = B2B.filter(c => !s || (c.p + c.c + c.code + c.n + c.a).toLowerCase().includes(s));
+  const box = pane.querySelector('#b2bq'); if (!box) return;
+  const s = (box.value || '').trim().toLowerCase();
   const hl = t => { const e = esc(t); if (!s) return e;
     return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
 
-  list.innerHTML = hit.length ? hit.map(c=>
-    `<button type="button" class="ct lg" data-tel="${esc(c.n)}" data-tel-name="${esc(c.p)} (${esc(c.c)})">
-      <span class="ct-b"><b>${hl(c.p)}<span class="ct-tag">${hl(c.c)} · ${esc(c.code)}</span></b>
-      <span class="ct-d">${hl(c.a)}</span></span>
-      <span class="ct-n">${hl(c.n)}</span></button>`).join('')
-    : `<div class="unk">해당하는 협력사가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
-  list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
-  if (typeof wireContacts === 'function') wireContacts(list, '.ct');
+  const draw = (id, rows, what) => {
+    const list = pane.querySelector(id); if (!list) return;
+    const hit = rows.filter(c => !s || (c.p + c.c + c.code + c.n + (c.d||'') + c.a).toLowerCase().includes(s));
+    list.innerHTML = hit.length ? hit.map(c=>
+      `<button type="button" class="ct lg" data-tel="${esc(c.n)}" data-tel-name="${esc(c.p)} (${esc(c.c)})">
+        <span class="ct-b"><b>${hl(c.p)}<span class="ct-tag">${hl(c.c)} · ${esc(c.code)}</span></b>
+        <span class="ct-d">${hl(c.a)}${c.d ? `<br>추가 회선 ${hl(c.d)}` : ''}</span></span>
+        <span class="ct-n">${hl(c.n)}</span></button>`).join('')
+      : `<div class="unk">해당하는 ${what} 협력사가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
+    list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
+    if (typeof wireContacts === 'function') wireContacts(list, '.ct');
+  };
+  draw('#b2blist', B2B, '가전');
+  draw('#itlist', B2B_IT, 'IT');
 }
 
 /*
@@ -638,6 +690,12 @@ function searchDocs(){
   for (const c of B2B) {
     out.push({ kind:'이전설치', title:`${c.p} · ${c.c}`, sub:c.a,
       kw:`${c.p} ${c.c} ${c.code} ${c.n} ${c.a} 이전설치 빌트인 b2b 관할`,
+      go(){ setTab('move'); const q = document.querySelector('#b2bq');
+            if (q) { q.value = c.c; renderB2B(); } } });
+  }
+  for (const c of B2B_IT) {
+    out.push({ kind:'IT 이전설치', title:`${c.p} · ${c.c}`, sub:c.a,
+      kw:`${c.p} ${c.c} ${c.code} ${c.n} ${c.d||''} ${c.a} 이전설치 it b2b 관할 노트북 모니터 프린터`,
       go(){ setTab('move'); const q = document.querySelector('#b2bq');
             if (q) { q.value = c.c; renderB2B(); } } });
   }
@@ -738,7 +796,7 @@ function setTab(t){
 renderCats(); renderBody(); wireSearch();
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { DB, ROYAL, CONTACTS, CENTERS, B2B, SINK, B2B_NATION,
+window.__as = { DB, ROYAL, CONTACTS, CENTERS, B2B, B2B_IT, SINK, B2B_NATION,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },
   search(q){ const i = document.getElementById('sq'); i.value = q; runSearch();

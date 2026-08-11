@@ -237,7 +237,7 @@ for (const [file, needle] of deepLinks) {
 // ── ⑥ 전 모듈이 색인에 들어 있는가 ──
 // 모듈을 새로 만들고 색인 생성기에 넣지 않으면 **통합검색에서 통째로 사라지는데 아무 표시도 안 난다.**
 {
-  const want = { finder: 300, install: 20, compare: 30, care: 10, as: 60, place: 50, hub: 10 };
+  const want = { finder: 300, install: 20, compare: 30, care: 10, as: 80, place: 50, hub: 10 };
   const got = {};
   for (const e of entries) got[e.m] = (got[e.m] || 0) + 1;
   for (const [m, min] of Object.entries(want)) {
@@ -252,6 +252,7 @@ for (const [file, needle] of deepLinks) {
     ['김해', 'as', '물류센터·이전설치 관할'],
     ['싱크대 리폼', 'as', '싱크장 리폼 협력사'],
     ['컴프레서 10년', 'as', '핵심부품 무상기간'],
+    ['안동 다존텍', 'as', 'B2B IT 관할'],
     ['에어컨 이격거리', 'place', '배치 시뮬레이터 이격'],
   ]) {
     const hit = find(q).filter((e) => e.m === m);

@@ -214,7 +214,7 @@ if (A.CONTACTS && /물류센터/.test(JSON.stringify(pane.textContent.match(/아
  * 담당자 실명·개인 업무메일·직통번호·임원 명단은 **싣지 않는다.**
  * 아래 [7-d] 가 그것이 새어 들어오지 않았는지 검사한다.
  * ──────────────────────────────────────────────────────────── */
-const B = A.B2B, S = A.SINK, N = A.B2B_NATION;
+const B = A.B2B, S = A.SINK, N = A.B2B_NATION, IT = A.B2B_IT;
 
 // [7-a] 표 크기
 if (!B || B.length !== 20) fail(`B2B 빌트인 관할이 ${B ? B.length : 0}행 — 원문은 20행이다`);
@@ -223,6 +223,28 @@ if (!S || S.length !== 4) fail(`싱크장 리폼 협력사가 ${S ? S.length : 0
 else pass('싱크장 리폼 협력사 4곳');
 if (!N || N.length !== 2) fail(`전국 담당이 ${N ? N.length : 0}건 — 중앙에너지·티지이엔지 2건이다`);
 else pass('전국 담당 2건 (중앙에너지 · 티지이엔지)');
+if (!IT || IT.length !== 12) fail(`B2B IT 관할이 ${IT ? IT.length : 0}행 — 원문은 12행이다`);
+else pass('B2B IT 관할 12행');
+
+/* IT 번호는 원문에서 담당자 이름 옆에 있어 대표번호인지 직통인지 알 수 없었다.
+ * 2026-08-11 사용자가 대표번호로 확인해 줘서 실었다. 원주·제주 번호가 가전 표의
+ * 협력사 대표번호와 **정확히 같다** — 그 확인과 맞아떨어지는 교차검증이다. */
+for (const [center, tel] of [
+  ['동탄', '031-377-9135'], ['원주', '033-731-3432'], ['대구', '070-7706-2147'],
+  ['세종', '070-7110-7303'], ['익산', '062-972-2118'], ['제주', '064-756-3260'],
+]) {
+  const r = IT.find((x) => x.c === center);
+  if (!r) fail(`B2B IT 관할에 ${center} 가 없다`);
+  else if (r.n !== tel) fail(`IT ${center} 번호가 ${r.n} — 원문은 ${tel}`);
+}
+pass('B2B IT 골든 6건');
+for (const [center, gajeon] of [['원주', '디앤아이'], ['제주', '새론']]) {
+  const it = IT.find((x) => x.c === center), ga = B.find((x) => x.c === center);
+  if (!it || !ga || it.n !== ga.n || it.p !== gajeon) {
+    fail(`${center}: IT 번호(${it && it.n})와 가전 번호(${ga && ga.n})가 달라 대표번호 교차검증에 실패`);
+  }
+}
+pass('IT ↔ 가전 대표번호 교차검증 2건 (원주 · 제주)');
 
 // [7-b] 골든값 — 원문에서 눈으로 확인한 값. 번호가 틀리면 고객을 엉뚱한 곳으로 보낸다.
 for (const [partner, center, tel] of [
@@ -261,11 +283,18 @@ pass('싱크장 리폼 골든 3건');
 
 // [7-d] **개인정보가 새어 들어오지 않았는가** — 이것이 이 구간의 핵심이다
 {
-  const blob = JSON.stringify([B, S, N]);
+  const blob = JSON.stringify([B, S, N, IT]);
   const leaks = [];
   if (/@/.test(blob)) leaks.push('이메일 주소');
   if (/(부장|차장|과장|대리|이사|상무|전무|사원|주임|센터장)/.test(blob)) leaks.push('직급이 붙은 사람 이름');
-  if (/(010|070)-\d{3,4}-\d{4}/.test(blob)) leaks.push('개인 휴대폰·인터넷전화 직통');
+  // 휴대폰(010)은 언제나 개인 번호다.
+  // 070 은 원문에서 담당자 이름 옆에 있어 직통으로 의심했는데, 2026-08-11 사용자가
+  // **대표번호로 확인**해 줬다. 그래서 그 둘만 예외로 두고 **나머지 070 은 계속 막는다** —
+  // 예외를 열어 두면 다음에 진짜 직통이 들어와도 통과한다.
+  const OK_070 = ['070-7706-2147', '070-7110-7303'];  // 다존텍 · 아이시티 대표 (사용자 확인)
+  const stripped = OK_070.reduce((t, n) => t.split(n).join(''), blob);
+  if (/010-\d{3,4}-\d{4}/.test(blob)) leaks.push('개인 휴대폰 직통');
+  if (/070-\d{3,4}-\d{4}/.test(stripped)) leaks.push('확인되지 않은 070 직통');
   if (leaks.length) fail(`공개 데이터에 개인정보가 들어 있다: ${leaks.join(' · ')}`);
   else pass('개인정보 미포함 (이메일 · 담당자 실명 · 직통번호 없음)');
 
@@ -302,9 +331,21 @@ pass('싱크장 리폼 골든 3건');
     fail('식기세척기 이전설치 순서 안내(싱크대 리폼 선행 · 아비스 1811-7958)가 화면에 없다');
   } else pass('식기세척기 리폼 선행 안내 노출');
 
-  // 확정 못 한 것은 실지 않았다는 사실을 화면이 밝히는가
-  if (!/B2B IT/.test(mp.textContent)) fail('B2B IT 부문을 넣지 않은 사실이 화면에 없다');
-  else pass('미수록(B2B IT) 사실 표기');
+  // IT 부문도 같은 검색칸으로 함께 걸러져야 한다 — 상담사는 지역을 칠 뿐이다
+  const itRows = () => mp.querySelectorAll('#itlist .ct').length;
+  if (itRows() !== 12) fail(`B2B IT 목록에 ${itRows()}건 렌더 — 12건이어야 한다`);
+  else pass('B2B IT 렌더 12건');
+  /* 한 검색칸이 두 표를 함께 거르고, **같은 지역이라도 담당이 갈린다**는 것이 보여야 한다 —
+     안동은 가전 성광티시엠 / IT 다존텍이다. 표를 합쳤다면 이 검사가 깨진다. */
+  type('안동');
+  const ga = mp.querySelector('#b2blist .ct');
+  const it = mp.querySelector('#itlist .ct');
+  if (rows() !== 1 || itRows() !== 1) {
+    fail(`'안동' → 가전 ${rows()}건 / IT ${itRows()}건 — 각각 1건이어야 한다`);
+  } else if (!/성광티시엠/.test(ga.textContent) || !/다존텍/.test(it.textContent)) {
+    fail(`'안동' 담당이 가전 ${ga.textContent.slice(0, 10)} / IT ${it.textContent.slice(0, 10)} — 성광티시엠 / 다존텍이어야 한다`);
+  } else pass("'안동' → 가전 성광티시엠 · IT 다존텍 (한 검색칸, 담당은 갈린다)");
+  type('');
 
   const noTel = [...mp.querySelectorAll('#b2blist .ct')].filter((el) => !el.dataset.tel);
   if (noTel.length) fail(`${noTel.length}건에 data-tel 이 없다 — 눌러도 걸리지 않는다`);
