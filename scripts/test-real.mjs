@@ -61,11 +61,20 @@ const srv = http.createServer((req, res) => {
 });
 await new Promise((r) => srv.listen(4630, r));
 
-// 단지가 골고루 섞이도록 일정 간격으로 뽑는다(무작위로 하면 실행할 때마다 결과가 흔들린다)
+/*
+ * 표본은 **파일 이름의 해시 순**으로 뽑는다.
+ *
+ * 예전에는 목록을 일정 간격으로 훑었는데(`i += step`), 그러면 **도면을 한 장 추가할 때마다
+ * 표본 30장이 통째로 밀린다.** 실제로 홍천 2장을 넣었더니 개구부 비율 중앙값이
+ * 20.1% → 23.0% 로 뛰었다 — 인식이 나빠진 것이 아니라 다른 30장을 본 것이다.
+ * 기준선이 표본에 묶여 있으면 이 검사는 코퍼스가 자랄 때마다 거짓으로 깨진다.
+ *
+ * 해시 순은 단지가 골고루 섞이면서(무작위처럼 흩어진다) **결정적**이고, 코퍼스가 자라도
+ * 기존 표본이 거의 그대로 남는다. 무작위(Math.random)와 달리 실행할 때마다 같다.
+ */
 const N = +process.env.REAL_N || 30;
-const step = Math.max(1, Math.floor(have.length / N));
-const sample = [];
-for (let i = 0; i < have.length && sample.length < N; i += step) sample.push(have[i]);
+const hash = (s) => { let x = 2166136261; for (let i = 0; i < s.length; i++){ x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return x >>> 0; };
+const sample = have.slice().sort((a, b) => hash(a.file) - hash(b.file)).slice(0, N);
 
 const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
 await page.goto('http://localhost:4630/place-app.html', { waitUntil: 'domcontentloaded' });
@@ -161,14 +170,47 @@ else if (withSeg.length) {
  * (2026-08-10 사용자가 실제로 이 증상을 보고했다).
  *
  * 방 하나에 문 900mm + 창 1,800mm 면 둘레 14m 기준 19% 안팎이 정상이다.
- * 축척 폴백을 실측 보정하기 전에는 이 표본에서 24.0%(40장 표본 24.5%, 최악 57%) 였고 보정 후 20.1% 다.
- * 상한 22% 는 그 사이에 둔 것이라, 폴백을 되돌리면 이 검사가 먼저 깨진다.
+ *
+ * **코퍼스 중앙값에 상한을 거는 방식은 버렸다.** 원래 "상한 22%"였는데, 그 22% 는
+ * 옛 순차 표본 30장에서 나온 수치였다. 도면 2장을 코퍼스에 넣자 표본이 통째로 밀리며
+ * 20.1% → 23.0% 가 됐다 — 인식은 한 줄도 안 바뀌었는데 검사가 깨졌다.
+ * 안정 표본으로 다시 재 보니 정상 코드 26.3% · 버그 코드(옛 폴백) 28.2% 로 **1.9pt** 차이라,
+ * 애초에 코퍼스 중앙값은 이 버그를 가리기에 너무 무딘 자였다(옛 3.9pt 차이는 표본 운이었다).
+ *
+ * 지금은 **도면마다 짝지어 비교한다.** 커밋된 기준선(open-ratio.json)에 도면별 값을 두고
+ * 도면별 증감의 중앙값을 본다. 모든 도면이 같은 방향으로 2pt 나빠지는 종류의 회귀는
+ * 짝비교에서 또렷하게 드러나고, 표본이 바뀌어도 흔들리지 않는다.
+ * 기준선을 다시 만들려면 `REAL_BASELINE=write npm run test:real`.
  */
+const BASE_FILE = path.join(__dirname, 'fixtures', 'plans-real', 'open-ratio.json');
 const withOpen = auto.filter((r) => r.openPct != null);
-if (withOpen.length) {
+if (process.env.REAL_BASELINE === 'write') {
+  const out = {};
+  for (const r of withOpen) out[r.file] = +r.openPct.toFixed(2);
+  fs.mkdirSync(path.dirname(BASE_FILE), { recursive: true });
+  fs.writeFileSync(BASE_FILE, JSON.stringify(out, null, 1) + '\n');
+  console.log(`기준선 ${Object.keys(out).length}장을 새로 썼습니다 → ${path.relative(process.cwd(), BASE_FILE)}`);
+} else if (withOpen.length) {
   const mo = med(withOpen.map((r) => r.openPct));
-  if (mo > 22) fail(`개구부 길이비율 중앙값 ${mo.toFixed(1)}% — 보정 후 실측 20.1%, 상한 22%. 벽이 개구부로 새고 있다`);
-  else pass(`개구부 길이비율 중앙값 ${mo.toFixed(1)}% (문+창 정상 범위)`);
+  const base = fs.existsSync(BASE_FILE) ? JSON.parse(fs.readFileSync(BASE_FILE, 'utf8')) : null;
+  if (!base) {
+    console.log(`NOTE: 개구부 기준선이 없습니다 — REAL_BASELINE=write 로 만드세요 (지금 중앙값 ${mo.toFixed(1)}%)`);
+  } else {
+    const paired = withOpen.filter((r) => base[r.file] != null);
+    const fresh = withOpen.length - paired.length;
+    if (!paired.length) {
+      console.log(`NOTE: 기준선과 겹치는 도면이 없습니다 (새 도면 ${fresh}장) — REAL_BASELINE=write 로 갱신하세요`);
+    } else {
+      const d = med(paired.map((r) => r.openPct - base[r.file]));
+      const worse = paired.filter((r) => r.openPct - base[r.file] > 5);
+      if (d > 1.0)
+        fail(`개구부 길이비율이 도면마다 중앙 ${d > 0 ? '+' : ''}${d.toFixed(1)}pt 나빠졌다 (${paired.length}장 짝비교, 허용 +1.0pt) — 벽이 개구부로 새고 있다`);
+      else if (worse.length > paired.length * 0.2)
+        fail(`5pt 넘게 나빠진 도면이 ${worse.length}/${paired.length}장 — ${worse.slice(0,3).map((r)=>`${r.c} ${r.type}`).join(', ')}`);
+      else
+        pass(`개구부 길이비율 중앙값 ${mo.toFixed(1)}% · 기준선 대비 ${d > 0 ? '+' : ''}${d.toFixed(1)}pt (${paired.length}장 짝비교${fresh ? ` · 새 도면 ${fresh}장` : ''})`);
+    }
+  }
 }
 
 // 세대 전체가 방 하나로 잡히는 비율 — 지금은 못 고치지만 나빠지는 것은 막는다
