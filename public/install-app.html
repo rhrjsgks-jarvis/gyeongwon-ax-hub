@@ -205,6 +205,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <div class="toast" id="toast"></div>
 
 <script src="prod-symbols.js"></script>
+<script src="share-kit.js"></script>
 <script>
 /* ═══════════════════════════════════════════
    설치환경 DB — 출처: samsung.com 구매/설치가이드,
@@ -1124,6 +1125,35 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
   const cat = new URLSearchParams(location.search).get('cat');
   if(cat && INSTALL_DB[cat]) selectCat(cat);
 })();
+
+/*
+ * 고객에게 보낼 카드 — 지금 고른 카테고리의 설치 요건을 이미지 한 장으로.
+ * 설치 상담에서 고객이 집에 가서 재 봐야 하는 것들이라, **말로 하면 반드시 샌다.**
+ * 이격거리·전기/급배수·확인 항목·주의를 그대로 담고 출처를 밝힌다.
+ *
+ * 이미지(규격도)는 카드에 넣지 않는다 — 원본이 삼성닷컴 자산이고, 카드는 우리가
+ * 정리한 수치만 전달하는 물건이다. 출처 링크를 적어 원본을 찾아갈 수 있게 한다.
+ */
+function installShareBuild(){
+  const d = INSTALL_DB[currentCat];
+  if (!d) return null;
+  const sections = [];
+  const pairs = (arr) => (arr || []).map((x) => [x[0], '', x[1]]);
+  if ((d.space || []).length)     sections.push({ h: '설치 공간', rows: pairs(d.space) });
+  if ((d.utility || []).length)   sections.push({ h: '전기 · 급배수', rows: pairs(d.utility) });
+  if ((d.checklist || []).length) sections.push({ h: '설치 전 확인', rows: d.checklist.map((t) => [t, '']) });
+  if ((d.cautions || []).length)  sections.push({ h: '주의', rows: d.cautions.map((t) => [t, '']) });
+  if (!sections.length) return null;
+  return {
+    app: '세일즈 코파일럿 · 제품별 설치환경 가이드',
+    title: currentCat,
+    sections: sections,
+    note: (d.source ? '출처 — ' + d.source + ' · ' : '')
+      + '설치 환경은 현장 상황에 따라 달라질 수 있으니 최종 확인은 설치 기사와 함께 하세요.',
+    filename: '설치환경_' + String(currentCat).replace(/[\\/:*?"<>|]/g, ''),
+  };
+}
+if (typeof mountShareButton === 'function') mountShareButton(installShareBuild);
 </script>
 <script>
 /* 제품 이모지 자리를 심벌로 갈아 끼운다 — 화면이 다시 그려질 때마다 */

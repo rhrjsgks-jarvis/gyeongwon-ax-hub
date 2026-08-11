@@ -176,12 +176,20 @@
     (opts.sections || []).forEach(function (s) {
       body.push({ t: 'h', v: s.h }); y += 40;
       (s.rows || []).forEach(function (r) {
+        var val = r[1] == null ? '' : String(r[1]);
+        /*
+         * **이름도 접는다.** 예전에는 설명만 접고 이름은 fillText 로 한 줄에 그려,
+         * 설치환경의 확인·주의 항목처럼 긴 문장이 오른쪽으로 넘쳐 잘렸다.
+         * 값이 오른쪽에 붙으므로 그 폭만큼 빼고 접는다.
+         */
+        F(15, 800);
+        var valW = val ? m.measureText(val).width + 14 : 0;
         F(15, 700);
-        var nm = String(r[0]);
+        var nm = wrap(m, String(r[0]), W - PAD * 2 - valW);
         F(13, 400);
         var det = r[2] ? wrap(m, r[2], W - PAD * 2 - 8) : [];
-        body.push({ t: 'r', nm: nm, val: r[1] == null ? '' : String(r[1]), det: det });
-        y += 26 + det.length * 19 + 10;
+        body.push({ t: 'r', nm: nm, val: val, det: det });
+        y += nm.length * 21 + 5 + det.length * 19 + 10;
       });
       y += 8;
     });
@@ -213,13 +221,14 @@
         cy += 40;
         return;
       }
+      var top = cy;
       c.fillStyle = INK; f(15, 700);
-      c.fillText(b.nm, PAD, cy + 14);
+      b.nm.forEach(function (l) { c.fillText(l, PAD, cy + 14); cy += 21; });
       if (b.val) {
         c.fillStyle = NAVY; f(15, 800);
-        c.textAlign = 'right'; c.fillText(b.val, W - PAD, cy + 14); c.textAlign = 'left';
+        c.textAlign = 'right'; c.fillText(b.val, W - PAD, top + 14); c.textAlign = 'left';
       }
-      cy += 26;
+      cy += 5;
       c.fillStyle = SUB; f(13, 400);
       b.det.forEach(function (l) { c.fillText(l, PAD, cy + 12); cy += 19; });
       cy += 10;
