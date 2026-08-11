@@ -35,6 +35,12 @@
   .rv{font-size:12px;line-height:1.6;color:#374151;min-width:0}
   /* 연락처 — 누르면 걸기/복사를 고르는 시트가 뜬다(share-kit.js).
      바로 걸리게 두면 번호만 원할 때 곤란하고, PC 에서는 tel: 이 동작하지 않는다 */
+  .mode-tabs{display:grid;grid-template-columns:repeat(2,1fr);background:#fff;
+    border-bottom:1px solid #ecedf1;position:sticky;top:0;z-index:55}
+  .mode-tab{padding:10px 4px 9px;text-align:center;cursor:pointer;font-size:11px;font-weight:700;
+    color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s}
+  .mode-tab.on{color:#1428A0;border-bottom-color:#1428A0}
+  .mt-ico{display:block;font-size:15px;margin-bottom:2px;line-height:1}
   .ctg{font-size:11px;font-weight:800;color:#6b7280;margin:12px 0 5px;letter-spacing:.02em}
   .ctg:first-of-type{margin-top:4px}
   .ct{display:flex;align-items:center;gap:10px;justify-content:space-between;
@@ -82,11 +88,19 @@
     </div>
   </div>
 </div>
+<!-- 탭 모양은 AI구독 케어와 같다 — 앱을 넘겨 볼 때 한 제품으로 읽혀야 한다 -->
+<div class="mode-tabs" id="modeTabs">
+  <div class="mode-tab on" data-tab="as" onclick="setTab('as')"><span class="mt-ico">🛡️</span>AS기간</div>
+  <div class="mode-tab" data-tab="contact" onclick="setTab('contact')"><span class="mt-ico">📞</span>연락처</div>
+</div>
 <div class="wrap">
-  <div class="sub">품목을 고르면 <b>무상보증 · 핵심부품 · 부품보유기간</b>을 한눈에 봅니다.
-    삼성전자서비스 <b>보증기간 산정기준</b> 원문 그대로이며, 원문에 없는 항목은 비워 둡니다.</div>
-  <div class="cats" id="cats"></div>
-  <div id="body"></div>
+  <div id="asPane">
+    <div class="sub">품목을 고르면 <b>무상보증 · 핵심부품 · 부품보유기간</b>을 한눈에 봅니다.
+      삼성전자서비스 <b>보증기간 산정기준</b> 원문 그대로이며, 원문에 없는 항목은 비워 둡니다.</div>
+    <div class="cats" id="cats"></div>
+    <div id="body"></div>
+  </div>
+  <div id="contactPane" style="display:none"></div>
 </div>
 
 <script src="prod-symbols.js"></script>
@@ -158,8 +172,7 @@ function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, ''
 function renderCats(){
   document.getElementById('cats').innerHTML = keys.map(k=>
     `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
-  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody();
-if (typeof mountShareButton === 'function') mountShareButton(shareBuild); });
+  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); });
 }
 
 function renderBody(){
@@ -195,22 +208,12 @@ function renderBody(){
     ${RULES.map(r=>`<div class="rule"><span class="rl ${r.c}">${esc(r.l)}</span><span class="rv">${esc(r.t)}</span></div>`).join('')}
     <div class="note">위 문구는 원문 그대로다. 유상수리 사유·출장비·교환환불 기준은 이 문서에 없어 싣지 않았다.</div></div>`;
 
-  h += `<div class="card"><h2>연락처 모음 <span class="pill">눌러서 바로 통화</span></h2>
-    ${CONTACTS.map(g=>`<div class="ctg">${esc(g.g)}</div>
-      ${g.items.map(c=>`<button type="button" class="ct" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
-        <span class="ct-b"><b>${esc(c.t)}</b><span class="ct-d">${esc(c.d)}</span></span>
-        <span class="ct-n">${esc(c.n)}</span></button>`).join('')}`).join('')}
-    <div class="ctg">물류 · 내부</div>
-    <div class="unk">아직 등록되지 않았습니다 — ${CONTACTS_TODO.map(esc).join(' · ')}<br>
-      공개 자료로 확인할 수 없는 내부 연락처라 지어내지 않았습니다. 번호를 알려주시면 넣겠습니다.</div>
-    </div>`;
 
   h += `<div class="src">출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
     · 삼성전자 <a href="${ROYAL.src}" target="_blank" rel="noopener">멤버십 등급별 혜택</a><br>
     2026-08-10 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.</div>`;
 
   document.getElementById('body').innerHTML = h;
-  if (typeof wireContacts === 'function') wireContacts(document.getElementById('body'), '.ct');
 
 }
 
@@ -230,8 +233,45 @@ function shareBuild(){
     filename:"AS기간_" + cur.replace(/[\/:*?"<>|]/g,"") };
 }
 
+/*
+ * 연락처는 **별도 탭**이다(2026-08-11 사용자 요청). AS 기간 결과 아래에 붙여 두면
+ * 품목을 고른 뒤 한참 내려야 나오는데, 상담 중에 "어디로 전화하죠"는 품목과 무관하게
+ * 아무 때나 나온다. 탭으로 빼면 한 번 눌러 바로 닿는다.
+ */
+function renderContacts(){
+  const pane = document.getElementById('contactPane');
+  let h = `<div class="sub">AS·구매 상담 연락처입니다. <b>번호를 누르면 걸기·복사를 고를 수 있습니다.</b></div>`;
+  h += `<div class="card"><h2>연락처 모음 <span class="pill">눌러서 걸기·복사</span></h2>
+    ${CONTACTS.map(g=>`<div class="ctg">${esc(g.g)}</div>
+      ${g.items.map(c=>`<button type="button" class="ct" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
+        <span class="ct-b"><b>${esc(c.t)}</b><span class="ct-d">${esc(c.d)}</span></span>
+        <span class="ct-n">${esc(c.n)}</span></button>`).join('')}`).join('')}
+    <div class="ctg">물류 · 내부</div>
+    <div class="unk">아직 등록되지 않았습니다 — ${CONTACTS_TODO.map(esc).join(' · ')}<br>
+      공개 자료로 확인할 수 없는 내부 연락처라 지어내지 않았습니다. 번호를 알려주시면 넣겠습니다.</div>
+    </div>`;
+  h += `<div class="src">삼성전자서비스(samsungsvc.co.kr) · 삼성닷컴(samsung.com/sec) 공식 표기 · 2026-08-11 확인</div>`;
+  pane.innerHTML = h;
+  if (typeof wireContacts === 'function') wireContacts(pane, '.ct');
+}
+
+let curTab = 'as';
+function setTab(t){
+  curTab = t;
+  document.querySelectorAll('.mode-tab').forEach(el=>el.classList.toggle('on', el.dataset.tab === t));
+  document.getElementById('asPane').style.display = t === 'as' ? '' : 'none';
+  document.getElementById('contactPane').style.display = t === 'contact' ? '' : 'none';
+  if (t === 'contact') renderContacts();
+  /* 공유 카드는 AS 기간 내용이라 연락처 탭에서는 감춘다 — 엉뚱한 것이 나가면 안 된다 */
+  const sb = document.getElementById('sk-share');
+  if (sb) sb.style.display = t === 'as' ? '' : 'none';
+}
+
 renderCats(); renderBody();
-window.__as = { DB, ROYAL, get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); } };
+/* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
+if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
+window.__as = { DB, ROYAL, CONTACTS, get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
+  get tab(){ return curTab; }, set tab(v){ setTab(v); } };
 </script>
 </body>
 </html>
