@@ -228,7 +228,19 @@ for (const [file, needle] of deepLinks) {
   const ask = (q) => {
     const cs = parseQuery(q);
     const live = cs.filter((c) => entries.some((e) => hits(e.kw, c)));
-    return live.length ? entries.filter((e) => live.every((c) => hits(e.kw, c))) : [];
+    let all = live.length ? entries.filter((e) => live.every((c) => hits(e.kw, c))) : [];
+    /* 0건인 조건만 빼는 것으로는 모자란다 — 뜻 없는 조각이 **하필 한 건에 걸리면** 살아남아
+       문장을 죽인다('놓을' 1건 · '년이야'가 '3년이'에 걸림). 다 걸어 0건이면 하나를 빼고 본다. */
+    if (!all.length && live.length > 1) {
+      let pick = null;
+      for (const c of live) {
+        const rest = live.filter((x) => x !== c);
+        const hit = entries.filter((e) => rest.every((r) => hits(e.kw, r)));
+        if (hit.length && (!pick || hit.length > pick.length)) pick = hit;
+      }
+      if (pick) all = pick;
+    }
+    return all;
   };
   for (const [q, needle] of [
     ['냉장고 컴프레서 몇 년이야', /냉장고/],
