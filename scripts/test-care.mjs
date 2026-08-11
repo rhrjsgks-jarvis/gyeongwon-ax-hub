@@ -49,9 +49,15 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
    * 시간을 늘리는 것은 미봉책이다. **렌더가 끝났는지를 본다.**
    */
   const doc = window.document;
-  for (let i = 0; i < 120; i++) {
+  /*
+   * DOM 만 기다리면 모자란다 — `npm test` 로 스위트를 연달아 돌리면 부하 때문에 인라인
+   * 스크립트가 6초 안에 못 끝나 `window.switchToCare is not a function` 으로 죽었다
+   * (2026-08-12, test-finder 와 같은 종류의 실패다). **스크립트가 만든 것**도 함께 기다리고,
+   * 여유를 15초로 둔다. 단독 실행에서는 늘 통과해 원인을 찾기 어려운 종류다.
+   */
+  for (let i = 0; i < 300; i++) {
     const el = doc.getElementById('body');
-    if (el && el.innerHTML.includes('계약기간')) break;
+    if (el && el.innerHTML.includes('계약기간') && typeof window.switchToCare === 'function') break;
     await wait(50);
   }
   let ok = true;

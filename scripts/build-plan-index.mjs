@@ -175,8 +175,28 @@ async function shrink(srcPath) {
 const index = [];
 let n = 0, bytes = 0, withScale = 0, dropped = 0;
 
+/*
+ * **단지 id 는 한 번 준 것을 그대로 쓴다.**
+ *
+ * 예전에는 처리 순서로 매겼다(`'c' + (index.length + 1)`). 그러면 단지가 하나 끼어드는 순간
+ * 뒤가 전부 밀려 **도면 파일이 통째로 다른 폴더로 옮겨 간다** — 2026-08-12 에 홍천 도면
+ * 2장을 넣었더니 914개 파일이 바뀌었다(신규 415 · 삭제 414 · 수정 85). public repo 라
+ * 그 이미지가 전부 새 blob 으로 쌓인다.
+ *
+ * 그래서 기존 색인에서 단지 이름(`지역_단지`)으로 id 를 찾아 재사용하고, 처음 보는 단지에만
+ * 남는 번호를 준다. 단지가 빠져도 그 번호는 비워 둔다 — 번호를 당기면 같은 일이 반복된다.
+ */
+const prevIndex = fs.existsSync(INDEX) ? JSON.parse(fs.readFileSync(INDEX, 'utf8')) : null;
+const idByKey = new Map();
+let maxId = 0;
+for (const c of (prevIndex && prevIndex.complexes) || []) {
+  if (!c.id) continue;
+  idByKey.set(`${c.region}_${c.complex}`, c.id);
+  maxId = Math.max(maxId, +String(c.id).replace(/\D/g, '') || 0);
+}
+
 for (const [dir, g] of [...groups.entries()].sort()) {
-  const id = 'c' + String(index.length + 1).padStart(2, '0');
+  const id = idByKey.get(dir) || ('c' + String(++maxId).padStart(2, '0'));
   const outDir = path.join(OUT, id);
   const plans = [];
   const used = new Set();
