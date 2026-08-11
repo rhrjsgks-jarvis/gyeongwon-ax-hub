@@ -1630,6 +1630,41 @@ const knownGaps = [];
   else if (!rot.hasDel) fail('3D: 고른 가전에 삭제 버튼이 없다');
   else if (!rot.gone) fail('3D: 선택을 풀었는데 회전 버튼이 남아 있다');
   else pass('3D 고르기·회전 — 냉장고 90° · 에어컨 45° (버튼 글자와 실제가 같다)');
+
+  /*
+   * 3D 를 켠 채로 가전을 고르면 **바로 나타나야 한다.** 예전에는 2D 로 돌아가야 보였다 —
+   * 고객 앞에서 화면이 왔다 갔다 한다. 대기 중인 것은 흐리게 세우고(2D 의 회색 점선과
+   * 같은 뜻) 끌어서 방 안으로 넣으면 그때부터 배치로 센다.
+   */
+  const live = await page.evaluate(() => {
+    const P = window.__place;
+    const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    P.state.rooms = []; P.state.items = []; P.state.walls = W; P.state.sel = null;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('거실', W);
+    const info0 = window.Place3D.open();
+    const count = () => { let n = 0; window.Place3D.root.traverse((o) => { if (o.userData && o.userData.item) n++; }); return n; };
+    const before = count();
+    P.stageOutside([{ cat: '냉장고', size: '4도어', group: '4도어', model: 'X',
+      part: { part: '본체', w: 912, h: 1853, d: 930 } }]);
+    const afterAdd = count();
+    const barTxt = document.getElementById('d3bar').textContent;
+    /* 방 안으로 옮기면 배치로 넘어간다 */
+    const it = P.state.items[0];
+    it.bx = 4000; it.by = 3000; it.staged = false;
+    P.evaluate(); P.draw();
+    const now = window.Place3D.doors(false);
+    window.Place3D.close();
+    return { before, afterAdd, waiting: /대기 1대/.test(barTxt), items: now.items, left: now.waiting, rooms: info0.rooms };
+  });
+
+  if (live.afterAdd <= live.before)
+    fail('3D: 가전을 골라도 3D 에 나타나지 않는다 — 2D 로 돌아가야만 보인다');
+  else if (!live.waiting) fail('3D: 대기 중인 가전이 있는데 안내띠가 알리지 않는다');
+  else if (live.items !== 1 || live.left !== 0)
+    fail(`3D: 방 안으로 넣었는데 배치 ${live.items}대 · 대기 ${live.left}대 (기대 1·0)`);
+  else pass('3D 즉시 반영 — 고르면 흐리게 서고, 방에 넣으면 배치로 넘어간다');
 }
 
 /*

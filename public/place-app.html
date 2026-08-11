@@ -2532,6 +2532,13 @@ function drawGlyph(it){
 
 /* ── 그리기 ── */
 function draw(){
+  /*
+   * 3D 를 켠 채로 가전을 고르거나 자동 배치를 돌리면 3D 가 그대로였다 — 상담사가 2D 로
+   * 돌아가야 보였다. 2D 를 다시 그리는 순간은 곧 "무언가 바뀌었다"는 뜻이므로 여기서 함께
+   * 세운다. 3D 가 켜져 있으면 2D 는 화면에 없으니(`#stage.on3d`) draw 가 자주 불리지도 않는다.
+   * `rebuild` 는 화면을 다시 맞추지 않으므로 보던 각도는 그대로다.
+   */
+  if (window.Place3D && window.Place3D.isOpen) window.Place3D.rebuild();
   const W = cv.width/(window.devicePixelRatio||1), H = cv.height/(window.devicePixelRatio||1);
   ctx.clearRect(0,0,W,H);
 
@@ -5051,6 +5058,8 @@ const blueMat = new THREE.MeshLambertMaterial({ color: 0x1428A0 });
 /* 문을 열었더니 부딪히는 제품 — 빨강. 상담 중에 한눈에 보여야 한다 */
 const badMat  = new THREE.MeshLambertMaterial({ color: 0xE23D3D });
 const selEdge = new THREE.LineBasicMaterial({ color: 0x1428A0 });   // 고른 가전의 모서리
+/* 대기 중(아직 안 놓은) 가전 — 2D 의 회색 점선에 해당한다 */
+const ghostMat = new THREE.MeshLambertMaterial({ color: 0xB6BFCB, transparent: true, opacity: 0.45 });
 const doorMat = new THREE.MeshLambertMaterial({ color: 0xE8ECF1, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
 const doorBad = new THREE.MeshLambertMaterial({ color: 0xE23D3D, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
 
@@ -5248,9 +5257,22 @@ function build(refit){
       bestA = A; eyeAt = c;
     }
   }
-  let n = 0, blocked = 0;
+  let n = 0, blocked = 0, waiting = 0;
   const placed = P.state.items.filter((i) => !i.staged);
-  for (const it of placed){
+  /*
+   * **대기(staged) 중인 가전도 세운다 — 흐릿하게.**
+   * 예전에는 아예 안 그렸는데, 그러면 3D 를 켠 채로 가전을 고르면 화면에 아무것도 안 나타나
+   * 상담사가 2D 로 돌아가야 했다. 고객 앞에서 화면이 왔다 갔다 한다.
+   * 2D 가 도면 밖에 회색 점선으로 꺼내 두는 것과 같은 뜻이다 — **아직 놓은 것이 아니므로**
+   * 판정은 하지 않고(문·겹침 모두), 끌어서 방 안으로 넣으면 그때부터 진짜 배치가 된다.
+   */
+  for (const it of P.state.items){
+    if (it.staged){
+      const g = applianceMesh(it);
+      g.traverse((o) => { if (o.isMesh){ o.material = ghostMat; } });
+      root.add(g); waiting++;
+      continue;
+    }
     const mesh = applianceMesh(it);
     root.add(mesh); n++;
     /* 문을 열었을 때 부딪히면 **빨갛게** 칠하고 몇 건인지 센다.
@@ -5282,7 +5304,7 @@ function build(refit){
    * 각도를 잃었다. 방이 바뀐 것이 아니라 그 안의 물건만 바뀐 때는 시점을 그대로 둔다.
    */
   if (refit){ orb.tx = c.x; orb.tz = c.z; view(mode3); }
-  return { rooms: loops.length, items: n, blocked };
+  return { rooms: loops.length, items: n, blocked, waiting };
 }
 
 /* ── 시점 프리셋 ────────────────────────────────────────────────
@@ -5512,6 +5534,7 @@ function paintBar(info){
     : (openDoors ? `<span style="color:#A7F3D0">문을 다 열어도 부딪히지 않습니다</span>` : '');
   bar.innerHTML =
     `<b>3D 보기</b> · 공간 ${info.rooms}곳 · 가전 ${info.items}대` +
+    (info.waiting ? ` · <span style="opacity:.8">대기 ${info.waiting}대 — 끌어서 넣으세요</span>` : '') +
     ` · 층고 ${WALL_H_MM.toLocaleString()}mm` +
     (warn ? ' · ' + warn : '') +
     `<span class="sp"></span>` +
@@ -5556,7 +5579,8 @@ function close(){
 window.Place3D = {
   open, close, toggle(){ return on ? (close(), null) : open(); },
   get isOpen(){ return on; },
-  rebuild(){ if (on) build(true); },
+  /* 내용이 바뀌었을 때 다시 세운다 — **화면은 다시 맞추지 않는다.** 그러면 보던 각도를 잃는다. */
+  rebuild(){ if (on) { const i = build(false); paintBar(i); } },
   /**
    * 지금 상태를 즉시 한 장 그린다.
    * `preserveDrawingBuffer` 는 **마지막으로 그린 프레임**을 보관할 뿐이라, 장면을 바꾼
