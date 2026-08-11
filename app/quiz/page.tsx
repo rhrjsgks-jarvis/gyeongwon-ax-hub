@@ -11,7 +11,7 @@ export default function QuizPage() {
     <IframeModule
       src="/quiz-app.html"
       title="URL 퀴즈 생성기"
-      className="-m-4 md:-m-6"
+      className="-m-4 lg:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     />
   )

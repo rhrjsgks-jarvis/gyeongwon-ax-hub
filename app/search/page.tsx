@@ -181,7 +181,7 @@ function SearchResults() {
   const found = useMemo(() => {
     if (!index) return null
     const conds = parseQuery(q)
-    if (!conds.length) return { conds, groups: [], per: [], best: null as null | { drop: string; n: number }, dropped: [] as string[] }
+    if (!conds.length) return { conds, groups: [], per: [], dropped: [] as string[], soft: [] as string[] }
 
     const per = conds.map((c) => ({ c, n: index.filter((e) => hits(e.kw, c)).length }))
 
@@ -196,21 +196,35 @@ function SearchResults() {
      */
     const live = per.filter((x) => x.n > 0).map((x) => x.c)
     const dropped = per.filter((x) => !x.n).map((x) => x.c.raw)
-    const all = live.length ? index.filter((e) => live.every((c) => hits(e.kw, c))) : []
+    let all = live.length ? index.filter((e) => live.every((c) => hits(e.kw, c))) : []
 
-    // 다 걸었더니 0건이면, 조건 하나를 더 빼면 몇 건이 되는지 미리 세어 둔다
-    let best: null | { drop: string; n: number } = null
+    /*
+     * **0건인 조건만 빼는 것으로는 모자란다.** 뜻 없는 조각이 **하필 한 건에 걸리면**
+     * 살아남아 문장 전체를 0건으로 만든다. 세 번 겪었다 —
+     * '놓을'(1건) · '년이야'가 '3년이'에 걸린 것. 데이터가 늘수록 이런 우연은 더 생긴다.
+     *
+     * 그래서 **다 걸어 0건이면 하나를 빼고 다시 본다.** 뺄 것은 빼서 가장 많이 나오는 조건.
+     * 상담 중에 "없습니다"로 끝나는 것보다, 결과를 주고 **무엇을 뺐는지 밝히는** 편이 낫다.
+     * (조용히 빼지 않는다 — 아래 안내 줄이 그 말을 적는다.)
+     */
+    const soft: string[] = []
     if (!all.length && live.length > 1) {
+      let pick: null | { raw: string; rest: Condition[]; n: number } = null
       for (const c of live) {
         const rest = live.filter((x) => x !== c)
         const n = index.filter((e) => rest.every((r) => hits(e.kw, r))).length
-        if (n > 0 && (!best || n > best.n)) best = { drop: c.raw, n }
+        if (n > 0 && (!pick || n > pick.n)) pick = { raw: c.raw, rest, n }
+      }
+      if (pick) {
+        all = index.filter((e) => pick!.rest.every((r) => hits(e.kw, r)))
+        soft.push(pick.raw)
       }
     }
+
     const groups = MODULE_ORDER
       .map((m) => ({ m, items: all.filter((e) => e.m === m) }))
       .filter((g) => g.items.length > 0)
-    return { conds, groups, per, best, dropped }
+    return { conds, groups, per, dropped, soft }
   }, [index, q])
 
   const grouped = found ? found.groups : null
@@ -260,6 +274,14 @@ function SearchResults() {
         </p>
       )}
 
+      {/* 함께 걸면 0건이라 하나를 빼고 찾은 경우 — 결과보다 먼저, 눈에 띄게 밝힌다 */}
+      {q && found && found.soft.length > 0 && total > 0 && (
+        <p className="text-[11px] mb-2 px-1 text-amber-700">
+          <b>{found.soft.join(' · ')}</b>
+          {' '}까지 함께 맞는 자료는 없어, 그 조건은 <b>빼고</b> 찾았습니다.
+        </p>
+      )}
+
       {/* 조건별로 몇 건이 걸렸는지 — 세 가지를 물었을 때 셋 다 인식됐는지 눈으로 확인된다 */}
       {q && found && found.conds.length > 1 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -289,18 +311,10 @@ function SearchResults() {
               앱 안에 없는 말입니다 —{' '}
               <b className="text-red-500">{found.per.map((p) => p.c.raw).join(' · ')}</b>
             </p>
-          ) : found && found.best ? (
+          ) : found && found.conds.length > 2 ? (
             <p className="text-xs text-gray-400">
-              조건은 따로따로는 다 있는데 <b>함께 맞는 자료</b>가 없습니다.{' '}
-              <button
-                type="button"
-                className="underline font-semibold"
-                style={{ color: '#1428A0' }}
-                onClick={() => router.push(`/search?q=${encodeURIComponent(
-                  found.conds.filter((c) => c.raw !== found.best!.drop).map((c) => c.raw).join(' '))}`)}
-              >
-                &lsquo;{found.best.drop}&rsquo; 빼고 다시 찾기 ({found.best.n}건)
-              </button>
+              조건이 <b>{found.conds.length}가지</b>입니다 — 하나만 빼서는 맞는 자료가 없습니다.
+              위 칩에서 건수가 적은 조건을 빼고 다시 물어보세요.
             </p>
           ) : (
             <p className="text-xs text-gray-400">제품명·모델코드·카테고리·기능명으로 검색해보세요.</p>

@@ -11,7 +11,7 @@ export default function InstallPage() {
     <IframeModule
       src="/install-app.html"
       title="제품별 설치환경 가이드"
-      className="-m-4 md:-m-6"
+      className="-m-4 lg:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     />
   )

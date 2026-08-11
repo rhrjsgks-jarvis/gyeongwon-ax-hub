@@ -152,7 +152,10 @@ const CAT_QUERIES = {
   const scenarios = [
     { q: '냉장고', desc: '카테고리명', minResults: 1 },
     { q: '무풍 에어컨 300만 이하', desc: '스펙+예산', minResults: 1 },
-    { q: 'JBL 사운드바 방수', desc: '브랜드+스펙 조합', minResults: 1 },
+    // 방수 사운드바는 DB 에 한 종도 없다(JBL 사운드바 5종 전부 방수 표기 없음).
+    // 예전에는 이 질의가 **삼성 사운드바 9종**을 내밀어 통과하고 있었다 — 조건이 아무 일도
+    // 안 하는 폴백 때문이었다. 브랜드+스펙 조합은 실제로 있는 조합으로 검사한다.
+    { q: 'JBL 포터블 스피커 방수', desc: '브랜드+스펙 조합', minResults: 1 },
     { q: '폭 700 냉장고', desc: '치수 조건', minResults: 1 },
     { q: 'S펜 노트북 OLED', desc: '기능 조합', minResults: 1 },
     { q: '가성비 태블릿 학생', desc: '가성비+카테고리', minResults: 1 },
@@ -354,6 +357,95 @@ const CAT_QUERIES = {
   }
   for (const c of Object.keys(CAT_QUERIES)) {
     if (!actualCats.has(c)) fail(`CAT_QUERIES에 있는 카테고리 "${c}"가 실제 DB에는 없음 — 카테고리명이 바뀌었거나 삭제됨`);
+  }
+
+  /* ═══ 11. 형태 구분(SUBCAT) — 카테고리가 하나인 품목의 하위 형태 ═══
+   *
+   * DB 카테고리는 '청소기' 하나인데 상담에서는 로봇/무선을 따로 찾는다. "로봇청소기 직배수"에
+   * **무선청소기가 섞여 나온 것**이 2026-08-11 사용자 지적이다. 모델 접두가 형태를 가른다.
+   */
+  console.log('── 11. 형태 구분(로봇/무선/드럼) ──');
+  const models = (q) => window.search(window.parseQuery(q)).map((r) => r.p);
+  {
+    const robot = models('로봇청소기');
+    if (!robot.length) fail('"로봇청소기" 0건');
+    const bad = robot.filter((p) => !/^VR/i.test(p.model));
+    if (bad.length) fail(`"로봇청소기"에 로봇이 아닌 모델: ${bad.slice(0, 3).map((p) => p.model).join(', ')}`);
+    console.log(`  로봇청소기 ${robot.length}종 — 전부 VR 접두 ✓`);
+
+    const stick = models('무선청소기');
+    if (!stick.length) fail('"무선청소기" 0건');
+    const bad2 = stick.filter((p) => !/^VS/i.test(p.model));
+    if (bad2.length) fail(`"무선청소기"에 스틱이 아닌 모델: ${bad2.slice(0, 3).map((p) => p.model).join(', ')}`);
+    console.log(`  무선청소기 ${stick.length}종 — 전부 VS 접두 ✓`);
+
+    // 형태를 안 밝히면 예전처럼 전체가 나와야 한다(형태 필터가 카테고리 검색을 좁히면 안 된다)
+    const allVac = models('청소기');
+    if (allVac.length <= robot.length) fail(`"청소기"(${allVac.length})가 "로봇청소기"(${robot.length})보다 넓어야 한다`);
+
+    // 원래 신고된 질의 — 직배수는 실제로 2종뿐이고, 무선청소기가 섞이면 안 된다
+    const drain = models('로봇청소기 직배수');
+    if (!drain.length) fail('"로봇청소기 직배수" 0건');
+    if (drain.some((p) => !/^VR/i.test(p.model))) fail('"로봇청소기 직배수"에 로봇이 아닌 모델이 섞였다');
+    if (drain.some((p) => p.kw.indexOf('직배수') < 0)) fail('"로봇청소기 직배수"에 직배수가 없는 모델이 섞였다');
+    console.log(`  로봇청소기 직배수 ${drain.length}종 — 전부 VR + 직배수 ✓`);
+
+    // 형태 필터는 자기 카테고리 안에서만 — 다른 품목을 함께 물으면 그쪽은 지우지 않는다
+    const mix = models('드럼세탁기 건조기');
+    if (!mix.some((p) => p.cat === '건조기')) fail('"드럼세탁기 건조기"에서 건조기가 통째로 사라졌다 — 형태 필터가 남의 카테고리까지 걸렸다');
+    if (mix.some((p) => p.cat === '세탁기·콤보' && !/^W[FWH]/i.test(p.model))) fail('"드럼세탁기"에 드럼이 아닌 세탁기가 섞였다');
+  }
+
+  /* ═══ 12. 복합 조건 — 조건은 AND, DB 에 없는 말은 뺀다 ═══ */
+  console.log('── 12. 복합 조건(AND) ──');
+  {
+    // 카테고리만 맞으면 남기던 폴백 때문에 조건이 아무 일도 안 하던 것을 막는다
+    const wide = models('청소기');
+    const narrow = models('청소기 직배수');
+    if (narrow.length >= wide.length) fail(`조건을 더해도 안 좁혀진다 — 청소기 ${wide.length} → 청소기 직배수 ${narrow.length}`);
+    if (narrow.some((p) => p.kw.indexOf('직배수') < 0)) fail('"청소기 직배수"에 직배수가 없는 모델이 남았다');
+
+    // 사용자가 든 예 — '공기청정'은 카테고리가 아니라 기능이라 무풍 에어컨이 나와야 한다
+    const mf = models('무풍 공기청정 19평');
+    if (!mf.length) fail('"무풍 공기청정 19평" 0건');
+    if (!mf.every((p) => p.cat === '에어컨')) fail('"무풍 공기청정 19평"에 에어컨이 아닌 것이 섞였다');
+    console.log(`  무풍 공기청정 19평 → ${mf.length}종 (전부 에어컨) ✓`);
+
+    // DB 에 아예 없는 말은 조건에서 빼고 그 사실을 P.ignored 로 밝힌다
+    const P = window.parseQuery('워치 지어낸조건단어');
+    const res = window.search(P);
+    if (!res.length) fail('DB 에 없는 말 하나가 결과를 통째로 지웠다 — 없는 말은 조건에서 빼야 한다');
+    if (!(P.ignored || []).includes('지어낸조건단어')) fail('뺀 말이 P.ignored 에 안 담겼다 — 화면이 그 사실을 밝힐 수 없다');
+    console.log(`  워치 + 없는 말 → ${res.length}종, 뺀 말 표시 ✓`);
+
+    /* 없는 말 판정은 **DB 전체가 아니라 그 카테고리 안에서** 해야 한다.
+     * 전체로 봤더니 "비스포크 냉장고"가 0종이 됐다 — 냉장고 kw 에는 '비스포크'가 한 종도
+     * 없는데 에어드레서·청소기에 14종이 있어 조건이 살아남아 AND 를 깨뜨렸다. */
+    const bes = models('비스포크 냉장고');
+    if (!bes.length) fail('"비스포크 냉장고" 0종 — 그 카테고리에 없는 말이 조건으로 남았다');
+    if (!bes.every((p) => p.cat === '냉장고')) fail('"비스포크 냉장고"에 냉장고가 아닌 것이 섞였다');
+    console.log(`  비스포크 냉장고 → ${bes.length}종 (그 카테고리에 없는 말은 뺀다) ✓`);
+  }
+
+  /* ═══ 13. 질의 표기 — 사람이 실제로 치는 형태 ═══ */
+  console.log('── 13. 질의 표기(구두점·쉼표) ──');
+  {
+    // "냉장고?" 가 0종이었다. 자연어로 묻는 도구에서 물음표 하나로 0건이 되면 안 된다
+    const base = models('냉장고').length;
+    for (const q of ['냉장고?', '냉장고!', '"냉장고"', '(냉장고)']) {
+      const n = models(q).length;
+      if (n !== base) fail(`"${q}" → ${n}종, "냉장고"(${base}종)와 같아야 한다 — 앞뒤 문장부호를 떼야 한다`);
+    }
+    if (models('로봇청소기?').length !== models('로봇청소기').length) fail('"로봇청소기?" 가 형태 필터를 못 탄다');
+    console.log(`  구두점이 붙어도 같은 결과 (냉장고 ${base}종) ✓`);
+
+    /* 숫자 안의 쉼표를 통째로 공백으로 바꾸던 탓에 "1,200만원 이하"가 **200만원**으로
+     * 읽혔다 — 0건도 아니고 조용히 틀린 답을 내밀었다. */
+    for (const [q, want] of [['1,000만 이하 TV', 1000], ['1,200만원 이하 TV', 1200], ['1000만 이하 TV', 1000]]) {
+      const got = window.parseQuery(q).budgetMax;
+      if (got !== want) fail(`"${q}" 예산 해석 ${got}만원, 기대 ${want}만원 — 숫자 안의 쉼표를 지워야 한다`);
+    }
+    console.log('  쉼표가 든 예산을 바르게 읽는다 (1,200만원 → 1200) ✓');
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
