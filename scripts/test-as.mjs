@@ -102,5 +102,108 @@ for (const [f, needle, label] of [
 }
 pass('허브·사이드바·로그·라우트 등록 확인');
 
+// ── [6] 물류센터 배송·설치 관할 ──
+/*
+ * 관할이 틀리면 배송이 통째로 엉뚱한 센터로 간다. 사내 배포본(2026.1.02 시행) 기준으로
+ * 검사한다. 특히 **다른 센터로 넘어간 3건**이 회귀 지점이다 — 원문에서 지명을 기계적으로
+ * 뽑으면 "*인천TC로 변경(안산시)" 같은 주석의 지명이 넘겨준 센터에도 남아 두 곳에서 잡힌다.
+ */
+A.tab = 'contact';
+const C = A.CENTERS;
+if (!C || C.length !== 21) fail(`물류센터가 ${C ? C.length : 0}개 — 21개여야 한다`);
+else pass('물류센터 21개');
+
+// 지사 구성 (원문: 서울 3 · 중부 4 · 남부 7 · 서부 7)
+const byBr = {};
+for (const c of C) byBr[c.b] = (byBr[c.b] || 0) + 1;
+const wantBr = { 서울: 3, 중부: 4, 남부: 7, 서부: 7 };
+const brBad = Object.entries(wantBr).filter(([k, v]) => byBr[k] !== v);
+if (brBad.length) fail(`지사별 센터 수 불일치: ${brBad.map(([k, v]) => `${k} ${byBr[k]}≠${v}`).join(', ')}`);
+else pass('지사별 센터 수 (서울 3 · 중부 4 · 남부 7 · 서부 7)');
+
+/* 번호 형식 — 대부분 1577-39xx 지만 **남서울TC 만 1899-9300** 이다.
+ * 형식만 검사하고 체계를 단정하지 않는다(1577 로 맞추려다 실제 번호를 틀리게 고칠 뻔했다). */
+const telBad = C.filter((c) => !/^\d{4}-\d{4}$/.test(c.n));
+if (telBad.length) fail(`연락처 형식이 깨진 센터: ${telBad.map((c) => c.t).join(', ')}`);
+else pass('연락처 형식 21건 정상');
+
+// 골든값 — 원문에서 눈으로 확인한 값
+let golden = 0;
+for (const [name, code, tel] of [
+  ['서서울TC', 'L104', '1577-3913'],
+  ['평택TC', 'L108', '1577-3922'],
+  ['제주RDC', 'L106', '1577-3971'],
+  ['익산TC', 'L121', '1577-3944'],
+  ['남서울TC', 'L133', '1899-9300'],
+]) {
+  const c = C.find((x) => x.t === name);
+  if (!c) fail(`${name} 이 없다`);
+  else if (c.code !== code || c.n !== tel) fail(`${name}: 코드/번호가 ${c.code}/${c.n} — ${code}/${tel} 이어야 한다`);
+  else golden++;
+}
+if (golden === 5) pass('골든 센터 5건 (코드·번호) 일치');
+
+/* 다른 센터로 넘어간 3건 — 넘겨받은 곳에서만 잡혀야 한다.
+ * 이 검사가 깨지면 상담사가 배송 담당 센터를 틀리게 안내한다. */
+for (const [region, owner, note] of [
+  ['안산시', '인천TC', "평택TC 칸의 '*인천TC로 변경(안산시)' 주석"],
+  ['보령시', '아산TC', "세종TC 칸의 '(아산TC로 변경 : 보령시)' 주석"],
+  ['영천시', '포항TC', "대구TC 칸의 '/// 포항TC(영천시)' 주석"],
+]) {
+  const hit = C.filter((c) => c.kw.includes(region)).map((c) => c.t);
+  if (hit.length !== 1 || hit[0] !== owner) {
+    fail(`${region}: 검색되는 센터가 [${hit.join(', ')}] — ${owner} 하나여야 한다 (${note}에서 딸려 들어왔다)`);
+  }
+}
+pass('관할 이관 3건 (안산→인천 · 보령→아산 · 영천→포항) 넘겨받은 센터에서만 검색됨');
+
+/* 반대로 실제로 두 센터에 걸친 지역은 둘 다 남아 있어야 한다 — 읍·면 단위로 갈린다 */
+for (const [region, n] of [['평창군', 2], ['홍천군', 2], ['함평군', 2]]) {
+  const hit = C.filter((c) => c.kw.includes(region));
+  if (hit.length !== n) fail(`${region}: ${hit.length}개 센터에서 검색 — ${n}개여야 한다(읍·면 단위 분할)`);
+}
+pass('분할 관할 3건 (평창·홍천·함평) 양쪽 유지');
+
+/* 시·도 이름은 키워드에서 빠져야 한다 — 서울은 네 센터로 갈리는데 '서울'로 다 잡히면 뜻이 없다 */
+const sido = C.filter((c) => c.kw.some((k) => /^(서울특별시|인천광역시|경기도|강원도|경상[남북]도|전라[남북]도|충청[남북]도)$/.test(k)));
+if (sido.length) fail(`시·도 이름이 검색 키워드에 남아 있다: ${sido.map((c) => c.t).join(', ')}`);
+else pass('시·도 머리글은 키워드에서 제외');
+
+// 화면 — 연락처 탭에 21개가 렌더되고 검색이 걸리는가
+const pane = doc.querySelector('#contactPane');
+const rows = () => pane.querySelectorAll('#lglist .ct').length;
+if (rows() !== 21) fail(`연락처 탭에 ${rows()}개 렌더 — 21개여야 한다`);
+else pass('연락처 탭 렌더 21건');
+
+const q = pane.querySelector('#lgq');
+const type = (v) => { q.value = v; q.dispatchEvent(new window.Event('input')); };
+type('수원');
+const one = pane.querySelector('#lglist .ct');
+if (rows() !== 1 || !/평택TC/.test(one.textContent)) fail(`'수원' 검색 → ${rows()}건 — 평택TC 하나여야 한다`);
+else pass("'수원' 검색 → 평택TC 하나");
+
+type('안산');
+const first = pane.querySelector('#lglist .ct');
+if (!first || !/인천TC/.test(first.textContent)) fail("'안산' 검색 결과 첫 줄이 인천TC 가 아니다");
+else pass("'안산' 검색 → 인천TC 가 첫 줄");
+
+type('');
+if (rows() !== 21) fail('검색어를 지웠는데 21건으로 돌아오지 않는다');
+else pass('검색어 해제 시 전체 복원');
+
+// 번호는 눌러서 걸 수 있어야 한다(share-kit 이 data-tel 로 시트를 띄운다)
+const noTel = [...pane.querySelectorAll('#lglist .ct')].filter((el) => !el.dataset.tel);
+if (noTel.length) fail(`${noTel.length}개 센터 줄에 data-tel 이 없다 — 눌러도 걸리지 않는다`);
+else pass('21건 전부 눌러서 걸기 가능');
+
+// 출처 표기 — 지어낸 값이 아님을 화면이 밝히는가
+if (!/센터별 배송 서비스지역/.test(pane.textContent)) fail('물류센터 출처 표기가 없다');
+else pass('물류센터 출처 표기');
+
+// 이제 물류센터는 채웠으므로 '미등록' 목록에서 빠져야 한다
+if (A.CONTACTS && /물류센터/.test(JSON.stringify(pane.textContent.match(/아직 등록되지 않았습니다[^\n]*/) || ''))) {
+  fail("물류센터를 채웠는데 아직 '미등록' 안내에 남아 있다");
+} else pass("'미등록' 안내에서 물류센터 제거됨");
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
