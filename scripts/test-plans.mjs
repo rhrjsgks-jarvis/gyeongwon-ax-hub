@@ -1525,6 +1525,70 @@ const knownGaps = [];
 }
 
 /*
+ * ── 3D 에서 가전 집기 · 시점 유지 ──
+ * 지키는 것 둘:
+ *  ① 가전 위를 누르면 그 가전이 집힌다(빈 곳은 안 집힌다) — 그래야 끌어 옮길 수 있고,
+ *    빈 곳을 끌면 카메라가 돈다.
+ *  ② **문 열기·이름표를 켜도 보던 각도를 잃지 않는다.** build() 가 끝에서 늘 화면을
+ *    다시 맞추던 시절에는, 가전을 끄는 동안 매 프레임 카메라가 제자리로 튕겨 나갔다.
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+    P.state.rooms = []; P.state.items = []; P.state.walls = W;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('거실', W);
+    const it = mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고',
+      w: 912, h: 1853, d: 930, bx: 4000, by: 2500 });
+    P.state.items.push(it);
+    window.Place3D.open();
+    window.Place3D.view('top');
+    window.Place3D.render();
+
+    /* 가전 몸통 중심을 화면으로 투영해 그 자리를 눌러 본다 */
+    const cam = window.Place3D.camera, cv = window.Place3D.canvas;
+    const [cx, cy] = P.bodyCenter(it);
+    const V = Object.getPrototypeOf(cam.position).constructor;
+    const v = new V(cx / 1000, (it.h / 2) / 1000, cy / 1000);
+    v.project(cam);
+    const rect = cv.getBoundingClientRect();
+    const sx = rect.left + (v.x + 1) / 2 * rect.width;
+    const sy = rect.top + (-v.y + 1) / 2 * rect.height;
+
+    const onItem = window.Place3D.pickAt(sx, sy);
+    const onEmpty = window.Place3D.pickAt(rect.left + 6, rect.top + 6);
+    const ground = window.Place3D.floorAt(sx, sy);
+
+    const before = [cam.position.x, cam.position.y, cam.position.z].map((n) => n.toFixed(3)).join(',');
+    window.Place3D.doors(true); window.Place3D.tags(true); window.Place3D.render();
+    const after = [cam.position.x, cam.position.y, cam.position.z].map((n) => n.toFixed(3)).join(',');
+    window.Place3D.doors(false); window.Place3D.tags(false); window.Place3D.close();
+    return { picked: onItem && onItem.id, empty: onEmpty && onEmpty.id, ground, before, after };
+  });
+
+  if (r.err) fail(r.err);
+  else {
+    if (r.picked !== 'f') fail(`3D 집기: 가전 위를 눌렀는데 ${r.picked || '아무것도'} 집혔다`);
+    else if (r.empty) fail(`3D 집기: 빈 곳을 눌렀는데 ${r.empty} 가 집혔다 — 그러면 카메라를 돌릴 수 없다`);
+    else pass('3D 집기 — 가전 위는 그 가전이, 빈 곳은 아무것도 안 집힌다');
+
+    /* 바닥 투영이 가전 자리 근처를 가리켜야 끌어 옮길 때 손과 물건이 따로 놀지 않는다 */
+    if (!r.ground) fail('3D: 바닥면 투영이 실패한다 (끌어 옮길 수 없다)');
+    else if (Math.hypot(r.ground[0] - 4000, r.ground[1] - 2500 - 465) > 900)
+      fail(`3D: 바닥 투영이 엉뚱한 곳을 가리킨다 — (${r.ground.map(Math.round)})`);
+    else pass(`3D 바닥 투영 — (${r.ground.map(Math.round).join(', ')})mm`);
+
+    if (r.before !== r.after)
+      fail(`3D: 문 열기·이름표를 켰더니 시점이 바뀐다 (${r.before} → ${r.after}) — 끄는 동안 카메라가 튕긴다`);
+    else pass('3D 시점 유지 — 문 열기·이름표를 켜도 보던 각도 그대로');
+  }
+}
+
+/*
  * ── 3D 결과 공유 — 화면에 보이는 것이 그대로 나가는가 ──
  * 상담이 끝나면 고객 손에 남는 것이 이 카드다. 두 가지를 지킨다:
  *  ① 3D 를 보고 있으면 3D 그림이 나간다(2D 가 아니라)
