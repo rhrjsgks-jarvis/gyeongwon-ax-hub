@@ -17,6 +17,7 @@
   .hd-s{font-size:11.5px;color:#c7d2fe;margin-top:2px;line-height:1.4}
   .wrap{max-width:840px;margin:0 auto;padding:16px 14px 60px}
   .sub{font-size:12.5px;color:#6b7280;line-height:1.55;margin-bottom:14px}
+  #body{scroll-margin-top:56px}
   .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:16px}
   .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
     font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:#374151}
@@ -172,7 +173,7 @@ function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, ''
 function renderCats(){
   document.getElementById('cats').innerHTML = keys.map(k=>
     `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
-  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); });
+  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); revealBody(); });
 }
 
 function renderBody(){
@@ -253,6 +254,19 @@ function renderContacts(){
   h += `<div class="src">삼성전자서비스(samsungsvc.co.kr) · 삼성닷컴(samsung.com/sec) 공식 표기 · 2026-08-11 확인</div>`;
   pane.innerHTML = h;
   if (typeof wireContacts === 'function') wireContacts(pane, '.ct');
+}
+
+/*
+ * 품목을 고르면 결과로 데려간다(2026-08-11 사용자 지적).
+ * 품목 타일이 26개라 결과가 화면 밖에 그려지는데, 그러면 눌러도 아무 일이 없어 보여
+ * **클릭이 됐나 싶어 여러 번 누르게 된다.** 스크롤은 사용자가 할 일이 아니다.
+ *
+ * 첫 렌더에서는 부르지 않는다 — 열자마자 화면이 튀면 그게 더 어리둥절하다.
+ * 가려지지 않도록 #body 에 scroll-margin-top 을 줘 sticky 탭 아래에 붙게 했다.
+ */
+function revealBody(){
+  const el = document.getElementById('body');
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 let curTab = 'as';
