@@ -11,7 +11,7 @@ export default function TestPage() {
     <IframeModule
       src="/test-app.html"
       title="레벨업 챌린지 2026"
-      className="-m-4 md:-m-6"
+      className="-m-4 lg:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     />
   )

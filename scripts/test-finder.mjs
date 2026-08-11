@@ -417,6 +417,35 @@ const CAT_QUERIES = {
     if (!res.length) fail('DB 에 없는 말 하나가 결과를 통째로 지웠다 — 없는 말은 조건에서 빼야 한다');
     if (!(P.ignored || []).includes('지어낸조건단어')) fail('뺀 말이 P.ignored 에 안 담겼다 — 화면이 그 사실을 밝힐 수 없다');
     console.log(`  워치 + 없는 말 → ${res.length}종, 뺀 말 표시 ✓`);
+
+    /* 없는 말 판정은 **DB 전체가 아니라 그 카테고리 안에서** 해야 한다.
+     * 전체로 봤더니 "비스포크 냉장고"가 0종이 됐다 — 냉장고 kw 에는 '비스포크'가 한 종도
+     * 없는데 에어드레서·청소기에 14종이 있어 조건이 살아남아 AND 를 깨뜨렸다. */
+    const bes = models('비스포크 냉장고');
+    if (!bes.length) fail('"비스포크 냉장고" 0종 — 그 카테고리에 없는 말이 조건으로 남았다');
+    if (!bes.every((p) => p.cat === '냉장고')) fail('"비스포크 냉장고"에 냉장고가 아닌 것이 섞였다');
+    console.log(`  비스포크 냉장고 → ${bes.length}종 (그 카테고리에 없는 말은 뺀다) ✓`);
+  }
+
+  /* ═══ 13. 질의 표기 — 사람이 실제로 치는 형태 ═══ */
+  console.log('── 13. 질의 표기(구두점·쉼표) ──');
+  {
+    // "냉장고?" 가 0종이었다. 자연어로 묻는 도구에서 물음표 하나로 0건이 되면 안 된다
+    const base = models('냉장고').length;
+    for (const q of ['냉장고?', '냉장고!', '"냉장고"', '(냉장고)']) {
+      const n = models(q).length;
+      if (n !== base) fail(`"${q}" → ${n}종, "냉장고"(${base}종)와 같아야 한다 — 앞뒤 문장부호를 떼야 한다`);
+    }
+    if (models('로봇청소기?').length !== models('로봇청소기').length) fail('"로봇청소기?" 가 형태 필터를 못 탄다');
+    console.log(`  구두점이 붙어도 같은 결과 (냉장고 ${base}종) ✓`);
+
+    /* 숫자 안의 쉼표를 통째로 공백으로 바꾸던 탓에 "1,200만원 이하"가 **200만원**으로
+     * 읽혔다 — 0건도 아니고 조용히 틀린 답을 내밀었다. */
+    for (const [q, want] of [['1,000만 이하 TV', 1000], ['1,200만원 이하 TV', 1200], ['1000만 이하 TV', 1000]]) {
+      const got = window.parseQuery(q).budgetMax;
+      if (got !== want) fail(`"${q}" 예산 해석 ${got}만원, 기대 ${want}만원 — 숫자 안의 쉼표를 지워야 한다`);
+    }
+    console.log('  쉼표가 든 예산을 바르게 읽는다 (1,200만원 → 1200) ✓');
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

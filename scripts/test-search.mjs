@@ -278,7 +278,12 @@ for (const [file, needle] of deepLinks) {
 
   // AS 앱에서만 확인할 수 있는 것들 — 물류센터·이전설치가 허브 검색에서도 잡혀야 한다
   const { parseQuery, hits } = await import('../lib/searchTerms.ts');
-  const find = (q) => { const cs = parseQuery(q); return entries.filter((e) => cs.every((c) => hits(e.kw, c))); };
+  // 화면(app/search/page.tsx)과 같은 판정 — **조건이 하나도 없으면 0건**이다.
+  // (빈 배열에 every 를 걸면 참이라 그냥 두면 전 항목이 나온다 — 화면은 그렇게 동작하지 않는다)
+  const find = (q) => {
+    const cs = parseQuery(q);
+    return cs.length ? entries.filter((e) => cs.every((c) => hits(e.kw, c))) : [];
+  };
   for (const [q, m, what] of [
     ['김해', 'as', '물류센터·이전설치 관할'],
     ['싱크대 리폼', 'as', '싱크장 리폼 협력사'],
@@ -331,6 +336,33 @@ for (const [file, needle] of deepLinks) {
   // 방 이름은 ROOM_PLAN 에서 파생시킨다 — 손으로 적으면 화면과 어긋난다
   const roomTagged = entries.filter((e) => e.m === 'place' && /(안방|침실1)/.test(e.kw)).length;
   if (roomTagged < 5) fail(`배치 시뮬레이터에 방 이름이 붙은 항목이 ${roomTagged}건뿐 — ROOM_PLAN 파싱이 깨졌는지 확인할 것`);
+
+  /* ── ⑨ 사람이 실제로 치는 형태 ── */
+  const n = (q) => find(q).length;
+  const base = n('냉장고');
+  for (const q of ['냉장고?', '냉장고!!!', '"냉장고"', '(냉장고)', '냉장고.']) {
+    if (n(q) !== base) fail(`"${q}" → ${n(q)}건, "냉장고"(${base}건)와 같아야 한다 — 앞뒤 문장부호를 떼야 한다`);
+  }
+  console.log(`OK: 구두점이 붙어도 같은 결과 (냉장고 ${base}건)`);
+
+  /* **한 글자는 조건으로 쓰지 않는다.** 판정이 kw.includes 라 어디에나 걸린다 —
+   * "왜 이거 안 되나요 진짜 좀 알려주세요"가 '안' 하나 때문에 145건으로 흩어졌다. */
+  for (const q of ['a', '1', '0', 'ㄱ', '왜 이거 안 되나요 진짜 좀 알려주세요']) {
+    if (n(q) !== 0) fail(`"${q}" → ${n(q)}건 — 한 글자는 조건에서 빼야 한다(어디에나 걸린다)`);
+  }
+  console.log('OK: 한 글자 토큰은 조건이 되지 않는다');
+
+  // 색인과 질의가 같은 정규화를 타는지 — 한쪽만 바꾸면 영영 안 걸린다
+  for (const [a, b] of [['912×1,853', '912x1853'], ['1,853', '1853'], ['65인치', '65형'], ['크기', '치수']]) {
+    if (n(a) !== n(b)) fail(`"${a}"(${n(a)}건) 과 "${b}"(${n(b)}건) 이 달라졌다 — 정규화가 어긋났다`);
+  }
+  console.log('OK: 표기가 갈려도 같은 결과(쉼표·곱셈기호·인치/형·크기/치수)');
+
+  // 정규식 메타문자·태그가 들어와도 예외가 없어야 한다(판정이 includes 라 안전해야 정상)
+  for (const q of ['<script>alert(1)</script>', "' OR 1=1 --", '\\ ^ $ ( ) [ ] { } * + ? | .', '🧊❄️']) {
+    try { find(q); } catch (e) { fail(`"${q}" 에서 예외: ${e.message}`); }
+  }
+  console.log('OK: 이상 입력에서 예외 없음');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

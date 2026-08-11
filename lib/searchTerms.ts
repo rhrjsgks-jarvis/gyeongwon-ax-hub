@@ -182,12 +182,34 @@ const STOPWORDS = new Set([
   '할', '하는', '될', '되는', '있는', '없는', '좋은', '맞는', '필요한', '어울리는',
 ])
 
+/*
+ * 토큰 앞뒤에 붙은 문장부호를 뗀다. **"냉장고?" 가 0건이었다** — 사람은 물음표를 붙여 묻는데
+ * 색인에는 '냉장고' 로 적혀 있으니 영영 안 걸린다. 자연어로 물으라고 만든 검색에서
+ * 물음표 하나로 0건이 되면 안 된다.
+ *
+ * **가운데 기호는 건드리지 않는다** — `1577-3922`(전화)·`2026.03.19`(날짜)·`w×h×d` 가
+ * 조각나면 그것들로 못 찾게 된다. 앞뒤만 깎는다.
+ */
+const EDGE_PUNCT = /^[?!.,;:~"'`()[\]{}<>_\-–—…]+|[?!.,;:~"'`()[\]{}<>_\-–—…]+$/g
+
 /** 질의를 조건 목록으로 쪼갠다. 각 조건은 AND 로 걸리고, 조건 안의 표기들은 OR 다. */
 export function parseQuery(q: string): { raw: string; forms: string[] }[] {
+  return tokens(q)
+    .filter((t) => !isStop(t))
+    .map((raw) => ({ raw, forms: expandToken(raw) }))
+}
+
+/*
+ * **한 글자는 조건으로 쓰지 않는다.** 판정이 `kw.includes(표기)` 라 한 글자는 어디에나 걸린다
+ * — 동의어 표에서 한 글자를 막아 둔 것과 같은 이유다. *"왜 이거 안 되나요 진짜 좀 알려주세요"*
+ * 가 '안' 하나 때문에 **145건**으로 흩어졌고, 'a' 하나로 678건이 나왔다.
+ * 조건이 아무거나 무는 것은 없느니만 못하다.
+ */
+function tokens(q: string): string[] {
   return normalize(q)
     .split(/\s+/)
-    .filter((t) => t && !isStop(t))
-    .map((raw) => ({ raw, forms: expandToken(raw) }))
+    .map((t) => t.replace(EDGE_PUNCT, ''))
+    .filter((t) => t.length >= 2)
 }
 
 /* 묻는 말은 활용형이 끝없다("어디로"·"어디서"·"어디에서"). 앞머리로 본다.
@@ -203,7 +225,7 @@ function isStop(t: string): boolean {
 
 /** 조건에서 빼 버린 말 — 화면이 "이건 무시했습니다"라고 밝히는 데 쓴다. */
 export function ignoredWords(q: string): string[] {
-  return normalize(q).split(/\s+/).filter((t) => t && isStop(t))
+  return tokens(q).filter((t) => isStop(t))
 }
 
 export type Condition = { raw: string; forms: string[] }
