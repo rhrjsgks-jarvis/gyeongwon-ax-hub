@@ -112,6 +112,11 @@ input{-webkit-tap-highlight-color:transparent}
 .mode-option input[type=radio]{accent-color:#1428A0;width:18px;height:18px;flex-shrink:0}
 .mode-label{font-size:14px;font-weight:700;color:#222}
 .mode-desc{font-size:11px;color:#888;margin-left:auto}
+
+  /* PC 대응 — 넓은 화면에서 본문이 폰 폭 그대로라 화면 한가운데 좁은 기둥으로 보였다
+     (2026-08-11 사용자 지적). 좁은 화면 값은 그대로 두고 넓은 화면에서만 늘린다. */
+  @media(min-width:1024px){ #quizContent,#submitBtn,#resultScreen { max-width:960px } }
+  @media(min-width:1440px){ #quizContent,#submitBtn,#resultScreen { max-width:1140px } }
 </style>
 </head>
 <body>

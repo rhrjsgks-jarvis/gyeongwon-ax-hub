@@ -95,6 +95,21 @@ const expectedImageCounts = {
   console.log('search "스마트폰" (removed cat) visible count:', visible.length);
   if (visible.length !== 0) { console.log('ERROR: removed cat should not match search'); ok = false; }
 
+  // 화면에 적힌 카테고리 개수가 DB 와 같은가 — 박아 두면 늘려도 옛 숫자가 남는다
+  // (2026-08-11: 실제 21개인데 "(20종)"으로 적혀 있었다)
+  {
+    const title = doc.getElementById('cat-count-title');
+    /* INSTALL_DB 는 const 라 window 에 없다 — 드롭다운에 실제로 깔린 항목 수와 댄다.
+       "화면에 적힌 개수 = 고를 수 있는 개수" 가 사용자가 보는 진짜 불변식이다. */
+    const n = doc.querySelectorAll('.cat-drop-row').length;
+    const said = title && (title.textContent.match(/\((\d+)종\)/) || [])[1];
+    if (!title) { console.log('ERROR: 카테고리 개수 표기 요소(#cat-count-title)가 없다'); ok = false; }
+    else if (Number(said) !== n) {
+      console.log(`ERROR: 화면은 "${said}종" 인데 드롭다운은 ${n}개 — 숫자를 박아 두지 말 것`);
+      ok = false;
+    } else console.log(`OK: 카테고리 개수 표기 ${n}종 = 드롭다운 항목 수 (DB 에서 세어 넣음)`);
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })();
