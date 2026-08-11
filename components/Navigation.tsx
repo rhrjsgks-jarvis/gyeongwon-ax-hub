@@ -22,7 +22,7 @@ const NAV_GROUPS = [
       { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
-      { href: '/as',               label: 'AS 관련 업무',     icon: 'warranty' as IconName },
+      { href: '/as',               label: 'AS 관련 정보',     icon: 'warranty' as IconName },
       { href: '/place',           label: '배치 시뮬레이터',   icon: 'place' as IconName },
     ],
   },
@@ -47,16 +47,23 @@ const NAV_GROUPS = [
 const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자용]', icon: 'dashboard' as IconName }
 
 /*
- * 좁은 화면 하단 바로가기 — **사이드바에서 그대로 뽑는다. 손으로 따로 적지 않는다.**
- * 손으로 적었더니 둘이 어긋나 하단에만 '레벨업 챌린지'(교육 그룹)가 들어가 있고
- * AS 관련 업무·배치 시뮬레이터·제품 상세검색은 빠져 있었다(2026-08-11 사용자 지적:
- * *"사이드바 메뉴가 동일하게 하단 바로가기로 나와 있어야 합니다. 하단 바로가기에
- * 엉뚱한 것들이 있습니다"*). 파생으로 두면 사이드바만 고쳐도 둘이 같이 간다.
+ * 좁은 화면 하단 바로가기 — **큰 분류만 담는다**(2026-08-11 사용자 요청).
  *
- * 담는 것은 **진입점 둘 + '제품 상담 도구' 그룹**이다. 하단 바는 한 줄이라 전부는 못 담고,
- * 상담 중에 손이 가는 것이 그 그룹이다. 교육·매장운영은 허브에서 연다.
+ * 한때 사이드바의 '제품 상담 도구' 여섯 개를 그대로 뽑아 8칸을 만들었는데, 한 줄에 여덟은
+ * 글자가 두 줄로 접혀 읽히지 않았다. 하단 바는 **분류로 들어가는 문**이지 도구 목록이 아니다.
+ *
+ * '교육'·'매장운영'은 페이지가 아니라 분류라 도구가 여럿이므로, **허브의 그 섹션으로**
+ * 데려간다(`app/page.tsx` 의 `SECTION_ID` · `ANCHOR_SECTION`). 링크만 걸고 섹션 id 를
+ * 안 만들면 모바일에서 접힌 채라 아무 일도 안 일어난다 — 둘을 함께 볼 것.
  */
-const NAV_ITEMS = [...NAV_ENTRY, ...NAV_GROUPS[0].items]
+const NAV_ITEMS = [
+  { href: '/',       label: '허브',           icon: 'home' as IconName },
+  { href: '/search', label: '통합검색',        icon: 'search' as IconName },
+  { href: '/as',     label: 'AS 관련 정보',    icon: 'warranty' as IconName },
+  { href: '/place',  label: '배치 시뮬레이터',  icon: 'place' as IconName },
+  { href: '/#edu',   label: '교육',           icon: 'quiz' as IconName },
+  { href: '/#store', label: '매장운영',        icon: 'coupon' as IconName },
+]
 
 export default function Navigation() {
   const pathname = usePathname()

@@ -23,7 +23,16 @@ const read = (f) => fs.readFileSync(pub(f), 'utf8');
 const entries = [];
 const add = (e) => entries.push(e);
 
-// ── 1. 모델파인더: 제품(CE/MX/Harman) + 카테고리 ──
+/*
+ * ── 1. 제품 상세검색: **제품만** ──
+ * **분류(카테고리)·제목은 넣지 않는다**(2026-08-11 사용자 요청: *"제품상세검색 항목은
+ * 제품관련만 검색되도록 해주세요. 다른 제목이나 분류가 검색되면 안 됩니다. 말 그대로
+ * 가전제품(CE+MX+B2B)만 검색입니다"*).
+ *
+ * 예전에는 카테고리 줄(`t:'category'`)도 함께 넣어, "냉장고"를 치면 제품 108종 사이에
+ * **"냉장고"라는 분류 줄**이 끼어 있었다. 분류로 찾는 일은 설치환경·타사비교 묶음이 하고,
+ * 이 묶음은 **제품 그 자체**만 담는다. `/finder` 화면은 원래부터 제품 카드만 렌더한다.
+ */
 {
   const html = read('finder-app.html');
   const grab = (re) => {
@@ -34,9 +43,7 @@ const add = (e) => entries.push(e);
     ...grab(/let PRODUCTS = (\[[\s\S]*?\]);/),
     ...grab(/const HARMAN_PRODUCTS = (\[[\s\S]*?\]);/),
   ];
-  const cats = new Set();
   for (const p of products) {
-    cats.add(p.cat);
     add({
       t: 'product', m: 'finder', title: p.model,
       sub: `${p.cat}${p.group ? ' · ' + p.group : ''}`,
@@ -51,10 +58,6 @@ const add = (e) => entries.push(e);
       usp: p.usp || [],
       catOk: !!p.cat_ok,
     });
-  }
-  for (const c of cats) {
-    add({ t: 'category', m: 'finder', title: c, sub: '모델파인더 카테고리',
-      kw: c, href: `/finder?q=${encodeURIComponent(c)}` });
   }
 }
 
@@ -130,7 +133,7 @@ function flatten(v, out = []) {
   }
 }
 
-// ── 5. AS 관련 업무: 품목별 보증 · 물류센터 · 이전설치 협력사 ──
+// ── 5. AS 관련 정보: 품목별 보증 · 물류센터 · 이전설치 협력사 ──
 // 상담에서 "수원은 어느 센터죠"·"컴프레서 몇 년이죠"는 허브 검색창에도 그대로 들어온다.
 {
   const html = read('as-app.html');

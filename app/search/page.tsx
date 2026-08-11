@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { logEvent } from '@/lib/logEvent'
-import { parseQuery, hits, type Condition } from '@/lib/searchTerms'
+import { parseQuery, hits, ignoredWords, type Condition } from '@/lib/searchTerms'
 
 // 인덱스는 두 파일로 나뉜다(scripts/build-search-index.mjs 참고).
 //  - search-index.json  : 검색에 필요한 필드만 담은 경량본. 첫 진입에 받는다.
@@ -38,7 +38,7 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string }
   install: { label: '설치환경 가이드',   icon: '🛠️', color: '#B45309' },
   compare: { label: '타사비교',         icon: '🔗', color: '#EA580C' },
   care:    { label: 'AI구독 케어',         icon: '💚', color: '#059669' },
-  as:      { label: 'AS 관련 업무',      icon: '🛡️', color: '#0D9488' },
+  as:      { label: 'AS 관련 정보',      icon: '🛡️', color: '#0D9488' },
   place:   { label: '배치 시뮬레이터',   icon: '📐', color: '#7C3AED' },
   hub:     { label: '허브 기능',        icon: '🏠', color: '#475569' },
 }
@@ -181,16 +181,28 @@ function SearchResults() {
   const found = useMemo(() => {
     if (!index) return null
     const conds = parseQuery(q)
-    if (!conds.length) return { conds, groups: [], per: [], best: null as null | { drop: string; n: number } }
+    if (!conds.length) return { conds, groups: [], per: [], best: null as null | { drop: string; n: number }, dropped: [] as string[] }
 
     const per = conds.map((c) => ({ c, n: index.filter((e) => hits(e.kw, c)).length }))
-    const all = index.filter((e) => conds.every((c) => hits(e.kw, c)))
 
-    // 다 걸었더니 0건이면, 조건 하나를 빼면 몇 건이 되는지 미리 세어 둔다
+    /*
+     * **앱 안에 없는 말은 조건에서 뺀다.** 자연어로 물으면 "수원은 어느 물류센터야" 처럼
+     * 조사·어미가 붙은 조각이 섞이는데, AND 라 그 하나가 0건이면 문장 전체가 0건이 된다.
+     * 불용어 목록으로는 활용형을 다 못 잡으므로 **실제로 0건인 조건을 뺀다** — 데이터가
+     * 스스로 판정하는 셈이라 목록을 관리할 필요가 없다.
+     *
+     * 조용히 빼지 않는다. 조건별 건수 칩이 그 말을 빨갛게 보여주고, 아래 한 줄이
+     * "이건 빼고 찾았습니다"라고 밝힌다 — 안 그러면 "왜 이게 나오지"가 된다.
+     */
+    const live = per.filter((x) => x.n > 0).map((x) => x.c)
+    const dropped = per.filter((x) => !x.n).map((x) => x.c.raw)
+    const all = live.length ? index.filter((e) => live.every((c) => hits(e.kw, c))) : []
+
+    // 다 걸었더니 0건이면, 조건 하나를 더 빼면 몇 건이 되는지 미리 세어 둔다
     let best: null | { drop: string; n: number } = null
-    if (!all.length && conds.length > 1) {
-      for (const c of conds) {
-        const rest = conds.filter((x) => x !== c)
+    if (!all.length && live.length > 1) {
+      for (const c of live) {
+        const rest = live.filter((x) => x !== c)
         const n = index.filter((e) => rest.every((r) => hits(e.kw, r))).length
         if (n > 0 && (!best || n > best.n)) best = { drop: c.raw, n }
       }
@@ -198,7 +210,7 @@ function SearchResults() {
     const groups = MODULE_ORDER
       .map((m) => ({ m, items: all.filter((e) => e.m === m) }))
       .filter((g) => g.items.length > 0)
-    return { conds, groups, per, best }
+    return { conds, groups, per, best, dropped }
   }, [index, q])
 
   const grouped = found ? found.groups : null
@@ -238,6 +250,16 @@ function SearchResults() {
         조건을 <b className="text-gray-500">띄어쓰기로 여러 개</b> 넣으면 모두 맞는 것만 남습니다. 줄여 쓴 말도 알아듣습니다(식세기·김냉·로청·안방).
       </p>
 
+      {/* 자연어로 물으면 '몇'·'수원은' 같은 말이 섞인다. 무엇을 뺐는지 밝힌다 */}
+      {q && found && (ignoredWords(q).length > 0 || (found.dropped.length > 0 && total > 0)) && (
+        <p className="text-[11px] text-gray-400 mb-2 px-1">
+          <span className="text-gray-500">
+            {[...ignoredWords(q), ...(total > 0 ? found.dropped : [])].join(' · ')}
+          </span>
+          {' '}은(는) 앱 안에 없는 말이라 빼고 찾았습니다.
+        </p>
+      )}
+
       {/* 조건별로 몇 건이 걸렸는지 — 세 가지를 물었을 때 셋 다 인식됐는지 눈으로 확인된다 */}
       {q && found && found.conds.length > 1 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -262,10 +284,10 @@ function SearchResults() {
       ) : total === 0 ? (
         <div className="text-center py-10">
           <p className="text-sm text-gray-500 mb-1">&ldquo;{q}&rdquo; 검색 결과가 없습니다.</p>
-          {found && found.per.some((p) => !p.n) ? (
+          {found && found.per.every((p) => !p.n) ? (
             <p className="text-xs text-gray-400">
               앱 안에 없는 말입니다 —{' '}
-              <b className="text-red-500">{found.per.filter((p) => !p.n).map((p) => p.c.raw).join(' · ')}</b>
+              <b className="text-red-500">{found.per.map((p) => p.c.raw).join(' · ')}</b>
             </p>
           ) : found && found.best ? (
             <p className="text-xs text-gray-400">

@@ -87,7 +87,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
             {
         href: '/as',
         icon: 'warranty',
-        title: 'AS 관련 업무',
+        title: 'AS 관련 정보',
         desc: '무상보증·핵심부품·부품보유기간 + AS·물류센터 연락처 + 빌트인 이전설치 관할까지 한 곳에서',
         color: '#1428A0',
         bg: '#EEF2FF',
@@ -265,6 +265,17 @@ const COUPON_LINKS = [
     desc: '매장별 쿠폰 재고 · 발급현황 조회',
   },
 ]
+
+/*
+ * 섹션 앵커 — 좁은 화면 하단 바로가기의 '교육'·'매장운영'이 이 자리로 데려간다.
+ * 그 둘은 페이지가 아니라 **분류**라 도구가 여럿이므로, 허브의 그 섹션을 펼쳐 보여주는 것이 맞다.
+ * ANCHOR_SECTION 에도 함께 넣어야 모바일에서 접힌 섹션이 펼쳐진다.
+ */
+const SECTION_ID: Record<string, string> = {
+  '제품 상담 도구': 'tools',
+  '교육': 'edu',
+  '매장운영 도구': 'store',
+}
 
 const TIPS = [
   { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
@@ -485,6 +496,9 @@ export default function Home() {
   const ANCHOR_SECTION: Record<string, string> = {
     coupon: '매장운영 도구',
     concierge: '매장운영 도구',
+    tools: '제품 상담 도구',
+    edu: '교육',
+    store: '매장운영 도구',
   }
   useEffect(() => {
     const id = window.location.hash.slice(1)
@@ -564,7 +578,7 @@ export default function Home() {
       {MODULE_GROUPS.map((group) => {
         const isOpen = !!openSections[group.title]
         return (
-          <div key={group.title} className="mb-5">
+          <div key={group.title} id={SECTION_ID[group.title]} className="mb-5 scroll-mt-20">
             <AccordionHeader title={group.title} isOpen={isOpen} onClick={() => toggleSection(group.title)} />
             <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-2 xl:grid-cols-3 gap-2.5 md:gap-3`}>
               {group.modules.map((mod) => (
