@@ -184,5 +184,64 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (ok) console.log('OK: "사용현황 대시보드[관리자용]" 명칭이 허브·사이드바·대시보드 3곳에 반영됨');
 }
 
+// ── 관리자 비밀번호 검증 (lib/adminAuth.ts) ──
+/*
+ * 2026-08-11 실제로 여기서 막혔다. 환경변수에 해시를 넣었는데 로그인이 안 됐고,
+ * 화면에는 "비밀번호가 다릅니다" 한 줄만 떠서 오타인지 미적용인지 구분할 수가 없었다.
+ * 붙여넣다 섞이는 것들(공백·따옴표·대문자)과 평문/해시 우선순위를 여기서 못 박는다.
+ */
+{
+  const A = await import('../lib/adminAuth.ts');
+  const PW = 'Admin1234!';
+  const H = A.sha256(PW);
+
+  if (H !== '5ce41ada64f1e8ffb0acfaafa622b141438f3a5777785e7f0b830fb73e40d3d6')
+    fail(`sha256("${PW}") 가 바뀌었다 — ${H}`);
+
+  const cases = [
+    ['평문',                     { ADMIN_PW: PW },                       true],
+    ['평문 + 앞뒤 공백',          { ADMIN_PW: '  ' + PW + '  ' },         true],
+    ['평문 + 줄바꿈',             { ADMIN_PW: PW + '\n' },                true],
+    ['평문 + 감싼 따옴표',        { ADMIN_PW: '"' + PW + '"' },           true],
+    ['해시',                     { ADMIN_PW_HASH: H },                   true],
+    ['해시 대문자',               { ADMIN_PW_HASH: H.toUpperCase() },     true],
+    ['해시 + 줄바꿈',             { ADMIN_PW_HASH: H + '\n' },            true],
+    ['둘 다 — 평문이 이긴다',      { ADMIN_PW: PW, ADMIN_PW_HASH: 'x'.repeat(64) }, true],
+    ['해시 자리에 평문 (오설정)',  { ADMIN_PW_HASH: PW },                  false],
+    ['틀린 비밀번호',             { ADMIN_PW: '다른비밀번호' },            false],
+  ];
+  let n = 0;
+  for (const [label, env, want] of cases) {
+    const got = A.verify(PW, env);
+    if (got !== want) fail(`[비밀번호] ${label}: verify() = ${got} — ${want} 여야 한다`);
+    else n++;
+  }
+  if (n === cases.length) console.log(`OK: 비밀번호 검증 ${n}가지 (평문·해시·공백·따옴표·대문자·우선순위)`);
+
+  // 빈 비밀번호가 폴백 해시를 우연히 통과하면 안 된다
+  if (A.verify('', {})) fail('[비밀번호] 빈 문자열이 통과한다');
+  else console.log('OK: 빈 비밀번호는 거부');
+
+  // 설정이 잘못됐을 때 서버가 무엇이 문제인지 말해 주는가 — 값 자체는 절대 싣지 않는다
+  const wPlain = A.configWarning({ ADMIN_PW: PW });
+  const wBad = A.configWarning({ ADMIN_PW_HASH: PW });
+  const wNone = A.configWarning({});
+  if (wPlain !== null) fail('[비밀번호] 평문이 제대로 설정됐는데 경고가 뜬다');
+  else if (!wBad || !/64자가 아닙니다/.test(wBad)) fail('[비밀번호] 해시 자리에 평문을 넣었는데 경고가 없다');
+  else if (!wNone || !/미설정/.test(wNone)) fail('[비밀번호] 둘 다 없는데 폴백 경고가 없다');
+  else console.log('OK: 설정 오류를 경고로 알린다 (평문 오설정 · 미설정)');
+
+  for (const [label, w] of [['오설정', wBad], ['미설정', wNone]]) {
+    if (w && (w.includes(PW) || w.includes(H))) fail(`[비밀번호] ${label} 경고에 비밀번호/해시가 그대로 실린다`);
+  }
+  console.log('OK: 경고문에 비밀번호·해시를 싣지 않는다');
+
+  // NEXT_PUBLIC_ 으로 새어 나가면 클라이언트 번들에 실려 검증이 통째로 무의미해진다
+  const authSrc = fs.readFileSync(new URL('../lib/adminAuth.ts', import.meta.url), 'utf8')
+    + fs.readFileSync(new URL('../app/api/admin-auth/route.ts', import.meta.url), 'utf8');
+  if (/NEXT_PUBLIC_ADMIN/.test(authSrc)) fail('[비밀번호] NEXT_PUBLIC_ 접두사가 붙은 관리자 환경변수가 있다');
+  else console.log('OK: 관리자 비밀번호 환경변수가 클라이언트로 새지 않음');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
