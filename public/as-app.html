@@ -31,12 +31,14 @@
   .rl.need{background:#E0F2FE;color:#0D1B7A}
   .rl.warn{background:#FEF3C7;color:#B45309}
   .rv{font-size:12px;line-height:1.6;color:#374151;min-width:0}
-  /* 연락처 — 매장 기기가 폰인 경우가 많아 tel 링크로 바로 걸리게 한다 */
+  /* 연락처 — 누르면 걸기/복사를 고르는 시트가 뜬다(share-kit.js).
+     바로 걸리게 두면 번호만 원할 때 곤란하고, PC 에서는 tel: 이 동작하지 않는다 */
   .ctg{font-size:11px;font-weight:800;color:#6b7280;margin:12px 0 5px;letter-spacing:.02em}
   .ctg:first-of-type{margin-top:4px}
   .ct{display:flex;align-items:center;gap:10px;justify-content:space-between;
     padding:9px 11px;margin-bottom:5px;border:1px solid #e5e7eb;border-radius:10px;
-    background:#fff;text-decoration:none;color:inherit}
+    background:#fff;text-decoration:none;color:inherit;width:100%;font-family:inherit;
+    text-align:left;cursor:pointer}
   .ct:active{background:#EEF2FF}
   .ct-b{display:flex;flex-direction:column;min-width:0}
   .ct-b b{font-size:12.5px;font-weight:700}
@@ -84,6 +86,7 @@
 </div>
 
 <script src="prod-symbols.js"></script>
+<script src="share-kit.js"></script>
 <script>
 /*
  * 데이터는 삼성전자서비스 '보증기간 산정기준'(https://www.samsungsvc.co.kr/info/fee?tab=assure) 원문에서만 만든다.
@@ -189,9 +192,9 @@ function renderBody(){
 
   h += `<div class="card"><h2>연락처 모음 <span class="pill">눌러서 바로 통화</span></h2>
     ${CONTACTS.map(g=>`<div class="ctg">${esc(g.g)}</div>
-      ${g.items.map(c=>`<a class="ct" href="tel:${esc(c.n.replace(/-/g,''))}">
+      ${g.items.map(c=>`<button type="button" class="ct" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
         <span class="ct-b"><b>${esc(c.t)}</b><span class="ct-d">${esc(c.d)}</span></span>
-        <span class="ct-n">${esc(c.n)}</span></a>`).join('')}`).join('')}
+        <span class="ct-n">${esc(c.n)}</span></button>`).join('')}`).join('')}
     <div class="ctg">물류 · 내부</div>
     <div class="unk">아직 등록되지 않았습니다 — ${CONTACTS_TODO.map(esc).join(' · ')}<br>
       공개 자료로 확인할 수 없는 내부 연락처라 지어내지 않았습니다. 번호를 알려주시면 넣겠습니다.</div>
@@ -202,6 +205,7 @@ function renderBody(){
     2026-08-10 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.</div>`;
 
   document.getElementById('body').innerHTML = h;
+  if (typeof wireContacts === 'function') wireContacts(document.getElementById('body'), '.ct');
 }
 
 renderCats(); renderBody();
