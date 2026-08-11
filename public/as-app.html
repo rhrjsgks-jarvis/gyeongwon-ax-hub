@@ -238,11 +238,11 @@ const CONTACTS = [
   ]},
 ];
 
-/* 물류센터·지점 담당처럼 **경원영업팀 내부 연락처**는 공개된 자료로 확인할 수 없다.
- * 지어내면 고객을 엉뚱한 곳으로 보내므로, 사용자가 알려 줄 때까지 빈 자리로 둔다.
- * 값을 채우면 위 CONTACTS 와 같은 모양으로 렌더된다.
- * 물류센터는 2026-08-11 사용자가 사내 자료('센터별 배송 서비스지역', 26.1.2 시행)를 줘서 채웠다. */
-const CONTACTS_TODO = ['지점 AS 담당', '설치 협력사'];
+/* '아직 등록되지 않은 연락처' 카드는 **없앴다**(2026-08-11 사용자 확인 — *"다른 곳에
+ * 업데이트 완료하였으니 확인하고 삭제"*). 비워 뒀던 둘이 실제로 채워졌다:
+ *   · 설치 협력사  → 빌트인 이전설치 · 싱크장 리폼 · 중앙에너지 · 티지이엔지 · B2B IT
+ *   · 지점 AS 담당 → 물류센터 21곳의 상황실 · 운영 · VOC 연락처
+ * 다시 만들지 말 것 — 채운 자료 옆에 "미등록"이 남아 있으면 그 자료까지 미등록으로 읽힌다. */
 
 /*
  * 물류센터 배송·설치 관할 — "우리 고객 댁은 어느 센터입니까"에 답하는 표다.
@@ -490,11 +490,55 @@ const SINK = [
     a:'대전 : 전지역  광주 : 전지역  제주 : 전지역  충남 : 아산시, 천안시, 서산시, 당진군, 예산군, 태안군, 홍성군, 공주시, 계룡시, 금산군, 연기군, 청양군, 서천군, 논산시, 부여시  충북 : 청주시, 보은시, 영동시, 옥천시, 진천시, 청원시, 증평군, 보령시  전북 : 무주군, 전주시, 김제시, 군산시, 익산시, 임실군, 장수군, 진안군, 부안군, 완주군, 고창군, 순창군, 남원시, 정읍시  전남 : 나주시, 화순군, 담양군, 장성군, 곡성군, 영광군, 함평군, 목포시, 무안군, 해남군, 진도군, 강진군, 영암군, 신안군, 장흥군, 완도군, 순천시, 광양시, 여수시, 구례군, 고흥군, 보성군' },
 ];
 
-/* 품목이 정해져 있어 권역을 따지지 않는 곳 — 원문에 전국 담당으로 적혀 있다 */
+/*
+ * 품목이 정해져 있어 권역을 따지지 않는 곳 — 원문에 전국 담당으로 적혀 있다.
+ * **품목별로 갈라 적는다**(2026-08-11 사용자 요청 — 상담사는 "정수기 이전설치 어디죠"로 찾지
+ * "중앙에너지가 뭘 맡죠"로 찾지 않는다).
+ *
+ * **번호는 지역이 아니라 품목으로 갈린다.** 사용자가 "지역별로 번호가 다른 걸로 안다"고
+ * 확인을 요청해 원문을 다시 봤는데, 중앙에너지는 **한 곳이 전국을 맡고 접수는 본사콜
+ * 하나**다. 지역별로 갈리는 것은 **설치를 나가는 지사(19곳, `MID`)** 이고 그 지사들의
+ * 개별 전화번호는 **원문에 없다.** 없는 번호를 지어내지 않는다 — 확인되면 넣는다.
+ *   · 인덕션 · 정수기 → 본사콜 1899-4850
+ *   · 후드          → 전용 회선 1577-5488 (본사콜도 함께 적는다)
+ */
 const B2B_NATION = [
-  { p:'중앙에너지', t:'인덕션 · 정수기 · 후드', n:'1899-4850', d:'본사콜',
-    x:[['후드','1577-5488'],['물류','032-675-3311']] },
-  { p:'티지이엔지', t:'시스템에어컨 천장형', n:'031-222-6666', d:'천장형 이전설치 문의 시 안내해야 하는 번호' },
+  { key:'ind',  t:'인덕션',  p:'중앙에너지', n:'1899-4850', mid:true,
+    d:'본사콜 — 접수는 본사 한 곳입니다', x:[['물류','032-675-3311']] },
+  { key:'wat',  t:'정수기',  p:'중앙에너지', n:'1899-4850', mid:true,
+    d:'본사콜 — 접수는 본사 한 곳입니다', x:[['물류','032-675-3311']] },
+  { key:'hood', t:'후드',    p:'중앙에너지', n:'1577-5488', mid:true,
+    d:'후드 전용 회선', x:[['본사콜','1899-4850'],['물류','032-675-3311']] },
+  { key:'sac',  t:'시스템에어컨 천장형', p:'티지이엔지', n:'031-222-6666',
+    d:'천장형 이전설치 문의 시 안내해야 하는 번호' },
+];
+
+/*
+ * 중앙에너지 설치 지사 19곳 — 인덕션·정수기·후드의 **설치를 실제로 나가는** 조직이다.
+ * 접수는 본사콜 하나지만, "우리 동네는 어디서 나오나"에 답하려면 이 표가 필요하다.
+ * `tc` 는 그 지사가 물린 물류센터(플랜트)라 물류 모음과 이어진다.
+ * 원문 '중앙에너지 현황' 표 그대로이며 **지사별 전화번호는 원문에 없다.**
+ */
+const MID = [
+  { g:'김포지사',   tc:'인천 L113',   a:'서울 강서구, 관악구, 구로구, 금천구, 동작구, 마포구, 서대문구, 서초구, 양천구, 영등포구, 용산구, 은평구, 종로구, 중구  인천 전지역  경기 고양시, 과천시, 광명시, 김포시, 부천시, 시흥시, 안양시, 의왕시, 파주시' },
+  { g:'남양주지사', tc:'동서울 L107', a:'서울 강남구, 강동구, 강북구, 광진구, 노원구, 도봉구, 동대문구, 성동구, 성북구, 송파구, 중랑구  경기 가평군, 구리시, 남양주시, 동두천시, 성남시, 양주시, 양평군, 연천군, 의정부시, 포천시, 하남시  강원 철원군' },
+  { g:'제천지사',   tc:'원주 L115',   a:'충북 제천시, 단양군, 충주시 / 강원도 정선군, 영월군' },
+  { g:'원주지사',   tc:'원주 L115',   a:'강원 원주시, 평창군, 횡성군' },
+  { g:'춘천지사',   tc:'원주 L115',   a:'강원 춘천시, 양구군, 인제군, 홍천군, 화천군' },
+  { g:'강릉지사',   tc:'강릉 L116',   a:'강원 강릉시, 태백시, 도계읍(삼척시 일부), 속초시, 양양군, 고성군, 삼척시, 동해시' },
+  { g:'수원지사',   tc:'화성 L108',   a:'경기 수원시, 화성시, 오산시, 용인시, 광주시, 군포시, 안산시, 평택시, 안성시, 여주시, 이천시' },
+  { g:'예산지사',   tc:'아산 L118',   a:'충남 당진시, 보령시, 서산시, 아산시, 예산군, 천안시, 태안군, 홍성군, 청양군' },
+  { g:'대전지사',   tc:'세종 L117',   a:'대전 전지역, 세종시  충남 계룡시, 공주시, 논산시, 부여군, 금산군, 연기군  충북 괴산군, 보은군, 영동군, 옥천군, 음성군, 증평군, 진천군, 청원군, 청주시  전북 무주군' },
+  { g:'전주지사',   tc:'익산 L121',   a:'충남 서천군  전북 고창군, 남원시, 순창군, 완주군, 익산시, 임실군, 장수군, 전주시, 정읍시, 진안군, 군산시, 김제시, 부안군' },
+  { g:'광주지사',   tc:'광주 L109',   a:'광주 전지역 / 전남 곡성군, 나주시, 담양군, 영광군, 장성군, 함평군, 화순군' },
+  { g:'목포지사',   tc:'목포 L123',   a:'전남 목포시, 무안군, 신안군, 해남군, 강진군, 영암군, 완도군, 진도군, 장흥군' },
+  { g:'순천지사',   tc:'순천 L122',   a:'전남 순천시, 고흥군, 광양시, 구례군, 보성군, 여수시' },
+  { g:'대구지사',   tc:'대구 L105',   a:'대구 전지역  경북 고령군, 구미시, 김천시, 군위군, 문경시, 봉화군, 상주시, 안동시, 영주시, 영양군, 의성군, 예천군, 청송군, 칠곡군' },
+  { g:'포항지사',   tc:'포항 L124',   a:'경북 포항시, 경산시, 경주시, 영덕군, 영천시, 울진군, 청도군' },
+  { g:'양산지사',   tc:'양산 L110',   a:'부산 전지역, 울산 전지역 / 경남 양산시' },
+  { g:'마산지사',   tc:'창원 L127',   a:'경남 마산시, 창원시, 창녕군, 함안군, 밀양시, 김해시, 의령군, 합천군' },
+  { g:'진주지사',   tc:'사천 L129',   a:'경남 진주시, 거창군, 남해군, 사천시, 산청군, 하동군, 함양군, 거제시, 통영시, 고성군' },
+  { g:'제주지사',   tc:'제주 L106',   a:'제주시' },
 ];
 
 /* 상담에서 실제로 사고가 나는 두 가지. 원문이 대화 예시까지 적어 둔 이유가 있다 —
@@ -593,27 +637,13 @@ function shareBuild(){
     filename:"AS기간_" + cur.replace(/[\/:*?"<>|]/g,"") };
 }
 
-/*
- * 연락처는 **별도 탭**이다(2026-08-11 사용자 요청). AS 기간 결과 아래에 붙여 두면
- * 품목을 고른 뒤 한참 내려야 나오는데, 상담 중에 "어디로 전화하죠"는 품목과 무관하게
- * 아무 때나 나온다. 탭으로 빼면 한 번 눌러 바로 닿는다.
- *
- * 그리고 그 안은 **세 묶음으로 접어 둔다**(2026-08-11 사용자 요청:
- * *"이렇게 다 넣으면 너무 길어집니다. AS연락처안에 검색기능이 있기때문에 버튼눌르면
- * 열리게만들어주세요"*). 다 펼쳐 두면 목록이 예순 줄이 넘어 상담 중에 못 읽는다.
- * **찾는 일은 위 검색창이 한다** — 여기서는 어디에 무엇이 있는지 보이고, 눌러 펼치면 된다.
- *   ① AS · 수리 모음   — 삼성전자서비스·구매 상담 대표번호
- *   ② 물류 모음       — 배송·설치 관할 21개 센터
- *   ③ B2B · 협력사 모음 — 빌트인 이전설치·싱크장 리폼·전국 담당
- * 묶음 제목에 **건수를 함께 적는다** — 열어 보지 않고도 무엇이 얼마나 있는지 알아야 한다.
- */
 /* 원문에 따로 적힌 번호(물류전화·후드 등)를 라벨과 함께 한 줄로 붙인다.
  * 번호만 나열하면 어디로 걸어야 하는지 모른다 — 라벨이 곧 용도다. */
 function xtext(o){ return (o.x||[]).map(([l,n])=>`${l} ${n}`).join(' '); }
-/* 검색은 상황실·운영·VOC 번호까지 훑는다 — 번호를 보고 어느 센터인지 되짚는 일이 실제로 있다 */
-function opsText(c){
-  const o = OPS[c.code]; if (!o) return '';
-  return [o.job, o.sit, o.sitN, ...(o.op||[]), ...(o.voc||[]), o.note].filter(Boolean).join(' ');
+function xline(o){
+  if (!(o.x||[]).length) return '';
+  return `<br><span class="xn">${(o.x||[]).map(([l,n])=>
+    `${l ? esc(l) + ' ' : ''}<b>${esc(n)}</b>`).join(' · ')}</span>`;
 }
 /*
  * 센터 줄에 붙는 상황실·운영·VOC 한 줄. 상황실 번호는 **물류 대표번호와 다를 때만** 적는다 —
@@ -629,21 +659,45 @@ function opsLine(c, hl){
   return `<br><span class="xn">${p.join(' · ')}</span>`
     + (o.note ? `<br><span class="xn" style="color:#B45309">${esc(o.note)}</span>` : '');
 }
-
-function xline(o){
-  if (!(o.x||[]).length) return '';
-  return `<br><span class="xn">${(o.x||[]).map(([l,n])=>
-    `${esc(l)} <b>${esc(n)}</b>`).join(' · ')}</span>`;
+/* 검색은 상황실·운영·VOC 번호까지 훑는다 — 번호를 보고 어느 센터인지 되짚는 일이 실제로 있다 */
+function opsText(c){
+  const o = OPS[c.code]; if (!o) return '';
+  return [o.job, o.sit, o.sitN, ...(o.op||[]), ...(o.voc||[]), o.note].filter(Boolean).join(' ');
 }
-
+/*
+ * 연락처는 **별도 탭**이다(2026-08-11 사용자 요청). AS 기간 결과 아래에 붙여 두면
+ * 품목을 고른 뒤 한참 내려야 나오는데, 상담 중에 "어디로 전화하죠"는 품목과 무관하게
+ * 아무 때나 나온다. 탭으로 빼면 한 번 눌러 바로 닿는다.
+ *
+ * 그 안은 **접이식 묶음**이다. 다 펼쳐 두면 백 줄이 넘어 상담 중에 못 읽는다.
+ * **찾는 일은 위 검색창이 한다** — 여기서는 어디에 무엇이 있는지 보이고, 눌러 펼치면 된다.
+ *
+ * **묶음은 품목·업무 단위로 쪼갠다**(2026-08-11 사용자 요청). 한때 이전설치 관련을
+ * 'B2B·협력사 모음' 하나에 몰아 뒀는데, 상담사는 *"정수기 이전설치 어디죠"* 로 찾지
+ * *"B2B 협력사가 뭐죠"* 로 찾지 않는다. 담당이 갈리는 단위가 곧 찾는 단위다:
+ *
+ *   AS·수리 / 물류 / 빌트인 가전 이전설치 / 식기세척기 싱크장 리폼 /
+ *   인덕션 / 정수기 / 후드 / 시스템에어컨 천장형 / B2B IT
+ *
+ * 인덕션·정수기·후드는 담당(중앙에너지)이 같지만 **번호가 후드만 다르고**, 무엇보다
+ * 상담사가 품목으로 찾으므로 셋을 갈라 둔다. 접혀 있어 길이 부담이 없다.
+ */
+const nat = (k) => B2B_NATION.find((x) => x.key === k);
 const GROUPS = [
-  { id:'g-as',  ico:'🛡️', t:'AS · 수리 모음',
-    n:CONTACTS.reduce((a,g)=>a+g.items.length,0), s:'AS 접수 · 구매 상담 대표번호' },
-  { id:'g-lg',  ico:'🚚', t:'물류 모음',
-    n:CENTERS.length, s:'배송 · 설치 관할 센터' },
-  { id:'g-b2b', ico:'🔧', t:'B2B · 협력사 모음',
-    n:B2B.length + B2B_IT.length + SINK.length + B2B_NATION.length,
-    s:'빌트인 이전설치 · 싱크장 리폼 · 전국 담당' },
+  { id:'g-as',   ico:'🛡️', t:'AS · 수리 모음',            n:CONTACTS.reduce((a,g)=>a+g.items.length,0),
+    s:'AS 접수 · 구매 상담 대표번호' },
+  { id:'g-lg',   ico:'🚚', t:'물류 모음',                 n:CENTERS.length,
+    s:'배송 · 설치 관할 센터 · 상황실 · VOC' },
+  { id:'g-mv',   ico:'🔧', t:'빌트인 가전 이전설치 관할',   n:B2B.length,
+    s:'접수 순서 · 권역 협력사 (냉장고 · 세탁기 · 식기세척기 등)' },
+  { id:'g-sink', ico:'🍽️', t:'식기세척기 싱크장 리폼',      n:SINK.length,
+    s:'이전설치와 담당이 다릅니다 — 리폼이 먼저입니다' },
+  { id:'g-ind',  ico:'🍳', t:'인덕션 이전설치',            n:1, s:'중앙에너지 — 전국' },
+  { id:'g-wat',  ico:'🚰', t:'정수기 이전설치',            n:1, s:'중앙에너지 — 전국' },
+  { id:'g-hood', ico:'🌬️', t:'후드 이전설치',              n:1, s:'중앙에너지 — 후드 전용 회선' },
+  { id:'g-sac',  ico:'❄️', t:'시스템에어컨 천장형 이전설치', n:1, s:'티지이엔지 — 전국' },
+  { id:'g-it',   ico:'💻', t:'B2B IT 부문 관할',           n:B2B_IT.length,
+    s:'노트북 · 모니터 · 프린터 등 IT 제품' },
 ];
 
 function grp(g, body){
@@ -653,28 +707,61 @@ function grp(g, body){
     <span class="gc">${g.n}건</span><span class="gv">▾</span></summary>
     <div class="grp-b">${body}</div></details>`;
 }
+const G = () => Object.fromEntries(GROUPS.map(g=>[g.id,g]));
+
+/* 전국 담당 한 곳을 카드 한 장으로 — 인덕션·정수기·후드·시스템에어컨이 같은 모양이다 */
+function natCard(x){
+  return `<button type="button" class="ct" data-tel="${esc(x.n)}" data-tel-name="${esc(x.t)} — ${esc(x.p)}">
+    <span class="ct-b"><b>${esc(x.p)}<span class="ct-tag">전국</span></b>
+    <span class="ct-d">${esc(x.d)}${xline(x)}</span></span>
+    <span class="ct-n">${esc(x.n)}</span></button>`;
+}
+
+/*
+ * 중앙에너지 지사 관할 — **접수는 본사콜 하나**이고 지사는 설치를 나가는 조직이다.
+ * 지사별 전화번호는 원문에 없으므로 번호를 만들어 붙이지 않는다(그래서 `.ct` 가 아니다).
+ * 인덕션·정수기·후드 세 묶음이 같은 표를 쓰는데, 셋 다 접혀 있어 길이 부담이 없다.
+ */
+function midTable(key){
+  return `<div class="card"><h2>지역별 설치 지사 <span class="pill">${MID.length}곳</span></h2>
+    <div class="why" style="margin-bottom:9px"><b>접수는 위 번호 한 곳</b>입니다.
+      설치는 아래 지사가 지역을 나눠 나갑니다 — <b>지사별 전화번호는 원문에 없습니다.</b></div>
+    <input class="lgq" id="mq-${key}" data-mid="${key}" placeholder="지역 · 지사명으로 찾기" autocomplete="off">
+    <div id="ml-${key}"></div></div>`;
+}
+function renderMid(key){
+  const pane = document.getElementById('contactPane');
+  const box = pane.querySelector(`#mq-${key}`); if (!box) return;
+  const list = pane.querySelector(`#ml-${key}`); if (!list) return;
+  const s = (box.value || '').trim().toLowerCase();
+  const hl = t => { const e = esc(t); if (!s) return e;
+    return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
+  const hit = MID.filter(m => !s || (m.g + m.tc + m.a).toLowerCase().includes(s));
+  list.innerHTML = hit.length ? hit.map(m=>
+    `<div class="ct lg" style="cursor:default">
+      <span class="ct-b"><b>${hl(m.g)}<span class="ct-tag">${hl(m.tc)}</span></b>
+      <span class="ct-d">${hl(m.a)}</span></span></div>`).join('')
+    : `<div class="unk">해당하는 지사가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
+  list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}곳</div>`);
+}
 
 function renderContacts(){
   const pane = document.getElementById('contactPane');
-  const G = Object.fromEntries(GROUPS.map(g=>[g.id,g]));
+  const g = G();
 
   let h = `<div class="sub">묶음을 <b>눌러 펼치세요.</b> 찾는 것이 정해져 있으면
     <b>맨 위 검색창</b>에 지역·품목·협력사를 치면 바로 그 자리로 데려갑니다.
     번호를 누르면 걸기·복사를 고를 수 있습니다.</div>`;
 
-  /* ① AS · 수리 — 확인 못 한 내부 연락처도 여기 함께 둔다(같은 성격이라) */
-  h += grp(G['g-as'],
-    `<div class="card">${CONTACTS.map(g=>`<div class="ctg">${esc(g.g)}</div>
-      ${g.items.map(c=>`<button type="button" class="ct" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
+  /* ① AS · 수리 */
+  h += grp(g['g-as'],
+    `<div class="card">${CONTACTS.map(x=>`<div class="ctg">${esc(x.g)}</div>
+      ${x.items.map(c=>`<button type="button" class="ct" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
         <span class="ct-b"><b>${esc(c.t)}</b><span class="ct-d">${esc(c.d)}</span></span>
-        <span class="ct-n">${esc(c.n)}</span></button>`).join('')}`).join('')}</div>
-     <div class="card"><h2>아직 등록되지 않은 연락처</h2>
-       <div class="unk">${CONTACTS_TODO.map(esc).join(' · ')}</div>
-       <div class="why" style="margin-top:5px">공개 자료로 확인할 수 없는 내부 연락처라 지어내지 않았습니다.
-         번호를 알려주시면 넣겠습니다.</div></div>`);
+        <span class="ct-n">${esc(c.n)}</span></button>`).join('')}`).join('')}</div>`);
 
   /* ② 물류 */
-  h += grp(G['g-lg'],
+  h += grp(g['g-lg'],
     `<div class="why" style="margin-bottom:9px">고객 댁 주소로 담당 센터를 찾습니다.
        <b>지역을 치면 그 센터만 남습니다</b> — 예: 수원, 안산, 강릉.</div>
      <input class="lgq" id="lgq" placeholder="지역 · 센터명 · 번호로 찾기" autocomplete="off">
@@ -687,57 +774,65 @@ function renderContacts(){
          <span class="ct-b"><b>VOC 접수</b><span class="ct-d">배송·설치 VOC 접수 창구${xline(VOC_HQ)}</span></span>
          <span class="ct-n">${esc(VOC_HQ.n)}</span></button></div>`);
 
-  /* ③ B2B · 협력사 — **접수 순서를 맨 위에 둔다.** 이전설치는 번호만 알면 사고가 난다:
-     싱크대 리폼이 먼저고 가구장이 먼저다. 번호와 절차가 떨어지면 안 된다. */
-  h += grp(G['g-b2b'],
+  /* ③ 빌트인 가전 이전설치 — **접수 순서를 맨 위에.** 번호만 알면 사고가 난다 */
+  h += grp(g['g-mv'],
     `<div class="card warn"><h2>⚠ 식기세척기 이전설치 — 리폼이 먼저입니다</h2>
        ${B2B_STEPS.map((t,i)=>`<div class="step"><span class="sn">${i+1}</span><span class="st">${t}</span></div>`).join('')}
        <div class="note">${B2B_CAUTION}</div></div>
-
-     <div class="card"><h2>빌트인 가전 이전설치 관할 <span class="pill">${B2B.length}개 센터</span></h2>
-       <div class="why" style="margin-bottom:9px">고객이 <b>이사 갈 주소</b>로 담당 협력사를 찾습니다.
-         아래 <b>IT 부문</b>도 이 검색칸으로 함께 걸러집니다.</div>
+     <div class="card"><h2>권역 협력사 <span class="pill">${B2B.length}개 센터</span></h2>
+       <div class="why" style="margin-bottom:9px">고객이 <b>이사 갈 주소</b>로 담당 협력사를 찾습니다.</div>
        <input class="lgq" id="b2bq" placeholder="지역 · 협력사 · 센터명으로 찾기" autocomplete="off">
-       <div id="b2blist"></div></div>
+       <div id="b2blist"></div></div>`);
 
-     <div class="card"><h2>B2B IT 부문 관할 <span class="pill">${B2B_IT.length}개 센터</span></h2>
-       <div class="why" style="margin-bottom:9px"><b>가전과 담당 협력사가 다릅니다</b> —
-         같은 지역이라도 가전과 IT 를 맡는 곳이 갈립니다.</div>
-       <div id="itlist"></div></div>
+  /* ④ 싱크장 리폼 */
+  h += grp(g['g-sink'],
+    `<div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> —
+       위 관할표가 아니라 여기서 찾으세요. <b>리폼이 안 돼 있으면 이전설치 접수보다 먼저입니다.</b></div>
+     ${SINK.map(x=>`<button type="button" class="ct lg" data-tel="${esc(x.n)}" data-tel-name="${esc(x.p)} 싱크장 리폼">
+       <span class="ct-b"><b>${esc(x.p)}</b><span class="ct-d">${esc(x.a)}${
+         x.n2 ? `<br><b>이전설치 문의 ${esc(x.n2)}</b>` : ''}${xline(x)}</span></span>
+       <span class="ct-n">${esc(x.n)}</span></button>`).join('')}`);
 
-     <div class="card"><h2>식기세척기 싱크장 리폼 <span class="pill">전국 ${SINK.length}개 협력사</span></h2>
-       <div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> —
-         위 관할표가 아니라 여기서 찾으세요.</div>
-       ${SINK.map(x=>`<button type="button" class="ct lg" data-tel="${esc(x.n)}" data-tel-name="${esc(x.p)} 싱크장 리폼">
-         <span class="ct-b"><b>${esc(x.p)}</b><span class="ct-d">${esc(x.a)}${
-           x.n2 ? `<br><b>이전설치 문의 ${esc(x.n2)}</b>` : ''}${xline(x)}</span></span>
-         <span class="ct-n">${esc(x.n)}</span></button>`).join('')}</div>
+  /* ⑤⑥⑦ 인덕션 · 정수기 · 후드 — 담당은 같지만 번호가 갈리고, 상담사는 품목으로 찾는다 */
+  for (const [id, key] of [['g-ind','ind'], ['g-wat','wat'], ['g-hood','hood']]) {
+    h += grp(g[id], `<div class="card">${natCard(nat(key))}</div>${midTable(key)}`);
+  }
 
-     <div class="card"><h2>품목이 정해진 전국 담당</h2>
-       ${B2B_NATION.map(x=>`<button type="button" class="ct" data-tel="${esc(x.n)}" data-tel-name="${esc(x.p)}">
-         <span class="ct-b"><b>${esc(x.t)}<span class="ct-tag">${esc(x.p)}</span></b>
-         <span class="ct-d">${esc(x.d)}${xline(x)}</span></span>
-         <span class="ct-n">${esc(x.n)}</span></button>`).join('')}</div>`);
+  /* ⑧ 시스템에어컨 천장형 */
+  h += grp(g['g-sac'],
+    `<div class="why" style="margin-bottom:9px">천장형 <b>이전설치 문의를 받으면 이 번호를 안내</b>해야 합니다.</div>
+     <div class="card">${natCard(nat('sac'))}</div>`);
+
+  /* ⑨ B2B IT — "이게 뭔지 모르겠다"는 말을 들었으므로 무엇인지부터 적는다 */
+  h += grp(g['g-it'],
+    `<div class="why" style="margin-bottom:9px"><b>노트북 · 모니터 · 프린터 등 IT 제품</b>의
+       B2B 이전설치 관할입니다. <b>가전과 담당 협력사가 다릅니다</b> — 같은 안동이라도
+       가전은 성광티시엠, IT 는 다존텍입니다.</div>
+     <input class="lgq" id="itq" placeholder="지역 · 협력사 · 센터명으로 찾기" autocomplete="off">
+     <div id="itlist"></div>`);
 
   h += `<div class="src">AS·구매 연락처 — 삼성전자서비스(samsungsvc.co.kr) · 삼성닷컴(samsung.com/sec) 공식 표기 · 2026-08-11 확인<br>
     물류센터 — 사내 배포본 '센터별 배송 서비스지역'(2026.1.02 시행) 원문 그대로<br>
     상황실·운영·VOC — 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02)의 운영업무 협조(B2C)·VOC 연락처(B2C) 표<br>
-    B2B·협력사 — 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02) 원문 그대로.
+    이전설치·리폼·중앙에너지·IT — 같은 배포본 원문 그대로.
     협력사명 · 관할지역 · 전화번호만 옮겼습니다 — 담당자 이름·이메일과 010 번호는 싣지 않습니다.</div>`;
   pane.innerHTML = h;
 
   const wire = (id, fn) => { const el = pane.querySelector(id); if (el) el.addEventListener('input', fn); };
   wire('#lgq', renderCenters);
   wire('#b2bq', renderB2B);
+  wire('#itq', renderB2B);
+  pane.querySelectorAll('[data-mid]').forEach(el =>
+    el.addEventListener('input', () => renderMid(el.dataset.mid)));
   pane.querySelectorAll('#lgchips .chip').forEach(el=>el.onclick=()=>{
     pane.querySelectorAll('#lgchips .chip').forEach(x=>x.classList.toggle('on', x===el));
     renderCenters();
   });
   renderCenters();
   renderB2B();
+  for (const k of ['ind','wat','hood']) renderMid(k);
   if (typeof wireContacts === 'function') wireContacts(pane, '.ct');
 }
-
 /*
  * 묶음을 펼치고 그 자리로 데려간다.
  * 상단 검색에서 고른 결과가 **접힌 묶음 안에 있으면 아무 일도 안 일어난 것처럼 보인다** —
@@ -780,29 +875,33 @@ function renderCenters(){
   if (typeof wireContacts === 'function') wireContacts(list, '.ct');
 }
 
-/* 관할 검색 — 물류센터와 같은 방식이다(원문 `a` 까지 훑고, 찾은 글자를 표시한다).
- * 가전(`#b2blist`)과 IT(`#itlist`) 두 목록을 **한 검색어로 함께** 거른다. */
+/*
+ * 관할 검색 — 물류센터와 같은 방식이다(원문 `a` 까지 훑고, 찾은 글자를 표시한다).
+ * 가전(`#b2bq`→`#b2blist`)과 IT(`#itq`→`#itlist`)는 **묶음이 갈렸으므로 검색칸도 각자 쓴다.**
+ * 한 칸으로 둘을 거르던 때는 같은 묶음 안에 나란히 있어서 가능했던 것이다.
+ */
 function renderB2B(){
   const pane = document.getElementById('contactPane');
-  const box = pane.querySelector('#b2bq'); if (!box) return;
-  const s = (box.value || '').trim().toLowerCase();
-  const hl = t => { const e = esc(t); if (!s) return e;
+  const hlOf = s => t => { const e = esc(t); if (!s) return e;
     return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
 
-  const draw = (id, rows, what) => {
-    const list = pane.querySelector(id); if (!list) return;
+  const draw = (qid, id, rows, what) => {
+    const box = pane.querySelector(qid), list = pane.querySelector(id);
+    if (!box || !list) return;
+    const s = (box.value || '').trim().toLowerCase();
+    const hl = hlOf(s);
     const hit = rows.filter(c => !s || (c.p + c.c + c.code + c.n + (c.d||'') + xtext(c) + c.a).toLowerCase().includes(s));
     list.innerHTML = hit.length ? hit.map(c=>
       `<button type="button" class="ct lg" data-tel="${esc(c.n)}" data-tel-name="${esc(c.p)} (${esc(c.c)})">
         <span class="ct-b"><b>${hl(c.p)}<span class="ct-tag">${hl(c.c)} · ${esc(c.code)}</span></b>
-        <span class="ct-d">${hl(c.a)}${xline(c)}</span></span>
+        <span class="ct-d">${hl(c.a)}${c.d ? `<br>추가 회선 ${hl(c.d)}` : ''}${xline(c)}</span></span>
         <span class="ct-n">${hl(c.n)}</span></button>`).join('')
       : `<div class="unk">해당하는 ${what} 협력사가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
     list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
     if (typeof wireContacts === 'function') wireContacts(list, '.ct');
   };
-  draw('#b2blist', B2B, '가전');
-  draw('#itlist', B2B_IT, 'IT');
+  draw('#b2bq', '#b2blist', B2B, '가전');
+  draw('#itq', '#itlist', B2B_IT, 'IT');
 }
 
 /*
@@ -839,31 +938,39 @@ function searchDocs(){
   for (const c of B2B) {
     out.push({ kind:'이전설치', title:`${c.p} · ${c.c}`, sub:c.a,
       kw:`${c.p} ${c.c} ${c.code} ${c.n} ${xtext(c)} ${c.a} 이전설치 빌트인 b2b 관할`,
-      go(){ openGroup('g-b2b'); const q = document.querySelector('#b2bq');
+      go(){ openGroup('g-mv'); const q = document.querySelector('#b2bq');
             if (q) { q.value = c.c; renderB2B(); } } });
   }
   for (const c of B2B_IT) {
     out.push({ kind:'IT 이전설치', title:`${c.p} · ${c.c}`, sub:c.a,
       kw:`${c.p} ${c.c} ${c.code} ${c.n} ${c.d||''} ${c.a} 이전설치 it b2b 관할 노트북 모니터 프린터`,
-      go(){ openGroup('g-b2b'); const q = document.querySelector('#b2bq');
+      go(){ openGroup('g-it'); const q = document.querySelector('#itq');
             if (q) { q.value = c.c; renderB2B(); } } });
   }
   for (const s of SINK) {
     out.push({ kind:'싱크장 리폼', title:s.p, sub:`${s.n} · ${s.a}`,
       kw:`${s.p} ${s.n} ${s.n2||''} ${xtext(s)} ${s.a} 싱크대 싱크장 리폼 식기세척기 식세기 빌트인`,
-      go(){ openGroup('g-b2b'); } });
+      go(){ openGroup('g-sink'); } });
   }
+  const NAT_GRP = { ind:'g-ind', wat:'g-wat', hood:'g-hood', sac:'g-sac' };
   for (const x of B2B_NATION) {
-    out.push({ kind:'전국 담당', title:`${x.t} — ${x.p}`, sub:`${x.n} · ${x.d}`,
+    out.push({ kind:'전국 담당', title:`${x.t} 이전설치`, sub:`${x.p} · ${x.n} · ${x.d}`,
       kw:`${x.p} ${x.t} ${x.n} ${x.d} ${xtext(x)} 이전설치 전국`,
-      go(){ openGroup('g-b2b'); } });
+      go(){ openGroup(NAT_GRP[x.key]); } });
+  }
+  /* 중앙에너지 지사 — "우리 동네는 어디서 나오나" 에 답한다(접수는 본사콜 하나) */
+  for (const m of MID) {
+    out.push({ kind:'설치 지사', title:`${m.g} (중앙에너지)`, sub:`${m.tc} · ${m.a}`,
+      kw:`${m.g} ${m.tc} ${m.a} 중앙에너지 인덕션 정수기 후드 지사 설치 관할`,
+      go(){ openGroup('g-ind'); const q = document.querySelector('#mq-ind');
+            if (q) { q.value = m.g; renderMid('ind'); } } });
   }
   out.push({ kind:'연락처', title:'물류 VOC 본사 창구', sub:`${VOC_HQ.n} · 배송·설치 VOC 접수`,
     kw:`voc 브이오씨 물류 본사 접수 불만 ${VOC_HQ.n} ${xtext(VOC_HQ)}`,
     go(){ openGroup('g-lg'); } });
   out.push({ kind:'안내', title:'식기세척기 이전설치 순서', sub:'싱크대 리폼이 먼저 — 아비스 1811-7958',
     kw:'식기세척기 식세기 이전설치 순서 싱크대 리폼 아비스 주의 tbi 가구장 빌트인',
-    go(){ openGroup('g-b2b'); } });
+    go(){ openGroup('g-mv'); } });
   for (const r of RULES) {
     out.push({ kind:'보증기준', title:r.l, sub:r.t,
       kw:`${r.l} ${r.t} 보증 기준 공통`, go(){ setTab('as'); } });
@@ -946,7 +1053,7 @@ function setTab(t){
 renderCats(); renderBody(); wireSearch();
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { DB, ROYAL, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, GROUPS,
+window.__as = { DB, ROYAL, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
   openGroup,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },
