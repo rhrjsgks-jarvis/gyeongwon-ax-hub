@@ -1425,11 +1425,20 @@ const knownGaps = [];
     return { n, areas, loops: P.roomLoops().length };
   }, b64);
 
+  /*
+   * 합쳐진 덩어리는 **전체 대비 비율**로 잡는다 — 넓이 상한(예: 90㎡)은 세대 크기마다
+   * 달라 못 쓴다. 실측으로 정상적인 거실+주방 트인 공간이 42%, 여러 방이 합쳐진
+   * 덩어리가 49% 였다. 45% 가 둘을 가른다.
+   */
+  const sum = r.areas.reduce((s, a) => s + a, 0);
+  const big = Math.max(...r.areas);
   if (!(r.n >= 3)) fail(`전체 인식: 공간을 ${r.n}곳만 잡았다 — 도면 전체를 잡아야 한다`);
   else if (r.loops !== r.n) fail(`전체 인식: 잡은 ${r.n}곳 중 3D 가 세울 고리가 ${r.loops}개다`);
-  else if (Math.max(...r.areas) > 90)
-    fail(`전체 인식: ${Math.max(...r.areas)}㎡ 짜리 공간이 섞였다 — 여러 방이 합쳐진 덩어리를 못 걸렀다 (전용 85.5㎡ 세대)`);
-  else pass(`도면 전체 인식 — 공간 ${r.n}곳 (${r.areas.join(' · ')}㎡), 합쳐진 덩어리 없음`);
+  else if (big > sum * 0.45)
+    fail(`전체 인식: 한 공간이 전체의 ${(big / sum * 100).toFixed(0)}% (${big}㎡/${sum.toFixed(1)}㎡) — 여러 방이 합쳐진 덩어리를 못 걸렀다`);
+  else if (big > 90)
+    fail(`전체 인식: ${big}㎡ 짜리 공간이 섞였다 (전용 85.5㎡ 세대)`);
+  else pass(`도면 전체 인식 — 공간 ${r.n}곳 (${r.areas.join(' · ')}㎡), 최대가 전체의 ${(big / sum * 100).toFixed(0)}% — 합쳐진 덩어리 없음`);
 }
 
 /*

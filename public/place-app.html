@@ -1935,7 +1935,7 @@ function detectAllRooms(){
     const cx = (x0+x1)/2, cy = (y0+y1)/2, w = x1-x0, h = y1-y0;
     if (found.some((c)=> Math.abs(c.cx-cx) < 20 && Math.abs(c.cy-cy) < 20
       && Math.abs(c.a-a) < Math.max(c.a, a) * 0.08)) continue;
-    found.push({ a, cx, cy, w, h, poly:r.poly, edges:r.edges });
+    found.push({ a, cx, cy, w, h, at:[x, y], closeR:r.closeR, poly:r.poly, edges:r.edges });
   }
   const planA = (W||1) * (H||1);
   const minShort = Math.min(W||1, H||1) * 0.05;
@@ -1955,11 +1955,42 @@ function detectAllRooms(){
    * 품어 **진짜 거실(31㎡)까지 버렸다.** 다각형 자체로 재야 한다 — ㄱ자 거실의 실제 영역은
    * 옆방 중심을 담지 않는다.
    */
-  const trimmed = keep.filter((c) => {
+  let trimmed = keep.filter((c) => {
     const inside = keep.filter((o) => o !== c && o.a < c.a * 0.9
       && inLoop(c.poly, o.cx, o.cy)).length;
     return inside < 2;
   });
+
+  /*
+   * **포함 관계만으로는 부족하다.** 합쳐진 영역의 다각형은 속 방들의 벽을 피해 구불구불
+   * 감싸므로 그 방들의 중심이 기하학적으로는 바깥에 있다 — 그래서 "품고 있다"로 안 걸린다.
+   * 더 확실한 단서는 **전체 대비 비율**이다: 합쳐진 것은 잡힌 것 전부를 합한 넓이의
+   * 절반 가까이를 혼자 차지한다. 문턱은 **45%** 다 — 실측으로 디에트르 84 의 덩어리가 49%,
+   * 대방 86A 의 정상적인 거실+주방 트인 공간이 42% 였다. 40% 로 잡았더니 그 거실까지
+   * 쪼개져 31.0 → 27.7㎡ 가 됐다(한국 아파트의 트인 거실은 원래 이만큼을 차지한다).
+   *
+   * 그런 후보는 버리지 않고 **닫기 반경을 키워 다시 잡아 본다.** 반경을 키우면 문이 막히며
+   * 옆방이 떨어져 나가 면적이 준다 — 화면의 "◂ 더 좁게"가 하는 일을 자동으로 하는 것이다.
+   * 끝내 안 줄면 그때 버린다(합쳐진 것을 '거실'로 등록하면 상담에서 그대로 읽힌다).
+   */
+  const total = () => trimmed.reduce((s, c) => s + c.a, 0);
+  const steps = (cleanRadii(ensureBase()).closeSteps || []).slice().sort((a, b) => a - b);
+  for (let i = 0; i < trimmed.length; i++){
+    const c = trimmed[i];
+    if (trimmed.length < 2 || c.a <= total() * 0.45) continue;
+    let fixed = null;
+    for (const r of steps){
+      if (r <= (c.closeR || 0)) continue;                 // 지금보다 큰 반경만 의미가 있다
+      let t; try { t = detectRoomAt(c.at[0], c.at[1], r); } catch (_) { continue; }
+      if (!t || t.error || !t.poly) continue;
+      const a = polyAreaPx(t.poly);
+      if (a <= 0 || a < planA * 0.012) continue;          // 너무 잘게 쪼개진 것은 방이 아니다
+      if (a <= total() * 0.45){ fixed = { ...c, a, poly: t.poly, edges: t.edges, closeR: r }; break; }
+    }
+    if (fixed) trimmed[i] = fixed;
+    else { trimmed.splice(i, 1); i--; }
+  }
+
   for (const c of trimmed) applyDetected(c.poly, c.edges, { name: nextRoomName() });
   return trimmed.length;
 }
