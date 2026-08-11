@@ -302,6 +302,7 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
   <b>📞 1588-6084</b>
 </div>
 <script src="prod-symbols.js"></script>
+<script src="share-kit.js"></script>
 <script>
 const PRODUCTS = [
   {key:"aircon",   name:"에어컨",    icon:"❄️", desc:"비스포크 AI 무풍콤보 갤러리 프로", st:"done"},
@@ -2597,6 +2598,45 @@ function toggleSell(){
     clearTimeout(window.__psymT); window.__psymT = setTimeout(run, 40);
   }).observe(document.body, { childList: true, subtree: true });
 })();
+
+/*
+ * 고객에게 보낼 카드 — 지금 고른 제품·플랜의 **회차별 케어 내용**을 이미지 한 장으로.
+ * 상담에서 고객이 가장 궁금해하는 것이 "몇 번 오고 뭘 해 주나"라, 회차마다
+ * 케어 종류와 항목을 그대로 적는다. 화면(타임라인)과 같은 careSchedule 을 쓰므로
+ * 카드와 화면이 어긋날 수가 없다.
+ */
+function careShareBuild(){
+  const key = (typeof tlKey !== 'undefined' && document.getElementById('timelinePane')
+    && document.getElementById('timelinePane').style.display !== 'none') ? tlKey : curCat;
+  const pl  = (key === tlKey && document.getElementById('timelinePane')
+    && document.getElementById('timelinePane').style.display !== 'none') ? tlPlan : curPlan;
+  const d = DATA[key];
+  if (!d) return null;
+  const sched = careSchedule(d, pl);
+  if (!sched.length) return null;
+
+  const sections = sched.map(function (r, i) {
+    return {
+      h: (i + 1) + '회차 · ' + r.month + '개월차' + (r.kind ? ' · ' + r.kind : ''),
+      rows: (r.items || []).map(function (it) { return [it.nm, '', it.det || '']; }),
+    };
+  });
+  sections.unshift({ h: '구독 조건', rows: [
+    ['계약기간', d.contract || ''],
+    ['방문 주기', '매 ' + pl + '개월형'],
+    ['총 방문', (d['total' + pl] || (sched.length + '회')) ],
+  ] });
+
+  return {
+    app: '세일즈 코파일럿 · AI구독 케어 안내',
+    title: d.name,
+    sections: sections,
+    note: (d.src ? d.src.replace(/^✅\s*/, '출처 — ') + ' · ' : '')
+      + '실제 제공 항목은 제품·계약 조건에 따라 달라질 수 있습니다.',
+    filename: 'AI구독케어_' + d.name.replace(/[\\/:*?"<>|]/g, '') + '_' + pl + '개월형',
+  };
+}
+if (typeof mountShareButton === 'function') mountShareButton(careShareBuild);
 </script>
 </body>
 </html>
