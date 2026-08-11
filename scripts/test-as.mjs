@@ -316,11 +316,28 @@ pass('싱크장 리폼 골든 3건');
 // [7-e] 화면 — 탭이 3개이고, 이전설치 탭이 렌더되며 관할 검색이 걸리는가
 {
   const tabs = doc.querySelectorAll('.mode-tab');
-  if (tabs.length !== 3) fail(`탭이 ${tabs.length}개 — AS기간·연락처·이전설치 3개여야 한다`);
-  else pass('탭 3개 (AS기간 · 연락처 · 이전설치·빌트인)');
+  if (tabs.length !== 2) fail(`탭이 ${tabs.length}개 — AS기간·연락처 2개여야 한다`);
+  else pass('탭 2개 (AS기간 · 연락처·협력사)');
 
-  A.tab = 'move';
-  const mp = doc.querySelector('#movePane');
+  /* 연락처 탭은 **세 묶음으로 접혀** 있다(2026-08-11 사용자 요청 — 다 펼쳐 두면 예순 줄이
+     넘어 상담 중에 못 읽는다). 기본은 닫힘이고 눌러야 열린다. */
+  A.tab = 'contact';
+  const mp = doc.querySelector('#contactPane');
+  const grps = [...mp.querySelectorAll('.grp')];
+  if (grps.length !== 3) fail(`묶음이 ${grps.length}개 — AS·수리 / 물류 / B2B·협력사 3개여야 한다`);
+  else if (grps.map((g) => g.id).join(',') !== 'g-as,g-lg,g-b2b') {
+    fail(`묶음 순서가 ${grps.map((g) => g.id).join(',')} — g-as,g-lg,g-b2b 여야 한다`);
+  } else pass('연락처 탭 묶음 3개 (AS·수리 / 물류 / B2B·협력사)');
+  if (grps.some((g) => g.open)) fail('묶음이 기본으로 펼쳐져 있다 — 눌러야 열려야 한다');
+  else pass('묶음 기본 접힘');
+  // 열어 보지 않고도 무엇이 얼마나 있는지 알아야 한다
+  for (const [id, n] of [['g-as', A.CONTACTS.reduce((a, g) => a + g.items.length, 0)],
+                         ['g-lg', A.CENTERS.length],
+                         ['g-b2b', B.length + IT.length + S.length + N.length]]) {
+    const t = mp.querySelector(`#${id} .gc`).textContent;
+    if (t !== `${n}건`) fail(`${id} 묶음 제목의 건수가 "${t}" — "${n}건" 이어야 한다`);
+  }
+  pass('묶음 제목에 건수 표기 (6 · 21 · 38)');
   const rows = () => mp.querySelectorAll('#b2blist .ct').length;
   if (rows() !== 20) fail(`이전설치 탭에 ${rows()}건 렌더 — 20건이어야 한다`);
   else pass('이전설치 탭 렌더 20건');
@@ -357,9 +374,9 @@ pass('싱크장 리폼 골든 3건');
   } else pass("'안동' → 가전 성광티시엠 · IT 다존텍 (한 검색칸, 담당은 갈린다)");
   type('');
 
-  const noTel = [...mp.querySelectorAll('#b2blist .ct')].filter((el) => !el.dataset.tel);
+  const noTel = [...mp.querySelectorAll('#b2blist .ct, #itlist .ct')].filter((el) => !el.dataset.tel);
   if (noTel.length) fail(`${noTel.length}건에 data-tel 이 없다 — 눌러도 걸리지 않는다`);
-  else pass('이전설치 20건 전부 눌러서 걸기 가능');
+  else pass('이전설치 32건 전부 눌러서 걸기 가능');
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -391,17 +408,28 @@ pass('싱크장 리폼 골든 3건');
   else pass('없는 말 → 0건');
 
   // 고르면 그 탭으로 데려가는가
-  A.tab = 'as';
-  const inp = doc.querySelector('#sq');
-  inp.value = '청주';
-  inp.dispatchEvent(new window.Event('input'));
-  const btn = [...doc.querySelectorAll('#sres .sr')].find((el) => /대양빌텍/.test(el.textContent));
-  if (!btn) fail("상단 검색 '청주' 결과에 대양빌텍 줄이 없다");
-  else {
+  /* 고른 결과가 **접힌 묶음 안에 있으면 아무 일도 안 일어난 것처럼 보인다** —
+     찾아 준 뜻이 없어지므로 탭 전환 + 묶음 펼침 + 목록 필터가 함께 걸려야 한다. */
+  for (const [q, needle, gid, listId] of [
+    ['청주', /대양빌텍/, 'g-b2b', '#b2blist'],
+    ['수원', /평택TC/, 'g-lg', '#lglist'],
+    ['삼성전자서비스', /삼성전자서비스/, 'g-as', null],
+  ]) {
+    A.tab = 'as';
+    for (const g of doc.querySelectorAll('.grp')) g.open = false;
+    const inp = doc.querySelector('#sq');
+    inp.value = q;
+    inp.dispatchEvent(new window.Event('input'));
+    const btn = [...doc.querySelectorAll('#sres .sr')].find((el) => needle.test(el.textContent));
+    if (!btn) { fail(`상단 검색 '${q}' 결과에 ${needle} 줄이 없다`); continue; }
     btn.click();
-    if (A.tab !== 'move') fail(`이전설치 결과를 눌렀는데 탭이 ${A.tab} — move 로 가야 한다`);
-    else pass('검색 결과를 누르면 해당 탭으로 이동');
+    if (A.tab !== 'contact') fail(`'${q}' 를 눌렀는데 탭이 ${A.tab} — contact 로 가야 한다`);
+    else if (!doc.querySelector(`#${gid}`).open) fail(`'${q}' 를 눌렀는데 ${gid} 묶음이 안 열렸다`);
+    else if (listId && doc.querySelectorAll(`${listId} .ct`).length !== 1) {
+      fail(`'${q}' 를 눌렀는데 ${listId} 가 ${doc.querySelectorAll(`${listId} .ct`).length}건 — 1건으로 좁혀져야 한다`);
+    } else continue;
   }
+  pass('검색 결과를 누르면 탭 전환 + 묶음 펼침 + 목록 필터가 함께 걸린다 (3건)');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
