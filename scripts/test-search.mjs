@@ -24,7 +24,8 @@ if (!fs.existsSync(indexPath)) {
   fail('public/search-index.json이 없음 — `node scripts/build-search-index.mjs` 실행 필요');
 } else {
   const committed = fs.readFileSync(indexPath, 'utf8');
-  execFileSync('node', [path.join(__dirname, 'build-search-index.mjs')], { stdio: 'pipe' });
+  // lib/searchTerms.ts 를 가져오므로 타입 스트리핑이 필요하다(구 Node 에서는 기본이 아니다)
+  execFileSync('node', ['--experimental-strip-types', path.join(__dirname, 'build-search-index.mjs')], { stdio: 'pipe' });
   const regenerated = fs.readFileSync(indexPath, 'utf8');
   if (committed !== regenerated) {
     fail('search-index.json이 최신이 아님 — 모듈 데이터를 고친 뒤 `node scripts/build-search-index.mjs`를 다시 실행하고 커밋할 것');
@@ -180,6 +181,84 @@ for (const [file, needle] of deepLinks) {
   const html = fs.readFileSync(path.join(root, 'public', file), 'utf8');
   if (!html.includes(needle)) fail(`${file}에 딥링크 처리(${needle})가 없음 — 검색 결과 클릭 시 해당 화면으로 이동하지 않음`);
   else console.log(`OK: ${file} 딥링크 처리 확인`);
+}
+
+// ── ⑤ 용어 세분화 — 상담사가 쓰는 말로 찾아지는가 ──
+// 데이터에 적힌 말과 매장에서 부르는 말이 다르다. "식세기"로 쳤는데 0건이면 상담이 거기서 멈춘다.
+// 이 구간이 지키는 것은 **그 말로 검색하면 나온다**는 사실 하나다.
+{
+  const { parseQuery, hits, SYNONYM_GROUPS, expandToken } = await import('../lib/searchTerms.ts');
+  const find = (q) => {
+    const cs = parseQuery(q);
+    return entries.filter((e) => cs.every((c) => hits(e.kw, c)));
+  };
+
+  // 줄여 부르는 말 → 정식 명칭이 걸려야 한다
+  for (const [q, needle] of [
+    ['식세기', '식기세척기'],
+    ['김냉', '김치냉장고'],
+    ['로청', '로봇청소기'],
+    ['에어콘', '에어컨'],
+    ['전자렌지', '전자레인지'],
+  ]) {
+    const hit = find(q);
+    if (!hit.length) fail(`"${q}" 검색 0건 — 동의어 확장이 동작하지 않는다`);
+    else if (!hit.some((e) => (e.title + e.sub + e.kw).includes(needle))) {
+      fail(`"${q}" 검색 결과에 "${needle}" 가 하나도 없다`);
+    } else console.log(`OK: "${q}" → "${needle}" 로 확장돼 ${hit.length}건`);
+  }
+
+  // 단위 표기 — 65형과 65인치는 같은 말이라 결과가 같아야 한다
+  const a = find('65인치').map((e) => e.i).sort().join(',');
+  const b = find('65형').map((e) => e.i).sort().join(',');
+  if (a !== b || !a) fail('"65인치" 와 "65형" 의 결과가 다르다 — 단위 표기 확장을 확인할 것');
+  else console.log(`OK: 65인치 = 65형 (${find('65인치').length}건)`);
+
+  // **단위를 뗀 맨숫자까지 확장하면 안 된다.** '20kg' → '20' 을 넣었더니 567건이 나온 적이 있다.
+  if (expandToken('20kg').includes('20')) fail("expandToken('20kg') 에 맨숫자 '20' 이 들어 있다 — 조건이 아무거나 문다");
+  else console.log('OK: 단위를 뗀 맨숫자는 확장하지 않는다');
+
+  // 한 글자 표기는 kw.includes 판정에서 어디에나 걸린다 — 표에 들어가면 안 된다
+  const tiny = SYNONYM_GROUPS.flat().filter((w) => w.length < 2);
+  if (tiny.length) fail(`동의어 표에 한 글자 표기가 있다: ${tiny.join(', ')}`);
+  else console.log('OK: 동의어 표에 한 글자 표기 없음');
+
+  // 조건 AND — 조건을 더하면 결과는 반드시 줄거나 같아야 한다
+  const one = find('에어컨').length, two = find('무풍 에어컨').length, three = find('무풍 에어컨 1등급').length;
+  if (!(one >= two && two >= three && three > 0)) {
+    fail(`조건을 겹칠수록 좁아져야 한다 — 에어컨 ${one} / 무풍 에어컨 ${two} / +1등급 ${three}`);
+  } else console.log(`OK: 다조건 AND — 에어컨 ${one} → 무풍 ${two} → 1등급 ${three}`);
+
+  // 색인·질의가 같은 정규화를 거치는가 — 쉼표 있는 치수를 쉼표 없이 찾을 수 있어야 한다
+  if (!find('1853').length) fail('"1853" 로 치수(912×1,853)가 안 찾아진다 — 쉼표 정규화가 한쪽만 걸린 것');
+  else console.log(`OK: 쉼표 없는 숫자로 치수 검색 (${find('1853').length}건)`);
+}
+
+// ── ⑥ 전 모듈이 색인에 들어 있는가 ──
+// 모듈을 새로 만들고 색인 생성기에 넣지 않으면 **통합검색에서 통째로 사라지는데 아무 표시도 안 난다.**
+{
+  const want = { finder: 300, install: 20, compare: 30, care: 10, as: 80, place: 50, hub: 10 };
+  const got = {};
+  for (const e of entries) got[e.m] = (got[e.m] || 0) + 1;
+  for (const [m, min] of Object.entries(want)) {
+    if (!got[m] || got[m] < min) fail(`색인에 '${m}' 모듈이 ${got[m] || 0}건뿐 — 최소 ${min}건은 있어야 한다`);
+  }
+  if (ok) console.log(`OK: 전 모듈 색인 ${JSON.stringify(got)}`);
+
+  // AS 앱에서만 확인할 수 있는 것들 — 물류센터·이전설치가 허브 검색에서도 잡혀야 한다
+  const { parseQuery, hits } = await import('../lib/searchTerms.ts');
+  const find = (q) => { const cs = parseQuery(q); return entries.filter((e) => cs.every((c) => hits(e.kw, c))); };
+  for (const [q, m, what] of [
+    ['김해', 'as', '물류센터·이전설치 관할'],
+    ['싱크대 리폼', 'as', '싱크장 리폼 협력사'],
+    ['컴프레서 10년', 'as', '핵심부품 무상기간'],
+    ['안동 다존텍', 'as', 'B2B IT 관할'],
+    ['에어컨 이격거리', 'place', '배치 시뮬레이터 이격'],
+  ]) {
+    const hit = find(q).filter((e) => e.m === m);
+    if (!hit.length) fail(`"${q}" 로 ${what}(${m})가 안 잡힌다`);
+    else console.log(`OK: "${q}" → ${m} ${hit.length}건 (${what})`);
+  }
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

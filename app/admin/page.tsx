@@ -95,7 +95,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
 }
 
 const ROI_DATA = [
-  { key: 'finder',  icon: '🔍', label: '모델파인더 — 제품 검색',    before: '5분/건',    after: '15초/건',  saving: 95 },
+  { key: 'finder',  icon: '🔍', label: '통합검색 — 자료 찾기',      before: '5분/건',    after: '15초/건',  saving: 95 },
   { key: 'compare', icon: '⚖️', label: '타사비교 가이드 생성',       before: '30분/건',   after: '3분/건',   saving: 90 },
   { key: 'quiz',    icon: '🎯', label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
   { key: 'care',    icon: '💚', label: 'AI구독 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
@@ -113,13 +113,13 @@ const ROI_DATA = [
 const MODULE_META: Record<string, { label: string; icon: string; color: string; retired?: boolean }> = {
   // 허브 메인 페이지뷰는 집계에서 제외되므로 여기 남는 건 통합검색·건의뿐이다
   hub:     { label: '허브 검색·건의',   icon: '🔎', color: '#1428A0' },
-  finder:  { label: '모델파인더',      icon: '🔍', color: '#2563EB' },
+  finder:  { label: '통합검색',        icon: '🔍', color: '#2563EB' },
   care:    { label: 'AI구독 케어',         icon: '🛠️', color: '#059669' },
   compare: { label: '타사비교 가이드', icon: '⚖️', color: '#D97706' },
   install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
   /* 아래 셋은 MODULE_META 에 아예 없어서 사용 현황에 한 줄도 안 잡히고 있었다
      (2026-08-11 발견). 운영 중인 모듈이 통계에서 통째로 빠지면 "안 쓴다"로 읽힌다. */
-  as:      { label: 'AS기간 확인',      icon: '🛡️', color: '#0D9488' },
+  as:      { label: 'AS 관련 업무',     icon: '🛡️', color: '#0D9488' },
   place:   { label: '가전 배치 시뮬레이터', icon: '📐', color: '#4F46E5' },
   test:    { label: '레벨업 챌린지',    icon: '📝', color: '#7C3AED' },
   quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },

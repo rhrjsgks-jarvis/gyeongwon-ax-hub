@@ -33,10 +33,20 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
     title: '제품 상담 도구',
     modules: [
       {
+        href: '/search',
+        icon: 'search',
+        title: '통합검색',
+        desc: '앱 안의 모든 자료를 한 번에 — 제품·설치·타사비교·구독케어·AS·배치를 조건 여러 개로 좁혀 검색',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.08',
+        status: 'live',
+      },
+      {
         href: '/finder',
         icon: 'finder',
-        title: '모델파인더',
-        desc: '키워드 한 줄로 CE·MX·리빙·Harman 전 제품(578종) 검색',
+        title: '제품 상세검색',
+        desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(578종)',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
@@ -87,8 +97,8 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
             {
         href: '/as',
         icon: 'warranty',
-        title: 'AS기간 확인',
-        desc: '품목별 무상보증·핵심부품·부품보유기간을 한눈에 — 삼성전자서비스 보증기간 산정기준 기준',
+        title: 'AS 관련 업무',
+        desc: '무상보증·핵심부품·부품보유기간 + AS·물류센터 연락처 + 빌트인 이전설치 관할까지 한 곳에서',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.08',
@@ -269,13 +279,13 @@ const COUPON_LINKS = [
 const TIPS = [
   { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
   { emoji: '📋', situation: 'AI구독 케어 항목을 안내할 때', tool: 'AI구독 케어 안내', href: '/care' },
-  { emoji: '🔎', situation: '제품 스펙을 빠르게 확인할 때', tool: '모델파인더', href: '/finder' },
+  { emoji: '🔎', situation: '무엇이든 빠르게 찾을 때', tool: '통합검색', href: '/search' },
   { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'URL 퀴즈 생성기', href: '/quiz' },
   { emoji: '🛠️', situation: '설치 가능 여부를 확인할 때', tool: '설치환경 가이드', href: '/install' },
 ]
 
 const GUIDE = [
-  { step: '01', text: '모델파인더 — 키워드 한 줄로 CE·MX·Harman 전 제품 검색' },
+  { step: '01', text: '통합검색 — 조건을 띄어쓰기로 겹쳐 앱 안의 모든 자료를 한 번에' },
   { step: '02', text: 'AI구독 케어 — 제품별 케어 주기·항목 즉시 조회' },
   { step: '03', text: '타사비교 — URL 입력으로 비교표 자동 생성' },
   { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },

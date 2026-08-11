@@ -1,5 +1,5 @@
 /*
- * AS기간 확인 회귀 테스트 — `npm run test:as`
+ * AS 관련 업무 회귀 테스트 — `npm run test:as`
  *
  * **AS 기간은 틀리면 그대로 고객 분쟁이다.** 그래서 다른 모듈보다 검사가 빡빡하다:
  *   [1] 화면이 렌더되고 품목을 고를 수 있는가
@@ -14,7 +14,8 @@ import { JSDOM } from 'jsdom';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
-const html = fs.readFileSync(path.join(root, 'public', 'as-app.html'), 'utf8');
+const APP = path.join(root, 'public', 'as-app.html');
+const html = fs.readFileSync(APP, 'utf8');
 
 let ok = true;
 const fail = (m) => { console.log('ERROR:', m); ok = false; };
@@ -204,6 +205,232 @@ else pass('물류센터 출처 표기');
 if (A.CONTACTS && /물류센터/.test(JSON.stringify(pane.textContent.match(/아직 등록되지 않았습니다[^\n]*/) || ''))) {
   fail("물류센터를 채웠는데 아직 '미등록' 안내에 남아 있다");
 } else pass("'미등록' 안내에서 물류센터 제거됨");
+
+/* ────────────────────────────────────────────────────────────
+ * [7] 이전설치·빌트인 탭 — B2B 관할 · 싱크장 리폼 · 접수 순서
+ *
+ * 출처는 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02)다.
+ * 이 앱은 **로그인 없는 공개 주소**이고 저장소도 public 이라, 원문에 있는
+ * 담당자 실명·개인 업무메일·직통번호·임원 명단은 **싣지 않는다.**
+ * 아래 [7-d] 가 그것이 새어 들어오지 않았는지 검사한다.
+ * ──────────────────────────────────────────────────────────── */
+const B = A.B2B, S = A.SINK, N = A.B2B_NATION, IT = A.B2B_IT;
+
+// [7-a] 표 크기
+if (!B || B.length !== 20) fail(`B2B 빌트인 관할이 ${B ? B.length : 0}행 — 원문은 20행이다`);
+else pass('B2B 빌트인 관할 20행');
+if (!S || S.length !== 4) fail(`싱크장 리폼 협력사가 ${S ? S.length : 0}곳 — 원문은 4곳이다`);
+else pass('싱크장 리폼 협력사 4곳');
+if (!N || N.length !== 2) fail(`전국 담당이 ${N ? N.length : 0}건 — 중앙에너지·티지이엔지 2건이다`);
+else pass('전국 담당 2건 (중앙에너지 · 티지이엔지)');
+if (!IT || IT.length !== 12) fail(`B2B IT 관할이 ${IT ? IT.length : 0}행 — 원문은 12행이다`);
+else pass('B2B IT 관할 12행');
+
+/* IT 번호는 원문에서 담당자 이름 옆에 있어 대표번호인지 직통인지 알 수 없었다.
+ * 2026-08-11 사용자가 대표번호로 확인해 줘서 실었다. 원주·제주 번호가 가전 표의
+ * 협력사 대표번호와 **정확히 같다** — 그 확인과 맞아떨어지는 교차검증이다. */
+for (const [center, tel] of [
+  ['동탄', '031-377-9135'], ['원주', '033-731-3432'], ['대구', '070-7706-2147'],
+  ['세종', '070-7110-7303'], ['익산', '062-972-2118'], ['제주', '064-756-3260'],
+]) {
+  const r = IT.find((x) => x.c === center);
+  if (!r) fail(`B2B IT 관할에 ${center} 가 없다`);
+  else if (r.n !== tel) fail(`IT ${center} 번호가 ${r.n} — 원문은 ${tel}`);
+}
+pass('B2B IT 골든 6건');
+for (const [center, gajeon] of [['원주', '디앤아이'], ['제주', '새론']]) {
+  const it = IT.find((x) => x.c === center), ga = B.find((x) => x.c === center);
+  if (!it || !ga || it.n !== ga.n || it.p !== gajeon) {
+    fail(`${center}: IT 번호(${it && it.n})와 가전 번호(${ga && ga.n})가 달라 대표번호 교차검증에 실패`);
+  }
+}
+pass('IT ↔ 가전 대표번호 교차검증 2건 (원주 · 제주)');
+
+// [7-b] 골든값 — 원문에서 눈으로 확인한 값. 번호가 틀리면 고객을 엉뚱한 곳으로 보낸다.
+for (const [partner, center, tel] of [
+  ['경성티에스', '인천', '032-672-3624'],
+  ['명일', '동서울', '031-527-6745'],
+  ['대양빌텍', '화성', '1577-8691'],
+  ['성광티시엠', '포항', '055-371-2329'],
+  ['새론', '제주', '064-756-3260'],
+  ['디앤아이', '원주', '033-731-3432'],
+]) {
+  const r = B.find((x) => x.p === partner && x.c === center);
+  if (!r) fail(`B2B 관할에 ${partner}·${center} 가 없다`);
+  else if (r.n !== tel) fail(`${partner}·${center} 번호가 ${r.n} — 원문은 ${tel}`);
+}
+pass('B2B 골든 6건 (협력사·센터·이전설치 문의번호)');
+
+// 싱크장 리폼 — 아비스만 대표번호와 이전설치 문의번호가 다르다(원문 확인)
+const abis = S.find((x) => /아비스/.test(x.p));
+if (!abis || abis.n !== '1811-7958' || abis.n2 !== '1644-0385') {
+  fail(`아비스 번호가 ${abis && abis.n}/${abis && abis.n2} — 원문은 1811-7958 / 1644-0385`);
+} else pass('아비스 대표 1811-7958 · 이전설치 1644-0385');
+for (const [p, tel] of [['에스엘피', '1577-6066'], ['성광티시엠', '1522-0481'], ['아이시티', '1811-6759']]) {
+  const r = S.find((x) => x.p === p);
+  if (!r || r.n !== tel) fail(`싱크장 리폼 ${p} 번호가 ${r && r.n} — 원문은 ${tel}`);
+}
+pass('싱크장 리폼 골든 3건');
+
+// [7-c] 협력사 단위로 번호가 하나여야 한다 — 원문의 '이전설치 문의전화' 칸이 병합돼 있다
+{
+  const byP = {};
+  for (const r of B) (byP[r.p] = byP[r.p] || new Set()).add(r.n);
+  const split = Object.entries(byP).filter(([, v]) => v.size > 1);
+  if (split.length) fail(`한 협력사에 번호가 여럿이다: ${split.map(([k, v]) => `${k}(${[...v].join('/')})`).join(', ')}`);
+  else pass('협력사 하나당 이전설치 문의번호 하나 (원문 병합셀과 일치)');
+}
+
+// [7-d] **개인정보가 새어 들어오지 않았는가** — 이것이 이 구간의 핵심이다
+{
+  const blob = JSON.stringify([B, S, N, IT]);
+  const leaks = [];
+  if (/@/.test(blob)) leaks.push('이메일 주소');
+  if (/(부장|차장|과장|대리|이사|상무|전무|사원|주임|센터장)/.test(blob)) leaks.push('직급이 붙은 사람 이름');
+  /* **막는 것은 `010`(휴대폰) 하나다**(2026-08-11 사용자 지시: "010번호를 제외한
+     나머지번호는 적혀있는대로 적어주세요"). 나머지 국번은 업무 회선이라는 것이
+     자료 소유자의 판단이고, 실제로 070 둘은 협력사 대표번호로 확인됐다.
+     이름·이메일 검사는 그대로 둔다 — 지시는 **번호**에 대한 것이었다. */
+  if (/010-\d{3,4}-\d{4}/.test(blob)) leaks.push('개인 휴대폰(010) 번호');
+  if (leaks.length) fail(`공개 데이터에 개인정보가 들어 있다: ${leaks.join(' · ')}`);
+  else pass('개인정보 미포함 (이메일 · 담당자 실명 · 010 번호 없음)');
+
+  /* **원문에 적힌 번호가 빠지지 않았는가.** 한동안 '이전설치 문의전화' 칸만 옮겨
+     물류전화가 통째로 사라져 있었다 — 경성티에스는 두 번호가 다르다. */
+  for (const [where, tel] of [
+    ['경성티에스 물류', '032-675-5100'],
+    ['중앙에너지 물류', '032-675-3311'],
+    ['중앙에너지 후드', '1577-5488'],
+    ['아비스 물류', '031-270-3871~5'],
+    ['디앤아이 IT 추가회선', '031-377-9136'],
+  ]) {
+    if (!blob.includes(tel)) fail(`원문의 ${where} 번호 ${tel} 가 빠져 있다`);
+  }
+  pass('원문에 따로 적힌 번호 5건 유지 (물류전화 · 후드 · 추가 회선)');
+
+  // 임원 명단은 통째로 들어오면 안 된다
+  if (/(대표이사|인사팀장|지원팀장|국판팀장|지사장)/.test(html)) fail('원문의 임원 명단이 소스에 남아 있다');
+  else pass('임원 명단 미포함');
+}
+
+// [7-e] 화면 — 탭이 3개이고, 이전설치 탭이 렌더되며 관할 검색이 걸리는가
+{
+  const tabs = doc.querySelectorAll('.mode-tab');
+  if (tabs.length !== 2) fail(`탭이 ${tabs.length}개 — AS기간·연락처 2개여야 한다`);
+  else pass('탭 2개 (AS기간 · 연락처·협력사)');
+
+  /* 연락처 탭은 **세 묶음으로 접혀** 있다(2026-08-11 사용자 요청 — 다 펼쳐 두면 예순 줄이
+     넘어 상담 중에 못 읽는다). 기본은 닫힘이고 눌러야 열린다. */
+  A.tab = 'contact';
+  const mp = doc.querySelector('#contactPane');
+  const grps = [...mp.querySelectorAll('.grp')];
+  if (grps.length !== 3) fail(`묶음이 ${grps.length}개 — AS·수리 / 물류 / B2B·협력사 3개여야 한다`);
+  else if (grps.map((g) => g.id).join(',') !== 'g-as,g-lg,g-b2b') {
+    fail(`묶음 순서가 ${grps.map((g) => g.id).join(',')} — g-as,g-lg,g-b2b 여야 한다`);
+  } else pass('연락처 탭 묶음 3개 (AS·수리 / 물류 / B2B·협력사)');
+  if (grps.some((g) => g.open)) fail('묶음이 기본으로 펼쳐져 있다 — 눌러야 열려야 한다');
+  else pass('묶음 기본 접힘');
+  // 열어 보지 않고도 무엇이 얼마나 있는지 알아야 한다
+  for (const [id, n] of [['g-as', A.CONTACTS.reduce((a, g) => a + g.items.length, 0)],
+                         ['g-lg', A.CENTERS.length],
+                         ['g-b2b', B.length + IT.length + S.length + N.length]]) {
+    const t = mp.querySelector(`#${id} .gc`).textContent;
+    if (t !== `${n}건`) fail(`${id} 묶음 제목의 건수가 "${t}" — "${n}건" 이어야 한다`);
+  }
+  pass('묶음 제목에 건수 표기 (6 · 21 · 38)');
+  const rows = () => mp.querySelectorAll('#b2blist .ct').length;
+  if (rows() !== 20) fail(`이전설치 탭에 ${rows()}건 렌더 — 20건이어야 한다`);
+  else pass('이전설치 탭 렌더 20건');
+
+  const q = mp.querySelector('#b2bq');
+  const type = (v) => { q.value = v; q.dispatchEvent(new window.Event('input')); };
+  type('청주');
+  const first = mp.querySelector('#b2blist .ct');
+  if (rows() !== 1 || !/대양빌텍/.test(first.textContent)) {
+    fail(`'청주' 검색 → ${rows()}건 — 대양빌텍(세종) 하나여야 한다`);
+  } else pass("'청주' 검색 → 대양빌텍(세종) 하나");
+  type('');
+  if (rows() !== 20) fail('검색어를 지웠는데 20건으로 돌아오지 않는다');
+  else pass('검색어 해제 시 전체 복원');
+
+  // 리폼이 먼저라는 안내가 화면에 있어야 한다 — 번호만 알면 그 자리에서 설치가 무산된다
+  if (!/리폼/.test(mp.textContent) || !/1811-7958/.test(mp.textContent)) {
+    fail('식기세척기 이전설치 순서 안내(싱크대 리폼 선행 · 아비스 1811-7958)가 화면에 없다');
+  } else pass('식기세척기 리폼 선행 안내 노출');
+
+  // IT 부문도 같은 검색칸으로 함께 걸러져야 한다 — 상담사는 지역을 칠 뿐이다
+  const itRows = () => mp.querySelectorAll('#itlist .ct').length;
+  if (itRows() !== 12) fail(`B2B IT 목록에 ${itRows()}건 렌더 — 12건이어야 한다`);
+  else pass('B2B IT 렌더 12건');
+  /* 한 검색칸이 두 표를 함께 거르고, **같은 지역이라도 담당이 갈린다**는 것이 보여야 한다 —
+     안동은 가전 성광티시엠 / IT 다존텍이다. 표를 합쳤다면 이 검사가 깨진다. */
+  type('안동');
+  const ga = mp.querySelector('#b2blist .ct');
+  const it = mp.querySelector('#itlist .ct');
+  if (rows() !== 1 || itRows() !== 1) {
+    fail(`'안동' → 가전 ${rows()}건 / IT ${itRows()}건 — 각각 1건이어야 한다`);
+  } else if (!/성광티시엠/.test(ga.textContent) || !/다존텍/.test(it.textContent)) {
+    fail(`'안동' 담당이 가전 ${ga.textContent.slice(0, 10)} / IT ${it.textContent.slice(0, 10)} — 성광티시엠 / 다존텍이어야 한다`);
+  } else pass("'안동' → 가전 성광티시엠 · IT 다존텍 (한 검색칸, 담당은 갈린다)");
+  type('');
+
+  const noTel = [...mp.querySelectorAll('#b2blist .ct, #itlist .ct')].filter((el) => !el.dataset.tel);
+  if (noTel.length) fail(`${noTel.length}건에 data-tel 이 없다 — 눌러도 걸리지 않는다`);
+  else pass('이전설치 32건 전부 눌러서 걸기 가능');
+}
+
+/* ────────────────────────────────────────────────────────────
+ * [8] 상단 통합 검색 — 세 탭에 흩어진 것을 한 칸에서 찾는가
+ * 찾기만 하고 데려가지 않으면 상담사는 다시 탭을 뒤져야 한다.
+ * ──────────────────────────────────────────────────────────── */
+{
+  A.tab = 'as';
+  for (const [q, needle] of [
+    ['수원', '평택TC'],
+    ['냉장고', '냉장고'],
+    ['김해', '양산TC'],
+    ['아비스', '아비스'],
+    ['청주', '대양빌텍'],
+  ]) {
+    const r = A.search(q);
+    if (!r.length) fail(`상단 검색 "${q}" → 0건`);
+    else if (!r.some((t) => t.includes(needle))) fail(`상단 검색 "${q}" 결과에 "${needle}" 가 없다: ${r.join(', ')}`);
+  }
+  pass('상단 검색 5건 대표 질의 통과');
+
+  // 조건을 겹치면 좁아져야 한다(AND)
+  const a = A.search('냉장고').length, b = A.search('냉장고 컴프레서').length;
+  if (!(b > 0 && b <= a)) fail(`상단 검색 AND 가 안 걸린다 — 냉장고 ${a} / 냉장고 컴프레서 ${b}`);
+  else pass(`상단 검색 다조건 AND (냉장고 ${a} → 냉장고 컴프레서 ${b})`);
+
+  // 없는 말은 0건이어야 한다 — 아무거나 무는 검색은 없느니만 못하다
+  if (A.search('없는말없는말').length) fail('없는 말로 검색했는데 결과가 나온다');
+  else pass('없는 말 → 0건');
+
+  // 고르면 그 탭으로 데려가는가
+  /* 고른 결과가 **접힌 묶음 안에 있으면 아무 일도 안 일어난 것처럼 보인다** —
+     찾아 준 뜻이 없어지므로 탭 전환 + 묶음 펼침 + 목록 필터가 함께 걸려야 한다. */
+  for (const [q, needle, gid, listId] of [
+    ['청주', /대양빌텍/, 'g-b2b', '#b2blist'],
+    ['수원', /평택TC/, 'g-lg', '#lglist'],
+    ['삼성전자서비스', /삼성전자서비스/, 'g-as', null],
+  ]) {
+    A.tab = 'as';
+    for (const g of doc.querySelectorAll('.grp')) g.open = false;
+    const inp = doc.querySelector('#sq');
+    inp.value = q;
+    inp.dispatchEvent(new window.Event('input'));
+    const btn = [...doc.querySelectorAll('#sres .sr')].find((el) => needle.test(el.textContent));
+    if (!btn) { fail(`상단 검색 '${q}' 결과에 ${needle} 줄이 없다`); continue; }
+    btn.click();
+    if (A.tab !== 'contact') fail(`'${q}' 를 눌렀는데 탭이 ${A.tab} — contact 로 가야 한다`);
+    else if (!doc.querySelector(`#${gid}`).open) fail(`'${q}' 를 눌렀는데 ${gid} 묶음이 안 열렸다`);
+    else if (listId && doc.querySelectorAll(`${listId} .ct`).length !== 1) {
+      fail(`'${q}' 를 눌렀는데 ${listId} 가 ${doc.querySelectorAll(`${listId} .ct`).length}건 — 1건으로 좁혀져야 한다`);
+    } else continue;
+  }
+  pass('검색 결과를 누르면 탭 전환 + 묶음 펼침 + 목록 필터가 함께 걸린다 (3건)');
+}
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
