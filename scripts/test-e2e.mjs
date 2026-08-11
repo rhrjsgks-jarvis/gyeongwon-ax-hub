@@ -37,9 +37,33 @@ try {
   process.exit(0);
 }
 
-// ── 프로덕션 빌드 ──
-if (!fs.existsSync(path.join(root, '.next', 'BUILD_ID'))) {
-  console.log('· .next 빌드 없음 → npm run build');
+/*
+ * ── 프로덕션 빌드 ──
+ * **소스가 빌드보다 새로우면 다시 빌드한다.** 예전에는 `.next` 가 있기만 하면 그대로 띄웠는데,
+ * 그러면 화면을 고친 뒤 E2E 를 돌려도 **옛 화면을 검사하고 통과한다** — 검사가 통째로 거짓이
+ * 된다(2026-08-11 실제로 그랬다. 새로 만든 화면이 안 나오는데 ALL PASS 가 떴다).
+ * CI 는 매번 새 체크아웃이라 안 걸리고 **로컬에서만 조용히 낡는다.**
+ */
+function newestSource() {
+  let t = 0;
+  const walk = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) walk(f);
+      else t = Math.max(t, fs.statSync(f).mtimeMs);
+    }
+  };
+  for (const d of ['app', 'components', 'lib', 'public']) {
+    const p = path.join(root, d);
+    if (fs.existsSync(p)) walk(p);
+  }
+  return t;
+}
+const buildId = path.join(root, '.next', 'BUILD_ID');
+const stale = fs.existsSync(buildId) && fs.statSync(buildId).mtimeMs < newestSource();
+if (!fs.existsSync(buildId) || stale) {
+  console.log(stale ? '· 소스가 .next 보다 새로움 → npm run build' : '· .next 빌드 없음 → npm run build');
   execFileSync('npm', ['run', 'build'], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' });
 }
 

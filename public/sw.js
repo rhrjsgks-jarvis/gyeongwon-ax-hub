@@ -21,11 +21,13 @@
  */
 // v3 (2026-08-10) — 앱 이름과 아이콘이 바뀌었다(AX 허브 → 세일즈 코파일럿).
 // manifest·아이콘이 캐시에 남아 있으면 옛 이름으로 계속 설치된다.
-const CACHE_VERSION = 'axhub-v5';
+const CACHE_VERSION = 'axhub-v6';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
-const SWR = /\/(finder|compare|install|care|quiz|test|place)-app\.html$|\/(search-(index|detail)|size-reps)\.json$/;
+// `as`·`poster` 가 빠져 있었다(2026-08-11). 미니앱은 전부 같은 규칙을 타야 매장에서
+// 전파가 끊겨도 한 번 본 화면이 열린다 — 새 미니앱을 만들면 여기에 함께 넣을 것.
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps)\.json$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

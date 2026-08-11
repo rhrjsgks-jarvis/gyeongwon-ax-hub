@@ -8,7 +8,7 @@ import Icon, { IconName } from './Icon'
 
 const NAV_ITEMS = [
   { href: '/',        label: '허브',      icon: 'home' as IconName },
-  { href: '/finder',  label: '모델파인더', icon: 'finder' as IconName },
+  { href: '/search',  label: '통합검색',   icon: 'search' as IconName },
   { href: '/care',    label: 'AI구독 케어',   icon: 'care' as IconName },
   { href: '/test',    label: '레벨업 챌린지', icon: 'quiz' as IconName },
   { href: '/compare', label: '타사비교',  icon: 'compare' as IconName },
@@ -20,11 +20,12 @@ const NAV_GROUPS = [
   {
     title: '제품 상담 도구',
     items: [
-      { href: '/finder',          label: '모델파인더',       icon: 'finder' as IconName },
+      { href: '/search',          label: '통합검색',         icon: 'search' as IconName },
+      { href: '/finder',          label: '제품 상세검색',     icon: 'finder' as IconName },
       { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
-      { href: '/as',               label: 'AS기간 확인',      icon: 'warranty' as IconName },
+      { href: '/as',               label: 'AS 관련 업무',     icon: 'warranty' as IconName },
       { href: '/place',           label: '배치 시뮬레이터',   icon: 'place' as IconName },
     ],
   },

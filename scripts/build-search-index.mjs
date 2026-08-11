@@ -11,6 +11,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+// 색인과 질의는 **같은 정규화**를 거쳐야 한다 — 한쪽만 쉼표를 지우면
+// "1,853"으로 색인되고 "1853"으로 찾아 영영 안 걸린다. 그래서 규칙을 한 파일에 둔다.
+// (그래서 이 스크립트는 --experimental-strip-types 로 돈다 — package.json 참고)
+import { normalize } from '../lib/searchTerms.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pub = (f) => path.join(__dirname, '..', 'public', f);
@@ -54,38 +58,126 @@ const add = (e) => entries.push(e);
   }
 }
 
-// ── 2. 설치환경 가이드: 카테고리 + 드롭다운 검색 키워드(data-kw) ──
+/*
+ * 미니앱 안의 객체 리터럴을 그대로 꺼내 쓴다.
+ * JSON 이 아니라 홑따옴표·주석·후행 쉼표가 섞인 JS 리터럴이라 JSON.parse 로는 안 되고,
+ * 정규식으로 필드를 하나씩 긁으면 원문이 조금만 바뀌어도 **조용히 빈 값이 된다**
+ * (그러면 그 모듈이 통째로 검색에서 사라지는데 화면에는 아무 표시도 안 난다).
+ * 우리 저장소의 우리 소스라 평가해서 읽는 편이 훨씬 안전하다 — 못 찾으면 던진다.
+ */
+function literal(html, re, label) {
+  const m = html.match(re);
+  if (!m) throw new Error(`${label} 를 찾지 못했습니다 — 원문 형식이 바뀌었는지 확인할 것`);
+  return (0, eval)(`(${m[1]})`);
+}
+/* 중첩 객체·배열을 통째로 한 줄 키워드로 편다(값만 쓰고 키 이름은 버린다) */
+function flatten(v, out = []) {
+  if (v == null) return out;
+  if (Array.isArray(v)) { for (const x of v) flatten(x, out); return out; }
+  if (typeof v === 'object') { for (const k of Object.keys(v)) flatten(v[k], out); return out; }
+  out.push(String(v));
+  return out;
+}
+
+// ── 2. 설치환경 가이드: 카테고리 + 드롭다운 키워드 + **본문 전체** ──
+// 예전에는 data-kw 만 담았는데, 그러면 "이격거리 50mm"·"천장고"·"전용 콘센트"처럼
+// 상담에서 실제로 묻는 말이 하나도 안 걸렸다. 본문(공간·설비·체크리스트·주의)까지 넣는다.
 {
   const html = read('install-app.html');
-  const re = /data-cat="([^"]+)"\s+data-kw="([^"]*)"/g;
-  let m;
-  while ((m = re.exec(html))) {
-    add({ t: 'category', m: 'install', title: m[1], sub: '설치 공간·전기/급배수 요건',
-      kw: `${m[1]} ${m[2]} 설치 설치환경`, href: `/install?cat=${encodeURIComponent(m[1])}` });
+  const DBI = literal(html, /const INSTALL_DB = (\{[\s\S]*?\n\});/, 'install-app.html 의 INSTALL_DB');
+  const kws = new Map();
+  for (const m of html.matchAll(/data-cat="([^"]+)"\s+data-kw="([^"]*)"/g)) kws.set(m[1], m[2]);
+  for (const [cat, d] of Object.entries(DBI)) {
+    add({ t: 'category', m: 'install', title: cat, sub: d.subtitle || '설치 공간·전기/급배수 요건',
+      kw: [cat, kws.get(cat) || '', '설치 설치환경 이격 치수',
+        ...flatten([d.subtitle, d.types, d.space, d.utility, d.checklist, d.cautions])].join(' '),
+      href: `/install?cat=${encodeURIComponent(cat)}` });
   }
 }
 
-// ── 3. 타사비교: 카테고리 + 삼성 비교 모델명 ──
+// ── 3. 타사비교: 카테고리 + 삼성 비교 모델 + 셀링포인트 ──
+// 카테고리 이름만 담아 뒀더니 "Micro RGB"·"무풍" 같은 셀링포인트로는 안 걸렸다.
 {
   const html = read('compare-app.html');
-  const cats = [...new Set([...html.matchAll(/selectCat\('([^']+)'\)/g)].map((x) => x[1]))];
-  for (const c of cats) {
-    add({ t: 'category', m: 'compare', title: c, sub: '타사비교 · 스펙 비교표·응대 스크립트',
-      kw: `${c} 비교 타사비교 경쟁사`, href: `/compare?cat=${encodeURIComponent(c)}` });
+  const DBC = literal(html, /\nconst DB = (\{[\s\S]*?\n\});/, 'compare-app.html 의 DB');
+  for (const [cat, d] of Object.entries(DBC)) {
+    const sams = d.samsung || [];
+    add({ t: 'category', m: 'compare', title: cat, sub: '타사비교 · 스펙 비교표·응대 스크립트',
+      kw: [cat, '비교 타사비교 경쟁사 lg', ...flatten(d)].join(' '),
+      href: `/compare?cat=${encodeURIComponent(cat)}` });
+    for (const s of sams) {
+      add({ t: 'product', m: 'compare', title: s.name, sub: `${cat} · 타사비교 삼성 대표모델`,
+        kw: [s.name, cat, '타사비교 비교 경쟁사', ...flatten([s.on, s.specs, s.grade])].join(' '),
+        href: `/compare?cat=${encodeURIComponent(cat)}` });
+    }
   }
 }
 
-// ── 4. AI Care: 케어십 대상 제품 ──
+// ── 4. AI구독 케어: 대상 제품 + 케어 내용 ──
 {
   const html = read('care-app.html');
   const m = html.match(/const PRODUCTS = \[([\s\S]*?)\n\];/);
+  const DATA = literal(html, /\nconst DATA = (\{[\s\S]*?\n\});/, 'care-app.html 의 DATA');
   if (m) {
     const re = /\{key:"([^"]+)",\s*name:"([^"]+)",[^}]*?desc:"([^"]*)"/g;
     let x;
     while ((x = re.exec(m[1]))) {
-      add({ t: 'care', m: 'care', title: x[2], sub: `AI Care · ${x[3]}`,
-        kw: `${x[2]} ${x[3]} 케어십 구독 care`, href: `/care?cat=${encodeURIComponent(x[1])}` });
+      add({ t: 'care', m: 'care', title: x[2], sub: `AI구독 케어 · ${x[3]}`,
+        kw: [x[2], x[3], '케어십 구독 care 방문케어 자가관리 무상수리',
+          ...flatten(DATA[x[1]])].join(' '),
+        href: `/care?cat=${encodeURIComponent(x[1])}` });
     }
+  }
+}
+
+// ── 5. AS 관련 업무: 품목별 보증 · 물류센터 · 이전설치 협력사 ──
+// 상담에서 "수원은 어느 센터죠"·"컴프레서 몇 년이죠"는 허브 검색창에도 그대로 들어온다.
+{
+  const html = read('as-app.html');
+  const DBA = literal(html, /\nconst DB = (\{[\s\S]*?\});\n/, 'as-app.html 의 DB');
+  const CEN = literal(html, /\nconst CENTERS = (\[[\s\S]*?\n\]);/, 'as-app.html 의 CENTERS');
+  const B2B = literal(html, /\nconst B2B = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B');
+  const SINK = literal(html, /\nconst SINK = (\[[\s\S]*?\n\]);/, 'as-app.html 의 SINK');
+  const NAT = literal(html, /\nconst B2B_NATION = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_NATION');
+
+  for (const [cat, d] of Object.entries(DBA)) {
+    add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
+      sub: `무상보증 ${d.base}${d.hold ? ` · 부품보유 ${d.hold}년` : ''}`,
+      kw: [cat, 'as 보증 무상보증 무상수리 부품보유 내용연수 핵심부품', ...flatten(d)].join(' '),
+      href: '/as' });
+  }
+  for (const c of CEN) {
+    add({ t: 'contact', m: 'as', title: `${c.t} (물류센터)`, sub: `${c.n} · ${c.a}`,
+      kw: [c.t, c.code, c.n, c.b, c.a, ...c.kw, '물류센터 배송 설치 관할 tc'].join(' '), href: '/as' });
+  }
+  for (const c of B2B) {
+    add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (빌트인 이전설치)`, sub: `${c.n} · ${c.a}`,
+      kw: [c.p, c.c, c.code, c.n, c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });
+  }
+  for (const s of SINK) {
+    add({ t: 'contact', m: 'as', title: `${s.p} (싱크장 리폼)`, sub: `${s.n} · ${s.a}`,
+      kw: [s.p, s.n, s.n2 || '', s.a, '싱크대 싱크장 리폼 식기세척기 식세기 빌트인 이전설치'].join(' '),
+      href: '/as' });
+  }
+  for (const x of NAT) {
+    add({ t: 'contact', m: 'as', title: `${x.t} — ${x.p}`, sub: `${x.n} · ${x.d}`,
+      kw: [x.p, x.t, x.n, x.d, '이전설치 전국 담당'].join(' '), href: '/as' });
+  }
+}
+
+// ── 6. 배치 시뮬레이터: 사이즈별 대표 규격 ──
+// "냉장고 4도어가 몇 mm 죠"가 검색으로 바로 나와야 한다. 숨김 항목(`hidden`)은 넣지 않는다 —
+// 목록·추천·대안이 같은 목록을 봐야 한다는 규칙과 같다(CLAUDE.md 공기청정기 벽걸이 건).
+{
+  const reps = JSON.parse(fs.readFileSync(pub('size-reps.json'), 'utf8'));
+  for (const r of reps) {
+    if (r.hidden) continue;
+    const p = (r.parts || [])[0];
+    add({ t: 'size', m: 'place', title: `${r.cat} ${r.size}`,
+      sub: p ? `${p.raw} (${p.label})` : r.sizeLabel || '',
+      kw: [r.cat, r.size, r.group, r.sizeLabel, r.note, '배치 시뮬레이터 치수 규격 사이즈 이격',
+        ...flatten(r.specs), ...flatten((r.parts || []).map((x) => [x.part, x.raw]))].join(' '),
+      href: '/place' });
   }
 }
 
@@ -162,7 +254,7 @@ for (const mod of MODULES) {
 // 검색은 질의를 공백으로 쪼갠 뒤 kw.includes(토큰)로 판정하므로 토큰이 한 번씩만 남아도
 // 결과가 동일하고, 인덱스는 90KB 가까이 줄어든다.
 for (const e of entries) {
-  e.kw = [...new Set(e.kw.toLowerCase().split(/\s+/).filter(Boolean))].join(' ');
+  e.kw = [...new Set(normalize(e.kw).split(/\s+/).filter(Boolean))].join(' ');
 }
 
 // ── 인덱스를 "검색용 경량본"과 "상세 스펙"으로 분리해 내보낸다 ──

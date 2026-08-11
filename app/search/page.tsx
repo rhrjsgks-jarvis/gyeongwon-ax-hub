@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { logEvent } from '@/lib/logEvent'
+import { parseQuery, hits, type Condition } from '@/lib/searchTerms'
 
 // 인덱스는 두 파일로 나뉜다(scripts/build-search-index.mjs 참고).
 //  - search-index.json  : 검색에 필요한 필드만 담은 경량본. 첫 진입에 받는다.
@@ -33,19 +34,16 @@ type Detail = {
 }
 
 const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
-  finder:  { label: '모델파인더',       icon: '🔍', color: '#1428A0' },
+  finder:  { label: '제품 · 모델',       icon: '🔍', color: '#1428A0' },
   install: { label: '설치환경 가이드',   icon: '🛠️', color: '#B45309' },
   compare: { label: '타사비교',         icon: '🔗', color: '#EA580C' },
   care:    { label: 'AI구독 케어',         icon: '💚', color: '#059669' },
+  as:      { label: 'AS 관련 업무',      icon: '🛡️', color: '#0D9488' },
+  place:   { label: '배치 시뮬레이터',   icon: '📐', color: '#7C3AED' },
   hub:     { label: '허브 기능',        icon: '🏠', color: '#475569' },
 }
-const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'care']
+const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'as', 'place', 'care']
 const MAX_PER_MODULE = 12
-
-// 공백으로 나눈 모든 토큰을 포함해야 매칭(AND) — "무풍 에어컨"처럼 조합 검색이 되게 한다.
-function match(e: Entry, tokens: string[]) {
-  return tokens.every((t) => e.kw.includes(t))
-}
 
 // 검색 결과에서 바로 펼쳐보는 상세 스펙 — 카탈로그 PDF를 열지 않고 확인하기 위한 화면
 function SpecDetail({ e, detail }: { e: Entry; detail: Detail | null }) {
@@ -127,7 +125,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
       <div className="px-3 pb-3">
         <Link href={e.href} className="no-underline">
           <span className="inline-block text-[12px] font-semibold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1428A0' }}>
-            모델파인더에서 열기 →
+            제품 상세검색에서 열기 →
           </span>
         </Link>
       </div>
@@ -172,16 +170,38 @@ function SearchResults() {
 
   useEffect(() => { if (q) logEvent('hub', 'search', q) }, [q])
 
-  const grouped = useMemo(() => {
+  /*
+   * 조건은 **AND** 로 걸린다 — 세 가지를 물으면 세 가지가 모두 맞는 것만 남는다.
+   * 조건 하나 안에서는 표기가 여러 개라 그중 하나만 맞으면 된다(용어 세분화, lib/searchTerms.ts).
+   *
+   * 그리고 **어느 조건이 몇 건을 걸렀는지 함께 낸다.** 결과가 0건일 때 "없습니다" 한 줄만
+   * 띄우면 상담사는 세 조건 중 무엇이 문제인지 알 수가 없어 통째로 다시 친다. 조건별 건수가
+   * 보이면 "1등급이 0건이구나" 하고 그 하나만 빼면 된다.
+   */
+  const found = useMemo(() => {
     if (!index) return null
-    const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
-    if (!tokens.length) return []
-    const hits = index.filter((e) => match(e, tokens))
-    return MODULE_ORDER
-      .map((m) => ({ m, items: hits.filter((e) => e.m === m) }))
+    const conds = parseQuery(q)
+    if (!conds.length) return { conds, groups: [], per: [], best: null as null | { drop: string; n: number } }
+
+    const per = conds.map((c) => ({ c, n: index.filter((e) => hits(e.kw, c)).length }))
+    const all = index.filter((e) => conds.every((c) => hits(e.kw, c)))
+
+    // 다 걸었더니 0건이면, 조건 하나를 빼면 몇 건이 되는지 미리 세어 둔다
+    let best: null | { drop: string; n: number } = null
+    if (!all.length && conds.length > 1) {
+      for (const c of conds) {
+        const rest = conds.filter((x) => x !== c)
+        const n = index.filter((e) => rest.every((r) => hits(e.kw, r))).length
+        if (n > 0 && (!best || n > best.n)) best = { drop: c.raw, n }
+      }
+    }
+    const groups = MODULE_ORDER
+      .map((m) => ({ m, items: all.filter((e) => e.m === m) }))
       .filter((g) => g.items.length > 0)
+    return { conds, groups, per, best }
   }, [index, q])
 
+  const grouped = found ? found.groups : null
   const total = grouped ? grouped.reduce((s, g) => s + g.items.length, 0) : 0
 
   function submit(e: React.FormEvent) {
@@ -198,11 +218,11 @@ function SearchResults() {
         <span className="text-gray-600">통합검색</span>
       </div>
 
-      <form onSubmit={submit} className="flex gap-2 mb-5">
+      <form onSubmit={submit} className="flex gap-2 mb-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="예: 무풍 / 김치냉장고 / RM90H91B1W / 설치"
+          placeholder="예: 무풍 에어컨 1등급 / 식세기 이전설치 / 냉장고 키친핏"
           autoFocus
           className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
         />
@@ -214,6 +234,26 @@ function SearchResults() {
           검색
         </button>
       </form>
+      <p className="text-[11px] text-gray-400 mb-5 px-1">
+        조건을 <b className="text-gray-500">띄어쓰기로 여러 개</b> 넣으면 모두 맞는 것만 남습니다. 줄여 쓴 말도 알아듣습니다(식세기·김냉·로청·안방).
+      </p>
+
+      {/* 조건별로 몇 건이 걸렸는지 — 세 가지를 물었을 때 셋 다 인식됐는지 눈으로 확인된다 */}
+      {q && found && found.conds.length > 1 && (
+        <div className="flex flex-wrap gap-1.5 mb-3">
+          {found.per.map((p) => (
+            <span
+              key={p.c.raw}
+              className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
+                p.n ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-red-50 border-red-200 text-red-600'
+              }`}
+            >
+              {p.c.raw} {p.n ? `${p.n}건` : '0건'}
+            </span>
+          ))}
+          <span className="text-[11px] text-gray-400 px-1 py-1">→ 모두 만족 <b className="text-gray-700">{total}건</b></span>
+        </div>
+      )}
 
       {!q ? (
         <p className="text-sm text-gray-400 text-center py-10">검색어를 입력해주세요.</p>
@@ -222,7 +262,27 @@ function SearchResults() {
       ) : total === 0 ? (
         <div className="text-center py-10">
           <p className="text-sm text-gray-500 mb-1">&ldquo;{q}&rdquo; 검색 결과가 없습니다.</p>
-          <p className="text-xs text-gray-400">제품명·모델코드·카테고리·기능명으로 검색해보세요.</p>
+          {found && found.per.some((p) => !p.n) ? (
+            <p className="text-xs text-gray-400">
+              앱 안에 없는 말입니다 —{' '}
+              <b className="text-red-500">{found.per.filter((p) => !p.n).map((p) => p.c.raw).join(' · ')}</b>
+            </p>
+          ) : found && found.best ? (
+            <p className="text-xs text-gray-400">
+              조건은 따로따로는 다 있는데 <b>함께 맞는 자료</b>가 없습니다.{' '}
+              <button
+                type="button"
+                className="underline font-semibold"
+                style={{ color: '#1428A0' }}
+                onClick={() => router.push(`/search?q=${encodeURIComponent(
+                  found.conds.filter((c) => c.raw !== found.best!.drop).map((c) => c.raw).join(' '))}`)}
+              >
+                &lsquo;{found.best.drop}&rsquo; 빼고 다시 찾기 ({found.best.n}건)
+              </button>
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400">제품명·모델코드·카테고리·기능명으로 검색해보세요.</p>
+          )}
         </div>
       ) : (
         <>
