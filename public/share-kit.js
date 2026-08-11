@@ -278,25 +278,61 @@
     toast('이미지를 저장했습니다');
   }
 
-  /** 화면 오른쪽 아래에 공유 버튼을 띄운다. build() 는 shareCard 옵션을 돌려준다. */
+  /*
+   * 화면 **오른쪽 위**에 공유 버튼을 띄운다.
+   *
+   * 예전에는 오른쪽 아래였는데 **개발자 문의 버튼(💬)과 겹쳤다**(사용자 지적).
+   * 그 버튼은 끌어서 옮길 수 있지만 기본 자리가 오른쪽 아래라, 둘을 같은 구석에
+   * 두면 어느 앱에서든 부딪힌다.
+   *
+   * 위쪽에는 앱마다 높이가 다른 고정바가 있다(탭·상단바). 하나로 못박으면 어떤 앱에서는
+   * 바를 덮고 어떤 앱에서는 붕 뜬다. 그래서 **고정바가 멈추는 자리를 재서 그 아래**에 둔다 —
+   * sticky 는 스크롤하면 `top` 에 멈추므로 현재 위치가 아니라 `top + 높이`가 기준이다.
+   */
+  function stickyBottom() {
+    /*
+     * **머리 전체(고정이든 아니든) 아래**로 내린다.
+     * 처음엔 sticky 가 멈추는 자리(top+높이)만 봤는데, 그건 스크롤한 뒤의 위치라
+     * **화면 맨 위에서는 탭을 덮었다**(실측: AS 에서 버튼 62px, 탭은 68~122px).
+     * 머리는 스크롤하면 올라가 사라지므로, 맨 아래 기준으로 잡아도 스크롤 후에
+     * 겹칠 일이 없다 — 두 상태 모두 안전한 쪽을 고른다.
+     */
+    var y = 0;
+    var list = document.querySelectorAll('.topbar, .hd, header, .mode-tabs');
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i].getBoundingClientRect();
+      if (r.height === 0) continue;
+      y = Math.max(y, r.bottom);
+    }
+    return Math.min(Math.max(Math.round(y), 0), 200);
+  }
+
+  /** build() 는 shareCard 옵션을 돌려준다. */
   function mountShareButton(build, label) {
     injectCss();
     if (document.getElementById('sk-share')) return;
     var st = document.createElement('style');
-    st.textContent = '#sk-share{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));'
-      + 'z-index:8000;background:#1428A0;color:#fff;border:0;border-radius:99px;padding:11px 17px;'
-      + 'font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;'
-      + 'box-shadow:0 4px 14px rgba(20,40,160,.32)}#sk-share:active{opacity:.85}';
+    /*
+     * 흰 바탕에 남색 글씨다. 남색 고정바 위에 놓일 때도, 밝은 본문 위에 놓일 때도
+     * 읽힌다 — 남색 버튼이면 남색 바 위에서 사라진다(AS 타일에서 겪은 것과 같다).
+     */
+    st.textContent = '#sk-share{position:fixed;right:12px;z-index:8000;background:#fff;color:#1428A0;'
+      + 'border:1.5px solid #1428A0;border-radius:99px;padding:8px 15px;font-size:13px;font-weight:800;'
+      + 'font-family:inherit;cursor:pointer;box-shadow:0 2px 10px rgba(14,28,48,.16)}'
+      + '#sk-share:active{background:#EEF2FF}';
     document.head.appendChild(st);
     var b = document.createElement('button');
     b.id = 'sk-share'; b.type = 'button';
-    b.textContent = label || '고객에게 공유';
+    b.textContent = label || '공유';
+    b.style.top = (stickyBottom() + 8) + 'px';
     b.addEventListener('click', function () {
       var o = build();
       if (!o) { toast('공유할 내용이 없습니다'); return; }
       shareCard(o);
     });
     document.body.appendChild(b);
+    /* 화면을 돌리면 바 높이가 달라진다 */
+    window.addEventListener('resize', function () { b.style.top = (stickyBottom() + 8) + 'px'; });
   }
 
   global.SHARE_KIT = {
