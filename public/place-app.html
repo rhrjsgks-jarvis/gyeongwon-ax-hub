@@ -991,6 +991,54 @@ function buildMask(){
   return { w, h, S, dark, thr };
 }
 
+/*
+ * **이 그림의 선이 가로·세로에 몰려 있는가**를 0~1 로 잰다.
+ *
+ * 벽 인식 전체가 "벽은 가로·세로로 곧은 띠"라는 전제 위에 서 있다(CLAUDE.md 의 Heras/Lv).
+ * 그 전제가 깨진 그림을 넣으면 글씨·범례가 벽이 되어 **얇은 띠 같은 방**이 나오는데,
+ * 예전에는 그 사실이 화면에 한 마디도 안 나왔다. 상담사는 왜 이상한지 알 길이 없다.
+ *
+ * 재는 법 — 기울기(Sobel) 방향 히스토그램에서 0°·90° 둘레(±7.5°)가 차지하는 비율.
+ * 각도를 미리 정하지 않으므로 30° 든 45° 든 걸린다.
+ *
+ * 색인 617장 실측: 중앙값 0.72 · 사분위 0.63~0.76 · 최대 0.86.
+ * 낮은 쪽을 눈으로 확인한 결과 — 0.05·0.10 입체 렌더링 / 0.31 품목표 지면 /
+ * 0.35 제목 띠. 반대로 **0.42 는 위가 입체, 아래가 평면인 도면**이라 쓸 수 있었다.
+ * 그래서 경고선은 **0.35** 로 둔다. 틀리는 방향이 안전하다 — 높이면 멀쩡한 도면에
+ * 경고가 붙고, 낮추면 조용해질 뿐 인식은 예전과 똑같이 동작한다.
+ *
+ * 축소는 **여기서 따로 한다.** DETECT_MAX(1,200)로 재면 같은 선이 다른 굵기로 잡혀
+ * 위 실측 기준이 안 맞는다. 420px 은 그 실측과 같은 크기다.
+ */
+const AXIS_S = 420, AXIS_MIN = 0.35;
+function axisConcentration(){
+  if (!state.img) return null;
+  const k = AXIS_S / Math.max(state.imgW, state.imgH);
+  const w = Math.max(8, Math.round(state.imgW * Math.min(1, k)));
+  const h = Math.max(8, Math.round(state.imgH * Math.min(1, k)));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h);
+  cx.drawImage(state.img, 0, 0, w, h);
+  const d = cx.getImageData(0, 0, w, h).data;
+  const g = new Float32Array(w * h);
+  for (let i = 0, p = 0; p < g.length; i += 4, p++) g[p] = (0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2]) / 255;
+  const bins = new Float64Array(36);                     // 5° 씩, 선은 방향성이 없어 180° 주기
+  let total = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++){
+    const o = y*w + x;
+    const gx = (g[o-w+1] + 2*g[o+1] + g[o+w+1]) - (g[o-w-1] + 2*g[o-1] + g[o+w-1]);
+    const gy = (g[o+w-1] + 2*g[o+w] + g[o+w+1]) - (g[o-w-1] + 2*g[o-w] + g[o-w+1]);
+    const m = Math.hypot(gx, gy);
+    if (m < 0.35) continue;                              // 사진 노이즈·그러데이션은 버린다
+    const a = ((Math.atan2(gy, gx) * 180 / Math.PI % 180) + 180) % 180;
+    bins[Math.min(35, Math.floor(a / 5))] += m;
+    total += m;
+  }
+  if (!total) return null;
+  return [35, 0, 1, 16, 17, 18].reduce((s, i) => s + bins[i], 0) / total;
+}
+
 /* ── 도면 정리 ────────────────────────────────────────────────────
    실제 분양 도면에는 벽 말고도 가구 그림·치수 글씨·해칭이 잔뜩 있고, 무엇보다
    **문 자리가 뚫려 있다**. 그대로 채우면 방 → 복도 → 도면 바깥으로 새어 나가
@@ -1296,7 +1344,23 @@ function lineMorph(src, w, h, r, mode, vert){
  * 대각선 벽은 이 기준에서 빠진다. 그래서 **이 연산으로 절반 넘게 사라지면 쓰지 않는다** —
  * 직각이 아닌 도면에서 벽을 통째로 잃는 것보다 가구가 좀 섞이는 편이 낫다.
  */
+/*
+ * 띠 추출을 포기했는지 기록해 둔다.
+ *
+ * 왜 필요한가: 아래 마지막 줄에서 절반 넘게 사라지면 원본을 그대로 돌려주는데(대각선 벽),
+ * 그 순간 이 도면은 **"가로·세로 띠"라는 벽의 정의가 통하지 않는 그림**이라는 뜻이다.
+ * 실제 색인 617장을 재 보니 기울기가 0°·90° 에 몰리지 않는 이미지가 상당수 있었고
+ * (입체 렌더링 · 인테리어 사진 · 면적표 지면), 그런 도면에서는 글씨·범례가 벽으로 잡혀
+ * **얇은 띠 같은 방**이 나온다. 실제로 원주무실 85 를 3D 로 세워 보니 방 4곳이 전부
+ * 그런 띠였고 Key Map 이 바닥에 깔렸다.
+ *
+ * 예전에는 이 포기가 조용해서 화면에 결과만 나갔다 — 상담사는 왜 이상한지 알 길이 없다.
+ * **이미지를 거부하지는 않는다**(왼쪽 입체 + 오른쪽 평면이 한 장에 있는 도면이 실제로 있다).
+ * 근거를 있는 그대로 알리고 고칠 길을 안내하는 것까지가 이 플래그의 몫이다.
+ */
+let bandsBailed = false;
 function keepBands(dark, w, h, r, thickR){
+  bandsBailed = false;
   if (r <= 0) return dark;
   const hor = lineMorph(lineMorph(dark, w, h, r, 'min', false), w, h, r, 'max', false);
   const ver = lineMorph(lineMorph(dark, w, h, r, 'min', true),  w, h, r, 'max', true);
@@ -1327,7 +1391,8 @@ function keepBands(dark, w, h, r, thickR){
     out[p] = (band[p] && !(blob && blob[p] && main && !main(p))) ? 1 : 0;
     if (out[p]) after++;
   }
-  return (before && after < before * 0.45) ? dark : out;
+  bandsBailed = !!(before && after < before * 0.45);
+  return bandsBailed ? dark : out;
 }
 
 /**
@@ -1522,7 +1587,15 @@ function ensureBase(){
   // 건물 안쪽 — 창의 유리선이 살아 있는 **원본** 마스크로 잡는다. 근거를 못 찾으면 null.
   const bboxArea = (bbox.x1 - bbox.x0 + 1) * (bbox.y1 - bbox.y0 + 1);
   const env = envelopeMask(mask.dark, mask.w, mask.h, bboxArea * 0.15);
-  state.baseInfo = { openR: usedOpen, bbox, thr: mask.thr, env: !!env };
+  /* bands=false 는 "가로·세로 띠로는 벽을 못 찾았다"(대각선·사진·표 지면),
+     outline=true 는 "벽을 칠하지 않고 윤곽선만 그린 도면이라 열기를 건너뛰었다".
+     둘 다 결과를 못 믿을 신호이므로 화면이 그대로 밝힌다(renderReport). */
+  const axis = axisConcentration();
+  state.baseInfo = { openR: usedOpen, bbox, thr: mask.thr, env: !!env, axis,
+                     bands: !bandsBailed, outline: usedOpen === 0 && openR > 0,
+                     /* 두 신호는 **서로 다른 실패**를 잡는다 — 기울기는 입체 렌더링·글자 지면을,
+                        띠 포기는 벽이 아예 없는 사진 몽타주를 잡는다. 그래서 합집합으로 본다. */
+                     tilted: (axis !== null && axis < AXIS_MIN) || bandsBailed };
   return (state.baseMask = { w:mask.w, h:mask.h, S:mask.S, dark:m, bbox, env });
 }
 
@@ -2904,6 +2977,9 @@ function renderMini(){
   if (who) bits.push(`<b>${esc(state.complexName ? state.complexName + ' ' + (state.typeName||'') : who)}</b>`);
   bits.push(state.scaled ? '축척 확정' : '<span class="warn">축척 미확정</span>');
   if (state.rooms.length) bits.push(`공간 ${state.rooms.length}곳${area ? ` · ${area.toFixed(0)}㎡` : ''}`);
+  /* 좁은 화면에서는 오른쪽 패널이 안 보이므로 이 띠가 유일한 알림 자리다(CLAUDE.md) */
+  if (state.baseInfo && state.baseInfo.tilted)
+    bits.push('<span class="warn">벽이 비스듬한 이미지 — 인식 결과 확인</span>');
   bits.push(`가전 ${state.items.length}대${staged ? ` (대기 ${staged})` : ''}`);
   bits.push(bad ? `<span class="warn">확인 필요 ${bad}건</span>`
     : (state.items.length ? '<span class="ok">문제 없음</span>' : ''));
@@ -2974,8 +3050,21 @@ function renderSide(){
         + (opensN?` · 개구부 ${opensN}곳`:'')
         + (whole?` — <b>${esc(whole.name)}가 세대 전체(전용 ${state.exclusiveM2}㎡) 크기입니다. 방이 나뉘지 않았을 수 있어요 — '더 좁게'로 다시 인식해 보세요</b>`:''))
     : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가'));
+  /*
+   * **인식이 스스로 포기한 것을 숨기지 않는다.**
+   * 이미지를 거부하지는 않는다 — 왼쪽은 입체, 오른쪽은 평면인 도면이 실제로 있고
+   * 그런 도면은 오른쪽만 보면 멀쩡히 인식된다. 다만 결과가 이상할 때 **왜 그런지**와
+   * **무엇을 하면 되는지**가 화면에 있어야 상담이 거기서 막히지 않는다.
+   */
+  const bi = state.baseInfo;
+  const drawLine = !bi ? null
+    : (bi.tilted
+        ? row('warn', '이 이미지는 벽이 가로·세로로 곧지 않습니다(입체 렌더링·사진·표 지면일 수 있어요) — '
+            + '<b>인식 결과를 그대로 믿지 마세요.</b> 2D 평면도 부분만 잘라 올리거나 <b>경계 수정</b>으로 고쳐 주세요')
+        : (bi.outline ? row('warn', '벽을 칠하지 않고 선으로만 그린 도면이라 가구·글씨가 함께 남습니다 — 경계 수정으로 다듬어 주세요') : null));
   $('#report').innerHTML = [
     row(state.scaled?'ok':'warn', state.mmPerPx ? `축척 확정 (도면 1px = ${state.mmPerPx.toFixed(2)}mm)` : (state.scaled ? '축척 확정 (벽 실제 길이 입력 기준)' : '축척 미확정 — 벽을 그리고 실제 길이를 입력하세요')),
+    ...(drawLine ? [drawLine] : []),
     roomLine,
     row(bad?'bad':'ok', bad ? `문제 ${bad}건` : `배치 ${state.items.length}건 · 문제 없음`),
     ...(soft ? [row('warn', `도어 오픈 등 확인 필요 ${soft}건 — 주황 점선 구역`)] : []),
@@ -4872,7 +4961,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, hitsOther, toast,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
-  boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
+  boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, draftPieces, draftTotalM2, applyDetected,
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, loadPlanIndex, useImage,

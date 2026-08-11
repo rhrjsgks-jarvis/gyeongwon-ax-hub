@@ -1766,6 +1766,61 @@ const knownGaps = [];
   }
 }
 
+/*
+ * ── 도면이 아닌 이미지를 화면이 알리는가 ────────────────────────────
+ *
+ * 색인 617장에는 2D 평면도만 있지 않다. 입체 렌더링·인테리어 사진·품목표·제목 띠가
+ * "평면도"로 분류돼 함께 들어와 있다(실측: 기울기 0.35 미만 46장). 벽 인식 전체가
+ * "벽은 가로·세로로 곧은 띠"라는 전제 위에 서 있어 그런 이미지에서는 글씨·범례가
+ * 벽이 되고 **얇은 띠 같은 방**이 나오는데, 예전에는 화면이 한 마디도 안 했다.
+ *
+ * 이미지를 거부하지는 않는다 — 위가 입체, 아래가 평면인 도면이 실제로 있고 아래만
+ * 보면 멀쩡히 인식된다. **경고를 붙일 뿐이고, 멀쩡한 도면에 붙으면 그게 실패다.**
+ */
+{
+  const CASES = [
+    ['입체 렌더링',   'plans/c09/85.jpg',     true],
+    ['입체 렌더링',   'plans/c114/T2.jpg',    true],
+    ['인테리어 사진', 'plans/c133/T2.jpg',    true],
+    ['품목표 지면',   'plans/c26/T9.jpg',     true],
+    ['제목 띠',       'plans/c123/100-2.jpg', true],
+    ['2D 평면도',     'plans/c39/117B.jpg',   false],
+    ['2D 평면도',     'plans/c86/85A.jpg',    false],
+    ['2D 평면도',     'plans/c26/T1.jpg',     false],
+    ['2D 평면도',     'plans/c85/23.jpg',     false],
+    /* 위가 입체·아래가 평면인 한 장. 아래쪽만 보면 쓸 수 있으므로 **경고가 붙으면 안 된다** */
+    ['입체+평면 한 장', 'plans/c72/59.jpg',   false],
+  ];
+  const got = [];
+  for (const [kind, file, want] of CASES){
+    const r = await page.evaluate(async (f) => {
+      const P = window.__place;
+      const img = new Image();
+      await new Promise((ok2, no) => { img.onload = ok2; img.onerror = no; img.src = '/' + f; });
+      P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+      P.state.mmPerPx = null; P.state.scaled = false;
+      P.state.rooms = []; P.state.items = []; P.state.walls = [];
+      P.state.mask = P.state.baseMask = P.state.baseInfo = null;
+      P.state.cleanCv = P.state.cleanInfo = null; P.state.sealCache = null;
+      P.ensureClean();
+      const bi = P.state.baseInfo || {};
+      return { tilted: !!bi.tilted, axis: bi.axis };
+    }, file);
+    got.push({ kind, file, want, ...r });
+  }
+  const wrong = got.filter((g) => g.tilted !== g.want);
+  const falsePos = wrong.filter((g) => g.tilted);      // 멀쩡한 도면에 경고가 붙은 것 — 제일 나쁘다
+  if (falsePos.length)
+    fail(`도면 판별: 쓸 수 있는 도면에 경고가 붙었다 — ${falsePos.map((g) => `${g.file}(기울기 ${g.axis.toFixed(2)})`).join(', ')}`);
+  else if (wrong.length)
+    fail(`도면 판별: 도면이 아닌데 경고가 안 붙었다 — ${wrong.map((g) => `${g.file}(기울기 ${g.axis.toFixed(2)})`).join(', ')}`);
+  else {
+    const lo = Math.min(...got.filter((g) => !g.want).map((g) => g.axis));
+    const hi = Math.max(...got.filter((g) => g.want).map((g) => g.axis));
+    pass(`도면 아님 알림 — ${CASES.length}장 전부 기대대로 (도면 최저 기울기 ${lo.toFixed(2)} > 경고선 0.35, 비도면 최고 ${hi.toFixed(2)}는 띠 포기로 잡힘)`);
+  }
+}
+
 /* 알려진 미해결은 **조용히 넘기지 않는다** — 몇 건인지 늘 보이게 적는다.
    실패로 세지 않을 뿐이고, 숨기는 것과는 다르다. */
 if (knownGaps.length){
