@@ -394,6 +394,41 @@ const CAT_QUERIES = {
     const mix = models('드럼세탁기 건조기');
     if (!mix.some((p) => p.cat === '건조기')) fail('"드럼세탁기 건조기"에서 건조기가 통째로 사라졌다 — 형태 필터가 남의 카테고리까지 걸렸다');
     if (mix.some((p) => p.cat === '세탁기·콤보' && !/^W[FWH]/i.test(p.model))) fail('"드럼세탁기"에 드럼이 아닌 세탁기가 섞였다');
+
+    /*
+     * **띄어 써도 · 조사를 붙여도 같은 형태여야 한다**(2026-08-11 배포본에서 발견).
+     * 예전에는 SUBCAT 을 토큰 하나에 그대로 대조해서, 붙여 쓴 것만 걸렸다:
+     *   "드럼세탁기" 17종 ↔ **"드럼 세탁기" 38종**(콤보 11 · 설치키트 8 · 통돌이 2 가 섞였다)
+     *   "무선청소기" 9종 ↔ **"무선 청소기" 10종**(로봇청소기가 섞였다)
+     * '통돌이'는 조사 제거가 '이'를 떼어 **'통돌'** 이 되는 바람에 표에 없는 말이 됐다.
+     */
+    const forms = [
+      ['로봇청소기', '로봇 청소기', /^VR/i],
+      ['무선청소기', '무선 청소기', /^VS/i],
+      ['유선청소기', '유선 청소기', /^VC/i],
+      ['드럼세탁기', '드럼 세탁기', /^W[FWH]/i],
+      ['통돌이세탁기', '통돌이 세탁기', /^WA/i],
+      ['통버블세탁기', '통버블 세탁기', /^WA/i],
+    ];
+    for (const [joined, spaced, re] of forms) {
+      const a = models(joined), b = models(spaced);
+      if (!a.length) fail(`"${joined}" 0건`);
+      if (a.length !== b.length) fail(`"${joined}"(${a.length}) 와 "${spaced}"(${b.length}) 결과가 다르다 — 띄어쓰기로 형태 필터가 새어 나간다`);
+      const leak = b.filter((p) => !re.test(p.model));
+      if (leak.length) fail(`"${spaced}"에 다른 형태가 섞였다: ${leak.slice(0, 4).map((p) => p.model).join(', ')}`);
+    }
+    console.log(`  띄어 쓴 형태 ${forms.length}가지 — 붙여 쓴 것과 같은 결과 ✓`);
+
+    // 조사가 붙어도 같아야 한다 ('통돌이 세탁기를' 이 '통돌' 로 잘려 조건에서 빠졌다)
+    for (const [q, re] of [['통돌이 세탁기를', /^WA/i], ['로봇청소기를', /^VR/i]]) {
+      const r = models(q);
+      if (!r.length) fail(`"${q}" 0건 — 조사 때문에 형태가 사라졌다`);
+      if (r.some((p) => !re.test(p.model))) fail(`"${q}"에 다른 형태가 섞였다`);
+    }
+
+    // 형태를 안 밝힌 말까지 좁히면 안 된다 — 오탐 회귀 검사
+    const noForm = models('무선 이어폰');
+    if (noForm.some((p) => p.cat === '청소기')) fail('"무선 이어폰"이 청소기 형태 필터에 걸렸다');
   }
 
   /* ═══ 12. 복합 조건 — 조건은 AND, DB 에 없는 말은 뺀다 ═══ */

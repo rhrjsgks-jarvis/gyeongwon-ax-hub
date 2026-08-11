@@ -569,6 +569,7 @@ const SUBCAT = {
   "드럼세탁기":{cat:"세탁기·콤보",re:/^W[FWH]/i,label:"드럼세탁기"},
   "통돌이세탁기":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"},
   "통돌이":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"},
+  "통버블세탁기":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"},
   "통버블":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"}
 };
 
@@ -635,28 +636,50 @@ function parseQuery(raw){
   }
 
   // 토큰화 + 복합어 분해 + 사전 매핑
-  const rawToks = q.split(/\s+/).filter(t=>t.length>=2 || /^[a-z0-9]+$/.test(t) && t.length>=1);
+  /* 앞뒤 문장부호를 뗀다 — "냉장고?" 가 0종이었다. 사람은 물음표를 붙여 묻는다.
+     가운데 기호는 두어야 `2026.03.19`·`w×h×d` 가 조각나지 않는다. */
+  const rawToks = q.split(/\s+/).filter(t=>t.length>=2 || /^[a-z0-9]+$/.test(t) && t.length>=1)
+    .map(t => t.replace(/^[?!.,;:~"'`()[\]{}<>]+|[?!.,;:~"'`()[\]{}<>]+$/g,"") || t)
+    .filter(Boolean);
+  const JOSA = /(으로|로|은|는|이|가|을|를|에서|에|도|만|랑|이랑|와|과|좀|요|의|에게|한테|부터|까지)$/;
   const seen = new Set();
-  for(let t of rawToks){
-    /* 앞뒤 문장부호를 뗀다 — "냉장고?" 가 0종이었다. 사람은 물음표를 붙여 묻는다.
-       가운데 기호는 두어야 `2026.03.19`·`w×h×d` 가 조각나지 않는다. */
-    t = t.replace(/^[?!.,;:~"'`()[\]{}<>]+|[?!.,;:~"'`()[\]{}<>]+$/g,"") || t;
-    if(!t) continue;
-    t = t.replace(/(으로|로|은|는|이|가|을|를|에서|에|도|만|랑|이랑|와|과|좀|요|의|에게|한테|부터|까지)$/,"") || t;
-    if(t.length<2 && !/^[a-z0-9]{2,}$/.test(t)) continue;
-    if(seen.has(t)) continue; seen.add(t);
-    if(UNSUPPORTED[t]){ P.unsupported.push(UNSUPPORTED[t]); continue; }
+  for(let i=0;i<rawToks.length;i++){
+    const t0 = rawToks[i];
     /*
      * 형태부터 본다 — decompound 보다 먼저다. '로봇청소기'가 DECOMP 에서 ['로봇','청소기']로
      * 쪼개지면 그 뒤로는 그냥 청소기 전체가 되어 형태를 되살릴 방법이 없다.
+     *
+     * **띄어 쓴 것과 조사 붙은 것까지 함께 본다**(2026-08-11). 예전에는 토큰 하나를
+     * 표에 그대로 대조해서 두 가지로 새어 나갔다:
+     *   ① *"드럼 세탁기"* 처럼 띄어 쓰면 안 맞아 **콤보 11 · 설치키트 8 · 통돌이 2 가
+     *      섞인 38종**이 나왔다(붙여 쓴 "드럼세탁기"는 17종). *"무선 청소기"* 에는
+     *      로봇청소기가 섞였다.
+     *   ② '통돌이' 는 조사 제거가 '이'를 떼어 **'통돌'** 이 되어 표에 없는 말이 됐고,
+     *      그대로 "없는 말이라 뺐습니다"로 조건에서 빠졌다.
+     * 그래서 **다음 토큰까지 이어 붙인 것 · 조사를 뗀 것**을 후보로 함께 대조하고,
+     * 이어 붙인 쪽이 맞으면 두 토큰을 함께 소비한다.
      */
-    if(SUBCAT[t]){
-      const s = SUBCAT[t];
+    const nx  = rawToks[i+1] || "";
+    const nxs = nx ? (nx.replace(JOSA,"") || nx) : "";
+    const t0s = t0.replace(JOSA,"") || t0;
+    let hit = null;
+    for(const [k, skip] of [[nx?t0+nxs:"",1],[nx?t0s+nxs:"",1],[t0,0],[t0s,0]]){
+      if(k && SUBCAT[k]){ hit = {k, skip}; break; }
+    }
+    if(hit){
+      const s = SUBCAT[hit.k];
       if(!P.cats.includes(s.cat)) P.cats.push(s.cat);
       if(!P.subs.some(x=>x.label===s.label && x.cat===s.cat)) P.subs.push(s);
-      P.tags.push("형태: "+s.label);
-      P.tokens.push(t); continue;
+      if(!P.tags.includes("형태: "+s.label)) P.tags.push("형태: "+s.label);
+      P.tokens.push(hit.k);
+      seen.add(hit.k);
+      i += hit.skip;
+      continue;
     }
+    let t = t0.replace(JOSA,"") || t0;
+    if(t.length<2 && !/^[a-z0-9]{2,}$/.test(t)) continue;
+    if(seen.has(t)) continue; seen.add(t);
+    if(UNSUPPORTED[t]){ P.unsupported.push(UNSUPPORTED[t]); continue; }
     const decomped = decompound(t);
     if(decomped){
       for(const e of decomped){
