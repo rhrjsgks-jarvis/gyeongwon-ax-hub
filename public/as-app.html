@@ -56,6 +56,19 @@
   .ct-b b{font-size:12.5px;font-weight:700}
   .ct-d{font-size:11px;color:#6b7280;margin-top:1px}
   .ct-n{flex:0 0 auto;font-size:13px;font-weight:800;color:#1428A0;letter-spacing:-.01em}
+  /* 번호 하나 = 누를 수 있는 조각. 한 줄에 번호가 여럿인 곳(상황실·운영·VOC·물류)에서
+     대표번호 하나만 눌리던 것을 고쳤다 — 걸 수 없는 번호를 적어 두면 받아적게 된다 */
+  button.telx{border:0;background:transparent;padding:1px 5px;margin:0 -5px;border-radius:6px;
+    font-family:inherit;font-size:11.5px;font-weight:800;color:#1428A0;letter-spacing:-.01em;
+    cursor:pointer;text-align:left;white-space:nowrap}
+  button.telx:active{background:#EEF2FF}
+  button.telx.big{font-size:13px}
+  /* 라벨 칸을 고정해 번호를 세로로 세운다 — ' · ' 로 이어 붙이면 좁은 화면에서
+     아무 데서나 줄이 바뀌어 어느 번호가 무엇인지 알 수 없다(사용자 지적) */
+  .opsrow{display:flex;gap:6px;align-items:flex-start;margin-top:2px}
+  .opsl{flex:0 0 42px;font-size:10.5px;font-weight:700;color:#9aa0a6;line-height:1.75;padding-top:1px}
+  .opsv{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+  .opsv .nm{font-size:11px;color:#374151;font-weight:700;line-height:1.75}
   /* 물류센터는 관할 지역이 길어 여러 줄이 된다 — 번호를 위에 맞춰야 줄이 늘어도 흐트러지지 않는다 */
   .ct.lg{align-items:flex-start}
   .ct.lg .ct-d{white-space:normal;word-break:keep-all;line-height:1.5;margin-top:3px}
@@ -725,10 +738,62 @@ function shareBuild(){
 /* 원문에 따로 적힌 번호(물류전화·후드 등)를 라벨과 함께 한 줄로 붙인다.
  * 번호만 나열하면 어디로 걸어야 하는지 모른다 — 라벨이 곧 용도다. */
 function xtext(o){ return (o.x||[]).map(([l,n])=>`${l} ${n}`).join(' '); }
-function xline(o){
+
+/*
+ * 번호 하나 = 누를 수 있는 조각(걸기·복사 시트가 뜬다).
+ *
+ * 예전에는 줄의 **대표번호 하나만** 눌렸다 — 서서울TC 처럼 번호가 셋인 곳에서 나머지 둘은
+ * 눈으로 읽고 받아적어야 했다(2026-08-11 사용자 지적). 화면에 적힌 번호는 전부 눌려야 한다.
+ *
+ * **거는 번호는 범위 꼬리를 뗀다.** `031-922-8546~7` 을 그대로 넘기면 숫자만 남겨
+ * `03192285467` 로 잘못 걸린다. 화면에는 원문 그대로 적고 거는 것만 앞 번호로 한다.
+ */
+function telx(n, name, h, big, dialOverride){
+  const dial = dialOverride || String(n).replace(/[~∼]\s*\d+$/, '').trim();
+  return `<button type="button" class="telx${big ? ' big' : ''}" data-tel="${esc(dial)}"`
+    + ` data-tel-name="${esc(name)}">${(h || esc)(n)}</button>`;
+}
+/*
+ * 한 칸에 번호가 둘 이상 적힌 값을 조각낸다 — `031-377-9136 · 9137` 을 통째로 넘기면
+ * 걸 수 없는 tel 값이 된다. **뒷자리만 적힌 번호는 앞 번호의 국번을 물려받는다**
+ * (원문이 `031-377-9135~7` 이므로 9136·9137 이 실제 번호다).
+ */
+function telsplit(v, name, h, big){
+  const parts = String(v).split(/\s*[·,]\s*/).map(x=>x.trim()).filter(Boolean);
+  let head = '';
+  return parts.map(raw => {
+    const m = raw.match(/^(\d{2,3}-\d{3,4})-\d{4}/);
+    if (m) head = m[1];
+    const full = /^\d{4}$/.test(raw) && head ? `${head}-${raw}` : null;
+    return telx(raw, name, h, big, full);
+  }).join('');
+}
+
+/*
+ * 안내문에 박힌 번호도 눌리게 한다 — "화면에 보이는 번호는 전부 눌린다"는 규칙은
+ * 목록이든 안내문이든 같다. 우리 저장소의 우리 문구라 정규식 치환이 안전하다.
+ * 이름은 아는 번호면 그 담당을 쓰고, 모르면 문맥 이름을 쓴다.
+ */
+function telNameOf(n){
+  for (const g of CONTACTS) for (const c of g.items) if (c.n === n) return c.t;
+  for (const x of SINK) { if (x.n === n) return `${x.p} 싱크장 리폼`; if (x.n2 === n) return `${x.p} 이전설치 문의`; }
+  for (const x of B2B_NATION) if (x.n === n) return `${x.t} — ${x.p}`;
+  return null;
+}
+function telify(html, fallback){
+  return String(html).replace(/<b>(1[5-9]\d{2}-\d{4}|0\d{1,2}-\d{3,4}-\d{4})<\/b>/g,
+    (_, n) => telx(n, telNameOf(n) || fallback || '연락처'));
+}
+
+/* 라벨 칸 + 번호를 세로로 — ' · ' 로 이어 붙이면 좁은 화면에서 아무 데서나 줄이 바뀐다 */
+function opsRow(label, inner){
+  return `<div class="opsrow"><span class="opsl">${esc(label)}</span><span class="opsv">${inner}</span></div>`;
+}
+function xline(o, name, hl){
   if (!(o.x||[]).length) return '';
-  return `<br><span class="xn">${(o.x||[]).map(([l,n])=>
-    `${l ? esc(l) + ' ' : ''}<b>${esc(n)}</b>`).join(' · ')}</span>`;
+  const who = name || '';
+  return (o.x||[]).map(([l,n]) =>
+    opsRow(l || '번호', telx(n, `${who}${l ? ' ' + l : ''}`.trim(), hl))).join('');
 }
 /*
  * 센터 줄에 붙는 상황실·운영·VOC 한 줄. 상황실 번호는 **물류 대표번호와 다를 때만** 적는다 —
@@ -737,12 +802,11 @@ function xline(o){
 function opsLine(c, hl){
   const o = OPS[c.code]; if (!o) return '';
   const h = hl || esc;
-  const p = [];
-  p.push(`상황실 <b>${h(o.sit)}</b>${o.sitN ? ` ${h(o.sitN)}` : ''}`);
-  if ((o.op||[]).length)  p.push(`운영 ${o.op.map(n=>`<b>${h(n)}</b>`).join(' · ')}`);
-  if ((o.voc||[]).length) p.push(`VOC ${o.voc.map(n=>`<b>${h(n)}</b>`).join(' · ')}`);
-  return `<br><span class="xn">${p.join(' · ')}</span>`
-    + (o.note ? `<br><span class="xn" style="color:#B45309">${esc(o.note)}</span>` : '');
+  let s = opsRow('상황실', `<span class="nm">${h(o.sit)}</span>`
+    + (o.sitN ? telx(o.sitN, `${c.t} 상황실`, h) : ''));
+  if ((o.op||[]).length)  s += opsRow('운영', o.op.map(n=>telx(n, `${c.t} 운영`, h)).join(''));
+  if ((o.voc||[]).length) s += opsRow('VOC',  o.voc.map(n=>telx(n, `${c.t} VOC`, h)).join(''));
+  return s + (o.note ? `<div class="xn" style="color:#B45309">${esc(o.note)}</div>` : '');
 }
 /* 검색은 상황실·운영·VOC 번호까지 훑는다 — 번호를 보고 어느 센터인지 되짚는 일이 실제로 있다 */
 function opsText(c){
@@ -796,10 +860,10 @@ const G = () => Object.fromEntries(GROUPS.map(g=>[g.id,g]));
 
 /* 전국 담당 한 곳을 카드 한 장으로 — 인덕션·정수기·후드·시스템에어컨이 같은 모양이다 */
 function natCard(x){
-  return `<button type="button" class="ct" data-tel="${esc(x.n)}" data-tel-name="${esc(x.t)} — ${esc(x.p)}">
+  return `<div class="ct">
     <span class="ct-b"><b>${esc(x.p)}<span class="ct-tag">전국</span></b>
-    <span class="ct-d">${esc(x.d)}${xline(x)}</span></span>
-    <span class="ct-n">${esc(x.n)}</span></button>`;
+    <span class="ct-d">${esc(x.d)}${xline(x, `${x.t} — ${x.p}`)}</span></span>
+    <span class="ct-n">${telx(x.n, `${x.t} — ${x.p}`, null, true)}</span></div>`;
 }
 
 /*
@@ -855,14 +919,16 @@ function renderContacts(){
      <div id="lglist"></div>
      <div class="card" style="margin-top:14px"><h2>물류 VOC 본사 창구 <span class="pill">센터 무관</span></h2>
        <div class="why" style="margin-bottom:9px">센터가 아니라 <b>본사로 접수</b>하는 물류 VOC 번호입니다.</div>
-       <button type="button" class="ct lg" data-tel="${esc(VOC_HQ.n)}" data-tel-name="물류 VOC 본사">
-         <span class="ct-b"><b>VOC 접수</b><span class="ct-d">배송·설치 VOC 접수 창구${xline(VOC_HQ)}</span></span>
-         <span class="ct-n">${esc(VOC_HQ.n)}</span></button></div>`);
+       <div class="ct lg">
+         <span class="ct-b"><b>VOC 접수</b><span class="ct-d">배송·설치 VOC 접수 창구${
+           xline(VOC_HQ, '물류 VOC 본사')}</span></span>
+         <span class="ct-n">${telx(VOC_HQ.n, '물류 VOC 본사', null, true)}</span></div></div>`);
 
   /* ③ 빌트인 가전 이전설치 — **접수 순서를 맨 위에.** 번호만 알면 사고가 난다 */
   h += grp(g['g-mv'],
     `<div class="card warn"><h2>⚠ 식기세척기 이전설치 — 리폼이 먼저입니다</h2>
-       ${B2B_STEPS.map((t,i)=>`<div class="step"><span class="sn">${i+1}</span><span class="st">${t}</span></div>`).join('')}
+       ${B2B_STEPS.map((t,i)=>`<div class="step"><span class="sn">${i+1}</span><span class="st">${
+         telify(t, '싱크장 리폼 문의')}</span></div>`).join('')}
        <div class="note">${B2B_CAUTION}</div></div>
      <div class="card"><h2>권역 협력사 <span class="pill">${B2B.length}개 센터</span></h2>
        <div class="why" style="margin-bottom:9px">고객이 <b>이사 갈 주소</b>로 담당 협력사를 찾습니다.</div>
@@ -873,10 +939,11 @@ function renderContacts(){
   h += grp(g['g-sink'],
     `<div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> —
        위 관할표가 아니라 여기서 찾으세요. <b>리폼이 안 돼 있으면 이전설치 접수보다 먼저입니다.</b></div>
-     ${SINK.map(x=>`<button type="button" class="ct lg" data-tel="${esc(x.n)}" data-tel-name="${esc(x.p)} 싱크장 리폼">
+     ${SINK.map(x=>`<div class="ct lg">
        <span class="ct-b"><b>${esc(x.p)}</b><span class="ct-d">${esc(x.a)}${
-         x.n2 ? `<br><b>이전설치 문의 ${esc(x.n2)}</b>` : ''}${xline(x)}</span></span>
-       <span class="ct-n">${esc(x.n)}</span></button>`).join('')}`);
+         x.n2 ? opsRow('이전설치', telx(x.n2, `${x.p} 이전설치 문의`)) : ''}${
+         xline(x, `${x.p} 싱크장 리폼`)}</span></span>
+       <span class="ct-n">${telx(x.n, `${x.p} 싱크장 리폼`, null, true)}</span></div>`).join('')}`);
 
   /* ⑤⑥⑦ 인덕션 · 정수기 · 후드 — 담당은 같지만 번호가 갈리고, 상담사는 품목으로 찾는다 */
   for (const [id, key] of [['g-ind','ind'], ['g-wat','wat'], ['g-hood','hood']]) {
@@ -916,7 +983,7 @@ function renderContacts(){
   renderCenters();
   renderB2B();
   for (const k of ['ind','wat','hood']) renderMid(k);
-  if (typeof wireContacts === 'function') wireContacts(pane, '.ct');
+  if (typeof wireContacts === 'function') wireContacts(pane, '[data-tel]');
 }
 /*
  * 묶음을 펼치고 그 자리로 데려간다.
@@ -950,14 +1017,14 @@ function renderCenters(){
     return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
 
   list.innerHTML = hit.length ? hit.map(c=>
-    `<button type="button" class="ct lg" data-tel="${esc(c.n)}" data-tel-name="${esc(c.t)}">
+    `<div class="ct lg">
       <span class="ct-b"><b>${hl(c.t)}<span class="ct-tag">${esc(c.b)} · ${esc(c.code)}</span>${
         OPS[c.code] ? `<span class="ct-tag">${esc(OPS[c.code].job)}</span>` : ''}</b>
       <span class="ct-d">${hl(c.a)}${opsLine(c, hl)}</span></span>
-      <span class="ct-n">${hl(c.n)}</span></button>`).join('')
+      <span class="ct-n">${telx(c.n, c.t, hl, true)}</span></div>`).join('')
     : `<div class="unk">해당하는 센터가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
   list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
-  if (typeof wireContacts === 'function') wireContacts(list, '.ct');
+  if (typeof wireContacts === 'function') wireContacts(list, '[data-tel]');
 }
 
 /*
@@ -977,13 +1044,15 @@ function renderB2B(){
     const hl = hlOf(s);
     const hit = rows.filter(c => !s || (c.p + c.c + c.code + c.n + (c.d||'') + xtext(c) + c.a).toLowerCase().includes(s));
     list.innerHTML = hit.length ? hit.map(c=>
-      `<button type="button" class="ct lg" data-tel="${esc(c.n)}" data-tel-name="${esc(c.p)} (${esc(c.c)})">
+      `<div class="ct lg">
         <span class="ct-b"><b>${hl(c.p)}<span class="ct-tag">${hl(c.c)} · ${esc(c.code)}</span></b>
-        <span class="ct-d">${hl(c.a)}${c.d ? `<br>추가 회선 ${hl(c.d)}` : ''}${xline(c)}</span></span>
-        <span class="ct-n">${hl(c.n)}</span></button>`).join('')
+        <span class="ct-d">${hl(c.a)}${
+          c.d ? opsRow('추가', telsplit(c.d, `${c.p} (${c.c}) 추가 회선`, hl)) : ''}${
+          xline(c, `${c.p} (${c.c})`, hl)}</span></span>
+        <span class="ct-n">${telx(c.n, `${c.p} (${c.c})`, hl, true)}</span></div>`).join('')
       : `<div class="unk">해당하는 ${what} 협력사가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
     list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
-    if (typeof wireContacts === 'function') wireContacts(list, '.ct');
+    if (typeof wireContacts === 'function') wireContacts(list, '[data-tel]');
   };
   draw('#b2bq', '#b2blist', B2B, '가전');
   draw('#itq', '#itlist', B2B_IT, 'IT');

@@ -376,7 +376,9 @@ const SYN = {
   "올레드tv":["oled","tv"],"마이크로led":["micro led","tv"],
   "더프레임":["the frame","frame","tv"],"더세리프":["the serif","tv"],
   "8k":["8k","tv"],"4k":["4k","uhd"],"uhd":["uhd","4k"],
-  "55인치":["55","tv"],"65인치":["65","tv"],"75인치":["75","tv"],"85인치":["85","tv"],
+  /* 인치 표기는 아래 파서가 '형'과 짝지어 처리한다. 여기에 두면 안 된다 —
+     `"65인치":["65","tv"]` 는 ①'tv'가 들어가 **모든 TV 가 조건을 통과**하고(63종)
+     ②맨숫자 '65'가 `165hz`·`1,658.8` 에 걸린다. 실제로 "65인치 TV"가 63종이었다. */
   "게이밍tv":["tv","게이밍","144hz"],"스마트tv":["tv","스마트"],
   "화면크게":["tv","65","75"],"대화면":["tv","65","75","85"],
   /* 스마트폰 */
@@ -682,6 +684,18 @@ function parseQuery(raw){
       if(e==="__PKG__"){ P.pkg=true; continue; }
       if(!P.terms.includes(e)) P.terms.push(e);
       forms.push(e.toLowerCase());
+    }
+    /*
+     * **인치 ↔ 형** — TV 는 데이터가 `65형` 으로, 모니터·노트북·태블릿은 `27인치` 로
+     * 적혀 있다. 상담사는 둘 다 쓰므로 표기를 이어 준다(통합검색 `UNIT_PAIRS` 와 같은 규칙).
+     * 맨숫자로는 넓히지 않는다 — '65' 하나면 `165hz`·`1,658.8` 이 걸린다.
+     */
+    const um = t.match(/^(\d{2,3})(인치|형)$/);
+    if(um){
+      for(const v of [um[1]+"인치", um[1]+"형"]){
+        if(!forms.includes(v)) forms.push(v);
+        if(!P.terms.includes(v)) P.terms.push(v);
+      }
     }
     // 카테고리 말은 카테고리 필터가 이미 하므로 조건으로 또 걸지 않는다
     if(forms.length) P.groups.push({raw:t, forms, req:!isCat});

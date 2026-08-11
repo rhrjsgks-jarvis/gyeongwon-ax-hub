@@ -241,10 +241,75 @@ type('');
 if (rows() !== 21) fail('검색어를 지웠는데 21건으로 돌아오지 않는다');
 else pass('검색어 해제 시 전체 복원');
 
-// 번호는 눌러서 걸 수 있어야 한다(share-kit 이 data-tel 로 시트를 띄운다)
-const noTel = [...pane.querySelectorAll('#lglist .ct')].filter((el) => !el.dataset.tel);
-if (noTel.length) fail(`${noTel.length}개 센터 줄에 data-tel 이 없다 — 눌러도 걸리지 않는다`);
+/*
+ * 번호는 **하나도 빠짐없이** 눌러서 걸 수 있어야 한다(share-kit 이 data-tel 로 시트를 띄운다).
+ *
+ * 예전에는 줄의 대표번호 하나만 눌렸다 — 서서울TC 처럼 번호가 셋인 곳에서 나머지 둘은
+ * 눈으로 읽고 받아적어야 했다(2026-08-11 사용자 지적).
+ */
+const noTel = [...pane.querySelectorAll('#lglist .ct')]
+  .filter((el) => !el.querySelector('[data-tel]'));
+if (noTel.length) fail(`${noTel.length}개 센터 줄에 누를 수 있는 번호가 없다`);
 else pass('21건 전부 눌러서 걸기 가능');
+
+{
+  // 화면에 적힌 번호 = 누를 수 있는 번호 (한 줄에 번호가 여럿이어도)
+  const TELRE = /(1[5-9]\d{2}-\d{4}|0\d{1,2}-\d{3,4}-\d{4})/g;
+  let shown = 0, missing = [];
+  for (const row of pane.querySelectorAll('#lglist .ct')) {
+    const tappable = new Set([...row.querySelectorAll('[data-tel]')].map((b) => b.textContent.trim()));
+    for (const m of (row.textContent.match(TELRE) || [])) {
+      shown++;
+      if (![...tappable].some((t) => t.includes(m))) missing.push(m);
+    }
+  }
+  if (missing.length) fail(`화면에 있는데 누를 수 없는 번호 ${missing.length}건 (예: ${missing.slice(0, 3).join(', ')})`);
+  else pass(`물류센터에 보이는 번호 ${shown}개가 전부 눌린다`);
+
+  // 서서울TC — 사용자가 짚은 그 줄. 대표 + 운영 2회선 = 3개가 모두 눌려야 한다
+  const seo = [...pane.querySelectorAll('#lglist .ct')].find((r) => /서서울/.test(r.textContent));
+  const nums = seo ? [...seo.querySelectorAll('[data-tel]')] : [];
+  if (nums.length < 3) fail(`서서울TC 에서 누를 수 있는 번호가 ${nums.length}개 — 대표 1 + 운영 2 여야 한다`);
+  else pass(`서서울TC 번호 ${nums.length}개 전부 눌린다`);
+
+  /* 범위 표기(031-922-8546~7)는 화면에 그대로 두되 **거는 번호는 앞 번호**여야 한다.
+     그대로 넘기면 숫자만 남겨 03192285467 로 잘못 걸린다. */
+  const bad = [...pane.querySelectorAll('#contactPane [data-tel]')].filter((b) => /[~∼]/.test(b.dataset.tel));
+  if (bad.length) fail(`걸기 번호에 범위 꼬리가 남은 것 ${bad.length}건 (예: ${bad[0].dataset.tel})`);
+  else pass('범위 번호(~N)는 앞 번호로 걸린다');
+
+  // 라벨 칸으로 세워 적는다 — ' · ' 로 이어 붙이면 좁은 화면에서 아무 데서나 줄이 바뀐다
+  if (!seo || !seo.querySelector('.opsrow .opsl')) fail('상황실·운영 줄이 라벨 칸으로 정렬돼 있지 않다');
+  else pass('번호 줄이 라벨 칸으로 정렬됨');
+
+  /* 안내문에 박힌 번호도 눌려야 한다 — 목록이든 안내문이든 "보이면 눌린다"는 같다.
+     접수 순서 3단계의 아비스 번호가 글자로만 있었다. */
+  A.tab = 'contact';
+  doc.querySelector('#g-mv').open = true;
+  const step = [...doc.querySelectorAll('#g-mv .step')].find((e) => /1811-7958/.test(e.textContent));
+  if (!step) fail('접수 순서에 아비스 번호가 없다');
+  else if (!step.querySelector('[data-tel="1811-7958"]')) fail('접수 순서 안내문의 번호가 눌리지 않는다');
+  else pass('안내문에 박힌 번호도 눌린다');
+
+  /* 한 칸에 번호가 둘인 값(동탄 추가 회선 "031-377-9136 · 9137")은 각각 눌려야 하고,
+     뒷자리만 적힌 번호는 앞 번호의 국번을 물려받아야 한다(원문 031-377-9135~7). */
+  if (typeof window.renderB2B === 'function') window.renderB2B();
+  const dt = [...doc.querySelectorAll('#itlist [data-tel]')].filter((b) => /9136|9137/.test(b.textContent));
+  if (dt.length !== 2) fail(`동탄 추가 회선이 ${dt.length}개로 쪼개졌다 — 2개여야 한다`);
+  else if (dt[1].dataset.tel !== '031-377-9137') fail(`뒷자리 번호가 ${dt[1].dataset.tel} — 031-377-9137 이어야 한다`);
+  else pass('한 칸에 둘인 번호가 각각 눌리고 국번을 물려받는다');
+
+  // 걸 수 없는 tel 값이 하나도 없어야 한다(숫자·하이픈·+ 만)
+  const dial = [...doc.querySelectorAll('#contactPane [data-tel]')];
+  const badDial = dial.filter((b) => !/^[\d+][\d\-+]*$/.test(b.dataset.tel));
+  if (badDial.length) fail(`걸 수 없는 tel 값 ${badDial.length}건 (예: ${badDial[0].dataset.tel})`);
+  else pass(`연락처 탭 번호 ${dial.length}개 전부 걸 수 있는 형식`);
+
+  // 중첩 button 은 HTML 위반이라 클릭이 먹지 않는 브라우저가 있다
+  const nested = doc.querySelectorAll('button button').length;
+  if (nested) fail(`중첩 button ${nested}건 — 안쪽 번호가 눌리지 않을 수 있다`);
+  else pass('중첩 button 없음');
+}
 
 // 출처 표기 — 지어낸 값이 아님을 화면이 밝히는가
 if (!/센터별 배송 서비스지역/.test(pane.textContent)) fail('물류센터 출처 표기가 없다');
@@ -468,9 +533,24 @@ pass('싱크장 리폼 골든 3건');
   } else pass("'안동' → 가전 성광티시엠 · IT 다존텍 (담당이 갈린다)");
   type(''); typeIt('');
 
-  const noTel = [...mp.querySelectorAll('#b2blist .ct, #itlist .ct')].filter((el) => !el.dataset.tel);
-  if (noTel.length) fail(`${noTel.length}건에 data-tel 이 없다 — 눌러도 걸리지 않는다`);
+  // 줄마다 대표번호 + 원문에 따로 적힌 번호(물류·후드 등)가 **전부** 눌려야 한다
+  const noTel = [...mp.querySelectorAll('#b2blist .ct, #itlist .ct')]
+    .filter((el) => !el.querySelector('[data-tel]'));
+  if (noTel.length) fail(`${noTel.length}건에 누를 수 있는 번호가 없다`);
   else pass('이전설치 32건 전부 눌러서 걸기 가능');
+
+  {
+    const TELRE = /(1[5-9]\d{2}-\d{4}|0\d{1,2}-\d{3,4}-\d{4})/g;
+    const missing = [];
+    for (const row of mp.querySelectorAll('#b2blist .ct, #itlist .ct')) {
+      const tap = [...row.querySelectorAll('[data-tel]')].map((b) => b.textContent.trim());
+      for (const m of (row.textContent.match(TELRE) || [])) {
+        if (!tap.some((t) => t.includes(m))) missing.push(m);
+      }
+    }
+    if (missing.length) fail(`이전설치에 보이는데 못 누르는 번호 ${missing.length}건 (예: ${missing.slice(0, 3).join(', ')})`);
+    else pass('이전설치 줄의 추가 회선·물류번호까지 전부 눌린다');
+  }
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -603,7 +683,8 @@ pass('상황실·업무·운영 골든 5건');
   A.tab = 'contact';
   const pane = doc.querySelector('#contactPane');
   pane.querySelector('#g-lg').open = true;
-  const lines = pane.querySelectorAll('#lglist .xn');
+  // 라벨 칸(.opsl)으로 세워 적는다 — 센터마다 최소 '상황실' 한 줄이 붙는다
+  const lines = [...pane.querySelectorAll('#lglist .opsl')].filter((e) => e.textContent === '상황실');
   if (lines.length < C.length) fail(`상황실 줄이 ${lines.length}개 — 센터 ${C.length}곳에 다 붙어야 한다`);
   else pass(`상황실 줄 ${lines.length}개 렌더`);
 
