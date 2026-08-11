@@ -1367,6 +1367,61 @@ for (const plan of PLANS) {
   }
 }
 
+/*
+ * ── 3D 가전 디테일 — 2D 실루엣과 같은 품목에 붙어 있는가 ──
+ * 같은 품목이 앱마다 다른 그림이면 상담사 눈이 헤맨다. 2D `drawGlyph` 가 실루엣을 그리는
+ * 품목은 3D 도 흰 상자로 두면 안 된다. 반대로 **2D 에 없는 품목(리빙 4종)은 3D 에도
+ * 만들지 않는다** — 근거 없이 지어낸 외형은 고객이 실물로 오해한다.
+ * 상자 본체(1) + 모서리선(1) 뿐이면 디테일이 없는 것이다.
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const cats = [...new Set((P.state.reps || []).filter((s) => !s.hidden).map((s) => s.cat))];
+    const out = {};
+    for (const cat of cats) {
+      const rep = (P.state.reps || []).find((s) => s.cat === cat && s.parts && s.parts[0]);
+      if (!rep) continue;
+      const p = rep.parts[0];
+      P.state.rooms = []; P.state.items = []; P.state.walls = W;
+      P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+      P.addRoom('거실', W);
+      P.state.items.push({ id: 'x', cat, size: rep.size, group: rep.group, label: cat,
+        w: p.w, h: p.h, d: p.d, a: 0, bx: 4000, by: 1000, warn: [], soft: [],
+        clear: { back: 0, side: 0, front: 0 } });
+      window.Place3D.open();
+      let parts = 0;
+      window.Place3D.root.traverse((o) => { if (o.isMesh || o.isLineSegments) parts++; });
+      window.Place3D.close();
+      // 방 바닥 1 + 벽 4 + 본체 1 + 모서리선 1 = 7 이 "디테일 없음"의 기준선
+      out[cat] = parts - 7;
+    }
+    return { out };
+  });
+
+  if (r.err) fail(r.err);
+  else {
+    /* 2D drawGlyph 가 실루엣을 그리는 품목 = 3D 도 디테일이 있어야 하는 품목 */
+    const NEEDS = /^냉장고|김치냉장고|냉동고|^업소용|세탁기|콤보|건조기|에어드레서|슈드레서|^TV|모니터|사운드바|인덕션|전기레인지|식기세척기|전자레인지|오븐|데이코|공기청정기|청소기|정수기|제습기|에어컨/;
+    const cats = Object.keys(r.out);
+    const missing = cats.filter((c) => NEEDS.test(c) && r.out[c] <= 0);
+    const extra = cats.filter((c) => !NEEDS.test(c) && r.out[c] > 0);
+
+    if (!cats.length) fail('3D 디테일: 카테고리를 하나도 못 읽었다 (size-reps 로드 실패?)');
+    else if (missing.length)
+      fail(`3D 디테일 없음 — 2D 는 실루엣을 그리는데 3D 는 흰 상자다: ${missing.join(', ')}`);
+    else if (extra.length)
+      fail(`3D 디테일이 2D 에 없는 품목에 붙었다 (지어낸 외형): ${extra.join(', ')}`);
+    else {
+      const withD = cats.filter((c) => r.out[c] > 0).length;
+      pass(`3D 가전 디테일 — ${cats.length}개 카테고리 중 ${withD}개에 디테일 (2D 실루엣과 일치, 리빙 ${cats.length - withD}종은 양쪽 다 없음)`);
+    }
+  }
+}
+
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
 else pass('전 도면에서 스크립트 오류 없음');
 
