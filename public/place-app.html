@@ -5050,6 +5050,7 @@ const darkMat = new THREE.MeshLambertMaterial({ color: 0x2B3440 });
 const blueMat = new THREE.MeshLambertMaterial({ color: 0x1428A0 });
 /* 문을 열었더니 부딪히는 제품 — 빨강. 상담 중에 한눈에 보여야 한다 */
 const badMat  = new THREE.MeshLambertMaterial({ color: 0xE23D3D });
+const selEdge = new THREE.LineBasicMaterial({ color: 0x1428A0 });   // 고른 가전의 모서리
 const doorMat = new THREE.MeshLambertMaterial({ color: 0xE8ECF1, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
 const doorBad = new THREE.MeshLambertMaterial({ color: 0xE23D3D, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
 
@@ -5259,6 +5260,8 @@ function build(refit){
     if (bad) blocked++;
     for (const lf of (mesh.userData.leaves || [])) root.add(leafMesh(lf, it, bad));
     if (bad) mesh.traverse((o) => { if (o.isMesh && o.material === bodyMat) o.material = badMat; });
+    /* 고른 것은 모서리를 삼성 블루로 굵게 — 무엇을 돌리고 지우는지 보여야 한다 */
+    if (it.id === P.state.sel) mesh.traverse((o) => { if (o.isLineSegments) o.material = selEdge; });
     if (showTags && it.label){
       const sp = tagSprite(it.label, bad);
       const [cx, cy] = P.bodyCenter(it);
@@ -5399,7 +5402,8 @@ const ray = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const hitPt = new THREE.Vector3();
-let drag = null;   // { it, offX, offY, prev }
+let drag = null;      // { it, offX, offY, prev }
+let lastTap = null;   // 더블탭 회전용 — 2D 와 같은 500ms 창(손가락은 마우스보다 느리다)
 
 /** 화면 좌표 → 바닥면 위의 월드 mm. 바닥과 안 만나면 null */
 function floorAt(clientX, clientY){
@@ -5469,9 +5473,19 @@ const up = (e) => {
     /* 놓는 순간에만 겹침을 본다 — 끄는 내내 막으면 손에서 자꾸 빠진다(2D 와 같은 이유).
        겹치면 잡기 전 자리로 되돌리고, 아니면 들어간 방으로 소속을 옮긴다. */
     const it = drag.it;
+    const moved = Math.hypot(it.bx - drag.prev.bx, it.by - drag.prev.by) > 1;
     const clash = P.hitsOther(it);
     if (clash){ Object.assign(it, drag.prev); toast3(clash); }
     else P.retagRoom(it);
+    /* 안 움직였으면 **누른 것**으로 본다 — 그러면 고르기가 된다(2D 의 TAP_SLOP 과 같은 생각).
+       고르면 안내띠에 회전·삭제가 뜬다. 끌어 옮기기만 되고 못 돌리면 벽에 붙일 수가 없다. */
+    if (!moved){
+      P.state.sel = P.state.sel === it.id ? null : it.id;
+      /* 같은 것을 짧게 두 번 누르면 2D 처럼 돌린다 */
+      if (lastTap && lastTap.id === it.id && Date.now() - lastTap.t < 500){
+        it.a += P.rotStep(it.cat); lastTap = null;
+      } else lastTap = { id: it.id, t: Date.now() };
+    }
     drag = null;
     P.evaluate(); P.draw();                  // 2D 화면과 경고 목록도 함께 맞춘다
     paintBar(build());
@@ -5490,6 +5504,8 @@ window.addEventListener('resize', () => { if (on) size(); });
 
 /* ── 열고 닫기 ── */
 function paintBar(info){
+  /* 고른 가전 — 2D 와 같은 `state.sel` 을 쓴다. 3D 에서 고르고 2D 로 넘어가도 그대로 남는다. */
+  const sel = P.state.items.find((x) => x.id === P.state.sel && !x.staged) || null;
   /* 부딪히는 것이 있으면 **숫자를 먼저** 말한다. 상담 중에 읽는 글자는 짧을수록 좋다. */
   const warn = info.blocked
     ? `<span style="color:#FFB4B4;font-weight:700">문이 안 열리는 제품 ${info.blocked}대 — 이 배치로는 안 됩니다</span>`
@@ -5506,8 +5522,20 @@ function paintBar(info){
     /* 버튼이 여섯이면 좁은 화면에서 줄이 넘어간다. 켜짐 여부는 글자가 아니라
        **색**으로 알린다 — 라벨이 짧아야 폰에서 한 줄에 들어간다. */
     `<button id="d3-tag" class="${showTags ? 'on' : ''}">이름</button>` +
+    /* 고른 가전이 있으면 회전·삭제를 띄운다. 회전 각도는 카테고리가 정한다
+       (에어컨 45° — 거실 모서리에 비스듬히 놓는 설치가 흔하다). 2D 와 같은 함수를 쓴다. */
+    (sel ? `<button id="d3-rot">↻ ${P.rotLabel(sel.cat)}°</button>` +
+           `<button id="d3-del">✕ 삭제</button>` : '') +
     `<button id="d3-close">2D로</button>`;
   bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
+  if (sel){
+    document.getElementById('d3-rot').onclick = () => {
+      sel.a += P.rotStep(sel.cat); P.evaluate(); P.draw(); paintBar(build());
+    };
+    document.getElementById('d3-del').onclick = () => {
+      P.removeItem(sel.id); P.draw(); paintBar(build());
+    };
+  }
   document.getElementById('d3-door').onclick = () => { openDoors = !openDoors; paintBar(build()); };
   document.getElementById('d3-tag').onclick = () => { showTags = !showTags; paintBar(build()); };
   document.getElementById('d3-close').onclick = close;

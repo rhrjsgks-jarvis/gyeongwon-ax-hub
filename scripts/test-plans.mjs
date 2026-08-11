@@ -1586,6 +1586,50 @@ const knownGaps = [];
       fail(`3D: 문 열기·이름표를 켰더니 시점이 바뀐다 (${r.before} → ${r.after}) — 끄는 동안 카메라가 튕긴다`);
     else pass('3D 시점 유지 — 문 열기·이름표를 켜도 보던 각도 그대로');
   }
+
+  /*
+   * 고르기·회전 — 끌어 옮기기만 되고 못 돌리면 벽에 붙일 수가 없다.
+   * 회전 각도는 **카테고리가 정한다**(에어컨 45° — 거실 모서리에 비스듬히 놓는 설치가 흔하다).
+   * 2D 와 같은 `rotStep` 을 쓰는지 확인한다 — 한쪽만 고치면 "버튼은 45°인데 더블탭은 90°"가 된다.
+   */
+  const rot = await page.evaluate(() => {
+    const P = window.__place;
+    const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+    P.state.rooms = []; P.state.items = []; P.state.walls = W;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('거실', W);
+    P.state.items.push(
+      mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고', w: 912, h: 1853, d: 930, bx: 3000, by: 2500 }),
+      mk({ id: 'ac', cat: '에어컨', group: '무풍 클래식', label: '에어컨', w: 363, h: 1883, d: 363, bx: 6000, by: 2500 }));
+    window.Place3D.open();
+    const out = {};
+    for (const id of ['f', 'ac']) {
+      P.state.sel = id;
+      window.Place3D.doors(false);                 // 안내띠를 다시 그려 버튼이 붙게 한다
+      const btn = document.getElementById('d3-rot');
+      if (!btn) { out[id] = { err: '회전 버튼이 안 뜬다' }; continue; }
+      const it = P.state.items.find((x) => x.id === id);
+      const a0 = it.a;
+      btn.click();
+      out[id] = { label: btn.textContent.replace(/\D/g, ''), deg: Math.round((it.a - a0) * 180 / Math.PI) };
+    }
+    const hasDel = !!document.getElementById('d3-del');
+    P.state.sel = null; window.Place3D.doors(false);
+    const gone = !document.getElementById('d3-rot');
+    window.Place3D.close();
+    return { ...out, hasDel, gone };
+  });
+
+  if (rot.f && rot.f.err) fail('3D 고르기: ' + rot.f.err);
+  else if (rot.f.deg !== 90) fail(`3D 회전: 냉장고가 ${rot.f.deg}° 돌았다 (기대 90°)`);
+  else if (rot.ac.deg !== 45) fail(`3D 회전: 에어컨이 ${rot.ac.deg}° 돌았다 (기대 45° — 대각선 설치가 흔하다)`);
+  else if (rot.f.label !== '90' || rot.ac.label !== '45')
+    fail(`3D 회전: 버튼에 적힌 각도가 실제와 다르다 (${rot.f.label}°/${rot.ac.label}°) — 화면이 거짓말을 한다`);
+  else if (!rot.hasDel) fail('3D: 고른 가전에 삭제 버튼이 없다');
+  else if (!rot.gone) fail('3D: 선택을 풀었는데 회전 버튼이 남아 있다');
+  else pass('3D 고르기·회전 — 냉장고 90° · 에어컨 45° (버튼 글자와 실제가 같다)');
 }
 
 /*
