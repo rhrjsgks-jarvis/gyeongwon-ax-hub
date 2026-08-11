@@ -294,6 +294,43 @@ for (const [file, needle] of deepLinks) {
     if (!hit.length) fail(`"${q}" 로 ${what}(${m})가 안 잡힌다`);
     else console.log(`OK: "${q}" → ${m} ${hit.length}건 (${what})`);
   }
+
+  /*
+   * ── ⑦ 화면에 보이는 제목으로 반드시 찾아진다 ──
+   *
+   * AS 묶음 107건만 제목이 kw 에서 빠져 있어 `김치냉장고 보증기간`(화면에 그렇게 적혀 있다)이
+   * **0건**이었다. 절마다 kw 를 손으로 지으니 다음 모듈에서 또 빠진다 — 불변식으로 지킨다.
+   */
+  // kw 는 토큰 단위로 중복 제거되므로 **낱말 단위**로 본다(검색도 토큰 AND 이라 기준이 같다)
+  const noTitle = entries.filter((e) => {
+    const words = String(e.title || '').toLowerCase()
+      .replace(/(\d),(?=\d)/g, '$1').replace(/[×✕х]/g, 'x')
+      .split(/\s+/).filter((w) => w.length > 1);
+    return words.some((w) => !e.kw.includes(w));
+  });
+  if (noTitle.length) {
+    fail(`제목의 낱말이 검색어에 없는 항목 ${noTitle.length}건 — 화면에 적힌 말로 못 찾는다`
+      + ` (예: ${noTitle.slice(0, 3).map((e) => `${e.m}/${e.title}`).join(', ')})`);
+  } else console.log(`OK: 전 항목(${entries.length}건) 제목의 낱말이 검색어에 포함됨`);
+
+  /* ── ⑧ 앞선 실사용 시뮬레이션에서 0건이던 질의들 ── */
+  for (const [q, m, what] of [
+    ['김치냉장고 보증기간', 'as', '제목 그대로 친 경우'],
+    ['로열블루', 'as', '멤버십 등급 연장'],
+    ['드럼세탁기 dd모터', 'as', 'DD모터(원문은 영문 DD MOTOR)'],
+    ['안방 에어드레서', 'place', '방 이름으로 찾기'],
+    ['침실1 공기청정기', 'place', '도면 표기(침실1)로 찾기'],
+    ['주방 식기세척기', 'place', '주방 가전'],
+    ['안방에 놓을 에어드레서 크기가 어떻게 되죠', 'place', '용언 활용형이 섞인 자연어'],
+  ]) {
+    const hit = find(q).filter((e) => e.m === m);
+    if (!hit.length) fail(`"${q}" 로 ${what}(${m})가 안 잡힌다`);
+    else console.log(`OK: "${q}" → ${m} ${hit.length}건 (${what})`);
+  }
+
+  // 방 이름은 ROOM_PLAN 에서 파생시킨다 — 손으로 적으면 화면과 어긋난다
+  const roomTagged = entries.filter((e) => e.m === 'place' && /(안방|침실1)/.test(e.kw)).length;
+  if (roomTagged < 5) fail(`배치 시뮬레이터에 방 이름이 붙은 항목이 ${roomTagged}건뿐 — ROOM_PLAN 파싱이 깨졌는지 확인할 것`);
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

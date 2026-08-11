@@ -64,6 +64,8 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 .ptag{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:8px;background:var(--cyan-soft);color:var(--cyan)}
 .ptag.fil{background:var(--amber-soft);color:var(--amber)}
 .ptag.cat{background:var(--deep);color:#fff}
+/* DB 에 없어 조건에서 뺀 말 — 조용히 빼면 "왜 이게 나오지"가 된다 */
+.ptag.off{background:#f3f4f6;color:#9aa0a6;font-weight:600}
 .rescount{font-size:12px;color:var(--sub);font-weight:600;margin-left:auto}
 
 /* 결과 목록 */
@@ -363,7 +365,10 @@ const SYN = {
   "로봇":["로봇","청소기","자동"],"물걸레로봇":["로봇","청소기","물걸레"],
   "물걸레청소기":["청소기","물걸레","스팀"],"무선":["무선청소기","제트"],
   "핸디청소기":["청소기","핸디","무선"],"청소":["청소기"],
-  "먼지":["청소기","집진","e-hepa"],"직배수":["직배수","로봇"],
+  "먼지":["청소기","집진","e-hepa"],
+  /* '직배수'에 '로봇'을 함께 달아 두면 **직배수가 아닌 로봇청소기까지 걸린다**(13종 중
+     실제 직배수는 2종뿐이다). 형태는 SUBCAT 이 가르므로 이 말은 기능만 가리키게 둔다. */
+  "직배수":["직배수"],
   "자동비움":["자동 먼지통 비움","로봇"],"AI청소":["ai 구역","로봇","청소기"],
   /* TV */
   "티비":["tv"],"텔레비전":["tv"],"테레비":["tv"],
@@ -481,7 +486,7 @@ const CATSYN = {
   "플립":["스마트폰(폴더블)"],"a시리즈":["스마트폰(A시리즈)"],
   "태블릿":["태블릿"],"탭":["태블릿"],"갤럭시탭":["태블릿"],
   "워치":["워치"],"갤럭시워치":["워치"],"스마트워치":["워치"],
-  "버즈":["버즈"],"이어폰":["버즈"],"이어버드":["버즈"],
+  "버즈":["버즈"],"이어폰":["버즈","JBL 무선 이어폰 (TWS)"],"이어버드":["버즈","JBL 무선 이어폰 (TWS)"],
   "링":["링"],"갤럭시링":["링"],"핏":["핏"],"갤럭시핏":["핏"],
   "xr":["XR"],"xr헤드셋":["XR"],
   "노트북":["노트북"],"북":["노트북"],"갤럭시북":["노트북"],"랩탑":["노트북"],
@@ -491,7 +496,10 @@ const CATSYN = {
   "외장ssd":["SSD·메모리"],"프린터":["프린터"],"복합기":["프린터"],
   // 신규 카테고리 (v25)
   "공기청정기":["공기청정기"],"공청기":["공기청정기"],"블루스카이":["공기청정기"],
-  "에어클리너":["공기청정기"],"공기청정":["공기청정기"],"미세먼지":["공기청정기"],
+  "에어클리너":["공기청정기"],"미세먼지":["공기청정기"],
+  /* '공기청정'(기 없이)은 **카테고리가 아니라 기능**이다. 무풍 에어컨 26종이 이 말을 달고
+     있는데 카테고리로 잡아 버리면 *"무풍 공기청정 19평"* 이 공기청정기로 끌려가 0종이 된다
+     (상담사가 찾는 것은 청정 기능이 있는 무풍 에어컨 3종이다). 조건으로 두면 둘 다 걸린다. */
   "김치냉장고":["김치냉장고"],"김치플러스":["김치냉장고"],"kimchi":["김치냉장고"],
   "김치통":["김치냉장고"],"뚜껑형냉장고":["김치냉장고"],
   "인덕션":["인덕션/전기레인지"],"전기레인지":["인덕션/전기레인지"],
@@ -500,7 +508,19 @@ const CATSYN = {
   "전자레인지":["전자레인지/오븐"],"오븐":["전자레인지/오븐"],"큐커":["전자레인지/오븐"],
   "전자렌지":["전자레인지/오븐"],"마이크로웨이브":["전자레인지/오븐"],
   "에어프라이어오븐":["전자레인지/오븐"],"컨벡션오븐":["전자레인지/오븐"],
-  "사운드바":["사운드바"],"soundbar":["사운드바"],"홈시어터":["사운드바"],
+  /*
+   * 하만 제품도 이 DB 안에 있는데(54종) 카테고리 이름이 `JBL 사운드바`처럼 브랜드가 앞에
+   * 붙어 있어, `사운드바` 하나만 매핑해 두면 **"JBL 사운드바"를 쳐도 삼성 사운드바 9종이
+   * 나왔다**(JBL 제품은 한 종도 없이). 품목으로 물으면 그 품목 전부가 나와야 한다 —
+   * 브랜드는 조건이 걸러 준다.
+   */
+  "사운드바":["사운드바","JBL 사운드바","Harman Kardon 사운드바 / 홈시어터"],
+  "soundbar":["사운드바","JBL 사운드바","Harman Kardon 사운드바 / 홈시어터"],
+  "홈시어터":["사운드바","JBL 사운드바","Harman Kardon 사운드바 / 홈시어터"],
+  "스피커":["JBL 블루투스 스피커 (포터블)","JBL 파티스피커","Harman Kardon 스피커",
+    "JBL Hi-Fi 북쉘프 스피커","JBL Hi-Fi 플로어스탠딩 스피커","Harman Kardon 하이엔드 스피커"],
+  "블루투스스피커":["JBL 블루투스 스피커 (포터블)"],"포터블스피커":["JBL 블루투스 스피커 (포터블)"],
+  "파티스피커":["JBL 파티스피커"],"헤드폰":["JBL 헤드폰","AKG 헤드폰"],
   "돌비애트모스":["사운드바"],"서라운드":["사운드바"],"q심포니":["사운드바"],
   // 신규 카테고리 (2026 dp 카탈로그 반영)
   "정수기":["정수기"],"직수정수기":["정수기"],"빌트인정수기":["정수기"],
@@ -510,6 +530,40 @@ const CATSYN = {
   "슈드레서":["슈드레서"],"신발관리기":["슈드레서"],"슈케어":["슈드레서"],
   "시스템에어컨":["시스템에어컨"],"홈멀티":["시스템에어컨"],"천장형":["시스템에어컨"],
   "상업용에어컨":["시스템에어컨"],"1way":["시스템에어컨"]
+};
+
+/*
+ * ─── 카테고리 안에서 형태를 가르는 말 ───
+ *
+ * DB 의 카테고리는 `청소기` 하나인데 상담에서는 **로봇/무선(스틱)/유선**을 따로 찾는다.
+ * CATSYN·DECOMP 는 셋을 전부 같은 카테고리로 떨어뜨려서, *"로봇청소기 직배수"* 에
+ * **무선청소기가 섞여 나왔다**(2026-08-11 사용자 지적). 카테고리만 맞으면 남기는
+ * 폴백까지 겹쳐, 로봇을 찾는 상담에 스틱청소기가 그대로 올라갔다.
+ *
+ * **모델 접두가 형태를 정확히 가른다** — DB 전수 확인 결과 예외가 없다:
+ *   청소기       VR 13종(로봇) · VS 9종(무선 스틱) · VC 4종(유선 캐니스터) · VW 1종(업소용)
+ *   세탁기·콤보  WA 2종(통돌이) · WF/WW/WH 17종(드럼 계열) · WD 11종(콤보) · SK 8종(설치키트)
+ *
+ * 키워드로 가르지 않는 이유는 **데이터가 그렇게 적혀 있지 않기 때문**이다 — '로봇'이
+ * 들어간 kw 는 13종 중 6종뿐이라(제품군 이름이 `AI 스팀 울트라 VR90F` 처럼 형태를 안
+ * 밝힌다) 키워드로 거르면 진짜 로봇청소기 7종이 사라진다.
+ *
+ * 형태 필터는 **자기 카테고리 안에서만** 건다. "드럼세탁기 건조기"처럼 두 품목을 함께
+ * 물으면 건조기까지 접두 검사에 걸려 통째로 사라진다.
+ */
+const SUBCAT = {
+  "로봇청소기":{cat:"청소기",re:/^VR/i,label:"로봇청소기"},
+  "로청":{cat:"청소기",re:/^VR/i,label:"로봇청소기"},
+  "로봇":{cat:"청소기",re:/^VR/i,label:"로봇청소기"},
+  "무선청소기":{cat:"청소기",re:/^VS/i,label:"무선(스틱)청소기"},
+  "스틱청소기":{cat:"청소기",re:/^VS/i,label:"무선(스틱)청소기"},
+  "핸디청소기":{cat:"청소기",re:/^VS/i,label:"무선(스틱)청소기"},
+  "유선청소기":{cat:"청소기",re:/^VC/i,label:"유선(캐니스터)청소기"},
+  "캐니스터":{cat:"청소기",re:/^VC/i,label:"유선(캐니스터)청소기"},
+  "드럼세탁기":{cat:"세탁기·콤보",re:/^W[FWH]/i,label:"드럼세탁기"},
+  "통돌이세탁기":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"},
+  "통돌이":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"},
+  "통버블":{cat:"세탁기·콤보",re:/^WA/i,label:"통돌이(통버블)세탁기"}
 };
 
 /* ─── DB 미수록 안내 ─── */
@@ -533,7 +587,9 @@ function getDims(p){
 /* ─── 질의 해석 ─── */
 function parseQuery(raw){
   let q = " " + raw.toLowerCase().replace(/,/g," ") + " ";
-  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null};
+  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null,
+    // 형태 필터(SUBCAT) · 조건 그룹(그룹 안은 OR, 그룹끼리는 AND) · DB 에 없어 뺀 말
+    subs:[], groups:[], ignored:[]};
   // 예산
   let m = q.match(/(\d{2,5})\s*(?:만\s*원?)?\s*[~∼\-]\s*(\d{2,5})\s*만\s*원?/);
   if(m){ P.budgetMin=+m[1]; P.budgetMax=+m[2]; q=q.replace(m[0]," "); P.tags.push(`예산 ${m[1]}~${m[2]}만원`); }
@@ -573,23 +629,47 @@ function parseQuery(raw){
     if(t.length<2 && !/^[a-z0-9]{2,}$/.test(t)) continue;
     if(seen.has(t)) continue; seen.add(t);
     if(UNSUPPORTED[t]){ P.unsupported.push(UNSUPPORTED[t]); continue; }
+    /*
+     * 형태부터 본다 — decompound 보다 먼저다. '로봇청소기'가 DECOMP 에서 ['로봇','청소기']로
+     * 쪼개지면 그 뒤로는 그냥 청소기 전체가 되어 형태를 되살릴 방법이 없다.
+     */
+    if(SUBCAT[t]){
+      const s = SUBCAT[t];
+      if(!P.cats.includes(s.cat)) P.cats.push(s.cat);
+      if(!P.subs.some(x=>x.label===s.label && x.cat===s.cat)) P.subs.push(s);
+      P.tags.push("형태: "+s.label);
+      P.tokens.push(t); continue;
+    }
     const decomped = decompound(t);
     if(decomped){
       for(const e of decomped){
         if(!P.terms.includes(e)) P.terms.push(e);
         if(CATSYN[e]) CATSYN[e].forEach(c=>{ if(!P.cats.includes(c)) P.cats.push(c); });
       }
+      // 복합어는 이미 카테고리로 좁혀졌다 — 조각을 다시 AND 조건으로 걸지 않는다
+      P.groups.push({raw:t, forms:decomped.map(e=>e.toLowerCase()), req:false});
       P.tokens.push(t); continue;
     }
-    if(CATSYN[t]){ CATSYN[t].forEach(c=>{ if(!P.cats.includes(c)) P.cats.push(c); }); P.tags.push("카테고리: "+t); }
+    const isCat = !!CATSYN[t];
+    if(isCat){ CATSYN[t].forEach(c=>{ if(!P.cats.includes(c)) P.cats.push(c); }); P.tags.push("카테고리: "+t); }
     const exp = SYN[t] || [t];
+    /*
+     * **친 말 자체를 조건에서 빼지 않는다.** SYN 은 치환표라 `"헤드폰":["버즈"]` 처럼
+     * 원래 말이 목록에 없는 항목이 있는데, 그대로 두면 "JBL 헤드폰"이 **0건**이 된다
+     * (JBL 헤드폰 kw 에는 '버즈'가 없다). 그룹 안은 OR 이라 원래 말을 더하는 것은
+     * 넓히기만 한다 — 좁아져서 사라지는 일이 없다.
+     */
+    const forms = [t];
     for(const e of exp){
       if(e==="__NEW__"){ P.wantNew=true; continue; }
       if(e==="__VALUE__"){ P.wantValue=true; continue; }
       if(e==="__PREMIUM__"){ P.wantPremium=true; continue; }
       if(e==="__PKG__"){ P.pkg=true; continue; }
       if(!P.terms.includes(e)) P.terms.push(e);
+      forms.push(e.toLowerCase());
     }
+    // 카테고리 말은 카테고리 필터가 이미 하므로 조건으로 또 걸지 않는다
+    if(forms.length) P.groups.push({raw:t, forms, req:!isCat});
     P.tokens.push(t);
   }
   return P;
@@ -633,8 +713,31 @@ function search(P){
     }
     return out;
   }
+  /*
+   * ─── 조건은 AND, 조건 안의 표기는 OR ───
+   *
+   * 예전에는 **카테고리만 맞으면 나머지 조건이 하나도 안 맞아도 남겼다**(`sc=1` 폴백).
+   * 그래서 "로봇청소기 직배수"가 직배수 없는 제품까지 다 내밀었다. 조건을 겹쳐 좁히라고
+   * 만든 도구에서 조건이 아무 일도 안 하면 없느니만 못하다.
+   *
+   * 다만 **DB 에 아예 없는 말은 조건에서 뺀다** — "부모님 효도 워치"의 '효도'처럼 사람이
+   * 덧붙이는 말이 섞이는데, 그 하나 때문에 문장 전체가 0건이 되면 상담이 막힌다.
+   * 목록으로 관리하지 않고 **데이터가 스스로 판정하게** 한다(통합검색과 같은 원칙).
+   * 조용히 빼지 않는다 — 뺀 말은 해석 바에 적는다.
+   */
+  const liveG = [];
+  P.ignored = [];
+  for(const g of (P.groups||[])){
+    if(!g.req || !g.forms.length) continue;
+    if(PRODUCTS.some(p=>g.forms.some(f=>p.kw.indexOf(f)>=0))) liveG.push(g);
+    else P.ignored.push(g.raw);
+  }
+
   const out = [];
   for(const p of PRODUCTS){
+    // 형태 필터는 자기 카테고리 안에서만 건다("드럼세탁기 건조기"에서 건조기까지 지우지 않게)
+    if(P.subs.length && P.subs.some(s=>p.cat===s.cat && !s.re.test(p.model))) continue;
+    if(liveG.length && !liveG.every(g=>g.forms.some(f=>p.kw.indexOf(f)>=0))) continue;
     // 가격 미상(price:null) 제품은 예산 조건이 걸린 검색에서 제외한다. null은 JS 비교에서
     // 0으로 취급돼 "예산 이하"에 항상 걸리므로, 그대로 두면 가격 없는 제품이 최저가처럼
     // 상단에 뜨는 왜곡이 생긴다(카탈로그 기준 구세대 모델은 출시가 정보가 없음).
@@ -701,15 +804,17 @@ function runSearch(){
   $("aiHost").innerHTML = "";
   if(!raw){ toast("키워드를 입력하세요"); return; }
   const P = parseQuery(raw);
+  // 검색을 먼저 돌린다 — "DB 에 없어 뺀 말"이 그 안에서 판정되고, 해석 바가 그걸 보여준다
+  lastResults = search(P);
   // 해석 태그 바
   $("parseBar").innerHTML = [
-    ...P.tags.map(t=>`<span class="ptag ${t.startsWith('카테고리')?'cat':'fil'}">${esc(t)}</span>`),
-    ...P.terms.slice(0,6).map(t=>`<span class="ptag">${esc(t)}</span>`)
+    ...P.tags.map(t=>`<span class="ptag ${t.startsWith('카테고리')||t.startsWith('형태')?'cat':'fil'}">${esc(t)}</span>`),
+    ...P.terms.slice(0,6).map(t=>`<span class="ptag">${esc(t)}</span>`),
+    ...(P.ignored||[]).map(t=>`<span class="ptag off">${esc(t)} — 없는 말이라 뺐습니다</span>`)
   ].join("") + `<span class="rescount" id="resCount"></span>`;
   // 미수록 안내
   $("noticeHost").innerHTML = P.unsupported.length ?
     `<div class="notice"><b>${P.unsupported.map(esc).join(", ")}</b>은(는) 현재 DB 미수록 카테고리입니다. [DB 최신화] 작업으로 보강 예정이며, 우선 수록된 22개 카테고리에서 검색해 보세요.</div>` : "";
-  lastResults = search(P);
   sortMode = P.wantValue ? "asc" : "rank";
   renderSortRow();
   renderResults();

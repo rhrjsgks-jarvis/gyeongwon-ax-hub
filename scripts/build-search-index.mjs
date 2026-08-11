@@ -21,7 +21,17 @@ const pub = (f) => path.join(__dirname, '..', 'public', f);
 const read = (f) => fs.readFileSync(pub(f), 'utf8');
 
 const entries = [];
-const add = (e) => entries.push(e);
+/*
+ * **화면에 보이는 제목은 반드시 검색어에 들어간다.**
+ *
+ * 각 절이 kw 를 손으로 짓다 보니 AS 묶음 107건만 제목이 빠져 있었다 — 화면에는
+ * `김치냉장고 보증기간` 이라고 적혀 있는데 kw 에는 `보증` 만 있어 **그 제목 그대로 쳐도
+ * 0건**이었다(`로열블루`도 같은 이유로 0건). 화면에 적힌 말로 못 찾는 것은 검색이 아니다.
+ *
+ * 절마다 고치면 다음 모듈에서 또 빠지므로 **여기 한 곳에서** 붙인다.
+ * `test-search.mjs` 가 전 항목에 대해 이 불변식을 검사한다.
+ */
+const add = (e) => entries.push({ ...e, kw: `${e.kw} ${e.title}` });
 
 /*
  * ── 1. 제품 상세검색: **제품만** ──
@@ -146,6 +156,11 @@ function flatten(v, out = []) {
   const SINK = literal(html, /\nconst SINK = (\[[\s\S]*?\n\]);/, 'as-app.html 의 SINK');
   const NAT = literal(html, /\nconst B2B_NATION = (\[[\s\S]*?\n\]);/, 'as-app.html 의 B2B_NATION');
   const MID = literal(html, /\nconst MID = (\[[\s\S]*?\n\]);/, 'as-app.html 의 MID');
+  const ROYAL = literal(html, /\nconst ROYAL = (\{[\s\S]*?\});\n/, 'as-app.html 의 ROYAL');
+
+  // 멤버십 등급 연장 — 화면에는 있는데 색인에 없어 '로열블루'가 0건이었다
+  add({ t: 'category', m: 'as', title: `멤버십 ${ROYAL.grade}`, sub: ROYAL.benefit,
+    kw: [...flatten(ROYAL), '멤버십 등급 연장 무상수리 로열'].join(' '), href: '/as' });
 
   for (const [cat, d] of Object.entries(DBA)) {
     add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
@@ -190,12 +205,30 @@ function flatten(v, out = []) {
 // 목록·추천·대안이 같은 목록을 봐야 한다는 규칙과 같다(CLAUDE.md 공기청정기 벽걸이 건).
 {
   const reps = JSON.parse(fs.readFileSync(pub('size-reps.json'), 'utf8'));
+  /*
+   * **방 이름으로도 찾을 수 있어야 한다** — 상담에서 나오는 말이 *"안방에 놓을 에어드레서"*
+   * 이지 *"에어드레서 규격"* 이 아니다. 동의어표에 `안방 ↔ 침실1` 을 넣어 두고도 색인에
+   * 두 표기가 **한 건도 없어** 그 질의가 통째로 0건이었다.
+   *
+   * 방↔가전 대응은 배치 시뮬레이터의 `ROOM_PLAN` 이 이미 들고 있다(가전 선택 시트의 방
+   * 드롭다운 기본값이 이 표에서 나온다). **여기서 새로 짓지 않고 그 표를 읽는다** —
+   * 따로 적으면 한쪽만 고쳤을 때 화면과 검색이 어긋난다.
+   */
+  const ROOM_PLAN = literal(read('place-app.html'), /\nconst ROOM_PLAN = (\{[\s\S]*?\n\});/,
+    'place-app.html 의 ROOM_PLAN');
+  // 도면 표기가 '침실1'인 곳이 절반이고 상담에서는 '안방'이라 부른다(CLAUDE.md 실측 120장)
+  const ROOM_ALIAS = { 침실: ['침실', '안방', '침실1', '침실2', '침실3', '주침실'] };
+  const roomsFor = (cat) => Object.entries(ROOM_PLAN)
+    .filter(([, cats]) => cats.includes(cat))
+    .flatMap(([use]) => ROOM_ALIAS[use] || [use]);
+
   for (const r of reps) {
     if (r.hidden) continue;
     const p = (r.parts || [])[0];
     add({ t: 'size', m: 'place', title: `${r.cat} ${r.size}`,
       sub: p ? `${p.raw} (${p.label})` : r.sizeLabel || '',
       kw: [r.cat, r.size, r.group, r.sizeLabel, r.note, '배치 시뮬레이터 치수 규격 사이즈 이격',
+        ...roomsFor(r.cat),
         ...flatten(r.specs), ...flatten((r.parts || []).map((x) => [x.part, x.raw]))].join(' '),
       href: '/place' });
   }
