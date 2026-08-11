@@ -20,7 +20,9 @@
   .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:16px}
   .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
     font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:#374151}
-  .cat .ci{font-size:17px;display:block;margin-bottom:3px;line-height:1}
+  /* 아이콘 크기는 AI구독 케어와 같은 값(22px)으로 맞춘다 — 앱을 넘겨 볼 때 같은 무게로 읽힌다 */
+  .cat .ci{display:block;margin-bottom:4px;line-height:1}
+  .cat .ci .psym{width:22px;height:22px;margin:0 auto}
   /* 보증 적용 기준 — 라벨로 갈라 적는다. 한 줄로 뭉치면 상담 중에 답을 다시 찾아야 한다
      (AI구독 케어의 조건 라벨과 같은 방식이다) */
   .rule{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid #f1f3f6}
@@ -46,6 +48,8 @@
   .ct-n{flex:0 0 auto;font-size:13px;font-weight:800;color:#1428A0;letter-spacing:-.01em}
   .cat:hover{border-color:#c7d2fe}
   .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
+  /* 심벌은 기본색이 삼성 블루라 선택된 남색 타일에서 안 보인다 — 흰색으로 뒤집는다 */
+  .cat.on .ci .psym{color:#fff}
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
   .card h2{font-size:14px;font-weight:800;margin:0 0 3px;display:flex;align-items:center;gap:6px}
   .big{font-size:27px;font-weight:800;color:#1428A0;line-height:1.15;margin:4px 0 2px}

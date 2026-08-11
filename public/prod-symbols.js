@@ -140,6 +140,12 @@
 
   /** 심벌 하나. 못 찾으면 fallback(대개 원래 이모지)으로 물러선다. */
   function prodSymbol(label, fallback) {
+    /*
+     * **크기 CSS 를 여기서도 넣는다.** 예전에는 upgradeIcons() 만 넣었는데, 이 함수만
+     * 쓰는 앱에서는 규칙이 없어 SVG 가 담는 칸을 꽉 채웠다 — AS 에서 아이콘이 타일의
+     * 85%(78.8px)까지 커졌다. 스타일 없는 SVG 는 width 가 auto 라 부모만큼 늘어난다.
+     */
+    injectCss();
     var k = symbolKey(label);
     if (!k || !S[k]) return fallback == null ? '' : fallback;
     return '<svg class="psym" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"'
