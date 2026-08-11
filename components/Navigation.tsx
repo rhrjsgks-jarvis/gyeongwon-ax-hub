@@ -85,7 +85,7 @@ export default function Navigation() {
 
       {/* 하단 탭 — 5개 전체 표시 (slice 제거) */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {NAV_ITEMS.map((item) => {
@@ -111,7 +111,7 @@ export default function Navigation() {
       </nav>
 
       {/* 사이드바 (데스크탑) */}
-      <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
+      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
         <div className="px-3 py-4 flex flex-col gap-1">
           {NAV_ITEMS.filter((item) => item.href === '/').map((item) => {
             const active = pathname === item.href

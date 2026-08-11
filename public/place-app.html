@@ -126,17 +126,27 @@
   #modal{position:absolute;inset:0;background:rgba(15,18,22,.42);display:none;align-items:center;
     justify-content:center;padding:16px;z-index:20}
   #modal.on{display:flex}
-  .sheet{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:86%;overflow:auto;
-    padding:16px;display:flex;flex-direction:column;gap:12px}
+  .sheet{--pad:16px;background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:86%;overflow:auto;
+    padding:var(--pad);display:flex;flex-direction:column;gap:12px}
   .sheet h2{margin:0;font-size:16px}
   .pickers{display:flex;flex-direction:column;gap:8px}
   .pickers label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  /* 체크박스 줄은 세로로 쌓으면 상자가 글자 위에 홀로 떠서 무엇의 체크인지 안 보인다 */
+  .pickers label.chk{flex-direction:row;align-items:center;gap:7px}
+  .pickers label.chk input{width:17px;height:17px;flex:none;accent-color:var(--brand);margin:0}
   .pickers select{max-width:none;width:100%}
   .spec{background:#F7F8FA;border-radius:8px;padding:9px 10px;font-size:12px;color:var(--muted);
     display:flex;flex-direction:column;gap:3px}
   .spec b{color:var(--ink);font-variant-numeric:tabular-nums}
   .src{font-size:11px;color:#8A9099;line-height:1.4}
-  .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+  /*
+   * 시트가 길어져 스크롤이 생기면 '도면 옆에 꺼내기' 같은 확정 버튼이 화면 밖으로
+   * 밀려난다 — 목록에 자리를 준 뒤 실제로 그렇게 됐다. 버튼은 항상 바닥에 붙여 둔다.
+   */
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
+    position:sticky;bottom:calc(-1*var(--pad));z-index:2;background:#fff;
+    /* 시트 안쪽 여백까지 덮어야 목록이 버튼 옆·아래로 비쳐 보이지 않는다 */
+    padding:10px var(--pad) var(--pad);margin:0 calc(-1*var(--pad)) calc(-1*var(--pad))}
   .liblist{max-height:46vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin:10px 0}
   /* 시·도 칩 — 지역이 17곳이라 휴대폰에서 계속 쓸어내려야 했다. 먼저 걸러 준다. */
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
@@ -160,7 +170,23 @@
   .crumb{font-size:12.5px;color:var(--sub);margin:8px 0 2px}
   .crumb a{color:var(--blue);text-decoration:none}
   .crumb a:hover{text-decoration:underline}
-  .picklist{display:flex;flex-direction:column;gap:2px;max-height:46vh;overflow:auto;
+  /*
+   * **고르는 자리가 어디인지 한눈에 보여야 한다.**
+   * 좁은 화면에서 추천 문구와 아래 설명글에 눌려 목록이 한 줄로 찌그러졌고,
+   * 사용자가 "어디가 가전선택창인지 한참을 찾았다"고 했다(2026-08-09).
+   * 목록 위에 제목을 달아 자리를 밝히고, 설명글은 접어 둔다.
+   */
+  .pickhead{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:2px 0 -4px}
+  .pickhead b{font-size:14px;color:var(--ink)}
+  .pickhead .hint{font-size:11.5px}
+  .help{border:1px solid var(--line);border-radius:8px;padding:0 10px}
+  .help summary{padding:8px 0;font:600 12px system-ui;color:var(--blue);cursor:pointer;list-style:none}
+  .help summary::-webkit-details-marker{display:none}
+  .help summary::before{content:'▸ '}
+  .help[open] summary::before{content:'▾ '}
+  .help .src{padding-bottom:10px}
+  /* 시트가 세로 플렉스라 min-height 가 없으면 위아래 글자에 밀려 목록만 찌그러진다 */
+  .picklist{display:flex;flex-direction:column;gap:2px;max-height:46vh;min-height:32vh;overflow:auto;
     border:1px solid var(--line);border-radius:8px;padding:6px}
   .pick{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;cursor:pointer}
   .pick:hover{background:#F4F6F9}
@@ -219,7 +245,7 @@
      * 자리를 먹어 목록이 두 칸밖에 안 보였다. 시트를 거의 전체 높이로 열고
      * 남는 자리를 전부 목록에 준다.
      */
-    .sheet{max-height:94%;padding:14px}
+    .sheet{--pad:14px;max-height:94%}
     .liblist{max-height:none;flex:1;min-height:34vh}
     /*
      * **가전 목록도 같은 처방이 필요하다.** 시트가 flex-column 이라 최소 높이를 안 주면
@@ -246,6 +272,31 @@
     /* 설명글이 화면을 먹지 않게 — 좁은 화면에서는 목록이 먼저다 */
     .sheet .src{display:none}
     .libitem{padding:13px 12px}
+    /*
+     * 가전 선택도 **목록이 주인공인 화면**이다. 시트가 세로 플렉스라 목록이 기본값대로
+     * 찌그러져 한 줄만 보였다 — 위아래 설명글은 글자라서 줄어들지 않고 목록만 줄어든다.
+     * 최소 높이를 박아 목록이 언제나 화면의 절반을 차지하게 한다.
+     */
+    .picklist{max-height:none;flex:1 1 auto;min-height:46vh}
+    /*
+     * 한 줄에 [체크·이름·사이즈·수량·방]을 다 넣으면 폭이 모자라 오른쪽이 잘린다
+     * (실제로 방 드롭다운이 화면 밖으로 나갔다). 두 줄로 접는다 —
+     * 1줄 체크·이름·방 / 2줄 사이즈·수량.
+     */
+    .pick{flex-wrap:wrap;row-gap:6px;padding:9px 6px}
+    .pick .nm{flex:1 1 auto;min-width:0;font-size:14px}
+    .pick select[data-room]{flex:0 0 auto;max-width:32vw}
+    /* 사이즈 드롭다운은 글자가 길어 통째로 아랫줄을 준다 */
+    .pick select[data-size]{order:10;flex:1 1 100%;max-width:none;padding:7px}
+    .pick input[type=number]{padding:7px 6px}
+    .pickinfo{margin-left:0}
+    /*
+     * 치수·모델코드·이격 줄은 항목마다 세 줄이라, 스무 종을 늘어놓으면 목록이
+     * 세 배로 길어져 정작 고를 것을 찾기 어렵다. **체크한 것만** 펼친다 —
+     * 고르지 않은 것의 상세는 그 시점에 볼 이유가 없다.
+     * :has 를 못 쓰는 브라우저에서는 이 규칙이 통째로 무시돼 예전처럼 전부 보인다.
+     */
+    .pick:not(:has(input[type=checkbox]:checked)) + .pickinfo{display:none}
     #side{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
       transition:transform .2s;z-index:15;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
     #side.on{transform:none}
@@ -3588,14 +3639,17 @@ async function openSelect(room){
         <span class="hint">업소용·빌트인·리빙 상품도 보기 (${otherCats.length}종)</span></label>` : ''}
     </div>
     <p class="spec" id="a-rec"></p>
+    <div class="pickhead"><b>여기서 고르세요</b>
+      <span class="hint">체크한 것만 도면에 나갑니다 · 사이즈·수량·방은 각 줄에서</span></div>
     <div id="a-list" class="picklist"></div>
+    <details class="help"><summary>'도면 옆에 꺼내기'와 '자동 배치'는 어떻게 다른가요?</summary>
     <p class="src"><b>도면 옆에 꺼내기</b>를 누르면 체크한 가전이 도면 오른쪽에 세워집니다 — 끌어서 원하는 자리에 놓으시면 됩니다.
       벽을 넘으면 안쪽으로 옮겨 드리고 그 사실을 알려드립니다. TV·사운드바와 세탁기·건조기는 위아래로 설치하는 조합이라 같은 자리에 놓을 수 있습니다.<br>
       <b>자동 배치</b>는 체크한 가전을 폭이 큰 것부터 긴 벽을 따라 놓습니다. 이격거리와 방 경계를 지키는
       자리를 못 찾으면 억지로 놓지 않고 "자리 없음"으로 알려드립니다. 놓은 뒤에는 끌어서 옮길 수 있고,
       겹치는 자리에는 놓이지 않습니다.<br>
       추천은 <b>시작점</b>입니다 — 에어컨·공기청정기는 잡아 둔 방 넓이로 계산한 값이고,
-      TV·냉장고·세탁기는 평형별로 흔히 나가는 구성입니다. 체크를 풀거나 사이즈를 바꾸면 됩니다.</p>
+      TV·냉장고·세탁기는 평형별로 흔히 나가는 구성입니다. 체크를 풀거나 사이즈를 바꾸면 됩니다.</p></details>
     <div class="modal-actions">
       <button id="c">취소</button>
       <button id="auto" title="이격과 방 경계를 지키는 자리를 찾아 자동으로 놓습니다">자동 배치</button>
