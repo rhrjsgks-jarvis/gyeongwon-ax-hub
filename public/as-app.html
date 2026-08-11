@@ -154,7 +154,8 @@ function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, ''
 function renderCats(){
   document.getElementById('cats').innerHTML = keys.map(k=>
     `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
-  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); });
+  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody();
+if (typeof mountShareButton === 'function') mountShareButton(shareBuild); });
 }
 
 function renderBody(){
@@ -206,6 +207,23 @@ function renderBody(){
 
   document.getElementById('body').innerHTML = h;
   if (typeof wireContacts === 'function') wireContacts(document.getElementById('body'), '.ct');
+
+}
+
+
+/* 고객에게 보낼 카드 — 지금 고른 품목의 보증 내용을 이미지 한 장으로 만든다.
+ * 화면 그대로가 아니라 **상담에 필요한 것만** 담는다: 기간·근거·출처.
+ * 확인 못 한 값은 카드에도 그대로 "확인 필요"로 나간다 — 화면과 다른 말을 하면 안 된다. */
+function shareBuild(){
+  const d = DB[cur]; if(!d) return null;
+  const sec = [{ h:"무상보증기간", rows:[[d.base, "", "원문 구분: " + d.baseWhy + (d.baseNote ? " · " + d.baseNote : "")]] }];
+  if((d.core||[]).length) sec.push({ h:"핵심부품 무상기간", rows:d.core.map(c=>[c[0], c[1], c[2]]) });
+  sec.push({ h:"부품보유기간 (내용연수)", rows:[[ d.hold ? d.hold + "년" : "확인 필요", "",
+    d.hold ? "원문 표기: " + d.holdAs : "원문 표에 이 품목이 없습니다 — 고객센터 1588-3366 확인 필요" ]] });
+  if(d.note) sec.push({ h:"주의", rows:[[d.note, ""]] });
+  return { app:"세일즈 코파일럿 · AS기간 확인", title:cur, subtitle:"", sections:sec,
+    note:"출처 — 삼성전자서비스 보증기간 산정기준(2026-08-10 확인). 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.",
+    filename:"AS기간_" + cur.replace(/[\/:*?"<>|]/g,"") };
 }
 
 renderCats(); renderBody();

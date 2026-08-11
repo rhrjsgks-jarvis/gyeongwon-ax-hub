@@ -141,10 +141,162 @@
     return n;
   }
 
+  /* ══════════════ 공유 카드 ══════════════
+   *
+   * 상담 결과를 고객 손에 남기는 통로다. **웹에는 화면을 그대로 캡처하는 API 가 없으므로**
+   * 내용을 캔버스에 다시 그린다(배치 시뮬레이터가 결과 저장에 쓰던 방식과 같다).
+   *
+   * **2배로 그린다.** 카톡으로 보내면 재압축되는데 등배로 만들면 글자가 뭉갠다.
+   * navigator.share(파일)를 먼저 쓰고, 없거나 실패하면 내려받기로 물러선다.
+   * **취소(AbortError)는 실패가 아니다** — 조용히 끝낸다.
+   */
+  var W = 720, PAD = 34, SCALE = 2;
+  var NAVY = '#1428A0', INK = '#16181b', SUB = '#6b7280', LINE = '#e9ecf3';
+
+  function wrap(ctx, text, maxW) {
+    var out = [], line = '';
+    String(text).split(/\s+/).forEach(function (w) {
+      var t = line ? line + ' ' + w : w;
+      if (ctx.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t;
+    });
+    if (line) out.push(line);
+    return out;
+  }
+
+  /**
+   * 카드 이미지를 만든다.
+   * opts = { app, title, subtitle, sections:[{h, rows:[[이름, 값, 설명?]]}], note, filename }
+   */
+  function buildCard(opts) {
+    var m = document.createElement('canvas').getContext('2d');
+    var F = function (sz, w) { m.font = (w || 600) + ' ' + sz + "px Pretendard, -apple-system, 'Segoe UI', sans-serif"; };
+
+    /* 1차: 높이를 재기 위해 줄을 미리 접는다 */
+    var body = [], y = 0;
+    (opts.sections || []).forEach(function (s) {
+      body.push({ t: 'h', v: s.h }); y += 40;
+      (s.rows || []).forEach(function (r) {
+        F(15, 700);
+        var nm = String(r[0]);
+        F(13, 400);
+        var det = r[2] ? wrap(m, r[2], W - PAD * 2 - 8) : [];
+        body.push({ t: 'r', nm: nm, val: r[1] == null ? '' : String(r[1]), det: det });
+        y += 26 + det.length * 19 + 10;
+      });
+      y += 8;
+    });
+    F(12, 400);
+    var noteLines = opts.note ? wrap(m, opts.note, W - PAD * 2) : [];
+    var H = 96 + y + (noteLines.length ? noteLines.length * 18 + 22 : 12) + PAD;
+
+    var cv = document.createElement('canvas');
+    cv.width = W * SCALE; cv.height = H * SCALE;
+    var c = cv.getContext('2d');
+    c.scale(SCALE, SCALE);
+    var f = function (sz, w) { c.font = (w || 600) + ' ' + sz + "px Pretendard, -apple-system, 'Segoe UI', sans-serif"; };
+
+    c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+    /* 머리 — 아홉 앱의 남색 바와 같은 색이다 */
+    c.fillStyle = NAVY; c.fillRect(0, 0, W, 76);
+    c.fillStyle = '#fff'; f(19, 800);
+    c.fillText(opts.title || '', PAD, 34);
+    c.fillStyle = '#C7D2FE'; f(12.5, 500);
+    c.fillText((opts.app || '세일즈 코파일럿') + (opts.subtitle ? ' · ' + opts.subtitle : ''), PAD, 56);
+
+    var cy = 96;
+    body.forEach(function (b) {
+      if (b.t === 'h') {
+        c.fillStyle = SUB; f(12, 800);
+        c.fillText(b.v, PAD, cy + 12);
+        c.strokeStyle = LINE; c.lineWidth = 1;
+        c.beginPath(); c.moveTo(PAD, cy + 22.5); c.lineTo(W - PAD, cy + 22.5); c.stroke();
+        cy += 40;
+        return;
+      }
+      c.fillStyle = INK; f(15, 700);
+      c.fillText(b.nm, PAD, cy + 14);
+      if (b.val) {
+        c.fillStyle = NAVY; f(15, 800);
+        c.textAlign = 'right'; c.fillText(b.val, W - PAD, cy + 14); c.textAlign = 'left';
+      }
+      cy += 26;
+      c.fillStyle = SUB; f(13, 400);
+      b.det.forEach(function (l) { c.fillText(l, PAD, cy + 12); cy += 19; });
+      cy += 10;
+    });
+
+    if (noteLines.length) {
+      cy += 6;
+      c.fillStyle = '#9aa0a6'; f(12, 400);
+      noteLines.forEach(function (l) { c.fillText(l, PAD, cy + 10); cy += 18; });
+    }
+
+    /* 높이는 그리기 전에 어림으로 잡을 수밖에 없어 아래가 남는다 —
+       다 그린 뒤 실제로 쓴 높이로 잘라낸다. 빈 여백이 붙어 있으면 카톡에서 어색하다. */
+    var used = Math.ceil(cy + PAD);
+    if (used > 0 && used < H) {
+      var cut = document.createElement('canvas');
+      cut.width = W * SCALE; cut.height = used * SCALE;
+      cut.getContext('2d').drawImage(cv, 0, 0);
+      return cut;
+    }
+    return cv;
+  }
+
+  function shareCard(opts) {
+    var cv;
+    try { cv = buildCard(opts); } catch (e) { toast('이미지를 만들지 못했습니다'); return; }
+    var name = (opts.filename || '세일즈코파일럿') + '.png';
+    cv.toBlob(function (blob) {
+      if (!blob) { toast('이미지를 만들지 못했습니다'); return; }
+      var file = null;
+      try { file = new File([blob], name, { type: 'image/png' }); } catch (e) { /* File 미지원 */ }
+      if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+        navigator.share({ files: [file], title: opts.title || '' })
+          .catch(function (err) { if (!err || err.name !== 'AbortError') download(blob, name); });
+        return;
+      }
+      download(blob, name);
+    }, 'image/png');
+  }
+
+  function download(blob, name) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    toast('이미지를 저장했습니다');
+  }
+
+  /** 화면 오른쪽 아래에 공유 버튼을 띄운다. build() 는 shareCard 옵션을 돌려준다. */
+  function mountShareButton(build, label) {
+    injectCss();
+    if (document.getElementById('sk-share')) return;
+    var st = document.createElement('style');
+    st.textContent = '#sk-share{position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));'
+      + 'z-index:8000;background:#1428A0;color:#fff;border:0;border-radius:99px;padding:11px 17px;'
+      + 'font-size:13px;font-weight:800;font-family:inherit;cursor:pointer;'
+      + 'box-shadow:0 4px 14px rgba(20,40,160,.32)}#sk-share:active{opacity:.85}';
+    document.head.appendChild(st);
+    var b = document.createElement('button');
+    b.id = 'sk-share'; b.type = 'button';
+    b.textContent = label || '고객에게 공유';
+    b.addEventListener('click', function () {
+      var o = build();
+      if (!o) { toast('공유할 내용이 없습니다'); return; }
+      shareCard(o);
+    });
+    document.body.appendChild(b);
+  }
+
   global.SHARE_KIT = {
     sheet: sheet, closeSheet: closeSheet, toast: toast, copyText: copyText,
     contactSheet: contactSheet, wireContacts: wireContacts,
+    buildCard: buildCard, shareCard: shareCard, mountShareButton: mountShareButton,
   };
   global.contactSheet = contactSheet;
   global.wireContacts = wireContacts;
+  global.shareCard = shareCard;
+  global.mountShareButton = mountShareButton;
 })(window);
