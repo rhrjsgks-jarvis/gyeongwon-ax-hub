@@ -112,7 +112,7 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 /* 제품을 고르면 결과로 스크롤한다 — sticky 탭에 가리지 않게 여백을 준다 */
 #body{scroll-margin-top:64px}
 .mode-tab .mt-ico{font-size:16px;display:block;margin-bottom:2px}
-/* === 전체품목 뷰 === */
+/* === 모델선택 뷰 === */
 .ov-lead{padding:14px 16px 0;font-size:12.5px;font-weight:700;color:#16181b}
 .ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px 14px}
 .ov-card{background:#fff;border-radius:16px;padding:14px 12px;cursor:pointer;border:1.5px solid #ecedf1;transition:all .15s;position:relative}
@@ -271,13 +271,13 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
     <div class="hd-pill">📎 <b>삼성닷컴 공식</b> + <b>AI구독클럽 브로슈어 2026.06</b> 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
   </div>
 <!--
-  탭 순서가 곧 상담 순서다 — 블루패스(왜 삼성인가) → 전체품목(무엇을 살까)
+  탭 순서가 곧 상담 순서다 — 블루패스(왜 삼성인가) → 모델선택(무엇을 살까)
   → 케어정보(그 제품은 어떻게 관리되나) → 타임라인(언제 오나).
   탭이 셋일 때는 4칸 그리드에 3개만 들어가 오른쪽 1/4이 비어 있었다.
 -->
 <div class="mode-tabs" id="modeTabs">
   <div class="mode-tab on" data-mode="bluepass" onclick="setMode('bluepass')"><span class="mt-ico">🎫</span>블루패스</div>
-  <div class="mode-tab" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>전체품목</div>
+  <div class="mode-tab" data-mode="overview" onclick="setMode('overview')"><span class="mt-ico">🏠</span>모델선택</div>
   <div class="mode-tab" data-mode="care" onclick="setMode('care')"><span class="mt-ico">🛡️</span>케어정보</div>
   <div class="mode-tab" data-mode="timeline" onclick="setMode('timeline')"><span class="mt-ico">📅</span>타임라인</div>
 </div>
@@ -2343,7 +2343,7 @@ function setMode(m){
 
 /* ═══════════════ BLUE PASS ═══════════════ */
 /*
- * 블루패스 전용 탭. 예전에는 전체품목 화면 맨 위에 얹혀 있었는데, 그러면
+ * 블루패스 전용 탭. 예전에는 모델선택 화면 맨 위에 얹혀 있었는데, 그러면
  * 내용을 자세히 적을수록 정작 품목 카드가 화면 밖으로 밀린다. 둘을 갈랐다.
  *
  * 품목을 **직접 고른** 상태면 그 품목을 넘겨 준다 — 에어컨을 보다 넘어오면
