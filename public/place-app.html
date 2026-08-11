@@ -54,6 +54,23 @@
     repeating-linear-gradient(0deg,#EFF1F3 0 1px,transparent 1px 24px),
     repeating-linear-gradient(90deg,#EFF1F3 0 1px,transparent 1px 24px),#FAFBFC;}
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+  /* 3D 는 2D 캔버스 위에 겹쳐 두고 보이기만 바꾼다. 2D 상태(줌·팬·선택)를 유지해야
+     3D 를 껐을 때 보던 자리로 그대로 돌아온다. */
+  #cv3{display:none;background:#EAEEF3}
+  #stage.on3d #cv{display:none}
+  #stage.on3d #cv3{display:block}
+  /* 2D 화면 위에 얹혀 있던 것들은 3D 에서 전부 내린다 — 안내문·요약띠·초안막대가
+     3D 위에 겹쳐 떠 있으면 도면이 글자에 덮여 "우리 집 느낌"이 통째로 죽는다. */
+  #stage.on3d #empty, #stage.on3d #mini, #stage.on3d #draftbar{display:none}
+  /* 3D 안내띠 — 무엇을 보고 있는지, 어떻게 돌리는지 한 줄로 */
+  #d3bar{position:absolute;left:8px;right:8px;bottom:8px;z-index:6;display:none;
+    background:rgba(17,24,39,.86);color:#fff;border-radius:12px;padding:9px 12px;
+    font-size:12px;line-height:1.5;display:none;align-items:center;gap:10px;flex-wrap:wrap}
+  #stage.on3d #d3bar{display:flex}
+  #d3bar b{font-weight:700}
+  #d3bar .sp{flex:1}
+  #d3bar button{background:#fff;color:#111827;border:0;border-radius:8px;
+    padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
   #empty{
     position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;
     align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--muted);
@@ -324,6 +341,9 @@
     <button id="btn-lib" class="primary">단지 불러오기</button>
     <button id="btn-img">도면 이미지</button>
     <button id="btn-add">가전 선택</button>
+    <!-- 3D 는 고객에게 "우리 집 느낌"을 보여주는 화면이라 ⋯ 안에 숨기지 않는다.
+         상담 흐름이 단지 → 가전 → 3D → 저장 이므로 자리도 그 순서에 둔다. -->
+    <button id="btn-3d">3D 보기</button>
     <button id="btn-share">결과 저장</button>
     <button id="btn-back" class="ghost" title="뒤로">←</button>
     <button id="btn-fit" class="ghost" title="도면이 화면에 들어오게 맞춥니다">⤢</button>
@@ -346,6 +366,8 @@
   <div id="main">
     <div id="stage">
       <canvas id="cv"></canvas>
+      <canvas id="cv3"></canvas>
+      <div id="d3bar"></div>
       <div id="empty">
         <strong>도면을 올리고 축척을 맞추면 시작합니다</strong>
         <span>도면을 올리면 <b>벽을 자동으로 인식</b>합니다. 그 뒤 가전을 체크해 고르면 이격거리에 맞춰 놓아 드립니다.</span>
@@ -588,6 +610,29 @@ function inRoom(room, x, y){
 }
 /** 이 점을 품는 방 (여러 개면 첫 번째) */
 function roomAt(x,y){ return state.rooms.find((r)=>inRoom(r,x,y)) || null; }
+
+/*
+ * 세울 수 있는 방 경계를 전부 모은다 — 3D 가 바닥과 벽을 만드는 재료다.
+ *
+ * 규칙은 판정 코드와 같아야 한다: **방이 하나라도 있으면 방별·조각별로** 돌고,
+ * 하나도 없으면 예전처럼 `state.walls` 하나만 본다(직접 그리기 경로와 기존 테스트가
+ * 그렇게 동작한다 — CLAUDE.md 가 깨지 말라고 못박은 규칙이다).
+ * 방 하나가 여러 조각일 수 있으므로(붙박이장 선이 방을 가르는 도면) 조각마다 고리를 낸다.
+ */
+function roomLoops(){
+  const out = [];
+  if (state.rooms.length){
+    for (const r of state.rooms)
+      for (const p of r.parts){
+        const L = loopOfWalls(p.walls);
+        if (L && L.length >= 3) out.push({ room:r, name:r.name, pts:L, walls:p.walls });
+      }
+  } else {
+    const L = wallLoop();
+    if (L && L.length >= 3) out.push({ room:null, name:null, pts:L, walls:state.walls });
+  }
+  return out;
+}
 /** 가전이 속한 방. 지정하지 않았으면 null */
 const itemRoom = (it) => (it && it.room ? roomById(it.room) : null);
 /** 가전 기준 "방 안인가" — 방을 지정했으면 그 방, 아니면 아무 방이나 / 방이 없으면 레거시 */
@@ -3034,6 +3079,26 @@ window.addEventListener('popstate', ()=>{ if (backDepth > 0){ backDepth--; stepB
 $('#btn-detect').onclick= ()=> startDetect();
 $('#btn-share').onclick = ()=> shareResult();
 /*
+ * 3D 보기 — 고객에게 "우리 집에 놓으면 이런 느낌"을 보여주는 화면이다.
+ *
+ * 3D 코드는 아래쪽 <script type="module"> 안에 따로 있다(three.js 가 ESM 이라
+ * 이 고전 스크립트에서 import 할 수 없다). 모듈이 늦게 붙을 수 있으므로
+ * **없으면 없다고 말한다** — 조용히 아무 일도 안 일어나면 고장으로 읽힌다.
+ *
+ * 들어가기 전 조건은 2D 와 같다: 축척이 서 있어야 하고(치수가 거짓이면 3D 는 더 심하다)
+ * 세울 벽이 있어야 한다.
+ */
+function open3D(){
+  if (!state.scaled){ needScale(); return; }
+  if (!roomLoops().length){
+    toast('먼저 방을 잡아 주세요 — 벽 자동 인식 또는 벽 그리기');
+    return;
+  }
+  if (!window.Place3D){ toast('3D 화면을 준비하는 중입니다. 잠시 뒤 다시 눌러 주세요'); return; }
+  window.Place3D.toggle();
+}
+$('#btn-3d').onclick = ()=> open3D();
+/*
  * 벽 길이(mm)는 기본으로 끈다. 늘 떠 있으면 숫자가 도면을 덮어 "제품이 놓인 느낌"이
  * 안 보인다 — 이 도구가 보여주려는 것이 그것이다. 필요할 때만 켠다.
  */
@@ -4494,7 +4559,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, clearFor,
+window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
@@ -4506,6 +4571,378 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
   planAreaM2, recommendPicks,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
+</script>
+
+<!--
+  3D 보기 — 고객에게 "우리 집에 놓으면 이런 느낌"을 보여주는 화면.
+
+  왜 별도 <script type="module"> 인가: three.js 가 ESM 이라 위 고전 스크립트에서
+  import 할 수 없다. 모듈 스크립트는 기본이 defer 라 위 스크립트가 먼저 끝나고 실행되므로
+  window.__place 는 여기 도달했을 때 이미 있다.
+
+  three.js 는 public/vendor/ 에 받아 두고 상대경로로 부른다. **CDN 을 쓰지 않는다** —
+  매장 전파가 약해도 한 번 본 화면은 열리게 하려고 서비스워커까지 두는 앱인데
+  3D 만 네트워크에 묶여 있을 이유가 없다(QR 을 직접 그리는 것과 같은 이유).
+-->
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+
+const P = window.__place;
+if (P) {
+
+/* ── 단위와 좌표계 ──────────────────────────────────────────────
+   앱 월드는 (x, y) mm 이고 **y 가 화면 아래쪽**이다(캔버스 관례).
+   3D 는 Y 가 위이므로 (x, y) → (x, 0, y) 로 보낸다. 즉 평면도의 아래쪽이 +Z 다.
+
+   흔한 방법인 "XY 평면에 만들고 X축 −90° 회전"을 쓰면 z 부호가 뒤집혀
+   **평면도가 좌우 반전된다.** 위에서 내려다본 3D 가 2D 화면과 다른 그림이 되면
+   상담 중에 "왼쪽이라면서요"가 나온다. 그래서 회전에 기대지 않고
+   삼각분할 결과를 XZ 에 직접 얹고 법선만 검사해 뒤집는다.
+
+   길이는 m 로 환산한다(mm 그대로 쓰면 원근·조명 상수가 엉뚱한 자릿수가 된다).
+──────────────────────────────────────────────────────────────── */
+const M = (mm) => mm / 1000;
+const WALL_H_MM = 2300;        // 층고 기본값. 평면도에 없는 값이라 가정이고, 화면이 그렇게 밝힌다
+const WALL_T_MM = 60;          // 벽 두께 — 안쪽 면만 알기에 얇게 그린다(치수를 주장하지 않는다)
+const LINTEL_MM = 2100;        // 개구부 위 인방. 문·창을 구분할 수 없으므로 위만 막아 "트인 곳"으로 읽히게 한다
+
+let ren = null, scene = null, cam = null, root = null, raf = 0, on = false;
+const cv3 = document.getElementById('cv3');
+const bar = document.getElementById('d3bar');
+
+/* 카메라 궤도 — 방을 중심에 두고 그 둘레를 돈다 */
+const orb = { tx:0, ty:0, tz:0, dist:8, yaw:-0.7, pitch:0.85, min:1, max:60 };
+
+function ensure(){
+  if (ren) return;
+  ren = new THREE.WebGLRenderer({ canvas:cv3, antialias:true, preserveDrawingBuffer:true });
+  ren.setClearColor(0xEAEEF3, 1);
+  scene = new THREE.Scene();
+  cam = new THREE.PerspectiveCamera(52, 1, 0.05, 400);
+  /* 조명은 부드럽게. 그림자를 세게 넣으면 도면 텍스처가 어두워져 "우리 집"이 안 보인다 */
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x9AA5B1, 2.1));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(4, 9, 5); scene.add(key);
+  root = new THREE.Group(); scene.add(root);
+}
+
+/* ── 방 바닥 ──────────────────────────────────────────────────
+   원본 도면 이미지를 그대로 바닥 텍스처로 쓴다. 도면에 이미 그려져 있는
+   마루색·타일·가구가 살아나 자산을 만들지 않고도 "우리 집"이 된다.
+   (CLAUDE.md: 원본을 정리본으로 갈아 끼웠더니 "현장감이 무너진다"는 지적을 받았다.)
+──────────────────────────────────────────────────────────────── */
+let planTex = null;
+function planTexture(){
+  const st = P.state;
+  if (!st.img || !st.mmPerPx) return null;
+  if (planTex && planTex.__src === st.img) return planTex;
+  planTex = new THREE.Texture(st.img);
+  planTex.__src = st.img;
+  planTex.colorSpace = THREE.SRGBColorSpace;
+  planTex.needsUpdate = true;
+  return planTex;
+}
+
+function floorMesh(pts){
+  const st = P.state;
+  const contour = pts.map((p) => new THREE.Vector2(p[0], p[1]));   // mm 그대로 삼각분할
+  const tris = THREE.ShapeUtils.triangulateShape(contour, []);
+  if (!tris.length) return null;
+
+  const pos = [], uv = [], nor = [];
+  const texW = st.img && st.mmPerPx ? st.imgW * st.mmPerPx : 0;
+  const texH = st.img && st.mmPerPx ? st.imgH * st.mmPerPx : 0;
+  const push = (i) => {
+    const p = contour[i];
+    pos.push(M(p.x), 0, M(p.y));
+    nor.push(0, 1, 0);
+    /* 도면 픽셀 ↔ 월드 mm 는 mmPerPx 하나로 이어진다. v 는 뒤집는다 —
+       three 는 v=1 이 이미지 위쪽인데 월드 y=0 이 이미지 위쪽이다. */
+    uv.push(texW ? p.x / texW : 0, texH ? 1 - p.y / texH : 0);
+  };
+  /* 감기 방향 검사 — 첫 삼각형의 법선이 아래를 보면 전부 뒤집는다.
+     다각형이 CW 인지 CCW 인지에 따라 갈리는데, 인식 결과는 둘 다 나온다. */
+  const a = contour[tris[0][0]], b = contour[tris[0][1]], c = contour[tris[0][2]];
+  const ny = (b.y - a.y) * (c.x - a.x) - (b.x - a.x) * (c.y - a.y);
+  for (const t of tris){ const o = ny > 0 ? t : [t[0], t[2], t[1]]; push(o[0]); push(o[1]); push(o[2]); }
+
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  const tex = planTexture();
+  const mat = tex
+    ? new THREE.MeshLambertMaterial({ map: tex })
+    : new THREE.MeshLambertMaterial({ color: 0xE8E2D9 });   // 도면이 없으면 담백한 바닥
+  return new THREE.Mesh(g, mat);
+}
+
+/* ── 벽 ──────────────────────────────────────────────────────
+   개구부(문·창)는 **세우지 않고 위에 인방만** 남긴다. 도면만으로는 문인지 창인지,
+   창이라면 아래턱이 몇 mm 인지 알 수 없다. 유리를 그리면 문을 창으로 단정하게 되고,
+   통째로 비우면 방이 안 닫혀 보인다. 위만 막으면 "여기가 트여 있다"로 정직하게 읽힌다.
+──────────────────────────────────────────────────────────────── */
+const wallMat  = new THREE.MeshLambertMaterial({ color: 0xF3F5F8 });
+const lintMat  = new THREE.MeshLambertMaterial({ color: 0xE3E8EF });
+
+function wallBox(x1, y1, x2, y2, y0mm, y1mm, mat){
+  const dx = M(x2 - x1), dz = M(y2 - y1);
+  const len = Math.hypot(dx, dz);
+  if (len < 1e-4) return null;
+  const h = M(y1mm - y0mm);
+  const g = new THREE.BoxGeometry(len, h, M(WALL_T_MM));
+  const m = new THREE.Mesh(g, mat);
+  m.position.set(M(x1) + dx / 2, M(y0mm) + h / 2, M(y1) + dz / 2);
+  /* 박스의 긴 축은 +X 다. Y축 회전 θ 는 +X 를 (cosθ, −sinθ) 로 보내므로
+     변 방향 (dx, dz) 에 맞추려면 θ = atan2(−dz, dx). */
+  m.rotation.y = Math.atan2(-dz, dx);
+  return m;
+}
+
+/*
+ * 앞을 막는 벽은 숨긴다 — 건축 시각화의 '돌하우스' 처리.
+ * 벽을 다 세워 두면 어느 각도에서 봐도 앞벽이 방을 가려 안이 안 보인다.
+ * 어느 쪽이 바깥인지는 **방 중심**으로 안다: 벽 중점에서 방 중심의 반대가 바깥이고,
+ * 카메라가 그 바깥쪽에 있으면 그 벽이 시야를 막고 있는 것이다. 내적 하나로 판정된다.
+ */
+const culled = [];
+function buildRoom(loop){
+  const g = new THREE.Group();
+  const f = floorMesh(loop.pts);
+  if (f) g.add(f);
+  /* 방 중심 — 꼭짓점 평균이면 한쪽에 점이 몰린 다각형에서 치우치므로 경계상자 중심을 쓴다 */
+  const xs = loop.pts.map((p) => p[0]), ys = loop.pts.map((p) => p[1]);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  for (const w of (loop.walls || [])){
+    const m = w.open
+      ? wallBox(w.x1, w.y1, w.x2, w.y2, LINTEL_MM, WALL_H_MM, lintMat)
+      : wallBox(w.x1, w.y1, w.x2, w.y2, 0, WALL_H_MM, wallMat);
+    if (!m) continue;
+    const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
+    const ox = mx - cx, oy = my - cy, L = Math.hypot(ox, oy) || 1;
+    m.userData.mid = new THREE.Vector3(M(mx), 0, M(my));
+    m.userData.out = new THREE.Vector3(ox / L, 0, oy / L);
+    culled.push(m);
+    g.add(m);
+  }
+  return g;
+}
+/** 카메라가 바깥쪽에 있는 벽을 감춘다 (매 프레임) */
+const _v = new THREE.Vector3();
+function cullWalls(){
+  for (const m of culled){
+    _v.copy(cam.position).sub(m.userData.mid);
+    m.visible = _v.dot(m.userData.out) <= 0;
+  }
+}
+
+/* ── 가전 ────────────────────────────────────────────────────
+   실측 W×H×D 상자에 알아볼 만큼의 최소 디테일만 얹는다. 2D 의 drawGlyph 와 같은 원칙 —
+   **치수는 정확하게, 외형은 단순하게.** 삼성 공식 3D 모델을 구할 수 없으므로
+   그럴듯한 곡면을 지어내지 않는다. 지어낸 외형은 고객이 실물로 오해한다.
+──────────────────────────────────────────────────────────────── */
+const bodyMat = new THREE.MeshLambertMaterial({ color: 0xFAFBFC });
+const faceMat = new THREE.MeshLambertMaterial({ color: 0xEDF0F4 });
+const darkMat = new THREE.MeshLambertMaterial({ color: 0x2B3440 });
+const blueMat = new THREE.MeshLambertMaterial({ color: 0x1428A0 });
+
+function applianceMesh(it){
+  const g = new THREE.Group();
+  const w = M(it.w), h = M(it.h || 800), d = M(it.d);
+  /* 앞면(로컬 +Z)만 다른 재질로 둬 방향이 읽히게 한다 */
+  const mats = [bodyMat, bodyMat, bodyMat, bodyMat, faceMat, bodyMat];
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats);
+  body.position.y = h / 2;
+  g.add(body);
+  /* 모서리 선 — 흰 제품이 흰 벽 앞에 서면 윤곽이 사라진다(2D 에서 흰 테두리를 준 것과 같은 이유) */
+  const edge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d)),
+    new THREE.LineBasicMaterial({ color: 0x9AA5B1 }));
+  edge.position.y = h / 2; g.add(edge);
+
+  const cat = it.cat || '';
+  const z = d / 2 + 0.004;                        // 앞면 바로 앞
+  const plate = (pw, ph, px, py, mat) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), mat);
+    m.position.set(px, py, z); g.add(m); return m;
+  };
+  if (/^냉장고|김치냉장고|냉동고/.test(cat)){
+    /* 도어 분할선 — 4도어는 가로 1줄 + 세로 1줄, 그 외는 세로 1줄 */
+    const four = /4도어|양문|세트/.test(it.size || '') || w > 0.85;
+    plate(w * 0.995, 0.006, 0, h * 0.55, darkMat);
+    if (four) plate(0.006, h * 0.99, 0, h / 2, darkMat);
+    plate(0.012, h * 0.22, -w * 0.32, h * 0.75, darkMat);   // 손잡이
+    plate(0.012, h * 0.22, w * 0.32, h * 0.75, darkMat);
+  } else if (/세탁기|콤보|건조기/.test(cat)){
+    const r = Math.min(w, h) * 0.30;
+    const door = new THREE.Mesh(new THREE.CircleGeometry(r, 28), darkMat);
+    door.position.set(0, h * 0.52, z); g.add(door);
+  } else if (/^TV|사운드바|모니터/.test(cat)){
+    plate(w * 0.96, h * 0.9, 0, h / 2, darkMat);            // 화면
+  } else if (/인덕션|전기레인지/.test(cat)){
+    /* 인덕션은 상판이 보이는 물건이라 앞면이 아니라 윗면에 화구를 그린다 */
+    for (const [ux, uz] of [[-0.25, -0.22], [0.25, -0.22], [-0.25, 0.22], [0.25, 0.22]]){
+      const c = new THREE.Mesh(new THREE.CircleGeometry(Math.min(w, d) * 0.16, 24), darkMat);
+      c.rotation.x = -Math.PI / 2;
+      c.position.set(ux * w, h + 0.004, uz * d); g.add(c);
+    }
+  } else if (/에어컨/.test(cat)){
+    plate(w * 0.6, 0.008, 0, h * 0.86, blueMat);            // 토출구 띠
+  }
+
+  /* 2D 와 같은 자세로 놓는다 — it 는 뒷면 중앙(bx,by)과 각도 a 로 표현되고 로컬 +y 가 정면이다.
+     몸통 중심은 로컬 (0, d/2) 이므로 회전시켜 월드로 옮긴다. */
+  const c = Math.cos(it.a), s = Math.sin(it.a);
+  const cx = it.bx - (it.d / 2) * s, cy = it.by + (it.d / 2) * c;
+  g.position.set(M(cx), 0, M(cy));
+  /* 박스 로컬 +Z 를 제품 정면 (−sin a, cos a) 에 맞추면 회전각은 −a 다 */
+  g.rotation.y = -it.a;
+  return g;
+}
+
+/* ── 장면 구성 ── */
+function build(){
+  ensure();
+  while (root.children.length) root.remove(root.children[0]);
+  culled.length = 0;
+  const loops = P.roomLoops();
+  const box = new THREE.Box3();
+  for (const L of loops){
+    const g = buildRoom(L);
+    root.add(g);
+    for (const p of L.pts) box.expandByPoint(new THREE.Vector3(M(p[0]), 0, M(p[1])));
+  }
+  let n = 0;
+  for (const it of P.state.items){
+    if (it.staged) continue;                     // 대기 중인 것은 아직 놓은 것이 아니다
+    root.add(applianceMesh(it)); n++;
+  }
+  /* 카메라를 방 전체가 보이는 자리로 */
+  const c = box.getCenter(new THREE.Vector3());
+  const sz = box.getSize(new THREE.Vector3());
+  orb.tx = c.x; orb.tz = c.z;
+  fitDist = Math.max(3, Math.hypot(sz.x, sz.z) * 1.15);
+  orb.max = Math.max(20, fitDist * 3);
+  view('iso');
+  return { rooms: loops.length, items: n };
+}
+
+/* ── 시점 프리셋 ────────────────────────────────────────────────
+   상담에서 실제로 필요한 시점은 셋이다:
+     둘러보기 — 방 전체가 보이는 비스듬한 각도(기본)
+     눈높이   — 사람이 서서 보는 높이. "우리 집 느낌"이 가장 잘 나는 각도다
+     위에서   — 2D 평면도와 같은 구도. 2D ↔ 3D 를 눈으로 잇게 해 준다
+   `fit` 은 방 크기에서 다시 계산한다 — 방마다 필요한 거리가 다르다. */
+let fitDist = 8;
+function view(name){
+  if (name === 'eye'){
+    orb.pitch = 0.16; orb.ty = M(1500); orb.dist = fitDist * 0.75;
+  } else if (name === 'top'){
+    orb.pitch = 1.44; orb.ty = 0; orb.dist = fitDist * 0.95; orb.yaw = 0;
+  } else {
+    orb.pitch = 0.85; orb.ty = M(WALL_H_MM) * 0.35; orb.dist = fitDist; orb.yaw = -0.7;
+  }
+}
+
+/* ── 카메라 적용 ── */
+function apply(){
+  const cp = Math.cos(orb.pitch), sp = Math.sin(orb.pitch);
+  cam.position.set(
+    orb.tx + orb.dist * cp * Math.sin(orb.yaw),
+    orb.ty + orb.dist * sp,
+    orb.tz + orb.dist * cp * Math.cos(orb.yaw));
+  cam.lookAt(orb.tx, orb.ty, orb.tz);
+}
+
+function size(){
+  const r = cv3.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);   // 폰에서 3배까지 올리면 느려진다
+  if (!r.width || !r.height) return;
+  ren.setPixelRatio(dpr);
+  ren.setSize(r.width, r.height, false);
+  cam.aspect = r.width / r.height;
+  cam.updateProjectionMatrix();
+}
+
+function loop(){
+  raf = requestAnimationFrame(loop);
+  if (!on) return;
+  apply();
+  cullWalls();
+  ren.render(scene, cam);
+}
+
+/* ── 손가락 조작 — 한 손가락 회전 / 두 손가락 확대·이동 ──
+   2D 화면의 관례(한 포인터는 끌면 이동)와 다르지만, 3D 에서 가장 하고 싶은 일이
+   "돌려 보기"라 한 손가락에 회전을 준다. 안내띠가 그 사실을 적는다. */
+const pts = new Map();
+let last = null, pinch = 0;
+cv3.addEventListener('pointerdown', (e) => {
+  pts.set(e.pointerId, [e.clientX, e.clientY]);
+  last = [e.clientX, e.clientY];
+  try { cv3.setPointerCapture(e.pointerId); } catch (_) {}   // 이미 놓인 포인터면 던진다 — 삼킨다
+});
+cv3.addEventListener('pointermove', (e) => {
+  if (!pts.has(e.pointerId)) return;
+  pts.set(e.pointerId, [e.clientX, e.clientY]);
+  const all = [...pts.values()];
+  if (all.length >= 2){
+    const d = Math.hypot(all[0][0] - all[1][0], all[0][1] - all[1][1]);
+    if (pinch) orb.dist = Math.min(orb.max, Math.max(orb.min, orb.dist * (pinch / d)));
+    pinch = d;
+    return;
+  }
+  if (!last) return;
+  orb.yaw   -= (e.clientX - last[0]) * 0.006;
+  orb.pitch  = Math.min(1.45, Math.max(0.06, orb.pitch + (e.clientY - last[1]) * 0.005));
+  last = [e.clientX, e.clientY];
+});
+const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; if (!pts.size) last = null; };
+cv3.addEventListener('pointerup', up);
+cv3.addEventListener('pointercancel', up);
+cv3.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  orb.dist = Math.min(orb.max, Math.max(orb.min, orb.dist * (e.deltaY > 0 ? 1.1 : 0.9)));
+}, { passive:false });
+
+window.addEventListener('resize', () => { if (on) size(); });
+
+/* ── 열고 닫기 ── */
+function open(){
+  const info = build();
+  on = true;
+  document.getElementById('stage').classList.add('on3d');
+  size(); if (!raf) loop();
+  const st = P.state;
+  bar.innerHTML =
+    `<b>3D 보기</b> · 공간 ${info.rooms}곳 · 가전 ${info.items}대` +
+    ` · 층고 ${WALL_H_MM.toLocaleString()}mm<span class="sp"></span>` +
+    `<button data-v="iso">둘러보기</button>` +
+    `<button data-v="eye">눈높이</button>` +
+    `<button data-v="top">위에서</button>` +
+    `<button id="d3-close">2D로</button>`;
+  bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
+  document.getElementById('d3-close').onclick = close;
+  return info;
+}
+function close(){
+  on = false;
+  document.getElementById('stage').classList.remove('on3d');
+}
+window.Place3D = {
+  open, close, toggle(){ return on ? (close(), null) : open(); },
+  get isOpen(){ return on; },
+  rebuild(){ if (on) build(); },
+  view,
+  get canvas(){ return cv3; },
+  /* 테스트가 장면을 직접 들여다볼 수 있게 연다 — 좌표계가 뒤집혔는지는
+     화면을 봐서는 알기 어렵고(방이 대칭이면 똑같아 보인다) 정점을 재야 잡힌다. */
+  get root(){ return root; },
+  get camera(){ return cam; },
+  WALL_H_MM, M,
+};
+
+}
 </script>
 </body>
 </html>

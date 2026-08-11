@@ -21,7 +21,7 @@
  */
 // v3 (2026-08-10) — 앱 이름과 아이콘이 바뀌었다(AX 허브 → 세일즈 코파일럿).
 // manifest·아이콘이 캐시에 남아 있으면 옛 이름으로 계속 설치된다.
-const CACHE_VERSION = 'axhub-v6';
+const CACHE_VERSION = 'axhub-v7';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -91,4 +91,10 @@ self.addEventListener('fetch', (e) => {
   if (req.mode === 'navigate') { e.respondWith(networkFirst(req)); return; }
   if (SWR.test(url.pathname))  { e.respondWith(swr(req)); return; }
   if (url.pathname.startsWith('/_next/static/')) { e.respondWith(cacheFirst(req)); return; }
+  /*
+   * 라이브러리(three.js 등)는 캐시 우선. 파일명에 버전이 박혀 있어 내용이 바뀌면
+   * 이름이 바뀌므로 굳을 걱정이 없고, 671KB 를 매번 받으면 매장 전파에서 3D 가 안 열린다.
+   * **CDN 을 쓰지 않고 여기 두는 이유가 이것이다** — 오프라인에서도 3D 가 떠야 한다.
+   */
+  if (url.pathname.startsWith('/vendor/')) { e.respondWith(cacheFirst(req)); return; }
 });

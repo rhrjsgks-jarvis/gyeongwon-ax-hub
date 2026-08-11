@@ -1308,6 +1308,65 @@ for (const plan of PLANS) {
   }
 }
 
+/*
+ * ── 3D 보기 ────────────────────────────────────────────────────
+ * 고객에게 "우리 집 느낌"을 보여주는 화면이다. 여기서 지킬 것은 셋이다:
+ *  ① 모듈이 살아 있는가 — three.js 를 CDN 이 아니라 public/vendor/ 에서 부르므로
+ *    경로가 깨지면 3D 가 통째로 안 뜬다. 그런데 2D 는 멀쩡해서 눈치채기 어렵다.
+ *  ② **좌표계가 뒤집히지 않았는가** — 앱 월드는 y 가 화면 아래쪽이고 3D 는 Y 가 위다.
+ *    "XY 에 만들고 X축 −90° 회전" 같은 흔한 방법을 쓰면 z 부호가 뒤집혀 평면도가
+ *    좌우 반전된다. 방이 대칭이면 화면으로는 똑같아 보여 눈으로 못 잡는다.
+ *  ③ 놓은 가전만 서 있는가 — 대기(staged) 중인 것은 아직 놓은 것이 아니다.
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음 — 모듈이 로드되지 않았다(three.js 경로 확인)' };
+    /* 3×4m 방 하나를 직접 그려 넣는다. 도면 인식과 무관하게 3D 만 본다. */
+    const W = [[0, 0, 4000, 0], [4000, 0, 4000, 3000], [4000, 3000, 0, 3000], [0, 3000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    P.state.rooms = []; P.state.items = []; P.state.walls = W;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('거실', W);
+    P.state.items.push({ id: 'a', cat: '냉장고', label: '냉장고', w: 912, h: 1853, d: 930,
+      a: 0, bx: 2000, by: 200, warn: [], soft: [], clear: { back: 50, side: 0, front: 0 } });
+    P.state.items.push({ id: 'b', cat: 'TV', label: 'TV', w: 1447, h: 830, d: 270,
+      a: 0, bx: 9000, by: 9000, staged: true, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } });
+    const info = window.Place3D.open();
+    /* 바닥 정점을 꺼내 월드 좌표와 대조한다 */
+    const pts = [];
+    window.Place3D.root.traverse((o) => {
+      if (o.isMesh && o.geometry && o.geometry.getAttribute && o.geometry.getAttribute('uv') && !pts.length){
+        const p = o.geometry.getAttribute('position');
+        for (let i = 0; i < p.count; i++) pts.push([p.getX(i), p.getY(i), p.getZ(i)]);
+      }
+    });
+    window.Place3D.close();
+    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen };
+  });
+
+  if (r.err) fail(r.err);
+  else {
+    if (r.info.rooms !== 1) fail(`3D: 방이 1곳이어야 하는데 ${r.info.rooms}곳`);
+    else if (r.info.items !== 1) fail(`3D: 놓은 가전 1대만 서야 하는데 ${r.info.items}대 (대기 중인 것이 섞였다)`);
+    else pass(`3D 보기 — 방 1곳 · 가전 1대 (대기 중 1대는 제외)`);
+
+    /* 바닥은 y=0 평면에 있고, XZ 가 월드 (x, y)/1000 과 부호까지 같아야 한다.
+       z 가 음수로 나오면 좌우 반전된 것이다. */
+    const ys = r.pts.map((p) => p[1]);
+    const xs = r.pts.map((p) => p[0]), zs = r.pts.map((p) => p[2]);
+    if (!r.pts.length) fail('3D: 바닥 정점을 찾지 못했다');
+    else if (ys.some((v) => Math.abs(v) > 1e-6)) fail('3D: 바닥이 y=0 평면에 있지 않다');
+    else if (Math.min(...zs) < -1e-6 || Math.min(...xs) < -1e-6)
+      fail(`3D: 좌표계가 뒤집혔다 — 월드 (0..4000, 0..3000) 인데 x[${Math.min(...xs).toFixed(2)}..${Math.max(...xs).toFixed(2)}] z[${Math.min(...zs).toFixed(2)}..${Math.max(...zs).toFixed(2)}]`);
+    else if (Math.abs(Math.max(...xs) - 4) > 0.01 || Math.abs(Math.max(...zs) - 3) > 0.01)
+      fail(`3D: 바닥 크기가 4×3m 가 아니다 — x최대 ${Math.max(...xs).toFixed(2)} z최대 ${Math.max(...zs).toFixed(2)}`);
+    else pass('3D 좌표계 — 월드 (x,y)mm → (x,0,y)m 그대로 (좌우 반전 없음)');
+
+    if (r.open) fail('3D: close() 후에도 열린 상태로 남았다');
+  }
+}
+
 if (errs.length) fail(`도면 인식 중 스크립트 오류 ${errs.length}건: ${errs[0]}`);
 else pass('전 도면에서 스크립트 오류 없음');
 
