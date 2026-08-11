@@ -71,6 +71,14 @@
   #d3bar .sp{flex:1}
   #d3bar button{background:#fff;color:#111827;border:0;border-radius:8px;
     padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer}
+  /* 켜짐은 글자가 아니라 색으로 알린다 — 라벨이 짧아야 폰에서 한 줄에 들어간다 */
+  #d3bar button.on{background:#1428A0;color:#fff}
+  /* 폰에서는 버튼을 줄여 한 줄에 넣는다. 여섯 개가 두 줄로 접히면 안내띠가 화면의
+     20%를 먹어 정작 보여줄 3D 가 그만큼 밀린다(매장 기기가 폰인 경우가 많다). */
+  @media(max-width:520px){
+    #d3bar{padding:7px 9px;gap:7px;font-size:11.5px}
+    #d3bar button{padding:4px 7px;font-size:11px}
+  }
   #empty{
     position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;
     align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--muted);
@@ -5046,6 +5054,40 @@ const doorMat = new THREE.MeshLambertMaterial({ color: 0xE8ECF1, transparent: tr
 const doorBad = new THREE.MeshLambertMaterial({ color: 0xE23D3D, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
 
 let openDoors = false;      // 문을 연 상태인가 (도구막대에서 켠다)
+let showTags = false;       // 가전 이름표를 띄우는가
+
+/*
+ * 가전 이름표 — **기본으로 끈다.**
+ * 고객에게 보여주는 화면이라 글자가 떠 있으면 "우리 집 느낌"이 흐려진다(2D 에서 벽 길이를
+ * 기본으로 끈 것과 같은 이유). 그런데 흰 상자가 여럿 서 있으면 상담사도 어느 것이 어느
+ * 제품인지 헷갈리므로, 필요할 때 켜는 손잡이를 둔다.
+ *
+ * **모델코드는 적지 않는다** — 대표모델은 크기를 가늠하려고 세운 자리끼움이지 "이 제품을
+ * 사시라"는 제안이 아닌데, 코드가 박혀 있으면 고객이 그 모델을 제안받은 것으로 읽는다.
+ * 카테고리와 사이즈까지만 적는다(2D 라벨과 같은 규칙).
+ */
+function tagSprite(text, bad){
+  const pad = 12, fs = 44;
+  const c = document.createElement('canvas');
+  const g0 = c.getContext('2d');
+  g0.font = `700 ${fs}px system-ui,sans-serif`;
+  const w = Math.ceil(g0.measureText(text).width) + pad * 2;
+  c.width = w; c.height = fs + pad * 2;
+  const g = c.getContext('2d');
+  g.font = `700 ${fs}px system-ui,sans-serif`;
+  g.fillStyle = bad ? 'rgba(226,61,61,.94)' : 'rgba(17,24,39,.86)';
+  g.beginPath(); g.roundRect(0, 0, c.width, c.height, 14); g.fill();
+  g.fillStyle = '#fff'; g.textBaseline = 'middle';
+  g.fillText(text, pad, c.height / 2 + 2);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+  /* 화면에서 늘 같은 크기로 보이게 하지 않는다 — 멀리 있는 것은 작게 보여야 거리감이 산다.
+     0.0016 은 1m 앞에서 글자가 읽히는 배율(실측으로 맞췄다). */
+  sp.scale.set(c.width * 0.0016, c.height * 0.0016, 1);
+  sp.renderOrder = 999;
+  return sp;
+}
 
 /**
  * 열린 문짝 하나를 세운다. `doorLeaves` 가 낸 **월드 다각형 그대로** 밑면으로 깔고
@@ -5215,6 +5257,12 @@ function build(){
     if (bad) blocked++;
     for (const lf of (mesh.userData.leaves || [])) root.add(leafMesh(lf, it, bad));
     if (bad) mesh.traverse((o) => { if (o.isMesh && o.material === bodyMat) o.material = badMat; });
+    if (showTags && it.label){
+      const sp = tagSprite(it.label, bad);
+      const [cx, cy] = P.bodyCenter(it);
+      sp.position.set(M(cx), M((it.h || 800) + 260), M(cy));   // 제품 머리 위
+      root.add(sp);
+    }
   }
   /* 카메라를 방 전체가 보이는 자리로 */
   const c = box.getCenter(new THREE.Vector3());
@@ -5376,9 +5424,13 @@ function paintBar(info){
     `<button data-v="eye">눈높이</button>` +
     `<button data-v="top">위에서</button>` +
     `<button id="d3-door">${openDoors ? '문 닫기' : '문 열기'}</button>` +
+    /* 버튼이 여섯이면 좁은 화면에서 줄이 넘어간다. 켜짐 여부는 글자가 아니라
+       **색**으로 알린다 — 라벨이 짧아야 폰에서 한 줄에 들어간다. */
+    `<button id="d3-tag" class="${showTags ? 'on' : ''}">이름</button>` +
     `<button id="d3-close">2D로</button>`;
   bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
   document.getElementById('d3-door').onclick = () => { openDoors = !openDoors; paintBar(build()); };
+  document.getElementById('d3-tag').onclick = () => { showTags = !showTags; paintBar(build()); };
   document.getElementById('d3-close').onclick = close;
 }
 
@@ -5409,6 +5461,16 @@ window.Place3D = {
   /** 문 열기/닫기 — 열었을 때 부딪히는 대수를 돌려준다 */
   doors(open){ openDoors = open == null ? !openDoors : !!open; const i = build(); if (on) paintBar(i); return i; },
   get doorsOpen(){ return openDoors; },
+  /** 가전 이름표 켜기·끄기 (기본은 꺼짐 — 고객 화면에 글자가 뜨면 "우리 집 느낌"이 흐려진다) */
+  /* 인자 이름을 `on` 으로 두면 모듈의 `on`(3D 가 열려 있는가)을 가린다 — 그러면
+     "화면이 켜져 있을 때만 다시 그린다"가 정반대로 동작한다. */
+  tags(want){
+    showTags = want == null ? !showTags : !!want;
+    const info = build();
+    if (on) paintBar(info);
+    return info;
+  },
+  get tagsOn(){ return showTags; },
   get canvas(){ return cv3; },
   /* 테스트가 장면을 직접 들여다볼 수 있게 연다 — 좌표계가 뒤집혔는지는
      화면을 봐서는 알기 어렵고(방이 대칭이면 똑같아 보인다) 정점을 재야 잡힌다. */
