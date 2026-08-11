@@ -223,6 +223,31 @@ for (const [file, needle] of deepLinks) {
   if (tiny.length) fail(`동의어 표에 한 글자 표기가 있다: ${tiny.join(', ')}`);
   else console.log('OK: 동의어 표에 한 글자 표기 없음');
 
+  /* **자연어로 물어도 걸려야 한다.** 조사·어미가 붙은 조각이 섞여도 답이 나와야 하고,
+     0건인 조건은 빼고 찾는다(app/search/page.tsx). 여기서는 그 규칙을 그대로 흉내 낸다. */
+  const ask = (q) => {
+    const cs = parseQuery(q);
+    const live = cs.filter((c) => entries.some((e) => hits(e.kw, c)));
+    return live.length ? entries.filter((e) => live.every((c) => hits(e.kw, c))) : [];
+  };
+  for (const [q, needle] of [
+    ['냉장고 컴프레서 몇 년이야', /냉장고/],
+    ['수원은 어느 물류센터야', /평택TC/],
+    ['안동 IT 이전설치 어디서 하나요', /다존텍/],
+    ['후드 이전설치 어디로 문의하죠', /후드/],
+    ['65인치 TV 있나요', /./],
+  ]) {
+    const hit = ask(q);
+    if (!hit.length) fail(`자연어 질의 "${q}" → 0건`);
+    else if (!needle.test(hit[0].title + hit[0].sub)) {
+      fail(`자연어 질의 "${q}" 첫 결과가 "${hit[0].title}" — ${needle} 이어야 한다`);
+    } else console.log(`OK: 자연어 "${q}" → ${hit.length}건 (${hit[0].title})`);
+  }
+
+  // 앱 안에 아무 말도 없으면 0건이어야 한다 — 아무거나 무는 검색은 없느니만 못하다
+  if (ask('없는말없는말 또없는말').length) fail('전부 없는 말인데 결과가 나온다');
+  else console.log('OK: 전부 없는 말 → 0건');
+
   // 조건 AND — 조건을 더하면 결과는 반드시 줄거나 같아야 한다
   const one = find('에어컨').length, two = find('무풍 에어컨').length, three = find('무풍 에어컨 1등급').length;
   if (!(one >= two && two >= three && three > 0)) {
@@ -232,6 +257,12 @@ for (const [file, needle] of deepLinks) {
   // 색인·질의가 같은 정규화를 거치는가 — 쉼표 있는 치수를 쉼표 없이 찾을 수 있어야 한다
   if (!find('1853').length) fail('"1853" 로 치수(912×1,853)가 안 찾아진다 — 쉼표 정규화가 한쪽만 걸린 것');
   else console.log(`OK: 쉼표 없는 숫자로 치수 검색 (${find('1853').length}건)`);
+
+  /* 제품 상세검색 묶음은 **제품만** 담는다 — 분류·제목이 섞이면 안 된다(사용자 요청) */
+  const nonProduct = entries.filter((e) => e.m === 'finder' && e.t !== 'product');
+  if (nonProduct.length) {
+    fail(`'제품·모델' 묶음에 제품이 아닌 것이 ${nonProduct.length}건 (${nonProduct.slice(0, 3).map((e) => e.title).join(', ')})`);
+  } else console.log(`OK: 제품 묶음은 제품만 (${entries.filter((e) => e.m === 'finder').length}종)`);
 }
 
 // ── ⑥ 전 모듈이 색인에 들어 있는가 ──

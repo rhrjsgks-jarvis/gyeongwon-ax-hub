@@ -119,7 +119,7 @@ const MODULE_META: Record<string, { label: string; icon: string; color: string; 
   install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
   /* 아래 셋은 MODULE_META 에 아예 없어서 사용 현황에 한 줄도 안 잡히고 있었다
      (2026-08-11 발견). 운영 중인 모듈이 통계에서 통째로 빠지면 "안 쓴다"로 읽힌다. */
-  as:      { label: 'AS 관련 업무',     icon: '🛡️', color: '#0D9488' },
+  as:      { label: 'AS 관련 정보',     icon: '🛡️', color: '#0D9488' },
   place:   { label: '가전 배치 시뮬레이터', icon: '📐', color: '#4F46E5' },
   test:    { label: '레벨업 챌린지',    icon: '📝', color: '#7C3AED' },
   quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },

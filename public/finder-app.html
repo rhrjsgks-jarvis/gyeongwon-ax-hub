@@ -533,7 +533,7 @@ function getDims(p){
 /* ─── 질의 해석 ─── */
 function parseQuery(raw){
   let q = " " + raw.toLowerCase().replace(/,/g," ") + " ";
-  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[]};
+  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null};
   // 예산
   let m = q.match(/(\d{2,5})\s*(?:만\s*원?)?\s*[~∼\-]\s*(\d{2,5})\s*만\s*원?/);
   if(m){ P.budgetMin=+m[1]; P.budgetMax=+m[2]; q=q.replace(m[0]," "); P.tags.push(`예산 ${m[1]}~${m[2]}만원`); }
@@ -548,6 +548,23 @@ function parseQuery(raw){
     m = q.match(r);
     if(m){ P.dim[axis]=+m[1]; q=q.replace(m[0]," "); P.tags.push(`${word} ${m[1]}mm 이하`); }
   }
+  /*
+   * 면적 — "19평", "62㎡" 처럼 **공간 크기로 고르는 품목**(에어컨·공기청정기·제습기)이 있다.
+   * 예전에는 이 말이 그냥 토큰이 되어 아무 데도 안 걸리고 **조용히 무시됐다** — "19평 에어컨"이
+   * "에어컨"과 결과가 똑같았다(2026-08-11 사용자 지적: *"무풍 공기청정 19평 이런식으로
+   * 복합적으로 검색할수있게 해줘야합니다"*).
+   *
+   * 뜻은 **"그 공간을 감당하는가"** 이므로 `면적 >= 요청` 으로 거른다(이하가 아니다).
+   * 1평 = 3.3058㎡. 치수(`이하`)와 방향이 반대라는 점을 헷갈리지 말 것.
+   */
+  m = q.match(/(\d{1,3}(?:\.\d+)?)\s*평/);
+  if(m){ P.areaMin = +m[1] * 3.3058; q = q.replace(m[0]," ");
+         P.tags.push(`${m[1]}평(${P.areaMin.toFixed(1)}㎡) 이상`); }
+  if(P.areaMin==null){
+    m = q.match(/(\d{1,3}(?:\.\d+)?)\s*(?:㎡|m2|제곱미터)/i);
+    if(m){ P.areaMin = +m[1]; q = q.replace(m[0]," "); P.tags.push(`${m[1]}㎡ 이상`); }
+  }
+
   // 토큰화 + 복합어 분해 + 사전 매핑
   const rawToks = q.split(/\s+/).filter(t=>t.length>=2 || /^[a-z0-9]+$/.test(t) && t.length>=1);
   const seen = new Set();
@@ -576,6 +593,21 @@ function parseQuery(raw){
     P.tokens.push(t);
   }
   return P;
+}
+
+/*
+ * 제품이 감당하는 면적(㎡). 라벨이 품목마다 달라(냉방면적(㎡) · 적용면적 · 청정면적)
+ * **라벨에 '면적'이 들어간 항목**에서 첫 숫자를 읽는다. 값에 단위가 붙은 것도 있다("60㎡").
+ * 면적 표기가 없는 제품은 null 이고, 면적 조건이 걸리면 후보에서 빠진다 —
+ * 감당 여부를 알 수 없는 것을 "됩니다"로 내밀 수는 없다.
+ */
+function prodArea(p){
+  for(const [k,v] of (p.fx||[])){
+    if(!/면적/.test(k)) continue;
+    const m = String(v).match(/(\d{1,3}(?:\.\d+)?)/);
+    if(m) return +m[1];
+  }
+  return null;
 }
 
 /* ─── 스코어링 (정확 일치 가중치 개선) ─── */
@@ -616,6 +648,10 @@ function search(P){
       if(P.dim.d && d.d > P.dim.d) continue;
     }
     if(P.cats.length && !P.cats.includes(p.cat)) continue;
+    if(P.areaMin!=null){
+      const a = prodArea(p);
+      if(a==null || a < P.areaMin) continue;
+    }
     let sc = 0; const hits = [];
     for(const t of P.terms){
       const tl = t.toLowerCase();
@@ -626,6 +662,7 @@ function search(P){
       if(p.model.toLowerCase().indexOf(tl) === 0 && tl.length>=3) sc += 8;
     }
     if(P.cats.length) sc += 4;
+    if(P.areaMin!=null){ sc += 4; hits.push(`${prodArea(p)}㎡ 커버`); }
     if(P.wantNew && p.isnew){ sc += 3; hits.push("2026 신형"); }
     if(P.wantPremium) sc += Math.min(4, p.price/120);
     const hasTerms = P.terms.length > 0;

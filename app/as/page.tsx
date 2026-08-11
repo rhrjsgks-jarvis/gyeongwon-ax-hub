@@ -10,7 +10,7 @@ export default function AsPage() {
   return (
     <IframeModule
       src="/as-app.html"
-      title="AS 관련 업무"
+      title="AS 관련 정보"
       className="-m-4 md:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     />
