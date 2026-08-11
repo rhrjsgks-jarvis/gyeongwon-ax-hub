@@ -153,7 +153,7 @@ function flatten(v, out = []) {
   }
   for (const c of B2B) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (빌트인 이전설치)`, sub: `${c.n} · ${c.a}`,
-      kw: [c.p, c.c, c.code, c.n, c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });
+      kw: [c.p, c.c, c.code, c.n, ...flatten(c.x), c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });
   }
   for (const c of IT) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (IT 이전설치)`, sub: `${c.n} · ${c.a}`,
@@ -162,12 +162,12 @@ function flatten(v, out = []) {
   }
   for (const s of SINK) {
     add({ t: 'contact', m: 'as', title: `${s.p} (싱크장 리폼)`, sub: `${s.n} · ${s.a}`,
-      kw: [s.p, s.n, s.n2 || '', s.a, '싱크대 싱크장 리폼 식기세척기 식세기 빌트인 이전설치'].join(' '),
+      kw: [s.p, s.n, s.n2 || '', ...flatten(s.x), s.a, '싱크대 싱크장 리폼 식기세척기 식세기 빌트인 이전설치'].join(' '),
       href: '/as' });
   }
   for (const x of NAT) {
     add({ t: 'contact', m: 'as', title: `${x.t} — ${x.p}`, sub: `${x.n} · ${x.d}`,
-      kw: [x.p, x.t, x.n, x.d, '이전설치 전국 담당'].join(' '), href: '/as' });
+      kw: [x.p, x.t, x.n, x.d, ...flatten(x.x), '이전설치 전국 담당'].join(' '), href: '/as' });
   }
 }
 
