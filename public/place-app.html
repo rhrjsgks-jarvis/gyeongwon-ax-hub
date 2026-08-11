@@ -2663,7 +2663,14 @@ function buildShareCanvas(){
   const g = out.getContext('2d');
   g.scale(S, S);
   g.fillStyle = '#fff'; g.fillRect(0, 0, W, H + listH);
-  g.drawImage(cv, 0, 0, W, H);                   // 화면 그대로
+  /*
+   * **화면에 보이는 것을 그대로** 내보낸다 — 3D 를 보고 있으면 3D 가 나가야 한다.
+   * 고객에게 보여준 그림과 손에 남는 그림이 다르면 "내가 본 것과 다르다"가 된다.
+   * WebGL 캔버스는 `preserveDrawingBuffer:true` 로 만들어 두어 그대로 복사된다.
+   */
+  const on3d = window.Place3D && window.Place3D.isOpen;
+  if (on3d) window.Place3D.render();     // 지금 상태로 한 장 그린 뒤 복사한다(아래 주석 참조)
+  g.drawImage(on3d ? window.Place3D.canvas : cv, 0, 0, W, H);
 
   g.fillStyle = '#F8FAFC'; g.fillRect(0, H, W, listH);
   g.strokeStyle = '#E2E8F0'; g.lineWidth = 1;
@@ -2674,12 +2681,28 @@ function buildShareCanvas(){
   g.fillText(title, padX, H + 28);
   const area = planAreaM2();
   g.fillStyle = '#64748B'; g.font = '12px system-ui,sans-serif';
+  /* 3D 로 내보낼 때는 무엇을 보고 있는지 밝힌다 — 층고는 도면에 없는 가정값이고,
+     문을 연 상태라면 그 사실이 그림의 뜻을 바꾼다. */
+  const doorsOn = on3d && window.Place3D.doorsOpen;
   g.fillText([
     area ? `전용 ${area.toFixed(1)}㎡` : null,
     state.rooms.length ? `공간 ${state.rooms.length}곳` : null,
     `가전 ${items.length}대`,
+    on3d ? `3D · 층고 ${window.Place3D.WALL_H_MM.toLocaleString()}mm(가정)` : null,
+    doorsOn ? '문 열림' : null,
     new Date().toLocaleDateString('ko-KR'),
   ].filter(Boolean).join('  ·  '), padX, H + 48);
+
+  /* 문을 열었더니 막히는 제품이 있으면 **카드에도 빨갛게** 적는다.
+     고객에게 보여준 경고가 손에 남는 그림에서 사라지면 안 된다. */
+  if (doorsOn){
+    const blocked = items.filter((it) => !it.staged && doorHits(it, items, state.walls).length);
+    if (blocked.length){
+      g.fillStyle = '#B42318'; g.font = '700 12.5px system-ui,sans-serif';
+      g.fillText(`⚠ 문이 안 열리는 제품 ${blocked.length}대 — ${blocked.map((b) => b.label).join(', ')}`,
+        padX, H + 62);
+    }
+  }
 
   items.forEach((it, i)=>{
     const y = H + headH + i * lineH + 14;
@@ -5236,6 +5259,13 @@ window.Place3D = {
   open, close, toggle(){ return on ? (close(), null) : open(); },
   get isOpen(){ return on; },
   rebuild(){ if (on) build(); },
+  /**
+   * 지금 상태를 즉시 한 장 그린다.
+   * `preserveDrawingBuffer` 는 **마지막으로 그린 프레임**을 보관할 뿐이라, 장면을 바꾼
+   * 직후에 캔버스를 복사하면 바뀌기 전 그림이 나간다 — 실제로 공유 카드에 문이 닫힌
+   * 냉장고가 찍혔다. 내보내기 전에 반드시 이걸 부른다.
+   */
+  render(){ if (!ren) return false; apply(); cullWalls(); ren.render(scene, cam); return true; },
   view,
   /** 문 열기/닫기 — 열었을 때 부딪히는 대수를 돌려준다 */
   doors(open){ openDoors = open == null ? !openDoors : !!open; const i = build(); if (on) paintBar(i); return i; },

@@ -1451,6 +1451,50 @@ for (const plan of PLANS) {
 }
 
 /*
+ * ── 3D 결과 공유 — 화면에 보이는 것이 그대로 나가는가 ──
+ * 상담이 끝나면 고객 손에 남는 것이 이 카드다. 두 가지를 지킨다:
+ *  ① 3D 를 보고 있으면 3D 그림이 나간다(2D 가 아니라)
+ *  ② **지금 상태**가 나간다. `preserveDrawingBuffer` 는 마지막으로 그린 프레임을 보관할
+ *    뿐이라, 장면을 바꾼 직후 캔버스를 복사하면 바뀌기 전 그림이 나간다 — 실제로 문을
+ *    연 직후 공유했더니 **문이 닫힌 냉장고**가 찍혔다. 내보내기 전에 한 장 다시 그린다.
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    const W = [[0, 0, 6000, 0], [6000, 0, 6000, 4000], [6000, 4000, 0, 4000], [0, 4000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+    P.state.rooms = []; P.state.items = []; P.state.walls = W;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('주방', W);
+    P.state.items.push(
+      mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고', w: 912, h: 1853, d: 930, bx: 3000, by: 400 }),
+      mk({ id: 'x', cat: '식기세척기', label: '식기세척기', w: 600, h: 815, d: 575, bx: 3456, by: 1780 }));
+    window.Place3D.open();
+
+    const grab = () => {
+      const c = P.buildShareCanvas();
+      /* 그림 부분만 비교한다 — 아래 목록은 문 상태와 무관하게 글자가 바뀐다 */
+      const s = document.createElement('canvas'); s.width = 80; s.height = 60;
+      s.getContext('2d').drawImage(c, 0, 0, c.width, Math.round(c.height * 0.6), 0, 0, 80, 60);
+      return s.toDataURL();
+    };
+    window.Place3D.doors(false); const closed = grab();
+    window.Place3D.doors(true);  const opened = grab();
+    const c = P.buildShareCanvas();
+    const cv3 = window.Place3D.canvas;
+    window.Place3D.doors(false);
+    return { same: closed === opened, w: c.width, cw: cv3.width, on: window.Place3D.isOpen };
+  });
+
+  if (r.same)
+    fail('3D 공유: 문을 열기 전후의 카드가 똑같다 — 바뀌기 전 프레임이 나가고 있다(내보내기 전 다시 그려야 한다)');
+  else pass('3D 공유 — 지금 상태가 그대로 카드에 나간다 (문 열기 전후 그림이 다르다)');
+
+  if (!r.w) fail('3D 공유: 카드가 만들어지지 않았다');
+}
+
+/*
  * ── 3D 가전 디테일 — 2D 실루엣과 같은 품목에 붙어 있는가 ──
  * 같은 품목이 앱마다 다른 그림이면 상담사 눈이 헤맨다. 2D `drawGlyph` 가 실루엣을 그리는
  * 품목은 3D 도 흰 상자로 두면 안 된다. 반대로 **2D 에 없는 품목(리빙 4종)은 3D 에도
