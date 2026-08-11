@@ -525,8 +525,10 @@ export default function Home() {
     }))
   }, [])
 
+  /* 본문 폭 — 넓은 화면에서 768px(max-w-3xl)에 묶여 좌우가 통째로 비어 있었다.
+   * 단계적으로 넓히되 한 줄이 너무 길어져 읽기 어려워지지 않게 6xl 에서 멈춘다. */
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl xl:max-w-5xl 2xl:max-w-6xl mx-auto">
       {/* 헤더 */}
       <div className="mb-4">
         <p className="text-xs text-gray-400 mb-1 min-h-4">{todayStr}</p>
@@ -564,7 +566,7 @@ export default function Home() {
         return (
           <div key={group.title} className="mb-5">
             <AccordionHeader title={group.title} isOpen={isOpen} onClick={() => toggleSection(group.title)} />
-            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-2 gap-2.5 md:gap-3`}>
+            <div className={`${isOpen ? 'grid' : 'hidden'} md:grid grid-cols-2 xl:grid-cols-3 gap-2.5 md:gap-3`}>
               {group.modules.map((mod) => (
                 <ModuleTile key={mod.href} mod={mod} />
               ))}
@@ -603,7 +605,7 @@ export default function Home() {
           isOpen={!!openSections['admin']}
           onClick={() => toggleSection('admin')}
         />
-        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-2 gap-2.5 md:gap-3`}>
+        <div className={`${openSections['admin'] ? 'grid' : 'hidden'} md:grid grid-cols-2 xl:grid-cols-3 gap-2.5 md:gap-3`}>
           <ModuleTile mod={ADMIN_MODULE} />
         </div>
       </div>

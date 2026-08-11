@@ -377,6 +377,61 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('타임라인 정합성 검사 실패: ' + e.message);
   }
 
+  /* ── 공유 카드는 보고 있는 탭을 따라가야 한다 ──
+   *
+   * 2026-08-11 사용자 지적: 블루패스·전체보기를 보면서 공유를 누르면 화면에 없는
+   * '에어컨 회차표'가 나갔다(네 탭 전부에서 재현). 고객에게 보내는 물건이 화면과
+   * 다른 것은 이 도구에서 가장 위험한 고장이라, 탭마다 제 내용이 나오는지 검사한다.
+   */
+  try {
+    const want = {
+      care:     { title: '에어컨',              first: '구독 조건' },
+      bluepass: { title: '블루패스',            first: '블루패스 혜택' },
+      overview: { title: '구독 케어 전체보기',  first: null },
+      timeline: { title: null /* tlKey 가 가리키는 제품 — 앞 검사에서 바뀌어 있을 수 있다 */, first: '구독 조건' },
+    };
+    let n = 0;
+    for (const [mode, exp] of Object.entries(want)) {
+      window.setMode(mode);
+      await wait(30);
+      const o = window.careShareBuild();
+      if (!o) { fail(`[공유] ${mode} 탭에서 카드가 만들어지지 않는다`); continue; }
+      /* DATA·tlKey 는 const/let 이라 window 에 없다 — 타임라인은 제목을 못 박지 않고
+         "회차표가 나오는가"만 본다(어느 제품인지는 앞 검사가 바꿔 놓을 수 있다). */
+      const wantTitle = exp.title;
+      if (wantTitle !== null && o.title !== wantTitle) {
+        fail(`[공유] ${mode} 탭인데 카드 제목이 "${o.title}" — "${wantTitle}" 이어야 한다`);
+        continue;
+      }
+      const first = o.sections && o.sections[0] && o.sections[0].h;
+      if (wantTitle === null && !o.title) { fail(`[공유] ${mode} 탭 카드에 제목이 없다`); continue; }
+      if (exp.first && first !== exp.first) {
+        fail(`[공유] ${mode} 탭 카드의 첫 섹션이 "${first}" — "${exp.first}" 이어야 한다`);
+        continue;
+      }
+      n++;
+    }
+    if (n === 4) console.log('OK: 공유 카드가 보고 있는 탭을 따라간다 (케어·블루패스·전체보기·타임라인)');
+
+    // 블루패스 카드가 화면의 혜택을 실제로 담고 있는가 — 빈 껍데기를 내보내지 않는다
+    window.setMode('bluepass');
+    await wait(30);
+    const bp = window.careShareBuild();
+    const bpRows = (bp.sections || []).reduce((a, s) => a.concat((s.rows || []).map((r) => r[0])), []);
+    /* 화면(#bluepassPane)에 뜬 혜택 제목이 카드에도 다 있는가 — 빈 껍데기를 내보내지 않는다 */
+    const onScreen = [...window.document.querySelectorAll('#bluepassPane .bp-t, #bluepassPane h3, #bluepassPane .bp-nm')]
+      /* 화면 제목 앞에는 순번 배지("1A/S 패스트트랙")가 붙는다 — 떼고 비교한다 */
+      .map((e) => e.textContent.trim().replace(/^\d+/, '')).filter(Boolean);
+    const missing = onScreen.filter((t) => !bpRows.includes(t));
+    if (bpRows.length < 6) fail(`[공유] 블루패스 카드가 ${bpRows.length}줄뿐 — 혜택이 빠졌다`);
+    else if (onScreen.length && missing.length) fail(`[공유] 화면에 있는 혜택이 카드에 없다: ${missing.join(', ')}`);
+    else console.log(`OK: 블루패스 공유 카드에 혜택 ${bpRows.length}개 포함${onScreen.length ? ` (화면 ${onScreen.length}개 전부 대조)` : ''}`);
+
+    window.setMode('care');
+  } catch (e) {
+    fail('공유 카드 탭 대응 검사 실패: ' + e.message);
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })();

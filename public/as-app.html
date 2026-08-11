@@ -16,7 +16,10 @@
   .hd-t{font-size:17px;font-weight:800;line-height:1.25}
   .hd-s{font-size:11.5px;color:#c7d2fe;margin-top:2px;line-height:1.4}
   .wrap{max-width:840px;margin:0 auto;padding:16px 14px 60px}
-  .sub{font-size:12.5px;color:#6b7280;line-height:1.55;margin-bottom:14px}
+  /* 오른쪽 위 공유 버튼(share-kit)이 이 안내문 위에 떠서 첫 줄을 덮고 있었다(실측 확인).
+     버튼 폭 + 여백만큼 자리를 비워 글자가 그 앞에서 접히게 한다. */
+  .sub{font-size:12.5px;color:#6b7280;line-height:1.55;margin-bottom:14px;padding-right:82px}
+  #contactPane .sub{padding-right:0}   /* 연락처 탭에서는 버튼이 숨으므로 폭을 다 쓴다 */
   #body{scroll-margin-top:56px}
   .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:16px}
   .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;

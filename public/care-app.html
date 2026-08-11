@@ -2339,6 +2339,8 @@ function setMode(m){
   if(m==='bluepass') renderBluePass();
   if(m==='overview') renderOverview();
   if(m==='timeline') renderTimeline();
+  /* 공유 카드는 탭마다 내용이 다르다 — 탭을 옮기면 버튼 노출도 다시 판단한다 */
+  if (typeof syncCareShareBtn === 'function') syncCareShareBtn();
 }
 
 /* ═══════════════ BLUE PASS ═══════════════ */
@@ -2615,16 +2617,25 @@ function toggleSell(){
 })();
 
 /*
- * 고객에게 보낼 카드 — 지금 고른 제품·플랜의 **회차별 케어 내용**을 이미지 한 장으로.
- * 상담에서 고객이 가장 궁금해하는 것이 "몇 번 오고 뭘 해 주나"라, 회차마다
- * 케어 종류와 항목을 그대로 적는다. 화면(타임라인)과 같은 careSchedule 을 쓰므로
- * 카드와 화면이 어긋날 수가 없다.
+ * 고객에게 보낼 카드 — **지금 보고 있는 탭의 내용**을 이미지 한 장으로.
+ *
+ * 예전에는 탭과 무관하게 늘 `curCat` 의 회차표를 만들었다. 그래서 블루패스나
+ * 전체보기를 보면서 공유를 누르면 **화면에 없는 '에어컨 회차표'가 나갔다**
+ * (2026-08-11 사용자 지적, 네 탭 전부에서 재현됨). 고객에게 보내는 물건이
+ * 화면과 다른 것은 이 도구에서 가장 위험한 종류의 고장이다.
+ *
+ * 그래서 `curMode` 로 갈라 각 탭이 자기 내용을 만든다. 만들 것이 없는 탭에서는
+ * null 을 돌려주고 버튼도 감춘다(`syncCareShareBtn`) — 빈 카드를 내보내지 않는다.
  */
 function careShareBuild(){
-  const key = (typeof tlKey !== 'undefined' && document.getElementById('timelinePane')
-    && document.getElementById('timelinePane').style.display !== 'none') ? tlKey : curCat;
-  const pl  = (key === tlKey && document.getElementById('timelinePane')
-    && document.getElementById('timelinePane').style.display !== 'none') ? tlPlan : curPlan;
+  const mode = (typeof curMode !== 'undefined') ? curMode : 'care';
+  if (mode === 'bluepass') return bluepassShareBuild();
+  if (mode === 'overview') return overviewShareBuild();
+
+  /* care · timeline — 둘 다 회차표지만 보고 있는 제품·플랜이 다르다 */
+  const useTl = (mode === 'timeline' && typeof tlKey !== 'undefined');
+  const key = useTl ? tlKey : curCat;
+  const pl  = useTl ? tlPlan : curPlan;
   const d = DATA[key];
   if (!d) return null;
   const sched = careSchedule(d, pl);
@@ -2651,7 +2662,64 @@ function careShareBuild(){
     filename: 'AI구독케어_' + d.name.replace(/[\\/:*?"<>|]/g, '') + '_' + pl + '개월형',
   };
 }
-if (typeof mountShareButton === 'function') mountShareButton(careShareBuild);
+
+/* 블루패스 탭 — 화면에 뜬 혜택을 그대로 옮긴다.
+ * 에어컨 전용 둘은 화면과 같이 항상 덧붙이되 어느 제품 것인지 머리글로 밝힌다. */
+function bluepassShareBuild(){
+  const line = (it) => [it.d, it.target ? '대상 — ' + it.target : '',
+    it.need ? '필요 — ' + it.need : '', it.except ? '제외 — ' + it.except : '',
+    it.cost ? '비용 — ' + it.cost : ''].filter(Boolean).join(' · ');
+  const sections = [{
+    h: '블루패스 혜택',
+    rows: (BLUEPASS.items || []).map(it => [it.t, '', line(it)]),
+  }];
+  if ((BLUEPASS.aircon || []).length) {
+    sections.push({ h: '에어컨 전용', rows: BLUEPASS.aircon.map(it => [it.t, '', line(it)]) });
+  }
+  return {
+    app: '세일즈 코파일럿 · AI구독 케어 안내',
+    title: '블루패스',
+    subtitle: 'AI 올인원 2.0 구독 혜택',
+    sections: sections,
+    note: (BLUEPASS.gate ? BLUEPASS.gate + ' · ' : '')
+      + (BLUEPASS.src ? BLUEPASS.src.replace(/^✅\s*/, '출처 — ') : ''),
+    filename: 'AI구독케어_블루패스',
+  };
+}
+
+/* 전체보기 탭 — 어떤 품목이 어떤 주기로 케어되는지 한 장으로. */
+function overviewShareBuild(){
+  const rows = (PRODUCTS || []).map(function (p) {
+    const d = DATA[p.key];
+    if (p.st !== 'done' || !d) return [p.name, '자가관리', ''];
+    let plan;
+    if (d.onlyPlan === '12') plan = '12개월형';
+    else if (d.onlyPlan === '36') plan = '36개월형';
+    else plan = [d.plan12 && '12개월형', d.plan36 && '36개월형'].filter(Boolean).join(' · ');
+    return [p.name, plan || '', d.contract || ''];
+  });
+  if (!rows.length) return null;
+  return {
+    app: '세일즈 코파일럿 · AI구독 케어 안내',
+    title: '구독 케어 전체보기',
+    subtitle: '품목별 방문 주기',
+    sections: [{ h: '품목 ' + rows.length + '종', rows: rows }],
+    note: '품목을 고르면 회차별 케어 내용을 볼 수 있습니다. 실제 제공 항목은 제품·계약 조건에 따라 달라질 수 있습니다.',
+    filename: 'AI구독케어_전체보기',
+  };
+}
+
+/* 만들 것이 없는 탭에서는 버튼을 감춘다 — 눌러도 아무 일이 없으면 고장으로 읽힌다.
+ * AS기간 확인이 연락처 탭에서 하는 것과 같은 방식이다. */
+function syncCareShareBtn(){
+  const b = document.getElementById('sk-share');
+  if (!b) return;
+  let ok = false;
+  try { ok = !!careShareBuild(); } catch (e) { ok = false; }
+  b.style.display = ok ? '' : 'none';
+}
+
+if (typeof mountShareButton === 'function') { mountShareButton(careShareBuild); syncCareShareBtn(); }
 </script>
 </body>
 </html>
