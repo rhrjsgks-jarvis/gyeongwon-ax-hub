@@ -4747,6 +4747,32 @@ function defaultRoomFor(cat){
   return state.rooms[0].id;
 }
 
+/*
+ * 통합검색이 보낸 `?pick=카테고리|사이즈` 를 들고 있다가 가전 선택 시트가 열릴 때 적용한다.
+ * 한 번 쓰면 지운다 — 다음에 시트를 열 때 또 체크되면 사용자가 지운 선택이 되살아난다.
+ */
+let deepPick = null;
+function applyDeepPick(){
+  if (!deepPick) return;
+  const [cat, size] = deepPick;
+  const cb = document.querySelector(`#a-list input[type=checkbox][data-cat="${CSS.escape(cat)}"]`);
+  if (!cb) return;                       // 목록에 없는 카테고리(업소용 토글 등)면 그냥 둔다
+  deepPick = null;
+  cb.checked = true;
+  cb.dispatchEvent(new Event('change', { bubbles: true }));
+  /* 사이즈까지 맞춘다 — 카테고리만 체크하면 "건조기 폭 600mm"가 아니라 대표 사이즈가 잡힌다 */
+  const sel = document.querySelector(`select[data-size="${CSS.escape(cat)}"]`);
+  if (sel && size) {
+    const rows = state.reps.filter((x)=>x.cat===cat);
+    const i = rows.findIndex((r)=>r.size === size);
+    if (i >= 0) {
+      const opt = [...sel.options].find((o)=>String(o.value).startsWith(i + ':'));
+      if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    }
+  }
+  cb.scrollIntoView({ block: 'center' });
+}
+
 async function openSelect(room){
   await loadReps();
   const allCats = [...new Set(state.reps.map((r)=>r.cat))];
@@ -4969,6 +4995,19 @@ async function openSelect(room){
       roomSel.onchange = fill;
       if ($('#a-all')) $('#a-all').onchange = fill;
       fill();
+      /*
+       * ── 통합검색 딥링크 (`/place?pick=건조기|폭 600mm`) ──
+       *
+       * 허브 통합검색이 이 앱의 사이즈 70건을 담고 있는데 링크가 전부 맨 `/place` 였다.
+       * *"건조기 폭 600mm"* 를 찾아 눌러도 앱 첫 화면만 열려, 상담사가 목록에서 그것을
+       * 다시 찾아야 했다(2026-08-12 사용자 지적).
+       *
+       * **시트를 억지로 먼저 열지 않는다.** 축척이 없으면 가전을 올릴 수 없다는 규칙이
+       * 먼저다(CLAUDE.md — 체크를 다 한 뒤에 막으면 헛수고가 된다). 그래서 요청을
+       * 들고만 있다가 **시트가 열리는 그때** 그 줄을 체크해 준다. 도면을 불러오는 순서가
+       * 바뀌어도 찾아 준 것이 사라지지 않는다.
+       */
+      applyDeepPick();
       $('#c').onclick = closeSheet;
       // 체크한 것을 모으는 일은 자동·수동이 똑같다. 한 곳에서 만든다.
       const collect = ()=>{
@@ -5632,11 +5671,30 @@ $('#modal').addEventListener('click',(e)=>{ if(e.target.id==='modal') closeSheet
 resize();
 loadReps();
 
+/*
+ * ── 통합검색 딥링크 (`?pick=건조기|폭 600mm`) ──
+ *
+ * 축척이 이미 잡혀 있으면(단지에서 불러온 경우) 바로 가전 선택 시트를 열어 그 줄을
+ * 체크한다. 아직 도면이 없으면 **시트를 열지 않는다** — 가전을 올릴 수 없는 상태에서
+ * 고르게 하면 헛수고가 된다. 대신 무엇을 찾아 왔는지 한 줄로 알리고, 나중에 시트를
+ * 열 때 그 줄이 체크된다.
+ */
+(function placeDeepLink(){
+  const raw = new URLSearchParams(location.search).get('pick');
+  if (!raw) return;
+  const [cat, size] = raw.split('|');
+  if (!cat) return;
+  deepPick = [cat, size || ''];
+  if (state.scaled) { openSelect(null); return; }
+  toast(`'${cat}${size ? ' ' + size : ''}' 을(를) 골라 두었습니다 — 도면을 먼저 불러오세요`);
+})();
+
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
+  openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,

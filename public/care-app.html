@@ -2161,6 +2161,22 @@ document.addEventListener('DOMContentLoaded', () => {
    * 특정 제품 회차표에서 시작하지 않는다. 품목 고르기는 바로 옆 탭이다.
    */
   setMode('bluepass');
+
+  /*
+   * ── 통합검색 딥링크 (`?cat=aircon`) ──
+   *
+   * 허브 통합검색이 이 앱으로 보낼 때 `?cat=` 을 붙여 왔는데 **여기서 읽지를 않아
+   * 늘 블루패스 첫 화면이 열렸다**(2026-08-12 사용자 지적: *"선택된 곳으로 자동
+   * 이동이 되어야 하는데 이동이 안 됩니다"*). 검색이 찾아 준 항목과 다른 화면이
+   * 뜨면 찾아 준 뜻이 없다 — AS 검색 결과가 접힌 묶음 안으로 데려갈 때 묶음까지
+   * 펼치는 것과 같은 이유다.
+   *
+   * `switchToCare` 를 그대로 쓴다(품목 선택 + 케어 탭 + 결과로 스크롤). 화면을
+   * 직접 만지지 않아야 사람이 눌렀을 때와 결과가 같다.
+   * 없는 키가 오면 아무것도 하지 않는다 — 기본 화면이 그대로 열린다.
+   */
+  const dl = new URLSearchParams(location.search).get('cat');
+  if (dl && PRODUCTS.some(p => p.key === dl)) switchToCare(dl);
 });
 
 

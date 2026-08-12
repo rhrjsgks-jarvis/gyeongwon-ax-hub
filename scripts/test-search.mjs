@@ -172,15 +172,74 @@ console.log('OK: 인덱스 내부 링크가 모두 실제 라우트를 가리킴
 }
 
 // ── ④ 딥링크 파라미터 처리기가 각 모듈에 실제로 붙어 있는지 ──
+/*
+ * **이 목록이 세 개뿐이라 194건이 조용히 깨져 있었다**(2026-08-12).
+ * care·as·place 가 빠져 있어, 색인은 `?cat=` 을 붙여 보내는데 앱이 읽지를 않아
+ * **늘 앱 첫 화면이 열렸다** — 검색이 찾아 준 항목과 다른 화면이 뜬 것이다
+ * (사용자 지적: *"선택된 곳으로 자동 이동이 되어야 하는데 이동이 안 됩니다"*).
+ * **딥링크를 내보내는 모듈은 전부 여기 있어야 한다.**
+ */
 const deepLinks = [
   ['finder-app.html', "get('q')"],
   ['install-app.html', "get('cat')"],
   ['compare-app.html', "get('cat')"],
+  ['care-app.html', "get('cat')"],
+  ['as-app.html', "get('q')"],
+  ['place-app.html', "get('pick')"],
 ];
 for (const [file, needle] of deepLinks) {
   const html = fs.readFileSync(path.join(root, 'public', file), 'utf8');
   if (!html.includes(needle)) fail(`${file}에 딥링크 처리(${needle})가 없음 — 검색 결과 클릭 시 해당 화면으로 이동하지 않음`);
   else console.log(`OK: ${file} 딥링크 처리 확인`);
+}
+
+/*
+ * ── ④-b 자료 항목이 **맨 주소**로 가지 않는지 ──
+ * 앱을 열어 주기만 하고 그 항목으로 데려가지 않으면 상담사는 앱 안에서 같은 말을 다시 친다.
+ * 허브 모듈 항목(`m:'hub'`)만 예외다 — 그건 "앱 자체"를 가리키는 것이 맞다.
+ */
+{
+  const bare = entries.filter((e) => e.m !== 'hub' && !e.ext && !e.href.includes('?') && !e.href.includes('#'));
+  if (bare.length) {
+    const by = {};
+    for (const e of bare) by[e.href] = (by[e.href] || 0) + 1;
+    fail(`자료 항목 ${bare.length}건이 맨 주소로 감 — 눌러도 그 항목이 열리지 않는다: `
+      + Object.entries(by).map(([h, n]) => `${h} ${n}건`).join(' · '));
+  } else console.log('OK: 자료 항목이 전부 딥링크를 달고 있다 (맨 주소 0건)');
+}
+
+/*
+ * ── ④-c AS 딥링크의 `?q=` 가 **앱 안에 실제로 있는 제목**인지 ──
+ * AS 앱은 이 값으로 자기 목록에서 항목을 찾아 `go()` 를 부른다. 제목이 한 글자라도
+ * 다르면 예외도 경고도 없이 **검색 결과만 뜨고 끝난다** — 화면으로는 알기 어렵다.
+ * 그래서 원문(as-app.html)에서 제목을 만들어 내는 데이터와 직접 대조한다.
+ */
+{
+  const html = fs.readFileSync(path.join(root, 'public', 'as-app.html'), 'utf8');
+  const lit = (re) => { const m = html.match(re); return m ? (0, eval)(`(${m[1]})`) : null; };
+  const titles = new Set();
+  const DBA = lit(/\nconst DB = (\{[\s\S]*?\});\n/);
+  const CEN = lit(/\nconst CENTERS = (\[[\s\S]*?\n\]);/);
+  const B2B = lit(/\nconst B2B = (\[[\s\S]*?\n\]);/);
+  const IT = lit(/\nconst B2B_IT = (\[[\s\S]*?\n\]);/);
+  const SINK = lit(/\nconst SINK = (\[[\s\S]*?\n\]);/);
+  const NAT = lit(/\nconst B2B_NATION = (\[[\s\S]*?\n\]);/);
+  const MID = lit(/\nconst MID = (\[[\s\S]*?\n\]);/);
+  const ROYAL = lit(/\nconst ROYAL = (\{[\s\S]*?\});\n/);
+  Object.keys(DBA || {}).forEach((k) => titles.add(k));
+  (CEN || []).forEach((c) => titles.add(c.t));
+  for (const arr of [B2B, IT]) (arr || []).forEach((c) => titles.add(`${c.p} · ${c.c}`));
+  (SINK || []).forEach((s) => titles.add(s.p));
+  (NAT || []).forEach((x) => titles.add(`${x.t} 이전설치`));
+  (MID || []).forEach((m) => titles.add(`${m.g} (중앙에너지)`));
+  if (ROYAL) titles.add(`멤버십 ${ROYAL.grade}`);
+  titles.add('물류 VOC 본사 창구');
+
+  const bad = entries.filter((e) => e.m === 'as' && e.href.startsWith('/as?q='))
+    .map((e) => decodeURIComponent(e.href.slice('/as?q='.length)))
+    .filter((q) => !titles.has(q));
+  if (bad.length) fail(`AS 딥링크 ${bad.length}건이 앱에 없는 제목을 가리킴 (그 항목으로 안 열린다): ${[...new Set(bad)].slice(0, 5).join(' · ')}`);
+  else console.log(`OK: AS 딥링크 ${entries.filter((e) => e.m === 'as').length}건이 전부 앱 항목을 가리킨다`);
 }
 
 // ── ⑤ 용어 세분화 — 상담사가 쓰는 말로 찾아지는가 ──
