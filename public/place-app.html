@@ -2074,10 +2074,29 @@ function detectAllRooms(){
   if (!state.img) return 0;
   ensureClean();
   const W = state.imgW, H = state.imgH;
-  const N = 6;
+  /*
+   * **기준은 시트가 아니라 건물이다**(2026-08-12 실측으로 고침).
+   *
+   * 분양 시트에는 위에 면적표·타입명, 아래에 안내문이 붙는다. 홍천 84B 는 이미지가
+   * 1032×1200 인데 **건물은 788×605(넓이의 39%)** 다. 그런데 방 크기 문턱을 시트 전체의
+   * 1.2% 로 잡고 있어 실제 욕실·현관(5,775~9,994px²)이 문턱(14,861px²) 아래로 떨어졌다 —
+   * 공간이 4곳에서 멈춘 원인이다(사용자 시연에서 주방·욕실·현관·발코니가 빠졌다).
+   * 찌르는 지점도 시트 전체에 뿌려 **36곳 중 11곳만** 방에 들어갔다.
+   *
+   * `structureBox` 가 이미 건물 범위를 알고 있다(치수선 마커·글씨를 뺀 가장 큰 덩어리).
+   * 그 안에만 찌르고, 크기 문턱도 그 넓이를 기준으로 잡는다.
+   * 건물 범위를 못 구하면 예전처럼 시트 전체로 물러선다.
+   */
+  const bx = ((state.baseInfo || {}).bbox) || null;
+  const bw = bx ? Math.max(1, bx.x1 - bx.x0) : W;
+  const bh = bx ? Math.max(1, bx.y1 - bx.y0) : H;
+  const bx0 = bx ? bx.x0 : 0, by0 = bx ? bx.y0 : 0;
+  /* 건물 안만 보게 되니 같은 촘촘함으로도 방에 훨씬 자주 들어간다 — 8×8 로 올린다.
+     마스크가 반경별로 캐시돼 있어 탐침을 늘려도 비용이 선형으로 늘지 않는다. */
+  const N = 8;
   const found = [];
   for (let iy = 1; iy <= N; iy++) for (let ix = 1; ix <= N; ix++){
-    const x = W * ix / (N + 1), y = H * iy / (N + 1);
+    const x = bx0 + bw * ix / (N + 1), y = by0 + bh * iy / (N + 1);
     let r; try { r = detectRoomAt(x, y); } catch (_) { continue; }
     if (!r || r.error || !r.poly) continue;
     const a = polyAreaPx(r.poly);
@@ -2089,8 +2108,8 @@ function detectAllRooms(){
       && Math.abs(c.a-a) < Math.max(c.a, a) * 0.08)) continue;
     found.push({ a, cx, cy, w, h, at:[x, y], closeR:r.closeR, poly:r.poly, edges:r.edges });
   }
-  const planA = (W||1) * (H||1);
-  const minShort = Math.min(W||1, H||1) * 0.05;
+  const planA = bw * bh;                       // 시트가 아니라 **건물** 넓이
+  const minShort = Math.min(bw, bh) * 0.05;
   const keep = found
     .filter((c)=> c.a >= planA * 0.012 && Math.min(c.w, c.h) >= minShort)
     .sort((u,v)=> v.a - u.a);
