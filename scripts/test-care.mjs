@@ -264,7 +264,13 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const prodOpts = doc.querySelectorAll('.tl-sel')[0].querySelectorAll('option');
     const TL_KEYS = DONE_KEYS.filter((k) => (window.eval(`(DATA['${k}']||{}).contract`) !== '자가관리'));
     if (prodOpts.length !== TL_KEYS.length) fail(`timeline: expected ${TL_KEYS.length} product options, got ${prodOpts.length}`);
-    const circles = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
+    /*
+     * 회차는 **점(`.tl-stop`) 개수**로 센다. 예전에는 `<circle` 문자열을 셌는데
+     * 그건 SVG 로 그리던 시절의 표현이라, 표현을 바꾸자 검사가 0을 세며 실패했다.
+     * 마크업이 아니라 DOM 을 세면 그리는 방법이 바뀌어도 뜻이 유지된다.
+     */
+    const stops = () => doc.querySelectorAll('#timelinePane .tl-stop').length;
+    const circles = stops();
     /*
      * 에어컨 12개월형은 **6회**다 — A타입 기본점검·케어 4회(12·24·48·60개월) +
      * B타입 기본 세척 2회(36·72개월). 예전에는 화면이 A타입만 그려 4회로 보였고
@@ -284,7 +290,7 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const prodSel = doc.querySelectorAll('.tl-sel')[0];
     prodSel.value = 'dryer';
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    const circlesDryer = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
+    const circlesDryer = stops();
     if (circlesDryer !== 2) fail(`timeline: dryer 는 36개월 전용이라 2회여야 하는데 ${circlesDryer}회`);
     const planOpts = [...doc.querySelectorAll('.tl-sel')[1].querySelectorAll('option')].map((o) => o.value);
     if (planOpts.length !== 1 || planOpts[0] !== '36') fail(`timeline: dryer 플랜 선택지는 36 하나여야 하는데 ${planOpts.join(',')}`);
@@ -293,13 +299,13 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const planSel = doc.querySelectorAll('.tl-sel')[1];
     planSel.value = '36';
     planSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    const circlesDryer36 = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
+    const circlesDryer36 = stops();
     if (circlesDryer36 !== 2) fail(`timeline: dryer/36개월형 expected 2 round circles, got ${circlesDryer36}`); // [36,72]
 
     // 사용자가 신고한 그 조합 — AI콤보 36개월형은 2회여야 한다
     prodSel.value = 'aicombo';
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    const circlesCombo = (doc.getElementById('timelinePane').innerHTML.match(/<circle/g) || []).length;
+    const circlesCombo = stops();
     if (circlesCombo !== 2) fail(`timeline: AI콤보 36개월형은 2회여야 하는데 ${circlesCombo}회 (구독 6년 ÷ 36개월)`);
 
     console.log('OK: timeline mode (default circles, product/plan select switching)');

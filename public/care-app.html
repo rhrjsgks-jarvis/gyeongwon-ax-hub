@@ -153,8 +153,28 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .tl-ctrl{padding:14px 16px 0}
 .tl-row{display:flex;gap:8px;margin-bottom:10px}
 .tl-sel{flex:1;background:#fff;border:1.5px solid #ecedf1;border-radius:12px;padding:10px 12px;font-size:13px;font-family:inherit;color:#16181b;font-weight:700;-webkit-appearance:none;appearance:none;cursor:pointer}
-.tl-bar{padding:14px 16px;overflow-x:auto}
-.tl-svg-wrap{min-width:600px}
+/*
+ * 방문 시점만 **균등 간격**으로 찍는다. 예전에는 0~72개월 축을 비례로 그렸는데
+ * 두 가지가 나빴다 — ①축이 72개월 고정이라 12개월형(6회가 12~72M 에 고르게 오는
+ * 제품 말고) 짧은 계약에서는 오른쪽이 통째로 비고 ②`min-width:600px` 이라 폰에서
+ * 가로 스크롤이 생겼다. 상담에서 필요한 것은 "몇 개월 뒤가 몇 회차인가"이지
+ * 시간 축 위의 비례 위치가 아니다(2026-08-13 사용자 요청: *"실제 개월수 반영된
+ * 수치는 필요없고 방문시점만 표기되어도 문제가없을것같습니다"*).
+ * 회차는 최대 6개라(전 제품 실측) 균등 간격이면 폰에서도 넘치지 않는다.
+ */
+.tl-bar{padding:14px 16px 6px}
+.tl-track{display:flex;position:relative}
+/* 잇는 선은 첫 점과 끝 점의 **중심 사이**만 긋는다 — 칸 너비의 절반씩 안으로 들인다 */
+.tl-track::before{content:"";position:absolute;top:13px;height:2px;background:#e3e6ec;
+  left:calc(50% / var(--n));right:calc(50% / var(--n))}
+.tl-stop{flex:1;min-width:0;position:relative;display:flex;flex-direction:column;align-items:center;gap:5px}
+.tl-pt{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:800;color:#fff;background:#1428A0}
+.tl-track.p36 .tl-pt{background:#0D1B7A}
+.tl-mo{font-size:10px;font-weight:700;color:#6b7280;white-space:nowrap}
+/* 지난 방문은 흐리게 — 예전의 빨간 '현재' 세로선이 하던 일을 대신한다(축이 없어도 갈린다) */
+.tl-stop.past .tl-pt{background:#ccd0d8}
+.tl-stop.past .tl-mo{color:#b0b5be}
 .tl-list{padding:0 16px 16px}
 .tl-item{background:#fff;border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
 .tl-body{min-width:0;flex:1}
@@ -2551,30 +2571,20 @@ function renderTimeline(){
   const sched = careSchedule(d, tlPlan);
   const months = sched.map(function(x){ return x.month; });
   const now = new Date();
-  const startDate = new Date(tlYear, tlMonth-1, 1);
-  const nowOffsetMonths = Math.max(0, (now.getFullYear()-startDate.getFullYear())*12 + (now.getMonth()-startDate.getMonth()));
 
-  const SVG_W = 680, SVG_H = 80, PAD = 30, INNER = SVG_W - PAD*2;
-  const MON_W = INNER / 72;
-  let svgDots = '';
-  for(let i=0;i<=72;i+=6){
-    const x = PAD + i*MON_W;
-    svgDots += '<text x="'+x+'" y="'+(SVG_H-5)+'" font-size="9" fill="#aab0b8" text-anchor="middle">'+i+'M</text>';
-    svgDots += '<line x1="'+x+'" y1="12" x2="'+x+'" y2="'+(SVG_H-18)+'" stroke="#ecedf1" stroke-width="1"/>';
-  }
-  if(nowOffsetMonths<=72){
-    const nx = PAD + nowOffsetMonths*MON_W;
-    svgDots += '<line x1="'+nx+'" y1="8" x2="'+nx+'" y2="'+(SVG_H-20)+'" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,2"/>';
-    svgDots += '<text x="'+nx+'" y="7" font-size="8" fill="#ef4444" text-anchor="middle">현재</text>';
-  }
-  svgDots += '<line x1="'+PAD+'" y1="40" x2="'+(SVG_W-PAD)+'" y2="40" stroke="#dde1e9" stroke-width="2"/>';
-  months.forEach((m,i)=>{
-    const x = PAD + m*MON_W;
-    const col = tlPlan==='12' ? '#1428A0' : '#0D1B7A';
-    svgDots += '<circle cx="'+x+'" cy="40" r="12" fill="'+col+'"/>';
-    svgDots += '<text x="'+x+'" y="44" font-size="9" fill="#fff" text-anchor="middle" font-weight="800">'+(i+1)+'회</text>';
-  });
-  const svg = '<svg viewBox="0 0 '+SVG_W+' '+SVG_H+'" width="100%" style="min-width:600px">'+svgDots+'</svg>';
+  /*
+   * **방문 시점만 균등 간격으로 찍는다.** 시간 축을 비례로 그리지 않는다 —
+   * 상담에서 묻는 것은 "몇 개월 뒤가 몇 회차인가"이고, 정확한 날짜는 바로 아래
+   * 회차 목록이 이미 적는다("2027년 7월 · 구독 12개월차").
+   * 지난 방문은 흐리게 칠해 예전 '현재' 세로선이 하던 구실을 대신한다.
+   */
+  const bar = '<div class="tl-track' + (tlPlan==='36' ? ' p36' : '') + '" style="--n:' + (months.length||1) + '">' +
+    months.map(function(m,i){
+      const past = new Date(tlYear, tlMonth-1+m, 1) < now;
+      return '<div class="tl-stop' + (past ? ' past' : '') + '">' +
+        '<div class="tl-pt">' + (i+1) + '</div>' +
+        '<div class="tl-mo">' + m + '개월</div></div>';
+    }).join('') + '</div>';
 
   /*
    * 회차마다 **어떤 케어가 나가는지**를 함께 적는다(2026-08-11 사용자 요청).
@@ -2617,8 +2627,11 @@ function renderTimeline(){
       '<div class="tl-row"><select class="tl-sel" onchange="tlYear=+this.value;renderTimeline()">'+yearOpts+'</select>' +
       '<select class="tl-sel" style="flex:.5" onchange="tlMonth=+this.value;renderTimeline()">'+monthOpts+'</select></div>' +
     '</div>' +
-    '<div class="tl-bar" style="overflow-x:auto">'+svg+'</div>' +
-    '<div style="padding:0 16px 6px;font-size:10px;color:#9aa0a6">● 빨간 점선 = 오늘('+now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+String(now.getDate()).padStart(2,'0')+') 기준</div>' +
+    '<div class="tl-bar">'+bar+'</div>' +
+    /* 비례 축을 없애며 빨간 점선도 없앴다. 지난 방문은 회색 점으로 갈리므로 그렇게 적는다 —
+       없는 표시를 설명하는 안내가 남아 있으면 화면이 거짓말을 한다. */
+    '<div style="padding:0 16px 6px;font-size:10px;color:#9aa0a6">회색 = 지난 방문 · 오늘 '
+      +now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+String(now.getDate()).padStart(2,'0')+' 기준</div>' +
     '<div class="tl-list">'+listHtml+'</div>';
 }
 
