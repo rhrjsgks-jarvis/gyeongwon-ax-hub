@@ -123,6 +123,28 @@ const expectedImageCounts = {
     } else console.log(`OK: 카테고리 개수 표기 ${n}종 = 드롭다운 항목 수 (DB 에서 세어 넣음)`);
   }
 
+  /*
+   * 규격도를 우리 저장소로 옮기는 중이다(`npm run fetch:install-img`).
+   * 옮긴 것은 **파일이 실제로 있어야 하고 원본 주소를 `orig` 로 달고 있어야 한다** —
+   * 없는 파일을 가리키면 화면에서 규격도가 조용히 사라지고(설치 상담에서 정작 필요한
+   * 그림이다), 출처가 없으면 나중에 값을 되짚을 수 없다.
+   * 아직 안 옮긴 것은 실패가 아니라 남은 개수로만 알린다.
+   */
+  {
+    const raw = fs.readFileSync(new URL('../public/install-app.html', import.meta.url), 'utf8');
+    const local = [...raw.matchAll(/src:'(install-img\/[^']+)'(?:,\s*orig:'([^']*)')?/g)];
+    const remote = [...raw.matchAll(/src:'(https:\/\/[^']+)'/g)];
+    let bad = 0;
+    for (const [, rel, orig] of local) {
+      const p = new URL('../public/' + rel, import.meta.url);
+      if (!fs.existsSync(p)) { console.log(`ERROR: 규격도 파일이 없다 — ${rel}`); bad++; }
+      else if (fs.statSync(p).size < 1024) { console.log(`ERROR: 규격도가 비어 있다 — ${rel}`); bad++; }
+      if (!orig) { console.log(`ERROR: 원본 주소(orig)가 없다 — ${rel}`); bad++; }
+    }
+    if (bad) ok = false;
+    else console.log(`OK: 규격도 — 우리 저장소 ${local.length}장(파일·출처 확인) · 아직 외부 ${remote.length}장`);
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })();
