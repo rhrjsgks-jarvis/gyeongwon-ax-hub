@@ -4019,6 +4019,44 @@ function askWallLength(segs, opts){
      */
     let more = 0;
     if (state.img) { try { more = detectAllRooms() || 0; } catch (_) { more = 0; } }
+    /*
+     * **축척을 잰 방이 덩어리면 버린다.**
+     *
+     * 합쳐진 덩어리를 걸러내는 45% 규칙은 `detectAllRooms` **안에만** 있어서, 축척 단계에서
+     * 먼저 등록되는 이 방은 그 검사를 지나가지 않았다. 프로덕션 3회 시험에서 전부 걸렸다 —
+     * 디에트르 84 에서 '침실1' 이 **96.1㎡** 로 잡혀 공간 5곳 합이 전용 84㎡ 의 **182%** 가 됐다.
+     * 축척은 그 벽 길이만 있으면 나오므로 값 자체는 맞지만(색인값과 0.0% 차이), **공간으로
+     * 남으면 상담에서 "침실1 96㎡"가 그대로 읽힌다.**
+     *
+     * 자동 인식이 방을 제대로 찾아낸 경우에만 버린다 — 못 찾았으면 이 방이라도 있어야 한다.
+     * 판정은 detectAllRooms 와 같은 두 가지다: 전체의 45% 초과 · 다른 방 2곳 이상을 품음.
+     */
+    if (more && state.rooms.length > 1){
+      const mine = state.rooms[0];
+      const area = (r) => roomArea(r);
+      const total = state.rooms.reduce((s, r) => s + area(r), 0);
+      const loop = loopOfWalls(mine.parts[0].walls);
+      const holds = loop ? state.rooms.filter((r) => {
+        if (r === mine) return false;
+        const c = loopOfWalls(r.parts[0].walls);
+        if (!c) return false;
+        const cx = c.reduce((s, p) => s + p[0], 0) / c.length;
+        const cy = c.reduce((s, p) => s + p[1], 0) / c.length;
+        return inLoop(loop, cx, cy);
+      }).length : 0;
+      /*
+       * **넓이 비율은 공간이 넉넉히 잡혔을 때만 본다.**
+       * 공간이 둘뿐이면 어느 쪽이든 45% 를 넘어 늘 걸린다 — 실제로 원주역 우미린 T1 에서
+       * 멀쩡한 방(8.5㎡)이 지워져 공간이 1곳만 남았다. 포함 관계(다른 방 2곳 이상을 품음)는
+       * 개수와 무관하게 성립하므로 그대로 둔다.
+       */
+      if ((state.rooms.length >= 4 && area(mine) > total * 0.45) || holds >= 2){
+        state.rooms = state.rooms.filter((r) => r !== mine);
+        state.items.forEach((it) => { if (it.room === mine.id) it.room = null; });
+        if (state.roomSel === mine.id) state.roomSel = state.rooms[0].id;
+        syncWalls();
+      }
+    }
     setMode("idle"); setStep(4); evaluate(); draw();
     toast(`도면 비율을 맞췄습니다 — 이 벽 ${mm.toLocaleString()}mm 기준`
       + (more ? ` · 도면 전체에서 공간 ${state.rooms.length}곳을 잡았습니다` : ''));
