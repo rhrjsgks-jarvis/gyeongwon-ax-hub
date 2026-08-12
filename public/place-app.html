@@ -21,6 +21,24 @@
 
   /* ── 단계 안내 ── */
   #steps{display:flex;gap:0;background:var(--card);border-bottom:1px solid var(--line);flex:none}
+  /*
+   * **배치 단계에 오면 단계바를 감춘다**(2026-08-12 사용자: *"너무 난잡한 것 같습니다"*).
+   * 네 단계가 전부 도구막대 버튼을 그대로 부르므로(`#steps.onclick`) 잃는 기능이 없고,
+   * 앞 세 칸은 ✓ 만 달고 54px 을 계속 먹는다. 도면이 주인공인 화면에서 그만한 자리를
+   * 완료 표시에 줄 이유가 없다 — "위를 비우고 아래를 채운다"는 이 앱의 규칙이다.
+   * 앞 단계로 돌아가면(setStep(<4)) 다시 나온다.
+   */
+  #steps.hide{display:none}
+  /*
+   * 좁은 화면에서 도구막대 라벨의 뒷말을 접는다(실측 360px 에서 3줄 → 1줄).
+   * `←` 는 여기서만 감춘다 — 안드로이드 하드웨어 뒤로가기가 같은 일을 하고
+   * (`pushBack`/`stepBack` 이 이미 그렇게 물리게 돼 있다) 폰에서는 그 손잡이가 겹친다.
+   * PC 에는 하드웨어 뒤로가기가 없으므로 그대로 둔다.
+   */
+  @media (max-width: 520px){
+    #bar .lg{display:none}
+    #bar #btn-back{display:none}
+  }
   .step{
     flex:1;padding:9px 6px;text-align:center;font-size:12px;color:var(--muted);
     border-bottom:2px solid transparent;cursor:pointer;user-select:none;
@@ -67,6 +85,16 @@
     background:rgba(17,24,39,.86);color:#fff;border-radius:12px;padding:9px 12px;
     font-size:12px;line-height:1.5;display:none;align-items:center;gap:10px;flex-wrap:wrap}
   #stage.on3d #d3bar{display:flex}
+  /*
+   * **3D 에서는 2D 전용 손잡이를 감춘다**(2026-08-12 사용자: *"난잡하다"*).
+   * `#status` 는 2D 모드가 무엇을 눌러야 하는지 안내하는 줄이라, 3D 에서는 사실이 아니다
+   * (실제로 3D 를 보는 중에 *"다른 방 안쪽을 눌러 계속 추가하세요"* 가 떠 있었다).
+   * `⤢ 화면 맞추기`·`↔ 치수`·`◧ 정리본`·`경계 수정` 은 2D 캔버스에만 듣고,
+   * `3D 보기` 는 이미 3D 인데 또 있다 — 돌아가는 길은 아래 막대의 `2D로` 다.
+   */
+  body.is3d #status, body.is3d #btn-fit, body.is3d #btn-3d,
+  body.is3d #btn-dims, body.is3d #btn-clean, body.is3d #btn-edit,
+  body.is3d #btn-wall, body.is3d #btn-scale{display:none}
   #d3bar b{font-weight:700}
   #d3bar .sp{flex:1}
   #d3bar button{background:#fff;color:#111827;border:0;border-radius:8px;
@@ -264,6 +292,10 @@
     .step b{font-size:10px}
     #bar{gap:6px;padding:8px 10px}
     #bar button{padding:9px 12px;font-size:13px}
+    /* 라벨이 두 글자로 접히는 폭(520px 이하)에서는 좌우 여백 12px 이 과하다.
+       8px 로 줄이면 390px 폰에서 도구막대가 한 줄에 들어간다 — 실측 101px → 56px.
+       세로 여백은 그대로라 누르는 높이는 줄지 않는다. */
+    @media (max-width:520px){ #bar{gap:5px} #bar button{padding:9px 8px} }
     #btn-side{margin-left:auto}
     /*
      * 단지 고르기는 **목록을 쓸어 넘기는 화면**이다. 좁은 화면에서 설명·칩·버튼이
@@ -346,13 +378,19 @@
       가전을 고르고, 결과를 남긴다. 나머지는 "가끔 손볼 때" 쓰는 것이라 ⋯ 안으로 넣는다.
       매장 기기가 휴대폰이면 열두 개가 두 줄로 접혀 도면이 밀려 올라간다.
     -->
-    <button id="btn-lib" class="primary">단지 불러오기</button>
-    <button id="btn-img">도면 이미지</button>
-    <button id="btn-add">가전 선택</button>
+    <!--
+      **좁은 화면에서는 뒷말을 접는다**(`.lg`). 실측으로 360px 폰에서 도구막대가
+      세 줄(146px)이었다 — 도면이 그만큼 밀려 올라간다. 앞 두 글자만 남겨도
+      무엇인지 알 수 있고("단지"·"도면"·"가전"·"저장"), 버튼 자리와 순서는 그대로다.
+      말을 줄이는 것이지 기능을 숨기는 것이 아니다.
+    -->
+    <button id="btn-lib" class="primary">단지<span class="lg"> 불러오기</span></button>
+    <button id="btn-img">도면<span class="lg"> 이미지</span></button>
+    <button id="btn-add">가전<span class="lg"> 선택</span></button>
     <!-- 3D 는 고객에게 "우리 집 느낌"을 보여주는 화면이라 ⋯ 안에 숨기지 않는다.
          상담 흐름이 단지 → 가전 → 3D → 저장 이므로 자리도 그 순서에 둔다. -->
-    <button id="btn-3d">3D 보기</button>
-    <button id="btn-share">결과 저장</button>
+    <button id="btn-3d">3D<span class="lg"> 보기</span></button>
+    <button id="btn-share"><span class="lg">결과 </span>저장</button>
     <button id="btn-back" class="ghost" title="뒤로">←</button>
     <button id="btn-fit" class="ghost" title="도면이 화면에 들어오게 맞춥니다">⤢</button>
     <button id="btn-more" class="ghost" title="도면·벽 손보기">⋯</button>
@@ -3086,9 +3124,20 @@ function renderSide(){
       <div class="row ${state.sel===it.id?'sel':''}" data-id="${it.id}">
         <!-- 이름표에 이미 사이즈가 들어 있다(“TV 115인치”) — pill 로 또 붙이면 두 번 나온다 -->
         <div class="t">${esc(it.label)}${itemRoom(it)?`<span class="pill">${esc(itemRoom(it).name)}</span>`:''}${it.staged?'<span class="pill">대기</span>':''}<span class="grow"></span><button class="del" data-delitem="${it.id}" title="이 가전을 지웁니다">✕</button></div>
-        <div class="m">${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm</div>
-        <div class="m">이격 후면 ${it.clear.back} · 좌우 ${it.clear.side}${it.clear.front?` · 전면 ${it.clear.front}`:''}mm</div>
-        <div class="w ${it.warn&&it.warn.length?'':'ok'}">${it.warn&&it.warn.length?esc(it.warn.join(' / ')):'배치 가능'}</div>
+        <!--
+          한 줄로 합치고 **0 인 이격은 적지 않는다**(2026-08-12 사용자: *"난잡하다"*).
+          가전 한 대가 네 줄을 먹어 여섯 대만 놓아도 목록이 화면을 넘겼는데,
+          그중 "이격 후면 0 · 좌우 0mm" 처럼 **아무 제약이 없다는 뜻의 줄**이 섞여 있었다.
+          이격은 값이 있을 때만 판정에 영향을 주므로 있을 때만 적는다.
+        -->
+        <div class="m">${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm${
+          (()=>{ const c=[]; if(it.clear.back)c.push(`후면 ${it.clear.back}`);
+                 if(it.clear.side)c.push(`좌우 ${it.clear.side}`);
+                 if(it.clear.front)c.push(`전면 ${it.clear.front}`);
+                 return c.length?` · 이격 ${c.join('·')}mm`:''; })()}</div>
+        <!-- **문제가 있을 때만 적는다.** 모든 줄에 초록 "배치 가능"이 붙어 있으면
+             정작 빨간 경고가 그 사이에 묻힌다. 아래 리포트가 총계를 따로 말한다. -->
+        ${it.warn&&it.warn.length?`<div class="w">${esc(it.warn.join(' / '))}</div>`:''}
         ${it.soft&&it.soft.length?`<div class="s">${esc(it.soft.join(' / '))}</div>`:''}
       </div>`).join('');
   }
@@ -3110,8 +3159,16 @@ function renderSide(){
    * 전용면적을 아는 경우에만 짚어 준다 — 근거 없이 경고하지 않는다.
    */
   const whole = state.exclusiveM2 && state.rooms.find((r)=> roomArea(r)/1e6 >= state.exclusiveM2 * 0.9);
+  /*
+   * **방별 면적을 여기 다시 적지 않는다.** 바로 위 `공간` 목록이 이름과 넓이를 이미
+   * 한 줄씩 보여주는데, 리포트가 그것을 쉼표로 이어 한 번 더 적고 있었다 —
+   * 같은 숫자가 화면에 두 번 뜬다(3D 하단바까지 치면 세 번).
+   * 여기서는 목록이 말하지 않는 것만 말한다 — 개수 · 조각난 방 · 세대 전체 경고.
+   */
+  const pieces = state.rooms.filter((r)=>r.parts.length>1).length;
   const roomLine = state.rooms.length
-    ? row('ok', `공간 ${state.rooms.length}곳 — ` + state.rooms.map((r)=>`${r.name} ${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?`(${r.parts.length}조각)`:''}`).join(' · ')
+    ? row('ok', `공간 ${state.rooms.length}곳`
+        + (pieces?` · ${pieces}곳은 조각으로 이어 붙임`:'')
         + (opensN?` · 개구부 ${opensN}곳`:'')
         + (whole?` — <b>${esc(whole.name)}가 세대 전체(전용 ${state.exclusiveM2}㎡) 크기입니다. 방이 나뉘지 않았을 수 있어요 — '더 좁게'로 다시 인식해 보세요</b>`:''))
     : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가'));
@@ -3601,7 +3658,8 @@ $('#steps').onclick = (e)=>{ const s=e.target.closest('.step'); if(!s) return;
 
 function setMode(m){ state.mode=m; renderSide(); }
 function setStep(n){ document.querySelectorAll('.step').forEach((s)=>{
-  const k=+s.dataset.step; s.classList.toggle('on', k===n); if(k<n) s.classList.add('done'); }); }
+  const k=+s.dataset.step; s.classList.toggle('on', k===n); if(k<n) s.classList.add('done'); });
+  $('#steps').classList.toggle('hide', n >= 4); }
 
 function askScale(){
   const [[x1,y1],[x2,y2]] = state.scalePts;
@@ -5740,10 +5798,15 @@ function paintBar(info){
   const warn = info.blocked
     ? `<span style="color:#FFB4B4;font-weight:700">문이 안 열리는 제품 ${info.blocked}대 — 이 배치로는 안 됩니다</span>`
     : (openDoors ? `<span style="color:#A7F3D0">문을 다 열어도 부딪히지 않습니다</span>` : '');
+  /*
+   * **오른쪽 패널이 이미 말하는 것은 여기 적지 않는다**(2026-08-12 사용자: *"난잡하다"*).
+   * 공간 수·가전 수는 패널의 `공간`·`배치 목록`에 그대로 있어 화면에 같은 숫자가 세 번 떴다.
+   * 여기 남길 것은 **이 화면에서만 알 수 있는 것**이다 —
+   * 층고가 가정값이라는 사실 · 대기 중인 가전(할 일) · 문 열림 판정(경고).
+   */
   bar.innerHTML =
-    `<b>3D 보기</b> · 공간 ${info.rooms}곳 · 가전 ${info.items}대` +
+    `<b>3D</b> · 층고 ${WALL_H_MM.toLocaleString()}mm<span style="opacity:.55">(가정)</span>` +
     (info.waiting ? ` · <span style="opacity:.8">대기 ${info.waiting}대 — 끌어서 넣으세요</span>` : '') +
-    ` · 층고 ${WALL_H_MM.toLocaleString()}mm` +
     (warn ? ' · ' + warn : '') +
     `<span class="sp"></span>` +
     `<button data-v="iso">둘러보기</button>` +
@@ -5776,6 +5839,7 @@ function open(){
   const info = build(true);   // 열 때만 화면을 맞춘다
   on = true;
   document.getElementById('stage').classList.add('on3d');
+  document.body.classList.add('is3d');   // 도구막대의 2D 전용 손잡이를 감춘다
   size(); if (!raf) loop();
   paintBar(info);
   return info;
@@ -5783,6 +5847,7 @@ function open(){
 function close(){
   on = false;
   document.getElementById('stage').classList.remove('on3d');
+  document.body.classList.remove('is3d');
 }
 window.Place3D = {
   open, close, toggle(){ return on ? (close(), null) : open(); },
