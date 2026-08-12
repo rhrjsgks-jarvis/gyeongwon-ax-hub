@@ -282,6 +282,12 @@
   #mini .act{margin-left:6px;padding:3px 8px;font-size:11px;border:1px solid var(--line);
     border-radius:6px;background:#fff;color:var(--ink);cursor:pointer}
   #mini .act:active{background:#EEF1F6}
+  /* 설치 높이 입력 — 벽에 거는 TV·사운드바에만 붙는다. 폰에서 숫자칸이 커지지 않게
+     너비를 못 박고, 스피너를 지워 좁은 화면에서 글자가 밀리지 않게 한다. */
+  #mini input.mh{width:56px;margin:0 3px;padding:2px 5px;font-size:11px;font-family:inherit;
+    border:1px solid var(--line);border-radius:6px;background:#fff;color:inherit;text-align:right}
+  #mini input.mh::-webkit-outer-spin-button,
+  #mini input.mh::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   @media (max-width:760px){
     #mini{display:block}
     /* 초안·축척 막대가 요약 띠에 가리지 않게 위로 올린다 */
@@ -2821,6 +2827,65 @@ const STACKABLE = [
   { a:/^TV$/, b:/^사운드바$/, ok:()=>true, why:'사운드바는 TV 아래에 설치합니다' },
   { a:/^세탁기·콤보$/, b:/^건조기$/, ok:(w)=>!isCombo(w), why:'건조기를 세탁기 위에 적층합니다' },
 ];
+/*
+ * ── 설치 높이 (`it.mh` — 바닥에서 제품 **하단**까지 mm) ─────────────────────
+ *
+ * *"TV와 사운드바는 높이를 설정할 수 있게 해주세요"*(2026-08-12 사용자).
+ *
+ * 예전에는 3D 가 `body.position.y = h/2` 한 줄이라 **모든 가전이 바닥에 놓였다.**
+ * 벽에 거는 TV 와 그 아래 사운드바가 거실 바닥에 누워 있으면 "우리 집 느낌"이 무너지고,
+ * 더 나쁘게는 **바닥 자리를 차지한 것으로 판정**되어 그 앞에 다른 가전을 못 놓는다.
+ *
+ * **어느 값이 근거가 있고 어느 값이 가정인지 분명히 갈라 둔다.**
+ *
+ *  ① 스탠드형 TV — `size-reps` 가 **스탠드 포함 높이**를 따로 들고 있다(65형 H1361.2 대
+ *     벽걸이 H875.1). 받침이 이미 치수에 들어 있으므로 **바닥(0)이 맞다.** 근거 있음.
+ *  ② 사운드바 — `STACKABLE` 이 이미 *"사운드바는 TV 아래에 설치합니다"* 라고 적고 있다.
+ *     그래서 같은 방 TV 의 **하단에 딱 붙여** 따라가게 한다. 지어낸 값이 아니라 파생값이다.
+ *     TV 가 없으면 바닥에 둔다(받침대 위에 놓는 경우와 같다).
+ *  ③ 벽걸이 TV 를 몇 mm 에 거는가 — **삼성 설치가이드에도, 구매가이드에도 수치가 없다**
+ *     (실제로 원문을 확인했다: 벽면 재질·두께·이격만 있고 높이는 없다).
+ *     그래서 **가정값**으로 두고 화면이 그 사실을 밝힌다 — 이 앱이 층고 2,300mm 를
+ *     다루는 방식 그대로다. 기준은 *화면 중심을 앉은 눈높이에 맞춘다* 는 통용 원칙이고,
+ *     눈높이는 `EYE_MM` 하나뿐이다. 사용자가 그 자리에서 고칠 수 있다.
+ *
+ * **가정은 이 상수 하나로 모은다.** 여기저기 숫자를 흩어 두면 무엇이 근거이고 무엇이
+ * 어림인지 알 수 없게 된다.
+ */
+const EYE_MM = 1100;        // 소파에 앉았을 때의 시선 높이(가정) — 화면이 가정임을 밝힌다
+const MOUNTABLE = /^TV$|^사운드바$/;
+/** 이 가전이 설치 높이를 가질 수 있는가 (스탠드 부품은 바닥이 맞으므로 제외) */
+function mountable(it){
+  if (!MOUNTABLE.test(it.cat || '')) return false;
+  if (/^TV$/.test(it.cat) && !/벽걸이/.test(it.part || '')) return false;   // 스탠드·프로젝터는 바닥
+  return true;
+}
+/** 기본 설치 높이 — 근거가 있으면 그것으로, 없으면 가정값으로 */
+function defaultMountH(it, others){
+  if (!mountable(it)) return 0;
+  if (/^TV$/.test(it.cat)) return Math.max(0, Math.round(EYE_MM - (it.h || 0) / 2));
+  // 사운드바 — 같은 방(없으면 아무 곳)의 벽걸이 TV 하단에 붙인다
+  const list = others || state.items;
+  const tvs = list.filter((o)=> o !== it && /^TV$/.test(o.cat) && (o.mh || 0) > 0);
+  if (!tvs.length) return 0;
+  const mine = it.room, same = tvs.filter((o)=> o.room === mine);
+  const tv = (same.length ? same : tvs).sort((a,b)=> (a.mh||0) - (b.mh||0))[0];
+  return Math.max(0, Math.round((tv.mh || 0) - (it.h || 0)));
+}
+/** 화면에 적을 근거 — 가정인지 파생인지 밝힌다(숫자만 띄우지 않는다) */
+function mountWhy(it){
+  if (!mountable(it)) return null;
+  return /^TV$/.test(it.cat)
+    ? `화면 중심을 앉은 눈높이(${EYE_MM.toLocaleString()}mm)에 맞춘 값 — 설치가이드에 높이 수치가 없어 가정입니다`
+    : 'TV 하단에 붙여 건다는 기준에서 나온 값입니다';
+}
+/** 두 가전이 높이로 갈려 서로 자리를 안 뺏는가 (하나가 벽/천장에 붙어 있을 때) */
+function clearsVertically(A, B){
+  const a0 = A.mh || 0, a1 = a0 + (A.h || 0);
+  const b0 = B.mh || 0, b1 = b0 + (B.h || 0);
+  return a1 <= b0 || b1 <= a0;      // 위아래로 어긋나면 같은 바닥을 다투지 않는다
+}
+
 /** 두 가전이 같은 자리를 차지해도 되는가 — 되면 사유를 돌려준다 */
 /*
  * 한 번에 도는 각도. 기본은 90°(벽에 붙여 놓는 물건은 네 방향이면 충분하다)이고,
@@ -2853,6 +2918,13 @@ function hitsOther(it){
   for (const o of state.items){
     if (o === it || o.staged) continue;
     if (stackable(it, o)) continue;
+    /*
+     * **높이로 갈리면 같은 바닥을 다투지 않는다.**
+     * 벽에 건 TV 아래를 지나가는 것은 겹침이 아니다 — 이걸 막으면 "들어갈 자리를
+     * 안 들어간다고 말하는" 쪽 실패가 되고, CLAUDE.md 가 그 손실이 더 크다고 적어 두었다.
+     * 둘 다 바닥(mh=0)이면 세로 구간이 반드시 겹치므로 예전 판정 그대로다.
+     */
+    if (clearsVertically(it, o)) continue;
     if (overlaps(body, corners(o))) return `${o.label}와 겹칩니다`;
     if (overlaps(clear, corners(o, o.clear))) return `${o.label}와 이격거리가 부족합니다`;
   }
@@ -3327,7 +3399,10 @@ function buildShareCanvas(){
     g.fillText(it.label + (it.staged ? ' (미배치)' : ''), padX + 16, y);
     g.fillStyle = '#475569'; g.font = '12px ui-monospace,monospace';
     // 상담지에도 모델코드는 적지 않는다 — 크기를 보여주는 것이지 그 모델을 제안하는 것이 아니다
-    const spec = `${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm  이격 후면 ${it.clear.back}·좌우 ${it.clear.side}mm`;
+    /* 벽에 건 것은 **설치 높이도 카드에 남긴다** — 고객이 집에 가서 재 봐야 하는 값이고,
+       화면에서 보여준 것이 손에 남는 그림에서 사라지면 안 된다(경고를 카드에 적는 것과 같은 이유). */
+    const spec = `${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm  이격 후면 ${it.clear.back}·좌우 ${it.clear.side}mm`
+      + (mountable(it) ? `  설치 높이 ${Math.round(it.mh || 0).toLocaleString()}mm(바닥→하단)` : '');
     g.fillText(spec, padX + 16, y + 15);
     if (it.warn && it.warn.length){
       g.fillStyle = '#B42318'; g.font = '11px system-ui,sans-serif'; g.textAlign = 'right';
@@ -3394,6 +3469,16 @@ function renderMini(){
        * 실제로 "더블클릭으로 알고 있다"는 말을 들었다. 손가락으로 정확히 두 번 누르는
        * 것도 쉽지 않다. 버튼이 있으면 헤맬 일이 없다.
        */
+      /*
+       * **설치 높이** — 벽에 거는 TV·그 아래 사운드바만 나온다(사용자 요청).
+       * 바닥에 놓는 가전에는 칸을 만들지 않는다 — 늘 0 인 칸이 붙어 있으면 화면만 시끄럽다.
+       * 값의 근거(가정인지 파생인지)는 `title` 로 붙여 눌러 보면 알 수 있게 한다.
+       */
+      + (mountable(it)
+        ? ` · 설치 높이 <input class="mh" id="mini-mh" type="number" inputmode="numeric"`
+          + ` min="0" max="2200" step="10" value="${Math.round(it.mh || 0)}"`
+          + ` title="${esc(mountWhy(it) || '')}">mm`
+        : '')
       + ` <button class="act" id="mini-rot">↻ ${rotLabel(it.cat)}°</button>`
       + `<button class="act" id="mini-del">✕ 삭제</button></span>` : '';
   el.innerHTML = `<div class="r">${bits.filter(Boolean).join('<span>·</span>')}`
@@ -3409,6 +3494,28 @@ function renderMini(){
   };
   const de = $('#mini-del');
   if (de) de.onclick = ()=> removeItem(state.sel);
+  /*
+   * 설치 높이 입력 — 값이 바뀌면 3D 를 다시 세운다(2D 평면에는 높이가 안 보인다).
+   * `input` 이 아니라 `change` 로 받는다: 숫자를 치는 중간값("6" → 60mm)마다 3D 를
+   * 다시 세우면 장면이 튀고, 무엇보다 그 중간값으로 판정이 돌아 경고가 깜빡인다.
+   * **글자를 치는 중에는 단축키를 받지 않는다**는 기존 규칙(`keydown` 이 INPUT 을 거른다)이
+   * 여기에도 그대로 걸린다 — 그래서 Backspace 로 가전이 지워지지 않는다.
+   */
+  const mh = $('#mini-mh');
+  if (mh) mh.onchange = ()=>{
+    const t = state.items.find((x)=>x.id===state.sel);
+    if (!t) return;
+    const v = Math.max(0, Math.min(2200, Math.round(+mh.value || 0)));
+    t.mh = v;
+    /* TV 를 옮기면 그 아래 사운드바가 따라간다 — 사용자가 사운드바를 직접 만진 적이
+       없을 때만. 한 번이라도 손댔으면 그 값을 존중한다(`mhSet`). */
+    if (/^TV$/.test(t.cat)) {
+      for (const o of state.items)
+        if (/^사운드바$/.test(o.cat) && !o.mhSet && o.room === t.room) o.mh = defaultMountH(o, state.items);
+    } else t.mhSet = true;
+    evaluate(); renderSide(); draw();
+    if (window.Place3D && window.Place3D.isOpen) window.Place3D.rebuild();
+  };
 }
 
 function renderSide(){
@@ -5427,9 +5534,12 @@ function autoPlace(picks){
     id:'i'+Math.random().toString(36).slice(2,8),
     cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null,
     label:`${q.cat} ${sizeText(q.cat, q.size)}${q.seq?` #${q.seq}`:''}`,
-    w:q.part.w, h:q.part.h, d:q.part.d,
+    w:q.part.w, h:q.part.h, d:q.part.d, part:q.part.part,
     clear:clearFor(q.cat, q.part.part, q.model, q.group), bx:0, by:0, a:0, warn:[],
   })).sort((a,b)=> b.w - a.w);
+  /* 설치 높이는 **폭 순으로 세운 뒤에** 정한다 — 사운드바가 TV 를 보고 따라가야 하는데,
+     TV(폭 1,400mm대)가 사운드바(850mm대)보다 앞에 서므로 이 시점이면 TV 값이 이미 있다. */
+  for (const it of list) it.mh = defaultMountH(it, list.concat(state.items));
 
   const placed = [...state.items];
   const failed = [];
@@ -5570,9 +5680,13 @@ function stageOutside(picks){
       cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null,
       label:`${q.cat} ${sizeText(q.cat, q.size)}${q.seq?` #${q.seq}`:``}`,
       w:q.part.w, h:q.part.h, d:q.part.d,
+      /* 부품 이름을 함께 들고 있어야 **스탠드형 TV 와 벽걸이 TV 를 가를 수 있다** —
+         둘은 치수도 설치 높이도 다르다(스탠드는 받침이 치수에 이미 들어 있어 바닥이 맞다). */
+      part:q.part.part,
       clear:clearFor(q.cat, q.part.part, q.model, q.group),
       bx: box.x2 + gap + q.part.w/2, by: y, a:0, warn:[], soft:[], staged:true,
     };
+    it.mh = defaultMountH(it, state.items);
     y += q.part.d + gap;
     state.items.push(it); made.push(it);
   }
@@ -5694,6 +5808,7 @@ loadReps();
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
+  mountable, defaultMountH, mountWhy, clearsVertically, EYE_MM,
   openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
@@ -6053,7 +6168,10 @@ function applianceMesh(it){
      몸통 중심은 로컬 (0, d/2) 이므로 회전시켜 월드로 옮긴다. */
   const c = Math.cos(it.a), s = Math.sin(it.a);
   const cx = it.bx - (it.d / 2) * s, cy = it.by + (it.d / 2) * c;
-  g.position.set(M(cx), 0, M(cy));
+  /* **설치 높이만큼 띄운다.** 몸통·모서리선·디테일이 전부 이 그룹 안에 있으므로 그룹을
+     올리면 함께 올라간다(디테일마다 따로 올리면 하나 빠뜨렸을 때 조용히 어긋난다).
+     기본 0 이라 바닥에 놓는 가전은 예전과 한 픽셀도 다르지 않다. */
+  g.position.set(M(cx), M(it.mh || 0), M(cy));
   /* 박스 로컬 +Z 를 제품 정면 (−sin a, cos a) 에 맞추면 회전각은 −a 다 */
   g.rotation.y = -it.a;
   return g;
@@ -6378,6 +6496,13 @@ function paintBar(info){
    */
   bar.innerHTML =
     `<b>3D</b> · 층고 ${WALL_H_MM.toLocaleString()}mm<span style="opacity:.55">(가정)</span>` +
+    /* 벽에 건 가전을 고르면 **그 설치 높이**를 여기 적는다 — 3D 에서만 보이는 값이고,
+       기본값이 가정에서 나온 것이라 숫자만 띄우면 확정처럼 읽힌다(층고와 같은 이유).
+       고치는 것은 2D 하단 띠의 입력칸이다. */
+    (sel && P.mountable(sel)
+      ? ` · 설치 높이 ${Math.round(sel.mh || 0).toLocaleString()}mm`
+        + `<span style="opacity:.55">(${/^TV$/.test(sel.cat) ? '가정' : 'TV 기준'})</span>`
+      : '') +
     (info.waiting ? ` · <span style="opacity:.8">대기 ${info.waiting}대 — 끌어서 넣으세요</span>` : '') +
     (warn ? ' · ' + warn : '') +
     `<span class="sp"></span>` +

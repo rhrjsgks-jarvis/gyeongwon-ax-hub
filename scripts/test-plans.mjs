@@ -1719,6 +1719,91 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 설치 높이 — 벽에 거는 TV 와 그 아래 사운드바 ──
+ *
+ * 예전에는 3D 가 모든 가전을 바닥에 놓았다. 벽걸이 TV 가 거실 바닥에 서 있으면 "우리 집
+ * 느낌"이 무너지고, 더 나쁘게는 **바닥 자리를 차지한 것으로 판정**되어 그 앞을 막는다.
+ *
+ * 지키는 것 넷:
+ *  ① 벽걸이 TV 는 화면 중심이 눈높이(EYE_MM)에 온다 — 그 값이 가정이라는 것은 화면이 밝힌다
+ *  ② 스탠드형 TV 는 바닥이다 — 받침이 이미 치수에 들어 있다(size-reps 가 부품을 나눠 담는다)
+ *  ③ 사운드바는 TV 하단에 붙는다 — `STACKABLE` 이 이미 적어 둔 사실에서 나온 파생값이다
+ *  ④ 3D 가 실제로 그 높이에 세우고, 높이로 갈리면 바닥을 다투지 않는다
+ *     (단 **세로가 겹치면 그대로 막아야 한다** — 안 막으면 벽에 건 TV 를 뚫고 냉장고가 선다)
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place, S = P.state;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const W = [[0, 0, 5000, 0], [5000, 0, 5000, 4000], [5000, 4000, 0, 4000], [0, 4000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const reset = () => { S.rooms = []; S.items = []; S.walls = W; S.mmPerPx = null; S.scaled = true; S.img = null; P.addRoom('거실', W); return S.rooms[0].id; };
+    const reps = (S.reps || []).filter((x) => !x.hidden);
+    const tv = reps.find((x) => x.cat === 'TV' && (x.parts || []).some((p) => /벽걸이/.test(p.part)));
+    const sb = reps.find((x) => x.cat === '사운드바');
+    if (!tv || !sb) return { err: 'TV·사운드바 대표모델을 못 찾았다' };
+    const wall = tv.parts.find((p) => /벽걸이/.test(p.part));
+    const stand = tv.parts.find((p) => /스탠드/.test(p.part));
+    const out = {};
+
+    let rid = reset();
+    P.stageOutside([
+      { cat: 'TV', size: tv.size, model: 'x', group: tv.group, part: wall, room: rid },
+      { cat: '사운드바', size: sb.size, model: 'x', group: sb.group, part: sb.parts[0], room: rid },
+    ]);
+    const T = S.items.find((i) => i.cat === 'TV'), B = S.items.find((i) => i.cat === '사운드바');
+    out.eye = P.EYE_MM;
+    out.tv = { mh: T.mh, h: Math.round(T.h), center: Math.round(T.mh + T.h / 2) };
+    out.bar = { mh: B.mh, h: Math.round(B.h) };
+
+    rid = reset();
+    P.stageOutside([{ cat: 'TV', size: tv.size, model: 'x', group: tv.group, part: stand, room: rid }]);
+    out.stand = { mh: S.items[0].mh, mountable: P.mountable(S.items[0]) };
+
+    // 세로로 갈리면 통과, 겹치면 막힘
+    rid = reset();
+    P.stageOutside([{ cat: 'TV', size: tv.size, model: 'x', group: tv.group, part: wall, room: rid }]);
+    const t2 = S.items[0]; t2.staged = false; t2.bx = 2500; t2.by = 120;
+    const under = (h) => ({ id: 'u', cat: '제습기', size: 'x', group: '', label: '제습기', part: '본체',
+      w: 420, h, d: 220, mh: 0, a: 0, bx: 2500, by: 120, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } });
+    out.lowPasses = !P.hitsOther(under(600));      // TV 하단(662) 아래 → 통과해야
+    out.tallBlocks = !!P.hitsOther(under(1800));   // TV 를 뚫는 높이 → 막아야
+    t2.mh = 0;
+    out.floorBlocks = !!P.hitsOther(under(600));   // 바닥에 둔 TV 는 예전대로 막아야
+    t2.mh = P.defaultMountH(t2, S.items);
+
+    // 3D 가 실제로 띄우는가
+    rid = reset();
+    P.stageOutside([
+      { cat: 'TV', size: tv.size, model: 'x', group: tv.group, part: wall, room: rid },
+      { cat: '사운드바', size: sb.size, model: 'x', group: sb.group, part: sb.parts[0], room: rid },
+    ]);
+    for (const i of S.items) { i.staged = false; i.bx = 2500; i.by = 140; }
+    window.Place3D.open();
+    const y = {};
+    window.Place3D.root.traverse((o) => { if (o.userData && o.userData.item) y[o.userData.item.cat] = Math.round(o.position.y * 1000); });
+    window.Place3D.close();
+    out.y3d = y;
+    return out;
+  });
+
+  if (r.err) fail(r.err);
+  else {
+    const bad = [];
+    if (r.tv.center !== r.eye) bad.push(`벽걸이 TV 화면 중심 ${r.tv.center}mm — 눈높이 ${r.eye}mm 여야 한다`);
+    if (r.bar.mh !== r.tv.mh - r.bar.h) bad.push(`사운드바 ${r.bar.mh}mm — TV 하단(${r.tv.mh}) 바로 아래여야 한다`);
+    if (r.stand.mh !== 0 || r.stand.mountable) bad.push(`스탠드형 TV 가 바닥이 아니다 (${r.stand.mh}mm)`);
+    if (!r.lowPasses) bad.push('벽에 건 TV 아래로 낮은 가전이 못 지나간다 — 있는 자리를 없다고 말한다');
+    if (!r.tallBlocks) bad.push('TV 를 세로로 뚫는 가전이 안 막힌다');
+    if (!r.floorBlocks) bad.push('바닥에 둔 TV 자리가 안 막힌다 — 예전 판정이 깨졌다');
+    if (r.y3d.TV !== r.tv.mh) bad.push(`3D TV 높이 ${r.y3d.TV}mm ≠ ${r.tv.mh}mm`);
+    if (r.y3d['사운드바'] !== r.bar.mh) bad.push(`3D 사운드바 높이 ${r.y3d['사운드바']}mm ≠ ${r.bar.mh}mm`);
+    if (bad.length) fail('설치 높이 — ' + bad.join(' / '));
+    else pass(`설치 높이 — 벽걸이 TV ${r.tv.mh}mm(화면 중심 ${r.tv.center}mm) · 사운드바 ${r.bar.mh}mm(TV 하단) · 스탠드형 바닥 · 3D 반영 · 아래는 통과/뚫으면 막힘`);
+  }
+}
+
+/*
  * ── 3D 가전 디테일 — 2D 실루엣과 같은 품목에 붙어 있는가 ──
  * 같은 품목이 앱마다 다른 그림이면 상담사 눈이 헤맨다. 2D `drawGlyph` 가 실루엣을 그리는
  * 품목은 3D 도 흰 상자로 두면 안 된다. 반대로 **2D 에 없는 품목(리빙 4종)은 3D 에도

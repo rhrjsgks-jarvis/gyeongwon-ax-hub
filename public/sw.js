@@ -53,7 +53,10 @@
  *  걸렸다. 그 검사가 보는 것은 "마지막으로 버전이 바뀐 커밋 **이후에** 미니앱이
  *  바뀌었는가"이므로, 덩어리를 다 만든 **맨 마지막에** 한 번 올리는 것이 맞다.)
  */
-const CACHE_VERSION = 'axhub-v15';
+/*
+ * v16 (2026-08-12) — TV·사운드바에 설치 높이가 생겼다(place-app.html).
+ */
+const CACHE_VERSION = 'axhub-v16';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
