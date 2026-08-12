@@ -1270,17 +1270,57 @@ const knownGaps = [];
         // 직원이 열어 보면 어느 타입인지 안다. 다만 수집 품질 지표라 눈에 띄게 적어 둔다.
         unnamed: flat.filter((p) => /^T\d+$/.test(p.type)).length,
         noArea: flat.filter((p) => !p.exclusiveM2).length,
+        /*
+         * **평면도가 아닌데 축척이 실린 도면**. 미리 실린 축척은 도면을 불러올 때
+         * 자동으로 적용되므로, 그 값이 틀리면 상담사가 **틀린 축척이 확정된 상태로**
+         * 시작하고 배치 판정이 조용히 거짓이 된다.
+         * 실제로 2장이 그랬다 — c09/85(axis 0.10)·c137/T2(0.11) 둘 다 치수가 하나도
+         * 없는 3D 투시도인데 사슬 판독기가 본문 숫자를 치수로 읽어 "확실"을 매겼다.
+         * 축척이 없으면 사람이 맞추면 되지만, 틀린 축척은 그럴 기회조차 주지 않는다.
+         */
+        scaledNonPlan: flat.filter((p) => p.mmPerPx && p.axis != null && p.axis < 0.35)
+          .map((p) => `${p.file}(axis ${p.axis})`),
+        scaled: flat.filter((p) => p.mmPerPx).length,
+        scaleByFile: Object.fromEntries(flat.filter((p) => p.mmPerPx).map((p) => [p.file, p.mmPerPx])),
         fetched: oks,
       };
     });
+
+    /*
+     * **손으로 잰 축척과 배포되는 축척이 어긋나면 실패시킨다.**
+     *
+     * `scripts/fixtures/plans-real/index.json` 은 도면에 인쇄된 치수 사슬을 사람이 구간마다
+     * 재서 만든 값이라 자동 판독보다 근거가 세다. 그런데 그 코퍼스가 *"색인의 19.521 은
+     * 크게 어긋난다"* 고 적어 두고도 **배포되는 색인은 그대로였다** — 원주역 우미 린 더
+     * 스카이가 20% 틀린 자로 상담에 나가고 있었다(폭 700mm 냉장고를 875mm 로 재는 셈).
+     * 사람이 재 놓은 값이 있는데 화면이 다른 값을 쓰는 상태를 다시 만들지 않는다.
+     *
+     * 10% 는 측정 편차(사슬 구간 간 ±3%)와 안목/벽심 차이로 설명되는 폭이다.
+     */
+    {
+      const corpus = JSON.parse(fs.readFileSync(
+        path.join(__dirname, 'fixtures', 'plans-real', 'index.json'), 'utf8'));
+      const off = corpus.filter((e) => e.src && e.mmPerImgPx && idxRes.scaleByFile[e.src])
+        .map((e) => ({ src: e.src, hand: +e.mmPerImgPx, idx: idxRes.scaleByFile[e.src] }))
+        .filter((x) => Math.abs(x.idx - x.hand) > x.hand * 0.10);
+      const linked = corpus.filter((e) => e.src).length;
+      if (!linked) fail('코퍼스 항목에 src(도면 경로)가 없다 — 색인과 대조할 수 없다');
+      else if (off.length)
+        fail(`손으로 잰 축척과 색인이 어긋난다 ${off.length}건 — 실측이 근거다: `
+          + off.map((x) => `${x.src} 실측 ${x.hand} vs 색인 ${x.idx}`).join(', '));
+      else pass(`축척 실측 대조 — 코퍼스 ${linked}장 중 색인에 실린 것 전부 10% 안 (실측이 근거)`);
+    }
 
     if (!idxRes.complexes) fail('단지 도면 색인이 비어 있다 — npm run build:plans 로 만든다');
     else if (idxRes.noRegion.length) fail(`경원 밖 지역이 색인에 있음: ${[...new Set(idxRes.noRegion)]}`);
     else if (idxRes.badPath) fail(`이미지 경로 형식이 어긋난 항목 ${idxRes.badPath}개`);
     else if (idxRes.fetched.some((x) => !x)) fail(`색인의 도면 이미지를 받지 못함 (${idxRes.fetched})`);
+    else if (idxRes.scaledNonPlan.length)
+      fail(`평면도가 아닌데 축척이 실린 도면 ${idxRes.scaledNonPlan.length}장 — 불러오면 틀린 축척이 자동 확정된다: `
+        + idxRes.scaledNonPlan.join(', '));
     else {
       pass(`단지 도면 색인 — ${idxRes.regions.length}개 지역 · 단지 ${idxRes.complexes}곳 · 도면 ${idxRes.plans}장 (경로 확인 ${idxRes.fetched.length}장)`);
-      console.log(`      └ 타입 미판독 ${idxRes.unnamed}장 · 전용면적 미판독 ${idxRes.noArea}장`);
+      console.log(`      └ 타입 미판독 ${idxRes.unnamed}장 · 전용면적 미판독 ${idxRes.noArea}장 · 축척 미리 실림 ${idxRes.scaled}장(전부 평면도)`);
     }
   }
 

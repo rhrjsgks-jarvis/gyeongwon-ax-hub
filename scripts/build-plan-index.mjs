@@ -43,6 +43,22 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/*
+ * 사람이 직접 잰 축척 — `scripts/fixtures/plans-real/index.json` 의 `src` → `mmPerImgPx`.
+ * 그 코퍼스는 도면에 **인쇄된 치수 사슬**을 구간마다 재서 중앙값을 쓴 값이라, 자동 판독보다
+ * 근거가 세다. 없으면 빈 표로 두고 예전처럼 자동 판독만 쓴다(코퍼스는 로컬 전용일 수 있다).
+ */
+const HAND_SCALE = (() => {
+  const m = new Map();
+  try {
+    const f = path.join(__dirname, 'fixtures', 'plans-real', 'index.json');
+    for (const e of JSON.parse(fs.readFileSync(f, 'utf8'))) {
+      if (e.src && e.mmPerImgPx) m.set(e.src, +e.mmPerImgPx);
+    }
+  } catch { /* 코퍼스가 없으면 그냥 자동 판독만 쓴다 */ }
+  return m;
+})();
 const ROOT = path.join(__dirname, '..');
 // 잘라 낸 도면이 있으면 그것을 싣는다. 원본 시트를 그대로 실으면 한 파일에 도면이 여럿이라
 // 매장에서 쓸 수가 없다(사용자 지적: "3개가 필요없습니다. 수치가있는 1개만 필요할뿐입니다").
@@ -293,7 +309,25 @@ for (const [dir, g] of [...groups.entries()].sort()) {
      *
      * 잰 값은 원본 픽셀 기준이다. 이미지를 줄였으니 같은 비율로 키워 준다.
      */
-    if (s.k && (s.conf === '확실' || s.conf === '보통')) {
+    /*
+     * **평면도가 아니면 축척도 싣지 않는다**(2026-08-12).
+     *
+     * 기울기(axis)가 낮은 이미지는 아이소메트릭 렌더링·인테리어 사진·품목표다. 그런
+     * 그림에도 숫자가 적혀 있으면 사슬 판독기가 그것을 치수로 읽어 **'확실'** 을 매긴다 —
+     * 실제로 두 장이 그랬다(`c09/85` axis 0.10 · `c137/T2` axis 0.11, 둘 다 치수가 하나도
+     * 없는 3D 투시도인데 축척 22.238·20.942 "확실"). CLAUDE.md 가 이 함정을 적어 두었는데
+     * 색인 생성 쪽에는 막이 없었다.
+     *
+     * 이 값은 **도면을 불러올 때 자동으로 적용된다.** 그러면 상담사는 틀린 축척이 이미
+     * 확정된 상태로 시작하고, 그 위의 배치 판정이 전부 조용히 거짓이 된다 —
+     * "틀린 축척은 조용히 잘못된 답을 낸다"는 아래 주석과 같은 이야기다.
+     *
+     * 목록에서 숨기는 기준(AXIS_MIN 0.35)과 **같은 값을 쓴다.** 목록에 안 보이는 도면의
+     * 축척을 남겨 둘 이유가 없고, 두 기준이 갈리면 "숨겼는데 축척은 살아 있는" 틈이 생긴다.
+     */
+    const AXIS_MIN = 0.35;
+    const planLike = rec.axis == null || rec.axis >= AXIS_MIN;
+    if (s.k && planLike && (s.conf === '확실' || s.conf === '보통')) {
       const mmPerPx = s.k / small.scale;
       /*
        * 축척이 맞더라도 **그려진 세대가 너무 작으면** 쓸 수 없다. 마케팅 시트는 세로로 길고
@@ -305,6 +339,28 @@ for (const [dir, g] of [...groups.entries()].sort()) {
       if (unitPx >= 300) {
         rec.mmPerPx = +mmPerPx.toFixed(3); rec.scaleConf = s.conf; withScale++;
       }
+    }
+    /*
+     * **손으로 잰 값이 있으면 그것이 이긴다**(2026-08-12).
+     *
+     * `scripts/fixtures/plans-real/index.json` 은 도면에 **인쇄된 치수 사슬을 사람이 직접
+     * 재서** 만든 값이다(구간마다 재고 중앙값을 쓴다). 자동 사슬 판독보다 근거가 세다.
+     *
+     * 실제로 한 장이 크게 어긋나 있었다 — 원주역 우미 린 더 스카이(`c10/T1`)는 자동
+     * 판독 **19.521** 인데 사슬을 직접 재면 **24.4** 다(−20%). 코퍼스 주석에 그 사실이
+     * 적혀 있었는데도 **배포되는 색인은 그대로였다.** 미리 실린 축척은 도면을 불러올 때
+     * 자동으로 적용되므로, 상담사는 20% 틀린 자로 시작하게 된다 —
+     * 폭 700mm 냉장고를 875mm 로 재는 셈이다.
+     *
+     * 10% 넘게 갈릴 때만 갈아 끼운다. 그 안쪽은 측정 편차(사슬 구간 간 ±3%)와
+     * 안목/벽심 차이로 설명되는 범위라 굳이 손댈 이유가 없다.
+     */
+    const hand = HAND_SCALE.get(rec.file);
+    if (hand && rec.mmPerPx && Math.abs(rec.mmPerPx - hand) > hand * 0.10) {
+      console.log(`  축척 교체(실측 우선): ${rec.file} ${rec.mmPerPx} → ${hand}`);
+      rec.mmPerPx = hand; rec.scaleConf = '실측';
+    } else if (hand && !rec.mmPerPx) {
+      rec.mmPerPx = hand; rec.scaleConf = '실측'; withScale++;
     }
     plans.push(rec);
   }

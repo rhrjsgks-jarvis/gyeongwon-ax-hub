@@ -80,8 +80,34 @@ for (const p of todo){
 }
 await browser.close();
 
+/*
+ * **평면도가 아니면 축척도 지운다**(2026-08-12).
+ *
+ * 기울기가 낮은 이미지는 아이소메트릭 렌더링·인테리어 사진·품목표다. 그런 그림에 적힌
+ * 숫자를 사슬 판독기가 치수로 읽어 **'확실'** 을 매기는 일이 실제로 있었다 —
+ * `c09/85`(axis 0.10)·`c137/T2`(axis 0.11) 둘 다 치수가 하나도 없는 3D 투시도인데
+ * 축척 22.238·20.942 "확실" 이 실려 있었다.
+ *
+ * 이 값은 도면을 불러올 때 **자동으로 적용된다.** 그러면 상담사는 틀린 축척이 이미 확정된
+ * 상태로 시작하고 배치 판정이 조용히 거짓이 된다. 축척이 없으면 사람이 맞추면 되지만,
+ * 틀린 축척은 그럴 기회조차 주지 않는다.
+ *
+ * 목록에서 숨기는 기준과 **같은 값(0.35)** 을 쓴다 — 갈리면 "숨겼는데 축척은 살아 있는"
+ * 틈이 생긴다. 새로 수집하는 분은 `build-plan-index.mjs` 가 같은 규칙으로 막는다.
+ */
+const AXIS_MIN = 0.35;
+let unscaled = 0;
+for (const c of (idx.complexes || [])) for (const p of (c.plans || [])){
+  if (p.mmPerPx && p.axis != null && p.axis < AXIS_MIN){
+    console.log(`  축척 제거: ${p.file} (axis ${p.axis} · ${p.mmPerPx} ${p.scaleConf}) — ${c.complex}`);
+    delete p.mmPerPx; delete p.scaleConf; unscaled++;
+  }
+}
+
 fs.writeFileSync(INDEX, JSON.stringify(idx, null, 1) + '\n');
 const all = (idx.complexes || []).flatMap((c) => c.plans || []).filter((p) => p.axis != null);
 const low = all.filter((p) => p.axis < 0.35).length;
+const scaled = (idx.complexes || []).flatMap((c) => c.plans || []).filter((p) => p.mmPerPx).length;
 console.log(`${done}장 기록${miss ? ` · ${miss}장은 파일이 없어 건너뜀` : ''}`);
 console.log(`0.35 미만(도면 아님 의심) ${low}장 / ${all.length}장`);
+console.log(`축척이 실린 도면 ${scaled}장${unscaled ? ` (평면도가 아니라 ${unscaled}장에서 제거)` : ''}`);
