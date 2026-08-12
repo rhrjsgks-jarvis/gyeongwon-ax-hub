@@ -48,15 +48,19 @@ const expectedImageCounts = {
 (async () => {
   const doc = window.document;
   let ok = true;
-  /* **스크립트가 돌았는지**를 봐야 한다. `.cat-drop-row` 는 정적 HTML 에 이미 있어
-     조건이 즉시 참이 되고, 그러면 예전 고정 대기와 다를 바가 없다(실제로 그렇게 깨졌다). */
-  if (!await ready(() => typeof window.selectCat === 'function'))
-    console.log('ERROR: 인라인 스크립트가 15초 안에 준비되지 않음 (selectCat)');
+  /* **스크립트가 돌았는지**를 봐야 한다 — 고정 대기(`wait(200)`)를 쓰면 스위트를 연달아
+     돌릴 때 큰 인라인 스크립트가 제때 못 끝나 단독 실행에서만 통과한다(실제로 그렇게 깨졌다).
+     예전에는 정적 HTML 에 박혀 있던 카테고리 행을 조건으로 삼아 즉시 참이 됐는데,
+     지금은 타일을 `renderCats()` 가 그리므로 타일이 서 있는 것 자체가 유효한 신호다.
+     그래도 `selectCat` 을 함께 본다 — 그리기와 고르기는 다른 함수다. */
+  if (!await ready(() => typeof window.selectCat === 'function'
+    && doc.querySelectorAll('#cats .cat').length > 0))
+    console.log('ERROR: 인라인 스크립트가 15초 안에 준비되지 않음 (selectCat · 타일)');
 
-  const rows = doc.querySelectorAll('.cat-drop-row');
-  console.log('total rows:', rows.length);
+  const rows = doc.querySelectorAll('#cats .cat');
+  console.log('total tiles:', rows.length);
   if (rows.length !== allCats.length) {
-    console.log(`ERROR: expected ${allCats.length} rows, got ${rows.length}`);
+    console.log(`ERROR: expected ${allCats.length} tiles, got ${rows.length}`);
     ok = false;
   }
 
@@ -94,17 +98,17 @@ const expectedImageCounts = {
     }
   }
 
-  window.filterCatDrop('인덕션');
-  let visible = [...doc.querySelectorAll('.cat-drop-row')].filter((r) => r.style.display !== 'none');
+  window.filterCats('인덕션');
+  let visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
   console.log('search "인덕션" visible:', visible.map((r) => r.dataset.cat));
   if (visible.length !== 1 || visible[0].dataset.cat !== '인덕션') { console.log('ERROR: 인덕션 search mismatch'); ok = false; }
 
-  window.filterCatDrop('공기청정기');
-  visible = [...doc.querySelectorAll('.cat-drop-row')].filter((r) => r.style.display !== 'none');
+  window.filterCats('공기청정기');
+  visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
   if (visible.length !== 1 || visible[0].dataset.cat !== '공기청정기') { console.log('ERROR: 공기청정기 search mismatch'); ok = false; }
 
-  window.filterCatDrop('스마트폰');
-  visible = [...doc.querySelectorAll('.cat-drop-row')].filter((r) => r.style.display !== 'none');
+  window.filterCats('스마트폰');
+  visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
   console.log('search "스마트폰" (removed cat) visible count:', visible.length);
   if (visible.length !== 0) { console.log('ERROR: removed cat should not match search'); ok = false; }
 
@@ -114,13 +118,13 @@ const expectedImageCounts = {
     const title = doc.getElementById('cat-count-title');
     /* INSTALL_DB 는 const 라 window 에 없다 — 드롭다운에 실제로 깔린 항목 수와 댄다.
        "화면에 적힌 개수 = 고를 수 있는 개수" 가 사용자가 보는 진짜 불변식이다. */
-    const n = doc.querySelectorAll('.cat-drop-row').length;
+    const n = doc.querySelectorAll('#cats .cat').length;
     const said = title && (title.textContent.match(/\((\d+)종\)/) || [])[1];
     if (!title) { console.log('ERROR: 카테고리 개수 표기 요소(#cat-count-title)가 없다'); ok = false; }
     else if (Number(said) !== n) {
-      console.log(`ERROR: 화면은 "${said}종" 인데 드롭다운은 ${n}개 — 숫자를 박아 두지 말 것`);
+      console.log(`ERROR: 화면은 "${said}종" 인데 타일은 ${n}개 — 숫자를 박아 두지 말 것`);
       ok = false;
-    } else console.log(`OK: 카테고리 개수 표기 ${n}종 = 드롭다운 항목 수 (DB 에서 세어 넣음)`);
+    } else console.log(`OK: 카테고리 개수 표기 ${n}종 = 타일 수 (DB 에서 세어 넣음)`);
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

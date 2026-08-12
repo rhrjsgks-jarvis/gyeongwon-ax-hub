@@ -33,7 +33,7 @@
  * 데이터 표기뿐 아니라 **미니앱의 동작을 바꿨을 때도** 같은 일이 난다. 위 v2 주석이
  * 데이터만 이야기하고 있어 이번에 놓쳤다 — 판단 기준은 "public/*-app.html 이 바뀌었는가"다.
  */
-const CACHE_VERSION = 'axhub-v13';
+const CACHE_VERSION = 'axhub-v14';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

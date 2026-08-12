@@ -26,25 +26,26 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .card{background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);padding:18px;margin-bottom:14px;}
 .card-title{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
 
+/* 카테고리 고르기 — **AS 관련 정보와 같은 심벌 타일 격자다**(2026-08-12 사용자 요청:
+   *"설치환경가이드도 AS탭처럼 심벌로해서 선택하게 인터페이스를 통일해주세요"*).
+   예전에는 접었다 펴는 드롭다운이라 ①무엇이 있는지 열어 봐야 알고 ②고를 때마다 두 번
+   눌러야 했다. 값(칸 최소폭·간격·모서리·심벌 22px)은 as-app.html 의 `.cats`/`.cat` 과
+   **같은 숫자를 쓴다** — 앱을 넘겨 볼 때 같은 무게로 읽혀야 한다. 한쪽만 고치지 말 것. */
 .cat-select{position:relative;}
 .cat-search{width:100%;box-sizing:border-box;padding:11px 14px;margin-bottom:8px;border:1.5px solid var(--border);border-radius:12px;font-size:13.5px;font-family:inherit;outline:none;transition:border-color .15s;}
 .cat-search:focus{border-color:var(--primary);}
 .cat-search-empty{display:none;margin-top:6px;padding:14px;text-align:center;font-size:12.5px;color:var(--gray);border:1.5px dashed var(--border);border-radius:12px;}
-.cat-select-btn{display:flex;align-items:center;justify-content:space-between;background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:12px;padding:13px 15px;cursor:pointer;transition:border-color .15s;}
-.cat-select-btn.open{border-color:var(--primary);}
-.cat-select-l{display:flex;align-items:center;gap:10px;}
-.cat-select-ico{font-size:20px;}
-.cat-select-nm{font-size:14px;font-weight:700;color:var(--text);}
-.cat-select-nm.placeholder{color:var(--gray);font-weight:600;}
-.cat-select-arr{font-size:11px;color:var(--primary);transition:transform .2s;flex-shrink:0;}
-.cat-select-arr.open{transform:rotate(180deg);}
-.cat-drop{display:none;margin-top:6px;border:1.5px solid var(--border);border-radius:12px;background:#fff;overflow-y:auto;max-height:340px;box-shadow:0 8px 24px rgba(20,30,60,.1);}
-.cat-drop.open{display:block;}
-.cat-drop-row{display:flex;align-items:center;gap:10px;padding:11px 15px;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background .12s;}
-.cat-drop-row:last-child{border-bottom:none;}
-.cat-drop-row:hover{background:var(--primary-l);}
-.cat-drop-row.sel{background:var(--primary-l);color:var(--primary);}
-.cat-drop-row .ci{font-size:17px;}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;}
+.cat{border:1px solid var(--border);background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
+  font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:var(--text);
+  word-break:keep-all;line-height:1.35;}
+.cat:hover{border-color:#c7d2fe;}
+.cat.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+.cat .ci{display:block;margin-bottom:4px;line-height:1;}
+.cat .ci .psym{width:22px;height:22px;margin:0 auto;}
+/* 심벌은 기본색이 삼성 블루라 선택된 남색 타일에서 안 보인다 — 흰색으로 뒤집는다 */
+.cat.on .ci .psym{color:#fff;}
+@media(max-width:520px){.cats{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}}
 .type-chip.clickable{cursor:pointer;transition:all .15s;}
 .type-chip.clickable:hover{background:var(--primary);color:#fff;}
 
@@ -52,13 +53,23 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 #result.visible{display:block;}
 
 .result-header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 100%);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px;}
-.result-header h2{font-size:16px;font-weight:800;margin-bottom:4px;}
+.result-header h2{font-size:16px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:7px;}
+/* 제목의 심벌 — 타일과 같은 그림이되 제목 글자에 맞춰 조금 크게 */
+.result-header h2 .res-ci{display:inline-flex;line-height:1;flex:0 0 auto;}
+/* 심벌 기본색이 삼성 블루라 남색 머리띠 위에서 묻힌다 — 흰색으로 뒤집는다
+   (선택된 타일에서 `.cat.on .ci .psym` 을 뒤집는 것과 같은 이유다) */
+.result-header h2 .res-ci .psym{width:20px;height:20px;color:#fff;}
 .result-header p{font-size:12px;opacity:.85;line-height:1.5;}
 
 .na-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:16px;margin-bottom:14px;font-size:13px;color:#7c2d12;line-height:1.6;}
 
 .sec-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.spec-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px;}
+/* `width:100%` 만으로는 좁은 화면에서 표가 넘친다 — 기본 `table-layout:auto` 는 칸을
+   **내용의 최소폭**에 맞춰 벌리기 때문이다. 실측으로 세탁기·콤보 사양표가 폰(390px)에서
+   407px 이 되어 가로 스크롤이 생겼다("가로 넘침 전 해상도 0건"이 이 저장소의 불변식이다).
+   `overflow-wrap:anywhere` 는 그 최소폭 계산 자체를 바꾸므로(`break-word` 와 다르다)
+   긴 토막이 있어도 칸이 벌어지지 않는다. */
+.spec-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px;overflow-wrap:anywhere;}
 .spec-table th{background:#f8f9fb;padding:9px 10px;font-size:11.5px;font-weight:700;color:var(--gray);text-align:left;border-bottom:2px solid var(--border);width:38%;}
 .spec-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55;}
 .spec-table tr:last-child td, .spec-table tr:last-child th{border-bottom:none;}
@@ -124,39 +135,11 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   <div class="card">
     <div class="card-title" id="cat-count-title">① 카테고리 검색 · 선택</div>
     <div class="cat-select">
-      <input type="text" class="cat-search" id="cat-search" placeholder="🔍 키워드 검색 (예: 키친핏, 4도어, 페어, 로봇청소기)"
-             oninput="filterCatDrop(this.value)" onfocus="openCatDrop()">
-      <div class="cat-select-btn" id="cat-select-btn" onclick="toggleCatDrop()">
-        <span class="cat-select-l">
-          <span class="cat-select-ico" id="cat-select-ico">📋</span>
-          <span class="cat-select-nm placeholder" id="cat-select-nm">카테고리를 선택하세요</span>
-        </span>
-        <span class="cat-select-arr" id="cat-select-arr">▾</span>
-      </div>
-      <div class="cat-drop" id="cat-drop">
-        <div class="cat-drop-row" data-cat="냉장고 4도어 프리스탠딩" data-kw="냉장고 4도어 프리스탠딩 fs freestanding" onclick="selectCat('냉장고 4도어 프리스탠딩')"><span class="ci">🧊</span>냉장고 4도어 프리스탠딩</div>
-        <div class="cat-drop-row" data-cat="냉장고 4도어 키친핏" data-kw="냉장고 4도어 키친핏 빌트인 kitchenfit built-in" onclick="selectCat('냉장고 4도어 키친핏')"><span class="ci">🧊</span>냉장고 4도어 키친핏</div>
-        <div class="cat-drop-row" data-cat="냉장고 4도어 키친핏 Max" data-kw="냉장고 4도어 키친핏 맥스 max 대용량" onclick="selectCat('냉장고 4도어 키친핏 Max')"><span class="ci">🧊</span>냉장고 4도어 키친핏 Max</div>
-        <div class="cat-drop-row" data-cat="냉장고 2도어" data-kw="냉장고 2도어 투도어 상냉장 하냉동" onclick="selectCat('냉장고 2도어')"><span class="ci">🧊</span>냉장고 2도어</div>
-        <div class="cat-drop-row" data-cat="냉장고 1도어" data-kw="냉장고 1도어 원도어 냉동고 와인냉장고 조합" onclick="selectCat('냉장고 1도어')"><span class="ci">🧊</span>냉장고 1도어</div>
-        <div class="cat-drop-row" data-cat="냉장고 양문형" data-kw="냉장고 양문형 사이드바이사이드 side-by-side" onclick="selectCat('냉장고 양문형')"><span class="ci">🧊</span>냉장고 양문형</div>
-        <div class="cat-drop-row" data-cat="냉장고 일반형" data-kw="냉장고 일반형 소형 1인가구" onclick="selectCat('냉장고 일반형')"><span class="ci">🧊</span>냉장고 일반형</div>
-        <div class="cat-drop-row" data-cat="냉장고 페어(2대 이상) 설치" data-kw="냉장고 페어 2대 조합 페어키트" onclick="selectCat('냉장고 페어(2대 이상) 설치')"><span class="ci">🧊</span>냉장고 페어(2대 이상) 설치</div>
-        <div class="cat-drop-row" data-cat="김치냉장고" data-kw="김치냉장고 김치플러스 스탠드형 뚜껑형 딤채" onclick="selectCat('김치냉장고')"><span class="ci">🥬</span>김치냉장고</div>
-        <div class="cat-drop-row" data-cat="세탁기·콤보" data-kw="세탁기 콤보 세탁 washer" onclick="selectCat('세탁기·콤보')"><span class="ci">🫧</span>세탁기·콤보</div>
-        <div class="cat-drop-row" data-cat="건조기" data-kw="건조기 dryer 적층 스태킹" onclick="selectCat('건조기')"><span class="ci">🌀</span>건조기</div>
-        <div class="cat-drop-row" data-cat="에어컨" data-kw="에어컨 냉방 실외기 무풍 스탠드 벽걸이" onclick="selectCat('에어컨')"><span class="ci">❄️</span>에어컨</div>
-        <div class="cat-drop-row" data-cat="TV" data-kw="tv 티비 벽걸이 스탠드 텔레비전" onclick="selectCat('TV')"><span class="ci">📺</span>TV</div>
-        <div class="cat-drop-row" data-cat="청소기" data-kw="청소기 무선청소기 스틱 거치대" onclick="selectCat('청소기')"><span class="ci">💨</span>무선청소기</div>
-        <div class="cat-drop-row" data-cat="로봇청소기" data-kw="로봇청소기 자동급배수 빌트인 프리스탠딩 물걸레" onclick="selectCat('로봇청소기')"><span class="ci">🤖</span>로봇청소기</div>
-        <div class="cat-drop-row" data-cat="식기세척기" data-kw="식기세척기 빌트인 트루빌트인 프리스탠딩 카운터탑" onclick="selectCat('식기세척기')"><span class="ci">🍽️</span>식기세척기</div>
-        <div class="cat-drop-row" data-cat="에어드레서" data-kw="에어드레서 스타일러 의류관리기 airdresser" onclick="selectCat('에어드레서')"><span class="ci">👗</span>에어드레서</div>
-        <div class="cat-drop-row" data-cat="인덕션" data-kw="인덕션 electric range 쿡탑 하이라이트 빌트인" onclick="selectCat('인덕션')"><span class="ci">🍳</span>인덕션</div>
-        <div class="cat-drop-row" data-cat="정수기" data-kw="정수기 카운터탑 빌트인 직수 냉온정수" onclick="selectCat('정수기')"><span class="ci">💧</span>정수기</div>
-        <div class="cat-drop-row" data-cat="전자레인지" data-kw="전자레인지 microwave 빌트인 카운터탑" onclick="selectCat('전자레인지')"><span class="ci">🍱</span>전자레인지</div>
-        <div class="cat-drop-row" data-cat="공기청정기" data-kw="공기청정기 air cleaner 청정기" onclick="selectCat('공기청정기')"><span class="ci">🌬️</span>공기청정기</div>
-      </div>
-      <div class="cat-search-empty" id="cat-search-empty" style="display:none;">검색 결과가 없습니다.</div>
+      <input type="text" class="cat-search" id="cat-search" placeholder="키워드 검색 (예: 키친핏, 4도어, 페어, 로봇청소기)"
+             oninput="filterCats(this.value)">
+      <!-- 타일은 INSTALL_DB 에서 세워 그린다(renderCats) — 손으로 적어 두면 DB 와 어긋난다 -->
+      <div class="cats" id="cats"></div>
+      <div class="cat-search-empty" id="cat-search-empty">검색 결과가 없습니다.</div>
     </div>
   </div>
 
@@ -966,44 +949,95 @@ const INSTALL_DB = {
 };
 
 let currentCat = null;
-let catDropOpen = false;
 
-function toggleCatDrop() {
-  catDropOpen = !catDropOpen;
-  document.getElementById('cat-drop').classList.toggle('open', catDropOpen);
-  document.getElementById('cat-select-btn').classList.toggle('open', catDropOpen);
-  document.getElementById('cat-select-arr').classList.toggle('open', catDropOpen);
+/*
+ * **카테고리 고르기는 AS 관련 정보와 같은 심벌 타일이다**(2026-08-12 사용자 요청).
+ *
+ * 예전에는 접었다 펴는 드롭다운이었다. 무엇이 있는지 열어 봐야 알았고, 고를 때마다
+ * "열고 → 고르고" 두 번을 눌러야 했다. 상담 중 화면을 보는 시간은 몇 초다.
+ *
+ * **타일 목록을 손으로 적지 않고 `INSTALL_DB` 에서 세워 그린다.** 예전 HTML 에는 21줄이
+ * 박혀 있어 "드롭다운 순서 = DB 순서를 늘 맞출 것"이 지킬 규칙으로 남아 있었는데,
+ * DB 하나만 보면 어긋날 자리가 아예 없어진다(AS 가 `Object.keys(DB)` 를 쓰는 것과 같다).
+ */
+
+/*
+ * 검색용 낱말 — 화면에 안 적히지만 상담사가 치는 말. 옛 `data-kw` 속성을 **한 글자도
+ * 바꾸지 않고** 옮겼다. 카테고리 이름과 겹치는 낱말('세탁'·'청정기')을 군더더기로 보고
+ * 줄였더니, 통합검색 색인에서 그 말들이 사라져 재생성 대조 검사가 잡아냈다.
+ * 이 표는 화면용이자 **색인 입력**이다(`scripts/build-search-index.mjs` 가 여기서 읽는다).
+ */
+const CAT_KW = {
+  '냉장고 4도어 프리스탠딩': '냉장고 4도어 프리스탠딩 fs freestanding',
+  '냉장고 4도어 키친핏': '냉장고 4도어 키친핏 빌트인 kitchenfit built-in',
+  '냉장고 4도어 키친핏 Max': '냉장고 4도어 키친핏 맥스 max 대용량',
+  '냉장고 2도어': '냉장고 2도어 투도어 상냉장 하냉동',
+  '냉장고 1도어': '냉장고 1도어 원도어 냉동고 와인냉장고 조합',
+  '냉장고 양문형': '냉장고 양문형 사이드바이사이드 side-by-side',
+  '냉장고 일반형': '냉장고 일반형 소형 1인가구',
+  '냉장고 페어(2대 이상) 설치': '냉장고 페어 2대 조합 페어키트',
+  '김치냉장고': '김치냉장고 김치플러스 스탠드형 뚜껑형 딤채',
+  '세탁기·콤보': '세탁기 콤보 세탁 washer',
+  '건조기': '건조기 dryer 적층 스태킹',
+  '에어컨': '에어컨 냉방 실외기 무풍 스탠드 벽걸이',
+  'TV': 'tv 티비 벽걸이 스탠드 텔레비전',
+  '청소기': '청소기 무선청소기 스틱 거치대',
+  '로봇청소기': '로봇청소기 자동급배수 빌트인 프리스탠딩 물걸레',
+  '식기세척기': '식기세척기 빌트인 트루빌트인 프리스탠딩 카운터탑',
+  '에어드레서': '에어드레서 스타일러 의류관리기 airdresser',
+  '인덕션': '인덕션 electric range 쿡탑 하이라이트 빌트인',
+  '정수기': '정수기 카운터탑 빌트인 직수 냉온정수',
+  '전자레인지': '전자레인지 microwave 빌트인 카운터탑',
+  '공기청정기': '공기청정기 air cleaner 청정기',
+};
+
+/* 화면에 부르는 이름이 DB 키와 다른 것만 적는다 (DB 키는 '청소기'지만 상담에서는 '무선청소기') */
+const CAT_LABEL = { '청소기': '무선청소기' };
+const catLabel = (c) => CAT_LABEL[c] || c;
+
+/* 심벌은 미니앱 공용(public/prod-symbols.js)이다 — 같은 품목이면 앱이 달라도 같은 그림이다.
+   이모지를 쓰지 않는 이유도 그 파일에 적혀 있다(OS 마다 모양이 다르고, 제품이 아니라
+   연상되는 물건을 그린다). 못 찾는 이름만 DB 의 이모지로 물러선다. */
+function catIcon(cat) {
+  const d = INSTALL_DB[cat];
+  const sym = (typeof prodSymbol === 'function') ? prodSymbol(cat, null) : null;
+  return sym || (d && d.emoji) || '';
 }
-function openCatDrop() {
-  if (catDropOpen) return;
-  catDropOpen = true;
-  document.getElementById('cat-drop').classList.add('open');
-  document.getElementById('cat-select-btn').classList.add('open');
-  document.getElementById('cat-select-arr').classList.add('open');
-}
-function closeCatDrop() {
-  catDropOpen = false;
-  document.getElementById('cat-drop').classList.remove('open');
-  document.getElementById('cat-select-btn').classList.remove('open');
-  document.getElementById('cat-select-arr').classList.remove('open');
-}
-function filterCatDrop(query) {
-  const q = (query || '').trim().toLowerCase();
-  const rows = document.querySelectorAll('.cat-drop-row');
-  let visibleCount = 0;
-  rows.forEach(function(r) {
-    const hay = (r.dataset.cat + ' ' + (r.dataset.kw || '')).toLowerCase();
-    const match = !q || hay.includes(q);
-    r.style.display = match ? '' : 'none';
-    if (match) visibleCount++;
+
+function renderCats() {
+  const box = document.getElementById('cats');
+  if (!box) return;
+  box.innerHTML = Object.keys(INSTALL_DB).map(function(cat) {
+    return '<div class="cat' + (cat === currentCat ? ' on' : '') + '"'
+      + ' data-cat="' + escAttr(cat) + '" data-kw="' + escAttr(CAT_KW[cat] || '') + '">'
+      + '<span class="ci">' + catIcon(cat) + '</span>' + escHtml(catLabel(cat)) + '</div>';
+  }).join('');
+  box.querySelectorAll('.cat').forEach(function(el) {
+    el.onclick = function(){ selectCat(el.dataset.cat); };
   });
-  document.getElementById('cat-search-empty').style.display = (q && visibleCount === 0) ? 'block' : 'none';
-  openCatDrop();
 }
-document.addEventListener('click', function(e) {
-  const wrap = document.querySelector('.cat-select');
-  if (wrap && !wrap.contains(e.target)) closeCatDrop();
-});
+
+/* 검색은 타일을 걸러 낸다 — 예전 드롭다운을 걸러 내던 것과 판정 규칙이 같다.
+   이름·표시명·검색어를 함께 본다(표시명이 DB 키와 다른 '무선청소기'를 쳐도 걸려야 한다). */
+function filterCats(query) {
+  const q = (query || '').trim().toLowerCase();
+  let visible = 0;
+  document.querySelectorAll('#cats .cat').forEach(function(el) {
+    const cat = el.dataset.cat;
+    const hay = (cat + ' ' + catLabel(cat) + ' ' + (el.dataset.kw || '')).toLowerCase();
+    const match = !q || hay.includes(q);
+    el.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  document.getElementById('cat-search-empty').style.display = (q && visible === 0) ? 'block' : 'none';
+}
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+const escAttr = escHtml;
 
 function scrollToImg(i) {
   const card = document.getElementById('img-card-' + i);
@@ -1019,16 +1053,16 @@ function selectCat(cat) {
   if (typeof syncInstallShareBtn === 'function') syncInstallShareBtn();
   const d = INSTALL_DB[cat];
 
-  document.getElementById('cat-select-nm').textContent = cat;
-  document.getElementById('cat-select-nm').classList.remove('placeholder');
-  document.getElementById('cat-select-ico').textContent = (d && d.emoji) || '📋';
-  document.querySelectorAll('.cat-drop-row').forEach(function(r){ r.classList.toggle('sel', r.dataset.cat === cat); });
+  /* 고른 타일에 표시를 남기고, 검색은 풀어 목록을 되돌린다 —
+     고른 뒤에도 걸러진 채로 두면 "다른 것도 있었는데" 하고 다시 지워야 한다. */
+  document.querySelectorAll('#cats .cat').forEach(function(el){ el.classList.toggle('on', el.dataset.cat === cat); });
   const searchInput = document.getElementById('cat-search');
   if (searchInput) searchInput.value = '';
-  filterCatDrop('');
-  closeCatDrop();
+  filterCats('');
 
-  document.getElementById('res-title').textContent = `${d ? d.emoji : ''} ${cat} 설치환경`;
+  /* 제목 아이콘도 타일과 같은 심벌이다 — 한쪽만 이모지면 같은 화면에서 그림이 두 종류가 된다 */
+  document.getElementById('res-title').innerHTML =
+    '<span class="ci res-ci">' + catIcon(cat) + '</span>' + escHtml(cat) + ' 설치환경';
 
   if (!d || d.notApplicable) {
     document.getElementById('res-subtitle').textContent = '설치 공간 규격이 적용되지 않는 제품군입니다';
@@ -1125,6 +1159,9 @@ function shareChecklist() {
 }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* 타일을 세운다. **딥링크보다 먼저** 그려야 `selectCat` 이 표시할 타일이 이미 있다 */
+renderCats();
 
 /* 허브 통합검색(/search)에서 넘어온 ?cat= 딥링크 — 해당 카테고리를 바로 연다 */
 (function(){

@@ -92,17 +92,22 @@ function flatten(v, out = []) {
   return out;
 }
 
-// ── 2. 설치환경 가이드: 카테고리 + 드롭다운 키워드 + **본문 전체** ──
+// ── 2. 설치환경 가이드: 카테고리 + 검색어 + **본문 전체** ──
 // 예전에는 data-kw 만 담았는데, 그러면 "이격거리 50mm"·"천장고"·"전용 콘센트"처럼
 // 상담에서 실제로 묻는 말이 하나도 안 걸렸다. 본문(공간·설비·체크리스트·주의)까지 넣는다.
+//
+// **검색어는 `CAT_KW` 에서 읽는다.** 카테고리 고르기를 심벌 타일로 바꾸면서(2026-08-12)
+// 타일을 `INSTALL_DB` 에서 세워 그리게 됐고, 그때 옛 `data-kw` 속성이 HTML 에서 사라졌다.
+// 정규식으로 속성을 긁던 코드가 **조용히 빈 값**이 되어 '키친핏'·'사이드바이사이드' 같은
+// 검색어 21건이 색인에서 통째로 빠졌다(재생성 대조 검사가 잡아냈다).
+// `literal()` 로 평가해 읽으므로 이제는 못 찾으면 조용히 넘어가지 않고 **던진다.**
 {
   const html = read('install-app.html');
   const DBI = literal(html, /const INSTALL_DB = (\{[\s\S]*?\n\});/, 'install-app.html 의 INSTALL_DB');
-  const kws = new Map();
-  for (const m of html.matchAll(/data-cat="([^"]+)"\s+data-kw="([^"]*)"/g)) kws.set(m[1], m[2]);
+  const KWI = literal(html, /const CAT_KW = (\{[\s\S]*?\n\});/, 'install-app.html 의 CAT_KW');
   for (const [cat, d] of Object.entries(DBI)) {
     add({ t: 'category', m: 'install', title: cat, sub: d.subtitle || '설치 공간·전기/급배수 요건',
-      kw: [cat, kws.get(cat) || '', '설치 설치환경 이격 치수',
+      kw: [cat, KWI[cat] || '', '설치 설치환경 이격 치수',
         ...flatten([d.subtitle, d.types, d.space, d.utility, d.checklist, d.cautions])].join(' '),
       href: `/install?cat=${encodeURIComponent(cat)}` });
   }
