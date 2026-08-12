@@ -1829,6 +1829,49 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 축척을 맞추면 도면 전체가 잡히는가 ────────────────────────────────
+ *
+ * 축척은 방 하나의 가로 벽만 있으면 나오지만 배치는 집 전체가 있어야 한다.
+ * 예전에는 축척 단계에서 **그 한 방만 등록하고 끝나서**, `벽 자동 인식`을 따로 누르지
+ * 않으면 3D 에도 그 방 하나만 섰다(2026-08-12 사용자 지적:
+ * *"부분선택을 하고 자동으로 축척이 완료되면 전체벽을 3D화 해야합니다"*).
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('load')), 9000);
+      P.useImage('/plans/c39/84.jpg', () => { clearTimeout(t); res(); }); });
+    await new Promise((res) => setTimeout(res, 2200));
+    if (!P.state.draft) return { err: '도면을 올렸는데 초안이 안 잡혔다' };
+    /* 이 공간 확정 → 이름 확정 → 벽 길이 입력 → 확정 */
+    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => /이 공간 확정/.test(x.textContent));
+    if (!ok) return { err: '초안 막대에 확정 버튼이 없다' };
+    ok.click();
+    await new Promise((res) => setTimeout(res, 400));
+    const nb = document.querySelector('#sheet .modal-actions button.primary');
+    if (nb) nb.click();
+    await new Promise((res) => setTimeout(res, 600));
+    const one = P.state.rooms.length;                 // 축척 단계에서 잡힌 방 수
+    const wl = document.getElementById('wl');
+    if (!wl) return { err: '벽 길이 입력칸이 안 떴다' };
+    wl.value = '3600';
+    document.getElementById('wl-ok').click();
+    await new Promise((res) => setTimeout(res, 4000));
+    const info = window.Place3D.open();
+    window.Place3D.close();
+    return { one, after: P.state.rooms.length, in3d: info.rooms, scaled: P.state.scaled };
+  });
+
+  if (r.err) fail(`축척→전체: ${r.err}`);
+  else if (!r.scaled) fail('축척→전체: 길이를 넣었는데 축척이 확정되지 않았다');
+  else if (r.after < 4)
+    fail(`축척→전체: 축척을 맞췄는데 공간이 ${r.after}곳뿐이다 — 도면 전체가 아니라 부분만 잡혔다`);
+  else if (r.in3d !== r.after)
+    fail(`축척→전체: 잡힌 공간 ${r.after}곳인데 3D 에는 ${r.in3d}곳만 섰다`);
+  else pass(`축척→전체 — 축척 단계 ${r.one}곳 → 도면 전체 ${r.after}곳, 3D 도 ${r.in3d}곳 전부`);
+}
+
+/*
  * ── 단지 불러오기 목록에서 도면 아닌 이미지를 뺐는가 ──────────────────
  *
  * 색인의 관문("방 이름 3종류 이상")을 아이소메트릭 렌더링·인테리어 사진·품목표·단지

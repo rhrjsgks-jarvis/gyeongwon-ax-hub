@@ -2096,24 +2096,52 @@ function detectAllRooms(){
    * **45% 규칙이 다 끝난 뒤에 한다.** 먼저 지우면 합계가 줄어 멀쩡한 트인 거실이 45% 를
    * 넘게 되고, 그 규칙이 거실을 쪼개러 들어간다 — 고쳐야 할 곳은 여기지 저기가 아니다.
    */
-  const coverFrac = (inner, outer) => {
-    const xs = inner.map((p) => p[0]), ys = inner.map((p) => p[1]);
-    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    let n = 0, both = 0;
-    for (let i = 0; i < 30; i++) for (let j = 0; j < 30; j++){
-      const x = x0 + (x1 - x0) * (i + 0.5) / 30, y = y0 + (y1 - y0) * (j + 0.5) / 30;
-      if (!inLoop(inner, x, y)) continue;
-      n++;
-      if (inLoop(outer, x, y)) both++;
-    }
-    return n ? both / n : 0;
-  };
   const uniq = trimmed.filter((c, i) =>
     !trimmed.some((o, j) => j !== i && (o.a > c.a || (o.a === c.a && j < i))
       && c.a > o.a * 0.6 && coverFrac(c.poly, o.poly) > 0.7));
 
-  for (const c of uniq) applyDetected(c.poly, c.edges, { name: nextRoomName() });
-  return uniq.length;
+  /*
+   * **이미 잡아 둔 공간은 다시 등록하지 않는다.**
+   * 축척을 맞추는 단계에서 방 하나가 먼저 등록되고(그 방의 가로 벽으로 축척을 냈다),
+   * 곧바로 여기가 도면 전체를 잡는다. 그 방을 또 넣으면 같은 공간이 이름만 다르게 둘이 된다.
+   * 등록된 벽은 mm 좌표이고 여기 후보는 이미지 픽셀이라 **축척을 곱해 같은 자로 맞춰** 비교한다.
+   */
+  const k = state.mmPerPx || 1;
+  const known = state.rooms.flatMap((r) => r.parts.map((p) => loopOfWalls(p.walls)).filter(Boolean));
+  const fresh = known.length
+    ? uniq.filter((c) => !known.some((e) => sameSpace(c.poly.map(([x, y]) => [x * k, y * k]), e)))
+    : uniq;
+
+  for (const c of fresh) applyDetected(c.poly, c.edges, { name: nextRoomName() });
+  return fresh.length;
+}
+
+/** 다각형 A 의 몇 할이 B 안에 드는가 (점 찍어 어림한다 — 정확한 교집합 넓이는 필요 없다) */
+function coverFrac(inner, outer){
+  const xs = inner.map((p) => p[0]), ys = inner.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  let n = 0, both = 0;
+  for (let i = 0; i < 30; i++) for (let j = 0; j < 30; j++){
+    const x = x0 + (x1 - x0) * (i + 0.5) / 30, y = y0 + (y1 - y0) * (j + 0.5) / 30;
+    if (!inLoop(inner, x, y)) continue;
+    n++;
+    if (inLoop(outer, x, y)) both++;
+  }
+  return n ? both / n : 0;
+}
+
+/**
+ * 두 다각형이 **같은 공간**인가.
+ *
+ * 겹침만 보면 안 된다 — 트인 거실(31㎡) 안에는 진짜 주방(16.8㎡)이 들어 있어서
+ * 겹침만으로 지우면 그 주방이 사라진다. 같은 공간을 두 번 잡은 것은 **넓이도 비슷하고**
+ * (실측 0.86배), 큰 공간 안의 작은 방은 훨씬 작다(0.54배). 그래서 넓이 비를 함께 본다.
+ */
+function sameSpace(a, b){
+  const A = Math.abs(polyAreaPx(a)), B = Math.abs(polyAreaPx(b));
+  if (!A || !B) return false;
+  if (Math.min(A, B) / Math.max(A, B) <= 0.6) return false;
+  return coverFrac(a, b) > 0.7 || coverFrac(b, a) > 0.7;
 }
 
 /** 도면을 올리고 축척을 맞춘 직후, 가운데를 눌러본 셈 치고 한 번 자동으로 시도한다 */
@@ -3758,8 +3786,22 @@ function askWallLength(segs, opts){
     state.zoom /= k; state.panX = 24; state.panY = 24;
     state.measureSeg = null;
     bar.classList.remove("on");
+    /*
+     * **축척이 잡히면 곧바로 도면 전체를 잡는다**(2026-08-12 사용자 지적).
+     *
+     * 축척은 방 하나의 가로 벽만 있으면 나오지만, 배치는 집 전체가 있어야 한다.
+     * 예전에는 여기서 **그 한 방만 등록하고 끝나서**, 사용자가 `벽 자동 인식`을 따로
+     * 누르지 않으면 3D 에도 그 방 하나만 섰다 — *"도면의 한 부분만 3D로 만드는 게
+     * 아닙니다"*. 고객은 가전을 어디에 놓을지 정해진 상태가 아니므로 집 전체가 서야 한다.
+     *
+     * 이미 등록한 그 방은 `detectAllRooms` 가 알아보고 건너뛴다(sameSpace).
+     * 도면 없이 벽을 직접 그린 경우에는 인식할 이미지가 없으므로 그대로 둔다.
+     */
+    let more = 0;
+    if (state.img) { try { more = detectAllRooms() || 0; } catch (_) { more = 0; } }
     setMode("idle"); setStep(4); evaluate(); draw();
-    toast(`도면 비율을 맞췄습니다 — 이 벽 ${mm.toLocaleString()}mm 기준`);
+    toast(`도면 비율을 맞췄습니다 — 이 벽 ${mm.toLocaleString()}mm 기준`
+      + (more ? ` · 도면 전체에서 공간 ${state.rooms.length}곳을 잡았습니다` : ''));
   };
   $("#wl-ok").onclick = commit;
   wl.onkeydown = (e)=>{ if (e.key === "Enter"){ e.preventDefault(); commit(); } };
