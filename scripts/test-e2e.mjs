@@ -365,14 +365,19 @@ try {
     else pass('업로드 직후 자동 인식 시도 (치수선 클릭 모드로 보내지 않는다)');
 
     /*
-     * 치수선이 인쇄된 도면을 위한 두 점 보정은 도구막대 '축척 맞추기'로 들어간다.
-     * 그 버튼은 휴대폰 화면을 비우려고 '⋯' 안에 접어 뒀으므로 먼저 펼쳐야 한다 —
-     * 접힌 버튼이 실제로 눌리는지까지 여기서 함께 확인하는 셈이다.
+     * 치수선이 인쇄된 도면을 위한 두 점 보정은 **길이 입력 막대 안**에서 들어간다
+     * (2026-08-12 도구막대 정리 — 치수가 인쇄된 도면이 8%뿐이라 늘 띄워 둘 손잡이가
+     * 아니고, 치수를 실제로 보고 있는 그 순간에만 필요하다).
+     * 여기서 그 경로가 살아 있는지 함께 확인한다 — 끊기면 그 8%가 갈 곳이 없어진다.
      */
-    await f.locator('#btn-more').click();
-    await page.waitForTimeout(200);
-    if (!(await f.locator('#btn-scale').isVisible())) fail("'⋯'를 눌렀는데 접어 둔 버튼이 안 나온다");
-    await f.locator('#btn-scale').click();
+    /*
+     * 화면에서 들어가는 길은 **길이 입력 막대의 '치수선 두 점으로'** 다. 그 손잡이가
+     * 실제로 붙어 있는지는 진짜 도면으로 흐름을 밟는 `test-plans` 가 검사한다
+     * (여기 합성 도면은 초안 단계가 이 스위트의 검사 대상이 아니라 흐름이 다르다).
+     * 여기서는 **두 점 보정 자체가 살아 있는지**를 본다 — 치수가 인쇄된 8% 도면이
+     * 갈 곳이라, 화면 정리로 이 기능이 통째로 죽는 일이 없어야 한다.
+     */
+    await f.locator('#btn-scale').dispatchEvent('click');
     await page.waitForTimeout(300);
     const md = await page.evaluate(() => document.querySelector('iframe').contentWindow.__place.state.mode);
     if (md !== 'scale') fail(`'축척 맞추기'를 눌렀는데 모드가 ${md} (기대 scale)`);

@@ -255,7 +255,10 @@
   /* ⋯ 안에 접어 둔 보조 버튼 — 펼치면 도구막대 아래로 한 줄 더 내려온다 */
   #bar-more{display:none;gap:6px;flex-wrap:wrap;width:100%;order:99;
     padding-top:8px;margin-top:2px;border-top:1px solid var(--line)}
-  #bar.moreopen #bar-more{display:flex}
+  /* 이 묶음은 화면에서 뺐다 — 각 손잡이는 쓰는 자리로 옮겼다(마크업 주석 참조).
+     버튼 자체는 남겨 둔다: 옮겨 간 자리에서 .click() 으로 그대로 부르고,
+     회귀 검사도 이 id 들을 눌러 동작을 확인한다. */
+  #bar-more{display:none !important}
   #bar.moreopen #btn-more{background:var(--brand);color:#fff;border-color:var(--brand)}
   /*
    * 하단 요약 띠 — 좁은 화면에서 오른쪽 패널이 서랍으로 숨으면 상담 중 볼 것이
@@ -391,18 +394,36 @@
          상담 흐름이 단지 → 가전 → 3D → 저장 이므로 자리도 그 순서에 둔다. -->
     <button id="btn-3d">3D<span class="lg"> 보기</span></button>
     <button id="btn-share"><span class="lg">결과 </span>저장</button>
-    <button id="btn-back" class="ghost" title="뒤로">←</button>
     <button id="btn-fit" class="ghost" title="도면이 화면에 들어오게 맞춥니다">⤢</button>
-    <button id="btn-more" class="ghost" title="도면·벽 손보기">⋯</button>
-    <span class="more" id="bar-more">
+    <!--
+      **도구막대에는 상담 한 번에 반드시 쓰는 것만 둔다**(2026-08-12 사용자 요청:
+      *"불필요한 버튼 모두 제거해주세요. 최대한 자동화 되는 시스템을 원합니다"*).
+      바라는 흐름이 이것이다 — 단지 불러오기 → (자동) 벽 인식 → 잰 선 부각 → 수치 입력 →
+      (자동) 축척·전체 벽 → 3D → 가전 배치. 손잡이가 필요한 순간은 그 흐름 안에 있으므로
+      **막대에 미리 늘어놓지 않고 필요한 자리에서 꺼낸다.** 옮긴 곳:
+
+        축척 맞추기(두 점)  → 길이 입력 막대 안의 '치수선 두 점으로' (거기서만 쓴다)
+        벽 자동 인식        → 자동으로 돈다. 다시 하려면 초안 막대의 '다시 누르기'
+        벽 그리기          → 도면이 없을 때만 필요하므로 **빈 화면**에 둔다
+        경계 수정          → 잡은 공간이 있을 때만 오른쪽 '공간' 패널에서 꺼낸다
+        주방 배치 추천      → '가전 선택'이 이미 평형별로 추천하고 놓아 준다
+        이 단지 저장       → '결과 저장' 시트 안으로
+        ◧ 정리본 · ↔ 치수  → 알고리즘 확인용이라 상담에는 쓰지 않는다(개발자 도구로 남김)
+
+      숨긴 것이 아니라 **쓰는 자리로 옮긴 것**이다. `←`(뒤로)는 휴대폰 하드웨어 뒤로가기와
+      시트 닫기가 이미 하는 일이라 뺐다.
+    -->
+    <span class="more" id="bar-more" hidden>
       <button id="btn-scale">축척 맞추기</button>
       <button id="btn-detect">벽 자동 인식</button>
       <button id="btn-wall">벽 그리기</button>
-      <button id="btn-edit" class="ghost" title="인식된 벽을 끌어서 고칩니다">경계 수정</button>
+      <button id="btn-edit" class="ghost">경계 수정</button>
       <button id="btn-auto">주방 배치 추천</button>
-      <button id="btn-save" class="ghost" title="지금 잡은 방을 단지로 등록합니다">이 단지 저장</button>
-      <button id="btn-clean" class="ghost" title="알고리즘이 보고 있는 정리본을 겹쳐 봅니다">◧ 정리본</button>
-      <button id="btn-dims" class="ghost" title="벽 길이(mm) 표시">↔ 치수</button>
+      <button id="btn-save" class="ghost">이 단지 저장</button>
+      <button id="btn-clean" class="ghost">◧ 정리본</button>
+      <button id="btn-dims" class="ghost">↔ 치수</button>
+      <button id="btn-back" class="ghost">←</button>
+      <button id="btn-more" class="ghost">⋯</button>
     </span>
     <span class="grow"></span>
     <span class="hint" id="status">도면 없이 벽만 그려도 됩니다</span>
@@ -414,10 +435,16 @@
       <canvas id="cv"></canvas>
       <canvas id="cv3"></canvas>
       <div id="d3bar"></div>
+      <!--
+        빈 화면은 **다음에 무엇을 누르면 되는지**만 말한다. 예전에는 "벽 그리기로 직접
+        입력해도 됩니다"라고 글로만 알렸는데, 그 버튼이 도구막대 ⋯ 안에 있어 찾아야 했다.
+        도면이 없을 때만 필요한 손잡이이므로 **여기가 그 자리다.**
+      -->
       <div id="empty">
-        <strong>도면을 올리고 축척을 맞추면 시작합니다</strong>
-        <span>도면을 올리면 <b>벽을 자동으로 인식</b>합니다. 그 뒤 가전을 체크해 고르면 이격거리에 맞춰 놓아 드립니다.</span>
-        <span>도면이 없으면 <b>벽 그리기</b>로 방 크기를 직접 입력해도 됩니다.</span>
+        <strong>단지를 부르거나 도면을 올리면 시작합니다</strong>
+        <span>도면을 올리면 <b>벽을 자동으로 인식</b>하고, 잰 벽의 실제 길이만 넣으면 축척까지 맞춰 드립니다.</span>
+        <span>그 뒤 <b>가전 선택</b>으로 제품을 고르면 이격거리에 맞춰 놓아 드립니다.</span>
+        <span class="acts"><button id="empty-wall" class="ghost">도면 없이 방 크기 직접 입력</button></span>
       </div>
       <div id="draftbar"></div>
       <div id="mini"></div>
@@ -3207,16 +3234,25 @@ function renderRooms(){
   const box = $('#rooms');
   if (!box) return;
   if (!state.rooms.length){
-    box.innerHTML = '<p class="hint" style="padding:8px 10px">아직 지정한 공간이 없습니다. <b>벽 자동 인식</b>으로 방 안쪽을 누르면 이름을 붙여 등록됩니다.</p>';
+    box.innerHTML = '<p class="hint" style="padding:8px 10px">도면을 올리면 공간을 자동으로 잡습니다. 방을 더 잡으려면 도면에서 그 방 안쪽을 누르세요.</p>';
     return;
   }
+  /*
+   * **경계 수정은 잡은 공간이 있을 때만 꺼낸다.**
+   * 자동 인식이 관례를 벗어난 도면에서 틀릴 때 사람이 고치는 마지막 안전망이라 없앨 수
+   * 없지만(CLAUDE.md), 공간이 없을 때는 고칠 대상도 없다. 도구막대에 늘 띄워 두는 대신
+   * 고칠 것이 생긴 자리에 둔다.
+   */
   box.innerHTML = state.rooms.map((r,i)=>`
     <div class="room ${state.roomSel===r.id?'sel':''}" data-room="${r.id}">
       <span class="swatch" style="background:${ROOM_FILL[i%ROOM_FILL.length]}"></span>
       <input type="text" class="rn" data-rename="${r.id}" value="${esc(r.name)}" maxlength="12">
       <span class="m">${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?` · ${r.parts.length}조각`:''}</span>
       <button class="del" data-del="${r.id}" title="삭제">✕</button>
-    </div>`).join('');
+    </div>`).join('')
+    + `<p class="hint" style="padding:6px 10px 10px">인식이 어긋났으면 <button id="rooms-edit" class="ghost" style="padding:4px 8px;font-size:12px">경계 수정</button>으로 벽을 끌어 고칠 수 있습니다.</p>`;
+  const ed = $('#rooms-edit');
+  if (ed) ed.onclick = (e)=>{ e.stopPropagation(); $('#btn-edit').click(); };
   box.querySelectorAll('input[data-rename]').forEach((el)=>{
     el.onchange = ()=>{
       const r = roomById(el.dataset.rename);
@@ -3586,7 +3622,26 @@ function stepBack(){
 $('#btn-back').onclick  = ()=>{ if (!stepBack()) toast('더 물러설 곳이 없습니다'); };
 window.addEventListener('popstate', ()=>{ if (backDepth > 0){ backDepth--; stepBack(); } });
 $('#btn-detect').onclick= ()=> startDetect();
-$('#btn-share').onclick = ()=> shareResult();
+/*
+ * **'결과 저장'이 두 가지 남기기를 함께 맡는다**(2026-08-12 도구막대 정리).
+ *   ① 고객에게 줄 이미지 한 장  ② 이 단지를 라이브러리에 등록(다음 상담에서 바로 부른다)
+ * 둘 다 "상담을 끝맺는" 행동이라 한자리에 있는 것이 맞고, '이 단지 저장'을 도구막대에
+ * 따로 둘 이유가 없다. 방을 안 잡았으면 등록할 것이 없으므로 그때는 안 묻는다.
+ */
+$('#btn-share').onclick = ()=>{
+  if (!state.items.length && state.rooms.length){ askSaveComplex(); return; }
+  if (!state.rooms.length){ shareResult(); return; }
+  sheet(`<h2>결과 저장</h2>
+    <p class="hint">고객에게 줄 이미지를 남기거나, 이 단지를 등록해 다음 상담에서 바로 부를 수 있습니다.</p>
+    <div class="modal-actions">
+      <button id="sv-lib">이 단지 등록</button>
+      <button class="primary" id="sv-img">이미지로 저장</button>
+    </div>`, ()=>{
+    $('#sv-img').onclick = ()=>{ closeSheet(); shareResult(); };
+    $('#sv-lib').onclick = ()=>{ closeSheet(); askSaveComplex(); };
+  });
+};
+$('#empty-wall').onclick = ()=> $('#btn-wall').click();
 /*
  * 3D 보기 — 고객에게 "우리 집에 놓으면 이런 느낌"을 보여주는 화면이다.
  *
@@ -3743,6 +3798,50 @@ function longestHRun(segs){
   return best;
 }
 
+/*
+ * **잴 수 있는 벽면 후보를 전부 모은다** — 가로와 세로 둘 다.
+ *
+ * 2026-08-12 사용자 요청: *"이미지에서 자동으로 가로 또는 세로 선 부각(해당 치수를 모르면
+ * 다음 버튼 눌러서 다른 경우의 수 표기)"*. 자동으로 고른 벽의 실제 길이를 상담사가 모를 수
+ * 있는데, 예전에는 그 자리에서 할 수 있는 일이 '다른 방'으로 넘기는 것뿐이었다.
+ * 같은 방 안에서도 **아는 벽**이 따로 있을 수 있다(가로는 몰라도 세로는 알거나 그 반대).
+ *
+ * 합치는 규칙은 `longestHRun` 과 같다 — 다각형 순서상 이어지고 같은 축에 있는 조각을
+ * 하나로 잇는다. **조각 하나를 재면 창 하나를 재게 되기 때문이다**(그 함수 주석 참조).
+ * 여기서는 가장 긴 것만이 아니라 **모든 런**을 길이 순으로 돌려준다.
+ */
+function wallRuns(segs){
+  const n = segs.length;
+  if (!n) return [];
+  const xs = segs.flatMap((q)=>[q.x1,q.x2]), ys = segs.flatMap((q)=>[q.y1,q.y2]);
+  const short = Math.min(Math.max(...xs)-Math.min(...xs), Math.max(...ys)-Math.min(...ys));
+  const tol = Math.max(2, short * 0.02);
+  const out = [];
+  for (const dir of ['h', 'v']){
+    const flat = (q) => dir === 'h' ? Math.abs(q.y2 - q.y1) : Math.abs(q.x2 - q.x1);
+    const along = (q) => dir === 'h' ? Math.abs(q.x2 - q.x1) : Math.abs(q.y2 - q.y1);
+    const mid   = (q) => dir === 'h' ? (q.y1 + q.y2) / 2 : (q.x1 + q.x2) / 2;
+    const ok    = (q) => flat(q) <= tol && along(q) > tol;
+    const joins = (a, b) => ok(a) && ok(b) && Math.abs(mid(a) - mid(b)) <= tol
+      && Math.hypot(a.x2 - b.x1, a.y2 - b.y1) <= tol;
+    let start = -1;
+    for (let i = 0; i < n; i++) if (!joins(segs[(i - 1 + n) % n], segs[i])) { start = i; break; }
+    if (start < 0) continue;
+    let cur = null;
+    for (let k = 0; k < n; k++){
+      const i = (start + k) % n, q = segs[i];
+      if (!ok(q)) { cur = null; continue; }
+      if (cur && joins(segs[(i - 1 + n) % n], q)) { cur.x2 = q.x2; cur.y2 = q.y2; }
+      else { cur = { x1: q.x1, y1: q.y1, x2: q.x2, y2: q.y2 }; out.push({ dir, seg: cur }); }
+    }
+  }
+  return out
+    .map((r) => ({ ...r, len: Math.hypot(r.seg.x2 - r.seg.x1, r.seg.y2 - r.seg.y1) }))
+    /* 짧은 토막은 재 봐야 축척이 흔들린다 — 가장 긴 것의 35% 미만은 후보에서 뺀다 */
+    .filter((r, _, a) => r.len >= Math.max(...a.map((x) => x.len)) * 0.35)
+    .sort((a, b) => b.len - a.len);
+}
+
 /**
  * 방 이름에 맞는 **가로 치수 예시**. 상담사가 감을 못 잡을 때 기준이 되는 값이라
  * 방과 어긋나면 축척이 통째로 틀어진다 — 아는 방만 적고 나머지는 비운다.
@@ -3768,16 +3867,30 @@ function askWallLength(segs, opts){
    * 거기에 3,600을 넣으면 **도면 전체 축척이 통째로 틀어진다**(사용자 지적).
    * 벽면의 안목치수는 창·문이 끼어 있어도 왼쪽 끝에서 오른쪽 끝까지다.
    */
+  /*
+   * **후보를 여럿 세워 두고 `다음`으로 넘긴다**(2026-08-12 사용자 요청).
+   * 기본은 여전히 **가로 벽면 전체**다 — 안방 치수는 상담에서 가로로 이야기하고,
+   * 세로를 재면 고객이 아는 숫자와 어긋난다. 다만 그 가로 길이를 모를 수 있으므로
+   * 같은 방의 다른 벽면(세로 포함)으로 넘겨 **아는 벽을 고를 수 있게** 한다.
+   */
   const runSeg = longestHRun(segs);
-  let lmax, mseg;
-  if (runSeg){ lmax = runSeg.len; mseg = runSeg.seg; }
-  else {
-    // 가로 벽면이 하나도 없는 도면(대각선 위주)에서만 전체 최장 벽으로 물러선다
+  const runs = wallRuns(segs);
+  const cands = [];
+  if (runSeg) cands.push({ dir: 'h', seg: runSeg.seg, len: runSeg.len });
+  for (const r of runs){
+    if (cands.some((c) => Math.abs(c.len - r.len) < 1
+      && Math.abs(c.seg.x1 - r.seg.x1) < 1 && Math.abs(c.seg.y1 - r.seg.y1) < 1)) continue;
+    cands.push(r);
+  }
+  if (!cands.length){
+    // 가로·세로 벽면이 하나도 없는 도면(대각선 위주)에서만 전체 최장 벽으로 물러선다
     let li = -1, m = 0;
     segs.forEach((q,i)=>{ const L = Math.hypot(q.x2-q.x1, q.y2-q.y1); if (L > m){ m = L; li = i; } });
     if (li < 0) return;
-    lmax = m; mseg = segs[li];
+    cands.push({ dir: 'h', seg: segs[li], len: m });
   }
+  let ci = 0;
+  let lmax = cands[0].len, mseg = cands[0].seg;
   /*
    * **어느 벽을 재는지 도면 위에 표시한다.**
    * 가장 긴 벽을 자동으로 고르므로 사용자는 클릭할 필요가 없지만, 어느 벽인지 모르면
@@ -3801,29 +3914,78 @@ function askWallLength(segs, opts){
    * `다른 방 ▸`로 다른 방을 골랐을 때 화면이 거짓말을 한다.
    */
   const rn = (opts && opts.name) || (roomById(state.roomSel)||{}).name || '침실1';
-  bar.innerHTML = "<div class='dl'>"
-    + "<span class='area'>" + esc(rn) + " 가로가 몇 mm 입니까?</span></div>"
-    + "<div class='dl'>"
-    + "<input type='number' id='wl' value='3600' min='100' step='10' "
-    + "style='width:120px;padding:6px 8px;font:600 15px ui-monospace,monospace'>"
-    + "<span class='meta'>mm</span>"
-    + "<span class='grow'></span>"
-    + "<button id='wl-again'>" + (state.img ? "다시 인식" : "다시 그리기") + "</button>"
-    + "<button class='primary' id='wl-ok'>확정</button></div>"
-    /*
-     * 예시 치수는 **지금 잡은 방에 맞춰** 적는다. 예전에는 "침실1(안방) 가로는 보통
-     * 3,000~3,600mm" 로 고정돼 있어, 거실을 잡았는데 "거실 가로가 몇 mm 입니까?" 밑에
-     * 침실 예시가 붙었다 — 상담사가 그 숫자를 그대로 넣으면 축척이 통째로 틀어진다.
-     * 방 이름을 모르면 예시를 아예 적지 않는다(없는 근거를 만들지 않는다).
-     */
-    + "<div class='dl'><span class='prev'><b style='color:#B45309'>주황색으로 표시된 벽</b>입니다 — "
-    + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다." + wallHint(rn) + "</span></div>";
+  /*
+   * 막대를 **다시 그릴 수 있게** 함수로 뺐다 — `다음`으로 후보를 넘기면 문구(가로/세로)와
+   * 주황 표시가 함께 바뀌어야 하기 때문이다. 숫자와 그림이 따로 놀면 축척이 틀어진다.
+   */
+  const paint = () => {
+    const c = cands[ci];
+    lmax = c.len; mseg = c.seg; state.measureSeg = mseg;
+    const way = c.dir === 'v' ? '세로' : '가로';
+    bar.innerHTML = "<div class='dl'>"
+      + "<span class='area'>" + esc(rn) + " " + way + "가 몇 mm 입니까?</span>"
+      + (cands.length > 1
+        ? "<span class='grow'></span><button id='wl-next'>다음 ▸ <span class='n'>"
+          + (ci + 1) + "/" + cands.length + "</span></button>" : "")
+      + "</div>"
+      + "<div class='dl'>"
+      + "<input type='number' id='wl' value='" + (c.dir === 'v' ? 3000 : 3600) + "' min='100' step='10' "
+      + "style='width:120px;padding:6px 8px;font:600 15px ui-monospace,monospace'>"
+      + "<span class='meta'>mm</span>"
+      + "<span class='grow'></span>"
+      /*
+       * **치수선 두 점 보정은 여기서만 꺼낸다.**
+       * 더 정확하지만 분양 도면 중 치수가 인쇄된 것은 8%뿐이고, 손가락으로는 몇 px 씩
+       * 어긋나 축척이 통째로 틀어진다(CLAUDE.md). 그래서 도구막대에 늘 띄워 두지 않고
+       * **치수를 실제로 보고 있는 이 순간**에만 내민다.
+       */
+      + (state.img ? "<button id='wl-two' class='ghost'>치수선 두 점으로</button>" : "")
+      + "<button id='wl-again'>" + (state.img ? "다시 인식" : "다시 그리기") + "</button>"
+      + "<button class='primary' id='wl-ok'>확정</button></div>"
+      /*
+       * 예시 치수는 **지금 잡은 방에 맞춰** 적는다. 예전에는 "침실1(안방) 가로는 보통
+       * 3,000~3,600mm" 로 고정돼 있어, 거실을 잡았는데 "거실 가로가 몇 mm 입니까?" 밑에
+       * 침실 예시가 붙었다 — 상담사가 그 숫자를 그대로 넣으면 축척이 통째로 틀어진다.
+       * 방 이름을 모르면 예시를 아예 적지 않는다(없는 근거를 만들지 않는다).
+       */
+      + "<div class='dl'><span class='prev'><b style='color:#B45309'>주황색으로 표시된 벽</b>입니다 — "
+      + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다."
+      + (c.dir === 'v' ? '' : wallHint(rn))
+      + (cands.length > 1 ? " 이 벽 길이를 모르시면 <b>다음</b>으로 다른 벽을 고르세요." : "")
+      + "</span></div>";
+    draw();
+    const nx = $('#wl-next');
+    if (nx) nx.onclick = ()=>{
+      /*
+       * 이 방의 벽을 한 바퀴 다 돌았으면 **다음 방 후보로 넘어간다.**
+       * 자동 인식이 도면 시트 전체를 방으로 잡는 일이 있어(실측 2/27장), 그 안의 벽은
+       * 전부 시트 가장자리라 아무리 넘겨도 잴 것이 없다. 상담사가 아는 벽에 닿으려면
+       * 방 자체를 바꿀 수 있어야 한다 — 초안 막대의 '다른 방'과 같은 손잡이다.
+       */
+      if (ci + 1 < cands.length){ ci++; paint(); wire(); return; }
+      const cs = state.roomCands || [];
+      if (cs.length < 2){ ci = 0; paint(); wire(); return; }
+      state.candIdx = ((state.candIdx || 0) + 1) % cs.length;
+      const c = cs[state.candIdx];
+      let res; try { res = detectRoomAt(c.at[0], c.at[1]); } catch (_) { res = { error: '인식 실패' }; }
+      if (res.error){ toast(res.error); ci = 0; paint(); wire(); return; }
+      state.draft = res.poly; state.draftEdges = res.edges; state.draftCloseR = res.closeR;
+      state.draftAt = c.at;
+      bar.classList.remove('on');
+      /* 새 방의 벽 목록으로 이 막대를 다시 연다 */
+      askWallLength(res.edges && res.edges.length
+        ? res.edges.map((e) => ({ x1:e.x1, y1:e.y1, x2:e.x2, y2:e.y2, open:!!e.open }))
+        : res.poly.map((p, i, a) => { const q = a[(i+1)%a.length]; return { x1:p[0], y1:p[1], x2:q[0], y2:q[1] }; }),
+        opts);
+    };
+    const w = $('#wl'); w.focus(); w.select();
+  };
+  paint();
   if (!bar.classList.contains('on')) pushBack();   // 휴대폰 뒤로가기가 앱이 아니라 이 막대를 닫도록
   bar.classList.add("on");
-  const wl = $("#wl");
-  wl.focus(); wl.select();
+  const wl = () => $("#wl");
   const commit = ()=>{
-    const mm = +wl.value;
+    const mm = +wl().value;
     if (!(mm>0)) { toast("실제 길이를 mm 로 넣어주세요"); return; }
     const k = mm / lmax;
     for (const s of segs){ s.x1*=k; s.y1*=k; s.x2*=k; s.y2*=k; }
@@ -3861,13 +4023,20 @@ function askWallLength(segs, opts){
     toast(`도면 비율을 맞췄습니다 — 이 벽 ${mm.toLocaleString()}mm 기준`
       + (more ? ` · 도면 전체에서 공간 ${state.rooms.length}곳을 잡았습니다` : ''));
   };
-  $("#wl-ok").onclick = commit;
-  wl.onkeydown = (e)=>{ if (e.key === "Enter"){ e.preventDefault(); commit(); } };
-  $("#wl-again").onclick = ()=>{
+  /* 막대를 다시 그리면 버튼도 새로 생기므로 손잡이 연결을 한 함수로 묶어 둔다 */
+  function wire(){
+    $("#wl-ok").onclick = commit;
+    wl().onkeydown = (e)=>{ if (e.key === "Enter"){ e.preventDefault(); commit(); } };
+    $("#wl-again").onclick = again;
+    const two = $("#wl-two");
+    if (two) two.onclick = ()=>{ bar.classList.remove("on"); state.measureSeg = null; $("#btn-scale").click(); };
+  }
+  const again = ()=>{
     state.measureSeg = null; bar.classList.remove("on");
     // 도면이 있으면 다시 그리라고 할 게 아니라 다시 인식시키는 것이 맞다
     if (state.img) startDetect(); else { setMode("wall"); draw(); }
   };
+  wire();
 }
 
 /* ── 단지 평면 라이브러리 ────────────────────────────────────────────

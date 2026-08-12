@@ -1854,12 +1854,16 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const one = P.state.rooms.length;                 // 축척 단계에서 잡힌 방 수
     const wl = document.getElementById('wl');
     if (!wl) return { err: '벽 길이 입력칸이 안 떴다' };
+    /* 화면 정리로 도구막대에서 뺀 두 손잡이가 이 막대 안에 살아 있는지 —
+       '다음'(다른 벽·다른 방)과 '치수선 두 점으로'(치수가 인쇄된 8% 도면의 유일한 길) */
+    const hasNext = !!document.getElementById('wl-next');
+    const hasTwo = !!document.getElementById('wl-two');
     wl.value = '3600';
     document.getElementById('wl-ok').click();
     await new Promise((res) => setTimeout(res, 4000));
     const info = window.Place3D.open();
     window.Place3D.close();
-    return { one, after: P.state.rooms.length, in3d: info.rooms, scaled: P.state.scaled };
+    return { one, after: P.state.rooms.length, in3d: info.rooms, scaled: P.state.scaled, hasNext, hasTwo };
   });
 
   if (r.err) fail(`축척→전체: ${r.err}`);
@@ -1868,7 +1872,9 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     fail(`축척→전체: 축척을 맞췄는데 공간이 ${r.after}곳뿐이다 — 도면 전체가 아니라 부분만 잡혔다`);
   else if (r.in3d !== r.after)
     fail(`축척→전체: 잡힌 공간 ${r.after}곳인데 3D 에는 ${r.in3d}곳만 섰다`);
-  else pass(`축척→전체 — 축척 단계 ${r.one}곳 → 도면 전체 ${r.after}곳, 3D 도 ${r.in3d}곳 전부`);
+  else if (!r.hasNext) fail("길이 입력 막대에 '다음'(다른 벽·다른 방)이 없다 — 아는 벽을 고를 길이 막혔다");
+  else if (!r.hasTwo) fail("길이 입력 막대에 '치수선 두 점으로'가 없다 — 치수가 인쇄된 도면이 갈 곳이 없다");
+  else pass(`축척→전체 — 축척 단계 ${r.one}곳 → 도면 전체 ${r.after}곳, 3D 도 ${r.in3d}곳 전부 · 막대에 다음·두점 손잡이 있음`);
 }
 
 /*
