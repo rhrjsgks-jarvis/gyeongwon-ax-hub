@@ -16,6 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { JSDOM } from 'jsdom';
+import { execSync } from 'child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pub = (f) => path.join(__dirname, '..', 'public', f);
@@ -101,6 +102,38 @@ for (const [cat, d] of Object.entries(DB)) {
 if (ok) {
   console.log(`OK: 타사비교 최상위 모델 ${checked}건 중 ${checked - unresolved}건이 모델파인더 DB에 존재` +
     (unresolved ? ` (미확정 ${unresolved}건은 위 TODO 참고)` : ''));
+}
+
+/*
+ * ── 서비스워커 캐시 버전 ──────────────────────────────────────
+ *
+ * **미니앱(public/*-app.html)을 고쳤으면 `sw.js` 의 CACHE_VERSION 도 올라가야 한다.**
+ * 미니앱은 stale-while-revalidate 라, 안 올리면 **이미 쓰던 기기는 옛 파일을 계속 쓴다** —
+ * 껍데기(Next 페이지)만 새것이 되어 "고쳤다는데 그대로다"가 된다.
+ * 2026-08-12 실제로 그랬다: 공유 버튼 수정을 배포했는데 옛 finder-app.html 이 남아 있어
+ * 화면에 없는 제품이 그대로 공유됐다(재현 확인).
+ *
+ * 마지막으로 CACHE_VERSION 이 바뀐 커밋 이후에 미니앱이 바뀌었으면 실패시킨다.
+ */
+{
+  const ROOT = path.join(__dirname, '..');
+  const ver = (read('sw.js').match(/CACHE_VERSION\s*=\s*'([^']+)'/) || [])[1];
+  if (!ver) fail('sw.js 에서 CACHE_VERSION 을 찾지 못했다');
+  else {
+    const sh = (cmd) => { try { return execSync(cmd, { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); }
+                          catch (e) { return ''; } };
+    const verCommit = sh(`git log -1 --format=%H -G"CACHE_VERSION = '" -- public/sw.js`);
+    if (!verCommit) console.log(`SKIP: 캐시 버전 대조 — git 이력을 읽을 수 없다 (${ver})`);
+    else {
+      const changed = sh(`git diff --name-only ${verCommit}..HEAD -- public/*-app.html`).split('\n').filter(Boolean);
+      if (changed.length) {
+        fail(`미니앱 ${changed.length}개가 바뀌었는데 CACHE_VERSION(${ver})은 그대로다 — `
+          + `이미 쓰던 기기가 옛 파일을 계속 쓴다: ${changed.map((f) => f.split('/').pop()).join(', ')}`);
+      } else {
+        console.log(`OK: 캐시 버전 ${ver} — 그 뒤로 바뀐 미니앱 없음`);
+      }
+    }
+  }
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
