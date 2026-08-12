@@ -13,7 +13,7 @@
 export type IconName =
   | 'home' | 'finder' | 'care' | 'compare' | 'catalog' | 'install'
   | 'warranty' | 'place' | 'quiz' | 'target' | 'dashboard'
-  | 'ticket' | 'display' | 'coupon' | 'search' | 'chat' | 'qr'
+  | 'ticket' | 'display' | 'coupon' | 'search' | 'chat' | 'qr' | 'share'
 
 const P: Record<IconName, React.ReactNode> = {
   /* 허브 — 집 */
@@ -51,6 +51,8 @@ const P: Record<IconName, React.ReactNode> = {
   qr: <><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14.5" y="14.5" width="2" height="2" /><rect x="18" y="18" width="2" height="2" /></>,
   /* 개발자 문의 */
   chat: <><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.2-2.9-.5L4.5 20l1.2-3.4A6.4 6.4 0 0 1 4 12.5C4 8.9 7.6 6 12 6s8 2.9 8 6.5Z" /></>,
+  /* 공유 — 점 셋을 잇는 관례적 모양. 사선은 45°만 쓰는 규칙에 맞춰 두 선을 같은 각으로 뒀다 */
+  share: <><circle cx="18" cy="5.5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="18.5" r="2.5" /><path d="M8.2 10.8 15.8 6.7" /><path d="M8.2 13.2l7.6 4.1" /></>,
 }
 
 export default function Icon({

@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Pretendard 폰트 */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+/* Pretendard 는 app/layout.tsx 에서 **화면을 막지 않게** 받는다 (CSS @import 는 렌더 차단이다) */
 
 :root {
   /* Samsung 디자인 토큰 */

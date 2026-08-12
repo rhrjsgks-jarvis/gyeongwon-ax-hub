@@ -4,7 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>모델 파인더 — 키워드 제품 추천</title>
-<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!--
+  폰트는 **화면을 막지 않게** 받는다(2026-08-11). 예전에는 렌더 차단 방식이라
+  CDN 이 느리거나 막히면 그동안 화면이 비어 있었다 — 실측으로 포스터가 폰트 응답을
+  기다리다 **13초** 걸린 적이 있다(CPU 는 97% 놀고 있었다). 매장 전파가 약하면 같은 일이 난다.
+  `media="print"` 로 받아 다 받은 뒤 `all` 로 바꾸면 그리기를 막지 않는다.
+  글꼴이 늦게 와도 -apple-system 등 대체 글꼴로 먼저 읽힌다.
+  (**자체 호스팅이 정답이다** — three.js 를 vendor/ 에 받아 둔 것과 같은 이유. 다만 폰트
+   파일을 받으려면 CDN 에 닿는 환경이 필요해 로컬 세션에서 할 일로 남겼다.)
+-->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"></noscript>
 <style>
 :root{
   --bg:#EDF2F9; --surface:#FFFFFF; --ink:#0E1C30; --sub:#5C6C82; --line:#D8E1EE;
@@ -899,6 +910,15 @@ function sorted(){
 }
 function renderResults(){
   const list = sorted().slice(0,15);
+  /*
+   * **화면에 없는 제품이 공유 카드로 나가지 않게 한다**(2026-08-11 사용자 지적:
+   * *"공유 눌렀을 때 현재 페이지가 공유되어야 하는데 다른 내용이 자꾸 나온다"*).
+   * 상세를 펼쳐 둔 채 다른 검색을 하면 `openId` 가 그대로 남아, 화면에는 로봇청소기가
+   * 떠 있는데 카드에는 **직전에 보던 에어컨**이 담겨 나갔다(실측 재현).
+   * 목록을 다시 그리는 곳이 여기 하나뿐이라, 지금 그리는 목록에 없으면 여기서 지운다.
+   */
+  if (openId != null && !list.some(r => r.p.id === openId)) openId = null;
+  syncShareBtn();
   const rc = $("resCount"); if(rc) rc.textContent = `${lastResults.length}종 매칭 · 상위 ${list.length}종`;
   if(!lastResults.length){
     $("rHost").innerHTML = `<div class="empty"><b>매칭 결과가 없습니다.</b><br>키워드를 줄이거나 예산·치수 조건을 완화해 보세요.<br>예: "무풍 에어컨" / "폭 920 냉장고" / "노트북 200만 이하"</div>`;

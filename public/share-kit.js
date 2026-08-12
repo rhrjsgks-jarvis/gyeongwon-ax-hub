@@ -333,6 +333,50 @@
     document.body.appendChild(b);
     /* 화면을 돌리면 바 높이가 달라진다 */
     window.addEventListener('resize', function () { b.style.top = (stickyBottom() + 8) + 'px'; });
+
+    /*
+     * ── 허브 안에서는 공유를 **앱 헤더 우측 상단**이 맡는다 (2026-08-11 사용자 요청) ──
+     *
+     * 떠 있는 버튼이 본문을 덮는다는 지적이 반복됐다(AS 안내문 첫 줄이 실제로 가려져
+     * padding-right 로 자리를 비워 두고 있었다). 헤더로 올리면 덮을 일이 없고 자리가
+     * 늘 같아 눈이 헤매지 않는다.
+     *
+     * 미니앱은 **혼자서도 열리는 파일**이므로(직접 URL 로 여는 경우가 있다) 감추는 것은
+     * iframe 안에 있을 때뿐이다. 바깥 헤더가 없는데 감추면 공유할 길이 사라진다.
+     */
+    var embedded = false;
+    try { embedded = window.parent && window.parent !== window; } catch (e) { embedded = true; }
+    if (!embedded) return;
+
+    b.style.display = b.style.display || '';
+    b.dataset.skEmbedded = '1';
+
+    /* 바깥에 "지금 공유할 것이 있는가"를 알린다 — 앱마다 sync 함수가 이 버튼의
+       display 를 직접 만지므로, 그 변화를 지켜보면 앱을 고치지 않아도 된다. */
+    function tell() {
+      var on = getComputedStyle(b).display !== 'none';
+      try { window.parent.postMessage({ sk: 'share-state', on: on }, '*'); } catch (e) {}
+    }
+    new MutationObserver(tell).observe(b, { attributes: true, attributeFilter: ['style', 'class'] });
+    tell();
+    window.addEventListener('message', function (e) {
+      if (!e.data) return;
+      /*
+       * **바깥이 물으면 다시 답한다.** 알리기만 하면 유실된다 — 미니앱이 먼저 뜨고
+       * 바깥 헤더가 나중에 듣기 시작하면 그 한 번이 사라져, 공유할 것이 있는데도
+       * 아이콘이 끝내 안 떴다(AS 에서 실제로 그랬다. 설치환경은 카테고리를 고를 때
+       * 상태가 다시 바뀌어 우연히 가려져 있었다).
+       */
+      if (e.data.sk === 'share-ping') { tell(); return; }
+      /* 바깥 버튼을 누르면 이 안에서 만든다 — 카드를 그리는 데 필요한 DOM 이 여기 있다 */
+      if (e.data.sk !== 'share-click') return;
+      if (getComputedStyle(b).display === 'none') { toast('공유할 내용이 없습니다'); return; }
+      b.click();
+    });
+    /* 헤더가 맡으므로 안쪽 버튼은 감춘다 — 같은 일을 하는 버튼이 둘 보이면 헷갈린다 */
+    var hide = document.createElement('style');
+    hide.textContent = '#sk-share{visibility:hidden;pointer-events:none}';
+    document.head.appendChild(hide);
   }
 
   global.SHARE_KIT = {

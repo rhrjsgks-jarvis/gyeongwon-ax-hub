@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
@@ -59,14 +59,48 @@ const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자
 const NAV_ITEMS = [
   { href: '/',       label: '허브',           icon: 'home' as IconName },
   { href: '/search', label: '통합검색',        icon: 'search' as IconName },
-  { href: '/as',     label: 'AS 관련 정보',    icon: 'warranty' as IconName },
-  { href: '/place',  label: '배치 시뮬레이터',  icon: 'place' as IconName },
+  { href: '/#tools', label: '제품 상담 도구',   icon: 'finder' as IconName },
   { href: '/#edu',   label: '교육',           icon: 'quiz' as IconName },
-  { href: '/#store', label: '매장운영',        icon: 'coupon' as IconName },
+  { href: '/place',  label: '배치 시뮬레이터',  icon: 'place' as IconName },
+  { href: '/as',     label: 'AS 관련 정보',    icon: 'warranty' as IconName },
 ]
 
 export default function Navigation() {
   const pathname = usePathname()
+  /*
+   * 공유는 **앱 헤더 우측 상단**이 맡는다(2026-08-11 사용자 요청). 미니앱 안에 떠 있던
+   * 버튼은 본문을 덮었고(AS 안내문 첫 줄이 실제로 가려져 자리를 비워 두고 있었다)
+   * 화면마다 자리가 달라 눈이 헤맸다.
+   *
+   * 만들 것이 있을 때만 보인다 — 미니앱이 `share-state` 로 알려 준다. 띄워 두고 눌렀을 때
+   * "공유할 내용이 없습니다"만 뜨면 고장으로 읽힌다(네 앱이 이미 지키던 규칙이다).
+   */
+  const [canShare, setCanShare] = useState(false)
+  useEffect(() => {
+    setCanShare(false) // 페이지를 옮기면 새 화면이 알려 줄 때까지 감춘다
+    let answered = false
+    function onMsg(e: MessageEvent) {
+      if (e.data && e.data.sk === 'share-state') { answered = true; setCanShare(!!e.data.on) }
+    }
+    window.addEventListener('message', onMsg)
+    /*
+     * **알림만 기다리지 않고 물어본다.** 미니앱이 먼저 뜨고 헤더가 나중에 듣기 시작하면
+     * 그 한 번이 유실돼, 공유할 것이 있는데도 아이콘이 끝내 안 떴다(AS 에서 실제로 그랬다).
+     * 미니앱이 뜰 때까지 잠깐 되물어 본다 — 답이 오면 멈춘다.
+     */
+    const t = setInterval(() => {
+      if (answered) { clearInterval(t); return }
+      document.querySelector('iframe')?.contentWindow?.postMessage({ sk: 'share-ping' }, '*')
+    }, 250)
+    const stop = setTimeout(() => clearInterval(t), 6000)
+    return () => { clearInterval(t); clearTimeout(stop); window.removeEventListener('message', onMsg) }
+  }, [pathname])
+
+  function share() {
+    // 카드를 그리는 데 필요한 DOM 이 미니앱 안에 있으므로, 만들기는 그쪽에 맡긴다
+    const f = document.querySelector('iframe')
+    f?.contentWindow?.postMessage({ sk: 'share-click' }, '*')
+  }
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
     NAV_GROUPS.forEach((group) => {
@@ -97,7 +131,22 @@ export default function Navigation() {
             세일즈 코파일럿
           </span>
         </Link>
-        <span className="text-white text-xs opacity-60">경원영업팀</span>
+        {/* 오른쪽 — 팀 이름은 왼쪽으로 밀고 그 자리에 공유 아이콘을 고정한다 */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-white text-xs opacity-60">경원영업팀</span>
+          {canShare && (
+            <button
+              type="button"
+              onClick={share}
+              aria-label="이 화면 공유하기"
+              title="이 화면 공유하기"
+              className="flex items-center justify-center rounded-full text-white"
+              style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.18)' }}
+            >
+              <Icon name="share" size={16} />
+            </button>
+          )}
+        </div>
       </header>
 
       {/* 하단 탭 — 5개 전체 표시 (slice 제거) */}
@@ -107,8 +156,16 @@ export default function Navigation() {
       >
         {NAV_ITEMS.map((item) => {
           const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+          /*
+           * 분류 탭('제품 상담 도구'·'교육')은 **평범한 `<a>`** 로 둔다.
+           * Next 의 `<Link>` 는 해시만 다른 이동에서 `hashchange` 를 일으키지 않아,
+           * 허브에 있는 상태에서 누르면 **주소만 바뀌고 섹션이 접힌 채 그대로**였다
+           * (2026-08-11 실측). 브라우저에 맡기면 같은 화면에서는 hashchange 가,
+           * 다른 화면에서는 새로 뜨면서 마운트가 그 일을 한다.
+           */
+          const Tag: any = item.href.includes('#') ? 'a' : Link
           return (
-            <Link
+            <Tag
               key={item.href}
               href={item.href}
               className="flex-1 min-w-0 flex flex-col items-center justify-center py-1.5 gap-0.5 text-center no-underline transition-colors relative"
@@ -122,7 +179,7 @@ export default function Navigation() {
                   style={{ background: 'var(--color-primary)' }}
                 />
               )}
-            </Link>
+            </Tag>
           )
         })}
       </nav>

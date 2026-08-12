@@ -136,6 +136,9 @@
   .sr-b span{display:block;font-size:11px;color:#6b7280;margin-top:1px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .sr-none{padding:14px 10px;font-size:12px;color:#6b7280;text-align:center}
+  /* 뺀 말을 밝히는 줄 — 조용히 빼면 왜 이 결과인지 알 수 없다 */
+  .sr-note{padding:8px 10px;font-size:11.5px;color:#B45309;background:#FFFBEB;
+    border-bottom:1px solid #FDE68A;line-height:1.45}
   .shd{font-size:10.5px;font-weight:800;color:#9aa0a6;padding:7px 10px 3px}
 
   /* 이전설치·빌트인 — 협력사 한 곳이 여러 센터를 맡아 관할이 길다. 물류센터 카드와 같은 모양 */
@@ -1074,7 +1077,8 @@ function searchDocs(){
     const d = DB[k];
     out.push({ kind:'품목', title:k,
       sub:`무상보증 ${d.base}${d.hold ? ' · 부품보유 ' + d.hold + '년' : ''}`,
-      kw:[k, d.base, d.baseWhy, d.baseNote, d.holdAs, d.note, 'as 보증 무상수리 부품',
+      kw:[k, d.base, d.baseWhy, d.baseNote, d.holdAs, d.note,
+          'as 보증 보증기간 무상보증 무상수리 부품 부품보유 부품보유기간 내용연수',
           ...(d.core||[]).flat()].filter(Boolean).join(' '),
       go(){ setTab('as'); cur = k; renderCats(); renderBody(); revealBody(); } });
   }
@@ -1129,9 +1133,52 @@ function searchDocs(){
     out.push({ kind:'보증기준', title:r.l, sub:r.t,
       kw:`${r.l} ${r.t} 보증 기준 공통`, go(){ setTab('as'); } });
   }
+  /*
+   * 멤버십 등급 연장 — **화면에 있는데 검색에 없었다**(실측: '로열블루' 0건).
+   * 화면에 적힌 말로 못 찾는 것은 검색이 아니다(허브 색인에서 같은 이유로 넣은 항목이다).
+   */
+  out.push({ kind:'멤버십', title:`멤버십 ${ROYAL.grade}`, sub:`${ROYAL.title} — ${ROYAL.ext}`,
+    kw:`${ROYAL.grade} ${ROYAL.title} ${ROYAL.ext} ${ROYAL.what} ${ROYAL.include} ${ROYAL.cond} ${ROYAL.keep} ${ROYAL.only} 멤버십 등급 연장 무상수리 로열블루 프레스티지`,
+    go(){ setTab('as'); revealBody(); } });
   return out.map(d => ({ ...d, kw:d.kw.toLowerCase() }));
 }
 let DOCS = null;
+
+/*
+ * ── 질의 해석 — 허브 통합검색과 같은 규칙을 쓴다 ──
+ *
+ * 예전에는 친 글자를 그대로 `kw.includes` 로 대조해서 **한 글자에 아무거나 걸렸다**
+ * (실측: '장' 23건 · '기' 58건 · '이' 52건 · '대' 40건). 상담사 눈에는 "AS 와 상관없는
+ * 것이 섞여 나온다"로 보인다(2026-08-11 사용자 지적). 게다가 조사·꼬리말이 붙으면
+ * 통째로 0건이 됐다 — *"냉장고 보증기간"* · *"에어컨 몇년"* 이 실제로 0건이었다.
+ */
+const AS_STOP_TAIL = /(입니까|입니다|인가요|인가|이야|이죠|인지|일까요|일까|해줘|해주세요|알려줘|알려주세요|뭐야|뭔가요|어때요|얼마나|얼마|몇|은|는|이|가|을|를|의|에|에서|도|만|요)$/;
+/* 화면 말 ↔ 자료 말이 갈리는 짝만 넣는다. 상위·하위 개념을 섞으면 조건이 무의미해진다. */
+const AS_SYN = {
+  '보증기간': ['무상보증', '보증'], '보증': ['보증'], '무상': ['무상'],
+  '몇년': ['년'], '년수': ['년'], '기간': ['기간', '년'],
+  'as': ['as'], '에이에스': ['as'], '수리': ['수리'],
+  '이사': ['이전설치'], '이전': ['이전설치'], '옮김': ['이전설치'],
+  '로열': ['로열'], '블루': ['블루'], '멤버쉽': ['멤버십'],
+  'dd모터': ['dd motor', 'ddmotor'], 'dd': ['dd'],
+  '인버터': ['인버터', 'inverter'], '컴프레셔': ['컴프레서'],
+};
+function asTokens(s){
+  return s.split(/\s+/)
+    .map(t => t.replace(/^[?!.,;:~"'`()[\]{}<>]+|[?!.,;:~"'`()[\]{}<>]+$/g, '') || t)
+    /* 한 글자는 조건으로 쓰지 않는다 — `includes` 판정이라 어디에나 걸린다 */
+    .filter(t => t.length >= 2);
+}
+/** 토큰 하나가 조건 하나다. 조건 안은 OR(원래 말 + 조사 뗀 말 + 표기 짝). */
+function asConds(s){
+  return asTokens(s).map(raw => {
+    const forms = [raw];
+    const cut = raw.replace(AS_STOP_TAIL, '');
+    if (cut && cut.length >= 2 && !forms.includes(cut)) forms.push(cut);
+    for (const f of [raw, cut]) (AS_SYN[f] || []).forEach(v => { if (!forms.includes(v)) forms.push(v); });
+    return { raw, forms };
+  });
+}
 
 function runSearch(){
   const box = document.getElementById('sres');
@@ -1140,13 +1187,31 @@ function runSearch(){
   document.getElementById('sx').style.display = s ? '' : 'none';
   if (!s) { box.style.display = 'none'; box.innerHTML = ''; document.body.classList.remove('sres-open'); return; }
   if (!DOCS) DOCS = searchDocs();
-  const tk = s.split(/\s+/).filter(Boolean);
-  const hit = DOCS.filter(d => tk.every(t => d.kw.includes(t))).slice(0, 40);
+  const conds = asConds(s);
+  const match = (d, cs) => cs.every(c => c.forms.some(f => d.kw.includes(f)));
+  let hit = conds.length ? DOCS.filter(d => match(d, conds)) : [];
+  /*
+   * **0건이면 안 걸린 조건 하나를 빼고 다시 찾는다** — 조용히 빼지 않고 화면에 적는다.
+   * 활용형을 목록으로 다 잡을 수 없으니 데이터가 스스로 판정하게 한다(허브와 같은 원칙).
+   */
+  const dropped = [];
+  if (!hit.length && conds.length > 1) {
+    let best = null;
+    for (const c of conds) {
+      const rest = conds.filter(x => x !== c);
+      const n = DOCS.filter(d => match(d, rest)).length;
+      if (n > 0 && (!best || n > best.n)) best = { c, rest, n };
+    }
+    if (best) { hit = DOCS.filter(d => match(d, best.rest)); dropped.push(best.c.raw); }
+  }
+  hit = hit.slice(0, 40);
 
   if (!hit.length) {
     box.innerHTML = `<div class="sr-none">"${esc(inp.value.trim())}" 결과가 없습니다.<br>품목명 · 부품명 · 지역명(시·군·구) · 협력사명으로 찾아보세요.</div>`;
   } else {
     let last = '', h = '';
+    /* 뺀 말이 있으면 반드시 밝힌다 — 조용히 빼면 왜 이 결과가 나왔는지 알 수 없다 */
+    if (dropped.length) h += `<div class="sr-note">"${esc(dropped.join(' · '))}" 까지 함께 맞는 자료가 없어, 그 말은 빼고 찾았습니다.</div>`;
     for (let i = 0; i < hit.length; i++) {
       const d = hit[i];
       if (d.kind !== last) { h += `<div class="shd">${esc(d.kind)}</div>`; last = d.kind; }

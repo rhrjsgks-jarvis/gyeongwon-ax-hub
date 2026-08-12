@@ -152,6 +152,60 @@ try {
   }
   pass('9개 모듈 페이지 iframe 로드');
 
+  /* ── 2-b. 하단 바로가기 · 헤더 공유 · three.js 지연 (2026-08-11) ── */
+  {
+    const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const mp = await m.newPage();
+    await mp.goto(BASE, { waitUntil: 'networkidle' });
+
+    // 순서는 사용자가 정한 그대로여야 한다
+    const labels = await mp.evaluate(() => {
+      const nav = [...document.querySelectorAll('nav')].find((n) => n.className.includes('bottom-0'));
+      return [...nav.querySelectorAll('a')].map((a) => a.textContent.trim());
+    });
+    const want = ['허브', '통합검색', '제품 상담 도구', '교육', '배치 시뮬레이터', 'AS 관련 정보'];
+    if (JSON.stringify(labels) !== JSON.stringify(want)) fail(`하단 바로가기 순서가 다르다 — ${labels.join(' · ')}`);
+    else pass(`하단 바로가기 순서 (${labels.join(' · ')})`);
+
+    /* 분류 탭은 **허브에 있는 상태에서 눌러도** 그 섹션이 펼쳐져야 한다.
+       Next 의 <Link> 는 해시만 다른 이동에서 hashchange 를 일으키지 않아 접힌 채였다. */
+    for (const [label, id] of [['제품 상담 도구', 'tools'], ['교육', 'edu']]) {
+      await mp.goto(BASE, { waitUntil: 'networkidle' });
+      const before = await mp.evaluate((id) => document.getElementById(id).innerText.replace(/\s+/g, '').length, id);
+      await mp.evaluate((label) => {
+        const nav = [...document.querySelectorAll('nav')].find((n) => n.className.includes('bottom-0'));
+        [...nav.querySelectorAll('a')].find((a) => a.textContent.trim() === label).click();
+      }, label);
+      await mp.waitForTimeout(900);
+      const after = await mp.evaluate((id) => document.getElementById(id).innerText.replace(/\s+/g, '').length, id);
+      if (after <= before) fail(`'${label}' 탭을 눌러도 섹션이 안 펼쳐진다 (${before} → ${after}자)`);
+      else pass(`'${label}' 탭 → 섹션 펼침 (${before} → ${after}자)`);
+    }
+
+    // 공유 아이콘 — 만들 것이 있을 때만 헤더에 뜬다
+    const hdr = () => mp.evaluate(() => !!document.querySelector('header button[aria-label="이 화면 공유하기"]'));
+    await mp.goto(BASE + '/install', { waitUntil: 'networkidle' });
+    await mp.waitForTimeout(1200);
+    const noneYet = await hdr();
+    await mp.evaluate(async () => {
+      const w = document.querySelector('iframe').contentWindow;
+      w.selectCat('에어컨'); await new Promise((x) => setTimeout(x, 400));
+    });
+    await mp.waitForTimeout(400);
+    const nowOn = await hdr();
+    if (noneYet || !nowOn) fail(`헤더 공유 아이콘: 미선택 ${noneYet} → 선택 후 ${nowOn}`);
+    else pass('헤더 공유 아이콘 — 만들 것이 있을 때만 표시');
+
+    // three.js 는 3D 를 켤 때만 받는다
+    const got = [];
+    mp.on('response', (r) => { if (/three\.module/.test(r.url())) got.push(r.url()); });
+    await mp.goto(BASE + '/place', { waitUntil: 'networkidle' });
+    await mp.waitForTimeout(1500);
+    if (got.length) fail(`/place 를 열기만 했는데 three.js 를 ${got.length}회 받았다`);
+    else pass('three.js 는 /place 를 열 때 받지 않는다 (3D 를 켤 때 받는다)');
+    await m.close();
+  }
+
   // ── 3. 관리자 인증 게이트 ──
   // 예전 방식(localStorage 영구 저장)으로 열려 있던 기기를 흉내 내 접속해도 잠겨 있어야 한다.
   await page.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -399,7 +453,12 @@ try {
   if (real.length) fail(`콘솔/페이지 오류 ${real.length}건:\n    - ${real.slice(0, 5).join('\n    - ')}`);
   else pass('전 페이지 콘솔 오류 없음');
 
-  const badReal = badResponses.filter((u) => !/favicon|manifest/.test(u));
+  /*
+   * `/api/logs` 는 구글 Apps Script 로 나간다. 검사 환경(샌드박스·CI)에는 그 바깥으로
+   * 나가는 길이 없어 502 가 돌아오는데, **앱 결함이 아니라 환경 제약**이다.
+   * 로그는 실패해도 대기함에 남아 다음에 다시 가므로 화면 동작과 무관하다.
+   */
+  const badReal = badResponses.filter((u) => !/favicon|manifest|\/api\/logs/.test(u));
   if (badReal.length) fail(`4xx/5xx 응답 ${badReal.length}건:\n    - ${[...new Set(badReal)].slice(0, 8).join('\n    - ')}`);
   else pass('전 페이지 4xx/5xx 응답 없음');
 } catch (e) {

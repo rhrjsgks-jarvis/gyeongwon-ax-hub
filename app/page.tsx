@@ -500,16 +500,31 @@ export default function Home() {
     edu: '교육',
     store: '매장운영 도구',
   }
+  /*
+   * **해시가 바뀔 때마다** 그 섹션을 펼치고 그 자리로 데려간다.
+   *
+   * 예전에는 마운트될 때 한 번만 봤다. 그런데 하단 바로가기의 분류 탭('제품 상담 도구' ·
+   * '교육' · '매장운영')은 **허브에 있는 상태에서 누르면 주소의 해시만 바뀐다** — 화면을
+   * 새로 띄우지 않으므로 그 한 번이 다시 오지 않는다. 실측으로 눌러도 **섹션이 접힌 채
+   * 그대로**였다(2026-08-11). 하단 탭이 하는 일이 바로 이것이라 그러면 탭이 아무 일도
+   * 안 하는 셈이다. `hashchange` 를 함께 듣는다.
+   */
   useEffect(() => {
-    const id = window.location.hash.slice(1)
-    if (!id) return
-    const section = ANCHOR_SECTION[id]
-    if (section) setOpenSections((prev) => (prev[section] ? prev : { ...prev, [section]: true }))
-    // 섹션이 펼쳐져 레이아웃이 잡힌 다음 프레임에 스크롤
-    const t = setTimeout(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 60)
-    return () => clearTimeout(t)
+    let t: ReturnType<typeof setTimeout> | undefined
+    function openFromHash() {
+      const id = window.location.hash.slice(1)
+      if (!id) return
+      const section = ANCHOR_SECTION[id]
+      if (section) setOpenSections((prev) => (prev[section] ? prev : { ...prev, [section]: true }))
+      // 섹션이 펼쳐져 레이아웃이 잡힌 다음 프레임에 스크롤
+      clearTimeout(t)
+      t = setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 60)
+    }
+    openFromHash()
+    window.addEventListener('hashchange', openFromHash)
+    return () => { clearTimeout(t); window.removeEventListener('hashchange', openFromHash) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
