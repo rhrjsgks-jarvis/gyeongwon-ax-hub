@@ -1829,6 +1829,83 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 도면에 인쇄된 방 이름을 붙이는가 ──────────────────────────────────
+ *
+ * 잡은 공간에 넓이 순서대로 이름을 붙이면 도면에는 '침실1' 이라고 적혀 있는데 화면은
+ * '주방' 이라고 부르는 일이 생긴다(2026-08-12 사용자 지적). 파이프라인에서 미리 읽어 둔
+ * `plan-names.json` 의 좌표로 그 방에 이름을 붙인다.
+ * **런타임 OCR 이 아니다** — 한국어 학습 데이터가 15MB 라 매장 기기에서 받게 할 수 없다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const names = await P.loadPlanNames();
+    if (!names || !names['plans/c139/84B.jpg']) return { skip: '이 도면의 이름 자료가 없다' };
+    await new Promise((ok, no) => { const t = setTimeout(no, 15000);
+      P.useImage('/plans/c139/84B.jpg', () => { clearTimeout(t); ok(); }); });
+    await new Promise((res) => setTimeout(res, 2200));
+    P.state.mmPerPx = 13.91; P.state.scaled = true;
+    P.state.rooms = []; P.state.items = [];
+    P.state.mask = P.state.baseMask = P.state.baseInfo = null;
+    P.state.cleanCv = P.state.cleanInfo = null; P.state.sealCache = null;
+    P.detectAllRooms();
+    const applied = P.nameRoomsFromPlan();
+    const rooms = P.state.rooms.map((x) => ({ n: x.name, a: +(P.roomArea(x) / 1e6).toFixed(1) }));
+    return { applied, rooms, planFile: P.state.planFile };
+  });
+
+  if (r.skip) console.log(`SKIP: 방 이름 붙이기 — ${r.skip}`);
+  else {
+    const dup = r.rooms.map((x) => x.n).filter((n, i, a) => a.indexOf(n) !== i);
+    const big = r.rooms.slice().sort((a, c) => c.a - a.a)[0];
+    if (!r.applied) fail('도면에 이름이 있는데 한 곳도 못 붙였다');
+    else if (dup.length) fail(`같은 이름이 둘 이상이다 — ${dup.join(', ')}`);
+    /* 홍천 84B 는 가장 넓은 곳이 거실이다. 순서로 붙이면 '침실1' 이 되던 자리다. */
+    else if (big.n !== '거실') fail(`가장 넓은 ${big.a}㎡ 가 '${big.n}' 이다 — 도면에는 거실로 적혀 있다`);
+    else pass(`방 이름 — 도면에서 ${r.applied}개를 읽어 붙였다 (${r.rooms.slice(0, 4).map((x) => x.n + ' ' + x.a).join(' · ')} …)`);
+  }
+}
+
+/*
+ * ── 같은 자리를 다시 누르면 합쳐지는가 ────────────────────────────────
+ *
+ * `state.walls` 는 모든 방의 경계를 그냥 합친 것이라(syncWalls), 같은 자리를 두 번 잡으면
+ * **그 경계가 벽으로 두 겹** 남는다(2026-08-12 사용자 지적: *"중복된 경계선이 벽으로
+ * 인식이 됩니다"*). 화면이 두꺼워지는 데 그치지 않고 벽 스냅·방 밖 판정이 있지도 않은
+ * 벽을 기준으로 돈다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const img = new Image();
+    await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = '/plans/c139/84B.jpg'; });
+    P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+    P.state.mmPerPx = 13.91; P.state.scaled = true;
+    P.state.rooms = []; P.state.items = [];
+    P.state.mask = P.state.baseMask = P.state.baseInfo = null;
+    P.state.cleanCv = P.state.cleanInfo = null; P.state.sealCache = null;
+    P.detectAllRooms();
+    const before = { rooms: P.state.rooms.length, walls: P.state.walls.length };
+    const big = P.state.rooms.slice().sort((a, c) => P.roomArea(c) - P.roomArea(a))[0];
+    if (!big) return { err: '방을 하나도 못 잡았다' };
+    const L = P.loopOfWalls(big.parts[0].walls) || [];
+    const cx = L.reduce((s, q) => s + q[0], 0) / L.length / P.state.mmPerPx;
+    const cy = L.reduce((s, q) => s + q[1], 0) / L.length / P.state.mmPerPx;
+    let res; try { res = P.detectRoomAt(cx, cy); } catch (_) { res = { error: '실패' }; }
+    if (!res || res.error) return { err: '같은 자리를 다시 인식하지 못했다' };
+    P.applyDetected(res.poly, res.edges, { name: '다시 누른 방' });
+    return { before, after: { rooms: P.state.rooms.length, walls: P.state.walls.length } };
+  });
+
+  if (r.err) fail(`중복 합치기: ${r.err}`);
+  else if (r.after.rooms > r.before.rooms)
+    fail(`같은 자리를 다시 눌렀는데 방이 ${r.before.rooms} → ${r.after.rooms}곳으로 늘었다 — 경계가 두 겹이 된다`);
+  else if (r.after.walls > r.before.walls)
+    fail(`같은 자리를 다시 눌렀는데 경계가 ${r.before.walls} → ${r.after.walls}구간으로 늘었다`);
+  else pass(`중복 합치기 — 같은 자리를 다시 눌러도 ${r.after.rooms}곳 · 경계 ${r.after.walls}구간 그대로`);
+}
+
+/*
  * ── 축척을 맞추면 도면 전체가 잡히는가 ────────────────────────────────
  *
  * 축척은 방 하나의 가로 벽만 있으면 나오지만 배치는 집 전체가 있어야 한다.
