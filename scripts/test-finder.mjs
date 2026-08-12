@@ -1,4 +1,4 @@
-// 모델 파인더(public/finder-app.html) 회귀 테스트
+// 제품 상세검색(public/finder-app.html) 회귀 테스트
 // 실행: node scripts/test-finder.mjs
 // 패턴: jsdom으로 정적 HTML을 runScripts:'dangerously'로 로드하고, 인라인 스크립트가
 // window에 노출하는 전역 함수(parseQuery/search/runSearch/setMode/toggleCat 등)를
@@ -9,7 +9,7 @@
 // 따라서 DB 원본은 이 파일 자체에서 정규식/JSON.parse로 직접 추출하고, 검색 로직 검증은
 // window.parseQuery()/window.search() 같은 노출된 함수 호출로 수행한다.
 //
-// DB(CE+MX+리빙+Harman 578종, 57개 카테고리)가 바뀌면 아래 TOTAL_PRODUCTS / CAT_QUERIES /
+// DB(CE+MX+리빙+Harman)가 바뀌면 아래 CAT_QUERIES /
 // expectedCatCounts 등을 함께 갱신할 것 — 안 하면 테스트가 실패한다.
 
 import { JSDOM } from 'jsdom';
@@ -34,7 +34,7 @@ function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
  *
  * 예전에는 `wait(200)` 이라는 고정 시간이었는데, `npm test` 로 스위트를 연달아 돌리면
  * 그 200ms 안에 못 끝나 `window.parseQuery is not a function` 으로 죽었다(2026-08-11 두 번).
- * 단독 실행에서는 늘 통과해 원인을 찾기 어려운 종류다 — finder-app.html 은 제품 578종이
+ * 단독 실행에서는 늘 통과해 원인을 찾기 어려운 종류다 — finder-app.html 은 제품 수백 종이
  * 든 큰 파일이라 부하가 걸리면 파싱·실행이 200ms 를 넘긴다.
  * 시간이 아니라 "준비됐는가"를 기다리면 느린 기계에서도, 빠른 기계에서도 맞는다.
  */
@@ -56,7 +56,7 @@ function extractArray(varDeclPrefix) {
 }
 const CE_MX = extractArray('let PRODUCTS');
 const HARMAN = extractArray('const HARMAN_PRODUCTS');
-const TOTAL_PRODUCTS = CE_MX.length + HARMAN.length; // 524 + 54 = 578
+const TOTAL_PRODUCTS = CE_MX.length + HARMAN.length;   // 삼성·리빙 + Harman (수치를 적어 두지 않는다 — 늘 때마다 낡는다)
 
 // 카테고리별 매칭 대표 검색어. CE/MX는 CATSYN 단일 매핑 토큰을 사용해 정확히 그 카테고리만
 // 걸리도록 했고, Harman 14종은 CATSYN과 충돌하지 않는(예: "사운드바"/"홈시어터"/"돌비애트모스"
@@ -481,6 +481,37 @@ const CAT_QUERIES = {
       if (got !== want) fail(`"${q}" 예산 해석 ${got}만원, 기대 ${want}만원 — 숫자 안의 쉼표를 지워야 한다`);
     }
     console.log('  쉼표가 든 예산을 바르게 읽는다 (1,200만원 → 1200) ✓');
+  }
+
+  /* ═══ 14. 화면에 적는 이름과 수치 ═══
+   *
+   * 둘 다 실제로 어긋나 있었다(2026-08-12 발견).
+   *  · 헤더가 아직 **'모델 파인더'** 였다. 그 이름은 통합검색(/search)으로 넘어갔고
+   *    이 앱의 정식 명칭은 **'제품 상세검색'** 이다(CLAUDE.md 용어표 · 허브 카드 · 사이드바).
+   *  · 상단바는 "586종", 히어로는 "524종" 이라고 **서로 다르게** 말했다. 524 는 데이코 8종을
+   *    넣기 전 값이고, 586 은 `setMode()` 안에 있어 초기 화면에서는 불리지도 않았다.
+   * 지금은 둘 다 `PRODUCTS` 를 세어 넣으므로, 이 검사는 그 연결이 끊기면 실패한다. */
+  console.log('── 14. 화면 표기(이름·제품 수) ──');
+  {
+    const brand = doc.querySelector('.brand b');
+    if (!brand) fail('상단바 이름 요소(.brand b)가 없다');
+    else if (brand.textContent.trim() !== '제품 상세검색')
+      fail(`상단바 이름이 "${brand.textContent.trim()}" — 정식 명칭은 '제품 상세검색'이다`);
+    else console.log('  상단바 이름 = 제품 상세검색 ✓');
+
+    /* `PRODUCTS` 는 최상위 `let` 이라 window 에 없다 — 위에서 원본을 뽑아 둔 값을 쓴다 */
+    const n = TOTAL_PRODUCTS;
+    const said = (s) => (String(s).match(/(\d+)\s*종/) || [])[1];
+    const bc = doc.getElementById('brandCount');
+    if (!bc) fail('제품 수 표기 요소(#brandCount)가 없다');
+    else if (Number(said(bc.textContent)) !== n)
+      fail(`상단바는 "${bc.textContent.trim()}" 인데 DB 는 ${n}종 — 숫자를 박아 두지 말 것`);
+
+    const sub = doc.getElementById('heroSub');
+    if (!sub) fail('안내문 요소(#heroSub)가 없다');
+    else if (Number(said(sub.textContent)) !== n)
+      fail(`안내문은 "${said(sub.textContent)}종" 인데 DB 는 ${n}종 — 초기 화면에서도 세어 넣어야 한다`);
+    else console.log(`  상단바·안내문 모두 ${n}종 (DB 에서 세어 넣음) ✓`);
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

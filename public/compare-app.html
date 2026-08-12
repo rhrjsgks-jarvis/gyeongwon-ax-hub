@@ -33,17 +33,25 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .card{background:#fff;border-radius:var(--radius);border:1.5px solid var(--border);padding:18px;margin-bottom:14px;}
 .card-title{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;}
 
-/* ── 카테고리 그리드 ── */
-.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:4px;}
-.cat-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:10px;padding:10px 6px;font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:all .15s;line-height:1.5;}
+/* ── 카테고리 그리드 ──
+   **AS 관련 정보·설치환경 가이드와 같은 타일이다**(2026-08-12 인터페이스 통일).
+   한 개를 고르는 화면은 세 앱이 전부 이 타일을 쓴다 — 칸 최소폭 104px(좁은 화면 90px) ·
+   간격 7px · 모서리 11px · 안여백 9px 6px · 글자 12.5px · 심벌 22px. 한쪽만 고치지 말 것.
+
+   **색만 다르다.** 타사비교는 경쟁 제품을 나란히 놓고 우열을 가리는 앱이라 시선을 끄는 것이
+   기능이므로 부각색(주황)을 쓴다 — CLAUDE.md 가 정해 둔 유일한 예외다.
+
+   3열 고정을 버린 이유: PC 에서 본문이 1,140px 까지 넓어져 **타일 하나가 290px** 이 됐다.
+   `auto-fill` 은 화면이 넓어지면 열을 늘려 폰 3열 · PC 8열이 된다. */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:4px;}
+.cat-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:11px;padding:9px 6px;font-size:12.5px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:.12s;line-height:1.35;word-break:keep-all;}
 .cat-btn:hover,.cat-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
-.cat-btn .ci{font-size:18px;display:block;margin-bottom:3px;}
-/* 모바일: 카테고리 13개가 세로로 길어져 스크롤 부담이 커지므로 아이콘·여백을 절반 수준으로
-   줄여 그리드 전체 높이를 낮춘다(데스크탑은 기존 크기 유지). */
-@media (max-width:480px){
-  .cat-grid{gap:6px;}
-  .cat-btn{padding:6px 4px;font-size:11px;line-height:1.35;}
-  .cat-btn .ci{font-size:11px;margin-bottom:1px;}
+.cat-btn .ci{display:block;margin-bottom:4px;line-height:1;}
+/* 심벌 기본색이 삼성 블루라 주황 글자 옆에서 혼자 파랗게 남는다(실측으로 그랬다).
+   `currentColor` 로 두면 평소엔 주황, 고른 타일에서는 흰색으로 글자를 따라간다. */
+.cat-btn .ci .psym{width:22px;height:22px;margin:0 auto;color:currentColor;}
+@media (max-width:520px){
+  .cat-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
 }
 
 /* ── 모델 선택 ── */
