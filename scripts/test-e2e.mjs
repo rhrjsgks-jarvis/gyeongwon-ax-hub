@@ -182,19 +182,79 @@ try {
       else pass(`'${label}' 탭 → 섹션 펼침 (${before} → ${after}자)`);
     }
 
-    // 공유 아이콘 — 만들 것이 있을 때만 헤더에 뜬다
+    /*
+     * 공유 아이콘 — **미니앱 화면에서는 언제나 뜬다**(2026-08-12).
+     * 공유가 "지금 화면을 그대로 찍는 것"으로 바뀌었으므로 볼 화면이 곧 공유할 것이다.
+     * (요약 카드를 만들던 시절에는 "만들 것이 있을 때만" 보였다.)
+     */
     const hdr = () => mp.evaluate(() => !!document.querySelector('header button[aria-label="이 화면 공유하기"]'));
-    await mp.goto(BASE + '/install', { waitUntil: 'networkidle' });
-    await mp.waitForTimeout(1200);
-    const noneYet = await hdr();
-    await mp.evaluate(async () => {
+    let miss = [];
+    for (const path of ['/as', '/install', '/finder', '/care']) {
+      await mp.goto(BASE + path, { waitUntil: 'networkidle' });
+      await mp.waitForTimeout(1500);
+      if (!(await hdr())) miss.push(path);
+    }
+    if (miss.length) fail(`미니앱에서 공유 아이콘이 안 뜬다: ${miss.join(', ')}`);
+    else pass('헤더 공유 아이콘 — 미니앱 4곳에서 항상 표시');
+
+    /* 눌렀을 때 화면 전체가 한 장으로 담기는가 — 보이는 부분만 찍으면 안 된다 */
+    await mp.goto(BASE + '/as', { waitUntil: 'networkidle' });
+    await mp.waitForTimeout(1600);
+    await mp.evaluate(() => {
       const w = document.querySelector('iframe').contentWindow;
-      w.selectCat('에어컨'); await new Promise((x) => setTimeout(x, 400));
+      w.__blob = null;
+      const orig = w.URL.createObjectURL.bind(w.URL);
+      w.URL.createObjectURL = (b) => { w.__blob = b; return orig(b); };
+      if (w.navigator.share) w.navigator.share = () => Promise.reject(new Error('no share'));
     });
-    await mp.waitForTimeout(400);
-    const nowOn = await hdr();
-    if (noneYet || !nowOn) fail(`헤더 공유 아이콘: 미선택 ${noneYet} → 선택 후 ${nowOn}`);
-    else pass('헤더 공유 아이콘 — 만들 것이 있을 때만 표시');
+    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유하기"]').click());
+    await mp.waitForFunction(() => !!document.querySelector('iframe').contentWindow.__blob, { timeout: 40000 })
+      .catch(() => {});
+    const shot = await mp.evaluate(async () => {
+      const w = document.querySelector('iframe').contentWindow;
+      if (!w.__blob) return null;
+      const img = await w.createImageBitmap(w.__blob);
+      const pageH = Math.max(w.document.body.scrollHeight, w.document.documentElement.scrollHeight);
+      return { w: img.width, h: img.height, pageH, vh: w.innerHeight };
+    });
+    if (!shot) fail('공유를 눌러도 이미지가 만들어지지 않는다');
+    else if (shot.h < shot.pageH * 0.95) fail(`화면 일부만 찍혔다 — ${shot.h}px (화면 길이 ${shot.pageH}px)`);
+    else pass(`공유 → 화면 전체 한 장 (${shot.w}×${shot.h}px · 화면 길이 ${shot.pageH}px · 보이는 ${shot.vh}px)`);
+
+    /*
+     * **가장 긴 화면** — AS 연락처의 묶음을 전부 펼치면 폰 폭에서 15,000px 을 넘는다.
+     * 브라우저 캔버스는 한 변이 **16,384px** 을 넘으면 그린 것이 통째로 사라지는데,
+     * 넓이(1,200만 픽셀)만 보고 배율을 잡던 시절 실제로 **21,634px** 짜리를 만들어
+     * 빈 그림이 나갈 뻔했다(2026-08-12). 배율이 1배 밑으로 내려가더라도 **전체가
+     * 담기고 한 변이 한도 안**이어야 한다.
+     */
+    await mp.goto(BASE + '/as', { waitUntil: 'networkidle' });
+    await mp.waitForTimeout(1600);
+    await mp.evaluate(() => {
+      const w = document.querySelector('iframe').contentWindow;
+      w.setTab && w.setTab('contact');
+      w.document.querySelectorAll('details.grp').forEach((d) => (d.open = true));
+      w.__blob = null;
+      const orig = w.URL.createObjectURL.bind(w.URL);
+      w.URL.createObjectURL = (b) => { w.__blob = b; return orig(b); };
+      if (w.navigator.share) w.navigator.share = () => Promise.reject(new Error('no share'));
+    });
+    await mp.waitForTimeout(900);
+    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유하기"]').click());
+    await mp.waitForFunction(() => !!document.querySelector('iframe').contentWindow.__blob, { timeout: 90000 })
+      .catch(() => {});
+    const long = await mp.evaluate(async () => {
+      const w = document.querySelector('iframe').contentWindow;
+      if (!w.__blob) return null;
+      const img = await w.createImageBitmap(w.__blob);
+      const pageH = Math.max(w.document.body.scrollHeight, w.document.documentElement.scrollHeight);
+      return { w: img.width, h: img.height, pageH };
+    });
+    const LIMIT = 16384;
+    if (!long) fail('가장 긴 화면에서 이미지가 만들어지지 않는다');
+    else if (long.h > LIMIT || long.w > LIMIT) fail(`캔버스 한 변이 한도를 넘었다 — ${long.w}×${long.h}px (빈 그림이 나간다)`);
+    else if (long.h < long.pageH * 0.95 && long.h < LIMIT * 0.97) fail(`긴 화면이 잘렸다 — ${long.h}px (화면 길이 ${long.pageH}px)`);
+    else pass(`공유 → 가장 긴 화면도 한 장 (${long.w}×${long.h}px · 화면 길이 ${long.pageH}px · 한 변 한도 ${LIMIT}px 이내)`);
 
     // three.js 는 3D 를 켤 때만 받는다
     const got = [];

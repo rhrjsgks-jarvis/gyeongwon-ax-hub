@@ -10,9 +10,16 @@
  * PC 에서는 `tel:` 이 아예 동작하지 않는다. 그래서 누르면 **걸기 / 복사**를 고르게 한다.
  *
  * ── 공유 ──
- * 상담 결과를 고객 손에 남기는 통로다. 화면을 그대로 캡처하는 API 는 웹에 없으므로
- * **내용을 캔버스에 다시 그려** 이미지로 만든다(배치 시뮬레이터가 쓰던 방식과 같다).
- * navigator.share 로 카톡 등에 바로 보내고, 안 되면 내려받기로 물러선다.
+ * 상담 결과를 고객 손에 남기는 통로다. **지금 보이는 화면을 처음부터 끝까지 그대로**
+ * 이미지로 만든다(`captureScreen`). navigator.share 로 카톡 등에 바로 보내고,
+ * 안 되면 내려받기로 물러선다.
+ *
+ * 예전에는 **내용을 캔버스에 다시 그려** 카드를 만들었는데, 다시 그리는 방식이라
+ * "지금 보고 있는 것"과 "카드에 담기는 것"이 갈렸다 — 그것이 이 기능에서 가장 자주
+ * 터진 고장이다(care 앱이 탭과 무관하게 회차표를 만들고, 제품 상세검색이 직전에 보던
+ * 제품을 담아 나갔다). 사용자 요구도 처음부터 그것이었다:
+ * *"지금 보여지는 화면이 그대로 공유되었으면 좋겠습니다 … 전체페이지를 캡쳐해서
+ * 보내는 개념"*(2026-08-12). 화면을 읽어 그리므로 갈릴 여지가 없다.
  */
 (function (global) {
   'use strict';
@@ -307,7 +314,106 @@
     return Math.min(Math.max(Math.round(y), 0), 200);
   }
 
-  /** build() 는 shareCard 옵션을 돌려준다. */
+  /* ══════════════ 화면 그대로 캡처 ══════════════
+   *
+   * **공유는 "지금 보이는 화면을 처음부터 끝까지" 내보낸다**(2026-08-12 사용자 요청:
+   * *"공유버튼을 누르면 전체페이지를 캡쳐해서 보내는 개념"*).
+   *
+   * 예전에는 내용을 캔버스에 **다시 그린 요약 카드**를 내보냈다. 정리된 표라는 장점은
+   * 있었지만 화면과 다른 그림이라, 상담사가 보고 있던 것과 고객 손에 남는 것이 갈렸다 —
+   * "다른 내용이 나간다"는 지적이 반복된 뿌리가 여기다. 화면을 그대로 찍으면 그 여지가
+   * 원시적으로 사라진다.
+   *
+   * 웹에는 화면을 캡처하는 API 가 없어(getDisplayMedia 는 매장 폰에서 못 쓴다) **DOM 을
+   * 다시 그려 주는 라이브러리**를 쓴다. three.js 와 같은 이유로 `public/vendor/` 에 받아
+   * 두고 상대경로로 부른다 — CDN 으로 되돌리지 말 것. **누를 때 받는다**(198KB·gzip 45KB).
+   *
+   * 한계는 정직하게 알아 둘 것:
+   *  - **다른 도메인 이미지**(samsung.com 규격도)는 그 서버가 CORS 를 허용해야 찍힌다.
+   *    안 되면 그 자리가 빈다 — 글자·표는 멀쩡하다.
+   *  - 화면이 길면 픽셀이 커진다. 폰 메모리를 넘기지 않게 배율을 자동으로 낮춘다.
+   */
+  var h2c = null;
+  function loadH2C() {
+    if (h2c) return h2c;
+    h2c = new Promise(function (res, rej) {
+      if (global.html2canvas) return res(global.html2canvas);
+      var s = document.createElement('script');
+      s.src = 'vendor/html2canvas.min.js';
+      s.onload = function () { global.html2canvas ? res(global.html2canvas) : rej(new Error('no h2c')); };
+      s.onerror = function () { h2c = null; rej(new Error('load fail')); };
+      document.head.appendChild(s);
+    });
+    return h2c;
+  }
+
+  /** 지금 화면을 처음부터 끝까지 한 장으로. filename 은 저장 이름. */
+  function captureScreen(filename) {
+    toast('화면을 담는 중입니다…');
+    return loadH2C().then(function (H) {
+      var doc = document.documentElement, body = document.body;
+      var w = doc.clientWidth;
+      var h = Math.max(body.scrollHeight, doc.scrollHeight, body.offsetHeight, doc.offsetHeight);
+      /*
+       * **배율은 화면 길이에 맞춰 낮춘다.** 두 가지 한도를 동시에 지켜야 한다:
+       *
+       *  ① **넓이** — 2배로 고정하면 긴 화면(제품 상세검색 3,600px)에서 2,800만 픽셀이 되어
+       *     폰 메모리에서 캔버스가 통째로 비어 나온다. 1,200만 픽셀 아래로 잡는다.
+       *  ② **한 변** — 브라우저 캔버스는 한 변이 **16,384px** 을 넘으면 그린 것이 사라진다.
+       *     넓이만 보면 이 한도를 그냥 넘어간다 — 실측으로 **AS 연락처의 묶음을 전부 펼치면
+       *     폰 폭에서 15,211px** 이고, 넓이 규칙만으로 잡은 배율 1.42 가 캔버스를
+       *     **21,634px** 로 만들었다(2026-08-12 확인). 그러면 공유가 빈 그림으로 나간다.
+       *
+       * 그래서 **1배 밑으로도 내려간다.** 글자가 작아지는 것보다 빈 그림이 나가는 쪽이
+       * 훨씬 나쁘다 — 화면 전체가 담기는 것이 이 기능의 요구사항이다.
+       */
+      var MAX_SIDE = 16000;
+      var scale = Math.min(
+        2,
+        Math.sqrt(12e6 / Math.max(w * h, 1)),
+        MAX_SIDE / Math.max(h, 1),
+        MAX_SIDE / Math.max(w, 1)
+      );
+      var bg = getComputedStyle(body).backgroundColor;
+      if (!bg || bg === 'rgba(0, 0, 0, 0)') bg = '#ffffff';
+      return H(body, {
+        backgroundColor: bg, scale: scale, useCORS: true, logging: false,
+        /* 전체 길이를 담는다 — 보이는 부분만 찍으면 "처음부터 끝까지"가 아니다 */
+        width: w, height: h, windowWidth: w, windowHeight: h,
+        scrollX: 0, scrollY: 0,
+        /* 화면 위에 떠 있는 우리 UI(공유 버튼·토스트·시트)는 담지 않는다 */
+        ignoreElements: function (el) {
+          return el.id === 'sk-share' || (el.className && typeof el.className === 'string'
+            && /(^|\s)(sk-toast|sk-dim)(\s|$)/.test(el.className));
+        },
+      });
+    }).then(function (cv) {
+      return new Promise(function (res) {
+        cv.toBlob(function (blob) {
+          if (!blob) { toast('이미지를 만들지 못했습니다'); return res(false); }
+          var name = (filename || '세일즈코파일럿') + '.png';
+          var file = null;
+          try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
+          if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+            navigator.share({ files: [file], title: filename || '' })
+              .catch(function (err) { if (!err || err.name !== 'AbortError') download(blob, name); })
+              .then(function () { res(true); }, function () { res(true); });
+            return;
+          }
+          download(blob, name);
+          res(true);
+        }, 'image/png');
+      });
+    }).catch(function () {
+      toast('화면을 담지 못했습니다');
+      return false;
+    });
+  }
+
+  /**
+   * build() 는 **저장 이름**을 짓는 데만 쓴다(무엇을 보고 있었는지 파일명에 남기려고).
+   * 그림 자체는 언제나 화면 그대로다.
+   */
   function mountShareButton(build, label) {
     injectCss();
     if (document.getElementById('sk-share')) return;
@@ -326,9 +432,9 @@
     b.textContent = label || '공유';
     b.style.top = (stickyBottom() + 8) + 'px';
     b.addEventListener('click', function () {
-      var o = build();
-      if (!o) { toast('공유할 내용이 없습니다'); return; }
-      shareCard(o);
+      var o = null;
+      try { o = build && build(); } catch (e) {}
+      captureScreen(o && o.filename);
     });
     document.body.appendChild(b);
     /* 화면을 돌리면 바 높이가 달라진다 */
@@ -351,13 +457,15 @@
     b.style.display = b.style.display || '';
     b.dataset.skEmbedded = '1';
 
-    /* 바깥에 "지금 공유할 것이 있는가"를 알린다 — 앱마다 sync 함수가 이 버튼의
-       display 를 직접 만지므로, 그 변화를 지켜보면 앱을 고치지 않아도 된다. */
+    /*
+     * **공유는 언제나 할 수 있다** — 화면을 그대로 찍기 때문이다(2026-08-12).
+     * 요약 카드를 만들던 시절에는 "만들 것이 있을 때만" 보였고, 앱마다 sync 함수가 이
+     * 버튼의 display 를 만져 그 상태를 알렸다. 이제는 볼 화면이 곧 공유할 것이라
+     * 감출 이유가 없다 — 상담사가 누르고 싶을 때 늘 그 자리에 있어야 한다.
+     */
     function tell() {
-      var on = getComputedStyle(b).display !== 'none';
-      try { window.parent.postMessage({ sk: 'share-state', on: on }, '*'); } catch (e) {}
+      try { window.parent.postMessage({ sk: 'share-state', on: true }, '*'); } catch (e) {}
     }
-    new MutationObserver(tell).observe(b, { attributes: true, attributeFilter: ['style', 'class'] });
     tell();
     window.addEventListener('message', function (e) {
       if (!e.data) return;
@@ -368,9 +476,8 @@
        * 상태가 다시 바뀌어 우연히 가려져 있었다).
        */
       if (e.data.sk === 'share-ping') { tell(); return; }
-      /* 바깥 버튼을 누르면 이 안에서 만든다 — 카드를 그리는 데 필요한 DOM 이 여기 있다 */
+      /* 바깥 버튼을 누르면 이 안에서 찍는다 — 찍을 화면이 여기 있다 */
       if (e.data.sk !== 'share-click') return;
-      if (getComputedStyle(b).display === 'none') { toast('공유할 내용이 없습니다'); return; }
       b.click();
     });
     /* 헤더가 맡으므로 안쪽 버튼은 감춘다 — 같은 일을 하는 버튼이 둘 보이면 헷갈린다 */
@@ -383,7 +490,9 @@
     sheet: sheet, closeSheet: closeSheet, toast: toast, copyText: copyText,
     contactSheet: contactSheet, wireContacts: wireContacts,
     buildCard: buildCard, shareCard: shareCard, mountShareButton: mountShareButton,
+    captureScreen: captureScreen,
   };
+  global.captureScreen = captureScreen;
   global.contactSheet = contactSheet;
   global.wireContacts = wireContacts;
   global.shareCard = shareCard;
