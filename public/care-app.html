@@ -49,7 +49,8 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .drop-ico .psym{width:22px;height:22px}
 .cat-ico .psym{width:24px;height:24px}
 .todo-ico .psym{width:40px;height:40px;margin:0 auto;color:#9aa0a6;display:block}
-.ov-ico .psym{width:28px;height:28px}
+/* 심벌 22px — AS·설치환경·타사비교와 같은 값이다(앱을 넘겨 볼 때 같은 무게로 읽혀야 한다) */
+.ov-ico .psym{width:22px;height:22px;margin:0 auto}
 .ov-card.na-card .ov-ico .psym{color:#2563EB}
 .st{font-size:9.5px;padding:3px 8px;border-radius:7px;font-weight:700}
 .st-done{color:#16a34a;background:rgba(22,163,74,.1)}.st-todo{color:#9aa0a6;background:#f1f3f6}.st-na{color:#2563EB;background:rgba(99,102,241,.1)}
@@ -122,15 +123,28 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 /* 제품을 고르면 결과로 스크롤한다 — sticky 탭에 가리지 않게 여백을 준다 */
 #body{scroll-margin-top:64px}
 .mode-tab .mt-ico{font-size:16px;display:block;margin-bottom:2px}
-/* === 모델선택 뷰 === */
+/* === 모델선택 뷰 ===
+   **AS 관련 정보·설치환경 가이드·타사비교와 같은 심벌 타일이다**(2026-08-12 인터페이스 통일).
+   한 개를 고르는 화면은 네 앱이 전부 이 값을 쓴다 — 칸 최소폭 104px(좁은 화면 90px) ·
+   간격 7px · 모서리 11px · 안여백 9px 6px · 글자 12.5px · 심벌 22px · 가운데 정렬.
+   한쪽만 고치지 말 것.
+
+   예전에는 혼자 **2열 고정 · 모서리 16 · 글자 16px · 왼쪽 정렬**이라, 같은 "품목 고르기"인데
+   폰에서 한 줄에 2개만 보여 16품목이 8줄이 됐다(다른 앱은 3열).
+
+   **다만 요금제 표시(12/36개월형)는 살린다.** 이 화면이 다른 셋과 다른 점이 그것 하나이고,
+   맨 타일로 눌러 담으면 상담에서 가장 먼저 보는 정보가 사라진다. */
 .ov-lead{padding:14px 16px 0;font-size:12.5px;font-weight:700;color:#16181b}
-.ov-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 16px 14px}
-.ov-card{background:#fff;border-radius:16px;padding:14px 12px;cursor:pointer;border:1.5px solid #ecedf1;transition:all .15s;position:relative}
-.ov-card.done:hover{border-color:#1259c3;box-shadow:0 2px 12px rgba(18,89,195,.12)}
+.ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;padding:10px 16px 14px}
+.ov-card{background:#fff;border-radius:11px;padding:9px 6px;cursor:pointer;border:1px solid #ecedf1;
+  transition:.12s;position:relative;text-align:center;font-size:12.5px;word-break:keep-all;line-height:1.35}
+.ov-card.done:hover{border-color:#c7d2fe}
 .ov-card.na-card{opacity:.65;cursor:default}
-.ov-ico{font-size:26px;margin-bottom:7px}
-.ov-nm{font-size:13px;font-weight:800;margin-bottom:5px}
-.ov-pills{display:flex;flex-wrap:wrap;gap:4px}
+.ov-ico{display:block;margin-bottom:4px;line-height:1}
+.ov-nm{font-size:12.5px;font-weight:600;margin-bottom:4px}
+/* 요금제 표시는 타일 가운데에 모은다 — 왼쪽에 붙으면 가운데 정렬한 이름과 축이 어긋난다 */
+.ov-pills{display:flex;flex-wrap:wrap;gap:3px;justify-content:center}
+@media(max-width:520px){.ov-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr))}}
 .ov-pill{font-size:9px;padding:2px 7px;border-radius:6px;font-weight:700}
 .ov-pill.p12{background:rgba(18,89,195,.1);color:#1259c3}
 .ov-pill.p36{background:rgba(13,148,136,.1);color:#0D1B7A}
