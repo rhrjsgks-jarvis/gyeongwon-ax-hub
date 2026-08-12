@@ -54,7 +54,8 @@
  *  바뀌었는가"이므로, 덩어리를 다 만든 **맨 마지막에** 한 번 올리는 것이 맞다.)
  */
 /*
- * v16 (2026-08-12) — TV·사운드바에 설치 높이가 생겼다(place-app.html).
+ * v16 (2026-08-12) — 설치 높이가 생겼다(place-app.html) — 벽걸이 TV·사운드바에 이어
+ * 벽걸이/창문형 에어컨·천장형 시스템에어컨·인덕션까지.
  */
 const CACHE_VERSION = 'axhub-v16';
 const RUNTIME = `${CACHE_VERSION}-runtime`;

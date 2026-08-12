@@ -1784,6 +1784,38 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     window.Place3D.root.traverse((o) => { if (o.userData && o.userData.item) y[o.userData.item.cat] = Math.round(o.position.y * 1000); });
     window.Place3D.close();
     out.y3d = y;
+
+    /*
+     * 벽·천장·창·상판에 붙는 나머지도 같은 규칙을 탄다(2026-08-12).
+     * 천장에 붙는 것은 **층고에서 뺀 값**이라, 3D 층고 상수와 어긋나면 천장을 뚫는다.
+     */
+    rid = reset();
+    const want = [
+      { cat: '에어컨', pick: (x) => /벽걸이/.test(x.size), kind: '천장아래' },
+      { cat: '에어컨', pick: (x) => /창문형/.test(x.size), kind: '창' },
+      { cat: '시스템에어컨', pick: (x) => (x.parts[0] || {}).h <= 400, kind: '천장' },
+      { cat: '인덕션/전기레인지', pick: () => true, kind: '상판' },
+    ];
+    const picks = [], meta = [];
+    for (const w of want) {
+      const rep = reps.find((x) => x.cat === w.cat && w.pick(x) && (x.parts || [])[0]);
+      if (!rep) continue;
+      picks.push({ cat: rep.cat, size: rep.size, model: 'x', group: rep.group, part: rep.parts[0], room: rid });
+      meta.push({ cat: rep.cat, size: rep.size, kind: w.kind });
+    }
+    P.stageOutside(picks);
+    out.others = S.items.map((i, k) => ({
+      cat: i.cat, size: i.size, kind: P.mountKind(i), want: (meta[k] || {}).kind,
+      mh: i.mh, top: Math.round((i.mh || 0) + i.h),
+    }));
+    out.ceil = P.CEIL_MM;
+    out.ceil3d = window.Place3D.WALL_H_MM;
+
+    /* 사운드바 줄에 딸린 **서라운드 스피커·우퍼는 TV 아래가 아니다** — 부품 이름을 안 보면
+       셋 다 TV 밑에 붙는다(실제로 그랬다). */
+    rid = reset();
+    P.stageOutside(sb.parts.map((p) => ({ cat: '사운드바', size: sb.size, model: 'x', group: sb.group, part: p, room: rid })));
+    out.barParts = S.items.map((i) => ({ part: i.part, kind: P.mountKind(i) }));
     return out;
   });
 
@@ -1798,8 +1830,20 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (!r.floorBlocks) bad.push('바닥에 둔 TV 자리가 안 막힌다 — 예전 판정이 깨졌다');
     if (r.y3d.TV !== r.tv.mh) bad.push(`3D TV 높이 ${r.y3d.TV}mm ≠ ${r.tv.mh}mm`);
     if (r.y3d['사운드바'] !== r.bar.mh) bad.push(`3D 사운드바 높이 ${r.y3d['사운드바']}mm ≠ ${r.bar.mh}mm`);
+    /* 층고 상수가 갈리면 천장에 붙는 가전이 천장을 뚫거나 공중에 뜬다 */
+    if (r.ceil !== r.ceil3d) bad.push(`층고 상수가 갈렸다 — 배치 ${r.ceil}mm vs 3D ${r.ceil3d}mm`);
+    for (const o of r.others) {
+      if (o.kind !== o.want) { bad.push(`${o.cat} ${o.size} 설치 방식 ${o.kind} — ${o.want} 여야 한다`); continue; }
+      if ((o.kind === '천장' || o.kind === '천장아래') && o.top !== r.ceil)
+        bad.push(`${o.cat} ${o.size} 상단 ${o.top}mm — 천장(${r.ceil}mm)에 붙어야 한다`);
+      if (o.mh <= 0) bad.push(`${o.cat} ${o.size} 가 바닥에 있다 — ${o.kind}에 붙어야 한다`);
+    }
+    const strays = r.barParts.filter((p) => !/^사운드바$/.test(p.part) && p.kind);
+    if (strays.length) bad.push(`사운드바 줄의 ${strays.map((s) => s.part).join('·')} 까지 TV 아래에 붙었다`);
     if (bad.length) fail('설치 높이 — ' + bad.join(' / '));
-    else pass(`설치 높이 — 벽걸이 TV ${r.tv.mh}mm(화면 중심 ${r.tv.center}mm) · 사운드바 ${r.bar.mh}mm(TV 하단) · 스탠드형 바닥 · 3D 반영 · 아래는 통과/뚫으면 막힘`);
+    else pass(`설치 높이 — 벽걸이 TV ${r.tv.mh}mm(화면 중심 ${r.tv.center}mm) · 사운드바 ${r.bar.mh}mm(TV 하단) · 스탠드형 바닥`
+      + ` · ${r.others.map((o) => `${o.cat === '인덕션/전기레인지' ? '인덕션' : o.cat}${o.kind === '천장아래' ? '(벽걸이)' : o.kind === '창' ? '(창문형)' : ''} ${o.mh}`).join(' · ')}mm`
+      + ` · 층고 ${r.ceil}mm 일치 · 3D 반영 · 아래는 통과/뚫으면 막힘`);
   }
 }
 

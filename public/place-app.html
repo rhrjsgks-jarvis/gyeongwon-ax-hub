@@ -2849,35 +2849,104 @@ const STACKABLE = [
  *     다루는 방식 그대로다. 기준은 *화면 중심을 앉은 눈높이에 맞춘다* 는 통용 원칙이고,
  *     눈높이는 `EYE_MM` 하나뿐이다. 사용자가 그 자리에서 고칠 수 있다.
  *
- * **가정은 이 상수 하나로 모은다.** 여기저기 숫자를 흩어 두면 무엇이 근거이고 무엇이
- * 어림인지 알 수 없게 된다.
+ * 뒤이어 **벽·천장·창·상판에 붙는 나머지도 같은 방식으로** 넣었다(2026-08-12).
+ * 설치가이드 원문에 높이 수치는 여전히 없지만 **설치 방식은 확정돼 있다** —
+ * 창문형은 *"창틀이 있는 미닫이 창문 전용 · 기본 거치대는 창문높이 92~146cm 지원"*,
+ * 인덕션은 *"하단 7~10cm 이상 확보 시 밀착 빌트인"*(= 상판에 묻힌다),
+ * 천장형 시스템에어컨은 실내기 높이가 135~138mm 에 판넬이 따로 있는 카세트다.
+ *
+ * **가정은 상수 세 개로 모은다.** 여기저기 숫자를 흩어 두면 무엇이 근거이고 무엇이
+ * 어림인지 알 수 없게 된다. 천장에 붙는 것은 **층고에서 빼는 파생값**이라 새 가정이 아니다
+ * (층고 자체가 이미 밝혀 둔 가정이다).
  */
-const EYE_MM = 1100;        // 소파에 앉았을 때의 시선 높이(가정) — 화면이 가정임을 밝힌다
-const MOUNTABLE = /^TV$|^사운드바$/;
-/** 이 가전이 설치 높이를 가질 수 있는가 (스탠드 부품은 바닥이 맞으므로 제외) */
-function mountable(it){
-  if (!MOUNTABLE.test(it.cat || '')) return false;
-  if (/^TV$/.test(it.cat) && !/벽걸이/.test(it.part || '')) return false;   // 스탠드·프로젝터는 바닥
-  return true;
+const EYE_MM = 1100;        // 소파에 앉았을 때의 시선 높이(가정)
+const COUNTER_MM = 850;     // 주방 상판 높이(가정) — 인덕션은 여기에 묻힌다
+const SILL_MM = 900;        // 창대 높이(가정) — 창문형 에어컨이 얹히는 자리
+/* 3D 층고와 **같은 값을 써야 한다.** 천장에 붙는 것을 층고에서 빼서 놓는데 둘이 어긋나면
+   가전이 천장을 뚫거나 공중에 뜬다. Place3D 는 모듈 안에 있어 여기서 못 읽으므로 상수를
+   여기 두고 그쪽이 가져다 쓴다 — `test-plans` 가 둘이 같은지 대조한다. */
+const CEIL_MM = 2300;
+
+/*
+ * 설치 방식 표 — **어디에 붙는가**만 적는다. 높이는 아래 `defaultMountH` 가 계산한다.
+ * 여기 없는 가전은 바닥이다(기본값 0이라 예전 판정과 한 픽셀도 다르지 않다).
+ */
+const MOUNT_KIND = [
+  // TV 는 부품이 갈린다 — 스탠드형은 받침이 치수에 이미 들어 있어 바닥이 맞다
+  { cat:/^TV$/,      when:(it)=> /벽걸이/.test(it.part||''), kind:'벽' },
+  /* **사운드바 본체만** TV 아래에 건다. 같은 줄에 딸린 서라운드 스피커는 옆·뒤에 두고
+     우퍼는 바닥에 놓는 물건이라, 부품 이름을 보지 않으면 셋 다 TV 아래로 붙어 버린다. */
+  { cat:/^사운드바$/,  when:(it)=> /^사운드바$/.test(it.part||''), kind:'TV아래' },
+  // 에어컨 — 줄 이름이 설치 형태를 그대로 밝힌다(스탠드는 바닥이라 여기 없다)
+  { cat:/^에어컨$/,    when:(it)=> /벽걸이/.test(it.size||''), kind:'천장아래' },
+  { cat:/^에어컨$/,    when:(it)=> /창문형/.test(it.size||''), kind:'창' },
+  // 시스템에어컨 — 실내기가 얇은 것(카세트)만 천장이다. 1,800mm 대는 바닥에 세우는 패키지형이다
+  { cat:/^시스템에어컨$/, when:(it)=> (it.h||0) <= 400,        kind:'천장' },
+  { cat:/^인덕션\/전기레인지$/, when:()=> true,                 kind:'상판' },
+];
+function mountKind(it){
+  for (const m of MOUNT_KIND) if (m.cat.test(it.cat||'') && m.when(it)) return m.kind;
+  return null;
 }
+/** 이 가전이 설치 높이를 가질 수 있는가 (바닥에 놓는 것은 칸을 만들지 않는다) */
+function mountable(it){ return !!mountKind(it); }
 /** 기본 설치 높이 — 근거가 있으면 그것으로, 없으면 가정값으로 */
 function defaultMountH(it, others){
-  if (!mountable(it)) return 0;
-  if (/^TV$/.test(it.cat)) return Math.max(0, Math.round(EYE_MM - (it.h || 0) / 2));
-  // 사운드바 — 같은 방(없으면 아무 곳)의 벽걸이 TV 하단에 붙인다
-  const list = others || state.items;
-  const tvs = list.filter((o)=> o !== it && /^TV$/.test(o.cat) && (o.mh || 0) > 0);
-  if (!tvs.length) return 0;
-  const mine = it.room, same = tvs.filter((o)=> o.room === mine);
-  const tv = (same.length ? same : tvs).sort((a,b)=> (a.mh||0) - (b.mh||0))[0];
-  return Math.max(0, Math.round((tv.mh || 0) - (it.h || 0)));
+  const kind = mountKind(it);
+  const H = it.h || 0;
+  const fit = (v)=> Math.max(0, Math.round(v));
+  switch (kind){
+    case '벽':      return fit(EYE_MM - H / 2);          // 화면 중심을 눈높이에
+    case '천장':    return fit(CEIL_MM - H);             // 천장에 붙인다(층고에서 뺀 파생값)
+    /* 벽걸이 에어컨도 천장 가까이 단다 — 찬 공기가 아래로 내려와야 하기 때문이다.
+       천장에 딱 붙이는 것으로 두면 새 가정을 만들지 않는다. */
+    case '천장아래': return fit(CEIL_MM - H);
+    case '창':      return fit(SILL_MM);                 // 창대에 얹는다
+    case '상판':    return fit(COUNTER_MM);              // 주방 상판에 묻힌다
+    case 'TV아래': {
+      // 같은 방(없으면 아무 곳)의 벽에 건 TV 하단에 붙인다
+      const list = others || state.items;
+      const tvs = list.filter((o)=> o !== it && /^TV$/.test(o.cat) && (o.mh || 0) > 0);
+      if (!tvs.length) return 0;                          // TV 가 없으면 받침대 위(=바닥)
+      const mine = it.room, same = tvs.filter((o)=> o.room === mine);
+      const tv = (same.length ? same : tvs).sort((a,b)=> (a.mh||0) - (b.mh||0))[0];
+      return fit((tv.mh || 0) - H);
+    }
+    default: return 0;
+  }
 }
-/** 화면에 적을 근거 — 가정인지 파생인지 밝힌다(숫자만 띄우지 않는다) */
+/**
+ * 화면에 적을 근거 — **가정인지 파생인지 밝힌다.** 숫자만 띄우면 확정으로 읽힌다.
+ * 이 앱이 층고 2,300mm 를 "(가정)"으로 적는 것과 같은 규칙이다.
+ */
+const MOUNT_WHY = {
+  '벽':      ()=> `화면 중심을 앉은 눈높이(${EYE_MM.toLocaleString()}mm)에 맞춘 값 — 설치가이드에 높이 수치가 없어 가정입니다`,
+  '천장':    ()=> `천장(층고 ${CEIL_MM.toLocaleString()}mm)에 붙인 값입니다 — 층고가 가정이라 이 값도 함께 움직입니다`,
+  '천장아래': ()=> `천장(층고 ${CEIL_MM.toLocaleString()}mm) 가까이 단다는 기준에서 나온 값입니다 — 층고가 가정입니다`,
+  '창':      ()=> `창대 높이(${SILL_MM.toLocaleString()}mm)에 얹은 값 — 설치가이드가 창 종류만 정하고 높이는 없어 가정입니다`,
+  '상판':    ()=> `주방 상판 높이(${COUNTER_MM.toLocaleString()}mm)에 묻은 값 — 설치가이드가 "하단 7~10cm 확보 시 밀착 빌트인"만 적고 높이는 없어 가정입니다`,
+  'TV아래':  ()=> 'TV 하단에 붙여 건다는 기준에서 나온 값입니다',
+};
 function mountWhy(it){
-  if (!mountable(it)) return null;
-  return /^TV$/.test(it.cat)
-    ? `화면 중심을 앉은 눈높이(${EYE_MM.toLocaleString()}mm)에 맞춘 값 — 설치가이드에 높이 수치가 없어 가정입니다`
-    : 'TV 하단에 붙여 건다는 기준에서 나온 값입니다';
+  const k = mountKind(it);
+  return k ? MOUNT_WHY[k]() : null;
+}
+/** 안내띠에 붙일 짧은 꼬리 — 가정에서 왔는지 다른 값에서 파생됐는지 */
+function mountTag(it){
+  const k = mountKind(it);
+  return k === 'TV아래' ? 'TV 기준' : (k === '천장' || k === '천장아래') ? '층고 기준' : '가정';
+}
+/**
+ * 새로 만든 가전들의 설치 높이를 정한다.
+ *
+ * **반드시 다 만든 뒤에 한 번에 한다.** 사운드바는 TV 를 보고 따라가는데, 목록 순서상
+ * 사운드바가 TV 보다 먼저 만들어지면(size-reps 순서가 그렇다) 그 시점엔 TV 가 없어
+ * **조용히 바닥(0)이 된다** — 실제로 그랬다. 그래서 TV 부터 세우고 나머지를 이어 정한다.
+ */
+function applyMountH(made, all){
+  const pool = (all || state.items);
+  for (const it of made) if (mountKind(it) !== 'TV아래') it.mh = defaultMountH(it, pool);
+  for (const it of made) if (mountKind(it) === 'TV아래') it.mh = defaultMountH(it, pool);
 }
 /** 두 가전이 높이로 갈려 서로 자리를 안 뺏는가 (하나가 벽/천장에 붙어 있을 때) */
 function clearsVertically(A, B){
@@ -5537,9 +5606,8 @@ function autoPlace(picks){
     w:q.part.w, h:q.part.h, d:q.part.d, part:q.part.part,
     clear:clearFor(q.cat, q.part.part, q.model, q.group), bx:0, by:0, a:0, warn:[],
   })).sort((a,b)=> b.w - a.w);
-  /* 설치 높이는 **폭 순으로 세운 뒤에** 정한다 — 사운드바가 TV 를 보고 따라가야 하는데,
-     TV(폭 1,400mm대)가 사운드바(850mm대)보다 앞에 서므로 이 시점이면 TV 값이 이미 있다. */
-  for (const it of list) it.mh = defaultMountH(it, list.concat(state.items));
+  /* 설치 높이는 **다 만든 뒤에** 정한다 — 사운드바가 TV 를 보고 따라가기 때문이다 */
+  applyMountH(list, list.concat(state.items));
 
   const placed = [...state.items];
   const failed = [];
@@ -5686,10 +5754,10 @@ function stageOutside(picks){
       clear:clearFor(q.cat, q.part.part, q.model, q.group),
       bx: box.x2 + gap + q.part.w/2, by: y, a:0, warn:[], soft:[], staged:true,
     };
-    it.mh = defaultMountH(it, state.items);
     y += q.part.d + gap;
     state.items.push(it); made.push(it);
   }
+  applyMountH(made, state.items);
   $('#empty').style.display='none';
   setMode('idle'); state.showClean = false;
   fitAll();
@@ -5808,7 +5876,7 @@ loadReps();
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
-  mountable, defaultMountH, mountWhy, clearsVertically, EYE_MM,
+  mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
@@ -5865,7 +5933,13 @@ if (P) {
    길이는 m 로 환산한다(mm 그대로 쓰면 원근·조명 상수가 엉뚱한 자릿수가 된다).
 ──────────────────────────────────────────────────────────────── */
 const M = (mm) => mm / 1000;
-const WALL_H_MM = 2300;        // 층고 기본값. 평면도에 없는 값이라 가정이고, 화면이 그렇게 밝힌다
+/*
+ * 층고 기본값. 평면도에 없는 값이라 가정이고, 화면이 그렇게 밝힌다.
+ * **위 고전 스크립트의 `CEIL_MM` 과 반드시 같아야 한다** — 천장에 붙는 가전(천장형
+ * 시스템에어컨·벽걸이 에어컨)의 설치 높이를 그쪽이 층고에서 빼서 정하기 때문이다.
+ * 어긋나면 가전이 천장을 뚫거나 공중에 뜬다. 그래서 여기서 **가져다 쓴다**(값을 또 적지 않는다).
+ */
+const WALL_H_MM = P.CEIL_MM;
 const WALL_T_MM = 60;          // 벽 두께 — 안쪽 면만 알기에 얇게 그린다(치수를 주장하지 않는다)
 const LINTEL_MM = 2100;        // 개구부 위 인방. 문·창을 구분할 수 없으므로 위만 막아 "트인 곳"으로 읽히게 한다
 
@@ -6501,7 +6575,7 @@ function paintBar(info){
        고치는 것은 2D 하단 띠의 입력칸이다. */
     (sel && P.mountable(sel)
       ? ` · 설치 높이 ${Math.round(sel.mh || 0).toLocaleString()}mm`
-        + `<span style="opacity:.55">(${/^TV$/.test(sel.cat) ? '가정' : 'TV 기준'})</span>`
+        + `<span style="opacity:.55">(${P.mountTag(sel)})</span>`
       : '') +
     (info.waiting ? ` · <span style="opacity:.8">대기 ${info.waiting}대 — 끌어서 넣으세요</span>` : '') +
     (warn ? ' · ' + warn : '') +
