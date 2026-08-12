@@ -147,6 +147,15 @@ function flatten(v, out = []) {
 // 상담에서 "수원은 어느 센터죠"·"컴프레서 몇 년이죠"는 허브 검색창에도 그대로 들어온다.
 {
   const html = read('as-app.html');
+  /*
+   * **`?q=` 는 AS 앱 안의 항목 제목이어야 한다** — 화면에 적히는 제목이 아니다.
+   *
+   * 108건이 전부 맨 `/as` 로 가던 것을 고친 것인데(2026-08-12), 앱이 그 값으로
+   * 자기 목록에서 항목을 찾아 `go()` 를 부르므로 **제목이 한 글자라도 다르면
+   * 조용히 검색 결과만 뜬다.** 그래서 화면 제목(`냉장고 보증기간`)이 아니라
+   * 앱 제목(`냉장고`)을 넣는다. 어긋나면 `test-search.mjs` 가 잡는다.
+   */
+  const asLink = (title) => `/as?q=${encodeURIComponent(title)}`;
   const DBA = literal(html, /\nconst DB = (\{[\s\S]*?\});\n/, 'as-app.html 의 DB');
   const CEN = literal(html, /\nconst CENTERS = (\[[\s\S]*?\n\]);/, 'as-app.html 의 CENTERS');
   const OPS = literal(html, /\nconst OPS = (\{[\s\S]*?\n\});/, 'as-app.html 의 OPS');
@@ -160,43 +169,44 @@ function flatten(v, out = []) {
 
   // 멤버십 등급 연장 — 화면에는 있는데 색인에 없어 '로열블루'가 0건이었다
   add({ t: 'category', m: 'as', title: `멤버십 ${ROYAL.grade}`, sub: ROYAL.benefit,
-    kw: [...flatten(ROYAL), '멤버십 등급 연장 무상수리 로열'].join(' '), href: '/as' });
+    kw: [...flatten(ROYAL), '멤버십 등급 연장 무상수리 로열'].join(' '), href: asLink(`멤버십 ${ROYAL.grade}`) });
 
   for (const [cat, d] of Object.entries(DBA)) {
     add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
       sub: `무상보증 ${d.base}${d.hold ? ` · 부품보유 ${d.hold}년` : ''}`,
       kw: [cat, 'as 보증 무상보증 무상수리 부품보유 내용연수 핵심부품', ...flatten(d)].join(' '),
-      href: '/as' });
+      href: asLink(cat) });
   }
   for (const c of CEN) {
     add({ t: 'contact', m: 'as', title: `${c.t} (물류센터)`, sub: `${c.n} · ${c.a}`,
       kw: [c.t, c.code, c.n, c.b, c.a, ...c.kw, ...flatten(OPS[c.code]),
-        '물류센터 배송 설치 관할 tc 상황실 운영 voc'].join(' '), href: '/as' });
+        '물류센터 배송 설치 관할 tc 상황실 운영 voc'].join(' '), href: asLink(c.t) });
   }
   add({ t: 'contact', m: 'as', title: '물류 VOC 본사 창구', sub: `${VOCHQ.n} · 배송·설치 VOC 접수`,
-    kw: [VOCHQ.n, ...flatten(VOCHQ.x), 'voc 물류 본사 접수 불만 배송 설치'].join(' '), href: '/as' });
+    kw: [VOCHQ.n, ...flatten(VOCHQ.x), 'voc 물류 본사 접수 불만 배송 설치'].join(' '), href: asLink('물류 VOC 본사 창구') });
   for (const c of B2B) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (빌트인 이전설치)`, sub: `${c.n} · ${c.a}`,
-      kw: [c.p, c.c, c.code, c.n, ...flatten(c.x), c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '), href: '/as' });
+      kw: [c.p, c.c, c.code, c.n, ...flatten(c.x), c.a, '이전설치 빌트인 b2b 관할 협력사'].join(' '),
+      href: asLink(`${c.p} · ${c.c}`) });
   }
   for (const c of IT) {
     add({ t: 'contact', m: 'as', title: `${c.p} · ${c.c} (IT 이전설치)`, sub: `${c.n} · ${c.a}`,
       kw: [c.p, c.c, c.code, c.n, c.d || '', c.a, '이전설치 it b2b 관할 협력사 노트북 모니터 프린터'].join(' '),
-      href: '/as' });
+      href: asLink(`${c.p} · ${c.c}`) });
   }
   for (const s of SINK) {
     add({ t: 'contact', m: 'as', title: `${s.p} (싱크장 리폼)`, sub: `${s.n} · ${s.a}`,
       kw: [s.p, s.n, s.n2 || '', ...flatten(s.x), s.a, '싱크대 싱크장 리폼 식기세척기 식세기 빌트인 이전설치'].join(' '),
-      href: '/as' });
+      href: asLink(s.p) });
   }
   for (const x of NAT) {
     add({ t: 'contact', m: 'as', title: `${x.t} 이전설치`, sub: `${x.p} · ${x.n} · ${x.d}`,
-      kw: [x.p, x.t, x.n, x.d, ...flatten(x.x), '이전설치 전국 담당'].join(' '), href: '/as' });
+      kw: [x.p, x.t, x.n, x.d, ...flatten(x.x), '이전설치 전국 담당'].join(' '), href: asLink(`${x.t} 이전설치`) });
   }
   // 중앙에너지 설치 지사 — "우리 동네는 어디서 나오나"(접수는 본사콜 하나)
   for (const m of MID) {
     add({ t: 'contact', m: 'as', title: `${m.g} (중앙에너지)`, sub: `${m.tc} · ${m.a}`,
-      kw: [m.g, m.tc, m.a, '중앙에너지 인덕션 정수기 후드 지사 설치 관할'].join(' '), href: '/as' });
+      kw: [m.g, m.tc, m.a, '중앙에너지 인덕션 정수기 후드 지사 설치 관할'].join(' '), href: asLink(`${m.g} (중앙에너지)`) });
   }
 }
 
@@ -230,7 +240,12 @@ function flatten(v, out = []) {
       kw: [r.cat, r.size, r.group, r.sizeLabel, r.note, '배치 시뮬레이터 치수 규격 사이즈 이격',
         ...roomsFor(r.cat),
         ...flatten(r.specs), ...flatten((r.parts || []).map((x) => [x.part, x.raw]))].join(' '),
-      href: '/place' });
+      /*
+       * **누르면 그 사이즈가 골라진 채로 열려야 한다.** 예전에는 70건이 전부 맨 `/place`
+       * 라 앱 첫 화면만 열렸다(2026-08-12 사용자 지적). 카테고리와 사이즈를 `|` 로 잇는다 —
+       * 카테고리만 넘기면 "건조기 폭 600mm"가 아니라 대표 사이즈가 잡힌다.
+       */
+      href: `/place?pick=${encodeURIComponent(`${r.cat}|${r.size}`)}` });
   }
 }
 
