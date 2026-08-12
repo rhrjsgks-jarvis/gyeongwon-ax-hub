@@ -23,6 +23,7 @@ import { spawn, execFile } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as agentLock from './agent-lock.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -254,6 +255,25 @@ export function splitMessage(text, limit = 3800) {
   return out;
 }
 
+/* ── 대기열 ────────────────────────────────────────────────────────────
+ * 겹치면 **버리지 않고 줄을 세운다.** 예전에는 "작업이 돌고 있습니다" 한 줄을 보내고
+ * 그 명령을 흘려버렸다 — 폰에서 보낸 지시가 조용히 사라지는 셈이라, 상담 중에 던져 놓고
+ * 나중에 결과를 보러 오는 이 봇의 쓰임새와 정면으로 어긋난다.
+ *
+ * 막는 것이 둘이다: **봇 자신의 작업**(state.busy)과 **로컬 세션**(agent-lock 파일).
+ * 상한을 두는 이유는 폰에서 연타했을 때 몇 시간짜리 줄이 서는 것을 막기 위해서다.
+ */
+export const MAX_QUEUE = 20;
+
+export function formatQueue(queue, now = Date.now()) {
+  if (!queue.length) return '대기열이 비어 있습니다.';
+  return [`대기 ${queue.length}건`, ...queue.map((j, i) => {
+    const min = Math.round((now - j.at) / 60000);
+    const head = String(j.prompt ?? '').replace(/\s+/g, ' ').trim();
+    return `${i + 1}. ${head.length > 60 ? head.slice(0, 57) + '…' : head}${min >= 1 ? ` (${min}분 대기)` : ''}`;
+  })].join('\n');
+}
+
 /* ── claude 인자 ───────────────────────────────────────────────────────
  * 프롬프트는 argv 가 아니라 **stdin** 으로 넘긴다 — argv 길이 제한·따옴표 이스케이프·
  * 가변인자(--allowedTools) 가 뒤 인자를 삼키는 문제를 한꺼번에 피한다.
@@ -312,6 +332,13 @@ export function validateConfig({ token, allowlist, permissionMode, preset }) {
   return errors;
 }
 
+/* 로컬 세션이 자물쇠를 잡게 하는 것은 **훅**이다(harness 가 실행한다). 훅이 빠지면
+ * 봇은 로컬 작업을 못 보고 예전처럼 동시에 달리는데, **화면에는 아무 표시도 안 난다.**
+ * 그래서 뜰 때 확인해 크게 알린다 — 조용히 반쪽이 되는 것을 막는다. */
+export function hooksInstalled(settingsTexts) {
+  return settingsTexts.some((t) => /agent-lock\.mjs/.test(String(t ?? '')));
+}
+
 /* ══════════════════════════════════════════════════════════════════════
  * 여기서부터는 실제로 봇을 띄울 때만 돈다. 위 함수들은 test-telegram.mjs 가 직접 부른다.
  * ══════════════════════════════════════════════════════════════════════ */
@@ -363,9 +390,11 @@ const HELP = [
   '세일즈 코파일럿 원격 조종',
   '',
   '그냥 하고 싶은 말을 보내면 됩니다. 대화는 이어집니다.',
+  'PC 에서 작업 중이면 버리지 않고 대기열에 넣었다가 끝난 뒤 이어서 합니다.',
   '',
   '/new     새 대화로 시작 (맥락 초기화)',
   '/status  브랜치·변경사항·현재 상태',
+  '/queue   대기열 보기 (clear 비우기 · force 로컬 자물쇠 풀기)',
   '/stop    돌고 있는 작업 중단',
   '/confirm 대기 중인 위험 작업 실행',
   '/cancel  대기 중인 작업 취소',
@@ -442,6 +471,15 @@ async function main() {
     console.warn('  — push·배포·삭제도 되묻지 않고 바로 실행합니다.\n');
   }
 
+  const settingsTexts = ['settings.json', 'settings.local.json'].map((f) => {
+    try { return fs.readFileSync(path.join(ROOT, '.claude', f), 'utf8'); } catch { return ''; }
+  });
+  if (!hooksInstalled(settingsTexts)) {
+    console.warn('\n로컬 세션 감지가 꺼져 있습니다 — .claude/settings.json 에 agent-lock 훅이 없습니다.');
+    console.warn('  PC 에서 작업 중일 때도 봇이 그대로 달려 같은 파일을 동시에 고칠 수 있습니다.');
+    console.warn('  UserPromptSubmit → acquire local · Stop → release local 훅을 등록하세요.\n');
+  }
+
   const branch = await git(['rev-parse', '--abbrev-ref', 'HEAD']);
   console.log(`@${me.username} 대기 중 · ${ROOT} · ${branch} · 허용 ${allowlist.length}명 · ${preset}/${permissionMode}`
     + ` · 확인 ${confirmGate ? '켜짐' : '꺼짐'}`);
@@ -458,6 +496,7 @@ async function main() {
     child: null,       // 돌고 있는 claude 프로세스
     busy: false,
     pending: null,     // /confirm 을 기다리는 위험 작업
+    queue: [],         // 지금 못 도는 것 — 앞에서부터 하나씩 꺼내 돈다
   };
 
   const send = async (chatId, text) => {
@@ -538,8 +577,53 @@ async function main() {
     });
   }
 
-  async function dispatch(chatId, prompt) {
+  /* 지금 시작할 수 없는 이유. 없으면 null.
+   * **로컬 세션 확인이 이 봇의 핵심이다** — 봇 메모리(state.busy)만 보면 PC 앞에서
+   * 돌고 있는 작업이 안 보여 같은 파일을 동시에 고친다. */
+  function blockedBy() {
+    if (state.busy) return '봇 작업이 돌고 있습니다';
+    const held = agentLock.read();
+    if (held && held.owner === 'local') return agentLock.describe(held);
+    return null;
+  }
+
+  async function enqueue(chatId, prompt, reason) {
+    if (state.queue.length >= MAX_QUEUE) {
+      return void (await send(chatId, `대기열이 가득 찼습니다(${MAX_QUEUE}건). /queue clear 로 비운 뒤 다시 보내 주세요.`));
+    }
+    state.queue.push({ chatId, prompt, at: Date.now() });
+    await send(chatId, `${reason}\n대기열 ${state.queue.length}번째로 넣었습니다 — 끝나는 대로 이어서 시작합니다.\n(/queue 확인 · /queue clear 비우기)`);
+  }
+
+  /* 시작할 수 있으면 바로, 아니면 줄을 세운다. **await 하지 않는다** —
+   * 여기서 기다리면 폴링이 멈춰 그동안 온 메시지에 답을 못 하고, 로컬 자물쇠가
+   * 풀리는 것도 못 본다. */
+  function startOrQueue(chatId, prompt) {
+    const why = blockedBy();
+    if (why) return enqueue(chatId, prompt, why);
+    dispatch(chatId, prompt).catch((e) => console.error('dispatch:', e.message));
+    return Promise.resolve();
+  }
+
+  /* 줄에서 하나 꺼내 돌린다. 2초마다·작업이 끝날 때마다 불린다 —
+   * 로컬 세션이 자물쇠를 놓는 것은 알림이 오지 않으므로 들여다보는 수밖에 없다. */
+  function drain() {
+    if (!state.queue.length || blockedBy()) return;
+    const job = state.queue.shift();
+    dispatch(job.chatId, job.prompt, { queued: true }).catch((e) => console.error('dispatch:', e.message));
+  }
+
+  async function dispatch(chatId, prompt, { queued = false } = {}) {
+    /* 자물쇠를 먼저 잡는다. 로컬 세션이 방금 잡았으면(2초 사이의 경합) 줄 맨 앞으로
+     * 되돌려 놓는다 — 순서가 뒤집히면 나중에 보낸 것이 먼저 돈다. */
+    const got = agentLock.acquire('bot', { note: prompt.replace(/\s+/g, ' ').slice(0, 60) });
+    if (!got.ok) {
+      state.queue.unshift({ chatId, prompt, at: Date.now() });
+      return;
+    }
     state.busy = true;
+    const beat = setInterval(() => agentLock.beat('bot'), agentLock.BEAT_MS);
+    if (queued) await send(chatId, '대기 중이던 작업을 시작합니다.');
     const started = Date.now();
     let statusId = null;
     let lastEdit = 0;
@@ -574,7 +658,11 @@ async function main() {
     } catch (e) {
       await send(chatId, `봇 오류: ${e.message}`);
     } finally {
+      clearInterval(beat);
+      agentLock.release('bot');
       state.busy = false;
+      // 다음 것을 바로 이어 돌린다. setImmediate 로 미뤄 재귀가 쌓이지 않게 한다.
+      setImmediate(drain);
     }
   }
 
@@ -603,7 +691,33 @@ async function main() {
     if (cmd === '/stop') {
       if (!state.child) return void (await send(chatId, '돌고 있는 작업이 없습니다.'));
       state.child.kill('SIGTERM');
-      return void (await send(chatId, '중단 요청을 보냈습니다.'));
+      return void (await send(chatId, `중단 요청을 보냈습니다.${state.queue.length ? `\n대기열 ${state.queue.length}건은 그대로 이어집니다 (/queue clear 로 비웁니다).` : ''}`));
+    }
+
+    if (cmd === '/queue') {
+      const arg = text.split(/\s+/)[1]?.toLowerCase();
+      if (arg === 'clear') {
+        const n = state.queue.length;
+        state.queue = [];
+        return void (await send(chatId, n ? `대기열 ${n}건을 비웠습니다.` : '대기열이 비어 있습니다.'));
+      }
+      /* 사람이 손으로 푸는 길. 로컬 세션이 자물쇠를 쥔 채 죽었는데 그 pid 를 다른
+       * 프로그램이 물려받으면(재부팅 없이) 판정으로는 살아 있는 것과 구별되지 않는다.
+       * 그때 폰에서 풀 수 있어야 한다 — 매장에서는 PC 앞으로 갈 수가 없다. */
+      if (arg === 'force') {
+        const l = agentLock.read();
+        if (!l || l.owner !== 'local') return void (await send(chatId, '로컬 자물쇠가 없습니다.'));
+        agentLock.release('local', { pid: l.pid });
+        await send(chatId, `로컬 자물쇠를 풀었습니다 (${agentLock.describe(l)}).\nPC 에서 정말 작업 중이었다면 파일이 엉킬 수 있습니다.`);
+        return void drain();
+      }
+      const held = agentLock.read();
+      return void (await send(chatId, [
+        formatQueue(state.queue),
+        '',
+        `지금: ${blockedBy() || '대기 중 (바로 시작할 수 있습니다)'}`,
+        held ? `자물쇠: ${agentLock.describe(held)}` : '자물쇠: 없음',
+      ].join('\n')));
     }
 
     if (cmd === '/cancel') {
@@ -623,7 +737,8 @@ async function main() {
         `최근 커밋: ${last || '?'}`,
         `변경: ${st ? '\n' + st : '없음 (깨끗)'}`,
         `대화: ${state.sessionId ? '이어짐' : '새 대화'}`,
-        `상태: ${state.busy ? '작업 중' : '대기'}${state.pending ? ' · 확인 대기 1건' : ''}`,
+        `상태: ${blockedBy() || '대기'}${state.pending ? ' · 확인 대기 1건' : ''}`,
+        `대기열: ${state.queue.length ? `${state.queue.length}건` : '없음'}`,
         // 어느 권한으로 도는지 폰에서 확인할 수 있어야 한다 — full 인 줄 모르고 쓰면 안 된다.
         `권한: ${preset}${preset === 'full' ? ' (push·배포 가능)' : ' (읽기·편집·테스트만)'}`,
         `확인 문턱: ${confirmGate ? '켜짐 (위험해 보이면 /confirm 을 묻는다)' : '꺼짐 (바로 실행한다)'}`,
@@ -638,15 +753,11 @@ async function main() {
         return void (await send(chatId, '확인 시간이 지났습니다(5분). 다시 보내 주세요.'));
       }
       state.pending = null;
-      if (state.busy) return void (await send(chatId, '다른 작업이 돌고 있습니다. 끝난 뒤 다시 보내 주세요.'));
-      return void (await dispatch(chatId, p.prompt));
+      // 확인을 마친 것도 겹치면 줄을 선다 — 여기서 되돌려 보내면 사용자가 다시 쳐야 한다.
+      return void (await startOrQueue(chatId, p.prompt));
     }
 
     if (cmd.startsWith('/')) return void (await send(chatId, `모르는 명령입니다: ${cmd}\n\n${HELP}`));
-
-    if (state.busy) {
-      return void (await send(chatId, '작업이 돌고 있습니다. 끝나면 알려 드립니다. (/stop 으로 중단)'));
-    }
 
     const risky = confirmGate ? isRiskyPrompt(text) : null;
     if (risky) {
@@ -660,15 +771,22 @@ async function main() {
       ].join('\n')));
     }
 
-    await dispatch(chatId, text);
+    await startOrQueue(chatId, text);
   }
+
+  /* 로컬 세션이 자물쇠를 놓아도 알림은 오지 않는다 — 들여다보는 수밖에 없다.
+   * 2초는 사람이 기다림을 못 느끼는 간격이면서 파일 하나 읽는 비용이라 부담이 없다. */
+  const drainTimer = setInterval(drain, 2000);
 
   let running = true;
   const shutdown = () => {
     if (!running) process.exit(0);
     running = false;
     console.log('\n종료합니다…');
+    clearInterval(drainTimer);
     state.child?.kill('SIGTERM');
+    // 죽으면서 자물쇠를 쥔 채로 두면 로컬 세션이 "봇이 돌고 있다"고 계속 믿는다.
+    agentLock.release('bot');
     setTimeout(() => process.exit(0), 500);
   };
   process.on('SIGINT', shutdown);

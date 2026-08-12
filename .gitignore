@@ -20,3 +20,6 @@ scripts/fixtures/plans-real/*.jpg
 scripts/fixtures/plans-real/*.jpeg
 scripts/fixtures/plans-real/*.webp
 scripts/fixtures/plans-real/*.gif
+
+# 작업 자물쇠 — 실행 중에만 존재하는 상태 파일 (scripts/agent-lock.mjs)
+.claude/agent.lock

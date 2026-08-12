@@ -15,15 +15,22 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import os from 'os';
 import {
   parseEnvFile, parseAllowlist, splitMessage, isRiskyPrompt, buildClaudeArgs,
   formatToolLine, formatDuration, validateConfig, explainTelegramError, resolveToolPolicy,
-  resolveClaudeBin, describeSpawnError, resolveConfirmGate,
+  resolveClaudeBin, describeSpawnError, resolveConfirmGate, formatQueue, hooksInstalled,
   DEFAULT_ALLOWED_TOOLS, DEFAULT_DISALLOWED_TOOLS, TOOL_PRESETS,
 } from './telegram-bot.mjs';
+import * as lock from './agent-lock.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
+
+/* 자물쇠 검사가 **진짜 자물쇠 파일을 건드리면 안 된다** — 그 순간 돌고 있는 세션의
+ * 자물쇠를 지우거나, 반대로 그 세션 때문에 검사가 실패한다. 경로를 옮겨 둔다.
+ * (`lockFile()` 이 부를 때마다 환경변수를 보므로 import 순서에 걸리지 않는다.) */
+process.env.AGENT_LOCK_FILE = path.join(os.tmpdir(), 'gw-agent-lock-test.lock');
 
 let ok = true;
 const fail = (m) => { console.log('ERROR:', m); ok = false; };
@@ -325,6 +332,67 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
   if (!describeSpawnError({ code: 'EINVAL', message: 'x' }, 'c.cmd').includes('.exe'))
     fail('EINVAL 안내에 .cmd → .exe 지시가 없다');
   else pass('.cmd 를 가리켰을 때 .exe 로 바꾸라고 알려 준다');
+}
+
+/* ── [7] 로컬 세션과 겹치지 않는가 (작업 자물쇠 · 대기열) ──────────────
+ * 로컬 Claude Code 와 봇이 같은 작업 트리를 동시에 고치면 서로 덮어쓴다.
+ * 자물쇠 하나로 조율하는데, **조용히 반쪽이 되는 방식으로 망가진다** —
+ * 훅이 빠지거나 판정이 틀어지면 화면에는 아무 표시 없이 예전처럼 동시에 달린다.
+ */
+{
+  const t0 = 1_700_000_000_000;
+  const boot = lock.bootStamp(t0);
+  /* `boot` 는 `now - 가동시간` 이라 실제로는 시계와 함께 움직인다. 검사에서 시계를
+   * 가짜로 앞당기면 그 값만 뒤처져 '재부팅'으로 오인된다 — 자물쇠를 만든 시점의
+   * 스탬프를 그 시점 기준으로 찍어 준다(실제 동작과 같아진다). */
+  const local = (o = {}, at = t0) => ({ owner: 'local', pid: 0, at, beat: at, boot: lock.bootStamp(at), transcript: '', ...o });
+  const bot = (o = {}) => ({ owner: 'bot', pid: 4242, at: t0, beat: t0, boot, transcript: '', ...o });
+  const dead = () => false;
+  const live = () => true;
+  const never = () => 0;
+
+  // 훅은 명령 한 줄 돌리고 끝나는 프로세스다 — 그 pid 로 생사를 보면 잡자마자 죽는다.
+  eq(lock.isStale(local(), t0 + 1000, dead, never), false,
+    '로컬 자물쇠는 pid 로 판정하지 않는다 (훅 프로세스는 즉시 끝난다)');
+
+  // 대화 기록이 만져지고 있으면 오래된 자물쇠라도 살아 있다 — 한 턴이 길 수 있다.
+  eq(lock.isStale(local({}, t0 + 40 * 60_000), t0 + 40 * 60_000, dead, () => t0 + 39 * 60_000), false,
+    '대화 기록이 움직이면 40분 된 로컬 자물쇠도 살아 있다');
+  eq(lock.isStale(local({ at: t0 }, t0 + lock.IDLE_MS + 1000), t0 + lock.IDLE_MS + 1000, dead, never), true,
+    '15분 넘게 조용하면 로컬 자물쇠는 썩은 것으로 본다');
+
+  // 재부팅을 건너온 자물쇠 — PC 를 끄면 훅이 못 돌아 파일만 남는다.
+  eq(lock.isStale(local({ boot: boot - 60 }), t0 + 1000, live, () => t0), true,
+    '재부팅 전에 만들어진 자물쇠는 썩은 것으로 본다');
+
+  // 봇은 스스로 심장박동을 찍으므로 기준이 다르다.
+  eq(lock.isStale(bot(), t0 + 30_000, live, never), false, '봇 자물쇠는 박동이 최근이면 살아 있다');
+  eq(lock.isStale(bot(), t0 + 30_000, dead, never), true, '봇 프로세스가 없으면 썩은 것으로 본다');
+  eq(lock.isStale(bot(), t0 + 7 * lock.BEAT_MS, live, never), true, '봇이 1분 넘게 조용하면 썩은 것으로 본다');
+
+  // 실제 파일로 잡기·놓기. 진짜 자물쇠를 건드리지 않도록 AGENT_LOCK_FILE 로 옮겨 둔다.
+  if (!process.env.AGENT_LOCK_FILE) fail('검사가 진짜 자물쇠 파일을 쓰고 있다 — AGENT_LOCK_FILE 로 옮길 것');
+  else {
+    try { fs.unlinkSync(process.env.AGENT_LOCK_FILE); } catch { /* 없으면 그만 */ }
+    eq(lock.acquire('local', { transcript: path.join(root, 'package.json') }).ok, true, '로컬이 자물쇠를 잡는다');
+    eq(lock.acquire('bot').ok, false, '로컬이 쥐고 있으면 봇은 못 잡는다 — 여기서 대기열로 간다');
+    eq(lock.release('bot'), false, '남의 자물쇠는 놓지 않는다 (둘 다 자유롭다고 믿으면 동시에 달린다)');
+    eq(lock.release('local'), true, '주인은 놓을 수 있다');
+    eq(lock.acquire('bot').ok, true, '풀리면 봇이 잡는다');
+    lock.release('bot');
+  }
+
+  // 대기열은 **버리지 않는 것**이 요점이다.
+  const q = [{ prompt: '테스트 돌려줘', at: t0 }, { prompt: '커밋해줘', at: t0 }];
+  if (!formatQueue(q, t0).includes('대기 2건')) fail('대기열 표시에 건수가 없다');
+  else pass('대기열은 건수와 내용을 함께 보여준다');
+  if (!formatQueue([], t0).includes('비어')) fail('빈 대기열 문구가 없다');
+  else pass('빈 대기열도 말로 알린다');
+
+  // 훅이 빠지면 봇은 로컬을 못 본다 — 뜰 때 반드시 알려야 한다.
+  eq(hooksInstalled(['{"permissions":{}}', '']), false, '훅이 없으면 없다고 판정한다');
+  eq(hooksInstalled([fs.readFileSync(path.join(root, '.claude', 'settings.json'), 'utf8')]), true,
+    '저장소의 .claude/settings.json 에 agent-lock 훅이 실제로 들어 있다');
 }
 
 console.log(ok ? '\n전부 통과' : '\n실패 있음');
