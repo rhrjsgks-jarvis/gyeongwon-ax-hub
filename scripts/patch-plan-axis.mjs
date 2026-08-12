@@ -96,10 +96,24 @@ await browser.close();
  * 틈이 생긴다. 새로 수집하는 분은 `build-plan-index.mjs` 가 같은 규칙으로 막는다.
  */
 const AXIS_MIN = 0.35;
+/*
+ * 사람이 **"치수 사슬이 없다"고 눈으로 확인한** 도면도 함께 뺀다.
+ * 판독기는 그런 도면에서도 값을 내놓는다 — 범례 번호(①~⑦)나 실명 글씨를 치수로 읽는
+ * 것으로 보인다. 등급으로는 안 갈린다(그 도면들도 '보통'이고, 멀쩡한 도면에도 '보통'이 있다).
+ * 도면마다의 사유는 `fixtures/plans-real/no-chain.json` 에 적혀 있다.
+ */
+const NO_CHAIN = (() => {
+  try {
+    const f = path.join(__dirname, 'fixtures', 'plans-real', 'no-chain.json');
+    return new Set((JSON.parse(fs.readFileSync(f, 'utf8')).files || []).map((e) => e.file));
+  } catch { return new Set(); }
+})();
 let unscaled = 0;
 for (const c of (idx.complexes || [])) for (const p of (c.plans || [])){
-  if (p.mmPerPx && p.axis != null && p.axis < AXIS_MIN){
-    console.log(`  축척 제거: ${p.file} (axis ${p.axis} · ${p.mmPerPx} ${p.scaleConf}) — ${c.complex}`);
+  const noChain = NO_CHAIN.has(p.file);
+  if (p.mmPerPx && (noChain || (p.axis != null && p.axis < AXIS_MIN))){
+    const why = noChain ? '치수 사슬 없음' : `axis ${p.axis}`;
+    console.log(`  축척 제거: ${p.file} (${why} · ${p.mmPerPx} ${p.scaleConf}) — ${c.complex}`);
     delete p.mmPerPx; delete p.scaleConf; unscaled++;
   }
 }
@@ -110,4 +124,4 @@ const low = all.filter((p) => p.axis < 0.35).length;
 const scaled = (idx.complexes || []).flatMap((c) => c.plans || []).filter((p) => p.mmPerPx).length;
 console.log(`${done}장 기록${miss ? ` · ${miss}장은 파일이 없어 건너뜀` : ''}`);
 console.log(`0.35 미만(도면 아님 의심) ${low}장 / ${all.length}장`);
-console.log(`축척이 실린 도면 ${scaled}장${unscaled ? ` (평면도가 아니라 ${unscaled}장에서 제거)` : ''}`);
+console.log(`축척이 실린 도면 ${scaled}장${unscaled ? ` (근거 없어 ${unscaled}장에서 제거)` : ''}`);

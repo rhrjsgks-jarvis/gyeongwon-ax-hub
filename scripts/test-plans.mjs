@@ -1304,11 +1304,23 @@ const knownGaps = [];
         .map((e) => ({ src: e.src, hand: +e.mmPerImgPx, idx: idxRes.scaleByFile[e.src] }))
         .filter((x) => Math.abs(x.idx - x.hand) > x.hand * 0.10);
       const linked = corpus.filter((e) => e.src).length;
+      /*
+       * **치수 사슬이 없다고 사람이 확인한 도면에는 축척이 실려 있으면 안 된다.**
+       * 판독기는 그런 도면에서도 값을 내놓는다(범례 번호·실명 글씨를 치수로 읽는 것으로
+       * 보인다) — 실제로 2장이 그랬고, 등급('보통')으로는 멀쩡한 도면과 갈리지 않았다.
+       */
+      const noChain = JSON.parse(fs.readFileSync(
+        path.join(__dirname, 'fixtures', 'plans-real', 'no-chain.json'), 'utf8')).files || [];
+      const stray = noChain.filter((e) => idxRes.scaleByFile[e.file])
+        .map((e) => `${e.file}(${idxRes.scaleByFile[e.file]})`);
+
       if (!linked) fail('코퍼스 항목에 src(도면 경로)가 없다 — 색인과 대조할 수 없다');
       else if (off.length)
         fail(`손으로 잰 축척과 색인이 어긋난다 ${off.length}건 — 실측이 근거다: `
           + off.map((x) => `${x.src} 실측 ${x.hand} vs 색인 ${x.idx}`).join(', '));
-      else pass(`축척 실측 대조 — 코퍼스 ${linked}장 중 색인에 실린 것 전부 10% 안 (실측이 근거)`);
+      else if (stray.length)
+        fail(`치수 사슬이 없는 도면에 축척이 실려 있다 ${stray.length}건 — 근거가 없다: ${stray.join(', ')}`);
+      else pass(`축척 실측 대조 — 코퍼스 ${linked}장 전부 10% 안 · 치수 없는 ${noChain.length}장에는 축척 없음`);
     }
 
     if (!idxRes.complexes) fail('단지 도면 색인이 비어 있다 — npm run build:plans 로 만든다');

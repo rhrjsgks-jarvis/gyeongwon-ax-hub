@@ -59,6 +59,19 @@ const HAND_SCALE = (() => {
   } catch { /* 코퍼스가 없으면 그냥 자동 판독만 쓴다 */ }
   return m;
 })();
+
+/*
+ * **치수 사슬이 없는 것을 사람이 확인한 도면** — 축척을 싣지 않는다.
+ * 판독기는 이런 도면에서도 값을 내놓는다(범례 번호·실명 글씨를 치수로 읽는 것으로 보인다).
+ * 등급으로는 안 갈린다 — 여기 적힌 것들도 '보통'이고 멀쩡한 도면에도 '보통'이 섞여 있다.
+ * 자세한 사유는 `fixtures/plans-real/no-chain.json` 에 도면마다 적혀 있다.
+ */
+const NO_CHAIN = (() => {
+  try {
+    const f = path.join(__dirname, 'fixtures', 'plans-real', 'no-chain.json');
+    return new Set((JSON.parse(fs.readFileSync(f, 'utf8')).files || []).map((e) => e.file));
+  } catch { return new Set(); }
+})();
 const ROOT = path.join(__dirname, '..');
 // 잘라 낸 도면이 있으면 그것을 싣는다. 원본 시트를 그대로 실으면 한 파일에 도면이 여럿이라
 // 매장에서 쓸 수가 없다(사용자 지적: "3개가 필요없습니다. 수치가있는 1개만 필요할뿐입니다").
@@ -327,7 +340,8 @@ for (const [dir, g] of [...groups.entries()].sort()) {
      */
     const AXIS_MIN = 0.35;
     const planLike = rec.axis == null || rec.axis >= AXIS_MIN;
-    if (s.k && planLike && (s.conf === '확실' || s.conf === '보통')) {
+    const hasChain = !NO_CHAIN.has(rec.file);      // 사람이 "치수 없음"으로 확인한 것은 뺀다
+    if (s.k && planLike && hasChain && (s.conf === '확실' || s.conf === '보통')) {
       const mmPerPx = s.k / small.scale;
       /*
        * 축척이 맞더라도 **그려진 세대가 너무 작으면** 쓸 수 없다. 마케팅 시트는 세로로 길고
