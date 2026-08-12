@@ -122,7 +122,20 @@ if (ok) {
   else {
     const sh = (cmd) => { try { return execSync(cmd, { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); }
                           catch (e) { return ''; } };
-    const verCommit = sh(`git log -1 --format=%H -G"CACHE_VERSION = '" -- public/sw.js`);
+    /*
+     * **`--diff-merges=first-parent` 와 `-s` 가 둘 다 있어야 한다.**
+     *
+     * ① `git log -G` 는 기본적으로 **병합 커밋을 건너뛴다**(diff 를 아예 만들지 않는다).
+     *    그래서 갈래를 합치면서 버전을 올리면 이 검사에는 "안 올린 것"으로 보이고,
+     *    방금 올린 그 버전을 두고 실패한다(2026-08-12 실제로 그랬다). 회피하려고 번호를
+     *    한 칸 더 올리면 합칠 때마다 번호가 샌다. 첫 부모와 견주면 병합이 들여온 변경이
+     *    보이므로 그때 올린 것도 잡힌다.
+     * ② 그런데 `--diff-merges` 는 **diff 출력을 켠다.** `--format=%H` 만으로는 해시 뒤에
+     *    diff 본문이 딸려 나오고, 그러면 아래 `git diff` 의 리비전 인자가 통째로 망가져
+     *    엉뚱한 파일이 "바뀐 미니앱"으로 보고된다 — 실제로 `scripts/test-consistency.mjs`
+     *    를 미니앱이라고 말했다. `-s`(--no-patch)로 눌러야 한다.
+     */
+    const verCommit = sh(`git log -1 --format=%H -s -G"CACHE_VERSION = '" --diff-merges=first-parent -- public/sw.js`);
     if (!verCommit) console.log(`SKIP: 캐시 버전 대조 — git 이력을 읽을 수 없다 (${ver})`);
     else {
       const changed = sh(`git diff --name-only ${verCommit}..HEAD -- public/*-app.html`).split('\n').filter(Boolean);
