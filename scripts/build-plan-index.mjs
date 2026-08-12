@@ -41,6 +41,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { writePlanIndex } from './plan-index-io.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -404,17 +405,15 @@ for (const [dir, g] of [...groups.entries()].sort()) {
 await browser.close();
 index.sort((a, b) => a.region.localeCompare(b.region, 'ko') || a.complex.localeCompare(b.complex, 'ko'));
 
-fs.writeFileSync(INDEX, JSON.stringify({
+// 머리말 수치(단지·도면·축척)는 writePlanIndex 가 데이터에서 다시 센다 — 손으로 넣지 않는다.
+writePlanIndex(INDEX, {
   version: 3,
   note: '단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 '
     + 'mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. '
     + '수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.',
   generatedAt: new Date().toISOString().slice(0, 10),
-  complexCount: index.length,
-  planCount: n,
-  scaledCount: withScale,
   complexes: index,
-}, null, 1) + '\n', 'utf8');
+});
 
 const byRegion = {};
 for (const c of index) byRegion[c.region] = (byRegion[c.region] || 0) + c.plans.length;

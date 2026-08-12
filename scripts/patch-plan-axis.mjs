@@ -14,6 +14,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { writePlanIndex } from './plan-index-io.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(__dirname, '..', 'public');
@@ -118,10 +119,10 @@ for (const c of (idx.complexes || [])) for (const p of (c.plans || [])){
   }
 }
 
-fs.writeFileSync(INDEX, JSON.stringify(idx, null, 1) + '\n');
+// 머리말 수치는 여기서 손대지 않는다 — 쓰는 자리가 데이터에서 다시 센다.
+const { scaled } = writePlanIndex(INDEX, idx);
 const all = (idx.complexes || []).flatMap((c) => c.plans || []).filter((p) => p.axis != null);
 const low = all.filter((p) => p.axis < 0.35).length;
-const scaled = (idx.complexes || []).flatMap((c) => c.plans || []).filter((p) => p.mmPerPx).length;
 console.log(`${done}장 기록${miss ? ` · ${miss}장은 파일이 없어 건너뜀` : ''}`);
 console.log(`0.35 미만(도면 아님 의심) ${low}장 / ${all.length}장`);
 console.log(`축척이 실린 도면 ${scaled}장${unscaled ? ` (근거 없어 ${unscaled}장에서 제거)` : ''}`);

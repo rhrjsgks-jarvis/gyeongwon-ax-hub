@@ -1323,6 +1323,24 @@ const knownGaps = [];
       else pass(`축척 실측 대조 — 코퍼스 ${linked}장 전부 10% 안 · 치수 없는 ${noChain.length}장에는 축척 없음`);
     }
 
+    /*
+     * **머리말 수치가 데이터와 같아야 한다.**
+     * 축척을 걷어내는 경로가 `scaledCount` 를 다시 세지 않아 데이터에는 11장인데
+     * 머리말은 **15** 로 굳어 있었다. 화면에 나가는 값은 아니지만 색인을 여는 사람이
+     * 처음 보는 숫자가 그것이라, 틀린 채로 두면 다음 작업이 그 숫자 위에서 시작한다
+     * (앱 화면의 "OOO종"을 손으로 박지 않고 세어 넣는 것과 같은 이유).
+     * 쓰는 자리는 `scripts/plan-index-io.mjs` 하나이므로 그 경로를 거치면 저절로 맞는다.
+     */
+    {
+      const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'plan-index.json'), 'utf8'));
+      const want = { complexCount: idxRes.complexes, planCount: idxRes.plans, scaledCount: idxRes.scaled };
+      const off = Object.entries(want).filter(([k, v]) => raw[k] !== v)
+        .map(([k, v]) => `${k} ${raw[k]} → 실제 ${v}`);
+      if (off.length)
+        fail(`색인 머리말 수치가 데이터와 다르다 — writePlanIndex 를 거치지 않은 손질이다: ${off.join(' · ')}`);
+      else pass(`색인 머리말 = 데이터 (단지 ${raw.complexCount} · 도면 ${raw.planCount} · 축척 ${raw.scaledCount})`);
+    }
+
     if (!idxRes.complexes) fail('단지 도면 색인이 비어 있다 — npm run build:plans 로 만든다');
     else if (idxRes.noRegion.length) fail(`경원 밖 지역이 색인에 있음: ${[...new Set(idxRes.noRegion)]}`);
     else if (idxRes.badPath) fail(`이미지 경로 형식이 어긋난 항목 ${idxRes.badPath}개`);
