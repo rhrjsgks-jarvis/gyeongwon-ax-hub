@@ -22,13 +22,16 @@
   /* ── 단계 안내 ── */
   #steps{display:flex;gap:0;background:var(--card);border-bottom:1px solid var(--line);flex:none}
   /*
-   * **배치 단계에 오면 단계바를 감춘다**(2026-08-12 사용자: *"너무 난잡한 것 같습니다"*).
-   * 네 단계가 전부 도구막대 버튼을 그대로 부르므로(`#steps.onclick`) 잃는 기능이 없고,
-   * 앞 세 칸은 ✓ 만 달고 54px 을 계속 먹는다. 도면이 주인공인 화면에서 그만한 자리를
-   * 완료 표시에 줄 이유가 없다 — "위를 비우고 아래를 채운다"는 이 앱의 규칙이다.
-   * 앞 단계로 돌아가면(setStep(<4)) 다시 나온다.
+   * **배치 단계에 오면 단계바를 한 줄로 줄인다.**
+   *
+   * 처음에는 아예 감췄다(2026-08-12 *"너무 난잡한 것 같습니다"*). 그런데 시연 중에
+   * 확정을 누르는 순간 상단이 통째로 사라지는 것이 **고장으로 보였다**
+   * (*"확정을 누르면 그냥 도면만 나오고 상단의 버튼들이 사라지고 있습니다"*).
+   * 지금까지의 진행을 보여 주는 자리라 없애는 것보다 **줄이는 편**이 맞다 —
+   * 번호를 라벨 앞으로 붙여 두 줄을 한 줄로 만든다(실측 54px → 30px).
    */
-  #steps.hide{display:none}
+  #steps.slim .step{padding:5px 6px;font-size:11px}
+  #steps.slim .step b{display:inline;margin-right:3px}
   /*
    * 좁은 화면에서 도구막대 라벨의 뒷말을 접는다(실측 360px 에서 3줄 → 1줄).
    * `←` 는 여기서만 감춘다 — 안드로이드 하드웨어 뒤로가기가 같은 일을 하고
@@ -3250,9 +3253,23 @@ function renderRooms(){
       <span class="m">${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?` · ${r.parts.length}조각`:''}</span>
       <button class="del" data-del="${r.id}" title="삭제">✕</button>
     </div>`).join('')
-    + `<p class="hint" style="padding:6px 10px 10px">인식이 어긋났으면 <button id="rooms-edit" class="ghost" style="padding:4px 8px;font-size:12px">경계 수정</button>으로 벽을 끌어 고칠 수 있습니다.</p>`;
+    /*
+     * **못 잡은 공간을 손으로 더 넣을 수 있어야 한다**(2026-08-12 사용자 지적:
+     * *"자동으로 인식이 안 될 경우를 대비해서 도면 영역을 선택하게 되면 선택된 영역을
+     * 추가하는 기능이 필요합니다"*).
+     *
+     * 자동 인식은 도면마다 놓치는 곳이 있다 — 홍천 84B 에서 4곳만 잡고 주방·욕실·현관이
+     * 빠졌다. 예전에는 확정 뒤 `detect` 모드가 유지돼 도면을 누르면 계속 추가됐는데,
+     * **자동 배치 뒤에는 `idle` 로 두어야 가전을 집을 수 있다**(CLAUDE.md — detect 모드가
+     * 살아 있으면 가전을 누르는 순간 그 자리를 새 방으로 인식해 가전을 집을 수가 없다).
+     * 그래서 모드를 유지하는 대신 **여기서 다시 켜는 손잡이**를 둔다.
+     */
+    + `<p class="hint" style="padding:6px 10px 10px">못 잡은 곳이 있으면 <button id="rooms-add" class="ghost" style="padding:4px 8px;font-size:12px">+ 공간 추가</button>를 누르고 그 방 안쪽을 누르세요.`
+    + ` 경계가 어긋났으면 <button id="rooms-edit" class="ghost" style="padding:4px 8px;font-size:12px">경계 수정</button>으로 벽을 끌어 고칩니다.</p>`;
   const ed = $('#rooms-edit');
   if (ed) ed.onclick = (e)=>{ e.stopPropagation(); $('#btn-edit').click(); };
+  const ad = $('#rooms-add');
+  if (ad) ad.onclick = (e)=>{ e.stopPropagation(); $('#btn-detect').click(); };
   box.querySelectorAll('input[data-rename]').forEach((el)=>{
     el.onchange = ()=>{
       const r = roomById(el.dataset.rename);
@@ -3714,7 +3731,7 @@ $('#steps').onclick = (e)=>{ const s=e.target.closest('.step'); if(!s) return;
 function setMode(m){ state.mode=m; renderSide(); }
 function setStep(n){ document.querySelectorAll('.step').forEach((s)=>{
   const k=+s.dataset.step; s.classList.toggle('on', k===n); if(k<n) s.classList.add('done'); });
-  $('#steps').classList.toggle('hide', n >= 4); }
+  $('#steps').classList.toggle('slim', n >= 4); }
 
 function askScale(){
   const [[x1,y1],[x2,y2]] = state.scalePts;
@@ -4346,12 +4363,24 @@ async function openLibrary(){
                * 도구막대의 '축척'으로 언제든 다시 맞출 수 있고, 확신도를 함께 알린다.
                */
               state.mmPerPx = mmpx; state.scaled = true;
-              setMode('room'); setStep(3);
+              /*
+               * **여기서도 도면 전체를 잡는다**(2026-08-12 프로덕션 시험에서 발견).
+               *
+               * "축척이 잡히면 도면 전체를 잡는다"를 `askWallLength` 안에만 넣어 뒀는데,
+               * **단지에서 불러온 도면은 축척이 색인에 이미 있어 그 함수를 지나가지 않는다.**
+               * 그래서 가장 흔한 경로인 `단지 불러오기` 에서는 여전히 방 하나만 섰다 —
+               * 실제로 3회 시험 전부 "공간 1곳"이었다(디에트르 84 에서 30.3㎡ 하나).
+               * 고객은 가전을 어디에 놓을지 정해진 상태가 아니므로 집 전체가 서야 한다.
+               */
+              let found = 0;
+              try { found = detectAllRooms() || 0; } catch (_) { found = 0; }
+              if (found) { setMode('idle'); setStep(4); evaluate(); }
+              else { setMode('room'); setStep(3); }
             }
             draw();
           });
           toast(s ? `${cx.complex} ${type} — 저장된 방까지 복원`
-            : mmpx ? `${cx.complex} ${type} — 축척 자동 적용(${sconf || '자동'}) · 다르면 '축척'으로 다시 맞추세요`
+            : mmpx ? `${cx.complex} ${type} — 축척 자동 적용(${sconf || "자동"}) · 공간 ${state.rooms.length}곳을 잡았습니다`
             : `${cx.complex} ${type} — 축척을 맞춰 주세요`);
         }
       };
