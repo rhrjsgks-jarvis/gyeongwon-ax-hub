@@ -684,7 +684,7 @@ function renderBody(){
   /* 멤버십 연장 — 대상 품목에서만 기간을 말하고, 아닌 품목에서는 아니라고 분명히 적는다.
    * 카드를 감추지 않는 이유: 상담사가 "혹시 되나?"를 그 자리에서 확인할 수 있어야 한다. */
   const rb = RB[cur] || ['na', '', ''];
-  h += `<div class="card"><h2>멤버십 ${esc(ROYAL.title)}` +
+  h += `<div class="card" id="royalCard"><h2>멤버십 ${esc(ROYAL.title)}` +
     (rb[0] === 'ok' ? '<span class="pill ok">대상</span>' : '<span class="pill no">대상 아님</span>') + '</h2>';
   if (rb[0] === 'ok') {
     h += `<div class="big">${esc(ROYAL.ext)}</div>
@@ -1136,10 +1136,23 @@ function searchDocs(){
   /*
    * 멤버십 등급 연장 — **화면에 있는데 검색에 없었다**(실측: '로열블루' 0건).
    * 화면에 적힌 말로 못 찾는 것은 검색이 아니다(허브 색인에서 같은 이유로 넣은 항목이다).
+   *
+   * **`go()` 는 카드까지 데려간다.** 예전에는 `setTab('as'); revealBody()` 뿐이었는데
+   * AS 탭은 이미 기본 화면이라 **눌러도 화면이 그대로였다** — 멤버십 카드는 품목 본문
+   * 한참 아래에 있어서 찾아 준 사람이 그걸 못 본다(2026-08-13 딥링크 전수 확인).
+   * 데려갈 품목은 **연장 대상인 것**으로 고른다. 대상이 아닌 품목에 서 있으면 카드가
+   * "대상 아님"만 보여줘, 정작 궁금한 '총 3년' 내용이 화면에 없다.
    */
   out.push({ kind:'멤버십', title:`멤버십 ${ROYAL.grade}`, sub:`${ROYAL.title} — ${ROYAL.ext}`,
     kw:`${ROYAL.grade} ${ROYAL.title} ${ROYAL.ext} ${ROYAL.what} ${ROYAL.include} ${ROYAL.cond} ${ROYAL.keep} ${ROYAL.only} 멤버십 등급 연장 무상수리 로열블루 프레스티지`,
-    go(){ setTab('as'); revealBody(); } });
+    go(){
+      setTab('as');
+      const t = keys.find((k) => (RB[k] || [])[0] === 'ok');
+      if (t) { cur = t; renderCats(); }
+      renderBody(); revealBody();
+      const el = document.getElementById('royalCard');
+      if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' });
+    } });
   return out.map(d => ({ ...d, kw:d.kw.toLowerCase() }));
 }
 let DOCS = null;
@@ -1300,6 +1313,10 @@ renderCats(); renderBody(); wireSearch();
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
 window.__as = { DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
   openGroup,
+  /* 딥링크가 착지하는지 검사하려면 **앱이 실제로 내놓는** 제목을 봐야 한다.
+     데이터에서 제목을 다시 만들어 대조하던 검사는 색인과 사이좋게 틀린 채로 통과했다
+     (멤버십 항목이 searchDocs 에 아예 없었는데 둘 다 있다고 여겼다, 2026-08-13). */
+  searchDocs,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },
   search(q){ const i = document.getElementById('sq'); i.value = q; runSearch();

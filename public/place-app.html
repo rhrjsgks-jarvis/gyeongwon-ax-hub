@@ -366,7 +366,14 @@
      * :has 를 못 쓰는 브라우저에서는 이 규칙이 통째로 무시돼 예전처럼 전부 보인다.
      */
     .pick:not(:has(input[type=checkbox]:checked)) + .pickinfo{display:none}
-    #side{position:absolute;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
+    /*
+     * **`fixed` 여야 한다 — `absolute` 면 닫혀 있는 서랍이 가로 스크롤을 만든다.**
+     * 닫힌 상태는 `translateX(100%)` 로 화면 밖에 세워 두는데, absolute 는 그 자리가
+     * 그대로 스크롤 영역으로 잡혀 **폰에서 늘 가로로 300px 이 남았다**(실측 360·390px
+     * 둘 다). 도면을 손가락으로 미는 도구라 그 여백이 팬 조작과 섞여 화면이 흔들린다.
+     * fixed 는 스크롤 영역에 안 잡히고, 이 앱은 iframe 을 꽉 채우므로 보이는 자리는 같다.
+     */
+    #side{position:fixed;right:0;top:0;bottom:0;width:min(84vw,300px);transform:translateX(100%);
       transition:transform .2s;z-index:15;box-shadow:-8px 0 24px rgba(0,0,0,.08)}
     #side.on{transform:none}
     select{max-width:38vw}

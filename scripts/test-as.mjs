@@ -736,5 +736,55 @@ pass('상황실·업무·운영 골든 5건');
   else pass('에어컨 동시 발송 주의 노출');
 }
 
+/*
+ * ── [12] 통합검색이 보낸 딥링크가 **실제로 착지하는가** ──
+ *
+ * 허브 통합검색은 `/as?q=<제목>` 으로 보내고, 앱은 그 값으로 `searchDocs()` 에서
+ * 항목을 찾아 `go()` 를 부른다. 제목이 한 글자라도 다르면 **예외도 경고도 없이**
+ * 검색 결과만 뜨고 끝난다 — 화면으로는 알기 어렵다.
+ *
+ * `test-search ④-c` 도 같은 것을 보지만, 그쪽은 앱의 **데이터에서 제목을 다시 만들어**
+ * 색인과 맞춰 본다 — 앱이 그 문서를 실제로 만드는지는 볼 수 없다. 여기서는
+ * **앱이 실제로 내놓는 목록**(`searchDocs()`)과 대조한다.
+ *
+ * 제목이 맞아도 **`go()` 가 화면을 안 바꾸면 소용이 없다.** 멤버십 항목이 그랬다 —
+ * `setTab('as'); revealBody()` 뿐이라 AS 탭이 이미 기본 화면이어서 눌러도 그대로였고,
+ * 정작 멤버십 카드는 본문 한참 아래에 있었다(2026-08-13 딥링크 전수 확인에서 드러났다).
+ * 그래서 그 항목만은 **어디로 데려가는지**까지 검사한다.
+ */
+{
+  const idxPath = path.join(root, 'public', 'search-index.json');
+  if (!fs.existsSync(idxPath)) {
+    console.log('SKIP: search-index.json 이 없어 딥링크 착지 검사를 건너뜁니다');
+  } else if (typeof A.searchDocs !== 'function') {
+    fail('as-app 이 searchDocs 를 내보내지 않는다 — 딥링크 착지를 검사할 수 없다');
+  } else {
+    const entries = JSON.parse(fs.readFileSync(idxPath, 'utf8')).entries || [];
+    const titles = new Set(A.searchDocs().map((d) => d.title));
+    const links = entries.filter((e) => e.m === 'as' && (e.href || '').startsWith('/as?q='))
+      .map((e) => ({ title: e.title, q: decodeURIComponent(e.href.slice('/as?q='.length)) }));
+    const miss = links.filter((l) => !titles.has(l.q));
+    if (!links.length) fail('색인에 AS 딥링크가 하나도 없다 — build:index 를 다시 돌렸는가');
+    else if (miss.length)
+      fail(`AS 딥링크 ${miss.length}건이 앱 목록에 없는 제목을 가리킨다(그 항목으로 안 열린다): `
+        + miss.slice(0, 5).map((l) => `"${l.q}"`).join(' · '));
+    else pass(`AS 딥링크 ${links.length}건이 전부 앱 항목(${titles.size}개)에 착지한다`);
+
+    /* 멤버십 항목은 **카드까지** 데려가야 한다 — 대상 품목으로 옮기고 카드가 화면에 있어야 한다 */
+    const royal = A.searchDocs().find((d) => d.kind === '멤버십');
+    if (!royal) fail('멤버십 항목이 AS 검색 목록에 없다');
+    else {
+      A.cur = '노트북';                       // 연장 대상이 아닌 품목에서 출발시킨다
+      royal.go();
+      const card = doc.getElementById('royalCard');
+      const okTarget = (A.RB[A.cur] || [])[0] === 'ok';
+      if (!card) fail('멤버십 딥링크 뒤에도 #royalCard 가 화면에 없다 — 카드로 데려가지 못한다');
+      else if (!okTarget) fail(`멤버십 딥링크가 연장 대상이 아닌 품목('${A.cur}')에 머문다 — 카드가 "대상 아님"만 보여준다`);
+      else if (!/총 3년/.test(card.textContent)) fail('멤버십 카드에 연장 기간(총 3년)이 안 보인다');
+      else pass(`멤버십 딥링크가 대상 품목('${A.cur}')의 카드로 데려간다`);
+    }
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

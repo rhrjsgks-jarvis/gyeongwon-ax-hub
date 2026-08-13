@@ -152,6 +152,39 @@ try {
   }
   pass('9개 모듈 페이지 iframe 로드');
 
+  /* ── 2-a. 폰에서 가로로 새지 않는가 — **미니앱 안쪽까지** ──
+   *
+   * 페이지 바깥만 재던 검사로는 못 잡는다. 배치 시뮬레이터의 목록 서랍이 닫힌 채
+   * `position:absolute` + `translateX(100%)` 로 화면 밖에 서 있어서, 그 자리가 그대로
+   * 스크롤 영역이 되어 **폰에서 늘 가로 300px 이 남았다**(360·390px 실측).
+   * 도면을 손가락으로 미는 도구라 그 여백이 팬 조작과 섞여 화면이 흔들린다.
+   *
+   * 포스터는 **인쇄용 A4 고정 폭**이라 폰에서 넘치는 것이 설계대로다 — 뺀다.
+   */
+  {
+    const nb = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const np = await nb.newPage();
+    const over = [];
+    for (const route of ['/finder', '/compare', '/install', '/care', '/as', '/place', '/quiz', '/test']) {
+      await np.goto(BASE + route, { waitUntil: 'domcontentloaded' });
+      await np.waitForTimeout(1800);
+      const r = await np.evaluate(() => {
+        const de = document.documentElement;
+        const out = { outer: de.scrollWidth - de.clientWidth, inner: 0 };
+        const f = document.querySelector('iframe');
+        if (f && f.contentDocument) {
+          const d2 = f.contentDocument.documentElement;
+          out.inner = d2.scrollWidth - d2.clientWidth;
+        }
+        return out;
+      });
+      if (r.outer > 0 || r.inner > 0) over.push(`${route}(바깥 ${r.outer} · 안 ${r.inner})`);
+    }
+    if (over.length) fail(`폰 390px 에서 가로로 샌다: ${over.join(' · ')}`);
+    else pass('폰 390px 가로 넘침 없음 — 미니앱 안쪽까지 8개 화면');
+    await nb.close();
+  }
+
   /* ── 2-b. 하단 바로가기 · 헤더 공유 · three.js 지연 (2026-08-11) ── */
   {
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });

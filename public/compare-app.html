@@ -2234,14 +2234,19 @@ function tryInstantCompare() {
   }
 }
 
-/* ── URL 탭 로직 ── */
+/* ── URL 탭 로직 ──
+ * 여기 적힌 주소는 상담사가 고객 앞에서 그대로 누른다. 죽은 링크는 404 를 띄우고
+ * 조용히 신뢰만 깎으므로, 바뀌면 실제로 열어 보고 고칠 것(`.scratch/audit-links.mjs`
+ * 가 앱 안의 바깥 링크를 전수로 두드린다).
+ */
 const PRESETS = {
   fridge: { own:'https://www.samsung.com/sec/refrigerators/all-refrigerators/', comp:'https://www.lge.co.kr/refrigerators' },
   washer: { own:'https://www.samsung.com/sec/washing-machines/all-washing-machines/', comp:'https://www.lge.co.kr/washing-machines' },
   aircon: { own:'https://www.samsung.com/sec/air-conditioners/all-air-conditioners/', comp:'https://www.lge.co.kr/air-conditioners' },
   tv:     { own:'https://www.samsung.com/sec/tvs/all-tvs/', comp:'https://www.lge.co.kr/tvs' },
   phone:  { own:'https://www.samsung.com/sec/smartphones/all-smartphones/', comp:'https://www.apple.com/kr/iphone/' },
-  vacuum: { own:'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp:'https://www.dyson.co.kr/vacuum-cleaners' },
+  // 다이슨이 카테고리 경로를 /products/ 아래로 옮겼다 — 옛 /vacuum-cleaners 는 404 다(2026-08-13 확인)
+  vacuum: { own:'https://www.samsung.com/sec/vacuum-cleaners/all-vacuum-cleaners/', comp:'https://www.dyson.co.kr/products/vacuum-cleaners' },
 };
 function loadPreset(k){ const p=PRESETS[k]; if(!p) return; document.getElementById('own-url').value=p.own; document.querySelectorAll('#competitor-list .competitor-row')[0].querySelector('input').value=p.comp; }
 function toggleChip(el){ el.classList.toggle('checked'); el.querySelector('input').checked=el.classList.contains('checked'); }
