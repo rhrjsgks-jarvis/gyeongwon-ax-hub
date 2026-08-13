@@ -458,5 +458,31 @@ for (const [file, needle] of deepLinks) {
   console.log('OK: 이상 입력에서 예외 없음');
 }
 
+/*
+ * ── 결과 묶음 순서 — '허브 기능'은 맨 뒤다 (2026-08-14 신설) ──────────
+ *
+ * 맨 앞이면 *"수원TC 물류센터"* 를 친 상담사에게 '배치 시뮬레이터'·'AS 관련 정보'
+ * **앱 열기 카드**가 먼저 뜨고 찾은 물류센터는 그 아래에 있다. 맨 위를 누르면 앱 첫
+ * 화면이 열리므로 "눌러도 그 항목으로 안 간다"로 보인다.
+ *
+ * **이 고침은 한 번 사라진 적이 있다** — 2026-08-12 에 다른 브랜치에서 고쳤는데
+ * main 에 합쳐지지 않아 배포본에는 없었다(2026-08-14 야간에 발견해 다시 반영).
+ * 그래서 여기서 순서를 못 박는다.
+ */
+{
+  const src = fs.readFileSync(path.join(__dirname, '..', 'app', 'search', 'page.tsx'), 'utf8');
+  const m = src.match(/const MODULE_ORDER = \[([^\]]+)\]/);
+  if (!m) fail('search/page.tsx 에서 MODULE_ORDER 를 못 찾았다');
+  else {
+    const order = m[1].split(',').map((s) => s.trim().replace(/['"]/g, '')).filter(Boolean);
+    if (order[order.length - 1] !== 'hub') {
+      fail(`검색 결과에서 '허브 기능'이 맨 뒤가 아니다 — 순서: ${order.join(' → ')}`
+        + ' (앱 열기 카드가 찾은 자료보다 먼저 나온다)');
+    } else if (order[0] !== 'finder') {
+      fail(`검색 결과 첫 묶음이 '${order[0]}' 이다 — 제품이 먼저여야 한다`);
+    } else console.log(`OK: 검색 결과 묶음 순서 — ${order.join(' → ')} (허브 기능 맨 뒤)`);
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

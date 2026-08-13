@@ -45,7 +45,21 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   place:   { label: '배치 시뮬레이터',   icon: 'place',    color: '#7C3AED' },
   hub:     { label: '허브 기능',        icon: 'home',     color: '#475569' },
 }
-const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'as', 'place', 'care']
+/*
+ * **'허브 기능'(앱 자체를 여는 링크)은 맨 뒤다.**
+ *
+ * 맨 앞이면 *"수원TC 물류센터"* 를 친 상담사에게 **'배치 시뮬레이터'·'AS 관련 정보'**
+ * 가 먼저 뜨고 정작 찾은 물류센터는 그 아래에 있다. 맨 위를 누르면 앱 첫 화면이
+ * 열리므로 **"눌러도 그 항목으로 안 간다"로 보인다** — 사용자가 지적한 증상의 절반이
+ * 이것이었다(나머지 절반은 딥링크 누락, 2026-08-12 에 고쳤다).
+ *
+ * 모듈 카드는 찾는 말이 곧 앱 이름일 때만 쓸모가 있고, 그때는 자료 쪽 결과가 적어
+ * 뒤에 있어도 바로 보인다. **찾은 자료가 먼저다.**
+ *
+ * (이 고침은 2026-08-12 에 `claude/mobile-code-working-k07dwn` 브랜치에서 만들어졌는데
+ *  **main 에 합쳐지지 않아 배포본에는 없었다.** 2026-08-14 야간에 다시 반영한다.)
+ */
+const MODULE_ORDER = ['finder', 'compare', 'install', 'as', 'place', 'care', 'hub']
 const MAX_PER_MODULE = 12
 
 // 검색 결과에서 바로 펼쳐보는 상세 스펙 — 카탈로그 PDF를 열지 않고 확인하기 위한 화면
