@@ -230,8 +230,26 @@ export function ignoredWords(q: string): string[] {
 
 export type Condition = { raw: string; forms: string[] }
 
+/* 대조 규칙이 글자 종류에 따라 갈린다 — 한쪽으로 통일하면 반드시 한쪽이 깨진다.
+ *
+ * **한글은 통짜 부분일치여야 한다.** 합성어가 한 토큰으로 붙어 있어서다 —
+ * `무풍에어컨`·`시스템에어컨`·`김치냉장고`. 앞머리로 바꿔 재 보니 '에어컨'이
+ * 142 → 80건, '냉장고'가 110 → 82건으로 무너졌다.
+ *
+ * **라틴·숫자는 낱말 앞머리여야 한다.** 통짜로 보면 짧은 말이 모델코드 한가운데
+ * 걸린다 — *"버즈 as"* 가 **타사비교 노트북**을 먼저 내밀고 있었다(모델코드 속
+ * `as`). 색인의 짧은 라틴 토큰 630종 중 **481종**에 이 오탐이 있었다:
+ * `as` 91 → 50 · `mm` 391 → 17 · `ax` 119 → 10 · `20` 579 → 172.
+ *
+ * **낱말 '완전'일치로 가지 않는 이유**는 모델코드 부분검색이다 — 상담사는
+ * `rm90` 까지만 치고 `RM90H91B1W` 를 찾는다(완전일치면 0건, 앞머리면 5건). */
+function matches(kw: string, f: string): boolean {
+  if (/[가-힣]/.test(f)) return kw.includes(f)
+  return kw.startsWith(f) || kw.includes(' ' + f)
+}
+
 /** 한 항목이 그 조건을 만족하는가 — 표기 중 하나라도 키워드에 있으면 참 */
 export function hits(kw: string, c: Condition): boolean {
-  for (const f of c.forms) if (kw.includes(f)) return true
+  for (const f of c.forms) if (matches(kw, f)) return true
   return false
 }

@@ -394,6 +394,32 @@ for (const [file, needle] of deepLinks) {
   }
 
   /*
+   * ── ⑥-b 대조 규칙이 글자 종류에 따라 갈린다 ──
+   *
+   * 라틴·숫자를 통짜 부분일치로 보면 짧은 말이 모델코드 한가운데 걸린다
+   * (`as` 91 → 50건 · `mm` 391 → 17건 · `ax` 119 → 10건). 반대로 한글을
+   * 낱말 앞머리로 보면 합성어가 무너진다(`에어컨` 142 → 80건).
+   * **한쪽으로 통일하면 반드시 한쪽이 깨지므로** 둘 다 검사한다.
+   */
+  {
+    const n = (q) => find(q).length;
+    // ① 라틴은 낱말 경계 — 모델코드 한가운데 걸리면 안 된다
+    const mid = entries.filter((e) => e.kw.includes('as') && !e.kw.split(' ').some((t) => t.startsWith('as')));
+    const hitAs = new Set(find('as'));
+    const bad = mid.filter((e) => hitAs.has(e));
+    if (bad.length) fail(`'as' 가 낱말 가운데 걸린다 ${bad.length}건 (예: ${bad[0].title}) — 라틴은 낱말 앞머리로 봐야 한다`);
+    else console.log(`OK: 라틴 짧은 말이 낱말 경계에서만 걸림 ('as' ${hitAs.size}건 · 통짜였으면 ${hitAs.size + mid.length}건)`);
+    // ② 그래도 모델코드 앞머리 검색은 살아 있어야 한다 — 상담사는 앞 네 자만 친다
+    if (!n('rm90')) fail("'rm90' 로 RM90H91B1W 를 못 찾는다 — 낱말 '완전'일치로 바뀌면 모델코드 부분검색이 죽는다");
+    else console.log(`OK: 모델코드 앞머리 검색 'rm90' → ${n('rm90')}건`);
+    // ③ 한글 합성어는 통짜 부분일치라야 한다(무풍에어컨·김치냉장고가 한 토큰이다)
+    for (const [q, min] of [['에어컨', 120], ['냉장고', 100], ['청소기', 40]]) {
+      if (n(q) < min) fail(`'${q}' 가 ${n(q)}건뿐 — 한글을 낱말 앞머리로 보면 합성어가 빠진다(최소 ${min}건)`);
+      else console.log(`OK: 한글 합성어 부분일치 '${q}' → ${n(q)}건`);
+    }
+  }
+
+  /*
    * ── ⑦ 화면에 보이는 제목으로 반드시 찾아진다 ──
    *
    * AS 묶음 107건만 제목이 kw 에서 빠져 있어 `김치냉장고 보증기간`(화면에 그렇게 적혀 있다)이
