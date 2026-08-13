@@ -149,6 +149,29 @@
     font-size:14px;font-weight:800}
   .grp>summary::-webkit-details-marker{display:none}
   .grp>summary .gi{font-size:17px;line-height:1;flex:0 0 auto}
+  /*
+   * **묶음은 2열로 늘어놓는다**(2026-08-13 사용자 요청). 아홉 개를 세로로 쌓으면
+   * 한 화면에 안 들어와 *무엇이 있는지* 훑을 수가 없다 — 찾는 것이 정해져 있으면
+   * 위 검색창을 쓰면 되고, 이 목록은 "어디에 무엇이 있나"를 보여주는 것이 일이다.
+   * **펼친 것만 전폭을 쓴다**(`grid-column:1/-1`) — 안 그러면 열린 내용이 반쪽 폭에 눌린다.
+   */
+  .grps{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px}
+  .grps>.grp{margin-bottom:0}
+  .grps>.grp[open]{grid-column:1/-1}
+  .grps>.grp>summary{padding:11px 12px;gap:7px;font-size:12.5px}
+  /* 아이콘이 컸다 — 2열에서는 글자를 밀어낸다. 담는 자리와 무관하게 못 박는다 */
+  .grps>.grp>summary .gi svg.psym{width:16px;height:16px}
+  /* 접혀 있을 때 부제는 감춘다. 2열에 세 줄이 들어가면 타일이 도로 길어진다 */
+  .grps>.grp:not([open])>summary .gt span{display:none}
+  .grps>.grp>summary .gc{padding:1px 6px;font-size:10px}
+  .grps>.grp>summary .gv{font-size:10px;margin-left:-2px}
+  /*
+   * **한글은 어절 단위로 끊는다.** 기본값은 글자 아무 데서나 끊어서 좁은 칸에서
+   * "AS · 수리 모/음" · "시스템에어/컨 천장형" 처럼 읽히지 않는 줄바꿈이 났다.
+   */
+  .grps>.grp>summary .gt b{word-break:keep-all;line-height:1.32}
+  /* 아주 좁은 기기에서는 두 열이 글자를 자른다 — 한 열로 돌아간다 */
+  @media (max-width:359px){ .grps{grid-template-columns:1fr} }
   /* 제목과 부제는 줄을 나눈다 — 한 줄로 붙으면 "AS·수리 모음AS 접수…" 로 읽힌다 */
   .grp>summary .gt{min-width:0;flex:1}
   .grp>summary .gt b{display:block;font-weight:800}
@@ -914,6 +937,10 @@ function renderContacts(){
     <b>맨 위 검색창</b>에 지역·품목·협력사를 치면 바로 그 자리로 데려갑니다.
     번호를 누르면 걸기·복사를 고를 수 있습니다.</div>`;
 
+  /* 아홉 묶음은 2열 격자에 담는다 — 세로로 쌓으면 한 화면에 안 들어와
+     "어디에 무엇이 있나"를 훑을 수가 없다. 펼친 것만 전폭을 쓴다(CSS `.grps`). */
+  h += '<div class="grps">';
+
   /* ① AS · 수리 */
   h += grp(g['g-as'],
     `<div class="card">${CONTACTS.map(x=>`<div class="ctg">${esc(x.g)}</div>
@@ -974,6 +1001,8 @@ function renderContacts(){
        가전은 성광티시엠, IT 는 다존텍입니다.</div>
      <input class="lgq" id="itq" placeholder="지역 · 협력사 · 센터명으로 찾기" autocomplete="off">
      <div id="itlist"></div>`);
+
+  h += '</div>';   /* .grps 닫기 */
 
   h += `<div class="src">AS·구매 연락처 — 삼성전자서비스(samsungsvc.co.kr) · 삼성닷컴(samsung.com/sec) 공식 표기 · 2026-08-11 확인<br>
     물류센터 — 사내 배포본 '센터별 배송 서비스지역'(2026.1.02 시행) 원문 그대로<br>

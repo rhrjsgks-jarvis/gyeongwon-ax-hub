@@ -227,8 +227,31 @@
      * 선으로 그린 SVG 는 안쪽에 여백이 남기 때문이다. 1.15em 이 눈으로 맞는 크기다.
      */
     st.textContent = '.psym{width:1.15em;height:1.15em;display:inline-block;vertical-align:-0.2em;'
-      + 'color:#1428A0;flex:0 0 auto}';
+      + 'color:#1428A0;flex:0 0 auto}'
+      /*
+       * **어두운 바탕 위에서는 글자색을 그대로 따른다.** 색을 삼성 블루로 못 박아 두면
+       * 남색 헤더 위에서 파랑 위 파랑이 되어 심벌이 사라진다(2026-08-13 사용자 지적).
+       * 이모지였을 때는 컬러 비트맵이라 배경과 무관했는데 선 그림으로 바꾸며 생긴 문제다.
+       * 배경색은 CSS 로 알 수 없지만 **글자색은 읽을 수 있다** — 아래 `lightInk()` 가
+       * 갈아 끼우는 순간 재서 이 클래스를 붙인다. 앱마다 선택자를 손으로 적지 않아도 되고,
+       * 앞으로 새로 생기는 어두운 카드에도 저절로 맞는다.
+       */
+      + '.psym.psym-ink{color:currentColor}';
     (document.head || document.documentElement).appendChild(st);
+  }
+
+  /** 그 자리의 글자가 밝은가 — 밝으면 어두운 바탕이라는 뜻이다 */
+  function lightInk(el) {
+    try {
+      var m = /(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(getComputedStyle(el).color || '');
+      if (!m) return false;
+      return (0.299 * +m[1] + 0.587 * +m[2] + 0.114 * +m[3]) > 150;
+    } catch (e) { return false; }
+  }
+  /** 어두운 바탕이면 글자색을 따르게 표시한다 */
+  function tone(svg, host) {
+    if (svg && host && lightInk(host)) svg.classList.add('psym-ink');
+    return svg;
   }
 
   var EMO = /[←-⇿☀-➿⬀-⯿️⌚⌛⏰-⏺]|[\uD83C-\uD83E][\uDC00-\uDFFF]/;
@@ -255,6 +278,7 @@
       var svg = prodSymbol(label, null);
       if (!svg) continue;                                     // 모르는 라벨은 이모지를 그대로 둔다
       el.innerHTML = svg;
+      tone(el.querySelector('svg.psym'), el);
       n++;
     }
     return n;
@@ -323,7 +347,7 @@
         if (m.index > last) frag.appendChild(document.createTextNode(t.nodeValue.slice(last, m.index)));
         var span = document.createElement('span');
         span.innerHTML = prodSymbol(EMOJI[m[1]], '');
-        if (span.firstChild) frag.appendChild(span.firstChild);
+        if (span.firstChild) frag.appendChild(tone(span.firstChild, t.parentElement || t.parentNode));
         else frag.appendChild(document.createTextNode(m[0]));
         last = m.index + m[0].length;
       }
