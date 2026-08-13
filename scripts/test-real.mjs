@@ -132,6 +132,16 @@ for (const s of sample) {
         const S = (P.state.baseMask || {}).S || 1;
         const bw = bx ? (bx.x1 - bx.x0) / S : P.state.imgW;
         out.span = Math.abs(m.x2 - m.x1) / Math.max(1, bw);
+        /*
+         * **세대 폭을 골랐을 때 화면이 그 사실을 말하는가.** 벽을 그렇게 고른 것 자체는
+         * 사고가 아니다 — 사용자가 12,000 이라고 답하면 축척은 정확하다. 사고는 그 벽을
+         * 두고 "침실1 가로는 보통 3,000~3,600mm" 라고 안내하는 것이다.
+         */
+        const bar = document.getElementById('draftbar');
+        out.barText = (bar.textContent || '').replace(/\s+/g, ' ').trim();
+        out.warnsWide = /세대 전체 폭/.test(out.barText);
+        out.hintsRoom = /보통 [\d,]+~[\d,]+mm/.test(out.barText);
+        out.prefill = +((document.getElementById('wl') || {}).value || 0);
       }
     }
     /*
@@ -201,25 +211,30 @@ else if (withSeg.length) {
  * 실측(`.scratch/scale-truth.mjs`, 54장) — 중앙값 0.36 이 정상이고 0.8 이상이 사고다.
  * 고치기 전 4장(7%) → "침실은 세대 폭을 가로지르지 않는다"를 넣은 뒤 2장(4%).
  *
- * **비율 상한이 아니라 0 으로 잡는다.** 7% 짜리 현상을 30장 표본에 대고 "상한 10%"로
- * 재면 영영 안 문다 — 실제로 고치기 전 이 표본의 값이 1장(3%)이라 10% 문턱을 그냥
- * 통과했다. 한 장이라도 나오면 실패시킨다.
+ * **"한 장도 없어야 한다"는 못 지킨다 — 지켜서도 안 된다.** 30장 표본에서는 0 이었지만
+ * 150장으로 넓히니 6장이 나왔다(춘천 레이크시티 144A 등). 그리고 벽을 그렇게 고른 것
+ * 자체는 사고가 아니다 — 사용자가 12,000 이라고 답하면 축척은 정확하다.
  *
- * **후보가 하나뿐인 도면은 세지 않는다.** 원룸처럼 세대 폭이 곧 방 폭이면 물러설 곳이
- * 없어 이건 인식 실패가 아니다. 고를 수 있었는데 세대 폭을 골랐을 때만 사고다.
+ * **진짜 사고는 그 벽을 두고 "침실1 가로는 보통 3,000~3,600mm" 라고 안내하는 것이다.**
+ * 안내대로 3,300 을 넣으면 축척이 3.6배 틀어지고 이후 판정이 전부 거짓이 된다.
+ * 그래서 검사도 "고르지 마라"가 아니라 **"골랐으면 사실대로 말하라"** 로 둔다:
+ * 세대 폭이면 방 이름·예시 치수를 빼고, 미리 채워 둔 값도 지운다.
  */
 {
   const withSpan = auto.filter((r) => r.span != null);
   if (withSpan.length) {
     const wide = withSpan.filter((r) => r.span >= 0.8);
-    const only1 = wide.filter((r) => (r.cands || 0) <= 1);
-    const bad = wide.filter((r) => (r.cands || 0) > 1);
-    if (bad.length) {
-      fail(`기준 벽이 세대 폭인 도면 ${bad.length}장 — 고를 후보가 있었는데 세대 폭을 골랐다`
-        + ` : ${bad.slice(0, 3).map((r) => `${r.c} ${r.type}(${r.span.toFixed(2)})`).join(', ')}`);
+    const silent = wide.filter((r) => !r.warnsWide);
+    const misled = wide.filter((r) => r.hintsRoom || r.prefill > 0);
+    if (silent.length) {
+      fail(`기준 벽이 세대 폭인데 화면이 말하지 않는다 ${silent.length}장`
+        + ` : ${silent.slice(0, 3).map((r) => `${r.c} ${r.type}(${r.span.toFixed(2)})`).join(', ')}`);
+    } else if (misled.length) {
+      fail(`세대 폭 벽에 방 예시 치수나 미리 채운 값이 남아 있다 ${misled.length}장`
+        + ` — 그대로 확정하면 축척이 통째로 틀어진다: ${misled.slice(0, 3).map((r) => `${r.c} ${r.type}`).join(', ')}`);
     } else {
-      pass(`기준 벽이 세대 폭인 도면 없음 (건물 폭 대비 중앙값 ${med(withSpan.map((r) => r.span)).toFixed(2)})`
-        + (only1.length ? ` · 후보가 하나뿐이라 제외 ${only1.length}장` : ''));
+      pass(`기준 벽 — 건물 폭 대비 중앙값 ${med(withSpan.map((r) => r.span)).toFixed(2)}`
+        + (wide.length ? ` · 세대 폭 ${wide.length}장은 화면이 그 사실을 밝힌다` : ' · 세대 폭 없음'));
     }
   }
 }

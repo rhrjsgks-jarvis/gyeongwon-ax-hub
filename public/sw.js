@@ -62,7 +62,7 @@
  * **버전은 덩어리를 다 만든 맨 마지막에 한 번 올린다.** 중간에 찍어 두면 그 뒤에 고친
  * 미니앱이 옛 캐시로 남고, 아래 test-consistency 의 대조가 바로 그것을 잡는다.
  */
-const CACHE_VERSION = 'axhub-v31';
+const CACHE_VERSION = 'axhub-v32';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

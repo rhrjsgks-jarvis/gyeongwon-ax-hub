@@ -4505,18 +4505,38 @@ function askWallLength(segs, opts){
    * 막대를 **다시 그릴 수 있게** 함수로 뺐다 — `다음`으로 후보를 넘기면 문구(가로/세로)와
    * 주황 표시가 함께 바뀌어야 하기 때문이다. 숫자와 그림이 따로 놀면 축척이 틀어진다.
    */
+  /*
+   * **부각한 벽이 세대 전체 폭이면 방 이름으로 묻지 않는다**(2026-08-14 실측으로 넣음).
+   *
+   * 도면 150장을 훑어 보니 **6장에서 기준 벽이 건물 폭 전체**였다. 벽을 그렇게 고른 것
+   * 자체는 사고가 아니다 — 사용자가 12,000 이라고 답하면 축척은 정확하다. **사고는 그
+   * 벽을 두고 "침실1 가로는 보통 3,000~3,600mm" 라고 안내하는 것이다.** 안내대로 3,300 을
+   * 넣으면 축척이 3.6배 틀어지고 이후 "들어갑니다"가 전부 거짓이 된다.
+   *
+   * 그래서 인식을 더 쥐어짜는 대신 **화면이 사실대로 말하게** 한다 — 방 이름과 예시 치수를
+   * 빼고 "이 벽"으로 묻고, 세대 전체 폭으로 보인다고 알린다. 사용자는 그 길이를 넣거나
+   * `다음 ▸` 으로 다른 벽을 고르면 된다.
+   */
+  const bldgW = (() => {
+    const bx = (state.baseInfo || {}).bbox, S = (state.baseMask || {}).S || 1;
+    return bx ? Math.max(1, (bx.x1 - bx.x0) / S) : (state.imgW || 1);
+  })();
+  const spans = (c) => c.dir !== 'v' && c.len >= bldgW * 0.8;
+
   const paint = () => {
     const c = cands[ci];
     lmax = c.len; mseg = c.seg; state.measureSeg = mseg;
     const way = c.dir === 'v' ? '세로' : '가로';
+    const wide = spans(c);
     bar.innerHTML = "<div class='dl'>"
-      + "<span class='area'>" + esc(rn) + " " + way + "가 몇 mm 입니까?</span>"
+      + "<span class='area'>" + (wide ? "이 벽의 길이가 몇 mm 입니까?" : esc(rn) + " " + way + "가 몇 mm 입니까?") + "</span>"
       + (cands.length > 1
         ? "<span class='grow'></span><button id='wl-next'>다음 ▸ <span class='n'>"
           + (ci + 1) + "/" + cands.length + "</span></button>" : "")
       + "</div>"
       + "<div class='dl'>"
-      + "<input type='number' id='wl' value='" + (c.dir === 'v' ? 3000 : 3600) + "' min='100' step='10' "
+      /* 세대 폭이면 **미리 채우지 않는다** — 3,600 이 들어 있으면 그냥 확정을 누른다 */
+      + "<input type='number' id='wl' value='" + (wide ? '' : (c.dir === 'v' ? 3000 : 3600)) + "' min='100' step='10' "
       + "style='width:120px;padding:6px 8px;font:600 15px ui-monospace,monospace'>"
       + "<span class='meta'>mm</span>"
       + "<span class='grow'></span>"
@@ -4537,7 +4557,9 @@ function askWallLength(segs, opts){
        */
       + "<div class='dl'><span class='prev'><b style='color:#B45309'>주황색으로 표시된 벽</b>입니다 — "
       + "넣으시면 <b>도면 전체</b>가 그 비율로 맞춰집니다."
-      + (c.dir === 'v' ? '' : wallHint(rn))
+      + (wide
+        ? " 이 벽은 <b>세대 전체 폭</b>으로 보입니다 — 방 하나의 치수를 넣지 마세요."
+        : (c.dir === 'v' ? '' : wallHint(rn)))
       + (cands.length > 1 ? " 이 벽 길이를 모르시면 <b>다음</b>으로 다른 벽을 고르세요." : "")
       + "</span></div>";
     draw();
