@@ -1752,16 +1752,52 @@ function ensureBase(){
   if (a0 && a1 < a0 * 0.4) { m = mask.dark; usedOpen = 0; }
   // **벽만 남긴다** — 두께보다 긴 곧은 띠(가로·세로)만 벽으로 본다. 글씨·문 열림 호·
   // 변기·둥근 기물·해칭·치수 마커가 여기서 전부 걸러진다.
-  const mmPx = (v, fb) => (state.mmPerPx
-    ? Math.max(2, Math.round((v / state.mmPerPx) * mask.S / 2))
-    : Math.max(2, Math.round(Math.max(mask.w, mask.h) * fb)));
+  /*
+   * **축척을 모를 때가 기본이다** — 이 정리는 사용자가 길이를 넣기 전에 돌고,
+   * 코퍼스의 92% 는 색인에도 축척이 없다. 그래서 폴백이 사실상 늘 쓰인다.
+   *
+   * 그 폴백이 **보정된 적 없는 어림값**(0.010 · 0.009 · 0.03)이었다. 같은 파일의
+   * `classifyEdges` 는 이미 실측 보정값을 쓴다 — **1mm ≈ 도면 긴변의 0.0054%**,
+   * 축척이 실린 도면 15장으로 잰 것이다. 그 기준으로 환산하면 셋 다 1.35~1.44배
+   * 작았고, **얇은 쪽으로 틀리면 실제 벽이 통째로 걸러진다.**
+   *   성남복정 84(806×557) — 두께 기준이 7px 인데 그 도면의 벽은 8~14px 이라
+   *   왼쪽 절반의 벽 덩어리(원본 28,492px)가 잘게 부서졌다. 그래서 축척 전
+   *   건물 상자가 540×531(축척 후 804×554)로 잡히고, `autoDetectCenter` 가
+   *   **엉뚱한 기준 벽**을 골라 사용자가 거기에 길이를 넣게 된다.
+   *
+   * 이제 두 곳이 같은 상수를 쓴다. 폴백은 "축척을 안다면 얼마였을까"를 그대로 계산한다.
+   */
+  /*
+   * **축척을 모를 때가 기본이다** — 이 정리는 사용자가 길이를 넣기 전에 돌고,
+   * 코퍼스의 92% 는 색인에도 축척이 없다. 그래서 폴백이 사실상 늘 쓰인다.
+   *
+   * **두께 폴백이 잘못돼 멀쩡한 내력벽을 가구로 지우고 있었다**(2026-08-14).
+   * 성남복정 84(806×557, 약 13.6mm/px)에서 두께 문턱이 7px 이라 "14px 초과는 가구"가
+   * 되는데, 그 도면의 실제 200~250mm 벽이 **15~18px** 이다. 바로 아래 주석이
+   * *"아파트 내력벽은 150~250mm라 이 기준(450mm)에 걸리지 않는다"* 고 적어 둔 그 전제가
+   * 폴백에서만 깨져 있었다 — 옛 폴백은 450mm 가 아니라 **약 190mm** 에 해당했다.
+   * 결과로 왼쪽 절반의 벽 덩어리(원본 28,492px)가 부서져 축척 전 건물 상자가
+   * 540×531(축척 후 804×554)로 잡히고, `autoDetectCenter` 가 엉뚱한 기준 벽을 골랐다.
+   *
+   * 환산은 같은 파일 `classifyEdges` 가 쓰는 **실측 보정값**과 하나로 맞춘다 —
+   * **1mm ≈ 도면 긴변의 0.0054%**(축척이 실린 도면 15장으로 잰 것).
+   *
+   * **길이·조각 폴백은 손대지 않는다.** 셋을 함께 올려 보니 짧은 벽 토막이 사라져
+   * test-real 의 '기준 벽이 세대 폭' 이 0 → 4장으로 후퇴했다(실측). 진단된 원인은
+   * 두께뿐이므로 두께만 고친다.
+   */
+  const mmFb = Math.max(mask.w, mask.h) * 0.000054;      // 1mm 당 마스크 픽셀(실측 보정)
+  const pxPerMm = state.mmPerPx ? mask.S / state.mmPerPx : mmFb;
+  const oldPx = (fb) => Math.max(2, Math.round(Math.max(mask.w, mask.h) * fb));
   // 띠 길이 기준 500mm — 문 옆 벽 토막·600mm 기둥은 남고, 실명 글씨 한 덩이(400~460mm)와
   // 해칭 빗금은 걸러진다. 이보다 올리면 작은 기둥·벽감이 사라져 그 자리에 가전을 놓게 된다.
-  m = keepBands(m, mask.w, mask.h, mmPx(500, 0.010), mmPx(450, 0.009));
+  const lenPx = state.mmPerPx ? Math.max(2, Math.round(500 * pxPerMm / 2)) : oldPx(0.010);
+  const thickPx = Math.max(2, Math.round(450 * pxPerMm / 2));
+  m = keepBands(m, mask.w, mask.h, lenPx, thickPx);
   // 그래도 떨어져 남은 작은 조각을 지운다. 기준은 800mm — 벽은 아무리 짧아도 그보다 길다.
   const speckPx = state.mmPerPx
     ? Math.max(4, Math.round((800 / state.mmPerPx) * mask.S))
-    : Math.max(6, Math.round(Math.max(mask.w, mask.h) * 0.03));
+    : oldPx(0.03);
   m = dropSpecks(m, mask.w, mask.h, speckPx);
   const bbox = structureBox(m, mask.w, mask.h);
   // 건물 안쪽 — 창의 유리선이 살아 있는 **원본** 마스크로 잡는다. 근거를 못 찾으면 null.

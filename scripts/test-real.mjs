@@ -161,6 +161,30 @@ for (const s of sample) {
       const bA = bx2 ? ((bx2.x1 - bx2.x0) / S2) * ((bx2.y1 - bx2.y0) / S2) : P.state.imgW * P.state.imgH;
       if (bA > 0) { out.cover2 = sum / bA * 100; out.spaces = (P.state.rooms || []).length; }
     } catch (_) {}
+    /*
+     * **축척 전 건물 상자가 축척 후와 같은가** (2026-08-14 신설).
+     *
+     * 건물이 어디까지인지는 축척을 알든 모르든 같아야 한다. 그런데 정리 문턱이 mm 기준이라
+     * 축척이 없으면 폴백으로 어림하고, 그 어림이 빗나가면 **정리 단계가 진짜 벽을 지운다.**
+     * 성남복정 84 에서 축척 전 540×531 / 축척 후 804×554 였다(넓이비 0.64).
+     *
+     * 이게 왜 사고인가 — 축척 전 상자는 `autoDetectCenter` 가 **기준 방·기준 벽**을 고르는
+     * 데 쓰인다. 여기가 어긋나면 화면이 엉뚱한 벽을 주황으로 표시하고 사용자가 거기에
+     * 길이를 넣어 **도면 전체 축척이 틀어진다.** 위의 덮는 비율은 표본에 흔들리는 넓은
+     * 그물이라 이걸 못 잡는다(되돌려도 통과하는 것을 확인했다).
+     */
+    try {
+      const bxA = (P.state.baseInfo || {}).bbox, SA = (P.state.baseMask || {}).S || 1;
+      P.state.mask = null; P.state.baseMask = null; P.state.sealCache = null;
+      P.state.mmPerPx = 10; P.state.scaled = true;      // 코퍼스 도면의 실제 축척대(9~22)와 같은 자릿수
+      try { P.detectRoomAt(P.state.imgW / 2, P.state.imgH / 2); } catch (_) {}
+      const bxB = (P.state.baseInfo || {}).bbox, SB = (P.state.baseMask || {}).S || 1;
+      if (bxA && bxB) {
+        const aA = ((bxA.x1 - bxA.x0) / SA) * ((bxA.y1 - bxA.y0) / SA);
+        const aB = ((bxB.x1 - bxB.x0) / SB) * ((bxB.y1 - bxB.y0) / SB);
+        if (aB > 0) out.boxRatio = aA / aB;
+      }
+    } catch (_) {}
     return out;
   }, s);
   rows.push({ ...s, ...r });
@@ -178,6 +202,7 @@ console.log(`실제 도면 ${rows.length}장 (보유 ${have.length}장 중 고�
  * 기준선은 2026-08-09 실측값에서 여유를 둔 것이다. 목표가 아니라 **하한**이므로,
  * 인식을 개선하면 여기 숫자를 함께 올려 다시 못 내려가게 할 것.
  */
+if (process.env.AUTO_DEBUG) console.log("  자동 인식 실패:", rows.filter((r)=>!auto.includes(r)).map((r)=>r.file||(r.c+" "+r.type)).join(" / "));
 if (rate < 0.80) fail(`자동 인식 성공률 ${Math.round(rate*100)}% — 실측 기준 90%, 하한 80%`);
 else pass(`자동 인식 ${auto.length}/${rows.length}장 (${Math.round(rate*100)}%)`);
 
@@ -316,6 +341,23 @@ console.log(`NOTE: 후보 방 개수 중앙값 ${med(auto.map((r)=>r.cands))}`);
     const mc2 = med(cv);
     if (mc2 < 55) fail(`도면 전체 인식이 건물의 ${mc2.toFixed(0)}% 만 덮는다 — 하한 55%`);
     else pass(`도면 전체 인식 덮는 비율 중앙값 ${mc2.toFixed(1)}% · 공간 수 중앙값 ${med(auto.filter((r)=>r.spaces!=null).map((r)=>r.spaces))}`);
+  }
+
+  /*
+   * 축척 전/후 건물 상자가 어긋나는 도면 — 축척 전 정리가 진짜 벽을 지운 것이다.
+   * 실측(30장): 고친 뒤 중앙값 1.00 · 0.8 미만 0장 / 두께 폴백을 되돌리면 0.8 미만이 늘어난다.
+   * 넉넉히 **0.8 미만이 표본의 15% 넘으면 실패**로 둔다 — 도면 한두 장의 표기 특성으로
+   * 흔들리는 것까지 잡으려 들면 거짓 실패가 난다.
+   */
+  const br = auto.filter((r) => r.boxRatio != null).map((r) => r.boxRatio);
+  if (br.length) {
+    const off = br.filter((v) => v < 0.8);
+    if (off.length > br.length * 0.15) {
+      fail(`축척 전 건물 상자가 축척 후보다 좁은 도면 ${off.length}/${br.length}장 (넓이비 중앙 ${med(br).toFixed(2)})`
+        + ` — 정리 문턱이 어긋나 진짜 벽을 지우고 있다. 기준 벽 선택이 통째로 틀어진다`);
+    } else {
+      pass(`축척 전 건물 상자 = 축척 후 (넓이비 중앙값 ${med(br).toFixed(2)} · 0.8 미만 ${off.length}/${br.length}장)`);
+    }
   }
 }
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
