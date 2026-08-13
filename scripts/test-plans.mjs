@@ -2260,12 +2260,13 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
        '다음'(다른 벽·다른 방)과 '치수선 두 점으로'(치수가 인쇄된 8% 도면의 유일한 길) */
     const hasNext = !!document.getElementById('wl-next');
     const hasTwo = !!document.getElementById('wl-two');
+    const hasPick = !!document.getElementById('wl-pick');
     wl.value = '3600';
     document.getElementById('wl-ok').click();
     await new Promise((res) => setTimeout(res, 4000));
     const info = window.Place3D.open();
     window.Place3D.close();
-    return { one, after: P.state.rooms.length, in3d: info.rooms, scaled: P.state.scaled, hasNext, hasTwo };
+    return { one, after: P.state.rooms.length, in3d: info.rooms, scaled: P.state.scaled, hasNext, hasTwo, hasPick };
   });
 
   if (r.err) fail(`축척→전체: ${r.err}`);
@@ -2276,7 +2277,73 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     fail(`축척→전체: 잡힌 공간 ${r.after}곳인데 3D 에는 ${r.in3d}곳만 섰다`);
   else if (!r.hasNext) fail("길이 입력 막대에 '다음'(다른 벽·다른 방)이 없다 — 아는 벽을 고를 길이 막혔다");
   else if (!r.hasTwo) fail("길이 입력 막대에 '치수선 두 점으로'가 없다 — 치수가 인쇄된 도면이 갈 곳이 없다");
-  else pass(`축척→전체 — 축척 단계 ${r.one}곳 → 도면 전체 ${r.after}곳, 3D 도 ${r.in3d}곳 전부 · 막대에 다음·두점 손잡이 있음`);
+  else if (!r.hasPick) fail("길이 입력 막대에 '벽 직접 고르기'가 없다 — 아는 벽을 직접 누를 길이 없다");
+  else pass(`축척→전체 — 축척 단계 ${r.one}곳 → 도면 전체 ${r.after}곳, 3D 도 ${r.in3d}곳 전부 · 막대에 다음·두점·직접고르기 손잡이 있음`);
+}
+
+/*
+ * ── 내가 고른 벽으로 축척을 맞춘다 (2026-08-14 신설) ──────────────────
+ *
+ * 자동이 고른 벽의 실제 길이를 상담사가 모를 수 있다. `벽 직접 고르기` 를 켜고 도면에서
+ * 그 벽면을 누르면 그 벽으로 잰다.
+ *
+ * **누른 조각 하나가 아니라 벽면 전체를 재야 한다.** `classifyEdges` 가 한 벽면을
+ * [벽토막 | 개구부 | 벽토막] 으로 쪼개 놓아, 조각만 재면 **창 하나를 재게 된다** —
+ * 실제로 75㎡ 도면에서 침실1 아래 창 구간만 잡혀 축척이 통째로 틀어졌다(CLAUDE.md).
+ * 그래서 이 검사는 ①고른 벽이 누른 조각보다 길어졌는지 ②그 축척으로 공간이 4곳 이상
+ * 잡히는지를 함께 본다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    P.state.rooms = []; P.state.walls = []; P.state.items = [];
+    P.state.mmPerPx = null; P.state.scaled = false;
+    await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('load')), 9000);
+      P.useImage('/plans/c39/84.jpg', () => { clearTimeout(t); res(); }); });
+    await wait(2200);
+    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => /이 공간 확정/.test(x.textContent));
+    if (!ok) return { err: '초안 막대에 확정 버튼이 없다' };
+    ok.click(); await wait(400);
+    const nb = document.querySelector('#sheet .modal-actions button.primary');
+    if (nb) nb.click(); await wait(600);
+    const pick = document.getElementById('wl-pick');
+    if (!pick) return { err: "'벽 직접 고르기' 버튼이 없다" };
+
+    /* 켠다 → 도면의 벽 하나를 누른다(초안 경계에서 조각 하나를 골라 그 가운데를 누른다) */
+    pick.click(); await wait(150);
+    if (!P.state.wallPick) return { err: '눌렀는데 벽 고르기가 켜지지 않았다' };
+    const segs = (P.state.wallSegs || []).map((e) => ({ x1:e.x1, y1:e.y1, x2:e.x2, y2:e.y2 }));
+    /* 쪼개진 가로 조각 중 가장 짧은 것 — 조각만 재는 사고가 나는 자리다 */
+    const hs = segs.filter((q) => Math.abs(q.y2 - q.y1) < 3 && Math.abs(q.x2 - q.x1) > 8)
+      .sort((a, b) => Math.abs(a.x2 - a.x1) - Math.abs(b.x2 - b.x1));
+    if (!hs.length) return { err: '가로 벽 조각이 없다' };
+    const q = hs[0];
+    const pieceLen = Math.abs(q.x2 - q.x1);
+    const k = P.state.mmPerPx || 1;
+    const wx = ((q.x1 + q.x2) / 2) * k, wy = ((q.y1 + q.y2) / 2) * k;
+    P.modeTap ? P.modeTap(0, 0, wx, wy, P.state.mode) : P.state.wallPickFn(wx, wy);
+    await wait(250);
+    const seg = P.state.measureSeg;
+    if (!seg) return { err: '벽을 눌렀는데 잴 벽이 정해지지 않았다' };
+    const runLen = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1);
+
+    const wl = document.getElementById('wl');
+    if (!wl) return { err: '길이 입력칸이 없다' };
+    wl.value = '3600';
+    document.getElementById('wl-ok').click();
+    await wait(4000);
+    return { pieceLen: Math.round(pieceLen), runLen: Math.round(runLen),
+      scaled: P.state.scaled, rooms: P.state.rooms.length,
+      still: P.state.wallPick };
+  });
+  if (r.err) fail(`벽 직접 고르기: ${r.err}`);
+  else if (!r.scaled) fail('벽 직접 고르기: 길이를 넣었는데 축척이 확정되지 않았다');
+  else if (r.runLen < r.pieceLen) fail(`벽 직접 고르기: 고른 벽(${r.runLen}px)이 누른 조각(${r.pieceLen}px)보다 짧다`);
+  else if (r.rooms < 4) fail(`벽 직접 고르기: 축척을 맞췄는데 공간이 ${r.rooms}곳뿐이다 — 도면 전체가 아니라 부분만 잡혔다`);
+  else if (r.still) fail('벽 직접 고르기: 벽을 고른 뒤에도 고르기 모드가 켜져 있다 — 다음 탭이 엉뚱한 벽을 잡는다');
+  else pass(`벽 직접 고르기 — 누른 조각 ${r.pieceLen}px → 벽면 전체 ${r.runLen}px 로 이어 재고`
+    + ` 축척 확정 · 공간 ${r.rooms}곳`);
 }
 
 /*
