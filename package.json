@@ -30,7 +30,8 @@
     "build:plans": "node scripts/build-plan-index.mjs",
     "bot": "node scripts/telegram-bot.mjs",
     "test:telegram": "node scripts/test-telegram.mjs",
-    "test:qr": "node --experimental-strip-types scripts/test-qr.mjs"
+    "test:qr": "node --experimental-strip-types scripts/test-qr.mjs",
+    "test:prod": "node scripts/test-prod.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",
