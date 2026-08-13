@@ -307,12 +307,34 @@ for (const [file, needle] of deepLinks) {
     ['안동 IT 이전설치 어디서 하나요', /다존텍/],
     ['후드 이전설치 어디로 문의하죠', /후드/],
     ['65인치 TV 있나요', /./],
+    /*
+     * 모바일·웨어러블 AS(2026-08-14). 구독·AS 가 가전 위주로만 채워져 있어 상담사가
+     * "갤럭시 워치 보증기간"을 쳐도 아무것도 안 나왔다. 자료를 넣었으면 **상담사가 쓰는
+     * 말로 찾아지는지**까지 봐야 한다 — 색인에 있어도 못 찾으면 없는 것과 같다.
+     */
+    ['갤럭시 워치 보증기간', /워치/],
+    ['선풍기 보증기간', /선풍기/],
   ]) {
     const hit = ask(q);
     if (!hit.length) fail(`자연어 질의 "${q}" → 0건`);
     else if (!needle.test(hit[0].title + hit[0].sub)) {
       fail(`자연어 질의 "${q}" 첫 결과가 "${hit[0].title}" — ${needle} 이어야 한다`);
     } else console.log(`OK: 자연어 "${q}" → ${hit.length}건 (${hit[0].title})`);
+  }
+
+  /*
+   * **결과 안에 있기만 하면 되는 질의** — 첫 결과까지 요구하지 않는다.
+   * "버즈 as" 는 AS 항목과 타사비교 '노트북'이 둘 다 걸린다(그 제품 셀링포인트에 '버즈'와
+   * '무상 A/S' 가 함께 있다). 찾아지기는 하지만 순위는 별개 문제라 여기서는 **누락만** 본다.
+   */
+  for (const [q, needle] of [
+    ['버즈 as', /버즈/],
+    ['워치 as', /워치/],
+  ]) {
+    const hit = ask(q);
+    const ok = hit.some((e) => needle.test(e.title + (e.sub || '')));
+    if (!ok) fail(`질의 "${q}" 결과 ${hit.length}건에 ${needle} 항목이 없다`);
+    else console.log(`OK: "${q}" → ${hit.length}건에 ${needle} 포함`);
   }
 
   // 앱 안에 아무 말도 없으면 0건이어야 한다 — 아무거나 무는 검색은 없느니만 못하다
