@@ -1494,6 +1494,69 @@ const knownGaps = [];
   }
 
   /*
+   * ── 실제 도면 3장에서 3D 공간 수 = 2D 인식 공간 수 (2026-08-14 신설) ──
+   *
+   * 지시문 C 의 완료 조건이다. **단지 불러오기 경로**로 확인해야 한다 — 그 경로만
+   * 색인 축척을 쓰고 거기서 `detectAllRooms` 가 돌기 때문이다(위 화면 맞춤 사고도
+   * 그 갈래에서만 났다).
+   *
+   * 방 하나만 서면 실패다: *"도면의 한 부분만 3D로 만드는 게 아닙니다"*(사용자).
+   * 합성 도면 한 장으로 보는 `축척→전체` 검사와 달리, 여기서는 **실제 분양 도면**을 본다.
+   */
+  {
+    const rows = await page.evaluate(async () => {
+      const P = window.__place;
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const idx = await P.loadPlanIndex();
+      /* 색인 축척이 실린 도면 3장 — 단지가 겹치지 않게 고른다(같은 단지는 서식이 같다) */
+      const picks = [];
+      for (const c of idx) {
+        if (picks.some((p) => p.c.complex === c.complex)) continue;
+        const p = c.plans.find((x) => x.mmPerPx);
+        if (p) picks.push({ c, p });
+        if (picks.length === 3) break;
+      }
+      if (picks.length < 3) return { skip: picks.length };
+      const out = [];
+      for (const hit of picks) {
+        P.state.rooms = []; P.state.walls = []; P.state.items = [];
+        P.state.img = null; P.state.mmPerPx = null; P.state.scaled = false;
+        await P.openLibrary(); await wait(300);
+        const items = () => [...document.querySelectorAll('#libbody .libitem')];
+        const click = (t) => { const b = items().find((x) => (x.textContent || '').includes(t)); if (b) b.click(); return !!b; };
+        const sido = (hit.c.region || '').split(' ')[0];
+        const chip = [...document.querySelectorAll('#libchips .chip')].find((x) => (x.textContent || '').includes(sido));
+        if (chip) { chip.click(); await wait(200); }
+        const sigun = (hit.c.region || '').split(' ').slice(-1)[0];
+        if (!click(sigun) || (await wait(250), !click(hit.c.complex))) { out.push({ name: hit.c.complex, err: '목록에서 못 찾음' }); continue; }
+        await wait(250);
+        if (!click(String(hit.p.type))) { out.push({ name: hit.c.complex, err: '도면을 못 찾음' }); continue; }
+        for (let i = 0; i < 60 && !P.state.img; i++) await wait(200);
+        await wait(2400);
+        const twoD = (P.state.rooms || []).length;
+        let info = null;
+        try { if (window.load3D) await window.load3D(); info = window.Place3D.open(); } catch (e) {}
+        await wait(400);
+        try { window.Place3D.close(); } catch (e) {}
+        out.push({ name: `${hit.c.complex} ${hit.p.type}`, twoD, threeD: info ? info.rooms : null });
+      }
+      return { out };
+    });
+    if (rows.skip != null) console.log(`SKIP: 색인 축척이 실린 단지가 ${rows.skip}곳뿐이라 3장을 못 채웠다`);
+    else {
+      const bad = rows.out.filter((r) => r.err || r.threeD == null || r.threeD !== r.twoD);
+      const thin = rows.out.filter((r) => !r.err && r.twoD < 2);
+      if (bad.length) {
+        fail(`3D 공간 수가 2D 와 다르다 — ${bad.map((r) => r.err ? `${r.name}(${r.err})` : `${r.name}: 2D ${r.twoD} ↔ 3D ${r.threeD}`).join(', ')}`);
+      } else if (thin.length) {
+        fail(`3D 에 방이 하나뿐인 도면이 있다 — ${thin.map((r) => `${r.name}(${r.twoD}곳)`).join(', ')} · 도면 전체가 서야 한다`);
+      } else {
+        pass(`실제 도면 3장 3D = 2D — ${rows.out.map((r) => `${r.name} ${r.twoD}곳`).join(' · ')}`);
+      }
+    }
+  }
+
+  /*
    * ── 다른 공간을 품고 있으면 화면이 그 사실을 적는가 (2026-08-14 신설) ──
    *
    * 한국 아파트의 거실·주방은 트여 있어 자동 인식이 **트인 전체**와 **그 안의 주방**을
