@@ -3064,6 +3064,34 @@ const rotStep = (cat)=> ROT_STEP[cat] || Math.PI / 2;
 /** 회전 버튼에 적을 각도 — 실제로 도는 만큼과 어긋나면 안 된다 */
 const rotLabel = (cat)=> Math.round(rotStep(cat) * 180 / Math.PI);
 
+/**
+ * **가전을 돌린다 — 제자리에서.**
+ *
+ * 가전은 뒷면 중앙(bx,by)과 각도로 표현한다(벽에 붙이는 물건이라 그 점이 기준이다).
+ * 그런데 `it.a += rotStep(...)` 만 하면 **뒷면 중앙을 축으로 돌아** 제품이 방을 가로질러
+ * 날아간다. 실측(912×930 냉장고, 7.8㎡ 방): 한 번 돌릴 때마다 본체 중심이 **930mm**
+ * 움직였다(6449 → 5519 → …). 벽에 붙여 둔 것이 방 한가운데로 가니, 돌릴 때마다 다시
+ * 끌어와야 한다 — 사용자가 "회전이 잘 안 된다"고 한 실체가 이것이다.
+ *
+ * 그래서 **본체 중심을 그대로 두고** 돌린 뒤 뒷면 중앙을 다시 잡는다. 벽에 붙어 있던
+ * 것은 벽에서 떨어질 수 있는데, 그건 회전하면 발자국이 바뀌니 당연한 일이고 판정이
+ * 알려 준다(억지로 벽에 다시 붙이면 사용자가 의도하지 않은 자리로 옮기는 셈이다).
+ *
+ * **다섯 자리가 이 함수를 지나가야 한다** — 하단 요약 버튼 · 2D 더블탭 · `R` 키 ·
+ * 3D 버튼 · 3D 더블탭. 한 곳만 고치면 "버튼은 45°인데 더블탭은 90°"가 되고,
+ * 그건 화면을 봐야만 알 수 있다(CLAUDE.md).
+ *
+ * @param dir -1 이면 반대 방향(길게 누르기)
+ */
+function rotateItem(it, dir){
+  if (!it) return;
+  const c = bodyCenter(it);
+  it.a += (dir < 0 ? -1 : 1) * rotStep(it.cat);
+  const c2 = bodyCenter(it);
+  it.bx += c[0] - c2[0];
+  it.by += c[1] - c2[1];
+}
+
 function stackable(A, B){
   for (const s of STACKABLE){
     if (s.a.test(A.cat) && s.b.test(B.cat) && s.ok(A, B)) return s.why;
@@ -3673,11 +3701,25 @@ function renderMini(){
   // 열기만 하면 닫을 길이 없어 다음 작업을 못 한다(사용자 지적) — 토글로 둔다
   if (mo) mo.onclick = ()=> toggleSide();
   const ro = $('#mini-rot');
-  if (ro) ro.onclick = ()=>{
-    const t = state.items.find((x)=>x.id===state.sel);
-    if (!t) return;
-    t.a += rotStep(t.cat); evaluate(); renderSide(); draw();
-  };
+  if (ro) {
+    /*
+     * **길게 누르면 반대 방향으로 돈다**(2026-08-14 지시문 F).
+     * 90° 단위면 세 번 눌러 돌아오면 되지만 **에어컨은 45°** 라 일곱 번이다 —
+     * 대각선으로 놓다가 한 칸 지나치면 되돌리기가 번거롭다.
+     * 길게 누르는 동안 한 번만 돈다(누르고 있으면 계속 도는 것은 어지럽다).
+     */
+    let held = null, fired = false;
+    const spin = (dir)=>{
+      const t = state.items.find((x)=>x.id===state.sel);
+      if (!t) return;
+      rotateItem(t, dir); evaluate(); renderSide(); draw();
+      if (dir < 0) toast(`반대 방향으로 ${rotLabel(t.cat)}° 돌렸습니다`);
+    };
+    ro.onpointerdown = ()=>{ fired = false; held = setTimeout(()=>{ fired = true; spin(-1); }, 500); };
+    const clear = ()=>{ if (held) { clearTimeout(held); held = null; } };
+    ro.onpointerup = ro.onpointerleave = ro.onpointercancel = clear;
+    ro.onclick = ()=>{ clear(); if (fired) { fired = false; return; } spin(1); };
+  }
   const de = $('#mini-del');
   if (de) de.onclick = ()=> removeItem(state.sel);
   /*
@@ -4026,7 +4068,7 @@ cv.addEventListener('pointerdown', (e)=>{
   const hit = [...state.items].reverse().find((it)=>pointIn(corners(it), wx, wy));
   if (hit){
     // 손가락 더블탭은 마우스보다 느리다 — 창을 400 → 500ms 로 넓혔다
-    if (state.sel===hit.id && ptr && Date.now()-ptr.t < 500){ hit.a += rotStep(hit.cat); evaluate(); draw(); return; }
+    if (state.sel===hit.id && ptr && Date.now()-ptr.t < 500){ rotateItem(hit); evaluate(); draw(); return; }
     state.sel = hit.id;
     state.drag = { id:hit.id, ox:wx-hit.bx, oy:wy-hit.by };
     ptr = { t:Date.now() };
@@ -4161,7 +4203,7 @@ document.addEventListener('keydown',(e)=>{
   if (t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.isContentEditable)) return;
   if (!state.sel) return;
   const it = state.items.find((x)=>x.id===state.sel); if(!it) return;
-  if (e.key==='r'||e.key==='R'){ it.a += rotStep(it.cat); evaluate(); draw(); }
+  if (e.key==='r'||e.key==='R'){ rotateItem(it, e.shiftKey ? -1 : 1); evaluate(); draw(); }
   if (e.key==='Delete'||e.key==='Backspace'){ removeItem(it.id); }
 });
 
@@ -6180,7 +6222,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
+window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   openSelect, applyDeepPick,
@@ -6864,7 +6906,7 @@ const up = (e) => {
       P.state.sel = P.state.sel === it.id ? null : it.id;
       /* 같은 것을 짧게 두 번 누르면 2D 처럼 돌린다 */
       if (lastTap && lastTap.id === it.id && Date.now() - lastTap.t < 500){
-        it.a += P.rotStep(it.cat); lastTap = null;
+        P.rotateItem(it); lastTap = null;
       } else lastTap = { id: it.id, t: Date.now() };
     }
     drag = null;
@@ -6924,7 +6966,7 @@ function paintBar(info){
   bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
   if (sel){
     document.getElementById('d3-rot').onclick = () => {
-      sel.a += P.rotStep(sel.cat); P.evaluate(); P.draw(); paintBar(build());
+      P.rotateItem(sel); P.evaluate(); P.draw(); paintBar(build());
     };
     document.getElementById('d3-del').onclick = () => {
       P.removeItem(sel.id); P.draw(); paintBar(build());

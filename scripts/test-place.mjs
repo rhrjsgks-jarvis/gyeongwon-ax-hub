@@ -570,8 +570,48 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     // 회전이 세 곳 모두 같은 함수를 지나가는지 (한 곳만 고치는 사고 방지)
     const src = fs.readFileSync(path.join(root, 'public', 'place-app.html'), 'utf8');
     const hard = (src.match(/\.a \+= Math\.PI\/2/g) || []).length;
+    /*
+     * **각도를 직접 더하는 곳이 남아 있으면 안 된다**(2026-08-14 확장).
+     * 예전에는 `Math.PI/2` 만 봤는데, `it.a += rotStep(...)` 로 흩어져 있으면 각도는 맞아도
+     * **회전축이 제각각**이 된다 — 실제로 다섯 곳 모두 뒷면 중앙을 축으로 돌고 있었다.
+     * 이제는 `rotateItem()` 하나만 각도를 만진다(주석은 세지 않는다).
+     */
+    const direct = (src.match(/^[^*/\n]*\.a \+= (P\.)?rotStep\(/gm) || []).length;
     if (hard) fail(`회전 각도를 직접 박아 둔 곳이 ${hard}군데 남아 있다 — rotStep() 을 쓸 것`);
-    else pass('회전 3경로(버튼·더블탭·R 키)가 모두 rotStep() 을 지나간다');
+    else if (direct) fail(`각도를 직접 더하는 곳이 ${direct}군데 남아 있다 — rotateItem() 을 지나가야 회전축이 같아진다`);
+    else pass('회전 5경로(버튼·2D 더블탭·R 키·3D 버튼·3D 더블탭)가 모두 rotateItem() 을 지나간다');
+  }
+
+  /*
+   * ── 회전은 **제자리에서** 일어나야 한다 (2026-08-14 신설) ──
+   *
+   * 가전은 뒷면 중앙(bx,by)과 각도로 표현하는데, 각도만 더하면 **뒷면 중앙을 축으로 돌아**
+   * 제품이 방을 가로질러 날아간다. 실측(912×930 냉장고): 한 번 돌릴 때마다 본체 중심이
+   * **930mm** 움직였다 — 벽에 붙여 둔 것이 방 한가운데로 간다. 사용자가 "회전이 잘 안
+   * 된다"고 한 실체가 이것이다. 각도만 검사하면 이 사고는 **절대 안 잡힌다.**
+   */
+  {
+    const it = { cat: '냉장고', w: 912, h: 1853, d: 930, bx: 5000, by: 5000, a: 0 };
+    const c0 = P.bodyCenter(it);
+    const seen = [];
+    for (let i = 0; i < 4; i++) {
+      P.rotateItem(it);
+      const c = P.bodyCenter(it);
+      seen.push(Math.round(Math.hypot(c[0] - c0[0], c[1] - c0[1])));
+    }
+    const moved = Math.max(...seen);
+    const back = Math.round(it.a * 180 / Math.PI) % 360;
+    if (moved > 2) fail(`회전할 때 본체 중심이 ${moved}mm 움직인다 — 제자리에서 돌아야 한다(뒷면 중앙을 축으로 돌고 있다)`);
+    else if (back !== 0) fail(`90° 네 번 돌렸는데 ${back}° 다 — 제자리로 돌아와야 한다`);
+    else {
+      /* 반대 방향도 같은 함수로 — 길게 누르기가 쓰는 길이다 */
+      P.rotateItem(it, -1);
+      const d = Math.round(((it.a * 180 / Math.PI) % 360 + 360) % 360);
+      const c = P.bodyCenter(it);
+      if (d !== 270) fail(`반대 방향 회전이 ${d}° — 270° 여야 한다`);
+      else if (Math.hypot(c[0] - c0[0], c[1] - c0[1]) > 2) fail('반대 방향으로 돌릴 때 중심이 움직인다');
+      else pass('회전은 제자리에서 — 90° 네 바퀴에도 중심 이동 0mm · 반대 방향도 같다');
+    }
   }
 
   /*
