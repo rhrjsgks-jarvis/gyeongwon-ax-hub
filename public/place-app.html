@@ -1676,8 +1676,28 @@ function sheetBoxAt(base, sx, sy){
   const sheets = sheetBoxes(base);
   const inside = sheets.filter((s) => sx >= s.x0 && sx <= s.x1 && sy >= s.y0 && sy <= s.y1);
   if (!inside.length) return base.bbox;
-  // 겹쳐 있으면 더 작은 쪽(= 더 구체적인 도면)을 쓴다
-  return inside.sort((a, b) => a.n - b.n)[0];
+  /*
+   * **건물의 한 귀퉁이만 덮는 박스는 도면이 아니라 끊긴 벽 조각이다**(2026-08-13 실측).
+   *
+   * 위 `sheetBoxes` 는 bbox 가 겹치는 조각끼리 합쳐 도면을 가른다. 그런데 벽을 **속이 찬
+   * 검은 블록**으로 그리고 문·창 자리를 비워 둔 도면에서는 조각들의 bbox 가 서로 겹치지
+   * 않아 한 장이 여러 개로 갈린다 — 디에트르 84 는 **한 도면이 8조각**으로 갈렸고,
+   * 그중에는 `가변형 벽체` 배지 하나짜리 박스(205,829~315,869)까지 있었다.
+   *
+   * 그러면 `detectRoomAt` 의 누수 한계(`leakLimit`)가 그 조각 크기에서 나와 **99px** 이 되고
+   * (실제 경계 접촉은 3,300~3,552px) 어떤 닫기 반경도 통과하지 못한다. 정상 경로가 통째로
+   * 죽어 늘 근사 사각형으로 떨어지고, 침실2 가 8.96㎡ 대신 **4.1㎡** 로 잡혔다 —
+   * 그 사각형의 오른쪽 끝 203 이 바로 이 조각 박스의 오른쪽 끝이다.
+   *
+   * 판정은 **결과로** 한다: 고른 박스가 건물 범위의 20% 도 못 덮으면 도면일 리 없다.
+   * 한 장에 도면이 둘 실린 시트라도 각 도면은 건물 범위의 3~4할을 차지하므로 걸리지 않는다.
+   */
+  const area = (b) => Math.max(1, (b.x1 - b.x0 + 1) * (b.y1 - b.y0 + 1));
+  const full = base.bbox || { x0: 0, y0: 0, x1: base.w - 1, y1: base.h - 1 };
+  const big = area(full) * 0.2;
+  // 겹쳐 있으면 더 작은 쪽(= 더 구체적인 도면)을 쓰되, 조각이라 할 만큼 작은 것은 건너뛴다
+  const ok = inside.filter((s) => area(s) >= big).sort((a, b) => a.n - b.n);
+  return ok.length ? ok[0] : full;
 }
 
 /**

@@ -134,6 +134,23 @@ for (const s of sample) {
         out.span = Math.abs(m.x2 - m.x1) / Math.max(1, bw);
       }
     }
+    /*
+     * **도면 전체 인식이 건물의 몇 할을 덮는가** (2026-08-13 신설).
+     *
+     * 공간 '개수'는 품질이 아니다 — 인식이 실패해 근사 사각형이 잘게 잡히면 개수만 늘고
+     * 실제로는 나빠진다(디에트르 84 에서 8곳이 잡혔는데 그중 하나가 4.1㎡ 짜리 가짜였다).
+     * 그래서 넓이로 잰다. 넓이 비는 축척과 무관하므로 임의의 mm/px 를 넣고 잰다.
+     * **마지막에 잰다** — detectAllRooms 가 공간을 등록해 위 지표들을 흔들기 때문이다.
+     */
+    try {
+      P.state.mmPerPx = 10; P.state.scaled = true;
+      P.detectAllRooms();
+      let sum = 0;
+      for (const rm of (P.state.rooms || [])) sum += P.roomArea(rm) / 100;   // mm² → 이미지 px²
+      const bx2 = (P.state.baseInfo || {}).bbox, S2 = (P.state.baseMask || {}).S || 1;
+      const bA = bx2 ? ((bx2.x1 - bx2.x0) / S2) * ((bx2.y1 - bx2.y0) / S2) : P.state.imgW * P.state.imgH;
+      if (bA > 0) { out.cover2 = sum / bA * 100; out.spaces = (P.state.rooms || []).length; }
+    } catch (_) {}
     return out;
   }, s);
   rows.push({ ...s, ...r });
@@ -264,5 +281,27 @@ if (hr > 0.40) fail(`세대 전체가 방 하나로 잡힌 것 ${Math.round(hr*1
 else console.log(`NOTE: 세대 전체로 잡힌 것 ${huge.length}/${auto.length}장 (${Math.round(hr*100)}%) — 알려진 한계, 화면이 경고로 알린다`);
 
 console.log(`NOTE: 후보 방 개수 중앙값 ${med(auto.map((r)=>r.cands))}`);
+
+/*
+ * ── 도면 전체 인식이 건물을 얼마나 덮는가 (2026-08-13 신설) ──
+ *
+ * 3D 와 배치 판정이 이 결과 위에 선다 — 덮지 못한 곳에는 가전을 놓을 수 없다.
+ * 개수로는 품질을 못 잰다(가짜 사각형이 개수를 늘린다). 넓이로 잰다.
+ *
+ * **이건 큰 퇴행을 잡는 넓은 그물이지 특정 고침의 가드가 아니다.** `sheetBoxAt` 이 벽
+ * 조각을 도면으로 오인하던 것을 고쳤을 때 이 표본 30장에서는 63.3% → 64.9%(1.6pt)로
+ * 조금 움직였고, 다른 표본 24장에서는 63.3% → 67.8%(4.5pt)였다 — 표본에 따라 흔들려
+ * 문턱을 그 사이에 두면 거짓으로 깨진다. 그 고침을 지키는 날카로운 가드는 위의
+ * '기준 벽이 세대 폭인가' 쪽이다. 여기서는 인식이 통째로 무너지는 것을 본다.
+ * 하한 **55%** — 개선하면 함께 올려 다시 못 내려가게 할 것.
+ */
+{
+  const cv = auto.filter((r) => r.cover2 != null).map((r) => r.cover2);
+  if (cv.length) {
+    const mc2 = med(cv);
+    if (mc2 < 55) fail(`도면 전체 인식이 건물의 ${mc2.toFixed(0)}% 만 덮는다 — 하한 55%`);
+    else pass(`도면 전체 인식 덮는 비율 중앙값 ${mc2.toFixed(1)}% · 공간 수 중앙값 ${med(auto.filter((r)=>r.spaces!=null).map((r)=>r.spaces))}`);
+  }
+}
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
