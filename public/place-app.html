@@ -3455,6 +3455,27 @@ function draw(){
 
     // 정면 표시(도어가 열리는 쪽)
     const [f1,f2] = [body[3], body[2]];
+    /*
+     * **카탈로그 컬러는 정면 쪽 띠로 보인다**(2026-08-14).
+     *
+     * 본체를 제품 색으로 칠하지 않는 이유가 있다 — 카탈로그 색은 대부분 화이트·베이지라
+     * 밝은 도면 위에서 **제품이 배경에 묻힌다.** 그건 이미 겪고 고친 문제다
+     * ("제품 컬러는 더 진하게 해야 도면 컬러와 겹치지 않게 확인이 가능하다" — 사용자).
+     * 그래서 본체는 진한 남색 그대로 두고, **정면 쪽에 색 띠**를 얹는다.
+     * 3D 는 상자 자체를 이 색으로 칠한다 — **두 화면이 같은 hex 를 쓴다.**
+     * `hex` 가 없으면(카탈로그 컬러명에 색 단어가 없다) 칠하지 않는다 — 지어내지 않는다.
+     */
+    if (it.hex && !it.staged){
+      const [b1, b2] = [body[0], body[1]];              // 뒷면
+      const t = 0.16;                                    // 깊이의 16% 만큼만
+      const mix = (p, q) => [p[0] + (q[0]-p[0])*t, p[1] + (q[1]-p[1])*t];
+      const m1 = mix(f1, b1), m2 = mix(f2, b2);
+      ctx.beginPath();
+      ctx.moveTo(f1[0],f1[1]); ctx.lineTo(f2[0],f2[1]);
+      ctx.lineTo(m2[0],m2[1]); ctx.lineTo(m1[0],m1[1]); ctx.closePath();
+      ctx.fillStyle = it.hex; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1; ctx.stroke();
+    }
     ctx.beginPath(); ctx.moveTo(f1[0],f1[1]); ctx.lineTo(f2[0],f2[1]);
     ctx.strokeStyle = '#FDE68A'; ctx.lineWidth=3.5; ctx.stroke();   // 진한 본체 위에서 도어 쪽이 보이도록
 
@@ -5420,12 +5441,23 @@ async function openSelect(room){
            * 치수 출처는 데이터에 그대로 남아 있어 나중에 되짚을 수 있다.
            */
           const gp = o.group ? ` <span class="hint">${esc(String(o.group).replace(/\s*\(.*$/, ''))}</span>` : '';
+          /*
+           * **컬러는 카탈로그에 적힌 그대로 적는다.** 색 이름에 색 단어가 없어 화면에 칠하지
+           * 못하는 것도 있는데(`트러플 메탈`), 그때는 **그 사실을 적는다** — 회백색으로
+           * 그려 놓고 아무 말도 안 하면 상담사가 그 색으로 오해한다.
+           */
+          const cw = o.color
+            ? ` · <span class="hint">컬러 ${esc(String(o.color).split(/[\/,·]/)[0].trim())}`
+              + (o.hex ? `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;margin-left:4px;`
+                + `border:1px solid rgba(0,0,0,.25);background:${esc(o.hex)}"></span>`
+                : ' <b>색 미상</b> — 화면은 회백색으로 그립니다') + '</span>'
+            : '';
           el.innerHTML = `<b>가로 ${Math.round(p0.w)} · 높이 ${Math.round(p0.h)} · 깊이 ${Math.round(p0.d)}mm</b>`
             + ` — ${esc(sizeText(cat, r.size))}${gp}${mg}${sp}`
             + ` · 이격 후면 ${cl.back}·좌우 ${cl.side}${cl.front?`·전면 ${cl.front}`:''}mm`
             + (dz ? ` · 도어 오픈 좌우 각 ${dz.side}mm` : '')
             + (cl.weak ? ' · <span class="hint">확정되지 않은 값이 섞여 있어 실측 확인 필요</span>' : '')
-            + extra + nt;
+            + cw + extra + nt;
         };
         cats.forEach(info);
 
@@ -5470,7 +5502,9 @@ async function openSelect(room){
           const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
           const roomEl = document.querySelector(`select[data-room="${CSS.escape(cat)}"]`);
           const rid = roomEl ? roomEl.value : null;
-          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0, room:rid });
+          for (let n=1; n<=qty; n++) picks.push({ cat, size:r.size, model:o.model, group:o.group, part:p, seq:qty>1?n:0, room:rid,
+            /* 카탈로그에 적힌 제품 색 — 2D 띠와 3D 상자가 같은 값을 쓴다. hex 가 없으면 색 미상 */
+            color:o.color||null, hex:o.hex||null });
         }
         return picks;
       };
@@ -5873,7 +5907,7 @@ function autoPlace(picks){
   // 폭이 큰 것부터 — 자리를 많이 먹는 제품이 먼저 벽을 잡아야 나머지가 틈에 들어간다
   const list = picks.map((q)=>({
     id:'i'+Math.random().toString(36).slice(2,8),
-    cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null,
+    cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null, color:q.color||null, hex:q.hex||null,
     label:`${q.cat} ${sizeText(q.cat, q.size)}${q.seq?` #${q.seq}`:''}`,
     w:q.part.w, h:q.part.h, d:q.part.d, part:q.part.part,
     clear:clearFor(q.cat, q.part.part, q.model, q.group), bx:0, by:0, a:0, warn:[],
@@ -6017,7 +6051,7 @@ function stageOutside(picks){
   for (const q of picks){
     const it = {
       id:'i'+Math.random().toString(36).slice(2,8),
-      cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null,
+      cat:q.cat, size:q.size, model:q.model, group:q.group, room:q.room || null, color:q.color||null, hex:q.hex||null,
       label:`${q.cat} ${sizeText(q.cat, q.size)}${q.seq?` #${q.seq}`:``}`,
       w:q.part.w, h:q.part.h, d:q.part.d,
       /* 부품 이름을 함께 들고 있어야 **스탠드형 TV 와 벽걸이 TV 를 가를 수 있다** —
@@ -6093,7 +6127,7 @@ function placeAt(wx,wy){
   const q = state.pending;
   const it = {
     id:'i'+Math.random().toString(36).slice(2,8),
-    cat:q.cat, size:q.size, model:q.model, group:q.group,
+    cat:q.cat, size:q.size, model:q.model, group:q.group, color:q.color||null, hex:q.hex||null,
     label:`${q.cat} ${sizeText(q.cat, q.size)}${q.part.part!=='본체'?` (${q.part.part})`:''}`,
     w:q.part.w, h:q.part.h, d:q.part.d,
     clear:q.clear, bx:wx, by:wy, a:0, warn:[],
@@ -6429,12 +6463,30 @@ function leafMesh(lf, it, bad){
   return g;
 }
 
+/*
+ * **카탈로그에 적힌 제품 색으로 칠한다**(2026-08-14). 사실감은 지어낸 외형이 아니라
+ * 컬러와 치수 정확도로 올린다 — 색은 카탈로그가 이미 갖고 있다(`색상: 코타 화이트`).
+ * 색 이름에 색 단어가 없으면(`트러플 메탈`) 칠하지 않고 기본 회백색으로 둔다.
+ * 2D 는 같은 hex 를 정면 띠로 보인다 — **두 화면이 같은 값을 쓴다.**
+ * 재질은 색마다 하나만 만들어 재사용한다(제품마다 새로 만들면 GPU 자원이 샌다).
+ */
+const colorMats = new Map();
+function bodyMatFor(it){
+  const hex = it && it.hex;
+  if (!hex || !/^#[0-9a-f]{6}$/i.test(hex)) return bodyMat;
+  if (!colorMats.has(hex)) colorMats.set(hex, new THREE.MeshLambertMaterial({ color: parseInt(hex.slice(1), 16) }));
+  return colorMats.get(hex);
+}
+
 function applianceMesh(it){
   const g = new THREE.Group();
   const w = M(it.w), h = M(it.h || 800), d = M(it.d);
   /* 앞면(로컬 +Z)만 다른 재질로 둬 방향이 읽히게 한다 */
-  const mats = [bodyMat, bodyMat, bodyMat, bodyMat, faceMat, bodyMat];
+  const bm = bodyMatFor(it);
+  const mats = [bm, bm, bm, bm, bm === bodyMat ? faceMat : bm, bm];
   const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mats);
+  /* 문이 막혔을 때 빨갛게 칠할 대상을 표시해 둔다 — 제품 색으로 칠하면 재질 비교로는 못 찾는다 */
+  body.userData.isBody = true;
   body.position.y = h / 2;
   g.add(body);
   /* 모서리 선 — 흰 제품이 흰 벽 앞에 서면 윤곽이 사라진다(2D 에서 흰 테두리를 준 것과 같은 이유) */
@@ -6587,7 +6639,8 @@ function build(refit){
     const bad = hits.length > 0;
     if (bad) blocked++;
     for (const lf of (mesh.userData.leaves || [])) root.add(leafMesh(lf, it, bad));
-    if (bad) mesh.traverse((o) => { if (o.isMesh && o.material === bodyMat) o.material = badMat; });
+    /* 문이 막히면 빨갛게 — 제품 색으로 칠한 것도 함께 바뀌어야 경고가 보인다 */
+    if (bad) mesh.traverse((o) => { if (o.isMesh && (o.userData.isBody || o.material === bodyMat)) o.material = badMat; });
     /* 고른 것은 모서리를 삼성 블루로 굵게 — 무엇을 돌리고 지우는지 보여야 한다 */
     if (it.id === P.state.sel) mesh.traverse((o) => { if (o.isLineSegments) o.material = selEdge; });
     if (showTags && it.label){

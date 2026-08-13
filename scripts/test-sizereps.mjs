@@ -139,5 +139,37 @@ for (const [cat, size, model, part, [w, h, d]] of GOLDEN) {
 }
 if (!goldBad) pass(`골든 치수 ${GOLDEN.length}건 일치`);
 
+/*
+ * ── 제품 컬러 (2026-08-14 신설) ────────────────────────────────────
+ *
+ * 도면 위 가전에 색을 입히는 근거는 **카탈로그에 적힌 컬러명**뿐이다. 지켜야 할 것 둘:
+ *
+ *  ① **원문을 그대로 보존한다.** 화면용 hex 만 남기고 원문을 버리면 나중에 "이 색이
+ *     맞나"를 되짚을 수 없다(모델코드를 데이터에는 남기고 화면에만 안 적는 것과 같은 규칙).
+ *  ② **색 단어가 없는 이름에는 hex 를 만들지 않는다.** `트러플 메탈` 처럼 이름만으로는
+ *     색을 알 수 없는 것이 있는데, 비슷한 색을 임의로 넣으면 고객이 그 색으로 오해한다.
+ *     그런 줄은 hex 가 비어 있어야 하고 화면이 "색 미상"이라고 적는다.
+ */
+{
+  const withColor = [];
+  for (const r of reps) for (const o of (r.options || [])) if (o.color) withColor.push({ r, o });
+  const badHex = withColor.filter((x) => x.o.hex && !/^#[0-9A-Fa-f]{6}$/.test(x.o.hex));
+  /* 이름에 색 단어가 없는데 hex 가 붙어 있으면 지어낸 것이다 */
+  const WORDS = /(화이트|WHITE|블랙|BLACK|그레이|실버|SILVER|베이지|차콜|챠콜|브라운|골드|플럼|카퍼|미러|이녹스|INOX|스틸|메탈|그린|그리너리)/i;
+  const invented = withColor.filter((x) => x.o.hex && !WORDS.test(x.o.color));
+  const empty = withColor.filter((x) => !String(x.o.color).trim());
+  if (!withColor.length) fail('컬러가 실린 옵션이 하나도 없다 — 카탈로그에서 끌어오지 못했다');
+  else if (empty.length) fail(`컬러가 빈 문자열인 옵션 ${empty.length}건 — 원문을 그대로 보존해야 한다`);
+  else if (badHex.length) fail(`hex 형식이 아닌 값 ${badHex.length}건: ${badHex.slice(0,3).map((x)=>x.o.hex).join(', ')}`);
+  else if (invented.length) {
+    fail(`이름에 색 단어가 없는데 hex 가 붙었다 ${invented.length}건 — 색을 지어내면 안 된다:`
+      + ` ${invented.slice(0, 3).map((x) => `${x.o.color}→${x.o.hex}`).join(', ')}`);
+  } else {
+    const unknown = withColor.filter((x) => !x.o.hex);
+    pass(`제품 컬러 ${withColor.length}건 — 원문 보존 · hex ${withColor.length - unknown.length}건`
+      + (unknown.length ? ` · 색 미상 ${unknown.length}건(${unknown.map((x) => x.o.color).join(' · ')})` : ''));
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

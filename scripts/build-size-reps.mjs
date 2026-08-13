@@ -108,6 +108,60 @@ function extractParts(fx) {
   return parts;
 }
 
+/*
+ * ── 제품 컬러 ────────────────────────────────────────────────────
+ *
+ * **색을 지어내지 않는다.** 도면 위 가전을 실물에 가깝게 보이려면 색이 있어야 하는데,
+ * 그 색은 카탈로그에 이미 적혀 있다(`색상: 코타 화이트`). 없는 것을 그럴듯하게 칠하면
+ * 고객이 실물로 오해한다 — 외형을 단순하게 두는 것과 같은 이유다.
+ *
+ * **어느 라벨이 제품 색인지 골라야 한다.** `컬러` 로 시작하는 라벨이 다 색은 아니다 —
+ * 실측(586종): `컬러 부스터` 52 · `컬러지원` 20 은 TV 화질 기능이고, `조작부 색상` 은
+ * 몸통이 아니라 조작부다. 아래 목록에 있는 라벨만 제품 색으로 본다(실측 152행).
+ */
+const COLOR_LABELS = new Set([
+  '색상', '컬러', '색상(바디)', '색상(바디 / 바람문)', '색상(상부)',
+  '색상 및 재질', '색상 / 재질', '선택 가능 컬러', '프레임 컬러', '패턴 / 컬러',
+]);
+
+/*
+ * **hex 는 이름 안의 색 단어에서만 나온다.** 카탈로그 컬러명은 실측 80종이고 꼬리가 길다
+ * (`솝스톤 챠콜` · `제주 그리너리` · `REFINED INOX` …). 이름마다 색을 정해 주려면 결국
+ * 짐작이 섞이므로, **이름이 스스로 말하는 색만** 받는다. 긴 단어부터 본다
+ * (`블루 그레이` 가 `그레이` 보다 먼저 걸려야 한다).
+ *
+ * 색 단어가 없으면 `hex` 를 비운다 — 화면이 회백색으로 그리고 **"색 미상"이라고 적는다.**
+ * 비슷한 색을 임의로 넣지 않는다.
+ */
+const COLOR_WORDS = [
+  ['블루 그레이', '#8A97A6'], ['블랙캐비어', '#26262A'], ['그레이지', '#B9B0A4'],
+  ['다크그레이', '#5A5F66'], ['다크스틸', '#4A4F55'], ['다크메탈', '#4A4F55'],
+  ['실버스틸', '#B9BEC4'], ['그리너리', '#7E9A6E'], ['베이지그린', '#B6BC9A'],
+  ['카퍼', '#B06A3B'], ['브라운', '#7A5A44'], ['차콜', '#3E4247'], ['챠콜', '#3E4247'],
+  ['플럼', '#6E4457'], ['골드', '#C8A96B'], ['미러', '#C6CBD1'], ['이녹스', '#AFB5BB'],
+  ['INOX', '#AFB5BB'], ['SILVER', '#B9BEC4'], ['실버', '#B9BEC4'],
+  ['화이트', '#F2F1EE'], ['WHITE', '#F2F1EE'], ['베이지', '#DCD2C0'],
+  ['블랙', '#2B2B2E'], ['BLACK', '#2B2B2E'], ['그레이', '#9AA0A6'],
+];
+
+/** 카탈로그에 적힌 제품 색 — 원문(color)과 화면용(hex). 없으면 null */
+function colorOf(p) {
+  for (const [label, value] of p.fx || []) {
+    if (!COLOR_LABELS.has(String(label).trim())) continue;
+    const raw = String(value).trim();
+    if (!raw || /^-+$/.test(raw)) continue;
+    /* 여러 색이 적힌 줄(`화이트 / 블랙`)은 **첫 색**을 대표로 쓴다. 접두 코드(`W - 화이트`)와
+       괄호 주석은 뗀다 — 색 이름을 찾는 것이지 표기를 그대로 쓰는 것이 아니다 */
+    const first = raw.split(/[\/,·]/)[0].replace(/^[A-Z]{1,3}\s*-\s*/, '').replace(/\(.*?\)?$/, '').trim();
+    if (!first) continue;
+    /* 띄어쓰기는 무시한다 — '다크 메탈' 과 '다크메탈' 은 같은 말이다(색을 지어내는 것이 아니다) */
+    const flat = first.toUpperCase().replace(/\s+/g, '');
+    const hit = COLOR_WORDS.find(([w]) => flat.includes(w.toUpperCase().replace(/\s+/g, '')));
+    return { color: raw, hex: hit ? hit[1] : null };
+  }
+  return null;
+}
+
 function sizeOf(p) {
   const fx = Object.fromEntries((p.fx || []).map(([k, v]) => [k, v]));
   for (const label of SIZE_AXIS[p.cat] || []) {
@@ -125,10 +179,13 @@ for (const p of products) {
   const parts = extractParts(p.fx);
   if (!parts.length) continue;
   const s = sizeOf(p);
+  const col = colorOf(p);
   rows.push({
     cat: p.cat,
     group: p.group || '',
     model: p.model,
+    color: col ? col.color : null,
+    hex: col ? col.hex : null,
     sizeLabel: s ? s.sizeLabel : null,
     size: s ? s.size : null,
     parts,
@@ -353,6 +410,8 @@ for (const r of rows) {
     // 126~347L 이 뜬다 — 그 줄은 126L 짜리인데 사이즈 전체의 범위를 보여주는 것이다.
     g.options.set(ok, {
       model: r.model, group: r.group, parts: r.parts, note: r.note, also: [], specs: [],
+      /* 카탈로그에 적힌 제품 색 — 원문과 화면용. 2D 실루엣과 3D 가 같은 값을 쓴다 */
+      color: r.color || null, hex: r.hex || null,
     });
   } else {
     g.options.get(ok).also.push(r.model);
