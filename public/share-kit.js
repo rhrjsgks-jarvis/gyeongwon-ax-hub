@@ -59,9 +59,15 @@
     setTimeout(function () { t.remove(); }, 1600);
   }
 
+  function sheetOpen() { return !!document.querySelector('.sk-dim'); }
+
   function closeSheet() {
     var d = document.querySelector('.sk-dim');
-    if (d) d.remove();
+    if (!d) return;
+    d.remove();
+    /* 휴대폰 뒤로가기용으로 쌓아 둔 히스토리 칸도 함께 되돌린다(back-kit.js).
+       뒤로가기가 부른 닫기라면 back-kit 이 알아서 무시한다 */
+    if (global.Back) global.Back.done();
   }
 
   /** 바닥에서 올라오는 시트. buttons = [{label, primary, href, onClick}] */
@@ -89,6 +95,11 @@
     dim.appendChild(box);
     dim.addEventListener('click', function (e) { if (e.target === dim) closeSheet(); });
     document.body.appendChild(dim);
+    /*
+     * **휴대폰 뒤로가기가 앱을 벗어나지 않고 이 시트를 닫는다**(back-kit.js).
+     * 연락처 시트는 아홉 앱 모두에서 뜨므로 여기 한 곳에 두면 전부 해결된다.
+     */
+    if (global.Back) global.Back.open(closeSheet, sheetOpen);
   }
 
   /* 클립보드는 https 나 localhost 에서만 열린다 — 안 되면 옛 방식으로 물러선다 */

@@ -252,6 +252,7 @@
   <div id="contactPane" style="display:none"></div>
 </div>
 
+<script src="back-kit.js"></script>
 <script src="prod-symbols.js"></script>
 <script src="share-kit.js"></script>
 <script>
@@ -1288,12 +1289,33 @@ function asConds(s){
   });
 }
 
+/*
+ * ── 검색 결과 상자 여닫기 ──
+ * 닫는 경로가 셋이다(글자를 지웠을 때 · 바깥을 눌렀을 때 · Esc). 셋 다 각자 클래스를
+ * 지우고 있었는데, 휴대폰 뒤로가기까지 붙이려면 **한 군데로 모아야** 한 곳만 고치면 된다.
+ * 상자가 화면을 덮으므로 뒤로가기를 누르면 앱이 아니라 이것부터 닫혀야 한다(back-kit.js).
+ */
+function searchOpen(){ return document.body.classList.contains('sres-open'); }
+function closeSearchBox(){
+  if (!searchOpen()) return;
+  const box = document.getElementById('sres');
+  box.style.display = 'none';
+  document.body.classList.remove('sres-open');
+  if (window.Back) Back.done();
+}
+function openSearchBox(){
+  if (searchOpen()) return;        // 이미 열려 있는데 또 쌓으면 뒤로가기를 여러 번 눌러야 한다
+  document.getElementById('sres').style.display = '';
+  document.body.classList.add('sres-open');
+  if (window.Back) Back.open(closeSearchBox, searchOpen);
+}
+
 function runSearch(){
   const box = document.getElementById('sres');
   const inp = document.getElementById('sq');
   const s = (inp.value || '').trim().toLowerCase();
   document.getElementById('sx').style.display = s ? '' : 'none';
-  if (!s) { box.style.display = 'none'; box.innerHTML = ''; document.body.classList.remove('sres-open'); return; }
+  if (!s) { box.innerHTML = ''; closeSearchBox(); return; }
   if (!DOCS) DOCS = searchDocs();
   const conds = asConds(s);
   const match = (d, cs) => cs.every(c => c.forms.some(f => d.kw.includes(f)));
@@ -1333,8 +1355,7 @@ function runSearch(){
       inp.value = ''; runSearch(); inp.blur();
     });
   }
-  box.style.display = '';
-  document.body.classList.add('sres-open');
+  openSearchBox();
 }
 
 function wireSearch(){
@@ -1344,10 +1365,7 @@ function wireSearch(){
   document.getElementById('sx').onclick = () => { inp.value = ''; runSearch(); inp.focus(); };
   /* 결과 밖을 누르면 닫는다 — 열어 둔 채로 두면 그 아래 화면을 만질 수가 없다 */
   document.addEventListener('pointerdown', e => {
-    if (!document.getElementById('sbar').contains(e.target)) {
-      document.getElementById('sres').style.display = 'none';
-      document.body.classList.remove('sres-open');
-    }
+    if (!document.getElementById('sbar').contains(e.target)) closeSearchBox();
   });
   inp.addEventListener('keydown', e => { if (e.key === 'Escape') { inp.value = ''; runSearch(); inp.blur(); } });
 }

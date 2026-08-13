@@ -253,6 +253,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   @media(min-width:1024px){ main { max-width:960px } }
   @media(min-width:1440px){ main { max-width:1140px } }
 </style>
+<script src="back-kit.js"></script>
 <script src="prod-symbols.js"></script>
 <!--
   2026-08-13 — CDN html2canvas 를 걷어내고 다른 앱과 같은 share-kit 배선으로 맞춘다.
@@ -2084,6 +2085,18 @@ function shareKakao() {
   }
 }
 
+/* ── 휴대폰 뒤로가기 ──
+ * 모달을 열어 둔 채 뒤로가기를 누르면 앱을 통째로 벗어났다. 열 때 히스토리를 한 칸 쌓아
+ * 두면 뒤로가기가 그 칸부터 소비한다(back-kit.js). 두 모달 다 `visible` 로 여닫는다.
+ * 판정자를 함께 넘기므로 `backDone()` 을 빠뜨린 경로가 있어도 스스로 정리된다. */
+function backOpen(close, id){
+  if (window.Back) Back.open(close, () => {
+    const el = document.getElementById(id);
+    return !!el && el.classList.contains('visible');
+  });
+}
+function backDone(){ if (window.Back) Back.done(); }
+
 /* ── 이미지로 남기기 ──
  * 예전에는 여기서 직접 html2canvas 를 불러 **비교표(`#result-db`)만** 찍었다. 이제는
  * share-kit 의 `captureScreen` 으로 **지금 보이는 화면 그대로** 찍는다 — 헤더 공유
@@ -2142,9 +2155,11 @@ ${scriptLines}
 
   document.getElementById('quiz-prompt-output').textContent = prompt;
   document.getElementById('quiz-modal-overlay').classList.add('visible');
+  backOpen(closeQuizModal, 'quiz-modal-overlay');
 }
 function closeQuizModal() {
   document.getElementById('quiz-modal-overlay').classList.remove('visible');
+  backDone();
 }
 function copyQuizPrompt() {
   const text = document.getElementById('quiz-prompt-output').textContent;
@@ -2462,8 +2477,9 @@ function openRegisterModal(){
 
   renderRegSpecInputs();
   document.getElementById('reg-modal-overlay').classList.add('visible');
+  backOpen(closeRegisterModal, 'reg-modal-overlay');
 }
-function closeRegisterModal(){ document.getElementById('reg-modal-overlay').classList.remove('visible'); }
+function closeRegisterModal(){ document.getElementById('reg-modal-overlay').classList.remove('visible'); backDone(); }
 
 /* 선택한 카테고리의 비교 항목을 그대로 입력칸으로 펼친다 — 가격은 위에서 이미 받으므로 뺀다 */
 function renderRegSpecInputs(){

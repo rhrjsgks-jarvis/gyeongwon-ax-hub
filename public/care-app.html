@@ -352,6 +352,7 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
   <span>2026.06.20 기준</span>
   <b>📞 1588-6084</b>
 </div>
+<script src="back-kit.js"></script>
 <script src="prod-symbols.js"></script>
 <script src="share-kit.js"></script>
 <script>
@@ -1679,17 +1680,26 @@ function buildDropHtml(){
   ).join('');
 }
 
+/*
+ * 드롭다운을 열어 둔 채 휴대폰 뒤로가기를 누르면 **앱을 통째로 벗어났다.** 열 때 히스토리를
+ * 한 칸 쌓아 두면 뒤로가기가 그 칸부터 소비한다(back-kit.js). 목록이 화면을 덮으므로
+ * 사용자는 그것부터 닫히기를 기대한다.
+ */
 function openDrop(){
+  if (isOpen) return;              // 이미 열려 있는데 또 쌓으면 뒤로가기를 두 번 눌러야 한다
   isOpen = true;
   document.getElementById('catBtn').classList.add('open');
   document.getElementById('catArr').classList.add('open');
   document.getElementById('catDrop').style.display = 'block';
+  if (window.Back) Back.open(closeDrop, () => isOpen);
 }
 function closeDrop(){
+  if (!isOpen) return;
   isOpen = false;
   document.getElementById('catBtn').classList.remove('open');
   document.getElementById('catArr').classList.remove('open');
   document.getElementById('catDrop').style.display = 'none';
+  if (window.Back) Back.done();
 }
 
 /* ────────────────── 요약 타일 ────────────────── */

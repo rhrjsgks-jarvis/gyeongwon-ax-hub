@@ -118,6 +118,7 @@ input{-webkit-tap-highlight-color:transparent}
   @media(min-width:1024px){ #quizContent,#submitBtn,#resultScreen { max-width:960px } }
   @media(min-width:1440px){ #quizContent,#submitBtn,#resultScreen { max-width:1140px } }
 </style>
+<script src="back-kit.js"></script>
 <script src="prod-symbols.js"></script>
 </head>
 <body>
@@ -6968,8 +6969,23 @@ function saveToGoogle(data){
 }
 
 let _modalCb=null;
-function showModal(msg){return new Promise(resolve=>{_modalCb=resolve;document.getElementById('modalMsg').textContent=msg;document.getElementById('modalOverlay').classList.add('active')})}
-function closeModal(val){document.getElementById('modalOverlay').classList.remove('active');if(_modalCb){_modalCb(val);_modalCb=null}}
+/*
+ * 확인 창을 띄워 둔 채 휴대폰 뒤로가기를 누르면 시험이 통째로 닫혔다 — 답안이 날아간다.
+ * 뒤로가기는 **'아니오'로 닫은 것과 같게** 다룬다(back-kit.js): 창만 닫히고 시험은 남는다.
+ */
+function modalOpen(){return document.getElementById('modalOverlay').classList.contains('active')}
+function showModal(msg){return new Promise(resolve=>{
+  _modalCb=resolve;
+  document.getElementById('modalMsg').textContent=msg;
+  document.getElementById('modalOverlay').classList.add('active');
+  if(window.Back) Back.open(()=>closeModal(false), modalOpen);
+})}
+function closeModal(val){
+  if(!modalOpen()) return;
+  document.getElementById('modalOverlay').classList.remove('active');
+  if(window.Back) Back.done();
+  if(_modalCb){_modalCb(val);_modalCb=null}
+}
 document.getElementById('empId').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('empName').focus()});
 document.getElementById('empName').addEventListener('keydown',e=>{if(e.key==='Enter')startQuiz()});
 </script>

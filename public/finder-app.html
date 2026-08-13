@@ -302,6 +302,7 @@ table.spec tr:last-child td{border-bottom:none}
 </div>
 
 <div class="toast" id="toast"></div>
+<script src="back-kit.js"></script>
 <script src="prod-symbols.js"></script>
 <script src="share-kit.js"></script>
 <script>
@@ -980,7 +981,24 @@ function rdetail(p){
     ${p.usp&&p.usp.length?`<h5>핵심 키워드 · USP</h5><div class="flagrow">${p.usp.map(f=>`<span class="flg usp">${esc(f)}</span>`).join("")}</div>`:""}
   </div>`;
 }
-function toggleDetail(id){ openId = (openId===id? null : id); renderResults(); syncShareBtn(); }
+/*
+ * 상세를 펼쳐 둔 채 휴대폰 뒤로가기를 누르면 앱을 통째로 벗어났다. 펼침도 "연 것"이므로
+ * 뒤로가기가 그것부터 접는다(back-kit.js). 펼친 것은 언제나 하나(`openId`)라 스택도 하나다.
+ */
+function closeDetail(){ if (openId == null) return; openId = null; renderResults(); syncShareBtn(); }
+function toggleDetail(id){
+  const wasOpen = openId != null;
+  const opening = openId !== id;
+  openId = opening ? id : null;
+  renderResults(); syncShareBtn();
+  if (!window.Back) return;
+  /*
+   * **쌓는 것은 "닫힘 → 열림" 일 때뿐이다.** 다른 카드를 눌러 옮겨 갈 때도 쌓으면
+   * 펼친 것은 하나인데 칸은 둘이 되어, 뒤로가기 한 번이 아무 일도 안 하고 삼켜진다.
+   */
+  if (opening && !wasOpen) Back.open(closeDetail, () => openId != null);
+  else if (!opening) Back.done();
+}
 
 /*
  * 고객에게 보낼 카드 — **상세를 펼친 제품 하나**를 담는다.

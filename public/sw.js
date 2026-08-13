@@ -62,13 +62,20 @@
  * **버전은 덩어리를 다 만든 맨 마지막에 한 번 올린다.** 중간에 찍어 두면 그 뒤에 고친
  * 미니앱이 옛 캐시로 남고, 아래 test-consistency 의 대조가 바로 그것을 잡는다.
  */
-const CACHE_VERSION = 'axhub-v25';
+const CACHE_VERSION = 'axhub-v26';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
 // `as`·`poster` 가 빠져 있었다(2026-08-11). 미니앱은 전부 같은 규칙을 타야 매장에서
 // 전파가 끊겨도 한 번 본 화면이 열린다 — 새 미니앱을 만들면 여기에 함께 넣을 것.
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps)\.json$/;
+/*
+ * **공용 스크립트도 여기 들어가야 한다**(2026-08-13 추가). 예전에는 미니앱 HTML 과 json 만
+ * 잡고 있었는데, 인라인이던 코드를 `share-kit.js`·`prod-symbols.js`·`back-kit.js` 로 뽑아낸
+ * 뒤로 그것들이 **아무 규칙에도 안 걸려 그냥 네트워크**였다. 전파가 끊기면 미니앱 HTML 은
+ * 캐시에서 뜨는데 심벌·공유·뒤로가기가 통째로 죽는다 — 캐시가 반쪽만 듣는 상태였다.
+ * 파일 이름에 버전이 없으므로 캐시 우선(vendor)이 아니라 stale-while-revalidate 로 둔다.
+ */
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.
