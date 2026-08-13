@@ -15,6 +15,8 @@ export type IconName =
   | 'warranty' | 'place' | 'quiz' | 'target' | 'dashboard'
   | 'ticket' | 'display' | 'coupon' | 'search' | 'chat' | 'qr' | 'share'
   | 'build' | 'external' | 'store' | 'book' | 'bulb' | 'link' | 'check' | 'warn' | 'chevron'
+  | 'x' | 'star' | 'lock' | 'eye' | 'user' | 'doc' | 'puzzle' | 'download' | 'trash'
+  | 'timer' | 'bolt' | 'printer' | 'phone' | 'ruler'
 
 const P: Record<IconName, React.ReactNode> = {
   /* 허브 — 집 */
@@ -74,6 +76,26 @@ const P: Record<IconName, React.ReactNode> = {
   warn: <><path d="M12 3.5 21.5 20H2.5L12 3.5Z" /><path d="M12 9.5v4.5" /><path d="M12 17h.01" /></>,
   /* 접힘 표시 — 펼치면 90° 돌아간다. 삼각형이라 작은 크기에서도 방향이 읽힌다 */
   chevron: <><path d="M9 5.5 16.5 12 9 18.5v-13Z" /></>,
+  x: <><path d="M6 6l12 12M18 6 6 18" /></>,
+  star: <><path d="M12 3.5l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.9l6.1-.8L12 3.5Z" /></>,
+  /* 잠금 — 관리자 대시보드 게이트 */
+  lock: <><rect x="4.5" y="10" width="15" height="10.5" rx="1.8" /><path d="M8 10V7.5a4 4 0 0 1 8 0V10" /></>,
+  /* 조회수 — 눈 */
+  eye: <><path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" /><circle cx="12" cy="12" r="3" /></>,
+  /* 세션 — 사람 */
+  user: <><circle cx="12" cy="8" r="3.8" /><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" /></>,
+  doc: <><path d="M5.5 3.5h9L18.5 7.5v13h-13z" /><path d="M14 3.5v4.5h4.5" /><path d="M8.5 12.5h7M8.5 16h5" /></>,
+  /* 추적 모듈 수 — 맞물리는 조각 */
+  puzzle: <><path d="M9.5 3.5h5v2.2a1.8 1.8 0 1 0 3.6 0V3.5h2.4v5h-2.2a1.8 1.8 0 1 0 0 3.6h2.2v8.4h-8.4v-2.2a1.8 1.8 0 1 0-3.6 0v2.2H3.5v-8.4h2.2a1.8 1.8 0 1 0 0-3.6H3.5v-5h6Z" /></>,
+  download: <><path d="M12 3.5v11" /><path d="M8 11l4 4 4-4" /><path d="M4.5 15.5v3.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-3.5" /></>,
+  trash: <><path d="M4.5 6.5h15" /><path d="M9.5 6.5V4h5v2.5" /><path d="M6.5 6.5 7.5 20.5h9l1-14" /><path d="M10.5 10v7M13.5 10v7" /></>,
+  timer: <><circle cx="12" cy="13.5" r="7.5" /><path d="M12 9.5v4h3" /><path d="M9.5 2.5h5" /><path d="M12 2.5v3.5" /></>,
+  bolt: <><path d="M13.5 2.5 5.5 13.5h5.5l-1 8 8-11h-5.5l1-8Z" /></>,
+  /* 인쇄 — 포스터 */
+  printer: <><rect x="3.5" y="8.5" width="17" height="7.5" rx="1.6" /><path d="M7 8.5V3.5h10v5" /><path d="M7 16h10v4.5H7Z" /></>,
+  phone: <><rect x="7" y="2.5" width="10" height="19" rx="2.2" /><path d="M10.6 5.3h2.8" /><path d="M10.5 18.7h3" /></>,
+  /* 치수 — 삼각자 */
+  ruler: <><path d="M3.5 14.5 14.5 3.5l6 6-11 11-6-6Z" /><path d="M7.5 10.5 9.5 12.5M10.5 7.5 12.5 9.5M13.5 4.5 15.5 6.5" /></>,
 }
 
 export default function Icon({

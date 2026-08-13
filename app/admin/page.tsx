@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
+import Icon, { IconName } from '@/components/Icon'
 
 // 인증 상태는 sessionStorage에 만료시각과 함께 둔다.
 // 이전에는 localStorage에 '1'만 저장해 한 번 통과한 기기는 브라우저를 껐다 켜도 영구히
@@ -60,7 +61,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
   return (
     <div className="max-w-sm mx-auto pt-24 px-4">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
-        <div className="text-2xl mb-2">🔒</div>
+        <div className="mb-2 flex justify-center"><Icon name="lock" size={28} style={{ color: '#1428A0' }} /></div>
         <h1 className="font-bold text-gray-800 mb-1">관리자 인증</h1>
         <p className="text-xs text-gray-400 mb-4">
           사용현황 대시보드[관리자용]는 비밀번호로 보호됩니다<br />
@@ -95,11 +96,11 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
 }
 
 const ROI_DATA = [
-  { key: 'finder',  icon: '🔍', label: '통합검색 — 자료 찾기',      before: '5분/건',    after: '15초/건',  saving: 95 },
-  { key: 'compare', icon: '⚖️', label: '타사비교 가이드 생성',       before: '30분/건',   after: '3분/건',   saving: 90 },
-  { key: 'quiz',    icon: '🎯', label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
-  { key: 'care',    icon: '💚', label: 'AI구독 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
-  { key: 'test',    icon: '📝', label: '레벨업 챌린지 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
+  { key: 'finder',  icon: 'finder' as IconName, label: '통합검색 — 자료 찾기',      before: '5분/건',    after: '15초/건',  saving: 95 },
+  { key: 'compare', icon: 'compare' as IconName, label: '타사비교 가이드 생성',       before: '30분/건',   after: '3분/건',   saving: 90 },
+  { key: 'quiz',    icon: 'target' as IconName, label: 'URL 퀴즈 출제',              before: '4시간/회',  after: '5분/회',   saving: 98 },
+  { key: 'care',    icon: 'care' as IconName, label: 'AI구독 케어 항목 확인',     before: '10분/건',   after: '30초/건',  saving: 95 },
+  { key: 'test',    icon: 'quiz' as IconName, label: '레벨업 챌린지 출제 준비',      before: '4시간/회',  after: '즉시',     saving: 99 },
 ]
 
 /*
@@ -110,27 +111,28 @@ const ROI_DATA = [
  * 목록·CSV 에서 여전히 이름이 필요하고 ②지우면 그 자리에 모듈 키(`planner`)가
  * 그대로 노출된다. 화면에서 빼는 것과 데이터에서 지우는 것은 다른 일이다.
  */
-const MODULE_META: Record<string, { label: string; icon: string; color: string; retired?: boolean }> = {
+/* 아이콘은 **그 도구가 허브에서 쓰는 것과 같은 것**을 쓴다 — 자리마다 다른 그림이면 눈이 헤맨다 */
+const MODULE_META: Record<string, { label: string; icon: IconName; color: string; retired?: boolean }> = {
   // 허브 메인 페이지뷰는 집계에서 제외되므로 여기 남는 건 통합검색·건의뿐이다
-  hub:     { label: '허브 검색·건의',   icon: '🔎', color: '#1428A0' },
-  finder:  { label: '통합검색',        icon: '🔍', color: '#2563EB' },
-  care:    { label: 'AI구독 케어',         icon: '🛠️', color: '#059669' },
-  compare: { label: '타사비교 가이드', icon: '⚖️', color: '#D97706' },
-  install: { label: '설치환경 가이드',  icon: '🛠️', color: '#B45309' },
+  hub:     { label: '허브 검색·건의',   icon: 'search',   color: '#1428A0' },
+  finder:  { label: '통합검색',        icon: 'finder',   color: '#2563EB' },
+  care:    { label: 'AI구독 케어',         icon: 'care',     color: '#059669' },
+  compare: { label: '타사비교 가이드', icon: 'compare',  color: '#D97706' },
+  install: { label: '설치환경 가이드',  icon: 'install',  color: '#B45309' },
   /* 아래 셋은 MODULE_META 에 아예 없어서 사용 현황에 한 줄도 안 잡히고 있었다
      (2026-08-11 발견). 운영 중인 모듈이 통계에서 통째로 빠지면 "안 쓴다"로 읽힌다. */
-  as:      { label: 'AS 관련 정보',     icon: '🛡️', color: '#0D9488' },
-  place:   { label: '가전 배치 시뮬레이터', icon: '📐', color: '#4F46E5' },
-  test:    { label: '레벨업 챌린지',    icon: '📝', color: '#7C3AED' },
-  quiz:    { label: 'URL 퀴즈',        icon: '🎯', color: '#DC2626' },
-  concierge: { label: '컨시어지 프로그램', icon: '🎫', color: '#DB2777' },
-  poster:  { label: '컨시어지 접수 포스터', icon: '🖨️', color: '#9333EA' },
-  coupon:  { label: '시크릿쿠폰',      icon: '🎁', color: '#DC2626' },
-  catalog: { label: '모바일 카탈로그',  icon: '📱', color: '#0EA5E9' },
+  as:      { label: 'AS 관련 정보',     icon: 'warranty', color: '#0D9488' },
+  place:   { label: '가전 배치 시뮬레이터', icon: 'place',    color: '#4F46E5' },
+  test:    { label: '레벨업 챌린지',    icon: 'quiz',     color: '#7C3AED' },
+  quiz:    { label: 'URL 퀴즈',        icon: 'target',   color: '#DC2626' },
+  concierge: { label: '컨시어지 프로그램', icon: 'ticket',   color: '#DB2777' },
+  poster:  { label: '컨시어지 접수 포스터', icon: 'printer',  color: '#9333EA' },
+  coupon:  { label: '시크릿쿠폰',      icon: 'coupon',   color: '#DC2626' },
+  catalog: { label: '모바일 카탈로그',  icon: 'catalog',  color: '#0EA5E9' },
 
   // ── 운영 종료·통합 (목록에서는 감춘다) ──
-  compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: '⚡', color: '#B45309', retired: true },
-  planner: { label: '패키지 플래너 (운영 종료)', icon: '📦', color: '#0891B2', retired: true },
+  compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: 'bolt', color: '#B45309', retired: true },
+  planner: { label: '패키지 플래너 (운영 종료)', icon: 'doc', color: '#0891B2', retired: true },
 }
 
 /** 화면에 세우는 모듈 — 운영 중인 것만. */
@@ -186,14 +188,14 @@ export default function AdminPage() {
         style={{ background: 'linear-gradient(135deg, #1428A0, #2563EB)' }}
       >
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xl">📊</span>
+          <Icon name="dashboard" size={20} style={{ color: '#1428A0' }} />
           <span className="font-bold text-base">사용현황 대시보드[관리자용]</span>
           <button
             onClick={() => { lockNow(); setUnlocked(false) }}
             className="ml-auto text-[11px] font-semibold rounded-lg px-2.5 py-1"
             style={{ background: 'rgba(255,255,255,0.18)' }}
           >
-            🔒 잠그기
+            잠그기
           </button>
         </div>
         <p className="text-xs text-blue-200">
@@ -205,10 +207,10 @@ export default function AdminPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-5">
-        <KpiCard label="총 페이지뷰"   value={totalViews}  icon="👁️" color="#1428A0" />
-        <KpiCard label="누적 세션"     value={uniqueUids}  icon="👤" color="#2563EB" />
-        <KpiCard label="기록된 이벤트" value={logs.length} icon="📋" color="#059669" />
-        <KpiCard label="추적 모듈 수"  value={LIVE_MODULES.length} icon="🧩" color="#7C3AED" />
+        <KpiCard label="총 페이지뷰"   value={totalViews}  icon="eye" color="#1428A0" />
+        <KpiCard label="누적 세션"     value={uniqueUids}  icon="user" color="#2563EB" />
+        <KpiCard label="기록된 이벤트" value={logs.length} icon="doc" color="#059669" />
+        <KpiCard label="추적 모듈 수"  value={LIVE_MODULES.length} icon="puzzle" color="#7C3AED" />
       </div>
 
       <Section title="모듈별 사용 현황">
@@ -223,7 +225,7 @@ export default function AdminPage() {
               <div key={key}>
                 <div className="flex items-center justify-between mb-0.5">
                   <span className="text-xs font-medium text-gray-700">
-                    {meta.icon} {meta.label}
+                    <Icon name={meta.icon} size={13} className="inline-block align-[-2px] mr-1" /> {meta.label}
                   </span>
                   <span className="text-xs font-bold" style={{ color: meta.color }}>{count}회</span>
                 </div>
@@ -290,12 +292,12 @@ export default function AdminPage() {
         ) : (
           <div className="space-y-1.5">
             {recent.map((ev, i) => {
-              const meta = MODULE_META[ev.module] || { icon: '?', label: ev.module, color: '#666' }
+              const meta = MODULE_META[ev.module] || { icon: 'doc' as IconName, label: ev.module, color: '#666' }
               const t = new Date(ev.ts + 9 * 3600000).toISOString().replace('T', ' ').slice(0, 16)
               return (
                 <div key={i} className="flex items-center gap-2 text-xs">
                   <span className="text-gray-400 w-28 shrink-0">{t}</span>
-                  <span>{meta.icon}</span>
+                  <Icon name={meta.icon} size={14} style={{ color: meta.color }} />
                   <span className="font-medium" style={{ color: meta.color }}>{meta.label}</span>
                   <span className="text-gray-400">
                     · {ev.action}{ev.extra ? ' (' + ev.extra + ')' : ''}
@@ -313,7 +315,7 @@ export default function AdminPage() {
           className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
           style={{ background: '#1428A0' }}
         >
-          📥 CSV 내보내기 ({logs.length}건)
+          CSV 내보내기 ({logs.length}건)
         </button>
         {!teamWide && (
           <button
@@ -325,7 +327,7 @@ export default function AdminPage() {
             }}
             className="py-2.5 px-4 rounded-xl text-sm font-semibold text-red-600 border border-red-200 bg-red-50"
           >
-            🗑️ 초기화
+            초기화
           </button>
         )}
       </div>
@@ -343,7 +345,7 @@ export default function AdminPage() {
           style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
         >
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">📈</span>
+            <Icon name="dashboard" size={20} style={{ color: '#1428A0' }} />
             <span className="font-bold text-base">AI 업무 효율화 효과</span>
           </div>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
@@ -356,7 +358,7 @@ export default function AdminPage() {
             <div key={item.key} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{item.icon}</span>
+                  <Icon name={item.icon} size={18} style={{ color: '#1428A0' }} />
                   <span className="text-sm font-bold text-gray-800">{item.label}</span>
                 </div>
                 <span
@@ -368,12 +370,12 @@ export default function AdminPage() {
               </div>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-red-400">⏱</span>
+                  <Icon name="timer" size={13} className="text-red-400" />
                   <span>기존: <b className="text-gray-700">{item.before}</b></span>
                 </div>
                 <span className="text-gray-300">→</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-green-500">⚡</span>
+                  <Icon name="bolt" size={13} className="text-green-500" />
                   <span>AI: <b className="text-green-700">{item.after}</b></span>
                 </div>
               </div>
@@ -392,7 +394,7 @@ export default function AdminPage() {
           className="rounded-2xl p-4 mt-3"
           style={{ background: 'linear-gradient(135deg, #1e3a5f, #1428A0)' }}
         >
-          <p className="text-xs font-bold text-blue-200 mb-2">💡 팀 기준 월간 절감 추산</p>
+          <p className="text-xs font-bold text-blue-200 mb-2 flex items-center gap-1"><Icon name="bulb" size={13} /> 팀 기준 월간 절감 추산</p>
           <div className="grid grid-cols-3 gap-2">
             {[
               { num: '36h+', label: '월 절감 시간', sub: '팀원 1인' },
@@ -412,11 +414,11 @@ export default function AdminPage() {
   )
 }
 
-function KpiCard({ label, value, icon, color }: { label: string; value: number; icon: string; color: string }) {
+function KpiCard({ label, value, icon, color }: { label: string; value: number; icon: IconName; color: string }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
       <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-base">{icon}</span>
+        <Icon name={icon} size={16} style={{ color }} />
         <span className="text-xs text-gray-500">{label}</span>
       </div>
       <p className="text-2xl font-bold" style={{ color }}>{value.toLocaleString()}</p>

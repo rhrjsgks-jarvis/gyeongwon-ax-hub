@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { logEvent } from '@/lib/logEvent'
+import Icon, { IconName } from '@/components/Icon'
 import { parseQuery, hits, ignoredWords, type Condition } from '@/lib/searchTerms'
 
 // 인덱스는 두 파일로 나뉜다(scripts/build-search-index.mjs 참고).
@@ -33,14 +34,16 @@ type Detail = {
   usp?: string[]
 }
 
-const MODULE_META: Record<string, { label: string; icon: string; color: string }> = {
-  finder:  { label: '제품 · 모델',       icon: '🔍', color: '#1428A0' },
-  install: { label: '설치환경 가이드',   icon: '🛠️', color: '#B45309' },
-  compare: { label: '타사비교',         icon: '🔗', color: '#EA580C' },
-  care:    { label: 'AI구독 케어',         icon: '💚', color: '#059669' },
-  as:      { label: 'AS 관련 정보',      icon: '🛡️', color: '#0D9488' },
-  place:   { label: '배치 시뮬레이터',   icon: '📐', color: '#7C3AED' },
-  hub:     { label: '허브 기능',        icon: '🏠', color: '#475569' },
+/* 아이콘은 **그 도구가 허브에서 쓰는 것과 같은 것**을 쓴다 — 같은 도구가 자리마다
+   다른 그림이면 상담사가 앱을 옮겨 다닐 때 눈이 헤맨다 */
+const MODULE_META: Record<string, { label: string; icon: IconName; color: string }> = {
+  finder:  { label: '제품 · 모델',       icon: 'finder',   color: '#1428A0' },
+  install: { label: '설치환경 가이드',   icon: 'install',  color: '#B45309' },
+  compare: { label: '타사비교',         icon: 'compare',  color: '#EA580C' },
+  care:    { label: 'AI구독 케어',         icon: 'care',     color: '#059669' },
+  as:      { label: 'AS 관련 정보',      icon: 'warranty', color: '#0D9488' },
+  place:   { label: '배치 시뮬레이터',   icon: 'place',    color: '#7C3AED' },
+  hub:     { label: '허브 기능',        icon: 'home',     color: '#475569' },
 }
 const MODULE_ORDER = ['hub', 'finder', 'compare', 'install', 'as', 'place', 'care']
 const MAX_PER_MODULE = 12
@@ -77,7 +80,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
         </span>
       </div>
 
-      {d.note && <p className="px-3 pt-2 text-[11px] text-amber-700">⚠️ {d.note}</p>}
+      {d.note && <p className="px-3 pt-2 text-[11px] text-amber-700 flex items-start gap-1"><Icon name="warn" size={12} className="flex-shrink-0 mt-0.5" /> <span>{d.note}</span></p>}
 
       <table className="w-full text-[13px]">
         <tbody>
@@ -92,7 +95,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
 
       {!!(d.on && d.on.length) && (
         <div className="px-3 py-2.5 border-t border-blue-100">
-          <p className="text-[11px] font-bold text-gray-400 mb-1.5">✅ 지원 기능</p>
+          <p className="text-[11px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="check" size={12} /> 지원 기능</p>
           <div className="flex flex-wrap gap-1">
             {d.on.map((f, i) => (
               <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-blue-200 text-blue-700">{f}</span>
@@ -102,7 +105,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
       )}
       {!!(d.off && d.off.length) && (
         <div className="px-3 pb-2.5">
-          <p className="text-[11px] font-bold text-gray-400 mb-1.5">✖ 미지원</p>
+          <p className="text-[11px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="x" size={12} /> 미지원</p>
           <div className="flex flex-wrap gap-1">
             {d.off.map((f, i) => (
               <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">{f}</span>
@@ -113,7 +116,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
 
       {!!(d.usp && d.usp.length) && (
         <div className="px-3 py-2.5 border-t border-blue-100">
-          <p className="text-[11px] font-bold text-amber-600 mb-1.5">⭐ 핵심 키워드 · USP</p>
+          <p className="text-[11px] font-bold text-amber-600 mb-1.5 flex items-center gap-1"><Icon name="star" size={12} /> 핵심 키워드 · USP</p>
           <div className="flex flex-wrap gap-1">
             {d.usp.map((f, i) => (
               <span key={i} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
@@ -239,7 +242,7 @@ function SearchResults() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-        <Link href="/" className="hover:text-gray-600 no-underline">🏠 허브</Link>
+        <Link href="/" className="hover:text-gray-600 no-underline inline-flex items-center gap-1"><Icon name="home" size={13} /> 허브</Link>
         <span>›</span>
         <span className="text-gray-600">통합검색</span>
       </div>
@@ -332,7 +335,7 @@ function SearchResults() {
               return (
                 <div key={g.m} className="bg-white rounded-2xl p-4 border border-gray-100">
                   <h2 className="font-bold text-sm mb-2.5" style={{ color: meta.color }}>
-                    {meta.icon} {meta.label}
+                    <Icon name={meta.icon} size={13} className="inline-block align-[-2px] mr-1" /> {meta.label}
                     <span className="text-gray-300 font-medium ml-1.5">{g.items.length}건</span>
                   </h2>
                   <div className="flex flex-col gap-0.5">
@@ -368,7 +371,7 @@ function SearchResults() {
                         <div className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-gray-50 transition-colors">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-800 truncate">
-                              {e.title}{e.ext && <span className="text-gray-300 font-normal"> ↗</span>}
+                              {e.title}{e.ext && <Icon name="external" size={11} className="inline-block align-[-1px] ml-1 text-gray-300" />}
                             </p>
                             <p className="text-[11px] text-gray-400 truncate">{e.sub}</p>
                           </div>
