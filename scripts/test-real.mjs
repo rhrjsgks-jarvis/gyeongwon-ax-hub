@@ -122,6 +122,16 @@ for (const s of sample) {
       if (m) {
         out.segH = Math.abs(m.x2 - m.x1) > Math.abs(m.y2 - m.y1);
         out.cover = Math.abs(m.x2 - m.x1) / Math.max(1, w);
+        /*
+         * **기준 벽이 건물 폭에서 차지하는 비율.** 화면은 "침실1 가로가 몇 mm 입니까?"
+         * 라고 묻는데 부각된 것이 세대 전체 폭이면 사용자가 3,300 을 넣는 순간 축척이
+         * 통째로 틀어진다 — 위 `cover`(벽/방 가로)로는 안 잡힌다. 방 자체가 세대 전체면
+         * 벽이 그 방을 100% 덮어 완벽해 보이기 때문이다.
+         */
+        const bx = (P.state.baseInfo || {}).bbox;
+        const S = (P.state.baseMask || {}).S || 1;
+        const bw = bx ? (bx.x1 - bx.x0) / S : P.state.imgW;
+        out.span = Math.abs(m.x2 - m.x1) / Math.max(1, bw);
       }
     }
     return out;
@@ -161,6 +171,40 @@ else if (withSeg.length) {
   else if (short.length > withSeg.length * 0.15) {
     fail(`벽면의 절반도 못 덮는 도면이 ${short.length}/${withSeg.length}장 — 조각만 잡고 있다`);
   } else pass(`기준 벽 전부 가로 · 방 가로를 덮는 비율 중앙값 ${mc.toFixed(2)}`);
+}
+
+/*
+ * ── 기준 벽이 세대 폭인가 (2026-08-13 신설) ──
+ *
+ * *"침실1 가로가 몇 mm 입니까?"* 라고 물으면서 세대 전체 폭을 부각하던 문제다. 사용자가
+ * 안내대로 3,300 을 넣으면 도면이 두세 배로 줄어 이후 판정이 전부 거짓이 된다
+ * (사용자 보고: 원주 푸르지오 85A · 안양자이 50-2). **위 `cover` 로는 안 잡힌다** —
+ * 방 자체가 세대 전체면 벽이 그 방을 100% 덮어 지표가 오히려 완벽해 보인다.
+ *
+ * 실측(`.scratch/scale-truth.mjs`, 54장) — 중앙값 0.36 이 정상이고 0.8 이상이 사고다.
+ * 고치기 전 4장(7%) → "침실은 세대 폭을 가로지르지 않는다"를 넣은 뒤 2장(4%).
+ *
+ * **비율 상한이 아니라 0 으로 잡는다.** 7% 짜리 현상을 30장 표본에 대고 "상한 10%"로
+ * 재면 영영 안 문다 — 실제로 고치기 전 이 표본의 값이 1장(3%)이라 10% 문턱을 그냥
+ * 통과했다. 한 장이라도 나오면 실패시킨다.
+ *
+ * **후보가 하나뿐인 도면은 세지 않는다.** 원룸처럼 세대 폭이 곧 방 폭이면 물러설 곳이
+ * 없어 이건 인식 실패가 아니다. 고를 수 있었는데 세대 폭을 골랐을 때만 사고다.
+ */
+{
+  const withSpan = auto.filter((r) => r.span != null);
+  if (withSpan.length) {
+    const wide = withSpan.filter((r) => r.span >= 0.8);
+    const only1 = wide.filter((r) => (r.cands || 0) <= 1);
+    const bad = wide.filter((r) => (r.cands || 0) > 1);
+    if (bad.length) {
+      fail(`기준 벽이 세대 폭인 도면 ${bad.length}장 — 고를 후보가 있었는데 세대 폭을 골랐다`
+        + ` : ${bad.slice(0, 3).map((r) => `${r.c} ${r.type}(${r.span.toFixed(2)})`).join(', ')}`);
+    } else {
+      pass(`기준 벽이 세대 폭인 도면 없음 (건물 폭 대비 중앙값 ${med(withSpan.map((r) => r.span)).toFixed(2)})`
+        + (only1.length ? ` · 후보가 하나뿐이라 제외 ${only1.length}장` : ''));
+    }
+  }
 }
 
 /*
