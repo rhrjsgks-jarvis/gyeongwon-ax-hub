@@ -2540,6 +2540,18 @@ function polyAreaPx(poly){
  * 그래도 자동은 초안이다. 틀리면 도면 위 막대의 "다시 누르기"로 사용자가 직접 찍으면 된다.
  */
 function autoDetectCenter(){
+  /*
+   * **물어볼 것이 없으면 묻지 않는다**(2026-08-14).
+   *
+   * 단지에서 부른 도면은 축척이 색인에 있고, 불러오는 자리에서 `detectAllRooms` 로
+   * 공간까지 전부 잡아 둔다. 그런데 `useImage` 는 콜백(`after`)을 부른 **뒤에** 이
+   * 함수를 부르므로, 그쪽에서 막대를 닫아도 여기서 다시 열렸다 — 화면에는
+   * "이 공간 확정 / 다른 방 ▸" 막대가 남아 **할 일이 없는데 할 일이 있는 것처럼**
+   * 보이고 도면의 절반을 가렸다(프로덕션 시연에서 확인).
+   *
+   * 축척이 확정돼 있고 공간도 이미 잡혀 있으면 이 함수가 할 일이 남아 있지 않다.
+   */
+  if (state.scaled && state.rooms.length) return;
   ensureClean();
   const W = state.imgW, H = state.imgH;
   const probes = [];
@@ -2682,6 +2694,28 @@ function draftTotalM2(){
   return any ? t : null;
 }
 
+/**
+ * 자동으로 잡은 초안이 **왜 이 방인지**를 한 줄로 적는다.
+ *
+ * 예전에는 `침실1(안방)로 보이는 방을 잡았습니다 — 축척은 이 방의 가로 벽으로 잽니다`
+ * 가 **통째로 하드코딩**돼 있었다. 두 가지가 어긋났다(2026-08-14 프로덕션 시연):
+ *
+ *  ① **이름**이 실제 고른 방과 무관했다. 디에트르 84 에서 30.3㎡(거실)를 잡아 놓고
+ *     "침실1(안방)로 보이는 방"이라고 말했다. CLAUDE.md 가 이미 정해 둔 규칙이 있다 —
+ *     *"자동이 그 방을 골랐으면 이름 제안도 그 방 이름이어야 한다. 화면이 거짓말을 한다."*
+ *  ② **축척이 이미 확정된 도면**(단지 색인에 실려 있다)에서도 "이 방의 가로 벽으로
+ *     잽니다"라고 말했다. 잴 일이 없는데 잰다고 하니 상담사가 무엇을 해야 하는지 흐려진다.
+ */
+function autoWhy(){
+  const nm = (() => { try { return nextRoomName(); } catch (_) { return '방'; } })();
+  const pick = `<b>${esc(nm)}(으)로 보이는 방</b>을 잡았습니다`;
+  const tail = ' 다른 방이면 <b>다른 방 ▸</b>';
+  /* 축척이 이미 있으면 잰다는 말을 하지 않는다 — 그 말이 곧 다음에 할 일을 가리키기 때문 */
+  return state.scaled
+    ? `${pick} —${tail}`
+    : `${pick} — 축척은 이 방의 <b>가로 벽</b>으로 잽니다.${tail}`;
+}
+
 function showDraftBar(auto, prevArea){
   const bar = $('#draftbar');
   const more = state.draftMore || [];
@@ -2723,7 +2757,7 @@ function showDraftBar(auto, prevArea){
       <span class="meta">모서리 ${state.draft.length}개${opens?` · 개구부 ${opens}곳`:''}</span>
       ${st.approx ? '<span class="meta">경계가 깔끔히 닫히지 않아 <b>대략</b>으로 잡았습니다 — 넓게/좁게로 맞춰 주세요</span>' : ''}
       <span class="grow"></span>
-      ${auto ? '<span class="meta"><b>침실1(안방)로 보이는 방</b>을 잡았습니다 — 축척은 이 방의 <b>가로 벽</b>으로 잽니다. 다른 방이면 <b>다른 방 ▸</b></span>' : ''}
+      ${auto ? `<span class="meta">${autoWhy()}</span>` : ''}
     </div>
     <div class="dl">
       <button id="d-wide" ${st.wider  == null ? 'disabled' : ''}>◂ 더 넓게</button>
@@ -4916,7 +4950,17 @@ async function openLibrary(){
               let found = 0;
               try { found = detectAllRooms() || 0; } catch (_) { found = 0; }
               try { nameRoomsFromPlan(); } catch (_) {}
-              if (found) { setMode('idle'); setStep(4); evaluate(); }
+              if (found) {
+                setMode('idle'); setStep(4); evaluate();
+                /*
+                 * **자동 인식이 띄워 둔 초안 막대를 닫는다**(2026-08-14).
+                 * `useImage` 안의 `autoDetectCenter` 가 방 하나를 잡아 "이 공간 확정 /
+                 * 축척은 이 방의 가로 벽으로 잽니다" 막대를 띄우는데, 여기서는 축척이
+                 * 이미 색인에 있고 공간도 전부 잡은 뒤다. 그대로 두면 **할 일이 없는데
+                 * 할 일이 있는 것처럼** 보이고, 도면의 절반을 가린다.
+                 */
+                hideDraftBar(); state.draft = null; state.draftMore = [];
+              }
               else { setMode('room'); setStep(3); }
               /*
                * **화면을 다시 맞춘다 — 안 맞추면 도면이 통째로 화면 밖에 있다**

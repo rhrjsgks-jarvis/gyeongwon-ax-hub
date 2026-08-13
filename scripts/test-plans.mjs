@@ -1458,6 +1458,9 @@ const knownGaps = [];
         cw: Math.round(rect.width), ch: Math.round(rect.height),
         onW: Math.round(x1 - x0), onH: Math.round(y1 - y0),
         overlap: x0 < rect.width && x1 > 0 && y0 < rect.height && y1 > 0,
+        /* 할 일이 끝났는데 초안 막대가 남아 있으면 도면 절반을 가리고 할 일이 있는 것처럼 보인다 */
+        bar: document.getElementById('draftbar').classList.contains('on'),
+        barText: (document.getElementById('draftbar').textContent || '').replace(/\s+/g, ' ').trim().slice(0, 50),
       };
     });
     if (vis.skip) console.log('SKIP: 색인에 축척이 실린 도면이 없어 화면 맞춤을 검사하지 못했다');
@@ -1477,9 +1480,16 @@ const knownGaps = [];
         + ` 도면이 ${vis.onW}×${vis.onH}px (fitAll 을 부르지 않으면 이렇게 된다)`);
     } else if (vis.onW < vis.cw * 0.3 && vis.onH < vis.ch * 0.3) {
       fail(`단지에서 불러온 도면이 화면의 ${Math.round(vis.onW / vis.cw * 100)}% 밖에 안 된다 — ${vis.name}`);
+    } else if (vis.bar) {
+      /*
+       * 축척도 색인에 있고 공간도 다 잡은 뒤인데 "이 공간 확정 / 다른 방 ▸" 막대가 남아
+       * 있었다. 할 일이 없는데 있는 것처럼 보이고 도면의 절반을 가린다 —
+       * `useImage` 가 콜백을 부른 **뒤에** `autoDetectCenter` 를 부르기 때문이었다.
+       */
+      fail(`단지에서 불러온 뒤 초안 막대가 남아 있다 — "${vis.barText}" (할 일이 없는데 있는 것처럼 보인다)`);
     } else {
       pass(`단지 불러오기 화면 맞춤 — ${vis.name}: 화면 ${vis.cw}×${vis.ch}px 에 도면 ${vis.onW}×${vis.onH}px`
-        + ` · 공간 ${vis.rooms}곳`);
+        + ` · 공간 ${vis.rooms}곳 · 초안 막대 없음`);
     }
   }
 
