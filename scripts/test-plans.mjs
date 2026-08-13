@@ -1482,6 +1482,46 @@ const knownGaps = [];
         + ` · 공간 ${vis.rooms}곳`);
     }
   }
+
+  /*
+   * ── 다른 공간을 품고 있으면 화면이 그 사실을 적는가 (2026-08-14 신설) ──
+   *
+   * 한국 아파트의 거실·주방은 트여 있어 자동 인식이 **트인 전체**와 **그 안의 주방**을
+   * 둘 다 잡는다. 그걸 지우지 않는 것은 이미 정한 결정이다(겹침만 보고 지웠더니 진짜
+   * 주방이 사라졌다 — CLAUDE.md). 그래서 넓이가 이중으로 세어진다:
+   * 실측 대방 86A 는 공간 합이 전용의 **122%** 이고 초과분이 전부 이 이중 계산이다.
+   *
+   * 인식은 그대로 두되 **화면이 거짓말을 하지 않아야 한다** — `거실 30.1㎡` 라고만
+   * 적으면 상담사가 "거실이 30이네요"로 읽는데 그 안에 주방 16.3㎡ 가 들어 있다.
+   */
+  {
+    const r = await page.evaluate(() => {
+      const P = window.__place;
+      /* 큰 사각형 안에 작은 사각형이 든 상태를 만든다 — 트인 거실 속 주방과 같은 모양 */
+      const rect = (x0, y0, x1, y1) => [
+        { x1: x0, y1: y0, x2: x1, y2: y0 }, { x1: x1, y1: y0, x2: x1, y2: y1 },
+        { x1: x1, y1: y1, x2: x0, y2: y1 }, { x1: x0, y1: y1, x2: x0, y2: y0 }];
+      P.state.rooms = []; P.state.walls = []; P.state.items = [];
+      P.state.scaled = true; P.state.mmPerPx = P.state.mmPerPx || 10;
+      P.addRoom('트인거실', rect(0, 0, 6000, 5000));
+      P.addRoom('주방', rect(3000, 500, 5500, 4000));
+      P.addRoom('침실', rect(9000, 0, 12000, 3000));      // 떨어져 있는 방 — 여기엔 표기가 붙으면 안 된다
+      P.renderRooms();
+      const rows = [...document.querySelectorAll('#rooms .room')].map((el) => ({
+        name: (el.querySelector('.rn') || {}).value,
+        m: (el.querySelector('.m') || {}).textContent || '',
+      }));
+      return rows;
+    });
+    const big = r.find((x) => x.name === '트인거실');
+    const kit = r.find((x) => x.name === '주방');
+    const bed = r.find((x) => x.name === '침실');
+    if (!big || !kit || !bed) fail('공간 포함 표기 검사를 세우지 못했다');
+    else if (!/포함/.test(big.m)) fail(`품고 있는 공간에 포함 표기가 없다 — "${big.m.trim()}" (넓이가 이중으로 세어지는데 화면이 말하지 않는다)`);
+    else if (!/주방/.test(big.m)) fail(`포함 표기에 품은 공간 이름이 없다 — "${big.m.trim()}"`);
+    else if (/포함/.test(kit.m) || /포함/.test(bed.m)) fail(`품지 않은 공간에 포함 표기가 붙었다 — 주방 "${kit.m.trim()}" · 침실 "${bed.m.trim()}"`);
+    else pass(`공간 포함 표기 — "${big.m.replace(/\s+/g, ' ').trim()}" · 떨어진 방에는 안 붙는다`);
+  }
 }
 
 /*

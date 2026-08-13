@@ -140,6 +140,8 @@
   .room .rn{flex:1;min-width:0;border:0;background:transparent;font:600 13px system-ui;color:var(--ink);padding:2px 0}
   .room .rn:focus{outline:0;border-bottom:1px solid var(--brand)}
   .room .m{font-size:11px;color:var(--muted);flex:none}
+  /* 트인 거실처럼 다른 공간을 품고 있으면 그 사실을 적는다 — 넓이가 이중으로 세어지기 때문 */
+  .room .m2in{color:#B45309}
   .room .del{border:0;background:transparent;color:var(--muted);font-size:13px;padding:0 2px;cursor:pointer;flex:none}
   /* 추천 개수는 시트를 열자마자 눈에 들어와야 한다 — 상담의 첫 문장이 된다 */
   #a-rec .recn{color:var(--brand);font-size:15px}
@@ -3743,13 +3745,46 @@ function renderRooms(){
    * 없지만(CLAUDE.md), 공간이 없을 때는 고칠 대상도 없다. 도구막대에 늘 띄워 두는 대신
    * 고칠 것이 생긴 자리에 둔다.
    */
-  box.innerHTML = state.rooms.map((r,i)=>`
+  /*
+   * **품고 있는 공간은 그 사실을 적는다**(2026-08-14 실측으로 넣음).
+   *
+   * 한국 아파트의 거실·주방은 트여 있어 자동 인식이 **트인 전체**와 **그 안의 주방**을
+   * 둘 다 잡는다. 그것을 지우지 않는 것은 이미 정한 결정이다 — 겹침만 보고 지웠더니
+   * 트인 거실(31㎡) 안의 **진짜 주방(16.8㎡)이 사라졌다**(CLAUDE.md).
+   *
+   * 그런데 화면은 `거실 30.1㎡` 라고만 적었다. 상담사가 "거실이 30이네요"라고 읽으면
+   * 사실과 다르다 — 그 안에 주방 16.3㎡ 가 들어 있다(대방 86A 실측: 공간 합이 전용의
+   * **122%** 인데, 초과분이 전부 이 이중 계산이다). 인식을 바꾸면 위 결정을 되돌리게
+   * 되므로 **화면이 포함 사실을 밝히는 쪽**으로 고친다.
+   *
+   * 판정은 **중심이 안에 드는가**로 한다 — 다각형 겹침을 매번 재면 목록을 그릴 때마다
+   * 비싸고, 완전히 품긴 경우만 잡으면 되므로 이걸로 충분하다.
+   */
+  const loopOf = (r) => { for (const pt of (r.parts || [])){ const L = loopOfWalls(pt.walls); if (L && L.length > 2) return L; } return null; };
+  const cen = (L) => { let x = 0, y = 0; for (const p of L){ x += p[0]; y += p[1]; } return [x / L.length, y / L.length]; };
+  const holds = state.rooms.map((r) => {
+    const L = loopOf(r); if (!L) return null;
+    const mine = roomArea(r);
+    const inside = state.rooms.filter((o) => {
+      if (o === r || roomArea(o) >= mine) return false;
+      const OL = loopOf(o); if (!OL) return false;
+      const c = cen(OL);
+      return inLoop(L, c[0], c[1]);
+    });
+    return inside.length ? inside : null;
+  });
+  box.innerHTML = state.rooms.map((r,i)=>{
+    const inn = holds[i];
+    const note = inn
+      ? ` <span class="m2in" title="이 공간 넓이에 아래 공간이 함께 들어 있습니다">· ${esc(inn.map((o)=>o.name).join('·'))} 포함</span>`
+      : '';
+    return `
     <div class="room ${state.roomSel===r.id?'sel':''}" data-room="${r.id}">
       <span class="swatch" style="background:${ROOM_FILL[i%ROOM_FILL.length]}"></span>
       <input type="text" class="rn" data-rename="${r.id}" value="${esc(r.name)}" maxlength="12">
-      <span class="m">${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?` · ${r.parts.length}조각`:''}</span>
+      <span class="m">${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?` · ${r.parts.length}조각`:''}${note}</span>
       <button class="del" data-del="${r.id}" title="삭제">✕</button>
-    </div>`).join('')
+    </div>`;}).join('')
     /*
      * **못 잡은 공간을 손으로 더 넣을 수 있어야 한다**(2026-08-12 사용자 지적:
      * *"자동으로 인식이 안 될 경우를 대비해서 도면 영역을 선택하게 되면 선택된 영역을
@@ -5953,6 +5988,8 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
+  /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
+  renderRooms,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
   planAreaM2, recommendPicks,
   CLEAR, OUTDOOR, ROOM_PLAN, DOOR_ZONE, TOP_OPEN };
