@@ -233,7 +233,7 @@ try {
      * **외부 도메인 자원도 같은 순회에서 함께 본다.** 매장 전파가 약해도 열려야 해서
      * three.js·html2canvas 를 vendor 로 받아 두는 앱이다. CDN 한 줄이 섞여 들어가면
      * 그 기능만 조용히 죽는다 — 타사비교가 실제로 그랬다.
-     * 글꼴(Pretendard)은 아직 CDN 이라 예외로 두되 개수를 보고해 늘어나는 것을 드러낸다.
+     * **글꼴도 2026-08-14 부터 우리 도메인이라 예외가 없다** — 한 건이라도 나오면 실패다.
      */
     const scanExt = () => mp.evaluate(() => {
       const out = [];
@@ -247,18 +247,47 @@ try {
       }
       return out;
     });
+    /*
+     * **글꼴은 "받았는가"가 아니라 "실제로 그려지는가"를 본다.**
+     * 앱마다 부르는 이름이 갈린다 — as·care·poster 는 `Pretendard`, compare·install·finder 는
+     * `Pretendard Variable`. 자체 호스팅 CSS 가 한 이름만 선언하면 **나머지가 조용히 시스템
+     * 글꼴로 떨어지는데 화면에는 아무 표시도 안 난다.**
+     *
+     * **`document.fonts.check` 를 쓰면 안 된다** — 그 자리에 **설치된 시스템 글꼴**이 있어도
+     * 참을 낸다. 개발 PC 에 Pretendard 가 깔려 있어서, 별칭을 통째로 지우고 돌려도 통과했다
+     * (실제로 확인함). 매장 폰에는 그 글꼴이 없으므로 그 검사는 아무것도 지키지 못한다.
+     * 그래서 **CSS 가 그 이름을 선언했는가**를 `document.fonts` 목록에서 직접 센다.
+     */
+    const fontOK = () => mp.evaluate(async () => {
+      const f = document.querySelector('iframe');
+      const d = f && f.contentDocument, w = f && f.contentWindow;
+      if (!d || !w || !w.document.fonts) return { skip: true };
+      try { await w.document.fonts.ready; } catch (e) { /* 준비 실패는 아래에서 거짓으로 잡힌다 */ }
+      const fam = w.getComputedStyle(d.body).fontFamily || '';
+      const want = /Pretendard Variable/i.test(fam) ? 'Pretendard Variable' : 'Pretendard';
+      const declared = new Set();
+      w.document.fonts.forEach((ff) => declared.add(String(ff.family).replace(/^['"]|['"]$/g, '')));
+      return { want, fam: fam.slice(0, 60), ok: declared.has(want), declared: [...declared] };
+    });
+
     const shareApps = ['/as', '/install', '/finder', '/care', '/compare'];
-    const extBad = [], extFont = [];
+    const extBad = [], fontBad = [], fontSeen = [];
     for (const path of shareApps) {
       await mp.goto(BASE + path, { waitUntil: 'networkidle' });
       await mp.waitForTimeout(1500);
       if (!(await hdr())) miss.push(path);
-      for (const u of await scanExt()) (/pretendard/i.test(u) ? extFont : extBad).push(path + ' → ' + u);
+      for (const u of await scanExt()) extBad.push(path + ' → ' + u);
+      const fr = await fontOK();
+      if (fr.skip) continue;
+      fontSeen.push(`${path} ${fr.want}`);
+      if (!fr.ok) fontBad.push(`${path} — 본문이 "${fr.fam}" 인데 "${fr.want}" 가 안 실렸다`);
     }
     if (miss.length) fail(`미니앱에서 공유 아이콘이 안 뜬다: ${miss.join(', ')}`);
     else pass(`헤더 공유 아이콘 — 미니앱 ${shareApps.length}곳에서 항상 표시`);
     if (extBad.length) fail(`미니앱이 외부 도메인 자원을 부른다(전파가 끊기면 죽는다): ${extBad.join(' / ')}`);
-    else pass(`외부 도메인 자원 없음 — 글꼴(Pretendard) ${extFont.length}건만 남았다`);
+    else pass('외부 도메인 자원 0건 — 글꼴까지 전부 우리 도메인');
+    if (fontBad.length) fail(`글꼴이 실리지 않는다: ${fontBad.join(' / ')}`);
+    else pass(`글꼴이 실제로 실린다 — ${fontSeen.join(' · ')}`);
 
     /* 눌렀을 때 화면 전체가 한 장으로 담기는가 — 보이는 부분만 찍으면 안 된다 */
     await mp.goto(BASE + '/as', { waitUntil: 'networkidle' });
