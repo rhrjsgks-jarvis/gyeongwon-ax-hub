@@ -220,15 +220,45 @@ try {
      * 공유가 "지금 화면을 그대로 찍는 것"으로 바뀌었으므로 볼 화면이 곧 공유할 것이다.
      * (요약 카드를 만들던 시절에는 "만들 것이 있을 때만" 보였다.)
      */
+    /*
+     * **`/compare` 를 목록에 넣은 것이 2026-08-13 이다.** 그 앱만 share-kit.js 를 싣지 않아
+     * 헤더와 주고받는 `share-state` 에 답하지 못했고, 아이콘이 끝내 안 떴다 — 검사 목록에
+     * 없어서 아무도 몰랐다. 대신 있던 자체 PNG 저장은 CDN html2canvas 에 걸려 있어
+     * 매장 전파가 약하면 그것도 안 됐다. 고객에게 비교 결과를 보여주는 것이 존재 이유인
+     * 앱에서 결과를 남길 길이 하나도 없었던 셈이다.
+     */
     const hdr = () => mp.evaluate(() => !!document.querySelector('header button[aria-label="이 화면 공유하기"]'));
     let miss = [];
-    for (const path of ['/as', '/install', '/finder', '/care']) {
+    /*
+     * **외부 도메인 자원도 같은 순회에서 함께 본다.** 매장 전파가 약해도 열려야 해서
+     * three.js·html2canvas 를 vendor 로 받아 두는 앱이다. CDN 한 줄이 섞여 들어가면
+     * 그 기능만 조용히 죽는다 — 타사비교가 실제로 그랬다.
+     * 글꼴(Pretendard)은 아직 CDN 이라 예외로 두되 개수를 보고해 늘어나는 것을 드러낸다.
+     */
+    const scanExt = () => mp.evaluate(() => {
+      const out = [];
+      for (const f of document.querySelectorAll('iframe')) {
+        let d; try { d = f.contentDocument; } catch (e) { continue; }
+        if (!d) continue;
+        for (const el of d.querySelectorAll('script[src],link[rel="stylesheet"]')) {
+          const u = el.src || el.href || '';
+          if (/^https?:\/\//.test(u) && !u.startsWith(location.origin)) out.push(u);
+        }
+      }
+      return out;
+    });
+    const shareApps = ['/as', '/install', '/finder', '/care', '/compare'];
+    const extBad = [], extFont = [];
+    for (const path of shareApps) {
       await mp.goto(BASE + path, { waitUntil: 'networkidle' });
       await mp.waitForTimeout(1500);
       if (!(await hdr())) miss.push(path);
+      for (const u of await scanExt()) (/pretendard/i.test(u) ? extFont : extBad).push(path + ' → ' + u);
     }
     if (miss.length) fail(`미니앱에서 공유 아이콘이 안 뜬다: ${miss.join(', ')}`);
-    else pass('헤더 공유 아이콘 — 미니앱 4곳에서 항상 표시');
+    else pass(`헤더 공유 아이콘 — 미니앱 ${shareApps.length}곳에서 항상 표시`);
+    if (extBad.length) fail(`미니앱이 외부 도메인 자원을 부른다(전파가 끊기면 죽는다): ${extBad.join(' / ')}`);
+    else pass(`외부 도메인 자원 없음 — 글꼴(Pretendard) ${extFont.length}건만 남았다`);
 
     /* 눌렀을 때 화면 전체가 한 장으로 담기는가 — 보이는 부분만 찍으면 안 된다 */
     await mp.goto(BASE + '/as', { waitUntil: 'networkidle' });
@@ -525,6 +555,41 @@ try {
       else if (inner.open) fail('ㄱ자 안쪽 세로벽이 개구부로 판정됨 — 멀쩡한 벽이 문·창이 된다');
       else pass(`ㄱ자 안쪽 세로벽 ${inner.mm}mm는 벽으로 유지`);
     }
+  }
+
+  /*
+   * ── 4-b. 휴대폰 뒤로가기가 앱을 벗어나지 않는다 (back-kit.js) ──
+   *
+   * 시트·검색결과를 열어 둔 채 뒤로가기를 누르면 그것만 닫혀야 한다. 예전에는 허브를
+   * 통째로 벗어났다. **이 계약은 브라우저에서만 확인된다** — jsdom 은 history.back() 이
+   * popstate 를 동기로 쏘지 않아 단위 테스트가 이벤트를 흉내 낼 뿐이다.
+   */
+  {
+    const bp = await ctx.newPage();
+    await bp.goto(BASE + '/as', { waitUntil: 'networkidle' });
+    await bp.waitForTimeout(1200);
+    const fr = bp.frames().find((f) => f.url().includes('as-app.html'));
+    if (!fr) fail('AS 미니앱 프레임을 찾지 못함');
+    else {
+      await fr.fill('#sq', '냉장고');
+      await bp.waitForTimeout(400);
+      const opened = await fr.evaluate(() => document.body.classList.contains('sres-open'));
+      /*
+       * **`page.goBack()` 을 쓰면 안 된다.** 쌓인 칸이 iframe 의 히스토리라 최상위 문서는
+       * load 를 다시 쏘지 않고, Playwright 가 그것을 기다리다 30초 만에 시간초과한다
+       * (실측). 그 사실 자체가 원하던 동작이다 — 뒤로가기가 미니앱 안에서 소비된다.
+       */
+      await bp.evaluate(() => history.back());
+      await bp.waitForTimeout(700);
+      const url = bp.url();
+      const fr2 = bp.frames().find((f) => f.url().includes('as-app.html'));
+      const stillOpen = fr2 ? await fr2.evaluate(() => document.body.classList.contains('sres-open')) : null;
+      if (!opened) fail('AS 검색 결과가 열리지 않아 뒤로가기를 검사할 수 없다');
+      else if (!url.includes('/as')) fail(`뒤로가기가 앱을 벗어났다 — ${url}`);
+      else if (stillOpen !== false) fail('뒤로가기를 눌렀는데 검색 결과가 그대로다');
+      else pass('뒤로가기 — 검색 결과만 닫히고 앱에 남는다 (/as)');
+    }
+    await bp.close();
   }
 
   // ── 5. 운영 종료된 라우트 ──
