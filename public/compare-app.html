@@ -536,9 +536,13 @@ const DB = {
       { name:'BESPOKE 4도어 에센셜 (874L) RF85DB90F1AP', price:220, grade:'S',
         on:['SmartThings','미세자동정온','엣지정온쿨링','반영구탈취','UV위생'],
         specs:{ cap:874, power:39, eGrade:1, as:1, noise:35 } },
+      /* 2026-08-13 제품 크기 신규 — 모델파인더의 색상 변형 `RS84DB5002WW` 에서 가져왔다
+         (접미 CW/WW 는 색상이고 치수는 같다). 같은 제품인지는 두 갈래로 검산했다 —
+         용량 852L 과 에너지등급 2 가 아래 값과 그대로 일치한다.
+         출처는 카탈로그가 아니라 삼성닷컴 조사분이며, 이 항목의 다른 모델들과 같은 출처다. */
       { name:'BESPOKE 양문형 (852L) RS84DB5002CW', price:190, grade:'B',
         on:['트위스트 아이스메이커','메탈쿨링'],
-        specs:{ cap:852, power:40, eGrade:2, as:1, noise:36 } }
+        specs:{ cap:852, power:40, eGrade:2, as:1, noise:36, size:'912 × 1,780 × 915' } }
     ],
     competitors:{
       /* 2026-08-03 LG 베스트샵 카탈로그(디오스 4도어 지면, M876/H876 스펙표) 대조.
