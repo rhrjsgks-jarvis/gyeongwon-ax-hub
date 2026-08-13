@@ -1406,6 +1406,82 @@ const knownGaps = [];
     else if (!sc.applied) fail('색인의 축척이 적용되지 않음');
     else pass(`미리 읽어 둔 축척 — ${sc.n}/${sc.total}장에 실려 있고 적용됨 (예: ${sc.sample})`);
   }
+
+  /*
+   * ── 단지에서 불러온 도면이 **화면에 보이는가** (2026-08-14 신설) ──
+   *
+   * 프로덕션 시연에서 잡은 것이다. `단지 불러오기` 는 가장 흔한 경로인데, 색인 축척을
+   * 적용하는 갈래가 `fitAll()` 을 부르지 않아 **도면이 통째로 화면 밖에 있었다.**
+   * `useImage` 가 맞춰 둔 줌은 월드 단위가 **이미지 픽셀**일 때의 값인데, 축척을 세우는
+   * 순간 월드가 **mm** 로 바뀌기 때문이다 — 실측(디에트르 84): 줌 0.579 가 그대로 남아
+   * 도면 16,622 × 19,036mm 중 캔버스 766px 에는 왼쪽 위 여백만 들어왔다.
+   *
+   * **오른쪽 패널은 "공간 7곳"이라고 말하는데 화면은 빈 격자**라, 상태 검사로는 절대
+   * 안 잡힌다. 그래서 여기서는 **줌·팬을 화면 좌표로 환산해** 도면이 실제로 캔버스
+   * 안에 들어오는지를 본다.
+   */
+  {
+    const vis = await page.evaluate(async () => {
+      const P = window.__place;
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const idx = await P.loadPlanIndex();
+      /* 색인 축척이 실린 도면을 찾는다 — 그 갈래에서만 나는 문제다 */
+      let hit = null;
+      for (const c of idx) for (const p of c.plans) if (p.mmPerPx) { hit = { c, p }; break; }
+      if (!hit) return { skip: true };
+      P.state.rooms = []; P.state.walls = []; P.state.items = [];
+      P.state.img = null; P.state.mmPerPx = null; P.state.scaled = false;
+      await P.openLibrary(); await wait(300);
+      const items = () => [...document.querySelectorAll('#libbody .libitem')];
+      const click = (t) => { const b = items().find((x) => (x.textContent || '').includes(t)); if (b) b.click(); return !!b; };
+      /* 목록에는 시·군만 적힌다(칩이 시·도를 이미 걸렀다) */
+      const sido = (hit.c.region || '').split(' ')[0];
+      const chip = [...document.querySelectorAll('#libchips .chip')].find((x) => (x.textContent || '').includes(sido));
+      if (chip) { chip.click(); await wait(200); }
+      const sigun = (hit.c.region || '').split(' ').slice(-1)[0];
+      if (!click(sigun)) return { err: '지역 못 찾음: ' + hit.c.region };
+      await wait(300);
+      if (!click(hit.c.complex)) return { err: '단지 못 찾음: ' + hit.c.complex };
+      await wait(300);
+      if (!click(String(hit.p.type))) return { err: '도면 못 찾음: ' + hit.p.type };
+      for (let i = 0; i < 60 && !P.state.img; i++) await wait(200);
+      await wait(2200);
+
+      const cv = document.getElementById('cv');
+      const rect = cv.getBoundingClientRect();
+      const box = P.planBox();
+      const s = P.state;
+      const sx = (x) => x * s.zoom + s.panX, sy = (y) => y * s.zoom + s.panY;
+      const x0 = sx(box.x1), y0 = sy(box.y1), x1 = sx(box.x2), y1 = sy(box.y2);
+      return {
+        name: `${hit.c.complex} ${hit.p.type}`, scaled: s.scaled, rooms: (s.rooms || []).length,
+        cw: Math.round(rect.width), ch: Math.round(rect.height),
+        onW: Math.round(x1 - x0), onH: Math.round(y1 - y0),
+        overlap: x0 < rect.width && x1 > 0 && y0 < rect.height && y1 > 0,
+      };
+    });
+    if (vis.skip) console.log('SKIP: 색인에 축척이 실린 도면이 없어 화면 맞춤을 검사하지 못했다');
+    else if (vis.err) fail(`단지 불러오기 화면 맞춤 검사를 못 했다 — ${vis.err}`);
+    else if (!vis.rooms) fail(`단지에서 불러왔는데 공간을 하나도 못 잡았다 (${vis.name})`);
+    else if (!vis.overlap) {
+      fail(`단지에서 불러온 도면이 화면 밖에 있다 — ${vis.name}: 화면 ${vis.cw}×${vis.ch}px 인데`
+        + ` 도면이 ${vis.onW}×${vis.onH}px 로 그려진다 (fitAll 을 부르지 않으면 이렇게 된다)`);
+    } else if (vis.onW > vis.cw * 1.1 || vis.onH > vis.ch * 1.1) {
+      /*
+       * **너무 큰 것도 잡아야 한다.** 처음에는 "화면과 겹치는가"와 "너무 작지 않은가"만
+       * 봤는데, 정작 이번 사고는 도면이 **화면보다 24배 커서** 왼쪽 위 귀퉁이만 걸친
+       * 것이었다 — 겹치기는 겹치므로 그 검사를 그냥 통과했다(고침을 빼고 확인함:
+       * 화면 610×918 에 도면 14,828×19,748). 맞춤이 돌았다면 양쪽 다 화면 안에 든다.
+       */
+      fail(`단지에서 불러온 도면이 화면보다 크다 — ${vis.name}: 화면 ${vis.cw}×${vis.ch}px 인데`
+        + ` 도면이 ${vis.onW}×${vis.onH}px (fitAll 을 부르지 않으면 이렇게 된다)`);
+    } else if (vis.onW < vis.cw * 0.3 && vis.onH < vis.ch * 0.3) {
+      fail(`단지에서 불러온 도면이 화면의 ${Math.round(vis.onW / vis.cw * 100)}% 밖에 안 된다 — ${vis.name}`);
+    } else {
+      pass(`단지 불러오기 화면 맞춤 — ${vis.name}: 화면 ${vis.cw}×${vis.ch}px 에 도면 ${vis.onW}×${vis.onH}px`
+        + ` · 공간 ${vis.rooms}곳`);
+    }
+  }
 }
 
 /*
