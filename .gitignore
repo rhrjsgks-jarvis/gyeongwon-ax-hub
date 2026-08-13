@@ -23,3 +23,7 @@ scripts/fixtures/plans-real/*.gif
 
 # 작업 자물쇠 — 실행 중에만 존재하는 상태 파일 (scripts/agent-lock.mjs)
 .claude/agent.lock
+
+# 밤샘 작업 지시문 — 저장소 루트에 두고 쓰는 개인 메모다. **이 저장소는 public 이라**
+# `git add -A` 에 딸려 들어가면 그대로 공개된다. 저장소에 남기기로 정하면 -f 로 넣을 것.
+밤샘작업지시문.md
