@@ -6,8 +6,16 @@
 <title>AS 관련 정보</title>
 <style>
   *{box-sizing:border-box}
+  /*
+   * **한글은 어절 단위로 끊는다**(2026-08-13 사용자 지적 — "문맥이 이상합니다").
+   * 브라우저 기본값은 글자 아무 데서나 끊어서 *"리폼이 먼저입/니다"* ·
+   * *"AS · 수리 모/음"* 처럼 말이 반토막 난다. 좁은 칸(2열 타일·목록)에서 특히 심하다.
+   * `keep-all` 은 어절을 안 쪼개고, 어절 하나가 칸보다 길 때만 `overflow-wrap` 이
+   * 받아 준다 — 전화번호·모델코드가 칸을 뚫고 나가지 않게 하는 안전망이다.
+   */
   body{margin:0;font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    background:#f6f7fb;color:#16181b;-webkit-text-size-adjust:100%}
+    background:#f6f7fb;color:#16181b;-webkit-text-size-adjust:100%;
+    word-break:keep-all;overflow-wrap:break-word}
   /* 헤더는 다른 미니앱과 같은 남색 바다 — 앱을 넘겨 볼 때 머리가 같아야 한 제품으로 읽힌다 */
   .topbar{background:#1428A0;color:#fff;padding:14px 16px}
   .topbar-in{max-width:840px;margin:0 auto;display:flex;align-items:center;gap:10px}
@@ -72,6 +80,10 @@
   /* 물류센터는 관할 지역이 길어 여러 줄이 된다 — 번호를 위에 맞춰야 줄이 늘어도 흐트러지지 않는다 */
   .ct.lg{align-items:flex-start}
   .ct.lg .ct-d{white-space:normal;word-break:keep-all;line-height:1.5;margin-top:3px}
+  /* 관할 — 시·도마다 한 줄. 라벨 폭을 고정해 시·도가 세로로 정렬돼 눈으로 훑인다 */
+  .ar{display:block;margin-top:2px}
+  .ar b{display:inline-block;min-width:30px;margin-right:5px;font-weight:800;color:#6b7280}
+  .ar-x{display:block;margin-top:2px}
   .ct-tag{font-size:10px;font-weight:700;color:#6b7280;background:#f1f3f6;
     border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:1px}
   /* 지역 검색 — 상담 중엔 "고객 댁이 수원인데"로 시작한다. 목록을 훑는 것이 아니라 쳐서 찾는다 */
@@ -825,6 +837,35 @@ function xline(o, name, hl){
  * 센터 줄에 붙는 상황실·운영·VOC 한 줄. 상황실 번호는 **물류 대표번호와 다를 때만** 적는다 —
  * 21곳 중 19곳이 같아서, 같은 번호를 한 줄에 두 번 적으면 어느 쪽으로 걸어야 하는지 헷갈린다.
  */
+/*
+ * 관할을 **시·도마다 줄을 내려** 보여준다(2026-08-13 사용자 요청 — "내려쓰기가 이상합니다").
+ *
+ * 원문은 `서울 : 강서구, … 송파구  경기 : 고양시, …` 처럼 한 덩어리라, 그대로 흘리면
+ * *"…송파구 경기 : 고양시…"* 로 **시·도 구분이 문장 중간에 묻힌다.** 상담사는 고객 주소의
+ * 시·도부터 찾는데 그 머리가 안 보인다.
+ *
+ * **원문(`a`)은 손대지 않는다** — 관할이 틀리면 배송이 통째로 어긋나므로 요약하지도
+ * 다듬지도 않는다는 것이 이 자료의 규칙이다. 여기서는 **표시할 때만** 나눈다.
+ * 시·도가 하나뿐이면 그냥 한 줄로 둔다 — 굳이 라벨을 세울 이유가 없다.
+ */
+const SIDO_RE = /(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)\s*:/g;
+function areaLines(text, mark){
+  const t = String(text == null ? '' : text);
+  const m = (mark || esc);
+  const at = [];
+  SIDO_RE.lastIndex = 0;
+  let x; while ((x = SIDO_RE.exec(t))) at.push([x.index, x[1]]);
+  if (at.length < 2) return m(t);
+  let out = '';
+  const head = t.slice(0, at[0][0]).trim();
+  if (head) out += `<span class="ar-x">${m(head)}</span>`;
+  for (let i = 0; i < at.length; i++){
+    const seg = t.slice(at[i][0], i + 1 < at.length ? at[i + 1][0] : t.length).trim();
+    out += `<span class="ar"><b>${m(at[i][1])}</b>${m(seg.replace(/^[^:]*:\s*/, ''))}</span>`;
+  }
+  return out;
+}
+
 function opsLine(c, hl){
   const o = OPS[c.code]; if (!o) return '';
   const h = hl || esc;
@@ -924,7 +965,7 @@ function renderMid(key){
   list.innerHTML = hit.length ? hit.map(m=>
     `<div class="ct lg" style="cursor:default">
       <span class="ct-b"><b>${hl(m.g)}<span class="ct-tag">${hl(m.tc)}</span></b>
-      <span class="ct-d">${hl(m.a)}</span></span></div>`).join('')
+      <span class="ct-d">${areaLines(m.a, hl)}</span></span></div>`).join('')
     : `<div class="unk">해당하는 지사가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
   list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}곳</div>`);
 }
@@ -979,7 +1020,7 @@ function renderContacts(){
     `<div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> —
        위 관할표가 아니라 여기서 찾으세요. <b>리폼이 안 돼 있으면 이전설치 접수보다 먼저입니다.</b></div>
      ${SINK.map(x=>`<div class="ct lg">
-       <span class="ct-b"><b>${esc(x.p)}</b><span class="ct-d">${esc(x.a)}${
+       <span class="ct-b"><b>${esc(x.p)}</b><span class="ct-d">${areaLines(x.a)}${
          x.n2 ? opsRow('이전설치', telx(x.n2, `${x.p} 이전설치 문의`)) : ''}${
          xline(x, `${x.p} 싱크장 리폼`)}</span></span>
        <span class="ct-n">${telx(x.n, `${x.p} 싱크장 리폼`, null, true)}</span></div>`).join('')}`);
@@ -1077,7 +1118,7 @@ function renderCenters(){
     `<div class="ct lg">
       <span class="ct-b"><b>${hl(c.t)}<span class="ct-tag">${esc(c.b)} · ${esc(c.code)}</span>${
         OPS[c.code] ? `<span class="ct-tag">${esc(OPS[c.code].job)}</span>` : ''}</b>
-      <span class="ct-d">${hl(c.a)}${opsLine(c, hl)}</span></span>
+      <span class="ct-d">${areaLines(c.a, hl)}${opsLine(c, hl)}</span></span>
       <span class="ct-n">${telx(c.n, c.t, hl, true)}</span></div>`).join('')
     : `<div class="unk">해당하는 센터가 없습니다 — 지역명(시·군·구)으로 찾아보세요.</div>`;
   list.insertAdjacentHTML('beforeend', `<div class="cnt">${hit.length}개 센터</div>`);
@@ -1103,7 +1144,7 @@ function renderB2B(){
     list.innerHTML = hit.length ? hit.map(c=>
       `<div class="ct lg">
         <span class="ct-b"><b>${hl(c.p)}<span class="ct-tag">${hl(c.c)} · ${esc(c.code)}</span></b>
-        <span class="ct-d">${hl(c.a)}${
+        <span class="ct-d">${areaLines(c.a, hl)}${
           c.d ? opsRow('추가', telsplit(c.d, `${c.p} (${c.c}) 추가 회선`, hl)) : ''}${
           xline(c, `${c.p} (${c.c})`, hl)}</span></span>
         <span class="ct-n">${telx(c.n, `${c.p} (${c.c})`, hl, true)}</span></div>`).join('')
