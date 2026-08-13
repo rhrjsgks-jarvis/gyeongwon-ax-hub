@@ -1413,16 +1413,7 @@ setMode("kw");
 })();
 </script>
 <script>
-/* 제품 이모지 자리를 심벌로 갈아 끼운다 — 화면이 다시 그려질 때마다 */
-(function(){
-  if (typeof upgradeProdIcons !== "function") return;
-  var run = function(){ try { upgradeProdIcons(document); } catch(e){} };
-  run();
-  document.addEventListener("DOMContentLoaded", run);
-  new MutationObserver(function(){
-    clearTimeout(window.__psymT); window.__psymT = setTimeout(function(){ run(); if (typeof syncShareBtn === 'function') syncShareBtn(); }, 40);
-  }).observe(document.body, { childList: true, subtree: true });
-})();
+/* 심벌 배선은 prod-symbols.js 가 스스로 한다 — 앱마다 복사해 두면 아홉 곳을 고쳐야 한다 */
 
 /* 공유 버튼은 한 번만 붙이고, 상세를 펼치기 전에는 감춰 둔다 */
 if (typeof mountShareButton === 'function') { mountShareButton(finderShareBuild); syncShareBtn(); }

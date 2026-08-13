@@ -14,6 +14,7 @@ export type IconName =
   | 'home' | 'finder' | 'care' | 'compare' | 'catalog' | 'install'
   | 'warranty' | 'place' | 'quiz' | 'target' | 'dashboard'
   | 'ticket' | 'display' | 'coupon' | 'search' | 'chat' | 'qr' | 'share'
+  | 'build' | 'external' | 'store' | 'book' | 'bulb' | 'link' | 'check' | 'warn' | 'chevron'
 
 const P: Record<IconName, React.ReactNode> = {
   /* 허브 — 집 */
@@ -53,6 +54,26 @@ const P: Record<IconName, React.ReactNode> = {
   chat: <><path d="M20 12.5c0 3.6-3.6 6.5-8 6.5-1 0-2-.2-2.9-.5L4.5 20l1.2-3.4A6.4 6.4 0 0 1 4 12.5C4 8.9 7.6 6 12 6s8 2.9 8 6.5Z" /></>,
   /* 공유 — 점 셋을 잇는 관례적 모양. 사선은 45°만 쓰는 규칙에 맞춰 두 선을 같은 각으로 뒀다 */
   share: <><circle cx="18" cy="5.5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="18.5" r="2.5" /><path d="M8.2 10.8 15.8 6.7" /><path d="M8.2 13.2l7.6 4.1" /></>,
+
+  /* ── 화면 표시 ──
+   * 카드 안 소제목·상태 표시에 남아 있던 이모지 자리. 미니앱은 같은 그림을
+   * `public/prod-symbols.js` 에서 쓴다 — 두 곳이 갈리면 허브와 도구가 다른 그림이 된다. */
+  /* 구축중 — 연장(스패너) */
+  build: <><path d="M14.5 3.5a4.5 4.5 0 0 0 5.4 5.9L9.7 19.6a2.6 2.6 0 1 1-3.7-3.7L16.2 5.7" /></>,
+  /* 바깥으로 나가는 링크 */
+  external: <><path d="M6.5 17.5 17.5 6.5" /><path d="M9.5 6.5h8v8" /></>,
+  /* 매장 — 차양과 몸체 */
+  store: <><path d="M4 10.5v10h16v-10" /><path d="M2.5 8 4.5 3.5h15L21.5 8a3 3 0 0 1-6 0 3 3 0 0 1-7 0 3 3 0 0 1-6 0Z" /></>,
+  /* 사용 방법 — 펼친 책. catalog 와 달리 안쪽 면을 나눠 '설명서'로 읽히게 한다 */
+  book: <><path d="M4 4.5h6a3 3 0 0 1 2 2.8v12a2.4 2.4 0 0 0-2-1.8H4v-13Z" /><path d="M20 4.5h-6a3 3 0 0 0-2 2.8v12a2.4 2.4 0 0 1 2-1.8h6v-13Z" /></>,
+  /* 안내 — 전구 */
+  bulb: <><path d="M12 2.8a6 6 0 0 0-3.5 10.9v2.3h7v-2.3A6 6 0 0 0 12 2.8Z" /><path d="M9.8 19h4.4M10.5 21.3h3" /></>,
+  /* 링크 복사 */
+  link: <><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 1 0-5-5l-1.5 1.5" /><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 1 0 5 5L12.5 16.5" /></>,
+  check: <><path d="M4.5 12.5 9.5 17.5 19.5 7.5" /></>,
+  warn: <><path d="M12 3.5 21.5 20H2.5L12 3.5Z" /><path d="M12 9.5v4.5" /><path d="M12 17h.01" /></>,
+  /* 접힘 표시 — 펼치면 90° 돌아간다. 삼각형이라 작은 크기에서도 방향이 읽힌다 */
+  chevron: <><path d="M9 5.5 16.5 12 9 18.5v-13Z" /></>,
 }
 
 export default function Icon({

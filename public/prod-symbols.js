@@ -91,6 +91,56 @@
     /* 후드 — 배기관 + 캐노피 + 아래 조리대.
      * 흡입 슬롯 세 줄을 그렸더니 16px 에서 빗자루로 읽혔다. 조리대 선 하나로 바꿨다. */
     hood:        '<path d="M10.6 2.5h2.8v3.5h-2.8z"/><path d="M3.5 9.5h17v4h-17z"/><path d="M6 17.5h12"/>',
+
+    /* ── 화면 표시 ──
+     * 본문 안의 상태 마커(✅·⚠)와 버튼·머리말 아이콘 자리. 여기까지 심벌로 덮어야
+     * 한 화면에 OS 가 그리는 컬러 비트맵과 우리 선 그림이 섞이지 않는다. */
+    check:       '<path d="M4.5 12.5 9.5 17.5 19.5 7.5"/>',
+    warn:        '<path d="M12 3.5 21.5 20H2.5L12 3.5Z"/><path d="M12 9.5v4.5"/><path d="M12 17h.01"/>',
+    x:           '<path d="M6 6l12 12M18 6 6 18"/>',
+    info:        '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><path d="M12 7.8h.01"/>',
+    dot:         '<circle cx="12" cy="12" r="5"/>',
+    doc:         '<path d="M5.5 3.5h9L18.5 7.5v13h-13z"/><path d="M14 3.5v4.5h4.5"/><path d="M8.5 12.5h7M8.5 16h5"/>',
+    note:        '<path d="M4.5 19.5v-3.5L16 4.5l3.5 3.5L8 19.5H4.5Z"/><path d="M13.5 7 17 10.5"/>',
+    tool:        '<path d="M14.5 3.5a4.5 4.5 0 0 0 5.4 5.9L9.7 19.6a2.6 2.6 0 1 1-3.7-3.7L16.2 5.7"/>',
+    ruler:       '<path d="M3.5 14.5 14.5 3.5l6 6-11 11-6-6Z"/><path d="M7.5 10.5 9.5 12.5M10.5 7.5 12.5 9.5M13.5 4.5 15.5 6.5"/>',
+    target:      '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>',
+    bolt:        '<path d="M13.5 2.5 5.5 13.5h5.5l-1 8 8-11h-5.5l1-8Z"/>',
+    link:        '<path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 1 0-5-5l-1.5 1.5"/><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 1 0 5 5L12.5 16.5"/>',
+    bulb:        '<path d="M12 2.8a6 6 0 0 0-3.5 10.9v2.3h7v-2.3A6 6 0 0 0 12 2.8Z"/><path d="M9.8 19h4.4M10.5 21.3h3"/>',
+    home:        '<path d="M3.5 11 12 3.5l8.5 7.5"/><path d="M5.8 12.8v7.7h12.4v-7.7"/>',
+    chart:       '<path d="M3.5 20.5h17"/><path d="M7 17.5v-6M12 17.5v-10M17 17.5v-4"/>',
+    call:        '<path d="M8.6 3.5 11 8 8.8 10.2a11 11 0 0 0 5 5L16 13l4.5 2.4v3.6a1.5 1.5 0 0 1-1.7 1.5C10.6 19.8 4.2 13.4 3 5.2A1.5 1.5 0 0 1 4.5 3.5h4.1Z"/>',
+    calendar:    '<rect x="3.5" y="5.5" width="17" height="15" rx="1.8"/><path d="M3.5 10h17"/><path d="M8 3.5v4M16 3.5v4"/>',
+    ticket:      '<path d="M2.5 8.5h19v3a2.5 2.5 0 0 0 0 5v3h-19v-3a2.5 2.5 0 0 0 0-5v-3Z"/><path d="M12 9.5v5"/>',
+    gift:        '<rect x="3" y="9.5" width="18" height="11" rx="1.5"/><path d="M2 6.5h20v3H2z"/><path d="M12 6.5v14"/><path d="M12 6.5 9 3.5M12 6.5 15 3.5"/>',
+    cart:        '<circle cx="9.5" cy="19.5" r="1.6"/><circle cx="17.5" cy="19.5" r="1.6"/><path d="M2.5 3.5h2.6l3 12h11l2.4-8.5H7"/>',
+    search:      '<circle cx="10.8" cy="10.8" r="6.8"/><path d="M15.8 15.8 20.5 20.5"/>',
+    pin:         '<path d="M12 21.5V13"/><path d="M9 3.5h6l-1 6 3 2.5H7l3-2.5-1-6Z"/>',
+    share:       '<path d="M12 15.5V3.5"/><path d="M8.5 7 12 3.5 15.5 7"/><path d="M4.5 13.5v6a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-6"/>',
+    plus:        '<path d="M12 5v14M5 12h14"/>',
+    play:        '<path d="M7.5 4.5 19 12 7.5 19.5v-15Z"/>',
+    arrows:      '<path d="M3.5 12h17"/><path d="M7 8.5 3.5 12 7 15.5M17 8.5 20.5 12 17 15.5"/>',
+    arrow_ne:    '<path d="M6.5 17.5 17.5 6.5"/><path d="M9.5 6.5h8v8"/>',
+    fire:        '<path d="M12 2.8S6.5 7.5 6.5 13a5.5 5.5 0 0 0 11 0c0-2.5-1.8-4.6-3-6-.6 1.6-1.6 2.4-2.5 2.4 0-2.6 0-6.6 0-6.6Z"/>',
+    wind:        '<path d="M3.5 8.5h10a3 3 0 1 0-3-3"/><path d="M3.5 13h13a3 3 0 1 1-3 3"/><path d="M3.5 17.5h6"/>',
+    drop:        '<path d="M12 3.2 6.8 11a6.2 6.2 0 1 0 10.4 0L12 3.2Z"/>',
+    camera:      '<rect x="2.5" y="6.5" width="19" height="13" rx="2"/><circle cx="12" cy="13" r="4"/><path d="M8.5 6.5 10 3.5h4l1.5 3"/>',
+    chat:        '<path d="M20.5 14.5a2 2 0 0 1-2 2H8l-4.5 4V5.5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v9Z"/>',
+    money:       '<rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9.5v5M18 9.5v5"/>',
+    store:       '<path d="M4 10.5v10h16v-10"/><path d="M2.5 8 4.5 3.5h15L21.5 8a3 3 0 0 1-6 0 3 3 0 0 1-7 0 3 3 0 0 1-6 0Z"/>',
+    book:        '<path d="M4 4.5h6a3 3 0 0 1 2 2.8v12a2.4 2.4 0 0 0-2-1.8H4v-13Z"/><path d="M20 4.5h-6a3 3 0 0 0-2 2.8v12a2.4 2.4 0 0 1 2-1.8h6v-13Z"/>',
+    edu:         '<path d="M2.5 8.5 12 4l9.5 4.5L12 13 2.5 8.5Z"/><path d="M6.5 10.5v5c0 1.7 2.5 3 5.5 3s5.5-1.3 5.5-3v-5"/>',
+    tap:         '<path d="M9 11V5.5a2 2 0 1 1 4 0V13"/><path d="M13 10.5a2 2 0 0 1 4 0V12a2 2 0 0 1 4 0v3.5a5 5 0 0 1-5 5h-2.5a5 5 0 0 1-4-2L7 15.5a2 2 0 0 1 3-2.5"/>',
+    clip:         '<path d="M17.5 10.5 10 18a4 4 0 0 1-5.7-5.7l8.5-8.5a2.8 2.8 0 0 1 4 4l-8.5 8.5a1.6 1.6 0 0 1-2.3-2.3l7.8-7.8"/>',
+    /* 저울(비교) — 16px 에서 접시를 곡선으로 그리면 뭉갠다. 짧은 가로선 둘로 둔다 */
+    scale:        '<path d="M12 4v16"/><path d="M6 20h12"/><path d="M4 8h16"/><path d="M4 8 1.8 13h4.4L4 8Z"/><path d="M20 8l-2.2 5h4.4L20 8Z"/>',
+    compass:      '<circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5 13.5 13.5 8.5 15.5 10.5 10.5 15.5 8.5Z"/>',
+    /* 톱니 — **축(허브)과 링이 있어야 톱니로 읽힌다.** 처음에 링 없이 방사선만 그렸더니
+     * 16px 에서 태양이 됐다. 톱니는 넷만 둔다 — 여덟이면 그 크기에서 원으로 뭉갠다 */
+    gear:         '<circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="7"/><path d="M12 2.6v2.4M12 19v2.4M2.6 12h2.4M19 12h2.4"/>',
+    sprout:       '<path d="M12 20.5v-7"/><path d="M12 13.5a5 5 0 0 0-5-5H4.5a5 5 0 0 0 5 5H12Z"/><path d="M12 13.5a4.5 4.5 0 0 1 4.5-4.5h3a4.5 4.5 0 0 1-4.5 4.5H12Z"/>',
+    timer:        '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4h3"/><path d="M9.5 2.5h5"/><path d="M12 2.5v3.5"/>',
   };
 
   /*
@@ -210,9 +260,118 @@
     return n;
   }
 
+  /*
+   * ── 이모지 → 심벌 ─────────────────────────────────────────────
+   *
+   * 본문에 박힌 이모지까지 덮는다. 아이콘 **자리**만 갈아 끼우던 `upgradeIcons` 로는
+   * 문장 안의 `✅`·`⚠` 를 못 잡아, 한 화면에 OS 가 그리는 컬러 비트맵과 우리 선 그림이
+   * 섞여 보였다(실측 681곳 — `✅` 만 348곳).
+   *
+   * **확실한 것만 적는다.** 모르는 이모지는 그대로 두는 편이 낫다 — 뜻이 어긋난 그림을
+   * 넣으면 상담사가 화면을 잘못 읽는다(설치환경 이미지 원칙과 같다).
+   */
+  var EMOJI = {
+    '✅': 'check', '✔': 'check', '☑': 'check',
+    '⚠': 'warn', '❌': 'x', '✖': 'x', 'ℹ': 'info',
+    '🔵': 'dot', '🔴': 'dot', '🟡': 'dot', '⚪': 'dot', '⚫': 'dot',
+    '📋': 'doc', '📄': 'doc', '📝': 'note', '✏': 'note',
+    '🔧': 'tool', '🛠': 'tool', '📐': 'ruler', '🎯': 'target', '⚡': 'bolt',
+    '🔗': 'link', '💡': 'bulb', '🏠': 'home', '📊': 'chart', '📈': 'chart',
+    '📞': 'call', '☎': 'call', '📅': 'calendar', '🗓': 'calendar',
+    '🎫': 'ticket', '🎁': 'gift', '🛒': 'cart', '🔍': 'search', '🔎': 'search',
+    '📌': 'pin', '📤': 'share', '➕': 'plus', '▶': 'play',
+    '↔': 'arrows', '↕': 'arrows', '↗': 'arrow_ne',
+    '🔥': 'fire', '♨': 'fire', '💨': 'wind', '🌀': 'wind', '🌬': 'wind', '💧': 'drop',
+    '📸': 'camera', '💬': 'chat', '💰': 'money', '🏬': 'store',
+    '📖': 'book', '📚': 'book', '🎓': 'edu', '👆': 'tap',
+    '📎': 'clip', '⚖': 'scale', '🧭': 'compass', '⚙': 'gear', '🌱': 'sprout', '⏱': 'timer', '⏰': 'timer', '⌛': 'timer',
+    /* 품목 — 같은 품목이면 앱이 달라도 같은 그림이어야 한다 */
+    '🧊': 'fridge', '🥬': 'kimchi', '🫧': 'washer', '🧺': 'washer', '👗': 'dresser',
+    '🍽': 'dish', '🍳': 'induction', '📺': 'tv', '📱': 'phone', '💻': 'laptop',
+    '❄': 'aircon', '🔊': 'soundbar', '🧹': 'stick', '📻': 'microwave', '🚰': 'purifier',
+    '🤖': 'robot', '🛡': 'shield', '🚚': 'truck',
+  };
+  /* 이모지 뒤에 따라오는 변형 선택자(U+FE0F)까지 함께 먹는다 — 안 그러면 네모가 남는다 */
+  var EMOJI_RE = new RegExp('(' + Object.keys(EMOJI).join('|') + ')️?', 'g');
+  /* 글자를 넣을 수 없는 자리 — 여기에 SVG 를 넣으면 화면이 깨진다 */
+  var SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, OPTION: 1, SELECT: 1, TITLE: 1, svg: 1 };
+
+  /**
+   * 텍스트 안의 이모지를 심벌로 갈아 끼운다. **속성값과 스크립트는 건드리지 않는다** —
+   * 텍스트 노드만 훑기 때문에 `data-cat="🧊 냉장고"` 같은 값이나 코드가 망가질 일이 없다.
+   * 이미 바꾼 자리(`svg.psym` 안)는 텍스트 노드가 없으므로 저절로 건너뛴다.
+   */
+  function upgradeEmoji(root) {
+    injectCss();
+    var w = document.createTreeWalker(root || document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !EMOJI_RE.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        while (p && p.nodeType === 1) {
+          if (SKIP[p.tagName] || SKIP[p.nodeName]) return NodeFilter.FILTER_REJECT;
+          p = p.parentNode;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    var hits = [], n;
+    while ((n = w.nextNode())) hits.push(n);
+    for (var i = 0; i < hits.length; i++) {
+      var t = hits[i], frag = document.createDocumentFragment(), last = 0, m;
+      EMOJI_RE.lastIndex = 0;
+      while ((m = EMOJI_RE.exec(t.nodeValue))) {
+        if (m.index > last) frag.appendChild(document.createTextNode(t.nodeValue.slice(last, m.index)));
+        var span = document.createElement('span');
+        span.innerHTML = prodSymbol(EMOJI[m[1]], '');
+        if (span.firstChild) frag.appendChild(span.firstChild);
+        else frag.appendChild(document.createTextNode(m[0]));
+        last = m.index + m[0].length;
+      }
+      if (last < t.nodeValue.length) frag.appendChild(document.createTextNode(t.nodeValue.slice(last)));
+      t.parentNode.replaceChild(frag, t);
+    }
+    return hits.length;
+  }
+
   global.PROD_SYMBOLS = S;
+  global.prodEmojiMap = EMOJI;
+  global.upgradeEmoji = upgradeEmoji;
   global.prodSymbolKey = symbolKey;
   global.prodSymbol = prodSymbol;
   global.upgradeProdIcons = upgradeIcons;
   global.injectProdSymbolCss = injectCss;
+
+  /*
+   * ── 스스로 설치한다 ──────────────────────────────────────────
+   *
+   * 예전에는 이 배선(첫 실행 + 다시 그릴 때마다)을 **앱마다 복사**해 두었다. 네 앱에
+   * 같은 블록이 있었고, 나머지 다섯에도 붙이면 아홉 벌이 된다 — 고칠 일이 생기면
+   * 아홉 곳을 고쳐야 한다. 앱은 `<script src="prod-symbols.js">` 한 줄만 두면 된다.
+   *
+   * **되풀이되지 않는다.** 갈아 끼우면 DOM 이 바뀌어 감시자가 다시 부르지만, 그때는
+   * 바꿀 이모지가 없어 아무것도 안 바뀌고 거기서 멈춘다.
+   *
+   * `data-no-psym` 을 `<html>`·`<body>` 에 두면 이 앱만 건너뛴다 — 인쇄물처럼
+   * 원본 그대로여야 하는 화면을 위해 남겨 둔 손잡이다.
+   */
+  function autoInstall() {
+    var el = document.documentElement;
+    if (el.hasAttribute('data-no-psym') || (document.body && document.body.hasAttribute('data-no-psym'))) return;
+    var run = function () {
+      try { upgradeIcons(document); } catch (e) {}
+      try { if (document.body) upgradeEmoji(document.body); } catch (e) {}
+    };
+    run();
+    var start = function () {
+      run();
+      if (!document.body) return;
+      new MutationObserver(function () {
+        clearTimeout(global.__psymT);
+        global.__psymT = setTimeout(run, 40);
+      }).observe(document.body, { childList: true, subtree: true });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+    else start();
+  }
+  autoInstall();
 })(window);

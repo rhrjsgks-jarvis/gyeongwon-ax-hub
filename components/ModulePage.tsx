@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Icon from './Icon'
 
 interface ModulePageProps {
   icon: string
@@ -17,7 +18,7 @@ export default function ModulePage({
     <div className="max-w-3xl mx-auto">
       {/* 브레드크럼 */}
       <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
-        <Link href="/" className="hover:text-gray-600 no-underline">🏠 허브</Link>
+        <Link href="/" className="hover:text-gray-600 no-underline inline-flex items-center gap-1"><Icon name="home" size={13} /> 허브</Link>
         <span>›</span>
         <span style={{ color }}>{title}</span>
       </div>
@@ -36,7 +37,7 @@ export default function ModulePage({
         </div>
         {status === 'building' && (
           <div className="mt-3 bg-white/20 rounded-xl px-3 py-2 text-xs">
-            🔧 현재 구축 중입니다. 곧 사용 가능합니다.
+            현재 구축 중입니다. 곧 사용 가능합니다.
           </div>
         )}
       </div>

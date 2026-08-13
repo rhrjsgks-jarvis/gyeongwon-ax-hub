@@ -145,7 +145,7 @@ export default function FeedbackButton() {
           >
             {status === 'sent' ? (
               <div className="text-center py-6">
-                <p className="text-2xl mb-2">✅</p>
+                <p className="mb-2 flex justify-center"><Icon name="check" size={30} style={{ color: '#059669' }} /></p>
                 <p className="text-sm font-semibold text-gray-700">감사합니다! 담당자에게 전달되었습니다.</p>
               </div>
             ) : (
@@ -172,7 +172,7 @@ export default function FeedbackButton() {
                 />
                 {status === 'error' && (
                   <p className="text-xs text-red-500 mb-3">
-                    ⚠️ 전송에 실패했습니다. 네트워크를 확인하고 다시 시도해주세요.
+                    전송에 실패했습니다. 네트워크를 확인하고 다시 시도해주세요.
                   </p>
                 )}
                 <div className="flex gap-2">

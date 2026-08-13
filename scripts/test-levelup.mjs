@@ -18,10 +18,17 @@ import { JSDOM } from 'jsdom';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readApp } from './lib/read-app.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+/*
+ * **`readApp` 으로 읽는다.** 앱이 공용 심벌을 `<script src="prod-symbols.js">` 로 부르는데,
+ * JSDOM 은 url 이 example.com 이라 그 상대 경로를 못 가져오고 **뒤따르는 인라인 스크립트를
+ * 미룬다** — 그러면 `window.startQuiz` 같은 전역이 없어 검사가 통째로 죽는다(실제로 죽었다).
+ * `readApp` 이 그 태그 자리에 파일을 그대로 끼워 넣어 순서가 막히지 않게 한다.
+ */
 const htmlPath = path.join(__dirname, '..', 'public', 'test-app.html');
-const html = fs.readFileSync(htmlPath, 'utf8');
+const html = readApp('test-app.html');
 
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 

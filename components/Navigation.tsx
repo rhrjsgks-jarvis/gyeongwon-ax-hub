@@ -219,12 +219,12 @@ export default function Navigation() {
                   className="w-full flex items-center justify-between px-3 mb-1 py-1 rounded-lg text-[10px] font-semibold text-gray-400 uppercase tracking-wide hover:bg-gray-50 hover:text-gray-600 transition-colors"
                 >
                   <span>{group.title}</span>
-                  <span
-                    className="text-[9px] transition-transform"
+                  <Icon
+                    name="chevron"
+                    size={9}
+                    className="transition-transform"
                     style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                  >
-                    ▶
-                  </span>
+                  />
                 </button>
                 {isOpen && (
                   <div className="flex flex-col gap-0.5">

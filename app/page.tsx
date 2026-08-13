@@ -278,11 +278,11 @@ const SECTION_ID: Record<string, string> = {
 }
 
 const TIPS = [
-  { emoji: '🛒', situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
-  { emoji: '📋', situation: 'AI구독 케어 항목을 안내할 때', tool: 'AI구독 케어 안내', href: '/care' },
-  { emoji: '🔎', situation: '무엇이든 빠르게 찾을 때', tool: '통합검색', href: '/search' },
-  { emoji: '🎓', situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'URL 퀴즈 생성기', href: '/quiz' },
-  { emoji: '🛠️', situation: '설치 가능 여부를 확인할 때', tool: '설치환경 가이드', href: '/install' },
+  { icon: 'compare' as IconName, situation: '고객이 타사 제품을 비교할 때', tool: '타사비교', href: '/compare' },
+  { icon: 'care' as IconName, situation: 'AI구독 케어 항목을 안내할 때', tool: 'AI구독 케어 안내', href: '/care' },
+  { icon: 'search' as IconName, situation: '무엇이든 빠르게 찾을 때', tool: '통합검색', href: '/search' },
+  { icon: 'quiz' as IconName, situation: '팀 교육 퀴즈 자료를 만들 때', tool: 'URL 퀴즈 생성기', href: '/quiz' },
+  { icon: 'install' as IconName, situation: '설치 가능 여부를 확인할 때', tool: '설치환경 가이드', href: '/install' },
 ]
 
 const GUIDE = [
@@ -302,7 +302,7 @@ function StatusBadge({ status }: { status: string }) {
   }
   return (
     <span className="badge text-amber-700 bg-amber-50 border border-amber-200">
-      🔧 구축중
+      <Icon name="build" size={12} className="inline-block align-[-2px] mr-1" /> 구축중
     </span>
   )
 }
@@ -321,7 +321,7 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
         <StatusBadge status={mod.status} />
       </div>
       <h2 className="font-bold text-sm md:text-base mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
-        {mod.title}{mod.external && <span className="text-gray-300 text-xs font-normal"> ↗</span>}
+        {mod.title}{mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-gray-300" />}
       </h2>
       <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
       <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
@@ -359,7 +359,8 @@ function LinkListCard({
   id, icon, title, subtitle, links, logKey, usage, note, stores,
 }: {
   id: string
-  icon: string
+  /* 이모지가 아니라 아이콘 이름이다 — 허브와 도구가 같은 그림을 쓰게 한다 */
+  icon: IconName
   title: string
   subtitle: string
   links: { href: string; icon: string; label: string; desc: string }[]
@@ -377,11 +378,11 @@ function LinkListCard({
 
   return (
     <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
-      <h3 className="font-bold text-sm text-gray-700 mb-0.5">{icon} {title}</h3>
+      <h3 className="font-bold text-sm text-gray-700 mb-0.5 flex items-center gap-1.5"><Icon name={icon} size={16} style={{ color: '#1428A0' }} /> {title}</h3>
       <p className="text-[10px] text-gray-300 font-medium mb-3">{subtitle}</p>
       {stores && stores.length > 0 && (
         <div className="mb-3 pb-3 border-b border-gray-100">
-          <p className="text-[10px] font-bold text-gray-400 mb-1.5">🏬 매장별로 확인하기</p>
+          <p className="text-[10px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="store" size={12} /> 매장별로 확인하기</p>
           <select
             value={storeCode}
             onChange={(e) => setStoreCode(e.target.value)}
@@ -389,7 +390,7 @@ function LinkListCard({
               storeCode ? 'border-gray-200 text-gray-700' : 'border-blue-300 text-blue-700 font-semibold'
             }`}
           >
-            <option value="">👆 지점명 선택하기</option>
+            <option value="">지점명 선택하기</option>
             {sortedStores.map((s) => (
               <option key={s.code} value={s.code}>{s.name}</option>
             ))}
@@ -413,7 +414,7 @@ function LinkListCard({
                 <p className="text-sm font-semibold text-gray-800">{l.label}</p>
                 <p className="text-xs text-gray-400">{l.desc}</p>
               </div>
-              <span className="text-gray-300 text-xs">↗</span>
+              <Icon name="external" size={12} className="text-gray-300" />
             </div>
           </a>
         ))}
@@ -425,7 +426,7 @@ function LinkListCard({
       </div>
       {usage && usage.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-[10px] font-bold text-gray-400 mb-1.5">📖 사용 방법</p>
+          <p className="text-[10px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="book" size={12} /> 사용 방법</p>
           <div className="flex flex-col gap-1">
             {usage.map((u) => (
               <div key={u.step} className="flex items-start gap-2">
@@ -443,7 +444,7 @@ function LinkListCard({
       )}
       {note && (
         <div className="mt-3 rounded-xl px-3 py-2.5" style={{ background: '#EFF6FF' }}>
-          <p className="text-xs text-blue-700 leading-relaxed">💡 {note}</p>
+          <p className="text-xs text-blue-700 leading-relaxed flex items-start gap-1.5"><Icon name="bulb" size={13} className="flex-shrink-0 mt-0.5" /> <span>{note}</span></p>
         </div>
       )}
     </div>
@@ -604,7 +605,7 @@ export default function Home() {
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
                 <LinkListCard
                   id="coupon"
-                  icon="🎁"
+                  icon="coupon"
                   title="쿠폰 배포프로그램"
                   subtitle="매장 쿠폰 재고·발급현황 관리"
                   links={COUPON_LINKS}
@@ -612,7 +613,7 @@ export default function Home() {
                 />
                 <LinkListCard
                   id="concierge"
-                  icon="🎫"
+                  icon="ticket"
                   title="컨시어지 프로그램"
                   subtitle="스타필드 수원 매장 대기접수 시스템"
                   links={CONCIERGE_LINKS}
@@ -650,7 +651,7 @@ export default function Home() {
           {TIPS.map((tip, i) => (
             <Link key={i} href={tip.href} className="no-underline">
               <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
-                <span className="text-base flex-shrink-0">{tip.emoji}</span>
+                <Icon name={tip.icon} size={16} className="flex-shrink-0" style={{ color: '#1428A0' }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-400">{tip.situation}</p>
                   <p className="text-sm font-semibold" style={{ color: '#1428A0' }}>→ {tip.tool}</p>
@@ -681,7 +682,7 @@ export default function Home() {
               className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-colors"
               style={{ background: copied ? '#059669' : '#1428A0' }}
             >
-              {copied ? '✓ 복사됨!' : '🔗 링크 복사'}
+              {copied ? <span className="inline-flex items-center gap-1"><Icon name="check" size={14} /> 복사됨!</span> : <span className="inline-flex items-center gap-1"><Icon name="link" size={14} /> 링크 복사</span>}
             </button>
           </div>
         </div>
