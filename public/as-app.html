@@ -835,26 +835,35 @@ function opsText(c){
  * 상담사가 품목으로 찾으므로 셋을 갈라 둔다. 접혀 있어 길이 부담이 없다.
  */
 const nat = (k) => B2B_NATION.find((x) => x.key === k);
+/*
+ * 묶음 머리 아이콘도 **품목 타일과 같은 심벌**을 쓴다(2026-08-13 사용자 요청).
+ * 이 자리에만 이모지가 남아 있던 이유는 심벌 모듈이 제품만 갖고 있었기 때문이다 —
+ * AS·물류·이전설치·후드는 '업무'라 그림이 없었다. 이제 `서비스` 절에 함께 있다.
+ * `sym` 은 심벌 키다. 모르는 키면 `ico`(옛 이모지)로 물러선다 — 빈칸보다 낫다.
+ */
 const GROUPS = [
-  { id:'g-as',   ico:'🛡️', t:'AS · 수리 모음',            n:CONTACTS.reduce((a,g)=>a+g.items.length,0),
+  { id:'g-as',   sym:'shield', ico:'🛡️', t:'AS · 수리 모음',            n:CONTACTS.reduce((a,g)=>a+g.items.length,0),
     s:'AS 접수 · 구매 상담 대표번호' },
-  { id:'g-lg',   ico:'🚚', t:'물류 모음',                 n:CENTERS.length,
+  { id:'g-lg',   sym:'truck',  ico:'🚚', t:'물류 모음',                 n:CENTERS.length,
     s:'배송 · 설치 관할 센터 · 상황실 · VOC' },
-  { id:'g-mv',   ico:'🔧', t:'빌트인 가전 이전설치 관할',   n:B2B.length,
+  { id:'g-mv',   sym:'move',   ico:'🔧', t:'빌트인 가전 이전설치 관할',   n:B2B.length,
     s:'접수 순서 · 권역 협력사 (냉장고 · 세탁기 · 식기세척기 등)' },
-  { id:'g-sink', ico:'🍽️', t:'식기세척기 싱크장 리폼',      n:SINK.length,
+  /* 아래 넷은 품목이 곧 묶음이라 **그 품목의 심벌을 그대로** 쓴다 —
+     상담사가 앱을 옮겨 다녀도 같은 그림이 같은 품목을 가리켜야 눈이 안 헤맨다 */
+  { id:'g-sink', sym:'dish',      ico:'🍽️', t:'식기세척기 싱크장 리폼',      n:SINK.length,
     s:'이전설치와 담당이 다릅니다 — 리폼이 먼저입니다' },
-  { id:'g-ind',  ico:'🍳', t:'인덕션 이전설치',            n:1, s:'중앙에너지 — 전국' },
-  { id:'g-wat',  ico:'🚰', t:'정수기 이전설치',            n:1, s:'중앙에너지 — 전국' },
-  { id:'g-hood', ico:'🌬️', t:'후드 이전설치',              n:1, s:'중앙에너지 — 후드 전용 회선' },
-  { id:'g-sac',  ico:'❄️', t:'시스템에어컨 천장형 이전설치', n:1, s:'티지이엔지 — 전국' },
-  { id:'g-it',   ico:'💻', t:'B2B IT 부문 관할',           n:B2B_IT.length,
+  { id:'g-ind',  sym:'induction', ico:'🍳', t:'인덕션 이전설치',            n:1, s:'중앙에너지 — 전국' },
+  { id:'g-wat',  sym:'purifier',  ico:'🚰', t:'정수기 이전설치',            n:1, s:'중앙에너지 — 전국' },
+  { id:'g-hood', sym:'hood',      ico:'🌬️', t:'후드 이전설치',              n:1, s:'중앙에너지 — 후드 전용 회선' },
+  { id:'g-sac',  sym:'aircon',    ico:'❄️', t:'시스템에어컨 천장형 이전설치', n:1, s:'티지이엔지 — 전국' },
+  { id:'g-it',   sym:'laptop',    ico:'💻', t:'B2B IT 부문 관할',           n:B2B_IT.length,
     s:'노트북 · 모니터 · 프린터 등 IT 제품' },
 ];
 
 function grp(g, body){
+  const ico = (typeof prodSymbol === 'function' ? prodSymbol(g.sym, g.ico) : g.ico);
   return `<details class="grp" id="${g.id}"><summary>
-    <span class="gi">${g.ico}</span>
+    <span class="gi">${ico}</span>
     <span class="gt"><b>${esc(g.t)}</b><span>${esc(g.s)}</span></span>
     <span class="gc">${g.n}건</span><span class="gv">▾</span></summary>
     <div class="grp-b">${body}</div></details>`;
@@ -987,6 +996,22 @@ function renderContacts(){
   renderB2B();
   for (const k of ['ind','wat','hood']) renderMid(k);
   if (typeof wireContacts === 'function') wireContacts(pane, '[data-tel]');
+
+  /*
+   * **누르면 그 내용으로 데려간다**(2026-08-13 사용자 요청 — 인터페이스 통일감).
+   * `<details>` 는 제자리에서 펼쳐질 뿐이라, 아래쪽 묶음을 누르면 펼쳐진 내용이
+   * 화면 밖에 남아 **아무 일도 안 일어난 것처럼 보인다**. 상단 검색에서 온 경우
+   * `openGroup()` 이 이미 하던 일을, 손으로 누를 때도 똑같이 한다 —
+   * 같은 동작이 경로에 따라 달라지면 안 된다.
+   *
+   * 접을 때는 옮기지 않는다. 접는 것은 "그만 보겠다"는 뜻이라 화면이 튀면 거슬린다.
+   */
+  pane.querySelectorAll('details.grp').forEach((d) => {
+    d.addEventListener('toggle', () => {
+      if (!d.open || !d.scrollIntoView) return;
+      d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
 }
 /*
  * 묶음을 펼치고 그 자리로 데려간다.
