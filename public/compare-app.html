@@ -532,7 +532,7 @@ const DB = {
         specs:{ cap:864, power:26.03, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 916' } },
       { name:'BESPOKE AI 4도어 (902L) RM70F90M1GD', price:230, grade:'S',
         on:['푸드쇼케이스 홈바','AI절약모드','하이브리드쿨링','AI 비전인사이드'],
-        specs:{ cap:902, power:39, eGrade:1, as:1, noise:34 } },
+        specs:{ cap:902, power:39, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 922' } },
       { name:'BESPOKE 4도어 에센셜 (874L) RF85DB90F1AP', price:220, grade:'S',
         on:['SmartThings','미세자동정온','엣지정온쿨링','반영구탈취','UV위생'],
         specs:{ cap:874, power:39, eGrade:1, as:1, noise:35 } },
@@ -636,7 +636,7 @@ const DB = {
         specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7, size:'686 × 984 × 796' } },
       { name:'AI 세탁기 (21kg) WF21DG6650BW', price:87, grade:'B',
         on:['AI 세탁','AI 절약모드','DD모터','워터샷','버블워시'],
-        specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 } }
+        specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 , size:'686 × 984 × 796'} }
     ],
     competitors:{
       /* 2026-08-03 LG 베스트샵 카탈로그(107~110쪽 워시콤보 / 세탁기 지면) 대조.
@@ -824,7 +824,9 @@ const DB = {
     samsung:[
       { name:'2026 Micro RGB R95H 85인치 (KMR85RH95AFXKR)', price:929, grade:'P',
         on:['Micro RGB(초정밀 RGB 백라이트)','Micro RGB AI 엔진 Pro','Micro RGB Precision Color 100(VDE 인증)','무반사 코팅(UL 인증)','165Hz VRR','돌비 애트모스'],
-        specs:{ size:85, res:'4K', panel:'Micro RGB', hz:165, as:2, brightness:2300, dim:'1,880.6 × 1,077.0 × 29.9' } },
+        /* eGrade — 카탈로그(모델파인더 DB) 에너지소비효율 3등급. 비교표는 양쪽 모두 값이
+           있어야 그 행을 그리므로, 삼성 쪽이 비면 LG 에 있어도 행이 통째로 사라진다 */
+        specs:{ size:85, res:'4K', panel:'Micro RGB', hz:165, as:2, brightness:2300, eGrade:3, dim:'1,880.6 × 1,077.0 × 29.9' } },
       { name:'2026 Neo QLED QNH80 85인치 (KQ85QNH80)', price:449, grade:'S',
         on:['Neo QLED(미니LED)','AI 프로세서 4K','모션 익셀러레이터 144Hz','돌비 애트모스','오브젝트 트래킹 사운드+','Pantone 색상 인증'],
         specs:{ size:85, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500 } },
@@ -1655,7 +1657,7 @@ const DB = {
     samsung:[
       { name:'비스포크 큐브 Air 공기청정기 (60㎡) AX060CG500GBD', price:55, grade:'P',
         on:['극세필터 + 미세먼지 집진필터 + 숯 탈취필터','SmartThings 연동'],
-        specs:{ area:60, as:1, size:'360 × 783 × 318' } },
+        specs:{ area:60, as:1, size:'360 × 783 × 318' , eGrade:3} },
       { name:'비스포크 AI 공기청정기 (33㎡, UV LED 살균) AP90H03193EGD', grade:'S',
         on:['UV LED 살균','구리 항균 처리 극세필터','PM1.0 / 2.5 / 10 · 가스 · 종합 청정도 표시','부스터 청정'],
         specs:{ area:33, uv:'UV LED', pm:1.0, as:1, size:'320 × 545 × 320' } },
@@ -1664,7 +1666,7 @@ const DB = {
         specs:{ area:85, as:1, size:'1,050 × 600 × 130' } },
       { name:'비스포크 큐브 Air 공기청정기 (33㎡) AX033CG310GBD', price:29, grade:'B',
         on:['극세필터 + 미세먼지 집진필터 + 숯 탈취필터'],
-        specs:{ area:33, as:1, size:'349 × 499 × 236' } }
+        specs:{ area:33, as:1, size:'349 × 499 × 236' , eGrade:3} }
     ],
     competitors:{
       'LG':[
