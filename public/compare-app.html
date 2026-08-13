@@ -254,7 +254,19 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   @media(min-width:1440px){ main { max-width:1140px } }
 </style>
 <script src="prod-symbols.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<!--
+  2026-08-13 — CDN html2canvas 를 걷어내고 다른 앱과 같은 share-kit 배선으로 맞춘다.
+  두 가지가 고쳐진다:
+   ① **매장 전파가 약하면 저장이 통째로 안 됐다.** 이 한 줄만 CDN 이라 서비스워커가
+      캐시할 수 없었다(three.js·폰트를 vendor 로 받아 둔 것과 같은 이유).
+      share-kit 은 `vendor/html2canvas.min.js` 를 **누를 때** 받는다 — 열기만 할 때는
+      199KB 를 받지 않으므로 첫 화면도 그만큼 빨라진다.
+   ② **헤더 공유 아이콘이 이 앱에서만 안 떴다.** 헤더는 미니앱이 `share-state` 로
+      답할 때만 아이콘을 띄우는데(components/Navigation.tsx), 그 대화를 담당하는 것이
+      share-kit 이다. 아홉 앱 중 타사비교만 답하지 않아, 정작 고객에게 보여주는 것이
+      존재 이유인 앱에서 결과를 남길 길이 없었다.
+-->
+<script src="share-kit.js"></script>
 </head>
 <body>
 
@@ -2072,19 +2084,20 @@ function shareKakao() {
   }
 }
 
-/* ── PNG 저장 (html2canvas) ── */
+/* ── 이미지로 남기기 ──
+ * 예전에는 여기서 직접 html2canvas 를 불러 **비교표(`#result-db`)만** 찍었다. 이제는
+ * share-kit 의 `captureScreen` 으로 **지금 보이는 화면 그대로** 찍는다 — 헤더 공유
+ * 아이콘과 이 버튼이 같은 그림을 내놓아야 한다. "보고 있던 것과 나간 것이 갈린다"가
+ * 이 기능에서 되풀이된 고장이라(2026-08-12) 앱마다 다른 경로를 두지 않는다.
+ * 배율·캔버스 한도·navigator.share 폴백도 그쪽에 이미 들어 있다. */
+function shareFilename(){ return `타사비교_${currentCat||'결과'}`; }
+/** share-kit 의 mountShareButton 은 `{filename}` 을 돌려받는다 — 문자열을 넘기면 이름이 빈다 */
+function compareShareBuild(){ return { filename: shareFilename() }; }
 function savePng() {
   const el = document.getElementById('result-db');
   if(!el || !el.classList.contains('visible')){ toast('먼저 비교를 실행하세요.'); return; }
-  if(typeof html2canvas === 'undefined'){ toast('⚠️ 이미지 생성 모듈 로드 실패'); return; }
-  toast('📸 이미지 생성 중...');
-  html2canvas(el, { backgroundColor:'#f8f9fb', scale:2, useCORS:true }).then(canvas=>{
-    const link = document.createElement('a');
-    link.download = `타사비교_${currentCat||'결과'}_${Date.now()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    toast('✅ PNG 저장 완료!');
-  }).catch(()=>toast('⚠️ 이미지 생성 실패'));
+  if(typeof captureScreen !== 'function'){ toast('이미지 생성 모듈을 불러오지 못했습니다'); return; }
+  captureScreen(shareFilename());
 }
 
 /* ── 퀴즈 연동: 비교 결과 → 퀴즈 생성 프롬프트 자동 생성 (Task #68) ── */
@@ -2563,6 +2576,10 @@ renderHistory();
   const cat = new URLSearchParams(location.search).get('cat');
   if(cat && DB[cat]){ switchTab('db'); selectCat(cat); }
 })();
+
+/* 공유 — 다른 앱과 같은 자리에서 같은 방식으로 배선한다(as·care·finder·install 과 동일).
+   iframe 안(허브)에서는 share-kit 이 이 버튼을 감추고 앱 헤더 아이콘이 대신 누른다. */
+if (typeof mountShareButton === 'function') mountShareButton(compareShareBuild);
 </script>
 <script>
 /* 심벌 배선은 prod-symbols.js 가 스스로 한다 — 앱마다 복사해 두면 아홉 곳을 고쳐야 한다 */
