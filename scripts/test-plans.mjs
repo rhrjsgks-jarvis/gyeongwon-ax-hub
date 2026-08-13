@@ -2143,8 +2143,18 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 
   if (r.err) fail(r.err);
   else {
-    /* 2D drawGlyph 가 실루엣을 그리는 품목 = 3D 도 디테일이 있어야 하는 품목 */
-    const NEEDS = /^냉장고|김치냉장고|냉동고|^업소용|세탁기|콤보|건조기|에어드레서|슈드레서|^TV|모니터|사운드바|인덕션|전기레인지|식기세척기|전자레인지|오븐|데이코|공기청정기|청소기|정수기|제습기|에어컨/;
+    /*
+     * **2D 목록을 손으로 적지 않는다**(2026-08-14). 예전에는 여기 정규식을 따로 적어 두어
+     * `drawGlyph` 에 품목을 추가해도 검사는 모르는 채였다 — 실제로 리빙 4종을 2D 에 넣고
+     * 3D 에도 넣었더니 "2D 에 없는 품목에 3D 디테일이 붙었다"고 잘못 실패했다.
+     * 이제 **`drawGlyph` 원문에서 조건을 뽑아** 쓴다. 양쪽이 저절로 같이 움직인다.
+     */
+    const src = fs.readFileSync(path.join(root, 'public', 'place-app.html'), 'utf8');
+    const gs = src.indexOf('function drawGlyph');
+    const body = src.slice(gs, src.indexOf('/* ── 그리기 ──', gs));
+    const pats = [...body.matchAll(/\/([^/\n]+)\/\.test\(cat\)/g)].map((m) => new RegExp(m[1]));
+    if (!pats.length) fail('drawGlyph 에서 품목 조건을 하나도 못 읽었다 — 검사가 무력해졌다');
+    const NEEDS = { test: (c) => pats.some((re) => re.test(c)) };
     const cats = Object.keys(r.out);
     const missing = cats.filter((c) => NEEDS.test(c) && r.out[c] <= 0);
     const extra = cats.filter((c) => !NEEDS.test(c) && r.out[c] > 0);

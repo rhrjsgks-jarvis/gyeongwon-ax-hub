@@ -74,7 +74,8 @@ const SIZE_AXIS = {
   '식기세척기': ['용량'], '전자레인지/오븐': ['용량'],
 };
 
-const TRIPLE = /^\s*([\d,.]+)\s*[×xX]\s*([\d,.]+)\s*[×xX]\s*([\d,.]+)/;
+/* 네 번째 그룹은 **세 번째 값에 붙은 괄호 범위** — 그 자리가 높이라는 표시다(extractParts 주석) */
+const TRIPLE = /^\s*([\d,.]+)\s*[×xX]\s*([\d,.]+)\s*[×xX]\s*([\d,.]+)\s*(\([\d,]+\))?/;
 const num = (s) => parseFloat(String(s).replace(/,/g, ''));
 
 function readProducts() {
@@ -100,7 +101,20 @@ function extractParts(fx) {
     if (!m) continue;
     const a = num(m[1]), b = num(m[2]), c = num(m[3]);
     if (![a, b, c].every((n) => Number.isFinite(n) && n > 0)) continue;
-    const [w, h, d] = spec.order === 'hwd' ? [b, a, c] : [a, b, c];
+    /*
+     * **세 번째 값에 괄호 범위가 붙으면 그 자리가 높이다** — 표기 순서가 `W × D × H` 다.
+     *
+     * 오드앵글 선풍기가 `370 × 390 × 840(1090)` 이다. 괄호는 **높이 조절 범위**이지
+     * 깊이가 늘어나는 것이 아니다. 그런데 라벨(`크기(mm)`)만 보고 W×H×D 로 읽으면
+     * 높이 390 · **깊이 840** 이 되어, 도면 위 발자국이 370×390 대신 **370×840** 으로
+     * 두 배 넘게 잡힌다 — "들어갑니다" 판정이 그대로 거짓이 된다.
+     *
+     * 규칙을 좁게 둔 근거: DB 전수에서 이 표기(세 번째 값 + 괄호)는 **딱 2건**이고
+     * 둘 다 오드앵글 선풍기다. 반대로 "높이 < 깊이" 로 넓게 잡으면 슬림 정수기
+     * (170×395×480)처럼 **실제로 깊은 제품**까지 뒤집어 놓는다(실측 4건).
+     */
+    const wdh = !!m[4];
+    const [w, h, d] = spec.order === 'hwd' ? [b, a, c] : wdh ? [a, c, b] : [a, b, c];
     if (seen.has(spec.part)) continue;   // 같은 배치 단위가 두 번 나오면 먼저 읽은 값 채택
     seen.add(spec.part);
     parts.push({ part: spec.part, w, h, d, label, raw: value.trim() });

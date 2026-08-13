@@ -3265,6 +3265,33 @@ function drawGlyph(it){
   } else if (/에어컨/.test(cat)){
     // 바람이 나가는 쪽 — 앞면에 호를 그린다
     ctx.beginPath(); ctx.arc(0, d*0.2, Math.min(w,d)*0.5, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
+  /*
+   * ── 리빙 4종 (2026-08-14) ─────────────────────────────────────
+   * **위에서 봤을 때 실제로 보이는 것만** 그린다. 카탈로그에 규격도가 없으므로
+   * 도어 분할선·손잡이 위치 같은 것은 넣지 않는다 — 확인이 안 되면 안 그린다.
+   * 여기 그리는 것은 그 물건의 **형태 자체**다: 비데는 변기에 얹는 시트,
+   * 선풍기는 원형 날개, 발안마기는 두 발이 들어가는 자리, 욕실케어는 벽에 붙는 사각 판.
+   */
+  } else if (/리빙 비데/.test(cat)){
+    /* 변기 위에 얹는 물건이라 위에서 보면 **시트 구멍**이 전부다.
+       뒤쪽(물탱크 쪽)에 조작부가 있어 앞뒤가 구분된다 */
+    ctx.beginPath();
+    ctx.ellipse(0, d*0.62, w*0.34, d*0.3, 0, 0, Math.PI*2); ctx.stroke();
+    line(-hw*0.7, d*0.2, hw*0.7, d*0.2);
+  } else if (/리빙 선풍기/.test(cat)){
+    /* 위에서 보면 원형 날개 하나 — 받침이 그보다 작다 */
+    circle(0, d*0.5, Math.min(w, d)*0.44);
+    circle(0, d*0.5, Math.min(w, d)*0.1);
+  } else if (/리빙 안마기/.test(cat)){
+    /* 발안마기는 발 두 짝이 들어가는 자리가 보인다. 손·복부용(얕은 것)은 한 칸이다 */
+    if (d > w*0.7){
+      ctx.strokeRect(-hw*0.7, d*0.25, w*0.32, d*0.5);
+      ctx.strokeRect(hw*0.06, d*0.25, w*0.32, d*0.5);
+    } else ctx.strokeRect(-hw*0.7, d*0.25, w*1.4*0.5, d*0.5);
+  } else if (/리빙 욕실케어/.test(cat)){
+    /* 벽·천장에 붙는 사각 판 — 가운데 흡·토출구가 보인다 */
+    ctx.strokeRect(-hw*0.78, d*0.18, w*0.78*2*0.5, d*0.64);
+    circle(0, d*0.5, Math.min(w, d)*0.18);
   }
   ctx.restore();
 }
@@ -6596,6 +6623,21 @@ function applianceMesh(it){
     topDisc(Math.min(w, d) * 0.30, 0, 0, faceMat);
   } else if (/에어컨/.test(cat)){
     plate(w * 0.6, 0.008, 0, h * 0.86, blueMat);              // 토출구 띠
+  /*
+   * ── 리빙 4종 (2026-08-14) ─────────────────────────────────────
+   * **2D `drawGlyph` 와 같은 어휘**로 넣는다 — 같은 품목이 앱마다 다른 그림이면 눈이 헤맨다.
+   * 카탈로그에 규격도가 없으므로 도어 분할선·손잡이는 넣지 않는다. 그리는 것은 그
+   * 물건의 형태 자체다(2D 와 짝이 맞는지 `test-plans` 가 양방향으로 검사한다).
+   */
+  } else if (/리빙 비데/.test(cat)){
+    topDisc(Math.min(w, d) * 0.32, 0, d * 0.12, faceMat);     // 위에서 보이는 시트 구멍
+  } else if (/리빙 선풍기/.test(cat)){
+    topDisc(Math.min(w, d) * 0.44, 0, 0, faceMat);            // 위에서 본 원형 날개
+  } else if (/리빙 안마기/.test(cat)){
+    topDisc(Math.min(w, d) * 0.22, -w * 0.2, 0, faceMat);     // 발 두 짝이 들어가는 자리
+    topDisc(Math.min(w, d) * 0.22, w * 0.2, 0, faceMat);
+  } else if (/리빙 욕실케어/.test(cat)){
+    plate(w * 0.78, h * 0.64, 0, h * 0.5, faceMat);           // 벽에 붙는 사각 판
   }
 
   /*
