@@ -300,6 +300,27 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('bluepass mode threw: ' + e.message);
   }
 
+  /*
+   * ── 6-b. **품목 아이콘이 전부 심벌인가** (2026-08-14) ──
+   *
+   * `prodIcon(p.key, p.icon)` 은 **키**를 넘기는데 `prod-symbols.js` 의 규칙은 한글
+   * 이름(`태블릿`·`노트북`)을 본다. 그래서 새로 넣은 `ai2_tabs11` 같은 키가 어느 규칙에도
+   * 안 걸려 **이모지로 떨어졌다**(사용자가 화면에서 잡아냈다 — 심벌은 이미 있었고
+   * `KEYS` 매핑만 빠져 있었다).
+   *
+   * 이모지는 OS 가 그리는 컬러 비트맵이라 삼성 블루와 무관한 색이 튀고 기기마다 모양이
+   * 다르다 — 이 저장소가 681개를 걷어낸 이유다. 새 제품을 추가할 때 또 빠지지 않게 지킨다.
+   */
+  try {
+    const bad = [];
+    for (const p of ALL_PRODUCTS) {
+      const html = window.prodIcon(p.key, '🧊');
+      if (!/^<svg/.test(String(html))) bad.push(`${p.key}(${p.name})`);
+    }
+    if (bad.length) fail(`품목 아이콘이 심벌이 아니라 이모지로 떨어진다 — prod-symbols.js 의 KEYS 에 추가할 것: ${bad.join(', ')}`);
+    else console.log(`OK: 품목 아이콘 ${ALL_PRODUCTS.length}개 전부 심벌(SVG)`);
+  } catch (e) { fail('아이콘 심벌 검사 예외: ' + e.message); }
+
   // ── 7. 모드 전환: overview ──
   try {
     window.setMode('overview');

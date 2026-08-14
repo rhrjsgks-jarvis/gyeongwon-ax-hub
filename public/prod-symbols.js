@@ -187,6 +187,15 @@
     airpur_reusable: 'airpur', airpur_s: 'airpur',
     purifier_under: 'purifier', purifier_counter: 'purifier_top',
     induction: 'induction', microwave: 'microwave', soundbar: 'soundbar',
+    /*
+     * **AI구독 케어의 모바일·PC·태블릿**(2026-08-14 추가). `prodIcon(p.key, p.icon)` 이
+     * **키**를 넘기는데 아래 RULES 는 한글 이름(`태블릿`·`노트북`)을 보므로
+     * `ai2_tabs11` 같은 키는 어느 규칙에도 안 걸려 **이모지로 떨어졌다**(사용자 지적).
+     * 심벌 자체는 이미 있었다 — 매핑만 빠져 있었다.
+     * 새 제품 키를 추가하면 여기도 함께 넣을 것(`test-care` 가 검사한다).
+     */
+    mx_fold8u: 'phone', mx_fold8: 'phone', mx_flip8: 'phone',
+    ai2_book6: 'laptop', ai2_tabs11: 'tablet',
   };
 
   function symbolKey(label) {
