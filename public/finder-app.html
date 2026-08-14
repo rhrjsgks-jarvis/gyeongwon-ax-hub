@@ -259,9 +259,28 @@ table.spec tr:last-child td{border-bottom:none}
   <div class="brand-ico">🧭</div>
   <div class="brand"><b>제품 상세검색</b><span id="brandCount">전 라인업</span></div>
   <div style="display:flex;align-items:center">
+    <!--
+      **AI 추천 버튼은 감춰 둔다**(2026-08-14 사용자 결정) — 지우지 않는다.
+      완성되면 `hidden` 만 떼면 그대로 열린다. 엔진(CAT_FEATURES·예산 가중치·스코어링)은
+      다시 만들기 아까운 자료라 코드와 검사를 그대로 살려 둔다.
+
+      **왜 감추는가 — 실제로 돌려 보고 나온 것 넷.** 고치기 전에 열지 말 것:
+      ① **예산이 통째로 무시된다(가장 위험).** `autoDistributeBudget()` 이 사용자가 따로
+         눌러야 하는 버튼이라, 문장에 "400만원"을 이미 쓴 상담사는 안 누른다. 그러면
+         예산 칸이 비어 `budget = 0` 이 되고 **예산 필터가 전부 꺼진다** —
+         *"냉장고만 볼게요 400만원"* 에 **584만원**짜리를 프리미엄으로 내밀었다.
+         (버튼을 누르면 정상이다: 프리미엄 369만 · "예산 400만 중 59만 15%")
+      ② **문장 해석이 과잉이다.** *"부모님 선물 TV 150만원"* 에 스마트폰·워치가 붙고,
+         *"자취방 원룸 이사"* 는 '이사'가 신혼 규칙에 걸려 8품목이 된다(식기세척기·에어드레서까지).
+      ③ **티어가 그냥 가격 3등분이다.** 같은 349만원·같은 제품군인 `WD90H25AHS`/`AHT`
+         (색상 변형)가 프리미엄/스탠다드로 갈린다. 400만원 고객에게 "가성비"로 59만원
+         일반형을 내민다.
+      ④ **제품의 40%만 본다.** 가격이 있는 213/532종만 후보다(TV 는 63종 중 21종) —
+         키워드 검색에는 나오는데 AI추천에는 없는 모델이 생긴다.
+    -->
     <div class="mode">
       <button id="mKw" class="on" onclick="setMode('kw')">키워드</button>
-      <button id="mAi" onclick="setMode('ai')">AI 추천</button>
+      <button id="mAi" hidden onclick="setMode('ai')">AI 추천</button>
     </div>
     <a class="catalog-link" href="https://www.samsungstore.com/event/catalog.sesc?menu=w110"
        target="_blank" rel="noopener noreferrer">📱 카탈로그 <span style="opacity:.6">↗</span></a>

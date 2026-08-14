@@ -138,6 +138,15 @@ const CAT_QUERIES = {
   if (exBtns.length === 0) fail('예시 키워드 버튼이 렌더되지 않음');
   if (!doc.getElementById('mKw').classList.contains('on')) fail('초기 모드가 키워드 모드(mKw)가 아님');
   if (doc.getElementById('mAi').classList.contains('on')) fail('초기 상태에서 AI 모드가 켜져있음');
+  /*
+   * **AI 추천 버튼은 감춰 둔 상태다**(2026-08-14 사용자 결정, 사유는 finder-app.html 주석).
+   * 완성 전에 실수로 열리는 것을 막는다 — 지금 열면 예산을 무시한 추천이 상담에 나간다.
+   * 엔진 자체는 아래 8절에서 계속 검사한다(코드가 썩지 않게).
+   * 열 때는 이 검사도 함께 뒤집을 것.
+   */
+  if (!doc.getElementById('mAi').hasAttribute('hidden')) {
+    fail('AI 추천 버튼이 감춰져 있지 않다 — 완성 전에는 hidden 이어야 한다(예산 미적용 결함)');
+  }
   if (doc.getElementById('kwBox').classList.contains('hidden')) fail('초기 상태에서 kwBox가 숨겨져 있음');
   if (!doc.getElementById('aiBox').classList.contains('hidden')) fail('초기 상태에서 aiBox가 보이고 있음');
 
