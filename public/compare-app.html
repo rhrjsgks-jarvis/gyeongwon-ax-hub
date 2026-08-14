@@ -877,15 +877,18 @@ const DB = {
         /* eGrade — 카탈로그(모델파인더 DB) 에너지소비효율 3등급. 비교표는 양쪽 모두 값이
            있어야 그 행을 그리므로, 삼성 쪽이 비면 LG 에 있어도 행이 통째로 사라진다 */
         specs:{ size:85, res:'4K', panel:'Micro RGB', hz:165, as:2, brightness:2300, eGrade:3, dim:'1,880.6 × 1,077.0 × 29.9' } },
+      /* 에너지등급·치수는 삼성닷컴 **지원 페이지**에서 확인했다 —
+         samsung.com/sec/support/model/KQ85QNH80AFXKR/ (제품 상세 D2C 지면에는 사양표가 없다) */
       { name:'2026 Neo QLED QNH80 85인치 (KQ85QNH80)', price:449, grade:'S',
         on:['Neo QLED(미니LED)','AI 프로세서 4K','모션 익셀러레이터 144Hz','돌비 애트모스','오브젝트 트래킹 사운드+','Pantone 색상 인증'],
-        specs:{ size:85, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500 } },
+        specs:{ size:85, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500, eGrade:1, dim:'1,888.8 × 1,083.2 × 52.5' } },
       { name:'2026 Neo QLED QNH70 85인치 (KQ85QNH70)', price:369, grade:'S',
         on:['Neo QLED(미니LED, 엣지형)','Samsung Vision AI','DLG 확장 120Hz'],
         specs:{ size:85, res:'4K', panel:'Neo QLED', hz:120, as:2, brightness:1200, eGrade:1, dim:'1,900.9 × 1,086.1 × 26.9' } },
+      /* samsung.com/sec/support/model/KQ75QNH80AFXKR/ */
       { name:'2026 Neo QLED QNH80 75인치 (KQ75QNH80)', price:349, grade:'S',
         on:['Neo QLED(미니LED)','AI 프로세서 4K','모션 익셀러레이터 144Hz','돌비 애트모스','SmartThings'],
-        specs:{ size:75, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500 } },
+        specs:{ size:75, res:'4K', panel:'Neo QLED', hz:144, as:2, brightness:1500, eGrade:1, dim:'1,666.6 × 957.8 × 52.3' } },
       { name:'2026 Neo QLED QNH70 75인치 (KQ75QNH70)', price:299, grade:'S',
         on:['Neo QLED(미니LED, 엣지형)','Samsung Vision AI','DLG 확장 120Hz'],
         specs:{ size:75, res:'4K', panel:'Neo QLED', hz:120, as:2, brightness:1200, eGrade:1, dim:'1,676.7 × 960.3 × 26.6' } },
