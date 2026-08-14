@@ -36,6 +36,14 @@ const ALL_PRODUCTS = [
   { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  onlyPlan: '36', dual: false },
   { key: 'microwave',        name: '전자레인지/오븐',      hasData: true,  onlyPlan: '36', dual: false },
   { key: 'soundbar',         name: '사운드바',             hasData: true,  onlyPlan: '36', dual: false },
+  /*
+   * 모바일 구독 3종 — **회차 구조가 없다**(방문 기사가 없다). `st:'mx'` 라 회차표 경로를
+   * 타지 않고 `buildMobileSub` 이 그린다. 개요 화면에서 '자가관리'(na-card)로 표시하면
+   * "구독 미대상"이라는 거짓말이 되므로 여기서 따로 센다.
+   */
+  { key: 'mx_fold8u',        name: '갤럭시 Z 폴드8 울트라', hasData: false, onlyPlan: null, dual: false, mx: true },
+  { key: 'mx_fold8',         name: '갤럭시 Z 폴드8',        hasData: false, onlyPlan: null, dual: false, mx: true },
+  { key: 'mx_flip8',         name: '갤럭시 Z 플립8',        hasData: false, onlyPlan: null, dual: false, mx: true },
 ];
 
 // 타임라인 모드에 노출되는(=st:'done') 제품 키. TL_MONTHS(care-app.html)에 정의된 키와 일치해야 함.
@@ -77,6 +85,27 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
       window.switchToCare(p.key);
       const nm = doc.getElementById('selNm').textContent;
       if (nm !== p.name) { fail(`[${p.key}] selNm = "${nm}", expected "${p.name}"`); continue; }
+
+      /*
+       * **모바일 구독은 회차표를 만들지 않는다** — 방문 기사가 없으므로 회차를 그리면
+       * 그 자체가 거짓이다. 그래서 화면이 ①회차 UI 를 하나도 그리지 않고 ②그 사실을
+       * 글로 밝히며 ③원문에서 확인한 세 혜택을 적는지 함께 본다.
+       * (회차표를 되살리면 ①이, 혜택 문구를 지우면 ③이 물린다 — 둘 다 확인함)
+       */
+      if (p.mx) {
+        const body = doc.getElementById('body');
+        const txt = body.textContent.replace(/\s+/g, ' ');
+        for (const sel of ['.plan-tabs', '.vtabs', '.type-tabs']) {
+          if (body.querySelector(sel)) fail(`[${p.key}] 모바일 구독에 회차 UI(${sel})가 그려졌다 — 방문 기사가 없어 회차가 없다`);
+        }
+        if (!/회차표가 없습니다/.test(txt)) fail(`[${p.key}] "회차표가 없습니다"를 화면이 밝히지 않는다`);
+        for (const must of ['Samsung Care+', '잔존가 보장', '액세서리', '민팃', '1877-5446', '1588-3366', '자급제']) {
+          if (!txt.includes(must)) fail(`[${p.key}] 원문 항목 "${must}" 가 화면에 없다`);
+        }
+        /* 확인 못 한 것을 지어내지 않았는지 — 원문에 없는 월 요금·통신사 약정을 단정하면 안 된다 */
+        if (/월 [\d,]+원/.test(txt)) fail(`[${p.key}] 원문에 없는 월 이용료가 적혀 있다`);
+        continue;
+      }
 
       if (!p.hasData) {
         const todo = doc.querySelector('.todo-card');
@@ -243,7 +272,7 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const cards = doc.querySelectorAll('.ov-card');
     if (cards.length !== ALL_PRODUCTS.length) fail(`overview: expected ${ALL_PRODUCTS.length} ov-cards, got ${cards.length}`);
     const naCards = doc.querySelectorAll('.ov-card.na-card').length;
-    const expectedNa = ALL_PRODUCTS.filter((p) => !DONE_KEYS.includes(p.key)).length;
+    const expectedNa = ALL_PRODUCTS.filter((p) => !DONE_KEYS.includes(p.key) && !p.mx).length;
     if (naCards !== expectedNa) fail(`overview: expected ${expectedNa} na-cards, got ${naCards}`);
 
     // overview 카드 클릭 → switchToCare 경유해 care 모드로 복귀

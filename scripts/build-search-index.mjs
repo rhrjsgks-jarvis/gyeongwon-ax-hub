@@ -136,13 +136,23 @@ function flatten(v, out = []) {
   const html = read('care-app.html');
   const m = html.match(/const PRODUCTS = \[([\s\S]*?)\n\];/);
   const DATA = literal(html, /\nconst DATA = (\{[\s\S]*?\n\});/, 'care-app.html 의 DATA');
+  /*
+   * **모바일 구독은 DATA 에 없다** — 회차 구조가 없어 별도 객체(`MX_SUB`)로 둔다.
+   * 그것까지 담지 않으면 화면에 크게 적힌 '잔존가 보장'·'Samsung Care+'·'민팃' 으로
+   * 검색해도 0건이 된다. 화면에 적힌 말로 못 찾는 것은 검색이 아니다(AS 묶음에서 이미
+   * 같은 실수를 했다). 방문케어 관련 말은 넣지 않는다 — 모바일에는 없는 개념이다.
+   */
+  const MX = literal(html, /\nconst MX_SUB = (\{[\s\S]*?\n\});/, 'care-app.html 의 MX_SUB');
+  const mxKw = flatten(MX).join(' ') + ' 모바일 구독 갤럭시 구독클럽 자급제 스마트폰 구독';
   if (m) {
-    const re = /\{key:"([^"]+)",\s*name:"([^"]+)",[^}]*?desc:"([^"]*)"/g;
+    const re = /\{key:"([^"]+)",\s*name:"([^"]+)",[^}]*?desc:"([^"]*)"[^}]*?st:"([^"]*)"/g;
     let x;
     while ((x = re.exec(m[1]))) {
+      const isMx = x[4] === 'mx';
       add({ t: 'care', m: 'care', title: x[2], sub: `AI구독 케어 · ${x[3]}`,
-        kw: [x[2], x[3], '케어십 구독 care 방문케어 자가관리 무상수리',
-          ...flatten(DATA[x[1]])].join(' '),
+        kw: [x[2], x[3],
+          isMx ? mxKw : '케어십 구독 care 방문케어 자가관리 무상수리',
+          ...(isMx ? [] : flatten(DATA[x[1]]))].join(' '),
         href: `/care?cat=${encodeURIComponent(x[1])}` });
     }
   }

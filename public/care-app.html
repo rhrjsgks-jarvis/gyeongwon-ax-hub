@@ -372,6 +372,15 @@ const PRODUCTS = [
   {key:"induction", name:"인덕션/전기레인지", icon:"🔥", desc:"비스포크 인피니트라인 3구·더 플레이트 시리즈", st:"na"},
   {key:"microwave", name:"전자레인지/오븐",    icon:"📻", desc:"큐커 오븐 MC 시리즈·세라믹 MS 시리즈", st:"na"},
   {key:"soundbar",  name:"사운드바",          icon:"🔊", desc:"HW-Q990H / Q900H / QS90H / Q800H 2026년형", st:"na"},
+  /*
+   * **모바일 구독은 가전과 구조가 다르다**(2026-08-14 사용자 승인 후 반영).
+   * 가전 구독 케어는 **회차형 방문케어**인데 모바일에는 방문 기사가 없다 —
+   * 회차표를 만들면 그 자체가 거짓이다. 그래서 `st:'mx'` 로 갈라 다른 본문을 그린다.
+   * 붙는 것은 Samsung Care+ · 잔존가 보장 · 액세서리 혜택 셋이다(원문 그대로).
+   */
+  {key:"mx_fold8u", name:"갤럭시 Z 폴드8 울트라", icon:"📱", desc:"New 갤럭시 AI 구독클럽 — 삼성닷컴 자급제 구매분", st:"mx"},
+  {key:"mx_fold8",  name:"갤럭시 Z 폴드8",       icon:"📱", desc:"New 갤럭시 AI 구독클럽 — 삼성닷컴 자급제 구매분", st:"mx"},
+  {key:"mx_flip8",  name:"갤럭시 Z 플립8",       icon:"📱", desc:"New 갤럭시 AI 구독클럽 — 삼성닷컴 자급제 구매분", st:"mx"},
 ];
 
 
@@ -2058,6 +2067,94 @@ function buildBenefits(d, key){
   </div>`;
 }
 
+/*
+ * ═══════════════ 모바일 구독 (New 갤럭시 AI 구독클럽) ═══════════════
+ *
+ * **가전의 회차 구조를 쓰지 않는다.** 가전 구독 케어는 전문가가 방문하는 회차형인데
+ * 모바일에는 방문 기사도 회차도 없다 — 회차표를 만들면 그 자체가 거짓이다.
+ * 원문: *"New 갤럭시 AI 구독클럽은 'Samsung Care+', '잔존가 보장 혜택',
+ * '액세서리 혜택'이 포함되어 있습니다."*
+ *
+ * **여기 적힌 문장은 전부 삼성닷컴 원문에서 확인한 것이다**(`samsung.com/sec/ai-subs/`,
+ * Care+ 는 `/sec/Samsung-Care-Plus/IM/`). 확인 못 한 것은 지어내지 않고 그렇게 적는다 —
+ * 월 이용료(요금제 더보기 뒤)와 **통신사 약정과의 관계**가 그렇다. 자급제 구매가
+ * 전제이므로 별개로 보이지만 **원문이 말하지 않은 것을 화면에 적지 않는다.**
+ *
+ * 상담에서 헷갈리는 지점을 함께 적는다 — 결제·문의 창구가 삼성이 아니라 **민팃**이고,
+ * Care+ 는 **자동이 아니라 60일 안에 따로** 가입해야 한다.
+ */
+const MX_SUB = {
+  title: 'New 갤럭시 AI 구독클럽',
+  who: '삼성닷컴에서 <b>자급제</b>로 구매한 갤럭시 Z 폴드8 · 폴드8 울트라 · 플립8',
+  term: '가입 개월 수를 고객이 고른다 (원문: “대상 모델 및 가입 개월 수에 따라 상이”)',
+  tiles: [
+    { t:'Samsung Care+', k:'별도 가입', d:'구독 가입 후 <b>60일 이내</b>에 가입해야 한다 · IMEI 제공 필수 · 수리 시 자기부담금이 발생할 수 있다' },
+    { t:'잔존가 보장',   k:'최대 50%', d:'반납은 <b>민팃 ATM</b> 으로 한다 · 조기 반납은 되지만 남은 개월 이용료는 전액 납부' },
+    { t:'액세서리 혜택', k:'40% 쿠폰', d:'액세서리 패키지 40% 할인 쿠폰 · 발급일로부터 <b>60일</b> 이내 사용' },
+  ],
+  /* 반납 불가 3가지 — 원문 표기 그대로 옮긴다 */
+  noReturn: ['외관상 파손 (몸체 휨 · 들뜸 · 유리 깨짐 · 후면 깨짐 · 카메라 깨짐 등)',
+             '전원 ON/OFF 불가', '계정 미삭제'],
+  cautions: [
+    '이용료는 가입 후 <b>익월부터 민팃에서 청구</b>된다 — 삼성이 청구하지 않는다',
+    '중도 해지는 되지만 <b>이미 낸 이용료는 환불되지 않고</b>, 해지 이후에는 Care+ 와 잔존가 보장을 못 받는다',
+  ],
+  unknown: [
+    '월 이용료 — 삼성닷컴 제품 페이지의 “요금제 더보기”에서 확인',
+    '통신사 약정과의 관계 — 원문에 언급이 없다. 확인 후 안내할 것',
+  ],
+  tel: [['가입·신청 문의', '삼성닷컴 고객센터', '1588-3366'],
+        ['혜택·이용료 문의', '민팃 고객센터', '1877-5446']],
+  src: 'samsung.com/sec/ai-subs/ · samsung.com/sec/Samsung-Care-Plus/IM/ (평일 09~18시, 주말·공휴일 휴무)',
+};
+
+/* 화면에 보이는 번호는 눌린다 — AS 앱과 같은 규칙(`data-tel` 을 단 것만 잡는다) */
+function wireTel(root){
+  root.querySelectorAll('[data-tel]').forEach((el)=>{
+    if (el.dataset.wired) return;
+    el.dataset.wired = '1';
+    el.style.cssText += ';cursor:pointer;text-decoration:underline;text-underline-offset:2px';
+    el.addEventListener('click', ()=>{ location.href = 'tel:' + String(el.dataset.tel).replace(/[^\d]/g,''); });
+  });
+}
+
+function buildMobileSub(p){
+  const M = MX_SUB;
+  return `
+  <div class="bnf">
+    <div class="bnf-h">🎁 ${M.title} — ${p.name}</div>
+    <div class="bnf-s">${M.who}</div>
+    <div class="bnf-g">
+      ${M.tiles.map(t=>`<div class="bnf-i"><div class="t">${t.t}</div><div class="k">${t.k}</div><div class="d">${t.d}</div></div>`).join('')}
+    </div>
+    <div class="bnf-n">약정 — ${M.term}</div>
+  </div>
+  <div class="card">
+    <div class="be">
+      <div>
+        <div class="be-hd" style="color:#dc2626">❌ 반납이 안 되는 세 가지</div>
+        ${M.noReturn.map((x,i)=>`<div class="be-i">${i+1}) ${x}</div>`).join('')}
+      </div>
+      <div>
+        <div class="be-hd" style="color:#dc2626">⚠️ 상담에서 헷갈리는 것</div>
+        ${M.cautions.map(x=>`<div class="be-i">${x}</div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="be-hd" style="color:#0D1B7A">📞 문의</div>
+    ${M.tel.map(([k,n,t])=>`<div class="be-i">${k} — ${n} <b data-tel="${t}">${t}</b></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="be-hd" style="color:#B45309">🔵 아직 확인 못 한 것</div>
+    ${M.unknown.map(x=>`<div class="be-i">${x}</div>`).join('')}
+  </div>
+  <div class="src-wrap">
+    <div class="src-row"><span class="src-dot"></span>${M.src}</div>
+    <div class="src-row"><span class="src-dot src-dot2"></span>가전 구독과 달리 <b>방문 기사가 없어 회차표가 없습니다</b> — 회차를 묻는 고객에게는 이 점을 먼저 알려 주세요</div>
+  </div>`;
+}
+
 function buildTail(d){
   return `
   <div class="card">
@@ -2112,6 +2209,9 @@ function render(){
 
   const body = document.getElementById('body');
   let out = '';
+
+  /* 모바일 구독 — 회차 구조가 없으므로 아래 회차표 경로를 타지 않는다 */
+  if(p.st==='mx'){ body.innerHTML = buildMobileSub(p); wireTel(body); return; }
 
   if(!d && p.st==='na'){
     body.innerHTML = '<div class="todo-card"><div class="todo-ico">'+prodIcon(p.key,p.icon)+'</div><div class="todo-t" style="color:#2563EB">'+p.name+' — 자가관리 가이드</div><div class="todo-s">'+p.desc+'<br><br>이 제품은 <b>삼성 AI구독 케어 미대상</b> 제품입니다. 자가관리 가이드를 참조하거나 삼성전자서비스센터(1588-3366)에 문의하세요.</div></div>';
@@ -2444,8 +2544,17 @@ function renderOverview(){
   PRODUCTS.forEach(p => {
     const d = DATA[p.key];
     const isDone = p.st==='done';
+    /*
+     * **모바일 구독을 '자가관리'로 표시하면 안 된다.** 구독 대상이 맞고, 다만 회차형
+     * 방문케어가 아닐 뿐이다 — `na-card` 로 두면 화면이 "구독 미대상"이라고 거짓말한다.
+     * 누르면 그 제품 화면으로 가야 하는 것도 done 과 같다.
+     */
+    const isMx = p.st==='mx';
+    const open = isDone || isMx;
     let pills = '';
-    if(isDone && d){
+    if(isMx){
+      pills = '<span class="ov-pill p12">갤럭시 AI 구독클럽</span>';
+    } else if(isDone && d){
       if(d.onlyPlan==='12') pills += '<span class="ov-pill p12">12개월형</span>';
       else if(d.onlyPlan==='36') pills += '<span class="ov-pill p36">36개월형</span>';
       else {
@@ -2455,7 +2564,7 @@ function renderOverview(){
     } else {
       pills = '<span class="ov-pill pna">자가관리</span>';
     }
-    html += '<div class="ov-card ' + (isDone?'done':'na-card') + '" ' + (isDone?'onclick="switchToCare(\''+p.key+'\')"':'') + '>' +
+    html += '<div class="ov-card ' + (open?'done':'na-card') + '" ' + (open?'onclick="switchToCare(\''+p.key+'\')"':'') + '>' +
       '<div class="ov-ico">' + prodIcon(p.key, p.icon) + '</div>' +
       '<div class="ov-nm">' + p.name + '</div>' +
       '<div class="ov-pills">' + pills + '</div>' +
