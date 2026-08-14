@@ -577,13 +577,13 @@ const DB = {
           specs:{ cap:870, eGrade:1, as:1, size:'914 × 1,860 × 918' } },
         { name:'디오스 AI 오브제컬렉션 (832L) S834MEE111', price:181,
           on:['도어쿨링+','인버터 리니어 컴프레서','매직스페이스'],
-          specs:{ cap:832, power:40.2, eGrade:1, as:1, noise:37 } },
+          specs:{ cap:832, power:40.2, eGrade:1, as:1, noise:37 , size:'913 × 1,790 × 913'} },
         { name:'디오스 오브제컬렉션 (870L) T873MEE111', price:193,
           on:['인버터 리니어 컴프레서','매직스페이스'],
-          specs:{ cap:870, power:43.7, eGrade:1, as:1, noise:38 } },
+          specs:{ cap:870, power:43.7, eGrade:1, as:1, noise:38 , size:'914 × 1,787 × 918'} },
         { name:'디오스 AI 오브제컬렉션 (870L) H876GBB011', price:259,
           on:['트레이 아이스메이커','AI절약모드','인버터 리니어 컴프레서'],
-          specs:{ cap:870, power:42, eGrade:1, as:1, noise:37 } },
+          specs:{ cap:870, power:42, eGrade:1, as:1, noise:37 , size:'914 × 1,860 × 918'} },
         /* 무드업(M874GNN3A1)은 라인 전체가 단종됐다 — M874·M624·M623·Z331 까지 현행 모델이 하나도 없다.
            색상가변 글라스 도어에 해당하는 기능이 현행 라인에 없어 같은 급(870L·1등급)으로 대체한다. */
         { name:'디오스 AI 오브제컬렉션 (870L, 매직스페이스) T876MEE1H1', price:260,
@@ -678,10 +678,10 @@ const DB = {
           specs:{ wash:24, dry:0, eGrade:1, as:1, size:'700 × 990 × 830' } },
         { name:'트롬 오브제컬렉션 세탁기 (21kg) FX21GAC', price:183,
           on:['AI 세탁','인버터DD','6모션','5방향터보샷','통살균'],
-          specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 } },
+          specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 , size:'700 × 990 × 770'} },
         { name:'트롬 오브제컬렉션 세탁기 (25kg) FX25GNC', price:198,
           on:['AI 세탁','인버터DD','6모션','통살균'],
-          specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7 } },
+          specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7 , size:'700 × 990 × 830'} },
         { name:'워시타워 컴팩트 (세탁14+건조10kg) WTK14VG2BGA', price:149,
           on:['에이센스 AI','ThinQ 연동'],
           specs:{ wash:14, dry:10, eGrade:1, as:1, noise:49 } },
@@ -792,13 +792,13 @@ const DB = {
       'LG':[
         { name:'휘센 오브제컬렉션 스탠드 (25평, 81.8㎡) FQ25GN9BE1', price:617,
           on:['에너지소비효율 1등급','냉방능력 9,800W','6.8" LCD 디스플레이','무드 라이팅','레이더센서 외출절전','AI 콜드프리','AI바람 공간인식','냉매 R32'],
-          specs:{ area:25, eGrade:1, as:1, size:'380 × 1,915 × 295' } },
+          specs:{ area:25, eGrade:1, as:1, size:'380 × 1,915 × 295' , pm:1} },
         { name:'휘센 오브제컬렉션 스탠드 (22평, 74.5㎡) FQ22GN9BE1', price:582,
           on:['에너지소비효율 1등급','냉방능력 8,200W','6.8" LCD 디스플레이','AI 콜드프리','AI바람 공간인식','냉매 R32'],
-          specs:{ area:22, eGrade:1, as:1, size:'380 × 1,915 × 295' } },
+          specs:{ area:22, eGrade:1, as:1, size:'380 × 1,915 × 295' , pm:1} },
         { name:'휘센 오브제컬렉션 스탠드 (18평, 58.5㎡) FQ18GN9BE1', price:532,
           on:['에너지소비효율 1등급','냉방능력 7,200W','6.8" LCD 디스플레이','AI 콜드프리','AI바람 공간인식','냉매 R32'],
-          specs:{ area:18, eGrade:1, as:1, size:'380 × 1,915 × 295' } },
+          specs:{ area:18, eGrade:1, as:1, size:'380 × 1,915 × 295' , pm:1} },
         /* 2026-08-13 LG 베스트샵 카탈로그 벽걸이 지면(162쪽) 대조.
            **에너지등급을 1 → 3 으로 정정한다.** 그 지면에는 같은 9평이 둘 있는데
            (SQ09GK1WES 1등급 / SQ09GJ1WAS 3등급) 우리가 싣고 있는 것은 뒤쪽이다.
@@ -816,7 +816,7 @@ const DB = {
            **지우지도 채우지도 않고 그대로 둔다** — 실재 여부를 확인해야 할 항목이다. */
         { name:'휘센 벽걸이에어컨 (10평) SQ10GJ1WAS', price:104, grade:'B',
           on:['ThinQ 연동'],
-          specs:{ area:10, eGrade:1, as:1, noise:21, pm:2.5 } },
+          specs:{ area:10, eGrade:1, as:1, noise:21, pm:2.5 , size:'837 × 308 × 189'} },
         { name:'휘센 타워 에어컨 (16평) FQ16DCBSE2U', price:179, grade:'S',
           on:['ThinQ 연동','공기청정'],
           specs:{ area:16, eGrade:1, as:1, noise:21, pm:2.5 } },
@@ -1793,7 +1793,7 @@ const DB = {
           specs:{ sterilize:'직수관·출수구 고온살균 + UVnano', voice:'LG 음성인식', ice:1, as:1, size:'240 × 465 × 497' } },
         { name:'LG 퓨리케어 오브제컬렉션 정수기(음성인식) WD524VC', price:204,
           on:['냉수 / 온수 / 정수','직수관 & 출수구 고온살균','스테인리스 직수관','UVnano 살균','음성인식','방문관리'],
-          specs:{ sterilize:'직수관·출수구 고온살균 + UVnano', voice:'LG 음성인식', as:1 } }
+          specs:{ sterilize:'직수관·출수구 고온살균 + UVnano', voice:'LG 음성인식', as:1 , size:'168 × 398 × 400'} }
       ]
     },
     specItems:[
