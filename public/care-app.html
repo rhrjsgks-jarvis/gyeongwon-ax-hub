@@ -381,6 +381,14 @@ const PRODUCTS = [
   {key:"mx_fold8u", name:"갤럭시 Z 폴드8 울트라", icon:"📱", desc:"New 갤럭시 AI 구독클럽 — 삼성닷컴 자급제 구매분", st:"mx"},
   {key:"mx_fold8",  name:"갤럭시 Z 폴드8",       icon:"📱", desc:"New 갤럭시 AI 구독클럽 — 삼성닷컴 자급제 구매분", st:"mx"},
   {key:"mx_flip8",  name:"갤럭시 Z 플립8",       icon:"📱", desc:"New 갤럭시 AI 구독클럽 — 삼성닷컴 자급제 구매분", st:"mx"},
+  /*
+   * **PC·태블릿은 모바일과 또 다르다**(2026-08-14 사용자 지적으로 확인·추가).
+   * 스마트폰은 `New 갤럭시 AI 구독클럽`(Care+ 별도 가입 · 잔존가 보장 · 액세서리 쿠폰)인데,
+   * PC·태블릿은 **`AI 구독클럽 올인원 2.0`** 이고 **구독케어(무상수리+파손보상)가 구독에
+   * 포함**된다. 잔존가 보장도 민팃 반납도 없다. `st:'ai2'` 로 갈라 또 다른 본문을 그린다.
+   */
+  {key:"ai2_book6", name:"갤럭시 북6 시리즈",   icon:"💻", desc:"AI 구독클럽 올인원 2.0 — 구독케어 2·3·4년", st:"ai2"},
+  {key:"ai2_tabs11", name:"갤럭시 탭 S11 시리즈", icon:"📲", desc:"AI 구독클럽 올인원 2.0 — 구독케어 3·4년", st:"ai2"},
 ];
 
 
@@ -2108,6 +2116,74 @@ const MX_SUB = {
   src: 'samsung.com/sec/ai-subs/ · samsung.com/sec/Samsung-Care-Plus/IM/ (평일 09~18시, 주말·공휴일 휴무)',
 };
 
+/*
+ * ═══════════════ PC·태블릿 구독 (AI 구독클럽 올인원 2.0) ═══════════════
+ *
+ * **스마트폰과 다른 상품이다.** 스마트폰은 `New 갤럭시 AI 구독클럽` 이고
+ * Care+ 를 따로 가입해야 하며 잔존가 보장·민팃 반납이 붙는다. PC·태블릿은
+ * **`AI 구독클럽 올인원 2.0`** 이고 **구독케어(무상수리+파손보상)가 구독에 포함**된다 —
+ * 잔존가 보장도 반납도 없다. 셋을 섞으면 상담에서 그대로 틀린 설명이 된다.
+ *
+ * **여기 적힌 문장은 전부 삼성닷컴 구독 지면에서 확인한 것이다.**
+ * 노트북 — `/sec/galaxybook/galaxy-book6-series/buy/?modelCode=NT960UJH-XC94Y&bcAiscYn=Y`
+ * 태블릿 — `/sec/tablets/galaxy-tab-s11ultra-wifi-x930/SM-X930NZAAKOO/?bcAiscYn=Y`
+ * (구독 지면을 여는 열쇠가 **`bcAiscYn=Y`** 다. 이게 없으면 일반 구매 지면이 뜬다.)
+ *
+ * 확인 못 한 것은 지어내지 않는다 — 월 구독료는 모델·기간·선납금·제휴카드에 따라
+ * 달라져 한 숫자로 적을 수 없다. 화면이 그 사실을 밝힌다.
+ */
+const AI2_SUB = {
+  title: 'AI 구독클럽 올인원 2.0',
+  care: '무상수리서비스 + 파손보상',
+  /* 기간 선택지가 품목마다 다르다 — 노트북 2·3·4년 / 태블릿 3·4년(원문 "최대 3/4년") */
+  terms: { ai2_book6: '4년 · 3년 · 2년', ai2_tabs11: '4년 · 3년' },
+  tiles: [
+    { t:'무상수리', k:'최대 +2년', d:'Samsung Care+ 무상수리서비스는 <b>기본 1년 보증기간 종료 후 최대 2년 연장</b>된다' },
+    { t:'파손보상', k:'횟수 무제한', d:'파손 서비스 요금의 <b>25% 자기부담금</b>이 발생한다 (최소 자기부담금 3만 원)' },
+    { t:'선납금',   k:'0~50% 선택', d:'없음 · 20 · 30 · 40 · 50% — 월 구독료와 <b>별도로 일시불</b> 결제' },
+  ],
+  cautions: [
+    '<b>선납금은 주문할 때만 신청된다</b> — 구독기간 도중에는 신청할 수 없고, 일부 상품은 선납 할인에서 제외된다',
+    '제휴카드(삼성전자 AI 구독 삼성카드) 결제일 할인이 붙지만 <b>전월 이용실적·카드사별로 다르다</b>',
+  ],
+  unknown: [
+    '월 구독료 — 모델 · 구독케어 기간 · 선납금 · 제휴카드에 따라 달라져 한 숫자로 적을 수 없다. 삼성닷컴 구독 지면에서 확인',
+    '노트북 지면에는 자기부담금 문구가 없다 — 위 25%는 <b>태블릿 지면의 “AI 구독클럽 가입 관련 유의사항”</b>에서 확인한 값이다',
+  ],
+  tel: [['가입·신청 문의', '삼성닷컴 고객센터', '1588-3366']],
+  src: 'samsung.com 구독 지면(bcAiscYn=Y) — 갤럭시 북6 시리즈 · 갤럭시 탭 S11 울트라',
+};
+
+function buildAllInOne2(p){
+  const M = AI2_SUB;
+  const term = M.terms[p.key] || '삼성닷컴 확인';
+  return `
+  <div class="bnf">
+    <div class="bnf-h">🎁 ${M.title} — ${p.name}</div>
+    <div class="bnf-s">구독케어 기간 <b>${term}</b> 중에서 고른다 · 그 기간 동안 <b>${M.care}</b></div>
+    <div class="bnf-g">
+      ${M.tiles.map(t=>`<div class="bnf-i"><div class="t">${t.t}</div><div class="k">${t.k}</div><div class="d">${t.d}</div></div>`).join('')}
+    </div>
+    <div class="bnf-n">스마트폰 구독과 다른 상품이다 — <b>잔존가 보장·민팃 반납이 없고</b>, 구독케어가 구독에 포함된다</div>
+  </div>
+  <div class="card">
+    <div class="be-hd" style="color:#dc2626">⚠️ 상담에서 헷갈리는 것</div>
+    ${M.cautions.map(x=>`<div class="be-i">${x}</div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="be-hd" style="color:#0D1B7A">📞 문의</div>
+    ${M.tel.map(([k,n,t])=>`<div class="be-i">${k} — ${n} <b data-tel="${t}">${t}</b></div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="be-hd" style="color:#B45309">🔵 아직 확인 못 한 것</div>
+    ${M.unknown.map(x=>`<div class="be-i">${x}</div>`).join('')}
+  </div>
+  <div class="src-wrap">
+    <div class="src-row"><span class="src-dot"></span>${M.src}</div>
+    <div class="src-row"><span class="src-dot src-dot2"></span>가전 구독과 달리 <b>방문 기사가 없어 회차표가 없습니다</b> — 구독케어는 고장·파손이 났을 때 받는 서비스입니다</div>
+  </div>`;
+}
+
 /* 화면에 보이는 번호는 눌린다 — AS 앱과 같은 규칙(`data-tel` 을 단 것만 잡는다) */
 function wireTel(root){
   root.querySelectorAll('[data-tel]').forEach((el)=>{
@@ -2212,6 +2288,8 @@ function render(){
 
   /* 모바일 구독 — 회차 구조가 없으므로 아래 회차표 경로를 타지 않는다 */
   if(p.st==='mx'){ body.innerHTML = buildMobileSub(p); wireTel(body); return; }
+  /* PC·태블릿 — 상품이 다르다(올인원 2.0). 회차표 경로를 타지 않는다 */
+  if(p.st==='ai2'){ body.innerHTML = buildAllInOne2(p); wireTel(body); return; }
 
   if(!d && p.st==='na'){
     body.innerHTML = '<div class="todo-card"><div class="todo-ico">'+prodIcon(p.key,p.icon)+'</div><div class="todo-t" style="color:#2563EB">'+p.name+' — 자가관리 가이드</div><div class="todo-s">'+p.desc+'<br><br>이 제품은 <b>삼성 AI구독 케어 미대상</b> 제품입니다. 자가관리 가이드를 참조하거나 삼성전자서비스센터(1588-3366)에 문의하세요.</div></div>';
@@ -2549,11 +2627,11 @@ function renderOverview(){
      * 방문케어가 아닐 뿐이다 — `na-card` 로 두면 화면이 "구독 미대상"이라고 거짓말한다.
      * 누르면 그 제품 화면으로 가야 하는 것도 done 과 같다.
      */
-    const isMx = p.st==='mx';
+    const isMx = p.st==='mx' || p.st==='ai2';
     const open = isDone || isMx;
     let pills = '';
     if(isMx){
-      pills = '<span class="ov-pill p12">갤럭시 AI 구독클럽</span>';
+      pills = '<span class="ov-pill p12">' + (p.st==='ai2' ? '올인원 2.0' : '갤럭시 AI 구독클럽') + '</span>';
     } else if(isDone && d){
       if(d.onlyPlan==='12') pills += '<span class="ov-pill p12">12개월형</span>';
       else if(d.onlyPlan==='36') pills += '<span class="ov-pill p36">36개월형</span>';

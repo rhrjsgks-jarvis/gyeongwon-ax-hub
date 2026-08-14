@@ -144,15 +144,22 @@ function flatten(v, out = []) {
    */
   const MX = literal(html, /\nconst MX_SUB = (\{[\s\S]*?\n\});/, 'care-app.html 의 MX_SUB');
   const mxKw = flatten(MX).join(' ') + ' 모바일 구독 갤럭시 구독클럽 자급제 스마트폰 구독';
+  /*
+   * **PC·태블릿은 또 다른 상품이라 자료도 따로다**(`AI2_SUB`, AI 구독클럽 올인원 2.0).
+   * 안 담으면 화면에 크게 적힌 '올인원 2.0'·'구독케어'·'선납금'·'파손보상' 으로 검색해도
+   * 0건이 된다 — 모바일에서 이미 같은 실수를 했다.
+   */
+  const AI2 = literal(html, /\nconst AI2_SUB = (\{[\s\S]*?\n\});/, 'care-app.html 의 AI2_SUB');
+  const ai2Kw = flatten(AI2).join(' ') + ' pc 노트북 태블릿 구독 올인원 갤럭시북 갤럭시탭 구독케어 파손보상';
   if (m) {
     const re = /\{key:"([^"]+)",\s*name:"([^"]+)",[^}]*?desc:"([^"]*)"[^}]*?st:"([^"]*)"/g;
     let x;
     while ((x = re.exec(m[1]))) {
-      const isMx = x[4] === 'mx';
+      const isMx = x[4] === 'mx', isAi2 = x[4] === 'ai2';
       add({ t: 'care', m: 'care', title: x[2], sub: `AI구독 케어 · ${x[3]}`,
         kw: [x[2], x[3],
-          isMx ? mxKw : '케어십 구독 care 방문케어 자가관리 무상수리',
-          ...(isMx ? [] : flatten(DATA[x[1]]))].join(' '),
+          isAi2 ? ai2Kw : isMx ? mxKw : '케어십 구독 care 방문케어 자가관리 무상수리',
+          ...(isMx || isAi2 ? [] : flatten(DATA[x[1]]))].join(' '),
         href: `/care?cat=${encodeURIComponent(x[1])}` });
     }
   }

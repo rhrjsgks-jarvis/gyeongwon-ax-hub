@@ -44,6 +44,13 @@ const ALL_PRODUCTS = [
   { key: 'mx_fold8u',        name: '갤럭시 Z 폴드8 울트라', hasData: false, onlyPlan: null, dual: false, mx: true },
   { key: 'mx_fold8',         name: '갤럭시 Z 폴드8',        hasData: false, onlyPlan: null, dual: false, mx: true },
   { key: 'mx_flip8',         name: '갤럭시 Z 플립8',        hasData: false, onlyPlan: null, dual: false, mx: true },
+  /*
+   * PC·태블릿 2종 — **스마트폰과 다른 상품이다**(AI 구독클럽 올인원 2.0).
+   * 구독케어(무상수리+파손보상)가 구독에 포함되고 잔존가 보장·민팃 반납이 없다.
+   * 셋을 섞으면 상담에서 그대로 틀린 설명이 되므로 아래에서 **서로 섞이지 않는지**도 본다.
+   */
+  { key: 'ai2_book6',        name: '갤럭시 북6 시리즈',     hasData: false, onlyPlan: null, dual: false, mx: true, ai2: true },
+  { key: 'ai2_tabs11',       name: '갤럭시 탭 S11 시리즈',  hasData: false, onlyPlan: null, dual: false, mx: true, ai2: true },
 ];
 
 // 타임라인 모드에 노출되는(=st:'done') 제품 키. TL_MONTHS(care-app.html)에 정의된 키와 일치해야 함.
@@ -96,14 +103,44 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
         const body = doc.getElementById('body');
         const txt = body.textContent.replace(/\s+/g, ' ');
         for (const sel of ['.plan-tabs', '.vtabs', '.type-tabs']) {
-          if (body.querySelector(sel)) fail(`[${p.key}] 모바일 구독에 회차 UI(${sel})가 그려졌다 — 방문 기사가 없어 회차가 없다`);
+          if (body.querySelector(sel)) fail(`[${p.key}] 구독 화면에 회차 UI(${sel})가 그려졌다 — 방문 기사가 없어 회차가 없다`);
         }
         if (!/회차표가 없습니다/.test(txt)) fail(`[${p.key}] "회차표가 없습니다"를 화면이 밝히지 않는다`);
-        for (const must of ['Samsung Care+', '잔존가 보장', '액세서리', '민팃', '1877-5446', '1588-3366', '자급제']) {
-          if (!txt.includes(must)) fail(`[${p.key}] 원문 항목 "${must}" 가 화면에 없다`);
-        }
-        /* 확인 못 한 것을 지어내지 않았는지 — 원문에 없는 월 요금·통신사 약정을 단정하면 안 된다 */
+        /* 확인 못 한 것을 지어내지 않았는지 — 원문에 없는 월 요금을 단정하면 안 된다 */
         if (/월 [\d,]+원/.test(txt)) fail(`[${p.key}] 원문에 없는 월 이용료가 적혀 있다`);
+
+        /*
+         * **두 상품을 섞지 않는다.** 스마트폰은 `New 갤럭시 AI 구독클럽`(Care+ 별도 가입 ·
+         * 잔존가 보장 · 민팃 반납), PC·태블릿은 `올인원 2.0`(구독케어 포함 · 잔존가 없음).
+         * 한쪽 문구가 다른 쪽에 새면 상담에서 그대로 틀린 설명이 된다.
+         */
+        /*
+         * **낱말을 통째로 금지하면 안 된다** — 두 상품이 같은 낱말을 다른 뜻으로 쓴다.
+         * 모바일 Care+ 에도 자기부담금이 있고, PC 화면은 *"잔존가 보장·민팃 반납이 없고"*
+         * 처럼 **부정문으로** 그 말을 쓴다(그게 상담에서 가장 중요한 구분이다).
+         * 그래서 **한쪽에만 있을 수 있는 고유 표지**만 금지한다.
+         */
+        if (p.ai2) {
+          for (const must of ['올인원 2.0', '무상수리', '파손보상', '25% 자기부담금', '선납금', '1588-3366']) {
+            if (!txt.includes(must)) fail(`[${p.key}] 원문 항목 "${must}" 가 화면에 없다`);
+          }
+          /* 민팃 고객센터 번호·'자급제'는 스마트폰 상품에만 있는 표지다 */
+          for (const bad of ['1877-5446', '자급제', '액세서리 패키지']) {
+            if (txt.includes(bad)) fail(`[${p.key}] 스마트폰 전용 표지 "${bad}" 가 섞였다`);
+          }
+          /* 잔존가·민팃은 **없다고 밝히는 문장**에서만 나와야 한다 */
+          if (/잔존가/.test(txt) && !/없고|없다|없습니다/.test(txt)) {
+            fail(`[${p.key}] '잔존가' 를 혜택처럼 적었다 — 올인원 2.0 에는 잔존가 보장이 없다`);
+          }
+        } else {
+          for (const must of ['Samsung Care+', '잔존가 보장', '액세서리', '민팃', '1877-5446', '1588-3366', '자급제']) {
+            if (!txt.includes(must)) fail(`[${p.key}] 원문 항목 "${must}" 가 화면에 없다`);
+          }
+          /* 올인원 2.0 고유 표지가 스마트폰 화면에 새면 안 된다 */
+          for (const bad of ['올인원 2.0', '구독케어 기간', '선납금']) {
+            if (txt.includes(bad)) fail(`[${p.key}] PC·태블릿 전용 표지 "${bad}" 가 섞였다`);
+          }
+        }
         continue;
       }
 
