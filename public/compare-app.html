@@ -905,7 +905,14 @@ const DB = {
     /* 2026-07-21 리서치로 85인치급 실제 모델 3종 신규 추가(기존엔 3개 브랜드 모두 65·75인치까지만 있어
        삼성 85인치 플래그십과 동급 비교가 원천적으로 불가능했음). 출처: ganow.co.kr(LG 86QNED86AKA),
        nosearch.com/tcl.com(TCL 85C855), danawa/enuri(하이센스 85U8Q).
-       as·brightness 일부는 국내 공식 스펙시트로 확정 못해 같은 브랜드 인접 모델값을 잠정 적용 — 재검증 필요. */
+       as·brightness 일부는 국내 공식 스펙시트로 확정 못해 같은 브랜드 인접 모델값을 잠정 적용 — 재검증 필요.
+
+       **2026-08-14 확인 — TCL QM8K·QM7K 는 TCL 한국 사이트에 제품 지면이 없다.**
+       `tcl.com/kr/ko/tvs/` 목록에도, `/tvs/qm8k`·`/tvs/qm7k` 로 직접 열어도 404 다
+       (한국에 있는 것은 `c855`·`x11l`·`98c7l`·`a400m` 등). 북미 라인일 가능성이 높다.
+       국내에서 못 사는 모델을 견줌 대상으로 두면 상담에서 되레 신뢰를 깎으므로
+       **지울지 남길지 사용자 판단이 필요하다** — 근거 없이 지우지 않고 표시만 해 둔다.
+       (C855 지면은 열리지만 마케팅 문구뿐이라 에너지등급·치수는 없다.) */
     competitors:{
       /* 2026-08-03 LG 베스트샵 카탈로그(TV 지면) 대조. 중요한 사실 하나 — LG도 2026년형에서
          Micro RGB 라인(100MRGB96BK / 86MRGB96BKA / 75MRGB96BKA)을 냈다. 삼성 Micro RGB를
@@ -916,16 +923,25 @@ const DB = {
       'LG':[
         { name:'LG Micro RGB 86인치 (86MRGB96BKA)',
           on:['Micro RGB 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','40W 2.2ch 돌비 애트모스','3면 시네마 스크린(갤러리 스타일)','AI 매직 리모컨','원거리 음성인식'],
-          specs:{ size:86, res:'4K', panel:'Micro RGB', as:2, eGrade:3, dim:'1,925 × 1,105 × 46.1' } },
+          specs:{ size:86, res:'4K', panel:'Micro RGB', hz:120, as:2, eGrade:3, dim:'1,925 × 1,105 × 46.1' } },
         { name:'LG Micro RGB 75인치 (75MRGB96BKA)',
           on:['Micro RGB 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','40W 2.2ch 돌비 애트모스','3면 시네마 스크린(갤러리 스타일)'],
-          specs:{ size:75, res:'4K', panel:'Micro RGB', as:2, eGrade:3, dim:'1,673 × 963 × 44.9' } },
+          specs:{ size:75, res:'4K', panel:'Micro RGB', hz:120, as:2, eGrade:3, dim:'1,673 × 963 × 44.9' } },
         { name:'LG 올레드 evo G6 97인치 (OLED97G6KNA)', price:4290,
           on:['올레드 evo 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','60W 4.2ch 돌비 애트모스','갤러리 디자인 · 4면 시네마 스크린','AI 매직 리모컨'],
-          specs:{ size:97, res:'4K', panel:'OLED evo', as:2, dim:'2,155 × 1,230 × 28.2' } },
+          specs:{ size:97, res:'4K', panel:'OLED evo', hz:120, as:2, dim:'2,155 × 1,230 × 28.2' } },
         { name:'LG 올레드 evo G6 83인치 (OLED83G6KNA)', price:1400,
           on:['올레드 evo 패널','알파11 Gen3 AI 프로세서','AI 화질 프로 / AI 사운드 프로','60W 4.2ch 돌비 애트모스','갤러리 디자인 · 4면 시네마 스크린'],
-          specs:{ size:83, res:'4K', panel:'OLED evo', as:2, eGrade:4, dim:'1,847 × 1,057 × 28' } },
+          specs:{ size:83, res:'4K', panel:'OLED evo', hz:120, as:2, eGrade:4, dim:'1,847 × 1,057 × 28' } },
+        /*
+         * **86QNED86AKA 의 에너지등급을 채우지 말 것 — 값이 없는 게 아니라 "비대상"이다.**
+         * lge.co.kr 원문: *"에너지소비효율등급 비대상 (8K / 화면대각선 216cm 초과 모델은
+         * 비대상임)"*. 86인치 = 218cm 라 제도상 등급이 매겨지지 않는다.
+         * `eGrade` 는 `better:'low'` 로 **수치 비교**하는 항목이라 "비대상" 문자열을 넣으면
+         * 비교가 깨진다(카탈로그 파싱에서 이미 한 번 들어왔던 값이다). 그래서 비워 둔다.
+         * 85인치(=214cm)는 대상이라 삼성 KQ85QNH80 에는 1등급이 있다 — 같은 급으로 보이지만
+         * 제도 기준이 갈리는 자리다.
+         */
         { name:'LG QNED evo AI 86인치 (86QNED86AKA)', price:508,
           on:['QNED 미니LED','α7 5세대 AI 프로세서','돌비비전IQ','돌비 애트모스','HDMI 2.1','VRR 144Hz'],
           specs:{ size:86, res:'4K', panel:'QNED(미니LED)', hz:120, as:2, brightness:1200 } },
