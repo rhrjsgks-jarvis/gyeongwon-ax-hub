@@ -33,7 +33,8 @@
     "test:qr": "node --experimental-strip-types scripts/test-qr.mjs",
     "test:prod": "node scripts/test-prod.mjs",
     "test:backkit": "node scripts/test-backkit.mjs",
-    "build:warranty": "node scripts/build-warranty.mjs"
+    "build:warranty": "node scripts/build-warranty.mjs",
+    "backup": "node scripts/backup.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

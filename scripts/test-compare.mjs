@@ -687,6 +687,73 @@ function resetUrlTabInputs() {
     else console.log(`[12] 부정형 값 ${seen}건 — 전부 문자열 항목 OK`);
   }
 
+  /*
+   * [13] 값을 모르는 항목("미공개") — 단위도 배지도 붙지 않아야 한다
+   *
+   * [12] 가 막는 '없음'과 성격이 다르다. '없음'은 **제품에 그 기능이 없다**는 사실이고,
+   * '미공개'는 **제조사가 값을 밝히지 않았다**는 뜻이다 — 애플은 아이폰 RAM 을 사양
+   * 지면에 아예 적지 않는다(확인함). 그래서 수치 항목(RAM)에 들어가는데, 그대로 두면
+   * 두 가지가 화면에서 거짓말을 한다:
+   *   ① 단위가 무조건 붙어 **"미공개GB"**
+   *   ② 우열 판정이 숫자에서만 도므로 배지가 **"🟡 동급"** — 12GB 와 동급이 아니다
+   * `unitOf()` 와 `specUnknown()` 이 그 둘을 막는다. 이 검사는 **렌더된 표를 직접 읽어**
+   * 확인한다 — 함수만 부르면 호출부가 그것을 안 쓰게 바뀌어도 통과한다.
+   */
+  {
+    const UNK = /^(미공개|미상|확인 필요)$/;
+    /* 미공개 값이 실제로 있는 (카테고리, 항목) 을 데이터에서 찾는다 */
+    const targets = [];
+    for (const [cat, v] of Object.entries(DB)) {
+      if (!v.specItems) continue;
+      const all = [...(v.samsung || []), ...Object.values(v.competitors || {}).flat()];
+      for (const it of v.specItems) {
+        if (all.some((m) => UNK.test(String((m.specs || {})[it.key])))) targets.push([cat, it]);
+      }
+    }
+    if (!targets.length) {
+      console.log("[13] '미공개' 값 없음 — 건너뜀");
+    } else {
+      const bad = [];
+      let checked = 0;
+      for (const [cat, it] of targets) {
+        const v = DB[cat];
+        for (const [brand, models] of Object.entries(v.competitors || {})) {
+          window.selectCat(cat);
+          window.selectBrand(brand);
+          for (let si = 0; si < (v.samsung || []).length; si++) {
+            for (let ci = 0; ci < models.length; ci++) {
+              const sv = (v.samsung[si].specs || {})[it.key];
+              const cv = (models[ci].specs || {})[it.key];
+              if (sv === undefined || cv === undefined) continue;
+              if (!UNK.test(String(sv)) && !UNK.test(String(cv))) continue;
+
+              val('sel-samsung').value = String(si);
+              val('sel-comp').value = String(ci);
+              window.renderResult();
+              checked++;
+
+              const row = [...val('spec-table').querySelectorAll('tr')]
+                .find((tr) => tr.querySelector('.spec-label')?.textContent.startsWith(it.label));
+              if (!row) { bad.push(`[${cat}] ${it.label} 행이 안 그려짐`); continue; }
+              const cells = [...row.querySelectorAll('.spec-val')].map((td) => td.textContent.trim());
+
+              /* ① 값을 모른다고 적은 칸에 단위가 붙었나 — "미공개GB" */
+              if (it.unit) {
+                const glued = cells.find((t) => new RegExp(`(미공개|미상|확인 필요)\\s*${it.unit}`).test(t));
+                if (glued) bad.push(`[${cat}] ${it.label} 단위가 붙음: "${glued}"`);
+              }
+              /* ② 우열·동급 배지가 붙었나 — 모르는 값에 "동급"은 거짓말이다 */
+              const badged = cells.find((t) => /우위|열위|동급/.test(t));
+              if (badged) bad.push(`[${cat}] ${it.label} 값을 모르는데 배지: "${badged}"`);
+            }
+          }
+        }
+      }
+      if (bad.length) fail(`[13] 미공개 표기 위반: ${[...new Set(bad)].slice(0, 6).join(' / ')}`);
+      else console.log(`[13] '미공개' 항목 ${targets.length}종 · 조합 ${checked}개 — 단위·배지 안 붙음 OK`);
+    }
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════

@@ -1237,37 +1237,37 @@ const DB = {
     samsung:[
       { name:'Galaxy S26 Ultra (256GB)', price:180, grade:'P',
         on:['S펜 내장','에이전틱 AI','10배 광학급 줌(5배 광학+하이브리드)','프라이버시 디스플레이','위성 긴급통신','IP68','UWB 초광대역'],
-        specs:{ size:6.9, hz:120, cam:200, bat:5000, as:2, charge:60 } },
+        specs:{ size:6.9, hz:120, cam:200, bat:5000, as:2, charge:60 , ap:'SD8 Elite Gen5', ram:12, storage:256} },
       { name:'Galaxy S26+ (256GB)', price:145, grade:'S',
         on:['에이전틱 AI','5배 광학 줌','IP68','UWB 초광대역'],
-        specs:{ size:6.7, hz:120, cam:50, bat:4900, as:2, charge:45 } },
+        specs:{ size:6.7, hz:120, cam:50, bat:4900, as:2, charge:45 , ap:'Exynos 2600', ram:12, storage:256} },
       { name:'Galaxy S26 (256GB)', price:125, grade:'B',
         on:['에이전틱 AI','3배 광학 줌','IP68'],
-        specs:{ size:6.2, hz:120, cam:50, bat:4000, as:2, charge:25 } },
+        specs:{ size:6.2, hz:120, cam:50, bat:4000, as:2, charge:25 , ap:'Exynos 2600', ram:12, storage:256} },
       { name:'Galaxy 퀀텀6 (128GB)', price:62, grade:'B',
         on:['서클 투 서치','제미나이 라이브','45W 초고속충전','IP67 방수방진'],
-        specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 } },
+        specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 , storage:128} },
       { name:'Galaxy A36 5G (128GB)', price:50, grade:'B',
         on:['120Hz 디스플레이','5000mAh 대용량 배터리','45W 초고속충전','IP67 방수방진','OIS 손떨림보정'],
-        specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 } }
+        specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 , ap:'SD6 Gen3', ram:8, storage:128} }
     ],
     competitors:{
       '애플':[
         { name:'iPhone 17e (256GB)', price:99,
           on:['Action Button','A19 칩','48MP 단일카메라(2배 무손실 줌)','Qi2 15W 무선충전'],
-          specs:{ size:6.1, hz:60, cam:48, bat:4005, as:2, charge:20 } },
+          specs:{ size:6.1, hz:60, cam:48, bat:4005, as:2, charge:20 , ap:'A19', ram:'미공개', storage:256} },
         { name:'iPhone 17 (256GB)', price:129,
           on:['ProMotion 120Hz(기본형 최초 탑재)','48MP 듀얼카메라','카메라 컨트롤','MagSafe 25W 무선충전'],
-          specs:{ size:6.3, hz:120, cam:48, bat:3692, as:2, charge:40 } },
+          specs:{ size:6.3, hz:120, cam:48, bat:3692, as:2, charge:40 , ap:'A19', ram:'미공개', storage:256} },
         { name:'iPhone Air (256GB)', price:159,
           on:['역대 최슬림 아이폰(5.6mm)','A19 Pro 칩','48MP Fusion 카메라','ProMotion 120Hz'],
-          specs:{ size:6.5, hz:120, cam:48, bat:3149, as:2, charge:20 } },
+          specs:{ size:6.5, hz:120, cam:48, bat:3149, as:2, charge:20 , ap:'A19 Pro', ram:'미공개', storage:256} },
         { name:'iPhone 17 Pro (256GB)', price:179,
           on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
-          specs:{ size:6.3, hz:120, cam:48, bat:3998, as:2, charge:40 } },
+          specs:{ size:6.3, hz:120, cam:48, bat:3998, as:2, charge:40 , ap:'A19 Pro', ram:'미공개', storage:256} },
         { name:'iPhone 17 Pro Max (256GB)', price:199,
           on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
-          specs:{ size:6.9, hz:120, cam:48, bat:5088, as:2, charge:40 } }
+          specs:{ size:6.9, hz:120, cam:48, bat:5088, as:2, charge:40 , ap:'A19 Pro', ram:'미공개', storage:256} }
       ]
     },
     specItems:[
@@ -1277,7 +1277,22 @@ const DB = {
       { key:'cam',   label:'카메라 화소', unit:'MP',   better:'high' },
       { key:'bat',   label:'배터리',      unit:'mAh',  better:'high' },
       { key:'as',    label:'무상 A/S',    unit:'년',   better:'high' },
-      { key:'charge',label:'유선 충전속도',unit:'W',   better:'high' }
+      { key:'charge',label:'유선 충전속도',unit:'W',   better:'high' },
+      /*
+       * AP·RAM·저장공간 (2026-08-13 사용자 요청: *"휴대폰의경우 AP와 램 저장공간 이런것이
+       * 중요한데 이런것들이 하나도없습니다"*). 상담에서 실제로 먼저 나오는 말인데 없었다.
+       *
+       * **AP 는 이름이라 우열을 가리지 않는다**(`better` 없음) — 문자열이라 크고 작음이
+       * 없고, 세대·제조사가 다른 칩을 표가 임의로 줄세우면 근거 없는 우열이 된다.
+       * 상담사가 이름을 나란히 보고 판단하도록 값만 적는다.
+       *
+       * **RAM 은 애플이 공개하지 않는다** — apple.com/kr 사양 지면에 항목 자체가 없다
+       * (확인함). 그래서 `없음`(제품에 그 기능이 없다)이 아니라 **`미공개`** 로 적는다.
+       * 둘을 섞으면 "아이폰은 램이 없다"로 읽힌다.
+       */
+      { key:'ap',     label:'AP(칩셋)',  unit:'' },
+      { key:'ram',    label:'RAM',       unit:'GB', better:'high' },
+      { key:'storage',label:'저장공간',   unit:'GB', better:'high' }
     ],
     sells:[
       'S펜 내장 — 메모·스케치·문서 편집 즉시 가능, 애플에는 없는 독자 기능',
@@ -1952,6 +1967,31 @@ function fmtSpec(v) {
   return typeof v === 'number' ? v.toLocaleString('ko-KR') : String(v);
 }
 
+/*
+ * 단위는 **값에 숫자가 있을 때만** 붙인다.
+ *
+ * "문자열이면 안 붙인다"로 잡으면 안 된다 — 치수(`"912 × 1,853 × 916"` + `mm`)와
+ * 채널 구성 같은 값도 문자열인데 단위가 붙어야 맞다(전수로 67종 확인). 반대로
+ * 값 자체가 "미공개"인 항목에 붙으면 **"미공개GB"** 라는 말이 화면에 나간다.
+ * 가르는 것은 자료형이 아니라 숫자의 유무다.
+ */
+function unitOf(v, unit) {
+  return (unit && /[0-9]/.test(String(v))) ? unit : '';
+}
+
+/*
+ * 값을 모른다고 적은 항목은 **우열을 말하지 않는다**.
+ *
+ * 배지는 양쪽이 숫자가 아니면 무조건 '🟡 동급'을 붙이는데, `12` vs `미공개` 를
+ * 동급이라 부르면 화면이 거짓말을 한다 — 애플이 RAM 을 공개하지 않는 것이지
+ * 삼성과 같다는 뜻이 아니다. ('없음'이 들어가는 기존 항목들은 전부 `score:false`
+ * 라 이미 배지가 붙지 않는다 — 그쪽 관례와 결과가 같아진다.)
+ */
+const UNKNOWN_SPEC = /^(미공개|미상|확인 필요)$/;
+function specUnknown(a, b) {
+  return UNKNOWN_SPEC.test(String(a)) || UNKNOWN_SPEC.test(String(b));
+}
+
 function priceLabel(m) {
   return (m.price === undefined || m.price === null) ? '(가격 문의)' : `(${m.price}만원)`;
 }
@@ -1997,16 +2037,17 @@ function renderResult() {
       }
     }
     const rowClass = bS==='win'?'spec-row-win':bC==='win'?'spec-row-lose':'spec-row-tie';
-    const badge = v => it.score===false ? '' :
+    const unknown = specUnknown(sv, cv);   // 값을 모르는 항목은 우열을 말하지 않는다
+    const badge = v => (it.score===false || unknown) ? '' :
                        bS==='win'&&v==='s'?'<span class="badge-win">✅ 우위</span>':
                        bC==='win'&&v==='c'?'<span class="badge-win">✅ 우위</span>':
                        bC==='win'&&v==='s'?'<span class="badge-lose">🔴 열위</span>':
                        bS==='win'&&v==='c'?'<span class="badge-lose">🔴 열위</span>':
                        '<span class="badge-tie">🟡 동급</span>';
-    rows += `<tr class="${it.score===false?'spec-row-tie':rowClass}">
-      <td class="spec-label">${escHtml(it.label)}${it.score===false?'<span class="spec-note">참고</span>':''}</td>
-      <td class="spec-val">${escHtml(fmtSpec(sv))}${escHtml(it.unit||'')} ${badge('s')}</td>
-      <td class="spec-val">${escHtml(fmtSpec(cv))}${escHtml(it.unit||'')} ${badge('c')}</td>
+    rows += `<tr class="${(it.score===false||unknown)?'spec-row-tie':rowClass}">
+      <td class="spec-label">${escHtml(it.label)}${(it.score===false||unknown)?'<span class="spec-note">참고</span>':''}</td>
+      <td class="spec-val">${escHtml(fmtSpec(sv))}${escHtml(unitOf(sv,it.unit))} ${badge('s')}</td>
+      <td class="spec-val">${escHtml(fmtSpec(cv))}${escHtml(unitOf(cv,it.unit))} ${badge('c')}</td>
     </tr>`;
   });
   document.getElementById('spec-table').innerHTML = rows;
@@ -2095,7 +2136,7 @@ function buildTextResult(sam, comp, d, samOnly, compOnly, sS, sC) {
   const specLines = d.specItems.map(it=>{
     const sv = specValue(sam, it.key), cv = specValue(comp, it.key);
     if(sv===undefined||cv===undefined) return null;
-    return `- ${it.label}: 삼성 ${sv}${it.unit||''} vs ${currentBrand} ${cv}${it.unit||''}`;
+    return `- ${it.label}: 삼성 ${sv}${unitOf(sv,it.unit)} vs ${currentBrand} ${cv}${unitOf(cv,it.unit)}`;
   }).filter(Boolean).join('\n');
   const lines = [
     `[타사비교 세일즈가이드] ${d.emoji} ${currentCat}`,
@@ -2172,7 +2213,7 @@ function goQuiz() {
   const specLines = d.specItems.map(it=>{
     const sv = sam.specs[it.key], cv = comp.specs[it.key];
     if(sv===undefined||cv===undefined) return null;
-    return `- ${it.label}: 삼성 ${sv}${it.unit} / ${brand} ${cv}${it.unit}`;
+    return `- ${it.label}: 삼성 ${sv}${unitOf(sv,it.unit)} / ${brand} ${cv}${unitOf(cv,it.unit)}`;
   }).filter(Boolean).join('\n');
   const sellLines = (d.sells||[]).map((s,i)=>`${i+1}. ${s}`).join('\n');
   const scriptLines = (d.scripts||[]).map(s=>`▶ ${s.trigger}\n  ${s.text}`).join('\n');
