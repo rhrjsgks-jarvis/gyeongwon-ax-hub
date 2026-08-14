@@ -523,6 +523,69 @@ const CAT_QUERIES = {
     else console.log(`  상단바·안내문 모두 ${n}종 (DB 에서 세어 넣음) ✓`);
   }
 
+  // ═══ 10. 견적 한 장 ═══
+  /*
+   * 상담이 끝나면 고객 손에 남는 종이다. 여기서 지키는 것은 **숫자가 맞는가**와
+   * **고객에게 나갈 그림에 상담사 화면이 섞이지 않는가** 둘이다.
+   * 공유는 화면을 통째로 찍으므로(share-kit), 견적을 열었을 때 검색 결과가 남아 있으면
+   * 그 15장이 고객에게 함께 나간다.
+   */
+  console.log('── 10. 견적 한 장 ──');
+  try {
+    window.runSearch && (doc.getElementById('q').value = '무풍 에어컨', window.runSearch());
+    await wait(150);
+    const picks = [...doc.querySelectorAll('.rpick button')].slice(0, 2);
+    if (picks.length < 2) fail('결과 카드에 견적 담기 버튼이 없다');
+    else {
+      picks.forEach((b) => b.click());
+      const ids = [...window.quotePicks];
+      if (ids.length !== 2) fail(`담기 2개인데 quotePicks 는 ${ids.length}개`);
+      const bar = doc.getElementById('qbar');
+      if (bar.hidden) fail('제품을 담았는데 하단 바가 안 뜬다');
+
+      /* 합계는 담긴 제품의 가격 합이어야 한다 — 가격 미상은 빼고 센다(0원처럼 보이면 안 된다).
+         PRODUCTS 는 `let` 이라 window 에 안 붙는다 — 앱이 가진 quoteItems() 를 쓴다. */
+      const prods = window.quoteItems();
+      const want = prods.map((p) => p.price).filter((v) => v != null).reduce((s, v) => s + v, 0);
+      window.quoteRender();
+      const totalEl = doc.querySelector('.qtotal b');
+      if (!totalEl) fail('견적 지면에 합계가 없다');
+      else if (Number(String(totalEl.textContent).replace(/[^\d]/g, '')) !== want)
+        fail(`합계가 ${totalEl.textContent} 인데 담긴 제품 가격 합은 ${want}만원`);
+
+      /* 상담사가 판매가를 고치면 합계가 따라와야 한다 — 출시가를 그대로 내보내지 않기 위한 칸이다 */
+      window.quoteSetPrice(ids[0], 111);
+      const want2 = 111 + prods.slice(1).map((p) => p.price).filter((v) => v != null).reduce((s, v) => s + v, 0);
+      const t2 = Number(String(doc.querySelector('.qtotal b').textContent).replace(/[^\d]/g, ''));
+      if (t2 !== want2) fail(`판매가를 고쳤는데 합계가 ${t2} — ${want2} 여야 한다`);
+
+      /* 고객에게 나가는 종이라 반드시 적혀 있어야 하는 것 */
+      const sheet = doc.getElementById('qsheet');
+      const txt = sheet ? sheet.textContent.replace(/\s+/g, ' ') : '';
+      for (const must of ['매장·프로모션·설치비에 따라 달라집니다', '현장 실측']) {
+        if (!txt.includes(must)) fail(`견적 지면에 "${must}" 문구가 없다 — 출시가를 약속처럼 읽으면 안 된다`);
+      }
+
+      /*
+       * **`quoteOpen()` 이 스스로 감추는지**를 본다 — `quoteHideSearch` 를 직접 부르고
+       * 확인하면 그 호출이 빠져도 검사가 통과한다(실제로 그렇게 만들었다가 안 물렸다).
+       * warranty.json fetch 는 jsdom 에서 실패하지만 앱이 삼키므로 흐름은 그대로 간다.
+       */
+      await window.quoteOpen();
+      await wait(80);
+      if (doc.getElementById('rHost').style.display !== 'none')
+        fail('견적을 열었는데 검색 결과가 남아 있다 — 고객에게 나갈 그림에 상담사 화면이 섞인다');
+      window.quoteClose();
+      if (doc.getElementById('rHost').style.display === 'none')
+        fail('견적을 닫았는데 검색 결과가 안 돌아온다');
+
+      window.quoteClear();
+      if (window.quotePicks.size !== 0) fail('비우기 후에도 담긴 제품이 남아 있다');
+      if (!doc.getElementById('qbar').hidden) fail('비웠는데 하단 바가 그대로다');
+      console.log('  담기 2개 → 합계 → 판매가 편집 → 검색 감춤 → 닫기 → 비우기 ✓');
+    }
+  } catch (e) { fail('견적 한 장 예외: ' + e.message); }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })().catch((e) => {

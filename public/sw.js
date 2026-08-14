@@ -62,7 +62,7 @@
  * **버전은 덩어리를 다 만든 맨 마지막에 한 번 올린다.** 중간에 찍어 두면 그 뒤에 고친
  * 미니앱이 옛 캐시로 남고, 아래 test-consistency 의 대조가 바로 그것을 잡는다.
  */
-const CACHE_VERSION = 'axhub-v54';
+const CACHE_VERSION = 'axhub-v55';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -75,7 +75,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 캐시에서 뜨는데 심벌·공유·뒤로가기가 통째로 죽는다 — 캐시가 반쪽만 듣는 상태였다.
  * 파일 이름에 버전이 없으므로 캐시 우선(vendor)이 아니라 stale-while-revalidate 로 둔다.
  */
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|warranty)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

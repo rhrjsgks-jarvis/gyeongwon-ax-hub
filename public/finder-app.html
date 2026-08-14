@@ -85,6 +85,43 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
   border:1px solid var(--line);color:var(--sub)}
 .sbtn.on{background:var(--deep);border-color:var(--deep);color:#fff}
 .rlist{display:flex;flex-direction:column;gap:10px}
+/* ═══ 견적 담기 · 견적 한 장 ═══
+   담기 버튼은 `.rmain`(카드 전체가 button) **밖**에 둔다 — 중첩 button 은 HTML 위반이라
+   브라우저에 따라 클릭이 안 먹는다(AS 앱에서 겪은 것과 같은 함정). */
+.rpick{display:flex;justify-content:flex-end;padding:0 14px 10px}
+.rpick button{border:1.5px solid var(--line);background:#fff;border-radius:999px;
+  padding:5px 12px;font-size:12px;font-weight:700;color:#555;cursor:pointer}
+.rpick button.on{border-color:var(--brand);background:#f0f3ff;color:var(--brand)}
+.qbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.97);
+  border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(0,0,0,.08);padding:10px 12px}
+.qbar-in{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.qbar-n{font-weight:800;color:var(--brand);font-size:13.5px;white-space:nowrap}
+.qbar-sum{flex:1;font-size:12.5px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qbar-clear{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;color:#666;cursor:pointer}
+.qbar-go{border:0;background:var(--brand);color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:800;cursor:pointer}
+/* 견적 지면 — 공유는 화면을 그대로 찍으므로 이 DOM 이 곧 고객에게 나가는 그림이다 */
+.qsheet{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 16px 14px;margin-top:14px}
+.qsheet h3{margin:0 0 2px;font-size:17px;font-weight:800;color:var(--brand)}
+.qsheet .qsub{font-size:11.5px;color:#777;margin-bottom:12px}
+.qrow{border-top:1px solid var(--line);padding:10px 0}
+.qrow:last-of-type{border-bottom:1px solid var(--line)}
+.qrow .qcat{font-size:10.5px;font-weight:800;letter-spacing:.08em;color:var(--cyan)}
+.qrow .qname{font-size:14px;font-weight:700;margin-top:1px}
+.qrow .qcode{font-size:11.5px;color:#777;font-family:ui-monospace,monospace}
+.qrow .qmeta{font-size:11.5px;color:#555;margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 12px}
+.qprice{display:flex;align-items:center;gap:6px;margin-top:6px}
+.qprice input{width:92px;border:1.5px solid var(--line);border-radius:7px;padding:5px 8px;
+  font-size:13px;font-weight:700;text-align:right}
+.qprice span{font-size:12px;color:#666}
+.qtotal{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 4px;font-size:15px}
+.qtotal b{font-size:20px;color:var(--brand)}
+.qwar{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.qwar h4{margin:0 0 6px;font-size:12.5px;font-weight:800;color:#333}
+.qwar div{font-size:11.5px;color:#555;line-height:1.55}
+.qnote{margin-top:12px;font-size:11px;color:#888;line-height:1.6}
+.qacts{display:flex;gap:8px;margin-top:12px}
+.qacts button{flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px;font-size:13px;cursor:pointer}
+@media (max-width:520px){ .qbar-sum{display:none} }
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .rmain{width:100%;text-align:left;padding:14px 16px 12px;display:block}
 .rtop{display:flex;align-items:baseline;gap:8px}
@@ -316,7 +353,22 @@ table.spec tr:last-child td{border-bottom:none}
   <div id="aiHost"></div>
   <div class="sortrow hidden" id="sortRow"></div>
   <div class="rlist" id="rHost"></div>
+  <div id="quoteHost"></div>
   <div class="footer">데이터: samsungCE v2.1 + samsungMX (2026-05-30 검증 · 출시가 기준)<br><b>PRODUCT SEARCH</b> · AX 교육 시리즈 — 키워드 추천 엔진</div>
+</div>
+
+<!--
+  **견적 담기 바** — 고른 제품이 하나라도 있으면 화면 아래에 뜬다.
+  상담이 끝났을 때 고객 손에 아무것도 안 남는 것이 이 도구의 구멍이었다(배치
+  시뮬레이터만 결과 이미지를 내보내고 있었다). 제품과 가격이 있는 자리가 여기라 여기 붙인다.
+-->
+<div class="qbar" id="qbar" hidden>
+  <div class="qbar-in">
+    <span class="qbar-n" id="qbarN">0개</span>
+    <span class="qbar-sum" id="qbarSum"></span>
+    <button class="qbar-clear" id="qbarClear" onclick="quoteClear()">비우기</button>
+    <button class="qbar-go" id="qbarGo" onclick="quoteOpen()">견적 한 장</button>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -960,6 +1012,154 @@ function renderResults(){
   }
   $("rHost").innerHTML = list.map((r,i)=>rcard(r,i)).join("");
 }
+/* ═══════════════ 견적 한 장 ═══════════════
+ *
+ * **상담이 끝나면 고객 손에 아무것도 안 남는 것**이 이 도구의 가장 큰 구멍이었다.
+ * 배치 시뮬레이터만 결과 이미지를 내보내고 있었고, 제품 상담 전체를 담은 한 장이 없었다.
+ * 제품과 가격이 있는 자리가 여기라 여기 붙인다.
+ *
+ * **그림을 따로 그리지 않는다.** 공유는 지금 화면을 그대로 찍으므로(`share-kit.js`),
+ * 견적을 DOM 으로 그리면 헤더 공유 버튼이 그것을 그대로 이미지로 만든다 —
+ * "보고 있는 것과 나가는 것이 갈리는" 옛 사고가 원천적으로 안 난다.
+ *
+ * **가격은 상담사가 확정한다.** DB 의 `price` 는 출시가라 매장·프로모션·설치비에 따라
+ * 실제 판매가와 다르다. 고객에게 나가는 종이에 출시가를 그대로 박으면 그 숫자로
+ * 약속한 것처럼 읽힌다. 그래서 **기본값으로 채워 두고 고칠 수 있게** 두고,
+ * 지면에도 그 사실을 적는다. 가격이 없는 제품(`price:null`)은 빈 칸으로 둔다 —
+ * 0원처럼 보이면 안 된다.
+ */
+var quotePicks = new Set();   /* var 로 둔다 — 고전 스크립트에서 let 은 window 에 안 붙어 검사가 못 본다 */
+var quotePrice = {};      // id → 상담사가 고친 가격(만원). 없으면 출시가를 쓴다.
+var WARRANTY = null;      // 견적을 열 때만 받는다(품목별 무상보증, 2KB)
+
+function quoteToggle(id){
+  if (quotePicks.has(id)) { quotePicks.delete(id); delete quotePrice[id]; }
+  else quotePicks.add(id);
+  renderResults();
+  quoteSyncBar();
+  if (document.getElementById('qsheet')) quoteRender();
+}
+function quoteClear(){
+  quotePicks = new Set(); quotePrice = {};
+  const h = $("quoteHost"); if (h) h.innerHTML = '';
+  quoteHideSearch(false);
+  renderResults(); quoteSyncBar();
+}
+function quoteItems(){
+  return [...quotePicks].map((id) => PRODUCTS.find((p) => p.id === id)).filter(Boolean);
+}
+/** 그 제품에 쓸 가격(만원) — 상담사가 고친 값이 있으면 그것, 없으면 출시가, 둘 다 없으면 null */
+function quoteAmt(p){
+  const v = quotePrice[p.id];
+  if (v != null && v !== '') return Number(v);
+  return p.price == null ? null : p.price;
+}
+function quoteSyncBar(){
+  const bar = $("qbar"); if (!bar) return;
+  const items = quoteItems();
+  bar.hidden = items.length === 0;
+  if (!items.length) return;
+  const amts = items.map(quoteAmt);
+  const sum = amts.filter((v) => v != null).reduce((s, v) => s + v, 0);
+  const unknown = amts.filter((v) => v == null).length;
+  $("qbarN").textContent = items.length + '개';
+  $("qbarSum").textContent = sum.toLocaleString() + '만원'
+    + (unknown ? ` · 가격 미정 ${unknown}개` : '');
+}
+async function quoteOpen(){
+  if (!quoteItems().length) { toast('견적에 담긴 제품이 없습니다'); return; }
+  if (!WARRANTY) {
+    /* 품목별 무상보증은 as-app 의 원문에서 뽑은 생성물이다(`scripts/build-warranty.mjs`).
+       손으로 옮겨 적으면 한쪽만 고쳤을 때 조용히 어긋난다. 받지 못하면 그 칸만 비운다. */
+    try { WARRANTY = await (await fetch('warranty.json')).json(); }
+    catch (e) { WARRANTY = {}; }
+  }
+  quoteRender();
+  /*
+   * **견적을 열면 검색 화면을 감춘다.** 공유가 화면을 통째로 찍기 때문이다 —
+   * 안 감추면 고객에게 나가는 그림에 상담사의 검색창과 결과 카드 15장이 함께 찍힌다.
+   * "지금 보이는 것이 그대로 나간다"는 규칙을 지키려면 **보이는 것 자체를** 견적만 남겨야 한다.
+   */
+  quoteHideSearch(true);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+/** 견적 지면만 남기고 검색 화면을 접는다(되돌릴 수 있게 표시만 바꾼다) */
+function quoteHideSearch(on){
+  for (const id of ['rHost', 'sortRow', 'parseBar', 'noticeHost', 'aiHost']) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = on ? 'none' : '';
+  }
+  const hero = document.querySelector('.shero');
+  if (hero) hero.style.display = on ? 'none' : '';
+  const kw = document.getElementById('kwBox');
+  if (kw) kw.style.display = on ? 'none' : '';
+}
+function quoteRender(){
+  const host = $("quoteHost"); if (!host) return;
+  const items = quoteItems();
+  if (!items.length) { host.innerHTML = ''; return; }
+  const now = new Date();
+  const ymd = `${now.getFullYear()}. ${now.getMonth() + 1}. ${now.getDate()}`;
+  const amts = items.map(quoteAmt);
+  const sum = amts.filter((v) => v != null).reduce((s, v) => s + v, 0);
+  const unknown = amts.filter((v) => v == null).length;
+
+  /* 무상보증은 품목이 겹치므로 한 번씩만 적는다 — 같은 말이 반복되면 정작 안 읽힌다 */
+  const cats = [...new Set(items.map((p) => p.cat))];
+  const war = cats.map((c) => (WARRANTY || {})[c] ? { c, ...WARRANTY[c] } : null).filter(Boolean);
+
+  host.innerHTML = `
+  <div class="qsheet" id="qsheet">
+    <h3>견적 안내</h3>
+    <div class="qsub">${ymd} · 삼성스토어 경원영업팀 · 제품 ${items.length}종</div>
+    ${items.map((p) => {
+      const amt = quoteAmt(p);
+      return `<div class="qrow">
+        <div class="qcat">${esc(p.cat)}</div>
+        <div class="qname">${esc(p.group || p.cat)}</div>
+        <div class="qcode">${esc(p.model)}</div>
+        <div class="qmeta">
+          ${p.dimtxt ? `<span>크기 ${esc(p.dimtxt)}mm</span>` : ''}
+          ${p.price != null ? `<span>출시가 ${p.price.toLocaleString()}만원</span>` : '<span>출시가 미상</span>'}
+        </div>
+        <div class="qprice">
+          <span>판매가</span>
+          <input type="number" inputmode="numeric" min="0" step="1"
+                 value="${amt == null ? '' : amt}" placeholder="입력"
+                 oninput="quoteSetPrice(${p.id}, this.value)">
+          <span>만원</span>
+        </div>
+      </div>`;
+    }).join('')}
+    <div class="qtotal"><span>합계</span><b>${sum.toLocaleString()}만원</b></div>
+    ${unknown ? `<div class="qnote">가격을 넣지 않은 제품이 ${unknown}개 있어 합계에서 빠져 있습니다.</div>` : ''}
+    ${war.length ? `<div class="qwar"><h4>무상보증</h4>${war.map((w) => `
+      <div><b>${esc(w.c)}</b> — 기본 ${esc(w.base)}${(w.core || []).length
+        ? ' · ' + w.core.map((c) => `${esc(c.part)} ${esc(c.term)}${c.cond ? `(${esc(c.cond)})` : ''}`).join(' · ')
+        : ''}</div>`).join('')}</div>` : ''}
+    <div class="qnote">
+      · 판매가는 상담사가 입력한 값이며 <b>매장·프로모션·설치비에 따라 달라집니다.</b> 출시가는 참고용입니다.<br>
+      · 크기는 삼성스토어 카탈로그 검증값입니다. 설치 가능 여부는 <b>현장 실측</b>으로 확인하세요.<br>
+      · 무상보증은 삼성전자서비스 「보증기간 산정기준」 기준이며 조건이 붙는 항목이 있습니다.
+    </div>
+    <div class="qacts">
+      <button type="button" onclick="quoteClose()">닫기</button>
+      <button type="button" onclick="quoteClear()">비우기</button>
+    </div>
+  </div>`;
+}
+function quoteSetPrice(id, v){
+  quotePrice[id] = v === '' ? '' : Number(v);
+  /* 입력 중에 지면을 다시 그리면 포커스가 튄다 — 합계와 하단 바만 갱신한다 */
+  const items = quoteItems();
+  const amts = items.map(quoteAmt);
+  const sum = amts.filter((x) => x != null).reduce((s, x) => s + x, 0);
+  const t = document.querySelector('.qtotal b');
+  if (t) t.textContent = sum.toLocaleString() + '만원';
+  quoteSyncBar();
+}
+function quoteClose(){ const h = $("quoteHost"); if (h) h.innerHTML = ''; quoteHideSearch(false); }
+
 function rcard(r, i){
   const p = r.p, d = getDims(p);
   const open = openId === p.id;
@@ -985,6 +1185,8 @@ function rcard(r, i){
         ${p.dimtxt?`<span>${esc(p.dimtxt)}mm${p.dv===false?" ⚠️추정":""}</span>`:""}</div>
       ${(why||aiWhy)?`<div class="rwhy">${aiWhy}${why}</div>`:""}
     </button>
+    <div class="rpick"><button type="button" class="${quotePicks.has(p.id)?'on':''}"
+      onclick="quoteToggle(${p.id})">${quotePicks.has(p.id)?'✓ 견적에 담김':'＋ 견적 담기'}</button></div>
     ${open?rdetail(p):""}
   </div>`;
 }
