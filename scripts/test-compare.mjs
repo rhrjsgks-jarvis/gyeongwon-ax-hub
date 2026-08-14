@@ -656,6 +656,38 @@ function resetUrlTabInputs() {
   }
 
   // ══════════════════════════════════════════
+  // [12] 부정형 값('없음')은 문자열 항목에만 — 2026-08-14 규약
+  // ══════════════════════════════════════════
+  /*
+   * 원문이 "없음"이라고 명시한 것은 값으로 넣는다. 빈 칸으로 두면 **우리가 없는 항목**이
+   * 화면에서 통째로 사라져(비교표는 양쪽에 값이 있어야 행을 그린다) 상담사가 자기 약점을
+   * 못 본다 — 삼성 AX060CG500GBD 는 UV 가 없는데 그 행이 12개 조합 중 10개에서 빠졌다.
+   *
+   * 다만 **수치 비교 항목에 넣으면 비교가 통째로 무너진다.** 우열 판정은 양쪽이 숫자일
+   * 때만 도는데, 한쪽이 문자열이 되면 그 항목은 영영 무승부가 된다. 그 경계를 지킨다.
+   */
+  {
+    const NEG = /^(없음|미지원|미제공)$/;
+    const bad = [];
+    let seen = 0;
+    for (const [cat, v] of Object.entries(DB)) {
+      const all = [...(v.samsung || []), ...Object.values(v.competitors || {}).flat()];
+      for (const mo of all) {
+        for (const [k, val] of Object.entries(mo.specs || {})) {
+          if (!NEG.test(String(val))) continue;
+          seen++;
+          /* 같은 항목에 숫자를 쓰는 모델이 하나라도 있으면 그건 수치 비교 항목이다 */
+          if (all.some((x) => typeof (x.specs || {})[k] === 'number')) {
+            bad.push(`[${cat}] ${k} — 수치 항목에 '${val}' (${String(mo.name).slice(0, 28)})`);
+          }
+        }
+      }
+    }
+    if (bad.length) fail(`[12] 부정형 값 규약 위반 — 수치 비교가 무너진다: ${bad.join(' / ')}`);
+    else console.log(`[12] 부정형 값 ${seen}건 — 전부 문자열 항목 OK`);
+  }
+
+  // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

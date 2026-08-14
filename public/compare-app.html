@@ -1739,7 +1739,7 @@ const DB = {
     samsung:[
       { name:'비스포크 큐브 Air 공기청정기 (60㎡) AX060CG500GBD', price:55, grade:'P',
         on:['극세필터 + 미세먼지 집진필터 + 숯 탈취필터','SmartThings 연동'],
-        specs:{ area:60, as:1, size:'360 × 783 × 318' , eGrade:3, pm:1} },
+        specs:{ area:60, as:1, size:'360 × 783 × 318' , eGrade:3, pm:1, uv:'없음'} },
       { name:'비스포크 AI 공기청정기 (33㎡, UV LED 살균) AP90H03193EGD', grade:'S',
         on:['UV LED 살균','구리 항균 처리 극세필터','PM1.0 / 2.5 / 10 · 가스 · 종합 청정도 표시','부스터 청정'],
         specs:{ area:33, uv:'UV LED', pm:1.0, as:1, size:'320 × 545 × 320' } },
@@ -1767,6 +1767,23 @@ const DB = {
       { key:'price',  label:'가격',        unit:'만원', better:'low',  score:false },
       { key:'area',   label:'청정 면적',    unit:'㎡',  better:'high' },
       { key:'pm',     label:'감지 최소입자', unit:'PM', better:'low'  },
+      /*
+       * **원문이 "없음"이라고 명시한 것은 값으로 넣는다**(2026-08-14 사용자 결정).
+       *
+       * 비교표는 **양쪽에 값이 있어야** 그 행을 그린다. 그래서 빈 칸으로 두면
+       * *우리가 없는 항목*이 화면에서 통째로 사라진다 — 삼성 AX060CG500GBD 는
+       * 원문이 "UV살균 LED = 없음"인데, 비워 두니 LG 의 UV팬살균과 견주는 행이
+       * 12개 조합 중 10개에서 안 그려졌다. **상담사가 자기 약점을 못 본다.**
+       * (타사 카탈로그를 보는 진짜 이유가 "우리 셀링포인트가 사실인지"인데 그에 반한다.)
+       *
+       * 경계 둘을 지킨다:
+       * ① **문자열 항목에만.** `uv`·`voice`·`install`·`disp` 처럼 우열을 수치로 재지
+       *    않는 항목이다. 우열 판정은 **양쪽이 숫자일 때만** 도므로(아래 렌더 참고)
+       *    "없음"이 들어가도 비교가 깨지지 않는다. `eGrade`·`noise` 같은 수치 항목에는
+       *    절대 넣지 말 것 — `better:'low'` 비교가 통째로 무너진다.
+       * ② **원문이 명시한 것만.** "확인 못 했다"와 "실제로 없다"는 다른 말이고,
+       *    이 앱은 전자를 비워 두는 것으로 표현한다. 섞으면 그 구분이 사라진다.
+       */
       { key:'uv',     label:'UV 살균',      unit:'',   better:'high', score:false },
       { key:'eGrade', label:'에너지등급',   unit:'등급', better:'low'  },
       { key:'as',     label:'무상 A/S',    unit:'년',  better:'high' },
