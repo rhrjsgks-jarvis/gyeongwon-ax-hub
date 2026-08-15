@@ -69,7 +69,12 @@
  * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
 /* v66 (2026-08-15) — 도면을 올리면 집 전체를 먼저 잡는다(place-app.html). */
-const CACHE_VERSION = 'axhub-v70';
+/*
+ * v71 (2026-08-16) — 타사비교(compare-app.html)에서 근거 없는 소음 값 9칸을 지우고
+ * 정수기 음성 제어를 채웠다. **v70 을 찍은 뒤에 compare 를 또 고쳐 대조가 걸렸다** —
+ * 위 v17 주석이 적어 둔 그대로, 버전은 덩어리를 다 만든 **맨 마지막에** 한 번 올려야 한다.
+ */
+const CACHE_VERSION = 'axhub-v71';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
