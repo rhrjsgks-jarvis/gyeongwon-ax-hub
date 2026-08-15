@@ -68,8 +68,8 @@
  * 단위·우열 배지를 붙이지 않게 고쳤다. 미니앱은 SWR 이라 여기를 안 올리면
  * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
-/* v63 (2026-08-15) — 등급을 견주는 두 모델 사이에서 낸다(compare-app.html). */
-const CACHE_VERSION = 'axhub-v63';
+/* v64 (2026-08-15) — 공기청정기 비교군을 현행 플래그십으로 교체(compare-app.html). */
+const CACHE_VERSION = 'axhub-v64';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
