@@ -2109,7 +2109,8 @@ var GRADES = ['S', 'A', 'B', 'C', 'D', 'E'];
  * 아니라 **고객이 고른 크기**다. 반대로 77 vs 75 처럼 같은 급끼리는 가려도 된다.
  * 그래서 등급은 카테고리 전체로 매겨 두되 **지금 견주는 두 값이 같은 급일 때만 보여준다.**
  */
-var CHOICE_KEYS = new Set(['size', 'cap', 'area', 'pants', 'burners', 'stages', 'bins', 'storage', 'fridgeCap', 'freezeCap']);
+var CHOICE_KEYS = new Set(['size', 'cap', 'area', 'pants', 'burners', 'stages', 'bins', 'storage',
+                           'fridgeCap', 'freezeCap', 'cam']);
 var SAME_CLASS = 0.90;   // 작은 값 / 큰 값 이 이 비율 이상이면 같은 급 (77/85 = 0.906)
 
 /** 크기 항목에서 두 값이 같은 급인가 — 다르면 등급을 보여주지 않는다 */
@@ -2131,35 +2132,41 @@ var ABS_GRADE = {
  * 그 카테고리의 한 항목에 대해 `값 → 등급` 표를 만든다.
  * `models` 는 삼성 + 경쟁사 전부 — 즉 **이 표에 담긴 모집단 안에서의 상대 등급**이다.
  *
- * 등급은 **순위가 아니라 최고값 대비 비율**로 잡는다. 순위로 매겨 보고 버렸다 —
- * 순위는 "몇 등인가"만 보고 "얼마나 차이 나는가"를 버려서 두 방향으로 다 틀렸다:
- *   · Geekbench **842점과 3,023점이 E 와 D** (3.6배 차이인데 한 칸)
- *   · 카메라 **50MP 와 48MP 가 C 와 E** (거의 같은데 두 칸)
- * 상담에서 필요한 것은 "얼마나 차이 나는가"다.
+ * **등급은 지금 견주는 두 모델 사이에서 낸다**(2026-08-15 사용자 지시:
+ * *"등급은 상대방과 비교했을때 기준으로하면됩니다. 모든 수치를 등급으로 만들어두고
+ * 그냥 불러오는게아닙니다"*).
  *
- * 그래서 `비율 = 값 / 최고값`(낮을수록 좋은 항목은 `최고값 / 값`)을 아래 칸으로 나눈다.
- * 화면에 **범례를 함께 띄운다** — 기준을 모르면 "E급"이 근거 없는 모욕으로 읽힌다.
+ * 카테고리 전체를 모집단으로 미리 만들어 봤다가 버렸다 — 표에 200MP 플래그십이
+ * 하나 있다는 이유로 **50MP 가 E급**이 된다. 상담사가 보는 것은 그 두 모델뿐인데
+ * 화면에 없는 제품이 등급을 좌우하면 안 된다.
+ *
+ * 순위로도 매겨 봤다가 버렸다 — "몇 등인가"만 보고 "얼마나 차이 나는가"를 버려서
+ * Geekbench **842점과 3,023점이 이웃 등급**(3.6배 차이인데)이 됐다.
+ *
+ * 지금 방식: 이긴 쪽이 **S**, 진 쪽은 **얼마나 뒤졌는지**로 등급을 받는다.
+ * 사실상 같으면(97% 이상) 둘 다 S. 화면에 **범례를 함께 띄운다** —
+ * 기준을 모르면 "E급"이 근거 없는 말로 읽힌다.
  */
-var GRADE_CUT = [0.95, 0.85, 0.70, 0.50, 0.30];   // S A B C D 의 하한, 그 아래가 E
+var PAIR_TIE = 0.97;                                   // 이보다 가까우면 둘 다 S
+var PAIR_CUT = [[0.90, 'A'], [0.80, 'B'], [0.65, 'C'], [0.45, 'D']];   // 진 쪽의 등급, 그 아래 E
 
-function gradeMap(models, item) {
-  if (!item || item.score === false || !item.better) return null;   // 우열을 안 매기는 항목
-  if (ABS_GRADE[item.key]) return { abs: ABS_GRADE[item.key] };      // 절대 등급이 있는 항목
-  const vals = [];
-  for (const m of models) {
-    const v = specValue(m, item.key);
-    if (typeof v === 'number' && v > 0) vals.push(v);
-  }
-  if (new Set(vals).size < 2) return null;   // 가를 것이 없으면 등급을 매기지 않는다
-  const best = item.better === 'high' ? Math.max(...vals) : Math.min(...vals);
-  const ratio = (v) => (item.better === 'high' ? v / best : best / v);
-  const grade = (v) => {
-    if (typeof v !== 'number' || v <= 0) return null;
-    const r = ratio(v);
-    for (let i = 0; i < GRADE_CUT.length; i++) if (r >= GRADE_CUT[i]) return GRADES[i];
-    return GRADES[GRADES.length - 1];
-  };
-  return { grade, best, n: new Set(vals).size };
+/** 두 값을 견줘 [삼성 등급, 상대 등급] 을 낸다. 못 매기면 [null, null]. */
+function pairGrades(sv, cv, item) {
+  if (!item || item.score === false || !item.better) return [null, null];  // 우열을 안 매기는 항목
+  const abs = ABS_GRADE[item.key];
+  if (abs) return [abs(sv), abs(cv)];                                      // 절대 등급이 있는 항목
+  if (typeof sv !== 'number' || typeof cv !== 'number' || sv <= 0 || cv <= 0) return [null, null];
+  /* 크기·용량은 급이 다르면 등급을 매기지 않는다 — 고객이 고른 크기이지 열등한 것이 아니다 */
+  if (CHOICE_KEYS.has(item.key) && !sameClass(sv, cv)) return [null, null];
+
+  const high = item.better === 'high';
+  const sWins = high ? sv >= cv : sv <= cv;
+  const better = sWins ? sv : cv, worse = sWins ? cv : sv;
+  const r = high ? worse / better : better / worse;    // 0~1, 1 이면 같다
+  if (r >= PAIR_TIE) return ['S', 'S'];
+  let lose = 'E';
+  for (const [cut, g] of PAIR_CUT) if (r >= cut) { lose = g; break; }
+  return sWins ? ['S', lose] : [lose, 'S'];
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2285,9 +2292,6 @@ function renderResult() {
    * 등급 표는 **항목마다 한 번만** 만든다. 모집단은 이 카테고리의 삼성 + 경쟁사 전부다 —
    * 지금 고른 두 모델만으로는 순위를 매길 수 없다(둘뿐이면 무조건 S 와 E 가 된다).
    */
-  const gradePop = [...(d.samsung || []), ...Object.values(d.competitors || {}).flat()];
-  const gradeMaps = {};
-  items.forEach((it) => { gradeMaps[it.key] = gradeMap(gradePop, it); });
   let rows = `<tr>
     <th style="width:30%">항목</th>
     <th class="samsung-col" style="width:35%">🔵 삼성</th>
@@ -2335,14 +2339,9 @@ function renderResult() {
      *     E 가 되면 안 된다)
      *   · 이름끼리(AP·패널 방식)는 등급을 매기지 않는다 — 잴 수 있는 수치가 없다
      */
-    const gm = gradeMaps[it.key];
-    const classOk = !CHOICE_KEYS.has(it.key) || sameClass(sv, cv);
-    const gradeOf = (v) => {
-      if (it.score === false || unknown || nameTie || !gm || !classOk) return null;
-      if (typeof v !== 'number') return null;
-      return gm.abs ? gm.abs(v) : gm.grade(v);
-    };
-    const gS = gradeOf(sv), gC = gradeOf(cv);
+    const [gS0, gC0] = pairGrades(sv, cv, it);
+    const gS = (unknown || nameTie) ? null : gS0;
+    const gC = (unknown || nameTie) ? null : gC0;
     const badge = (g) => g ? `<span class="badge-grade g-${g}">${g}급</span>` : '';
     const plain = !gS && !gC;   // 등급을 못 매기는 행은 '참고'
     rows += `<tr class="${plain ? 'spec-row-tie' : rowClass}">
@@ -2356,9 +2355,9 @@ function renderResult() {
    * 등급은 이 표에 담긴 같은 카테고리 모델 전체에서 그 항목의 최고값과 견준 비율이다.
    */
   rows += `<tr><td colspan="3" class="grade-legend">
-    등급 = <b>이 표 ${gradePop.length}개 모델 중 최고값 대비</b> ·
-    S 95%↑ · A 85%↑ · B 70%↑ · C 50%↑ · D 30%↑ · E 30%↓
-    <span class="gl-sub">에너지등급은 정부 등급 그대로 · 크기·용량은 같은 급끼리만 ·
+    등급 = <b>이 두 모델을 견준 것</b> — 이긴 쪽 S, 진 쪽은 뒤진 만큼 ·
+    A 90%↑ · B 80%↑ · C 65%↑ · D 45%↑ · E 45%↓ (97% 이상이면 둘 다 S)
+    <span class="gl-sub">에너지등급은 정부 등급 그대로 · 크기·용량·화소는 같은 급끼리만 ·
     이름(칩셋·패널)은 잴 수치가 없어 등급 없음</span>
   </td></tr>`;
   document.getElementById('spec-table').innerHTML = rows;

@@ -927,10 +927,19 @@ function resetUrlTabInputs() {
       const gap = Math.abs(gi(gb[0].grade) - gi(gb[1].grade));
       if (gap < 3) bad.push(`Geekbench 842점 vs 3,023점(3.6배)인데 등급이 ${gb[0].grade}/${gb[1].grade} 로 ${gap}칸뿐 — 순위가 아니라 비율로 매길 것`);
     }
-    /* 거의 같은 값은 같은 등급이어야 한다 (50MP vs 48MP) */
+    /*
+     * 거의 같은 값은 **이웃 등급 안**이어야 한다 (50MP vs 48MP → S/A).
+     * 카테고리 전체를 모집단으로 삼던 시절에는 표에 200MP 가 있다는 이유로 **둘 다 E**
+     * 였다 — 화면에 없는 제품이 등급을 좌우했다. 지금은 견주는 둘 사이에서만 낸다.
+     */
     const cam = r['카메라 화소'];
-    if (cam && cam[0].grade && cam[1].grade && cam[0].grade !== cam[1].grade) {
-      bad.push(`카메라 50MP/48MP 가 ${cam[0].grade}/${cam[1].grade} — 거의 같은 값에 다른 등급`);
+    if (cam && cam[0].grade && cam[1].grade) {
+      const gi = (g) => 'SABCDE'.indexOf(g[0]);
+      const d = Math.abs(gi(cam[0].grade) - gi(cam[1].grade));
+      if (d > 1) bad.push(`카메라 50MP/48MP 가 ${cam[0].grade}/${cam[1].grade} — 거의 같은 값인데 ${d}칸 벌어졌다`);
+      if (gi(cam[0].grade) > 1 || gi(cam[1].grade) > 1) {
+        bad.push(`카메라 50MP/48MP 가 ${cam[0].grade}/${cam[1].grade} — 견주는 둘만 보면 둘 다 상위여야 한다(표의 200MP 가 끼어들면 안 된다)`);
+      }
     }
 
     /* ⓒ 크기: 급이 다르면 등급이 없어야 한다 (TV 97인치 vs 65인치급) */
