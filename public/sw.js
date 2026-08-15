@@ -69,7 +69,7 @@
  * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
 /* v66 (2026-08-15) — 도면을 올리면 집 전체를 먼저 잡는다(place-app.html). */
-const CACHE_VERSION = 'axhub-v66';
+const CACHE_VERSION = 'axhub-v67';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -158,4 +158,10 @@ self.addEventListener('fetch', (e) => {
    * **매장에서 전파가 끊겨도 규격도가 떠야 한다** — 설치 상담에서 정작 필요한 그림이다.
    */
   if (url.pathname.startsWith('/install-img/')) { e.respondWith(cacheFirst(req)); return; }
+  /*
+   * 단지 목록(경기 12개 시 2,969곳)도 캐시를 먼저 보여주고 뒤에서 갱신한다.
+   * 상담 시작이 *"어느 단지 사세요"* 라 이게 안 뜨면 그 자리에서 막힌다 —
+   * 목록이 하루 늦는 것보다 안 열리는 쪽이 훨씬 치명적이다(미니앱과 같은 판단).
+   */
+  if (url.pathname.startsWith('/apt/')) { e.respondWith(swr(req)); return; }
 });

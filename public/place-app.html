@@ -216,7 +216,12 @@
   .chip span{margin-left:6px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
   .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
   .chip.on span{color:rgba(255,255,255,.75)}
-  .libitem{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);
+  /* 도면 없는 단지 — 목록에는 있지만 도면은 못 구한 곳. 있는 것이 먼저 눈에 들어와야
+   하므로 흐리게 둔다. 누르면 도면 올리기로 이어진다. */
+.libitem.noplan{opacity:.72;}
+.libitem.noplan b{font-weight:600;}
+.libitem.noplan .hint b{color:#B45309;}
+.libitem{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);
     border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;font-size:13.5px}
   .libitem:hover{background:#F3F5F8}
   .libitem .ty{color:var(--blue);font-weight:700;margin-left:4px}
@@ -5147,6 +5152,46 @@ function loadFromLibrary(entry){
   toast(`${entry.complex} ${entry.type} — 방 ${entry.rooms.length}곳 불러옴`);
 }
 
+/*
+ * ── 도면 없는 단지 목록 (2026-08-15) ──────────────────────────────
+ *
+ * 라이브러리에는 도면이 있는 139단지만 있었다. 그런데 경원 관할 경기 12개 시에는
+ * **아파트가 2,969곳**이고, 그중 90~2000년대 단지가 1,600여 곳이다 — 고객 대다수가
+ * 사는 그 집들이 목록에 아예 없어서 상담사는 *"그 단지는 없습니다"* 로 시작해야 했다.
+ *
+ * 도면은 못 구한다(실측: 표본 50곳 중 공식 출처가 있는 곳 2곳뿐. 남은 사본은 전부
+ * 약관·저작권으로 막힌 집계 사이트에 있다). **그래도 이름·동·입주년월은 실을 수 있다.**
+ * 그러면 상담사가 *"○○아파트요? 1998년 입주 단지네요"* 로 받고, 도면은 고객에게
+ * 받아 올리면 된다(올리는 즉시 집 전체가 잡힌다).
+ *
+ * 출처: K-apt 공동주택관리정보시스템(국토교통부) — 100세대 이상 **의무 등록**이라
+ * 전수다. 시별로 쪼개 두어 고른 시만 받는다(전체 200KB → 한 시 5~45KB).
+ * 매장 전파가 약해도 열려야 하므로 필요한 것만 받는 것이 이 앱의 규칙이다.
+ */
+var APT_KEY = { 수원:'suwon', 성남:'seongnam', 용인:'yongin', 화성:'hwaseong', 평택:'pyeongtaek',
+                오산:'osan', 안성:'anseong', 이천:'icheon', 광주:'gwangju', 안양:'anyang',
+                광명:'gwangmyeong', 하남:'hanam' };
+var aptCache = {};
+var aptCityCount = {};      // 시 → 아파트 수 (목차만 먼저 받아 목록에 적는다)
+async function loadAptCount(){
+  if (Object.keys(aptCityCount).length) return aptCityCount;
+  try {
+    const r = await fetch('apt/index.json');
+    if (r.ok) for (const c of (await r.json()).cities || []) aptCityCount[c.city] = c.n;
+  } catch {}
+  return aptCityCount;
+}
+async function loadAptList(city){
+  if (aptCache[city]) return aptCache[city];
+  try {
+    /* 파일명은 영문이다 — 한글 경로는 URL 인코딩·서비스워커 캐시에서 조용히 깨진다 */
+    const key = APT_KEY[city]; if (!key) { aptCache[city] = []; return []; }
+    const r = await fetch('apt/' + key + '.json');
+    aptCache[city] = r.ok ? await r.json() : [];
+  } catch { aptCache[city] = []; }
+  return aptCache[city];
+}
+
 let planIndex = null;
 async function loadPlanIndex(){
   if (planIndex) return planIndex;
@@ -5169,7 +5214,7 @@ async function loadPlanIndex(){
  * 그 타입의 방을 전에 저장해 두었다면 도면 없이 방까지 그대로 복원한다.
  */
 async function openLibrary(){
-  const [rawIdx, saved] = await Promise.all([loadPlanIndex(), libraryAll()]);
+  const [rawIdx, saved] = await Promise.all([loadPlanIndex(), libraryAll(), loadAptCount()]);
   /*
    * **도면이 아닌 이미지는 목록에서 뺀다**(2026-08-12 사용자 요청).
    *
@@ -5204,7 +5249,15 @@ async function openLibrary(){
   const uniq = (a) => [...new Set(a)].sort((x, y) => x.localeCompare(y, 'ko'));
   // 도면이 있는 단지 + 방만 저장된 단지를 함께 보여 준다
   const savedOnly = saved.filter((e) => !idx.some((c) => c.complex === e.complex));
-  const regions = () => uniq([...idx.map((c) => c.region), ...savedOnly.map((e) => e.region || '지역 미지정')]);
+  /*
+   * **도면이 한 장도 없는 시도 목록에 남긴다**(2026-08-15). 예전에는 도면 색인에서만
+   * 도시를 뽑아 **하남이 통째로 사라졌다** — 관할 12개 시 중 도면 0장인 곳이 그렇다.
+   * 도시가 목록에 없으면 상담사에게는 *"우리는 그 지역을 안 다룬다"* 로 읽히는데
+   * 그건 사실이 아니다(단지 목록에 하남만 123곳이 있다). 도면 한 장을 빼는 것과
+   * 단지가 목록에서 사라지는 것이 다른 말인 것과 같은 이유다.
+   */
+  const regions = () => uniq([...idx.map((c) => c.region), ...savedOnly.map((e) => e.region || '지역 미지정'),
+    ...Object.keys(aptCityCount).map((c) => '경기 ' + c)]);   /* 색인 표기가 `경기 하남`(시 없음)이다 */
   const inRegion = () => idx.filter((c) => c.region === region);
   const savedIn = (complex) => saved.filter((e) => e.complex === complex);
 
@@ -5244,8 +5297,12 @@ async function openLibrary(){
           + savedOnly.filter((e) => (e.region || '지역 미지정') === r).length;
         // 칩에서 시·도를 이미 골랐으니 목록에는 시·군만 적는다 — 줄이 짧아야 눈에 잘 들어온다
         const shortName = cityOf(r);
+        const withPlan = cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length;
+        /* 그 시의 전체 아파트 수 — 도면이 없어도 목록에는 있다. 목차만 미리 받아 둔다.
+           상담사가 "그 시에 몇 단지가 있나"를 먼저 알아야 없다고 단정하지 않는다. */
+        const allN = (aptCityCount[shortName.replace(/시$/, '')] || 0);
         return `<button class="libitem" data-v="${esc(r)}"><b>${esc(shortName)}</b>
-          <span class="hint">단지 ${cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length}곳 · 도면 ${n}장</span></button>`;
+          <span class="hint">${allN ? `단지 ${allN.toLocaleString()}곳 · ` : `단지 ${withPlan}곳 · `}도면 ${n}장</span></button>`;
       });
     } else if (lv === 'complex') {
       items = inRegion().map((c) => `<button class="libitem" data-id="${esc(c.id)}"><b>${esc(c.complex)}</b>
@@ -5254,6 +5311,23 @@ async function openLibrary(){
       for (const e of savedOnly.filter((x) => (x.region || '지역 미지정') === region)) {
         items.push(`<button class="libitem" data-saved="${esc(e.complex)}"><b>${esc(e.complex)}</b>
           <span class="hint">저장된 방만 있음</span></button>`);
+      }
+      /*
+       * **도면이 없는 단지도 함께 보여준다**(2026-08-15). 경기 12개 시 2,969곳 중
+       * 도면이 있는 것은 139곳뿐이라, 그것만 띄우면 상담사가 대부분의 고객에게
+       * *"그 단지는 없습니다"* 로 시작해야 한다. 이름·동·입주년월만 있어도
+       * 고객 집을 특정하고 평형 상담을 시작할 수 있고, 도면은 받아서 올리면 된다.
+       * 이미 도면이 있는 단지는 위에서 나왔으므로 **이름이 겹치면 뺀다.**
+       */
+      const cityKey = cityOf(region).replace(/시$/, '');
+      const extra = (aptCache[cityKey] || []).filter((a) => {
+        const n = a.n.replace(/\s+/g, '');
+        return !inRegion().some((c) => { const h = c.complex.replace(/\s+/g, ''); return h.includes(n) || n.includes(h); });
+      });
+      for (const a of extra) {
+        const yr = a.y ? `${a.y.slice(0, 4)}년 ${+a.y.slice(4, 6)}월 입주` : '입주년월 미상';
+        items.push(`<button class="libitem noplan" data-apt="${esc(a.n)}" data-yr="${esc(a.y || '')}"><b>${esc(a.n)}</b>
+          <span class="hint">${esc(a.d || '')} · ${esc(yr)} · <b>도면 없음</b> — 고객 도면을 올려 주세요</span></button>`);
       }
     } else {
       items = cx.plans.map((p) => {
@@ -5281,8 +5355,29 @@ async function openLibrary(){
 
     body.querySelectorAll('.libitem').forEach((b) => {
       b.onclick = () => {
-        if (lv === 'region') { region = b.dataset.v; lv = 'complex'; render(); }
+        if (lv === 'region') {
+          region = b.dataset.v; lv = 'complex';
+          /* 그 시의 단지 목록을 받아 둔다(도면 없는 곳까지 보여주기 위해).
+             먼저 그려 두고 도착하면 다시 그린다 — 기다림이 안 보이게. */
+          const ck = (region.split(' ')[1] || region).replace(/시$/, '');
+          render();
+          if (!aptCache[ck]) loadAptList(ck).then(() => { if (lv === 'complex') render(); });
+        }
         else if (lv === 'complex') {
+          if (b.dataset.apt) {
+            /*
+             * **도면 없는 단지** — 단지 이름만 들고 도면 올리기로 보낸다.
+             * 이름을 기억해 두면 결과 이미지·저장에 그 단지로 적힌다(상담지에
+             * 단지명이 없으면 무슨 종이인지 모른다).
+             */
+            state.complexName = b.dataset.apt;
+            state.typeName = null;
+            closeSheet();
+            toast(`${b.dataset.apt} — 도면이 없습니다. 고객 도면을 올려 주세요`);
+            const f = document.getElementById('file');
+            if (f) f.click();
+            return;
+          }
           if (b.dataset.saved) {                       // 도면 없이 방만 저장된 단지
             const e = saved.find((x) => x.complex === b.dataset.saved);
             closeSheet(); if (e) loadFromLibrary(e);
