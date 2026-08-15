@@ -1,4 +1,9 @@
 {
+  "statusLine": {
+    "type": "command",
+    "command": "node .claude/statusline.mjs",
+    "padding": 0
+  },
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -7,6 +12,12 @@
             "type": "command",
             "command": "node",
             "args": ["scripts/agent-lock.mjs", "acquire", "local"],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node",
+            "args": [".claude/status-context.mjs"],
             "timeout": 10
           }
         ]
