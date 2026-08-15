@@ -700,7 +700,14 @@ function resetUrlTabInputs() {
    * 확인한다 — 함수만 부르면 호출부가 그것을 안 쓰게 바뀌어도 통과한다.
    */
   {
-    const UNK = /^(미공개|미상|확인 필요)$/;
+    /*
+     * 판정 목록은 **앱에서 읽어 온다.** 여기 따로 적으면 앱에 표기를 하나 더 넣었을 때
+     * 검사가 그것을 안 보고 조용히 통과한다(실제로 '비대상'을 넣자마자 어긋났다).
+     */
+    const UNK = window.UNKNOWN_SPEC;
+    /* `instanceof RegExp` 로 보면 안 된다 — jsdom 안에서 만든 정규식은 **다른 realm** 의
+       객체라 Node 쪽 RegExp 의 인스턴스가 아니다(항상 거짓이 된다). 동작으로 확인한다. */
+    if (typeof UNK?.test !== 'function') fail('[13] UNKNOWN_SPEC 을 앱에서 못 읽음 — 이름이 바뀌었는지 확인할 것');
     /* 미공개 값이 실제로 있는 (카테고리, 항목) 을 데이터에서 찾는다 */
     const targets = [];
     for (const [cat, v] of Object.entries(DB)) {

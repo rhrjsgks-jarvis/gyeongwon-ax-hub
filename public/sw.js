@@ -62,7 +62,13 @@
  * **버전은 덩어리를 다 만든 맨 마지막에 한 번 올린다.** 중간에 찍어 두면 그 뒤에 고친
  * 미니앱이 옛 캐시로 남고, 아래 test-consistency 의 대조가 바로 그것을 잡는다.
  */
-const CACHE_VERSION = 'axhub-v56';
+/*
+ * v57 (2026-08-15) — 타사비교(compare-app.html) 가 바뀌었다.
+ * 스마트폰에 AP·RAM·저장공간을 넣고, 값을 모르는 항목("미공개"·"비대상")에
+ * 단위·우열 배지를 붙이지 않게 고쳤다. 미니앱은 SWR 이라 여기를 안 올리면
+ * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
+ */
+const CACHE_VERSION = 'axhub-v57';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
