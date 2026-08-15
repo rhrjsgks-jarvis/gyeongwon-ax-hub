@@ -662,7 +662,9 @@ const DB = {
   /* 2026-07-21 브랜드별 라인업 확장 리서치: 삼성 콤보 2종을 정확한 실제 모델(WD25DB8695BC 320만원·
      WD25DB8995BZ 430만원, 소음 51.7dB는 삼성전자서비스 스펙시트로 확인)로 교체하고 단독세탁기 3종 추가.
      LG는 기존 "FX25GSB"가 실존 모델코드가 아니라 실제 워시콤보 라인(FH25ESE/FH25ESEFX)으로 교체,
-     단독세탁기 2종(FX21GAC·FX25GNC) 추가. 표시 안 된 noise는 콤보 확인값(51.7dB)을 잠정 준용 — 재검증 필요.
+     단독세탁기 2종(FX21GAC·FX25GNC) 추가.
+     ※ 이때 "표시 안 된 noise는 콤보 확인값(51.7dB)을 잠정 준용" 했던 것을 2026-08-15 전수 재검증해
+       **근거가 확인된 모델만 남기고 9칸을 지웠다** — 아래 '소음(noise) 근거' 주석 참조.
      출처: samsung.com(WD25DB8695BC, WD25DB8995BZ), samsungsvc.co.kr 스펙시트(51.7dB),
      lge.co.kr(fh25ese, fh25esefx, fx25wac 페이지)
      2026-07-22 리서치: 삼성이 2026년형 "비스포크 AI 콤보 프리히트"를 국내 일체형 세탁건조기 중
@@ -675,6 +677,27 @@ const DB = {
      콤보의 실제 채번이며, 'WD25'는 오기/미확인 코드였던 것으로 판단. 실존 확인된 2026년형 코드로 교체:
      7형 LCD 상위 트림 WD90H25AHS(430만~429.9만원), 기본형(다이얼 조작) WD90H25BHY(319.9만원대)로 정정.
      출처: samsung.com/sec/laundry-combo/combo-wd90h25ahs-d2c, danawa.com, news.samsung.com(2026-03-26) */
+  /* ── 소음(noise) 근거 — 2026-08-15 전수 재검증. **모델 계열 각주가 있는 것만 싣는다.**
+     한 모델에서 확인한 51.7dB 이 세탁기 9칸·건조기 4칸으로 번져 있었고, 그중에는
+     **LG 6칸**도 있었다. 우열 판정은 양쪽이 숫자일 때만 도므로 화면은 근거 없이
+     "소음 동급"이라고 말하고 있었다. 게다가 원 출처로 적힌 WD25DB8995BZ 는 위 2026-07-29
+     주석이 밝힌 대로 **실존이 확인되지 않은 코드**다.
+
+     남긴 것 — 삼성 제품 지면 각주에 **모델 계열과 시험 조건이 함께** 적힌 것:
+       · WD**H25***  = 51.7dB(A)  3.6kg 표준코스(세탁만)·강 탈수, KS C 9608:2013 자사 시험
+                       → WD90H25AHS · WD90H25BHY (세탁기·건조기 양쪽)
+       · WF25CB***** = 51.7dB     3.6kg 표준코스·탈수레벨 4, Intertek 검증
+                       → WF25CB8895BV
+     지운 것 —
+       · 삼성 WF21CB6650BW · WF21DG6650BW : 제품 지면에 소음 수치가 없다(21kg 계열 각주 없음)
+       · LG 전 모델 : **LG 사양표에는 소음 항목 자체가 없다**(FC2521SX6C 44행 · FX24ENER 63행 ·
+         FH25ESEFX 66행 라벨 전수 확인, `.scratch/lg-spec-api.mjs`). LG 에어컨과 같다.
+         WTK14VG2BGA 의 49dB 은 출처가 없고 LG 검색에도 그 코드가 없다.
+     그 결과 이 두 카테고리의 소음 행은 **그려지지 않는다** — 한쪽만 값이 있기 때문이고,
+     그것이 정직한 상태다. 수치 항목에는 '없음'을 넣지 않는다(그러면 영영 무승부가 된다).
+     출처: samsung.com/sec/laundry-combo/combo-wd90h25ahs-d2c(WD**H25*** 각주) ·
+           samsung.com/sec/washing-machines/wf25cb8895bg-d2c(WF25CB***** 각주) ·
+           samsung.com/sec/support/model/WD90H25AHS·WF25CB8895BV(지원 페이지에는 소음 항목 없음) */
   '세탁기·콤보': {
     emoji:'🫧',
     samsung:[
@@ -689,10 +712,10 @@ const DB = {
         specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7, size:'686 × 984 × 875' } },
       { name:'BESPOKE 그랑데 AI 세탁기 (21kg) WF21CB6650BW', price:125, grade:'S',
         on:['AI 맞춤세탁','앱연동','AI 절약모드','강화유리 도어'],
-        specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7, size:'686 × 984 × 796' } },
+        specs:{ wash:21, dry:0, eGrade:1, as:1, size:'686 × 984 × 796' } },
       { name:'AI 세탁기 (21kg) WF21DG6650BW', price:87, grade:'B',
         on:['AI 세탁','AI 절약모드','DD모터','워터샷','버블워시'],
-        specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 , size:'686 × 984 × 796'} }
+        specs:{ wash:21, dry:0, eGrade:1, as:1, size:'686 × 984 × 796'} }
     ],
     competitors:{
       /* 2026-08-03 LG 베스트샵 카탈로그(107~110쪽 워시콤보 / 세탁기 지면) 대조.
@@ -715,19 +738,19 @@ const DB = {
           specs:{ wash:24, dry:0, eGrade:1, as:1, size:'700 × 990 × 830' } },
         { name:'트롬 오브제컬렉션 세탁기 (21kg) FX21GAC', price:183,
           on:['AI 세탁','인버터DD','6모션','5방향터보샷','통살균'],
-          specs:{ wash:21, dry:0, eGrade:1, as:1, noise:51.7 , size:'700 × 990 × 770'} },
+          specs:{ wash:21, dry:0, eGrade:1, as:1, size:'700 × 990 × 770'} },
         { name:'트롬 오브제컬렉션 세탁기 (25kg) FX25GNC', price:198,
           on:['AI 세탁','인버터DD','6모션','통살균'],
-          specs:{ wash:25, dry:0, eGrade:1, as:1, noise:51.7 , size:'700 × 990 × 830'} },
+          specs:{ wash:25, dry:0, eGrade:1, as:1, size:'700 × 990 × 830'} },
         { name:'워시타워 컴팩트 (세탁14+건조10kg) WTK14VG2BGA', price:149,
           on:['에이센스 AI','ThinQ 연동'],
-          specs:{ wash:14, dry:10, eGrade:1, as:1, noise:49 } },
+          specs:{ wash:14, dry:10, eGrade:1, as:1 } },
         { name:'트롬 오브제컬렉션 워시콤보 (세탁25+건조15kg) FH25ESE', price:445,
           on:['AI 세탁건조','트루스팀살균','통살균케어','6모션'],
-          specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7, size:'700 × 990 × 830' } },
+          specs:{ wash:25, dry:15, eGrade:1, as:1, size:'700 × 990 × 830' } },
         { name:'트롬 오브제컬렉션 워시콤보+미니워시 (세탁25+건조15kg) FH25ESEFX', price:517,
           on:['AI 세탁건조','트루스팀살균','미니워시 4kg 별도','6모션'],
-          specs:{ wash:25, dry:15, eGrade:1, as:1, noise:51.7 } }
+          specs:{ wash:25, dry:15, eGrade:1, as:1 } }
       ]
     },
     specItems:[
@@ -1414,10 +1437,10 @@ const DB = {
           specs:{ cap:21, eGrade:1, as:1, size:'700 × 1,360 × 885' } },
         { name:'LG 트롬 오브제컬렉션 워시콤보 (일체형, 세탁25+건조15kg) FH25ESE', price:445,
           on:['AI 세탁건조','트루스팀살균','통살균케어','6모션'],
-          specs:{ cap:15, eGrade:1, as:1, noise:51.7, size:'700 × 990 × 830' } },
+          specs:{ cap:15, eGrade:1, as:1, size:'700 × 990 × 830' } },
         { name:'LG 트롬 오브제컬렉션 워시콤보+미니워시 (일체형, 세탁25+건조15kg) FH25ESEFX', price:517,
           on:['AI 세탁건조','트루스팀살균','미니워시 4kg 별도','6모션'],
-          specs:{ cap:15, eGrade:1, as:1, noise:51.7 } }
+          specs:{ cap:15, eGrade:1, as:1 } }
       ]
     },
     specItems:[

@@ -1008,6 +1008,48 @@ function resetUrlTabInputs() {
     else console.log('[17] S~E 등급 — 이름 무등급 · 비율 반영 · 크기 같은 급만 · 범례 OK');
   }
 
+  /*
+   * [18] 소음(dB) — **모델 계열 각주가 있는 것만** (2026-08-15)
+   *
+   * 한 모델에서 확인한 51.7dB 이 세탁기 9칸·건조기 4칸으로 번져 있었고 그중 6칸이 LG 였다.
+   * **LG 사양표에는 소음 항목 자체가 없어**(라벨 전수 확인) 그 값은 출처가 존재할 수 없다.
+   * 우열 판정은 양쪽이 숫자일 때만 도므로, 화면은 근거 없이 "소음 동급"이라고 말하고 있었다.
+   * 게다가 원 출처로 적힌 WD25DB8995BZ 는 앞선 재검증에서 **실존이 확인되지 않은 코드**였다.
+   *
+   * 그래서 "누가 또 잠정 준용하는 것"을 여기서 막는다. 값을 되살리려면 **그 모델 계열의
+   * 각주**를 찾아 여기 골든에 함께 등재할 것 — 옆 모델 값을 옮겨 적는 것은 이 검사가 막는다.
+   * (로봇청소기 22,000Pa 를 옆 모델에 옮기지 않는 것과 같은 규칙이다.)
+   */
+  {
+    /* 소음 값을 가져도 되는 모델 = 제품 지면 각주에 계열과 시험 조건이 함께 적힌 것 */
+    const NOISE_OK = {
+      'WD90H25AHS': 51.7,   // WD**H25***  3.6kg 표준코스(세탁만)·강 탈수, KS C 9608:2013
+      'WD90H25BHY': 51.7,   // 같은 계열
+      'WF25CB8895BV': 51.7, // WF25CB*****  3.6kg 표준코스·탈수레벨 4, Intertek 검증
+    };
+    const bad = [];
+    let kept = 0;
+    for (const cat of ['세탁기·콤보', '건조기']) {
+      const c = DB[cat];
+      if (!c) { bad.push(`${cat} 카테고리가 사라졌다`); continue; }
+      const sam = (c.samsung || []).map((m) => ['삼성', m]);
+      const comp = Object.values(c.competitors || {}).flat().map((m) => ['타사', m]);
+      for (const [side, m] of [...sam, ...comp]) {
+        const v = (m.specs || {}).noise;
+        if (v === undefined || v === null || v === '') continue;
+        /* 이름 끝에 모델코드가 붙어 있다 */
+        const hit = Object.keys(NOISE_OK).find((code) => String(m.name).includes(code));
+        if (!hit) {
+          bad.push(`[${cat}] ${side} ${m.name} — 소음 ${v}dB 의 근거 각주가 등재돼 있지 않다`);
+        } else if (NOISE_OK[hit] !== v) {
+          bad.push(`[${cat}] ${m.name} — 소음 ${v}dB ≠ 각주값 ${NOISE_OK[hit]}dB`);
+        } else kept++;
+      }
+    }
+    if (bad.length) fail(`[18] 근거 없는 소음 값: ${bad.join(' / ')}`);
+    else console.log(`[18] 소음 — 근거 각주가 있는 ${kept}칸만 남아 있음 OK (LG 는 사양표에 소음 항목이 없다)`);
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
