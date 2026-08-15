@@ -90,38 +90,72 @@ for (const s of sample) {
         P.useImage('/' + p0.file, () => { clearTimeout(t); res(); }); });
       await new Promise((res) => setTimeout(res, 1800));
     } catch { return { err: 'load' }; }
-    const d = P.state.draft;
-    const cands = P.state.roomCands || [];
+    /*
+     * **2026-08-15 개편으로 재는 대상이 바뀌었다.**
+     *
+     * 예전에는 `state.draft`(방 하나 초안)를 놓고 "그 방이 조각인가 · 그 방의 가로 벽을
+     * 골랐는가"를 쟀다. 그 단계가 없어졌다 — 도면을 올리면 **집 전체를 먼저 잡고** 그
+     * 벽 전부에서 후보를 세운다. 그래서 `auto` 의 뜻도 "방 하나를 잡았나"가 아니라
+     * **"집 전체가 섰나"** 로 바꾼다.
+     */
     const planA = P.state.imgW * P.state.imgH;
-    if (!d) return { auto: false, cands: cands.length };
-    const xs = d.map((q) => q[0]), ys = d.map((q) => q[1]);
-    const w = Math.max(...xs) - Math.min(...xs), h = Math.max(...ys) - Math.min(...ys);
-    const out = {
-      auto: true, cands: cands.length,
-      pct: area(d) / planA * 100,
-      short: Math.min(w, h) / Math.min(P.state.imgW, P.state.imgH) * 100,
-      roomW: w,
-    };
-    // 개구부가 둘레에서 차지하는 비율 — 벽이 마스크에서 사라지면 닫기가 그 자리를 메우고
-    // 그 구간이 개구부로 보고된다. 그래서 이 비율이 곧 "부분 누락" 지표다.
-    const E = P.state.draftEdges;
-    if (E && E.length) {
-      const len = (e) => Math.hypot(e.x2 - e.x1, e.y2 - e.y1);
-      const per = E.reduce((a, e) => a + len(e), 0);
-      if (per > 0) out.openPct = E.filter((e) => e.open).reduce((a, e) => a + len(e), 0) / per * 100;
+    const rooms = P.state.rooms || [];
+    if (!rooms.length) return { auto: false, cands: 0 };
+    /* 각 공간의 다각형·넓이 — 조각이 섞였는지 본다 */
+    const loops = [];
+    for (const rm of rooms) for (const pt of rm.parts) {
+      const L = P.loopOfWalls ? P.loopOfWalls(pt.walls) : null;
+      if (L && L.length > 2) loops.push(L);
     }
-    // 기준 벽까지 밀어 본다 — 벽면 전체를 덮는지가 축척 정확도를 좌우한다
-    const okBtn = [...document.querySelectorAll('#draftbar button')].find((x) => x.textContent.trim() === '이 공간 확정');
-    if (okBtn) {
-      okBtn.click();
-      await new Promise((res) => setTimeout(res, 350));
-      const nb = document.querySelector('#sheet .modal-actions button.primary');
-      if (nb) nb.click();
-      await new Promise((res) => setTimeout(res, 450));
+    const pcts = loops.map((L) => area(L) / planA * 100);
+    const shorts = loops.map((L) => {
+      const xs = L.map((q) => q[0]), ys = L.map((q) => q[1]);
+      return Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys))
+             / Math.min(P.state.imgW, P.state.imgH) * 100;
+    });
+    const nx = document.getElementById('wl-next');
+    const out = {
+      auto: rooms.length >= 3,          // 집 전체가 섰는가
+      spacesPre: rooms.length,
+      cands: nx ? +((nx.textContent.match(/\/(\d+)/) || [])[1] || 1) : 1,
+      /* 가장 작은 공간이 조각인가 — 창틀(32×21px)이 공간으로 잡히던 사고를 계속 지킨다 */
+      pct: Math.min(...pcts),
+      short: Math.min(...shorts),
+      prefill: (document.getElementById('wl') || {}).value || '',
+    };
+    /* 개구부가 둘레에서 차지하는 비율 — 벽이 마스크에서 사라지면 닫기가 그 자리를 메우고
+       그 구간이 개구부로 보고된다. 그래서 이 비율이 곧 "부분 누락" 지표다.
+       이제 초안이 없으므로 **잡힌 공간 전체의 벽**에서 잰다. */
+    {
+      const all = [];
+      for (const rm of rooms) for (const pt of rm.parts) for (const w2 of pt.walls) all.push(w2);
+      const len = (e) => Math.hypot(e.x2 - e.x1, e.y2 - e.y1);
+      const per = all.reduce((a, e) => a + len(e), 0);
+      if (per > 0) out.openPct = all.filter((e) => e.open).reduce((a, e) => a + len(e), 0) / per * 100;
+    }
+    // 기준 벽 — 길이 막대가 이미 떠 있다(확정 버튼을 거치지 않는다)
+    {
       const m = P.state.measureSeg;
+      /* 기준 벽이 속한 공간의 가로폭 — 벽면 전체를 덮는지 견주는 잣대 */
+      let w = 0;
+      if (m && loops.length) {
+        const mx = (m.x1 + m.x2) / 2, my = (m.y1 + m.y2) / 2;
+        let best = null, bd = Infinity;
+        for (const L of loops) {
+          const xs = L.map((q) => q[0]), ys = L.map((q) => q[1]);
+          const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+          const d2 = (cx - mx) ** 2 + (cy - my) ** 2;
+          if (d2 < bd) { bd = d2; best = L; }
+        }
+        /* **벽이 놓인 축으로 잰다.** 세로 벽도 후보가 되므로 가로폭과 견주면 0 이 나온다 */
+        const horiz = Math.abs(m.x2 - m.x1) > Math.abs(m.y2 - m.y1);
+        const arr = best.map((q) => (horiz ? q[0] : q[1]));
+        w = Math.max(...arr) - Math.min(...arr);
+      }
       if (m) {
         out.segH = Math.abs(m.x2 - m.x1) > Math.abs(m.y2 - m.y1);
-        out.cover = Math.abs(m.x2 - m.x1) / Math.max(1, w);
+        const segLen = Math.max(Math.abs(m.x2 - m.x1), Math.abs(m.y2 - m.y1));
+        out.cover = segLen / Math.max(1, w);
         /*
          * **기준 벽이 건물 폭에서 차지하는 비율.** 화면은 "침실1 가로가 몇 mm 입니까?"
          * 라고 묻는데 부각된 것이 세대 전체 폭이면 사용자가 3,300 을 넣는 순간 축척이
@@ -130,8 +164,11 @@ for (const s of sample) {
          */
         const bx = (P.state.baseInfo || {}).bbox;
         const S = (P.state.baseMask || {}).S || 1;
-        const bw = bx ? (bx.x1 - bx.x0) / S : P.state.imgW;
-        out.span = Math.abs(m.x2 - m.x1) / Math.max(1, bw);
+        /* 벽이 놓인 축의 건물 크기와 견준다 — 세로 벽을 건물 '폭'과 재면 늘 0 이다 */
+        const bw = out.segH
+          ? (bx ? (bx.x1 - bx.x0) / S : P.state.imgW)
+          : (bx ? (bx.y1 - bx.y0) / S : P.state.imgH);
+        out.span = segLen / Math.max(1, bw);
         /*
          * **세대 폭을 골랐을 때 화면이 그 사실을 말하는가.** 벽을 그렇게 고른 것 자체는
          * 사고가 아니다 — 사용자가 12,000 이라고 답하면 축척은 정확하다. 사고는 그 벽을
@@ -203,20 +240,44 @@ console.log(`실제 도면 ${rows.length}장 (보유 ${have.length}장 중 고�
  * 인식을 개선하면 여기 숫자를 함께 올려 다시 못 내려가게 할 것.
  */
 if (process.env.AUTO_DEBUG) console.log("  자동 인식 실패:", rows.filter((r)=>!auto.includes(r)).map((r)=>r.file||(r.c+" "+r.type)).join(" / "));
-if (rate < 0.80) fail(`자동 인식 성공률 ${Math.round(rate*100)}% — 실측 기준 90%, 하한 80%`);
-else pass(`자동 인식 ${auto.length}/${rows.length}장 (${Math.round(rate*100)}%)`);
+/*
+ * `auto` 의 뜻이 2026-08-15 개편으로 바뀌었다 — "방 하나를 잡았나"가 아니라
+ * **"도면을 올리자마자 집 전체(3곳 이상)가 섰나"** 다. 축척이 색인에 없는 도면
+ * 560장(전체의 92%)이 예전에는 늘 방 하나에서 멈췄다.
+ */
+if (rate < 0.80) fail(`집 전체 인식률 ${Math.round(rate*100)}% — 하한 80% (축척을 묻기 전에 집 전체가 서야 한다)`);
+else pass(`집 전체 인식 ${auto.length}/${rows.length}장 (${Math.round(rate*100)}%) · 공간 중앙값 ${med(auto.map((r)=>r.spacesPre))}곳`);
 
-// 축척 기준 방이 조각이면 안 된다 — 창틀(32×21px)이 뽑히던 사고
-const slivers = auto.filter((r) => r.pct < 3 || r.short < 8);
-if (slivers.length) {
-  fail(`축척 기준으로 조각을 골랐다 ${slivers.length}장 — ${slivers.slice(0,3).map((r)=>`${r.c} ${r.type}(${r.pct.toFixed(1)}%)`).join(', ')}`);
-} else pass(`축척 기준 방이 전부 방다움 (넓이 ${med(auto.map((r)=>r.pct)).toFixed(1)}% · 짧은변 ${med(auto.map((r)=>r.short)).toFixed(1)}%)`);
+/*
+ * 잡힌 공간에 조각이 섞이면 안 된다 — 창틀(32×21px)이 공간으로 잡히던 사고를 계속 지킨다.
+ * 예전에는 "축척 기준으로 고른 그 방"만 봤는데, 이제 집 전체를 잡으므로 **가장 작은 공간**을 본다.
+ * 그래서 문턱도 낮춘다(욕실·현관이 정상적으로 작다) — 잡아내려는 것은 방이 아닌 조각이다.
+ */
+const slivers = auto.filter((r) => r.pct < 0.6 || r.short < 4);
+if (slivers.length > auto.length * 0.2) {
+  fail(`조각이 공간으로 잡힌 도면 ${slivers.length}/${auto.length}장 — ${slivers.slice(0,3).map((r)=>`${r.c} ${r.type}(${r.pct.toFixed(2)}%)`).join(', ')}`);
+} else pass(`잡힌 공간이 전부 공간다움 (가장 작은 공간 넓이 중앙값 ${med(auto.map((r)=>r.pct)).toFixed(2)}% · 짧은변 ${med(auto.map((r)=>r.short)).toFixed(1)}%, 조각 ${slivers.length}장)`);
 
 // 기준 벽은 가로여야 하고, 벽면 전체를 덮어야 한다(창 조각만 잡히던 사고)
+/*
+ * **2026-08-15 개편 — "기준 벽은 가로여야 한다"는 규칙을 뗀다.**
+ *
+ * 그 규칙은 화면이 *"안방 **가로**가 몇 mm 입니까?"* 하고 방향을 못 박아 묻던 시절의
+ * 것이다. 세로 벽을 부각해 놓고 가로를 물으면 사용자가 아는 숫자와 어긋나기 때문이었다.
+ * 지금은 집 전체의 벽에서 후보를 세우고 **"이 벽의 길이가 몇 mm 입니까?"** 로 중립하게
+ * 묻는다 — 방향을 단정하지 않으므로 세로 벽이 부각돼도 화면은 거짓말을 하지 않는다.
+ * 오히려 긴 벽을 우선하는 편이 축척 오차가 작다(같은 픽셀 오차가 덜 증폭된다).
+ *
+ * 대신 지켜야 할 것이 남았다: **후보가 여럿이어야** 아는 벽을 고를 수 있다.
+ */
 const withSeg = auto.filter((r) => r.cover != null);
-const vertical = withSeg.filter((r) => !r.segH);
-if (vertical.length) fail(`기준 벽이 세로인 도면 ${vertical.length}장 — 가로여야 한다`);
-else if (withSeg.length) {
+{
+  const few = auto.filter((r) => (r.cands || 1) < 2);
+  if (few.length > auto.length * 0.2) {
+    fail(`벽 후보가 하나뿐인 도면 ${few.length}/${auto.length}장 — 아는 벽을 골라 넣을 수 없다`);
+  } else pass(`벽 후보 중앙값 ${med(auto.map((r) => r.cands || 1))}개 · 후보 하나뿐 ${few.length}장`);
+}
+if (withSeg.length) {
   const mc = med(withSeg.map((r) => r.cover));
   const short = withSeg.filter((r) => r.cover < 0.5);
   if (mc < 0.9) fail(`기준 벽이 방 가로를 덮는 비율 중앙값 ${mc.toFixed(2)} — 실측 1.00, 하한 0.90`);

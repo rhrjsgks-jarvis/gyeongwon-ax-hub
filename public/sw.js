@@ -68,8 +68,8 @@
  * 단위·우열 배지를 붙이지 않게 고쳤다. 미니앱은 SWR 이라 여기를 안 올리면
  * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
-/* v65 (2026-08-15) — 타사비교 가격 행 제거 · 구독케어 무상수리 기간 정정. */
-const CACHE_VERSION = 'axhub-v65';
+/* v66 (2026-08-15) — 도면을 올리면 집 전체를 먼저 잡는다(place-app.html). */
+const CACHE_VERSION = 'axhub-v66';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

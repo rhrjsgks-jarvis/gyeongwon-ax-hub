@@ -946,43 +946,39 @@ const knownGaps = [];
     const area = (poly) => { let a = 0; for (let i = 0; i < poly.length; i++){ const [x1,y1]=poly[i],[x2,y2]=poly[(i+1)%poly.length]; a += x1*y2-x2*y1; } return Math.abs(a)/2; };
     const bb = (poly) => { const xs = poly.map((q)=>q[0]), ys = poly.map((q)=>q[1]);
       return { w: Math.max(...xs)-Math.min(...xs), h: Math.max(...ys)-Math.min(...ys), x1: Math.min(...xs) }; };
-    const d = P.state.draft;
-    const out = {
-      cands: (P.state.roomCands || []).map((c) => Math.round(c.a)),
-      candIdx: P.state.candIdx,
-      draft: d ? { a: Math.round(area(d)), w: Math.round(bb(d).w), h: Math.round(bb(d).h), x1: Math.round(bb(d).x1) } : null,
-      hasNext: !!document.querySelector('#d-next'),
+    const m = P.state.measureSeg;
+    const bar = document.getElementById('draftbar');
+    const nx = document.getElementById('wl-next');
+    return {
+      rooms: P.state.rooms.length,
+      areas: P.state.rooms.map((rm) => Math.round(P.roomArea ? P.roomArea(rm) : 0)),
+      scaled: !!P.state.scaled,
+      barOn: !!(bar && bar.classList.contains('on')),
+      barText: bar ? (bar.innerText || '').replace(/\s+/g, ' ').slice(0, 60) : '',
+      hasLen: !!document.getElementById('wl'),
+      prefill: (document.getElementById('wl') || {}).value,
+      candN: nx ? +((nx.textContent.match(/\/(\d+)/) || [])[1] || 0) : 0,
+      seg: m ? { dx: Math.round(Math.abs(m.x2 - m.x1)), dy: Math.round(Math.abs(m.y2 - m.y1)) } : null,
     };
-    // 확정 → 이름 → 길이 묻기까지 가서 실제 기준 벽을 본다
-    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => x.textContent.trim() === '이 공간 확정');
-    if (ok) {
-      ok.click();
-      await new Promise((res) => setTimeout(res, 500));
-      const nb = document.querySelector('#sheet .modal-actions button.primary');
-      if (nb) nb.click();
-      await new Promise((res) => setTimeout(res, 600));
-      const m = P.state.measureSeg;
-      if (m) out.seg = { dx: Math.round(Math.abs(m.x2 - m.x1)), dy: Math.round(Math.abs(m.y2 - m.y1)) };
-    }
-    return out;
   });
 
-  if (!r.draft) fail('도면을 올렸는데 초안이 안 잡혔다');
-  else if (r.cands.length < 2) fail(`후보 방이 ${r.cands.length}개 — 넘겨 고를 수 있어야 한다`);
-  else if (r.cands.some((a, i) => i && a > r.cands[i - 1])) fail(`후보가 넓은 순이 아니다: ${r.cands}`);
-  else if (r.candIdx === 0) {
-    fail(`가장 넓은 방(거실 ${r.cands[0]}px²)을 기준으로 잡았다 — 안방이어야 한다`);
-  } else if (r.draft.x1 < 400) {
-    fail(`왼쪽 거실(x=${r.draft.x1})을 잡았다 — 오른쪽 안방이어야 한다`);
-  } else if (Math.max(r.draft.w, r.draft.h) / Math.min(r.draft.w, r.draft.h) >= 2) {
-    fail(`잡은 방이 길쭉하다 (${r.draft.w}×${r.draft.h}) — 네모난 안방을 골라야 한다`);
-  } else if (!r.hasNext) fail("'다른 방 ▸' 버튼이 없다 — 자동이 틀렸을 때 바로잡을 수 없다");
-  else if (!r.seg) fail('길이 묻기 단계에서 기준 벽이 표시되지 않았다');
-  else if (r.seg.dx <= r.seg.dy) {
-    fail(`기준 벽이 세로다 (Δx ${r.seg.dx} · Δy ${r.seg.dy}) — 가로 벽이어야 한다`);
-  } else {
-    pass(`축척 기준 = 안방의 가로 벽 — 후보 ${r.cands.length}곳 중 ${r.candIdx + 1}번(${r.draft.w}×${r.draft.h}, 네모)을 잡고 `
-      + `가로 벽 ${r.seg.dx}px 를 잰다 (거실 ${r.cands[0]}px² 는 건너뜀)`);
+  /*
+   * 2026-08-15 개편 전에는 여기서 **"안방을 기본 기준 방으로 골랐는가"** 를 봤다.
+   * 그 기준 자체가 사라졌다 — 축척을 방마다 묻지 않고 **집 전체를 먼저 잡은 뒤
+   * 그 벽 전부에서 후보를 세우기** 때문이다(사용자 요청). 새 계약을 검사한다.
+   */
+  if (r.rooms < 3) fail(`도면을 올렸는데 공간이 ${r.rooms}곳뿐이다 — 집 전체가 서야 한다 (${r.areas})`);
+  else if (r.scaled) fail('축척을 묻기도 전에 확정돼 있다');
+  else if (!r.barOn || !r.hasLen) fail(`길이 묻는 막대가 안 떴다 — "${r.barText}"`);
+  else if (r.candN < 2) fail(`벽 후보가 ${r.candN}개 — 아는 벽을 골라 넣을 수 있어야 한다`);
+  else if (r.prefill) {
+    /* 어느 방 벽인지 단정할 수 없으므로 예시 치수를 미리 채우면 안 된다 —
+       그대로 확정을 눌러 축척이 통째로 틀어진다(현관 벽에 3,600 이 들어간 적이 있다) */
+    fail(`길이 칸에 ${r.prefill} 이 미리 채워져 있다 — 집 전체 후보는 방을 단정할 수 없다`);
+  } else if (!r.seg) fail('어느 벽을 재는지 도면에 표시되지 않았다');
+  else {
+    pass(`도면을 올리면 집 전체 — 공간 ${r.rooms}곳(${r.areas}) · 벽 후보 ${r.candN}개 · `
+      + `기본 벽 ${Math.max(r.seg.dx, r.seg.dy)}px 표시 · 예시 치수 미채움`);
   }
 }
 
@@ -1077,15 +1073,9 @@ const knownGaps = [];
     g.beginPath(); g.moveTo(520, 350); g.lineTo(820, 350); g.stroke();
     const url = c.toDataURL();
     await new Promise((res) => { const im = new Image(); im.onload = () => { P.useImage(url); setTimeout(res, 900); }; im.src = url; });
-    await new Promise((res) => setTimeout(res, 1200));   // 자동 인식이 끝나기를 기다린다
-
-    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => x.textContent.trim() === '이 공간 확정');
-    if (!ok) return { step: '초안 막대에 확정 버튼이 없다' };
-    ok.click();
-    await new Promise((res) => setTimeout(res, 500));
-    const nameOk = document.querySelector('#sheet .modal-actions button.primary');
-    if (nameOk) nameOk.click();
-    await new Promise((res) => setTimeout(res, 500));
+    /* 2026-08-15 개편 — 도면을 올리면 집 전체를 잡고 곧바로 길이 막대가 뜬다
+       (예전의 [초안 → 이 공간 확정 → 이름] 단계는 없어졌다) */
+    await new Promise((res) => setTimeout(res, 2600));
 
     const wl = document.querySelector('#wl');
     if (!wl) return { step: '길이 입력칸이 안 뜬다' };
@@ -2316,17 +2306,16 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const P = window.__place;
     await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('load')), 9000);
       P.useImage('/plans/c39/84.jpg', () => { clearTimeout(t); res(); }); });
-    await new Promise((res) => setTimeout(res, 2200));
-    if (!P.state.draft) return { err: '도면을 올렸는데 초안이 안 잡혔다' };
-    /* 이 공간 확정 → 이름 확정 → 벽 길이 입력 → 확정 */
-    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => /이 공간 확정/.test(x.textContent));
-    if (!ok) return { err: '초안 막대에 확정 버튼이 없다' };
-    ok.click();
-    await new Promise((res) => setTimeout(res, 400));
-    const nb = document.querySelector('#sheet .modal-actions button.primary');
-    if (nb) nb.click();
-    await new Promise((res) => setTimeout(res, 600));
-    const one = P.state.rooms.length;                 // 축척 단계에서 잡힌 방 수
+    await new Promise((res) => setTimeout(res, 3000));
+    /*
+     * **2026-08-15 개편 — 순서가 바뀌었다.**
+     * 예전에는 [방 하나 초안 → 이 공간 확정 → 이름 → 벽 길이] 였다. 그래서 축척이
+     * 색인에 없는 도면(560장, 전체의 92%)에서는 **집 전체가 끝내 서지 않았다**
+     * (사용자 지적: *"전체면적이 선택되어야하는데 아직도 방하나만 선택이됩니다"*).
+     * 지금은 도면을 올리는 순간 **집 전체를 먼저 잡고** 길이만 묻는다.
+     */
+    const one = P.state.rooms.length;                 // 축척 **전에** 잡힌 방 수 — 집 전체여야 한다
+    if (P.state.scaled) return { err: '축척이 없어야 할 도면인데 이미 확정돼 있다' };
     const wl = document.getElementById('wl');
     if (!wl) return { err: '벽 길이 입력칸이 안 떴다' };
     /* 화면 정리로 도구막대에서 뺀 두 손잡이가 이 막대 안에 살아 있는지 —
@@ -2343,6 +2332,8 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   });
 
   if (r.err) fail(`축척→전체: ${r.err}`);
+  else if (r.one < 3)
+    fail(`축척 전 집 전체: 도면을 올렸는데 공간이 ${r.one}곳뿐이다 — 축척을 묻기 전에 집 전체가 서야 한다`);
   else if (!r.scaled) fail('축척→전체: 길이를 넣었는데 축척이 확정되지 않았다');
   else if (r.after < 4)
     fail(`축척→전체: 축척을 맞췄는데 공간이 ${r.after}곳뿐이다 — 도면 전체가 아니라 부분만 잡혔다`);
@@ -2374,12 +2365,9 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     P.state.mmPerPx = null; P.state.scaled = false;
     await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('load')), 9000);
       P.useImage('/plans/c39/84.jpg', () => { clearTimeout(t); res(); }); });
-    await wait(2200);
-    const ok = [...document.querySelectorAll('#draftbar button')].find((x) => /이 공간 확정/.test(x.textContent));
-    if (!ok) return { err: '초안 막대에 확정 버튼이 없다' };
-    ok.click(); await wait(400);
-    const nb = document.querySelector('#sheet .modal-actions button.primary');
-    if (nb) nb.click(); await wait(600);
+    /* 2026-08-15 개편 — 도면을 올리면 집 전체를 잡고 곧바로 길이 막대가 뜬다.
+       예전처럼 [초안 → 이 공간 확정 → 이름] 을 거치지 않는다. */
+    await wait(3000);
     const pick = document.getElementById('wl-pick');
     if (!pick) return { err: "'벽 직접 고르기' 버튼이 없다" };
 
