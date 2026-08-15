@@ -405,9 +405,21 @@ function resetUrlTabInputs() {
   // 10. 비교항목 확충 — 가격 행 전 카테고리 + 데이터에만 있던 항목 노출
   // ══════════════════════════════════════════
   {
+    /*
+     * **가격 행은 없어야 한다** (2026-08-15 사용자 결정). 예전에는 전 카테고리에
+     * 가격 행이 **있어야** 통과하는 검사였는데 규칙이 뒤집혔다.
+     *
+     * 이 앱이 하는 일은 근거를 꺼내 주는 것인데, 가격은 매장·프로모션·시점마다 달라
+     * 우리가 확정할 수 없다. 실제로 코드 주석에 "실제 시세의 절반 수준으로 표기돼
+     * 있었음" · "판매처별 편차 큼" 같은 기록이 남아 있다 — 관리가 안 되는 값이었다.
+     * 무엇보다 가격으로 붙으면 성능 우위가 가격에 묻힌다.
+     *
+     * **데이터의 `price` 값은 지우지 않는다** — 되살릴 수 있어야 하고, 대응전략 문구가
+     * 가격 이야기를 할 때 근거로 쓴다.
+     */
     for (const cat of Object.keys(DB)) {
-      assertTrue(DB[cat].specItems.some((it) => it.key === 'price'),
-        `specItems: "${cat}"에 가격 항목이 없음`);
+      assertTrue(!DB[cat].specItems.some((it) => it.key === 'price'),
+        `specItems: "${cat}"에 가격 행이 남아 있다 — 타사비교는 성능만 견준다`);
       assertTrue(DB[cat].specItems.length >= 3,
         `specItems: "${cat}" 비교 항목이 ${DB[cat].specItems.length}개뿐 — 최소 3개`);
     }
@@ -417,20 +429,20 @@ function resetUrlTabInputs() {
     assertTrue(has('식기세척기', 'dryType'), '식기세척기 건조 방식 항목 누락');
     assertTrue(has('인덕션', 'kw') && has('인덕션', 'cutout'), '인덕션 출력·타공 항목 누락');
 
-    // 가격은 참고 행이라 종합 스코어를 흔들면 안 된다
-    const priceItem = DB['냉장고'].specItems.find((it) => it.key === 'price');
-    assertEq(priceItem.score, false, '가격 항목이 score:false가 아님 — 프리미엄 모델이 비싸다는 이유로 열위가 된다');
+    /* 가격은 비교표에서 뺐다(위 참조). 데이터의 `price` 값은 남아 있어야 한다 —
+       되살릴 수 있어야 하고 대응전략 문구가 근거로 쓴다. */
+    assertTrue(DB['냉장고'].samsung.some((m) => typeof m.price === 'number'),
+      '데이터의 price 값까지 지워졌다 — 화면에서 빼는 것과 데이터에서 지우는 것은 다른 일이다');
 
     window.switchTab('db');
     window.selectCat('인덕션');
     window.selectBrand('LG');
     val('sel-samsung').value = '0';
-    // sel-comp는 건드리지 않는다 — 등급 자동매칭이 고른 기본값(가격이 확인된 동급 모델)을
-    // 그대로 검증해야 "상담 화면을 열자마자 가격 행이 보이는가"를 실제로 확인할 수 있다.
+    // sel-comp는 건드리지 않는다 — 등급 자동매칭이 고른 기본값을 그대로 검증한다.
     window.updateCompetitors();
     window.renderResult();
     const rowLabels = [...val('spec-table').querySelectorAll('.spec-label')].map((td) => td.textContent);
-    assertTrue(rowLabels.some((t) => t.includes('가격')), '비교표에 가격 행이 렌더되지 않음');
+    assertTrue(!rowLabels.some((t) => t.includes('가격')), '비교표에 가격 행이 렌더된다 — 성능만 견준다');
     assertTrue(rowLabels.some((t) => t.includes('전체 출력')), '비교표에 전체 출력 행이 렌더되지 않음');
     console.log(`[10] 비교항목 확충 OK — 인덕션 ${rowLabels.length}행 렌더`);
   }
@@ -593,10 +605,8 @@ function resetUrlTabInputs() {
     window.renderRegSpecInputs();
     val('reg-brand').value = '나르왈';
     val('reg-sam-name').value = '테스트 삼성 로봇 (VR99TEST)';
-    val('reg-sam-price').value = '150';
     val('reg-sam-on').value = '자동급배수\n스팀살균';
     val('reg-comp-name').value = '나르왈 프리오 (TEST-N1)';
-    val('reg-comp-price').value = '130';
     val('reg-comp-on').value = '스팀살균';
 
     // 카테고리 기본 비교항목(배터리) 입력칸이 자동 생성되는지

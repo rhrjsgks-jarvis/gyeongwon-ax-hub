@@ -514,19 +514,13 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
       <div class="reg-sec">
         <h4>🔵 자사(삼성) 모델</h4>
-        <div class="reg-2col">
-          <input type="text" id="reg-sam-name" placeholder="모델명 (예: 비스포크 AI … VR90F01SAG)"/>
-          <input type="number" id="reg-sam-price" placeholder="가격(만원)" min="0" step="1"/>
-        </div>
+        <input type="text" id="reg-sam-name" placeholder="모델명 (예: 비스포크 AI … VR90F01SAG)"/>
         <textarea id="reg-sam-on" placeholder="핵심 기능 — 한 줄에 하나씩&#10;예)&#10;22,000W 흡입력&#10;자동급배수 스테이션"></textarea>
       </div>
 
       <div class="reg-sec">
         <h4 class="comp">⚪ 경쟁사 모델</h4>
-        <div class="reg-2col">
-          <input type="text" id="reg-comp-name" placeholder="모델명 (예: LG 홈봇 … N95THO)"/>
-          <input type="number" id="reg-comp-price" placeholder="가격(만원)" min="0" step="1"/>
-        </div>
+        <input type="text" id="reg-comp-name" placeholder="모델명 (예: LG 홈봇 … N95THO)"/>
         <textarea id="reg-comp-on" placeholder="핵심 기능 — 한 줄에 하나씩"></textarea>
       </div>
 
@@ -625,7 +619,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'총 용량',     unit:'L',    better:'high' },
       /*
        * 냉장실·냉동실 분리 용량 — 상담에서 "총 몇 리터"보다 자주 나오는 말인데 없었다.
@@ -738,7 +731,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'wash',  label:'세탁 용량', unit:'kg',  better:'high' },
       { key:'dry',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
@@ -870,7 +862,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'area',  label:'냉방 면적', unit:'평',   better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급', better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',   better:'high' },
@@ -1055,7 +1046,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'size',      label:'화면 크기',   unit:'인치', better:'high' },
       { key:'res',       label:'해상도',      unit:'',     better:'high' },
       { key:'panel',     label:'패널 방식',   unit:'',     better:'high' },
@@ -1157,7 +1147,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'watt',  label:'최대 흡입력', unit:'W',  better:'high' },
       { key:'bat',   label:'배터리',   unit:'분',  better:'high' },
       { key:'dust',  label:'필터',     unit:'µm',  better:'low'  },
@@ -1251,7 +1240,6 @@ const DB = {
        동일 Pa 표기 브랜드 간에도 측정 프로토콜이 상이함 — 소비자원 실측 결과 표기Pa와 실제 흡입일(W) 순위가
        뒤바뀐 사례 확인). 대신 각 모델의 흡입력 표기값은 on[] 배열에 "제조사 발표" 단서를 달아 참고용으로만 노출. */
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'bat',     label:'배터리',    unit:'분',   better:'high' },
       { key:'pa',      label:'진공도',    unit:'Pa',   better:'high' },
       { key:'charge',  label:'충전시간',  unit:'분',   better:'low'  },
@@ -1334,7 +1322,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'size',  label:'화면 크기',   unit:'인치', better:'high' },
       { key:'hz',    label:'주사율',      unit:'Hz',   better:'high' },
       { key:'cam',   label:'카메라 화소', unit:'MP',   better:'high' },
@@ -1426,7 +1413,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'건조 용량', unit:'kg',  better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
@@ -1505,7 +1491,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'용량',     unit:'인용',better:'high' },
       { key:'dryType',label:'건조 방식',unit:'',   better:'high' },
       { key:'eGrade',label:'에너지등급',unit:'등급',better:'low'  },
@@ -1591,7 +1576,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'size',  label:'화면 크기', unit:'인치',better:'high' },
       { key:'hz',    label:'주사율',   unit:'Hz',  better:'high' },
       { key:'bat',   label:'배터리',   unit:'Wh',  better:'high' },
@@ -1666,7 +1650,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'총 용량',    unit:'L',   better:'high' },
       { key:'bins',  label:'김치통 수량', unit:'개',  better:'high' },
       { key:'eGrade',label:'에너지등급',  unit:'등급', better:'low'  },
@@ -1738,7 +1721,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'상의 수납',  unit:'벌', better:'high' },
       { key:'pants', label:'하의 전용 관리', unit:'벌', better:'high' },
       { key:'as',    label:'무상 A/S',  unit:'년', better:'high' },
@@ -1798,7 +1780,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'burner', label:'화구 수',   unit:'구',  better:'high' },
       { key:'kw',     label:'전체 출력', unit:'kW',  better:'high' },
       { key:'as',     label:'무상 A/S', unit:'년',  better:'high' },
@@ -1865,7 +1846,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price',  label:'가격',        unit:'만원', better:'low',  score:false },
       { key:'area',   label:'청정 면적',    unit:'㎡',  better:'high' },
       { key:'pm',     label:'감지 최소입자', unit:'PM', better:'low'  },
       /*
@@ -1928,7 +1908,6 @@ const DB = {
       ]
     },
     specItems:[
-      { key:'price',     label:'가격',      unit:'만원', better:'low',  score:false },
       { key:'stages',    label:'필터 단계',  unit:'단계', better:'high' },
       { key:'sterilize', label:'살균 방식',  unit:'',    better:'high', score:false },
       { key:'voice',     label:'음성 제어',  unit:'',    better:'high', score:false },
@@ -2878,8 +2857,7 @@ function openRegisterModal(){
   document.getElementById('reg-brand').value = detectBrand(compUrl) || '';
   document.getElementById('reg-sam-name').value = urlModelGuess(ownUrl);
   document.getElementById('reg-comp-name').value = urlModelGuess(compUrl);
-  document.getElementById('reg-sam-price').value = '';
-  document.getElementById('reg-comp-price').value = '';
+
   document.getElementById('reg-sam-on').value = '';
   document.getElementById('reg-comp-on').value = '';
   document.getElementById('reg-custom-inputs').innerHTML = '';
@@ -2937,8 +2915,8 @@ function submitRegister(){
   if(!brand){ alert('경쟁 브랜드를 입력해주세요.'); return; }
   if(!samName || !compName){ alert('자사·경쟁사 모델명을 모두 입력해주세요.'); return; }
 
-  const samPrice = numOrText(document.getElementById('reg-sam-price').value);
-  const compPrice = numOrText(document.getElementById('reg-comp-price').value);
+  const samPrice = undefined;   // 가격 칸을 없앴다(비교표에서 가격을 뺐다)
+  const compPrice = undefined;  // 〃
   const splitOn = id => document.getElementById(id).value.split('\n').map(x=>x.trim()).filter(Boolean);
 
   const samSpecs = {}, compSpecs = {};
