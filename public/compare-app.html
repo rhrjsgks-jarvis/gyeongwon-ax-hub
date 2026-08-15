@@ -88,6 +88,21 @@ select:focus{border-color:var(--primary);}
 .spec-table th.samsung-col{color:var(--navy);background:var(--navy-l);}
 .spec-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .spec-table tr:last-child td{border-bottom:none;}
+/*
+ * S~E 등급 배지. **색은 S→E 로 한 줄기**여야 눈이 순서를 읽는다 —
+ * 항목마다 다른 색을 쓰면 등급이 아니라 분류로 보인다.
+ * 색맹에도 읽히도록 글자(S·A·B·C·D·E)를 함께 둔다.
+ */
+.badge-grade{display:inline-block;margin-left:5px;padding:1px 6px;border-radius:9px;
+  font-size:10.5px;font-weight:800;letter-spacing:-.2px;color:#fff;vertical-align:middle;}
+.badge-grade.g-S{background:#1428A0;}   /* 삼성 블루 — 최상 */
+.badge-grade.g-A{background:#2f6fd0;}
+.badge-grade.g-B{background:#4a9ad4;}
+.badge-grade.g-C{background:#94a3b8;}
+.badge-grade.g-D{background:#b98a5a;}
+.badge-grade.g-E{background:#c26060;}
+.grade-legend{padding:8px 10px !important;font-size:10.5px;line-height:1.6;color:var(--gray);background:#f8f9fb;}
+.grade-legend .gl-sub{display:block;margin-top:2px;opacity:.85;}
 /* 전기요금 환산 — 기본은 감춰 둔 상태(`#elecCost[hidden]`). 열면 이 모양으로 나온다. */
 .elec{margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:10px;background:#fbfcfe;}
 .elec-h{font-size:13px;font-weight:700;color:var(--navy);}
@@ -1297,7 +1312,7 @@ const DB = {
         specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 , storage:128} },
       { name:'Galaxy A36 5G (128GB)', price:50, grade:'B',
         on:['120Hz 디스플레이','5000mAh 대용량 배터리','45W 초고속충전','IP67 방수방진','OIS 손떨림보정'],
-        specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 , ap:'SD6 Gen3', ram:8, storage:128} }
+        specs:{ size:6.7, hz:120, cam:50, bat:5000, as:2, charge:45 , ap:'SD6 Gen3', ram:8, storage:128, gbSingle:842, gbMulti:2791} }
     ],
     competitors:{
       '애플':[
@@ -1306,16 +1321,16 @@ const DB = {
           specs:{ size:6.1, hz:60, cam:48, bat:4005, as:2, charge:20 , ap:'A19', ram:'미공개', storage:256} },
         { name:'iPhone 17 (256GB)', price:129,
           on:['ProMotion 120Hz(기본형 최초 탑재)','48MP 듀얼카메라','카메라 컨트롤','MagSafe 25W 무선충전'],
-          specs:{ size:6.3, hz:120, cam:48, bat:3692, as:2, charge:40 , ap:'A19', ram:'미공개', storage:256} },
+          specs:{ size:6.3, hz:120, cam:48, bat:3692, as:2, charge:40 , ap:'A19', ram:'미공개', storage:256, gbSingle:3023, gbMulti:8347} },
         { name:'iPhone Air (256GB)', price:159,
           on:['역대 최슬림 아이폰(5.6mm)','A19 Pro 칩','48MP Fusion 카메라','ProMotion 120Hz'],
-          specs:{ size:6.5, hz:120, cam:48, bat:3149, as:2, charge:20 , ap:'A19 Pro', ram:'미공개', storage:256} },
+          specs:{ size:6.5, hz:120, cam:48, bat:3149, as:2, charge:20 , ap:'A19 Pro', ram:'미공개', storage:256, gbSingle:3046, gbMulti:8466} },
         { name:'iPhone 17 Pro (256GB)', price:179,
           on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
-          specs:{ size:6.3, hz:120, cam:48, bat:3998, as:2, charge:40 , ap:'A19 Pro', ram:'미공개', storage:256} },
+          specs:{ size:6.3, hz:120, cam:48, bat:3998, as:2, charge:40 , ap:'A19 Pro', ram:'미공개', storage:256, gbSingle:3151, gbMulti:8738} },
         { name:'iPhone 17 Pro Max (256GB)', price:199,
           on:['카메라 컨트롤','8배 광학급 줌','알루미늄 유니바디','위성 긴급통신','IP68'],
-          specs:{ size:6.9, hz:120, cam:48, bat:5088, as:2, charge:40 , ap:'A19 Pro', ram:'미공개', storage:256} }
+          specs:{ size:6.9, hz:120, cam:48, bat:5088, as:2, charge:40 , ap:'A19 Pro', ram:'미공개', storage:256, gbSingle:3169, gbMulti:8790} }
       ]
     },
     specItems:[
@@ -1340,7 +1355,15 @@ const DB = {
        */
       { key:'ap',     label:'AP(칩셋)',  unit:'' },
       { key:'ram',    label:'RAM',       unit:'GB', better:'high' },
-      { key:'storage',label:'저장공간',   unit:'GB', better:'high' }
+      { key:'storage',label:'저장공간',   unit:'GB', better:'high' },
+      /*
+       * Geekbench 6 — **공식 차트**(Primate Labs)에서 온 값이다. 칩 이름끼리는 우열을
+       * 잴 수 없다는 지적을 받고 넣었다. 폰은 **기기 단위 중앙값**, 노트북은 **CPU 단위**다.
+       * 차트에 없는 기기는 비워 둔다 — 갤럭시 S26 시리즈·iPhone 17e·퀀텀6 는 아직 없다.
+       * 다른 기기에서 잰 값을 옮겨 적지 않는다.
+       */
+      { key:'gbSingle', label:'Geekbench 싱글', unit:'점', better:'high' },
+      { key:'gbMulti',  label:'Geekbench 멀티', unit:'점', better:'high' }
     ],
     sells:[
       'S펜 내장 — 메모·스케치·문서 편집 즉시 가능, 애플에는 없는 독자 기능',
@@ -1528,13 +1551,13 @@ const DB = {
         specs:{ size:16, hz:120, bat:78.64, as:2, weight:1.89 } },
       { name:'Galaxy Book6 Pro (16인치) NT960XJG', price:351, grade:'P',
         on:['AMOLED 디스플레이','가변 주사율(30~120Hz)','인텔 코어 Ultra X7(시리즈3)','Copilot+ PC'],
-        specs:{ size:16, hz:120, bat:78.07, as:2, weight:1.59 } },
+        specs:{ size:16, hz:120, bat:78.07, as:2, weight:1.59 , gbSingle:2103, gbMulti:9316} },
       { name:'Galaxy Book5 Pro 360 (16인치) NP960XGK', price:289, grade:'S',
         on:['AMOLED 디스플레이','터치 디스플레이','360도 힌지','S펜 지원','Copilot+ PC','인텔 코어 Ultra 7'],
         specs:{ size:16, hz:120, bat:76, as:2, weight:1.69 } },
       { name:'Galaxy Book6 Pro (14인치) NT940XJG', price:260, grade:'S',
         on:['AMOLED 디스플레이','인텔 코어 Ultra(시리즈3, 팬서레이크)','Copilot+ PC'],
-        specs:{ size:14, hz:120, bat:54, as:2, weight:1.24 } },
+        specs:{ size:14, hz:120, bat:54, as:2, weight:1.24 , gbSingle:2103, gbMulti:9316} },
       { name:'Galaxy Book6 (16인치) NT760VJG', price:195, grade:'B',
         on:['1920x1200 WUXGA 디스플레이','인텔 코어 Ultra(시리즈3)','Copilot+ PC'],
         specs:{ size:16, hz:60, bat:61.2, as:2, weight:1.74 } },
@@ -1555,13 +1578,13 @@ const DB = {
           specs:{ size:16, bat:77, as:2, weight:1.199 } },
         { name:'LG 그램 (17인치, RTX 5050) 17Z90TR-ED7HK', price:514,
           on:['NVIDIA GeForce RTX 5050 외장 GPU','인텔 코어 Ultra 7 255H','WQXGA 2560×1600 IPS','32GB LPDDR5x','1TB NVMe + 확장 슬롯 1','90Wh 배터리','Wi-Fi 7'],
-          specs:{ size:17, bat:90, as:2, weight:1.479 } },
+          specs:{ size:17, bat:90, as:2, weight:1.479 , gbSingle:2349, gbMulti:14119} },
         { name:'LG 그램 Pro (16인치) 16Z90SP', price:249,
           on:['IPS 디스플레이','Copilot+ PC','군용 규격 MIL-STD-810H'],
           specs:{ size:16, hz:120, bat:80, as:2, weight:1.199 } },
         { name:'LG 그램 Pro 360 AI 2026 (16인치) 16T95TP', price:369,
           on:['WQXGA+ 2880x1800','360도 힌지','터치 디스플레이','Copilot+ PC','인텔 코어 Ultra 7 255H'],
-          specs:{ size:16, hz:120, bat:77, as:2, weight:1.399 } },
+          specs:{ size:16, hz:120, bat:77, as:2, weight:1.399 , gbSingle:2143, gbMulti:11579} },
         { name:'LG 그램 Pro 360 (16인치) 16T90SP', price:279,
           on:['OLED 디스플레이','360도 힌지','터치 디스플레이','Copilot+ PC','군용 규격 MIL-STD-810H'],
           specs:{ size:16, hz:120, bat:77, as:2, weight:1.399 } }
@@ -1573,7 +1596,16 @@ const DB = {
       { key:'hz',    label:'주사율',   unit:'Hz',  better:'high' },
       { key:'bat',   label:'배터리',   unit:'Wh',  better:'high' },
       { key:'as',    label:'무상 A/S', unit:'년',  better:'high' },
-      { key:'weight',label:'무게',     unit:'kg',  better:'low'  }
+      { key:'weight',label:'무게',     unit:'kg',  better:'low'  },
+      /*
+       * Geekbench 6 — **CPU 단위 중앙값**(browser.geekbench.com/processor-benchmarks).
+       * 노트북은 기본 모델코드 하나가 17~26개 SKU 를 아울러 CPU 를 단일값으로 못 적는데,
+       * 삼성 카탈로그(파인더 fx)와 LG 제품 사양이 **CPU 를 특정해 주는 모델만** 채웠다.
+       * 차트에 없는 CPU(Ultra X7 358H · Ultra5 125H · Ultra7 155H)와, 이름이 비슷하지만
+       * 다른 칩인 것(Ultra 9 275H ↔ 차트의 **275HX**, 24코어)은 비워 둔다.
+       */
+      { key:'gbSingle', label:'Geekbench 싱글', unit:'점', better:'high' },
+      { key:'gbMulti',  label:'Geekbench 멀티', unit:'점', better:'high' }
     ],
     sells:[
       'AMOLED 디스플레이 — 그램 IPS 모델 대비 명암비·색재현율 우위 (단, 그램에도 OLED 트림 16Z90U-KU7HK가 있으니 고객이 보는 모델을 먼저 확인할 것)',
@@ -2048,6 +2080,89 @@ function unitOf(v, unit) {
 var UNKNOWN_SPEC = /^(미공개|미상|확인 필요|비대상)$/;
 
 /* ══════════════════════════════════════════════════════════════════════
+ * S~E 등급 (2026-08-15 사용자 요청)
+ *
+ * *"공신력있는곳의 근거자료를 가지고 우열판정을 했으면 좋겠습니다. 단순히 우 열 보다는
+ *  … S급 A급 B급 C급 D급 E급 이런식으로하면 더 좋을것같습니다"*
+ *
+ * **등급의 근거는 값 자체다.** 값은 전부 제조사 공식 자료(삼성 지원 페이지·카탈로그,
+ * LG pdpsvc 사양, 애플 사양 지면)에서 확인해 넣은 것이고, 등급은 그 값들을
+ * **이 표에 담긴 같은 카테고리 모델 전체**로 줄세운 상대 위치다. 새로운 주장을
+ * 만들어 내지 않는다 — 이미 검증된 숫자를 읽기 쉽게 바꿔 보여줄 뿐이다.
+ *
+ * 왜 비율이 아니라 **순위**인가:
+ *   비율(최고 대비 몇 %)로 잡으면 작은 정수 척도가 무너진다 — 에너지등급은 1등급이
+ *   최고인데 2등급이 1/2 = 50% 가 되어 **2등급이 E** 로 떨어진다. 실제로 그렇게 된다.
+ *   그래서 **서로 다른 값의 개수**를 세어 6칸으로 나눈다.
+ *
+ * 같은 값은 같은 등급이다(공동 순위). 값이 하나뿐인 항목은 가를 것이 없으므로
+ * 등급을 매기지 않는다 — 전부 S 로 칠하면 우열을 말한 것처럼 보인다.
+ * ══════════════════════════════════════════════════════════════════════ */
+var GRADES = ['S', 'A', 'B', 'C', 'D', 'E'];
+
+/*
+ * **크기·용량은 "같은 급일 때만" 등급을 매긴다** (2026-08-15 사용자 지시:
+ * *"크기를 등급으로 매길순없습니다 … 크기는 고객의 선호도 문제입니다. 비교군에서는
+ * 등급을 매길순있습니다. 예를들면 77인치 vs 75인치 일 경우는 등급을 매겨도됩니다"*).
+ *
+ * 97인치가 표에 있다는 이유로 65인치를 "E급"이라 하면 안 된다 — 그건 열등한 것이
+ * 아니라 **고객이 고른 크기**다. 반대로 77 vs 75 처럼 같은 급끼리는 가려도 된다.
+ * 그래서 등급은 카테고리 전체로 매겨 두되 **지금 견주는 두 값이 같은 급일 때만 보여준다.**
+ */
+var CHOICE_KEYS = new Set(['size', 'cap', 'area', 'pants', 'burners', 'stages', 'bins', 'storage', 'fridgeCap', 'freezeCap']);
+var SAME_CLASS = 0.90;   // 작은 값 / 큰 값 이 이 비율 이상이면 같은 급 (77/85 = 0.906)
+
+/** 크기 항목에서 두 값이 같은 급인가 — 다르면 등급을 보여주지 않는다 */
+function sameClass(a, b) {
+  if (typeof a !== 'number' || typeof b !== 'number' || !a || !b) return false;
+  return Math.min(a, b) / Math.max(a, b) >= SAME_CLASS;
+}
+
+/*
+ * **에너지소비효율등급은 그 자체가 정부가 매긴 절대 등급이다.**
+ * 상대 순위로 돌리면 표에 1·2등급밖에 없을 때 2등급이 꼴찌라는 이유로 E 가 된다 —
+ * 2등급은 E급이 아니다. 값을 그대로 옮긴다.
+ */
+var ABS_GRADE = {
+  eGrade: (v) => ['S', 'A', 'B', 'C', 'D'][Math.round(v) - 1] || null,
+};
+
+/*
+ * 그 카테고리의 한 항목에 대해 `값 → 등급` 표를 만든다.
+ * `models` 는 삼성 + 경쟁사 전부 — 즉 **이 표에 담긴 모집단 안에서의 상대 등급**이다.
+ *
+ * 등급은 **순위가 아니라 최고값 대비 비율**로 잡는다. 순위로 매겨 보고 버렸다 —
+ * 순위는 "몇 등인가"만 보고 "얼마나 차이 나는가"를 버려서 두 방향으로 다 틀렸다:
+ *   · Geekbench **842점과 3,023점이 E 와 D** (3.6배 차이인데 한 칸)
+ *   · 카메라 **50MP 와 48MP 가 C 와 E** (거의 같은데 두 칸)
+ * 상담에서 필요한 것은 "얼마나 차이 나는가"다.
+ *
+ * 그래서 `비율 = 값 / 최고값`(낮을수록 좋은 항목은 `최고값 / 값`)을 아래 칸으로 나눈다.
+ * 화면에 **범례를 함께 띄운다** — 기준을 모르면 "E급"이 근거 없는 모욕으로 읽힌다.
+ */
+var GRADE_CUT = [0.95, 0.85, 0.70, 0.50, 0.30];   // S A B C D 의 하한, 그 아래가 E
+
+function gradeMap(models, item) {
+  if (!item || item.score === false || !item.better) return null;   // 우열을 안 매기는 항목
+  if (ABS_GRADE[item.key]) return { abs: ABS_GRADE[item.key] };      // 절대 등급이 있는 항목
+  const vals = [];
+  for (const m of models) {
+    const v = specValue(m, item.key);
+    if (typeof v === 'number' && v > 0) vals.push(v);
+  }
+  if (new Set(vals).size < 2) return null;   // 가를 것이 없으면 등급을 매기지 않는다
+  const best = item.better === 'high' ? Math.max(...vals) : Math.min(...vals);
+  const ratio = (v) => (item.better === 'high' ? v / best : best / v);
+  const grade = (v) => {
+    if (typeof v !== 'number' || v <= 0) return null;
+    const r = ratio(v);
+    for (let i = 0; i < GRADE_CUT.length; i++) if (r >= GRADE_CUT[i]) return GRADES[i];
+    return GRADES[GRADES.length - 1];
+  };
+  return { grade, best, n: new Set(vals).size };
+}
+
+/* ══════════════════════════════════════════════════════════════════════
  * 전기요금 환산 — **화면에는 감춰 둔 상태다** (`#elecCost` 의 `hidden`)
  *
  * 2026-08-15 사용자 결정: *"전기요금은 매번 케이스가 다를수있음으로 전기요금작업은
@@ -2166,6 +2281,13 @@ function renderResult() {
   // 스펙표
   let scoreS=0, scoreC=0;
   const items = d.specItems;
+  /*
+   * 등급 표는 **항목마다 한 번만** 만든다. 모집단은 이 카테고리의 삼성 + 경쟁사 전부다 —
+   * 지금 고른 두 모델만으로는 순위를 매길 수 없다(둘뿐이면 무조건 S 와 E 가 된다).
+   */
+  const gradePop = [...(d.samsung || []), ...Object.values(d.competitors || {}).flat()];
+  const gradeMaps = {};
+  items.forEach((it) => { gradeMaps[it.key] = gradeMap(gradePop, it); });
   let rows = `<tr>
     <th style="width:30%">항목</th>
     <th class="samsung-col" style="width:35%">🔵 삼성</th>
@@ -2189,18 +2311,56 @@ function renderResult() {
     }
     const rowClass = bS==='win'?'spec-row-win':bC==='win'?'spec-row-lose':'spec-row-tie';
     const unknown = specUnknown(sv, cv);   // 값을 모르는 항목은 우열을 말하지 않는다
-    const badge = v => (it.score===false || unknown) ? '' :
-                       bS==='win'&&v==='s'?'<span class="badge-win">✅ 우위</span>':
-                       bC==='win'&&v==='c'?'<span class="badge-win">✅ 우위</span>':
-                       bC==='win'&&v==='s'?'<span class="badge-lose">🔴 열위</span>':
-                       bS==='win'&&v==='c'?'<span class="badge-lose">🔴 열위</span>':
-                       '<span class="badge-tie">🟡 동급</span>';
-    rows += `<tr class="${(it.score===false||unknown)?'spec-row-tie':rowClass}">
-      <td class="spec-label">${escHtml(it.label)}${(it.score===false||unknown)?'<span class="spec-note">참고</span>':''}</td>
-      <td class="spec-val">${escHtml(fmtSpec(sv))}${escHtml(unitOf(sv,it.unit))} ${badge('s')}</td>
-      <td class="spec-val">${escHtml(fmtSpec(cv))}${escHtml(unitOf(cv,it.unit))} ${badge('c')}</td>
+    /*
+     * **이름끼리는 우열을 말하지 않는다** (2026-08-15 사용자 지적:
+     * *"엑시노스2600이랑 A19 pro 칩셋이 동급이라고 표기되어있는데 어떤근거로
+     * 동급이라는건지 알수가없습니다"*).
+     *
+     * 우열 판정(bS/bC)은 양쪽이 숫자일 때만 돌고 그 외에는 'tie' 로 남는데, 배지는
+     * 그것을 그대로 '🟡 동급' 으로 찍고 있었다 — **재 보지도 않고 같다고 말한 셈**이다.
+     * AP(칩셋)뿐 아니라 TV 패널 방식(`Micro RGB` vs `OLED evo`) 등 27개 조합이 그랬다.
+     *
+     * 값이 **글자 그대로 같을 때만** 동급이라 한다(`4K` vs `4K` 는 사실이다).
+     * 다르면 배지를 붙이지 않고 '참고' 로 둔다 — 우열을 매기려면 비교 가능한
+     * **수치 항목**을 따로 넣어야 한다(스마트폰 Geekbench 점수가 그 예다).
+     */
+    const bothNum = typeof sv==='number' && typeof cv==='number';
+    const nameTie = !bothNum && String(sv).trim() !== String(cv).trim();
+    /*
+     * 배지는 **S~E 등급**이다(2026-08-15 사용자 요청). '우위/열위/동급' 세 칸으로는
+     * 얼마나 차이 나는지가 안 보인다.
+     *   · 절대 등급이 있는 항목(에너지등급)은 그 값을 그대로 옮긴다
+     *   · 그 밖의 수치 항목은 **이 표의 같은 카테고리 모델 전체**로 줄세운 상대 등급
+     *   · 크기·용량은 **두 값이 같은 급일 때만** 보여준다(97인치 때문에 65인치가
+     *     E 가 되면 안 된다)
+     *   · 이름끼리(AP·패널 방식)는 등급을 매기지 않는다 — 잴 수 있는 수치가 없다
+     */
+    const gm = gradeMaps[it.key];
+    const classOk = !CHOICE_KEYS.has(it.key) || sameClass(sv, cv);
+    const gradeOf = (v) => {
+      if (it.score === false || unknown || nameTie || !gm || !classOk) return null;
+      if (typeof v !== 'number') return null;
+      return gm.abs ? gm.abs(v) : gm.grade(v);
+    };
+    const gS = gradeOf(sv), gC = gradeOf(cv);
+    const badge = (g) => g ? `<span class="badge-grade g-${g}">${g}급</span>` : '';
+    const plain = !gS && !gC;   // 등급을 못 매기는 행은 '참고'
+    rows += `<tr class="${plain ? 'spec-row-tie' : rowClass}">
+      <td class="spec-label">${escHtml(it.label)}${plain ? '<span class="spec-note">참고</span>' : ''}</td>
+      <td class="spec-val">${escHtml(fmtSpec(sv))}${escHtml(unitOf(sv,it.unit))} ${badge(gS)}</td>
+      <td class="spec-val">${escHtml(fmtSpec(cv))}${escHtml(unitOf(cv,it.unit))} ${badge(gC)}</td>
     </tr>`;
   });
+  /*
+   * 범례 — **기준을 밝히지 않으면 "E급"이 근거 없는 말로 읽힌다.**
+   * 등급은 이 표에 담긴 같은 카테고리 모델 전체에서 그 항목의 최고값과 견준 비율이다.
+   */
+  rows += `<tr><td colspan="3" class="grade-legend">
+    등급 = <b>이 표 ${gradePop.length}개 모델 중 최고값 대비</b> ·
+    S 95%↑ · A 85%↑ · B 70%↑ · C 50%↑ · D 30%↑ · E 30%↓
+    <span class="gl-sub">에너지등급은 정부 등급 그대로 · 크기·용량은 같은 급끼리만 ·
+    이름(칩셋·패널)은 잴 수치가 없어 등급 없음</span>
+  </td></tr>`;
   document.getElementById('spec-table').innerHTML = rows;
   renderElecCost(sam, comp);
 

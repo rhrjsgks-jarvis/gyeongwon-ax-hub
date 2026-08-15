@@ -876,6 +876,83 @@ function resetUrlTabInputs() {
     else console.log(`[16] 냉장실+냉동실 = 총 용량 ${checked}종 검산 OK`);
   }
 
+  /*
+   * [17] S~E 등급 — 근거 없이 우열을 말하지 않는다
+   *
+   * 2026-08-15 사용자 지적: *"엑시노스2600이랑 A19 pro 칩셋이 동급이라고 표기되어있는데
+   * 어떤근거로 동급이라는건지 알수가없습니다"*. 배지가 **숫자가 아니면 무조건 '동급'** 을
+   * 찍고 있었다 — 재 보지도 않고 같다고 말한 셈이다.
+   *
+   * 지금 규칙(전부 여기서 검사한다):
+   *   ⓐ 이름 항목(AP·패널 방식)에는 등급이 붙지 않는다 — 잴 수치가 없다
+   *   ⓑ 등급은 **최고값 대비 비율**이다. 순위로 매기면 842점과 3,023점이 이웃 등급이
+   *      되고 50MP 와 48MP 가 두 칸 벌어진다(둘 다 실제로 그랬다)
+   *   ⓒ 크기·용량은 **같은 급일 때만** 등급이 붙는다 — 97인치 때문에 65인치가 E 가
+   *      되면 안 된다
+   *   ⓓ 옛 '우위/열위/동급' 배지는 남아 있으면 안 된다
+   *   ⓔ 범례가 있어야 한다 — 기준을 모르면 "E급"이 근거 없는 말로 읽힌다
+   */
+  {
+    const bad = [];
+    window.selectCat('스마트폰'); window.selectBrand('애플');
+
+    const render = (si, ci) => {
+      val('sel-samsung').value = String(si);
+      val('sel-comp').value = String(ci);
+      window.renderResult();
+      const out = {};
+      for (const tr of val('spec-table').querySelectorAll('tr')) {
+        const label = tr.querySelector('.spec-label')?.textContent.replace('참고', '').trim();
+        if (!label) continue;
+        out[label] = [...tr.querySelectorAll('.spec-val')].map((td) => ({
+          text: td.textContent.trim(),
+          grade: (td.querySelector('.badge-grade') || {}).textContent || null,
+        }));
+      }
+      return out;
+    };
+
+    /* ⓐ AP(칩셋)은 이름이라 등급이 없어야 한다 */
+    let r = render(1, 3);                    // S26+ vs iPhone 17 Pro
+    const ap = r['AP(칩셋)'];
+    if (!ap) bad.push('AP(칩셋) 행이 안 그려짐');
+    else if (ap.some((c) => c.grade)) bad.push(`AP(칩셋)에 등급이 붙었다: ${ap.map((c) => c.grade).join('/')} — 칩 이름끼리는 잴 수치가 없다`);
+
+    /* ⓑ 크기 차이가 등급에 반영되는가 — 842점과 3,023점이 같은 칸이면 안 된다 */
+    r = render(4, 1);                        // A36 vs iPhone 17 (둘 다 Geekbench 있음)
+    const gb = r['Geekbench 싱글'];
+    if (!gb || !gb[0].grade || !gb[1].grade) bad.push('Geekbench 싱글에 등급이 없다');
+    else {
+      const gi = (g) => 'SABCDE'.indexOf(g[0]);
+      const gap = Math.abs(gi(gb[0].grade) - gi(gb[1].grade));
+      if (gap < 3) bad.push(`Geekbench 842점 vs 3,023점(3.6배)인데 등급이 ${gb[0].grade}/${gb[1].grade} 로 ${gap}칸뿐 — 순위가 아니라 비율로 매길 것`);
+    }
+    /* 거의 같은 값은 같은 등급이어야 한다 (50MP vs 48MP) */
+    const cam = r['카메라 화소'];
+    if (cam && cam[0].grade && cam[1].grade && cam[0].grade !== cam[1].grade) {
+      bad.push(`카메라 50MP/48MP 가 ${cam[0].grade}/${cam[1].grade} — 거의 같은 값에 다른 등급`);
+    }
+
+    /* ⓒ 크기: 급이 다르면 등급이 없어야 한다 (TV 97인치 vs 65인치급) */
+    window.selectCat('TV'); window.selectBrand('LG');
+    const tv = render(0, 2);                 // 삼성 85인치 vs LG 올레드 97인치
+    const sz = tv['화면 크기'];
+    if (sz) {
+      const nums = sz.map((c) => parseFloat(String(c.text).replace(/[^\d.]/g, '')));
+      const close = Math.min(...nums) / Math.max(...nums) >= 0.90;
+      if (!close && sz.some((c) => c.grade)) {
+        bad.push(`화면 크기 ${nums.join(' vs ')} — 급이 다른데 등급이 붙었다(${sz.map((c) => c.grade).join('/')})`);
+      }
+    }
+
+    /* ⓓ·ⓔ */
+    if (doc.querySelectorAll('.badge-win,.badge-lose,.badge-tie').length) bad.push("옛 '우위/열위/동급' 배지가 남아 있다");
+    if (!doc.querySelector('.grade-legend')) bad.push('등급 범례가 없다 — 기준을 밝히지 않으면 "E급"이 근거 없는 말이 된다');
+
+    if (bad.length) fail(`[17] 등급 규칙 위반: ${bad.join(' / ')}`);
+    else console.log('[17] S~E 등급 — 이름 무등급 · 비율 반영 · 크기 같은 급만 · 범례 OK');
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
