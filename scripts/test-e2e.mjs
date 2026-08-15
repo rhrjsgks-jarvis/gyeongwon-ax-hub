@@ -487,18 +487,26 @@ try {
 
     const after = await page.evaluate(() => {
       const w = document.querySelector('iframe').contentWindow;
-      return { mmPerPx: w.__place.state.mmPerPx, scaled: w.__place.state.scaled, mode: w.__place.state.mode };
+      return { mmPerPx: w.__place.state.mmPerPx, scaled: w.__place.state.scaled,
+               mode: w.__place.state.mode, rooms: w.__place.state.rooms.length };
     });
     if (!after.scaled) fail('축척 확정 후에도 scaled 플래그가 false');
     else if (Math.abs(after.mmPerPx - 5) > 0.05) fail(`축척이 1px = ${after.mmPerPx?.toFixed(3)}mm (기대 5.000)`);
     else pass(`축척 보정 정확 (1,200px = 6,000mm → 1px = ${after.mmPerPx.toFixed(2)}mm)`);
-    // 축척을 확정하면 바로 벽 자동 인식을 시도한다. 이 픽스처는 선 하나뿐인 빈 도면이라
-    // 자동 인식이 실패하고 "방 안쪽을 눌러주세요" 상태(detect)로 남는 것이 정상이다.
-    // 어느 쪽이든 사용자가 바로 다음 동작을 할 수 있는 모드여야 한다 — idle로 남으면
-    // 단계 표시와 어긋나 도면을 눌러도 아무 일이 없다.
-    if (!['detect', 'wall'].includes(after.mode)) {
-      fail(`축척 확정 후 모드가 ${after.mode} — detect(자동 인식) 또는 wall(직접 그리기)이어야 한다`);
-    } else pass(`축척 확정 후 ${after.mode} 모드로 자동 전환`);
+    /*
+     * 축척을 확정하면 곧바로 벽 자동 인식을 돌린다. **결과에 따라 갈 곳이 다르다**:
+     *  · 공간을 잡았으면 `idle` — 바로 가전을 놓을 수 있는 상태다
+     *  · 못 잡았으면 `detect` 나 `wall` — 사용자가 눌러서 잡을 수 있어야 한다
+     * 어느 쪽이든 **다음 동작이 가능해야 한다.** 2026-08-15 개편 전에는 축척 전에
+     * 방이 없어 늘 후자였는데, 지금은 집 전체를 먼저 잡으므로 전자도 정상이다.
+     * (그때 `autoDetectCenter` 가 "이미 방이 있으면 반환"하는 바람에 모드가 `scale` 에
+     *  붙박여 도면을 눌러도 아무 일이 없었다 — 이 검사가 그것을 잡았다.)
+     */
+    const okMode = after.rooms ? after.mode === 'idle' : ['detect', 'wall'].includes(after.mode);
+    if (!okMode) {
+      fail(`축척 확정 후 모드가 ${after.mode} (공간 ${after.rooms}곳) — `
+        + `공간을 잡았으면 idle, 못 잡았으면 detect/wall 이어야 한다`);
+    } else pass(`축척 확정 후 ${after.mode} 모드 (공간 ${after.rooms}곳)`);
     void cvbox;
   }
 

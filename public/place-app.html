@@ -4546,7 +4546,24 @@ function askScale(){
         state.zoom = Math.min(r.width/(state.imgW*state.mmPerPx), r.height/(state.imgH*state.mmPerPx)) * 0.9;
         state.panX = 20; state.panY = 20;
         state.scalePts=[]; state.wallPts=[]; closeSheet(); setStep(3); draw();
-        autoDetectCenter();
+        /*
+         * **축척 전에 잡아 둔 방은 버리고 다시 잡는다**(2026-08-15 개편).
+         *
+         * 도면을 올릴 때 집 전체를 먼저 잡는데(`detectHouseThenScale`) 그 좌표는
+         * **이미지 픽셀**이다. 여기서 `scaled = true` 가 되는 순간 월드는 **mm** 가 되므로
+         * 그대로 두면 **같은 화면에 자가 둘**이 된다 — CLAUDE.md 가 "도면이 작아진다 /
+         * 화면 밖으로 나간다"로 두 번 적어 둔 그 사고다.
+         *
+         * 게다가 `autoDetectCenter` 는 첫 줄에서 `scaled && rooms.length` 면 그냥
+         * 반환하므로, 방이 남아 있으면 **모드가 `scale` 에 붙박여** 도면을 눌러도 아무
+         * 일이 없다(E2E 가 이걸 잡았다).
+         */
+        state.rooms = []; state.walls = []; state.roomSel = null;
+        let n = 0;
+        try { n = detectAllRooms() || 0; } catch (_) { n = 0; }
+        try { nameRoomsFromPlan(); } catch (_) {}
+        if (n) { setMode('idle'); setStep(4); evaluate(); fitAll(); draw(); }
+        else autoDetectCenter();
       };
       $('#c').onclick = ()=>{ state.scalePts=[]; closeSheet(); setMode('idle'); draw(); };
     });
