@@ -842,6 +842,40 @@ function resetUrlTabInputs() {
     }
   }
 
+  /*
+   * [16] 냉장실 + 냉동실 = 총 용량
+   *
+   * 분리 용량은 두 출처(삼성 지원 페이지 · LG pdpsvc)에서 따로 왔다. 합계가 총용량과
+   * 맞는지가 **모델을 잘못 짚지 않았다는 가장 싼 증거**다 — 다른 모델 값을 집어 오면
+   * 거의 반드시 어긋난다(실제로 이 검산으로 대응을 확인하고 넣었다).
+   *
+   * 예외는 **칸이 셋 이상인 모델**뿐이다. `RF85DB90F1AP` 는 521 + 냉동 177 +
+   * 맞춤보관실 176 = 874 다. 그런 모델은 기능 목록에 그 칸을 적어 두게 하고,
+   * 적혀 있지 않으면 실패시킨다 — 냉동실 숫자만 보면 오해가 생기기 때문이다.
+   */
+  {
+    const bad = [];
+    let checked = 0;
+    for (const [cat, c] of Object.entries(DB)) {
+      if (!c.specItems?.some((i) => i.key === 'fridgeCap')) continue;
+      for (const m of [...(c.samsung || []), ...Object.values(c.competitors || {}).flat()]) {
+        const sp = m.specs || {};
+        if (typeof sp.fridgeCap !== 'number' || typeof sp.freezeCap !== 'number' || typeof sp.cap !== 'number') continue;
+        checked++;
+        const rest = sp.cap - (sp.fridgeCap + sp.freezeCap);
+        if (rest === 0) continue;
+        /* 남는 용량이 있으면 그 칸이 기능 목록에 적혀 있어야 한다 */
+        const told = (m.on || []).some((f) => new RegExp(`${rest}\\s*(ℓ|L|리터)`).test(String(f)));
+        if (!told) {
+          bad.push(`[${cat}] ${m.name} — ${sp.fridgeCap}+${sp.freezeCap}=${sp.fridgeCap + sp.freezeCap} 인데 총 ${sp.cap} `
+            + `(${rest}ℓ 가 뜬다). 다른 모델 값을 집었거나, 별도 보관실이면 기능 목록에 적을 것`);
+        }
+      }
+    }
+    if (bad.length) fail(`[16] 용량 합계가 안 맞는다: ${bad.join(' / ')}`);
+    else console.log(`[16] 냉장실+냉동실 = 총 용량 ${checked}종 검산 OK`);
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════

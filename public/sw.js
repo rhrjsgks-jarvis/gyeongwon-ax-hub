@@ -68,8 +68,8 @@
  * 단위·우열 배지를 붙이지 않게 고쳤다. 미니앱은 SWR 이라 여기를 안 올리면
  * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
-/* v60 (2026-08-15) — 하이센스 KC 조회 경로 기록(compare-app.html 주석). */
-const CACHE_VERSION = 'axhub-v60';
+/* v61 (2026-08-15) — 냉장고에 냉장실·냉동실 분리 용량 추가(compare-app.html). */
+const CACHE_VERSION = 'axhub-v61';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

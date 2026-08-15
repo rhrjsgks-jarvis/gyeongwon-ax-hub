@@ -562,20 +562,20 @@ const DB = {
     samsung:[
       { name:'BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W', price:584, grade:'P',
         on:['AI Vision(제미나이 연동, 37종 식재료 인식)','32형 대형 터치스크린','하이브리드쿨링','음성인식 제어'],
-        specs:{ cap:864, power:26.03, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 916' } },
+        specs:{ cap:864, power:26.03, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 916' , fridgeCap:509, freezeCap:355} },
       { name:'BESPOKE AI 4도어 (902L) RM70F90M1GD', price:230, grade:'S',
         on:['푸드쇼케이스 홈바','AI절약모드','하이브리드쿨링','AI 비전인사이드'],
-        specs:{ cap:902, power:39, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 922' } },
+        specs:{ cap:902, power:39, eGrade:1, as:1, noise:34, size:'912 × 1,853 × 922' , fridgeCap:536, freezeCap:366} },
       { name:'BESPOKE 4도어 에센셜 (874L) RF85DB90F1AP', price:220, grade:'S',
-        on:['SmartThings','미세자동정온','엣지정온쿨링','반영구탈취','UV위생'],
-        specs:{ cap:874, power:39, eGrade:1, as:1, noise:35 , size:'912 × 1,853 × 916'} },
+        on:['맞춤보관실 176ℓ(냉동실과 별도)','SmartThings','미세자동정온','엣지정온쿨링','반영구탈취','UV위생'],
+        specs:{ cap:874, power:39, eGrade:1, as:1, noise:35 , size:'912 × 1,853 × 916', fridgeCap:521, freezeCap:177} },
       /* 2026-08-13 제품 크기 신규 — 모델파인더의 색상 변형 `RS84DB5002WW` 에서 가져왔다
          (접미 CW/WW 는 색상이고 치수는 같다). 같은 제품인지는 두 갈래로 검산했다 —
          용량 852L 과 에너지등급 2 가 아래 값과 그대로 일치한다.
          출처는 카탈로그가 아니라 삼성닷컴 조사분이며, 이 항목의 다른 모델들과 같은 출처다. */
       { name:'BESPOKE 양문형 (852L) RS84DB5002CW', price:190, grade:'B',
         on:['트위스트 아이스메이커','메탈쿨링'],
-        specs:{ cap:852, power:40, eGrade:2, as:1, noise:36, size:'912 × 1,780 × 915' } }
+        specs:{ cap:852, power:40, eGrade:2, as:1, noise:36, size:'912 × 1,780 × 915' , fridgeCap:532, freezeCap:320} }
     ],
     competitors:{
       /* 2026-08-03 LG 베스트샵 카탈로그(디오스 4도어 지면, M876/H876 스펙표) 대조.
@@ -589,29 +589,40 @@ const DB = {
       'LG':[
         { name:'디오스 AI 오브제컬렉션 4도어 (871L, 더블매직스페이스) M876GBB231', price:455,
           on:['더블 매직스페이스','인버터 리니어 컴프레서','24시간 자동정온','UV청정탈취필터+','대용량 바스켓','패널 교체 가능'],
-          specs:{ cap:871, power:43.0, eGrade:1, as:1, size:'914 × 1,860 × 918' } },
+          specs:{ cap:871, power:43.0, eGrade:1, as:1, size:'914 × 1,860 × 918' , fridgeCap:504, freezeCap:367} },
         { name:'디오스 AI 오브제컬렉션 4도어 (870L, 베이직) H876GBB031', price:330,
           on:['오토 클로징(상)','인버터 리니어 컴프레서','24시간 자동정온','UV청정탈취필터+','접이 선반','트레이 아이스메이커'],
-          specs:{ cap:870, eGrade:1, as:1, size:'914 × 1,860 × 918' } },
+          specs:{ cap:870, eGrade:1, as:1, size:'914 × 1,860 × 918' , fridgeCap:503, freezeCap:367} },
         { name:'디오스 AI 오브제컬렉션 (832L) S834MEE111', price:181,
           on:['도어쿨링+','인버터 리니어 컴프레서','매직스페이스'],
-          specs:{ cap:832, power:40.2, eGrade:1, as:1, noise:37 , size:'913 × 1,790 × 913'} },
+          specs:{ cap:832, power:40.2, eGrade:1, as:1, noise:37 , size:'913 × 1,790 × 913', fridgeCap:524, freezeCap:308} },
         { name:'디오스 오브제컬렉션 (870L) T873MEE111', price:193,
           on:['인버터 리니어 컴프레서','매직스페이스'],
-          specs:{ cap:870, power:43.7, eGrade:1, as:1, noise:38 , size:'914 × 1,787 × 918'} },
+          specs:{ cap:870, power:43.7, eGrade:1, as:1, noise:38 , size:'914 × 1,787 × 918', fridgeCap:503, freezeCap:367} },
         { name:'디오스 AI 오브제컬렉션 (870L) H876GBB011', price:259,
           on:['트레이 아이스메이커','AI절약모드','인버터 리니어 컴프레서'],
-          specs:{ cap:870, power:42, eGrade:1, as:1, noise:37 , size:'914 × 1,860 × 918'} },
+          specs:{ cap:870, power:42, eGrade:1, as:1, noise:37 , size:'914 × 1,860 × 918', fridgeCap:503, freezeCap:367} },
         /* 무드업(M874GNN3A1)은 라인 전체가 단종됐다 — M874·M624·M623·Z331 까지 현행 모델이 하나도 없다.
            색상가변 글라스 도어에 해당하는 기능이 현행 라인에 없어 같은 급(870L·1등급)으로 대체한다. */
         { name:'디오스 AI 오브제컬렉션 (870L, 매직스페이스) T876MEE1H1', price:260,
           on:['매직스페이스','인버터 리니어 컴프레서','24시간 자동정온','대용량 바스켓'],
-          specs:{ cap:870, power:43.7, eGrade:1, as:1, size:'914 × 1,787 × 918' } }
+          specs:{ cap:870, power:43.7, eGrade:1, as:1, size:'914 × 1,787 × 918' , fridgeCap:503, freezeCap:367} }
       ]
     },
     specItems:[
       { key:'price', label:'가격',       unit:'만원', better:'low',  score:false },
       { key:'cap',   label:'총 용량',     unit:'L',    better:'high' },
+      /*
+       * 냉장실·냉동실 분리 용량 — 상담에서 "총 몇 리터"보다 자주 나오는 말인데 없었다.
+       * 삼성은 지원 페이지 '용량' 섹션, LG 는 pdpsvc /spec 에서 왔고 **두 쪽 다 합계가
+       * 총용량과 정확히 맞아** 모델 대응이 검산된다(509+355=864 · LG 504+367=871 …).
+       *
+       * `RF85DB90F1AP` 는 521 + 냉동 177 + **맞춤보관실 176** 이라 냉동실만 보면
+       * LG 367 에 두 배 넘게 지는 것처럼 보인다. 숫자는 원문대로 두고 기능 목록에
+       * 맞춤보관실을 적어 뒀다 — 유리하게 고치지 않는다.
+       */
+      { key:'fridgeCap', label:'냉장실 용량', unit:'L', better:'high' },
+      { key:'freezeCap', label:'냉동실 용량', unit:'L', better:'high' },
       { key:'power', label:'월 소비전력', unit:'kWh',  better:'low'  },
       { key:'eGrade',label:'에너지등급',  unit:'등급', better:'low'  },
       { key:'as',    label:'무상 A/S',    unit:'년',   better:'high' },
