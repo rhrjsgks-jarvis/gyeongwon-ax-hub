@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
+import { versionLabel } from '@/lib/version'
 
 // 허브·통합검색은 **그룹 밖 최상단**이다. 둘 다 '도구'가 아니라 진입점이고,
 // 좁은 화면에서는 하단 탭이, 넓은 화면에서는 사이드바 맨 위가 같은 역할을 한다.
@@ -133,6 +134,11 @@ export default function Navigation() {
         </Link>
         {/* 오른쪽 — 팀 이름은 왼쪽으로 밀고 그 자리에 공유 아이콘을 고정한다 */}
         <div className="flex items-center gap-2.5">
+          {/* 버전 — 미니앱을 보고 있을 때도 최신인지 확인돼야 해서 상단바에 함께 둔다.
+              좁은 화면에서는 팀 이름과 겹쳐 두 줄이 되므로 넓은 화면에서만 띄운다. */}
+          <span className="hidden sm:inline text-white text-[10px] opacity-50 tracking-wide">
+            {versionLabel()}
+          </span>
           <span className="text-white text-xs opacity-60">경원영업팀</span>
           {canShare && (
             <button

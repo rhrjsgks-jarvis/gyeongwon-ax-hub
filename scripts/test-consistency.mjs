@@ -147,6 +147,26 @@ if (ok) {
       }
     }
   }
+
+  /*
+   * **화면에 뜨는 버전(`lib/version.ts`)이 CACHE_VERSION 과 같아야 한다.**
+   *
+   * 그 숫자의 쓸모가 "내 폰이 최신인가"를 눈으로 확인하는 것인데(2026-08-15 사용자
+   * 요청), 둘이 어긋나면 화면이 거짓말을 한다 — 옛 캐시를 쓰는 기기가 최신 번호를
+   * 보여주거나 그 반대가 된다. `sw.js` 는 정적 파일로 그대로 서빙돼야 해서
+   * `lib/version.ts` 를 import 할 수 없다. 그래서 한쪽에서 읽어 오는 대신 여기서 묶는다.
+   */
+  /* `read()` 는 public/ 기준이라 저장소 루트의 파일은 직접 읽는다 */
+  const versionTs = fs.readFileSync(path.join(__dirname, '..', 'lib', 'version.ts'), 'utf8');
+  const shown = (versionTs.match(/APP_VERSION\s*=\s*'([^']+)'/) || [])[1];
+  if (!shown) fail('lib/version.ts 에서 APP_VERSION 을 찾지 못했다');
+  /* 캐시 키는 `axhub-v59` 꼴이고 화면에는 `v59` 만 띄운다 — 접두를 뺀 뒤 견준다 */
+  else if (shown !== ver.replace(/^axhub-/, '')) {
+    fail(`화면 버전(${shown}) ≠ 캐시 버전(${ver}) — 버전을 올릴 때 두 곳을 함께 고칠 것. `
+      + `어긋나면 "내 폰이 최신인가"를 이 숫자로 판단할 수 없다`);
+  } else {
+    console.log(`OK: 화면 버전 ${shown} = 캐시 버전 ${ver}`);
+  }
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

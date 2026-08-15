@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 import QRCode from '@/components/QRCode'
+import { APP_VERSION, versionLabel } from '@/lib/version'
 
 /*
  * 배포 주소. **`salescopilot.vercel.app` 은 쓸 수 없다** — 이미 다른 사람의 앱이 그 이름을
@@ -562,7 +563,20 @@ export default function Home() {
       {/* 헤더 */}
       <div className="mb-4">
         <p className="text-xs text-gray-400 mb-1 min-h-4">{todayStr}</p>
-        <h1 className="text-2xl font-black text-gray-900">세일즈 코파일럿</h1>
+        <h1 className="text-2xl font-black text-gray-900 flex items-baseline gap-2">
+          세일즈 코파일럿
+          {/*
+            버전 — 매장 기기는 서비스워커가 캐시를 들고 있어 "배포했는데 화면이 그대로"가
+            실제로 여러 번 있었다. 여기 숫자가 방금 올린 판과 같으면 반영된 것이다.
+            이름을 이겨서는 안 되므로 작고 흐리게 둔다(심플 이즈 베스트).
+          */}
+          <span
+            className="text-[11px] font-semibold text-gray-400 tracking-wide"
+            title={`화면에 뜬 판이 최신인지 확인용 — 서비스워커 캐시 ${APP_VERSION}`}
+          >
+            {versionLabel()}
+          </span>
+        </h1>
         <p className="text-sm text-gray-500 mt-1">매장 상담의 모든 답을 한 곳에</p>
       </div>
 
