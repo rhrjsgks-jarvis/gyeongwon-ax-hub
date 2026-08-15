@@ -512,7 +512,11 @@ async function main() {
   function runClaude(prompt, onProgress) {
     return new Promise((resolve) => {
       const args = buildClaudeArgs({ sessionId: state.sessionId, ...policy });
-      const child = spawn(claudeBin, args, { cwd: ROOT, stdio: ['pipe', 'pipe', 'pipe'] });
+      /* 자식에게 "너는 봇의 세션이다"를 알린다. cwd 가 이 저장소라 자식도 `.claude/settings.json`
+       * 의 자물쇠 훅을 그대로 도는데, 표식이 없으면 **자기를 띄운 봇을 충돌로 신고한다**
+       * (agent-lock.mjs 의 SELF_ENV 주석 참조). 환경변수는 손자 프로세스까지 물려진다. */
+      const env = { ...process.env, [agentLock.SELF_ENV]: 'bot' };
+      const child = spawn(claudeBin, args, { cwd: ROOT, env, stdio: ['pipe', 'pipe', 'pipe'] });
       state.child = child;
 
       let buf = '';

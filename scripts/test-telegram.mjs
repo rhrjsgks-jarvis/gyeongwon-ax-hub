@@ -16,6 +16,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
+import { execFileSync } from 'child_process';
 import {
   parseEnvFile, parseAllowlist, splitMessage, isRiskyPrompt, buildClaudeArgs,
   formatToolLine, formatDuration, validateConfig, explainTelegramError, resolveToolPolicy,
@@ -380,6 +381,63 @@ const eq = (a, b, m) => (a === b ? pass(m) : fail(`${m} — 기대 ${JSON.string
     eq(lock.release('local'), true, '주인은 놓을 수 있다');
     eq(lock.acquire('bot').ok, true, '풀리면 봇이 잡는다');
     lock.release('bot');
+
+    /* **썩었어도 남의 자물쇠는 지우지 않는다**(2026-08-15). 봇은 10초마다 박동을 찍는데
+     * 판정선이 60초라, 절전에서 깨어난 직후에는 살아 있는 봇이 다음 박동까지 잠깐
+     * '썩음' 으로 읽힌다. 그 창에서 로컬 Stop 훅이 지우면 둘이 동시에 달린다. */
+    const f = process.env.AGENT_LOCK_FILE;
+    const deadPid = 0x7ffffffe;   // 존재할 수 없는 pid — 봇 자물쇠를 썩은 상태로 만든다
+    fs.writeFileSync(f, JSON.stringify({
+      owner: 'bot', pid: deadPid, at: Date.now(), beat: Date.now(),
+      boot: lock.bootStamp(), transcript: '', note: '폰에서 온 명령',
+    }));
+    eq(lock.read(), null, '죽은 봇 자물쇠는 썩은 것으로 읽힌다 (검사 전제)');
+    eq(lock.release('local'), false, '썩었어도 남의 자물쇠는 로컬이 지우지 않는다');
+    eq(fs.existsSync(f), true, '지우지 않았으니 파일이 그대로 남는다');
+    eq(lock.acquire('local').ok, true, '복구는 그대로 — acquire 가 썩은 것을 걷어내고 잡는다');
+    eq(lock.release('local'), true, '제 자물쇠는 놓는다');
+
+    // 주인을 알 수 없는 쓰레기는 걷어낸다 — 안 그러면 아무도 못 지우는 파일이 된다.
+    fs.writeFileSync(f, '깨진 내용');
+    eq(lock.release('local'), true, '깨져서 주인을 알 수 없는 파일은 걷어낸다');
+    eq(fs.existsSync(f), false, '깨진 파일은 지워진다');
+  }
+
+  /* 봇이 띄운 세션은 **자기를 충돌로 신고하면 안 된다**(2026-08-15 실측 고장).
+   * 봇의 cwd 가 이 저장소라 자식 claude 도 자물쇠 훅을 그대로 도는데, 그 훅이
+   * 봇 자물쇠를 보고 경고를 뱉어 **폰에서 보낸 모든 명령이 "기다리라"는 문장을
+   * 맥락에 달고 시작했다.** 파일이 엉키지는 않지만 모델이 작업을 미룬다. */
+  eq(lock.isBotChild({ [lock.SELF_ENV]: 'bot' }), true, '표식이 있으면 봇이 띄운 세션으로 본다');
+  eq(lock.isBotChild({}), false, '표식이 없으면 사람이 앉은 로컬 세션이다');
+
+  if (process.env.AGENT_LOCK_FILE) {
+    /* CLI 를 진짜로 돌려 본다 — 훅이 부르는 것이 이 경로이고, 함수만 부르면
+     * cli() 의 분기를 건너뛰어 검사가 아무것도 지키지 못한다.
+     * `input:''` 를 반드시 줄 것 — cli 가 stdin(fd 0)에서 transcript_path 를 읽는다. */
+    const runCli = (env, ...argv) => execFileSync(
+      process.execPath, [path.join(__dirname, 'agent-lock.mjs'), ...argv],
+      { env, input: '', encoding: 'utf8' },
+    );
+    const childEnv = { ...process.env, [lock.SELF_ENV]: 'bot' };
+
+    lock.acquire('bot', { note: '폰에서 온 명령' });
+    eq(runCli(childEnv, 'acquire', 'local').trim(), '',
+      '봇이 띄운 세션은 자기를 충돌로 신고하지 않는다');
+    runCli(childEnv, 'release', 'local');
+    eq(lock.read()?.owner, 'bot',
+      '자식 세션의 Stop 훅이 봇 자물쇠를 지우지 않는다');
+
+    // 표식이 없으면 예전 그대로 알려야 한다 — 이 경고까지 사라지면 자물쇠가 무의미해진다.
+    const warned = runCli({ ...process.env, [lock.SELF_ENV]: '' }, 'acquire', 'local');
+    if (!warned.includes('작업 자물쇠')) fail('진짜 로컬 세션에는 봇 작업을 알려야 한다');
+    else pass('표식이 없는 진짜 로컬 세션에는 예전처럼 충돌을 알린다');
+    lock.release('bot');
+
+    /* 표식을 넘기는 쪽이 빠지면 위 분기가 영영 안 탄다 — 조용히 반쪽이 된다. */
+    const botSrc = fs.readFileSync(path.join(__dirname, 'telegram-bot.mjs'), 'utf8');
+    if (!/spawn\(claudeBin[^)]*\benv\b/.test(botSrc) || !botSrc.includes('[agentLock.SELF_ENV]:'))
+      fail('봇이 claude 를 띄울 때 표식을 넘기지 않는다 — 자식이 자기를 충돌로 신고한다');
+    else pass('봇이 자식 세션에 표식을 넘긴다 (spawn env)');
   }
 
   // 대기열은 **버리지 않는 것**이 요점이다.

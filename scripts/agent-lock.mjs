@@ -111,10 +111,14 @@ export function isStale(lock, now = Date.now(), alive = isAlive, touched = touch
   return now - Math.max(touched(lock.transcript), lock.at) > IDLE_MS;          // 로컬 대화가 멈췄다
 }
 
+/* 파일에 적힌 것을 판정 없이 그대로 읽는다. `read()` 는 썩은 것을 `null` 로 뭉개므로
+ * "파일이 없다"와 "있는데 썩었다"를 가를 수 없다 — 그 둘을 갈라야 하는 곳이 release 다. */
+function readRaw() {
+  try { return parseLock(fs.readFileSync(lockFile(), 'utf8')); } catch { return null; }
+}
+
 export function read(now = Date.now()) {
-  let text;
-  try { text = fs.readFileSync(lockFile(), 'utf8'); } catch { return null; }
-  const lock = parseLock(text);
+  const lock = readRaw();
   if (!lock || isStale(lock, now)) return null;
   return lock;
 }
@@ -161,7 +165,19 @@ export function beat(owner, { pid = process.pid, now = Date.now() } = {}) {
  * 그 순간 둘 다 자유롭다고 믿고 동시에 달린다. */
 export function release(owner, { pid = process.pid } = {}) {
   const held = read();
-  if (!held) { try { fs.unlinkSync(lockFile()); } catch { /* 이미 없다 */ } return true; }
+  if (!held) {
+    /* 파일이 없거나 **썩었다**. 썩은 것이라도 주인이 다르면 지우지 않는다 —
+     * 봇은 10초마다 박동을 찍는데 판정선은 60초라, **절전에서 깨어난 직후**에는
+     * `Date.now()` 가 뛰어 살아 있는 봇이 다음 박동까지 최대 10초간 '썩음'으로 읽힌다.
+     * 그 창에서 로컬 Stop 훅이 돌면 멀쩡한 봇 자물쇠가 지워지고 둘이 동시에 달린다 —
+     * 이 자물쇠가 막으려던 바로 그 상황이다.
+     * **복구는 그대로 된다** — 진짜로 죽어 남은 자물쇠는 `acquire` 가 스스로 걷어낸다
+     * (EEXIST → 썩었으면 unlink 후 재시도). 지우는 길이 여기 하나 더 있을 뿐이었다. */
+    const rotten = readRaw();
+    if (rotten && rotten.owner !== owner) return false;
+    try { fs.unlinkSync(lockFile()); } catch { /* 이미 없다 */ }
+    return true;
+  }
   if (held.owner !== owner) return false;
   if (held.pid && pid && held.pid !== pid && owner === 'bot') return false;
   try { fs.unlinkSync(lockFile()); } catch { /* 경합 — 이미 없어졌으면 목적은 달성됐다 */ }
@@ -174,6 +190,27 @@ export function describe(lock, now = Date.now()) {
   const sec = Math.max(0, Math.round((now - lock.at) / 1000));
   const dur = sec < 60 ? `${sec}초째` : `${Math.floor(sec / 60)}분 ${sec % 60}초째`;
   return `${who} 작업 중 (${dur})${lock.note ? ` — ${lock.note}` : ''}`;
+}
+
+/* ── 봇이 띄운 세션은 '로컬'이 아니다 ─────────────────────────────────
+ * 봇은 `claude -p` 를 **이 저장소를 cwd 로** 띄운다. 그 자식 세션도 `.claude/settings.json`
+ * 을 읽으므로 **훅이 그대로 돈다** — 그래서 자식의 UserPromptSubmit 이 `acquire local` 을
+ * 부르고, 자기를 띄운 봇의 자물쇠를 보고 "충돌"이라고 신고했다(2026-08-15 실측: 폰에서
+ * 보낸 첫 명령이 `[작업 자물쇠] 텔레그램 봇 작업 중 …` 을 맥락에 달고 시작했다).
+ *
+ * **파일이 엉키지는 않는다** — `release` 가 주인을 대조해 남의 자물쇠를 지킨다. 문제는
+ * 경고문이 세션 맥락에 붙는다는 것이다. 모델이 그걸 "봇이 돌고 있으니 기다리자"로 읽으면
+ * 폰에서 보낸 명령이 아무것도 안 하고 끝난다. 자기 자신과의 충돌을 자기에게 보고하는 셈이다.
+ *
+ * 알아보는 방법은 **봇이 spawn 할 때 넣어 주는 환경변수 표식**이다. 환경변수는 자식으로
+ * 복사되고 손자(훅 프로세스)까지 내려가므로, pid 계보를 뒤지지 않아도 된다(윈도우에서
+ * 계보 추적은 비싸고 pid 재사용까지 겹친다). 표식이 있으면 acquire·release 를 **둘 다**
+ * 건너뛴다 — release 만 남겨 두면 봇 자물쇠가 썩은 것으로 판정되는 찰나에 자식의 Stop 훅이
+ * 그것을 지운다. */
+export const SELF_ENV = 'AGENT_LOCK_SESSION';
+
+export function isBotChild(env = process.env) {
+  return env[SELF_ENV] === 'bot';
 }
 
 /* ── 훅에서 부르는 얼굴 ────────────────────────────────────────────────
@@ -196,6 +233,9 @@ function hookInput() {
 
 function cli(argv) {
   const [cmd, owner = 'local'] = argv;
+  /* 봇이 띄운 세션 안에서 도는 훅이다 — 자물쇠는 봇이 이미 쥐고 있고 봇이 놓는다.
+   * 여기서 잡으려 들면 자기 자신을 충돌로 신고하고, 놓으려 들면 봇 것을 건드린다. */
+  if (owner === 'local' && isBotChild() && (cmd === 'acquire' || cmd === 'release')) return 0;
   if (cmd === 'acquire') {
     const r = acquire(owner, { note: argv.slice(2).join(' '), transcript: hookInput().transcript_path || '' });
     if (!r.ok) console.log(`[작업 자물쇠] ${describe(r.held)} — 같은 파일을 동시에 고치면 서로 덮어씁니다.`);
