@@ -69,7 +69,7 @@
  * 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
 /* v66 (2026-08-15) — 도면을 올리면 집 전체를 먼저 잡는다(place-app.html). */
-const CACHE_VERSION = 'axhub-v68';
+const CACHE_VERSION = 'axhub-v69';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

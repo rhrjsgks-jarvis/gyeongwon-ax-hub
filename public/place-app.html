@@ -5168,25 +5168,31 @@ function loadFromLibrary(entry){
  * 전수다. 시별로 쪼개 두어 고른 시만 받는다(전체 200KB → 한 시 5~45KB).
  * 매장 전파가 약해도 열려야 하므로 필요한 것만 받는 것이 이 앱의 규칙이다.
  */
-var APT_KEY = { 수원:'suwon', 성남:'seongnam', 용인:'yongin', 화성:'hwaseong', 평택:'pyeongtaek',
-                오산:'osan', 안성:'anseong', 이천:'icheon', 광주:'gwangju', 안양:'anyang',
-                광명:'gwangmyeong', 하남:'hanam' };
+/*
+ * **시·도와 파일명은 목차(`apt/index.json`)에서 읽는다 — 앱에 표를 또 두지 않는다.**
+ * 한때 `APT_KEY` 를 여기 적고 지역명을 `'경기 ' + 시` 로 만들었는데, 강원을 넣는
+ * 순간 **춘천·원주까지 전부 '경기'** 가 됐다. 표가 두 곳에 있으면 한쪽만 고치게 된다 —
+ * 목차는 `scripts/build-apt-index.mjs` 가 만들며 `{city, sido, key, n}` 을 함께 싣는다.
+ * (파일명이 영문인 이유는 그대로다 — 한글 경로는 URL 인코딩·서비스워커 캐시에서
+ *  조용히 깨진다.)
+ */
 var aptCache = {};
-var aptCityCount = {};      // 시 → 아파트 수 (목차만 먼저 받아 목록에 적는다)
+var aptCity = {};           // 시 → {n, key, sido} — 목차만 먼저 받아 목록에 적는다
 async function loadAptCount(){
-  if (Object.keys(aptCityCount).length) return aptCityCount;
+  if (Object.keys(aptCity).length) return aptCity;
   try {
     const r = await fetch('apt/index.json');
-    if (r.ok) for (const c of (await r.json()).cities || []) aptCityCount[c.city] = c.n;
+    if (r.ok) for (const c of (await r.json()).cities || [])
+      aptCity[c.city] = { n: c.n, key: c.key, sido: c.sido || '경기' };
   } catch {}
-  return aptCityCount;
+  return aptCity;
 }
 async function loadAptList(city){
   if (aptCache[city]) return aptCache[city];
   try {
-    /* 파일명은 영문이다 — 한글 경로는 URL 인코딩·서비스워커 캐시에서 조용히 깨진다 */
-    const key = APT_KEY[city]; if (!key) { aptCache[city] = []; return []; }
-    const r = await fetch('apt/' + key + '.json');
+    const meta = aptCity[city];
+    if (!meta || !meta.key) { aptCache[city] = []; return []; }
+    const r = await fetch('apt/' + meta.key + '.json');
     aptCache[city] = r.ok ? await r.json() : [];
   } catch { aptCache[city] = []; }
   return aptCache[city];
@@ -5257,7 +5263,8 @@ async function openLibrary(){
    * 단지가 목록에서 사라지는 것이 다른 말인 것과 같은 이유다.
    */
   const regions = () => uniq([...idx.map((c) => c.region), ...savedOnly.map((e) => e.region || '지역 미지정'),
-    ...Object.keys(aptCityCount).map((c) => '경기 ' + c)]);   /* 색인 표기가 `경기 하남`(시 없음)이다 */
+    /* 색인 표기가 `경기 하남`·`강원 춘천`(시/군 없음)이라 그 꼴로 맞춘다 */
+    ...Object.entries(aptCity).map(([c, m]) => m.sido + ' ' + c)]);
   const inRegion = () => idx.filter((c) => c.region === region);
   const savedIn = (complex) => saved.filter((e) => e.complex === complex);
 
@@ -5300,7 +5307,7 @@ async function openLibrary(){
         const withPlan = cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length;
         /* 그 시의 전체 아파트 수 — 도면이 없어도 목록에는 있다. 목차만 미리 받아 둔다.
            상담사가 "그 시에 몇 단지가 있나"를 먼저 알아야 없다고 단정하지 않는다. */
-        const allN = (aptCityCount[shortName.replace(/시$/, '')] || 0);
+        const allN = ((aptCity[shortName.replace(/[시군]$/, '')] || {}).n || 0);
         return `<button class="libitem" data-v="${esc(r)}"><b>${esc(shortName)}</b>
           <span class="hint">${allN ? `단지 ${allN.toLocaleString()}곳 · ` : `단지 ${withPlan}곳 · `}도면 ${n}장</span></button>`;
       });
@@ -5313,13 +5320,13 @@ async function openLibrary(){
           <span class="hint">저장된 방만 있음</span></button>`);
       }
       /*
-       * **도면이 없는 단지도 함께 보여준다**(2026-08-15). 경기 12개 시 2,969곳 중
-       * 도면이 있는 것은 139곳뿐이라, 그것만 띄우면 상담사가 대부분의 고객에게
-       * *"그 단지는 없습니다"* 로 시작해야 한다. 이름·동·입주년월만 있어도
-       * 고객 집을 특정하고 평형 상담을 시작할 수 있고, 도면은 받아서 올리면 된다.
+       * **도면이 없는 단지도 함께 보여준다**(2026-08-15). 경기 12개 시 + 강원 전역
+       * 18개 시·군 3,829곳 중 도면이 있는 것은 139곳뿐이라, 그것만 띄우면 상담사가
+       * 대부분의 고객에게 *"그 단지는 없습니다"* 로 시작해야 한다. 이름·동·입주년월만
+       * 있어도 고객 집을 특정하고 평형 상담을 시작할 수 있고, 도면은 받아서 올리면 된다.
        * 이미 도면이 있는 단지는 위에서 나왔으므로 **이름이 겹치면 뺀다.**
        */
-      const cityKey = cityOf(region).replace(/시$/, '');
+      const cityKey = cityOf(region).replace(/[시군]$/, '');
       const extra = (aptCache[cityKey] || []).filter((a) => {
         const n = a.n.replace(/\s+/g, '');
         return !inRegion().some((c) => { const h = c.complex.replace(/\s+/g, ''); return h.includes(n) || n.includes(h); });
@@ -5359,7 +5366,7 @@ async function openLibrary(){
           region = b.dataset.v; lv = 'complex';
           /* 그 시의 단지 목록을 받아 둔다(도면 없는 곳까지 보여주기 위해).
              먼저 그려 두고 도착하면 다시 그린다 — 기다림이 안 보이게. */
-          const ck = (region.split(' ')[1] || region).replace(/시$/, '');
+          const ck = (region.split(' ')[1] || region).replace(/[시군]$/, '');
           render();
           if (!aptCache[ck]) loadAptList(ck).then(() => { if (lv === 'complex') render(); });
         }
