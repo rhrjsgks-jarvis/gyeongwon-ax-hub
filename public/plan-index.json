@@ -119,8 +119,8 @@
    "addr": "강원특별자치도 강릉시 송정동 1048번지 일원",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c03/85.jpg",
+     "type": "84A",
+     "file": "plans/c03/84A.jpg",
      "w": 836,
      "h": 556,
      "exclusiveM2": 84.98,
@@ -137,8 +137,8 @@
    "addr": "강원특별자치도 강릉시 송정동 산77-3번지 일원",
    "plans": [
     {
-     "type": "124",
-     "file": "plans/c140/124.jpg",
+     "type": "124D",
+     "file": "plans/c140/124D.jpg",
      "w": 528,
      "h": 1200,
      "exclusiveM2": 124.47,
@@ -147,8 +147,8 @@
      "axis": 0.712
     },
     {
-     "type": "124-2",
-     "file": "plans/c140/124-2.jpg",
+     "type": "124D-2",
+     "file": "plans/c140/124D-2.jpg",
      "w": 528,
      "h": 1200,
      "exclusiveM2": 124.47,
@@ -205,8 +205,8 @@
      "axis": 0.728
     },
     {
-     "type": "85",
-     "file": "plans/c04/85.jpg",
+     "type": "84A",
+     "file": "plans/c04/84A.jpg",
      "w": 929,
      "h": 623,
      "exclusiveM2": 84.98,
@@ -215,8 +215,8 @@
      "axis": 0.676
     },
     {
-     "type": "85-2",
-     "file": "plans/c04/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c04/84B.jpg",
      "w": 566,
      "h": 858,
      "exclusiveM2": 84.98,
@@ -225,8 +225,8 @@
      "axis": 0.731
     },
     {
-     "type": "85-3",
-     "file": "plans/c04/85-3.jpg",
+     "type": "84C",
+     "file": "plans/c04/84C.jpg",
      "w": 583,
      "h": 825,
      "exclusiveM2": 84.98,
@@ -245,18 +245,8 @@
      "axis": 0.74
     },
     {
-     "type": "117",
-     "file": "plans/c04/117.jpg",
-     "w": 625,
-     "h": 918,
-     "exclusiveM2": 117.15,
-     "rooms": 8,
-     "kb": 42,
-     "axis": 0.742
-    },
-    {
-     "type": "117-2",
-     "file": "plans/c04/117-2.jpg",
+     "type": "117A",
+     "file": "plans/c04/117A.jpg",
      "w": 615,
      "h": 867,
      "exclusiveM2": 117.15,
@@ -265,8 +255,18 @@
      "axis": 0.748
     },
     {
-     "type": "117-3",
-     "file": "plans/c04/117-3.jpg",
+     "type": "117B",
+     "file": "plans/c04/117B.jpg",
+     "w": 625,
+     "h": 918,
+     "exclusiveM2": 117.15,
+     "rooms": 8,
+     "kb": 42,
+     "axis": 0.742
+    },
+    {
+     "type": "117C",
+     "file": "plans/c04/117C.jpg",
      "w": 616,
      "h": 893,
      "exclusiveM2": 117.15,
@@ -285,8 +285,8 @@
      "axis": 0.733
     },
     {
-     "type": "137-2",
-     "file": "plans/c04/137-2.jpg",
+     "type": "137A",
+     "file": "plans/c04/137A.jpg",
      "w": 587,
      "h": 859,
      "exclusiveM2": 137,
@@ -295,8 +295,8 @@
      "axis": 0.703
     },
     {
-     "type": "137",
-     "file": "plans/c04/137.jpg",
+     "type": "137B",
+     "file": "plans/c04/137B.jpg",
      "w": 584,
      "h": 824,
      "exclusiveM2": 137.23,
@@ -487,8 +487,8 @@
    "addr": "강원특별자치도 원주시 원동 274-40일원",
    "plans": [
     {
-     "type": "60",
-     "file": "plans/c08/60.jpg",
+     "type": "59D",
+     "file": "plans/c08/59D.jpg",
      "w": 708,
      "h": 562,
      "exclusiveM2": 59.93,
@@ -517,8 +517,8 @@
      "axis": 0.717
     },
     {
-     "type": "85",
-     "file": "plans/c08/85.jpg",
+     "type": "84B",
+     "file": "plans/c08/84B.jpg",
      "w": 576,
      "h": 801,
      "exclusiveM2": 84.98,
@@ -737,8 +737,8 @@
      "axis": 0.608
     },
     {
-     "type": "85-2",
-     "file": "plans/c15/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c15/84B.jpg",
      "w": 707,
      "h": 423,
      "exclusiveM2": 84.87,
@@ -747,8 +747,8 @@
      "axis": 0.796
     },
     {
-     "type": "85",
-     "file": "plans/c15/85.jpg",
+     "type": "84A",
+     "file": "plans/c15/84A.jpg",
      "w": 1140,
      "h": 1077,
      "exclusiveM2": 84.94,
@@ -949,8 +949,8 @@
    "addr": "강원도 평창군 대관령면 올림픽로 169-15",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c19/85.jpg",
+     "type": "84A",
+     "file": "plans/c19/84A.jpg",
      "w": 940,
      "h": 634,
      "exclusiveM2": 84.98,
@@ -959,8 +959,8 @@
      "axis": 0.784
     },
     {
-     "type": "85-2",
-     "file": "plans/c19/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c19/84B.jpg",
      "w": 326,
      "h": 319,
      "exclusiveM2": 84.99,
@@ -1025,8 +1025,8 @@
    "addr": "강원특별자치도 홍천군 홍천읍 갈마곡리 23-26 일원",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c139/85.jpg",
+     "type": "84A",
+     "file": "plans/c139/84A.jpg",
      "w": 1075,
      "h": 1200,
      "exclusiveM2": 84.92,
@@ -1035,8 +1035,8 @@
      "axis": 0.638
     },
     {
-     "type": "85-2",
-     "file": "plans/c139/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c139/84B.jpg",
      "w": 1032,
      "h": 1200,
      "exclusiveM2": 84.93,
@@ -1089,8 +1089,8 @@
    "addr": "경기도 광명시 광명동 373-3 일원",
    "plans": [
     {
-     "type": "60-2",
-     "file": "plans/c141/60-2.jpg",
+     "type": "59B",
+     "file": "plans/c141/59B.jpg",
      "w": 640,
      "h": 1025,
      "exclusiveM2": 59.8,
@@ -1099,8 +1099,8 @@
      "axis": 0.604
     },
     {
-     "type": "60-3",
-     "file": "plans/c141/60-3.jpg",
+     "type": "59B-2",
+     "file": "plans/c141/59B-2.jpg",
      "w": 867,
      "h": 1200,
      "exclusiveM2": 59.8,
@@ -1109,8 +1109,8 @@
      "axis": 0.646
     },
     {
-     "type": "60",
-     "file": "plans/c141/60.jpg",
+     "type": "59A",
+     "file": "plans/c141/59A.jpg",
      "w": 640,
      "h": 1025,
      "exclusiveM2": 59.94,
@@ -1119,8 +1119,8 @@
      "axis": 0.58
     },
     {
-     "type": "75",
-     "file": "plans/c141/75.jpg",
+     "type": "74B",
+     "file": "plans/c141/74B.jpg",
      "w": 640,
      "h": 1180,
      "exclusiveM2": 74.76,
@@ -1129,8 +1129,8 @@
      "axis": 0.622
     },
     {
-     "type": "75-2",
-     "file": "plans/c141/75-2.jpg",
+     "type": "74B-2",
+     "file": "plans/c141/74B-2.jpg",
      "w": 821,
      "h": 1200,
      "exclusiveM2": 74.76,
@@ -1139,8 +1139,8 @@
      "axis": 0.65
     },
     {
-     "type": "75-5",
-     "file": "plans/c141/75-5.jpg",
+     "type": "74C",
+     "file": "plans/c141/74C.jpg",
      "w": 640,
      "h": 1180,
      "exclusiveM2": 74.77,
@@ -1149,8 +1149,8 @@
      "axis": 0.618
     },
     {
-     "type": "75-3",
-     "file": "plans/c141/75-3.jpg",
+     "type": "74A",
+     "file": "plans/c141/74A.jpg",
      "w": 640,
      "h": 1100,
      "exclusiveM2": 74.92,
@@ -1159,8 +1159,8 @@
      "axis": 0.624
     },
     {
-     "type": "75-4",
-     "file": "plans/c141/75-4.jpg",
+     "type": "74A-2",
+     "file": "plans/c141/74A-2.jpg",
      "w": 821,
      "h": 1200,
      "exclusiveM2": 74.92,
@@ -1169,8 +1169,8 @@
      "axis": 0.658
     },
     {
-     "type": "85",
-     "file": "plans/c141/85.jpg",
+     "type": "84A",
+     "file": "plans/c141/84A.jpg",
      "w": 614,
      "h": 1200,
      "exclusiveM2": 84.96,
@@ -1179,18 +1179,8 @@
      "axis": 0.623
     },
     {
-     "type": "85-2",
-     "file": "plans/c141/85-2.jpg",
-     "w": 614,
-     "h": 1200,
-     "exclusiveM2": 84.96,
-     "rooms": 6,
-     "kb": 84,
-     "axis": 0.64
-    },
-    {
-     "type": "85-3",
-     "file": "plans/c141/85-3.jpg",
+     "type": "84A-2",
+     "file": "plans/c141/84A-2.jpg",
      "w": 821,
      "h": 1200,
      "exclusiveM2": 84.96,
@@ -1199,8 +1189,18 @@
      "axis": 0.651
     },
     {
-     "type": "85-4",
-     "file": "plans/c141/85-4.jpg",
+     "type": "84B",
+     "file": "plans/c141/84B.jpg",
+     "w": 614,
+     "h": 1200,
+     "exclusiveM2": 84.96,
+     "rooms": 6,
+     "kb": 84,
+     "axis": 0.64
+    },
+    {
+     "type": "84B-2",
+     "file": "plans/c141/84B-2.jpg",
      "w": 821,
      "h": 1200,
      "exclusiveM2": 84.96,
@@ -1851,8 +1851,8 @@
    "addr": "경기도 수원시 영통구 영통동 980-2번지 일원",
    "plans": [
     {
-     "type": "84",
-     "file": "plans/c36/84.jpg",
+     "type": "84A-2",
+     "file": "plans/c36/84A-2.jpg",
      "w": 1200,
      "h": 877,
      "exclusiveM2": 84,
@@ -2065,8 +2065,8 @@
    "addr": "",
    "plans": [
     {
-     "type": "84",
-     "file": "plans/c39/84.jpg",
+     "type": "84B",
+     "file": "plans/c39/84B.jpg",
      "w": 957,
      "h": 1096,
      "exclusiveM2": 84.37,
@@ -2077,8 +2077,8 @@
      "scaleConf": "보통"
     },
     {
-     "type": "85",
-     "file": "plans/c39/85.jpg",
+     "type": "84A",
+     "file": "plans/c39/84A.jpg",
      "w": 1111,
      "h": 1106,
      "exclusiveM2": 84.85,
@@ -2087,8 +2087,8 @@
      "axis": 0.72
     },
     {
-     "type": "85-2",
-     "file": "plans/c39/85-2.jpg",
+     "type": "84C",
+     "file": "plans/c39/84C.jpg",
      "w": 675,
      "h": 1200,
      "exclusiveM2": 84.98,
@@ -2387,8 +2387,8 @@
    "addr": "경기도 수원시 권선구 당수1지구 공공주택지구 내 C3블록",
    "plans": [
     {
-     "type": "75",
-     "file": "plans/c44/75.jpg",
+     "type": "74A",
+     "file": "plans/c44/74A.jpg",
      "w": 488,
      "h": 620,
      "exclusiveM2": 74.95,
@@ -2397,8 +2397,8 @@
      "axis": 0.624
     },
     {
-     "type": "85-3",
-     "file": "plans/c44/85-3.jpg",
+     "type": "84P",
+     "file": "plans/c44/84P.jpg",
      "w": 1113,
      "h": 488,
      "exclusiveM2": 84.7,
@@ -2407,8 +2407,8 @@
      "axis": 0.742
     },
     {
-     "type": "85-2",
-     "file": "plans/c44/85-2.jpg",
+     "type": "84A",
+     "file": "plans/c44/84A.jpg",
      "w": 510,
      "h": 692,
      "exclusiveM2": 84.78,
@@ -2417,8 +2417,8 @@
      "axis": 0.62
     },
     {
-     "type": "85",
-     "file": "plans/c44/85.jpg",
+     "type": "84B",
+     "file": "plans/c44/84B.jpg",
      "w": 653,
      "h": 721,
      "exclusiveM2": 84.92,
@@ -2427,8 +2427,8 @@
      "axis": 0.684
     },
     {
-     "type": "93-2",
-     "file": "plans/c44/93-2.jpg",
+     "type": "92B",
+     "file": "plans/c44/92B.jpg",
      "w": 1200,
      "h": 542,
      "exclusiveM2": 92.88,
@@ -2437,8 +2437,8 @@
      "axis": 0.722
     },
     {
-     "type": "93",
-     "file": "plans/c44/93.jpg",
+     "type": "92A",
+     "file": "plans/c44/92A.jpg",
      "w": 961,
      "h": 619,
      "exclusiveM2": 92.91,
@@ -2447,8 +2447,8 @@
      "axis": 0.723
     },
     {
-     "type": "93-3",
-     "file": "plans/c44/93-3.jpg",
+     "type": "92C",
+     "file": "plans/c44/92C.jpg",
      "w": 1200,
      "h": 856,
      "exclusiveM2": 92.93,
@@ -2457,8 +2457,8 @@
      "axis": 0.667
     },
     {
-     "type": "107",
-     "file": "plans/c44/107.jpg",
+     "type": "106A",
+     "file": "plans/c44/106A.jpg",
      "w": 1030,
      "h": 545,
      "exclusiveM2": 106.93,
@@ -2467,8 +2467,8 @@
      "axis": 0.727
     },
     {
-     "type": "113",
-     "file": "plans/c44/113.jpg",
+     "type": "112A",
+     "file": "plans/c44/112A.jpg",
      "w": 1200,
      "h": 721,
      "exclusiveM2": 112.97,
@@ -2515,8 +2515,8 @@
    "addr": "경기도 수원시 권선구 당수1지구 공공주택지구 내 D3블록",
    "plans": [
     {
-     "type": "75",
-     "file": "plans/c45/75.jpg",
+     "type": "74A",
+     "file": "plans/c45/74A.jpg",
      "w": 488,
      "h": 620,
      "exclusiveM2": 74.95,
@@ -2525,8 +2525,8 @@
      "axis": 0.624
     },
     {
-     "type": "85-3",
-     "file": "plans/c45/85-3.jpg",
+     "type": "84P",
+     "file": "plans/c45/84P.jpg",
      "w": 1113,
      "h": 488,
      "exclusiveM2": 84.7,
@@ -2535,8 +2535,8 @@
      "axis": 0.742
     },
     {
-     "type": "85-2",
-     "file": "plans/c45/85-2.jpg",
+     "type": "84A",
+     "file": "plans/c45/84A.jpg",
      "w": 510,
      "h": 692,
      "exclusiveM2": 84.78,
@@ -2545,8 +2545,8 @@
      "axis": 0.62
     },
     {
-     "type": "85",
-     "file": "plans/c45/85.jpg",
+     "type": "84B",
+     "file": "plans/c45/84B.jpg",
      "w": 653,
      "h": 721,
      "exclusiveM2": 84.92,
@@ -2555,8 +2555,8 @@
      "axis": 0.684
     },
     {
-     "type": "93-2",
-     "file": "plans/c45/93-2.jpg",
+     "type": "92B",
+     "file": "plans/c45/92B.jpg",
      "w": 1200,
      "h": 542,
      "exclusiveM2": 92.88,
@@ -2565,8 +2565,8 @@
      "axis": 0.722
     },
     {
-     "type": "93",
-     "file": "plans/c45/93.jpg",
+     "type": "92A",
+     "file": "plans/c45/92A.jpg",
      "w": 961,
      "h": 619,
      "exclusiveM2": 92.91,
@@ -2575,8 +2575,8 @@
      "axis": 0.723
     },
     {
-     "type": "93-3",
-     "file": "plans/c45/93-3.jpg",
+     "type": "92C",
+     "file": "plans/c45/92C.jpg",
      "w": 1200,
      "h": 856,
      "exclusiveM2": 92.93,
@@ -2585,8 +2585,8 @@
      "axis": 0.667
     },
     {
-     "type": "107",
-     "file": "plans/c45/107.jpg",
+     "type": "106A",
+     "file": "plans/c45/106A.jpg",
      "w": 1030,
      "h": 545,
      "exclusiveM2": 106.93,
@@ -2595,8 +2595,8 @@
      "axis": 0.727
     },
     {
-     "type": "113",
-     "file": "plans/c45/113.jpg",
+     "type": "112A",
+     "file": "plans/c45/112A.jpg",
      "w": 1200,
      "h": 721,
      "exclusiveM2": 112.97,
@@ -2925,8 +2925,8 @@
    "addr": "경기도 안성시 안성당왕지구 B-1블록 공동주택용지",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c55/85.jpg",
+     "type": "84A",
+     "file": "plans/c55/84A.jpg",
      "w": 791,
      "h": 1200,
      "exclusiveM2": 84.99,
@@ -2935,8 +2935,8 @@
      "axis": 0.58
     },
     {
-     "type": "85-2",
-     "file": "plans/c55/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c55/84B.jpg",
      "w": 508,
      "h": 495,
      "exclusiveM2": 84.99,
@@ -3953,8 +3953,8 @@
    "addr": "경기도 용인시 처인구 삼가동 174번지 일원",
    "plans": [
     {
-     "type": "60",
-     "file": "plans/c74/60.jpg",
+     "type": "59A",
+     "file": "plans/c74/59A.jpg",
      "w": 1180,
      "h": 766,
      "exclusiveM2": 59.98,
@@ -3963,8 +3963,8 @@
      "axis": 0.288
     },
     {
-     "type": "75",
-     "file": "plans/c74/75.jpg",
+     "type": "74B",
+     "file": "plans/c74/74B.jpg",
      "w": 1113,
      "h": 1164,
      "exclusiveM2": 74.95,
@@ -4427,8 +4427,8 @@
    "addr": "경기도 용인시 처인구 양지면 양지리 산97-12번지 일원",
    "plans": [
     {
-     "type": "81",
-     "file": "plans/c82/81.jpg",
+     "type": "80A",
+     "file": "plans/c82/80A.jpg",
      "w": 739,
      "h": 493,
      "exclusiveM2": 80.97,
@@ -4437,8 +4437,8 @@
      "axis": 0.767
     },
     {
-     "type": "81-2",
-     "file": "plans/c82/81-2.jpg",
+     "type": "80A-2",
+     "file": "plans/c82/80A-2.jpg",
      "w": 646,
      "h": 427,
      "exclusiveM2": 80.97,
@@ -4447,8 +4447,8 @@
      "axis": 0.678
     },
     {
-     "type": "85-2",
-     "file": "plans/c82/85-2.jpg",
+     "type": "84C",
+     "file": "plans/c82/84C.jpg",
      "w": 653,
      "h": 682,
      "exclusiveM2": 84.79,
@@ -4457,8 +4457,8 @@
      "axis": 0.643
     },
     {
-     "type": "85-5",
-     "file": "plans/c82/85-5.jpg",
+     "type": "84C-2",
+     "file": "plans/c82/84C-2.jpg",
      "w": 552,
      "h": 578,
      "exclusiveM2": 84.79,
@@ -4467,8 +4467,8 @@
      "axis": 0.643
     },
     {
-     "type": "85",
-     "file": "plans/c82/85.jpg",
+     "type": "84A",
+     "file": "plans/c82/84A.jpg",
      "w": 739,
      "h": 519,
      "exclusiveM2": 84.89,
@@ -4477,8 +4477,8 @@
      "axis": 0.77
     },
     {
-     "type": "85-3",
-     "file": "plans/c82/85-3.jpg",
+     "type": "84B",
+     "file": "plans/c82/84B.jpg",
      "w": 639,
      "h": 404,
      "exclusiveM2": 84.9,
@@ -4487,8 +4487,8 @@
      "axis": 0.637
     },
     {
-     "type": "85-4",
-     "file": "plans/c82/85-4.jpg",
+     "type": "84B-2",
+     "file": "plans/c82/84B-2.jpg",
      "w": 834,
      "h": 532,
      "exclusiveM2": 84.9,
@@ -4497,8 +4497,8 @@
      "axis": 0.623
     },
     {
-     "type": "85-6",
-     "file": "plans/c82/85-6.jpg",
+     "type": "84D",
+     "file": "plans/c82/84D.jpg",
      "w": 650,
      "h": 683,
      "exclusiveM2": 84.97,
@@ -4507,18 +4507,8 @@
      "axis": 0.779
     },
     {
-     "type": "85-7",
-     "file": "plans/c82/85-7.jpg",
-     "w": 563,
-     "h": 700,
-     "exclusiveM2": 84.97,
-     "rooms": 9,
-     "kb": 48,
-     "axis": 0.632
-    },
-    {
-     "type": "85-8",
-     "file": "plans/c82/85-8.jpg",
+     "type": "84D-2",
+     "file": "plans/c82/84D-2.jpg",
      "w": 552,
      "h": 570,
      "exclusiveM2": 84.97,
@@ -4527,8 +4517,18 @@
      "axis": 0.659
     },
     {
-     "type": "135-2",
-     "file": "plans/c82/135-2.jpg",
+     "type": "84E",
+     "file": "plans/c82/84E.jpg",
+     "w": 563,
+     "h": 700,
+     "exclusiveM2": 84.97,
+     "rooms": 9,
+     "kb": 48,
+     "axis": 0.632
+    },
+    {
+     "type": "134B",
+     "file": "plans/c82/134B.jpg",
      "w": 1193,
      "h": 782,
      "exclusiveM2": 134.94,
@@ -4537,8 +4537,8 @@
      "axis": 0.757
     },
     {
-     "type": "135-6",
-     "file": "plans/c82/135-6.jpg",
+     "type": "134B-2",
+     "file": "plans/c82/134B-2.jpg",
      "w": 612,
      "h": 395,
      "exclusiveM2": 134.94,
@@ -4547,8 +4547,8 @@
      "axis": 0.78
     },
     {
-     "type": "135-3",
-     "file": "plans/c82/135-3.jpg",
+     "type": "134C",
+     "file": "plans/c82/134C.jpg",
      "w": 1135,
      "h": 577,
      "exclusiveM2": 134.96,
@@ -4557,8 +4557,8 @@
      "axis": 0.806
     },
     {
-     "type": "135-4",
-     "file": "plans/c82/135-4.jpg",
+     "type": "134C-2",
+     "file": "plans/c82/134C-2.jpg",
      "w": 650,
      "h": 329,
      "exclusiveM2": 134.96,
@@ -4567,8 +4567,8 @@
      "axis": 0.81
     },
     {
-     "type": "135",
-     "file": "plans/c82/135.jpg",
+     "type": "134A",
+     "file": "plans/c82/134A.jpg",
      "w": 1018,
      "h": 669,
      "exclusiveM2": 135,
@@ -4577,8 +4577,8 @@
      "axis": 0.76
     },
     {
-     "type": "135-5",
-     "file": "plans/c82/135-5.jpg",
+     "type": "134A-2",
+     "file": "plans/c82/134A-2.jpg",
      "w": 635,
      "h": 418,
      "exclusiveM2": 135,
@@ -4587,8 +4587,8 @@
      "axis": 0.768
     },
     {
-     "type": "84A",
-     "file": "plans/c82/84A.jpg",
+     "type": "84A-2",
+     "file": "plans/c82/84A-2.jpg",
      "w": 645,
      "h": 452,
      "exclusiveM2": null,
@@ -4597,8 +4597,8 @@
      "axis": 0.666
     },
     {
-     "type": "84E",
-     "file": "plans/c82/84E.jpg",
+     "type": "84E-2",
+     "file": "plans/c82/84E-2.jpg",
      "w": 543,
      "h": 672,
      "exclusiveM2": null,
@@ -4615,8 +4615,8 @@
    "addr": "경기도 용인시 처인구 역북동 811번지 (신대지구 A1 블록)",
    "plans": [
     {
-     "type": "85-2",
-     "file": "plans/c83/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c83/84B.jpg",
      "w": 546,
      "h": 1200,
      "exclusiveM2": 84.98,
@@ -4625,8 +4625,8 @@
      "axis": 0.63
     },
     {
-     "type": "85-3",
-     "file": "plans/c83/85-3.jpg",
+     "type": "84B-2",
+     "file": "plans/c83/84B-2.jpg",
      "w": 628,
      "h": 447,
      "exclusiveM2": 84.98,
@@ -4635,8 +4635,8 @@
      "axis": 0.695
     },
     {
-     "type": "85-4",
-     "file": "plans/c83/85-4.jpg",
+     "type": "84C",
+     "file": "plans/c83/84C.jpg",
      "w": 433,
      "h": 977,
      "exclusiveM2": 84.98,
@@ -4645,8 +4645,8 @@
      "axis": 0.649
     },
     {
-     "type": "85-5",
-     "file": "plans/c83/85-5.jpg",
+     "type": "84C-2",
+     "file": "plans/c83/84C-2.jpg",
      "w": 552,
      "h": 1200,
      "exclusiveM2": 84.98,
@@ -4655,8 +4655,8 @@
      "axis": 0.664
     },
     {
-     "type": "85",
-     "file": "plans/c83/85.jpg",
+     "type": "84A",
+     "file": "plans/c83/84A.jpg",
      "w": 546,
      "h": 1200,
      "exclusiveM2": 84.99,
@@ -4665,8 +4665,8 @@
      "axis": 0.627
     },
     {
-     "type": "84A",
-     "file": "plans/c83/84A.jpg",
+     "type": "84A-2",
+     "file": "plans/c83/84A-2.jpg",
      "w": 215,
      "h": 977,
      "exclusiveM2": null,
@@ -4683,8 +4683,8 @@
    "addr": "경기도 용인시 기흥구 영덕동 55-1번지 일원",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c84/85.jpg",
+     "type": "84C",
+     "file": "plans/c84/84C.jpg",
      "w": 651,
      "h": 478,
      "exclusiveM2": 84.64,
@@ -4693,8 +4693,8 @@
      "axis": 0.751
     },
     {
-     "type": "85-3",
-     "file": "plans/c84/85-3.jpg",
+     "type": "84A",
+     "file": "plans/c84/84A.jpg",
      "w": 1198,
      "h": 473,
      "exclusiveM2": 84.68,
@@ -4703,8 +4703,8 @@
      "axis": 0.567
     },
     {
-     "type": "85-4",
-     "file": "plans/c84/85-4.jpg",
+     "type": "84A-2",
+     "file": "plans/c84/84A-2.jpg",
      "w": 891,
      "h": 687,
      "exclusiveM2": 84.68,
@@ -4713,8 +4713,8 @@
      "axis": 0.698
     },
     {
-     "type": "85-2",
-     "file": "plans/c84/85-2.jpg",
+     "type": "84B",
+     "file": "plans/c84/84B.jpg",
      "w": 898,
      "h": 677,
      "exclusiveM2": 84.7,
@@ -4723,8 +4723,8 @@
      "axis": 0.558
     },
     {
-     "type": "85-5",
-     "file": "plans/c84/85-5.jpg",
+     "type": "84B-2",
+     "file": "plans/c84/84B-2.jpg",
      "w": 1197,
      "h": 444,
      "exclusiveM2": 84.7,
@@ -4733,8 +4733,8 @@
      "axis": 0.607
     },
     {
-     "type": "104",
-     "file": "plans/c84/104.jpg",
+     "type": "103A",
+     "file": "plans/c84/103A.jpg",
      "w": 759,
      "h": 502,
      "exclusiveM2": 103.88,
@@ -4743,8 +4743,8 @@
      "axis": 0.744
     },
     {
-     "type": "104-2",
-     "file": "plans/c84/104-2.jpg",
+     "type": "103B",
+     "file": "plans/c84/103B.jpg",
      "w": 1197,
      "h": 445,
      "exclusiveM2": 103.88,
@@ -4763,8 +4763,8 @@
      "axis": 0.577
     },
     {
-     "type": "119",
-     "file": "plans/c84/119.jpg",
+     "type": "119A",
+     "file": "plans/c84/119A.jpg",
      "w": 580,
      "h": 713,
      "exclusiveM2": 119.16,
@@ -4773,8 +4773,8 @@
      "axis": 0.768
     },
     {
-     "type": "103A",
-     "file": "plans/c84/103A.jpg",
+     "type": "103A-2",
+     "file": "plans/c84/103A-2.jpg",
      "w": 687,
      "h": 1200,
      "exclusiveM2": null,
@@ -4783,8 +4783,8 @@
      "axis": 0.713
     },
     {
-     "type": "103B",
-     "file": "plans/c84/103B.jpg",
+     "type": "103B-2",
+     "file": "plans/c84/103B-2.jpg",
      "w": 368,
      "h": 771,
      "exclusiveM2": null,
@@ -4803,8 +4803,8 @@
      "axis": 0.728
     },
     {
-     "type": "119A",
-     "file": "plans/c84/119A.jpg",
+     "type": "119A-2",
+     "file": "plans/c84/119A-2.jpg",
      "w": 897,
      "h": 751,
      "exclusiveM2": null,
@@ -4833,8 +4833,8 @@
      "axis": 0.587
     },
     {
-     "type": "84C",
-     "file": "plans/c84/84C.jpg",
+     "type": "84C-2",
+     "file": "plans/c84/84C-2.jpg",
      "w": 743,
      "h": 491,
      "exclusiveM2": null,
@@ -5227,8 +5227,8 @@
    "addr": "경기도 이천시 갈산동 572-1번지 일원",
    "plans": [
     {
-     "type": "85-2",
-     "file": "plans/c94/85-2.jpg",
+     "type": "84C",
+     "file": "plans/c94/84C.jpg",
      "w": 860,
      "h": 947,
      "exclusiveM2": 84.94,
@@ -5237,8 +5237,8 @@
      "axis": 0.727
     },
     {
-     "type": "85",
-     "file": "plans/c94/85.jpg",
+     "type": "84A",
+     "file": "plans/c94/84A.jpg",
      "w": 883,
      "h": 656,
      "exclusiveM2": 84.96,
@@ -5247,8 +5247,8 @@
      "axis": 0.724
     },
     {
-     "type": "85-3",
-     "file": "plans/c94/85-3.jpg",
+     "type": "84B",
+     "file": "plans/c94/84B.jpg",
      "w": 880,
      "h": 656,
      "exclusiveM2": 84.96,
@@ -5823,8 +5823,8 @@
    "addr": "경기도 평택시 화양지구 도시개발사업 9-1BL(경기도 평택시 현덕면 화양리 785번지 일원)",
    "plans": [
     {
-     "type": "85-2",
-     "file": "plans/c107/85-2.jpg",
+     "type": "84D",
+     "file": "plans/c107/84D.jpg",
      "w": 765,
      "h": 1013,
      "exclusiveM2": 84.73,
@@ -5833,8 +5833,8 @@
      "axis": 0.719
     },
     {
-     "type": "85",
-     "file": "plans/c107/85.jpg",
+     "type": "84C",
+     "file": "plans/c107/84C.jpg",
      "w": 607,
      "h": 424,
      "exclusiveM2": 84.95,
@@ -5979,8 +5979,8 @@
    "addr": "경기도 평택시 가재지구 도시개발사업 공동 1BL",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c109/85.jpg",
+     "type": "84A",
+     "file": "plans/c109/84A.jpg",
      "w": 913,
      "h": 774,
      "exclusiveM2": 84.96,
@@ -6947,8 +6947,8 @@
    "addr": "경기도 화성시 산척동 746번지 (화성동탄2 택지개발사업지구 A78BL)",
    "plans": [
     {
-     "type": "85-2",
-     "file": "plans/c126/85-2.jpg",
+     "type": "84A-2",
+     "file": "plans/c126/84A-2.jpg",
      "w": 1200,
      "h": 903,
      "exclusiveM2": 84.73,
@@ -6957,8 +6957,8 @@
      "axis": 0.674
     },
     {
-     "type": "85",
-     "file": "plans/c126/85.jpg",
+     "type": "84B",
+     "file": "plans/c126/84B.jpg",
      "w": 1200,
      "h": 910,
      "exclusiveM2": 84.95,
@@ -7025,8 +7025,8 @@
    "addr": "경기도 화성시 산척동 749번지 (화성동탄2 택지개발사업지구 A76-2BL)",
    "plans": [
     {
-     "type": "85",
-     "file": "plans/c127/85.jpg",
+     "type": "84A",
+     "file": "plans/c127/84A.jpg",
      "w": 1200,
      "h": 622,
      "exclusiveM2": 84.65,
@@ -7035,8 +7035,8 @@
      "axis": 0.647
     },
     {
-     "type": "85-2",
-     "file": "plans/c127/85-2.jpg",
+     "type": "84A-2",
+     "file": "plans/c127/84A-2.jpg",
      "w": 733,
      "h": 426,
      "exclusiveM2": 84.65,
@@ -7045,24 +7045,24 @@
      "axis": 0.668
     },
     {
-     "type": "85-3",
-     "file": "plans/c127/85-3.jpg",
-     "w": 681,
-     "h": 552,
-     "exclusiveM2": 84.78,
-     "rooms": 7,
-     "kb": 40,
-     "axis": 0.779
-    },
-    {
-     "type": "85-4",
-     "file": "plans/c127/85-4.jpg",
+     "type": "84B-2",
+     "file": "plans/c127/84B-2.jpg",
      "w": 680,
      "h": 589,
      "exclusiveM2": 84.78,
      "rooms": 6,
      "kb": 42,
      "axis": 0.787
+    },
+    {
+     "type": "84C",
+     "file": "plans/c127/84C.jpg",
+     "w": 681,
+     "h": 552,
+     "exclusiveM2": 84.78,
+     "rooms": 7,
+     "kb": 40,
+     "axis": 0.779
     },
     {
      "type": "85C",
@@ -7075,8 +7075,8 @@
      "axis": 0.688
     },
     {
-     "type": "85-5",
-     "file": "plans/c127/85-5.jpg",
+     "type": "84D-2",
+     "file": "plans/c127/84D-2.jpg",
      "w": 621,
      "h": 707,
      "exclusiveM2": 84.88,
@@ -7085,8 +7085,8 @@
      "axis": 0.786
     },
     {
-     "type": "98-2",
-     "file": "plans/c127/98-2.jpg",
+     "type": "97A",
+     "file": "plans/c127/97A.jpg",
      "w": 689,
      "h": 485,
      "exclusiveM2": 97.62,
@@ -7095,8 +7095,8 @@
      "axis": 0.773
     },
     {
-     "type": "98-3",
-     "file": "plans/c127/98-3.jpg",
+     "type": "97B-2",
+     "file": "plans/c127/97B-2.jpg",
      "w": 686,
      "h": 415,
      "exclusiveM2": 97.62,
@@ -7115,8 +7115,8 @@
      "axis": 0.796
     },
     {
-     "type": "98",
-     "file": "plans/c127/98.jpg",
+     "type": "97B",
+     "file": "plans/c127/97B.jpg",
      "w": 986,
      "h": 1005,
      "exclusiveM2": 97.76,

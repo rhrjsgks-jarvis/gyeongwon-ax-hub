@@ -290,10 +290,31 @@ for (const [dir, g] of [...groups.entries()].sort()) {
      */
     const excl = ty.excl || s.excl || null;
 
-    // 주택형 이름 — OCR 로 읽은 것이 가장 믿을 만하고, 없으면 파일명, 그것도 없으면 순번.
-    // 겹치면 버리지 말고 -2, -3 을 붙인다. 84A~84D 중 하나만 남고 나머지가 사라지는 것보다,
-    // 직원이 도면을 보고 구분하는 편이 낫다.
-    let key = (ty.type || s.type || '').toUpperCase() || typeFromName(it.file) || '';
+    /*
+     * 주택형 이름 — OCR 로 읽은 것이 가장 믿을 만하고, 없으면 파일명, 그것도 없으면 순번.
+     * 겹치면 버리지 말고 -2, -3 을 붙인다. 84A~84D 중 하나만 남고 나머지가 사라지는 것보다,
+     * 직원이 도면을 보고 구분하는 편이 낫다.
+     *
+     * **단, OCR 이 숫자만 읽었고 파일명에 주택형 글자가 있으면 파일명을 쓴다**(2026-08-16).
+     * read-types 의 `type` 은 **전용면적을 반올림한 값**이라 84A·84B·84C 가 전부 '85' 로
+     * 뭉개진다 — 그러면 -2·-3 이 붙어 `85 · 85-2 · 85-3` 이 되고, 상담사가 화면에서
+     * 주택형을 고를 수가 없다(고성 퍼스트뷰가 84·117·137 세 계열 전부 그랬다).
+     * 매장에서 부르는 이름은 '84B' 이지 '85-2' 가 아니다.
+     *
+     * **파일명을 무조건 믿지는 않는다.** 두 출처가 서로 검산하게 한다 — 파일명이 말하는
+     * 숫자가 OCR 이 읽은 전용면적과 2㎡ 안쪽으로 맞을 때만 쓴다. 그래야 "01_84a.jpg" 인데
+     * 실제로는 59㎡ 인 도면에서 엉뚱한 이름을 붙이지 않는다(파일명 순번을 주택형으로 읽어
+     * 강릉 오션시티가 통째로 16·19·22·25 로 실렸던 것과 같은 계열의 사고다).
+     */
+    const ocrKey = (ty.type || s.type || '').toUpperCase();
+    const nameKey = typeFromName(it.file) || '';
+    let key = ocrKey;
+    if (/^\d+$/.test(ocrKey) && /[A-Z]/.test(nameKey)) {
+      const nameNum = parseInt(nameKey, 10);
+      const area = excl || parseInt(ocrKey, 10);
+      if (Number.isFinite(nameNum) && Math.abs(nameNum - area) <= 2) key = nameKey;
+    }
+    key = key || nameKey || '';
     if (!key) key = 'T' + (plans.length + 1);
     if (used.has(key)) {
       let i = 2;

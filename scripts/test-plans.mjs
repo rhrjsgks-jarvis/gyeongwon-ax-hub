@@ -2162,6 +2162,46 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 아래에서 이름으로 지목하는 도면이 아직 그 자리에 있는가 ──────────
+ *
+ * **단지 id(`c139`)는 자리 순번이라 단지를 하나 추가하면 그 뒤가 통째로 밀린다.**
+ * 주택형 이름도 파이프라인을 다시 돌리면 바뀔 수 있다(전용면적 OCR 이 채워지면
+ * `84B` → `85-2` 가 되는 식). 실제로 2026-08-16 에 단지 5곳을 추가하자 여기서
+ * 지목하던 `plans/c139/84B.jpg` 가 사라져 **`page.evaluate: undefined` 라는
+ * 알 수 없는 오류로 스위트가 죽었다** — 무엇이 없어졌는지 화면에 한 마디도 안 나왔다.
+ *
+ * 그래서 먼저 확인하고, 없으면 **같은 주택형을 가진 단지를 찾아 알려 준다.**
+ * 검사가 죽는 것 자체는 막을 수 없지만(그 도면으로 확인하려던 것이 있으므로),
+ * 적어도 "어디를 고치면 되는지"는 알려 줘야 한다.
+ */
+{
+  const REFS = [
+    'plans/c09/85.jpg', 'plans/c114/T2.jpg', 'plans/c133/T2.jpg', 'plans/c26/T9.jpg',
+    'plans/c123/100-2.jpg', 'plans/c39/117B.jpg', 'plans/c86/85A.jpg', 'plans/c26/T1.jpg',
+    'plans/c85/23.jpg', 'plans/c72/59.jpg', 'plans/c139/84B.jpg', 'plans/c39/84B.jpg',
+  ];
+  const idx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'plan-index.json'), 'utf8'));
+  const live = new Set();
+  const byType = new Map();
+  for (const c of (idx.complexes || [])) for (const p of (c.plans || [])) {
+    live.add(p.file);
+    if (!byType.has(p.type)) byType.set(p.type, []);
+    byType.get(p.type).push(`${p.file}  (${c.region} ${c.complex})`);
+  }
+  const gone = REFS.filter((f) => !live.has(f));
+  if (gone.length) {
+    for (const f of gone) {
+      const t = f.split('/').pop().replace(/\.jpg$/, '');
+      const cand = (byType.get(t) || []).slice(0, 3);
+      console.log(`   ${f} 가 없다 — 같은 주택형('${t}') 후보: ${cand.length ? cand.join(' / ') : '없음'}`);
+    }
+    fail(`이름으로 지목한 도면 ${gone.length}장이 색인에 없다 — 단지 id 가 밀렸을 수 있다(위 후보 참고)`);
+  } else {
+    pass(`지목한 도면 ${REFS.length}장 전부 제자리 — 단지 id 안 밀림`);
+  }
+}
+
+/*
  * ── 도면이 아닌 이미지를 화면이 알리는가 ────────────────────────────
  *
  * 색인 617장에는 2D 평면도만 있지 않다. 입체 렌더링·인테리어 사진·품목표·제목 띠가
@@ -2305,7 +2345,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   const r = await page.evaluate(async () => {
     const P = window.__place;
     await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('load')), 9000);
-      P.useImage('/plans/c39/84.jpg', () => { clearTimeout(t); res(); }); });
+      P.useImage('/plans/c39/84B.jpg', () => { clearTimeout(t); res(); }); });
     await new Promise((res) => setTimeout(res, 3000));
     /*
      * **2026-08-15 개편 — 순서가 바뀌었다.**
@@ -2364,7 +2404,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     P.state.rooms = []; P.state.walls = []; P.state.items = [];
     P.state.mmPerPx = null; P.state.scaled = false;
     await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('load')), 9000);
-      P.useImage('/plans/c39/84.jpg', () => { clearTimeout(t); res(); }); });
+      P.useImage('/plans/c39/84B.jpg', () => { clearTimeout(t); res(); }); });
     /* 2026-08-15 개편 — 도면을 올리면 집 전체를 잡고 곧바로 길이 막대가 뜬다.
        예전처럼 [초안 → 이 공간 확정 → 이름] 을 거치지 않는다. */
     await wait(3000);
