@@ -761,6 +761,42 @@ function resetUrlTabInputs() {
     }
   }
 
+  /*
+   * [14] 셀링포인트에 적힌 수치와 비교표 값이 어긋나지 않아야 한다
+   *
+   * 같은 사실이 화면에 두 번 나온다 — 위쪽 비교표(`specs`)와 아래쪽 기능 목록(`on`).
+   * 둘이 갈라지면 **한 화면 안에서 서로 다른 말을 한다.** 실제로 로봇청소기 3종이
+   * `on` 에 "6,000Pa 흡입력"을 적어 놓고 `specs.pa` 는 비어 있었다 — 그래서 그 사실이
+   * 기능 목록에는 보이는데 **비교 행은 통째로 사라졌다**(비교표는 양쪽에 값이 있어야
+   * 그 행을 그린다). 상담사 입장에서는 "왜 이건 비교가 안 되지"가 된다.
+   *
+   * 지금은 Pa 만 본다. 다른 단위로 넓힐 때는 `on` 문구의 표기 흔들림(공백·쉼표·단위
+   * 대소문자)을 먼저 살펴볼 것 — 오탐이 나면 이 검사가 방해물이 된다.
+   */
+  {
+    const bad = [];
+    let checked = 0;
+    for (const [cat, c] of Object.entries(DB)) {
+      if (!c.specItems?.some((i) => i.key === 'pa')) continue;
+      for (const m of [...(c.samsung || []), ...Object.values(c.competitors || {}).flat()]) {
+        for (const f of m.on || []) {
+          const g = String(f).match(/([0-9][0-9,]{2,})\s*Pa\b/i);
+          if (!g) continue;
+          checked++;
+          const said = Number(g[1].replace(/,/g, ''));
+          const has = (m.specs || {}).pa;
+          if (has === undefined) {
+            bad.push(`[${cat}] ${m.name} — 기능 목록엔 ${said}Pa 인데 specs.pa 가 비어 비교 행이 안 그려진다`);
+          } else if (has !== said) {
+            bad.push(`[${cat}] ${m.name} — 기능 목록 ${said}Pa ≠ 비교표 ${has}Pa`);
+          }
+        }
+      }
+    }
+    if (bad.length) fail(`[14] 화면 안에서 말이 갈린다: ${bad.join(' / ')}`);
+    else console.log(`[14] 셀링포인트 Pa 표기 ${checked}건 — 비교표와 일치 OK`);
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════

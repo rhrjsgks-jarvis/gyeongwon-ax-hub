@@ -1144,7 +1144,7 @@ const DB = {
       'LG':[
         { name:'LG 코드제로 오브제컬렉션 R5 (R585WKA1)', price:56,
           on:['2,700Pa 흡입력(4단계 조절, 제조사 발표)','라이다 센서 정밀 맵핑','ThinQ 연동'],
-          specs:{ bat:140, noise:58, as:1, docktype:2 } },
+          specs:{ bat:140, noise:58, as:1, docktype:2 , pa:2700} },
         { name:'LG 코드제로 로보킹 AI 올인원 직배수 (B95AWBTH)', price:219,
           on:['흡입 모터 최대 진공도 10,000 Pa (LG 카탈로그)','물걸레 180 RPM · 리프팅 9㎜','먼지통 0.27L / 먼지봉투 2.5L / 급수 3L / 오수 2.5L','직배수·자동급배수','먼지자동비움','물걸레 자동세척·자동건조','엉킴 방지 브러시','ThinQ 연동'],
           specs:{ bat:180, noise:58, as:1, docktype:5, pa:10000, charge:300 } },
@@ -1158,7 +1158,7 @@ const DB = {
       '로보락':[
         { name:'로보락 S8 Pro Ultra', price:129,
           on:['6,000Pa 흡입력','라이다맵핑','4-in-1 도크','온수 물걸레세척'],
-          specs:{ bat:180, noise:58, as:1, docktype:3 } },
+          specs:{ bat:180, noise:58, as:1, docktype:3 , pa:6000} },
         { name:'로보락 S8 MaxV Ultra', price:169,
           on:['10,000Pa 흡입력','라이다+카메라 3D맵핑','8-in-1 도크(온수세척+온풍건조)','자동급수·자동배수·세제투입','AI 장애물인식 73종'],
           specs:{ bat:180, noise:58, as:1, docktype:4 , pa:10000} },
@@ -1169,18 +1169,18 @@ const DB = {
       '에코백스':[
         { name:'에코백스 디봇 T90 Pro Omni', price:109,
           on:['직배수','70℃ 온수 물걸레세척','자동먼지비움','회전식 물걸레','AI 장애물회피','30,000Pa 흡입력(제조사 발표)'],
-          specs:{ bat:150, noise:60, as:2, docktype:3 } },
+          specs:{ bat:150, noise:60, as:2, docktype:3 , pa:30000} },
         { name:'에코백스 디봇 T30S 프로', price:140,
           on:['11,000Pa 흡입력(제조사 발표)','트루엣지 물걸레 벽면 확장','제로탱글(엉킴방지)','70℃ 온수 물걸레세척+온풍건조','9mm 물걸레 리프팅'],
-          specs:{ bat:150, noise:60, as:2, docktype:3 } }
+          specs:{ bat:150, noise:60, as:2, docktype:3 , pa:11000} }
       ],
       '드리미':[
         { name:'드리미 X60 Ultra', price:129,
           on:['35,000Pa 흡입력(제조사 발표)','하이퍼스트림 엉킴방지 듀얼브러시 2.0','본체 높이 7.95cm(소파·침대 하부 진입)','AI 블루라이트 광학스캔'],
-          specs:{ bat:180, noise:58, as:1, docktype:3 } },
+          specs:{ bat:180, noise:58, as:1, docktype:3 , pa:35000} },
         { name:'드리미 X60 Master', price:142,
           on:['직배수','AI 장애물회피','MopExtend 측면 확장 물걸레','자동물걸레세척','온풍건조','35,000Pa 흡입력(제조사 발표)'],
-          specs:{ bat:180, noise:58, as:1, docktype:3 } }
+          specs:{ bat:180, noise:58, as:1, docktype:3 , pa:35000} }
       ]
     },
     /* suc(흡입력)는 specItems에서 제외함 — 브랜드별 측정 기준(Pa/W)이 달라 수치를 그대로 나란히 비교하면
