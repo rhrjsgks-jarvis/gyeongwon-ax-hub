@@ -105,6 +105,69 @@ if (ok) {
 }
 
 /*
+ * ── PART C: 최상위만이 아니라 **삼성 전 모델**의 코드가 실재하는가 ──
+ *
+ * 위 PART B 는 카테고리마다 **최상위(P) 한 종만** 본다. 그래서 식기세척기
+ * `DW80F71Y1UEWS` 가 그대로 남아 있었다 — **samsung.com 현행 목록(11종)에도
+ * dp 카탈로그에도 없는 코드**다. 상담사가 그 코드로 파인더를 찾으면 0건이고,
+ * 고객에게 불러 주면 존재하지 않는 모델을 안내하는 셈이다(2026-08-15 발견).
+ *
+ * **하드 실패로 만들지 않는다.** 재 보니 59건 중 16건(27%)이 파인더에 없는데,
+ * 대부분은 오류가 아니라 **카탈로그보다 새 제품**이다(2026 Neo QLED QNH80,
+ * Infinite AI 공기청정기 등 — 모델파인더는 카탈로그가 기준이라 늦게 들어온다).
+ * 전부 실패시키면 이 검사가 방해물이 되고 결국 아무도 안 본다.
+ *
+ * 그래서 **이유를 적어 등재하고, 새로 늘어난 것만 실패시킨다.** 목록은 줄어드는
+ * 방향이 맞다 — 카탈로그가 갱신되면 여기서 빼면 된다.
+ */
+{
+  const KNOWN = new Map([
+    /* 카탈로그보다 새 제품 — 다음 카탈로그 반영 때 저절로 해소된다 */
+    ['RF85DB90F1AP', '카탈로그 미수록 (BESPOKE 4도어 에센셜 874L)'],
+    ['RS84DB5002CW', '카탈로그 미수록 (BESPOKE 양문형 852L)'],
+    ['AR60F15D12WS', '카탈로그 미수록 (무풍 벽걸이 15평)'],
+    ['AR60F11D11WT', '카탈로그 미수록 (무풍콤보 벽걸이 11평)'],
+    ['AR60F09D11WT', '카탈로그 미수록 (무풍콤보 벽걸이 9평)'],
+    ['AR60F07D12WT', '카탈로그 미수록 (무풍콤보 벽걸이 7평)'],
+    ['KQ85QNH80', '카탈로그 미수록 (2026 Neo QLED QNH80 85")'],
+    ['KQ75QNH80', '카탈로그 미수록 (2026 Neo QLED QNH80 75")'],
+    ['VS28D950AIW', '카탈로그 미수록 (제트 Lite 280W)'],
+    ['NP960XGK', '카탈로그 미수록 (Book5 Pro 360 16")'],
+    ['NT760VJG', '카탈로그 미수록 (Book6 16")'],
+    ['NP750XGK', '카탈로그 미수록 (Book5 15")'],
+    ['AP90H10198UDD', '카탈로그 미수록 (Infinite AI 100㎡)'],
+    ['AP90F08163UDD', '카탈로그 미수록 (Infinite AI 80㎡)'],
+    /* 여기부터는 **코드 자체가 확정되지 않았다** — 위와 성격이 다르다 */
+    ['DW80F71Y1UEWS', '⚠ 코드 미확정 — samsung.com 현행 11종·dp 카탈로그 어디에도 없다'],
+    ['DW80F73Y1UEWS', '⚠ 코드 미확정 — 카탈로그는 DW80F73Y1UWW, 현행 목록은 DW80F73X1UEWS'],
+  ]);
+  /* 이름 끝뿐 아니라 이름 안쪽에 코드가 오는 항목도 있다(괄호 안 표기) */
+  const codeOf = (name) => {
+    const m = String(name).match(/\b[A-Z]{2}[A-Z0-9]{5,}(?:[-/][A-Z0-9]+)?\b/g);
+    return m ? m[m.length - 1] : null;
+  };
+  const fresh = [];
+  let seen = 0, known = 0;
+  for (const [cat, d] of Object.entries(DB)) {
+    for (const m of d.samsung || []) {
+      const code = codeOf(m.name);
+      if (!code) continue;
+      seen++;
+      if (finderHtml.includes(code)) continue;
+      if (KNOWN.has(code)) { known++; continue; }
+      fresh.push(`"${cat}" ${code} (${String(m.name).slice(0, 34)})`);
+    }
+  }
+  if (fresh.length) {
+    fail(`타사비교 삼성 모델 ${fresh.length}건이 모델파인더 DB에 없고 등재도 안 돼 있다 — `
+      + `상담사가 그 코드로 찾으면 0건이다: ${fresh.join(' / ')}`);
+  } else {
+    console.log(`OK: 타사비교 삼성 모델코드 ${seen}건 — 파인더 미수록 ${known}건은 전부 이유와 함께 등재됨`);
+    for (const [code, why] of KNOWN) if (why.startsWith('⚠')) console.log(`TODO: ${code} — ${why.slice(2)}`);
+  }
+}
+
+/*
  * ── 서비스워커 캐시 버전 ──────────────────────────────────────
  *
  * **미니앱(public/*-app.html)을 고쳤으면 `sw.js` 의 CACHE_VERSION 도 올라가야 한다.**

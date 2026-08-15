@@ -808,6 +808,42 @@ function resetUrlTabInputs() {
   }
 
   /*
+   * [14-b] 셀링포인트의 **흡입력 W 가 그 품목에서 나올 수 있는 값**이어야 한다
+   *
+   * 로봇청소기 2종에 **"6,000W 흡입력"** 이 적혀 있었다(2026-08-15 발견). 로봇청소기가
+   * 6kW 를 쓸 수는 없다 — 헤어드라이어 네 대다. 삼성 제품 지면은 같은 모델을
+   * **최대 10W** 로 적고 시험 근거까지 밝힌다(KTL · KS B 7303:2025).
+   * **우리 제품 설명이라 상담사가 그대로 읽으면 그 자리에서 반박당한다.**
+   * Pa 를 W 로 잘못 옮겨 적으면 이렇게 되므로, 자릿수만 봐도 잡힌다.
+   *
+   * 상한은 **품목마다 실제 표기 범위**에서 잡는다. 스틱청소기는 진짜로 수백 W 다
+   * (제품명 자체가 '비스포크 AI 제트 400W'). 에어컨 냉방능력 9,800W 도 정상이라
+   * **'흡입력' 이 붙은 값만** 본다 — 아무 W 나 잡으면 이 검사가 방해물이 된다.
+   */
+  {
+    const CAP = { '로봇청소기': 150, '청소기': 1000 };   // W — 이보다 크면 단위를 잘못 옮긴 것이다
+    const bad = [];
+    let checked = 0;
+    for (const [cat, cap] of Object.entries(CAP)) {
+      const c = DB[cat];
+      if (!c) { bad.push(`[${cat}] 카테고리가 사라졌다 — 상한표를 함께 고칠 것`); continue; }
+      for (const m of [...(c.samsung || []), ...Object.values(c.competitors || {}).flat()]) {
+        for (const f of m.on || []) {
+          const s = String(f);
+          if (!/흡입력/.test(s)) continue;
+          const g = s.match(/([0-9][0-9,]*)\s*W(?![a-zA-Z])/);
+          if (!g) continue;
+          checked++;
+          const w = Number(g[1].replace(/,/g, ''));
+          if (w > cap) bad.push(`[${cat}] ${m.name} — 흡입력 ${w.toLocaleString()}W (${cat} 상한 ${cap}W): "${s.slice(0, 40)}"`);
+        }
+      }
+    }
+    if (bad.length) fail(`[14-b] 흡입력 W 가 그 품목에서 나올 수 없는 값이다: ${bad.join(' / ')}`);
+    else console.log(`[14-b] 셀링포인트 흡입력 W ${checked}건 — 품목별 상한 안 OK`);
+  }
+
+  /*
    * [15] 전기요금 환산 — **감춰져 있어야 한다** + 계산이 맞아야 한다
    *
    * 2026-08-15 사용자 결정으로 만들어만 두고 노출하지 않는다("전기요금은 매번 케이스가
