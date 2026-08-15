@@ -797,6 +797,51 @@ function resetUrlTabInputs() {
     else console.log(`[14] 셀링포인트 Pa 표기 ${checked}건 — 비교표와 일치 OK`);
   }
 
+  /*
+   * [15] 전기요금 환산 — **감춰져 있어야 한다** + 계산이 맞아야 한다
+   *
+   * 2026-08-15 사용자 결정으로 만들어만 두고 노출하지 않는다("전기요금은 매번 케이스가
+   * 다를수있음"). 제품 상세검색의 AI 추천 버튼과 같은 방식이라, `hidden` 이 실수로
+   * 떨어지면 여기서 실패한다. 동시에 **엔진은 계속 검사**해 코드가 썩지 않게 한다.
+   *
+   * 골든값은 한전 주택용 저압(2024-01-01 시행) 표에서 손으로 계산한 것이다:
+   *   200kWh → 기본 910 + 200×120.0 = 24,910 + 연료비조정 200×5.0 = 1,000 → 25,910원
+   *   350kWh → 910... 아니라 2구간이므로 기본 1,600
+   *            + 200×120.0(24,000) + 150×214.6(32,190) + 350×5.0(1,750) = 59,540원
+   */
+  {
+    const box = doc.getElementById('elecCost');
+    if (!box) fail('[15] #elecCost 가 없다 — 전기요금 환산이 통째로 사라졌는지 확인할 것');
+    else if (!box.hasAttribute('hidden')) {
+      fail('[15] 전기요금 환산이 노출돼 있다 — 사용자 결정으로 감춰 두기로 한 기능이다');
+    }
+
+    const T = window.ELEC_TARIFF;
+    if (!T) fail('[15] ELEC_TARIFF 를 앱에서 못 읽음');
+    else {
+      /* 출처·시행일이 지워지지 않았는지 — 근거 없는 요금표가 되면 안 된다 */
+      if (!/kepco/i.test(String(T.source))) fail('[15] 요금표 출처 표기가 사라졌다');
+      if (T.effective !== '2024-01-01') fail(`[15] 시행일이 바뀌었다(${T.effective}) — 요금표를 갱신했으면 골든값도 함께 고칠 것`);
+      /* 기후환경요금은 확인 못 해 비워 둔 값이다. 누가 채우면 골든값이 어긋나 [15]가
+         먼저 실패하므로 여기서는 알려만 준다 — 출처를 주석에 남겼는지 보라는 뜻이다. */
+      if (T.climate !== null) console.log(`[15] 참고 — 기후환경요금 단가가 ${T.climate} 로 채워졌다. 출처 주석과 골든값을 함께 확인할 것`);
+
+      const cases = [[200, 25910], [350, 59540]];
+      for (const [kwh, want] of cases) {
+        const got = window.elecBill(kwh, false);
+        if (got !== want) fail(`[15] elecBill(${kwh}) = ${got} (기대 ${want})`);
+      }
+      /* 한계 단가 — 구간이 올라가면 반드시 비싸진다 */
+      const m = [200, 350, 500].map((u) => window.elecMarginal(u, false));
+      if (!(m[0] < m[1] && m[1] < m[2])) fail(`[15] 한계 단가가 구간을 따라 오르지 않는다: ${m.join(' / ')}`);
+      /* 연간 차액 — 같은 kWh 차이가 구간에 따라 달라지는 것이 이 기능의 요지다 */
+      const d200 = window.elecYearDiff(26.03, 43, 200, false);
+      const d500 = window.elecYearDiff(26.03, 43, 500, false);
+      if (!(d500 > d200 * 1.5)) fail(`[15] 누진 효과가 안 나타난다: 200kWh ${d200}원 vs 500kWh ${d500}원`);
+      console.log(`[15] 전기요금 환산 — 감춰짐 OK · 요금 계산 OK (냉장고 17kWh 차이: 연 ${d200.toLocaleString('ko-KR')}~${d500.toLocaleString('ko-KR')}원)`);
+    }
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
