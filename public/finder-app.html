@@ -1313,24 +1313,25 @@ async function runAI(){
   const bm=q.match(/(\d[\d,]*)\s*만\s*원?/);
   aiParsedBudget=bm?parseInt(bm[1].replace(/,/g,"")):null;
 
-  const detected=new Set();
-  // 용도별 자동 감지
-  if(/신혼|혼수|결혼|입주|이사|전세/.test(q))
-    ['냉장고','세탁기·콤보','건조기','TV','에어컨','식기세척기','에어드레서','청소기'].forEach(c=>detected.add(c));
-  if(/1인가구|혼자|자취|원룸/.test(q))
-    ['냉장고','세탁기·콤보','TV','청소기'].forEach(c=>detected.add(c));
-  if(/학생|캠퍼스|대학|학교/.test(q))
-    ['노트북','스마트폰','태블릿','버즈'].forEach(c=>detected.add(c));
-  if(/재택|홈오피스|업무|사무/.test(q))
-    ['노트북','스마트폰','워치'].forEach(c=>detected.add(c));
-  if(/건강|운동|피트니스|헬스/.test(q))
-    ['워치','스마트폰'].forEach(c=>detected.add(c));
-  if(/게임|게이밍/.test(q))
-    ['노트북','스마트폰'].forEach(c=>detected.add(c));
-  if(/부모님|엄마|아빠|어른|선물/.test(q))
-    ['TV','스마트폰','워치'].forEach(c=>detected.add(c));
-  // 개별 품목 키워드
-  [
+  /*
+   * ── 품목 감지 (2026-08-16 과잉 반응을 고침) ─────────────────────────
+   *
+   * 예전에는 용도 규칙과 품목 키워드를 **전부 합집합**으로 더했다. 그래서:
+   *   · *"부모님 선물 TV 150만원"* → TV + **스마트폰 + 워치** ('부모님·선물' 규칙)
+   *   · *"자취방 원룸 이사 300만원"* → **8품목** ('이사'가 신혼 규칙에 걸려
+   *     식기세척기·에어드레서까지)
+   * 예산은 고른 품목 수로 나뉘므로(`autoDistributeBudget`) **품목이 늘면 품목당 예산이
+   * 줄어** 엉뚱한 급을 추천하게 된다 — 실제로 150만원 TV 상담에서 TV 몫이 50만원이 됐다.
+   *
+   * 두 가지로 좁힌다:
+   *  ① **문장에 품목이 적혀 있으면 용도 규칙을 끈다.** 사람이 품목을 말했으면 그게 답이다.
+   *  ② 품목이 없을 때, **가구 형태 규칙(1인가구)이 생활 이벤트 규칙(신혼·이사)을 이긴다.**
+   *     '이사'는 1인가구에도 해당해서 합치면 늘 넓은 쪽이 이겨 버린다.
+   *
+   * 좁혀도 안전한 이유 — 선택 화면은 **모든 품목을 보여주고 감지된 것만 체크**하므로
+   * 상담사가 언제든 더할 수 있다. 반대로 과하게 고르면 예산이 조용히 왜곡된다.
+   */
+  const ITEM_RULES=[
     [/냉장고/,'냉장고'],[/세탁기|콤보세탁|드럼세탁|빨래/,'세탁기·콤보'],[/건조기/,'건조기'],
     [/TV|텔레비전|티비/i,'TV'],[/에어컨|냉방기/,'에어컨'],[/식기세척기|식세기/,'식기세척기'],
     [/에어드레서|스타일러/,'에어드레서'],[/청소기|로봇청소기/,'청소기'],
@@ -1339,9 +1340,35 @@ async function runAI(){
     [/갤럭시|핸드폰|스마트폰|폰|휴대폰/,'스마트폰'],[/노트북|랩탑/i,'노트북'],
     [/태블릿|갤탭|탭/,'태블릿'],[/워치|스마트워치|갤럭시워치/,'워치'],
     [/이어폰|버즈|에어팟|무선이어폰/,'버즈'],
-  ].forEach(([r,c])=>{ if(r.test(q)) detected.add(c); });
+  ];
+  const explicit=new Set();
+  ITEM_RULES.forEach(([r,c])=>{ if(r.test(q)) explicit.add(c); });
 
-  renderCatSelector(detected, aiParsedBudget);
+  const detected=new Set(explicit);
+  let why='';
+  if(explicit.size){
+    why=`문장에 적힌 품목 ${explicit.size}개만 골랐습니다 — 용도 추천은 껐습니다.`;
+  } else {
+    const solo=/1인가구|혼자|자취|원룸/.test(q);
+    /* ② 1인가구가 잡히면 신혼·이사류는 적용하지 않는다 */
+    if(!solo && /신혼|혼수|결혼|입주|전세|이사/.test(q))
+      ['냉장고','세탁기·콤보','건조기','TV','에어컨','식기세척기','에어드레서','청소기'].forEach(c=>detected.add(c));
+    if(solo)
+      ['냉장고','세탁기·콤보','TV','청소기'].forEach(c=>detected.add(c));
+    if(/학생|캠퍼스|대학|학교/.test(q))
+      ['노트북','스마트폰','태블릿','버즈'].forEach(c=>detected.add(c));
+    if(/재택|홈오피스|업무|사무/.test(q))
+      ['노트북','스마트폰','워치'].forEach(c=>detected.add(c));
+    if(/건강|운동|피트니스|헬스/.test(q))
+      ['워치','스마트폰'].forEach(c=>detected.add(c));
+    if(/게임|게이밍/.test(q))
+      ['노트북','스마트폰'].forEach(c=>detected.add(c));
+    if(/부모님|엄마|아빠|어른|선물/.test(q))
+      ['TV','스마트폰','워치'].forEach(c=>detected.add(c));
+    if(detected.size) why=`문장에 품목이 없어 **용도**로 ${detected.size}개를 골랐습니다 — 필요 없는 것은 체크를 푸세요.`;
+  }
+
+  renderCatSelector(detected, aiParsedBudget, why);
 }
 
 /* Step 1: 카테고리 선택 */
@@ -1357,7 +1384,7 @@ const AI_CATS = [
   {label:'이어폰',cat:'버즈',emoji:'🎧',src:'MX'},
 ];
 
-function renderCatSelector(preSelected, budget){
+function renderCatSelector(preSelected, budget, why){
   selectedCats=preSelected instanceof Set?new Set(preSelected):new Set();
   aiParsedBudget=(typeof budget==='number')?budget:aiParsedBudget;
   $("aiHost").innerHTML=""; $("parseBar").innerHTML="";
@@ -1374,8 +1401,14 @@ function renderCatSelector(preSelected, budget){
       <span class="cat-src cat-src-${c.src.toLowerCase()}">${c.src}</span>
     </button>`).join('');
 
+  /* **왜 이 품목들이 골라졌는지 밝힌다** — 조용히 좁히거나 넓히면 상담사가 검산할 수 없다 */
+  const whyHtml=why
+    ? `<div class="ai-budget" style="border-color:#bbb;background:#f8f8f8;color:#555">${esc(why).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')}</div>`
+    : '';
+
   $("rHost").innerHTML=`
     ${budgetHtml}
+    ${whyHtml}
     <div class="cat-selector-title">📋 필요한 품목을 선택하세요</div>
     <div class="cat-grid" id="catGrid">${chips}</div>
     <button id="aiNextBtn" class="cat-search-btn" onclick="goStep2()" type="button"

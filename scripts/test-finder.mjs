@@ -275,16 +275,50 @@ const CAT_QUERIES = {
   console.log('── 8. AI 추천 플로우 ──');
   try {
     window.setMode('ai');
+
+    /*
+     * ── 품목을 말했으면 그 품목만 (2026-08-16) ────────────────────────
+     *
+     * 이 문장은 "세탁기랑 건조기 둘 다 필요하고" 라고 **품목을 정확히 말한다.**
+     * 예전에는 '신혼부부' 라는 말 때문에 8품목을 골랐고, 예산 350만원이 8로 나뉘어
+     * 세탁기 몫이 56만원이 됐다 — 상담사가 말한 것과 다른 답이 나온다.
+     * 이 검사는 그 옛 동작을 **기대값으로 굳혀 두고 있었다.**
+     *
+     * 지금은 두 경우를 따로 본다: ①품목을 말하면 그것만 ②말 안 하면 용도 규칙.
+     * 한쪽만 보면 반대쪽이 죽어도 모른다.
+     */
     doc.getElementById('aq').value = '신혼부부인데 집이 좁아요. 세탁기랑 건조기 둘 다 필요하고 예산은 350만원 정도예요.';
     await window.runAI();
     const chips = doc.querySelectorAll('#catGrid .cat-chip');
     const selectedChips = [...doc.querySelectorAll('#catGrid .cat-chip.on')].map((c) => c.dataset.cat);
-    console.log('runAI() 후 카테고리 칩:', chips.length, '개, 자동선택:', selectedChips.length, '개');
+    console.log('runAI() 후 카테고리 칩:', chips.length, '개, 자동선택:', selectedChips.join(', '));
     if (chips.length === 0) fail('runAI() 후 카테고리 선택 칩이 렌더되지 않음');
-    const expectedAuto = ['냉장고', '세탁기·콤보', '건조기', 'TV', '에어컨', '식기세척기', '에어드레서', '청소기'];
-    for (const c of expectedAuto) {
-      if (!selectedChips.includes(c)) fail(`"신혼부부" 문장인데 "${c}" 카테고리가 자동 선택되지 않음`);
+    for (const c of ['세탁기·콤보', '건조기']) {
+      if (!selectedChips.includes(c)) fail(`문장에 적힌 "${c}" 가 자동 선택되지 않음`);
     }
+    const strays = selectedChips.filter((c) => !['세탁기·콤보', '건조기'].includes(c));
+    if (strays.length) fail(`품목을 말했는데 용도 규칙이 더 얹혔다: ${strays.join(', ')} (예산이 그만큼 쪼개진다)`);
+
+    /* ② 품목을 말하지 않으면 용도 규칙이 살아 있어야 한다 */
+    doc.getElementById('aq').value = '신혼부부 혼수 준비중입니다. 예산은 1000만원이에요.';
+    await window.runAI();
+    const useCase = [...doc.querySelectorAll('#catGrid .cat-chip.on')].map((c) => c.dataset.cat);
+    for (const c of ['냉장고', '세탁기·콤보', '건조기', 'TV', '에어컨', '식기세척기', '에어드레서', '청소기']) {
+      if (!useCase.includes(c)) fail(`품목을 안 말한 "신혼부부 혼수" 문장인데 "${c}" 가 빠졌다 — 용도 규칙이 죽었다`);
+    }
+
+    /* ③ 1인가구가 생활 이벤트(이사)를 이긴다 — 자취방에 식기세척기를 얹지 않는다 */
+    doc.getElementById('aq').value = '자취방 원룸 이사 300만원';
+    await window.runAI();
+    const solo = [...doc.querySelectorAll('#catGrid .cat-chip.on')].map((c) => c.dataset.cat);
+    if (solo.includes('식기세척기') || solo.includes('에어드레서'))
+      fail(`자취방 원룸인데 신혼 규칙이 얹혔다: ${solo.join(', ')}`);
+    if (!solo.includes('냉장고') || !solo.includes('청소기'))
+      fail(`1인가구 규칙이 안 걸렸다: ${solo.join(', ')}`);
+
+    /* 아래 Step2 검사는 원래 문장(품목 2개 + 예산 350만)으로 이어 간다 */
+    doc.getElementById('aq').value = '신혼부부인데 집이 좁아요. 세탁기랑 건조기 둘 다 필요하고 예산은 350만원 정도예요.';
+    await window.runAI();
 
     // toggleCat으로 카테고리 하나 추가
     window.toggleCat('노트북');
@@ -296,11 +330,15 @@ const CAT_QUERIES = {
     // 다시 꺼서 원상복구 (세탁기 패키지 8개만 유지)
     window.toggleCat('노트북');
 
-    // Step2로 이동
+    /*
+     * Step2 카드 수는 **고른 품목 수에서 끌어낸다.** 8 로 박아 두면 감지 규칙을 고칠
+     * 때마다 이 검사가 깨지는데, 정작 여기서 지켜야 할 것은 "고른 품목마다 카드 하나"다.
+     */
+    const wantCards = [...doc.querySelectorAll('#catGrid .cat-chip.on')].length;
     window.goStep2();
     const configCards = doc.querySelectorAll('#rHost .cat-config-card');
-    console.log('goStep2() 후 카테고리별 설정 카드:', configCards.length, '개 (기대: 8개)');
-    if (configCards.length !== 8) fail(`goStep2() 후 설정 카드 수 = ${configCards.length}, 기대값 8`);
+    console.log('goStep2() 후 카테고리별 설정 카드:', configCards.length, `개 (고른 품목 ${wantCards}개)`);
+    if (configCards.length !== wantCards) fail(`goStep2() 후 설정 카드 수 = ${configCards.length}, 고른 품목은 ${wantCards}개`);
     const featChips = doc.querySelectorAll('#rHost .feat-chip');
     if (featChips.length === 0) fail('goStep2() 후 기능 선택 칩(.feat-chip)이 하나도 없음');
 
@@ -311,7 +349,7 @@ const CAT_QUERIES = {
 
     // 예산 입력 후 합계 갱신
     const budgetInputs = doc.querySelectorAll('#rHost .cat-budget-input');
-    if (budgetInputs.length !== 8) fail(`예산 입력 필드 수 = ${budgetInputs.length}, 기대값 8`);
+    if (budgetInputs.length !== wantCards) fail(`예산 입력 필드 수 = ${budgetInputs.length}, 고른 품목은 ${wantCards}개`);
     /*
      * **문장에서 예산을 읽었으면 goStep2 가 이미 칸을 채워 둔다**(2026-08-16).
      * 예전에는 버튼을 눌러야 채워졌는데, 문장에 예산을 쓴 상담사는 그 버튼을 누르지
