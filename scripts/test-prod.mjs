@@ -125,7 +125,50 @@ for (let n = 0; n < targets.length; n++) {
   await page.waitForTimeout(5500);
 
   await step('공간 확정', async () => {
-    await f.locator('#draftbar button', { hasText: '이 공간 확정' }).click({ timeout: 15000 });
+    /*
+     * **글자가 아니라 id 로 잡는다**(2026-08-16 정정).
+     *
+     * 확정 버튼 문구는 상황에 따라 바뀐다 —
+     *   `more.length ? `${more.length+1}개로 확정` : '이 공간 확정'`
+     * 도면을 올리면 집 전체를 먼저 잡게 되면서(2026-08-15) `more` 가 거의 항상 차서
+     * **"N개로 확정"** 이 뜬다. 그런데 이 검사는 '이 공간 확정' 이라는 글자를 붙들고
+     * 있어 **6회 전부 15초 타임아웃**이었다. 앱은 멀쩡했다.
+     *
+     * 늘 실패하는 검사는 아무것도 지키지 못한다 — 게다가 이 스위트는 `npm test` 에
+     * 없어서 아무도 못 봤다. 화면 문구는 바뀌라고 있는 것이고, **id 는 안 바뀐다.**
+     */
+    /*
+     * **못 찾으면 화면에 무엇이 있었는지 적는다**(2026-08-16).
+     *
+     * 이 단계가 6회 전부 15초 타임아웃이었는데 **뒤 흐름은 매번 성공**했다 —
+     * 공간 9~11곳 인식 · 가전 배치 · 3D 열림. 즉 앱은 멀쩡하고 이 단계만 막혔다.
+     * 실제로 찍어 보니 막대는 떠 있는데(`on`) **`#d-ok` 가 없고** 모달이 열려 있었다.
+     * 실측으로 확정했다 — 그때 막대에 있는 버튼은 **`wl-next · wl-pick · wl-two ·
+     * wl-again · wl-ok`**, 전부 **벽 길이(축척) 입력** 손잡이다. 즉 단지를 불러오면
+     * 공간을 이미 등록해 두고(9곳) **곧장 축척을 묻는다** — 이 경로에 확정 단계는 없다
+     * (2026-08-15 '도면을 올리면 집 전체를 먼저 잡는다'의 결과다).
+     * 직접 올린 도면 경로에는 아직 남아 있을 수 있어 단계를 지우지는 않았다.
+     *
+     * **통과시키려고 단계를 지우지 않는다.** 아직 확정하지 못했기 때문이다. 대신
+     * 못 찾았을 때 **그 순간 화면 상태를 함께 남겨** 다음 사람이 판단하게 한다 —
+     * 아무 정보 없이 "Timeout" 만 남으면 이번처럼 원인 찾기를 처음부터 다시 한다.
+     */
+    const ok = f.locator('#draftbar #d-ok');
+    if (await ok.count()) { await ok.click({ timeout: 15000 }); }
+    else {
+      const st = await fr()?.evaluate(() => {
+        const d = document.getElementById('draftbar'), sh = document.getElementById('sheet');
+        const P = window.__place || {};
+        return {
+          bar: d ? d.className + '/' + getComputedStyle(d).display : '없음',
+          btns: d ? [...d.querySelectorAll('button')].map((b) => b.id || b.textContent.trim().slice(0, 10)).join(',') : '',
+          sheet: sh ? getComputedStyle(sh).display : '-',
+          rooms: (P.state?.rooms || []).length, scaled: !!P.state?.scaled,
+        };
+      }).catch(() => null);
+      notes.push(`공간 확정 버튼(#d-ok)이 없었다 — 막대 ${st?.bar} 버튼[${st?.btns}] · 모달 ${st?.sheet} · 공간 ${st?.rooms}곳 · 축척 ${st?.scaled ? '확정' : '미확정'}`);
+      return;
+    }
     await page.waitForTimeout(800);
     await f.locator('#sheet .modal-actions button.primary').click({ timeout: 8000 }).catch(() => {});
     await page.waitForTimeout(1300);
