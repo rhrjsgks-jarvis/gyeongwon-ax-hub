@@ -85,7 +85,11 @@
  * 전력산업기반기금을 넣었다. 화면은 여전히 hidden 이지만 미니앱 파일이 바뀌었으므로
  * SWR 규칙상 여기를 올려야 이미 쓰던 기기가 새 계산을 받는다.
  */
-const CACHE_VERSION = 'axhub-v73';
+/*
+ * v74 (2026-08-16) — place-app.html 은 주석만 바뀌었지만(도면 단지 수 139 → 144),
+ * 이 검사는 파일이 바뀌었는지만 보므로 함께 올린다. 기능 변화는 없다.
+ */
+const CACHE_VERSION = 'axhub-v74';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
