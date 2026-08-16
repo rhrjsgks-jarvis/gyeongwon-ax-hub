@@ -1072,6 +1072,38 @@ function resetUrlTabInputs() {
     }
     if (bad.length) fail(`[18] 근거 없는 소음 값: ${bad.join(' / ')}`);
     else console.log(`[18] 소음 — 근거 각주가 있는 ${kept}칸만 남아 있음 OK (LG 는 사양표에 소음 항목이 없다)`);
+
+    /*
+     * [18-b] 로봇청소기 배터리 — **제조사가 공개한 최대 사용시간**만 싣는다.
+     *
+     * 소음과 같은 사고가 여기에도 있었다. 삼성 4종은 지원 페이지 표가 완전히 같은데
+     * 220·180·180·150 으로 모델마다 다르게 적혀 있었고 **180 은 원문에 없는 수**였다.
+     * LG 로보킹도 180 이었는데 실제는 중 모드 110 이다.
+     * 로보락·에코백스·드리미는 한국 지면에 분/min 표기가 0건이라 지웠다.
+     */
+    const BAT_OK = {
+      'VR90F01SAG': 220, 'VR80F01ADH': 220, 'VR80F01ADG': 220, 'VR70F00SGG': 220, // 먼지흡입 저소음
+      'R585WKA1': 140,   // 약 모드
+      'B95AWBTH': 110,   // 중 모드
+      'N95TWU': 220, 'N95THO': 220, // 중 모드
+    };
+    const badBat = [];
+    let keptBat = 0;
+    {
+      const c = DB['로봇청소기'];
+      const all = [...(c.samsung || []).map((m) => ['삼성', m]),
+        ...Object.values(c.competitors || {}).flat().map((m) => ['타사', m])];
+      for (const [side, m] of all) {
+        const v = (m.specs || {}).bat;
+        if (v === undefined || v === null || v === '') continue;
+        const hit = Object.keys(BAT_OK).find((code) => String(m.name).includes(code));
+        if (!hit) badBat.push(`${side} ${m.name} — 배터리 ${v}분의 출처가 등재돼 있지 않다`);
+        else if (BAT_OK[hit] !== v) badBat.push(`${m.name} — 배터리 ${v}분 ≠ 공개값 ${BAT_OK[hit]}분`);
+        else keptBat++;
+      }
+    }
+    if (badBat.length) fail(`[18-b] 근거 없는 배터리 값: ${badBat.join(' / ')}`);
+    else console.log(`[18-b] 로봇청소기 배터리 — 공개 최대 사용시간 ${keptBat}칸만 남아 있음 OK`);
   }
 
   // ══════════════════════════════════════════

@@ -93,7 +93,11 @@
  * v75 (2026-08-16) — 로봇청소기 소음을 바로잡았다(compare-app.html). 삼성 55 → 63(원문),
  * 근거 없는 타사 11칸 제거. 상담 화면의 수치가 바뀌므로 옛 캐시가 남으면 안 된다.
  */
-const CACHE_VERSION = 'axhub-v75';
+/*
+ * v76 (2026-08-16) — 로봇청소기 배터리도 바로잡았다(compare-app.html).
+ * 삼성 4종 220 통일(사양표가 4종 동일) · LG 로보킹 180 → 110 · 근거 없는 타사 7칸 제거.
+ */
+const CACHE_VERSION = 'axhub-v76';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
