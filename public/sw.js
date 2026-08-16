@@ -97,7 +97,11 @@
  * v76 (2026-08-16) — 로봇청소기 배터리도 바로잡았다(compare-app.html).
  * 삼성 4종 220 통일(사양표가 4종 동일) · LG 로보킹 180 → 110 · 근거 없는 타사 7칸 제거.
  */
-const CACHE_VERSION = 'axhub-v76';
+/*
+ * v77 (2026-08-16) — AI 추천의 티어 역전과 예산 초과 처리를 고쳤다(finder-app.html).
+ * 버튼은 계속 hidden 이지만 미니앱 파일이 바뀌었다.
+ */
+const CACHE_VERSION = 'axhub-v77';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

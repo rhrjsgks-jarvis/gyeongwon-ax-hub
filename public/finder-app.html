@@ -1545,6 +1545,7 @@ function runAiFinal(){
   const inputs=[...document.querySelectorAll('.cat-budget-input')];
   const allResults=[]; let totalBudget=0;
   const poolStats=[];
+  const overList=[];
 
   for(const el of inputs){
     const cat=el.dataset.cat;
@@ -1571,8 +1572,31 @@ function runAiFinal(){
      */
     const catAll=PRODUCTS.filter(p=>p.cat===cat).length;
     poolStats.push({cat,used:pool.length,all:catAll});
+    /*
+     * **예산에 맞는 제품이 없으면 그렇다고 말한다**(2026-08-16).
+     *
+     * 예전에도 후보가 비면 예산 필터를 끄고 전체 풀을 썼는데, **아무 말도 안 했다.**
+     * 실측 — *"자취방 원룸 이사 300만원"* 에서 TV 몫이 60만원인데 **890만원짜리 83인치
+     * OLED 를 프리미엄으로** 내밀었다(15배). 상담사가 화면을 그대로 읽으면 사고다.
+     *
+     * 후보를 비우지는 않는다 — 0건으로 끝나면 상담이 거기서 멈춘다. 대신 **넘겼다는
+     * 사실과 가장 싼 값을 함께 적어** 상담사가 예산을 다시 잡을 수 있게 한다.
+     */
     let budgetPool=budget>0?pool.filter(p=>p.price<=budget):pool;
-    if(!budgetPool.length) budgetPool=pool;
+    let overBudget=null;
+    if(!budgetPool.length){
+      if(budget>0&&pool.length){
+        const min=Math.min(...pool.map(p=>p.price));
+        overBudget={cat,budget,min};
+        /*
+         * **넘길 때는 싼 쪽에서 고른다.** 전체 풀을 그대로 쓰면 티어가 가격 3등분이라
+         * 프리미엄이 최상단으로 튄다 — 60만원 예산에 **890만원 83인치 OLED** 가 떴다.
+         * 상담사가 알고 싶은 것은 "그럼 얼마부터 되나"이므로 가장 싼 쪽 몇 개만 남긴다.
+         */
+        budgetPool=pool.slice().sort((a,b)=>a.price-b.price).slice(0,6);
+      } else budgetPool=pool;
+    }
+    if(overBudget) overList.push(overBudget);
 
     const scored=budgetPool.map(p=>({p,sc:scoreProduct(p,wantedFeats,budget)}))
       .sort((a,b)=>b.sc-a.sc||b.p.price-a.p.price);
@@ -1603,14 +1627,26 @@ function runAiFinal(){
     let valStart=Math.floor(n*0.66);
     if(n){ const v=byPrice[Math.min(valStart,n-1)].price; while(valStart>0&&byPrice[valStart-1].price===v) valStart--; }
     let valCands=byPrice.slice(Math.max(valStart,premEnd));
+    /*
+     * **하한에 걸린 것은 티어에서 통째로 뺀다**(2026-08-16 같은 날 재수정).
+     *
+     * 처음에는 가성비 후보에서만 뺐는데, 그러면 걸러진 싼 제품이 사라지지 않고
+     * **스탠다드로 떨어진다** — 실제로 신혼 사례에서 프리미엄 199만 · 스탠다드 59만 ·
+     * 가성비 89만이 나와 **스탠다드가 가성비보다 싼** 역전이 생겼다. 화면에서 바로
+     * 이상해 보인다. 그 예산에 걸맞지 않다고 판단한 물건이면 어느 티어에도 넣지 않는 것이 맞다.
+     */
+    const tooCheap=new Set();
     if(budget>0){
       const credible=valCands.filter(p=>p.price>=budget*0.4);
-      if(credible.length) valCands=credible;
+      if(credible.length){
+        valCands.forEach(p=>{ if(p.price<budget*0.4) tooCheap.add(p.id); });
+        valCands=credible;
+      }
     }
     const valIds=new Set(valCands.map(p=>p.id));
     const premScored=scored.filter(r=>premIds.has(r.p.id));
     const valScored=scored.filter(r=>valIds.has(r.p.id));
-    const stdScored=scored.filter(r=>!premIds.has(r.p.id)&&!valIds.has(r.p.id));
+    const stdScored=scored.filter(r=>!premIds.has(r.p.id)&&!valIds.has(r.p.id)&&!tooCheap.has(r.p.id));
 
     const makeTier=(r,tier,label)=>{
       if(!r) return null;
@@ -1666,9 +1702,24 @@ function runAiFinal(){
       <span class="tier-badge tier-value">가성비</span>
       <span style="font-size:11px;color:#888;margin-left:6px">— 카테고리별 3티어 비교</span>
     </div>
+    ${overNote(overList)}
     ${poolNote(poolStats)}`;
   $("rHost").innerHTML='';
   renderAiResults(allResults);
+}
+
+/**
+ * 예산 안에 제품이 하나도 없어 **예산을 넘겨 골랐다**면 그 사실을 먼저 밝힌다.
+ * 조용히 넘기면 60만원 예산에 890만원짜리가 프리미엄으로 뜬다(실측).
+ * 경고색으로 두는 이유 — 이건 참고가 아니라 **상담사가 손봐야 하는 것**이다.
+ */
+function overNote(list){
+  if(!list||!list.length) return '';
+  const txt=list.map(o=>`${o.cat} 예산 ${o.budget.toLocaleString()}만원 (가장 싼 것 ${o.min.toLocaleString()}만원)`).join(' · ');
+  return `<div class="ai-budget" style="border-color:#c0392b;background:#fdf3f2;color:#a03228">
+    ⚠️ 예산 안에 제품이 없어 <b>예산을 넘겨 골랐습니다</b> — ${esc(txt)}.
+    예산을 다시 잡거나 품목을 줄여 주세요.
+  </div>`;
 }
 
 /**

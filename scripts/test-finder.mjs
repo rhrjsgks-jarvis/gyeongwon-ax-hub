@@ -389,6 +389,65 @@ const CAT_QUERIES = {
       const body = tierCards[0].querySelector('.ai-detail-body');
       if (!body || body.style.display !== 'block') fail('toggleAiDetail() 호출 후 상세 영역이 열리지 않음');
     }
+
+    /*
+     * ── 티어는 값이 비싼 순이어야 한다 (2026-08-16) ──────────────────────
+     *
+     * 가성비에 "예산 40% 하한"을 넣었더니 **걸러진 싼 제품이 사라지지 않고 스탠다드로
+     * 떨어졌다.** 실측으로 냉장고가 프리미엄 199만 · 스탠다드 59만 · **가성비 89만** 이
+     * 되어 스탠다드가 가성비보다 싼 역전이 났다. 화면에서 바로 이상해 보인다.
+     * 지금은 하한에 걸린 것을 어느 티어에도 넣지 않는다.
+     */
+    {
+      const byCat = new Map();
+      for (const card of doc.querySelectorAll('#rHost .ai-cat-group')) {
+        const cat = (card.querySelector('.ai-cat-group-head')?.textContent || '').trim();
+        const tiers = [...card.querySelectorAll('.ai-tier-card')].map((c) => {
+          const t = c.textContent.replace(/\s+/g, ' ');
+          return {
+            tier: (t.match(/(프리미엄|스탠다드|가성비)/) || [])[1],
+            won: Number(((t.match(/(\d[\d,]*)만원/) || [])[1] || '0').replace(/,/g, '')),
+          };
+        }).filter((x) => x.tier && x.won);
+        if (tiers.length >= 2) byCat.set(cat, tiers);
+      }
+      const rank = { 프리미엄: 3, 스탠다드: 2, 가성비: 1 };
+      const bad = [];
+      for (const [cat, tiers] of byCat) {
+        const sorted = tiers.slice().sort((a, b) => rank[b.tier] - rank[a.tier]);
+        for (let i = 0; i + 1 < sorted.length; i++) {
+          if (sorted[i].won < sorted[i + 1].won) {
+            bad.push(`${cat}: ${sorted[i].tier} ${sorted[i].won}만 < ${sorted[i + 1].tier} ${sorted[i + 1].won}만`);
+          }
+        }
+      }
+      if (bad.length) fail(`티어 가격이 역전됐다 — ${bad.join(' / ')}`);
+      else console.log(`티어 가격 순서 OK (${byCat.size}개 카테고리)`);
+    }
+
+    /*
+     * ── 예산을 넘겨 골랐으면 그렇다고 말해야 한다 (2026-08-16) ───────────
+     *
+     * 예산 안에 제품이 없으면 예전에는 조용히 필터를 끄고 전체 풀을 썼다. 실측으로
+     * *"자취방 원룸 이사 300만원"* 에서 TV 몫 60만원에 **890만원 83인치 OLED** 가
+     * 프리미엄으로 떴다(15배). 지금은 ①경고를 띄우고 ②싼 쪽에서 고른다.
+     */
+    {
+      doc.getElementById('aq').value = 'TV 30만원';
+      await window.runAI(); await new Promise((r) => setTimeout(r, 80));
+      window.goStep2(); await new Promise((r) => setTimeout(r, 80));
+      window.runAiFinal(); await new Promise((r) => setTimeout(r, 120));
+      const warn = [...doc.querySelectorAll('#aiHost .ai-budget')]
+        .map((e) => e.textContent).find((t) => /예산을 넘겨/.test(t));
+      if (!warn) fail('예산(30만원) 안에 TV 가 없는데 "예산을 넘겨 골랐다"는 경고가 없다');
+      const wons = [...doc.querySelectorAll('#rHost .ai-tier-card')]
+        .map((c) => Number(((c.textContent.replace(/\s+/g, ' ').match(/(\d[\d,]*)만원/) || [])[1] || '0').replace(/,/g, '')))
+        .filter(Boolean);
+      /* 싼 쪽에서 골랐는지 — 예산의 10배를 넘는 것을 내밀면 안 된다 */
+      const absurd = wons.filter((w) => w > 300);
+      if (absurd.length) fail(`예산 30만원인데 ${absurd.join('·')}만원짜리를 내밀었다 — 싼 쪽에서 골라야 한다`);
+      else console.log(`예산 초과 안내 OK (경고 있음 · 추천가 ${wons.join('·')}만원)`);
+    }
   } catch (e) {
     fail(`AI 추천 플로우 중 예외: ${e.stack || e.message}`);
   } finally {
