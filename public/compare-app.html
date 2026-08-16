@@ -2227,7 +2227,22 @@ var ELEC_TARIFF = {
   기타계절: [[200, 910, 120.0], [400, 1600, 214.6], [null, 7300, 307.3]],
   하계:     [[300, 910, 120.0], [450, 1600, 214.6], [null, 7300, 307.3]],
   fuelAdj: 5.0,        // 연료비조정단가(원/kWh) — '26년 3분기, 분기마다 바뀐다
-  climate: null,       // 기후환경요금 단가 — 확인 못 함. 지어내지 않는다
+  /*
+   * 기후환경요금 단가(원/kWh) — 2026-08-16 확인. **RPS 7.7 + ETS 1.1 + 재정지원 0.2 = 9.0**,
+   * "'23. 1월부터 적용". 출처: 한전 사이버지점 주요 전기요금제도(기후환경요금)
+   * `cyber.kepco.co.kr/ckepco/front/jsp/CY/H/C/CYHCHP00211.jsp`.
+   * **웹검색 요약은 5.3원이라고 했다 — 원문과 달라 원문을 따랐다**(연료비조정단가 때와 같다).
+   */
+  climate: 9.0,
+  /*
+   * 청구금액 = 전기요금 + 부가가치세 + 전력산업기반기금.
+   * 출처: 한전 한글 전기요금표 `online.kepco.co.kr/PRM004D00` 원문 —
+   *   "부가가치세(원미만 4사 5입) : 전기요금 X 10%"
+   *   "전력사업기반기금(10원미만 절사) : 전기요금 X 2.7%"
+   * **기반기금은 2.7% 다.** 흔히 3.7% 로 알려져 있어 그대로 넣을 뻔했다.
+   */
+  vat: 0.10,
+  fund: 0.027,
 };
 
 /* 그 사용량이 속하는 구간의 **한계 단가**(원/kWh). 냉장고 한 대 차이는 총사용량을
@@ -2235,11 +2250,18 @@ var ELEC_TARIFF = {
 function elecMarginal(usageKwh, summer) {
   const tiers = summer ? ELEC_TARIFF.하계 : ELEC_TARIFF.기타계절;
   const t = tiers.find(([cap]) => cap === null || usageKwh <= cap) || tiers[tiers.length - 1];
-  return t[2] + ELEC_TARIFF.fuelAdj + (ELEC_TARIFF.climate || 0);
+  const base = t[2] + ELEC_TARIFF.fuelAdj + (ELEC_TARIFF.climate || 0);
+  /*
+   * **한계 1kWh 에도 부가세·기반기금이 붙는다**(2026-08-16). 고객이 실제로 더 내는 돈은
+   * 청구금액 기준이므로 차액에도 그대로 얹는다. 절사·반올림은 총액에서만 뜻이 있고
+   * 한계 단가에서는 무시한다(1kWh 단위에서 10원 절사를 적용하면 오히려 왜곡된다).
+   */
+  return base * (1 + ELEC_TARIFF.vat + ELEC_TARIFF.fund);
 }
 
-/* 한 달 전기요금(원) — 누진 구간을 차례로 쌓는다. 기본요금은 최종 구간의 것을 쓴다.
-   부가가치세·전력산업기반기금은 넣지 않는다(확인한 표에 없다). */
+/* 한 달 전기요금(원) — 누진 구간을 차례로 쌓고, **부가가치세와 전력산업기반기금까지**
+   더해 청구금액을 낸다(2026-08-16, 한전 요금표 원문의 계산식 그대로).
+   원단위 처리도 원문대로다 — 부가세는 원미만 4사5입, 기반기금은 10원미만 절사. */
 function elecBill(usageKwh, summer) {
   const tiers = summer ? ELEC_TARIFF.하계 : ELEC_TARIFF.기타계절;
   let left = usageKwh, prev = 0, energy = 0, base = tiers[0][1];
@@ -2252,7 +2274,10 @@ function elecBill(usageKwh, summer) {
     prev = cap;
   }
   const rider = usageKwh * (ELEC_TARIFF.fuelAdj + (ELEC_TARIFF.climate || 0));
-  return Math.round(base + energy + rider);
+  const elec = Math.round(base + energy + rider);          // 전기요금
+  const vat = Math.round(elec * ELEC_TARIFF.vat);          // 원미만 4사5입
+  const fund = Math.floor(elec * ELEC_TARIFF.fund / 10) * 10; // 10원미만 절사
+  return elec + vat + fund;
 }
 
 /* 두 제품의 **연간 전기요금 차액**(원). 같은 가정이 같은 구간에 있다고 보고 한계 단가로 잰다.
