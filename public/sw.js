@@ -101,7 +101,11 @@
  * v77 (2026-08-16) — AI 추천의 티어 역전과 예산 초과 처리를 고쳤다(finder-app.html).
  * 버튼은 계속 hidden 이지만 미니앱 파일이 바뀌었다.
  */
-const CACHE_VERSION = 'axhub-v77';
+/*
+ * v78 (2026-08-16) — AI 추천이 청소기 형태(로봇/무선/유선)를 지키고, 김치냉장고가
+ * 냉장고를 딸고 오지 않게 고쳤다(finder-app.html). 버튼은 계속 hidden.
+ */
+const CACHE_VERSION = 'axhub-v78';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

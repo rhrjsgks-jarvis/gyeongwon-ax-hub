@@ -1303,6 +1303,7 @@ function setMode(m){
 }
 
 let aiParsedBudget = null;
+let aiSubcat = null;   /* 청소기처럼 한 카테고리 안에서 형태를 가를 때 쓴다(모델 접두) */
 let selectedCats = new Set();
 
 /* Step 0: 자연어 파싱 → Step1 */
@@ -1343,6 +1344,27 @@ async function runAI(){
   ];
   const explicit=new Set();
   ITEM_RULES.forEach(([r,c])=>{ if(r.test(q)) explicit.add(c); });
+
+  /*
+   * **'김치냉장고' 는 '냉장고' 를 품는다**(2026-08-16). `/냉장고/` 가 "김치냉장고" 안쪽에
+   * 매치돼 *"김치냉장고 좋은거"* 에 **냉장고까지** 골라 예산이 둘로 쪼개졌다.
+   * 더 긴 품목이 잡혔으면 그것이 답이다 — 짧은 쪽을 뺀다.
+   */
+  if(explicit.has('김치냉장고')) explicit.delete('냉장고');
+
+  /*
+   * **청소기는 카테고리가 하나인데 상담에서는 로봇/무선/유선을 따로 찾는다**(2026-08-16).
+   * *"로봇청소기 100만원"* 에 **무선청소기와 유선 캐니스터**가 나왔다 — 로봇이 한 대도
+   * 없이. 제품 상세검색은 이미 같은 문제를 **모델 접두**로 풀어 뒀다(CLAUDE.md `SUBCAT`):
+   * DB 전수로 **VR 로봇 13종 · VS 무선 9종 · VC 유선 4종 · VW 업소용 1종**이 정확히 갈린다.
+   * 키워드로 가르면 안 된다 — 제품군 이름이 형태를 안 밝히는 것이 많다.
+   */
+  aiSubcat=null;
+  if(explicit.has('청소기')){
+    if(/로봇\s*청소기|로봇청소기/.test(q))      aiSubcat={cat:'청소기',re:/^VR/,label:'로봇청소기'};
+    else if(/무선\s*청소기|스틱\s*청소기/.test(q)) aiSubcat={cat:'청소기',re:/^VS/,label:'무선청소기'};
+    else if(/유선\s*청소기|캐니스터/.test(q))     aiSubcat={cat:'청소기',re:/^VC/,label:'유선청소기'};
+  }
 
   const detected=new Set(explicit);
   let why='';
@@ -1560,6 +1582,11 @@ function runAiFinal(){
 
     // 패키지 모드는 가격 합산·티어 분리가 전제라 가격 미상 제품은 후보에서 제외
     let pool=PRODUCTS.filter(p=>p.cat===cat && p.price!=null);
+    /* 문장이 형태를 말했으면 그 형태만 남긴다(로봇/무선/유선) — 없으면 거르지 않는다 */
+    if(aiSubcat&&aiSubcat.cat===cat){
+      const sub=pool.filter(p=>aiSubcat.re.test(p.model||''));
+      if(sub.length) pool=sub;
+    }
     /*
      * **몇 종 중에서 골랐는지 세어 둔다**(2026-08-16). 카탈로그 제품은 대부분
      * `price: null` 이라 이 품목의 절반 넘게 후보에서 빠지는 경우가 있는데, 화면이

@@ -448,6 +448,38 @@ const CAT_QUERIES = {
       if (absurd.length) fail(`예산 30만원인데 ${absurd.join('·')}만원짜리를 내밀었다 — 싼 쪽에서 골라야 한다`);
       else console.log(`예산 초과 안내 OK (경고 있음 · 추천가 ${wons.join('·')}만원)`);
     }
+
+    /*
+     * ── 청소기는 형태(로봇/무선/유선)를 지켜야 한다 (2026-08-16) ─────────
+     *
+     * DB 카테고리는 '청소기' 하나인데 상담에서는 셋을 따로 찾는다. 예전에는
+     * *"로봇청소기 100만원"* 에 **무선청소기와 유선 캐니스터**가 나왔다 — 로봇이 한 대도
+     * 없이. 제품 상세검색이 이미 모델 접두로 푼 문제다(VR 로봇 · VS 무선 · VC 유선).
+     * **키워드로 가르면 안 된다** — 제품군 이름이 형태를 안 밝히는 것이 많다.
+     */
+    const models = () => [...doc.querySelectorAll('#rHost .ai-tier-card')]
+      .map((c) => (c.textContent.match(/\b(V[RSCW][A-Z0-9]{4,})\b/) || [])[1]).filter(Boolean);
+    for (const [q, re, label] of [['로봇청소기 100만원', /^VR/, '로봇'], ['무선청소기 80만원', /^VS/, '무선']]) {
+      doc.getElementById('aq').value = q;
+      await window.runAI(); await new Promise((r) => setTimeout(r, 80));
+      window.goStep2(); await new Promise((r) => setTimeout(r, 80));
+      window.runAiFinal(); await new Promise((r) => setTimeout(r, 120));
+      const ms = models();
+      const wrong = ms.filter((m) => !re.test(m));
+      if (!ms.length) fail(`"${q}" 에 추천이 없다`);
+      else if (wrong.length) fail(`"${q}" 인데 ${label}청소기가 아닌 것이 나왔다: ${wrong.join(', ')}`);
+      else console.log(`청소기 형태 OK — "${q}" → ${ms.join(', ')}`);
+    }
+
+    /* '김치냉장고' 는 '냉장고' 를 품는다 — 짧은 쪽이 딸려오면 예산이 쪼개진다 */
+    {
+      doc.getElementById('aq').value = '김치냉장고 200만원';
+      await window.runAI(); await new Promise((r) => setTimeout(r, 80));
+      const picked = [...doc.querySelectorAll('#catGrid .cat-chip.on')].map((c) => c.dataset.cat);
+      if (picked.includes('냉장고')) fail(`"김치냉장고" 인데 냉장고까지 골랐다: ${picked.join(', ')}`);
+      else if (!picked.includes('김치냉장고')) fail(`"김치냉장고" 가 안 골라졌다: ${picked.join(', ')}`);
+      else console.log(`품목 포함관계 OK — 김치냉장고만 (${picked.join(', ')})`);
+    }
   } catch (e) {
     fail(`AI 추천 플로우 중 예외: ${e.stack || e.message}`);
   } finally {
