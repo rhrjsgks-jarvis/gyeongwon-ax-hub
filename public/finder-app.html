@@ -1544,6 +1544,7 @@ function scoreProduct(p, wantedFeats, budget){
 function runAiFinal(){
   const inputs=[...document.querySelectorAll('.cat-budget-input')];
   const allResults=[]; let totalBudget=0;
+  const poolStats=[];
 
   for(const el of inputs){
     const cat=el.dataset.cat;
@@ -1558,6 +1559,18 @@ function runAiFinal(){
 
     // 패키지 모드는 가격 합산·티어 분리가 전제라 가격 미상 제품은 후보에서 제외
     let pool=PRODUCTS.filter(p=>p.cat===cat && p.price!=null);
+    /*
+     * **몇 종 중에서 골랐는지 세어 둔다**(2026-08-16). 카탈로그 제품은 대부분
+     * `price: null` 이라 이 품목의 절반 넘게 후보에서 빠지는 경우가 있는데, 화면이
+     * 그 사실을 한 마디도 안 했다 — 상담사는 "이 품목 전체에서 고른 것"으로 읽는다.
+     * 키워드 검색에는 나오는데 AI 추천에는 없는 모델이 생기는 이유가 이것이다.
+     *
+     * **가격 없는 제품을 티어에 어떻게 넣을지는 정하지 않았다** — 티어와 예산이
+     * 모두 가격 위에 서 있어 규칙을 새로 정해야 하는 제품 결정이다(CLAUDE.md).
+     * 그때까지는 빼되, **뺐다는 사실을 밝힌다.**
+     */
+    const catAll=PRODUCTS.filter(p=>p.cat===cat).length;
+    poolStats.push({cat,used:pool.length,all:catAll});
     let budgetPool=budget>0?pool.filter(p=>p.price<=budget):pool;
     if(!budgetPool.length) budgetPool=pool;
 
@@ -1652,9 +1665,25 @@ function runAiFinal(){
       <span class="tier-badge tier-standard">스탠다드</span>
       <span class="tier-badge tier-value">가성비</span>
       <span style="font-size:11px;color:#888;margin-left:6px">— 카테고리별 3티어 비교</span>
-    </div>`;
+    </div>
+    ${poolNote(poolStats)}`;
   $("rHost").innerHTML='';
   renderAiResults(allResults);
+}
+
+/**
+ * 후보에서 빠진 제품이 있으면 그 사실을 한 줄로 밝힌다.
+ * 전부 가격이 있는 품목만 있으면 아무것도 적지 않는다 — 할 말이 없을 때 띄우는
+ * 안내는 화면만 채운다.
+ */
+function poolNote(stats){
+  const short=stats.filter(s=>s.used<s.all);
+  if(!short.length) return '';
+  const txt=short.map(s=>`${s.cat} ${s.used}/${s.all}종`).join(' · ');
+  return `<div class="ai-budget" style="border-color:#bbb;background:#f8f8f8;color:#666">
+    ℹ️ 가격이 확인된 제품 중에서 골랐습니다 — ${esc(txt)}.
+    카탈로그에 가격이 없는 제품은 티어·예산 판정을 할 수 없어 뺐습니다(키워드 검색에는 나옵니다).
+  </div>`;
 }
 
 function renderAiResults(results){
