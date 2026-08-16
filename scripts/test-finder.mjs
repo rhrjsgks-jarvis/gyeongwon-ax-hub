@@ -457,18 +457,46 @@ const CAT_QUERIES = {
      * 없이. 제품 상세검색이 이미 모델 접두로 푼 문제다(VR 로봇 · VS 무선 · VC 유선).
      * **키워드로 가르면 안 된다** — 제품군 이름이 형태를 안 밝히는 것이 많다.
      */
-    const models = () => [...doc.querySelectorAll('#rHost .ai-tier-card')]
-      .map((c) => (c.textContent.match(/\b(V[RSCW][A-Z0-9]{4,})\b/) || [])[1]).filter(Boolean);
-    for (const [q, re, label] of [['로봇청소기 100만원', /^VR/, '로봇'], ['무선청소기 80만원', /^VS/, '무선']]) {
+    const models = (pre) => [...doc.querySelectorAll('#rHost .ai-tier-card')]
+      .map((c) => (c.textContent.match(new RegExp('\\b(' + pre + '[A-Z0-9]{4,})\\b')) || [])[1]).filter(Boolean);
+    /*
+     * 같은 병이 에어컨에도 있었다 — "에어컨 스탠드" 에 벽걸이가 나왔다.
+     * 접두는 size-reps 와 같은 규칙이다: AF 스탠드 · AR 벽걸이 · AW 창문형.
+     */
+    for (const [q, pre, re, label] of [
+      ['로봇청소기 100만원', 'V[RSCW]', /^VR/, '로봇'],
+      ['무선청소기 80만원', 'V[RSCW]', /^VS/, '무선'],
+      ['에어컨 스탠드 300만원', 'A[FRW]', /^AF/, '스탠드'],
+      ['에어컨 벽걸이 200만원', 'A[FRW]', /^AR/, '벽걸이'],
+    ]) {
       doc.getElementById('aq').value = q;
       await window.runAI(); await new Promise((r) => setTimeout(r, 80));
       window.goStep2(); await new Promise((r) => setTimeout(r, 80));
       window.runAiFinal(); await new Promise((r) => setTimeout(r, 120));
-      const ms = models();
+      const ms = models(pre);
       const wrong = ms.filter((m) => !re.test(m));
       if (!ms.length) fail(`"${q}" 에 추천이 없다`);
-      else if (wrong.length) fail(`"${q}" 인데 ${label}청소기가 아닌 것이 나왔다: ${wrong.join(', ')}`);
-      else console.log(`청소기 형태 OK — "${q}" → ${ms.join(', ')}`);
+      else if (wrong.length) fail(`"${q}" 인데 ${label} 형태가 아닌 것이 나왔다: ${wrong.join(', ')}`);
+      else console.log(`형태 지킴 OK — "${q}" → ${ms.join(', ')}`);
+    }
+
+    /*
+     * 예산을 넘길 때는 **가장 싼 것이 반드시 보여야 한다.** 싼 쪽으로 좁히고도 그 안에서
+     * 다시 3등분하면 위쪽이 올라와, 건조기 50만원 상담에서 89만원(최저)이 안 보이고
+     * 199/129/119 가 떴다. 지금은 가장 싼 3종만 남긴다.
+     */
+    {
+      doc.getElementById('aq').value = '건조기만 필요해요 예산 50만';
+      await window.runAI(); await new Promise((r) => setTimeout(r, 80));
+      window.goStep2(); await new Promise((r) => setTimeout(r, 80));
+      window.runAiFinal(); await new Promise((r) => setTimeout(r, 120));
+      const warn = [...doc.querySelectorAll('#aiHost .ai-budget')].map((e) => e.textContent).find((t) => /예산을 넘겨/.test(t));
+      const min = Number((String(warn || '').match(/가장 싼 것 ([\d,]+)만원/) || [])[1]?.replace(/,/g, '') || 0);
+      const wons = [...doc.querySelectorAll('#rHost .ai-tier-card')]
+        .map((c) => Number(((c.textContent.replace(/\s+/g, ' ').match(/(\d[\d,]*)만원/) || [])[1] || '0').replace(/,/g, ''))).filter(Boolean);
+      if (!min) fail('예산 초과 경고에 "가장 싼 것" 이 없다');
+      else if (!wons.includes(min)) fail(`예산 초과인데 가장 싼 ${min}만원이 추천에 없다 (나온 것: ${wons.join('·')}만원)`);
+      else console.log(`예산 초과 시 최저가 노출 OK — 최저 ${min}만원 포함 (${wons.join('·')}만원)`);
     }
 
     /* '김치냉장고' 는 '냉장고' 를 품는다 — 짧은 쪽이 딸려오면 예산이 쪼개진다 */

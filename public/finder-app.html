@@ -1360,10 +1360,32 @@ async function runAI(){
    * 키워드로 가르면 안 된다 — 제품군 이름이 형태를 안 밝히는 것이 많다.
    */
   aiSubcat=null;
+  const pre=(re)=>(p)=>re.test(p.model||'');
   if(explicit.has('청소기')){
-    if(/로봇\s*청소기|로봇청소기/.test(q))      aiSubcat={cat:'청소기',re:/^VR/,label:'로봇청소기'};
-    else if(/무선\s*청소기|스틱\s*청소기/.test(q)) aiSubcat={cat:'청소기',re:/^VS/,label:'무선청소기'};
-    else if(/유선\s*청소기|캐니스터/.test(q))     aiSubcat={cat:'청소기',re:/^VC/,label:'유선청소기'};
+    if(/로봇\s*청소기|로봇청소기/.test(q))      aiSubcat={cat:'청소기',ok:pre(/^VR/),label:'로봇청소기'};
+    else if(/무선\s*청소기|스틱\s*청소기/.test(q)) aiSubcat={cat:'청소기',ok:pre(/^VS/),label:'무선청소기'};
+    else if(/유선\s*청소기|캐니스터/.test(q))     aiSubcat={cat:'청소기',ok:pre(/^VC/),label:'유선청소기'};
+  }
+  /*
+   * 에어컨도 같다 — **AF 스탠드 · AR 벽걸이 · AW 창문형**(CLAUDE.md 의 size-reps 규칙과
+   * 같은 접두). *"에어컨 스탠드 300만원"* 에 스탠다드·가성비로 **벽걸이**가 나왔다.
+   */
+  if(explicit.has('에어컨')){
+    if(/스탠드|스탠딩|거실용/.test(q))       aiSubcat={cat:'에어컨',ok:pre(/^AF/),label:'스탠드'};
+    else if(/벽걸이/.test(q))                aiSubcat={cat:'에어컨',ok:pre(/^AR/),label:'벽걸이'};
+    else if(/창문형|창문에어컨/.test(q))      aiSubcat={cat:'에어컨',ok:pre(/^AW/),label:'창문형'};
+  }
+  /*
+   * 인덕션은 접두가 전부 NZ 라 **화구 수**로 가른다. 제품군 문자열('… 3구 빌트인')이
+   * 대부분 밝히고, 안 밝히는 것은 `fx` 의 '화구수' 행이 밝힌다 — 둘 다 본다.
+   * *"인덕션 3구 150만원"* 에 **1구 플레이트**가 스탠다드·가성비로 나왔다.
+   */
+  const bm2=q.match(/([1-5])\s*구/);
+  if(explicit.has('인덕션/전기레인지')&&bm2){
+    const n=bm2[1];
+    aiSubcat={cat:'인덕션/전기레인지',label:n+'구',
+      ok:(p)=>new RegExp(n+'\\s*구').test(String(p.group||''))
+             ||(p.fx||[]).some(f=>/화구/.test(f[0])&&new RegExp(n+'\\s*구').test(String(f[1])))};
   }
 
   const detected=new Set(explicit);
@@ -1584,7 +1606,7 @@ function runAiFinal(){
     let pool=PRODUCTS.filter(p=>p.cat===cat && p.price!=null);
     /* 문장이 형태를 말했으면 그 형태만 남긴다(로봇/무선/유선) — 없으면 거르지 않는다 */
     if(aiSubcat&&aiSubcat.cat===cat){
-      const sub=pool.filter(p=>aiSubcat.re.test(p.model||''));
+      const sub=pool.filter(p=>aiSubcat.ok(p));
       if(sub.length) pool=sub;
     }
     /*
@@ -1620,7 +1642,7 @@ function runAiFinal(){
          * 프리미엄이 최상단으로 튄다 — 60만원 예산에 **890만원 83인치 OLED** 가 떴다.
          * 상담사가 알고 싶은 것은 "그럼 얼마부터 되나"이므로 가장 싼 쪽 몇 개만 남긴다.
          */
-        budgetPool=pool.slice().sort((a,b)=>a.price-b.price).slice(0,6);
+        budgetPool=pool.slice().sort((a,b)=>a.price-b.price).slice(0,3);
       } else budgetPool=pool;
     }
     if(overBudget) overList.push(overBudget);
