@@ -40,7 +40,22 @@ function pickDest() {
   return { dir: path.join(home, '세일즈코파일럿-백업'), synced: false };
 }
 
-const stamp = new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-');
+/*
+ * 회차 폴더 이름은 **현지 시각**으로 찍는다(2026-08-16 정정).
+ *
+ * 예전에는 `toISOString()` 이라 **UTC** 였다. 한국은 +9 라 10:36 에 뜬 백업이
+ * `…-0136` 으로 적혔고, 더 나쁜 것은 **00~09시에 뜬 백업이 전날 날짜 폴더로 들어간다**는
+ * 점이다(03:00 KST → `20260815-1800`). 날짜별로 회차를 보는 백업에서 이건 그냥
+ * 헷갈리는 정도가 아니라 **복구할 때 엉뚱한 회차를 고르게 만든다** — 정작 그때가
+ * 가장 헷갈리면 안 되는 순간이다.
+ *
+ * 정렬은 그대로 안전하다. 한국은 서머타임이 없어 현지 시각도 단조 증가하고,
+ * 아래 오래된 회차 정리는 `YYYYMMDD-HHMM` 이름 정렬에 기댄다.
+ */
+const now = new Date();
+const p2 = (n) => String(n).padStart(2, '0');
+const stamp = `${now.getFullYear()}${p2(now.getMonth() + 1)}${p2(now.getDate())}`
+  + `-${p2(now.getHours())}${p2(now.getMinutes())}`;
 const { dir: BASE, synced } = pickDest();
 const OUT = path.join(BASE, stamp);
 
