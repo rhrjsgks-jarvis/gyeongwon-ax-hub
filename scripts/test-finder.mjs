@@ -312,11 +312,24 @@ const CAT_QUERIES = {
     // 예산 입력 후 합계 갱신
     const budgetInputs = doc.querySelectorAll('#rHost .cat-budget-input');
     if (budgetInputs.length !== 8) fail(`예산 입력 필드 수 = ${budgetInputs.length}, 기대값 8`);
+    /*
+     * **문장에서 예산을 읽었으면 goStep2 가 이미 칸을 채워 둔다**(2026-08-16).
+     * 예전에는 버튼을 눌러야 채워졌는데, 문장에 예산을 쓴 상담사는 그 버튼을 누르지
+     * 않아 예산 필터가 통째로 꺼졌다(400만원 고객에게 584만원을 프리미엄으로 내밀었다).
+     */
+    const preFilled = [...budgetInputs].filter((el) => +el.value > 0).length;
+    if (!preFilled) fail('goStep2() 뒤 예산 칸이 비어 있다 — 문장에서 읽은 예산이 자동 분배되지 않았다');
+
+    /*
+     * 합계 검사는 **지금 칸에 든 값의 합**과 대조한다. 예전에는 "250 이 들어 있는가"로
+     * 봤는데, 그건 나머지 칸이 비어 있다는 전제에 기댄 것이라 자동 분배가 생기자 깨졌다.
+     */
     budgetInputs[0].value = '250';
     window.updateTotal();
+    const want = [...budgetInputs].reduce((s, el) => s + (parseInt(el.value) || 0), 0);
     const totalText = doc.getElementById('totalBarPrice').textContent;
-    console.log('updateTotal() 후 합계 표시:', totalText);
-    if (!totalText.includes('250')) fail(`updateTotal() 후 합계가 반영되지 않음: ${totalText}`);
+    console.log('updateTotal() 후 합계 표시:', totalText, '(칸 합계', want + ')');
+    if (totalText.replace(/[^\d]/g, '') !== String(want)) fail(`updateTotal() 후 합계가 칸 합계와 다르다: ${totalText} ≠ ${want}만원`);
 
     // 예산 자동 분배 (aiParsedBudget=350이 감지되어 있어야 함)
     window.autoDistributeBudget();
