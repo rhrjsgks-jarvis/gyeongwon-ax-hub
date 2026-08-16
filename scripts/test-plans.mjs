@@ -187,9 +187,36 @@ const knownGaps = [];
          */
         if (pr.wMm) {
           const [wlo, whi] = pr.wMm;
-          const wOff = r.widthMm < wlo || r.widthMm > whi;
-          if (wOff && pr.known) knownGaps.push(`${label} 폭 → ${Math.round(r.widthMm)}mm (기대 ${wlo}~${whi}) — ${pr.known}`);
-          else if (wOff) fail(`${label}: 폭 ${Math.round(r.widthMm)}mm (도면 인쇄값 기준 기대 ${wlo}~${whi}mm)`);
+          /*
+           * **저해상도 도면에서는 백분율 허용치가 물리적으로 성립하지 않는다**(2026-08-16).
+           *
+           * 기대 범위 ±12% 는 "측정 편차 3% + 인쇄가 안목인지 벽심인지 모르는 폭 8%" 로
+           * 잡은 값인데, 여기에 **해상도가 빠져 있었다.** 자이 헤리티지 23·24 는 553×442 라
+           * **1px 이 45mm** 다.
+           *
+           * 실측(2026-08-16) — 같은 도면의 형제 프로브는 인쇄값의 **92~96%** 로 나온다
+           * (침실4 2,953/3,190 · 거실 4,594/4,800 · 침실2 2,666/2,860). 이게 안목 vs 벽심
+           * 차이의 정상 폭이고 ±12% 안에 든다. 그런데 **침실3 만 85~87%**(2,459~2,505 /
+           * 2,890)로 6%p 더 낮다 — 두 도면 · 네 반경에서 모두 그렇다.
+           * 원인은 해상도 자체가 아니라 **침실3·4 를 가르면서 공유 벽에서 1~2px 을 더
+           * 먹는 것**이다(2026-08-14 에 두 방이 5,795mm 로 합쳐지던 것을 고치며 맞바꾼 비용).
+           * 45mm/px 에서 2px 은 90mm 이고, 부족분이 정확히 38~84mm 다.
+           *
+           * **덜 재는 방향이라 배치 판정에서는 안전한 쪽**이다(있는 자리를 없다고 한다).
+           * 다시 가르지 않게 되돌리는 것보다 이 오차를 안고 가는 편이 낫다고 보고,
+           * 그 사실을 검사가 눈감는 대신 **하한에만 픽셀 여유를 명시적으로 준다.**
+           *
+           * 그래서 하한에만 **2px 어치**를 더 준다(양쪽 각 1px). 고해상도 도면에서는
+           * 무시할 만한 값이고(1,200px 도면이면 20~30mm), 저해상도에서만 실제로 듣는다.
+           * **상한은 건드리지 않는다** — 이 검사가 실제로 잡아 온 사고가 "두 방이 합쳐져
+           * 폭이 2배가 되는 것"(침실3+침실4 = 5,795mm)이라 상한이 이 가드의 이빨이다.
+           */
+          const slackMm = 2 * (e.mmPerImgPx || 0);
+          const wOff = r.widthMm < wlo - slackMm || r.widthMm > whi;
+          /* 판정에 쓴 하한을 그대로 적는다 — 적힌 기대치와 실제 기준이 다르면 그게 거짓말이다 */
+          const band = `기대 ${wlo}~${whi}mm${slackMm >= 1 ? ` (하한은 해상도 2px=${Math.round(slackMm)}mm 를 더해 ${Math.round(wlo - slackMm)})` : ''}`;
+          if (wOff && pr.known) knownGaps.push(`${label} 폭 → ${Math.round(r.widthMm)}mm (${band}) — ${pr.known}`);
+          else if (wOff) fail(`${label}: 폭 ${Math.round(r.widthMm)}mm (도면 인쇄값 기준 ${band})`);
           else if (pr.known) fail(`${label}: 이제 통과한다 — known 을 지울 것 (폭 ${Math.round(r.widthMm)}mm)`);
           else pass(`${label} → 폭 ${Math.round(r.widthMm)}mm · 넓이 ${r.areaM2.toFixed(1)}㎡ · 모서리 ${r.corners}`);
           continue;
