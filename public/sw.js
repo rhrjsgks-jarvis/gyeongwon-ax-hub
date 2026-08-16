@@ -80,7 +80,12 @@
  * 후보 종수 밝히기. 버튼은 계속 hidden 이지만 미니앱 파일이 바뀌었으므로 SWR 규칙상
  * 여기를 올리지 않으면 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
-const CACHE_VERSION = 'axhub-v72';
+/*
+ * v73 (2026-08-16) — 타사비교(compare-app.html)의 전기요금 환산에 기후환경요금·부가세·
+ * 전력산업기반기금을 넣었다. 화면은 여전히 hidden 이지만 미니앱 파일이 바뀌었으므로
+ * SWR 규칙상 여기를 올려야 이미 쓰던 기기가 새 계산을 받는다.
+ */
+const CACHE_VERSION = 'axhub-v73';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
