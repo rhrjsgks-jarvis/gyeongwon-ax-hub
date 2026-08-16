@@ -74,7 +74,13 @@
  * 정수기 음성 제어를 채웠다. **v70 을 찍은 뒤에 compare 를 또 고쳐 대조가 걸렸다** —
  * 위 v17 주석이 적어 둔 그대로, 버전은 덩어리를 다 만든 **맨 마지막에** 한 번 올려야 한다.
  */
-const CACHE_VERSION = 'axhub-v71';
+/*
+ * v72 (2026-08-16) — 제품 상세검색(finder-app.html)의 AI 추천 엔진을 넷 고쳤다.
+ * 문장 예산 자동 분배 · 품목 명시 시 용도 규칙 끄기 · 같은 가격 같은 티어 ·
+ * 후보 종수 밝히기. 버튼은 계속 hidden 이지만 미니앱 파일이 바뀌었으므로 SWR 규칙상
+ * 여기를 올리지 않으면 이미 쓰던 기기가 옛 파일을 계속 쓴다.
+ */
+const CACHE_VERSION = 'axhub-v72';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
