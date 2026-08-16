@@ -89,7 +89,11 @@
  * v74 (2026-08-16) — place-app.html 은 주석만 바뀌었지만(도면 단지 수 139 → 144),
  * 이 검사는 파일이 바뀌었는지만 보므로 함께 올린다. 기능 변화는 없다.
  */
-const CACHE_VERSION = 'axhub-v74';
+/*
+ * v75 (2026-08-16) — 로봇청소기 소음을 바로잡았다(compare-app.html). 삼성 55 → 63(원문),
+ * 근거 없는 타사 11칸 제거. 상담 화면의 수치가 바뀌므로 옛 캐시가 남으면 안 된다.
+ */
+const CACHE_VERSION = 'axhub-v75';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
