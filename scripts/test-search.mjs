@@ -121,10 +121,23 @@ const routes = new Set(
     .map((d) => '/' + d.name)
 );
 routes.add('/');
+
+// 다른 배포로 넘기는 경로(next.config.js 의 rewrites)도 실재하는 링크다.
+// app/ 밑에 폴더가 없다고 「없는 라우트」 로 잡으면 멀쩡한 링크가 막힌다.
+// **목록을 여기 손으로 적지 않는다** — 설정에서 읽어야 둘이 어긋나지 않는다.
+const rewriteRoutes = new Set();
+for (const m of fs.readFileSync(path.join(root, 'next.config.js'), 'utf8').matchAll(/source:\s*'(\/[^']*)'/g)) {
+  const base = m[1].split('/:')[0]; // '/dev/telecom/:path*' → '/dev/telecom'
+  rewriteRoutes.add(base);
+  rewriteRoutes.add(base.endsWith('/') ? base : base + '/');
+}
+
 for (const e of entries) {
   if (e.ext) continue;
   const base = e.href.split('?')[0].split('#')[0] || '/';
-  if (!routes.has(base)) { fail(`인덱스 링크가 존재하지 않는 라우트를 가리킴: ${e.href} (${e.title})`); break; }
+  if (routes.has(base) || rewriteRoutes.has(base)) continue;
+  fail(`인덱스 링크가 존재하지 않는 라우트를 가리킴: ${e.href} (${e.title})`);
+  break;
 }
 console.log('OK: 인덱스 내부 링크가 모두 실제 라우트를 가리킴');
 

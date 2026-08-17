@@ -147,6 +147,24 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       },
     ],
   },
+  {
+    // 아직 다듬는 중인 것. status 가 'live' 가 아니면 「구축중」 배지가 붙는다.
+    title: '개발중',
+    modules: [
+      {
+        // 이 저장소가 아니라 별도 배포다. next.config.js 가 요청을 넘긴다.
+        // **접속 코드가 따로 있다** — 이 허브의 admin 비번과 다르다.
+        href: '/dev/telecom/index.html',
+        icon: 'phone',
+        title: '통신 요금제 상담 도구',
+        desc: '3사 요금제 349건·부가서비스 542건·결합 27건·단말 출고가·제휴카드 40장 — 월납부금액과 할부기간 총액까지 계산 (접속 코드 필요)',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.08',
+        status: 'dev',
+      },
+    ],
+  },
 ]
 
 // 사용현황 대시보드는 그룹에 속하지 않고 허브 최하단에 별도 섹션으로 운영
