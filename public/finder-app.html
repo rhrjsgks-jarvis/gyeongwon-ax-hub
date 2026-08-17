@@ -1720,8 +1720,25 @@ setMode("kw");
       p.kw = (p.kw || '') + ' ' + rows.map(function (r2) { return r2[0] + ' ' + r2[1]; }).join(' ').toLowerCase();
       filled++;
     }
+    /*
+     * **빠진 칸은 여기서 채운다.** 파일에는 꼭 필요한 것만 담겨 있다 —
+     * `kw` 는 `fx` 를 소문자로 베낀 글이라 함께 넣으면 2.7MB 가 그대로 중복된다.
+     * 만드는 재료는 우리 DB 와 같다(카테고리·제품군·모델코드·사양 전문).
+     */
     var base = PRODUCTS.length;
-    (j.add || []).forEach(function (p2, k) { p2.id = base + k; PRODUCTS.push(p2); });
+    (j.add || []).forEach(function (p2, k) {
+      p2.src = 'SEC'; p2.rawcat = p2.cat; p2.price = null; p2.price_lab = '';
+      p2.on = []; p2.off = []; p2.usp = [];
+      p2.note = '삼성닷컴 ' + (j.collectedAt || '') + ' 수집';
+      p2.dimkey = p2.dimtxt ? 'W×H×D(mm)' : '';
+      if (!p2.dims) p2.dims = null;
+      p2.isnew = false; p2.cat_ok = true;
+      var t = [p2.cat, p2.group, p2.model];
+      for (var q = 0; q < p2.fx.length; q++) { t.push(p2.fx[q][0]); t.push(p2.fx[q][1]); }
+      p2.kw = t.join(' ').toLowerCase();
+      p2.id = base + k;
+      PRODUCTS.push(p2);
+    });
     if (typeof buildCatIndex === 'function') { try { buildCatIndex(); } catch (e) {} }
     syncCounts();
     if (typeof lastResults !== 'undefined' && lastResults && lastResults.length) runSearch();
