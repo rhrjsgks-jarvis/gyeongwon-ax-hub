@@ -165,10 +165,30 @@ function typeFromName(file) {
   return plain ? String(+plain[1]) : '';
 }
 
+/*
+ * **robots 로 근거를 못 얻은 출처는 색인에 넣지 않는다** (2026-08-18 전수 감사).
+ *
+ * 기준은 **평면 지면이 robots 로 허용되는가**이고, 그 지면이 쓰는 이미지 경로는 따로
+ * 묻지 않는다 — 지면을 열어 두겠다고 적어 놓고 그 지면의 이미지를 막는 것은 robots 를
+ * 쓴 쪽의 부주의로 본다(사용자 결정). `grab-retry2.mjs` 도 지면만 검사하고 이미지는
+ * Referer 를 붙여 받으므로 수집기와 색인이 같은 기준 위에 있다.
+ *
+ * **색인에서 지우는 것으로는 못 막는다** — `.scratch/plans/` 원본이 남아 있어 다음
+ * 빌드에 그대로 되살아난다. 그래서 커밋되는 목록으로 막는다.
+ */
+const EXCLUDED = (() => {
+  const f = path.join(__dirname, 'fixtures', 'plans-robots-excluded.json');
+  if (!fs.existsSync(f)) return new Map();
+  const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+  return new Map((j.dirs || []).map((e) => [e.dir, e.reason]));
+})();
+
 // 지역_단지 별로 묶는다
 const groups = new Map();
+let excluded = 0;
 for (const c of classify) {
   if (!c.plan) continue;
+  if (EXCLUDED.has(c.dir)) { excluded++; continue; }
   const [region, ...rest] = c.dir.split('_');
   const complex = rest.join('_');
   if (!/^(경기|강원)/.test(region)) continue;          // 경원지역만
@@ -482,6 +502,8 @@ writePlanIndex(INDEX, {
 const byRegion = {};
 for (const c of index) byRegion[c.region] = (byRegion[c.region] || 0) + c.plans.length;
 console.log(`단지 ${index.length}곳 · 도면 ${n}장 (축척 있음 ${withScale}장, 단지 안에서 어긋나 뺀 것 ${dropped}장) · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
+/* 무엇을 뺐는지 반드시 말한다 — 조용히 줄이면 "전부 담았다"로 읽힌다 */
+if (excluded) console.log(`  robots 근거 없어 뺀 것 ${excluded}장 (scripts/fixtures/plans-robots-excluded.json)`);
 if (kept.length) {
   console.log(`  나빠짐 방지 — 새 크롭이 예전보다 작아 예전 도면을 유지한 것 ${kept.length}장`);
   for (const k of kept) console.log(`    · ${k}`);

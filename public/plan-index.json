@@ -2,8 +2,8 @@
  "version": 3,
  "note": "단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. 수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.",
  "generatedAt": "2026-08-17",
- "complexCount": 150,
- "planCount": 697,
+ "complexCount": 149,
+ "planCount": 696,
  "scaledCount": 12,
  "complexes": [
   {
@@ -1701,24 +1701,6 @@
      "rooms": 5,
      "kb": 93,
      "axis": 0.743
-    }
-   ]
-  },
-  {
-   "id": "c30",
-   "region": "경기 광주",
-   "complex": "광주 더파크 비스타 데시앙",
-   "addr": "경기도 광주시 역동 산 1-39외 17필지",
-   "plans": [
-    {
-     "type": "T1",
-     "file": "plans/c30/T1.jpg",
-     "w": 820,
-     "h": 816,
-     "exclusiveM2": null,
-     "rooms": 3,
-     "kb": 55,
-     "axis": 0.784
     }
    ]
   },
