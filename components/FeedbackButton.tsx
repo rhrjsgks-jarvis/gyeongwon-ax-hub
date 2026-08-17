@@ -1,15 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { sendFeedback } from '@/lib/logEvent'
 import Icon from './Icon'
-
-/**
- * 버튼을 옮겨 둔 자리. 화면 크기가 달라져도 쓸 수 있게 **비율(0~1)** 로 저장한다 —
- * px 로 저장하면 가로/세로를 돌렸을 때 화면 밖으로 나간다.
- */
-const POS_KEY = 'ax_feedback_pos'
-const EDGE = 8
 
 export default function FeedbackButton() {
   const [open, setOpen] = useState(false)
@@ -18,73 +11,21 @@ export default function FeedbackButton() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
   /*
-   * ── 끌어서 옮기기 ──────────────────────────────────────────────────
-   * 기본 자리가 오른쪽 아래인데, 배치 시뮬레이터처럼 화면을 꽉 쓰는 도구에서는
-   * **그 아래 버튼들을 가린다**(사용자 지적). 그렇다고 자리를 옮기면 다른 화면에서
-   * 또 무언가를 가리므로, 쓰는 사람이 직접 옮기게 한다.
-   * 옮긴 자리는 기기에 남겨 다음에도 그대로 쓴다.
+   * ── 헤더에 고정한다 (2026-08-17 사용자 결정) ─────────────────────────
+   *
+   * 예전에는 오른쪽 아래에 **떠 있는 버튼**이었고, 배치 시뮬레이터에서 아래 버튼들을
+   * 가려서 **끌어서 옮길 수 있게** 해 두었다. 그건 고친 것이 아니라 **문제를 상담사에게
+   * 떠넘긴 것**이다 — 옮긴 자리는 그 기기에만 남아, 매장 태블릿을 새로 깔면 또 가린다.
+   *
+   * **공유 버튼이 이미 같은 이유로 헤더에 옮겨져 있다**(2026-08-11: 미니앱 안에 떠 있다가
+   * AS 안내문 첫 줄을 가려 오른쪽 여백으로 자리를 비워 두고 있었다). 같은 병이므로
+   * 같은 해법을 쓴다 — 헤더 우측, 공유 아이콘 옆.
+   *
+   * 배치를 3D 에서만 하기로 한 뒤로는 더 분명해졌다 — 3D 는 화면을 꽉 쓰고 하단에 조작
+   * 띠가 있어, 떠 있는 버튼이 가장 방해되는 화면이 앞으로 주 화면이 된다.
    */
-  const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
-  const btnRef = useRef<HTMLButtonElement>(null)
-  const drag = useRef<{ dx: number; dy: number; moved: boolean } | null>(null)
-
-  /** 비율로 저장된 자리를 지금 화면 크기에 맞춰 px 로 돌려놓는다 */
-  const clamp = useCallback((x: number, y: number) => {
-    const el = btnRef.current
-    const w = el?.offsetWidth ?? 160
-    const h = el?.offsetHeight ?? 44
-    return {
-      x: Math.max(EDGE, Math.min(window.innerWidth - w - EDGE, x)),
-      y: Math.max(EDGE, Math.min(window.innerHeight - h - EDGE, y)),
-    }
-  }, [])
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(POS_KEY)
-      if (!raw) return
-      const r = JSON.parse(raw) as { rx: number; ry: number }
-      if (typeof r?.rx !== 'number' || typeof r?.ry !== 'number') return
-      setPos(clamp(r.rx * window.innerWidth, r.ry * window.innerHeight))
-    } catch { /* 저장된 자리가 깨졌으면 기본 자리를 쓴다 */ }
-  }, [clamp])
-
-  // 화면을 돌리거나 크기가 바뀌면 밖으로 나가지 않게 다시 안으로 넣는다
-  useEffect(() => {
-    if (!pos) return
-    const onResize = () => setPos((p) => (p ? clamp(p.x, p.y) : p))
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [pos, clamp])
-
-  function onDown(e: React.PointerEvent<HTMLButtonElement>) {
-    const r = e.currentTarget.getBoundingClientRect()
-    drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false }
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* 이미 놓인 포인터 */ }
-  }
-  function onMove(e: React.PointerEvent<HTMLButtonElement>) {
-    const d = drag.current
-    if (!d) return
-    const nx = e.clientX - d.dx, ny = e.clientY - d.dy
-    // 손가락이 살짝 흔들린 것까지 이동으로 보면 누르기가 안 된다
-    if (!d.moved && Math.abs(e.movementX) + Math.abs(e.movementY) < 1) return
-    d.moved = true
-    setPos(clamp(nx, ny))
-  }
-  function onUp() {
-    const d = drag.current
-    drag.current = null
-    if (!d) return
-    if (!d.moved) { setOpen(true); return }   // 안 움직였으면 그냥 누른 것이다
-    setPos((p) => {
-      if (p) {
-        try {
-          localStorage.setItem(POS_KEY, JSON.stringify({ rx: p.x / window.innerWidth, ry: p.y / window.innerHeight }))
-        } catch { /* 저장 못 해도 이번 화면에서는 옮겨져 있다 */ }
-      }
-      return p
-    })
-  }
+  /* 옛 드래그 자리는 더 쓰지 않는다 — 남겨 두면 기기에 쓰레기로 굳는다 */
+  useEffect(() => { try { localStorage.removeItem('ax_feedback_pos') } catch { /* 무시 */ } }, [])
 
   function close() {
     setOpen(false)
@@ -108,29 +49,19 @@ export default function FeedbackButton() {
 
   return (
     <>
+      {/*
+        헤더 안에 들어가므로 **공유 아이콘과 같은 모양**을 쓴다 — 둘이 다르게 생기면
+        같은 줄에서 하나만 버튼처럼 보인다. 크기(30px)·배경 투명도까지 맞춘다.
+      */}
       <button
-        ref={btnRef}
         type="button"
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerCancel={() => { drag.current = null }}
-        aria-label="개발자에게 문의하기 (끌어서 옮길 수 있습니다)"
-        title="끌어서 옮길 수 있습니다"
-        className={
-          'z-40 rounded-full shadow-lg flex items-center gap-1.5 text-white whitespace-nowrap px-3.5 py-3 md:px-4 md:py-3 min-h-[44px] select-none ' +
-          // 옮기기 전에는 기본 자리(오른쪽 아래)를 그대로 쓴다
-          (pos ? 'fixed' : 'fixed bottom-24 right-3 md:bottom-6 md:right-6')
-        }
-        style={{
-          background: '#1428A0',
-          touchAction: 'none',            // 끌 때 화면이 같이 스크롤되지 않게
-          cursor: 'grab',
-          ...(pos ? { left: pos.x, top: pos.y } : null),
-        }}
+        onClick={() => setOpen(true)}
+        aria-label="개발자에게 문의하기"
+        title="개발자에게 문의하기"
+        className="flex items-center justify-center rounded-full text-white shrink-0"
+        style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.18)' }}
       >
-        <Icon name="chat" size={17} />
-        <span className="text-xs md:text-sm font-semibold leading-none">개발자에게 문의하기</span>
+        <Icon name="chat" size={16} />
       </button>
 
       {open && (

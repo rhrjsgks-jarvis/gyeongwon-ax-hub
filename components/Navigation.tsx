@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
+import FeedbackButton from './FeedbackButton'
 
 // 허브·통합검색은 **그룹 밖 최상단**이다. 둘 다 '도구'가 아니라 진입점이고,
 // 좁은 화면에서는 하단 탭이, 넓은 화면에서는 사이드바 맨 위가 같은 역할을 한다.
@@ -139,7 +140,15 @@ export default function Navigation() {
           <span className="hidden sm:inline text-white text-[10px] opacity-50 tracking-wide">
             {versionLabel()}
           </span>
-          <span className="text-white text-xs opacity-60">경원영업팀</span>
+          {/*
+            **좁은 화면에서는 팀 이름을 숨긴다.** 문의 아이콘이 들어오면서 우측이
+            워드마크+배지+팀이름+공유+문의로 빽빽해졌다 — 320px 기기에서 가로가 넘친다.
+            이 앱은 "가로 스크롤 넘침 0건"을 기준으로 삼아 왔고, 버전 표시가 이미
+            같은 방식으로 넓은 화면에서만 뜬다.
+          */}
+          <span className="hidden sm:inline text-white text-xs opacity-60">경원영업팀</span>
+          {/* 개발자 문의 — 떠 있던 버튼을 여기로 옮겼다(FeedbackButton 주석 참조) */}
+          <FeedbackButton />
           {canShare && (
             <button
               type="button"

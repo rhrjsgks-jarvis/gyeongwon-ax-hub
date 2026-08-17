@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Navigation from '@/components/Navigation'
-import FeedbackButton from '@/components/FeedbackButton'
 import ServiceWorker from '@/components/ServiceWorker'
 
 export const metadata: Metadata = {
@@ -61,7 +60,6 @@ export default function RootLayout({
       <body>
         <ServiceWorker />
         <Navigation />
-        <FeedbackButton />
         <main
           className="pt-[60px] lg:pl-56 min-h-screen"
           style={{ background: 'var(--color-bg)' }}
