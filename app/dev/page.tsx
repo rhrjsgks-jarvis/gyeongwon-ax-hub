@@ -23,7 +23,7 @@ export default function DevPage() {
       <h1 className="text-lg font-bold text-gray-800 mb-1">개발중인 서비스</h1>
       <p className="text-xs text-gray-400 mb-5 flex items-center gap-1.5">
         <Icon name="lock" size={13} style={{ opacity: 0.6 }} />
-        아직 다듬는 중입니다 — 들어갈 때 비밀번호를 묻습니다. 값이 바뀌거나 화면이 달라질 수 있으니 고객에게 그대로 읽지 마세요.
+        아직 다듬는 중입니다 — 값이 바뀌거나 화면이 달라질 수 있으니 고객에게 그대로 읽지 마세요.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {DEV_MODULES.map((m) => (

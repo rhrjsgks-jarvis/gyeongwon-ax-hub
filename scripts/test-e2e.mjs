@@ -85,16 +85,15 @@ const browser = await chromium.launch({
 
 try {
 /*
- * **개발중인 서비스 잠금을 미리 풀어 둔다.** 가전 배치 시뮬레이터를 개발중으로 내리면서
- * `/place` 가 비밀번호 뒤로 들어갔다(2026-08-17). 검사가 재는 것은 그 도구의 화면이지
- * 자물쇠가 아니므로, 세션 값을 미리 넣어 지나간다 — 자물쇠 자체는 test-admin 이 지킨다.
+ * **개발중인 서비스는 비밀번호를 묻지 않는다**(2026-08-17 사용자 요청).
+ *
+ * 한때 `/place` 가 `DevGate` 뒤에 있어 검사가 세션 값을 미리 넣고 지나갔다. 지금은
+ * 자물쇠가 없으므로 그 우회를 지운다 — **남겨 두면 잠금이 되살아나도 검사가 조용히
+ * 통과해** 아무것도 못 지킨다(이 저장소가 "검사가 앱을 못 따라가 무력해진다"로 여러 번
+ * 데인 종류다). 대신 아래에서 **비밀번호 칸 없이 도구가 뜨는지**를 직접 본다.
  */
-const unlockDev = (ctx) => ctx.addInitScript(() => {
-  try { sessionStorage.setItem('ax_dev_unlocked_until', String(Date.now() + 3600e3)) } catch {}
-});
 
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
-  await unlockDev(ctx);
   const page = await ctx.newPage();
 
   // 서버가 뜰 때까지 대기
@@ -162,6 +161,31 @@ const unlockDev = (ctx) => ctx.addInitScript(() => {
   }
   pass('9개 모듈 페이지 iframe 로드');
 
+  /* ── 2-0. 개발중 도구는 비밀번호 없이 열리되, 개발중이라고 말한다 (2026-08-17) ──
+   *
+   * 사용자 요청으로 `/place` 의 자물쇠를 풀었다. 자물쇠를 없애면 **그 화면이 지고 있던
+   * 경고**("값이 바뀔 수 있으니 고객에게 그대로 읽지 마세요")까지 함께 사라져, 상담사가
+   * 완성된 도구로 오해한다 — 잠갔던 이유가 접근 차단이 아니라 그것이었다. 그래서 둘을
+   * 함께 본다: **비밀번호를 묻지 않는가** · **개발중이라고 적혀 있는가.**
+   *
+   * 세션이 깨끗한 새 창으로 본다 — 앞의 검사가 무언가를 풀어 놓았을 수 있다.
+   */
+  {
+    const fresh = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const fp = await fresh.newPage();
+    await fp.goto(BASE + '/place', { waitUntil: 'domcontentloaded' });
+    await fp.waitForTimeout(1200);
+    const pw = await fp.locator('input[type=password]').count();
+    const hasFrame = await fp.locator('iframe').count();
+    const body = (await fp.locator('body').innerText().catch(() => '')) || '';
+    if (pw) fail('/place 가 아직 비밀번호를 묻는다 — 비밀번호 없이 확인할 수 있어야 한다');
+    else if (!hasFrame) fail('/place 에 도구가 뜨지 않는다');
+    else if (!/개발중/.test(body)) {
+      fail('/place 에 개발중 표시가 없다 — 자물쇠를 풀면서 경고까지 사라지면 완성된 도구로 읽힌다');
+    } else pass('개발중 도구 — 비밀번호 없이 열리고 개발중이라고 밝힌다');
+    await fresh.close();
+  }
+
   /* ── 2-a. 폰에서 가로로 새지 않는가 — **미니앱 안쪽까지** ──
    *
    * 페이지 바깥만 재던 검사로는 못 잡는다. 배치 시뮬레이터의 목록 서랍이 닫힌 채
@@ -173,7 +197,6 @@ const unlockDev = (ctx) => ctx.addInitScript(() => {
    */
   {
     const nb = await browser.newContext({ viewport: { width: 390, height: 844 } });
-    await unlockDev(nb);
     const np = await nb.newPage();
     const over = [];
     for (const route of ['/finder', '/compare', '/install', '/care', '/as', '/place', '/quiz', '/test']) {
@@ -199,7 +222,6 @@ const unlockDev = (ctx) => ctx.addInitScript(() => {
   /* ── 2-b. 하단 바로가기 · 헤더 공유 · three.js 지연 (2026-08-11) ── */
   {
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-    await unlockDev(m);
     const mp = await m.newPage();
     await mp.goto(BASE, { waitUntil: 'networkidle' });
 
