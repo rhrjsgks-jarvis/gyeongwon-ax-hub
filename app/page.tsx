@@ -7,6 +7,7 @@ import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 import QRCode from '@/components/QRCode'
 import { APP_VERSION, versionLabel } from '@/lib/version'
+import { DEV_MODULES } from '@/lib/devModules'
 
 /*
  * 배포 주소. **`salescopilot.vercel.app` 은 쓸 수 없다** — 이미 다른 사람의 앱이 그 이름을
@@ -95,16 +96,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.08',
         status: 'live',
       },
-{
-        href: '/place',
-        icon: 'place',
-        title: '가전 배치 시뮬레이터',
-        desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 70개 사이즈)',
-        color: '#1428A0',
-        bg: '#EEF2FF',
-        updated: '2026.08',
-        status: 'live',
-      },
+
     ],
   },
   {
@@ -149,21 +141,10 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   },
   {
     // 아직 다듬는 중인 것. status 가 'live' 가 아니면 「구축중」 배지가 붙는다.
+    // 목록은 `lib/devModules.ts` 한 곳에서만 적는다 — 사이드바의 '개발중인 서비스'가
+    // 같은 것을 보여주므로, 두 곳에 적으면 어긋나고 어긋난 쪽을 본 상담사가 헤맨다.
     title: '개발중',
-    modules: [
-      {
-        // 이 저장소가 아니라 별도 배포다. next.config.js 가 요청을 넘긴다.
-        // **접속 코드가 따로 있다** — 이 허브의 admin 비번과 다르다.
-        href: '/dev/telecom/index.html',
-        icon: 'phone',
-        title: '통신 요금제 상담 도구',
-        desc: '3사 요금제 349건·부가서비스 542건·결합 27건·단말 출고가·제휴카드 40장 — 월납부금액과 할부기간 총액까지 계산 (접속 코드 필요)',
-        color: '#1428A0',
-        bg: '#EEF2FF',
-        updated: '2026.08',
-        status: 'dev',
-      },
-    ],
+    modules: DEV_MODULES as unknown as ModuleCard[],
   },
 ]
 

@@ -25,7 +25,6 @@ const NAV_GROUPS = [
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
       { href: '/as',               label: 'AS 관련 정보',     icon: 'warranty' as IconName },
-      { href: '/place',           label: '배치 시뮬레이터',   icon: 'place' as IconName },
     ],
   },
   {
@@ -47,6 +46,12 @@ const NAV_GROUPS = [
 
 // 사용현황 대시보드 — 그룹에 속하지 않고 사이드바 최하단에 별도 운영
 const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자용]', icon: 'dashboard' as IconName }
+/*
+ * 개발중인 서비스 — 사이드바 **최하단**에 잠긴 칸으로 둔다(2026-08-17 사용자 요청).
+ * 아직 다듬는 중인 도구라 그대로 열어 두면 상담사가 반쯤 만든 화면을 고객에게 보여준다.
+ * 자물쇠 아이콘을 함께 띄워 **누르기 전에 잠겨 있다는 것이 보이게** 한다.
+ */
+const DEV_LINK = { href: '/dev', label: '개발중인 서비스', icon: 'build' as IconName }
 
 /*
  * 좁은 화면 하단 바로가기 — **큰 분류만 담는다**(2026-08-11 사용자 요청).
@@ -63,7 +68,6 @@ const NAV_ITEMS = [
   { href: '/search', label: '통합검색',        icon: 'search' as IconName },
   { href: '/#tools', label: '제품 상담 도구',   icon: 'finder' as IconName },
   { href: '/#edu',   label: '교육',           icon: 'quiz' as IconName },
-  { href: '/place',  label: '배치 시뮬레이터',  icon: 'place' as IconName },
   { href: '/as',     label: 'AS 관련 정보',    icon: 'warranty' as IconName },
 ]
 
@@ -267,8 +271,24 @@ export default function Navigation() {
             )
           })}
 
-          {/* 사용현황 대시보드 — 그룹에 속하지 않고 최하단에 별도 노출 */}
+          {/*
+            최하단 — 잠겨 있는 두 칸. 그룹에 속하지 않는다.
+            **개발중인 서비스가 위, 대시보드가 아래**다. 상담사가 쓸 일이 있는 쪽이 위에 온다.
+          */}
           <div className="pt-2 border-t border-gray-100">
+            <Link
+              href={DEV_LINK.href}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
+              style={{
+                background: pathname.startsWith(DEV_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                color: pathname.startsWith(DEV_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                fontWeight: pathname.startsWith(DEV_LINK.href) ? 700 : 500,
+              }}
+            >
+              <Icon name={DEV_LINK.icon} size={19} />
+              <span>{DEV_LINK.label}</span>
+              <Icon name="lock" size={13} style={{ opacity: 0.45, marginLeft: 'auto' }} />
+            </Link>
             <Link
               href={ADMIN_LINK.href}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"

@@ -84,7 +84,17 @@ const browser = await chromium.launch({
 });
 
 try {
+/*
+ * **개발중인 서비스 잠금을 미리 풀어 둔다.** 가전 배치 시뮬레이터를 개발중으로 내리면서
+ * `/place` 가 비밀번호 뒤로 들어갔다(2026-08-17). 검사가 재는 것은 그 도구의 화면이지
+ * 자물쇠가 아니므로, 세션 값을 미리 넣어 지나간다 — 자물쇠 자체는 test-admin 이 지킨다.
+ */
+const unlockDev = (ctx) => ctx.addInitScript(() => {
+  try { sessionStorage.setItem('ax_dev_unlocked_until', String(Date.now() + 3600e3)) } catch {}
+});
+
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  await unlockDev(ctx);
   const page = await ctx.newPage();
 
   // 서버가 뜰 때까지 대기
@@ -163,6 +173,7 @@ try {
    */
   {
     const nb = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await unlockDev(nb);
     const np = await nb.newPage();
     const over = [];
     for (const route of ['/finder', '/compare', '/install', '/care', '/as', '/place', '/quiz', '/test']) {
@@ -188,6 +199,7 @@ try {
   /* ── 2-b. 하단 바로가기 · 헤더 공유 · three.js 지연 (2026-08-11) ── */
   {
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    await unlockDev(m);
     const mp = await m.newPage();
     await mp.goto(BASE, { waitUntil: 'networkidle' });
 
@@ -196,7 +208,9 @@ try {
       const nav = [...document.querySelectorAll('nav')].find((n) => n.className.includes('bottom-0'));
       return [...nav.querySelectorAll('a')].map((a) => a.textContent.trim());
     });
-    const want = ['허브', '통합검색', '제품 상담 도구', '교육', '배치 시뮬레이터', 'AS 관련 정보'];
+    /* 배치 시뮬레이터는 2026-08-17 에 '개발중인 서비스'(사이드바 최하단, 잠금)로 내려가
+       하단 바로가기에서 빠졌다 — 잠긴 도구를 하단 탭에 두면 눌러도 비밀번호만 뜬다. */
+    const want = ['허브', '통합검색', '제품 상담 도구', '교육', 'AS 관련 정보'];
     if (JSON.stringify(labels) !== JSON.stringify(want)) fail(`하단 바로가기 순서가 다르다 — ${labels.join(' · ')}`);
     else pass(`하단 바로가기 순서 (${labels.join(' · ')})`);
 

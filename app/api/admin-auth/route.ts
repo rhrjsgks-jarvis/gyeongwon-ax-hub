@@ -47,8 +47,12 @@ export async function POST(req: Request) {
     )
   }
 
-  const { password } = await req.json().catch(() => ({ password: '' }))
-  const ok = verify(password, process.env)
+  /* `scope` 는 무엇을 여는지 — 기본은 관리자, 'dev' 는 개발중인 서비스 칸이다.
+     알 수 없는 값이 오면 관리자로 본다(더 엄격한 쪽으로 떨어뜨린다). */
+  const body = await req.json().catch(() => ({ password: '' }))
+  const password = (body as { password?: unknown }).password
+  const scope = (body as { scope?: unknown }).scope === 'dev' ? 'dev' : 'admin'
+  const ok = verify(password, process.env, scope)
   if (ok) attempts.delete(key)
   return NextResponse.json({ ok })
 }

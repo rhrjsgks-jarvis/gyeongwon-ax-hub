@@ -45,8 +45,24 @@ export function clean(v: string | undefined): string {
   return s
 }
 
+/**
+ * 잠그는 대상. `dev` 는 사이드바 최하단의 **개발중인 서비스** 칸이다.
+ *
+ * **비밀번호를 하나 더 만들지 않는다.** `DEV_PW`(또는 `DEV_PW_HASH`)를 따로 두면 그것을
+ * 쓰고, **없으면 관리자 비번을 그대로 쓴다** — 매장에 알려 줄 비밀번호가 늘수록 새는 곳도
+ * 는다. 나중에 갈라야 하면 환경변수만 넣으면 되고 코드는 그대로다.
+ */
+export type AuthScope = 'admin' | 'dev'
+
 /** 지금 서버가 기다리고 있는 해시. 어디서 왔는지(source)도 함께 돌려준다. */
-export function resolveExpected(env: AdminEnv): { hash: string; source: 'plain' | 'hash' | 'fallback' } {
+export function resolveExpected(env: AdminEnv, scope: AuthScope = 'admin'): { hash: string; source: 'plain' | 'hash' | 'fallback' } {
+  if (scope === 'dev') {
+    const devPlain = clean(env.DEV_PW)
+    if (devPlain) return { hash: sha256(devPlain), source: 'plain' }
+    const devHash = clean(env.DEV_PW_HASH).toLowerCase()
+    if (devHash) return { hash: devHash, source: 'hash' }
+    /* 전용 값이 없으면 아래로 흘러 관리자 비번을 쓴다 */
+  }
   const plain = clean(env.ADMIN_PW)
   if (plain) return { hash: sha256(plain), source: 'plain' }
 
@@ -65,8 +81,8 @@ export function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb)
 }
 
-export function verify(password: unknown, env: AdminEnv): boolean {
-  return safeEqual(sha256(String(password ?? '')), resolveExpected(env).hash)
+export function verify(password: unknown, env: AdminEnv, scope: AuthScope = 'admin'): boolean {
+  return safeEqual(sha256(String(password ?? '')), resolveExpected(env, scope).hash)
 }
 
 /*

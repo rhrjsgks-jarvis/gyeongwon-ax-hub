@@ -415,5 +415,30 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log(`OK: outbox — 한 배치(20건)가 차면 즉시 전송`);
 }
 
+/*
+ * ── 개발중인 서비스 잠금 (scope: dev) ──────────────────────────────
+ *
+ * 사이드바 최하단의 「개발중인 서비스」는 관리자와 **같은 장치**로 잠근다.
+ * 비밀번호를 하나 더 만들지 않는 것이 요점이라 — DEV_PW 가 있으면 그것을,
+ * **없으면 관리자 비번을 그대로** 쓴다. 이 폴백이 조용히 깨지면 매장에서 아무도
+ * 못 들어가거나(비번이 갈려서) 반대로 그냥 열린다.
+ */
+{
+  const A = await import('../lib/adminAuth.ts');
+  const cases = [
+    ['DEV_PW 가 따로 있으면 그것을 쓴다', { DEV_PW: 'devpw', ADMIN_PW: 'adminpw' }, 'devpw', true],
+    ['그때 관리자 비번으로는 못 연다',      { DEV_PW: 'devpw', ADMIN_PW: 'adminpw' }, 'adminpw', false],
+    ['DEV_PW 가 없으면 관리자 비번을 쓴다', { ADMIN_PW: 'adminpw' }, 'adminpw', true],
+    ['DEV_PW_HASH 도 쓸 수 있다',          { DEV_PW_HASH: A.sha256('hashed'), ADMIN_PW: 'adminpw' }, 'hashed', true],
+  ];
+  let bad = 0;
+  for (const [label, env, pw, want] of cases) {
+    if (A.verify(pw, env, 'dev') !== want) { fail(`[개발중 잠금] ${label}`); bad++; }
+  }
+  /* 관리자 쪽이 DEV_PW 에 영향받으면 안 된다 — 대시보드가 조용히 열리는 종류의 사고다 */
+  if (A.verify('devpw', { DEV_PW: 'devpw', ADMIN_PW: 'adminpw' })) { fail('[개발중 잠금] DEV_PW 로 관리자까지 열린다'); bad++; }
+  if (!bad) console.log('OK: 개발중 잠금 — DEV_PW 우선, 없으면 관리자 비번 폴백, 관리자는 영향 없음');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

@@ -2251,6 +2251,45 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 냉장고 도어 구성 — 이름이 밝히는 대로 그린다 ──────────────────────
+ *
+ * 예전에는  한 줄로 갈라 넷이 틀렸다 — 양문형에 없는 가로
+ * 분할선, 1도어를 반으로 가름, 1도어 세트를 2×2 로 그림, 뚜껑형 김치냉장고 앞면에
+ * 도어선. **2D 와 3D 가 같은 함수를 봐야** 같은 품목이 앱마다 다르게 생기지 않는다.
+ *
+ * 이름이 밝히지 않는 것(업소용 다목적 등)은 **예전 폭 기준 그대로** 둔다 — 근거 없이
+ * 도어 수를 지어내지 않는다.
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    if (!P.fridgeLayout) return { err: 'fridgeLayout 이 노출되지 않았다' };
+    const want = [
+      ['4도어 프리스탠딩', 'AI 4도어 프리스탠딩', 912, 2, 2, false],
+      ['양문형', '양문형 2도어', 912, 2, 1, false],
+      ['일반형', '일반형', 700, 1, 2, false],
+      ['1도어 키친핏', '1도어 냉장 키친핏', 595, 1, 1, false],
+      ['1도어 키친핏 세트 (냉장+냉동)', 'Bespoke 2세트', 1196, 2, 1, false],
+      ['1도어 키친핏 세트 (냉장+냉동+와인+김치)', 'Infinite 4세트', 2398, 4, 1, false],
+      ['202~221L', '뚜껑형 221L', 925, 1, 1, true],
+      ['324~347L', '김치플러스 4도어 스탠드형', 670, 2, 2, false],
+    ];
+    return {
+      rows: want.map(([size, group, w, c, ro, top]) => {
+        const F = P.fridgeLayout({ cat: '냉장고', size, group, w });
+        return { size, ok: F.cols === c && F.rows === ro && !!F.top === top, got: F.cols + 'x' + F.rows + (F.top ? '뚜껑' : '') , want: c + 'x' + ro + (top ? '뚜껑' : '') };
+      }),
+    };
+  });
+  if (r.err) fail('냉장고 도어 구성 — ' + r.err);
+  else {
+    const bad = r.rows.filter((x) => !x.ok);
+    if (bad.length) fail('냉장고 도어 구성 — ' + bad.map((b) => `${b.size} ${b.got}(원하는 값 ${b.want})`).join(' / '));
+    else pass(`냉장고 도어 구성 ${r.rows.length}종 — 이름이 밝히는 대로(양문형은 가로로 안 갈리고, 뚜껑형은 앞면이 없다)`);
+  }
+}
+
+/*
  * ── 3D 가전 디테일 — 2D 실루엣과 같은 품목에 붙어 있는가 ──
  * 같은 품목이 앱마다 다른 그림이면 상담사 눈이 헤맨다. 2D `drawGlyph` 가 실루엣을 그리는
  * 품목은 3D 도 흰 상자로 두면 안 된다. 반대로 **2D 에 없는 품목(리빙 4종)은 3D 에도
