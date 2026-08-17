@@ -64,9 +64,9 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 .searchbox .go{background:var(--blue);color:#fff;font-size:14.5px;font-weight:800;padding:0 20px;border-radius:var(--r);
   box-shadow:var(--shadow);align-self:stretch}
 .searchbox .go:active{background:#101F7E}
-.exrow{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px}
-.ex{font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-soft);padding:6px 12px;border-radius:99px}
-.ex:active{background:#D3DBF7}
+/* 검색 방법 안내. 예전에는 예시 키워드 칩 20개였는데 낡은 말이 섞여 되레 헷갈렸다 */
+.exrow{margin-bottom:8px;font-size:12.5px;line-height:1.65;color:var(--sub)}
+.exrow b{color:var(--blue);font-weight:700}
 .aihint{font-size:11.5px;color:var(--sub);margin:-2px 0 8px}
 
 /* 해석 결과 바 */
@@ -941,20 +941,27 @@ function search(P){
 
 /* ─── 렌더링 ─── */
 let lastResults = [], openId = null, sortMode = "rank";
-const EXAMPLES = [
-  "무풍 에어컨 300만 이하","폭 700 냉장고","S펜 노트북 OLED",
-  "혈압 측정 워치","게이밍 모니터 240hz","펫 세탁기 콤보",
-  "로봇청소기 직배수","2026 신형 TV","통역 이어폰 노캔",
-  "가성비 태블릿 학생","크리에이터 노트북","부모님 효도 워치",
-  "블루스카이 공기청정기 60㎡","사운드바 돌비애트모스","김치냉장고 스탠드형",
-  "인덕션 빌트인 3구","큐커 오븐 에어프라이어",
-  "비스포크 냉장고","여름 무풍 에어컨 2026","신혼가전 패키지"
-];
-
+/*
+ * **검색 방법을 적는다 — 예시 키워드를 깔지 않는다** (2026-08-17 사용자 요청).
+ *
+ * 예전에는 `무풍 에어컨 300만 이하` 같은 칩 20개를 깔았는데, 라인업이 바뀌면 그 말이
+ * 낡는다(실제로 `2026 신형 TV`·`여름 무풍 에어컨 2026`·`신혼가전 패키지` 가 남아 있었다).
+ * **낡은 예시는 없느니만 못하다** — 상담사가 그대로 눌러 보고 결과가 신통찮으면
+ * 검색기 자체를 못 믿게 된다.
+ *
+ * 대신 **엔진이 실제로 하는 일**을 적는다. 이 셋은 화면 어디에도 안 적혀 있어
+ * 안 알려주면 알 길이 없는 것들이다:
+ *   ① 띄어 쓴 말 하나가 조건 하나이고 **겹칠수록 좁혀진다**(AND)
+ *   ② 품목·기능뿐 아니라 **예산·치수·평형·인치**를 섞어도 알아듣는다
+ *   ③ **못 알아들은 말은 빼고 찾은 뒤 무엇을 뺐는지 밝힌다**(해석 줄)
+ *
+ * 품목명·기능명은 적지 않는다 — 그것을 적는 순간 다시 '예시 키워드'가 되어 낡는다.
+ */
 function renderExamples(){
-  $("exRow").innerHTML = EXAMPLES.map(e=>`<button class="ex" onclick="exGo('${e}')">${e}</button>`).join("");
+  $("exRow").innerHTML =
+    '<b>띄어 쓴 말 하나가 조건 하나입니다 — 겹쳐 쓸수록 좁혀집니다.</b><br>'
+    + '못 알아들은 말은 빼고 찾은 뒤, 무엇을 뺐는지 아래에 알려 드립니다.';
 }
-function exGo(e){ $("q").value = e; runSearch(); }
 
 function runSearch(){
   const raw = ($("q").value||"").trim();

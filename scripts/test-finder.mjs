@@ -125,7 +125,7 @@ const CAT_QUERIES = {
 
 (async () => {
   const loaded = await ready(() =>
-    typeof window.parseQuery === 'function' && window.document.querySelectorAll('#exRow .ex').length > 0);
+    typeof window.parseQuery === 'function' && (window.document.getElementById('exRow').textContent || '').trim().length > 0);
   const doc = window.document;
   let ok = true;
   const fail = (msg) => { console.log('ERROR:', msg); ok = false; };
@@ -133,9 +133,18 @@ const CAT_QUERIES = {
 
   // ═══ 1. 초기 렌더 ═══
   console.log('── 1. 초기 렌더 ──');
-  const exBtns = doc.querySelectorAll('#exRow .ex');
-  console.log('example buttons:', exBtns.length);
-  if (exBtns.length === 0) fail('예시 키워드 버튼이 렌더되지 않음');
+  /*
+   * **검색창 아래는 예시 키워드가 아니라 '검색 방법 안내'다**(2026-08-17 사용자 요청).
+   * 예전에는 `무풍 에어컨 300만 이하` 같은 칩 20개를 깔았는데 라인업이 바뀌면 낡는다
+   * (실제로 `2026 신형 TV`·`신혼가전 패키지` 가 남아 있었다). **낡은 예시는 없느니만
+   * 못하다** — 눌러 보고 결과가 신통찮으면 검색기 자체를 못 믿게 된다.
+   * 그래서 여기서는 ①안내가 떠 있는가 ②키워드 칩이 되살아나지 않았는가 를 함께 본다.
+   */
+  const help = (doc.getElementById('exRow').textContent || '').trim();
+  console.log('검색 안내:', help.slice(0, 40) + '…');
+  if (!help) fail('검색 방법 안내가 렌더되지 않음');
+  if (doc.querySelectorAll('#exRow .ex').length) fail('예시 키워드 칩이 되살아났다 — 낡으면 상담에서 해가 된다');
+  if (!/조건/.test(help)) fail('안내에 조건(AND) 설명이 없다 — 겹칠수록 좁혀진다는 것이 핵심이다');
   if (!doc.getElementById('mKw').classList.contains('on')) fail('초기 모드가 키워드 모드(mKw)가 아님');
   if (doc.getElementById('mAi').classList.contains('on')) fail('초기 상태에서 AI 모드가 켜져있음');
   /*
