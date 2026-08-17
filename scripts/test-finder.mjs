@@ -722,6 +722,37 @@ const CAT_QUERIES = {
     else console.log('  견적 담기·하단 바·견적 지면 모두 없음 ✓');
   }
 
+  // ═══ 11. 제품 id 가 겹치지 않는가 ═══
+  /*
+   * 삼성 배열과 JBL 배열이 **각자 0부터** 번호를 매겨 와서, 합치면 586종인데 고유 id 는
+   * 532개였다. 목록·상세는 객체를 직접 그려 멀쩡해 보이지만 **공유는 id 로 찾는다**
+   * (`PRODUCTS.find(x => x.id === openId)`). 그래서 JBL 제품을 열어 공유하면 같은 id 의
+   * 삼성 제품이 나갔다 — 고객에게 나가는 그림이라 조용히 위험하다.
+   *
+   * 화면을 거쳐 확인한다: JBL 을 찾아 카드를 펼치고, **공유가 만드는 것이 그 JBL 제품인가.**
+   * id 재부여를 지우면 이 검사가 물린다.
+   */
+  console.log('── 11. 제품 id 겹침 ──');
+  {
+    doc.getElementById('q').value = 'JBL 사운드바';
+    window.runSearch();
+    const cards = [...doc.querySelectorAll('.rmain')];
+    const jbl = cards.find((c) => /JBL/i.test(c.textContent));
+    if (!jbl) fail('JBL 제품 카드를 찾지 못했다');
+    else {
+      const m = (jbl.getAttribute('onclick') || '').match(/toggleDetail\((\d+)\)/);
+      if (!m) fail('카드에서 id 를 읽지 못했다');
+      else {
+        window.toggleDetail(+m[1]);
+        const built = window.finderShareBuild();
+        const txt = JSON.stringify(built || {});
+        if (!built) fail('상세를 펼쳤는데 공유가 만들어지지 않았다');
+        else if (!/JBL/i.test(txt)) fail('JBL 제품을 펼쳤는데 공유에는 다른 제품이 담겼다 — id 가 겹친다');
+        else console.log('  JBL 카드를 펼치면 공유도 그 제품이다 ✓');
+      }
+    }
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })().catch((e) => {

@@ -339,6 +339,20 @@ const HARMAN_PRODUCTS = [{"src":"HARMAN","cat":"JBL 블루투스 스피커 (포�
 PRODUCTS = PRODUCTS.concat(HARMAN_PRODUCTS);
 
 /*
+ * **id 를 다시 매긴다** (2026-08-17).
+ *
+ * 두 배열이 각자 0부터 번호를 매겨 와서, 합치면 **586종인데 고유 id 는 532개**였다 —
+ * JBL 54종이 삼성 앞쪽 54종과 겹친다. 목록·상세는 객체를 직접 그려 멀쩡해 보이지만
+ * **공유가 id 로 찾는다**(`PRODUCTS.find(x => x.id === openId)`). 그래서 JBL 제품을
+ * 열어 공유하면 같은 id 의 **삼성 제품이 나갔다**(id 0 이면 냉장고). 고객에게 나가는
+ * 그림이라 조용히 위험하다.
+ *
+ * `openId` 는 그 순간에만 쓰는 값이고 딥링크는 `?q=` 로 걸리므로, 번호를 다시 매겨도
+ * 밖에서 깨질 것이 없다.
+ */
+PRODUCTS.forEach(function (p, i) { p.id = i; });
+
+/*
  * **제품 수는 데이터에서 세어 넣는다**(2026-08-12).
  *
  * 화면 두 곳에 숫자를 박아 두고 있었는데 **서로 달랐다** — 상단바는 "전 라인업 586종",
@@ -348,9 +362,15 @@ PRODUCTS = PRODUCTS.concat(HARMAN_PRODUCTS);
  * CLAUDE.md 가 "낡은 수치가 화면에 남지 않게 할 것"이라 적어 둔 바로 그 함정이다.
  */
 const HARMAN_N = HARMAN_PRODUCTS.length;
-const TOTAL_N = PRODUCTS.length;
+/*
+ * **숫자를 상수로 굳히지 않는다**(2026-08-17). 삼성닷컴 수집분을 `finder-extra.json`
+ * 으로 나중에 붙이므로, 한 번 잰 값을 들고 있으면 화면이 **붙기 전 숫자**를 계속 말한다.
+ * "낡은 수치가 화면에 남지 않게 할 것"이라는 이 파일의 규칙이 그대로 적용된다.
+ */
+function totalN(){ return PRODUCTS.length; }
 function countText(){
-  return `전사 제품 DB ${TOTAL_N}종 (삼성·리빙 ${TOTAL_N - HARMAN_N}종 + Harman ${HARMAN_N}종)`;
+  const t = totalN();
+  return `전사 제품 DB ${t}종 (삼성·리빙 ${t - HARMAN_N}종 + Harman ${HARMAN_N}종)`;
 }
 
 </script>
@@ -1663,8 +1683,50 @@ $("q").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(); });
 /* 제품 수를 화면에 채운다 — 상단바와 히어로 문구 둘 다. 여기서 한 번 부르지 않으면
    히어로는 `setMode()` 가 불릴 때까지(=사용자가 모드 버튼을 누를 때까지) 정적 HTML 의
    낡은 값을 그대로 보여준다. 실제로 그래서 초기 화면에 524 종이 떠 있었다. */
-$("brandCount").textContent = `전 라인업 ${TOTAL_N}종`;
+function syncCounts(){
+  $("brandCount").textContent = `전 라인업 ${totalN()}종`;
+  const sub = $("heroSub2") || null;
+  if (sub) sub.textContent = countText();
+}
+syncCounts();
 setMode("kw");
+
+/*
+ * ── 삼성닷컴 수집분을 붙인다 (`finder-extra.json`, 2026-08-17) ──────────
+ *
+ * 카탈로그에 없는 현행 제품과, 기존 제품의 **비어 있던 사양**을 담은 파일이다.
+ * **인라인에 넣지 않는 이유**: 이 지면은 이미 1.1MB 이고 해석·실행에만 1,242ms 가
+ * 걸린다(프로파일의 58%가 파싱). 1,200종을 인라인에 더하면 2.65MB 가 되어 매장
+ * 폰에서 3초 넘게 파싱만 한다. JSON 은 그보다 싸고 서비스워커가 캐시한다.
+ *
+ * **기존 값은 덮지 않는다** — 카탈로그 대조로 넣은 값이 기준이고, 없던 항목만 채운다.
+ * 실패하면 조용히 넘어간다. 전파가 끊긴 매장에서 기존 532종은 그대로 써야 한다.
+ */
+(function(){
+  fetch('finder-extra.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (!j) return;
+    var byModel = {};
+    for (var i = 0; i < PRODUCTS.length; i++) byModel[PRODUCTS[i].model] = PRODUCTS[i];
+    var filled = 0;
+    for (var m in (j.fill || {})) {
+      var p = byModel[m];
+      if (!p) continue;
+      var have = {};
+      (p.fx || []).forEach(function (r2) { have[r2[0]] = 1; });
+      var rows = j.fill[m].filter(function (r2) { return !have[r2[0]]; });
+      if (!rows.length) continue;
+      p.fx = (p.fx || []).concat(rows);
+      /* 검색이 보는 글에도 더한다 — 안 더하면 새 사양으로는 못 찾는다 */
+      p.kw = (p.kw || '') + ' ' + rows.map(function (r2) { return r2[0] + ' ' + r2[1]; }).join(' ').toLowerCase();
+      filled++;
+    }
+    var base = PRODUCTS.length;
+    (j.add || []).forEach(function (p2, k) { p2.id = base + k; PRODUCTS.push(p2); });
+    if (typeof buildCatIndex === 'function') { try { buildCatIndex(); } catch (e) {} }
+    syncCounts();
+    if (typeof lastResults !== 'undefined' && lastResults && lastResults.length) runSearch();
+  }).catch(function () { /* 전파가 끊겨도 기존 제품은 그대로 쓴다 */ });
+})();
 
 /* 허브 통합검색(/search)에서 넘어온 ?q= 딥링크 — 검색어를 채우고 즉시 실행한다 */
 (function(){
