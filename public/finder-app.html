@@ -328,12 +328,20 @@ table.spec tr:last-child td{border-bottom:none}
   <div class="shero">
     <div class="eyebrow">KEYWORD PRODUCT SEARCH</div>
     <h1 id="heroTitle">키워드 한 줄이면 됩니다.</h1>
-    <p id="heroSub">기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요.</p>
+    <!--
+      **금액은 예시로 쓰지 않는다**(2026-08-17 사용자: *"금액적인 부분은 없애는 게 맞습니다.
+      타사비교 외엔 금액은 모두 사용하지 않습니다"*). 예시에 금액이 있으면 상담사가
+      이 도구를 **가격으로 찾는 도구**로 읽는데, 이 저장소에서 가격을 쓰는 곳은
+      타사비교뿐이다. 대신 이 도구만 할 수 있는 것(평형·치수·형태 겹쳐 좁히기)을 보인다.
+    -->
+    <p id="heroSub">기능·치수·평형·카테고리를 자유롭게 섞어 입력하세요.</p>
   </div>
 
   <div id="kwBox">
     <div class="searchbox">
-      <div class="field"><input id="q" placeholder="예: 무풍 에어컨 300만원 이하" enterkeyhint="search"></div>
+      <!-- 실측으로 3종이 나오는 질의다(평형 필터가 실제로 도는 예). 낡은 예시를 적으면
+           검색기 자체를 못 믿게 되므로, 되는 것만 적는다 -->
+      <div class="field"><input id="q" placeholder="예: 무풍 에어컨 19평" enterkeyhint="search"></div>
       <button class="go" onclick="runSearch()">검색</button>
     </div>
     <div class="exrow" id="exRow"></div>
