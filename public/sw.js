@@ -109,7 +109,12 @@
  * v79 (2026-08-16) — AI 추천이 에어컨 설치 형태와 인덕션 화구 수를 지키고,
  * 예산 초과 시 가장 싼 것을 보여준다(finder-app.html). 버튼은 계속 hidden.
  */
-const CACHE_VERSION = 'axhub-v94';
+/*
+ * v95 (2026-08-18) — finder-extra.json 에서 **법정 표시 12종 460줄**을 걷어냈다.
+ * 사양이 아니라 전자상거래 고지(제조국·A/S 책임자 전화번호·품질보증기준…)라 kw 에
+ * 섞여 검색을 흐린다. 이 파일도 SWR 이라 여기를 안 올리면 이미 쓰던 기기가 옛 것을 쓴다.
+ */
+const CACHE_VERSION = 'axhub-v95';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
