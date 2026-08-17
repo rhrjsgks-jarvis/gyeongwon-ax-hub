@@ -1263,6 +1263,118 @@ const knownGaps = [];
       `(넓이 ${r.afterArea.join('·')}㎡ 그대로, 이미지 미포함)`);
   }
 
+  /*
+   * ── 잡아 둔 벽선이 기기 밖으로 나가는가 (`exportLibrary`) ──────────────
+   *
+   * **공용 목록을 늘리는 유일한 길이다.** 저장은 localStorage 라 그 기기에만 남고,
+   * 밖으로 못 나가면 상담사가 애써 잡은 벽선이 매장에서 죽는다.
+   *
+   * 예전에는 내려받기뿐이었다 — 폰에서는 다운로드 폴더에 떨어진 뒤 거기서 끝난다.
+   * 지금은 결과 이미지와 같이 `navigator.share` 로 **파일째** 보내고, 안 되는
+   * 기기에서만 내려받기로 물러선다. 넷을 본다:
+   *   ① 0건이면 내보내지 않는다(빈 파일을 건네면 보낸 쪽은 보낸 줄 안다)
+   *   ② 공유가 되는 기기에서는 **공유로** 나가고 내려받지 않는다
+   *   ③ 취소는 실패가 아니다 — 내려받기로 떨어지지 않는다(취소했는데 파일이 생긴다)
+   *   ④ 공유가 막힌 기기에서는 내려받기로 물러선다
+   */
+  {
+    const r = await page.evaluate(async () => {
+      const P = window.__place;
+      const out = {};
+      /* 내려받기를 가로챈다 — 실제로 파일이 생기는지가 아니라 "떨어졌는가"만 본다 */
+      const realClick = HTMLAnchorElement.prototype.click;
+      let downloads = [];
+      HTMLAnchorElement.prototype.click = function () {
+        if (this.download) { downloads.push(this.download); return; }
+        return realClick.call(this);
+      };
+      const shareStub = (impl) => {
+        Object.defineProperty(navigator, 'share', { value: impl, configurable: true });
+        Object.defineProperty(navigator, 'canShare', { value: () => !!impl, configurable: true });
+      };
+      const noShare = () => {
+        Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
+        Object.defineProperty(navigator, 'canShare', { value: undefined, configurable: true });
+      };
+
+      try {
+        /* ① 0건 */
+        localStorage.removeItem('place_library_v1');
+        downloads = [];
+        noShare();
+        out.emptyReturn = await P.exportLibrary();
+        out.emptyDownloads = downloads.length;
+
+        /* 두 건을 만들어 둔다 */
+        P.state.rooms = []; P.state.walls = [];
+        P.addRoom('거실', [
+          { x1: 0, y1: 0, x2: 5000, y2: 0 }, { x1: 5000, y1: 0, x2: 5000, y2: 4000 },
+          { x1: 5000, y1: 4000, x2: 0, y2: 4000 }, { x1: 0, y1: 4000, x2: 0, y2: 0 },
+        ]);
+        P.saveToLibrary('경기 수원', '내보내기 단지', '84A');
+        P.saveToLibrary('강원 원주', '내보내기 단지2', '59B');
+
+        /* ② 공유가 되는 기기 */
+        let shared = null;
+        shareStub(async (data) => { shared = data; });
+        downloads = [];
+        out.shareReturn = await P.exportLibrary();
+        out.shareDownloads = downloads.length;
+        if (shared && shared.files && shared.files[0]) {
+          const f = shared.files[0];
+          out.name = f.name;
+          out.type = f.type;
+          const doc = JSON.parse(await f.text());
+          out.entries = (doc.entries || []).length;
+          out.complexes = (doc.entries || []).map((e) => e.complex);
+          out.hasImage = /data:image|base64,/.test(JSON.stringify(doc));
+        }
+
+        /* ③ 취소 */
+        shareStub(async () => { const e = new Error('cancel'); e.name = 'AbortError'; throw e; });
+        downloads = [];
+        out.abortReturn = await P.exportLibrary();
+        out.abortDownloads = downloads.length;
+
+        /* ④ 공유가 막힌 기기 */
+        noShare();
+        downloads = [];
+        out.fallbackReturn = await P.exportLibrary();
+        out.fallbackDownloads = downloads.slice();
+
+        /* 목록 시트가 "이 기기에 몇 건" 을 말하는가 */
+        await P.openLibrary();
+        out.hint = (document.querySelector('#libmine') || {}).textContent || '';
+      } finally {
+        HTMLAnchorElement.prototype.click = realClick;
+      }
+      return out;
+    });
+
+    if (r.emptyReturn !== false || r.emptyDownloads) {
+      fail(`저장해 둔 것이 0건인데 내보냈다 (반환 ${r.emptyReturn} · 내려받기 ${r.emptyDownloads}건) — 빈 파일을 건네면 보낸 쪽은 보낸 줄 안다`);
+    } else if (r.shareReturn !== true) fail('공유가 되는 기기인데 내보내지 못했다');
+    else if (r.shareDownloads) {
+      /* 두 가지가 여기로 온다 — 갈라서 말해야 다음 사람이 원인을 다시 찾지 않는다 */
+      fail(r.name
+        ? '공유로 보냈는데 내려받기까지 했다 — 파일이 두 번 생긴다'
+        : '공유가 되는 기기인데 공유를 건너뛰고 내려받았다 — 폰에서는 다운로드 폴더에 떨어진 뒤 거기서 끝난다');
+    }
+    else if (r.entries !== 2) fail(`공유한 파일에 항목이 ${r.entries}건 (기대 2건)`);
+    else if (r.hasImage) fail('내보낸 파일에 이미지가 섞였다 — 저작권 때문에 좌표만 담아야 한다');
+    else if (!/^plan-library-\d{4}-\d{2}-\d{2}-2\.json$/.test(r.name || '')) {
+      fail(`파일명이 "${r.name}" — 한글 이름은 다운로드·공유에서 조용히 깨진다. 영문 + 날짜 + 건수여야 한다`);
+    } else if (r.abortReturn !== false || r.abortDownloads) {
+      fail(`공유를 취소했는데 내려받기로 떨어졌다 (${r.abortDownloads}건) — 취소는 실패가 아니다`);
+    } else if (r.fallbackReturn !== true || r.fallbackDownloads.length !== 1) {
+      fail(`공유가 막힌 기기에서 내려받기로 물러서지 않았다 (${r.fallbackDownloads.length}건)`);
+    } else if (!/2곳/.test(r.hint)) {
+      fail(`단지 고르기 시트가 이 기기에 저장된 건수를 말하지 않는다 — "${r.hint.trim().slice(0, 40)}"`);
+    } else {
+      pass(`벽선 내보내기 — 0건이면 막고 · 공유로 ${r.name} 2건(${r.complexes.join('·')}) · 취소는 무해 · 공유 불가 기기는 내려받기`);
+    }
+  }
+
   // ── 단지 도면 색인 (public/plan-index.json) ──
   // 지역 → 단지 → 도면 순으로 고르는 것이 이 기능의 전부다. 색인이 비어 있거나
   // 이미지 경로가 깨지면 매장에서 아무것도 못 고른다.

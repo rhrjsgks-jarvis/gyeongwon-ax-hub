@@ -5389,6 +5389,56 @@ function saveToLibrary(region, complex, type){
   return entry;
 }
 
+/*
+ * ── 잡아 둔 벽선을 밖으로 내보낸다 ──────────────────────────────────
+ *
+ * **공용 목록을 늘리는 유일한 길이 여기다.** 도면 이미지 수집은 소진됐지만 벽선은
+ * 파생 측정값이라 저작권 제약이 없어 계속 모을 수 있다. 그런데 이 앱이 저장한 것은
+ * 그 기기 localStorage 에만 남아, 상담사가 애써 잡아 둔 벽선이 매장 밖으로 못 나갔다.
+ *
+ * **예전에는 내려받기뿐이었다.** 폰에서는 파일이 다운로드 폴더에 떨어진 뒤 거기서
+ * 끝난다 — 그것을 찾아 카톡에 첨부하는 일은 매장에서 일어나지 않는다. 그래서 결과
+ * 이미지와 **같은 방식**으로 보낸다(`share-kit`): `navigator.share` 로 파일째 넘기면
+ * 그 자리에서 카톡·메일을 고를 수 있다. 안 되는 기기에서만 내려받기로 물러선다.
+ *
+ *   · **취소(AbortError)는 실패가 아니다** — 조용히 끝낸다(share-kit 과 같은 규칙).
+ *   · **파일명은 영문이다.** 한글 이름은 다운로드·공유에서 조용히 깨진다
+ *     (단지 목록 파일을 영문으로 둔 것과 같은 이유).
+ *   · **0건이면 내보내지 않는다.** 빈 파일을 건네면 보낸 사람은 보낸 줄 알고,
+ *     받는 쪽은 왜 비었는지 모른다. 무엇을 해야 하는지 말해 준다.
+ */
+async function exportLibrary(){
+  let local = [];
+  try { local = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch { local = []; }
+  if (!local.length) {
+    toast('이 기기에 저장해 둔 단지가 없습니다 — 방을 잡고 ‘단지 저장’을 먼저 눌러 주세요');
+    return false;
+  }
+
+  const name = `plan-library-${new Date().toISOString().slice(0, 10)}-${local.length}.json`;
+  const blob = new Blob([JSON.stringify({ version: 1, entries: local }, null, 1)], { type: 'application/json' });
+
+  let file = null;
+  try { file = new File([blob], name, { type: 'application/json' }); } catch (_) { /* File 미지원 */ }
+  if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+    try {
+      await navigator.share({ files: [file], title: `벽선 ${local.length}건` });
+      toast(`벽선 ${local.length}건을 보냈습니다`);
+      return true;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return false;   // 사용자가 취소한 것은 실패가 아니다
+      /* 공유가 막힌 기기 — 내려받기로 물러선다 */
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast(`벽선 ${local.length}건을 내려받았습니다`);
+  return true;
+}
+
 /** 라이브러리 항목을 현재 화면으로 불러온다 — 도면 이미지 없이 방만 복원한다 */
 function loadFromLibrary(entry){
   state.img = null; state.imgW = state.imgH = 0;
@@ -5758,16 +5808,23 @@ async function openLibrary(){
     <div id="libcrumb" class="crumb"></div>
     <div id="libchips" class="chips"></div>
     <div id="libbody" class="liblist"></div>
-    <div class="modal-actions"><button id="libexp">내보내기(JSON)</button><button id="c">닫기</button></div>`,
+    <div id="libmine" class="hint"></div>
+    <div class="modal-actions"><button id="libexp">벽선 보내기</button><button id="c">닫기</button></div>`,
     () => {
       render();
-      $('#libexp').onclick = () => {
-        let local = [];
-        try { local = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch {}
-        const blob = new Blob([JSON.stringify({ version: 1, entries: local }, null, 1)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = 'plan-library-내보내기.json'; a.click();
-      };
+      /*
+       * **이 기기에 몇 건이 있는지 먼저 말한다.** 버튼만 있으면 누를 이유를 모른다 —
+       * 벽선을 보내 달라는 부탁은 "당신이 잡아 둔 N 곳이 여기 있다"에서 시작한다.
+       * 0건이면 무엇을 해야 하는지로 바꿔 적는다.
+       */
+      let mine = [];
+      try { mine = JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch { mine = []; }
+      $('#libmine').innerHTML = mine.length
+        ? `이 기기에 저장해 둔 단지 <b>${mine.length}곳</b>이 있습니다. ‘벽선 보내기’로 개발자에게 보내 주시면
+           다음 배포부터 <b>모든 매장</b>이 그 단지를 바로 불러옵니다 — 도면 이미지는 담기지 않습니다.`
+        : `도면에서 방을 잡은 뒤 <b>단지 저장</b>을 누르면 이 기기에 남고, 그것을 보내 주시면
+           다음 배포부터 모든 매장이 함께 씁니다.`;
+      $('#libexp').onclick = () => { exportLibrary(); };
       $('#c').onclick = closeSheet;
     });
 }
@@ -6833,7 +6890,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, draftPieces, draftTotalM2, applyDetected,
-  libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
+  libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, exportLibrary, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
