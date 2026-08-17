@@ -2316,7 +2316,8 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
         clear: { back: 0, side: 0, front: 0 } });
       window.Place3D.open();
       let parts = 0;
-      window.Place3D.root.traverse((o) => { if (o.isMesh || o.isLineSegments) parts++; });
+      /* 접지 그림자는 '디테일' 이 아니다 — 바닥에 놓는 가전마다 하나씩 붙으므로 빼고 센다 */
+      window.Place3D.root.traverse((o) => { if ((o.isMesh || o.isLineSegments) && !o.userData.isShadow) parts++; });
       window.Place3D.close();
       // 방 바닥 1 + 벽 4 + 본체 1 + 모서리선 1 = 7 이 "디테일 없음"의 기준선
       out[cat] = parts - 7;
@@ -2355,6 +2356,40 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 접지 그림자 — 바닥에 놓는 것에만 붙는가 ────────────────────────────
+ *
+ * 그림자가 없으면 가전이 바닥에 얹혀 있지 않고 떠 보인다. 그렇다고 **벽에 건 TV·천장
+ * 카세트에 발자국 그림자**가 생기면 없는 물건이 거기 있는 것처럼 보인다 — 이 앱이
+ * "근거 없는 것을 화면에 띄우지 않는다"고 정한 것과 같은 종류다.
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const shadows = (mh) => {
+      P.state.rooms = []; P.state.items = []; P.state.walls = W;
+      P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+      P.addRoom('거실', W);
+      P.state.items.push({ id: 'x', cat: '냉장고', size: '양문형', group: '양문형 2도어', label: 'x',
+        w: 912, h: 1853, d: 716, a: 0, bx: 4000, by: 1000, mh, warn: [], soft: [],
+        clear: { back: 0, side: 0, front: 0 } });
+      window.Place3D.open();
+      let n = 0;
+      window.Place3D.root.traverse((o) => { if (o.userData && o.userData.isShadow) n++; });
+      window.Place3D.close();
+      return n;
+    };
+    return { floor: shadows(0), wall: shadows(840) };
+  });
+  if (r.err) fail('접지 그림자 — ' + r.err);
+  else if (!r.floor) fail('접지 그림자 — 바닥에 놓았는데 그림자가 없다 (떠 보인다)');
+  else if (r.wall) fail(`접지 그림자 — 벽에 건 것에도 발자국 그림자가 ${r.wall}개 붙었다`);
+  else pass('접지 그림자 — 바닥에 놓는 것에만 붙는다 (벽·천장에 건 것은 없음)');
+}
+
+/*
  * ── 부품마다 다르게 그리는가 ──────────────────────────────────────────
  *
  * 한 줄에 여러 물건이 들어 있는 카테고리가 있다 —
@@ -2387,7 +2422,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
       window.Place3D.open();
       const sig = [];
       window.Place3D.root.traverse((o) => {
-        if (!o.isMesh || !o.geometry) return;
+        if (!o.isMesh || !o.geometry || o.userData.isShadow) return;   // 접지 그림자는 부품 지문에서 뺀다
         /* 본체(Box)·바닥·벽은 빼고 **덧붙인 디테일**만 본다 */
         if (o.geometry.type === 'BoxGeometry' || o.geometry.type === 'ShapeGeometry') return;
         sig.push(`${o.geometry.type}@${o.position.x.toFixed(2)},${o.position.y.toFixed(2)},${o.position.z.toFixed(2)}`

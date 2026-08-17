@@ -7112,6 +7112,28 @@ function leafMesh(lf, it, bad){
  * 2D 는 같은 hex 를 정면 띠로 보인다 — **두 화면이 같은 값을 쓴다.**
  * 재질은 색마다 하나만 만들어 재사용한다(제품마다 새로 만들면 GPU 자원이 샌다).
  */
+/*
+ * 접지 그림자 재질 — **한 장을 만들어 모두가 나눠 쓴다.**
+ * 가운데가 진하고 가장자리로 사라지는 원. 그림자 맵을 쓰지 않는 이유는 위 조명 주석과
+ * 같다 — 바닥이 원본 도면 텍스처라 전체가 어두워지면 마루색·가구가 죽는다.
+ */
+let shadowMat_ = null;
+function shadowMat(){
+  if (shadowMat_) return shadowMat_;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g2 = c.getContext('2d');
+  const grd = g2.createRadialGradient(64, 64, 4, 64, 64, 62);
+  grd.addColorStop(0, 'rgba(0,0,0,0.34)');
+  grd.addColorStop(0.55, 'rgba(0,0,0,0.16)');
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  g2.fillStyle = grd; g2.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  /* `depthWrite:false` 라야 그 위에 선 제품이 그림자에 잘리지 않는다 */
+  return (shadowMat_ = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+}
+
 const colorMats = new Map();
 function bodyMatFor(it){
   const hex = it && it.hex;
@@ -7262,6 +7284,27 @@ function applianceMesh(it){
      몸통 중심은 로컬 (0, d/2) 이므로 회전시켜 월드로 옮긴다. */
   const c = Math.cos(it.a), s = Math.sin(it.a);
   const cx = it.bx - (it.d / 2) * s, cy = it.by + (it.d / 2) * c;
+  /*
+   * ── 접지 그림자 ────────────────────────────────────────────────
+   *
+   * 그림자가 없으면 가전이 바닥에 **얹혀 있지 않고 떠 보인다** — "우리 집 느낌"이
+   * 가장 크게 깨지는 지점이다. 그렇다고 **그림자 맵을 켜지 않는다**: 이 앱의 바닥은
+   * 원본 도면 텍스처라 전체가 어두워지면 마루색·가구가 죽는다(위 조명 주석과 같은 이유).
+   *
+   * 그래서 **발밑에만** 부드러운 원을 깐다. 텍스처는 한 장을 만들어 모두가 나눠 쓰고
+   * 크기만 발자국에 맞춘다(제품마다 만들면 GPU 자원이 샌다 — 색 재질과 같은 규칙).
+   *
+   * **바닥에 놓는 것에만 붙인다.** 벽에 건 TV·천장 카세트의 그림자가 발자국 자리에
+   * 생기면 없는 물건이 거기 있는 것처럼 보인다.
+   */
+  if (!(it.mh > 0)) {
+    const sh = new THREE.Mesh(new THREE.PlaneGeometry(M(it.w) * 1.35, M(it.d) * 1.35), shadowMat());
+    sh.rotation.x = -Math.PI / 2;
+    sh.position.y = 0.003;                 // 바닥과 z-fighting 하지 않게 살짝 띄운다
+    sh.renderOrder = -1;
+    sh.userData.isShadow = true;           // 검사가 '디테일' 로 세지 않게 표시해 둔다
+    g.add(sh);
+  }
   /* **설치 높이만큼 띄운다.** 몸통·모서리선·디테일이 전부 이 그룹 안에 있으므로 그룹을
      올리면 함께 올라간다(디테일마다 따로 올리면 하나 빠뜨렸을 때 조용히 어긋난다).
      기본 0 이라 바닥에 놓는 가전은 예전과 한 픽셀도 다르지 않다. */
