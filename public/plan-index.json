@@ -1,9 +1,9 @@
 {
  "version": 3,
  "note": "단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. 수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.",
- "generatedAt": "2026-08-15",
- "complexCount": 144,
- "planCount": 671,
+ "generatedAt": "2026-08-17",
+ "complexCount": 150,
+ "planCount": 697,
  "scaledCount": 12,
  "complexes": [
   {
@@ -139,52 +139,52 @@
     {
      "type": "124D",
      "file": "plans/c140/124D.jpg",
-     "w": 528,
-     "h": 1200,
+     "w": 1097,
+     "h": 447,
      "exclusiveM2": 124.47,
      "rooms": 7,
-     "kb": 49,
-     "axis": 0.712
+     "kb": 33,
+     "axis": 0.619
     },
     {
      "type": "124D-2",
      "file": "plans/c140/124D-2.jpg",
-     "w": 528,
-     "h": 1200,
+     "w": 1097,
+     "h": 447,
      "exclusiveM2": 124.47,
      "rooms": 7,
-     "kb": 49,
-     "axis": 0.712
+     "kb": 33,
+     "axis": 0.619
     },
     {
      "type": "134P",
      "file": "plans/c140/134P.jpg",
-     "w": 755,
-     "h": 1200,
+     "w": 1097,
+     "h": 449,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 68,
-     "axis": 0.506
+     "kb": 33,
+     "axis": 0.613
     },
     {
      "type": "84D",
      "file": "plans/c140/84D.jpg",
-     "w": 755,
-     "h": 1200,
+     "w": 1097,
+     "h": 449,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 70,
-     "axis": 0.758
+     "kb": 35,
+     "axis": 0.604
     },
     {
      "type": "84D-2",
      "file": "plans/c140/84D-2.jpg",
-     "w": 755,
-     "h": 1200,
+     "w": 1097,
+     "h": 449,
      "exclusiveM2": null,
      "rooms": 9,
-     "kb": 70,
-     "axis": 0.758
+     "kb": 35,
+     "axis": 0.604
     }
    ]
   },
@@ -769,6 +769,24 @@
    ]
   },
   {
+   "id": "c150",
+   "region": "강원 춘천",
+   "complex": "춘천 동문 디 이스트 어반포레",
+   "addr": "강원특별자치도 춘천시 동면 만천리 811-21번지 외 10필지",
+   "plans": [
+    {
+     "type": "59",
+     "file": "plans/c150/59.jpg",
+     "w": 579,
+     "h": 312,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 23,
+     "axis": 0.639
+    }
+   ]
+  },
+  {
    "id": "c16",
    "region": "강원 춘천",
    "complex": "춘천 레이크시티 2차 아이파크",
@@ -1111,12 +1129,12 @@
     {
      "type": "59A",
      "file": "plans/c141/59A.jpg",
-     "w": 640,
-     "h": 1025,
+     "w": 639,
+     "h": 938,
      "exclusiveM2": 59.94,
      "rooms": 6,
-     "kb": 73,
-     "axis": 0.58
+     "kb": 77,
+     "axis": 0.603
     },
     {
      "type": "74B",
@@ -1131,72 +1149,72 @@
     {
      "type": "74B-2",
      "file": "plans/c141/74B-2.jpg",
-     "w": 821,
-     "h": 1200,
+     "w": 1200,
+     "h": 1026,
      "exclusiveM2": 74.76,
      "rooms": 6,
-     "kb": 107,
-     "axis": 0.65
+     "kb": 111,
+     "axis": 0.748
     },
     {
      "type": "74C",
      "file": "plans/c141/74C.jpg",
-     "w": 640,
-     "h": 1180,
+     "w": 632,
+     "h": 850,
      "exclusiveM2": 74.77,
      "rooms": 4,
-     "kb": 82,
-     "axis": 0.618
+     "kb": 64,
+     "axis": 0.695
     },
     {
      "type": "74A",
      "file": "plans/c141/74A.jpg",
-     "w": 640,
-     "h": 1100,
+     "w": 633,
+     "h": 755,
      "exclusiveM2": 74.92,
      "rooms": 5,
-     "kb": 81,
-     "axis": 0.624
+     "kb": 63,
+     "axis": 0.71
     },
     {
      "type": "74A-2",
      "file": "plans/c141/74A-2.jpg",
-     "w": 821,
+     "w": 1107,
      "h": 1200,
      "exclusiveM2": 74.92,
      "rooms": 5,
-     "kb": 105,
-     "axis": 0.658
+     "kb": 127,
+     "axis": 0.716
     },
     {
      "type": "84A",
      "file": "plans/c141/84A.jpg",
-     "w": 614,
-     "h": 1200,
+     "w": 631,
+     "h": 951,
      "exclusiveM2": 84.96,
      "rooms": 6,
-     "kb": 82,
-     "axis": 0.623
+     "kb": 80,
+     "axis": 0.678
     },
     {
      "type": "84A-2",
      "file": "plans/c141/84A-2.jpg",
-     "w": 821,
-     "h": 1200,
+     "w": 1200,
+     "h": 932,
      "exclusiveM2": 84.96,
      "rooms": 5,
-     "kb": 125,
-     "axis": 0.651
+     "kb": 115,
+     "axis": 0.729
     },
     {
      "type": "84B",
      "file": "plans/c141/84B.jpg",
-     "w": 614,
-     "h": 1200,
+     "w": 633,
+     "h": 588,
      "exclusiveM2": 84.96,
      "rooms": 6,
-     "kb": 84,
-     "axis": 0.64
+     "kb": 58,
+     "axis": 0.75
     },
     {
      "type": "84B-2",
@@ -2157,6 +2175,24 @@
    ]
   },
   {
+   "id": "c152",
+   "region": "경기 수원",
+   "complex": "서광교 한라비발디 레이크포레",
+   "addr": "경기도 수원시 장안구 연무동 58-1번지 일원",
+   "plans": [
+    {
+     "type": "T1",
+     "file": "plans/c152/T1.jpg",
+     "w": 836,
+     "h": 181,
+     "exclusiveM2": null,
+     "rooms": 3,
+     "kb": 22,
+     "axis": 0.506
+    }
+   ]
+  },
+  {
    "id": "c41",
    "region": "경기 수원",
    "complex": "서수원 에피트 센트럴마크",
@@ -2955,32 +2991,22 @@
     {
      "type": "18",
      "file": "plans/c144/18.jpg",
-     "w": 331,
-     "h": 266,
+     "w": 330,
+     "h": 187,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 17,
-     "axis": 0.414
+     "kb": 14,
+     "axis": 0.389
     },
     {
-     "type": "24",
-     "file": "plans/c144/24.jpg",
-     "w": 358,
-     "h": 177,
-     "exclusiveM2": null,
-     "rooms": 4,
-     "kb": 10,
-     "axis": 0.417
-    },
-    {
-     "type": "T2",
-     "file": "plans/c144/T2.jpg",
-     "w": 331,
-     "h": 266,
+     "type": "T1",
+     "file": "plans/c144/T1.jpg",
+     "w": 330,
+     "h": 187,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 17,
-     "axis": 0.414
+     "kb": 14,
+     "axis": 0.389
     }
    ]
   },
@@ -3439,16 +3465,6 @@
      "rooms": 6,
      "kb": 54,
      "axis": 0.78
-    },
-    {
-     "type": "59B",
-     "file": "plans/c145/59B.jpg",
-     "w": 735,
-     "h": 784,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 64,
-     "axis": 0.784
     },
     {
      "type": "59C",
@@ -4069,6 +4085,24 @@
      "rooms": 5,
      "kb": 60,
      "axis": 0.522
+    }
+   ]
+  },
+  {
+   "id": "c156",
+   "region": "경기 용인",
+   "complex": "용인 고림 동문 디 이스트",
+   "addr": "경기도 용인시 처인구 고림동 620번지 일원",
+   "plans": [
+    {
+     "type": "59",
+     "file": "plans/c156/59.jpg",
+     "w": 237,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 34,
+     "axis": 0.531
     }
    ]
   },
@@ -4841,6 +4875,74 @@
      "rooms": 5,
      "kb": 52,
      "axis": 0.736
+    }
+   ]
+  },
+  {
+   "id": "c157",
+   "region": "경기 용인",
+   "complex": "용인반도체클러스터 동일하이빌 파크밸리",
+   "addr": "경기도 용인시 처인구 원삼면 용인 반도체 클러스터 일반산업단지 D1-1BL",
+   "plans": [
+    {
+     "type": "60-2",
+     "file": "plans/c157/60-2.jpg",
+     "w": 977,
+     "h": 901,
+     "exclusiveM2": 59.5,
+     "rooms": 9,
+     "kb": 84,
+     "axis": 0.579
+    },
+    {
+     "type": "60-3",
+     "file": "plans/c157/60-3.jpg",
+     "w": 980,
+     "h": 952,
+     "exclusiveM2": 59.9,
+     "rooms": 8,
+     "kb": 85,
+     "axis": 0.62
+    },
+    {
+     "type": "60",
+     "file": "plans/c157/60.jpg",
+     "w": 771,
+     "h": 558,
+     "exclusiveM2": 59.94,
+     "rooms": 10,
+     "kb": 66,
+     "axis": 0.73
+    },
+    {
+     "type": "72",
+     "file": "plans/c157/72.jpg",
+     "w": 1002,
+     "h": 934,
+     "exclusiveM2": 71.82,
+     "rooms": 8,
+     "kb": 72,
+     "axis": 0.732
+    },
+    {
+     "type": "85",
+     "file": "plans/c157/85.jpg",
+     "w": 774,
+     "h": 536,
+     "exclusiveM2": 84.76,
+     "rooms": 10,
+     "kb": 65,
+     "axis": 0.754
+    },
+    {
+     "type": "T4",
+     "file": "plans/c157/T4.jpg",
+     "w": 776,
+     "h": 544,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 61,
+     "axis": 0.741
     }
    ]
   },
@@ -5731,6 +5833,94 @@
    ]
   },
   {
+   "id": "c158",
+   "region": "경기 평택",
+   "complex": "고덕국제신도시 수자인하우스디",
+   "addr": "경기도 평택시 고덕국제화계획지구 A-67블록",
+   "plans": [
+    {
+     "type": "85-2",
+     "file": "plans/c158/85-2.jpg",
+     "w": 631,
+     "h": 551,
+     "exclusiveM2": 84.84,
+     "rooms": 9,
+     "kb": 61,
+     "axis": 0.614
+    },
+    {
+     "type": "85-3",
+     "file": "plans/c158/85-3.jpg",
+     "w": 406,
+     "h": 151,
+     "exclusiveM2": 84.84,
+     "rooms": 8,
+     "kb": 7,
+     "axis": 0.458
+    },
+    {
+     "type": "85",
+     "file": "plans/c158/85.jpg",
+     "w": 214,
+     "h": 702,
+     "exclusiveM2": 84.99,
+     "rooms": 9,
+     "kb": 16,
+     "axis": 0.62
+    },
+    {
+     "type": "85-4",
+     "file": "plans/c158/85-4.jpg",
+     "w": 145,
+     "h": 299,
+     "exclusiveM2": 84.99,
+     "rooms": 8,
+     "kb": 7,
+     "axis": 0.67
+    },
+    {
+     "type": "85-5",
+     "file": "plans/c158/85-5.jpg",
+     "w": 376,
+     "h": 777,
+     "exclusiveM2": 84.99,
+     "rooms": 7,
+     "kb": 51,
+     "axis": 0.597
+    },
+    {
+     "type": "85-6",
+     "file": "plans/c158/85-6.jpg",
+     "w": 509,
+     "h": 139,
+     "exclusiveM2": 84.99,
+     "rooms": 6,
+     "kb": 17,
+     "axis": 0.407
+    },
+    {
+     "type": "102",
+     "file": "plans/c158/102.jpg",
+     "w": 804,
+     "h": 704,
+     "exclusiveM2": 102,
+     "rooms": 10,
+     "kb": 88,
+     "axis": 0.643
+    },
+    {
+     "type": "102-2",
+     "file": "plans/c158/102-2.jpg",
+     "w": 568,
+     "h": 532,
+     "exclusiveM2": 102,
+     "rooms": 8,
+     "kb": 53,
+     "axis": 0.625
+    }
+   ]
+  },
+  {
    "id": "c105",
    "region": "경기 평택",
    "complex": "더샵 지제역 센트럴파크 1BL",
@@ -6057,242 +6247,242 @@
     {
      "type": "15",
      "file": "plans/c149/15.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 24,
-     "axis": 0.804
+     "kb": 25,
+     "axis": 0.784
     },
     {
      "type": "15-2",
      "file": "plans/c149/15-2.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.76
     },
     {
      "type": "16",
      "file": "plans/c149/16.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 480,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 23,
-     "axis": 0.799
+     "kb": 24,
+     "axis": 0.79
     },
     {
      "type": "16-2",
      "file": "plans/c149/16-2.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.76
     },
     {
      "type": "17",
      "file": "plans/c149/17.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 479,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 23,
-     "axis": 0.801
+     "kb": 24,
+     "axis": 0.788
     },
     {
      "type": "17-2",
      "file": "plans/c149/17-2.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.751
     },
     {
      "type": "18",
      "file": "plans/c149/18.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 24,
-     "axis": 0.804
+     "kb": 25,
+     "axis": 0.784
     },
     {
      "type": "18-2",
      "file": "plans/c149/18-2.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 479,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 23,
-     "axis": 0.801
+     "kb": 24,
+     "axis": 0.788
     },
     {
      "type": "19",
      "file": "plans/c149/19.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 480,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 23,
-     "axis": 0.799
+     "kb": 24,
+     "axis": 0.79
     },
     {
      "type": "19-2",
      "file": "plans/c149/19-2.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 25,
-     "axis": 0.811
+     "kb": 26,
+     "axis": 0.796
     },
     {
      "type": "37",
      "file": "plans/c149/37.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.751
     },
     {
      "type": "38",
      "file": "plans/c149/38.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.76
     },
     {
      "type": "39",
      "file": "plans/c149/39.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 480,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 23,
-     "axis": 0.799
+     "kb": 24,
+     "axis": 0.79
     },
     {
      "type": "40",
      "file": "plans/c149/40.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 479,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 23,
-     "axis": 0.801
+     "kb": 24,
+     "axis": 0.788
     },
     {
      "type": "41",
      "file": "plans/c149/41.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 24,
-     "axis": 0.804
+     "kb": 25,
+     "axis": 0.784
     },
     {
      "type": "42",
      "file": "plans/c149/42.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 25,
-     "axis": 0.811
+     "kb": 26,
+     "axis": 0.796
     },
     {
      "type": "T10",
      "file": "plans/c149/T10.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 480,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 6,
-     "kb": 23,
-     "axis": 0.799
+     "kb": 24,
+     "axis": 0.79
     },
     {
      "type": "T14",
      "file": "plans/c149/T14.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 5,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.76
     },
     {
      "type": "T17",
      "file": "plans/c149/T17.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 25,
-     "axis": 0.811
+     "kb": 26,
+     "axis": 0.796
     },
     {
      "type": "T18",
      "file": "plans/c149/T18.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 4,
-     "kb": 25,
-     "axis": 0.811
+     "kb": 26,
+     "axis": 0.796
     },
     {
      "type": "T2",
      "file": "plans/c149/T2.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 443,
+     "h": 320,
      "exclusiveM2": null,
      "rooms": 8,
-     "kb": 24,
-     "axis": 0.804
+     "kb": 25,
+     "axis": 0.784
     },
     {
      "type": "T22",
      "file": "plans/c149/T22.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.751
     },
     {
      "type": "T23",
      "file": "plans/c149/T23.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 407,
+     "h": 290,
      "exclusiveM2": null,
      "rooms": 3,
-     "kb": 23,
-     "axis": 0.794
+     "kb": 24,
+     "axis": 0.751
     },
     {
      "type": "T6",
      "file": "plans/c149/T6.jpg",
-     "w": 492,
-     "h": 441,
+     "w": 479,
+     "h": 260,
      "exclusiveM2": null,
      "rooms": 7,
-     "kb": 23,
-     "axis": 0.801
+     "kb": 24,
+     "axis": 0.788
     }
    ]
   },
@@ -6677,6 +6867,24 @@
      "rooms": 9,
      "kb": 48,
      "axis": 0.771
+    }
+   ]
+  },
+  {
+   "id": "c160",
+   "region": "경기 평택",
+   "complex": "평택 브레인시티 한신더휴",
+   "addr": "경기도 평택시 장안동 평택브레인시티 일반산업단지 공동 7BL",
+   "plans": [
+    {
+     "type": "59A",
+     "file": "plans/c160/59A.jpg",
+     "w": 612,
+     "h": 410,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 40,
+     "axis": 0.763
     }
    ]
   },
@@ -7803,6 +8011,16 @@
      "axis": 0.835
     },
     {
+     "type": "85",
+     "file": "plans/c136/85.jpg",
+     "w": 423,
+     "h": 448,
+     "exclusiveM2": 84.9,
+     "rooms": 5,
+     "kb": 35,
+     "axis": 0.081
+    },
+    {
      "type": "85A",
      "file": "plans/c136/85A.jpg",
      "w": 607,
@@ -7813,6 +8031,16 @@
      "axis": 0.856
     },
     {
+     "type": "111",
+     "file": "plans/c136/111.jpg",
+     "w": 806,
+     "h": 399,
+     "exclusiveM2": 110.67,
+     "rooms": 4,
+     "kb": 55,
+     "axis": 0.317
+    },
+    {
      "type": "124",
      "file": "plans/c136/124.jpg",
      "w": 1160,
@@ -7821,6 +8049,86 @@
      "rooms": 8,
      "kb": 93,
      "axis": 0.73
+    },
+    {
+     "type": "T10",
+     "file": "plans/c136/T10.jpg",
+     "w": 306,
+     "h": 437,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 21,
+     "axis": 0.727
+    },
+    {
+     "type": "T11",
+     "file": "plans/c136/T11.jpg",
+     "w": 415,
+     "h": 387,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 29,
+     "axis": 0.094
+    },
+    {
+     "type": "T12",
+     "file": "plans/c136/T12.jpg",
+     "w": 364,
+     "h": 432,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 22,
+     "axis": 0.698
+    },
+    {
+     "type": "T4",
+     "file": "plans/c136/T4.jpg",
+     "w": 415,
+     "h": 438,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 34,
+     "axis": 0.102
+    },
+    {
+     "type": "T5",
+     "file": "plans/c136/T5.jpg",
+     "w": 345,
+     "h": 463,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 23,
+     "axis": 0.72
+    },
+    {
+     "type": "T6",
+     "file": "plans/c136/T6.jpg",
+     "w": 355,
+     "h": 474,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 22,
+     "axis": 0.712
+    },
+    {
+     "type": "T7",
+     "file": "plans/c136/T7.jpg",
+     "w": 813,
+     "h": 414,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 55,
+     "axis": 0.32
+    },
+    {
+     "type": "T8",
+     "file": "plans/c136/T8.jpg",
+     "w": 355,
+     "h": 422,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 23,
+     "axis": 0.713
     }
    ]
   },

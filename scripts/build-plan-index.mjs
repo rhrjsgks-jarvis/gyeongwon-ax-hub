@@ -117,6 +117,10 @@ for (const r of crops) if (r.out) cropBy.set(`${r.dir}/${r.file}`, { ...r, dirOf
 // 뒤에 넣어 덮어쓴다 — crops2 가 우선이다
 for (const r of recrop) if (r.out) cropBy.set(`${r.dir}/${r.file}`, { ...r, dirOf: CROPS2 });
 
+/* 이미 실려 있던 도면이 이 비율보다 작아지면 새것을 쓰지 않는다 (아래 '나빠짐 방지' 참조) */
+const KEEP_RATIO = 0.5;
+const kept = [];
+
 /*
  * **방을 3곳도 못 잡는 그림은 싣지 않는다.** 매장에서 열어 봐야 쓸 수 없고, 그런 그림은
  * 대개 설명글·면적표·3D 렌더다. 인식기가 직접 센 값이라 판정과 목적이 같다.
@@ -173,7 +177,14 @@ for (const c of classify) {
   groups.get(key).items.push(c);
 }
 
-fs.rmSync(OUT, { recursive: true, force: true });
+/*
+ * **지우기 전에 옮겨 둔다.** 아래 '나빠짐 방지'가 *예전 도면 파일*을 되살려야 하는데,
+ * 여기서 통째로 지워 버리면 되살릴 원본이 없다(그래서 가드가 한 번 헛돌았다).
+ * 다 만든 뒤 지운다.
+ */
+const PREV = path.join(ROOT, 'public', '.plans-prev');
+fs.rmSync(PREV, { recursive: true, force: true });
+if (fs.existsSync(OUT)) fs.renameSync(OUT, PREV);
 fs.mkdirSync(OUT, { recursive: true });
 
 // 이미지를 줄여 담는다. 브라우저 캔버스를 쓰는 이유는 추가 의존성 없이 되기 때문이다.
@@ -253,6 +264,11 @@ let n = 0, bytes = 0, withScale = 0, dropped = 0;
  * 남는 번호를 준다. 단지가 빠져도 그 번호는 비워 둔다 — 번호를 당기면 같은 일이 반복된다.
  */
 const prevIndex = fs.existsSync(INDEX) ? JSON.parse(fs.readFileSync(INDEX, 'utf8')) : null;
+/* 파일 경로 → 예전 항목. '나빠짐 방지'(KEEP_RATIO)가 이걸 보고 판단한다 */
+const prevPlanByFile = new Map();
+for (const c of (prevIndex && prevIndex.complexes) || []) {
+  for (const p of c.plans || []) if (p.file) prevPlanByFile.set(p.file, p);
+}
 const idByKey = new Map();
 let maxId = 0;
 for (const c of (prevIndex && prevIndex.complexes) || []) {
@@ -327,6 +343,33 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     if (!small) continue;
     fs.mkdirSync(outDir, { recursive: true });
     const file = `${key.replace(/[^\w가-힣-]/g, '')}.jpg`;
+
+    /*
+     * **이미 실려 있던 도면을 훨씬 작은 것으로 바꾸지 않는다** (2026-08-17).
+     *
+     * `recrop` 은 "방이 가장 많이 잡히는 블록"을 고르는데, 같은 시트를 다시 처리하면
+     * 다른 블록이 이길 수 있다. 실제로 재수집 뒤 6장이 이렇게 나빠졌다 —
+     * 광명 호반써밋 74B 가 **640×1180 → 200×125**, 홍천 84B 가 1032×1200 → 1173×270
+     * (가로로 긴 띠라 평면이 아니다). 벽 인식 해상도 상한이 1,200px 이라 짧은 변이
+     * 200px 면 **벽 두께가 1px 도 안 돼** 인식이 통째로 실패한다.
+     *
+     * 크기 하한으로 자르면 안 된다 — 색인에는 `1197×142` 처럼 원래 가늘고 긴 정상 항목이
+     * 많다. 가르는 것은 절대 크기가 아니라 **"예전보다 나빠졌는가"** 다.
+     * 방 이름 좌표(`plan-names.json`)가 이미지 대비 비율이라 그림이 바뀌면 **이름표가
+     * 엉뚱한 방에 붙는 것**까지 함께 막는다.
+     */
+    const prevRec = prevPlanByFile.get(`plans/${id}/${file}`);
+    const shrunk = prevRec && prevRec.w && prevRec.h
+      && (small.w * small.h) < (prevRec.w * prevRec.h) * KEEP_RATIO;
+    const prevFile = path.join(PREV, id, file);
+    if (shrunk && fs.existsSync(prevFile)) {
+      kept.push(`plans/${id}/${file} ${prevRec.w}×${prevRec.h} ← ${small.w}×${small.h}`);
+      fs.copyFileSync(prevFile, path.join(outDir, file));   // 예전 도면을 그대로 되살린다
+      plans.push({ ...prevRec });                            // 치수·축척도 예전 것을 쓴다
+      bytes += fs.statSync(prevFile).size; n++;
+      continue;
+    }
+
     fs.writeFileSync(path.join(outDir, file), small.buf);
     bytes += small.buf.length; n++;
 
@@ -439,6 +482,11 @@ writePlanIndex(INDEX, {
 const byRegion = {};
 for (const c of index) byRegion[c.region] = (byRegion[c.region] || 0) + c.plans.length;
 console.log(`단지 ${index.length}곳 · 도면 ${n}장 (축척 있음 ${withScale}장, 단지 안에서 어긋나 뺀 것 ${dropped}장) · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
+if (kept.length) {
+  console.log(`  나빠짐 방지 — 새 크롭이 예전보다 작아 예전 도면을 유지한 것 ${kept.length}장`);
+  for (const k of kept) console.log(`    · ${k}`);
+}
+fs.rmSync(PREV, { recursive: true, force: true });   // 되살릴 것을 다 쓴 뒤 지운다
 console.log('지역별: ' + Object.entries(byRegion).sort((a, b) => b[1] - a[1])
   .map(([k, v]) => `${k} ${v}`).join(' · '));
 console.log('→ public/plans/ · public/plan-index.json');
