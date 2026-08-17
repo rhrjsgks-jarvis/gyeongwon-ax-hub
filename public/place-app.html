@@ -3603,7 +3603,15 @@ function drawGlyph(it){
     ctx.lineWidth = 3.2 / z;
     line(-hw*0.94, d*0.9, hw*0.94, d*0.9);
     ctx.lineWidth = 1.6 / z;
-    if (/^TV$/.test(cat)) line(-hw*0.3, d*0.9, hw*0.3, d*0.15);   // 스탠드 목
+    /*
+     * **스탠드 목은 스탠드로 세울 때만 그린다.** TV 를 항상 벽걸이로 배치하도록 바꾼 뒤
+     * (2026-08-17) 벽에 건 TV 아래에 받침 목이 그려지고 있었다 — 없는 물건이다.
+     * 벽걸이는 대신 **벽에 붙은 쪽**을 짧게 그어 어디에 걸렸는지 보이게 한다.
+     */
+    if (/^TV$/.test(cat)){
+      if (/스탠드/.test(String(it.part || ''))) line(-hw*0.3, d*0.9, hw*0.3, d*0.15);
+      else line(-hw*0.5, d*0.06, hw*0.5, d*0.06);              // 벽에 닿는 면
+    }
   } else if (/인덕션|전기레인지/.test(cat)){
     /* 화구 수는 이름이 밝힐 때만 그 수를 쓴다(`burnerCount`) — 1구 플레이트에 넷을 그렸었다 */
     const n = burnerCount(it), r = Math.min(w, d) * (n <= 2 ? 0.26 : 0.17);
@@ -3617,8 +3625,24 @@ function drawGlyph(it){
   } else if (/공기청정기|청소기|정수기|제습기/.test(cat)){
     circle(0, d*0.5, Math.min(w, d) * 0.3);
   } else if (/에어컨/.test(cat)){
-    // 바람이 나가는 쪽 — 앞면에 호를 그린다
-    ctx.beginPath(); ctx.arc(0, d*0.2, Math.min(w,d)*0.5, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
+    /*
+     * **부품 이름이 물건을 밝힌다**(`실내기`·`실외기`·`판넬`). 예전에는 셋을 똑같이
+     * 그려서, 천장에 붙는 35mm 두께 판넬에도 실내기와 같은 토출 호가 붙었다.
+     */
+    const p = String(it.part || '');
+    if (/실외기/.test(p)){
+      /* 실외기는 **앞으로 바람을 뿜는다** — 그 방향이 배치의 전부다(이격도 전면 500mm).
+         앞면을 굵게 긋고 팬 자리를 원으로 얹는다. */
+      ctx.lineWidth = 3.2 / z; line(-hw*0.9, d*0.94, hw*0.9, d*0.94); ctx.lineWidth = 1.6 / z;
+      circle(0, d*0.5, Math.min(w, d) * 0.32);
+    } else if (/판넬/.test(p)){
+      /* 천장에 붙는 사각 판넬 — 위에서 보면 테두리와 가운데 흡입구다 */
+      ctx.strokeRect(-hw*0.9, d*0.08, w*0.9, d*0.84);
+      ctx.strokeRect(-hw*0.34, d*0.34, w*0.34, d*0.32);
+    } else {
+      // 바람이 나가는 쪽 — 앞면에 호를 그린다
+      ctx.beginPath(); ctx.arc(0, d*0.2, Math.min(w,d)*0.5, Math.PI*0.15, Math.PI*0.85); ctx.stroke();
+    }
   /*
    * ── 리빙 4종 (2026-08-14) ─────────────────────────────────────
    * **위에서 봤을 때 실제로 보이는 것만** 그린다. 카탈로그에 규격도가 없으므로
@@ -7171,7 +7195,13 @@ function applianceMesh(it){
   } else if (/^TV|모니터/.test(cat)){
     plate(w * 0.96, h * 0.9, 0, h / 2, darkMat);              // 화면
   } else if (/사운드바/.test(cat)){
-    plate(w * 0.97, h * 0.7, 0, h / 2, darkMat);              // 그릴 — 화면이 아니라 얇은 띠
+    /*
+     * **한 줄에 세 물건이 들어 있다** — `사운드바`(길고 얇은 띠) · `서라운드 스피커`(작은
+     * 상자) · `우퍼`(325×400 상자). 예전에는 셋 다 긴 그릴 띠를 붙여, 우퍼 앞면이
+     * 통째로 띠가 됐다. 부품 이름이 데이터에 있으므로 그것으로 가른다.
+     */
+    if (/우퍼|스피커/.test(String(it.part || ''))) disc(Math.min(w, h) * 0.34, h * 0.5, darkMat);
+    else plate(w * 0.97, h * 0.7, 0, h / 2, darkMat);         // 그릴 — 화면이 아니라 얇은 띠
   } else if (/인덕션|전기레인지/.test(cat)){
     /* 상판이 보이는 물건이라 앞면이 아니라 윗면에 화구를 그린다.
        화구 수·자리는 2D 와 같은 함수(`burnerCount`)를 본다 — 1구 플레이트에 넷을 그렸었다 */
@@ -7189,7 +7219,18 @@ function applianceMesh(it){
     /* 2D 가 위에서 본 원(토출구·그릴)을 그리므로 3D 도 윗면에 원을 얹는다 */
     topDisc(Math.min(w, d) * 0.30, 0, 0, faceMat);
   } else if (/에어컨/.test(cat)){
-    plate(w * 0.6, 0.008, 0, h * 0.86, blueMat);              // 토출구 띠
+    /* 부품 이름이 물건을 밝힌다 — 2D 와 같은 갈래로 나눈다(`실내기`·`실외기`·`판넬`) */
+    const p = String(it.part || '');
+    if (/실외기/.test(p)){
+      /* 앞면 팬 그릴 — 실외기에서 눈에 들어오는 것이 이것이고, 이격도 그 방향으로 잡는다 */
+      disc(Math.min(w, h) * 0.34, h * 0.5, darkMat);
+    } else if (/판넬/.test(p)){
+      /* 천장 카세트 판넬은 **아래를 본다** — 앞면이 아니라 밑면에 흡입구를 얹는다 */
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.42, d * 0.42), darkMat);
+      m.rotation.x = Math.PI / 2; m.position.set(0, 0.004, 0); g.add(m);
+    } else {
+      plate(w * 0.6, 0.008, 0, h * 0.86, blueMat);            // 토출구 띠
+    }
   /*
    * ── 리빙 4종 (2026-08-14) ─────────────────────────────────────
    * **2D `drawGlyph` 와 같은 어휘**로 넣는다 — 같은 품목이 앱마다 다른 그림이면 눈이 헤맨다.

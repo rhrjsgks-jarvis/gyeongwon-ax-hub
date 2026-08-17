@@ -2355,6 +2355,72 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 }
 
 /*
+ * ── 부품마다 다르게 그리는가 ──────────────────────────────────────────
+ *
+ * 한 줄에 여러 물건이 들어 있는 카테고리가 있다 —
+ * 시스템에어컨 `실내기/실외기/판넬` · 사운드바 `사운드바/서라운드 스피커/우퍼`.
+ * 예전에는 부품 이름을 안 보고 **셋을 똑같이** 그렸다: 두께 35mm 짜리 천장 판넬에
+ * 실내기와 같은 토출 호가 붙고, 우퍼 앞면이 통째로 그릴 띠가 됐다.
+ *
+ * 부품 이름은 `size-reps` 에 있는 **데이터**다 — 그것을 보는 것은 외형을 지어내는 것이
+ * 아니다. 여기서는 **부품마다 그림이 실제로 갈리는지**만 본다(무엇을 그리는지는 안 따진다).
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    /*
+     * 그 부품 하나만 세우고 **무엇이 붙었는지**를 적는다.
+     * **개수로는 못 가른다** — 원(`CircleGeometry`)이든 판(`PlaneGeometry`)이든 메시는
+     * 하나씩이라 셋 다 같은 수가 나온다(실제로 그렇게 한 번 헛돌았다).
+     * 그래서 형상 종류와 자리를 함께 지문으로 쓴다.
+     */
+    const count = (cat, rep, part) => {
+      P.state.rooms = []; P.state.items = []; P.state.walls = W;
+      P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+      P.addRoom('거실', W);
+      P.state.items.push({ id: 'x', cat, size: rep.size, group: rep.group, label: cat, part: part.part,
+        w: part.w, h: part.h, d: part.d, a: 0, bx: 4000, by: 1000, warn: [], soft: [],
+        clear: { back: 0, side: 0, front: 0 } });
+      window.Place3D.open();
+      const sig = [];
+      window.Place3D.root.traverse((o) => {
+        if (!o.isMesh || !o.geometry) return;
+        /* 본체(Box)·바닥·벽은 빼고 **덧붙인 디테일**만 본다 */
+        if (o.geometry.type === 'BoxGeometry' || o.geometry.type === 'ShapeGeometry') return;
+        sig.push(`${o.geometry.type}@${o.position.x.toFixed(2)},${o.position.y.toFixed(2)},${o.position.z.toFixed(2)}`
+          + `/${o.rotation.x.toFixed(2)}`);
+      });
+      window.Place3D.close();
+      return sig.sort().join(' ') || '(없음)';
+    };
+    const out = [];
+    for (const cat of ['시스템에어컨', '사운드바']) {
+      const rows = (P.state.reps || []).filter((s) => s.cat === cat && (s.parts || []).length > 1);
+      if (!rows.length) { out.push({ cat, err: '부품이 여럿인 줄이 없다' }); continue; }
+      const rep = rows[rows.length - 1];
+      out.push({ cat, parts: rep.parts.map((p) => ({ name: p.part, sig: count(cat, rep, p) })) });
+    }
+    return { out };
+  });
+
+  if (r.err) fail('부품별 그림 — ' + r.err);
+  else {
+    const bad = [];
+    for (const g of r.out) {
+      if (g.err) { bad.push(`${g.cat}: ${g.err}`); continue; }
+      /* 부품 이름이 다른데 메시 수가 전부 같으면 = 갈리지 않고 있다는 뜻이다 */
+      const uniq = new Set(g.parts.map((p) => p.sig));
+      if (uniq.size < 2) bad.push(`${g.cat} — 부품이 ${g.parts.length}개인데 그림이 전부 같다 (${g.parts[0].sig})`);
+    }
+    if (bad.length) fail('부품별 그림 — ' + bad.join(' / '));
+    else pass(`부품별 그림 — ${r.out.map((g) => `${g.cat}(${g.parts.map((p) => p.name).join('·')})`).join(' · ')} 가 서로 다르게 그려진다`);
+  }
+}
+
+/*
  * ── 아래에서 이름으로 지목하는 도면이 아직 그 자리에 있는가 ──────────
  *
  * **단지 id(`c139`)는 자리 순번이라 단지를 하나 추가하면 그 뒤가 통째로 밀린다.**
