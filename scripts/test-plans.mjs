@@ -2185,6 +2185,31 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     out.align = { dx: Math.round(B.bx - T.bx), dy: Math.round(B.by - T.by), da: Math.round((B.a - T.a) * 180 / Math.PI),
       room: B.room === T.room, gap: Math.round(T.mh - (B.mh + B.h)) };
 
+    /*
+     * ⑥ **TV 는 반드시 벽을 등진다**(2026-08-17 사용자).
+     * 방 한가운데로 끌어다 놓아도 가장 가까운 벽에 붙고 방 안쪽을 봐야 한다.
+     * 3D 는 바닥면에 광선을 쏘아 옮기므로 그냥 두면 공중에 뜬 TV 가 선다.
+     */
+    T.bx = W / 2; T.by = D / 2;                 // 방 한가운데로 던져 본다
+    const snapped = P.snapWallMounted(T);
+    /* 붙었는가 — 네 벽 중 하나까지의 거리가 (뒤 이격 + 오차) 안이어야 한다 */
+    const back = (T.clear && T.clear.back) || 0;
+    const dWall = Math.min(T.bx, T.by, W - T.bx, D - T.by);
+    /*
+     * 화면이 보는 방향이 방 안쪽인가 — 앞으로 한 걸음 갔을 때 방 중심에 가까워져야 한다.
+     * 제품 로컬 좌표는 `y: 0..d` 이고 **앞면이 +y** 다(`drawGlyph` 가 화면을 `d*0.9` 에 그린다).
+     * 각도 `a` 로 돌리면 +y 는 **(−sin a, cos a)** 로 간다 — 부호를 뒤집어 쓰면
+     * "벽을 본다"는 반대 결론이 나온다(실제로 그렇게 한 번 틀렸다).
+     */
+    const fx = T.bx - Math.sin(T.a) * 100, fy = T.by + Math.cos(T.a) * 100;
+    out.wall = {
+      snapped,
+      dist: Math.round(dWall - back),
+      inward: Math.hypot(fx - W / 2, fy - D / 2) < Math.hypot(T.bx - W / 2, T.by - D / 2),
+    };
+    /* ⑦ 벽걸이는 손으로 돌리지 않는다 — 돌리면 화면이 벽을 본다 */
+    const a0 = T.a; P.rotateItem(T); out.noRotate = T.a === a0;
+
     /* ⑤ 손으로 옮긴 뒤 TV 를 움직여도 따라가지 않는다 */
     B.posSet = true; B.bx += 1234;
     const before = B.bx;
@@ -2215,8 +2240,12 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (r.align.gap <= 0) bad.push(`사운드바가 TV 하단에 붙거나 겹쳤다 (틈 ${r.align.gap}mm)`);
     if (!r.keepsManual) bad.push('손으로 옮긴 사운드바를 도로 끌어왔다 — 조작이 안 먹는다');
     if (!r.follows) bad.push('TV 를 옮겼는데 사운드바가 안 따라온다');
+    if (!r.wall.snapped) bad.push('방 한가운데 놓은 벽걸이 TV 가 벽에 안 붙었다');
+    else if (Math.abs(r.wall.dist) > 2) bad.push(`벽걸이 TV 가 벽에서 ${r.wall.dist}mm 떨어져 있다 — 벽을 등져야 한다`);
+    if (!r.wall.inward) bad.push('벽걸이 TV 화면이 방 안쪽을 안 본다 — 벽을 보고 있다');
+    if (!r.noRotate) bad.push('벽걸이 TV 가 손으로 돌아간다 — 화면이 벽을 보게 된다');
     if (bad.length) fail('TV 벽걸이/사운드바 — ' + bad.join(' / '));
-    else pass(`TV 벽걸이 고정 ${r.parts.length}줄 · 85인치 하단 ${a85.mh}mm · 클수록 내려감(${byH[0].mh}→${byH[byH.length - 1].mh}mm)`
+    else pass(`TV 벽걸이 고정 ${r.parts.length}줄 · 85인치 하단 ${a85.mh}mm · 클수록 내려감(${byH[0].mh}→${byH[byH.length - 1].mh}mm) · 벽 등짐(간격 ${r.wall.dist}mm)`
       + ` · 사운드바 TV 중앙 정렬(틈 ${r.align.gap}mm) · 손으로 옮기면 안 따라감`);
   }
 }

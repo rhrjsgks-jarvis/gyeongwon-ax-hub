@@ -800,6 +800,42 @@ function snapToWall(px,py,item){
   return { bx:n.x + nx*back, by:n.y + ny*back, a:Math.atan2(ny,nx) - Math.PI/2, dist:best.n.dist };
 }
 
+/*
+ * ── 벽에 거는 것은 **반드시 벽을 등진다** (`snapWallMounted`) ──────────────
+ *
+ * *"TV는 반드시 벽을 등집니다"*(2026-08-17 사용자).
+ *
+ * 자동배치(`findSpot`)는 원래 벽에 붙여 법선 방향으로 세운다. 그런데 **끌어서 옮기거나
+ * 회전시키면 그 관계가 풀린다** — 거실 한가운데 떠 있는 벽걸이 TV 가 3D 에 서고,
+ * 상담사가 그걸 고객에게 보여주게 된다.
+ *
+ * **`snapToWall` 을 그대로 쓸 수 없다** — 그쪽은 개구부(창·문)도 벽으로 친다.
+ * 벽걸이는 걸 벽이 있어야 하므로 `open` 구간을 빼고 가장 가까운 **실제 벽**을 찾는다.
+ * 벽이 하나도 없으면(직접 그리기 전이거나 전부 개구부) 손대지 않는다 —
+ * 없는 벽을 만들어 붙이는 것보다 그대로 두고 경고가 알리는 편이 낫다.
+ */
+function snapWallMounted(it){
+  if (!it || mountKind(it) !== '벽') return false;
+  const room = itemRoom(it);
+  const walls = (room ? room.parts.flatMap((p)=>p.walls) : state.walls).filter((w)=>!w.open);
+  if (!walls.length) return false;
+  let best = null;
+  for (const w of walls){
+    const n = nearestOnSeg(it.bx, it.by, w);
+    if (!best || n.dist < best.n.dist) best = { w, n };
+  }
+  const { w, n } = best;
+  const ang = Math.atan2(w.y2 - w.y1, w.x2 - w.x1);
+  /* 벽에 수직인 두 방향 중 **가전이 있는 쪽**이 방 안쪽이다 */
+  let nx = -Math.sin(ang), ny = Math.cos(ang);
+  if ((it.bx - n.x) * nx + (it.by - n.y) * ny < 0){ nx = -nx; ny = -ny; }
+  const back = (it.clear && it.clear.back) || 0;
+  it.bx = n.x + nx * back;
+  it.by = n.y + ny * back;
+  it.a  = Math.atan2(ny, nx) - Math.PI / 2;    // 화면이 방 안쪽을 본다
+  return true;
+}
+
 /** 방(닫힌 벽 폴리곤) 안에 점이 있는가 */
 /* ── 방(공간) 모델 ───────────────────────────────────────────────
    한 세대에는 방이 여럿이고, 가전은 "어느 방에 놓을 것인가"가 정해져 있어야 한다.
@@ -3300,6 +3336,18 @@ const rotLabel = (cat)=> Math.round(rotStep(cat) * 180 / Math.PI);
  */
 function rotateItem(it, dir){
   if (!it) return;
+  /*
+   * **벽에 거는 것은 돌리지 않는다**(2026-08-17 사용자: *"TV는 반드시 벽을 등집니다"*).
+   * 각도는 붙은 벽이 정하는 값이라 손으로 돌리면 **화면이 벽을 보게 된다.**
+   * 다른 벽으로 옮기고 싶으면 끌어다 놓으면 된다 — `snapWallMounted` 가 그때 다시 맞춘다.
+   * 사운드바도 TV 를 따라 도는 물건이라 같이 막는다.
+   */
+  const k = mountKind(it);
+  if (k === '벽' || k === 'TV아래'){
+    toast(k === '벽' ? '벽걸이는 벽을 등지므로 돌리지 않습니다 — 다른 벽으로 끌어다 놓으세요'
+                     : '사운드바는 TV 를 따라갑니다 — TV 를 옮기면 함께 움직입니다');
+    return;
+  }
   const c = bodyCenter(it);
   it.a += (dir < 0 ? -1 : 1) * rotStep(it.cat);
   const c2 = bodyCenter(it);
@@ -4418,7 +4466,10 @@ cv.addEventListener('pointermove', (e)=>{
      * 반대로 **TV 를 옮기면** 아직 손대지 않은 사운드바는 따라간다.
      */
     if (mountKind(it) === 'TV아래') it.posSet = true;
-    else if (/^TV$/.test(it.cat)) alignUnderTV(null, state.items);
+    else if (/^TV$/.test(it.cat)) {
+      snapWallMounted(it);            // 벽걸이는 반드시 벽을 등진다
+      alignUnderTV(null, state.items);
+    } else snapWallMounted(it);
   }
   evaluate(); draw();
 });
@@ -5979,17 +6030,26 @@ async function openSelect(room){
        * 설치 느낌을 보여주는 물건이지, 자리를 대신 정해 주는 물건이 아니다(사용자 정의).
        * 방이 없어도 된다 — 도면 옆에 세우는 것뿐이라서.
        */
+      /*
+       * **배치는 3D 에서 한다**(2026-08-17 사용자: *"2D로 가전제품 배치하지 않습니다.
+       * 3D에서만 배치합니다"*). 그래서 가전을 확정하면 곧바로 3D 를 연다.
+       *
+       * 2D 의 끌기·놓기 코드는 **지우지 않는다** — 3D 가 판정에 쓰는 함수들
+       * (`nudgeInside`·`hitsOther`·`retagRoom`·`snapWallMounted`)이 전부 그쪽에 있고,
+       * 검사도 그 길로 돈다. 2D 는 **도면·축척·방을 잡는 화면**으로 남는다.
+       */
+      const to3D = ()=>{ try { open3D(); } catch (_) {} };
       $('#ok').onclick = ()=>{
         const picks = collect();
         if (!picks.length){ toast('가전을 하나 이상 체크해주세요'); return; }
-        closeSheet(); stageOutside(picks);
+        closeSheet(); stageOutside(picks); to3D();
       };
       $('#auto').onclick = ()=>{
         const picks = collect();
         if (!picks.length){ toast('가전을 하나 이상 체크해주세요'); return; }
         closeSheet();
         if (!state.rooms.length && !wallLoop()){ needRoom(); return; }
-        autoPlace(picks);
+        autoPlace(picks); to3D();
       };
 
     });
@@ -6661,7 +6721,7 @@ loadReps();
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
-  mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM,
+  mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted,
   openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
@@ -7351,7 +7411,14 @@ const up = (e) => {
     const moved = Math.hypot(it.bx - drag.prev.bx, it.by - drag.prev.by) > 1;
     const clash = P.hitsOther(it);
     if (clash){ Object.assign(it, drag.prev); toast3(clash); }
-    else P.retagRoom(it);
+    else {
+      P.retagRoom(it);
+      /* **벽에 거는 것은 반드시 벽을 등진다.** 3D 는 바닥면에 광선을 쏘아 옮기므로
+         그냥 두면 벽걸이 TV 가 방 한가운데 떠 있게 된다 — 2D 와 같은 규칙을 태운다. */
+      if (P.mountKind(it) === 'TV아래') it.posSet = true;
+      else if (P.snapWallMounted(it) && /^TV$/.test(it.cat)) P.alignUnderTV(null, P.state.items);
+      else if (/^TV$/.test(it.cat)) P.alignUnderTV(null, P.state.items);
+    }
     /* 안 움직였으면 **누른 것**으로 본다 — 그러면 고르기가 된다(2D 의 TAP_SLOP 과 같은 생각).
        고르면 안내띠에 회전·삭제가 뜬다. 끌어 옮기기만 되고 못 돌리면 벽에 붙일 수가 없다. */
     if (!moved){
