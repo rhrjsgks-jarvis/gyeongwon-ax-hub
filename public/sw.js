@@ -109,7 +109,7 @@
  * v79 (2026-08-16) — AI 추천이 에어컨 설치 형태와 인덕션 화구 수를 지키고,
  * 예산 초과 시 가장 싼 것을 보여준다(finder-app.html). 버튼은 계속 hidden.
  */
-const CACHE_VERSION = 'axhub-v89';
+const CACHE_VERSION = 'axhub-v90';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -122,7 +122,16 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 캐시에서 뜨는데 심벌·공유·뒤로가기가 통째로 죽는다 — 캐시가 반쪽만 듣는 상태였다.
  * 파일 이름에 버전이 없으므로 캐시 우선(vendor)이 아니라 stale-while-revalidate 로 둔다.
  */
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|warranty)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
+/*
+ * **공용 벽선 라이브러리도 여기 들어간다**(2026-08-17). `plan-library.json` 은 도면
+ * 이미지 없이 방 경계(mm 좌표)만 담아, 전파가 끊겨도 그것만 있으면 **배치를 그대로
+ * 할 수 있다** — 도면을 못 받아도 3D 가 서고 가전을 놓을 수 있는 유일한 자료다.
+ * 그런데 아무 규칙에도 안 걸려 그냥 네트워크였다(`share-kit.js` 때와 같은 종류).
+ *
+ * 도면 색인·이미지(`plan-index.json`·`/plans/`)는 아직 규칙이 없다 — 그쪽은 수십 MB 라
+ * 따로 판단할 일이다.
+ */
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|warranty|plan-library)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

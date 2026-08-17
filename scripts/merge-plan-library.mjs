@@ -62,6 +62,46 @@ function areaM2(walls) {
   return Math.abs(a / 2) / 1e6;
 }
 
+/*
+ * ── 타입 이름이 밝히는 크기와 실제로 잡힌 넓이가 맞는가 ────────────────
+ *
+ * 이 파일 맨 위의 스키마가 **스스로 계약을 적어 두었다** — `type` 은 "84A 등, 숫자
+ * 부분이 전용면적(㎡)". 그러면 잡힌 방 넓이의 합과 그 숫자를 견주는 것만으로 명백한
+ * 불량이 드러난다. 바깥 자료를 끌어올 필요가 없다.
+ *
+ * **실측 (2026-08-17, 도면 인쇄 치수로 축척을 맞춰 뽑은 11건 · `.scratch/seed-library.mjs`)**
+ *
+ *   멀쩡한 것        0.86 · 0.92 · 0.98 · 1.25 배
+ *   거르고 싶은 것   0.55 · 4.66 · 5.36 · 6.89 배
+ *   잴 수 없는 것    `T1` 처럼 숫자가 없는 타입 3건
+ *
+ * 위쪽 1.25 배는 **버그가 아니라 정상**이다 — 트인 거실 안의 주방을 따로 잡는 것을
+ * 일부러 그렇게 두었고(CLAUDE.md), 그래서 합계가 전용면적을 넘는다. 발코니가 잡히면
+ * 더 늘 수도 있다.
+ *
+ * 아래쪽 0.55 배는 **인식이 절반만 된 것**이다. 다만 상담사가 일부러 거실 하나만 잡아
+ * 저장하는 경우도 있어, 낮다고 전부 불량이라 할 수는 없다.
+ *
+ * 4.66~6.89 배는 **타입 이름 자체가 틀린 것**으로 보인다(자이 헤리티지 22·23·24 —
+ * 주택형 OCR 이 숫자만 읽어 뭉갠 자리다). 상담사가 `23` 을 고르면 158㎡ 집이 뜬다.
+ */
+/**
+ * @param {number} sumM2   잡힌 방 넓이의 합(㎡)
+ * @param {number} typeM2  타입 이름에서 읽은 전용면적(㎡)
+ * @returns {string|null}  거를 이유 · 통과면 null
+ */
+function sizeVerdict(sumM2, typeM2) {
+  const k = sumM2 / typeM2;
+  /*
+   * **0.6 ~ 1.6 배**(2026-08-17 사용자 결정). 실측 정상 범위 0.86~1.25 에 앞뒤로 여유를
+   * 둔 값이다 — 목적은 "정확한 값 고르기"가 아니라 **"명백히 잘못된 것 거르기"** 라는
+   * 이 파일의 다른 범위들(한 변 30m · 방 1~200㎡)과 같은 생각이다.
+   */
+  if (k > 1.6) return `잡힌 넓이 ${sumM2.toFixed(0)}㎡ 가 타입 ${typeM2}㎡ 의 ${k.toFixed(1)}배 — 타입 이름이나 인식이 틀렸다`;
+  if (k < 0.6) return `잡힌 넓이 ${sumM2.toFixed(0)}㎡ 가 타입 ${typeM2}㎡ 의 ${k.toFixed(1)}배 — 집이 반만 잡혔다`;
+  return null;
+}
+
 function checkEntry(e) {
   const bad = [];
   if (!e || typeof e !== 'object') return ['항목이 객체가 아니다'];
@@ -90,12 +130,63 @@ function checkEntry(e) {
       if (a < M2_MIN || a > M2_MAX) bad.push(`"${r.name || '?'}" 넓이 ${a.toFixed(1)}㎡ — 사람이 사는 크기가 아니다`);
     }
   }
+
+  /*
+   * ── 가장 넓은 방이 거실인가 ────────────────────────────────────
+   *
+   * `test-plans` 가 이미 지키는 규칙이다 — *"홍천 84B 는 가장 넓은 곳이 거실이다.
+   * 순서로 붙이면 '침실1' 이 되던 자리다"*. 세대 평면에서 가장 넓은 방은 거실이고,
+   * 그렇지 않다는 것은 **이름이 엉뚱한 방에 붙었다**는 뜻이다.
+   *
+   * 실측으로 `원주역 우미 린 더 스카이 T1` 이 **거실 7.8㎡ · 침실2 23.2㎡** 였다.
+   * 75㎡ 집에 그런 거실은 없다. 벽선(지오메트리)은 멀쩡한데 이름만 어긋난 것인데,
+   * 라이브러리는 이미지 없이 이름만 남으므로 **화면에서 바로잡을 근거가 사라진다.**
+   *
+   * **방이 3곳 이상일 때만 본다** — 상담사가 방 하나만 잡아 저장하는 경우가 있고,
+   * 그때 가장 넓은 방이 침실인 것은 정상이다.
+   */
+  if (rooms.length >= 3) {
+    let big = null, bigA = -1;
+    for (const r of rooms) {
+      let a = 0;
+      for (const p of (r.parts || [])) a += areaM2(p.walls || []);
+      if (a > bigA) { bigA = a; big = r; }
+    }
+    if (big && !/거실/.test(big.name || '')) {
+      bad.push(`가장 넓은 ${bigA.toFixed(1)}㎡ 가 "${big.name || '이름없음'}" 이다 — 방 이름이 엉뚱한 자리에 붙었다`);
+    }
+  }
+
+  /* 타입 숫자와 실제 넓이가 맞는가 — 숫자가 없는 타입(`T1`)은 잴 수 없으니 넘어간다 */
+  {
+    const m = String(e.type || '').match(/[\d.]+/);
+    const typeM2 = m ? parseFloat(m[0]) : NaN;
+    /*
+     * **`T1` 의 `1` 은 전용면적이 아니다.** 주택형을 못 읽은 도면이 그렇게 적히는데
+     * 그대로 재면 배율이 90배로 나와 멀쩡한 항목이 통째로 걸린다(실측 3건).
+     * 사람이 사는 집의 전용면적은 10㎡ 아래로 내려가지 않으므로 거기서 자른다.
+     */
+    if (Number.isFinite(typeM2) && typeM2 >= 10) {
+      let sum = 0;
+      for (const r of rooms) for (const p of (r.parts || [])) sum += areaM2(p.walls || []);
+      const why = sizeVerdict(sum, typeM2);
+      if (why) bad.push(why);
+    }
+  }
   return [...new Set(bad)];
 }
 
 /* ── 읽기 ─────────────────────────────────────────────────────── */
+/*
+ * **키에 지역이 들어간다.** 단지명은 전국에서 유일하지 않다 — 실측으로 `자이 헤리티지`가
+ * **경기 화성**과 **경기 용인** 두 곳에 있다(도면 색인 c132 · c85, 서로 다른 집이다).
+ * `단지|타입` 만으로 잡으면 한쪽이 다른 쪽을 "이미 있다"로 밀어내거나 `--force` 에
+ * 조용히 덮인다. 그러면 **엉뚱한 집 벽선으로 상담한다.**
+ */
+const keyOf = (e) => `${e.region || ''}|${e.complex}|${e.type}`;
+
 const lib = JSON.parse(fs.readFileSync(LIB, 'utf8'));
-const have = new Map((lib.entries || []).map((e) => [`${e.complex}|${e.type}`, e]));
+const have = new Map((lib.entries || []).map((e) => [keyOf(e), e]));
 const before = have.size;
 
 let added = 0, skipped = 0, replaced = 0, rejected = 0;
@@ -111,7 +202,7 @@ for (const f of files) {
   console.log(`\n■ ${path.basename(f)} — 항목 ${list.length}개`);
 
   for (const e of list) {
-    const key = `${e.complex}|${e.type}`;
+    const key = keyOf(e);
     const bad = checkEntry(e);
     if (bad.length) {
       rejected++;
