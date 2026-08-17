@@ -33,7 +33,6 @@
     "test:qr": "node --experimental-strip-types scripts/test-qr.mjs",
     "test:prod": "node scripts/test-prod.mjs",
     "test:backkit": "node scripts/test-backkit.mjs",
-    "build:warranty": "node scripts/build-warranty.mjs",
     "backup": "node scripts/backup.mjs",
     "build:apt": "node scripts/build-apt-index.mjs",
     "test:apt": "node scripts/test-apt.mjs",

@@ -109,7 +109,7 @@
  * v79 (2026-08-16) — AI 추천이 에어컨 설치 형태와 인덕션 화구 수를 지키고,
  * 예산 초과 시 가장 싼 것을 보여준다(finder-app.html). 버튼은 계속 hidden.
  */
-const CACHE_VERSION = 'axhub-v92';
+const CACHE_VERSION = 'axhub-v93';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -131,7 +131,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 도면 색인·이미지(`plan-index.json`·`/plans/`)는 아직 규칙이 없다 — 그쪽은 수십 MB 라
  * 따로 판단할 일이다.
  */
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|warranty|plan-library)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

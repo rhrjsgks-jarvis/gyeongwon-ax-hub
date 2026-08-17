@@ -798,34 +798,6 @@ pass('상황실·업무·운영 골든 5건');
   }
 }
 
-/*
- * ── [12] 견적 한 장이 쓰는 무상보증 생성물이 최신인가 ──
- *
- * `public/warranty.json` 은 이 파일의 `DB` 에서 뽑은 것이다(`scripts/build-warranty.mjs`).
- * 견적은 `finder-app.html` 에서 그리는데 두 미니앱은 서로의 데이터를 못 읽으므로
- * 생성물로 잇는다. **AS 원문을 고치고 다시 만들지 않으면 견적에 옛 보증기간이 나간다** —
- * 화면에는 아무 표시도 안 나고, 그 종이는 고객 손에 남는다.
- * (통합검색 색인·size-reps 와 같은 규칙이다.)
- */
-{
-  const wp = path.join(root, 'public', 'warranty.json');
-  if (!fs.existsSync(wp)) {
-    fail('[12] public/warranty.json 이 없다 — `npm run build:warranty` 를 돌리고 커밋할 것');
-  } else {
-    const before = fs.readFileSync(wp, 'utf8');
-    execFileSync('node', [path.join(root, 'scripts', 'build-warranty.mjs')], { stdio: 'pipe' });
-    const after = fs.readFileSync(wp, 'utf8');
-    if (before !== after) {
-      fail('[12] warranty.json 이 최신이 아니다 — as-app 을 고쳤으면 `npm run build:warranty` 를 다시 돌려 커밋할 것');
-    } else {
-      const w = JSON.parse(after);
-      /* 원문에 있는 품목이 빠지면 견적에서 그 품목의 보증이 통째로 안 나온다 */
-      const missing = Object.keys(A.DB).filter((k) => !w[k]);
-      if (missing.length) fail(`[12] 생성물에 빠진 품목: ${missing.join(', ')}`);
-      else console.log(`[12] warranty.json 최신 — ${Object.keys(w).length}품목 (AS DB 와 동수)`);
-    }
-  }
-}
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
