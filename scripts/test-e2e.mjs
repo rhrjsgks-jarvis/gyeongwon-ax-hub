@@ -178,11 +178,26 @@ try {
     const pw = await fp.locator('input[type=password]').count();
     const hasFrame = await fp.locator('iframe').count();
     const body = (await fp.locator('body').innerText().catch(() => '')) || '';
+    /*
+     * **자물쇠 그림도 없어야 한다**(2026-08-17 사용자 요청). 비밀번호를 안 묻는데
+     * 자물쇠가 그려져 있으면 상담사가 **열어 보지도 않는다** — 화면이 사실과 다른 말을
+     * 하는 셈이다. 그 자리에는 반대로 **써 보고 아이디어를 달라는 부탁**이 온다.
+     */
+    const lockPlace = await fp.locator('[data-icon="lock"]').count();
+    await fp.goto(BASE + '/dev', { waitUntil: 'domcontentloaded' });
+    await fp.waitForTimeout(600);
+    const lockDev = await fp.locator('[data-icon="lock"]').count();
+    const devBody = (await fp.locator('body').innerText().catch(() => '')) || '';
+
     if (pw) fail('/place 가 아직 비밀번호를 묻는다 — 비밀번호 없이 확인할 수 있어야 한다');
     else if (!hasFrame) fail('/place 에 도구가 뜨지 않는다');
     else if (!/개발중/.test(body)) {
       fail('/place 에 개발중 표시가 없다 — 자물쇠를 풀면서 경고까지 사라지면 완성된 도구로 읽힌다');
-    } else pass('개발중 도구 — 비밀번호 없이 열리고 개발중이라고 밝힌다');
+    } else if (lockPlace || lockDev) {
+      fail(`개발중 칸에 자물쇠가 남아 있다 (/place ${lockPlace}개 · /dev ${lockDev}개) — 안 묻는데 그려 두면 상담사가 열어 보지 않는다`);
+    } else if (!/아이디어/.test(devBody) || !/아이디어/.test(body)) {
+      fail('개발중 칸이 아이디어를 보내 달라고 말하지 않는다 — 자물쇠를 걷어낸 자리에 올 말이다');
+    } else pass('개발중 도구 — 비밀번호·자물쇠 없이 열리고, 써 보고 아이디어를 달라고 말한다');
     await fresh.close();
   }
 

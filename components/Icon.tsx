@@ -119,6 +119,10 @@ export default function Icon({
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
+      /* 어떤 아이콘인지 DOM 에 남긴다 — 화면에는 보이지 않지만 "이 지면에 자물쇠가
+         있는가" 같은 것을 검사가 직접 볼 수 있다(2026-08-17, 개발중 칸의 자물쇠를
+         걷어내며 추가). 이름은 이미 타입으로 묶여 있어 오타가 나지 않는다. */
+      data-icon={name}
       aria-hidden="true"
       focusable="false"
     >

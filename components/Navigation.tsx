@@ -272,8 +272,13 @@ export default function Navigation() {
           })}
 
           {/*
-            최하단 — 잠겨 있는 두 칸. 그룹에 속하지 않는다.
+            최하단 두 칸. 그룹에 속하지 않는다.
             **개발중인 서비스가 위, 대시보드가 아래**다. 상담사가 쓸 일이 있는 쪽이 위에 온다.
+
+            **개발중인 서비스에는 자물쇠를 붙이지 않는다**(2026-08-17 사용자 요청:
+            *"이제 잠금을 해제했기 때문에 자물쇠 마크는 필요없습니다"*). 실제로 비밀번호를
+            묻지 않는데 자물쇠가 그려져 있으면 **상담사가 들어가 보지도 않는다** — 화면이
+            사실과 다른 말을 하는 셈이다. 대시보드는 여전히 잠기므로 그쪽에만 남는다.
           */}
           <div className="pt-2 border-t border-gray-100">
             <Link
@@ -287,7 +292,6 @@ export default function Navigation() {
             >
               <Icon name={DEV_LINK.icon} size={19} />
               <span>{DEV_LINK.label}</span>
-              <Icon name="lock" size={13} style={{ opacity: 0.45, marginLeft: 'auto' }} />
             </Link>
             <Link
               href={ADMIN_LINK.href}
