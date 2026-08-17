@@ -3079,7 +3079,18 @@ const STACKABLE = [
  * 어림인지 알 수 없게 된다. 천장에 붙는 것은 **층고에서 빼는 파생값**이라 새 가정이 아니다
  * (층고 자체가 이미 밝혀 둔 가정이다).
  */
-const EYE_MM = 1100;        // 소파에 앉았을 때의 시선 높이(가정)
+/*
+ * 벽걸이 TV 의 **화면 중심 높이**. 예전에는 "앉은 눈높이" 어림값 1,100 이었는데,
+ * 2026-08-17 사용자가 현장 기준을 줬다 — *"85인치 기준 600mm. 소파에서 앉아서
+ * 시청했을 때의 적정 높이"*.
+ *
+ * 83~85형 벽걸이 높이가 **실측 1,077mm** 이므로 하단 600 → **중심 1,139mm**.
+ * 즉 **기준점만 바꾸면 되고 공식(`중심 − 높이/2`)은 그대로다.** 그 공식이 곧
+ * *"더 큰 TV 는 비율에 맞춰 하향조정"* 이다 — 화면이 커진 만큼 하단이 내려간다:
+ *   65형 701 · **83~85형 600(기준)** · 98형 514 · 115형 400mm
+ * (작은 TV 는 반대로 올라간다 — 중심을 눈높이에 맞추는 것이 기준이라 그렇다.)
+ */
+const EYE_MM = 1139;
 const COUNTER_MM = 850;     // 주방 상판 높이(가정) — 인덕션은 여기에 묻힌다
 const SILL_MM = 900;        // 창대 높이(가정) — 창문형 에어컨이 얹히는 자리
 /* 3D 층고와 **같은 값을 써야 한다.** 천장에 붙는 것을 층고에서 빼서 놓는데 둘이 어긋나면
@@ -3110,13 +3121,39 @@ function mountKind(it){
 }
 /** 이 가전이 설치 높이를 가질 수 있는가 (바닥에 놓는 것은 칸을 만들지 않는다) */
 function mountable(it){ return !!mountKind(it); }
+
+/*
+ * ── 주 부품 고르기 (`mainPart`) ────────────────────────────────────────
+ *
+ * **TV 는 항상 벽걸이로 배치한다**(2026-08-17 사용자 결정).
+ *
+ * `size-reps` 는 TV 를 스탠드/벽걸이 **두 부품으로 따로** 들고 있고 치수가 크게 다르다 —
+ * 55형 스탠드 `1255×1237×483` vs 벽걸이 `1255×748×**221**`. **깊이가 2.2배**다(받침 포함).
+ *
+ * 그래서 "높이만 벽걸이로"는 틀린 구현이다. 스탠드 치수를 그대로 쓰면
+ *   · 3D 에 **받침 달린 TV 가 벽에 떠 있고**
+ *   · 평면에서 **바닥 자리를 2배로 차지**해 그 앞에 다른 가전을 못 놓는다.
+ *
+ * **한 곳에서 정한다.** 예전에는 `o.parts[0]`(=스탠드)을 목록·정보줄·배치가 각각 집었다.
+ * 세 곳이 갈리면 화면에 적힌 치수와 실제로 놓이는 치수가 달라진다.
+ */
+function mainPart(cat, o){
+  const parts = (o && o.parts) || [];
+  if (/^TV$/.test(cat)) return parts.find((p)=>/벽걸이/.test(p.part||'')) || parts[0];
+  return parts[0];
+}
 /** 기본 설치 높이 — 근거가 있으면 그것으로, 없으면 가정값으로 */
 function defaultMountH(it, others){
   const kind = mountKind(it);
   const H = it.h || 0;
   const fit = (v)=> Math.max(0, Math.round(v));
   switch (kind){
-    case '벽':      return fit(EYE_MM - H / 2);          // 화면 중심을 눈높이에
+    /*
+     * 화면 중심을 눈높이에 — 커질수록 하단이 내려간다(사용자 기준: 85인치 하단 600mm).
+     * **천장을 뚫지 않게 상한을 둔다.** 115형(높이 1,478)까지는 여유가 있지만 층고가
+     * 가정값이라 사용자가 낮추면 넘칠 수 있다. 그때는 천장에 붙여 세운다.
+     */
+    case '벽':      return fit(Math.min(EYE_MM - H / 2, CEIL_MM - H));
     case '천장':    return fit(CEIL_MM - H);             // 천장에 붙인다(층고에서 뺀 파생값)
     /* 벽걸이 에어컨도 천장 가까이 단다 — 찬 공기가 아래로 내려와야 하기 때문이다.
        천장에 딱 붙이는 것으로 두면 새 가정을 만들지 않는다. */
@@ -3130,7 +3167,9 @@ function defaultMountH(it, others){
       if (!tvs.length) return 0;                          // TV 가 없으면 받침대 위(=바닥)
       const mine = it.room, same = tvs.filter((o)=> o.room === mine);
       const tv = (same.length ? same : tvs).sort((a,b)=> (a.mh||0) - (b.mh||0))[0];
-      return fit((tv.mh || 0) - H);
+      /* **틈은 여기서도 같이 뺀다.** `alignUnderTV` 와 값이 갈리면 배치 경로에 따라
+         사운드바 높이가 달라진다 — 화면이 스스로 다른 말을 하게 된다. */
+      return fit((tv.mh || 0) - H - SB_GAP_MM);
     }
     default: return 0;
   }
@@ -3140,7 +3179,8 @@ function defaultMountH(it, others){
  * 이 앱이 층고 2,300mm 를 "(가정)"으로 적는 것과 같은 규칙이다.
  */
 const MOUNT_WHY = {
-  '벽':      ()=> `화면 중심을 앉은 눈높이(${EYE_MM.toLocaleString()}mm)에 맞춘 값 — 설치가이드에 높이 수치가 없어 가정입니다`,
+  /* 근거가 바뀌었다 — 설치가이드가 아니라 **현장 기준**이다. 그 사실을 화면에 밝힌다. */
+  '벽':      ()=> `85인치 하단 600mm(앉아서 볼 때의 적정 높이) 기준으로, 화면 중심을 ${EYE_MM.toLocaleString()}mm 에 맞춘 값입니다 — 화면이 클수록 하단이 내려갑니다`,
   '천장':    ()=> `천장(층고 ${CEIL_MM.toLocaleString()}mm)에 붙인 값입니다 — 층고가 가정이라 이 값도 함께 움직입니다`,
   '천장아래': ()=> `천장(층고 ${CEIL_MM.toLocaleString()}mm) 가까이 단다는 기준에서 나온 값입니다 — 층고가 가정입니다`,
   '창':      ()=> `창대 높이(${SILL_MM.toLocaleString()}mm)에 얹은 값 — 설치가이드가 창 종류만 정하고 높이는 없어 가정입니다`,
@@ -3167,6 +3207,57 @@ function applyMountH(made, all){
   const pool = (all || state.items);
   for (const it of made) if (mountKind(it) !== 'TV아래') it.mh = defaultMountH(it, pool);
   for (const it of made) if (mountKind(it) === 'TV아래') it.mh = defaultMountH(it, pool);
+}
+
+/*
+ * ── 사운드바를 TV 에 맞춘다 (`alignUnderTV`) ─────────────────────────────
+ *
+ * *"사운드바는 TV 하단에 살짝 공간 두고 센터정렬 자동배치"*(2026-08-17 사용자).
+ *
+ * 예전에는 **높이만** TV 를 따라갔다(`mountKind 'TV아래'`). 평면 좌표는 각자
+ * `findSpot` 으로 제 자리를 찾아서, 3D 로 보면 사운드바가 **TV 와 다른 벽에 붙어 있었다.**
+ *
+ * 맞추는 것은 셋이다 — **중심(x·y) · 방향(각도) · 방(room)**. 각도까지 같이 돌려야
+ * 벽에 나란히 붙는다(TV 만 벽을 보고 사운드바는 90° 틀어져 있으면 벽을 파고든다).
+ *
+ * **사용자가 직접 옮긴 것은 건드리지 않는다** — 설치 높이에 `mhSet` 플래그가 있는 것과
+ * 같은 장치(`posSet`)다. 상담사가 일부러 옮겨 놓은 것을 도로 끌어오면 조작이 안 먹는다.
+ */
+const SB_GAP_MM = 60;        // TV 하단과 사운드바 윗면 사이 — "살짝 공간"의 값(가정)
+
+/** 이 사운드바가 따라갈 TV — 같은 방을 먼저, 없으면 가장 가까운 것 */
+function tvFor(sb, all){
+  const tvs = (all || state.items).filter((o)=> o !== sb && /^TV$/.test(o.cat) && !o.staged);
+  if (!tvs.length) return null;
+  const same = tvs.filter((o)=> o.room === sb.room);
+  const pool = same.length ? same : tvs;
+  return pool.sort((a,b)=> Math.hypot(a.bx-sb.bx, a.by-sb.by) - Math.hypot(b.bx-sb.bx, b.by-sb.by))[0];
+}
+
+/**
+ * 사운드바를 TV 아래 중앙으로 옮긴다. 옮겼으면 true.
+ * `made` 를 주면 그 안의 사운드바만 본다(새로 꺼낸 것만 맞출 때).
+ */
+function alignUnderTV(made, all){
+  const pool = all || state.items;
+  const list = (made || pool).filter((it)=> mountKind(it) === 'TV아래' && !it.posSet && !it.staged);
+  let n = 0;
+  for (const sb of list){
+    const tv = tvFor(sb, pool);
+    if (!tv) continue;
+    sb.bx = tv.bx; sb.by = tv.by;          // 센터정렬 — 평면 중심을 TV 와 같게
+    sb.a = tv.a;                            // 같은 벽을 보게 (안 맞추면 벽을 파고든다)
+    sb.room = tv.room;
+    sb.mh = Math.max(0, Math.round((tv.mh || 0) - (sb.h || 0) - SB_GAP_MM));
+    /* TV 보다 넓은 사운드바가 실제로 있다 — 사운드바 최대 1,030mm vs TV 42~43형 986mm.
+       센터정렬은 되지만 양옆으로 나오므로 그 사실을 알린다(하드로 막을 일은 아니다). */
+    sb.soft = (sb.soft || []).filter((s)=> !/사운드바가 TV 보다/.test(s));
+    if ((sb.w || 0) > (tv.w || 0) + 1) {
+      sb.soft.push(`사운드바가 TV 보다 ${Math.round(sb.w - tv.w)}mm 넓습니다 — 양옆으로 나옵니다`);
+    }
+    n++;
+  }
+  return n;
 }
 /** 두 가전이 높이로 갈려 서로 자리를 안 뺏는가 (하나가 벽/천장에 붙어 있을 때) */
 function clearsVertically(A, B){
@@ -3330,7 +3421,19 @@ function evaluate(){
     for (const w of state.walls){
       if (!w.open) continue;
       if (segHitsPoly(w, Abody)){
-        A.soft.push('문·창(개구부) 앞을 막습니다 — 출입·개폐 확인');
+        /*
+         * **벽에 거는 것은 여기서 하드다**(2026-08-17 사용자 결정).
+         *
+         * 바닥에 놓는 가전이 창 앞에 오는 것은 "출입·개폐 확인"으로 족하다 —
+         * 실제로 그 자리에 놓기도 한다. 그런데 **벽걸이는 걸 벽 자체가 없다.**
+         * 상담 중에 *"여기 걸면 됩니다"* 가 거짓이 되는 것이라 경고로는 부족하다.
+         *
+         * 도어 오픈을 하드로 만들지 않은 기존 결정과 어긋나지 않는다 — 그쪽은
+         * **힌지 방향을 몰라 양쪽에 그리는 추정값**이고, 이쪽은 "벽이 있는가"라는
+         * 훨씬 단순한 사실이다.
+         */
+        if (mountKind(A) === '벽') A.warn.push('창·문 자리에는 벽걸이를 걸 수 없습니다');
+        else A.soft.push('문·창(개구부) 앞을 막습니다 — 출입·개폐 확인');
         break;
       }
     }
@@ -3689,6 +3792,16 @@ function removeItem(id){
   state.items = state.items.filter((x)=>x!==it);
   if (state.sel===id) state.sel = null;
   if (!state.items.length) $('#empty').style.display='';
+  /*
+   * **TV 를 지우면 그 아래 사운드바가 공중에 남는다.** 3D 에서 벽에 붙어 떠 있는데
+   * 걸 TV 가 없으니 거짓 그림이다. 따라가던 것만 다시 계산한다 —
+   * 다른 TV 가 있으면 그쪽으로 가고, 없으면 바닥(받침대 위)으로 내려온다.
+   */
+  if (/^TV$/.test(it.cat)){
+    const orphans = state.items.filter((o)=> mountKind(o)==='TV아래' && !o.mhSet);
+    for (const o of orphans) o.mh = defaultMountH(o, state.items);
+    alignUnderTV(orphans.filter((o)=>!o.posSet), state.items);
+  }
   evaluate(); renderSide(); draw();
   toast(`${it.label} 삭제`);
 }
@@ -3891,6 +4004,7 @@ function renderMini(){
     if (/^TV$/.test(t.cat)) {
       for (const o of state.items)
         if (/^사운드바$/.test(o.cat) && !o.mhSet && o.room === t.room) o.mh = defaultMountH(o, state.items);
+      alignUnderTV(null, state.items);      // 높이만이 아니라 평면 중심도 따라간다
     } else t.mhSet = true;
     evaluate(); renderSide(); draw();
     if (window.Place3D && window.Place3D.isOpen) window.Place3D.rebuild();
@@ -4298,6 +4412,13 @@ cv.addEventListener('pointermove', (e)=>{
     if (clash){ Object.assign(it, prev); toast(clash); }
     /* 다른 방으로 넘어갔으면 소속을 그 방으로 옮긴다 — 이름표는 사실을 따라야 한다 */
     else retagRoom(it);
+    /*
+     * **손으로 옮긴 사운드바는 더 이상 TV 를 따라가지 않는다**(`posSet`).
+     * 설치 높이의 `mhSet` 과 같은 장치다 — 일부러 옮겨 둔 것을 도로 끌어오면 조작이 안 먹는다.
+     * 반대로 **TV 를 옮기면** 아직 손대지 않은 사운드바는 따라간다.
+     */
+    if (mountKind(it) === 'TV아래') it.posSet = true;
+    else if (/^TV$/.test(it.cat)) alignUnderTV(null, state.items);
   }
   evaluate(); draw();
 });
@@ -5666,7 +5787,8 @@ async function openSelect(room){
            * (애매하면 크게 재는 쪽이 안전하다), 아래 정보줄이 사이즈 안의 편차를 함께 적는다.
            */
           const foot = (o)=>{
-            const p = (o.parts||[]).find((q)=>/본체|실내기|스탠드 설치/.test(q.part||'')) || o.parts[0];
+            /* TV 는 벽걸이가 주 부품이다(mainPart) — 목록 정렬·정보줄·배치가 같은 것을 봐야 한다 */
+            const p = mainPart(c, o) || (o.parts||[]).find((q)=>/본체|실내기/.test(q.part||'')) || o.parts[0];
             return p ? { w:+p.w||0, d:+p.d||0 } : { w:0, d:0 };
           };
           const opts = rows.map((r,i)=>({ r, i, o:r.options[0], k:0 }));
@@ -5693,7 +5815,7 @@ async function openSelect(room){
             <span class="nm">${esc(c)}</span>
             <select data-size="${esc(c)}">
               ${opts.map(({ r, i, o, k })=>{
-                const p0 = o.parts[0];
+                const p0 = mainPart(c, o);
                 const dim = `${Math.round(p0.w)}×${Math.round(p0.h)}×${Math.round(p0.d)}`;
                 /*
                  * 라인업 접두는 사이즈 이름이 **이미 설치 방식을 담고 있으면** 붙이지 않는다 —
@@ -5755,10 +5877,13 @@ async function openSelect(room){
           const el = document.querySelector(`p[data-info="${CSS.escape(cat)}"]`);
           if (!el) return;
           const { r, o } = pickOf(cat);
-          const p0 = o.parts[0];
+          const p0 = mainPart(cat, o);   /* TV 는 벽걸이가 주 부품 — 화면 치수와 실제 배치가 같아야 한다 */
           const cl = clearFor(cat, p0.part, o.model, o.group);
-          const extra = o.parts.length>1
-            ? ' · ' + o.parts.slice(1).map((q)=>`${esc(q.part)} ${Math.round(q.w)}×${Math.round(q.h)}×${Math.round(q.d)}`).join(' · ')
+          /* 부속은 **주 부품을 뺀 나머지**다. `slice(1)` 로 자르면 TV 에서 주 부품(벽걸이)이
+             부속으로 적히고 스탠드가 사라진다 — 주 부품이 항상 0번은 아니다. */
+          const rest = (o.parts||[]).filter((q)=> q !== p0);
+          const extra = rest.length
+            ? ' · ' + rest.map((q)=>`${esc(q.part)} ${Math.round(q.w)}×${Math.round(q.h)}×${Math.round(q.d)}`).join(' · ')
             : '';
           const dz = doorZoneFor({ cat, group:o.group });
           // 비슷한 발자국끼리 묶은 사이즈는 그 사실을 밝힌다. 무리 중 **가장 큰 치수**로
@@ -5839,7 +5964,7 @@ async function openSelect(room){
           const qtyEl = document.querySelector(`input[data-qty="${CSS.escape(cat)}"]`);
           const [si,ki] = String(sel.value || '0:0').split(':').map(Number);
           const r = state.reps.filter((x)=>x.cat===cat)[si||0];
-          const o = r.options[ki||0], p = o.parts[0];
+          const o = r.options[ki||0], p = mainPart(cat, o);
           const qty = Math.max(1, Math.min(6, +qtyEl.value || 1));
           const roomEl = document.querySelector(`select[data-room="${CSS.escape(cat)}"]`);
           const rid = roomEl ? roomEl.value : null;
@@ -6260,7 +6385,19 @@ function autoPlace(picks){
   const failed = [];
   // 실패한 것은 **원래 pick 그대로** 들고 있어야 "직접 놓기"로 이어 줄 수 있다
   const failedPicks = [];
-  for (const it of list){
+  /*
+   * **사운드바는 맨 뒤로 미룬다.** TV 아래 중앙에 붙일 것이라 TV 가 먼저 놓여 있어야 한다.
+   * 폭 내림차순만 믿으면 안 된다 — 사운드바 최대 1,030mm 가 TV 42~43형 986mm 보다 넓어
+   * **사운드바가 먼저 놓이는 조합이 실제로 있다.**
+   */
+  const order = [...list].sort((a,b)=> (mountKind(a)==='TV아래'?1:0) - (mountKind(b)==='TV아래'?1:0));
+  for (const it of order){
+    /* TV 가 이미 놓였으면 자리를 따로 찾지 않고 그 아래 중앙에 붙인다 */
+    if (mountKind(it) === 'TV아래' && tvFor(it, placed)){
+      alignUnderTV([it], placed);
+      placed.push(it); state.items.push(it);
+      continue;
+    }
     const spot = findSpot(it, placed);
     if (spot){ Object.assign(it, {bx:spot.bx, by:spot.by, a:spot.a}); placed.push(it); state.items.push(it); }
     else {
@@ -6524,6 +6661,7 @@ loadReps();
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
+  mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM,
   openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,

@@ -2029,6 +2029,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     ]);
     const T = S.items.find((i) => i.cat === 'TV'), B = S.items.find((i) => i.cat === '사운드바');
     out.eye = P.EYE_MM;
+    out.gap = P.SB_GAP_MM;
     out.tv = { mh: T.mh, h: Math.round(T.h), center: Math.round(T.mh + T.h / 2) };
     out.bar = { mh: B.mh, h: Math.round(B.h) };
 
@@ -2099,7 +2100,9 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   else {
     const bad = [];
     if (r.tv.center !== r.eye) bad.push(`벽걸이 TV 화면 중심 ${r.tv.center}mm — 눈높이 ${r.eye}mm 여야 한다`);
-    if (r.bar.mh !== r.tv.mh - r.bar.h) bad.push(`사운드바 ${r.bar.mh}mm — TV 하단(${r.tv.mh}) 바로 아래여야 한다`);
+    /* 사용자 요청: *"사운드바는 TV 하단에 **살짝 공간 두고**"* — 틈(`SB_GAP_MM`)만큼 띄운다.
+       높이를 정하는 길이 둘(`defaultMountH` · `alignUnderTV`)이라 **같은 값이 나와야 한다.** */
+    if (r.bar.mh !== r.tv.mh - r.bar.h - r.gap) bad.push(`사운드바 ${r.bar.mh}mm — TV 하단(${r.tv.mh})에서 ${r.gap}mm 띄운 자리여야 한다`);
     if (r.stand.mh !== 0 || r.stand.mountable) bad.push(`스탠드형 TV 가 바닥이 아니다 (${r.stand.mh}mm)`);
     if (!r.lowPasses) bad.push('벽에 건 TV 아래로 낮은 가전이 못 지나간다 — 있는 자리를 없다고 말한다');
     if (!r.tallBlocks) bad.push('TV 를 세로로 뚫는 가전이 안 막힌다');
@@ -2120,6 +2123,101 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     else pass(`설치 높이 — 벽걸이 TV ${r.tv.mh}mm(화면 중심 ${r.tv.center}mm) · 사운드바 ${r.bar.mh}mm(TV 하단) · 스탠드형 바닥`
       + ` · ${r.others.map((o) => `${o.cat === '인덕션/전기레인지' ? '인덕션' : o.cat}${o.kind === '천장아래' ? '(벽걸이)' : o.kind === '창' ? '(창문형)' : ''} ${o.mh}`).join(' · ')}mm`
       + ` · 층고 ${r.ceil}mm 일치 · 3D 반영 · 아래는 통과/뚫으면 막힘`);
+  }
+}
+
+/*
+ * ── TV 는 항상 벽걸이 · 사운드바는 TV 아래 중앙 ──────────────────────
+ *
+ * 2026-08-17 사용자 요청 — *"TV는 항상 벽걸이높이로 배치"* · *"사운드바는 TV 하단에
+ * 살짝 공간 두고 센터정렬 자동배치"* · *"85인치 기준 600mm, 더 큰 티비는 비율에 맞춰
+ * 자동 하향조정"*.
+ *
+ * 여기서 지키는 것은 다섯이다. 하나라도 조용히 되돌아가면 상담 화면이 거짓이 된다:
+ *  ① **파트가 벽걸이여야 한다** — 높이만 올리고 스탠드 치수(깊이 2.2배)를 쓰면 3D 에
+ *     받침 달린 TV 가 벽에 뜨고 평면에서 바닥 자리를 두 배로 먹는다
+ *  ② **85인치 하단 600mm** — 사용자가 준 현장 기준값이다
+ *  ③ **클수록 내려간다** — 화면 중심을 고정하므로 저절로 그렇게 된다
+ *  ④ **사운드바 중심·각도가 TV 와 같다** — 각도까지 안 맞추면 벽을 파고든다
+ *  ⑤ **손으로 옮긴 사운드바는 안 따라간다**(`posSet`) — 조작이 안 먹는 것을 막는다
+ */
+{
+  const r = await page.evaluate(() => {
+    const P = window.__place, S = P.state, out = {};
+    const rep = (cat) => (S.reps || []).filter((x) => x.cat === cat);
+    /*
+     * TV 카테고리에는 **프로젝터도 들어 있다**(The Freestyle `폭 135mm` ·
+     * The Premiere `폭 530~550mm`). 이들은 파트가 `본체` 하나뿐이라 벽에 거는 물건이
+     * 아니고, `mainPart` 가 폴백으로 본체를 골라 바닥에 놓는 것이 맞다.
+     * 그래서 **벽걸이 파트를 가진 줄만** 이 검사의 대상이다.
+     */
+    const tvRows = rep('TV').filter((r0) => (r0.options[0].parts || []).some((p) => /벽걸이/.test(p.part || '')));
+    if (!tvRows.length) return { err: '대표모델에 벽걸이 TV 가 없다' };
+
+    /* ① 주 부품 — 모든 TV 줄에서 벽걸이가 뽑혀야 한다 */
+    out.parts = tvRows.map((r0) => {
+      const p = P.mainPart('TV', r0.options[0]);
+      return { size: r0.size, part: p && p.part, d: p && Math.round(p.d) };
+    });
+
+    /* ②③ 사이즈별 하단 높이 — 벽걸이 파트 높이로 계산 */
+    out.h = tvRows.map((r0) => {
+      const p = P.mainPart('TV', r0.options[0]);
+      return { size: r0.size, h: Math.round(p.h), mh: P.defaultMountH({ cat: 'TV', part: p.part, h: p.h }, []) };
+    });
+
+    /* ④⑤ 자동배치 — TV 와 사운드바를 함께 놓아 본다 */
+    S.items = []; S.rooms = [];
+    const W = 6000, D = 5000;
+    S.rooms = [{ id: 'r1', name: '거실', parts: [{ walls: [
+      { x1: 0, y1: 0, x2: W, y2: 0 }, { x1: W, y1: 0, x2: W, y2: D },
+      { x1: W, y1: D, x2: 0, y2: D }, { x1: 0, y1: D, x2: 0, y2: 0 },
+    ] }] }];
+    S.mmPerPx = 1; S.scaled = true;
+    const sb = rep('사운드바')[0];
+    P.autoPlace([
+      { cat: 'TV', size: tvRows[tvRows.length - 1].size, model: 'x', group: tvRows[tvRows.length - 1].options[0].group,
+        part: P.mainPart('TV', tvRows[tvRows.length - 1].options[0]), room: 'r1' },
+      { cat: '사운드바', size: sb.size, model: 'x', group: sb.options[0].group, part: sb.options[0].parts[0], room: 'r1' },
+    ]);
+    const T = S.items.find((i) => i.cat === 'TV'), B = S.items.find((i) => i.cat === '사운드바');
+    if (!T || !B) return { err: 'TV·사운드바가 배치되지 않았다' };
+    out.align = { dx: Math.round(B.bx - T.bx), dy: Math.round(B.by - T.by), da: Math.round((B.a - T.a) * 180 / Math.PI),
+      room: B.room === T.room, gap: Math.round(T.mh - (B.mh + B.h)) };
+
+    /* ⑤ 손으로 옮긴 뒤 TV 를 움직여도 따라가지 않는다 */
+    B.posSet = true; B.bx += 1234;
+    const before = B.bx;
+    T.bx += 500; P.alignUnderTV(null, S.items);
+    out.keepsManual = B.bx === before;
+    /* 반대로 플래그가 없으면 따라와야 한다 */
+    B.posSet = false; P.alignUnderTV(null, S.items);
+    out.follows = Math.round(B.bx) === Math.round(T.bx);
+    return out;
+  });
+
+  if (r.err) fail('TV 벽걸이/사운드바 — ' + r.err);
+  else {
+    const bad = [];
+    const stand = r.parts.filter((p) => !/벽걸이/.test(p.part || ''));
+    if (stand.length) bad.push(`스탠드 파트가 뽑혔다 — ${stand.map((s) => s.size).join('·')}`);
+    const a85 = r.h.find((x) => /8[35]/.test(String(x.size)));
+    if (!a85) bad.push('83~85형 줄을 못 찾았다');
+    else if (Math.abs(a85.mh - 600) > 3) bad.push(`85인치 하단 ${a85.mh}mm — 600mm 여야 한다(사용자 기준)`);
+    /* 클수록 낮아진다 — 높이 오름차순으로 정렬했을 때 하단이 내림차순이어야 한다 */
+    const byH = [...r.h].sort((x, y) => x.h - y.h);
+    for (let i = 1; i < byH.length; i++) {
+      if (byH[i].mh > byH[i - 1].mh) { bad.push(`${byH[i].size}(${byH[i].mh}mm)가 ${byH[i - 1].size}(${byH[i - 1].mh}mm)보다 높다 — 클수록 내려가야 한다`); break; }
+    }
+    if (r.align.dx !== 0 || r.align.dy !== 0) bad.push(`사운드바가 TV 중심에서 (${r.align.dx}, ${r.align.dy})mm 어긋났다`);
+    if (r.align.da !== 0) bad.push(`사운드바 각도가 TV 와 ${r.align.da}° 다르다 — 벽을 파고든다`);
+    if (!r.align.room) bad.push('사운드바가 TV 와 다른 방에 있다');
+    if (r.align.gap <= 0) bad.push(`사운드바가 TV 하단에 붙거나 겹쳤다 (틈 ${r.align.gap}mm)`);
+    if (!r.keepsManual) bad.push('손으로 옮긴 사운드바를 도로 끌어왔다 — 조작이 안 먹는다');
+    if (!r.follows) bad.push('TV 를 옮겼는데 사운드바가 안 따라온다');
+    if (bad.length) fail('TV 벽걸이/사운드바 — ' + bad.join(' / '));
+    else pass(`TV 벽걸이 고정 ${r.parts.length}줄 · 85인치 하단 ${a85.mh}mm · 클수록 내려감(${byH[0].mh}→${byH[byH.length - 1].mh}mm)`
+      + ` · 사운드바 TV 중앙 정렬(틈 ${r.align.gap}mm) · 손으로 옮기면 안 따라감`);
   }
 }
 
