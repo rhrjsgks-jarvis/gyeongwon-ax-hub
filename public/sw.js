@@ -153,7 +153,12 @@
  * "문 개폐에 지장" 주의를 붙인다(place-app.html). 예전에는 개구부 선에 몸체가 닿을
  * 때만 걸려서, 문 앞 1m 에 냉장고를 세워도 아무 말이 없었다.
  */
-const CACHE_VERSION = 'axhub-v103';
+/*
+ * v104 (2026-08-18) — 가전 3D 자산이 들어올 자리를 열었다(GLTFLoader 자체 호스팅 ·
+ * public/models/ 등록부 · 없으면 지금 상자로 폴백). 그리고 제품 색을 삼성닷컴
+ * 수집분으로 19개 더 채웠다(77 → 96) — 3D 가 그 색으로 선다.
+ */
+const CACHE_VERSION = 'axhub-v104';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
