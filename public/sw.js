@@ -158,7 +158,7 @@
  * public/models/ 등록부 · 없으면 지금 상자로 폴백). 그리고 제품 색을 삼성닷컴
  * 수집분으로 19개 더 채웠다(77 → 96) — 3D 가 그 색으로 선다.
  */
-const CACHE_VERSION = 'axhub-v109';
+const CACHE_VERSION = 'axhub-v110';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -185,7 +185,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster|exam-print)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra|quiz-bank)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

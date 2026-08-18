@@ -127,6 +127,7 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   quiz:    { label: 'URL 퀴즈',        icon: 'target',   color: '#DC2626' },
   concierge: { label: '컨시어지 프로그램', icon: 'ticket',   color: '#DB2777' },
   poster:  { label: '컨시어지 접수 포스터', icon: 'printer',  color: '#9333EA' },
+  examprint: { label: '시험지 인쇄', icon: 'printer', color: '#1428A0' },
   coupon:  { label: '시크릿쿠폰',      icon: 'coupon',   color: '#DC2626' },
   catalog: { label: '모바일 카탈로그',  icon: 'catalog',  color: '#0EA5E9' },
 
