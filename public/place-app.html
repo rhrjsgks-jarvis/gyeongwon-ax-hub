@@ -1637,6 +1637,47 @@ function pairedFill(dark, w, h, r, maxT){
   return out;
 }
 
+/*
+ * ── 벽 두께를 잰다 (2026-08-18) ─────────────────────────────────
+ *
+ * 3D 는 벽 두께를 **60mm 로 가정**해 왔다. 주석이 스스로 *"안쪽 면만 알기에 얇게 그린다 —
+ * 치수를 주장하지 않는다"* 고 적어 둔 자리다. 그런데 **짝선 채우기로 벽 몸통을 잡게 되어
+ * 이제 잴 수 있다.** AI Hub 정답 23,861개로 재니 실제 벽 두께 중앙값이 **약 200mm** 라,
+ * 60mm 는 3배 이상 얇았다.
+ *
+ * ## 재는 법
+ * 벽 픽셀마다 **가로 런과 세로 런 중 짧은 쪽**이 그 자리의 두께다(긴 쪽은 벽을 따라
+ * 흐르는 길이다). 그 중앙값을 쓴다 — 평균은 긴 벽 하나에 끌려간다.
+ *
+ * 반환은 **마스크 픽셀** 단위다. mm 로 바꾸는 것은 축척을 아는 쪽(`ensureBase`)이 한다.
+ */
+function wallThickPx(m, w, h){
+  const runH = new Int32Array(w * h), runV = new Int32Array(w * h);
+  for (let y = 0; y < h; y++){                       // 가로 런
+    let x = 0;
+    while (x < w){
+      if (!m[y*w + x]) { x++; continue; }
+      let e = x; while (e < w && m[y*w + e]) e++;
+      for (let k = x; k < e; k++) runH[y*w + k] = e - x;
+      x = e;
+    }
+  }
+  for (let x = 0; x < w; x++){                       // 세로 런
+    let y = 0;
+    while (y < h){
+      if (!m[y*w + x]) { y++; continue; }
+      let e = y; while (e < h && m[e*w + x]) e++;
+      for (let k = y; k < e; k++) runV[k*w + x] = e - y;
+      y = e;
+    }
+  }
+  const t = [];
+  for (let p = 0; p < w * h; p++) if (m[p]) t.push(Math.min(runH[p], runV[p]));
+  if (!t.length) return 0;
+  t.sort((a, b) => a - b);
+  return t[Math.floor(t.length / 2)];
+}
+
 function keepBands(dark, w, h, r, thickR){
   bandsBailed = false;
   if (r <= 0) return dark;
@@ -1991,8 +2032,14 @@ function ensureBase(){
   /* bands=false 는 "가로·세로 띠로는 벽을 못 찾았다"(대각선·사진·표 지면),
      outline=true 는 "벽을 칠하지 않고 윤곽선만 그린 도면이라 열기를 건너뛰었다".
      둘 다 결과를 못 믿을 신호이므로 화면이 그대로 밝힌다(renderReport). */
+  /*
+   * **벽 두께를 재 둔다.** 3D 가 60mm 가정 대신 이 값을 쓴다. 축척을 모르면 픽셀만
+   * 싣고 mm 는 비운다 — 모르는 것을 숫자로 적지 않는다.
+   */
+  const wallPx = wallThickPx(m, mask.w, mask.h);
+  const wallMm = (wallPx && state.mmPerPx) ? Math.round(wallPx * state.mmPerPx / mask.S) : null;
   const axis = axisConcentration();
-  state.baseInfo = { openR: usedOpen, bbox, thr: mask.thr, env: !!env, axis,
+  state.baseInfo = { openR: usedOpen, bbox, thr: mask.thr, env: !!env, axis, wallPx, wallMm,
                      bands: !bandsBailed, outline: usedOpen === 0 && openR > 0,
                      /* 두 신호는 **서로 다른 실패**를 잡는다 — 기울기는 입체 렌더링·글자 지면을,
                         띠 포기는 벽이 아예 없는 사진 몽타주를 잡는다. 그래서 합집합으로 본다. */
@@ -7007,7 +7054,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   /* 탭 처리 — 검사가 "도면을 눌렀을 때"를 사람이 누른 것과 같은 길로 재현한다 */
   modeTap, runAt,
-  boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, pairedFill, PAIR_MM, classifyEdges, segHitsPoly, sealedMask,
+  boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, pairedFill, PAIR_MM, wallThickPx, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, draftPieces, draftTotalM2, applyDetected,
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, exportLibrary, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
@@ -7069,7 +7116,32 @@ const M = (mm) => mm / 1000;
  * 어긋나면 가전이 천장을 뚫거나 공중에 뜬다. 그래서 여기서 **가져다 쓴다**(값을 또 적지 않는다).
  */
 const WALL_H_MM = P.CEIL_MM;
-const WALL_T_MM = 60;          // 벽 두께 — 안쪽 면만 알기에 얇게 그린다(치수를 주장하지 않는다)
+/*
+ * **벽 두께 — 이제 잰다** (2026-08-18).
+ *
+ * 예전에는 60mm 로 두고 주석에 *"안쪽 면만 알기에 얇게 그린다"* 고 적었다. 그런데
+ * AI Hub 정답 23,861개로 재니 실제 벽 두께 중앙값이 **약 200mm** 라 60mm 는 3배 이상
+ * 얇았고, 3D 에서 벽이 **구조가 아니라 종이 판**으로 보였다.
+ *
+ * 짝선 채우기로 벽 몸통을 잡게 되어 `wallThickPx` 가 도면에서 직접 잰다.
+ *
+ * **다만 그대로 쓰지 않고 자른다.** 이 파일이 다른 곳에서 이미 경고한 대로
+ * *"도면의 벽은 실제 두께가 아니라 선 굵기로 그려진다"* — 코퍼스 12장 실측이
+ * 243~512mm(중앙값 318)로 흩어졌다. 아파트 내력벽 150~250mm 에 외벽 마감을 더한
+ * 범위로 자른다.
+ *
+ * **못 재면 200mm 를 쓴다** — 60mm 로 되돌리지 않는다. 그쪽이 근거가 없는 값이고,
+ * 200mm 는 정답 23,861개의 중앙값이다.
+ *
+ * **두꺼워져도 방은 안 좁아진다** — 벽은 방 경계에서 **바깥쪽으로** 세우므로 안쪽 면은
+ * 그대로다. 이웃 방과 벽이 겹치는 것은 실제로 공유 벽이라 맞는 그림이다.
+ */
+const WALL_T_MIN = 100, WALL_T_MAX = 300, WALL_T_FALLBACK = 200;
+function wallT(){
+  const mm = (P.state.baseInfo || {}).wallMm;
+  if (!mm) return WALL_T_FALLBACK;
+  return Math.max(WALL_T_MIN, Math.min(WALL_T_MAX, mm));
+}
 const LINTEL_MM = 2100;        // 개구부 위 인방. 문·창을 구분할 수 없으므로 위만 막아 "트인 곳"으로 읽히게 한다
 
 let ren = null, scene = null, cam = null, root = null, raf = 0, on = false;
@@ -7168,7 +7240,7 @@ function wallBox(x1, y1, x2, y2, y0mm, y1mm, mat){
   const len = Math.hypot(dx, dz);
   if (len < 1e-4) return null;
   const h = M(y1mm - y0mm);
-  const g = new THREE.BoxGeometry(len, h, M(WALL_T_MM));
+  const g = new THREE.BoxGeometry(len, h, M(wallT()));
   const m = new THREE.Mesh(g, mat);
   m.position.set(M(x1) + dx / 2, M(y0mm) + h / 2, M(y1) + dz / 2);
   /* 박스의 긴 축은 +X 다. Y축 회전 θ 는 +X 를 (cosθ, −sinθ) 로 보내므로

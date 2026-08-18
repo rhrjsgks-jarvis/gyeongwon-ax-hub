@@ -144,7 +144,11 @@
  * 속이 빈 벽에서 몸통을 통째로 놓치던 원리 결함을 고쳤다 — 정답 90장에서 재현율
  * 24.4 → 45.1%, 정밀도 63.9 → 68.1%. 인식 결과가 바뀌므로 옛 캐시가 남으면 안 된다.
  */
-const CACHE_VERSION = 'axhub-v101';
+/*
+ * v102 (2026-08-18) — 3D 벽 두께를 도면에서 재서 쓴다(place-app.html). 60mm 가정은
+ * 정답 23,861개 중앙값(약 200mm)의 3분의 1이라 벽이 종이 판으로 보였다.
+ */
+const CACHE_VERSION = 'axhub-v102';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
