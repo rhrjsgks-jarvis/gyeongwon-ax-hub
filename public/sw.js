@@ -148,7 +148,12 @@
  * v102 (2026-08-18) — 3D 벽 두께를 도면에서 재서 쓴다(place-app.html). 60mm 가정은
  * 정답 23,861개 중앙값(약 200mm)의 3분의 1이라 벽이 종이 판으로 보였다.
  */
-const CACHE_VERSION = 'axhub-v102';
+/*
+ * v103 (2026-08-18) — 개구부 개폐 궤적을 2D·3D 에 그리고, 그 자리를 막는 가전에
+ * "문 개폐에 지장" 주의를 붙인다(place-app.html). 예전에는 개구부 선에 몸체가 닿을
+ * 때만 걸려서, 문 앞 1m 에 냉장고를 세워도 아무 말이 없었다.
+ */
+const CACHE_VERSION = 'axhub-v103';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

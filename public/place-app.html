@@ -3568,6 +3568,51 @@ function collisionAt(it){
 }
 
 /** 선분이 다각형과 닿는가 (개구부를 가로막는지 볼 때 쓴다) */
+/*
+ * ── 개구부 개폐 영역 (2026-08-18 사용자 요청) ────────────────────
+ *
+ * *"문은 모두 오픈된 상태로 해주면 됩니다. 가전배치하는데 문은 크게 상관이 없습니다.
+ *   다만 **문이 열리고 닫히는 가상선은 있어야** 하고 그 위로 가전을 올릴 경우
+ *   **문 개폐에 지장이 있다는 식으로 경고**가 필요합니다."*
+ *
+ * 예전에는 **개구부 선에 몸체가 닿을 때만** 경고했다. 문 앞 1m 에 냉장고를 세워도
+ * 아무 말이 없었다 — 정작 문이 안 열리는 배치인데.
+ *
+ * ## 문인지 창인지 모르는 채로 그린다
+ * 정답 11,230개로 판별자를 셋(폭·바깥경계·유리선) 재 봤는데 최고가 72% 였다. 그래서
+ * **가르지 않고** 개구부 앞을 **"열고 드나드는 자리"** 로 본다 — 문이든 창(발코니 출입)이든
+ * 앞을 막으면 안 되는 것은 같다. 이름도 그렇게 붙인다.
+ *
+ * ## 반지름은 문 한 짝만큼
+ * 개구부 길이를 그대로 쓰면 2m 발코니 창이 6㎡ 를 먹는다. **문 한 짝이 열리는 만큼**
+ * (최대 900mm)으로 자른다. 방 안쪽에만 그린다 — 바깥은 남의 집이거나 발코니다.
+ *
+ * **하드가 아니라 주의다.** 힌지 방향을 몰라 양쪽을 덮는 추정값이라, 막으면 실제 주방
+ * 대부분이 배치 불가가 된다(이 파일의 기존 결정과 같은 이유).
+ */
+const SWING_MAX_MM = 900;
+function openingSwing(w){
+  const dx = w.x2 - w.x1, dy = w.y2 - w.y1;
+  const L = Math.hypot(dx, dy);
+  if (!L) return null;
+  const ux = dx / L, uy = dy / L;
+  const R = Math.min(L, SWING_MAX_MM);
+  const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
+  /* 어느 쪽이 방 안인가 — 법선 양쪽을 찔러 본다 */
+  let nx = -uy, ny = ux;
+  if (!insideRoom(mx + nx * 60, my + ny * 60)) { nx = -nx; ny = -ny; }
+  if (!insideRoom(mx + nx * 60, my + ny * 60)) return null;   // 양쪽 다 밖이면 그리지 않는다
+  const pts = [[w.x1, w.y1]];
+  const N = 12;
+  for (let i = 0; i <= N; i++){
+    const t = Math.PI * i / N;                      // 개구부를 따라 반원
+    const ax = Math.cos(t), ay = Math.sin(t);
+    pts.push([mx + (-ux * R) * ax + nx * R * ay, my + (-uy * R) * ax + ny * R * ay]);
+  }
+  pts.push([w.x2, w.y2]);
+  return pts;
+}
+
 function segHitsPoly(seg, poly){
   const cross = (ax,ay,bx,by,cx,cy)=> (bx-ax)*(cy-ay)-(by-ay)*(cx-ax);
   for (let i=0;i<poly.length;i++){
@@ -3650,6 +3695,20 @@ function evaluate(){
         if (mountKind(A) === '벽') A.warn.push('창·문 자리에는 벽걸이를 걸 수 없습니다');
         else A.soft.push('문·창(개구부) 앞을 막습니다 — 출입·개폐 확인');
         break;
+      }
+    }
+    /*
+     * **개폐 영역까지 본다**(2026-08-18). 위 검사는 개구부 **선에 닿을 때만** 걸려서,
+     * 문 앞 1m 에 냉장고를 세워도 아무 말이 없었다 — 정작 문이 안 열리는 배치인데.
+     */
+    if (mountKind(A) !== '벽'){
+      for (const w of state.walls){
+        if (!w.open) continue;
+        const z = openingSwing(w);
+        if (z && overlaps(Abody, z)){
+          A.soft.push('문 개폐에 지장이 있습니다 — 열고 드나드는 자리입니다');
+          break;
+        }
       }
     }
   }
@@ -3905,6 +3964,21 @@ function draw(){
    */
   ctx.lineCap='round';
   const wallCol = getComputedStyle(document.documentElement).getPropertyValue('--wall').trim()||'#111';
+  /*
+   * **개폐 궤적을 먼저 깐다**(2026-08-18 사용자 요청: *"문이 열리고 닫히는 가상선은
+   * 있어야 한다"*). 벽·가전보다 아래에 깔아야 그것들을 가리지 않는다.
+   */
+  for (const w of state.walls){
+    if (!w.open) continue;
+    const z = openingSwing(w);
+    if (!z) continue;
+    ctx.beginPath();
+    z.forEach((p, i) => { const [sx, sy] = toScreen(p[0], p[1]); i ? ctx.lineTo(sx, sy) : ctx.moveTo(sx, sy); });
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(180,83,9,.10)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(180,83,9,.55)'; ctx.lineWidth = 1.2; ctx.setLineDash([5,4]); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   for (const w of state.walls){
     const [ax,ay]=toScreen(w.x1,w.y1), [bx,by]=toScreen(w.x2,w.y2);
     const L=Math.hypot(w.x2-w.x1,w.y2-w.y1);
@@ -7055,7 +7129,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   /* 탭 처리 — 검사가 "도면을 눌렀을 때"를 사람이 누른 것과 같은 길로 재현한다 */
   modeTap, runAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, pairedFill, PAIR_MM, wallThickPx, classifyEdges, segHitsPoly, sealedMask,
-  traceContour, simplifyRect, mergeCollinear,
+  traceContour, simplifyRect, mergeCollinear, openingSwing, SWING_MAX_MM,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, draftPieces, draftTotalM2, applyDetected,
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, exportLibrary, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
@@ -7234,6 +7308,8 @@ function floorMesh(pts){
  */
 const wallMat  = new THREE.MeshLambertMaterial({ color: 0xE6EAF0 });
 const lintMat  = new THREE.MeshLambertMaterial({ color: 0xE3E8EF });
+/* 개폐 궤적 — 2D 의 주황 점선과 같은 색이다(같은 것은 앱이 달라도 같게 보여야 한다) */
+const swingMat = new THREE.MeshBasicMaterial({ color: 0xB45309, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false });
 
 function wallBox(x1, y1, x2, y2, y0mm, y1mm, mat){
   const dx = M(x2 - x1), dz = M(y2 - y1);
@@ -7263,6 +7339,24 @@ function buildRoom(loop){
   /* 방 중심 — 꼭짓점 평균이면 한쪽에 점이 몰린 다각형에서 치우치므로 경계상자 중심을 쓴다 */
   const xs = loop.pts.map((p) => p[0]), ys = loop.pts.map((p) => p[1]);
   const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  /*
+   * **개폐 궤적을 바닥에 깐다**(2026-08-18 사용자 요청). 3D 는 개구부 아래를 트여
+   * 두므로 "여기가 문"이라는 것이 안 보였다 — 열고 드나드는 자리를 바닥에 표시한다.
+   * 가전을 그 위에 놓으면 배치 목록에 "문 개폐에 지장" 이 함께 뜬다.
+   */
+  for (const w of (loop.walls || [])){
+    if (!w.open) continue;
+    const z = P.openingSwing(w);
+    if (!z || z.length < 3) continue;
+    const shape = new THREE.Shape(z.map((p) => new THREE.Vector2(M(p[0]), M(p[1]))));
+    const geo = new THREE.ShapeGeometry(shape);
+    geo.rotateX(Math.PI / 2);                       // XY 평면 → 바닥(XZ)
+    const mesh = new THREE.Mesh(geo, swingMat);
+    mesh.position.y = 0.004;
+    mesh.renderOrder = -1;
+    mesh.userData.isSwing = true;                   // 검사가 '가전 디테일' 로 세지 않게
+    root.add(mesh);
+  }
   for (const w of (loop.walls || [])){
     const m = w.open
       ? wallBox(w.x1, w.y1, w.x2, w.y2, LINTEL_MM, WALL_H_MM, lintMat)
