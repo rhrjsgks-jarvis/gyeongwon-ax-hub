@@ -119,7 +119,12 @@
  * (586종)를 그대로 말하고 있었다. syncCounts 가 없는 id(heroSub2)를 찾던 탓이다.
  * 상단바는 2,012종인데 바로 아래 문장이 586종이라 같은 화면이 두 숫자를 말했다.
  */
-const CACHE_VERSION = 'axhub-v96';
+/*
+ * v97 (2026-08-18) — place-app.html 은 주석만 바뀌었다(리빙 4종이 2D·3D 양쪽에
+ * 이미 있는데 "만들지 않는다"로 적혀 있었다). 이 검사는 파일이 바뀌었는지만 보므로
+ * 함께 올린다. 기능 변화는 없다.
+ */
+const CACHE_VERSION = 'axhub-v97';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

@@ -3597,7 +3597,14 @@ function drawGlyph(it){
   } else if (/세탁기|건조기|에어드레서|슈드레서/.test(cat)){
     // 원형 도어 — 통버블(상부 개폐)은 위에서 보면 뚜껑이라 사각으로 둔다
     if (/통버블|일반세탁기/.test(g)) { ctx.strokeRect(-hw*0.72, d*0.16, w*0.72, d*0.68); }
-    else circle(0, d*0.55, Math.min(w, d) * 0.28);
+    else {
+      /* 3D 와 같은 어휘로 두 겹 — 테두리 원 + 안쪽 유리(2026-08-18 사용자 요청).
+         한 겹 선만 그으면 작은 배율에서 점으로 보인다. */
+      const rr = Math.min(w, d) * 0.34;
+      circle(0, d*0.55, rr);
+      ctx.beginPath(); ctx.arc(0, d*0.55, rr*0.74, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fill(); ctx.stroke();
+    }
   } else if (/^TV$|사운드바/.test(cat)){
     // 화면(앞면) 쪽을 굵게 — 어느 방향을 보고 있는지가 TV 배치의 전부다
     ctx.lineWidth = 3.2 / z;
@@ -7091,6 +7098,15 @@ const bodyMat = new THREE.MeshLambertMaterial({ color: 0xFAFBFC });
 const faceMat = new THREE.MeshLambertMaterial({ color: 0xEDF0F4 });
 const darkMat = new THREE.MeshLambertMaterial({ color: 0x2B3440 });
 const blueMat = new THREE.MeshLambertMaterial({ color: 0x1428A0 });
+/* 도어 테두리 — 흰 본체 위에서도, 색 있는 본체 위에서도 원이 읽히는 중간 회색 */
+const rimMat = new THREE.MeshLambertMaterial({ color: 0xB7BEC7 });
+/*
+ * TV 화면 — **본체보다 밝아야 한다.** TV 를 블랙으로 바꾸자(2026-08-18) 검은 본체 위에
+ * 검은 화면이 얹혀 **어느 쪽이 앞인지 안 보였다.** 2D 가 화면 쪽 선을 굵게 그리는 이유가
+ * "어느 방향을 보고 있는지가 TV 배치의 전부"라서인데, 3D 에서 그 정보를 잃은 셈이다.
+ * 꺼진 화면이 빛을 반사하는 실제 모습과도 맞는다.
+ */
+const screenMat = new THREE.MeshLambertMaterial({ color: 0x39414D });
 /* 문을 열었더니 부딪히는 제품 — 빨강. 상담 중에 한눈에 보여야 한다 */
 const badMat  = new THREE.MeshLambertMaterial({ color: 0xE23D3D });
 const selEdge = new THREE.LineBasicMaterial({ color: 0x1428A0 });   // 고른 가전의 모서리
@@ -7222,9 +7238,13 @@ function applianceMesh(it){
    * 그래서 갈래도 2D 와 똑같이 나눈다 — 냉장고 도어선·손잡이 / 원형 도어 / 화면 /
    * 화구 / 앞면 도어패널 / 윗면 원형 그릴 / 에어컨 토출구.
    *
-   * **2D 에 없는 품목(리빙 비데·선풍기·안마기·욕실케어)은 3D 에도 만들지 않는다.**
-   * 근거 없이 외형을 지어내면 고객이 실물로 오해한다. 2D 에 실루엣을 추가하게 되면
-   * 그때 여기도 함께 넣을 것.
+   * **규칙은 "2D 에 없는 품목은 3D 에도 만들지 않는다"** 이다 — 근거 없이 외형을
+   * 지어내면 고객이 실물로 오해한다. 한쪽에만 그림이 있으면 `test-plans` 가 양방향으로
+   * 물린다.
+   *
+   * 리빙 4종(비데·선풍기·안마기·욕실케어)은 **2026-08-17 에 2D·3D 양쪽에 함께 넣었다.**
+   * 이 주석이 한동안 "만들지 않는다"로 남아 있어 없는 것처럼 읽혔다 — 지금은
+   * `size-reps` 24개 카테고리 전부에 2D 실루엣과 3D 디테일이 있다.
    */
   const cat = it.cat || '';
   const grp = String(it.group || '');
@@ -7233,10 +7253,10 @@ function applianceMesh(it){
     const m = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), mat);
     m.position.set(px, py, z); g.add(m); return m;
   };
-  /** 앞면에 붙이는 원 (세탁기 도어 등) */
-  const disc = (r, py, mat) => {
+  /** 앞면에 붙이는 원 (세탁기 도어 등). `dz` 로 살짝 앞에 겹쳐 그린다 */
+  const disc = (r, py, mat, dz) => {
     const m = new THREE.Mesh(new THREE.CircleGeometry(r, 28), mat);
-    m.position.set(0, py, z); g.add(m); return m;
+    m.position.set(0, py, z + (dz || 0)); g.add(m); return m;
   };
   /** 윗면에 눕히는 원 (인덕션 화구·공기청정기 토출구 등) */
   const topDisc = (r, ux, uz, mat) => {
@@ -7268,11 +7288,22 @@ function applianceMesh(it){
       }
     }
   } else if (/세탁기|콤보|건조기|에어드레서|슈드레서/.test(cat)){
+    /*
+     * **도어가 한눈에 보여야 한다**(2026-08-18 사용자 요청: *"세탁기는 도어모양이
+     * 명확히 보여야합니다"*). 예전에는 어두운 원 하나였는데, 흰 본체 위에서는 그냥
+     * 점으로 보이고 색 있는 본체 위에서는 묻혔다.
+     * 지금은 **테두리(중간 회색) + 유리(어두움)** 두 겹이고 지름도 키웠다 —
+     * 실물 드럼 도어가 그렇게 생겼고, 두 겹이라 어떤 본체 색 위에서도 원이 읽힌다.
+     */
     /* 통버블은 위로 열리는 물건이라 앞면에 원형 도어가 없다 — 2D 도 사각으로 둔다 */
     if (/통버블|일반세탁기/.test(grp)) plate(w * 0.72, h * 0.5, 0, h * 0.62, faceMat);
-    else disc(Math.min(w, h) * 0.30, h * 0.52, darkMat);
+    else {
+      const R = Math.min(w, h) * 0.36;
+      disc(R, h * 0.52, rimMat);                 // 도어 테두리
+      disc(R * 0.74, h * 0.52, darkMat, 0.004);  // 유리
+    }
   } else if (/^TV|모니터/.test(cat)){
-    plate(w * 0.96, h * 0.9, 0, h / 2, darkMat);              // 화면
+    plate(w * 0.96, h * 0.9, 0, h / 2, screenMat);            // 화면 — 본체보다 밝게(방향이 읽히게)
   } else if (/사운드바/.test(cat)){
     /*
      * **한 줄에 세 물건이 들어 있다** — `사운드바`(길고 얇은 띠) · `서라운드 스피커`(작은

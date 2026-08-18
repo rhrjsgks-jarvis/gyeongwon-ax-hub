@@ -158,6 +158,25 @@ const COLOR_WORDS = [
   ['블랙', '#2B2B2E'], ['BLACK', '#2B2B2E'], ['그레이', '#9AA0A6'],
 ];
 
+/*
+ * **TV 는 색상 표기가 없어도 블랙으로 둔다** (2026-08-18 사용자 결정: *"TV는 블랙으로
+ * 하면됩니다"*).
+ *
+ * 위 규칙("이름이 스스로 말하는 색만")의 **예외**이고, 그래서 여기 따로 적는다.
+ * 근거는 데이터가 아니라 **영업 현장의 사실**이다 — 카탈로그에도 삼성닷컴에도 TV 색상
+ * 항목이 없는데(실측: 삼성닷컴 TV 256종 중 색상 0종), 화면은 흰 상자를 세우고 있었다.
+ * 거실 3D 에서 가장 큰 물건이 흰 판으로 서면 "우리 집 느낌"이 그 자리에서 깨진다.
+ *
+ * **프로젝터는 뺀다.** TV 카테고리에는 The Freestyle·The Premiere 가 함께 들어 있고
+ * (제품군이 `프로젝터`, 파트가 `본체` 하나뿐) 그것들은 검지 않다. CLAUDE.md 가
+ * "모든 TV 는 벽걸이로 검사하면 깨진다"고 적어 둔 것과 같은 함정이다.
+ */
+function tvColor(p) {
+  if (!/^TV$/.test(String(p.cat || '').trim())) return null;
+  if (/프로젝터/.test(String(p.group || ''))) return null;
+  return { color: '블랙(제품 공통)', hex: '#1C1F24' };
+}
+
 /** 카탈로그에 적힌 제품 색 — 원문(color)과 화면용(hex). 없으면 null */
 function colorOf(p) {
   for (const [label, value] of p.fx || []) {
@@ -193,7 +212,7 @@ for (const p of products) {
   const parts = extractParts(p.fx);
   if (!parts.length) continue;
   const s = sizeOf(p);
-  const col = colorOf(p);
+  const col = tvColor(p) || colorOf(p);
   rows.push({
     cat: p.cat,
     group: p.group || '',
