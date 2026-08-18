@@ -6536,6 +6536,21 @@ function findSpot(item, placed){
       const front = corners(cand, { back:0, side:0, front:item.clear.front });
       if (front.some(([x,y])=>!insideFor(item,x,y))) return false;
     }
+    /*
+     * **3D 가 쓰는 바로 그 판정으로 마무리한다** (2026-08-18).
+     *
+     * 바로 위 `dz` 는 도어 오픈 공간을 **좌우 사각형으로 어림한** 값이고, 3D 는
+     * `doorLeaves` 로 **실제 문짝이 쓸고 가는 자리**를 12단계로 훑는다. 두 모델이 달라
+     * 자동 배치가 "괜찮다" 한 자리를 3D 가 빨갛게 칠했다 — 축척이 실린 도면 12장으로
+     * 재니 **배치 60대 중 6대, 12장 중 5장**에서 났다. 시연에서 "추천 배치입니다" 하고
+     * 3D 를 열었는데 빨간 상자가 뜨면 그 자리에서 신뢰가 무너진다.
+     *
+     * 같은 함수로 재면 어긋날 수 없다. **strict 단계에서만** 본다 — 자리가 정말 없으면
+     * 2차(완화)에서 놓고 `evaluate()` 가 주의로 표시한다("억지로 놓지 않는다"는 규칙은
+     * 자리를 아예 못 찾는 경우를 말하는 것이지, 문이 걸리는 자리를 금지하는 것이 아니다).
+     * 앞의 싼 검사들이 후보 대부분을 이미 걸러내므로 비용도 그만큼만 든다.
+     */
+    if (doorHits(cand, placed, state.walls).length) return false;
     return true;
   };
 

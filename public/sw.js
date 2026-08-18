@@ -129,7 +129,12 @@
  * 30장으로 재니 지우던 조각이 쓰레기가 아니라 진짜 벽 토막이었다 — 윤곽선 도면에서
  * 지킴 52 → 64%, 정밀도는 오히려 57 → 58%. 인식 결과가 바뀌므로 옛 캐시가 남으면 안 된다.
  */
-const CACHE_VERSION = 'axhub-v98';
+/*
+ * v99 (2026-08-18) — 자동 배치가 3D 와 같은 도어 판정을 쓴다(place-app.html).
+ * 예전에는 배치는 사각형 어림으로 보고 3D 는 문짝 스윕으로 봐서, 자동 배치 60대 중
+ * 6대가 3D 에서 빨갛게 떴다. 배치 결과가 바뀌므로 옛 캐시가 남으면 안 된다.
+ */
+const CACHE_VERSION = 'axhub-v99';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
