@@ -6802,6 +6802,44 @@ function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Mat
 function pickN(arr,n){return shuffle(arr||[]).slice(0,n)}
 function prepareQ(q,cat){const order=shuffle([0,1,2,3]);return{...q,cat,shuffledOpts:order.map(i=>q.opts[i]),shuffledAns:order.indexOf(q.ans)}}
 
+/*
+ * **카테고리마다 최소 1문항씩 뽑는다** (2026-08-18)
+ *
+ * 예전에는 CE 전체를 한 풀에 부어 24문항을 무작위로 뽑았다. 그러면 **문항이 많은
+ * 카테고리가 그 비율대로 이긴다** — 사운드바는 CE 풀 371문항 중 8개라 기댓값이
+ * 24 × 8/371 = **0.5문항**이고, 상담사 절반은 사운드바 문제를 한 번도 못 본다.
+ * 정작 그 얇은 다섯(공기청정기·김치냉장고·인덕션·전자레인지·사운드바)이
+ * 상담에서 헷갈리는 품목이라 시험에 나와야 하는 쪽이다.
+ *
+ * **`CE_CORE`/`CE_BONUS` 라는 구분이 이미 데이터에 있는데 뽑을 때 안 보고 있었다.**
+ *   ① 카테고리마다 1문항 — 얇아도 반드시 나온다
+ *   ② 남는 자리는 **핵심 품목**에 무게를 준다(상담 빈도가 높다)
+ *
+ * 문항을 늘리는 것과는 **다른 문제다.** 얇은 카테고리를 채워도 이 규칙이 없으면
+ * 여전히 비율대로 밀리고, 이 규칙이 있으면 문항이 적어도 반드시 출제된다.
+ * 다만 8문항뿐인 카테고리는 같은 문제가 자주 반복되므로 채우는 일도 함께 해야 한다.
+ */
+function pickBalanced(cats,core,n){
+  const avail=cats.filter(c=>(QB[c]||[]).length);
+  const used={};
+  const take=(cat)=>{
+    const seen=used[cat]||(used[cat]=[]);
+    const pool=(QB[cat]||[]).filter(q=>!seen.includes(q));
+    if(!pool.length)return null;
+    const q=pool[Math.floor(Math.random()*pool.length)];
+    seen.push(q);return prepareQ(q,cat);
+  };
+  const out=[];
+  /* ① 핵심부터 한 바퀴 — 자리가 카테고리 수보다 적어도 핵심이 먼저 들어간다 */
+  const order=[...shuffle(avail.filter(c=>core.includes(c))),...shuffle(avail.filter(c=>!core.includes(c)))];
+  for(const c of order){if(out.length>=n)break;const q=take(c);if(q)out.push(q)}
+  /* ② 남는 자리 — 핵심을 두 번 담아 무게를 준다 */
+  const weighted=[...avail.filter(c=>core.includes(c)),...avail.filter(c=>core.includes(c)),...avail];
+  let guard=0;
+  while(out.length<n&&guard++<2000){const c=weighted[Math.floor(Math.random()*weighted.length)];const q=take(c);if(q)out.push(q)}
+  return shuffle(out);
+}
+
 function startQuiz(){
   const id=document.getElementById('empId').value.trim();
   const nm=document.getElementById('empName').value.trim();
@@ -6814,18 +6852,11 @@ function startQuiz(){
 
   let qs;
   if(mode==='ce'){
-    /* CE 전체 풀 24문항 */
-    const cePool=ALL_CE.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
-    qs=shuffle(pickN(cePool,24));
+    qs=pickBalanced(ALL_CE,CE_CORE,24);
   }else if(mode==='mx'){
-    /* MX 전체 풀 24문항 */
-    const mxPool=ALL_MX.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
-    qs=shuffle(pickN(mxPool,24));
+    qs=pickBalanced(ALL_MX,MX_CORE,24);
   }else{
-    /* CE+MX: CE 전체 풀 16문항 + MX 전체 풀 8문항 */
-    const cePool=ALL_CE.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
-    const mxPool=ALL_MX.flatMap(cat=>(QB[cat]||[]).map(q=>prepareQ(q,cat)));
-    qs=shuffle([...pickN(cePool,16),...pickN(mxPool,8)]);
+    qs=shuffle([...pickBalanced(ALL_CE,CE_CORE,16),...pickBalanced(ALL_MX,MX_CORE,8)]);
   }
   st.questions=qs;
   st.startTime=Date.now();

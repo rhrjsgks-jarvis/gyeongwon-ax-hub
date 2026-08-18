@@ -158,7 +158,7 @@
  * public/models/ 등록부 · 없으면 지금 상자로 폴백). 그리고 제품 색을 삼성닷컴
  * 수집분으로 19개 더 채웠다(77 → 96) — 3D 가 그 색으로 선다.
  */
-const CACHE_VERSION = 'axhub-v106';
+const CACHE_VERSION = 'axhub-v107';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
