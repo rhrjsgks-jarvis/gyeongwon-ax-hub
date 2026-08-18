@@ -178,6 +178,35 @@ function tvColor(p) {
 }
 
 /** 카탈로그에 적힌 제품 색 — 원문(color)과 화면용(hex). 없으면 null */
+/*
+ * **카탈로그에 색이 없으면 삼성닷컴 수집분을 본다** (2026-08-18).
+ *
+ * 3D 는 `hex` 가 있어야 제품 색으로 세운다. 그런데 카탈로그는 색상 항목이 없는 제품이
+ * 많아 대표모델 옵션 160개 중 **77개만** 색이 있었다 — 나머지는 흰 상자로 선다.
+ * `public/finder-extra.json`(삼성닷컴 사양)에 같은 모델의 색이 있으면 그것으로 채운다.
+ * **덮지 않는다** — 카탈로그가 기준이라는 이 저장소의 원칙 그대로, 빈 것만 채운다.
+ */
+const SEC_COLOR = (() => {
+  const f = 'public/finder-extra.json';
+  const out = new Map();
+  if (!fs.existsSync(f)) return out;
+  const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+  const pick = (fx) => {
+    for (const r of fx || []) if (COLOR_LABELS.has(String(r[0]).trim())) {
+      const v = String(r[1]).trim();
+      /* 색이 아닌 표기는 거른다 — "패널 레디"는 패널을 따로 붙인다는 뜻이고
+         "BESPOKE 색상 별도 선택"은 색이 아직 안 정해졌다는 뜻이다 */
+      const bad = ['패널 레디', '패널레디', 'PANEL READY', '별도 선택', '별도선택', '해당 없음', '해당없음'];
+      if (!v || bad.some((k) => v.toUpperCase().includes(k))) return null;
+      return v;
+    }
+    return null;
+  };
+  for (const [m, rows] of Object.entries(j.fill || {})) { const c = pick(rows); if (c) out.set(m, c); }
+  for (const p of j.add || []) { const c = pick(p.fx); if (c) out.set(p.model, c); }
+  return out;
+})();
+
 function colorOf(p) {
   for (const [label, value] of p.fx || []) {
     if (!COLOR_LABELS.has(String(label).trim())) continue;
@@ -191,6 +220,20 @@ function colorOf(p) {
     const flat = first.toUpperCase().replace(/\s+/g, '');
     const hit = COLOR_WORDS.find(([w]) => flat.includes(w.toUpperCase().replace(/\s+/g, '')));
     return { color: raw, hex: hit ? hit[1] : null };
+  }
+  /* 카탈로그에 없으면 삼성닷컴 수집분 — 같은 규칙으로 색 단어만 읽는다 */
+  const sec = SEC_COLOR.get(p.model);
+  if (sec) {
+    /* 색 이름 다듬기 — 정규식 없이 한다. 이 파일을 스크립트로 고칠 때 역슬래시가
+       먹혀 `(.*?)?$` 가 `(.*?)?$` 가 되면서 이름이 통째로 비어 0건이 된 적이 있다. */
+    let first = sec.split('/')[0].split(',')[0].split('·')[0].trim();
+    const dash = first.indexOf(' - ');
+    if (dash >= 0 && dash <= 4) first = first.slice(dash + 3);          // 'W - 화이트'
+    const par = first.indexOf('(');
+    if (par > 0) first = first.slice(0, par);                            // '이녹스(메탈)'
+    const flat = first.toUpperCase().split(' ').join('').trim();
+    const hit = COLOR_WORDS.find(([w]) => flat.includes(w.toUpperCase().split(' ').join('')));
+    if (hit) return { color: sec + ' (삼성닷컴)', hex: hit[1] };
   }
   return null;
 }

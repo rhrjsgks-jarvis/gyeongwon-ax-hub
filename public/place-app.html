@@ -7506,6 +7506,65 @@ function bodyMatFor(it){
   return colorMats.get(hex);
 }
 
+/*
+ * ── 가전 3D 자산 (2026-08-18) ───────────────────────────────────
+ *
+ * **지금은 자산이 하나도 없다.** 저장소·스크래치에 GLB/GLTF 가 0개다. 그래서 이 길은
+ * **자리를 열어 두는 것**이고, 자산이 없으면 아래 상자 그림이 그대로 쓰인다(섞여도 된다).
+ *
+ * ## 치수는 우리가 안다 — 자산은 모양만 준다
+ * `size-reps` 의 W×H×D 는 카탈로그 실측이고 **이 도구의 존재 이유**다. 그래서 불러온
+ * 모델의 경계상자를 재서 **우리 치수에 맞춰 늘린다.** 다만 **가로세로 비가 15% 넘게
+ * 어긋나면 쓰지 않는다** — 늘려서 맞추면 형태가 왜곡되고, 그건 실물이 아닌 것을 실물처럼
+ * 보이게 하는 일이다(CLAUDE.md: 지어낸 외형은 고객이 실물로 오해한다).
+ *
+ * ## 지연 로드
+ * `GLTFLoader`(107KB)는 **등록부에 자산이 있을 때만** 받는다. three.js 를 3D 를 켤 때만
+ * 받는 것과 같은 이유 — 매장 전파가 약해도 열려야 한다.
+ */
+let MODELS = null, gltfLoader = null;
+async function modelManifest(){
+  if (MODELS) return MODELS;
+  try {
+    const r = await fetch('models/manifest.json');
+    MODELS = r.ok ? ((await r.json()).models || {}) : {};
+  } catch { MODELS = {}; }
+  return MODELS;
+}
+/** 자산이 있으면 상자를 그것으로 바꿔 끼운다. 없거나 치수가 어긋나면 아무것도 안 한다. */
+async function swapInModel(group, it){
+  const man = await modelManifest();
+  const path = man[`${it.cat}|${it.size}`] || man[it.cat];
+  if (!path) return;
+  if (!gltfLoader){
+    const { GLTFLoader } = await import('./vendor/GLTFLoader.js');
+    gltfLoader = new GLTFLoader();
+  }
+  let gltf; try { gltf = await gltfLoader.loadAsync('models/' + path); } catch { return; }
+  const obj = gltf.scene;
+  const box = new THREE.Box3().setFromObject(obj);
+  const size = box.getSize(new THREE.Vector3());
+  const want = { x: M(it.w), y: M(it.h || 800), z: M(it.d) };
+  if (!size.x || !size.y || !size.z) return;
+  /* 가로세로 비가 크게 어긋나면 믿지 않는다 */
+  const rx = (size.x / size.y) / (want.x / want.y), rz = (size.z / size.y) / (want.z / want.y);
+  if (rx < 0.85 || rx > 1.18 || rz < 0.85 || rz > 1.18){
+    console.warn('[3D] 자산 치수가 실측과 어긋나 쓰지 않습니다:', path,
+      `모델 ${size.x.toFixed(2)}×${size.y.toFixed(2)}×${size.z.toFixed(2)}m · 실측 ${want.x.toFixed(2)}×${want.y.toFixed(2)}×${want.z.toFixed(2)}m`);
+    return;
+  }
+  obj.scale.set(want.x / size.x, want.y / size.y, want.z / size.z);
+  /* 원점이 어디든 바닥 중심으로 옮긴다 */
+  const b2 = new THREE.Box3().setFromObject(obj);
+  const c = b2.getCenter(new THREE.Vector3());
+  obj.position.set(-c.x, -b2.min.y, -c.z);
+  /* 상자·모서리·디테일은 걷어내고 그림자는 남긴다 */
+  for (const ch of [...group.children]) if (!ch.userData.isShadow) group.remove(ch);
+  obj.userData.isBody = true;                 // 문 막힘 때 빨갛게 칠할 대상
+  group.add(obj);
+  if (typeof render === 'function') render();
+}
+
 function applianceMesh(it){
   const g = new THREE.Group();
   const w = M(it.w), h = M(it.h || 800), d = M(it.d);
@@ -7678,6 +7737,8 @@ function applianceMesh(it){
    * **바닥에 놓는 것에만 붙인다.** 벽에 건 TV·천장 카세트의 그림자가 발자국 자리에
    * 생기면 없는 물건이 거기 있는 것처럼 보인다.
    */
+  /* 자산이 있으면 비동기로 바꿔 끼운다 — 없으면 아무 일도 일어나지 않는다 */
+  swapInModel(g, it);
   if (!(it.mh > 0)) {
     const sh = new THREE.Mesh(new THREE.PlaneGeometry(M(it.w) * 1.35, M(it.d) * 1.35), shadowMat());
     sh.rotation.x = -Math.PI / 2;

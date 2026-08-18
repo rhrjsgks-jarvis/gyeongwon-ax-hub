@@ -251,6 +251,14 @@ self.addEventListener('fetch', (e) => {
    */
   if (url.pathname.startsWith('/vendor/')) { e.respondWith(cacheFirst(req)); return; }
   /*
+   * **가전 3D 자산도 캐시 우선**(2026-08-18). `/models/` 는 파일 이름이 바뀌지 않는 한
+   * 내용도 그대로라 캐시 우선이 맞다(vendor 와 같다). 매장 전파가 약해도 열려야 하고,
+   * 모델 파일은 크므로 매번 받으면 3D 가 그만큼 늦어진다.
+   * **등록부(manifest.json)만 SWR** — 자산을 새로 넣으면 그날 반영돼야 한다.
+   */
+  if (url.pathname === '/models/manifest.json') { e.respondWith(swr(req)); return; }
+  if (url.pathname.startsWith('/models/')) { e.respondWith(cacheFirst(req)); return; }
+  /*
    * 설치환경 규격도도 캐시 우선. 파일 이름이 삼성닷컴 원본 경로에서 오고 그 경로에
    * 개정번호(`_v3`·`_v5`)가 박혀 있어 내용이 바뀌면 이름이 바뀐다 — 굳을 걱정이 없다.
    * **매장에서 전파가 끊겨도 규격도가 떠야 한다** — 설치 상담에서 정작 필요한 그림이다.
