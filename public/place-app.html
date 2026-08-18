@@ -1584,6 +1584,59 @@ function lineMorph(src, w, h, r, mode, vert){
  * 근거를 있는 그대로 알리고 고칠 길을 안내하는 것까지가 이 플래그의 몫이다.
  */
 let bandsBailed = false;
+/*
+ * ── 나란한 두 선 사이를 메운다 (2026-08-18) ─────────────────────────
+ *
+ * **우리는 벽 정의의 절반만 구현하고 있었다.** 이 파일이 인용한 문헌의 정의는
+ * *"parallel lines arranged in orthogonal directions, usually longer than thicker"* —
+ * **나란한 두 선**인데, `keepBands` 는 "곧은 띠"만 보고 **짝**을 안 봤다.
+ *
+ * 그래서 **속이 빈 벽**(윤곽선 두 줄로만 그린 벽)에서 선 두 줄만 남기고 **몸통을 통째로
+ * 놓쳤다.** AI Hub 정답으로 재니 정답 벽을 덮는 상한이 **41.6%** 였다(메우면 90.9%).
+ * 문턱을 아무리 만져도 넘을 수 없는 천장이라 원리를 고쳤다.
+ *
+ * ## 어떻게
+ *   · 가로로 긴 선(hor)과 세로로 긴 선(ver)을 뽑는다 — `lineMorph`, keepBands 와 같은 것
+ *   · **가로 벽**은 hor 두 줄이 위아래로 나란하다 → 세로로 훑어 그 사이를 메운다
+ *   · **세로 벽**은 ver 두 줄이 좌우로 나란하다 → 가로로 훑어 그 사이를 메운다
+ *   · **벽 두께 범위 안일 때만** 메운다 — 방 바닥처럼 먼 간격은 건드리지 않는다
+ *
+ * 글씨·해칭은 긴 선이 아니라 hor/ver 에 없으므로 **짝이 될 수 없다.** 순진한 닫기가
+ * 정밀도 17.8% 로 무너지는 것과 갈리는 지점이 이것이다.
+ *
+ * ## 두께 상한이 결정적이다
+ * 실측(정답 20장) — 120mm 재현 47.5% · **160mm 48.6%** · 200mm 50.2% · 450mm 은
+ * 정밀도가 41.8% 로 무너진다. 160mm 에서 재현 48.6% / 정밀 69.4% 로, 지금 방식
+ * (30.6% / 60.3%)보다 **둘 다 오른다.** 재현을 올리면 정밀도가 깎이는 것이 보통인데
+ * 여기서 함께 오르는 것은 **메운 자리가 진짜 벽 몸통**이기 때문이다.
+ */
+const PAIR_MM = 160;            // 짝으로 볼 두 선 사이 최대 간격(벽 두께)
+function pairedFill(dark, w, h, r, maxT){
+  if (r <= 0 || maxT <= 0) return dark;
+  const hor = lineMorph(lineMorph(dark, w, h, r, 'min', false), w, h, r, 'max', false);
+  const ver = lineMorph(lineMorph(dark, w, h, r, 'min', true),  w, h, r, 'max', true);
+  const out = Uint8Array.from(dark);
+  for (let x = 0; x < w; x++){                    // 가로 벽 — 세로로 훑는다
+    let last = -1;
+    for (let y = 0; y < h; y++){
+      if (!hor[y*w + x]) continue;
+      if (last >= 0 && y - last > 1 && y - last - 1 <= maxT)
+        for (let k = last + 1; k < y; k++) out[k*w + x] = 1;
+      last = y;
+    }
+  }
+  for (let y = 0; y < h; y++){                    // 세로 벽 — 가로로 훑는다
+    let last = -1;
+    for (let x = 0; x < w; x++){
+      if (!ver[y*w + x]) continue;
+      if (last >= 0 && x - last > 1 && x - last - 1 <= maxT)
+        for (let k = last + 1; k < x; k++) out[y*w + k] = 1;
+      last = x;
+    }
+  }
+  return out;
+}
+
 function keepBands(dark, w, h, r, thickR){
   bandsBailed = false;
   if (r <= 0) return dark;
@@ -1902,6 +1955,29 @@ function ensureBase(){
    */
   const lenPx = state.mmPerPx ? Math.max(2, Math.round(500 * pxPerMm / 2)) : oldPx(0.010);
   const thickPx = Math.max(2, Math.round(450 * pxPerMm / 2));
+  /*
+   * **나란한 두 선 사이를 먼저 메운다** (2026-08-18). 속이 빈 벽에서 몸통을 놓치던
+   * 원리 결함을 고치는 자리다 — 자세한 근거는 `pairedFill` 주석에 있다.
+   *
+   * **메운 뒤에는 열기를 쓰지 않는다.** 벽이 속까지 찬 덩어리가 되므로 얇은 선을 지울
+   * 이유가 없고, 오히려 깎는다. 실측(정답 20장) — 열기를 두면 재현 41.7%, 빼면 48.6%
+   * 이고 정밀도는 71.0% → 69.4% 로 1.6pt 만 준다.
+   *
+   * `usedOpen`·`outline` 은 **그대로 계산해 둔다** — 화면이 "윤곽선만 그린 도면"을
+   * 알리는 신호이고, 여기서 쓰지 않을 뿐 진단으로는 여전히 맞다.
+   */
+  /*
+   * **속이 빈 벽에만 쓴다.** 전부에 쓰면 벽이 두꺼워져 방이 좁아진다 — 우리 코퍼스에서
+   * 실제로 거실이 51.3 → 36.9㎡ 로 줄었다(기대 44~56). 분양 도면은 벽이 이미 칠해져
+   * 있어 메울 것이 없는데, 다른 나란한 선(마감선·가구 윤곽)까지 메우기 때문이다.
+   *
+   * 가르는 신호는 이미 있다 — 바로 위의 `usedOpen === 0`, 즉 **열기가 그림의 절반
+   * 넘게 지워 건너뛴 도면**이 곧 "선으로만 그린 도면"이다.
+   */
+  if (usedOpen === 0 && openR > 0){
+    const pairPx = Math.max(2, Math.round(PAIR_MM * pxPerMm));
+    m = pairedFill(mask.dark, mask.w, mask.h, lenPx, pairPx);
+  }
   m = keepBands(m, mask.w, mask.h, lenPx, thickPx);
   // 그래도 떨어져 남은 작은 조각을 지운다. 기준은 800mm — 벽은 아무리 짧아도 그보다 길다.
   const speckPx = state.mmPerPx
@@ -6931,7 +7007,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   /* 탭 처리 — 검사가 "도면을 눌렀을 때"를 사람이 누른 것과 같은 길로 재현한다 */
   modeTap, runAt,
-  boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, classifyEdges, segHitsPoly, sealedMask,
+  boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, pairedFill, PAIR_MM, classifyEdges, segHitsPoly, sealedMask,
   traceContour, simplifyRect, mergeCollinear,
   showDraftBar, hideDraftBar, nameRoomSheet, draftAreaM2, draftPieces, draftTotalM2, applyDetected,
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, exportLibrary, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,

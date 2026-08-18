@@ -139,7 +139,12 @@
  * 벽 #F3F5F8 에 가전 본체가 #FAFBFC 라 가전이 벽보다 오히려 밝았다 — 실제 도면으로
  * 세워 보니 거실의 냉장고·식기세척기·공기청정기가 안 보이고 검은 TV 만 보였다.
  */
-const CACHE_VERSION = 'axhub-v100';
+/*
+ * v101 (2026-08-18) — 벽 검출이 나란한 두 선 사이를 메운다(place-app.html).
+ * 속이 빈 벽에서 몸통을 통째로 놓치던 원리 결함을 고쳤다 — 정답 90장에서 재현율
+ * 24.4 → 45.1%, 정밀도 63.9 → 68.1%. 인식 결과가 바뀌므로 옛 캐시가 남으면 안 된다.
+ */
+const CACHE_VERSION = 'axhub-v101';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
