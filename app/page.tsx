@@ -619,7 +619,7 @@ export default function Home() {
                 <LinkListCard
                   id="coupon"
                   icon="coupon"
-                  title="쿠폰 배포프로그램"
+                  title="쿠폰 배포 프로그램"
                   subtitle="매장 쿠폰 재고·발급현황 관리"
                   links={COUPON_LINKS}
                   logKey="coupon"

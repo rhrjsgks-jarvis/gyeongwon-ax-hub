@@ -333,7 +333,7 @@ const MODULES = [
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
   // (패키지 플래너는 2026-08-03 운영 종료 — 라우트·정적앱·인덱스 항목 모두 제거했다.)
   { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge 🏬 매장운영 도구', href: '/#concierge' },
-  { title: '쿠폰 배포프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true },
+  { title: '쿠폰 배포 프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true },
 ];
 for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });
