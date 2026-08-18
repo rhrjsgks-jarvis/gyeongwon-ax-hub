@@ -124,7 +124,12 @@
  * 이미 있는데 "만들지 않는다"로 적혀 있었다). 이 검사는 파일이 바뀌었는지만 보므로
  * 함께 올린다. 기능 변화는 없다.
  */
-const CACHE_VERSION = 'axhub-v97';
+/*
+ * v98 (2026-08-18) — 벽 인식의 조각 제거 문턱을 낮췄다(place-app.html). AI Hub 정답
+ * 30장으로 재니 지우던 조각이 쓰레기가 아니라 진짜 벽 토막이었다 — 윤곽선 도면에서
+ * 지킴 52 → 64%, 정밀도는 오히려 57 → 58%. 인식 결과가 바뀌므로 옛 캐시가 남으면 안 된다.
+ */
+const CACHE_VERSION = 'axhub-v98';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
