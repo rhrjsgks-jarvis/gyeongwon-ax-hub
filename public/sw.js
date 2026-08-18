@@ -134,7 +134,12 @@
  * 예전에는 배치는 사각형 어림으로 보고 3D 는 문짝 스윕으로 봐서, 자동 배치 60대 중
  * 6대가 3D 에서 빨갛게 떴다. 배치 결과가 바뀌므로 옛 캐시가 남으면 안 된다.
  */
-const CACHE_VERSION = 'axhub-v99';
+/*
+ * v100 (2026-08-18) — 3D 에서 가전이 벽에 묻히던 것을 고쳤다(place-app.html).
+ * 벽 #F3F5F8 에 가전 본체가 #FAFBFC 라 가전이 벽보다 오히려 밝았다 — 실제 도면으로
+ * 세워 보니 거실의 냉장고·식기세척기·공기청정기가 안 보이고 검은 TV 만 보였다.
+ */
+const CACHE_VERSION = 'axhub-v100';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
