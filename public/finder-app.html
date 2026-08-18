@@ -1129,8 +1129,7 @@ function setMode(m){
   $("mKw").classList.toggle("on",m==="kw"); $("mAi").classList.toggle("on",m==="ai");
   $("kwBox").classList.toggle("hidden",m!=="kw"); $("aiBox").classList.toggle("hidden",m!=="ai");
   $("heroTitle").textContent = m==="kw" ? "키워드 한 줄이면 됩니다." : "상황을 문장으로 말해주세요.";
-  $("heroSub").textContent = m==="kw"
-    ? `기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요. ${countText()}에서 찾아드립니다.`
+  $("heroSub").textContent = m==="kw" ? kwHeroText()
     : "고객 상황을 문장으로 입력하면 품목·예산을 자동 분석해 카테고리별 3티어로 추천합니다.";
   $("parseBar").innerHTML=""; $("noticeHost").innerHTML=""; $("aiHost").innerHTML=""; $("rHost").innerHTML=""; $("sortRow").classList.add("hidden");
   lastResults=[];
@@ -1683,10 +1682,20 @@ $("q").addEventListener("keydown", e=>{ if(e.key==="Enter") runSearch(); });
 /* 제품 수를 화면에 채운다 — 상단바와 히어로 문구 둘 다. 여기서 한 번 부르지 않으면
    히어로는 `setMode()` 가 불릴 때까지(=사용자가 모드 버튼을 누를 때까지) 정적 HTML 의
    낡은 값을 그대로 보여준다. 실제로 그래서 초기 화면에 524 종이 떠 있었다. */
+/* 키워드 모드 히어로 문구 — setMode 와 syncCounts 가 같은 글을 써야 한다 */
+function kwHeroText(){
+  return `기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요. ${countText()}에서 찾아드립니다.`;
+}
 function syncCounts(){
   $("brandCount").textContent = `전 라인업 ${totalN()}종`;
-  const sub = $("heroSub2") || null;
-  if (sub) sub.textContent = countText();
+  /*
+   * **히어로 문구도 함께 고친다.** 예전에는 여기서 `heroSub2` 를 찾았는데 **그런 id 가
+   * 없어서 아무 일도 하지 않았다.** 그래서 삼성닷컴 수집분이 붙은 뒤 상단바만 2,012종이
+   * 되고 **바로 아래 문장은 붙기 전 586종을 그대로 말했다** — 같은 화면이 두 숫자를
+   * 말하는 셈이라, 2026-08-18 배포본을 눈으로 보고서야 발견했다.
+   * AI 모드 문구에는 종수가 없으므로 **키워드 모드일 때만** 다시 적는다.
+   */
+  if ($("mKw").classList.contains("on")) $("heroSub").textContent = kwHeroText();
 }
 syncCounts();
 setMode("kw");

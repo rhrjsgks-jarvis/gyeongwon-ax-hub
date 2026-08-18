@@ -114,7 +114,12 @@
  * 사양이 아니라 전자상거래 고지(제조국·A/S 책임자 전화번호·품질보증기준…)라 kw 에
  * 섞여 검색을 흐린다. 이 파일도 SWR 이라 여기를 안 올리면 이미 쓰던 기기가 옛 것을 쓴다.
  */
-const CACHE_VERSION = 'axhub-v95';
+/*
+ * v96 (2026-08-18) — 제품 상세검색 히어로 문구가 삼성닷컴 수집분이 붙기 전 숫자
+ * (586종)를 그대로 말하고 있었다. syncCounts 가 없는 id(heroSub2)를 찾던 탓이다.
+ * 상단바는 2,012종인데 바로 아래 문장이 586종이라 같은 화면이 두 숫자를 말했다.
+ */
+const CACHE_VERSION = 'axhub-v96';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
