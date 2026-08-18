@@ -5837,8 +5837,17 @@ async function openLibrary(){
     const chipBox = $('#libchips');
     if (chipBox) chipBox.innerHTML = '';
     if (lv === 'region') {
-      const sidos = [...new Set(regions().map(sidoOf))]
-        .sort((a,b)=> regions().filter((r)=>sidoOf(r)===b).length - regions().filter((r)=>sidoOf(r)===a).length);
+      /*
+       * **기본 시·도는 지역 수가 아니라 단지 수로 고른다** (2026-08-18).
+       *
+       * 예전에는 시·군 개수로 정렬해 **강원(18곳)이 경기(12곳)를 이겨** 기본이 됐다.
+       * 그런데 관할 단지는 **경기 2,969곳(78%) · 강원 860곳(22%)** 이라, 상담사가 열면
+       * 대부분의 경우 칩을 한 번 더 눌러야 자기 단지를 봤다 — 실물 리허설에서
+       * *"경기 단지를 못 찾는다"* 로 드러났다.
+       */
+      const sidoN = (sd) => regions().filter((r)=>sidoOf(r)===sd)
+        .reduce((n,r)=> n + ((aptCity[cityOf(r)] || {}).n || 1), 0);
+      const sidos = [...new Set(regions().map(sidoOf))].sort((a,b)=> sidoN(b) - sidoN(a));
       if (sido === null || !sidos.includes(sido)) sido = sidos[0] || null;
       if (chipBox && sidos.length > 1) {
         chipBox.innerHTML = sidos.map((sd)=>{
