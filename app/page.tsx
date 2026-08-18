@@ -632,7 +632,7 @@ export default function Home() {
                   links={CONCIERGE_LINKS}
                   logKey="concierge"
                   usage={CONCIERGE_USAGE}
-                  note="고건한 프로에게 연락주시면 우리 매장에도 동일하게 적용 가능합니다."
+                  note="고건한 프로에게 연락 주시면 우리 매장에도 동일하게 적용 가능합니다."
                   stores={STORE_LIST}
                 />
               </div>
