@@ -73,13 +73,13 @@ const grab = () => page.evaluate(() => {
   const sheets = [...document.querySelectorAll('.sheet')];
   const qs = [...sheets[0].querySelectorAll('.q')].map(el => ({
     q: el.querySelector('.qt').textContent.trim(),
-    cat: el.querySelector('.tag').textContent.trim(),
     opts: [...el.querySelectorAll('.opts li span:last-child')].map(x => x.textContent.trim()),
   }));
   const keys = [...sheets[1].querySelectorAll('.akey div span')].map(x => x.textContent.trim());
   const exps = [...sheets[1].querySelectorAll('.ex .a')].map(x => x.textContent.trim());
   return {
     sheets: sheets.length, codes: sheets.map(s => s.querySelector('.code').textContent.trim()),
+    tags: document.querySelectorAll('.tag').length,
     qs, keys, exps, hint: document.getElementById('hint').textContent, title: document.title,
   };
 });
@@ -89,6 +89,8 @@ const NO = ['①', '②', '③', '④'];
 say(a.sheets === 2, '시험지+정답지 두 장 (실제 ' + a.sheets + ')');
 say(a.qs.length === 20, '20문항 (실제 ' + a.qs.length + ')');
 say(a.qs.every(q => q.opts.length === 4), '모든 문항 보기 4개');
+/* 품목 이름은 답을 좁혀 주는 힌트다 — 되살아나면 여기서 걸린다 */
+say(a.tags === 0, '문항 옆에 품목 이름이 없다 (실제 ' + a.tags + '개)');
 say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
 say(a.codes[0] === a.codes[1], '시험지·정답지 코드 일치 (' + a.codes.join(' / ') + ')');
 say(a.keys.length === 20, '정답표 20칸 (실제 ' + a.keys.length + ')');

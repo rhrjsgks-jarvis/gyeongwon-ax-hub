@@ -11,6 +11,11 @@
  * 요구사항 그대로다 — 20문항을 **순수 랜덤**으로 뽑고(모든 품목이 나올 필요 없다),
  * **시험지와 정답지를 세트로** 내며, **누를 때마다 다른 시험지**가 나온다.
  *
+ * ## 문항 옆에 품목 이름을 적지 않는다
+ * 2026-08-19 사용자 요청 — 오른쪽 카테고리 칩(김치냉장고·청소기…)을 뺐다.
+ * **품목 이름이 곧 답을 좁혀 주는 힌트**라 시험지에 있으면 안 된다.
+ * 갈래(정책/제품) 비율은 조작 막대가 밝히므로 화면에서 확인할 수 있다.
+ *
  * ## 시험지 코드가 핵심이다
  * 매번 다른 문제가 나오므로 여러 장 인쇄하면 시험지와 정답지가 섞인다.
  * 그래서 네 글자 코드를 **시드로** 쓰고 두 장 머리에 같은 코드를 찍는다 —
@@ -69,9 +74,6 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 .q{margin:0 0 7px;page-break-inside:avoid;break-inside:avoid}
 .qh{display:flex;gap:6px;align-items:baseline;font-size:12.5px;font-weight:700;margin-bottom:2px;line-height:1.35}
 .qn{color:var(--navy);min-width:24px}
-.tag{font-size:9.5px;font-weight:700;border-radius:3px;padding:1px 5px;background:#eef0f8;color:var(--navy);
-     white-space:nowrap;align-self:center}
-.tag.pol{background:#fdeeea;color:#b3401f}
 .qt{font-weight:600;flex:1}
 .opts{list-style:none;margin:0;padding:0 0 0 28px}
 .opts li{font-size:11.8px;margin:0;display:flex;gap:5px;line-height:1.38}
@@ -199,8 +201,7 @@ function render(code, n, polPct){
     '점 · 100점 만점</span></div>';
   qs.forEach(function(q, k){
     h += '<div class="q"><div class="qh"><span class="qn">' + (k+1) + '.</span>' +
-         '<span class="qt">' + esc(q.q) + '</span>' +
-         '<span class="tag' + (q.type === 'policy' ? ' pol' : '') + '">' + esc(q.cat) + '</span></div><ul class="opts">';
+         '<span class="qt">' + esc(q.q) + '</span></div><ul class="opts">';
     q.opts.forEach(function(o, i){
       h += '<li><span class="no">' + NO[i] + '</span><span>' + esc(o) + '</span></li>';
     });
