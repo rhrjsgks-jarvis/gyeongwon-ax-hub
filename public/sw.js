@@ -164,7 +164,12 @@
  * `test-app.html` 의 QB 에서 갤럭시북 S 문항을 뺐다(삼성스토어 미운영 모델).
  * 둘 다 SWR 대상이라 여기를 안 올리면 이미 쓰던 기기가 옛 파일을 계속 쓴다.
  */
-const CACHE_VERSION = 'axhub-v111';
+/*
+ * v112 (2026-08-19) — 단종 모델 인덕션 NZ63DB553CFT 문항 6건을 은행에서 뺐다
+ * (test-app.html 의 QB). SWR 대상이라 여기를 안 올리면 이미 쓰던 기기가
+ * 단종 모델을 계속 출제한다.
+ */
+const CACHE_VERSION = 'axhub-v112';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
