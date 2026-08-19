@@ -113,16 +113,6 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         status: 'live',
       },
       {
-        href: '/exam-print',
-        icon: 'printer',
-        title: '시험지 인쇄',
-        desc: '문제은행에서 20문항 랜덤 추첨 · 시험지+정답지 A4 세트 출력',
-        color: '#1428A0',
-        bg: '#EEF2FF',
-        updated: '2026.08',
-        status: 'live',
-      },
-      {
         href: '/quiz',
         icon: 'target',
         title: 'URL 퀴즈 생성기',

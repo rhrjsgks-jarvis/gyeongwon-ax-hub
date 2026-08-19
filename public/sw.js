@@ -185,7 +185,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster|exam-print)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra|quiz-bank)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
+const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>시험지 인쇄 — 레벨업 챌린지</title>
+<title>시험지 출력기 — SAMSUNG STORE 레벨업 챌린지</title>
 <style>
 /*
  * **A4 인쇄 전용 화면** (2026-08-19 사용자 요청)
@@ -16,9 +16,20 @@
  * 그래서 네 글자 코드를 **시드로** 쓰고 두 장 머리에 같은 코드를 찍는다 —
  * 코드를 넣으면 **같은 시험지를 다시 뽑을 수 있다**(재인쇄·채점 대조).
  *
- * ## 문제은행은 파생 파일에서 읽는다
- * 사본을 들고 있으면 반드시 어긋나므로 quiz-bank.json(= test-app.html 의 QB 를
- * 빌드로 뽑은 것)만 읽는다.
+ * ## 이 파일은 **빌드 결과물의 틀**이다 — 직접 배포하지 않는다
+ * 사용자에게 가는 것은 `npm run build:examtool` 이 만드는 `tools/시험지출력기.html` 이고,
+ * 그 파일은 문제은행을 **안에 통째로 담고 있어 더블클릭만으로 열린다**(인터넷·서버 불필요).
+ * 여기 `__QUIZ_BANK__` 자리에 은행이 들어간다.
+ *
+ * **세일즈 코파일럿 앱에 붙이지 않는다**(2026-08-19 사용자 결정 —
+ * *"오로지 시험문제 출력용 별도로 필요합니다 … 기존 세일즈코파일럿에 업데이트하는
+ * 형식이 아닙니다"*). 한 번 `/exam-print` 라우트로 붙였다가 되돌렸다.
+ * 그래서 `fetch` 를 쓸 수 없다 — `file://` 는 CORS 로 막힌다.
+ *
+ * ## 문제은행은 사본이 아니라 파생물이다
+ * 단일 출처는 `public/test-app.html` 의 `QB` 다. 여기에 사본을 적어 두면 문항을
+ * 늘렸을 때 조용히 어긋나므로, 빌드가 매번 원본에서 새로 읽어 넣고
+ * `test-examtool` 이 "커밋된 것 == 재생성한 것"을 검사한다.
  */
 :root{ --navy:#1428A0; --ink:#111; --sub:#555; --line:#d5d8e0; --bg:#f4f5f8; }
 *{box-sizing:border-box}
@@ -89,21 +100,25 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 <body>
 
 <div class="bar noprint">
-  <h1>시험지 인쇄</h1>
+  <h1>시험지 출력기</h1>
   <label>문항 <input type="number" id="n" value="20" min="5" max="50"></label>
   <label>정책 <input type="number" id="pol" value="40" min="0" max="100">%</label>
   <label>코드 <input type="text" id="code" maxlength="4" placeholder="자동"></label>
   <button class="btn" id="gen">새 시험지</button>
   <button class="btn ghost" id="prt">인쇄</button>
   <div class="hint" id="hint">문제은행을 불러오는 중…</div>
+  <div class="hint">인쇄창에서 <b>대상</b>을 <b>“PDF로 저장”</b>으로 고르면 파일로 남습니다 — 파일 이름은 시험지 코드가 붙습니다.</div>
 </div>
+
+<noscript><div class="sheet"><div class="head"><div><div class="t">자바스크립트를 켜 주세요</div>
+<div class="s">시험지는 열 때마다 새로 뽑으므로 자바스크립트가 필요합니다. 브라우저 설정에서 켠 뒤 새로고침하세요.</div></div></div></div></noscript>
 
 <div id="paper"></div>
 
 <script>
-/* 문제은행 — quiz-bank.json 은 test-app.html 의 QB 에서 빌드로 뽑은 파생 파일이다.
-   여기서 사본을 들고 있으면 문항을 늘렸을 때 조용히 어긋난다. */
-var BANK = null;
+/* 문제은행 — 빌드가 test-app.html 의 QB 에서 읽어 여기에 넣는다(사본이 아니라 파생물).
+   **자립형 파일이라 fetch 를 쓸 수 없다** — file:// 는 CORS 로 막힌다. */
+var BANK = /*__QUIZ_BANK__*/null;
 
 /* ── 시드 난수 ──
    **왜 시드를 쓰나** — 시험지 코드로 같은 시험지를 다시 뽑을 수 있어야 한다.
@@ -214,6 +229,8 @@ function render(code, n, polPct){
            r.wantPol + '개 중 ' + r.gotPol + '개만 넣고 나머지는 제품으로 채웠습니다.';
   document.getElementById('hint').textContent = msg;
   document.getElementById('code').value = code;
+  /* 인쇄창 "PDF로 저장"의 기본 파일명이 여기서 온다 — 여러 장 뽑아도 파일이 안 섞인다 */
+  document.title = '시험지_' + code;
   try { history.replaceState(null, '', '?code=' + code + '&n=' + n + '&pol=' + polPct); } catch (e) {}
 }
 
@@ -224,16 +241,17 @@ function go(useTyped){
   render(useTyped && /^[A-Z0-9]{4}$/.test(typed) ? typed : newCode(), n, pol);
 }
 
-fetch('quiz-bank.json').then(function(r){ return r.json(); }).then(function(j){
-  BANK = j;
+if (!BANK || !BANK.items || !BANK.items.length) {
+  /* 틀 파일을 그대로 열었을 때다. 조용히 빈 화면을 보이지 않고 무엇을 해야 하는지 적는다 */
+  document.getElementById('hint').textContent =
+    '문제은행이 비어 있습니다 — 이 파일은 틀입니다. npm run build:examtool 로 만든 tools/시험지출력기.html 을 여세요.';
+} else {
   var p = new URLSearchParams(location.search);
   if (p.get('n')) document.getElementById('n').value = p.get('n');
   if (p.get('pol')) document.getElementById('pol').value = p.get('pol');
   if (p.get('code')) document.getElementById('code').value = p.get('code');
   go(true);
-}).catch(function(){
-  document.getElementById('hint').textContent = '문제은행을 불러오지 못했습니다. 새로고침 해 주세요.';
-});
+}
 
 document.getElementById('gen').addEventListener('click', function(){
   document.getElementById('code').value = '';   /* 새로 뽑을 때는 코드도 새로 */
