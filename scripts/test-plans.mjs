@@ -2576,13 +2576,19 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
  * 지목하던 `plans/c139/84B.jpg` 가 사라져 **`page.evaluate: undefined` 라는
  * 알 수 없는 오류로 스위트가 죽었다** — 무엇이 없어졌는지 화면에 한 마디도 안 나왔다.
  *
+ * **파일이 있는 것과 내용이 같은 것은 다른 말이다.** 경로는 살아 있는데 다른 그림이
+ * 들어앉는 일이 실제로 있었다 — 2026-08-19 에 철산역자이에 도면이 늘자 품목표 지면을
+ * 지목하던 `c26/T9.jpg` 가 **진짜 평면도**가 되어 "도면이 아닌데 경고가 안 붙었다"로
+ * 실패했다(같은 그림은 `c26/T11.jpg` 로 옮겨 가 있었다). 그때는
+ * `node .scratch/ref-remap.mjs` 로 **예전 파일의 md5 를 지금 위치와 대조**해 되찾는다.
+ *
  * 그래서 먼저 확인하고, 없으면 **같은 주택형을 가진 단지를 찾아 알려 준다.**
  * 검사가 죽는 것 자체는 막을 수 없지만(그 도면으로 확인하려던 것이 있으므로),
  * 적어도 "어디를 고치면 되는지"는 알려 줘야 한다.
  */
 {
   const REFS = [
-    'plans/c09/85.jpg', 'plans/c114/T2.jpg', 'plans/c133/T2.jpg', 'plans/c26/T9.jpg',
+    'plans/c09/85.jpg', 'plans/c114/T2.jpg', 'plans/c133/T2.jpg', 'plans/c26/T11.jpg',
     'plans/c123/100-2.jpg', 'plans/c39/117B.jpg', 'plans/c86/85A.jpg', 'plans/c26/T1.jpg',
     'plans/c85/23.jpg', 'plans/c72/59.jpg', 'plans/c139/84B.jpg', 'plans/c39/84B.jpg',
   ];
@@ -2623,7 +2629,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     ['입체 렌더링',   'plans/c09/85.jpg',     true],
     ['입체 렌더링',   'plans/c114/T2.jpg',    true],
     ['인테리어 사진', 'plans/c133/T2.jpg',    true],
-    ['품목표 지면',   'plans/c26/T9.jpg',     true],
+    ['품목표 지면',   'plans/c26/T11.jpg',     true],
     ['제목 띠',       'plans/c123/100-2.jpg', true],
     ['2D 평면도',     'plans/c39/117B.jpg',   false],
     ['2D 평면도',     'plans/c86/85A.jpg',    false],
