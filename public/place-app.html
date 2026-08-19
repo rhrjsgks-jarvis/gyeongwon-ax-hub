@@ -7440,6 +7440,25 @@ function buildRoom(loop){
       : wallBox(w.x1, w.y1, w.x2, w.y2, 0, WALL_H_MM, wallMat);
     if (!m) continue;
     const mx = (w.x1 + w.x2) / 2, my = (w.y1 + w.y2) / 2;
+    /*
+     * **벽은 경계선 **바깥쪽**으로 세운다 — 안쪽 면이 방 경계다** (2026-08-20).
+     *
+     * `wallBox` 는 상자를 경계선 **위에 가운데 정렬**한다. 두께가 60mm 이던 시절에는
+     * 방 안으로 30mm 만 들어와 티가 안 났는데, 실측값 200mm 로 바꾸면서 **100mm 가
+     * 방 안으로 들어왔다.** 그래서 벽에 등을 붙인 벽걸이 TV 가 그만큼 벽 속에 묻혀
+     * **어디에서도 안 보이는** 상태가 됐다(2026-08-20 사용자 보고).
+     *
+     * 이 파일의 다른 주석이 이미 *"벽은 방 경계에서 바깥쪽으로 세우므로 안쪽 면은
+     * 그대로다"* 라고 적어 두었는데 코드가 그렇지 않았다 — 코드를 주석에 맞춘다.
+     * 이웃 방과 겹치는 것은 실제로 공유 벽이라 맞는 그림이다.
+     */
+    {
+      const wx = w.x2 - w.x1, wy = w.y2 - w.y1, WL = Math.hypot(wx, wy) || 1;
+      let nx = -wy / WL, ny = wx / WL;                       // 벽에 수직
+      if ((mx - cx) * nx + (my - cy) * ny < 0){ nx = -nx; ny = -ny; }   // 방 바깥쪽으로
+      m.position.x += M(nx * wallT() / 2);
+      m.position.z += M(ny * wallT() / 2);
+    }
     const ox = mx - cx, oy = my - cy, L = Math.hypot(ox, oy) || 1;
     m.userData.mid = new THREE.Vector3(M(mx), 0, M(my));
     m.userData.out = new THREE.Vector3(ox / L, 0, oy / L);

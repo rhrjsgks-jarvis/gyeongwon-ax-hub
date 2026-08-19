@@ -1927,6 +1927,65 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
  *  ② **문 열기·이름표를 켜도 보던 각도를 잃지 않는다.** build() 가 끝에서 늘 화면을
  *    다시 맞추던 시절에는, 가전을 끄는 동안 매 프레임 카메라가 제자리로 튕겨 나갔다.
  */
+/*
+ * ── 벽은 방 경계 **바깥쪽**으로 세운다 — 벽걸이 TV 가 벽에 묻히면 안 된다 ──
+ *
+ * 2026-08-20 사용자 보고: *"TV가 벽 안쪽으로 들어가 어디에서도 보이지 않는다."*
+ * 3D 벽 상자가 경계선 **위에 가운데 정렬**돼 있어서였다. 두께가 60mm 이던 때는 방 안으로
+ * 30mm 만 들어와 티가 안 났는데, 실측값 200mm 로 바꾸면서 **100mm 가 방 안으로** 들어왔다.
+ * 벽걸이 TV 는 등을 벽에 붙이므로(이격 15mm) 그대로 벽 속에 잠겼다.
+ *
+ * 그래서 **벽 안쪽 면이 방 경계와 같은 자리인지**를 숫자로 잰다. 두께를 다시 만지거나
+ * 벽 세우는 자리를 바꾸면 여기가 먼저 깨진다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const H = 4000, WD = 5000;
+    const pts = [[0, 0], [WD, 0], [WD, H], [0, H]];
+    const walls = pts.map((a, i) => { const b = pts[(i + 1) % pts.length]; return { x1: a[0], y1: a[1], x2: b[0], y2: b[1], open: false }; });
+    P.state.rooms = []; P.state.items = []; P.state.walls = walls;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('거실', walls);
+
+    /* 앱이 고르는 그대로 — TV 는 벽걸이 부품이 주 부품이다 */
+    const rep = (P.state.reps || []).find((x) => x.cat === 'TV' && !x.hidden && x.options && x.options.length);
+    if (!rep) return { err: 'TV 대표 치수가 없다' };
+    const o = rep.options[0];
+    const made = P.stageOutside([{ cat: 'TV', size: rep.size, model: o.model, group: o.group, part: P.mainPart('TV', o) || o.parts[0] }]);
+    const it = made && made[0];
+    if (!it) return { err: 'TV 가 안 올라감' };
+    it.bx = WD / 2; it.by = H - 300; it.staged = false; it.room = P.state.rooms[0].id;
+    const snapped = P.snapWallMounted(it);
+
+    window.Place3D.open();
+    window.Place3D.render();
+    /* 아래 벽(z ≈ H) 상자를 찾아 안쪽 면을 잰다 */
+    let inner = null, thick = null;
+    window.Place3D.root.traverse((m) => {
+      if (!m.isMesh || !m.geometry || !m.geometry.parameters) return;
+      const g = m.geometry.parameters;
+      if (!g.depth || !g.width || !(g.height > 1)) return;
+      const zc = m.position.z * 1000;
+      if (Math.abs(zc - H) > 400) return;
+      inner = zc - (g.depth * 1000) / 2; thick = g.depth * 1000;
+    });
+    window.Place3D.close();
+    return { snapped, mount: P.mountKind(it), back: it.by, depth: it.d, inner, thick, bound: H };
+  });
+  if (r.err) fail(`벽 바깥쪽 세우기: ${r.err}`);
+  else if (!r.snapped || r.mount !== '벽') fail(`벽 바깥쪽 세우기: TV 가 벽걸이로 안 잡혔다 (설치 ${r.mount})`);
+  else if (r.inner == null) fail('벽 바깥쪽 세우기: 3D 에서 벽 상자를 못 찾았다');
+  else if (Math.abs(r.inner - r.bound) > 1) {
+    fail(`벽이 방 안쪽으로 ${(r.bound - r.inner).toFixed(0)}mm 들어왔다 — 벽 안쪽 면 ${r.inner.toFixed(0)} ≠ 방 경계 ${r.bound} (두께 ${r.thick.toFixed(0)}mm)`);
+  } else if (r.back > r.inner + 1) {
+    fail(`벽걸이 TV 가 벽 속에 있다 — 등 ${r.back.toFixed(0)} > 벽 안쪽 면 ${r.inner.toFixed(0)}`);
+  } else {
+    pass(`벽은 경계 바깥으로 — 두께 ${r.thick.toFixed(0)}mm · 안쪽 면 ${r.inner.toFixed(0)} = 방 경계 ${r.bound} · 벽걸이 TV 등 ${r.back.toFixed(0)}(깊이 ${r.depth}mm)`);
+  }
+}
+
 {
   const r = await page.evaluate(() => {
     const P = window.__place;
