@@ -169,7 +169,12 @@
  * (test-app.html 의 QB). SWR 대상이라 여기를 안 올리면 이미 쓰던 기기가
  * 단종 모델을 계속 출제한다.
  */
-const CACHE_VERSION = 'axhub-v112';
+/*
+ * v113 (2026-08-19) — 제품 상세검색이 NZ63DB503CFT 를 "스마트 컨트롤 미지원"으로
+ * 보여주고 있었다(사장님 확인: 지원). 상담사가 고객에게 그대로 읽던 값이라
+ * 옛 캐시가 남으면 안 된다. finder-app.html 은 SWR 대상이다.
+ */
+const CACHE_VERSION = 'axhub-v113';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
