@@ -146,6 +146,41 @@ const again = await grab();
 say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
   '같은 코드(' + code + ') → 같은 시험지 재현');
 
+/*
+ * **쪽수를 못 박는다** — 2026-08-19 사용자: *"A4 로 출력하면 너무 작게 나옵니다.
+ * 답안지는 1장으로 나와도 되는데 시험지는 2~3장으로 나눠서 문제를 조금 더 크게".*
+ * 조판을 조이는 것이 늘 미덕이 아니다 — 이 도구의 결과물은 **시험장에서 사람이 읽는
+ * 종이**다. 글자를 줄여 쪽수를 아끼면 여기서 걸린다.
+ *
+ * 어림(높이 ÷ A4)으로 재지 말 것 — `.q` 의 page-break-inside:avoid 가 쪽 끝에서
+ * 문항을 통째로 다음 장으로 밀어 빈 자리가 생긴다(어림 3장, 실제 4장이었다).
+ */
+{
+  const count = (buf) => (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+  const only = async (keep) => {
+    await page.evaluate((k) => document.querySelectorAll('.sheet').forEach((s, i) => { s.style.display = i === k ? '' : 'none'; }), keep);
+    const n = count(await page.pdf({ format: 'A4', printBackground: true }));
+    await page.evaluate(() => document.querySelectorAll('.sheet').forEach((s) => { s.style.display = ''; }));
+    return n;
+  };
+  const exam = await only(0), ans = await only(1);
+  say(exam >= 2 && exam <= 3, '시험지가 A4 2~3장 (실제 ' + exam + '장)');
+  say(ans === 1, '정답지는 A4 1장 (실제 ' + ans + '장)');
+
+  /*
+   * **쪽수만으로는 못 지킨다 — 글꼴 하한을 함께 본다.**
+   * 옛 조판(문항 12.5px)으로 되돌려 보니 시험지가 2장이라 "2~3장" 범위를 그대로
+   * 통과했다. 쪽수는 결과이고 요구사항은 "글자를 크게" 였다. 하한으로 잡는다
+   * (test-real 이 품질 지표를 하한으로 지키는 것과 같은 모양).
+   */
+  const font = await page.evaluate(() => ({
+    q: parseFloat(getComputedStyle(document.querySelector('.qh')).fontSize),
+    o: parseFloat(getComputedStyle(document.querySelector('.opts li')).fontSize),
+  }));
+  say(font.q >= 16, '문항 글꼴 16px 이상 (실제 ' + font.q + 'px)');
+  say(font.o >= 14, '보기 글꼴 14px 이상 (실제 ' + font.o + 'px)');
+}
+
 /* A4 로 인쇄되는가 */
 const pdf = path.join(dir, 'sample.pdf');
 await page.pdf({ path: pdf, format: 'A4', printBackground: true });

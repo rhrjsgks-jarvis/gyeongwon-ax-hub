@@ -63,20 +63,23 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
        box-shadow:0 2px 12px rgba(0,0,0,.12)}
 .head{border-bottom:2.5px solid var(--navy);padding-bottom:7px;margin-bottom:10px;
       display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.head .t{font-size:19px;font-weight:800;letter-spacing:-.03em;color:var(--navy)}
+.head .t{font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--navy)}
 .head .s{font-size:11.5px;color:var(--sub);margin-top:3px}
 .head .code{font-size:12px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--navy);
             color:var(--navy);border-radius:5px;padding:4px 9px;white-space:nowrap}
-.meta{display:flex;gap:16px;font-size:11.5px;color:var(--sub);margin-bottom:10px;flex-wrap:wrap}
+.meta{display:flex;gap:18px;font-size:13px;color:var(--sub);margin-bottom:14px;flex-wrap:wrap}
 .meta b{color:var(--ink);font-weight:600}
 .fill{display:inline-block;border-bottom:1px solid #999;min-width:76px}
 
-.q{margin:0 0 7px;page-break-inside:avoid;break-inside:avoid}
-.qh{display:flex;gap:6px;align-items:baseline;font-size:12.5px;font-weight:700;margin-bottom:2px;line-height:1.35}
-.qn{color:var(--navy);min-width:24px}
+/* **글자 크기는 상담사가 시험장에서 읽는 크기다** — 2026-08-19 사용자 요청으로 키웠다
+   ("A4 로 출력하면 너무 작게 나옵니다"). 시험지 2장 → 3장이 되는 대신 읽힌다.
+   줄이려거든 쪽수부터 재 볼 것(.scratch/exam-pages.mjs). */
+.q{margin:0 0 13px;page-break-inside:avoid;break-inside:avoid}
+.qh{display:flex;gap:7px;align-items:baseline;font-size:18px;font-weight:700;margin-bottom:5px;line-height:1.4}
+.qn{color:var(--navy);min-width:30px}
 .qt{font-weight:600;flex:1}
-.opts{list-style:none;margin:0;padding:0 0 0 28px}
-.opts li{font-size:11.8px;margin:0;display:flex;gap:5px;line-height:1.38}
+.opts{list-style:none;margin:0;padding:0 0 0 37px}
+.opts li{font-size:16px;margin:0 0 2px;display:flex;gap:7px;line-height:1.45}
 .opts .no{color:var(--sub);flex-shrink:0}
 
 /* 정답지 */
@@ -84,7 +87,10 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 .akey div{border:1px solid var(--line);border-radius:4px;padding:4px 2px;text-align:center}
 .akey b{display:block;font-size:10.5px;color:var(--sub);font-weight:600}
 .akey span{font-size:14px;font-weight:800;color:var(--navy)}
-.ex{font-size:11px;margin:0 0 5px;padding-bottom:4px;line-height:1.42;border-bottom:1px dotted var(--line);
+/* 정답지는 채점용이라 한 장에 다 보이는 쪽이 낫다(사용자 요청). 2단으로 세운다 —
+   글자를 더 줄이는 것보다 단을 나누는 편이 읽힌다. */
+.exwrap{columns:2;column-gap:7mm}
+.ex{font-size:10px;margin:0 0 4px;padding-bottom:3px;line-height:1.38;border-bottom:1px dotted var(--line);
     page-break-inside:avoid;break-inside:avoid}
 .ex b{color:var(--navy)}
 .ex .a{color:#166534;font-weight:700}
@@ -214,12 +220,13 @@ function render(code, n, polPct){
        '<div class="akey">';
   qs.forEach(function(q, k){ h += '<div><b>' + (k+1) + '번</b><span>' + NO[q.ans] + '</span></div>'; });
   h += '</div>';
+  h += '<div class="exwrap">';
   qs.forEach(function(q, k){
     h += '<div class="ex"><b>' + (k+1) + '.</b> ' + esc(q.q) +
          '<br><span class="a">정답 ' + NO[q.ans] + ' ' + esc(q.opts[q.ans]) + '</span>' +
          (q.exp ? '<br>' + esc(q.exp) : '') + '</div>';
   });
-  h += '</div>';
+  h += '</div></div>';
 
   document.getElementById('paper').innerHTML = h;
 
