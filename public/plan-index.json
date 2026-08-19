@@ -2,8 +2,8 @@
  "version": 3,
  "note": "단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. 수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.",
  "generatedAt": "2026-08-19",
- "complexCount": 152,
- "planCount": 727,
+ "complexCount": 153,
+ "planCount": 815,
  "scaledCount": 12,
  "complexes": [
   {
@@ -127,6 +127,76 @@
      "rooms": 6,
      "kb": 63,
      "axis": 0.741
+    },
+    {
+     "type": "117A",
+     "file": "plans/c03/117A.jpg",
+     "w": 1200,
+     "h": 1179,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 103,
+     "axis": 0.685
+    },
+    {
+     "type": "117B",
+     "file": "plans/c03/117B.jpg",
+     "w": 1086,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 79,
+     "axis": 0.688
+    },
+    {
+     "type": "125A",
+     "file": "plans/c03/125A.jpg",
+     "w": 1200,
+     "h": 1179,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 103,
+     "axis": 0.684
+    },
+    {
+     "type": "84B",
+     "file": "plans/c03/84B.jpg",
+     "w": 1200,
+     "h": 1179,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 95,
+     "axis": 0.67
+    },
+    {
+     "type": "84C",
+     "file": "plans/c03/84C.jpg",
+     "w": 1200,
+     "h": 1179,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 89,
+     "axis": 0.677
+    },
+    {
+     "type": "84D",
+     "file": "plans/c03/84D.jpg",
+     "w": 1200,
+     "h": 1179,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 97,
+     "axis": 0.682
+    },
+    {
+     "type": "84E",
+     "file": "plans/c03/84E.jpg",
+     "w": 1200,
+     "h": 1179,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 101,
+     "axis": 0.668
     }
    ]
   },
@@ -585,14 +655,34 @@
     {
      "type": "T1",
      "file": "plans/c10/T1.jpg",
+     "w": 415,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 61,
+     "axis": 0.508,
+     "mmPerPx": 24.4,
+     "scaleConf": "실측"
+    },
+    {
+     "type": "T2",
+     "file": "plans/c10/T2.jpg",
      "w": 580,
      "h": 453,
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 44,
-     "axis": 0.722,
-     "mmPerPx": 24.4,
-     "scaleConf": "실측"
+     "axis": 0.722
+    },
+    {
+     "type": "T3",
+     "file": "plans/c10/T3.jpg",
+     "w": 383,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 56,
+     "axis": 0.492
     }
    ]
   },
@@ -613,6 +703,56 @@
      "axis": 0.712,
      "mmPerPx": 24.152,
      "scaleConf": "보통"
+    },
+    {
+     "type": "T2",
+     "file": "plans/c11/T2.jpg",
+     "w": 372,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 63,
+     "axis": 0.464
+    },
+    {
+     "type": "T3",
+     "file": "plans/c11/T3.jpg",
+     "w": 372,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 64,
+     "axis": 0.489
+    },
+    {
+     "type": "T4",
+     "file": "plans/c11/T4.jpg",
+     "w": 372,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 62,
+     "axis": 0.49
+    },
+    {
+     "type": "T5",
+     "file": "plans/c11/T5.jpg",
+     "w": 372,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 64,
+     "axis": 0.469
+    },
+    {
+     "type": "T6",
+     "file": "plans/c11/T6.jpg",
+     "w": 372,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 64,
+     "axis": 0.513
     }
    ]
   },
@@ -625,12 +765,32 @@
     {
      "type": "T1",
      "file": "plans/c12/T1.jpg",
+     "w": 1200,
+     "h": 610,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 57,
+     "axis": 0.704
+    },
+    {
+     "type": "T2",
+     "file": "plans/c12/T2.jpg",
      "w": 614,
      "h": 414,
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 52,
      "axis": 0.715
+    },
+    {
+     "type": "T3",
+     "file": "plans/c12/T3.jpg",
+     "w": 410,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 3,
+     "kb": 82,
+     "axis": 0.443
     }
    ]
   },
@@ -1719,6 +1879,36 @@
      "rooms": 8,
      "kb": 97,
      "axis": 0.697
+    },
+    {
+     "type": "T2",
+     "file": "plans/c31/T2.jpg",
+     "w": 748,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 98,
+     "axis": 0.627
+    },
+    {
+     "type": "T3",
+     "file": "plans/c31/T3.jpg",
+     "w": 762,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 99,
+     "axis": 0.627
+    },
+    {
+     "type": "T4",
+     "file": "plans/c31/T4.jpg",
+     "w": 762,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 97,
+     "axis": 0.629
     }
    ]
   },
@@ -2441,6 +2631,46 @@
     {
      "type": "T1",
      "file": "plans/c152/T1.jpg",
+     "w": 915,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 130,
+     "axis": 0.534
+    },
+    {
+     "type": "T2",
+     "file": "plans/c152/T2.jpg",
+     "w": 932,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 108,
+     "axis": 0.539
+    },
+    {
+     "type": "T3",
+     "file": "plans/c152/T3.jpg",
+     "w": 938,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 113,
+     "axis": 0.566
+    },
+    {
+     "type": "T4",
+     "file": "plans/c152/T4.jpg",
+     "w": 936,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 117,
+     "axis": 0.55
+    },
+    {
+     "type": "T5",
+     "file": "plans/c152/T5.jpg",
      "w": 836,
      "h": 181,
      "exclusiveM2": null,
@@ -3127,6 +3357,36 @@
      "rooms": 4,
      "kb": 105,
      "axis": 0.742
+    },
+    {
+     "type": "84B",
+     "file": "plans/c50/84B.jpg",
+     "w": 197,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 38,
+     "axis": 0.644
+    },
+    {
+     "type": "84C",
+     "file": "plans/c50/84C.jpg",
+     "w": 197,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 37,
+     "axis": 0.641
+    },
+    {
+     "type": "84D",
+     "file": "plans/c50/84D.jpg",
+     "w": 197,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 38,
+     "axis": 0.61
     }
    ]
   },
@@ -3489,6 +3749,76 @@
      "rooms": 10,
      "kb": 49,
      "axis": 0.67
+    },
+    {
+     "type": "16",
+     "file": "plans/c57/16.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 91,
+     "axis": 0.609
+    },
+    {
+     "type": "18",
+     "file": "plans/c57/18.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 89,
+     "axis": 0.622
+    },
+    {
+     "type": "20",
+     "file": "plans/c57/20.jpg",
+     "w": 296,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 65,
+     "axis": 0.567
+    },
+    {
+     "type": "T11",
+     "file": "plans/c57/T11.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 86,
+     "axis": 0.648
+    },
+    {
+     "type": "T12",
+     "file": "plans/c57/T12.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 88,
+     "axis": 0.645
+    },
+    {
+     "type": "T13",
+     "file": "plans/c57/T13.jpg",
+     "w": 430,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 89,
+     "axis": 0.619
+    },
+    {
+     "type": "T14",
+     "file": "plans/c57/T14.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 87,
+     "axis": 0.636
     }
    ]
   },
@@ -4073,6 +4403,126 @@
      "rooms": 9,
      "kb": 50,
      "axis": 0.682
+    },
+    {
+     "type": "T10",
+     "file": "plans/c66/T10.jpg",
+     "w": 424,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 64,
+     "axis": 0.477
+    },
+    {
+     "type": "T11",
+     "file": "plans/c66/T11.jpg",
+     "w": 431,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 64,
+     "axis": 0.466
+    },
+    {
+     "type": "T12",
+     "file": "plans/c66/T12.jpg",
+     "w": 423,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 66,
+     "axis": 0.477
+    },
+    {
+     "type": "T13",
+     "file": "plans/c66/T13.jpg",
+     "w": 431,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 68,
+     "axis": 0.49
+    },
+    {
+     "type": "T2",
+     "file": "plans/c66/T2.jpg",
+     "w": 436,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 65,
+     "axis": 0.472
+    },
+    {
+     "type": "T3",
+     "file": "plans/c66/T3.jpg",
+     "w": 416,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 61,
+     "axis": 0.471
+    },
+    {
+     "type": "T4",
+     "file": "plans/c66/T4.jpg",
+     "w": 418,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 64,
+     "axis": 0.449
+    },
+    {
+     "type": "T5",
+     "file": "plans/c66/T5.jpg",
+     "w": 420,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 67,
+     "axis": 0.472
+    },
+    {
+     "type": "T6",
+     "file": "plans/c66/T6.jpg",
+     "w": 425,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 65,
+     "axis": 0.464
+    },
+    {
+     "type": "T7",
+     "file": "plans/c66/T7.jpg",
+     "w": 123,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 34,
+     "axis": 0.447
+    },
+    {
+     "type": "T8",
+     "file": "plans/c66/T8.jpg",
+     "w": 114,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 35,
+     "axis": 0.434
+    },
+    {
+     "type": "T9",
+     "file": "plans/c66/T9.jpg",
+     "w": 420,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 64,
+     "axis": 0.477
     }
    ]
   },
@@ -4157,12 +4607,72 @@
     {
      "type": "T1",
      "file": "plans/c69/T1.jpg",
+     "w": 415,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 57,
+     "axis": 0.542
+    },
+    {
+     "type": "T2",
+     "file": "plans/c69/T2.jpg",
+     "w": 415,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 55,
+     "axis": 0.532
+    },
+    {
+     "type": "T3",
+     "file": "plans/c69/T3.jpg",
      "w": 558,
      "h": 449,
      "exclusiveM2": null,
      "rooms": 7,
      "kb": 42,
      "axis": 0.71
+    },
+    {
+     "type": "T4",
+     "file": "plans/c69/T4.jpg",
+     "w": 457,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 62,
+     "axis": 0.525
+    },
+    {
+     "type": "T5",
+     "file": "plans/c69/T5.jpg",
+     "w": 109,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 33,
+     "axis": 0.406
+    },
+    {
+     "type": "T6",
+     "file": "plans/c69/T6.jpg",
+     "w": 463,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 60,
+     "axis": 0.523
+    },
+    {
+     "type": "T7",
+     "file": "plans/c69/T7.jpg",
+     "w": 455,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 58,
+     "axis": 0.529
     }
    ]
   },
@@ -4275,6 +4785,26 @@
      "rooms": 8,
      "kb": 32,
      "axis": 0.386
+    },
+    {
+     "type": "T2",
+     "file": "plans/c73/T2.jpg",
+     "w": 827,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 77,
+     "axis": 0.723
+    },
+    {
+     "type": "T3",
+     "file": "plans/c73/T3.jpg",
+     "w": 738,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 72,
+     "axis": 0.722
     }
    ]
   },
@@ -4457,6 +4987,16 @@
    "addr": "경기도 용인시 처인구 포곡읍 금어리 646번지 일원",
    "plans": [
     {
+     "type": "101",
+     "file": "plans/c77/101.jpg",
+     "w": 1055,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 125,
+     "axis": 0.636
+    },
+    {
      "type": "68A",
      "file": "plans/c77/68A.jpg",
      "w": 727,
@@ -4465,6 +5005,36 @@
      "rooms": 8,
      "kb": 64,
      "axis": 0.664
+    },
+    {
+     "type": "68B",
+     "file": "plans/c77/68B.jpg",
+     "w": 1055,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 128,
+     "axis": 0.632
+    },
+    {
+     "type": "84A",
+     "file": "plans/c77/84A.jpg",
+     "w": 1055,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 129,
+     "axis": 0.624
+    },
+    {
+     "type": "84B",
+     "file": "plans/c77/84B.jpg",
+     "w": 1055,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 114,
+     "axis": 0.605
     }
    ]
   },
@@ -5569,6 +6139,36 @@
      "rooms": 9,
      "kb": 118,
      "axis": 0.573
+    },
+    {
+     "type": "84B",
+     "file": "plans/c91/84B.jpg",
+     "w": 935,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 94,
+     "axis": 0.604
+    },
+    {
+     "type": "84C",
+     "file": "plans/c91/84C.jpg",
+     "w": 935,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 103,
+     "axis": 0.611
+    },
+    {
+     "type": "84D",
+     "file": "plans/c91/84D.jpg",
+     "w": 935,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 95,
+     "axis": 0.61
     }
    ]
   },
@@ -5587,6 +6187,46 @@
      "rooms": 6,
      "kb": 107,
      "axis": 0.327
+    },
+    {
+     "type": "59B",
+     "file": "plans/c92/59B.jpg",
+     "w": 820,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 93,
+     "axis": 0.365
+    },
+    {
+     "type": "84A",
+     "file": "plans/c92/84A.jpg",
+     "w": 820,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 103,
+     "axis": 0.357
+    },
+    {
+     "type": "84B",
+     "file": "plans/c92/84B.jpg",
+     "w": 820,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 10,
+     "kb": 104,
+     "axis": 0.361
+    },
+    {
+     "type": "84C",
+     "file": "plans/c92/84C.jpg",
+     "w": 820,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 10,
+     "kb": 103,
+     "axis": 0.372
     }
    ]
   },
@@ -6049,6 +6689,34 @@
      "rooms": 8,
      "kb": 14,
      "axis": 0.315
+    }
+   ]
+  },
+  {
+   "id": "c169",
+   "region": "경기 평택",
+   "complex": "고덕국제신도시 서한이다음 그레이튼",
+   "addr": "경기도 평택시 고덕동 2394-2",
+   "plans": [
+    {
+     "type": "84A",
+     "file": "plans/c169/84A.jpg",
+     "w": 1200,
+     "h": 972,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 142,
+     "axis": 0.545
+    },
+    {
+     "type": "84A-2",
+     "file": "plans/c169/84A-2.jpg",
+     "w": 843,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 129,
+     "axis": 0.528
     }
    ]
   },
@@ -6839,6 +7507,36 @@
     {
      "type": "T1",
      "file": "plans/c112/T1.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 56,
+     "axis": 0.466
+    },
+    {
+     "type": "T10",
+     "file": "plans/c112/T10.jpg",
+     "w": 120,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 32,
+     "axis": 0.435
+    },
+    {
+     "type": "T11",
+     "file": "plans/c112/T11.jpg",
+     "w": 122,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 37,
+     "axis": 0.441
+    },
+    {
+     "type": "T12",
+     "file": "plans/c112/T12.jpg",
      "w": 435,
      "h": 273,
      "exclusiveM2": null,
@@ -6847,8 +7545,8 @@
      "axis": 0.767
     },
     {
-     "type": "T2",
-     "file": "plans/c112/T2.jpg",
+     "type": "T13",
+     "file": "plans/c112/T13.jpg",
      "w": 412,
      "h": 328,
      "exclusiveM2": null,
@@ -6857,8 +7555,8 @@
      "axis": 0.74
     },
     {
-     "type": "T3",
-     "file": "plans/c112/T3.jpg",
+     "type": "T14",
+     "file": "plans/c112/T14.jpg",
      "w": 385,
      "h": 324,
      "exclusiveM2": null,
@@ -6867,8 +7565,8 @@
      "axis": 0.746
     },
     {
-     "type": "T4",
-     "file": "plans/c112/T4.jpg",
+     "type": "T15",
+     "file": "plans/c112/T15.jpg",
      "w": 393,
      "h": 282,
      "exclusiveM2": null,
@@ -6877,8 +7575,8 @@
      "axis": 0.772
     },
     {
-     "type": "T5",
-     "file": "plans/c112/T5.jpg",
+     "type": "T16",
+     "file": "plans/c112/T16.jpg",
      "w": 402,
      "h": 300,
      "exclusiveM2": null,
@@ -6887,14 +7585,94 @@
      "axis": 0.748
     },
     {
-     "type": "T6",
-     "file": "plans/c112/T6.jpg",
+     "type": "T17",
+     "file": "plans/c112/T17.jpg",
      "w": 400,
      "h": 286,
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 22,
      "axis": 0.751
+    },
+    {
+     "type": "T2",
+     "file": "plans/c112/T2.jpg",
+     "w": 416,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 55,
+     "axis": 0.476
+    },
+    {
+     "type": "T3",
+     "file": "plans/c112/T3.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 56,
+     "axis": 0.477
+    },
+    {
+     "type": "T4",
+     "file": "plans/c112/T4.jpg",
+     "w": 420,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 55,
+     "axis": 0.481
+    },
+    {
+     "type": "T5",
+     "file": "plans/c112/T5.jpg",
+     "w": 430,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 58,
+     "axis": 0.478
+    },
+    {
+     "type": "T6",
+     "file": "plans/c112/T6.jpg",
+     "w": 428,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 58,
+     "axis": 0.471
+    },
+    {
+     "type": "T7",
+     "file": "plans/c112/T7.jpg",
+     "w": 420,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 60,
+     "axis": 0.467
+    },
+    {
+     "type": "T8",
+     "file": "plans/c112/T8.jpg",
+     "w": 425,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 61,
+     "axis": 0.479
+    },
+    {
+     "type": "T9",
+     "file": "plans/c112/T9.jpg",
+     "w": 120,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 35,
+     "axis": 0.458
     }
    ]
   },
@@ -7183,6 +7961,66 @@
      "rooms": 9,
      "kb": 48,
      "axis": 0.771
+    },
+    {
+     "type": "T2",
+     "file": "plans/c118/T2.jpg",
+     "w": 1100,
+     "h": 1136,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 117,
+     "axis": 0.798
+    },
+    {
+     "type": "T3",
+     "file": "plans/c118/T3.jpg",
+     "w": 1014,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 101,
+     "axis": 0.771
+    },
+    {
+     "type": "T4",
+     "file": "plans/c118/T4.jpg",
+     "w": 1100,
+     "h": 1032,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 100,
+     "axis": 0.788
+    },
+    {
+     "type": "T5",
+     "file": "plans/c118/T5.jpg",
+     "w": 1100,
+     "h": 1150,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 138,
+     "axis": 0.759
+    },
+    {
+     "type": "T6",
+     "file": "plans/c118/T6.jpg",
+     "w": 448,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 3,
+     "kb": 93,
+     "axis": 0.45
+    },
+    {
+     "type": "T7",
+     "file": "plans/c118/T7.jpg",
+     "w": 448,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 3,
+     "kb": 99,
+     "axis": 0.447
     }
    ]
   },
@@ -8181,6 +9019,16 @@
      "rooms": 9,
      "kb": 36,
      "axis": 0.429
+    },
+    {
+     "type": "T3",
+     "file": "plans/c133/T3.jpg",
+     "w": 438,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 63,
+     "axis": 0.528
     }
    ]
   },
@@ -8307,6 +9155,46 @@
      "rooms": 5,
      "kb": 62,
      "axis": 0.515
+    },
+    {
+     "type": "84A",
+     "file": "plans/c135/84A.jpg",
+     "w": 789,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 117,
+     "axis": 0.362
+    },
+    {
+     "type": "84A-2",
+     "file": "plans/c135/84A-2.jpg",
+     "w": 450,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 66,
+     "axis": 0.523
+    },
+    {
+     "type": "84B",
+     "file": "plans/c135/84B.jpg",
+     "w": 789,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 118,
+     "axis": 0.374
+    },
+    {
+     "type": "84C",
+     "file": "plans/c135/84C.jpg",
+     "w": 789,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 120,
+     "axis": 0.369
     }
    ]
   },
