@@ -119,6 +119,23 @@ for (let i = 0; i < 4; i++) {
 }
 say(seen.size === 5, '5번 뽑아 5번 다 다른 시험지 (실제 ' + seen.size + '종)');
 
+/*
+ * **인쇄는 시험지를 바꾸지 않는다 — 일부러 그렇다**(2026-08-19 사용자 확인).
+ * 바꾸는 것은 `새 시험지` 버튼뿐이다. 인쇄가 그 자리에서 새로 뽑으면
+ * ①화면에서 검토한 것과 다른 것이 프린터로 나가고 ②코드를 넣어 같은 시험지를
+ * 다시 뽑는 재인쇄·채점 대조가 무너진다. "안 바뀌네" 하고 고치지 말 것.
+ */
+{
+  const before = await grab();
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.click('#prt');
+  await page.waitForTimeout(150);
+  const after = await grab();
+  say(after.qs.map(q => q.q).join('|') === before.qs.map(q => q.q).join('|') &&
+      after.codes[0] === before.codes[0],
+    '인쇄를 눌러도 시험지가 그대로 (' + before.codes[0] + ') — 바꾸는 것은 새 시험지 버튼뿐');
+}
+
 /* 같은 코드면 같은 시험지여야 한다(재인쇄·채점 대조) */
 const cur = await grab();
 const code = cur.codes[0].replace('시험지 ', '');
