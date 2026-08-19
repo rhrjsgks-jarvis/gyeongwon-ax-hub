@@ -5863,16 +5863,26 @@ async function openLibrary(){
       }
       items = regions().filter((r)=> !sido || sidoOf(r) === sido).map((r) => {
         const cs = idx.filter((c) => c.region === r);
-        const n = cs.reduce((s, c) => s + c.plans.length, 0)
-          + savedOnly.filter((e) => (e.region || '지역 미지정') === r).length;
+        /*
+         * **도면과 벽선을 한 숫자에 뭉치지 않는다.** 예전에는 둘을 더해 놓고 라벨은
+         * `도면 N장` 이라 적어서, 도면이 한 장도 없는 하남이 **"도면 6장"** 으로 떴다
+         * (2026-08-19 프로덕션에서 확인 — LH 벽선 6건이 그 숫자였다). 들어가 보면
+         * 도면이 없으니 화면이 거짓말을 한 셈이다. 단지 단계는 이미 갈라 적고 있었다.
+         */
+        const planN = cs.reduce((s, c) => s + c.plans.length, 0);
+        const savedN = savedOnly.filter((e) => (e.region || '지역 미지정') === r).length;
         // 칩에서 시·도를 이미 골랐으니 목록에는 시·군만 적는다 — 줄이 짧아야 눈에 잘 들어온다
         const shortName = cityOf(r);
         const withPlan = cs.length + uniq(savedOnly.filter((e) => (e.region || '지역 미지정') === r).map((e) => e.complex)).length;
         /* 그 시의 전체 아파트 수 — 도면이 없어도 목록에는 있다. 목차만 미리 받아 둔다.
            상담사가 "그 시에 몇 단지가 있나"를 먼저 알아야 없다고 단정하지 않는다. */
         const allN = ((aptCity[shortName.replace(/[시군]$/, '')] || {}).n || 0);
+        const bits = [];
+        if (planN) bits.push(`도면 ${planN}장`);
+        if (savedN) bits.push(`저장된 방 ${savedN}종`);
+        if (!bits.length) bits.push('도면 0장');
         return `<button class="libitem" data-v="${esc(r)}"><b>${esc(shortName)}</b>
-          <span class="hint">${allN ? `단지 ${allN.toLocaleString()}곳 · ` : `단지 ${withPlan}곳 · `}도면 ${n}장</span></button>`;
+          <span class="hint">${allN ? `단지 ${allN.toLocaleString()}곳 · ` : `단지 ${withPlan}곳 · `}${bits.join(' · ')}</span></button>`;
       });
     } else if (lv === 'complex') {
       items = inRegion().map((c) => `<button class="libitem" data-id="${esc(c.id)}"><b>${esc(c.complex)}</b>
