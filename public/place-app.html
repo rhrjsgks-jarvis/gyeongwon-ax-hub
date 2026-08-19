@@ -4254,7 +4254,8 @@ function buildShareCanvas(){
      문을 연 상태라면 그 사실이 그림의 뜻을 바꾼다. */
   const doorsOn = on3d && window.Place3D.doorsOpen;
   g.fillText([
-    area ? `전용 ${area.toFixed(1)}㎡` : null,
+    area && planAreaKnown() ? `전용 ${area.toFixed(1)}㎡`
+      : (state.rooms.length ? `공간 ${state.rooms.length}곳 · 넓이 합계는 겹칠 수 있어 적지 않습니다` : null),
     state.rooms.length ? `공간 ${state.rooms.length}곳` : null,
     `가전 ${items.length}대`,
     on3d ? `3D · 층고 ${window.Place3D.WALL_H_MM.toLocaleString()}mm(가정)` : null,
@@ -4334,7 +4335,9 @@ function renderMini(){
   const bits = [];
   if (who) bits.push(`<b>${esc(state.complexName ? state.complexName + ' ' + (state.typeName||'') : who)}</b>`);
   bits.push(state.scaled ? '축척 확정' : '<span class="warn">축척 미확정</span>');
-  if (state.rooms.length) bits.push(`공간 ${state.rooms.length}곳${area ? ` · ${area.toFixed(0)}㎡` : ''}`);
+  if (state.rooms.length) bits.push(`공간 ${state.rooms.length}곳${planAreaKnown() && area ? ` · 전용 ${area.toFixed(0)}㎡` : ''}`);
+  /* 숫자를 안 적는 이유를 화면이 밝힌다 — 없으면 "왜 없지"가 되고, 적으면 거짓이 된다 */
+  if (state.rooms.length > 1 && !planAreaKnown()) bits.push('<span class="warn">공간이 겹칠 수 있어 넓이 합계는 표시하지 않습니다</span>');
   /* 좁은 화면에서는 오른쪽 패널이 안 보이므로 이 띠가 유일한 알림 자리다(CLAUDE.md) */
   if (state.baseInfo && state.baseInfo.tilted)
     bits.push('<span class="warn">벽이 비스듬한 이미지 — 인식 결과 확인</span>');
@@ -6613,13 +6616,28 @@ function sizeText(cat, size){
   return t;
 }
 
-/** 상담 기준이 되는 세대 넓이(㎡) — 색인의 전용면적이 있으면 그것, 없으면 잡아 둔 방의 합 */
+/**
+ * 상담 기준이 되는 세대 넓이(㎡) — **색인의 전용면적이 있을 때만 확정값**이다.
+ *
+ * 없으면 잡아 둔 방을 더해 어림하는데, 그 값은 **화면에 숫자로 내밀지 않는다**
+ * (2026-08-20 사용자 지적: *"여러 공간을 추가하면 모든 공간값을 더한 수치를 보여주는데
+ * 사실 중복된 공간이 있어 잘못된 수치가 될 수 있다"*).
+ *
+ * 실제로 그렇다 — 이 앱은 **트인 거실 안의 주방을 일부러 따로 잡는다**(넓이비 0.6 조건).
+ * 실측: 대방 엘리움 86A 가 11곳 합계 104.3㎡ = 전용의 **122%** 였고, 초과분이 전부
+ * 이중 계산이었다(주방 ⊂ 거실 · 세탁실 ⊂ 안방).
+ *
+ * 그래서 어림값은 **추천 평형을 고르는 데만** 쓰고, 화면에는 겹칠 수 있다는 사실을
+ * 경고로 적는다. `planAreaKnown()` 이 그 둘을 가른다.
+ */
 function planAreaM2(){
   if (state.exclusiveM2) return state.exclusiveM2;
   if (!state.rooms.length || !state.scaled) return null;
   const t = state.rooms.reduce((s, r)=> s + roomArea(r), 0) / 1e6;
   return t > 5 ? t : null;
 }
+/** 위 값이 **확정된 전용면적**인가(색인에서 온 것인가) — 아니면 겹칠 수 있는 어림이다 */
+function planAreaKnown(){ return !!state.exclusiveM2; }
 
 /**
  * 카테고리별 추천 사이즈 — { i, k } (state.reps 안 인덱스와 옵션 인덱스).
@@ -6633,7 +6651,8 @@ function planAreaM2(){
  */
 function planLabel(){
   if (state.typeName) return `${state.typeName}`.replace(/\s*타입$/, '') + ' 타입';
-  const a = planAreaM2();
+  /* 방을 더한 어림값으로 "전용 84㎡" 라 부르면 상담에서 그대로 읽힌다 — 확정값일 때만 부른다 */
+  const a = planAreaKnown() ? planAreaM2() : null;
   return a ? `전용 ${a.toFixed(0)}㎡` : null;
 }
 
