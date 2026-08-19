@@ -2,8 +2,8 @@
  "version": 3,
  "note": "단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. 수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.",
  "generatedAt": "2026-08-19",
- "complexCount": 153,
- "planCount": 815,
+ "complexCount": 156,
+ "planCount": 839,
  "scaledCount": 12,
  "complexes": [
   {
@@ -471,6 +471,92 @@
      "rooms": 6,
      "kb": 87,
      "axis": 0.805
+    }
+   ]
+  },
+  {
+   "id": "c170",
+   "region": "강원 속초",
+   "complex": "더샵 속초프라임뷰",
+   "addr": "강원특별자치도 속초시 금호동 617-21 외 32필지",
+   "plans": [
+    {
+     "type": "T1",
+     "file": "plans/c170/T1.jpg",
+     "w": 606,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 65,
+     "axis": 0.781
+    },
+    {
+     "type": "T2",
+     "file": "plans/c170/T2.jpg",
+     "w": 820,
+     "h": 637,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 54,
+     "axis": 0.783
+    },
+    {
+     "type": "T3",
+     "file": "plans/c170/T3.jpg",
+     "w": 820,
+     "h": 556,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 43,
+     "axis": 0.805
+    },
+    {
+     "type": "T4",
+     "file": "plans/c170/T4.jpg",
+     "w": 820,
+     "h": 580,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 44,
+     "axis": 0.803
+    },
+    {
+     "type": "T5",
+     "file": "plans/c170/T5.jpg",
+     "w": 766,
+     "h": 956,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 64,
+     "axis": 0.799
+    }
+   ]
+  },
+  {
+   "id": "c171",
+   "region": "강원 속초",
+   "complex": "힐스테이트 속초",
+   "addr": "강원특별자치도 속초시 금호동 622-40 일원",
+   "plans": [
+    {
+     "type": "T1",
+     "file": "plans/c171/T1.jpg",
+     "w": 887,
+     "h": 480,
+     "exclusiveM2": null,
+     "rooms": 3,
+     "kb": 36,
+     "axis": 0.712
+    },
+    {
+     "type": "T2",
+     "file": "plans/c171/T2.jpg",
+     "w": 887,
+     "h": 480,
+     "exclusiveM2": null,
+     "rooms": 3,
+     "kb": 37,
+     "axis": 0.703
     }
    ]
   },
@@ -7391,16 +7477,26 @@
     {
      "type": "T1",
      "file": "plans/c149/T1.jpg",
-     "w": 443,
-     "h": 320,
+     "w": 701,
+     "h": 1200,
      "exclusiveM2": null,
-     "rooms": 8,
-     "kb": 25,
-     "axis": 0.784
+     "rooms": 10,
+     "kb": 92,
+     "axis": 0.624
     },
     {
-     "type": "T13",
-     "file": "plans/c149/T13.jpg",
+     "type": "T12",
+     "file": "plans/c149/T12.jpg",
+     "w": 480,
+     "h": 260,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 24,
+     "axis": 0.79
+    },
+    {
+     "type": "T16",
+     "file": "plans/c149/T16.jpg",
      "w": 407,
      "h": 290,
      "exclusiveM2": null,
@@ -7409,18 +7505,18 @@
      "axis": 0.76
     },
     {
-     "type": "T17",
-     "file": "plans/c149/T17.jpg",
-     "w": 443,
-     "h": 320,
+     "type": "T2",
+     "file": "plans/c149/T2.jpg",
+     "w": 742,
+     "h": 1200,
      "exclusiveM2": null,
-     "rooms": 4,
-     "kb": 26,
-     "axis": 0.796
+     "rooms": 9,
+     "kb": 96,
+     "axis": 0.594
     },
     {
-     "type": "T18",
-     "file": "plans/c149/T18.jpg",
+     "type": "T20",
+     "file": "plans/c149/T20.jpg",
      "w": 443,
      "h": 320,
      "exclusiveM2": null,
@@ -7431,6 +7527,16 @@
     {
      "type": "T21",
      "file": "plans/c149/T21.jpg",
+     "w": 443,
+     "h": 320,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 26,
+     "axis": 0.796
+    },
+    {
+     "type": "T24",
+     "file": "plans/c149/T24.jpg",
      "w": 407,
      "h": 290,
      "exclusiveM2": null,
@@ -7439,8 +7545,8 @@
      "axis": 0.751
     },
     {
-     "type": "T23",
-     "file": "plans/c149/T23.jpg",
+     "type": "T26",
+     "file": "plans/c149/T26.jpg",
      "w": 407,
      "h": 290,
      "exclusiveM2": null,
@@ -7449,24 +7555,34 @@
      "axis": 0.751
     },
     {
-     "type": "T5",
-     "file": "plans/c149/T5.jpg",
+     "type": "T3",
+     "file": "plans/c149/T3.jpg",
+     "w": 443,
+     "h": 320,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 25,
+     "axis": 0.784
+    },
+    {
+     "type": "T7",
+     "file": "plans/c149/T7.jpg",
+     "w": 769,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 98,
+     "axis": 0.603
+    },
+    {
+     "type": "T8",
+     "file": "plans/c149/T8.jpg",
      "w": 479,
      "h": 260,
      "exclusiveM2": null,
      "rooms": 7,
      "kb": 24,
      "axis": 0.788
-    },
-    {
-     "type": "T9",
-     "file": "plans/c149/T9.jpg",
-     "w": 480,
-     "h": 260,
-     "exclusiveM2": null,
-     "rooms": 6,
-     "kb": 24,
-     "axis": 0.79
     }
    ]
   },
@@ -8525,6 +8641,154 @@
      "rooms": 7,
      "kb": 66,
      "axis": 0.708
+    }
+   ]
+  },
+  {
+   "id": "c177",
+   "region": "경기 화성",
+   "complex": "동탄 포레파크 자연앤푸르지오",
+   "addr": "",
+   "plans": [
+    {
+     "type": "142P",
+     "file": "plans/c177/142P.jpg",
+     "w": 737,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 82,
+     "axis": 0.611
+    },
+    {
+     "type": "142P-2",
+     "file": "plans/c177/142P-2.jpg",
+     "w": 475,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 64,
+     "axis": 0.539
+    },
+    {
+     "type": "84A",
+     "file": "plans/c177/84A.jpg",
+     "w": 728,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 78,
+     "axis": 0.607
+    },
+    {
+     "type": "84A-2",
+     "file": "plans/c177/84A-2.jpg",
+     "w": 413,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 58,
+     "axis": 0.566
+    },
+    {
+     "type": "84B",
+     "file": "plans/c177/84B.jpg",
+     "w": 728,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 71,
+     "axis": 0.607
+    },
+    {
+     "type": "84B-2",
+     "file": "plans/c177/84B-2.jpg",
+     "w": 418,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 57,
+     "axis": 0.575
+    },
+    {
+     "type": "84C",
+     "file": "plans/c177/84C.jpg",
+     "w": 424,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 58,
+     "axis": 0.559
+    },
+    {
+     "type": "84C-2",
+     "file": "plans/c177/84C-2.jpg",
+     "w": 728,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 71,
+     "axis": 0.596
+    },
+    {
+     "type": "84D",
+     "file": "plans/c177/84D.jpg",
+     "w": 701,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 61,
+     "axis": 0.593
+    },
+    {
+     "type": "84D-2",
+     "file": "plans/c177/84D-2.jpg",
+     "w": 396,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 56,
+     "axis": 0.563
+    },
+    {
+     "type": "97A",
+     "file": "plans/c177/97A.jpg",
+     "w": 701,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 69,
+     "axis": 0.627
+    },
+    {
+     "type": "97A-2",
+     "file": "plans/c177/97A-2.jpg",
+     "w": 431,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 62,
+     "axis": 0.575
+    },
+    {
+     "type": "97B",
+     "file": "plans/c177/97B.jpg",
+     "w": 701,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 69,
+     "axis": 0.626
+    },
+    {
+     "type": "97B-2",
+     "file": "plans/c177/97B-2.jpg",
+     "w": 431,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 60,
+     "axis": 0.559
     }
    ]
   },
