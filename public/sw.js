@@ -179,7 +179,7 @@
  * 단종 553 을 뺄 때 함께 사라졌는데 정답은 현행 최고급 857 이라 잃을 이유가 없었다.
  * 오답 보기만 현행 503 으로 갈았다.
  */
-const CACHE_VERSION = 'axhub-v121';
+const CACHE_VERSION = 'axhub-v122';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
