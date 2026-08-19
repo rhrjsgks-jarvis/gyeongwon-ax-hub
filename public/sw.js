@@ -174,7 +174,12 @@
  * 보여주고 있었다(사장님 확인: 지원). 상담사가 고객에게 그대로 읽던 값이라
  * 옛 캐시가 남으면 안 된다. finder-app.html 은 SWR 대상이다.
  */
-const CACHE_VERSION = 'axhub-v113';
+/*
+ * v114 (2026-08-19) — 인덕션 "최고급 모델번호" 문항을 되살렸다(test-app.html 의 QB).
+ * 단종 553 을 뺄 때 함께 사라졌는데 정답은 현행 최고급 857 이라 잃을 이유가 없었다.
+ * 오답 보기만 현행 503 으로 갈았다.
+ */
+const CACHE_VERSION = 'axhub-v114';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
