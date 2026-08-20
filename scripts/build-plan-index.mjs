@@ -39,6 +39,7 @@
  * 공개 저장소에 담기는 용량이라 장당 60KB 안팎을 목표로 한다.
  */
 import fs from 'fs';
+import crypto from 'crypto';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { writePlanIndex } from './plan-index-io.mjs';
@@ -127,6 +128,51 @@ const kept = [];
  * 자르기 기록에 방 개수가 없는 옛 항목은 통과시킨다(예전 방식으로 자른 것).
  */
 const ROOM_GATE = 3;
+/*
+ * **사람이 보고 평면도라고 확인한 것은 관문을 건너뛴다** (2026-08-20).
+ *
+ * 방 개수는 잡음이 큰 대리 지표다. 관문에 걸린 50장을 전수로 눈으로 보니 **17장이 진짜
+ * 평면도**였고(효성해링턴 74A · 힐스테이트 안양펠루스 65C1H · 롯데캐슬 위너스포레 59B …),
+ * 반대로 **조감도가 5곳 · 3D 투시도가 7곳**으로 통과하고 있었다.
+ *
+ * 자를 바꿔도 안 갈린다 — 그 뒤로 벽 인식을 두 번 크게 고쳤으므로(v98 · v101) 지금 자로
+ * 다시 세어 봤는데, 통과하는 18장의 상당수가 그 조감도 · 투시도이고 정작 진짜 평면도는
+ * 그대로 1~2곳이었다. **문턱을 낮추면 쓰레기가 함께 들어온다.**
+ *
+ * 그래서 관문은 그대로 두고 **사람이 확인한 것만** 무른다 — 아래 축척에서 `HAND_SCALE`
+ * (손으로 잰 값)이 자동 판독을 이기는 것과 같은 방식이다.
+ *
+ * 왜 인식기가 못 잡는가 — 이 17장은 대개 **한 시트에 평면이 여럿**(기본형+확장형)이거나
+ * 면적표 · 동배치도가 함께 있다. `roomsIn` 은 4×4 격자로 **자동으로 찔러 보는** 것이라
+ * 탐침이 표 · 여백에 떨어진다. 매장에서는 상담사가 **원하는 자리를 직접 누르므로**
+ * 자동 탐침이 실패한 것이 곧 "쓸 수 없다"는 뜻은 아니다.
+ */
+const HANDPICK = (() => {
+  const f = path.join(__dirname, 'fixtures', 'plans-handpicked.json');
+  if (!fs.existsSync(f)) return new Set();
+  const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+  return new Set((j.items || []).map((e) => `${e.dir}/${e.file}`));
+})();
+let handOk = 0;
+/*
+ * **그 단지 것이 아닌 도면은 뺀다** (2026-08-20).
+ *
+ * 같은 이미지가 **세 단지에 바이트 단위로 똑같이** 들어 있었다(대광로제비앙 · 더샵 지제역
+ * 2BL · 봉담 파라곤). 도면에 인쇄된 전용면적 75.2833 · 84.8460 · 110.3573 ㎡ 가 청약홈
+ * 주택형표에서 **대광로제비앙에만** 있어(그 단지 주택형 4개 ↔ 도면 4장이 정확히 맞는다)
+ * 나머지 둘이 잘못 들어온 것으로 확정했다.
+ *
+ * **"그 단지 도면이 없다"가 "남의 집 도면을 보여준다"보다 낫다** — 상담사가 틀린 평면에
+ * 가전을 재면 "들어갑니다"가 그대로 거짓이 된다. 그래서 뺀 단지가 목록에서 사라져도 뺀다
+ * (단지 목록 3,829곳에는 그대로 있어 고객 도면을 그 자리에서 받을 수 있다).
+ */
+const MISATTR = (() => {
+  const f = path.join(__dirname, 'fixtures', 'plans-misattributed.json');
+  if (!fs.existsSync(f)) return new Set();
+  const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+  return new Set((j.items || []).map((e) => `${e.dir}/${e.file}`));
+})();
+let misOut = 0;
 const grab = fs.existsSync(GRAB) ? JSON.parse(fs.readFileSync(GRAB, 'utf8')) : {};
 // 주택형·전용면적은 별도 패스에서 전 평면도에 대해 읽는다(read-types.mjs). 축척 판독은
 // 8% 만 통과하는데 이름은 전부에 필요해서다 — 화면에 "T1·T2·T3" 만 뜨면 고를 수가 없다.
@@ -313,7 +359,13 @@ for (const [dir, g] of [...groups.entries()].sort()) {
     // 잘라 낸 도면이 있으면 그것을 싣는다 (없으면 원본 시트).
     // 축척·주택형 기록도 잘라 낸 파일명으로 남아 있으므로 조회 키를 맞춘다.
     const cp = cropBy.get(`${dir}/${it.file}`);
-    if (cp && cp.rooms != null && cp.rooms < ROOM_GATE) continue;   // 방을 못 잡는 그림은 싣지 않는다
+    // 그 단지 것이 아닌 도면은 싣지 않는다 (위 MISATTR 참조 — HANDPICK 보다 먼저 본다)
+    if (MISATTR.has(`${dir}/${it.file}`)) { misOut++; continue; }
+    // 방을 못 잡는 그림은 싣지 않는다 — 단, 사람이 확인한 것은 뺀다(위 HANDPICK 참조)
+    if (cp && cp.rooms != null && cp.rooms < ROOM_GATE) {
+      if (!HANDPICK.has(`${dir}/${it.file}`)) continue;
+      handOk++;
+    }
     const src = cp ? path.join(cp.dirOf, dir, cp.out) : path.join(RAW, dir, it.file);
     if (!fs.existsSync(src)) continue;
     const skey = cp ? `${dir}/${cp.out}` : `${dir}/${it.file}`;
@@ -504,6 +556,39 @@ for (const c of index) byRegion[c.region] = (byRegion[c.region] || 0) + c.plans.
 console.log(`단지 ${index.length}곳 · 도면 ${n}장 (축척 있음 ${withScale}장, 단지 안에서 어긋나 뺀 것 ${dropped}장) · ${(bytes / 1024 / 1024).toFixed(1)}MB`);
 /* 무엇을 뺐는지 반드시 말한다 — 조용히 줄이면 "전부 담았다"로 읽힌다 */
 if (excluded) console.log(`  robots 근거 없어 뺀 것 ${excluded}장 (scripts/fixtures/plans-robots-excluded.json)`);
+if (handOk) console.log(`  사람이 확인해 관문을 무른 것 ${handOk}장 (scripts/fixtures/plans-handpicked.json)`);
+if (misOut) console.log(`  그 단지 것이 아니라 뺀 것 ${misOut}장 (scripts/fixtures/plans-misattributed.json)`);
+/*
+ * **같은 그림이 두 단지에 있으면 알린다** (2026-08-20).
+ *
+ * 이 사고는 **조용하다** — 도면이 멀쩡히 뜨고 방도 잡히는데 **다른 집**이다. 실제로
+ * 58건 120장 25단지가 이 상태였고, 주택형 이름과 방 이름 개수가 세 단지에서 똑같은 것을
+ * 눈으로 보고서야 알았다. 사람 눈에 기대면 안 되는 종류라 빌드가 매번 세어 알린다.
+ * (1단지/2단지처럼 **같은 개발단지**는 정상일 수 있으므로 지우지 않고 보고만 한다.)
+ */
+{
+  const byHash = new Map();
+  for (const c of index) for (const p of c.plans || []) {
+    const f = path.join(ROOT, 'public', p.file);
+    if (!fs.existsSync(f)) continue;
+    const h = crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex');
+    if (!byHash.has(h)) byHash.set(h, []);
+    byHash.get(h).push(c);
+  }
+  const dup = [...byHash.values()].filter((cs) => new Set(cs.map((c) => c.id)).size > 1);
+  if (dup.length) {
+    const comps = new Set(dup.flat().map((c) => c.id));
+    console.log(`  ! 같은 그림이 두 단지 이상에 있다 — ${dup.length}건 · 단지 ${comps.size}곳`);
+    const seen = new Set();
+    for (const cs of dup) {
+      const key = [...new Set(cs.map((c) => c.complex))].sort().join(' | ');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (seen.size <= 8) console.log(`      ${key.slice(0, 96)}`);
+    }
+    console.log('      (1단지/2단지처럼 같은 개발단지는 정상일 수 있다. 다르면 도면의 전용면적을 청약홈 주택형표와 대조할 것)');
+  }
+}
 if (kept.length) {
   console.log(`  나빠짐 방지 — 새 크롭이 예전보다 작아 예전 도면을 유지한 것 ${kept.length}장`);
   for (const k of kept) console.log(`    · ${k}`);

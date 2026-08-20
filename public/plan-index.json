@@ -2,8 +2,8 @@
  "version": 3,
  "note": "단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. 수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.",
  "generatedAt": "2026-08-20",
- "complexCount": 159,
- "planCount": 846,
+ "complexCount": 158,
+ "planCount": 855,
  "scaledCount": 12,
  "complexes": [
   {
@@ -2935,6 +2935,16 @@
    "addr": "경기도 수원시 권선구 권선동 1340",
    "plans": [
     {
+     "type": "55",
+     "file": "plans/c42/55.jpg",
+     "w": 399,
+     "h": 355,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 26,
+     "axis": 0.716
+    },
+    {
      "type": "60",
      "file": "plans/c42/60.jpg",
      "w": 289,
@@ -3493,6 +3503,26 @@
    "addr": "경기도 수원시 팔달구 우만동 436번지",
    "plans": [
     {
+     "type": "74A",
+     "file": "plans/c48/74A.jpg",
+     "w": 1200,
+     "h": 773,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 75,
+     "axis": 0.756
+    },
+    {
+     "type": "74B",
+     "file": "plans/c48/74B.jpg",
+     "w": 1200,
+     "h": 773,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 77,
+     "axis": 0.747
+    },
+    {
      "type": "84A",
      "file": "plans/c48/84A.jpg",
      "w": 1200,
@@ -3501,6 +3531,16 @@
      "rooms": 7,
      "kb": 80,
      "axis": 0.75
+    },
+    {
+     "type": "84B",
+     "file": "plans/c48/84B.jpg",
+     "w": 1200,
+     "h": 773,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 78,
+     "axis": 0.759
     }
    ]
   },
@@ -4257,6 +4297,34 @@
    ]
   },
   {
+   "id": "c182",
+   "region": "경기 안양",
+   "complex": "힐스테이트 안양펠루스",
+   "addr": "경기도 안양시 만안구 안양동 395-1번지",
+   "plans": [
+    {
+     "type": "65",
+     "file": "plans/c182/65.jpg",
+     "w": 481,
+     "h": 355,
+     "exclusiveM2": 65,
+     "rooms": 6,
+     "kb": 35,
+     "axis": 0.663
+    },
+    {
+     "type": "65-2",
+     "file": "plans/c182/65-2.jpg",
+     "w": 483,
+     "h": 354,
+     "exclusiveM2": 65,
+     "rooms": 6,
+     "kb": 34,
+     "axis": 0.663
+    }
+   ]
+  },
+  {
    "id": "c145",
    "region": "경기 오산",
    "complex": "롯데캐슬 위너스포레",
@@ -4291,6 +4359,16 @@
      "rooms": 6,
      "kb": 54,
      "axis": 0.78
+    },
+    {
+     "type": "59B",
+     "file": "plans/c145/59B.jpg",
+     "w": 735,
+     "h": 784,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 64,
+     "axis": 0.784
     },
     {
      "type": "59C",
@@ -5139,6 +5217,26 @@
    "addr": "경기도 용인고림지구 H5BL(경기도 용인시 처인구 고림동 646-2 일원)",
    "plans": [
     {
+     "type": "85",
+     "file": "plans/c76/85.jpg",
+     "w": 1149,
+     "h": 911,
+     "exclusiveM2": 84.85,
+     "rooms": 5,
+     "kb": 110,
+     "axis": 0.645
+    },
+    {
+     "type": "110",
+     "file": "plans/c76/110.jpg",
+     "w": 1149,
+     "h": 911,
+     "exclusiveM2": 110.36,
+     "rooms": 3,
+     "kb": 105,
+     "axis": 0.699
+    },
+    {
      "type": "T1",
      "file": "plans/c76/T1.jpg",
      "w": 1149,
@@ -5149,8 +5247,8 @@
      "axis": 0.636
     },
     {
-     "type": "T2",
-     "file": "plans/c76/T2.jpg",
+     "type": "T3",
+     "file": "plans/c76/T3.jpg",
      "w": 1149,
      "h": 911,
      "exclusiveM2": null,
@@ -6109,6 +6207,16 @@
     {
      "type": "29C",
      "file": "plans/c88/29C.jpg",
+     "w": 1036,
+     "h": 606,
+     "exclusiveM2": null,
+     "rooms": 10,
+     "kb": 94,
+     "axis": 0.671
+    },
+    {
+     "type": "29C-2",
+     "file": "plans/c88/29C-2.jpg",
      "w": 1107,
      "h": 767,
      "exclusiveM2": null,
@@ -6117,8 +6225,8 @@
      "axis": 0.7
     },
     {
-     "type": "29C-2",
-     "file": "plans/c88/29C-2.jpg",
+     "type": "29C-3",
+     "file": "plans/c88/29C-3.jpg",
      "w": 999,
      "h": 782,
      "exclusiveM2": null,
@@ -6127,8 +6235,8 @@
      "axis": 0.758
     },
     {
-     "type": "29C-3",
-     "file": "plans/c88/29C-3.jpg",
+     "type": "29C-4",
+     "file": "plans/c88/29C-4.jpg",
      "w": 820,
      "h": 578,
      "exclusiveM2": null,
@@ -6137,8 +6245,8 @@
      "axis": 0.663
     },
     {
-     "type": "29C-4",
-     "file": "plans/c88/29C-4.jpg",
+     "type": "29C-5",
+     "file": "plans/c88/29C-5.jpg",
      "w": 829,
      "h": 560,
      "exclusiveM2": null,
@@ -6425,6 +6533,16 @@
      "rooms": 9,
      "kb": 74,
      "axis": 0.663
+    },
+    {
+     "type": "116",
+     "file": "plans/c93/116.jpg",
+     "w": 1036,
+     "h": 606,
+     "exclusiveM2": null,
+     "rooms": 10,
+     "kb": 94,
+     "axis": 0.671
     },
     {
      "type": "118",
@@ -7093,6 +7211,16 @@
     {
      "type": "T1",
      "file": "plans/c105/T1.jpg",
+     "w": 588,
+     "h": 538,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 53,
+     "axis": 0.773
+    },
+    {
+     "type": "T2",
+     "file": "plans/c105/T2.jpg",
      "w": 693,
      "h": 820,
      "exclusiveM2": null,
@@ -7101,8 +7229,8 @@
      "axis": 0.749
     },
     {
-     "type": "T2",
-     "file": "plans/c105/T2.jpg",
+     "type": "T3",
+     "file": "plans/c105/T3.jpg",
      "w": 681,
      "h": 835,
      "exclusiveM2": null,
@@ -7111,8 +7239,8 @@
      "axis": 0.711
     },
     {
-     "type": "T3",
-     "file": "plans/c105/T3.jpg",
+     "type": "T4",
+     "file": "plans/c105/T4.jpg",
      "w": 698,
      "h": 801,
      "exclusiveM2": null,
@@ -7121,8 +7249,8 @@
      "axis": 0.736
     },
     {
-     "type": "T4",
-     "file": "plans/c105/T4.jpg",
+     "type": "T5",
+     "file": "plans/c105/T5.jpg",
      "w": 716,
      "h": 775,
      "exclusiveM2": null,
@@ -7131,42 +7259,14 @@
      "axis": 0.717
     },
     {
-     "type": "T5",
-     "file": "plans/c105/T5.jpg",
+     "type": "T6",
+     "file": "plans/c105/T6.jpg",
      "w": 699,
      "h": 802,
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 70,
      "axis": 0.728
-    }
-   ]
-  },
-  {
-   "id": "c106",
-   "region": "경기 평택",
-   "complex": "더샵 지제역 센트럴파크 2BL",
-   "addr": "경기도 평택시 지제동삭2로 177(동삭동, The Sharp 지제역 센트럴파크 2BL)",
-   "plans": [
-    {
-     "type": "T1",
-     "file": "plans/c106/T1.jpg",
-     "w": 1149,
-     "h": 911,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 81,
-     "axis": 0.636
-    },
-    {
-     "type": "T2",
-     "file": "plans/c106/T2.jpg",
-     "w": 1149,
-     "h": 911,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 99,
-     "axis": 0.674
     }
    ]
   },
@@ -7295,6 +7395,16 @@
      "axis": 0.775
     },
     {
+     "type": "103",
+     "file": "plans/c108/103.jpg",
+     "w": 712,
+     "h": 243,
+     "exclusiveM2": 103.25,
+     "rooms": 8,
+     "kb": 27,
+     "axis": 0.793
+    },
+    {
      "type": "113H",
      "file": "plans/c108/113H.jpg",
      "w": 687,
@@ -7315,8 +7425,8 @@
      "axis": 0.752
     },
     {
-     "type": "T8",
-     "file": "plans/c108/T8.jpg",
+     "type": "T9",
+     "file": "plans/c108/T9.jpg",
      "w": 725,
      "h": 381,
      "exclusiveM2": null,
@@ -9259,34 +9369,6 @@
      "rooms": 3,
      "kb": 94,
      "axis": 0.384
-    }
-   ]
-  },
-  {
-   "id": "c131",
-   "region": "경기 화성",
-   "complex": "봉담 파라곤",
-   "addr": "경기도 화성시 봉담읍 동화리 228번지 일원(동화3지구 지역주택조합 공동주택 건설사업)",
-   "plans": [
-    {
-     "type": "T1",
-     "file": "plans/c131/T1.jpg",
-     "w": 1149,
-     "h": 911,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 81,
-     "axis": 0.636
-    },
-    {
-     "type": "T2",
-     "file": "plans/c131/T2.jpg",
-     "w": 1149,
-     "h": 911,
-     "exclusiveM2": null,
-     "rooms": 5,
-     "kb": 99,
-     "axis": 0.674
     }
    ]
   },
