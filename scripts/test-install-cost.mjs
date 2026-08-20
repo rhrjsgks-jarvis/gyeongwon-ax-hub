@@ -106,6 +106,35 @@ D.careplus.groups.forEach((g) => g.sections.forEach((s) => s.rows.forEach((r) =>
 })));
 ok(bad === 0, `이전설치 ${crows}행의 값 칸 수가 머리글과 맞는다`);
 
+/* ── [4-b] 비고가 값 자리로 밀리지 않았는가 ──────────────
+ * 사장님 지적(2026-08-20 — *"식기세척기처럼 다른 항목도 주석이나 비고가 있으면 표기"*)으로
+ * 재 보니 케어플러스 쪽이 **한 칸씩 밀려** 있었다: `앵글 → 규격 110,000원 /
+ * 금액 "설치비 + 자재비 기준…"`. 행마다 칸 수가 달라 머리글 자리로 자른 탓이다.
+ * 지금은 **뒤에서** 자른다. 밀리면 값 자리에 문장이 들어오므로 그것으로 잡는다.
+ */
+console.log('\n[4-b] 비고가 제자리에 있는가');
+let shifted = 0, notes = 0;
+D.careplus.groups.forEach((g) => g.sections.forEach((s) => s.rows.forEach((r) => {
+  if (!r.values) return;
+  if (r.note) notes++;
+  r.values.forEach((v) => {
+    /* 값은 금액·무상·실비·견적이거나 짧은 조건문이다. 문장이 오면 밀린 것이다 */
+    if (v && v.length > 30 && !/^시간별|^\(.*\).*\+/.test(v)) {
+      shifted++; console.log(`      값 자리에 문장: ${g.name}/${s.title} · ${r.label} → ${v.slice(0, 44)}`);
+    }
+  });
+})));
+ok(shifted === 0, '이전설치 값 칸에 설명 문장이 섞이지 않았다');
+ok(notes >= 50, `이전설치 비고 ${notes}건 (밀려 있던 때는 0건이었다)`);
+ok(D.careplus.groups.find((g) => g.key === 'ac').sections[1].rows[0].note.includes('자재비'),
+   '에어컨 앵글의 비고가 "설치비 + 자재비 기준…" 으로 붙어 있다');
+ok(D.careplus.groups.find((g) => g.key === 'common').sections[0].rows
+     .some((r) => r.note === '회당비용'), '사다리차 "회당비용" 이 비고 자리에 있다');
+/* 표 밖 각주 — 표만 옮기면 사라지는 조건이다 */
+ok(D.newInstall.categories.find((c) => c.key === 'ac').sections
+     .some((s) => (s.foot || '').includes('신제품 설치 시 무상')),
+   '사다리차 절의 표 밖 각주(신제품 설치 시 무상)를 담았다');
+
 /* ── [5]~[8] 화면 ────────────────────────────────────── */
 console.log('\n[5] 화면');
 const html = fs.readFileSync('public/install-cost-app.html', 'utf8');
@@ -128,6 +157,16 @@ ok(!!(win.__cost && win.__cost.data), '앱이 자료를 읽어 들였다');
 const text = () => win.document.getElementById('body').textContent;
 ok(text().includes('원문 보기') && text().includes(D.collectedAt),
    `출처와 확인일(${D.collectedAt})을 화면에 적는다`);
+
+/* 자료에 비고가 있어도 화면이 안 그리면 소용없다 — 실제로 그려진 줄을 센다 */
+let drawn = 0, feet = 0;
+D.newInstall.categories.forEach((c) => { win.__cost.go('new', c.key, null);
+  drawn += win.document.querySelectorAll('#body .nt').length;
+  feet += win.document.querySelectorAll('#body .foot2').length; });
+D.careplus.groups.forEach((g) => { win.__cost.go('care', g.key, null);
+  drawn += win.document.querySelectorAll('#body .nt').length; });
+ok(drawn >= 90, `비고가 화면에 ${drawn}줄 그려진다`);
+ok(feet >= 1, `절 각주가 화면에 ${feet}개 그려진다`);
 
 win.__cost.go('prep');
 ok(text().includes('16A') && text().includes('4000W'), '멀티탭 기준(16A · 4000W)이 화면에 있다');

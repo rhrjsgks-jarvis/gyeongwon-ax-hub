@@ -41,9 +41,16 @@ const newInstall = src.categories.map((c) => {
 });
 
 /* ② 이전설치 (삼성케어플러스) */
+/*
+ * **비고도 함께 색인한다 — 다만 이름을 밀어내지 않게.**
+ * 예전에는 `r.note || 라벨+값` 이었는데, 그때는 비고가 **주석 전용 줄에만** 있었다.
+ * 지금은 일반 행에도 붙으므로 그 조건이 뒤집혀 **이름 대신 비고만 색인됐다** —
+ * `야간 할증료` 로 찾으면 0건이 되고 검색이 그 줄로 못 갔다.
+ */
 src.careplus.groups.forEach((g) =>
   g.sections.forEach((s, si) => s.rows.forEach((r, ri) =>
-    add('care', g.key, s.title, r.note || [r.label, ...r.values].filter(Boolean).join(' · '),
+    add('care', g.key, s.title,
+      r.label ? [r.label, ...(r.values || []), r.note].filter(Boolean).join(' · ') : r.note,
       `care:${g.key}:${si}:${ri}`))));
 
 /*
