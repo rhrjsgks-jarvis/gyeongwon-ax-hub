@@ -100,7 +100,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         href: '/install-cost',
         icon: 'bolt',
         title: '설치비용 · 사전준비',
-        desc: '신규 설치 추가비 131행 + 이전·재설치·철거 304행 + 사다리차·야간/공휴일·거리 할증 + 멀티탭 안전 기준',
+        desc: '신규 설치 추가비 131행 + 이전·재설치·철거 304행 + 사다리차·야간/공휴일·거리 할증 + 설치 전 준비(멀티탭 16A·식기세척기 설치 불가 조건·에어컨 안전 안내)',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.08',

@@ -21,29 +21,49 @@ const src = JSON.parse(fs.readFileSync(SRC, 'utf8'));
    (통합검색 normalize 와 같은 규칙이다) */
 const norm = (s) => String(s).toLowerCase().replace(/,(?=\d)/g, '').replace(/\s+/g, ' ').trim();
 
-const rows = [];   // 검색용 평면 목록 — 어디에 있는 값인지 함께 담아 눌러서 갈 수 있게 한다
-const add = (tab, cat, sec, text) => {
+/*
+ * 검색용 평면 목록. **행마다 고유 키(`id`)를 함께 심는다** — 검색 결과를 누르면 그 표가
+ * 아니라 **그 줄로** 데려가야 하기 때문이다. 글자로 찾으면 같은 금액(`100,000`)이 여러
+ * 줄에 있을 때 엉뚱한 데로 간다. 키는 `탭:품목:절번호:행번호` 라 화면이 그대로 찾아 쓴다.
+ */
+const rows = [];
+const add = (tab, cat, sec, text, id) => {
   const t = norm(text);
-  if (t.length > 1) rows.push({ tab, cat, sec, t: text, k: t });
+  if (t.length > 1) rows.push({ tab, cat, sec, t: text, k: t, id });
 };
 
 /* ① 신규 설치 추가비 (삼성전자로지텍) */
 const newInstall = src.categories.map((c) => {
-  c.sections.forEach((s) =>
-    s.grid.slice(s.headRows).forEach((r) => add('new', c.key, s.title, r.filter(Boolean).join(' · '))));
+  c.sections.forEach((s, si) =>
+    s.grid.slice(s.headRows).forEach((r, ri) =>
+      add('new', c.key, s.title, r.filter(Boolean).join(' · '), `new:${c.key}:${si}:${ri}`)));
   return c;
 });
 
 /* ② 이전설치 (삼성케어플러스) */
 src.careplus.groups.forEach((g) =>
-  g.sections.forEach((s) => s.rows.forEach((r) =>
-    add('care', g.key, s.title, r.note || [r.label, ...r.values].filter(Boolean).join(' · ')))));
+  g.sections.forEach((s, si) => s.rows.forEach((r, ri) =>
+    add('care', g.key, s.title, r.note || [r.label, ...r.values].filter(Boolean).join(' · '),
+      `care:${g.key}:${si}:${ri}`))));
 
-/* ③ 설치 전 준비 */
-src.safety.lines.forEach((l) => add('prep', 'safety', src.safety.title, l));
-add('prep', 'safety', src.safety.title, `대상제품 ${src.safety.targets.join(' · ')}`);
-add('prep', 'safety', src.safety.title, `${src.safety.ok.label} ${src.safety.ok.items.join(' · ')} ${src.safety.ok.spec}`);
-add('prep', 'safety', src.safety.title, `${src.safety.no.label} ${src.safety.no.items.join(' · ')}`);
+/*
+ * ③ 설치 전 준비 — 표가 아니라 카드라 카드 단위로 짚는다.
+ * **그림 속 글자는 검색이 안 된다** — 그래서 옮겨 적은 문장을 반드시 색인에 넣는다.
+ * "타공" · "베란다" · "아일랜드장" 으로 찾아야 하는데 그림만 있으면 0건이 된다.
+ */
+const item = (x) => (typeof x === 'string' ? x : x.t);
+src.safety.lines.forEach((l, i) => add('prep', 'safety', src.safety.title, l, `prep:line:${i}`));
+add('prep', 'safety', src.safety.title, `대상제품 ${src.safety.targets.join(' · ')}`, 'prep:targets');
+add('prep', 'safety', src.safety.title,
+  `${src.safety.ok.label} ${src.safety.ok.items.map(item).join(' · ')} ${src.safety.ok.spec}`, 'prep:ok');
+add('prep', 'safety', src.safety.title,
+  `${src.safety.no.label} ${src.safety.no.items.map(item).join(' · ')}`, 'prep:no');
+
+(src.prepMore || []).forEach((c) => {
+  add('prep', c.key, c.title, c.lead, `prep:${c.key}`);
+  (c.items || []).forEach((x, i) =>
+    add('prep', c.key, c.title, `${x.t} — ${x.d}`, `prep:${c.key}:${i}`));
+});
 
 const out = {
   _generated: '이 파일은 build-install-cost.mjs 가 만든다. 직접 고치지 말고 fixture 를 고칠 것.',
@@ -56,7 +76,7 @@ const out = {
   },
   careplus: src.careplus,
   safety: src.safety,
-  imageOnly: src.imageOnly,
+  prepMore: src.prepMore,
   index: rows,
 };
 

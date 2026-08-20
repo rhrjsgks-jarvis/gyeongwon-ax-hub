@@ -23,85 +23,136 @@
   @media(min-width:1024px){.topbar-in,.wrap{max-width:960px}}
   @media(min-width:1440px){.topbar-in,.wrap{max-width:1140px}}
 
-  /* 검색이 주력이다 — 표가 435행이라 눈으로 훑을 양이 아니고, 상담사는 "사다리차"·"타공"
-     처럼 항목 이름으로 찾지 품목부터 고르지 않는다. 그래서 탭보다 위에 둔다. */
+  /* 검색이 주력이다 — 435행은 눈으로 훑을 양이 아니고, 상담사는 "사다리차"·"타공"처럼
+     항목 이름으로 찾지 품목부터 고르지 않는다. 그래서 탭보다 위에 둔다. */
   .sbar{background:#fff;border-bottom:1px solid #ecedf1;padding:10px 14px;position:sticky;top:0;z-index:60}
   .sbar-in{max-width:840px;margin:0 auto;position:relative}
   @media(min-width:1024px){.sbar-in{max-width:960px}}
   @media(min-width:1440px){.sbar-in{max-width:1140px}}
-  #sq{width:100%;border:1.5px solid #e5e7eb;border-radius:11px;padding:10px 34px 10px 12px;
-    font-size:14px;font-family:inherit;background:#fafbfc}
+  #sq{width:100%;border:1.5px solid #e5e7eb;border-radius:11px;padding:11px 34px 11px 12px;
+    font-size:15px;font-family:inherit;background:#fafbfc}
   #sq:focus{outline:none;border-color:#1428A0;background:#fff}
-  .sclr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;
-    font-size:16px;color:#9aa0a6;cursor:pointer;padding:4px}
-  .snote{font-size:11.5px;color:#6b7280;margin-top:6px;line-height:1.5}
+  .sclr{position:absolute;right:6px;top:9px;border:0;background:none;
+    font-size:17px;color:#9aa0a6;cursor:pointer;padding:6px}
+
+  /*
+   * 검색 결과는 **본문을 덮지 않고 검색창 아래로 내려온다**(2026-08-20 사장님 요청).
+   * 예전에는 결과가 본문 자리를 통째로 차지해, 누르기 전에는 표를 볼 수가 없었다.
+   * 지금은 목록이 늘 보이고 결과는 그 위에 잠깐 떴다가 누르면 **그 줄로 데려간다.**
+   */
+  .sdrop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:70;background:#fff;
+    border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 10px 30px rgba(16,24,40,.14);
+    max-height:min(62vh,460px);overflow:auto;padding:6px}
+  .sdrop .shead{font-size:11px;color:#6b7280;padding:6px 8px 7px;line-height:1.5;
+    border-bottom:1px solid #f1f3f6;margin-bottom:4px}
+  .sr{border-radius:9px;padding:9px 10px;cursor:pointer;font-size:13px;line-height:1.55;color:#1f2937}
+  .sr:hover,.sr:focus{background:#f3f5fb;outline:none}
+  .sr .w{font-size:10.5px;font-weight:700;color:#1428A0;display:block;margin-bottom:2px}
+  .sr mark{background:#FEF08A;color:inherit;padding:0 1px;border-radius:2px}
 
   .tabs{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;
-    border-bottom:1px solid #ecedf1;position:sticky;top:57px;z-index:55}
+    border-bottom:1px solid #ecedf1;position:sticky;top:59px;z-index:55}
   .tab{padding:10px 4px 9px;text-align:center;cursor:pointer;font-size:11.5px;font-weight:700;
-    color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s;border-top:0;background:none;font-family:inherit}
+    color:#9aa0a6;border:0;border-bottom:2px solid transparent;transition:all .15s;
+    background:none;font-family:inherit}
   .tab.on{color:#1428A0;border-bottom-color:#1428A0}
   .tb-ico{display:block;font-size:15px;margin-bottom:2px;line-height:1}
 
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 14px}
-  .chip{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;
-    font-weight:600;cursor:pointer;color:#374151;font-family:inherit;transition:.12s}
+  /* 품목 칩 — 좁은 화면에서는 가로로 밀어 고른다(줄바꿈하면 위쪽을 두 줄이나 먹는다) */
+  .chips{display:flex;gap:6px;margin:12px 0 14px;overflow-x:auto;padding-bottom:2px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 13px;font-size:13px;
+    font-weight:600;cursor:pointer;color:#374151;font-family:inherit;transition:.12s;
+    white-space:nowrap;flex:0 0 auto}
   .chip.on{background:#1428A0;border-color:#1428A0;color:#fff}
+  @media(min-width:600px){.chips{flex-wrap:wrap;overflow:visible}}
 
   .src{font-size:11.5px;color:#6b7280;line-height:1.6;background:#fff;border:1px solid #eceef2;
     border-radius:11px;padding:10px 12px;margin-bottom:14px}
   .src a{color:#1428A0}
   .src b{color:#374151}
 
+  /* 절은 **기본으로 펼쳐 둔다**(2026-08-20 사장님 요청) — 눌러야 열리면 상담 중에
+     어디에 무엇이 있는지 알 수가 없다. 접는 손잡이는 남긴다(긴 표를 잠시 접을 때 쓴다). */
   .sec{background:#fff;border:1px solid #eceef2;border-radius:12px;margin-bottom:11px;overflow:hidden}
-  .sec>summary{cursor:pointer;list-style:none;padding:11px 13px;font-size:13px;font-weight:700;
+  .sec>summary{cursor:pointer;list-style:none;padding:12px 13px;font-size:14px;font-weight:800;
     color:#1f2937;display:flex;align-items:center;justify-content:space-between;gap:8px}
   .sec>summary::-webkit-details-marker{display:none}
-  .sec>summary::after{content:'▾';color:#9aa0a6;font-size:11px;transition:.15s}
+  .sec>summary::after{content:'▾';color:#c3c7cf;font-size:11px;transition:.15s}
   .sec[open]>summary::after{transform:rotate(180deg)}
   .sec>summary .cnt{font-size:11px;font-weight:600;color:#9aa0a6}
-  /* 표는 좁은 화면에서 가로로만 스크롤한다 — 지면 전체가 옆으로 밀리면 안 된다 */
-  .tw{overflow-x:auto;border-top:1px solid #f1f3f6}
-  table{border-collapse:collapse;width:100%;font-size:12px;min-width:340px}
-  th,td{border-bottom:1px solid #f1f3f6;border-right:1px solid #f1f3f6;padding:7px 9px;
-    text-align:left;vertical-align:middle;line-height:1.5}
-  th{background:#f8f9fc;color:#4b5563;font-weight:700;font-size:11.5px;white-space:nowrap}
-  td:last-child,th:last-child{border-right:0}
-  /* 금액 칸은 자릿수를 맞춰 세운다 — 세로로 훑을 때 자리가 어긋나면 읽히지 않는다 */
-  td.num{text-align:right;font-weight:700;color:#111827;white-space:nowrap;
+
+  /*
+   * **표가 아니라 목록으로 그린다**(2026-08-20 사장님 요청 — *"전기레인지나 정수기 같은
+   * 스타일"*). 그 두 표가 읽히는 이유는 칸이 적어서가 아니라 **「이름 → 금액」 두 덩어리로
+   * 끝나기 때문**이다. 에어컨(4칸)·식기세척기(5칸)는 같은 자료인데 눈이 흩어진다.
+   * 그래서 어느 표든 같은 모양으로 세운다 — 왼쪽에 이름, 오른쪽에 금액.
+   */
+  .rows{border-top:1px solid #f1f3f6}
+  .r{display:flex;align-items:baseline;gap:10px;padding:10px 13px;border-bottom:1px solid #f4f5f8}
+  .r:last-child{border-bottom:0}
+  .r .nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#1f2937;line-height:1.5}
+  .r .v{flex:0 0 auto;font-size:15px;font-weight:800;color:#111827;white-space:nowrap;
     font-variant-numeric:tabular-nums}
-  td.free{color:#1428A0}
-  td.note{color:#6b7280;font-size:11px;min-width:160px}
-  tr.notes td{background:#fbfcfe;color:#6b7280;font-size:11px}
+  .r .v .u{font-size:11px;font-weight:600;color:#9aa0a6;margin-left:2px}
+  .r .v.free{color:#1428A0}
+  .r .v.soft{font-size:13px;font-weight:700;color:#6b7280}
+  /* 값이 여럿인 표(이전설치·재설치·철거 / 신제품·이전) — 이름 아래에 나란히 세운다 */
+  .r.multi{display:block}
+  .r.multi .nm{margin-bottom:7px}
+  .vs{display:flex;flex-wrap:wrap;gap:8px}
+  .vs>span{flex:1 1 96px;background:#f8f9fc;border:1px solid #eef0f4;border-radius:9px;
+    padding:6px 9px;min-width:0}
+  .vs i{display:block;font-style:normal;font-size:10.5px;font-weight:700;color:#9aa0a6;
+    margin-bottom:1px;letter-spacing:.02em}
+  .vs b{font-size:14.5px;font-weight:800;color:#111827;font-variant-numeric:tabular-nums}
+  .vs b.free{color:#1428A0}
+  .vs b.soft{font-size:12.5px;font-weight:700;color:#6b7280}
+  .r .nt{font-size:11.5px;color:#6b7280;line-height:1.6;margin-top:5px}
+  .r.only{color:#6b7280;font-size:11.5px;background:#fbfcfe;line-height:1.6;display:block}
+  /* 검색으로 찾아온 줄 — 잠깐 강조했다가 가라앉는다 */
+  .hit{animation:hit 2.6s ease-out}
+  @keyframes hit{0%,55%{background:#FEF08A}100%{background:transparent}}
+  @media(max-width:420px){
+    .r{padding:10px 12px}
+    .r:not(.multi){display:block}
+    .r:not(.multi) .v{display:block;margin-top:3px}
+  }
 
   .safe{background:#fff;border:1px solid #eceef2;border-radius:12px;padding:14px;margin-bottom:12px}
-  .safe h3{margin:0 0 4px;font-size:14px;color:#1f2937}
-  .safe .tg{font-size:12px;color:#374151;line-height:1.7;margin-bottom:12px}
+  .safe h3{margin:0 0 4px;font-size:14.5px;color:#1f2937}
+  .safe .tg{font-size:13px;color:#374151;line-height:1.7;margin-bottom:12px}
   .safe .tg b{color:#1428A0}
   .yn{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
-  @media(max-width:420px){.yn{grid-template-columns:1fr}}
-  .yn>div{border-radius:10px;padding:10px 11px}
+  @media(max-width:460px){.yn{grid-template-columns:1fr}}
+  .yn>div{border-radius:10px;padding:11px 12px}
   .yn .y{background:#EEF2FF;border:1px solid #dbe3ff}
   .yn .n{background:#FEF2F2;border:1px solid #fde0e0}
-  .yn h4{margin:0 0 6px;font-size:12px}
+  .yn h4{margin:0 0 6px;font-size:12.5px}
   .yn .y h4{color:#1428A0}
   .yn .n h4{color:#B91C1C}
-  .yn ul{margin:0;padding-left:16px;font-size:12px;line-height:1.75;color:#374151}
-  .yn .spec{margin-top:7px;font-size:12.5px;font-weight:800;color:#1428A0}
-  .lines{margin:0;padding-left:16px;font-size:12.5px;line-height:1.8;color:#374151}
+  .yn ul{margin:0;padding-left:16px;font-size:13px;line-height:1.75;color:#374151}
+  .yn .spec{margin-top:7px;font-size:13.5px;font-weight:800;color:#1428A0}
+  .lines{margin:0;padding-left:16px;font-size:13px;line-height:1.85;color:#374151}
   .lines li::marker{color:#1428A0}
   .warnbox{margin-top:11px;background:#FEF3C7;border:1px solid #fde68a;border-radius:10px;
-    padding:9px 11px;font-size:12px;color:#92400E;line-height:1.6;font-weight:600}
-  .imgonly{background:#fff;border:1px solid #eceef2;border-radius:12px;padding:12px 13px}
-  .imgonly h3{margin:0 0 6px;font-size:13px;color:#1f2937}
-  .imgonly p{margin:0 0 8px;font-size:11.5px;color:#6b7280;line-height:1.6}
-  .imgonly a{display:block;font-size:12.5px;color:#1428A0;padding:6px 0;border-top:1px solid #f1f3f6}
-
-  .sres{margin-bottom:14px}
-  .sr{background:#fff;border:1px solid #eceef2;border-radius:10px;padding:9px 11px;margin-bottom:6px;
-    cursor:pointer;font-size:12.5px;line-height:1.55}
-  .sr .w{font-size:10.5px;font-weight:700;color:#1428A0;display:block;margin-bottom:2px}
-  .sr mark{background:#FEF08A;color:inherit;padding:0 1px;border-radius:2px}
+    padding:10px 12px;font-size:12.5px;color:#92400E;line-height:1.6;font-weight:600}
+  .foot{font-size:11.5px;color:#6b7280;margin-top:10px;line-height:1.6}
+  .foot a{color:#1428A0}
+  /* 멀티탭 가능/불가 — 지면의 그림을 그대로 붙인다. 글보다 그림이 먼저 읽힌다 */
+  .icl{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+  .icl li{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.72);
+    border-radius:9px;padding:5px 9px 5px 5px;font-size:12.5px;color:#374151;font-weight:600}
+  .icl .ic{width:30px;height:30px;object-fit:contain;flex:0 0 auto}
+  /* 설치 전 준비 카드 안의 항목 — 제목 · 설명 · 그림 순서로 세운다 */
+  .pit{border-top:1px solid #f1f3f6;padding:11px 0 3px}
+  .pit:first-of-type{border-top:0}
+  .pt{font-size:13.5px;font-weight:800;color:#1f2937;line-height:1.5;margin-bottom:4px}
+  .pd{font-size:12.5px;color:#4b5563;line-height:1.7}
+  /* 그림은 누르면 원본 크기로 열린다 — 매장에서 고객에게 확대해 보여준다 */
+  .shot{display:block;margin:9px 0 4px;border:1px solid #eef0f4;border-radius:10px;overflow:hidden;background:#fff}
+  .shot img{display:block;width:100%;height:auto}
   .empty{text-align:center;color:#9aa0a6;font-size:12.5px;padding:26px 10px;line-height:1.7}
 </style>
 </head>
@@ -118,13 +169,13 @@
 
 <!--
   검색을 탭보다 위에 둔다. 상담 중에 나오는 말은 "사다리차 얼마죠" · "타공비" · "멀티탭"
-  인데, 그게 어느 탭에 있는지는 상담사가 알 이유가 없다.
+  인데, 그게 어느 탭에 있는지는 상담사가 알 이유가 없다. 고르면 **그 줄로 데려간다.**
 -->
 <div class="sbar">
   <div class="sbar-in">
     <input id="sq" type="search" placeholder="사다리차 · 타공 · 앵글 · 멀티탭 · 이전설치…" autocomplete="off">
     <button class="sclr" id="sclr" hidden aria-label="지우기">✕</button>
-    <div class="snote" id="snote" hidden></div>
+    <div class="sdrop" id="sdrop" hidden></div>
   </div>
 </div>
 
@@ -152,58 +203,103 @@ var esc = function (s) { return String(s == null ? '' : s)
    `36,300` 으로 색인해 놓고 `36300` 으로 찾아 영영 안 걸린다 */
 var norm = function (s) { return String(s).toLowerCase().replace(/,(?=\d)/g, '').replace(/\s+/g, ' ').trim(); };
 
-/* 값처럼 보이는 칸인가 — 금액은 오른쪽으로 세우고 무상/무료는 파랗게 둔다 */
-var NUM = /^[\d,]+$/, FREE = /^(무상|무료|-?\s*해당\s*없음)$/;
-var cellClass = function (v) {
-  if (FREE.test(v)) return 'num free';
-  if (NUM.test(v) || /^(실비|견적가|견적 후 합의|상담필요)$/.test(v)) return 'num';
-  return v.length > 24 ? 'note' : '';
-};
+/*
+ * **어느 칸이 금액인지는 머리글이 스스로 말해 준다.** 칸 수를 손으로 세면 표 모양이
+ * 조금만 달라도 어긋난다 — 에어컨은 `구분|규격|금액`, 사다리차는 `구분|신제품 설치|이전설치`,
+ * 식기세척기는 `구분|작업항목|고객단가|작업내용` 이다. 머리글로 판정하면 셋 다 같은
+ * 목록으로 선다.
+ */
+var VAL_H = /금액|단가|비용|이전설치|재설치|철거|신제품|케어\+/;
+var NOTE_H = /비고|작업내용|설명/;
+var MONEY = /^[\d,]+$/, FREE = /^(무상|무료|-?\s*해당\s*없음)$/;
+var SOFT = /^(실비|발생실비|견적가|견적 후 합의|상담필요)/;
 
-/* 원문 표의 병합을 되살린다 — 옆으로 같은 값이 이어지면 한 칸으로 합친다.
-   격자를 그대로 두고 화면에서 합치는 쪽이 안전하다(자료에서 지우면 열이 어긋난다). */
-function gridTable(sec) {
-  var head = sec.grid.slice(0, sec.headRows), body = sec.grid.slice(sec.headRows);
-  var h = head.map(function (r) {
-    return '<tr>' + span(r).map(function (c) {
-      return '<th' + (c.n > 1 ? ' colspan="' + c.n + '"' : '') + '>' + esc(c.v) + '</th>';
-    }).join('') + '</tr>';
-  }).join('');
-  var seen = [];
-  var b = body.map(function (r) {
-    return '<tr>' + span(r).map(function (c) {
-      /* 바로 위와 같은 값이면 흐리게 — 원문에서 세로로 병합돼 있던 자리다 */
-      var dim = seen[c.i] === c.v && !NUM.test(c.v) ? ' style="color:#c3c7cf"' : '';
-      seen[c.i] = c.v;
-      return '<td class="' + cellClass(c.v) + '"' + (c.n > 1 ? ' colspan="' + c.n + '"' : '') + dim + '>' + esc(c.v) + '</td>';
-    }).join('') + '</tr>';
-  }).join('');
-  return '<div class="tw"><table>' + h + b + '</table></div>';
+function money(v) {
+  if (!v) return '';
+  if (FREE.test(v)) return '<span class="v free">' + esc(v) + '</span>';
+  if (MONEY.test(v)) return '<span class="v">' + esc(v) + '<span class="u">원</span></span>';
+  if (SOFT.test(v) || v.length > 12) return '<span class="v soft">' + esc(v) + '</span>';
+  return '<span class="v">' + esc(v) + '</span>';
 }
-function span(row) {
-  var out = [];
-  for (var i = 0; i < row.length; i++) {
-    if (out.length && out[out.length - 1].v === row[i]) { out[out.length - 1].n++; continue; }
-    out.push({ v: row[i], n: 1, i: i });
+function moneyIn(v) {
+  if (FREE.test(v)) return '<b class="free">' + esc(v) + '</b>';
+  if (MONEY.test(v)) return '<b>' + esc(v) + '<span class="u">원</span></b>';
+  if (SOFT.test(v) || v.length > 12) return '<b class="soft">' + esc(v) + '</b>';
+  return '<b>' + esc(v) + '</b>';
+}
+
+/*
+ * 격자(신규 설치)와 이름+값 목록(이전설치)을 **같은 모양**으로 만든다.
+ * → { vh:[값 칸 이름], rows:[{ name, vals:[], note }] }
+ */
+function normalizeGrid(sec) {
+  var head = sec.grid.slice(0, sec.headRows);
+  var last = head[head.length - 1] || [];
+  var W = sec.grid[0].length;
+  var vi = [], ni = [], ti = [];
+  for (var i = 0; i < W; i++) {
+    var h = last[i] || '';
+    if (NOTE_H.test(h)) ti.push(i);
+    else if (VAL_H.test(h)) vi.push(i);
+    else ni.push(i);
   }
-  return out;
+  /* 머리글이 값 칸을 안 밝히면 맨 오른쪽을 값으로 본다 — 그래야 빈손으로 끝나지 않는다 */
+  if (!vi.length) { vi = [W - 1]; ni = ni.filter(function (x) { return x !== W - 1; }); }
+  var uniq = function (a) { var o = [], p = null; a.forEach(function (x) { if (x !== p) { o.push(x); p = x; } }); return o; };
+  return {
+    vh: vi.map(function (i) { return last[i] || ''; }),
+    rows: sec.grid.slice(sec.headRows).map(function (r) {
+      return {
+        name: uniq(ni.map(function (i) { return r[i]; }).filter(Boolean)).join(' · '),
+        vals: vi.map(function (i) { return r[i] || ''; }),
+        note: ti.map(function (i) { return r[i]; }).filter(Boolean).join(' '),
+      };
+    }),
+  };
+}
+function normalizeRows(sec) {
+  var vi = [], ti = [];
+  sec.head.forEach(function (h, i) {
+    if (i === 0) return;
+    if (NOTE_H.test(h)) ti.push(i - 1); else vi.push(i - 1);
+  });
+  return {
+    vh: vi.map(function (i) { return sec.head[i + 1]; }),
+    rows: sec.rows.map(function (r) {
+      if (r.note) return { only: r.note };
+      return {
+        name: r.label,
+        vals: vi.map(function (i) { return r.values[i] || ''; }),
+        note: ti.map(function (i) { return r.values[i]; }).filter(Boolean).join(' '),
+      };
+    }),
+  };
 }
 
-/* 케어플러스 쪽은 이름 + 값 목록이라 격자가 아니다 */
-function rowTable(sec) {
-  var h = '<tr>' + sec.head.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>';
-  var b = sec.rows.map(function (r) {
-    if (r.note) return '<tr class="notes"><td colspan="' + sec.head.length + '">' + esc(r.note) + '</td></tr>';
-    return '<tr><td>' + esc(r.label) + '</td>' + r.values.map(function (v) {
-      return '<td class="' + cellClass(v) + '">' + esc(v) + '</td>';
-    }).join('') + '</tr>';
-  }).join('');
-  return '<div class="tw"><table>' + h + b + '</table></div>';
+/* 「이름 → 금액」 한 줄. 값이 여럿이면 이름 아래에 나란히 둔다. */
+function listOf(n, pfx) {
+  var multi = n.vh.length > 1;
+  return '<div class="rows">' + n.rows.map(function (r, ri) {
+    var id = ' data-id="' + pfx + ':' + ri + '"';
+    if (r.only) return '<div class="r only"' + id + '>' + esc(r.only) + '</div>';
+    if (!multi) {
+      return '<div class="r"' + id + '><div class="nm">' + esc(r.name)
+        + (r.note ? '<div class="nt">' + esc(r.note) + '</div>' : '') + '</div>'
+        + money(r.vals[0]) + '</div>';
+    }
+    var seen = r.vals.filter(Boolean);
+    return '<div class="r multi"' + id + '><div class="nm">' + esc(r.name) + '</div>'
+      + (seen.length ? '<div class="vs">' + r.vals.map(function (v, i) {
+          return v ? '<span><i>' + esc(n.vh[i]) + '</i>' + moneyIn(v) + '</span>' : '';
+        }).join('') + '</div>' : '')
+      + (r.note ? '<div class="nt">' + esc(r.note) + '</div>' : '') + '</div>';
+  }).join('') + '</div>';
 }
 
-function section(title, n, inner, open) {
-  return '<details class="sec"' + (open ? ' open' : '') + '><summary><span>' + esc(title) +
-    '</span><span class="cnt">' + n + '행</span></summary>' + inner + '</details>';
+/* 절은 기본으로 펼친다 — 눌러야 열리면 무엇이 있는지 알 수가 없다 */
+function section(title, n, inner) {
+  return '<details class="sec" open><summary><span>' + esc(title) +
+    '</span><span class="cnt">' + n + '건</span></summary>' + inner + '</details>';
 }
 
 function chips(list, cur, tab) {
@@ -216,7 +312,6 @@ function chips(list, cur, tab) {
 function render() {
   var el = document.getElementById('body');
   if (!D) { el.innerHTML = '<div class="empty">불러오는 중…</div>'; return; }
-  if (Q) { el.innerHTML = searchView(); return; }
 
   if (TAB === 'new') {
     var cats = D.newInstall.categories, key = CAT.new || cats[0].key;
@@ -226,7 +321,8 @@ function render() {
       + '<br>' + esc(c.note) + ' · 확인 ' + esc(D.collectedAt)
       + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div>'
       + c.sections.map(function (s, i) {
-          return section(s.title, s.grid.length - s.headRows, gridTable(s), i === 0);
+          var n = normalizeGrid(s);
+          return section(s.title, n.rows.length, listOf(n, 'new:' + c.key + ':' + i));
         }).join('');
     return;
   }
@@ -238,39 +334,66 @@ function render() {
       + '<div class="src"><b>' + esc(D.careplus.title) + '</b> — ' + esc(D.careplus.note)
       + '<br>출처 삼성닷컴 케어플러스 · 확인 ' + esc(D.careplus.collectedAt)
       + ' · <a href="' + esc(D.careplus.source) + '" target="_blank" rel="noopener">원문 보기</a></div>'
-      + g.sections.map(function (s, i) { return section(s.title, s.rows.length, rowTable(s), i === 0); }).join('');
+      + g.sections.map(function (s, i) {
+          var n = normalizeRows(s);
+          return section(s.title, n.rows.length, listOf(n, 'care:' + g.key + ':' + i));
+        }).join('');
     return;
   }
 
-  var sf = D.safety;
+  /*
+   * 설치 전 준비 — 원문 지면의 **그림과 글을 함께** 싣는다(2026-08-20 사장님 요청).
+   * 예전에는 멀티탭 글만 있고 나머지 두 지면은 "그림이라 못 옮겼습니다"로 링크만 뒀는데,
+   * 그 두 지면이 **설치 불가 조건·필요 공간·타공 기준**을 담고 있어 상담에서 바로 쓰인다.
+   * 그림은 펼쳐 보여주고, 글은 옮겨 적어 검색에 걸리게 한다.
+   */
+  var sf = D.safety, ico = function (x) {
+    return x.img ? '<img class="ic" src="' + esc(x.img) + '" alt="" loading="lazy">' : '';
+  };
   el.innerHTML = '<div class="safe"><h3>' + esc(sf.title) + '</h3>'
-    + '<div class="tg">대상제품 <b>' + sf.targets.map(esc).join(' · ') + '</b></div>'
-    + '<div class="yn"><div class="y"><h4>' + esc(sf.ok.label) + '</h4><ul>'
-    + sf.ok.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('')
+    + '<div class="tg" data-id="prep:targets">대상제품 <b>' + sf.targets.map(esc).join(' · ') + '</b></div>'
+    + '<div class="yn"><div class="y" data-id="prep:ok"><h4>' + esc(sf.ok.label) + '</h4><ul class="icl">'
+    + sf.ok.items.map(function (i) { return '<li>' + ico(i) + '<span>' + esc(i.t) + '</span></li>'; }).join('')
     + '</ul><div class="spec">' + esc(sf.ok.spec) + '</div></div>'
-    + '<div class="n"><h4>' + esc(sf.no.label) + '</h4><ul>'
-    + sf.no.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul></div></div>'
-    + '<ul class="lines">' + sf.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'
+    + '<div class="n" data-id="prep:no"><h4>' + esc(sf.no.label) + '</h4><ul class="icl">'
+    + sf.no.items.map(function (i) { return '<li>' + ico(i) + '<span>' + esc(i.t) + '</span></li>'; }).join('')
+    + '</ul></div></div>'
+    + '<ul class="lines">' + sf.lines.map(function (l, i) {
+        return '<li data-id="prep:line:' + i + '">' + esc(l) + '</li>'; }).join('') + '</ul>'
     + '<div class="warnbox">멀티탭 정격용량을 넘겨 쓰면 화재 위험이 있습니다. 전원은 벽면 콘센트에 제품 단독으로 꽂는 것이 원칙입니다.</div>'
-    + '<div class="snote" style="margin-top:10px">확인 ' + esc(D.collectedAt)
-    + ' · <a href="' + esc(sf.url) + '" target="_blank" rel="noopener" style="color:#1428A0">원문 보기</a></div></div>'
-    /* 그림으로만 있는 안내는 옮겨 적을 수 없다 — 없는 것이 아니라 못 옮긴 것이라 밝힌다 */
-    + '<div class="imgonly"><h3>원문 지면에서 봐야 하는 안내</h3>'
-    + '<p>아래 두 가지는 원문이 전부 그림이라 이 앱으로 옮기지 못했습니다. 눌러서 원문을 확인하세요.</p>'
-    + D.imageOnly.map(function (x) {
-        return '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.name) + ' ›</a>';
-      }).join('') + '</div>';
+    + '<div class="foot">확인 ' + esc(D.collectedAt)
+    + ' · <a href="' + esc(sf.url) + '" target="_blank" rel="noopener">원문 보기</a></div></div>'
+    + (D.prepMore || []).map(function (c) {
+        return '<div class="safe" data-id="prep:' + esc(c.key) + '"><h3>' + esc(c.title) + '</h3>'
+          + '<div class="tg">' + esc(c.lead) + '</div>'
+          + (c.img ? '<a class="shot" href="' + esc(c.img) + '" target="_blank" rel="noopener">'
+              + '<img src="' + esc(c.img) + '" alt="' + esc(c.imgAlt || c.title) + '" loading="lazy"></a>' : '')
+          + c.items.map(function (x, i) {
+              return '<div class="pit" data-id="prep:' + esc(c.key) + ':' + i + '">'
+                + '<div class="pt">' + esc(x.t) + '</div>'
+                + '<div class="pd">' + esc(x.d) + '</div>'
+                + (x.img ? '<a class="shot" href="' + esc(x.img) + '" target="_blank" rel="noopener">'
+                    + '<img src="' + esc(x.img) + '" alt="' + esc(x.t) + '" loading="lazy"></a>' : '')
+                + '</div>';
+            }).join('')
+          + '<div class="foot">확인 ' + esc(D.collectedAt)
+          + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div></div>';
+      }).join('');
 }
 
-/* 검색 — 한 글자는 조건으로 쓰지 않는다(어디에나 걸린다). 모든 토큰을 포함해야 한다(AND). */
-function searchView() {
+/* ── 검색 ────────────────────────────────────────────────
+ * 한 글자는 조건으로 쓰지 않는다(어디에나 걸린다). 모든 토큰을 포함해야 한다(AND).
+ * 결과는 본문을 덮지 않고 검색창 아래로 내려오고, 고르면 **그 줄로 데려간다.**
+ */
+function runSearch() {
+  var drop = document.getElementById('sdrop');
   var toks = norm(Q).split(' ').filter(function (t) { return t.length > 1; });
-  var note = document.getElementById('snote');
-  if (!toks.length) { note.hidden = true; return '<div class="empty">두 글자 이상 입력해 주세요.</div>'; }
+  if (!toks.length) { drop.hidden = true; drop.innerHTML = ''; return; }
+
   var hit = D.index.filter(function (r) {
     return toks.every(function (t) { return r.k.indexOf(t) >= 0; });
   });
-  /* 0건이면 안 걸린 말을 빼고 다시 찾고, 뺀 말을 화면에 적는다 — 조용히 빼지 않는다 */
+  /* 0건이면 안 걸린 말을 빼고 다시 찾고, 뺀 말을 밝힌다 — 조용히 빼지 않는다 */
   var dropped = [];
   if (!hit.length && toks.length > 1) {
     var live = toks.filter(function (t) { return D.index.some(function (r) { return r.k.indexOf(t) >= 0; }); });
@@ -279,18 +402,21 @@ function searchView() {
       return live.every(function (t) { return r.k.indexOf(t) >= 0; });
     });
   }
-  note.hidden = false;
-  note.innerHTML = hit.length
-    ? '결과 ' + hit.length + '건' + (dropped.length ? ' · 없는 말이라 뺐습니다: ' + dropped.map(esc).join(', ') : '')
-    : '찾지 못했습니다.';
-  if (!hit.length) return '<div class="empty">해당하는 항목이 없습니다.<br>사다리차 · 타공 · 앵글 · 멀티탭처럼 항목 이름으로 찾아보세요.</div>';
 
   var TABN = { new: '신규 설치 추가비', care: '이전 · 재설치 · 철거', prep: '설치 전 준비' };
-  return '<div class="sres">' + hit.slice(0, 120).map(function (r) {
-    return '<div class="sr" data-go="' + esc(r.tab) + '" data-cat="' + esc(r.cat) + '">'
-      + '<span class="w">' + esc(TABN[r.tab]) + ' · ' + esc(r.sec) + '</span>' + hl(r.t, toks) + '</div>';
-  }).join('') + '</div>'
-  + (hit.length > 120 ? '<div class="snote">앞의 120건만 보여줍니다. 검색어를 좁혀 보세요.</div>' : '');
+  var head = hit.length
+    ? '결과 ' + hit.length + '건 — 누르면 그 자리로 갑니다'
+      + (dropped.length ? ' · 없는 말이라 뺐습니다: ' + dropped.map(esc).join(', ') : '')
+    : '찾지 못했습니다. 사다리차 · 타공 · 앵글 · 멀티탭처럼 항목 이름으로 찾아보세요.';
+  drop.innerHTML = '<div class="shead">' + head + '</div>'
+    + (hit.length ? hit.slice(0, 80).map(function (r) {
+        return '<div class="sr" tabindex="0" data-go="' + esc(r.tab) + '" data-cat="' + esc(r.cat)
+          + '" data-target="' + esc(r.id || '') + '">'
+          + '<span class="w">' + esc(TABN[r.tab]) + ' · ' + esc(r.sec) + '</span>' + hl(r.t, toks) + '</div>';
+      }).join('') : '')
+    + (hit.length > 80 ? '<div class="shead" style="border:0">앞의 80건만 보여줍니다. 검색어를 좁혀 보세요.</div>' : '');
+  drop.hidden = false;
+  drop.scrollTop = 0;
 }
 function hl(text, toks) {
   var out = esc(text);
@@ -302,45 +428,79 @@ function hl(text, toks) {
   return out;
 }
 
+/*
+ * 검색 결과를 누르면 **탭·품목·그 줄까지** 데려간다. 찾아 주기만 하고 두면 결국 다시 뒤진다.
+ * 줄은 글자가 아니라 **키**로 찾는다 — 같은 금액이 여러 줄에 있어 글자로는 못 가른다.
+ */
+function go(tab, cat, target) {
+  TAB = tab; if (cat) CAT[tab] = cat;
+  [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t.dataset.tab === tab); });
+  closeDrop();
+  render();
+  if (!target) { window.scrollTo(0, 0); return; }
+  var el = document.querySelector('[data-id="' + String(target).replace(/"/g, '') + '"]');
+  if (!el) { window.scrollTo(0, 0); return; }
+  /* 접어 둔 절 안이면 펼치고 나서 옮긴다 — 닫힌 채로는 스크롤이 엉뚱한 곳에 선다 */
+  var d = el.closest ? el.closest('details') : null;
+  if (d && !d.open) d.open = true;
+  if (el.scrollIntoView) el.scrollIntoView({ block: 'center' });
+  el.classList.remove('hit');
+  void el.offsetWidth;                 // 같은 줄을 다시 눌러도 강조가 한 번 더 돌게
+  el.classList.add('hit');
+}
+function closeDrop() {
+  var d = document.getElementById('sdrop'); d.hidden = true; d.innerHTML = '';
+}
+
 /* ── 조작 ─────────────────────────────────────────────── */
 document.getElementById('tabs').addEventListener('click', function (e) {
   var b = e.target.closest('.tab'); if (!b) return;
-  TAB = b.dataset.tab; Q = ''; document.getElementById('sq').value = '';
-  document.getElementById('sclr').hidden = true; document.getElementById('snote').hidden = true;
-  [].forEach.call(this.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t === b); });
-  render(); window.scrollTo(0, 0);
+  go(b.dataset.tab, null, null);
 });
 document.getElementById('body').addEventListener('click', function (e) {
   var chip = e.target.closest('.chip');
-  if (chip) { CAT[chip.dataset.tab] = chip.dataset.cat; render(); return; }
-  var sr = e.target.closest('.sr');
-  if (sr) { go(sr.dataset.go, sr.dataset.cat); }
+  if (chip) { CAT[chip.dataset.tab] = chip.dataset.cat; render(); }
 });
+var drop = document.getElementById('sdrop');
+var pick = function (e) {
+  var sr = e.target.closest('.sr'); if (!sr) return;
+  go(sr.dataset.go, sr.dataset.cat, sr.dataset.target);
+};
+drop.addEventListener('click', pick);
+drop.addEventListener('keydown', function (e) { if (e.key === 'Enter') pick(e); });
+
 var sq = document.getElementById('sq');
 sq.addEventListener('input', function () {
-  Q = this.value; document.getElementById('sclr').hidden = !Q; render();
+  Q = this.value; document.getElementById('sclr').hidden = !Q; runSearch();
+});
+/* Enter 는 첫 결과로 — 폰에서 목록을 다시 누르지 않아도 되게 */
+sq.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  var first = drop.querySelector('.sr');
+  if (first) { e.preventDefault(); go(first.dataset.go, first.dataset.cat, first.dataset.target); this.blur(); }
 });
 document.getElementById('sclr').addEventListener('click', function () {
-  sq.value = ''; Q = ''; this.hidden = true; document.getElementById('snote').hidden = true; render();
+  sq.value = ''; Q = ''; this.hidden = true; closeDrop(); sq.focus();
 });
-
-/* 검색 결과를 누르면 그 탭·품목까지 데려간다 — 찾아 주기만 하고 두면 결국 다시 뒤진다 */
-function go(tab, cat) {
-  TAB = tab; if (cat) CAT[tab] = cat;
-  Q = ''; sq.value = ''; document.getElementById('sclr').hidden = true;
-  document.getElementById('snote').hidden = true;
-  [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t.dataset.tab === tab); });
-  render(); window.scrollTo(0, 0);
-}
+/* 바깥을 누르면 결과가 닫힌다 — 폰에서 목록이 화면을 계속 덮고 있으면 안 된다 */
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.sbar-in')) closeDrop();
+}, true);
 
 fetch('install-cost.json').then(function (r) { return r.json(); }).then(function (j) {
   D = j;
-  /* 통합검색에서 `?q=` 로 들어오면 그 말로 바로 찾아 준다 */
   var p = new URLSearchParams(location.search);
-  var q = p.get('q');
-  if (q) { sq.value = q; Q = q; document.getElementById('sclr').hidden = false; }
-  var t = p.get('tab'); if (t && ['new', 'care', 'prep'].indexOf(t) >= 0) go(t, p.get('cat'));
+  var t = p.get('tab');
+  if (t && ['new', 'care', 'prep'].indexOf(t) >= 0) { TAB = t; if (p.get('cat')) CAT[t] = p.get('cat'); }
+  [].forEach.call(document.querySelectorAll('.tab'), function (x) { x.classList.toggle('on', x.dataset.tab === TAB); });
   render();
+  /* 통합검색에서 `?q=` 로 들어오면 그 말로 바로 찾아 첫 결과로 데려간다 */
+  var q = p.get('q');
+  if (q) {
+    sq.value = q; Q = q; document.getElementById('sclr').hidden = false; runSearch();
+    var first = drop.querySelector('.sr');
+    if (first) go(first.dataset.go, first.dataset.cat, first.dataset.target);
+  }
   if (window.parent !== window) parent.postMessage({ type: 'share-state', on: true }, '*');
 }).catch(function () {
   document.getElementById('body').innerHTML =
@@ -348,9 +508,16 @@ fetch('install-cost.json').then(function (r) { return r.json(); }).then(function
 });
 
 /* 테스트가 들여다보는 손잡이 */
-window.__cost = { get data() { return D; }, go: go,
-  search: function (q) { sq.value = q; Q = q; render();
-    return [].map.call(document.querySelectorAll('#body .sr'), function (e) { return e.textContent; }); } };
+window.__cost = {
+  get data() { return D; }, go: go,
+  search: function (q) { sq.value = q; Q = q; runSearch();
+    return [].map.call(document.querySelectorAll('#sdrop .sr'), function (e) { return e.textContent; }); },
+  /* 검색 → 첫 결과로 이동했을 때 실제로 그 줄이 잡히는가 */
+  jump: function (q) { this.search(q);
+    var f = document.querySelector('#sdrop .sr'); if (!f) return null;
+    go(f.dataset.go, f.dataset.cat, f.dataset.target);
+    var el = document.querySelector('.hit'); return el ? el.textContent.replace(/\s+/g, ' ').trim() : null; },
+};
 </script>
 </body>
 </html>
