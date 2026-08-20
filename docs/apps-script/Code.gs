@@ -77,8 +77,9 @@ function doPost(e) {
 
     const now = new Date().toISOString();
     const rows = events.map(function (ev) {
+      /* 지점 두 칸은 **맨 뒤**다 — HEADER 순서와 자리가 같아야 한다(doGet 도 같은 자리를 읽는다) */
       return [ev.ts || '', ev.date || '', ev.module || '', ev.action || '',
-              ev.uid || '', ev.extra || '', now];
+              ev.uid || '', ev.extra || '', now, ev.store || '', ev.storeName || ''];
     });
 
     /* 여러 매장이 동시에 쓰면 같은 줄에 겹쳐 쓸 수 있다. 예전에는 한 건씩 appendRow 라
@@ -156,6 +157,15 @@ function doGet(e) {
       action: String(row[3]),
       uid: String(row[4]),
       extra: row[5] ? String(row[5]) : undefined,
+      /*
+       * **지점도 함께 돌려준다**(2026-08-20). 쓰는 쪽(doPost)에만 칸을 더하고 여기를
+       * 빠뜨려서, 시트에는 지점이 쌓이는데 **대시보드는 계속 비어 보였다.**
+       * 열은 `receivedAt`(row[6]) 뒤에 붙였으므로 7·8번이다.
+       * 옛 줄에는 값이 없으므로 있을 때만 담는다 — 빈 문자열을 넣으면 대시보드가
+       * "지점이 있는데 이름이 없다"로 읽는다.
+       */
+      store: row[7] ? String(row[7]) : undefined,
+      storeName: row[8] ? String(row[8]) : undefined,
     });
   }
   logs.reverse();                         // 다시 시간순으로

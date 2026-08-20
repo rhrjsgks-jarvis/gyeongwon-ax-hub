@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { STORE_LIST, getStoreCode, setStoreCode, findStores } from '@/lib/stores'
+import { ACTIVE_STORES, getStoreCode, setStoreCode, findStores, isTestStore } from '@/lib/stores'
 import { logEvent } from '@/lib/logEvent'
 
 /*
@@ -93,7 +93,7 @@ export default function StorePicker() {
                   fontWeight: s.code === code ? 700 : 500,
                 }}
               >
-                <span className="text-[14px]">{s.name}</span>
+<span className="text-[14px]" style={isTestStore(s.code) ? { color: '#9aa0a6' } : undefined}>{s.name}</span>
                 <span className="text-[11px] tracking-wide text-gray-400">{s.code}</span>
               </button>
             ))
@@ -101,7 +101,8 @@ export default function StorePicker() {
         </div>
 
         <div className="flex items-center justify-between border-t px-5 py-3" style={{ borderColor: '#f1f3f6' }}>
-          <span className="text-[11px] text-gray-400">전체 {STORE_LIST.length}곳</span>
+{/* **활성 지점만 센다** — 전체 목록을 세면 화면이 거짓말을 한다(다른 팀 지점은 안 보인다) */}
+          <span className="text-[11px] text-gray-400">경원영업팀 {ACTIVE_STORES.length}곳</span>
           {/* 나중에 고를 수 있게 둔다 — 상담을 막는 것이 로그가 비는 것보다 나쁘다 */}
           <button
             type="button"

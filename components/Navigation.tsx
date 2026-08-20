@@ -7,7 +7,7 @@ import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
 import FeedbackButton from './FeedbackButton'
-import { getStoreCode, storeName } from '@/lib/stores'
+import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
 
 /*
  * **지금 보고 있는 화면인가** — 경로는 글자가 아니라 **마디(segment)** 로 본다.
@@ -189,9 +189,14 @@ export default function Navigation() {
             onClick={() => window.dispatchEvent(new Event('ax-store-open'))}
             title="지점 바꾸기"
             className="text-white text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap"
-            style={{ background: 'rgba(255,255,255,0.18)' }}
+            style={{
+              /* 테스트점은 **다른 색으로 표시한다** — 로그가 안 쌓이는 상태인데 평소와
+                 똑같아 보이면, 점검이 끝난 뒤 되돌리는 것을 잊어 그 매장 통계가 통째로 빈다 */
+              background: isTestStore(store) ? 'rgba(255,193,7,.9)' : 'rgba(255,255,255,0.18)',
+              color: isTestStore(store) ? '#4a3200' : '#fff',
+            }}
           >
-            {store ? storeName(store) || store : '지점 선택'}
+            {store ? (isTestStore(store) ? '테스트점 · 로그 미기록' : storeName(store) || store) : '지점 선택'}
           </button>
           <span className="hidden lg:inline text-white text-xs opacity-60">경원영업팀</span>
           {/* 개발자 문의 — 떠 있던 버튼을 여기로 옮겼다(FeedbackButton 주석 참조) */}

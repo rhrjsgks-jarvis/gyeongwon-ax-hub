@@ -25,7 +25,7 @@ export interface LogEvent {
   storeName?: string  // 지점명 — 시트를 사람이 볼 때 코드만으로는 못 읽는다
 }
 
-import { getStoreCode, storeName } from './stores.ts'
+import { getStoreCode, storeName, isTestStore } from './stores.ts'
 
 const STORAGE_KEY = 'axhub_logs'
 const MAX_LOGS    = 2000
@@ -186,6 +186,13 @@ export function logEvent(
   extra?: string
 ): void {
   if (typeof localStorage === 'undefined') return
+  /*
+   * **테스트점(Z000)에서는 아무것도 남기지 않는다**(2026-08-20 사장님 요청).
+   * 관리자가 화면을 점검할 때 그 조작이 매장 통계에 섞이면 **실제 사용량과 구분할
+   * 방법이 없어진다.** 기기에도, 시트에도 안 쌓는다 — 로컬만 막으면 대기함에 남아
+   * 다음 전송 때 시트로 올라간다.
+   */
+  if (isTestStore(getStoreCode())) return
   const ev = buildEvent(module, action, extra)
   saveLocal(ev)
   if (!GAS_CONNECTED) return

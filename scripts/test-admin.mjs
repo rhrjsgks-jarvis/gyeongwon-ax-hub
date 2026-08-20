@@ -500,5 +500,68 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!bad) console.log('OK: 지점 — 목록·검색·로그 적재·점별 집계·중복 방지·옛 줄 호환');
 }
 
+/* ── Apps Script — 쓰는 칸과 읽는 칸이 맞는가 ──────────────────
+ * 2026-08-20 실제로 어긋났다: 지점 두 칸을 doPost 에만 더하고 doGet 을 빠뜨려,
+ * **시트에는 쌓이는데 대시보드는 계속 비어 보였다.** 배포가 저장소 밖(구글)이라
+ * 눈으로만 확인하면 또 놓친다 — 소스에서 세어 둔다.
+ */
+{
+  let bad = 0;
+  const gs = fs.readFileSync('docs/apps-script/Code.gs', 'utf8');
+
+  const hm = gs.match(/const HEADER = \[([^\]]*)\]/);
+  const header = hm ? hm[1].split(',').map((x) => x.trim().replace(/^'|'$/g, '')) : [];
+  if (!header.includes('store') || !header.includes('storeName')) {
+    fail('[AppsScript] HEADER 에 지점 칸이 없다'); bad++;
+  }
+
+  /* doPost 가 HEADER 만큼 값을 쓰는가 — 모자라면 뒤 칸이 통째로 빈다 */
+  const post = gs.match(/return \[ev\.ts[\s\S]*?\];/);
+  const written = post ? (post[0].match(/ev\.[a-zA-Z]+|now/g) || []).length : 0;
+  if (written !== header.length) {
+    fail('[AppsScript] doPost 가 ' + written + '칸을 쓰는데 HEADER 는 ' + header.length + '칸이다'); bad++;
+  }
+
+  /* doGet 이 그 칸을 돌려주는가 — 여기가 빠지면 대시보드가 비어 보인다 */
+  const get = gs.match(/logs\.push\(\{[\s\S]*?\}\);/);
+  const read = get ? get[0] : '';
+  for (const f of ['store', 'storeName']) {
+    if (!new RegExp(f + ':').test(read)) { fail('[AppsScript] doGet 이 ' + f + ' 를 안 돌려준다'); bad++; }
+  }
+  /* 자리까지 맞는가 — receivedAt(row[6]) 뒤가 store(7)·storeName(8) 이다 */
+  if (!/store: row\[7\]/.test(read) || !/storeName: row\[8\]/.test(read)) {
+    fail('[AppsScript] doGet 의 지점 열 번호가 HEADER 순서와 다르다'); bad++;
+  }
+  if (!bad) console.log('OK: Apps Script — HEADER ' + header.length + '칸, doPost·doGet 이 같은 칸을 본다');
+}
+
+/* ── 테스트점(Z000)은 로그를 남기지 않는다 (2026-08-20 사장님 요청) ──
+ * 관리자가 화면을 점검할 때 그 조작이 매장 통계에 섞이면 **집계가 오염된다.**
+ * 실제 매장 사용량과 점검 클릭을 구분할 방법이 없어지므로, 아예 안 쌓는 쪽이 맞다.
+ */
+{
+  let bad = 0;
+  localStorage.clear(); sessionStorage.clear();
+  S.setStoreCode(S.TEST_STORE_CODE);
+  const before = readLogs().length;
+  logEvent('finder', 'page_view');
+  logEvent('as', 'result_open', '냉장고');
+  logOnce('care', 'result_open', '에어컨');
+  if (readLogs().length !== before) { fail('[테스트점] 로그가 쌓였다 — 점검 조작이 통계를 오염시킨다'); bad++; }
+
+  /* 지점을 되돌리면 다시 쌓여야 한다 — 영영 꺼져 있으면 그게 더 나쁘다 */
+  S.setStoreCode('ZN01');
+  logEvent('finder', 'page_view');
+  if (readLogs().length !== before + 1) { fail('[테스트점] 다른 지점으로 바꿔도 로그가 안 쌓인다'); bad++; }
+
+  if (!S.STORE_LIST.some((x) => x.code === S.TEST_STORE_CODE)) {
+    fail('[테스트점] 목록에 테스트점이 없다 — 고를 수가 없다'); bad++;
+  }
+  if (!S.isTestStore(S.TEST_STORE_CODE) || S.isTestStore('ZN01')) {
+    fail('[테스트점] isTestStore 판정이 틀렸다'); bad++;
+  }
+  if (!bad) console.log('OK: 테스트점(Z000) — 로그를 남기지 않고, 다른 지점으로 바꾸면 다시 쌓인다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
