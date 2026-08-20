@@ -374,7 +374,7 @@ for (const [file, needle] of deepLinks) {
 // ── ⑥ 전 모듈이 색인에 들어 있는가 ──
 // 모듈을 새로 만들고 색인 생성기에 넣지 않으면 **통합검색에서 통째로 사라지는데 아무 표시도 안 난다.**
 {
-  const want = { finder: 300, install: 20, compare: 30, care: 10, as: 80, place: 50, hub: 10 };
+  const want = { finder: 300, install: 20, compare: 30, care: 10, as: 80, place: 50, installcost: 30, hub: 10 };
   const got = {};
   for (const e of entries) got[e.m] = (got[e.m] || 0) + 1;
   for (const [m, min] of Object.entries(want)) {

@@ -96,6 +96,16 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.08',
         status: 'live',
       },
+      {
+        href: '/install-cost',
+        icon: 'bolt',
+        title: '설치비용 · 사전준비',
+        desc: '신규 설치 추가비 131행 + 이전·재설치·철거 304행 + 사다리차·야간/공휴일·거리 할증 + 멀티탭 안전 기준',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.08',
+        status: 'live',
+      },
 
     ],
   },

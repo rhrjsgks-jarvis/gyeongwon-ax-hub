@@ -179,7 +179,16 @@
  * 단종 553 을 뺄 때 함께 사라졌는데 정답은 현행 최고급 857 이라 잃을 이유가 없었다.
  * 오답 보기만 현행 503 으로 갈았다.
  */
-const CACHE_VERSION = 'axhub-v125';
+/*
+ * v126 (2026-08-20) — 새 모듈 「설치비용 · 사전준비」(install-cost-app.html + install-cost.json).
+ * 신규 설치 추가비(삼성전자로지텍) 131행 · 이전/재설치/철거(삼성케어플러스) 304행 ·
+ * 멀티탭 안전 기준. 둘 다 SWR 대상이라 여기를 올리지 않으면 이미 쓰던 기기가
+ * **새 지면을 아예 못 받는다**(자료 파일이 없어 빈 화면이 된다).
+ *
+ * 같은 덩어리에 place-app.html 도 들어간다 — 도구막대 '축척 맞추기'가 길이 입력 막대를
+ * 닫지 않아 **치수선 두 점을 눌러도 아무 일이 안 일어나던 것**을 고쳤다(E2E 가 잡았다).
+ */
+const CACHE_VERSION = 'axhub-v126';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -206,7 +215,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|install|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
+const SWR = /\/(finder|compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra|install-cost)\.json$|\/(share-kit|prod-symbols|back-kit)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

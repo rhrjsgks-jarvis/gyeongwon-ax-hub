@@ -25,6 +25,7 @@ const NAV_GROUPS = [
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
       { href: '/as',               label: 'AS 관련 정보',     icon: 'warranty' as IconName },
+      { href: '/install-cost',     label: '설치비용 · 사전준비', icon: 'bolt' as IconName },
     ],
   },
   {

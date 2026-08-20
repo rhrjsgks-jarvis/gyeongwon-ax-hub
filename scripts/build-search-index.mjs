@@ -271,6 +271,42 @@ function flatten(v, out = []) {
   }
 }
 
+// ── 6-b. 설치비용 · 사전준비 ──
+// 상담에서 나오는 말은 *"사다리차 얼마죠"* · *"타공비"* · *"멀티탭 뭐 써야 하죠"* 다.
+// **행이 아니라 절 단위로** 담는다 — 435행을 다 넣으면 색인이 40KB 늘어나는데, 허브 검색이
+// 할 일은 "어느 표에 있는지"까지이고 그 안에서 다시 찾는 것은 앱의 검색창이 한다.
+// 그래서 `?q=` 로 검색어를 함께 넘겨 **앱이 열리자마자 같은 말로 걸러 준다.**
+{
+  const IC = JSON.parse(fs.readFileSync(pub('install-cost.json'), 'utf8'));
+  const link = (tab, cat) => `/install-cost?tab=${tab}${cat ? `&cat=${encodeURIComponent(cat)}` : ''}`;
+
+  for (const c of IC.newInstall.categories) {
+    for (const s of c.sections) {
+      const body = s.grid.slice(s.headRows).map((r) => r.filter(Boolean).join(' ')).join(' ');
+      add({ t: 'cost', m: 'installcost', title: `${c.name} ${s.title}`,
+        sub: `신규 설치 추가비 · ${s.grid.length - s.headRows}행`,
+        kw: [c.name, s.title, '설치비 추가설치비 신규설치 견적 단가 로지텍', body].join(' '),
+        href: link('new', c.key) });
+    }
+  }
+  for (const g of IC.careplus.groups) {
+    for (const s of g.sections) {
+      const body = s.rows.map((r) => r.note || [r.label, ...r.values].join(' ')).join(' ');
+      add({ t: 'cost', m: 'installcost', title: `${g.name} ${s.title}`,
+        sub: `이전설치 · ${s.rows.length}행`,
+        kw: [g.name, s.title, '이전설치 재설치 철거 케어플러스 할증 사다리차 이동거리 단가', body].join(' '),
+        href: link('care', g.key) });
+    }
+  }
+  // 안전한 사용준비 — 화면에 있는 말로 못 찾으면 검색이 아니다(AS 앱에서 배운 것)
+  add({ t: 'cost', m: 'installcost', title: IC.safety.title,
+    sub: `대상 ${IC.safety.targets.join(' · ')}`,
+    kw: ['멀티탭 콘센트 정격 16A 220V 4000W 과부하 누전 차단 화재 설치 전 준비 안전',
+      IC.safety.targets.join(' '), IC.safety.ok.items.join(' '), IC.safety.no.items.join(' '),
+      IC.safety.lines.join(' ')].join(' '),
+    href: link('prep') });
+}
+
 // ── 5. 허브 모듈·외부 링크 (수동 정의 — 소스가 app/page.tsx라 여기서 별도 관리) ──
 // 쿠폰 프로그램 URL만은 app/page.tsx의 COUPON_LINKS에서 직접 읽는다.
 // 여기에 URL을 복사해두면 한쪽만 바뀌었을 때 검색 결과가 죽은 링크를 가리키게 된다.

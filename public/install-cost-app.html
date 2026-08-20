@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>설치비용 · 사전준비</title>
+<link rel="stylesheet" href="/vendor/fonts/pretendard-variable.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/vendor/fonts/pretendard-variable.css"></noscript>
+<style>
+  *{box-sizing:border-box}
+  /* 한글은 어절 단위로 끊는다 — 좁은 칸에서 말이 반토막 나는 것을 막는다(다른 미니앱과 같은 규칙) */
+  body{margin:0;font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    background:#f6f7fb;color:#16181b;-webkit-text-size-adjust:100%;
+    word-break:keep-all;overflow-wrap:break-word}
+  /* 헤더는 아홉 앱이 같은 남색 바다 — 넘겨 볼 때 머리가 같아야 한 제품으로 읽힌다 */
+  .topbar{background:#1428A0;color:#fff;padding:14px 16px}
+  .topbar-in{max-width:840px;margin:0 auto;display:flex;align-items:center;gap:10px}
+  .hd-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);
+    display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+  .hd-t{font-size:17px;font-weight:800;line-height:1.25}
+  .hd-s{font-size:11.5px;color:#c7d2fe;margin-top:2px;line-height:1.4}
+  .wrap{max-width:840px;margin:0 auto;padding:14px 14px 60px}
+  @media(min-width:1024px){.topbar-in,.wrap{max-width:960px}}
+  @media(min-width:1440px){.topbar-in,.wrap{max-width:1140px}}
+
+  /* 검색이 주력이다 — 표가 435행이라 눈으로 훑을 양이 아니고, 상담사는 "사다리차"·"타공"
+     처럼 항목 이름으로 찾지 품목부터 고르지 않는다. 그래서 탭보다 위에 둔다. */
+  .sbar{background:#fff;border-bottom:1px solid #ecedf1;padding:10px 14px;position:sticky;top:0;z-index:60}
+  .sbar-in{max-width:840px;margin:0 auto;position:relative}
+  @media(min-width:1024px){.sbar-in{max-width:960px}}
+  @media(min-width:1440px){.sbar-in{max-width:1140px}}
+  #sq{width:100%;border:1.5px solid #e5e7eb;border-radius:11px;padding:10px 34px 10px 12px;
+    font-size:14px;font-family:inherit;background:#fafbfc}
+  #sq:focus{outline:none;border-color:#1428A0;background:#fff}
+  .sclr{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:none;
+    font-size:16px;color:#9aa0a6;cursor:pointer;padding:4px}
+  .snote{font-size:11.5px;color:#6b7280;margin-top:6px;line-height:1.5}
+
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);background:#fff;
+    border-bottom:1px solid #ecedf1;position:sticky;top:57px;z-index:55}
+  .tab{padding:10px 4px 9px;text-align:center;cursor:pointer;font-size:11.5px;font-weight:700;
+    color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s;border-top:0;background:none;font-family:inherit}
+  .tab.on{color:#1428A0;border-bottom-color:#1428A0}
+  .tb-ico{display:block;font-size:15px;margin-bottom:2px;line-height:1}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 14px}
+  .chip{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;
+    font-weight:600;cursor:pointer;color:#374151;font-family:inherit;transition:.12s}
+  .chip.on{background:#1428A0;border-color:#1428A0;color:#fff}
+
+  .src{font-size:11.5px;color:#6b7280;line-height:1.6;background:#fff;border:1px solid #eceef2;
+    border-radius:11px;padding:10px 12px;margin-bottom:14px}
+  .src a{color:#1428A0}
+  .src b{color:#374151}
+
+  .sec{background:#fff;border:1px solid #eceef2;border-radius:12px;margin-bottom:11px;overflow:hidden}
+  .sec>summary{cursor:pointer;list-style:none;padding:11px 13px;font-size:13px;font-weight:700;
+    color:#1f2937;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .sec>summary::-webkit-details-marker{display:none}
+  .sec>summary::after{content:'▾';color:#9aa0a6;font-size:11px;transition:.15s}
+  .sec[open]>summary::after{transform:rotate(180deg)}
+  .sec>summary .cnt{font-size:11px;font-weight:600;color:#9aa0a6}
+  /* 표는 좁은 화면에서 가로로만 스크롤한다 — 지면 전체가 옆으로 밀리면 안 된다 */
+  .tw{overflow-x:auto;border-top:1px solid #f1f3f6}
+  table{border-collapse:collapse;width:100%;font-size:12px;min-width:340px}
+  th,td{border-bottom:1px solid #f1f3f6;border-right:1px solid #f1f3f6;padding:7px 9px;
+    text-align:left;vertical-align:middle;line-height:1.5}
+  th{background:#f8f9fc;color:#4b5563;font-weight:700;font-size:11.5px;white-space:nowrap}
+  td:last-child,th:last-child{border-right:0}
+  /* 금액 칸은 자릿수를 맞춰 세운다 — 세로로 훑을 때 자리가 어긋나면 읽히지 않는다 */
+  td.num{text-align:right;font-weight:700;color:#111827;white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  td.free{color:#1428A0}
+  td.note{color:#6b7280;font-size:11px;min-width:160px}
+  tr.notes td{background:#fbfcfe;color:#6b7280;font-size:11px}
+
+  .safe{background:#fff;border:1px solid #eceef2;border-radius:12px;padding:14px;margin-bottom:12px}
+  .safe h3{margin:0 0 4px;font-size:14px;color:#1f2937}
+  .safe .tg{font-size:12px;color:#374151;line-height:1.7;margin-bottom:12px}
+  .safe .tg b{color:#1428A0}
+  .yn{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
+  @media(max-width:420px){.yn{grid-template-columns:1fr}}
+  .yn>div{border-radius:10px;padding:10px 11px}
+  .yn .y{background:#EEF2FF;border:1px solid #dbe3ff}
+  .yn .n{background:#FEF2F2;border:1px solid #fde0e0}
+  .yn h4{margin:0 0 6px;font-size:12px}
+  .yn .y h4{color:#1428A0}
+  .yn .n h4{color:#B91C1C}
+  .yn ul{margin:0;padding-left:16px;font-size:12px;line-height:1.75;color:#374151}
+  .yn .spec{margin-top:7px;font-size:12.5px;font-weight:800;color:#1428A0}
+  .lines{margin:0;padding-left:16px;font-size:12.5px;line-height:1.8;color:#374151}
+  .lines li::marker{color:#1428A0}
+  .warnbox{margin-top:11px;background:#FEF3C7;border:1px solid #fde68a;border-radius:10px;
+    padding:9px 11px;font-size:12px;color:#92400E;line-height:1.6;font-weight:600}
+  .imgonly{background:#fff;border:1px solid #eceef2;border-radius:12px;padding:12px 13px}
+  .imgonly h3{margin:0 0 6px;font-size:13px;color:#1f2937}
+  .imgonly p{margin:0 0 8px;font-size:11.5px;color:#6b7280;line-height:1.6}
+  .imgonly a{display:block;font-size:12.5px;color:#1428A0;padding:6px 0;border-top:1px solid #f1f3f6}
+
+  .sres{margin-bottom:14px}
+  .sr{background:#fff;border:1px solid #eceef2;border-radius:10px;padding:9px 11px;margin-bottom:6px;
+    cursor:pointer;font-size:12.5px;line-height:1.55}
+  .sr .w{font-size:10.5px;font-weight:700;color:#1428A0;display:block;margin-bottom:2px}
+  .sr mark{background:#FEF08A;color:inherit;padding:0 1px;border-radius:2px}
+  .empty{text-align:center;color:#9aa0a6;font-size:12.5px;padding:26px 10px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="hd-ico">🧾</div>
+    <div>
+      <div class="hd-t">설치비용 · 사전준비</div>
+      <div class="hd-s">신규 설치 추가비 · 이전설치 · 안전한 사용준비</div>
+    </div>
+  </div>
+</div>
+
+<!--
+  검색을 탭보다 위에 둔다. 상담 중에 나오는 말은 "사다리차 얼마죠" · "타공비" · "멀티탭"
+  인데, 그게 어느 탭에 있는지는 상담사가 알 이유가 없다.
+-->
+<div class="sbar">
+  <div class="sbar-in">
+    <input id="sq" type="search" placeholder="사다리차 · 타공 · 앵글 · 멀티탭 · 이전설치…" autocomplete="off">
+    <button class="sclr" id="sclr" hidden aria-label="지우기">✕</button>
+    <div class="snote" id="snote" hidden></div>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab on" data-tab="new"><span class="tb-ico">🔧</span>신규 설치 추가비</button>
+  <button class="tab" data-tab="care"><span class="tb-ico">🚚</span>이전 · 재설치 · 철거</button>
+  <button class="tab" data-tab="prep"><span class="tb-ico">🔌</span>설치 전 준비</button>
+</div>
+
+<div class="wrap" id="body"><div class="empty">불러오는 중…</div></div>
+
+<script src="share-kit.js"></script>
+<script>
+/*
+ * 자료는 `public/install-cost.json` — `npm run build:installcost` 가 만든다.
+ * 인라인으로 넣지 않은 이유는 145KB 라 미니앱 파싱 시간에 그대로 얹히기 때문이고,
+ * 서비스워커가 SWR 로 잡아 매장 전파가 약해도 열린다.
+ */
+var D = null, TAB = 'new', CAT = {}, Q = '';
+
+var esc = function (s) { return String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+
+/* 검색 정규화는 만드는 쪽(build-install-cost)과 같아야 한다 — 한쪽만 쉼표를 지우면
+   `36,300` 으로 색인해 놓고 `36300` 으로 찾아 영영 안 걸린다 */
+var norm = function (s) { return String(s).toLowerCase().replace(/,(?=\d)/g, '').replace(/\s+/g, ' ').trim(); };
+
+/* 값처럼 보이는 칸인가 — 금액은 오른쪽으로 세우고 무상/무료는 파랗게 둔다 */
+var NUM = /^[\d,]+$/, FREE = /^(무상|무료|-?\s*해당\s*없음)$/;
+var cellClass = function (v) {
+  if (FREE.test(v)) return 'num free';
+  if (NUM.test(v) || /^(실비|견적가|견적 후 합의|상담필요)$/.test(v)) return 'num';
+  return v.length > 24 ? 'note' : '';
+};
+
+/* 원문 표의 병합을 되살린다 — 옆으로 같은 값이 이어지면 한 칸으로 합친다.
+   격자를 그대로 두고 화면에서 합치는 쪽이 안전하다(자료에서 지우면 열이 어긋난다). */
+function gridTable(sec) {
+  var head = sec.grid.slice(0, sec.headRows), body = sec.grid.slice(sec.headRows);
+  var h = head.map(function (r) {
+    return '<tr>' + span(r).map(function (c) {
+      return '<th' + (c.n > 1 ? ' colspan="' + c.n + '"' : '') + '>' + esc(c.v) + '</th>';
+    }).join('') + '</tr>';
+  }).join('');
+  var seen = [];
+  var b = body.map(function (r) {
+    return '<tr>' + span(r).map(function (c) {
+      /* 바로 위와 같은 값이면 흐리게 — 원문에서 세로로 병합돼 있던 자리다 */
+      var dim = seen[c.i] === c.v && !NUM.test(c.v) ? ' style="color:#c3c7cf"' : '';
+      seen[c.i] = c.v;
+      return '<td class="' + cellClass(c.v) + '"' + (c.n > 1 ? ' colspan="' + c.n + '"' : '') + dim + '>' + esc(c.v) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  return '<div class="tw"><table>' + h + b + '</table></div>';
+}
+function span(row) {
+  var out = [];
+  for (var i = 0; i < row.length; i++) {
+    if (out.length && out[out.length - 1].v === row[i]) { out[out.length - 1].n++; continue; }
+    out.push({ v: row[i], n: 1, i: i });
+  }
+  return out;
+}
+
+/* 케어플러스 쪽은 이름 + 값 목록이라 격자가 아니다 */
+function rowTable(sec) {
+  var h = '<tr>' + sec.head.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr>';
+  var b = sec.rows.map(function (r) {
+    if (r.note) return '<tr class="notes"><td colspan="' + sec.head.length + '">' + esc(r.note) + '</td></tr>';
+    return '<tr><td>' + esc(r.label) + '</td>' + r.values.map(function (v) {
+      return '<td class="' + cellClass(v) + '">' + esc(v) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  return '<div class="tw"><table>' + h + b + '</table></div>';
+}
+
+function section(title, n, inner, open) {
+  return '<details class="sec"' + (open ? ' open' : '') + '><summary><span>' + esc(title) +
+    '</span><span class="cnt">' + n + '행</span></summary>' + inner + '</details>';
+}
+
+function chips(list, cur, tab) {
+  return '<div class="chips">' + list.map(function (c) {
+    return '<button class="chip' + (c.key === cur ? ' on' : '') + '" data-tab="' + tab +
+      '" data-cat="' + c.key + '">' + esc((c.icon ? c.icon + ' ' : '') + c.name) + '</button>';
+  }).join('') + '</div>';
+}
+
+function render() {
+  var el = document.getElementById('body');
+  if (!D) { el.innerHTML = '<div class="empty">불러오는 중…</div>'; return; }
+  if (Q) { el.innerHTML = searchView(); return; }
+
+  if (TAB === 'new') {
+    var cats = D.newInstall.categories, key = CAT.new || cats[0].key;
+    var c = cats.filter(function (x) { return x.key === key; })[0] || cats[0];
+    el.innerHTML = chips(cats, c.key, 'new')
+      + '<div class="src"><b>' + esc(D.newInstall.title) + '</b> — ' + esc(D.newInstall.note)
+      + '<br>' + esc(c.note) + ' · 확인 ' + esc(D.collectedAt)
+      + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div>'
+      + c.sections.map(function (s, i) {
+          return section(s.title, s.grid.length - s.headRows, gridTable(s), i === 0);
+        }).join('');
+    return;
+  }
+
+  if (TAB === 'care') {
+    var gs = D.careplus.groups, k = CAT.care || gs[0].key;
+    var g = gs.filter(function (x) { return x.key === k; })[0] || gs[0];
+    el.innerHTML = chips(gs, g.key, 'care')
+      + '<div class="src"><b>' + esc(D.careplus.title) + '</b> — ' + esc(D.careplus.note)
+      + '<br>출처 삼성닷컴 케어플러스 · 확인 ' + esc(D.careplus.collectedAt)
+      + ' · <a href="' + esc(D.careplus.source) + '" target="_blank" rel="noopener">원문 보기</a></div>'
+      + g.sections.map(function (s, i) { return section(s.title, s.rows.length, rowTable(s), i === 0); }).join('');
+    return;
+  }
+
+  var sf = D.safety;
+  el.innerHTML = '<div class="safe"><h3>' + esc(sf.title) + '</h3>'
+    + '<div class="tg">대상제품 <b>' + sf.targets.map(esc).join(' · ') + '</b></div>'
+    + '<div class="yn"><div class="y"><h4>' + esc(sf.ok.label) + '</h4><ul>'
+    + sf.ok.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('')
+    + '</ul><div class="spec">' + esc(sf.ok.spec) + '</div></div>'
+    + '<div class="n"><h4>' + esc(sf.no.label) + '</h4><ul>'
+    + sf.no.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul></div></div>'
+    + '<ul class="lines">' + sf.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>'
+    + '<div class="warnbox">멀티탭 정격용량을 넘겨 쓰면 화재 위험이 있습니다. 전원은 벽면 콘센트에 제품 단독으로 꽂는 것이 원칙입니다.</div>'
+    + '<div class="snote" style="margin-top:10px">확인 ' + esc(D.collectedAt)
+    + ' · <a href="' + esc(sf.url) + '" target="_blank" rel="noopener" style="color:#1428A0">원문 보기</a></div></div>'
+    /* 그림으로만 있는 안내는 옮겨 적을 수 없다 — 없는 것이 아니라 못 옮긴 것이라 밝힌다 */
+    + '<div class="imgonly"><h3>원문 지면에서 봐야 하는 안내</h3>'
+    + '<p>아래 두 가지는 원문이 전부 그림이라 이 앱으로 옮기지 못했습니다. 눌러서 원문을 확인하세요.</p>'
+    + D.imageOnly.map(function (x) {
+        return '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.name) + ' ›</a>';
+      }).join('') + '</div>';
+}
+
+/* 검색 — 한 글자는 조건으로 쓰지 않는다(어디에나 걸린다). 모든 토큰을 포함해야 한다(AND). */
+function searchView() {
+  var toks = norm(Q).split(' ').filter(function (t) { return t.length > 1; });
+  var note = document.getElementById('snote');
+  if (!toks.length) { note.hidden = true; return '<div class="empty">두 글자 이상 입력해 주세요.</div>'; }
+  var hit = D.index.filter(function (r) {
+    return toks.every(function (t) { return r.k.indexOf(t) >= 0; });
+  });
+  /* 0건이면 안 걸린 말을 빼고 다시 찾고, 뺀 말을 화면에 적는다 — 조용히 빼지 않는다 */
+  var dropped = [];
+  if (!hit.length && toks.length > 1) {
+    var live = toks.filter(function (t) { return D.index.some(function (r) { return r.k.indexOf(t) >= 0; }); });
+    dropped = toks.filter(function (t) { return live.indexOf(t) < 0; });
+    if (live.length) hit = D.index.filter(function (r) {
+      return live.every(function (t) { return r.k.indexOf(t) >= 0; });
+    });
+  }
+  note.hidden = false;
+  note.innerHTML = hit.length
+    ? '결과 ' + hit.length + '건' + (dropped.length ? ' · 없는 말이라 뺐습니다: ' + dropped.map(esc).join(', ') : '')
+    : '찾지 못했습니다.';
+  if (!hit.length) return '<div class="empty">해당하는 항목이 없습니다.<br>사다리차 · 타공 · 앵글 · 멀티탭처럼 항목 이름으로 찾아보세요.</div>';
+
+  var TABN = { new: '신규 설치 추가비', care: '이전 · 재설치 · 철거', prep: '설치 전 준비' };
+  return '<div class="sres">' + hit.slice(0, 120).map(function (r) {
+    return '<div class="sr" data-go="' + esc(r.tab) + '" data-cat="' + esc(r.cat) + '">'
+      + '<span class="w">' + esc(TABN[r.tab]) + ' · ' + esc(r.sec) + '</span>' + hl(r.t, toks) + '</div>';
+  }).join('') + '</div>'
+  + (hit.length > 120 ? '<div class="snote">앞의 120건만 보여줍니다. 검색어를 좁혀 보세요.</div>' : '');
+}
+function hl(text, toks) {
+  var out = esc(text);
+  toks.forEach(function (t) {
+    /* 정규식 특수문자를 그대로 넣으면 터진다 — 사용자가 치는 말이라 반드시 막아 둔다 */
+    var safe = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    out = out.replace(new RegExp('(' + safe + ')', 'gi'), '<mark>$1</mark>');
+  });
+  return out;
+}
+
+/* ── 조작 ─────────────────────────────────────────────── */
+document.getElementById('tabs').addEventListener('click', function (e) {
+  var b = e.target.closest('.tab'); if (!b) return;
+  TAB = b.dataset.tab; Q = ''; document.getElementById('sq').value = '';
+  document.getElementById('sclr').hidden = true; document.getElementById('snote').hidden = true;
+  [].forEach.call(this.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t === b); });
+  render(); window.scrollTo(0, 0);
+});
+document.getElementById('body').addEventListener('click', function (e) {
+  var chip = e.target.closest('.chip');
+  if (chip) { CAT[chip.dataset.tab] = chip.dataset.cat; render(); return; }
+  var sr = e.target.closest('.sr');
+  if (sr) { go(sr.dataset.go, sr.dataset.cat); }
+});
+var sq = document.getElementById('sq');
+sq.addEventListener('input', function () {
+  Q = this.value; document.getElementById('sclr').hidden = !Q; render();
+});
+document.getElementById('sclr').addEventListener('click', function () {
+  sq.value = ''; Q = ''; this.hidden = true; document.getElementById('snote').hidden = true; render();
+});
+
+/* 검색 결과를 누르면 그 탭·품목까지 데려간다 — 찾아 주기만 하고 두면 결국 다시 뒤진다 */
+function go(tab, cat) {
+  TAB = tab; if (cat) CAT[tab] = cat;
+  Q = ''; sq.value = ''; document.getElementById('sclr').hidden = true;
+  document.getElementById('snote').hidden = true;
+  [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t.dataset.tab === tab); });
+  render(); window.scrollTo(0, 0);
+}
+
+fetch('install-cost.json').then(function (r) { return r.json(); }).then(function (j) {
+  D = j;
+  /* 통합검색에서 `?q=` 로 들어오면 그 말로 바로 찾아 준다 */
+  var p = new URLSearchParams(location.search);
+  var q = p.get('q');
+  if (q) { sq.value = q; Q = q; document.getElementById('sclr').hidden = false; }
+  var t = p.get('tab'); if (t && ['new', 'care', 'prep'].indexOf(t) >= 0) go(t, p.get('cat'));
+  render();
+  if (window.parent !== window) parent.postMessage({ type: 'share-state', on: true }, '*');
+}).catch(function () {
+  document.getElementById('body').innerHTML =
+    '<div class="empty">자료를 불러오지 못했습니다.<br>연결을 확인하고 새로고침해 주세요.</div>';
+});
+
+/* 테스트가 들여다보는 손잡이 */
+window.__cost = { get data() { return D; }, go: go,
+  search: function (q) { sq.value = q; Q = q; render();
+    return [].map.call(document.querySelectorAll('#body .sr'), function (e) { return e.textContent; }); } };
+</script>
+</body>
+</html>

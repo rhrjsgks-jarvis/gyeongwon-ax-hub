@@ -4934,7 +4934,14 @@ $('#file').onchange = (e)=>{
   const f = e.target.files[0]; if(!f) return;
   useImage(URL.createObjectURL(f));
 };
-$('#btn-scale').onclick = ()=>{ state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
+/*
+ * **길이 입력 막대를 먼저 닫는다**(2026-08-20). 막대가 떠 있는 동안에는 `wallPickFn` 이
+ * 켜져 있어 `modeTap` 맨 앞에서 탭을 가로챈다 — 두 점 보정으로 들어와도 **도면을 눌러도
+ * 아무 일이 안 일어났다**(E2E 가 `#mm` 시트를 못 찾아 잡았다).
+ * 막대 안의 '치수선 두 점으로' 버튼은 이미 껐는데 도구막대 버튼만 안 껐다 —
+ * **같은 일을 하는 길이 둘이면 뒷정리도 둘 다** 해야 한다.
+ */
+$('#btn-scale').onclick = ()=>{ hideDraftBar(); state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
 $('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
 $('#btn-edit').onclick  = ()=>{
   if (!state.rooms.length){ toast('먼저 공간을 하나 이상 지정해주세요'); return; }
