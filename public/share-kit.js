@@ -497,7 +497,29 @@
     document.head.appendChild(hide);
   }
 
+  /*
+   * ── 사용 로그 ──
+   * 미니앱은 iframe 안이라 **자기가 직접 로그를 못 보낸다**(`logEvent` 는 Next 쪽 모듈이다).
+   * 그래서 부모에게 알리고 부모가 기록한다. 부모가 없으면(미니앱을 따로 열었을 때)
+   * 조용히 아무 일도 하지 않는다 — 로그 때문에 화면이 깨지면 안 된다.
+   *
+   * `once` 를 주면 **그 세션에서 한 번만** 쌓는다. 상담 한 건에서 제품·탭을 오가면
+   * 같은 화면이 수십 번 잡히는데, 그러면 "무엇을 많이 보는가"가 아니라 "누가 많이
+   * 눌렀는가"가 되어 집계가 뒤틀린다(2026-08-20 사장님 지적).
+   */
+  function log(module, action, extra, once) {
+    try {
+      if (!window.parent || window.parent === window) return;
+      window.parent.postMessage({
+        sk: 'log', module: module, action: action,
+        extra: extra == null ? '' : String(extra), once: !!once,
+      }, '*');
+    } catch (e) { /* 로그가 화면을 막지 않는다 */ }
+  }
+  global.AX_LOG = log;
+
   global.SHARE_KIT = {
+    log: log,
     sheet: sheet, closeSheet: closeSheet, toast: toast, copyText: copyText,
     contactSheet: contactSheet, wireContacts: wireContacts,
     buildCard: buildCard, shareCard: shareCard, mountShareButton: mountShareButton,

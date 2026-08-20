@@ -2673,6 +2673,14 @@ function revealBody(){
 }
 
 function switchToCare(key){
+  /*
+   * **제품 단위로 한 번만** 남긴다(2026-08-20 사장님 지적 — 조회 종류가 많아 중복이 쌓인다).
+   * 이 앱은 한 제품 안에서 12/36개월 · 회차 · 타입 A/B 를 오가므로, 그 전환을 다 세면
+   * 제품 하나가 수십 건이 된다. 상담에서 알고 싶은 것은 **어떤 제품을 상담했는가**다.
+   */
+  /* **내부 키가 아니라 제품 이름으로 남긴다** — 대시보드에 `aircon` 이 뜨면 사람이 못 읽는다 */
+  const _p = PRODUCTS.find(p=>p.key===key);
+  if (window.AX_LOG) AX_LOG('care', 'result_open', (_p && _p.name) || key, true);
   const idx = PRODUCTS.findIndex(p=>p.key===key);
   if(idx>=0){
     curCat = pickedCat = key;

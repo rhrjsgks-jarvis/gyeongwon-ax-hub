@@ -16,7 +16,16 @@ export interface LogEvent {
   action: LogAction
   uid: string         // 세션 ID (익명)
   extra?: string      // 검색어·탭명 등 선택 추가 정보
+  /*
+   * **어느 매장에서 썼는가**(2026-08-20 사장님 요청 — 점별 사용 로그 취합).
+   * 첫 접속에서 고른 지점이 이 기기에 남고(`lib/stores.ts`) 모든 이벤트에 함께 실린다.
+   * 아직 안 골랐으면 비어 있다 — **0 과 '모름'을 구분한다**(상태줄에서 지키는 규칙과 같다).
+   */
+  store?: string      // 점코드 (예: ZN01)
+  storeName?: string  // 지점명 — 시트를 사람이 볼 때 코드만으로는 못 읽는다
 }
+
+import { getStoreCode, storeName } from './stores.ts'
 
 const STORAGE_KEY = 'axhub_logs'
 const MAX_LOGS    = 2000
@@ -49,7 +58,32 @@ export function readLogs(): LogEvent[] {
 
 function buildEvent(module: LogModule, action: LogAction, extra?: string): LogEvent {
   const ts = Date.now()
-  return { ts, date: kstDate(ts), module, action, uid: getUid(), extra }
+  const code = getStoreCode()
+  return {
+    ts, date: kstDate(ts), module, action, uid: getUid(), extra,
+    ...(code ? { store: code, storeName: storeName(code) } : {}),
+  }
+}
+
+/*
+ * **같은 것을 세션 안에서 한 번만 기록한다.**
+ *
+ * 사장님 지적(2026-08-20): *"AI구독케어 항목 안에는 조회하는 종류가 많아 중복 로그가
+ * 쌓일 수 있다."* 상담 한 건에서 제품·회차·탭을 오가면 같은 화면이 수십 번 잡힌다.
+ * 그러면 "무엇을 많이 보는가"가 아니라 "누가 많이 눌렀는가"가 되어 집계가 뒤틀린다.
+ *
+ * 그래서 **무엇을 봤는지는 남기되 몇 번 눌렀는지는 세지 않는다** — 같은
+ * `모듈|행동|대상` 은 그 세션에서 한 번만 쌓는다. 세션이 끝나면(앱을 닫으면) 초기화되므로
+ * 다음 상담은 다시 잡힌다.
+ */
+export function logOnce(module: LogModule, action: LogAction, extra?: string): void {
+  if (typeof sessionStorage === 'undefined') { logEvent(module, action, extra); return }
+  const key = `axhub_once:${module}|${action}|${extra || ''}`
+  try {
+    if (sessionStorage.getItem(key)) return
+    sessionStorage.setItem(key, '1')
+  } catch { /* 용량 초과 — 그냥 기록한다 */ }
+  logEvent(module, action, extra)
 }
 
 function saveLocal(ev: LogEvent): void {
@@ -205,6 +239,24 @@ export function aggregateByModule(logs: LogEvent[]) {
   return map
 }
 
+/**
+ * **점별 사용 건수**(2026-08-20 사장님 요청). 지점을 고르기 전에 쌓인 옛 로그는
+ * `store` 가 비어 있으므로 '(미지정)'으로 따로 센다 — 0 으로 적으면 "안 썼다"는
+ * 거짓말이 되고, 빼 버리면 합계가 안 맞는다.
+ */
+export function aggregateByStore(logs: LogEvent[]) {
+  const map: Record<string, { name: string; count: number }> = {}
+  for (const ev of logs) {
+    const code = ev.store || ''
+    const key = code || '(미지정)'
+    if (!map[key]) map[key] = { name: code ? (ev.storeName || storeName(code) || code) : '지점 미선택', count: 0 }
+    map[key].count++
+  }
+  return Object.entries(map)
+    .map(([code, v]) => ({ code, name: v.name, count: v.count }))
+    .sort((a, b) => b.count - a.count)
+}
+
 export function aggregateByDay(logs: LogEvent[], days = 14) {
   const cutoff = Date.now() - days * 86_400_000
   const map: Record<string, number> = {}
@@ -263,6 +315,9 @@ export function normalizeLogs(rows: unknown[]): LogEvent[] {
       action: r.action as LogAction,
       uid: r.uid == null ? '' : String(r.uid),
       ...(extra ? { extra } : {}),
+      /* 지점 열은 나중에 붙였다 — 옛 줄에는 없으므로 있을 때만 담는다 */
+      ...(r.store ? { store: String(r.store) } : {}),
+      ...(r.storeName ? { storeName: String(r.storeName) } : {}),
     })
   }
   return out
@@ -281,9 +336,10 @@ export async function fetchTeamLogs(): Promise<LogEvent[] | null> {
 }
 
 export function exportCsv(logs: LogEvent[]): void {
-  const header = 'ts,date,module,action,uid,extra'
+  const header = 'ts,date,module,action,uid,extra,store,storeName'
   const rows = logs.map(
-    (e) => [e.ts, e.date, e.module, e.action, e.uid, csvField(e.extra || '')].join(',')
+    (e) => [e.ts, e.date, e.module, e.action, e.uid, csvField(e.extra || ''),
+            csvField(e.store || ''), csvField(e.storeName || '')].join(',')
   )
   const blob = new Blob([header + '\n' + rows.join('\n')], { type: 'text/csv' })
   const a = document.createElement('a')

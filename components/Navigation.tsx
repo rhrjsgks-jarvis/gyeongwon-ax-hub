@@ -7,6 +7,7 @@ import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
 import FeedbackButton from './FeedbackButton'
+import { getStoreCode, storeName } from '@/lib/stores'
 
 /*
  * **지금 보고 있는 화면인가** — 경로는 글자가 아니라 **마디(segment)** 로 본다.
@@ -99,6 +100,20 @@ export default function Navigation() {
    * 만들 것이 있을 때만 보인다 — 미니앱이 `share-state` 로 알려 준다. 띄워 두고 눌렀을 때
    * "공유할 내용이 없습니다"만 뜨면 고장으로 읽힌다(네 앱이 이미 지키던 규칙이다).
    */
+  /*
+   * 헤더에 **지금 이 기기가 어느 매장인지** 띄운다(2026-08-20). 점별 로그가 이 값으로
+   * 쌓이므로 **틀린 채로 오래 가면 통계가 통째로 어긋난다** — 늘 보이는 자리에 두어
+   * 눈으로 검산되게 한다(상태줄에 미배포 커밋 수를 띄운 것과 같은 이유다).
+   * 누르면 다시 고를 수 있다.
+   */
+  const [store, setStore] = useState('')
+  useEffect(() => {
+    const read = () => setStore(getStoreCode())
+    read()
+    window.addEventListener('ax-store-changed', read)
+    return () => window.removeEventListener('ax-store-changed', read)
+  }, [])
+
   const [canShare, setCanShare] = useState(false)
   useEffect(() => {
     setCanShare(false) // 페이지를 옮기면 새 화면이 알려 줄 때까지 감춘다
@@ -168,7 +183,17 @@ export default function Navigation() {
             이 앱은 "가로 스크롤 넘침 0건"을 기준으로 삼아 왔고, 버전 표시가 이미
             같은 방식으로 넓은 화면에서만 뜬다.
           */}
-          <span className="hidden sm:inline text-white text-xs opacity-60">경원영업팀</span>
+          {/* 지점 — 좁은 화면에서도 남긴다. 로그가 이 값으로 쌓이므로 팀 이름보다 중요하다 */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event('ax-store-open'))}
+            title="지점 바꾸기"
+            className="text-white text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap"
+            style={{ background: 'rgba(255,255,255,0.18)' }}
+          >
+            {store ? storeName(store) || store : '지점 선택'}
+          </button>
+          <span className="hidden lg:inline text-white text-xs opacity-60">경원영업팀</span>
           {/* 개발자 문의 — 떠 있던 버튼을 여기로 옮겼다(FeedbackButton 주석 참조) */}
           <FeedbackButton />
           {canShare && (

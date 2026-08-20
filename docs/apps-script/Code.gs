@@ -26,7 +26,16 @@
 const FEEDBACK_EMAIL = 'rhrjsgks@gmail.com';
 
 const SHEET_NAME = 'logs';
-const HEADER = ['ts', 'date', 'module', 'action', 'uid', 'extra', 'receivedAt'];
+/*
+ * **열은 뒤에만 붙인다**(2026-08-20 지점 열 추가). 시트에는 이미 옛 로그가 쌓여 있고
+ * 이 스크립트는 **자리로** 쓰므로, 가운데에 끼우면 그 아래 모든 줄이 한 칸씩 밀린다.
+ * 옛 줄의 새 칸은 비어 있고, 대시보드가 그것을 '(미지정)'으로 따로 센다 —
+ * 0 으로 적으면 "안 썼다"는 거짓말이 된다.
+ *
+ * **시트에 이미 헤더가 있으면 자동으로 늘려 주지 않는다.** 열을 더한 뒤에는 시트 1행에
+ * store · storeName 두 칸을 직접 적어 두거나, 시트를 새로 만들 것.
+ */
+const HEADER = ['ts', 'date', 'module', 'action', 'uid', 'extra', 'receivedAt', 'store', 'storeName'];
 
 function getSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();

@@ -1,6 +1,41 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { logEvent, logOnce, LogModule, LogAction } from '@/lib/logEvent'
+
+/* 미니앱이 보내오는 값은 바깥에서 들어오는 값이다 — 아는 이름만 받는다 */
+const ALLOWED_MODULE = new Set<string>([
+  'finder', 'as', 'care', 'test', 'compare', 'quiz', 'hub',
+  'install', 'installcost', 'place', 'poster',
+])
+const ALLOWED_ACTION = new Set<string>([
+  'page_view', 'search', 'result_open', 'generate', 'tab_switch',
+])
+
+/*
+ * **미니앱이 보내는 사용 로그를 대신 기록한다**(2026-08-20 사장님 요청 — 점별 로그).
+ *
+ * 미니앱은 iframe 안이라 `logEvent` 를 직접 못 부른다. `share-kit.js` 의 `AX_LOG` 가
+ * `postMessage` 로 알리고 여기서 받아 적는다.
+ *
+ * **모듈 이름은 미니앱이 말하는 대로 믿지 않는다** — 오타나 옛 이름이 오면 집계에
+ * 없는 항목이 생겨 "안 쓰는 모듈"처럼 보인다. 아는 이름만 받는다.
+ */
+function useMiniAppLogs() {
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      const d = e.data as { sk?: string; module?: string; action?: string; extra?: string; once?: boolean }
+      if (!d || d.sk !== 'log') return
+      if (!d.module || !d.action) return
+      if (!ALLOWED_MODULE.has(d.module) || !ALLOWED_ACTION.has(d.action)) return
+      const extra = typeof d.extra === 'string' && d.extra ? d.extra.slice(0, 120) : undefined
+      if (d.once) logOnce(d.module as LogModule, d.action as LogAction, extra)
+      else logEvent(d.module as LogModule, d.action as LogAction, extra)
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [])
+}
 
 export default function IframeModule({
   src, title, className, style,
@@ -10,6 +45,7 @@ export default function IframeModule({
   className?: string
   style?: React.CSSProperties
 }) {
+  useMiniAppLogs()
   const [loaded, setLoaded] = useState(false)
   const ref = useRef<HTMLIFrameElement>(null)
 

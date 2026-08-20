@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect } from 'react'
-import { logEvent } from '@/lib/logEvent'
+import { logOnce } from '@/lib/logEvent'
 import IframeModule from '@/components/IframeModule'
 
 export default function InstallCostPage() {
-  useEffect(() => { logEvent('installcost', 'page_view') }, [])
+  /* **세션당 1회**(2026-08-20) — 사장님 지시 — 통으로 1회. 매번 쌓으면 같은 상담이 두 번 세어진다 */
+  useEffect(() => { logOnce('installcost', 'page_view') }, [])
 
   return (
     <IframeModule

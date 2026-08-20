@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, aggregateByStore, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 
 // 인증 상태는 sessionStorage에 만료시각과 함께 둔다.
@@ -177,6 +177,7 @@ export default function AdminPage() {
 
   const byModule   = aggregateByModule(logs)
   const byDay      = aggregateByDay(logs, 14)
+  const byStore    = aggregateByStore(logs)
   const totalViews = logs.filter(e => e.action === 'page_view').length
   const uniqueUids = new Set(logs.map(e => e.uid)).size
   const maxDay     = Math.max(...byDay.map(d => d.count), 1)
@@ -213,6 +214,49 @@ export default function AdminPage() {
         <KpiCard label="기록된 이벤트" value={logs.length} icon="doc" color="#059669" />
         <KpiCard label="추적 모듈 수"  value={LIVE_MODULES.length} icon="puzzle" color="#7C3AED" />
       </div>
+
+      {/*
+        * **점별 사용 현황**(2026-08-20 사장님 요청). 지점은 첫 접속에서 고른 값이
+        * 기기에 남아 모든 이벤트에 실린다. 고르기 전에 쌓인 옛 로그는 지점 칸이 비어
+        * '(미지정)'으로 따로 센다 — 0 으로 적으면 "안 썼다"는 거짓말이 되고,
+        * 빼 버리면 합계가 안 맞는다.
+        */}
+      <Section title={`점별 사용 현황 (${byStore.length}곳)`}>
+        {byStore.length === 0 ? (
+          <p className="text-sm text-gray-400">아직 기록이 없습니다.</p>
+        ) : (
+          <div className="space-y-2.5">
+            {byStore.map((st) => {
+              const max = byStore[0].count || 1
+              const unknown = st.code === '(미지정)'
+              return (
+                <div key={st.code} className="flex items-center gap-3">
+                  <span
+                    className="text-xs w-28 shrink-0 truncate"
+                    style={{ color: unknown ? '#9aa0a6' : '#374151', fontWeight: unknown ? 500 : 600 }}
+                    title={`${st.name} (${st.code})`}
+                  >
+                    {st.name}
+                  </span>
+                  <span className="text-[10px] w-12 shrink-0 text-gray-400 tracking-wide">
+                    {unknown ? '' : st.code}
+                  </span>
+                  <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.round((st.count / max) * 100)}%`,
+                        background: unknown ? '#c3c7cf' : 'var(--color-primary)',
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold w-10 text-right tabular-nums">{st.count}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Section>
 
       <Section title="모듈별 사용 현황">
         <div className="space-y-2.5">

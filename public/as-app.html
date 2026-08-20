@@ -700,7 +700,9 @@ function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, ''
 function renderCats(){
   document.getElementById('cats').innerHTML = keys.map(k=>
     `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
-  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); revealBody(); });
+  document.querySelectorAll('.cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); revealBody();
+    /* 품목당 1회 — 상담에서 실제로 무엇을 확인했는지가 남는다 */
+    if (window.AX_LOG) AX_LOG('as', 'result_open', cur, true); });
 }
 
 function renderBody(){
@@ -1400,6 +1402,9 @@ function setTab(t){
   document.getElementById('asPane').style.display = t === 'as' ? '' : 'none';
   document.getElementById('contactPane').style.display = t === 'contact' ? '' : 'none';
   if (t === 'contact') renderContacts();
+  /* **연락처 탭은 통으로 1회**(2026-08-20 사장님 지시). 안쪽 묶음이 아홉이고 검색까지
+     있어 낱낱이 세면 이 탭 하나가 집계를 다 먹는다 — "연락처를 봤다"까지만 남긴다. */
+  if (t === 'contact' && window.AX_LOG) AX_LOG('as', 'tab_switch', '연락처·협력사', true);
   /* 공유 카드는 AS 기간 내용이라 다른 탭에서는 감춘다 — 엉뚱한 것이 나가면 안 된다 */
   const sb = document.getElementById('sk-share');
   if (sb) sb.style.display = t === 'as' ? '' : 'none';

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navigation from '@/components/Navigation'
 import ServiceWorker from '@/components/ServiceWorker'
+import StorePicker from '@/components/StorePicker'
 
 export const metadata: Metadata = {
   title: '세일즈 코파일럿',
@@ -59,6 +60,8 @@ export default function RootLayout({
       </head>
       <body>
         <ServiceWorker />
+        {/* 첫 접속에 지점을 묻는다 — 점별 사용 로그의 출발점이다(2026-08-20 사장님 요청) */}
+        <StorePicker />
         <Navigation />
         <main
           className="pt-[60px] lg:pl-56 min-h-screen"

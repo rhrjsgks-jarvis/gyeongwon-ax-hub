@@ -21,9 +21,10 @@ globalThis.document = { createElement: () => ({ ...fakeAnchor }) };
 globalThis.URL.createObjectURL = (blob) => { lastBlob = blob; return 'blob:fake'; };
 
 const {
-  readLogs, logEvent, aggregateByModule, aggregateByDay, exportCsv, excludeHubViews,
-  fetchTeamLogs, GAS_CONNECTED,
+  readLogs, logEvent, logOnce, aggregateByModule, aggregateByDay, aggregateByStore,
+  exportCsv, excludeHubViews, normalizeLogs, fetchTeamLogs, GAS_CONNECTED,
 } = await import('../lib/logEvent.ts');
+const S = await import('../lib/stores.ts');
 
 import fs from 'fs';
 
@@ -94,7 +95,8 @@ exportCsv([
 if (!lastBlob) fail('exportCsv: Blob이 생성되지 않음(URL.createObjectURL 호출 안 됨)');
 const csvText = await lastBlob.text();
 const lines = csvText.split('\n');
-if (lines[0] !== 'ts,date,module,action,uid,extra') fail(`exportCsv: 헤더 불일치 — "${lines[0]}"`);
+/* 지점 두 칸을 **뒤에** 붙였다(2026-08-20) — 앞을 건드리면 옛 CSV 를 읽던 것이 다 깨진다 */
+if (lines[0] !== 'ts,date,module,action,uid,extra,store,storeName') fail(`exportCsv: 헤더 불일치 — "${lines[0]}"`);
 if (!lines[1].includes('냉장고 900mm')) fail('exportCsv: 일반 텍스트 행이 누락됨');
 // extra에 콤마·따옴표가 섞인 경우 CSV 컬럼이 깨지지 않아야 함(RFC4180: 콤마/따옴표/개행 포함 시
 // 필드를 큰따옴표로 감싸고 내부 큰따옴표는 ""로 이스케이프) — 아주 단순한 CSV 파서로 왕복 검증.
@@ -116,7 +118,7 @@ function parseCsvLine(line) {
   return fields;
 }
 const parsed = parseCsvLine(commaRow);
-if (parsed.length !== 6) fail(`exportCsv 회귀: extra 필드의 콤마/따옴표 이스케이프가 깨져 컬럼 수 = ${parsed.length}, 기대값 6 — "${commaRow}"`);
+if (parsed.length !== 8) fail(`exportCsv 회귀: extra 필드의 콤마/따옴표 이스케이프가 깨져 컬럼 수 = ${parsed.length}, 기대값 8 — "${commaRow}"`);
 else if (parsed[5] !== '건조기, 20kg "특가"') fail(`exportCsv 회귀: extra 필드 왕복 결과 = "${parsed[5]}", 기대값 '건조기, 20kg "특가"'`);
 else console.log('OK: exportCsv — extra 필드 콤마·따옴표 포함 시에도 CSV 왕복 파싱 정상(RFC4180 이스케이프 확인)');
 
@@ -438,6 +440,64 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* 관리자 쪽이 DEV_PW 에 영향받으면 안 된다 — 대시보드가 조용히 열리는 종류의 사고다 */
   if (A.verify('devpw', { DEV_PW: 'devpw', ADMIN_PW: 'adminpw' })) { fail('[개발중 잠금] DEV_PW 로 관리자까지 열린다'); bad++; }
   if (!bad) console.log('OK: 개발중 잠금 — DEV_PW 우선, 없으면 관리자 비번 폴백, 관리자는 영향 없음');
+}
+
+/* ── 지점 · 중복 방지 (2026-08-20 사장님 요청) ──────────────────
+ * 점별 사용 로그를 취합하려면 두 가지가 지켜져야 한다:
+ *  ① 고른 지점이 **모든 이벤트에** 실린다
+ *  ② 같은 것을 여러 번 눌러도 **한 번만** 쌓인다(AI구독 케어처럼 조회가 잦은 곳)
+ */
+{
+  let bad = 0;
+
+  /* ① 지점 목록 — 점코드로도 지점명으로도 찾아진다 */
+  if (S.STORE_LIST.length < 50) { fail(`[지점] 매장이 ${S.STORE_LIST.length}곳뿐이다`); bad++; }
+  const dupe = S.STORE_LIST.length - new Set(S.STORE_LIST.map((x) => x.code)).size;
+  if (dupe) { fail(`[지점] 점코드가 ${dupe}건 겹친다`); bad++; }
+  if (!S.findStores('ZN01').some((x) => x.code === 'ZN01')) { fail('[지점] 점코드로 못 찾는다'); bad++; }
+  if (!S.findStores('zn01').some((x) => x.code === 'ZN01')) { fail('[지점] 점코드 대소문자'); bad++; }
+  /* 상담사는 띄어 쓰기도 하고 붙여 쓰기도 한다 */
+  if (!S.findStores('스타필드수원').length) { fail('[지점] 띄어쓰기 없는 이름으로 못 찾는다'); bad++; }
+  if (!S.findStores('스타필드 수원').length) { fail('[지점] 띄어 쓴 이름으로 못 찾는다'); bad++; }
+
+  /* ② 고른 지점이 로그에 실린다 */
+  localStorage.clear(); sessionStorage.clear();
+  S.setStoreCode('ZN01');
+  logEvent('finder', 'page_view');
+  const ev = readLogs().at(-1);
+  if (ev.store !== 'ZN01') { fail(`[지점] 로그에 점코드가 안 실린다 (${ev.store})`); bad++; }
+  if (!ev.storeName) { fail('[지점] 로그에 지점명이 안 실린다'); bad++; }
+
+  /* ③ 같은 것은 세션당 한 번 — 다른 대상은 따로 센다 */
+  const n0 = readLogs().length;
+  logOnce('care', 'result_open', '에어컨');
+  logOnce('care', 'result_open', '에어컨');
+  logOnce('care', 'result_open', '에어컨');
+  logOnce('care', 'result_open', '냉장고');
+  const added = readLogs().length - n0;
+  if (added !== 2) { fail(`[중복방지] 3+1번 눌렀는데 ${added}건 쌓였다 (기대 2)`); bad++; }
+
+  /* ④ 점별 집계 — 지점을 안 고른 옛 로그는 '(미지정)'으로 따로 센다 */
+  const mixed = [
+    { ts: 1, date: 'x', module: 'finder', action: 'page_view', uid: 'a', store: 'ZN01', storeName: '스타필드 수원' },
+    { ts: 2, date: 'x', module: 'as', action: 'page_view', uid: 'b', store: 'ZN01', storeName: '스타필드 수원' },
+    { ts: 3, date: 'x', module: 'as', action: 'page_view', uid: 'c' },
+  ];
+  const byStore = aggregateByStore(mixed);
+  const zn = byStore.find((x) => x.code === 'ZN01');
+  const un = byStore.find((x) => x.code === '(미지정)');
+  if (!zn || zn.count !== 2) { fail('[점별집계] 같은 지점을 합치지 못한다'); bad++; }
+  if (!un || un.count !== 1) { fail('[점별집계] 지점 없는 로그를 따로 세지 못한다'); bad++; }
+  if (zn && byStore[0].code !== 'ZN01') { fail('[점별집계] 많이 쓴 지점이 위로 오지 않는다'); bad++; }
+
+  /* ⑤ 시트에서 온 옛 줄에 지점 칸이 없어도 깨지지 않는다 */
+  const norm = normalizeLogs([{ ts: 1700000000000, module: 'finder', action: 'page_view', uid: 'x' }]);
+  if (norm.length !== 1 || norm[0].store) { fail('[정규화] 지점 없는 옛 줄 처리'); bad++; }
+
+  /* ⑥ CSV 에도 지점이 나간다 — 화면과 내보내기가 어긋나면 안 된다 */
+  exportCsv(mixed);
+  const head = (lastBlob && lastBlob.__text) || '';
+  if (!bad) console.log('OK: 지점 — 목록·검색·로그 적재·점별 집계·중복 방지·옛 줄 호환');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

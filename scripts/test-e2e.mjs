@@ -94,6 +94,13 @@ try {
  */
 
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  /*
+   * **지점을 미리 고른 기기로 검사한다**(2026-08-20). 첫 접속 지점 모달이 화면을 덮어
+   * 기존 검사가 전부 클릭을 못 하게 된다 — 매장 태블릿은 처음 한 번만 고르고 그 뒤로는
+   * 고른 상태이므로, **평소 상태**로 보는 것이 맞다.
+   * 첫 접속 자체는 아래에서 **새 컨텍스트**로 따로 확인한다.
+   */
+  await ctx.addInitScript(() => { try { localStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
   const page = await ctx.newPage();
 
   // 서버가 뜰 때까지 대기
@@ -708,6 +715,56 @@ try {
       else pass(`${path} → 사이드바 "${on[0]}" 하나만 켜진다`);
     }
     await wide.close();
+  }
+
+  /*
+   * ── 4-d. 지점 선택과 점별 로그 ──(2026-08-20 사장님 요청)
+   *
+   * 순수 함수 검사(test-admin)는 값이 맞는지까지다. **첫 접속에 정말 묻는가**와
+   * **미니앱 클릭이 부모에 로그로 닿는가**는 브라우저로만 확인된다 — 미니앱은 iframe
+   * 안이라 `logEvent` 를 직접 못 부르고 `postMessage` 로 건너오기 때문이다.
+   *
+   * 중복 방지도 여기서 본다: 같은 품목을 두 번 눌러도 한 건이어야 한다.
+   */
+  {
+    /* **지점을 고르지 않은 새 기기**로 연다 — 공용 컨텍스트는 이미 고른 상태다 */
+    const spCtx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+    const sp = await spCtx.newPage();
+    await sp.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await sp.waitForTimeout(1200);
+    const asked = await sp.locator('[aria-label="지점 선택"]').count();
+    if (!asked) fail('첫 접속인데 지점을 묻지 않는다');
+    else pass('첫 접속 — 지점을 묻는다');
+
+    /* 점코드로 찾아 고른다 — 상담사는 이름을, 관리자는 코드를 안다 */
+    await sp.locator('#__next input, input[placeholder*="ZN01"]').first().fill('zn01');
+    await sp.waitForTimeout(300);
+    await sp.locator('button:has-text("스타필드 수원")').first().click();
+    await sp.waitForTimeout(500);
+    const chip = (await sp.locator('header button[title="지점 바꾸기"]').textContent()) || '';
+    if (!chip.includes('스타필드')) fail(`헤더에 지점이 안 보인다 — "${chip}"`);
+    else pass(`헤더에 지점 표시 — ${chip.trim()}`);
+
+    /* 설치환경 가이드: 품목당 1회 · 같은 품목 재클릭은 안 센다 */
+    await sp.goto(BASE + '/install', { waitUntil: 'domcontentloaded' });
+    await sp.waitForTimeout(3500);
+    const fi = sp.frameLocator('iframe');
+    await fi.locator('[data-cat]').nth(1).click();
+    await sp.waitForTimeout(300);
+    await fi.locator('[data-cat]').nth(1).click();
+    await sp.waitForTimeout(300);
+    await fi.locator('[data-cat]').nth(3).click();
+    await sp.waitForTimeout(800);
+
+    const logs = await sp.evaluate(() => JSON.parse(localStorage.getItem('axhub_logs') || '[]'));
+    const opens = logs.filter((e) => e.module === 'install' && e.action === 'result_open');
+    if (opens.length !== 2) fail(`설치환경 품목 로그가 ${opens.length}건 (같은 품목 2회 + 다른 품목 1회 → 기대 2)`);
+    else pass('설치환경 — 품목당 1회, 같은 품목 재클릭은 안 센다');
+
+    const noStore = logs.filter((e) => !e.store);
+    if (noStore.length) fail(`지점이 안 실린 로그 ${noStore.length}건 — 점별 집계가 비게 된다`);
+    else pass(`모든 로그(${logs.length}건)에 지점이 실린다`);
+    await spCtx.close();
   }
 
   // ── 5. 운영 종료된 라우트 ──
