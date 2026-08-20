@@ -754,14 +754,26 @@ try {
      * 상담사가 읽어 내려가다 눈에 걸린 것을 누른다 — 자기 매장이 아닌데도 고르면
      * 그 매장 통계가 통째로 엉뚱한 곳에 잡힌다. 쳐야 나온다.
      */
-    const preList = await sp.locator('[aria-label="지점 선택"] button').count();
-    if (preList > 1) fail(`입력 전에 지점이 ${preList - 1}곳 보인다 — 눈에 걸린 것을 누르게 된다`);
-    else pass('입력 전에는 지점 목록을 보여주지 않는다');
+    /*
+     * **목록이 아예 없다**(2026-08-20 사장님 결정 — 점코드·점명이 통행증이다).
+     * 화면에 매장 이름이 하나라도 적혀 있으면 아무나 그것으로 들어올 수 있어 뜻이 없다.
+     */
+    const dlgText = (await sp.locator('[aria-label="지점 선택"]').innerText()) || '';
+    const leaked = ['스타필드', '분당', '동탄', 'ZN01'].filter((w) => dlgText.includes(w));
+    if (leaked.length) fail(`지점 창에 매장 이름이 노출된다: ${leaked.join(', ')}`);
+    else pass('지점 창에 매장 이름이 하나도 노출되지 않는다');
+
+    /* **부분 입력으로는 못 들어간다** — 한 글자로 뚫리면 통행증이 아니다 */
+    await sp.locator('[aria-label="지점 선택"] input').first().fill('수');
+    await sp.locator('[aria-label="지점 선택"] button:has-text("시작하기")').click();
+    await sp.waitForTimeout(300);
+    if (await sp.locator('[aria-label="지점 선택"]').count() === 0) fail('부분 입력 "수" 로 들어가진다');
+    else pass('부분 입력으로는 들어가지 못한다');
 
     /* 점코드로 찾아 고른다 — 상담사는 이름을, 관리자는 코드를 안다 */
+    /* 점코드는 대소문자를 가리지 않는다 — 상담사가 소문자로 친다 */
     await sp.locator('[aria-label="지점 선택"] input').first().fill('zn01');
-    await sp.waitForTimeout(300);
-    await sp.locator('button:has-text("스타필드 수원")').first().click();
+    await sp.locator('[aria-label="지점 선택"] button:has-text("시작하기")').click();
     await sp.waitForTimeout(500);
     const chip = (await sp.locator('header button[title="지점 바꾸기"]').textContent()) || '';
     if (!chip.includes('스타필드')) fail(`헤더에 지점이 안 보인다 — "${chip}"`);

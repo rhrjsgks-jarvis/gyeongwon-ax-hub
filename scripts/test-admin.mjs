@@ -454,11 +454,19 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (S.STORE_LIST.length < 50) { fail(`[지점] 매장이 ${S.STORE_LIST.length}곳뿐이다`); bad++; }
   const dupe = S.STORE_LIST.length - new Set(S.STORE_LIST.map((x) => x.code)).size;
   if (dupe) { fail(`[지점] 점코드가 ${dupe}건 겹친다`); bad++; }
-  if (!S.findStores('ZN01').some((x) => x.code === 'ZN01')) { fail('[지점] 점코드로 못 찾는다'); bad++; }
-  if (!S.findStores('zn01').some((x) => x.code === 'ZN01')) { fail('[지점] 점코드 대소문자'); bad++; }
+  /* **정확히 일치할 때만 통과한다** — 점코드·점명이 곧 통행증이다(2026-08-20 사장님 결정) */
+  if (S.matchStore('ZN01')?.code !== 'ZN01') { fail('[지점] 점코드로 못 들어간다'); bad++; }
+  if (S.matchStore('zn01')?.code !== 'ZN01') { fail('[지점] 점코드 대소문자'); bad++; }
   /* 상담사는 띄어 쓰기도 하고 붙여 쓰기도 한다 */
-  if (!S.findStores('스타필드수원').length) { fail('[지점] 띄어쓰기 없는 이름으로 못 찾는다'); bad++; }
-  if (!S.findStores('스타필드 수원').length) { fail('[지점] 띄어 쓴 이름으로 못 찾는다'); bad++; }
+  if (S.matchStore('스타필드수원')?.code !== 'ZN01') { fail('[지점] 띄어쓰기 없는 이름'); bad++; }
+  if (S.matchStore('스타필드 수원')?.code !== 'ZN01') { fail('[지점] 띄어 쓴 이름'); bad++; }
+  /* **부분 일치로는 못 들어간다** — 한 글자로 뚫리면 통행증이 아니다 */
+  /* '수원'·'분당'은 **실제 점명**이라 통과가 맞다 — 여기 넣으면 검사가 거짓으로 문다 */
+  for (const q of ['수', '분', 'Z', 'ZN', '스타필드', '수원점']) {
+    if (S.matchStore(q)) { fail('[지점] 부분 입력 "' + q + '" 으로 들어가진다'); bad++; }
+  }
+  if (S.matchStore('없는점')) { fail('[지점] 없는 이름으로 들어가진다'); bad++; }
+  if (S.matchStore('')) { fail('[지점] 빈 입력으로 들어가진다'); bad++; }
 
   /* ② 고른 지점이 로그에 실린다 */
   localStorage.clear(); sessionStorage.clear();
@@ -564,14 +572,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
    * **목록에는 안 내밀고, 쳐서 찾으면 나온다**(2026-08-20 사장님 지시).
    * 상담사가 무심코 고르면 그 매장 사용량이 통째로 사라지므로 아는 사람만 쓰게 한다.
    */
-  if (S.findStores('').some((x) => S.isTestStore(x.code))) {
-    fail('[테스트점] 빈 목록에 테스트점이 보인다 — 무심코 고르면 그 매장 로그가 사라진다'); bad++;
+  /* 관리자는 코드나 이름을 **정확히** 쳐서 들어간다 — 목록에 내밀지 않으므로 아는 사람만 쓴다 */
+  if (S.matchStore('Z000')?.code !== S.TEST_STORE_CODE) {
+    fail('[테스트점] 점코드로 못 들어간다 — 관리자가 쓸 수 없다'); bad++;
   }
-  if (!S.findStores('Z000').some((x) => S.isTestStore(x.code))) {
-    fail('[테스트점] 점코드를 쳐도 안 나온다 — 관리자가 쓸 수 없다'); bad++;
-  }
-  if (!S.findStores('테스트점').some((x) => S.isTestStore(x.code))) {
-    fail('[테스트점] 이름을 쳐도 안 나온다'); bad++;
+  if (S.matchStore('테스트점')?.code !== S.TEST_STORE_CODE) {
+    fail('[테스트점] 이름으로 못 들어간다'); bad++;
   }
   if (!bad) console.log('OK: 테스트점(Z000) — 로그를 남기지 않고, 다른 지점으로 바꾸면 다시 쌓인다');
 }

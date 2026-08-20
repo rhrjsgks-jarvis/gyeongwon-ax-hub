@@ -14,8 +14,8 @@
  * 전국 지점코드는 아직 다 등록하지 않았다. 지금은 **경원영업팀만** 쓰고 있으므로
  * 경원 지점은 `'Y'`, 다른 영업팀 지점은 `'N'` 으로 넣는다.
  *
- * **화면에는 `Y` 만 보인다**(`findStores`). 안 쓰는 팀의 지점이 목록에 섞이면 상담사가
- * 자기 매장을 찾다가 헤매고, 잘못 고르면 **그 매장 통계가 통째로 엉뚱한 팀에 잡힌다.**
+ * **`Y` 인 지점만 통과시킨다**(`matchStore`). 다른 팀 코드로 들어오면 그 매장 통계가
+ * 통째로 엉뚱한 팀에 잡힌다.
  * 다른 팀이 쓰기 시작하면 그 지점들을 `'Y'` 로 바꾸면 되고 코드는 그대로다.
  */
 export type Store = { code: string; name: string; active: 'Y' | 'N' }
@@ -27,7 +27,7 @@ export function isTestStore(code: string): boolean { return code === TEST_STORE_
 export const STORE_LIST: Store[] = [
   /* 관리자 점검용. 이 지점으로 두면 무엇을 눌러도 로그가 쌓이지 않는다 —
      점검 조작이 매장 통계에 섞이면 실제 사용량과 구분할 방법이 없어진다. */
-  { code: 'Z000', name: '테스트점 (로그 미기록)', active: 'Y' },
+  { code: 'Z000', name: '테스트점', active: 'Y' },
   { code: 'ZN01', name: '스타필드 수원', active: 'Y' },
   { code: 'ZHA7', name: '현대판교모바일', active: 'Y' },
   { code: 'Z279', name: '오산', active: 'Y' },
@@ -131,28 +131,26 @@ export function storeName(code: string): string {
   return s ? s.name : ''
 }
 
-/**
- * 지점명·점코드 어느 쪽으로도 찾는다 — 상담사는 매장 이름을 알고, 관리자는 코드를 안다.
- * 코드는 대소문자를 가리지 않고, 이름은 띄어쓰기를 무시한다("스타필드수원" · "스타필드 수원").
+/*
+ * **정확히 일치하는 지점 하나를 찾는다 — 없으면 null.**
+ *
+ * 사장님 결정(2026-08-20): *"점코드 또는 점명으로만 접속해도 됩니다."* 별도 비밀번호 없이
+ * **지점 식별자 자체가 통행증**이다. 그래서 부분 일치로 목록을 내밀지 않는다 —
+ * `수` 한 글자로 여러 매장이 뜨면 아무나 눌러 들어갈 수 있어 열쇠 구실을 못 한다.
+ *
+ * 사람이 치는 방식은 받아 준다: 점코드는 **대소문자 무시**, 지점명은 **띄어쓰기 무시**.
+ * 안 쓰는 팀(`active: 'N'`)은 통과시키지 않는다.
  */
-export function findStores(q: string): Store[] {
-  /*
-   * **활성 지점만 보여준다.** 전국 지점을 다 넣으면 목록이 수백 곳이 되는데, 지금은
-   * 경원영업팀만 쓴다. 안 쓰는 팀 지점이 섞이면 상담사가 자기 매장을 찾다 헤매고,
-   * 잘못 고르면 **그 매장 통계가 통째로 엉뚱한 팀에 잡힌다.**
-   */
-  const live = STORE_LIST.filter((s) => s.active === 'Y')
-  const t = q.trim().toLowerCase().replace(/\s+/g, '')
-  /*
-   * **테스트점은 목록에 내밀지 않는다**(2026-08-20 사장님 지시). 로그가 안 쌓이는
-   * 지점이라 상담사가 무심코 고르면 **그 매장 사용량이 통째로 사라진다.**
-   * 관리자가 `Z000` 이나 `테스트점` 을 직접 쳤을 때만 나온다 — 아는 사람만 쓴다.
-   */
-  if (!t) return live.filter((s) => !isTestStore(s.code))
-  return live.filter(
-    (s) => s.code.toLowerCase().includes(t) || s.name.replace(/\s+/g, '').toLowerCase().includes(t)
+export function matchStore(input: string): Store | null {
+  const t = String(input || '').trim().toLowerCase().replace(/\s+/g, '')
+  if (!t) return null
+  return (
+    STORE_LIST.find(
+      (s) => s.active === 'Y' &&
+        (s.code.toLowerCase() === t || s.name.replace(/\s+/g, '').toLowerCase() === t)
+    ) || null
   )
 }
 
-/** 지금 쓰는 지점 수 — 화면이 "전체 N곳"을 적을 때 쓴다(전체 목록을 세면 거짓이 된다) */
+/** 지금 쓰는 지점 수 — 화면이 "N곳"을 적을 때 쓴다(전체 목록을 세면 거짓이 된다) */
 export const ACTIVE_STORES = STORE_LIST.filter((s) => s.active === 'Y')
