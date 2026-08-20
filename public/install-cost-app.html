@@ -108,6 +108,21 @@
    * 끝나기 때문**이다. 에어컨(4칸)·식기세척기(5칸)는 같은 자료인데 눈이 흩어진다.
    * 그래서 어느 표든 같은 모양으로 세운다 — 왼쪽에 이름, 오른쪽에 금액.
    */
+  /*
+   * **절이 하나뿐인 품목도 두 단을 쓰게 한다**(2026-08-20 사장님 지적 — 식기세척기만
+   * 1열로 나와 통일성이 없었다). 에어컨·전기레인지는 절이 여럿이라 카드가 두 단으로
+   * 흘렀지만, 식기세척기는 절이 하나(47행)라 흘릴 카드가 없어 오른쪽이 통째로 비었다.
+   *
+   * 그래서 **큰 절은 카드가 두 단을 가로지르고(`column-span`) 그 안의 줄을 두 단으로**
+   * 나눈다. 값이 여럿인 표(이전설치·재설치·철거)는 값 상자가 넓어야 하므로 나누지 않는다.
+   */
+  .sec.wide{column-span:all;-webkit-column-span:all}
+  @media(min-width:900px){
+    .sec.wide .rows{column-count:2;column-gap:0}
+    .sec.wide .r{break-inside:avoid;-webkit-column-break-inside:avoid}
+    /* 가운데에 옅은 선 하나 — 두 단이 붙어 보이지 않게 */
+    .sec.wide .rows{column-rule:1px solid #f1f3f6}
+  }
   .rows{}
   .r{display:flex;align-items:baseline;gap:12px;padding:10px 14px;border-bottom:1px solid #f4f5f8;
     transition:background .12s}
@@ -333,9 +348,15 @@ function listOf(n, pfx) {
   }).join('') + '</div>';
 }
 
+/*
+ * **두 단으로 나눌 절인가.** 값이 하나뿐이고(이름 → 금액) 줄이 많은 절이 대상이다.
+ * 값이 여럿인 표(이전설치·재설치·철거)는 값 상자 셋이 나란해야 해서 나누면 짓눌린다.
+ */
+function isWide(n) { return n.vh.length <= 1 && n.rows.length >= 14; }
+
 /* 절은 기본으로 펼친다 — 눌러야 열리면 무엇이 있는지 알 수가 없다 */
-function section(title, n, inner, foot) {
-  return '<details class="sec" open><summary><span>' + esc(title) +
+function section(title, n, inner, foot, wide) {
+  return '<details class="sec' + (wide ? ' wide' : '') + '" open><summary><span>' + esc(title) +
     '</span><span class="cnt">' + n + '건</span></summary>' + inner
     + (foot ? '<div class="foot2">※ ' + esc(foot) + '</div>' : '') + '</details>';
 }
@@ -360,7 +381,7 @@ function render() {
       + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div>'
       + '<div class="secs">' + c.sections.map(function (s, i) {
           var n = normalizeGrid(s);
-          return section(s.title, n.rows.length, listOf(n, 'new:' + c.key + ':' + i), s.foot);
+          return section(s.title, n.rows.length, listOf(n, 'new:' + c.key + ':' + i), s.foot, isWide(n));
         }).join('') + '</div>';
     return;
   }
@@ -374,7 +395,7 @@ function render() {
       + ' · <a href="' + esc(D.careplus.source) + '" target="_blank" rel="noopener">원문 보기</a></div>'
       + '<div class="secs">' + g.sections.map(function (s, i) {
           var n = normalizeRows(s);
-          return section(s.title, n.rows.length, listOf(n, 'care:' + g.key + ':' + i), s.foot);
+          return section(s.title, n.rows.length, listOf(n, 'care:' + g.key + ':' + i), s.foot, isWide(n));
         }).join('') + '</div>';
     return;
   }

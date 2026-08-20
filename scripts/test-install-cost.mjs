@@ -166,6 +166,19 @@ D.newInstall.categories.forEach((c) => { win.__cost.go('new', c.key, null);
 D.careplus.groups.forEach((g) => { win.__cost.go('care', g.key, null);
   drawn += win.document.querySelectorAll('#body .nt').length; });
 ok(drawn >= 90, `비고가 화면에 ${drawn}줄 그려진다`);
+
+/*
+ * **품목마다 화면 짜임이 같아야 한다**(사장님 지적 — 식기세척기만 1열로 나왔다).
+ * 절이 여럿인 품목은 카드가 두 단으로 흐르는데, 절이 하나뿐인 품목(식기세척기 47행)은
+ * 흘릴 카드가 없어 오른쪽이 통째로 비었다. 큰 절은 카드가 두 단을 가로지르고
+ * 그 안의 줄을 나눈다 — 그 표시(`.wide`)가 붙는지 본다.
+ */
+const wideOf = (tab, key) => { win.__cost.go(tab, key, null);
+  return win.document.querySelectorAll('#body .sec.wide').length; };
+ok(wideOf('new', 'dw') === 1, '식기세척기(절 1개·47행)가 두 단을 쓴다');
+ok(wideOf('new', 'el') >= 1, '전기레인지(19행)가 두 단을 쓴다');
+ok(wideOf('new', 'ac') === 0, '에어컨은 절이 여럿이라 카드 단위로 흐른다(줄은 안 나눈다)');
+ok(wideOf('care', 'wash') >= 1, '이전설치 세탁기 추가설치비(46행)가 두 단을 쓴다');
 ok(feet >= 1, `절 각주가 화면에 ${feet}개 그려진다`);
 
 win.__cost.go('prep');
