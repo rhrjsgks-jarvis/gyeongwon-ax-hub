@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getStoreCode, setStoreCode, matchStore, isTestStore, clearLegacyStore } from '@/lib/stores'
+import SamsungWordmark from './SamsungWordmark'
 
 /*
  * **점코드 또는 점명을 쳐야 들어간다**(2026-08-20 사장님 결정 —
@@ -10,11 +11,14 @@ import { getStoreCode, setStoreCode, matchStore, isTestStore, clearLegacyStore }
  * 별도 비밀번호를 두지 않고 **지점 식별자 자체를 통행증**으로 쓴다. 로그인이 없고 주소가
  * 공개인 앱에서, 매장을 아는 사람만 들어오게 하는 가장 가벼운 방법이다.
  *
- * ── 들어오기 전에는 **아무것도 보여주지 않는다** ──
- * 사장님 지시(2026-08-20): *"하얀 배경에 점을 입력하는 창만 나오게. 아예 어떤 어플인지
- * 모르게 하는 게 좋을 것 같습니다."* 그래서 이 화면은 앱 위에 뜨는 모달이 아니라
- * **앱을 통째로 가리는 문**이다 — 불투명 흰 바탕에 입력칸 하나뿐이고, 앱 이름·로고·
- * 메뉴가 하나도 없다.
+ * ── 들어오기 전에는 **허브 내용을 보여주지 않는다** ──
+ * 사장님 지시(2026-08-20): *"하얀 배경에 점을 입력하는 창만 나오게."* 그래서 이 화면은
+ * 앱 위에 뜨는 모달이 아니라 **앱을 감싸는 문**이다 — 흰 바탕에 앱 이름과 입력칸뿐이고,
+ * 메뉴·카드·자료가 하나도 안 그려진다.
+ *
+ * **앱 이름은 보여도 된다**(같은 날 사장님 확인). 처음에 "어떤 어플인지 모르게"로 읽고
+ * 이름까지 지웠는데, 감춰야 했던 것은 **허브 내용**이지 정체가 아니었다 — 이름이 없으면
+ * 상담사가 "잘못 들어왔나" 한다. 안내 문구도 같은 이유로 남긴다.
  *
  * **기본값이 「잠김」이다.** 열림을 기본으로 두면 서버가 보낸 HTML 에 앱이 먼저 그려지고
  * 자바스크립트가 도는 찰나에 **허브가 번쩍 보인다** — 감추려는 뜻이 그 순간에 무너진다.
@@ -125,7 +129,37 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
         className="fixed inset-0 z-[9999] flex items-center justify-center px-6"
         style={{ background: '#fff' }}
       >
-        <div className="w-full max-w-xs">{field}</div>
+        <div className="w-full max-w-xs">
+          {/*
+            **앱 이름은 보여도 된다**(2026-08-20 사장님 확인). 처음에 "어떤 앱인지 모르게"로
+            읽고 이름까지 지웠는데, 감춰야 했던 것은 **허브 내용**(메뉴·카드·자료)이지
+            정체가 아니었다. 이름이 있어야 상담사가 "잘못 들어왔나" 하지 않는다.
+            공식 워드마크는 글꼴이 아니라 SVG 패스다(components/SamsungWordmark.tsx).
+          */}
+          <div className="flex items-center gap-2 mb-5" style={{ color: '#1428A0' }}>
+            <SamsungWordmark height={15} />
+            <span
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(20,40,160,.08)', color: '#1428A0' }}
+            >
+              세일즈 코파일럿
+            </span>
+          </div>
+          {/*
+            **안내 문구는 남긴다**(2026-08-20 사장님 지적). 입력칸만 덩그러니 두면
+            상담사가 **왜 넣어야 하는지 모른 채** 마주친다 — 감춰야 하는 것은
+            "어떤 앱인가"이지 "무엇을 넣어야 하는가"가 아니다.
+            앱 이름·로고·메뉴만 없고 물음과 이유는 그대로다.
+          */}
+          <h2 className="text-lg font-extrabold" style={{ color: '#1428A0' }}>
+            어느 매장인가요?
+          </h2>
+          <p className="mt-1.5 mb-4 text-xs leading-relaxed text-gray-500">
+            매장별 사용 현황을 모으는 데 씁니다.
+            <br />점코드 또는 지점명을 입력해야 시작할 수 있습니다.
+          </p>
+          {field}
+        </div>
       </div>
     )
   }

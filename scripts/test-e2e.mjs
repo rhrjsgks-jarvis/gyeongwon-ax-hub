@@ -783,9 +783,15 @@ try {
      * 뒤가 비치고, 무엇보다 **자바스크립트가 돌기 전에 허브가 번쩍 보인다.**
      */
     const gateText = (await sp.locator('body').innerText()) || '';
-    const brand = ['세일즈 코파일럿', '통합검색', '제품 상담 도구', 'AS 관련 정보'].filter((w) => gateText.includes(w));
-    if (brand.length) fail(`들어오기 전에 앱이 드러난다: ${brand.join(', ')}`);
-    else pass('들어오기 전에는 어떤 앱인지 드러나지 않는다');
+    /*
+     * **앱 이름은 보여도 된다**(2026-08-20 사장님 확인). 감춰야 하는 것은 **허브 내용** —
+     * 메뉴·카드·자료가 뒤에 비치면 지점을 안 넣고도 쓸 수 있는 것처럼 보이고,
+     * 무엇보다 아무나 열어 그대로 읽을 수 있다.
+     */
+    const leak = ['통합검색', '제품 상담 도구', 'AS 관련 정보', '레벨업 챌린지', '사용현황 대시보드']
+      .filter((w) => gateText.includes(w));
+    if (leak.length) fail(`들어오기 전에 허브 내용이 드러난다: ${leak.join(', ')}`);
+    else pass('들어오기 전에는 허브 내용이 드러나지 않는다');
 
     /* 점코드는 대소문자를 가리지 않는다 — 상담사가 소문자로 친다 */
     await sp.locator('[aria-label="지점 선택"] input').first().fill('zn01');
