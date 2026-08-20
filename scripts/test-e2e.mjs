@@ -749,6 +749,15 @@ try {
     if (await sp.locator('[aria-label="지점 선택"]').count() === 0) fail('바깥을 누르니 지점 창이 닫힌다');
     else pass('바깥을 눌러도 닫히지 않는다');
 
+    /*
+     * **지점명을 미리 보여주지 않는다**(2026-08-20 사장님 지시). 목록을 펼쳐 두면
+     * 상담사가 읽어 내려가다 눈에 걸린 것을 누른다 — 자기 매장이 아닌데도 고르면
+     * 그 매장 통계가 통째로 엉뚱한 곳에 잡힌다. 쳐야 나온다.
+     */
+    const preList = await sp.locator('[aria-label="지점 선택"] button').count();
+    if (preList > 1) fail(`입력 전에 지점이 ${preList - 1}곳 보인다 — 눈에 걸린 것을 누르게 된다`);
+    else pass('입력 전에는 지점 목록을 보여주지 않는다');
+
     /* 점코드로 찾아 고른다 — 상담사는 이름을, 관리자는 코드를 안다 */
     await sp.locator('[aria-label="지점 선택"] input').first().fill('zn01');
     await sp.waitForTimeout(300);

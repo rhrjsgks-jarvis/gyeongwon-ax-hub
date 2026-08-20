@@ -41,7 +41,14 @@ export default function StorePicker() {
     return () => window.removeEventListener('ax-store-open', reopen)
   }, [])
 
-  const list = useMemo(() => findStores(q), [q])
+  /*
+   * **지점명을 미리 보여주지 않는다**(2026-08-20 사장님 지시).
+   * 목록을 펼쳐 두면 상담사가 **읽어 내려가다 눈에 먼저 걸린 것을 누른다** — 자기 매장이
+   * 아닌데도 그럴듯하면 고르게 되고, 그 매장 통계가 통째로 엉뚱한 곳에 잡힌다.
+   * 자기 매장을 **알고 치는 사람만** 고르게 한다.
+   */
+  const typed = q.trim().length > 0
+  const list = useMemo(() => (typed ? findStores(q) : []), [q, typed])
   /* 아직 안 골랐으면 닫을 수 없다 — 지점 없는 기록은 점별 집계에서 쓸모가 없다 */
   const required = !code
 
@@ -84,10 +91,23 @@ export default function StorePicker() {
             띄우면 그 매장이 기본값처럼 읽혀 **그대로 두고 들어가는 사람이 생긴다** —
             점별 통계가 그 한 곳으로 쏠린다. 무엇을 넣는지만 말한다.
           */}
+          {/*
+            **자동완성을 끈다**(2026-08-20 사장님 지시). 브라우저가 지난번에 친 지점명을
+            드롭다운으로 띄우면, **지점명을 미리 보여주지 않기로 한 것이 그 자리에서
+            무너진다** — 남의 기기·다른 매장에서 그 목록을 그대로 눌러 들어가게 된다.
+            맞춤법 교정·첫 글자 대문자도 끈다(점코드가 `Zn01` 로 바뀌면 못 찾는다).
+          */}
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            name="ax-store-q"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            data-lpignore="true"
+            data-form-type="other"
             placeholder="지점명 or 점코드를 입력해주세요"
             className="mt-3 w-full rounded-xl border px-3 py-2.5 text-[15px] outline-none"
             style={{ borderColor: '#e5e7eb', background: '#fafbfc' }}
@@ -95,8 +115,12 @@ export default function StorePicker() {
         </div>
 
         <div className="flex-1 overflow-auto px-3 pb-2" style={{ minHeight: '38vh' }}>
-          {list.length === 0 ? (
-            <p className="py-10 text-center text-sm text-gray-400">
+          {!typed ? (
+            <p className="py-12 text-center text-sm text-gray-400 leading-relaxed">
+              지점명 또는 점코드를 입력하면<br />해당하는 매장이 나옵니다.
+            </p>
+          ) : list.length === 0 ? (
+            <p className="py-12 text-center text-sm text-gray-400 leading-relaxed">
               찾는 매장이 없습니다.<br />점코드(Z…)로도 찾아보세요.
             </p>
           ) : (
