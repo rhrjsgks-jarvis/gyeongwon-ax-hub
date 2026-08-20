@@ -179,6 +179,8 @@ try {
    */
   {
     const fresh = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    /* 지점 문을 지나 있어야 앱이 그려진다 — 이 검사의 대상은 문이 아니라 그 뒤다 */
+    await fresh.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
     const fp = await fresh.newPage();
     await fp.goto(BASE + '/place', { waitUntil: 'domcontentloaded' });
     await fp.waitForTimeout(1200);
@@ -219,6 +221,8 @@ try {
    */
   {
     const nb = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    /* 지점 문을 지나 있어야 앱이 그려진다 — 이 검사의 대상은 문이 아니라 그 뒤다 */
+    await nb.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
     const np = await nb.newPage();
     const over = [];
     for (const route of ['/finder', '/compare', '/install', '/care', '/as', '/place', '/quiz', '/test']) {
@@ -244,6 +248,8 @@ try {
   /* ── 2-b. 하단 바로가기 · 헤더 공유 · three.js 지연 (2026-08-11) ── */
   {
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    /* 지점 문을 지나 있어야 앱이 그려진다 — 이 검사의 대상은 문이 아니라 그 뒤다 */
+    await m.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
     const mp = await m.newPage();
     await mp.goto(BASE, { waitUntil: 'networkidle' });
 
@@ -765,15 +771,25 @@ try {
 
     /* **부분 입력으로는 못 들어간다** — 한 글자로 뚫리면 통행증이 아니다 */
     await sp.locator('[aria-label="지점 선택"] input').first().fill('수');
-    await sp.locator('[aria-label="지점 선택"] button:has-text("시작하기")').click();
+    await sp.locator('[aria-label="지점 선택"] button:has-text("확인")').click();
     await sp.waitForTimeout(300);
     if (await sp.locator('[aria-label="지점 선택"]').count() === 0) fail('부분 입력 "수" 로 들어가진다');
     else pass('부분 입력으로는 들어가지 못한다');
 
     /* 점코드로 찾아 고른다 — 상담사는 이름을, 관리자는 코드를 안다 */
+    /*
+     * **문이 앱을 통째로 가린다**(2026-08-20 사장님 지시 — *"아예 어떤 어플인지 모르게"*).
+     * 들어오기 전에는 앱 이름·메뉴·카드가 하나도 보이면 안 된다. 모달로 덮기만 하면
+     * 뒤가 비치고, 무엇보다 **자바스크립트가 돌기 전에 허브가 번쩍 보인다.**
+     */
+    const gateText = (await sp.locator('body').innerText()) || '';
+    const brand = ['세일즈 코파일럿', '통합검색', '제품 상담 도구', 'AS 관련 정보'].filter((w) => gateText.includes(w));
+    if (brand.length) fail(`들어오기 전에 앱이 드러난다: ${brand.join(', ')}`);
+    else pass('들어오기 전에는 어떤 앱인지 드러나지 않는다');
+
     /* 점코드는 대소문자를 가리지 않는다 — 상담사가 소문자로 친다 */
     await sp.locator('[aria-label="지점 선택"] input').first().fill('zn01');
-    await sp.locator('[aria-label="지점 선택"] button:has-text("시작하기")').click();
+    await sp.locator('[aria-label="지점 선택"] button:has-text("확인")').click();
     await sp.waitForTimeout(500);
     const chip = (await sp.locator('header button[title="지점 바꾸기"]').textContent()) || '';
     if (!chip.includes('스타필드')) fail(`헤더에 지점이 안 보인다 — "${chip}"`);

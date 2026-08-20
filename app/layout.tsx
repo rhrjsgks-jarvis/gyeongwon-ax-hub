@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Navigation from '@/components/Navigation'
 import ServiceWorker from '@/components/ServiceWorker'
-import StorePicker from '@/components/StorePicker'
+import StoreGate from '@/components/StorePicker'
 
 export const metadata: Metadata = {
   title: '세일즈 코파일럿',
@@ -60,17 +60,23 @@ export default function RootLayout({
       </head>
       <body>
         <ServiceWorker />
-        {/* 첫 접속에 지점을 묻는다 — 점별 사용 로그의 출발점이다(2026-08-20 사장님 요청) */}
-        <StorePicker />
-        <Navigation />
-        <main
-          className="pt-[60px] lg:pl-56 min-h-screen"
-          style={{ background: 'var(--color-bg)' }}
-        >
-          <div className="p-4 lg:p-6 pb-24 lg:pb-6">
-            {children}
-          </div>
-        </main>
+        {/*
+          **지점을 넣기 전에는 앱을 아예 그리지 않는다**(2026-08-20 사장님 지시 —
+          *"하얀 배경에 점을 입력하는 창만. 아예 어떤 어플인지 모르게"*).
+          덮기만 하면 뒤 화면이 DOM 에 남아 글자가 그대로 읽히고, 무엇보다 자바스크립트가
+          돌기 전에 허브가 번쩍 보인다. 그래서 감싸서 **안 그린다.**
+        */}
+        <StoreGate>
+          <Navigation />
+          <main
+            className="pt-[60px] lg:pl-56 min-h-screen"
+            style={{ background: 'var(--color-bg)' }}
+          >
+            <div className="p-4 lg:p-6 pb-24 lg:pb-6">
+              {children}
+            </div>
+          </main>
+        </StoreGate>
       </body>
     </html>
   )
