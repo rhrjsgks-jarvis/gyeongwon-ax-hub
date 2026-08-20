@@ -100,7 +100,7 @@ try {
    * 고른 상태이므로, **평소 상태**로 보는 것이 맞다.
    * 첫 접속 자체는 아래에서 **새 컨텍스트**로 따로 확인한다.
    */
-  await ctx.addInitScript(() => { try { localStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
+  await ctx.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
   const page = await ctx.newPage();
 
   // 서버가 뜰 때까지 대기
@@ -744,6 +744,16 @@ try {
     const chip = (await sp.locator('header button[title="지점 바꾸기"]').textContent()) || '';
     if (!chip.includes('스타필드')) fail(`헤더에 지점이 안 보인다 — "${chip}"`);
     else pass(`헤더에 지점 표시 — ${chip.trim()}`);
+
+    /*
+     * **접속하고 지점만 고른 상태에서는 로그가 없어야 한다**(2026-08-20 사장님 요청 —
+     * *"접속한 것만으로 로그가 쌓이진 않게"*). 예전에는 지점을 고르는 순간
+     * `hub/tab_switch` 가 하나 쌓여, **앱을 열었다 닫기만 해도 사용 기록이 생겼다.**
+     * 허브 메인 페이지뷰를 집계에서 뺀 것과 같은 이유다 — 진입은 사용이 아니다.
+     */
+    const afterPick = await sp.evaluate(() => JSON.parse(localStorage.getItem('axhub_logs') || '[]'));
+    if (afterPick.length !== 0) fail(`접속·지점 선택만 했는데 로그가 ${afterPick.length}건 쌓였다`);
+    else pass('접속과 지점 선택만으로는 로그가 쌓이지 않는다');
 
     /* 설치환경 가이드: 품목당 1회 · 같은 품목 재클릭은 안 센다 */
     await sp.goto(BASE + '/install', { waitUntil: 'domcontentloaded' });

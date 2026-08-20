@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { ACTIVE_STORES, getStoreCode, setStoreCode, findStores, isTestStore } from '@/lib/stores'
-import { logEvent } from '@/lib/logEvent'
+import { ACTIVE_STORES, getStoreCode, setStoreCode, findStores, isTestStore, clearLegacyStore } from '@/lib/stores'
 
 /*
  * **첫 접속에 지점을 고르고 들어간다**(2026-08-20 사장님 요청).
@@ -24,6 +23,7 @@ export default function StorePicker() {
   const [code, setCode] = useState('')
 
   useEffect(() => {
+    clearLegacyStore()          // 예전 방식으로 기기에 남은 값 정리
     const saved = getStoreCode()
     setCode(saved)
     if (!saved) setOpen(true)
@@ -38,8 +38,12 @@ export default function StorePicker() {
     setStoreCode(c)
     setCode(c)
     setOpen(false)
-    /* 어느 매장이 언제 들어왔는지도 신호다 — 지점을 고른 그 순간을 남긴다 */
-    logEvent('hub', 'tab_switch', `지점 선택: ${c}`)
+    /*
+     * **지점을 고르는 것만으로는 로그를 남기지 않는다**(2026-08-20 사장님 요청 —
+     * *"접속한 것만으로 로그가 쌓이진 않게"*). 예전에는 여기서 `hub/tab_switch` 를
+     * 하나 남겼는데, 그러면 **앱을 열었다 닫기만 해도 사용 기록이 생긴다** —
+     * 허브 메인 페이지뷰를 집계에서 뺀 것과 같은 이유다(진입은 사용이 아니다).
+     */
     window.dispatchEvent(new CustomEvent('ax-store-changed', { detail: c }))
   }
 

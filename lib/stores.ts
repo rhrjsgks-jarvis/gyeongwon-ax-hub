@@ -95,17 +95,35 @@ export const STORE_LIST: Store[] = [
   { code: 'ZRG1', name: 'KGM평택모바일', active: 'Y' },
 ]
 
+/*
+ * **접속할 때마다 다시 묻는다**(2026-08-20 사장님 요청). 그래서 `localStorage` 가 아니라
+ * **`sessionStorage`** 다 — 앱을 닫으면 지워지고 다음에 열 때 다시 고른다. 같은 세션
+ * 안에서 화면을 옮길 때는 묻지 않는다(그것까지 물으면 상담이 막힌다).
+ *
+ * 익명 세션 id(`axhub_uid`)와 **수명이 같아져** 로그의 단위도 맞아떨어진다 —
+ * "한 세션 = 한 매장의 상담 한 판"이 된다.
+ */
 const KEY = 'axhub_store'
+const LEGACY_KEY = 'axhub_store'   // 예전에는 localStorage 에 두어 한 번만 물었다
 
-/** 지금 기기에 저장된 점코드. 아직 고르지 않았으면 빈 문자열 */
+/** 이번 접속에 고른 점코드. 아직 고르지 않았으면 빈 문자열 */
 export function getStoreCode(): string {
-  if (typeof localStorage === 'undefined') return ''
-  try { return localStorage.getItem(KEY) || '' } catch { return '' }
+  if (typeof sessionStorage === 'undefined') return ''
+  try { return sessionStorage.getItem(KEY) || '' } catch { return '' }
 }
 
 export function setStoreCode(code: string): void {
+  if (typeof sessionStorage === 'undefined') return
+  try { sessionStorage.setItem(KEY, code) } catch { /* 사파리 비공개 모드 */ }
+}
+
+/**
+ * 예전 방식(기기에 영구 저장)으로 남은 값을 지운다.
+ * 남겨 두면 **그 기기만 영영 안 묻는 것처럼 보이지는 않지만**(읽지 않으므로) 쓰레기로 굳는다.
+ */
+export function clearLegacyStore(): void {
   if (typeof localStorage === 'undefined') return
-  try { localStorage.setItem(KEY, code) } catch { /* 사파리 비공개 모드 */ }
+  try { localStorage.removeItem(LEGACY_KEY) } catch { /* 무시 */ }
 }
 
 export function storeName(code: string): string {
