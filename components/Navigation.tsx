@@ -8,6 +8,23 @@ import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
 import FeedbackButton from './FeedbackButton'
 
+/*
+ * **지금 보고 있는 화면인가** — 경로는 글자가 아니라 **마디(segment)** 로 본다.
+ *
+ * 예전에는 `pathname.startsWith(href)` 였다. 그런데 `/install-cost` 는 `/install` 로
+ * **시작**하므로, 설치비용을 열면 **설치환경 가이드까지 함께 켜져 보였다**
+ * (2026-08-20 사장님 지적). 쓰는 데는 지장이 없지만 화면이 거짓말을 하는 셈이다.
+ * 같거나 `href + '/'` 로 시작할 때만 그 아래 화면이다.
+ *
+ * **판정을 여기 한 곳에만 둔다.** 같은 검사가 파일 안에 다섯 군데 흩어져 있었고,
+ * 한 곳만 고치면 나머지에서 또 난다(이 저장소가 허브 카드 수·앱 버전에서 반복해서
+ * 데인 그 종류다).
+ */
+function isActive(pathname: string, href: string): boolean {
+  if (href.includes('#') || href === '/') return pathname === href
+  return pathname === href || pathname.startsWith(href + '/')
+}
+
 // 허브·통합검색은 **그룹 밖 최상단**이다. 둘 다 '도구'가 아니라 진입점이고,
 // 좁은 화면에서는 하단 탭이, 넓은 화면에서는 사이드바 맨 위가 같은 역할을 한다.
 const NAV_ENTRY = [
@@ -112,7 +129,7 @@ export default function Navigation() {
     const initial: Record<string, boolean> = {}
     NAV_GROUPS.forEach((group) => {
       initial[group.title] = group.items.some(
-        (item) => pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
+        (item) => isActive(pathname, item.href)
       )
     })
     return initial
@@ -175,7 +192,7 @@ export default function Navigation() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+          const active = isActive(pathname, item.href)
           /*
            * 분류 탭('제품 상담 도구'·'교육')은 **평범한 `<a>`** 로 둔다.
            * Next 의 `<Link>` 는 해시만 다른 이동에서 `hashchange` 를 일으키지 않아,
@@ -249,7 +266,7 @@ export default function Navigation() {
                 {isOpen && (
                   <div className="flex flex-col gap-0.5">
                     {group.items.map((item) => {
-                      const active = pathname === item.href || (!item.href.includes('#') && item.href !== '/' && pathname.startsWith(item.href))
+                      const active = isActive(pathname, item.href)
                       return (
                         <Link
                           key={item.href}
@@ -286,9 +303,9 @@ export default function Navigation() {
               href={DEV_LINK.href}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
               style={{
-                background: pathname.startsWith(DEV_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
-                color: pathname.startsWith(DEV_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                fontWeight: pathname.startsWith(DEV_LINK.href) ? 700 : 500,
+                background: isActive(pathname, DEV_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                color: isActive(pathname, DEV_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                fontWeight: isActive(pathname, DEV_LINK.href) ? 700 : 500,
               }}
             >
               <Icon name={DEV_LINK.icon} size={19} />
@@ -298,9 +315,9 @@ export default function Navigation() {
               href={ADMIN_LINK.href}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
               style={{
-                background: pathname.startsWith(ADMIN_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
-                color: pathname.startsWith(ADMIN_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                fontWeight: pathname.startsWith(ADMIN_LINK.href) ? 700 : 500,
+                background: isActive(pathname, ADMIN_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
+                color: isActive(pathname, ADMIN_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                fontWeight: isActive(pathname, ADMIN_LINK.href) ? 700 : 500,
               }}
             >
               <Icon name={ADMIN_LINK.icon} size={19} />

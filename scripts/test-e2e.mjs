@@ -680,6 +680,36 @@ try {
     await bp.close();
   }
 
+  /*
+   * ── 4-c. 사이드바에서 지금 화면 하나만 켜지는가 ──
+   *
+   * `/install-cost` 를 열면 **설치환경 가이드까지 함께 켜져 보였다**(2026-08-20 사장님
+   * 지적). 판정이 `pathname.startsWith(href)` 라 `/install-cost` 가 `/install` 로
+   * 시작하는 탓이었다. 쓰는 데는 지장이 없지만 화면이 거짓말을 한다.
+   *
+   * **경로가 겹치는 짝을 실제로 열어 세어 본다** — 소스만 보면 다섯 군데 중 하나를
+   * 놓쳐도 통과한다. 사이드바는 넓은 화면(lg=1024px)에서만 뜨므로 그 폭으로 연다.
+   */
+  {
+    const wide = await ctx.newPage();
+    await wide.setViewportSize({ width: 1280, height: 900 });
+    for (const [path, want] of [['/install-cost', '설치비용'], ['/install', '설치환경']]) {
+      await wide.goto(BASE + path, { waitUntil: 'domcontentloaded' });
+      await wide.waitForTimeout(700);
+      /* 켜진 항목은 글자가 굵고(700) 파랗다 — 그 표시로 센다 */
+      const on = await wide.evaluate(() => [...document.querySelectorAll('nav a, aside a')]
+        .filter((a) => {
+          const s = getComputedStyle(a);
+          return s.fontWeight === '700' && /rgb\(20, 40, 160\)/.test(s.color);
+        })
+        .map((a) => a.textContent.replace(/\s+/g, ' ').trim()));
+      if (on.length !== 1) fail(`${path} — 사이드바에 ${on.length}곳이 켜져 있다: ${on.join(' / ')}`);
+      else if (!on[0].includes(want)) fail(`${path} — 켜진 곳이 "${on[0]}" (기대 ${want})`);
+      else pass(`${path} → 사이드바 "${on[0]}" 하나만 켜진다`);
+    }
+    await wide.close();
+  }
+
   // ── 5. 운영 종료된 라우트 ──
   {
     collecting = false;   // 404는 의도한 결과라 콘솔 오류로 세지 않는다
