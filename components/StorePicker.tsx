@@ -4,18 +4,27 @@ import { useEffect, useMemo, useState } from 'react'
 import { ACTIVE_STORES, getStoreCode, setStoreCode, findStores, isTestStore, clearLegacyStore } from '@/lib/stores'
 
 /*
- * **첫 접속에 지점을 고르고 들어간다**(2026-08-20 사장님 요청).
+ * **접속할 때마다 지점을 고르고 들어간다**(2026-08-20 사장님 요청).
  *
- * 점별 사용 로그를 취합하려면 "이 기기가 어느 매장인가"를 알아야 하는데, 로그인 없는
- * 공개 주소라 서버가 알 방법이 없다. 그래서 **처음 한 번만 묻고 기기에 남긴다**
- * (`localStorage`). 매장 태블릿은 자리에 고정돼 있어 한 번 고르면 바뀌지 않는다.
+ * 점별 사용 로그를 취합하려면 "지금 이 접속이 어느 매장인가"를 알아야 하는데, 로그인 없는
+ * 공개 주소라 서버가 알 방법이 없다. 그래서 묻는다.
  *
- * 지키는 것 셋:
- *  · **지점명과 점코드 어느 쪽으로도 찾는다** — 상담사는 매장 이름을 알고, 관리자는
- *    코드를 안다. 이름은 띄어쓰기를 무시한다("스타필드수원" · "스타필드 수원").
- *  · **건너뛸 수 있다.** 고르지 않으면 로그의 지점 칸이 비고, 대시보드가 '(미지정)'으로
- *    따로 센다 — 0 으로 적어 "안 썼다"로 읽히게 하지 않는다. 상담을 막는 것이 더 나쁘다.
- *  · **나중에 바꿀 수 있다.** 헤더의 지점 이름을 누르면 이 화면이 다시 뜬다(`ax-store-open`).
+ *  · **세션마다 묻는다.** 저장 자리가 `sessionStorage` 라 앱을 닫으면 지워지고 다음에 열
+ *    때 다시 고른다. 같은 세션 안에서 화면을 옮길 때는 묻지 않는다 — 그것까지 물으면
+ *    상담이 막힌다. 익명 세션 id 와 수명이 같아져 "한 세션 = 한 매장의 상담 한 판"이 된다.
+ *
+ *  · **고르기 전에는 쓸 수 없다**(2026-08-20 사장님 재지시 — *"이제는 어느 지점에서
+ *    활용하는지 기록이 중요합니다"*). 예전에는 '나중에 고르기'로 건너뛸 수 있었는데,
+ *    그러면 그 세션의 사용이 통째로 '(미지정)'으로 빠진다. **지점을 모르는 기록은
+ *    점별 집계에서 아무 쓸모가 없다** — 뒤로 물러설 길을 닫는 것이 맞다.
+ *    이미 고른 뒤 헤더에서 다시 열었을 때만 닫을 수 있다(바꾸려다 만 경우다).
+ *
+ *  · **지점명·점코드 어느 쪽으로도 찾는다** — 상담사는 매장 이름을, 관리자는 코드를 안다.
+ *    이름은 띄어쓰기를 무시한다("스타필드수원" · "스타필드 수원").
+ *
+ *  · **고르는 것만으로는 로그를 남기지 않는다.** 예전에는 여기서 `hub/tab_switch` 를
+ *    하나 남겼는데, 그러면 앱을 열었다 닫기만 해도 사용 기록이 생긴다 — 허브 메인
+ *    페이지뷰를 집계에서 뺀 것과 같은 이유다(진입은 사용이 아니다).
  */
 export default function StorePicker() {
   const [open, setOpen] = useState(false)
@@ -23,7 +32,7 @@ export default function StorePicker() {
   const [code, setCode] = useState('')
 
   useEffect(() => {
-    clearLegacyStore()          // 예전 방식으로 기기에 남은 값 정리
+    clearLegacyStore()          // 예전 방식(기기 영구 저장)으로 남은 값 정리
     const saved = getStoreCode()
     setCode(saved)
     if (!saved) setOpen(true)
@@ -33,17 +42,13 @@ export default function StorePicker() {
   }, [])
 
   const list = useMemo(() => findStores(q), [q])
+  /* 아직 안 골랐으면 닫을 수 없다 — 지점 없는 기록은 점별 집계에서 쓸모가 없다 */
+  const required = !code
 
   function choose(c: string) {
     setStoreCode(c)
     setCode(c)
     setOpen(false)
-    /*
-     * **지점을 고르는 것만으로는 로그를 남기지 않는다**(2026-08-20 사장님 요청 —
-     * *"접속한 것만으로 로그가 쌓이진 않게"*). 예전에는 여기서 `hub/tab_switch` 를
-     * 하나 남겼는데, 그러면 **앱을 열었다 닫기만 해도 사용 기록이 생긴다** —
-     * 허브 메인 페이지뷰를 집계에서 뺀 것과 같은 이유다(진입은 사용이 아니다).
-     */
     window.dispatchEvent(new CustomEvent('ax-store-changed', { detail: c }))
   }
 
@@ -55,25 +60,35 @@ export default function StorePicker() {
       aria-modal="true"
       aria-label="지점 선택"
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
-      style={{ background: 'rgba(16,24,40,.55)' }}
+      style={{ background: 'rgba(16,24,40,.62)' }}
+      /* 이미 고른 상태에서 다시 연 것이면 바깥을 눌러 닫을 수 있다 */
+      onClick={() => { if (!required) setOpen(false) }}
     >
       <div
         className="w-full sm:max-w-md bg-white flex flex-col"
         style={{ borderRadius: '18px 18px 0 0', maxHeight: '88vh' }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 pt-5 pb-3">
           <h2 className="text-lg font-extrabold" style={{ color: 'var(--color-primary)' }}>
             어느 매장인가요?
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-gray-500">
-            매장별 사용 현황을 모으는 데 씁니다. 한 번만 고르면 이 기기에 기억됩니다.
+            {required
+              ? '매장별 사용 현황을 모으는 데 씁니다. 지점을 골라야 시작할 수 있습니다.'
+              : '매장별 사용 현황을 모으는 데 씁니다.'}
             <br />지점명이나 점코드로 찾으세요.
           </p>
+          {/*
+            **예시 지점을 적지 않는다**(2026-08-20 사장님 요청). 한 매장 이름을 예시로
+            띄우면 그 매장이 기본값처럼 읽혀 **그대로 두고 들어가는 사람이 생긴다** —
+            점별 통계가 그 한 곳으로 쏠린다. 무엇을 넣는지만 말한다.
+          */}
           <input
             autoFocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="스타필드 수원 · ZN01 · 분당…"
+            placeholder="지점명 or 점코드를 입력해주세요"
             className="mt-3 w-full rounded-xl border px-3 py-2.5 text-[15px] outline-none"
             style={{ borderColor: '#e5e7eb', background: '#fafbfc' }}
           />
@@ -97,7 +112,10 @@ export default function StorePicker() {
                   fontWeight: s.code === code ? 700 : 500,
                 }}
               >
-<span className="text-[14px]" style={isTestStore(s.code) ? { color: '#9aa0a6' } : undefined}>{s.name}</span>
+                {/* 테스트점은 검색해야만 나온다 — 무심코 고르면 그 매장 사용량이 사라진다 */}
+                <span className="text-[14px]" style={isTestStore(s.code) ? { color: '#9aa0a6' } : undefined}>
+                  {s.name}
+                </span>
                 <span className="text-[11px] tracking-wide text-gray-400">{s.code}</span>
               </button>
             ))
@@ -105,16 +123,21 @@ export default function StorePicker() {
         </div>
 
         <div className="flex items-center justify-between border-t px-5 py-3" style={{ borderColor: '#f1f3f6' }}>
-{/* **활성 지점만 센다** — 전체 목록을 세면 화면이 거짓말을 한다(다른 팀 지점은 안 보인다) */}
-          <span className="text-[11px] text-gray-400">경원영업팀 {ACTIVE_STORES.length}곳</span>
-          {/* 나중에 고를 수 있게 둔다 — 상담을 막는 것이 로그가 비는 것보다 나쁘다 */}
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="text-[13px] font-semibold text-gray-500 px-3 py-1.5"
-          >
-            나중에 고르기
-          </button>
+          {/* **활성 지점만, 테스트점은 빼고 센다** — 목록에 안 보이는 것을 세면 화면이 거짓말을 한다 */}
+          <span className="text-[11px] text-gray-400">
+            경원영업팀 {ACTIVE_STORES.filter((x) => !isTestStore(x.code)).length}곳
+          </span>
+          {required ? (
+            <span className="text-[11px] text-gray-400">지점을 골라야 시작됩니다</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="text-[13px] font-semibold text-gray-500 px-3 py-1.5"
+            >
+              닫기
+            </button>
+          )}
         </div>
       </div>
     </div>

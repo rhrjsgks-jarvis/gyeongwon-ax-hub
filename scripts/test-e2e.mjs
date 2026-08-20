@@ -736,8 +736,21 @@ try {
     if (!asked) fail('첫 접속인데 지점을 묻지 않는다');
     else pass('첫 접속 — 지점을 묻는다');
 
+    /*
+     * **고르기 전에는 쓸 수 없다**(2026-08-20 사장님 재지시). 건너뛸 길이 남아 있으면
+     * 그 세션의 사용이 통째로 '(미지정)'으로 빠진다 — 지점을 모르는 기록은 점별 집계에서
+     * 쓸모가 없다. 바깥을 눌러도 닫히지 않아야 한다.
+     */
+    const skip = await sp.locator('[aria-label="지점 선택"] button:has-text("나중에")').count();
+    if (skip) fail('지점을 건너뛸 수 있다 — 그 세션 사용이 통째로 미지정으로 빠진다');
+    else pass('지점을 고르기 전에는 건너뛸 수 없다');
+    await sp.mouse.click(5, 5);          // 바깥 누르기
+    await sp.waitForTimeout(300);
+    if (await sp.locator('[aria-label="지점 선택"]').count() === 0) fail('바깥을 누르니 지점 창이 닫힌다');
+    else pass('바깥을 눌러도 닫히지 않는다');
+
     /* 점코드로 찾아 고른다 — 상담사는 이름을, 관리자는 코드를 안다 */
-    await sp.locator('#__next input, input[placeholder*="ZN01"]').first().fill('zn01');
+    await sp.locator('[aria-label="지점 선택"] input').first().fill('zn01');
     await sp.waitForTimeout(300);
     await sp.locator('button:has-text("스타필드 수원")').first().click();
     await sp.waitForTimeout(500);

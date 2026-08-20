@@ -560,6 +560,19 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!S.isTestStore(S.TEST_STORE_CODE) || S.isTestStore('ZN01')) {
     fail('[테스트점] isTestStore 판정이 틀렸다'); bad++;
   }
+  /*
+   * **목록에는 안 내밀고, 쳐서 찾으면 나온다**(2026-08-20 사장님 지시).
+   * 상담사가 무심코 고르면 그 매장 사용량이 통째로 사라지므로 아는 사람만 쓰게 한다.
+   */
+  if (S.findStores('').some((x) => S.isTestStore(x.code))) {
+    fail('[테스트점] 빈 목록에 테스트점이 보인다 — 무심코 고르면 그 매장 로그가 사라진다'); bad++;
+  }
+  if (!S.findStores('Z000').some((x) => S.isTestStore(x.code))) {
+    fail('[테스트점] 점코드를 쳐도 안 나온다 — 관리자가 쓸 수 없다'); bad++;
+  }
+  if (!S.findStores('테스트점').some((x) => S.isTestStore(x.code))) {
+    fail('[테스트점] 이름을 쳐도 안 나온다'); bad++;
+  }
   if (!bad) console.log('OK: 테스트점(Z000) — 로그를 남기지 않고, 다른 지점으로 바꾸면 다시 쌓인다');
 }
 

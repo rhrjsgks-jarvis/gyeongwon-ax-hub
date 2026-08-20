@@ -143,7 +143,12 @@ export function findStores(q: string): Store[] {
    */
   const live = STORE_LIST.filter((s) => s.active === 'Y')
   const t = q.trim().toLowerCase().replace(/\s+/g, '')
-  if (!t) return live
+  /*
+   * **테스트점은 목록에 내밀지 않는다**(2026-08-20 사장님 지시). 로그가 안 쌓이는
+   * 지점이라 상담사가 무심코 고르면 **그 매장 사용량이 통째로 사라진다.**
+   * 관리자가 `Z000` 이나 `테스트점` 을 직접 쳤을 때만 나온다 — 아는 사람만 쓴다.
+   */
+  if (!t) return live.filter((s) => !isTestStore(s.code))
   return live.filter(
     (s) => s.code.toLowerCase().includes(t) || s.name.replace(/\s+/g, '').toLowerCase().includes(t)
   )
