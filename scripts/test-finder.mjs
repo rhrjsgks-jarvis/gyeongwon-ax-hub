@@ -1,4 +1,8 @@
-// 제품 상세검색(public/finder-app.html) 회귀 테스트
+// 모델파인더(제품 상세검색) — public/finder-app.html 회귀 테스트
+//
+// **이름은 여기 한 곳에서만 적는다.** 허브 카드·사이드바·앱 헤더가 같은 이름을 불러야
+// 하는데, 검사가 이름을 따로 적으면 그 자체가 네 번째 사본이 된다.
+const APP_NAME = '모델파인더(제품 상세검색)';
 // 실행: node scripts/test-finder.mjs
 // 패턴: jsdom으로 정적 HTML을 runScripts:'dangerously'로 로드하고, 인라인 스크립트가
 // window에 노출하는 전역 함수(parseQuery/search/runSearch/setMode/toggleCat 등)를
@@ -674,8 +678,11 @@ const CAT_QUERIES = {
   /* ═══ 14. 화면에 적는 이름과 수치 ═══
    *
    * 둘 다 실제로 어긋나 있었다(2026-08-12 발견).
-   *  · 헤더가 아직 **'모델 파인더'** 였다. 그 이름은 통합검색(/search)으로 넘어갔고
-   *    이 앱의 정식 명칭은 **'제품 상세검색'** 이다(CLAUDE.md 용어표 · 허브 카드 · 사이드바).
+   *  · 헤더가 아직 **'모델 파인더'** 였다. 지금 정식 명칭은
+   *    **'모델파인더(제품 상세검색)'** 이다 — 2026-08-21 에 발표 자료와 맞췄다.
+   *    현장이 여전히 '모델파인더'로 부르고 경영진 자료도 그 말을 쓰기 때문이고,
+   *    괄호로 지금 이름을 함께 남겨 화면을 보던 상담사가 헷갈리지 않게 한다.
+   *    **허브 카드 · 사이드바 · 앱 헤더가 같은 이름을 불러야 한다** — 그걸 이 검사가 지킨다.
    *  · 상단바는 "586종", 히어로는 "524종" 이라고 **서로 다르게** 말했다. 524 는 데이코 8종을
    *    넣기 전 값이고, 586 은 `setMode()` 안에 있어 초기 화면에서는 불리지도 않았다.
    * 지금은 둘 다 `PRODUCTS` 를 세어 넣으므로, 이 검사는 그 연결이 끊기면 실패한다. */
@@ -683,9 +690,9 @@ const CAT_QUERIES = {
   {
     const brand = doc.querySelector('.brand b');
     if (!brand) fail('상단바 이름 요소(.brand b)가 없다');
-    else if (brand.textContent.trim() !== '제품 상세검색')
-      fail(`상단바 이름이 "${brand.textContent.trim()}" — 정식 명칭은 '제품 상세검색'이다`);
-    else console.log('  상단바 이름 = 제품 상세검색 ✓');
+    else if (brand.textContent.trim() !== APP_NAME)
+      fail(`상단바 이름이 "${brand.textContent.trim()}" — 정식 명칭은 '${APP_NAME}'이다`);
+    else console.log('  상단바 이름 = ' + APP_NAME + ' ✓');
 
     /* `PRODUCTS` 는 최상위 `let` 이라 window 에 없다 — 위에서 원본을 뽑아 둔 값을 쓴다 */
     const n = TOTAL_PRODUCTS;

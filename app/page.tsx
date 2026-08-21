@@ -38,7 +38,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/finder',
         icon: 'finder',
-        title: '제품 상세검색',
+        title: '모델파인더(제품 상세검색)',
         desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(2,012종)',
         color: '#1428A0',
         bg: '#EEF2FF',

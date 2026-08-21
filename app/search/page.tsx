@@ -142,7 +142,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
       <div className="px-3 pb-3">
         <Link href={e.href} className="no-underline">
           <span className="inline-block text-[12px] font-semibold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1428A0' }}>
-            제품 상세검색에서 열기 →
+            모델파인더(제품 상세검색)에서 열기 →
           </span>
         </Link>
       </div>
