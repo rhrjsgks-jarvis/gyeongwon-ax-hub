@@ -457,7 +457,10 @@ const SYN = {
   /* 스마트폰 */
   "휴대폰":["스마트폰","갤럭시"],"핸드폰":["스마트폰","갤럭시"],"폰":["스마트폰"],
   "갤럭시":["갤럭시","스마트폰"],"갤s":["갤럭시 s","스마트폰"],
-  "울트라":["ultra","스마트폰"],"접는폰":["폴더블"],
+  /* **울트라는 스마트폰만의 말이 아니다** — 북6 울트라 · 탭 S11 울트라 · 워치 울트라2 ·
+     제트 울트라가 있다. 예전에는 확장에 "스마트폰"이 들어 있어  로 찾으면
+     스마트폰이 통째로 조건을 통과했다(SYN 에 상위 개념을 섞지 말라는 그 규칙이다). */
+  "울트라":["ultra"],"접는폰":["폴더블"],
   "폴드":["fold"],"플립":["flip"],"a시리즈":["a시리즈","갤럭시 a"],
   "저가폰":["a시리즈","__VALUE__"],"카메라폰":["광학 줌","ois","스마트폰"],
   "셀카":["스마트폰","셀피","광학 줌"],"5g":["5g","스마트폰"],
@@ -855,6 +858,46 @@ function search(P){
    * 한 종도 없는데 에어드레서·청소기에 14종이 있어 조건이 살아남아 AND 를 깨뜨렸다.
    * 그 카테고리 안에서 아무것도 못 거르는 조건은 그 상담에서 뜻이 없는 말이다.
    */
+  /*
+   * ── 제품군 애칭으로도 찾게 한다 (2026-08-21) ─────────────────────────
+   *
+   * 상담사는 `북6` · `탭S11` 처럼 제품군을 먼저 부르고 그 안에서 세부 모델을 고른다.
+   * 그런데 **붙여 쓰면 0건**이었다 — 데이터는 `갤럭시 북6 울트라` 처럼 띄어 쓰여 있고
+   * 판정이 `kw.indexOf(토큰)` 이라 `갤럭시북6` 가 안 걸린다.
+   *
+   * 0건인 조건은 "없는 말"로 보고 조건에서 빠지므로(P.ignored) **정확도까지** 무너졌다 —
+   * `탭S11 울트라` 가 `울트라` 하나만 남아 S26 Ultra 를 내놓았다.
+   *
+   * 표를 새로 만들지 않는다. **공백을 지운 쪽끼리 견주면** 부분일치라 그대로 걸린다
+   * (`탭s11` ⊂ `갤럭시탭s11울트라`). 영문 애칭만 음차가 필요하다.
+   */
+  const NICK_EN = [["book","북"],["tab","탭"],["watch","워치"],["buds","버즈"],
+    ["fit","핏"],["ring","링"],["flip","플립"],["fold","폴드"],["ultra","울트라"],
+    ["pro","프로"],["edge","엣지"],["classic","클래식"],["lite","라이트"],["active","액티브"]];
+  /* 뒤에 숫자·공백·끝이 올 때만 바꾼다 — 그래야 processor 가 "프로cessor" 가 되지 않는다 */
+  const NICK_RE = NICK_EN.map(([en,ko])=>[new RegExp("\\b"+en+"(?=\\d|\\s|$)","g"),ko]);
+  const nospace = (s)=>s.replace(/\s+/g,"");
+  function kwc(p){ return p.__kwc || (p.__kwc = nospace(p.kw)); }
+  /*
+   * 이 토큰이 가질 수 있는 표기들 — 원문 · 공백 지운 것 · 영문 음차 · 그 공백 지운 것.
+   * **kw 판정과 제품군 가산점이 같은 목록을 써야 한다.** 나눠 두었더니 질의 `울트라` 가
+   * SYN 으로 `ultra` 가 되어 kw 는 걸리는데 한글 제품군 이름에는 가산점이 안 붙었다.
+   */
+  const FORMS = {};
+  function formsOf(f){
+    if(FORMS[f]) return FORMS[f];
+    const out = [f, nospace(f)];
+    let ko = f;
+    for(const [re,k] of NICK_RE) ko = ko.replace(re, k);
+    if(ko !== f){ out.push(ko, nospace(ko)); }
+    return (FORMS[f] = [...new Set(out)]);
+  }
+  function kwHit(p, f){
+    if(p.kw.indexOf(f) >= 0) return true;
+    const c = kwc(p);
+    return formsOf(f).some(v=>c.indexOf(nospace(v)) >= 0);
+  }
+
   const pool = PRODUCTS.filter(p=>
     (!P.cats.length || P.cats.includes(p.cat)) &&
     !P.subs.some(s=>p.cat===s.cat && !s.re.test(p.model)));
@@ -862,7 +905,7 @@ function search(P){
   P.ignored = [];
   for(const g of (P.groups||[])){
     if(!g.req || !g.forms.length) continue;
-    if(pool.some(p=>g.forms.some(f=>p.kw.indexOf(f)>=0))) liveG.push(g);
+    if(pool.some(p=>g.forms.some(f=>kwHit(p,f)))) liveG.push(g);
     else P.ignored.push(g.raw);
   }
 
@@ -870,7 +913,7 @@ function search(P){
   for(const p of PRODUCTS){
     // 형태 필터는 자기 카테고리 안에서만 건다("드럼세탁기 건조기"에서 건조기까지 지우지 않게)
     if(P.subs.length && P.subs.some(s=>p.cat===s.cat && !s.re.test(p.model))) continue;
-    if(liveG.length && !liveG.every(g=>g.forms.some(f=>p.kw.indexOf(f)>=0))) continue;
+    if(liveG.length && !liveG.every(g=>g.forms.some(f=>kwHit(p,f)))) continue;
     // 가격 미상(price:null) 제품은 예산 조건이 걸린 검색에서 제외한다. null은 JS 비교에서
     // 0으로 취급돼 "예산 이하"에 항상 걸리므로, 그대로 두면 가격 없는 제품이 최저가처럼
     // 상단에 뜨는 왜곡이 생긴다(카탈로그 기준 구세대 모델은 출시가 정보가 없음).
@@ -891,11 +934,27 @@ function search(P){
     let sc = 0; const hits = [];
     for(const t of P.terms){
       const tl = t.toLowerCase();
-      if(p.kw.indexOf(tl) >= 0){
+      if(kwHit(p, tl)){
         const exactWord = new RegExp("(^|\\s)"+tl.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(\\s|$)");
         sc += exactWord.test(p.kw) ? 5 : 3; hits.push(t);
       }
       if(p.model.toLowerCase().indexOf(tl) === 0 && tl.length>=3) sc += 8;
+      /*
+       * **제품명에 있는 말을 더 높게 친다** (2026-08-21).
+       * 사양 어딘가에 우연히 들어 있는 것과 제품 이름인 것은 무게가 다르다 —
+       *  로 찾으면 북6 프로가 위에 섰다. 프로의 CPU 이름이
+       *  이라 → 확장에 걸렸기 때문이다.
+       */
+      /*
+       * **제품군 이름에 있는 말을 더 높게 친다** (2026-08-21).
+       * 사양 어딘가에 우연히 들어 있는 것과 제품 이름인 것은 무게가 다르다 —
+       * `북6 울트라` 로 찾으면 북6 **프로**가 위에 섰다. 삼성닷컴 제품명이
+       * `갤럭시 북6 프로 (40.6cm) Core™ Ultra X7 / 1TB …` 라 이름 안에 Ultra 가 있고,
+       * `울트라`→`ultra` 확장이 거기 걸렸기 때문이다.
+       * 그래서 **괄호 앞 제품군 이름**만 본다 — `갤럭시 북6 울트라` vs `갤럭시 북6 프로`.
+       */
+      const fam = (p.__fam || (p.__fam = nospace(String(p.group||"").split(/[(,]/)[0].toLowerCase())));
+      if(formsOf(tl).some(v=>fam.indexOf(nospace(v)) >= 0)) sc += 6;
     }
     if(P.cats.length) sc += 4;
     if(P.areaMin!=null){ sc += 4; hits.push(`${prodArea(p)}㎡ 커버`); }
