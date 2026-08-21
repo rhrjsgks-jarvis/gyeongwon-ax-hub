@@ -20,7 +20,7 @@ import { DEV_MODULES } from '@/lib/devModules'
 export default function DevPage() {
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-lg font-bold text-gray-800 mb-1">개발중인 서비스</h1>
+      <h1 className="text-lg font-bold text-gray-800 mb-1">개발 중인 서비스</h1>
       {/*
         **자물쇠를 지우고 그 자리에 부탁을 적는다**(2026-08-17 사용자 요청:
         *"이제 잠금을 해제했기 때문에 자물쇠 마크는 필요없습니다. 차라리 어플 만져보고

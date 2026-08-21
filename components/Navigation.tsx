@@ -70,7 +70,7 @@ const ADMIN_LINK = { href: '/admin', label: '사용현황 대시보드[관리자
  * 아직 다듬는 중인 도구라 그대로 열어 두면 상담사가 반쯤 만든 화면을 고객에게 보여준다.
  * 자물쇠 아이콘을 함께 띄워 **누르기 전에 잠겨 있다는 것이 보이게** 한다.
  */
-const DEV_LINK = { href: '/dev', label: '개발중인 서비스', icon: 'build' as IconName }
+const DEV_LINK = { href: '/dev', label: '개발 중인 서비스', icon: 'build' as IconName }
 
 /*
  * 좁은 화면 하단 바로가기 — **큰 분류만 담는다**(2026-08-11 사용자 요청).

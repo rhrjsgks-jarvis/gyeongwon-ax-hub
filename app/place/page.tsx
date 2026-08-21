@@ -36,7 +36,7 @@ export default function PlacePage() {
       >
         <Icon name="bulb" size={11} style={{ opacity: 0.8, flexShrink: 0 }} />
         <span>
-          개발중 — 써 보시고 <b>개선 아이디어를 보내 주세요</b>
+          개발 중 — 써 보시고 <b>개선 아이디어를 보내 주세요</b>
           {/* 좁은 화면에서는 뒤 문장을 접는다. 띠가 두 줄이 되면 도면이 그만큼 밀린다 —
               헤더에서 '경원영업팀' 을 숨기는 것과 같은 방식이다. */}
           <span className="hidden sm:inline"> · 값이 바뀔 수 있으니 고객에게 그대로 읽지 마세요</span>

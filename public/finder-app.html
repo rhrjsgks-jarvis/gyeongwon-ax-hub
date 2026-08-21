@@ -370,7 +370,7 @@ const HARMAN_N = HARMAN_PRODUCTS.length;
 function totalN(){ return PRODUCTS.length; }
 function countText(){
   const t = totalN();
-  return `전사 제품 DB ${t}종 (삼성·리빙 ${t - HARMAN_N}종 + Harman ${HARMAN_N}종)`;
+  return `전사 제품 DB ${t.toLocaleString()}종 (삼성·리빙 ${(t - HARMAN_N).toLocaleString()}종 + Harman ${HARMAN_N}종)`;
 }
 
 </script>
@@ -1802,7 +1802,7 @@ function kwHeroText(){
   return `기능·예산·치수·카테고리를 자유롭게 섞어 입력하세요. ${countText()}에서 찾아드립니다.`;
 }
 function syncCounts(){
-  $("brandCount").textContent = `전 라인업 ${totalN()}종`;
+  $("brandCount").textContent = `전 라인업 ${totalN().toLocaleString()}종`;
   /*
    * **히어로 문구도 함께 고친다.** 예전에는 여기서 `heroSub2` 를 찾았는데 **그런 id 가
    * 없어서 아무 일도 하지 않았다.** 그래서 삼성닷컴 수집분이 붙은 뒤 상단바만 2,012종이

@@ -43,7 +43,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         title: '모델파인더',
         /* 옛 이름 — 제목 아래 작은 줄로 내린다(괄호로 한 줄에 붙이면 지저분하다) */
         sub: '제품 상세검색',
-        desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(2,012종)',
+        desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(2,005종)',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
@@ -158,7 +158,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
     // 아직 다듬는 중인 것. status 가 'live' 가 아니면 「구축중」 배지가 붙는다.
     // 목록은 `lib/devModules.ts` 한 곳에서만 적는다 — 사이드바의 '개발중인 서비스'가
     // 같은 것을 보여주므로, 두 곳에 적으면 어긋나고 어긋난 쪽을 본 상담사가 헤맨다.
-    title: '개발중',
+    title: '개발 중',
     modules: DEV_MODULES as unknown as ModuleCard[],
   },
 ]
@@ -207,7 +207,7 @@ const CONCIERGE_LINKS = [
 
 const CONCIERGE_USAGE = [
   { step: '1', text: '고객이 매장 방문 시 "컨시어지 접수"에서 성함·연락처를 입력해 대기 등록 → 대기번호가 발급됩니다.' },
-  { step: '2', text: '"매장 전광판"을 매장 내 모니터·태블릿에 항상 띄워두면 대기번호·순번이 고객에게 실시간으로 보입니다.' },
+  { step: '2', text: '"매장 전광판"을 매장 내 모니터·태블릿에 항상 띄워 두면 대기번호·순번이 고객에게 실시간으로 보입니다.' },
   { step: '3', text: '상담 가능해지면 담당 직원이 "컨시어지 관리자"에서 해당 대기번호를 호출·완료 처리합니다.' },
 ]
 
@@ -243,7 +243,7 @@ const GUIDE = [
   { step: '01', text: '통합검색 — 조건을 띄어쓰기로 겹쳐 앱 안의 모든 자료를 한 번에' },
   { step: '02', text: 'AI구독 케어 — 제품별 케어 주기·항목 즉시 조회' },
   { step: '03', text: '타사비교 — URL 입력으로 비교표 자동 생성' },
-  { step: '04', text: 'AX 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },
+  { step: '04', text: '사용현황 대시보드 — 내 사용 통계 확인 · CSV 내보내기' },
 ]
 
 function StatusBadge({ status }: { status: string }) {

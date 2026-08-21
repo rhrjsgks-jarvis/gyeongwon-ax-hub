@@ -200,7 +200,7 @@ try {
 
     if (pw) fail('/place 가 아직 비밀번호를 묻는다 — 비밀번호 없이 확인할 수 있어야 한다');
     else if (!hasFrame) fail('/place 에 도구가 뜨지 않는다');
-    else if (!/개발중/.test(body)) {
+    else if (!/개발 ?중/.test(body)) {
       fail('/place 에 개발중 표시가 없다 — 자물쇠를 풀면서 경고까지 사라지면 완성된 도구로 읽힌다');
     } else if (lockPlace || lockDev) {
       fail(`개발중 칸에 자물쇠가 남아 있다 (/place ${lockPlace}개 · /dev ${lockDev}개) — 안 묻는데 그려 두면 상담사가 열어 보지 않는다`);

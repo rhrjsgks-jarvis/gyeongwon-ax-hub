@@ -31,7 +31,7 @@ export const DEV_MODULES: DevModule[] = [
     href: '/place',
     icon: 'place',
     title: '가전 배치 시뮬레이터',
-    desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 70개 사이즈)',
+    desc: '구매할 가전을 고르면 도면에 맞춰 배치를 추천 — 이격거리·간섭·방 이탈까지 판정(카탈로그 실측 71개 사이즈)',
     color: '#1428A0',
     bg: '#EEF2FF',
     updated: '2026.08',
