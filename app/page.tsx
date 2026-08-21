@@ -22,6 +22,8 @@ type ModuleCard = {
   href: string
   icon: IconName
   title: string
+  /* 옛 이름 — 제목 아래 작은 줄로 나온다. 없는 모듈은 그 줄이 아예 안 그려진다 */
+  sub?: string
   desc: string
   color: string
   bg: string
@@ -38,7 +40,9 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
       {
         href: '/finder',
         icon: 'finder',
-        title: '모델파인더(제품 상세검색)',
+        title: '모델파인더',
+        /* 옛 이름 — 제목 아래 작은 줄로 내린다(괄호로 한 줄에 붙이면 지저분하다) */
+        sub: '제품 상세검색',
         desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(2,012종)',
         color: '#1428A0',
         bg: '#EEF2FF',
@@ -273,6 +277,8 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
       <h2 className="font-bold text-sm md:text-base mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
         {mod.title}{mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-gray-300" />}
       </h2>
+      {/* 옛 이름이 있는 모듈만 한 줄 더 — 없는 모듈은 이 줄이 아예 안 그려진다 */}
+      {mod.sub && <p className="text-[10px] md:text-[11px] text-gray-400 font-medium -mt-0.5 mb-1">{mod.sub}</p>}
       <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
       <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
     </div>

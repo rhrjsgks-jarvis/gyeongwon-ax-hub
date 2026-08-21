@@ -38,7 +38,7 @@ const NAV_GROUPS = [
   {
     title: '제품 상담 도구',
     items: [
-      { href: '/finder',          label: '모델파인더(제품 상세검색)',     icon: 'finder' as IconName },
+      { href: '/finder',          label: '모델파인더',     icon: 'finder' as IconName },
       { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },

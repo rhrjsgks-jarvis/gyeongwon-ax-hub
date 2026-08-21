@@ -2,7 +2,7 @@
 //
 // **이름은 여기 한 곳에서만 적는다.** 허브 카드·사이드바·앱 헤더가 같은 이름을 불러야
 // 하는데, 검사가 이름을 따로 적으면 그 자체가 네 번째 사본이 된다.
-const APP_NAME = '모델파인더(제품 상세검색)';
+const APP_NAME = '모델파인더';
 // 실행: node scripts/test-finder.mjs
 // 패턴: jsdom으로 정적 HTML을 runScripts:'dangerously'로 로드하고, 인라인 스크립트가
 // window에 노출하는 전역 함수(parseQuery/search/runSearch/setMode/toggleCat 등)를

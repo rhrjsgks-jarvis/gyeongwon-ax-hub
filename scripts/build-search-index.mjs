@@ -330,11 +330,16 @@ function hubModulesFromSource() {
   const groups = [...body.matchAll(/title: '([^']+)',\s*\n\s*modules: \[/g)]
     .map((m) => ({ at: m.index, title: m[1] }));
   const mods = [...body.matchAll(
-    /href: '([^']+)',\s*\n\s*icon: '([^']*)',\s*\n\s*title: '([^']+)',\s*\n\s*desc: '([^']+)'/g)];
+    /* title 과 desc 사이에 다른 줄(sub, 주석)이 와도 잡히게 — 붙어 있는 것을 전제하면
+       줄 하나만 끼어도 그 카드가 조용히 색인에서 사라진다(2026-08-21 실제로 그랬다) */
+    /href: '([^']+)',\s*\n\s*icon: '([^']*)',[\s\S]{0,300}?title: '([^']+)',[\s\S]{0,300}?desc: '([^']+)'/g)];
   if (!groups.length || !mods.length) throw new Error('MODULE_GROUPS 파싱 실패 — 형식이 바뀌었는지 확인할 것');
   const out = mods.map((m) => {
     const group = [...groups].reverse().find((g) => g.at < m.index);
-    return { href: m[1], title: m[3], desc: m[4], group: group ? group.title : '' };
+    /* 옛 이름(sub)이 있으면 검색어에 넣는다 — '제품 상세검색' 으로 찾던 사람이 그대로 찾아야 한다 */
+    const seg = body.slice(m.index, m.index + 400);
+    const sub = (seg.match(/sub: '([^']+)'/) || [])[1] || '';
+    return { href: m[1], title: m[3], sub, desc: m[4], group: group ? group.title : '' };
   });
   // AX 현황 대시보드는 그룹에 속하지 않고 허브 최하단 별도 섹션에 있어 위 블록에 없다
   const admin = src.match(
@@ -363,7 +368,12 @@ const MODULES = [
   ...hubModulesFromSource().map((m) => ({
     title: m.title, sub: m.desc, href: m.href, ext: /^https?:/.test(m.href),
     // 카드 설명·섹션명·사이드바 라벨을 모두 키워드에 넣어 화면에 보이는 워딩이면 검색되게 한다
-    kw: [m.desc, m.group, ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].join(' '),
+    /*
+     * 옛 이름(m.sub)도 넣는다 — 이름을 바꿔도 예전 말로 찾던 사람이 그대로 찾아야 한다.
+     * **공백을 지운 형태도 함께** 넣는다: 판정이 부분일치라 `제품상세검색` 처럼 붙여 쳐도
+     * 걸린다(안 넣으면 0건이었다).
+     */
+    kw: [m.desc, m.sub, m.sub && m.sub.replace(/\s+/g, ''), m.title.replace(/\s+/g, ''), m.group, ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].join(' '),
   })),
   // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
