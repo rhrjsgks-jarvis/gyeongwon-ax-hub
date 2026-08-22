@@ -251,17 +251,39 @@ export function aggregateByModule(logs: LogEvent[]) {
  * `store` 가 비어 있으므로 '(미지정)'으로 따로 센다 — 0 으로 적으면 "안 썼다"는
  * 거짓말이 되고, 빼 버리면 합계가 안 맞는다.
  */
+/** 지점을 고르기 전에 쌓인 옛 로그를 세는 이름. **두 집계가 같은 값을 봐야 한다.** */
+export const UNSET_STORE = '(미지정)'
+
 export function aggregateByStore(logs: LogEvent[]) {
   const map: Record<string, { name: string; count: number }> = {}
   for (const ev of logs) {
     const code = ev.store || ''
-    const key = code || '(미지정)'
+    const key = code || UNSET_STORE
     if (!map[key]) map[key] = { name: code ? (ev.storeName || storeName(code) || code) : '지점 미선택', count: 0 }
     map[key].count++
   }
   return Object.entries(map)
     .map(([code, v]) => ({ code, name: v.name, count: v.count }))
     .sort((a, b) => b.count - a.count)
+}
+
+/**
+ * **한 지점이 무엇을 많이 썼는가**(2026-08-22 사장님 요청 — 지점을 눌러 펼쳐 본다).
+ *
+ * `code` 가 `null` 이면 **전점 통합**이다. 지점을 가리는 규칙은 `aggregateByStore` 와
+ * 반드시 같아야 한다 — 거기서 '(미지정)'으로 센 것을 여기서 다르게 가리면 펼친 합과
+ * 접힌 숫자가 어긋난다(이 저장소가 허브 카드 개수·앱 버전에서 반복해 데인 종류다).
+ */
+export function aggregateStoreModules(logs: LogEvent[], code: string | null) {
+  const want = code === null ? null : code === UNSET_STORE ? '' : code
+  const map: Record<string, number> = {}
+  for (const ev of logs) {
+    if (want !== null && (ev.store || '') !== want) continue
+    map[ev.module] = (map[ev.module] || 0) + 1
+  }
+  return Object.entries(map)
+    .map(([module, count]) => ({ module, count }))
+    .sort((a, b) => b.count - a.count || a.module.localeCompare(b.module))
 }
 
 export function aggregateByDay(logs: LogEvent[], days = 14) {

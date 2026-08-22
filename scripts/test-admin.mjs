@@ -22,6 +22,7 @@ globalThis.URL.createObjectURL = (blob) => { lastBlob = blob; return 'blob:fake'
 
 const {
   readLogs, logEvent, logOnce, aggregateByModule, aggregateByDay, aggregateByStore,
+  aggregateStoreModules, UNSET_STORE,
   exportCsv, excludeHubViews, normalizeLogs, fetchTeamLogs, GAS_CONNECTED,
 } = await import('../lib/logEvent.ts');
 const S = await import('../lib/stores.ts');
@@ -498,6 +499,40 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!un || un.count !== 1) { fail('[점별집계] 지점 없는 로그를 따로 세지 못한다'); bad++; }
   if (zn && byStore[0].code !== 'ZN01') { fail('[점별집계] 많이 쓴 지점이 위로 오지 않는다'); bad++; }
 
+  /*
+   * ④-b **지점을 펼치면 무엇을 많이 썼는지**(2026-08-22 사장님 요청).
+   *
+   * 가장 중요한 것은 **펼친 합 == 접힌 숫자**다. 두 집계가 지점을 다르게 가리면
+   * 화면이 서로 다른 말을 한다 — 이 저장소가 허브 카드 개수·앱 버전·비교표 값에서
+   * 반복해서 데인 종류라 여기서 못 박는다.
+   */
+  const znMods = aggregateStoreModules(mixed, 'ZN01');
+  if (znMods.length !== 2) { fail(`[점별상세] ZN01 모듈 ${znMods.length}종 (기대 2)`); bad++; }
+  const znSum = znMods.reduce((a, r) => a + r.count, 0);
+  if (znSum !== zn.count) { fail(`[점별상세] 펼친 합 ${znSum} != 접힌 숫자 ${zn.count}`); bad++; }
+
+  /* '(미지정)' 도 같은 규칙으로 가려야 한다 — 상수를 공유하는 이유다 */
+  const unMods = aggregateStoreModules(mixed, UNSET_STORE);
+  if (unMods.reduce((a, r) => a + r.count, 0) !== un.count) {
+    fail('[점별상세] 미지정 지점의 펼친 합이 접힌 숫자와 다르다'); bad++;
+  }
+
+  /* 전점 통합(null) — 모든 지점을 합친 것이라 전체 건수와 같아야 한다 */
+  const allMods = aggregateStoreModules(mixed, null);
+  const allSum = allMods.reduce((a, r) => a + r.count, 0);
+  if (allSum !== mixed.length) { fail(`[전점통합] 합 ${allSum} != 전체 ${mixed.length}`); bad++; }
+  if (allMods[0].module !== 'as' || allMods[0].count !== 2) {
+    fail('[전점통합] 많이 쓴 모듈이 위로 오지 않는다'); bad++;
+  }
+
+  /* 지점별 합을 다 더하면 전체가 된다 — 어느 지점도 새거나 겹치지 않는다 */
+  const perStore = byStore.reduce((a, st) => a + aggregateStoreModules(mixed, st.code)
+    .reduce((x, r) => x + r.count, 0), 0);
+  if (perStore !== mixed.length) { fail(`[점별상세] 지점별 합 ${perStore} != 전체 ${mixed.length}`); bad++; }
+
+  /* 없는 지점은 빈 목록 — 0 을 만들어 내지 않는다 */
+  if (aggregateStoreModules(mixed, 'NOPE').length !== 0) { fail('[점별상세] 없는 지점에 값이 나온다'); bad++; }
+
   /* ⑤ 시트에서 온 옛 줄에 지점 칸이 없어도 깨지지 않는다 */
   const norm = normalizeLogs([{ ts: 1700000000000, module: 'finder', action: 'page_view', uid: 'x' }]);
   if (norm.length !== 1 || norm[0].store) { fail('[정규화] 지점 없는 옛 줄 처리'); bad++; }
@@ -505,7 +540,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* ⑥ CSV 에도 지점이 나간다 — 화면과 내보내기가 어긋나면 안 된다 */
   exportCsv(mixed);
   const head = (lastBlob && lastBlob.__text) || '';
-  if (!bad) console.log('OK: 지점 — 목록·검색·로그 적재·점별 집계·중복 방지·옛 줄 호환');
+  if (!bad) console.log('OK: 지점 — 목록·검색·로그 적재·점별 집계·펼침 상세·전점 통합·중복 방지·옛 줄 호환');
 }
 
 /* ── Apps Script — 쓰는 칸과 읽는 칸이 맞는가 ──────────────────

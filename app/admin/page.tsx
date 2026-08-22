@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, aggregateByStore, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 
 // 인증 상태는 sessionStorage에 만료시각과 함께 둔다.
@@ -141,6 +141,12 @@ const LIVE_MODULES = Object.entries(MODULE_META).filter(([, m]) => !m.retired)
 
 export default function AdminPage() {
   const [logs, setLogs]         = useState<LogEvent[]>([])
+  /*
+   * **펼친 지점**(2026-08-22 사장님 요청 — 지점을 누르면 무엇을 많이 썼는지 보인다).
+   * 하나만 열리는 아코디언이 아니라 **여럿을 함께 열어 둘 수 있게** Set 으로 둔다 —
+   * 두 매장을 나란히 놓고 견주는 것이 이 화면을 보는 이유다.
+   */
+  const [openStores, setOpenStores] = useState<Set<string>>(new Set())
   const [teamWide, setTeamWide] = useState(false)
   const [loaded, setLoaded]     = useState(false)
   const [unlocked, setUnlocked] = useState(false)
@@ -174,6 +180,13 @@ export default function AdminPage() {
   if (!gateChecked) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
   if (!unlocked) return <AdminGate onUnlock={() => setUnlocked(true)} />
   if (!loaded) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
+
+  const toggleStore = (code: string) =>
+    setOpenStores((prev) => {
+      const next = new Set(prev)
+      next.has(code) ? next.delete(code) : next.add(code)
+      return next
+    })
 
   const byModule   = aggregateByModule(logs)
   const byDay      = aggregateByDay(logs, 14)
@@ -225,35 +238,35 @@ export default function AdminPage() {
         {byStore.length === 0 ? (
           <p className="text-sm text-gray-400">아직 기록이 없습니다.</p>
         ) : (
-          <div className="space-y-2.5">
-            {byStore.map((st) => {
-              const max = byStore[0].count || 1
-              const unknown = st.code === '(미지정)'
-              return (
-                <div key={st.code} className="flex items-center gap-3">
-                  <span
-                    className="text-xs w-28 shrink-0 truncate"
-                    style={{ color: unknown ? '#9aa0a6' : '#374151', fontWeight: unknown ? 500 : 600 }}
-                    title={`${st.name} (${st.code})`}
-                  >
-                    {st.name}
-                  </span>
-                  <span className="text-[10px] w-12 shrink-0 text-gray-400 tracking-wide">
-                    {unknown ? '' : st.code}
-                  </span>
-                  <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${Math.round((st.count / max) * 100)}%`,
-                        background: unknown ? '#c3c7cf' : 'var(--color-primary)',
-                      }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold w-10 text-right tabular-nums">{st.count}</span>
-                </div>
-              )
-            })}
+          <div className="space-y-1">
+            {/*
+              **전점 통합을 맨 위에 둔다**(2026-08-22 사장님 요청 — 누적 전체 조회 건수).
+              지점 행과 **같은 생김새·같은 조작**이라 따로 배울 것이 없고, 펼치면
+              전 매장을 합쳐 무엇을 많이 쓰는지가 나온다.
+            */}
+            <StoreRow
+              name="전점 통합"
+              sub={`${byStore.length}곳 누적`}
+              count={logs.length}
+              ratio={1}
+              open={openStores.has(ALL_STORES)}
+              onToggle={() => toggleStore(ALL_STORES)}
+              rows={aggregateStoreModules(logs, null)}
+              accent
+            />
+            {byStore.map((st) => (
+              <StoreRow
+                key={st.code}
+                name={st.name}
+                sub={st.code === UNSET_STORE ? '' : st.code}
+                count={st.count}
+                ratio={st.count / (byStore[0].count || 1)}
+                open={openStores.has(st.code)}
+                onToggle={() => toggleStore(st.code)}
+                rows={aggregateStoreModules(logs, st.code)}
+                muted={st.code === UNSET_STORE}
+              />
+            ))}
           </div>
         )}
       </Section>
@@ -467,6 +480,115 @@ function KpiCard({ label, value, icon, color }: { label: string; value: number; 
         <span className="text-xs text-gray-500">{label}</span>
       </div>
       <p className="text-2xl font-bold" style={{ color }}>{value.toLocaleString()}</p>
+    </div>
+  )
+}
+
+/** 전점 통합 행을 가리키는 값. 실제 점코드와 겹치지 않게 기호를 쓴다. */
+const ALL_STORES = '__all__'
+
+/**
+ * **지점 한 줄 — 누르면 무엇을 많이 썼는지 펼쳐진다**(2026-08-22 사장님 요청).
+ *
+ * 접힌 상태는 예전과 똑같이 보인다(이름·점코드·막대·건수). 달라진 것은 **누를 수
+ * 있다는 표시**와 펼침이라, 쓰던 사람이 다시 배울 것이 없다.
+ */
+function StoreRow({
+  name, sub, count, ratio, open, onToggle, rows, muted, accent,
+}: {
+  name: string; sub: string; count: number; ratio: number
+  open: boolean; onToggle: () => void
+  rows: { module: string; count: number }[]
+  muted?: boolean; accent?: boolean
+}) {
+  /*
+   * **운영이 끝난 모듈은 목록에서 감춘다** — 사용 현황 표와 같은 규칙이다.
+   * 다만 **숨긴 건수는 밝힌다**: 조용히 빼면 펼친 합과 접힌 숫자가 어긋나 보인다.
+   */
+  const shown  = rows.filter((r) => !MODULE_META[r.module]?.retired)
+  const hidden = rows.length - shown.length
+  const hiddenN = rows.filter((r) => MODULE_META[r.module]?.retired).reduce((a, r) => a + r.count, 0)
+  const top = shown[0]?.count || 1
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden"
+      style={{ background: open ? '#F8FAFF' : 'transparent', border: open ? '1px solid #E4E9F7' : '1px solid transparent' }}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="w-full flex items-center gap-2.5 px-2 py-2 text-left rounded-xl hover:bg-gray-50 transition-colors"
+      >
+        <span
+          className="shrink-0 text-[10px] w-3 text-gray-400 transition-transform"
+          style={{ transform: open ? 'rotate(90deg)' : 'none' }}
+          aria-hidden
+        >
+          ▶
+        </span>
+        <span
+          className="text-xs w-24 shrink-0 truncate"
+          style={{
+            color: muted ? '#9aa0a6' : accent ? '#1428A0' : '#374151',
+            fontWeight: accent ? 800 : muted ? 500 : 600,
+          }}
+          title={`${name} ${sub}`}
+        >
+          {name}
+        </span>
+        <span className="text-[10px] w-14 shrink-0 text-gray-400 tracking-wide truncate">{sub}</span>
+        <span className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+          <span
+            className="block h-full rounded-full"
+            style={{
+              width: `${Math.round(ratio * 100)}%`,
+              background: muted ? '#c3c7cf' : accent ? '#1428A0' : 'var(--color-primary)',
+            }}
+          />
+        </span>
+        <span
+          className="text-xs w-12 text-right tabular-nums"
+          style={{ fontWeight: accent ? 800 : 700, color: accent ? '#1428A0' : undefined }}
+        >
+          {count.toLocaleString()}
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-2 pb-2.5 pl-7">
+          {shown.length === 0 ? (
+            <p className="text-[11px] text-gray-400 py-1">기록된 사용이 없습니다.</p>
+          ) : (
+            <div className="space-y-1.5 pt-1">
+              {shown.map((r) => {
+                const meta = MODULE_META[r.module] || { label: r.module, icon: 'doc' as IconName, color: '#888' }
+                return (
+                  <div key={r.module} className="flex items-center gap-2">
+                    <Icon name={meta.icon} size={12} style={{ color: meta.color, flexShrink: 0 }} />
+                    <span className="text-[11px] w-28 shrink-0 truncate text-gray-600">{meta.label}</span>
+                    <span className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                      <span
+                        className="block h-full rounded-full"
+                        style={{ width: `${Math.round((r.count / top) * 100)}%`, background: meta.color }}
+                      />
+                    </span>
+                    <span className="text-[11px] font-semibold w-10 text-right tabular-nums text-gray-700">
+                      {r.count.toLocaleString()}
+                    </span>
+                  </div>
+                )
+              })}
+              {hidden > 0 && (
+                <p className="text-[10px] text-gray-400 pt-1">
+                  운영 종료 모듈 {hidden}종 {hiddenN.toLocaleString()}건은 목록에서 제외했습니다.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
