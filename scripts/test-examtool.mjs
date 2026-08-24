@@ -157,6 +157,34 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
   say(lg === 4, 'LG 비교 문항 4개 고정 (실제 ' + lg + ')');
   say(a.hint.indexOf('LG 비교 4문항') >= 0, '안내문이 LG 문항 수를 밝힌다');
 }
+/*
+ * **한 장만 보고 통과시키지 말 것.** 위 셋(CE/MX · 난이도 · LG)은 추첨마다 다시 맞춰야
+ * 하는데, 한 시험지만 검사하면 **우연히 맞은 것**을 통과시킨다. 실제로 두 번 당했다 —
+ * 여백은 무작위 추첨에서 깨졌고(고정 12종은 통과), LG 는 채우기 단계에서 우연히 6개가
+ * 뽑혔다. 그래서 여러 번 뽑아 **전부** 맞는지 본다.
+ */
+{
+  const N = 12, bad = [];
+  for (let t = 0; t < N; t++) {
+    await page.click('#gen');
+    await page.waitForFunction(() => document.querySelectorAll('.sheet').length > 0);
+    const c = await page.evaluate(() => {
+      const qs = [...document.querySelectorAll('.sheet:not(.ans) .q')];
+      const n = (k, v) => qs.filter(e => e.dataset[k] === v).length;
+      return { code: document.querySelector('.code').firstChild.textContent.trim(),
+               total: qs.length, ce: n('div', 'CE'), mx: n('div', 'MX'),
+               ha: n('lv', '하'), jung: n('lv', '중'), sang: n('lv', '상'),
+               lg: qs.filter(e => e.dataset.lg === '1').length };
+    });
+    const ok2 = c.total === 20 && c.ce === 10 && c.mx === 10 &&
+                c.ha === 6 && c.jung === 8 && c.sang === 6 && c.lg === 4;
+    if (!ok2) bad.push(c.code + '(CE' + c.ce + '/MX' + c.mx + ' 하' + c.ha + '중' + c.jung +
+                       '상' + c.sang + ' LG' + c.lg + ')');
+  }
+  say(bad.length === 0, N + '번 뽑아 전부 구성이 맞다 (CE10/MX10 · 하6중8상6 · LG4)' +
+      (bad.length ? ' — 어긋난 것 ' + bad.length + '건: ' + bad.slice(0, 4).join(' ') : ''));
+}
+
 say(new Set(a.codes).size === 1, '모든 장의 시험지 코드 일치 (' + a.codes[0] + ')');
 say(a.keys.length === 20, '정답표 20칸 (실제 ' + a.keys.length + ')');
 

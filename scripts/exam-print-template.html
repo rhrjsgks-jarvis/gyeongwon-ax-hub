@@ -290,13 +290,20 @@ function pick(n, mxPct, rnd){
     gotLg++;
   }
 
-  /* ② 난이도 × 갈래를 함께 맞추고, 안 되면 한 조건씩 늦춘다 */
+  /* ② 난이도 × 갈래를 함께 맞추고, 안 되면 한 조건씩 늦춘다.
+   *
+   * **채우면서 LG 를 또 뽑지 않는다.** LG 문항도 일반 풀에 들어 있어 그냥 채우면 우연히
+   * 더 뽑히고, 그러면 "LG 4문항 고정"이 약속이 아니라 하한이 된다(실측으로 6개가 나왔다).
+   * 정말 채울 것이 없을 때만 마지막 폴백에서 받아들인다 — 문항 수를 못 채우는 쪽이 더 나쁘다. */
+  var noLg = function(x){ return !x.lg || gotLg < LG_WANT; };
   while (out.length < n) {
-    var q2 = take(function(x){ return need.lv[x.lv] > 0 && need.div[x.div] > 0; })
-          || take(function(x){ return need.lv[x.lv] > 0; })
-          || take(function(x){ return need.div[x.div] > 0; })
+    var q2 = take(function(x){ return noLg(x) && need.lv[x.lv] > 0 && need.div[x.div] > 0; })
+          || take(function(x){ return noLg(x) && need.lv[x.lv] > 0; })
+          || take(function(x){ return noLg(x) && need.div[x.div] > 0; })
+          || take(function(x){ return noLg(x); })
           || take(function(){ return true; });
     if (!q2) break;                      /* 은행이 바닥났다 */
+    if (q2.lg) gotLg++;
   }
 
   var got = { lv: {}, div: { CE: 0, MX: 0 }, lg: 0 };
