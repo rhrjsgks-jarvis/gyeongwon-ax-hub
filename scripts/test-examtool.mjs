@@ -71,28 +71,93 @@ await page.waitForFunction(() => document.querySelectorAll('.sheet').length > 0,
 
 const grab = () => page.evaluate(() => {
   const sheets = [...document.querySelectorAll('.sheet')];
-  const qs = [...sheets[0].querySelectorAll('.q')].map(el => ({
+  const exam = sheets.filter(s => !s.classList.contains('ans'));
+  const ansSheets = sheets.filter(s => s.classList.contains('ans'));
+  const qs = exam.flatMap(sh => [...sh.querySelectorAll('.q')]).map(el => ({
     q: el.querySelector('.qt').textContent.trim(),
     opts: [...el.querySelectorAll('.opts li span:last-child')].map(x => x.textContent.trim()),
+    div: el.dataset.div || '',
+    lv: el.dataset.lv || '',
+    lg: el.dataset.lg === '1',
   }));
-  const keys = [...sheets[1].querySelectorAll('.akey div span')].map(x => x.textContent.trim());
-  const exps = [...sheets[1].querySelectorAll('.ex .a')].map(x => x.textContent.trim());
+  /* 시험지 지면에 난이도 글자가 새어 나갔는지 — 사장님 지시가 "시험지에 난이도표시X" 다 */
+  const examText = exam.map(s => s.innerText).join(' ');
+  const ansLv = ansSheets.flatMap(sh => [...sh.querySelectorAll('.ex .lv')]).map(x => x.textContent.trim());
+  const keys = ansSheets.flatMap(sh => [...sh.querySelectorAll('.akey div span')]).map(x => x.textContent.trim());
+  const exps = ansSheets.flatMap(sh => [...sh.querySelectorAll('.ex .a')]).map(x => x.textContent.trim());
   return {
-    sheets: sheets.length, codes: sheets.map(s => s.querySelector('.code').textContent.trim()),
+    sheets: sheets.length, examSheets: exam.length, ansSheets: ansSheets.length,
+    perPage: exam.map(sh => sh.querySelectorAll('.q').length),
+    wordmarks: sheets.filter(sh => sh.querySelector('.head .brand svg')).length,
+    codes: sheets.map(s => s.querySelector('.code').firstChild.textContent.trim()),
     tags: document.querySelectorAll('.tag').length,
-    qs, keys, exps, hint: document.getElementById('hint').textContent, title: document.title,
+    qs, keys, exps, examText, ansLv,
+    hint: document.getElementById('hint').textContent, title: document.title,
   };
 });
 const a = await grab();
 const NO = ['①', '②', '③', '④'];
 
-say(a.sheets === 2, '시험지+정답지 두 장 (실제 ' + a.sheets + ')');
+/*
+ * **쪽당 5문항으로 직접 끊는다**(2026-08-24 사장님 지시). 브라우저가 알아서 흘리게 두면
+ * 한 블록이 여러 쪽에 걸쳐, 블록의 padding 이 첫 쪽 위·마지막 쪽 아래에만 걸린다 —
+ * 가운데 쪽은 여백이 0이 되어 잘렸다. 한 블록 = 한 쪽이면 그 문제가 사라진다.
+ */
+say(a.examSheets === 4, '시험지 4장 (실제 ' + a.examSheets + ')');
+say(a.ansSheets >= 1, '정답지 ' + a.ansSheets + '장');
+say(a.perPage.every(n => n === 5), '쪽당 5문항 (실제 ' + a.perPage.join('/') + ')');
+/* 로고가 잘려 안 보인다는 신고가 있었다 — 이제 모든 장에 들어간다 */
+say(a.wordmarks === a.sheets, '모든 장에 삼성 워드마크 (' + a.wordmarks + '/' + a.sheets + ')');
 say(a.qs.length === 20, '20문항 (실제 ' + a.qs.length + ')');
 say(a.qs.every(q => q.opts.length === 4), '모든 문항 보기 4개');
 /* 품목 이름은 답을 좁혀 주는 힌트다 — 되살아나면 여기서 걸린다 */
 say(a.tags === 0, '문항 옆에 품목 이름이 없다 (실제 ' + a.tags + '개)');
 say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
-say(a.codes[0] === a.codes[1], '시험지·정답지 코드 일치 (' + a.codes.join(' / ') + ')');
+
+/*
+ * **CE / MX 를 반씩 낸다** — 2026-08-24 사장님 지시("시험문제 비중은 CE 50% MX 50%").
+ * 갈래는 `scripts/lib/quiz-bank.mjs` 의 MX_CATS 가 정하고, 근거는 모델파인더 DB 의 src 다.
+ * `data-div` 는 화면·인쇄에 안 보이는 표식이라 시험지에 힌트를 주지 않는다.
+ */
+{
+  const ce = a.qs.filter(q => q.div === 'CE').length;
+  const mx = a.qs.filter(q => q.div === 'MX').length;
+  say(ce === 10 && mx === 10, 'CE / MX 를 반씩 낸다 (실제 CE ' + ce + ' / MX ' + mx + ')');
+  say(a.hint.indexOf('CE 10 / MX 10') >= 0, '안내문이 CE/MX 구성을 밝힌다');
+}
+
+/*
+ * **난이도는 섞고, 시험지에는 적지 않는다** — 2026-08-24 사장님 지시
+ * ("시험난이도 상중하로 3단계 구분(시험지에 난이도표시X)" · "상 중 하 를 믹스").
+ * 갈래 정의는 `scripts/lib/quiz-bank.mjs` 의 `levelOf()` 주석에 있다 —
+ * 하=무엇인지 아는가 / 중=어떻게 다른가 / 상=정확히 얼마인가.
+ */
+{
+  const n = L => a.qs.filter(q => q.lv === L).length;
+  say(n('하') === 6 && n('중') === 8 && n('상') === 6,
+      '난이도 하 6 / 중 8 / 상 6 (실제 ' + ['하','중','상'].map(L => L + ' ' + n(L)).join(' / ') + ')');
+  say(a.qs.every(q => ['하','중','상'].includes(q.lv)), '모든 문항에 난이도가 붙어 있다');
+  /* 표식은 data 속성이라 인쇄에 안 나온다 — 지면 글자에 난이도가 섞이면 힌트가 된다 */
+  say(!/(^|[^가-힣])(난이도|하급|중급|상급)([^가-힣]|$)/.test(a.examText),
+      '시험지 지면에 난이도가 적혀 있지 않다');
+  /* 정답지에는 적는다(사장님 결정) — 채점·복기에 쓴다 */
+  say(a.ansLv.filter(x => ['하','중','상'].includes(x)).length === 20,
+      '정답지 20문항 전부에 난이도 표시 (실제 ' + a.ansLv.filter(x => ['하','중','상'].includes(x)).length + ')');
+  say(a.hint.indexOf('난이도 하 6 / 중 8 / 상 6') >= 0, '안내문이 난이도 구성을 밝힌다');
+}
+
+/*
+ * **LG 비교 문항 4개 고정** — 2026-08-24 사장님 지시("시험문제 LG비교문항 필요").
+ * 근거 자료는 `public/compare-app.html` 의 LG 베스트샵 카탈로그 실측 스펙이고,
+ * 판정은 `quiz-bank.mjs` 의 `isLG()` 가 **질문·보기**로만 한다(해설만으로는 세지 않는다 —
+ * 응시자가 보는 지면에 LG 가 없는 문항을 LG 문항이라 세면 약속이 거짓이 된다).
+ */
+{
+  const lg = a.qs.filter(q => q.lg).length;
+  say(lg === 4, 'LG 비교 문항 4개 고정 (실제 ' + lg + ')');
+  say(a.hint.indexOf('LG 비교 4문항') >= 0, '안내문이 LG 문항 수를 밝힌다');
+}
+say(new Set(a.codes).size === 1, '모든 장의 시험지 코드 일치 (' + a.codes[0] + ')');
 say(a.keys.length === 20, '정답표 20칸 (실제 ' + a.keys.length + ')');
 
 let match = 0;
@@ -157,15 +222,72 @@ say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
  */
 {
   const count = (buf) => (buf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
-  const only = async (keep) => {
-    await page.evaluate((k) => document.querySelectorAll('.sheet').forEach((s, i) => { s.style.display = i === k ? '' : 'none'; }), keep);
+  /* 시험지가 여러 장으로 나뉘었으므로 **묶음 단위**(.ans 여부)로 숨겨 센다 */
+  const only = async (wantAns) => {
+    await page.evaluate((w) => document.querySelectorAll('.sheet').forEach((s) => {
+      s.style.display = (s.classList.contains('ans') === w) ? '' : 'none';
+    }), wantAns);
     const n = count(await page.pdf({ format: 'A4', printBackground: true }));
     await page.evaluate(() => document.querySelectorAll('.sheet').forEach((s) => { s.style.display = ''; }));
     return n;
   };
-  const exam = await only(0), ans = await only(1);
-  say(exam >= 2 && exam <= 3, '시험지가 A4 2~3장 (실제 ' + exam + '장)');
-  say(ans === 1, '정답지는 A4 1장 (실제 ' + ans + '장)');
+  const exam = await only(false), ans = await only(true);
+  say(exam === a.examSheets, '시험지 블록 ' + a.examSheets + '개 = A4 ' + exam + '쪽 (한 블록 = 한 쪽)');
+
+  /*
+   * **여백은 인쇄 설정과 무관해야 한다.** @page 여백만 믿으면 인쇄창에서 여백을 “없음”으로
+   * 고르는 순간 통째로 무시돼 다시 잘린다(2026-08-24 현장에서 11mm · 31mm 두 번 다 잘렸다).
+   * 지금은 한 블록 = 한 쪽이라 **.sheet 의 padding** 이 그 쪽의 위아래 모두에 걸린다.
+   * 그래서 여기서는 ①실제 여백값 ②인쇄 설정을 바꿔도 쪽수가 그대로인지 를 함께 본다.
+   */
+  {
+    const pad = await page.evaluate(() => {
+      const cs = getComputedStyle(document.querySelector('.sheet'));
+      const mm = v => parseFloat(v) / (96 / 25.4);
+      return { top: mm(cs.paddingTop), side: mm(cs.paddingLeft) };
+    });
+    say(pad.top >= 25, '쪽 위아래 여백 25mm 이상 (실제 ' + pad.top.toFixed(0) + 'mm)');
+    /* 하한선은 설정값(15mm)보다 0.1 낮게 잡는다 — mm→px→mm 왕복에서 15mm 가 14.998mm 로
+     * 돌아와 '여유 0' 인 하한선이 반올림 하나에 깨진다. 14mm 이하는 그대로 물린다. */
+    say(pad.side >= 14.9, '쪽 좌우 여백 15mm 이상 (실제 ' + pad.side.toFixed(1) + 'mm)');
+
+    /* **폰에서 인쇄해도 여백이 그대로여야 한다.** `@media (max-width:820px)` 가 미디어 종류를
+     * 안 밝히면 인쇄에도 걸리고 `@media print` 와 명시도가 같아 뒤에 있는 쪽이 이긴다 —
+     * 실제로 폰 인쇄에서 여백이 14px(3.7mm)로 무너져 프린터가 못 찍는 가장자리 안으로 들어가
+     * **좌측 상단 워드마크가 잘렸다**(2026-08-24 매장 보고). 위 검사는 넓은 화면에서 재므로
+     * 이걸 못 잡는다 — **화면을 좁혀 인쇄 매체로 재는 것**이 유일한 재현이다. */
+    const vp = page.viewportSize() || { width: 1280, height: 720 };
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.emulateMedia({ media: 'print' });
+    const phone = await page.evaluate(() => {
+      const cs = getComputedStyle(document.querySelector('.sheet'));
+      const mm = v => parseFloat(v) / (96 / 25.4);
+      return { top: mm(cs.paddingTop), side: mm(cs.paddingLeft) };
+    });
+    await page.emulateMedia({ media: null });
+    await page.setViewportSize(vp);
+    say(phone.top >= 25 && phone.side >= 14.9,
+        '폰 화면에서 인쇄해도 여백 그대로 (실제 ' + phone.top.toFixed(0) + ' / ' + phone.side.toFixed(1) + 'mm)');
+
+    const base = count(await page.pdf({ format: 'A4', printBackground: true }));
+    let steady = true, badCase = '';
+    /* 인쇄창에서 고를 수 있는 현실적인 두 값만 본다. “넓게”(25mm)는 우리 26mm 위에 다시
+       25mm 를 얹는 셈이라 5문항이 물리적으로 한 쪽에 안 들어간다 — 화면 안내가 쓰지 말라고 적는다. */
+    for (const m of ['0', '10mm']) {
+      const tag = await page.addStyleTag({ content: '@media print{ @page{ size:A4; margin:' + m + ' } }' });
+      const n = count(await page.pdf({ format: 'A4', printBackground: true }));
+      if (n !== base) { steady = false; badCase = m + ' → ' + n + '쪽'; }
+      await page.evaluate(el => el.remove(), tag);
+    }
+    say(steady, '인쇄창 여백을 바꿔도 쪽수 그대로 (' + base + '쪽)' + (steady ? '' : ' — ' + badCase));
+  }
+  /*
+   * 정답지는 **1~2장 다 정상**이다(2026-08-24 사장님 확인: "정답지가 2장이 되어도 상관없습니다").
+   * 해설을 2단(`columns:2`)으로 짜는데 크롬이 다단 블록을 쪽 경계에서 잘 못 나눠,
+   * 내용이 210mm 뿐이어도 여백을 조금만 주면 두 쪽으로 흘린다. 조판을 조이면
+   * 해설 글자가 작아지므로 **기준을 넓히는 쪽**을 골랐다.
+   */
+  say(ans === a.ansSheets, '정답지 블록 ' + a.ansSheets + '개 = A4 ' + ans + '쪽 (한 블록 = 한 쪽)');
 
   /*
    * **쪽수만으로는 못 지킨다 — 글꼴 하한을 함께 본다.**

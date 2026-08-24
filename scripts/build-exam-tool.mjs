@@ -77,7 +77,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   fs.mkdirSync(OUTDIR, { recursive: true });
   fs.writeFileSync(OUT, html);
   console.log(
-    `문항 ${bank.total}개 · 카테고리 ${Object.keys(bank.cats).length}개 · ${JSON.stringify(bank.byType)}`
+    `문항 ${bank.total}개 · 카테고리 ${Object.keys(bank.cats).length}개 · ${JSON.stringify(bank.byType) + ' · ' + JSON.stringify(bank.byDiv)}`
   );
   console.log(`→ tools/시험지출력기.html (${(Buffer.byteLength(html) / 1024).toFixed(0)}KB) · 바깥을 부르는 곳 0`);
 }

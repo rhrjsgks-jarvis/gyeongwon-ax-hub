@@ -14,7 +14,7 @@
  * ## 문항 옆에 품목 이름을 적지 않는다
  * 2026-08-19 사용자 요청 — 오른쪽 카테고리 칩(김치냉장고·청소기…)을 뺐다.
  * **품목 이름이 곧 답을 좁혀 주는 힌트**라 시험지에 있으면 안 된다.
- * 갈래(정책/제품) 비율은 조작 막대가 밝히므로 화면에서 확인할 수 있다.
+ * CE / MX 비중은 조작 막대와 안내문이 밝히므로 화면에서 확인할 수 있다.
  *
  * ## 시험지 코드가 핵심이다
  * 매번 다른 문제가 나오므로 여러 장 인쇄하면 시험지와 정답지가 섞인다.
@@ -54,12 +54,18 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 .btn.ghost{background:rgba(255,255,255,.18);color:#fff}
 .btn:active{transform:translateY(1px)}
 .hint{font-size:12px;opacity:.9;flex-basis:100%;margin-top:-2px}
+/* 인쇄 설정 경고 — 크롬에서 여백을 "없음" 으로 고르면 @page 여백이 통째로 무시돼
+   프린터가 가장자리를 잘라 낸다. CSS 로는 막을 수 없어 화면으로 알린다.
+   작은 hint 줄로 두었더니 두 번 놓쳤다(2026-08-24 현장 잘림 신고 2회). */
+.warn{flex-basis:100%;background:#FEF3C7;color:#7C2D12;border:1.5px solid #F59E0B;
+      border-radius:7px;padding:8px 11px;font-size:13px;font-weight:600;line-height:1.5;margin-top:4px}
+.warn b{color:#9A3412}
 
 /* 종이 */
 #paper > .sheet:first-child{margin-top:16px}
 .bar{scroll-margin-top:0}
 #paper{padding-top:4px}
-.sheet{background:#fff;width:210mm;min-height:297mm;margin:14px auto;padding:12mm 13mm;
+.sheet{background:#fff;width:210mm;min-height:297mm;margin:14px auto;padding:26mm 15mm;
        box-shadow:0 2px 12px rgba(0,0,0,.12)}
 .head{border-bottom:2.5px solid var(--navy);padding-bottom:7px;margin-bottom:10px;
       display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
@@ -68,6 +74,7 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 .head .brand .store{font-size:12.5px;font-weight:700;letter-spacing:.14em}
 .head .t{font-size:21px;font-weight:800;letter-spacing:-.03em;color:var(--navy)}
 .head .s{font-size:11.5px;color:var(--sub);margin-top:3px}
+.head .pg{display:block;font-size:10.5px;font-weight:700;letter-spacing:.04em;opacity:.75;margin-top:2px}
 .head .code{font-size:12px;font-weight:800;letter-spacing:.1em;border:1.5px solid var(--navy);
             color:var(--navy);border-radius:5px;padding:4px 9px;white-space:nowrap}
 .meta{display:flex;gap:18px;font-size:13px;color:var(--sub);margin-bottom:14px;flex-wrap:wrap}
@@ -77,12 +84,20 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 /* **글자 크기는 상담사가 시험장에서 읽는 크기다** — 2026-08-19 사용자 요청으로 키웠다
    ("A4 로 출력하면 너무 작게 나옵니다"). 시험지 2장 → 3장이 되는 대신 읽힌다.
    줄이려거든 쪽수부터 재 볼 것(.scratch/exam-pages.mjs). */
-.q{margin:0 0 13px;page-break-inside:avoid;break-inside:avoid}
-.qh{display:flex;gap:7px;align-items:baseline;font-size:18px;font-weight:700;margin-bottom:5px;line-height:1.4}
+/* 문항 간격 10px — **글꼴을 줄이는 대신 여기를 줄인다.**
+   @page 에 실제 여백(11/12mm)을 주면서 쪽마다 22mm 를 잃어 시험지가 4장이 됐는데,
+   실측해 보니 간격만 13px → 10px 로 줄여도 8종 전부 3장으로 돌아온다(글꼴·행간은 그대로).
+   2026-08-24 에 문항 18 → 17px · 보기 16 → 15px · 간격 10 → 9px 로 한 단계 내렸다
+   (사용자 허락: "폰트크기를 줄여도 됩니다"). 진짜 인쇄 여백(26/15mm)이 걸리자 쪽 높이가
+   281.9mm 가 되어 인쇄창 "기본" 여백에서 쪽이 쪼개졌기 때문이다 — 264.7mm 로 들어왔다.
+   **더 내리지 말 것.** 원래 요구가 "A4 로 출력하면 너무 작다" 였고, 검사 하한이
+   문항 16px · 보기 14px 이라 한 단계밖에 안 남았다. */
+.q{margin:0 0 8px;page-break-inside:avoid;break-inside:avoid}
+.qh{display:flex;gap:7px;align-items:baseline;font-size:17px;font-weight:700;margin-bottom:5px;line-height:1.4}
 .qn{color:var(--navy);min-width:30px}
 .qt{font-weight:600;flex:1}
 .opts{list-style:none;margin:0;padding:0 0 0 37px}
-.opts li{font-size:16px;margin:0 0 2px;display:flex;gap:7px;line-height:1.45}
+.opts li{font-size:15px;margin:0 0 2px;display:flex;gap:7px;line-height:1.45}
 .opts .no{color:var(--sub);flex-shrink:0}
 
 /* 정답지 */
@@ -90,22 +105,56 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 .akey div{border:1px solid var(--line);border-radius:4px;padding:4px 2px;text-align:center}
 .akey b{display:block;font-size:10.5px;color:var(--sub);font-weight:600}
 .akey span{font-size:14px;font-weight:800;color:var(--navy)}
-/* 정답지는 채점용이라 한 장에 다 보이는 쪽이 낫다(사용자 요청). 2단으로 세운다 —
-   글자를 더 줄이는 것보다 단을 나누는 편이 읽힌다. */
+/* ## 정답지는 2쪽이고, 해설은 12px 다 (2026-08-24 사장님 지시)
+   "답안지2페이지로설정(답안지2페이지가 되면서 해설글씨 크기 보강)" — 2쪽을 쓰기로 한 만큼
+   자리가 남아 10 → 12px 로 키웠다. 2단(columns:2)은 그대로다. 실측(.scratch/_exam-sweep.mjs,
+   코드 12종) — 26mm 여백 · 해설 12px 에서 **정답지 블록 최대 213.1mm** 로 한 쪽(277mm) 안에
+   여유 64mm 로 들어간다. 더 키우려면 이 하네스로 다시 잴 것. */
 .exwrap{columns:2;column-gap:7mm}
-.ex{font-size:10px;margin:0 0 4px;padding-bottom:3px;line-height:1.38;border-bottom:1px dotted var(--line);
+.ex{font-size:12px;margin:0 0 5px;padding-bottom:4px;line-height:1.45;border-bottom:1px dotted var(--line);
     page-break-inside:avoid;break-inside:avoid}
 .ex b{color:var(--navy)}
 .ex .a{color:#166534;font-weight:700}
+/* 난이도·LG 표식 — **정답지에만** 붙는다(시험지에는 안 나간다).
+   인쇄가 흑백일 수 있어 색에만 기대지 않고 글자로 적는다. */
+.lv{display:inline-block;border:1px solid var(--line);border-radius:3px;padding:0 4px;
+    font-size:9px;font-weight:800;line-height:1.5;vertical-align:1px;color:var(--sub)}
+.lv-하{border-color:#86efac;color:#166534}
+.lv-중{border-color:#fcd34d;color:#92400e}
+.lv-상{border-color:#fca5a5;color:#991b1b}
+.lv-LG{border-color:var(--navy);color:var(--navy)}
 
 @media print{
-  @page{size:A4;margin:0}
+  /* ## 여백은 @page 가 아니라 .sheet 의 padding 이 만든다
+   * @page 여백만 믿으면 **인쇄창에서 여백을 “없음”으로 고르는 순간 통째로 무시돼** 다시 잘린다
+   * (2026-08-24 현장에서 11mm · 31mm 두 번 다 잘렸다는 신고를 받았다).
+   * 지금은 쪽당 5문항으로 **한 블록 = 한 쪽**이 되도록 직접 끊으므로, 블록의 padding 이
+   * 그 쪽의 위아래 모두에 걸린다 — 즉 여백이 **인쇄 설정과 무관하게** 지켜진다.
+   * @page 의 5mm 는 덤이다(프린터 인쇄 불가 영역용). 이 둘을 바꿔 달지 말 것. */
+  @page{size:A4;margin:5mm}
   body{background:#fff}
   .bar,.noprint{display:none !important}
-  .sheet{width:auto;min-height:0;margin:0;padding:11mm 12mm;box-shadow:none;page-break-after:always}
+  /* ## 26mm / 15mm — 2026-08-24 **실제 인쇄 레이아웃에서** 다시 쟀다.
+     옛 주석의 "최대 높이 269mm" 는 못 믿을 값이었다. 그때는 아래 `@media (max-width:820px)` 가
+     인쇄에도 걸려 실제 인쇄 여백이 14px(3.7mm)였고, 검사는 여백을 **화면(1200px)** 에서 재고
+     쪽수는 **PDF(용지 폭 794px)** 에서 세는 바람에 둘 다 통과했다 — 서로 다른 레이아웃을 보고
+     있었던 것이다. 그 사이 매장에 나간 시험지는 좌측 상단 워드마크가 잘렸다.
+     지금 실측(코드 12종 고정, .scratch/_exam-sweep.mjs) — 여백 26mm 에서 **시험지 블록 최대
+     257.0mm · 정답지 블록 최대 213.1mm**(해설 12px). 인쇄창 "기본"(10mm)이면 쪽 높이가
+     277mm 라 시험지가 여유 20mm 로 들어간다. 22·24·26mm × 해설 10·11·12px 아홉 조합을
+     전부 재 보고 26/12 를 골랐다 — **여백과 글꼴을 둘 다 가장 크게 주면서 쪽수가 안 늘어나는 자리**다.
+     28mm 는 정답지가 3쪽으로 흘러 물린다(시험지가 아니라 정답지가 상한을 정한다).
+     **좌우를 넓히면 세로가 는다** — 15 → 20mm 면 줄바꿈이 늘어 +6.7mm 다. 여백·글꼴은
+     같은 예산을 나눠 쓰므로 한쪽만 만지지 말고 반드시 다시 잴 것. */
+  .sheet{width:auto;min-height:0;margin:0;padding:26mm 15mm;box-shadow:none;page-break-after:always}
   .sheet:last-child{page-break-after:auto}
 }
-@media (max-width:820px){ .sheet{width:auto;min-height:0;padding:14px} }
+/* **반드시 `screen and` 를 붙일 것.** 이 규칙은 폰에서 "화면으로 볼 때" 쓰라고 만든 것인데
+   미디어 종류를 안 밝히면 인쇄에도 걸리고, @media print 와 명시도가 같아 **뒤에 있는 이쪽이 이긴다.**
+   그러면 폰에서 인쇄할 때 쪽 여백이 14px(3.7mm)로 무너져 프린터가 못 찍는 가장자리 안으로 들어가
+   **좌측 상단 워드마크가 잘린다**(2026-08-24 매장 보고). 순서를 바꿔 고치지 말 것 — 규칙 하나만
+   옮겨도 조용히 재발한다. */
+@media screen and (max-width:820px){ .sheet{width:auto;min-height:0;padding:14px} }
 </style>
 </head>
 <body>
@@ -113,12 +162,15 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 <div class="bar noprint">
   <h1>시험지 출력기</h1>
   <label>문항 <input type="number" id="n" value="20" min="5" max="50"></label>
-  <label>정책 <input type="number" id="pol" value="40" min="0" max="100">%</label>
+  <label>MX <input type="number" id="mx" value="50" min="0" max="100">%</label>
   <label>코드 <input type="text" id="code" maxlength="4" placeholder="자동"></label>
   <button class="btn" id="gen">새 시험지</button>
   <button class="btn ghost" id="prt">인쇄</button>
   <div class="hint" id="hint">문제은행을 불러오는 중…</div>
   <div class="hint">인쇄창에서 <b>대상</b>을 <b>“PDF로 저장”</b>으로 고르면 파일로 남습니다 — 파일 이름은 시험지 코드가 붙습니다.</div>
+  <div class="warn">🖨 인쇄창에서 <b>여백 = “없음”</b> · <b>배율 = “기본”</b> 으로 두세요.
+  이 시험지는 <b>여백을 스스로 갖고 있습니다</b>(상하 26mm · 좌우 15mm) — 인쇄창에서 여백을 또 주면
+  쪽수만 늘어납니다. <b>“기본값”도 괜찮지만 “넓게”는 쓰지 마세요.</b></div>
 </div>
 
 <noscript><div class="sheet"><div class="head"><div><div class="t">자바스크립트를 켜 주세요</div>
@@ -162,15 +214,81 @@ function shuffle(arr, rnd){
 /* ── 문항 뽑기 ──
    사용자 요청 그대로 **순수 랜덤**이다 — 카테고리마다 반드시 나오게 하지 않는다
    (그건 /test 앱이 하는 일이고 여기는 성격이 다르다).
-   정책 비율만 맞추고, 정책 문항이 모자라면 **모자란 만큼 제품으로 채우고 그 사실을 밝힌다.** */
-function pick(n, polPct, rnd){
-  var pol = [], pro = [];
-  for (var i = 0; i < BANK.items.length; i++)
-    (BANK.items[i].type === 'policy' ? pol : pro).push(BANK.items[i]);
-  var wantPol = Math.round(n * polPct / 100);
-  var gotPol = Math.min(wantPol, pol.length);
-  var picked = shuffle(pol, rnd).slice(0, gotPol).concat(shuffle(pro, rnd).slice(0, n - gotPol));
-  return { list: shuffle(picked, rnd), wantPol: wantPol, gotPol: gotPol };
+   **맞추는 것은 CE / MX 비중 하나뿐이다**(2026-08-24 사장님 지시: 50% / 50%).
+   한쪽이 모자라면 **모자란 만큼 반대쪽으로 채우고 그 사실을 밝힌다** — 조용히 넘기지 않는다. */
+/* ## 한 시험지가 동시에 지켜야 하는 것이 셋이다 (2026-08-24 사장님 지시)
+ *   ① CE 50% / MX 50%
+ *   ② 난이도 **상·중·하를 섞는다** — 난이도별로 시험지를 따로 내지 않는다
+ *   ③ **LG 비교 문항 4개 고정** — "시험문제 LG비교문항 필요"
+ *
+ * 셋이 서로 물린다. LG 문항은 전부 CE 라 ③을 채우면 ①의 CE 자리가 줄고, 그 문항들의
+ * 난이도가 ②의 칸을 먹는다. 그래서 **가장 빡빡한 것부터 채운다** — LG(9개 카테고리에서
+ * 37문항뿐) → 난이도×갈래 → 남는 자리.
+ *
+ * **모자라면 조용히 넘기지 않고 화면에 적는다.** 이 저장소의 규칙이고, 여기서 특히 중요하다 —
+ * "LG 4문항"은 사장님과 한 약속이라 안 지켜졌으면 그 사실이 보여야 한다. */
+var LV_ORDER = ['하', '중', '상'];
+/* 20문항 기준 배분. n 이 달라지면 비율대로 늘리고 줄인다. */
+var LV_MIX = { '하': 6, '중': 8, '상': 6 };
+var LG_WANT = 4;
+
+function lvQuota(n){
+  var q = {}, sum = 0, i;
+  for (i = 0; i < LV_ORDER.length; i++){
+    q[LV_ORDER[i]] = Math.round(n * LV_MIX[LV_ORDER[i]] / 20);
+    sum += q[LV_ORDER[i]];
+  }
+  /* 반올림으로 어긋난 만큼을 '중' 에서 맞춘다 — 가운데가 가장 두껍다 */
+  q['중'] += n - sum;
+  if (q['중'] < 0) { q['하'] += q['중']; q['중'] = 0; }
+  return q;
+}
+
+function pick(n, mxPct, rnd){
+  var wantMx = Math.round(n * mxPct / 100);
+  var wantLv = lvQuota(n);
+  var need = { lv: lvQuota(n), div: { MX: wantMx, CE: n - wantMx } };
+  var all = BANK.items, used = {}, out = [];
+
+  /* 조건에 맞는 것 하나를 무작위로 집는다. 없으면 null — 부르는 쪽이 조건을 늦춘다. */
+  function take(ok){
+    var pool = [], i;
+    for (i = 0; i < all.length; i++) if (!used[all[i].i] && ok(all[i])) pool.push(all[i]);
+    if (!pool.length) return null;
+    var q = pool[Math.floor(rnd() * pool.length)];
+    used[q.i] = 1; out.push(q);
+    if (need.lv[q.lv] > 0) need.lv[q.lv]--;
+    if (need.div[q.div] > 0) need.div[q.div]--;
+    return q;
+  }
+
+  /* ① LG 문항 먼저 — 가장 얇아서 나중에 채우면 자리가 남지 않는다 */
+  var gotLg = 0;
+  while (gotLg < LG_WANT && out.length < n) {
+    var q = take(function(x){ return x.lg && need.lv[x.lv] > 0 && need.div[x.div] > 0; })
+         || take(function(x){ return x.lg && need.lv[x.lv] > 0; })
+         || take(function(x){ return x.lg; });
+    if (!q) break;                       /* 은행에 LG 문항이 모자란다 */
+    gotLg++;
+  }
+
+  /* ② 난이도 × 갈래를 함께 맞추고, 안 되면 한 조건씩 늦춘다 */
+  while (out.length < n) {
+    var q2 = take(function(x){ return need.lv[x.lv] > 0 && need.div[x.div] > 0; })
+          || take(function(x){ return need.lv[x.lv] > 0; })
+          || take(function(x){ return need.div[x.div] > 0; })
+          || take(function(){ return true; });
+    if (!q2) break;                      /* 은행이 바닥났다 */
+  }
+
+  var got = { lv: {}, div: { CE: 0, MX: 0 }, lg: 0 };
+  for (var k = 0; k < out.length; k++){
+    got.lv[out[k].lv] = (got.lv[out[k].lv] || 0) + 1;
+    got.div[out[k].div]++;
+    if (out[k].lg) got.lg++;
+  }
+  return { list: shuffle(out, rnd), wantMx: wantMx, wantLv: wantLv, wantLg: LG_WANT,
+           gotMx: got.div.MX, gotCe: got.div.CE, gotLv: got.lv, gotLg: got.lg };
 }
 
 function esc(s){
@@ -180,14 +298,14 @@ function esc(s){
 }
 var NO = ['①','②','③','④','⑤'];
 
-function render(code, n, polPct){
+function render(code, n, mxPct){
   var rnd = rng(seedFrom(code));
-  var r = pick(n, polPct, rnd);
+  var r = pick(n, mxPct, rnd);
 
   /* 보기 순서도 섞는다 — 같은 문항이라도 시험지마다 답 위치가 달라야 한다 */
   var qs = r.list.map(function(q){
     var order = shuffle([0,1,2,3], rnd);
-    return { q:q.q, cat:q.cat, type:q.type, exp:q.exp,
+    return { q:q.q, cat:q.cat, type:q.type, div:q.div, lv:q.lv, lg:q.lg, exp:q.exp,
              opts: order.map(function(i){ return q.opts[i]; }),
              ans: order.indexOf(q.ans) };
   });
@@ -197,63 +315,105 @@ function render(code, n, polPct){
 
   /* 공식 워드마크(SVG 패스) — 글꼴로는 재현할 수 없다(A 가로획 없음 · U 아래 열림) */
   var WORDMARK = "<svg class=\"wm\" viewBox=\"0 0 7051.4024 1080\" role=\"img\" aria-label=\"SAMSUNG\" fill=\"currentColor\"><defs><clipPath id=\"exam-samsung-clip\" clipPathUnits=\"userSpaceOnUse\"><path d=\"M 0,166.885 H 628.238 V 0 H 0 Z\"/></clipPath></defs><g transform=\"matrix(12.944053,0,0,-12.944053,-540.03625,1620.0233)\"><g clip-path=\"url(#exam-samsung-clip)\"><g transform=\"translate(558.9328,88.5098)\"><path d=\"m 0,0 v -11.358 h 7.982 v -11.269 c 0.025,-1.007 -0.03,-2.093 -0.203,-2.962 -0.317,-2.102 -2.314,-5.681 -7.98,-5.681 -5.632,0 -7.593,3.579 -7.933,5.681 -0.143,0.869 -0.204,1.955 -0.204,2.962 v 35.593 c 0,1.259 0.085,2.637 0.352,3.68 0.387,1.897 2.068,5.638 7.743,5.638 5.957,0 7.444,-3.944 7.785,-5.638 0.224,-1.122 0.237,-3.004 0.237,-3.004 V 9.32 h 19.613 v 2.555 c 0,0 0.089,2.666 -0.149,5.154 C 25.769,31.638 13.732,36.26 -0.07,36.26 c -13.827,0 -25.62,-4.665 -27.338,-19.231 -0.155,-1.332 -0.392,-3.728 -0.392,-5.154 v -32.742 c 0,-1.426 0.046,-2.53 0.31,-5.136 1.28,-14.207 13.593,-19.243 27.365,-19.243 13.857,0 26.085,5.036 27.387,19.243 0.231,2.606 0.255,3.71 0.286,5.136 V 0 Z m -135.235,34.165 h -19.696 v -57.613 c 0.031,-1.004 0,-2.132 -0.173,-2.959 -0.411,-1.934 -2.05,-5.656 -7.484,-5.656 -5.364,0 -7.046,3.722 -7.426,5.656 -0.197,0.827 -0.222,1.955 -0.197,2.959 v 57.613 h -19.69 V -21.66 c -0.025,-1.439 0.088,-4.379 0.173,-5.149 1.359,-14.547 12.824,-19.27 27.14,-19.27 14.344,0 25.802,4.723 27.186,19.27 0.109,0.77 0.252,3.71 0.167,5.149 z m -180.97,0 -9.825,-60.876 -9.819,60.876 h -31.771 l -1.685,-77.878 h 19.464 l 0.527,72.094 13.392,-72.094 h 19.748 l 13.404,72.094 0.529,-72.094 h 19.513 l -1.742,77.878 z m -117.631,0 -14.426,-77.878 h 21.037 l 10.871,72.094 10.61,-72.094 h 20.891 l -14.366,77.878 z m 367.435,-62.701 -18.34,62.701 h -28.9 v -77.066 h 19.118 l -1.11,64.707 19.696,-64.707 h 27.717 v 77.066 h -19.243 z m -176.838,42.433 c -0.346,1.538 -0.246,3.172 -0.067,4.026 0.557,2.493 2.232,5.212 7.058,5.212 4.498,0 7.135,-2.804 7.135,-7.012 v -4.762 h 19.2 v 5.428 c 0,16.78 -15.044,19.416 -25.936,19.416 -13.718,0 -24.921,-4.522 -26.967,-17.148 -0.541,-3.436 -0.675,-6.486 0.186,-10.378 3.336,-15.743 30.743,-20.31 34.721,-30.266 0.702,-1.886 0.501,-4.291 0.143,-5.708 -0.596,-2.591 -2.339,-5.197 -7.506,-5.197 -4.846,0 -7.763,2.786 -7.763,6.985 l -0.006,7.474 h -20.666 v -5.941 c 0,-17.215 13.484,-22.409 28.007,-22.409 13.909,0 25.397,4.753 27.24,17.637 0.879,6.657 0.216,10.993 -0.137,12.626 -3.22,16.147 -32.431,21.004 -34.642,30.017 m -253.273,0.191 c -0.377,1.57 -0.289,3.227 -0.079,4.091 0.532,2.481 2.217,5.248 7.128,5.248 4.555,0 7.237,-2.831 7.237,-7.073 v -4.82 h 19.425 v 5.471 c 0,16.941 -15.274,19.641 -26.285,19.641 -13.833,0 -25.136,-4.592 -27.204,-17.309 -0.566,-3.491 -0.663,-6.562 0.155,-10.497 3.372,-15.922 31.05,-20.526 35.077,-30.601 0.754,-1.873 0.526,-4.278 0.152,-5.75 -0.639,-2.618 -2.396,-5.261 -7.606,-5.261 -4.865,0 -7.775,2.834 -7.775,7.091 l -0.027,7.494 h -20.898 v -5.955 c 0,-17.412 13.675,-22.648 28.311,-22.648 14.071,0 25.626,4.795 27.511,17.828 0.937,6.718 0.234,11.09 -0.082,12.748 -3.287,16.345 -32.823,21.186 -35.04,30.302\"/></g></g></g></svg>";
-  function head(title, sub){
+  /* 머리는 **모든 장에** 넣는다 — 여러 장으로 나뉘므로 장마다 워드마크·시험지 코드·쪽번호가 있어야
+     섞이지 않는다(2026-08-24 현장: 로고가 잘려 안 보인다는 신고도 여기서 함께 해소된다). */
+  function head(title, sub, pg){
     return '<div class="head"><div>' +
            '<div class="brand">' + WORDMARK + '<span class="store">STORE</span></div>' +
            '<div class="t">' + title + '</div>' +
            '<div class="s">' + sub + '</div></div>' +
-           '<div class="code">시험지 ' + code + '</div></div>';
+           '<div class="code">시험지 ' + code + '<br><span class="pg">' + pg + '</span></div></div>';
   }
 
-  var h = '<div class="sheet">' +
-    head('레벨업 챌린지', '2026 삼성 제품 전문가 성장 프로그램 · ' + ymd) +
-    '<div class="meta"><span>이름 <span class="fill"></span></span>' +
-    '<span>사번 <span class="fill"></span></span>' +
-    '<span>매장 <span class="fill"></span></span>' +
-    '<span><b>' + qs.length + '문항</b> · 각 ' + (100/qs.length).toFixed(qs.length===20?0:1) +
-    '점 · 100점 만점</span></div>';
-  qs.forEach(function(q, k){
-    h += '<div class="q"><div class="qh"><span class="qn">' + (k+1) + '.</span>' +
-         '<span class="qt">' + esc(q.q) + '</span></div><ul class="opts">';
-    q.opts.forEach(function(o, i){
-      h += '<li><span class="no">' + NO[i] + '</span><span>' + esc(o) + '</span></li>';
+  /* ## 쪽당 5문항으로 **직접 끊는다** (2026-08-24 사장님 지시)
+   * 브라우저가 알아서 흘리게 두면 한 .sheet 블록이 여러 쪽에 걸치는데, 그러면 그 블록의
+   * padding 이 **첫 쪽 위와 마지막 쪽 아래에만** 걸려 가운데 쪽은 여백이 0이 된다.
+   * 여기서 잘림이 났다. **한 블록 = 한 쪽**으로 끊으면 padding 이 그 쪽의 위아래 모두에
+   * 걸리므로, 인쇄창의 여백 설정과 **무관하게** 여백이 지켜진다. */
+  var PER_PAGE = 5;
+  var pages = Math.ceil(qs.length / PER_PAGE);
+  var h = '';
+  for (var pi = 0; pi < pages; pi++) {
+    var from = pi * PER_PAGE, part = qs.slice(from, from + PER_PAGE);
+    h += '<div class="sheet">' +
+         head('레벨업 챌린지', '2026 삼성 제품 전문가 성장 프로그램 · ' + ymd, (pi+1) + ' / ' + pages);
+    if (pi === 0)
+      h += '<div class="meta"><span>이름 <span class="fill"></span></span>' +
+           '<span>사번 <span class="fill"></span></span>' +
+           '<span>매장 <span class="fill"></span></span>' +
+           '<span><b>' + qs.length + '문항</b> · 각 ' + (100/qs.length).toFixed(qs.length===20?0:1) +
+           '점 · 100점 만점</span></div>';
+    part.forEach(function(q, k){
+      /* `data-lv` 는 **화면에도 인쇄에도 안 나오는 표식**이다 — 사장님 지시가
+         "시험지에 난이도표시X" 라 응시자에게는 보이지 않아야 하고, 검사는 구성을 확인해야 한다.
+         `data-div`(CE/MX)를 같은 이유로 이미 이렇게 두고 있다. */
+      h += '<div class="q" data-div="' + esc(q.div) + '" data-lv="' + esc(q.lv) + '"' +
+           (q.lg ? ' data-lg="1"' : '') + '><div class="qh"><span class="qn">' + (from+k+1) + '.</span>' +
+           '<span class="qt">' + esc(q.q) + '</span></div><ul class="opts">';
+      q.opts.forEach(function(o, i){
+        h += '<li><span class="no">' + NO[i] + '</span><span>' + esc(o) + '</span></li>';
+      });
+      h += '</ul></div>';
     });
-    h += '</ul></div>';
-  });
-  h += '</div>';
+    h += '</div>';
+  }
 
-  h += '<div class="sheet">' +
-       head('정답 및 해설', '시험지 ' + code + ' 전용 — 시험지 코드가 같은지 확인하세요') +
-       '<div class="akey">';
-  qs.forEach(function(q, k){ h += '<div><b>' + (k+1) + '번</b><span>' + NO[q.ans] + '</span></div>'; });
-  h += '</div>';
-  h += '<div class="exwrap">';
-  qs.forEach(function(q, k){
-    h += '<div class="ex"><b>' + (k+1) + '.</b> ' + esc(q.q) +
-         '<br><span class="a">정답 ' + NO[q.ans] + ' ' + esc(q.opts[q.ans]) + '</span>' +
-         (q.exp ? '<br>' + esc(q.exp) : '') + '</div>';
-  });
-  h += '</div></div>';
+  /* 정답지도 같은 이유로 직접 끊는다 — 해설 10개씩. 첫 장에만 정답표를 얹는다. */
+  var A_PER = 10;
+  var apages = Math.ceil(qs.length / A_PER);
+  for (var ai = 0; ai < apages; ai++) {
+    var afrom = ai * A_PER, apart = qs.slice(afrom, afrom + A_PER);
+    h += '<div class="sheet ans">' +
+         head('정답 및 해설', '시험지 ' + code + ' 전용 — 시험지 코드가 같은지 확인하세요', (ai+1) + ' / ' + apages);
+    if (ai === 0) {
+      h += '<div class="akey">';
+      qs.forEach(function(q, k){ h += '<div><b>' + (k+1) + '번</b><span>' + NO[q.ans] + '</span></div>'; });
+      h += '</div>';
+    }
+    h += '<div class="exwrap">';
+    apart.forEach(function(q, k){
+      /* **난이도는 정답지에만 적는다**(2026-08-24 사장님 결정) — 채점·복기할 때
+         "어느 난이도에서 틀렸는지"가 보인다. 시험지에는 안 나가므로 힌트가 되지 않는다. */
+      h += '<div class="ex"><b>' + (afrom+k+1) + '.</b> ' +
+           '<span class="lv lv-' + esc(q.lv) + '">' + esc(q.lv) + '</span> ' +
+           (q.lg ? '<span class="lv lv-LG">LG</span> ' : '') + esc(q.q) +
+           '<br><span class="a">정답 ' + NO[q.ans] + ' ' + esc(q.opts[q.ans]) + '</span>' +
+           (q.exp ? '<br>' + esc(q.exp) : '') + '</div>';
+    });
+    h += '</div></div>';
+  }
 
   document.getElementById('paper').innerHTML = h;
 
   /* 모자란 것은 조용히 넘기지 않고 밝힌다 */
   var msg = '시험지 ' + code + ' · ' + qs.length + '문항 (은행 ' + BANK.total + '문항에서 추첨)';
-  if (r.gotPol < r.wantPol)
-    msg += ' — 정책 문항이 은행에 ' + (BANK.byType.policy || 0) + '개뿐이라 ' +
-           r.wantPol + '개 중 ' + r.gotPol + '개만 넣고 나머지는 제품으로 채웠습니다.';
+  msg += ' · CE ' + r.gotCe + ' / MX ' + r.gotMx;
+  msg += ' · 난이도 하 ' + (r.gotLv['하'] || 0) + ' / 중 ' + (r.gotLv['중'] || 0) +
+         ' / 상 ' + (r.gotLv['상'] || 0);
+  msg += ' · LG 비교 ' + r.gotLg + '문항';
+  if (r.gotMx < r.wantMx)
+    msg += ' — MX 문항이 은행에 ' + ((BANK.byDiv && BANK.byDiv.MX) || 0) + '개뿐이라 ' +
+           r.wantMx + '개 중 ' + r.gotMx + '개만 넣고 나머지는 CE 로 채웠습니다.';
+  /* 약속한 구성이 안 지켜졌으면 반드시 적는다 — 조용히 넘기면 화면이 거짓말을 한다 */
+  if (r.gotLg < r.wantLg)
+    msg += ' — LG 비교 문항은 은행에 ' + ((BANK.lgTotal) || 0) + '개뿐이라 ' +
+           r.wantLg + '개 중 ' + r.gotLg + '개만 넣었습니다.';
+  var lvOff = LV_ORDER.filter(function(L){ return (r.gotLv[L] || 0) !== r.wantLv[L]; });
+  if (lvOff.length)
+    msg += ' — 난이도 배분이 목표(하 ' + r.wantLv['하'] + '/중 ' + r.wantLv['중'] +
+           '/상 ' + r.wantLv['상'] + ')와 다릅니다: ' + lvOff.join('·');
   document.getElementById('hint').textContent = msg;
   document.getElementById('code').value = code;
   /* 인쇄창 "PDF로 저장"의 기본 파일명이 여기서 온다 — 여러 장 뽑아도 파일이 안 섞인다 */
   document.title = '시험지_' + code;
-  try { history.replaceState(null, '', '?code=' + code + '&n=' + n + '&pol=' + polPct); } catch (e) {}
+  try { history.replaceState(null, '', '?code=' + code + '&n=' + n + '&mx=' + mxPct); } catch (e) {}
 }
 
 function go(useTyped){
   var n = Math.max(5, Math.min(50, parseInt(document.getElementById('n').value, 10) || 20));
-  var pol = Math.max(0, Math.min(100, parseInt(document.getElementById('pol').value, 10) || 0));
+  var mx = Math.max(0, Math.min(100, parseInt(document.getElementById('mx').value, 10) || 0));
   var typed = (document.getElementById('code').value || '').trim().toUpperCase();
-  render(useTyped && /^[A-Z0-9]{4}$/.test(typed) ? typed : newCode(), n, pol);
+  render(useTyped && /^[A-Z0-9]{4}$/.test(typed) ? typed : newCode(), n, mx);
 }
 
 if (!BANK || !BANK.items || !BANK.items.length) {
@@ -263,7 +423,7 @@ if (!BANK || !BANK.items || !BANK.items.length) {
 } else {
   var p = new URLSearchParams(location.search);
   if (p.get('n')) document.getElementById('n').value = p.get('n');
-  if (p.get('pol')) document.getElementById('pol').value = p.get('pol');
+  if (p.get('mx')) document.getElementById('mx').value = p.get('mx');
   if (p.get('code')) document.getElementById('code').value = p.get('code');
   go(true);
 }
