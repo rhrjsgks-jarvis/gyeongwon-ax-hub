@@ -154,8 +154,8 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
  */
 {
   const lg = a.qs.filter(q => q.lg).length;
-  say(lg === 4, 'LG 비교 문항 4개 고정 (실제 ' + lg + ')');
-  say(a.hint.indexOf('LG 비교 4문항') >= 0, '안내문이 LG 문항 수를 밝힌다');
+  say(lg === 6, 'LG 비교 문항 6개 고정 (실제 ' + lg + ')');
+  say(a.hint.indexOf('LG 비교 6문항') >= 0, '안내문이 LG 문항 수를 밝힌다');
 }
 /*
  * **한 장만 보고 통과시키지 말 것.** 위 셋(CE/MX · 난이도 · LG)은 추첨마다 다시 맞춰야
@@ -177,11 +177,11 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
                lg: qs.filter(e => e.dataset.lg === '1').length };
     });
     const ok2 = c.total === 20 && c.ce === 10 && c.mx === 10 &&
-                c.ha === 6 && c.jung === 8 && c.sang === 6 && c.lg === 4;
+                c.ha === 6 && c.jung === 8 && c.sang === 6 && c.lg === 6;
     if (!ok2) bad.push(c.code + '(CE' + c.ce + '/MX' + c.mx + ' 하' + c.ha + '중' + c.jung +
                        '상' + c.sang + ' LG' + c.lg + ')');
   }
-  say(bad.length === 0, N + '번 뽑아 전부 구성이 맞다 (CE10/MX10 · 하6중8상6 · LG4)' +
+  say(bad.length === 0, N + '번 뽑아 전부 구성이 맞다 (CE10/MX10 · 하6중8상6 · LG6)' +
       (bad.length ? ' — 어긋난 것 ' + bad.length + '건: ' + bad.slice(0, 4).join(' ') : ''));
 }
 

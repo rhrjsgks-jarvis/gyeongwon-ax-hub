@@ -107,12 +107,16 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
 .akey span{font-size:14px;font-weight:800;color:var(--navy)}
 /* ## 정답지는 2쪽이고, 해설은 12px 다 (2026-08-24 사장님 지시)
    "답안지2페이지로설정(답안지2페이지가 되면서 해설글씨 크기 보강)" — 2쪽을 쓰기로 한 만큼
-   자리가 남아 10 → 12px 로 키웠다. 2단(columns:2)은 그대로다.
+   자리가 남아 10 → 11px 로 키웠다. 2단(columns:2)은 그대로다.
+   **12px 은 못 쓴다** — LG 문항을 68개로 늘리자 해설이 길어져 인쇄창 "기본"(10mm) 여백에서
+   30종 중 2종이 정답지 3쪽으로 흘렀다. 여백을 14mm 까지 줄여도 같은 2종이 넘쳤고
+   간격을 조여도(margin 3px·line-height 1.35) 안 됐다 — **상한을 정하는 것은 여백이 아니라
+   해설 글꼴**이다. "답안지 2페이지"가 사장님 지시라 글꼴을 한 단계 내주는 쪽을 골랐다.
    **재려면 `.scratch/_exam-pages.mjs` 로 쪽수를 셀 것** — 블록 높이로 재면 인쇄창 여백이
    만드는 줄바꿈을 못 본다(아래 여백 주석 참조). 현재 설정으로 40종 × 여백 0·10mm 전부
    정답지 2쪽이다. 더 키우려면 그 하네스로 다시 잴 것. */
 .exwrap{columns:2;column-gap:7mm}
-.ex{font-size:12px;margin:0 0 5px;padding-bottom:4px;line-height:1.45;border-bottom:1px dotted var(--line);
+.ex{font-size:11px;margin:0 0 5px;padding-bottom:4px;line-height:1.45;border-bottom:1px dotted var(--line);
     page-break-inside:avoid;break-inside:avoid}
 .ex b{color:var(--navy)}
 .ex .a{color:#166534;font-weight:700}
@@ -248,7 +252,7 @@ function shuffle(arr, rnd){
 var LV_ORDER = ['하', '중', '상'];
 /* 20문항 기준 배분. n 이 달라지면 비율대로 늘리고 줄인다. */
 var LV_MIX = { '하': 6, '중': 8, '상': 6 };
-var LG_WANT = 4;
+var LG_WANT = 6;   /* 2026-08-24 사장님 요청으로 4 → 6. 은행 68문항이라 두 시험지 기대 겹침 0.5개 */
 
 function lvQuota(n){
   var q = {}, sum = 0, i;
