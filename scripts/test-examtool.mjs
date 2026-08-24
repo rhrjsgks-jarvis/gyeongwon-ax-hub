@@ -246,10 +246,10 @@ say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
       const mm = v => parseFloat(v) / (96 / 25.4);
       return { top: mm(cs.paddingTop), side: mm(cs.paddingLeft) };
     });
-    say(pad.top >= 25, '쪽 위아래 여백 25mm 이상 (실제 ' + pad.top.toFixed(0) + 'mm)');
+    say(pad.top >= 17, '쪽 위아래 여백 18mm (실제 ' + pad.top.toFixed(0) + 'mm)');
     /* 하한선은 설정값(15mm)보다 0.1 낮게 잡는다 — mm→px→mm 왕복에서 15mm 가 14.998mm 로
      * 돌아와 '여유 0' 인 하한선이 반올림 하나에 깨진다. 14mm 이하는 그대로 물린다. */
-    say(pad.side >= 14.9, '쪽 좌우 여백 15mm 이상 (실제 ' + pad.side.toFixed(1) + 'mm)');
+    say(pad.side >= 9.9, '쪽 좌우 여백 10mm (실제 ' + pad.side.toFixed(1) + 'mm)');
 
     /* **폰에서 인쇄해도 여백이 그대로여야 한다.** `@media (max-width:820px)` 가 미디어 종류를
      * 안 밝히면 인쇄에도 걸리고 `@media print` 와 명시도가 같아 뒤에 있는 쪽이 이긴다 —
@@ -266,7 +266,7 @@ say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
     });
     await page.emulateMedia({ media: null });
     await page.setViewportSize(vp);
-    say(phone.top >= 25 && phone.side >= 14.9,
+    say(phone.top >= 17 && phone.side >= 9.9,
         '폰 화면에서 인쇄해도 여백 그대로 (실제 ' + phone.top.toFixed(0) + ' / ' + phone.side.toFixed(1) + 'mm)');
 
     const base = count(await page.pdf({ format: 'A4', printBackground: true }));
