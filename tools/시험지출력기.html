@@ -186,16 +186,17 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
   <label>문항 <input type="number" id="n" value="20" min="5" max="50"></label>
   <label>MX <input type="number" id="mx" value="50" min="0" max="100">%</label>
   <label>난이도 <select id="lv">
-    <option value="4,8,8" selected>기본 (하4·중8·상8)</option>
+    <option value="3,7,10" selected>기본 (하3·중7·상10)</option>
     <option value="8,7,5">쉽게 (하8·중7·상5)</option>
-    <option value="2,8,10">어렵게 (하2·중8·상10)</option>
-    <option value="0,8,12">매우 어렵게 (중8·상12)</option>
+    <option value="4,8,8">보통 (하4·중8·상8)</option>
+    <option value="1,6,13">어렵게 (하1·중6·상13)</option>
+    <option value="0,6,14">매우 어렵게 (중6·상14)</option>
     <option value="manual">직접 지정…</option>
   </select></label>
   <span id="lvman" hidden>
-    <label>하 <input type="number" id="lvL" value="4" min="0" max="50"></label>
-    <label>중 <input type="number" id="lvM" value="8" min="0" max="50"></label>
-    <label>상 <input type="number" id="lvH" value="8" min="0" max="50"></label>
+    <label>하 <input type="number" id="lvL" value="3" min="0" max="50"></label>
+    <label>중 <input type="number" id="lvM" value="7" min="0" max="50"></label>
+    <label>상 <input type="number" id="lvH" value="10" min="0" max="50"></label>
   </span>
   <label>코드 <input type="text" id="code" maxlength="4" placeholder="자동"></label>
   <button class="btn" id="gen">새 시험지</button>
@@ -285,7 +286,13 @@ var LV_ORDER = ['하', '중', '상'];
  * **`중` 은 8 아래로 내리지 않는다.** LG 비교 문항 74개가 **전부 '중'** 이라
  * `중 < LG_WANT(6)` 이면 "LG 6문항 고정" 이 그 자리에서 깨진다. 프리셋 넷이 모두
  * 중 7~8 인 이유이고, '직접 지정' 에서 낮추면 화면이 그 사실을 적는다(아래 `render`). */
-var LV_MIX = { '하': 4, '중': 8, '상': 8 };
+/* 2026-08-25 사장님 지시로 **웹 시험과 같은 기준**이 됐다 — 방향성 문서
+   (`urlquizgenerator_SKILL.md`)의 **상 50 · 중 35 · 하 15**. 20문항이면 10·7·3 으로
+   정확히 떨어진다. 옛 값 하4·중8·상8(상 40%)은 프리셋 '쉽게' 쪽으로 내려갔다.
+   *"이 시험은 붙는 시험이 아니다 … 목표는 평균 60점대"* 가 그 근거이고,
+   A4 를 매장 교육용이라 다르게 둘지 물었으나 **맞추라**는 답을 받았다.
+   **중은 6 아래로 내리지 않는다** — LG 비교 문항이 전부 '중' 이라 약속이 깨진다. */
+var LV_MIX = { '하': 3, '중': 7, '상': 10 };
 var LG_WANT = 6;   /* 2026-08-24 사장님 요청으로 4 → 6. 은행 68문항이라 두 시험지 기대 겹침 0.5개 */
 
 /** 고른 비중을 문항 수 n 에 맞춰 나눈다. mix 는 **비율**이라 합이 20 이 아니어도 된다

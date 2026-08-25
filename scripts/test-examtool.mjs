@@ -187,8 +187,8 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
  */
 {
   const n = L => a.qs.filter(q => q.lv === L).length;
-  say(n('하') === 4 && n('중') === 8 && n('상') === 8,
-      '난이도 하 4 / 중 8 / 상 8 (실제 ' + ['하','중','상'].map(L => L + ' ' + n(L)).join(' / ') + ')');
+  say(n('하') === 3 && n('중') === 7 && n('상') === 10,
+      '난이도 하 3 / 중 7 / 상 10 (실제 ' + ['하','중','상'].map(L => L + ' ' + n(L)).join(' / ') + ')');
   say(a.qs.every(q => ['하','중','상'].includes(q.lv)), '모든 문항에 난이도가 붙어 있다');
   /* 표식은 data 속성이라 인쇄에 안 나온다 — 지면 글자에 난이도가 섞이면 힌트가 된다 */
   say(!/(^|[^가-힣])(난이도|하급|중급|상급)([^가-힣]|$)/.test(a.examText),
@@ -196,7 +196,7 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
   /* 정답지에는 적는다(사장님 결정) — 채점·복기에 쓴다 */
   say(a.ansLv.filter(x => ['하','중','상'].includes(x)).length === 20,
       '정답지 20문항 전부에 난이도 표시 (실제 ' + a.ansLv.filter(x => ['하','중','상'].includes(x)).length + ')');
-  say(a.hint.indexOf('난이도 하 4 / 중 8 / 상 8') >= 0, '안내문이 난이도 구성을 밝힌다');
+  say(a.hint.indexOf('난이도 하 3 / 중 7 / 상 10') >= 0, '안내문이 난이도 구성을 밝힌다');
 }
 
 /*
@@ -230,11 +230,11 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
                lg: qs.filter(e => e.dataset.lg === '1').length };
     });
     const ok2 = c.total === 20 && c.ce === 10 && c.mx === 10 &&
-                c.ha === 4 && c.jung === 8 && c.sang === 8 && c.lg === 6;
+                c.ha === 3 && c.jung === 7 && c.sang === 10 && c.lg === 6;
     if (!ok2) bad.push(c.code + '(CE' + c.ce + '/MX' + c.mx + ' 하' + c.ha + '중' + c.jung +
                        '상' + c.sang + ' LG' + c.lg + ')');
   }
-  say(bad.length === 0, N + '번 뽑아 전부 구성이 맞다 (CE10/MX10 · 하4중8상8 · LG6)' +
+  say(bad.length === 0, N + '번 뽑아 전부 구성이 맞다 (CE10/MX10 · 하3중7상10 · LG6)' +
       (bad.length ? ' — 어긋난 것 ' + bad.length + '건: ' + bad.slice(0, 4).join(' ') : ''));
 }
 
@@ -300,7 +300,7 @@ say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
  * 프리셋 전부를 실제로 눌러 결과를 센다.
  */
 {
-  const want = { '4,8,8': [4, 8, 8], '8,7,5': [8, 7, 5], '2,8,10': [2, 8, 10], '0,8,12': [0, 8, 12] };
+  const want = { '3,7,10': [3, 7, 10], '8,7,5': [8, 7, 5], '4,8,8': [4, 8, 8], '1,6,13': [1, 6, 13], '0,6,14': [0, 6, 14] };
   for (const [val, [lo, mid, hi]] of Object.entries(want)) {
     await page.selectOption('#lv', val);
     await page.waitForTimeout(150);
@@ -334,7 +334,7 @@ say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
   say(z.qs.filter(q => q.lg).length === 0 && /난이도 “중” 인데/.test(z.hint),
     'LG 가 안 들어가는 배분이면 그 원인을 화면이 밝힌다');
 
-  await page.selectOption('#lv', '4,8,8');   /* 뒷 검사를 위해 기본값으로 되돌린다 */
+  await page.selectOption('#lv', '3,7,10');   /* 뒷 검사를 위해 기본값으로 되돌린다 */
   await page.waitForTimeout(150);
 }
 

@@ -186,16 +186,17 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
   <label>문항 <input type="number" id="n" value="20" min="5" max="50"></label>
   <label>MX <input type="number" id="mx" value="50" min="0" max="100">%</label>
   <label>난이도 <select id="lv">
-    <option value="4,8,8" selected>기본 (하4·중8·상8)</option>
+    <option value="3,7,10" selected>기본 (하3·중7·상10)</option>
     <option value="8,7,5">쉽게 (하8·중7·상5)</option>
-    <option value="2,8,10">어렵게 (하2·중8·상10)</option>
-    <option value="0,8,12">매우 어렵게 (중8·상12)</option>
+    <option value="4,8,8">보통 (하4·중8·상8)</option>
+    <option value="1,6,13">어렵게 (하1·중6·상13)</option>
+    <option value="0,6,14">매우 어렵게 (중6·상14)</option>
     <option value="manual">직접 지정…</option>
   </select></label>
   <span id="lvman" hidden>
-    <label>하 <input type="number" id="lvL" value="4" min="0" max="50"></label>
-    <label>중 <input type="number" id="lvM" value="8" min="0" max="50"></label>
-    <label>상 <input type="number" id="lvH" value="8" min="0" max="50"></label>
+    <label>하 <input type="number" id="lvL" value="3" min="0" max="50"></label>
+    <label>중 <input type="number" id="lvM" value="7" min="0" max="50"></label>
+    <label>상 <input type="number" id="lvH" value="10" min="0" max="50"></label>
   </span>
   <label>코드 <input type="text" id="code" maxlength="4" placeholder="자동"></label>
   <button class="btn" id="gen">새 시험지</button>
