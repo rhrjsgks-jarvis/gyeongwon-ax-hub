@@ -48,8 +48,31 @@ const OUTSIDE = [
   [/XMLHttpRequest/, 'XMLHttpRequest'],
 ];
 
+/* ## 웹 시험만 예외가 하나 있다 — 결과를 시트로 보내는 `fetch` (2026-08-25)
+ *
+ * 사장님 지시 문서(`urlquizgenerator_SKILL.md`)가 요구한 기능이라 뺄 수 없다.
+ * 그렇다고 검사를 무르면 **진짜 외부 의존이 들어와도 안 걸린다** — 그래서
+ * **무르는 대신 조건을 검사한다.** 셋을 다 지켜야 통과한다:
+ *
+ *   ① `fetch` 는 딱 한 번만 나온다
+ *   ② `SCRIPT_URL` 이 **빈 문자열로 선언**돼 있다 — 즉 기본값은 아무 데도 안 보낸다
+ *   ③ 그 `fetch` 가 `if (SCRIPT_URL)` 안에 있다
+ *
+ * 그래야 "받아서 열면 그대로 돈다"는 성질이 지켜진다. 시트로 보내려면 파일을 받은
+ * 쪽이 주소를 직접 넣어야 하고, 그건 **의식적인 선택**이다. */
+function beaconOk(html) {
+  const fetches = (html.match(/\bfetch\s*\(/g) || []).length;
+  const emptyUrl = /var\s+SCRIPT_URL\s*=\s*''\s*;/.test(html);
+  const guarded = /if\s*\(\s*SCRIPT_URL\s*\)/.test(html);
+  return fetches === 1 && emptyUrl && guarded;
+}
+
 export function assertSelfContained(html) {
-  const bad = OUTSIDE.filter(([re]) => re.test(html)).map(([, why]) => why);
+  const bad = OUTSIDE.filter(([re, why]) => {
+    if (!re.test(html)) return false;
+    if (why.startsWith('fetch') && beaconOk(html)) return false;   /* 위 세 조건을 지킨 보고용 */
+    return true;
+  }).map(([, why]) => why);
   if (bad.length) {
     throw new Error(
       '자립형이 아니다 — 메일로 받은 사람의 PC 에서 조용히 반쪽이 된다: ' + bad.join(' · ')
@@ -57,19 +80,26 @@ export function assertSelfContained(html) {
   }
 }
 
-export function buildExamTool() {
-  const tpl = fs.readFileSync(TPL, 'utf8');
-  const mark = '/*__QUIZ_BANK__*/null';
-  if (!tpl.includes(mark)) throw new Error('틀에서 ' + mark + ' 자리를 찾지 못했다');
+/** 틀에 **문제은행과 출제 로직**을 끼운다. A4 인쇄용과 웹 시험이 함께 쓴다 —
+ *  출제부를 두 벌로 두면 한쪽만 고쳤을 때 두 시험지가 다른 말을 한다. */
+export function fillTemplate(tplPath) {
+  const tpl = fs.readFileSync(tplPath, 'utf8');
+  const bankMark = '/*__QUIZ_BANK__*/null';
+  const coreMark = '/*__EXAM_CORE__*/';
+  if (!tpl.includes(bankMark)) throw new Error('틀에서 ' + bankMark + ' 자리를 찾지 못했다');
+  if (!tpl.includes(coreMark)) throw new Error('틀에서 ' + coreMark + ' 자리를 찾지 못했다');
 
   const bank = buildBank();
   /* `</script>` 가 문자열 안에 있으면 브라우저가 거기서 스크립트를 끊는다.
      은행 본문에 그런 글자가 들어올 일은 없지만, 들어오면 파일이 통째로 죽으므로 막는다. */
-  const json = JSON.stringify(bank).replace(/<\//g, '<\/');
-  const html = tpl.replace(mark, json);
+  const json = JSON.stringify(bank).replace(/<\//g, '<\\/');
+  const core = fs.readFileSync(path.join(path.dirname(TPL), 'lib', 'exam-core.js'), 'utf8');
+  const html = tpl.replace(bankMark, json).replace(coreMark, core);
   assertSelfContained(html);
   return { html, bank };
 }
+
+export function buildExamTool() { return fillTemplate(TPL); }
 
 /* 직접 실행했을 때만 파일을 쓴다 — 테스트는 buildExamTool() 만 불러 대조한다 */
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

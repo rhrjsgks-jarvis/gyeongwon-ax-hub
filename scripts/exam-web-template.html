@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SAMSUNG STORE 레벨업 챌린지</title>
+<style>
+/*
+ * **인터랙티브 웹 시험** (2026-08-25 사장님 지시 — `urlquizgenerator_SKILL.md` 의 최종 목표)
+ *
+ * A4 출력기(`시험지출력기.html`)와 **한 문제은행·한 출제 로직**을 쓴다.
+ * 다른 것은 출구뿐이다 — 저쪽은 종이, 이쪽은 타이머 달린 화면이다.
+ *
+ * ## 자립형이어야 한다
+ * 메일·링크로 받은 사람의 PC 에는 우리 서버가 없다. 문제은행을 파일 안에 담고
+ * 바깥을 부르지 않는다(`fetch`·CDN 금지). A4 출력기와 같은 규칙이고 검사가 지킨다.
+ *
+ * ## 사번을 받는 이유
+ * 누가 몇 점인지 남아야 교육이 된다. 8자리 숫자만 받고 이름은 받지 않는다 —
+ * 이 파일은 링크로 퍼질 수 있어 개인정보를 최소로 둔다.
+ *
+ * ## 채점 결과를 시트로 보낼 수 있다
+ * `SCRIPT_URL` 이 비어 있으면 화면에만 보여주고 아무 데도 안 보낸다(기본값).
+ */
+:root{ --navy:#1428A0; --ink:#111; --sub:#5b6070; --line:#e2e5ec; --bg:#f5f6f9;
+       --ok:#166534; --no:#991b1b; --warn:#b45309; }
+*{box-sizing:border-box}
+body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,
+     'Malgun Gothic',sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;
+     -webkit-text-size-adjust:100%}
+.wrap{max-width:700px;margin:0 auto;padding:0 16px 80px}
+
+/* ── 머리 ── 타이머가 늘 보여야 하므로 붙여 둔다 */
+header{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;
+       box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.hd{max-width:700px;margin:0 auto;padding:11px 16px;display:flex;align-items:center;gap:12px}
+.hd .ttl{font-size:15px;font-weight:800;letter-spacing:-.02em;flex:1;min-width:0;
+         overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hd .who{font-size:12px;opacity:.85;white-space:nowrap}
+#timer{font-variant-numeric:tabular-nums;font-size:17px;font-weight:800;letter-spacing:.04em;
+       padding:3px 9px;border-radius:7px;background:rgba(255,255,255,.16);white-space:nowrap}
+#timer.warn{background:#F59E0B;color:#3b2500}
+#timer.danger{background:#DC2626;animation:blink 1s steps(2,start) infinite}
+@keyframes blink{50%{opacity:.35}}
+
+.prog{max-width:700px;margin:0 auto;padding:7px 16px;display:flex;align-items:center;gap:10px;
+      font-size:12.5px;background:#0f1f7a;color:#fff}
+.prog .bar{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+.prog .bar i{display:block;height:100%;background:#fff;width:0;transition:width .25s}
+
+/* ── 인트로 ── 전체를 덮어 시험 전에는 문항이 보이지 않게 한다 */
+#intro{position:fixed;inset:0;z-index:50;background:var(--bg);overflow:auto;
+       display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.card{background:#fff;border-radius:14px;box-shadow:0 6px 30px rgba(20,40,160,.10);
+      padding:28px 24px;max-width:520px;width:100%}
+.card h1{font-size:22px;margin:0 0 4px;color:var(--navy);letter-spacing:-.03em}
+.card .sub{font-size:13px;color:var(--sub);margin:0 0 18px}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 18px;font-size:13.5px}
+.card dt{color:var(--sub)}
+.card dd{margin:0;font-weight:600}
+.card label{display:block;font-size:13px;font-weight:700;margin:0 0 6px}
+.card input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:9px;
+            font-size:16px;font-family:inherit;letter-spacing:.14em;text-align:center}
+.card input:focus{outline:0;border-color:var(--navy)}
+.err{color:var(--no);font-size:12.5px;min-height:18px;margin:6px 0 0}
+.go{width:100%;margin-top:14px;padding:13px;border:0;border-radius:9px;background:var(--navy);
+    color:#fff;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer}
+.go:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:12px;color:var(--sub);margin-top:14px;line-height:1.6}
+
+/* ── 문항 ── */
+.q{background:#fff;border-radius:12px;padding:18px 18px 14px;margin:14px 0;
+   box-shadow:0 1px 4px rgba(20,40,160,.06)}
+.q .qh{display:flex;gap:9px;font-size:16px;font-weight:700;line-height:1.5;margin-bottom:12px}
+.q .qn{color:var(--navy);min-width:26px}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;border:1.5px solid var(--line);
+     border-radius:9px;margin:0 0 7px;cursor:pointer;font-size:14.5px;background:#fff}
+.opt:hover{border-color:#b9c0d8}
+.opt.sel{border-color:var(--navy);background:#eef1ff}
+.opt .no{color:var(--sub);font-weight:700;flex-shrink:0}
+.opt.right{border-color:var(--ok);background:#f0fdf4}
+.opt.wrong{border-color:var(--no);background:#fef2f2}
+.exp{margin-top:10px;padding:11px 12px;background:#f8f9fc;border-radius:8px;font-size:13px;
+     color:var(--sub);line-height:1.6}
+.exp b{color:var(--navy)}
+
+.submit{width:100%;padding:15px;border:0;border-radius:11px;background:var(--navy);color:#fff;
+        font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;margin:18px 0}
+.submit:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── 결과 ── */
+.result{background:#fff;border-radius:14px;padding:26px 22px;margin:18px 0;text-align:center;
+        box-shadow:0 3px 16px rgba(20,40,160,.08)}
+.result .score{font-size:44px;font-weight:900;color:var(--navy);letter-spacing:-.04em;line-height:1.1}
+.result .grade{font-size:16px;font-weight:800;margin:6px 0 14px}
+.result dl{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:13px;text-align:left;
+           max-width:280px;margin:0 auto}
+.result dt{color:var(--sub)}
+.result dd{margin:0;font-weight:600}
+.again{margin-top:18px;padding:11px 22px;border:1.5px solid var(--navy);border-radius:9px;
+       background:#fff;color:var(--navy);font-weight:800;font-family:inherit;font-size:14px;cursor:pointer}
+h2.sec{font-size:15px;margin:26px 0 4px;color:var(--navy)}
+</style>
+</head>
+<body>
+
+<header><div class="hd">
+  <span class="ttl">SAMSUNG STORE 레벨업 챌린지</span>
+  <span class="who" id="who"></span>
+  <span id="timer">--:--</span>
+</div></header>
+<div class="prog" id="prog" hidden>
+  <span id="progtxt">답변 0 / 0</span>
+  <span class="bar"><i id="progbar"></i></span>
+</div>
+
+<div id="intro">
+  <div class="card">
+    <h1>SAMSUNG STORE 레벨업 챌린지</h1>
+    <p class="sub">경원영업팀 상담매니저 역량 평가</p>
+    <dl>
+      <dt>문항</dt><dd id="i-n">–</dd>
+      <dt>제한 시간</dt><dd id="i-t">–</dd>
+      <dt>구성</dt><dd id="i-c">–</dd>
+      <dt>시험지 코드</dt><dd id="i-code">–</dd>
+    </dl>
+    <label for="emp">사번 8자리</label>
+    <input id="emp" inputmode="numeric" maxlength="8" placeholder="00000000"
+           autocomplete="off" autocorrect="off" spellcheck="false">
+    <p class="err" id="emperr"></p>
+    <button class="go" id="start" disabled>시험 시작하기</button>
+    <p class="note">
+      시작을 누르면 타이머가 돌아갑니다. 시간이 끝나면 <b>자동으로 제출</b>됩니다.<br>
+      문항과 보기 순서는 응시자마다 다릅니다. 중간에 새로고침하면 처음부터 다시 시작합니다.
+    </p>
+  </div>
+</div>
+
+<div class="wrap"><div id="paper"></div></div>
+
+<noscript><div class="wrap"><div class="card" style="margin-top:24px">
+  <h1>자바스크립트를 켜 주세요</h1>
+  <p class="sub">시험은 열 때마다 새로 뽑으므로 자바스크립트가 필요합니다.</p>
+</div></div></noscript>
+
+<script>
+/* 문제은행 — 빌드가 test-app.html 의 QB 에서 읽어 넣는다(사본이 아니라 파생물) */
+var BANK = /*__QUIZ_BANK__*/null;
+
+/* 출제 로직은 scripts/lib/exam-core.js 한 곳에 있다 — A4 출력기와 함께 쓰므로
+   여기에 사본을 두지 않는다. 빌드가 아래 자리에 통째로 끼운다. */
+/*__EXAM_CORE__*/
+
+/* ── 시험 설정 ──
+   난이도는 `urlquizgenerator_SKILL.md` 가 정한 **상 50 · 중 35 · 하 15** 다.
+   *"이 시험은 붙는 시험이 아니다 … 목표는 평균 60점대"* 라는 것이 그 근거이고,
+   A4 출력기(하4·중8·상8)와 값이 다른 것은 **의도한 것**이다 —
+   저쪽은 매장 교육용이고 이쪽은 평가용이다. */
+var EXAM_COUNT = 25;
+var EXAM_MIN = 30;
+var EXAM_MIX = { '하': 15, '중': 35, '상': 50 };
+var MX_PCT = 50;
+var SCRIPT_URL = '';   /* Google Apps Script 주소. 비어 있으면 아무 데도 안 보낸다 */
+
+var code = newCode(), picked = null, chosen = {}, submitted = false;
+var left = EXAM_MIN * 60, tick = null, startedAt = null;
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+  });
+}
+var NO = ['①','②','③','④','⑤'];
+var $ = function(id){ return document.getElementById(id); };
+
+/* ── 인트로 ── */
+function setup(){
+  if (!BANK || !BANK.items || !BANK.items.length){
+    $('i-n').textContent = '문제은행이 비어 있습니다 — 이 파일은 틀입니다.';
+    return;
+  }
+  var rnd = rng(seedFrom(code));
+  picked = pick(EXAM_COUNT, MX_PCT, rnd, EXAM_MIX);
+  /* 보기 순서도 응시자마다 섞는다 — 같은 문항이라도 답 위치가 달라야 한다 */
+  picked.list = picked.list.map(function(q){
+    var idx = shuffle(q.opts.map(function(_, i){ return i; }), rnd);
+    return { q:q.q, exp:q.exp, lv:q.lv, lg:q.lg, cat:q.cat,
+             opts: idx.map(function(i){ return q.opts[i]; }),
+             ans: idx.indexOf(q.ans) };
+  });
+  $('i-n').textContent = picked.list.length + '문항 (은행 ' + BANK.total + '문항에서 추첨)';
+  $('i-t').textContent = EXAM_MIN + '분';
+  $('i-c').textContent = 'CE ' + picked.gotCe + ' / MX ' + picked.gotMx +
+    ' · 난이도 하 ' + (picked.gotLv['하']||0) + ' / 중 ' + (picked.gotLv['중']||0) +
+    ' / 상 ' + (picked.gotLv['상']||0) + ' · 타사비교 ' + picked.gotLg;
+  $('i-code').textContent = code;
+}
+
+$('emp').addEventListener('input', function(){
+  this.value = this.value.replace(/\D/g, '').slice(0, 8);
+  var ok = this.value.length === 8;
+  $('start').disabled = !ok;
+  $('emperr').textContent = this.value.length && !ok ? '사번은 숫자 8자리입니다.' : '';
+});
+$('emp').addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !$('start').disabled) start();
+});
+$('start').addEventListener('click', start);
+
+function start(){
+  if (!picked) return;
+  startedAt = new Date();
+  $('who').textContent = $('emp').value;
+  $('intro').hidden = true; $('intro').style.display = 'none';
+  $('prog').hidden = false;
+  render();
+  tick = setInterval(step, 1000);
+  step();
+}
+
+/* ── 타이머 ── 0 이 되면 자동 제출한다(문서 요구) */
+function step(){
+  var m = Math.floor(left / 60), s = left % 60;
+  var el = $('timer');
+  el.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  el.className = left <= 300 ? 'danger' : (left <= 600 ? 'warn' : '');
+  if (left <= 0){ clearInterval(tick); submit(true); return; }
+  left--;
+}
+
+/* ── 문항 ── 한 페이지 스크롤(페이지네이션 없음) */
+function render(){
+  var h = '';
+  picked.list.forEach(function(q, i){
+    h += '<div class="q" data-i="' + i + '" data-lv="' + esc(q.lv) + '"' +
+         (q.lg ? ' data-lg="1"' : '') + '>' +
+         '<div class="qh"><span class="qn">' + (i + 1) + '.</span><span>' + esc(q.q) + '</span></div>';
+    q.opts.forEach(function(o, j){
+      h += '<div class="opt" data-i="' + i + '" data-j="' + j + '">' +
+           '<span class="no">' + NO[j] + '</span><span>' + esc(o) + '</span></div>';
+    });
+    h += '</div>';
+  });
+  h += '<button class="submit" id="sub" disabled>제출하기</button>';
+  $('paper').innerHTML = h;
+  $('sub').addEventListener('click', function(){ submit(false); });
+  progress();
+}
+
+document.addEventListener('click', function(e){
+  var el = e.target.closest ? e.target.closest('.opt') : null;
+  if (!el || submitted) return;
+  var i = el.getAttribute('data-i');
+  [].forEach.call(document.querySelectorAll('.opt[data-i="' + i + '"]'),
+    function(x){ x.classList.remove('sel'); });
+  el.classList.add('sel');
+  chosen[i] = +el.getAttribute('data-j');
+  progress();
+});
+
+function progress(){
+  var n = Object.keys(chosen).length, t = picked.list.length;
+  $('progtxt').textContent = '답변 ' + n + ' / ' + t;
+  $('progbar').style.width = (n / t * 100) + '%';
+  var b = $('sub'); if (b) b.disabled = n < t;    /* 다 풀어야 제출된다 */
+}
+
+/* ── 채점 ── */
+function submit(auto){
+  if (submitted) return;
+  submitted = true;
+  clearInterval(tick);
+  var correct = 0;
+  picked.list.forEach(function(q, i){
+    var mine = chosen[i];
+    if (mine === q.ans) correct++;
+    var box = document.querySelector('.q[data-i="' + i + '"]');
+    [].forEach.call(box.querySelectorAll('.opt'), function(o){
+      var j = +o.getAttribute('data-j');
+      o.classList.remove('sel');
+      if (j === q.ans) o.classList.add('right');
+      else if (j === mine) o.classList.add('wrong');
+    });
+    /* 틀린 문항에만 해설을 붙인다 — 다 맞은 문항까지 펴면 결과가 안 읽힌다 */
+    if (mine !== q.ans && q.exp){
+      var d = document.createElement('div');
+      d.className = 'exp';
+      d.innerHTML = '<b>정답 ' + NO[q.ans] + '</b> · ' + esc(q.exp);
+      box.appendChild(d);
+    }
+  });
+  var total = picked.list.length, pctv = Math.round(correct / total * 100);
+  var grade = pctv >= 90 ? '완벽합니다' : pctv >= 75 ? '우수합니다'
+            : pctv >= 60 ? '양호합니다' : '더 노력이 필요합니다';
+  var used = Math.max(0, Math.round((new Date() - startedAt) / 1000));
+  var um = Math.floor(used / 60), us = used % 60;
+
+  var r = document.createElement('div');
+  r.className = 'result';
+  r.id = 'result';
+  r.innerHTML = '<div class="score">' + pctv + '점</div>' +
+    '<div class="grade">' + grade + '</div>' +
+    '<dl><dt>사번</dt><dd>' + esc($('emp').value) + '</dd>' +
+    '<dt>정답</dt><dd>' + correct + ' / ' + total + '</dd>' +
+    '<dt>소요 시간</dt><dd>' + um + '분 ' + us + '초' + (auto ? ' (시간 종료)' : '') + '</dd>' +
+    '<dt>응시 일시</dt><dd>' + startedAt.toLocaleString('ko-KR') + '</dd>' +
+    '<dt>시험지 코드</dt><dd>' + code + '</dd></dl>' +
+    '<button class="again" id="again">다시 풀기</button>';
+  $('paper').insertBefore(r, $('paper').firstChild);
+  var sb = $('sub'); if (sb) sb.remove();
+  $('again').addEventListener('click', function(){ location.reload(); });
+  var h2 = document.createElement('h2');
+  h2.className = 'sec'; h2.textContent = '문항별 결과';
+  $('paper').insertBefore(h2, r.nextSibling);
+  $('timer').textContent = '종료';
+  $('timer').className = '';
+  window.scrollTo(0, 0);
+
+  /* 시트 기록 — 주소가 없으면 아무 데도 보내지 않는다(기본값) */
+  if (SCRIPT_URL){
+    try {
+      fetch(SCRIPT_URL + '?' + new URLSearchParams({
+        empId: $('emp').value, score: pctv + '점', correct: correct, total: total,
+        code: code, datetime: startedAt.toISOString(), elapsed: used
+      }), { method:'GET', mode:'no-cors' }).catch(function(){});
+    } catch (e) {}
+  }
+}
+
+setup();
+</script>
+</body>
+</html>
