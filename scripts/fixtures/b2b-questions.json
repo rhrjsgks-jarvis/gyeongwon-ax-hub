@@ -1,7 +1,7 @@
 {
  "_note": "SOHO몰(B2B) 사양에서 자동 생성한 수치 문항. 오답은 형제 모델 실제값(세대 교차) 또는 근사값. 값은 전부 제품 지면 원문이며 지어낸 것이 없다. npm run build:b2bq 로 다시 만든다.",
  "_source": "scripts/fixtures/soho-catalog.json + SOHO몰 제품 지면 사양",
- "count": 439,
+ "count": 461,
  "items": [
   {
    "cat": "에어컨",
@@ -3659,6 +3659,132 @@
   },
   {
    "cat": "갤럭시북",
+   "q": "삼성 에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)의 제품 무게 (스탠드 포함)으로 올바른 것은?",
+   "opts": [
+    "3.5 kg",
+    "7.4 kg",
+    "4.1 kg",
+    "3.10 kg"
+   ],
+   "ans": 0,
+   "exp": "에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)의 제품 무게 (스탠드 포함)은 3.5 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)의 제품 무게 (스탠드 포함)으로 올바른 것은?",
+   "opts": [
+    "7.4 kg",
+    "3.5 kg",
+    "4.1 kg",
+    "3.10 kg"
+   ],
+   "ans": 0,
+   "exp": "초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)의 제품 무게 (스탠드 포함)은 7.4 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 QHD 오디세이 G5 (LS27FG504) 180Hz(LS27FG504EKXKR)의 제품 무게 (스탠드 포함)으로 올바른 것은?",
+   "opts": [
+    "4.1 kg",
+    "3.5 kg",
+    "7.4 kg",
+    "3.10 kg"
+   ],
+   "ans": 0,
+   "exp": "QHD 오디세이 G5 (LS27FG504) 180Hz(LS27FG504EKXKR)의 제품 무게 (스탠드 포함)은 4.1 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)의 제품 무게 (스탠드 제외)로 올바른 것은?",
+   "opts": [
+    "2.3 kg",
+    "4.7 kg",
+    "3.7 kg",
+    "2.4 kg"
+   ],
+   "ans": 0,
+   "exp": "에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)의 제품 무게 (스탠드 제외)은 2.3 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 뷰피니티 S8 S80UH 4K USB-C (LS32H802U)(LS32H802UAKXKR)의 제품 무게 (스탠드 제외)로 올바른 것은?",
+   "opts": [
+    "4.7 kg",
+    "2.3 kg",
+    "3.7 kg",
+    "2.4 kg"
+   ],
+   "ans": 0,
+   "exp": "뷰피니티 S8 S80UH 4K USB-C (LS32H802U)(LS32H802UAKXKR)의 제품 무게 (스탠드 제외)은 4.7 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 오디세이 G5(G55C) (68.4 cm)(LS27CG554EKXKR)의 제품 무게 (스탠드 제외)로 올바른 것은?",
+   "opts": [
+    "3.7 kg",
+    "2.3 kg",
+    "4.7 kg",
+    "2.4 kg"
+   ],
+   "ans": 0,
+   "exp": "오디세이 G5(G55C) (68.4 cm)(LS27CG554EKXKR)의 제품 무게 (스탠드 제외)은 3.7 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)의 무게 (박스 포장)으로 올바른 것은?",
+   "opts": [
+    "4.8 kg",
+    "10.7 kg",
+    "5.7 kg",
+    "4.30 kg"
+   ],
+   "ans": 0,
+   "exp": "에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)의 무게 (박스 포장)은 4.8 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)의 무게 (박스 포장)으로 올바른 것은?",
+   "opts": [
+    "10.7 kg",
+    "4.8 kg",
+    "5.7 kg",
+    "4.30 kg"
+   ],
+   "ans": 0,
+   "exp": "초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)의 무게 (박스 포장)은 10.7 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 오디세이 G5 G53F QHD 200Hz (LS27FG530)(LS27FG530EKXKR)의 무게 (박스 포장)으로 올바른 것은?",
+   "opts": [
+    "5.7 kg",
+    "4.8 kg",
+    "10.7 kg",
+    "4.30 kg"
+   ],
+   "ans": 0,
+   "exp": "오디세이 G5 G53F QHD 200Hz (LS27FG530)(LS27FG530EKXKR)의 무게 (박스 포장)은 5.7 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
    "q": "삼성 오디세이 Neo G9(G95NC) (144.8 cm)(LS57CG950NKXKR)의 전원 케이블 길이로 올바른 것은?",
    "opts": [
     "3.0 m",
@@ -4214,6 +4340,48 @@
    ],
    "ans": 0,
    "exp": "갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC(NT960UJH-XC94Y)의 소비전력 (kWh)은 4.2이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 갤럭시 북5 (39.6cm) Core™ Ultra 7 / 512GB NVMe SSD(NT751XHD-KR715)의 무게 (kg)로 올바른 것은?",
+   "opts": [
+    "1.24",
+    "1.55",
+    "1.89",
+    "1.59"
+   ],
+   "ans": 1,
+   "exp": "갤럭시 북5 (39.6cm) Core™ Ultra 7 / 512GB NVMe SSD(NT751XHD-KR715)의 무게 (kg)은 1.55이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC(NT940XJG-KC51G)의 무게 (kg)로 올바른 것은?",
+   "opts": [
+    "1.55",
+    "1.24",
+    "1.89",
+    "1.59"
+   ],
+   "ans": 1,
+   "exp": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC(NT940XJG-KC51G)의 무게 (kg)은 1.24이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "삼성 갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC(NT960UJH-XC94Y)의 무게 (kg)로 올바른 것은?",
+   "opts": [
+    "1.55",
+    "1.89",
+    "1.24",
+    "1.59"
+   ],
+   "ans": 1,
+   "exp": "갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC(NT960UJH-XC94Y)의 무게 (kg)은 1.89이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
    "lv": "상",
    "b2b": 1
   },
@@ -4947,6 +5115,48 @@
   },
   {
    "cat": "갤럭시탭",
+   "q": "삼성 갤럭시 탭 A11+ (Wi-Fi)(SM-X230NZALKOO)의 무게 (g)로 올바른 것은?",
+   "opts": [
+    "477",
+    "497",
+    "664",
+    "469"
+   ],
+   "ans": 0,
+   "exp": "갤럭시 탭 A11+ (Wi-Fi)(SM-X230NZALKOO)의 무게 (g)은 477이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시탭",
+   "q": "삼성 갤럭시 탭 S10 FE (Wi-Fi)(SM-X520NLBEKOO)의 무게 (g)로 올바른 것은?",
+   "opts": [
+    "497",
+    "477",
+    "664",
+    "469"
+   ],
+   "ans": 0,
+   "exp": "갤럭시 탭 S10 FE (Wi-Fi)(SM-X520NLBEKOO)의 무게 (g)은 497이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시탭",
+   "q": "삼성 갤럭시 탭 S10 FE+ (Wi-Fi)(SM-X620NLBEKOO)의 무게 (g)로 올바른 것은?",
+   "opts": [
+    "664",
+    "477",
+    "497",
+    "469"
+   ],
+   "ans": 0,
+   "exp": "갤럭시 탭 S10 FE+ (Wi-Fi)(SM-X620NLBEKOO)의 무게 (g)은 664이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시탭",
    "q": "삼성 갤럭시 탭 A11+ (Wi-Fi)(SM-X230NZALKOO)의 배터리 용량 (mAh, Typical)으로 올바른 것은?",
    "opts": [
     "8400",
@@ -5110,6 +5320,34 @@
    ],
    "ans": 1,
    "exp": "Bespoke AI 스팀 울트라 자동 급배수 (리폼비 포함)(VR90F01SAGS)의 CPU 종류은 Qualcomm QRB4210이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "청소기",
+   "q": "삼성 Bespoke AI 스팀 울트라(VR90F01AAG)의 총 중량(Gross)으로 올바른 것은?",
+   "opts": [
+    "18.1 kg",
+    "21.5 kg",
+    "23.2 kg",
+    "18.9 kg"
+   ],
+   "ans": 1,
+   "exp": "Bespoke AI 스팀 울트라(VR90F01AAG)의 총 중량(Gross)은 21.5 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
+   "lv": "상",
+   "b2b": 1
+  },
+  {
+   "cat": "청소기",
+   "q": "삼성 Bespoke AI 스팀 울트라 자동 급배수 (리폼비 포함)(VR90F01SAGS)의 총 중량(Gross)으로 올바른 것은?",
+   "opts": [
+    "21.5 kg",
+    "19.5 kg",
+    "18.1 kg",
+    "15.9 kg"
+   ],
+   "ans": 2,
+   "exp": "Bespoke AI 스팀 울트라 자동 급배수 (리폼비 포함)(VR90F01SAGS)의 총 중량(Gross)은 18.1 kg이다. 오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)",
    "lv": "상",
    "b2b": 1
   },
@@ -5941,6 +6179,48 @@
   },
   {
    "cat": "갤럭시북",
+   "q": "다음 중 제품 무게 (스탠드 포함)이 가장 큰 모델은?",
+   "opts": [
+    "에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)",
+    "초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)",
+    "QHD 오디세이 G5 (LS27FG504) 180Hz(LS27FG504EKXKR)",
+    "에센셜모니터 S30GD (68.6cm)(LS27D304GAKXKR)"
+   ],
+   "ans": 1,
+   "exp": "LS24D404GAKXKR 3.5 kg / LS27C900PAKXKR 7.4 kg / LS27FG504EKXKR 4.1 kg / LS27D304GAKXKR 3.10 kg. 가장 큰 것은 LS27C900PAKXKR(7.4 kg)다. (근거: SOHO몰 제품 지면)",
+   "lv": "중",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "다음 중 제품 무게 (스탠드 제외)가 가장 큰 모델은?",
+   "opts": [
+    "에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)",
+    "뷰피니티 S8 S80UH 4K USB-C (LS32H802U)(LS32H802UAKXKR)",
+    "오디세이 G5(G55C) (68.4 cm)(LS27CG554EKXKR)",
+    "에센셜모니터 S30GD (68.6cm)(LS27D304GAKXKR)"
+   ],
+   "ans": 1,
+   "exp": "LS24D404GAKXKR 2.3 kg / LS32H802UAKXKR 4.7 kg / LS27CG554EKXKR 3.7 kg / LS27D304GAKXKR 2.4 kg. 가장 큰 것은 LS32H802UAKXKR(4.7 kg)다. (근거: SOHO몰 제품 지면)",
+   "lv": "중",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "다음 중 무게 (박스 포장)이 가장 큰 모델은?",
+   "opts": [
+    "에센셜모니터 S40GD (60.4cm)(LS24D404GAKXKR)",
+    "초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)",
+    "오디세이 G5 G53F QHD 200Hz (LS27FG530)(LS27FG530EKXKR)",
+    "에센셜모니터 S30GD (68.6cm)(LS27D304GAKXKR)"
+   ],
+   "ans": 1,
+   "exp": "LS24D404GAKXKR 4.8 kg / LS27C900PAKXKR 10.7 kg / LS27FG530EKXKR 5.7 kg / LS27D304GAKXKR 4.30 kg. 가장 큰 것은 LS27C900PAKXKR(10.7 kg)다. (근거: SOHO몰 제품 지면)",
+   "lv": "중",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
    "q": "다음 중 색재현성(Color Gamut, sRGB Coverage)이 가장 큰 모델은?",
    "opts": [
     "초고해상도 뷰피니티 S9(S90PC) (68.4cm)(LS27C900PAKXKR)",
@@ -5992,6 +6272,20 @@
    ],
    "ans": 2,
    "exp": "NT751XHD-KR715 61.2 / NT940XJG-KC51G 67.18 / NT960UJH-XC94Y 80.20 / NT960XJG-KC71G 78.07. 가장 큰 것은 NT960UJH-XC94Y(80.20)다. (근거: SOHO몰 제품 지면)",
+   "lv": "중",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시북",
+   "q": "다음 중 무게 (kg)가 가장 큰 모델은?",
+   "opts": [
+    "갤럭시 북5 (39.6cm) Core™ Ultra 7 / 512GB NVMe SSD(NT751XHD-KR715)",
+    "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC(NT940XJG-KC51G)",
+    "갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC(NT960UJH-XC94Y)",
+    "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 512GB NVMe SSD,  <br>Copilot+ PC(NT960XJG-KC71G)"
+   ],
+   "ans": 2,
+   "exp": "NT751XHD-KR715 1.55 / NT940XJG-KC51G 1.24 / NT960UJH-XC94Y 1.89 / NT960XJG-KC71G 1.59. 가장 큰 것은 NT960UJH-XC94Y(1.89)다. (근거: SOHO몰 제품 지면)",
    "lv": "중",
    "b2b": 1
   },
@@ -6118,6 +6412,20 @@
    ],
    "ans": 3,
    "exp": "SM-X230NZAFKOO 233.2GB / SM-X230NZALKOO 105.0GB / SM-X620NLBAKOO 106.2GB / SM-X620NLBEKOO 233.7GB. 가장 큰 것은 SM-X620NLBEKOO(233.7GB)다. (근거: SOHO몰 제품 지면)",
+   "lv": "중",
+   "b2b": 1
+  },
+  {
+   "cat": "갤럭시탭",
+   "q": "다음 중 무게 (g)가 가장 큰 모델은?",
+   "opts": [
+    "갤럭시 탭 A11+ (Wi-Fi)(SM-X230NZALKOO)",
+    "갤럭시 탭 S10 FE (Wi-Fi)(SM-X520NLBEKOO)",
+    "갤럭시 탭 S10 FE+ (Wi-Fi)(SM-X620NLBEKOO)",
+    "갤럭시 탭 S11 (Wi-Fi)(SM-X730NZSEKOO)"
+   ],
+   "ans": 2,
+   "exp": "SM-X230NZALKOO 477 / SM-X520NLBEKOO 497 / SM-X620NLBEKOO 664 / SM-X730NZSEKOO 469. 가장 큰 것은 SM-X620NLBEKOO(664)다. (근거: SOHO몰 제품 지면)",
    "lv": "중",
    "b2b": 1
   },
