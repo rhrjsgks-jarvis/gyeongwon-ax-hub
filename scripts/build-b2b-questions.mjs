@@ -47,7 +47,14 @@ const CATMAP = {
    `제조국` · `제조 국가` 처럼 변형이 많다. */
 const SKIP = ['제조자', '수입자', '제조국', '출시년월', '품질보증', 'A/S책임자', 'AS책임자',
   'KC인증', '인증기관', '인증번호', '인증구분', '제품인증', '제품명', '모델명', '색상',
-  '전화번호', '동일모델'];
+  '전화번호', '동일모델',
+  /* **무게·중량은 안 낸다** (2026-08-25 사장님 지시 — *"중량을 물어보는 문항은 제외해주세요
+     실제 업무와 맞지 않습니다"*). 상담에서 쓰는 값이 아니다 — 상담사가 답해야 하는 것은
+     "들어가는가"(치수)와 "얼마나 쓰는가"(용량·전력)이지 몇 kg 인지가 아니다.
+     라벨 57종을 전수로 훑어 **전부 진짜 무게**임을 확인하고 뺐다(65문항).
+     프린터의 `급지 지원용지 무게` 는 용지 평량이라 다른 값이지만, 프린터는 애초에
+     문제은행 카테고리가 없어 문항이 만들어지지 않는다. */
+  '무게', '중량'];
 const flat = s => String(s).replace(/\s/g, '');
 const skipLabel = k => SKIP.some(x => flat(k).includes(flat(x)));
 
@@ -58,6 +65,14 @@ const numOf = v => (String(v).match(/\d+(?:[.,]\d+)?/g) || []);
  *  **마지막 글자가 아니라 마지막 한글을 본다** — 라벨이 `운전전류 (최대)` 처럼
  *  괄호로 끝나면 `)` 를 보고 판정해 `(최대)으로` 가 된다. 사람은 `최대` 까지 읽고
  *  조사를 붙이므로 꼬리의 괄호·기호·공백을 걷어낸 뒤 판정한다. */
+/** 받침에 따라 . euro 와 같은 이유로 **마지막 한글**을 본다 —
+ *   가  으로 나갔다. */
+const iga = w => {
+  const m = String(w).match(/[가-힣](?=[^가-힣]*$)/);
+  if (!m) return '이';
+  return (m[0].charCodeAt(0) - 0xAC00) % 28 ? '이' : '가';
+};
+
 const euro = w => {
   const m = String(w).match(/[가-힣](?=[^가-힣]*$)/);
   if (!m) return '으로';                              /* 한글이 없으면(영문·숫자) 읽는 소리가 갈린다 */
@@ -150,6 +165,115 @@ export function buildB2BQuestions() {
       }
     }
   }
+  /* ── 값 비교 문항 ── `다음 중 …이 가장 큰 모델은?`
+   *
+   * 수치 문항이 전부 '상' 이라 은행이 상 쪽으로 쏠린다. 부정형은 '중' 이라
+   * (용어정리의 *"중 = 어떻게 다른가 · 비교·부정형"*) 균형을 되돌리는데,
+   * **셀링포인트 부정형은 접었다** — 아래 절에 이유를 적어 두었다.
+   * 비교형은 값이 넷 다 실측이라 **단정하는 것이 없다.** */
+  for (const [qbCat, labels] of Object.entries(pool)) {
+    for (const [label, rows] of Object.entries(labels)) {
+      const uniq = [...new Map(rows.map(r => [String(r.val).replace(/\s/g, ''), r])).values()];
+      if (uniq.length < 4) continue;
+      const num = v => parseFloat((numOf(v)[0] || '0').replace(/,/g, ''));
+      const four = uniq.slice(0, 4);
+      const vals = four.map(r => num(r.val));
+      const top = Math.max(...vals);
+      if (vals.filter(v => v === top).length !== 1) continue;   /* 최대가 둘이면 정답이 둘 */
+      const ans = vals.indexOf(top);
+      out.push({
+        cat: qbCat,
+        q: `다음 중 ${label}${iga(label)} 가장 큰 모델은?`,
+        opts: four.map(r => `${r.name}(${r.code})`),
+        ans,
+        exp: four.map(r => `${r.code} ${r.val}`).join(' / ')
+           + `. 가장 큰 것은 ${four[ans].code}(${four[ans].val})다. (근거: SOHO몰 제품 지면)`,
+        lv: '중',            /* 용어정리의 "중 = 어떻게 다른가" */
+        b2b: 1,
+      });
+    }
+  }
+
+  /* ── 셀링포인트 부정형은 **만들지 않는다** (2026-08-25) ──
+   * 만들어 보고 접었다. `다른 모델의 셀링포인트`를 오답으로 넣었더니 —
+   *   · `실용적인 용량과 심플한 디자인` 이 846L 양문형의 정답(=아닌 것)이 됐다
+   *   · 모니터 문항의 정답이 `빠른 IPS` 인데 **그 모니터도 IPS 일 수 있다**
+   * 방향성 문서가 못 박은 그것이다 — *"원문에서 확인하지 못한 기능은 출제하지 않는다.
+   * 없는 것을 '없음'이라고 단정할 수 없다."* **"안 내세운다" 와 "없다" 는 다르다.**
+   * C형(LG)이 성립하는 이유는 오답이 **상대 브랜드 고유 기술명**이라 우리 제품에
+   * 없다는 것이 확인되기 때문인데, 같은 브랜드 안에서는 그 확인이 안 된다.
+   * 아래는 그때 만든 것이고 **되살리지 말 것.**
+   *
+   * ── 접은 코드 ──
+   * 
+   *    * 수치 문항이 전부 '상' 이라 은행이 상 쪽으로 쏠린다(중 19%). 부정형은 '중' 이라
+   *    * (용어정리의 *"중 = 어떻게 다른가 · 비교·부정형"*) 균형을 되돌린다.
+   *    *
+   *    * **정답이 둘이 되는 길을 두 겹으로 막는다.** 빌려온 셀링포인트가 이 제품에도
+   *    * 있으면 그 문항은 무너진다 —
+   *    *   ① **그 카테고리에서 딱 한 제품만 내세우는 문구**만 빌린다. 흔한 문구일수록
+   *    *      이 제품에도 있을 확률이 높다(`AI 절약 모드` 처럼 여러 모델이 함께 쓴다).
+   *    *   ② 빌린 문구의 **핵심어**(영문·긴 한글 토막)가 이 제품 셀링포인트나 이름에
+   *    *      나오면 쓰지 않는다.
+   *    * C형(`build-lg-questions`)이 LG 고유 명칭만 쓰는 것과 같은 규칙이다. * /
+   *   const norm = s => String(s).replace(/\s/g, '').toLowerCase();
+   *   const keyWords = s => [
+   *     ...(String(s).match(/[A-Za-z][A-Za-z0-9+]{2,}/g) || []),
+   *     ...(String(s).match(/[가-힣]{3,}/g) || []),
+   *   ];
+   *   / * `uspDescList` 에 **셀링포인트가 아닌 것**이 섞여 온다 — 실측으로 셋을 봤다:
+   *        · 스펙 요약   `- 용량: 6kW, 전기타입: 단상, 에너지소비효율등급: 1`
+   *        · 판매 옵션   `기본 설치비 포함` · `삼상` · `냉난방전용`
+   *        · 너무 긴 홍보문
+   *      그대로 쓰면 *"셀링포인트가 아닌 것은?"* 의 정답이 셀링포인트 얘기가 아니게 된다.
+   *      **문장인지**로 가른다 — 콜론·앞머리 하이픈이 없고 길이가 사람 말 범위인 것만. * /
+   *   const uspOk = u => {
+   *     const s = String(u).trim();
+   *     return s.length >= 10 && s.length <= 60 && !/[:：]/.test(s) && !/^[-–—]/.test(s)
+   *       && (s.match(/,/g) || []).length < 2;
+   *   };
+   *   const uspBy = {};
+   *   for (const info of cat.items) {
+   *     const qbCat = (info.cats || []).map(c => CATMAP[c]).find(Boolean);
+   *     const usp = (info.usp || []).filter(uspOk);
+   *     if (!qbCat || !usp.length) continue;
+   *     (uspBy[qbCat] = uspBy[qbCat] || []).push({ ...info, usp });
+   *   }
+   * 
+   *   for (const [qbCat, prods] of Object.entries(uspBy)) {
+   *     const freq = {};
+   *     for (const p of prods) for (const u of new Set(p.usp.map(norm))) freq[u] = (freq[u] || 0) + 1;
+   *     const rare = prods.flatMap(p => p.usp.filter(u => freq[norm(u)] === 1).map(u => ({ u, from: p.code })));
+   * 
+   *     for (const me of prods) {
+   *       if (me.usp.length < 3) continue;
+   *       const mine = norm(me.usp.join(' ') + me.name);
+   *       const cands = rare.filter(r => r.from !== me.code
+   *         && !keyWords(r.u).some(w => mine.includes(norm(w))));
+   *       if (!cands.length) continue;
+   *       / * **첫 번째를 집지 않는다** — 그러면 카테고리 안의 모든 문항이 같은 오답을
+   *          쓰게 되어 두 문항만 봐도 패턴이 읽힌다(실제로 그랬다). 제품마다 다른 것을
+   *          고르되 코드로 정하므로 다시 만들어도 같은 시험지가 나온다. * /
+   *       const pick = cands[me.code.length % cands.length];
+   *       const three = me.usp.slice(0, 3);
+   *       const at = (me.code.length + me.name.length) % 4;
+   *       const opts = [...three];
+   *       opts.splice(at, 0, pick.u);
+   *       out.push({
+   *         cat: qbCat,
+   *         q: `삼성 ${me.name}(${me.code})이 내세우는 셀링포인트가 아닌 것은?`,
+   *         opts, ans: at,
+   *         exp: `"${pick.u}"는 같은 품목의 다른 모델이 내세우는 문구다. `
+   *            + `${me.name}(${me.code})의 셀링포인트는 ${three.join(' / ')}. (근거: SOHO몰 제품 지면)`,
+   *         lv: '중',            / * 용어정리의 "중 = 어떻게 다른가(비교·부정형)" * /
+   *         b2b: 1,
+   *       });
+   *     }
+   *   }
+   * 
+   * 
+   */
+
   return { items: out, skippedLabels: [...skipped].sort() };
 }
 
