@@ -80,7 +80,7 @@ say(shape.length === 0, 'C형은 삼성이 주어이고 지면에 LG 브랜드 �
   const longest = q => { let b = 0; for (let i = 1; i < q.opts.length; i++) if (q.opts[i].length > q.opts[b].length) b = i; return b; };
   const hit = items.filter(q => longest(q) === q.ans).length;
   const rate = hit / items.length * 100;
-  const CAP = 42;                       /* 실측 40.8%. 배치를 돌 때마다 함께 내릴 것 */
+  const CAP = 41;                       /* 실측 39.1%. 배치를 돌 때마다 함께 내릴 것 */
   say(rate <= CAP, `가장 긴 보기만 골랐을 때 ${rate.toFixed(1)}% (상한 ${CAP}% · 찍기 25%)`
     + (rate <= CAP ? '' : ' — 정답만 긴 문항이 늘었다. npm run fix:anslen 과 오답 다시쓰기'));
   const auto = items.filter(q => q.lg);
