@@ -129,6 +129,29 @@ export function readQB() {
 }
 
 /** 출력기가 먹는 모양으로 — 문항을 한 줄로 펴고 정책/제품 갈래를 붙인다 */
+/* ## B2B 문항은 **시험 도구에만** 들어간다 (2026-08-25)
+ *
+ * `scripts/fixtures/b2b-questions.json` 은 SOHO몰 사양에서 자동 생성한 수치 문항이다
+ * (`npm run build:b2bq`). QB 에 끼워 넣지 않고 **여기서 합친다** — 갈래가 분명하다:
+ *
+ *   · `test-app.html` 의 `QB` … 레벨업 챌린지 **앱**이 브라우저에서 직접 읽는다
+ *   · `buildBank()` 결과 … **시험 도구**(A4 출력기·웹 시험)가 빌드 때 읽는다
+ *
+ * B2B 는 호텔TV·시스템에어컨·모니터처럼 **평가용 시험에 맞는** 재료라 시험 쪽만
+ * 두껍게 한다. QB 에 넣으면 앱까지 무거워지고(438문항 · 130KB) 난이도도 통째로
+ * '상' 쪽으로 쏠린다.
+ *
+ * **없으면 조용히 건너뛴다** — 다른 PC 에서 받아 오지 않았을 수 있고, 그때 빌드가
+ * 죽으면 A4 출력기까지 못 만든다. 대신 개수를 `b2bTotal` 로 밝힌다. */
+function readB2B() {
+  const p = path.join(ROOT, 'scripts', 'fixtures', 'b2b-questions.json');
+  const alt = 'scripts/fixtures/b2b-questions.json';
+  for (const f of [alt, p]) {
+    try { return JSON.parse(fs.readFileSync(f, 'utf8')).items || []; } catch {}
+  }
+  return [];
+}
+
 export function buildBank() {
   const QB = readQB();
   const items = [];
@@ -147,6 +170,18 @@ export function buildBank() {
       });
     }
   }
+  /* B2B 수치 문항을 뒤에 붙인다. `cats` 는 **QB 기준 그대로** 두어 앱 쪽 집계와
+     어긋나지 않게 하고, 늘어난 개수는 `b2bTotal` 로 따로 밝힌다. */
+  const b2b = readB2B();
+  for (const q of b2b) {
+    items.push({
+      i: seq++, cat: q.cat, type: 'product',
+      div: MX_CATS.has(q.cat) ? 'MX' : 'CE',
+      lv: levelOf(q), lg: 0, b2b: 1,
+      q: q.q, opts: q.opts, ans: q.ans, exp: q.exp || '',
+    });
+  }
+
   const byType = items.reduce((a, x) => (a[x.type] = (a[x.type] || 0) + 1, a), {});
   const byDiv  = items.reduce((a, x) => (a[x.div]  = (a[x.div]  || 0) + 1, a), {});
   const byLv   = items.reduce((a, x) => (a[x.lv]   = (a[x.lv]   || 0) + 1, a), {});
@@ -160,6 +195,7 @@ export function buildBank() {
     byLv,
     lgByLv,
     lgTotal: items.filter(x => x.lg).length,
+    b2bTotal: items.filter(x => x.b2b).length,
     items,
   };
 }
