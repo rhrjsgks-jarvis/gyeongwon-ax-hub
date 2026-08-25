@@ -21,6 +21,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildExamTool, assertSelfContained, OUT } from './build-exam-tool.mjs';
+import { buildLGQuestions, isStandaloneLG } from './build-lg-questions.mjs';
+import { readQB, LG_RE } from './lib/quiz-bank.mjs';
 
 let ok = true;
 const say = (c, m) => { console.log((c ? 'OK  ' : 'FAIL') + ': ' + m); if (!c) ok = false; };
@@ -35,6 +37,29 @@ const { html: fresh, bank } = buildExamTool();
 say(committed === fresh,
   `커밋된 출력기 == 재생성한 것 (문항 ${bank.total}개)` +
   (committed === fresh ? '' : ' — `npm run build:examtool` 을 돌리고 커밋할 것'));
+
+/* ── ①-b LG 비교 문항(C형) ──
+ * 2026-08-25 사장님 지시 — *"엘지문제가 통으로 나오는 게 아니라 … 질문은 삼성질문이고
+ * 보기에 LG를 넣어서 헷갈리게"*. 그 전에는 LG 68문항 중 **48개가 "LG 단독 지식"**
+ * (상담사에게 LG 스펙을 외우라고 묻는 것)이었다. 되돌아오면 여기서 걸린다. */
+const ALL = Object.values(readQB()).flat();
+
+const standalone = ALL.filter(isStandaloneLG);
+say(standalone.length === 0, 'LG 를 통으로 묻는 문항 0개'
+  + (standalone.length ? ` — ${standalone.length}개 발견: "${standalone[0].q}"` : ''));
+
+const cq = ALL.filter(q => q.lg === 1);
+const key = qs => qs.map(q => `${q.q}|${q.opts.join('|')}|${q.ans}`).sort().join('\n');
+say(key(cq) === key(buildLGQuestions()),
+  `커밋된 C형 == 재생성한 것 (${cq.length}개)`
+  + (key(cq) === key(buildLGQuestions()) ? '' : ' — `npm run build:lgq` 를 돌리고 커밋할 것'));
+
+/* 지면에 브랜드가 보이면 그 자리가 곧 정답이라 "헷갈리게" 라는 지시와 어긋난다.
+   보기에 드는 것은 `트루스팀`·`인버터 리니어 컴프레서` 같은 **고유 기술명**이어야 한다. */
+const shape = cq.filter(q => !/삼성/.test(q.q) || LG_RE.test(q.q)
+  || (q.opts || []).some(o => LG_RE.test(String(o))));
+say(shape.length === 0, 'C형은 삼성이 주어이고 지면에 LG 브랜드 표기가 없다'
+  + (shape.length ? ` — ${shape.length}개 어긋남: "${shape[0].q}"` : ''));
 
 /* ── ② 자립성 ── */
 let selfOk = true, why = '';
