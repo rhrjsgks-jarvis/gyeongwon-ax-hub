@@ -84,21 +84,53 @@ const plain = n => n.replace(/\s*\([^)]*\)\s*/g, ' ')
 /** 브랜드가 이미 이름에 있으면 또 붙이지 않는다 — "LG LG 올레드 evo" 가 된다 */
 const lgName = n => (/^LG\b/.test(plain(n)) ? plain(n) : `LG ${plain(n)}`);
 
-/** 질문 주어로 쓸 이름을 카테고리 단위로 정한다 — **겹칠 때만** 괄호를 남긴다.
- *  · 코드를 남기면 질문이 `… 85인치(KMR85RH95AFXKR)의 특징이…` 처럼 지저분하고,
- *    `levelOf()` 도 모델코드를 보고 '상'(수치 암기)으로 잘못 매긴다.
- *  · 그렇다고 늘 떼면 `AI 무풍콤보 벽걸이 (11평)` 과 `(9평)` 이 같은 이름이 되어
- *    **문항이 통째로 겹친다**(공기청정기 Infinite AI 3종도 같다).
- *  그래서 겹치는 이름에만 괄호 첫 토막(평형·용량)을 붙여 가른다. */
+/* ## 제품은 **모델명으로** 가리킨다 (2026-08-25 사장님 지시)
+ * *"식기세척기 12인용 보다는 모델명으로 시험문제를 내주는 것이 좋습니다"* ·
+ * *"모델명을 넣어주셔야 할 것 같습니다"*.
+ *
+ * 그 전에는 `14인용` 같은 스펙만 붙였는데 **삼성 식기세척기 14인용이 3종**이라 이름이
+ * 겹쳤고, 겹치는 것은 버리고 있었다(그래서 문항이 줄었다). 모델코드는 유일하므로
+ * 버릴 일이 없고 상담사가 어느 제품인지 정확히 안다.
+ *
+ * **코드가 있는 자리가 두 가지다** — 대부분은 이름 끝(`… DW80F73Y1UEWS`)인데
+ * TV·청소기·로봇청소기는 **괄호 안**이다(`… 85인치 (KQ85QNH80)`). 한쪽만 보면
+ * 그 카테고리 문항에 코드가 통째로 빠진다.
+ *
+ * 예전에 코드를 뺐던 이유(`levelOf()` 가 모델코드를 '상'=수치 암기로 매긴다)는
+ * 이제 없다 — C형은 `lv:'중'` 을 직접 달기 때문이다. */
+const codeOf = n => {
+  const tail = n.match(/([A-Z][A-Z0-9-]{5,})\s*$/);
+  if (tail) return tail[1];
+  const p = (n.match(/\(([^)]*)\)/) || [, ''])[1].split(',')[0].trim();
+  return /^[A-Z][A-Z0-9-]{5,}$/.test(p) ? p : '';
+};
+
+/** 괄호 안의 스펙(용량·평형·인용수). **숫자가 있는 것만** 쓴다 —
+ *  그래야 `dp 카탈로그 스펙표` 같은 **내부 메모가 시험지로 새어 나가지 않는다**
+ *  (v151 에서 실제로 겪은 사고다). 목록으로 막지 않고 데이터가 스스로 판정한다. */
+const specOf = n => {
+  const p = (n.match(/\(([^)]*)\)/) || [, ''])[1].split(',')[0].trim();
+  if (!p || !/\d/.test(p) || /^[A-Z][A-Z0-9-]{5,}$/.test(p)) return '';
+  return p;
+};
+
+/** 질문 주어 — `제품명 스펙(모델코드)` */
+const nameOf = m => {
+  const spec = specOf(m.name), code = codeOf(m.name);
+  return plain(m.name) + (spec ? ' ' + spec : '') + (code ? `(${code})` : '');
+};
+
+/** 해설에 쓸 짧은 이름 — **코드를 뺀다.** 질문에 이미 있어 되풀이이고,
+ *  코드를 넣었더니 해설이 길어져 **정답지가 3쪽으로 흘렀다**(검사가 잡았다).
+ *  "답안지 2페이지" 는 사장님 지시라 그쪽을 지킨다. */
+const shortOf = m => {
+  const spec = specOf(m.name);
+  return plain(m.name) + (spec ? ' ' + spec : '');
+};
+
 function labelsFor(models) {
-  const n = {};
-  for (const m of models) n[plain(m.name)] = (n[plain(m.name)] || 0) + 1;
   const out = new Map();
-  for (const m of models) {
-    const base = plain(m.name);
-    const paren = (m.name.match(/\(([^)]*)\)/) || [, ''])[1].split(',')[0].trim();
-    out.set(m, n[base] > 1 && paren ? `${base}(${paren})` : base);
-  }
+  for (const m of models) out.set(m, nameOf(m));
   return out;
 }
 
@@ -171,7 +203,7 @@ export function buildLGQuestions() {
           opts,
           ans: at,
           exp: `${f}${josa(f, '은', '는')} ${lgName(owner.name)}의 기능이다. `
-             + `삼성 ${name}의 셀링포인트는 ${three.join(' · ')}. `
+             + `삼성 ${shortOf(p)}의 셀링포인트는 ${three.join(' · ')}. `
              + `(근거: 타사비교 세일즈가이드)`,
           /* 난이도는 못 박는다 — 이 형태는 용어정리의 "중 = 어떻게 다른가(비교·부정형)" 다.
              문형에 따라 `levelOf()` 가 흔들리면 시험지 난이도 배분이 함께 흔들린다. */
