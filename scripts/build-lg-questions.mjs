@@ -49,13 +49,21 @@ const CAT = {
 const han = s => s.match(/[가-힣]+/g) || [];
 const eng = s => (s.match(/[A-Za-z0-9]+/g) || []).map(w => w.toLowerCase());
 
+/* 두 브랜드가 **똑같이 쓰는 업계 공통어**. 이것이 겹치는 것은 "같은 기술"의 근거가
+   못 된다 — 삼성 'AI 열교환기 자동세척' 과 LG 'AI 콜드프리' 는 전혀 다른 기능인데
+   접두사 'AI' 하나로 걸려 에어컨 문항이 통째로 막혔다(2026-08-26).
+   이 저장소가 되풀이해서 데인 유형이다 — '무선 이어폰'이 청소기로 끌려가고,
+   '프로서비스'가 '프로'로 잡히고, 삼성 'DLG 확장'이 LG 로 잡혔다.
+   **좁게 유지할 것** — 여기에 뜻이 있는 말을 넣으면 가드가 통째로 무뎌진다. */
+const GENERIC = new Set(['ai']);
+
 /** 같은 기술을 다르게 부른 것인가.
  *  한글은 3글자만 이어져도 의심한다 — LG '24시간 자동정온' ↔ 삼성 '미세자동정온'.
  *  영문·숫자는 단어가 통째로 같을 때만 본다 — 부분문자열로 보면 LG 'ThinQ' 가
  *  삼성 'SmartThings' 와 "Thi" 로 걸려 멀쩡한 오답이 날아간다. */
 function overlap(a, b) {
   const eb = eng(b);
-  for (const w of eng(a)) if (w.length >= 2 && eb.includes(w)) return w;
+  for (const w of eng(a)) if (w.length >= 2 && !GENERIC.has(w) && eb.includes(w)) return w;
   const hb = han(b);
   for (const s of han(a)) {
     for (let n = 3; n <= s.length; n++) {
@@ -152,6 +160,9 @@ export function buildLGQuestions() {
   const FX = JSON.parse(fs.readFileSync(FIX, 'utf8'));
   const OK = FX['확정'];
   const BAN = new Set(FX['금지']['목록']);
+  const ALLOW_OVERLAP = { ...(FX['겹침 허용'] || {}) };
+  for (const k of Object.keys(ALLOW_OVERLAP)) if (k.startsWith('_')) delete ALLOW_OVERLAP[k];
+  const waived = [];
   const out = [];
   /* 같은 제품이 두 카테고리에 실린다 — 콤보는 '세탁기·콤보' 와 '건조기' 양쪽에 있고
      셀링포인트도 조금씩 다르다. 그대로 두면 **같은 질문이 두 번** 나온다.
@@ -188,7 +199,12 @@ export function buildLGQuestions() {
       const owner = lgs.find(p => (p.on || []).includes(f));
       if (BAN.has(f)) throw new Error(`확정과 금지에 함께 있다: ${f}`);
       const bad = ssAll.find(s => overlap(f, s));
-      if (bad) throw new Error(`겹침 가드 — "${f}" 가 삼성 "${bad}" 와 겹친다 (${cmpCat})`);
+      /* 겹치는데도 넣기로 한 것은 fixture 에 **한 줄씩 등재**한다. 가드를 통째로 무디게
+         하면 다음에 진짜 겹침이 들어와도 아무도 모른다 — 도면 손확인 목록과 같은 방식이다.
+         조용히 넘기지 않고 무엇을 무르고 있는지 찍는다. */
+      if (bad && !ALLOW_OVERLAP[f])
+        throw new Error(`겹침 가드 — "${f}" 가 삼성 "${bad}" 와 겹친다 (${cmpCat})`);
+      if (bad) waived.push(`${f} ↔ 삼성 "${bad}"`);
 
       for (const p of ss) {
         const three = (p.on || []).slice(0, 3);
@@ -220,6 +236,10 @@ export function buildLGQuestions() {
     const prev = seen.get(q.q);
     if (prev) throw new Error(`질문이 겹친다: "${q.q}"\n  ① ${prev.opts.join(' / ')}\n  ② ${q.opts.join(' / ')}`);
     seen.set(q.q, q);
+  }
+  if (waived.length) {
+    console.log(`겹침을 알고 넣은 것 ${waived.length}건 — fixture '겹침 허용' 에 등재됨`);
+    for (const w of waived) console.log('  · ' + w);
   }
   return out;
 }
