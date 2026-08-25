@@ -61,6 +61,34 @@ const shape = cq.filter(q => !/삼성/.test(q.q) || LG_RE.test(q.q)
 say(shape.length === 0, 'C형은 삼성이 주어이고 지면에 LG 브랜드 표기가 없다'
   + (shape.length ? ` — ${shape.length}개 어긋남: "${shape[0].q}"` : ''));
 
+/* ── ①-c 읽지 않고 찍히는가 ──
+ * 사장님 방향성 문서(`urlquizgenerator_SKILL.md`) — *"정답만 길고 나머지 보기가
+ * 터무니없는 문항은 즉시 버린다. 읽지 않고도 찍힌다."*
+ *
+ * **문제를 안 읽고 가장 긴 보기만 고르는 전략**의 적중률을 잰다. 찍기는 25% 이고,
+ * 2026-08-25 처음 재니 **68.0%** 였다 — 목표가 *"평균 60점대"* 인데 아무것도
+ * 모르고 68점이면 시험이 성립하지 않는다.
+ *
+ * 자동 생성한 C형은 22%(찍기 수준)라 정상이고 **손으로 쓴 문항이 문제**다.
+ * `npm run fix:anslen` 이 뜻을 안 바꾸는 축약으로 36개를 줄여 **63.4%** 가 됐다.
+ * 나머지 418개는 **오답을 다시 써야** 하는 authoring 이라 규칙으로 못 한다.
+ *
+ * 여기 문턱은 **하한이 아니라 상한**이다 — 나빠지면 실패한다.
+ * **고칠 때마다 이 숫자를 함께 내려** 다시 못 오르게 할 것(개구부 기준선과 같은 규칙). */
+{
+  const items = bank.items;
+  const longest = q => { let b = 0; for (let i = 1; i < q.opts.length; i++) if (q.opts[i].length > q.opts[b].length) b = i; return b; };
+  const hit = items.filter(q => longest(q) === q.ans).length;
+  const rate = hit / items.length * 100;
+  const CAP = 64;                       /* 실측 63.4% 에서 살짝 여유. 낮출 것, 올리지 말 것 */
+  say(rate <= CAP, `가장 긴 보기만 골랐을 때 ${rate.toFixed(1)}% (상한 ${CAP}% · 찍기 25%)`
+    + (rate <= CAP ? '' : ' — 정답만 긴 문항이 늘었다. npm run fix:anslen 과 오답 다시쓰기'));
+  const auto = items.filter(q => q.lg);
+  const autoHit = auto.filter(q => longest(q) === q.ans).length;
+  say(autoHit / auto.length <= 0.35,
+    `  └ 자동 생성 C형은 ${(autoHit / auto.length * 100).toFixed(0)}% — 찍기 수준을 지킨다`);
+}
+
 /* ── ② 자립성 ── */
 let selfOk = true, why = '';
 try { assertSelfContained(committed); } catch (e) { selfOk = false; why = e.message; }
