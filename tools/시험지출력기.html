@@ -185,6 +185,18 @@ body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMa
   <h1>시험지 출력기</h1>
   <label>문항 <input type="number" id="n" value="20" min="5" max="50"></label>
   <label>MX <input type="number" id="mx" value="50" min="0" max="100">%</label>
+  <label>난이도 <select id="lv">
+    <option value="4,8,8" selected>기본 (하4·중8·상8)</option>
+    <option value="8,7,5">쉽게 (하8·중7·상5)</option>
+    <option value="2,8,10">어렵게 (하2·중8·상10)</option>
+    <option value="0,8,12">매우 어렵게 (중8·상12)</option>
+    <option value="manual">직접 지정…</option>
+  </select></label>
+  <span id="lvman" hidden>
+    <label>하 <input type="number" id="lvL" value="4" min="0" max="50"></label>
+    <label>중 <input type="number" id="lvM" value="8" min="0" max="50"></label>
+    <label>상 <input type="number" id="lvH" value="8" min="0" max="50"></label>
+  </span>
   <label>코드 <input type="text" id="code" maxlength="4" placeholder="자동"></label>
   <button class="btn" id="gen">새 시험지</button>
   <button class="btn ghost" id="prt">인쇄</button>
@@ -250,26 +262,42 @@ function shuffle(arr, rnd){
  * **모자라면 조용히 넘기지 않고 화면에 적는다.** 이 저장소의 규칙이고, 여기서 특히 중요하다 —
  * "LG 4문항"은 사장님과 한 약속이라 안 지켜졌으면 그 사실이 보여야 한다. */
 var LV_ORDER = ['하', '중', '상'];
-/* 20문항 기준 배분. n 이 달라지면 비율대로 늘리고 줄인다. */
-var LV_MIX = { '하': 6, '중': 8, '상': 6 };
+/* ## 난이도 비중은 출력할 때마다 고른다 (2026-08-25 사장님 요청)
+ * *"문제난이도 비중을 선택해서 출력할수있게"* · *"상담매니저들 실력향상과 전문성을 위한
+ * 시험문제이기때문에 조금 더 문제 난이도가 높아도 됩니다"* → 기본을 **하4·중8·상8** 로
+ * 올렸다(상 30% → 40%). 옛 기본은 하6·중8·상6 이었고 '쉽게' 가 그 자리를 대신한다.
+ *
+ * **`중` 은 8 아래로 내리지 않는다.** LG 비교 문항 74개가 **전부 '중'** 이라
+ * `중 < LG_WANT(6)` 이면 "LG 6문항 고정" 이 그 자리에서 깨진다. 프리셋 넷이 모두
+ * 중 7~8 인 이유이고, '직접 지정' 에서 낮추면 화면이 그 사실을 적는다(아래 `render`). */
+var LV_MIX = { '하': 4, '중': 8, '상': 8 };
 var LG_WANT = 6;   /* 2026-08-24 사장님 요청으로 4 → 6. 은행 68문항이라 두 시험지 기대 겹침 0.5개 */
 
-function lvQuota(n){
-  var q = {}, sum = 0, i;
+/** 고른 비중을 문항 수 n 에 맞춰 나눈다. mix 는 **비율**이라 합이 20 이 아니어도 된다
+ *  (직접 지정에서 3·3·4 처럼 쳐도 그대로 돌아간다). */
+function lvQuota(n, mix){
+  mix = mix || LV_MIX;
+  var tot = 0, q = {}, sum = 0, i, L;
+  for (i = 0; i < LV_ORDER.length; i++) tot += Math.max(0, mix[LV_ORDER[i]] || 0);
+  if (!tot) return lvQuota(n, LV_MIX);           /* 셋 다 0 이면 기본값으로 되돌린다 */
   for (i = 0; i < LV_ORDER.length; i++){
-    q[LV_ORDER[i]] = Math.round(n * LV_MIX[LV_ORDER[i]] / 20);
+    q[LV_ORDER[i]] = Math.round(n * Math.max(0, mix[LV_ORDER[i]] || 0) / tot);
     sum += q[LV_ORDER[i]];
   }
-  /* 반올림으로 어긋난 만큼을 '중' 에서 맞춘다 — 가운데가 가장 두껍다 */
-  q['중'] += n - sum;
-  if (q['중'] < 0) { q['하'] += q['중']; q['중'] = 0; }
+  /* 반올림으로 어긋난 만큼은 **가장 두꺼운 칸**에서 맞춘다.
+     예전에는 '중' 에 몰아줬는데, 비중을 고를 수 있게 되면서 '중' 이 0 인 배분도 생긴다 —
+     그때 '중' 에 얹으면 **고르지 않은 난이도가 시험지에 들어간다.** */
+  var big = LV_ORDER[0];
+  for (i = 1; i < LV_ORDER.length; i++) if (q[LV_ORDER[i]] > q[big]) big = LV_ORDER[i];
+  q[big] += n - sum;
+  if (q[big] < 0) q[big] = 0;
   return q;
 }
 
-function pick(n, mxPct, rnd){
+function pick(n, mxPct, rnd, mix){
   var wantMx = Math.round(n * mxPct / 100);
-  var wantLv = lvQuota(n);
-  var need = { lv: lvQuota(n), div: { MX: wantMx, CE: n - wantMx } };
+  var wantLv = lvQuota(n, mix);
+  var need = { lv: lvQuota(n, mix), div: { MX: wantMx, CE: n - wantMx } };
   var all = BANK.items, used = {}, out = [];
 
   /* 조건에 맞는 것 하나를 무작위로 집는다. 없으면 null — 부르는 쪽이 조건을 늦춘다. */
@@ -287,9 +315,12 @@ function pick(n, mxPct, rnd){
   /* ① LG 문항 먼저 — 가장 얇아서 나중에 채우면 자리가 남지 않는다 */
   var gotLg = 0;
   while (gotLg < LG_WANT && out.length < n) {
+    /* **난이도 칸을 넘어서까지 LG 를 밀어 넣지 않는다** (2026-08-25).
+       난이도 비중이 사장님이 그 자리에서 고른 값이 된 뒤로, 갈래(CE/MX)만 늦추고
+       난이도는 지킨다 — 안 그러면 `상 20` 을 골랐는데 LG 6개가 '중' 이라 **상 14** 가
+       나온다(실측). 못 넣은 만큼은 `render` 가 원인과 함께 화면에 적는다. */
     var q = take(function(x){ return x.lg && need.lv[x.lv] > 0 && need.div[x.div] > 0; })
-         || take(function(x){ return x.lg && need.lv[x.lv] > 0; })
-         || take(function(x){ return x.lg; });
+         || take(function(x){ return x.lg && need.lv[x.lv] > 0; });
     if (!q) break;                       /* 은행에 LG 문항이 모자란다 */
     gotLg++;
   }
@@ -327,9 +358,9 @@ function esc(s){
 }
 var NO = ['①','②','③','④','⑤'];
 
-function render(code, n, mxPct){
+function render(code, n, mxPct, mix){
   var rnd = rng(seedFrom(code));
-  var r = pick(n, mxPct, rnd);
+  var r = pick(n, mxPct, rnd, mix);
 
   /* 보기 순서도 섞는다 — 같은 문항이라도 시험지마다 답 위치가 달라야 한다 */
   var qs = r.list.map(function(q){
@@ -424,9 +455,18 @@ function render(code, n, mxPct){
     msg += ' — MX 문항이 은행에 ' + ((BANK.byDiv && BANK.byDiv.MX) || 0) + '개뿐이라 ' +
            r.wantMx + '개 중 ' + r.gotMx + '개만 넣고 나머지는 CE 로 채웠습니다.';
   /* 약속한 구성이 안 지켜졌으면 반드시 적는다 — 조용히 넘기면 화면이 거짓말을 한다 */
-  if (r.gotLg < r.wantLg)
-    msg += ' — LG 비교 문항은 은행에 ' + ((BANK.lgTotal) || 0) + '개뿐이라 ' +
-           r.wantLg + '개 중 ' + r.gotLg + '개만 넣었습니다.';
+  if (r.gotLg < r.wantLg) {
+    /* **원인을 갈라 적는다.** 난이도를 고를 수 있게 되면서 부족한 이유가 둘이 됐다 —
+       은행이 얇아서인지, 고른 배분에 LG 가 들어갈 칸이 없어서인지. 뭉뚱그리면
+       "은행에 6개뿐" 같은 **틀린 원인**을 화면이 말하게 된다. */
+    if (r.wantLv['중'] < r.wantLg)
+      msg += ' — LG 비교 문항은 전부 난이도 “중” 인데 중 배정이 ' + r.wantLv['중'] +
+             '개뿐이라 ' + r.wantLg + '개 중 ' + r.gotLg + '개만 넣었습니다. 중을 ' +
+             r.wantLg + '개 이상으로 두시면 다 들어갑니다.';
+    else
+      msg += ' — LG 비교 문항은 은행에 ' + ((BANK.lgTotal) || 0) + '개뿐이라 ' +
+             r.wantLg + '개 중 ' + r.gotLg + '개만 넣었습니다.';
+  }
   var lvOff = LV_ORDER.filter(function(L){ return (r.gotLv[L] || 0) !== r.wantLv[L]; });
   if (lvOff.length)
     msg += ' — 난이도 배분이 목표(하 ' + r.wantLv['하'] + '/중 ' + r.wantLv['중'] +
@@ -435,14 +475,37 @@ function render(code, n, mxPct){
   document.getElementById('code').value = code;
   /* 인쇄창 "PDF로 저장"의 기본 파일명이 여기서 온다 — 여러 장 뽑아도 파일이 안 섞인다 */
   document.title = '시험지_' + code;
-  try { history.replaceState(null, '', '?code=' + code + '&n=' + n + '&mx=' + mxPct); } catch (e) {}
+  /* 난이도도 주소에 싣는다 — **코드만으로는 같은 시험지가 안 나온다.**
+     문항 수·MX% 와 마찬가지로 추첨 결과를 바꾸는 값이라, 링크를 넘겨야 그대로 재현된다. */
+  try {
+    history.replaceState(null, '', '?code=' + code + '&n=' + n + '&mx=' + mxPct +
+      '&lv=' + LV_ORDER.map(function(L){ return r.wantLv[L]; }).join(','));
+  } catch (e) {}
+}
+
+/** 화면에서 고른 난이도 비중. '직접 지정' 이면 세 칸을 읽는다. */
+function curMix(){
+  var sel = document.getElementById('lv'), man = document.getElementById('lvman');
+  var manual = sel.value === 'manual';
+  man.hidden = !manual;
+  if (manual) return {
+    '하': Math.max(0, parseInt(document.getElementById('lvL').value, 10) || 0),
+    '중': Math.max(0, parseInt(document.getElementById('lvM').value, 10) || 0),
+    '상': Math.max(0, parseInt(document.getElementById('lvH').value, 10) || 0),
+  };
+  var v = sel.value.split(',');
+  /* 프리셋을 고르면 세 칸도 따라 움직인다 — '직접 지정' 으로 넘어갈 때 그 값에서 이어 고친다 */
+  document.getElementById('lvL').value = v[0];
+  document.getElementById('lvM').value = v[1];
+  document.getElementById('lvH').value = v[2];
+  return { '하': +v[0], '중': +v[1], '상': +v[2] };
 }
 
 function go(useTyped){
   var n = Math.max(5, Math.min(50, parseInt(document.getElementById('n').value, 10) || 20));
   var mx = Math.max(0, Math.min(100, parseInt(document.getElementById('mx').value, 10) || 0));
   var typed = (document.getElementById('code').value || '').trim().toUpperCase();
-  render(useTyped && /^[A-Z0-9]{4}$/.test(typed) ? typed : newCode(), n, mx);
+  render(useTyped && /^[A-Z0-9]{4}$/.test(typed) ? typed : newCode(), n, mx, curMix());
 }
 
 if (!BANK || !BANK.items || !BANK.items.length) {
@@ -454,8 +517,27 @@ if (!BANK || !BANK.items || !BANK.items.length) {
   if (p.get('n')) document.getElementById('n').value = p.get('n');
   if (p.get('mx')) document.getElementById('mx').value = p.get('mx');
   if (p.get('code')) document.getElementById('code').value = p.get('code');
+  /* 주소로 받은 난이도는 프리셋에 있으면 그것을 고르고, 없으면 '직접 지정' 으로 연다 —
+     받은 링크가 조용히 다른 배분으로 바뀌면 시험지가 재현되지 않는다 */
+  if (p.get('lv') && /^\d+,\d+,\d+$/.test(p.get('lv'))) {
+    var want = p.get('lv'), sel = document.getElementById('lv'), hit = false, i;
+    for (i = 0; i < sel.options.length; i++) if (sel.options[i].value === want) { sel.value = want; hit = true; }
+    if (!hit) {
+      var v = want.split(',');
+      document.getElementById('lvL').value = v[0];
+      document.getElementById('lvM').value = v[1];
+      document.getElementById('lvH').value = v[2];
+      sel.value = 'manual';
+    }
+  }
   go(true);
 }
+
+/* 난이도를 바꾸면 곧바로 다시 뽑는다 — 코드는 그대로 두어 **배분만 바뀐 차이**를 볼 수 있다 */
+document.getElementById('lv').addEventListener('change', function(){ go(true); });
+['lvL', 'lvM', 'lvH'].forEach(function(id){
+  document.getElementById(id).addEventListener('change', function(){ go(true); });
+});
 
 document.getElementById('gen').addEventListener('click', function(){
   document.getElementById('code').value = '';   /* 새로 뽑을 때는 코드도 새로 */
