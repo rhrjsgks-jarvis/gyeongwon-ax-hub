@@ -330,6 +330,55 @@ var EXAM_MIX = { '하': 15, '중': 35, '상': 50 };
 var MX_PCT = 50;
 var SCRIPT_URL = '';   /* Google Apps Script 주소. 비어 있으면 아무 데도 안 보낸다 */
 
+/* ── 채점 결과 보내기 ── (2026-08-26)
+ * 화면에만 남기면 응시자가 창을 닫는 순간 점수가 사라진다. 그래서 시트로 보내되
+ * **성공 여부를 읽는다.** 예전에는 mode:'no-cors' 로 던지고 끝이라 실패해도 아무도
+ * 몰랐다 — 이 저장소가 사용 로그 파이프라인에서 이미 데인 그 고장이고, 시험에서는
+ * 더 나쁘다(응시자는 다시 풀 수도 없다).
+ *
+ * POST 가 아니라 GET 인 이유는 이 파일이 file:// 로 열리기 때문이다. origin 이 null 이라
+ * POST 에는 프리플라이트(OPTIONS)가 붙는데 Apps Script 는 그것을 받지 않는다.
+ *
+ * 못 보낸 것은 **브라우저에 남겨 두었다가 다음에 열 때 다시 보낸다.** 매장 전파가
+ * 끊긴 채로 응시하는 일이 실제로 있고, 그때 점수가 통째로 빠지면 안 된다.
+ * 같은 줄이 두 번 가는 것은 받는 쪽(docs/apps-script/Exam.gs)이 사번+코드+응시시각으로 거른다. */
+var OUTBOX = 'exam_outbox', PEND = null;
+/* **메모리가 1차, localStorage 는 덤이다.** 파일로 연 HTML 에서는 브라우저에 따라
+   localStorage 가 막히는데(사파리는 file:// 에서 던진다), 예전처럼 예외를 삼키고
+   빈 배열을 돌려주면 **보낼 것이 없다고 보고 화면에 "기록됨"이라 적는다** —
+   한 줄도 안 보내 놓고 성공이라 말하는 셈이라 이 기능에서 가장 나쁜 고장이다.
+   localStorage 는 "다음에 열 때 다시 보내기"에만 쓰이고, 없으면 그것만 못 한다. */
+function box(v){
+  if (v){
+    PEND = v.slice(-50);
+    try { localStorage.setItem(OUTBOX, JSON.stringify(PEND)); } catch (e) {}
+    return PEND;
+  }
+  if (PEND) return PEND;
+  try { PEND = JSON.parse(localStorage.getItem(OUTBOX) || '[]'); } catch (e) { PEND = []; }
+  return PEND;
+}
+function rec(msg, bad){
+  var el = $('rec'); if (!el) return;
+  el.textContent = msg;
+  el.style.color = bad ? 'var(--no)' : '';
+}
+/** 밀린 것을 앞에서부터 하나씩 보낸다. 한 건이라도 실패하면 거기서 멈춘다 —
+ *  실패는 대개 네트워크·배포 문제라 나머지를 밀어붙여도 똑같이 실패한다. */
+function send(){
+  var q = box();
+  if (!q.length){ rec('기록됨'); return; }
+  fetch(SCRIPT_URL + '?' + new URLSearchParams(q[0])).then(function(r){
+    return r.ok ? r.text() : Promise.reject(r.status);
+  }).then(function(t){
+    if (t.indexOf('"ok":true') < 0) return Promise.reject(t.slice(0, 60));
+    box(box().slice(1));
+    send();
+  }).catch(function(){
+    rec('기록 실패 — 결과 화면을 캡처해 전달하세요', true);
+  });
+}
+
 var code = newCode(), picked = null, chosen = {}, submitted = false;
 var left = EXAM_MIN * 60, tick = null, startedAt = null;
 
@@ -472,7 +521,8 @@ function submit(auto){
     '<dt>정답</dt><dd>' + correct + ' / ' + total + '</dd>' +
     '<dt>소요 시간</dt><dd>' + um + '분 ' + us + '초' + (auto ? ' (시간 종료)' : '') + '</dd>' +
     '<dt>응시 일시</dt><dd>' + startedAt.toLocaleString('ko-KR') + '</dd>' +
-    '<dt>시험지 코드</dt><dd>' + code + '</dd></dl>' +
+    '<dt>시험지 코드</dt><dd>' + code + '</dd>' +
+    (SCRIPT_URL ? '<dt>기록</dt><dd id="rec">…</dd>' : '') + '</dl>' +
     '<button class="again" id="again">다시 풀기</button>';
   $('paper').insertBefore(r, $('paper').firstChild);
   var sb = $('sub'); if (sb) sb.remove();
@@ -486,16 +536,17 @@ function submit(auto){
 
   /* 시트 기록 — 주소가 없으면 아무 데도 보내지 않는다(기본값) */
   if (SCRIPT_URL){
-    try {
-      fetch(SCRIPT_URL + '?' + new URLSearchParams({
-        empId: $('emp').value, score: pctv + '점', correct: correct, total: total,
-        code: code, datetime: startedAt.toISOString(), elapsed: used
-      }), { method:'GET', mode:'no-cors' }).catch(function(){});
-    } catch (e) {}
+    box(box().concat([{
+      empId: $('emp').value, score: pctv, correct: correct, total: total,
+      code: code, startedAt: startedAt.toISOString(), elapsed: used
+    }]));
+    rec('보내는 중…');
+    send();
   }
 }
 
 setup();
+if (SCRIPT_URL) send();   /* 지난번에 못 보낸 것이 있으면 먼저 털어낸다 */
 </script>
 </body>
 </html>

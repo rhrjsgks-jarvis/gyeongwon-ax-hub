@@ -10,6 +10,7 @@
  *   ② 자립성 — 바깥을 부르는 곳 0. 단, 시트 보고용 `fetch` 는 **기본이 꺼져 있어야** 한다
  *   ③ 구성   — 난이도 상 50 / 중 35 / 하 15 (사장님 방향성 문서)
  *   ④ 실물   — 파일 한 장만 임시 폴더에 두고 `file://` 로 열어 한 판 친다
+ *   ⑤ 보고   — `SCRIPT_URL` 을 채운 사본으로 **실제로 보내 본다**(성공·실패·재전송)
  */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -136,6 +137,79 @@ say(res.timer === '종료', '제출하면 타이머가 멈춘다');
 /* 제출 뒤에는 답을 바꿀 수 없어야 한다 — 바꿀 수 있으면 점수가 거짓이 된다 */
 await page.locator('.opt[data-i="0"]').first().click();
 say((await page.locator('.opt.sel').count()) === 0, '제출 뒤에는 답을 못 바꾼다');
+
+/* ── ⑤ 시트 보고 ──
+ * 기본값이 꺼짐이라 위 실물 검사는 이 길을 **한 줄도 안 지나간다.** 켜 놓고 쓰는 것이
+ * 이 기능의 본래 모습인데 검사가 없으면 조용히 썩는다 — 그래서 주소를 채운 사본을 만들어
+ * `fetch` 만 가짜로 물리고 한 판 더 친다.
+ *
+ * 가장 무서운 고장은 "안 보내 놓고 기록됨이라 적는 것"이라 **보낸 내용까지 들여다본다.** */
+{
+  const url = 'https://script.example.test/exec';
+  const lone2 = path.join(dir, 'with-url.html');
+  fs.writeFileSync(lone2, committed.replace("var SCRIPT_URL = '';", "var SCRIPT_URL = '" + url + "';"));
+
+  const ctx = await br.newContext({ viewport: { width: 720, height: 1000 } });
+  /* 진짜로 나가지 않게 fetch 를 갈아 끼운다. `__mode` 로 성공·실패를 바꾼다. */
+  await ctx.addInitScript(() => {
+    window.__sent = [];
+    window.__mode = 'ok';
+    window.fetch = u => {
+      window.__sent.push(String(u));
+      return window.__mode === 'ok'
+        ? Promise.resolve({ ok: true, text: () => Promise.resolve('{"ok":true}') })
+        : Promise.reject(new Error('offline'));
+    };
+  });
+  const p2 = await ctx.newPage();
+  const play = async (emp, mode) => {
+    await p2.goto(pathToFileURL(lone2).href, { waitUntil: 'domcontentloaded' });
+    await p2.waitForFunction(() => document.getElementById('i-code').textContent !== '–', { timeout: 15000 });
+    if (mode) await p2.evaluate(m => { window.__mode = m; }, mode);
+    await p2.fill('#emp', emp);
+    await p2.click('#start');
+    await p2.waitForSelector('.q', { timeout: 8000 });
+    const ans = await p2.evaluate(() => window.picked.list.map(q => q.ans));
+    for (const [i, j] of ans.entries()) await p2.locator(`.opt[data-i="${i}"][data-j="${j}"]`).click();
+    await p2.click('#sub');
+    await p2.waitForSelector('#result', { timeout: 8000 });
+    await p2.waitForFunction(() => {
+      const el = document.getElementById('rec');
+      return el && el.textContent !== '…' && el.textContent.indexOf('보내는 중') < 0;
+    }, { timeout: 8000 }).catch(() => {});
+    return p2.evaluate(() => ({
+      sent: window.__sent.slice(), rec: (document.getElementById('rec') || {}).textContent || '',
+      left: (window.box ? window.box() : []).length,
+    }));
+  };
+
+  const a = await play('11112222');
+  say(a.sent.length === 1, `보내기가 실제로 나간다 (실제 ${a.sent.length}건)`);
+  const qs = new URL(a.sent[0] || 'https://x/?').searchParams;
+  say(qs.get('empId') === '11112222' && qs.get('score') === '100' && qs.get('total') === '25',
+    `사번·점수·문항수가 실려 간다 (${qs.get('empId')} · ${qs.get('score')}점 · ${qs.get('total')}문항)`);
+  say(!!qs.get('code') && !!qs.get('startedAt'),
+    '시험지 코드와 응시시각이 함께 간다 — 받는 쪽이 중복을 이것으로 거른다');
+  say(a.rec === '기록됨', `성공하면 화면이 그렇게 적는다 (${a.rec})`);
+  say(a.left === 0, `보낸 것은 대기함에서 지운다 (남은 ${a.left}건)`);
+
+  /* **실패를 성공이라 말하지 않는다** — 여기가 이 기능에서 가장 위험한 자리다 */
+  const b = await play('33334444', 'fail');
+  say(b.rec.indexOf('기록 실패') === 0, `실패하면 실패라고 적는다 (${b.rec})`);
+  say(b.left === 1, `못 보낸 것은 대기함에 남는다 (남은 ${b.left}건)`);
+
+  /* 다시 열면 밀린 것부터 털어낸다. localStorage 가 막힌 브라우저에서는 이것만 못 한다 */
+  await p2.goto(pathToFileURL(lone2).href, { waitUntil: 'domcontentloaded' });
+  const store = await p2.evaluate(() => { try { localStorage.setItem('t','1'); return true; } catch (e) { return false; } });
+  if (store) {
+    const c = await p2.evaluate(() => new Promise(r => setTimeout(() => r({
+      sent: window.__sent.length, left: window.box().length }), 400)));
+    say(c.sent === 1 && c.left === 0, `다시 열면 밀린 것을 다시 보낸다 (보냄 ${c.sent} · 남은 ${c.left})`);
+  } else {
+    console.log('SKIP: 이 브라우저는 file:// 에서 localStorage 를 막는다 — 재전송 검사만 건너뛴다');
+  }
+  await ctx.close();
+}
 
 say(outside.length === 0, '바깥으로 나간 요청 0' + (outside.length ? ' — ' + outside[0] : ''));
 say(errs.length === 0, '콘솔 오류 없음' + (errs.length ? ' — ' + errs[0] : ''));
