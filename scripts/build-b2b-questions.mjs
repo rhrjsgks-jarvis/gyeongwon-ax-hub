@@ -61,6 +61,22 @@ const SKIP = ['제조자', '수입자', '제조국', '출시년월', '품질보�
  * 그래서 카테고리로 가른다 — 라벨 이름으로는 가를 수 없다. */
 const WEIGHT_OK = new Set(['갤럭시북', '갤럭시탭', '휴대폰', '웨어러블', '청소기']);
 const isWeight = k => /무게|중량/.test(k);
+
+/* ## 제품 **외형 치수**도 품목이 정한다 (2026-08-25 사장님 지시)
+ * *"공기청정기 등 소형가전 등 제품의 사이즈가 필요한 가전은 빌트인 가전제품 등의
+ * 설치 관련으로 필요하지, 실제 제품들의 사이즈를 시험으로 내놓을 이유는 없습니다."*
+ *
+ * **설치 규격이 상담 항목인 품목**에서만 낸다 — 빌트인 인덕션의 타공 규격,
+ * 키친핏 냉장고의 좌우 이격처럼 **안 맞으면 설치가 안 되는** 값이다.
+ * 사운드바·공기청정기는 놓기만 하면 되니 몇 mm 인지 외울 이유가 없다.
+ *
+ * **화면 크기는 여기 해당하지 않는다** — `화면사이즈`·`대각선`·`Display` 는 제품을
+ * 고르는 기준이지 설치 규격이 아니다. 그래서 라벨로 한 번 더 가른다
+ * (실제로 B2B 치수 문항 24개가 전부 화면 크기였다). */
+const SIZE_OK = new Set(['냉장고', '김치냉장고', '식기세척기', '인덕션/전기레인지',
+  '전자레인지/오븐', '에어컨', '세탁기', '건조기', '에어드레서']);
+const isBodySize = k => /치수|크기|사이즈|외형|타공|개구부/.test(k)
+  && !/화면|디스플레이|display|스크린|대각선|패널/i.test(k);
 const flat = s => String(s).replace(/\s/g, '');
 const skipLabel = k => SKIP.some(x => flat(k).includes(flat(x)));
 
@@ -130,6 +146,8 @@ export function buildB2BQuestions() {
       if (skipLabel(k)) { skipped.add(k); continue; }
       /* 무게는 휴대용·청소기에서만 낸다 — 놓고 쓰는 가전은 상담에서 안 쓴다 */
       if (isWeight(k) && !WEIGHT_OK.has(qbCat)) { skipped.add(k + " (" + qbCat + ")"); continue; }
+      /* 외형 치수는 설치 규격이 상담 항목인 품목에서만 — 화면 크기는 여기 해당 없다 */
+      if (isBodySize(k) && !SIZE_OK.has(qbCat)) { skipped.add(k + " (" + qbCat + ")"); continue; }
       if (dup.has(k)) continue;                       /* 값이 둘 — 정답이 둘이 된다 */
       const val = String(v).trim();
       if (BAD_VAL.test(val) || val.length > 24) continue;
