@@ -1,0 +1,6269 @@
+{
+ "_note": "SOHO몰(삼성 B2B) 현행 판매 모델 목록. 시험 문항의 재료이며 앱에 실리지 않는다. 가격은 담지 않는다(가격 표기는 타사비교에서 출고가로만 한다). usp 는 목록 API 의 uspDescList — 타사비교 on[] 과 같은 셀링포인트다.",
+ "_source": "https://www.samsungebiz.com/sohomall/  ·  /sohomall/cxhr/pf/goodsList",
+ "_robots": "samsungebiz.com robots 는 검색 결과 지면 3개만 금지하고 /sohomall/ 은 허용 (2026-08-25 확인). 자동 갱신 경로가 있으므로 npm run fetch:soho 로 다시 받을 것.",
+ "collectedAt": "2026-08-25",
+ "categories": [
+  "smartphones",
+  "tablets",
+  "watches",
+  "buds",
+  "water-purifier",
+  "refrigerators",
+  "kimchi-refrigerators",
+  "dishwashers",
+  "electric-range",
+  "micro-wave-ovens",
+  "air-conditioners",
+  "air-cleaner",
+  "vacuum-cleaners",
+  "laundry-combo",
+  "washing-machines",
+  "dryers",
+  "airdresser",
+  "shoedresser",
+  "living-accessories",
+  "sac-maintenance",
+  "tv",
+  "sound-bar",
+  "hamman-audio",
+  "galaxy-book",
+  "monitors",
+  "printers",
+  "system-air-conditioners",
+  "signage",
+  "pc",
+  "restaurant",
+  "accomodation",
+  "retail",
+  "education",
+  "postpartum-care-center",
+  "coin-laundry",
+  "hairdressing",
+  "fitness-facility",
+  "tv-accessories"
+ ],
+ "bizCategories": [
+  "restaurant",
+  "accomodation",
+  "retail",
+  "education",
+  "postpartum-care-center",
+  "coin-laundry",
+  "hairdressing",
+  "fitness-facility"
+ ],
+ "count": 432,
+ "failed": [
+  {
+   "key": "smartphones",
+   "why": "대기열(Queue-it) — 우회하지 않는다"
+  },
+  {
+   "key": "watches",
+   "why": "대기열(Queue-it) — 우회하지 않는다"
+  }
+ ],
+ "items": [
+  {
+   "code": "AC023CS1PBH1ST",
+   "name": "싱글 에어컨 무풍 1Way 냉난방",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "무풍/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC023CS1PBH1ST/AC023CS1PBH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC023CS1PBH2ST",
+   "name": "싱글 에어컨 무풍 1Way 냉난방 (공청)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "무풍/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC023CS1PBH2ST/AC023CS1PBH2ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS1DBH1ST",
+   "name": "싱글 에어컨 무풍 1Way 냉난방",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "무풍/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC060CS1DBH1ST/AC060CS1DBH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS4FBH2ST",
+   "name": "상업용 무풍 시스템에어컨  (48.8 ㎡)",
+   "usp": [
+    "- 용량: 6kW, 전기타입: 단상, 에너지소비효율등급: 1",
+    "- 냉난방용",
+    "- Wi-Fi 기능 있음, UV-C 살균 적용"
+   ],
+   "url": "system-air-conditioners/package-ac060cs4fbh2st-d2c/AC060CS4FBH2ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS4FBH3ST",
+   "name": "싱글 에어컨 무풍 4Way (1등급, 공기청정)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방 전용",
+    "1등급 / 공기청정 판넬"
+   ],
+   "url": "system-air-conditioners/AC060CS4FBH3ST/AC060CS4FBH3ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS4FBH4ST",
+   "name": "싱글 에어컨 무풍 4Way (자동승강)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/자동승강/UV-C",
+    "무풍/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC060CS4FBH4ST/AC060CS4FBH4ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS4PBH1ST",
+   "name": "싱글 에어컨 무풍 4Way (3등급)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/UV-C",
+    "무풍/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC060CS4PBH1ST/AC060CS4PBH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS4PBH3ST",
+   "name": "싱글 에어컨 무풍 4Way (자동승강)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/자동승강/UV-C",
+    "무풍/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC060CS4PBH3ST/AC060CS4PBH3ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS6PBH1ST",
+   "name": "싱글 에어컨 360CST",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/UV-C",
+    "Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC060CS6PBH1ST/AC060CS6PBH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC060CS6PBH3ST",
+   "name": "싱글 에어컨 360CST (자동승강)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/자동승강/UV-C",
+    "Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/AC060CS6PBH3ST/AC060CS6PBH3ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC100CS4FHH2ST",
+   "name": "상업용 무풍 시스템에어컨  (90.9 ㎡)",
+   "usp": [
+    "- 용량: 10kW, 전기타입: 3상, 에너지소비효율등급: 1",
+    "- 냉난방용",
+    "- Wi-Fi 기능 있음, UV-C 살균 적용"
+   ],
+   "url": "system-air-conditioners/AC100CS4FHH2ST/AC100CS4FHH2ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC100CS4FHH3ST",
+   "name": "싱글 에어컨 무풍 4Way (1등급, 공기청정, 3상)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방 전용",
+    "1등급 / 공기청정 판넬 / 3상"
+   ],
+   "url": "system-air-conditioners/AC100CS4FHH3ST/AC100CS4FHH3ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC100CS4FHH4ST",
+   "name": "싱글 에어컨 무풍 4Way (자동승강, 3상)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/자동승강/UV-C",
+    "무풍/Wi-Fi내장/삼상"
+   ],
+   "url": "system-air-conditioners/AC100CS4FHH4ST/AC100CS4FHH4ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC100CS4PHH1ST",
+   "name": "싱글 에어컨 무풍 4Way (3상)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/UV-C",
+    "무풍/Wi-Fi내장/삼상"
+   ],
+   "url": "system-air-conditioners/AC100CS4PHH1ST/AC100CS4PHH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC100CS4PHH3ST",
+   "name": "싱글 에어컨 무풍 4Way (자동승강, 3상)",
+   "usp": [
+    "- 기본 설치비 포함",
+    "- 냉난방전용/자동승강/UV-C",
+    "- 무풍/Wi-Fi내장/삼상"
+   ],
+   "url": "system-air-conditioners/AC100CS4PHH3ST/AC100CS4PHH3ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC110CS6PHH1ST",
+   "name": "싱글 에어컨 360CST (3상)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/UV-C",
+    "Wi-Fi내장/삼상"
+   ],
+   "url": "system-air-conditioners/package-ac100cs6phh1st-d2c/AC110CS6PHH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AC110CS6PHH3ST",
+   "name": "싱글 에어컨 360CST (자동승강, 3상)",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용/자동승강/UV-C",
+    "Wi-Fi내장/삼상"
+   ],
+   "url": "system-air-conditioners/AC110CS6PHH3ST/AC110CS6PHH3ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF60F17D11WRT",
+   "name": "AI Q9000 56.9/18.7㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 넓은 공간도 빠르게 하이패스 회오리 냉방",
+    "스마트싱스로 상황에 맞게 전기료를 관리해주는 AI 에너지 절약",
+    "관리가 편해 더욱 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF60F17D11WRT/AF60F17D11WRT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF60F17D11WT",
+   "name": "AI Q9000 56.9㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 넓은 공간도 빠르게 하이패스 회오리 냉방",
+    "스마트싱스로 상황에 맞게 전기료를 관리해주는 AI 에너지 절약",
+    "관리가 편해 더욱 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF60F17D11WT/AF60F17D11WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF60F19D11WRT",
+   "name": "AI Q9000 62.6/18.7㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 넓은 공간도 빠르게 하이패스 회오리 냉방",
+    "스마트싱스로 상황에 맞게 전기료를 관리해주는 AI 에너지 절약",
+    "관리가 편해 더욱 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF60F19D11WRT/AF60F19D11WRT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF60F19D11WT",
+   "name": "AI Q9000 62.6㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 넓은 공간도 빠르게 하이패스 회오리 냉방",
+    "스마트싱스로 상황에 맞게 전기료를 관리해주는 AI 에너지 절약",
+    "관리가 편해 더욱 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF60F19D11WT/AF60F19D11WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF70F17D11GRT",
+   "name": "Bespoke AI 무풍 클래식 56.9/18.7㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 빠르게, 직바람 없이 쾌적하게 하이패스 AI 무풍",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "관리가 편해 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF70F17D11GRT/AF70F17D11GRT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF70F17D11GT",
+   "name": "Bespoke AI 무풍 클래식 56.9㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 빠르게, 직바람 없이 쾌적하게 하이패스 AI 무풍",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "관리가 편해 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF70F17D11GT/AF70F17D11GT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF70F19D11WRT",
+   "name": "Bespoke AI 무풍 클래식 62.6/18.7㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 빠르게, 직바람 없이 쾌적하게 하이패스 AI 무풍",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "관리가 편해 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF70F19D11WRT/AF70F19D11WRT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF70F19D11WT",
+   "name": "Bespoke AI 무풍 클래식 62.6㎡ (리모컨 포함)",
+   "usp": [
+    "하이패스 방식으로 빠르게, 직바람 없이 쾌적하게 하이패스 AI 무풍",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "관리가 편해 위생적인 이지케어 4단계"
+   ],
+   "url": "air-conditioners/AF70F19D11WT/AF70F19D11WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF90H19D35WRT",
+   "name": "Bespoke AI 무풍콤보 갤러리 프로 청정 62.6/18.7㎡",
+   "usp": [
+    "냉방면적(62.6/18.7㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 슬림디자인, 청정, 5가지 모션바람, 심리스 디자인",
+    "스탠드 색상: 에센셜 화이트, 벽걸이 색상: 화이트"
+   ],
+   "url": "air-conditioners/AF90H19D35WRT/AF90H19D35WRT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF90H19D35WT",
+   "name": "Bespoke AI 무풍콤보 갤러리 프로 청정 62.6㎡",
+   "usp": [
+    "냉방면적(62.6㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 슬림디자인, 청정",
+    "색상: 에센셜 화이트"
+   ],
+   "url": "air-conditioners/AF90H19D35WT/AF90H19D35WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF90H19D38WRT",
+   "name": "Bespoke AI 무풍콤보 갤러리 프로 청정 62.6/18.7㎡",
+   "usp": [
+    "냉방면적(62.6/18.7㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 1등급, 슬림디자인, 청정, 5가지 모션바람, 심리스 디자인",
+    "스탠드 색상: 에센셜 화이트, 벽걸이 색상: 화이트"
+   ],
+   "url": "air-conditioners/AF90H19D38WRT/AF90H19D38WRT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF90H19D38WT",
+   "name": "Bespoke AI 무풍콤보 갤러리 프로 청정 62.6㎡",
+   "usp": [
+    "냉방면적(62.6㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 1등급, 슬림디자인, 청정",
+    "색상: 에센셜 화이트"
+   ],
+   "url": "air-conditioners/AF90H19D38WT/AF90H19D38WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AF90H25D36WT",
+   "name": "Bespoke AI 무풍콤보 갤러리 프로 청정 81.8㎡",
+   "usp": [
+    "냉방면적(81.8㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 슬림디자인, 청정",
+    "색상: 에센셜 화이트"
+   ],
+   "url": "air-conditioners/AF90H25D36WT/AF90H25D36WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AI-MAINCLN01",
+   "name": "시스템에어컨 (천정형)",
+   "usp": [],
+   "url": "sac-maintenance/AI-MAINCLN01-sac-maintenance-1-10/AI-MAINCLN01/",
+   "cats": [
+    "sac-maintenance"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AI-MAINCLN04",
+   "name": "스탠드에어컨 (상업용)",
+   "usp": [],
+   "url": "sac-maintenance/AI-MAINCLN04-sac-maintenance/AI-MAINCLN04/",
+   "cats": [
+    "sac-maintenance"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AI-MAINCLN06",
+   "name": "스탠드에어컨 (가정용)",
+   "usp": [],
+   "url": "sac-maintenance/AI-MAINCLN06-sac-maintenance/AI-MAINCLN06/",
+   "cats": [
+    "sac-maintenance"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AI-MAINCLN07",
+   "name": "벽걸이에어컨",
+   "usp": [],
+   "url": "sac-maintenance/AI-MAINCLN07-sac-maintenance/AI-MAINCLN07/",
+   "cats": [
+    "sac-maintenance"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AKGN5HYBRIDBLK",
+   "name": "AKG N5 하이브리드 노이즈 캔슬링 무선 이어폰",
+   "usp": [
+    "고해상도, 고품질의 AKG 사운드",
+    "몰입형 AKG 공간 음향",
+    "맞춤형 제어를 통한 트루 어댑티브 노이즈 캔슬링"
+   ],
+   "url": "hamman-audio/AKGN5HYBRIDBLK/AKGN5HYBRIDBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AKGN9HYBRIDWHT",
+   "name": "AKG N9 하이브리드 노이즈 캔슬링 무선 헤드폰",
+   "usp": [
+    "고해상도, 고품질의 AKG 사운드",
+    "2.4 GHz 지원 가능한 USB-C 동글",
+    "맞춤형 제어를 통한 트루 어댑티브 노이즈 캔슬링"
+   ],
+   "url": "hamman-audio/AKGN9HYBRIDWHT/AKGN9HYBRIDWHT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP060BAPPBH2ST",
+   "name": "상업용 스탠딩 에어컨 6.0kW",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "4등급/단상"
+   ],
+   "url": "system-air-conditioners/AP060BAPPBH2ST/AP060BAPPBH2ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP083CAPPBH1ST",
+   "name": "상업용 스탠딩 에어컨 8.3kW",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "4등급/Wi-Fi내장/단상"
+   ],
+   "url": "system-air-conditioners/package-ap083cappbh1st-d2c/AP083CAPPBH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP083CSPPBH6ST",
+   "name": "중대형 에어컨 BESPOKE 냉난방",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "단상"
+   ],
+   "url": "system-air-conditioners/package-ap083csppbh6st-d2c/AP083CSPPBH6ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP145BAPPHH2ST",
+   "name": "상업용 스탠딩 에어컨 14.5kW",
+   "usp": [
+    "- 기본 설치비 포함",
+    "- 냉난방전용",
+    "- 4등급/삼상"
+   ],
+   "url": "system-air-conditioners/AP145BAPPHH2ST/AP145BAPPHH2ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP145CAPPHH1ST",
+   "name": "상업용 스탠딩 에어컨 14.5kW",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "4등급/Wi-Fi내장/삼상"
+   ],
+   "url": "system-air-conditioners/package-ap145capphh1st-d2c/AP145CAPPHH1ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP145CSPPHH6ST",
+   "name": "중대형 에어컨 BESPOKE 냉난방",
+   "usp": [
+    "기본 설치비 포함",
+    "냉난방전용",
+    "삼상"
+   ],
+   "url": "system-air-conditioners/AP145CSPPHH6ST/AP145CSPPHH6ST/",
+   "cats": [
+    "system-air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP70F03102RVD",
+   "name": "블루스카이 3100 (33.1㎡)",
+   "usp": [
+    "강력한 3단계 청정 시스템",
+    "4단계 컬러로 청정도 확인이 편리한 청정 디스플레이",
+    "손쉬운 필터 교체"
+   ],
+   "url": "air-cleaner/AP70F03102RVD/AP70F03102RVD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP70F06103RVD",
+   "name": "블루스카이 5500 (60㎡)",
+   "usp": [
+    "실내 공기질까지 학습해 맞춰주는 맞춤청정 AI+",
+    "초미세먼지까지 제거 가능한 3단계 청정 시스템",
+    "나의 일상에 맞춰 실내 공기를 관리해주는 AI 루틴"
+   ],
+   "url": "air-cleaner/AP70F06103RVD/AP70F06103RVD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP90F08163EDD",
+   "name": "Infinite AI 공기청정기 (80㎡, S필터, 1등급)",
+   "usp": [
+    "4면에서 오염된 공기를 흡입, 토출하는 4way 서라운드 & 부스터 청정",
+    "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+",
+    "더욱 강력해진 일체형 S 필터"
+   ],
+   "url": "air-cleaner/AP90F08163EDD/AP90F08163EDD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP90H03163EGD",
+   "name": "Infinite AI 공기청정기 (33㎡, S 필터)",
+   "usp": [
+    "4면에서 오염된 공기를 흡입, 토출하는 4way 서라운드 청정",
+    "더욱 강력해진 일체형 S 필터",
+    "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
+   ],
+   "url": "air-cleaner/AP90H03163EGD/AP90H03163EGD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP90H03193UGD",
+   "name": "Infinite AI 공기청정기 (33㎡, 리유저블 필터)",
+   "usp": [
+    "주기적으로 교체할 필요 없는 리유저블 필터",
+    "4면에서 오염된 공기를 흡입, 토출하는 4way 서라운드 청정",
+    "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
+   ],
+   "url": "air-cleaner/AP90H03193UGD/AP90H03193UGD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP90H10163EDD",
+   "name": "Infinite AI 공기청정기 (100㎡, S 필터)",
+   "usp": [
+    "4면에서 오염된 공기를 흡입, 토출하는 4way 서라운드 & 부스터 청정",
+    "더욱 강력해진 일체형 S 필터",
+    "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
+   ],
+   "url": "air-cleaner/AP90H10163EDD/AP90H10163EDD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AP90H10198EDD",
+   "name": "Infinite AI 공기청정기 (100㎡, 리유저블 필터)",
+   "usp": [
+    "주기적으로 교체할 필요 없는 리유저블 필터",
+    "4면에서 오염된 공기를 흡입, 토출하는 4way 서라운드 & 부스터 청정",
+    "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
+   ],
+   "url": "air-cleaner/AP90H10198EDD/AP90H10198EDD/",
+   "cats": [
+    "air-cleaner"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AR06D1150HZT",
+   "name": "에어컨 벽걸이 18.7㎡",
+   "usp": [],
+   "url": "air-conditioners/package-ar06d1150hzt-d2c/AR06D1150HZT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AR50F10D13HT",
+   "name": "벽걸이 에어컨 31.7㎡ (리모컨 포함)",
+   "usp": [
+    "패스트쿨링으로 빠르게, 직바람없이 쾌적한 AI 무풍에어컨",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
+   ],
+   "url": "air-conditioners/AR50F10D13HT/AR50F10D13HT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AR60F07C14WT",
+   "name": "AI 무풍콤보 벽걸이 냉난방 24.4㎡ (리모컨 포함)",
+   "usp": [
+    "난방이 가능해 겨울에도 따뜻하게 사계절 에어컨",
+    "패스트쿨링으로 빠르게, 직바람없이 쾌적한 AI 무풍에어컨",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약"
+   ],
+   "url": "air-conditioners/AR60F07C14WT/AR60F07C14WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AR60F07D12WT",
+   "name": "AI 무풍콤보 벽걸이 24.4㎡ (리모컨 포함)",
+   "usp": [
+    "패스트쿨링으로 빠르게, 직바람없이 쾌적한 AI 무풍에어컨",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
+   ],
+   "url": "air-conditioners/AR60F07D12WT/AR60F07D12WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AR60F09D11WT",
+   "name": "AI 무풍콤보 벽걸이 29.3㎡ (리모컨 포함)",
+   "usp": [
+    "패스트쿨링으로 빠르게, 직바람없이 쾌적한 AI 무풍에어컨",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
+   ],
+   "url": "air-conditioners/AR60F09D11WT/AR60F09D11WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "AR60F11D11WT",
+   "name": "AI 무풍콤보 벽걸이 34.1㎡ (리모컨 포함)",
+   "usp": [
+    "패스트쿨링으로 빠르게, 직바람없이 쾌적한 AI 무풍에어컨",
+    "스마트싱스로 상황에 맞게 관리해주는 AI 에너지 절약",
+    "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
+   ],
+   "url": "air-conditioners/AR60F11D11WT/AR60F11D11WT/",
+   "cats": [
+    "air-conditioners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "BRR297231WW",
+   "name": "빌트인 냉장고 278L",
+   "usp": [
+    "언제 어디서나 간편하게 SmartThings",
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "성에 걱정 없이 깔끔하고 신선하게 자동 성에 제거"
+   ],
+   "url": "refrigerators/one-door-brr297231ww-d2c/BRR297231WW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "BRZ227200WW",
+   "name": "빌트인 냉동고 211L",
+   "usp": [
+    "성에 걱정 없이 깔끔하고 신선하게 자동 성에 제거",
+    "냉기를 꽉 잡아 음식의 신선함을 지키는 메탈쿨링",
+    "공간 효율을 높이는 설계로 여유로운 수납 공간"
+   ],
+   "url": "refrigerators/one-door-brz227200ww-d2c/BRZ227200WW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CC80F63X1Z",
+   "name": "Bespoke 인덕션",
+   "usp": [
+    "어느 곳에 두어도 어울리는 완벽한 연출 프레임리스",
+    "밀키트, 간편식도 바코드 스캔 한 번으로 알아서 스캔쿡",
+    "LCD 대화형 알림창과 더 넒어진 패널로 간편하게"
+   ],
+   "url": "electric-range/CC80F63X1Z/CC80F63X1Z/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CC80H63G1HS",
+   "name": "Bespoke AI 인덕션 (플렉스존)",
+   "usp": [
+    "키친 인테리어를 완성하는 Seamless 디자인",
+    "자동 화력 조절로 간편식 조리까지 편리하게 AI 끓음 감지",
+    "전체 화구 사용으로 많은 요리도 한번에 3,400W 초고화력"
+   ],
+   "url": "electric-range/CC80H63G1HS/CC80H63G1HS/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CC80H63U1HS",
+   "name": "Bespoke AI 인덕션",
+   "usp": [
+    "키친 인테리어를 완성하는 Seamless 디자인",
+    "자동 화력 조절로 간편식 조리까지 편리하게 AI 끓음 감지",
+    "전체 화구 사용으로 많은 요리도 한번에 3,400W 초고화력"
+   ],
+   "url": "electric-range/CC80H63U1HS/CC80H63U1HS/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CC99F63G1DS",
+   "name": "Infinite AI 인덕션 (플렉스존)",
+   "usp": [
+    "매트한 무광 디자인에 긁힘 걱정 없는 견고함까지 Infinite Glass",
+    "전원 OFF 가능한 스마트 컨트롤 기능으로 외출 시에도 안심",
+    "많은 요리도 한 번에 3,400W 초고화력 빠른 조리 All MAX 부스트"
+   ],
+   "url": "electric-range/CC99F63G1DS/CC99F63G1DS/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CC99F63U1DS",
+   "name": "Infinite AI 인덕션",
+   "usp": [
+    "매트한 무광 디자인에 긁힘 걱정 없는 견고함까지 Infinite Glass",
+    "전원 OFF 가능한 스마트 컨트롤 기능으로 외출 시에도 안심",
+    "많은 요리도 한 번에 3,400W 초고화력 빠른 조리 All MAX 부스트"
+   ],
+   "url": "electric-range/CC99F63U1DS/CC99F63U1DS/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CC99H84JAD",
+   "name": "Infinite Line 후드일체형 인덕션",
+   "usp": [
+    "후드일체형으로 더 자유롭게",
+    "어디에 올려도 빈틈 걱정 없이 균일하게 화력을 전달하는 올 플렉스존",
+    "최대 7,400W의 강력한 화력으로  더 빠르고 완성도 있는 조리"
+   ],
+   "url": "electric-range/CC99H84JAD/CC99H84JAD/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CFF-0622",
+   "name": "업소용 냉동고 500 L ",
+   "usp": [
+    "자주 여닫아도 냉기를 빠르게 복원하는 신선보관방식",
+    "외부 열을 효과적으로 막아주는 우레탄 발포 도어",
+    "성에가 자동으로 제거하여 위생적인 자동 성에 제거"
+   ],
+   "url": "refrigerators/cff-0622-d2c/CFF-0622/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CFF-1144",
+   "name": "업소용 냉동고 1053 L ",
+   "usp": [
+    "자주 여닫아도 냉기를 빠르게 복원하는 신선보관방식",
+    "외부 열을 효과적으로 막아주는 우레탄 발포 도어",
+    "성에가 자동으로 제거하여 위생적인 자동 성에 제거"
+   ],
+   "url": "refrigerators/cff-1144-d2c/CFF-1144/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-C404S/TND",
+   "name": "컬러 레이저 프린터 토너 1,000매 (사이안)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-C404S-TND/CLT-C404S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-C406S/TND",
+   "name": "컬러 레이저 프린터 토너 1,000매 (사이안)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-C406S-TND/CLT-C406S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-C504S/TND",
+   "name": "컬러 레이저 프린터 토너 1,800매 (사이안)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-C504S-TND/CLT-C504S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-C515S/DIR",
+   "name": "컬러 레이저 프린터 토너 1,000매 (사이안)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너"
+   ],
+   "url": "printers/CLT-C515S-DIR/CLT-C515S/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-K404S/TND",
+   "name": "컬러 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월항 보존력"
+   ],
+   "url": "printers/CLT-K404S-TND/CLT-K404S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-K406S/TND",
+   "name": "컬러 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-K406S-TND/CLT-K406S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-K504S/TND",
+   "name": "컬러 레이저 프린터 토너 2,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-K504S-TND/CLT-K504S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-K515S/DIR",
+   "name": "컬러 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너"
+   ],
+   "url": "printers/CLT-K515S-DIR/CLT-K515S/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-M404S/TND",
+   "name": "컬러 레이저 프린터 토너 1,000매 (마젠타)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-M404S-TND/CLT-M404S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-M406S/TND",
+   "name": "컬러 레이저 프린터 토너 1,000매 (마젠타)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-M406S-TND/CLT-M406S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-M504S/TND",
+   "name": "컬러 레이저 프린터 토너 1,800매 (마젠타)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-M504S-TND/CLT-M504S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-M515S/DIR",
+   "name": "컬러 레이저 프린터 토너 1,000매 (마젠타)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너"
+   ],
+   "url": "printers/CLT-M515S-DIR/CLT-M515S/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-P404C/TND",
+   "name": "컬러 레이저 프린터 토너 4색 패키지 (멀티)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-P404C-TND/CLT-P404C/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-P406C/TND",
+   "name": "컬러 레이저 프린터 토너 4색 패키지 (멀티)",
+   "usp": [
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-P406C-TND/CLT-P406C/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-Y404S/TND",
+   "name": "컬러 레이저 프린터 토너 1,000매 (옐로우)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "해상도와 윤택성을 높여주는 중합토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-Y404S-TND/CLT-Y404S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-Y406S/TND",
+   "name": "컬러 레이저 프린터 토너 1,000매 (옐로우)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-Y406S-TND/CLT-Y406S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-Y504S/TND",
+   "name": "컬러 레이저 프린터 토너 1,800매 (옐로우)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-Y504S-TND/CLT-Y504S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CLT-Y515S/DIR",
+   "name": "컬러 레이저 프린터 토너 1,000매 (옐로우)",
+   "usp": [
+    "해상도와 윤택성을 높여주는 중합 토너",
+    "선명한 표현력과 탁월한 보존력"
+   ],
+   "url": "printers/CLT-Y515S-DIR/CLT-Y515S/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CRF-1140",
+   "name": "업소용 냉장고 1081 L ",
+   "usp": [
+    "자주 여닫아도 냉기를 빠르게 복원하는 신선보관방식",
+    "외부 열을 효과적으로 막아주는 우레탄 발포 도어",
+    "성에가 자동으로 제거하여 위생적인 자동 성에 제거"
+   ],
+   "url": "refrigerators/crf-1140-d2c/CRF-1140/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CRFF-1141",
+   "name": "업소용 냉장고 1021 L ",
+   "usp": [
+    "자주 여닫아도 냉기를 빠르게 복원하는 신선보관방식",
+    "외부 열을 효과적으로 막아주는 우레탄 발포 도어",
+    "성에가 자동으로 제거하여 위생적인 자동 성에 제거"
+   ],
+   "url": "refrigerators/crff-1141-d2c/CRFF-1141/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CRFF-1142",
+   "name": "업소용 냉장고 1014 L ",
+   "usp": [
+    "자주 여닫아도 냉기를 빠르게 복원하는 신선보관방식",
+    "외부 열을 효과적으로 막아주는 우레탄 발포 도어",
+    "성에가 자동으로 제거하여 위생적인 자동 성에 제거"
+   ],
+   "url": "refrigerators/crff-1142-d2c/CRFF-1142/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "CRFF-1762",
+   "name": "업소용 냉장고 1608 L ",
+   "usp": [
+    "자주 여닫아도 냉기를 빠르게 복원하는 신선보관방식",
+    "외부 열을 효과적으로 막아주는 우레탄 발포 도어",
+    "소음이 적어 조용한 BLDC Fan Motor"
+   ],
+   "url": "refrigerators/crff-1762-d2c/CRFF-1762/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DF18CG3100HR",
+   "name": "에어드레서 일반용량 5벌",
+   "usp": [
+    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
+    "강력한 듀얼에어워시, 듀얼제트스팀으로 빠르게 탈취, 살균하는 진짜 의류케어",
+    "심플한 디자인과 컬러로 공간맞춤"
+   ],
+   "url": "airdresser/airdresser-df18cg3100tl-d2c/DF18CG3100HR/",
+   "cats": [
+    "airdresser"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DF18CG3100TL",
+   "name": "에어드레서 일반용량 5벌",
+   "usp": [
+    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
+    "강력한 듀얼에어워시, 듀얼제트스팀으로 빠르게 탈취, 살균하는 진짜 의류케어",
+    "심플한 디자인과 컬러로 공간맞춤"
+   ],
+   "url": "airdresser/airdresser-df18cg3100tl-d2c/DF18CG3100TL/",
+   "cats": [
+    "airdresser"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "postpartum-care-center",
+    "hairdressing"
+   ]
+  },
+  {
+   "code": "DF18CG3100TR",
+   "name": "에어드레서 일반용량 5벌",
+   "usp": [
+    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
+    "강력한 듀얼에어워시, 듀얼제트스팀으로 빠르게 탈취, 살균하는 진짜 의류케어",
+    "심플한 디자인과 컬러로 공간맞춤"
+   ],
+   "url": "airdresser/airdresser-df18cg3100tl-d2c/DF18CG3100TR/",
+   "cats": [
+    "airdresser"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DF24CB9900DR",
+   "name": "Bespoke AI 에어드레서 대용량 5~9벌",
+   "usp": [
+    "강력한 듀얼에어워시, 듀얼제트스팀으로 빠르게 탈취, 살균하는 청정 의류케어",
+    "최대 9벌까지 한 번에 관리 할 수 있는 대용량 케어 코스",
+    "건조와 구김 제거를 한 번에 AI 섬세 건조"
+   ],
+   "url": "airdresser/DF24CB9900DR/DF24CB9900DR/",
+   "cats": [
+    "airdresser"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DM500SHA-AC51B",
+   "name": "데스크탑 Slim Core™ Ultra 5 / 512GB NVMe SSD",
+   "usp": [
+    "세련되고 깔끔한 연출이 가능한 슬림 디자인",
+    "새롭게 탑재된 Intel® Core™ Ultra 프로세서",
+    "계속 더 편리해지는 갤럭시 연결성"
+   ],
+   "url": "pc/DM500SHA-AC51B/DM500SHA-AC51B/",
+   "cats": [
+    "pc"
+   ],
+   "biz": [
+    "accomodation",
+    "retail",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing"
+   ]
+  },
+  {
+   "code": "DM500THA-AC51B",
+   "name": "데스크탑 Tower Core™ Ultra 5 / 512 GB NVMe SSD",
+   "usp": [
+    "세련되고 깔끔한 연출이 가능한 컴팩트 디자인",
+    "새롭게 탑재된 Intel® Core™ Ultra 프로세서",
+    "계속 더 편리해지는 갤럭시 연결성"
+   ],
+   "url": "pc/DM500THA-AC51B/DM500THA-AC51B/",
+   "cats": [
+    "pc"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DV21DG8600BV",
+   "name": "AI 건조기 21kg",
+   "usp": [
+    "옷감 특성에 맞춰 섬세하게 AI 맞춤건조",
+    "옷감 손상 걱정 없이 골고루 자연의 좋은 건조",
+    "에너지를 절약하는 확실한 방법 AI 절약 모드"
+   ],
+   "url": "dryers/DV21DG8600BV/DV21DG8600BV/",
+   "cats": [
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DV90T5540BV",
+   "name": "인버터 건조기 9 kg",
+   "usp": [
+    "센서로 정확하고 빠르게 AI 쾌속 건조",
+    "옷감 손상 걱정 없이 골고루 자연의 좋은 건조",
+    "안심필터로 더 편리해진 직접 관리형 열교환기"
+   ],
+   "url": "dryers/DV90T5540BV/DV90T5540BV/",
+   "cats": [
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DV90TA040KE",
+   "name": "건조기 9kg",
+   "usp": [
+    "옷감 손상은 줄이고 뽀송뽀송하게 저온 제습 건조",
+    "에너지 절감하고 전기료 절약하고",
+    "옷감 손상 걱정 없이 골고루 자연의 좋은 건조"
+   ],
+   "url": "dryers/dryer-dv90ta040ae-d2c/DV90TA040KE/",
+   "cats": [
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW30FB305CE0",
+   "name": "Bespoke 식기세척기 카운터탑 6인용 (열풍건조)",
+   "usp": [
+    "다양한 식기도 뽀송하게 열풍건조",
+    "99.999% 고온직수 파워살균 젖병까지 안심 세척",
+    "나에게 맞춘 키친테리어 Bespoke 디자인"
+   ],
+   "url": "dishwashers/DW30FB305CE0/DW30FB305CE0/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW80F71Y1UEWS",
+   "name": "Bespoke AI 식기세척기 빌트인 12인용",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "감각적인 키친테리어 Bespoke 디자인",
+    "4단 입체 물살 강력세척"
+   ],
+   "url": "dishwashers/DW80F71Y1UEWS/DW80F71Y1UEWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW80F73X1UEWS",
+   "name": "Bespoke AI 식기세척기 빌트인 14인용",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "감각적인 키친테리어 Bespoke 디자인",
+    "4단 입체 물살 강력세척"
+   ],
+   "url": "dishwashers/DW80F73X1UEWS/DW80F73X1UEWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW80F73Y1FEWS",
+   "name": "Bespoke AI 식기세척기 프리스탠딩 14인용",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "감각적인 키친테리어 Bespoke 디자인",
+    "4단 입체 물살 강력세척"
+   ],
+   "url": "dishwashers/DW80F73Y1FEWS/DW80F73Y1FEWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW80F75K1USWS",
+   "name": "Bespoke AI 식기세척기 빌트인 14인용 (필터 내장형)",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "키친 인테리어에 녹아드는 일체감 Seamless 디자인",
+    "물방울까지 뽀송하게 건조 열풍건조 100℃+"
+   ],
+   "url": "dishwashers/DW80F75K1USWS/DW80F75K1USWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW90F79F1U01S",
+   "name": "Bespoke AI 식기세척기 빌트인 14인용 (필터 내장형, 컵 맞춤 세척)",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "키친 인테리어에 녹아드는 일체감 Seamless 디자인",
+    "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
+   ],
+   "url": "dishwashers/DW90F79F1U01S/DW90F79F1U01S/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW90F79F1USWS",
+   "name": "Bespoke AI 식기세척기 빌트인 14인용 (필터 내장형, 컵 맞춤 세척)",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "키친 인테리어에 녹아드는 일체감 Seamless 디자인",
+    "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
+   ],
+   "url": "dishwashers/DW90F79F1USWS/DW90F79F1USWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW90F79P1U01S",
+   "name": "Bespoke AI 식기세척기 빌트인 14인용 (컵 맞춤 세척)",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "키친 인테리어에 녹아드는 일체감 Seamless 디자인",
+    "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
+   ],
+   "url": "dishwashers/DW90F79P1U01S/DW90F79P1U01S/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW90F79P1USWS",
+   "name": "Bespoke AI 식기세척기 빌트인 14인용 (컵 맞춤 세척)",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "키친 인테리어에 녹아드는 일체감 Seamless 디자인",
+    "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
+   ],
+   "url": "dishwashers/DW90F79P1USWS/DW90F79P1USWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "DW99F79E1USWS",
+   "name": "Infinite AI 식기세척기 빌트인 14인용 (필터 내장형, 컵 맞춤 세척)",
+   "usp": [
+    "세척의 처음부터 끝까지 알아서 AI 맞춤 세척+",
+    "키친 인테리어에 녹아드는 일체감 Seamless 디자인",
+    "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
+   ],
+   "url": "dishwashers/DW99F79E1USWS/DW99F79E1USWS/",
+   "cats": [
+    "dishwashers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HG43U700FNFXKR",
+   "name": "호텔 TV HU7000F 시리즈",
+   "usp": [
+    "맞춤형 서비스를 제공하는 링크 클라우드",
+    "객실 내 향상된 엔터테인먼트 제공하는 구글 캐스트",
+    "외부 노출 걱정 없이 간편한 스트리밍 애플 에어플레이"
+   ],
+   "url": "tv/HG43U700FNFXKR/HG43U700FNFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKAURAS5BLKAS",
+   "name": "하만카돈 AURA STUDIO 5 블루투스 스피커",
+   "usp": [
+    "새롭게 재해석된 타임리스 디자인",
+    "몰입감을 더하는 3-Way 사운드 필드",
+    "다중 스피커 연결이 가능한 Stereo & Auracast™"
+   ],
+   "url": "hamman-audio/HKAURAS5BLKAS/HKAURAS5BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKAURAS5WFBSAS",
+   "name": "하만카돈 AURA STUDIO 5 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "새롭게 재해석된 타임리스 디자인",
+    "몰입감을 더하는 3-Way 사운드 필드",
+    "다중 스피커 연결이 가능한 Stereo & Auracast™"
+   ],
+   "url": "hamman-audio/hk-speaker-auras5-d2c/HKAURAS5WFBSAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKENCH900BLKAS",
+   "name": "하만카돈 ENCHANT 900 사운드바",
+   "usp": [
+    "Dolby Atmos® 및 멀티빔™을 통한 3D 서라운드 사운드",
+    "집안을 영화관으로 만들어주는 다중 채널 서라운드 사운드",
+    "원하는 방식으로 즐길 수 있는 다양한 무선 연결성"
+   ],
+   "url": "hamman-audio/HKENCH900BLKAS/HKENCH900BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKENCHSPKBLKAS",
+   "name": "하만카돈 ENCHANT 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "3D 공간 사운드를 선사하는 Dolby Atmos® Music",
+    "집안을 영화관으로 만들어주는 다중 채널 서라운드 사운드",
+    "원하는 방식으로 즐길 수 있는 다양한 무선 연결성"
+   ],
+   "url": "hamman-audio/HKENCHSPKBLKAS/HKENCHSPKBLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKENCHSUB2BLKAS",
+   "name": "하만카돈 ENCHANT SUB 무선 서브우퍼",
+   "usp": [
+    "웅장한 울림을 선사하는 강렬한 베이스",
+    "보다 정밀한 사운드를 위한 베이스 리플렉터 디자인",
+    "나에게 딱 맞는 설정 Harman Kardon One 앱"
+   ],
+   "url": "hamman-audio/HKENCHSUB2BLKAS/HKENCHSUB2BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKGOPLAY3GRYAS",
+   "name": "하만카돈 GO PLAY 3 블루투스 스피커",
+   "usp": [
+    "3-way 스피커가 만들어주는 탁월한 스테레오 사운드",
+    "프리미엄 소재로 우아하게 마무리한 시그니처 디자인",
+    "강력한 방진, 방수 & 12시간 재생 아웃도어 성능"
+   ],
+   "url": "hamman-audio/HKGOPLAY3GRYAS/HKGOPLAY3GRYAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKOS9BLKAS",
+   "name": "하만카돈 ONYX STUDIO 9 블루투스 스피커",
+   "usp": [
+    "우수한 성능과 확장된 사운드 스테이지",
+    "우아하고 세련된 디자인",
+    "배터리 걱정 없이 최대 8시간 연속 재생"
+   ],
+   "url": "hamman-audio/hk-speaker-os9-d2c/HKOS9BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKOS9GRYAS",
+   "name": "하만카돈 ONYX STUDIO 9 블루투스 스피커",
+   "usp": [
+    "우수한 성능과 확장된 사운드 스테이지",
+    "우아하고 세련된 디자인",
+    "배터리 걱정 없이 최대 8시간 연속 재생"
+   ],
+   "url": "hamman-audio/hk-speaker-os9-d2c/HKOS9GRYAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HKSOUNDSTK5BAS1",
+   "name": "하만카돈 SOUND STICKS 5 블루투스 스피커",
+   "usp": [
+    "새롭게 진화한 아이코닉 디자인",
+    "몰입감을 더하는 3-Way 사운드 필드",
+    "TV와 유선연결 확장 HDMI ARC 지원"
+   ],
+   "url": "hamman-audio/hk-speaker-soundsticks5-d2c/HKSOUNDSTK5BAS1/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "HKSOUNDSTK5WFWAS1",
+   "name": "하만카돈 SOUND STICKS 5 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "정제되고 직관적인 아이코닉 디자인",
+    "3-Way 스피커 설계로 구현한 균형 잡힌 사운드",
+    "내장 Wi-Fi를 통한 고선명도 음악 스트리밍"
+   ],
+   "url": "hamman-audio/hk-speaker-soundsticks5-d2c/HKSOUNDSTK5WFWAS1/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-B400F/KR",
+   "name": "2.0ch 사운드바 B400F",
+   "usp": [
+    "콤팩트한 사운드바에 담은 더 깊은 사운드 빌트인 우퍼 2.0ch 사운드",
+    "하나의 리모컨, 두 가지 컨트롤 원 리모컨",
+    "주변을 둘러싸는 입체적인 사운드 서라운드 사운드 확장"
+   ],
+   "url": "sound-bar/HW-B400F-KR/HW-B400F/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-B650F/KR",
+   "name": "3.1ch 사운드바 B650F",
+   "usp": [
+    "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드",
+    "TV와 더욱 조화로운 Q 심포니",
+    "온몸을 휘감는 웅장하고 매혹적인 사운드 Dolby Audio / DTS Virtual:X"
+   ],
+   "url": "sound-bar/HW-B650F-KR/HW-B650F/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-LS51H/KR",
+   "name": "뮤직 스튜디오 5 LS51H",
+   "usp": [
+    "부훌렉 도트 디자인",
+    "무선 음악 스트리밍",
+    "강력한 사운드"
+   ],
+   "url": "sound-bar/wifi-speaker-hw-ls50h-d2c/HW-LS51H/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-LS60D/KR",
+   "name": "뮤직 프레임 LS60D",
+   "usp": [
+    "우리 집 무드에 맞출 수 있는 커스텀 디자인 뮤직 프레임",
+    "넓은 공간을 커버하는 균형 잡힌 사운드 와이드 스위트 스팟",
+    "온몸을 휘감는 3D 서라운드 사운드 Dolby Atmos"
+   ],
+   "url": "sound-bar/music-frame-hw-ls60d-d2c/HW-LS60D/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-LS70H/KR",
+   "name": "뮤직 스튜디오 7 LS70H",
+   "usp": [
+    "트루 3.1.1 몰입형 사운드",
+    "Q 심포니",
+    "Hi-Resolution Audio"
+   ],
+   "url": "sound-bar/wifi-speaker-hw-ls70h-d2c/HW-LS70H/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-QS700F/KR",
+   "name": "3.1.2ch 사운드바 QS700F",
+   "usp": [
+    "원하는 대로 설치하는 컨버터블 핏",
+    "콘텐츠를 풍성하게 트루 3.1.2채널 사운드",
+    "선 없이 간편하게 Dolby Atmos 무선 연결"
+   ],
+   "url": "sound-bar/HW-QS700F-KR/HW-QS700F/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-S50B/KR",
+   "name": "3.0 ch 사운드바 S50B",
+   "usp": [
+    "당신을 감싸는 3.0 채널의 풍성한 사운드",
+    "TV와 사운드바의 완벽한 조화 Q 심포니",
+    "속삭임까지 귓가에 전해지는 센터 채널 스피커"
+   ],
+   "url": "sound-bar/HW-S50B-KR/HW-S50B/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-S55B/KR",
+   "name": "3.0 ch 사운드바 S55B",
+   "usp": [
+    "당신을 감싸는 3.0 채널의 풍성한 사운드",
+    "TV와 사운드바의 완벽한 조화 Q 심포니",
+    "속삭임까지 귓가에 전해지는 센터 채널 스피커"
+   ],
+   "url": "sound-bar/HW-S55B-KR/HW-S55B/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-S60D/KR",
+   "name": "5.0 ch 사운드바 S60D",
+   "usp": [
+    "콤팩트한 디자인에 담긴 강력한 서라운드 사운드 All-in-one 5.0 ch 사운드",
+    "무선으로 연결되는 Dolby Atmos 사운드바 Dolby Atmos 무선 연결 기능",
+    "사운드바와 TV의 황홀한 하모니 Q 심포니"
+   ],
+   "url": "sound-bar/HW-S60D-KR/HW-S60D/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "HW-S61D/KR",
+   "name": "5.0 ch 사운드바 S61D",
+   "usp": [
+    "콤팩트한 디자인에 담긴 강력한 서라운드 사운드 All-in-one 5.0 ch 사운드",
+    "무선으로 연결되는 Dolby Atmos 사운드바 Dolby Atmos 무선 연결 기능",
+    "사운드바와 TV의 황홀한 하모니 Q 심포니"
+   ],
+   "url": "sound-bar/HW-S61D-KR/HW-S61D/KR/",
+   "cats": [
+    "sound-bar"
+   ],
+   "biz": []
+  },
+  {
+   "code": "IB-PP20",
+   "name": "포토 프린터 용지 20 매",
+   "usp": [
+    "소중한 순간들을 더 특별하게",
+    "잉크 보충 필요 없이 간편하게!",
+    "관리도 용지 한 장으로!"
+   ],
+   "url": "printers/IB-PP20/IB-PP20/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "IB-PP30",
+   "name": "포토 프린터 용지 30 매",
+   "usp": [
+    "소중한 순간들을 더 특별하게",
+    "잉크 보충 필요 없이 간편하게!",
+    "관리도 용지 한 장으로!"
+   ],
+   "url": "printers/IB-PP30/IB-PP30/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "INK-C170",
+   "name": "잉크젯 프린터 잉크 165매 (멀티)",
+   "usp": [
+    "삼성 정품 잉크와 삼성 프린터의 완벽한 조합",
+    "눈에 보이는 생생한 컬러와 깨끗한 선처리",
+    "뛰어난 성능으로, 고장 스트레스까지 제로"
+   ],
+   "url": "printers/INK-C170/INK-C170/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "INK-C610",
+   "name": "잉크젯 프린터 잉크 8,000매 (사이안)",
+   "usp": [
+    "대용량 잉크 8,000매 출력 가능",
+    "경제적인 출력 비용 장당 출력비 1.3원",
+    "정품 무한 잉크젯 삼성 프린터와의 완벽한 조합"
+   ],
+   "url": "printers/INK-C610/INK-C610/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "INK-K610",
+   "name": "잉크젯 프린터 잉크 6,000매 (블랙)",
+   "usp": [
+    "대용량 잉크 6,000매 출력 가능",
+    "경제적인 출력 비용 장당 출력비 1.7원",
+    "정품 무한 잉크젯 삼성 프린터와의 완벽한 조합"
+   ],
+   "url": "printers/INK-K610/INK-K610/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "INK-M170",
+   "name": "잉크젯 프린터 잉크 190매 (블랙)",
+   "usp": [
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리",
+    "삼성 정품 잉크와 삼성 프린터의 완벽한 조합",
+    "뛰어난 성능으로, 고장 스트레스까지 제로"
+   ],
+   "url": "printers/INK-M170/INK-M170/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "INK-M610",
+   "name": "잉크젯 프린터 잉크 8,000매 (마젠타)",
+   "usp": [
+    "대용량 잉크 8,000매 출력 가능",
+    "경제적인 출력 비용, 장당 출력비 1.3원",
+    "정품 무한 잉크젯 삼성 프린터와의 완벽한 조합"
+   ],
+   "url": "printers/INK-M610/INK-M610/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "INK-Y610",
+   "name": "잉크젯 프린터 잉크 8,000매 (옐로우)",
+   "usp": [
+    "대용량 잉크 8,000매 출력 가능",
+    "경제적인 출력 비용, 장당 출력비 1.3원",
+    "정품 무한 잉크젯 삼성 프린터와의 완벽한 조합"
+   ],
+   "url": "printers/INK-Y610/INK-Y610/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLAUTH200BLKAS",
+   "name": "JBL Authentics 200 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "강력하고 뛰어난 스테레오 사운드",
+    "JBL 헤리티지가 가미된 아이코닉 디자인",
+    "내장 Wi-Fi를 통한 고선명도 음악 스트리밍"
+   ],
+   "url": "hamman-audio/JBLAUTH200BLKAS/JBLAUTH200BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLAUTH300BLKAS",
+   "name": "JBL Authentics 300 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "강력하고 뛰어난 스테레오 사운드",
+    "JBL 헤리티지가 가미된 아이코닉 디자인",
+    "내장 Wi-Fi를 통한 고선명도 음악 스트리밍"
+   ],
+   "url": "hamman-audio/JBLAUTH300BLKAS/JBLAUTH300BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLAUTH500BLKAS",
+   "name": "JBL Authentics 500 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "Dolby Atmos® Music의 생생한 사운드",
+    "JBL 헤리티지가 가미된 아이코닉 디자인",
+    "내장 Wi-Fi를 통한 고선명도 음악 스트리밍"
+   ],
+   "url": "hamman-audio/JBLAUTH500BLKAS/JBLAUTH500BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLBANDBOXSOLO",
+   "name": "JBL BANDBOX SOLO 블루투스 스피커",
+   "usp": [
+    "AI 실시간 보컬 및 악기 분리",
+    "강력한 JBL 사운드",
+    "튜너와 메트로놈은 기본 스마트한 스피커"
+   ],
+   "url": "hamman-audio/jbl-speaker-bandboxsolo-d2c/JBLBANDBOXSOLO/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "JBLBAR1000M2BLKAS1",
+   "name": "JBL BAR 1000 MK2 분리형 사운드바",
+   "usp": [
+    "컨탠츠나 무드에 따라 사운드 채널 선택 분리형 무선 리어스피커",
+    "풍성한 서라운드와 사운드 스테이지 MultiBeam™ 3.0",
+    "미세한 소리도 놓치지 않는 SmartDetails"
+   ],
+   "url": "hamman-audio/JBLBAR1000M2BLKAS1/JBLBAR1000M2BLKAS1/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLBAR1300M2BLKAS1",
+   "name": "JBL BAR 1300 MK2 분리형 사운드바",
+   "usp": [
+    "컨탠츠나 분위기에 따라 사운드채널 선택 분리형 무선 리어스피커",
+    "AI Sound Boost로 더 강력해진 듀얼 드라이버 컴팩트 우퍼",
+    "무선으로 TV↔사운드바 연출 가능한 One Commander"
+   ],
+   "url": "hamman-audio/JBLBAR1300M2BLKAS1/JBLBAR1300M2BLKAS1/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLBAR20AIOM2BLKAS",
+   "name": "JBL BAR  2.0 All-in-One MK2 사운드바",
+   "usp": [
+    "심플하고 간결한 올인원 디자인",
+    "최대 80 W의 깊고 풍부한 사운드",
+    "공간을 채우는 JBL 서라운드 사운드"
+   ],
+   "url": "hamman-audio/JBLBAR20AIOM2BLKAS/JBLBAR20AIOM2BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLBAR300M2BLKAS",
+   "name": "JBL BAR 300 MK2 원바디 사운드바",
+   "usp": [
+    "원바디로 즐기는 강력한 사운드 출력",
+    "극장 한가운데 있는 듯한 세세한 방향감 MultiBeam™ 3.0",
+    "공간에 맞춰서 알아서 사운드 보정 자동 사운드 캘리브레이션"
+   ],
+   "url": "hamman-audio/JBLBAR300M2BLKAS/JBLBAR300M2BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLBAR800M2BLKAS1",
+   "name": "JBL BAR 800 MK2 분리형 사운드바",
+   "usp": [
+    "컨텐츠나 무드에 따라 사운드 채널 선택 분리형 무선 리어스피커",
+    "사운드빔으로 공간을 가득 채우는 MultiBeam™ 3.0",
+    "배경에 묻히지 않는 주인공의 목소리 PureVoice 2.0"
+   ],
+   "url": "hamman-audio/JBLBAR800M2BLKAS1/JBLBAR800M2BLKAS1/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLBATTERY200",
+   "name": "JBL BATTERY 200 배터리",
+   "usp": [
+    "파티를 두 배 더 즐길 수 있는 강력한 배터리 성능",
+    "10분 고속 충전으로 80분 재생 가능",
+    "편리한 사용이 가능한 전용 어플리케이션"
+   ],
+   "url": "hamman-audio/JBLBATTERY200/JBLBATTERY200/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLCHARGE6BLK",
+   "name": "JBL CHARGE6 블루투스 스피커",
+   "usp": [
+    "AI 사운드 부스트로 강화된 강력한 JBL PRO 사운드",
+    "음악 재생과 함께 충전도 가능한 보조 배터리 기능",
+    "야외 활동에 강한 강력한 방수, 방진 설계"
+   ],
+   "url": "hamman-audio/JBLCHARGE6BLK/JBLCHARGE6BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLCLIP5BLK",
+   "name": "JBL CLIP 5 블루투스 스피커",
+   "usp": [
+    "업그레이드 된 일체형 클립",
+    "IP67 등급으로 생활 방수와 방진 OK",
+    "다채로운 컬러와 감각적인 디자인"
+   ],
+   "url": "hamman-audio/JBLCLIP5BLK/JBLCLIP5BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLFLIP7BLK",
+   "name": "JBL FLIP 7 블루투스 스피커",
+   "usp": [
+    "JBL PRO 사운드를 한층 풍성하게 해주는 AI 사운드 부스트",
+    "야외 활동에 강한 강력한 방수, 방진 설계",
+    "푸쉬-락 시스템으로 교체 가능한 액세서리"
+   ],
+   "url": "hamman-audio/JBLFLIP7BLK/JBLFLIP7BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5BLK",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5BLU",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5BLU/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5ORG",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5ORG/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5PIK",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5PIK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5PUR",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5PUR/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5RED",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5RED/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5SQUAD",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5SQUAD/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5WHT",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5WHT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGO5YEL",
+   "name": "JBL GO 5 포터블 블루투스 스피커",
+   "usp": [
+    "손안에 담긴 강력한 사운드",
+    "분위기를 더하는 에지 라이팅",
+    "방수, 방진 기능 IP68"
+   ],
+   "url": "hamman-audio/jbl-speaker-go5-d2c/JBLGO5YEL/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLGRIPBLK",
+   "name": "JBL GRIP 포터블 블루투스 스피커",
+   "usp": [
+    "AI 사운드 부스트로 강화된 강력한 JBL PRO 사운드",
+    "공간의 분위기를 완성하는 앰비언트 라이트",
+    "야외 활동에 강한 강력한 방수, 방진 설계"
+   ],
+   "url": "hamman-audio/JBLGRIPBLK/JBLGRIPBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLHORIZON3BLKAS",
+   "name": "JBL HORIZON 3 블루투스 시계 FM 라디오 스피커",
+   "usp": [
+    "JBL PRO 사운드로 시작하는 나만의 일출 알람 시계",
+    "FM 라디오+블루투스+충전 다기능 스피커",
+    "시계 및 설정이 간편한 디스플레이 & 회전식 조절 다이얼"
+   ],
+   "url": "hamman-audio/JBLHORIZON3BLKAS/JBLHORIZON3BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLJR320BLU",
+   "name": "JBL JR320 유선 키즈 헤드폰",
+   "usp": [
+    "오랜 시간 동안 즐기는 최대 50시간 재생",
+    "청력 보호를 위한 안심 사운드",
+    "초경량 무게와 편안한 착용감"
+   ],
+   "url": "hamman-audio/JBLJR320BLU/JBLJR320BLU/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLJR320BTBLU",
+   "name": "JBL JR320BT 블루투스 무선 키즈 헤드폰",
+   "usp": [
+    "자유로운 활동을 돕는 블루투스 무선 연결",
+    "청력 보호를 위한 안심 사운드",
+    "초경량 무게와 편안한 착용감"
+   ],
+   "url": "hamman-audio/JBLJR320BTBLU/JBLJR320BTBLU/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLLIVE670NCWHT",
+   "name": "JBL LIVE 670NC 무선 온이어 헤드폰",
+   "usp": [
+    "고품질의 JBL 시그니처 사운드",
+    "주변 환경에 따라 조절되는 트루 어댑티브 노이즈 캔슬링",
+    "오랫동안 즐길 수 있는 최대 50시간 재생"
+   ],
+   "url": "hamman-audio/JBLLIVE670NCWHT/JBLLIVE670NCWHT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLLIVE770NCSAT",
+   "name": "JBL LIVE 770NC 무선 오버이어 헤드폰",
+   "usp": [
+    "고품질의 JBL 시그니처 사운드",
+    "주변 환경에 따라 조절되는 트루 어댑티브 노이즈 캔슬링",
+    "오랫동안 즐길 수 있는 최대 50시간 재생"
+   ],
+   "url": "hamman-audio/JBLLIVE770NCSAT/JBLLIVE770NCSAT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLPBWIRELESSMIC",
+   "name": "JBL PARTYBOX 무선 마이크",
+   "usp": [
+    "선명하고 깨끗한 보컬 사운드",
+    "간편하고 안정적인 2.4GHz 동글 연결",
+    "오래 지속되는 배터리 성능"
+   ],
+   "url": "hamman-audio/JBLPBWIRELESSMIC/JBLPBWIRELESSMIC/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQTUM100M2BLK",
+   "name": "JBL QUANTUM 100 M2 게이밍 유선 헤드셋",
+   "usp": [
+    "게이머를 위해 튜닝된 JBL Quantum Sound",
+    "장시간 사용에도 편안한 패브릭 이어쿠션",
+    "깔끔한 목소리 전달을 위한 탈착식 지향성 붐 마이크"
+   ],
+   "url": "hamman-audio/JBLQTUM100M2BLK/JBLQTUM100M2BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQTUM250BLK",
+   "name": "JBL QUANTUM 250 게이밍 헤드셋",
+   "usp": [
+    "풍부한 사운드를 구현하는 50mm 다이내믹 드라이버",
+    "JBL QuantumENGINE 소프트웨어 지원",
+    "헤드 트래킹을 지원하는 JBL Quantum Spatial Sound"
+   ],
+   "url": "hamman-audio/jbl-headphone-quantum250-d2c/JBLQTUM250BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQTUM50CBLK",
+   "name": "JBL QUANTUM 50C 게이밍 유선 이어폰",
+   "usp": [
+    "게임의 몰입감을 돕는 Quantum 시그니처 사운드",
+    "게임에 최적화된 간편 컨트롤과 음성 마이크",
+    "장시간 플레이에도 편안한 Twistlock™ 기술"
+   ],
+   "url": "hamman-audio/JBLQTUM50CBLK/JBLQTUM50CBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQTUM650BLK",
+   "name": "JBL QUANTUM 650 무선 게이밍 헤드셋",
+   "usp": [
+    "풍부한 사운드를 구현하는 50mm 다이내믹 드라이버",
+    "JBL QuantumENGINE 소프트웨어 지원",
+    "헤드 트래킹을 지원하는 JBL Quantum Spatial Sound"
+   ],
+   "url": "hamman-audio/jbl-headphone-quantum650-d2c/JBLQTUM650BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQTUM950BLK",
+   "name": "JBL QUANTUM 950 무선 게이밍 헤드셋",
+   "usp": [
+    "풍부한 사운드를 구현하는 50mm 카본 다이내믹 드라이버",
+    "JBL QuantumENGINE 소프트웨어 지원",
+    "외부 소음을 줄여주는 Adaptive 노이즈 캔슬링"
+   ],
+   "url": "hamman-audio/jbl-headphone-quantum950-d2c/JBLQTUM950BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQTWSAIRBLKAS",
+   "name": "JBL QUANTUM TWS AIR 무선 게이밍 이어폰",
+   "usp": [
+    "실감나는 사운드 플레이 JBL QuantumSURROUND",
+    "두 가지 무선 연결 지원 2.4G USB 동글&블루투스 5.2",
+    "선명한 팀 보이스를 위한 4개 빔포밍 마이크"
+   ],
+   "url": "hamman-audio/JBLQTWSAIRBLKAS/JBLQTWSAIRBLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLQUANTUM300BLK",
+   "name": "JBL QUANTUM 300 게이밍 헤드셋",
+   "usp": [
+    "현실감 넘치는 7.1 채널 Quantum 서라운드",
+    "선명한 소통을 위한 지향성 붐 마이크",
+    "편안한 경량 헤드 밴드 메모리폼 쿠션"
+   ],
+   "url": "hamman-audio/JBLQUANTUM300BLK/JBLQUANTUM300BLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLSENSELITEBEG",
+   "name": "JBL Sense Lite 오픈-이어 블루투스 이어폰",
+   "usp": [
+    "음악과 함께 주변 소리도 들을 수 있는 JBL Open Sound",
+    "오픈된 환경에서도 선명한 사운드 11x18mm 고감도 드라이버",
+    "오랜시간 편안한 착용감 울트라-소프트 액체 실리콘&메모리 와이어"
+   ],
+   "url": "hamman-audio/JBLSENSELITEBEG/JBLSENSELITEBEG/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLSENSEPROBLK",
+   "name": "JBL SENSE PRO 오픈 이어 블루투스 이어폰",
+   "usp": [
+    "오픈형 구조로 즐기는 JBL OPENSOUND와 공간음향",
+    "Hi-Res Wireless로 완성하는 깊고 정교한 사운드",
+    "하루 종일 안정적인 착용감과 최대 38시간 배터리"
+   ],
+   "url": "hamman-audio/jbl-earphone-sensepro-d2c/JBLSENSEPROBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLSNDGEARCLBLK",
+   "name": "JBL SOUNDGEAR CLIPS 오픈 이어 블루투스 이어폰",
+   "usp": [
+    "주변과 자연스럽게 이어지는 오픈 사운드 경험",
+    "리듬을 놓치지 않는 다이내믹한 베이스 사운드",
+    "활동 중에도 안정적인 착용과 선명한 통화 품질"
+   ],
+   "url": "hamman-audio/jbl-earphone-soundgearclips-d2c/JBLSNDGEARCLBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLSTRMTALKBLK",
+   "name": "JBL QUANTUM STREAM TALK 게이밍 USB 콘덴서 마이크",
+   "usp": [
+    "스트리밍에 안성맞춤인 싱글 콘덴서 마이크",
+    "주변의 소리를 차단하는 단일 음성 픽업 패턴",
+    "조절이 용이한 컨트롤 노브"
+   ],
+   "url": "hamman-audio/JBLSTRMTALKBLK/JBLSTRMTALKBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLT215BTBLKAS",
+   "name": "JBL TUNE 215BT 블루투스 이어폰",
+   "usp": [
+    "JBL의 놀라운 퓨어 베이스 사운드",
+    "최대 16시간 재생 대용량 배터리",
+    "손실 걱정 없는 고품질 스트리밍 구현"
+   ],
+   "url": "hamman-audio/JBLT215BTBLKAS/JBLT215BTBLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLT310CWHT",
+   "name": "JBL TUNE 310C USB-C 유선 이어폰",
+   "usp": [
+    "Hi-Res 오디오 인증 JBL의 강력한 베이스 사운드",
+    "광범위한 호환성 USB-C 연결 지원",
+    "편리한 3-버튼 리모콘"
+   ],
+   "url": "hamman-audio/JBLT310CWHT/JBLT310CWHT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLT530BTBLK",
+   "name": "JBL TUNE 530BT 무선 온이어 헤드폰",
+   "usp": [
+    "깊고 풍성한 JBL Pure Bass 사운드",
+    "최대 76시간의 여유로운 배터리 사용 시간",
+    "가볍고 편안한 착용감과 접이식 디자인"
+   ],
+   "url": "hamman-audio/jbl-headphone-tune530bt-d2c/JBLT530BTBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLT720BTPUR",
+   "name": "JBL TUNE 720BT 무선 오버이어 헤드폰",
+   "usp": [
+    "깊고 풍성한 JBL만의 Pure Bass 사운드",
+    "오랜시간 감상 가능한 최대 76시간 배터리 수명",
+    "가볍고 편안한 접이식 디자인"
+   ],
+   "url": "hamman-audio/JBLT720BTPUR/JBLT720BTPUR/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLT730BTBLK",
+   "name": "JBL TUNE 730BT 무선 오버이어 헤드폰",
+   "usp": [
+    "40mm 드라이버를 적용한 JBL Pure Bass 사운드",
+    "최대 76시간 배터리 사용",
+    "Bluetooth® 5.0 멀티포인트 연결"
+   ],
+   "url": "hamman-audio/jbl-headphone-tune730bt-d2c/JBLT730BTBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLT770NCPUR",
+   "name": "JBL TUNE 770NC 무선 오버이어 헤드폰",
+   "usp": [
+    "깊고 풍성한 JBL만의 Pure Bass 사운드",
+    "한 번 충전만으로 최대 70시간 음악재생",
+    "몰입감을 높이는 액티브 노이즈 캔슬링"
+   ],
+   "url": "hamman-audio/JBLT770NCPUR/JBLT770NCPUR/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLTBEAM2BLKAS",
+   "name": "JBL TUNE BEAM 2 어댑티브 노이즈 캔슬링 무선 이어폰",
+   "usp": [
+    "강력한 JBL Pure Bass 사운드",
+    "몰입감을 높이는 어댑티브 노이즈 캔슬링",
+    "6개의 마이크가 적용되어 선명하고 깨끗한 통화품질"
+   ],
+   "url": "hamman-audio/JBLTBEAM2BLKAS/JBLTBEAM2BLKAS/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLTOM3AVIBLK",
+   "name": "JBL TOUR ONE M3 Smart Tx 노이즈 캔슬링 오버이어 헤드폰",
+   "usp": [
+    "JBL 스마트 Tx 오디오 전송 및 디스플레이 컨트롤",
+    "Legendary JBL Pro Sound로 구현한 Hi-res 오디오",
+    "True Adaptive 노이즈 캔슬링 2.0과 깔끔한 통화 품질"
+   ],
+   "url": "hamman-audio/JBLTOM3AVIBLK/JBLTOM3AVIBLK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLTOURPRO3BLU",
+   "name": "JBL TOUR PRO 3 프리미엄 노이즈 캔슬링 무선 이어폰",
+   "usp": [
+    "다양한 사용 경험을 선사하는 스마트 케이스",
+    "하이브리드 듀얼 드라이버가 탑재된 JBL 프로 사운드",
+    "스마트 환경 인식을 통한 적응형 노이즈 캔슬링"
+   ],
+   "url": "hamman-audio/jbl-earphone-tourpro3-d2c/JBLTOURPRO3BLU/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLTOURPRO3LTT",
+   "name": "JBL TOUR PRO 3 프리미엄 노이즈 캔슬링 무선 이어폰",
+   "usp": [
+    "다양한 사용 경험을 선사하는 스마트 케이스",
+    "하이브리드 듀얼 드라이버가 탑재된 JBL 프로 사운드",
+    "스마트 환경 인식을 통한 적응형 노이즈 캔슬링"
+   ],
+   "url": "hamman-audio/JBLTOURPRO3LTT/JBLTOURPRO3LTT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLWBEAM2PIK",
+   "name": "JBL WAVE BEAM 2 액티브 노이즈 캔슬링 무선 이어폰",
+   "usp": [
+    "깊고 웅장해진 JBL Pure Bass 사운드",
+    "4개의 마이크 적용으로 강력해진 액티브 노이즈 캔슬링과 통화품질",
+    "긴 배터리 사용시간 최대 40시간"
+   ],
+   "url": "hamman-audio/JBLWBEAM2PIK/JBLWBEAM2PIK/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "JBLWBUDS2WHT",
+   "name": "JBL WAVE BUDS 2 액티브 노이즈 캔슬링 무선 이어폰",
+   "usp": [
+    "깊고 웅장해진 JBL Pure Bass 사운드",
+    "4개의 마이크 적용으로 강력해진 액티브 노이즈 캔슬링과 통화품질",
+    "긴 배터리 사용시간 최대 40시간"
+   ],
+   "url": "hamman-audio/JBLWBUDS2WHT/JBLWBUDS2WHT/",
+   "cats": [
+    "hamman-audio"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KQ42SH90-1W",
+   "name": "무빙스타일 OLED (SH90) (105cm) 라이트",
+   "usp": [
+    "빛 반사 걱정 없는, Glare Free",
+    "얼티밋 게이밍 팩",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "url": "tv/package-kq42sh90-1w-d2c/KQ42SH90-1W/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KQ42SH90AEXKR",
+   "name": "2026 OLED SH90 (105cm)",
+   "usp": [
+    "빛 반사 걱정 없는, Glare Free",
+    "얼티밋 게이밍 팩",
+    "레이저슬림 디자인"
+   ],
+   "url": "tv/oled-sh90-d2c/KQ42SH90AEXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KQ48SH90-1B",
+   "name": "무빙스타일 OLED (SH90) (120cm) 라이트",
+   "usp": [
+    "빛 반사 걱정 없는, Glare Free",
+    "얼티밋 게이밍 팩",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "url": "tv/package-kq48sh90-1b-d2c/KQ48SH90-1B/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KQ55LSD01AFXKR",
+   "name": "2024 The Serif (138 cm)",
+   "usp": [
+    "360도 모든 각도에서 아름다운 Serif 디자인",
+    "빛 반사를 최소화하여 더욱 선명한 매트 디스플레이",
+    "어느 곳에 배치해도 감각적인 탈부착형 스탠드"
+   ],
+   "url": "tv/KQ55LSD01AFXKR/KQ55LSD01AFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KQ65QNH80AFXKR",
+   "name": "2026 Neo QLED QNH80 (163cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "퀀텀 Mini LED",
+    "모션 터보 144Hz"
+   ],
+   "url": "tv/neo-qled-4k-qnh80-d2c/KQ65QNH80AFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU27LSFM7AXXKR",
+   "name": "2025 The Movingstyle",
+   "usp": [
+    "분리와 이동이 자유로운 스타일",
+    "간편한 자유롭게 즐기는 스타일",
+    "터치 인터랙션으로 완성한 스타일"
+   ],
+   "url": "tv/KU27LSFM7AXXKR/KU27LSFM7AXXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU43MH70-1W",
+   "name": "무빙스타일 Mini LED (MH70) (108cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "url": "tv/package-ku43mh70-1w-d2c/KU43MH70-1W/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU43MH70AFXKR",
+   "name": "2026 Mini LED MH70 (108cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "삼성 Knox 보안"
+   ],
+   "url": "tv/mini-led-mh70-d2c/KU43MH70AFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU50MH70-1W",
+   "name": "무빙스타일 Mini LED (MH70) (125cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "url": "tv/package-ku50mh70-1w-d2c/KU50MH70-1W/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU50MH70-W",
+   "name": "2026 Mini LED MH70 (125cm) 풀 모션 슬림핏 벽걸이형",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "삼성 Knox 보안"
+   ],
+   "url": "tv/mini-led-mh70-d2c/KU50MH70-W/",
+   "cats": [],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "education",
+    "postpartum-care-center",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "KU50UH8000FXKR",
+   "name": "2026 Crystal UHD UH8000 (125cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "크리스탈 프로세서 4K",
+    "다이내믹 사운드 팩"
+   ],
+   "url": "tv/uhd-uh8000-d2c/KU50UH8000FXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU75MH75AFXKR",
+   "name": "2026 Mini LED MH75 (189cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "삼성 Knox 보안"
+   ],
+   "url": "tv/mini-led-mh75-d2c/KU75MH75AFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "KU75UH8000-W",
+   "name": "2026 Crystal UHD UH8000 (189cm) 풀 모션 슬림핏 벽걸이형",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "크리스탈 프로세서 4K",
+    "다이내믹 사운드 팩"
+   ],
+   "url": "tv/uhd-uh8000-d2c/KU75UH8000-W/",
+   "cats": [],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "education",
+    "postpartum-care-center",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "KU75UH8000FXKR",
+   "name": "2026 Crystal UHD UH8000 (189cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "크리스탈 프로세서 4K",
+    "다이내믹 사운드 팩"
+   ],
+   "url": "tv/uhd-uh8000-d2c/KU75UH8000FXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH32EMDIAGBXKR",
+   "name": "E Paper",
+   "usp": [
+    "컬러 이페이퍼, 유연한 사용성과 효율성을 동시에",
+    "간결한 디자인이 찾은 최상의 미니멀리즘",
+    "비즈니스를 위한 자유로운 이동과 배치"
+   ],
+   "url": "signage/e-paper-lh32emdiagbxkr/LH32EMDIAGBXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH32QMCEBGCXKR",
+   "name": "단독형 UHD M 시리즈",
+   "usp": [
+    "미세 크리스탈에서 탄생한 순도 높은 컬러",
+    "클립 한번으로 편리한 연결",
+    "전문적인 비즈니스 환경을 위한 도구"
+   ],
+   "url": "signage/LH32QMCEBGCXKR/LH32QMCEBGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH43BEHHLBFXKR",
+   "name": "비즈니스TV",
+   "usp": [
+    "비즈니스를 위한 맞춤형 TV",
+    "손끝으로 간편하게 콘텐츠 제어",
+    "강력한 4K가 선사하는 현실감 넘치는 화질"
+   ],
+   "url": "tv/LH43BEHHLBFXKR/LH43BEHHLBFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH43QHCEBGCXKR",
+   "name": "단독형 UHD H 시리즈",
+   "usp": [
+    "슬림한 디자인과 놀라운 성능",
+    "좋은 공간도 넓게 누리는 세련된 디자인",
+    "어떤 조명 아래에서도 선명한 화질"
+   ],
+   "url": "signage/LH43QHCEBGCXKR/LH43QHCEBGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH50BEHHLBFXKR",
+   "name": "비즈니스TV",
+   "usp": [
+    "비즈니스를 위한 맞춤형 TV",
+    "손끝으로 간편하게 콘텐츠 제어",
+    "강력한 4K가 선사하는 현실감 넘치는 화질"
+   ],
+   "url": "tv/LH50BEHHLBFXKR/LH50BEHHLBFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH55BEFHLB-1WB",
+   "name": "무빙스타일 Biz (138.7cm) 라이트",
+   "usp": [
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "비즈니스 TV + 무빙스탠드 조합",
+    "강력한 4K가 선사하는 현실감 넘치는 화질"
+   ],
+   "url": "tv/LH55BEFHLB-1WB/LH55BEFHLB-1WB/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH55BEFHLBFXKR",
+   "name": "비즈니스TV",
+   "usp": [
+    "비즈니스를 위한 맞춤형 TV",
+    "손끝으로 간편하게 콘텐츠 제어",
+    "강력한 4K가 선사하는 현실감 넘치는 화질"
+   ],
+   "url": "tv/LH55BEFHLBFXKR/LH55BEFHLBFXKR/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH55WMFWBGCXKR",
+   "name": "Flip Pro 전자칠판",
+   "usp": [
+    "자연스럽고 정교한 필기 경험",
+    "향상된 화이트보드 기능",
+    "사용이 편리한 Flip Home"
+   ],
+   "url": "signage/LH55WMFWBGCXKR/LH55WMFWBGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH65WMFWBGCXKR",
+   "name": "Flip Pro 전자칠판",
+   "usp": [
+    "자연스럽고 정교한 필기 경험",
+    "향상된 화이트보드 기능",
+    "사용이 편리한 Flip Home"
+   ],
+   "url": "signage/LH65WMFWBGCXKR/LH65WMFWBGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH75WMFWLGCXKR",
+   "name": "Flip Pro 전자칠판",
+   "usp": [
+    "자연스럽고 정교한 필기 경험",
+    "향상된 화이트보드 기능",
+    "사용이 편리한 Flip Home"
+   ],
+   "url": "signage/LH75WMFWLGCXKR/LH75WMFWLGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH85QBCEBGC-S",
+   "name": "단독형 UHD B 시리즈 + 단독형 스탠드 (대형)",
+   "usp": [
+    "슬림한 디자인과 놀라운 성능",
+    "좋은 공간도 넓게 누리는 세련된 디자인",
+    "세로 모드에서도 완벽한 시청 경험"
+   ],
+   "url": "signage/LH85QBCEBGC-S/LH85QBCEBGC-S/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH85QBCEBGC-W",
+   "name": "단독형 UHD B 시리즈 + 단독형 벽걸이 브라켓",
+   "usp": [
+    "슬림한 디자인과 놀라운 성능",
+    "좋은 공간도 넓게 누리는 세련된 디자인",
+    "세로 모드에서도 완벽한 시청 경험"
+   ],
+   "url": "signage/LH85QBCEBGC-W/LH85QBCEBGC-W/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH85QBCEBGCXKR",
+   "name": "단독형 UHD B 시리즈",
+   "usp": [
+    "슬림한 디자인과 놀라운 성능",
+    "좁은 공간도 넓게 누리는 세련된 디자인",
+    "세로 모드에서도 완벽한 시청 경험"
+   ],
+   "url": "signage/LH85QBCEBGCXKR/LH85QBCEBGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH85WMFWLGCXKR",
+   "name": "Flip Pro 전자칠판",
+   "usp": [
+    "자연스럽고 정교한 필기 경험",
+    "향상된 화이트보드 기능",
+    "사용이 편리한 Flip Home"
+   ],
+   "url": "signage/LH85WMFWLGCXKR/LH85WMFWLGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH86WAFWLGC-H",
+   "name": "안드로이드 전자칠판 WAF + 안드로이드 전자칠판 이동식 스탠드",
+   "usp": [
+    "편리한 사용을 위한 직관적인 UX",
+    "간편하게 누리는 다양한 Google 서비스",
+    "화면 어디든 자유로운 메모"
+   ],
+   "url": "signage/LH86WAFWLGC-H/LH86WAFWLGC-H/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH86WAFWLGCXKR",
+   "name": "안드로이드 전자칠판 WAF",
+   "usp": [
+    "편리한 사용을 위한 직관적인 UX",
+    "간편하게 누리는 다양한 Google 서비스",
+    "화면 어디든 자유로운 메모"
+   ],
+   "url": "signage/LH86WAFWLGCXKR/LH86WAFWLGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH98QECEDGC-W",
+   "name": "단독형 UHD E 시리즈 + 고정형 벽걸이 브라켓",
+   "usp": [
+    "비즈니스의 가능성을 높여주는 사이니지 효과",
+    "공간을 압도하는 폭넓은 화면 사이즈",
+    "유행을 타지 않는 감각적인 디스플레이"
+   ],
+   "url": "signage/LH98QECEDGC-W/LH98QECEDGC-W/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LH98QECEDGCXKR",
+   "name": "단독형 UHD E 시리즈",
+   "usp": [
+    "비즈니스의 가능성을 높여주는 사이니지 효과",
+    "공간을 압도하는 폭넓은 화면 사이즈",
+    "유행을 타지 않는 감각적인 디스플레이"
+   ],
+   "url": "signage/qec-series-d/LH98QECEDGCXKR/",
+   "cats": [
+    "signage"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS24D404GAKXKR",
+   "name": "에센셜모니터 S40GD (60.4cm)",
+   "usp": [
+    "다양한 각도에서도 선명한 색상 IPS 패널",
+    "한층 더 부드럽고 생동감 있는 화면 100Hz 주사율",
+    "눈의 피로 걱정을 줄여주는 모니터 눈 보호 모드"
+   ],
+   "url": "monitors/LS24D404GAKXKR/LS24D404GAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27C900PAKXKR",
+   "name": "초고해상도 뷰피니티 S9(S90PC) (68.4cm)",
+   "usp": [
+    "99 % DCI-P3 옵션의 뛰어난 채도 5K 해상도",
+    "Windows는 물론 Mac에서도 5K 즐기기 Thunderbolt 4",
+    "눈의 피로를 줄여주는 플리커 프리"
+   ],
+   "url": "monitors/LS27C900PAKXKR/LS27C900PAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27CG554EKXKR",
+   "name": "오디세이 G5(G55C) (68.4 cm)",
+   "usp": [
+    "QHD 디스플레이",
+    "감각을 압도하는 1000 R 곡률의 커브스크린",
+    "세련된 스타일과 현대적인 165 Hz 주사율"
+   ],
+   "url": "monitors/gaming-ls32cg554ekxkr-d2c/LS27CG554EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27D304GAKXKR",
+   "name": "에센셜모니터 S30GD (68.6cm)",
+   "usp": [
+    "다양한 각도에서도 선명한 색상 IPS 패널",
+    "한층 더 부드럽고 생동감 있는 화면 100Hz 주사율",
+    "게임을 승리로 이끄는 게임 모드"
+   ],
+   "url": "monitors/lsd304gakxkr/LS27D304GAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27D408GAKXKR",
+   "name": "에센셜모니터 S40GD (68.6cm)",
+   "usp": [
+    "다양한 각도에서도 선명한 색상 IPS 패널",
+    "한층 더 부드럽고 생동감 있는 화면 100Hz 주사율",
+    "눈의 피로 걱정을 줄여주는 모니터 눈 보호 모드"
+   ],
+   "url": "monitors/LS27D408GAKXKR/LS27D408GAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": [
+    "accomodation",
+    "retail",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry"
+   ]
+  },
+  {
+   "code": "LS27D604UAKXKR",
+   "name": "뷰피니티 S6 S60UD QHD USB-C (LS27D604U)",
+   "usp": [
+    "QHD 해상도와 100Hz 주사율로 부드러운 비주얼",
+    "USB-C로 간편한 데이터 전송 및 충전",
+    "간편 설치 스탠드 · 높이 조절/틸트/스위블/피봇"
+   ],
+   "url": "monitors/LS27D604UAKXKR/LS27D604UAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27FG502SKXKR",
+   "name": "오디세이 OLED G5 G50SF QHD 180Hz (LS27FG502S)",
+   "usp": [
+    "QD-OLED in QHD & 글레어프리 & OLED세이프가드",
+    "최대 180Hz 주사율 · 0.03ms 응답속도(GtG) · G-Sync 호환",
+    "자동 소스 스위치+ · DP&HDMI 케이블 동봉"
+   ],
+   "url": "monitors/gaming-ls27fg502skxkr-d2c/LS27FG502SKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27FG504EKXKR",
+   "name": "QHD 오디세이 G5 (LS27FG504) 180Hz",
+   "usp": [
+    "QHD 해상도 · 고속 IPS 패널",
+    "180Hz 주사율 · 1ms 응답속도(GtG)",
+    "HDR10 · 피봇/높이조절 스탠드"
+   ],
+   "url": "monitors/LS27FG504EKXKR/LS27FG504EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27FG530EKXKR",
+   "name": "오디세이 G5 G53F QHD 200Hz (LS27FG530)",
+   "usp": [
+    "QHD 해상도 & IPS 패널",
+    "200Hz 주사율 & 1ms 응답속도(MPRT)",
+    "블랙 이퀄라이저 & 자동 소스 스위치"
+   ],
+   "url": "monitors/gaming-ls27fg504ekxkr-d2c/LS27FG530EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27FG812SKXKR",
+   "name": "오디세이 OLED G8 G81SF 4K 240Hz (LS27FG812)",
+   "usp": [
+    "4K QD-OLED · 글레어 프리 · OLED 세이프가드+",
+    "240Hz 주사율 · 0.03ms 응답속도(GtG) · G-Sync호환",
+    "팬톤 인증 · 코어라이팅+ · 높이 조절 · 피봇 지원"
+   ],
+   "url": "monitors/gaming-ls32dg802skxkr-d2c/LS27FG812SKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS27H802UAKXKR",
+   "name": "뷰피니티 S8 S80UH 4K USB-C (LS27H802U)",
+   "usp": [
+    "4K UHD 해상도 · IPS패널 · HDR10 · USB-C 90W",
+    "아이 세이버 모드 · 삼성 디스플레이 매니저",
+    "이지커넥션(E/C) · 인체공학적 스탠드(높이조절, 피봇)"
+   ],
+   "url": "monitors/LS27H802UAKXKR/LS27H802UAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32CG554EKXKR",
+   "name": "오디세이 G5(G55C) (80.0 cm)",
+   "usp": [
+    "QHD 디스플레이",
+    "감각을 압도하는 1000 R 곡률의 커브스크린",
+    "세련된 스타일과 현대적인 165 Hz 주사율"
+   ],
+   "url": "monitors/gaming-ls32cg554ekxkr-d2c/LS32CG554EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32D396GAKXKR",
+   "name": "에센셜모니터 S39GD (80.1cm)",
+   "usp": [
+    "완전한 집중을 위한 곡선형 1500R 커브드 스크린",
+    "한층 더 부드럽고 생동감 있는 화면 100Hz 주사율",
+    "게임을 승리로 이끄는 게임 모드 게임 모드"
+   ],
+   "url": "monitors/LS32D396GAKXKR/LS32D396GAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32D604UAKXKR",
+   "name": "고해상도 뷰피니티 S6(S60UD)<br/>블랙 (80.1 cm)",
+   "usp": [
+    "2560x1440 해상도의 부드러운 영상 화질 QHD 해상도",
+    "간편한 데이터 전송 및 충전 USB-C 타입",
+    "빠르고 쉬운 모니터 세팅 손쉬운 스탠드 설치"
+   ],
+   "url": "monitors/LS32D604UAKXKR/LS32D604UAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32DG702EKXKR",
+   "name": "오디세이 G7 G70D 4K 144Hz 스마트 (LS32DG702)",
+   "usp": [
+    "눈앞에 펼쳐지는 궁극의 비주얼 4K UHD",
+    "화면을 가득 채우는 생생한 컬러 빠른 IPS",
+    "최적의 재생 빈도수로 매끄러운 플레이 144Hz 주사율"
+   ],
+   "url": "monitors/LS32DG702EKXKR/LS32DG702EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32DM503EKXKR",
+   "name": "2024 스마트모니터 M5 M50D 화이트 (80.1 cm)",
+   "usp": [
+    "좋아하는  OTT 콘텐츠를 바로 플레이 스마트 TV 앱",
+    "여러 기기를 하나의 마우스와 키보드로 멀티 컨트롤",
+    "편리한 연결 다양한 활용 다중 포트 지원"
+   ],
+   "url": "monitors/smart-ls32dm503ekxkr-d2c-share26/LS32DM503EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FG504EKXKR",
+   "name": "QHD 오디세이 G5 (LS32FG504) 180Hz",
+   "usp": [
+    "QHD 해상도 · 고속 IPS 패널",
+    "180Hz 주사율 · 1ms 응답속도(GtG)",
+    "HDR10 · 피봇/높이조절 스탠드"
+   ],
+   "url": "monitors/LS32FG504EKXKR/LS32FG504EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FG812SKXKR",
+   "name": "오디세이 OLED G8 G81SF 4K 240Hz (LS32FG812)",
+   "usp": [
+    "4K QD-OLED · 글레어 프리 · OLED 세이프가드+",
+    "240Hz 주사율 · 0.03ms 응답속도(GtG) · G-Sync호환",
+    "팬톤 인증 · 코어라이팅+ · 높이 조절 · 피봇 지원"
+   ],
+   "url": "monitors/LS32FG812SKXKR/LS32FG812SKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FM1E3U-2WE",
+   "name": " 2025 무빙스타일 M1 (80cm) 스탠다드",
+   "usp": [
+    "좋아하는 OTT 콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "클릭 투 써치, AVA 기능, 삼성 Knox 보안",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "url": "monitors/package-ls43fm1e3u-2we-d2c-subscribe2-d2c/LS32FM1E3U-2WE/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FM1E3UKXKR",
+   "name": "2025 4K 스마트모니터 M1 화이트 (LS32FM1E3)",
+   "usp": [
+    "좋아하는 OTT 콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "클릭 투 써치, AVA 기능",
+    "삼성 Knox 보안, 멀티 컨트롤, AirPlay 지원"
+   ],
+   "url": "monitors/LS32FM1E3UKXKR/LS32FM1E3UKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FM503EKXKR",
+   "name": "2025 FHD 스마트모니터 M5 웜화이트 (LS32FM503)",
+   "usp": [
+    "좋아하는 OTT 컨텐츠를 바로 플레이, 스마트 TV앱",
+    "게이밍 허브, 삼성Knox보안, 다중 포트 지원",
+    "어떤 공간에서든 스타일리시하게, 초슬림 디자인"
+   ],
+   "url": "monitors/LS32FM503EKXKR/LS32FM503EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FM700M-1ME",
+   "name": "무빙스타일 Edge (80cm) 라이트",
+   "usp": [
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "좋아하는 OTT콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "정교하고 깔끔한 심리스 디자인"
+   ],
+   "url": "monitors/package-ls32fm700m-1me-d2c-subscribe2-d2c36/LS32FM700M-1ME/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32FM700M-2ME",
+   "name": "무빙스타일 Edge (80cm) 스탠다드",
+   "usp": [
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "좋아하는 OTT콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "정교하고 깔끔한 심리스 디자인"
+   ],
+   "url": "monitors/package-ls32fm700m-2me/LS32FM700M-2ME/",
+   "cats": [
+    "tv"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32H703EAKXKR",
+   "name": "뷰피니티 S7 S70H 4K 웜화이트 (LS32H703)",
+   "usp": [
+    "4K UHD 해상도 · HDR10",
+    "178˚ 광시야각 · DP & HDMI 다중 포트",
+    "아이 세이버 모드 · 삼성 디스플레이 매니저"
+   ],
+   "url": "monitors/LS32H703EAKXKR/LS32H703EAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS32H802UAKXKR",
+   "name": "뷰피니티 S8 S80UH 4K USB-C (LS32H802U)",
+   "usp": [
+    "4K UHD 해상도 · HDR10 · USB-C 90W",
+    "아이 세이버 모드 · 삼성 디스플레이 매니저",
+    "이지커넥션(E/C) · 인체공학적 스탠드(높이조절, 피봇)"
+   ],
+   "url": "monitors/LS32H802UAKXKR/LS32H802UAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS34DG852SKXKR",
+   "name": "오디세이 OLED G8 G85SD UWQHD 175Hz 스마트 (LS34DG852)",
+   "usp": [
+    "눈부신 컬러와 선명도 Ultra WQHD OLED",
+    "빛 반사 방해 걱정 없는 또렷함 OLED 글레어 프리",
+    "빠른 속도와 즉각적인 응답성 0.03 ms 응답속도 (GtG)"
+   ],
+   "url": "monitors/LS34DG852SKXKR/LS34DG852SKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS37D800UAKXKR",
+   "name": "뷰피니티 S80UD (92.7cm)",
+   "usp": [
+    "디테일한  UHD 해상도 HDR10으로 구현한 약 10억 7천만 가지 색상 USB-C 및 LAN 포트 기기를 한번에 제어하는 내장 KVM 스위치 간편 설치 스탠드 인체공학적 디자인 TÜV 인증 인텔리전트 아이 케어"
+   ],
+   "url": "monitors/LS37D800UAKXKR/LS37D800UAKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS37FG750EKXKR",
+   "name": "오디세이 G7 G75F 4K 165Hz (LS37FG750)",
+   "usp": [
+    "92.7cm 커브드 UHD의 생생한 디테일로 완성한 압도적 비주얼",
+    "또렷하게 찾아내는 어둠 속 숨겨진 디테일",
+    "끊김 없는 플레이로 거침없는 승리"
+   ],
+   "url": "monitors/LS37FG750EKXKR/LS37FG750EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS40FG750EKXKR",
+   "name": "오디세이 G7 G75F 5K2K 180Hz (LS40FG750)",
+   "usp": [
+    "100.6cm 커브드 WUHD의 더욱 넓고 세밀한 화면이 선사하는 몰입감",
+    "또렷하게 찾아내는 어둠 속 숨겨진 디테일",
+    "최소화된 지연 시간으로 즐기는 빠른 액션"
+   ],
+   "url": "monitors/LS40FG750EKXKR/LS40FG750EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS43FM1E3U-2WE",
+   "name": "2025 무빙스타일 M1 (107.9cm) 스탠다드",
+   "usp": [
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "좋아하는 장면을 더욱 디테일하게 감상, 4K UHD 해상도",
+    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
+   ],
+   "url": "monitors/package-ls43fm1e3u-2we-d2c-subscribe2-d2c/LS43FM1E3U-2WE/",
+   "cats": [],
+   "biz": [
+    "accomodation",
+    "retail",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry"
+   ]
+  },
+  {
+   "code": "LS43FM702U-2BE",
+   "name": "2025 무빙스타일 M7 (107.9cm) 스탠다드",
+   "usp": [
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "좋아하는 장면을 더욱 디테일하게 감상, 4K UHD 해상도",
+    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
+   ],
+   "url": "monitors/LS43FM702U-2BE/LS43FM702U-2BE/",
+   "cats": [
+    "tv",
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS43FM702UKXKR",
+   "name": "2025 4K 스마트모니터 M7 블랙 (LS43FM702)",
+   "usp": [
+    "좋아하는 OTT 콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "클릭 투 써치, AVA 기능",
+    "삼성 Knox 보안, 멀티 컨트롤, AirPlay 지원"
+   ],
+   "url": "monitors/LS43FM702UKXKR/LS43FM702UKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS49FG910EKXKR",
+   "name": "오디세이 G9 G91F DQHD 144Hz (LS49FG910)",
+   "usp": [
+    "시야를  감싸 몰입감의 완성 커브드 듀얼 QHD",
+    "어둠 속에서도 선명한 디테일 VESA 디스플레이 HDR 600",
+    "승리를 가져올 더 우월한 속도 144Hz 주사율 & 1ms 응답 속도"
+   ],
+   "url": "monitors/LS49FG910EKXKR/LS49FG910EKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS55CG970NKXKR",
+   "name": "오디세이 Ark 2세대 G9(G97NC) (138.7 cm)",
+   "usp": [
+    "탐험을 여는 새로운 시각 조종석 모드",
+    "대화면을 하나로 즐기는 멀티스크린 4분할 멀티뷰",
+    "게임을 승리로 이끄는 압도적 성능 165 Hz 주사율 & 1 ms 응답속도"
+   ],
+   "url": "monitors/LS55CG970NKXKR/LS55CG970NKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "LS57CG950NKXKR",
+   "name": "오디세이 Neo G9(G95NC) (144.8 cm)",
+   "usp": [
+    "현실의 한계를 넘는 시각적 즐거움 세계 최초 듀얼 UHD 모니터",
+    "넓은 시야로 더 향상된 깊이감 1000 R 커브드 스크린",
+    "승리를 완성하는 극강의 화질 퀸텀 매트릭스 기술"
+   ],
+   "url": "monitors/LS57CG950NKXKR/LS57CG950NKXKR/",
+   "cats": [
+    "monitors"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D101S/TND",
+   "name": "흑백 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D101S-TND/MLT-D101S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D103L/TND",
+   "name": "흑백 레이저 프린터 토너 2,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D103L-TND/MLT-D103L/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D103S/TND",
+   "name": "흑백 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D103S-TND/MLT-D103S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D104S/TND",
+   "name": "흑백 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D104S-TND/MLT-D104S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D105L/TND",
+   "name": "흑백 레이저 프린터 토너 2,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D105L-TND/MLT-D105L/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D105S/TND",
+   "name": "흑백 레이저 프린터 토너 1,500매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D105S-TND/MLT-D105S/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D115L/DIR",
+   "name": "흑백 레이저 프린터 토너 3,000매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D115L-DIR/MLT-D115L/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D116L/TND",
+   "name": "흑백 레이저 프린터 토너 3,000매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D116L-TND/MLT-D116L/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D203L/DIR",
+   "name": "흑백 레이저 프린터 토너 5,000매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D203L-DIR/MLT-D203L/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D204L/TND",
+   "name": "흑백 레이저 프린터 토너 5,000매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D204L-TND/MLT-D204L/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-D205L/TND",
+   "name": "흑백 레이저 프린터 토너 5,000매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 완벽한 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-D205L-TND/MLT-D205L/TND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MLT-K200S/DIR",
+   "name": "흑백 레이저 프린터 토너 1,000매 (블랙)",
+   "usp": [
+    "삼성 정품 토너와 삼성 프린터의 최적의 조합",
+    "선명한 표현력과 탁월한 보존력",
+    "눈에 보이는 뚜렷한 명암 효과와 깨끗한 선처리"
+   ],
+   "url": "printers/MLT-K200S-DIR/MLT-K200S/DIR/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "MS23A7013AT",
+   "name": "빌트인 전자레인지 23 L",
+   "usp": [
+    "주방의 품격은 높이고, 음식 맛은 살리고",
+    "내 취향에 딱 맞는 키친테리어",
+    "심플하고 직관적인 디자인"
+   ],
+   "url": "micro-wave-ovens/MS23A7013AT/MS23A7013AT/",
+   "cats": [
+    "micro-wave-ovens"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NT750XHD-KC51G",
+   "name": "갤럭시 북5 (39.6cm) Core™ Ultra 5 / 512GB NVMe SSD",
+   "usp": [
+    "생산성을 높여 주는 AI 도구",
+    "AI 퍼포먼스를 지원하는Intel® Core™ Ultra 프로세서",
+    "갤럭시 연결로 강화된 AI 경험"
+   ],
+   "url": "galaxy-book/NT750XHD-KC51G/NT750XHD-KC51G/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NT751XHD-KR515",
+   "name": "갤럭시 북5 (39.6cm) Core™ Ultra 5 / 512GB NVMe SSD",
+   "usp": [
+    "생산성을 높여 주는 AI 도구",
+    "AI 퍼포먼스를 지원하는Intel® Core™ Ultra 프로세서",
+    "갤럭시 연결로 강화된 AI 경험"
+   ],
+   "url": "galaxy-book/NT751XHD-KR515/NT751XHD-KR515/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NT751XHD-KR715",
+   "name": "갤럭시 북5 (39.6cm) Core™ Ultra 7 / 512GB NVMe SSD",
+   "usp": [
+    "생산성을 높여 주는 AI 도구",
+    "AI 퍼포먼스를 지원하는Intel® Core™ Ultra 프로세서",
+    "갤럭시 연결로 강화된 AI 경험"
+   ],
+   "url": "galaxy-book/NT751XHD-KR715/NT751XHD-KR715/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NT940XJG-KC51G",
+   "name": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "url": "galaxy-book/galaxy-book6-pro-nt940xjg-kc51g/NT940XJG-KC51G/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NT940XJG-KC51S",
+   "name": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "url": "galaxy-book/galaxy-book6-pro-nt940xjg-kc51g/NT940XJG-KC51S/",
+   "cats": [],
+   "biz": [
+    "accomodation",
+    "retail",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing"
+   ]
+  },
+  {
+   "code": "NT960UJH-XC94Y",
+   "name": "갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "NVIDIA® Geforce® RTX™ 50 시리즈",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "url": "galaxy-book/NT960UJH-XC94Y/NT960UJH-XC94Y/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NT960XJG-KC51G",
+   "name": "갤럭시 북6 프로 (40.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "url": "galaxy-book/galaxy-book6-pro-nt960xjg-kc71g/NT960XJG-KC51G/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": [
+    "accomodation",
+    "retail",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing"
+   ]
+  },
+  {
+   "code": "NT960XJG-KC71G",
+   "name": "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 512GB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "url": "galaxy-book/galaxy-book6-pro-nt960xjg-kc71g/NT960XJG-KC71G/",
+   "cats": [
+    "galaxy-book"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NZ31DG200CFH",
+   "name": "더 플레이트 인덕션 1구",
+   "usp": [
+    "설치 걱정 없는 1구 인덕션",
+    "공간에 최적화된 46mm 슬림 디자인",
+    "로즈골드 다이얼로 편리한 작동"
+   ],
+   "url": "electric-range/NZ31DG200CFH/NZ31DG200CFH/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NZ62DG300CFW",
+   "name": "더 플레이트 인덕션 2구",
+   "usp": [
+    "설치 걱정 없이 어디서든 강력하게",
+    "공간에 최적화된 46mm 슬림 디자인",
+    "다양한 조합의 2가지 요리도 동시에"
+   ],
+   "url": "electric-range/NZ62DG300CFW/NZ62DG300CFW/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NZ63DB503CFT",
+   "name": "Bespoke 인덕션",
+   "usp": [
+    "매트한 디자인에 긁힘 걱정 없는 견고함 Infinite Glass",
+    "어느 곳에 두어도 어울리는 완벽한 연출 프레임리스",
+    "전체 화구 사용으로 많은 요리도 한번에 3,400W 초고화력"
+   ],
+   "url": "electric-range/NZ63DB503CFT/NZ63DB503CFT/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NZ63DB553CFT",
+   "name": "Bespoke 인덕션 (플렉스존)",
+   "usp": [
+    "매트한 디자인에 긁힘 걱정 없는 견고함 Infinite Glass",
+    "어느 곳에 두어도 어울리는 완벽한 연출 프레임리스",
+    "어디에 올려도 균일하고 강력한 화력 콰트로 플렉스존"
+   ],
+   "url": "electric-range/NZ63DB553CFT/NZ63DB553CFT/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NZ63DB607CFE",
+   "name": "Bespoke AI 인덕션",
+   "usp": [
+    "어느 곳에 두어도 어울리는 완벽한 연출 프레임리스",
+    "자동 화력 조절로 간편식 조리까지 편리하게 AI 끓음 감지",
+    "전체 화구 사용으로 많은 요리도 한번에 3,400W 초고화력"
+   ],
+   "url": "electric-range/NZ63DB607CFE/NZ63DB607CFE/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "NZ63T5601AK",
+   "name": "전기레인지 하이브리드",
+   "usp": [
+    "100대 한정 판매",
+    "2가지 방식으로 다양한 한국식 조리가 가능한 하이브리드",
+    "누구나 쉽게 사용하는 간결한 디자인"
+   ],
+   "url": "electric-range/cooktop-nz63t5601ak-b2c/NZ63T5601AK/",
+   "cats": [
+    "electric-range"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RB30D4051S9",
+   "name": "냉장고 306L",
+   "usp": [
+    "전기료 부담을 줄여주는 에너지 소비효율 1등급",
+    "자주 사용하는 냉장실은 위에 상냉장 하냉동의 편리한 구조",
+    "칸칸마다 시원한 냉기 전달 멀티 냉각 시스템"
+   ],
+   "url": "refrigerators/bottom-mount-freezer-rb30d4051s9-d2c/RB30D4051S9/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F42F2X",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L (냄새케어 김치통)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F42F2X/RK70F42F2X/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F42F2XJ",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L (냄새케어 김치통)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F42F2XJ/RK70F42F2XJ/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F42F2ZG",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L (냄새케어 김치통)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F42F2ZG/RK70F42F2ZG/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F42M2A",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F42M2A/RK70F42M2A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F42M2ZG",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F42M2ZG/RK70F42M2ZG/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F42M3Z",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F42M3Z/RK70F42M3Z/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49D1A",
+   "name": "Bespoke AI 김치플러스 4도어 487L (맞춤숙성실)",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "다양한 식재료까지 맞춤 숙성해주는 맞춤숙성실",
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F49D1A/RK70F49D1A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49F1DD",
+   "name": "Bespoke AI 김치플러스 4도어 490L (냄새케어 김치통)",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
+   ],
+   "url": "kimchi-refrigerators/RK70F49F1DD/RK70F49F1DD/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49F1X",
+   "name": "Bespoke AI 김치플러스 4도어 490L (냄새케어 김치통)",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
+   ],
+   "url": "kimchi-refrigerators/RK70F49F1X/RK70F49F1X/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49F1XJ",
+   "name": "Bespoke AI 김치플러스 4도어 490L (냄새케어 김치통)",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
+   ],
+   "url": "kimchi-refrigerators/RK70F49F1XJ/RK70F49F1XJ/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49F1ZG",
+   "name": "Bespoke AI 김치플러스 4도어 490L (냄새케어 김치통)",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
+   ],
+   "url": "kimchi-refrigerators/RK70F49F1ZG/RK70F49F1ZG/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49F2A",
+   "name": "Bespoke AI 김치플러스 4도어 490L (냄새케어 김치통)",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
+   ],
+   "url": "kimchi-refrigerators/RK70F49F2A/RK70F49F2A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49M1A",
+   "name": "Bespoke AI 김치플러스 4도어 490L",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F49M1A/RK70F49M1A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49M1ZG",
+   "name": "Bespoke AI 김치플러스 4도어 490L",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F49M1ZG/RK70F49M1ZG/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49M2GD",
+   "name": "Bespoke AI 김치플러스 4도어 490L",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F49M2GD/RK70F49M2GD/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49M2Z",
+   "name": "Bespoke AI 김치플러스 4도어 490L",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F49M2Z/RK70F49M2Z/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F49M2ZD",
+   "name": "Bespoke AI 김치플러스 4도어 490L",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F49M2ZD/RK70F49M2ZD/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK70F58M1ZG",
+   "name": "Bespoke AI 김치플러스 4도어 586L",
+   "usp": [
+    "오랫동안 아삭한 식감을 지켜주는 유산균 아삭 숙성 모드",
+    "필요에 따라 보관하는 칸칸칸 모드",
+    "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "kimchi-refrigerators/RK70F58M1ZG/RK70F58M1ZG/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F42C2A",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 418L (맞춤숙성실)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
+   ],
+   "url": "kimchi-refrigerators/RK80F42C2A/RK80F42C2A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F42C2W",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 418L (맞춤숙성실)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
+   ],
+   "url": "kimchi-refrigerators/RK80F42C2W/RK80F42C2W/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F42C2XJ",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 418L (맞춤숙성실)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
+   ],
+   "url": "kimchi-refrigerators/RK80F42C2XJ/RK80F42C2XJ/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F42E2A",
+   "name": "Bespoke AI 김치플러스 4도어 키친핏 Max 420L (메탈쿨링 선반)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
+   ],
+   "url": "kimchi-refrigerators/RK80F42E2A/RK80F42E2A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F49C1W",
+   "name": "Bespoke AI 김치플러스 4도어 487L (맞춤숙성실)",
+   "usp": [
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
+   ],
+   "url": "kimchi-refrigerators/RK80F49C1W/RK80F49C1W/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": [
+    "restaurant",
+    "education"
+   ]
+  },
+  {
+   "code": "RK80F49C1X",
+   "name": "Bespoke AI 김치플러스 4도어 487L (맞춤숙성실)",
+   "usp": [
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
+   ],
+   "url": "kimchi-refrigerators/RK80F49C1X/RK80F49C1X/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F49E1A",
+   "name": "Bespoke AI 김치플러스 4도어 490L (메탈쿨링 선반)",
+   "usp": [
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
+   ],
+   "url": "kimchi-refrigerators/RK80F49E1A/RK80F49E1A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RK80F58B1A",
+   "name": "Bespoke AI 김치플러스 4도어 583L (냄새케어 메탈쿨링 김치통)",
+   "usp": [
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
+   ],
+   "url": "kimchi-refrigerators/RK80F58B1A/RK80F58B1A/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F63M2A",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 636L (푸드 쇼케이스)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "식재료 수납의 정석 푸드 쇼케이스"
+   ],
+   "url": "refrigerators/french-door-rm70f63m2a-d2c/RM70F63M2A/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "retail",
+    "education",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "RM70F63M2Z",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 636L (푸드 쇼케이스)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "식재료 수납의 정석 푸드 쇼케이스"
+   ],
+   "url": "refrigerators/french-door-rm70f63m2a-d2c/RM70F63M2Z/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F63R2A",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ],
+   "url": "refrigerators/RM70F63R2A/RM70F63R2A/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F63R2G",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ],
+   "url": "refrigerators/RM70F63R2G/RM70F63R2G/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F63R2ZG",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ],
+   "url": "refrigerators/RM70F63R2ZG/RM70F63R2ZG/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F64M2X",
+   "name": "Bespoke AI 하이브리드 4도어 키친핏 Max 633L (푸드 쇼케이스)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "평소엔 효율적으로 필요할 땐 강력하게 AI 하이브리드 쿨링",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ],
+   "url": "refrigerators/RM70F64M2X/RM70F64M2X/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F64M2ZG",
+   "name": "Bespoke AI 하이브리드 4도어 키친핏 Max 633L (푸드 쇼케이스)",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "평소엔 효율적으로 필요할 땐 강력하게 AI 하이브리드 쿨링",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ],
+   "url": "refrigerators/RM70F64M2ZG/RM70F64M2ZG/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F90Q2A",
+   "name": "Bespoke AI 냉장고 4도어 884L (빅아이스/큐브)",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 여유로운 수납공간",
+    "자동으로 얼음을 만들어주는 대용량 빅 아이스메이커"
+   ],
+   "url": "refrigerators/RM70F90Q2A/RM70F90Q2A/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F90Q2D",
+   "name": "Bespoke AI 냉장고 4도어 884L (빅아이스/큐브)",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 여유로운 수납공간",
+    "자동으로 얼음을 만들어주는 대용량 빅 아이스메이커"
+   ],
+   "url": "refrigerators/RM70F90Q2D/RM70F90Q2D/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F90Q2ZG",
+   "name": "Bespoke AI 냉장고 4도어 884L (빅아이스/큐브)",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 여유로운 수납공간",
+    "자동으로 얼음을 만들어주는 대용량 빅 아이스메이커"
+   ],
+   "url": "refrigerators/RM70F90Q2ZG/RM70F90Q2ZG/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F90R1ZD",
+   "name": "Bespoke AI 냉장고 4도어 905L",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간",
+    "사용 패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "refrigerators/french-door-rm70f90r1zd-d2c/RM70F90R1ZD/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "retail",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "RM70F90R2D",
+   "name": "Bespoke AI 냉장고 4도어 905L",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간",
+    "사용 패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "refrigerators/RM70F90R2D/RM70F90R2D/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F90R2DD",
+   "name": "Bespoke AI 냉장고 4도어 905L",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간",
+    "사용 패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "refrigerators/RM70F90R2DD/RM70F90R2DD/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F90R2GD",
+   "name": "Bespoke AI 냉장고 4도어 905L",
+   "usp": [
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간",
+    "사용 패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
+   ],
+   "url": "refrigerators/RM70F90R2GD/RM70F90R2GD/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM70F91R1A",
+   "name": "Bespoke AI 하이브리드 4도어 901L (UV탈취)",
+   "usp": [
+    "평소엔 효율적으로 필요할 땐 강력하게 AI 하이브리드 쿨링",
+    "에너지 소비량을 절감하는 AI 절약 모드",
+    "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간"
+   ],
+   "url": "refrigerators/RM70F91R1A/RM70F91R1A/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RM80F91L1XJ",
+   "name": "Bespoke AI 하이브리드 4도어 875L (오토오픈도어)",
+   "usp": [
+    "평소엔 효율적으로 필요할 땐 강력하게 AI 하이브리드 쿨링",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
+   ],
+   "url": "refrigerators/RM80F91L1XJ/RM80F91L1XJ/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP13C1022S9",
+   "name": "김치플러스 뚜껑형 126L",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "다양한 식품을 맞춤 보관",
+    "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
+   ],
+   "url": "kimchi-refrigerators/RP13C1022S9/RP13C1022S9/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP13C1022Z1",
+   "name": "김치플러스 뚜껑형 126L",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "다양한 식품을 맞춤 보관",
+    "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
+   ],
+   "url": "kimchi-refrigerators/kimchi-top-loading-rp13c1022s9-d2c/RP13C1022Z1/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP20C3111EG",
+   "name": "김치플러스 뚜껑형 202L",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 전문 맞춤 모드",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RP20C3111EG/RP20C3111EG/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP22C3111S9",
+   "name": "김치플러스 뚜껑형 221L",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 전문 맞춤 모드",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RP22C3111S9/RP22C3111S9/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP22C3111Z1",
+   "name": "김치플러스 뚜껑형 221L",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 전문 맞춤 모드",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RP22C3111Z1/RP22C3111Z1/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP22C3111Z3",
+   "name": "김치플러스 뚜껑형 221L",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 전문 맞춤 모드",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RP22C3111Z3/RP22C3111Z3/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RP22C3231Z3",
+   "name": "김치플러스 뚜껑형 221L (5면 메탈쿨링)",
+   "usp": [
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 전문 맞춤 모드",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/kimchi-top-loading-rp22c3231z3-d2c/RP22C3231Z3/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": [
+    "accomodation",
+    "retail"
+   ]
+  },
+  {
+   "code": "RQ22K5L01EC",
+   "name": "빌트인 김치냉장고 220 L",
+   "usp": [
+    "최적의 온도와 습도를 유지하는 상하실 독립냉각",
+    "김치가 가장 맛있게 익는 4일간의 숙성, 맛듦 숙성",
+    "냄새 제거에 효과적인 솔라파워 탈취기능"
+   ],
+   "url": "kimchi-refrigerators/builtin-kimchi-refrigerators-rq22k5l01ec-d2c/RQ22K5L01EC/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ22K5R01EC",
+   "name": "빌트인 김치냉장고 220 L",
+   "usp": [
+    "최적의 온도와 습도를 유지하는 상하실 독립냉각",
+    "김치가 가장 맛있게 익는 4일간의 숙성, 맛듦 숙성",
+    "냄새 제거에 효과적인 솔라파워 탈취기능"
+   ],
+   "url": "kimchi-refrigerators/builtin-kimchi-refrigerators-rq22k5r01ec-d2c/RQ22K5R01EC/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB7411AP01",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB7411AP01/RQ33DB7411AP01/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB7411APW6",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB7411APW6/RQ33DB7411APW6/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB7411APWB",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB7411APWB/RQ33DB7411APWB/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB7411EW",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB7411EW/RQ33DB7411EW/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": [
+    "postpartum-care-center",
+    "coin-laundry"
+   ]
+  },
+  {
+   "code": "RQ33DB7411W6",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB7411W6/RQ33DB7411W6/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB74B1AP01",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB74B1AP01/RQ33DB74B1AP01/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB74B1APW6",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB74B1APW6/RQ33DB74B1APW6/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB74B1EW",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB74B1EW/RQ33DB74B1EW/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DB74D201",
+   "name": "Bespoke 김치플러스 3도어 키친핏 313L",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게 나만의 조합 & 오리지널 키친핏",
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
+   ],
+   "url": "kimchi-refrigerators/RQ33DB74D201/RQ33DB74D201/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DG71G1S9",
+   "name": "김치플러스 3도어 328L",
+   "usp": [
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온",
+    "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
+   ],
+   "url": "kimchi-refrigerators/RQ33DG71G1S9/RQ33DG71G1S9/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DG71J2ET",
+   "name": "BESPOKE 김치플러스 3도어 328L",
+   "usp": [
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온",
+    "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
+   ],
+   "url": "kimchi-refrigerators/kimchi-stand-rq33dg71j2et-d2c/RQ33DG71J2ET/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DG71J3EW",
+   "name": "Bespoke 김치플러스 3도어 328L",
+   "usp": [
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온",
+    "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
+   ],
+   "url": "kimchi-refrigerators/RQ33DG71J3EW/RQ33DG71J3EW/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RQ33DG71J3S9",
+   "name": "김치플러스 3도어 328L",
+   "usp": [
+    "필요에 따라 보관하는 칸칸칸 맞춤 보관",
+    "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온",
+    "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
+   ],
+   "url": "kimchi-refrigerators/RQ33DG71J3S9/RQ33DG71J3S9/",
+   "cats": [
+    "kimchi-refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RR09BG014WW",
+   "name": "냉장고 89L (냉장전용)",
+   "usp": [
+    "컴팩트한 사이즈에 꼭 필요한 기능만 쏙!",
+    "도어가드와 강화유리 선반으로 수납도 더욱 편리하게!",
+    "히든핸들로 미니멀한 디자인까지!"
+   ],
+   "url": "refrigerators/one-door-rr09bg014ww-d2c/RR09BG014WW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RR40C7985AP01",
+   "name": "Bespoke AI 냉장고 1도어 키친핏 409L (좌열림, 냉장전용)",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게, 나만의 조합 & 오리지널 키친핏",
+    "재료 본연의 맛을 지켜주는, ±0.5 ℃ 미세정온",
+    "힘들이지 않고 편리하게, 오토 오픈 도어"
+   ],
+   "url": "refrigerators/RR40C7985AP01/RR40C7985AP01/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RR40C7985AP39",
+   "name": "Bespoke AI 냉장고 1도어 키친핏 409L (좌열림, 냉장전용)",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게, 나만의 조합 & 오리지널 키친핏",
+    "재료 본연의 맛을 지켜주는, ±0.5 ℃ 미세정온",
+    "힘들이지 않고 편리하게, 오토 오픈 도어"
+   ],
+   "url": "refrigerators/RR40C7985AP39/RR40C7985AP39/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RR40C7985APW6",
+   "name": "Bespoke AI 냉장고 1도어 키친핏 409L (좌열림, 냉장전용)",
+   "usp": [
+    "맞춤형 조합으로 주방을 나답게, 나만의 조합 & 오리지널 키친핏",
+    "재료 본연의 맛을 지켜주는, ±0.5 ℃ 미세정온",
+    "힘들이지 않고 편리하게, 오토 오픈 도어"
+   ],
+   "url": "refrigerators/RR40C7985AP-W6/RR40C7985APW6/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": [
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "RS84DB5002CW",
+   "name": "BESPOKE 양문형 냉장고 852L",
+   "usp": [
+    "에너지 소비량을 최대 15 %까지 절감하는 AI 절약 모드",
+    "신선하고 맛있게 정온 냉장 기술",
+    "감각적인 스타일의 리얼 플랫 도어"
+   ],
+   "url": "refrigerators/RS84DB5002CW/RS84DB5002CW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RS84DB5602CW",
+   "name": "BESPOKE 양문형 냉장고 846L (오토오픈도어)",
+   "usp": [
+    "에너지 소비량을 최대 15 %까지 절감하는 AI 절약 모드",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "식재료 수납의 정석 푸드 쇼케이스"
+   ],
+   "url": "refrigerators/RS84DB5602CW/RS84DB5602CW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RS84DG5602M9",
+   "name": "양문형 냉장고 846L (오토오픈도어)",
+   "usp": [
+    "에너지 소비량을 최대 15 %까지 절감하는 AI 절약 모드",
+    "자동 문열림으로 편리하게 오토 오픈 도어",
+    "식재료 수납의 정석 푸드 쇼케이스"
+   ],
+   "url": "refrigerators/RS84DG5602M9/RS84DG5602M9/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT09DG004WW",
+   "name": "냉장고 82L",
+   "usp": [
+    "컴팩트한 사이즈에 꼭 필요한 기능만 쏙!",
+    "도어가드와 강화유리 선반으로 수납도 더욱 편리하게!",
+    "히든핸들로 미니멀한 디자인까지!"
+   ],
+   "url": "refrigerators/RT09DG004WW/RT09DG004WW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT25DARAHS9",
+   "name": "냉장고 255L",
+   "usp": [
+    "안쪽에 있는 식재료도 꺼내기 쉽게 이지 슬라이드 선반",
+    "재료 본연의 풍미를 유지하는 Fresh Room",
+    "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
+   ],
+   "url": "refrigerators/top-mount-freezer-rt25darahs9-d2c/RT25DARAHS9/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT31CB5624C3",
+   "name": "냉장고 298L",
+   "usp": [
+    "칸칸마다 시원한 냉기 전달, 멀티 냉각 시스템",
+    "얼음을 간편하고 깨끗하게, 트위스트 아이스메이커",
+    "식재료를 더욱 신선하게, 프레시 박스"
+   ],
+   "url": "refrigerators/top-mount-freezer-rt31cb5624c3-d2c/RT31CB5624C3/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT42CG6024S9",
+   "name": "냉장고 410L",
+   "usp": [
+    "칸칸마다 시원한 냉기 전달, 멀티 냉각 시스템",
+    "얼음을 간편하고 깨끗하게, 트위스트 아이스메이커",
+    "식재료를 더욱 신선하게, 프레시 박스"
+   ],
+   "url": "refrigerators/top-mount-freezer-rt42cg6024s9-d2c1/RT42CG6024S9/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT53DB7A1CET",
+   "name": "냉장고 525L",
+   "usp": [
+    "냉기를 따로따로 더 신선하게 독립냉각",
+    "라이프스타일에 맞춰 바꿀 수 있는 스마트 변온모드",
+    "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
+   ],
+   "url": "refrigerators/RT53DB7A1CET/RT53DB7A1CET/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT53DG7A1CWW",
+   "name": "냉장고 525L",
+   "usp": [
+    "냉기를 따로따로 더 신선하게 독립냉각",
+    "라이프스타일에 맞춰 바꿀 수 있는 스마트 변온모드",
+    "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
+   ],
+   "url": "refrigerators/RT53DG7A1CWW/RT53DG7A1CWW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RT62A7049S9",
+   "name": "냉장고 615L",
+   "usp": [
+    "냉기를 따로따로 더 신선하게 독립냉각",
+    "냉동실도 내 맘대로 스마트 변온모드",
+    "원하는 곳에 착! 프리스탠딩 아이스메이커"
+   ],
+   "url": "refrigerators/top-mount-freezer-rt62a7049s9-n/RT62A7049S9/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RWP54421BF6MF",
+   "name": "Bespoke 정수기 일체형 (냉/온/정수)+교체용 필터 1SET",
+   "usp": [
+    "나에게 맞춘 컬러, Bespoke 디자인",
+    "미세플라스틱 제거 NSF 인증 받은 4단계 필터 시스템",
+    "불필요한 방문 없이 알아서 깨끗하게, 스마트 클린 케어"
+   ],
+   "url": "water-purifier/RWP54421BF6MF/RWP54421BF6MF/",
+   "cats": [
+    "water-purifier"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RWP70F15ANW",
+   "name": "Bespoke AI 정수기 (냉/온/정수)",
+   "usp": [
+    "유해 물질 82종 제거로 믿고 마실 수 있는 국내 최다 항목 NSF 인증 정수기",
+    "안심할 수 있는 자동 위생관리",
+    "AI로 더 쉽고 편리한 사용 빅스비 & SmartThings"
+   ],
+   "url": "water-purifier/RWP70F15ANW/RWP70F15ANW/",
+   "cats": [
+    "water-purifier"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RWP70F15ANWF2",
+   "name": "Bespoke AI 정수기 (냉/온/정수)+교체용 필터 1SET",
+   "usp": [
+    "유해 물질 82종 제거로 믿고 마실 수 있는 국내 최다 항목 NSF 인증 정수기",
+    "안심할 수 있는 자동 위생관리",
+    "AI로 더 쉽고 편리한 사용 빅스비 & SmartThings"
+   ],
+   "url": "water-purifier/RWP70F15ANWF2/RWP70F15ANWF2/",
+   "cats": [
+    "water-purifier"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RWP90H15ANW",
+   "name": "Bespoke AI 얼음정수기 (냉/온/정수)",
+   "usp": [
+    "직수관과 아이스룸을 전해수 살균으로 깨끗하게 AI 맞춤 살균",
+    "유해 물질 82종 제거로 믿고 마실 수 있는 국내 최다 항목 NSF 인증 정수기",
+    "하루 8kg 얼음으로 여름철에도 넉넉하게 강력한 제빙량"
+   ],
+   "url": "water-purifier/water-purifier-rwp90h15anw-d2c/RWP90H15ANW/",
+   "cats": [
+    "water-purifier"
+   ],
+   "biz": [
+    "restaurant",
+    "education",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "RZ22CG4000WW",
+   "name": "냉동고 227L (냉동전용)",
+   "usp": [
+    "실용적인 용량과 심플한 디자인",
+    "간접 냉각 방식으로 성에 걱정없이 깔끔하게",
+    "도어를 쉽게 열 수 있는 이지 핸들"
+   ],
+   "url": "refrigerators/top-mount-freezer-rz22cg4000ww-d2c/RZ22CG4000WW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "RZ24A5660APW",
+   "name": "BESPOKE 냉동고 1도어 (변온) 240 L",
+   "usp": [
+    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
+    "목적에 따라 맞춤 구성이 가능한 모듈형 냉장고",
+    "선반마다 균일하게 냉기를 전달하는 멀티냉각 시스템"
+   ],
+   "url": "refrigerators/RZ24A5660APW/RZ24A5660APW/",
+   "cats": [
+    "refrigerators"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-C4030ND",
+   "name": "A4 컬러 레이저 프린터 C40 시리즈 40 ppm SL-C4030ND",
+   "usp": [
+    "분당 최대 40 페이지 출력의 빠른 속도",
+    "Dual Core CPU의 빠른 데이터 처리",
+    "기가비트 이더넷으로 네트워크 지원"
+   ],
+   "url": "printers/SL-C4030ND/SL-C4030ND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-C515",
+   "name": "컬러 레이저 프린터 18/4 ppm",
+   "usp": [
+    "알뜰 토너 프린터",
+    "400 MHz CPU와 64 MB 메모리의 빠른 처리 속도",
+    "선명한 이미지, 또렷한 텍스트(ReCP)"
+   ],
+   "url": "printers/SL-C515/SL-C515/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-C515W/HYP",
+   "name": "컬러 레이저프린터18/4 ppm",
+   "usp": [
+    "심플한 컴팩트 디자인",
+    "400 MHz CPU와 64 MB 메모리의 빠른 처리 속도",
+    "누구나 쉽게 Wi-Fi 기능으로 스마트하게 프린팅"
+   ],
+   "url": "printers/sl-c515w-hyp/SL-C515W/HYP/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-C565FW/HYP",
+   "name": "컬러 레이저복합기18/4 ppm",
+   "usp": [
+    "알뜰 토너 복합기",
+    "프린트에서 복사, 스캔, 팩스까지 All-in-One",
+    "800 MHz CPU와 128 MB 메모리의 빠른 처리 속도"
+   ],
+   "url": "printers/sl-c565fw-hyp/SL-C565FW/HYP/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-C565W/HYP",
+   "name": "컬러 레이저복합기18/4 ppm",
+   "usp": [
+    "슬림해진 유지비용의 알뜰토너 복합기",
+    "프린트에서 복사, 스캔까지 All-in-One",
+    "누구나 쉽게 Wi-Fi 기능으로 스마트하게 프린팅"
+   ],
+   "url": "printers/sl-c565w-hyp/SL-C565W/HYP/",
+   "cats": [
+    "printers"
+   ],
+   "biz": [
+    "retail",
+    "education",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SL-M2085FW",
+   "name": "흑백 레이저 복합기 20 ppm",
+   "usp": [
+    "프린트에서 복사, 스캔, 팩스까지 All-in-One",
+    "600 MHz CPU와 128 MB 메모리의 빠른 처리 속도",
+    "선명한 이미지, 또렷한 텍스트 (ReCP)"
+   ],
+   "url": "printers/sl-m2085fw/SL-M2085FW/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-M2680FN",
+   "name": "흑백 레이저 복합기 26 ppm",
+   "usp": [
+    "프린트에서 복사, 스캔, 팩스까지 올인원",
+    "600 MHz CPU와 256 MB 메모리의 빠른 처리속도",
+    "높은 해상도로 선명한 출력"
+   ],
+   "url": "printers/sl-m2680fn/SL-M2680FN/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-M3390FD",
+   "name": "흑백 레이저 복합기 33 ppm",
+   "usp": [
+    "인쇄, 팩스, 복사, 스캔 가능한 4-in-1 레이저 복합기",
+    "높은 해상도로 선명한 출력"
+   ],
+   "url": "printers/SL-M3390FD/SL-M3390FD/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-M3510ND",
+   "name": "흑백 레이저 프린터 35 ppm",
+   "usp": [
+    "600 MHz CPU와 512 MB 메모리의 빠른 처리속도",
+    "높은 해상도로 선명한 출력",
+    "용지를 아껴주는 편리한 양면 인쇄"
+   ],
+   "url": "printers/SL-M3510ND/SL-M3510ND/",
+   "cats": [
+    "printers"
+   ],
+   "biz": [
+    "retail",
+    "education",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SL-T1685W",
+   "name": "잉크젯 플러스S 22/16 ppm",
+   "usp": [
+    "더욱 강력해진 성능으로 업무 효율 극대화",
+    "마음껏 써도 부담 없는 경제적인 출력 비용",
+    "환경까지 생각하는 친환경 복합기"
+   ],
+   "url": "printers/SL-T1685W/SL-T1685W/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-T2273DW",
+   "name": "잉크젯 플러스S 23/22 ppm",
+   "usp": [
+    "더욱 강력해진 성능으로 업무 효율 극대화",
+    "꼭 필요한 기능만 담은 스마트한 복합기",
+    "마음껏 사용해도 부담 없는 경제적인 출력비용"
+   ],
+   "url": "printers/SL-T2273DW-buymore/SL-T2273DW/",
+   "cats": [
+    "printers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SL-T2273FW",
+   "name": "잉크젯 플러스S 23/22 ppm",
+   "usp": [
+    "더욱 강력해진 성능으로 업무 효울 극대화",
+    "네 가지 작업이 가능한 다재다능 복합기",
+    "마음껏 사용해도 부담없는 경제적인 출력비용"
+   ],
+   "url": "printers/SL-T2273FW/SL-T2273FW/",
+   "cats": [
+    "printers"
+   ],
+   "biz": [
+    "retail",
+    "education",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SM-R420NZAAKOO",
+   "name": "갤럭시 버즈3 FE",
+   "usp": [
+    "세련된 블레이드 디자인, 안정적 착용감",
+    "향상된 오디오 성능과 ANC",
+    "음성 명령으로 편리한 Gemini 실행"
+   ],
+   "url": "buds/SM-R420NZAAKOO/SM-R420NZAAKOO/",
+   "cats": [
+    "buds"
+   ],
+   "biz": [
+    "retail",
+    "education",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SM-R420NZKAKOO",
+   "name": "갤럭시 버즈3 FE",
+   "usp": [
+    "세련된 블레이드 디자인, 안정적 착용감",
+    "향상된 오디오 성능과 ANC",
+    "음성 명령으로 편리한 Gemini 실행"
+   ],
+   "url": "buds/SM-R420NZKAKOO/SM-R420NZKAKOO/",
+   "cats": [
+    "buds"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-R540NZKAKOO",
+   "name": "갤럭시 버즈4",
+   "usp": [
+    "디테일까지 놓치지 않는 Hi-Fi 사운드",
+    "오래 껴도 편안한 오픈형 디자인",
+    "갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI"
+   ],
+   "url": "buds/SM-R540NZKAKOO/SM-R540NZKAKOO/",
+   "cats": [],
+   "biz": [
+    "retail",
+    "education",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SM-R540NZWAKOO",
+   "name": "갤럭시 버즈4",
+   "usp": [
+    "디테일까지 놓치지 않는 Hi-Fi 사운드",
+    "오래 껴도 편안한 오픈형 디자인",
+    "갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI"
+   ],
+   "url": "buds/SM-R540NZWAKOO/SM-R540NZWAKOO/",
+   "cats": [
+    "buds"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-R640NZWAKOO",
+   "name": "갤럭시 버즈4 프로",
+   "usp": [
+    "디테일까지 놓치지 않는 Hi-Fi 사운드",
+    "빅데이터로 설계한 최적의 착용감",
+    "갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI"
+   ],
+   "url": "buds/SM-R640NZWAKOO/SM-R640NZWAKOO/",
+   "cats": [
+    "buds"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-S942NZKEKOO",
+   "name": "갤럭시 S26 자급제",
+   "usp": [
+    "한 단계 더 진화된 나만의 맞춤형 AI",
+    "나이토그래피로 어둠속에서도 선명하고 AI로 진화된 차원이 다른 카메라 경험",
+    "슬림한 디자인에 더욱 견고해진 내구성"
+   ],
+   "url": "smartphones/galaxy-s26-s942/SM-S942NZKEKOO/",
+   "cats": [],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "retail",
+    "education",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SM-X230NZAFKOO",
+   "name": "갤럭시 탭 A11+ (Wi-Fi)",
+   "usp": [
+    "90Hz 주사율과 쿼드스피커로 실감나는 콘텐츠 감상",
+    "향상된 AP와 메모리로 끊김없는 성능",
+    "Gemini, 서클 투 서치 등 AI 기능 최초 적용"
+   ],
+   "url": "tablets/SM-X230NZAFKOO/SM-X230NZAFKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X230NZALKOO",
+   "name": "갤럭시 탭 A11+ (Wi-Fi)",
+   "usp": [
+    "90Hz 주사율과 쿼드스피커로 실감나는 콘텐츠 감상",
+    "향상된 AP와 메모리로 끊김없는 성능",
+    "Gemini, 서클 투 서치 등 AI 기능 최초 적용"
+   ],
+   "url": "tablets/SM-X230NZALKOO/SM-X230NZALKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X520NLBAKOO",
+   "name": "갤럭시 탭 S10 FE (Wi-Fi)",
+   "usp": [
+    "더 얇아진 두께, 가벼워진 무게로 휴대성 극대화",
+    "개선된 AP와 더 커진 메모리 등 하드웨어 성능 강화",
+    "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
+   ],
+   "url": "tablets/SM-X520NLBAKOO/SM-X520NLBAKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X520NLBEKOO",
+   "name": "갤럭시 탭 S10 FE (Wi-Fi)",
+   "usp": [
+    "더 얇아진 두께, 가벼워진 무게로 휴대성 극대화",
+    "개선된 AP와 더 커진 메모리 등 하드웨어 성능 강화",
+    "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
+   ],
+   "url": "tablets/SM-X520NLBEKOO/SM-X520NLBEKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X620NLBAKOO",
+   "name": "갤럭시 탭 S10 FE+ (Wi-Fi)",
+   "usp": [
+    "더 커지고 밝아진 화면으로 몰입감 있는 시청경험",
+    "더 얇아진 두께, IP68로 휴대성에 내구성까지",
+    "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
+   ],
+   "url": "tablets/SM-X620NLBAKOO/SM-X620NLBAKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": [
+    "restaurant",
+    "education",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SM-X620NLBEKOO",
+   "name": "갤럭시 탭 S10 FE+ (Wi-Fi)",
+   "usp": [
+    "더 커지고 밝아진 화면으로 몰입감 있는 시청경험",
+    "더 얇아진 두께, IP68로 휴대성에 내구성까지",
+    "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
+   ],
+   "url": "tablets/SM-X620NLBEKOO/SM-X620NLBEKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X730NZAAKOO",
+   "name": "갤럭시 탭 S11 (Wi-Fi)",
+   "usp": [
+    "대화면 멀티태스킹에 최적화된 멀티모달 Galaxy AI",
+    "더 얇고 가벼워진 디자인으로 강화된 휴대성",
+    "필기에서 드로잉까지 새로워진 S펜 하나로"
+   ],
+   "url": "tablets/SM-X730NZAAKOO/SM-X730NZAAKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": [
+    "restaurant",
+    "education",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "SM-X730NZSEKOO",
+   "name": "갤럭시 탭 S11 (Wi-Fi)",
+   "usp": [
+    "대화면 멀티태스킹에 최적화된 멀티모달 Galaxy AI",
+    "더 얇고 가벼워진 디자인으로 강화된 휴대성",
+    "필기에서 드로잉까지 새로워진 S펜 하나로"
+   ],
+   "url": "tablets/SM-X730NZSEKOO/SM-X730NZSEKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X820NZAEKOO",
+   "name": "갤럭시 탭 S10+ (Wi-Fi)",
+   "usp": [
+    "AI로 더 똑똑해진 프리미엄 태블릿",
+    "저반사코팅과 다이얼로그부스트로 완성된 극강의 시청 경험",
+    "하드웨어 성능 강화로 멀티태스킹도 끊김없이 빠르게"
+   ],
+   "url": "tablets/SM-X820NZAEKOO/SM-X820NZAEKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X930NZAAKOO",
+   "name": "갤럭시 탭 S11 울트라 (Wi-Fi)",
+   "usp": [
+    "대화면 멀티태스킹에 최적화된 멀티모달 Galaxy AI",
+    "더 밝아진 369.9mm 대화면으로 몰입감 있는 시청경험",
+    "최신 AP의 향상된 성능으로 끊김없이 오래 사용"
+   ],
+   "url": "tablets/SM-X930NZAAKOO/SM-X930NZAAKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X930NZAEKOO",
+   "name": "갤럭시 탭 S11 울트라 (Wi-Fi)",
+   "usp": [
+    "대화면 멀티태스킹에 최적화된 멀티모달 Galaxy AI",
+    "더 밝아진 369.9mm 대화면으로 몰입감 있는 시청경험",
+    "최신 AP의 향상된 성능으로 끊김없이 오래 사용"
+   ],
+   "url": "tablets/SM-X930NZAEKOO/SM-X930NZAEKOO/",
+   "cats": [
+    "tablets"
+   ],
+   "biz": []
+  },
+  {
+   "code": "SM-X930NZSAKOO",
+   "name": "갤럭시 탭 S11 울트라 (Wi-Fi)",
+   "usp": [
+    "대화면 멀티태스킹에 최적화된 멀티모달 Galaxy AI",
+    "더 밝아진 369.9mm 대화면으로 몰입감 있는 시청경험",
+    "최신 AP의 향상된 성능으로 끊김없이 오래 사용"
+   ],
+   "url": "tablets/SM-X930NZSAKOO/SM-X930NZSAKOO/",
+   "cats": [],
+   "biz": [
+    "restaurant",
+    "education",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "VR70F00AGG",
+   "name": "Bespoke AI 스팀",
+   "usp": [
+    "100℃의 스팀으로 99.999% 물걸레 스팀 살균 스팀 청정스테이션",
+    "사각지대까지 놓치지 않는 구석 청소 솔루션 팝아웃 콤보",
+    "Knox 보안 기술 적용으로 검증된 보안"
+   ],
+   "url": "vacuum-cleaners/VR70F00AGG/VR70F00AGG/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR70F00SGG",
+   "name": "Bespoke AI 스팀 자동 급배수",
+   "usp": [
+    "간편한 급수와 배수 관리에 빌트인 설치까지 자동 급배수 스팀 청정스테이션",
+    "높은 문턱도 넘나드는 이지패스 휠",
+    "사각지대까지 놓치지 않는 구석 청소 솔루션 팝아웃 콤보"
+   ],
+   "url": "vacuum-cleaners/VR70F00SGG-share/VR70F00SGG/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR70F00SGGS",
+   "name": "Bespoke AI 스팀 자동 급배수 (리폼비 포함)",
+   "usp": [
+    "간편한 급수와 배수 관리에 빌트인 설치까지 자동 급배수 스팀 청정스테이션",
+    "높은 문턱과 매트를 넘나드는 이지패스 휠",
+    "사각지대까지 놓치지 않는 구석 청소 솔루션 팝아웃 콤보"
+   ],
+   "url": "vacuum-cleaners/VR70F00SGGS/VR70F00SGGS/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR80F01ADG",
+   "name": "Bespoke AI 스팀 플러스",
+   "usp": [
+    "99.999% 물걸레 스팀 살균으로 냄새까지 줄여주는 100°C  스팀 청정스테이션",
+    "강력한 흡입력과 이지패스 휠로 확실한 청소",
+    "1cm 장애물을 감지하여 끊김 없는 효율적인 청소"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr80f01ad-d2c/VR80F01ADG/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR80F01SDG",
+   "name": "Bespoke AI 스팀 플러스 자동 급배수",
+   "usp": [
+    "간편한 급수와 배수 관리에 빌트인 설치까지 자동 급배수 스팀 청정스테이션",
+    "강력한 흡입력과 이지패스 휠로 확실한 청소",
+    "1cm 장애물을 감지하여 끊김 없는 효율적인 청소"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr80f01sdg-d2c/VR80F01SDG/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR80F01SDGS",
+   "name": "Bespoke AI 스팀 플러스 자동 급배수 (리폼비 포함)",
+   "usp": [
+    "간편한 급수와 배수 관리에 빌트인 설치까지 자동 급배수 스팀 청정스테이션",
+    "강력한 흡입력과 이지패스 휠로 확실한 청소",
+    "1cm 장애물을 감지하여 끊김 없는 효율적인 청소"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr80f01sdg-d2c/VR80F01SDGS/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR90F01AAG",
+   "name": "Bespoke AI 스팀 울트라",
+   "usp": [
+    "99.999% 물걸레 스팀 살균으로 냄새까지 줄여주는 100°C 스팀 청정스테이션",
+    "강력한 흡입력과 이지패스 휠로 확실한 청소",
+    "Knox 보안 기술 적용으로 검증된 보안"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr90f01aa-d2c/VR90F01AAG/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": []
+  },
+  {
+   "code": "VR90F01AAH",
+   "name": "Bespoke AI 스팀 울트라",
+   "usp": [
+    "99.999% 물걸레 스팀 살균으로 냄새까지 줄여주는 100°C 스팀 청정스테이션",
+    "강력한 흡입력과 이지패스 휠로 확실한 청소",
+    "Knox 보안 기술 적용으로 검증된 보안"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr90f01aa-d2c/VR90F01AAH/",
+   "cats": [],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "retail",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "VR90F01SAG",
+   "name": "Bespoke AI 스팀 울트라 자동 급배수",
+   "usp": [
+    "간편한 급수와 배수 관리에 빌트인 설치까지 자동 급배수 스팀 청정스테이션",
+    "높은 문턱과 매트를 넘나드는 이지패스 휠",
+    "물처럼 투명한 액체까지 인식 가능한 AI 사물인식"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr90f01sag-d2c/VR90F01SAG/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "retail",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "VR90F01SAGS",
+   "name": "Bespoke AI 스팀 울트라 자동 급배수 (리폼비 포함)",
+   "usp": [
+    "간편한 급수와 배수 관리에 빌트인 설치까지 자동 급배수 스팀 청정스테이션",
+    "강력한 흡입력과 이지패스 휠로 확실한 청소",
+    "Knox 보안 기술 적용으로 검증된 보안"
+   ],
+   "url": "vacuum-cleaners/jetbot-vr90f01sag-d2c/VR90F01SAGS/",
+   "cats": [
+    "vacuum-cleaners"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "retail",
+    "postpartum-care-center",
+    "coin-laundry",
+    "hairdressing",
+    "fitness-facility"
+   ]
+  },
+  {
+   "code": "WA10CG5441BW",
+   "name": "그랑데 통버블 세탁기 10kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 무상수리)",
+    "풍부한 버블로 더 깨끗하게 버블폭포",
+    "입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
+   ],
+   "url": "washing-machines/top-loader-wa10cg5441bw-d2c2/WA10CG5441BW/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WA16CG6441BY",
+   "name": "그랑데 통버블 세탁기 16kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 무상수리)",
+    "풍부한 버블로 더 깨끗하게 버블폭포",
+    "입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
+   ],
+   "url": "washing-machines/WA16CG6441BY/WA16CG6441BY/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WA21A8376KV",
+   "name": "통버블 세탁기 21kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 무상수리)",
+    "풍부한 버블로 더 깨끗하게 버블폭포",
+    "제트샷과 입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
+   ],
+   "url": "washing-machines/WA21A8376KV/WA21A8376KV/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": [
+    "restaurant",
+    "accomodation",
+    "postpartum-care-center",
+    "hairdressing"
+   ]
+  },
+  {
+   "code": "WA23A8377KV",
+   "name": "통버블 세탁기 23kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 무상수리)",
+    "풍부한 버블로 더 깨끗하게 버블폭포",
+    "제트샷과 입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
+   ],
+   "url": "washing-machines/WA23A8377KV/WA23A8377KV/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WA25B8377KV",
+   "name": "통버블 세탁기 25kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 무상수리)",
+    "풍부한 버블로 더 깨끗하게 버블폭포",
+    "제트샷과 입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
+   ],
+   "url": "washing-machines/WA25B8377KV/WA25B8377KV/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WA80F19E8W",
+   "name": "AI 통버블 세탁기 19kg",
+   "usp": [
+    "AI로 세탁부터 탈수까지 알아서 AI 맞춤세탁",
+    "풍부한 버블로 깨끗한 세탁 버블폭포",
+    "에너지를 절약하는 확실한 방법 AI 절약 모드"
+   ],
+   "url": "washing-machines/WA80F19E8W/WA80F19E8W/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WD40F09N0Y",
+   "name": "세탁기(건조 겸용) 9kg",
+   "usp": [
+    "세탁부터 건조까지 한 번에 편리하게",
+    "소량 세탁도 빠르게",
+    "통세척으로 위생적인 관리"
+   ],
+   "url": "washing-machines/WD40F09N0Y/WD40F09N0Y/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WD90F25CHB",
+   "name": "Bespoke AI 콤보 25/18kg (177.8mm LCD)",
+   "usp": [
+    "세탁물 이동 없이 편리하게 하나로 세탁·건조하는 ONE 솔루션",
+    "국내 최대 용량으로 건조까지 빠르게 쾌속 코스 89분",
+    "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
+   ],
+   "url": "laundry-combo/WD90F25CHB/WD90F25CHB/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WD90F25CHY",
+   "name": "Bespoke AI 콤보 25/18kg (177.8mm LCD)",
+   "usp": [
+    "세탁물 이동 없이 편리하게 하나로 세탁·건조하는 ONE 솔루션",
+    "국내 최대 용량으로 건조까지 빠르게 쾌속 코스 89분",
+    "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
+   ],
+   "url": "washing-machines/WD90F25CHY/WD90F25CHY/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF21CB6650BW",
+   "name": "Bespoke AI 세탁기 21kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 무상수리)",
+    "섬세하고 더 깨끗하게 똑똑한 AI 버블",
+    "세탁부터 탈수까지 알아서 AI 맞춤세탁"
+   ],
+   "url": "washing-machines/WF21CB6650BW/WF21CB6650BW/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF21DG6650BW",
+   "name": "AI 세탁기 21kg",
+   "usp": [
+    "세탁부터 탈수까지 알아서 AI 맞춤세탁",
+    "AI로 세탁물에 맞춰 깨끗하고 부드럽게 AI 버블",
+    "에너지를 절약하는 확실한 방법 AI 절약 모드"
+   ],
+   "url": "washing-machines/WF21DG6650BW/WF21DG6650BW/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF21T6000KV",
+   "name": "그랑데 세탁기 21 kg",
+   "usp": [
+    "버블로 빠르게 초강력 워터샷으로 깨끗하게 버블세탁",
+    "더 편리하고 위생적인 세탁기 관리 무세제통세척+",
+    "더 깨끗하고 알뜰하게 초강력/초절약 세탁"
+   ],
+   "url": "washing-machines/WF21T6000KV/WF21T6000KV/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF21T6000KW",
+   "name": "그랑데 세탁기 21 kg",
+   "usp": [
+    "버블로 빠르게 초강력 워터샷으로 깨끗하게 버블세탁",
+    "더 편리하고 위생적인 세탁기 관리 무세제통세척+",
+    "더 깨끗하고 알뜰하게 초강력/초절약 세탁"
+   ],
+   "url": "washing-machines/grande-wf21t6000kw/WF21T6000KW/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF2420HCWWC",
+   "name": "Bespoke AI 원바디 24/20kg",
+   "usp": [
+    "세탁부터 건조까지 알아서 AI 맞춤세탁/건조",
+    "사계절 이불에 맞춰 더 꼼꼼하고 빠르게 AI 이불 세탁/건조",
+    "에너지를 절약하는 확실한 방법 AI 에너지 절약"
+   ],
+   "url": "laundry-combo/WF2420HCWWC/WF2420HCWWC/",
+   "cats": [
+    "laundry-combo"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF25DG8250BW2T",
+   "name": "AI 세탁기+건조기 25/21kg+상단 설치 키트",
+   "usp": [
+    "세탁부터 탈수까지 알아서 AI 맞춤세탁",
+    "AI로 세탁물에 맞춰 깨끗하고 부드럽게 AI 버블",
+    "옷감 특성에 맞춰 섬세하게 AI 맞춤건조"
+   ],
+   "url": "laundry-combo/WF25DG8250BW2T/WF25DG8250BW2T/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF25DG8650BV2T",
+   "name": "AI 세탁기+건조기 25/21kg+상단 설치 키트",
+   "usp": [
+    "세탁부터 탈수까지 알아서 AI 맞춤세탁",
+    "AI로 세탁물에 맞춰 깨끗하고 부드럽게 AI 버블",
+    "옷감 특성에 맞춰 섬세하게 AI 맞춤건조"
+   ],
+   "url": "washing-machines/WF25DG8650BV2T/WF25DG8650BV2T/",
+   "cats": [
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF25DG8650BW",
+   "name": "AI 세탁기 25kg",
+   "usp": [
+    "세탁부터 탈수까지 알아서 AI 맞춤세탁",
+    "AI로 세탁물에 맞춰 깨끗하고 부드럽게 AI 버블",
+    "에너지를 절약하는 확실한 방법 AI 절약 모드"
+   ],
+   "url": "washing-machines/WF25DG8650BW/WF25DG8650BW/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF25DG8650BW2T",
+   "name": "AI 세탁기+건조기 25/21kg+상단 설치 키트",
+   "usp": [
+    "세탁부터 탈수까지 알아서 AI 맞춤세탁",
+    "AI로 세탁물에 맞춰 깨끗하고 부드럽게 AI 버블",
+    "옷감 특성에 맞춰 섬세하게 AI 맞춤건조"
+   ],
+   "url": "washing-machines/WF25DG8650BW2T/WF25DG8650BW2T/",
+   "cats": [
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF40F09M0Y",
+   "name": "세탁기 9kg",
+   "usp": [
+    "소량 세탁도 빠르게",
+    "통세척으로 위생적인 관리",
+    "직관적이고 사용하기 편리한 터치 패널"
+   ],
+   "url": "washing-machines/WF40F09M0Y/WF40F09M0Y/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WF40F09N0Y",
+   "name": "세탁기 9kg",
+   "usp": [
+    "소량 세탁도 빠르게",
+    "통세척으로 위생적인 관리",
+    "직관적이고 사용하기 편리한 터치 패널"
+   ],
+   "url": "washing-machines/WF40F09N0Y/WF40F09N0Y/",
+   "cats": [
+    "washing-machines"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WH90F2120GBHS",
+   "name": "Bespoke AI 원바디 21/20kg (177.8mm LCD)",
+   "usp": [
+    "AI로 세탁부터 건조까지 알아서 AI 맞춤+",
+    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
+    "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
+   ],
+   "url": "laundry-combo/WH90F2120GBHS/WH90F2120GBHS/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WH90F2120GBHT",
+   "name": "Bespoke AI 원바디 21/20kg (177.8mm LCD)",
+   "usp": [
+    "AI로 세탁부터 건조까지 알아서 AI 맞춤+",
+    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
+    "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
+   ],
+   "url": "laundry-combo/WH90F2120GBHT/WH90F2120GBHT/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WH90F2120GBHW",
+   "name": "Bespoke AI 원바디 21/20kg (177.8mm LCD)",
+   "usp": [
+    "AI로 세탁부터 건조까지 알아서 AI 맞춤+",
+    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
+    "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
+   ],
+   "url": "laundry-combo/WH90F2120GBHW/WH90F2120GBHW/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WH90F2120GBHY",
+   "name": "Bespoke AI 원바디 21/20kg (177.8mm LCD)",
+   "usp": [
+    "AI로 세탁부터 건조까지 알아서 AI 맞춤+",
+    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
+    "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
+   ],
+   "url": "laundry-combo/WH90F2120GBHY/WH90F2120GBHY/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WH90F2520GBHS",
+   "name": "Bespoke AI 원바디 25/20kg (177.8mm LCD)",
+   "usp": [
+    "AI로 세탁부터 건조까지 알아서 AI 맞춤+",
+    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
+    "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
+   ],
+   "url": "washing-machines/WH90F2520GBHS/WH90F2520GBHS/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  },
+  {
+   "code": "WH90F2522AAHS",
+   "name": "Bespoke AI 원바디 25/22kg (177.8mm LCD)",
+   "usp": [
+    "AI로 세탁부터 건조까지 알아서 AI 맞춤+",
+    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
+    "세탁·건조 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
+   ],
+   "url": "laundry-combo/WH90F2522AAHS/WH90F2522AAHS/",
+   "cats": [
+    "laundry-combo",
+    "washing-machines",
+    "dryers"
+   ],
+   "biz": []
+  }
+ ]
+}

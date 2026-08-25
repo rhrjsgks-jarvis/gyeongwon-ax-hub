@@ -38,6 +38,7 @@
     "test:apt": "node scripts/test-apt.mjs",
     "merge:library": "node scripts/merge-plan-library.mjs",
     "test:library": "node scripts/test-library.mjs",
+    "fetch:soho": "node scripts/fetch-soho-catalog.mjs",
     "build:lgq": "node scripts/build-lg-questions.mjs",
     "build:examtool": "node scripts/build-exam-tool.mjs",
     "test:examtool": "node scripts/test-examtool.mjs",
