@@ -41,6 +41,7 @@
     "fetch:soho": "node scripts/fetch-soho-catalog.mjs",
     "fetch:sohospec": "node scripts/fetch-soho-specs.mjs",
     "fix:anslen": "node scripts/fix-answer-length.mjs",
+    "fix:opts": "node scripts/fix-options.mjs",
     "build:b2bq": "node scripts/build-b2b-questions.mjs",
     "build:lgq": "node scripts/build-lg-questions.mjs",
     "build:examtool": "node scripts/build-exam-tool.mjs",
