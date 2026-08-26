@@ -238,6 +238,30 @@ export default function AdminPage() {
   const perHeadMin = (min: number) => last30 * min / SALES_HEADCOUNT
   /* 한 시간이 안 되면 분으로 적는다 — `0.5h` 보다 `23분` 이 상담에서 바로 읽힌다 */
   const fmtPerHead = (m: number) => (m >= 60 ? `${(m / 60).toFixed(1)}h` : `${Math.round(m)}분`)
+
+  /* ── "하루 1회 쓰면" 은 **예측이다. 위 세 칸과 성격이 다르다** ──
+   * 위는 로그에서 센 값이고 이건 *"이렇게 되면"* 이다. 나란히 같은 모양으로 두면
+   * **둘 다 측정값처럼 읽힌다** — 비교표가 `없음`(실제로 없다)과 `미공개`(확인
+   * 못 했다)를 갈라 적는 것과 같은 문제라, 화면에서 **눈으로 구분되게** 둔다
+   * (점선 테두리 · 화살표 · "예측입니다" 표기).
+   *
+   * **하루 = 영업일 22일이다.** 발표자료가 이미 `월 근무 176시간 = 22일 × 8시간` 을
+   * 쓰므로 30일로 잡으면 무대에서 두 자료가 어긋난다. 화면이 그 기준을 함께 적는다.
+   *
+   * 기준 분은 `BASE_MIN`(발표자료 값) 하나만 쓴다 — 여기까지 2·3·5분을 곱하면
+   * 숫자가 아홉이 되어 상담·발표에서 읽을 수가 없다. 폭은 위 세 칸이 이미 보여준다. */
+  const WORKDAYS = 22
+  const goalUses = SALES_HEADCOUNT * WORKDAYS       /* 1인 하루 1회 → 월 사용 건수 */
+  const nowPerHead = last30 / SALES_HEADCOUNT       /* 지금 1인당 월 사용 건수 */
+  /* 0건이면 배수가 무한대가 된다 — 그때는 배수를 적지 않는다(빈 화면에 거짓말을 쓰지 않는다) */
+  const goalMultiple = last30 > 0 ? goalUses / last30 : null
+  /* **단위는 값마다가 아니라 비교하는 짝끼리 함께 정한다.** `23분 → 1.1h` 는 화살표를
+     보고도 머릿속에서 환산해야 한다 — `23분 → 66분` 이면 는 폭이 즉시 보인다.
+     두 시간을 넘어가면 그때는 분이 오히려 안 읽히므로 둘 다 시간으로 넘긴다. */
+  const fmtPair = (a: number, b: number): [string, string] =>
+    Math.max(a, b) < 120
+      ? [`${Math.round(a)}분`, `${Math.round(b)}분`]
+      : [`${(a / 60).toFixed(1)}h`, `${(b / 60).toFixed(1)}h`]
   /* 허브에서 여는 도구 수 — `hub`(검색·건의)는 도구가 아니라 진입점이라 뺀다 */
   const toolCount = LIVE_MODULES.filter(([k]) => k !== 'hub').length
 
@@ -564,6 +588,40 @@ export default function AdminPage() {
                 </div>
               )
             })}
+          </div>
+
+          {/* ── 예측 칸 — **위 칸들과 눈으로 구분되게 둔다** ──
+              점선 테두리·화살표·"예측입니다" 셋이 그 일을 한다. 실측 옆에 같은 모양으로
+              두면 둘 다 측정값처럼 읽힌다(비교표의 `없음`/`미공개` 와 같은 규칙). */}
+          <div
+            className="mt-2.5 rounded-xl px-3 py-2"
+            style={{ border: '1px dashed rgba(255,255,255,0.35)', background: 'rgba(0,0,0,0.12)' }}
+          >
+            <p className="text-[10px] font-bold text-blue-100">
+              만약 1인이 <b className="text-white">하루 1회</b> 쓴다면
+              <span className="font-normal text-blue-300"> · 영업일 {WORKDAYS}일 · 1건 {BASE_MIN}분 기준</span>
+            </p>
+            <div className="grid grid-cols-3 gap-2 mt-1.5">
+              {[
+                { k: '1인 월 사용', now: `${nowPerHead.toFixed(1)}건`, goal: `${WORKDAYS}건` },
+                { k: '팀 절감', now: `${savedHoursAt(BASE_MIN).toLocaleString()}h`, goal: `${Math.round(goalUses * BASE_MIN / 60).toLocaleString()}h` },
+                (([now, goal]) => ({ k: '1인 절감', now, goal }))(
+                  fmtPair(perHeadMin(BASE_MIN), WORKDAYS * BASE_MIN)
+                ),
+              ].map((r) => (
+                <div key={r.k} className="text-center">
+                  <p className="text-[9px] text-blue-300">{r.k}</p>
+                  <p className="text-[11px] text-blue-200 mt-0.5">
+                    {r.now} <span className="text-blue-400">→</span>{' '}
+                    <b className="text-white text-[13px]">{r.goal}</b>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[9px] text-blue-300 mt-1.5">
+              ※ <b className="text-blue-200">예측입니다</b> — 측정값이 아닙니다
+              {goalMultiple !== null && ` (지금의 ${goalMultiple.toFixed(1)}배)`}
+            </p>
           </div>
 
           <div
