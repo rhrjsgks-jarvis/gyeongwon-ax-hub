@@ -604,8 +604,23 @@ const DOOR_OPEN = [
     src:'Bespoke 4도어 키친핏 — 도어오픈각 105~108°(모델별). 전체폭 실측이 없어 각도만 쓴다 · samsung.com' },
   { cat:'김치냉장고', group:/뚜껑형/, kind:'top', deg:92,
     src:'김치플러스 뚜껑형 — 도어 오픈 92°, 상부 개폐라 평면에 영향이 없다 · samsung.com' },
+  /*
+   * **4도어는 상실만 여닫이다**(2026-08-27 사용자 확인: *"김치냉장고 4도어 제품은 상실이
+   * 좌우도어고 중실 하실은 서랍형입니다"*). 예전에는 `leaves:1` 이라 폭 795mm 제품이
+   * **한쪽으로 609mm** 튀어나오는 것으로 재고 있었다 — 실제로는 좌우 두 짝이라
+   * 짝당 397mm 씩 **양쪽**이다. 한쪽 여유는 덜 필요하고 반대쪽 여유가 새로 필요해지는,
+   * 방향이 반대인 오차였다.
+   *
+   * **중실·하실 서랍은 넣지 않는다** — 앞으로 얼마나 빠지는지가 설치가이드·카탈로그
+   * 어디에도 없다. 지어낸 인출 깊이로 "앞이 이만큼 필요합니다"를 말할 수는 없다
+   * (`CLEAR` 의 `front` 도 같은 이유로 0 이다). 실측이 나오면 `kind:'front'` 로 함께 담을 것.
+   */
+  { cat:'김치냉장고', group:/4도어/, kind:'side', leaves:2, deg:130,
+    src:'김치플러스 스탠드형 4도어(RQ48A9001S9) — 도어 오픈 130° · 제품 가로 795mm · samsung.com 설치가이드 규격도. '
+      + '문짝 수는 2026-08-27 사용자 확인 — 상실 좌우 2도어, 중실·하실은 서랍(인출 깊이 실측 없음).' },
   { cat:'김치냉장고', kind:'side', leaves:1, deg:130,
-    src:'김치플러스 스탠드형 4도어(RQ48A9001S9) — 도어 오픈 130° · samsung.com' },
+    src:'김치플러스 스탠드형(RQ48A9001S9) — 도어 오픈 130° · samsung.com. '
+      + '3도어·키친핏 313L 의 문짝 구성은 확인하지 않아 한 짝으로 둔다 — 4도어처럼 좌우로 단정하지 않는다.' },
   { cat:'세탁기·콤보', group:/통버블|일반세탁기|통돌이/, kind:'top', deg:90,
     src:'통버블·통돌이는 상부 개폐 — 도어 오픈 높이 1,480~1,510mm(모델별) · samsung.com' },
   { cat:'세탁기·콤보', group:/워시타워/, kind:'front', leaves:1, deg:90, openD:1377,
@@ -3750,6 +3765,14 @@ function fridgeLayout(it){
   /* 1도어 세트 — `(냉장+냉동+김치)` 처럼 구성이 이름에 적혀 있다. 캐비닛 수가 곧 도어 수다 */
   const set = size.match(/\(([^)]*\+[^)]*)\)/);
   if (set) return { cols: Math.max(2, Math.min(4, set[1].split('+').length)), rows: 1, top: false };
+  /*
+   * **김치냉장고 4도어는 냉장고 4도어와 앞면이 다르다**(2026-08-27 사용자 확인) —
+   * 상실만 좌우 두 짝이고 **중실·하실은 서랍**이라 그 아래는 통째로 한 칸씩이다.
+   * 냉장고와 같은 2×2 로 그리면 서랍 한가운데에 **없는 세로 분할선**이 생긴다.
+   * `splitRows` 는 "위에서 몇 칸이 좌우로 갈리는가"이고, 나머지 칸은 서랍이다.
+   */
+  if (/^김치냉장고$/.test(String(it.cat || '')) && /4도어/.test(s))
+    return { cols: 2, rows: 3, top: false, splitRows: 1 };
   if (/4도어/.test(s)) return { cols: 2, rows: 2, top: false };
   if (/양문형/.test(s)) return { cols: 2, rows: 1, top: false };   // 좌우 도어 — 가로로 안 갈린다
   if (/일반형|상냉장|하냉동/.test(s)) return { cols: 1, rows: 2, top: false };
@@ -4259,14 +4282,16 @@ function buildShareCanvas(){
     state.rooms.length ? `공간 ${state.rooms.length}곳` : null,
     `가전 ${items.length}대`,
     on3d ? `3D · 층고 ${window.Place3D.WALL_H_MM.toLocaleString()}mm(가정)` : null,
-    doorsOn ? '문 열림' : null,
+    doorsOn ? `문 열림 ${items.filter((it) => it.doorOpen && !it.staged).length}대` : null,
     new Date().toLocaleDateString('ko-KR'),
   ].filter(Boolean).join('  ·  '), padX, H + 48);
 
   /* 문을 열었더니 막히는 제품이 있으면 **카드에도 빨갛게** 적는다.
      고객에게 보여준 경고가 손에 남는 그림에서 사라지면 안 된다. */
   if (doorsOn){
-    const blocked = items.filter((it) => !it.staged && doorHits(it, items, state.walls).length);
+    /* **연 것만 센다** — 문 열림은 제품마다 다르다. 닫아 둔 제품을 "문이 안 열립니다"로
+       적으면 상담사가 열어 보지도 않은 제품에 경고를 달게 된다 */
+    const blocked = items.filter((it) => !it.staged && it.doorOpen && doorHits(it, items, state.walls).length);
     if (blocked.length){
       g.fillStyle = '#B42318'; g.font = '700 12.5px system-ui,sans-serif';
       g.fillText(`⚠ 문이 안 열리는 제품 ${blocked.length}대 — ${blocked.map((b) => b.label).join(', ')}`,
@@ -7528,7 +7553,31 @@ const ghostMat = new THREE.MeshLambertMaterial({ color: 0xB6BFCB, transparent: t
 const doorMat = new THREE.MeshLambertMaterial({ color: 0xE8ECF1, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
 const doorBad = new THREE.MeshLambertMaterial({ color: 0xE23D3D, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
 
-let openDoors = false;      // 문을 연 상태인가 (도구막대에서 켠다)
+/*
+ * ── 문 열기 — **제품마다 따로**, 그리고 **여닫는 동작이 보이게** (2026-08-27) ──────────
+ *
+ * 예전에는 `openDoors` 불리언 하나로 **모든 제품의 문이 한꺼번에** 열렸다. 상담에서
+ * 보고 싶은 것은 *"이 냉장고 문을 열면 어떻게 되는가"* 인데 옆의 세탁기·건조기 문까지
+ * 함께 열려 화면이 문짝으로 뒤덮였다(2026-08-27 사용자 지적).
+ *
+ * 그래서 **열림 상태를 제품이 들고 있는다**(`it.doorOpen`). 3D 에서 제품을 누르면 고른
+ * 것이 되고 안내띠의 「문 열기」가 **그 제품에만** 걸린다. 아무것도 안 골랐을 때만
+ * 「문 전체 열기」로 예전처럼 다 연다 — 훑어보던 동작을 없애지는 않는다.
+ *
+ * **여는 동작도 보여준다.** `doorLeaves(it, frac)` 가 이미 0~1 사이 자세를 낸다
+ * (충돌 판정이 *열리는 도중*을 12단계로 훑느라 만들어 둔 것이다). 프레임마다 그 값만
+ * 올리면 문이 실제로 돌아가고, **그림과 판정이 같은 함수를 쓴다**는 규칙도 그대로 지켜진다.
+ */
+const DOOR_MS = 520;                    // 다 여는 데 걸리는 시간(ms). 실제로 냉장고 문을 여는 속도쯤이다
+const easeDoor = (t) => 1 - Math.pow(1 - t, 3);   // 끝에서 감속. 진행도는 선형이라 **반드시 끝난다**
+const doorFrac = new Map();             // 제품 id → 지금 열린 정도(0~1). 그림에만 쓰는 값이다
+let doorPlan = [];                      // build() 가 정리해 둔 [{it, bad}] — 애니메이션은 이것만 다시 그린다
+let doorRoot = null;                    // 열린 문짝만 담는 그룹. 장면 전체가 아니라 여기만 갈아 끼운다
+let doorClock = 0;                      // 지난 프레임 시각(ms)
+/** 문을 열어 보여줄 수 있는 제품인가 — 위로 열리는 뚜껑형은 평면에 보여줄 것이 없다 */
+const canOpenDoor = (it) => !!(it && !it.staged && P.doorOpenFor(it) && P.doorLeaves(it).length);
+/** 지금 문이 열려 있는 제품 수 */
+const openDoorCount = () => P.state.items.filter((it) => it.doorOpen && canOpenDoor(it)).length;
 let showTags = false;       // 가전 이름표를 띄우는가
 
 /*
@@ -7569,26 +7618,130 @@ function tagSprite(text, bad){
  * 문 높이만큼 올린다 — 판정과 그림이 같은 것을 봐야 한다.
  * 문 높이는 본체 높이의 8할로 둔다(손잡이·힌지 여유). 실측이 아니라 보이기 위한 값이다.
  */
+/**
+ * 문짝이 앞면에서 차지하는 **높이 구간들** [[아래, 위], …] (m).
+ *
+ * **앞면 구성이 곧 문짝 구성이다.** `fridgeLayout` 이 이미 "좌우로 몇 칸(`cols`) ·
+ * 위아래로 몇 칸(`rows`) · 그중 좌우로 갈린 것이 몇 칸(`splitRows`)"을 알고 있으므로
+ * 그대로 읽는다 — 앞면 그림과 열리는 문이 어긋나면 눈이 헤맨다.
+ *
+ *   · 4도어 냉장고  — 상·하 두 단이 각각 좌우 두 짝 → **문짝 4장**
+ *     (예전에는 바닥부터 통짜 한 장이라 앞면에 그려 둔 가로 분할선을 문이 가로질렀다)
+ *   · 양문형        — 한 단 좌우 두 짝
+ *   · 김치냉장고 4도어 — **상실 한 단만**(2026-08-27 사용자 확인). 중실·하실은 서랍이라
+ *     바닥까지 내려온 문짝을 그리면 서랍 두 칸이 통째로 열리는 것처럼 보인다
+ *
+ * 냉장고 계열이 아닌 것(세탁기·건조기…)은 예전 그대로 바닥부터 8할이다 —
+ * 실측이 아니라 보이기 위한 값이다(손잡이·힌지 여유).
+ */
+function leafSpans(it){
+  const H = it.h || 800;
+  const F = /^냉장고|^김치냉장고|^냉동고|^업소용/.test(String(it.cat || '')) && P.fridgeLayout
+    ? P.fridgeLayout(it) : null;
+  if (F && !F.top && F.cols > 1){
+    const sr = F.splitRows == null ? F.rows : F.splitRows;
+    const rowH = H / F.rows, out = [];
+    for (let i = 0; i < sr; i++){                    // 위 칸부터 — 갈린 칸만 여닫이다
+      const base = H - rowH * (i + 1);
+      out.push([M(base + rowH * 0.02), M(base + rowH * 0.98)]);
+    }
+    if (out.length) return out;
+  }
+  return [[0, M(H * 0.8)]];
+}
+
 function leafMesh(lf, it, bad){
   const g = new THREE.Group();
-  const h = M((it.h || 800) * 0.8);
   const p = lf.poly;
   /* 사각형이므로 두 삼각형이면 된다. 앞뒤로 보이게 DoubleSide 를 쓴다. */
   const idx = [[0,1,2],[0,2,3]];
   const pos = [];
-  for (const t of idx) for (const i of t){ pos.push(M(p[i][0]), 0, M(p[i][1])); }
-  for (const t of idx) for (const i of t){ pos.push(M(p[i][0]), h, M(p[i][1])); }
-  /* 옆면 — 문짝이 판때기로만 보이지 않게 네 변을 세운다 */
-  for (let i = 0; i < 4; i++){
-    const a = p[i], b = p[(i + 1) % 4];
-    pos.push(M(a[0]), 0, M(a[1]), M(b[0]), 0, M(b[1]), M(b[0]), h, M(b[1]));
-    pos.push(M(a[0]), 0, M(a[1]), M(b[0]), h, M(b[1]), M(a[0]), h, M(a[1]));
+  /* **한 짝이 여러 단이면 단마다 판을 세운다** — 판정 다각형(`lf.poly`)은 하나 그대로다.
+     평면에서 쓸고 가는 자리는 상·하 도어가 같으므로 판정은 바뀌지 않고 그림만 정확해진다. */
+  for (const [y0, y1] of leafSpans(it)){
+    for (const t of idx) for (const i of t){ pos.push(M(p[i][0]), y0, M(p[i][1])); }
+    for (const t of idx) for (const i of t){ pos.push(M(p[i][0]), y1, M(p[i][1])); }
+    /* 옆면 — 문짝이 판때기로만 보이지 않게 네 변을 세운다 */
+    for (let i = 0; i < 4; i++){
+      const a = p[i], b = p[(i + 1) % 4];
+      pos.push(M(a[0]), y0, M(a[1]), M(b[0]), y0, M(b[1]), M(b[0]), y1, M(b[1]));
+      pos.push(M(a[0]), y0, M(a[1]), M(b[0]), y1, M(b[1]), M(a[0]), y1, M(a[1]));
+    }
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   geo.computeVertexNormals();
   g.add(new THREE.Mesh(geo, bad ? doorBad : doorMat));
+  /* **열린 문짝을 눌러도 그 제품이 집힌다.** 문이 활짝 열리면 화면에서 가장 큰 것이
+     문짝인데, 그걸 눌렀을 때 아무 일도 안 일어나면 "왜 안 골라지지"가 된다. */
+  g.userData.item = it;
+  g.userData.isDoorLeaf = true;
   return g;
+}
+
+/**
+ * 열린 문짝들을 지금 진행도(`doorFrac`)에 맞춰 다시 세운다.
+ *
+ * **장면 전체를 다시 짓지 않는다.** 여는 동작은 프레임마다 자세가 바뀌는데 `build()` 는
+ * 방·벽·가전을 통째로 다시 만들어 60fps 로 돌릴 것이 아니다. 문짝만 담는 그룹
+ * (`doorRoot`)을 두고 그 안만 갈아 끼운다.
+ *
+ * **지오메트리는 반드시 버린다**(`dispose`). 프레임마다 새로 만드는 자리라 안 버리면
+ * GPU 메모리가 그대로 샌다 — 색 재질을 한 장만 만들어 나눠 쓰는 것과 같은 이유다.
+ */
+function paintDoors(){
+  if (!doorRoot) return;
+  for (const c of doorRoot.children.slice()){
+    c.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+    doorRoot.remove(c);
+  }
+  for (const d of doorPlan){
+    const t = doorFrac.get(d.it.id) || 0;
+    /* 거의 닫힌 자세는 그리지 않는다 — 문짝이 앞면 안쪽에 겹쳐 z-파이팅으로 깜빡인다 */
+    if (t <= 0.02) continue;
+    for (const lf of P.doorLeaves(d.it, easeDoor(t))) doorRoot.add(leafMesh(lf, d.it, d.bad));
+  }
+}
+
+/**
+ * 문이 열리고 닫히는 **동작** — 제품마다 목표(`it.doorOpen`)를 향해 진행도를 옮긴다.
+ *
+ * 진행도는 **선형**으로 재고 각도로 바꿀 때만 감속을 준다(`easeDoor`). 지수 감쇠로
+ * 부드럽게 하면 목표에 영원히 도달하지 않아 문이 미세하게 계속 떨리고, 그러면 화면이
+ * 멈추지 않아 폰 배터리를 계속 먹는다.
+ */
+function stepDoors(){
+  const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  /* 탭이 가려졌다 돌아오면 dt 가 몇 초씩 튄다 — 그러면 문이 순간이동한다. 잘라 둔다 */
+  const dt = doorClock ? Math.min(120, Math.max(0, now - doorClock)) : 16;
+  doorClock = now;
+  let moved = false;
+  for (const d of doorPlan){
+    const tgt = d.it.doorOpen ? 1 : 0;
+    const cur = doorFrac.has(d.it.id) ? doorFrac.get(d.it.id) : tgt;
+    if (cur === tgt){ doorFrac.set(d.it.id, tgt); continue; }
+    const step = dt / DOOR_MS;
+    doorFrac.set(d.it.id, tgt > cur ? Math.min(tgt, cur + step) : Math.max(tgt, cur - step));
+    moved = true;
+  }
+  return moved;
+}
+
+/**
+ * 여는 도중을 건너뛰고 **목표 자세로 곧장 맞춘다.**
+ *
+ * 공유 카드는 *"문을 연 상태"* 를 보여야지 **여는 도중**을 보이면 안 된다 — 중간 자세는
+ * 그 찰나에만 있는 그림이라 고객 손에 남을 그림으로는 뜻이 없다. 그래서 내보내기 직전
+ * (`render()`)에 한 번 부른다. 화면도 그 자리에서 함께 끝난다.
+ */
+function settleDoors(){
+  let moved = false;
+  for (const d of doorPlan){
+    const tgt = d.it.doorOpen ? 1 : 0;
+    if (doorFrac.get(d.it.id) !== tgt){ doorFrac.set(d.it.id, tgt); moved = true; }
+  }
+  if (moved) paintDoors();
+  return moved;
 }
 
 /*
@@ -7751,15 +7904,24 @@ function applianceMesh(it){
       const lid = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.9, d * 0.8), faceMat);
       lid.rotation.x = -Math.PI / 2; lid.position.set(0, h + 0.004, 0); g.add(lid);
     } else {
-      for (let i = 1; i < F.cols; i++)                        // 세로 분할선
-        plate(0.006, h * 0.99, -w / 2 + (w * i) / F.cols, h / 2, darkMat);
+      /* `splitRows` 는 **위에서 몇 칸이 좌우로 갈리는가**다(김치냉장고 4도어 = 상실 1칸).
+         안 적혀 있으면 예전처럼 전 칸이 갈린다 — 아래 식이 그대로 옛 그림을 낸다. */
+      const sr = F.splitRows == null ? F.rows : F.splitRows;
+      const rowH = h / F.rows, splitH = rowH * sr;
+      for (let i = 1; i < F.cols; i++)                        // 세로 분할선 — **갈린 칸에만**
+        plate(0.006, splitH * 0.99, -w / 2 + (w * i) / F.cols, h - splitH / 2, darkMat);
       for (let i = 1; i < F.rows; i++)                        // 가로 분할선
-        plate(w * 0.995, 0.006, 0, (h * i) / F.rows, darkMat);
+        plate(w * 0.995, 0.006, 0, rowH * i, darkMat);
       const cw = w / F.cols;
-      for (let i = 0; i < F.cols; i++){                       // 칸마다 손잡이 하나
+      const hy = sr === F.rows ? h * 0.75 : h - splitH * 0.42;
+      const hh = sr === F.rows ? h * 0.22 : splitH * 0.40;
+      for (let i = 0; i < F.cols; i++){                       // 여닫이 칸마다 세로 손잡이 하나
         const cx = -w / 2 + cw * (i + 0.5);
-        plate(0.012, h * 0.22, cx + cw * (F.cols > 1 && i === 0 ? 0.34 : F.cols > 1 ? -0.34 : 0.30), h * 0.75, darkMat);
+        plate(0.012, hh, cx + cw * (F.cols > 1 && i === 0 ? 0.34 : F.cols > 1 ? -0.34 : 0.30), hy, darkMat);
       }
+      /* 서랍 칸은 **가로 손잡이** — 앞으로 당겨 빼는 물건이라 세로 손잡이가 없다 */
+      for (let r = 0; r < F.rows - sr; r++)
+        plate(w * 0.46, 0.014, 0, rowH * (r + 0.78), darkMat);
     }
   } else if (/세탁기|콤보|건조기|에어드레서|슈드레서/.test(cat)){
     /*
@@ -7833,12 +7995,12 @@ function applianceMesh(it){
   }
 
   /*
-   * 열린 문짝 — 고객에게 "문 열면 이만큼 나옵니다"를 보여주는 것이 이 기능의 목적이다.
-   * 다각형은 `doorLeaves` 가 만든 것을 **그대로** 쓴다. 3D 그림과 충돌 판정이 다른 것을
-   * 보면 화면에서는 부딪히는데 경고가 없거나 그 반대가 된다.
-   * 좌표가 이미 월드라 그룹 회전에 딸려 돌지 않도록 나중에 root 에 직접 붙인다.
+   * 열린 문짝은 **여기서 만들지 않는다** — `paintDoors()` 가 `doorRoot` 에 따로 세운다.
+   * 문짝 좌표는 이미 월드라 이 그룹의 회전에 딸려 돌면 안 되고, 무엇보다 여는 동작이
+   * 프레임마다 자세를 바꾸므로 **가전 몸통까지 매 프레임 다시 만들 수는 없다.**
+   * 다각형은 여전히 `doorLeaves` 가 만든 것을 그대로 쓴다 — 그림과 충돌 판정이 갈리면
+   * 화면에서는 부딪히는데 경고가 없거나 그 반대가 된다.
    */
-  g.userData.leaves = (openDoors && !it.staged) ? P.doorLeaves(it) : [];
 
   g.userData.item = it;      // 레이캐스트로 집었을 때 어느 가전인지 되찾는다
 
@@ -7883,6 +8045,9 @@ function build(refit){
   ensure();
   while (root.children.length) root.remove(root.children[0]);
   culled.length = 0; segs2d = []; eyeAt = null;
+  /* 열린 문짝은 따로 담는다 — 여는 동작이 프레임마다 이 그룹만 갈아 끼운다 */
+  doorPlan = [];
+  doorRoot = new THREE.Group(); root.add(doorRoot);
   const loops = P.roomLoops();
   const box = new THREE.Box3();
   let bestA = 0;
@@ -7914,7 +8079,7 @@ function build(refit){
       bestA = A; eyeAt = c;
     }
   }
-  let n = 0, blocked = 0, waiting = 0;
+  let n = 0, blocked = 0, waiting = 0, openN = 0;
   const placed = P.state.items.filter((i) => !i.staged);
   /*
    * **대기(staged) 중인 가전도 세운다 — 흐릿하게.**
@@ -7934,10 +8099,14 @@ function build(refit){
     root.add(mesh); n++;
     /* 문을 열었을 때 부딪히면 **빨갛게** 칠하고 몇 건인지 센다.
        배치 단계의 주황 주의와 달리 여기서는 하드하게 말한다 — 상담사가 직접 연 것이다. */
-    const hits = openDoors ? P.doorHits(it, placed, P.state.walls) : [];
+    /* 문 열림은 **제품마다** 다르다 — 연 것만 판정하고, 연 것만 빨갛게 칠한다 */
+    const opened = !!it.doorOpen && canOpenDoor(it);
+    const hits = opened ? P.doorHits(it, placed, P.state.walls) : [];
     const bad = hits.length > 0;
+    if (opened) openN++;
     if (bad) blocked++;
-    for (const lf of (mesh.userData.leaves || [])) root.add(leafMesh(lf, it, bad));
+    /* 닫힌 것도 계획에 넣는다 — 그래야 **닫히는 동작**이 보인다(빼면 그 자리에서 사라진다) */
+    if (canOpenDoor(it)) doorPlan.push({ it, bad });
     /* 문이 막히면 빨갛게 — 제품 색으로 칠한 것도 함께 바뀌어야 경고가 보인다 */
     if (bad) mesh.traverse((o) => { if (o.isMesh && (o.userData.isBody || o.material === bodyMat)) o.material = badMat; });
     /* 고른 것은 모서리를 삼성 블루로 굵게 — 무엇을 돌리고 지우는지 보여야 한다 */
@@ -7962,7 +8131,8 @@ function build(refit){
    * 각도를 잃었다. 방이 바뀐 것이 아니라 그 안의 물건만 바뀐 때는 시점을 그대로 둔다.
    */
   if (refit){ orb.tx = c.x; orb.tz = c.z; view(mode3); }
-  return { rooms: loops.length, items: n, blocked, waiting };
+  paintDoors();          // 지금 진행도로 문짝을 세운다(여는 도중이면 그 자세로)
+  return { rooms: loops.length, items: n, blocked, waiting, opened: openN, doorable: doorPlan.length };
 }
 
 /* ── 시점 프리셋 ────────────────────────────────────────────────
@@ -8059,6 +8229,9 @@ function size(){
 function loop(){
   raf = requestAnimationFrame(loop);
   if (!on) return;
+  /* 문이 여닫히는 중이면 그 프레임만큼 자세를 옮기고 문짝만 다시 세운다.
+     움직임이 끝나면 아무 일도 하지 않는다 — 늘 다시 만들면 폰이 계속 뜨거워진다 */
+  if (stepDoors()) paintDoors();
   apply();
   cullWalls();
   ren.render(scene, cam);
@@ -8083,6 +8256,7 @@ const ndc = new THREE.Vector2();
 const floor = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const hitPt = new THREE.Vector3();
 let drag = null;      // { it, offX, offY, prev }
+let downAt = null;    // 누른 자리 — 빈 곳을 '눌렀는지' 카메라를 '돌렸는지' 가른다
 let lastTap = null;   // 더블탭 회전용 — 2D 와 같은 500ms 창(손가락은 마우스보다 느리다)
 
 /** 화면 좌표 → 바닥면 위의 월드 mm. 바닥과 안 만나면 null */
@@ -8113,6 +8287,7 @@ cv3.addEventListener('pointerdown', (e) => {
   last = [e.clientX, e.clientY];
   try { cv3.setPointerCapture(e.pointerId); } catch (_) {}   // 이미 놓인 포인터면 던진다 — 삼킨다
   if (pts.size === 1){
+    downAt = [e.clientX, e.clientY];
     const it = pickItem(e.clientX, e.clientY);
     const at = it && floorAt(e.clientX, e.clientY);
     if (it && at) drag = { it, offX: it.bx - at[0], offY: it.by - at[1],
@@ -8176,7 +8351,18 @@ const up = (e) => {
     drag = null;
     P.evaluate(); P.draw();                  // 2D 화면과 경고 목록도 함께 맞춘다
     paintBar(build());
+  } else if (downAt && !pts.size && P.state.sel){
+    /*
+     * **빈 곳을 누르면 선택이 풀린다.** 예전에는 고른 것을 푸는 길이 "같은 것을 다시 누르기"
+     * 하나뿐이었는데, 문 열기가 제품별이 된 뒤로는 선택을 풀어야 「문 전체」로 돌아간다.
+     * 카메라를 돌린 것과 가르는 기준은 2D 의 `TAP_SLOP` 과 같은 6px 다 — 손가락은 가만히 있지 못한다.
+     */
+    const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 6;
+    if (!moved && !pickItem(e.clientX, e.clientY)){
+      P.state.sel = null; P.draw(); paintBar(build());
+    }
   }
+  if (!pts.size) downAt = null;
 };
 /** 3D 위에 잠깐 뜨는 알림 — 2D 의 toast 는 도면 위에 뜨므로 여기서도 그대로 쓴다 */
 function toast3(msg){ if (P.toast) P.toast(msg); }
@@ -8196,7 +8382,14 @@ function paintBar(info){
   /* 부딪히는 것이 있으면 **숫자를 먼저** 말한다. 상담 중에 읽는 글자는 짧을수록 좋다. */
   const warn = info.blocked
     ? `<span style="color:#FFB4B4;font-weight:700">문이 안 열리는 제품 ${info.blocked}대 — 이 배치로는 안 됩니다</span>`
-    : (openDoors ? `<span style="color:#A7F3D0">문을 다 열어도 부딪히지 않습니다</span>` : '');
+    : (info.opened ? `<span style="color:#A7F3D0">문 열림 ${info.opened}대 — 부딪히지 않습니다</span>` : '');
+  /*
+   * 「문 열기」가 무엇에 걸리는가 — **고른 제품이 있으면 그 제품에만**(2026-08-27 사용자 요청).
+   * 아무것도 안 골랐을 때만 전체를 연다. 버튼을 하나 더 두지 않은 이유는 좁은 화면에서
+   * 도구막대가 두 줄로 접히기 때문이다 — 무엇에 걸리는지는 **글자('전체')가 밝힌다.**
+   * 문이 없는 제품(TV·에어컨…)을 고른 상태면 전체 동작으로 남는다.
+   */
+  const doorSel = sel && canOpenDoor(sel) ? sel : null;
   /*
    * **오른쪽 패널이 이미 말하는 것은 여기 적지 않는다**(2026-08-12 사용자: *"난잡하다"*).
    * 공간 수·가전 수는 패널의 `공간`·`배치 목록`에 그대로 있어 화면에 같은 숫자가 세 번 떴다.
@@ -8218,7 +8411,9 @@ function paintBar(info){
     `<button data-v="iso">둘러보기</button>` +
     `<button data-v="eye">눈높이</button>` +
     `<button data-v="top">위에서</button>` +
-    `<button id="d3-door">${openDoors ? '문 닫기' : '문 열기'}</button>` +
+    (doorSel
+      ? `<button id="d3-door" class="${doorSel.doorOpen ? 'on' : ''}">${doorSel.doorOpen ? '문 닫기' : '문 열기'}</button>`
+      : `<button id="d3-door" class="${info.opened ? 'on' : ''}">${info.opened ? '문 전체 닫기' : '문 전체 열기'}</button>`) +
     /* 버튼이 여섯이면 좁은 화면에서 줄이 넘어간다. 켜짐 여부는 글자가 아니라
        **색**으로 알린다 — 라벨이 짧아야 폰에서 한 줄에 들어간다. */
     `<button id="d3-tag" class="${showTags ? 'on' : ''}">이름</button>` +
@@ -8236,7 +8431,14 @@ function paintBar(info){
       P.removeItem(sel.id); P.draw(); paintBar(build());
     };
   }
-  document.getElementById('d3-door').onclick = () => { openDoors = !openDoors; paintBar(build()); };
+  document.getElementById('d3-door').onclick = () => {
+    if (doorSel) doorSel.doorOpen = !doorSel.doorOpen;                 // 고른 제품 하나만
+    else {
+      const want = !openDoorCount();                                   // 하나라도 열려 있으면 전부 닫는다
+      for (const it of P.state.items) if (canOpenDoor(it)) it.doorOpen = want;
+    }
+    paintBar(build());
+  };
   document.getElementById('d3-tag').onclick = () => { showTags = !showTags; paintBar(build()); };
   document.getElementById('d3-close').onclick = close;
 }
@@ -8244,6 +8446,7 @@ function paintBar(info){
 function open(){
   const info = build(true);   // 열 때만 화면을 맞춘다
   on = true;
+  doorClock = 0;              // 닫아 둔 사이의 시간이 dt 로 잡히면 문이 순간이동한다
   document.getElementById('stage').classList.add('on3d');
   document.body.classList.add('is3d');   // 도구막대의 2D 전용 손잡이를 감춘다
   size(); if (!raf) loop();
@@ -8266,11 +8469,33 @@ window.Place3D = {
    * 직후에 캔버스를 복사하면 바뀌기 전 그림이 나간다 — 실제로 공유 카드에 문이 닫힌
    * 냉장고가 찍혔다. 내보내기 전에 반드시 이걸 부른다.
    */
-  render(){ if (!ren) return false; apply(); cullWalls(); ren.render(scene, cam); return true; },
+  render(){ if (!ren) return false; settleDoors(); apply(); cullWalls(); ren.render(scene, cam); return true; },
   view,
-  /** 문 열기/닫기 — 열었을 때 부딪히는 대수를 돌려준다 */
-  doors(open){ openDoors = open == null ? !openDoors : !!open; const i = build(); if (on) paintBar(i); return i; },
-  get doorsOpen(){ return openDoors; },
+  /**
+   * 문 열기/닫기 — **모든 제품**에 걸린다(제품 하나만은 `door(id)`).
+   * 열었을 때 부딪히는 대수를 돌려준다. 인자를 안 주면 뒤집는다 —
+   * 하나라도 열려 있으면 전부 닫고, 다 닫혀 있으면 전부 연다.
+   */
+  doors(open){
+    const want = open == null ? !openDoorCount() : !!open;
+    for (const it of P.state.items) if (canOpenDoor(it)) it.doorOpen = want;
+    const i = build(); if (on) paintBar(i); return i;
+  },
+  /** 제품 하나만 여닫는다 — 상담에서 실제로 하는 동작이다 */
+  door(id, open){
+    const it = P.state.items.find((x) => x.id === id);
+    if (!canOpenDoor(it)) return null;
+    it.doorOpen = open == null ? !it.doorOpen : !!open;
+    const i = build(); if (on) paintBar(i); return i;
+  },
+  /** 문이 하나라도 열려 있는가 (공유 카드가 "문 열림"을 적을지 판단한다) */
+  get doorsOpen(){ return openDoorCount() > 0; },
+  /** 문을 열어 보여줄 수 있는 제품인가 */
+  canOpenDoor,
+  /** 여는 도중을 건너뛰고 목표 자세로 맞춘다 — 검사가 동작을 기다리지 않아도 되게 */
+  settleDoors,
+  /** 그 제품의 문이 지금 얼마나 열려 있는가(0~1). 여는 **동작**을 검사가 들여다본다 */
+  doorFracOf(id){ return doorFrac.get(id) || 0; },
   /** 가전 이름표 켜기·끄기 (기본은 꺼짐 — 고객 화면에 글자가 뜨면 "우리 집 느낌"이 흐려진다) */
   /* 인자 이름을 `on` 으로 두면 모듈의 `on`(3D 가 열려 있는가)을 가린다 — 그러면
      "화면이 켜져 있을 때만 다시 그린다"가 정반대로 동작한다. */

@@ -2119,6 +2119,97 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   else if (live.items !== 1 || live.left !== 0)
     fail(`3D: 방 안으로 넣었는데 배치 ${live.items}대 · 대기 ${live.left}대 (기대 1·0)`);
   else pass('3D 즉시 반영 — 고르면 흐리게 서고, 방에 넣으면 배치로 넘어간다');
+
+  /*
+   * ── 문 열기는 **제품마다 따로** 걸리고, **여는 동작**이 보인다 (2026-08-27) ──
+   *
+   * 예전에는 불리언 하나라 냉장고 문을 보려는데 **옆의 세탁기 문까지 함께 열렸다**
+   * (사용자 지적). 네 가지를 지킨다:
+   *   ① `door(id)` 는 그 제품 하나만 연다 — 옆 제품은 닫힌 채다
+   *   ② 여는 **도중**이 있다(진행도가 0 과 1 사이를 지난다). 없으면 순간이동이다
+   *   ③ 다 열리면 진행도 1 에서 **멈춘다** — 계속 움직이면 폰이 계속 뜨거워진다
+   *   ④ `doors(true)` 는 예전처럼 전부 연다(훑어보던 동작을 없애지 않았다)
+   */
+  const per = await page.evaluate(async () => {
+    const P = window.__place;
+    const W = [[0, 0, 9000, 0], [9000, 0, 9000, 6000], [9000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+    P.state.rooms = []; P.state.items = []; P.state.walls = W; P.state.sel = null;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('주방', W);
+    P.state.items.push(
+      mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고', w: 912, h: 1853, d: 930, bx: 2000, by: 2500 }),
+      mk({ id: 'c', cat: '세탁기·콤보', group: 'AI 콤보', label: '콤보', w: 686, h: 1000, d: 875, bx: 6000, by: 2500 }),
+      mk({ id: 'k', cat: '김치냉장고', group: '김치플러스 4도어 스탠드형', size: '324~347L',
+           label: '김치냉장고', w: 795, h: 1825, d: 800, bx: 4000, by: 2500 }));
+    window.Place3D.open();
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const leaves = () => { let n = 0; window.Place3D.root.traverse((o) => { if (o.userData && o.userData.isDoorLeaf) n++; }); return n; };
+    /* 문짝이 앞면에서 차지하는 높이 구간 [가장 아래, 가장 위] (mm) */
+    const span = () => {
+      let lo = 1e9, hi = -1e9;
+      window.Place3D.root.traverse((o) => {
+        if (!o.userData || !o.userData.isDoorLeaf) return;
+        o.traverse((m) => {
+          const a = m.geometry && m.geometry.attributes && m.geometry.attributes.position;
+          if (!a) return;
+          for (let i = 0; i < a.count; i++){ const y = a.getY(i) * 1000; if (y < lo) lo = y; if (y > hi) hi = y; }
+        });
+      });
+      return hi < lo ? null : [Math.round(lo), Math.round(hi)];
+    };
+
+    window.Place3D.doors(false); window.Place3D.settleDoors();
+    const start = leaves();
+
+    window.Place3D.door('f');                       // 냉장고 **하나만**
+    /* 여는 도중을 잡는다 — rAF 가 도는 환경인지도 함께 확인된다(최대 1초) */
+    let mid = 0;
+    for (let i = 0; i < 60; i++){ await wait(16); mid = window.Place3D.doorFracOf('f'); if (mid > 0.05) break; }
+    const midOther = window.Place3D.doorFracOf('c');
+    await wait(900);                                // DOOR_MS(520) 보다 넉넉히
+    const doneF = window.Place3D.doorFracOf('f'), doneC = window.Place3D.doorFracOf('c');
+    const oneOpen = leaves();                       // 4도어 = 좌우 두 짝
+    const otherFlag = !!P.state.items.find((x) => x.id === 'c').doorOpen;
+
+    const fridgeSpan = span();                      // 4도어 냉장고 — 상·하 두 단이라 바닥까지 내려온다
+    window.Place3D.door('f', false);
+    window.Place3D.door('k', true); window.Place3D.render();
+    const kimchiSpan = span();                      // 김치냉장고 — **상실만** 여닫이다
+    const kimchiN = leaves();
+
+    window.Place3D.doors(true); window.Place3D.render();   // 공유 직전엔 목표 자세로 맞춰진다
+    const allOpen = leaves();
+    window.Place3D.doors(false); window.Place3D.render();
+    const allShut = leaves();
+    window.Place3D.close();
+    return { start, mid, midOther, doneF, doneC, oneOpen, otherFlag, allOpen, allShut,
+             fridgeSpan, kimchiSpan, kimchiN, kimchiH: 1825 };
+  });
+
+  if (per.start !== 0) fail(`3D 문: 다 닫아 두었는데 문짝 ${per.start}장이 서 있다`);
+  else if (!(per.mid > 0.05 && per.mid < 0.95))
+    fail(`3D 문: 여는 도중이 없다 (진행도 ${per.mid}) — 문이 순간이동한다`);
+  else if (per.midOther !== 0 || per.doneC !== 0 || per.otherFlag)
+    fail('3D 문: 냉장고 하나만 열었는데 콤보 문까지 열린다 — 예전 "한꺼번에 열림" 이 남아 있다');
+  else if (per.doneF !== 1) fail(`3D 문: 다 열려도 진행도가 ${per.doneF} 에서 멈추지 않는다`);
+  else if (per.oneOpen !== 2) fail(`3D 문: 4도어 냉장고를 열었는데 문짝이 ${per.oneOpen}장이다 (기대 좌우 2장)`);
+  else if (per.allOpen <= per.oneOpen)
+    fail(`3D 문: 「전체 열기」인데 문짝이 ${per.allOpen}장뿐이다 (한 대만 열었을 때가 ${per.oneOpen}장)`);
+  else if (per.allShut !== 0) fail(`3D 문: 전체를 닫았는데 문짝 ${per.allShut}장이 남았다`);
+  /*
+   * **문짝이 앞면 구성과 맞아야 한다** — 김치냉장고 4도어는 상실만 여닫이고 중실·하실은
+   * 서랍이다(2026-08-27 사용자 확인). 바닥까지 내려온 문짝을 그리면 서랍 두 칸이 통째로
+   * 열리는 것처럼 보인다. 반대로 4도어 냉장고는 상·하 모두 도어라 바닥까지 내려온다.
+   */
+  else if (!per.fridgeSpan || per.fridgeSpan[0] > 60)
+    fail(`3D 문: 4도어 냉장고 문짝이 바닥에서 ${per.fridgeSpan && per.fridgeSpan[0]}mm 떠 있다 — 하부도 도어다`);
+  else if (!per.kimchiSpan || per.kimchiSpan[0] < per.kimchiH * 0.5)
+    fail(`3D 문: 김치냉장고 문짝이 ${per.kimchiSpan && per.kimchiSpan[0]}mm 부터 서 있다 — 상실만 여닫이인데 서랍 칸까지 덮는다`);
+  else if (per.kimchiN !== 2)
+    fail(`3D 문: 김치냉장고 문짝이 ${per.kimchiN}장이다 (기대 상실 좌우 2장)`);
+  else pass(`3D 문 — 제품마다 따로 열리고(냉장고 ${per.oneOpen}장 ${per.fridgeSpan[0]}~${per.fridgeSpan[1]}mm · 김치냉장고 상실 ${per.kimchiN}장 ${per.kimchiSpan[0]}~${per.kimchiSpan[1]}mm) 여는 동작이 보인다(도중 진행도 ${per.mid.toFixed(2)})`);
 }
 
 /*
@@ -2435,20 +2526,27 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   const r = await page.evaluate(() => {
     const P = window.__place;
     if (!P.fridgeLayout) return { err: 'fridgeLayout 이 노출되지 않았다' };
+    /* [카테고리, 사이즈, 제품군, 폭, 기대 cols, 기대 rows, 뚜껑형인가, 기대 splitRows] */
     const want = [
-      ['4도어 프리스탠딩', 'AI 4도어 프리스탠딩', 912, 2, 2, false],
-      ['양문형', '양문형 2도어', 912, 2, 1, false],
-      ['일반형', '일반형', 700, 1, 2, false],
-      ['1도어 키친핏', '1도어 냉장 키친핏', 595, 1, 1, false],
-      ['1도어 키친핏 세트 (냉장+냉동)', 'Bespoke 2세트', 1196, 2, 1, false],
-      ['1도어 키친핏 세트 (냉장+냉동+와인+김치)', 'Infinite 4세트', 2398, 4, 1, false],
-      ['202~221L', '뚜껑형 221L', 925, 1, 1, true],
-      ['324~347L', '김치플러스 4도어 스탠드형', 670, 2, 2, false],
+      ['냉장고', '4도어 프리스탠딩', 'AI 4도어 프리스탠딩', 912, 2, 2, false, 2],
+      ['냉장고', '양문형', '양문형 2도어', 912, 2, 1, false, 1],
+      ['냉장고', '일반형', '일반형', 700, 1, 2, false, 2],
+      ['냉장고', '1도어 키친핏', '1도어 냉장 키친핏', 595, 1, 1, false, 1],
+      ['냉장고', '1도어 키친핏 세트 (냉장+냉동)', 'Bespoke 2세트', 1196, 2, 1, false, 1],
+      ['냉장고', '1도어 키친핏 세트 (냉장+냉동+와인+김치)', 'Infinite 4세트', 2398, 4, 1, false, 1],
+      ['김치냉장고', '202~221L', '뚜껑형 221L', 925, 1, 1, true, 1],
+      /* **김치냉장고 4도어는 상실만 좌우 두 짝이고 중실·하실은 서랍**이다(2026-08-27 사용자 확인).
+         냉장고 4도어와 같은 2×2 로 그리면 서랍 한가운데에 없는 세로 분할선이 생긴다. */
+      ['김치냉장고', '324~347L', '김치플러스 4도어 스탠드형', 670, 2, 3, false, 1],
+      ['김치냉장고', '4도어 키친핏 (폭 795mm)', '4도어 키친핏 Max', 795, 2, 3, false, 1],
     ];
     return {
-      rows: want.map(([size, group, w, c, ro, top]) => {
-        const F = P.fridgeLayout({ cat: '냉장고', size, group, w });
-        return { size, ok: F.cols === c && F.rows === ro && !!F.top === top, got: F.cols + 'x' + F.rows + (F.top ? '뚜껑' : '') , want: c + 'x' + ro + (top ? '뚜껑' : '') };
+      rows: want.map(([cat, size, group, w, c, ro, top, sr]) => {
+        const F = P.fridgeLayout({ cat, size, group, w });
+        const gotSr = F.splitRows == null ? F.rows : F.splitRows;
+        return { size, ok: F.cols === c && F.rows === ro && !!F.top === top && gotSr === sr,
+          got: F.cols + 'x' + F.rows + '(갈림 ' + gotSr + ')' + (F.top ? '뚜껑' : ''),
+          want: c + 'x' + ro + '(갈림 ' + sr + ')' + (top ? '뚜껑' : '') };
       }),
     };
   });
