@@ -352,12 +352,22 @@ export function normalizeLogs(rows: unknown[]): LogEvent[] {
   return out
 }
 
+/**
+ * 팀 전체 로그를 받아 온다. 못 받으면 `null` — **빈 배열과 갈라야 한다.**
+ *
+ * 예전에는 `Array.isArray(data.logs)` 만 봤는데, 서버가 타임아웃에 걸려 돌려주는
+ * `logs: []` 도 **배열이라 성공으로 읽혔다.** 그래서 대시보드가 *팀 전체 모드로
+ * 전 항목 0* 을 그렸고, 사장님이 **"새로고침을 수차례 해야 숫자가 나온다"** 고
+ * 신고하셨다(2026-08-26). 실제로는 그때마다 실패하고 있었던 것이다.
+ * 이제 서버가 `connected` 로 성패를 분명히 밝히고 여기서 그것을 본다.
+ */
 export async function fetchTeamLogs(): Promise<LogEvent[] | null> {
   if (!GAS_CONNECTED) return null
   try {
-    const res = await fetch('/api/logs', { cache: 'no-store', signal: AbortSignal.timeout(10000) })
+    const res = await fetch('/api/logs', { cache: 'no-store', signal: AbortSignal.timeout(20000) })
     if (!res.ok) return null
     const data = await res.json()
+    if (data.connected === false) return null          /* 실패를 0 으로 그리지 않는다 */
     return Array.isArray(data.logs) ? normalizeLogs(data.logs) : null
   } catch {
     return null

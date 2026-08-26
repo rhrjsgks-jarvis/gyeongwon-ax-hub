@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, fetchTeamLogs, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, GAS_CONNECTED, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
+import { QUIZ_BANK_TOTAL } from '@/lib/quiz-stats'
 
 // 인증 상태는 sessionStorage에 만료시각과 함께 둔다.
 // 이전에는 localStorage에 '1'만 저장해 한 번 통과한 기기는 브라우저를 껐다 켜도 영구히
@@ -159,22 +160,39 @@ export default function AdminPage() {
     setGateChecked(true)
   }, [])
 
+  /* 팀 전체 자료를 못 받았을 때 **그 사실을 화면이 말한다.**
+     예전에는 조용히 이 기기 기록으로 내려앉아, 사장님이 *"새로고침을 수차례 해야
+     숫자가 나온다"* 고 겪으신 그 상황에서 화면이 아무 설명도 하지 않았다. */
+  const [teamFailed, setTeamFailed] = useState(false)
+  const [reloading, setReloading]   = useState(false)
+  /* **언제 받은 자료인지 화면이 말한다.** 숫자만 떠 있으면 그것이 방금 것인지
+     10분 전 것인지 알 수 없어, 사장님처럼 새로고침을 여러 번 누르게 된다. */
+  const [fetchedAt, setFetchedAt] = useState<number | null>(null)
+
+  const load = async () => {
+    setReloading(true)
+    // 화면·CSV 모두 허브 메인 페이지뷰를 뺀 로그로 통일한다(집계와 내보내기가 어긋나지 않게).
+    const team = await fetchTeamLogs()
+    if (team) {
+      setLogs(excludeHubViews(team))
+      setTeamWide(true)
+      setTeamFailed(false)
+    } else {
+      setLogs(excludeHubViews(readLogs()))
+      setTeamWide(false)
+      setTeamFailed(GAS_CONNECTED)     /* 연동이 안 된 것과 못 받은 것은 다른 말이다 */
+    }
+    setFetchedAt(Date.now())
+    setLoaded(true)
+    setReloading(false)
+  }
+
   useEffect(() => {
     if (!unlocked) return
     // 관리자 대시보드 조회 자체는 로그로 남기지 않는다 — 이 페이지를 열 때마다
     // hub 페이지뷰가 1건씩 늘어 집계가 부풀려졌다.
-    ;(async () => {
-      // 화면·CSV 모두 허브 메인 페이지뷰를 뺀 로그로 통일한다(집계와 내보내기가 어긋나지 않게).
-      const team = await fetchTeamLogs()
-      if (team) {
-        setLogs(excludeHubViews(team))
-        setTeamWide(true)
-      } else {
-        setLogs(excludeHubViews(readLogs()))
-        setTeamWide(false)
-      }
-      setLoaded(true)
-    })()
+    load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocked])
 
   if (!gateChecked) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
@@ -195,6 +213,20 @@ export default function AdminPage() {
   const uniqueUids = new Set(logs.map(e => e.uid)).size
   const maxDay     = Math.max(...byDay.map(d => d.count), 1)
   const recent     = [...logs].reverse().slice(0, 20)
+
+  /* ── 월간 절감 추산은 **로그에서 센다** ──
+   * 손으로 박아 둔 `36h+ · 5종 · 574문` 이 실제와 어긋난 채 오래 떠 있었다
+   * (2026-08-26 사장님 지적). 이 저장소가 허브 카드 개수·앱 버전·비교표 값에서
+   * 되풀이해 데인 그 종류라, 세 숫자를 전부 **지금 있는 자료에서** 만든다.
+   *
+   * `1건당 3분` 은 **가정**이다 — 발표자료가 쓰는 것과 같은 값이라 두 곳이 어긋나지
+   * 않는다(상담사 진술 *"찾는 시간이 단축된다"*). 화면이 그 근거를 함께 적는다. */
+  const MIN_PER_USE = 3
+  const since30 = Date.now() - 30 * 24 * 60 * 60 * 1000
+  const last30 = logs.filter(e => e.ts >= since30).length
+  const savedHours = Math.round(last30 * MIN_PER_USE / 60)
+  /* 허브에서 여는 도구 수 — `hub`(검색·건의)는 도구가 아니라 진입점이라 뺀다 */
+  const toolCount = LIVE_MODULES.filter(([k]) => k !== 'hub').length
 
   return (
     <div className="max-w-2xl mx-auto pb-12">
@@ -219,7 +251,44 @@ export default function AdminPage() {
         <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
           허브 메인화면 조회수는 집계에서 제외됩니다 (모든 모듈의 진입점이라 실사용 신호가 아님)
         </p>
+        {/* 언제 받은 자료인지 밝히고, 한 번에 다시 받는 손잡이를 준다 */}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            {fetchedAt ? `${new Date(fetchedAt).toLocaleTimeString('ko-KR')} 기준` : '불러오는 중…'}
+          </span>
+          <button
+            onClick={load}
+            disabled={reloading}
+            className="text-[10px] font-semibold rounded-lg px-2 py-0.5 disabled:opacity-50"
+            style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
+          >
+            {reloading ? '새로 받는 중…' : '새로 고침'}
+          </button>
+        </div>
       </div>
+
+      {/* 팀 전체를 못 받았으면 **0 을 그대로 두지 않고 그렇게 적는다.**
+          예전에는 조용히 이 기기 기록으로 내려앉아 숫자만 이상해 보였다. */}
+      {teamFailed && (
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 flex items-start gap-2.5">
+          <Icon name="warn" size={16} className="mt-0.5 shrink-0" style={{ color: '#B45309' }} />
+          <div className="flex-1">
+            <p className="text-xs font-bold text-amber-900">팀 전체 자료를 불러오지 못했습니다</p>
+            <p className="text-[11px] text-amber-800 mt-0.5">
+              지금 보이는 숫자는 <b>이 기기에 남은 기록</b>입니다. 구글 시트 응답이 늦어질 때 생기며,
+              다시 불러오면 대개 해결됩니다.
+            </p>
+          </div>
+          <button
+            onClick={load}
+            disabled={reloading}
+            className="shrink-0 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 text-white disabled:opacity-50"
+            style={{ background: '#B45309' }}
+          >
+            {reloading ? '불러오는 중…' : '다시 불러오기'}
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 mb-5">
         <KpiCard label="총 페이지뷰"   value={totalViews}  icon="eye" color="#1428A0" />
@@ -455,9 +524,9 @@ export default function AdminPage() {
           <p className="text-xs font-bold text-blue-200 mb-2 flex items-center gap-1"><Icon name="bulb" size={13} /> 팀 기준 월간 절감 추산</p>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { num: '36h+', label: '월 절감 시간', sub: '팀원 1인' },
-              { num: '5종', label: 'AI 도구', sub: '즉시 현장 투입' },
-              { num: '574문', label: '문제은행', sub: '자동 생성·관리' },
+              { num: savedHours + 'h', label: '월 절감 시간', sub: `최근 30일 ${last30.toLocaleString()}건 × ${MIN_PER_USE}분` },
+              { num: toolCount + '종', label: 'AI 도구', sub: '허브에서 여는 도구' },
+              { num: QUIZ_BANK_TOTAL.toLocaleString() + '문', label: '문제은행', sub: '레벨업 챌린지 · 시험지' },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-xl font-bold text-white">{s.num}</p>

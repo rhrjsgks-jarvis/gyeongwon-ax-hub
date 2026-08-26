@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { buildExamTool, assertSelfContained, OUT } from './build-exam-tool.mjs';
+import { buildExamTool, assertSelfContained, OUT, STATS, statsSource } from './build-exam-tool.mjs';
 import { buildLGQuestions, isStandaloneLG } from './build-lg-questions.mjs';
 import { readQB, LG_RE } from './lib/quiz-bank.mjs';
 
@@ -37,6 +37,13 @@ const { html: fresh, bank } = buildExamTool();
 say(committed === fresh,
   `커밋된 출력기 == 재생성한 것 (문항 ${bank.total}개)` +
   (committed === fresh ? '' : ' — `npm run build:examtool` 을 돌리고 커밋할 것'));
+
+/* 대시보드가 이 파일에서 문항 수를 읽어 화면에 적는다. 낡으면 **화면이 거짓말을 한다** —
+   손으로 박아 둔 `574문` 이 실제 은행과 어긋난 채 오래 떠 있었다(2026-08-26 사장님 지적). */
+const statsNow = fs.existsSync(STATS) ? fs.readFileSync(STATS, 'utf8') : '';
+say(statsNow === statsSource(bank),
+  `커밋된 문항 수 파일 == 재생성한 것 (은행 ${bank.total} · 앱 ${bank.total - bank.b2bTotal})` +
+  (statsNow === statsSource(bank) ? '' : ' — `npm run build:examtool` 을 돌리고 커밋할 것'));
 
 /* ── ①-b LG 비교 문항(C형) ──
  * 2026-08-25 사장님 지시 — *"엘지문제가 통으로 나오는 게 아니라 … 질문은 삼성질문이고

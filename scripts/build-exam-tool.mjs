@@ -101,11 +101,24 @@ export function fillTemplate(tplPath) {
 
 export function buildExamTool() { return fillTemplate(TPL); }
 
+/* 대시보드가 읽는 문항 수. **화면에 적는 개수는 데이터에서 세어 넣는다** —
+   손으로 박아 둔 `574문` 이 실제 은행과 어긋난 채 오래 떠 있었다(2026-08-26 사장님 지적).
+   React 페이지는 1MB 짜리 `test-app.html` 을 실행 중에 셀 수 없으므로 여기서 적어 준다.
+   `test-examtool` 이 **커밋본 == 재생성** 을 대조하므로 낡으면 검사가 먼저 깨진다. */
+export const STATS = 'lib/quiz-stats.ts';
+export function statsSource(bank) {
+  return `/* 자동 생성 — 손으로 고치지 말 것. \`npm run build:examtool\` 이 다시 쓴다.\n`
+    + `   화면에 적는 개수를 데이터에서 세어 넣기 위한 파일이다. */\n`
+    + `export const QUIZ_BANK_TOTAL = ${bank.total}          /* 시험지·웹시험이 뽑는 전체 은행 */\n`
+    + `export const QUIZ_APP_TOTAL = ${bank.total - (bank.b2bTotal || 0)}           /* 그중 레벨업 챌린지 앱에 실린 것 */\n`;
+}
+
 /* 직접 실행했을 때만 파일을 쓴다 — 테스트는 buildExamTool() 만 불러 대조한다 */
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { html, bank } = buildExamTool();
   fs.mkdirSync(OUTDIR, { recursive: true });
   fs.writeFileSync(OUT, html);
+  fs.writeFileSync(STATS, statsSource(bank));
   console.log(
     `문항 ${bank.total}개 · 카테고리 ${Object.keys(bank.cats).length}개 · ${JSON.stringify(bank.byType) + ' · ' + JSON.stringify(bank.byDiv)}`
   );
