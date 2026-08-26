@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { readLogs, fetchTeamLogs, GAS_CONNECTED, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
+import { SALES_HEADCOUNT } from '@/lib/stores'
 import { QUIZ_BANK_TOTAL } from '@/lib/quiz-stats'
 
 // 인증 상태는 sessionStorage에 만료시각과 함께 둔다.
@@ -219,12 +220,24 @@ export default function AdminPage() {
    * (2026-08-26 사장님 지적). 이 저장소가 허브 카드 개수·앱 버전·비교표 값에서
    * 되풀이해 데인 그 종류라, 세 숫자를 전부 **지금 있는 자료에서** 만든다.
    *
-   * `1건당 3분` 은 **가정**이다 — 발표자료가 쓰는 것과 같은 값이라 두 곳이 어긋나지
-   * 않는다(상담사 진술 *"찾는 시간이 단축된다"*). 화면이 그 근거를 함께 적는다. */
-  const MIN_PER_USE = 3
+   * **1건당 몇 분을 아끼는지는 못 박지 않는다**(2026-08-26 사장님 요청 —
+   * *"2분일때 3분일때 5분일때 기준으로 모두 계산"*). 이 저장소가 **전기요금 환산에서
+   * 이미 같은 판단을 했다** — 금액 하나를 못 박지 않고 세 가지 가정을 나란히 둔다.
+   * 하나만 적으면 **그것이 측정값처럼 읽히는데**, 실제로는 도구마다·상담마다 다르다
+   * (2분과 5분은 2.5배 차이다).
+   *
+   * **3분 칸만 밝게 둔다** — 발표자료가 쓰는 값이라, 흐려 두면 무대에서 화면과 대본의
+   * 숫자가 갈린다. 셋 다 같은 무게로 두는 것과는 다른 결정이다. */
+  const MIN_ASSUMPTIONS = [2, 3, 5]
+  const BASE_MIN = 3                       /* 발표자료가 쓰는 값 */
   const since30 = Date.now() - 30 * 24 * 60 * 60 * 1000
   const last30 = logs.filter(e => e.ts >= since30).length
-  const savedHours = Math.round(last30 * MIN_PER_USE / 60)
+  const savedHoursAt = (min: number) => Math.round(last30 * min / 60)
+  /* **1인당은 분으로 낸다** — `건수 × 분 ÷ 인원` 이 곧 1인당 분이다. 시간으로 먼저
+     바꾸면 0.5h 처럼 읽기 나쁜 값이 되고, 반올림이 두 번 겹쳐 팀 합과 어긋난다. */
+  const perHeadMin = (min: number) => last30 * min / SALES_HEADCOUNT
+  /* 한 시간이 안 되면 분으로 적는다 — `0.5h` 보다 `23분` 이 상담에서 바로 읽힌다 */
+  const fmtPerHead = (m: number) => (m >= 60 ? `${(m / 60).toFixed(1)}h` : `${Math.round(m)}분`)
   /* 허브에서 여는 도구 수 — `hub`(검색·건의)는 도구가 아니라 진입점이라 뺀다 */
   const toolCount = LIVE_MODULES.filter(([k]) => k !== 'hub').length
 
@@ -521,15 +534,48 @@ export default function AdminPage() {
           className="rounded-2xl p-4 mt-3"
           style={{ background: 'linear-gradient(135deg, #1e3a5f, #1428A0)' }}
         >
-          <p className="text-xs font-bold text-blue-200 mb-2 flex items-center gap-1"><Icon name="bulb" size={13} /> 팀 기준 월간 절감 추산</p>
+          <div className="flex items-baseline justify-between gap-2">
+            <p className="text-xs font-bold text-blue-200 flex items-center gap-1"><Icon name="bulb" size={13} /> 팀 기준 월간 절감 시간</p>
+            <p className="text-[10px] text-blue-300">
+              최근 30일 {last30.toLocaleString()}건 · 영업 {SALES_HEADCOUNT}명
+            </p>
+          </div>
+          {/* 가정을 밝히고 셋을 나란히 둔다 — 하나만 적으면 측정값처럼 읽힌다 */}
+          <p className="text-[9px] text-blue-300 mt-0.5 mb-2">
+            1건당 아끼는 시간은 <b className="text-blue-200">가정</b>입니다 — 2·3·5분을 나란히 봅니다
+            <span className="text-blue-400"> (가운데가 발표자료 기준)</span>
+          </p>
           <div className="grid grid-cols-3 gap-2">
+            {MIN_ASSUMPTIONS.map((m) => {
+              const base = m === BASE_MIN
+              return (
+                <div
+                  key={m}
+                  className="text-center rounded-xl py-1.5"
+                  style={base ? { background: 'rgba(255,255,255,0.13)' } : undefined}
+                >
+                  <p className={`text-xl font-bold ${base ? 'text-white' : 'text-blue-100'}`}>
+                    {savedHoursAt(m).toLocaleString()}h
+                  </p>
+                  <p className="text-[10px] text-blue-200 mt-0.5">1건 {m}분 기준</p>
+                  {/* 팀 합만 적으면 `190h` 가 1인당으로 오해된다 — 옛 타일이 실제로
+                      `36h+ / 팀원 1인` 이라 적고 있었다(2026-08-26 사장님 요청). */}
+                  <p className="text-[9px] text-blue-300 mt-0.5">1인 {fmtPerHead(perHeadMin(m))}</p>
+                </div>
+              )
+            })}
+          </div>
+
+          <div
+            className="grid grid-cols-2 gap-2 mt-2.5 pt-2.5"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.14)' }}
+          >
             {[
-              { num: savedHours + 'h', label: '월 절감 시간', sub: `최근 30일 ${last30.toLocaleString()}건 × ${MIN_PER_USE}분` },
               { num: toolCount + '종', label: 'AI 도구', sub: '허브에서 여는 도구' },
               { num: QUIZ_BANK_TOTAL.toLocaleString() + '문', label: '문제은행', sub: '레벨업 챌린지 · 시험지' },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <p className="text-xl font-bold text-white">{s.num}</p>
+                <p className="text-lg font-bold text-white">{s.num}</p>
                 <p className="text-[10px] text-blue-200 mt-0.5">{s.label}</p>
                 <p className="text-[9px] text-blue-300">{s.sub}</p>
               </div>
