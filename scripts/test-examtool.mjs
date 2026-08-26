@@ -87,6 +87,25 @@ say(shape.length === 0, 'C형은 삼성이 주어이고 지면에 LG 브랜드 �
   const autoHit = auto.filter(q => longest(q) === q.ans).length;
   say(autoHit / auto.length <= 0.35,
     `  └ 자동 생성 C형은 ${(autoHit / auto.length * 100).toFixed(0)}% — 찍기 수준을 지킨다`);
+
+  /* **제목이 정답을 흘리면 안 된다.** 제품 이름에 스펙이 박힌 것이 흔해서
+     "…카운터탑 6인용…의 용량은?" 같은 문항이 자동으로 만들어진다 — 읽기만 해도 풀린다
+     (2026-08-26 사장님이 시험지에서 잡아냈다. 그때 13개였다).
+     값의 공백을 **먼저 지우고** 글자 사이에 \s* 를 넣어 찾는다 — '6 인용' 과 '6인용' 이
+     안 맞아 정작 찾으려던 것을 놓친다. 앞뒤가 영숫자면 오탐이다('2026' 안의 '20',
+     모델코드 'LS32FM' 안의 '32'). 모델코드로 스펙을 읽는 것은 **지식**이라 통과시킨다. */
+  const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const leak = q => {
+    const a = String(q.opts[q.ans] || '').replace(/\s+/g, '');
+    if (a.length < 2) return false;
+    /* 다른 보기가 정답을 통째로 품으면(지원 ⊂ 미지원) 제목의 그 낱말은 힌트가 못 된다 */
+    if (q.opts.some((o, i) => i !== q.ans && o.replace(/\s+/g, '').includes(a))) return false;
+    return new RegExp('(^|[^0-9A-Za-z])' + a.split('').map(escRe).join('\\s*') + '([^0-9A-Za-z]|$)')
+      .test(q.q);
+  };
+  const leaked = items.filter(leak);
+  say(leaked.length === 0, `제목에 정답이 드러난 문항 ${leaked.length}개`
+    + (leaked.length ? ` — 예: ${leaked[0].q.slice(0, 60)} → ${leaked[0].opts[leaked[0].ans]}` : ''));
 }
 
 /* ── ② 자립성 ── */

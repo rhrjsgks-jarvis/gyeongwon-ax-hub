@@ -105,6 +105,43 @@ const euro = w => {
 /** 보기 둘이 **사실상 같은 값**인지. 문자열이 달라도 숫자와 단위가 같으면 같은 말이다 —
  *  `200 cd/㎡` 와 `200 cd/㎡ cd/㎡` 가 실제로 함께 나왔다(단위가 원문에서 겹쳐 적혀 있었다).
  *  방향성 문서가 *"보기 4개 중 2개가 명백히 같은 말인 문항은 즉시 버린다"* 고 한 그것이다. */
+/* ── 제목이 정답을 흘리지 않게 한다 ──
+ *
+ * 제품 이름에 스펙이 박혀 있는 것이 흔하다("AI 건조기 **21kg**", "카운터탑 **6인용**",
+ * "The Serif (**138 cm**)"). 그 스펙을 묻는 문항을 만들면 **읽기만 해도 풀린다.**
+ *
+ * 값의 공백은 **먼저 지우고** 글자 사이에 `\s*` 를 넣어 찾는다 — 그러지 않으면
+ * 정답 '6 인용' 이 이름의 '6인용' 과 안 맞아 정작 찾으려던 것을 놓친다.
+ * 모델코드는 건드리지 않는다 — `DV21DG…` 로 21kg 을 읽어 내는 것은 **지식**이지 읽기가 아니다. */
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const spaced = val => {
+  const a = String(val).replace(/\s+/g, '');
+  return a.length < 2 ? null : new RegExp(a.split('').map(escRe).join('\\s*'), 'g');
+};
+
+const leaksAnswer = (text, val) => {
+  const re = spaced(val);
+  return re ? re.test(String(text)) : false;
+};
+
+/** 이름에서 그 값을 지우고 뒷정리한다. 쓸 만한 이름이 안 남으면 `null`(그 문항을 버린다). */
+function hideSpec(name, val) {
+  const re = spaced(val);
+  if (!re || !re.test(name)) return name;          /* 애초에 안 들어 있으면 그대로 */
+  let s = String(name).replace(spaced(val), '');
+  s = s.replace(/\(\s*\)/g, ' ')                   /* 값만 있던 괄호가 비었다 */
+       .replace(/\/\s*(?=[(),]|$)/g, ' ')          /* "25/18kg" → "25/" 의 꼬리 슬래시.
+                                                      **여는 괄호도 넣어야 한다** — 뒤에
+                                                      "(177.8mm LCD)" 가 붙는 이름에서
+                                                      "25/ (177.8mm…" 로 남았다 */
+       .replace(/\s*,\s*(?=,|$)/g, '')             /* 남은 쉼표 */
+       .replace(/\s{2,}/g, ' ')
+       .replace(/\s+([),])/g, '$1')
+       .trim();
+  return s.replace(/[\s/,·-]+$/, '').trim().length >= 3 ? s.replace(/[\s/,·-]+$/, '').trim() : null;
+}
+
 const sameVal = (a, b) => {
   const key = s => String(s).replace(/\s/g, '').replace(/(.+?)\1+$/, '$1');
   if (key(a) === key(b)) return true;
@@ -176,12 +213,19 @@ export function buildB2BQuestions() {
           if (n && !opts.some(o => sameVal(o, n))) opts.push(n);
         }
         if (opts.length < 4) continue;
+        /* **제품 이름에 그 스펙이 박혀 있으면 제목이 곧 정답이다.**
+           "삼성 Bespoke 식기세척기 카운터탑 6인용…의 용량은?" 은 읽기만 해도 풀린다
+           (2026-08-26 사장님이 시험지에서 잡아냈다). 이름에서 그 값을 지우고,
+           지운 자리가 지저분해지면(빈 괄호·꼬리 슬래시) 그 문항은 **버린다** —
+           모델코드는 남긴다. `DV21DG…` 로 21kg 을 읽어 내는 것은 지식이지 읽기가 아니다. */
+        const shown = hideSpec(me.name, me.val);
+        if (shown === null || leaksAnswer(shown, me.val)) continue;
         const at = (me.code.length + label.length) % 4;
         const four = opts.slice(1);
         four.splice(at, 0, me.val);
         out.push({
           cat: qbCat,
-          q: `삼성 ${me.name}(${me.code})의 ${label}${euro(label)} 올바른 것은?`,
+          q: `삼성 ${shown}(${me.code})의 ${label}${euro(label)} 올바른 것은?`,
           opts: four, ans: at,
           exp: `${me.name}(${me.code})의 ${label}은 ${me.val}이다. `
              + `오답은 같은 품목 다른 모델의 실제 값이거나 근사값이다. (근거: SOHO몰 제품 지면)`,
