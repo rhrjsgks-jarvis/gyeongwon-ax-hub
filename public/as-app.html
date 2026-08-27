@@ -1645,7 +1645,11 @@ function searchDocs(){
       sub:`무상보증 ${d.base}${d.hold ? ' · 부품보유 ' + d.hold + '년' : ''}`,
       kw:[k, d.base, d.baseWhy, d.baseNote, d.holdAs, d.note,
           'as 보증 보증기간 무상보증 무상수리 부품 부품보유 부품보유기간 내용연수',
-          ...(d.core||[]).flat()].filter(Boolean).join(' '),
+          ...(d.core||[]).flat(),
+          /* **품목별 적용 기준도 담는다** — 화면에 「총판 제품 … 케이원에이브(K1AV)」가
+             떠 있는데 그 말로 못 찾으면 안 된다. 이 앱이 세운 규칙 그대로다.
+             `RULES`(전 품목 공통)는 담지 않는다 — 모든 품목이 같은 글이라 검색이 흐려진다. */
+          ...(d.rules||[]).map(r => r.l + ' ' + r.t)].filter(Boolean).join(' '),
       go(){ setTab('as'); cur = k; renderCats(); renderBody(); revealBody(); } });
   }
   /*

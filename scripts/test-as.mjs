@@ -907,6 +907,21 @@ pass('상황실·업무·운영 골든 5건');
       if (g && !/K1AV|케이원에이브/.test(g.textContent))
         fail('연락처 탭 하만 카드의 택배 안내에 K1AV 보증서 언급이 없다');
       else if (g) pass('연락처 탭 택배 안내에도 K1AV 보증서가 적혀 있다');
+
+      /*
+       * **앱 안 검색창에서도 찾혀야 한다.** 허브 통합검색(`search-index.json`)과
+       * 앱 내부 검색(`searchDocs`)은 **서로 다른 색인**이라, 색인만 고치면 앱 안에서는
+       * 여전히 0건이다. 품목 `kw` 가 `rules` 를 안 담고 있어 실제로 그랬다.
+       * 이 앱이 세운 규칙 그대로다 — *"화면에 적힌 말로 못 찾는 것은 검색이 아니다"*.
+       */
+      if (typeof A.searchDocs === 'function') {
+        const docs = A.searchDocs();
+        for (const q of ['K1AV', '케이원에이브', '총판']) {
+          const hit = docs.filter((x) => (x.kw || '').toLowerCase().includes(q.toLowerCase()));
+          if (!hit.length) fail(`앱 안 검색에서 "${q}" 가 0건이다 — 화면에 있는 말로 못 찾는다`);
+          else pass(`앱 안 검색: "${q}" → ${hit.length}건 (${hit[0].title})`);
+        }
+      }
     }
 
     /* 멤버십 연장 대상이 아니다 — 4대 품목이 아니고, 애초에 삼성전자서비스가 수리하지 않는다 */
