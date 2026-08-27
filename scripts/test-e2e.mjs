@@ -843,6 +843,81 @@ try {
     collecting = true;
   }
 
+
+  /*
+   * ── 전화 팝업이 하단 탭바에 가리지 않는가 (2026-08-27 사장님 보고) ──
+   *
+   * *"연락처를 눌르게되면 바로 전화걸수있는 팝업이뜨게되는데 하단에 닫기버튼이
+   * 짤려서보이게됩니다"*.
+   *
+   * **이 검사는 여기에만 있을 수 있다.** jsdom 은 레이아웃이 없어 좌표를 못 재고,
+   * 미니앱 단독으로 열면 **부모의 하단 탭바가 없어 재현되지 않는다** — iframe 이
+   * 뷰포트 끝까지 차 있는데 그 위를 탭바가 덮는 것이 원인이라, 부모까지 띄우는
+   * 이 스위트만이 잡을 수 있다. 실제로 그래서 여태 아무도 못 잡았다.
+   *
+   * **PC 에서는 재현되지 않는다**(탭바가 없다) — 폰 폭으로 봐야 한다.
+   */
+  {
+    await page.goto(`${BASE}/as`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(2500);
+
+    /* 부모: iframe 과 하단 고정 탭바의 위치 */
+    const outer = await page.evaluate(() => {
+      const f = document.querySelector('iframe');
+      const r = f && f.getBoundingClientRect();
+      let navTop = innerHeight;
+      for (const el of document.querySelectorAll('nav,div')) {
+        const cs = getComputedStyle(el);
+        if (cs.position === 'fixed' && parseFloat(cs.bottom) === 0
+          && el.offsetHeight > 30 && el.offsetHeight < 120) {
+          navTop = Math.min(navTop, el.getBoundingClientRect().top); break;
+        }
+      }
+      return { vp: innerHeight, top: r ? r.top : 0, navTop };
+    });
+
+    const fr = page.frames().find((f) => f.url().includes('as-app.html'));
+    if (!fr) {
+      fail('AS 미니앱 프레임을 못 찾아 전화 팝업을 검사할 수 없다');
+    } else {
+      const shown = await fr.evaluate(() => {
+        if (typeof window.contactSheet !== 'function') return false;
+        window.contactSheet('테스트센터', '1588-3366');
+        return true;
+      });
+      await page.waitForTimeout(400);
+      if (!shown) {
+        fail('share-kit 의 contactSheet 가 없다 — 전화 팝업이 뜨지 않는다');
+      } else {
+        const box = await fr.evaluate(() => {
+          const s = document.querySelector('.sk-sheet');
+          if (!s) return null;
+          return {
+            btns: [...s.querySelectorAll('.sk-b')].map((e) => {
+              const r = e.getBoundingClientRect();
+              return { t: e.textContent.trim(), top: r.top, bottom: r.bottom };
+            }),
+          };
+        });
+        if (!box || !box.btns.length) {
+          fail('전화 팝업이 그려지지 않았다');
+        } else {
+          /* iframe 안 좌표 → 부모 화면 좌표 */
+          const bad = box.btns
+            .map((b) => ({ t: b.t, bottom: outer.top + b.bottom, top: outer.top + b.top }))
+            .filter((b) => b.bottom > outer.navTop + 0.5 || b.top < 0);
+          if (bad.length) {
+            fail(`전화 팝업 버튼이 하단 탭바에 가린다 — ${bad.map((b) =>
+              `「${b.t}」 ${Math.round(b.bottom - outer.navTop)}px 가림`).join(' · ')}`
+              + ` (탭바 top=${Math.round(outer.navTop)})`);
+          } else {
+            pass(`전화 팝업 버튼 ${box.btns.length}개가 하단 탭바 위에 온전히 보인다`);
+          }
+        }
+        await fr.evaluate(() => { if (window.closeSheet) window.closeSheet(); });
+      }
+    }
+  }
   // ── 콘솔 오류 종합 ──
   // 실제 스크립트 오류만 본다. 아래는 테스트 진행 자체가 만드는 잡음이라 제외한다:
   //  - RSC payload prefetch 실패: 링크 프리페치가 끝나기 전에 다음 페이지로 이동해서 나는 것

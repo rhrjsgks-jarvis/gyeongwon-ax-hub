@@ -30,12 +30,29 @@
     var st = document.createElement('style');
     st.id = 'sharekit-css';
     st.textContent = [
+      /*
+       * **화면 가운데에 띄운다**(2026-08-27 사장님 보고 — *"하단에 닫기버튼이 짤려서
+       * 보이게됩니다 … 중앙에 팝업이뜨면 더 좋을것같습니다"*).
+       *
+       * 예전에는 `align-items:flex-end` 인 **하단 시트**였는데, 미니앱은 iframe 안이고
+       * 그 iframe 이 뷰포트 끝까지 차 있는 반면 **하단 바로가기 탭바가 그 위를 덮는다.**
+       * 그래서 시트 맨 아래 「닫기」가 탭바 뒤로 들어갔다 — 실측 **21px 가림**
+       * (폰 390·360 · 태블릿 820 전부. PC 는 탭바가 없어 멀쩡해서 여태 안 드러났다).
+       *
+       * **하단 여백으로는 못 고친다** — iframe 안에서는 탭바 높이를 알 수 없고, 앱마다
+       * 다르며 PC 에는 아예 없다. 가운데로 옮기면 그 계산 자체가 사라진다.
+       *
+       * `.sk-dim` 의 `padding` 이 상하좌우 여백을 만들고, `max-height`+`overflow` 가
+       * 버튼이 늘어도 화면을 넘지 않게 잡는다.
+       */
       '.sk-dim{position:fixed;inset:0;background:rgba(15,20,35,.45);z-index:9000;display:flex;',
-      '  align-items:flex-end;justify-content:center;animation:sk-fade .14s ease-out}',
+      '  align-items:center;justify-content:center;padding:16px;animation:sk-fade .14s ease-out}',
       '@keyframes sk-fade{from{opacity:0}to{opacity:1}}',
-      '.sk-sheet{background:#fff;width:100%;max-width:460px;border-radius:16px 16px 0 0;',
-      '  padding:18px 16px calc(16px + env(safe-area-inset-bottom));animation:sk-up .18s ease-out}',
-      '@keyframes sk-up{from{transform:translateY(14px)}to{transform:translateY(0)}}',
+      '.sk-sheet{background:#fff;width:100%;max-width:400px;border-radius:16px;',
+      '  padding:18px 16px;animation:sk-pop .18s ease-out;',
+      '  max-height:100%;overflow-y:auto}',
+      /* 가운데 팝업이라 아래에서 올라오는 대신 살짝 커지며 나타난다 */
+      '@keyframes sk-pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}',
       '.sk-t{font-size:14px;font-weight:800;margin-bottom:2px}',
       '.sk-n{font-size:20px;font-weight:800;color:#1428A0;letter-spacing:-.01em;margin-bottom:14px}',
       '.sk-b{display:block;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:11px;',
