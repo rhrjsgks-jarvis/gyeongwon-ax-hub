@@ -369,7 +369,13 @@ const HARMAN_N = HARMAN_PRODUCTS.length;
  * 으로 나중에 붙이므로, 한 번 잰 값을 들고 있으면 화면이 **붙기 전 숫자**를 계속 말한다.
  * "낡은 수치가 화면에 남지 않게 할 것"이라는 이 파일의 규칙이 그대로 적용된다.
  */
-function totalN(){ return PRODUCTS.length; }
+/*
+ * **묶음 상품은 검색 대상이 아니므로 세지 않는다**(2026-08-27). 화면이 `1,997종` 이라고
+ * 적는데 실제로 찾아지는 것은 1,697종이면 그 숫자가 거짓이 된다 —
+ * "낡은 수치가 화면에 남지 않게 할 것"과 같은 규칙이다.
+ * (`isPackage` 는 뒤 스크립트 블록에 있지만 이 함수는 화면을 그릴 때 불리므로 그때는 있다.)
+ */
+function totalN(){ return PRODUCTS.filter(p=>!isPackage(p)).length; }
 function countText(){
   const t = totalN();
   return `전사 제품 DB ${t.toLocaleString()}종 (삼성·리빙 ${(t - HARMAN_N).toLocaleString()}종 + Harman ${HARMAN_N}종)`;
@@ -1000,6 +1006,40 @@ function prodInch(p){
 const INCH_TOL = 0.35;
 
 /*
+ * ── **묶음 상품은 검색에서 뺀다** (2026-08-27 사용자 결정) ──────────────────────
+ *
+ * *"모델파인더에서는 세트상품은 필요가 없습니다. 제품의 정보를 얻기 위함이지 묶음상품을
+ * 확인하는 게 아닙니다."*
+ *
+ * 삼성닷컴은 `TV+사운드바`·`에어컨+공기청정기`·`버즈+케이스` 조합을 **각각 다른 SKU 로**
+ * 판다. 그래서 `TV 85인치` 가 **107종**이었는데 **38종만 단품**이고 69종이 묶음이었다 —
+ * 같은 QNF80 이 사운드바 조합마다 다섯 번 나온다(2026-08-27 사용자 지적).
+ *
+ * **데이터에서 지우지는 않는다** — 검색 후보에서만 뺀다(공기청정기 벽걸이를 `hidden` 으로
+ * 두고 `loadReps` 에서 한 번에 거른 것과 같은 방식이다). 되살릴 일이 생기면 이 함수만 본다.
+ *
+ * ── 판정: **이름이 스스로 밝히는 것만** 읽는다 ────────────────────────────────
+ *
+ * `+` 하나로 잡으면 **오탐이 380종 중 셋**이다(전수 확인). 그 셋을 먼저 걷어낸다:
+ *   ① **괄호 안의 `+`** 는 규격 설명이다 — `Infinite AI 공기청정기 (80㎡+33㎡, S 필터)`
+ *   ② `Copilot+ PC` — 인텔·MS 의 **제품 등급 이름**이다(노트북 32종)
+ *   ③ `프리미엄 100℃ 열풍건조+ 빌트인` — 식기세척기 **기능 이름**이다
+ *
+ * **모델코드로 가르지 말 것** — 묶음 코드가 `KQ85QNF80-8`·`KMR85RH85-992O` 처럼 제각각이고,
+ * 단품에도 `KQ85LSD03-WT`(베젤 색상) 같은 하이픈이 있다.
+ *
+ * **`세트` 는 넣지 않았다** — finder 데이터에 그 말을 쓰는 묶음이 한 종도 없고
+ * (`패키지`·`번들`만 쓴다), 배치 시뮬레이터의 `1도어 키친핏 세트` 와 혼동될 수 있다.
+ */
+function isPackage(p){
+  if(p.__pk!==undefined) return p.__pk;
+  let s = String(p.group||"");
+  s = s.replace(/\([^)]*\)/g, " ");              // 괄호 안은 규격 설명이다
+  s = s.replace(/copilot\s*\+|열풍건조\s*\+/gi, " ");   // 제품·기능 이름에 박힌 +
+  return (p.__pk = /[+＋]|패키지|번들/.test(s));
+}
+
+/*
  * 제품이 감당하는 면적(㎡). 라벨이 품목마다 달라(냉방면적(㎡) · 적용면적 · 청정면적)
  * **라벨에 '면적'이 들어간 항목**에서 첫 숫자를 읽는다. 값에 단위가 붙은 것도 있다("60㎡").
  * 면적 표기가 없는 제품은 null 이고, 면적 조건이 걸리면 후보에서 빠진다 —
@@ -1147,16 +1187,47 @@ function search(P){
   const pool = PRODUCTS.filter(p=>
     (!P.cats.length || P.cats.includes(p.cat)) &&
     !P.subs.some(s=>p.cat===s.cat && !s.re.test(p.model)));
+  /*
+   * ── **TV 는 벽걸이형 모델이 따로 없다** (2026-08-27 사용자 확인) ──────────────────
+   *
+   * *"TV는 벽걸이형 모델이 별도로 존재하지 않습니다. 스탠드형 벽걸이형 선택해서
+   * 설치하는 형태입니다."*
+   *
+   * 그런데 `TV 벽걸이 65인치` 가 10종을 내밀고 있었다 — 마치 **그 10종만 벽에 걸리는 것**
+   * 처럼 읽힌다. 재 보니 `벽걸이` 가 걸린 TV 54종 중 **45종은 제품군 이름에 그 말이 없다** —
+   * `kw` 가 사양 전문을 담다 보니 **벽걸이 규격 문구**에 우연히 걸린 것이다.
+   *
+   * 그래서 TV 로 좁혀진 검색에서는 `벽걸이`·`스탠드`를 조건에서 빼고 **그 사실을 화면에 적는다.**
+   * 조용히 빼지 않는다(`P.ignored` 와 같은 원칙) — 상담사가 왜 안 걸렸는지 알아야 한다.
+   *
+   * **에어컨에는 적용하지 않는다** — 그쪽은 벽걸이(AR)·스탠드(AF)·창문형(AW)이 **실제로
+   * 다른 모델**이고 모델 접두가 그것을 가른다(`size-reps` 도 같은 규칙을 쓴다).
+   */
+  P.notes = [];
+  const tvOnly = P.cats.length === 1 && P.cats[0] === "TV";
+  /* **조사 제거가 `벽걸이` 를 `벽걸` 로 깎는다**(`이` 를 조사로 본다) — 이 파일이
+     `통돌이`→`통돌` 로 이미 데인 함정이다. 깎인 형태도 함께 본다. */
+  const INSTALL_CHOICE = /^(벽걸이|벽걸|벽걸이형|스탠드|스탠드형)$/;
+
   const liveG = [];
   P.ignored = [];
   for(const g of (P.groups||[])){
     if(!g.req || !g.forms.length) continue;
+    if(tvOnly && INSTALL_CHOICE.test(g.raw)){
+      /* **깎인 형태(`벽걸`)를 화면에 적지 않는다** — 사람이 친 말이 아니다.
+         무엇을 뺐는지는 고정 문구가 이미 밝히고 있다. */
+      P.notes.push("TV 는 벽걸이형·스탠드형 모델이 따로 없습니다 — 전 모델이 스탠드·벽걸이 선택 설치라 그 말은 조건에서 뺐습니다");
+      continue;
+    }
     if(pool.some(p=>g.forms.some(f=>kwHit(p,f)))) liveG.push(g);
     else P.ignored.push(g.raw);
   }
 
   const out = [];
   for(const p of PRODUCTS){
+    /* **묶음 상품은 후보에서 뺀다** — 이 도구는 제품 정보를 얻는 곳이지 묶음을 고르는 곳이
+       아니다(2026-08-27 사용자 결정). 데이터에는 그대로 남는다. */
+    if(isPackage(p)) continue;
     // 형태 필터는 자기 카테고리 안에서만 건다("드럼세탁기 건조기"에서 건조기까지 지우지 않게)
     if(P.subs.length && P.subs.some(s=>p.cat===s.cat && !s.re.test(p.model))) continue;
     if(liveG.length && !liveG.every(g=>g.forms.some(f=>kwHit(p,f)))) continue;
@@ -1264,8 +1335,11 @@ function runSearch(){
     ...(P.ignored||[]).map(t=>`<span class="ptag off">${esc(t)} — 없는 말이라 뺐습니다</span>`)
   ].join("") + `<span class="rescount" id="resCount"></span>`;
   // 미수록 안내
-  $("noticeHost").innerHTML = P.unsupported.length ?
-    `<div class="notice"><b>${P.unsupported.map(esc).join(", ")}</b>은(는) 현재 DB 미수록 카테고리입니다. [DB 최신화] 작업으로 보강 예정이며, 우선 수록된 22개 카테고리에서 검색해 보세요.</div>` : "";
+  /* 미수록 안내 + **검색이 스스로 밝히는 말**(TV 설치 방식 등). 조용히 빼지 않는다. */
+  $("noticeHost").innerHTML =
+    (P.unsupported.length ?
+      `<div class="notice"><b>${P.unsupported.map(esc).join(", ")}</b>은(는) 현재 DB 미수록 카테고리입니다. [DB 최신화] 작업으로 보강 예정이며, 우선 수록된 22개 카테고리에서 검색해 보세요.</div>` : "")
+    + ((P.notes||[]).length ? `<div class="notice">${P.notes.map(esc).join("<br>")}</div>` : "");
   sortMode = P.wantValue ? "asc" : "rank";
   renderSortRow();
   renderResults();
@@ -1367,7 +1441,9 @@ function renderResults(){
    */
   if (openId != null && !list.some(r => r.p.id === openId)) openId = null;
   syncShareBtn();
-  const rc = $("resCount"); if(rc) rc.textContent = `${lastResults.length}종 매칭 · 상위 ${list.length}종`;
+  /* 묶음 상품은 `search()` 가 후보에서 빼므로 여기 남는 것은 전부 단품이다 */
+  const rc = $("resCount");
+  if(rc) rc.textContent = `${lastResults.length}종 매칭 · 상위 ${list.length}종`;
   if(!lastResults.length){
     $("rHost").innerHTML = `<div class="empty"><b>매칭 결과가 없습니다.</b><br>키워드를 줄이거나 예산·치수 조건을 완화해 보세요.<br>예: "무풍 에어컨" / "폭 920 냉장고" / "노트북 200만 이하"</div>`;
     return;

@@ -781,6 +781,37 @@ const CAT_QUERIES = {
     }
     console.log(`  TV 85인치 ${tv85.length}종(그 크기 전부) · 노트북 16인치 ${nb16.length}종 · 비화면 품목에 인치 없음 ✓`);
 
+    /*
+     * ── 묶음 상품은 **검색에서 뺀다** (2026-08-27 사용자 결정) ─────────────────────
+     * *"모델파인더에서는 세트상품은 필요가 없습니다. 제품의 정보를 얻기 위함"*.
+     * `TV 85인치` 가 107종이었는데 38종만 단품이고 69종이 사운드바·무빙스타일 조합이었다.
+     *
+     * **오탐이 없어야 한다** — `+` 하나로 잡으면 노트북 `Copilot+ PC`(32종) ·
+     * 식기세척기 `열풍건조+` · 공기청정기 `(80㎡+33㎡)` 가 함께 걸린다.
+     */
+    for (const [q, must] of [['노트북', '노트북'], ['식기세척기', '식기세척기']]) {
+      if (!models(q).length) fail(`"${must}" 0건 — 묶음 판정이 단품까지 지웠다`);
+    }
+    const packLeft = models('TV').filter((p) => window.isPackage(p));
+    if (packLeft.length) fail(`검색 결과에 묶음 상품이 ${packLeft.length}종 남았다 — ${packLeft[0].group}`);
+    /* 판정 자체 — 실제 이름으로 확인한다(오탐 셋 + 진짜 묶음 셋) */
+    const pkCase = [
+      ['2025 Neo QLED QNF80 (214cm)+5.1.2ch 사운드바 Q800F', true],
+      ['갤럭시 버즈3 화이트 + 아머 케이스 카키', true],
+      ['Bespoke AI 제트 400W 침구브러시 패키지', true],
+      ['갤럭시 북6 프로 (35.6cm) Core™ Ultra X7 / 1TB NVMe SSD, Copilot+ PC', false],
+      ['프리미엄 100℃ 열풍건조+ 빌트인 (595×815×572mm)', false],
+      ['Infinite AI 공기청정기 (80㎡+33㎡, S 필터)', false],
+    ];
+    for (const [g, want] of pkCase) {
+      const got = window.isPackage({ group: g });
+      if (got !== want) fail(`묶음 판정이 틀렸다 — "${g}" → ${got} (기대 ${want})`);
+    }
+    /* 화면에 적는 제품 수도 **검색 대상**이어야 한다 — 묶음까지 세면 화면이 거짓말을 한다 */
+    if (/\d/.test(String(window.countText && window.countText())) === false)
+      fail('제품 수 표기를 만들지 못한다');
+    console.log(`  묶음 제외 — TV ${models('TV').length}종 · 전 라인업 표기 ${window.totalN().toLocaleString()}종 ✓`);
+
     /* **카테고리 이름 자체는 예전처럼 조건에서 뺀다** — 안 그러면 이 수정이 회귀를 만든다.
        `세탁기` ↔ `세탁기·콤보`, `스마트폰` ↔ `스마트폰(폴더블)` 처럼 표기만 다른 것도 같은 말이다. */
     for (const [q, want] of [['냉장고', '냉장고'], ['사운드바', '사운드바'], ['세탁기', '세탁기']]) {

@@ -43,7 +43,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         title: '모델파인더',
         /* 옛 이름 — 제목 아래 작은 줄로 내린다(괄호로 한 줄에 붙이면 지저분하다) */
         sub: '제품 상세검색',
-        desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(1,997종)',
+        desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(1,697종)',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.06',
