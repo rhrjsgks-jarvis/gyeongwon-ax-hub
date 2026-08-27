@@ -59,6 +59,17 @@ const GOLDEN = [
   ['헤드폰·이어폰',  '1년', null, null, null],
   /* 표0 계절성 칸에 **선풍기**가 명시돼 있고 부품보유 표에도 "선풍기 5년"이 있다 */
   ['선풍기',        '2년', 5, null, null],
+  /*
+   * 하만 오디오(2026-08-27 추가). **출처가 다르다** — 삼성전자서비스 '보증기간 산정기준'
+   * 원문에는 하만·JBL·AKG 가 **한 줄도 없다**(렌더된 DOM 전수 확인). 값은 하만 공식
+   * 서비스센터 안내(harmansvc.co.kr/wtyinfo) 원문 그대로다:
+   *   *"하만 오디오 제품의 보증기간은 구입일로부터 12개월 입니다."*
+   *   *"※ 제품의 품질보증기간은 구입 후 12개월, 부품 보유기간은 3년 이며, 유통과정에 따라 연장될 수 있습니다."*
+   * **부품보유 3년은 이 앱에서 유일하게 삼성 표 밖에서 온 값이다** — 삼성 표의 최소가 3년
+   * (생활용품·주방가전)이라 우연히 같아 보이지만 근거가 다르다. 지우거나 4년(컴퓨터 및
+   * 주변기기)으로 맞추지 말 것.
+   */
+  ['JBL·하만카돈·AKG', '1년', 3, null, null],
 ];
 let bad = 0;
 for (const [cat, base, hold, part, yr] of GOLDEN) {
@@ -490,22 +501,22 @@ pass('싱크장 리폼 골든 3건');
   const mp = doc.querySelector('#contactPane');
   /* **묶음은 품목·업무 단위로 쪼갠다**(2026-08-11 사용자 요청). 상담사는 "정수기 이전설치
      어디죠"로 찾지 "B2B 협력사가 뭐죠"로 찾지 않는다. 담당이 갈리는 단위가 곧 찾는 단위다. */
-  const WANT = 'g-as,g-lg,g-mv,g-sink,g-ind,g-wat,g-hood,g-sac,g-it';
+  const WANT = 'g-as,g-hm,g-lg,g-mv,g-sink,g-ind,g-wat,g-hood,g-sac,g-it';
   const grps = [...mp.querySelectorAll('.grp')];
   if (grps.map((g) => g.id).join(',') !== WANT) {
     fail(`묶음이 [${grps.map((g) => g.id).join(',')}] — [${WANT}] 여야 한다`);
-  } else pass(`연락처 탭 묶음 ${grps.length}개 (AS·수리 / 물류 / 빌트인 / 리폼 / 인덕션 / 정수기 / 후드 / 시스템에어컨 / IT)`);
+  } else pass(`연락처 탭 묶음 ${grps.length}개 (AS·수리 / 하만 오디오 / 물류 / 빌트인 / 리폼 / 인덕션 / 정수기 / 후드 / 시스템에어컨 / IT)`);
   if (grps.some((g) => g.open)) fail('묶음이 기본으로 펼쳐져 있다 — 눌러야 열려야 한다');
   else pass('묶음 기본 접힘');
   // 열어 보지 않고도 무엇이 얼마나 있는지 알아야 한다
   for (const [id, n] of [['g-as', A.CONTACTS.reduce((a, g) => a + g.items.length, 0)],
-                         ['g-lg', A.CENTERS.length], ['g-mv', B.length], ['g-sink', S.length],
+                         ['g-hm', 1], ['g-lg', A.CENTERS.length], ['g-mv', B.length], ['g-sink', S.length],
                          ['g-ind', 1], ['g-wat', 1], ['g-hood', 1], ['g-sac', 1], ['g-it', IT.length]]) {
     const el = mp.querySelector(`#${id} .gc`);
     if (!el) { fail(`${id} 묶음이 없다`); continue; }
     if (el.textContent !== `${n}건`) fail(`${id} 묶음 제목의 건수가 "${el.textContent}" — "${n}건" 이어야 한다`);
   }
-  pass('묶음 제목에 건수 표기 (6·21·20·4·1·1·1·1·12)');
+  pass('묶음 제목에 건수 표기 (6·1·21·20·4·1·1·1·1·12)');
 
   /* '아직 등록되지 않은 연락처' 카드는 없앴다 — 비워 뒀던 둘이 실제로 채워졌기 때문이다.
      채운 자료 옆에 "미등록"이 남아 있으면 그 자료까지 미등록으로 읽힌다. */
@@ -803,6 +814,274 @@ pass('상황실·업무·운영 골든 5건');
   }
 }
 
+
+/*
+ * ── [14] 하만 오디오(JBL · harman/kardon · AKG) ──
+ *
+ * 사장님 지적으로 넣었다(2026-08-27) — *"JBL 그룹 계열 상품 AS 관련 정보 및 AS 기간
+ * 정보가 누락"*. 이 품목은 **이 앱에서 유일하게 출처가 삼성전자서비스가 아니다.**
+ * 그래서 값이 아니라 **어느 원문에서 왔는지**까지 검사한다 — 삼성 기준을 그대로 갖다
+ * 쓰면 영수증이 없을 때 "생산년월 + 3개월"로 안내하게 되는데 하만은 "제조번호 회수일자
+ * + 15개월" 이다. 그 한 줄이 상담에서 그대로 분쟁이 된다.
+ */
+{
+  const KEY = 'JBL·하만카돈·AKG';
+  const d = A.DB[KEY];
+  if (!d) fail(`품목 '${KEY}' 이 없다 — 하만 계열 AS 정보가 누락된 상태다`);
+  else {
+    /* 출처가 하만이어야 한다. 삼성 원문에는 이 브랜드가 한 줄도 없다(전수 확인) */
+    if (!d.src || !/harmansvc\.co\.kr/.test(d.src[1]))
+      fail('하만 품목의 출처가 하만 공식 안내(harmansvc.co.kr)가 아니다');
+    else pass('하만 품목의 출처가 하만 공식 서비스센터 안내');
+
+    /* 삼성 공통 RULES 를 쓰면 안 된다 — 영수증 없을 때의 기산이 다르다 */
+    if (!d.rules || !d.rules.length) fail('하만 품목이 삼성 공통 RULES 를 쓴다 — 영수증 없을 때 기산이 다르다');
+    else if (!d.rules.some((r) => /15개월/.test(r.t)))
+      fail('하만 적용 기준에 "제조번호 회수일자로부터 15개월" 이 없다');
+    else if (d.rules.some((r) => /3개월 감안|생산년월/.test(r.t)))
+      fail('하만 적용 기준에 삼성의 "생산년월 + 3개월" 이 섞였다');
+    else pass('하만 적용 기준이 하만 원문 기준 (영수증 없으면 회수일자 + 15개월)');
+
+    /* 영업용 단축은 삼성 1/2 과 결과가 같지만 원문 표기가 "절반(6개월)" 이다 */
+    if (!/6개월/.test(d.baseNote || '')) fail('하만 영업용 단축(6개월) 표기가 없다');
+    else pass('하만 영업용 단축 6개월 표기');
+
+    /* 화면이 실제로 그렇게 그리는가 — 값만 맞고 화면이 삼성 출처를 적으면 소용없다 */
+    A.cur = KEY;
+    const bodyEl = doc.getElementById('body');
+    const body = bodyEl.textContent;
+    /* **출처는 링크로 판정한다.** 본문에는 *"삼성전자서비스 '보증기간 산정기준'에
+       나오지 않습니다"* 라는 부인 문구가 일부러 들어 있어 글자로 보면 뒤집힌다. */
+    const links = [...bodyEl.querySelectorAll('.src a')].map((a) => a.getAttribute('href') || '');
+    if (!/12개월|1년/.test(body)) fail('하만 화면에 보증기간이 안 보인다');
+    else if (!/3년/.test(body)) fail('하만 화면에 부품보유 3년이 안 보인다');
+    else if (links.some((u) => /samsungsvc\.co\.kr/.test(u)))
+      fail('하만 화면이 삼성전자서비스 원문을 출처 링크로 걸고 있다');
+    else if (!links.some((u) => /harmansvc\.co\.kr/.test(u)))
+      fail('하만 화면에 하만 출처 링크가 없다');
+    else if (!/나오지 않습니다|없어/.test(body))
+      fail('하만 화면이 "삼성 원문에는 이 브랜드가 없다"는 사실을 밝히지 않는다');
+    else pass('하만 화면이 하만 출처만 링크하고, 삼성 원문에 없다는 사실을 밝힌다');
+
+    /* 멤버십 연장 대상이 아니다 — 4대 품목이 아니고, 애초에 삼성전자서비스가 수리하지 않는다 */
+    if ((A.RB[KEY] || [])[0] === 'ok') fail('하만이 멤버십 무상수리 연장 대상으로 표시된다');
+    else if (/총 3년/.test(doc.getElementById('royalCard').textContent))
+      fail('하만 품목에 멤버십 연장 기간(총 3년)이 떠 있다');
+    else pass('하만은 멤버십 연장 대상 아님으로 표시');
+
+    /* 삼성 사운드바·헤드폰을 열었을 때 하만으로 가는 길이 있어야 한다 —
+       그쪽은 접수처도 부품보유기간도 다른데 화면이 같아 보이면 그대로 잘못 안내한다 */
+    for (const k of ['사운드바', '헤드폰·이어폰']) {
+      if (!/JBL|하만/.test(A.DB[k].note || '')) fail(`'${k}' 에 하만은 기준이 다르다는 안내가 없다`);
+    }
+    pass('삼성 사운드바·헤드폰에 "하만은 기준이 다르다" 안내');
+  }
+
+  /* 연락처 — 삼성전자서비스가 **수리하지 않는다**는 사실이 화면에 있어야 한다 */
+  const H = A.HARMAN;
+  if (!H) fail('HARMAN 연락처가 없다');
+  else {
+    if (H.n !== '02-553-3494') fail(`하만 서비스센터 번호가 ${H.n} — 02-553-3494 여야 한다`);
+    else pass('하만 서비스센터 대표번호 골든 02-553-3494');
+    /* public repo 다 — 사람 이름·010 번호는 싣지 않는다 */
+    const blob = JSON.stringify(H);
+    if (/010[-\s]?\d{3,4}[-\s]?\d{4}/.test(blob)) fail('하만 연락처에 010 번호가 있다');
+    else pass('하만 연락처에 010 번호 없음');
+
+    A.tab = 'contact';
+    const g = doc.querySelector('#g-hm');
+    if (!g) fail('연락처 탭에 하만 묶음(g-hm)이 없다');
+    else if (g.open) fail('하만 묶음이 기본으로 펼쳐져 있다');
+    else if (!/접수만/.test(g.textContent))
+      fail('하만 묶음에 "삼성전자서비스는 접수만 받습니다" 안내가 없다 — 번호만 보면 잘못 안내한다');
+    else if (!g.querySelector('[data-tel]')) fail('하만 묶음에 누를 수 있는 번호가 없다');
+    else pass('하만 묶음: 기본 접힘 · "접수만" 안내 · 번호 누를 수 있음');
+
+    /* 상단 검색에서 "JBL" · "하만" · "AKG" 로 찾아져야 한다 */
+    for (const q of ['jbl', '하만', 'akg']) {
+      const hit = A.searchDocs().filter((x) => (x.kw || '').toLowerCase().includes(q));
+      if (!hit.length) fail(`상단 검색에서 "${q}" 로 하만 자료를 못 찾는다`);
+    }
+    pass('상단 검색에서 JBL · 하만 · AKG 로 찾힌다');
+  }
+}
+
+/*
+ * ── [13] AS센터 찾기 — 한글 입력 · 이름 · 접이식 ──
+ *
+ * **한글이 자모로 쪼개지던 버그가 여기 있었다**(2026-08-27 사장님 보고 —
+ * *"성남 이라고 검색하고 싶은데 ㅅ ㅓ ㅇ ㄴ ㅏ ㅁ 이렇게 검색되어 오작동"*).
+ * 입력할 때마다 `pane.innerHTML` 을 통째로 다시 써서 **입력칸이 새 DOM 요소로 바뀌었고**,
+ * 그러면 IME 조합 버퍼가 끊겨 자모가 그대로 확정된다.
+ *
+ * **`fill()` 처럼 값을 통째로 넣으면 이 버그는 재현되지 않는다** — IME 를 안 거치기 때문이다.
+ * 그래서 조합 이벤트를 직접 쏘고, **입력칸이 같은 DOM 요소로 남아 있는지**를 본다.
+ * 그것이 조합이 살아남는 조건 자체다(값 비교만으로는 jsdom 이 IME 를 흉내 내지 못한다).
+ *
+ * 센터 목록은 `fetch` 로 오는데 jsdom 에는 fetch 가 없어 `loadSvc()` 로 직접 넣는다.
+ */
+{
+  const svcPath = path.join(root, 'public', 'svc-centers.json');
+  if (!fs.existsSync(svcPath)) {
+    console.log('SKIP: svc-centers.json 이 없어 AS센터 검사를 건너뜁니다');
+  } else if (typeof A.loadSvc !== 'function') {
+    fail('as-app 이 loadSvc 를 내보내지 않는다 — AS센터 탭을 검사할 수 없다');
+  } else {
+    const SVC = JSON.parse(fs.readFileSync(svcPath, 'utf8'));
+    A.tab = 'center';
+    A.loadSvc(SVC);
+    const box = () => doc.getElementById('svcq');
+    const rows = () => [...doc.querySelectorAll('#svclist .svcd')];
+
+    if (!box()) fail('AS센터 검색칸(#svcq)이 없다');
+    else if (!rows().length) fail('AS센터 목록이 한 줄도 안 그려졌다');
+    else pass(`AS센터 탭 렌더 (${rows().length}곳)`);
+
+    /* [13-a] 입력해도 **입력칸이 그대로 남는가** — 이것이 IME 조합이 살아남는 조건이다 */
+    {
+      const el0 = box();
+      const steps = ['ㅅ', '서', '성', '성ㄴ', '성나', '성남'];
+      let swapped = 0;
+      for (const buf of steps) {
+        el0.value = buf;
+        el0.dispatchEvent(new window.Event('input', { bubbles: true }));
+        if (doc.getElementById('svcq') !== el0) swapped++;
+      }
+      const after = doc.getElementById('svcq');
+      if (swapped) {
+        fail(`한글 조합: 입력 ${steps.length}회 중 ${swapped}회에서 입력칸이 새 요소로 바뀐다`
+          + ' — IME 조합이 끊겨 "성남"이 "ㅅㅓㅇㄴㅏㅁ"으로 확정된다');
+      } else if (after.value !== '성남') {
+        fail(`한글 조합 뒤 입력칸 값이 "${after.value}" — "성남"이어야 한다`);
+      } else pass('한글 조합: 입력칸이 같은 요소로 남고 값이 "성남"으로 온전하다');
+
+      /* 그 검색이 실제로 좁히는가 */
+      const nm = rows().map((d) => d.querySelector('.svcn').textContent);
+      if (!nm.length || !nm.every((n) => /성남|분당/.test(n)))
+        fail(`"성남" 검색 결과가 ${nm.length}곳 — 성남권 센터로 좁혀져야 한다 (${nm.slice(0, 3).join(', ')})`);
+      else pass(`"성남" 검색이 ${nm.length}곳으로 좁혀진다`);
+    }
+
+    /* [13-b] `삼성전자` 접두는 화면에서만 떼고 **데이터는 그대로** 둔다 */
+    {
+      if (!SVC.items.every((x) => /^삼성전자\s/.test(x.full)))
+        fail('svc-centers.json 의 full 에서 "삼성전자" 접두가 사라졌다 — 원문 대조용 데이터는 그대로여야 한다');
+      else pass('데이터(svc-centers.json)는 "삼성전자" 접두를 그대로 갖고 있다');
+
+      box().value = '';
+      box().dispatchEvent(new window.Event('input', { bubbles: true }));
+      const nm = rows().map((d) => d.querySelector('.svcn').textContent.trim());
+      const left = nm.filter((n) => n.startsWith('삼성전자'));
+      if (left.length) fail(`화면 이름 ${left.length}곳에 "삼성전자"가 남아 있다 (예: ${left[0]})`);
+      else pass(`화면 이름 ${nm.length}곳에서 "삼성전자" 접두 제거`);
+
+      /* **`nm`(짧은 이름)을 그냥 쓰면 모바일/바로서비스 구분이 사라진다** — `full` 에서 접두만 뗀다 */
+      const kind = nm.filter((n) => /^모바일 |바로\s?서비스/.test(n));
+      if (kind.length < nm.length * 0.9)
+        fail(`이름에서 모바일/바로서비스 구분이 사라졌다 — ${nm.length}곳 중 ${kind.length}곳만 남았다`);
+      else pass('이름에 모바일/바로서비스 구분이 남아 있다');
+
+      /* 접두를 떼도 178곳 이름이 유일해야 검색·딥링크가 한 곳을 가리킨다 */
+      const uniq = new Set(SVC.items.map((x) => A.svcName(x)));
+      if (uniq.size !== SVC.items.length)
+        fail(`접두를 떼면 이름이 겹친다 — ${SVC.items.length}곳 중 ${uniq.size}개만 유일하다`);
+      else pass(`접두를 떼도 이름 ${uniq.size}곳 전부 유일`);
+    }
+
+    /* [13-c] 접이식 — 기본은 접혀 있고, 눌러야 세부가 보인다 */
+    {
+      const open = rows().filter((d) => d.open);
+      if (open.length) fail(`AS센터 ${open.length}곳이 기본으로 펼쳐져 있다 — 눌러야 열려야 한다`);
+      else pass(`AS센터 ${rows().length}곳 기본 접힘`);
+
+      const first = rows()[0];
+      const sum = first.querySelector('summary');
+      /* 접힌 줄에 **이름 · 가전 접수 배지 · 시·군·구**가 있어야 고를 수 있다.
+         어느 동네인지 모르면 못 고르고, 가전 접수 여부를 모르면 TV 고객을 모바일 전용 센터로 보낸다 */
+      if (!sum.querySelector('.svcn')) fail('접힌 줄에 센터 이름이 없다');
+      else if (!/가전 접수|모바일만/.test(sum.textContent)) fail('접힌 줄에 가전 접수 배지가 없다');
+      else if (!sum.querySelector('.sg').textContent.trim()) fail('접힌 줄에 시·군·구가 없다');
+      else pass('접힌 줄에 이름 · 가전 접수 배지 · 시·군·구가 있다');
+
+      /* 주소·번호 같은 세부는 **펼침 안쪽**에 있어야 한다 — 접힌 줄에 있으면 접은 뜻이 없다 */
+      const detail = first.querySelector('.svcd-b');
+      if (!detail) fail('펼침 영역(.svcd-b)이 없다');
+      else if (/주소/.test(sum.textContent)) fail('접힌 줄에 주소가 그대로 노출된다');
+      else if (!/주소/.test(detail.textContent)) fail('펼쳐도 주소가 안 보인다');
+      else pass('세부(주소·영업·대표·주차·찾아가기·취급)는 펼침 안쪽에만 있다');
+
+      /*
+       * 닫힌 `<details>` 안이어도 전화 버튼은 걸려야 한다. `wireContacts` 는
+       * `querySelectorAll('[data-tel]')` 로 훑는데 **닫힌 details 의 자식도 DOM 에는 있으므로**
+       * 접혀 있어도 걸린다 — 여기서 보는 것은 그 전제, 즉 *"접힌 채로도 번호가 DOM 에 있는가"* 다.
+       * (`wireContacts` 는 `share-kit.js` 에 있고 jsdom 은 외부 스크립트를 안 싣는다.
+       *  실제로 걸리는지는 브라우저에서 재서 확인했다 — 접힌 상태로 40/40.)
+       */
+      const tel = [...doc.querySelectorAll('#svclist [data-tel]')];
+      /* **`dial` 이 있는 센터만** 버튼이 된다 — `031-8061-내선검색` 같은 대표번호는
+         걸 수 있는 번호가 아니라서 자료가 `dial:null` 로 비워 두었다(전국 6곳).
+         예전 렌더는 거기서 숫자만 추려 `0318061` 을 만들어 걸었다 — 없는 번호다. */
+      const want = SVC.items.filter((x) => x.sd === '경기' && x.tel && x.dial).length;
+      const bad = tel.filter((e) => !/^0\d{8,10}$/.test(e.dataset.tel || ''));
+      if (rows().some((d) => d.open)) fail('이 검사는 접힌 상태에서 해야 한다');
+      else if (tel.length !== want)
+        fail(`접힌 목록의 번호가 ${tel.length}건 — dial 이 있는 센터 ${want}곳만큼 있어야 한다`);
+      else if (bad.length)
+        fail(`걸 수 없는 tel 값 ${bad.length}건 (예: "${bad[0].dataset.tel}") — dial 을 쓰지 않고 지어냈다`);
+      else pass(`접힌 상태에서도 번호 ${tel.length}건이 DOM 에 있고 전부 걸 수 있는 형식`);
+
+      /* 걸 수 없는 대표번호는 **글자로만** 남아야 한다 — 지워도 안 되고(원문에 있는 값이다) 걸려도 안 된다 */
+      {
+        const noDial = SVC.items.find((x) => x.tel && !x.dial);
+        if (!noDial) { pass('dial 이 비어 있는 센터가 없다'); }
+        else {
+          box().value = A.svcName(noDial);
+          box().dispatchEvent(new window.Event('input', { bubbles: true }));
+          const r = rows()[0];
+          if (!r) fail(`"${A.svcName(noDial)}" 를 못 찾는다`);
+          else if (!r.textContent.includes(noDial.tel))
+            fail(`걸 수 없는 대표번호("${noDial.tel}")가 화면에서 사라졌다 — 원문에 있는 값이라 적어야 한다`);
+          else if (r.querySelector('[data-tel]') && [...r.querySelectorAll('[data-tel]')]
+                     .some((e) => (e.textContent || '').includes(noDial.tel)))
+            fail(`걸 수 없는 대표번호("${noDial.tel}")가 버튼이 됐다 — 누르면 없는 번호로 걸린다`);
+          else pass(`걸 수 없는 대표번호는 글자로만 적는다 ("${noDial.tel}")`);
+          box().value = '';
+          box().dispatchEvent(new window.Event('input', { bubbles: true }));
+        }
+      }
+    }
+
+    /* [13-d] 검색으로 한 곳만 남으면 펼쳐 준다 — 접혀 있으면 찾아 준 뜻이 없다 */
+    {
+      const target = A.svcName(SVC.items.find((x) => /성남센터/.test(x.full)) || SVC.items[0]);
+      box().value = target;
+      box().dispatchEvent(new window.Event('input', { bubbles: true }));
+      const r = rows();
+      if (r.length !== 1) fail(`"${target}" 로 찾았는데 ${r.length}곳 — 한 곳이어야 한다`);
+      else if (!r[0].open) fail(`"${target}" 한 곳만 남았는데 접혀 있다 — 찾아 준 뜻이 없다`);
+      else pass(`이름으로 찾으면 그 한 곳이 펼쳐진다 ("${target}")`);
+
+      /* 여러 곳이 나오는 검색에서는 접힌 채여야 한다 — 그게 이 변경의 목적이다 */
+      box().value = '수원';
+      box().dispatchEvent(new window.Event('input', { bubbles: true }));
+      const many = rows();
+      if (many.length < 2) fail(`"수원" 검색이 ${many.length}곳 — 여러 곳이어야 한다`);
+      else if (many.some((d) => d.open)) fail('"수원" 검색 결과가 펼쳐져 있다 — 여러 곳일 때는 접혀 있어야 한다');
+      else pass(`"수원" 검색 ${many.length}곳은 접힌 채로 남는다`);
+
+      /* 통합검색이 보내는 AS센터 딥링크도 그 한 곳에 착지해야 한다 */
+      const doc0 = A.searchDocs().find((d) => d.kind === 'AS센터' && /성남센터/.test(d.title));
+      if (!doc0) fail('AS센터 항목이 통합검색 목록에 없다');
+      else {
+        doc0.go();
+        const r2 = rows();
+        if (r2.length !== 1) fail(`AS센터 딥링크를 눌렀는데 ${r2.length}곳이 남았다 — 그 한 곳만 남아야 한다`);
+        else if (!r2[0].open) fail('AS센터 딥링크로 온 센터가 접혀 있다');
+        else pass('통합검색 AS센터 딥링크가 그 한 곳을 펼쳐서 보여준다');
+      }
+    }
+  }
+}
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

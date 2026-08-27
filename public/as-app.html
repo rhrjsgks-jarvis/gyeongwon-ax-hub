@@ -101,6 +101,21 @@
     font-size:11.5px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit}
   .chip.on{background:#1428A0;border-color:#1428A0;color:#fff}
   .cnt{font-size:11px;color:#9aa0a6;margin-top:8px}
+  /* AS센터 한 줄 — 접어 두고 눌러야 세부가 보인다(`.grp` 와 같은 손잡이, 목록용이라 더 촘촘하다) */
+  .svcd{background:#fff;border:1px solid #e5e7eb;border-radius:11px;margin-bottom:7px;overflow:hidden}
+  .svcd>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;align-items:center;
+    gap:7px;font-size:12.5px}
+  .svcd>summary::-webkit-details-marker{display:none}
+  .svcd>summary:active{background:#EEF2FF}
+  .svcd>summary .svcn{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .svcd>summary .sg{margin-left:auto;flex:0 0 auto;font-size:11px;color:#6b7280;white-space:nowrap}
+  .svcd>summary .gv{flex:0 0 auto;font-size:10px;color:#9aa0a6;transition:transform .15s}
+  .svcd[open]>summary .gv{transform:rotate(180deg)}
+  .svcd[open]>summary{border-bottom:1px solid #f1f2f4}
+  .svcd .ct-tag{flex:0 0 auto}
+  /* 가전 접수는 눈에 띄어야 한다 — 모바일 전용 센터로 TV 고객을 보내면 그대로 헛걸음이다 */
+  .svcd .ct-tag.home{color:#1428A0;background:#EEF2FF}
+  .svcd-b{padding:9px 12px 12px}
   mark{background:#FEF3C7;color:inherit;border-radius:3px;padding:0 1px}
   .cat:hover{border-color:#c7d2fe}
   .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
@@ -271,7 +286,7 @@
  * 부품보유기간이 원문 표에 없는 품목은 hold:null 로 두고 화면이 "확인 필요"로 알린다.
  */
 const AS_SRC = "https://www.samsungsvc.co.kr/info/fee?tab=assure";
-const DB = {"냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","냉장고"],["인버터 컴프레서","10년","양문형 냉장고·스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"김치냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","김치독"],["인버터 컴프레서","10년","스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"세탁기·콤보":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"세탁기","core":[["일반모터","3년","세탁기"],["세탁 모터","10년","드럼세탁기 DD MOTOR(2008년 1월 제조분~) · 전자동 10kg 이상(2011년 2월 제조분~)"]]},"건조기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류건조기","core":[["컴프레서","3년","의류건조기"],["모터·컴프레서","정속형 10년 / 인버터형 12년","건조기"]]},"TV":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"TV","core":[["LCD/LED 패널","2년","TV"]]},"모니터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"모니터","core":[["LCD/LED 패널","2년","모니터"]]},"에어컨":{"base":"2년","baseWhy":"계절성 제품 — 냉방 전용","baseNote":"냉난방 겸용은 일반 제품이라 1년","hold":8,"holdAs":"에어컨","core":[["컴프레서","4년","에어컨"],["인버터 컴프레서","10년","2015년 1월 이후 제조분 — 시스템에어컨 제외"]]},"시스템에어컨":{"base":"1년","baseWhy":"일반 제품","hold":8,"holdAs":"시스템에어컨","core":[["컴프레서","4년","시스템에어컨"]],"note":"인버터 컴프레서 10년 적용 대상에서 시스템에어컨은 제외된다"},"에어드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"],["컴프레서","10년","에어드레서"]]},"슈드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"]]},"청소기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전기청소기","core":[["인버터 모터","10년","청소기 — 단, 모션싱크 계열 5년"]]},"공기청정기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[["인버터 모터","10년","공기청정기 — 2018년 향부터"]]},"제습기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"제습기","core":[["인버터 컴프레서","10년","제습기 — 2015년 1월 이후 제조분"]]},"정수기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"정수기","core":[]},"전자레인지/오븐":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전자레인지","core":[["마그네트론","3년","전자레인지"]]},"식기세척기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"인덕션/전기레인지":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"냉동고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"업소용 냉장고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"데이코 빌트인":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"사운드바":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"스마트폰":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"배터리는 1년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"태블릿":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"'25.12.31 까지 구입분은 1년, '26.1.1 이후 구입분부터 2년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"노트북":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[],"note":"노트북 LCD/LED 패널은 핵심부품 2년 적용 대상에서 제외된다"},"데스크탑":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[["메인보드","2년","PC"],["LCD/LED 패널","2년","일체형PC"]]},"프린터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"프린터","core":[]},"워치":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"원문 보증기간 표의 2년 항목은 \"휴대폰/스마트폰/태블릿\"이라 워치는 해당하지 않는다. 부품보유연수는 원문 표에 없다."},"버즈":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"원문 예외사항: 휴대폰 소모성 악세서리(이어폰·유선충전기·USB케이블)는 유상 수리 후 2개월 품질보증 — 무선 이어폰 본체와는 다른 항목이니 혼동하지 말 것. 부품보유연수는 원문 표에 없다."},"링":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유연수는 원문 표에 없다."},"핏":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유연수는 원문 표에 없다."},"XR":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유연수는 원문 표에 없다."},"SSD·메모리":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유 표의 \"컴퓨터 및 주변기기 4년\"에 들어가는지는 원문이 밝히지 않는다 — 단정하지 않고 비워 둔다."},"헤드폰·이어폰":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"원문 예외사항: 휴대폰 소모성 악세서리(이어폰·유선충전기·USB케이블)는 유상 수리 후 2개월 품질보증. 부품보유연수는 원문 표에 없다."},"선풍기":{"base":"2년","baseWhy":"계절성 제품 — 원문에 선풍기 명시","hold":5,"holdAs":"선풍기","core":[],"note":"부품보유 표에 \"선풍기 5년\"으로 있다."}};
+const DB = {"냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","냉장고"],["인버터 컴프레서","10년","양문형 냉장고·스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"김치냉장고":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"냉장고","core":[["컴프레서","3년","김치독"],["인버터 컴프레서","10년","스탠드 김치냉장고 — 2009년 11월 판매분부터"]]},"세탁기·콤보":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"세탁기","core":[["일반모터","3년","세탁기"],["세탁 모터","10년","드럼세탁기 DD MOTOR(2008년 1월 제조분~) · 전자동 10kg 이상(2011년 2월 제조분~)"]]},"건조기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류건조기","core":[["컴프레서","3년","의류건조기"],["모터·컴프레서","정속형 10년 / 인버터형 12년","건조기"]]},"TV":{"base":"1년","baseWhy":"일반 제품","hold":9,"holdAs":"TV","core":[["LCD/LED 패널","2년","TV"]]},"모니터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"모니터","core":[["LCD/LED 패널","2년","모니터"]]},"에어컨":{"base":"2년","baseWhy":"계절성 제품 — 냉방 전용","baseNote":"냉난방 겸용은 일반 제품이라 1년","hold":8,"holdAs":"에어컨","core":[["컴프레서","4년","에어컨"],["인버터 컴프레서","10년","2015년 1월 이후 제조분 — 시스템에어컨 제외"]]},"시스템에어컨":{"base":"1년","baseWhy":"일반 제품","hold":8,"holdAs":"시스템에어컨","core":[["컴프레서","4년","시스템에어컨"]],"note":"인버터 컴프레서 10년 적용 대상에서 시스템에어컨은 제외된다"},"에어드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"],["컴프레서","10년","에어드레서"]]},"슈드레서":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"의류관리기","core":[["컴프레서","3년","의류관리기"]]},"청소기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전기청소기","core":[["인버터 모터","10년","청소기 — 단, 모션싱크 계열 5년"]]},"공기청정기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[["인버터 모터","10년","공기청정기 — 2018년 향부터"]]},"제습기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"제습기","core":[["인버터 컴프레서","10년","제습기 — 2015년 1월 이후 제조분"]]},"정수기":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"정수기","core":[]},"전자레인지/오븐":{"base":"1년","baseWhy":"일반 제품","hold":7,"holdAs":"전자레인지","core":[["마그네트론","3년","전자레인지"]]},"식기세척기":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"인덕션/전기레인지":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"냉동고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"업소용 냉장고":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"데이코 빌트인":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[]},"사운드바":{"base":"1년","baseWhy":"일반 제품","hold":null,"core":[],"note":"JBL · harman/kardon · AKG 는 이 기준이 아닙니다 — 접수처(하만 오디오 전문 서비스센터)와 부품보유기간(3년)이 다릅니다. 품목에서 「JBL·하만카돈·AKG」 를 보세요."},"스마트폰":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"배터리는 1년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"태블릿":{"base":"2년","baseWhy":"휴대폰/스마트폰/태블릿","baseNote":"'25.12.31 까지 구입분은 1년, '26.1.1 이후 구입분부터 2년","hold":4,"holdAs":"휴대폰·스마트폰","core":[]},"노트북":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[],"note":"노트북 LCD/LED 패널은 핵심부품 2년 적용 대상에서 제외된다"},"데스크탑":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"컴퓨터 및 주변기기","core":[["메인보드","2년","PC"],["LCD/LED 패널","2년","일체형PC"]]},"프린터":{"base":"1년","baseWhy":"일반 제품","hold":4,"holdAs":"프린터","core":[]},"워치":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"원문 보증기간 표의 2년 항목은 \"휴대폰/스마트폰/태블릿\"이라 워치는 해당하지 않는다. 부품보유연수는 원문 표에 없다."},"버즈":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"원문 예외사항: 휴대폰 소모성 악세서리(이어폰·유선충전기·USB케이블)는 유상 수리 후 2개월 품질보증 — 무선 이어폰 본체와는 다른 항목이니 혼동하지 말 것. 부품보유연수는 원문 표에 없다."},"링":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유연수는 원문 표에 없다."},"핏":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유연수는 원문 표에 없다."},"XR":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유연수는 원문 표에 없다."},"SSD·메모리":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"부품보유 표의 \"컴퓨터 및 주변기기 4년\"에 들어가는지는 원문이 밝히지 않는다 — 단정하지 않고 비워 둔다."},"헤드폰·이어폰":{"base":"1년","baseWhy":"일반 제품 — 원문 \"전제품 공통\"","hold":null,"core":[],"note":"원문 예외사항: 휴대폰 소모성 악세서리(이어폰·유선충전기·USB케이블)는 유상 수리 후 2개월 품질보증. 부품보유연수는 원문 표에 없다. JBL · harman/kardon · AKG 는 이 기준이 아닙니다 — 접수처(하만 오디오 전문 서비스센터)와 부품보유기간(3년)이 다릅니다. 품목에서 「JBL·하만카돈·AKG」 를 보세요."},"JBL·하만카돈·AKG":{"base":"1년","baseWhy":"하만 오디오 — 원문 \"하만 오디오 제품의 보증기간은 구입일로부터 12개월\"","baseNote":"영업용으로 사용하면 절반(6개월)으로 단축","hold":3,"holdAs":"하만 오디오 — 원문 \"부품 보유기간은 3년\" (유통과정에 따라 연장될 수 있음)","core":[],"note":"접수는 전국 삼성전자서비스에서 받고, 접수 이후 서비스 과정은 하만 오디오 전문 서비스센터(시머스 주식회사 · 02-553-3494)가 진행합니다. 수리가 아니라 \"보증 교환 서비스\"이고 동일 상품 교환이 원칙입니다. 삼성전자가 국내 유통한 제품만 대상이라 병행수입·해외 직구·구매대행은 제외됩니다. 사운드바 등의 설치·이동설치는 지원하지 않습니다.","src":["하만 오디오 전문 서비스센터 — 보증 교환 서비스안내","https://harmansvc.co.kr/wtyinfo"],"rules":[{"l":"기준","c":"ok","t":"품목별 소비자 분쟁해결 기준(공정거래위원회 고시)에 따라 보증을 실시하며, 보증기간은 구입일로부터 12개월이다."},{"l":"영수증 없음","c":"need","t":"구입 증빙이 없어 구입일 확인이 불가능한 경우, 삼성전자㈜의 제조번호 회수일자를 기산점으로 하여 그날로부터 15개월로 산정한다."},{"l":"영업용","c":"warn","t":"본 제품을 영업용으로 사용할 경우 보증 기간은 절반(6개월)으로 단축된다."},{"l":"대상 제외","c":"warn","t":"삼성전자㈜가 국내에서 공급/유통하지 않거나 유통 여부를 판단할 수 없는 제품(병행수입·해외 구매대행·해외 직구 등)은 서비스 대상에서 제외된다."},{"l":"교환 원칙","c":"ok","t":"보증 교환 서비스는 동일 상품 교환을 원칙으로 한다. JBL · harman/kardon · AKG 브랜드 오디오 제품만 서비스가 가능하다."},{"l":"재발 고장","c":"ok","t":"수리한 날로부터 1년 이내에 교체한 부품·제품에 동일 고장이 재발할 경우 무상으로 수리한다."},{"l":"처리 기한","c":"ok","t":"수리 가능 여부는 요구일로부터 7일 이내에 통보하며, 실제 수리 및 환불 등의 보상은 통보일로부터 14일 이내에 해결한다."},{"l":"폐기","c":"warn","t":"입고 후 연락 두절 등 고객 귀책 사유로 3개월 이내에 제품을 배송할 수 없는 경우, 별도 통지 없이 폐기 처리될 수 있다."}]},"선풍기":{"base":"2년","baseWhy":"계절성 제품 — 원문에 선풍기 명시","hold":5,"holdAs":"선풍기","core":[],"note":"부품보유 표에 \"선풍기 5년\"으로 있다."}};
 /*
  * 멤버십 무상수리 서비스 기간 연장 — 삼성닷컴 원문(membershipBluecare) 그대로다.
  *
@@ -339,6 +354,9 @@ const RB = {
   'XR': ['na', '', '멤버십 무상수리 서비스 기간 연장은 원문이 4대 품목(TV·냉장고·세탁기·에어컨)으로 한정한다 — 이 품목은 그 목록에 없다'],
   'SSD·메모리': ['na', '', '멤버십 무상수리 서비스 기간 연장은 원문이 4대 품목(TV·냉장고·세탁기·에어컨)으로 한정한다 — 이 품목은 그 목록에 없다'],
   '헤드폰·이어폰': ['na', '', '멤버십 무상수리 서비스 기간 연장은 원문이 4대 품목(TV·냉장고·세탁기·에어컨)으로 한정한다 — 이 품목은 그 목록에 없다'],
+  /* 하만은 대상이 아닌 이유가 하나 더 있다 — 그 연장은 삼성전자서비스가 하는 무상수리인데
+     하만 오디오는 애초에 삼성전자서비스가 수리하지 않는다(접수만 받고 하만 전문센터가 처리한다) */
+  'JBL·하만카돈·AKG': ['na', '', '멤버십 무상수리 서비스 기간 연장은 원문이 4대 품목(TV·냉장고·세탁기·에어컨)으로 한정한다 — 이 품목은 그 목록에 없다'],
   '선풍기': ['na', '', '멤버십 무상수리 서비스 기간 연장은 원문이 4대 품목(TV·냉장고·세탁기·에어컨)으로 한정한다 — 이 품목은 그 목록에 없다'],
 };
 
@@ -505,6 +523,28 @@ const OPS = {
 
 /* 물류 VOC 본사 창구 — 센터와 무관하게 걸리는 공통 번호다(원문 'VOC 연락처(B2C)' 표 머리) */
 const VOC_HQ = { n:'031-270-3518', x:[['추가 회선','070-7094-3512'],['','070-7094-3569'],['','070-7094-3773']] };
+
+/*
+ * 하만 오디오(JBL · harman/kardon · AKG) — **삼성전자서비스가 수리하지 않는다.**
+ * 접수만 전국 삼성전자서비스에서 받고, 그 뒤 과정은 이 전문센터가 진행한다.
+ * 원문 그대로: *"전국 삼성전자서비스㈜에서 접수 가능하며, 접수 이후 서비스 과정은
+ * 하만오디오 전문 서비스센터(시머스 주식회사)에서 진행합니다."*
+ *
+ * **묶음을 따로 두는 이유** — 상담사는 *"JBL AS 어디죠"* 로 찾지 *"오디오 협력사가 뭐죠"*
+ * 로 찾지 않는다(인덕션·정수기·후드를 담당이 같은데도 셋으로 가른 것과 같은 규칙).
+ * `CONTACTS` 에 한 줄로 넣으면 주소·운영시간·대상 브랜드를 담을 자리가 없기도 하다.
+ *
+ * 출처 — harmansvc.co.kr `/wtyinfo` · `/`(2026-08-27 확인). 사람 이름은 싣지 않는다.
+ */
+const HARMAN = {
+  p:'하만 오디오 전문 서비스센터', c:'시머스 주식회사(SEMAS)', n:'02-553-3494',
+  mail:'harman@harmansvc.co.kr',
+  a:'경기도 수원시 영통구 중부대로448번길 97 삼성테크노파크 1층 112호',
+  hours:'평일 09:00~18:00 (토·일·공휴일 휴무) · 점심시간 12:00~13:00',
+  brands:'JBL · harman/kardon · AKG',
+  recv:'전국 삼성전자서비스에서 접수 가능 — 접수 이후 서비스 과정은 이 센터가 진행합니다',
+  site:'https://harmansvc.co.kr/wtyinfo',
+};
 
 
 /*
@@ -724,6 +764,9 @@ function renderBody(){
   if (d.core && d.core.length) {
     h += d.core.map(([nm,yr,why])=>`<div class="row"><div class="n">${esc(nm)}
       <div class="d">${esc(why)}</div></div><div class="v">${esc(yr)}</div></div>`).join('');
+  } else if (d.src) {
+    /* 출처가 다른 품목(하만)은 "원문"이 가리키는 문서도 다르다 — 어느 원문인지 밝힌다 */
+    h += `<div class="why">${esc(d.src[0])} 원문에는 핵심부품 표가 없습니다 — 본체 무상보증기간을 따릅니다.</div>`;
   } else {
     h += '<div class="why">이 품목은 원문의 핵심부품 표에 없습니다 — 본체 무상보증기간을 따릅니다.</div>';
   }
@@ -763,15 +806,23 @@ function renderBody(){
   }
   h += '</div>';
 
-  h += `<div class="card"><h2>보증 적용 기준 <span class="pill">전 품목 공통</span></h2>
-    ${RULES.map(r=>`<div class="rule"><span class="rl ${r.c}">${esc(r.l)}</span><span class="rv">${esc(r.t)}</span></div>`).join('')}
+  /* **적용 기준은 품목이 자기 것을 가질 수 있다.** 공통 `RULES` 는 삼성전자서비스 원문이라
+     하만 오디오에 그대로 쓰면 틀린다 — 영수증이 없을 때 삼성은 "생산년월 + 3개월",
+     하만은 "제조번호 회수일자 + 15개월" 이다. 그 한 줄이 상담에서 그대로 분쟁이 된다. */
+  const rules = d.rules || RULES;
+  h += `<div class="card"><h2>보증 적용 기준 <span class="pill">${d.rules?esc(cur):'전 품목 공통'}</span></h2>
+    ${rules.map(r=>`<div class="rule"><span class="rl ${r.c}">${esc(r.l)}</span><span class="rv">${esc(r.t)}</span></div>`).join('')}
     <div class="note">위 문구는 원문 그대로다. 유상수리 사유·출장비·교환환불 기준은 이 문서에 없어 싣지 않았다.</div></div>`;
 
 
-  h += `<div class="src">출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
+  h += `<div class="src">${d.src ? `출처 — <a href="${esc(d.src[1])}" target="_blank" rel="noopener">${esc(d.src[0])}</a>
+    (2026-08-27 확인)<br>이 품목은 <b>삼성전자서비스 '보증기간 산정기준'에 나오지 않습니다</b> — 그 원문에는
+    하만·JBL·AKG 가 한 줄도 없어(전수 확인) 하만 공식 안내를 따릅니다.<br>
+    확정 안내 전 하만 오디오 전문 서비스센터(02-553-3494)로 확인하세요.`
+    : `출처 — 삼성전자서비스 <a href="${AS_SRC}" target="_blank" rel="noopener">보증기간 산정기준</a>
     · 삼성전자 <a href="${ROYAL.srcLevel}" target="_blank" rel="noopener">멤버십 등급별 혜택</a>
     · <a href="${ROYAL.src}" target="_blank" rel="noopener">무상수리 서비스 기간 연장</a><br>
-    2026-08-11 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.</div>`;
+    2026-08-11 확인. 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.`}</div>`;
 
   document.getElementById('body').innerHTML = h;
 
@@ -789,7 +840,10 @@ function shareBuild(){
     d.hold ? "원문 표기: " + d.holdAs : "원문 표에 이 품목이 없습니다 — 고객센터 1588-3366 확인 필요" ]] });
   if(d.note) sec.push({ h:"주의", rows:[[d.note, ""]] });
   return { app:"세일즈 코파일럿 · AS 관련 정보", title:cur, subtitle:"", sections:sec,
-    note:"출처 — 삼성전자서비스 보증기간 산정기준(2026-08-10 확인). 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.",
+    /* 출처가 다른 품목은 카드에도 그 출처가 나가야 한다 — 화면과 다른 말을 하면 안 된다 */
+    note: d.src
+      ? "출처 — " + d.src[0] + "(harmansvc.co.kr, 2026-08-27 확인). 삼성전자서비스 '보증기간 산정기준'에는 이 브랜드가 없습니다. 확정 안내 전 하만 오디오 전문 서비스센터(02-553-3494)로 확인하세요."
+      : "출처 — 삼성전자서비스 보증기간 산정기준(2026-08-10 확인). 실제 적용은 구입 시점·제조일자에 따라 달라질 수 있으니 확정 안내 전 고객센터(1588-3366)로 확인하세요.",
     filename:"AS기간_" + cur.replace(/[\/:*?"<>|]/g,"") };
 }
 
@@ -928,6 +982,10 @@ const nat = (k) => B2B_NATION.find((x) => x.key === k);
 const GROUPS = [
   { id:'g-as',   sym:'shield', ico:'🛡️', t:'AS · 수리 모음',            n:CONTACTS.reduce((a,g)=>a+g.items.length,0),
     s:'AS 접수 · 구매 상담 대표번호' },
+  /* AS 바로 아래 — 하만도 결국 "어디로 전화하죠"이고, 삼성전자서비스가 수리하지 않는다는
+     사실을 상담사가 빨리 봐야 한다 */
+  { id:'g-hm',   sym:'soundbar', ico:'🔊', t:'JBL·하만카돈·AKG 오디오 AS', n:1,
+    s:'하만 오디오 전문 서비스센터 — 전국 (삼성전자서비스는 접수만)' },
   { id:'g-lg',   sym:'truck',  ico:'🚚', t:'물류 모음',                 n:CENTERS.length,
     s:'배송 · 설치 관할 센터 · 상황실 · VOC' },
   { id:'g-mv',   sym:'move',   ico:'🔧', t:'빌트인 가전 이전설치 관할',   n:B2B.length,
@@ -1009,7 +1067,27 @@ function renderContacts(){
         <span class="ct-b"><b>${esc(c.t)}</b><span class="ct-d">${esc(c.d)}</span></span>
         <span class="ct-n">${esc(c.n)}</span></button>`).join('')}`).join('')}</div>`);
 
-  /* ② 물류 */
+  /* ② 하만 오디오 — **삼성전자서비스가 수리하지 않는다는 것부터 적는다.**
+     번호만 알려 주면 상담사가 "삼성 AS 맡기시면 됩니다"로 잘못 안내한다 */
+  h += grp(g['g-hm'],
+    `<div class="card warn"><h2>⚠ 삼성전자서비스는 접수만 받습니다</h2>
+       <div class="why">${esc(HARMAN.recv)}. 대상 브랜드는 <b>${esc(HARMAN.brands)}</b> 뿐이고,
+         <b>삼성전자가 국내 유통한 제품만</b> 서비스합니다 — 병행수입·해외 직구·구매대행은 제외됩니다.
+         수리가 아니라 <b>보증 교환 서비스</b>이고 <b>동일 상품 교환</b>이 원칙입니다.</div></div>
+     <div class="card">
+       <div class="ct lg">
+         <span class="ct-b"><b>${esc(HARMAN.p)}<span class="ct-tag">전국</span></b>
+         <span class="ct-d">${esc(HARMAN.c)}
+           ${opsRow('주소', `<span>${esc(HARMAN.a)}</span>`)}
+           ${opsRow('영업', `<span>${esc(HARMAN.hours)}</span>`)}
+           ${opsRow('이메일', `<span>${esc(HARMAN.mail)}</span>`)}
+           ${opsRow('보증', '<span>구입일로부터 12개월 · 부품보유 3년 (영업용은 6개월)</span>')}
+         </span></span>
+         <span class="ct-n">${telx(HARMAN.n, HARMAN.p, null, true)}</span></div>
+       <div class="note">사운드바 등의 <b>설치·이동설치는 지원하지 않습니다.</b>
+         자세한 기준은 <a href="${esc(HARMAN.site)}" target="_blank" rel="noopener">하만 보증 교환 서비스안내</a>.</div></div>`);
+
+  /* ③ 물류 */
   h += grp(g['g-lg'],
     `<div class="why" style="margin-bottom:9px">고객 댁 주소로 담당 센터를 찾습니다.
        <b>지역을 치면 그 센터만 남습니다</b> — 예: 수원, 안산, 강릉.</div>
@@ -1068,6 +1146,7 @@ function renderContacts(){
   h += `<div class="src">AS·구매 연락처 — 삼성전자서비스(samsungsvc.co.kr) · 삼성닷컴(samsung.com/sec) 공식 표기 · 2026-08-11 확인<br>
     물류센터 — 사내 배포본 '센터별 배송 서비스지역'(2026.1.02 시행) 원문 그대로<br>
     상황실·운영·VOC — 사내 배포본 'B2B 이전설치 센터 권역현황·연락처'(2025.02)의 운영업무 협조(B2C)·VOC 연락처(B2C) 표<br>
+    하만 오디오 — 하만 오디오 전문 서비스센터(harmansvc.co.kr) 공식 안내 · 2026-08-27 확인<br>
     이전설치·리폼·중앙에너지·IT — 같은 배포본 원문 그대로.
     협력사명 · 관할지역 · 전화번호만 옮겼습니다 — 담당자 이름·이메일과 010 번호는 싣지 않습니다.</div>`;
   pane.innerHTML = h;
@@ -1168,6 +1247,32 @@ function renderCenters(){
  * ───────────────────────────────────────────────────────────────────────── */
 let SVC = null, svcSido = '경기', svcHomeOnly = false;
 
+/*
+ * **이름에서 `삼성전자 ` 를 뗀다 — 표시 계층에서만.** 178곳이 전부 그 접두로 시작해
+ * (전수 확인) 화면에서는 군더더기다. `svc-centers.json` 은 원문 대조용이라 손대지 않는다
+ * (배치 시뮬레이터가 `65형` 을 `65인치` 로 적으면서 데이터는 그대로 둔 것과 같은 규칙).
+ *
+ * **`nm`(`강릉센터`)을 쓰면 안 된다** — `모바일`/`바로서비스` 구분이 사라진다.
+ * `full` 에서 접두만 떼면 `모바일 강릉센터` · `삼송 바로서비스` 로 그 구분이 남는다.
+ * 떼고도 178개 이름이 전부 유일하다(확인함). 접두가 없는 이름은 그대로 둔다.
+ */
+function svcName(x){ return String(x.full || '').replace(/^삼성전자\s+/, ''); }
+
+/*
+ * 화면을 **껍데기와 목록으로 가른다** (2026-08-27).
+ *
+ * **한글이 자모로 쪼개지던 버그가 여기서 났다** — 예전에는 `oninput` 이
+ * `renderSvcCenters()` 를 불러 `pane.innerHTML` 을 통째로 다시 썼다. 그러면 입력칸이
+ * **새 DOM 요소로 바뀌어 IME 조합 버퍼가 끊긴다.** `ㅅ` → `서` → `성` 으로 합쳐지지
+ * 못하고 자모가 그대로 확정돼 *"성남"* 이 **"ㅅㅓㅇㄴㅏㅁ"** 이 됐다(사장님 보고).
+ * `focus()` + `setSelectionRange()` 는 **커서만** 되살릴 뿐 조합 상태는 못 되살린다.
+ *
+ * **이 앱은 이미 답을 갖고 있었다** — `renderB2B()` 의 `draw()` 는 입력칸을 그대로 두고
+ * 목록만 갈아 끼운다. 그래서 `#lgq`·`#b2bq`·`#itq` 에는 같은 문제가 없다. 그 패턴을 따른다:
+ *   · `renderSvcCenters()` — 껍데기(안내문·입력칸·칩). 탭 진입·칩 클릭에서만 부른다
+ *   · `renderSvcList()`    — 목록과 건수 줄만. **입력할 때 부르는 것은 이쪽뿐이다**
+ * **입력 핸들러에서 껍데기를 다시 그리지 말 것.** 그 한 줄이 이 버그다.
+ */
 function renderSvcCenters(){
   const pane = document.getElementById('centerPane');
   if (!SVC){
@@ -1181,11 +1286,63 @@ function renderSvcCenters(){
     .sort((a,b)=>SVC.items.filter(x=>x.sd===b).length - SVC.items.filter(x=>x.sd===a).length);
   if (!sidos.includes(svcSido)) svcSido = sidos[0];
   const q = (document.getElementById('svcq') || {}).value || '';
-  const s = q.trim().toLowerCase();
+
+  pane.innerHTML =
+    `<div class="sub">전국 <b>${SVC.n}곳</b> · 가전 접수 <b>${SVC.items.filter(x=>x.home).length}곳</b>
+       <span style="opacity:.7">(${esc(SVC.at)} 기준 · 삼성전자서비스)</span></div>
+     <div class="notice">${esc(SVC.notice)}</div>
+     <input id="svcq" class="lgq" placeholder="센터 이름 · 지역 · 취급 품목으로 찾기 (예: 수원, 청소기)" value="${esc(q)}">
+     <div class="chips" id="svcchips">${sidos.map(sd=>
+       `<button type="button" class="chip" data-sd="${esc(sd)}">${esc(sd)} ${SVC.items.filter(x=>x.sd===sd).length}</button>`).join('')}</div>
+     <div class="chips"><button type="button" class="chip${svcHomeOnly?' on':''}" id="svchome">가전 접수만</button></div>
+     <div class="sub" id="svccnt" style="margin-bottom:8px"></div>
+     <div id="svclist"></div>`;
+
+  pane.querySelectorAll('#svcchips .chip').forEach(el=>el.onclick=()=>{
+    svcSido = el.dataset.sd;
+    const box = document.getElementById('svcq'); if (box) box.value = '';
+    /* 칩을 누를 때는 조합 중이 아니므로 껍데기를 다시 그려도 안전하다(칩의 `on` 이 바뀐다) */
+    renderSvcCenters();
+  });
+  const hb = document.getElementById('svchome');
+  if (hb) hb.onclick = ()=>{ svcHomeOnly = !svcHomeOnly; renderSvcCenters(); };
+  const box = document.getElementById('svcq');
+  /* **목록만 다시 그린다.** `focus()`·`setSelectionRange()` 는 없앴다 —
+     입력칸을 건드리지 않으니 커서도 조합도 그대로 남는다. */
+  if (box) box.oninput = renderSvcList;
+  renderSvcList();
+}
+
+/*
+ * 목록 — **센터마다 접어 둔다** (2026-08-27 사장님 요청: *"각 서비스센터별 클릭하면
+ * 세부내용이 보이게 하면 더 많은 센터 정보가 한 화면에 들어와 좋을 것 같습니다"*).
+ * 여섯 줄(주소·영업·대표·주차·찾아가기·취급)을 다 펼쳐 두니 폰 390px 한 화면에 **1곳**만
+ * 들어왔다(실측). 연락처 탭의 `<details class="grp">` 와 같은 손잡이다.
+ *
+ * **접힌 줄에 남기는 것은 이름 · 가전 접수 배지 · 시·군·구 셋이다.** 고르려면 그만큼은
+ * 있어야 한다 — 어느 동네인지 모르면 못 고르고(시·도 칩만으로는 경기 안에서 못 가른다),
+ * 가전 접수 여부를 모르면 **TV 고객을 모바일 전용 센터로 보내 헛걸음시킨다**(178곳 중 66곳).
+ *
+ * **결과가 1곳이면 펼쳐 둔다.** 상단 통합검색에서 특정 센터로 들어오면 `go()` 가 그 센터의
+ * 이름을 통째로 `svcq` 에 넣으므로 결과가 1곳이 된다 — 그때 접혀 있으면 *"아무 일도 안
+ * 일어난 것처럼 보여"* 찾아 준 뜻이 없어진다(연락처 탭이 묶음을 펼치는 것과 같은 이유).
+ * 반대로 *"수원"* 처럼 여러 곳이 나오는 검색에서는 접힌 채 둔다 — 그게 이 변경의 목적이다.
+ */
+function renderSvcList(){
+  if (!SVC) return;
+  const listEl = document.getElementById('svclist');
+  const cntEl  = document.getElementById('svccnt');
+  if (!listEl) return;
+
+  const s = ((document.getElementById('svcq') || {}).value || '').trim().toLowerCase();
   /* 검색어를 치면 **시·도 칩을 넘어 전국에서** 찾는다 — 상담사는 어느 시도인지 모르고 이름만 안다 */
   let list = s ? SVC.items : SVC.items.filter(x=>x.sd === svcSido);
   if (svcHomeOnly) list = list.filter(x=>x.home);
   if (s) list = list.filter(x=>(x.full+x.sd+x.sg+x.ad+x.it.join(' ')).toLowerCase().includes(s));
+
+  /* 검색 중에는 시·도 칩의 `on` 을 끈다 — 전국에서 찾고 있으므로 그 칩이 켜져 있으면 거짓말이다 */
+  const chips = document.querySelectorAll('#svcchips .chip');
+  chips.forEach(c=>c.classList.toggle('on', !s && c.dataset.sd === svcSido));
 
   /* 찾은 글자를 표시한다. **정규식 이스케이프를 쓰지 않는다** — 검색어에 특수문자가 섞이면
      정규식이 깨지는데, 그러면 이 앱 전체 스크립트가 죽는다(실제로 죽었다).
@@ -1204,42 +1361,34 @@ function renderSvcCenters(){
     return out;
   };
   const hours = (x)=>[x.wd&&`평일 ${x.wd}`, x.sa&&`토 ${x.sa}`, x.ho&&`공휴일 ${x.ho}`].filter(Boolean).join(' · ');
+  const one = list.length === 1;
 
-  pane.innerHTML =
-    `<div class="sub">전국 <b>${SVC.n}곳</b> · 가전 접수 <b>${SVC.items.filter(x=>x.home).length}곳</b>
-       <span style="opacity:.7">(${esc(SVC.at)} 기준 · 삼성전자서비스)</span></div>
-     <div class="notice">${esc(SVC.notice)}</div>
-     <input id="svcq" class="lgq" placeholder="센터 이름 · 지역 · 취급 품목으로 찾기 (예: 수원, 청소기)" value="${esc(q)}">
-     <div class="chips" id="svcchips">${sidos.map(sd=>
-       `<button type="button" class="chip${sd===svcSido&&!s?' on':''}" data-sd="${esc(sd)}">${esc(sd)} ${SVC.items.filter(x=>x.sd===sd).length}</button>`).join('')}</div>
-     <div class="chips"><button type="button" class="chip${svcHomeOnly?' on':''}" id="svchome">가전 접수만</button></div>
-     <div class="sub" style="margin-bottom:8px">${s?`전국에서 <b>${list.length}곳</b>`:`${esc(svcSido)} <b>${list.length}곳</b>`}</div>
-     <div id="svclist">${list.length ? list.map(x=>
-      `<div class="ct lg">
-        <span class="ct-b"><b>${hl(x.full)}<span class="ct-tag">${x.home?'가전 접수':'모바일만'}</span></b>
-        <span class="ct-d">
-          ${opsRow('주소', `<span>${hl(x.sd+' '+x.sg+' '+x.ad)}</span>`)}
-          ${hours(x)?`${opsRow('영업', `<span>${esc(hours(x))}</span>`)}`:''}
-          ${x.tel?`${opsRow('대표', `<span data-tel="${esc(String(x.tel).replace(/[^0-9]/g,'').slice(0,11))}">${esc(x.tel)}</span>`)}`:''}
-          ${x.park?`${opsRow('주차', `<span>${esc(x.park)}</span>`)}`:''}
-          ${x.taxi?`${opsRow('찾아가기', `<span>${esc(x.taxi)}</span>`)}`:''}
-          ${opsRow('취급', `<span>${x.it.length?hl(x.it.join(' · ')):'접수 품목 정보 없음'}</span>`)}
-        </span></span>
-      </div>`).join('') : '<div class="sub">찾는 센터가 없습니다.</div>'}</div>`;
+  if (cntEl) cntEl.innerHTML = s ? `전국에서 <b>${list.length}곳</b>` : `${esc(svcSido)} <b>${list.length}곳</b>`;
 
-  pane.querySelectorAll('#svcchips .chip').forEach(el=>el.onclick=()=>{
-    svcSido = el.dataset.sd;
-    const box = document.getElementById('svcq'); if (box) box.value = '';
-    renderSvcCenters();
-  });
-  const hb = document.getElementById('svchome');
-  if (hb) hb.onclick = ()=>{ svcHomeOnly = !svcHomeOnly; renderSvcCenters(); };
-  const box = document.getElementById('svcq');
-  if (box){
-    box.oninput = ()=>{ const v = box.selectionStart; renderSvcCenters();
-      const nb = document.getElementById('svcq'); if (nb){ nb.focus(); nb.setSelectionRange(v, v); } };
-  }
-  if (typeof wireContacts === 'function') wireContacts(pane);
+  listEl.innerHTML = list.length ? list.map(x=>
+    `<details class="svcd"${one?' open':''}>
+      <summary>
+        <span class="svcn">${hl(svcName(x))}</span>
+        <span class="ct-tag${x.home?' home':''}">${x.home?'가전 접수':'모바일만'}</span>
+        <span class="sg">${hl(x.sg)}</span><span class="gv">▾</span></summary>
+      <div class="svcd-b"><span class="ct-d">
+        ${opsRow('주소', `<span>${hl(x.sd+' '+x.sg+' '+x.ad)}</span>`)}
+        ${hours(x)?`${opsRow('영업', `<span>${esc(hours(x))}</span>`)}`:''}
+        ${x.tel?`${opsRow('대표', x.dial
+          ? `<span data-tel="${esc(x.dial)}">${esc(x.tel)}</span>`
+          /* **`dial` 이 null 이면 버튼으로 만들지 않는다.** 그런 센터는 대표번호가
+             `031-8061-내선검색` 처럼 걸 수 있는 번호가 아니다(6곳). 예전에는 여기서 숫자만
+             추려 `0318061` 을 만들어 걸었는데 — 그건 없는 번호다. 자료가 비워 둔 것을
+             화면이 지어내면 안 된다(이 앱이 부품보유기간을 "확인 필요"로 두는 것과 같은 규칙). */
+          : `<span>${esc(x.tel)}</span>`)}`:''}
+        ${x.park?`${opsRow('주차', `<span>${esc(x.park)}</span>`)}`:''}
+        ${x.taxi?`${opsRow('찾아가기', `<span>${esc(x.taxi)}</span>`)}`:''}
+        ${opsRow('취급', `<span>${x.it.length?hl(x.it.join(' · ')):'접수 품목 정보 없음'}</span>`)}
+      </span></div>
+    </details>`).join('') : '<div class="sub">찾는 센터가 없습니다.</div>';
+
+  /* 닫힌 `<details>` 안의 요소도 DOM 에는 있으므로 전화 버튼이 그대로 걸린다(검사가 지킨다) */
+  if (typeof wireContacts === 'function') wireContacts(listEl, '[data-tel]');
 }
 
 /*
@@ -1300,12 +1449,16 @@ function searchDocs(){
    * `SVC` 는 비동기로 오므로 **오기 전에는 이 갈래가 비어 있다**(검색이 죽지는 않는다).
    */
   for (const x of ((SVC && SVC.items) || [])) {
-    out.push({ kind:'AS센터', title:x.full,
+    /* 제목도 화면과 같은 짧은 이름을 쓴다 — `kw` 에 `full` 이 그대로 있어 "삼성전자"로도 찾힌다 */
+    out.push({ kind:'AS센터', title:svcName(x),
       sub:`${x.sd} ${x.sg} · ${x.home ? '가전 접수' : '모바일만'}`,
       kw:`${x.full} ${x.nm} ${x.sd} ${x.sg} ${x.ad} ${x.it.join(' ')} as센터 서비스센터 수리 위치 주소`,
+      /* **이름을 통째로 넣어 그 한 곳만 남긴다** — 결과가 1곳이면 `renderSvcList` 가 펼쳐 주므로
+         찾아 준 센터의 주소·번호가 바로 보인다. `nm`(`강릉센터`) 대신 `svcName`
+         (`모바일 강릉센터`)을 쓰는 이유는 그것이 화면에 적히는 이름이고 178곳에서 유일하기 때문이다. */
       go(){ setTab('center'); svcSido = x.sd; svcHomeOnly = false;
         renderSvcCenters();
-        const b = document.getElementById('svcq'); if (b){ b.value = x.nm; renderSvcCenters(); }
+        const b = document.getElementById('svcq'); if (b){ b.value = svcName(x); renderSvcList(); }
         revealBody(); } });
   }
   for (const g of CONTACTS) for (const c of g.items) {
@@ -1349,6 +1502,11 @@ function searchDocs(){
       go(){ openGroup('g-ind'); const q = document.querySelector('#mq-ind');
             if (q) { q.value = m.g; renderMid('ind'); } } });
   }
+  /* 상담사가 치는 말은 "JBL AS" · "하만 서비스센터" · "AKG 수리" 다 — 그 말로 걸려야 한다 */
+  out.push({ kind:'연락처', title:HARMAN.p, sub:`${HARMAN.n} · ${HARMAN.brands} 보증 교환 서비스`,
+    kw:`${HARMAN.p} ${HARMAN.c} ${HARMAN.n} ${HARMAN.a} ${HARMAN.mail} jbl 제이비엘 하만 하만카돈 harman kardon akg 에이케이지 `
+      + `오디오 스피커 사운드바 이어폰 헤드폰 파티스피커 as 수리 보증 교환 서비스센터 시머스 semas`,
+    go(){ setTab('contact'); openGroup('g-hm'); revealBody(); } });
   out.push({ kind:'연락처', title:'물류 VOC 본사 창구', sub:`${VOC_HQ.n} · 배송·설치 VOC 접수`,
     kw:`voc 브이오씨 물류 본사 접수 불만 ${VOC_HQ.n} ${xtext(VOC_HQ)}`,
     go(){ openGroup('g-lg'); } });
@@ -1568,12 +1726,16 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
 
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
+window.__as = { DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, HARMAN, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
   openGroup,
   /* 딥링크가 착지하는지 검사하려면 **앱이 실제로 내놓는** 제목을 봐야 한다.
      데이터에서 제목을 다시 만들어 대조하던 검사는 색인과 사이좋게 틀린 채로 통과했다
      (멤버십 항목이 searchDocs 에 아예 없었는데 둘 다 있다고 여겼다, 2026-08-13). */
   searchDocs,
+  /* AS센터 목록은 `fetch` 로 오는데 jsdom 에는 fetch 가 없다 — 검사가 직접 넣어 준다.
+     이걸 안 열어 두면 센터 탭 전체가 검사 밖에 남는다(한글이 자모로 쪼개지던 버그가 그렇게 지나갔다). */
+  loadSvc(j){ SVC = j; renderSvcCenters(); },
+  renderSvcList, svcName,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },
   search(q){ const i = document.getElementById('sq'); i.value = q; runSearch();

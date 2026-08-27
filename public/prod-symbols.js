@@ -195,6 +195,9 @@
      * 새 제품 키를 추가하면 여기도 함께 넣을 것(`test-care` 가 검사한다).
      */
     mx_fold8u: 'phone', mx_fold8: 'phone', mx_flip8: 'phone',
+    /* AS 앱의 하만 품목 — 브랜드 이름이라 아래 RULES 어디에도 안 걸린다.
+       스피커·사운드바·이어폰·헤드폰을 아우르므로 오디오를 뜻하는 soundbar 를 쓴다. */
+    'JBL·하만카돈·AKG': 'soundbar',
     ai2_book6: 'laptop', ai2_tabs11: 'tablet',
   };
 
