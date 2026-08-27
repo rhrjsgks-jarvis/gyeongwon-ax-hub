@@ -473,11 +473,16 @@ pass('싱크장 리폼 골든 3건');
   else pass('임원 명단 미포함');
 }
 
-// [7-e] 화면 — 탭이 3개이고, 이전설치 탭이 렌더되며 관할 검색이 걸리는가
+// [7-e] 화면 — 탭이 셋이고, 이전설치 탭이 렌더되며 관할 검색이 걸리는가
 {
   const tabs = doc.querySelectorAll('.mode-tab');
-  if (tabs.length !== 2) fail(`탭이 ${tabs.length}개 — AS기간·연락처 2개여야 한다`);
-  else pass('탭 2개 (AS기간 · 연락처·협력사)');
+  /* **AS센터 찾기가 가운데다**(2026-08-27 사장님 지시) — 상담 흐름이
+     "보증기간 → 어디로 가나 → 누구에게 거나" 순이다. 순서까지 검사한다. */
+  const want = ['as', 'center', 'contact'];
+  const got = [...tabs].map((t) => t.dataset.tab);
+  if (got.length !== 3) fail(`탭이 ${got.length}개 — AS기간 · AS센터 찾기 · 연락처 셋이어야 한다`);
+  else if (got.join(',') !== want.join(',')) fail(`탭 순서가 ${got.join('·')} — AS센터가 가운데여야 한다`);
+  else pass('탭 3개 · AS센터 찾기가 가운데');
 
   /* 연락처 탭은 **세 묶음으로 접혀** 있다(2026-08-11 사용자 요청 — 다 펼쳐 두면 예순 줄이
      넘어 상담 중에 못 읽는다). 기본은 닫힘이고 눌러야 열린다. */

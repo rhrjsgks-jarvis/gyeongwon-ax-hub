@@ -49,9 +49,13 @@
   .rv{font-size:12px;line-height:1.6;color:#374151;min-width:0}
   /* 연락처 — 누르면 걸기/복사를 고르는 시트가 뜬다(share-kit.js).
      바로 걸리게 두면 번호만 원할 때 곤란하고, PC 에서는 tel: 이 동작하지 않는다 */
-  .mode-tabs{display:grid;grid-template-columns:repeat(2,1fr);background:#fff;
+  /* **탭 수가 곧 열 수다**(2026-08-27) — 2열로 박아 두었더니 탭이 셋이 되며 두 줄로 접혀
+     '연락처·협력사' 가 아래로 밀렸다. 숫자를 박지 말고 자동으로 나눈다. */
+  .mode-tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:#fff;
     border-bottom:1px solid #ecedf1;position:sticky;top:0;z-index:55}
-  .mode-tab{padding:10px 4px 9px;text-align:center;cursor:pointer;font-size:11px;font-weight:700;
+  /* 셋이 되며 좁아졌다 — 폰(390px)에서 한 줄에 들어가게 글자와 여백을 줄인다(실측) */
+  .mode-tab{padding:10px 2px 9px;text-align:center;cursor:pointer;font-size:10.5px;font-weight:700;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s}
   .mode-tab.on{color:#1428A0;border-bottom-color:#1428A0}
   .mt-ico{display:block;font-size:15px;margin-bottom:2px;line-height:1}
@@ -242,6 +246,8 @@
 <!-- 탭 모양은 AI구독 케어와 같다 — 앱을 넘겨 볼 때 한 제품으로 읽혀야 한다 -->
 <div class="mode-tabs" id="modeTabs">
   <div class="mode-tab on" data-tab="as" onclick="setTab('as')"><span class="mt-ico">🛡️</span>AS기간</div>
+  <!-- **가운데에 둔다**(2026-08-27 사장님 지시) — 상담 흐름이 "보증기간 → 어디로 가나 → 누구에게 거나" 순이다 -->
+  <div class="mode-tab" data-tab="center" onclick="setTab('center')"><span class="mt-ico">📍</span>AS센터 찾기</div>
   <div class="mode-tab" data-tab="contact" onclick="setTab('contact')"><span class="mt-ico">📞</span>연락처·협력사</div>
 </div>
 <div class="wrap">
@@ -251,6 +257,7 @@
     <div class="cats" id="cats"></div>
     <div id="body"></div>
   </div>
+  <div id="centerPane" style="display:none"></div>
   <div id="contactPane" style="display:none"></div>
 </div>
 
@@ -1138,6 +1145,103 @@ function renderCenters(){
   if (typeof wireContacts === 'function') wireContacts(list, '[data-tel]');
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * AS센터 위치찾기 (2026-08-27 사장님 요청)
+ *
+ * *"세일즈코파일럿 내 AS 관련 부분에 전국에 있는 고객센터 위치정보를 넣을 수 있습니까?"*
+ * *"고객센터 위치와 고객센터 유형(가전 AS 도 함께하는지 등)"*
+ * *"연락처·협력사 오른쪽 탭"* → *"AS센터 위치찾기를 중앙에 만들어 주시는 게 나을 것 같습니다."*
+ *
+ * 자료는 `public/svc-centers.json`(`npm run build:svc` 가 만든다). **178곳.**
+ *
+ * **화면이 반드시 밝혀야 하는 것 둘** — 안 적으면 상담사가 헛걸음을 시킨다:
+ *   ① **대형 가전은 센터 방문이 아니라 출장 수리다.** 센터 「수리 제품 선택」 목록에
+ *      냉장고·세탁기·에어컨이 아예 없다(실측). 받는 가전은 소형가전이다.
+ *   ② **178곳 중 66곳은 모바일만 받는다.** 스마트폰·태블릿·웨어러블 셋뿐이다.
+ *      그 주소를 TV 고객에게 알려주면 그대로 헛걸음이다.
+ *
+ * **시·도 칩으로 먼저 좁힌다** — 178곳을 한 줄로 늘어놓으면 폰에서 못 읽는다
+ * (배치 시뮬레이터가 단지 목록을 시·도로 거르는 것과 같은 이유).
+ *
+ * **센터장 이름·사진·`010` 직통번호는 담지 않았다** — 이 저장소는 public repo 이고
+ * 이 앱은 이미 *"`010` 을 제외한 나머지 번호만"* 을 지키고 있다(수집 단계에서 뺐다).
+ * ───────────────────────────────────────────────────────────────────────── */
+let SVC = null, svcSido = '경기', svcHomeOnly = false;
+
+function renderSvcCenters(){
+  const pane = document.getElementById('centerPane');
+  if (!SVC){
+    pane.innerHTML = '<div class="sub">센터 자료를 불러오는 중입니다…</div>';
+    if (typeof fetch !== 'function'){ pane.innerHTML = '<div class="sub">이 환경에서는 센터 자료를 받을 수 없습니다.</div>'; return; }
+    fetch('svc-centers.json').then(r=>r.json()).then(j=>{ SVC = j; renderSvcCenters(); })
+      .catch(()=>{ pane.innerHTML = '<div class="sub">센터 자료를 불러오지 못했습니다. 새로고침해 주세요.</div>'; });
+    return;
+  }
+  const sidos = [...new Set(SVC.items.map(x=>x.sd))]
+    .sort((a,b)=>SVC.items.filter(x=>x.sd===b).length - SVC.items.filter(x=>x.sd===a).length);
+  if (!sidos.includes(svcSido)) svcSido = sidos[0];
+  const q = (document.getElementById('svcq') || {}).value || '';
+  const s = q.trim().toLowerCase();
+  /* 검색어를 치면 **시·도 칩을 넘어 전국에서** 찾는다 — 상담사는 어느 시도인지 모르고 이름만 안다 */
+  let list = s ? SVC.items : SVC.items.filter(x=>x.sd === svcSido);
+  if (svcHomeOnly) list = list.filter(x=>x.home);
+  if (s) list = list.filter(x=>(x.full+x.sd+x.sg+x.ad+x.it.join(' ')).toLowerCase().includes(s));
+
+  /* 찾은 글자를 표시한다. **정규식 이스케이프를 쓰지 않는다** — 검색어에 특수문자가 섞이면
+     정규식이 깨지는데, 그러면 이 앱 전체 스크립트가 죽는다(실제로 죽었다).
+     대소문자 무시로 자리를 찾아 잘라 붙인다. */
+  const hl = (t)=>{
+    const raw = String(t == null ? '' : t);
+    if (!s) return esc(raw);
+    const low = raw.toLowerCase();
+    let out = '', i = 0;
+    for(;;){
+      const at = low.indexOf(s, i);
+      if (at < 0){ out += esc(raw.slice(i)); break; }
+      out += esc(raw.slice(i, at)) + '<mark>' + esc(raw.substr(at, s.length)) + '</mark>';
+      i = at + s.length;
+    }
+    return out;
+  };
+  const hours = (x)=>[x.wd&&`평일 ${x.wd}`, x.sa&&`토 ${x.sa}`, x.ho&&`공휴일 ${x.ho}`].filter(Boolean).join(' · ');
+
+  pane.innerHTML =
+    `<div class="sub">전국 <b>${SVC.n}곳</b> · 가전 접수 <b>${SVC.items.filter(x=>x.home).length}곳</b>
+       <span style="opacity:.7">(${esc(SVC.at)} 기준 · 삼성전자서비스)</span></div>
+     <div class="notice">${esc(SVC.notice)}</div>
+     <input id="svcq" class="lgq" placeholder="센터 이름 · 지역 · 취급 품목으로 찾기 (예: 수원, 청소기)" value="${esc(q)}">
+     <div class="chips" id="svcchips">${sidos.map(sd=>
+       `<button type="button" class="chip${sd===svcSido&&!s?' on':''}" data-sd="${esc(sd)}">${esc(sd)} ${SVC.items.filter(x=>x.sd===sd).length}</button>`).join('')}</div>
+     <div class="chips"><button type="button" class="chip${svcHomeOnly?' on':''}" id="svchome">가전 접수만</button></div>
+     <div class="sub" style="margin-bottom:8px">${s?`전국에서 <b>${list.length}곳</b>`:`${esc(svcSido)} <b>${list.length}곳</b>`}</div>
+     <div id="svclist">${list.length ? list.map(x=>
+      `<div class="ct lg">
+        <span class="ct-b"><b>${hl(x.full)}<span class="ct-tag">${x.home?'가전 접수':'모바일만'}</span></b>
+        <span class="ct-d">
+          ${opsRow('주소', `<span>${hl(x.sd+' '+x.sg+' '+x.ad)}</span>`)}
+          ${hours(x)?`${opsRow('영업', `<span>${esc(hours(x))}</span>`)}`:''}
+          ${x.tel?`${opsRow('대표', `<span data-tel="${esc(String(x.tel).replace(/[^0-9]/g,'').slice(0,11))}">${esc(x.tel)}</span>`)}`:''}
+          ${x.park?`${opsRow('주차', `<span>${esc(x.park)}</span>`)}`:''}
+          ${x.taxi?`${opsRow('찾아가기', `<span>${esc(x.taxi)}</span>`)}`:''}
+          ${opsRow('취급', `<span>${x.it.length?hl(x.it.join(' · ')):'접수 품목 정보 없음'}</span>`)}
+        </span></span>
+      </div>`).join('') : '<div class="sub">찾는 센터가 없습니다.</div>'}</div>`;
+
+  pane.querySelectorAll('#svcchips .chip').forEach(el=>el.onclick=()=>{
+    svcSido = el.dataset.sd;
+    const box = document.getElementById('svcq'); if (box) box.value = '';
+    renderSvcCenters();
+  });
+  const hb = document.getElementById('svchome');
+  if (hb) hb.onclick = ()=>{ svcHomeOnly = !svcHomeOnly; renderSvcCenters(); };
+  const box = document.getElementById('svcq');
+  if (box){
+    box.oninput = ()=>{ const v = box.selectionStart; renderSvcCenters();
+      const nb = document.getElementById('svcq'); if (nb){ nb.focus(); nb.setSelectionRange(v, v); } };
+  }
+  if (typeof wireContacts === 'function') wireContacts(pane);
+}
+
 /*
  * 관할 검색 — 물류센터와 같은 방식이다(원문 `a` 까지 훑고, 찾은 글자를 표시한다).
  * 가전(`#b2bq`→`#b2blist`)과 IT(`#itq`→`#itlist`)는 **묶음이 갈렸으므로 검색칸도 각자 쓴다.**
@@ -1189,6 +1293,20 @@ function searchDocs(){
           'as 보증 보증기간 무상보증 무상수리 부품 부품보유 부품보유기간 내용연수',
           ...(d.core||[]).flat()].filter(Boolean).join(' '),
       go(){ setTab('as'); cur = k; renderCats(); renderBody(); revealBody(); } });
+  }
+  /*
+   * **센터도 한 칸에서 찾는다** (2026-08-27). 상담 중에 나오는 말은 *"수원 AS센터 어디죠"*
+   * 인데 그게 어느 탭에 있는지는 상담사가 알 이유가 없다 — 이 검색이 세우는 원칙 그대로다.
+   * `SVC` 는 비동기로 오므로 **오기 전에는 이 갈래가 비어 있다**(검색이 죽지는 않는다).
+   */
+  for (const x of ((SVC && SVC.items) || [])) {
+    out.push({ kind:'AS센터', title:x.full,
+      sub:`${x.sd} ${x.sg} · ${x.home ? '가전 접수' : '모바일만'}`,
+      kw:`${x.full} ${x.nm} ${x.sd} ${x.sg} ${x.ad} ${x.it.join(' ')} as센터 서비스센터 수리 위치 주소`,
+      go(){ setTab('center'); svcSido = x.sd; svcHomeOnly = false;
+        renderSvcCenters();
+        const b = document.getElementById('svcq'); if (b){ b.value = x.nm; renderSvcCenters(); }
+        revealBody(); } });
   }
   for (const g of CONTACTS) for (const c of g.items) {
     out.push({ kind:'연락처', title:c.t, sub:`${c.n} · ${c.d}`,
@@ -1400,8 +1518,13 @@ function setTab(t){
   curTab = t;
   document.querySelectorAll('.mode-tab').forEach(el=>el.classList.toggle('on', el.dataset.tab === t));
   document.getElementById('asPane').style.display = t === 'as' ? '' : 'none';
+  document.getElementById('centerPane').style.display = t === 'center' ? '' : 'none';
   document.getElementById('contactPane').style.display = t === 'contact' ? '' : 'none';
   if (t === 'contact') renderContacts();
+  if (t === 'center') renderSvcCenters();
+  /* 센터 탭도 **통으로 1회**만 센다 — 시·도 칩과 검색으로 계속 좁히는 화면이라
+     낱낱이 세면 이 탭 하나가 집계를 다 먹는다(연락처 탭과 같은 이유). */
+  if (t === 'center' && window.AX_LOG) AX_LOG('as', 'tab_switch', 'AS센터 위치찾기', true);
   /* **연락처 탭은 통으로 1회**(2026-08-20 사장님 지시). 안쪽 묶음이 아홉이고 검색까지
      있어 낱낱이 세면 이 탭 하나가 집계를 다 먹는다 — "연락처를 봤다"까지만 남긴다. */
   if (t === 'contact' && window.AX_LOG) AX_LOG('as', 'tab_switch', '연락처·협력사', true);
@@ -1411,6 +1534,12 @@ function setTab(t){
 }
 
 renderCats(); renderBody(); wireSearch();
+/* 센터 자료를 미리 받아 둔다 — 상단 검색이 **첫 타이핑부터** 센터를 찾아야 한다.
+   123KB 이고 서비스워커가 SWR 로 잡으므로 두 번째부터는 즉시 온다. 실패해도 조용히 넘어간다
+   (센터 탭을 누르면 그때 다시 받는다). */
+/* **`fetch` 가 없는 환경이 있다** — jsdom 검사가 그렇다. 가드 없이 부르면 여기서 스크립트가
+   죽어 아래 `window.__as` 노출까지 막힌다(실제로 검사가 통째로 깨졌다). */
+if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).then(j=>{ SVC = j; }).catch(()=>{});
 
 /*
  * ── 통합검색 딥링크 (`?q=…`) ──
