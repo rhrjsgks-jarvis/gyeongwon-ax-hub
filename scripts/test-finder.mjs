@@ -716,6 +716,71 @@ const CAT_QUERIES = {
       fail('"돌비애트모스 사운드바"에 돌비애트모스가 없는 모델이 남았다');
     console.log(`  플립 ${flip.length}종 · 폴드 ${fold.length}종 · 김치플러스 ${kimchi.length}종 · 애트모스 ${atmos.length}종 — 전부 그 말을 가진 것만 ✓`);
 
+    /*
+     * ── 복합어가 **자기 이름으로** 카테고리를 밝히는 경우 (2026-08-27) ──────────
+     * `CATSYN` 에 `"게이밍모니터":["모니터"]` 가 있는데도 DECOMP 분기가 **조각만** 보느라
+     * 지나쳤다 — `게이밍모니터 4K` 에 **TV 가 33종** 섞이고 최신순 상위를 먹었다.
+     */
+    const gm = models('게이밍모니터 4K');
+    if (!gm.length) fail('"게이밍모니터 4K" 0건');
+    else if (gm.some((p) => p.cat !== '모니터'))
+      fail(`"게이밍모니터 4K"에 모니터가 아닌 것이 섞였다 — ${[...new Set(gm.filter((p) => p.cat !== '모니터').map((p) => p.cat))].join(',')}`);
+
+    /*
+     * ── 갇힌 토큰 — `anc` 가 **`contrast enhancer`** 안에 있었다 ────────────────
+     * TV 287종이 `노이즈캔슬링` 조건을 통과했다. `SWALLOW` 가 그 자리를 가린다.
+     */
+    const nc = models('노이즈캔슬링');
+    if (!nc.length) fail('"노이즈캔슬링" 0건');
+    else if (nc.some((p) => p.cat === 'TV'))
+      fail(`"노이즈캔슬링"에 TV 가 ${nc.filter((p) => p.cat === 'TV').length}종 섞였다 — anc 가 다른 낱말 속에 갇혀 있다`);
+
+    /*
+     * ── 화면 크기는 **낱말이 아니라 숫자**다 (2026-08-27) ─────────────────────────
+     *
+     * kw 부분일치로 걸렀더니 `TV 85인치` 가 **7종**이었다(실제 85형 TV 는 107종).
+     * TV 316종 중 kw 에 `N형` 이 있는 것이 54종뿐이고 `N인치` 는 0종이기 때문이다.
+     * `TV 벽걸이 65인치` 는 **0건**이었다 — 벽걸이 54종과 65형 9종의 교집합이 비었다.
+     *
+     * **카테고리마다 출처가 다르다**(전수 실측): TV·모니터는 모델코드 앞머리가 가장 정확하고
+     * (불일치 0), **노트북은 모델코드가 39/39 오답**이라 값의 `N.N inch` 를 읽는다.
+     */
+    /* **건수를 박지 않는다** — jsdom 은 `finder-extra.json` 을 못 받아 인라인 DB 만 본다
+       (브라우저 316종 ↔ jsdom 60종). 대신 **"그 인치인 제품을 전부 찾는가"** 를 본다. */
+    const allOf = (cat) => models(cat).filter((p) => window.prodInch(p) != null);
+    const atInch = (cat, n) => allOf(cat).filter((p) => Math.abs(window.prodInch(p) - n) <= 0.35);
+    for (const [cat, n] of [['TV', 85], ['TV', 65], ['모니터', 27], ['노트북', 16]]) {
+      const want = atInch(cat, n), got = models(`${cat} ${n}인치`);
+      if (want.length && got.length !== want.length)
+        fail(`"${cat} ${n}인치" 가 ${got.length}종인데 그 크기 제품은 ${want.length}종이다 — 화면 크기를 kw 로만 찾고 있다`);
+      if (got.some((p) => p.cat !== cat)) fail(`"${cat} ${n}인치"에 ${cat} 아닌 것이 섞였다`);
+    }
+    /*
+     * 인치가 **다른 조건과 교집합을 만들 수 있어야** 한다. 예전에는 인치도 kw 조건이라
+     * `TV 벽걸이 65인치` 가 0건이었다(벽걸이 54종 ∩ 65형 9종 = 0).
+     * **그 크기 제품이 실제로 가진 말**을 골라 함께 친다 — DB 마다 어떤 말이 있는지 다르다.
+     */
+    const s65 = atInch('TV', 65);
+    if (s65.length) {
+      const word = ['oled', 'qled', 'neo', 'uhd', 'crystal'].find((wd) => s65.some((p) => p.kw.includes(wd)));
+      if (word && !models(`TV ${word} 65인치`).length)
+        fail(`"TV ${word} 65인치" 가 0건이다 — 인치가 다른 조건과 교집합을 못 만든다`);
+    }
+    const tv85 = models('TV 85인치');
+    /* **노트북 모델코드로 인치를 뽑으면 안 된다** — `NT960…` 은 시리즈 등급이지 960인치가 아니다 */
+    const nb16 = models('노트북 16인치');
+    if (nb16.some((p) => p.cat !== '노트북')) fail('"노트북 16인치"에 노트북이 아닌 것이 섞였다');
+    /* **15.6" 와 16" 는 다른 규격이다** — 여유를 키우면 섞인다 */
+    if (nb16.some((p) => { const i = window.prodInch(p); return i != null && Math.abs(i - 16) > 0.35; }))
+      fail('"노트북 16인치"에 15.6인치가 섞였다 — INCH_TOL 이 너무 크다');
+    /* **비화면 제품에 인치가 붙으면 안 된다** — 모델코드 앞머리의 뜻이 품목마다 다르다
+       (공기청정기 `AX85N…` 의 85 는 청정면적 ㎡ · 시스템에어컨은 냉방능력 kW×10) */
+    for (const bad of ['공기청정기', '시스템에어컨', '에어컨', '냉장고', '세탁기·콤보', '인덕션/전기레인지']) {
+      const any = models(bad).some((p) => window.prodInch(p) != null);
+      if (any) fail(`${bad} 에 화면 인치가 붙는다 — 모델코드 앞머리를 화면 크기로 읽고 있다`);
+    }
+    console.log(`  TV 85인치 ${tv85.length}종(그 크기 전부) · 노트북 16인치 ${nb16.length}종 · 비화면 품목에 인치 없음 ✓`);
+
     /* **카테고리 이름 자체는 예전처럼 조건에서 뺀다** — 안 그러면 이 수정이 회귀를 만든다.
        `세탁기` ↔ `세탁기·콤보`, `스마트폰` ↔ `스마트폰(폴더블)` 처럼 표기만 다른 것도 같은 말이다. */
     for (const [q, want] of [['냉장고', '냉장고'], ['사운드바', '사운드바'], ['세탁기', '세탁기']]) {

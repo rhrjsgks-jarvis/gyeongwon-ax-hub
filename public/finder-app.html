@@ -682,7 +682,7 @@ function parseQuery(raw){
    * 통합검색 `normalize()` 와 같은 규칙이다.
    */
   let q = " " + raw.toLowerCase().replace(/(\d),(?=\d)/g,"$1").replace(/,/g," ") + " ";
-  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null,
+  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null, inch:null,
     // 형태 필터(SUBCAT) · 조건 그룹(그룹 안은 OR, 그룹끼리는 AND) · DB 에 없어 뺀 말
     subs:[], groups:[], ignored:[]};
   // 예산
@@ -739,12 +739,36 @@ function parseQuery(raw){
   m = q.match(/(\d{1,3}(?:\.\d+)?)\s*평/);
   if(m){ const conv = +m[1] * PY_M2;
          P.areaMin = Math.max(0, conv - PY_SLACK); q = q.replace(m[0]," ");
-         /* 해석 바에는 **환산값**을 적는다 — 여유는 표기 오차를 덮는 장치일 뿐이라
-            화면에 61.8 이라고 쓰면 상담사가 "왜 62.81 이 아니지" 하고 헷갈린다 */
-         P.tags.push(`${m[1]}평(${conv.toFixed(1)}㎡) 이상`); }
+         /* 해석 바에는 **환산값**을 적되 `급` 을 붙인다 — 여유는 표기 오차를 덮는 장치라
+            화면에 61.8 이라고 쓰면 "왜 62.81 이 아니지" 하고 헷갈리고, 그렇다고
+            `62.8㎡ 이상` 이라고만 쓰면 62.6㎡ 제품이 나오는 것이 설명되지 않는다.
+            `급` 한 글자가 "제조사 평형 표기 기준"임을 밝힌다. */
+         P.tags.push(`${m[1]}평(${conv.toFixed(1)}㎡)급 이상`); }
   if(P.areaMin==null){
     m = q.match(/(\d{1,3}(?:\.\d+)?)\s*(?:㎡|m2|제곱미터)/i);
     if(m){ P.areaMin = +m[1]; q = q.replace(m[0]," "); P.tags.push(`${m[1]}㎡ 이상`); }
+  }
+  /*
+   * ── 화면 크기(인치·형)는 **낱말이 아니라 숫자**다 (2026-08-27) ──────────────────
+   *
+   * 예전에는 `65인치` 를 `["65인치","65형"]` 두 표기로 넓혀 **kw 부분일치**로 걸렀다.
+   * 그런데 **TV 316종 중 kw 에 `N형` 이 있는 것은 54종뿐**이고 `N인치` 는 **0종**이다 —
+   * 나머지는 `화면크기 214 cm` 로만 적혀 있다. 그래서:
+   *
+   *   · `TV 85인치` → **7종** (모델코드에 85 가 든 TV 는 128종)
+   *   · `TV 벽걸이 65인치` → **0건** (벽걸이 54종 ∩ 65형 9종 = 0)
+   *   · `노트북 16인치` → **0건** (노트북 kw 는 `16.0inch` — 영문이라 안 걸린다)
+   *
+   * 그래서 면적(`areaMin`)과 같은 **숫자 필터**로 바꾼다. 토큰을 여기서 먹어 치우므로
+   * 아래 kw 조건에는 들어가지 않는다. 값을 읽는 곳은 `prodInch()` 다.
+   *
+   * **소수를 받는다** — 노트북 `15.6inch` · 태블릿 `14.6인치` 가 실제 규격이다.
+   */
+  if(P.inch==null){
+    m = q.match(/(\d{1,3}(?:\.\d)?)\s*(?:인치|형|″|")/);
+    if(m && +m[1] >= 8 && +m[1] <= 130){
+      P.inch = +m[1]; q = q.replace(m[0]," "); P.tags.push(`${m[1]}인치`);
+    }
   }
 
   // 토큰화 + 복합어 분해 + 사전 매핑
@@ -811,6 +835,18 @@ function parseQuery(raw){
        * `["게이밍","odyssey","240hz"]` 로 쪼개지는데 어느 조각도 CATSYN 에 없어
        * 카테고리도 안 잡히고 조건도 안 걸려 **아무 일도 안 했다**(692종 · TV 가 상위에).
        */
+      /*
+       * **복합어 자체가 카테고리를 밝히는 경우** — 조각으로는 못 잡는다(2026-08-27).
+       * `CATSYN` 에 `"게이밍모니터":["모니터"]` 가 이미 있는데도, DECOMP 분기가 **조각만**
+       * 보느라 그것을 지나쳤다. 그래서 `게이밍모니터 4K` 에 **TV 가 61종 섞였고**
+       * (게이밍 허브 · 4K 240Hz 지원) 최신순 정렬에서 TV 가 상위를 먹었다.
+       *
+       * **조각에 `모니터` 를 더하는 것으로는 못 고친다** — 조각은 OR 이라 모니터 전부가
+       * 통과해 `게이밍` 조건이 무의미해진다. 카테고리만 따로 붙이고 조건은 조각으로 남긴다.
+       */
+      if(CATSYN[t]) CATSYN[t].forEach(c=>{ if(!P.cats.includes(c)) P.cats.push(c); });
+      /* `req` 는 **조각 기준 그대로** — 조각에 카테고리 이름이 있으면 조건이 무의미해서 뺀다
+         (`로봇청소기` → `["로봇","청소기"]` 는 SUBCAT 이 형태를 가른다) */
       const gotCat = decomped.some(e=>!!CATSYN[e]);
       P.groups.push({raw:t, forms:decomped.map(e=>e.toLowerCase()), req:!gotCat});
       P.tokens.push(t); continue;
@@ -877,6 +913,91 @@ function parseQuery(raw){
   }
   return P;
 }
+
+/*
+ * ── 화면 대각선(인치) — **카테고리마다 출처가 다르다** (2026-08-27 전수 실측) ──────
+ *
+ * 한 규칙으로는 안 된다. 실측이 그렇게 말한다:
+ *
+ * | 카테고리 | 쓰는 출처 | 정확도 |
+ * |---|---|---|
+ * | TV | 값의 `N형` → 없으면 **모델코드 앞머리** | 형 54종·cm 253종 양쪽과 **불일치 0** |
+ * | 모니터 | `화면`의 `N인치` → `화면사이즈 (Class)` → 모델코드 | Class 117/117 일치 |
+ * | 노트북 | 값의 **`N.N inch`**(영문) | 39/39. **모델코드는 39/39 오답** |
+ * | 태블릿 | `N인치` → **mm ÷ 25.4** | mm 가 공칭값을 그대로 준다 |
+ *
+ * **cm ÷ 2.54 로 환산하지 말 것** — 삼성 cm 표기는 실측 대각선이라 공칭보다 늘 작다
+ * (`214 cm` → 84.25 → **84인치**). TV 253종이 통째로 한 칸 낮아진다. 오차 폭이 정확히
+ * 1.000(−0.83 ~ +0.17)이라 **어떤 단일 보정 반올림도 전수를 못 맞춘다**(최선 423/424).
+ *
+ * **모델코드를 전 카테고리에 열지 말 것** — 앞머리 숫자의 뜻이 품목마다 다르다:
+ * 시스템에어컨 176종은 냉방능력 kW×10(`AN23…`=2.3kW) · 공기청정기는 **청정면적 ㎡**
+ * (`AX85N…`=85㎡) · 노트북은 시리즈 등급(`NT960…`=북6 울트라, 16인치다).
+ * 게이트를 안 걸면 **1,100종 넘는 비화면 제품에 인치가 붙는다.**
+ * **앵커(`^`)도 빼지 말 것** — 코드 아무 데서나 `85` 를 찾으면 83인치·43인치 21종이 틀린다.
+ *
+ * **자기 크기가 아닌 표기를 걸러 낸다:**
+ *   · TV 액세서리(베젤·스탠드) — `화면크기` 가 **붙일 TV 크기**다(`KQ85LSD03-WT` 214cm)
+ *   · 프로젝터 6종 — `40~100"` 는 **투사 화면** 크기다(범위 표기로 걸린다)
+ *   · `호환 화면크기` · `설치 가능 TV` · `최대 화면 크기` · 베젤 라벨 — 전부 호환 범위
+ *   · 프린터 `디스플레이 10.9 cm 터치 스크린` — 조작 패널이지 화면이 아니다(카테고리 게이트가 막는다)
+ */
+const SCREEN_CATS = /^(TV|모니터|노트북|태블릿)$/;
+/* 라벨 이름이 '화면'을 담아도 **값이 호환 범위**인 것들 — 자기 크기가 아니다 */
+const NOT_OWN_SIZE = /호환|설치가능|최대|베젤|기기설치|초점/;
+function prodInch(p){
+  if(p.__in!==undefined) return p.__in;
+  const cat = String(p.cat||""), model = String(p.model||""), grp = String(p.group||"");
+  let v = null;
+  if(SCREEN_CATS.test(cat) && !/액세서리/.test(grp)){
+    const fx = p.fx||[];
+    const pick = (re)=>{
+      for(const [k,val] of fx){
+        const key = String(k).replace(/\s/g,"");
+        if(NOT_OWN_SIZE.test(key)) continue;
+        if(!re.test(key)) continue;
+        const s = String(val);
+        if(/[~∼]/.test(s)) continue;        // 범위는 자기 크기가 아니다(프로젝터)
+        return s;
+      }
+      return null;
+    };
+    const codeNum = ()=>{ const m = model.match(/^[A-Z]+(\d{2,3})/); return m ? +m[1] : null; };
+    if(cat === "TV"){
+      const s = pick(/^화면크기$/);
+      if(s){
+        const m = s.match(/(\d{2,3})\s*형/);
+        v = m ? +m[1] : codeNum();          // 형이 없으면 코드 — cm 환산보다 정확하다
+      }
+    } else if(cat === "모니터"){
+      const s = pick(/^화면$/) || "";
+      const m = s.match(/(\d{2,3}(?:\.\d)?)\s*인치/);
+      if(m) v = +m[1];
+      if(v==null){
+        const c = pick(/^화면사이즈\(Class\)$/i) || pick(/^화면사이즈\(Inch\)$/i);
+        if(c && /^\s*\d{2,3}(\.\d+)?\s*$/.test(c)) v = +c;
+      }
+      if(v==null) v = codeNum();
+    } else if(cat === "노트북"){
+      /* 값이 `크기 35.6 cm (14.0 inch) 해상도 …` 처럼 한 칸에 뭉쳐 있다 — 라벨을 안 가린다 */
+      for(const [,val] of fx){
+        const m = String(val).match(/(\d{1,2}(?:\.\d)?)\s*inch/i);
+        if(m){ v = +m[1]; break; }
+      }
+    } else if(cat === "태블릿"){
+      for(const [,val] of fx){
+        const s = String(val);
+        let m = s.match(/(\d{1,2}(?:\.\d)?)\s*인치/);
+        if(m){ v = +m[1]; break; }
+        m = s.match(/(\d{3}(?:\.\d)?)\s*mm/);
+        if(m){ v = Math.round(+m[1] / 25.4 * 10) / 10; break; }   // mm 가 공칭값을 그대로 준다
+      }
+    }
+  }
+  return (p.__in = (v!=null && v>=8 && v<=130) ? v : null);
+}
+/* 같은 규격으로 볼 여유. 0.35 라야 노트북 `15.6"` 와 `16"` 가 안 섞인다(차이 0.4) */
+const INCH_TOL = 0.35;
 
 /*
  * 제품이 감당하는 면적(㎡). 라벨이 품목마다 달라(냉방면적(㎡) · 적용면적 · 청정면적)
@@ -977,6 +1098,10 @@ function search(P){
     /프로세서|프로그램|프로파일|프로필|프로토콜|프로젝터/g,
     /processor|product|protocol|protection|proprinter|approx/g,
     /feet|fedora|chamfer|features/g,
+    /* `anc`(노이즈캔슬링) 가 **`contrast enhancer`** 안에 갇혀 있었다 — TV 287종이
+       `노이즈캔슬링` 조건을 통과했다(2026-08-27 실측). `advanced` 도 같다.
+       조각에 `이어폰` 을 더하는 대신 **갇힌 자리를 가린다** — 그쪽이 근본이다. */
+    /enhancer|advanced/g,
     /울트라와이드|ultrawide/g,
     /엣지라이팅/g,
     /드럼라이트|백라이트|하이라이트/g,
@@ -1048,6 +1173,12 @@ function search(P){
       if(P.dim.d && d.d > P.dim.d) continue;
     }
     if(P.cats.length && !P.cats.includes(p.cat)) continue;
+    /* 화면 크기 — 면적과 같은 규칙이다. **표기가 없는 제품은 후보에서 뺀다**
+       (크기를 모르는 것을 "65인치입니다"로 내밀 수 없다). */
+    if(P.inch!=null){
+      const inch = prodInch(p);
+      if(inch==null || Math.abs(inch - P.inch) > INCH_TOL) continue;
+    }
     if(P.areaMin!=null){
       const a = prodArea(p);
       if(a==null || a < P.areaMin) continue;
@@ -1143,7 +1274,10 @@ function renderSortRow(){
   const row = $("sortRow");
   if(!lastResults.length){ row.classList.add("hidden"); return; }
   row.classList.remove("hidden");
-  const B = [["rank","추천순"],["asc","낮은 가격"],["desc","높은 가격"],["new","2026 신형"]];
+  /* **`2026 신형` 이라고 적지 않는다**(2026-08-27) — 연식 내림차순 **정렬**인데 그렇게 적으면
+     "2026 제품만 보여주는 필터"로 읽히고, 해가 바뀌면 굳은 거짓이 된다(`maxYear()` 와 같은 이유).
+     사용자가 부르는 말도 "최신제품"이다. */
+  const B = [["rank","추천순"],["asc","낮은 가격"],["desc","높은 가격"],["new","최신순"]];
   row.innerHTML = B.map(([k,l])=>`<button class="sbtn ${sortMode===k?'on':''}" onclick="setSort('${k}')">${l}</button>`).join("");
 }
 function setSort(k){ sortMode=k; renderSortRow(); renderResults(); }
