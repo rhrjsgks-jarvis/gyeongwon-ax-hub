@@ -931,7 +931,10 @@ pass('상황실·업무·운영 골든 5건');
     A.tab = 'center';
     A.loadSvc(SVC);
     const box = () => doc.getElementById('svcq');
-    const rows = () => [...doc.querySelectorAll('#svclist .svcd')];
+    /* 칸 하나 = 센터 하나. AS기간의 `.cat`(품목 칸)과 같은 구조다 */
+    const rows = () => [...doc.querySelectorAll('#svclist .svcc')];
+    const body = () => doc.getElementById('svcbody');
+    const typed = (v) => { box().value = v; box().dispatchEvent(new window.Event('input', { bubbles: true })); };
 
     if (!box()) fail('AS센터 검색칸(#svcq)이 없다');
     else if (!rows().length) fail('AS센터 목록이 한 줄도 안 그려졌다');
@@ -956,7 +959,7 @@ pass('상황실·업무·운영 골든 5건');
       } else pass('한글 조합: 입력칸이 같은 요소로 남고 값이 "성남"으로 온전하다');
 
       /* 그 검색이 실제로 좁히는가 */
-      const nm = rows().map((d) => d.querySelector('.svcn').textContent);
+      const nm = rows().map((d) => d.querySelector('.svcc-n').textContent);
       if (!nm.length || !nm.every((n) => /성남|분당/.test(n)))
         fail(`"성남" 검색 결과가 ${nm.length}곳 — 성남권 센터로 좁혀져야 한다 (${nm.slice(0, 3).join(', ')})`);
       else pass(`"성남" 검색이 ${nm.length}곳으로 좁혀진다`);
@@ -970,7 +973,7 @@ pass('상황실·업무·운영 골든 5건');
 
       box().value = '';
       box().dispatchEvent(new window.Event('input', { bubbles: true }));
-      const nm = rows().map((d) => d.querySelector('.svcn').textContent.trim());
+      const nm = rows().map((d) => d.querySelector('.svcc-n').textContent.trim());
       const left = nm.filter((n) => n.startsWith('삼성전자'));
       if (left.length) fail(`화면 이름 ${left.length}곳에 "삼성전자"가 남아 있다 (예: ${left[0]})`);
       else pass(`화면 이름 ${nm.length}곳에서 "삼성전자" 접두 제거`);
@@ -988,86 +991,108 @@ pass('상황실·업무·운영 골든 5건');
       else pass(`접두를 떼도 이름 ${uniq.size}곳 전부 유일`);
     }
 
-    /* [13-c] 접이식 — 기본은 접혀 있고, 눌러야 세부가 보인다 */
+    /*
+     * [13-c] **작은 칸 → 누르면 상세** (2026-08-27 사장님 지시로 접이식에서 옮겨 왔다).
+     * AS기간이 품목 칸을 누르면 아래 본문이 뜨는 것과 같은 구조라, 같은 것을 본다:
+     * 기본은 아무것도 안 골라져 있고 · 칸에는 고를 만큼만 있고 · 세부는 칸 밖 상세에 있다.
+     */
     {
-      const open = rows().filter((d) => d.open);
-      if (open.length) fail(`AS센터 ${open.length}곳이 기본으로 펼쳐져 있다 — 눌러야 열려야 한다`);
-      else pass(`AS센터 ${rows().length}곳 기본 접힘`);
+      typed('');
+      if (rows().filter((d) => d.classList.contains('on')).length)
+        fail('AS센터가 기본으로 골라져 있다 — 눌러야 상세가 열려야 한다');
+      else if ((body().innerHTML || '').trim())
+        fail('아무것도 안 골랐는데 상세가 그려져 있다');
+      else pass(`AS센터 ${rows().length}곳 기본 선택 없음`);
 
       const first = rows()[0];
-      const sum = first.querySelector('summary');
-      /* 접힌 줄에 **이름 · 가전 접수 배지 · 시·군·구**가 있어야 고를 수 있다.
-         어느 동네인지 모르면 못 고르고, 가전 접수 여부를 모르면 TV 고객을 모바일 전용 센터로 보낸다 */
-      if (!sum.querySelector('.svcn')) fail('접힌 줄에 센터 이름이 없다');
-      else if (!/가전 접수|모바일만/.test(sum.textContent)) fail('접힌 줄에 가전 접수 배지가 없다');
-      else if (!sum.querySelector('.sg').textContent.trim()) fail('접힌 줄에 시·군·구가 없다');
-      else pass('접힌 줄에 이름 · 가전 접수 배지 · 시·군·구가 있다');
+      /* 칸에 **이름 · 시·군·구 · 가전 접수 여부**가 있어야 고를 수 있다. 어느 동네인지
+         모르면 못 고르고, 가전 접수 여부를 모르면 TV 고객을 모바일 전용 센터로 보낸다 */
+      if (!first.querySelector('.svcc-n')) fail('칸에 센터 이름이 없다');
+      else if (!(first.querySelector('.svcc-g') || {}).textContent) fail('칸에 시·군·구가 없다');
+      else if (!/가전 접수|모바일만/.test(first.textContent)) fail('칸에 가전 접수 여부가 없다');
+      else pass('칸에 이름 · 시·군·구 · 가전 접수 여부가 있다');
 
-      /* 주소·번호 같은 세부는 **펼침 안쪽**에 있어야 한다 — 접힌 줄에 있으면 접은 뜻이 없다 */
-      const detail = first.querySelector('.svcd-b');
-      if (!detail) fail('펼침 영역(.svcd-b)이 없다');
-      else if (/주소/.test(sum.textContent)) fail('접힌 줄에 주소가 그대로 노출된다');
-      else if (!/주소/.test(detail.textContent)) fail('펼쳐도 주소가 안 보인다');
-      else pass('세부(주소·영업·대표·주차·찾아가기·취급)는 펼침 안쪽에만 있다');
+      /* **약식이어야 한다** — 주소·영업시간이 칸에 들어가면 칸으로 만든 뜻이 없다 */
+      if (/주소|평일|취급/.test(first.textContent))
+        fail('칸에 주소·영업·취급이 그대로 노출된다 — 약식이 아니다');
+      else pass('칸은 약식 — 세부는 들어 있지 않다');
+
+      /* 누르면 상세가 열린다 */
+      first.dispatchEvent(new window.Event('click', { bubbles: true }));
+      const on = rows().filter((d) => d.classList.contains('on'));
+      const txt = () => (body().textContent || '');
+      if (on.length !== 1) fail(`눌렀는데 골라진 칸이 ${on.length}개다`);
+      else if (!/주소/.test(txt()) || !/취급/.test(txt()))
+        fail('눌렀는데 상세에 주소·취급이 없다');
+      else pass('칸을 누르면 상세(주소·영업·대표·주차·찾아가기·취급)가 열린다');
+
+      /* 같은 칸을 다시 누르면 접는다 — 상세가 화면을 먹을 때 돌아갈 길이 있어야 한다 */
+      rows()[0].dispatchEvent(new window.Event('click', { bubbles: true }));
+      if (rows().filter((d) => d.classList.contains('on')).length)
+        fail('고른 칸을 다시 눌렀는데 안 놓인다');
+      else if ((body().innerHTML || '').trim())
+        fail('선택을 놓았는데 상세가 남아 있다');
+      else pass('고른 칸을 다시 누르면 닫힌다');
 
       /*
-       * 닫힌 `<details>` 안이어도 전화 버튼은 걸려야 한다. `wireContacts` 는
-       * `querySelectorAll('[data-tel]')` 로 훑는데 **닫힌 details 의 자식도 DOM 에는 있으므로**
-       * 접혀 있어도 걸린다 — 여기서 보는 것은 그 전제, 즉 *"접힌 채로도 번호가 DOM 에 있는가"* 다.
-       * (`wireContacts` 는 `share-kit.js` 에 있고 jsdom 은 외부 스크립트를 안 싣는다.
-       *  실제로 걸리는지는 브라우저에서 재서 확인했다 — 접힌 상태로 40/40.)
+       * 상세의 전화번호는 **`dial` 이 있을 때만** 버튼이 된다 — `031-8061-내선검색` 같은
+       * 대표번호는 걸 수 있는 번호가 아니라서 자료가 `dial:null` 로 비워 두었다(전국 6곳).
+       * 예전 렌더는 거기서 숫자만 추려 `0318061` 을 만들어 걸었다 — 없는 번호다.
        */
-      const tel = [...doc.querySelectorAll('#svclist [data-tel]')];
-      /* **`dial` 이 있는 센터만** 버튼이 된다 — `031-8061-내선검색` 같은 대표번호는
-         걸 수 있는 번호가 아니라서 자료가 `dial:null` 로 비워 두었다(전국 6곳).
-         예전 렌더는 거기서 숫자만 추려 `0318061` 을 만들어 걸었다 — 없는 번호다. */
-      const want = SVC.items.filter((x) => x.sd === '경기' && x.tel && x.dial).length;
-      const bad = tel.filter((e) => !/^0\d{8,10}$/.test(e.dataset.tel || ''));
-      if (rows().some((d) => d.open)) fail('이 검사는 접힌 상태에서 해야 한다');
-      else if (tel.length !== want)
-        fail(`접힌 목록의 번호가 ${tel.length}건 — dial 이 있는 센터 ${want}곳만큼 있어야 한다`);
-      else if (bad.length)
-        fail(`걸 수 없는 tel 값 ${bad.length}건 (예: "${bad[0].dataset.tel}") — dial 을 쓰지 않고 지어냈다`);
-      else pass(`접힌 상태에서도 번호 ${tel.length}건이 DOM 에 있고 전부 걸 수 있는 형식`);
+      {
+        const withDial = SVC.items.find((x) => x.sd === '경기' && x.tel && x.dial);
+        typed(A.svcName(withDial));
+        const tel = [...body().querySelectorAll('[data-tel]')];
+        if (tel.length !== 1) fail(`상세의 전화 버튼이 ${tel.length}개 — 한 곳을 골랐으니 1개여야 한다`);
+        else if (!/^0\d{8,10}$/.test(tel[0].dataset.tel || ''))
+          fail(`걸 수 없는 tel 값 "${tel[0].dataset.tel}" — dial 을 쓰지 않고 지어냈다`);
+        else if (tel[0].dataset.tel !== withDial.dial)
+          fail(`tel 값이 자료의 dial 과 다르다 (${tel[0].dataset.tel} ≠ ${withDial.dial})`);
+        else pass(`상세 전화번호가 자료의 dial 그대로다 ("${withDial.tel}")`);
+      }
 
       /* 걸 수 없는 대표번호는 **글자로만** 남아야 한다 — 지워도 안 되고(원문에 있는 값이다) 걸려도 안 된다 */
       {
         const noDial = SVC.items.find((x) => x.tel && !x.dial);
         if (!noDial) { pass('dial 이 비어 있는 센터가 없다'); }
         else {
-          box().value = A.svcName(noDial);
-          box().dispatchEvent(new window.Event('input', { bubbles: true }));
-          const r = rows()[0];
-          if (!r) fail(`"${A.svcName(noDial)}" 를 못 찾는다`);
-          else if (!r.textContent.includes(noDial.tel))
+          typed(A.svcName(noDial));
+          if (!rows().length) fail(`"${A.svcName(noDial)}" 를 못 찾는다`);
+          else if (!(body().textContent || '').includes(noDial.tel))
             fail(`걸 수 없는 대표번호("${noDial.tel}")가 화면에서 사라졌다 — 원문에 있는 값이라 적어야 한다`);
-          else if (r.querySelector('[data-tel]') && [...r.querySelectorAll('[data-tel]')]
-                     .some((e) => (e.textContent || '').includes(noDial.tel)))
+          else if ([...body().querySelectorAll('[data-tel]')].some((e) => (e.textContent || '').includes(noDial.tel)))
             fail(`걸 수 없는 대표번호("${noDial.tel}")가 버튼이 됐다 — 누르면 없는 번호로 걸린다`);
           else pass(`걸 수 없는 대표번호는 글자로만 적는다 ("${noDial.tel}")`);
-          box().value = '';
-          box().dispatchEvent(new window.Event('input', { bubbles: true }));
         }
+        typed('');
       }
     }
 
-    /* [13-d] 검색으로 한 곳만 남으면 펼쳐 준다 — 접혀 있으면 찾아 준 뜻이 없다 */
+    /* [13-d] 한 곳만 남으면 자동으로 골라 준다 — 안 골라 주면 찾아 준 뜻이 없다 */
     {
       const target = A.svcName(SVC.items.find((x) => /성남센터/.test(x.full)) || SVC.items[0]);
-      box().value = target;
-      box().dispatchEvent(new window.Event('input', { bubbles: true }));
+      typed(target);
       const r = rows();
       if (r.length !== 1) fail(`"${target}" 로 찾았는데 ${r.length}곳 — 한 곳이어야 한다`);
-      else if (!r[0].open) fail(`"${target}" 한 곳만 남았는데 접혀 있다 — 찾아 준 뜻이 없다`);
-      else pass(`이름으로 찾으면 그 한 곳이 펼쳐진다 ("${target}")`);
+      else if (!r[0].classList.contains('on')) fail(`"${target}" 한 곳만 남았는데 안 골라졌다 — 찾아 준 뜻이 없다`);
+      else if (!/주소/.test(body().textContent || '')) fail(`"${target}" 을 골랐는데 상세가 없다`);
+      else pass(`이름으로 찾으면 그 한 곳이 골라져 상세가 보인다 ("${target}")`);
 
-      /* 여러 곳이 나오는 검색에서는 접힌 채여야 한다 — 그게 이 변경의 목적이다 */
-      box().value = '수원';
-      box().dispatchEvent(new window.Event('input', { bubbles: true }));
+      /* 여러 곳이 나오는 검색에서는 아무것도 고르지 않는다 — 고르는 것은 상담사 몫이다 */
+      typed('수원');
       const many = rows();
       if (many.length < 2) fail(`"수원" 검색이 ${many.length}곳 — 여러 곳이어야 한다`);
-      else if (many.some((d) => d.open)) fail('"수원" 검색 결과가 펼쳐져 있다 — 여러 곳일 때는 접혀 있어야 한다');
-      else pass(`"수원" 검색 ${many.length}곳은 접힌 채로 남는다`);
+      else if (many.some((d) => d.classList.contains('on')))
+        fail('"수원" 검색 결과가 골라져 있다 — 여러 곳일 때는 상담사가 고른다');
+      else pass(`"수원" 검색 ${many.length}곳은 고르지 않은 채로 남는다`);
+
+      /* **고른 센터가 목록에서 빠지면 선택을 놓는다** — 안 놓으면 화면 아래에 그 결과에
+         없는 센터의 상세가 남아 화면이 거짓말을 한다 */
+      typed(target);
+      typed('강릉');
+      if (rows().some((d) => d.classList.contains('on')) && !/강릉/.test(body().textContent || ''))
+        fail('검색을 바꿨는데 그 결과에 없는 센터가 골라진 채로 남아 있다');
+      else pass('검색을 바꾸면 결과에 없는 선택은 놓는다');
 
       /* 통합검색이 보내는 AS센터 딥링크도 그 한 곳에 착지해야 한다 */
       const doc0 = A.searchDocs().find((d) => d.kind === 'AS센터' && /성남센터/.test(d.title));
@@ -1076,12 +1101,86 @@ pass('상황실·업무·운영 골든 5건');
         doc0.go();
         const r2 = rows();
         if (r2.length !== 1) fail(`AS센터 딥링크를 눌렀는데 ${r2.length}곳이 남았다 — 그 한 곳만 남아야 한다`);
-        else if (!r2[0].open) fail('AS센터 딥링크로 온 센터가 접혀 있다');
-        else pass('통합검색 AS센터 딥링크가 그 한 곳을 펼쳐서 보여준다');
+        else if (!r2[0].classList.contains('on')) fail('AS센터 딥링크로 온 센터가 안 골라졌다');
+        else pass('통합검색 AS센터 딥링크가 그 한 곳을 골라 상세까지 보여준다');
       }
     }
   }
 }
+
+/*
+ * ── [14] 아이콘 통일 (2026-08-27 사장님 지시) ──────────────────────────
+ *
+ * *"제품아이콘처럼 센터아이콘도 같은 크기로 통일해주세요"*. 세 탭 중 AS센터만 이모지
+ * `📍` 였다 — 심벌표에 그 이모지가 없어 갈아 끼워지지 않았고, 이모지 글리프와 선 그림은
+ * 높이가 달라(실측 15px vs 17.3px) 한 줄에서 크기가 어긋나 보였다.
+ *
+ * **그리고 품목 35개 중 5개(링·핏·XR·SSD·메모리·선풍기)에 그림이 없어 그 칸만 글자만
+ * 있었다.** 아이콘을 새로 그려 채웠다 — 여기서 지키는 것은 *"빠짐없이 붙는가"* 다.
+ */
+{
+  const ps = path.join(root, 'public', 'prod-symbols.js');
+  if (!fs.existsSync(ps)) {
+    fail('prod-symbols.js 가 없다');
+  } else {
+    const g = new JSDOM('<body></body>', { runScripts: 'dangerously' }).window;
+    g.eval(fs.readFileSync(ps, 'utf8'));
+
+    /* [14-a] 탭 이모지가 전부 심벌로 갈린다 — 하나라도 빠지면 그 탭만 크기가 다르다 */
+    const tabIco = [...doc.querySelectorAll('.mode-tab .mt-ico')].map((e) => e.textContent.trim());
+    const unmapped = tabIco.filter((t) => t && !g.prodEmojiMap[t.replace(/️/g, '')]);
+    if (!tabIco.length) fail('탭 아이콘 자리를 못 찾았다');
+    else if (unmapped.length)
+      fail(`탭 아이콘 ${unmapped.join(' ')} 가 심벌표에 없다 — 그 탭만 이모지로 남아 크기가 어긋난다`);
+    else pass(`탭 아이콘 ${tabIco.length}개가 전부 심벌로 갈린다`);
+
+    /* [14-b] 📍 와 📌 는 **다른 그림**이어야 한다 — 압정과 위치는 뜻이 다르다 */
+    if (g.prodSymbol('📍'.length ? g.prodEmojiMap['📍'] : '', null) === null)
+      fail('📍 에 이어진 심벌이 없다');
+    else if (g.prodEmojiMap['📍'] === g.prodEmojiMap['📌'])
+      fail('📍 와 📌 가 같은 그림이다 — "여기 있음(위치)"과 "여기 붙여 둠(압정)"은 다른 뜻이다');
+    else pass(`📍 → ${g.prodEmojiMap['📍']} · 📌 → ${g.prodEmojiMap['📌']} 로 갈린다`);
+
+    /* [14-c] 품목 35개 전부 아이콘이 붙는가 */
+    const cats = Object.keys(A.DB);
+    const noIcon = cats.filter((k) => !g.prodSymbol(k, null));
+    if (noIcon.length)
+      fail(`품목 ${cats.length}개 중 ${noIcon.length}개에 아이콘이 없다 (${noIcon.join(' · ')})`);
+    else pass(`품목 ${cats.length}개 전부 아이콘이 붙는다`);
+
+    /*
+     * [14-d] **화면에 실제로 그려지는가** — 규칙만 있고 렌더가 안 되면 뜻이 없다.
+     *
+     * jsdom 은 `<script src>` 를 싣지 않아 앱 창에 `prodSymbol` 이 없다(그래서 평소에는
+     * 아이콘 없이 그려진다). 심벌 라이브러리를 앱 창에 직접 넣고 다시 그려 **실제 렌더
+     * 경로**(`renderCats` → `catIcon` → `prodSymbol`)를 지나가게 한다.
+     */
+    if (!/<script src="prod-symbols.js">/.test(html))
+      fail('as-app 이 prod-symbols.js 를 싣지 않는다 — 아이콘이 통째로 안 그려진다');
+    else {
+      window.prodSymbol = g.prodSymbol;
+      A.cur = A.cur;                                   /* setter 가 renderCats() 를 부른다 */
+      const chips = [...doc.querySelectorAll('#cats .cat')];
+      const blank = chips.filter((c) => !c.querySelector('.ci svg'));
+      if (!chips.length) fail('품목 칸이 안 그려졌다');
+      else if (blank.length)
+        fail(`품목 칸 ${chips.length}개 중 ${blank.length}개가 아이콘 없이 그려진다`
+          + ` (${blank.slice(0, 5).map((c) => c.dataset.k).join(' · ')})`);
+      else pass(`품목 칸 ${chips.length}개 전부 SVG 아이콘이 그려진다`);
+    }
+
+    /*
+     * [14-e] **새 규칙이 남의 라벨을 물면 안 된다.** 맨 `/링/` 은 '업스케일링'을,
+     * 맨 `/핏/` 은 '1도어 키친핏'을 문다 — 이 저장소가 검색에서 이미 데인 함정이다.
+     */
+    const trap = { '업스케일링': null, '리마스터링': null, 'AI 업스케일링': null, '키친핏 Max': null };
+    const bit = Object.keys(trap).filter((l) => g.prodSymbolKey(l) !== trap[l]);
+    if (bit.length)
+      fail(`부분일치 사고: ${bit.map((l) => `${l}→${g.prodSymbolKey(l)}`).join(', ')}`);
+    else pass(`부분일치 함정 ${Object.keys(trap).length}개 라벨을 물지 않는다`);
+  }
+}
+
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

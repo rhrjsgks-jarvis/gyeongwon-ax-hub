@@ -101,21 +101,34 @@
     font-size:11.5px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit}
   .chip.on{background:#1428A0;border-color:#1428A0;color:#fff}
   .cnt{font-size:11px;color:#9aa0a6;margin-top:8px}
-  /* AS센터 한 줄 — 접어 두고 눌러야 세부가 보인다(`.grp` 와 같은 손잡이, 목록용이라 더 촘촘하다) */
-  .svcd{background:#fff;border:1px solid #e5e7eb;border-radius:11px;margin-bottom:7px;overflow:hidden}
-  .svcd>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;align-items:center;
-    gap:7px;font-size:12.5px}
-  .svcd>summary::-webkit-details-marker{display:none}
-  .svcd>summary:active{background:#EEF2FF}
-  .svcd>summary .svcn{font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .svcd>summary .sg{margin-left:auto;flex:0 0 auto;font-size:11px;color:#6b7280;white-space:nowrap}
-  .svcd>summary .gv{flex:0 0 auto;font-size:10px;color:#9aa0a6;transition:transform .15s}
-  .svcd[open]>summary .gv{transform:rotate(180deg)}
-  .svcd[open]>summary{border-bottom:1px solid #f1f2f4}
-  .svcd .ct-tag{flex:0 0 auto}
-  /* 가전 접수는 눈에 띄어야 한다 — 모바일 전용 센터로 TV 고객을 보내면 그대로 헛걸음이다 */
-  .svcd .ct-tag.home{color:#1428A0;background:#EEF2FF}
-  .svcd-b{padding:9px 12px 12px}
+  /*
+   * AS센터 — **AS기간의 품목 칸과 같은 규격이다**(2026-08-27 사장님 지시:
+   * *"작은 칸에 00센터 이런 식으로 약식으로 나오면 되고 그걸 클릭했을 때 상세정보가
+   * 열리는 방식"*). 그리드·간격·모서리·선택색을 `.cats`/`.cat` 에서 그대로 가져온다 —
+   * 두 탭에서 "고르는 자리"가 같은 모양이어야 앱을 넘겨 볼 때 눈이 헤매지 않는다.
+   *
+   * **아이콘은 넣지 않는다**(같은 지시: *"서비스센터 위치를 보는데 무슨 심벌을 사용하나요"*).
+   * 품목은 그림으로 구분되지만 센터는 이름·지역으로 구분되므로 심벌이 뜻하는 바가 없다.
+   */
+  .svcg{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:14px}
+  .svcc{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;
+    font-family:inherit;text-align:center;cursor:pointer;transition:.12s;color:#374151;width:100%}
+  .svcc:hover{border-color:#c7d2fe}
+  /* **짧은 이름을 쓰지 말 것** — `.sn` 은 이 앱이 접수 순서의 **단계 번호 원**
+     (19px 원 + 남색 배경)으로 이미 쓰고 있어, 그대로 두면 센터 이름이 그 원 안에 갇혀
+     첫 글자만 보인다(실제로 그렇게 났다). 이름에 자기 자리를 박는다. */
+  .svcc .svcc-n{display:block;font-size:12.5px;font-weight:600;line-height:1.35;word-break:keep-all}
+  .svcc .svcc-g{display:block;font-size:10.5px;color:#9aa0a6;margin-top:3px}
+  /* 가전 접수 여부는 칸에 남긴다 — 모바일 전용 센터로 TV 고객을 보내면 그대로 헛걸음이다 */
+  .svcc .svcc-h{display:block;font-size:10px;font-weight:700;color:#1428A0;margin-top:2px}
+  .svcc .svcc-h.m{color:#9aa0a6;font-weight:600}
+  .svcc.on{background:#1428A0;border-color:#1428A0;color:#fff}
+  .svcc.on .svcc-g,.svcc.on .svcc-h{color:#fff;opacity:.85}
+  /* **안내문에 규칙이 아예 없었다** — 그래서 본문 기본 글씨(16px 검정)로 떠 AS기간 탭의
+     `.sub`(12.5px 회색)와 무게가 달랐다. 헛걸음을 막는 문장이라 지우지 않고, 옅은 파란
+     상자로 눈에 남기되 글씨 크기는 이 앱의 안내 글씨에 맞춘다. */
+  .notice{font-size:12px;line-height:1.55;color:#0D1B7A;background:#EEF2FF;
+    border:1px solid #dbe2ff;border-radius:10px;padding:9px 11px;margin-bottom:10px;word-break:keep-all}
   mark{background:#FEF3C7;color:inherit;border-radius:3px;padding:0 1px}
   .cat:hover{border-color:#c7d2fe}
   .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
@@ -1246,6 +1259,8 @@ function renderCenters(){
  * 이 앱은 이미 *"`010` 을 제외한 나머지 번호만"* 을 지키고 있다(수집 단계에서 뺐다).
  * ───────────────────────────────────────────────────────────────────────── */
 let SVC = null, svcSido = '경기', svcHomeOnly = false;
+/* 고른 센터의 id — AS기간의 `cur`(고른 품목)과 같은 자리다. 목록에서 빠지면 놓는다 */
+let svcPick = null;
 
 /*
  * **이름에서 `삼성전자 ` 를 뗀다 — 표시 계층에서만.** 178곳이 전부 그 접두로 시작해
@@ -1296,7 +1311,8 @@ function renderSvcCenters(){
        `<button type="button" class="chip" data-sd="${esc(sd)}">${esc(sd)} ${SVC.items.filter(x=>x.sd===sd).length}</button>`).join('')}</div>
      <div class="chips"><button type="button" class="chip${svcHomeOnly?' on':''}" id="svchome">가전 접수만</button></div>
      <div class="sub" id="svccnt" style="margin-bottom:8px"></div>
-     <div id="svclist"></div>`;
+     <div class="svcg" id="svclist"></div>
+     <div id="svcbody"></div>`;
 
   pane.querySelectorAll('#svcchips .chip').forEach(el=>el.onclick=()=>{
     svcSido = el.dataset.sd;
@@ -1314,24 +1330,33 @@ function renderSvcCenters(){
 }
 
 /*
- * 목록 — **센터마다 접어 둔다** (2026-08-27 사장님 요청: *"각 서비스센터별 클릭하면
- * 세부내용이 보이게 하면 더 많은 센터 정보가 한 화면에 들어와 좋을 것 같습니다"*).
- * 여섯 줄(주소·영업·대표·주차·찾아가기·취급)을 다 펼쳐 두니 폰 390px 한 화면에 **1곳**만
- * 들어왔다(실측). 연락처 탭의 `<details class="grp">` 와 같은 손잡이다.
+ * 목록 — **AS기간 탭과 같은 구조다** (2026-08-27 사장님 지시: *"AS기간 인터페이스와
+ * AS센터찾기 인터페이스를 통일해주세요"* · *"작은 칸에 00센터 이런 식으로 약식으로
+ * 나오면 되고 그걸 클릭했을 때 상세정보가 열리는 방식으로 하면 됩니다"*).
  *
- * **접힌 줄에 남기는 것은 이름 · 가전 접수 배지 · 시·군·구 셋이다.** 고르려면 그만큼은
- * 있어야 한다 — 어느 동네인지 모르면 못 고르고(시·도 칩만으로는 경기 안에서 못 가른다),
+ * 그래서 **작은 칸 그리드 → 누르면 아래에 상세 카드**다 — 품목을 고르면 아래에
+ * 보증기간 카드가 뜨는 그 흐름과 똑같다(`renderCats` → `renderBody` → `revealBody`).
+ *
+ * **접이식(`<details>`)에서 옮겨 왔다.** 접이식도 "눌러야 세부가 보인다"는 같았지만
+ * 한 줄이 화면 폭을 다 먹어 한 화면에 8곳이었다 — 칸으로 바꾸니 3열이라 훨씬 많이 들어가고,
+ * 무엇보다 **두 탭이 같은 모양**이 된다. 접이식 시절의 실측(펼치면 1곳)은 아래 절에 남긴다.
+ *
+ * **칸에 적는 것은 이름 · 시·군·구 · 가전 접수 여부 셋이다.** 고르려면 그만큼은 있어야
+ * 한다 — 어느 동네인지 모르면 못 고르고(시·도 칩만으로는 경기 42곳 안에서 못 가른다),
  * 가전 접수 여부를 모르면 **TV 고객을 모바일 전용 센터로 보내 헛걸음시킨다**(178곳 중 66곳).
  *
- * **결과가 1곳이면 펼쳐 둔다.** 상단 통합검색에서 특정 센터로 들어오면 `go()` 가 그 센터의
- * 이름을 통째로 `svcq` 에 넣으므로 결과가 1곳이 된다 — 그때 접혀 있으면 *"아무 일도 안
- * 일어난 것처럼 보여"* 찾아 준 뜻이 없어진다(연락처 탭이 묶음을 펼치는 것과 같은 이유).
- * 반대로 *"수원"* 처럼 여러 곳이 나오는 검색에서는 접힌 채 둔다 — 그게 이 변경의 목적이다.
+ * **결과가 1곳이면 자동으로 고른다.** 상단 통합검색에서 특정 센터로 들어오면 `go()` 가
+ * 그 이름을 통째로 `svcq` 에 넣어 결과가 1곳이 되는데, 그때 아무것도 안 골라져 있으면
+ * *"아무 일도 안 일어난 것처럼 보여"* 찾아 준 뜻이 없어진다(연락처 탭이 묶음을 펼치는 것과 같다).
+ *
+ * **고른 센터가 목록에서 사라지면 선택을 놓는다.** 안 그러면 검색을 바꿨는데 화면 아래에
+ * 그 결과에 없는 센터의 상세가 남아 있어 화면이 거짓말을 한다.
  */
 function renderSvcList(){
   if (!SVC) return;
   const listEl = document.getElementById('svclist');
   const cntEl  = document.getElementById('svccnt');
+  const bodyEl = document.getElementById('svcbody');
   if (!listEl) return;
 
   const s = ((document.getElementById('svcq') || {}).value || '').trim().toLowerCase();
@@ -1361,34 +1386,55 @@ function renderSvcList(){
     return out;
   };
   const hours = (x)=>[x.wd&&`평일 ${x.wd}`, x.sa&&`토 ${x.sa}`, x.ho&&`공휴일 ${x.ho}`].filter(Boolean).join(' · ');
-  const one = list.length === 1;
+
+  /* 결과가 1곳이면 그 곳을, 고른 센터가 목록에서 빠졌으면 아무것도 고르지 않는다 */
+  if (list.length === 1) svcPick = list[0].id;
+  else if (!list.some(x=>x.id === svcPick)) svcPick = null;
 
   if (cntEl) cntEl.innerHTML = s ? `전국에서 <b>${list.length}곳</b>` : `${esc(svcSido)} <b>${list.length}곳</b>`;
 
   listEl.innerHTML = list.length ? list.map(x=>
-    `<details class="svcd"${one?' open':''}>
-      <summary>
-        <span class="svcn">${hl(svcName(x))}</span>
-        <span class="ct-tag${x.home?' home':''}">${x.home?'가전 접수':'모바일만'}</span>
-        <span class="sg">${hl(x.sg)}</span><span class="gv">▾</span></summary>
-      <div class="svcd-b"><span class="ct-d">
-        ${opsRow('주소', `<span>${hl(x.sd+' '+x.sg+' '+x.ad)}</span>`)}
-        ${hours(x)?`${opsRow('영업', `<span>${esc(hours(x))}</span>`)}`:''}
-        ${x.tel?`${opsRow('대표', x.dial
-          ? `<span data-tel="${esc(x.dial)}">${esc(x.tel)}</span>`
+    `<button type="button" class="svcc${x.id===svcPick?' on':''}" data-id="${x.id}">
+      <span class="svcc-n">${hl(svcName(x))}</span>
+      <span class="svcc-g">${hl(x.sg)}</span>
+      <span class="svcc-h${x.home?'':' m'}">${x.home?'가전 접수':'모바일만'}</span>
+    </button>`).join('') : '<div class="sub">찾는 센터가 없습니다.</div>';
+
+  listEl.querySelectorAll('.svcc').forEach(el=>el.onclick=()=>{
+    /* 고른 것을 다시 누르면 접는다 — 상세가 화면을 먹고 있을 때 목록으로 돌아갈 길이 있어야 한다 */
+    svcPick = (+el.dataset.id === svcPick) ? null : +el.dataset.id;
+    renderSvcList();
+    if (svcPick != null) revealSvcBody();
+    /* 센터당 1회 — 상담에서 실제로 어느 센터를 봤는지가 남는다(품목 로그와 같은 규칙) */
+    if (svcPick != null && window.AX_LOG) AX_LOG('as', 'result_open', 'AS센터', true);
+  });
+
+  const p = svcPick == null ? null : SVC.items.find(x=>x.id === svcPick);
+  if (bodyEl) bodyEl.innerHTML = !p ? '' :
+    `<div class="card">
+      <h2>${esc(svcName(p))} <span class="pill">${p.home?'가전 접수':'모바일만'}</span></h2>
+      <span class="ct-d">
+        ${opsRow('주소', `<span>${esc(p.sd+' '+p.sg+' '+p.ad)}</span>`)}
+        ${hours(p)?`${opsRow('영업', `<span>${esc(hours(p))}</span>`)}`:''}
+        ${p.tel?`${opsRow('대표', p.dial
+          ? `<span data-tel="${esc(p.dial)}">${esc(p.tel)}</span>`
           /* **`dial` 이 null 이면 버튼으로 만들지 않는다.** 그런 센터는 대표번호가
              `031-8061-내선검색` 처럼 걸 수 있는 번호가 아니다(6곳). 예전에는 여기서 숫자만
              추려 `0318061` 을 만들어 걸었는데 — 그건 없는 번호다. 자료가 비워 둔 것을
              화면이 지어내면 안 된다(이 앱이 부품보유기간을 "확인 필요"로 두는 것과 같은 규칙). */
-          : `<span>${esc(x.tel)}</span>`)}`:''}
-        ${x.park?`${opsRow('주차', `<span>${esc(x.park)}</span>`)}`:''}
-        ${x.taxi?`${opsRow('찾아가기', `<span>${esc(x.taxi)}</span>`)}`:''}
-        ${opsRow('취급', `<span>${x.it.length?hl(x.it.join(' · ')):'접수 품목 정보 없음'}</span>`)}
-      </span></div>
-    </details>`).join('') : '<div class="sub">찾는 센터가 없습니다.</div>';
+          : `<span>${esc(p.tel)}</span>`)}`:''}
+        ${p.park?`${opsRow('주차', `<span>${esc(p.park)}</span>`)}`:''}
+        ${p.taxi?`${opsRow('찾아가기', `<span>${esc(p.taxi)}</span>`)}`:''}
+        ${opsRow('취급', `<span>${p.it.length?esc(p.it.join(' · ')):'접수 품목 정보 없음'}</span>`)}
+      </span></div>`;
 
-  /* 닫힌 `<details>` 안의 요소도 DOM 에는 있으므로 전화 버튼이 그대로 걸린다(검사가 지킨다) */
-  if (typeof wireContacts === 'function') wireContacts(listEl, '[data-tel]');
+  if (typeof wireContacts === 'function' && bodyEl) wireContacts(bodyEl, '[data-tel]');
+}
+
+/* 고른 센터의 상세로 데려간다 — AS기간이 품목을 고르면 `revealBody()` 로 본문을 보여주는 것과 같다 */
+function revealSvcBody(){
+  const el = document.getElementById('svcbody');
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
 /*
@@ -1453,10 +1499,11 @@ function searchDocs(){
     out.push({ kind:'AS센터', title:svcName(x),
       sub:`${x.sd} ${x.sg} · ${x.home ? '가전 접수' : '모바일만'}`,
       kw:`${x.full} ${x.nm} ${x.sd} ${x.sg} ${x.ad} ${x.it.join(' ')} as센터 서비스센터 수리 위치 주소`,
-      /* **이름을 통째로 넣어 그 한 곳만 남긴다** — 결과가 1곳이면 `renderSvcList` 가 펼쳐 주므로
-         찾아 준 센터의 주소·번호가 바로 보인다. `nm`(`강릉센터`) 대신 `svcName`
-         (`모바일 강릉센터`)을 쓰는 이유는 그것이 화면에 적히는 이름이고 178곳에서 유일하기 때문이다. */
-      go(){ setTab('center'); svcSido = x.sd; svcHomeOnly = false;
+      /* **이름을 통째로 넣어 그 한 곳만 남긴다** — 결과가 1곳이면 `renderSvcList` 가 그 곳을
+         자동으로 골라 주므로 찾아 준 센터의 주소·번호가 바로 보인다. `nm`(`강릉센터`) 대신
+         `svcName`(`모바일 강릉센터`)을 쓰는 이유는 그것이 화면에 적히는 이름이고
+         178곳에서 유일하기 때문이다. */
+      go(){ setTab('center'); svcSido = x.sd; svcHomeOnly = false; svcPick = x.id;
         renderSvcCenters();
         const b = document.getElementById('svcq'); if (b){ b.value = svcName(x); renderSvcList(); }
         revealBody(); } });
