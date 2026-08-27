@@ -150,6 +150,27 @@
   .note{font-size:11.5px;color:#6b7280;line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb}
   .src{font-size:11px;color:#9aa0a6;line-height:1.6;margin-top:14px}
   .src a{color:#1428A0}
+  /* 지도 링크 — `.pill` 과 같은 알약 모양이되 남색 글자로 눌리는 것임을 밝힌다.
+     주소 줄 안에 들어가므로 `white-space:nowrap` 으로 두 줄로 접히지 않게 한다. */
+  .maplink{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;
+    color:#1428A0;background:#EEF2FF;border-radius:99px;padding:2px 8px;margin-top:3px;
+    text-decoration:none;white-space:nowrap;line-height:1.5}
+  .maplink:hover{background:#E0E7FF}
+  /* 「어디로 가면 되나」 경로 — 하만은 접수처와 수리센터가 갈려 있어 경로가 셋이다.
+     이름이 짧지만 `.way`·`.wn` 은 이 파일에 **0건**임을 확인하고 붙였다(`.sn` 이 접수
+     순서 원과 겹쳐 센터 이름이 원에 갇혔던 사고가 있어 새 클래스는 반드시 세어 본다). */
+  .ways{display:flex;flex-direction:column;gap:5px;margin-top:9px}
+  .way{display:flex;gap:7px;align-items:flex-start;font-size:11.5px;line-height:1.5;
+    padding:7px 9px;border-radius:9px;background:#F9FAFB;border:1px solid #f1f2f4}
+  .way.hot{background:#EEF2FF;border-color:#c7d2fe}
+  .way .wn{flex:0 0 auto;width:17px;height:17px;border-radius:99px;background:#e5e7eb;
+    color:#6b7280;font-size:10px;font-weight:800;display:flex;align-items:center;
+    justify-content:center;margin-top:1px}
+  .way.hot .wn{background:#1428A0;color:#fff}
+  .way b{font-weight:700;color:#111827}
+  .way.hot b{color:#1428A0}
+  .way i{font-style:normal;color:#6b7280;display:block;margin-top:1px;word-break:keep-all}
+  .wsub{font-size:10.5px;color:#9aa0a6;line-height:1.5;margin-top:2px;word-break:keep-all}
   .pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:99px;
     background:#EEF2FF;color:#1428A0;margin-left:5px;vertical-align:2px}
   .pill.ok{background:#ECFDF5;color:#047857}
@@ -557,6 +578,42 @@ const HARMAN = {
   brands:'JBL · harman/kardon · AKG',
   recv:'전국 삼성전자서비스에서 접수 가능 — 접수 이후 서비스 과정은 이 센터가 진행합니다',
   site:'https://harmansvc.co.kr/wtyinfo',
+
+  /* **지도에서는 건물 이름으로 찾아야 한다.** 카카오맵 장소 DB에 「하만 오디오 전문
+     서비스센터」도 「시머스」도 없다(2026-08-27 실측 — 건물만 잡힌다). 센터 이름으로
+     검색하면 안 나오는 것이 사실이므로 화면이 그 사실을 밝힌다. */
+  bldg:'삼성테크노파크',
+
+  /* 온라인 접수(택배) — 수원까지 못 오는 고객의 경로다. 원문 `harmansvc.co.kr/Reqsvc`:
+     제조번호(S/N) 조회가 먼저이고, **접수 완료 후 2개월 내 미도착이면 접수가 취소**된다.
+     보증 유무는 **실제 접수일** 기준으로 처리된다(발송일이 아니다 — 상담에서 갈린다). */
+  post:'https://harmansvc.co.kr/Reqsvc',
+  postNote:'제조번호(S/N) 조회 후 접수 · 접수 완료 2개월 내 미도착 시 취소 · 보증 유무는 실제 접수일 기준',
+
+  /*
+   * 「어디로 가면 되나」 — 경로가 셋이고, **화면이 먼저 말하는 것이 상담을 바꾼다.**
+   *
+   * 이 셋은 대체재가 아니라 고객 사정에 따라 갈린다:
+   *   · 전국 삼성전자서비스 방문 접수 — 178곳. 가깝지만 접수만 하고 제품은 수원으로 간다
+   *   · 하만 전문센터 직접 방문      — 수원 1곳. 가장 빠르지만 수도권 남부가 아니면 멀다
+   *   · 온라인 접수 후 택배          — 어디서나 되지만 S/N 조회와 발송 절차가 붙는다
+   *
+   * `ways[0]` 이 화면 맨 위에 굵게 온다.
+   */
+  ways: [
+    /* **접수처가 먼저다**(2026-08-27 사용자 결정 — *"전국 삼성 접수 먼저, 그걸 강조로"*).
+       고객이 가장 먼저 알아야 하는 것이 *"수원까지 가야 하나요"* 에 대한 답이라서다.
+       **개수를 적지 않는다** — 이 배열은 정적이라 센터 수가 바뀌면 굳은 거짓이 되고,
+       연락처 탭은 `SVC` 를 기다리지 않아 세어 넣을 수도 없다. 하만 원문도 "전국"까지만 말한다. */
+    { t:'가까운 삼성전자서비스에 접수', hot:true,
+      d:'전국 어디서나 됩니다 — 접수만 받고, 수리·교환은 아래 전문센터가 진행합니다' },
+    /* 2·3 은 설명을 짧게 자른다 — 주소·영업시간·택배 조건이 바로 아래 카드에 이미 있다.
+       같은 말을 두 번 적으면 상담 중에 못 읽는다. */
+    { t:'하만 전문센터에 직접 방문',
+      d:'수원 영통구 1곳 — 아래 주소·영업시간을 보세요' },
+    { t:'온라인 접수 후 택배 발송',
+      d:'어디서나 되지만 제조번호(S/N) 조회와 발송 절차가 붙습니다' },
+  ],
 };
 
 
@@ -911,6 +968,48 @@ function telify(html, fallback){
 }
 
 /* 라벨 칸 + 번호를 세로로 — ' · ' 로 이어 붙이면 좁은 화면에서 아무 데서나 줄이 바뀐다 */
+/*
+ * 지도 링크 (2026-08-27 사장님 요청 — *"jbl그룹 as센터 위치안내도 필요합니다"*)
+ *
+ * **좌표가 있으면 좌표로, 없으면 주소로 간다.** 두 형식 다 실물로 확인했다(카카오맵 웹):
+ *   · 좌표 `map.kakao.com/link/map/{이름},{위도},{경도}` → 이름표가 붙은 핀 + 「길찾기」
+ *   · 검색 `map.kakao.com/?q={주소}` → 주소 결과 1건으로 정확히 잡힌다(삼성테크노파크)
+ *
+ * **이름으로 검색하지 않는다.** 카카오맵에 삼성 센터는 「삼성전자서비스 강릉센터」로 정식
+ * 등록돼 있지만 **178곳 전수를 확인하지 않았고**, 우리가 부르는 이름(`삼성전자 모바일
+ * 강릉센터`)과도 다르다. 좌표는 자료에 178곳 전부 들어 있는 **확인된 사실**이라 그쪽을 쓴다.
+ * 좌표 링크에도 「길찾기」가 뜨므로 잃는 것이 없다.
+ *
+ * **네이버지도는 넣지 않았다** — 링크 형식을 실물로 확인하지 못했다. 화면에 링크가 있는데
+ * 안 열리면 상담이 그 자리에서 막힌다(부품보유기간을 "확인 필요"로 비워 두는 것과 같은 규칙).
+ *
+ * **하만 전문센터는 카카오맵 장소 DB에 없다**(실측). 그래서 주소로 보내고, 화면이
+ * *"건물명으로 찾으세요"* 라고 밝힌다 — 이름으로 검색하면 안 나오는 것이 사실이다.
+ */
+function mapLink(name, la, ln, addr){
+  var url = (la != null && ln != null)
+    ? 'https://map.kakao.com/link/map/' + encodeURIComponent(name) + ',' + la + ',' + ln
+    : 'https://map.kakao.com/?q=' + encodeURIComponent(addr || name);
+  return '<a class="maplink" href="' + esc(url) + '" target="_blank" rel="noopener">지도에서 보기</a>';
+}
+/*
+ * 「어디로 가면 되나」 — `HARMAN.ways` 를 번호 붙은 줄로 그린다.
+ *
+ * **비어 있으면 아무것도 그리지 않는다.** 경로를 정하지 못한 채 빈 상자를 띄우면
+ * 상담사가 *"여기 뭐가 있어야 하는데"* 로 읽는다. 그동안은 바로 위 경고 카드
+ * (「삼성전자서비스는 접수만 받습니다」)가 같은 일을 한다.
+ *
+ * `hot` 은 **하나만** 붙인다 — 둘 이상이면 강조가 강조가 아니게 된다.
+ */
+function harmanWays(){
+  var w = HARMAN.ways || [];
+  if (!w.length) return '';
+  return '<div class="ways">' + w.map(function(x, i){
+    return '<div class="way' + (x.hot ? ' hot' : '') + '">'
+      + '<span class="wn">' + (i + 1) + '</span>'
+      + '<span><b>' + esc(x.t) + '</b><i>' + esc(x.d) + '</i></span></div>';
+  }).join('') + '</div>';
+}
 function opsRow(label, inner){
   return `<div class="opsrow"><span class="opsl">${esc(label)}</span><span class="opsv">${inner}</span></div>`;
 }
@@ -998,7 +1097,10 @@ const GROUPS = [
   /* AS 바로 아래 — 하만도 결국 "어디로 전화하죠"이고, 삼성전자서비스가 수리하지 않는다는
      사실을 상담사가 빨리 봐야 한다 */
   { id:'g-hm',   sym:'soundbar', ico:'🔊', t:'JBL·하만카돈·AKG 오디오 AS', n:1,
-    s:'하만 오디오 전문 서비스센터 — 전국 (삼성전자서비스는 접수만)' },
+    /* **부제가 위치를 먼저 말한다.** 예전 '— 전국' 은 카드의 「수리·교환」 태그와 어긋났고,
+       무엇보다 **센터가 전국에 있다는 뜻으로 읽힌다** — 실제로는 수원 1곳이다. 접수망과
+       수리센터가 갈린 것이 이 품목의 핵심이라 그 둘을 한 줄에 나란히 적는다. */
+    s:'수리·교환은 수원 1곳 — 접수는 전국 삼성전자서비스' },
   { id:'g-lg',   sym:'truck',  ico:'🚚', t:'물류 모음',                 n:CENTERS.length,
     s:'배송 · 설치 관할 센터 · 상황실 · VOC' },
   { id:'g-mv',   sym:'move',   ico:'🔧', t:'빌트인 가전 이전설치 관할',   n:B2B.length,
@@ -1088,12 +1190,17 @@ function renderContacts(){
          <b>삼성전자가 국내 유통한 제품만</b> 서비스합니다 — 병행수입·해외 직구·구매대행은 제외됩니다.
          수리가 아니라 <b>보증 교환 서비스</b>이고 <b>동일 상품 교환</b>이 원칙입니다.</div></div>
      <div class="card">
+       ${harmanWays()}
        <div class="ct lg">
-         <span class="ct-b"><b>${esc(HARMAN.p)}<span class="ct-tag">전국</span></b>
+         <span class="ct-b"><b>${esc(HARMAN.p)}<span class="ct-tag">수리·교환</span></b>
          <span class="ct-d">${esc(HARMAN.c)}
-           ${opsRow('주소', `<span>${esc(HARMAN.a)}</span>`)}
+           ${opsRow('주소', `<span>${esc(HARMAN.a)}</span>${mapLink(HARMAN.p, null, null, HARMAN.a)}
+             <span class="wsub">지도 앱에서는 센터 이름이 아니라 <b>${esc(HARMAN.bldg)}</b> 로 찾으세요 —
+               「하만」·「시머스」로는 검색되지 않습니다.</span>`)}
            ${opsRow('영업', `<span>${esc(HARMAN.hours)}</span>`)}
            ${opsRow('이메일', `<span>${esc(HARMAN.mail)}</span>`)}
+           ${opsRow('택배', `<a class="maplink" href="${esc(HARMAN.post)}" target="_blank" rel="noopener">온라인 접수</a>
+             <span class="wsub">${esc(HARMAN.postNote)}</span>`)}
            ${opsRow('보증', '<span>구입일로부터 12개월 · 부품보유 3년 (영업용은 6개월)</span>')}
          </span></span>
          <span class="ct-n">${telx(HARMAN.n, HARMAN.p, null, true)}</span></div>
@@ -1414,7 +1521,7 @@ function renderSvcList(){
     `<div class="card">
       <h2>${esc(svcName(p))} <span class="pill">${p.home?'가전 접수':'모바일만'}</span></h2>
       <span class="ct-d">
-        ${opsRow('주소', `<span>${esc(p.sd+' '+p.sg+' '+p.ad)}</span>`)}
+        ${opsRow('주소', `<span>${esc(p.sd+' '+p.sg+' '+p.ad)}</span>${mapLink(svcName(p), p.la, p.ln, p.sd+' '+p.sg+' '+p.ad)}`)}
         ${hours(p)?`${opsRow('영업', `<span>${esc(hours(p))}</span>`)}`:''}
         ${p.tel?`${opsRow('대표', p.dial
           ? `<span data-tel="${esc(p.dial)}">${esc(p.tel)}</span>`

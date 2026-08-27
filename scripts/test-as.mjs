@@ -1182,5 +1182,143 @@ pass('상황실·업무·운영 골든 5건');
 }
 
 
+
+
+/*
+ * ── [15] 위치 안내 — 지도 링크 (2026-08-27 사장님 요청) ──────────────────
+ *
+ * *"jbl그룹 as센터 위치안내도 필요합니다"*. 자료에 좌표(`la`/`ln`)가 178곳 전부 들어
+ * 있는데 **화면이 한 번도 쓰지 않아** 상담사가 주소를 손으로 옮겨 적어야 했다.
+ *
+ * **여기서 지키는 것은 "링크가 있는가"가 아니라 "확인한 형식만 쓰는가"다.**
+ * 카카오맵 두 형식은 실물로 확인했다(좌표 → 이름표 붙은 핀 + 길찾기 / 주소 → 결과 1건).
+ * **네이버지도는 형식을 확인하지 못해 넣지 않았다** — 화면에 링크가 있는데 안 열리면
+ * 상담이 그 자리에서 막힌다(부품보유기간을 "확인 필요"로 비워 두는 것과 같은 규칙).
+ *
+ * 그리고 **삼성과 하만은 링크 방식이 다르다.** 삼성 센터는 좌표가 자료에 있고, 하만은
+ * 없다(카카오맵 장소 DB에 그 센터가 등록조차 안 돼 있다). 한 방식을 둘에 쓰면 한쪽이
+ * 조용히 엉뚱한 곳을 가리킨다.
+ */
+{
+  const KAKAO_PIN = 'https://map.kakao.com/link/map/';
+  const KAKAO_Q   = 'https://map.kakao.com/?q=';
+  /* 확인하지 않은 지도 서비스가 새어 들어오면 잡는다 */
+  const UNVERIFIED = /map\.naver\.com|naver\.me|google\.[a-z.]+\/maps|maps\.app\.goo\.gl|tmap|map\.worldstreet/i;
+
+  /* [15-a] 삼성 178곳 — 상세에 지도 링크가 있고 **자료의 좌표를 그대로** 쓴다 */
+  const svcPath = path.join(root, 'public', 'svc-centers.json');
+  if (!fs.existsSync(svcPath) || typeof A.loadSvc !== 'function') {
+    console.log('SKIP: svc-centers.json 이 없어 삼성 센터 지도 링크 검사를 건너뜁니다');
+  } else {
+    const SVC = JSON.parse(fs.readFileSync(svcPath, 'utf8'));
+    A.tab = 'center';
+    A.loadSvc(SVC);
+    const box = doc.getElementById('svcq');
+    /* 이름이 유일한 센터 하나를 골라 상세를 연다 */
+    box.value = '강릉센터';
+    box.dispatchEvent(new window.Event('input', { bubbles: true }));
+    const body = doc.getElementById('svcbody');
+    const link = body && body.querySelector('a.maplink');
+
+    if (!link) {
+      fail('삼성 센터 상세에 지도 링크가 없다 — 좌표가 자료에 있는데 화면이 쓰지 않는다');
+    } else {
+      const href = link.getAttribute('href') || '';
+      const want = SVC.items.find((x) => /강릉센터/.test(x.full));
+      if (!href.startsWith(KAKAO_PIN)) {
+        fail(`삼성 센터 지도 링크가 좌표 형식이 아니다 — ${href.slice(0, 60)}`);
+      } else if (!href.includes(String(want.la)) || !href.includes(String(want.ln))) {
+        fail(`삼성 센터 지도 링크 좌표가 자료와 다르다`
+          + ` (자료 ${want.la},${want.ln} / 링크 ${href.slice(-40)})`);
+      } else pass(`삼성 센터 상세 지도 링크가 자료의 좌표 그대로 (${want.la}, ${want.ln})`);
+
+      if (link.getAttribute('target') !== '_blank' || !/noopener/.test(link.getAttribute('rel') || ''))
+        fail('지도 링크가 새 탭(target=_blank rel=noopener)으로 열리지 않는다');
+      else pass('지도 링크가 새 탭으로 열린다');
+    }
+  }
+
+  /* [15-b] 하만 — **주소 검색**으로 간다. 좌표가 없으니 좌표 형식이면 그 자체가 사고다 */
+  const g = doc.querySelector('#g-hm');
+  if (!g) {
+    fail('연락처 탭에 하만 묶음(g-hm)이 없다 — 위치 안내를 검사할 수 없다');
+  } else {
+    const H = A.HARMAN || {};
+    const links = [...g.querySelectorAll('a')].map((a) => a.getAttribute('href') || '');
+    const mapl = links.filter((u) => /map\.kakao\.com/.test(u));
+
+    if (!mapl.length) {
+      fail('하만 전문센터에 지도 링크가 없다 — 사장님이 요청한 위치 안내가 빠졌다');
+    } else if (mapl.some((u) => u.startsWith(KAKAO_PIN))) {
+      fail('하만 지도 링크가 좌표 형식이다 — 그 센터의 좌표는 자료에 없다(지어낸 값이다)');
+    } else if (!mapl.every((u) => u.startsWith(KAKAO_Q))) {
+      fail(`하만 지도 링크가 확인한 형식이 아니다 — ${mapl[0].slice(0, 60)}`);
+    } else if (!mapl.some((u) => decodeURIComponent(u).includes(H.a || '\u0000'))) {
+      fail('하만 지도 링크의 검색어가 센터 주소와 다르다');
+    } else pass('하만 지도 링크가 주소 검색으로 간다 (좌표를 지어내지 않는다)');
+
+    /* [15-c] **센터 이름으로는 검색되지 않는다는 사실을 화면이 밝히는가.**
+       카카오맵 장소 DB에 「하만 오디오 전문 서비스센터」도 「시머스」도 없다(실측).
+       그 사실을 안 적으면 상담사가 "지도에 검색하세요"라고 안내하고 고객은 못 찾는다. */
+    const gt = g.textContent;
+    if (!H.bldg) fail('HARMAN.bldg (지도에서 찾을 건물명)가 없다');
+    else if (!gt.includes(H.bldg)) fail(`화면에 건물명(${H.bldg})이 안 보인다`);
+    else if (!/검색되지 않|검색으로는|이름이 아니라/.test(gt))
+      fail('센터 이름으로는 지도에서 검색되지 않는다는 사실을 화면이 밝히지 않는다');
+    else pass(`지도에서 건물명(${H.bldg})으로 찾으라고 화면이 밝힌다`);
+
+    /* [15-d] 택배 접수 — 수원까지 못 오는 고객의 경로. 링크가 하만 공식 접수 지면이어야 한다 */
+    if (!H.post || !/harmansvc\.co\.kr/.test(H.post))
+      fail('하만 온라인(택배) 접수 경로가 없거나 하만 공식 지면이 아니다');
+    else if (!links.includes(H.post))
+      fail('화면에 하만 온라인 접수 링크가 걸려 있지 않다');
+    else if (!/접수일/.test(gt))
+      fail('택배 접수에서 보증 유무가 **실제 접수일** 기준이라는 것을 화면이 밝히지 않는다'
+        + ' — 발송일로 알면 그 자리에서 분쟁이 된다');
+    else pass('택배 접수 경로와 접수일 기준이 화면에 있다');
+
+    /* [15-e] 확인하지 않은 지도 서비스가 새어 들어가지 않았는가 */
+    const leak = links.filter((u) => UNVERIFIED.test(u));
+    if (leak.length) fail(`확인하지 않은 지도 서비스 링크가 들어갔다 — ${leak[0]}`);
+    else pass('확인하지 않은 지도 서비스 링크가 없다');
+    /*
+     * [15-g] **펼치면 맨 먼저 보이는 줄이 위치를 말하는가.**
+     *
+     * (접힌 상태에서는 부제가 숨는다 — `.grps>.grp:not([open])>summary .gt span{display:none}`,
+     *  2열 그리드에서 줄이 길어지는 것을 막는 규칙이다. 그래서 이 줄은 "목록에서 보이는
+     *  것"이 아니라 **펼친 직후 첫 줄**이다.)
+     *
+     * 예전 부제는 `— 전국` 이라 **센터가 전국에 있다는 뜻으로 읽혔다** — 실제로는 수원
+     * 1곳이고 전국인 것은 접수망이다. 소재지는 `HARMAN.a` 에서 끌어내 대조한다:
+     * 부제에 손으로 적은 지명이 자료와 어긋나면 그 자체가 사고다.
+     */
+    const city = ((H.a || '').match(/([가-힣]+)시/) || [])[1];
+    const sub = (doc.querySelector('#g-hm .grp-b .sub, #g-hm .sub') || {}).textContent
+      || (g.querySelector('summary') || {}).textContent || '';
+    if (!city) fail('HARMAN.a 에서 소재지를 읽지 못했다');
+    else if (!sub.includes(city))
+      fail(`묶음 부제에 소재지(${city})가 없다 — 펼쳐도 위치를 알 수 없다: "${sub.trim().slice(0, 50)}"`);
+    else pass(`묶음 부제가 소재지(${city})를 말한다`);
+
+    /* [15-f] 「어디로 가면 되나」 경로 — 비어 있으면 **아무것도 그리지 않아야** 한다.
+       빈 상자를 띄우면 상담사가 "여기 뭐가 있어야 하는데"로 읽는다. */
+    const ways = [...g.querySelectorAll('.ways .way')];
+    const W = H.ways || [];
+    if (!W.length) {
+      if (ways.length) fail('HARMAN.ways 가 비었는데 화면에 빈 경로 상자가 그려진다');
+      else console.log('TODO: HARMAN.ways 가 비어 있습니다 — 「어디로 가면 되나」 경로 3가지를 채우세요');
+    } else if (ways.length !== W.length) {
+      fail(`경로가 ${W.length}개인데 화면에 ${ways.length}개 그려진다`);
+    } else {
+      const hot = W.filter((x) => x.hot).length;
+      if (hot > 1) fail(`hot 이 ${hot}개다 — 하나만 강조해야 강조가 된다`);
+      else if (ways.filter((e) => e.classList.contains('hot')).length !== hot)
+        fail('hot 표시가 화면에 그대로 반영되지 않는다');
+      else pass(`「어디로 가면 되나」 경로 ${W.length}개 · 강조 ${hot}개`);
+    }
+  }
+}
+
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
