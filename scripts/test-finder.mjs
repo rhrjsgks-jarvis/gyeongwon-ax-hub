@@ -638,6 +638,93 @@ const CAT_QUERIES = {
     if (!mf.every((p) => p.cat === '에어컨')) fail('"무풍 공기청정 19평"에 에어컨이 아닌 것이 섞였다');
     console.log(`  무풍 공기청정 19평 → ${mf.length}종 (전부 에어컨) ✓`);
 
+    /*
+     * ── **평형 표기는 산술 환산이 아니다** (2026-08-27) ──────────────────────
+     *
+     * 1평=3.3058 을 곧이곧대로 곱했더니 **자기 평형 제품이 자기 검색에서 빠졌다** —
+     * 19평형 카탈로그 표기가 62.6㎡ 인데 환산값이 62.81 이라 0.21㎡ 차이로 탈락했다.
+     * 20평(65.9 vs 66.12) · 25평(81.8 vs 82.64)도 같고, 17평만 우연히 통과해
+     * 오래 안 드러났다. "19평 무풍"을 쳐도 19평형이 안 나오는 **조용히 틀린 답**이었다.
+     *
+     * 그래서 관례 오차 1.0㎡ 를 빼고 거른다. 아래 둘을 함께 지킨다 —
+     * 자기 평형이 들어오는가 · **한 칸 아래 평형이 딸려 오지 않는가**(여유를 키우면 무너진다).
+     */
+    const areaOf = (p) => window.prodArea(p);
+    const p19 = models('19평 에어컨');
+    if (!p19.some((p) => areaOf(p) === 62.6))
+      fail('"19평 에어컨"에 19평형(냉방면적 62.6㎡)이 없다 — 평→㎡ 환산이 자기 평형을 떨어뜨린다');
+    if (p19.some((p) => areaOf(p) != null && areaOf(p) < 60))
+      fail(`"19평 에어컨"에 아래 평형이 섞였다 (${p19.map(areaOf).filter((a) => a < 60).join(',')}㎡) — 여유가 너무 크다`);
+    const p20 = models('20평 에어컨');
+    if (!p20.some((p) => areaOf(p) === 65.9))
+      fail('"20평 에어컨"에 20평형(65.9㎡)이 없다');
+    if (p20.some((p) => areaOf(p) === 62.6))
+      fail('"20평 에어컨"에 19평형(62.6㎡)이 섞였다 — 여유가 인접 평형을 끌어온다');
+    console.log(`  19평 → ${p19.length}종(62.6㎡ 포함) · 20평 → ${p20.length}종(62.6㎡ 제외) ✓`);
+
+    /*
+     * ── 「최신제품」 정렬은 **연식**을 본다 (2026-08-27) ─────────────────────
+     *
+     * 예전에는 `isnew` 하나로 갈랐는데 1,997종 중 48종(2.4%)에만 붙어 있어,
+     * 검색 결과에 그 48종이 없으면 정렬이 **아무 일도 안 하고 추천순 그대로** 남았다
+     * (사용자 지적: *"최신제품을 눌러도 가장 위에 구형 에어컨이 나온다"*).
+     * 지금은 제품군 이름·사양표가 밝히는 연도(`prodYear`)로 정렬한다.
+     */
+    const yrTop = (q) => {
+      const P2 = window.parseQuery(q);
+      const rs = window.search(P2).slice()
+        .sort((a, b) => (window.prodYear(b.p) - window.prodYear(a.p)) || (b.sc - a.sc));
+      return rs.slice(0, 5).map((x) => window.prodYear(x.p));
+    };
+    const top = yrTop('무풍 에어컨');
+    if (!top.length) fail('"무풍 에어컨" 0건');
+    else if (top[0] !== 2026)
+      fail(`최신제품 정렬인데 맨 위가 ${top[0] || '연식 미상'} 이다 — 연식을 안 보고 있다`);
+    else if (top.some((y, i) => i && y > top[i - 1]))
+      fail(`최신제품 정렬이 연식 내림차순이 아니다 (${top.join(' → ')})`);
+    else console.log(`  최신제품 정렬 — 무풍 에어컨 상위 연식 ${top.join(' · ')} ✓`);
+    /* 연식을 **모르는 것**은 뒤로 보낸다 — 가격 미상을 가격 정렬에서 뒤로 보내는 것과 같다 */
+    if (window.prodYear({ group: '연식이 안 적힌 제품군', fx: [] }) !== 0)
+      fail('연식을 모르는 제품에 연도가 붙는다 — 모르는 것을 최신인 척하면 안 된다');
+
+    /*
+     * ── **CATSYN 에 걸렸다고 다 카테고리 이름은 아니다** (2026-08-27) ────────────
+     *
+     * 카테고리 토큰을 조건에서 빼는 규칙이 `CATSYN` 에 등재된 **기능·형태 말**까지
+     * 빼 버려, 그 말들이 카테고리만 넓히고 **아무것도 못 좁혔다.** 화면 표기조차 없었다.
+     * 가장 눈에 띈 것이 `플립 자급제` 의 상위 4건이 전부 **폴드**였던 것이다.
+     */
+    /* **한글·영문 두 표기를 함께 본다** — 인라인 DB 는 `Z Flip7` 이고 SYN 이 `플립→flip`
+       으로 확장해 걸린다. 한쪽만 보면 멀쩡한 결과를 틀렸다고 잡는다(실제로 한 번 헛돌았다). */
+    const has = (p, re) => re.test(p.kw);
+    const flip = models('플립 자급제');
+    if (!flip.length) fail('"플립 자급제" 0건');
+    else if (flip.some((p) => !has(p, /플립|flip/)))
+      fail(`"플립 자급제"에 플립이 아닌 것이 섞였다 — ${flip.filter((p) => !has(p, /플립|flip/)).length}종(폴드가 같은 카테고리라 딸려 온다)`);
+    const fold = models('갤럭시 폴드 512GB');
+    if (!fold.length) fail('"갤럭시 폴드 512GB" 0건');
+    else if (fold.some((p) => !has(p, /폴드|fold/))) fail('"갤럭시 폴드"에 폴드가 아닌 것이 섞였다');
+    /* 두 형태가 서로를 안 데려오는지 — 같은 카테고리라 예전에는 서로 섞였다 */
+    if (flip.some((p) => fold.includes(p)))
+      fail('"플립"과 "폴드" 결과가 겹친다 — 형태를 못 가르고 카테고리만 보고 있다');
+    const kimchi = models('냉장고 김치플러스');
+    if (kimchi.some((p) => p.kw.indexOf('김치플러스') < 0))
+      fail('"냉장고 김치플러스"에 김치플러스가 없는 모델이 남았다 — 조건이 카테고리만 넓히고 있다');
+    const atmos = models('돌비애트모스 사운드바');
+    if (!atmos.length) fail('"돌비애트모스 사운드바" 0건');
+    else if (atmos.some((p) => !has(p, /돌비\s*애트모스|dolby\s*atmos/)))
+      fail('"돌비애트모스 사운드바"에 돌비애트모스가 없는 모델이 남았다');
+    console.log(`  플립 ${flip.length}종 · 폴드 ${fold.length}종 · 김치플러스 ${kimchi.length}종 · 애트모스 ${atmos.length}종 — 전부 그 말을 가진 것만 ✓`);
+
+    /* **카테고리 이름 자체는 예전처럼 조건에서 뺀다** — 안 그러면 이 수정이 회귀를 만든다.
+       `세탁기` ↔ `세탁기·콤보`, `스마트폰` ↔ `스마트폰(폴더블)` 처럼 표기만 다른 것도 같은 말이다. */
+    for (const [q, want] of [['냉장고', '냉장고'], ['사운드바', '사운드바'], ['세탁기', '세탁기']]) {
+      const P3 = window.parseQuery(q);
+      const g = (P3.groups || []).find((x) => x.raw === q);
+      if (g && g.req) fail(`"${q}" 가 조건으로도 걸린다 — 카테고리 이름은 카테고리 필터가 이미 한다`);
+      if (!models(q).length) fail(`"${want}" 0건`);
+    }
+
     // DB 에 아예 없는 말은 조건에서 빼고 그 사실을 P.ignored 로 밝힌다
     const P = window.parseQuery('워치 지어낸조건단어');
     const res = window.search(P);
