@@ -16,7 +16,7 @@
  * (`sw.js` 는 정적 파일로 그대로 서빙돼야 해서 이 모듈을 import 할 수 없다 —
  *  그래서 한쪽에서 읽어 오는 대신 검사로 묶었다.)
  */
-export const APP_VERSION = 'v185'
+export const APP_VERSION = 'v186'
 
 /*
  * 어느 커밋이 올라갔는지 — Vercel 이 빌드할 때 넣어 준다(시스템 환경변수 자동 노출).
