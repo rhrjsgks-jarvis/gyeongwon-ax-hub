@@ -2086,6 +2086,128 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   else pass('3D 고르기·회전 — 냉장고 90° · 에어컨 45° (버튼 글자와 실제가 같다)');
 
   /*
+   * ── 반투명 조이스틱 (2026-08-27) ──────────────────────────────
+   * 세 가지를 지킨다:
+   *   ① **3D 에서만 뜬다** — 2D 도면 위에 손잡이가 떠 있으면 도면을 가린다(안내띠와 같은 규칙)
+   *   ② **밀면 카메라가 실제로 움직인다** — 손잡이만 움직이고 화면이 그대로면 고장이다
+   *   ③ **조이스틱 위에서 시작한 끌기는 가전을 집지 않는다** — 여기가 가장 위험하다.
+   *      이 화면은 "가전을 누르면 가전이 움직인다"라, 새면 조이스틱이 **냉장고를 끌고 다닌다.**
+   *
+   * ③ 을 진짜로 재려고 **조이스틱 바로 아래에 냉장고를 놓는다**(스틱 중심의 바닥 좌표를
+   * 그대로 쓴다). 그러면 "그 자리에 가전이 있는데도 안 집혔다"가 증명된다 — 빈 곳에서
+   * 끌어 보면 애초에 집힐 것이 없어 아무것도 지키지 못한다.
+   *
+   * 마우스는 **진짜로** 움직인다(page.mouse). `dispatchEvent` 로 cv3 에 직접 쏘면
+   * 브라우저의 히트 테스트를 건너뛰어 정작 검사하려는 "누가 이 손가락을 받는가"가 사라진다.
+   */
+  {
+    const closed = await page.evaluate(() => {
+      const el = document.getElementById('d3joy');
+      return el ? getComputedStyle(el).display : 'none-el';
+    });
+
+    /* 조이스틱 아래에 냉장고를 놓는다 */
+    const setup = await page.evaluate(() => {
+      const P = window.__place;
+      const W = [[0, 0, 8000, 0], [8000, 0, 8000, 6000], [8000, 6000, 0, 6000], [0, 6000, 0, 0]]
+        .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+      const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+      P.state.rooms = []; P.state.items = []; P.state.walls = W; P.state.sel = null;
+      P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+      P.addRoom('거실', W);
+      const it = mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', label: '냉장고',
+        w: 912, h: 1853, d: 930, bx: 4000, by: 2500 });
+      P.state.items.push(it);
+      window.Place3D.open();
+      window.Place3D.view('top');
+      window.Place3D.render();
+
+      const el = document.getElementById('d3joy');
+      const shown = el ? getComputedStyle(el).display : 'none-el';
+      const stick = document.querySelector('#d3joy .stick[data-j="move"]');
+      const look = document.querySelector('#d3joy .stick[data-j="look"]');
+      if (!stick || !look) return { err: '조이스틱이 없다 (#d3joy .stick)' };
+      const r = stick.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+
+      /* 스틱 한가운데가 가리키는 바닥 좌표에 냉장고를 세운다 (by 는 앞면이라 깊이 절반을 뺀다) */
+      const at = window.Place3D.floorAt(cx, cy);
+      if (!at) return { err: '스틱 자리의 바닥 좌표를 못 구했다' };
+      it.bx = at[0]; it.by = at[1] - it.d / 2;
+      window.Place3D.rebuild();
+      window.Place3D.render();
+
+      /* 안내띠와 겹치지 않는가 — 폰에서 띠가 두 줄로 접히면 그 아래 깔린다 */
+      const jb = el.getBoundingClientRect(), bb = document.getElementById('d3bar').getBoundingClientRect();
+      return { shown, cx, cy, r: { w: r.width, h: r.height },
+        under: (window.Place3D.pickAt(cx, cy) || {}).id || null,
+        overlap: Math.round(Math.max(0, jb.bottom - bb.top)),
+        bx: it.bx, by: it.by, joy: window.Place3D.joy };
+    });
+
+    if (setup.err) fail('3D 조이스틱: ' + setup.err);
+    else {
+      if (closed !== 'none') fail(`3D 조이스틱이 2D 화면에도 떠 있다 (display=${closed}) — 도면을 가린다`);
+      else if (setup.shown === 'none') fail('3D 조이스틱이 3D 에서도 안 뜬다');
+      else pass(`3D 조이스틱 — 3D 에서만 뜬다 (2D none → 3D ${setup.shown}, 지름 ${Math.round(setup.r.w)}px)`);
+
+      if (setup.overlap > 0) fail(`3D 조이스틱이 안내띠를 ${setup.overlap}px 가린다 — 띠가 접히면 그 아래 깔린다`);
+      else pass('3D 조이스틱 — 안내띠와 안 겹친다');
+
+      if (setup.under !== 'f')
+        fail(`3D 조이스틱 검사 준비 실패: 스틱 아래에 냉장고가 없다(집힌 것 ${setup.under}) — 이대로면 ③ 을 못 잰다`);
+
+      /* ② 밀면 카메라가 움직이는가 · ③ 그때 가전은 가만히 있는가 */
+      const before = await page.evaluate(() => {
+        const c = window.Place3D.camera, it = window.__place.state.items[0];
+        return { cam: [c.position.x, c.position.y, c.position.z].map((n) => +n.toFixed(3)),
+          bx: it.bx, by: it.by, sel: window.__place.state.sel };
+      });
+      await page.mouse.move(setup.cx, setup.cy);
+      await page.mouse.down();
+      await page.mouse.move(setup.cx, setup.cy - setup.r.h * 0.42, { steps: 3 });
+      await page.waitForTimeout(420);
+      const mid = await page.evaluate(() => {
+        const c = window.Place3D.camera, it = window.__place.state.items[0];
+        return { cam: [c.position.x, c.position.y, c.position.z].map((n) => +n.toFixed(3)),
+          bx: it.bx, by: it.by, joy: window.Place3D.joy };
+      });
+      await page.mouse.up();
+      await page.waitForTimeout(120);
+      const after = await page.evaluate(() => {
+        const c = window.Place3D.camera, it = window.__place.state.items[0];
+        return { cam: [c.position.x, c.position.y, c.position.z].map((n) => +n.toFixed(3)),
+          bx: it.bx, by: it.by, joy: window.Place3D.joy, sel: window.__place.state.sel };
+      });
+
+      const moved = Math.hypot(mid.cam[0] - before.cam[0], mid.cam[2] - before.cam[2]);
+      if (!mid.joy.move[1]) fail('3D 조이스틱: 밀었는데 스틱이 입력을 못 받았다 (joy.move = 0)');
+      else if (moved < 0.2) fail(`3D 조이스틱: 밀었는데 카메라가 ${moved.toFixed(3)}m 밖에 안 움직였다`);
+      else pass(`3D 조이스틱 이동 — 0.42초에 ${moved.toFixed(2)}m 움직인다`);
+
+      const dragged = Math.hypot(mid.bx - before.bx, mid.by - before.by);
+      if (dragged > 1)
+        fail(`3D 조이스틱이 **가전을 끌고 다닌다** — 냉장고가 ${Math.round(dragged)}mm 옮겨졌다`);
+      else if (after.sel !== before.sel)
+        fail('3D 조이스틱을 눌렀는데 가전이 선택됐다 — 손가락이 캔버스로 샜다');
+      else pass('3D 조이스틱 — 그 아래 가전이 있어도 집지 않는다 (선택도 안 바뀐다)');
+
+      /* 손을 떼면 멈춘다 — 안 멈추면 화면이 저절로 흘러간다 */
+      await page.waitForTimeout(300);
+      const rest = await page.evaluate(() => {
+        const c = window.Place3D.camera;
+        return { cam: [c.position.x, c.position.y, c.position.z].map((n) => +n.toFixed(3)),
+          joy: window.Place3D.joy };
+      });
+      const drift = Math.hypot(rest.cam[0] - after.cam[0], rest.cam[2] - after.cam[2]);
+      if (rest.joy.move[0] || rest.joy.move[1] || drift > 0.02)
+        fail(`3D 조이스틱: 손을 뗐는데 ${drift.toFixed(3)}m 더 흘러간다 (joy=${JSON.stringify(rest.joy.move)})`);
+      else pass('3D 조이스틱 — 손을 떼면 그 자리에 선다');
+    }
+    await page.evaluate(() => window.Place3D.close());
+  }
+
+  /*
    * 3D 를 켠 채로 가전을 고르면 **바로 나타나야 한다.** 예전에는 2D 로 돌아가야 보였다 —
    * 고객 앞에서 화면이 왔다 갔다 한다. 대기 중인 것은 흐리게 세우고(2D 의 회색 점선과
    * 같은 뜻) 끌어서 방 안으로 넣으면 그때부터 배치로 센다.
@@ -2184,8 +2306,15 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     window.Place3D.doors(false); window.Place3D.render();
     const allShut = leaves();
     window.Place3D.close();
+    /*
+     * 상실 바닥이 어디여야 하는가는 **손으로 적지 않는다.** 규격도에서 잰 `rowFrac` 이
+     * 바뀌면 여기도 함께 움직여야 한다 — 숫자를 적어 두면 그 자체가 두 번째 사본이 된다.
+     */
+    const kit = P.state.items.find((x) => x.id === 'k');
+    const kRows = P.fridgeRows(P.fridgeLayout(kit), kit.h);
     return { start, mid, midOther, doneF, doneC, oneOpen, otherFlag, allOpen, allShut,
-             fridgeSpan, kimchiSpan, kimchiN, kimchiH: 1825 };
+             fridgeSpan, kimchiSpan, kimchiN, kimchiH: 1825,
+             kimchiTop: Math.round(kRows[0][0]), kimchiRows: kRows.map((r) => Math.round(r[1] - r[0])) };
   });
 
   if (per.start !== 0) fail(`3D 문: 다 닫아 두었는데 문짝 ${per.start}장이 서 있다`);
@@ -2205,11 +2334,136 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
    */
   else if (!per.fridgeSpan || per.fridgeSpan[0] > 60)
     fail(`3D 문: 4도어 냉장고 문짝이 바닥에서 ${per.fridgeSpan && per.fridgeSpan[0]}mm 떠 있다 — 하부도 도어다`);
-  else if (!per.kimchiSpan || per.kimchiSpan[0] < per.kimchiH * 0.5)
-    fail(`3D 문: 김치냉장고 문짝이 ${per.kimchiSpan && per.kimchiSpan[0]}mm 부터 서 있다 — 상실만 여닫이인데 서랍 칸까지 덮는다`);
+  /* 문짝 바닥이 **상실 바닥**과 맞아야 한다 — 서랍 칸을 덮으면 서랍이 통째로 열리는 것처럼 보인다 */
+  else if (!per.kimchiSpan || Math.abs(per.kimchiSpan[0] - per.kimchiTop) > per.kimchiH * 0.05)
+    fail(`3D 문: 김치냉장고 문짝이 ${per.kimchiSpan && per.kimchiSpan[0]}mm 부터 서 있다 — 상실 바닥은 ${per.kimchiTop}mm 다(앞면 그림과 어긋난다)`);
+  /* 칸 높이가 균등이면 규격도 반영이 풀린 것이다 — 상실이 서랍보다 확실히 커야 한다 */
+  else if (!(per.kimchiRows[0] > per.kimchiRows[1] * 1.5))
+    fail(`3D: 김치냉장고 칸 높이가 ${per.kimchiRows.join('/')}mm — 상실이 서랍보다 훨씬 커야 한다(규격도 실측 55/23/22%)`);
   else if (per.kimchiN !== 2)
     fail(`3D 문: 김치냉장고 문짝이 ${per.kimchiN}장이다 (기대 상실 좌우 2장)`);
-  else pass(`3D 문 — 제품마다 따로 열리고(냉장고 ${per.oneOpen}장 ${per.fridgeSpan[0]}~${per.fridgeSpan[1]}mm · 김치냉장고 상실 ${per.kimchiN}장 ${per.kimchiSpan[0]}~${per.kimchiSpan[1]}mm) 여는 동작이 보인다(도중 진행도 ${per.mid.toFixed(2)})`);
+  else pass(`3D 문 — 제품마다 따로 열리고(냉장고 ${per.oneOpen}장 ${per.fridgeSpan[0]}~${per.fridgeSpan[1]}mm · 김치냉장고 상실 ${per.kimchiN}장 ${per.kimchiSpan[0]}~${per.kimchiSpan[1]}mm · 칸 ${per.kimchiRows.join('/')}mm) 여는 동작이 보인다(도중 진행도 ${per.mid.toFixed(2)})`);
+}
+
+/*
+ * ── 문을 열면 **원형으로 · 안이 보이게** (2026-08-27 사장님 지적) ─────────────
+ *
+ * *"세탁기 도어 개폐가 **원형으로** 개폐되는 모습이어야 하는데 냉장고 도어처럼 열리는 모습으로
+ * 나옵니다. 또한 냉장고·김치냉장고·세탁기 모두 도어가 열리면 **내부 모습이 보여야** 하는데
+ * 도어가 닫혀 있는 형태로 나옵니다."*
+ *
+ * 셋을 지킨다:
+ *   ① 세탁기 문짝이 **원형**인가 — **메시 개수로 세지 않는다.** 원이든 판이든 메시는 하나씩이라
+ *      셋 다 같은 수가 나온다(이 저장소가 부품별 그림 검사에서 이미 한 번 헛돌았다).
+ *      **형상 종류(`CylinderGeometry`)와 냉장고 문짝의 판때기를 갈라** 본다.
+ *   ② 문을 열면 **안쪽 면**이 생기는가 — 앞면이 지워지고 그 자리에 구멍 뚫린 앞면과
+ *      어두운 안쪽 상자가 선다.
+ *   ③ **닫으면 사라지는가** — 안 사라지면 닫힌 냉장고에 구멍이 뚫린 채로 남는다.
+ */
+{
+  const r = await page.evaluate(async () => {
+    const P = window.__place;
+    if (!window.Place3D) return { err: 'Place3D 없음' };
+    const W = [[0, 0, 9000, 0], [9000, 0, 9000, 6000], [9000, 6000, 0, 6000], [0, 6000, 0, 0]]
+      .map(([x1, y1, x2, y2]) => ({ x1, y1, x2, y2, open: false }));
+    const mk = (o) => Object.assign({ a: 0, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } }, o);
+    P.state.rooms = []; P.state.items = []; P.state.walls = W; P.state.sel = null;
+    P.state.mmPerPx = null; P.state.scaled = true; P.state.img = null;
+    P.addRoom('주방', W);
+    P.state.items.push(
+      mk({ id: 'f', cat: '냉장고', group: '4도어 프리스탠딩', size: '4도어 프리스탠딩',
+           label: '냉장고', w: 912, h: 1853, d: 930, bx: 1500, by: 300 }),
+      mk({ id: 'k', cat: '김치냉장고', group: '김치플러스 4도어 스탠드형', size: '324~347L',
+           label: '김치냉장고', w: 795, h: 1825, d: 800, bx: 3500, by: 300 }),
+      mk({ id: 'w', cat: '세탁기·콤보', group: 'AI 콤보', size: '폭 686mm',
+           label: '콤보', w: 686, h: 1000, d: 875, bx: 5500, by: 300 }),
+      /* 통버블은 **위로** 열린다 — 원형 문짝을 만들면 안 된다 */
+      mk({ id: 't', cat: '세탁기·콤보', group: '통버블 세탁기', size: '폭 665mm',
+           label: '통버블', w: 665, h: 980, d: 700, bx: 7500, by: 300 }));
+    window.Place3D.open();
+
+    /* 지금 doorRoot 안에 무엇이 있는가 — 제품별로 형상 종류를 모은다 */
+    const scan = () => {
+      const per = {};
+      window.Place3D.root.traverse((o) => {
+        if (!o.userData) return;
+        const leaf = o.userData.isDoorLeaf, ins = o.userData.isDoorInside;
+        if (!leaf && !ins) return;
+        let it = o; while (it && !it.userData.item) it = it.parent;
+        const id = it && it.userData.item ? it.userData.item.id : '?';
+        const e = per[id] = per[id] || { leafShapes: [], insideShapes: [], round: false, leaves: 0, insides: 0 };
+        if (leaf){ e.leaves++; if (o.userData.isRoundDoor) e.round = true; }
+        if (ins) e.insides++;
+        o.traverse((m) => {
+          if (!m.isMesh || !m.geometry) return;
+          (leaf ? e.leafShapes : e.insideShapes).push(m.geometry.type);
+        });
+      });
+      return per;
+    };
+    /* 몸통 앞면 재질이 지워졌는가 — 안이 보이려면 앞면이 비켜야 한다 */
+    const faceHidden = (id) => {
+      let hit = null;
+      window.Place3D.root.traverse((o) => {
+        if (!o.userData || !o.userData.item || o.userData.item.id !== id) return;
+        o.traverse((m) => {
+          if (m.isMesh && m.userData.isBody && Array.isArray(m.material))
+            hit = m.material[4] && m.material[4].opacity === 0;
+        });
+      });
+      return hit;
+    };
+
+    window.Place3D.doors(false); window.Place3D.settleDoors();
+    const shut = scan();
+    const shutFace = { f: faceHidden('f'), w: faceHidden('w') };
+
+    window.Place3D.doors(true); window.Place3D.settleDoors(); window.Place3D.render();
+    const open = scan();
+    const openFace = { f: faceHidden('f'), w: faceHidden('w') };
+
+    window.Place3D.doors(false); window.Place3D.settleDoors(); window.Place3D.render();
+    const reshut = scan();
+    const reshutFace = { f: faceHidden('f'), w: faceHidden('w') };
+    window.Place3D.close();
+    return { shut, open, reshut, shutFace, openFace, reshutFace };
+  });
+
+  if (r.err) fail(r.err);
+  else {
+    const bad = [];
+    const O = r.open;
+    /* ① 세탁기 = 원형 · 냉장고 = 판때기 */
+    const wash = O.w || {};
+    if (!wash.leaves) bad.push('세탁기 문짝이 아예 안 선다');
+    else if (!wash.round || !wash.leafShapes.some((t) => /Cylinder/.test(t)))
+      bad.push(`세탁기 문짝이 원형이 아니다 (형상 ${(wash.leafShapes || []).join('·') || '없음'}) — 드럼 도어는 원판이다`);
+    const fr = O.f || {};
+    if (!fr.leaves) bad.push('냉장고 문짝이 안 선다');
+    else if (fr.round || fr.leafShapes.some((t) => /Cylinder/.test(t)))
+      bad.push('냉장고 문짝이 원형으로 그려졌다 — 냉장고 문은 판때기다');
+    /* 통버블은 위로 열려 문짝 자체가 없어야 한다 */
+    if (O.t && O.t.leaves) bad.push(`통버블 세탁기에 문짝 ${O.t.leaves}장이 섰다 — 위로 열리는 물건이다`);
+
+    /* ② 열면 안쪽이 생긴다 */
+    for (const [id, name] of [['f', '냉장고'], ['k', '김치냉장고'], ['w', '세탁기']]){
+      const e = O[id];
+      if (!e || !e.insides) bad.push(`${name}: 문을 열었는데 안쪽이 없다 — 닫힌 것처럼 보인다`);
+      else if (!e.insideShapes.some((t) => /Shape/.test(t)))
+        bad.push(`${name}: 구멍 뚫린 앞면(ShapeGeometry)이 없다`);
+    }
+    if (!r.openFace.f || !r.openFace.w) bad.push('문을 열었는데 몸통 앞면이 그대로다 — 안이 가려진다');
+
+    /* ③ 닫으면 사라진다 */
+    for (const [id, name] of [['f', '냉장고'], ['k', '김치냉장고'], ['w', '세탁기']]){
+      if (r.shut[id] || r.reshut[id]) bad.push(`${name}: 문을 닫았는데 안쪽·문짝이 남아 있다`);
+    }
+    if (r.reshutFace.f !== false || r.reshutFace.w !== false)
+      bad.push('문을 닫았는데 몸통 앞면이 지워진 채로 남았다 — 구멍 뚫린 냉장고가 된다');
+
+    if (bad.length) bad.forEach((m) => fail('3D 도어/내부 — ' + m));
+    else pass(`3D 도어/내부 — 세탁기는 원형(${wash.leafShapes.filter((t) => /Cylinder|Circle/.test(t)).length}개 원형 조각) · 냉장고는 판때기 · 열면 안쪽이 생기고(냉장고 ${(O.f.insideShapes || []).length}조각) 닫으면 사라진다`);
+  }
 }
 
 /*

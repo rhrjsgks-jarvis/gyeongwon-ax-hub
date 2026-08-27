@@ -110,6 +110,52 @@
     #d3bar{padding:7px 9px;gap:7px;font-size:11.5px}
     #d3bar button{padding:4px 7px;font-size:11px}
   }
+
+  /* ── 3D 이동 조이스틱 (2026-08-27 사용자 요청) ──────────────────
+   * *"도면 3D 렌더링 후 공간을 자유롭게 이동하고 싶은데 조이스틱 같은 걸 화면에 띄워주면
+   * 좋을 것 같습니다. **반투명 상태로** 하면 좋을 것 같아요"*
+   *
+   * **반투명이 취향이 아니라 기능이다.** 이 화면이 답하는 것은 *"우리 집에 이 제품을 놓으면
+   * 어떤 느낌인가"* 라(CLAUDE.md), 손잡이가 도면과 가전을 가리면 목적 자체가 깨진다.
+   * 그래서 바탕은 16%, 손잡이는 55% 로 두고 **잡고 있는 동안에만** 진해진다 —
+   * 조작 중에는 어디를 얼마나 밀었는지가 보여야 하고, 그때는 이미 사용자가 그것을 보고 있다.
+   *
+   * **바깥 상자는 pointer-events:none 이고 원 두 개만 auto 다.** 상자가 손가락을 먹으면
+   * 그 띠 전체에서 카메라를 못 돌리고 가전도 못 집는다 — 원 사이의 넓은 빈 자리는
+   * 그대로 3D 캔버스여야 한다.
+   *
+   * **아래 위치(bottom)는 CSS 에 박지 않고 placeJoy() 가 잰다.** 안내띠(#d3bar)는
+   * 고른 가전·경고에 따라 버튼이 늘어 **두 줄로 접히면 높이가 달라진다** — 고정값을 두면
+   * 폰에서 그날 그날 겹친다. z-index 도 안내띠(6)보다 낮은 5 로 둬 혹시 겹쳐도 띠가 이긴다.
+   */
+  #d3joy{position:absolute;left:10px;right:10px;bottom:64px;z-index:5;display:none;
+    justify-content:space-between;align-items:flex-end;pointer-events:none}
+  #stage.on3d #d3joy{display:flex}
+  #d3joy .stick{
+    pointer-events:auto;touch-action:none;position:relative;
+    width:108px;height:108px;border-radius:50%;
+    background:rgba(17,24,39,.16);border:2px solid rgba(255,255,255,.5);
+    box-shadow:0 2px 10px rgba(0,0,0,.14);
+    display:flex;align-items:center;justify-content:center;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  #d3joy .stick.on{background:rgba(20,40,160,.28);border-color:rgba(255,255,255,.85)}
+  #d3joy .stick i{
+    display:block;width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,.55);border:1px solid rgba(17,24,39,.22);
+    will-change:transform;
+  }
+  #d3joy .stick.on i{background:rgba(255,255,255,.9)}
+  /* 무엇을 하는 손잡이인지 두 글자로만. 크게 적으면 그 자체가 도면을 가린다 */
+  #d3joy .stick b{position:absolute;bottom:7px;left:0;right:0;text-align:center;
+    font-size:10px;font-weight:700;color:rgba(255,255,255,.92);
+    text-shadow:0 1px 3px rgba(0,0,0,.75);pointer-events:none;letter-spacing:.02em}
+  /* 폰에서는 지름을 줄인다 — 108px 두 개면 390px 화면의 가로 55% 를 먹는다(실측) */
+  @media(max-width:520px){
+    #d3joy{left:8px;right:8px}
+    #d3joy .stick{width:92px;height:92px}
+    #d3joy .stick i{width:38px;height:38px}
+  }
   #empty{
     position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;
     align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--muted);
@@ -461,6 +507,15 @@
       <canvas id="cv"></canvas>
       <canvas id="cv3"></canvas>
       <div id="d3bar"></div>
+      <!--
+        3D 이동 조이스틱 — **3D 에서만 뜬다**(`#stage.on3d`, 안내띠와 같은 규칙).
+        왼쪽 = 이동(카메라가 보는 방향 기준) · 오른쪽 = 시선(좌우 돌리기 / 위아래 각도).
+        오른쪽을 '높이'가 아니라 '시선'으로 둔 근거는 아래 모듈 주석에 적었다.
+      -->
+      <div id="d3joy">
+        <div class="stick" data-j="move"><i></i><b>이동</b></div>
+        <div class="stick" data-j="look"><i></i><b>시선</b></div>
+      </div>
       <!--
         빈 화면은 **다음에 무엇을 누르면 되는지**만 말한다. 예전에는 "벽 그리기로 직접
         입력해도 됩니다"라고 글로만 알렸는데, 그 버튼이 도구막대 ⋯ 안에 있어 찾아야 했다.
@@ -3759,6 +3814,44 @@ function evaluate(){
  * **2D 와 3D 가 이 함수 하나를 같이 본다.** 위에서 본 그림(2D)은 `cols` 만 쓰고,
  * 앞면이 보이는 3D 는 `rows` 까지 쓴다 — 같은 품목이 앱마다 다르게 생기면 눈이 헤맨다.
  */
+/*
+ * ── 칸 높이 비율 (`rowFrac`) — **규격도에서 재서 넣었다** (2026-08-27) ──────────
+ *
+ * 사장님 지적: *"김치냉장고 **서랍 높이가 비정상적으로** 보입니다."* 재 보니 그대로였다 —
+ * 예전에는 칸 높이를 `h / rows` 로 **균등 분할**해서 김치냉장고가 33/33/33% 였는데,
+ * 실물은 **상실이 절반이 넘고 서랍은 그 절반도 안 된다.**
+ *
+ * 지어낸 값이 아니다. `public/install-img/` 의 **공식 설치가이드 규격도 전면 VIEW** 를
+ * 픽셀로 재서 넣었다 — 그 그림에는 제품 전체 높이가 mm 로 적혀 있어 비율이 곧 실측이 된다
+ * (도구: `.scratch/_measure-front2.mjs`, 도어 사이 손잡이 띠의 **가운데**를 경계로 본다).
+ *
+ * | 규격도 | 실측 | 옛 값 |
+ * |---|---|---|
+ * | `pc01-02-03-01.jpg` 김치플러스 스탠드형 4도어(1,825mm) — 상실 54.9% · 중실 23.0% · 하실 22.1% | **0.55 / 0.23 / 0.22** | 0.33 / 0.33 / 0.33 |
+ * | `pc-set-one-refri-bespoke-4doorFs-rm_f91_f90_v4.jpg` Bespoke 4도어 프리스탠딩(1,853mm) — 상 54.5% | **0.545 / 0.455** | 0.5 / 0.5 |
+ *
+ * **이름이 안 밝히는 것에는 넣지 않는다** — `rowFrac` 이 없으면 예전처럼 균등 분할이라
+ * 양문형·일반형·업소용은 한 픽셀도 달라지지 않는다.
+ *
+ * **앞면 그림과 문짝 구간이 같은 값을 봐야 한다**(`leafSpans` ← `fridgeRows`).
+ * 갈리면 문이 앞면에 그려 둔 분할선을 가로지른다 — 그 사고를 이미 한 번 겪었다.
+ */
+const KIMCHI_ROWS  = [0.55, 0.23, 0.22];    // 위 칸부터: 상실(좌우 2도어) · 중실 서랍 · 하실 서랍
+const FRIDGE4_ROWS = [0.545, 0.455];        // 위 칸부터: 상단 좌우 도어 · 하단 좌우 도어
+
+/**
+ * 칸마다 [바닥에서 y0, y1] (위 칸부터). `rowFrac` 이 있으면 그 비율, 없으면 균등 분할.
+ * **2D·3D·문짝이 전부 이 함수 하나를 본다** — 세 곳에서 따로 나누면 화면이 서로 다른 말을 한다.
+ */
+function fridgeRows(F, H){
+  const n = Math.max(1, F.rows || 1);
+  const fr = (F.rowFrac && F.rowFrac.length === n) ? F.rowFrac : Array.from({ length: n }, () => 1 / n);
+  const out = [];
+  let top = H;
+  for (const f of fr){ const bot = top - H * f; out.push([bot, top]); top = bot; }
+  return out;
+}
+
 function fridgeLayout(it){
   const size = String(it.size || ''), grp = String(it.group || ''), s = size + ' ' + grp;
   if (/뚜껑형/.test(s)) return { cols: 1, rows: 1, top: true };
@@ -3772,8 +3865,8 @@ function fridgeLayout(it){
    * `splitRows` 는 "위에서 몇 칸이 좌우로 갈리는가"이고, 나머지 칸은 서랍이다.
    */
   if (/^김치냉장고$/.test(String(it.cat || '')) && /4도어/.test(s))
-    return { cols: 2, rows: 3, top: false, splitRows: 1 };
-  if (/4도어/.test(s)) return { cols: 2, rows: 2, top: false };
+    return { cols: 2, rows: 3, top: false, splitRows: 1, rowFrac: KIMCHI_ROWS };
+  if (/4도어/.test(s)) return { cols: 2, rows: 2, top: false, rowFrac: FRIDGE4_ROWS };
   if (/양문형/.test(s)) return { cols: 2, rows: 1, top: false };   // 좌우 도어 — 가로로 안 갈린다
   if (/일반형|상냉장|하냉동/.test(s)) return { cols: 1, rows: 2, top: false };
   if (/1도어/.test(s)) return { cols: 1, rows: 1, top: false };    // 통짜 캐비닛
@@ -7250,7 +7343,7 @@ loadReps();
 window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
-  mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, burnerCount,
+  mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,
   openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
@@ -7550,6 +7643,25 @@ const badMat  = new THREE.MeshLambertMaterial({ color: 0xE23D3D });
 const selEdge = new THREE.LineBasicMaterial({ color: 0x1428A0 });   // 고른 가전의 모서리
 /* 대기 중(아직 안 놓은) 가전 — 2D 의 회색 점선에 해당한다 */
 const ghostMat = new THREE.MeshLambertMaterial({ color: 0xB6BFCB, transparent: true, opacity: 0.45 });
+/*
+ * ── 문을 열면 **안이 보인다** (2026-08-27 사장님 지적) ─────────────────────
+ * *"냉장고·김치냉장고·세탁기 모두 도어가 열리면 내부 모습이 보여야 하는데 도어가 닫혀 있는
+ * 형태로 나옵니다. 누가 봐도 정성이 빠져 보입니다."*
+ *
+ * `insideMat` — 개구부 안쪽 면(어둡다). **DoubleSide 다.** 안쪽만 그리는 `BackSide` 로 두면
+ *   비스듬히 볼 때 앞쪽 옆벽이 잘려 **제품을 뚫고 방이 보인다**(실제로 그렇게 된다).
+ * `shelfMat` — 선반. **개수는 카탈로그 값이 아니라 '보이기 위한 값'** 이다(문짝 두께 22mm ·
+ *   문 높이 8할과 같은 부류). 화면 어디에도 선반 수를 적지 않으므로 상담사가 이 수를
+ *   읽어 갈 일이 없다. **김치냉장고 상실에는 넣지 않는다** — 통을 넣는 칸이라 선반 구성을
+ *   확인한 적이 없다(지어내지 않는다).
+ * `hideMat` — 개구부가 뚫린 앞면으로 갈아 끼울 때 **원래 앞면을 지우는** 재질.
+ *   `visible:false` 대신 **투명 + 깊이 미기록**을 쓴다 — three 판마다 배열 재질의
+ *   `visible` 처리가 다를 수 있고, 깊이를 안 써야 그 자리에 우리가 만든 앞면이 그려진다.
+ */
+const insideMat = new THREE.MeshLambertMaterial({ color: 0x3A4350, side: THREE.DoubleSide });
+const backMat   = new THREE.MeshLambertMaterial({ color: 0x4A5462, side: THREE.DoubleSide });
+const shelfMat  = new THREE.MeshLambertMaterial({ color: 0xC3CAD3, side: THREE.DoubleSide });
+const hideMat   = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
 const doorMat = new THREE.MeshLambertMaterial({ color: 0xE8ECF1, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
 const doorBad = new THREE.MeshLambertMaterial({ color: 0xE23D3D, transparent: true, opacity: 0.85, side: THREE.DoubleSide });
 
@@ -7640,17 +7752,63 @@ function leafSpans(it){
     ? P.fridgeLayout(it) : null;
   if (F && !F.top && F.cols > 1){
     const sr = F.splitRows == null ? F.rows : F.splitRows;
-    const rowH = H / F.rows, out = [];
+    /* **칸 높이는 균등이 아니다** — 앞면 그림과 같은 `fridgeRows` 를 본다(2026-08-27).
+       예전에는 여기서도 `H / rows` 로 따로 나눠, 규격도를 반영하면 문이 앞면 분할선을
+       가로지르게 될 자리였다. 두 곳이 같은 함수를 지나가야 저절로 맞는다. */
+    const rows = P.fridgeRows(F, H), out = [];
     for (let i = 0; i < sr; i++){                    // 위 칸부터 — 갈린 칸만 여닫이다
-      const base = H - rowH * (i + 1);
-      out.push([M(base + rowH * 0.02), M(base + rowH * 0.98)]);
+      const [y0, y1] = rows[i], gap = (y1 - y0) * 0.02;
+      out.push([M(y0 + gap), M(y1 - gap)]);
     }
     if (out.length) return out;
   }
   return [[0, M(H * 0.8)]];
 }
 
+/**
+ * **드럼 세탁기·건조기의 문은 원형이다** (2026-08-27 사장님 지적:
+ * *"세탁기 도어 개폐가 원형으로 개폐되는 모습이어야 하는데 냉장고 도어처럼 열리는 모습으로
+ * 나옵니다"*). 앞면 그림은 이미 원(테두리+유리)이었는데 **열린 문짝만 사각 판**이었다.
+ *
+ * **판정 다각형(`lf.poly`)은 건드리지 않는다.** 앞으로 얼마나 나오는지(`openD 1,430mm`)는
+ * 설치가이드 실측이고 `doorHits` 가 그 값으로 부딪힘을 판정한다 — 그림만 바꾼다.
+ * 원판은 그 다각형의 **힌지 쪽 끝에서 반지름만큼 나아간 자리**에 세운다(문은 제 가장자리에
+ * 달려 돈다). 지름은 앞면 그림과 **같은 `drumR`** 을 본다.
+ *
+ * 위로 열리는 통버블·일반세탁기는 애초에 `kind:'top'` 이라 문짝이 만들어지지 않는다.
+ */
+function drumLeafMesh(lf, it, bad){
+  const g = new THREE.Group();
+  const p = lf.poly;
+  const R = drumR(it), T = 0.022;                 // 두께 — 실측이 아니라 보이기 위한 값(사각 문짝과 같다)
+  const cy = M(it.h || 800) * DRUM_CY;
+  /* 힌지 쪽 변(p0→p1)이 문이 뻗는 방향이다 */
+  const ux = M(p[1][0] - p[0][0]), uz = M(p[1][1] - p[0][1]);
+  const len = Math.hypot(ux, uz) || 1;
+  const dx = ux / len, dz = uz / len;
+  const cx = M(p[0][0]) + dx * R, cz = M(p[0][1]) + dz * R;
+  /* 문 판의 법선 = 뻗는 방향에 수직인 수평 방향 */
+  const nrm = new THREE.Vector3(-dz, 0, dx);
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(R, R, T, 28), bad ? doorBad : doorMat);
+  body.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), nrm);
+  body.position.set(cx, cy, cz);
+  g.add(body);
+  /* 유리 — 양면에 하나씩. 어느 쪽에서 봐도 원이 두 겹으로 읽혀야 한다(앞면 그림과 같은 어휘) */
+  for (const sgn of [1, -1]){
+    const gl = new THREE.Mesh(new THREE.CircleGeometry(R * 0.74, 28), bad ? doorBad : darkMat);
+    gl.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), nrm.clone().multiplyScalar(sgn));
+    gl.position.set(cx + nrm.x * sgn * (T / 2 + 0.002), cy, cz + nrm.z * sgn * (T / 2 + 0.002));
+    g.add(gl);
+  }
+  g.userData.item = it;
+  g.userData.isDoorLeaf = true;
+  g.userData.isRoundDoor = true;      // 검사가 "원형으로 열리는가"를 형상으로 확인한다
+  return g;
+}
+
 function leafMesh(lf, it, bad){
+  /* 드럼 도어는 원판이다 — 앞으로 열리는 세탁기·건조기 계열이 전부 그렇다 */
+  if (lf.spec && lf.spec.kind === 'front') return drumLeafMesh(lf, it, bad);
   const g = new THREE.Group();
   const p = lf.poly;
   /* 사각형이므로 두 삼각형이면 된다. 앞뒤로 보이게 DoubleSide 를 쓴다. */
@@ -7680,6 +7838,111 @@ function leafMesh(lf, it, bad){
 }
 
 /**
+ * ── 열린 칸의 **안쪽**을 만든다 (2026-08-27) ────────────────────────────────
+ *
+ * 문만 젖혀 놓고 몸통을 통짜 상자로 두면 **닫힌 것처럼** 보인다. 그래서 열려 있는 동안만
+ * ①몸통의 앞면을 지우고 ②그 자리에 **구멍 뚫린 앞면**을 새로 깔고 ③구멍 뒤에 **안쪽 상자**를
+ * 세운다. 셋 다 `doorRoot` 에 들어가므로 `paintDoors()` 가 프레임마다 버리고 다시 만든다.
+ *
+ * **왜 몸통을 고쳐 만들지 않는가** — 앞면에 구멍을 내려면 몸통 지오메트리를 다시 만들어야
+ * 하는데, 여는 동작은 프레임마다 자세가 바뀐다. 이 파일이 이미 못박아 둔 규칙이 그것이다:
+ * *"`build()` 는 방·벽·가전을 통째로 만드는 함수라 60fps 로 돌릴 것이 아니다."*
+ * 대신 **재질 한 칸만 바꾼다**(앞면 = 재질 배열의 4번). 지오메트리는 그대로다.
+ *
+ * **구멍 자리는 문짝과 같은 값에서 나온다** — 냉장고 계열은 `leafSpans`(= `fridgeRows`),
+ * 드럼은 `drumR`. 갈리면 구멍과 문짝 크기가 달라 보인다.
+ */
+function insideGroup(it, bad){
+  const w = M(it.w), h = M(it.h || 800), d = M(it.d);
+  const cat = String(it.cat || '');
+  const drum = /세탁기|콤보|건조기/.test(cat) && P.doorOpenFor(it) && P.doorOpenFor(it).kind === 'front';
+  const g = new THREE.Group();
+  /* 가전 그룹과 **같은 자세**로 놓는다(applianceMesh 끝부분과 같은 식) */
+  const c = Math.cos(it.a), sn = Math.sin(it.a);
+  g.position.set(M(it.bx - (it.d / 2) * sn), M(it.mh || 0), M(it.by + (it.d / 2) * c));
+  g.rotation.y = -it.a;
+
+  /* 구멍 — 냉장고 계열은 열리는 칸마다 네모, 드럼은 원 하나 */
+  const holes = [];
+  if (drum) holes.push({ round: true, cy: h * DRUM_CY, r: drumR(it) });
+  else for (const [y0, y1] of leafSpans(it)) holes.push({ y0, y1 });
+  if (!holes.length) return null;
+
+  /* ① 구멍 뚫린 앞면. `ShapeGeometry` 가 구멍 감기를 알아서 맞춘다 */
+  const shape = new THREE.Shape();
+  shape.moveTo(-w / 2, 0); shape.lineTo(w / 2, 0); shape.lineTo(w / 2, h); shape.lineTo(-w / 2, h);
+  const inx = w * 0.02;                       // 좌우 테두리 — 실물 도어도 몸통보다 조금 작다
+  for (const hl of holes){
+    const path = new THREE.Path();
+    if (hl.round) path.absarc(0, hl.cy, hl.r, 0, Math.PI * 2, false);
+    else {
+      path.moveTo(-w / 2 + inx, hl.y0); path.lineTo(w / 2 - inx, hl.y0);
+      path.lineTo(w / 2 - inx, hl.y1);  path.lineTo(-w / 2 + inx, hl.y1);
+    }
+    shape.holes.push(path);
+  }
+  const face = new THREE.Mesh(new THREE.ShapeGeometry(shape), bad ? badMat : faceMat);
+  face.position.z = d / 2 + 0.0015;           // 몸통 앞면 바로 앞 — z-파이팅을 피한다
+  g.add(face);
+
+  /* ② 안쪽 — 앞이 트인 상자(다섯 면). 벽 두께 60mm 만큼 들어가 있다고 본다 */
+  const zF = d / 2 - 0.02;
+  const quad = (a, b, c2, e) => [...a, ...b, ...c2, ...a, ...c2, ...e];
+  const box = (x0, x1, y0, y1, z0, z1) => {
+    const P3 = (x, y, z) => [x, y, z];
+    return [
+      ...quad(P3(x0, y0, z1), P3(x0, y0, z0), P3(x0, y1, z0), P3(x0, y1, z1)),   // 왼쪽
+      ...quad(P3(x1, y0, z0), P3(x1, y0, z1), P3(x1, y1, z1), P3(x1, y1, z0)),   // 오른쪽
+      ...quad(P3(x0, y1, z0), P3(x1, y1, z0), P3(x1, y1, z1), P3(x0, y1, z1)),   // 위
+      ...quad(P3(x0, y0, z1), P3(x1, y0, z1), P3(x1, y0, z0), P3(x0, y0, z0)),   // 아래
+    ];
+  };
+  const mesh = (pos, mat) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, mat);
+    g.add(m); return m;
+  };
+  if (drum){
+    /* 드럼 — 원통 안쪽과 막힌 끝. 선반 같은 것은 없다 */
+    const R = drumR(it), depth = Math.min(d * 0.7, d - 0.06);
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(R, R, depth, 24, 1, true), insideMat);
+    cyl.rotation.x = Math.PI / 2;
+    cyl.position.set(0, h * DRUM_CY, zF - depth / 2);
+    g.add(cyl);
+    const cap = new THREE.Mesh(new THREE.CircleGeometry(R, 24), backMat);
+    cap.position.set(0, h * DRUM_CY, zF - depth);
+    g.add(cap);
+  } else {
+    const depth = Math.min(d * 0.78, d - 0.06);
+    for (const hl of holes){
+      const x0 = -w / 2 + inx, x1 = w / 2 - inx, z0 = zF - depth;
+      mesh(box(x0, x1, hl.y0, hl.y1, z0, zF), insideMat);
+      /* 안쪽 끝 — 옆·위·아래보다 밝게 둬야 깊이가 읽힌다 */
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, hl.y1 - hl.y0), backMat);
+      back.position.set(0, (hl.y0 + hl.y1) / 2, z0);
+      g.add(back);
+      /*
+       * 선반 — **냉장고에만**. 칸 수는 카탈로그 값이 아니라 보이기 위한 값이다(위 재질 주석).
+       * 김치냉장고 상실은 통을 넣는 칸이라 구성을 확인한 적이 없어 **넣지 않는다.**
+       */
+      if (/^냉장고$/.test(cat) && (hl.y1 - hl.y0) > 0.35){
+        for (const f of [0.36, 0.68]){
+          const sh2 = new THREE.Mesh(new THREE.PlaneGeometry((x1 - x0) * 0.94, depth * 0.9), shelfMat);
+          sh2.rotation.x = -Math.PI / 2;
+          sh2.position.set(0, hl.y0 + (hl.y1 - hl.y0) * f, zF - depth * 0.5);
+          g.add(sh2);
+        }
+      }
+    }
+  }
+  g.userData.item = it;          // 안쪽을 눌러도 그 제품이 집힌다(열린 문짝과 같은 규칙)
+  g.userData.isDoorInside = true;
+  return g;
+}
+
+/**
  * 열린 문짝들을 지금 진행도(`doorFrac`)에 맞춰 다시 세운다.
  *
  * **장면 전체를 다시 짓지 않는다.** 여는 동작은 프레임마다 자세가 바뀌는데 `build()` 는
@@ -7698,7 +7961,25 @@ function paintDoors(){
   for (const d of doorPlan){
     const t = doorFrac.get(d.it.id) || 0;
     /* 거의 닫힌 자세는 그리지 않는다 — 문짝이 앞면 안쪽에 겹쳐 z-파이팅으로 깜빡인다 */
-    if (t <= 0.02) continue;
+    const open = t > 0.02;
+    /*
+     * **열려 있는 동안만 앞면을 지운다.** 몸통 지오메트리는 그대로 두고 재질 배열의
+     * 4번(앞면) 한 칸만 바꾼다 — 그래야 60fps 로 돌려도 값이 싸다.
+     * 닫히면 원래 재질로 되돌린다(안 되돌리면 앞면이 영영 사라진 채로 남는다).
+     */
+    if (d.body){
+      if (open){
+        if (d.savedFace === undefined) d.savedFace = d.body.material[4];
+        d.body.material[4] = hideMat;
+      } else if (d.savedFace !== undefined){
+        d.body.material[4] = d.savedFace; d.savedFace = undefined;
+      }
+    }
+    /* 도어 분할선·손잡이·원형 도어 그림은 **문에 붙은 것**이라 함께 사라진다 */
+    for (const m of (d.faces || [])) m.visible = !open;
+    if (!open) continue;
+    const inside = insideGroup(d.it, d.bad);
+    if (inside) doorRoot.add(inside);
     for (const lf of P.doorLeaves(d.it, easeDoor(t))) doorRoot.add(leafMesh(lf, d.it, d.bad));
   }
 }
@@ -7840,6 +8121,14 @@ async function swapInModel(group, it){
   if (typeof render === 'function') render();
 }
 
+/*
+ * 드럼 도어의 **반지름과 높이**. 앞면 그림 · 열린 원형 문짝 · 드럼 개구부가 **같은 값**을
+ * 봐야 한다 — 갈리면 문을 열었을 때 구멍과 문짝 크기가 달라 보인다.
+ * 실측이 아니라 보이기 위한 값이다(문짝 두께 22mm 와 같은 부류).
+ */
+const DRUM_CY = 0.52;
+const drumR = (it) => Math.min(M(it.w), M(it.h || 800)) * 0.36;
+
 function applianceMesh(it){
   const g = new THREE.Group();
   const w = M(it.w), h = M(it.h || 800), d = M(it.d);
@@ -7907,21 +8196,40 @@ function applianceMesh(it){
       /* `splitRows` 는 **위에서 몇 칸이 좌우로 갈리는가**다(김치냉장고 4도어 = 상실 1칸).
          안 적혀 있으면 예전처럼 전 칸이 갈린다 — 아래 식이 그대로 옛 그림을 낸다. */
       const sr = F.splitRows == null ? F.rows : F.splitRows;
-      const rowH = h / F.rows, splitH = rowH * sr;
+      /*
+       * **칸 높이는 균등이 아니다** — 규격도에서 잰 `rowFrac` 을 `fridgeRows` 가 편다
+       * (2026-08-27). 예전에는 `h / rows` 라 김치냉장고 상실이 33% 였는데 실물은 55% 다.
+       * 문짝 구간(`leafSpans`)도 같은 함수를 보므로 앞면과 문이 저절로 맞는다.
+       */
+      const rows = P.fridgeRows(F, h);                        // 위 칸부터 [[y0,y1], …]
+      const splitTop = rows[0][1], splitBot = rows[sr - 1][0], splitH = splitTop - splitBot;
+      /*
+       * **여닫이 칸의 그림은 문에 붙은 것이다.** 문이 열리면 함께 사라져야 한다 —
+       * 안 그러면 활짝 열린 문 앞에 도어 분할선과 손잡이만 허공에 떠 있다.
+       * `paintDoors()` 가 이 표를 보고 진행도에 맞춰 껐다 켠다.
+       */
+      const onDoor = (m) => { m.userData.doorFace = true; return m; };
       for (let i = 1; i < F.cols; i++)                        // 세로 분할선 — **갈린 칸에만**
-        plate(0.006, splitH * 0.99, -w / 2 + (w * i) / F.cols, h - splitH / 2, darkMat);
-      for (let i = 1; i < F.rows; i++)                        // 가로 분할선
-        plate(w * 0.995, 0.006, 0, rowH * i, darkMat);
+        onDoor(plate(0.006, splitH * 0.99, -w / 2 + (w * i) / F.cols, (splitTop + splitBot) / 2, darkMat));
+      for (let i = 1; i < F.rows; i++){                       // 가로 분할선 — 칸 경계마다
+        const y = rows[i][1];
+        /* 여닫이 칸 **사이**의 선만 문에 붙은 것이다(서랍과 맞닿는 아래쪽 경계는 몸통에 남는다) */
+        const m = plate(w * 0.995, 0.006, 0, y, darkMat);
+        if (i < sr) onDoor(m);
+      }
       const cw = w / F.cols;
-      const hy = sr === F.rows ? h * 0.75 : h - splitH * 0.42;
+      const hy = sr === F.rows ? h * 0.75 : splitTop - splitH * 0.42;
       const hh = sr === F.rows ? h * 0.22 : splitH * 0.40;
       for (let i = 0; i < F.cols; i++){                       // 여닫이 칸마다 세로 손잡이 하나
         const cx = -w / 2 + cw * (i + 0.5);
-        plate(0.012, hh, cx + cw * (F.cols > 1 && i === 0 ? 0.34 : F.cols > 1 ? -0.34 : 0.30), hy, darkMat);
+        onDoor(plate(0.012, hh, cx + cw * (F.cols > 1 && i === 0 ? 0.34 : F.cols > 1 ? -0.34 : 0.30), hy, darkMat));
       }
-      /* 서랍 칸은 **가로 손잡이** — 앞으로 당겨 빼는 물건이라 세로 손잡이가 없다 */
-      for (let r = 0; r < F.rows - sr; r++)
-        plate(w * 0.46, 0.014, 0, rowH * (r + 0.78), darkMat);
+      /* 서랍 칸은 **가로 손잡이** — 앞으로 당겨 빼는 물건이라 세로 손잡이가 없다.
+         손잡이는 서랍 앞판 **위쪽**에 있다(규격도에서 확인) — 칸 높이의 22% 아래. */
+      for (let r = sr; r < F.rows; r++){
+        const [y0, y1] = rows[r];
+        plate(w * 0.46, 0.014, 0, y1 - (y1 - y0) * 0.22, darkMat);
+      }
     }
   } else if (/세탁기|콤보|건조기|에어드레서|슈드레서/.test(cat)){
     /*
@@ -7934,9 +8242,11 @@ function applianceMesh(it){
     /* 통버블은 위로 열리는 물건이라 앞면에 원형 도어가 없다 — 2D 도 사각으로 둔다 */
     if (/통버블|일반세탁기/.test(grp)) plate(w * 0.72, h * 0.5, 0, h * 0.62, faceMat);
     else {
-      const R = Math.min(w, h) * 0.36;
-      disc(R, h * 0.52, rimMat);                 // 도어 테두리
-      disc(R * 0.74, h * 0.52, darkMat, 0.004);  // 유리
+      /* 이 두 겹은 **도어 자체**다 — 문을 열면 함께 사라지고 원형 문짝이 그 자리를 대신한다
+         (`paintDoors`). 안 그러면 열린 문 앞에 도어 그림만 남아 문이 둘로 보인다. */
+      const R = drumR(it);
+      disc(R, h * DRUM_CY, rimMat).userData.doorFace = true;                 // 도어 테두리
+      disc(R * 0.74, h * DRUM_CY, darkMat, 0.004).userData.doorFace = true;  // 유리
     }
   } else if (/^TV|모니터/.test(cat)){
     plate(w * 0.96, h * 0.9, 0, h / 2, screenMat);            // 화면 — 본체보다 밝게(방향이 읽히게)
@@ -8044,7 +8354,7 @@ function applianceMesh(it){
 function build(refit){
   ensure();
   while (root.children.length) root.remove(root.children[0]);
-  culled.length = 0; segs2d = []; eyeAt = null;
+  culled.length = 0; segs2d = []; eyeAt = null; roomPolysM = [];
   /* 열린 문짝은 따로 담는다 — 여는 동작이 프레임마다 이 그룹만 갈아 끼운다 */
   doorPlan = [];
   doorRoot = new THREE.Group(); root.add(doorRoot);
@@ -8062,6 +8372,7 @@ function build(refit){
      * (복도 한가운데나 벽 속에 서게 된다). 그래서 방마다 따로 구해 넓은 쪽을 쓴다.
      */
     const mp = L.pts.map((p) => [M(p[0]), M(p[1])]);
+    roomPolysM.push(mp);
     let a2 = 0, cx = 0, cy = 0;
     for (let i = 0, j = mp.length - 1; i < mp.length; j = i++){
       const f = mp[j][0] * mp[i][1] - mp[i][0] * mp[j][1];
@@ -8106,9 +8417,30 @@ function build(refit){
     if (opened) openN++;
     if (bad) blocked++;
     /* 닫힌 것도 계획에 넣는다 — 그래야 **닫히는 동작**이 보인다(빼면 그 자리에서 사라진다) */
-    if (canOpenDoor(it)) doorPlan.push({ it, bad });
+    if (canOpenDoor(it)){
+      /*
+       * 문을 열면 **앞면을 지우고 안을 보여줘야** 한다. 그러려면 프레임마다 두 가지를
+       * 만져야 하는데, 매 프레임 장면을 훑을 수는 없으므로 여기서 한 번 찾아 둔다 —
+       * 몸통(앞면 재질을 지울 대상)과 **문에 붙은 그림**(도어 분할선·손잡이·원형 도어).
+       */
+      let body = null; const faces = [];
+      mesh.traverse((o) => {
+        if (o.userData.isBody && Array.isArray(o.material)) body = o;
+        if (o.userData.doorFace) faces.push(o);
+      });
+      doorPlan.push({ it, bad, body, faces });
+    }
     /* 문이 막히면 빨갛게 — 제품 색으로 칠한 것도 함께 바뀌어야 경고가 보인다 */
-    if (bad) mesh.traverse((o) => { if (o.isMesh && (o.userData.isBody || o.material === bodyMat)) o.material = badMat; });
+    /*
+     * **재질 배열을 통째로 갈아 끼우지 않는다.** 몸통은 면마다 재질이 다른 6칸 배열이라
+     * (앞면만 `faceMat`) 하나로 덮어쓰면 배열이 사라지고, 그러면 문을 열 때 **앞면만
+     * 지우는 일**(`paintDoors`)을 할 수가 없다 — 열어도 안이 안 보인다.
+     */
+    if (bad) mesh.traverse((o) => {
+      if (!o.isMesh) return;
+      if (Array.isArray(o.material)) { if (o.userData.isBody) o.material = o.material.map(() => badMat); }
+      else if (o.userData.isBody || o.material === bodyMat) o.material = badMat;
+    });
     /* 고른 것은 모서리를 삼성 블루로 굵게 — 무엇을 돌리고 지우는지 보여야 한다 */
     if (it.id === P.state.sel) mesh.traverse((o) => { if (o.isLineSegments) o.material = selEdge; });
     if (showTags && it.label){
@@ -8175,6 +8507,11 @@ function view(name){
    "우리 집 한 칸"을 보여주려던 뜻이 사라진다.
 ──────────────────────────────────────────────────────────────── */
 let segs2d = [], eyeAt = null, ctr = null;
+/*
+ * 방 경계 다각형(m). 조이스틱 이동이 **집 밖으로 새지 않게** 하는 데만 쓴다.
+ * `segs2d` 로는 못 한다 — 그쪽은 벽 선분 묶음이라 "지금 이 점이 방 안인가"를 못 답한다.
+ */
+let roomPolysM = [];
 /** 광선 (px,pz)+t·(dx,dz) 와 선분의 교차 t (없으면 null) */
 function raySeg(px, pz, dx, dz, s){
   const ex = s[2] - s[0], ez = s[3] - s[1];
@@ -8224,11 +8561,15 @@ function size(){
   ren.setSize(r.width, r.height, false);
   cam.aspect = r.width / r.height;
   cam.updateProjectionMatrix();
+  placeJoy();   // 폭이 바뀌면 안내띠가 접히는 줄 수도 바뀐다
 }
 
-function loop(){
+function loop(ts){
   raf = requestAnimationFrame(loop);
-  if (!on) return;
+  /* 닫혀 있는 동안 시계를 끊는다 — 안 그러면 다시 열 때 그 사이 시간이 한 프레임 dt 로
+     잡혀 조이스틱을 밀어 두었던 만큼 **순간이동**한다(문 여닫이의 doorClock 과 같은 함정). */
+  if (!on){ joyClock = 0; return; }
+  stepJoy(ts || performance.now());   // 첫 호출은 rAF 가 아니라 open() 이 직접 부른다
   /* 문이 여닫히는 중이면 그 프레임만큼 자세를 옮기고 문짝만 다시 세운다.
      움직임이 끝나면 아무 일도 하지 않는다 — 늘 다시 만들면 폰이 계속 뜨거워진다 */
   if (stepDoors()) paintDoors();
@@ -8283,6 +8624,9 @@ function pickItem(clientX, clientY){
 }
 
 cv3.addEventListener('pointerdown', (e) => {
+  /* **조이스틱에서 시작한 손가락은 여기 오지 않는다** — 스틱이 캡처한다. 그래도 한 겹 더
+     막는다: 캡처가 실패했을 때 새어 들어오면 조이스틱이 가전을 집어 끌고 다니게 된다. */
+  if (joyIds.has(e.pointerId)) return;
   pts.set(e.pointerId, [e.clientX, e.clientY]);
   last = [e.clientX, e.clientY];
   try { cv3.setPointerCapture(e.pointerId); } catch (_) {}   // 이미 놓인 포인터면 던진다 — 삼킨다
@@ -8373,6 +8717,158 @@ cv3.addEventListener('wheel', (e) => {
   orb.dist = Math.min(orb.max, Math.max(orb.min, orb.dist * (e.deltaY > 0 ? 1.1 : 0.9)));
 }, { passive:false });
 
+/* ── 반투명 조이스틱 — 공간을 걸어 다닌다 (2026-08-27 사용자 요청) ──────────
+ * *"도면 3D 렌더링 후 공간을 자유롭게 이동하고 싶은데 조이스틱 같은 걸 화면에 띄워주면
+ * 좋을 것 같습니다. 반투명 상태로 하면 좋을 것 같아요"*
+ *
+ * **왼쪽 = 이동, 오른쪽 = 시선.** 오른쪽을 '높이'가 아니라 '시선'으로 둔 근거가 둘이다:
+ *
+ * ① **한 손가락 회전이 가전 위에서는 안 듣는다.** 이 화면은 *"가전을 누르면 가전이
+ *    움직이고, 빈 곳을 끌면 카메라가 돈다"* 로 정해져 있어(위 `drag` 분기), 화면이
+ *    가전으로 차 있으면 **돌릴 빈 자리가 없다.** 조이스틱은 그 자리를 보장한다 —
+ *    조이스틱 위에서 시작한 손가락은 절대 가전을 집지 않는다.
+ * ② **높이는 눈높이 시점에서 손잡이가 될 수 없다.** `clampInside()` 가 매 프레임
+ *    `orb.ty` 를 `EYE_MM` 에서 거꾸로 계산해 덮어쓴다. 거기에 높이 스틱을 붙이면
+ *    **밀어도 아무 일이 안 일어나는 손잡이**가 된다(둘러보기·위에서 시점에서는 이미
+ *    두 손가락 확대가 같은 일을 한다). 없는 기능을 손잡이로 내밀지 않는다.
+ *
+ * **옮기는 것은 `orb.tx`/`orb.tz`(바라보는 점)이지 `cam.position` 이 아니다.**
+ * `apply()` 가 매 프레임 궤도에서 카메라 자리를 다시 계산하므로 카메라를 직접 옮기면
+ * **다음 프레임에 통째로 되돌아간다.** 눈높이 시점에서 `clampInside()` 와 싸우지 않는
+ * 이유도 같다 — 그쪽은 거리(`dist`)와 높이(`ty`)만 만지고, 바라보는 점은 안 만진다.
+ * 즉 스틱이 걸어 들어가면 clamp 는 그 자리에서 벽까지 거리를 다시 재 준다.
+ ─────────────────────────────────────────────────────────────────────────── */
+const joyEl = document.getElementById('d3joy');
+/* 스틱마다 −1~1 두 값. 손을 떼면 0 이라 loop() 가 아무 일도 하지 않는다 */
+const joyVec = { move:[0, 0], look:[0, 0] };
+/*
+ * 조이스틱이 쥐고 있는 포인터 id. cv3 가 **같은 손가락을 다시 집지 않게** 하는 자물쇠다.
+ * 스틱이 `setPointerCapture` 를 하므로 보통은 여기까지 오지도 않지만, 캡처는 실패할 수
+ * 있고(이미 놓인 포인터면 던진다) 그때 새어 들어오면 **조이스틱이 냉장고를 끌고 다닌다.**
+ */
+const joyIds = new Set();
+const JOY_DEAD = 0.12;      // 손가락은 가만히 있지 못한다. 이보다 작게 밀린 것은 0 으로 본다(2D 의 TAP_SLOP 과 같은 생각)
+const WALK_MS = 2.2;        // 눈높이 걷는 속도(m/s). 6m 거실을 3초 안쪽에 가로지른다 — 사람 걸음(1.4)보다 조금 빠르게 둬야 상담 중에 답답하지 않다
+const LOOK_YAW = 1.8;       // 좌우 돌리는 속도(rad/s). 최대로 밀면 한 바퀴에 3.5초
+const LOOK_PITCH = 1.1;     // 위아래 각도 속도(rad/s)
+function joyIdle(){ return !joyVec.move[0] && !joyVec.move[1] && !joyVec.look[0] && !joyVec.look[1]; }
+
+for (const el of (joyEl ? joyEl.querySelectorAll('.stick') : [])){
+  const key = el.dataset.j;
+  const knob = el.querySelector('i');
+  let id = null, cx = 0, cy = 0, R = 1;
+  /*
+   * 손잡이는 반지름의 **50%** 까지만 나간다. 62% 로 두었더니 실물에서 **원 밖으로 튀어나왔고**
+   * 55% 는 테두리에 딱 붙었다 — 실측: 폰 R=46 · 손잡이 반지름 19 · 테두리 안쪽 44 라
+   * 0.62×46+19 = 47.5, 0.55 는 44.3, **0.50 은 42** 로 안에 든다(PC 는 R=54 · 22 · 안쪽 52 →
+   * 49). 손잡이·원 크기를 바꾸면 이 값을 다시 잴 것.
+   */
+  const setVec = (dx, dy) => {
+    const len = Math.hypot(dx, dy);
+    const ux = len ? dx / len : 0, uy = len ? dy / len : 0;
+    const lim = Math.min(1, len / R);
+    knob.style.transform = 'translate(' + (ux * lim * R * 0.50).toFixed(1) + 'px,'
+                                        + (uy * lim * R * 0.50).toFixed(1) + 'px)';
+    const t = lim < JOY_DEAD ? 0 : (lim - JOY_DEAD) / (1 - JOY_DEAD);
+    joyVec[key][0] = ux * t; joyVec[key][1] = uy * t;
+  };
+  const rest = () => {
+    id = null; joyVec[key][0] = joyVec[key][1] = 0;
+    knob.style.transform = ''; el.classList.remove('on');
+  };
+  el.addEventListener('pointerdown', (e) => {
+    /* 여기서 갈라야 한다 — 막지 않으면 브라우저가 스크롤·길게누르기로 가져간다 */
+    e.preventDefault(); e.stopPropagation();
+    const r = el.getBoundingClientRect();
+    cx = r.left + r.width / 2; cy = r.top + r.height / 2; R = r.width / 2;
+    id = e.pointerId; joyIds.add(e.pointerId);
+    try { el.setPointerCapture(e.pointerId); } catch (_) {}   // 실패해도 조작을 막지 않는다(cv3 와 같은 이유)
+    el.classList.add('on');
+    setVec(e.clientX - cx, e.clientY - cy);
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== id) return;                            // 다른 손가락은 다른 스틱 몫이다
+    e.preventDefault();
+    setVec(e.clientX - cx, e.clientY - cy);
+  });
+  const off = (e) => { if (e.pointerId !== id) return; joyIds.delete(e.pointerId); rest(); };
+  el.addEventListener('pointerup', off);
+  el.addEventListener('pointercancel', off);
+  el.addEventListener('lostpointercapture', off);   // 캡처를 뺏겨도 손잡이가 밀린 채 굳지 않게
+  el.__joyRest = () => { joyIds.delete(id); rest(); };
+}
+/** 3D 를 닫을 때 — 밀고 있던 채로 닫으면 다음에 열었을 때 저절로 걸어간다 */
+function releaseJoy(){
+  if (!joyEl) return;
+  for (const el of joyEl.querySelectorAll('.stick')) if (el.__joyRest) el.__joyRest();
+}
+
+/** 지금 있는 방들 중 하나라도 그 점을 담고 있는가 */
+function insideAnyRoom(x, z){
+  for (const poly of roomPolysM) if (inPoly(poly, x, z)) return true;
+  return false;
+}
+/**
+ * 바라보는 점을 옮긴다.
+ * **눈높이 시점에서만 집 안에 가둔다.** 그 시점의 뜻이 *"우리 집 한 칸에 서서 본다"* 라
+ * 밖으로 걸어 나가면 옆집·여백이 보여 화면이 통째로 딴 그림이 된다(`clampInside` 가
+ * 개구부까지 벽으로 치는 것과 같은 이유). 둘러보기·위에서는 2D 의 자유로운 팬과 같아야
+ * 하므로 가두지 않는다 — 거기서 가두면 도면 전체를 훑어볼 수가 없다.
+ */
+function moveTarget(dx, dz){
+  if (mode3 !== 'eye' || !roomPolysM.length){ orb.tx += dx; orb.tz += dz; return; }
+  if (insideAnyRoom(orb.tx + dx, orb.tz + dz)){ orb.tx += dx; orb.tz += dz; return; }
+  /* 벽을 비스듬히 밀면 **벽을 따라 미끄러진다** — 축을 하나씩 나눠 본다.
+     안 그러면 벽에 닿는 순간 통째로 멈춰 "고장난 것 같다"가 된다. */
+  if (dx && insideAnyRoom(orb.tx + dx, orb.tz)) orb.tx += dx;
+  if (dz && insideAnyRoom(orb.tx, orb.tz + dz)) orb.tz += dz;
+}
+
+/**
+ * 한 프레임 몫의 조이스틱 입력을 카메라에 반영한다.
+ * **프레임 수가 아니라 시간(dt)으로 센다** — 폰과 PC 의 프레임 수가 달라 같은 거리를
+ * 밀어도 이동 거리가 갈리면 안 된다. 화면이 잠깐 멈췄다 돌아온 경우를 위해 100ms 로 자른다.
+ */
+let joyClock = 0;
+function stepJoy(now){
+  const dt = joyClock ? Math.min(0.1, (now - joyClock) / 1000) : 0;
+  joyClock = now;
+  if (!dt || joyIdle()) return;
+  const [lx, ly] = joyVec.look;
+  if (lx || ly){
+    /* 부호는 **한 손가락 끌기와 같게** 둔다(오른쪽으로 = yaw 감소, 아래로 = pitch 증가).
+       두 손잡이가 반대로 돌면 손이 헷갈린다. 위아래 한계도 끌기와 같은 값이다. */
+    orb.yaw  -= lx * LOOK_YAW * dt;
+    orb.pitch = Math.min(1.45, Math.max(0.06, orb.pitch + ly * LOOK_PITCH * dt));
+  }
+  const [mx, my] = joyVec.move;
+  if (mx || my){
+    /*
+     * 카메라는 바라보는 점에서 (sin yaw, cos yaw) 쪽에 있으므로(`apply()`)
+     * **앞은 그 반대**이고 오른쪽은 (cos yaw, −sin yaw) 다. 스틱의 y 는 화면 아래가 +라
+     * 앞으로 미는 것은 my 가 음수다 — 그래서 아래 식에 부호가 한 번 더 들어간다.
+     */
+    const sn = Math.sin(orb.yaw), cs = Math.cos(orb.yaw);
+    /*
+     * 속도는 시점에 따라 다르다. 눈높이는 사람이 걷는 것이라 방 크기와 무관하게 고정이고,
+     * 내려다보는 시점은 **화면에 담긴 넓이에 비례**해야 같은 속도로 느껴진다
+     * (멀리서 보고 있는데 걸음 속도로 움직이면 화면이 거의 안 움직인다).
+     */
+    const sp = mode3 === 'eye' ? WALK_MS : Math.min(8, Math.max(1.5, orb.dist * 0.6));
+    moveTarget(( cs * mx + sn * my) * sp * dt,
+               (-sn * mx + cs * my) * sp * dt);
+  }
+}
+
+/**
+ * 조이스틱을 안내띠 **위**에 놓는다.
+ * 띠는 고른 가전·경고에 따라 버튼이 늘어 **두 줄로 접히면 높이가 달라진다** — CSS 에
+ * 고정값을 박으면 그때 폰에서 겹친다. 그래서 띠를 그릴 때마다 실제 높이를 재서 얹는다.
+ */
+function placeJoy(){
+  if (joyEl && bar) joyEl.style.bottom = (bar.offsetHeight + 16) + 'px';
+}
+
 window.addEventListener('resize', () => { if (on) size(); });
 
 /* ── 열고 닫기 ── */
@@ -8441,12 +8937,14 @@ function paintBar(info){
   };
   document.getElementById('d3-tag').onclick = () => { showTags = !showTags; paintBar(build()); };
   document.getElementById('d3-close').onclick = close;
+  placeJoy();   // 띠 높이가 방금 바뀌었을 수 있다(버튼이 늘면 두 줄로 접힌다)
 }
 
 function open(){
   const info = build(true);   // 열 때만 화면을 맞춘다
   on = true;
   doorClock = 0;              // 닫아 둔 사이의 시간이 dt 로 잡히면 문이 순간이동한다
+  joyClock = 0; releaseJoy();  // 밀어 둔 채로 닫았어도 열자마자 걸어가지 않게
   document.getElementById('stage').classList.add('on3d');
   document.body.classList.add('is3d');   // 도구막대의 2D 전용 손잡이를 감춘다
   size(); if (!raf) loop();
@@ -8455,6 +8953,7 @@ function open(){
 }
 function close(){
   on = false;
+  releaseJoy();
   document.getElementById('stage').classList.remove('on3d');
   document.body.classList.remove('is3d');
 }
@@ -8507,6 +9006,8 @@ window.Place3D = {
   },
   get tagsOn(){ return showTags; },
   get canvas(){ return cv3; },
+  /** 지금 조이스틱이 얼마나 밀려 있는가 (−1~1). 스틱이 입력을 받았는지 검사가 확인한다 */
+  get joy(){ return { move: joyVec.move.slice(), look: joyVec.look.slice() }; },
   /* 테스트가 장면을 직접 들여다볼 수 있게 연다 — 좌표계가 뒤집혔는지는
      화면을 봐서는 알기 어렵고(방이 대칭이면 똑같아 보인다) 정점을 재야 잡힌다. */
   get root(){ return root; },
