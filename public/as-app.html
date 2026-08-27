@@ -156,6 +156,9 @@
     color:#1428A0;background:#EEF2FF;border-radius:99px;padding:2px 8px;margin-top:3px;
     text-decoration:none;white-space:nowrap;line-height:1.5}
   .maplink:hover{background:#E0E7FF}
+  /* 지도 링크 둘을 나란히 — `.opsv` 가 세로 플렉스라 감싸지 않으면 위아래로 쌓인다 */
+  .maplinks{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+  .maplinks .maplink{margin-top:0}
   /* 「어디로 가면 되나」 경로 — 하만은 접수처와 수리센터가 갈려 있어 경로가 셋이다.
      이름이 짧지만 `.way`·`.wn` 은 이 파일에 **0건**임을 확인하고 붙였다(`.sn` 이 접수
      순서 원과 겹쳐 센터 이름이 원에 갇혔던 사고가 있어 새 클래스는 반드시 세어 본다). */
@@ -579,10 +582,19 @@ const HARMAN = {
   recv:'전국 삼성전자서비스에서 접수 가능 — 접수 이후 서비스 과정은 이 센터가 진행합니다',
   site:'https://harmansvc.co.kr/wtyinfo',
 
-  /* **지도에서는 건물 이름으로 찾아야 한다.** 카카오맵 장소 DB에 「하만 오디오 전문
-     서비스센터」도 「시머스」도 없다(2026-08-27 실측 — 건물만 잡힌다). 센터 이름으로
-     검색하면 안 나오는 것이 사실이므로 화면이 그 사실을 밝힌다. */
+  /* **지도에서는 건물 이름으로 찾아야 한다.** 카카오맵·네이버지도 **양쪽 장소 DB에**
+     「하만 오디오 전문 서비스센터」도 「시머스」도 없다(2026-08-27 실측 — 건물만 잡힌다).
+     센터 이름으로 검색하면 안 나오는 것이 사실이므로 화면이 그 사실을 밝히고,
+     **지도 핀의 이름표도 건물명으로 단다** — 지도에 뜨는 이름과 검색되는 이름이 같아야 한다. */
   bldg:'삼성테크노파크',
+
+  /* **건물 좌표다 — 센터(1층 112호) 좌표가 아니다.** 출처는 네이버 공식 지역검색 API 가
+     「삼성테크노파크」에 대해 준 값(`mapx/mapy` ÷ 1e7)이고, 그것이 우리 주소와 맞는지
+     **두 가지로 검산했다** — 도로명 `중부대로448번길 97` 이 `a` 와 같고, 지번
+     `원천동 471`(우 16521)이 카카오맵이 같은 건물에 대해 내놓는 지번과 같다.
+     삼성 센터 178곳의 좌표(`svc-centers.json` 의 `la`/`ln`)와 달리 **우리가 수집한 값이
+     아니므로** 여기 출처를 적어 둔다. 목적지가 그 건물이라 건물 좌표로 충분하다. */
+  la:37.2664724, ln:127.0594388,
 
   /* 온라인 접수(택배) — 수원까지 못 오는 고객의 경로다. 원문 `harmansvc.co.kr/Reqsvc`:
      제조번호(S/N) 조회가 먼저이고, **접수 완료 후 2개월 내 미도착이면 접수가 취소**된다.
@@ -969,28 +981,63 @@ function telify(html, fallback){
 
 /* 라벨 칸 + 번호를 세로로 — ' · ' 로 이어 붙이면 좁은 화면에서 아무 데서나 줄이 바뀐다 */
 /*
- * 지도 링크 (2026-08-27 사장님 요청 — *"jbl그룹 as센터 위치안내도 필요합니다"*)
+ * 지도 링크 — **카카오맵 · 구글맵 둘 다** (2026-08-27 사장님 결정).
  *
- * **좌표가 있으면 좌표로, 없으면 주소로 간다.** 두 형식 다 실물로 확인했다(카카오맵 웹):
- *   · 좌표 `map.kakao.com/link/map/{이름},{위도},{경도}` → 이름표가 붙은 핀 + 「길찾기」
- *   · 검색 `map.kakao.com/?q={주소}` → 주소 결과 1건으로 정확히 잡힌다(삼성테크노파크)
+ * 매장마다·고객마다 쓰는 지도가 달라 하나만 두면 절반은 주소를 손으로 옮겨 적는다.
+ * **둘 다 좌표로 간다** — 그래야 두 링크가 같은 지점을 가리킨다.
  *
- * **이름으로 검색하지 않는다.** 카카오맵에 삼성 센터는 「삼성전자서비스 강릉센터」로 정식
- * 등록돼 있지만 **178곳 전수를 확인하지 않았고**, 우리가 부르는 이름(`삼성전자 모바일
- * 강릉센터`)과도 다르다. 좌표는 자료에 178곳 전부 들어 있는 **확인된 사실**이라 그쪽을 쓴다.
- * 좌표 링크에도 「길찾기」가 뜨므로 잃는 것이 없다.
+ *   · 카카오 `map.kakao.com/link/map/{이름},{위도},{경도}` — 실물로 눌러 확인했다
+ *     (이름표가 붙은 핀 + 「길찾기」, 프로덕션에서도 확인).
+ *   · 구글  `google.com/maps/search/?api=1&query={위도},{경도}` — 실물로 눌러 확인했다
+ *     (좌표 정확히 반영 · 「경로」 버튼 · 지도 데이터는 TMap Mobility).
+ *     형식은 구글 공식 **Maps URLs** 스펙이라 흔들릴 걱정이 적다.
+ *   · 좌표가 없으면 카카오는 주소 검색(`?q=`), 구글은 같은 `query=` 에 주소를 넣는다.
  *
- * **네이버지도는 넣지 않았다** — 링크 형식을 실물로 확인하지 못했다. 화면에 링크가 있는데
- * 안 열리면 상담이 그 자리에서 막힌다(부품보유기간을 "확인 필요"로 비워 두는 것과 같은 규칙).
+ * **구글맵 핀에는 이름표가 안 붙는다** — 제목이 `37°15'59.3"N 127°03'34.0"E` 로 뜬다.
+ * `?api=1&query={좌표}` 에 이름 자리가 없어서다. 그래서 **버튼 글자로 어느 지도인지
+ * 밝히고**, 이름이 필요한 안내(「삼성테크노파크로 찾으세요」)는 화면 글로 따로 적는다.
  *
- * **하만 전문센터는 카카오맵 장소 DB에 없다**(실측). 그래서 주소로 보내고, 화면이
- * *"건물명으로 찾으세요"* 라고 밝힌다 — 이름으로 검색하면 안 나오는 것이 사실이다.
+ * **네이버지도는 넣지 못했다 — 되살리기 전에 이 문단을 읽을 것**(2026-08-27 실측).
+ * 세 갈래를 전부 두드렸고 셋 다 막혔다:
+ *
+ *   ① 공식 URL Scheme 문서는 **`nmap://` 모바일 앱 전용**이다 — PC 에서는 아무 일도
+ *      안 일어나고 앱이 없는 폰에서도 마찬가지다. 매장 기기가 PC 인 곳이 있다.
+ *   ② 네이버 클라우드 **공식 포럼의 네이버 측 답변**(2024-04-01)이 안내하는
+ *      `map.naver.com/?lng=&lat=&title=` 는 **지금은 동작하지 않는다.** 눌러 보니
+ *      `map.naver.com/p?c=15.00,0,0,0,dh` 로 리다이렉트되며 **좌표가 통째로 사라졌다**
+ *      (정상은 `c={x},{y},{줌},0,0,0,dh` 7개 필드인데 앞 두 자리가 빠진다).
+ *   ③ `c=` 는 **WGS84 위경도가 아니라 네이버 자체 투영좌표(x,y)** 를 받는다 —
+ *      우리가 가진 위경도로는 만들 수 없고 변환식을 검증할 방법도 없다.
+ *
+ * **그리고 더 확인할 수 없다** — `map.naver.com/robots.txt` 가
+ * `User-agent: ClaudeBot → Disallow: /` 이고(`*` 그룹도 `/$`·`/p/$` 만 허용),
+ * 브라우저 도구에서도 그 도메인이 막힌다. 남은 후보(`/p/search/{검색어}`)는
+ * **사람이 직접 눌러 봐야** 확인된다.
+ *
+ * **robots 가 링크 자체를 막는 것은 아니다** — 그것은 자동 수집을 규율하고, 화면의
+ * 링크는 상담사가 손으로 누르면 그 사람의 브라우저가 여는 것이다. 걸림돌은 "걸어도
+ * 되는가"가 아니라 **"우리가 동작을 확인할 수 없다"** 쪽이다.
+ *
+ * 확인되지 않은 링크를 화면에 두지 않는 이유는 늘 같다 — 안 열리면 상담이 그 자리에서
+ * 막히고 **화면에는 아무 표시도 안 난다.** `test-as [15]` 의 `UNVERIFIED` 가 그 경계를 지킨다.
  */
 function mapLink(name, la, ln, addr){
-  var url = (la != null && ln != null)
-    ? 'https://map.kakao.com/link/map/' + encodeURIComponent(name) + ',' + la + ',' + ln
-    : 'https://map.kakao.com/?q=' + encodeURIComponent(addr || name);
-  return '<a class="maplink" href="' + esc(url) + '" target="_blank" rel="noopener">지도에서 보기</a>';
+  var out = [];
+  if (la != null && ln != null){
+    out.push(['카카오맵', 'https://map.kakao.com/link/map/'
+      + encodeURIComponent(name) + ',' + la + ',' + ln]);
+    out.push(['구글맵', 'https://www.google.com/maps/search/?api=1&query='
+      + encodeURIComponent(la + ',' + ln)]);
+  } else {
+    out.push(['카카오맵', 'https://map.kakao.com/?q=' + encodeURIComponent(addr || name)]);
+    out.push(['구글맵', 'https://www.google.com/maps/search/?api=1&query='
+      + encodeURIComponent(addr || name)]);
+  }
+  var inner = out.map(function(x){
+    return '<a class="maplink" href="' + esc(x[1]) + '" target="_blank" rel="noopener">'
+      + esc(x[0]) + '</a>';
+  }).join('');
+  return '<span class="maplinks">' + inner + '</span>';
 }
 /*
  * 「어디로 가면 되나」 — `HARMAN.ways` 를 번호 붙은 줄로 그린다.
@@ -1194,7 +1241,7 @@ function renderContacts(){
        <div class="ct lg">
          <span class="ct-b"><b>${esc(HARMAN.p)}<span class="ct-tag">수리·교환</span></b>
          <span class="ct-d">${esc(HARMAN.c)}
-           ${opsRow('주소', `<span>${esc(HARMAN.a)}</span>${mapLink(HARMAN.p, null, null, HARMAN.a)}
+           ${opsRow('주소', `<span>${esc(HARMAN.a)}</span>${mapLink(HARMAN.bldg, HARMAN.la, HARMAN.ln, HARMAN.a)}
              <span class="wsub">지도 앱에서는 센터 이름이 아니라 <b>${esc(HARMAN.bldg)}</b> 로 찾으세요 —
                「하만」·「시머스」로는 검색되지 않습니다.</span>`)}
            ${opsRow('영업', `<span>${esc(HARMAN.hours)}</span>`)}

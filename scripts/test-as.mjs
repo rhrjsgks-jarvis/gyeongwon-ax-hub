@@ -1202,11 +1202,24 @@ pass('상황실·업무·운영 골든 5건');
 {
   const KAKAO_PIN = 'https://map.kakao.com/link/map/';
   const KAKAO_Q   = 'https://map.kakao.com/?q=';
-  /* 확인하지 않은 지도 서비스가 새어 들어오면 잡는다 */
-  const UNVERIFIED = /map\.naver\.com|naver\.me|google\.[a-z.]+\/maps|maps\.app\.goo\.gl|tmap|map\.worldstreet/i;
+  const GOOGLE    = 'https://www.google.com/maps/search/?api=1&query=';
+  /*
+   * **확인한 형식만 쓴다** — 이 목록에 걸리면 실패시킨다.
+   *
+   * · **네이버지도 전체를 막는다.** 공식 포럼이 안내하는 `?lng=&lat=&title=` 가
+   *   실측에서 **좌표를 통째로 잃었고**(`p?c=15.00,0,0,0,dh` 로 리다이렉트), `c=` 는
+   *   위경도가 아니라 네이버 자체 투영좌표라 우리가 만들 수 없다. robots 와 브라우저
+   *   차단으로 **더 확인할 방법도 없다.** 되살리려면 사람이 눌러 확인한 뒤 이 줄을 고칠 것.
+   * · **구글 단축 URL(`maps.app.goo.gl`)은 막는다** — 무엇을 가리키는지 열어 보기
+   *   전에는 알 수 없다. 우리가 쓰는 것은 공식 Maps URLs 스펙(`?api=1&query=`)뿐이다.
+   * · `nmap://`(네이버 앱 스킴)은 **PC 에서 아무 일도 안 일어난다.**
+   */
+  const UNVERIFIED = /map\.naver\.com|naver\.me|maps\.app\.goo\.gl|tmap|map\.worldstreet|nmap:/i;
 
   /* [15-a] 삼성 178곳 — 상세에 지도 링크가 있고 **자료의 좌표를 그대로** 쓴다 */
   const svcPath = path.join(root, 'public', 'svc-centers.json');
+  const SVCJ = fs.existsSync(svcPath)
+    ? JSON.parse(fs.readFileSync(svcPath, 'utf8')) : null;
   if (!fs.existsSync(svcPath) || typeof A.loadSvc !== 'function') {
     console.log('SKIP: svc-centers.json 이 없어 삼성 센터 지도 링크 검사를 건너뜁니다');
   } else {
@@ -1245,17 +1258,55 @@ pass('상황실·업무·운영 골든 5건');
   } else {
     const H = A.HARMAN || {};
     const links = [...g.querySelectorAll('a')].map((a) => a.getAttribute('href') || '');
-    const mapl = links.filter((u) => /map\.kakao\.com/.test(u));
+    const mapl = links.filter((u) => ['map.kakao.com', 'map.naver.com', 'google.com/maps']
+      .some((h) => u.includes(h)));
 
     if (!mapl.length) {
       fail('하만 전문센터에 지도 링크가 없다 — 사장님이 요청한 위치 안내가 빠졌다');
-    } else if (mapl.some((u) => u.startsWith(KAKAO_PIN))) {
-      fail('하만 지도 링크가 좌표 형식이다 — 그 센터의 좌표는 자료에 없다(지어낸 값이다)');
-    } else if (!mapl.every((u) => u.startsWith(KAKAO_Q))) {
-      fail(`하만 지도 링크가 확인한 형식이 아니다 — ${mapl[0].slice(0, 60)}`);
-    } else if (!mapl.some((u) => decodeURIComponent(u).includes(H.a || '\u0000'))) {
-      fail('하만 지도 링크의 검색어가 센터 주소와 다르다');
-    } else pass('하만 지도 링크가 주소 검색으로 간다 (좌표를 지어내지 않는다)');
+    } else if (!mapl.some((u) => u.startsWith(KAKAO_PIN))) {
+      fail('하만 카카오맵 링크가 좌표 형식이 아니다');
+    } else if (!mapl.some((u) => u.startsWith(GOOGLE))) {
+      fail('하만 구글맵 링크가 없거나 공식 Maps URLs 형식(?api=1&query=)이 아니다');
+    } else if (H.la == null || H.ln == null) {
+      fail('HARMAN 에 좌표가 없다');
+    } else if (!mapl.every((u) => decodeURIComponent(u).includes(String(H.la))
+      && decodeURIComponent(u).includes(String(H.ln)))) {
+      fail(`하만 지도 링크 2곳이 같은 좌표(${H.la}, ${H.ln})를 가리키지 않는다`);
+    } else if (!decodeURIComponent(mapl.find((u) => u.startsWith(KAKAO_PIN))).includes(H.bldg)) {
+      /* **카카오 핀 이름표는 건물명이어야 한다.** 지도 장소 DB에 그 센터가 없어(실측)
+         센터명을 달면 지도에 뜨는 이름과 검색되는 이름이 어긋난다.
+         **구글은 이름 자리가 없어**(제목이 좌표로 뜬다) 여기서 보지 않는다. */
+      fail(`하만 카카오 핀 이름표가 건물명(${H.bldg})이 아니다`);
+    } else pass(`하만 지도 링크 2곳(카카오·구글)이 같은 좌표로 간다 (${H.la}, ${H.ln})`);
+
+    /*
+     * [15-c] **좌표가 주소와 같은 동네인가.**
+     *
+     * `H.la`/`H.ln` 은 삼성 178곳과 달리 **우리가 수집한 값이 아니라** 네이버 공식
+     * 지역검색 API 에서 받아 적은 것이다. 손으로 옮겨 적는 값은 자릿수를 하나 틀리면
+     * **링크가 엉뚱한 곳을 가리키는데 화면에는 아무 표시도 안 난다.**
+     *
+     * **자기 자신과 비교해서는 못 잡는다** — 링크 좌표는 이 값에서 만들어지므로 늘 같다.
+     * 그래서 **삼성 센터 자료가 검산한다**: 하만 주소가 말하는 시(市)의 센터들과 한
+     * 권역 안에 있어야 한다. 실제로 삼성 수원 센터들과 하만은 같은 수원시다.
+     */
+    if (H.la != null && SVCJ) {
+      const city = ((H.a || '').match(/([가-힣]+시)/) || [])[1];
+      const near = SVCJ.items.filter((x) => x.sg && x.sg.startsWith(city || '\u0000'));
+      if (!city) fail('하만 주소에서 시(市)를 읽지 못했다');
+      else if (!near.length) console.log(`SKIP: ${city} 삼성 센터가 없어 좌표 검산을 건너뜁니다`);
+      else {
+        /* 같은 시 안의 센터 중 가장 가까운 것까지의 거리 — 0.1도는 약 11km 로,
+           한 시(市) 안이면 넉넉히 들어오고 다른 도시면 벗어난다 */
+        const d = Math.min(...near.map((x) =>
+          Math.hypot(x.la - H.la, x.ln - H.ln)));
+        if (d > 0.1)
+          fail(`하만 좌표(${H.la}, ${H.ln})가 ${city} 삼성 센터 ${near.length}곳에서`
+            + ` ${(d * 111).toFixed(1)}km 떨어져 있다 — 주소는 ${city}인데 좌표가 다른 동네다`);
+        else pass(`하만 좌표가 ${city} 삼성 센터 ${near.length}곳과 같은 권역`
+          + ` (가장 가까운 곳 ${(d * 111).toFixed(1)}km)`);
+      }
+    }
 
     /* [15-c] **센터 이름으로는 검색되지 않는다는 사실을 화면이 밝히는가.**
        카카오맵 장소 DB에 「하만 오디오 전문 서비스센터」도 「시머스」도 없다(실측).
