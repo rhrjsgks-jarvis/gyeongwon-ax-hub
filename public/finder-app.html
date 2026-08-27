@@ -688,7 +688,7 @@ function parseQuery(raw){
    * 통합검색 `normalize()` 와 같은 규칙이다.
    */
   let q = " " + raw.toLowerCase().replace(/(\d),(?=\d)/g,"$1").replace(/,/g," ") + " ";
-  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null, inch:null,
+  const P = {tokens:[], terms:[], budgetMax:null, budgetMin:null, dim:{}, cats:[], wantNew:false, wantValue:false, wantPremium:false, pkg:false, unsupported:[], tags:[], areaMin:null, inch:null, pyeong:null, pyeongM2:null,
     // 형태 필터(SUBCAT) · 조건 그룹(그룹 안은 OR, 그룹끼리는 AND) · DB 에 없어 뺀 말
     subs:[], groups:[], ignored:[]};
   // 예산
@@ -744,12 +744,31 @@ function parseQuery(raw){
   const PY_SLACK = 1.0;        // 제조사 평형 표기의 관례 오차(실측 최대 0.84)
   m = q.match(/(\d{1,3}(?:\.\d+)?)\s*평/);
   if(m){ const conv = +m[1] * PY_M2;
+         /*
+          * ── **`N평` 은 제품 규격이지 방 크기가 아니다** (2026-08-27 사용자 지적) ──────
+          *
+          * *"무풍 19평 공기청정 을 검색하면 19평이 넘는 모델도 일괄로 나옵니다.
+          * 우리가 원하는 건 19형이지 20형 22형 25형 같은 상품이 아닙니다."*
+          *
+          * `면적 >= 요청`("그 공간을 감당하는가")으로 두었더니 19평 요청에 20·25평형이
+          * 함께 나왔다. **인치와 같은 성격이다** — `65인치` 가 "65인치 이상"이 아니듯
+          * `19평` 도 "19평 이상"이 아니다. 상담에서 *"19평형 주세요"* 는 25평형을 원한다는
+          * 뜻이 아니고, 평형이 올라가면 값과 크기가 함께 올라간다.
+          *
+          * 그래서 **평형은 정확 매칭**이다(`P.pyeongM2`). 여유는 관례 오차 ±1.0㎡ 그대로 —
+          * 인접 평형 간격이 3.3㎡ 라 위아래로 1.0 을 줘도 섞이지 않는다
+          * (19평 61.8~63.8 → 62.6 만 · 20평 65.1~67.1 → 65.9 만).
+          *
+          * **`N㎡` 는 그대로 '이상' 이다**(아래) — 그쪽은 사람이 **방 넓이**를 말하는 것이라
+          * *"이 방을 감당하는가"* 로 읽는 것이 맞다. 두 말의 뜻이 실제로 다르다.
+          */
+         P.pyeong = +m[1]; P.pyeongM2 = conv;
          P.areaMin = Math.max(0, conv - PY_SLACK); q = q.replace(m[0]," ");
          /* 해석 바에는 **환산값**을 적되 `급` 을 붙인다 — 여유는 표기 오차를 덮는 장치라
             화면에 61.8 이라고 쓰면 "왜 62.81 이 아니지" 하고 헷갈리고, 그렇다고
             `62.8㎡ 이상` 이라고만 쓰면 62.6㎡ 제품이 나오는 것이 설명되지 않는다.
             `급` 한 글자가 "제조사 평형 표기 기준"임을 밝힌다. */
-         P.tags.push(`${m[1]}평(${conv.toFixed(1)}㎡)급 이상`); }
+         P.tags.push(`${m[1]}평형(${conv.toFixed(1)}㎡)`); }
   if(P.areaMin==null){
     m = q.match(/(\d{1,3}(?:\.\d+)?)\s*(?:㎡|m2|제곱미터)/i);
     if(m){ P.areaMin = +m[1]; q = q.replace(m[0]," "); P.tags.push(`${m[1]}㎡ 이상`); }
@@ -1287,6 +1306,20 @@ function search(P){
     if(hasTerms && hits.length===0 && !P.cats.length) continue;
     if(hasTerms && hits.length===0 && P.cats.length) sc = 1;
     out.push({p, sc, hits});
+  }
+  /*
+   * ── 평형은 **정확히 그 평형만** (2026-08-27) ────────────────────────────────
+   * 위 루프는 `areaMin`(하한)으로만 걸렀으므로 여기서 위쪽도 자른다.
+   *
+   * **0종이면 물러선다.** 평형 규격으로 파는 것은 에어컨뿐이고, 공기청정기는
+   * 청정면적(33·60·85㎡)이라 `19평 공기청정기` 가 정확 매칭으로는 0종이 된다 —
+   * 그때는 *"그 공간을 감당하는가"* 로 넓혀 찾고 **화면에 그 사실을 적는다**
+   * (0건인 조건을 빼고 다시 찾는 `P.ignored` 와 같은 원칙이다).
+   */
+  if(P.pyeongM2 != null){
+    const exact = out.filter(r=>{ const a = prodArea(r.p); return a!=null && Math.abs(a - P.pyeongM2) <= 1.0; });
+    if(exact.length) out.splice(0, out.length, ...exact);   // 같은 배열을 유지한다(아래 정렬이 이어진다)
+    else if(out.length) P.notes.push(`${P.pyeong}평형 제품이 없어 ${P.pyeong}평 이상으로 넓혀 찾았습니다`);
   }
   out.sort((a,b)=>{
     if(b.sc !== a.sc) return b.sc - a.sc;
