@@ -1440,5 +1440,36 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   reset();
 }
 
+// ── [15] 안내 문구에 HTML 태그가 새어 나오지 않는가 (2026-08-28 실물 확인에서 발견) ──
+/*
+ * 오른쪽 안내는 `row()` 가 **통째로 이스케이프**한다(사용자 입력이 섞일 수 있어 맞는 처리다).
+ * 그런데 문구 쪽에 강조를 넣어 두어 화면에 `<b>인식 결과를 그대로 믿지 마세요.</b>` 가
+ * **글자로 그대로** 떴다 — 실물 스크린샷에서 잡혔고 어떤 검사도 안 보고 있었다.
+ * AS 앱이 원문의 `<br/>` 에서 이미 겪은 그 종류다.
+ *
+ * **이스케이프를 푸는 쪽으로 고치지 않는다** — 방 이름 같은 사용자 값이 그 문장에 들어간다.
+ * 문구에서 태그를 빼는 것이 맞고, 이 검사가 그것을 지킨다.
+ */
+{
+  const st = P.state;
+  const rect = (x, y, w, h) => [
+    { x1: x, y1: y, x2: x + w, y2: y }, { x1: x + w, y1: y, x2: x + w, y2: y + h },
+    { x1: x + w, y1: y + h, x2: x, y2: y + h }, { x1: x, y1: y + h, x2: x, y2: y },
+  ];
+  st.items = []; st.walls = []; st.rooms = []; st.roomSel = null;
+  st.scaled = true; st.mmPerPx = 20; st.exclusiveM2 = 20;   // 방 하나가 세대 전체 크기가 되게
+  st.baseInfo = { tilted: true };                            // 기울기 경고도 함께 띄운다
+  P.addRoom('거실', rect(0, 0, 5000, 4000));
+  P.renderSide();
+  const el = dom.window.document.getElementById('report');
+  const txt = (el && el.textContent) || '';
+  const tag = txt.match(/<\/?[a-zA-Z][^>]*>/);
+  if (!txt) fail('안내(#report)가 비어 있다 — 검사가 아무것도 못 본다');
+  else if (!/곧지 않습니다/.test(txt)) fail('기울기 경고가 안 떴다 — 검사 준비가 틀렸다');
+  else if (tag) fail(`안내 문구에 HTML 태그가 글자로 나온다: ${tag[0]} — row() 가 이스케이프하므로 문구에 태그를 넣으면 안 된다`);
+  else pass('안내 문구 — HTML 태그가 글자로 새지 않는다');
+  st.baseInfo = null; st.exclusiveM2 = null; st.rooms = []; st.walls = []; st.mmPerPx = null;
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

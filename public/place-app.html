@@ -4710,7 +4710,9 @@ function renderSide(){
     ? row('ok', `공간 ${state.rooms.length}곳`
         + (pieces?` · ${pieces}곳은 조각으로 이어 붙임`:'')
         + (opensN?` · 개구부 ${opensN}곳`:'')
-        + (whole?` — <b>${esc(whole.name)}가 세대 전체(전용 ${state.exclusiveM2}㎡) 크기입니다. 방이 나뉘지 않았을 수 있어요 — '더 좁게'로 다시 인식해 보세요</b>`:''))
+        /* row() 가 통째로 이스케이프하므로 **여기에 태그를 넣으면 글자로 보인다** —
+           실제로 화면에 `<b>…</b>` 가 그대로 떴다. 안쪽 esc() 도 이중 이스케이프라 뺀다. */
+        + (whole?` — ${whole.name}가 세대 전체(전용 ${state.exclusiveM2}㎡) 크기입니다. 방이 나뉘지 않았을 수 있어요 — '더 좁게'로 다시 인식해 보세요`:''))
     : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가'));
   /*
    * **인식이 스스로 포기한 것을 숨기지 않는다.**
@@ -4722,7 +4724,7 @@ function renderSide(){
   const drawLine = !bi ? null
     : (bi.tilted
         ? row('warn', '이 이미지는 벽이 가로·세로로 곧지 않습니다(입체 렌더링·사진·표 지면일 수 있어요) — '
-            + '<b>인식 결과를 그대로 믿지 마세요.</b> 2D 평면도 부분만 잘라 올리거나 <b>경계 수정</b>으로 고쳐 주세요')
+            + '인식 결과를 그대로 믿지 마세요. 2D 평면도 부분만 잘라 올리거나 경계 수정으로 고쳐 주세요')
         : (bi.outline ? row('warn', '벽을 칠하지 않고 선으로만 그린 도면이라 가구·글씨가 함께 남습니다 — 경계 수정으로 다듬어 주세요') : null));
   $('#report').innerHTML = [
     row(state.scaled?'ok':'warn', state.mmPerPx ? `축척 확정 (도면 1px = ${state.mmPerPx.toFixed(2)}mm)` : (state.scaled ? '축척 확정 (벽 실제 길이 입력 기준)' : '축척 미확정 — 벽을 그리고 실제 길이를 입력하세요')),
@@ -7520,6 +7522,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, exportLibrary, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
+  renderSide,
   placeable, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
   /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
   renderRooms,
