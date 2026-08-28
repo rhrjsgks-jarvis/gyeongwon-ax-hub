@@ -1623,6 +1623,75 @@ const knownGaps = [];
   }
 
   /*
+   * ── 상담 한 번이 곧 도면 한 장이 된다 (2026-08-28 사장님: *"도면데이터도 부족하며"*) ──
+   *
+   * 웹 수집은 소진됐고 공용 목록을 늘리는 길은 **매장에서 잡은 벽선을 모으는 것**뿐인데,
+   * 새는 곳이 있었다 — 단지 목록에서 연 도면은 **단지·주택형 이름이 화면 상태에 안
+   * 담겨서**(설정하는 곳이 두 군데뿐인데 이 경로가 빠져 있었다) ①결과 카드 제목이
+   * 단지명 없이 나가고 ②이름을 모르니 축척·벽선을 자동으로 남길 수가 없었다.
+   *
+   * 여기서 재는 것은 **끝에서 끝까지**다 — 목록에서 눌러 들어가 → 이름이 담기고 →
+   * 벽선이 이 기기에 남는가. 가운데 한 곳만 봐서는 새는 곳을 못 찾는다.
+   */
+  {
+    const auto = await page.evaluate(async () => {
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const P = window.__place;
+      const idx = await P.loadPlanIndex();
+      /* 색인에 축척이 실린 도면으로 잰다 — 길이를 손으로 넣는 단계를 건너뛴다 */
+      let hit = null;
+      for (const c of idx) for (const p of (c.plans || [])) if (p.mmPerPx && !hit) hit = { c, p };
+      if (!hit) return { skip: true };
+      try { localStorage.removeItem('place_library_v1'); } catch (_) {}
+      P.state.rooms = []; P.state.walls = []; P.state.items = [];
+      P.state.img = null; P.state.mmPerPx = null; P.state.scaled = false;
+      P.state.complexName = null; P.state.typeName = null;
+      await P.openLibrary(); await wait(300);
+      const items = () => [...document.querySelectorAll('#libbody .libitem')];
+      const click = (t) => { const b = items().find((x) => (x.textContent || '').includes(t)); if (b) b.click(); return !!b; };
+      const sido = (hit.c.region || '').split(' ')[0];
+      const chip = [...document.querySelectorAll('#libchips .chip')].find((x) => (x.textContent || '').includes(sido));
+      if (chip) { chip.click(); await wait(200); }
+      if (!click((hit.c.region || '').split(' ').slice(-1)[0])) return { err: '지역 못 찾음' };
+      await wait(300);
+      if (!click(hit.c.complex)) return { err: '단지 못 찾음' };
+      await wait(300);
+      if (!click(String(hit.p.type))) return { err: '도면 못 찾음' };
+      for (let i = 0; i < 60 && !P.state.img; i++) await wait(200);
+      await wait(2500);
+      /* 자동 저장은 늦춰 부른다(경계를 끄는 동안 매 프레임 저장하지 않으려고) */
+      await wait(1800);
+      let saved = [];
+      try { saved = JSON.parse(localStorage.getItem('place_library_v1') || '[]'); } catch (_) {}
+      const e = saved.find((x) => x.complex === hit.c.complex && x.type === String(hit.p.type));
+      return {
+        want: `${hit.c.complex} ${hit.p.type}`,
+        complexName: P.state.complexName, typeName: P.state.typeName,
+        rooms: (P.state.rooms || []).length, scaled: !!P.state.scaled,
+        savedN: saved.length, entryRooms: e ? e.rooms.length : 0,
+        entryMm: e ? e.mmPerPx : null, entryAuto: e ? !!e.auto : false,
+      };
+    });
+
+    if (auto.skip) console.log('SKIP: 색인에 축척이 실린 도면이 없어 자동 저장을 검사하지 못했다');
+    else if (auto.err) fail(`벽선 자동 저장 검사를 못 했다 — ${auto.err}`);
+    else if (auto.complexName !== auto.want.replace(new RegExp(' ' + auto.typeName + '$'), ''))
+      fail(`단지 이름이 안 담긴다 — complexName=${auto.complexName} (기대: ${auto.want})`
+        + ' · 결과 카드 제목이 단지명 없이 나가고 벽선도 자동으로 안 남는다');
+    else if (!auto.typeName) fail('주택형 이름이 안 담긴다 — typeName 이 비었다');
+    else if (!auto.scaled || auto.rooms < 2)
+      fail(`자동 저장 조건이 안 갖춰졌다 — 축척 ${auto.scaled} · 공간 ${auto.rooms}곳`);
+    else if (!auto.entryRooms)
+      fail(`벽선이 이 기기에 안 남았다 (저장 ${auto.savedN}건) — 상담사가 애써 잡은 것이 사라진다`);
+    else if (!auto.entryAuto) fail('자동으로 담은 표시(auto)가 없다 — 합칠 때 사람 확인분과 구분이 안 된다');
+    else if (!auto.entryMm)
+      fail('저장된 벽선에 축척(mmPerPx)이 없다 — 다음에 열면 도면을 못 띄운다');
+    else pass(`벽선 자동 저장 — ${auto.want}: 이름 담김 · 방 ${auto.entryRooms}곳 · 축척 ${auto.entryMm} 함께 남음`);
+
+    await page.evaluate(() => { try { localStorage.removeItem('place_library_v1'); } catch (_) {} });
+  }
+
+  /*
    * ── 실제 도면 3장에서 3D 공간 수 = 2D 인식 공간 수 (2026-08-14 신설) ──
    *
    * 지시문 C 의 완료 조건이다. **단지 불러오기 경로**로 확인해야 한다 — 그 경로만
