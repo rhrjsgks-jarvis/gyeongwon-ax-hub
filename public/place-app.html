@@ -992,6 +992,108 @@ function insideFor(it, x, y){
   if (state.rooms.length) return state.rooms.some((rm)=>inRoom(rm, x, y));
   return insideRoom(x, y);
 }
+/*
+ * ── 벽을 뚫고 놓이는 것을 막는다 (2026-08-28 사장님 지적) ──────────────
+ *
+ * *"가전제품이 벽을 뚫고 이동하는 제품도 아직 있어보입니다"*.
+ *
+ * 재현해 보니 증상이 둘인데 **뿌리는 하나**였다 — 판정이 *"이 점이 어딘가 방 안인가"* 만
+ * 묻고 **"몸통이 벽을 가로지르는가"** 는 한 번도 묻지 않았다.
+ *
+ *   ① 두 방 사이 벽에 걸쳐 놓으면 **모서리가 각각 다른 방 안**이라 통과했다
+ *      (냉장고 912mm 를 200mm 벽 한가운데 → `escapesRoom:false`, 경고 0건)
+ *   ② 방 안으로 튀어나온 기둥·벽감은 **모서리 넷 사이로 지나가** 안 보였다
+ *      (세탁기 1200mm 가 600×900 기둥을 관통 → `escapesRoom:false`)
+ *
+ * **벽 선분과 교차하는지로 고치지 않았다.** 그 방식은 트인 거실+주방처럼 실제로 벽이
+ * 없는데 두 다각형으로 잡힌 곳에서 오탐이 난다 — 안쪽 다각형(주방)의 경계가 가짜 벽으로
+ * 읽혀 거실 쪽으로 조금만 나와도 막힌다. 대신 **"몸통의 모든 점이 잡힌 공간 어딘가에
+ * 들어야 한다"** 로 잡는다: 두 방 사이 벽 띠는 어느 다각형에도 없으므로 ①이 걸리고,
+ * 기둥도 마찬가지라 ②가 걸리며, 거실이 주방을 품고 있으면 합집합이 메워 트인 공간은
+ * 그대로 통과한다. `insideFor` 의 "어느 방이든" 규칙(2026-08-11 사용자 요구)도 그대로다.
+ *
+ * **문·창 자리는 예외다 — 거기엔 벽이 없다.** 개구부 가까이는 놓을 수 있고, 문 앞을
+ * 막는 것은 이미 소프트 경고가 다룬다. 하드로 막으면 문간에 놓는 흔한 배치가 통째로
+ * "안 들어갑니다"가 되어, 이 저장소가 도어 오픈을 하드로 안 만든 것과 같은 손실이 난다.
+ */
+const OPEN_TOL = 250;      // 개구부 옆으로 허용하는 폭(mm). 벽 두께 실측 중앙값(약 200) 언저리
+const PROBE_STEP = 120;    // 테두리를 훑는 간격(mm) — **가장 얇은 벽보다 촘촘해야 건너뛰지 않는다**
+const PROBE_IN   = 150;    // 속을 훑는 간격(mm) — 몸통에 통째로 삼켜진 기둥을 잡는다
+const PROBE_INSET = 10;    // 훑는 점을 몸통 안쪽으로 이 만큼 들인다 (아래 설명)
+
+/** 점에서 선분까지의 거리 */
+function distToSeg(x, y, s){
+  const dx = s.x2 - s.x1, dy = s.y2 - s.y1;
+  const L2 = dx*dx + dy*dy;
+  const t = L2 ? Math.max(0, Math.min(1, ((x-s.x1)*dx + (y-s.y1)*dy) / L2)) : 0;
+  return Math.hypot(x - (s.x1 + t*dx), y - (s.y1 + t*dy));
+}
+/* 개구부 목록은 자주 쓰이므로 `state.walls` 가 바뀔 때만 다시 만든다(syncWalls 가 새 배열을 준다) */
+let _openCache = { src: null, segs: [] };
+function openSegs(){
+  if (_openCache.src !== state.walls) _openCache = { src: state.walls, segs: state.walls.filter((w)=>w.open) };
+  return _openCache.segs;
+}
+/** 문·창 자리인가 — 벽이 없는 구간이라 몸통이 지나가도 된다 */
+function nearOpening(x, y){
+  for (const w of openSegs()) if (distToSeg(x, y, w) <= OPEN_TOL) return true;
+  return false;
+}
+/** 이 점에 몸통이 있어도 되는가 = 잡힌 공간 안 **또는** 문·창 자리 */
+function placeable(it, x, y){
+  return insideFor(it, x, y) || nearOpening(x, y);
+}
+
+/**
+ * 몸통(또는 여유를 준 사각형)을 훑을 점들.
+ *
+ * **모서리 넷만으로는 부족하다** — 그 사이를 지나는 벽이 안 보인다(위 ②). 테두리를
+ * `PROBE_STEP` 간격으로, 속을 `PROBE_IN` 간격으로 훑는다.
+ *
+ * **점을 몸통 안쪽으로 조금 들인다**(`PROBE_INSET`). 벽에 붙여 놓은 가전은 뒷면이
+ * 방 경계선 **위에** 놓이는데, 다각형 경계 위의 점은 짝수-홀수 판정이 불안정해
+ * "방 밖"으로 뒤집힐 수 있다 — 그러면 **정상 배치가 통째로 경고를 단다.**
+ * 안쪽으로 들이면 그 자리가 확실히 방 안이 되고, 벽을 실제로 파고든 경우는
+ * 들인 만큼(10mm)보다 훨씬 깊이 들어가므로 그대로 걸린다.
+ */
+function bodyProbes(it, pad){
+  const p = pad || { back:0, side:0, front:0 };
+  const eps = Math.min(PROBE_INSET, it.w/4, it.d/4);
+  const hw = it.w/2 + p.side - eps;
+  const y0 = -p.back + eps, y1 = it.d + p.front - eps;
+  const c = Math.cos(it.a), s = Math.sin(it.a);
+  const W = (x, y) => [it.bx + x*c - y*s, it.by + x*s + y*c];
+  const out = [];
+  const W2 = hw*2, D2 = y1 - y0;
+  const nx = Math.max(1, Math.ceil(W2 / PROBE_STEP));
+  const ny = Math.max(1, Math.ceil(D2 / PROBE_STEP));
+  for (let i = 0; i <= nx; i++){                       // 앞뒤 두 변
+    const x = -hw + W2 * i / nx;
+    out.push(W(x, y0), W(x, y1));
+  }
+  for (let j = 1; j < ny; j++){                        // 좌우 두 변 (모서리는 위에서 이미 넣었다)
+    const y = y0 + D2 * j / ny;
+    out.push(W(-hw, y), W(hw, y));
+  }
+  const gx = Math.max(1, Math.ceil(W2 / PROBE_IN));    // 속 — 통째로 삼켜진 기둥을 잡는다
+  const gy = Math.max(1, Math.ceil(D2 / PROBE_IN));
+  for (let i = 1; i < gx; i++) for (let j = 1; j < gy; j++){
+    out.push(W(-hw + W2 * i / gx, y0 + D2 * j / gy));
+  }
+  return out;
+}
+
+/**
+ * 몸통이 **놓을 수 없는 자리를 지나는가**. 이 한 함수를 2D 끌기·3D 끌기·자동 배치·
+ * 판정이 모두 지나가므로, 여기만 고치면 네 경로가 함께 낫는다.
+ * 모서리 넷을 먼저 보고(싼 검사) 통과할 때만 촘촘히 훑는다 — 자동 배치가 후보를
+ * 수백 개 훑으므로 대부분은 모서리에서 걸러진다.
+ */
+function bodyOutside(it, pad){
+  for (const [x, y] of corners(it, pad)) if (!placeable(it, x, y)) return true;
+  for (const [x, y] of bodyProbes(it, pad)) if (!placeable(it, x, y)) return true;
+  return false;
+}
 /** 가전이 실제로 들어가 있는 공간으로 소속을 옮긴다 — 이름표는 사실을 따라야 한다 */
 function retagRoom(it){
   if (!state.rooms.length || it.staged) return;
@@ -3600,10 +3702,21 @@ function stackable(A, B){
   return null;
 }
 
+/**
+ * **벽을 가로지르는가** — 모서리는 다 놓을 수 있는 자리인데 몸통이 못 지나는 곳을 지난다.
+ * 판정이 아니라 **문구를 고르기 위한** 함수다: 벽에 걸친 것을 "집 밖으로 나갑니다"라고
+ * 하면 화면이 거짓말을 한다(상담사가 도면을 보며 "집 안인데요?" 하게 된다).
+ * 모서리부터 밖이면 그건 진짜 '밖'이므로 여기서 false 를 준다.
+ */
+function crossesWall(it){
+  if (it.staged || !canJudge(it)) return false;
+  for (const [x,y] of corners(it)) if (!placeable(it,x,y)) return false;
+  return bodyProbes(it).some(([x,y]) => !placeable(it,x,y));
+}
 /** 본체가 방을 벗어나는가 */
 function escapesRoom(it){
   if (it.staged || !canJudge(it)) return false;
-  return corners(it).some(([x,y]) => !insideFor(it,x,y));
+  return bodyOutside(it);
 }
 /** 다른 가전과 부딪히는가 (겹쳐도 되는 조합은 뺀다) */
 function hitsOther(it){
@@ -3631,6 +3744,7 @@ function collisionAt(it){
      * 뜻이다. 그런데 예전 문구는 가전에 붙은 방 이름을 그대로 썼다 — 집 밖에 있는데
      * "침실2 밖으로 나갑니다"라고 말하게 된다. 화면이 거짓말을 하면 안 된다.
      */
+    if (crossesWall(it)) return '벽을 가로지릅니다';
     if (state.rooms.length) return state.rooms.length > 1 ? '집 밖으로 나갑니다' : `${state.rooms[0].name} 밖으로 나갑니다`;
     return '방 밖으로 나갑니다';
   }
@@ -3709,9 +3823,10 @@ function evaluate(){
     const Abody = corners(A), Aclear = corners(A, A.clear);
     // 방 밖으로 나가는가 — **도면 밖에 꺼내 둔 것(staged)은 아직 판정하지 않는다.**
     // 상담사가 끌어다 넣기 전이라 "방 밖"이 당연하고, 경고로 채우면 진짜 문제가 묻힌다.
-    if (!A.staged && closed && Abody.some(([x,y]) => !insideFor(A,x,y))) {
+    if (!A.staged && closed && bodyOutside(A)) {
       const r = itemRoom(A);
-      A.warn.push(r ? `${r.name} 밖으로 나감` : '방 밖으로 나감');
+      A.warn.push(crossesWall(A) ? '벽을 가로지름'
+                : r ? `${r.name} 밖으로 나감` : '방 밖으로 나감');
     }
     for (let j=i+1;j<items.length;j++){
       const B = items[j];
@@ -6937,7 +7052,7 @@ function findSpot(item, placed){
   /** 이 자리가 쓸 만한가. strict면 도어 오픈 공간까지 비어 있어야 한다. */
   const okAt = (cand, strict) => {
     const body = corners(cand), cl = corners(cand, cand.clear);
-    if (body.some(([x,y])=>!insideFor(item,x,y))) return false;
+    if (bodyOutside(cand)) return false;
     for (const o of placed){
       if (overlaps(body, corners(o)) || overlaps(cl, corners(o, o.clear))) return false;
     }
@@ -7355,6 +7470,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   libraryAll, saveToLibrary, loadFromLibrary, openLibrary, askSaveComplex, exportLibrary, loadPlanIndex, loadPlanNames, nameRoomsFromPlan, useImage,
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
+  placeable, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
   /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
   renderRooms,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
@@ -7475,6 +7591,42 @@ function planTexture(){
   planTex.needsUpdate = true;
   return planTex;
 }
+
+/*
+ * ── 도면 전체를 덮는 바닥 (2026-08-28 사장님 요청) ───────────────────
+ *
+ * *"조이스틱으로 도면 전체를 다 이동할 수 있어야 합니다"* · *"도면 데이터를 3D 모델링하는
+ * 작업도 추가로 더 필요합니다"*.
+ *
+ * 두 요청의 뿌리가 하나였다 — **바닥이 방으로 잡힌 다각형 안에만 있었다**(`floorMesh` 가
+ * 방마다 호출된다). 도면 덮음이 중앙값 37% 라(CLAUDE.md 실측) 인식 안 된 복도·현관·
+ * 발코니는 3D 에 **바닥 자체가 없어** 걸어가면 허공이고, 화면에는 방 몇 칸이 공중에 떠
+ * 있는 그림이 된다.
+ *
+ * 그래서 방들 **아래에 도면 한 장을 통째로 깐다.** 지어내는 것이 아니라 **도면 그림을
+ * 그대로 놓는 것**이라 이 앱의 첫 원칙("근거 없는 숫자를 화면에 띄우지 않는다")에
+ * 어긋나지 않는다 — 벽도 방도 만들지 않고, 인식이 못 잡은 곳은 **바닥에 그려진 그림으로만**
+ * 보인다(그 위에 가전을 놓아도 벽 판정은 여전히 잡힌 공간 기준이다).
+ *
+ * **방 바닥보다 5mm 아래에 둔다** — 같은 높이면 두 면이 서로 깜빡인다(z-fighting).
+ * 축척(`mmPerPx`)이 없으면 만들지 않는다: 크기를 모르는 그림을 깔면 도면과 가전의
+ * 크기 관계가 통째로 거짓이 된다(2D 가 같은 이유로 이미지를 아예 안 그린다).
+ */
+function basePlanFloor(){
+  const st = P.state;
+  if (!st.img || !st.mmPerPx || !st.imgW || !st.imgH) return null;
+  const W = st.imgW * st.mmPerPx, H = st.imgH * st.mmPerPx;
+  const tex = planTexture();
+  if (!tex) return null;
+  const g = new THREE.PlaneGeometry(M(W), M(H));
+  const mesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ map: tex }));
+  mesh.rotation.x = -Math.PI / 2;                 // XY 평면을 바닥(XZ)으로 눕힌다
+  mesh.position.set(M(W / 2), M(-5), M(H / 2));   // 도면 원점이 (0,0) 이므로 한가운데로 민다
+  mesh.userData.isBase = true;                    // 가전 집기(pickItem)와 검사가 알아보게
+  return mesh;
+}
+/** 걸어 다닐 수 있는 범위 (m) — 도면이 있으면 도면 전체, 없으면 방 경계 + 여유 */
+let walkBox = null;
 
 function floorMesh(pts){
   const st = P.state;
@@ -8361,6 +8513,9 @@ function build(refit){
   const loops = P.roomLoops();
   const box = new THREE.Box3();
   let bestA = 0;
+  /* 방들 **아래에** 도면 한 장을 깐다 — 인식 못 한 곳도 발밑이 생긴다 */
+  const base = basePlanFloor();
+  if (base) root.add(base);
   for (const L of loops){
     const g = buildRoom(L);
     root.add(g);
@@ -8454,6 +8609,24 @@ function build(refit){
   const c = box.getCenter(new THREE.Vector3());
   const sz = box.getSize(new THREE.Vector3());
   ctr = [c.x, c.z];
+  /*
+   * **걸어 다닐 범위 — 도면 전체다**(2026-08-28 사장님: *"조이스틱으로 도면 전체를 다
+   * 이동할 수 있어야 합니다"*). 방 다각형으로 가두던 것을 풀었다.
+   * 가두지 않고 완전히 자유롭게 두면 **끝없이 걸어 나가 도면을 잃어버린다** — 3D 에는
+   * 2D 의 화면 맞추기(⤢) 같은 손잡이가 없어 되돌아올 길이 시점 프리셋뿐이다.
+   * 그래서 도면(없으면 방 경계) **바깥 2m** 까지만 둔다. 실질적으로 "아무 데나"이면서
+   * 길을 잃지는 않는다.
+   */
+  {
+    const ps = P.state, MG = 2;
+    let x0 = box.min.x, z0 = box.min.z, x1 = box.max.x, z1 = box.max.z;
+    if (ps.img && ps.mmPerPx && ps.imgW && ps.imgH){
+      x0 = Math.min(x0, 0); z0 = Math.min(z0, 0);
+      x1 = Math.max(x1, M(ps.imgW * ps.mmPerPx)); z1 = Math.max(z1, M(ps.imgH * ps.mmPerPx));
+    }
+    walkBox = Number.isFinite(x0) && Number.isFinite(x1)
+      ? { x0: x0 - MG, z0: z0 - MG, x1: x1 + MG, z1: z1 + MG } : null;
+  }
   fitDist = Math.max(3, Math.hypot(sz.x, sz.z) * 1.15);
   orb.max = Math.max(20, fitDist * 3);
   /*
@@ -8803,25 +8976,31 @@ function releaseJoy(){
   for (const el of joyEl.querySelectorAll('.stick')) if (el.__joyRest) el.__joyRest();
 }
 
-/** 지금 있는 방들 중 하나라도 그 점을 담고 있는가 */
+/** 지금 있는 방들 중 하나라도 그 점을 담고 있는가 — 안내띠가 "지금 집 안인가"를 적는 데 쓴다 */
 function insideAnyRoom(x, z){
   for (const poly of roomPolysM) if (inPoly(poly, x, z)) return true;
   return false;
 }
 /**
- * 바라보는 점을 옮긴다.
- * **눈높이 시점에서만 집 안에 가둔다.** 그 시점의 뜻이 *"우리 집 한 칸에 서서 본다"* 라
- * 밖으로 걸어 나가면 옆집·여백이 보여 화면이 통째로 딴 그림이 된다(`clampInside` 가
- * 개구부까지 벽으로 치는 것과 같은 이유). 둘러보기·위에서는 2D 의 자유로운 팬과 같아야
- * 하므로 가두지 않는다 — 거기서 가두면 도면 전체를 훑어볼 수가 없다.
+ * 바라보는 점을 옮긴다 — **도면 전체를 걸어 다닌다**(2026-08-28 사장님 요청).
+ *
+ * 예전에는 눈높이 시점에서 **인식된 방 다각형 안**으로만 걷게 했다. 뜻은 맞았지만
+ * (*"우리 집 한 칸에 서서 본다"*) 실제로는 갇혔다 — 도면 덮음이 중앙값 37% 라
+ * **복도·현관·발코니가 아예 걸을 수 없는 땅**이었고, 방과 방 사이에는 벽 두께만큼
+ * 틈이 있어 문을 지나 옆방으로 건너가지도 못했다.
+ *
+ * 지금은 walkBox(도면 전체 + 2m) 안에서 자유롭다. 인식이 못 잡은 곳에도 이제
+ * **도면 바닥이 깔려 있어**(basePlanFloor) 허공을 걷지 않는다.
+ * 벽을 지나가는 것은 막지 않는다 — 카메라는 물건이 아니고, 벽에 막혀 못 도는 것보다
+ * 통과해서라도 보여 주는 편이 상담에 낫다(가전은 여전히 bodyOutside 가 막는다).
  */
 function moveTarget(dx, dz){
-  if (mode3 !== 'eye' || !roomPolysM.length){ orb.tx += dx; orb.tz += dz; return; }
-  if (insideAnyRoom(orb.tx + dx, orb.tz + dz)){ orb.tx += dx; orb.tz += dz; return; }
-  /* 벽을 비스듬히 밀면 **벽을 따라 미끄러진다** — 축을 하나씩 나눠 본다.
-     안 그러면 벽에 닿는 순간 통째로 멈춰 "고장난 것 같다"가 된다. */
-  if (dx && insideAnyRoom(orb.tx + dx, orb.tz)) orb.tx += dx;
-  if (dz && insideAnyRoom(orb.tx, orb.tz + dz)) orb.tz += dz;
+  let nx = orb.tx + dx, nz = orb.tz + dz;
+  if (walkBox){
+    nx = Math.min(walkBox.x1, Math.max(walkBox.x0, nx));
+    nz = Math.min(walkBox.z1, Math.max(walkBox.z0, nz));
+  }
+  orb.tx = nx; orb.tz = nz;
 }
 
 /**
@@ -9016,6 +9195,14 @@ window.Place3D = {
   pickAt(x, y){ return pickItem(x, y); },
   /** 화면 좌표가 가리키는 바닥 위 월드 mm */
   floorAt(x, y){ return floorAt(x, y); },
+  /** 지금 바라보고 있는 점(m) — 조이스틱이 실제로 옮겼는지 검사가 잰다 */
+  get target(){ return [orb.tx, orb.tz]; },
+  /** 걸어 다닐 수 있는 범위(m) — 검사가 "도면 전체를 걷는가"를 잰다 */
+  get walkBox(){ return walkBox ? { ...walkBox } : null; },
+  /** 바라보는 점을 옮긴다 (검사·자동화용) */
+  moveTarget(dx, dz){ moveTarget(dx, dz); apply(); },
+  /** 지금 바라보는 점이 잡힌 공간 안인가 */
+  get inRoomNow(){ return insideAnyRoom(orb.tx, orb.tz); },
   WALL_H_MM, M,
 };
 

@@ -2208,6 +2208,75 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
   }
 
   /*
+   * ── 조이스틱은 도면 전체를 걷는다 (2026-08-28 사장님 요청) ──────────────
+   *
+   * *"조이스틱으로 도면 전체를 다 이동할 수 있어야 합니다"*.
+   *
+   * 예전에는 눈높이 시점에서 **인식된 방 다각형 안**으로만 걸었다. 도면 덮음이
+   * 중앙값 37% 라 복도·현관·발코니가 걸을 수 없는 땅이었고, 방과 방 사이에는 벽 두께만큼
+   * 틈이 있어 **문을 지나 옆방으로 건너가지도 못했다.**
+   *
+   * **떨어져 있는 두 방으로 잰다** — 사이의 2m 는 어느 방에도 안 든 땅이라, 예전 규칙이면
+   * 첫 걸음에서 멈춘다. 거기까지 걸어가지면 "방 밖도 걷는다"가 증명된다.
+   * 함께 보는 것 둘 — ①**끝없이 나가지는 않는가**(walkBox 밖으로 밀어 본다)
+   * ②**도면 전체에 바닥이 깔리는가**(인식 못 한 곳이 허공이면 걸어도 소용이 없다).
+   */
+  {
+    const walk = await page.evaluate(async () => {
+      const P = window.__place, T = window.Place3D;
+      const rect = (x, y, w, h) => [
+        { x1: x, y1: y, x2: x + w, y2: y }, { x1: x + w, y1: y, x2: x + w, y2: y + h },
+        { x1: x + w, y1: y + h, x2: x, y2: y + h }, { x1: x, y1: y + h, x2: x, y2: y },
+      ];
+      P.state.rooms = []; P.state.items = []; P.state.walls = []; P.state.sel = null;
+      P.state.scaled = true;
+      /* 1×1 흰 점을 도면으로 쓴다 — 크기는 mmPerPx 가 정하므로 그림 내용은 상관없다 */
+      const img = new Image();
+      img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+      await new Promise((r) => { img.onload = r; img.onerror = r; });
+      P.state.img = img; P.state.imgW = 1000; P.state.imgH = 800; P.state.mmPerPx = 12;  // 12,000 × 9,600mm
+      P.addRoom('거실', rect(0, 0, 4000, 4000));
+      P.addRoom('침실', rect(6000, 0, 3000, 3000));      // 사이 2m 는 인식 안 된 땅
+      T.open(); T.view('eye');
+      const start = T.target.slice();
+      const inRoom0 = T.inRoomNow;
+      /* 방과 방 사이(어느 다각형에도 없는 곳)로 4m 걸어간다 */
+      for (let i = 0; i < 40; i++) T.moveTarget(0.1, 0);
+      const mid = T.target.slice();
+      const inRoomMid = T.inRoomNow;
+      /* 끝없이 나가지는 않는가 — 100m 밀어 본다 */
+      for (let i = 0; i < 1000; i++) T.moveTarget(0.1, 0.1);
+      const far = T.target.slice();
+      /* 도면 전체 바닥이 깔렸는가 */
+      let base = null;
+      T.root.traverse((o) => { if (o.userData && o.userData.isBase) base = o; });
+      const bs = base && base.geometry && base.geometry.parameters
+        ? [base.geometry.parameters.width, base.geometry.parameters.height] : null;
+      const box = T.walkBox;
+      T.close();
+      return { start, mid, inRoom0, inRoomMid, far, bs, box };
+    });
+
+    const gone = Math.hypot(walk.mid[0] - walk.start[0], walk.mid[1] - walk.start[1]);
+    if (gone < 3.5)
+      fail(`3D 조이스틱: 방 밖으로 ${gone.toFixed(2)}m 밖에 못 걸었다 (4m 요청) — 방 다각형에 갇혔다`);
+    else if (walk.inRoomMid)
+      fail('3D 조이스틱: 4m 걸었는데 아직 방 안이다 — 검사가 방 밖을 재지 못하고 있다');
+    else pass(`3D 조이스틱 — 인식 안 된 땅도 걷는다 (${gone.toFixed(2)}m, 방 안 ${walk.inRoom0} → ${walk.inRoomMid})`);
+
+    if (!walk.box) fail('3D 걷기 범위(walkBox)가 없다 — 끝없이 걸어 나가 도면을 잃는다');
+    else if (walk.far[0] > walk.box.x1 + 0.01 || walk.far[1] > walk.box.z1 + 0.01)
+      fail(`3D 조이스틱: 걷기 범위를 넘었다 (${walk.far.map((n) => n.toFixed(1))} > ${walk.box.x1.toFixed(1)},${walk.box.z1.toFixed(1)})`);
+    else pass(`3D 걷기 범위 — 도면 전체 + 여유 안에서만 (${(walk.box.x1 - walk.box.x0).toFixed(1)} × ${(walk.box.z1 - walk.box.z0).toFixed(1)}m)`);
+
+    /* 도면 1000×800px × 12mm/px = 12,000 × 9,600mm = 12 × 9.6m */
+    if (!walk.bs) fail('도면 전체 바닥이 안 깔렸다 — 인식 못 한 곳이 허공이라 걸어도 소용이 없다');
+    else if (Math.abs(walk.bs[0] - 12) > 0.05 || Math.abs(walk.bs[1] - 9.6) > 0.05)
+      fail(`도면 바닥 크기가 어긋난다: ${walk.bs.map((n) => n.toFixed(2))}m (기대 12 × 9.6m)`);
+    else pass(`도면 전체 바닥 — ${walk.bs[0].toFixed(1)} × ${walk.bs[1].toFixed(1)}m (축척대로)`);
+  }
+
+  /*
    * 3D 를 켠 채로 가전을 고르면 **바로 나타나야 한다.** 예전에는 2D 로 돌아가야 보였다 —
    * 고객 앞에서 화면이 왔다 갔다 한다. 대기 중인 것은 흐리게 세우고(2D 의 회색 점선과
    * 같은 뜻) 끌어서 방 안으로 넣으면 그때부터 배치로 센다.

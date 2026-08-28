@@ -1363,5 +1363,82 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.items = []; st.walls = [];
 }
 
+// ── [14] 벽을 뚫고 놓이는 것을 막는다 (2026-08-28 사장님 지적) ──────────────
+/*
+ * *"가전제품이 벽을 뚫고 이동하는 제품도 아직 있어보입니다"* — 재현해 보니 판정이
+ * **모서리 넷만** 보고 있었다. 그래서 ①두 방 사이 벽에 걸치면 모서리가 각각 다른 방
+ * 안이라 통과했고 ②방 안 기둥은 모서리 사이로 지나가 안 보였다.
+ *
+ * **막는 것과 막지 않는 것을 함께 검사한다.** 세게 막는 쪽으로만 검사하면 다음 사람이
+ * 문턱을 올려도 통과하는데, 그러면 **정상 배치가 "안 들어갑니다"가 되는** 반대쪽 실패가
+ * 난다 — 이 저장소가 키친핏 이격에서 이미 적어 둔 그 손실이다.
+ */
+{
+  const st = P.state;
+  const rect = (x, y, w, h) => [
+    { x1: x, y1: y, x2: x + w, y2: y }, { x1: x + w, y1: y, x2: x + w, y2: y + h },
+    { x1: x + w, y1: y + h, x2: x, y2: y + h }, { x1: x, y1: y + h, x2: x, y2: y },
+  ];
+  const ring = (p) => p.map((a, i) => ({ x1: a[0], y1: a[1], x2: p[(i + 1) % p.length][0], y2: p[(i + 1) % p.length][1] }));
+  const reset = () => { st.items = []; st.walls = []; st.rooms = []; st.roomSel = null; };
+  const put = (o) => { const it = { id: 't' + Math.random(), a: 0, clear: {}, staged: false, ...o }; st.items.push(it); return it; };
+
+  // ① 두 방 사이 200mm 벽 한가운데에 냉장고 912mm
+  reset();
+  const rA = P.addRoom('침실1', rect(0, 0, 3000, 4000));
+  P.addRoom('침실2', rect(3200, 0, 3000, 4000));
+  const fr = put({ cat: '냉장고', label: '냉장고', bx: 3100, by: 1000, w: 912, d: 930, room: rA.id });
+  if (!P.escapesRoom(fr)) fail('두 방 사이 벽에 걸쳐 놓았는데 통과했다 — 벽을 뚫는다');
+  else if (P.collisionAt(fr) !== '벽을 가로지릅니다')
+    fail(`벽에 걸친 것을 이렇게 알린다: ${P.collisionAt(fr)} — "집 밖"은 거짓말이다`);
+  else pass('벽 관통 — 두 방 사이 벽에 걸치면 막는다 ("벽을 가로지릅니다")');
+
+  // 같은 냉장고를 방 한가운데·벽에 딱 붙임 — 오탐이 나면 안 된다
+  fr.bx = 1500;
+  if (P.escapesRoom(fr)) fail('방 한가운데인데 막았다 (오탐)');
+  else { fr.bx = 456; fr.by = 0;                        // 뒷면이 왼쪽 벽 경계선 위
+    if (P.escapesRoom(fr)) fail('벽에 딱 붙여 놓았는데 막았다 (오탐) — 경계선 위 점 판정이 흔들린다');
+    else pass('오탐 없음 — 방 한가운데·벽에 딱 붙이기 둘 다 통과');
+  }
+  fr.bx = 9000;
+  if (!P.escapesRoom(fr)) fail('집 밖인데 통과했다');
+  else if (P.collisionAt(fr) === '벽을 가로지릅니다') fail('집 밖인데 "벽을 가로지릅니다"로 알린다');
+  else pass('집 밖은 예전처럼 "집 밖으로 나갑니다"');
+
+  // ② 방 안으로 튀어나온 기둥(600×900)을 세탁기 1200mm 가 관통
+  reset();
+  const rC = P.addRoom('거실', ring([[0,0],[1700,0],[1700,900],[2300,900],[2300,0],[4000,0],[4000,3000],[0,3000]]));
+  const wm = put({ cat: '세탁기·콤보', label: '세탁기', bx: 2000, by: 200, w: 1200, d: 600, room: rC.id });
+  if (!P.escapesRoom(wm)) fail('방 안 기둥을 관통했는데 통과했다 — 모서리 넷만 보고 있다');
+  else { wm.by = 1200;                                  // 기둥 아래로 비켜 놓으면 정상
+    if (P.escapesRoom(wm)) fail('기둥을 비켜 놓았는데 막았다 (오탐)');
+    else pass('벽 관통 — 방 안 기둥도 잡는다 (비켜 놓으면 통과)');
+  }
+
+  // ③ 트인 거실+주방 — 거실이 주방을 품는다. 경계에 걸쳐도 막으면 안 된다
+  reset();
+  P.addRoom('거실', rect(0, 0, 6000, 5000));
+  const rK = P.addRoom('주방', rect(0, 0, 2500, 3000));
+  const dw = put({ cat: '식기세척기', label: '식기세척기', bx: 2400, by: 1000, w: 600, d: 600, room: rK.id });
+  if (P.escapesRoom(dw)) fail('트인 거실+주방 경계에 걸쳤는데 막았다 — 안쪽 다각형 경계를 가짜 벽으로 읽는다');
+  else pass('트인 공간 — 거실이 품은 주방 경계는 벽이 아니다');
+
+  // ④ 문(개구부) 자리 — 벽이 없으므로 놓을 수 있어야 한다
+  reset();
+  const wa = rect(0, 0, 3000, 4000); wa[1].open = true;
+  const wb = rect(3200, 0, 3000, 4000); wb[3].open = true;
+  const rD = P.addRoom('거실', wa); P.addRoom('침실', wb);
+  const ap = put({ cat: '공기청정기', label: '공기청정기', bx: 3100, by: 1500, w: 400, d: 400, room: rD.id });
+  if (P.escapesRoom(ap)) fail('문 자리에 걸쳐 놓았는데 막았다 — 개구부에는 벽이 없다');
+  else pass('개구부 — 문·창 자리는 지나갈 수 있다');
+
+  // ⑤ 훑는 간격이 가장 얇은 벽보다 촘촘한가 (200mm 벽을 건너뛰면 ①이 조용히 되살아난다)
+  if (P.PROBE_STEP > 200)
+    fail(`훑는 간격 ${P.PROBE_STEP}mm 가 벽 두께(약 200mm)보다 성기다 — 벽을 건너뛴다`);
+  else pass(`훑는 간격 ${P.PROBE_STEP}mm — 200mm 벽보다 촘촘하다`);
+
+  reset();
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
