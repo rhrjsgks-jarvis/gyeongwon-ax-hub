@@ -30,12 +30,25 @@ export async function GET() {
     return NextResponse.json({ ...(cache.body as object), cached: true })
   }
 
-  /* **8일치만 받는다.** 창이 최대 7일이라 그 이상은 받아도 버린다 —
-     `/api/logs` 가 60일을 받아 느려진 것과 같은 실수를 되풀이하지 않는다.
-     옛 Apps Script 는 days 를 모르지만 그냥 무시하므로 안전하다. */
+  /* **좁혀 받지 못한다 — Apps Script 의 `doGet` 이 시간순을 전제로 `break` 하기 때문이다.**
+   *
+   * 창이 최대 7일이라 `?days=8` 로 받고 싶었고 실제로 그렇게 배포했는데, **순위가 틀리게
+   * 나왔다**(실측: 맞는 값 `install 49 · finder 32 · care 32` → 받은 값 `install 18 · care 5`,
+   * finder 는 통째로 사라졌다). `doGet` 은 시트를 **뒤에서부터 훑다가 `ts < since` 면 멈추는데**,
+   * 이 앱의 로그는 **못 보낸 것을 나중에 다시 보내는 대기함**을 갖고 있어 오프라인이던 기기의
+   * 옛 이벤트가 뒤늦게 붙는다 — 실측으로 **시간 역행이 383곳, 최대 되돌림 332시간(약 14일)** 이다.
+   * 창이 좁을수록 그 줄을 일찍 만나 **그 앞이 통째로 잘린다.**
+   *
+   * 그래서 관리자 대시보드와 같은 60일로 받아 **여기서 창을 자른다.** 자료가 30일치라
+   * 60일 경계에는 역행 줄이 없어 잘리지 않는다(실측 4,520줄 = 원본 전체).
+   *
+   * **`days` 를 줄이지 말 것.** 줄이면 화면이 조용히 틀린 순위를 말한다 — 0건이 아니라
+   * *"그럴듯한데 틀린 값"* 이라 눈으로는 못 잡는다. 근본 고침은 `docs/apps-script/Code.gs` 의
+   * `break` → `continue` 이고, **그것을 Apps Script 에 재배포한 뒤에야** 좁힐 수 있다.
+   */
   for (const ms of [6000, 8000]) {
     try {
-      const res = await fetch(`${url}?days=8`, { cache: 'no-store', signal: AbortSignal.timeout(ms) })
+      const res = await fetch(`${url}?days=60`, { cache: 'no-store', signal: AbortSignal.timeout(ms) })
       if (!res.ok) continue
       const data = await res.json()
       /* 시트가 보내는 `date` 는 `'Wed Jul 29 2026 …'` 꼴이고 헤더 행도 섞여 온다.

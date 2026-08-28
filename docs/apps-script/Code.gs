@@ -149,7 +149,19 @@ function doGet(e) {
     const row = values[i];
     const ts = Number(row[0]);
     if (!ts) continue;                    // 헤더가 섞였거나 빈 줄
-    if (ts < since) break;                // 시간순이라 여기서 멈추면 된다
+    /*
+     * **시간순이라고 믿고 멈추면 안 된다**(2026-08-28 정정 — 예전에는 `break` 였다).
+     *
+     * 클라이언트에 **못 보낸 것을 나중에 다시 보내는 대기함**이 있어(logEvent.ts 의 outbox),
+     * 오프라인이던 기기의 옛 이벤트가 시트 뒤쪽에 붙는다. 실측으로 **시간 역행이 383곳,
+     * 최대 되돌림 332시간(약 14일)** 이다. 뒤에서부터 훑다가 그 줄을 만나 멈추면
+     * **그 앞이 통째로 잘린다** — 허브의 「지금 많이 찾는 것」이 `?days=8` 로 받다가
+     * 실제로 순위를 틀리게 냈다(install 49→18 · finder 는 통째로 사라짐).
+     *
+     * 값은 이미 `getRange` 로 통째로 읽어 왔으므로 끝까지 훑어도 비용이 늘지 않는다.
+     * **`continue` 를 `break` 로 되돌리지 말 것.**
+     */
+    if (ts < since) continue;
     logs.push({
       ts: ts,
       date: String(row[1]),
