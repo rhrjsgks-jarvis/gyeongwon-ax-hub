@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
+import SearchTrends from '@/components/SearchTrends'
 import QRCode from '@/components/QRCode'
 import { APP_VERSION, versionLabel } from '@/lib/version'
 import { DEV_MODULES } from '@/lib/devModules'
@@ -558,6 +559,10 @@ export default function Home() {
           검색
         </button>
       </form>
+
+      {/* 지금 팀이 많이 찾는 것 — 검색어·도구 순위(2026-08-28 사장님 요청).
+          자료가 없거나 얇으면 스스로 안 그린다. */}
+      <SearchTrends />
 
       {/* 모듈 그리드 (섹션별) — 모바일: 클릭해야 펼쳐지는 아코디언 / 데스크탑: 항상 펼침 */}
       {MODULE_GROUPS.map((group) => {

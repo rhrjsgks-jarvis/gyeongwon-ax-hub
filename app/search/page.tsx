@@ -185,7 +185,19 @@ function SearchResults() {
       .finally(() => setDetailLoading(false))
   }
 
-  useEffect(() => { if (q) logEvent('hub', 'search', q) }, [q])
+  /*
+   * **인기 검색어 칩으로 들어온 것은 세지 않는다**(2026-08-28, `from=trend`).
+   *
+   * 허브의 「지금 많이 찾는 것」이 이 로그로 만들어진다. 칩을 눌러 온 검색까지 세면
+   * 그 말이 스스로 더 위로 올라가는 **자기강화 고리**가 생겨, 며칠이면 목록이 굳어
+   * *"지금 많이 찾는 것"* 이 아니라 *"어제 1위였던 것"* 이 된다. 상담사가 **직접 친 말**만
+   * 순위에 넣어야 그 목록이 실제 수요를 말한다.
+   *
+   * (칩을 눌러 연 화면은 그것대로 유용한 진입이지만, 그 쓸모는 '검색 수요'가 아니라
+   *  '이 기능이 쓰이는가'라 성격이 다르다 — 세려면 별도 행동으로 세야 한다.)
+   */
+  const fromTrend = params.get('from') === 'trend'
+  useEffect(() => { if (q && !fromTrend) logEvent('hub', 'search', q) }, [q, fromTrend])
 
   /*
    * 조건은 **AND** 로 걸린다 — 세 가지를 물으면 세 가지가 모두 맞는 것만 남는다.
