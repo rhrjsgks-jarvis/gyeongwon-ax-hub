@@ -121,10 +121,10 @@ function fresh() {
  */
 {
   const dir = new URL('../public/', import.meta.url);
-  const apps = ['as', 'care', 'compare', 'finder', 'install', 'poster', 'quiz', 'test'];
+  const apps = ['as', 'care', 'compare', 'finder', 'install', 'install-cost', 'poster', 'quiz', 'test'];
   const miss = apps.filter((a) => !fs.readFileSync(new URL(a + '-app.html', dir), 'utf8')
     .includes('<script src="back-kit.js"></script>'));
-  ok(miss.length === 0, '[8] 여덟 앱 전부 back-kit.js 를 싣는다' + (miss.length ? ' — 빠진 앱: ' + miss.join(', ') : ''));
+  ok(miss.length === 0, '[8] 아홉 앱 전부 back-kit.js 를 싣는다' + (miss.length ? ' — 빠진 앱: ' + miss.join(', ') : ''));
   const place = fs.readFileSync(new URL('place-app.html', dir), 'utf8');
   ok(/function\s+stepBack/.test(place), '[8] 배치 시뮬레이터는 자체 뒤로가기를 그대로 갖고 있다');
 }
@@ -138,6 +138,58 @@ function fresh() {
   const line = (sw.match(/^const SWR = .*$/m) || [''])[0];
   ok(['share-kit', 'prod-symbols', 'back-kit'].every((k) => line.includes(k)),
     '[9] sw.js 의 SWR 규칙이 공용 스크립트 셋을 함께 잡는다');
+}
+
+/*
+ * [10] **여는 것이 있는 앱은 실제로 등록하는가.** back-kit 을 싣기만 하고 `Back.open` 을
+ * 안 부르면 아무 일도 일어나지 않는다 — 스크립트 태그만 보고 "적용됐다"고 읽게 된다.
+ * 실제로 `install-cost` 는 태그도 등록도 없어 결과를 펼쳐 둔 채 뒤로가기를 누르면
+ * 허브로 튕겼다(2026-08-28 실측). 화면에는 아무 표시도 안 난다.
+ */
+{
+  const dir = new URL('../public/', import.meta.url);
+  /* 앱 → 그 앱이 반드시 등록해야 하는 닫기 함수 이름 */
+  const NEED = {
+    'as-app.html': 'closeSearchBox',
+    'care-app.html': 'closeDrop',
+    'compare-app.html': 'closeRegisterModal',
+    'finder-app.html': 'closeDetail',
+    'install-cost-app.html': 'closeDrop',
+    'test-app.html': 'closeModal',
+    'share-kit.js': 'closeSheet',
+  };
+  Object.keys(NEED).forEach((f) => {
+    const src = fs.readFileSync(new URL(f, dir), 'utf8');
+    /* 정규식은 **리터럴로** 쓴다 — new RegExp('\.') 는 문자열 단계에서 역슬래시가 먹혀
+       조용히 다른 것을 매치한다. test 앱은 Back.open(()=>closeModal(false)) 처럼
+       화살표 함수를 끼우므로 여는 자리 뒤 80자 안에 이름이 있으면 등록으로 본다. */
+    const wired = [...src.matchAll(/Back\.open\(|backOpen\(/g)]
+      .some((m) => src.slice(m.index, m.index + 80).includes(NEED[f]));
+    ok(wired, '[10] ' + f + ' 이 ' + NEED[f] + ' 를 뒤로가기에 등록한다');
+  });
+}
+
+/*
+ * [11] **설치형에는 브라우저 뒤로가기가 없다.** `manifest.json` 이 `display:standalone`
+ * 이라 홈 화면에 설치하면 주소창·뒤로가기 버튼이 통째로 사라진다 — 매장 태블릿이 그렇게
+ * 쓴다. 미니앱 배선이 다 맞아도 **누를 버튼이 없어서** 뒤로가기가 없는 앱이 된다
+ * (2026-08-28 사장님 지적). 헤더 버튼이 그 유일한 길이므로 사라지면 안 된다.
+ */
+{
+  const nav = fs.readFileSync(new URL('../components/Navigation.tsx', import.meta.url), 'utf8');
+  const icon = fs.readFileSync(new URL('../components/Icon.tsx', import.meta.url), 'utf8');
+  const mani = fs.readFileSync(new URL('../public/manifest.json', import.meta.url), 'utf8');
+
+  ok(/"display"\s*:\s*"standalone"/.test(mani), '[11] 설치형이다 — 그래서 헤더 버튼이 필요하다');
+  ok(/name="back"/.test(nav), '[11] 헤더에 뒤로가기 버튼이 있다');
+  ok(nav.includes("pathname !== '/' &&"), '[11] 허브에서는 띄우지 않는다 (돌아갈 곳이 없다)');
+  ok(/window\.history\.back\(\)/.test(nav), '[11] 브라우저 뒤로가기와 같은 일을 한다 (미니앱이 쌓은 칸부터 물린다)');
+  ok(nav.includes("router.push('/')"), '[11] 셀 수 없으면 허브로 물러선다 (링크로 곧장 들어온 경우)');
+
+  /* 뒤로가기 화살표와 접기·펴기 삼각형이 같은 그림이면 눈이 헤맨다 */
+  const back = (icon.match(/back: <>([\s\S]*?)<\/>/) || [])[1] || '';
+  const chev = (icon.match(/chevron: <>([\s\S]*?)<\/>/) || [])[1] || '';
+  ok(!!back && !!chev && back !== chev, '[11] 뒤로가기 심벌이 chevron 과 다른 그림이다');
 }
 
 console.log(fail ? `\n${fail}건 실패` : '\nALL PASS');

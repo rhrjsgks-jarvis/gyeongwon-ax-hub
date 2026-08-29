@@ -236,6 +236,7 @@
 
 <div class="wrap" id="body"><div class="empty">불러오는 중…</div></div>
 
+<script src="back-kit.js"></script>
 <script src="share-kit.js"></script>
 <script>
 /*
@@ -447,7 +448,7 @@ function render() {
 function runSearch() {
   var drop = document.getElementById('sdrop');
   var toks = norm(Q).split(' ').filter(function (t) { return t.length > 1; });
-  if (!toks.length) { drop.hidden = true; drop.innerHTML = ''; return; }
+  if (!toks.length) { closeDrop(); return; }   /* 직접 감추면 쌓아 둔 칸이 남는다 */
 
   var hit = D.index.filter(function (r) {
     return toks.every(function (t) { return r.k.indexOf(t) >= 0; });
@@ -474,7 +475,7 @@ function runSearch() {
           + '<span class="w">' + esc(TABN[r.tab]) + ' · ' + esc(r.sec) + '</span>' + hl(r.t, toks) + '</div>';
       }).join('') : '')
     + (hit.length > 80 ? '<div class="shead" style="border:0">앞의 80건만 보여줍니다. 검색어를 좁혀 보세요.</div>' : '');
-  drop.hidden = false;
+  openDrop();
   drop.scrollTop = 0;
 }
 function hl(text, toks) {
@@ -507,8 +508,26 @@ function go(tab, cat, target) {
   void el.offsetWidth;                 // 같은 줄을 다시 눌러도 강조가 한 번 더 돌게
   el.classList.add('hit');
 }
+/*
+ * ── 뒤로가기 ──
+ * 검색 결과 상자가 본문 위를 덮으므로, 뒤로가기를 누르면 **앱이 아니라 이것부터** 닫혀야
+ * 한다(back-kit.js). 여덟 앱이 이미 하는 일인데 이 앱만 빠져 있어, 결과를 펼쳐 둔 채
+ * 뒤로가기를 누르면 허브로 튕겼다(2026-08-28 실측).
+ *
+ * **열림으로 넘어가는 순간에만 등록한다.** `runSearch()` 는 글자를 칠 때마다 도는데
+ * 그때마다 쌓으면 "사다리차" 를 치는 동안 네 칸이 쌓여 뒤로가기를 네 번 눌러야 한다.
+ */
+function dropOpen() { var d = document.getElementById('sdrop'); return !!d && !d.hidden; }
+function openDrop() {
+  if (dropOpen()) return;
+  document.getElementById('sdrop').hidden = false;
+  if (window.Back) Back.open(closeDrop, dropOpen);
+}
 function closeDrop() {
-  var d = document.getElementById('sdrop'); d.hidden = true; d.innerHTML = '';
+  var d = document.getElementById('sdrop');
+  var was = !d.hidden;
+  d.hidden = true; d.innerHTML = '';
+  if (was && window.Back) Back.done();
 }
 
 /* ── 조작 ─────────────────────────────────────────────── */

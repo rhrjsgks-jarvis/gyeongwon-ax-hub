@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
@@ -92,6 +92,38 @@ const NAV_ITEMS = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  /*
+   * ── 뒤로가기 ───────────────────────────────────────────────────
+   * **설치해서 쓰면 브라우저 뒤로가기가 없다**(`manifest.json` 이 `display:standalone`).
+   * 매장 태블릿은 대개 홈 화면에 설치해서 쓰므로, 미니앱 안의 배선(`back-kit.js`)이
+   * 다 맞아도 **누를 버튼이 없어서** 뒤로가기가 없는 앱이 된다(2026-08-28 사장님 지적).
+   *
+   * **브라우저 뒤로가기와 같은 일을 한다** — 미니앱이 시트·모달을 열며 쌓아 둔 칸이 있으면
+   * 그것부터 닫히고, 없으면 앞 화면으로 간다. 버튼을 따로 만들지 않고 히스토리를 쓰는 이유가
+   * 그것이다(두 갈래로 만들면 "버튼은 닫는데 뒤로가기는 벗어난다"가 된다).
+   *
+   * **셀 수 없을 때는 허브로 보낸다.** 카카오톡 링크로 곧장 들어온 경우 앞에 우리 화면이
+   * 없어 `history.back()` 이 앱을 통째로 벗어난다. 부모 프레임은 자식 iframe 이 쌓은
+   * 칸을 못 읽으므로(실측: `history.state` 가 null) 정확히 셀 방법이 없다 —
+   * 대신 **틀려도 안전한 쪽**으로 물러선다. 허브는 언제나 옳은 목적지다.
+   */
+  const moves = useRef(0)
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) { first.current = false; return }
+    moves.current++
+  }, [pathname])
+  useEffect(() => {
+    const onPop = () => { moves.current = Math.max(0, moves.current - 1) }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+  const goBack = () => {
+    if (moves.current > 0 || window.history.length > 2) window.history.back()
+    else router.push('/')
+  }
   /*
    * 공유는 **앱 헤더 우측 상단**이 맡는다(2026-08-11 사용자 요청). 미니앱 안에 떠 있던
    * 버튼은 본문을 덮었고(AS 안내문 첫 줄이 실제로 가려져 자리를 비워 두고 있었다)
@@ -160,11 +192,31 @@ export default function Navigation() {
         style={{ height: 'var(--nav-height)', background: 'var(--color-primary)' }}
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 shadow-md"
       >
+        {pathname !== '/' && (
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label="뒤로 가기"
+            title="뒤로 가기"
+            className="flex items-center justify-center rounded-full text-white mr-1.5 shrink-0"
+            style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.18)' }}
+          >
+            <Icon name="back" size={17} />
+          </button>
+        )}
         <Link href="/" className="flex items-center gap-2 text-white no-underline">
           {/* 공식 워드마크 — 글꼴로 친 "SAMSUNG" 은 글자 모양이 달라 로고가 아니다 */}
           <SamsungWordmark height={17} />
+          {/*
+            **좁은 화면에서는 이름 배지를 숨긴다**(2026-08-28). 헤더가 워드마크+배지+지점+
+            문의+공유로 빽빽해져 320·360px 에서 **공유 아이콘이 잘려 있었다** — 뒤로가기
+            버튼이 들어오며 390px 까지 번졌다. 팀 이름·버전이 이미 같은 방식으로 물러선다.
+            앱 이름은 허브 본문 h1 과 탭 제목이 계속 들고 있고, 미니앱은 바로 아래 자기
+            헤더에 제 이름을 적으므로 **폰에서 이름을 잃지 않는다.**
+            (재려면 `node .scratch/_hdrfit.mjs` — fixed 요소라 scrollWidth 로는 안 잡힌다)
+          */}
           <span
-            className="text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
+            className="hidden sm:inline text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
             style={{ background: 'rgba(255,255,255,0.2)' }}
           >
             세일즈 코파일럿
@@ -188,7 +240,10 @@ export default function Navigation() {
             type="button"
             onClick={() => window.dispatchEvent(new Event('ax-store-open'))}
             title="지점 바꾸기"
-            className="text-white text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap"
+            /* 긴 이름(현대기아차연구소모바일 11자)이 320px 에서 공유 아이콘을 밀어냈다.
+               **감추지 않고 줄인다** — 로그가 이 값으로 쌓이므로 사라지면 안 된다.
+               눌러서 전체 이름을 볼 수 있다 */
+            className="text-white text-[11px] font-semibold rounded-full px-2 py-0.5 truncate max-w-[74px] sm:max-w-none"
             style={{
               /* 테스트점은 **다른 색으로 표시한다** — 로그가 안 쌓이는 상태인데 평소와
                  똑같아 보이면, 점검이 끝난 뒤 되돌리는 것을 잊어 그 매장 통계가 통째로 빈다 */

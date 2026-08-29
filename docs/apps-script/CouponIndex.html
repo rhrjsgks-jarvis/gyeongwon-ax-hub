@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!--
+    경원영업팀 시크릿쿠폰 — 전 점 공유 발급 화면 (2026-08-28)
+
+    **매장명 입력이 없다.** 9월부터 배정을 나누지 않으므로 들어가면 곧바로 쿠폰 종류 버튼이다.
+    버튼은 시트 탭에서 만들어지므로 이 파일에 쿠폰 이름을 적지 않는다 — 종류가 늘어도 여기를
+    고칠 일이 없다(같은 것을 두 곳에 적으면 어긋난다는 규칙).
+
+    **옛 화면에서 살린 것 셋** — 전부 현장에서 얻은 장치라 버리면 개선이 아니라 퇴보다:
+      ① 쿠폰번호의 숫자에만 밑줄 → 0/O · 1/I 오독 방지
+      ② 사용완료를 안 누른 채 화면을 벗어나려 하면 브라우저 경고
+      ③ 취소를 누를 때 "이미 안내했다면 취소가 아니라 사용완료" 되묻기
+    버린 것은 **매장명 입력과 자동완성**뿐이다(전 점 공유라 더 이상 물을 것이 없다).
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ── 색 ─────────────────────────────────────────────────
+       2026-08-29 사장님 지적: *"지금은 너무 어두워서 혼자 다른 프로그램 같은 느낌을 줍니다"*.
+       세일즈 코파일럿 미니앱 아홉과 같은 옷으로 갈아입혔다 — **삼성 블루 #1428A0 가 메인**,
+       바탕은 옅은 회색, 카드는 흰 바탕 + #e5e7eb 테두리. 값은 `as-app.html`·`care-app.html`
+       에서 그대로 가져왔다(머리 바·카드·글자색) — 눈대중으로 맞추면 앱마다 미묘하게 어긋난다.
+
+       **옛 어두운 값은 남기지 않는다.** 두 벌을 두면 어느 쪽이 사는지 알 수 없고, 이 저장소가
+       같은 것을 두 곳에 적어 반복해서 데인 종류다. */
+    :root{
+      --bg:#f6f7fb; --card:#fff; --line:#e5e7eb;
+      --ink:#16181b; --ink-soft:#6b7280; --ink-dim:#9aa0a6;
+      --navy:#1428A0; --navy-l:#EEF2FF; --navy-b:#c7d2fe; --navy-deep:#0D1B7A;
+      --danger:#dc2626;
+      --warn-bg:#FEF3C7; --warn-line:#FDE68A; --warn-ink:#92400E; --warn-em:#B91C1C;
+    }
+    *{box-sizing:border-box;}
+    html{width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+    /* 한글은 어절 단위로 끊는다(as-app.html 과 같은 규칙) — 브라우저 기본값은 글자 아무 데서나
+       끊어 말이 반토막 난다. 쿠폰번호·바코드 글자는 각자 break-all 로 이 값을 덮어쓴다. */
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+      font-family:'Noto Sans KR',-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;
+      word-break:keep-all;overflow-wrap:break-word;}
+    body{min-height:100vh;min-height:100dvh;
+      padding-bottom:calc(40px + env(safe-area-inset-bottom));position:relative;overflow-x:hidden;width:100%;}
+
+    /* 장식(빛무리 둘 · 머리 바 오른쪽 위의 원)은 **뺐다.** 어두운 바탕에서 깊이를 내려고 둔
+       장치라 밝은 바탕에서는 뿌옇게 뜨기만 한다. 옛 화면의 자리표시 이미지(placehold.co)를
+       뺀 것과 같은 판단이다 — 더하는 것보다 빼는 것을 먼저 본다. */
+
+    /* 머리 바 — 미니앱 아홉과 같은 규격이다(남색 바 + 반투명 흰 아이콘 배지 + 제목 + 부제).
+       앱을 넘겨 볼 때 머리가 같아야 한 제품으로 읽힌다. 숫자는 as-app.html 에서 그대로 가져왔다:
+       배지 34px · 모서리 10px · 흰색 16% · 제목 17px/800 · 부제 11.5px #C7D2FE. */
+    .topbar{background:var(--navy);color:#fff;
+      padding:calc(14px + env(safe-area-inset-top)) 16px 14px;}
+    .topbar-in{max-width:460px;margin:0 auto;display:flex;align-items:center;gap:11px;}
+    .hd-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);
+      display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;}
+    .hd-ico svg{width:1.3em;height:1.3em;}
+    .hd-t{font-size:17px;font-weight:800;line-height:1.25;letter-spacing:-.01em;}
+    .hd-s{font-size:11.5px;color:var(--navy-b);margin-top:2px;line-height:1.4;}
+
+    .wrap{max-width:460px;margin:0 auto;padding:14px 16px 0;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;}
+    .label{font-size:12px;font-weight:700;color:var(--ink-soft);letter-spacing:.3px;margin-bottom:10px;display:block;}
+
+    #typesSection{display:none;}
+    #typesSection.show{display:block;}
+    .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .type-btn{background:var(--card);border:1.5px solid var(--line);border-radius:14px;
+      padding:18px 10px;text-align:center;cursor:pointer;transition:.12s;}
+    .type-btn:hover{border-color:var(--navy-b);}
+    .type-btn:active{background:var(--navy-l);border-color:var(--navy);}
+    /* 소진·읽지 못함은 **흐리지 않고 회색으로 적는다.** 옛 화면은 opacity:.45 였는데, 어두운
+       바탕에서는 그것으로 충분했지만 흰 바탕에서는 글자가 뿌옇게 날아가 아예 안 읽힌다. */
+    .type-btn.out{background:var(--bg);cursor:default;}
+    .type-btn.out:hover{border-color:var(--line);}
+    .type-btn .t-name{font-size:14.5px;font-weight:700;color:var(--ink);line-height:1.35;}
+    .type-btn.out .t-name{color:var(--ink-dim);}
+    .type-btn .t-count{font-size:11.5px;color:var(--ink-soft);margin-top:6px;}
+    .type-btn .t-count b{color:var(--navy);font-family:'JetBrains Mono',monospace;}
+    .type-btn.out .t-count{color:var(--ink-dim);}
+    .type-btn.out .t-count b{color:var(--ink-dim);}
+    /* **못 읽은 것과 소진은 다른 말이다** — 쿠폰이 없는 것과 우리가 못 읽은 것을 뭉개지 않는다 */
+    .type-btn.bad .t-count{color:var(--danger);font-weight:700;}
+    .empty-note{font-size:13px;color:var(--ink-soft);text-align:center;padding:10px 0;line-height:1.6;}
+
+    #ticketSection{display:none;margin-top:4px;}
+    #ticketSection.show{display:block;}
+    /* 쿠폰 — 금색 그러데이션을 버리고 **흰 카드**로 바꿨다. 다른 미니앱의 카드와 같은 옷이라야
+       한 제품으로 읽힌다(사장님 지적의 핵심이 "혼자 다른 프로그램 같다"였다).
+       양옆의 반원 홈(::before/::after)도 뺐다 — 바탕색을 오려 내 티켓처럼 보이게 하는 장치라
+       **어두운 바탕에서만 성립**하고, 자리도 카드 한가운데라 아래쪽 절취선(.perf)과 어긋나 있었다.
+       쿠폰이라는 느낌은 절취선과 남색 쿠폰번호가 대신한다.
+
+       **안여백을 18 -> 16px 로 줄인 것은 멋이 아니라 계산이다.** 카드에 1px 테두리가, 그 안의
+       바코드 상자에도 1px 테두리가 생겨 안쪽 폭이 4px 줄어든다. 바코드 상자 폭이 곧 막대
+       굵기라(renderBarcode 가 box.clientWidth 를 잰다) 좌우 2px 씩을 되돌려 준다. */
+    .ticket{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;
+      padding:18px 16px 16px;color:var(--ink);box-shadow:0 1px 2px rgba(20,30,60,.04);}
+    .ticket .t-type{font-size:12px;font-weight:700;letter-spacing:.3px;color:var(--ink-soft);}
+    .ticket .t-code{font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:800;
+      color:var(--navy);margin:10px 0 6px;word-break:break-all;letter-spacing:2.5px;}
+    /* 0/O, 1/I 혼동 방지: 숫자 아래에만 밑줄을 그려 알파벳과 구분한다 */
+    .ticket .t-code .dg{border-bottom:3px solid var(--navy-b);padding-bottom:2px;}
+    /* 아래쪽 여백이 없으면 0·1 의 밑줄이 다음 줄(남은 쿠폰 N매)에 닿는다 */
+    .code-hint{font-size:11.5px;margin:10px 0 7px;color:var(--ink-soft);font-weight:700;display:none;}
+    .code-hint .dg{border-bottom:3px solid var(--navy-b);padding-bottom:1px;
+      font-family:'JetBrains Mono',monospace;color:var(--navy);}
+    .ticket .t-remain{font-size:12px;color:var(--ink-soft);}
+    .perf{border-top:2px dashed var(--line);margin:16px 0;}
+
+    /* 경고 — 이 앱에서 가장 중요한 문장이라 옅게 두지 않는다. 흰 카드 위에서 눈에 남는 색은
+       노랑이고, AS 앱의 주의 라벨(.rl.warn — #FEF3C7 바탕)과 같은 계열을 쓴다. */
+    .warn-box{background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line);
+      border-radius:10px;
+      padding:12px 14px;margin-bottom:12px;display:flex;gap:10px;align-items:flex-start;}
+    .warn-box .ico{font-size:17px;line-height:1.2;flex:none;color:var(--warn-em);}
+    .warn-box .ico svg{width:1.15em;height:1.15em;display:block;}
+    .warn-box .txt{font-size:12.5px;font-weight:700;line-height:1.55;}
+    .warn-box .txt em{font-style:normal;color:var(--warn-em);}
+
+    .ticket-actions{display:flex;flex-direction:column;gap:10px;}
+    .btn-used{width:100%;background:var(--navy);color:#fff;border:none;border-radius:10px;
+      padding:18px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;
+      box-shadow:0 0 0 0 rgba(20,40,160,.5);animation:pulseBtn 2s infinite;letter-spacing:-.2px;}
+    .btn-used:active{background:var(--navy-deep);animation:none;}
+    /* 맥박은 장식이 아니라 **안내다** — 이걸 눌러야 상담이 끝난다는 신호라 남기고 색만 바꿨다 */
+    @keyframes pulseBtn{
+      0%{box-shadow:0 0 0 0 rgba(20,40,160,.45);}
+      70%{box-shadow:0 0 0 14px rgba(20,40,160,0);}
+      100%{box-shadow:0 0 0 0 rgba(20,40,160,0);}
+    }
+    .btn-cancel{width:100%;background:var(--card);color:var(--ink-soft);
+      border:1.5px solid var(--line);border-radius:10px;padding:11px 16px;
+      font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .btn-cancel:active{background:var(--bg);}
+
+    /* 완료 카드도 흰 카드다 — 예전에는 어두운 바탕 위에 글자만 떠 있어 테두리가 필요 없었다 */
+    .done-card{display:none;text-align:center;padding:26px 18px;
+      background:var(--card);border:1px solid var(--line);border-radius:14px;}
+    .done-card.show{display:block;}
+    .done-card .mark{width:52px;height:52px;border-radius:50%;background:var(--navy);color:#fff;
+      display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;font-weight:900;}
+    .done-card p{margin:0;font-size:13.5px;color:var(--ink-soft);}
+    .done-card .again{margin-top:16px;background:var(--card);border:1.5px solid var(--navy-b);border-radius:10px;
+      padding:10px 18px;font-size:13.5px;font-weight:700;color:var(--navy);cursor:pointer;font-family:inherit;}
+
+    .spinner{display:none;text-align:center;padding:14px;font-size:13px;color:var(--ink-soft);}
+    .spinner.show{display:block;}
+    .msg{font-size:13px;color:var(--danger);margin-top:10px;display:none;line-height:1.6;}
+    .msg.show{display:block;}
+
+    /* ── 바코드 ─────────────────────────────────────────────
+       **흰 블록 위에만 그린다.** 바코드 규격은 흑백 대비(reflectance difference)와 좌우
+       여백(quiet zone)을 요구한다 — 바탕을 물들이면 스캐너가 놓친다. 옛 화면에서는 티켓
+       바탕이 금색 그러데이션이라 이 블록이 반드시 필요했는데, **카드가 흰색이 된 지금도
+       #fff 를 못 박아 둔다** — 카드 바탕이 나중에 옅은 색으로 바뀌어도 바코드는 흰 바탕을
+       잃지 않는다. 여백 10모듈은 SVG 안에서 준다.
+       테두리는 상자 바깥선일 뿐이라 막대·여백을 건드리지 않는다(흰 카드 위에서 스캔 영역이
+       어디까지인지 알려 준다). 대신 그 1px 만큼 안쪽 폭이 줄므로 .ticket 안여백에서 되돌렸다.
+       **여기에 그러데이션·반투명·그림자를 얹지 말 것.** */
+    .bc{background:#fff;border:1px solid var(--line);border-radius:10px;
+      padding:12px 8px 9px;margin-top:14px;text-align:center;cursor:pointer;}
+    .bc svg{display:block;margin:0 auto;}
+    .bc .bc-cap{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1.5px;
+      color:#111;margin-top:7px;font-weight:700;word-break:break-all;}
+    .bc .bc-tap{font-size:10.5px;color:var(--ink-soft);margin-top:4px;font-weight:700;}
+    .bc .bc-none{font-size:12px;color:var(--danger);font-weight:700;line-height:1.55;padding:10px 6px;}
+    .bc-alt{width:100%;background:none;border:none;color:var(--navy);font-family:inherit;
+      font-size:11.5px;font-weight:700;padding:8px 0 0;cursor:pointer;text-decoration:underline;}
+
+    /* 크게 보기 — 폰 세로를 가로로 써야 모듈이 굵어진다(0.31mm -> 0.78mm 실측) */
+    .bc-full{position:fixed;inset:0;background:#fff;z-index:99;display:none;}
+    .bc-full.show{display:flex;align-items:center;justify-content:center;}
+    .bc-full .rot{display:flex;flex-direction:column;align-items:center;gap:14px;}
+    .bc-full.turn .rot{transform:rotate(90deg);}
+    .bc-full .fc{font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:2px;
+      color:#111;font-weight:800;word-break:break-all;}
+    .bc-full .fx{position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;
+      background:var(--navy);color:#fff;border:none;border-radius:9px;font-family:inherit;
+      padding:11px 16px;font-size:14px;font-weight:800;cursor:pointer;z-index:100;}
+
+    /* ── PC 화면 ─────────────────────────────────────────────
+       2026-08-28 사장님 지적: *"모바일에 딱 맞는 크기인데 PC에서는 너무 작아 보입니다"*.
+
+       **좁은 화면 값은 한 픽셀도 건드리지 않는다** — 매장 기기가 폰인 경우가 많다.
+       넓은 화면에서만 키운다(저장소가 미니앱 아홉에 이미 쓰는 규칙).
+
+       **배치를 바꾸지 않고 그대로 키운다.** 여백이 남는 것이 아니라 작아 보이는 것이라,
+       칸을 3열로 늘리거나 폭을 960px 로 벌리면 버튼이 가로로 늘어져 오히려 못 읽는다
+       (쿠폰 종류가 둘뿐이라 한 칸이 470px 가 된다). 폭은 알맞게만 늘리고 글자·여백을 키운다. */
+    @media (min-width:1024px){
+      .wrap{max-width:720px;padding:22px 20px 0;}
+      /* 머리 바 속은 본문과 **같은 폭**이라야 제목이 카드 왼쪽 선에 맞는다 */
+      .topbar{padding:22px 20px;}
+      .topbar-in{max-width:720px;gap:14px;}
+      .hd-ico{width:46px;height:46px;border-radius:13px;font-size:25px;}
+      .hd-t{font-size:26px;}
+      .hd-s{font-size:14px;margin-top:4px;}
+      .card{border-radius:18px;padding:24px;margin-bottom:20px;}
+      .label{font-size:14.5px;margin-bottom:16px;}
+      .type-grid{gap:16px;}
+      .type-btn{border-radius:18px;padding:34px 16px;border-width:2px;}
+      .type-btn .t-name{font-size:21px;}
+      .type-btn .t-count{font-size:15px;margin-top:10px;}
+      .empty-note{font-size:16px;}
+      /* 안여백 26 -> 24px — 좁은 화면과 같은 이유다(카드 테두리 2px + 바코드 상자 테두리 2px 보상) */
+      .ticket{border-radius:18px;padding:26px 24px 22px;}
+      .ticket .t-type{font-size:14px;}
+      .ticket .t-code{font-size:40px;letter-spacing:4px;margin:14px 0 8px;}
+      .ticket .t-code .dg{border-bottom-width:4px;}
+      .code-hint{font-size:14px;margin:12px 0 9px;}
+      .ticket .t-remain{font-size:15px;}
+      .warn-box{padding:16px 18px;border-radius:13px;}
+      .warn-box .ico{font-size:22px;}
+      .warn-box .txt{font-size:15px;}
+      .btn-used{padding:24px;font-size:22px;border-radius:13px;}
+      .btn-cancel{padding:15px 18px;font-size:15.5px;border-radius:13px;}
+      .done-card{padding:40px 20px;border-radius:18px;}
+      .done-card .mark{width:70px;height:70px;font-size:34px;margin-bottom:18px;}
+      .done-card p{font-size:16.5px;}
+      .done-card .again{font-size:16px;padding:13px 24px;}
+      .msg{font-size:15px;}
+      .spinner{font-size:15px;}
+      /* 바코드도 함께 커진다 — 폭은 JS 가 상자를 재서 잡고, 높이는 폭에 비례시킨다 */
+      .bc{padding:18px 14px 14px;border-radius:14px;margin-top:20px;}
+      .bc .bc-cap{font-size:15px;letter-spacing:2.5px;margin-top:10px;}
+      .bc .bc-tap{font-size:13px;margin-top:6px;}
+      .bc .bc-none{font-size:15px;}
+      .bc-alt{font-size:14px;padding:12px 0 0;}
+    }
+    @media (min-width:1440px){
+      .wrap{max-width:820px;}
+      .topbar-in{max-width:820px;}
+      .hd-t{font-size:29px;}
+      .type-btn{padding:40px 18px;}
+      .type-btn .t-name{font-size:23px;}
+      .ticket .t-code{font-size:46px;}
+      .btn-used{font-size:24px;padding:26px;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 머리는 미니앱 아홉과 같은 짜임이다 — 배지 + 제목 + 부제. 문구는 그대로 두었다. -->
+  <div class="topbar">
+    <div class="topbar-in">
+      <div class="hd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v1.9a1.8 1.8 0 0 0 0 3.2v1.9A1.5 1.5 0 0 1 18.5 17h-13A1.5 1.5 0 0 1 4 15.5v-1.9a1.8 1.8 0 0 0 0-3.2V8.5Z"/><path d="M9 11.5h6"/></svg></div>
+      <div>
+        <div class="hd-t">경원영업팀 시크릿쿠폰</div>
+        <div class="hd-s">쿠폰 종류를 누르면 남은 쿠폰 중 하나가 나옵니다 · 전 매장이 함께 씁니다</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="spinner show" id="spinner">불러오는 중…</div>
+
+    <div class="card" id="typesSection">
+      <span class="label">쿠폰 종류를 선택하세요</span>
+      <div class="type-grid" id="typeGrid"></div>
+      <div class="msg" id="typeMsg"></div>
+    </div>
+
+    <div id="ticketSection">
+      <div class="ticket" id="ticket">
+        <div class="t-type" id="ticketType"></div>
+        <div class="t-code" id="ticketCode"></div>
+        <div class="code-hint" id="codeHint"></div>
+        <div class="t-remain" id="ticketRemain"></div>
+        <div class="bc" id="bcBox"></div>
+        <button class="bc-alt" id="bcAltBtn"></button>
+        <div class="perf"></div>
+        <!--
+          **경고 문구가 예전과 반대다 — 실제 동작이 바뀌었기 때문이다.**
+          상태를 `미사용`·`사용` 둘로만 쓰기로 하면서 **뽑는 순간 바로 `사용`** 이 된다.
+          그래서 아무것도 안 눌러도 중복 발급은 나지 않고, 대신 **안내하지 않았을 때
+          「취소」를 눌러야** 쿠폰이 되살아난다. 화면이 사실과 다른 말을 하면 안 된다.
+        -->
+        <div class="warn-box">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.2 2.8 19.5h18.4L12 4.2Z"/><path d="M12 10v3.6"/><path d="M12 16.6h.01"/></svg></div>
+          <div class="txt">이 쿠폰은 <em>이미 사용 처리</em>되었습니다.<br>
+          고객에게 <em>안내하지 않으셨다면</em> 아래 「취소」를 눌러 주세요 — 그래야 쿠폰이 되살아납니다.</div>
+        </div>
+        <div class="ticket-actions">
+          <button class="btn-used" id="confirmBtn">✓ 사용완료 처리하기</button>
+          <button class="btn-cancel" id="cancelBtn">고객에게 안내하지 않음 (취소)</button>
+        </div>
+      </div>
+      <div class="done-card" id="doneCard">
+        <div class="mark">✓</div>
+        <p>사용 처리 완료. 이 쿠폰은 더 이상 노출되지 않습니다.</p>
+        <button class="again" id="againBtn">다른 쿠폰 뽑기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bc-full" id="bcFull">
+    <button class="fx" id="bcFullX">닫기 ✕</button>
+    <div class="rot"><div id="bcFullSvg"></div><div class="fc" id="bcFullCode"></div></div>
+  </div>
+
+<script>
+  var currentDraw = null;   // {couponType, couponNumber, rowIndex, remain}
+
+  function el(id){ return document.getElementById(id); }
+  function showSpinner(v){ el('spinner').classList.toggle('show', v); }
+  function onFail(err){
+    showSpinner(false);
+    alert('오류가 발생했습니다:\n' + (err && err.message ? err.message : err));
+  }
+
+  /* **뽑아 놓고 그냥 나가려 하면 한 번 잡는다.**
+     이유가 예전과 다르다 — 이제 중복 발급 위험은 없고(뽑는 순간 `사용`이다),
+     **안내도 안 했는데 쿠폰 한 장이 그대로 소모되는 것**을 막으려는 것이다.
+     현장에서 이 확인을 빠뜨리는 사례가 잦다고 옛 화면 주석이 적어 두었다. */
+  window.addEventListener('beforeunload', function(e){
+    if(currentDraw){ e.preventDefault(); e.returnValue = ''; return ''; }
+  });
+
+  /* 쿠폰번호 표시: **숫자 아래에만 밑줄**을 그려 알파벳과 구분한다(0↔O, 1↔I 오독 방지). */
+  function renderCouponCode(code){
+    var s = String(code);
+    var html = '';
+    for(var i=0;i<s.length;i++){
+      var ch = s.charAt(i);
+      html += (ch >= '0' && ch <= '9') ? '<span class="dg">' + ch + '</span>' : ch;
+    }
+    el('ticketCode').innerHTML = html;
+
+    var hint = el('codeHint');
+    if(/[0O1I]/.test(s)){
+      hint.innerHTML = '밑줄 있는 <span class="dg">0</span> <span class="dg">1</span> = 숫자 &nbsp;·&nbsp; 밑줄 없는 O I = 알파벳';
+      hint.style.display = 'block';
+    } else {
+      hint.style.display = 'none';
+    }
+  }
+
+
+  /* ── 바코드 ────────────────────────────────────────────────────────────
+     **직접 그린다. 바깥 바코드 API 를 부르지 말 것.** 이유가 셋인데 저장소가 QR 을
+     직접 그리기로 한 것과 같고, 쿠폰에서는 세 번째가 특히 무겁다:
+       ① 그 서버가 죽는 날 바코드가 조용히 빈칸이 된다
+       ② 매장 전파가 약하면 안 뜬다
+       ③ **쿠폰번호가 남의 서버 로그에 남는다**
+
+     **주 규격은 Code 128 이다** — 카메라(이미저)·레이저 스캐너가 둘 다 읽고 영문·숫자·
+     하이픈을 그대로 담는다. Code 39 는 물러설 길로 함께 둔다(구형 레이저까지 읽지만
+     34% 넓고 소문자를 못 담는다 — 실측 13자리 178 vs 239모듈).
+
+     **화면 번호와 스캔 값은 반드시 같아야 한다**(2026-08-28 사장님 확정: *"화면에 보이는
+     그대로"*). 그래서 담지 못하는 글자가 있으면 대문자로 바꾸거나 지우지 않고 **바코드를
+     안 그리고 그 사실을 적는다** — 조용히 바꾸면 스캔 값과 직원이 눈으로 읽고 친 값이
+     갈리는데, 그 자리에서는 아무도 모르고 계산대에서 드러난다. */
+
+  /* Code 128 값 0..106 의 요소 폭(막대·여백 번갈아, 합 11 · 106 만 13) */
+  var C128 = ('212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 '
+   + '221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 '
+   + '221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 '
+   + '212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 '
+   + '231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 '
+   + '231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 '
+   + '314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 '
+   + '112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 '
+   + '111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 '
+   + '214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 '
+   + '114131 311141 411131 211412 211214 211232 2331112').split(' ');
+
+  function code128B(s){
+    s = String(s);
+    var vals = [104], sum = 104;                 // Start B
+    for (var i = 0; i < s.length; i++) {
+      var c = s.charCodeAt(i);
+      if (c < 32 || c > 126) return null;        // 한글·특수문자 — 담을 수 없다
+      vals.push(c - 32);
+      sum += (c - 32) * (i + 1);
+    }
+    vals.push(sum % 103);                        // 검사문자
+    vals.push(106);                              // Stop
+    var out = '';
+    for (var k = 0; k < vals.length; k++) {
+      var p = C128[vals[k]];
+      for (var j = 0; j < p.length; j++) { var n = +p.charAt(j); while (n--) out += (j % 2 === 0) ? '1' : '0'; }
+    }
+    return out;
+  }
+
+  /* Code 39 — 요소 9개(막대5·여백4) 중 넓은 것이 늘 3개다(자기검사 규격이라 검사문자가 없다) */
+  var C39 = {
+    '0':'nnnwwnwnn','1':'wnnwnnnnw','2':'nnwwnnnnw','3':'wnwwnnnnn','4':'nnnwwnnnw',
+    '5':'wnnwwnnnn','6':'nnwwwnnnn','7':'nnnwnnwnw','8':'wnnwnnwnn','9':'nnwwnnwnn',
+    'A':'wnnnnwnnw','B':'nnwnnwnnw','C':'wnwnnwnnn','D':'nnnnwwnnw','E':'wnnnwwnnn',
+    'F':'nnwnwwnnn','G':'nnnnnwwnw','H':'wnnnnwwnn','I':'nnwnnwwnn','J':'nnnnwwwnn',
+    'K':'wnnnnnnww','L':'nnwnnnnww','M':'wnwnnnnwn','N':'nnnnwnnww','O':'wnnnwnnwn',
+    'P':'nnwnwnnwn','Q':'nnnnnnwww','R':'wnnnnnwwn','S':'nnwnnnwwn','T':'nnnnwnwwn',
+    'U':'wwnnnnnnw','V':'nwwnnnnnw','W':'wwwnnnnnn','X':'nwnnwnnnw','Y':'wwnnwnnnn',
+    'Z':'nwwnwnnnn','-':'nwnnnnwnw','.':'wwnnnnwnn',' ':'nwwnnnwnn','$':'nwnwnwnnn',
+    '/':'nwnwnnnwn','+':'nwnnnwnwn','%':'nnnwnwnwn','*':'nwnnwnwnn'
+  };
+  var C39_WIDE = 3;                              // 넓은:좁은 = 3:1 (규격 허용 2.0~3.0 중 여유가 가장 크다)
+
+  function code39(s){
+    s = String(s);
+    for (var i = 0; i < s.length; i++) if (!C39[s.charAt(i)]) return null;   // 소문자 등 — 담을 수 없다
+    var out = '';
+    function put(ch){
+      var p = C39[ch];
+      for (var j = 0; j < 9; j++) { var n = (p.charAt(j) === 'w') ? C39_WIDE : 1; while (n--) out += (j % 2 === 0) ? '1' : '0'; }
+      out += '0';                                // 글자 사이 좁은 여백
+    }
+    put('*');
+    for (var k = 0; k < s.length; k++) put(s.charAt(k));
+    put('*');
+    return out.slice(0, -1);
+  }
+
+  var BC_KINDS = [
+    { id: '128', name: 'Code 128', enc: code128B },
+    { id: '39',  name: 'Code 39',  enc: code39  }
+  ];
+  var bcKind = 0;
+
+  /* 모듈 문자열 -> SVG.
+     **각지게(crispEdges) 그리지 않는다.** 픽셀에 맞추면 막대 경계가 밀려 폭 비율이
+     틀어지는데, 스캐너는 흐릿한 경계보다 **밀린 경계**에 훨씬 약하다. 소수점 폭 그대로
+     두면 경계 위치가 정확하고 브라우저가 부드럽게 그린다.
+     좌우 여백 10모듈은 규격 요구값(quiet zone)이라 **SVG 안에서** 준다 — CSS 여백에
+     맡기면 화면이 좁아졌을 때 조용히 사라진다. */
+  function bcSvg(bits, widthPx, heightPx){
+    var QZ = 10, m = widthPx / (bits.length + QZ * 2), r = '', i = 0;
+    while (i < bits.length) {
+      if (bits.charAt(i) === '1') {
+        var j = i; while (j < bits.length && bits.charAt(j) === '1') j++;
+        r += '<rect x="' + ((QZ + i) * m).toFixed(3) + '" y="0" width="' + ((j - i) * m).toFixed(3)
+           + '" height="' + heightPx + '"/>';
+        i = j;
+      } else i++;
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + widthPx + '" height="' + heightPx
+         + '" viewBox="0 0 ' + widthPx + ' ' + heightPx + '" fill="#000">' + r + '</svg>';
+  }
+
+  /* 고른 규격이 이 번호를 못 담으면 다른 규격으로 물러선다(소문자가 섞이면 Code 39 가 못 담는다). */
+  function bcPick(code){
+    for (var n = 0; n < BC_KINDS.length; n++) {
+      var k = BC_KINDS[(bcKind + n) % BC_KINDS.length];
+      var bits = k.enc(code);
+      if (bits) return { kind: k, bits: bits };
+    }
+    return null;
+  }
+
+  function renderBarcode(code){
+    var box = el('bcBox'), alt = el('bcAltBtn');
+    var got = bcPick(code);
+    if (!got) {
+      box.innerHTML = '<div class="bc-none">이 쿠폰번호는 바코드로 만들 수 없는 글자를 담고 있습니다.<br>번호를 직접 입력해 주세요.</div>';
+      alt.style.display = 'none';
+      box.onclick = null;
+      return;
+    }
+    var w = Math.max(180, box.clientWidth - 16);
+    box.innerHTML = bcSvg(got.bits, w, Math.max(64, Math.min(150, Math.round(w * 0.2))))
+      + '<div class="bc-cap">' + code + '</div>'
+      + '<div class="bc-tap">눌러서 크게 보기 · ' + got.kind.name + '</div>';
+    box.onclick = function(){ openBcFull(code, got); };
+    alt.style.display = 'block';
+    var next = BC_KINDS[(BC_KINDS.indexOf(got.kind) + 1) % BC_KINDS.length];
+    alt.textContent = '스캔이 안 되나요? ' + next.name + ' 로 바꾸기';
+  }
+
+  /* 크게 보기 — **폰 세로를 가로로 써야 막대가 굵어진다**(실측 모듈 0.31mm -> 0.78mm).
+     화면 바코드를 계산대에서 읽히게 하는 표준 수법이다. 가로 화면에서는 돌리지 않는다. */
+  function openBcFull(code, got){
+    var turn = window.innerHeight > window.innerWidth;
+    var span = (turn ? window.innerHeight : window.innerWidth) - 48;
+    el('bcFullSvg').innerHTML = bcSvg(got.bits, Math.max(240, span), 150);
+    el('bcFullCode').textContent = code;
+    el('bcFull').classList.toggle('turn', turn);
+    el('bcFull').classList.add('show');
+  }
+  el('bcFullX').addEventListener('click', function(){ el('bcFull').classList.remove('show'); });
+
+  /* 창 크기·화면 방향이 바뀌면 상자 폭이 달라진다. 안 다시 그리면 PC 에서 창을 넓혀도
+     바코드만 옛 폭으로 남는다(폰을 돌렸을 때도 같다). */
+  var bcTimer = null;
+  window.addEventListener('resize', function(){
+    if (!currentDraw) return;
+    clearTimeout(bcTimer);
+    bcTimer = setTimeout(function(){ renderBarcode(currentDraw.couponNumber); }, 120);
+  });
+
+  el('bcAltBtn').addEventListener('click', function(){
+    bcKind = (bcKind + 1) % BC_KINDS.length;
+    if (currentDraw) renderBarcode(currentDraw.couponNumber);
+  });
+
+  /* ── 목록 ─────────────────────────────────────────── */
+  function loadTypes(){
+    currentDraw = null;
+    el('ticketSection').classList.remove('show');
+    el('typesSection').classList.remove('show');
+    el('typeMsg').classList.remove('show');
+    showSpinner(true);
+    google.script.run.withSuccessHandler(renderTypes).withFailureHandler(onFail).getAvailableTypes();
+  }
+
+  function renderTypes(types){
+    showSpinner(false);
+    var grid = el('typeGrid');
+    grid.innerHTML = '';
+    if(!types || !types.length){
+      grid.innerHTML = '<div class="empty-note">쿠폰 시트를 찾지 못했습니다.<br>탭 이름이 _ 로 시작하거나 숨겨져 있지 않은지 확인해 주세요.</div>';
+      el('typesSection').classList.add('show');
+      return;
+    }
+    var bad = 0;
+    for(var i=0;i<types.length;i++){
+      (function(t){
+        var b = document.createElement('div');
+        /* **못 읽은 것을 「소진」이라 적지 않는다.** 쿠폰은 멀쩡히 있는데 우리가 못 읽은
+           것이라, 소진이라고 쓰면 화면이 거짓말을 한다(실제로 그렇게 떠서 헤맸다). */
+        if(t.unreadable){
+          bad++;
+          b.className = 'type-btn out bad';
+          b.innerHTML = '<div class="t-name">'+t.type+'</div><div class="t-count">읽지 못함</div>';
+        } else if(t.count <= 0){
+          b.className = 'type-btn out';
+          b.innerHTML = '<div class="t-name">'+t.type+'</div><div class="t-count"><b>소진</b></div>';
+        } else {
+          b.className = 'type-btn';
+          b.innerHTML = '<div class="t-name">'+t.type+'</div><div class="t-count">잔여 <b>'+t.count+'</b>매</div>';
+          b.onclick = function(){ drawCoupon(t.type); };
+        }
+        grid.appendChild(b);
+      })(types[i]);
+    }
+    if(bad){
+      el('typeMsg').innerHTML = '쿠폰번호 열을 찾지 못한 탭이 있습니다. 그 탭에 쿠폰번호가 들어 있는지 확인해 주세요.';
+      el('typeMsg').classList.add('show');
+    }
+    el('typesSection').classList.add('show');
+  }
+
+  /* ── 뽑기 ─────────────────────────────────────────── */
+  function drawCoupon(type){
+    showSpinner(true);
+    google.script.run.withSuccessHandler(function(res){
+      showSpinner(false);
+      if(!res || !res.success){
+        alert((res && res.message === '소진') ? '이 쿠폰은 모두 나갔습니다.'
+              : ((res && res.message) || '발급에 실패했습니다.'));
+        loadTypes();
+        return;
+      }
+      currentDraw = res;
+      el('ticketType').textContent = res.couponType;
+      renderCouponCode(res.couponNumber);
+      el('ticketRemain').textContent = '남은 쿠폰 ' + res.remain + '매';
+      el('ticket').style.display = 'block';
+      el('doneCard').classList.remove('show');
+      el('typesSection').classList.remove('show');
+      el('ticketSection').classList.add('show');
+      /* **반드시 보여준 뒤에 그린다.** 숨어 있을 때 그리면 상자 폭이 0 이라 하한값
+         180px 로 떨어지는데, 화면에는 멀쩡한 바코드로 보인다 — 눈으로는 못 잡는다.
+         실측으로 막대가 0.17mm 가 되어 규격 하한 0.19mm 에도 못 미쳤다. */
+      renderBarcode(res.couponNumber);
+      el('ticketSection').scrollIntoView({behavior:'smooth', block:'center'});
+    }).withFailureHandler(onFail).drawCoupon(type);
+  }
+
+  /* ── 확정 · 취소 ──────────────────────────────────── */
+  /* **사용완료를 누르면 바코드까지 함께 사라진다 — 그게 맞다.**
+     2026-08-28 사장님 확인: *"스캔 먼저 하고 사용완료 누릅니다"*. 이 순서면 누르는
+     시점에 스캔이 이미 끝난 뒤라, 다음 고객으로 넘어갈 때 **이미 나간 쿠폰이 화면에
+     남아 있지 않은 것**이 안전하다.
+     화면 문구와도 맞는다 — 이 앱은 뽑는 즉시 시트가 `사용` 이 되므로 경고가 "이미 사용
+     처리되었습니다" 라고 적는다. 「사용완료」는 상태를 바꾸는 버튼이 아니라 확인 도장이다.
+     **"스캔 전에 눌러버리면" 을 걱정해 바코드를 남기지 말 것** — 그러면 화면 말과
+     어긋나고, 실제 순서는 그렇지 않다. 그때는 「다른 쿠폰 뽑기」가 아니라 시트에서
+     되살려야 하는 상황이라 이 화면이 풀 문제가 아니다. */
+  el('confirmBtn').addEventListener('click', function(){
+    if(!currentDraw) return;
+    var d = currentDraw;
+    showSpinner(true);
+    google.script.run.withSuccessHandler(function(res){
+      showSpinner(false);
+      if(!res || !res.success){ alert((res && res.message) || '처리 실패'); return; }
+      currentDraw = null;              // 처리 완료 — 이탈 경고 해제
+      el('ticket').style.display = 'none';
+      el('doneCard').classList.add('show');
+    }).withFailureHandler(onFail).confirmUse(d.couponType, d.rowIndex, d.couponNumber);
+  });
+
+  el('cancelBtn').addEventListener('click', function(){
+    if(!currentDraw) return;
+    if(!confirm('이 쿠폰을 고객에게 안내하지 않으셨나요?\n\n취소하면 쿠폰이 미사용 상태로 돌아갑니다.\n이미 고객에게 번호를 알려주셨다면 "취소"가 아니라\n"사용완료 처리하기"를 눌러주세요.')){
+      return;
+    }
+    var d = currentDraw;
+    showSpinner(true);
+    google.script.run.withSuccessHandler(function(){
+      showSpinner(false);
+      currentDraw = null;              // 처리 완료 — 이탈 경고 해제
+      loadTypes();
+    }).withFailureHandler(onFail).cancelDraw(d.couponType, d.rowIndex, d.couponNumber);
+  });
+
+  el('againBtn').addEventListener('click', function(){
+    currentDraw = null;
+    loadTypes();
+  });
+
+  loadTypes();
+</script>
+</body>
+</html>

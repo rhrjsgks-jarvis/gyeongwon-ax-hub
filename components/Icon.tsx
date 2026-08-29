@@ -16,7 +16,7 @@ export type IconName =
   | 'ticket' | 'display' | 'coupon' | 'search' | 'chat' | 'qr' | 'share'
   | 'build' | 'external' | 'store' | 'book' | 'bulb' | 'link' | 'check' | 'warn' | 'chevron'
   | 'x' | 'star' | 'lock' | 'eye' | 'user' | 'doc' | 'puzzle' | 'download' | 'trash'
-  | 'timer' | 'bolt' | 'printer' | 'phone' | 'ruler'
+  | 'timer' | 'bolt' | 'printer' | 'phone' | 'ruler' | 'back'
 
 const P: Record<IconName, React.ReactNode> = {
   /* 허브 — 집 */
@@ -76,6 +76,9 @@ const P: Record<IconName, React.ReactNode> = {
   warn: <><path d="M12 3.5 21.5 20H2.5L12 3.5Z" /><path d="M12 9.5v4.5" /><path d="M12 17h.01" /></>,
   /* 접힘 표시 — 펼치면 90° 돌아간다. 삼각형이라 작은 크기에서도 방향이 읽힌다 */
   chevron: <><path d="M9 5.5 16.5 12 9 18.5v-13Z" /></>,
+  /* 뒤로가기 — chevron(채운 삼각형, 접기·펴기)과 **다른 그림이어야 한다**.
+     설치형(standalone)에는 브라우저 뒤로가기가 없어 이 버튼이 유일한 길이다 */
+  back: <><path d="M14.5 5.5 8 12l6.5 6.5" /></>,
   x: <><path d="M6 6l12 12M18 6 6 18" /></>,
   star: <><path d="M12 3.5l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.9l6.1-.8L12 3.5Z" /></>,
   /* 잠금 — 관리자 대시보드 게이트 */
