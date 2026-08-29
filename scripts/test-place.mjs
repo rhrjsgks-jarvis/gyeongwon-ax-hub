@@ -1539,5 +1539,63 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.rooms = []; st.walls = []; st.detectStats = null; st.mmPerPx = null; st.baseInfo = null;
 }
 
+const ok2 = (c, m) => (c ? pass(m) : fail(m));
+
+/*
+ * [17] **도시 고르기는 칸 그리드다** (2026-08-29 사장님 지시:
+ * *"지역을 먼저 선택 … AS센터찾기처럼 박스형태로 … 드랍다운보다 훨씬 보기좋습니다"*).
+ *
+ * 줄 목록일 때 폰 390px 에서 경기 12곳이 **544px 만큼 숨어 있었다**(실측 · 칸으로 0px).
+ * 그런데 이건 **화면에서만 보이는 결함**이라 어떤 검사도 잡지 못했다 — 규격이 조용히
+ * 되돌아가면 그대로 배포된다.
+ *
+ * **규격은 AS 앱 `.svcg`/`.svcc` 를 그대로 베꼈다.** 베낀 값은 시간이 지나면 갈라지므로
+ * 두 파일을 직접 대조한다 — 눈대중으로 맞추지 말라는 규칙이 검사로 서 있어야 한다.
+ */
+{
+  const asHtml = fs.readFileSync(path.join(root, 'public', 'as-app.html'), 'utf8');
+  /* 정규식을 짓지 않고 문자열로 자른다 — 선택자에 점이 들어 있어 정규식으로 만들면
+     이스케이프가 한 겹 더 필요하고, 그 한 겹이 조용히 어긋나면 검사가 헛돈다 */
+  const rule = (src, sel) => {
+    const i = src.indexOf(sel + '{');
+    if (i < 0) return null;
+    const j = src.indexOf('}', i);
+    return j < 0 ? null : src.slice(i + sel.length + 1, j);
+  };
+  const val = (body, key) => {
+    if (body == null) return null;
+    for (const part of body.split(';')) {
+      const k = part.slice(0, part.indexOf(':')).trim();
+      if (k === key) return part.slice(part.indexOf(':') + 1).replace(/\s+/g, ' ').trim();
+    }
+    return null;
+  };
+  const svcg = rule(asHtml, '.svcg');
+  const libg = rule(html, '.liblist.grid');
+  const svcc = rule(asHtml, '.svcc');
+  const libb = rule(html, '.libbox');
+
+  ok2(libg != null && svcg != null, '[17] 두 앱에서 칸 규격을 찾았다');
+  ok2(val(libg, 'grid-template-columns') === val(svcg, 'grid-template-columns'),
+    '[17] 칸 열 규격이 AS 와 같다 — ' + val(libg, 'grid-template-columns'));
+  ok2(val(libg, 'gap') === val(svcg, 'gap'), '[17] 칸 사이 간격이 AS 와 같다 — ' + val(libg, 'gap'));
+  for (const k of ['border-radius', 'padding', 'text-align']) {
+    ok2(val(libb, k) === val(svcc, k), '[17] 칸 ' + k + ' 가 AS 와 같다 — ' + val(libb, k));
+  }
+
+  /* 도시 단계만 칸이다 — 단지·도면은 이름이 길고 미리보기가 붙어 줄이 맞다 */
+  ok2(html.includes('class="libbox" data-v='), '[17] 도시 항목이 칸이다');
+  ok2(html.includes('class="libitem" data-id='), '[17] 단지 항목은 줄 그대로다');
+  ok2(html.includes('class="libitem withthumb" data-file='), '[17] 도면 항목은 줄 그대로다 (미리보기가 붙는다)');
+  ok2(html.includes("classList.toggle('grid', lv === 'region'"), '[17] 격자는 도시 단계에서만 켠다');
+  ok2(html.includes("querySelectorAll('.libitem, .libbox')"), '[17] 클릭 배선이 칸도 잡는다');
+
+  /* 칸은 약식이다 — 셋뿐(이름 · 단지 수 · 도면 유무). 넷째가 붙으면 칸으로 만든 뜻이 없다 */
+  const bi = html.indexOf('<button class="libbox" data-v=');
+  const box = bi < 0 ? '' : html.slice(bi, html.indexOf('</button>', bi));
+  ok2((box.match(/libbox-/g) || []).length === 3, '[17] 칸에 적는 것은 셋뿐이다 (이름 · 단지 수 · 도면 유무)');
+  ok2(box.includes('libbox-h'), '[17] 도면 유무를 칸에 남긴다 — 0장인 도시로 들어가면 헛걸음이다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
