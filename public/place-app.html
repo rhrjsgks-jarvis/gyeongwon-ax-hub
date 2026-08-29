@@ -754,6 +754,23 @@ function doorLeaves(it, openFrac){
  * 반면 **3D 에서 문을 여는 것은 상담사가 직접 한 행동**이다. 그 자리에서 "이 상태로는
  * 안 됩니다"라고 분명히 말해야 고객에게 보여줄 수 있다. 그래서 두 단계를 나눈다.
  */
+/**
+ * 그 가전의 **문이 닿을 만한 거리 안의 벽**만 돌려준다.
+ *
+ * 방이 0곳이면 `state.walls` 가 비어 **문이 벽에 부딪혀도 안 잡힌다**. 도면의 벽면으로
+ * 물러서되 **전부 훑지는 않는다** — 도면 하나가 벽면 800개쯤이고 `doorHits` 는 12단계 ×
+ * 문짝마다 도는 자리라, 걸러 내지 않으면 문 하나 여는 데 2만 번을 잰다.
+ */
+function wallsFor(it){
+  if (state.walls.length) return state.walls;
+  const faces = allWallFaces();
+  if (!faces.length) return faces;
+  const R = doorReach(it, doorOpenFor(it)) + Math.max(it.w || 0, it.d || 0) + 200;
+  const [cx, cy] = bodyCenter(it);
+  return faces.filter((w) =>
+    Math.min(w.x1, w.x2) <= cx + R && Math.max(w.x1, w.x2) >= cx - R &&
+    Math.min(w.y1, w.y2) <= cy + R && Math.max(w.y1, w.y2) >= cy - R);
+}
 function doorHits(it, others, walls){
   if (!doorOpenFor(it) || !doorLeaves(it).length) return [];
   /*
@@ -854,10 +871,23 @@ function nearestOnSeg(px,py,w){
  * 법선 부호는 "사용자가 클릭한 쪽"으로 정한다 — 벽 선분의 점 순서에 따라
  * +90°가 벽 바깥을 가리키는 경우가 있어, 각도만 보고 정하면 가전이 방 밖에 놓인다.
  */
+/**
+ * 붙일 벽 목록 — 방 경계가 있으면 그것을, 없으면 **도면의 벽면**을.
+ *
+ * 벽을 도면에서 직접 세우게 되면서(2026-08-29) 방이 0곳인 도면이 정상이 됐다. 그런데
+ * 벽에 붙이는 두 곳(`snapToWall`·`snapWallMounted`)은 여전히 방 경계만 보고 있었다 —
+ * 그러면 **벽걸이 TV 가 방 한가운데 뜬다.** 이 파일이 못 박은 *"TV 는 반드시 벽을
+ * 등진다"* 가 조용히 깨지는 자리다.
+ */
+function snapWalls(room){
+  const ws = (room ? room.parts.flatMap((p)=>p.walls) : state.walls).filter((w)=>!w.open);
+  return ws.length ? ws : allWallFaces();
+}
 function snapToWall(px,py,item){
-  if (!state.walls.length) return null;
+  const list = snapWalls(null);
+  if (!list.length) return null;
   let best=null;
-  for (const w of state.walls){
+  for (const w of list){
     const n = nearestOnSeg(px,py,w);
     if (!best || n.dist < best.n.dist) best = {w,n};
   }
@@ -866,6 +896,8 @@ function snapToWall(px,py,item){
   // 벽에 수직인 두 방향 중 클릭 지점이 있는 쪽
   let nx = -Math.sin(ang), ny = Math.cos(ang);
   if ((px-n.x)*nx + (py-n.y)*ny < 0){ nx=-nx; ny=-ny; }
+  /* 도면에서 뽑은 벽면은 **빈 쪽을 이미 알고 있다** — 그쪽이 맞다(누른 자리가 벽 속일 수 있다) */
+  if (w.nx != null){ nx = w.nx; ny = w.ny; }
   const back = (item.clear && item.clear.back) || 0;
   return { bx:n.x + nx*back, by:n.y + ny*back, a:Math.atan2(ny,nx) - Math.PI/2, dist:best.n.dist };
 }
@@ -886,8 +918,7 @@ function snapToWall(px,py,item){
  */
 function snapWallMounted(it){
   if (!it || mountKind(it) !== '벽') return false;
-  const room = itemRoom(it);
-  const walls = (room ? room.parts.flatMap((p)=>p.walls) : state.walls).filter((w)=>!w.open);
+  const walls = snapWalls(itemRoom(it));
   if (!walls.length) return false;
   let best = null;
   for (const w of walls){
@@ -899,6 +930,8 @@ function snapWallMounted(it){
   /* 벽에 수직인 두 방향 중 **가전이 있는 쪽**이 방 안쪽이다 */
   let nx = -Math.sin(ang), ny = Math.cos(ang);
   if ((it.bx - n.x) * nx + (it.by - n.y) * ny < 0){ nx = -nx; ny = -ny; }
+  /* 도면에서 뽑은 벽면은 빈 쪽을 이미 안다 — 벽 속에서 끌어다 놓아도 바깥으로 붙는다 */
+  if (w.nx != null){ nx = w.nx; ny = w.ny; }
   const back = (it.clear && it.clear.back) || 0;
   it.bx = n.x + nx * back;
   it.by = n.y + ny * back;
@@ -1067,6 +1100,30 @@ function nearOpening(x, y){
 function wallMask(){
   return (state.img && state.baseMask && state.mmPerPx) ? state.baseMask : null;
 }
+/**
+ * 인식된 벽을 도면 위에 얹어 보여주는 캔버스 — **도면당 한 번만** 만들어 마스크에 얹어 둔다
+ * (그릴 때마다 픽셀 100만 개를 칠하면 손이 무거워진다).
+ * 색은 삼성 블루 옅게 — 이 앱이 방 경계를 그리는 색과 같은 계열이라 눈이 헤매지 않는다.
+ */
+function wallOverlayCv(){
+  const base = wallMask();
+  if (!base) return null;
+  if (base._wallCv) return base._wallCv;
+  const c = document.createElement('canvas');
+  c.width = base.w; c.height = base.h;
+  const cx = c.getContext('2d');
+  if (!cx) return null;
+  const im = cx.createImageData(base.w, base.h);
+  for (let p = 0; p < base.dark.length; p++){
+    if (!base.dark[p]) continue;
+    const i = p * 4;
+    im.data[i] = 0x14; im.data[i + 1] = 0x28; im.data[i + 2] = 0xA0; im.data[i + 3] = 105;
+  }
+  cx.putImageData(im, 0, 0);
+  base._wallCv = c;
+  return c;
+}
+
 /** 그 점이 벽인가 — 'wall' · 'free' · 'out'(도면/건물 밖) · null(마스크가 없어 못 잼) */
 function wallAt(x, y){
   const base = wallMask();
@@ -4250,6 +4307,16 @@ function draw(){
   const canDrawPlan = state.img && (state.mmPerPx || !state.scaled);
   if (canDrawPlan) drawPlan(state.img, 1);
   if (canDrawPlan && state.showClean && state.cleanCv) drawPlan(state.cleanCv, .55);
+  /*
+   * **방을 하나도 못 잡았으면 인식된 벽을 보여준다** (2026-08-29).
+   * 벽이 판정과 3D 의 기반이 되면서 방이 0곳이어도 배치가 정상인데, 화면에는 도면만
+   * 떠 있어 상담사가 *"아무것도 안 됐다"* 고 읽는다. 무엇을 잡았는지 보여야 믿고 쓴다.
+   * 방이 있으면 그리지 않는다 — 방 경계가 이미 그 일을 하고, 겹치면 도면이 지저분해진다.
+   */
+  if (canDrawPlan && !state.rooms.length && !state.showClean){
+    const ov = wallOverlayCv();
+    if (ov) drawPlan(ov, 1);
+  }
 
   // 방 — 이름과 넓이를 도면 위에 적는다. 어느 방에 무엇을 놓는지가 이 도구의 핵심이라
   // 화면만 보고도 방을 구분할 수 있어야 한다.
@@ -4593,7 +4660,7 @@ function buildShareCanvas(){
   if (doorsOn){
     /* **연 것만 센다** — 문 열림은 제품마다 다르다. 닫아 둔 제품을 "문이 안 열립니다"로
        적으면 상담사가 열어 보지도 않은 제품에 경고를 달게 된다 */
-    const blocked = items.filter((it) => !it.staged && it.doorOpen && doorHits(it, items, state.walls).length);
+    const blocked = items.filter((it) => !it.staged && it.doorOpen && doorHits(it, items, wallsFor(it)).length);
     if (blocked.length){
       g.fillStyle = '#B42318'; g.font = '700 12.5px system-ui,sans-serif';
       g.fillText(`⚠ 문이 안 열리는 제품 ${blocked.length}대 — ${blocked.map((b) => b.label).join(', ')}`,
@@ -4805,7 +4872,11 @@ function renderSide(){
         /* row() 가 통째로 이스케이프하므로 **여기에 태그를 넣으면 글자로 보인다** —
            실제로 화면에 `<b>…</b>` 가 그대로 떴다. 안쪽 esc() 도 이중 이스케이프라 뺀다. */
         + (whole?` — ${whole.name}가 세대 전체(전용 ${state.exclusiveM2}㎡) 크기입니다. 방이 나뉘지 않았을 수 있어요 — '더 좁게'로 다시 인식해 보세요`:''))
-    : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가'));
+    : (wallMask() && state.scaled
+        /* **도면에서 벽을 잡았으면 "벽 없음"이 거짓이다.** 방이 0곳이어도 벽 스냅·판정·
+           3D 가 전부 그 벽 위에서 돈다 — 화면이 그 사실을 말해야 상담사가 믿고 쓴다. */
+        ? row('ok', `도면에서 벽을 잡았습니다 (벽면 ${maskWallFaces().length}개) — 방을 안 잡아도 배치·3D 가 됩니다`)
+        : row(loop?'ok':(state.walls.length?'warn':'bad'), loop ? `방 닫힘 (경계 ${state.walls.length}구간${opensN?` · 개구부 ${opensN}곳`:''})` : (state.walls.length?`벽 ${state.walls.length}개 — 닫히지 않아 "방 밖" 판정을 하지 않습니다`:'벽 없음 — 벽 스냅·방 밖 판정 불가')));
   /*
    * **인식이 스스로 포기한 것을 숨기지 않는다.**
    * 이미지를 거부하지는 않는다 — 왼쪽은 입체, 오른쪽은 평면인 도면이 실제로 있고
@@ -4844,9 +4915,21 @@ function renderSide(){
     const sum = state.rooms.reduce((s, r) => s + roomArea(r), 0) / (k * k);   // 이미지 px²
     return sum / st.planA;
   })();
-  const thinLine = (state.rooms.length && (state.rooms.length <= 2 || (detA != null && detA < 0.15)))
-    ? row('warn', `공간이 ${state.rooms.length}곳뿐입니다 — 한 장에 표·동배치도·옵션 안내가 함께 실린 시트이면`
-        + ' 인식이 그쪽으로 샙니다. 평면도 부분만 잘라서 올리면 훨씬 정확합니다')
+  /*
+   * **문구도 함께 진화한다** (2026-08-29). 어제까지 이 자리는 *"평면도 부분만 잘라서
+   * 올리면 훨씬 정확합니다"* 라고 말했다. 그때는 방 인식이 전부라 그것이 유일한 길이었다.
+   * 지금은 **벽이 기반이라 방이 0곳이어도 배치·3D 가 그대로 된다** — 옛 문구를 두면
+   * 상담사에게 **필요 없는 작업을 시키는 거짓**이 된다.
+   *
+   * 방이 없을 때 실제로 잃는 것은 **이름·넓이**뿐이므로 그것을 말한다.
+   */
+  const wallsOk = !!(wallMask() && state.scaled);
+  const thin = state.rooms.length <= 2 || (detA != null && detA < 0.15);
+  const thinLine = (thin && (state.rooms.length || wallsOk))
+    ? row('warn', `공간이 ${state.rooms.length}곳뿐입니다 — `
+        + (wallsOk
+            ? '벽은 도면에서 잡았으니 배치와 3D 는 그대로 됩니다. 방 이름·넓이가 필요하면 방 안쪽을 눌러 추가하세요'
+            : '한 장에 표·동배치도·옵션 안내가 함께 실린 시트이면 인식이 그쪽으로 샙니다. 평면도 부분만 잘라서 올리면 훨씬 정확합니다'))
     : null;
   $('#report').innerHTML = [
     row(state.scaled?'ok':'warn', state.mmPerPx ? `축척 확정 (도면 1px = ${state.mmPerPx.toFixed(2)}mm)` : (state.scaled ? '축척 확정 (벽 실제 길이 입력 기준)' : '축척 미확정 — 벽을 그리고 실제 길이를 입력하세요')),
@@ -7218,13 +7301,17 @@ function roomCenter(){
  * **400mm 보다 짧은 면은 버린다** — 가전을 붙일 수 없는 자투리이고, 그런 것이 수천 개면
  * 훑는 비용만 든다. 긴 것부터 보도록 정렬해 **가장 쓸 만한 벽을 먼저** 시도한다.
  */
-function maskWallFaces(){
+/**
+ * 마스크 가장자리의 **모든** 벽면. 도면당 한 번만 만들어 마스크에 얹어 둔다 —
+ * 끌 때마다(`snapToWall`) 다시 만들면 손이 무거워진다.
+ */
+function allWallFaces(){
   const base = wallMask();
   if (!base) return [];
+  if (base._faces && base._facesK === state.mmPerPx) return base._faces;
   const { w, h, dark } = base, S = base.S || 1, k = state.mmPerPx;
   const D = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? dark[y * w + x] : 0;
   const X = (px) => px / S * k;
-  const MIN_FACE = 400;                 // mm
   const out = [];
   for (let x = 0; x <= w; x++){
     let y = 0;
@@ -7234,8 +7321,7 @@ function maskWallFaces(){
       if (!west && !east) { y++; continue; }
       let y1 = y;
       while (y1 + 1 < h && (west ? (D(x, y1 + 1) && !D(x - 1, y1 + 1)) : (D(x - 1, y1 + 1) && !D(x, y1 + 1)))) y1++;
-      if (X(y1 + 1) - X(y) >= MIN_FACE)
-        out.push({ x1: X(x), y1: X(y), x2: X(x), y2: X(y1 + 1), nx: west ? -1 : 1, ny: 0 });
+      out.push({ x1: X(x), y1: X(y), x2: X(x), y2: X(y1 + 1), nx: west ? -1 : 1, ny: 0 });
       y = y1 + 1;
     }
   }
@@ -7247,11 +7333,22 @@ function maskWallFaces(){
       if (!north && !south) { x++; continue; }
       let x1 = x;
       while (x1 + 1 < w && (north ? (D(x1 + 1, y) && !D(x1 + 1, y - 1)) : (D(x1 + 1, y - 1) && !D(x1 + 1, y)))) x1++;
-      if (X(x1 + 1) - X(x) >= MIN_FACE)
-        out.push({ x1: X(x), y1: X(y), x2: X(x1 + 1), y2: X(y), nx: 0, ny: north ? -1 : 1 });
+      out.push({ x1: X(x), y1: X(y), x2: X(x1 + 1), y2: X(y), nx: 0, ny: north ? -1 : 1 });
       x = x1 + 1;
     }
   }
+  base._faces = out; base._facesK = state.mmPerPx;
+  return out;
+}
+
+/**
+ * 자동 배치가 훑을 **쓸 만한** 벽면 — 짧은 자투리를 버리고 긴 것부터.
+ * 붙일 벽을 찾는 `snapToWall` 은 **가장 가까운** 면이 필요하므로 `allWallFaces` 를 쓴다
+ * (여기서 걸러 낸 짧은 면이 바로 옆에 있을 수 있다).
+ */
+function maskWallFaces(){
+  const MIN_FACE = 400;                 // mm
+  const out = allWallFaces().filter((f) => Math.hypot(f.x2 - f.x1, f.y2 - f.y1) >= MIN_FACE);
   out.sort((a, b) => Math.hypot(b.x2 - b.x1, b.y2 - b.y1) - Math.hypot(a.x2 - a.x1, a.y2 - a.y1));
   return out.slice(0, 120);             // 긴 것부터 — 그 이상은 자투리라 훑어도 소득이 없다
 }
@@ -7316,7 +7413,7 @@ function findSpot(item, placed){
      * 자리를 아예 못 찾는 경우를 말하는 것이지, 문이 걸리는 자리를 금지하는 것이 아니다).
      * 앞의 싼 검사들이 후보 대부분을 이미 걸러내므로 비용도 그만큼만 든다.
      */
-    if (doorHits(cand, placed, state.walls).length) return false;
+    if (doorHits(cand, placed, wallsFor(cand)).length) return false;
     return true;
   };
 
@@ -7714,7 +7811,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   renderSide,
-  placeable, wallAt, wallMask, maskWallFaces, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
+  placeable, wallAt, wallMask, maskWallFaces, allWallFaces, snapWalls, wallsFor, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
   /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
   renderRooms,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
@@ -8964,7 +9061,7 @@ function build(refit){
        배치 단계의 주황 주의와 달리 여기서는 하드하게 말한다 — 상담사가 직접 연 것이다. */
     /* 문 열림은 **제품마다** 다르다 — 연 것만 판정하고, 연 것만 빨갛게 칠한다 */
     const opened = !!it.doorOpen && canOpenDoor(it);
-    const hits = opened ? P.doorHits(it, placed, P.state.walls) : [];
+    const hits = opened ? P.doorHits(it, placed, P.wallsFor(it)) : [];
     const bad = hits.length > 0;
     if (opened) openN++;
     if (bad) blocked++;

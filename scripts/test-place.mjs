@@ -1511,7 +1511,25 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   if (!said()) fail('공간이 5곳이지만 덮음이 1% 도 안 되는데 안내가 없다');
   else pass('인식 실패 안내 — 덮음이 15% 미만이어도 알린다');
 
-  // ③ 멀쩡한 도면에는 붙으면 안 된다
+  /*
+   * ③ **벽을 잡았으면 말이 달라진다** (2026-08-29). 벽이 기반이 되면서 방이 0곳이어도
+   * 배치·3D 가 그대로 된다 — 그때 "잘라서 올리세요"는 필요 없는 작업을 시키는 거짓이다.
+   * 잃는 것은 이름·넓이뿐이므로 그것을 말해야 한다.
+   */
+  st.rooms = []; st.walls = []; st.roomSel = null;
+  st.detectStats = { planA: 400 * 400 };
+  st.img = {};                                     // wallMask() 가 도면이 있다고 보게
+  st.baseMask = { w: 40, h: 40, S: 1, dark: new Uint8Array(1600), bbox: { x0: 0, y0: 0, x1: 39, y1: 39 } };
+  P.addRoom('거실', rect(0, 0, 4000, 4000));
+  {
+    const t = reportText();
+    if (/잘라서 올리면/.test(t)) fail('벽을 잡았는데도 "잘라서 올리세요"라고 한다 — 필요 없는 작업을 시킨다');
+    else if (!/배치와 3D 는 그대로/.test(t)) fail(`벽을 잡았을 때 안내가 안 뜬다: ${t.slice(0, 90)}`);
+    else pass('인식 실패 안내 — 벽을 잡았으면 "배치·3D 는 된다"고 말한다');
+  }
+  st.img = null; st.baseMask = null;
+
+  // ④ 멀쩡한 도면에는 붙으면 안 된다
   st.rooms = []; st.walls = []; st.roomSel = null;
   st.detectStats = { planA: 450 * 450 };
   for (let i = 0; i < 5; i++) P.addRoom('방' + i, rect((i % 3) * 3000, Math.floor(i / 3) * 3000, 2800, 2800));

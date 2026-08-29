@@ -2410,6 +2410,29 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
       out.autoPlaced = P.state.items.filter((i) => !i.staged).length;
       out.autoWant = picks.length;
 
+      /*
+       * **벽에 거는 것은 방이 없어도 벽을 등진다.** 이 앱이 못 박은 규칙인데
+       * `snapWallMounted` 가 방 경계만 보고 있어 방이 0곳이면 조용히 깨졌다 —
+       * 벽걸이 TV 가 방 한가운데 뜬다.
+       */
+      {
+        const tv = { id: 'tv', cat: 'TV', label: 'TV 75인치', group: 'Neo QLED', part: '벽걸이',
+          bx: free[0] / S * k, by: free[1] / S * k, w: 1670, d: 60, h: 1060, a: 0,
+          clear: { back: 0, side: 0, front: 0 }, staged: false, warn: [], soft: [] };
+        P.state.items = [tv];
+        out.tvSnapped = P.snapWallMounted(tv);
+        out.tvFaceMm = Math.round(P.allWallFaces().reduce((m, w2) => {
+          const dx = w2.x2 - w2.x1, dy = w2.y2 - w2.y1, L2 = dx * dx + dy * dy;
+          const t = L2 ? Math.max(0, Math.min(1, ((tv.bx - w2.x1) * dx + (tv.by - w2.y1) * dy) / L2)) : 0;
+          return Math.min(m, Math.hypot(tv.bx - (w2.x1 + t * dx), tv.by - (w2.y1 + t * dy)));
+        }, Infinity));
+        P.state.items = [];
+      }
+      /* 2D — 방이 0곳이면 인식된 벽을 보여줘야 한다("아무것도 안 됐다"로 읽히면 안 된다) */
+      P.evaluate(); P.renderSide(); P.draw();
+      out.overlay = !!(P.state.baseMask && P.state.baseMask._wallCv);
+      out.report = (document.getElementById('report').textContent || '').replace(/\s+/g, ' ');
+
       /* 3D — 도면에서 세운 벽 메시가 있어야 한다 */
       if (typeof window.load3D === 'function') await window.load3D();
       await wait(600);
@@ -2441,6 +2464,15 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (r.autoPlaced < r.autoWant)
       fail(`방이 없을 때 자동배치가 ${r.autoPlaced}/${r.autoWant}대뿐이다 — 벽면을 훑지 못한다 (벽면 ${r.faces}개)`);
     else pass(`벽만으로 자동배치 — 벽면 ${r.faces}개에서 ${r.autoPlaced}/${r.autoWant}대 (방 0곳)`);
+
+    if (!r.tvSnapped) fail('방이 0곳일 때 벽걸이 TV 가 벽에 안 붙는다 — 방 한가운데 뜬다');
+    else if (r.tvFaceMm > 60) fail(`벽걸이 TV 가 벽에서 ${r.tvFaceMm}mm 떨어져 있다 — 벽을 등지지 않았다`);
+    else pass(`벽만으로 벽걸이 — 방 0곳에서도 TV 가 벽을 등진다 (벽까지 ${r.tvFaceMm}mm)`);
+
+    if (!r.overlay) fail('방이 0곳인데 2D 에 인식된 벽을 안 보여준다 — 상담사가 "아무것도 안 됐다"로 읽는다');
+    else if (/벽 없음/.test(r.report)) fail(`벽을 잡았는데 화면은 "벽 없음"이라고 한다: ${r.report.slice(0, 90)}`);
+    else if (!/도면에서 벽을 잡았습니다/.test(r.report)) fail(`화면이 벽을 잡았다고 말하지 않는다: ${r.report.slice(0, 90)}`);
+    else pass('벽만으로 화면 — 2D 에 벽을 보여주고, 안내가 사실대로 말한다');
   }
 
 
