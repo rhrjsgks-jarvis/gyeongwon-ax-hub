@@ -2049,8 +2049,9 @@ function sheetBoxAt(base, sx, sy){
  * 외벽이 실제로 뚫려 있는 도면(방 하나만 그린 그림)에서는 배경이 안까지 들어와
  * 건물 안이 거의 남지 않는다. 그때는 근거가 없으므로 이 마스크를 쓰지 않는다.
  */
-function envelopeMask(raw, w, h, minInside){
-  const out = new Uint8Array(w * h);      // 1 = 바깥에서 닿은 곳
+/** 바깥에서 닿는 곳을 채운다 (건물 안 = 안 닿는 곳) */
+function outsideFlood(raw, w, h){
+  const out = new Uint8Array(w * h);
   const stack = new Int32Array(w * h);
   let sp = 0;
   const push = (p) => { if (!out[p] && !raw[p]) { out[p] = 1; stack[sp++] = p; } };
@@ -2064,11 +2065,17 @@ function envelopeMask(raw, w, h, minInside){
     if (y > 0)     push(p - w);
     if (y < h - 1) push(p + w);
   }
+  return out;
+}
+
+function envelopeMask(raw, w, h, minInside){
+  const out = outsideFlood(raw, w, h);
   let inside = 0;
   const env = new Uint8Array(w * h);
   for (let p = 0; p < w * h; p++) { env[p] = out[p] ? 0 : 1; if (env[p] && !raw[p]) inside++; }
   return inside >= minInside ? env : null;
 }
+
 
 /** 얇은 것만 지운 기본 마스크(문·창은 그대로 뚫려 있다) */
 function ensureBase(){
@@ -2202,6 +2209,7 @@ function ensureBase(){
   const bbox = structureBox(m, mask.w, mask.h);
   // 건물 안쪽 — 창의 유리선이 살아 있는 **원본** 마스크로 잡는다. 근거를 못 찾으면 null.
   const bboxArea = (bbox.x1 - bbox.x0 + 1) * (bbox.y1 - bbox.y0 + 1);
+  /* 링에 구멍이 있으면 닫기 사다리로 메워 본다 — 반경은 방 채우기가 쓰는 것과 같은 값 */
   const env = envelopeMask(mask.dark, mask.w, mask.h, bboxArea * 0.15);
   /* bands=false 는 "가로·세로 띠로는 벽을 못 찾았다"(대각선·사진·표 지면),
      outline=true 는 "벽을 칠하지 않고 윤곽선만 그린 도면이라 열기를 건너뛰었다".
@@ -2707,6 +2715,7 @@ function detectAllRooms(opts){
      마스크가 반경별로 캐시돼 있어 탐침을 늘려도 비용이 선형으로 늘지 않는다. */
   const N = 8;
   const found = [];
+  const gate = {};        // 관문마다 몇 개가 남는지 (조사용 — state.detectStats 로 나간다)
   /**
    * 한 점을 찔러 후보로 담는다(이미 같은 것을 담았으면 건너뛴다). 담았으면 true
    *
@@ -2742,9 +2751,14 @@ function detectAllRooms(opts){
    * 판정이 달라진다(실제로 달라져야 맞다). 라운드마다 새로 계산한다.
    */
   const refine = () => {
+  /* 관문마다 몇 개가 남는지 남긴다 — 조사할 때 "어디서 잃었나"를 바로 볼 수 있어야 한다 */
+  gate.raw = found.length;
+  const tooSmall = found.filter((c)=> !(c.a >= planA * 0.012)).length;
+  const tooThin = found.filter((c)=> c.a >= planA * 0.012 && !(Math.min(c.w, c.h) >= minShort)).length;
   const keep = found
     .filter((c)=> c.a >= planA * 0.012 && Math.min(c.w, c.h) >= minShort)
     .sort((u,v)=> v.a - u.a);
+  gate.small = tooSmall; gate.thin = tooThin; gate.afterSize = keep.length;
   /*
    * **여러 방이 한 덩어리로 잡힌 것은 버린다.**
    * 문이 다 열린 채 그려진 도면에서는 닫기 반경이 모자라 온 집(때로는 도면 여백까지)이
@@ -2763,6 +2777,7 @@ function detectAllRooms(opts){
       && inLoop(c.poly, o.cx, o.cy)).length;
     return inside < 2;
   });
+  gate.afterContain = trimmed.length;
 
   /*
    * **포함 관계만으로는 부족하다.** 합쳐진 영역의 다각형은 속 방들의 벽을 피해 구불구불
@@ -2815,9 +2830,12 @@ function detectAllRooms(opts){
    * **45% 규칙이 다 끝난 뒤에 한다.** 먼저 지우면 합계가 줄어 멀쩡한 트인 거실이 45% 를
    * 넘게 되고, 그 규칙이 거실을 쪼개러 들어간다 — 고쳐야 할 곳은 여기지 저기가 아니다.
    */
-  return trimmed.filter((c, i) =>
+  gate.afterBlob = trimmed.length;
+  const out = trimmed.filter((c, i) =>
     !trimmed.some((o, j) => j !== i && (o.a > c.a || (o.a === c.a && j < i))
       && c.a > o.a * 0.6 && coverFrac(c.poly, o.poly) > 0.7));
+  gate.afterOverlap = out.length;
+  return out;
   };
 
   /*
@@ -2860,6 +2878,23 @@ function detectAllRooms(opts){
   const fresh = known.length
     ? uniq.filter((c) => !known.some((e) => sameSpace(c.poly.map(([x, y]) => [x * k, y * k]), e)))
     : uniq;
+
+  /*
+   * **어느 관문에서 잃었는지 남긴다**(2026-08-29).
+   * 이 절은 조사 때마다 되풀이해서 파는 곳인데(CLAUDE.md 에 버린 가설이 둘 적혀 있다),
+   * "몇 곳 잡혔다" 말고는 아무 흔적이 없어 **매번 계측기를 새로 만들어야 했다.**
+   * 찌른 수 · 관문별 남은 수 · 건물 넓이를 남겨 두면 다음 조사가 바로 시작된다.
+   * 화면에는 쓰지 않는다 — 조사용이다.
+   */
+  state.detectStats = {
+    probes: found.length,                                  // 찔러서 나온 후보(중복 제거 뒤)
+    gate: { ...gate },                                     // 관문마다 남은 수
+    kept: uniq.length,                                     // 걸러내기를 통과한 것
+    fresh: fresh.length,                                   // 실제로 등록한 것
+    planA, minShort,                                       // 건물 넓이(px²) · 짧은변 하한(px)
+    bw, bh,                                                // 건물 상자 크기(이미지 px)
+    area: uniq.reduce((s, c) => s + c.a, 0),               // 잡은 공간 합(px²)
+  };
 
   for (const c of fresh) applyDetected(c.poly, c.edges, { name: nextRoomName(), raw: dopt.raw });
   return fresh.length;
@@ -4726,9 +4761,40 @@ function renderSide(){
         ? row('warn', '이 이미지는 벽이 가로·세로로 곧지 않습니다(입체 렌더링·사진·표 지면일 수 있어요) — '
             + '인식 결과를 그대로 믿지 마세요. 2D 평면도 부분만 잘라 올리거나 경계 수정으로 고쳐 주세요')
         : (bi.outline ? row('warn', '벽을 칠하지 않고 선으로만 그린 도면이라 가구·글씨가 함께 남습니다 — 경계 수정으로 다듬어 주세요') : null));
+  /*
+   * ── 인식이 사실상 실패했으면 **무엇을 하면 되는지** 말한다 (2026-08-29) ──────────
+   *
+   * 분양 시트에는 평면도 말고 제목·면적표·**동배치도(KEY MAP)**·옵션 안내칸이 함께 실린다.
+   * 그런 시트에서는 방 채우기가 시트 여백으로 새어 나가 **찌른 자리마다 실패**한다 —
+   * 동탄 포레파크 84C 는 64점 중 **60점이 "경계를 닫지 못했습니다"** 로 끝나 공간 1곳이었다.
+   *
+   * 그런데 화면에는 `공간 1곳 · 문제 없음` 이라고만 떴다. 상담사는 **왜 안 되는지도,
+   * 무엇을 하면 되는지도** 알 수 없다. 이 앱의 규칙은 *"결과가 이상할 때 왜 그런지와
+   * 무엇을 하면 되는지가 화면에 있어야 상담이 거기서 막히지 않는다"* 이다(기울기 경고와 같다).
+   *
+   * **안내가 사실이라는 것을 재서 확인했다** — 같은 도면에서 평면도 밴드만 잘라 올리니
+   * **공간 1곳·덮음 1.2% → 14곳·50.1%** 가 됐다. 지어낸 조언이 아니다.
+   *
+   * **앱이 스스로 자르지는 않는다.** 시트를 밴드로 훑어 가장 잘 인식되는 곳을 고르는 것은
+   * 재 봤고 되긴 하지만(1곳 → 10~13곳) **인식을 16번 돌려야 해 40~60초**가 걸리고,
+   * 고른 밴드가 진짜 세대 평면인지(옵션칸의 작은 평면일 수 있다) 확인하지 못했다.
+   * 근거는 CLAUDE.md 에 적어 두었다 — 다음에 이어서 할 자리다.
+   */
+  const detA = (() => {
+    const st = state.detectStats;
+    if (!st || !st.planA || !state.mmPerPx || !state.rooms.length) return null;
+    const k = state.mmPerPx;
+    const sum = state.rooms.reduce((s, r) => s + roomArea(r), 0) / (k * k);   // 이미지 px²
+    return sum / st.planA;
+  })();
+  const thinLine = (state.rooms.length && (state.rooms.length <= 2 || (detA != null && detA < 0.15)))
+    ? row('warn', `공간이 ${state.rooms.length}곳뿐입니다 — 한 장에 표·동배치도·옵션 안내가 함께 실린 시트이면`
+        + ' 인식이 그쪽으로 샙니다. 평면도 부분만 잘라서 올리면 훨씬 정확합니다')
+    : null;
   $('#report').innerHTML = [
     row(state.scaled?'ok':'warn', state.mmPerPx ? `축척 확정 (도면 1px = ${state.mmPerPx.toFixed(2)}mm)` : (state.scaled ? '축척 확정 (벽 실제 길이 입력 기준)' : '축척 미확정 — 벽을 그리고 실제 길이를 입력하세요')),
     ...(drawLine ? [drawLine] : []),
+    ...(thinLine ? [thinLine] : []),
     roomLine,
     row(bad?'bad':'ok', bad ? `문제 ${bad}건` : `배치 ${state.items.length}건 · 문제 없음`),
     ...(soft ? [row('warn', `도어 오픈 등 확인 필요 ${soft}건 — 주황 점선 구역`)] : []),

@@ -1471,5 +1471,55 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   st.baseInfo = null; st.exclusiveM2 = null; st.rooms = []; st.walls = []; st.mmPerPx = null;
 }
 
+// ── [16] 인식이 사실상 실패했으면 무엇을 하면 되는지 말한다 (2026-08-29) ──────────
+/*
+ * 분양 시트에 표·동배치도·옵션 안내가 함께 실리면 방 채우기가 시트 여백으로 새어 나가
+ * **찌른 자리마다 실패**한다(실측: 동탄 포레파크 84C 는 64점 중 60점 실패 → 공간 1곳).
+ * 그런데 화면은 `공간 1곳 · 문제 없음` 이라고만 떴다 — 왜 안 되는지도, 무엇을 하면
+ * 되는지도 알 수 없다.
+ *
+ * 안내가 **사실인 것을 재서 확인했다** — 평면도 밴드만 잘라 올리면 1곳·1.2% → 14곳·50.1%.
+ *
+ * **멀쩡한 도면에 이 안내가 붙으면 안 된다** — 그러면 상담사가 매번 자르려 든다.
+ * 그래서 양쪽을 함께 검사한다.
+ */
+{
+  const st = P.state;
+  const rect = (x, y, w, h) => [
+    { x1: x, y1: y, x2: x + w, y2: y }, { x1: x + w, y1: y, x2: x + w, y2: y + h },
+    { x1: x + w, y1: y + h, x2: x, y2: y + h }, { x1: x, y1: y + h, x2: x, y2: y },
+  ];
+  const reportText = () => {
+    P.renderSide();
+    const el = dom.window.document.getElementById('report');
+    return (el && el.textContent) || '';
+  };
+  const said = () => /잘라서 올리면/.test(reportText());
+
+  // ① 공간이 1곳뿐 — 안내가 떠야 한다
+  st.items = []; st.walls = []; st.rooms = []; st.roomSel = null;
+  st.scaled = true; st.mmPerPx = 20; st.exclusiveM2 = null; st.baseInfo = null;
+  st.detectStats = { planA: 400 * 400 };            // 건물 400×400px
+  P.addRoom('거실', rect(0, 0, 4000, 4000));        // 200×200px → 건물의 25%
+  if (!said()) fail('공간이 1곳뿐인데 "잘라서 올리라"는 안내가 안 뜬다 — 상담이 거기서 막힌다');
+  else pass('인식 실패 안내 — 공간이 1~2곳이면 무엇을 하면 되는지 말한다');
+
+  // ② 공간은 여럿인데 덮음이 바닥 — 안내가 떠야 한다
+  st.rooms = []; st.walls = []; st.roomSel = null;
+  st.detectStats = { planA: 4000 * 4000 };          // 건물이 훨씬 크다 → 덮음 1% 미만
+  for (let i = 0; i < 5; i++) P.addRoom('방' + i, rect(i * 1200, 0, 1000, 1000));
+  if (!said()) fail('공간이 5곳이지만 덮음이 1% 도 안 되는데 안내가 없다');
+  else pass('인식 실패 안내 — 덮음이 15% 미만이어도 알린다');
+
+  // ③ 멀쩡한 도면에는 붙으면 안 된다
+  st.rooms = []; st.walls = []; st.roomSel = null;
+  st.detectStats = { planA: 450 * 450 };
+  for (let i = 0; i < 5; i++) P.addRoom('방' + i, rect((i % 3) * 3000, Math.floor(i / 3) * 3000, 2800, 2800));
+  if (said()) fail('멀쩡하게 잡힌 도면에 "잘라서 올리라"가 붙는다 — 매번 자르려 들게 된다');
+  else pass('인식 실패 안내 — 잘 잡힌 도면에는 안 붙는다');
+
+  st.rooms = []; st.walls = []; st.detectStats = null; st.mmPerPx = null; st.baseInfo = null;
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
