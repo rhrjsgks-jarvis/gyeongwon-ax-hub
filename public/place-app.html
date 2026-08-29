@@ -8550,16 +8550,65 @@ function planTexture(){
  * 축척(`mmPerPx`)이 없으면 만들지 않는다: 크기를 모르는 그림을 깔면 도면과 가전의
  * 크기 관계가 통째로 거짓이 된다(2D 가 같은 이유로 이미지를 아예 안 그린다).
  */
+/*
+ * 방들 **아래에** 도면 한 장을 깐다 — 인식 못 한 곳도 발밑이 생긴다.
+ *
+ * **시트 여백은 잘라 낸다**(2026-08-30 실물에서 발견). 분양 도면은 평면도 둘레에
+ * 치수선·조감도·면적표가 있고, 아래에는 **「무상 옵션(한시적)」 같은 마케팅 문구**가
+ * 실려 있다. 그대로 깔면 **고객에게 보여주는 3D 바닥에 분양 광고가 깔린다.**
+ *
+ * 자르는 것은 **건물 상자**(`baseInfo.bbox`)이고, 없으면 방 범위 + 여유로 물러선다.
+ * 텍스처를 다시 만들지 않고 UV(offset·repeat)만 옮긴다 — 이미지는 이미 받아 둔 것이다.
+ * **마루색·타일은 그대로 남는다** — 잘라 내는 것은 평면도 바깥뿐이다.
+ */
+function baseCrop(){
+  const st = P.state;
+  const bb = (st.baseInfo || {}).bbox;
+  const S = (st.baseMask && st.baseMask.S) || 1;
+  const iw = st.imgW, ih = st.imgH;
+  /*
+   * **방이 잡혔으면 그것이 곧 평면도다.** 건물 상자(baseInfo.bbox)는 시트 아래의
+   * 옵션 안내·면적표까지 품는 경우가 있어, 그것으로 시작해 넓히기만 하면 아무것도
+   * 잘리지 않는다(실측 — 자르기 전과 그림이 똑같았다). viewBox 와 같은 순서다.
+   */
+  let x0, y0, x1, y1;
+  const rs = P.roomLoops();
+  if (rs.length){
+    x0 = Infinity; y0 = Infinity; x1 = -Infinity; y1 = -Infinity;
+    for (const L of rs) for (const q of (L.pts || [])){
+      const px = q[0] / st.mmPerPx, py = q[1] / st.mmPerPx;
+      x0 = Math.min(x0, px); x1 = Math.max(x1, px);
+      y0 = Math.min(y0, py); y1 = Math.max(y1, py);
+    }
+  } else if (bb && Number.isFinite(bb.x0)){
+    x0 = bb.x0 / S; y0 = bb.y0 / S; x1 = bb.x1 / S; y1 = bb.y1 / S;
+  } else {
+    x0 = 0; y0 = 0; x1 = iw; y1 = ih;
+  }
+  const mx = (x1 - x0) * 0.03, my = (y1 - y0) * 0.03;
+  x0 = Math.max(0, x0 - mx); y0 = Math.max(0, y0 - my);
+  x1 = Math.min(iw, x1 + mx); y1 = Math.min(ih, y1 + my);
+  /* 자른 것이 이미지의 5% 도 안 되면 잘못 잡힌 것이다 — 통째로 깐다 */
+  if (!(x1 > x0 && y1 > y0) || (x1 - x0) * (y1 - y0) < iw * ih * 0.05) return { x0: 0, y0: 0, x1: iw, y1: ih };
+  return { x0, y0, x1, y1 };
+}
+
 function basePlanFloor(){
   const st = P.state;
   if (!st.img || !st.mmPerPx || !st.imgW || !st.imgH) return null;
-  const W = st.imgW * st.mmPerPx, H = st.imgH * st.mmPerPx;
   const tex = planTexture();
   if (!tex) return null;
+  const c = baseCrop();
+  const W = (c.x1 - c.x0) * st.mmPerPx, H = (c.y1 - c.y0) * st.mmPerPx;
+  /* 텍스처를 공유하면 다른 곳(방 바닥)의 UV 까지 흔든다 — 이 바닥만 쓸 사본을 만든다 */
+  const t2 = tex.clone(); t2.needsUpdate = true;
+  t2.repeat.set((c.x1 - c.x0) / st.imgW, (c.y1 - c.y0) / st.imgH);
+  /* v 는 뒤집혀 있다 — 아래쪽 여백을 자르려면 offset 을 위에서부터 센다 */
+  t2.offset.set(c.x0 / st.imgW, 1 - c.y1 / st.imgH);
   const g = new THREE.PlaneGeometry(M(W), M(H));
-  const mesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ map: tex }));
+  const mesh = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ map: t2 }));
   mesh.rotation.x = -Math.PI / 2;                 // XY 평면을 바닥(XZ)으로 눕힌다
-  mesh.position.set(M(W / 2), M(-5), M(H / 2));   // 도면 원점이 (0,0) 이므로 한가운데로 민다
+  mesh.position.set(M(c.x0 * st.mmPerPx + W / 2), M(-5), M(c.y0 * st.mmPerPx + H / 2));
   mesh.userData.isBase = true;                    // 가전 집기(pickItem)와 검사가 알아보게
   return mesh;
 }
@@ -9738,8 +9787,30 @@ function build(refit){
      눈높이   — 사람이 서서 보는 높이. "우리 집 느낌"이 가장 잘 나는 각도다
      위에서   — 2D 평면도와 같은 구도. 2D ↔ 3D 를 눈으로 잇게 해 준다
    `fit` 은 방 크기에서 다시 계산한다 — 방마다 필요한 거리가 다르다. */
-let fitDist = 8, mode3 = 'iso', lastBox = null;
+let fitDist = 8, mode3 = 'iso', lastBox = null, lastAsp = null;
 const EYE_MM = 1600;           // 서서 보는 눈높이. 한국 성인 평균 신장에서 눈까지가 대략 이 값이다
+/*
+ * **화면이 세로로 길면 더 물러선다.** three 의 `fov` 는 **세로 기준**이라 가로 화각은
+ * `aspect` 만큼 좁다 — 폰은 0.5 안팎이라 절반이다. 대각선 길이로만 거리를 잡으면
+ * 세로는 남는데 **가로가 잘린다**(실물: 13.2m 짜리 집의 오른쪽이 화면 밖으로 나갔다).
+ *
+ * **`build()` 안에서 재면 안 된다** — 그때는 캔버스가 아직 배치 전이라 `aspect` 가 1 로
+ * 남아 보정이 통째로 안 먹는다(실측: 폰·PC 모두 fit 18.15 로 같았다).
+ * 시점을 정하는 이 자리는 캔버스가 이미 떠 있다.
+ *
+ * **넓은 화면은 건드리지 않는다** — 그쪽은 옛 식이 이미 맞고, 새 식만 쓰면 오히려 가까워진다.
+ */
+function fitForScreen(){
+  const el = ren && ren.domElement;
+  const asp = (el && el.clientHeight) ? el.clientWidth / el.clientHeight
+    : ((cam && cam.aspect) || 1);
+  lastAsp = +asp.toFixed(3);
+  if (asp >= 1 || !lastBox || !lastBox.x) return fitDist;
+  const vf = (((cam && cam.fov) || 52) * Math.PI) / 180;
+  const byW = (lastBox.x / 2) / (Math.tan(vf / 2) * Math.max(0.2, asp));
+  return Math.max(fitDist, byW * 1.25);
+}
+
 function view(name){
   mode3 = (name === 'eye' || name === 'top') ? name : 'iso';
   /* 실내에서는 화각을 넓힌다 — 부동산 실내 사진이 광각으로 찍히는 것과 같은 이유다.
@@ -9757,10 +9828,10 @@ function view(name){
     orb.pitch = 0.06; orb.dist = 1e4;
     if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; }
   } else if (mode3 === 'top'){
-    orb.pitch = 1.44; orb.ty = 0; orb.dist = fitDist * 0.95; orb.yaw = 0;
+    orb.pitch = 1.44; orb.ty = 0; orb.dist = fitForScreen() * 0.95; orb.yaw = 0;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   } else {
-    orb.pitch = 0.85; orb.ty = M(WALL_H_MM) * 0.35; orb.dist = fitDist; orb.yaw = -0.7;
+    orb.pitch = 0.85; orb.ty = M(WALL_H_MM) * 0.35; orb.dist = fitForScreen(); orb.yaw = -0.7;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   }
 }
@@ -10262,7 +10333,7 @@ window.Place3D = {
       pitch: +orb.pitch.toFixed(2), yaw: +orb.yaw.toFixed(2),
       tx: +orb.tx.toFixed(2), tz: +orb.tz.toFixed(2), ty: +orb.ty.toFixed(2),
       fov: cam && cam.fov, camY: cam && +cam.position.y.toFixed(2),
-      box: lastBox || null };
+      box: lastBox || null, asp: lastAsp };
   },
   /* 내용이 바뀌었을 때 다시 세운다 — **화면은 다시 맞추지 않는다.** 그러면 보던 각도를 잃는다. */
   rebuild(){ if (on) { const i = build(false); paintBar(i); } },

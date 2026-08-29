@@ -1751,5 +1751,37 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   });
 }
 
+/*
+ * [22] **3D 가 고객에게 보여줄 그림이 되게** (2026-08-30 실물에서 발견).
+ *
+ * ① **폰에서 집이 화면에 안 들어왔다.** three 의 `fov` 는 **세로 기준**이라 가로 화각은
+ *    `aspect` 만큼 좁은데, 거리를 대각선 길이로만 잡아 **가로가 잘렸다**.
+ *    실측 — 폰(asp 0.51) 18.15 → **32.9m** · PC(asp 1.30) 18.15 **그대로**.
+ *    `build()` 안에서 재면 안 된다 — 그때는 캔버스가 배치 전이라 aspect 가 1 이다
+ *    (실제로 그렇게 만들었다가 폰·PC 가 같은 값이 나왔다).
+ *
+ * ② **바닥에 분양 시트가 통째로 깔려 있었다** — 치수선·조감도·「무상 옵션(한시적)」
+ *    같은 마케팅 문구까지. 고객에게 보여주는 화면이다. 건물만 잘라 깐다.
+ */
+{
+  const has = (t) => html.includes(t);
+  ok2(has('function fitForScreen()'), '[22] 화면 종횡비에 맞춰 거리를 잡는 함수가 있다');
+  ok2(has('if (asp >= 1 || !lastBox || !lastBox.x) return fitDist;'),
+    '[22] 넓은 화면은 건드리지 않는다 — 그쪽은 옛 식이 이미 맞다');
+  ok2(has('orb.dist = fitForScreen()'), '[22] 둘러보기가 그 거리를 쓴다');
+  ok2(has('orb.dist = fitForScreen() * 0.95'), '[22] 위에서 보기도 그 거리를 쓴다');
+  ok2(!has('orb.dist = fitDist;'), '[22] 옛 거리를 그대로 쓰는 시점이 남아 있지 않다');
+
+  ok2(has('function baseCrop()'), '[22] 바닥 도면을 자르는 함수가 있다');
+  ok2(has('const rs = P.roomLoops();\n  if (rs.length){'),
+    '[22] 방이 잡혔으면 그것이 곧 평면도다 — 건물 상자는 시트 여백을 품는다');
+  ok2(has('const t2 = tex.clone()'),
+    '[22] 바닥만 쓸 텍스처 사본을 만든다 — 공유하면 방 바닥의 UV 까지 흔든다');
+  ok2(has('t2.offset.set(c.x0 / st.imgW, 1 - c.y1 / st.imgH)'),
+    '[22] v 는 뒤집혀 있으므로 offset 을 위에서부터 센다');
+  ok2(has('< iw * ih * 0.05) return { x0: 0, y0: 0, x1: iw, y1: ih };'),
+    '[22] 잘못 잡히면 통째로 깐다 — 자르다 아무것도 안 남는 것이 더 나쁘다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

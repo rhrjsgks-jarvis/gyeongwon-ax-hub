@@ -2329,7 +2329,14 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
         ? [base.geometry.parameters.width, base.geometry.parameters.height] : null;
       const box = T.walkBox;
       T.close();
-      return { start, mid, inRoom0, inRoomMid, far, bs, box };
+      /* 바닥이 방을 다 덮는지 보려면 방 범위도 필요하다 */
+      let rx0 = Infinity, rz0 = Infinity, rx1 = -Infinity, rz1 = -Infinity;
+      for (const L of P.roomLoops()) for (const q of (L.pts || [])){
+        rx0 = Math.min(rx0, q[0] / 1000); rx1 = Math.max(rx1, q[0] / 1000);
+        rz0 = Math.min(rz0, q[1] / 1000); rz1 = Math.max(rz1, q[1] / 1000);
+      }
+      const roomExtent = Number.isFinite(rx0) ? [rx1 - rx0, rz1 - rz0] : null;
+      return { start, mid, inRoom0, inRoomMid, far, bs, box, roomExtent };
     });
 
     const gone = Math.hypot(walk.mid[0] - walk.start[0], walk.mid[1] - walk.start[1]);
@@ -2344,11 +2351,30 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
       fail(`3D 조이스틱: 걷기 범위를 넘었다 (${walk.far.map((n) => n.toFixed(1))} > ${walk.box.x1.toFixed(1)},${walk.box.z1.toFixed(1)})`);
     else pass(`3D 걷기 범위 — 도면 전체 + 여유 안에서만 (${(walk.box.x1 - walk.box.x0).toFixed(1)} × ${(walk.box.z1 - walk.box.z0).toFixed(1)}m)`);
 
-    /* 도면 1000×800px × 12mm/px = 12,000 × 9,600mm = 12 × 9.6m */
-    if (!walk.bs) fail('도면 전체 바닥이 안 깔렸다 — 인식 못 한 곳이 허공이라 걸어도 소용이 없다');
-    else if (Math.abs(walk.bs[0] - 12) > 0.05 || Math.abs(walk.bs[1] - 9.6) > 0.05)
-      fail(`도면 바닥 크기가 어긋난다: ${walk.bs.map((n) => n.toFixed(2))}m (기대 12 × 9.6m)`);
-    else pass(`도면 전체 바닥 — ${walk.bs[0].toFixed(1)} × ${walk.bs[1].toFixed(1)}m (축척대로)`);
+    /*
+     * 도면 바닥이 **축척대로** 깔렸는가.
+     *
+     * 예전에는 이미지 전체(12 × 9.6m)를 기대했는데, 2026-08-30 부터 **평면도 부분만
+     * 잘라 깐다** — 분양 시트는 둘레에 치수선·조감도가 있고 아래에는 「무상 옵션(한시적)」
+     * 같은 **마케팅 문구**가 실려 있어, 그대로 깔면 고객에게 보여주는 3D 바닥에 광고가 깔린다.
+     *
+     * 그래서 **크기를 박지 않고 관계로 본다** — 바닥은 ①방을 다 덮어야 하고
+     * ②이미지 전체보다 크면 안 된다. 자르기를 안 하면 ①은 통과하지만 ②의 하한
+     * (이미지의 98% 미만)에서 걸린다.
+     */
+    if (!walk.bs) fail('도면 바닥이 안 깔렸다 — 인식 못 한 곳이 허공이라 걸어도 소용이 없다');
+    else {
+      const [bw, bh] = walk.bs;
+      const roomW = walk.roomExtent ? walk.roomExtent[0] : 0;
+      const roomH = walk.roomExtent ? walk.roomExtent[1] : 0;
+      if (bw > 12.05 || bh > 9.65)
+        fail(`도면 바닥이 이미지보다 크다: ${bw.toFixed(2)} × ${bh.toFixed(2)}m (이미지 12 × 9.6m)`);
+      else if (roomW && (bw < roomW - 0.01 || bh < roomH - 0.01))
+        fail(`도면 바닥이 방을 다 못 덮는다: ${bw.toFixed(2)} × ${bh.toFixed(2)}m < 방 ${roomW.toFixed(2)} × ${roomH.toFixed(2)}m`);
+      else if (bw > 11.9 && bh > 9.5)
+        fail(`도면 바닥이 안 잘렸다: ${bw.toFixed(2)} × ${bh.toFixed(2)}m — 시트 여백까지 깔린다`);
+      else pass(`도면 바닥 — ${bw.toFixed(1)} × ${bh.toFixed(1)}m (평면도만 · 방 ${roomW.toFixed(1)} × ${roomH.toFixed(1)}m 를 덮는다)`);
+    }
   }
   /*
    * ── **벽만으로 선다 — 방이 0곳이어도** (2026-08-29 사장님 지시) ─────────────────
