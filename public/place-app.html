@@ -1098,7 +1098,12 @@ function nearOpening(x, y){
  * 통째로 어긋나 아무 데도 못 놓게 된다(회귀 검사가 실제로 이걸 잡았다).
  */
 function wallMask(){
-  return (state.img && state.baseMask && state.mmPerPx) ? state.baseMask : null;
+  /*
+   * **축척은 요구하지 않는다** (2026-08-29). 축척 전에는 이 앱의 월드 단위가 곧
+   * **이미지 픽셀**이라(`drawPlan` 이 그렇게 그린다) 마스크를 그대로 쓸 수 있다.
+   * 요구하면 **축척을 묻는 단계에서 벽을 못 쓴다** — 정작 그때 벽이 가장 필요하다.
+   */
+  return (state.img && state.baseMask) ? state.baseMask : null;
 }
 /**
  * 인식된 벽을 도면 위에 얹어 보여주는 캔버스 — **도면당 한 번만** 만들어 마스크에 얹어 둔다
@@ -1124,12 +1129,70 @@ function wallOverlayCv(){
   return c;
 }
 
+
+/*
+ * ── 도면에서 **개구부(벽이 끊긴 자리)** 를 찾는다 (2026-08-29) ──────────────────
+ *
+ * **문인지 창인지는 가르지 않는다.** 이 저장소는 그 판별을 정답 20만 건으로 5겹
+ * 교차검증해 **최고 72%** 였고(기준선 80.5%), *"이 줄이 있는 한 다시 세우지 말 것"*
+ * 이라고 적어 두었다. 그 결정은 그대로다.
+ *
+ * 대신 **"여기가 트여 있다"** 는 확실하다 — 마스크에 벽 픽셀이 없는 자리이기 때문이다.
+ * 방이 0곳이면 개구부를 방 경계의 `open` 표시에서 얻을 수 없어 *"문·창 앞을 막습니다"*
+ * 경고가 통째로 사라졌는데, 그 경고를 되살린다.
+ *
+ * **찾는 법** — 같은 선 위에 나란히 놓인 벽면 두 조각 사이의 빈 구간이다.
+ * 양옆이 실제로 벽이므로 "그 사이가 트였다"는 것은 관찰이지 추정이 아니다.
+ * 아무 빈 구간이나 잡지 않게 셋을 요구한다:
+ *   · 폭 **500~2,500mm** — 문(900)·창(1,800)이 드는 범위. 그보다 넓으면 벽이 아예 없는 것
+ *   · 양옆 벽 조각이 각각 **300mm 이상** — 자투리 사이의 틈은 개구부가 아니다
+ *   · 같은 **바깥 방향**(법선)을 가진 조각끼리 — 반대편 벽면과 짝지으면 엉뚱한 구간이 나온다
+ */
+const OPEN_MIN = 500, OPEN_MAX = 2500, OPEN_SIDE = 300;
+function maskOpenings(){
+  const base = wallMask();
+  if (!base) return [];
+  const k = state.mmPerPx || 1;
+  if (base._opens && base._opensK === k) return base._opens;
+  const lines = new Map();                       // "가로|좌표|법선" → 조각들
+  for (const f of allWallFaces()){
+    const horiz = Math.abs(f.y2 - f.y1) < 1e-6;
+    const key = (horiz ? 'h' : 'v') + '|' + (horiz ? f.y1 : f.x1).toFixed(2) + '|' + f.nx + ',' + f.ny;
+    if (!lines.has(key)) lines.set(key, []);
+    lines.get(key).push(f);
+  }
+  const out = [];
+  for (const [key, arr] of lines){
+    const horiz = key[0] === 'h';
+    const lo = (f) => Math.min(horiz ? f.x1 : f.y1, horiz ? f.x2 : f.y2);
+    const hi = (f) => Math.max(horiz ? f.x1 : f.y1, horiz ? f.x2 : f.y2);
+    arr.sort((a, b) => lo(a) - lo(b));
+    for (let i = 0; i + 1 < arr.length; i++){
+      const a = arr[i], b = arr[i + 1];
+      const gap = lo(b) - hi(a);
+      if (gap < OPEN_MIN || gap > OPEN_MAX) continue;
+      if (hi(a) - lo(a) < OPEN_SIDE || hi(b) - lo(b) < OPEN_SIDE) continue;
+      const c = horiz ? a.y1 : a.x1;
+      out.push(horiz
+        ? { x1: hi(a), y1: c, x2: lo(b), y2: c, open: true, nx: a.nx, ny: a.ny }
+        : { x1: c, y1: hi(a), x2: c, y2: lo(b), open: true, nx: a.nx, ny: a.ny });
+    }
+  }
+  base._opens = out; base._opensK = k;
+  return out;
+}
+/** 지금 쓸 개구부 — 방 경계에 표시된 것이 있으면 그것을, 없으면 도면에서 찾은 것을 */
+function openingsNow(){
+  const fromRooms = state.walls.filter((w) => w.open);
+  return fromRooms.length ? fromRooms : maskOpenings();
+}
+
 /** 그 점이 벽인가 — 'wall' · 'free' · 'out'(도면/건물 밖) · null(마스크가 없어 못 잼) */
 function wallAt(x, y){
   const base = wallMask();
   if (!base) return null;
-  const S = base.S || 1;
-  const mx = Math.round(x / state.mmPerPx * S), my = Math.round(y / state.mmPerPx * S);
+  const S = base.S || 1, k = state.mmPerPx || 1;   // 축척 전에는 월드 단위가 이미지 픽셀이다
+  const mx = Math.round(x / k * S), my = Math.round(y / k * S);
   if (mx < 0 || my < 0 || mx >= base.w || my >= base.h) return 'out';
   /*
    * **건물 상자 밖은 막는다.** 벽이 아닌 곳이 전부 놓을 수 있는 곳이라면 시트 여백
@@ -3173,7 +3236,17 @@ function detectHouseThenScale(){
 function askHouseScale(){
   const segs = [];
   for (const r of state.rooms) for (const part of r.parts) for (const w of part.walls) segs.push({ ...w });
-  if (!segs.length) { autoDetectCenter(); return; }
+  /*
+   * **방을 하나도 못 잡아도 축척은 잴 수 있다** (2026-08-29).
+   * 예전에는 방이 없으면 `autoDetectCenter` 로 돌아갔고, 거기서도 못 잡으면
+   * *"침실1 안쪽을 한 번 눌러주세요"* 로 끝났다 — **상담이 그 자리에서 막힌다.**
+   * 벽은 잡혔으니 그 벽면으로 묻는다(긴 것부터). 상담사는 아는 벽으로 `다음 ▸` 하면 된다.
+   */
+  if (!segs.length){
+    const faces = allWallFaces();
+    if (faces.length){ askWallLength(faces.map((f) => ({ ...f })), { house: true, sortByLen: true }); return; }
+    autoDetectCenter(); return;
+  }
   /*
    * **긴 벽부터 내민다.** 후보를 집 전체에서 모으면 현관·욕실 같은 짧은 벽이 앞에 설 수
    * 있는데, 짧은 벽으로 축척을 재면 같은 픽셀 오차가 훨씬 크게 증폭된다(1m 벽에서 5px 는
@@ -3285,6 +3358,17 @@ function autoDetectCenter(){
   const usable = cands.length && roomLike(cands[pick]);
   const best = usable ? { a: cands[pick].a, r: detectRoomAt(cands[pick].at[0], cands[pick].at[1]), at: cands[pick].at } : null;
   if (!best || best.r.error){
+    /*
+     * **방을 못 잡아도 벽은 잡혔다** (2026-08-29). 예전에는 여기서 *"침실1 안쪽을
+     * 눌러주세요"* 로 끝나 상담이 막혔다 — 그런데 그런 도면일수록 눌러도 안 잡힌다
+     * (동탄 포레파크 84C 는 64점 중 60점이 실패한다). 도면의 벽면으로 축척을 묻는다.
+     */
+    const faces = allWallFaces();
+    if (faces.length){
+      toast('방은 자동으로 못 잡았지만 벽은 잡았습니다 — 아는 벽의 길이를 넣어 주세요');
+      askWallLength(faces.map((f) => ({ ...f })), { house: true, sortByLen: true });
+      return;
+    }
     setMode('detect');
     toast('방을 자동으로 못 잡았습니다 — 침실1(안방) 안쪽을 한 번 눌러주세요');
     draw(); return;
@@ -4016,8 +4100,8 @@ function evaluate(){
     const to = topOpenFor(A);
     if (to) A.soft.push(to.note);
 
-    // 문·창(개구부) 앞을 막는가 — 인식된 경계 중 open 표시가 붙은 구간
-    for (const w of state.walls){
+    /* 문·창(개구부) 앞을 막는가 — 방 경계의 open 구간, 없으면 도면에서 찾은 개구부 */
+    for (const w of openingsNow()){
       if (!w.open) continue;
       if (segHitsPoly(w, Abody)){
         /*
@@ -4041,7 +4125,8 @@ function evaluate(){
      * 문 앞 1m 에 냉장고를 세워도 아무 말이 없었다 — 정작 문이 안 열리는 배치인데.
      */
     if (mountKind(A) !== '벽'){
-      for (const w of state.walls){
+      /* 방이 0곳이면 방 경계에 개구부 표시가 없다 — 도면에서 찾은 것으로 물러선다 */
+      for (const w of openingsNow()){
         if (!w.open) continue;
         const z = openingSwing(w);
         if (z && overlaps(Abody, z)){
@@ -7277,6 +7362,43 @@ const ROOM_PLAN = {
   '침실':   ['에어컨','공기청정기','에어드레서','제습기'],
 };
 
+/*
+ * ── 도면에 **적혀 있는** 방 이름으로 용도를 안다 (2026-08-29) ─────────────────
+ *
+ * 방 다각형을 못 잡아도 도면에는 *"주방/식당"* 이라고 인쇄돼 있고, 우리는 그 좌표를
+ * 이미 갖고 있다(`plan-names.json` — 855장, OCR 로 읽어 커밋해 둔 것).
+ * 그러면 **냉장고를 주방 벽에, 세탁기를 세탁실 벽에** 붙일 수 있다.
+ *
+ * **지어내지 않는다** — 도면에 그 이름이 인쇄돼 있을 때만 쓴다. 없으면 예전처럼
+ * 긴 벽부터 본다(`findSpot`).
+ */
+/*
+ * **가까운 이름까지 받는다 — 앞엣것부터.** 도면마다 적는 말이 다르다(실측 855장, 이름 55종):
+ * 주방은 238장에만 그 말로 적혀 있고 '식당'·'팬트리' 로 적힌 곳이 따로 있다.
+ * 팬트리·다용도실은 주방/세탁실 **바로 옆**이라 기준점으로 쓸 만하다 — 지어내는 것이
+ * 아니라 도면에 적힌 말을 쓰는 것이고, 어디까지나 **어느 벽부터 볼지**를 정할 뿐이다.
+ */
+const ROOM_ALIAS = {
+  '침실':   ['침실', '안방', '주침실'],
+  '주방':   ['주방', '식당', '팬트리'],
+  '세탁실': ['세탁실', '다용도실', '보조주방'],
+  '거실':   ['거실', '알파룸'],
+};
+function plannedSpotFor(item){
+  const list = (planNames || {})[state.planFile || ''];
+  if (!list || !list.length || !item) return null;
+  const k = state.mmPerPx || 1, W = state.imgW || 1, H = state.imgH || 1;
+  /* 이 카테고리를 담당하는 방 이름들 — 앞에 적힌 것이 더 알맞은 자리다 */
+  const wants = Object.keys(ROOM_PLAN).filter((nm) => (ROOM_PLAN[nm] || []).includes(item.cat));
+  for (const nm of wants){
+    for (const key of (ROOM_ALIAS[nm] || [nm])){
+      const hit = list.find((q) => String(q.n || '').includes(key));
+      if (hit) return [hit.x * W * k, hit.y * H * k];
+    }
+  }
+  return null;
+}
+
 /** 방 안쪽을 향하는 단위 법선 — 방 중심이 있는 쪽 */
 function inwardNormal(w, center){
   const ang = Math.atan2(w.y2-w.y1, w.x2-w.x1);
@@ -7308,8 +7430,9 @@ function roomCenter(){
 function allWallFaces(){
   const base = wallMask();
   if (!base) return [];
-  if (base._faces && base._facesK === state.mmPerPx) return base._faces;
-  const { w, h, dark } = base, S = base.S || 1, k = state.mmPerPx;
+  const k = state.mmPerPx || 1;
+  if (base._faces && base._facesK === k) return base._faces;
+  const { w, h, dark } = base, S = base.S || 1;
   const D = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? dark[y * w + x] : 0;
   const X = (px) => px / S * k;
   const out = [];
@@ -7337,7 +7460,7 @@ function allWallFaces(){
       x = x1 + 1;
     }
   }
-  base._faces = out; base._facesK = state.mmPerPx;
+  base._faces = out; base._facesK = k;
   return out;
 }
 
@@ -7372,8 +7495,24 @@ function findSpot(item, placed){
    * 마스크 가장자리에서 벽면과 **빈 쪽 방향**을 함께 뽑아 준다.
    */
   if (!groups.length){
-    const faces = maskWallFaces();
-    if (faces.length) groups.push({ walls: faces, center: null });
+    let faces = maskWallFaces();
+    /*
+     * **도면에 인쇄된 방 이름 옆 벽을 먼저 본다** (2026-08-29).
+     * 방을 못 잡아도 도면에는 *"주방/식당"* 이라고 **적혀 있고**, 그 좌표를 이미
+     * 갖고 있다(`plan-names.json`, 855장). 그러면 냉장고를 주방 벽에, 세탁기를
+     * 세탁실 벽에 붙일 수 있다 — 방 다각형 없이도 **용도를 아는 배치**가 된다.
+     * 이름이 없거나 못 찾으면 예전처럼 긴 벽부터 본다.
+     */
+    const aim = plannedSpotFor(item);
+    if (aim && faces.length){
+      const d2 = (w) => {
+        const dx = w.x2 - w.x1, dy = w.y2 - w.y1, L2 = dx * dx + dy * dy;
+        const t = L2 ? Math.max(0, Math.min(1, ((aim[0] - w.x1) * dx + (aim[1] - w.y1) * dy) / L2)) : 0;
+        return Math.hypot(aim[0] - (w.x1 + t * dx), aim[1] - (w.y1 + t * dy));
+      };
+      faces = faces.slice().sort((a, b) => d2(a) - d2(b));
+    }
+    if (faces.length) groups.push({ walls: faces, center: null, keepOrder: !!aim });
   }
   if (!groups.length) return null;
   const dz = doorZoneFor(item);
@@ -7422,8 +7561,10 @@ function findSpot(item, placed){
   for (const strict of [true, false]){
     for (const g of groups){
       // 개구부(문·창)는 벽이 아니므로 가전을 붙이지 않는다. 붙이면 문이 안 열린다.
-      const walls = g.walls.filter((w)=>!w.open).sort((a,b)=>
-        Math.hypot(b.x2-b.x1,b.y2-b.y1) - Math.hypot(a.x2-a.x1,a.y2-a.y1));
+      /* 인쇄된 방 이름으로 순서를 정해 둔 경우에는 그 순서를 지킨다(길이로 다시 세우면 무의미해진다) */
+      const walls = g.keepOrder ? g.walls.filter((w)=>!w.open)
+        : g.walls.filter((w)=>!w.open).sort((a,b)=>
+            Math.hypot(b.x2-b.x1,b.y2-b.y1) - Math.hypot(a.x2-a.x1,a.y2-a.y1));
       for (const w of walls){
         const L = Math.hypot(w.x2-w.x1, w.y2-w.y1);
         const need = item.w + item.clear.side*2;
@@ -7800,7 +7941,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,
   openSelect, applyDeepPick,
-  findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
+  findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, askHouseScale, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   /* 탭 처리 — 검사가 "도면을 눌렀을 때"를 사람이 누른 것과 같은 길로 재현한다 */
   modeTap, runAt,
@@ -7811,7 +7952,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   renderSide,
-  placeable, wallAt, wallMask, maskWallFaces, allWallFaces, snapWalls, wallsFor, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
+  placeable, wallAt, wallMask, maskOpenings, openingsNow, maskWallFaces, allWallFaces, snapWalls, wallsFor, plannedSpotFor, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
   /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
   renderRooms,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,

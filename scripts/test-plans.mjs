@@ -2403,12 +2403,24 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
 
       /* 자동배치 — 방이 없어도 벽면을 훑어 놓아야 한다 */
       P.state.items = [];
+      await P.loadPlanNames();
       const pick = (cat) => { const rep = P.state.reps.find((x) => x.cat === cat && !x.hidden && x.options && x.options.length);
         return rep ? { cat, size: rep.size, model: rep.options[0].model, group: rep.options[0].group, part: rep.options[0].parts[0] } : null; };
-      const picks = ['냉장고', 'TV'].map(pick).filter(Boolean);
+      const picks = ['냉장고', 'TV', '세탁기·콤보'].map(pick).filter(Boolean);
       P.autoPlace(picks);
       out.autoPlaced = P.state.items.filter((i) => !i.staged).length;
       out.autoWant = picks.length;
+      /*
+       * **도면에 적힌 방 이름 옆에 놓였는가** — 방 다각형 없이 용도를 아는 배치.
+       * 기준점이 있는 가전만 잰다(도면에 그 말이 인쇄돼 있지 않으면 잴 것이 없다).
+       */
+      out.aimed = [];
+      for (const it of P.state.items){
+        const aim = P.plannedSpotFor(it);
+        if (!aim) continue;
+        const [cx, cy] = P.bodyCenter(it);
+        out.aimed.push({ cat: it.cat, mm: Math.round(Math.hypot(cx - aim[0], cy - aim[1])) });
+      }
 
       /*
        * **벽에 거는 것은 방이 없어도 벽을 등진다.** 이 앱이 못 박은 규칙인데
@@ -2428,6 +2440,43 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
         }, Infinity));
         P.state.items = [];
       }
+      /*
+       * **개구부(문·창)도 도면에서 찾는다.** 방이 0곳이면 방 경계의 `open` 표시가 없어
+       * *"문·창 앞을 막습니다"* 경고가 통째로 사라졌다. 문인지 창인지는 가르지 않는다
+       * (CLAUDE.md — 5겹 교차검증 최고 72%). "트여 있다"만 말한다.
+       */
+      /*
+       * **축척도 방 없이 물을 수 있어야 한다.** 예전에는 방을 못 잡으면
+       * *"침실1 안쪽을 한 번 눌러주세요"* 로 끝나 **상담이 그 자리에서 막혔다** —
+       * 그런데 그런 도면일수록 눌러도 안 잡힌다.
+       */
+      {
+        const bar0 = document.getElementById('draftbar');
+        if (bar0) bar0.classList.remove('on');
+        P.state.scaled = false;
+        P.askHouseScale();
+        await wait(300);
+        out.wlWithoutRooms = !!document.getElementById('wl');
+        const b2 = document.getElementById('draftbar');
+        if (b2) b2.classList.remove('on');
+        P.state.scaled = true;
+      }
+      out.opens = P.maskOpenings().length;
+      out.openW = P.maskOpenings().map((o) => Math.round(Math.hypot(o.x2 - o.x1, o.y2 - o.y1))).sort((a, c) => a - c);
+      {
+        const op = P.maskOpenings()[0];
+        if (op){
+          const mid = [(op.x1 + op.x2) / 2, (op.y1 + op.y2) / 2];
+          const it = { id: 'blk', cat: '공기청정기', label: '공기청정기',
+            bx: mid[0] - (op.nx || 0) * 300, by: mid[1] - (op.ny || 0) * 300,
+            w: 400, d: 400, a: 0, clear: { back: 0, side: 0, front: 0 }, staged: false, warn: [], soft: [] };
+          P.state.items = [it];
+          P.evaluate();
+          out.blockWarn = [...(it.soft || []), ...(it.warn || [])].some((m) => /문·창/.test(m));
+          P.state.items = [];
+        }
+      }
+
       /* 2D — 방이 0곳이면 인식된 벽을 보여줘야 한다("아무것도 안 됐다"로 읽히면 안 된다) */
       P.evaluate(); P.renderSide(); P.draw();
       out.overlay = !!(P.state.baseMask && P.state.baseMask._wallCv);
@@ -2468,6 +2517,24 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (!r.tvSnapped) fail('방이 0곳일 때 벽걸이 TV 가 벽에 안 붙는다 — 방 한가운데 뜬다');
     else if (r.tvFaceMm > 60) fail(`벽걸이 TV 가 벽에서 ${r.tvFaceMm}mm 떨어져 있다 — 벽을 등지지 않았다`);
     else pass(`벽만으로 벽걸이 — 방 0곳에서도 TV 가 벽을 등진다 (벽까지 ${r.tvFaceMm}mm)`);
+
+    if (!r.wlWithoutRooms)
+      fail('방이 0곳일 때 축척을 물을 길이 없다 — 상담이 그 자리에서 막힌다');
+    else pass('축척 — 방을 하나도 못 잡아도 도면의 벽으로 길이를 묻는다');
+
+    if (r.opens < 5)
+      fail(`방이 0곳일 때 도면에서 찾은 개구부가 ${r.opens}곳뿐이다 — 문·창 경고가 통째로 사라진다`);
+    else if (r.openW[0] < 500 || r.openW[r.openW.length - 1] > 2500)
+      fail(`개구부 폭이 문·창 범위를 벗어난다: ${r.openW[0]}~${r.openW[r.openW.length - 1]}mm`);
+    else if (!r.blockWarn)
+      fail('개구부 앞에 가전을 놓았는데 "문·창" 경고가 없다');
+    else pass(`개구부 — 방 0곳에서도 ${r.opens}곳을 찾고(폭 ${r.openW[0]}~${r.openW[r.openW.length - 1]}mm) 앞을 막으면 알린다`);
+
+    if (!r.aimed.length)
+      fail('도면에 방 이름이 인쇄돼 있는데 기준점을 하나도 못 찾았다 — plan-names.json 을 안 읽고 있다');
+    else if (r.aimed.some((q) => q.mm > 4000))
+      fail(`인쇄된 방 이름에서 너무 멀리 놓였다: ${r.aimed.map((q) => `${q.cat} ${q.mm}mm`).join(' · ')}`);
+    else pass(`용도 배치 — 도면에 적힌 방 이름 옆에 놓는다 (${r.aimed.map((q) => `${q.cat} ${q.mm}mm`).join(' · ')})`);
 
     if (!r.overlay) fail('방이 0곳인데 2D 에 인식된 벽을 안 보여준다 — 상담사가 "아무것도 안 됐다"로 읽는다');
     else if (/벽 없음/.test(r.report)) fail(`벽을 잡았는데 화면은 "벽 없음"이라고 한다: ${r.report.slice(0, 90)}`);
