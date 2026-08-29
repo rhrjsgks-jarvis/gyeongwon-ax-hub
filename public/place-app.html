@@ -1039,9 +1039,55 @@ function nearOpening(x, y){
   for (const w of openSegs()) if (distToSeg(x, y, w) <= OPEN_TOL) return true;
   return false;
 }
-/** 이 점에 몸통이 있어도 되는가 = 잡힌 공간 안 **또는** 문·창 자리 */
+/*
+ * ── **벽이 아니면 놓을 수 있다** (2026-08-29 사장님 지시) ─────────────────────
+ *
+ * *"꼭 방으로 인식이 안 되어도 됩니다. **벽이 확실하게 인식되면 나머지 영역은 가전제품을
+ *   놓을 수 있는 공간**이기 때문입니다."*
+ *
+ * 예전에는 *"잡힌 방 다각형 안인가"* 로 물었다. 그래서 **방을 못 잡으면 아무 데도 못
+ * 놓았다** — 인식이 도면의 일부만 잡는 것이 보통이라(덮음 중앙값 64%) 복도·현관·
+ * 발코니는 놓을 수 없는 땅이었고, 방이 1곳뿐인 도면에서는 상담이 그 자리에서 막혔다.
+ *
+ * 지금은 **벽 마스크를 직접 본다.** 근거는 채점값이다 — 벽 재현 90.8% vs 방 인식 22%
+ * (AI Hub 정답, CLAUDE.md). 잘 잡는 것으로 판정하는 것이 맞다.
+ *
+ * 덤으로 **훨씬 싸다.** 예전에는 점 하나마다 방 11곳 × 다각형 30점을 훑었는데(330번),
+ * 지금은 **배열 조회 한 번**이다. 몸통을 촘촘히 훑는 `bodyProbes` 가 그만큼 가벼워진다.
+ *
+ * **도면·축척이 없으면**(직접 그리기) 예전 잣대로 물러선다 — 그 경로에는 마스크가 없다.
+ */
+/**
+ * 지금 도면에 대한 벽 마스크 (없으면 null).
+ *
+ * **`state.img` 를 함께 봐야 한다.** 마스크는 도면에서 만들어지는데, 도면 없이 벽만
+ * 그리는 경로에서는 **직전 도면의 마스크가 그대로 남아 있다.** 그것을 쓰면 좌표가
+ * 통째로 어긋나 아무 데도 못 놓게 된다(회귀 검사가 실제로 이걸 잡았다).
+ */
+function wallMask(){
+  return (state.img && state.baseMask && state.mmPerPx) ? state.baseMask : null;
+}
+/** 그 점이 벽인가 — 'wall' · 'free' · 'out'(도면/건물 밖) · null(마스크가 없어 못 잼) */
+function wallAt(x, y){
+  const base = wallMask();
+  if (!base) return null;
+  const S = base.S || 1;
+  const mx = Math.round(x / state.mmPerPx * S), my = Math.round(y / state.mmPerPx * S);
+  if (mx < 0 || my < 0 || mx >= base.w || my >= base.h) return 'out';
+  /*
+   * **건물 상자 밖은 막는다.** 벽이 아닌 곳이 전부 놓을 수 있는 곳이라면 시트 여백
+   * (제목·면적표 자리)에도 냉장고가 놓인다 — "들어갑니다"가 뜻을 잃는다.
+   * 상자는 넉넉하므로 복도·현관·발코니는 그대로 놓을 수 있다.
+   */
+  const bb = base.bbox;
+  if (bb && (mx < bb.x0 - 2 || mx > bb.x1 + 2 || my < bb.y0 - 2 || my > bb.y1 + 2)) return 'out';
+  return base.dark[my * base.w + mx] ? 'wall' : 'free';
+}
+/** 이 점에 몸통이 있어도 되는가 */
 function placeable(it, x, y){
-  return insideFor(it, x, y) || nearOpening(x, y);
+  const s = wallAt(x, y);
+  if (s !== null) return s === 'free';
+  return insideFor(it, x, y) || nearOpening(x, y);   // 도면 없이 벽만 그린 경로
 }
 
 /**
@@ -1101,8 +1147,11 @@ function retagRoom(it){
   const r = roomAt(cx, cy);
   if (r && it.room !== r.id) it.room = r.id;
 }
-/** 이 가전에 대해 "방 밖" 판정을 할 수 있는가 */
+/** 이 가전에 대해 "놓을 수 없는 자리" 판정을 할 수 있는가 */
 function canJudge(it){
+  /* **벽 마스크가 있으면 방이 하나도 없어도 판정한다** (2026-08-29) —
+     벽이 곧 잣대이므로 방 인식 성패와 무관하다(`placeable` 주석 참조). */
+  if (wallMask()) return true;
   const r = itemRoom(it);
   if (r) return r.parts.some((p)=>!!loopOfWalls(p.walls));
   if (state.rooms.length) return true;
@@ -3747,6 +3796,12 @@ function stackable(A, B){
  */
 function crossesWall(it){
   if (it.staged || !canJudge(it)) return false;
+  /* 벽 마스크가 있으면 **벽에 닿았는지를 직접** 본다 — '벽'과 '도면 밖'을 가려야
+     화면이 사실대로 말한다(예전에는 벽에 걸친 것을 "집 밖"이라 했다). */
+  if (wallMask()){
+    const hit = (p) => wallAt(p[0], p[1]) === 'wall';
+    return corners(it).some(hit) || bodyProbes(it).some(hit);
+  }
   for (const [x,y] of corners(it)) if (!placeable(it,x,y)) return false;
   return bodyProbes(it).some(([x,y]) => !placeable(it,x,y));
 }
@@ -3782,6 +3837,7 @@ function collisionAt(it){
      * "침실2 밖으로 나갑니다"라고 말하게 된다. 화면이 거짓말을 하면 안 된다.
      */
     if (crossesWall(it)) return '벽을 가로지릅니다';
+    if (wallMask()) return '도면 밖으로 나갑니다';
     if (state.rooms.length) return state.rooms.length > 1 ? '집 밖으로 나갑니다' : `${state.rooms[0].name} 밖으로 나갑니다`;
     return '방 밖으로 나갑니다';
   }
@@ -3863,6 +3919,7 @@ function evaluate(){
     if (!A.staged && closed && bodyOutside(A)) {
       const r = itemRoom(A);
       A.warn.push(crossesWall(A) ? '벽을 가로지름'
+                : wallMask() ? '도면 밖으로 나감'
                 : r ? `${r.name} 밖으로 나감` : '방 밖으로 나감');
     }
     for (let j=i+1;j<items.length;j++){
@@ -7151,6 +7208,54 @@ function roomCenter(){
   return [pts.reduce((s,p)=>s+p[0],0)/pts.length, pts.reduce((s,p)=>s+p[1],0)/pts.length];
 }
 
+/*
+ * ── 도면의 **벽면**을 뽑는다 (2026-08-29) ─────────────────────────────
+ *
+ * 벽 마스크의 가장자리 — 한쪽은 벽이고 다른 쪽은 빈 곳인 자리 — 를 런으로 이어
+ * 선분으로 만든다. **빈 쪽 방향(`nx`,`ny`)을 함께 준다**: 자동 배치가 가전을 그쪽으로
+ * 붙여야 하는데, 방이 없으면 `inwardNormal` 이 쓰는 "방 중심"이 없기 때문이다.
+ *
+ * **400mm 보다 짧은 면은 버린다** — 가전을 붙일 수 없는 자투리이고, 그런 것이 수천 개면
+ * 훑는 비용만 든다. 긴 것부터 보도록 정렬해 **가장 쓸 만한 벽을 먼저** 시도한다.
+ */
+function maskWallFaces(){
+  const base = wallMask();
+  if (!base) return [];
+  const { w, h, dark } = base, S = base.S || 1, k = state.mmPerPx;
+  const D = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? dark[y * w + x] : 0;
+  const X = (px) => px / S * k;
+  const MIN_FACE = 400;                 // mm
+  const out = [];
+  for (let x = 0; x <= w; x++){
+    let y = 0;
+    while (y < h){
+      const west = D(x, y) && !D(x - 1, y);      // 벽의 서쪽 면 → 빈 쪽은 −X
+      const east = D(x - 1, y) && !D(x, y);      // 벽의 동쪽 면 → 빈 쪽은 +X
+      if (!west && !east) { y++; continue; }
+      let y1 = y;
+      while (y1 + 1 < h && (west ? (D(x, y1 + 1) && !D(x - 1, y1 + 1)) : (D(x - 1, y1 + 1) && !D(x, y1 + 1)))) y1++;
+      if (X(y1 + 1) - X(y) >= MIN_FACE)
+        out.push({ x1: X(x), y1: X(y), x2: X(x), y2: X(y1 + 1), nx: west ? -1 : 1, ny: 0 });
+      y = y1 + 1;
+    }
+  }
+  for (let y = 0; y <= h; y++){
+    let x = 0;
+    while (x < w){
+      const north = D(x, y) && !D(x, y - 1);     // 벽의 북쪽 면 → 빈 쪽은 −Z
+      const south = D(x, y - 1) && !D(x, y);     // 벽의 남쪽 면 → 빈 쪽은 +Z
+      if (!north && !south) { x++; continue; }
+      let x1 = x;
+      while (x1 + 1 < w && (north ? (D(x1 + 1, y) && !D(x1 + 1, y - 1)) : (D(x1 + 1, y - 1) && !D(x1 + 1, y)))) x1++;
+      if (X(x1 + 1) - X(x) >= MIN_FACE)
+        out.push({ x1: X(x), y1: X(y), x2: X(x1 + 1), y2: X(y), nx: 0, ny: north ? -1 : 1 });
+      x = x1 + 1;
+    }
+  }
+  out.sort((a, b) => Math.hypot(b.x2 - b.x1, b.y2 - b.y1) - Math.hypot(a.x2 - a.x1, a.y2 - a.y1));
+  return out.slice(0, 120);             // 긴 것부터 — 그 이상은 자투리라 훑어도 소득이 없다
+}
+
 /**
  * 벽면을 50mm 간격으로 훑어 첫 유효 위치를 찾는다.
  * 유효 = 본체가 방 안 + 다른 가전과 본체/이격 모두 겹치지 않음.
@@ -7163,6 +7268,16 @@ function findSpot(item, placed){
   const groups = room
     ? room.parts.map((p)=>({ walls:p.walls, center:partCenter(p) })).filter((g)=>g.center)
     : (wallLoop() ? [{ walls: state.walls, center: roomCenter() }] : []);
+  /*
+   * **방이 없으면 도면의 벽면을 훑는다** (2026-08-29).
+   * 자동 배치는 "벽에 붙여 놓는다"인데 그 벽을 방 경계에서만 얻고 있었다. 방이 0곳이면
+   * 훑을 것이 없어 **아무것도 못 놓았다** — 벽은 멀쩡히 있는데도. `maskWallFaces` 가
+   * 마스크 가장자리에서 벽면과 **빈 쪽 방향**을 함께 뽑아 준다.
+   */
+  if (!groups.length){
+    const faces = maskWallFaces();
+    if (faces.length) groups.push({ walls: faces, center: null });
+  }
   if (!groups.length) return null;
   const dz = doorZoneFor(item);
   const openings = state.walls.filter((w)=>w.open);
@@ -7216,7 +7331,8 @@ function findSpot(item, placed){
         const L = Math.hypot(w.x2-w.x1, w.y2-w.y1);
         const need = item.w + item.clear.side*2;
         if (L < need) continue;                       // 이 벽에는 폭이 안 들어간다
-        const { nx, ny } = inwardNormal(w, g.center);
+        /* 마스크에서 뽑은 벽면은 **빈 쪽 방향을 이미 알고 있다**(방 중심이 없어도 된다) */
+        const { nx, ny } = (w.nx != null) ? { nx: w.nx, ny: w.ny } : inwardNormal(w, g.center);
         const ux = (w.x2-w.x1)/L, uy = (w.y2-w.y1)/L;
         for (let t = need/2; t <= L - need/2; t += 50){
           const cand = {
@@ -7402,10 +7518,19 @@ function nudgeInside(it){
   const centers = state.rooms.map((rm) =>
     partCenter(rm.parts.reduce((a, q) =>
       (loopArea(loopOfWalls(q.walls)||[]) >= loopArea(loopOfWalls(a.walls)||[]) ? q : a)))).filter(Boolean);
-  const target = centers.length
+  let target = centers.length
     ? centers.reduce((best, c) =>
         (Math.hypot(c[0]-bx0, c[1]-by0) < Math.hypot(best[0]-bx0, best[1]-by0) ? c : best))
     : roomCenter();
+  /*
+   * **방이 하나도 없어도 밀어 넣는다** (2026-08-29). 벽 기준으로 판정하게 되면서
+   * 방이 0곳인 도면에서도 배치가 되는데, 그때 밀 목표가 없어 손에서 빠지기만 했다.
+   * 건물 상자 한가운데로 민다 — 한 걸음씩 옮기며 놓을 수 있는 자리가 나오면 멈춘다.
+   */
+  if (!target && wallMask()){
+    const bb = state.baseMask.bbox, S = state.baseMask.S || 1, k = state.mmPerPx;
+    if (bb) target = [ (bb.x0 + bb.x1) / 2 / S * k, (bb.y0 + bb.y1) / 2 / S * k ];
+  }
   if (!target) return false;
   const step = Math.max(40, Math.min(it.w, it.d) / 6);
   for (let n = 0; n < 60; n++){
@@ -7589,7 +7714,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   hitBoundary, moveVertex, moveEdge, toggleEdgeOpen, partPoints, setPartPoints,
   addRoom, roomById, inRoom, roomAt, itemRoom, insideFor, canJudge, roomArea,
   renderSide,
-  placeable, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
+  placeable, wallAt, wallMask, maskWallFaces, bodyProbes, bodyOutside, nearOpening, crossesWall, OPEN_TOL, PROBE_STEP,
   /* 공간 목록을 다시 그린다 — 검사가 "품고 있으면 그 사실을 적는가"를 DOM 으로 확인한다 */
   renderRooms,
   syncWalls, defaultRoomFor, nextRoomName, loopOfWalls,
@@ -7800,6 +7925,9 @@ function floorMesh(pts){
  */
 const wallMat  = new THREE.MeshLambertMaterial({ color: 0xE6EAF0 });
 const lintMat  = new THREE.MeshLambertMaterial({ color: 0xE3E8EF });
+/* 도면에서 직접 세운 벽 — 윗면은 앞면, 옆면은 **뒷면만**(그것이 곧 돌하우스다. maskWallMesh 주석) */
+const wallTopMat  = new THREE.MeshLambertMaterial({ color: 0xEDF0F5 });
+const wallSideMat = new THREE.MeshLambertMaterial({ color: 0xE6EAF0, side: THREE.BackSide });
 /* 개폐 궤적 — 2D 의 주황 점선과 같은 색이다(같은 것은 앱이 달라도 같게 보여야 한다) */
 const swingMat = new THREE.MeshBasicMaterial({ color: 0xB45309, transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false });
 
@@ -7824,6 +7952,110 @@ function wallBox(x1, y1, x2, y2, y0mm, y1mm, mat){
  * 카메라가 그 바깥쪽에 있으면 그 벽이 시야를 막고 있는 것이다. 내적 하나로 판정된다.
  */
 const culled = [];
+/*
+ * ── 벽을 **방이 아니라 도면에서 직접** 세운다 (2026-08-29 사장님 지시) ──────────────
+ *
+ * *"꼭 방으로 인식이 안 되어도 됩니다. **벽이 확실하게 인식되면 나머지 영역은 가전제품을
+ *   놓을 수 있는 공간**이기 때문입니다."*
+ *
+ * 재 보니 그 말이 맞다 — 우리는 **잘 잡는 것을 못 잡는 것의 재료로만** 쓰고 있었다:
+ *
+ * | AI Hub 정답 채점(분양 도면) | |
+ * |---|---|
+ * | **벽** 재현 | **90.8%** |
+ * | **방** 인식 (IoU ≥ 0.5) | **22%** |
+ *
+ * 실제로 동탄 포레파크 84C 는 방이 **1곳**밖에 안 잡혀 3D 가 사실상 빈 화면인데,
+ * **벽은 평면도 전체가 정확히 서 있었다**(실측 스크린샷으로 확인).
+ *
+ * **뜻밖의 이득 — 문이 저절로 뚫린다.** 도면에 문이 열린 채 그려지면 그 자리에 벽 픽셀이
+ * 없다. 그래서 마스크를 그대로 세우면 개구부 처리(`open` 플래그·인방)가 통째로 필요 없다.
+ *
+ * **맞닿은 면은 그리지 않는다.** 직사각형마다 상자를 세우면 이웃끼리 겹친 면이 두 번
+ * 그려져 **널판처럼 갈라져 보인다**(실물에서 확인). 이웃이 벽이 아닌 곳에만 옆면을 낸다.
+ *
+ * 실측 — 삼각형 1,352~23,940개 · 생성 **14~30ms**. 매장 폰에서 문제없다.
+ */
+function maskWallMesh(){
+  const st = P.state;
+  const base = st.baseMask;
+  if (!st.img || !base || !st.mmPerPx) return null;
+  const { w, h, dark } = base, S = base.S || 1, k = st.mmPerPx;
+  const D = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? dark[y * w + x] : 0;
+  const WX = (px) => M(px / S * k), TOP = M(WALL_H_MM);
+  const top = { pos: [], nor: [], idx: [] }, side = { pos: [], nor: [], idx: [] };
+  const quad = (t, a, b, c, d, n) => {
+    const s = t.pos.length / 3;
+    for (const v of [a, b, c, d]) { t.pos.push(v[0], v[1], v[2]); t.nor.push(n[0], n[1], n[2]); }
+    t.idx.push(s, s + 1, s + 2, s, s + 2, s + 3);
+  };
+  /* ① 윗면 — 가로 런을 아래로 이어 붙인 직사각형(개수를 줄인다) */
+  const used = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++){
+    let x = 0;
+    while (x < w){
+      if (!D(x, y) || used[y * w + x]) { x++; continue; }
+      let x1 = x; while (x1 + 1 < w && D(x1 + 1, y) && !used[y * w + x1 + 1]) x1++;
+      let y1 = y;
+      grow: while (y1 + 1 < h){
+        for (let q = x; q <= x1; q++) if (!D(q, y1 + 1) || used[(y1 + 1) * w + q]) break grow;
+        y1++;
+      }
+      for (let yy = y; yy <= y1; yy++) for (let q = x; q <= x1; q++) used[yy * w + q] = 1;
+      quad(top, [WX(x), TOP, WX(y)], [WX(x1 + 1), TOP, WX(y)],
+                [WX(x1 + 1), TOP, WX(y1 + 1)], [WX(x), TOP, WX(y1 + 1)], [0, 1, 0]);
+      x = x1 + 1;
+    }
+  }
+  /* ② 옆면 — 이웃이 벽이 아닌 자리에만 */
+  for (let x = 0; x <= w; x++){
+    let y = 0;
+    while (y < h){
+      const west = D(x, y) && !D(x - 1, y), east = D(x - 1, y) && !D(x, y);
+      if (!west && !east) { y++; continue; }
+      let y1 = y;
+      while (y1 + 1 < h && (west ? (D(x, y1 + 1) && !D(x - 1, y1 + 1)) : (D(x - 1, y1 + 1) && !D(x, y1 + 1)))) y1++;
+      const X = WX(x), Z0 = WX(y), Z1 = WX(y1 + 1);
+      if (west) quad(side, [X, 0, Z1], [X, 0, Z0], [X, TOP, Z0], [X, TOP, Z1], [-1, 0, 0]);
+      else      quad(side, [X, 0, Z0], [X, 0, Z1], [X, TOP, Z1], [X, TOP, Z0], [1, 0, 0]);
+      y = y1 + 1;
+    }
+  }
+  for (let y = 0; y <= h; y++){
+    let x = 0;
+    while (x < w){
+      const north = D(x, y) && !D(x, y - 1), south = D(x, y - 1) && !D(x, y);
+      if (!north && !south) { x++; continue; }
+      let x1 = x;
+      while (x1 + 1 < w && (north ? (D(x1 + 1, y) && !D(x1 + 1, y - 1)) : (D(x1 + 1, y - 1) && !D(x1 + 1, y)))) x1++;
+      const Z = WX(y), A = WX(x), B = WX(x1 + 1);
+      if (north) quad(side, [A, 0, Z], [B, 0, Z], [B, TOP, Z], [A, TOP, Z], [0, 0, -1]);
+      else       quad(side, [B, 0, Z], [A, 0, Z], [A, TOP, Z], [B, TOP, Z], [0, 0, 1]);
+      x = x1 + 1;
+    }
+  }
+  if (!top.idx.length && !side.idx.length) return null;
+  const g = new THREE.Group();
+  const mk = (t, mat) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(t.pos, 3));
+    geo.setAttribute('normal', new THREE.Float32BufferAttribute(t.nor, 3));
+    geo.setIndex(t.idx);
+    return new THREE.Mesh(geo, mat);
+  };
+  /*
+   * **옆면은 뒷면만 그린다**(`BackSide`) — 이것이 곧 돌하우스다.
+   * 카메라를 향한 벽면은 아예 그려지지 않아 **어느 각도에서도 안이 보인다.**
+   * 예전 `cullWalls` 는 방 경계상자 중심으로 "바깥쪽 벽"을 골라 숨겼는데, 벽이 마스크
+   * 하나로 합쳐지면 그렇게 고를 대상이 없다. 뒷면 그리기는 **픽셀 단위**라 더 정확하고
+   * 규칙도 필요 없다. 윗면은 앞면 그대로 둔다 — 안 그러면 위에서 볼 때 벽이 사라진다.
+   */
+  g.add(mk(top, wallTopMat));
+  g.add(mk(side, wallSideMat));
+  g.userData.maskWall = true;
+  return g;
+}
+
 function buildRoom(loop){
   const g = new THREE.Group();
   const f = floorMesh(loop.pts);
@@ -7849,7 +8081,11 @@ function buildRoom(loop){
     mesh.userData.isSwing = true;                   // 검사가 '가전 디테일' 로 세지 않게
     root.add(mesh);
   }
-  for (const w of (loop.walls || [])){
+  /*
+   * **도면에서 벽을 세웠으면 방 경계로는 다시 세우지 않는다** — 두 겹이 되고,
+   * 방 경계 벽은 개구부를 인방으로 막아 도면에 실제로 뚫린 자리를 도로 덮는다.
+   */
+  for (const w of (maskWallsOn ? [] : (loop.walls || []))){
     const m = w.open
       ? wallBox(w.x1, w.y1, w.x2, w.y2, LINTEL_MM, WALL_H_MM, lintMat)
       : wallBox(w.x1, w.y1, w.x2, w.y2, 0, WALL_H_MM, wallMat);
@@ -8635,6 +8871,25 @@ function build(refit){
   /* 방들 **아래에** 도면 한 장을 깐다 — 인식 못 한 곳도 발밑이 생긴다 */
   const base = basePlanFloor();
   if (base) root.add(base);
+  /*
+   * **벽은 도면에서 직접 세운다**(2026-08-29). 방이 하나도 안 잡혀도 집이 선다 —
+   * 근거와 실측은 `maskWallMesh` 주석에 있다. 방은 이름·넓이용으로 남는다.
+   */
+  const mw = maskWallMesh();
+  maskWallsOn = !!mw;
+  if (mw){
+    root.add(mw);
+    /*
+     * **화면 맞춤도 벽에서 낸다.** 방에서 내면 방이 하나뿐인 도면에서 카메라가 그 방
+     * 하나에 붙어 도면 전체가 안 보인다(실측: 84C 가 욕실 한 칸만 화면에 찼다).
+     */
+    const ps = P.state, bb = (ps.baseInfo || {}).bbox;
+    if (bb && ps.mmPerPx){
+      const S = (ps.baseMask && ps.baseMask.S) || 1, k = ps.mmPerPx;
+      box.expandByPoint(new THREE.Vector3(M(bb.x0 / S * k), 0, M(bb.y0 / S * k)));
+      box.expandByPoint(new THREE.Vector3(M(bb.x1 / S * k), 0, M(bb.y1 / S * k)));
+    }
+  }
   for (const L of loops){
     const g = buildRoom(L);
     root.add(g);
@@ -8663,6 +8918,29 @@ function build(refit){
       }
       bestA = A; eyeAt = c;
     }
+  }
+  /*
+   * **방이 하나도 없어도 설 자리를 찾는다** (2026-08-29).
+   * 눈높이 시점은 "가장 넓은 방 안쪽의 한 점"에 섰는데, 벽 기준으로 바뀌면서 방이 0곳인
+   * 도면에서도 3D 가 서게 됐다. 그때 설 자리가 없어 카메라가 원점(도면 왼쪽 위 모서리)에
+   * 박혔다. **벽에서 가장 먼 빈 자리**를 찾아 세운다 — 그 점은 반드시 어느 공간 안이고
+   * 문틈에서도 멀다(`gapProbes` 가 가장 깊은 점을 고르는 것과 같은 생각).
+   */
+  if (!eyeAt && maskWallsOn){
+    const ps = P.state, bm = ps.baseMask, S = bm.S || 1, k = ps.mmPerPx;
+    const bb = bm.bbox || { x0: 0, y0: 0, x1: bm.w - 1, y1: bm.h - 1 };
+    const dark = (mx, my) => (mx < 0 || my < 0 || mx >= bm.w || my >= bm.h) ? 1 : bm.dark[my * bm.w + mx];
+    let best = -1, bx = null, by = null;
+    for (let my = bb.y0; my <= bb.y1; my += 3) for (let mx = bb.x0; mx <= bb.x1; mx += 3){
+      if (dark(mx, my)) continue;
+      let r = 0;
+      for (const q of [3, 6, 10, 15, 21]){          // 벽에서 얼마나 떨어져 있나
+        if (dark(mx - q, my) || dark(mx + q, my) || dark(mx, my - q) || dark(mx, my + q)) break;
+        r = q;
+      }
+      if (r > best){ best = r; bx = mx; by = my; }
+    }
+    if (bx != null) eyeAt = [M(bx / S * k), M(by / S * k)];
   }
   let n = 0, blocked = 0, waiting = 0, openN = 0;
   const placed = P.state.items.filter((i) => !i.staged);
@@ -8799,6 +9077,7 @@ function view(name){
    "우리 집 한 칸"을 보여주려던 뜻이 사라진다.
 ──────────────────────────────────────────────────────────────── */
 let segs2d = [], eyeAt = null, ctr = null;
+let maskWallsOn = false;   // 도면에서 직접 세운 벽을 쓰고 있는가
 /*
  * 방 경계 다각형(m). 조이스틱 이동이 **집 밖으로 새지 않게** 하는 데만 쓴다.
  * `segs2d` 로는 못 한다 — 그쪽은 벽 선분 묶음이라 "지금 이 점이 방 안인가"를 못 답한다.
@@ -8813,12 +9092,35 @@ function raySeg(px, pz, dx, dz, s){
   const u = ((s[0] - px) * dz - (s[1] - pz) * dx) / den;
   return (t > 1e-4 && u >= 0 && u <= 1) ? t : null;
 }
+/*
+ * **벽 마스크를 따라가며 첫 벽까지 거리를 잰다**(m). 없으면 null.
+ * 벽이 마스크 하나로 합쳐지면 선분 목록(`segs2d`)이 없으므로, 광선을 선분과 교차시키는
+ * 대신 **한 걸음씩 걸어가며 마스크를 조회한다** — 조회가 배열 한 번이라 훨씬 싸다.
+ */
+function maskRayHit(x, z, dx, dz){
+  const st = P.state, base = st.baseMask;
+  if (!st.img || !base || !st.mmPerPx) return null;
+  const S = base.S || 1, k = st.mmPerPx;
+  const stepM = M(120);                      // 120mm 씩 — 가장 얇은 벽보다 촘촘하다
+  const maxM = M(40000);
+  for (let d = stepM; d < maxM; d += stepM){
+    const wx = x + dx * d, wz = z + dz * d;
+    const mx = Math.round(wx * 1000 / k * S), my = Math.round(wz * 1000 / k * S);
+    if (mx < 0 || my < 0 || mx >= base.w || my >= base.h) return d;
+    if (base.dark[my * base.w + mx]) return d;
+  }
+  return null;
+}
 function clampInside(){
-  if (!segs2d.length) return;
   const cp = Math.max(Math.cos(orb.pitch), 1e-3);
   const dx = Math.sin(orb.yaw), dz = Math.cos(orb.yaw);
   let hit = Infinity;
-  for (const s of segs2d){ const t = raySeg(orb.tx, orb.tz, dx, dz, s); if (t != null && t < hit) hit = t; }
+  const mh = maskRayHit(orb.tx, orb.tz, dx, dz);
+  if (mh != null) hit = mh;
+  else {
+    if (!segs2d.length) return;
+    for (const s of segs2d){ const t = raySeg(orb.tx, orb.tz, dx, dz, s); if (t != null && t < hit) hit = t; }
+  }
   const rmax = Math.max(M(500), (hit === Infinity ? fitDist : hit) - M(300));
   orb.dist = Math.min(orb.dist, rmax / cp);
   /* 카메라가 눈높이에 오도록 바라보는 점의 높이를 거꾸로 맞춘다 */

@@ -2344,6 +2344,105 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
       fail(`도면 바닥 크기가 어긋난다: ${walk.bs.map((n) => n.toFixed(2))}m (기대 12 × 9.6m)`);
     else pass(`도면 전체 바닥 — ${walk.bs[0].toFixed(1)} × ${walk.bs[1].toFixed(1)}m (축척대로)`);
   }
+  /*
+   * ── **벽만으로 선다 — 방이 0곳이어도** (2026-08-29 사장님 지시) ─────────────────
+   *
+   * *"꼭 방으로 인식이 안 되어도 됩니다. **벽이 확실하게 인식되면 나머지 영역은 가전제품을
+   *   놓을 수 있는 공간**이기 때문입니다."*
+   *
+   * 근거는 채점값이다 — 벽 재현 **90.8%** vs 방 인식 **22%**(AI Hub 정답). 잘 잡는 것으로
+   * 3D 도 판정도 세운다. 그래서 **방을 통째로 비운 상태**로 넷을 검사한다:
+   * 벽이 서는가 · 빈 곳에 놓이는가 · 벽 위는 막히는가 · 자동배치가 되는가.
+   *
+   * **방을 비우는 것이 이 검사의 핵심**이다. 방이 있으면 옛 경로로도 통과해 아무것도
+   * 지키지 못한다(이 저장소가 "검사가 무는지 되돌려 확인한다"고 적어 둔 그 이유다).
+   */
+  {
+    const r = await page.evaluate(async () => {
+      const wait = (ms) => new Promise((s) => setTimeout(s, ms));
+      const P = window.__place;
+      P.state.reps = await (await fetch('size-reps.json')).json();
+      const img = new Image();
+      await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = '/plans/c139/84B.jpg'; });
+      P.state.img = img; P.state.imgW = img.naturalWidth; P.state.imgH = img.naturalHeight;
+      P.state.mmPerPx = 13.91; P.state.scaled = true;
+      P.state.mask = P.state.baseMask = P.state.baseInfo = null;
+      P.state.cleanCv = P.state.cleanInfo = null; P.state.sealCache = null;
+      P.state.rooms = []; P.state.walls = []; P.state.items = []; P.state.sel = null;
+      P.detectAllRooms();
+      const roomsFound = P.state.rooms.length;
+      /* **방을 통째로 비운다** — 여기서부터는 벽만 남는다 */
+      P.state.rooms = []; P.state.walls = []; P.state.items = []; P.state.roomSel = null;
+
+      const base = P.state.baseMask, S = base.S || 1, k = P.state.mmPerPx, bb = base.bbox;
+      /* 벽에서 넉넉히 떨어진 빈 자리와, 확실한 벽 위 한 점을 고른다 */
+      /* **몸통이 실제로 들어가는 자리**를 찾는다 — 냉장고 700mm 는 이 도면에서 50px 다.
+         몇 px 만 보고 "빈 곳"이라 하면 검사가 스스로 틀린 자리를 고른다(실제로 그랬다). */
+      const RPX = Math.ceil(700 / k * S / 2) + 2;
+      let free = null, onWall = null;
+      for (let my = bb.y0 + RPX; my < bb.y1 - RPX && !free; my += 2)
+        for (let mx = bb.x0 + RPX; mx < bb.x1 - RPX && !free; mx += 2){
+          let ok = true;
+          for (let dy = -RPX; dy <= RPX && ok; dy += 2) for (let dx = -RPX; dx <= RPX && ok; dx += 2)
+            if (base.dark[(my + dy) * base.w + (mx + dx)]) ok = false;
+          if (ok) free = [mx, my];
+        }
+      for (let my = bb.y0; my < bb.y1 && !onWall; my += 5)
+        for (let mx = bb.x0; mx < bb.x1 && !onWall; mx += 5)
+          if (base.dark[my * base.w + mx]) onWall = [mx, my];
+      const mk = (p) => ({ id: 't' + Math.random(), cat: '냉장고', label: '냉장고',
+        bx: p[0] / S * k, by: p[1] / S * k, w: 700, d: 700, a: 0, clear: {}, staged: false, warn: [], soft: [] });
+
+      const out = { roomsFound, faces: P.maskWallFaces().length };
+      if (free){ const it = mk(free); it.by -= 350; P.state.items = [it];
+        out.freeBlocked = P.escapesRoom(it); out.freeMsg = P.collisionAt(it); }
+      if (onWall){ const it = mk(onWall); P.state.items = [it];
+        out.wallBlocked = P.escapesRoom(it); out.wallMsg = P.collisionAt(it); }
+      { const it = mk([bb.x1 + 500, bb.y1 + 500]); P.state.items = [it];
+        out.outBlocked = P.escapesRoom(it); out.outMsg = P.collisionAt(it); }
+
+      /* 자동배치 — 방이 없어도 벽면을 훑어 놓아야 한다 */
+      P.state.items = [];
+      const pick = (cat) => { const rep = P.state.reps.find((x) => x.cat === cat && !x.hidden && x.options && x.options.length);
+        return rep ? { cat, size: rep.size, model: rep.options[0].model, group: rep.options[0].group, part: rep.options[0].parts[0] } : null; };
+      const picks = ['냉장고', 'TV'].map(pick).filter(Boolean);
+      P.autoPlace(picks);
+      out.autoPlaced = P.state.items.filter((i) => !i.staged).length;
+      out.autoWant = picks.length;
+
+      /* 3D — 도면에서 세운 벽 메시가 있어야 한다 */
+      if (typeof window.load3D === 'function') await window.load3D();
+      await wait(600);
+      const info = window.Place3D.open();
+      await wait(400);
+      let maskWall = 0, tri = 0;
+      window.Place3D.root.traverse((o) => {
+        if (o.userData && o.userData.maskWall) maskWall++;
+        if (o.isMesh && o.geometry && o.geometry.index && o.parent && o.parent.userData && o.parent.userData.maskWall)
+          tri += o.geometry.index.count / 3;
+      });
+      out.rooms3d = info.rooms; out.maskWall = maskWall; out.tri = Math.round(tri);
+      window.Place3D.close();
+      return out;
+    });
+
+    if (r.roomsFound < 3) fail(`벽만으로 서기 검사 준비 실패 — 원래 방이 ${r.roomsFound}곳뿐이라 "비웠다"가 의미 없다`);
+    else if (!r.maskWall) fail('방을 비웠더니 3D 에 벽이 하나도 없다 — 도면에서 벽을 세우지 않는다');
+    else if (r.tri < 100) fail(`도면에서 세운 벽이 삼각형 ${r.tri}개뿐이다 — 벽이 거의 안 섰다`);
+    else pass(`벽만으로 3D — 방 ${r.roomsFound}곳을 비워도 도면에서 벽이 선다 (삼각형 ${r.tri}개)`);
+
+    if (r.freeBlocked) fail(`빈 곳인데 못 놓는다 (${JSON.stringify(r.freeMsg)}) — 벽이 아니면 놓을 수 있어야 한다`);
+    else if (!r.wallBlocked) fail('벽 위에 놓았는데 통과했다 — 벽을 뚫는다');
+    else if (r.wallMsg !== '벽을 가로지릅니다') fail(`벽 위인데 이렇게 알린다: ${r.wallMsg}`);
+    else if (!r.outBlocked) fail('도면 밖인데 통과했다');
+    else if (r.outMsg !== '도면 밖으로 나갑니다') fail(`도면 밖인데 이렇게 알린다: ${r.outMsg}`);
+    else pass('벽만으로 판정 — 빈 곳은 놓이고, 벽 위·도면 밖은 막힌다 (방 0곳)');
+
+    if (r.autoPlaced < r.autoWant)
+      fail(`방이 없을 때 자동배치가 ${r.autoPlaced}/${r.autoWant}대뿐이다 — 벽면을 훑지 못한다 (벽면 ${r.faces}개)`);
+    else pass(`벽만으로 자동배치 — 벽면 ${r.faces}개에서 ${r.autoPlaced}/${r.autoWant}대 (방 0곳)`);
+  }
+
 
   /*
    * 3D 를 켠 채로 가전을 고르면 **바로 나타나야 한다.** 예전에는 2D 로 돌아가야 보였다 —

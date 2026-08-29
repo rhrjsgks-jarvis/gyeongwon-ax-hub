@@ -408,7 +408,7 @@
  * 사이드바·앱 헤더처럼 한 줄뿐인 자리는 모델파인더만 쓴다 — 옛 이름은 카드 부제와
  * 검색어에 남으므로 '제품 상세검색'으로 찾던 사람도 그대로 찾는다.
  */
-const CACHE_VERSION = 'axhub-v192';
+const CACHE_VERSION = 'axhub-v193';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
