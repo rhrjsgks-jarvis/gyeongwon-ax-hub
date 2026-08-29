@@ -940,6 +940,58 @@ try {
   const badReal = badResponses.filter((u) => !/favicon|manifest|\/api\/logs/.test(u));
   if (badReal.length) fail(`4xx/5xx 응답 ${badReal.length}건:\n    - ${[...new Set(badReal)].slice(0, 8).join('\n    - ')}`);
   else pass('전 페이지 4xx/5xx 응답 없음');
+  /*
+   * ── 홈에서 뒤로가기 → **종료를 묻는다** (2026-08-29 사장님 지시) ──
+   *
+   * 가르는 것이 표식(`history.state.axGuard`)이다 — 그것이 없으면 `/as → 뒤로 → 허브`
+   * 에서도 종료 창이 뜬다. 그래서 **묻는 경우와 묻지 않는 경우를 함께** 본다.
+   * 한쪽만 보면 절반을 놓친다.
+   *
+   * 뒤로가기 히스토리는 **화면에서만 보이는 종류**라 놓치면 조용히 되돌아간다.
+   */
+  {
+    const xc = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await xc.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
+    const xp = await xc.newPage();
+    const asks = async () => {
+      const d = xp.locator('[role="dialog"]', { hasText: '종료하시겠습니까' });
+      return (await d.count()) > 0 && (await d.isVisible());
+    };
+    await xp.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await xp.waitForTimeout(1800);
+
+    await xp.goBack(); await xp.waitForTimeout(700);
+    (await asks()) ? pass('홈에서 뒤로가기 → 종료를 묻는다') : fail('홈에서 뒤로가기 → 종료를 묻지 않는다');
+
+    await xp.getByRole('button', { name: '아니오' }).click(); await xp.waitForTimeout(500);
+    (!(await asks()) && new URL(xp.url()).pathname === '/')
+      ? pass('「아니오」 → 창이 닫히고 홈에 머문다')
+      : fail('「아니오」를 눌렀는데 창이 남거나 홈을 벗어났다');
+
+    await xp.goBack(); await xp.waitForTimeout(700);
+    (await asks()) ? pass('다시 뒤로가기 → 또 묻는다 (표식이 다시 심어진다)')
+                   : fail('두 번째 뒤로가기에서 묻지 않는다 — 재무장이 안 된다');
+    await xp.getByRole('button', { name: '아니오' }).click(); await xp.waitForTimeout(400);
+
+    const beforeLen = await xp.evaluate(() => history.length);
+    await xp.click('a[href="/as"]'); await xp.waitForTimeout(2200);
+    await xp.goBack(); await xp.waitForTimeout(900);
+    (!(await asks()) && new URL(xp.url()).pathname === '/')
+      ? pass('미니앱에서 뒤로가기 → 묻지 않고 홈으로 (표식 칸에 선 것뿐이다)')
+      : fail('미니앱에서 뒤로가기 했는데 종료를 물었다 — 표식 판정이 깨졌다');
+
+    for (let i = 0; i < 3; i++) {
+      await xp.click('a[href="/as"]'); await xp.waitForTimeout(1500);
+      await xp.goBack(); await xp.waitForTimeout(800);
+    }
+    const afterLen = await xp.evaluate(() => history.length);
+    (afterLen - beforeLen <= 1)
+      ? pass(`홈을 여러 번 오가도 히스토리가 쌓이지 않는다 (${beforeLen} → ${afterLen})`)
+      : fail(`홈을 오갈 때마다 히스토리가 쌓인다 (${beforeLen} → ${afterLen}) — 나가려면 여러 번 눌러야 한다`);
+
+    await xc.close();
+  }
+
 } catch (e) {
   fail(`E2E 실행 중 예외: ${e.message}`);
 } finally {

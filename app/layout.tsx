@@ -3,6 +3,7 @@ import './globals.css'
 import Navigation from '@/components/Navigation'
 import ServiceWorker from '@/components/ServiceWorker'
 import StoreGate from '@/components/StorePicker'
+import ExitGuard from '@/components/ExitGuard'
 
 export const metadata: Metadata = {
   title: '세일즈 코파일럿',
@@ -67,6 +68,7 @@ export default function RootLayout({
           돌기 전에 허브가 번쩍 보인다. 그래서 감싸서 **안 그린다.**
         */}
         <StoreGate>
+          <ExitGuard />
           <Navigation />
           <main
             className="pt-[60px] lg:pl-56 min-h-screen"
