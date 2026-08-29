@@ -1722,5 +1722,34 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
     '[20] 아직 놓은 가전이 없으면 아무 말도 하지 않는다');
 }
 
+/*
+ * [21] **결과 카드** — 상담이 끝나고 고객 손에 남는 유일한 것 (2026-08-30 실물에서 발견).
+ *
+ * 실물을 찍어 보니 셋이 깨져 있었다:
+ *   · 출처 문구가 **제목과 같은 y(H+28)** 에 오른쪽 정렬이라 **제목 위에 겹쳐** 찍혔다
+ *   · 부제가 `공간 11곳 · … · 공간 11곳` 으로 **같은 말을 두 번** 적었다
+ *   · 긴 글자가 폭을 넘어 그냥 잘렸다(`설치 높이 400mm` 에서 끊김)
+ *
+ * 카드는 캔버스라 글자를 되읽을 수 없다 — 소스로 지키고 실물은 눈으로 본다.
+ */
+{
+  const has = (t) => html.includes(t);
+  ok2(has('function fitText(g, text, maxW, sizes)'),
+    '[21] 글자를 칸에 맞추는 함수가 있다 (줄이고, 그래도 넘으면 자른다)');
+  ok2(!/fillText\('치수는 삼성스토어 카탈로그 기준[^)]*H \+ 28\)/.test(html),
+    '[21] 출처 문구가 제목과 같은 줄에 있지 않다');
+  ok2(has('padX, H + listH - 8)'), '[21] 출처는 카드 바닥에 적는다');
+  ok2(has('const footH = 22') || has('padX = 20, footH = 22'),
+    '[21] 바닥 한 줄 자리를 남겨 둔다');
+  /* 같은 말을 두 번 적지 않는다 */
+  const subBlock = html.slice(html.indexOf('const subText = ['), html.indexOf('].filter(Boolean).join'));
+  ok2((subBlock.match(/공간 \$\{state\.rooms\.length\}곳/g) || []).length === 2
+      && subBlock.includes('전용 ${area.toFixed(1)}㎡ · 공간'),
+    '[21] 부제가 「공간 N곳」을 두 번 적지 않는다 (전용을 알 때와 모를 때 한 번씩)');
+  ['titleFit', 'fitText(g, subText', 'fitText(g, spec'].forEach((t) => {
+    ok2(has(t), '[21] ' + t.replace('fitText(g, ', '').replace(/[(,].*/, '') + ' 가 폭에 맞춰진다');
+  });
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

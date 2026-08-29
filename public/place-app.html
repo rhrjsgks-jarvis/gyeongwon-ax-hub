@@ -4868,12 +4868,29 @@ function removeItem(id){
  * 캔버스를 다시 그리지 않고 **화면에 보이는 것을 그대로 복사**한다. 화면과 다른 그림이
  * 나가면 "내가 본 것과 다르다"가 되기 때문이다.
  */
+/*
+ * 글자가 칸을 넘으면 **줄이고, 그래도 넘으면 자른다.**
+ * 카드는 폭이 화면 폭(폰 390px)이라 단지 이름·사양이 쉽게 넘친다 — 넘친 글자는
+ * 그냥 잘려 나가 **고객 손에 남는 그림에서 문장이 끊긴다**(실측: `설치 높이 400mm` 에서 끊김).
+ */
+function fitText(g, text, maxW, sizes){
+  for (const [w, px] of sizes){
+    g.font = `${w} ${px}px system-ui,sans-serif`;
+    if (g.measureText(text).width <= maxW) return text;
+  }
+  let t = text;
+  while (t.length > 4 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+  return t + '…';
+}
+
 function buildShareCanvas(){
   const dpr = window.devicePixelRatio || 1;
   const W = cv.width / dpr, H = cv.height / dpr;
   const items = state.items;
-  const lineH = 34, headH = 64, padX = 20;
-  const listH = items.length ? headH + items.length * lineH + 16 : headH;
+  /* 출처 한 줄이 바닥에 들어갈 자리를 남긴다 — 예전에는 **제목과 같은 y** 에 오른쪽
+     정렬로 찍혀 좁은 화면에서 제목 위에 겹쳤다(실물에서 확인). */
+  const lineH = 34, headH = 64, padX = 20, footH = 22;
+  const listH = (items.length ? headH + items.length * lineH + 16 : headH) + footH;
   const out = document.createElement('canvas');
   const S = 2;                                   // 카톡으로 보내도 글자가 뭉개지지 않게
   out.width = W * S; out.height = (H + listH) * S;
@@ -4894,22 +4911,26 @@ function buildShareCanvas(){
   g.beginPath(); g.moveTo(0, H + .5); g.lineTo(W, H + .5); g.stroke();
 
   const title = state.complexName ? `${state.complexName}${state.typeName ? ' ' + state.typeName : ''}` : '가전 배치 상담';
-  g.fillStyle = '#0F172A'; g.font = '700 17px system-ui,sans-serif'; g.textAlign = 'left';
-  g.fillText(title, padX, H + 28);
+  g.fillStyle = '#0F172A'; g.textAlign = 'left';
+  const titleFit = fitText(g, title, W - padX * 2, [[700, 17], [700, 15], [700, 13]]);
+  g.fillText(titleFit, padX, H + 28);
   const area = planAreaM2();
-  g.fillStyle = '#64748B'; g.font = '12px system-ui,sans-serif';
+  g.fillStyle = '#64748B'; g.font = '12px system-ui,sans-serif';   /* 아래에서 fitText 가 다시 정한다 */
   /* 3D 로 내보낼 때는 무엇을 보고 있는지 밝힌다 — 층고는 도면에 없는 가정값이고,
      문을 연 상태라면 그 사실이 그림의 뜻을 바꾼다. */
   const doorsOn = on3d && window.Place3D.doorsOpen;
-  g.fillText([
-    area && planAreaKnown() ? `전용 ${area.toFixed(1)}㎡`
+  const subText = [
+    /* **같은 말을 두 번 적지 않는다.** 전용면적을 모르면 첫 줄이 이미 "공간 N곳" 이라
+       말하는데 그 아래 줄이 또 "공간 N곳" 이었다(실물에서 확인). */
+    area && planAreaKnown() ? `전용 ${area.toFixed(1)}㎡ · 공간 ${state.rooms.length}곳`
       : (state.rooms.length ? `공간 ${state.rooms.length}곳 · 넓이 합계는 겹칠 수 있어 적지 않습니다` : null),
-    state.rooms.length ? `공간 ${state.rooms.length}곳` : null,
     `가전 ${items.length}대`,
     on3d ? `3D · 층고 ${window.Place3D.WALL_H_MM.toLocaleString()}mm(가정)` : null,
     doorsOn ? `문 열림 ${items.filter((it) => it.doorOpen && !it.staged).length}대` : null,
     new Date().toLocaleDateString('ko-KR'),
-  ].filter(Boolean).join('  ·  '), padX, H + 48);
+  ].filter(Boolean).join('  ·  ');
+  g.fillStyle = '#64748B';
+  g.fillText(fitText(g, subText, W - padX * 2, [[400, 12], [400, 11], [400, 10]]), padX, H + 48);
 
   /* 문을 열었더니 막히는 제품이 있으면 **카드에도 빨갛게** 적는다.
      고객에게 보여준 경고가 손에 남는 그림에서 사라지면 안 된다. */
@@ -4929,22 +4950,28 @@ function buildShareCanvas(){
     g.fillStyle = it.warn && it.warn.length ? '#B42318' : (it.staged ? '#64748B' : '#1428A0');
     g.beginPath(); g.arc(padX + 4, y - 4, 4, 0, 7); g.fill();
     g.fillStyle = '#0F172A'; g.font = '600 13px system-ui,sans-serif';
-    g.fillText(it.label + (it.staged ? ' (미배치)' : ''), padX + 16, y);
+    g.fillStyle = '#0F172A';
+    g.fillText(fitText(g, it.label + (it.staged ? ' (미배치)' : ''), W - padX * 2 - 16, [[600, 13], [600, 12], [600, 11]]), padX + 16, y);
     g.fillStyle = '#475569'; g.font = '12px ui-monospace,monospace';
     // 상담지에도 모델코드는 적지 않는다 — 크기를 보여주는 것이지 그 모델을 제안하는 것이 아니다
     /* 벽에 건 것은 **설치 높이도 카드에 남긴다** — 고객이 집에 가서 재 봐야 하는 값이고,
        화면에서 보여준 것이 손에 남는 그림에서 사라지면 안 된다(경고를 카드에 적는 것과 같은 이유). */
     const spec = `${Math.round(it.w)}×${Math.round(it.h)}×${Math.round(it.d)}mm  이격 후면 ${it.clear.back}·좌우 ${it.clear.side}mm`
       + (mountable(it) ? `  설치 높이 ${Math.round(it.mh || 0).toLocaleString()}mm(바닥→하단)` : '');
-    g.fillText(spec, padX + 16, y + 15);
+    /* 사양 줄도 폭을 넘으면 줄인다 — `설치 높이 400mm` 에서 끊겨 나갔다 */
+    g.fillStyle = '#475569';
+    g.fillText(fitText(g, spec, W - padX * 2 - 16, [[400, 12], [400, 11], [400, 10]]), padX + 16, y + 15);
     if (it.warn && it.warn.length){
       g.fillStyle = '#B42318'; g.font = '11px system-ui,sans-serif'; g.textAlign = 'right';
       g.fillText(it.warn.join(' / '), W - padX, y);
       g.textAlign = 'left';
     }
   });
-  g.fillStyle = '#94A3B8'; g.font = '11px system-ui,sans-serif'; g.textAlign = 'right';
-  g.fillText('치수는 삼성스토어 카탈로그 기준 · 설치 규격은 실측 확인 필요', W - padX, H + 28);
+  /* **바닥에 적는다.** 예전에는 `H + 28` — **제목과 같은 y** 에 오른쪽 정렬이라
+     좁은 화면에서 제목 위에 겹쳐 찍혔다(고객 손에 남는 그림에서 글자가 뭉갰다). */
+  g.fillStyle = '#94A3B8'; g.textAlign = 'left';
+  g.fillText(fitText(g, '치수는 삼성스토어 카탈로그 기준 · 설치 규격은 실측 확인 필요',
+    W - padX * 2, [[400, 11], [400, 10], [400, 9]]), padX, H + listH - 8);
   return out;
 }
 
