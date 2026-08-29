@@ -24,13 +24,16 @@ const {
   readLogs, logEvent, logOnce, aggregateByModule, aggregateByDay, aggregateByStore,
   aggregateStoreModules, UNSET_STORE,
   exportCsv, excludeHubViews, normalizeLogs, fetchTeamLogs, GAS_CONNECTED,
+  aggregateFunnel, aggregateWeakPlans,
 } = await import('../lib/logEvent.ts');
+const LOG = { aggregateFunnel, aggregateWeakPlans };
 const S = await import('../lib/stores.ts');
 
 import fs from 'fs';
 
 let ok = true;
 const fail = (msg) => { console.log('ERROR:', msg); ok = false; };
+const pass = (msg) => console.log('OK:', msg);
 const KST = 9 * 60 * 60 * 1000;
 
 // ── 1. readLogs: 빈 상태 / 손상된 JSON 폴백 ──
@@ -615,6 +618,48 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     fail('[테스트점] 이름으로 못 들어간다'); bad++;
   }
   if (!bad) console.log('OK: 테스트점(Z000) — 로그를 남기지 않고, 다른 지점으로 바꾸면 다시 쌓인다');
+}
+
+// ── 상담이 어디까지 갔는가 · 인식이 나빴던 도면 (2026-08-29) ─────────────────
+/*
+ * 프로덕션 32일치를 열어 보니 배치 시뮬레이터가 `page_view` 하나만 남기고 있었다 —
+ * 500명이 쓰는데 **어디서 막히는지 알 길이 없어** 개선이 전부 추측이 됐다.
+ * 이제 단계를 남기므로 그것을 세는 집계를 검사한다.
+ *
+ * **세션 수로 세는지**가 핵심이다. 건수로 세면 "무엇이 되는가"가 아니라
+ * "누가 많이 눌렀는가"가 된다 — 이 저장소가 로그 전반에서 지키는 규칙이다.
+ */
+{
+  const ev = (uid, action, extra) => ({ ts: Date.now(), date: '2026-08-29', module: 'place', uid, action, extra });
+  const logs = [
+    ev('a', 'page_view'), ev('a', 'step', '도면'), ev('a', 'step', '축척'), ev('a', 'step', '배치'),
+    ev('b', 'page_view'), ev('b', 'step', '도면'), ev('b', 'step', '도면'),   // 같은 세션이 두 번 — 한 번으로 세야 한다
+    ev('c', 'page_view'),
+    ev('d', 'page_view'), ev('d', 'step', '도면'), ev('d', 'step', '축척'),
+      ev('d', 'step', '배치'), ev('d', 'step', '3D'), ev('d', 'step', '저장'),
+    { ts: Date.now(), date: '2026-08-29', module: 'hub', uid: 'z', action: 'step', extra: '도면' },  // 다른 모듈은 안 센다
+  ];
+  const f = LOG.aggregateFunnel(logs);
+  const get = (n) => f.steps.find((s) => s.name === n);
+  if (f.opened !== 4) fail(`퍼널: 연 세션이 ${f.opened} (기대 4)`);
+  else if (get('도면').n !== 3) fail(`퍼널: 도면 ${get('도면').n} (기대 3 — 같은 세션의 중복은 한 번)`);
+  else if (get('축척').n !== 2) fail(`퍼널: 축척 ${get('축척').n} (기대 2)`);
+  else if (get('저장').n !== 1) fail(`퍼널: 저장 ${get('저장').n} (기대 1)`);
+  else if (get('도면').pct !== 75) fail(`퍼널: 도면 비율 ${get('도면').pct}% (기대 75)`);
+  else pass(`상담 퍼널 — 연 세션 4 → 도면 3(75%) → 축척 2 → 배치 2 → 3D 1 → 저장 1`);
+
+  /* 인식이 나빴던 도면 — 그대로 "고칠 도면 목록"이 된다 */
+  const R = (uid, who, rooms, faces) => ev(uid, 'result_open', `${who} · 공간 ${rooms} · 벽면 ${faces}`);
+  const weak = LOG.aggregateWeakPlans([
+    R('a', '동탄 포레파크 84C', 1, 120), R('b', '동탄 포레파크 84C', 1, 120),
+    R('c', '북수원 디에트르 84B', 12, 104),          // 잘 잡힌 것은 목록에 없어야 한다
+    R('d', '평택 고덕 우미린 T4', 0, 69),
+    ev('e', 'result_open', '형식이 다른 값'),          // 못 읽는 값은 조용히 건너뛴다
+  ]);
+  if (weak.some((w) => /디에트르/.test(w.who))) fail('잘 잡힌 도면이 "고칠 목록"에 들어갔다');
+  else if (weak.length !== 2) fail(`고칠 도면이 ${weak.length}개 (기대 2)`);
+  else if (weak[0].sess !== 2) fail(`자주 열리는 것이 앞에 와야 한다 (${weak[0].who} 세션 ${weak[0].sess})`);
+  else pass(`고칠 도면 목록 — ${weak.map((w) => `${w.who}(공간 ${w.rooms}·${w.sess}세션)`).join(' · ')}`);
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

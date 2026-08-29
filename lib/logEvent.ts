@@ -7,7 +7,7 @@
 // 남아 있어 타입에서 빼면 집계 코드가 타입 에러를 낸다 — 유니온에는 유지하고 화면 라벨로 구분한다.
 export type LogModule = 'finder' | 'as'
   | 'care' | 'test' | 'compare' | 'compareInstant' | 'quiz' | 'hub' | 'planner' | 'install' | 'installcost' | 'place' | 'concierge' | 'coupon' | 'catalog' | 'poster'
-export type LogAction = 'page_view' | 'search' | 'result_open' | 'generate' | 'tab_switch' | 'feedback'
+export type LogAction = 'page_view' | 'search' | 'result_open' | 'generate' | 'tab_switch' | 'feedback' | 'step'
 
 export interface LogEvent {
   ts: number          // Unix ms
@@ -253,6 +253,61 @@ export function aggregateByModule(logs: LogEvent[]) {
  */
 /** 지점을 고르기 전에 쌓인 옛 로그를 세는 이름. **두 집계가 같은 값을 봐야 한다.** */
 export const UNSET_STORE = '(미지정)'
+
+/*
+ * ── 상담이 **어디까지 갔는가** (2026-08-29) ──────────────────────────────
+ *
+ * 프로덕션 32일치를 열어 보니 배치 시뮬레이터가 남기는 로그가 `page_view` 하나뿐이라
+ * **도면을 올렸는지, 축척까지 갔는지, 가전을 놓았는지 아무것도 몰랐다.** 500명이 쓰는데
+ * 어디서 막히는지 알 길이 없어 개선이 전부 추측이 됐다.
+ *
+ * 이제 미니앱이 단계를 남긴다(`step`). **세션 수로 센다** — 건수로 세면 "무엇이
+ * 되는가"가 아니라 "누가 많이 눌렀는가"가 된다(집계 전반의 규칙과 같다).
+ */
+export const PLACE_STEPS = ['도면', '축척', '배치', '3D', '저장'] as const
+
+export function aggregateFunnel(logs: LogEvent[], module = 'place') {
+  const seen: Record<string, Set<string>> = {}
+  const opened = new Set<string>()
+  for (const e of logs) {
+    if (e.module !== module) continue
+    opened.add(e.uid)
+    if (e.action !== 'step') continue
+    const name = String(e.extra || '')
+    if (!name) continue
+    ;(seen[name] = seen[name] || new Set()).add(e.uid)
+  }
+  const base = opened.size
+  return {
+    opened: base,
+    steps: PLACE_STEPS.map((name) => {
+      const n = seen[name] ? seen[name].size : 0
+      return { name, n, pct: base ? Math.round((n / base) * 100) : 0 }
+    }),
+  }
+}
+
+/*
+ * **인식이 나빴던 도면 목록** — 그대로 "고칠 도면 목록"이 된다.
+ * `result_open` 의 extra 가 `단지 주택형 · 공간 N · 벽면 M` 이다.
+ * 같은 도면이 여러 세션에서 잡히므로 **세션 수를 함께** 세어 자주 열리는 것을 앞세운다.
+ */
+export function aggregateWeakPlans(logs: LogEvent[], maxRooms = 3) {
+  const by: Record<string, { rooms: number; faces: number; sess: Set<string> }> = {}
+  for (const e of logs) {
+    if (e.module !== 'place' || e.action !== 'result_open') continue
+    const m = String(e.extra || '').match(/^(.*) · 공간 (\d+) · 벽면 (\d+)$/)
+    if (!m) continue
+    const who = m[1], rooms = +m[2], faces = +m[3]
+    const r = (by[who] = by[who] || { rooms, faces, sess: new Set() })
+    r.rooms = Math.min(r.rooms, rooms); r.faces = faces
+    r.sess.add(e.uid)
+  }
+  return Object.entries(by)
+    .map(([who, v]) => ({ who, rooms: v.rooms, faces: v.faces, sess: v.sess.size }))
+    .filter((r) => r.rooms <= maxRooms)
+    .sort((a, b) => b.sess - a.sess || a.rooms - b.rooms)
+}
 
 export function aggregateByStore(logs: LogEvent[]) {
   const map: Record<string, { name: string; count: number }> = {}

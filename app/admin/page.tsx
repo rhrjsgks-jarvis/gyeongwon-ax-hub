@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, fetchTeamLogs, GAS_CONNECTED, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, GAS_CONNECTED, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, aggregateFunnel, aggregateWeakPlans, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 import { SALES_HEADCOUNT } from '@/lib/stores'
 import { QUIZ_BANK_TOTAL } from '@/lib/quiz-stats'
@@ -214,6 +214,8 @@ export default function AdminPage() {
   const uniqueUids = new Set(logs.map(e => e.uid)).size
   const maxDay     = Math.max(...byDay.map(d => d.count), 1)
   const recent     = [...logs].reverse().slice(0, 20)
+  const funnel     = aggregateFunnel(logs)
+  const weakPlans  = aggregateWeakPlans(logs)
 
   /* ── 월간 절감 추산은 **로그에서 센다** ──
    * 손으로 박아 둔 `36h+ · 5종 · 574문` 이 실제와 어긋난 채 오래 떠 있었다
@@ -333,6 +335,60 @@ export default function AdminPage() {
         <KpiCard label="기록된 이벤트" value={logs.length} icon="doc" color="#059669" />
         <KpiCard label="추적 모듈 수"  value={LIVE_MODULES.length} icon="puzzle" color="#7C3AED" />
       </div>
+
+      {/*
+        * ── **상담이 어디까지 갔는가** (2026-08-29) ──────────────────────────
+        *
+        * 프로덕션 32일치를 열어 보니 배치 시뮬레이터가 `page_view` 하나만 남기고
+        * 있었다 — 500명이 쓰는데 **어디서 막히는지 알 길이 없어** 개선이 전부
+        * 추측이 됐다. 이제 단계를 남기므로 여기서 보여준다.
+        *
+        * **세션 수로 센다.** 건수로 세면 "무엇이 되는가"가 아니라 "누가 많이
+        * 눌렀는가"가 된다(집계 전반의 규칙과 같다).
+        */}
+      {funnel.opened > 0 && (
+        <Section title={`배치 시뮬레이터 — 상담이 어디까지 갔나 (${funnel.opened}세션)`}>
+          <div className="space-y-1.5">
+            {funnel.steps.map((s) => (
+              <div key={s.name} className="flex items-center gap-2 text-sm">
+                <span className="w-12 shrink-0 text-gray-600">{s.name}</span>
+                <div className="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
+                  <div className="h-full rounded" style={{ width: `${s.pct}%`, background: '#1428A0' }} />
+                </div>
+                <span className="w-20 shrink-0 text-right tabular-nums text-gray-700">
+                  {s.n}세션 {s.pct}%
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-gray-400">
+            여는 것과 실제로 쓰는 것 사이가 어디서 끊기는지 봅니다. 세션당 한 번씩만 셉니다.
+          </p>
+        </Section>
+      )}
+
+      {/*
+        * **고칠 도면 목록** — 인식이 나빴던 도면이 그대로 목록이 된다.
+        * 예전에는 코퍼스에서 해시 순으로 뽑아 쟀는데, 정작 **매장에서 실제로 열리는
+        * 도면**이 무엇인지는 몰랐다. 자주 열리는 것부터 앞에 온다.
+        */}
+      {weakPlans.length > 0 && (
+        <Section title={`인식이 약한 도면 (${weakPlans.length}장)`}>
+          <div className="space-y-1">
+            {weakPlans.slice(0, 12).map((w) => (
+              <div key={w.who} className="flex items-center gap-2 text-sm">
+                <span className="flex-1 truncate text-gray-700">{w.who}</span>
+                <span className="shrink-0 tabular-nums text-gray-500">공간 {w.rooms} · 벽면 {w.faces}</span>
+                <span className="shrink-0 w-14 text-right tabular-nums text-gray-400">{w.sess}세션</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-gray-400">
+            공간을 3곳 이하로 잡은 도면입니다. 벽면이 많은데 공간이 적으면 벽은 잡혔다는 뜻이라
+            배치·3D 는 됩니다.
+          </p>
+        </Section>
+      )}
 
       {/*
         * **점별 사용 현황**(2026-08-20 사장님 요청). 지점은 첫 접속에서 고른 값이

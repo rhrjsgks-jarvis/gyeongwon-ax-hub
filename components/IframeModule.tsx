@@ -10,6 +10,8 @@ const ALLOWED_MODULE = new Set<string>([
 ])
 const ALLOWED_ACTION = new Set<string>([
   'page_view', 'search', 'result_open', 'generate', 'tab_switch',
+  /* 단계 — 상담이 어디까지 갔는지(도면·축척·배치·3D·저장). 세션당 한 번씩만 쌓인다 */
+  'step',
 ])
 
 /*
