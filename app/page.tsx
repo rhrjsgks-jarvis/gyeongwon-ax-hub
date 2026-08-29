@@ -275,8 +275,23 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
         </div>
         <StatusBadge status={mod.status} />
       </div>
+      {/*
+        **꺾쇠 꼬리(`[관리자용]`)는 다음 줄로 내린다**(2026-08-29 사장님 지시).
+        폰에서 카드가 2열이라 폭이 174px 뿐이고, `사용현황 대시보드[관리자용]` 이
+        **`…대시보드[관리자` / `용]` 로 단어 가운데에서 잘렸다**(실측).
+
+        **문자열 자체는 그대로 둔다** — 이 명칭은 사이드바·관리자 화면과 같아야 하고
+        `test-admin` 이 문자열로, 통합검색 색인이 카드 제목으로 들고 있다. 자르는 것은
+        **화면에서만** 한다(사이드바도 같은 방식이다).
+      */}
       <h2 className="font-bold text-sm md:text-base mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
-        {mod.title}{mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-gray-300" />}
+        {mod.title.replace(/\s*\[.*$/, '')}
+        {mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-gray-300" />}
+        {/\[(.+)\]/.test(mod.title) && (
+          <span className="block text-[11px] font-semibold text-gray-400 mt-0.5">
+            {(mod.title.match(/\[(.+)\]/) || [])[1]}
+          </span>
+        )}
       </h2>
       {/* 옛 이름이 있는 모듈만 한 줄 더 — 없는 모듈은 이 줄이 아예 안 그려진다 */}
       {mod.sub && <p className="text-[10px] md:text-[11px] text-gray-400 font-medium -mt-0.5 mb-1">{mod.sub}</p>}

@@ -37,6 +37,7 @@ const NAV_ENTRY = [
 const NAV_GROUPS = [
   {
     title: '제품 상담 도구',
+    icon: 'chat' as IconName,
     items: [
       { href: '/finder',          label: '모델파인더',     icon: 'finder' as IconName },
       { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
@@ -48,6 +49,7 @@ const NAV_GROUPS = [
   },
   {
     title: '교육',
+    icon: 'book' as IconName,
     items: [
       { href: '/test', label: '레벨업 챌린지',   icon: 'quiz' as IconName },
       { href: '/quiz', label: 'URL 퀴즈 생성기', icon: 'target' as IconName },
@@ -55,6 +57,7 @@ const NAV_GROUPS = [
   },
   {
     title: '매장운영 도구',
+    icon: 'store' as IconName,
     items: [
       { href: '/#coupon',    label: '쿠폰 배포 프로그램', icon: 'coupon' as IconName },
       { href: '/#concierge', label: '컨시어지',        icon: 'ticket' as IconName },
@@ -317,7 +320,7 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium no-underline transition-all"
                 style={{
                   background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                   color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -338,13 +341,14 @@ export default function Navigation() {
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.title)}
-                  className="w-full flex items-center justify-between px-3 mb-1 py-1 rounded-lg text-[10px] font-semibold text-gray-400 uppercase tracking-wide hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 mb-1 py-2 rounded-xl text-[14px] font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
                 >
-                  <span>{group.title}</span>
+                  <Icon name={group.icon} size={19} />
+                  <span className="flex-1 text-left">{group.title}</span>
                   <Icon
                     name="chevron"
-                    size={9}
-                    className="transition-transform"
+                    size={11}
+                    className="transition-transform shrink-0"
                     style={{ transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
                   />
                 </button>
@@ -356,14 +360,14 @@ export default function Navigation() {
                         <Link
                           key={item.href}
                           href={item.href}
-                          className="flex items-center gap-2.5 pl-6 pr-3 py-2 rounded-xl text-[13px] font-medium no-underline transition-all"
+                          className="flex items-center gap-3 pl-6 pr-3 py-2 rounded-xl text-[14px] font-medium no-underline transition-all"
                           style={{
                             background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                             color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
                             fontWeight: active ? 700 : 500,
                           }}
                         >
-                          <Icon name={item.icon} size={17} />
+                          <Icon name={item.icon} size={19} />
                           <span>{item.label}</span>
                         </Link>
                       )
@@ -386,7 +390,7 @@ export default function Navigation() {
           <div className="pt-2 border-t border-gray-100">
             <Link
               href={DEV_LINK.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium no-underline transition-all"
               style={{
                 background: isActive(pathname, DEV_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                 color: isActive(pathname, DEV_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -398,7 +402,7 @@ export default function Navigation() {
             </Link>
             <Link
               href={ADMIN_LINK.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium no-underline transition-all"
               style={{
                 background: isActive(pathname, ADMIN_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                 color: isActive(pathname, ADMIN_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -406,7 +410,18 @@ export default function Navigation() {
               }}
             >
               <Icon name={ADMIN_LINK.icon} size={19} />
-              <span>{ADMIN_LINK.label}</span>
+              {/*
+                **'관리자용'을 다음 줄로 내린다**(2026-08-29 사장님 지시).
+                `사용현황 대시보드[관리자용]` 은 사이드바 폭(224px)에서 14px 로는 한 줄에
+                안 들어가 아무 데서나 접혔다 — 대괄호가 줄 끝에 홀로 남기도 한다.
+                **문자열 자체는 그대로 둔다**(`ADMIN_LINK.label`) — 이 명칭은 허브 카드·
+                관리자 화면과 같아야 하고 `test-admin` 이 문자열로 검사한다. 자르는 것은
+                **화면에서만** 한다.
+              */}
+              <span className="leading-tight">
+                {ADMIN_LINK.label.replace(/\[.*$/, '')}
+                <span className="block text-[11px] font-medium opacity-60">관리자용</span>
+              </span>
             </Link>
           </div>
         </div>

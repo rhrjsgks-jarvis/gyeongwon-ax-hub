@@ -121,7 +121,7 @@ for (let n = 0; n < targets.length; n++) {
     await page.waitForTimeout(1500);
     await f.locator(`#libchips .chip:has-text("${sido}")`).first().click();
     await page.waitForTimeout(450);
-    await f.locator(`#libbody .libitem:has-text("${city}")`).first().click();
+    await f.locator(`#libbody .libbox:has-text("${city}")`).first().click();
     await page.waitForTimeout(650);
     await f.locator(`#libbody .libitem:has-text("${t.complex}")`).first().click();
     await page.waitForTimeout(750);

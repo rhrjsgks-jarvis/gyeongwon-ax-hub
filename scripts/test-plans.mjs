@@ -1192,10 +1192,10 @@ const knownGaps = [];
     // 매장에서 고객에게 묻는 순서 그대로여야 한다. 목록이 늘어나도 한 화면에 쏟아지면 안 된다.
     P.saveToLibrary('강원 원주', '다른 단지', '59B');   // 지역이 둘이 되도록 하나 더
     await P.openLibrary();
-    const step = () => [...document.querySelectorAll('#libbody .libitem')].map((b) => b.textContent.replace(/\s+/g, ' ').trim());
+    const step = () => [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')].map((b) => b.textContent.replace(/\s+/g, ' ').trim());
     out.lv1 = step();                                   // 시·도 칩으로 걸러진 시·군 목록
     const pick = (txt) => {
-      const b = [...document.querySelectorAll('#libbody .libitem')].find((x) => x.textContent.includes(txt));
+      const b = [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')].find((x) => x.textContent.includes(txt));
       if (b) b.click();
       return !!b;
     };
@@ -1561,7 +1561,7 @@ const knownGaps = [];
       P.state.rooms = []; P.state.walls = []; P.state.items = [];
       P.state.img = null; P.state.mmPerPx = null; P.state.scaled = false;
       await P.openLibrary(); await wait(300);
-      const items = () => [...document.querySelectorAll('#libbody .libitem')];
+      const items = () => [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')];
       const click = (t) => { const b = items().find((x) => (x.textContent || '').includes(t)); if (b) b.click(); return !!b; };
       /* 목록에는 시·군만 적힌다(칩이 시·도를 이미 걸렀다) */
       const sido = (hit.c.region || '').split(' ')[0];
@@ -1647,7 +1647,7 @@ const knownGaps = [];
       P.state.img = null; P.state.mmPerPx = null; P.state.scaled = false;
       P.state.complexName = null; P.state.typeName = null;
       await P.openLibrary(); await wait(300);
-      const items = () => [...document.querySelectorAll('#libbody .libitem')];
+      const items = () => [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')];
       const click = (t) => { const b = items().find((x) => (x.textContent || '').includes(t)); if (b) b.click(); return !!b; };
       const sido = (hit.c.region || '').split(' ')[0];
       const chip = [...document.querySelectorAll('#libchips .chip')].find((x) => (x.textContent || '').includes(sido));
@@ -1720,7 +1720,7 @@ const knownGaps = [];
         P.state.rooms = []; P.state.walls = []; P.state.items = [];
         P.state.img = null; P.state.mmPerPx = null; P.state.scaled = false;
         await P.openLibrary(); await wait(300);
-        const items = () => [...document.querySelectorAll('#libbody .libitem')];
+        const items = () => [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')];
         const click = (t) => { const b = items().find((x) => (x.textContent || '').includes(t)); if (b) b.click(); return !!b; };
         const sido = (hit.c.region || '').split(' ')[0];
         const chip = [...document.querySelectorAll('#libchips .chip')].find((x) => (x.textContent || '').includes(sido));
@@ -3620,7 +3620,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const raw = await P.loadPlanIndex();
     await P.openLibrary();
     await new Promise((res) => setTimeout(res, 400));
-    const rows = () => [...document.querySelectorAll('#libbody .libitem')];
+    const rows = () => [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')];
     const clickText = async (re) => {
       const el = rows().find((b) => re.test(b.textContent));
       if (!el) return false;
