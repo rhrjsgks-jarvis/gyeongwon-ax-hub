@@ -1616,9 +1616,15 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(has('showRooms && ROOM_FILL.length && state.rooms.forEach'),
     '[18] 방 색·이름·넓이는 켤 때만 그린다');
   ok2(has('for (const w of showSwing ? state.walls : [])'),
-    '[18] 개폐 궤적은 가전이 놓였을 때만 (빈 도면을 덮지 않는다)');
-  ok2(has("const showSwing = showRooms || anyPlaced"),
-    '[18] 켜 두면 언제든 볼 수 있다 — 없앤 것이 아니라 옮긴 것이다');
+    '[18] 개폐 궤적을 조건부로 그린다');
+  /* 2026-08-30 정정 — 처음에는 "가전이 놓였을 때만" 이었는데 **거꾸로였다**.
+     가전이 놓인 그때가 화면이 가장 지저분한 때다(실물 확인). 「방 표시」에만 묶는다. */
+  ok2(has("const showSwing = showRooms;"),
+    '[18] 개폐 궤적은 「방 표시」에만 묶는다 (가전이 놓인 때가 가장 지저분하다)');
+  ok2(has("const short = it.cat || String(it.label).split"),
+    '[18] 도면 위 이름표는 품목만 적는다');
+  ok2(has("if (!clash(ly)) {"),
+    '[18] 이름표가 겹치면 적지 않는다 — 뭉개진 글자보다 낫다');
   /* 개구부는 계속 그린다 — 도면만 봐서는 알 수 없는 판정 결과이고 경고의 근거다 */
   ok2(has("ctx.strokeStyle = w.open ? '#B45309' : wallCol"),
     '[18] 개구부(문·창)는 계속 그린다 — 그 앞을 막는 가전에 경고가 붙는다');
