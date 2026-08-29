@@ -5195,6 +5195,12 @@ function renderSide(){
         + Math.round(sane0.ratio * 100) + '% 입니다 — 넣으신 벽 길이가 실제와 다를 수 있습니다. '
         + '축척을 다시 맞춰 주세요')
     : '';
+  /* 갈 방이 없어 조용히 거실에 놓인 가전을 알린다 — 상담사가 끌어다 옮기면 된다 */
+  const miss = roomsMissing();
+  const missRow = miss.length
+    ? row('warn', miss.map((m) => m.cats.join('·') + '을(를) 놓을 ' + m.use + '이(가) 이 도면에는 안 잡혔습니다').join(' · ')
+        + ' — 지금은 가까운 벽에 두었으니 끌어서 옮겨 주세요')
+    : '';
   const pieces = state.rooms.filter((r)=>r.parts.length>1).length;
   const roomLine = state.rooms.length
     ? row('ok', `공간 ${state.rooms.length}곳`
@@ -5268,6 +5274,7 @@ function renderSide(){
          그리고 문구가 낡았다 — 도면을 올리면 벽은 자동으로 잡고 길이만 물어본다 */
       : (state.img ? '크기 맞추기 — 잰 벽의 실제 길이만 넣으면 됩니다' : '도면을 가져오면 여기에 진행 상황이 표시됩니다'))),
     ...(scaleRow ? [scaleRow] : []),
+    ...(missRow ? [missRow] : []),
     ...(drawLine ? [drawLine] : []),
     ...(thinLine ? [thinLine] : []),
     roomLine,
@@ -7063,6 +7070,32 @@ async function loadReps(){
  * 잡아 둔 방 이름이 ROOM_PLAN의 용도와 맞으면 그 방을 고른다(주방 가전 → '주방').
  * 맞는 방이 없으면 첫 번째 방. 어디까지나 기본값이고 사용자가 바꿀 수 있다.
  */
+/*
+ * ── 갈 방이 없으면 **말해 준다** (2026-08-30) ────────────────────────────
+ *
+ * `defaultRoomFor` 는 용도에 맞는 방이 없으면 **조용히 `state.rooms[0]`(대개 거실)로**
+ * 떨어진다. 그러면 화면에 *"냉장고 · 거실"* 이라 적히고 상담사는 *"왜 여기 있지"* 한다.
+ *
+ * 실측(2026-08-30 · 공용 벽선 12건 전수) — **감일·하남 6건에서 냉장고·김치냉장고·
+ * 세탁기가 전부 거실로 갔다.** 그 벽선들에 **주방·세탁실이라는 이름의 방이 없어서**다
+ * (LH 도면이라 주방이 거실과 트여 있고, 손질할 때 이름을 안 붙였다).
+ *
+ * **자동으로 고치지 않는다** — 어디가 주방인지 모르는 것은 사실이고, 지어내면 그 위에서
+ * "여기 놓으면 됩니다"가 거짓이 된다. 대신 그 사실을 적어 상담사가 끌어다 옮기게 한다.
+ */
+function roomsMissing(){
+  if (!state.rooms.length || !state.items.length) return [];
+  const names = state.rooms.map((r) => r.name);
+  const out = [];
+  for (const [use, cats] of Object.entries(ROOM_PLAN)){
+    if (use === '거실' || use === '침실') continue;      // 폴백이 거실이라 뜻이 없다
+    if (names.some((n) => n.includes(use) || use.includes(n))) continue;
+    const put = state.items.filter((it) => cats.includes(it.cat));
+    if (put.length) out.push({ use, cats: [...new Set(put.map((i) => i.cat))] });
+  }
+  return out;
+}
+
 function defaultRoomFor(cat){
   if (!state.rooms.length) return null;
   for (const [use, cats] of Object.entries(ROOM_PLAN)){
