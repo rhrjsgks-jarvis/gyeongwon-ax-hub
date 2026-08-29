@@ -37,6 +37,7 @@ import { usePathname } from 'next/navigation'
 export default function ExitGuard() {
   const pathname = usePathname()
   const [ask, setAsk] = useState(false)
+  const [bye, setBye] = useState(false)
   const noRef = useRef<HTMLButtonElement>(null)
 
   /** 표식을 심는다 — 이미 그 칸 위면 아무것도 하지 않는다(쌓이지 않게) */
@@ -75,7 +76,55 @@ export default function ExitGuard() {
   }, [ask])
 
   const stay = () => { setAsk(false); arm() }
-  const leave = () => { setAsk(false); try { window.history.back() } catch { /* 갈 곳이 없으면 그대로 */ } }
+  /*
+   * **나갈 수 있으면 진짜로 나가고, 갈 곳이 없으면 종료 화면을 보여준다.**
+   *
+   * 실측(2026-08-30) — 앞에 다른 지면이 있는 탭에서는 `history.back()` 이 그 지면으로
+   * 데려간다(확인). 그런데 **설치형(standalone)은 시작 지면이 히스토리의 첫 칸이라
+   * back 이 아무 일도 하지 않는다** — 사장님 지적: *"예를 누르면 종료가 되어야 하는데
+   * 종료가 안 됩니다."* 매장 태블릿이 그렇게 쓴다.
+   *
+   * **웹은 스스로 창을 닫을 수 없다.** `window.close()` 는 스크립트가 연 창에서만 듣고,
+   * 안드로이드가 PWA 를 닫는 것은 **사용자가 직접 뒤로가기 제스처**를 했을 때이지 스크립트가
+   * 부른 back 으로는 안 된다. 우회할 수 있는 규칙이 아니다.
+   *
+   * 그래서 **되는 만큼 하고, 안 되면 사실대로 종료 화면을 보여준다.** 눌러서 다시 시작할
+   * 수 있으므로 거짓말이 아니고, 상담사에게는 "끝났다"가 그 자리에서 보인다.
+   */
+  const leave = () => {
+    setAsk(false)
+    const path = window.location.pathname
+    try { window.close() } catch { /* 스크립트가 연 창이 아니면 무시된다 */ }
+    try { window.history.back() } catch { /* 갈 곳이 없다 */ }
+    /* 정말 나갔으면 이 컴포넌트가 사라져 타이머도 함께 사라진다 */
+    window.setTimeout(() => {
+      if (window.location.pathname === path) setBye(true)
+    }, 400)
+  }
+
+  if (bye) {
+    return (
+      <div
+        className="fixed inset-0 z-[110] flex flex-col items-center justify-center gap-4 bg-white p-6 text-center"
+        role="dialog"
+        aria-modal="true"
+      >
+        <p className="text-[15px] font-bold text-gray-900">세일즈 코파일럿을 종료했습니다</p>
+        {/* **왜 창이 안 닫히는지 사실대로 적는다** — 화면이 남아 있는데 말이 없으면 고장으로 읽힌다 */}
+        <p className="text-[12.5px] leading-relaxed text-gray-500">
+          이 화면은 닫으셔도 됩니다.<br />설치해서 쓰실 때는 홈 버튼으로 나가시면 됩니다.
+        </p>
+        <button
+          type="button"
+          onClick={() => { setBye(false); arm() }}
+          className="mt-1 rounded-xl px-5 py-2.5 text-[14px] font-semibold text-white"
+          style={{ background: 'var(--color-primary)' }}
+        >
+          다시 시작
+        </button>
+      </div>
+    )
+  }
 
   if (!ask) return null
 

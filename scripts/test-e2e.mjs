@@ -990,6 +990,48 @@ try {
       : fail(`홈을 오갈 때마다 히스토리가 쌓인다 (${beforeLen} → ${afterLen}) — 나가려면 여러 번 눌러야 한다`);
 
     await xc.close();
+
+    /*
+     * **「예, 종료」는 두 상황에서 다르게 동작해야 한다** (2026-08-30 사장님 지적:
+     * *"예를 누르면 종료가 되어야 하는데 종료가 안 됩니다."*).
+     *
+     * 실측 — 앞에 다른 지면이 있으면 `history.back()` 이 그리로 데려가지만,
+     * **설치형(standalone)은 시작 지면이 첫 칸이라 back 이 아무 일도 하지 않는다.**
+     * 웹은 스스로 창을 못 닫으므로(`window.close()` 는 스크립트가 연 창에서만) 그때는
+     * **종료 화면**을 보여 준다. 여기서는 그 갈 곳 없는 상태를 만들어 확인한다.
+     */
+    const sa = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await sa.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
+    await sa.addInitScript(() => {
+      let floor = 0;
+      const realBack = history.back.bind(history);
+      window.addEventListener('load', () => { floor = history.length; });
+      history.back = function () { if (history.length <= floor) return; return realBack(); };
+    });
+    const sp = await sa.newPage();
+    await sp.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await sp.waitForTimeout(1800);
+    await sp.goBack(); await sp.waitForTimeout(700);
+    const askedSa = await sp.locator('[role="dialog"]', { hasText: '종료하시겠습니까' }).count();
+    askedSa ? pass('설치형에서도 홈 뒤로가기 → 종료를 묻는다')
+            : fail('설치형에서 종료를 묻지 않는다');
+    if (askedSa) {
+      await sp.getByRole('button', { name: '예, 종료' }).click();
+      await sp.waitForTimeout(1200);
+      const bye = await sp.locator('text=세일즈 코파일럿을 종료했습니다').count();
+      bye ? pass('갈 곳이 없으면 종료 화면을 보여준다 (창을 스스로 닫을 수 없다)')
+          : fail('「예」를 눌렀는데 아무 일도 일어나지 않는다 — 종료 화면이 없다');
+      if (bye) {
+        await sp.getByRole('button', { name: '다시 시작' }).click();
+        await sp.waitForTimeout(700);
+        const back = (await sp.locator('text=세일즈 코파일럿을 종료했습니다').count()) === 0
+          && new URL(sp.url()).pathname === '/';
+        back ? pass('「다시 시작」이 앱으로 되돌린다')
+             : fail('「다시 시작」을 눌렀는데 앱으로 돌아오지 않는다');
+      }
+    }
+    await sa.close();
+
   }
 
 } catch (e) {
