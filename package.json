@@ -53,7 +53,8 @@
     "test:installcost": "node scripts/test-install-cost.mjs",
     "test:svc": "node scripts/test-svc.mjs",
     "test:coupon": "node scripts/test-coupon.mjs",
-    "build:svc": "node scripts/build-svc.mjs"
+    "build:svc": "node scripts/build-svc.mjs",
+    "audit:library": "node scripts/audit-library.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",
