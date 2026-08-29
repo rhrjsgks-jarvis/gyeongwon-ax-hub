@@ -1597,5 +1597,73 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(box.includes('libbox-h'), '[17] 도면 유무를 칸에 남긴다 — 0장인 도시로 들어가면 헛걸음이다');
 }
 
+/*
+ * [18] **배치 시뮬레이터 화면 개편** (2026-08-29 사장님 지시: *"작동 인터페이스도 손을
+ * 봐야 할 것 같은데 … 전면수정해도됩니다"*).
+ *
+ * 재고 나서 고친 것들이라, 되돌아가면 **화면에서만 보이고 어떤 검사도 안 잡는다.**
+ * 실측(폰 390px, 망포역 푸르지오 르마크 84A-2):
+ *   · 방 색·이름 16개가 서로 뭉개져 `침실3침실2` 로 읽혔다 → 기본으로 끈다
+ *   · 단계 바 1번이 두 줄로 접혀 55px → 셋으로 줄여 27~41px
+ *   · 도면이 좌상단에 붙어 아래 500px 이 빈 격자 → 가운데(panY 24 → 256)
+ *   · 시작 화면의 유일한 버튼이 `pointer-events:none` 에 덮여 **눌리지 않았다**
+ */
+{
+  const has = (t) => html.includes(t);
+
+  /* ① 도면 위 겹침 — 기본은 「놓은 가전만」 */
+  ok2(/showRooms:\s*false/.test(html), '[18] 방 표시는 기본으로 꺼져 있다');
+  ok2(has('showRooms && ROOM_FILL.length && state.rooms.forEach'),
+    '[18] 방 색·이름·넓이는 켤 때만 그린다');
+  ok2(has('for (const w of showSwing ? state.walls : [])'),
+    '[18] 개폐 궤적은 가전이 놓였을 때만 (빈 도면을 덮지 않는다)');
+  ok2(has("const showSwing = showRooms || anyPlaced"),
+    '[18] 켜 두면 언제든 볼 수 있다 — 없앤 것이 아니라 옮긴 것이다');
+  /* 개구부는 계속 그린다 — 도면만 봐서는 알 수 없는 판정 결과이고 경고의 근거다 */
+  ok2(has("ctx.strokeStyle = w.open ? '#B45309' : wallCol"),
+    '[18] 개구부(문·창)는 계속 그린다 — 그 앞을 막는 가전에 경고가 붙는다');
+  ok2(has('id="btn-rooms"'), '[18] 「방 표시」 손잡이가 ⋯ 안에 있다');
+
+  /* ② 시작 화면 — 큰 버튼 셋 */
+  ['st-lib', 'st-img', 'st-wall'].forEach((id) => {
+    ok2(has('id="' + id + '"'), '[18] 시작 버튼 ' + id + ' 가 있다');
+  });
+  ok2(has('#empty .startgrid{display:flex') && has('pointer-events:auto'),
+    '[18] 시작 버튼이 실제로 눌린다 (#empty 는 pointer-events:none 이다)');
+  /* 길을 두 벌로 만들지 않는다 — 도구막대의 같은 버튼을 그대로 누른다 */
+  ok2(has("$('#st-lib').onclick  = ()=> $('#btn-lib').click();"),
+    '[18] 시작 버튼은 도구막대의 같은 버튼을 부른다 (두 벌로 만들지 않는다)');
+
+  /* ③ 도구막대는 지금 쓸 수 있는 것만 */
+  ok2(has('function syncBar()'), '[18] 도구막대 상태를 맞추는 syncBar 가 있다');
+  ok2(has('function draw(){\n  syncBar();'),
+    '[18] 상태가 바뀌면 도구막대도 따라간다 (draw 에서 부른다)');
+  ok2(has('if (sig === _barSig) return;'),
+    '[18] 바뀔 때만 일한다 — draw 는 끄는 동안 초당 수십 번 돈다');
+  ["set('#btn-add',   state.scaled,", "set('#btn-3d',    hasSpace,"].forEach((t) => {
+    ok2(has(t), '[18] ' + t.split(',')[0].replace(/.*#/, '#') + ' 의 조건이 실제 진입 조건과 같다');
+  });
+
+  /* ④ 단계는 셋 — 「벽 인식」은 사용자가 하는 일이 아니다 */
+  const steps = (html.match(/class="step[^"]*" data-step="\d"/g) || []).length;
+  ok2(steps === 3, '[18] 단계가 셋이다 (지금 ' + steps + ')');
+  ok2(has('<b>3</b>가전 놓기') && !has('<b>3</b>벽 인식'),
+    '[18] 3단계가 「가전 놓기」다 — 「벽 인식」은 자동이라 단계가 아니다');
+  ok2(has('const STEP_MAP = { 1:1, 2:2, 3:2, 4:3 };'),
+    '[18] 부르는 쪽은 옛 번호를 그대로 쓴다 (호출 12곳을 고치면 하나를 빠뜨린다)');
+
+  /* ⑤ 화면 맞춤 — 가운데 */
+  ok2(has('state.panX = (rect.width  - cw)/2 - x1*state.zoom;'),
+    '[18] fitAll 이 가운데에 놓는다');
+  ok2(!/state\.zoom \/= k; state\.panX = 24; state\.panY = 24;/.test(html),
+    '[18] 축척 확정이 좌상단에 박지 않는다 — fitAll 을 지나간다');
+
+  /* ⑥ 하단 띠 — 내부 용어를 늘어놓지 않는다 */
+  ok2(!has("bits.push(`공간 ${state.rooms.length}곳"),
+    '[18] 하단 띠에 「공간 N곳」을 적지 않는다 (알고리즘 결과이지 상담사의 말이 아니다)');
+  ok2(has("bits.push('가전을 고르면 놓아 드립니다')"),
+    '[18] 하단 띠가 「지금 할 일」을 한 줄로 말한다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

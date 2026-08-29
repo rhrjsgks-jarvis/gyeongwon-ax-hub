@@ -263,6 +263,12 @@ const knownGaps = [];
     P.state.mask = P.state.baseMask = P.state.cleanCv = null; P.state.sealCache = null;
     P.state.rooms = []; P.state.walls = []; P.state.items = [];
     P.state.zoom = 1; P.state.panX = 0; P.state.panY = 0;
+    /*
+     * **한 번 그려 준다.** 실제 `useImage()` 는 도면을 올린 뒤 반드시 `draw()` 를 부르고,
+     * 그때 도구막대가 "지금 쓸 수 있는 것"을 다시 판정한다(2026-08-29 개편). 여기서는
+     * 상태를 손으로 심으므로 그 한 걸음이 빠져 있었다 — 앱이 만들지 않는 중간 상태다.
+     */
+    P.draw();
 
     const out = {};
     document.querySelector('#btn-scale').click();
