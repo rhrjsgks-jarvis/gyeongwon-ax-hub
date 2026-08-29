@@ -1811,5 +1811,27 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
     '[23] 코앞의 가전은 오히려 안 보인다 — 후보에서 뺀다');
 }
 
+/*
+ * [24] **대안은 성격이 같은 것만** (2026-08-30 실물에서 발견).
+ *
+ * `TV 115인치 → 폭 135mm이면 들어갑니다` 라고 말하고 있었다 — 135mm 는 **The Freestyle
+ * 프로젝터**다. TV 카테고리에 프로젝터가 함께 있어 **발자국이 작은 순**으로만 찾으면
+ * 그것이 걸린다. 상담사가 그대로 읽으면 *"115인치 대신 이거 어떠세요"* 가 된다.
+ * TV 가 못 들어가는 이유는 **벽면 길이**이지 바닥 자리가 아니다.
+ *
+ * 고친 뒤 — `TV 115인치 → 48~50인치이면 들어갑니다 (1111×76mm)`.
+ * 깊이 76mm 는 **벽걸이** 치수다(스탠드는 받침이 들어가 2.2배다).
+ */
+{
+  const has = (t) => html.includes(t);
+  ok2(has('const wantMount = mountable(it);'), '[24] 지금 제품이 벽에 거는 것인지 본다');
+  ok2(has("if (mountable({ cat: it.cat, part: q.part, size: r.size, h: q.h }) !== wantMount) continue;"),
+    '[24] 벽에 거는 것과 바닥에 놓는 것을 섞지 않는다');
+  ok2(has('const q = mainPart(it.cat, o);'),
+    '[24] 주 부품을 mainPart 로 고른다 — TV 의 parts[0] 은 스탠드일 수 있다');
+  ok2(!has('const q = (o.parts || [])[0];'),
+    '[24] parts[0] 을 그대로 쓰는 자리가 남아 있지 않다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

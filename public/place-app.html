@@ -8001,11 +8001,23 @@ function fitAlternative(it, placed){
    * 자기보다 발자국이 작은 것만 담으므로 자기 자신은 저절로 빠진다.
    */
   const cands = [];
+  /*
+   * **벽에 거는 것과 바닥에 놓는 것을 섞지 않는다**(2026-08-30 실물에서 발견).
+   * TV 카테고리에는 프로젝터가 함께 있어(The Freestyle 폭 135mm), 발자국이 작은 순으로만
+   * 찾으면 **115인치 TV 의 대안으로 프로젝터를 내민다** — 상담사가 그대로 읽으면
+   * *"115인치 대신 이거 어떠세요"* 가 된다. TV 가 못 들어가는 이유는 **벽면 길이**이지
+   * 바닥 자리가 아니다.
+   *
+   * **주 부품도 `mainPart` 로 고른다.** `parts[0]` 은 TV 에서 스탠드일 수 있는데,
+   * 스탠드는 깊이가 2.2배라(받침 포함) 벽걸이로 배치하는 이 앱에서는 틀린 치수다.
+   */
+  const wantMount = mountable(it);
   for (const r of reps){
     if (line && r.line !== line) continue;
     for (const o of (r.options || [])){
-      const q = (o.parts || [])[0];
+      const q = mainPart(it.cat, o);
       if (!q || foot(q) >= myFoot) continue;
+      if (mountable({ cat: it.cat, part: q.part, size: r.size, h: q.h }) !== wantMount) continue;
       /*
        * 같은 줄 안의 대안은 **눈에 띄게 작아야** 말할 값어치가 있다.
        * 그냥 "발자국이 더 작은 것"으로 두면 912×930 대신 **912×922** 를 내민다 —
