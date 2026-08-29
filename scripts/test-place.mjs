@@ -1783,5 +1783,28 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
     '[22] 잘못 잡히면 통째로 깐다 — 자르다 아무것도 안 남는 것이 더 나쁘다');
 }
 
+/*
+ * [23] **눈높이에서 어디를 볼 것인가** (2026-08-30 실물에서 발견).
+ *
+ * 서는 자리(`eyeAt`)는 정해 두었는데 **바라보는 방향은 정해 두지 않아**, 기본 각도로
+ * 서면 **코앞의 벽 모서리**를 보게 됐다 — 화면에 벽 두 면과 천장만 찼다.
+ * 고객에게 "우리 집 느낌"을 보여주는 핵심 시점인데 아무것도 안 보였다.
+ *
+ * 실측(공용 벽선 12건 전수) — 등 뒤 여유 **1.69m → 2.04~4.15m · 1.5m 미만 0건.**
+ */
+{
+  const has = (t) => html.includes(t);
+  ok2(has('function bestEyeYaw(x, z)'), '[23] 바라볼 방향을 고르는 함수가 있다');
+  ok2(has('orb.yaw = bestEyeYaw(orb.tx, orb.tz)'), '[23] 눈높이로 들어갈 때 그 방향을 쓴다');
+  ok2(has('if (back < BACK_MIN) continue;'),
+    '[23] 등 뒤 여유가 없는 방향은 쓰지 않는다 — 막히면 코앞 벽만 보인다');
+  ok2(has('for (const sg of segs2d){ const t = raySeg(x, z, dx, dz, sg)'),
+    '[23] 마스크가 없으면 방 경계로 잰다 — clampInside 와 같은 자를 써야 한다');
+  ok2(has('return best.th + Math.PI;'),
+    '[23] 카메라는 반대쪽에 선다 — apply() 가 바라보는 점을 향해 본다');
+  ok2(has('if (L < M(600)) continue;'),
+    '[23] 코앞의 가전은 오히려 안 보인다 — 후보에서 뺀다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

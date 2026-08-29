@@ -9826,7 +9826,7 @@ function view(name){
      * 그 뒤 두 손가락으로 좁히면 앞으로 다가온다.
      */
     orb.pitch = 0.06; orb.dist = 1e4;
-    if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; }
+    if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; orb.yaw = bestEyeYaw(orb.tx, orb.tz); }
   } else if (mode3 === 'top'){
     orb.pitch = 1.44; orb.ty = 0; orb.dist = fitForScreen() * 0.95; orb.yaw = 0;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
@@ -9877,6 +9877,78 @@ function maskRayHit(x, z, dx, dz){
   }
   return null;
 }
+/*
+ * ── 눈높이에서 **어디를 볼 것인가** (2026-08-30 실물에서 발견) ─────────────────
+ *
+ * 서는 자리(`eyeAt`)는 정해 두었는데 **바라보는 방향은 정해 두지 않았다.** 그래서
+ * 기본 각도로 서면 **코앞의 벽 모서리**를 보게 되고, 화면에 벽 두 면과 천장만 찬다 —
+ * 고객에게 "우리 집 느낌"을 보여주는 핵심 시점인데 아무것도 안 보였다(실물 확인).
+ *
+ * **가장 멀리 트인 쪽을 본다.** `apply()` 는 카메라를 `yaw` 방향에 놓고 **바라보는 점을
+ * 향해** 보므로, 보고 싶은 방향이 θ 면 카메라는 반대쪽(θ+π)에 서야 한다.
+ * 그래서 **볼 쪽이 트여 있고 등 뒤도 조금은 트인** 방향을 고른다 — 등 뒤가 막히면
+ * `clampInside` 가 거리를 바짝 잘라 코앞만 보인다.
+ *
+ * **놓은 가전이 있으면 그쪽을 먼저 본다.** 이 도구가 답하는 것은 *"이 집에 이 제품을
+ * 놓으면 어떤 느낌인가"* 다 — 빈 방을 잘 보여주는 것이 목적이 아니다.
+ * 다만 **벽에 막힌 쪽이면 쓰지 않는다**(가전이 등 뒤 벽 너머일 수 있다).
+ */
+const BACK_MIN = M(2200);   /* 등 뒤로 이만큼은 있어야 방이 보인다 */
+function bestEyeYaw(x, z){
+  /*
+   * **`clampInside` 와 같은 자를 써야 한다.** 마스크만 보면 벽선만 불러온 도면
+   * (공용 벽선 12건이 그렇다)에서 **사방이 트인 것으로 보여** 방향을 아무렇게나 고른다 —
+   * 실측으로 8방향이 전부 "벽 없음"이었는데 정작 거리는 1.99m 로 잘렸다.
+   */
+  const look = (dx, dz) => {
+    const h = maskRayHit(x, z, dx, dz);
+    if (h != null) return h;
+    let m = Infinity;
+    for (const sg of segs2d){ const t = raySeg(x, z, dx, dz, sg); if (t != null && t < m) m = t; }
+    return m === Infinity ? M(40000) : m;
+  };
+  let best = null;
+  /* 놓은 가전 쪽을 먼저 본다 — 보이면 그것이 상담의 주인공이다 */
+  const its = P.state.items.filter((it) => !it.staged);
+  for (const it of its){
+    const c = P.bodyCenter(it);
+    const dx = M(c[0]) - x, dz = M(c[1]) - z;
+    const L = Math.hypot(dx, dz);
+    if (L < M(600)) continue;                       // 코앞이면 오히려 안 보인다
+    const ux = dx / L, uz = dz / L;
+    if (look(ux, uz) < L - M(300)) continue;        // 사이에 벽이 있다
+    const back = look(-ux, -uz);
+    /* **등 뒤 여유가 없으면 쓸 수 없다.** 카메라는 바라보는 점 뒤에 서므로 등 뒤가
+       막히면 `clampInside` 가 거리를 바짝 잘라 코앞 벽만 보인다(실측 1.7m). */
+    if (back < BACK_MIN) continue;
+    const score = Math.min(L, M(12000)) + back * 0.6;
+    if (!best || score > best.score) best = { score, th: Math.atan2(ux, uz) };
+  }
+  if (!best){
+    /* 가전이 없으면 가장 트인 쪽 — 16 방향을 훑는다 */
+    for (let i = 0; i < 16; i++){
+      const th = (i / 16) * Math.PI * 2;
+      const ux = Math.sin(th), uz = Math.cos(th);
+      const back = look(-ux, -uz);
+      if (back < BACK_MIN) continue;
+      const score = look(ux, uz) + back * 0.6;
+      if (!best || score > best.score) best = { score, th };
+    }
+  }
+  if (!best){
+    /* 어느 방향도 등 뒤 여유가 없으면 **가장 널널한 쪽**으로 물러선다 —
+       좁은 방에서는 그것이 최선이고, 아무 방향이나 두는 것보다 낫다 */
+    for (let i = 0; i < 16; i++){
+      const th = (i / 16) * Math.PI * 2;
+      const back = look(-Math.sin(th), -Math.cos(th));
+      if (!best || back > best.score) best = { score: back, th };
+    }
+  }
+  if (!best) return orb.yaw;
+  /* 카메라는 반대쪽에 선다 — 그래야 바라보는 점 너머로 방이 펼쳐진다 */
+  return best.th + Math.PI;
+}
+
 function clampInside(){
   const cp = Math.max(Math.cos(orb.pitch), 1e-3);
   const dx = Math.sin(orb.yaw), dz = Math.cos(orb.yaw);
@@ -10333,7 +10405,13 @@ window.Place3D = {
       pitch: +orb.pitch.toFixed(2), yaw: +orb.yaw.toFixed(2),
       tx: +orb.tx.toFixed(2), tz: +orb.tz.toFixed(2), ty: +orb.ty.toFixed(2),
       fov: cam && cam.fov, camY: cam && +cam.position.y.toFixed(2),
-      box: lastBox || null, asp: lastAsp };
+      box: lastBox || null, asp: lastAsp,
+      eyeAt: eyeAt ? eyeAt.map((v) => +v.toFixed(2)) : null,
+      rays: eyeAt ? Array.from({ length: 8 }, (_, i) => {
+        const th = (i / 8) * Math.PI * 2;
+        const h = maskRayHit(eyeAt[0], eyeAt[1], Math.sin(th), Math.cos(th));
+        return h == null ? 99 : +h.toFixed(2);
+      }) : null };
   },
   /* 내용이 바뀌었을 때 다시 세운다 — **화면은 다시 맞추지 않는다.** 그러면 보던 각도를 잃는다. */
   rebuild(){ if (on) { const i = build(false); paintBar(i); } },
