@@ -9811,6 +9811,24 @@ function fitForScreen(){
   return Math.max(fitDist, byW * 1.25);
 }
 
+/*
+ * **위에서 보기는 따로 잰다.** 거의 수직으로 내려다보므로 화면에 담아야 하는 것은
+ * 집의 **가로(x)와 세로(z) 그 자체**다 — 둘러보기용 거리(대각선 기반)를 그대로 쓰면
+ * 너무 멀어 집이 화면 한구석에 작게 놓인다(실물 확인).
+ * 이 시점은 **2D 평면도와 같은 구도**여야 2D ↔ 3D 를 눈으로 이을 수 있다(CLAUDE.md).
+ */
+function fitTop(){
+  const el = ren && ren.domElement;
+  const asp = (el && el.clientHeight) ? el.clientWidth / el.clientHeight
+    : ((cam && cam.aspect) || 1);
+  if (!lastBox || !lastBox.x) return fitDist;
+  const vf = (((cam && cam.fov) || 52) * Math.PI) / 180;
+  const t = Math.tan(vf / 2);
+  const byW = (lastBox.x / 2) / (t * Math.max(0.2, asp));
+  const byH = (lastBox.z / 2) / t;
+  return Math.max(3, Math.max(byW, byH) * 1.12);
+}
+
 function view(name){
   mode3 = (name === 'eye' || name === 'top') ? name : 'iso';
   /* 실내에서는 화각을 넓힌다 — 부동산 실내 사진이 광각으로 찍히는 것과 같은 이유다.
@@ -9828,7 +9846,7 @@ function view(name){
     orb.pitch = 0.06; orb.dist = 1e4;
     if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; orb.yaw = bestEyeYaw(orb.tx, orb.tz); }
   } else if (mode3 === 'top'){
-    orb.pitch = 1.44; orb.ty = 0; orb.dist = fitForScreen() * 0.95; orb.yaw = 0;
+    orb.pitch = 1.44; orb.ty = 0; orb.dist = fitTop(); orb.yaw = 0;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   } else {
     orb.pitch = 0.85; orb.ty = M(WALL_H_MM) * 0.35; orb.dist = fitForScreen(); orb.yaw = -0.7;

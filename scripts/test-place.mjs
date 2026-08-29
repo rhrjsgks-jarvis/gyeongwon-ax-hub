@@ -1769,7 +1769,9 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(has('if (asp >= 1 || !lastBox || !lastBox.x) return fitDist;'),
     '[22] 넓은 화면은 건드리지 않는다 — 그쪽은 옛 식이 이미 맞다');
   ok2(has('orb.dist = fitForScreen()'), '[22] 둘러보기가 그 거리를 쓴다');
-  ok2(has('orb.dist = fitForScreen() * 0.95'), '[22] 위에서 보기도 그 거리를 쓴다');
+  /* 위에서 보기는 거의 수직이라 담아야 하는 것이 가로·세로 그 자체다 — 따로 잰다 */
+  ok2(has('function fitTop()') && has('orb.dist = fitTop()'),
+    '[22] 위에서 보기는 따로 잰다 (2D 평면도와 같은 구도여야 한다)');
   ok2(!has('orb.dist = fitDist;'), '[22] 옛 거리를 그대로 쓰는 시점이 남아 있지 않다');
 
   ok2(has('function baseCrop()'), '[22] 바닥 도면을 자르는 함수가 있다');
