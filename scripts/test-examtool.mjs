@@ -422,6 +422,15 @@ say(again.qs.map(q => q.q).join('|') === cur.qs.map(q => q.q).join('|'),
     say(phone.top >= 17 && phone.side >= 9.9,
         '폰 화면에서 인쇄해도 여백 그대로 (실제 ' + phone.top.toFixed(0) + ' / ' + phone.side.toFixed(1) + 'mm)');
 
+    /*
+     * **여백 검사만은 시험지를 고정한다**(2026-08-30).
+     * 문항을 무작위로 뽑으므로 내용이 쪽 경계에 걸리면 여백과 무관하게 6↔7쪽으로 갈린다 —
+     * 이 검사가 이따금 빨개져 **다른 실패를 못 보게** 만들었다. 출력기는 `?code=` 로 같은
+     * 시험지를 다시 뽑으므로(재인쇄·채점 대조용으로 이미 있는 기능) 그것을 쓴다.
+     * 무작위성만 빼고 **여백 불변식은 그대로** 지킨다.
+     */
+    await page.goto(pathToFileURL(lone).href + '?code=EXAM', { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => document.querySelectorAll('.sheet').length > 0, { timeout: 15000 });
     const base = count(await page.pdf({ format: 'A4', printBackground: true }));
     let steady = true, badCase = '';
     /* 인쇄창에서 고를 수 있는 현실적인 두 값만 본다. “넓게”(25mm)는 우리 26mm 위에 다시
