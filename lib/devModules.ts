@@ -10,6 +10,8 @@ export type DevModule = {
   href: string
   icon: string
   title: string
+  /** 옛 이름 — 카드에 작게 남고 통합검색이 그 말로도 찾는다(모델파인더의 「제품 상세검색」과 같은 장치) */
+  sub?: string
   desc: string
   color: string
   bg: string
@@ -79,6 +81,8 @@ export const DEV_MODULES: DevModule[] = [
     href: '/dev/telecom',
     icon: 'phone',
     title: '통신향 상담기',
+    // 2026-08-30 사장님 개명(옛 「통신 요금제 상담 도구」). 옛 이름으로 찾던 상담사가 그대로 찾아야 한다.
+    sub: '통신 요금제 상담 도구',
     desc: '3사 요금제 349건·부가서비스 542건·결합 27건·단말 출고가·제휴카드 40장 — 월납부금액과 할부기간 총액까지 계산',
     color: '#1428A0',
     bg: '#EEF2FF',

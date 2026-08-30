@@ -368,9 +368,15 @@ function hubModulesFromSource() {
 function devModulesFromSource() {
   const src = readSrc('lib/devModules.ts');
   const mods = [...src.matchAll(
-    /href: '([^']+)',[\s\S]{0,300}?title: '([^']+)',[\s\S]{0,300}?desc: '([^']+)'/g)];
+    /href: '([^']+)',[\s\S]{0,300}?title: '([^']+)',[\s\S]{0,600}?desc: '([^']+)'/g)];
   if (!mods.length) throw new Error('lib/devModules.ts 파싱 실패 — 형식이 바뀌었는지 확인할 것');
-  return mods.map((m) => ({ href: m[1], title: m[2], desc: m[3] }));
+  return mods.map((m) => {
+    /* 옛 이름(sub)이 있으면 함께 줍는다 — 이름을 바꿔도 예전 말로 찾던 사람이 그대로
+       찾아야 한다(허브 모듈의 sub 와 같은 장치. 통신향 상담기 ← 통신 요금제 상담 도구). */
+    const seg = src.slice(m.index, m.index + 900);
+    const sub = (seg.match(/sub: '([^']+)'/) || [])[1] || '';
+    return { href: m[1], title: m[2], desc: m[3], sub };
+  });
 }
 
 // 사이드바/하단 내비 라벨과 그 그룹명도 검색어가 되어야 한다
@@ -402,7 +408,7 @@ const MODULES = [
   /* 개발중인 서비스 — 부제에 그 사실을 적는다. 상담사가 고객 앞에서 열기 전에 알아야 한다 */
   ...devModulesFromSource().map((m) => ({
     title: m.title, sub: '개발중 · ' + m.desc, href: m.href,
-    kw: [m.desc, m.title.replace(/\s+/g, ''), '개발중 개발 중 준비중 베타 dev', ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].join(' '),
+    kw: [m.desc, m.sub, m.sub && m.sub.replace(/\s+/g, ''), m.title.replace(/\s+/g, ''), '개발중 개발 중 준비중 베타 dev', ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].filter(Boolean).join(' '),
   })),
   // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.
