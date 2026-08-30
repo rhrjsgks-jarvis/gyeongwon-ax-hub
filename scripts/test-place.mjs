@@ -240,6 +240,25 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     fail('구형 14mm 근거가 설치환경 가이드에 없음');
   } else pass('에어드레서 모델 세대별 좌우 이격 (현행 2.5mm / 구형 Bespoke 14mm)');
 
+  /*
+   * 공기청정기 — **기본 60cm, 팝업 청정 부스터 모델만 1m** (2026-08-30).
+   *
+   * 삼성닷컴 원문 "* 사용 시 벽면과의 거리는 1m 이상 유지해 주세요" 는 `AP90F08163***`
+   * 각주다. **기본값을 1m 로 올리면 안 된다** — 나머지 모델에 없는 제약을 씌워
+   * "여기엔 안 들어갑니다" 가 거짓이 된다(키친핏 이격을 크게 잡으면 안 되는 것과 같다).
+   * 반대로 예외를 지우면 그 모델에서 벽에 붙여 놓고 "됩니다" 라고 말하게 된다.
+   * **양쪽을 함께 본다** — 한쪽만 보면 절반을 놓친다.
+   */
+  {
+    const base = P.clearFor('공기청정기', '본체', 'AP70F06103RVD');
+    const pop = P.clearFor('공기청정기', '본체', 'AP90F08163UDD');
+    if (base.back !== 600) fail(`공기청정기 기본 벽면 이격이 ${base.back}mm (기대 600 — 뉴스룸 60cm)`);
+    else if (pop.back !== 1000) fail(`팝업 부스터 모델(AP90F08163) 벽면 이격이 ${pop.back}mm (기대 1000)`);
+    else if (!install.includes('AP90F08163')) fail('팝업 부스터 1m 근거가 설치환경 가이드에 없다');
+    else if (!install.includes('최소 60cm 권장')) fail('기본 60cm 가 설치환경 가이드에서 사라졌다 — 지울 근거가 나온 적이 없다');
+    else pass(`공기청정기 벽면 이격 — 기본 ${base.back}mm · 팝업 부스터 모델 ${pop.back}mm`);
+  }
+
   // size-reps에 실린 에어드레서가 어느 쪽인지 확인 — 지금은 전부 현행 라인업이어야 한다
   const ad = reps.filter((r) => r.cat === '에어드레서')
     .flatMap((r) => r.options.flatMap((o) => [o.model, ...o.also]));

@@ -34,15 +34,15 @@ const allCats = [
   '냉장고 4도어 프리스탠딩', '냉장고 4도어 키친핏', '냉장고 4도어 키친핏 Max', '냉장고 2도어',
   '냉장고 1도어', '냉장고 양문형', '냉장고 일반형', '냉장고 페어(2대 이상) 설치', '김치냉장고',
   '세탁기·콤보', '건조기', '에어컨', 'TV', '청소기', '로봇청소기', '식기세척기', '에어드레서',
-  '인덕션', '정수기', '전자레인지', '공기청정기',
+  '인덕션', '후드', '후드일체형 인덕션', '정수기', '전자레인지', '공기청정기',
 ];
 
 const expectedImageCounts = {
   '냉장고 4도어 프리스탠딩': 3, '냉장고 4도어 키친핏': 3, '냉장고 4도어 키친핏 Max': 2,
   '냉장고 2도어': 1, '냉장고 1도어': 2, '냉장고 양문형': 4, '냉장고 일반형': 1,
-  '냉장고 페어(2대 이상) 설치': 2, '김치냉장고': 5, '세탁기·콤보': 9, '건조기': 4, '에어컨': 3,
+  '냉장고 페어(2대 이상) 설치': 4, '김치냉장고': 5, '세탁기·콤보': 9, '건조기': 4, '에어컨': 3,
   'TV': 15, '청소기': 0, '로봇청소기': 3, '식기세척기': 11, '에어드레서': 4,
-  '인덕션': 8, '정수기': 5, '전자레인지': 0, '공기청정기': 0,
+  '인덕션': 8, '후드': 2, '후드일체형 인덕션': 5, '정수기': 5, '전자레인지': 0, '공기청정기': 0,
 };
 
 (async () => {
@@ -101,7 +101,22 @@ const expectedImageCounts = {
   window.filterCats('인덕션');
   let visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
   console.log('search "인덕션" visible:', visible.map((r) => r.dataset.cat));
-  if (visible.length !== 1 || visible[0].dataset.cat !== '인덕션') { console.log('ERROR: 인덕션 search mismatch'); ok = false; }
+  /*
+   * **개수를 박지 않는다.** 2026-08-30 에 「후드일체형 인덕션」이 생기면서 이 검사가
+   * 물었는데, 그건 결함이 아니라 카테고리가 는 것이다 — 개수를 고정하면 검사가
+   * 앱을 못 따라가 조용히 무력해진다(이 저장소가 여러 번 데인 종류다).
+   * 지켜야 하는 것은 **"친 말이 든 카테고리만 남는가"** 라는 불변식이다.
+   */
+  if (!visible.length || !visible.every((r) => r.dataset.cat.includes('인덕션'))) {
+    console.log('ERROR: 인덕션 search mismatch'); ok = false;
+  }
+  /* 두 카테고리가 실제로 갈리는지 — 값이 다르므로 섞이면 안 된다 */
+  window.filterCats('후드일체형');
+  const hoodInd = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
+  if (hoodInd.length !== 1 || hoodInd[0].dataset.cat !== '후드일체형 인덕션') {
+    console.log('ERROR: 후드일체형 인덕션이 따로 안 잡힌다 —', hoodInd.map((r) => r.dataset.cat));
+    ok = false;
+  }
 
   window.filterCats('공기청정기');
   visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
