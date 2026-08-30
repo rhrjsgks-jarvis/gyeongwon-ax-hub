@@ -2,8 +2,8 @@
  "version": 3,
  "note": "단지 도면 색인 — 지역 → 단지 → 도면 순으로 고른다. 평면도면 싣고, 치수가 읽힌 도면에는 mmPerPx(축척)와 scaleConf(확신도)를 미리 넣어 둔다. 축척이 없는 도면은 매장에서 사용자가 맞춘다. 수집·판별은 로컬(.scratch)에서 하고 npm run build:plans 로 이 색인과 이미지를 만든다.",
  "generatedAt": "2026-08-30",
- "complexCount": 155,
- "planCount": 841,
+ "complexCount": 165,
+ "planCount": 900,
  "scaledCount": 12,
  "complexes": [
   {
@@ -31,6 +31,56 @@
    "addr": "강원특별자치도 강릉시 회산동 536번지 일원",
    "plans": [
     {
+     "type": "115A",
+     "file": "plans/c178/115A.jpg",
+     "w": 644,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 81,
+     "axis": 0.605
+    },
+    {
+     "type": "115A-2",
+     "file": "plans/c178/115A-2.jpg",
+     "w": 624,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 77,
+     "axis": 0.604
+    },
+    {
+     "type": "146P",
+     "file": "plans/c178/146P.jpg",
+     "w": 626,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 85,
+     "axis": 0.589
+    },
+    {
+     "type": "147P",
+     "file": "plans/c178/147P.jpg",
+     "w": 624,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 83,
+     "axis": 0.614
+    },
+    {
+     "type": "166P",
+     "file": "plans/c178/166P.jpg",
+     "w": 612,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 85,
+     "axis": 0.614
+    },
+    {
      "type": "84A",
      "file": "plans/c178/84A.jpg",
      "w": 629,
@@ -39,6 +89,56 @@
      "rooms": 9,
      "kb": 84,
      "axis": 0.596
+    },
+    {
+     "type": "84A-2",
+     "file": "plans/c178/84A-2.jpg",
+     "w": 629,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 84,
+     "axis": 0.596
+    },
+    {
+     "type": "84B",
+     "file": "plans/c178/84B.jpg",
+     "w": 615,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 83,
+     "axis": 0.607
+    },
+    {
+     "type": "84B-2",
+     "file": "plans/c178/84B-2.jpg",
+     "w": 627,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 85,
+     "axis": 0.598
+    },
+    {
+     "type": "84C",
+     "file": "plans/c178/84C.jpg",
+     "w": 595,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 79,
+     "axis": 0.631
+    },
+    {
+     "type": "99",
+     "file": "plans/c178/99.jpg",
+     "w": 632,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 90,
+     "axis": 0.601
     }
    ]
   },
@@ -277,6 +377,84 @@
    ]
   },
   {
+   "id": "c183",
+   "region": "강원 강릉",
+   "complex": "리쉐스302",
+   "addr": "",
+   "plans": [
+    {
+     "type": "128",
+     "file": "plans/c183/128.jpg",
+     "w": 687,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 57,
+     "axis": 0.585
+    },
+    {
+     "type": "142",
+     "file": "plans/c183/142.jpg",
+     "w": 706,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 5,
+     "kb": 72,
+     "axis": 0.58
+    },
+    {
+     "type": "149",
+     "file": "plans/c183/149.jpg",
+     "w": 780,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 7,
+     "kb": 87,
+     "axis": 0.606
+    },
+    {
+     "type": "156",
+     "file": "plans/c183/156.jpg",
+     "w": 725,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 82,
+     "axis": 0.583
+    },
+    {
+     "type": "220P",
+     "file": "plans/c183/220P.jpg",
+     "w": 1163,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 96,
+     "axis": 0.698
+    },
+    {
+     "type": "223P",
+     "file": "plans/c183/223P.jpg",
+     "w": 1200,
+     "h": 959,
+     "exclusiveM2": null,
+     "rooms": 2,
+     "kb": 96,
+     "axis": 0.708
+    },
+    {
+     "type": "227P",
+     "file": "plans/c183/227P.jpg",
+     "w": 1200,
+     "h": 1035,
+     "exclusiveM2": null,
+     "rooms": 1,
+     "kb": 96,
+     "axis": 0.731
+    }
+   ]
+  },
+  {
    "id": "c04",
    "region": "강원 고성",
    "complex": "르네오션 고성 퍼스트뷰",
@@ -435,6 +613,64 @@
    ]
   },
   {
+   "id": "c186",
+   "region": "강원 동해",
+   "complex": "동해 석미아데나 더퍼스트",
+   "addr": "",
+   "plans": [
+    {
+     "type": "59A",
+     "file": "plans/c186/59A.jpg",
+     "w": 416,
+     "h": 388,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 22,
+     "axis": 0.644
+    },
+    {
+     "type": "59B",
+     "file": "plans/c186/59B.jpg",
+     "w": 405,
+     "h": 384,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 19,
+     "axis": 0.622
+    },
+    {
+     "type": "59C",
+     "file": "plans/c186/59C.jpg",
+     "w": 409,
+     "h": 376,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 21,
+     "axis": 0.637
+    },
+    {
+     "type": "59D",
+     "file": "plans/c186/59D.jpg",
+     "w": 407,
+     "h": 382,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 18,
+     "axis": 0.615
+    },
+    {
+     "type": "84",
+     "file": "plans/c186/84.jpg",
+     "w": 540,
+     "h": 514,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 32,
+     "axis": 0.646
+    }
+   ]
+  },
+  {
    "id": "c05",
    "region": "강원 동해",
    "complex": "동해자이",
@@ -489,6 +725,34 @@
      "rooms": 6,
      "kb": 87,
      "axis": 0.805
+    }
+   ]
+  },
+  {
+   "id": "c187",
+   "region": "강원 삼척",
+   "complex": "트리븐 삼척",
+   "addr": "강원특별자치도 삼척시 교동 205-6번지 일원",
+   "plans": [
+    {
+     "type": "84",
+     "file": "plans/c187/84.jpg",
+     "w": 604,
+     "h": 535,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 20,
+     "axis": 0.826
+    },
+    {
+     "type": "99",
+     "file": "plans/c187/99.jpg",
+     "w": 604,
+     "h": 535,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 20,
+     "axis": 0.827
     }
    ]
   },
@@ -551,6 +815,24 @@
    ]
   },
   {
+   "id": "c188",
+   "region": "강원 속초",
+   "complex": "속초 석미모닝파크",
+   "addr": "",
+   "plans": [
+    {
+     "type": "T1",
+     "file": "plans/c188/T1.jpg",
+     "w": 640,
+     "h": 433,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 42,
+     "axis": 0.544
+    }
+   ]
+  },
+  {
    "id": "c171",
    "region": "강원 속초",
    "complex": "힐스테이트 속초",
@@ -575,6 +857,94 @@
      "rooms": 3,
      "kb": 37,
      "axis": 0.703
+    }
+   ]
+  },
+  {
+   "id": "c189",
+   "region": "강원 양양",
+   "complex": "양양 금호어울림 더퍼스트",
+   "addr": "강원도 양양군 양양읍 구교리 57번지 외 14필지",
+   "plans": [
+    {
+     "type": "119",
+     "file": "plans/c189/119.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 14,
+     "axis": 0.804
+    },
+    {
+     "type": "129",
+     "file": "plans/c189/129.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 12,
+     "axis": 0.815
+    },
+    {
+     "type": "59",
+     "file": "plans/c189/59.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 13,
+     "axis": 0.824
+    },
+    {
+     "type": "84A",
+     "file": "plans/c189/84A.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 14,
+     "axis": 0.84
+    },
+    {
+     "type": "84B",
+     "file": "plans/c189/84B.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 13,
+     "axis": 0.848
+    },
+    {
+     "type": "84C",
+     "file": "plans/c189/84C.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 14,
+     "axis": 0.846
+    },
+    {
+     "type": "84D",
+     "file": "plans/c189/84D.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 15,
+     "axis": 0.836
+    },
+    {
+     "type": "99",
+     "file": "plans/c189/99.jpg",
+     "w": 446,
+     "h": 470,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 12,
+     "axis": 0.804
     }
    ]
   },
@@ -737,6 +1107,54 @@
      "rooms": 9,
      "kb": 48,
      "axis": 0.735
+    }
+   ]
+  },
+  {
+   "id": "c190",
+   "region": "강원 원주",
+   "complex": "원주무실 사랑으로 부영",
+   "addr": "",
+   "plans": [
+    {
+     "type": "T1",
+     "file": "plans/c190/T1.jpg",
+     "w": 950,
+     "h": 474,
+     "exclusiveM2": null,
+     "rooms": 1,
+     "kb": 33,
+     "axis": 0.698
+    },
+    {
+     "type": "T2",
+     "file": "plans/c190/T2.jpg",
+     "w": 950,
+     "h": 440,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 30,
+     "axis": 0.637
+    },
+    {
+     "type": "T3",
+     "file": "plans/c190/T3.jpg",
+     "w": 950,
+     "h": 480,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 36,
+     "axis": 0.683
+    },
+    {
+     "type": "T4",
+     "file": "plans/c190/T4.jpg",
+     "w": 950,
+     "h": 440,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 34,
+     "axis": 0.65
     }
    ]
   },
@@ -1003,6 +1421,132 @@
    ]
   },
   {
+   "id": "c191",
+   "region": "강원 철원",
+   "complex": "철원 석미아데나 퍼스티어",
+   "addr": "",
+   "plans": [
+    {
+     "type": "59D",
+     "file": "plans/c191/59D.jpg",
+     "w": 1200,
+     "h": 900,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 88,
+     "axis": 0.855
+    },
+    {
+     "type": "59E",
+     "file": "plans/c191/59E.jpg",
+     "w": 1200,
+     "h": 900,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 63,
+     "axis": 0.841
+    },
+    {
+     "type": "78C",
+     "file": "plans/c191/78C.jpg",
+     "w": 1200,
+     "h": 900,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 92,
+     "axis": 0.86
+    },
+    {
+     "type": "84A",
+     "file": "plans/c191/84A.jpg",
+     "w": 1200,
+     "h": 900,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 94,
+     "axis": 0.853
+    }
+   ]
+  },
+  {
+   "id": "c184",
+   "region": "강원 춘천",
+   "complex": "더 리치먼드 리버센트 소양",
+   "addr": "",
+   "plans": [
+    {
+     "type": "84A",
+     "file": "plans/c184/84A.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 30,
+     "axis": 0.535
+    },
+    {
+     "type": "84B",
+     "file": "plans/c184/84B.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 29,
+     "axis": 0.527
+    },
+    {
+     "type": "84C",
+     "file": "plans/c184/84C.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 25,
+     "axis": 0.722
+    },
+    {
+     "type": "84D",
+     "file": "plans/c184/84D.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 6,
+     "kb": 26,
+     "axis": 0.809
+    },
+    {
+     "type": "84E",
+     "file": "plans/c184/84E.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 25,
+     "axis": 0.802
+    },
+    {
+     "type": "84F",
+     "file": "plans/c184/84F.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 24,
+     "axis": 0.803
+    },
+    {
+     "type": "84G",
+     "file": "plans/c184/84G.jpg",
+     "w": 640,
+     "h": 600,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 25,
+     "axis": 0.807
+    }
+   ]
+  },
+  {
    "id": "c15",
    "region": "강원 춘천",
    "complex": "춘천 금호어울림 더 퍼스트",
@@ -1249,6 +1793,56 @@
    "addr": "강원특별자치도 춘천시 동면 만천리 770-6번지 일원",
    "plans": [
     {
+     "type": "116",
+     "file": "plans/c180/116.jpg",
+     "w": 528,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 8,
+     "kb": 68,
+     "axis": 0.588
+    },
+    {
+     "type": "72",
+     "file": "plans/c180/72.jpg",
+     "w": 556,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 84,
+     "axis": 0.539
+    },
+    {
+     "type": "84A",
+     "file": "plans/c180/84A.jpg",
+     "w": 547,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 70,
+     "axis": 0.572
+    },
+    {
+     "type": "84B",
+     "file": "plans/c180/84B.jpg",
+     "w": 476,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 62,
+     "axis": 0.572
+    },
+    {
+     "type": "97",
+     "file": "plans/c180/97.jpg",
+     "w": 494,
+     "h": 1200,
+     "exclusiveM2": null,
+     "rooms": 9,
+     "kb": 65,
+     "axis": 0.581
+    },
+    {
      "type": "T1",
      "file": "plans/c180/T1.jpg",
      "w": 556,
@@ -1289,14 +1883,90 @@
      "axis": 0.581
     },
     {
-     "type": "T5",
-     "file": "plans/c180/T5.jpg",
+     "type": "T9",
+     "file": "plans/c180/T9.jpg",
      "w": 528,
      "h": 1200,
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 68,
      "axis": 0.588
+    }
+   ]
+  },
+  {
+   "id": "c192",
+   "region": "강원 태백",
+   "complex": "태백황지동 1단지",
+   "addr": "",
+   "plans": [
+    {
+     "type": "59A",
+     "file": "plans/c192/59A.jpg",
+     "w": 950,
+     "h": 400,
+     "exclusiveM2": null,
+     "rooms": 1,
+     "kb": 20,
+     "axis": 0.73
+    },
+    {
+     "type": "59A-2",
+     "file": "plans/c192/59A-2.jpg",
+     "w": 950,
+     "h": 390,
+     "exclusiveM2": null,
+     "rooms": 1,
+     "kb": 20,
+     "axis": 0.787
+    },
+    {
+     "type": "84",
+     "file": "plans/c192/84.jpg",
+     "w": 950,
+     "h": 390,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 20,
+     "axis": 0.751
+    },
+    {
+     "type": "84-2",
+     "file": "plans/c192/84-2.jpg",
+     "w": 950,
+     "h": 350,
+     "exclusiveM2": null,
+     "rooms": 0,
+     "kb": 19,
+     "axis": 0.774
+    }
+   ]
+  },
+  {
+   "id": "c185",
+   "region": "강원 태백",
+   "complex": "태백황지동 2단지",
+   "addr": "",
+   "plans": [
+    {
+     "type": "59",
+     "file": "plans/c185/59.jpg",
+     "w": 950,
+     "h": 320,
+     "exclusiveM2": null,
+     "rooms": 4,
+     "kb": 19,
+     "axis": 0.769
+    },
+    {
+     "type": "59-2",
+     "file": "plans/c185/59-2.jpg",
+     "w": 950,
+     "h": 260,
+     "exclusiveM2": null,
+     "rooms": 1,
+     "kb": 16,
+     "axis": 0.752
     }
    ]
   },

@@ -3653,8 +3653,11 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     await P.openLibrary();
     await new Promise((res) => setTimeout(res, 400));
     const rows = () => [...document.querySelectorAll('#libbody .libitem, #libbody .libbox')];
+    /* 정규식도 받고 함수도 받는다 — 단지 이름에 특수문자가 있으면 정규식으로 짓는 것이
+       위험하다(이스케이프가 한 겹만 어긋나도 조용히 헛돈다) */
     const clickText = async (re) => {
-      const el = rows().find((b) => re.test(b.textContent));
+      const test = typeof re === 'function' ? re : (t) => re.test(t);
+      const el = rows().find((b) => test(b.textContent));
       if (!el) return false;
       el.click();
       await new Promise((res) => setTimeout(res, 350));
@@ -3663,22 +3666,34 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const chip = [...document.querySelectorAll('#libchips .chip')].find((c) => /강원/.test(c.textContent));
     if (chip) { chip.click(); await new Promise((res) => setTimeout(res, 300)); }
     if (!await clickText(/원주/)) return { err: '도시 목록에서 원주를 못 찾았다' };
-    if (!await clickText(/원주무실/)) return { err: '단지 목록에서 원주무실을 못 찾았다' };
+    /*
+     * **단지를 이름으로 지목하지 않는다**(2026-08-30). 예전에는 /원주무실/ 로 찾았는데
+     * 같은 말이 든 단지가 하나 더 들어오자(「원주무실 사랑으로 부영」) 그쪽이 먼저
+     * 잡혀 검사가 물었다 — 도면 한 장을 넣어도 밀리는, CLAUDE.md 가 이미 적어 둔 함정이다.
+     * **지켜야 하는 것은 "기울어진 도면이 목록에서 빠지는가"** 라는 불변식이므로,
+     * 색인에서 **그런 도면을 실제로 가진 단지**를 찾아 그것으로 검사한다.
+     */
+    const c = raw.find((x) => (x.plans || []).some((p) => p.axis != null && p.axis < 0.35)
+      && (x.plans || []).some((p) => p.axis == null || p.axis >= 0.35));
+    if (!c) return { err: '기울어진 도면과 멀쩡한 도면을 함께 가진 단지가 색인에 없다' };
+    /* 이름을 정규식으로 짓지 않는다 — 특수문자 이스케이프가 한 겹만 어긋나도 조용히 헛돈다.
+       글자를 그대로 견주는 함수를 넘긴다. */
+    if (!await clickText((t) => String(t).includes(c.complex))) {
+      return { err: '단지 목록에서 「' + c.complex + '」 을 못 찾았다' };
+    }
     const files = rows().map((b) => b.dataset.file);
-    /* 원본 색인에서 이 단지가 원래 몇 장인지 */
-    const c = raw.find((x) => /원주무실/.test(x.complex));
-    return { files, rawFiles: (c.plans || []).map((p) => p.file),
+    return { complex: c.complex, files, rawFiles: (c.plans || []).map((p) => p.file),
              lowFiles: (c.plans || []).filter((p) => p.axis != null && p.axis < 0.35).map((p) => p.file) };
   });
 
   if (r.err) fail(`단지 목록: ${r.err}`);
-  else if (!r.lowFiles.length) fail('단지 목록 검사용 단지(원주무실)에 0.35 미만 도면이 없다 — 색인에 axis 가 없는 듯');
+  else if (!r.lowFiles.length) fail('기울어진 도면을 가진 단지를 색인에서 못 찾았다 — axis 가 실려 있는지 볼 것');
   else {
     const leaked = r.files.filter((f) => r.lowFiles.includes(f));
     const lost = r.rawFiles.filter((f) => !r.lowFiles.includes(f) && !r.files.includes(f));
     if (leaked.length) fail(`단지 목록에 도면 아닌 이미지가 남았다 — ${leaked.join(', ')}`);
     else if (lost.length) fail(`단지 목록에서 멀쩡한 도면이 사라졌다 — ${lost.join(', ')}`);
-    else pass(`단지 목록에서 비-평면도 제외 — 원주무실 ${r.rawFiles.length}장 중 ${r.files.length}장만 보인다`);
+    else pass(`단지 목록에서 비-평면도 제외 — ${r.complex} ${r.rawFiles.length}장 중 ${r.files.length}장만 보인다`);
   }
 }
 

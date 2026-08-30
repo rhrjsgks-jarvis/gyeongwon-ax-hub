@@ -233,7 +233,18 @@ const EXCLUDED = (() => {
 const groups = new Map();
 let excluded = 0;
 for (const c of classify) {
-  if (!c.plan) continue;
+  /*
+   * **손확인 목록은 이 관문도 무른다**(2026-08-30).
+   *
+   * 예전에는 `HANDPICK` 이 아래쪽 방 개수 관문(ROOM_GATE)에서만 힘을 썼는데, 그 앞에
+   * **`plan:false` 로 통째로 걸러 내는 관문**이 하나 더 있어 사람이 확인한 도면이 여기서
+   * 조용히 사라졌다 — 강원 수집분에서 실제로 **7개 단지 28장**이 그랬다(관문 통과가
+   * 한 장도 없는 단지는 통째로 목록에서 빠졌다).
+   *
+   * 관문이 두 겹이면 **무르는 것도 두 겹이어야 한다.** 손확인 목록은 "관문을 통째로
+   * 무르는 힘"으로 만든 것인데 절반만 들으면 그 뜻이 반쯤 없어진다.
+   */
+  if (!c.plan && !HANDPICK.has(`${c.dir}/${c.file}`)) continue;
   if (EXCLUDED.has(c.dir)) { excluded++; continue; }
   const [region, ...rest] = c.dir.split('_');
   const complex = rest.join('_');
