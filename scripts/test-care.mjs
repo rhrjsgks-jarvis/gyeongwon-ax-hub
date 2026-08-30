@@ -373,6 +373,43 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
   try {
     window.setMode('timeline');
     if (doc.getElementById('timelinePane').style.display === 'none') fail('timeline mode: timelinePane should be visible');
+
+    /*
+     * ── 설명 → 선택 → 보기 (2026-08-30 사장님 지시) ────────────────────────────
+     * *"타임라인을 누르면 … 설명을하고 어떤것을 선택하고 최종적으로 타임라인 보기를
+     * 누르면 결과값을 보여주는 형식"*. 탭을 누르자마자 결과(아무도 고르지 않은
+     * 에어컨 12개월형)가 뜨면 안 된다 — 그 상태가 신고된 증상이다.
+     */
+    {
+      const pane = doc.getElementById('timelinePane');
+      if (!/타임라인이란/.test(pane.textContent)) fail('타임라인 진입 시 설명이 없다 — 결과부터 내밀고 있다');
+      if (!doc.getElementById('tlGo')) fail('「타임라인 보기」 버튼이 없다');
+      if (doc.querySelectorAll('#timelinePane .tl-stop').length !== 0) {
+        fail('보기를 누르기 전에 결과(회차 점)가 이미 그려져 있다 — 신고된 그 증상이다');
+      }
+      /* 설명 화면에도 선택 드롭다운 4개(제품·플랜·연·월)가 같은 순서로 있어야 한다 */
+      if (doc.querySelectorAll('#timelinePane .tl-sel').length !== 4) {
+        fail('설명 화면의 선택 드롭다운이 4개(제품·플랜·연·월)가 아니다');
+      }
+      /* 보기를 눌러야 결과가 나온다 — 이후 검사들은 결과 화면 기준이다 */
+      doc.getElementById('tlGo').click();
+      if (doc.querySelectorAll('#timelinePane .tl-stop').length === 0) {
+        fail('「타임라인 보기」를 눌렀는데 결과가 안 나온다');
+      }
+      /* 되돌아가는 길 — 「다시 선택하기」가 설명 화면으로 데려간다 */
+      const backBtn = [...pane.querySelectorAll('button')].find((b) => /다시 선택/.test(b.textContent));
+      if (!backBtn) fail('「다시 선택하기」 버튼이 없다 — 결과에서 처음으로 돌아갈 길이 없다');
+      else {
+        backBtn.click();
+        if (!/타임라인이란/.test(pane.textContent)) fail('「다시 선택하기」가 설명 화면으로 안 데려간다');
+        doc.getElementById('tlGo').click();          // 이후 검사를 위해 결과 화면으로
+      }
+      /* 탭을 떠났다 돌아오면 다시 설명부터다 — "누르면 설명" 이 흐름의 요점이다 */
+      window.setMode('care'); window.setMode('timeline');
+      if (!/타임라인이란/.test(pane.textContent)) fail('탭을 다시 눌렀는데 설명이 안 나온다');
+      doc.getElementById('tlGo').click();            // 이후 검사를 위해 결과 화면으로
+      console.log('OK: 타임라인 — 설명 → 선택 → 보기 → 다시 선택 흐름');
+    }
     // 자가관리 제품(인덕션·전자레인지·사운드바)은 방문 케어가 아니라 타임라인 목록에서 빠진다
     /*
      * **기준월은 오늘의 다음 달이다** (2026-08-30 사장님 지시: *"지금은 지난달로 표시됩니다.

@@ -69,6 +69,40 @@ const add = (e) => entries.push({ ...e, kw: `${e.kw} ${e.title}` });
       catOk: !!p.cat_ok,
     });
   }
+
+  /*
+   * ── 삼성닷컴 수집분(finder-extra 의 add)도 담는다 (2026-08-30 사장님 지시) ────────
+   * *"통합검색창이 모델파인더 상위호환기능입니다"* — 그런데 모델파인더가 찾는
+   * 1,697종 중 인라인 574종만 색인에 있어 **1,123종이 통합검색에서 0건**이었다
+   * (폴드8 SM-F976 이 그 예다). 상위호환이려면 모델파인더가 찾는 것은 다 찾아져야 한다.
+   *
+   * **경량으로 담는다** — fx 전문까지 넣으면 색인이 3MB 를 넘는다. 통합검색의 몫은
+   * "빠른 진입점"까지고(제품명·모델코드·카테고리로 걸리면 된다) 세부 사양 검색은
+   * 딥링크(/finder?q=모델)로 넘어간 모델파인더가 한다. 상세 펼침(spec)도 안 담는다 —
+   * 그건 카탈로그 대조분만의 것이고, 이 항목들은 눌러서 모델파인더로 간다.
+   *
+   * **묶음(세트)은 뺀다** — 모델파인더가 빼는 것과 같은 규칙(finder-merge.js 한 벌).
+   */
+  {
+    const extra = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'finder-extra.json'), 'utf8'));
+    const mergeSrc = fs.readFileSync(path.join(__dirname, '..', 'public', 'finder-merge.js'), 'utf8');
+    const w = {};
+    new Function('window', mergeSrc)(w);
+    const isPkg = (w.AX_FILL && w.AX_FILL.isPackage) || (() => false);
+    const have = new Set(products.map((x) => x.model));
+    let n = 0;
+    for (const p2 of (extra.add || [])) {
+      if (!p2.model || have.has(p2.model) || isPkg(p2)) continue;
+      add({
+        t: 'product', m: 'finder', title: p2.model,
+        sub: (p2.cat || '') + (p2.group ? ' · ' + p2.group : '') + ' · 삼성닷컴 수집분',
+        kw: [p2.model, p2.cat, p2.rawcat, p2.group, p2.dimtxt].filter(Boolean).join(' '),
+        href: '/finder?q=' + encodeURIComponent(p2.model),
+      });
+      n++;
+    }
+    console.log('  삼성닷컴 수집분 ' + n + '종을 경량으로 담음 (통합검색 = 모델파인더 상위호환)');
+  }
 }
 
 /*

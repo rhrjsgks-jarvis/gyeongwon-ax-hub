@@ -106,7 +106,14 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 .rdetail h5:first-child{margin-top:0}
 table.spec{width:100%;border-collapse:collapse;font-size:12.5px}
 table.spec td{padding:6px 4px;border-bottom:1px solid #EEF2F8;vertical-align:top}
-table.spec td:first-child{color:var(--sub);width:35%;font-weight:600}
+table.spec td:first-child{color:var(--sub);width:35%;font-weight:600;
+  /* **낱말 단위로만 꺾는다**(2026-08-30 사장님 지시 — "왼쪽 명칭 오와열이 안 맞는다").
+     한글은 기본이 아무 글자에서나 꺾여 "케이스 크기 (세로x가 / 로x두께" 처럼 낱말
+     가운데가 잘렸다. keep-all 로 띄어쓰기에서만 꺾고, 칸보다 긴 한 덩어리만
+     overflow-wrap 이 마지막 수단으로 자른다(안 그러면 칸이 밀려 오히려 열이 무너진다). */
+  word-break:keep-all;overflow-wrap:anywhere}
+/* 라벨의 괄호 설명(단위·조건)은 **아랫줄에 작게** — 본이름의 왼쪽 열이 가지런해진다 */
+table.spec td:first-child i{display:block;font-style:normal;font-weight:500;font-size:11px;color:#9AA8BB;margin-top:1px}
 table.spec tr:last-child td{border-bottom:none}
 .flagrow{display:flex;flex-wrap:wrap;gap:5px}
 .flg{font-size:11px;font-weight:600;background:var(--blue-soft);color:var(--blue);padding:4px 9px;border-radius:6px}
@@ -1517,11 +1524,26 @@ function rcard(r, i){
     ${open?rdetail(p):""}
   </div>`;
 }
+/*
+ * 스펙 라벨 표시 — **본이름 / (괄호 설명)** 두 줄로 (2026-08-30 사장님 지시).
+ * 삼성닷컴 수집 라벨은 "이어버드 오디오 재생 시간 (ANC 켜짐, 시간)" 처럼 괄호에
+ * 단위·조건이 붙어 길다(11자 이상이 728종). 한 줄로 우겨 넣으면 폰(라벨 칸 ≈ 9자)에서
+ * 서너 줄로 아무 데서나 접혀 왼쪽 열이 지저분했다. 짧은 라벨(W×H×D(mm))은 그대로 둔다 —
+ * 안 접힐 것을 두 줄로 만들면 오히려 어수선하다.
+ */
+function specLabel(k){
+  const t = String(k);
+  if (t.length > 12){
+    const i = t.indexOf('(');
+    if (i > 1 && t.endsWith(')')) return esc(t.slice(0, i).trim()) + '<i>' + esc(t.slice(i)) + '</i>';
+  }
+  return esc(t);
+}
 function rdetail(p){
   const fx = p.fx.filter(([k])=>k!=="등급");
   return `<div class="rdetail">
     <h5>스펙 (DB 검증값)</h5>
-    <table class="spec">${fx.map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join("")}
+    <table class="spec">${fx.map(([k,v])=>`<tr><td>${specLabel(k)}</td><td>${esc(v)}</td></tr>`).join("")}
       ${p.note?`<tr><td>비고</td><td>${esc(p.note)}</td></tr>`:""}</table>
     ${p.on.length?`<h5>탑재 기능</h5><div class="flagrow">${p.on.map(f=>`<span class="flg">${esc(f)}</span>`).join("")}</div>`:""}
     ${p.off.length?`<h5>미탑재 — 과장 안내 주의</h5><div class="flagrow">${p.off.map(f=>`<span class="flg no">${esc(f)}</span>`).join("")}</div>`:""}
