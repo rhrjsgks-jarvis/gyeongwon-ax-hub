@@ -18,7 +18,7 @@ import { fileURLToPath } from 'url';
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'public');
 /** 끼워 넣을 공용 스크립트. 앱이 부르는 순서와 무관하게 각자 제자리에 들어간다 */
-const LIBS = ['back-kit.js', 'prod-symbols.js', 'share-kit.js'];
+const LIBS = ['back-kit.js', 'prod-symbols.js', 'share-kit.js', 'finder-merge.js'];
 
 export function readApp(file) {
   let html = fs.readFileSync(path.join(PUBLIC, file), 'utf8');

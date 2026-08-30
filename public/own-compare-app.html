@@ -120,6 +120,7 @@ button.b:disabled{opacity:.45;cursor:default}
 <script src="prod-symbols.js"></script>
 <script src="back-kit.js"></script>
 <script src="share-kit.js"></script>
+<script src="finder-merge.js"></script>
 <script>
 'use strict';
 var MAX = 4;                 /* 사장님 지시 — 최대 4개 */
@@ -148,6 +149,15 @@ function load(){
   var extra = fetch('finder-extra.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; });
   return Promise.all([core, extra]).then(function(a){
     var x = Array.isArray(a[1]) ? a[1] : (a[1].add || a[1].items || []);
+    /* **빠진 사양을 채운다**(2026-08-30). 여기가 `fill` 을 아예 안 붙이고 있어
+       카탈로그 574종 중 200종이 제품 상세검색보다 9,871줄 적게 보였다 —
+       비교표가 사양 줄을 나란히 놓는 도구인데 그 줄이 없으면 비교가 안 된다.
+       규칙은 `finder-merge.js` 한 곳에 있다(같은 칸을 두 줄로 만들지 않는다). */
+    var fill = (a[1] && a[1].fill) || {};
+    a[0].forEach(function (p2) {
+      var rows = window.AX_FILL ? window.AX_FILL.pickRows(p2, fill[p2.model]) : [];
+      if (rows.length) p2.fx = (p2.fx || []).concat(rows);
+    });
     DATA = a[0].concat(x).filter(function(p){ return p && p.cat && p.model && (p.fx || []).length; });
     /* 같은 모델이 두 파일에 다 있으면 앞엣것(카탈로그 대조분)을 남긴다 */
     var seen = {}, out = [];

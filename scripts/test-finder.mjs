@@ -817,7 +817,7 @@ const CAT_QUERIES = {
       for (const p of CE_MX) {
         for (const [k, v] of (p.fx || [])) {
           if (!/모델/.test(k)) continue;
-          for (const c of String(v).split(/[,s/]+/)) if (/^[A-Z]{2}[A-Z0-9-]{5,}$/.test(c)) codes.add(c);
+          for (const c of String(v).split(/[,\s\/]+/)) if (/^[A-Z]{2}[A-Z0-9-]{5,}$/.test(c)) codes.add(c);
         }
       }
       const list = [...codes];
@@ -831,6 +831,87 @@ const CAT_QUERIES = {
       if (misread.length) fail(`모델코드를 단위로 읽는다 ${misread.length}종 — ${misread.slice(0, 5).join(' ')}`);
       if (zero.length) fail(`그 모델코드를 쳤는데 0건이다 ${zero.length}종 — ${zero.slice(0, 5).join(' ')}`);
       if (!misread.length && !zero.length) console.log(`  모델코드 ${list.length}종 — 단위로 오파싱 0 · 검색 0건 0 ✓`);
+    }
+
+    /*
+     * ── **삼성닷컴 수집분을 붙일 때 같은 칸을 두 줄로 만들지 않는다** (2026-08-30) ──
+     *
+     * 인라인은 `W×H×D`, 삼성닷컴은 `W×H×D(mm)` 라 병합이 "없던 항목" 으로 보고
+     * **치수 줄을 하나 더** 붙였다. 화면에 서로 다른 치수 두 줄이 떠서 상담사가
+     * 어느 쪽을 읽어야 할지 알 수 없었다 — **값 하나가 틀린 것보다 나쁘다.**
+     *
+     * **jsdom 에는 fetch 가 없어 이 길을 한 줄도 안 지나간다.** 그래서 배포본에서
+     * 병합 함수를 그대로 꺼내 실제 `finder-extra.json` 으로 돌린다. 따로 적은
+     * 구현을 재면 검사가 아무것도 못 지킨다.
+     */
+    {
+      /* **배포본의 병합 함수를 그대로 꺼내 실제 자료로 돌린다.** 검사 쪽에 의도를
+         다시 적으면 `finder-merge.js` 가 바뀌어도 통과해 아무것도 못 지킨다.
+         jsdom 에는 fetch 가 없어 이 길을 한 줄도 안 지나가므로 여기서 직접 돌린다. */
+      const libSrc = fs.readFileSync(path.join(__dirname, '..', 'public', 'finder-merge.js'), 'utf8');
+      const AX = new Function('window', libSrc + '; return window.AX_FILL;')({});
+      if (!AX || !AX.pickRows) fail('finder-merge.js 에서 AX_FILL 을 못 꺼냈다 — 검사가 헛돈다');
+      else {
+        /* 두 앱이 **그 공용 함수를 실제로 부르는가** — 안 부르면 규칙이 있어도 안 돈다 */
+        for (const [f, src2] of [['finder-app.html', html],
+                                 ['own-compare-app.html', readApp('own-compare-app.html')]]) {
+          if (!/AX_FILL\.pickRows/.test(src2)) fail(`${f} 이 공용 병합 함수를 부르지 않는다`);
+        }
+        const mk = (x, rows) => ({
+          rows: AX.pickRows(x, rows), normLab: AX.normLab, isTri: AX.isTri, partOf: AX.partOf,
+        });
+        const extra = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'finder-extra.json'), 'utf8'));
+        const byModel = new Map(CE_MX.filter((x) => x.model).map((x) => [x.model, x]));
+
+        /* ① 다른 뜻의 칸을 뭉개면 안 된다 — `(포장)`·`(스탠드 포함)` 은 다른 것을 잰다 */
+        let smear = 0, smearEx = '';
+        for (const x of CE_MX) {
+          const H = mk(x, []); const seen = new Map();
+          for (const [k] of (x.fx || [])) {
+            const n = H.normLab(k);
+            if (seen.has(n) && seen.get(n) !== k) { smear++; smearEx = smearEx || (seen.get(n) + ' ⟷ ' + k); }
+            seen.set(n, k);
+          }
+        }
+        if (smear) fail(`라벨 정규화가 다른 뜻의 칸을 뭉갠다 ${smear}건 — ${smearEx}`);
+
+        /* ② 같은 부품의 치수를 두 값으로 적으면 안 된다 */
+        let conf = 0, confEx = '', dupLab = 0, dupEx = '';
+        for (const [m2, f] of Object.entries(extra.fill || {})) {
+          const x = byModel.get(m2); if (!x) continue;
+          const H = mk(x, Array.isArray(f) ? f : (f.fx || []));
+          const merged = (x.fx || []).concat(H.rows);
+          /* **병합이 새 값을 들여왔는가**만 본다. 인라인이 스스로 두 값을 적는 것은
+             정상이다 — TV 36종이 `스탠드 포함`·`스탠드 제외` 를 일부러 나란히 적는다. */
+          const tri = (v) => (String(v).match(/\d[\d,]*(?:\.\d+)?/g) || [])
+            .slice(0, 3).map((z) => +z.replace(/,/g, "")).join("×");
+          /* 값이 **치수만** 적은 행일 때만 — 프린터 `급지 지원용지 규격` 처럼 긴 글은 치수가 아니다 */
+          const pureDim = (v) => /^[^A-Za-z가-힣]*[0-9][0-9.,]*\s*[x*×]\s*[0-9.,]+\s*[x*×]\s*[0-9.,]+\s*(mm|㎜|cm|㎝)?\s*$/i.test(String(v));
+          const base = new Map();
+          for (const [k, v] of (x.fx || [])) {
+            if (!H.isTri(v)) continue;
+            const q = H.partOf(k, v);
+            if (!base.has(q)) base.set(q, new Set());
+            base.get(q).add(tri(v));
+          }
+          for (const [k, v] of H.rows) {
+            if (!H.isTri(v) || !pureDim(v)) continue;
+            const q = H.partOf(k, v);
+            if (base.has(q) && !base.get(q).has(tri(v))) {
+              conf++;
+              confEx = confEx || (m2 + " " + q + " — 기존 " + [...base.get(q)].join("/") + " 인데 " + tri(v) + " 를 덧붙였다");
+            }
+          }
+          /* 라벨이 겹치는 칸을 다시 적지 않는가 — 치수가 아니어도 화면에 같은 줄이 두 번 뜬다 */
+          const labs = merged.map(([k]) => H.normLab(k));
+          for (let z = 0; z < labs.length; z++) {
+            if (labs.indexOf(labs[z]) !== z) { dupLab++; dupEx = dupEx || (m2 + ' — ' + merged[z][0]); break; }
+          }
+        }
+        if (conf) fail(`병합이 이미 있는 부품 치수에 다른 값을 덧붙인다 ${conf}건 — ${confEx}`);
+        if (dupLab) fail(`이미 있는 칸을 다시 적는다 ${dupLab}건 — ${dupEx}`);
+        if (!smear && !conf && !dupLab) console.log('  삼성닷컴 병합 — 같은 칸을 두 줄로 만들지 않는다 ✓');
+      }
     }
 
     /*
