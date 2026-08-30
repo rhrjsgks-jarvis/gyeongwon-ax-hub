@@ -730,15 +730,25 @@ var STORES = [{"code":"ZN01","name":"스타필드수원"},{"code":"ZHA7","name":
    * 포스터를 그 이름으로 뽑으면 매장에 나갈 인쇄물이 「테스트점」이 된다.
    * 값이 없거나 목록에 없으면 아무 일도 하지 않는다(예전처럼 직접 고르면 된다).
    */
+  /*
+   * **컨시어지 카드의 「매장별로 확인하기」에서 고른 지점이 최우선이다**
+   * (2026-08-30 사장님 지시: *"강릉점을 골랐으면 접수포스터도 자동으로 강릉점"*).
+   * 허브가 그 선택을 ?s= 로 실어 보내고 IframeModule 이 iframe 까지 전달한다.
+   * ?s= 가 없으면 예전처럼 접속 지점(axhub_store)으로 채운다.
+   */
   try {
-    var mine = sessionStorage.getItem('axhub_store');
+    var fromCard = null;
+    try { fromCard = new URLSearchParams(location.search).get('s'); } catch (e2) {}
+    var mine = fromCard || sessionStorage.getItem('axhub_store');
     if (mine && mine !== 'Z000' && apply(mine)) {
       var hint = document.querySelector('label[for="store"], #store');
       /* 자동으로 채웠다는 것을 화면이 밝힌다 — 조용히 채우면 남의 지점으로 뽑을 수 있다 */
       var note = document.createElement('div');
       note.id = 'store-auto';
       note.style.cssText = 'margin:6px 0 0;font-size:12px;color:#1428A0;font-weight:600';
-      note.textContent = '접속하신 지점으로 채웠습니다 — 다른 지점 포스터가 필요하면 위에서 바꾸세요.';
+      note.textContent = fromCard
+        ? '「매장별로 확인하기」에서 고르신 지점으로 맞췄습니다 — 다른 지점이 필요하면 위에서 바꾸세요.'
+        : '접속하신 지점으로 채웠습니다 — 다른 지점 포스터가 필요하면 위에서 바꾸세요.';
       if (sel.parentNode) sel.parentNode.insertBefore(note, sel.nextSibling);
     }
   } catch (e) { /* sessionStorage 를 못 쓰는 환경이면 예전처럼 직접 고른다 */ }

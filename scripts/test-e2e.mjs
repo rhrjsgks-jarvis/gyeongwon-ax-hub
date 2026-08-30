@@ -1138,21 +1138,53 @@ try {
         stray: (a.textContent || '').replace(/\s+/g, ' ').trim(),
       }));
       const side = [...document.querySelectorAll('a')]
-        .filter((a) => a.getAttribute('href') === '/poster' && !card.contains(a)).length;
+        .filter((a) => (a.getAttribute('href') || '').startsWith('/poster') && !card.contains(a)).length;
       return { rows, outside: side };
     });
     if (c.err) fail('컨시어지: ' + c.err);
     else {
-      const poster = c.rows.find((r) => r.href === '/poster');
+      const poster = c.rows.find((r) => (r.href || '').startsWith('/poster'));
       poster ? pass('접수 포스터가 컨시어지 카드 안에 있다')
              : fail('접수 포스터가 컨시어지 카드 안에 없다 — 사장님이 여기 두라고 하셨다');
       if (poster) {
         poster.target !== '_blank'
           ? pass('접수 포스터는 같은 탭에서 연다 (뒤로가기가 끊기지 않게)')
           : fail('접수 포스터가 새 탭으로 열린다 — 우리 앱 안의 화면이다');
-        poster.href === '/poster'
-          ? pass('접수 포스터에 지점코드를 붙이지 않는다')
-          : fail(`접수 포스터 주소에 무언가 붙었다: ${poster.href}`);
+        /*
+         * **매장별로 확인하기 ↔ 접수 포스터 지점 자동 일치** (2026-08-30 사장님 지시:
+         * *"강릉점을 골랐으면 접수포스터도 자동으로 강릉점으로나와야"*).
+         * 예전 검사는 반대로 "지점코드를 붙이지 않는다"를 지켰다 — 지시가 바뀌었다.
+         * 이 컨텍스트는 axhub_store=ZN01 을 심어 두므로 드롭다운이 접속 지점으로
+         * 미리 맞고, 포스터 링크가 그 코드를 실어야 한다.
+         */
+        poster.href === '/poster?s=ZN01'
+          ? pass('접수 포스터가 접속 지점(ZN01)을 자동으로 싣는다')
+          : fail(`접수 포스터 링크가 접속 지점을 안 싣는다: ${poster.href}`);
+        /* 드롭다운을 다른 지점(강릉 Z624)으로 바꾸면 포스터 링크가 따라간다 */
+        const follow = await cp.evaluate(() => {
+          const sel2 = document.querySelector('#concierge select');
+          if (!sel2) return { err: '드롭다운이 없다' };
+          sel2.value = 'Z624';
+          sel2.dispatchEvent(new Event('change', { bubbles: true }));
+          return {};
+        });
+        await cp.waitForTimeout(400);
+        const after = await cp.evaluate(() => {
+          const card2 = document.querySelector('#concierge');
+          const a2 = card2 && [...card2.querySelectorAll('a')].find((x) => (x.getAttribute('href') || '').startsWith('/poster'));
+          return a2 ? a2.getAttribute('href') : null;
+        });
+        (!follow.err && after === '/poster?s=Z624')
+          ? pass('드롭다운을 강릉(Z624)으로 바꾸면 포스터 링크가 따라간다')
+          : fail(`드롭다운 변경이 포스터 링크에 안 실린다: ${follow.err || after}`);
+        /* 끝까지 — 그 링크로 실제로 열면 포스터 지점명이 강릉이다 */
+        await cp.goto(BASE + '/poster?s=Z624', { waitUntil: 'domcontentloaded' });
+        await cp.waitForTimeout(2500);
+        const pf = cp.frames().find((f) => f.url().includes('poster-app.html'));
+        const branch = pf ? await pf.evaluate(() => (document.getElementById('branch') || {}).value || '') : '(프레임 없음)';
+        branch === '강릉'
+          ? pass('포스터를 열면 지점명 칸이 「강릉」 으로 채워져 있다 (끝까지 일치)')
+          : fail(`포스터 지점명이 강릉이 아니다: "${branch}"`);
       }
       c.outside === 0 ? pass('접수 포스터가 컨시어지 밖(사이드바 등)에 남아 있지 않다')
                       : fail(`컨시어지 밖에 /poster 링크가 ${c.outside}개 남았다`);

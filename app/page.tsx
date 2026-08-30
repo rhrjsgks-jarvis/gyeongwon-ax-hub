@@ -354,7 +354,21 @@ function LinkListCard({
 }) {
   // 기본값을 특정 지점(스타필드 수원)으로 두면 다른 매장 사용자가 선택 없이 눌렀을 때 남의
   // 매장 정보가 열리므로, 처음에는 빈 값으로 두고 지점 선택을 먼저 유도한다.
+  //
+  // **접속 지점은 예외다**(2026-08-30 사장님 지시 — 매장별로 확인하기와 접수 포스터의
+  // 지점이 자동으로 일치해야 한다). 지점 문에서 고른 자기 매장(axhub_store)으로 미리
+  // 맞춘다 — 남의 매장이 아니라 그 사람의 매장이라 예전 결정(하드코딩 금지)과
+  // 어긋나지 않는다. 테스트점(Z000)은 채우지 않는다. SSR 하이드레이션이 어긋나지
+  // 않게 마운트 뒤에 넣는다.
   const [storeCode, setStoreCode] = useState('')
+  useEffect(() => {
+    if (!stores || storeCode) return
+    try {
+      const mine = sessionStorage.getItem('axhub_store')
+      if (mine && mine !== 'Z000' && stores.some((x) => x.code === mine)) setStoreCode(mine)
+    } catch { /* sessionStorage 를 못 쓰면 예전처럼 직접 고른다 */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const storeReady = !stores || !!storeCode
   // 지점명 ㄱ~ㅎ 순 정렬 (영문·숫자로 시작하는 매장명은 한글 앞에 배치됨)
   const sortedStores = stores ? [...stores].sort((a, b) => a.name.localeCompare(b.name, 'ko')) : []
@@ -384,7 +398,10 @@ function LinkListCard({
         {links.map((l) => (
           <a
             key={l.href}
-            href={l.internal ? l.href : stores ? (storeCode ? withStoreCode(l.href, storeCode) : undefined) : l.href}
+            /* 내부 링크(접수 포스터)에도 고른 지점을 실어 보낸다(2026-08-30 사장님 지시 —
+               "강릉점을 골랐으면 접수포스터도 자동으로 강릉점"). IframeModule 이 쿼리를
+               iframe 까지 전달하고, 포스터가 ?s= 를 최우선으로 읽는다. */
+            href={l.internal ? (stores && storeCode ? l.href + '?s=' + storeCode : l.href) : stores ? (storeCode ? withStoreCode(l.href, storeCode) : undefined) : l.href}
             target={l.internal ? undefined : '_blank'}
             rel={l.internal ? undefined : 'noopener noreferrer'}
             className={`no-underline ${l.internal || storeReady ? '' : 'pointer-events-none opacity-40'}`}
