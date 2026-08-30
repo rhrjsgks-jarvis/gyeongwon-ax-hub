@@ -699,5 +699,53 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else pass(`포스터 매장 목록 두 벌(option ${opts.size} · STORES ${inline ? inline.size : '?'}) = lib/stores.ts 활성 ${base.size}곳`);
 }
 
+/* ── 팀 게시판 Board.gs — 쓰는 칸과 읽는 칸이 맞는가 (2026-08-30 신설) ──
+ * Code.gs 가 겪은 그 사고("doPost 만 고치고 doGet 을 빠뜨려 시트엔 쌓이는데
+ * 화면이 비어 보인다")를 게시판에서도 소스로 막는다. 배포는 구글에 있어
+ * 저장소에서 세어 두는 것이 유일한 안전망이다.
+ */
+{
+  let bad = 0;
+  const gs = fs.readFileSync('docs/apps-script/Board.gs', 'utf8');
+
+  const hm = gs.match(/const HEADER = \[([^\]]*)\]/);
+  const header = hm ? hm[1].split(',').map((x) => x.trim().replace(/^'|'$/g, '')) : [];
+  if (header.join(',') !== 'ts,store,storeName,author,topic,title,body') {
+    fail('[Board.gs] HEADER 가 예상(7칸)과 다르다: ' + header.join(',')); bad++;
+  }
+
+  /* doPost 가 HEADER 만큼 값을 쓰는가 */
+  const post = gs.match(/appendRow\(\[new Date\(\)([^\]]*)\]\)/);
+  const written = post ? 1 + post[1].split(',').filter((x) => x.trim()).length : 0;
+  if (written !== header.length) {
+    fail('[Board.gs] doPost 가 ' + written + '칸을 쓰는데 HEADER 는 ' + header.length + '칸이다'); bad++;
+  }
+
+  /* doGet 이 모든 칸을 자리 맞춰 돌려주는가 — 어긋나면 제목 자리에 본문이 뜬다 */
+  const getBlock = gs.match(/return \{[\s\S]*?\};[\s\S]*?filter/);
+  const read = getBlock ? getBlock[0] : '';
+  const POS = { store: 1, storeName: 2, author: 3, topic: 4, title: 5, body: 6 };
+  for (const [f, idx] of Object.entries(POS)) {
+    if (!read.includes(f + ': String(r[' + idx + ']')) {
+      fail('[Board.gs] doGet 의 ' + f + ' 열 번호가 HEADER 순서(' + idx + ')와 다르다'); bad++;
+    }
+  }
+  if (!read.includes('ts: new Date(r[0])')) { fail('[Board.gs] doGet 이 ts(0번 열)를 안 돌려준다'); bad++; }
+
+  /* 라우트가 그 주소를 환경변수로만 아는가 — 커밋되면 public repo 라 즉시 공개다 */
+  const route = fs.readFileSync('app/api/board/route.ts', 'utf8');
+  if (!route.includes('process.env.BOARD_GAS_URL')) { fail('[board] 라우트가 BOARD_GAS_URL 을 안 본다'); bad++; }
+  if (/NEXT_PUBLIC_BOARD/.test(route) || /script\.google\.com\/macros/.test(route)) {
+    fail('[board] GAS 주소가 소스에 박혔거나 NEXT_PUBLIC 으로 새고 있다'); bad++;
+  }
+  /* 화면도 — 페이지에 주소가 박히면 프록시를 둔 뜻이 없다 */
+  const pageSrc = fs.readFileSync('app/board/page.tsx', 'utf8');
+  if (/script\.google\.com\/macros/.test(pageSrc)) { fail('[board] 화면에 GAS 주소가 박혀 있다'); bad++; }
+  if (pageSrc.includes('dangerouslySetInnerHTML=')) {
+    fail('[board] 화면이 dangerouslySetInnerHTML 을 쓴다 — 남이 쓴 글을 HTML 로 그리면 XSS 다'); bad++;
+  }
+  if (!bad) console.log('OK: 팀 게시판 — Board.gs HEADER 7칸 · doPost·doGet 열 일치 · 주소 미노출 · XSS 없음');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

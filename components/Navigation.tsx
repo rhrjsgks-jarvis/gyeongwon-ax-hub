@@ -59,6 +59,7 @@ const NAV_GROUPS = [
     title: '매장운영 도구',
     icon: 'store' as IconName,
     items: [
+      { href: '/board',      label: '팀 게시판',       icon: 'chat' as IconName },
       { href: '/#coupon',    label: '쿠폰 배포 프로그램', icon: 'coupon' as IconName },
       { href: '/#concierge', label: '컨시어지',        icon: 'ticket' as IconName },
     ],
