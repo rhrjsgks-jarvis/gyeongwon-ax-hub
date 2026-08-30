@@ -61,7 +61,6 @@ const NAV_GROUPS = [
     items: [
       { href: '/#coupon',    label: '쿠폰 배포 프로그램', icon: 'coupon' as IconName },
       { href: '/#concierge', label: '컨시어지',        icon: 'ticket' as IconName },
-      { href: '/poster',     label: '접수 포스터',      icon: 'qr' as IconName },
     ],
   },
 ]

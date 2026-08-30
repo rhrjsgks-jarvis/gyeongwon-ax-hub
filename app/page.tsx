@@ -141,19 +141,12 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
     ],
   },
   {
+    /*
+     * 카드가 없는 섹션이다 — 이 섹션의 알맹이는 아래 두 「링크 카드」(쿠폰·컨시어지)이고
+     * 접수 포스터는 **컨시어지 카드 안**으로 들어갔다(2026-08-30 사장님 지시).
+     */
     title: '매장운영 도구',
-    modules: [
-      {
-        href: '/poster',
-        icon: 'qr',
-        title: '컨시어지 접수 포스터',
-        desc: '지점을 고르면 그 매장 접수 QR 이 만들어진다 — 지면 문구는 직접 고쳐 인쇄, 전 지점 일괄 출력도 된다',
-        color: '#1428A0',
-        bg: '#EEF2FF',
-        updated: '2026.08',
-        status: 'live',
-      },
-    ],
+    modules: [],
   },
   {
     // 아직 다듬는 중인 것. status 가 'live' 가 아니면 「구축중」 배지가 붙는다.
@@ -179,21 +172,39 @@ const ADMIN_MODULE: ModuleCard = {
 const CONCIERGE_LINKS = [
   {
     href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?s=ZN01',
-    icon: 'ticket',
+    icon: 'ticket' as IconName,
     label: '컨시어지 접수',
     desc: '성함·연락처로 대기접수 · 대기번호 발급',
   },
   {
     href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?page=admin&s=ZN01',
-    icon: 'ticket',
+    icon: 'ticket' as IconName,
     label: '컨시어지 관리자',
     desc: '대기 호출 · 완료처리 (직원용)',
   },
   {
     href: 'https://script.google.com/macros/s/AKfycbzhQZIPSl8_bCnw4Sp0BRs2SkxWukAx5Eg0L3gE8U93e1SzvEsdoguGYIf4isur_SCZ/exec?page=board&s=ZN01',
-    icon: 'display',
+    icon: 'display' as IconName,
     label: '매장 전광판',
     desc: '대기 현황 실시간 안내판',
+  },
+  /*
+   * 접수 포스터는 **컨시어지 안에 둔다**(2026-08-30 사장님 지시). 예전에는 사이드바
+   * 최상위 항목이자 별도 허브 카드였는데, 이 포스터가 하는 일은 **컨시어지 접수 QR 을
+   * 벽에 붙이는 것** 하나뿐이라 컨시어지를 떠나면 뜻이 없다.
+   *
+   * **우리 앱 안의 화면이라 다르게 다룬다** — 지점 코드를 붙이지 않고(포스터가 스스로
+   * 지점을 고르고 `withStoreCode` 는 상대경로에서 던진다) 같은 탭에서 연다(새 탭으로
+   * 열면 방금 세운 뒤로가기가 끊긴다). 로그도 컨시어지가 아니라 제 이름으로 남긴다 —
+   * 대시보드에서 포스터 사용량이 사라지면 안 된다.
+   */
+  {
+    href: '/poster',
+    icon: 'qr' as IconName,
+    label: '컨시어지 접수 포스터',
+    desc: '매장 접수 QR 포스터 — 인쇄해서 붙인다',
+    internal: true,
+    log: 'poster' as LogModule,
   },
 ]
 
@@ -215,7 +226,7 @@ const CONCIERGE_USAGE = [
 const COUPON_LINKS = [
   {
     href: 'https://script.google.com/macros/s/AKfycbzXMz57Vo-w15z_FOI2lg4iOMQBBoRW0p2JQIiB1kKXWs5cEKquVt_-Qug2r3MemA/exec',
-    icon: 'coupon',
+    icon: 'coupon' as IconName,
     label: '시크릿쿠폰',
     desc: '매장별 쿠폰 재고 · 발급현황 조회',
   },
@@ -335,7 +346,7 @@ function LinkListCard({
   icon: IconName
   title: string
   subtitle: string
-  links: { href: string; icon: string; label: string; desc: string }[]
+  links: { href: string; icon: IconName; label: string; desc: string; internal?: boolean; log?: LogModule }[]
   logKey: LogModule
   usage?: { step: string; text: string }[]
   note?: string
@@ -373,15 +384,15 @@ function LinkListCard({
         {links.map((l) => (
           <a
             key={l.href}
-            href={stores ? (storeCode ? withStoreCode(l.href, storeCode) : undefined) : l.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`no-underline ${storeReady ? '' : 'pointer-events-none opacity-40'}`}
-            aria-disabled={!storeReady}
-            onClick={() => logEvent(logKey, 'page_view')}
+            href={l.internal ? l.href : stores ? (storeCode ? withStoreCode(l.href, storeCode) : undefined) : l.href}
+            target={l.internal ? undefined : '_blank'}
+            rel={l.internal ? undefined : 'noopener noreferrer'}
+            className={`no-underline ${l.internal || storeReady ? '' : 'pointer-events-none opacity-40'}`}
+            aria-disabled={!l.internal && !storeReady}
+            onClick={() => logEvent(l.log || logKey, 'page_view')}
           >
             <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
-              <span className="text-base flex-shrink-0">{l.icon}</span>
+              <Icon name={l.icon} size={17} className="flex-shrink-0" style={{ color: '#1428A0' }} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-800">{l.label}</p>
                 <p className="text-xs text-gray-400">{l.desc}</p>

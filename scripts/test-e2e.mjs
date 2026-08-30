@@ -1034,6 +1034,61 @@ try {
 
   }
 
+  /*
+   * ── 컨시어지 카드 (2026-08-30 사장님 지시) ────────────────────────────
+   *
+   * 둘을 함께 지킨다. 하나만 보면 절반을 놓친다:
+   *  ① **접수 포스터가 컨시어지 안에 있고** 사이드바에는 없다 — 포스터가 하는 일은
+   *    컨시어지 접수 QR 을 벽에 붙이는 것 하나뿐이라 컨시어지를 떠나면 뜻이 없다.
+   *  ② **아이콘 자리에 그림이 있다** — 예전에는 `icon: 'ticket'` 을 그대로 찍어
+   *    화면에 **글자 "ticket" 이 떠 있었다**(이모지→SVG 전환의 잔재. CLAUDE.md 의
+   *    「이모지를 지울 때의 함정」 **세 번째** 사례이고, 실물 스크린샷으로만 잡혔다).
+   */
+  {
+    const cp = await ctx.newPage();
+    await cp.goto(BASE + '/#concierge', { waitUntil: 'domcontentloaded' });
+    await cp.waitForTimeout(1800);
+    const c = await cp.evaluate(() => {
+      const card = document.querySelector('#concierge');
+      if (!card) return { err: '컨시어지 카드가 없다' };
+      const rows = [...card.querySelectorAll('a')].map((a) => ({
+        href: a.getAttribute('href'), target: a.getAttribute('target'),
+        label: ((a.querySelector('p') || {}).textContent || '').trim(),
+        icon: !!a.querySelector('svg'),
+        /* 아이콘 이름이 글자로 새어 나왔는지 — 라벨·설명 말고 남는 글자를 본다 */
+        stray: (a.textContent || '').replace(/\s+/g, ' ').trim(),
+      }));
+      const side = [...document.querySelectorAll('a')]
+        .filter((a) => a.getAttribute('href') === '/poster' && !card.contains(a)).length;
+      return { rows, outside: side };
+    });
+    if (c.err) fail('컨시어지: ' + c.err);
+    else {
+      const poster = c.rows.find((r) => r.href === '/poster');
+      poster ? pass('접수 포스터가 컨시어지 카드 안에 있다')
+             : fail('접수 포스터가 컨시어지 카드 안에 없다 — 사장님이 여기 두라고 하셨다');
+      if (poster) {
+        poster.target !== '_blank'
+          ? pass('접수 포스터는 같은 탭에서 연다 (뒤로가기가 끊기지 않게)')
+          : fail('접수 포스터가 새 탭으로 열린다 — 우리 앱 안의 화면이다');
+        poster.href === '/poster'
+          ? pass('접수 포스터에 지점코드를 붙이지 않는다')
+          : fail(`접수 포스터 주소에 무언가 붙었다: ${poster.href}`);
+      }
+      c.outside === 0 ? pass('접수 포스터가 컨시어지 밖(사이드바 등)에 남아 있지 않다')
+                      : fail(`컨시어지 밖에 /poster 링크가 ${c.outside}개 남았다`);
+      const noIcon = c.rows.filter((r) => !r.icon).map((r) => r.label);
+      noIcon.length === 0 ? pass('컨시어지 링크 ' + c.rows.length + '개 모두 아이콘(svg)이 있다')
+                          : fail('아이콘이 없는 링크: ' + noIcon.join(', '));
+      /* 아이콘 이름이 글자로 보이면 라벨 앞에 그 말이 남는다 */
+      const words = ['ticket', 'display', 'coupon', 'qr'];
+      const leaked = c.rows.filter((r) => words.some((w) => r.stray.startsWith(w))).map((r) => r.label);
+      leaked.length === 0 ? pass('아이콘 이름이 글자로 새어 나오지 않았다')
+                          : fail('아이콘 이름이 글자로 보인다: ' + leaked.join(', '));
+    }
+    await cp.close();
+  }
+
 } catch (e) {
   fail(`E2E 실행 중 예외: ${e.message}`);
 } finally {
