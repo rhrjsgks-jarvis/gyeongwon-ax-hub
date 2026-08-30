@@ -360,6 +360,19 @@ function hubModulesFromSource() {
   return out;
 }
 
+/*
+ * 개발중인 서비스도 화면에 보이므로 색인에 넣는다(2026-08-30).
+ * 목록은 `lib/devModules.ts` **한 곳**에만 있다 — 여기서도 손으로 적으면 어긋난다.
+ * 새로 만든 도구가 통합검색에서 안 나오면 상담사는 그것이 없는 줄 안다.
+ */
+function devModulesFromSource() {
+  const src = readSrc('lib/devModules.ts');
+  const mods = [...src.matchAll(
+    /href: '([^']+)',[\s\S]{0,300}?title: '([^']+)',[\s\S]{0,300}?desc: '([^']+)'/g)];
+  if (!mods.length) throw new Error('lib/devModules.ts 파싱 실패 — 형식이 바뀌었는지 확인할 것');
+  return mods.map((m) => ({ href: m[1], title: m[2], desc: m[3] }));
+}
+
 // 사이드바/하단 내비 라벨과 그 그룹명도 검색어가 되어야 한다
 function navLabelsFromSource() {
   const src = readSrc('components/Navigation.tsx');
@@ -385,6 +398,11 @@ const MODULES = [
      * 걸린다(안 넣으면 0건이었다).
      */
     kw: [m.desc, m.sub, m.sub && m.sub.replace(/\s+/g, ''), m.title.replace(/\s+/g, ''), m.group, ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].join(' '),
+  })),
+  /* 개발중인 서비스 — 부제에 그 사실을 적는다. 상담사가 고객 앞에서 열기 전에 알아야 한다 */
+  ...devModulesFromSource().map((m) => ({
+    title: m.title, sub: '개발중 · ' + m.desc, href: m.href,
+    kw: [m.desc, m.title.replace(/\s+/g, ''), '개발중 개발 중 준비중 베타 dev', ...(navWords.get(m.href) || []), m.href.replace(/^\//, '')].join(' '),
   })),
   // 컨시어지는 링크가 3개인 데다 지점 선택을 먼저 해야 해서 허브 카드로 보낸다.
   // 쿠폰은 링크가 하나뿐이라 다른 모듈처럼 검색 결과에서 바로 프로그램이 열리게 한다.

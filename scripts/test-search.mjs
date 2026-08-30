@@ -135,7 +135,10 @@ for (const m of fs.readFileSync(path.join(root, 'next.config.js'), 'utf8').match
 for (const e of entries) {
   if (e.ext) continue;
   const base = e.href.split('?')[0].split('#')[0] || '/';
-  if (routes.has(base) || rewriteRoutes.has(base)) continue;
+  /* rewrite 는 `/dev/telecom/:path*` 라 **그 아래 전부**가 실재하는 링크다.
+     정확히 일치로만 보면 `/dev/telecom/index.html` 이 「없는 라우트」로 잡힌다 —
+     그 주소는 끝의 슬래시를 피하려고 일부러 그렇게 적은 것이다(308 무한 왕복). */
+  if (routes.has(base) || [...rewriteRoutes].some((r) => base === r || base.startsWith(r.replace(/\/$/, '') + '/'))) continue;
   fail(`인덱스 링크가 존재하지 않는 라우트를 가리킴: ${e.href} (${e.title})`);
   break;
 }
