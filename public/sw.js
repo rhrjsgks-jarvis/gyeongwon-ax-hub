@@ -427,15 +427,18 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 할 수 있다** — 도면을 못 받아도 3D 가 서고 가전을 놓을 수 있는 유일한 자료다.
  * 그런데 아무 규칙에도 안 걸려 그냥 네트워크였다(`share-kit.js` 때와 같은 종류).
  *
- * 도면 색인·이미지(`plan-index.json`·`/plans/`)는 아직 규칙이 없다 — 그쪽은 수십 MB 라
- * 따로 판단할 일이다.
+ * **도면 색인도 여기 들어간다**(2026-08-30). 예전에는 *"도면 색인·이미지는 수십 MB 라
+ * 규칙이 없다"* 고 적어 두었는데, **수십 MB 인 것은 이미지이지 색인이 아니다** —
+ * `plan-index.json` 224KB · `plan-names.json` 233KB 뿐이다(도면 1,087장 기준).
+ * 상담의 첫 단계가 **단지 고르기**라 이게 안 뜨면 그 자리에서 막힌다(`/apt/` 를 SWR 로
+ * 잡은 것과 같은 이유). 이미지(`/plans/`)는 그대로 규칙 없이 둔다 — 62MB 다.
  */
 /*
  * **삼성닷컴 수집분도 여기 들어간다**(2026-08-17). `finder-extra.json` 은 제품 상세검색이
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|finder-extra|finder-core|install-cost|svc-centers)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
+const SWR = /\/(finder|compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.
