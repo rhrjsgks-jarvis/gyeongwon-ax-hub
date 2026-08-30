@@ -1771,7 +1771,9 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(has('function fitForScreen()'), '[22] 화면 종횡비에 맞춰 거리를 잡는 함수가 있다');
   ok2(has('if (asp >= 1 || !lastBox || !lastBox.x) return fitDist;'),
     '[22] 넓은 화면은 건드리지 않는다 — 그쪽은 옛 식이 이미 맞다');
-  ok2(has('orb.dist = fitForScreen()'), '[22] 둘러보기가 그 거리를 쓴다');
+  /* 2026-08-30 — 둘러보기는 **어느 쪽에서 볼지도** 함께 고른다(세로 화면에서 집이 1.5배 커진다) */
+  ok2(has('function bestIsoYaw()') && has('const iso = bestIsoYaw();') && has('orb.dist = iso.dist; orb.yaw = iso.yaw;'),
+    '[22] 둘러보기는 크게 보이는 쪽을 골라 거리와 각도를 함께 정한다');
   /* 위에서 보기는 거의 수직이라 담아야 하는 것이 가로·세로 그 자체다 — 따로 잰다 */
   ok2(has('function fitTop()') && has('orb.dist = fitTop()'),
     '[22] 위에서 보기는 따로 잰다 (2D 평면도와 같은 구도여야 한다)');

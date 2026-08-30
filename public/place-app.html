@@ -1536,6 +1536,67 @@ function addRoom(name, walls){
   return room;
 }
 
+/*
+ * ── 방 크기를 숫자로 받아 공간을 만든다 (2026-08-30 사장님 지시) ─────────────
+ *
+ * 시작 화면의 「방 크기 직접 입력」이 **작동하지 않았다**. 두 가지가 겹쳐 있었다:
+ *
+ * ① 누르면 벽 그리기 모드로 들어가는데 **시작 화면(#empty)이 그대로 떠 있어**
+ *    가운데를 큰 버튼 셋이 덮었다 — 캔버스를 누를 수가 없다(실측: 네 점 중 1점만 찍혔다).
+ * ② 더 근본적으로 **말과 동작이 달랐다.** 버튼은 *"가로·세로만 알면 됩니다"* 라고 하는데
+ *    실제로는 **벽 모서리를 손으로 찍으라**고 했다. 사장님이 기대한 것은 전자다 —
+ *    *"가로세로 입력시 가상공간을 보여주어 어떤 느낌인지 보여주는 시스템"*.
+ *
+ * 그래서 **두 숫자를 받아 사각형 공간을 만든다.** 도면 없이 온 고객에게 *"거실이 몇
+ * 미터인가요"* 만 물으면 바로 3D 로 보여줄 수 있다 — 상담에서 훨씬 빠르다.
+ *
+ * **근거 없는 숫자를 만들지 않는다는 원칙에 어긋나지 않는다** — 치수가 **사용자가 확정한
+ * 값**에서 온다(도면 축척 보정과 같다). 벽을 손으로 그리는 길은 `⋯ 벽 그리기` 에 그대로 있다.
+ */
+function askRoomSize(){
+  closeSheet();
+  sheet(`<h2>방 크기 직접 입력</h2>
+    <p class="hint">도면이 없어도 됩니다. <b>가로·세로만</b> 넣으면 그 크기의 공간을 만들어
+      가전을 놓아 볼 수 있습니다. 고객에게 물어보신 값을 그대로 넣으세요.</p>
+    <label class="pickers"><span class="hint">가로 (mm)</span>
+      <input type="number" id="rw" value="4200" min="600" max="30000" step="100"></label>
+    <label class="pickers"><span class="hint">세로 (mm)</span>
+      <input type="number" id="rh" value="3600" min="600" max="30000" step="100"></label>
+    <p class="src">한국 아파트 거실은 보통 가로 3,600~4,800mm · 세로 3,000~4,200mm 입니다.
+      나중에 <b>경계 수정</b>으로 모양을 고칠 수 있습니다.</p>
+    <div class="modal-actions"><button id="c">취소</button><button class="primary" id="ok">만들기</button></div>`,
+    ()=>{
+      const go = ()=>{
+        const w = +$('#rw').value, h = +$('#rh').value;
+        if (!(w >= 600 && h >= 600)){ toast('가로·세로를 600mm 이상으로 넣어 주세요'); return; }
+        closeSheet();
+        makeBoxRoom(w, h);
+      };
+      $('#ok').onclick = go;
+      $('#c').onclick = closeSheet;
+      /* 숫자를 치고 엔터를 누르는 것이 가장 빠른 길이다 */
+      ['#rw', '#rh'].forEach((s)=>{ const el = $(s); if (el) el.onkeydown = (e)=>{ if (e.key === 'Enter') go(); }; });
+      const first = $('#rw'); if (first){ first.focus(); first.select(); }
+    });
+}
+
+/** 가로·세로(mm)로 사각형 공간 하나를 만든다 — 도면이 없으므로 월드가 곧 mm 다 */
+function makeBoxRoom(w, h){
+  /* 도면 상태를 지운다 — 이미지가 남아 있으면 축척이 없는 채로 겹쳐 그려진다 */
+  state.img = null; state.imgW = 0; state.imgH = 0;
+  state.mask = state.baseMask = state.cleanCv = null; state.sealCache = null; state.baseInfo = null;
+  state.rooms = []; state.walls = []; state.items = []; state.wallPts = [];
+  state.mmPerPx = null;          // 도면이 없으니 이미지 축척도 없다(CLAUDE.md)
+  state.scaled = true;           // 다만 **월드 단위는 mm 다** — 사용자가 확정한 값이다
+  state.complexName = null; state.typeName = null; state.exclusiveM2 = null;
+  const seg = (x1,y1,x2,y2)=>({ x1, y1, x2, y2, open:false });
+  addRoom('거실', [seg(0,0,w,0), seg(w,0,w,h), seg(w,h,0,h), seg(0,h,0,0)]);
+  $('#empty').style.display = 'none';
+  setMode('idle'); setStep(4);
+  fitAll(); evaluate(); renderSide(); draw();
+  toast(`${w.toLocaleString()} × ${h.toLocaleString()}mm 공간을 만들었습니다 — 가전을 골라 보세요`);
+}
+
 /* ── 벽 자동 인식 ────────────────────────────────────────────────
    도면에서 방 하나를 눌러 벽을 자동으로 잡는다.
 
@@ -5761,7 +5822,9 @@ $('#file').onchange = (e)=>{
  * **같은 일을 하는 길이 둘이면 뒷정리도 둘 다** 해야 한다.
  */
 $('#btn-scale').onclick = ()=>{ hideDraftBar(); state.scalePts=[]; setMode('scale'); setStep(2); draw(); };
-$('#btn-wall').onclick  = ()=>{ state.wallPts=[]; setMode('wall'); setStep(3); draw(); };
+/* **시작 화면을 감춘다** — 큰 버튼 셋이 가운데를 덮고 있어 캔버스를 누를 수가 없었다
+   (실측: 네 점을 찍었는데 1점만 들어갔다). 벽 그리기는 캔버스를 눌러야 하는 조작이다. */
+$('#btn-wall').onclick  = ()=>{ state.wallPts=[]; $('#empty').style.display='none'; setMode('wall'); setStep(3); draw(); };
 $('#btn-edit').onclick  = ()=>{
   if (!state.rooms.length){ toast('먼저 공간을 하나 이상 지정해주세요'); return; }
   hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
@@ -5822,7 +5885,9 @@ $('#btn-share').onclick = ()=>{
    길을 두 벌로 만들지 않는다(한쪽만 고치면 두 길이 다른 일을 한다). */
 $('#st-lib').onclick  = ()=> $('#btn-lib').click();
 $('#st-img').onclick  = ()=> $('#btn-img').click();
-$('#st-wall').onclick = ()=> $('#btn-wall').click();
+/* 시작 화면의 「방 크기 직접 입력」은 **숫자 두 개**를 받는다 — 벽을 손으로 그리는
+   길은 `⋯ 벽 그리기` 에 그대로 있다(말과 동작이 다르면 안 된다) */
+$('#st-wall').onclick = ()=> askRoomSize();
 /*
  * 3D 보기 — 고객에게 "우리 집에 놓으면 이런 느낌"을 보여주는 화면이다.
  *
@@ -8413,7 +8478,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,
   openSelect, applyDeepPick,
-  findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, askHouseScale, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
+  findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, askHouseScale, askRoomSize, makeBoxRoom, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
   collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
   /* 탭 처리 — 검사가 "도면을 눌렀을 때"를 사람이 누른 것과 같은 길로 재현한다 */
   modeTap, runAt,
@@ -9803,7 +9868,7 @@ function build(refit){
      눈높이   — 사람이 서서 보는 높이. "우리 집 느낌"이 가장 잘 나는 각도다
      위에서   — 2D 평면도와 같은 구도. 2D ↔ 3D 를 눈으로 잇게 해 준다
    `fit` 은 방 크기에서 다시 계산한다 — 방마다 필요한 거리가 다르다. */
-let fitDist = 8, mode3 = 'iso', lastBox = null, lastAsp = null;
+let fitDist = 8, mode3 = 'iso', lastBox = null, lastAsp = null, lastIso = null;
 const EYE_MM = 1600;           // 서서 보는 눈높이. 한국 성인 평균 신장에서 눈까지가 대략 이 값이다
 /*
  * **화면이 세로로 길면 더 물러선다.** three 의 `fov` 는 **세로 기준**이라 가로 화각은
@@ -9845,6 +9910,56 @@ function fitTop(){
   return Math.max(3, Math.max(byW, byH) * 1.12);
 }
 
+/*
+ * ── 어느 쪽에서 볼 때 집이 가장 크게 보이는가 (2026-08-30) ─────────────────
+ *
+ * 집은 대개 **가로로 길고**(실측 13.2 × 8.7m) 폰 화면은 **세로로 길다**(390 × 668).
+ * 기본 각도(yaw −40°)로는 화면 **가로에 긴 변**이 놓여, 가로를 맞추느라 카메라가 멀어지고
+ * **세로가 통째로 남는다** — 실측으로 집이 화면 세로의 **49%** 만 썼다.
+ *
+ * 90° 돌리면 가로에 짧은 변(8.7m)만 담으면 되어 카메라가 **1.5배 가까이** 온다.
+ * 그래서 **네 방향을 재서 가장 가까이 올 수 있는 쪽**을 고른다.
+ *
+ * **후보를 축에 정렬하지 않는다** — 기본 각도에서 90°씩 돌린 넷이라 전부 비스듬하다.
+ * 정면으로 보면 벽이 한 겹으로 겹쳐 방이 안 읽힌다(그래서 애초에 −40° 였다).
+ */
+function bestIsoYaw(){
+  if (!lastBox || !lastBox.x || !lastBox.z) return { yaw: -0.7, dist: fitForScreen(), asp: null };
+  const el = ren && ren.domElement;
+  const asp = (el && el.clientHeight) ? el.clientWidth / el.clientHeight
+    : ((cam && cam.aspect) || 1);
+  const vf = (((cam && cam.fov) || 52) * Math.PI) / 180;
+  const t = Math.tan(vf / 2);
+  const pitch = 0.85, sp = Math.sin(pitch), cp = Math.cos(pitch);
+  const wallH = M(WALL_H_MM);
+  let best = null;
+  /*
+   * **후보를 대각선으로만 두면 안 된다.** 처음에 기본 각도(−40°)에서 90°씩 돌린 넷을
+   * 후보로 삼았는데 **넷 다 대각선**이라 어느 것을 골라도 폭이 15m 근처였다 —
+   * 경계상자를 45° 로 돌리면 화면 가로 폭이 **최대**가 된다. 정반대를 고르고 있었다.
+   * 30° 간격 열둘을 재서 가장 가까이 올 수 있는 쪽을 고른다.
+   */
+  for (let i = 0; i < 12; i++){
+    const yaw = i * (Math.PI / 6);
+    /*
+     * **도면 글자가 뒤집히는 각도는 쓰지 않는다.** 바닥은 도면 이미지라 카메라를 돌리면
+     * 인쇄된 방 이름도 함께 돈다 — 90° 는 옆으로 눕는 정도지만 **180° 근처는 거꾸로**
+     * 읽혀 고장으로 보인다. 눕는 것은 감수한다(3D 의 목적은 "우리 집 느낌"이고 방 이름은
+     * 2D 와 「위에서」에서 바로 읽힌다).
+     */
+    if (Math.cos(yaw) < -0.35) continue;
+    const c = Math.abs(Math.cos(yaw)), s = Math.abs(Math.sin(yaw));
+    /* 화면 가로에 놓이는 폭 · 세로에 놓이는 높이(깊이는 pitch 로 눌린다) */
+    const wide = lastBox.x * c + lastBox.z * s;
+    const tall = (lastBox.x * s + lastBox.z * c) * sp + wallH * cp;
+    const need = Math.max((wide / 2) / (t * Math.max(0.2, asp)), (tall / 2) / t) * 1.15;
+    if (!best || need < best.dist) best = { yaw, dist: Math.max(3, need), wide, tall, asp };
+  }
+  lastAsp = +asp.toFixed(3);
+  lastIso = { yaw: +best.yaw.toFixed(2), wide: +best.wide.toFixed(1), tall: +best.tall.toFixed(1) };
+  return best;
+}
+
 function view(name){
   mode3 = (name === 'eye' || name === 'top') ? name : 'iso';
   /* 실내에서는 화각을 넓힌다 — 부동산 실내 사진이 광각으로 찍히는 것과 같은 이유다.
@@ -9865,7 +9980,22 @@ function view(name){
     orb.pitch = 1.44; orb.ty = 0; orb.dist = fitTop(); orb.yaw = 0;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   } else {
-    orb.pitch = 0.85; orb.ty = M(WALL_H_MM) * 0.35; orb.dist = fitForScreen(); orb.yaw = -0.7;
+    const iso = bestIsoYaw();
+    /*
+     * **아래쪽은 안내띠와 조이스틱이 먹는다**(실측 폰에서 약 200px). 바라보는 점을
+     * 화면 한가운데에 두면 집이 그 아래로 내려가 발코니·드레스룸이 가린다.
+     * 좁은 화면에서만 바라보는 점을 낮춰 집을 위로 올린다 — 넓은 화면은 UI 가 옆에 있다.
+     */
+    const narrow = iso.asp != null && iso.asp < 1;
+    orb.pitch = 0.85;
+    /*
+     * **보정은 집 크기에 비례해야 한다.** 고정값(−1.27m)은 13m 짜리 집에는 알맞지만
+     * **4.8m 방에서는 카메라가 방 안에 파묻힌다**(실물에서 확인) — 바라보는 점이 바닥
+     * 아래로 내려가 시야가 발밑에 꽂힌다. 집 깊이의 한 자락만 내린다.
+     */
+    const drop = Math.min(M(WALL_H_MM) * 0.55, (lastBox ? lastBox.z : 8) * 0.10);
+    orb.ty = narrow ? -drop : M(WALL_H_MM) * 0.35;
+    orb.dist = iso.dist; orb.yaw = iso.yaw;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
   }
 }
@@ -10439,7 +10569,7 @@ window.Place3D = {
       pitch: +orb.pitch.toFixed(2), yaw: +orb.yaw.toFixed(2),
       tx: +orb.tx.toFixed(2), tz: +orb.tz.toFixed(2), ty: +orb.ty.toFixed(2),
       fov: cam && cam.fov, camY: cam && +cam.position.y.toFixed(2),
-      box: lastBox || null, asp: lastAsp,
+      box: lastBox || null, asp: lastAsp, iso: lastIso,
       eyeAt: eyeAt ? eyeAt.map((v) => +v.toFixed(2)) : null,
       rays: eyeAt ? Array.from({ length: 8 }, (_, i) => {
         const th = (i / 8) * Math.PI * 2;
