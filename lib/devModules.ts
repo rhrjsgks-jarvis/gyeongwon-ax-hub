@@ -70,7 +70,13 @@ export const DEV_MODULES: DevModule[] = [
      * 자리가 없다(`SALES_APP_PASSCODE` 는 telecom-plan-app 의 환경변수다).
      * 그 배포에서 값을 비우거나 검사를 끄지 않으면 화면은 계속 코드를 묻는다.
      */
-    href: '/dev/telecom/index.html',
+    // 허브 껍데기 안에서 연다 — /dev/telecom 은 이 저장소의 페이지이고,
+    // 그 안의 iframe 이 /dev/telecom/index.html(저쪽 배포)을 띄운다. 하단 탭바가
+    // 사라지지 않게 하려는 것이다(2026-08-30 사장님 지시).
+    //
+    // rewrite 와 부딪히지 않는다: rewrites() 가 배열이면 **파일 라우트를 먼저**
+    // 보므로 정확히 '/dev/telecom' 은 이 페이지가, 그 아래 경로는 rewrite 가 받는다.
+    href: '/dev/telecom',
     icon: 'phone',
     title: '통신 요금제 상담 도구',
     desc: '3사 요금제 349건·부가서비스 542건·결합 27건·단말 출고가·제휴카드 40장 — 월납부금액과 할부기간 총액까지 계산',

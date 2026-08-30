@@ -285,8 +285,16 @@ export default function Navigation() {
         </div>
       </header>
 
-      {/* 하단 탭 — 5개 전체 표시 (slice 제거) */}
+      {/*
+        하단 탭 — 5개 전체 표시 (slice 제거)
+
+        `data-tabbar` 는 **높이를 재 가라고 붙여 둔 표시**다(2026-08-30).
+        /dev/telecom 은 도구를 뷰포트에 붙여(fixed) 띄우는데, 그 칸이 이 탭바를
+        얼마나 비켜야 하는지 알아야 한다. 클래스 이름으로 찾게 두면 Tailwind 를
+        손대는 순간 조용히 어긋나므로 붙잡을 자리를 따로 준다.
+      */}
       <nav
+        data-tabbar
         className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 flex lg:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
