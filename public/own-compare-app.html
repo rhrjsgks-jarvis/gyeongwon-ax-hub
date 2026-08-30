@@ -77,7 +77,14 @@ th,td{border-bottom:1px solid var(--line);padding:8px 9px;vertical-align:top;tex
 thead th{position:sticky;top:0;background:#fff;font-size:11.5px;font-weight:800;z-index:1;
   border-bottom:2px solid var(--blue)}
 tbody th{font-weight:700;color:var(--muted);font-size:11.5px;white-space:nowrap;
-  position:sticky;left:0;background:#fff}
+  position:sticky;left:0;background:#fff;
+  /* 옆으로 끌면 잘린 열이 이 뒤로 비쳐 글자 조각이 보였다 — 오른쪽에 옅은 그림자를
+     둬 "여기까지가 항목 칸"이 또렷이 갈리게 한다(2026-08-30) */
+  box-shadow:2px 0 0 var(--line)}
+/* 열 번호 칩 — 위의 「고른 것」 칩과 같은 번호라 끌다가도 몇 번째인지 잇는다 */
+.cno{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+  border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;
+  margin-right:5px;vertical-align:1px}
 tr.diff td{background:#fffbeb}
 tr.diff th{background:#fffbeb}
 .mono{font-variant-numeric:tabular-nums}
@@ -246,7 +253,11 @@ function renderPicked(){
   }
   box.innerHTML = picked.map(function(m, i){
     var p = DATA.find(function(x){ return x.model === m; }) || {};
-    return '<span class="chip">' + (i + 1) + '. ' + esc(p.group || m)
+    /* 번호는 표 머리글의 칩(①②③④)과 같은 모양·같은 번호다 — 끌다가도 잇는다.
+       이름은 구분되는 쪽(model: S26 Ultra)을 함께 적는다 — 제품군만 적으면
+       "갤럭시 S26 시리즈" 칩이 세 개 나란히 서서 무엇을 뺄지 알 수 없었다. */
+    var nm = esc(p.group || m) + (p.model && p.model !== p.group ? ' <b>' + esc(p.model) + '</b>' : '');
+    return '<span class="chip"><span class="cno">' + (i + 1) + '</span>' + nm
       + '<button data-x="' + esc(m) + '" aria-label="빼기">×</button></span>';
   }).join('') + (picked.length < 2
     ? '<span class="hint" style="width:100%">둘 이상 고르면 표가 만들어집니다.</span>' : '');
@@ -289,9 +300,30 @@ function renderTable(){
   var same = rows.filter(function(r){ return !r.diff; }).length;
   var use = onlyDiff ? rows.filter(function(r){ return r.diff; }) : rows;
 
-  var head = '<tr><th>항목</th>' + ps.map(function(p){
-    return '<th>' + esc(p.group || p.model) + '<br><span style="font-weight:600;color:var(--muted)">'
-      + esc(p.model) + '</span></th>'; }).join('') + '</tr>';
+  /*
+   * ── 열 머리글 (2026-08-30 사장님 보고: "당사제품비교항목이 보기가 어렵습니다") ──
+   *
+   * 폰(390px)에서 4개를 고르면 한 화면에 두 열만 보이는데, 머리글이 제품군 이름이라
+   * **넷 중 셋이 「갤럭시 S26 시리즈 (2026.03.11 출시)」로 똑같았다** — 옆으로 끌다 보면
+   * 어느 열이 어느 제품인지 알 수 없다. 정작 구분되는 말(S26 Ultra·S26+·S26)은
+   * 작은 회색으로 강등돼 있었다(자료의 model 필드가 사람이 부르는 그 이름이다).
+   *
+   * · **골라 둔 것끼리 제품군 이름이 겹치면** 구분 이름(model)을 큰 글씨로 올린다.
+   *   단 model 이 코드 꼴(SM-F976NZVIKOO — 삼성닷컴 수집분)이면 올려도 못 읽으니
+   *   제품군을 그대로 크게 둔다.
+   * · **번호 칩 ①②③④** — 위의 「고른 것」 칩과 같은 번호라, 끌다가도 몇 번째
+   *   제품인지 즉시 잇는다.
+   */
+  var bigNames = ps.map(function(p){ return shortName(p); });
+  var headDup = bigNames.some(function(g, i){ return bigNames.indexOf(g) !== i; });
+  var isCode = function(m){ return /^[A-Z]{1,3}-?[A-Z0-9]{5,}/.test(String(m || '')); };
+  var head = '<tr><th>항목</th>' + ps.map(function(p, i){
+    var flip = headDup && p.model && !isCode(p.model);   // 구분 이름을 앞세운다
+    var big = flip ? p.model : shortName(p);
+    var small = flip ? shortName(p) : p.model;
+    return '<th><span class="cno">' + (i + 1) + '</span>' + esc(big)
+      + '<br><span style="font-weight:600;color:var(--muted)">' + esc(small) + '</span></th>';
+  }).join('') + '</tr>';
   /* 가격은 fx 가 아니라 최상위에 있다 — 표 맨 위에 따로 올린다 */
   var priceRow = '<tr class="' + (ps.map(function(p){ return p.price; })
       .some(function(v, i, a){ return v !== a[0]; }) ? 'diff' : '') + '">'

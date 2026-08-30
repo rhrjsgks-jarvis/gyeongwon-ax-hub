@@ -130,5 +130,58 @@ const sw = rd('public/sw.js');
   }
 }
 
+
+/* ── ⑦ 열 머리글이 서로 갈리는가 (2026-08-30 사장님 보고: "보기가 어렵습니다") ──
+ *
+ * 폰에서 4개를 고르면 두 열만 보이는데, 머리글이 제품군 이름뿐이라 **넷 중 셋이
+ * 「갤럭시 S26 시리즈」로 똑같았다.** 실제 앱을 jsdom 에 띄워 같은 제품군 4개를 고르고
+ * ①머리글 글자가 서로 다른지 ②번호 칩(.cno)이 붙는지 본다 — 실자료(finder-core)로 돈다.
+ */
+{
+  const { JSDOM } = await import('jsdom');
+  const html = fs.readFileSync(path.join(ROOT, 'public', 'own-compare-app.html'), 'utf8')
+    /* 공용 스크립트는 인라인으로 — jsdom 은 상대경로 src 를 못 받아 뒤 스크립트가 멈춘다 */
+    .replace(/<script src="([^"]+)"><\/script>/g, (m, f) => {
+      try { return '<script>' + fs.readFileSync(path.join(ROOT, 'public', f), 'utf8') + '</script>'; }
+      catch { return ''; }
+    });
+  const core = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'finder-core.json'), 'utf8'));
+  const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'https://e.com/own-compare-app.html' });
+  const w = dom.window;
+  /* fetch 를 실자료로 물린다 — extra 는 비워도 core 만으로 검사가 선다 */
+  w.fetch = (u) => Promise.resolve({ ok: true, json: () => Promise.resolve(
+    /extra/.test(String(u)) ? { add: [] } : core) });
+  await new Promise((r) => setTimeout(r, 400));
+  await w.eval('load()').catch?.(() => {});
+  await new Promise((r) => setTimeout(r, 400));
+
+  const doc = w.document;
+  const s26 = core.filter((x) => /S26 시리즈/.test(x.group || '')).slice(0, 3);
+  if (s26.length < 3) fail('S26 시리즈 3종을 못 모았다 — 검사 재료가 없다');
+  else {
+    w.eval('cur = ' + JSON.stringify(s26[0].cat) + '; picked = ' + JSON.stringify(s26.map((x) => x.model)) + '; renderTable();');
+    const ths = [...doc.querySelectorAll('#out thead th')].slice(1);
+    /* **큰 줄(첫 줄)만 견준다** — textContent 로 합쳐 세면 작은 회색 줄(model) 덕에
+       옛 화면(제품군 셋이 똑같이 큰 글씨)도 통과해 검사가 아무것도 못 지킨다
+       (실제로 되돌려 넣었는데 안 물렸다). 눈에 먼저 들어오는 것은 큰 줄이다. */
+    const texts = ths.map((t) => {
+      let out = '';
+      for (const n of t.childNodes){
+        if (n.nodeName === 'BR') break;
+        if (n.classList && n.classList.contains('cno')) continue;   // 번호는 이름이 아니다
+        out += n.textContent;
+      }
+      return out.trim();
+    });
+    const uniq = new Set(texts);
+    if (uniq.size !== texts.length) fail('열 머리글이 겹친다(' + texts.join(' | ') + ') — 어느 열이 어느 제품인지 알 수 없다');
+    else pass('같은 제품군 3개를 골라도 열 머리글이 전부 다르다 (' + texts.map((t) => t.slice(0, 14)).join(' · ') + ')');
+    const chips = doc.querySelectorAll('#out thead .cno').length;
+    if (chips !== s26.length) fail('열 번호 칩이 ' + chips + '개 — 고른 것 칩과 번호로 이어져야 한다');
+    else pass('열마다 번호 칩(①②③) — 고른 것 칩과 같은 번호로 이어진다');
+  }
+  dom.window.close();
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
