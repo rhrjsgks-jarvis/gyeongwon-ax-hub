@@ -63,9 +63,9 @@ export default function BoardPage() {
     store.current = { code, name: storeName(code) }
   }, [])
 
-  const load = async () => {
+  const load = async (fresh = false) => {
     try {
-      const res = await fetch('/api/board', { cache: 'no-store' })
+      const res = await fetch(fresh ? '/api/board?fresh=1' : '/api/board', { cache: 'no-store' })
       const d = await res.json()
       setPosts(Array.isArray(d.posts) ? d.posts : [])
       setConnected(!!d.connected)
@@ -101,7 +101,7 @@ export default function BoardPage() {
         setNotice({ ok: true, msg: '등록되었습니다.' })
         setTitle(''); setBody('')
         logEvent('board', 'generate', topic)
-        await load()
+        await load(true)
       } else {
         /* 실패라고 사실대로 적고 **쓴 글은 지우지 않는다** — 다시 누르면 된다 */
         setNotice({ ok: false, msg: `등록 실패 — ${(d && d.reason) || `HTTP ${res.status}`}. 쓰신 글은 그대로 있으니 다시 눌러주세요.` })

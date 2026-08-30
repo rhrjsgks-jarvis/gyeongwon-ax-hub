@@ -18,12 +18,16 @@ type Cached = { at: number; posts: unknown[] }
 let cache: Cached | null = null
 const TTL_MS = 15_000
 
-export async function GET() {
+export async function GET(req: Request) {
   const url = process.env.BOARD_GAS_URL
   if (!url) {
     return NextResponse.json({ posts: [], connected: false, reason: '게시판 시트 미연동 (BOARD_GAS_URL)' })
   }
-  if (cache && Date.now() - cache.at < TTL_MS) {
+  /* 글을 막 등록한 화면은 ?fresh=1 로 캐시를 건너뛴다 — 서버리스라 POST 가 비운
+   * 캐시와 GET 이 읽는 캐시가 **다른 인스턴스**일 수 있어, 그대로 두면 자기 글이
+   * 최대 15초 안 보인다(실측). 글쓴 사람이 "안 됐나?" 하고 다시 누르게 되는 결함이다. */
+  const fresh = new URL(req.url).searchParams.has('fresh')
+  if (!fresh && cache && Date.now() - cache.at < TTL_MS) {
     return NextResponse.json({ posts: cache.posts, connected: true, cached: true })
   }
   const tries = [6000, 8000]

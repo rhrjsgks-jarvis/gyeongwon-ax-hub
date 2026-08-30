@@ -67,6 +67,11 @@ GitHub → Vercel 자동배포 파이프라인으로 운영 중이며, 이 파�
     주소를 쓴다** — `app/page.tsx` 의 `HUB_URL` 하나만 고치면 QR·표시 주소·복사 링크가
     모두 따라간다(표시 문구가 상수와 어긋나 있던 적이 있다).
 - Vercel projectId: `prj_JskGnqqArCARl3mNBm6tp1dmdu46` / teamId: `team_o104cKtnAQcEaKospwGIAt9N`
+  - **Vercel 프로젝트 이름은 `sales_copilot` 이다 — 저장소 이름(`gyeongwon-ax-hub`)이 아니다.**
+    `vercel link --project gyeongwon-ax-hub` 를 치면 **그 이름의 빈 프로젝트가 조용히 새로
+    만들어져** 환경변수가 엉뚱한 곳에 들어간다(2026-08-30 실제로 그랬다 — BOARD_GAS_URL 을
+    넣고 재배포까지 했는데 미연동이 계속됐다). 링크 후 `.vercel/project.json` 의 projectId 가
+    위 값과 같은지 확인할 것.
 - git push 인증은 로컬에 SSH 키 또는 `gh auth login`으로 한 번만 설정해두면 이후 세션에서 재설정 불필요 (Cowork 샌드박스 환경과 달리 로컬 환경은 인증정보가 세션 간 유지됨).
 
 ## 현재상황 상시 표시 (`.claude/statusline.mjs`, 2026-08-16 사용자 요청)
