@@ -130,6 +130,9 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   quiz:    { label: 'URL 퀴즈',        icon: 'target',   color: '#DC2626' },
   concierge: { label: '컨시어지 프로그램', icon: 'ticket',   color: '#DB2777' },
   poster:  { label: '컨시어지 접수 포스터', icon: 'printer',  color: '#9333EA' },
+  /* 2026-08-30 신설 — LogModule 에 추가하면 여기도 함께 넣어야 사용 현황에 잡힌다
+     (그러지 않으면 한 줄도 안 잡혀 '안 쓰는 모듈'로 읽힌다) */
+  ownCompare: { label: '당사제품 비교',  icon: 'compare',  color: '#7C3AED' },
   coupon:  { label: '시크릿쿠폰',      icon: 'coupon',   color: '#DC2626' },
   catalog: { label: '모바일 카탈로그',  icon: 'catalog',  color: '#0EA5E9' },
 

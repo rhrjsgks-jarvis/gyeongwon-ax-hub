@@ -6,7 +6,7 @@ import { logEvent, logOnce, LogModule, LogAction } from '@/lib/logEvent'
 /* 미니앱이 보내오는 값은 바깥에서 들어오는 값이다 — 아는 이름만 받는다 */
 const ALLOWED_MODULE = new Set<string>([
   'finder', 'as', 'care', 'test', 'compare', 'quiz', 'hub',
-  'install', 'installcost', 'place', 'poster',
+  'install', 'installcost', 'place', 'poster', 'ownCompare',
 ])
 const ALLOWED_ACTION = new Set<string>([
   'page_view', 'search', 'result_open', 'generate', 'tab_switch',

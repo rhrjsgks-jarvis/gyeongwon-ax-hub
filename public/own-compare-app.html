@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<!--
+  당사제품 비교 — 삼성 제품끼리 나란히 놓고 본다 (2026-08-30 사장님 요청)
+
+    *"당사제품끼리 비교할수있는 방법이 있으면 좋겠습니다. 최대 4개까지 비교가되면
+      좋을 것 같습니다. 당사제품비교는 동일품목군에서끼리만 비교가되어야하고
+      위치는 개발 중 안으로 넣어주세요"*
+
+  **타사비교(compare-app)와 다른 도구다.** 그쪽은 우열을 가리려고 등급(S~E)을 매기지만,
+  이쪽은 **우리 제품끼리**라 등급을 매기지 않는다 — 상담사가 "어느 쪽이 이 고객에게
+  맞나"를 고르는 자리이지 이기고 지는 자리가 아니다.
+
+  **자료를 새로 만들지 않았다.** 제품 상세검색이 쓰는 두 파일을 그대로 받는다 —
+  `finder-core.json`(인라인 574종, 카탈로그 대조분) + `finder-extra.json`(1,423종,
+  삼성닷컴 수집분). 값이 갈라질 여지를 두지 않기 위해서다.
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>당사제품 비교 — 세일즈 코파일럿</title>
+<link rel="stylesheet" href="vendor/fonts/pretendard-variable.css" media="print" onload="this.media='all'">
+<style>
+:root{--blue:#1428A0;--line:#e8eaef;--muted:#9aa0a6;--fg:#111827;--bg:#f5f6f8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+  font-size:14px;line-height:1.55;-webkit-text-size-adjust:100%}
+
+/* 머리 — 아홉 앱이 같은 모양이다(남색 바 + 아이콘 배지 + 제목 + 부제) */
+.topbar{background:var(--blue);color:#fff;padding:12px 16px}
+.topbar-in{max-width:840px;margin:0 auto;display:flex;align-items:center;gap:10px}
+.tb-ico{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.tb-ico svg{width:19px;height:19px}
+.brand b{display:block;font-size:15px;font-weight:800;line-height:1.3}
+.brand span{display:block;font-size:11px;opacity:.75;line-height:1.4}
+
+.wrap{max-width:840px;margin:0 auto;padding:14px 16px 40px}
+@media(min-width:1024px){ .topbar-in,.wrap{max-width:960px} }
+@media(min-width:1440px){ .topbar-in,.wrap{max-width:1140px} }
+
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:12px}
+.lab{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+select,input[type=search]{width:100%;padding:10px 12px;font-size:14px;font-family:inherit;
+  border:1px solid var(--line);border-radius:11px;background:#fff;color:inherit}
+select:focus,input:focus{outline:none;border-color:var(--blue)}
+
+/* 제품 칸 — AS 센터 찾기·단지 고르기와 같은 규격이다(짧은 이름이 여럿일 때 칸이 이긴다) */
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:7px;
+  max-height:44vh;overflow:auto;margin-top:8px}
+.pbox{border:1px solid var(--line);border-radius:11px;background:#fff;padding:9px 8px;
+  text-align:center;cursor:pointer;font:inherit;color:inherit;position:relative}
+.pbox:hover{background:#f3f5f8}
+.pbox.on{border-color:var(--blue);background:#eef2ff}
+.pbox .pn{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:12.5px;font-weight:600;line-height:1.35;word-break:keep-all}
+.pbox .pm{display:block;font-size:10px;color:var(--muted);margin-top:3px}
+.pbox .pp{display:block;font-size:10.5px;font-weight:700;color:var(--blue);margin-top:2px}
+.pbox .pk{position:absolute;top:5px;right:6px;width:17px;height:17px;border-radius:50%;
+  background:var(--blue);color:#fff;font-size:10px;font-weight:800;line-height:17px;display:none}
+.pbox.on .pk{display:block}
+
+.picked{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;
+  color:var(--blue);border-radius:999px;padding:5px 8px 5px 10px;font-size:11.5px;font-weight:700}
+.chip button{border:0;background:none;color:var(--blue);font-size:14px;line-height:1;cursor:pointer;padding:0 2px}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.6}
+.warn{font-size:11.5px;color:#B45309;font-weight:600}
+
+/* 비교표 — 가로로 넘치면 표 안에서만 굴린다(본문이 가로로 밀리면 안 된다) */
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:min(100%,520px)}
+th,td{border-bottom:1px solid var(--line);padding:8px 9px;vertical-align:top;text-align:left}
+thead th{position:sticky;top:0;background:#fff;font-size:11.5px;font-weight:800;z-index:1;
+  border-bottom:2px solid var(--blue)}
+tbody th{font-weight:700;color:var(--muted);font-size:11.5px;white-space:nowrap;
+  position:sticky;left:0;background:#fff}
+tr.diff td{background:#fffbeb}
+tr.diff th{background:#fffbeb}
+.mono{font-variant-numeric:tabular-nums}
+.none{color:#c8ccd4}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+button.b{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 13px;
+  font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;color:inherit}
+button.b.on{border-color:var(--blue);background:#eef2ff;color:var(--blue)}
+button.b:disabled{opacity:.45;cursor:default}
+.empty{text-align:center;color:var(--muted);font-size:12.5px;padding:26px 10px;line-height:1.7}
+.src{font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <span class="tb-ico" id="tbico"></span>
+  <span class="brand"><b>당사제품 비교</b><span>같은 품목군 안에서 최대 4개까지 — 삼성 제품끼리</span></span>
+</div></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="lab">품목군</div>
+    <select id="cat"><option value="">불러오는 중…</option></select>
+    <!--
+      **품목군을 먼저 고르게 한다.** 사장님이 못 박은 규칙이다 —
+      *"동일품목군에서끼리만 비교가되어야하고"*. 냉장고와 세탁기를 나란히 놓으면
+      비교표의 행이 하나도 안 겹쳐 표 자체가 성립하지 않는다.
+    -->
+    <div style="margin-top:9px"><input type="search" id="q" placeholder="제품 이름·모델코드로 좁히기" autocomplete="off"></div>
+    <div class="plist" id="plist"></div>
+    <div class="picked" id="picked"></div>
+    <div class="btnrow">
+      <button class="b" id="clear">고른 것 비우기</button>
+      <button class="b on" id="onlydiff" aria-pressed="true">다른 값만 보기 <b id="odm">켜짐</b></button>
+    </div>
+  </div>
+
+  <div class="card" id="out"></div>
+  <div class="src" id="src"></div>
+</div>
+
+<script src="prod-symbols.js"></script>
+<script src="back-kit.js"></script>
+<script src="share-kit.js"></script>
+<script>
+'use strict';
+var MAX = 4;                 /* 사장님 지시 — 최대 4개 */
+var DATA = [], CATS = [], cur = '', picked = [], onlyDiff = true, q = '';
+
+function $(s){ return document.querySelector(s); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+  return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+/* 머리 아이콘 — 미니앱 공용 심벌을 쓴다(같은 뜻이면 앱이 달라도 같은 그림) */
+(function(){
+  var el = $('#tbico');
+  /* **prodSymbol 을 믿고 폴백을 두면 글자가 나온다** — 이 앱 이름은 심벌표에 없어
+     반환값이 이름 문자열이 될 수 있다(실물에서 「비교」 글자가 떴다).
+     허브·사이드바와 같은 규칙(24×24 · stroke 1.6 · currentColor)으로 직접 그린다. */
+  if (el) el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"'
+    + ' stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M4 7h6M4 12h6M4 17h6M14 7h6M14 12h6M14 17h6"/>'
+    + '<path d="M12 4v16"/></svg>';
+})();
+
+/* ── 자료 — 제품 상세검색이 쓰는 두 파일을 그대로 받는다 ────────────────
+   값이 갈라질 여지를 두지 않는다. 둘 다 서비스워커가 캐시한다. */
+function load(){
+  var core = fetch('finder-core.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; });
+  var extra = fetch('finder-extra.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; });
+  return Promise.all([core, extra]).then(function(a){
+    var x = Array.isArray(a[1]) ? a[1] : (a[1].add || a[1].items || []);
+    DATA = a[0].concat(x).filter(function(p){ return p && p.cat && p.model && (p.fx || []).length; });
+    /* 같은 모델이 두 파일에 다 있으면 앞엣것(카탈로그 대조분)을 남긴다 */
+    var seen = {}, out = [];
+    for (var i = 0; i < DATA.length; i++){
+      var k = String(DATA[i].model);
+      if (seen[k]) continue;
+      seen[k] = 1; out.push(DATA[i]);
+    }
+    DATA = out;
+    /* **2종 미만인 품목군은 목록에 올리지 않는다** — 비교할 상대가 없는데 고르게 하면
+       고른 뒤에야 "비교할 것이 없습니다"가 뜬다. */
+    var by = {};
+    DATA.forEach(function(p){ by[p.cat] = (by[p.cat] || 0) + 1; });
+    CATS = Object.keys(by).filter(function(c){ return by[c] >= 2; })
+      .sort(function(a, b){ return by[b] - by[a] || a.localeCompare(b, 'ko'); })
+      .map(function(c){ return { c: c, n: by[c] }; });
+  });
+}
+
+function inCat(){
+  return DATA.filter(function(p){ return p.cat === cur; });
+}
+function norm(s){ return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+function shown(){
+  var n = norm(q);
+  return inCat().filter(function(p){
+    if (!n) return true;
+    return norm(p.group).indexOf(n) >= 0 || norm(p.model).indexOf(n) >= 0;
+  });
+}
+
+function renderCats(){
+  var sel = $('#cat');
+  sel.innerHTML = '<option value="">품목군을 고르세요</option>'
+    + CATS.map(function(x){
+        return '<option value="' + esc(x.c) + '"' + (x.c === cur ? ' selected' : '') + '>'
+          + esc(x.c) + ' (' + x.n + '종)</option>'; }).join('');
+}
+
+/*
+ * 칸에 적는 이름 — 제품군 문자열에 **치수·주석이 섞여 있는 것**이 있다
+ * (실물에서 "갤러리 프로 스탠드 AF90H (2026 신제품 — 360×1930×290mm ✓)" 가 떴다).
+ * 칸은 약식이라 괄호 안이 길면 이름이 세 줄을 넘어 뭉갠다 — **모델코드가 바로 아래
+ * 있으므로** 괄호는 짧을 때만 남긴다. 자료는 손대지 않고 화면에서만 줄인다.
+ */
+function shortName(p){
+  var g = String(p.group || p.model || '');
+  return g.replace(/s*([^)]{16,})s*/g, ' ').replace(/s{2,}/g, ' ').trim() || String(p.model);
+}
+
+function renderList(){
+  var box = $('#plist'), list = shown();
+  if (!cur){ box.innerHTML = ''; return; }
+  if (!list.length){
+    box.innerHTML = '<p class="hint" style="grid-column:1/-1">「' + esc(q) + '」 에 맞는 제품이 없습니다.</p>';
+    return;
+  }
+  box.innerHTML = list.slice(0, 300).map(function(p){
+    var i = picked.indexOf(p.model);
+    /* 가격은 카탈로그에 없는 것이 많다 — 없으면 "가격 문의"(제품 상세검색과 같은 규칙) */
+    var pr = (p.price == null) ? '가격 문의' : (p.price.toLocaleString() + '만원');
+    return '<button class="pbox' + (i >= 0 ? ' on' : '') + '" data-m="' + esc(p.model) + '">'
+      + '<span class="pk">' + (i + 1) + '</span>'
+      + '<span class="pn">' + esc(shortName(p)) + '</span>'
+      + '<span class="pm">' + esc(p.model) + '</span>'
+      + '<span class="pp">' + esc(pr) + '</span></button>';
+  }).join('');
+  if (list.length > 300) box.innerHTML += '<p class="hint" style="grid-column:1/-1">'
+    + list.length.toLocaleString() + '종 중 300종만 보입니다 — 위에서 이름으로 좁혀 주세요.</p>';
+}
+
+function renderPicked(){
+  var box = $('#picked');
+  if (!picked.length){
+    box.innerHTML = '<span class="hint">제품을 눌러 <b>최대 ' + MAX + '개</b>까지 고르세요.</span>';
+    return;
+  }
+  box.innerHTML = picked.map(function(m, i){
+    var p = DATA.find(function(x){ return x.model === m; }) || {};
+    return '<span class="chip">' + (i + 1) + '. ' + esc(p.group || m)
+      + '<button data-x="' + esc(m) + '" aria-label="빼기">×</button></span>';
+  }).join('') + (picked.length < 2
+    ? '<span class="hint" style="width:100%">둘 이상 고르면 표가 만들어집니다.</span>' : '');
+}
+
+/* ── 비교표 ───────────────────────────────────────────────────────
+   행은 **고른 제품들의 fx 키 합집합**이다. 한 제품에만 있는 항목도 보여야
+   "이 모델에만 있는 기능"이 드러난다 — 빈 칸은 「—」로 적어 값이 없다는 것을 밝힌다. */
+function renderTable(){
+  var out = $('#out');
+  if (picked.length < 2){
+    out.innerHTML = '<div class="empty">' + (cur
+      ? '제품을 <b>둘 이상</b> 고르면 나란히 견줄 수 있습니다.<br>같은 품목군 안에서 최대 ' + MAX + '개까지입니다.'
+      : '먼저 <b>품목군</b>을 고르세요.<br>비교는 같은 품목군 안에서만 됩니다.') + '</div>';
+    return;
+  }
+  var ps = picked.map(function(m){ return DATA.find(function(x){ return x.model === m; }); }).filter(Boolean);
+  var keys = [], seen = {};
+  ps.forEach(function(p){
+    (p.fx || []).forEach(function(e){
+      var k = String(e[0]);
+      if (!seen[k]){ seen[k] = 1; keys.push(k); }
+    });
+  });
+  var val = function(p, k){
+    var e = (p.fx || []).find(function(x){ return String(x[0]) === k; });
+    return e ? String(e[1]) : null;
+  };
+  var rows = keys.map(function(k){
+    var vs = ps.map(function(p){ return val(p, k); });
+    var first = vs[0];
+    var diff = vs.some(function(v){ return v !== first; });
+    return { k: k, vs: vs, diff: diff };
+  });
+  var same = rows.filter(function(r){ return !r.diff; }).length;
+  var use = onlyDiff ? rows.filter(function(r){ return r.diff; }) : rows;
+
+  var head = '<tr><th>항목</th>' + ps.map(function(p){
+    return '<th>' + esc(p.group || p.model) + '<br><span style="font-weight:600;color:var(--muted)">'
+      + esc(p.model) + '</span></th>'; }).join('') + '</tr>';
+  /* 가격은 fx 가 아니라 최상위에 있다 — 표 맨 위에 따로 올린다 */
+  var priceRow = '<tr class="' + (ps.map(function(p){ return p.price; })
+      .some(function(v, i, a){ return v !== a[0]; }) ? 'diff' : '') + '">'
+    + '<th>가격(만원)</th>' + ps.map(function(p){
+        return '<td class="mono">' + (p.price == null
+          ? '<span class="none">가격 문의</span>' : esc(p.price.toLocaleString())) + '</td>'; }).join('') + '</tr>';
+  var body = use.map(function(r){
+    return '<tr class="' + (r.diff ? 'diff' : '') + '"><th>' + esc(r.k) + '</th>'
+      + r.vs.map(function(v){ return '<td>' + (v == null ? '<span class="none">—</span>' : esc(v)) + '</td>'; }).join('')
+      + '</tr>';
+  }).join('');
+
+  out.innerHTML = '<div class="lab">' + esc(cur) + ' — ' + ps.length + '개 비교</div>'
+    + '<div class="tblwrap"><table><thead>' + head + '</thead><tbody>' + priceRow + body + '</tbody></table></div>'
+    + '<p class="hint" style="margin-top:9px">'
+    + '노란 줄이 <b>값이 갈리는 항목</b>입니다. 같은 값 ' + same + '개'
+    + (onlyDiff ? '는 접혀 있습니다 — 「다른 값만 보기」를 끄면 모두 보입니다.' : '도 함께 보입니다.')
+    + '<br><b>「—」는 그 제품에 그 항목이 없다는 뜻이 아니라 자료에 없다는 뜻입니다</b> — '
+    + '카탈로그·삼성닷컴이 적지 않은 항목은 비워 둡니다.</p>';
+}
+
+function render(){ renderCats(); renderList(); renderPicked(); renderTable(); sync(); }
+
+/* 공유 — 화면을 그대로 찍는다(share-kit 이 한다). 무엇을 비교했는지 파일 이름에 남긴다 */
+function sync(){
+  try {
+    if (window.AX_SHARE_SET) window.AX_SHARE_SET(true);
+  } catch (e) {}
+}
+window.ownCompareShareBuild = function(){
+  return (cur || '당사제품') + '_비교_' + picked.length + '개';
+};
+
+/* ── 배선 ─────────────────────────────────────────────────────── */
+$('#cat').addEventListener('change', function(){
+  cur = this.value;
+  /* **품목군을 바꾸면 고른 것을 비운다** — 다른 품목군 제품이 섞이면 사장님이 못 박은
+     "동일품목군에서끼리만" 이 그 자리에서 깨진다. */
+  picked = []; q = ''; $('#q').value = '';
+  render();
+  if (cur && typeof AX_LOG === 'function') AX_LOG('ownCompare', 'result_open', cur, true);
+});
+$('#q').addEventListener('input', function(){ q = this.value; renderList(); });
+$('#plist').addEventListener('click', function(e){
+  var b = e.target.closest('.pbox');
+  if (!b) return;
+  var m = b.dataset.m, i = picked.indexOf(m);
+  if (i >= 0) picked.splice(i, 1);
+  else if (picked.length >= MAX) { alert('한 번에 ' + MAX + '개까지 비교할 수 있습니다.\n먼저 하나를 빼 주세요.'); return; }
+  else picked.push(m);
+  renderList(); renderPicked(); renderTable();
+});
+$('#picked').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-x]');
+  if (!b) return;
+  var i = picked.indexOf(b.dataset.x);
+  if (i >= 0) picked.splice(i, 1);
+  renderList(); renderPicked(); renderTable();
+});
+$('#clear').addEventListener('click', function(){ picked = []; renderList(); renderPicked(); renderTable(); });
+$('#onlydiff').addEventListener('click', function(){
+  onlyDiff = !onlyDiff;
+  this.classList.toggle('on', onlyDiff);
+  this.setAttribute('aria-pressed', String(onlyDiff));
+  var od = document.getElementById('odm'); if (od) od.textContent = onlyDiff ? '켜짐' : '꺼짐';
+  renderTable();
+});
+
+load().then(function(){
+  $('#src').innerHTML = '자료는 <b>제품 상세검색과 같은 것</b>입니다 — 카탈로그 대조분과 '
+    + 'samsung.com 수집분 합계 <b>' + DATA.length.toLocaleString() + '종</b>, 비교 가능한 품목군 '
+    + CATS.length + '개. 값이 갈라지지 않게 같은 파일을 씁니다.';
+  render();
+}).catch(function(e){
+  $('#out').innerHTML = '<div class="empty">자료를 불러오지 못했습니다.<br>'
+    + '잠시 뒤 다시 열어 주세요. (' + esc(e && e.message) + ')</div>';
+});
+</script>
+</body>
+</html>
