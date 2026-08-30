@@ -26,14 +26,24 @@ const TTL_MS = 30_000
 // 팀 전체 사용 로그를 서버 사이드에서 가져오는 프록시.
 // Google Apps Script Web App(doGet)을 서버에서 대신 호출해 브라우저 CORS 이슈를 피한다.
 // NEXT_PUBLIC_GAS_URL이 설정돼 있지 않으면(=아직 구글 시트 연동 전) 빈 배열을 반환한다.
-export async function GET() {
+export async function GET(req: Request) {
   const url = process.env.NEXT_PUBLIC_GAS_URL
 
   if (!url) {
     return NextResponse.json({ logs: [], connected: false, reason: 'GAS 미연동' })
   }
 
-  if (cache && Date.now() - cache.at < TTL_MS) {
+  /* **사람이 「새로 고침」을 누른 것은 캐시를 건너뛴다**(2026-08-31 사장님 요청 —
+   * *"새로고침버튼을 만들어서 시간이 반영된 값을 보고싶다"*).
+   *
+   * 자동 로드는 캐시를 그대로 쓴다 — GAS 는 하루 실행시간 90분이 한도라 화면이
+   * 뜰 때마다 두드리면 매장이 늘수록 그 한도를 먹는다. 하지만 **버튼은 누른 사람이
+   * 방금 것을 원한다는 뜻**이고, 관리자 대시보드는 몇 사람만 보는 화면이라 그 비용이
+   * 무시할 만하다. 버튼이 약속한 일을 실제로 하지 않으면 사장님이 **여러 번 누르게
+   * 되고**(2026-08-26 에 이미 겪은 그 일이다) 결국 호출 수는 오히려 는다. */
+  const fresh = new URL(req.url).searchParams.get('fresh') === '1'
+
+  if (!fresh && cache && Date.now() - cache.at < TTL_MS) {
     return NextResponse.json({ logs: cache.logs, connected: true, cached: true })
   }
 

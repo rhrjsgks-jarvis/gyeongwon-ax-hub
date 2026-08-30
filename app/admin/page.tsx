@@ -175,19 +175,33 @@ export default function AdminPage() {
   /* **언제 받은 자료인지 화면이 말한다.** 숫자만 떠 있으면 그것이 방금 것인지
      10분 전 것인지 알 수 없어, 사장님처럼 새로고침을 여러 번 누르게 된다. */
   const [fetchedAt, setFetchedAt] = useState<number | null>(null)
+  /* **받은 자료가 방금 것인지 화면이 말한다**(2026-08-31 사장님 요청).
+     시각만 적으면 그 시각에 시트를 두드린 것처럼 읽히는데, 서버 30초 캐시나
+     stale 폴백이면 사실이 아니다 — 버튼을 눌러도 숫자가 안 변하는 체감의 정체다. */
+  const [dataCached, setDataCached] = useState(false)
+  const [dataStale,  setDataStale]  = useState(false)
 
-  const load = async () => {
+  /* `fresh` 는 **사람이 버튼을 눌렀다**는 뜻이다 — 서버 30초 캐시를 건너뛰고 시트를
+     실제로 다시 두드린다. 화면이 저절로 뜰 때(useEffect)는 캐시를 쓴다: GAS 는 하루
+     실행시간 90분이 한도라 자동 로드까지 매번 두드리면 그 한도를 먹는다.
+     **onClick 에 load 를 그대로 넘기지 말 것** — React 가 넘기는 MouseEvent 가
+     `fresh` 자리에 들어가 늘 truthy 가 된다. */
+  const load = async (fresh = false) => {
     setReloading(true)
     // 화면·CSV 모두 허브 메인 페이지뷰를 뺀 로그로 통일한다(집계와 내보내기가 어긋나지 않게).
-    const team = await fetchTeamLogs()
+    const team = await fetchTeamLogs({ fresh })
     if (team) {
-      setLogs(excludeHubViews(team))
+      setLogs(excludeHubViews(team.logs))
       setTeamWide(true)
       setTeamFailed(false)
+      setDataCached(team.cached)
+      setDataStale(team.stale)
     } else {
       setLogs(excludeHubViews(readLogs()))
       setTeamWide(false)
       setTeamFailed(GAS_CONNECTED)     /* 연동이 안 된 것과 못 받은 것은 다른 말이다 */
+      setDataCached(false)
+      setDataStale(false)
     }
     setFetchedAt(Date.now())
     setLoaded(true)
@@ -258,6 +272,15 @@ export default function AdminPage() {
    *
    * 기준 분은 `BASE_MIN`(발표자료 값) 하나만 쓴다 — 여기까지 2·3·5분을 곱하면
    * 숫자가 아홉이 되어 상담·발표에서 읽을 수가 없다. 폭은 위 세 칸이 이미 보여준다. */
+  /* **언제 받은 자료인지 한 곳에서만 짓는다** — 머리와 절감 칸 두 곳에 적히는데
+     따로 지으면 화면이 서로 다른 말을 한다(이 저장소가 되풀이해 데인 종류다).
+     시각만으로는 부족하다: 서버 30초 캐시나 stale 폴백이면 **그 시각에 시트를
+     두드린 것이 아니다.** */
+  const freshLabel = !fetchedAt
+    ? '불러오는 중…'
+    : `${new Date(fetchedAt).toLocaleTimeString('ko-KR')} 기준${
+        dataStale ? ' · 시트 응답 없음(마지막 성공분)' : dataCached ? ' · 30초 내 캐시' : ''}`
+
   const WORKDAYS = 22
   const goalUses = SALES_HEADCOUNT * WORKDAYS       /* 1인 하루 1회 → 월 사용 건수 */
   const nowPerHead = last30 / SALES_HEADCOUNT       /* 지금 1인당 월 사용 건수 */
@@ -299,10 +322,10 @@ export default function AdminPage() {
         {/* 언제 받은 자료인지 밝히고, 한 번에 다시 받는 손잡이를 준다 */}
         <div className="flex items-center gap-2 mt-2">
           <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            {fetchedAt ? `${new Date(fetchedAt).toLocaleTimeString('ko-KR')} 기준` : '불러오는 중…'}
+            {freshLabel}
           </span>
           <button
-            onClick={load}
+            onClick={() => load(true)}
             disabled={reloading}
             className="text-[10px] font-semibold rounded-lg px-2 py-0.5 disabled:opacity-50"
             style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
@@ -325,7 +348,7 @@ export default function AdminPage() {
             </p>
           </div>
           <button
-            onClick={load}
+            onClick={() => load(true)}
             disabled={reloading}
             className="shrink-0 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 text-white disabled:opacity-50"
             style={{ background: '#B45309' }}
@@ -620,12 +643,34 @@ export default function AdminPage() {
           className="rounded-2xl p-4 mt-3"
           style={{ background: 'linear-gradient(135deg, #1e3a5f, #1428A0)' }}
         >
-          <div className="flex items-baseline justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-bold text-blue-200 flex items-center gap-1"><Icon name="bulb" size={13} /> 팀 기준 월간 절감 시간</p>
-            <p className="text-[10px] text-blue-300">
-              최근 30일 {last30.toLocaleString()}건 · 영업 {SALES_HEADCOUNT}명
-            </p>
+            {/* **이 칸에도 새로고침을 둔다**(2026-08-31 사장님 요청). 머리에도 있지만
+                화면이 길어 절감 칸까지 내려오면 보이지 않는다 — 보고 있는 자리에서
+                바로 다시 받을 수 있어야 한다. 누른 것이므로 캐시를 건너뛴다. */}
+            <button
+              onClick={() => load(true)}
+              disabled={reloading}
+              className="shrink-0 text-[10px] font-semibold rounded-lg px-2 py-0.5 disabled:opacity-50"
+              style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
+            >
+              {reloading ? '새로 받는 중…' : '새로 고침'}
+            </button>
           </div>
+          {/* **두 숫자의 관계를 밝힌다**(2026-08-31 사장님 지적 — *"4,396건인데 아직
+              4,120건으로 계산되고 있다"*). 둘 다 맞는 값인데 **기준 기간이 다르다**:
+              위 KPI 는 받아 온 전 기간(60일치)이고 이 칸은 **월간**이라 최근 30일만
+              센다. 관계를 안 적으면 *"아직 반영이 안 됐나"* 로 읽힌다 — 숫자를 바꿀
+              일이 아니라 화면이 말하게 할 일이다. */}
+          {/* **한 덩어리로 읽혀야 하는 조각은 묶는다**(`whitespace-nowrap`). 폰 390px 에서
+              `영업 500명` 의 「명」이 혼자 다음 줄로 떨어져 있었다 — 숫자와 단위가 갈리면
+              읽다 멈칫한다(AS 앱이 라벨 칸을 세워 적는 것과 같은 이유). */}
+          <p className="text-[10px] text-blue-300 mt-0.5">
+            <span className="whitespace-nowrap">기록된 {logs.length.toLocaleString()}건 중 <b className="text-blue-200">최근 30일 {last30.toLocaleString()}건</b></span>
+            {logs.length > last30 && <span className="text-blue-400 whitespace-nowrap"> (30일보다 오래된 {(logs.length - last30).toLocaleString()}건 제외)</span>}
+            <span className="whitespace-nowrap">{' · '}영업 {SALES_HEADCOUNT}명</span>
+          </p>
+          <p className="text-[9px] text-blue-400 mt-0.5">{freshLabel}</p>
           {/* 가정을 밝히고 셋을 나란히 둔다 — 하나만 적으면 측정값처럼 읽힌다 */}
           <p className="text-[9px] text-blue-300 mt-0.5 mb-2">
             1건당 아끼는 시간은 <b className="text-blue-200">가정</b>입니다 — 2·3·5분을 나란히 봅니다

@@ -408,6 +408,25 @@ export function normalizeLogs(rows: unknown[]): LogEvent[] {
 }
 
 /**
+ * **받은 자료가 방금 것인지 함께 나른다**(2026-08-31).
+ *
+ * 서버는 이미 `cached`(30초 캐시를 그대로 내줌) · `stale`(GAS 를 못 받아 마지막
+ * 성공분을 내줌)을 갈라 밝히고 있었는데 **여기서 `logs` 만 꺼내고 그 표식을 버렸다.**
+ * 그래서 화면이 *"09:12 기준"* 이라 적어도 실제 자료는 30초 전 것일 수 있었고,
+ * 사장님이 버튼을 눌러도 숫자가 안 변하는 것으로 겪으셨다.
+ *
+ * 이 저장소가 이미 여러 번 세운 규칙과 같다 — **실패를 0 으로 그리지 않는다** ·
+ * **조용히 넘기지 않는다**. 캐시된 자료를 방금 받은 것처럼 적는 것도 같은 거짓말이다.
+ */
+export interface TeamLogs {
+  logs: LogEvent[]
+  /** 서버의 30초 캐시를 그대로 받았다 — 이 순간 시트를 두드린 것이 아니다 */
+  cached: boolean
+  /** GAS 를 못 받아 마지막 성공분을 받았다 — 낡은 자료다 */
+  stale: boolean
+}
+
+/**
  * 팀 전체 로그를 받아 온다. 못 받으면 `null` — **빈 배열과 갈라야 한다.**
  *
  * 예전에는 `Array.isArray(data.logs)` 만 봤는데, 서버가 타임아웃에 걸려 돌려주는
@@ -415,15 +434,20 @@ export function normalizeLogs(rows: unknown[]): LogEvent[] {
  * 전 항목 0* 을 그렸고, 사장님이 **"새로고침을 수차례 해야 숫자가 나온다"** 고
  * 신고하셨다(2026-08-26). 실제로는 그때마다 실패하고 있었던 것이다.
  * 이제 서버가 `connected` 로 성패를 분명히 밝히고 여기서 그것을 본다.
+ *
+ * `fresh` 는 **사람이 「새로 고침」을 누른 경우**다 — 서버 캐시를 건너뛰고 시트를
+ * 실제로 다시 두드린다(자동 로드는 캐시를 쓴다. 근거는 라우트 주석에 있다).
  */
-export async function fetchTeamLogs(): Promise<LogEvent[] | null> {
+export async function fetchTeamLogs(opts?: { fresh?: boolean }): Promise<TeamLogs | null> {
   if (!GAS_CONNECTED) return null
   try {
-    const res = await fetch('/api/logs', { cache: 'no-store', signal: AbortSignal.timeout(20000) })
+    const qs = opts?.fresh ? '?fresh=1' : ''
+    const res = await fetch(`/api/logs${qs}`, { cache: 'no-store', signal: AbortSignal.timeout(20000) })
     if (!res.ok) return null
     const data = await res.json()
     if (data.connected === false) return null          /* 실패를 0 으로 그리지 않는다 */
-    return Array.isArray(data.logs) ? normalizeLogs(data.logs) : null
+    if (!Array.isArray(data.logs)) return null
+    return { logs: normalizeLogs(data.logs), cached: data.cached === true, stale: data.stale === true }
   } catch {
     return null
   }
