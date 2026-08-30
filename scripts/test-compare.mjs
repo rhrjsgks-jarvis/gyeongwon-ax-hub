@@ -1106,6 +1106,57 @@ function resetUrlTabInputs() {
     else console.log(`[18-b] 로봇청소기 배터리 — 공개 최대 사용시간 ${keptBat}칸만 남아 있음 OK`);
   }
 
+  /*
+   * ── [19] 타사 스펙 — 제조사 원문으로 되돌아가지 않게 (2026-08-30 전수 검증) ──
+   *
+   * **방향이 양쪽으로 틀려 있었다.** 우리에게 유리하게 틀린 것(에코백스 보증 2년 ·
+   * 다이슨 필터 0.3µm)과 불리하게 틀린 것(TCL 주사율 120)이 섞여 있었다 —
+   * 둘 다 현장에서 반박당한다. 타사 카탈로그를 보는 목적 자체가 이것이다.
+   *
+   * 각 항목에 **어느 문장이 근거인지**를 함께 적어 둔다. 다시 바꾸려면 그 문장을
+   * 먼저 뒤집어야 한다.
+   */
+  {
+    const G = [
+      { model: '에코백스 디봇 T90 Pro Omni', key: 'as', want: 1,
+        why: '공식 보증 약관 "within a period of 1 year from the date of purchase" (help.ecovacs.com/kr/support/warranty). 한국 전용 2년 조항이 없다' },
+      { model: '에코백스 디봇 T30 PRO OMNI', key: 'as', want: 1, why: '위와 같음' },
+      { model: 'TCL C855', key: 'hz', want: 144,
+        why: '제조사 스펙표는 "Refresh Rate 144Hz VRR" 하나뿐이다. 120 은 마케팅 문구의 "120Hz MEMC"(프레임 보간)라 패널 주사율이 아니다' },
+      { model: '다이슨 Gen5detect', key: 'dust', want: 0.1,
+        why: '제품 페이지·오버뷰 양쪽 본문 "헤파 필터 시스템이 0.1마이크론만큼 작은 입자를 99.99% 포착". dust 는 작을수록 좋은 항목이라 0.3 은 경쟁사를 실제보다 나쁘게 적는 것이다' },
+    ];
+    const bad = [];
+    for (const cat of Object.values(DB)) {
+      const all = [...(cat.samsung || []), ...Object.values(cat.competitors || {}).flat()];
+      for (const g of G) {
+        const m = all.find((x) => String(x.name).includes(g.model));
+        if (!m) continue;
+        const v = (m.specs || {})[g.key];
+        if (v !== g.want) bad.push(`${m.name} ${g.key}=${v} (기대 ${g.want} — ${g.why})`);
+      }
+    }
+    /* 근거 없는 값은 비워 둔다 — 비교표는 양쪽에 값이 있어야 행을 그리므로 그 행이
+       사라지지만, 근거 없는 숫자를 화면에 두는 것보다 낫다 */
+    for (const cat of Object.values(DB)) {
+      const all = [...(cat.samsung || []), ...Object.values(cat.competitors || {}).flat()];
+      const hs = all.find((x) => String(x.name).includes('하이센스 U8'));
+      if (hs && (hs.specs || {}).brightness !== undefined) {
+        bad.push(`${hs.name} brightness=${hs.specs.brightness} — 제조사 스펙표에 밝기 행 자체가 없다. `
+          + '유일한 수치인 "Up to 5000 nits" 는 65인치 지면에도 똑같이 실려 사이즈별 값이 아니다 — 비워 둘 것');
+      }
+      const tcl = all.find((x) => String(x.name).includes('TCL C855'));
+      if (tcl && (tcl.on || []).some((o) => /(^|[^d])120Hz/.test(o))) {
+        bad.push(`${tcl.name} 셀링포인트에 120Hz 가 남았다 — 보간(MEMC) 값이다`);
+      }
+      if (hs && (hs.on || []).some((o) => /Google TV/i.test(o))) {
+        bad.push(`${hs.name} 셀링포인트에 Google TV 가 남았다 — 호주 스펙표는 VIDAA U9 이고 Google TV 는 미국 U8QG 것이다`);
+      }
+    }
+    if (bad.length) fail('[19] 타사 스펙이 제조사 원문과 다르다: ' + bad.join(' / '));
+    else console.log('[19] 타사 스펙 — 제조사 원문 대조 OK (에코백스 보증 1년 · TCL 144Hz · 다이슨 0.1µm · 하이센스 밝기 비움)');
+  }
+
   // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════

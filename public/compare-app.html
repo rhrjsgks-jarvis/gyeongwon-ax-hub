@@ -1009,10 +1009,10 @@ const DB = {
       ],
       'TCL':[
         { name:'TCL C855 QD-미니LED 85인치 (85C855)', price:240,
-          on:['QD-미니LED','120Hz','FreeSync Premium 144Hz VRR','HDMI 2.1','Dolby Vision IQ','Google TV'],
+          on:['QD-미니LED','144Hz VRR','FreeSync Premium Pro','HDMI 2.1','Dolby Vision IQ','Google TV'],
           /* eGrade — 한국에너지공단 효율관리제도 신고 DB(신청번호 143240579, 완료 2024-03-19).
              화면대각선 215cm · R 199.3W. 등급의 원 출처가 여기다 — 제조사 지면이 아니다. */
-          specs:{ size:85, res:'4K', panel:'QD-MiniLED', hz:120, as:1, brightness:3500, eGrade:5 } }
+          specs:{ size:85, res:'4K', panel:'QD-MiniLED', hz:144, as:1, brightness:3500, eGrade:5 } }
         /*
          * **QM8K(65인치)·QM7K(75인치)를 뺐다**(2026-08-14 사용자 결정).
          * TCL 한국 사이트에 제품 지면이 없다 — `tcl.com/kr/ko/tvs/` 목록에도 없고
@@ -1058,9 +1058,9 @@ const DB = {
        */
       '하이센스':[
         { name:'하이센스 U8 시리즈 85인치 미니LED (85U8Q)', price:199,
-          on:['미니LED 4K','165Hz','HDMI 2.1','돌비비전IQ','HDR10+','Google TV'],
+          on:['미니LED 4K','165Hz','HDMI 2.1','돌비비전IQ','HDR10+'],
           /* eGrade — 에너지공단 신고 DB(신청번호 143250485, 완료 2025-06-11). 215cm · R 161.6W */
-          specs:{ size:85, res:'4K', panel:'ULED(미니LED)', hz:165, as:1, brightness:3000, eGrade:4 } },
+          specs:{ size:85, res:'4K', panel:'ULED(미니LED)', hz:165, as:1, eGrade:4 } },
         /*
          * **`65U8QG`·`75U7QG` 를 뺐다**(2026-08-17 사용자 결정).
          *
@@ -1155,8 +1155,8 @@ const DB = {
           on:['240AW 흡입력(제조사 발표)','레이저 먼지 감지','HEPA 필터','압전 감지','LCD 화면'],
           specs:{ bat:60, dust:0.3, as:2, weight:3.1 } },
         { name:'다이슨 Gen5detect Complete', price:139, grade:'P',
-          on:['262AW 흡입력(제조사 발표)','피조 센서 자동흡입조절','10셀 배터리','145겹 HEPA 필터','LCD 화면'],
-          specs:{ bat:70, dust:0.3, as:2, weight:3.5 } }
+          on:['280AW 흡입력(제조사 발표)','피조 센서 자동흡입조절','10셀 배터리','145겹 HEPA 필터','LCD 화면'],
+          specs:{ bat:70, dust:0.1, as:2, weight:3.5 } }
       ],
       'LG':[
         /* 2026-08-02 LG 베스트샵 카탈로그(4분할 재업로드본 135쪽 "코드제로 A9 AI") 대조.
@@ -1311,10 +1311,10 @@ const DB = {
       '에코백스':[
         { name:'에코백스 디봇 T90 Pro Omni', price:109,
           on:['직배수','70℃ 온수 물걸레세척','자동먼지비움','회전식 물걸레','AI 장애물회피','30,000Pa 흡입력(제조사 발표)'],
-          specs:{ as:2, docktype:3 , pa:30000} },
-        { name:'에코백스 디봇 T30S 프로', price:140,
+          specs:{ as:1, docktype:3 , pa:30000} },
+        { name:'에코백스 디봇 T30 PRO OMNI', price:140,
           on:['11,000Pa 흡입력(제조사 발표)','트루엣지 물걸레 벽면 확장','제로탱글(엉킴방지)','70℃ 온수 물걸레세척+온풍건조','9mm 물걸레 리프팅'],
-          specs:{ as:2, docktype:3 , pa:11000} }
+          specs:{ as:1, docktype:3 , pa:11000} }
       ],
       '드리미':[
         { name:'드리미 X60 Ultra', price:129,
