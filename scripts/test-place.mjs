@@ -241,6 +241,28 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   } else pass('에어드레서 모델 세대별 좌우 이격 (현행 2.5mm / 구형 Bespoke 14mm)');
 
   /*
+   * 세탁기 — **라인업마다 이격이 다르다**(2026-08-30 전수 조사에서 잡혔다).
+   * 기본값(좌우 20 · 후면 50)이 맞는 것은 드럼(WF·WW)과 콤보(WD)뿐이고,
+   * 원바디(WH)·통버블/아가사랑(WA)·플렉스워시(WV)는 **더 넓게 필요하다**.
+   * 모자라게 재면 "들어갑니다" 가 거짓이 되고 그대로 설치 사고다 —
+   * 하필 그 줄이 BY_AREA 가 59㎡ 이상 전 평형대에 기본 추천하는 줄이다.
+   * **양쪽을 함께 본다** — 기본값이 넓어져도(멀쩡한 배치를 막는다) 예외가 사라져도 문다.
+   */
+  {
+    const drum = P.clearFor('세탁기·콤보', '본체', 'WF90F25ADS');
+    const combo = P.clearFor('세탁기·콤보', '본체', 'WD90H25AHS');
+    const onebody = P.clearFor('세탁기·콤보', '본체', 'WH90F2522AAHY');
+    const tub = P.clearFor('세탁기·콤보', '본체', 'WA80F19SKB');
+    const flex = P.clearFor('세탁기·콤보', '본체', 'WV26R9980KV');
+    if (drum.side !== 20 || combo.side !== 20) fail(`드럼·콤보 좌우 이격이 ${drum.side}/${combo.side} (기대 20 — 넓히면 멀쩡한 배치를 막는다)`);
+    else if (onebody.side !== 50) fail(`원바디(WH) 좌우 이격이 ${onebody.side} (기대 50 — 원문 "양옆 이격 각 50mm")`);
+    else if (tub.side !== 50 || tub.back !== 100) fail(`통버블(WA) 이격이 좌우 ${tub.side}·후면 ${tub.back} (기대 50/100)`);
+    else if (flex.back !== 100) fail(`플렉스워시(WV) 후면 이격이 ${flex.back} (기대 100)`);
+    else if (!install.includes('양옆 이격 각 50mm')) fail('원바디·통버블 50mm 근거가 설치환경 가이드에 없다');
+    else pass(`세탁기 라인업별 이격 — 드럼·콤보 ${drum.side}mm · 원바디 ${onebody.side}mm · 통버블 ${tub.side}/${tub.back}mm · 플렉스워시 후면 ${flex.back}mm`);
+  }
+
+  /*
    * 공기청정기 — **기본 60cm, 팝업 청정 부스터 모델만 1m** (2026-08-30).
    *
    * 삼성닷컴 원문 "* 사용 시 벽면과의 거리는 1m 이상 유지해 주세요" 는 `AP90F08163***`
