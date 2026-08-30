@@ -1053,7 +1053,19 @@ function resetUrlTabInputs() {
     };
     const bad = [];
     let kept = 0;
-    for (const cat of ['세탁기·콤보', '건조기', '로봇청소기']) {
+    /*
+     * **울타리에 식기세척기를 넣었다**(2026-08-30). 예전에는 셋만 지켜서
+     * **식기세척기 소음 4칸(삼성 30 vs LG 44·46)이 울타리 밖**이었다 — 삼성 PDP 76행·
+     * LG 사양 4종 어디에도 dB 가 없는데 검사는 ALL PASS 였다. 값이 우리에게 유리한
+     * 방향으로 틀린 것까지 로봇청소기 55dB 사고와 판박이였다.
+     *
+     * **전 카테고리로 넓히지는 않았다.** 넓히면 냉장고·에어컨·김치냉장고 18칸이 함께
+     * 걸리는데, 그것들은 **틀렸다고 확인된 것이 아니라 아직 대조하지 않은 것**이다
+     * (냉장고·에어컨 소음은 제조사가 흔히 공개한다). 지우면 멀쩡한 값을 잃는다.
+     * 대신 **아래에서 세어 보고**한다 — 그것이 다음 조사 목록이다.
+     * 대조를 마치면 그 카테고리를 이 배열에 넣을 것.
+     */
+    for (const cat of ['세탁기·콤보', '건조기', '로봇청소기', '식기세척기']) {
       const c = DB[cat];
       if (!c) { bad.push(`${cat} 카테고리가 사라졌다`); continue; }
       const sam = (c.samsung || []).map((m) => ['삼성', m]);
@@ -1072,6 +1084,24 @@ function resetUrlTabInputs() {
     }
     if (bad.length) fail(`[18] 근거 없는 소음 값: ${bad.join(' / ')}`);
     else console.log(`[18] 소음 — 근거 각주가 있는 ${kept}칸만 남아 있음 OK (LG 는 사양표에 소음 항목이 없다)`);
+    {
+      /* 아직 대조하지 않은 카테고리의 소음 칸 — 실패로 세지 않고 목록만 남긴다 */
+      const todo = [];
+      for (const [cat, c] of Object.entries(DB)) {
+        if (['세탁기·콤보', '건조기', '로봇청소기', '식기세척기'].includes(cat)) continue;
+        const all = [...(c.samsung || []), ...Object.values(c.competitors || {}).flat()];
+        for (const m of all) {
+          const v = (m.specs || {}).noise;
+          if (v !== undefined && v !== null && v !== '') todo.push(cat);
+        }
+      }
+      if (todo.length) {
+        const by = todo.reduce((o, k) => (o[k] = (o[k] || 0) + 1, o), {});
+        console.log('NOTE: 소음 근거 미대조 ' + todo.length + '칸 — '
+          + Object.entries(by).map(([k, n]) => k + ' ' + n).join(' · ')
+          + ' (틀렸다는 뜻이 아니라 아직 원문과 대조하지 않았다는 뜻이다)');
+      }
+    }
 
     /*
      * [18-b] 로봇청소기 배터리 — **제조사가 공개한 최대 사용시간**만 싣는다.
