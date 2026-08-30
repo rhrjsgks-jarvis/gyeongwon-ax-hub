@@ -1583,12 +1583,63 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
     ok2(val(libb, k) === val(svcc, k), '[17] 칸 ' + k + ' 가 AS 와 같다 — ' + val(libb, k));
   }
 
-  /* 도시 단계만 칸이다 — 단지·도면은 이름이 길고 미리보기가 붙어 줄이 맞다 */
+  /*
+   * **도시·단지가 칸이고 도면만 줄이다** (2026-08-30 사장님 지시:
+   * *"지역에들어가면 그안에 단지도 동일한 인터페이스로 하면 좋을것같습니다"*).
+   *
+   * 어제까지 이 검사는 *"단지 항목은 줄 그대로다"* 를 지키고 있었다 — 그때는 그것이
+   * 옳은 판단이었지만(이름이 길다), **사장님이 뒤집으신 결정**이라 검사도 함께 뒤집는다.
+   * 대신 그 판단의 근거였던 것을 검사로 남긴다: **단지 칸은 도시 칸보다 넓고 이름을
+   * 세 줄에서 자른다** — 안 그러면 한 칸이 예닐곱 줄이 되어 칸으로 만든 뜻이 사라진다.
+   *
+   * **도면 단계는 줄로 둔다.** 미리보기 그림이 붙고, 그 그림이 "이게 진짜 평면도인가"를
+   * 상담사가 가르는 근거다(자동 선별이 표본 40장 중 8장을 틀린다).
+   */
   ok2(html.includes('class="libbox" data-v='), '[17] 도시 항목이 칸이다');
-  ok2(html.includes('class="libitem" data-id='), '[17] 단지 항목은 줄 그대로다');
+  ok2(/class="libbox\${dim \? ' noplan' : ''}"/.test(html), '[17] 단지 항목도 칸이다');
   ok2(html.includes('class="libitem withthumb" data-file='), '[17] 도면 항목은 줄 그대로다 (미리보기가 붙는다)');
-  ok2(html.includes("classList.toggle('grid', lv === 'region'"), '[17] 격자는 도시 단계에서만 켠다');
+  ok2(html.includes("classList.toggle('grid', (lv === 'region' || lv === 'complex')"),
+    '[17] 격자를 도시·단지 두 단계에서 켠다');
+  ok2(html.includes("classList.toggle('cx', lv === 'complex'"), '[17] 단지 단계에 넓은 칸 규격을 붙인다');
+  {
+    const cxg = rule(html, '.liblist.grid.cx');
+    const wide = val(cxg, 'grid-template-columns') || '';
+    const cityMin = +((val(libg, 'grid-template-columns') || '').match(/minmax\((\d+)px/) || [])[1];
+    const cxMin = +(wide.match(/minmax\((\d+)px/) || [])[1];
+    ok2(cxMin > cityMin, `[17] 단지 칸이 도시 칸보다 넓다 — ${cxMin}px > ${cityMin}px`);
+    const clamp = rule(html, '.liblist.grid.cx .libbox-n');
+    ok2(clamp != null && /line-clamp:\s*3/.test(clamp), '[17] 긴 단지 이름을 세 줄에서 자른다');
+  }
+  /* 세 가지 단지(도면 있음 · 저장만 · 도면 없음)가 모두 칸으로 나가는가 —
+     하나만 줄로 남으면 그 줄만 화면에서 튄다 */
+  for (const [k, m] of [['data-id=', '도면 있는 단지'], ['data-saved=', '저장된 방만 있는 단지'],
+                        ['data-apt=', '도면 없는 단지']]) {
+    ok2(html.includes('cxBox(`' + k) || html.includes('cxBox(\`' + k),
+      `[17] ${m}도 칸으로 그린다`);
+  }
   ok2(html.includes("querySelectorAll('.libitem, .libbox')"), '[17] 클릭 배선이 칸도 잡는다');
+
+  /*
+   * **단지가 많은 시는 검색이 없으면 못 찾는다.** 수원 468곳이면 폰에서 **18,432px**
+   * 를 쓸어내려야 한다(실측). 칸으로 바꿔 절반이 됐지만 여전히 훑을 수 없어,
+   * 사장님이 본보기로 드신 AS 센터 찾기처럼 목록 위에 검색칸을 두었다
+   * (실측 — 「래미안」 6개 · 「광교」 46개 · 숨은 스크롤 18,432 → 0px).
+   *
+   * **도시 단계에는 띄우지 않는다** — 12~18곳이라 눈으로 찾는 편이 빠르다.
+   * **거르기는 그린 뒤에 한 번만 한다** — 만드는 곳이 셋(도면 있음 · 저장만 ·
+   * 도면 없음)이라 각각에서 거르면 한 곳만 빠뜨려도 조용히 어긋난다.
+   */
+  ok2(/id="libq"/.test(html), '[17] 단지 검색칸이 있다');
+  ok2(rule(html, '.libq') != null, '[17] 검색칸에 모양이 붙어 있다');
+  ok2(html.includes("qbox.hidden = !on"), '[17] 검색칸을 단지 단계에서만 띄운다');
+  ok2(html.includes('let cxNames = []'), '[17] 칸 이름을 모아 둔다 (거르기의 재료)');
+  ok2(html.includes('cxNames.push(name)'), '[17] 칸을 만드는 한 곳에서 이름을 모은다');
+  ok2(/qq \|\| ''\)\.replace/.test(html) || html.includes("items.filter((_, i) => String(cxNames[i]"),
+    '[17] 그린 뒤 이름으로 한 번에 거른다');
+  /* 공백을 지우고 견주는가 — "래미안 원천" 과 "래미안원천" 이 같아야 한다 */
+  ok2((html.match(/replace\(\/\\s\+\/g, ''\)\.toLowerCase\(\)/g) || []).length >= 2,
+    '[17] 검색은 공백을 무시한다');
+  ok2(html.includes('에 맞는 단지가 없습니다'), '[17] 못 찾았을 때 검색 중임을 밝힌다');
 
   /* 칸은 약식이다 — 셋뿐(이름 · 단지 수 · 도면 유무). 넷째가 붙으면 칸으로 만든 뜻이 없다 */
   const bi = html.indexOf('<button class="libbox" data-v=');

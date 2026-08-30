@@ -291,7 +291,22 @@
    * **짧은 클래스 이름을 쓰지 말 것** — AS 에서 `.sn` 이 접수 순서의 단계 번호 원과
    * 부딪혀 이름이 원 안에 갇힌 적이 있다. 여기서는 `libbox-` 접두를 박는다.
    */
+  /*
+   * **단지가 많은 시는 훑을 수가 없다.** 수원 468곳이면 폰에서 **18m** 를 쓸어내려야
+   * 한다(실측) — 칸으로 바꿔 절반이 됐지만 여전히 못 찾는다. 사장님이 본보기로 드신
+   * AS 센터 찾기도 목록 위에 검색칸을 두고 있다.
+   */
+  .libq{width:100%;box-sizing:border-box;margin:8px 0 2px;padding:10px 12px;font-size:14px;
+    border:1px solid var(--line);border-radius:11px;background:#fff;color:inherit}
+  .libq:focus{outline:none;border-color:var(--blue)}
   .liblist.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
+  /*
+   * **단지 칸은 도시 칸보다 넓다.** 도시는 「수원」처럼 두세 글자인데 단지는
+   * 「북수원이목지구 디에트르 더리체2차」처럼 길다 — 104px 에 넣으면 한 칸이
+   * 예닐곱 줄이 되어 칸으로 만든 뜻이 사라진다. 이름은 세 줄에서 자른다.
+   */
+  .liblist.grid.cx{grid-template-columns:repeat(auto-fill,minmax(148px,1fr))}
+  .liblist.grid.cx .libbox-n{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .libbox{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 6px;
     font-family:inherit;text-align:center;cursor:pointer;transition:.12s;color:var(--ink);width:100%}
   .libbox:hover{border-color:#c7d2fe}
@@ -6822,6 +6837,8 @@ async function openLibrary(){
                        : { ...c, allTilted: true };
   });
   let lv = 'region', region = null, cx = null;
+  /* 칸을 그리면서 모아 두는 단지 이름 — 검색은 이것으로 거른다 */
+  let cxNames = [];
   /*
    * **시·도를 먼저 고르게 한다.**
    * 지역이 17곳이라 휴대폰에서는 한 화면에 안 들어가 계속 쓸어내려야 했다
@@ -6918,12 +6935,31 @@ async function openLibrary(){
           <span class="libbox-h${bits.length ? '' : ' none'}">${bits.length ? esc(bits.join(' · ')) : '도면 0장'}</span></button>`;
       });
     } else if (lv === 'complex') {
-      items = inRegion().map((c) => `<button class="libitem" data-id="${esc(c.id)}"><b>${esc(c.complex)}</b>
-        <span class="hint">도면 ${c.plans.length}장${savedIn(c.complex).length ? ` · 저장된 방 ${savedIn(c.complex).length}종` : ''}${
-          c.allTilted ? ' · <b>벽 인식이 어려운 도면만 있습니다</b>' : ''}</span></button>`);
+      /*
+       * **도시와 같은 칸 그리드다**(2026-08-30 사장님 지시: *"지역에들어가면 그안에
+       * 단지도 동일한 인터페이스로 하면 좋을것같습니다"*). 칸에 적는 것은 도시 칸과
+       * 같은 셋 — **이름 · 곁들이 · 도면 유무**. 넷째를 붙이면 칸이 아니라 줄이 된다.
+       */
+      const cxBox = (attr, name, sub, hi, dim) =>
+        (cxNames.push(name),
+        `<button class="libbox${dim ? ' noplan' : ''}" ${attr}>
+          <span class="libbox-n">${esc(name)}</span>
+          <span class="libbox-g">${esc(sub || '')}</span>
+          <span class="libbox-h${dim ? ' none' : ''}">${esc(hi)}</span></button>`);
+      /* 이름으로 좁힌다 — 공백은 무시한다("래미안 원천" ↔ "래미안원천") */
+      const norm = (x) => String(x || '').replace(/\s+/g, '').toLowerCase();
+      const q = norm(($('#libq') || {}).value);
+      const hit = (name) => !q || norm(name).includes(q);
+      cxNames = [];
+      items = inRegion().map((c) => {
+        const sv = savedIn(c.complex).length;
+        /* 「벽 인식이 어려운 도면만 있습니다」는 칸에 넣기엔 길다 — 짧게 적고,
+           들어가면 도면 목록과 화면 경고가 그 사실을 다시 말한다. */
+        const hi = `도면 ${c.plans.length}장` + (c.allTilted ? ' · 인식 어려움' : '');
+        return cxBox(`data-id="${esc(c.id)}"`, c.complex, sv ? `저장된 방 ${sv}종` : '', hi, false);
+      });
       for (const e of savedOnly.filter((x) => (x.region || '지역 미지정') === region)) {
-        items.push(`<button class="libitem" data-saved="${esc(e.complex)}"><b>${esc(e.complex)}</b>
-          <span class="hint">저장된 방만 있음</span></button>`);
+        items.push(cxBox(`data-saved="${esc(e.complex)}"`, e.complex, '', '저장된 방만 있음', false));
       }
       /*
        * **도면이 없는 단지도 함께 보여준다**(2026-08-15). 경기 12개 시 + 강원 전역
@@ -6938,9 +6974,11 @@ async function openLibrary(){
         return !inRegion().some((c) => { const h = c.complex.replace(/\s+/g, ''); return h.includes(n) || n.includes(h); });
       });
       for (const a of extra) {
-        const yr = a.y ? `${a.y.slice(0, 4)}년 ${+a.y.slice(4, 6)}월 입주` : '입주년월 미상';
-        items.push(`<button class="libitem noplan" data-apt="${esc(a.n)}" data-yr="${esc(a.y || '')}"><b>${esc(a.n)}</b>
-          <span class="hint">${esc(a.d || '')} · ${esc(yr)} · <b>도면 없음</b> — 고객 도면을 올려 주세요</span></button>`);
+        /* 칸이라 **입주 연도만** 적는다 — 월·주소까지 넣으면 세 줄이 되어 이름을 가린다.
+           같은 이름 단지를 가르는 데는 연도면 대개 충분하고(1차/2차), 눌러 들어가면
+           그 이름으로 도면 올리기가 열린다. */
+        const yr = a.y ? `${a.y.slice(0, 4)}년 입주` : '입주년월 미상';
+        items.push(cxBox(`data-apt="${esc(a.n)}" data-yr="${esc(a.y || '')}"`, a.n, yr, '도면 없음', true));
       }
     } else {
       items = cx.plans.map((p) => {
@@ -6963,10 +7001,39 @@ async function openLibrary(){
           </span></button>`;
       });
     }
+    /*
+     * **거르는 것은 그린 뒤에 한다.** 만드는 곳이 셋(도면 있음 · 저장만 · 도면 없음)이라
+     * 각각에서 거르면 한 곳만 빠뜨려도 조용히 어긋난다 — 이름을 모아 두고 여기서 한 번에 거른다.
+     */
+    let shown = items, total = items.length;
+    if (lv === 'complex') {
+      const qq = String(($('#libq') || {}).value || '').replace(/\s+/g, '').toLowerCase();
+      if (qq) shown = items.filter((_, i) => String(cxNames[i] || '').replace(/\s+/g, '').toLowerCase().includes(qq));
+    }
+    items = shown;
     body.innerHTML = items.length ? items.join('')
-      : '<p class="hint">등록된 것이 없습니다. 도면을 올려 방을 잡은 뒤 <b>이 단지 저장</b>을 누르세요.</p>';
-    /* 도시 단계만 칸 그리드다 — 단지·도면은 이름이 길고 미리보기가 붙어 줄이 맞다 */
-    body.classList.toggle('grid', lv === 'region' && items.length > 0);
+      : (lv === 'complex' && ($('#libq') || {}).value)
+        ? `<p class="hint">「${esc(($('#libq') || {}).value)}」 에 맞는 단지가 없습니다. 이름 일부만 넣어 보세요.</p>`
+        : '<p class="hint">등록된 것이 없습니다. 도면을 올려 방을 잡은 뒤 <b>이 단지 저장</b>을 누르세요.</p>';
+    /* 도시·단지가 칸 그리드다. **도면 단계는 줄로 둔다** — 미리보기 그림이 붙어
+       칸에 넣으면 그림이 뭉개지고, 그 그림이 "이게 진짜 평면도인가"를 가르는 근거다. */
+    /* 검색칸은 단지 단계에서만 — 도시는 12~18곳이라 눈으로 찾는 편이 빠르다 */
+    const qbox = $('#libq');
+    if (qbox) {
+      const on = lv === 'complex';
+      qbox.hidden = !on;
+      if (!on) qbox.value = '';
+      else qbox.placeholder = total > 0 ? `단지 ${total.toLocaleString()}곳에서 이름으로 찾기` : '단지 이름으로 찾기';
+    }
+    body.classList.toggle('grid', (lv === 'region' || lv === 'complex') && items.length > 0);
+    body.classList.toggle('cx', lv === 'complex' && items.length > 0);
+
+    /* 입력칸은 #libbody 밖이라 다시 그려도 글자와 커서가 그대로다 */
+    const qb = $('#libq');
+    if (qb && !qb.dataset.wired) {
+      qb.dataset.wired = '1';
+      qb.oninput = () => render();
+    }
 
     body.querySelectorAll('.libitem, .libbox').forEach((b) => {
       b.onclick = () => {
@@ -7099,6 +7166,8 @@ async function openLibrary(){
     <p class="hint">도시 → 단지 → 도면 순으로 고릅니다. 저장해 둔 도면은 방까지 복원됩니다.</p>
     <div id="libcrumb" class="crumb"></div>
     <div id="libchips" class="chips"></div>
+    <input id="libq" class="libq" type="search" hidden autocomplete="off"
+      placeholder="단지 이름으로 찾기" aria-label="단지 이름으로 찾기">
     <div id="libbody" class="liblist"></div>
     <div id="libmine" class="hint"></div>
     <div class="modal-actions"><button id="libexp">벽선 보내기</button><button id="c">닫기</button></div>`,

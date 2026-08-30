@@ -39,6 +39,8 @@ export default function ExitGuard() {
   const [ask, setAsk] = useState(false)
   const [bye, setBye] = useState(false)
   const noRef = useRef<HTMLButtonElement>(null)
+  /* 물러나는 중 — 이때 도는 popstate 로 종료 창이 다시 뜨면 안 된다 */
+  const leaving = useRef(false)
 
   /** 표식을 심는다 — 이미 그 칸 위면 아무것도 하지 않는다(쌓이지 않게) */
   const arm = () => {
@@ -58,6 +60,7 @@ export default function ExitGuard() {
 
   useEffect(() => {
     const onPop = () => {
+      if (leaving.current) return
       if (window.location.pathname !== '/') return
       const st = window.history.state
       if (st && st.axGuard) return // 아직 표식 칸 위다 — 앱 안이다
@@ -77,29 +80,50 @@ export default function ExitGuard() {
 
   const stay = () => { setAsk(false); arm() }
   /*
-   * **나갈 수 있으면 진짜로 나가고, 갈 곳이 없으면 종료 화면을 보여준다.**
+   * **나갈 때까지 뒤로 간다 — 한 번으로는 앱 안으로 들어가 버린다.**
    *
-   * 실측(2026-08-30) — 앞에 다른 지면이 있는 탭에서는 `history.back()` 이 그 지면으로
-   * 데려간다(확인). 그런데 **설치형(standalone)은 시작 지면이 히스토리의 첫 칸이라
-   * back 이 아무 일도 하지 않는다** — 사장님 지적: *"예를 누르면 종료가 되어야 하는데
-   * 종료가 안 됩니다."* 매장 태블릿이 그렇게 쓴다.
+   * 사장님 지적(2026-08-30): *"예를 누르면 종료가 되어야 하는데 종료가 안 됩니다.
+   * 예를 누르면 뒤로가기버튼이 자동으로 한번 눌리게 하면 해결될 것 같은데 가능합니까."*
    *
-   * **웹은 스스로 창을 닫을 수 없다.** `window.close()` 는 스크립트가 연 창에서만 듣고,
-   * 안드로이드가 PWA 를 닫는 것은 **사용자가 직접 뒤로가기 제스처**를 했을 때이지 스크립트가
-   * 부른 back 으로는 안 된다. 우회할 수 있는 규칙이 아니다.
+   * 재현해 보니 **정확한 지적이었다**(.scratch/_exit.mjs). 앱 안을 돌아다닌 뒤 홈으로
+   * 오면 히스토리가 이만큼 쌓인다 — Next 가 한 칸, 우리 표식이 또 한 칸:
    *
-   * 그래서 **되는 만큼 하고, 안 되면 사실대로 종료 화면을 보여준다.** 눌러서 다시 시작할
-   * 수 있으므로 거짓말이 아니고, 상담사에게는 "끝났다"가 그 자리에서 보인다.
+   *   앱 뜸 len=3 (표식 O) · AS 로 len=4 · **홈으로 돌아옴 len=6** (표식 O)
+   *   뒤로 1번 → 종료 창 · 예 → **AS 화면으로 갔다**
+   *
+   * 즉 뒤로가기 한 번은 앱 밖이 아니라 **앱 안 다른 화면**으로 데려간다. 곧장 뒤로 간
+   * 경우(len=3)에는 제대로 나갔기 때문에 상황에 따라 되기도 하고 안 되기도 했다.
+   *
+   * **몇 칸을 물러나야 하는지는 셀 수 없다** — 해시 링크(/#tools)처럼 우리가 못 세는
+   * 칸도 있다. 그래서 **나갈 때까지 반복해서 뒤로 간다.** 위험해 보이지만 그렇지 않다:
+   * **지면을 벗어나는 순간 이 코드가 함께 내려가** 더 물러나지 않는다(pagehide 로도
+   * 한 번 더 막는다). 사용자의 이전 방문 기록까지 헤집을 일이 없다.
+   *
+   * **웹은 스스로 창을 닫을 수 없다.** window.close() 는 스크립트가 연 창에서만 듣고,
+   * 설치형(standalone)은 시작 지면이 히스토리 첫 칸이라 어떻게 해도 물러날 곳이 없다.
+   * 그때는 12번 시도한 뒤 **사실대로 종료 화면을 보여준다** — 눌러서 다시 시작할 수
+   * 있으므로 거짓말이 아니고, 상담사에게는 "끝났다"가 그 자리에서 보인다.
    */
   const leave = () => {
     setAsk(false)
-    const path = window.location.pathname
-    try { window.close() } catch { /* 스크립트가 연 창이 아니면 무시된다 */ }
-    try { window.history.back() } catch { /* 갈 곳이 없다 */ }
-    /* 정말 나갔으면 이 컴포넌트가 사라져 타이머도 함께 사라진다 */
-    window.setTimeout(() => {
-      if (window.location.pathname === path) setBye(true)
-    }, 400)
+    leaving.current = true
+    let n = 0
+    let done = false
+    /* 진짜로 나가면 이 지면이 내려간다 — 그때 멈춘다 */
+    const stop = () => { done = true }
+    window.addEventListener('pagehide', stop)
+    const step = () => {
+      if (done) return
+      if (n++ >= 12) {                       // 갈 곳이 없다 — 사실대로 말한다
+        window.removeEventListener('pagehide', stop)
+        leaving.current = false
+        setBye(true)
+        return
+      }
+      try { window.history.back() } catch { window.removeEventListener('pagehide', stop); leaving.current = false; setBye(true); return }
+      window.setTimeout(step, 320)
+    }
+    step()
   }
 
   if (bye) {

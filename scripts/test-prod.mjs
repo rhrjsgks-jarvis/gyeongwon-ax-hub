@@ -123,7 +123,9 @@ for (let n = 0; n < targets.length; n++) {
     await page.waitForTimeout(450);
     await f.locator(`#libbody .libbox:has-text("${city}")`).first().click();
     await page.waitForTimeout(650);
-    await f.locator(`#libbody .libitem:has-text("${t.complex}")`).first().click();
+    /* 단지도 칸이 됐다(2026-08-30) — 둘 다 받는다. 한쪽만 적으면 화면을 바꿀 때마다
+       이 스위트가 「요소를 못 찾음」으로 죽고, 원인이 인식 로직처럼 보인다. */
+    await f.locator(`#libbody .libbox:has-text("${t.complex}"), #libbody .libitem:has-text("${t.complex}")`).first().click();
     await page.waitForTimeout(750);
     await f.locator(`#libbody .libitem:has-text("${t.type}")`).first().click();
   });

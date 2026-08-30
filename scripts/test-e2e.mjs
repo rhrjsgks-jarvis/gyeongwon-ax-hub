@@ -1017,7 +1017,8 @@ try {
             : fail('설치형에서 종료를 묻지 않는다');
     if (askedSa) {
       await sp.getByRole('button', { name: '예, 종료' }).click();
-      await sp.waitForTimeout(1200);
+      /* 나갈 때까지 되풀이해 물러나므로(12번 × 320ms) 그것을 다 기다린 뒤에 본다 */
+      await sp.waitForTimeout(4800);
       const bye = await sp.locator('text=세일즈 코파일럿을 종료했습니다').count();
       bye ? pass('갈 곳이 없으면 종료 화면을 보여준다 (창을 스스로 닫을 수 없다)')
           : fail('「예」를 눌렀는데 아무 일도 일어나지 않는다 — 종료 화면이 없다');
@@ -1031,6 +1032,41 @@ try {
       }
     }
     await sa.close();
+
+    /*
+     * **앱 안을 돌아다닌 뒤에도 「예」가 진짜로 나가야 한다** (2026-08-30 사장님 지적:
+     * *"예를 누르면 종료가 되어야 하는데 종료가 안 됩니다."*).
+     *
+     * 재현하니 홈 → AS → 홈 이면 히스토리가 3 → 6 칸이 되고, 뒤로 한 번에 종료 창이
+     * 뜬 다음 「예」가 **AS 화면으로 데려갔다**. 나가는 것이 아니라 앱 안으로 들어간 것이다.
+     * 지금은 지면을 벗어날 때까지 되풀이해 물러난다.
+     *
+     * **곧장 뒤로 간 경우만 보면 이 결함을 못 잡는다** — 그쪽은 고치기 전에도 잘 나갔다.
+     * 반드시 **앱 안 링크로 옮겨 다닌 뒤에** 확인할 것.
+     */
+    const wc = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    await wc.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
+    const wp = await wc.newPage();
+    await wp.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await wp.waitForTimeout(1600);
+    /* page.goto 로 옮기면 문서가 새로 떠서 실제 앱과 다르게 움직인다 — 링크를 누른다 */
+    for (const name of ['AS 관련 정보', '허브']) {
+      await wp.locator('a', { hasText: name }).first().click({ timeout: 5000 }).catch(() => {});
+      await wp.waitForTimeout(1400);
+    }
+    await wp.goBack(); await wp.waitForTimeout(800);
+    const askedW = await wp.locator('[role="dialog"]', { hasText: '종료하시겠습니까' }).count();
+    askedW ? pass('앱 안을 돌아다닌 뒤 홈에서 뒤로가기 → 종료를 묻는다')
+           : fail('앱 안을 돌아다닌 뒤에는 종료를 묻지 않는다');
+    if (askedW) {
+      await wp.getByRole('button', { name: '예, 종료' }).click();
+      await wp.waitForTimeout(4800);
+      const where = await wp.evaluate(() => location.href);
+      const inApp = /\/(as|place|finder|compare|care|install|test|quiz|poster|search)\b/.test(where);
+      !inApp ? pass('「예」가 앱을 벗어난다 (' + where.replace(BASE, '').slice(0, 24) + ')')
+             : fail('「예」가 앱 안 화면으로 들어갔다: ' + where.replace(BASE, ''));
+    }
+    await wc.close();
 
   }
 
