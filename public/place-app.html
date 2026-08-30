@@ -299,6 +299,12 @@
   .libq{width:100%;box-sizing:border-box;margin:8px 0 2px;padding:10px 12px;font-size:14px;
     border:1px solid var(--line);border-radius:11px;background:#fff;color:inherit}
   .libq:focus{outline:none;border-color:var(--blue)}
+  /* 방 크기 입력 — 어느 벽이 가로인지 그림으로 먼저 보여준다 */
+  .boxdim{display:flex;align-items:center;gap:10px;margin:2px 0 6px}
+  .boxdim svg{flex:none}
+  .boxdim-t{font-size:11.5px;color:var(--fg,#111827);line-height:1.6}
+  .boxdim-t b{color:var(--blue)}
+  .boxdim-t span{color:var(--muted);font-size:10.5px}
   .liblist.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
   /*
    * **단지 칸은 도시 칸보다 넓다.** 도시는 「수원」처럼 두세 글자인데 단지는
@@ -1573,9 +1579,23 @@ function askRoomSize(){
   sheet(`<h2>방 크기 직접 입력</h2>
     <p class="hint">도면이 없어도 됩니다. <b>가로·세로만</b> 넣으면 그 크기의 공간을 만들어
       가전을 놓아 볼 수 있습니다. 고객에게 물어보신 값을 그대로 넣으세요.</p>
-    <label class="pickers"><span class="hint">가로 (mm)</span>
+    <div class="boxdim" aria-hidden="true">
+      <svg viewBox="0 0 150 104" width="150" height="104">
+        <rect x="34" y="10" width="104" height="62" rx="3" fill="none" stroke="#1428A0" stroke-width="2"/>
+        <path d="M34 86h104M38 82l-4 4 4 4M134 82l4 4-4 4" fill="none" stroke="#1428A0"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="86" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1428A0">가로</text>
+        <path d="M20 10v62M16 14l4-4 4 4M16 68l4 4 4-4" fill="none" stroke="#1428A0"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <text x="8" y="41" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1428A0"
+          transform="rotate(-90 8 41)">세로</text>
+      </svg>
+      <div class="boxdim-t">가로는 <b>좌우</b> 벽면,<br>세로는 <b>위아래</b> 벽면입니다.<br>
+        <span>만든 뒤에도 네 벽에 mm 가 적힙니다.</span></div>
+    </div>
+    <label class="pickers"><span class="hint">가로 (mm) — 좌우 벽면</span>
       <input type="number" id="rw" value="4200" min="600" max="30000" step="100"></label>
-    <label class="pickers"><span class="hint">세로 (mm)</span>
+    <label class="pickers"><span class="hint">세로 (mm) — 위아래 벽면</span>
       <input type="number" id="rh" value="3600" min="600" max="30000" step="100"></label>
     <p class="src">한국 아파트 거실은 보통 가로 3,600~4,800mm · 세로 3,000~4,200mm 입니다.
       나중에 <b>경계 수정</b>으로 모양을 고칠 수 있습니다.</p>
@@ -1607,6 +1627,14 @@ function makeBoxRoom(w, h){
   const seg = (x1,y1,x2,y2)=>({ x1, y1, x2, y2, open:false });
   addRoom('거실', [seg(0,0,w,0), seg(w,0,w,h), seg(w,h,0,h), seg(0,h,0,0)]);
   $('#empty').style.display = 'none';
+  /*
+   * **치수를 켠 채로 만든다**(2026-08-30 사장님 지시). 도면에서 잡은 방은 숫자가
+   * 도면을 덮어 기본으로 꺼 두지만, 직접 입력한 방은 **덮을 도면이 없고** 그 두 숫자가
+   * 화면의 전부다 — 어느 벽이 가로인지 세로인지 보이지 않으면 만든 뜻이 없다.
+   * 도구막대 ↔ 로 언제든 끌 수 있다.
+   */
+  state.showDims = true;
+  const dimBtn = $('#btn-dims'); if (dimBtn) dimBtn.classList.add('on');
   setMode('idle'); setStep(4);
   fitAll(); evaluate(); renderSide(); draw();
   toast(`${w.toLocaleString()} × ${h.toLocaleString()}mm 공간을 만들었습니다 — 가전을 골라 보세요`);

@@ -18,22 +18,29 @@ window.alert = () => {};
 function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 // PRODUCTS 배열(public/care-app.html)과 동일 순서/구성 — DATA 유무·onlyPlan·듀얼플랜 여부를 함께 기록.
+// 2026-08-30 — 콤보·세탁기·건조기·냉장고의 12개월형이 실제로 있는데 onlyPlan:'36' 이
+// 감추고 있었다(건조기는 자료까지 이미 있었다). 넷 다 듀얼 플랜으로 바뀌었다.
 const ALL_PRODUCTS = [
   { key: 'aircon',           name: '에어컨',              hasData: true,  onlyPlan: null, dual: true,  typeAB: true  },
-  { key: 'aicombo',          name: 'AI콤보',               hasData: true,  onlyPlan: '36', dual: false },
-  { key: 'washer',           name: '세탁기',               hasData: true,  onlyPlan: '36', dual: false },
-  { key: 'dryer',            name: '건조기',               hasData: true,  onlyPlan: '36', dual: false },
-  { key: 'fridge',           name: '냉장고',               hasData: true,  onlyPlan: '36', dual: false },
+  { key: 'aicombo',          name: 'AI콤보',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
+  { key: 'washer',           name: '세탁기',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
+  { key: 'dryer',            name: '건조기',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
+  { key: 'fridge',           name: '냉장고',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
   { key: 'dish',             name: '식기세척기',           hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
   { key: 'dresser',          name: '에어드레서',           hasData: true,  onlyPlan: null, dual: true,  single12: true },
   { key: 'airpur_reusable',  name: '공기청정기(리유저블)', hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
   { key: 'airpur_s',         name: '공기청정기(S필터)',    hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
   { key: 'purifier_under',   name: '언더싱크 정수기',      hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
-  { key: 'purifier_counter', name: '카운터탑·얼음 정수기', hasData: false, onlyPlan: null, dual: false },
+  /* 2026-08-30 — 한 카드에 묶여 있던 둘을 갈랐다. 카운터탑은 방문케어가 있는데
+     얼음정수기와 묶여 통째로 「자가관리」로 떠 있었다(회차표는 아직 못 받아 DATA 없음). */
+  { key: 'purifier_counter', name: '카운터탑 정수기', hasData: false, onlyPlan: null, dual: false },
+  { key: 'purifier_ice',     name: '얼음정수기',     hasData: false, onlyPlan: null, dual: false },
   { key: 'vacuum',           name: '로봇청소기',           hasData: true,  onlyPlan: '12', dual: false, single12: true },
   // 김치냉장고는 12·36개월형이 다 있다. 예전에 36개월 전용으로 적어 뒀는데 삼성닷컴 대조에서 틀린 것으로 확인됐다
   { key: 'kimchi',           name: '김치냉장고',           hasData: true,  onlyPlan: null, dual: true  },
-  { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  onlyPlan: '36', dual: false },
+  /* 2026-08-30 — 삼성닷컴이 방문케어(36/12개월)를 파는데 우리는 「미대상·자가관리」라
+     적고 있었다. 이제 12·36 두 플랜을 다 가진 정상 케어 상품이다. */
+  { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  onlyPlan: null, dual: true, rounds12: 6 },
   { key: 'microwave',        name: '전자레인지/오븐',      hasData: true,  onlyPlan: '36', dual: false },
   { key: 'soundbar',         name: '사운드바',             hasData: true,  onlyPlan: '36', dual: false },
   /*
@@ -54,7 +61,9 @@ const ALL_PRODUCTS = [
 ];
 
 // 타임라인 모드에 노출되는(=st:'done') 제품 키. TL_MONTHS(care-app.html)에 정의된 키와 일치해야 함.
-const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser','airpur_reusable','airpur_s','purifier_under','vacuum','kimchi'];
+/* 2026-08-30 — 인덕션이 들어왔다. 삼성닷컴이 방문케어를 파는데 우리는 「미대상」이라
+   적고 있었다(현행 구독 SKU 8종). 새 제품을 done 으로 올리면 여기도 함께 넣을 것. */
+const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser','airpur_reusable','airpur_s','purifier_under','vacuum','kimchi','induction'];
 
 (async () => {
   /*
@@ -147,7 +156,14 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
       if (!p.hasData) {
         const todo = doc.querySelector('.todo-card');
         if (!todo) { fail(`[${p.key}] expected placeholder .todo-card (no DATA entry)`); continue; }
-        if (!todo.textContent.includes('자가관리 가이드')) fail(`[${p.key}] placeholder text missing 자가관리 가이드`);
+        /*
+         * **'자가관리 가이드' 라는 문구를 박지 않는다**(2026-08-30). 회차표가 없는 제품이
+         * 다 자가관리는 아니다 — 카운터탑 정수기는 방문케어까지 되는데 그 문구가 붙어
+         * 있으면 화면이 거짓말을 한다. 지켜야 하는 것은 **제품 이름과 설명이 보이는가** 다.
+         */
+        const tt = todo.textContent;
+        if (!tt.includes(p.name)) fail(`[${p.key}] placeholder 에 제품 이름이 없다`);
+        else if (tt.replace(/s+/g, ' ').trim().length < 40) fail(`[${p.key}] placeholder 본문이 너무 짧다`);
         if (doc.querySelector('.sumrow')) fail(`[${p.key}] should not render .sumrow when DATA missing`);
         console.log(`[${p.key}] OK (placeholder, no DATA)`);
         continue;
@@ -272,13 +288,23 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
       if (!html.includes(`>${label}</span>`)) fail(`bluepass: 조건 라벨 '${label}' 이 화면에 없다`);
     }
 
-    // 빠지면 분쟁이 되는 조건 문구 — 원문 그대로 남아 있어야 한다
+    /*
+     * 빠지면 분쟁이 되는 조건 문구 — **원문(ai-subs/guide)에 실제로 있는 것만** 지킨다.
+     *
+     * 2026-08-30 전수 대조에서 예전 목록 다섯 중 넷이 **원문에 없는 말**이었다.
+     * 특히 '하절기(6~9월)는 운영 제외' 는 혜택을 스스로 깎는 말이고,
+     * '유상 옵션 — 추가 비용이 발생합니다' 가 붙어 있던 시간맞춤 설치는 원문이
+     * **"추가 비용 없이"** 라고 적어 정반대였다. 검사가 그것들을 지키고 있었다 —
+     * **검사가 근거 없는 값을 붙들면 고치는 쪽이 실패한다.**
+     * 아래는 원문 조건 불릿 다섯과 게이트 문장 그대로다.
+     */
     const MUST = [
-      '하절기(6~9월)는 운영 제외',            // A/S 패스트트랙을 무제한으로 말하면 안 된다
-      'SmartThings 앱 설치 후 제품 연결 필요', // 앱 없이는 사전케어가 동작하지 않는다
-      '유상 옵션 — 추가 비용이 발생합니다',    // 오늘보장 설치는 무료가 아니다
-      '삼성전자 제품에 한함',                  // 하나 더 서비스는 타사 제품 불가
-      'AI 올인원 2.0 구독 고객에게만 제공됩니다', // 스마트 요금제는 블루패스가 없다
+      '냉장고 / 김치냉장고 / 세탁기 / 건조기 / 에어컨 / TV 중 택 1',   // 하나 더 서비스
+      '냉장고, 김치냉장고, 에어드레서, 건조기, 세탁기, TV 중 일부 모델 대상', // 시간맞춤 설치
+      '유상옵션',                                                      // 오늘보장 설치는 무료가 아니다
+      '일반에어컨(D+1일내), 가정용 시스템에어컨(D+5일내) 설치 보장',    // 최우선 설치
+      '설치 이슈로 인한 냉매 누설 및 당사 제품/배관 시공 완료 제품에 한함', // 냉매 안심케어
+      'AI 올인원 2.0 구독 고객에게만 제공되는 서비스입니다',            // 스마트 요금제는 블루패스가 없다
     ];
     for (const s of MUST) {
       if (!html.includes(s)) fail(`bluepass: 조건 문구가 사라졌다 — '${s}'`);
@@ -369,29 +395,33 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     if (kinds.filter((x) => /세척/.test(x)).length !== 2) fail(`timeline: 에어컨 12개월형에 B타입(기본 세척) 2회가 안 보인다 — ${kinds.join(',')}`);
 
     /*
-     * 36개월 전용 제품으로 넘어가면 **플랜이 36으로 보정돼야 한다.**
-     * 예전에는 tlPlan 이 '12' 로 남아 죽은 TL_MONTHS[dryer][12] 가 그려져 6회로 보였다
-     * (2026-08-11 사용자 보고 — AI콤보에서 같은 증상). 건조기는 onlyPlan:'36' 이라
-     * 12개월형이 없으므로 회차는 2회(36·72개월차)여야 한다.
+     * **단일 플랜 제품으로 넘어가면 플랜이 그쪽으로 보정돼야 한다.**
+     * 예전에는 tlPlan 이 옛 값으로 남아 **죽은 표를 그려** 회차 수가 틀렸다
+     * (2026-08-11 사용자 보고 — AI콤보에서 같은 증상).
+     *
+     * **대상을 로봇청소기로 옮겼다**(2026-08-30). 건조기가 12·36 둘 다 갖게 됐기
+     * 때문이다 — 삼성닷컴이 파는 12개월형을 onlyPlan:'36' 이 감추고 있었다.
+     * 로봇청소기는 5년형·12개월 전용이라 회차가 5회다.
      */
     const prodSel = doc.querySelectorAll('.tl-sel')[0];
-    prodSel.value = 'dryer';
+    prodSel.value = 'aicombo';                       // 먼저 듀얼 플랜 제품에서 36을 골라 둔다
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    const circlesDryer = stops();
-    if (circlesDryer !== 2) fail(`timeline: dryer 는 36개월 전용이라 2회여야 하는데 ${circlesDryer}회`);
+    doc.querySelectorAll('.tl-sel')[1].value = '36';
+    doc.querySelectorAll('.tl-sel')[1].dispatchEvent(new window.Event('change', { bubbles: true }));
+    prodSel.value = 'vacuum';                        // 12개월 전용으로 넘어간다
+    prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
+    const circlesOnly = stops();
+    if (circlesOnly !== 5) fail(`timeline: 로봇청소기는 12개월 전용 5년형이라 5회여야 하는데 ${circlesOnly}회`);
     const planOpts = [...doc.querySelectorAll('.tl-sel')[1].querySelectorAll('option')].map((o) => o.value);
-    if (planOpts.length !== 1 || planOpts[0] !== '36') fail(`timeline: dryer 플랜 선택지는 36 하나여야 하는데 ${planOpts.join(',')}`);
+    if (planOpts.length !== 1 || planOpts[0] !== '12') fail(`timeline: 로봇청소기 플랜 선택지는 12 하나여야 하는데 ${planOpts.join(',')}`);
 
-    // 36개월 전용 제품에서도 회차는 그대로 2회
-    const planSel = doc.querySelectorAll('.tl-sel')[1];
-    planSel.value = '36';
-    planSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    const circlesDryer36 = stops();
-    if (circlesDryer36 !== 2) fail(`timeline: dryer/36개월형 expected 2 round circles, got ${circlesDryer36}`); // [36,72]
-
-    // 사용자가 신고한 그 조합 — AI콤보 36개월형은 2회여야 한다
+    /* 사용자가 신고한 그 조합 — AI콤보 36개월형은 2회여야 한다.
+       2026-08-30 부터 콤보는 12개월형도 있으므로 **36을 골라서** 본다
+       (예전에는 36 전용이라 고를 필요가 없었다). */
     prodSel.value = 'aicombo';
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
+    doc.querySelectorAll('.tl-sel')[1].value = '36';
+    doc.querySelectorAll('.tl-sel')[1].dispatchEvent(new window.Event('change', { bubbles: true }));
     const circlesCombo = stops();
     if (circlesCombo !== 2) fail(`timeline: AI콤보 36개월형은 2회여야 하는데 ${circlesCombo}회 (구독 6년 ÷ 36개월)`);
 

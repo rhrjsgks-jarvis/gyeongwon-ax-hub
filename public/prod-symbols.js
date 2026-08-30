@@ -206,7 +206,7 @@
     aircon: 'aircon', washer: 'washer', dryer: 'dryer', aicombo: 'combo', fridge: 'fridge',
     kimchi: 'kimchi', dish: 'dish', dresser: 'dresser', vacuum: 'robot',
     airpur_reusable: 'airpur', airpur_s: 'airpur',
-    purifier_under: 'purifier', purifier_counter: 'purifier_top',
+    purifier_under: 'purifier', purifier_counter: 'purifier_top', purifier_ice: 'purifier_top',
     induction: 'induction', microwave: 'microwave', soundbar: 'soundbar',
     /*
      * **AI구독 케어의 모바일·PC·태블릿**(2026-08-14 추가). `prodIcon(p.key, p.icon)` 이

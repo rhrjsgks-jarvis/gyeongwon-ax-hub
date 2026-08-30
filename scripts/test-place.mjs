@@ -1652,6 +1652,32 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(rule(html, '.libq') != null, '[17] 검색칸에 모양이 붙어 있다');
   ok2(html.includes("qbox.hidden = !on"), '[17] 검색칸을 단지 단계에서만 띄운다');
   ok2(html.includes('let cxNames = []'), '[17] 칸 이름을 모아 둔다 (거르기의 재료)');
+
+  /*
+   * **방 크기 직접 입력은 치수를 켠 채로 만든다** (2026-08-30 사장님 지시:
+   * *"가로사이즈와 세로사이즈가 표시되면 좋겠습니다. 어느벽면이 어느길이인지 헷깔립니다."*
+   * · *"가상의방이기때문에 충분히 가능합니다."*).
+   *
+   * 도면에서 잡은 방은 숫자가 도면을 덮어 기본으로 꺼 두지만, 직접 입력한 방은
+   * **덮을 도면이 없고** 그 두 숫자가 화면의 전부다. 새 그리기 코드를 만들지 않고
+   * 이미 있는 `state.showDims` 를 켜는 것이라, 도구막대 ↔ 로 언제든 끌 수 있다.
+   *
+   * 입력칸 그림은 **글리프에 기대지 않는다** — 「↕」가 글꼴에 없어 「↔」로 렌더돼
+   * 가로·세로가 같은 화살표로 보였다(실물 스크린샷으로 잡았다). SVG 로 그린다.
+   */
+  ok2(/state.showDims = true/.test(html), '[18] 직접 입력한 방은 치수를 켠 채로 만든다');
+  ok2(html.includes("dimBtn.classList.add('on')"), '[18] 도구막대 ↔ 버튼도 켜진 것으로 보인다');
+  ok2(html.includes('class="boxdim"'), '[18] 입력칸에 가로·세로 그림이 있다');
+  {
+    /* 거리 정규식으로 보지 않는다 — 그림이 길어지면 조용히 헛돈다. 블록을 잘라서 본다. */
+    const bi = html.indexOf('class="boxdim"');
+    const be = html.indexOf('</svg>', bi);
+    const box = bi > 0 && be > bi ? html.slice(bi, be) : '';
+    ok2(box.length > 0, '[18] 입력칸 그림 블록을 찾을 수 있다');
+    ok2(!box.includes('↕'), '[18] 그림이 「↕」 글리프에 기대지 않는다');
+    ok2(box.includes('>가로<') && box.includes('>세로<'), '[18] 그림 안에 가로·세로 라벨이 붙어 있다');
+    ok2(/<path[^>]*d="M\d+ \d+v\d+/.test(box), '[18] 세로 화살표를 SVG 로 그린다');
+  }
   ok2(html.includes('cxNames.push(name)'), '[17] 칸을 만드는 한 곳에서 이름을 모은다');
   ok2(/qq \|\| ''\)\.replace/.test(html) || html.includes("items.filter((_, i) => String(cxNames[i]"),
     '[17] 그린 뒤 이름으로 한 번에 거른다');

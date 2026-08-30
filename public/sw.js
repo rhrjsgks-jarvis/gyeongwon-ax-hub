@@ -408,7 +408,7 @@
  * 사이드바·앱 헤더처럼 한 줄뿐인 자리는 모델파인더만 쓴다 — 옛 이름은 카드 부제와
  * 검색어에 남으므로 '제품 상세검색'으로 찾던 사람도 그대로 찾는다.
  */
-const CACHE_VERSION = 'axhub-v213';
+const CACHE_VERSION = 'axhub-v214';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -519,6 +519,8 @@ self.addEventListener('fetch', (e) => {
    * **매장에서 전파가 끊겨도 규격도가 떠야 한다** — 설치 상담에서 정작 필요한 그림이다.
    */
   if (url.pathname.startsWith('/install-img/')) { e.respondWith(cacheFirst(req)); return; }
+  /* 블루패스 타일 그림 — 규격도와 같은 규칙(캐시 우선). 파일명이 원문 것이라 내용이 바뀌면 이름도 바뀐다 */
+  if (url.pathname.startsWith('/care-img/')) { e.respondWith(cacheFirst(req)); return; }
   /* 설치 전 준비 안내 그림 — 설치 불가 조건·필요 공간·타공 기준이 그림에 있어 매장에서
      전파가 끊겨도 열려야 한다. 파일 내용이 바뀌면 이름을 바꿔 올릴 것(캐시 우선이다). */
   if (url.pathname.startsWith('/install-cost-img/')) { e.respondWith(cacheFirst(req)); return; }
