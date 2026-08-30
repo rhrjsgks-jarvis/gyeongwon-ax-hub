@@ -7256,12 +7256,12 @@ function saveToGoogle(data){
   });
   iframe.addEventListener('error',()=>{
     if(settled)return; settled=true;
-    if(el)el.innerHTML='<span class="drive-skip">저장 실패 — 네트워크 연결을 확인하세요</span>';
+    if(el)el.innerHTML='<span class="drive-err">저장 실패 — 네트워크 연결을 확인하세요</span>';
     cleanup();
   });
   setTimeout(()=>{
     if(settled)return; settled=true;
-    if(el)el.innerHTML='<span class="drive-skip">저장 확인 시간 초과 — 네트워크 연결을 확인하세요</span>';
+    if(el)el.innerHTML='<span class="drive-err">저장 확인 시간 초과 — 네트워크 연결을 확인하세요</span>';
     cleanup();
   },10000);
   form.submit();

@@ -1137,7 +1137,6 @@ function search(P){
   /* 뒤에 숫자·공백·끝이 올 때만 바꾼다 — 그래야 processor 가 "프로cessor" 가 되지 않는다 */
   const NICK_RE = NICK_EN.map(([en,ko])=>[new RegExp("\\b"+en+"(?=\\d|\\s|$)","g"),ko]);
   const nospace = (s)=>s.replace(/\s+/g,"");
-  function kwc(p){ return p.__kwc || (p.__kwc = nospace(p.kw)); }
   /*
    * 이 토큰이 가질 수 있는 표기들 — 원문 · 공백 지운 것 · 영문 음차 · 그 공백 지운 것.
    * **kw 판정과 제품군 가산점이 같은 목록을 써야 한다.** 나눠 두었더니 질의 `울트라` 가

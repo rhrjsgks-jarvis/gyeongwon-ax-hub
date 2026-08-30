@@ -101,8 +101,14 @@ for (let n = 0; n < targets.length; n++) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 880 } });
   /* 배치 시뮬레이터가 '개발중인 서비스'로 내려가 비밀번호 뒤에 있다(2026-08-17).
      여기서 재는 것은 그 도구의 흐름이지 자물쇠가 아니므로 세션 값을 미리 넣어 지나간다. */
+  /* **지점 문도 함께 지나간다**(2026-08-30). 2026-08-20 에 첫 접속마다 점코드를 묻게 되면서
+     앱이 그 전에는 아예 안 그려진다 — 그래서 iframe 을 못 찾아 `fr()` 이 undefined 였고,
+     이 검사가 또 죽어 있었다. **테스트점(Z000)을 쓰면 로그도 안 쌓인다.** */
   await page.addInitScript(() => {
-    try { sessionStorage.setItem('ax_dev_unlocked_until', String(Date.now() + 3600e3)) } catch {}
+    try {
+      sessionStorage.setItem('ax_dev_unlocked_until', String(Date.now() + 3600e3))
+      sessionStorage.setItem('axhub_store', 'Z000')
+    } catch {}
   });
   const errs = [], bad = [];
   page.on('pageerror', (e) => errs.push(e.message.slice(0, 120)));

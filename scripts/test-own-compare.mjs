@@ -11,6 +11,7 @@
  *     한 줄도 안 잡혀 "안 쓰는 모듈"로 읽힌다.
  */
 import fs from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -69,7 +70,31 @@ const sw = rd('public/sw.js');
     fail('finder-core.json 이 없다 — npm run build:owncompare 를 돌려 커밋할 것');
   } else pass('제품 상세검색과 같은 두 파일을 쓴다');
 
-  /* 재생성 대조 — 인라인 PRODUCTS 를 고치고 이 파일을 안 올리면 조용히 낡는다 */
+  /*
+   * **재생성 대조** — 인라인 `PRODUCTS` 를 고치고 이 파일을 안 올리면 조용히 낡는다.
+   * 단종 처리·카탈로그 대조로 인라인이 바뀌는 일이 잦은데, 그때 당사제품 비교만
+   * 옛 사양을 보여주게 된다.
+   *
+   * **주석은 예전부터 "재생성 대조" 라고 적혀 있었는데 코드는 모양만 보고 있었다**
+   * (길이 400 이상 · 필드 존재 · kw 없음). 검사가 스스로에 대해 거짓말을 하고 있었던 셈이라
+   * 여기서 실제로 다시 만들어 견준다 — `search-index`·`size-reps`·`examtool` 이 쓰는 방식이다.
+   */
+  {
+    const built = path.join(ROOT, 'public', 'finder-core.json');
+    const before = fs.readFileSync(built, 'utf8');
+    try {
+      execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build-own-compare.mjs')],
+        { cwd: ROOT, stdio: 'ignore' });
+      const after = fs.readFileSync(built, 'utf8');
+      if (before !== after) {
+        fs.writeFileSync(built, before);        // 검사가 파일을 바꿔 놓지 않는다
+        fail('finder-core.json 이 낡았다 — 인라인 PRODUCTS 를 고쳤으면 `npm run build:owncompare` 를 돌려 커밋할 것');
+      } else pass('finder-core.json 이 최신이다 (지금 다시 만든 것과 같다)');
+    } catch (e) {
+      fs.writeFileSync(built, before);
+      fail('finder-core.json 재생성에 실패했다 — ' + String(e.message || e).split('\n')[0].slice(0, 90));
+    }
+  }
   const core = JSON.parse(rd('public/finder-core.json'));
   if (!Array.isArray(core) || core.length < 400) fail(`finder-core.json 이 ${core.length}종 — 너무 적다`);
   else if (core.some((p) => !p.cat || !p.model || !Array.isArray(p.fx))) fail('finder-core.json 에 cat·model·fx 가 빠진 항목이 있다');
