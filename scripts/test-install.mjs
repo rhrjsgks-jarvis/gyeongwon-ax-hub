@@ -33,11 +33,12 @@ async function ready(check, ms = 15000) {
 const allCats = [
   '냉장고 4도어 프리스탠딩', '냉장고 4도어 키친핏', '냉장고 4도어 키친핏 Max', '냉장고 2도어',
   '냉장고 1도어', '냉장고 양문형', '냉장고 일반형', '냉장고 페어(2대 이상) 설치', '김치냉장고',
-  '세탁기·콤보', '건조기', '에어컨', 'TV', '청소기', '로봇청소기', '식기세척기', '에어드레서',
+  '세탁기·콤보', '건조기', '에어컨', '시스템에어컨', 'TV', '청소기', '로봇청소기', '식기세척기', '에어드레서',
   '인덕션', '후드', '후드일체형 인덕션', '정수기', '전자레인지', '공기청정기',
 ];
 
 const expectedImageCounts = {
+  '시스템에어컨': 4,
   '냉장고 4도어 프리스탠딩': 3, '냉장고 4도어 키친핏': 3, '냉장고 4도어 키친핏 Max': 2,
   '냉장고 2도어': 1, '냉장고 1도어': 2, '냉장고 양문형': 4, '냉장고 일반형': 1,
   '냉장고 페어(2대 이상) 설치': 4, '김치냉장고': 5, '세탁기·콤보': 9, '건조기': 4, '에어컨': 3,
@@ -162,6 +163,50 @@ const expectedImageCounts = {
     }
     if (bad) ok = false;
     else console.log(`OK: 규격도 — 우리 저장소 ${local.length}장(파일·출처 확인) · 아직 외부 ${remote.length}장`);
+  }
+
+  {
+    const _i = html.indexOf("const INSTALL_DB");
+    const _s = html.indexOf("{", _i);
+    let _d = 0, _j = _s;
+    for (; _j < html.length; _j++) { const c = html[_j]; if (c === "{") _d++; else if (c === "}") { _d--; if (!_d) break; } }
+    const DB = new Function("return " + html.slice(_s, _j + 1))();
+
+/*
+ * ── **화면에 나가는 문구에 렌더되지 않는 서식을 넣지 않는다** (2026-08-30) ──────────
+ *
+ * 이 앱의 `row()` 는 문구를 통째로 이스케이프한다. 그래서 `<b>` 든 마크다운 `**` 든
+ * **글자 그대로 보인다.** CLAUDE.md 가 `<b>` 로 이미 데인 자리인데, 시스템에어컨을
+ * 넣으며 마크다운으로 같은 실수를 했다 — 화면에 `**필수.**` 가 별표째 떴다
+ * (검사는 전부 통과했고 **스크린샷이 잡았다**).
+ *
+ * **`**` 를 통째로 막으면 안 된다** — 와일드카드 모델코드가 그 모양이다
+ * (`RK**F42*` · `WF*0F25**` · `DW80F73*`, 실측 20건). 막는 것은 **한글을 감싼 강조**다.
+ */
+
+  const RENDERED = ['subtitle', 'source'];
+  /* **와일드카드 모델코드를 강조로 오인하지 않는다** — `RK**F42*`·`AP90F08163***` 가
+     그 모양이라, 별표 둘 사이가 멀면 서로 다른 코드의 별표를 이어 잡는다(실제로 그랬다).
+     그래서 앞은 시작·공백·여는 괄호, 뒤는 끝·공백·문장부호일 때만 강조로 본다. */
+  const EMPH = /(^|[\s(「'])\*\*(?=\S)[^*\n]{1,120}?\*\*(?=$|[\s.,)」·'])|__[^_\n]*[가-힣][^_\n]*__|<\/?[a-z]+[^>]*>/i;
+  const bad = [];
+  for (const [cat, d] of Object.entries(DB)) {
+    const texts = [];
+    for (const k of RENDERED) if (d[k]) texts.push([k, d[k]]);
+    for (const k of ['space', 'utility']) for (const row of (d[k] || [])) texts.push([k, row.join(' ')]);
+    for (const k of ['checklist', 'cautions', 'types']) for (const t of (d[k] || [])) texts.push([k, t]);
+    for (const im of (d.images || [])) { texts.push(['cap', im.cap || '']); texts.push(['alt', im.alt || '']); }
+    for (const [k, t] of texts) {
+      const m = String(t).match(EMPH);
+      if (m) bad.push(`${cat}/${k} — ${m[0].slice(0, 30)}`);
+    }
+  }
+  if (bad.length) {
+    console.log(`ERROR: 렌더되지 않는 서식이 화면 문구에 섞였다 ${bad.length}건 — ${bad.slice(0, 4).join(' · ')}`);
+    ok = false;
+  } else {
+    console.log('OK: 화면 문구에 렌더되지 않는 서식 없음 (와일드카드 모델코드는 정상)');
+  }
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
