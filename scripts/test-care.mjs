@@ -374,6 +374,26 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     window.setMode('timeline');
     if (doc.getElementById('timelinePane').style.display === 'none') fail('timeline mode: timelinePane should be visible');
     // 자가관리 제품(인덕션·전자레인지·사운드바)은 방문 케어가 아니라 타임라인 목록에서 빠진다
+    /*
+     * **기준월은 오늘의 다음 달이다** (2026-08-30 사장님 지시: *"지금은 지난달로 표시됩니다.
+     * 10월에 조회하면 11월부터 설치되는걸로"*). 예전에는 2026년 7월이 박혀 있었다.
+     * **박아 둔 날짜는 그날 하루만 맞고 다음 달부터 거짓이 된다** — 그래서 검사도
+     * 특정 연·월을 적지 않고 "오늘에서 뽑았는가"라는 불변식으로 본다.
+     */
+    {
+      const n = new Date(); n.setDate(1); n.setMonth(n.getMonth() + 1);
+      const y = window.eval('tlYear'), m = window.eval('tlMonth');
+      if (y !== n.getFullYear() || m !== n.getMonth() + 1) {
+        fail(`타임라인 기준월이 ${y}.${m} — 오늘 기준 다음 달(${n.getFullYear()}.${n.getMonth() + 1})이어야 한다`);
+      } else {
+        const sels = doc.querySelectorAll('.tl-sel');
+        const ys = sels.length > 2 ? [...sels[2].querySelectorAll('option')].map((o) => +o.value) : [];
+        if (!ys.length) fail('타임라인 연도 드롭다운을 못 찾았다');
+        else if (!ys.includes(n.getFullYear() + 6)) fail(`연도 목록이 6년 계약을 못 덮는다 (최대 ${Math.max(...ys)})`);
+        else console.log(`OK: 타임라인 기준월이 오늘의 다음 달 (${y}.${m}) · 연도 ${Math.min(...ys)}~${Math.max(...ys)})`);
+      }
+    }
+
     const prodOpts = doc.querySelectorAll('.tl-sel')[0].querySelectorAll('option');
     const TL_KEYS = DONE_KEYS.filter((k) => (window.eval(`(DATA['${k}']||{}).contract`) !== '자가관리'));
     if (prodOpts.length !== TL_KEYS.length) fail(`timeline: expected ${TL_KEYS.length} product options, got ${prodOpts.length}`);

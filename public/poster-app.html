@@ -684,16 +684,42 @@ var STORES = [{"code":"ZN01","name":"스타필드 수원"},{"code":"ZHA7","name"
     img.dataset.code = code;
   }
 
-  sel.addEventListener('change', function(){
-    var code = sel.value;
-    if (!code) return;
+  function apply(code){
+    if (!code) return false;
     var st = STORES.filter(function(s){ return s.code === code; })[0];
-    if (st && branch) {
+    if (!st) return false;
+    sel.value = code;
+    if (branch) {
       branch.value = st.name;
       branch.dispatchEvent(new Event('input', { bubbles:true }));
     }
     make(code);
-  });
+    return true;
+  }
+
+  sel.addEventListener('change', function(){ apply(sel.value); });
+
+  /*
+   * **앱 들머리에서 고른 지점을 그대로 쓴다**(2026-08-30 사장님 지시).
+   * 미니앱은 같은 출처의 iframe 이라 부모가 담아 둔 sessionStorage 를 그대로 읽는다 —
+   * 쿼리로 넘기면 헤더·라우트·iframe 세 곳을 거쳐야 하고 한 곳만 빠져도 조용히 안 먹는다.
+   *
+   * **테스트점(Z000)은 건너뛴다** — 그 지점은 로그도 남기지 않는 점검용이라
+   * 포스터를 그 이름으로 뽑으면 매장에 나갈 인쇄물이 「테스트점」이 된다.
+   * 값이 없거나 목록에 없으면 아무 일도 하지 않는다(예전처럼 직접 고르면 된다).
+   */
+  try {
+    var mine = sessionStorage.getItem('axhub_store');
+    if (mine && mine !== 'Z000' && apply(mine)) {
+      var hint = document.querySelector('label[for="store"], #store');
+      /* 자동으로 채웠다는 것을 화면이 밝힌다 — 조용히 채우면 남의 지점으로 뽑을 수 있다 */
+      var note = document.createElement('div');
+      note.id = 'store-auto';
+      note.style.cssText = 'margin:6px 0 0;font-size:12px;color:#1428A0;font-weight:600';
+      note.textContent = '접속하신 지점으로 채웠습니다 — 다른 지점 포스터가 필요하면 위에서 바꾸세요.';
+      if (sel.parentNode) sel.parentNode.insertBefore(note, sel.nextSibling);
+    }
+  } catch (e) { /* sessionStorage 를 못 쓰는 환경이면 예전처럼 직접 고른다 */ }
 
   /* 전 지점 한 번에 — 65장을 순서대로 인쇄하거나 PNG 로 내려받는다 */
   var btnAll = document.getElementById('qr-all');

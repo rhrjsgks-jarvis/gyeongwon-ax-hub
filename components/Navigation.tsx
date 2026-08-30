@@ -194,6 +194,17 @@ export default function Navigation() {
         style={{ height: 'var(--nav-height)', background: 'var(--color-primary)' }}
         className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 shadow-md"
       >
+        {/*
+          **뒤로가기와 로고를 한 덩어리로 묶는다**(2026-08-30 사장님 지시:
+          *"최상단 SAMSUNG 세일즈코파일럿 로고가 중앙으로 이동합니다. 이것은 항상
+          좌측상단에 위치하고있어야합니다."*).
+
+          헤더가 `justify-between` 이라 **뒤로가기 · 로고 · 오른쪽 셋을 고르게 벌리고**,
+          그 결과 미니앱 화면(뒤로가기가 있는 화면)에서만 로고가 가운데로 밀렸다.
+          허브에서는 뒤로가기가 없어 왼쪽에 붙으므로 **화면마다 자리가 달라 보였다.**
+          둘을 한 상자에 넣으면 벌어지는 것은 [뒤로가기+로고] ↔ [오른쪽] 둘뿐이다.
+        */}
+        <div className="flex items-center min-w-0">
         {pathname !== '/' && (
           <button
             type="button"
@@ -224,6 +235,7 @@ export default function Navigation() {
             세일즈 코파일럿
           </span>
         </Link>
+        </div>
         {/* 오른쪽 — 팀 이름은 왼쪽으로 밀고 그 자리에 공유 아이콘을 고정한다 */}
         <div className="flex items-center gap-2.5">
           {/* 버전 — 미니앱을 보고 있을 때도 최신인지 확인돼야 해서 상단바에 함께 둔다.

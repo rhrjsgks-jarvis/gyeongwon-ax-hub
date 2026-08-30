@@ -1018,7 +1018,9 @@ try {
     if (askedSa) {
       await sp.getByRole('button', { name: '예, 종료' }).click();
       /* 나갈 때까지 되풀이해 물러나므로(12번 × 320ms) 그것을 다 기다린 뒤에 본다 */
-      await sp.waitForTimeout(4800);
+      /* 12번 × 320ms 를 다 기다린 뒤에도 React 가 그리는 데 한 박자 걸린다 —
+         고정 시간 대신 종료 화면이 뜰 때까지 기다린다(이 저장소가 이미 데인 함정). */
+      await sp.waitForSelector('text=세일즈 코파일럿을 종료했습니다', { timeout: 12000 }).catch(() => {});
       const bye = await sp.locator('text=세일즈 코파일럿을 종료했습니다').count();
       bye ? pass('갈 곳이 없으면 종료 화면을 보여준다 (창을 스스로 닫을 수 없다)')
           : fail('「예」를 눌렀는데 아무 일도 일어나지 않는다 — 종료 화면이 없다');
@@ -1081,6 +1083,37 @@ try {
    *    「이모지를 지울 때의 함정」 **세 번째** 사례이고, 실물 스크린샷으로만 잡혔다).
    */
   {
+    /*
+     * **로고는 어느 화면에서도 좌측 상단이다** (2026-08-30 사장님 지시:
+     * *"로고가 중앙으로 이동합니다. 이것은 항상 좌측상단에 위치하고있어야합니다.
+     * 이것만큼은 오와열을 맞추지 않습니다."*).
+     *
+     * 헤더가 justify-between 이라 뒤로가기·로고·오른쪽 셋을 고르게 벌렸고, 그 결과
+     * **뒤로가기가 있는 화면에서만** 로고가 가운데로 밀렸다 — 허브에서는 왼쪽이라
+     * 화면마다 자리가 달라 보였다. 지금은 뒤로가기와 로고가 한 덩어리다.
+     * **한 화면만 보면 이 결함을 못 잡는다** — 허브와 미니앱을 함께 본다.
+     */
+    for (const [w, hh] of [[390, 900], [1440, 900]]) {
+      const lc = await browser.newContext({ viewport: { width: w, height: hh } });
+      await lc.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
+      const lp = await lc.newPage();
+      const xs = [];
+      for (const route of ['/', '/as']) {
+        await lp.goto(BASE + route, { waitUntil: 'domcontentloaded' });
+        await lp.waitForTimeout(1300);
+        const x = await lp.evaluate(() => {
+          const svg = document.querySelector('header svg');
+          return svg ? Math.round(svg.getBoundingClientRect().left) : -1;
+        });
+        xs.push({ route, x });
+      }
+      const bad = xs.filter((r) => r.x < 0 || r.x > 60);
+      bad.length
+        ? fail(`${w}px — 워드마크가 왼쪽에 없다: ${bad.map((r) => r.route + ' x=' + r.x).join(', ')}`)
+        : pass(`${w}px — 워드마크가 어느 화면에서도 좌측 상단 (${xs.map((r) => r.route + ' ' + r.x).join(' · ')})`);
+      await lc.close();
+    }
+
     const cp = await ctx.newPage();
     await cp.goto(BASE + '/#concierge', { waitUntil: 'domcontentloaded' });
     await cp.waitForTimeout(1800);

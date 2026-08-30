@@ -231,10 +231,12 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
   border-radius:13px;padding:11px 11px 10px}
 /* 원문 타일 그림 — 카드 위에 띠로 얹는다(배경으로 깔면 남색 위 흰 글자가 안 읽힌다) */
 .bp-i.haspic{display:block;padding:0;overflow:hidden}
-.bp-i.haspic .bp-img{display:block;width:100%;height:82px;object-fit:cover;object-position:center 30%}
-.bp-i.haspic .bp-ic{position:absolute;margin:-46px 0 0 10px}
-.bp-i.haspic .bp-tx{padding:14px 11px 10px;margin-top:-4px}
-@media (min-width:520px){ .bp-i.haspic .bp-img{height:96px} }
+.bp-i.haspic .bp-img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;object-position:center 35%}
+.bp-i.haspic .bp-ic{position:absolute;margin:-42px 0 0 9px;width:30px;height:30px;border-radius:9px;box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.bp-i.haspic .bp-ic svg{width:17px;height:17px}
+.bp-i.haspic .bp-tx{padding:15px 10px 11px;margin-top:-2px}
+/* 넓은 화면에서는 사진이 너무 커지지 않게 위아래를 조금 잘라 준다 */
+@media (min-width:720px){ .bp-i.haspic .bp-img{aspect-ratio:2/1} }
 .bp-ic{width:34px;height:34px;border-radius:10px;background:#fff;color:#1428A0;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center}
 .bp-ic svg{width:20px;height:20px;display:block}
@@ -267,11 +269,11 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
  * 자세히 보여 주는 것이 이 화면의 목적이므로 폭을 글에 준다.
  */
 #bluepassPane .bp-wrap{margin:14px 16px 4px}
-#bluepassPane .bp-g{grid-template-columns:1fr}
+#bluepassPane .bp-g{grid-template-columns:1fr 1fr}
 #bluepassPane .bp-t{font-size:13.5px}
 #bluepassPane .bp-d{font-size:11.5px}
 #bluepassPane .bp-cv{font-size:10.5px}
-@media(max-width:560px){.bp-g{grid-template-columns:1fr}
+@media(max-width:560px){.bp-g{grid-template-columns:1fr 1fr;gap:8px}
   .bp-wrap{padding:15px 13px 12px}.bp-hh{font-size:14px}
   #bluepassPane .bp-wrap{margin:14px 12px 4px}}
 
@@ -3088,7 +3090,13 @@ function careSchedule(d, pl){
   return out.sort(function(a,b){ return a.month - b.month; });
 }
 
-let tlKey='aircon', tlPlan='12', tlYear=2026, tlMonth=7;
+/*
+ * **기준월을 박지 않는다.** 상담 시점의 **다음 달**부터 설치되는 것으로 잡는다
+ * (2026-08-30 사장님 지시 — 그 전에는 2026년 7월이 박혀 있어 지난달이 떴다).
+ * 드롭다운으로 언제든 바꿀 수 있다.
+ */
+const tlNext = (() => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + 1); return d; })();
+let tlKey='aircon', tlPlan='12', tlYear=tlNext.getFullYear(), tlMonth=tlNext.getMonth()+1;
 
 function renderTimeline(){
   /*
@@ -3114,7 +3122,9 @@ function renderTimeline(){
   // <option> 은 텍스트만 담는다 — SVG 심벌을 못 넣으므로 제품명만 쓴다
   let prodOpts = done.map(p=>'<option value="'+p.key+'" '+(p.key===tlKey?'selected':'')+'>'+p.name+'</option>').join('');
   let planOpts = plans.map(pl=>'<option value="'+pl+'" '+(pl===tlPlan?'selected':'')+'>매 '+pl+'개월형</option>').join('');
-  let yearOpts = [2024,2025,2026,2027,2028,2029,2030].map(y=>'<option value="'+y+'" '+(y===tlYear?'selected':'')+'>'+y+'년</option>').join('');
+  /* 연도도 박지 않는다 — 6년 계약이라 앞뒤로 넉넉히 편다(지난 상담을 되짚을 수 있게 뒤로 2년) */
+  const tlY0 = new Date().getFullYear();
+  let yearOpts = Array.from({length:11},(_,i)=>tlY0-2+i).map(y=>'<option value="'+y+'" '+(y===tlYear?'selected':'')+'>'+y+'년</option>').join('');
   let monthOpts = Array.from({length:12},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===tlMonth?'selected':'')+'>'+(i+1)+'월</option>').join('');
 
   /* 회차·내용은 DATA 에서 직접 만든다 — TL_MONTHS 와 갈라질 여지를 없앤다 */
