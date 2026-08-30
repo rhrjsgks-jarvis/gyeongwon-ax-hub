@@ -796,6 +796,44 @@ const CAT_QUERIES = {
     console.log(`  TV 85인치 ${tv85.length}종(그 크기 전부) · 노트북 16인치 ${nb16.length}종 · 비화면 품목에 인치 없음 ✓`);
 
     /*
+     * ── **모델코드 안의 글자를 단위로 읽지 않는다** (2026-08-30) ────────────────────
+     *
+     * `RM70F63M2A` 의 **`63M2`** 가 ㎡ 규칙에 걸려 `areaMin 63㎡` 로 파싱됐다.
+     * 면적 필터는 그 값을 못 넘는 제품을 후보에서 빼므로 **그 코드를 쳤는데 결과가
+     * 0건**이 된다 — 화면에는 "없습니다" 한 줄만 떠서 상담이 그 자리에서 막히고,
+     * 무엇이 문제인지 알 길이 없다(0건도 아니고 조용히 틀린 답이다).
+     *
+     * 인치·평도 같은 함정을 안고 있다 — 모델코드에 숫자와 글자가 붙는 것이 흔하다
+     * (`AF90H17D38EN` 의 `17D` · `KQ85QNH80` 의 `85Q`). 셋 다 **앞뒤 경계**를
+     * 요구해서 막는다. 사람이 치는 말은 `63㎡`·`19평`처럼 앞뒤가 비어 있거나 조사가
+     * 붙으므로 경계를 요구해도 잃는 것이 없다(바로 위 검사들이 그것을 지킨다).
+     *
+     * **건수를 박지 않는다** — DB 의 모델코드를 전수로 훑어 *"단위로 읽히는 것이 하나도
+     * 없다"* 는 불변식으로 본다. 제품이 늘어도 그대로 돈다.
+     */
+    {
+      const codes = new Set();
+      /* PRODUCTS 는 최상위 let 이라 window 에 안 붙는다 — 원문에서 뽑은 배열을 쓴다 */
+      for (const p of CE_MX) {
+        for (const [k, v] of (p.fx || [])) {
+          if (!/모델/.test(k)) continue;
+          for (const c of String(v).split(/[,s/]+/)) if (/^[A-Z]{2}[A-Z0-9-]{5,}$/.test(c)) codes.add(c);
+        }
+      }
+      const list = [...codes];
+      if (list.length < 100) fail(`모델코드를 ${list.length}종밖에 못 모았다 — 검사가 헛돈다`);
+      const misread = [], zero = [];
+      for (const c of list) {
+        const q = window.parseQuery(c);
+        if (q.areaMin != null || q.inch != null || q.pyeong != null) misread.push(c);
+        if (window.search(window.parseQuery(c)).length === 0) zero.push(c);
+      }
+      if (misread.length) fail(`모델코드를 단위로 읽는다 ${misread.length}종 — ${misread.slice(0, 5).join(' ')}`);
+      if (zero.length) fail(`그 모델코드를 쳤는데 0건이다 ${zero.length}종 — ${zero.slice(0, 5).join(' ')}`);
+      if (!misread.length && !zero.length) console.log(`  모델코드 ${list.length}종 — 단위로 오파싱 0 · 검색 0건 0 ✓`);
+    }
+
+    /*
      * ── 묶음 상품은 **검색에서 뺀다** (2026-08-27 사용자 결정) ─────────────────────
      * *"모델파인더에서는 세트상품은 필요가 없습니다. 제품의 정보를 얻기 위함"*.
      * `TV 85인치` 가 107종이었는데 38종만 단품이고 69종이 사운드바·무빙스타일 조합이었다.
