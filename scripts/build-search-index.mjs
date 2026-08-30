@@ -120,8 +120,19 @@ function flatten(v, out = []) {
   const DBC = literal(html, /\nconst DB = (\{[\s\S]*?\n\});/, 'compare-app.html 의 DB');
   for (const [cat, d] of Object.entries(DBC)) {
     const sams = d.samsung || [];
+    /*
+     * **타사 모델코드를 색인에 담지 않는다**(2026-08-30). CLAUDE.md 가 못 박은 규칙이다 —
+     * *"LG 모델은 타사비교에만 넣고 모델파인더·통합검색 인덱스에는 절대 넣지 않는다"*.
+     * 그런데 `flatten(d)` 가 카테고리 객체를 통째로 펼쳐 `competitors` 까지 담고 있었다.
+     * 실측 — 타사 모델코드 **54종 전부**가 `search-index.json` 에 들어가 있었다
+     * (`kw` 가 소문자라 대문자로 grep 하면 안 보인다. **소문자로 대조할 것**).
+     *
+     * **브랜드 이름은 남긴다** — 막는 것은 모델이지 브랜드가 아니고, 상담사가
+     * *"하이센스 비교"* 로 찾는 것은 막을 이유가 없다.
+     */
+    const { competitors, ...rest } = d;
     add({ t: 'category', m: 'compare', title: cat, sub: '타사비교 · 스펙 비교표·응대 스크립트',
-      kw: [cat, '비교 타사비교 경쟁사 lg', ...flatten(d)].join(' '),
+      kw: [cat, '비교 타사비교 경쟁사 lg', ...Object.keys(competitors || {}), ...flatten(rest)].join(' '),
       href: `/compare?cat=${encodeURIComponent(cat)}` });
     for (const s of sams) {
       add({ t: 'product', m: 'compare', title: s.name, sub: `${cat} · 타사비교 삼성 대표모델`,

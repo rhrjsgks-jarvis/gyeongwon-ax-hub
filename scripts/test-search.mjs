@@ -536,5 +536,68 @@ for (const [file, needle] of deepLinks) {
   }
 }
 
+
+/*
+ * ── **타사 모델코드를 색인에 담지 않는다** (2026-08-30) ─────────────────────────
+ *
+ * CLAUDE.md 가 못 박은 규칙 — *"LG 모델은 타사비교에만 넣고 모델파인더·통합검색
+ * 인덱스에는 절대 넣지 않는다"*. 그런데 색인 생성기의 `flatten(d)` 가 카테고리 객체를
+ * 통째로 펼쳐 `competitors` 까지 담아, **타사 모델코드 54종이 전부 들어가 있었다.**
+ *
+ * **소문자로 대조할 것** — `kw` 는 소문자라 대문자로 grep 하면 0 이 나와 없는 줄 안다
+ * (실제로 그렇게 한 번 "안 샜다"고 판정했다. CLAUDE.md 의 grep 지시도 그 함정을 안고 있다).
+ *
+ * **다만 응대 스크립트·셀링포인트 문장 안의 말은 막지 않는다** —
+ * *"LG 얼음정수기(WD722RK 240㎜)보다 70㎜ 좁다"* 는 상담사가 읽을 문장이지 제품으로
+ * 실린 것이 아니다. 지우면 문장이 뭉개진다. 그래서 규칙은 **"타사 제품 이름으로는
+ * 못 찾는다"** 이지 "그 글자가 파일 어디에도 없다" 가 아니다.
+ */
+{
+  const cmpHtml = fs.readFileSync(path.join(root, 'public', 'compare-app.html'), 'utf8');
+  const dbAt = cmpHtml.indexOf('const DB');
+  const dbFrom = cmpHtml.indexOf('{', dbAt);
+  let depth = 0, dbTo = dbFrom;
+  for (; dbTo < cmpHtml.length; dbTo++) {
+    const ch = cmpHtml[dbTo];
+    if (ch === '{') depth++;
+    else if (ch === '}') { depth--; if (!depth) break; }
+  }
+  const DBC = new Function('return ' + cmpHtml.slice(dbFrom, dbTo + 1))();
+
+  const rival = new Map();       // 타사 모델코드 → 브랜드
+  const ownText = new Map();     // 카테고리 → 삼성 쪽 글 전체(응대 문장 포함)
+  for (const [cat, d] of Object.entries(DBC)) {
+    const { competitors, ...rest } = d;
+    ownText.set(cat, JSON.stringify(rest));
+    for (const [brand, list] of Object.entries(competitors || {})) {
+      for (const pr of (Array.isArray(list) ? list : [])) {
+        const found = String(pr.name || '').match(/[A-Z][A-Z0-9-]{5,}/g) || [];
+        for (const code of found) rival.set(code, brand);
+      }
+    }
+  }
+  if (rival.size < 20) fail(`타사 모델코드를 ${rival.size}종밖에 못 모았다 — 검사가 헛돈다`);
+  else {
+    const bad = [];
+    for (const e of entries) {
+      const kw = String(e.kw || '').toLowerCase();
+      for (const [code, brand] of rival) {
+        if (!kw.includes(code.toLowerCase())) continue;
+        /* 타사비교 카테고리 글 안의 문장이면 봐준다 — 그 문장은 상담사가 읽을 말이다 */
+        const prose = e.m === 'compare' && (ownText.get(e.title) || '').includes(code);
+        if (!prose) bad.push(`${code}(${brand}) → ${e.m}/${e.title}`);
+      }
+    }
+    if (bad.length) fail(`타사 모델코드가 색인에 실렸다 ${bad.length}건 — ${bad.slice(0, 5).join(' · ')}`);
+    else console.log(`OK: 타사 모델코드 ${rival.size}종이 색인에 제품으로 실리지 않았다 (응대 문장 안의 말만 남는다)`);
+
+    /* 브랜드 이름은 남아야 한다 — 막는 것은 모델이지 브랜드가 아니다 */
+    const idxTxt = JSON.stringify(entries).toLowerCase();
+    const miss = [...new Set(rival.values())].filter((b) => !idxTxt.includes(String(b).toLowerCase()));
+    if (miss.length) fail(`타사 브랜드 이름까지 사라졌다: ${miss.join(' · ')} — "하이센스 비교" 로 못 찾는다`);
+    else console.log('OK: 타사 브랜드 이름은 색인에 남아 있다');
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
