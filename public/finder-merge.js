@@ -43,8 +43,8 @@
       .replace(/(mm|㎜)$/, "");
   }
 
-  var PARTS = ["실내기", "실외기", "판넬", "패널", "포장", "박스", "스킠드", "벽걸이", "본체",
-               "미니워시", "개구부", "청정스테이션", "우퍼", "거치", "받침", "배관", "리모컨", "도어", "서람", "충전"];
+  var PARTS = ["실내기", "실외기", "판넬", "패널", "포장", "박스", "스탠드", "벽걸이", "본체",
+               "미니워시", "개구부", "청정스테이션", "우퍼", "거치", "받침", "배관", "리모컨", "도어", "서랍", "충전"];
 
   function isTri(v) {
     var n = String(v).match(/[0-9][0-9,]*(?:\.[0-9]+)?/g) || [];
@@ -73,5 +73,17 @@
     });
   }
 
-  window.AX_FILL = { pickRows: pickRows, normLab: normLab, isTri: isTri, partOf: partOf };
+  /*
+   * 묶음(세트) 상품인가 — 2026-08-27 사장님 결정으로 검색·비교에서 뺀다.
+   * 규칙은 제품 상세검색과 **한 벌**이어야 한다(당사제품 비교가 같은 것을 쓴다).
+   * 괄호 안의 + 는 규격 설명(80㎡+33㎡)이고, Copilot+ · 열풍건조+ 는 제품·기능 이름이다.
+   */
+  function isPackage(p) {
+    var s = String((p && p.group) || "");
+    s = s.replace(/\([^)]*\)/g, " ");
+    s = s.replace(/copilot\s*\+|열풍건조\s*\+/gi, " ");
+    return /[+＋]|패키지|번들/.test(s);
+  }
+
+  window.AX_FILL = { pickRows: pickRows, normLab: normLab, isTri: isTri, partOf: partOf, isPackage: isPackage };
 })();

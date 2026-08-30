@@ -54,7 +54,7 @@ body{font-family:'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif
 .essay-textarea{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:10px;font-size:14px;line-height:1.7;resize:vertical;outline:none;transition:border .2s;font-family:inherit}
 .essay-textarea:focus{border-color:var(--blue)}
 .essay-count{text-align:right;font-size:12px;color:#aaa;margin-top:6px}
-#submitWrap{position:fixed;bottom:0;left:0;right:0;background:rgba(244,246,251,.95);backdrop-filter:blur(8px);padding:12px 20px;border-top:1px solid var(--border);display:none}
+#submitWrap{position:fixed;bottom:var(--ax-tabbar,0px);left:0;right:0;background:rgba(244,246,251,.95);backdrop-filter:blur(8px);padding:12px 20px;border-top:1px solid var(--border);display:none}
 #submitWrap.visible{display:block}
 #submitBtn{max-width:740px;width:100%;margin:0 auto;display:block;background:var(--blue);color:#fff;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.5px}
 #submitBtn:disabled{background:#B0BEC5;cursor:not-allowed}
@@ -3167,7 +3167,7 @@ const QB={
 "LG 하위 트림은 건조 기능이 없다"
 ],
 "ans": 0,
-"exp": "타사비교 DB — LG 워시콤보는 상위 FC2521SX6C가 건조 21kg, 하위 FH25ESE가 15kg입니다. 삼성 콤보는 20kg이므로 **고객이 보는 LG 트림이 무엇인지에 따라 우열이 뒤집힙니다.** 모델코드를 먼저 확인하세요."
+"exp": "타사비교 DB — LG 워시콤보는 상위 FC2521SX6C가 건조 21kg, 하위 FH25ESE가 15kg입니다. 삼성 콤보는 20kg이므로 고객이 보는 LG 트림이 무엇인지에 따라 우열이 뒤집힙니다. 모델코드를 먼저 확인하세요."
 }
 ,
 {
@@ -7241,30 +7241,32 @@ function showResults(results,ceScore,mxScore,essayScore,em,es){
 
 function saveToGoogle(data){
   if(!SCRIPT_URL){document.getElementById('driveStatus').innerHTML='<span class="drive-skip">Google Apps Script URL 미설정</span>';return}
-  const iframeName='gs_'+Date.now();
-  const iframe=document.createElement('iframe');iframe.name=iframeName;iframe.style.display='none';document.body.appendChild(iframe);
-  const form=document.createElement('form');form.method='POST';form.action=SCRIPT_URL;form.target=iframeName;
-  const input=document.createElement('input');input.type='hidden';input.name='data';input.value=JSON.stringify(data);
-  form.appendChild(input);document.body.appendChild(form);
+  /*
+   * 예전에는 숨긴 iframe 에 form POST 를 하고 iframe 의 load 를 성공 신호로 썼다 —
+   * **교차출처 iframe 의 load 는 500·권한 오류에도 똑같이 떠서** 실패가 초록색
+   * "저장되었습니다!" 로 적혔다(2026-08-30 전수조사). 응시 기록은 다시 만들 수 없어
+   * 이 화면에서 가장 나쁜 거짓말이다.
+   *
+   * fetch + urlencoded POST 는 단순 요청이라 프리플라이트가 없고(Apps Script 는
+   * OPTIONS 를 안 받는다) 응답을 읽을 수 있다. 몸통은 예전과 같은 data=<JSON> 이라
+   * 받는 쪽은 그대로다.
+   */
   const el=document.getElementById('driveStatus');
-  let settled=false;
-  const cleanup=()=>{if(form.parentNode)document.body.removeChild(form);if(iframe.parentNode)document.body.removeChild(iframe)};
-  iframe.addEventListener('load',()=>{
-    if(settled)return; settled=true;
-    if(el)el.innerHTML='<span class="drive-ok">Google Drive에 저장되었습니다!</span>';
-    cleanup();
-  });
-  iframe.addEventListener('error',()=>{
-    if(settled)return; settled=true;
-    if(el)el.innerHTML='<span class="drive-err">저장 실패 — 네트워크 연결을 확인하세요</span>';
-    cleanup();
-  });
-  setTimeout(()=>{
-    if(settled)return; settled=true;
-    if(el)el.innerHTML='<span class="drive-err">저장 확인 시간 초과 — 네트워크 연결을 확인하세요</span>';
-    cleanup();
-  },10000);
-  form.submit();
+  const body=new URLSearchParams();
+  body.set('data', JSON.stringify(data));
+  const ctrl=(typeof AbortController==='function')?new AbortController():null;
+  const timer=setTimeout(()=>{ if(ctrl)ctrl.abort(); },10000);
+  fetch(SCRIPT_URL,{method:'POST',body:body,signal:ctrl?ctrl.signal:undefined})
+    .then(res=>{
+      clearTimeout(timer);
+      if(res.ok){ if(el)el.innerHTML='<span class="drive-ok">Google Drive에 저장되었습니다!</span>'; }
+      else{ if(el)el.innerHTML='<span class="drive-err">저장 실패 (HTTP '+res.status+') — 결과 화면을 캡처해 전달하세요</span>'; }
+    })
+    .catch(()=>{
+      clearTimeout(timer);
+      /* 네트워크 단절·시간 초과 — 실패라고 사실대로 적는다. 화면 캡처가 남는 유일한 길이다 */
+      if(el)el.innerHTML='<span class="drive-err">저장 실패 — 네트워크를 확인하고, 결과 화면을 캡처해 전달하세요</span>';
+    });
 }
 
 let _modalCb=null;

@@ -117,7 +117,9 @@ const ROI_DATA = [
 const MODULE_META: Record<string, { label: string; icon: IconName; color: string; retired?: boolean }> = {
   // 허브 메인 페이지뷰는 집계에서 제외되므로 여기 남는 건 통합검색·건의뿐이다
   hub:     { label: '허브 검색·건의',   icon: 'search',   color: '#1428A0' },
-  finder:  { label: '통합검색',        icon: 'finder',   color: '#2563EB' },
+  /* '통합검색'이라 적혀 있었다 — 지금 통합검색은 /search 고 /finder 는 「모델파인더」다.
+     lib/trends.ts 가 이 어긋남을 알고 우회하고 있었다(그 주석도 함께 정리했다). */
+  finder: { label: '모델파인더',        icon: 'finder',   color: '#2563EB' },
   care:    { label: 'AI구독 케어',         icon: 'care',     color: '#059669' },
   compare: { label: '타사비교 가이드', icon: 'compare',  color: '#D97706' },
   install: { label: '설치환경 가이드',  icon: 'install',  color: '#B45309' },

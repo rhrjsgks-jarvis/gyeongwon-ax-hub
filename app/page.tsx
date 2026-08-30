@@ -47,7 +47,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         desc: '예산·치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(1,697종)',
         color: '#1428A0',
         bg: '#EEF2FF',
-        updated: '2026.06',
+        updated: '2026.08',
         status: 'live',
       },
       {
@@ -57,7 +57,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         desc: '제품별 구독 기간·주기에 따라 받는 케어 서비스 안내',
         color: '#1428A0',
         bg: '#EEF2FF',
-        updated: '2026.06',
+        updated: '2026.08',
         status: 'live',
       },
       {
@@ -125,7 +125,7 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         desc: '2026 제품 전문가 역량 평가 · 25문항 · 30분',
         color: '#1428A0',
         bg: '#EEF2FF',
-        updated: '2026.06',
+        updated: '2026.08',
         status: 'live',
       },
       {
@@ -389,7 +389,9 @@ function LinkListCard({
             rel={l.internal ? undefined : 'noopener noreferrer'}
             className={`no-underline ${l.internal || storeReady ? '' : 'pointer-events-none opacity-40'}`}
             aria-disabled={!l.internal && !storeReady}
-            onClick={() => logEvent(l.log || logKey, 'page_view')}
+            /* 내부 링크(예: /poster)는 그 라우트가 page_view 를 쌓는다 — 여기서도 쌓으면
+               한 번 연 것이 두 건이 된다(실측: 포스터가 그랬다). 외부 링크만 여기서 쌓는다. */
+            onClick={() => !l.internal && logEvent(l.log || logKey, 'page_view')}
           >
             <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
               <Icon name={l.icon} size={17} className="flex-shrink-0" style={{ color: '#1428A0' }} />
@@ -516,6 +518,9 @@ export default function Home() {
     navigator.clipboard.writeText(HUB_URL).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }).catch(() => {
+      /* 실패를 조용히 삼키면 버튼이 "눌렸나?"가 된다 — 주소를 직접 보여 손으로 복사하게 한다 */
+      window.prompt('복사가 막혔습니다 — 주소를 길게 눌러 복사하세요', HUB_URL)
     })
   }
 

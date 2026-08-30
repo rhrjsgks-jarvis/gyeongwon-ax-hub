@@ -662,5 +662,42 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else pass(`고칠 도면 목록 — ${weak.map((w) => `${w.who}(공간 ${w.rooms}·${w.sess}세션)`).join(' · ')}`);
 }
 
+
+/*
+ * ── 포스터의 매장 목록이 lib/stores.ts 와 어긋나지 않는가 (2026-08-30) ─────────────
+ *
+ * CLAUDE.md: *"매장 목록은 lib/stores.ts 한 곳이다."* 그런데 포스터는 미니앱이라
+ * 그 모듈을 import 할 수 없어 <option> 65줄과 STORES 배열을 **제 안에 두 벌** 들고
+ * 있고, 실제로 이름이 갈라져 있었다(stores.ts 「스타필드수원」 vs 포스터 「스타필드 수원」
+ * — 인쇄물·QR 파일명에 다른 표기가 나갔다). 세 벌을 하나로 합치는 대신, **어긋나는
+ * 순간 무는 검사**를 둔다 — 지점이 늘면 세 곳을 함께 고치라고 이 검사가 시킨다.
+ */
+{
+  const posterSrc = fs.readFileSync(new URL('../public/poster-app.html', import.meta.url), 'utf8');
+
+  /* 기준 — lib/stores.ts 의 활성 지점(테스트점 Z000 은 포스터에 없어야 정상) */
+  const base = new Map(S.STORE_LIST.filter((s) => s.active === 'Y' && s.code !== 'Z000')
+    .map((s) => [s.code, s.name]));
+
+  /* ① <option value="ZN01">이름</option> */
+  const opts = new Map([...posterSrc.matchAll(/<option value="(Z[A-Z0-9]{3})">([^<]+)<\/option>/g)]
+    .map((m) => [m[1], m[2].trim()]));
+  /* ② var STORES = [...] */
+  const stMatch = posterSrc.match(/var STORES = (\[[^\n]*\]);/);
+  const inline = stMatch ? new Map(JSON.parse(stMatch[1]).map((s) => [s.code, s.name])) : null;
+
+  const diffs = [];
+  for (const [label, map] of [['option', opts], ['STORES', inline]]) {
+    if (!map) { diffs.push(label + ' 목록을 못 읽음'); continue; }
+    for (const [code, name] of base) {
+      if (!map.has(code)) diffs.push(`${label}: ${code}(${name}) 가 포스터에 없다`);
+      else if (map.get(code) !== name) diffs.push(`${label}: ${code} 이름이 갈렸다 — stores.ts「${name}」 vs 포스터「${map.get(code)}」`);
+    }
+    for (const code of map.keys()) if (!base.has(code)) diffs.push(`${label}: ${code} 는 stores.ts 에 없는(또는 비활성) 지점이다`);
+  }
+  if (diffs.length) fail(`포스터 매장 목록이 lib/stores.ts 와 어긋난다 ${diffs.length}건 — ${diffs.slice(0, 4).join(' · ')}`);
+  else pass(`포스터 매장 목록 두 벌(option ${opts.size} · STORES ${inline ? inline.size : '?'}) = lib/stores.ts 활성 ${base.size}곳`);
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

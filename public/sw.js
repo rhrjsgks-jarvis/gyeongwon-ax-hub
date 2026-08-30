@@ -408,7 +408,7 @@
  * 사이드바·앱 헤더처럼 한 줄뿐인 자리는 모델파인더만 쓴다 — 옛 이름은 카드 부제와
  * 검색어에 남으므로 '제품 상세검색'으로 찾던 사람도 그대로 찾는다.
  */
-const CACHE_VERSION = 'axhub-v225';
+const CACHE_VERSION = 'axhub-v226';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -438,7 +438,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
+const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

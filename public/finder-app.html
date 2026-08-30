@@ -326,7 +326,7 @@ table.spec tr:last-child td{border-bottom:none}
   <div id="aiHost"></div>
   <div class="sortrow hidden" id="sortRow"></div>
   <div class="rlist" id="rHost"></div>
-  <div class="footer">데이터: samsungCE v2.1 + samsungMX (2026-05-30 검증 · 출시가 기준)<br><b>PRODUCT SEARCH</b> · AX 교육 시리즈 — 키워드 추천 엔진</div>
+  <div class="footer">데이터: 삼성스토어 카탈로그 대조분 + Harman + 데이코 + samsung.com 수집분 (출시가 기준)<br><b>PRODUCT SEARCH</b> · AX 교육 시리즈 — 키워드 추천 엔진</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -569,6 +569,9 @@ const SYN = {
 
 /* ─── 카테고리 사전 ─── */
 const CATSYN = {
+  /* 밥솥은 MD 카탈로그 반영(리빙 밥솥)으로 실려 있는데 UNSUPPORTED 에 남아
+     "DB 미수록"이라 말하고 있었다 — 정수기·제습기·냉동고를 옮길 때 빠뜨린 것(2026-08-30). */
+  "전기밥솥":["리빙 밥솥"], "밥솥":["리빙 밥솥"], "전기압력밥솥":["리빙 밥솥"],
   "냉장고":["냉장고"],"세탁기":["세탁기·콤보"],"세탁":["세탁기·콤보"],"콤보":["세탁기·콤보"],
   "건조기":["건조기","세탁기·콤보"],"tv":["TV"],"television":["TV"],
   "에어컨":["에어컨"],"무풍에어컨":["에어컨"],
@@ -666,7 +669,6 @@ const UNSUPPORTED = {
   // 공기청정기·김치냉장고·인덕션·전자레인지/오븐·사운드바는 v25 DB에 수록됨 → CATSYN으로 이동
   // 정수기·제습기·냉동고도 2026 dp 카탈로그 반영으로 DB에 수록됨 → CATSYN으로 이동
   "프로젝터":"프로젝터(더 프리스타일)","빔프로젝터":"프로젝터(더 프리스타일)",
-  "전기밥솥":"전기밥솥 (DB 미수록)",
   "가습기":"가습기 (DB 미수록)","에어프라이어":"에어프라이어 단품(큐커 오븐 기능으로 대체 가능)"
 };
 
@@ -1057,10 +1059,9 @@ const INCH_TOL = 0.35;
  */
 function isPackage(p){
   if(p.__pk!==undefined) return p.__pk;
-  let s = String(p.group||"");
-  s = s.replace(/\([^)]*\)/g, " ");              // 괄호 안은 규격 설명이다
-  s = s.replace(/copilot\s*\+|열풍건조\s*\+/gi, " ");   // 제품·기능 이름에 박힌 +
-  return (p.__pk = /[+＋]|패키지|번들/.test(s));
+  /* 판정은 finder-merge.js 한 곳에 있다 — 당사제품 비교가 같은 것을 쓴다.
+     두 벌로 적으면 한쪽만 고쳤을 때 두 앱의 종수가 갈린다(실제로 갈라져 있었다). */
+  return (p.__pk = !!(window.AX_FILL && window.AX_FILL.isPackage(p)));
 }
 
 /*
@@ -1375,7 +1376,7 @@ function runSearch(){
   /* 미수록 안내 + **검색이 스스로 밝히는 말**(TV 설치 방식 등). 조용히 빼지 않는다. */
   $("noticeHost").innerHTML =
     (P.unsupported.length ?
-      `<div class="notice"><b>${P.unsupported.map(esc).join(", ")}</b>은(는) 현재 DB 미수록 카테고리입니다. [DB 최신화] 작업으로 보강 예정이며, 우선 수록된 22개 카테고리에서 검색해 보세요.</div>` : "")
+      `<div class="notice"><b>${P.unsupported.map(esc).join(", ")}</b>은(는) 현재 DB 미수록 카테고리입니다. [DB 최신화] 작업으로 보강 예정이며, 우선 수록된 카테고리에서 검색해 보세요.</div>` : "")
     + ((P.notes||[]).length ? `<div class="notice">${P.notes.map(esc).join("<br>")}</div>` : "");
   sortMode = P.wantValue ? "asc" : "rank";
   renderSortRow();
@@ -1510,7 +1511,7 @@ function rcard(r, i){
       <div class="rname">${esc(p.group||p.cat)}</div>
       <div class="rcode">${esc(p.model)}${p.cat_ok?'<span class="catbadge">카탈로그 동일모델</span>':''}</div>
       <div class="rmeta"><span>${p.price==null?`<b>가격 문의</b>`:`출시가 <b>${p.price}만</b>`}${p.price!=null&&p.price_lab?` <span style="font-size:10.5px">(${esc(p.price_lab)})</span>`:""}</span>
-        ${p.dimtxt?`<span>${esc(p.dimtxt)}mm${p.dv===false?" ⚠️추정":""}</span>`:""}</div>
+        ${p.dimtxt?`<span>${esc(String(p.dimtxt).replace(/\s*mm\s*$/i,""))}mm${p.dv===false?" ⚠️추정":""}</span>`:""}</div>
       ${(why||aiWhy)?`<div class="rwhy">${aiWhy}${why}</div>`:""}
     </button>
     ${open?rdetail(p):""}
@@ -2219,6 +2220,11 @@ setMode("kw");
       p.fx = (p.fx || []).concat(rows);
       /* 검색이 보는 글에도 더한다 — 안 더하면 새 사양으로는 못 찾는다 */
       p.kw = (p.kw || '') + ' ' + rows.map(function (r2) { return r2[0] + ' ' + r2[1]; }).join(' ').toLowerCase();
+      /* **캐시를 비운다**(2026-08-30). 통합검색 딥링크(?q=)는 이 fetch 가 끝나기 전에
+         runSearch 를 한 번 돌려 __kwqc(제품별 kw 사본)를 채운다 — 그 뒤 kw 를 늘려도
+         캐시가 옛 글을 들고 있어 **새로 채운 사양 9,000여 줄이 검색에서 영영 빠졌다.**
+         연식 캐시(__yr)도 같다 — fill 로 출시년월이 들어와도 「최신순」이 못 읽는다. */
+      delete p.__kwq; delete p.__kwqc; delete p.__yr; delete p.__kwc;
       filled++;
     }
     /*
@@ -2246,7 +2252,6 @@ setMode("kw");
       p2.id = base + k;
       PRODUCTS.push(p2);
     });
-    if (typeof buildCatIndex === 'function') { try { buildCatIndex(); } catch (e) {} }
     syncCounts();
     if (typeof lastResults !== 'undefined' && lastResults && lastResults.length) runSearch();
   }).catch(function () { /* 전파가 끊겨도 기존 제품은 그대로 쓴다 */ });

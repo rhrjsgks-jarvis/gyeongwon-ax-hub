@@ -26,6 +26,10 @@ const ALLOWED_ACTION = new Set<string>([
 function useMiniAppLogs() {
   useEffect(() => {
     function onMsg(e: MessageEvent) {
+      /* **우리 출처만 받는다.** 미니앱은 같은 도메인 iframe 이라 origin 이 우리 것이다 —
+         다른 창이 postMessage 로 로그를 밀어 넣는 길을 잠근다. 화이트리스트가 피해를
+         로그 오염으로 한정하고 있었지만, 문 자체를 잠그는 편이 맞다(2026-08-30). */
+      if (e.origin !== window.location.origin) return
       const d = e.data as { sk?: string; module?: string; action?: string; extra?: string; once?: boolean }
       if (!d || d.sk !== 'log') return
       if (!d.module || !d.action) return
@@ -81,6 +85,31 @@ export default function IframeModule({
     }
     check()
     return () => clearTimeout(timer)
+  }, [])
+
+  /*
+   * **하단 탭바 높이를 미니앱에 알려 준다** (2026-08-30 전수조사).
+   *
+   * 미니앱 iframe 은 탭바 아래까지 차는데(`-6rem` 마진), 그 안의 `position:fixed;bottom:0`
+   * 요소 — 케어의 정보바(`.btm`, AS 번호가 적혀 있다) · 레벨업의 **제출 버튼**(`#submitWrap`)
+   * — 이 폰에서 탭바에 덮였다. iframe 안에서는 탭바 높이를 알 수 없고 앱마다 다르며
+   * PC 에는 없다(share-kit 이 전화 팝업을 가운데로 옮기며 적어 둔 그 제약).
+   * 그래서 **아는 쪽(부모)이 재서 알려 준다** — back-kit 이 받아 `--ax-tabbar` 변수로 깔고,
+   * 미니앱 CSS 가 `bottom: var(--ax-tabbar, 0px)` 로 쓴다.
+   *
+   * display:none 인 요소는 ResizeObserver 관찰에서 빠지므로 resize 도 같이 듣는다
+   * (telecom 래퍼가 실측으로 확인한 함정 — 초기 호출조차 0회였다).
+   */
+  useEffect(() => {
+    const send = () => {
+      const nav = document.querySelector<HTMLElement>('nav[data-tabbar]')
+      const h = nav && getComputedStyle(nav).display !== 'none' ? nav.offsetHeight : 0
+      try { ref.current?.contentWindow?.postMessage({ sk: 'tabbar', h }, window.location.origin) } catch { /* 아직 못 받는 상태면 다음 기회에 */ }
+    }
+    send()
+    const t = setInterval(send, 1000)          // 미니앱이 늦게 뜨는 경우 — 받는 쪽은 멱등이다
+    window.addEventListener('resize', send)
+    return () => { clearInterval(t); window.removeEventListener('resize', send) }
   }, [])
 
   return (

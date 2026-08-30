@@ -402,7 +402,7 @@
         <div class="opt"><span class="opt-label">D</span> 세탁 24kg / 스팀 코스</div>
       </div>
       <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--primary-mid); font-size:12px; color:#1428A0;">
-        ✏️ 해설: AI 콤보는 세탁 25kg/건조 17kg 일체형으로, SmartThings 자동화로 LG 대비 스마트 연동이 강점입니다.
+        ✏️ 해설: AI 콤보 프리히트(WD90H25AHS)는 세탁 25kg/건조 20kg 일체형으로, SmartThings 자동화로 LG 대비 스마트 연동이 강점입니다.
       </div>
     </div>
   </div>
@@ -474,6 +474,14 @@ function copyPrompt() {
     btn.textContent = '✅ 복사 완료!';
     btn.classList.add('copied');
     setTimeout(() => { btn.textContent = '📋 프롬프트 복사'; btn.classList.remove('copied'); }, 2500);
+  }).catch(() => {
+    /* 실패를 조용히 삼키면 버튼이 "눌렸나?"가 된다 — 예전 방식(선택 후 복사)으로 물러선다 */
+    const btn = document.getElementById('copy-btn');
+    const r = document.createRange();
+    r.selectNodeContents(document.getElementById('prompt-output'));
+    const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    btn.textContent = '⚠ 자동 복사가 막혔습니다 — 선택해 두었으니 길게 눌러 복사하세요';
+    setTimeout(() => { btn.textContent = '📋 프롬프트 복사'; }, 4000);
   });
 }
 </script>

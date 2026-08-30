@@ -536,6 +536,23 @@ for (const [file, needle] of deepLinks) {
     } else if (order[0] !== 'finder') {
       fail(`검색 결과 첫 묶음이 '${order[0]}' 이다 — 제품이 먼저여야 한다`);
     } else console.log(`OK: 검색 결과 묶음 순서 — ${order.join(' → ')} (허브 기능 맨 뒤)`);
+
+    /*
+     * **색인에 있는 모듈은 전부 화면 묶음에도 있어야 한다** (2026-08-30).
+     * 첫/끝만 보던 탓에 `installcost` 41건이 MODULE_ORDER 에 빠진 채 **결과가 통째로
+     * 안 그려지는** 것을 이 검사가 못 물었다 — 조건 칩은 색인 전체로 세므로 화면은
+     * "N건"이라 말하면서 아래는 "없습니다"였다. 목록을 박지 않고 색인에서 센다.
+     */
+    if (m) {
+      const order = m[1].split(',').map((s) => s.trim().replace(/['"]/g, '')).filter(Boolean);
+      const inIndex = [...new Set(entries.map((e) => e.m))];
+      const missing = inIndex.filter((mod) => !order.includes(mod));
+      if (missing.length) fail(`색인에는 있는데 화면 묶음(MODULE_ORDER)에 없는 모듈: ${missing.join(' · ')} — 그 결과가 통째로 안 그려진다`);
+      else console.log(`OK: 색인의 모듈 ${inIndex.length}종이 전부 화면 묶음에 있다`);
+      /* 라벨·아이콘 표(MODULE_META)도 같이 본다 — ORDER 에 있어도 META 가 없으면 이름 없는 묶음이 뜬다 */
+      const metaMissing = inIndex.filter((mod) => !new RegExp('\\b' + mod + '\\s*:\\s*\\{\\s*label:').test(src));
+      if (metaMissing.length) fail(`MODULE_META 에 없는 모듈: ${metaMissing.join(' · ')}`);
+    }
   }
 }
 

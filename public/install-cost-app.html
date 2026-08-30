@@ -382,7 +382,7 @@ function render() {
       + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div>'
       + '<div class="secs">' + c.sections.map(function (s, i) {
           var n = normalizeGrid(s);
-          return section(s.title, n.rows.length, listOf(n, 'new:' + c.key + ':' + i), s.foot, isWide(n));
+          return section(s.title, n.rows.filter(function(r){ return !(r.note && !r.label); }).length /* 각주 줄(주석)은 항목이 아니다 — 2026-08-30 */, listOf(n, 'new:' + c.key + ':' + i), s.foot, isWide(n));
         }).join('') + '</div>';
     return;
   }
@@ -483,7 +483,11 @@ function hl(text, toks) {
   toks.forEach(function (t) {
     /* 정규식 특수문자를 그대로 넣으면 터진다 — 사용자가 치는 말이라 반드시 막아 둔다 */
     var safe = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    out = out.replace(new RegExp('(' + safe + ')', 'gi'), '<mark>$1</mark>');
+    /* 숫자 토큰은 쉼표를 무시하고 찾는다(2026-08-30). 색인은 36,300 을 36300 으로
+       정규화하는데 표시는 원문이라, 금액으로 검색하면 결과는 나오는데 **어디가 걸린
+       것인지 노란 표시가 안 붙었다** — 숫자 사이마다 ,? 를 끼워 짝을 맞춘다. */
+    var pat = /^\d+$/.test(t) ? t.split('').join(',?') : safe;
+    out = out.replace(new RegExp('(' + pat + ')', 'gi'), '<mark>$1</mark>');
   });
   return out;
 }

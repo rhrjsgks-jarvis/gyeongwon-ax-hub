@@ -44,15 +44,23 @@ function loadDom() {
   window.alert = () => {};
   window.scrollTo = () => {};
   window.Element.prototype.scrollIntoView = () => {};
-  // saveToGoogle()은 fetch가 아니라 hidden iframe + <form method=POST> 제출로 Google Apps Script에
-  // 데이터를 보낸다. jsdom은 기본적으로 form.submit()의 실제 네비게이션을 구현하지 않아 실제 네트워크
-  // 호출은 발생하지 않지만("Not implemented" 콘솔 에러만 출력), 테스트에서는 이를 명시적으로 no-op으로
-  // 막아 잡음 없이/결정적으로 검증한다. 지시사항에 따라 전역 fetch도 함께 mock한다(코드가 fetch를 쓰지
-  // 않으므로 호출되면 안 됨 — 즉 fetch 호출 횟수 0이 기대값).
+  /*
+   * saveToGoogle 은 fetch + urlencoded POST 다(2026-08-30 개정 — 예전 hidden iframe 방식은
+   * 교차출처 iframe 의 load 가 500 에도 떠서 실패가 "저장되었습니다!"로 적혔다).
+   * fetch 를 가짜로 갈아 끼워 **성공·실패를 각각 화면이 사실대로 적는지** 본다.
+   */
   window.HTMLFormElement.prototype.submit = function () { window.__formSubmitCalled = (window.__formSubmitCalled || 0) + 1; };
   let fetchCalls = 0;
-  window.fetch = async (...args) => { fetchCalls++; throw new Error('fetch should not be called: ' + JSON.stringify(args)); };
+  const fetchLog = [];
+  window.__fetchMode = 'ok';           // 'ok' | 'http500' | 'neterr'
+  window.fetch = async (url, opt) => {
+    fetchCalls++;
+    fetchLog.push({ url: String(url), method: opt && opt.method, body: opt && opt.body ? String(opt.body) : '' });
+    if (window.__fetchMode === 'neterr') throw new Error('network down');
+    return { ok: window.__fetchMode === 'ok', status: window.__fetchMode === 'ok' ? 200 : 500 };
+  };
   Object.defineProperty(window, '__fetchCalls', { get: () => fetchCalls });
+  Object.defineProperty(window, '__fetchLog', { get: () => fetchLog });
   return dom;
 }
 
@@ -317,23 +325,51 @@ async function startFresh(mode, empId, empName) {
     assert(doc.querySelector('.score-grade').classList.contains('grade-c'), '[채점:부분] C등급(48점 < 60) 부여');
   }
 
-  // ── 8. saveToGoogle / 네트워크 차단 확인 ─────────────────
+  // ── 8. saveToGoogle — 성패를 사실대로 적는가 (2026-08-30 개정) ─────────────
+  // 예전 검사는 "fetch 0회 = 정상"으로 옛 iframe 방식을 못 박고 있었다. 방식이 바뀐
+  // 이유가 바로 그 방식의 거짓 성공이므로, 지금은 세 경로를 각각 본다.
   {
+    /* 성공 — 기록됨이라 적는다 */
     const dom = await startFresh('cemx', '수원점', '저장확인');
     const { window } = dom;
     await wait(50);
     let threw = false;
-    try {
-      await window.handleSubmit(true);
-    } catch (e) {
-      threw = true;
-      console.log('  예외 내용:', e.message);
-    }
-    assert(!threw, '[saveToGoogle] handleSubmit → saveToGoogle 흐름에서 예외 발생 안 함');
-    assert(window.__fetchCalls === 0, '[saveToGoogle] 전역 fetch가 호출되지 않음 (iframe+form POST 방식이므로 0회가 정상)');
-    assert(window.__formSubmitCalled === 1, '[saveToGoogle] form.submit()이 정확히 1회 호출됨(=Apps Script로 제출 시도했으나 mock으로 실제 네트워크는 차단됨)');
-    const driveStatus = window.document.getElementById('driveStatus');
-    assert(driveStatus !== null && driveStatus.textContent.includes('저장 중'), '[saveToGoogle] 제출 직후 "저장 중..." 상태 표시(실제 네트워크 응답은 mock으로 차단되어 대기 상태 유지)');
+    try { await window.handleSubmit(true); } catch (e) { threw = true; console.log('  예외:', e.message); }
+    await wait(80);
+    assert(!threw, '[saveToGoogle] handleSubmit 흐름에서 예외 없음');
+    assert(window.__fetchCalls === 1, '[saveToGoogle] fetch 가 정확히 1회 나간다 (실제 ' + window.__fetchCalls + ')');
+    const log = window.__fetchLog[0] || {};
+    assert(log.method === 'POST' && /data=/.test(log.body),
+      '[saveToGoogle] urlencoded POST 에 data 가 실려 간다 — 받는 쪽(doPost)은 그대로다');
+    const st1 = window.document.getElementById('driveStatus');
+    assert(st1 && st1.textContent.includes('저장되었습니다'), '[saveToGoogle] 성공하면 "저장되었습니다"');
+  }
+  {
+    /* HTTP 실패 — **초록색으로 거짓말하지 않는다.** 예전 iframe 방식이 정확히 이 경우에
+       "저장되었습니다!"를 띄웠다. */
+    const dom = await startFresh('cemx', '수원점', '저장실패');
+    const { window } = dom;
+    window.__fetchMode = 'http500';
+    await wait(50);
+    await window.handleSubmit(true);
+    await wait(80);
+    const st2 = window.document.getElementById('driveStatus');
+    assert(st2 && /저장 실패/.test(st2.textContent) && /500/.test(st2.textContent),
+      '[saveToGoogle] HTTP 500 이면 "저장 실패 (HTTP 500)" — 거짓 성공이 없다');
+    assert(st2 && st2.querySelector('.drive-err') !== null,
+      '[saveToGoogle] 실패는 빨간색(drive-err)이다 — 노란 "안 보냄"과 갈린다');
+  }
+  {
+    /* 네트워크 단절 */
+    const dom = await startFresh('cemx', '수원점', '저장단절');
+    const { window } = dom;
+    window.__fetchMode = 'neterr';
+    await wait(50);
+    await window.handleSubmit(true);
+    await wait(80);
+    const st3 = window.document.getElementById('driveStatus');
+    assert(st3 && /저장 실패/.test(st3.textContent) && /캡처/.test(st3.textContent),
+      '[saveToGoogle] 네트워크 단절이면 실패 + 화면 캡처 안내');
   }
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

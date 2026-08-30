@@ -43,6 +43,10 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   care:    { label: 'AI구독 케어',         icon: 'care',     color: '#059669' },
   as:      { label: 'AS 관련 정보',      icon: 'warranty', color: '#0D9488' },
   place:   { label: '배치 시뮬레이터',   icon: 'place',    color: '#7C3AED' },
+  /* 색인에는 41건이 있는데 이 표에 없어 **결과가 통째로 안 그려졌다**(2026-08-30 전수조사).
+     조건 칩은 색인 전체로 세므로 "N건"인데 아래는 "없습니다"가 되는 조합이었다.
+     새 모듈을 색인에 넣으면 **여기(META·ORDER)도 함께** — 한쪽만 고치면 조용히 버려진다. */
+  installcost: { label: '설치비용 · 사전준비', icon: 'bolt', color: '#B45309' },
   hub:     { label: '허브 기능',        icon: 'home',     color: '#475569' },
 }
 /*
@@ -59,7 +63,7 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
  * (이 고침은 2026-08-12 에 `claude/mobile-code-working-k07dwn` 브랜치에서 만들어졌는데
  *  **main 에 합쳐지지 않아 배포본에는 없었다.** 2026-08-14 야간에 다시 반영한다.)
  */
-const MODULE_ORDER = ['finder', 'compare', 'install', 'as', 'place', 'care', 'hub']
+const MODULE_ORDER = ['finder', 'compare', 'install', 'installcost', 'as', 'place', 'care', 'hub']
 const MAX_PER_MODULE = 12
 
 // 검색 결과에서 바로 펼쳐보는 상세 스펙 — 카탈로그 PDF를 열지 않고 확인하기 위한 화면

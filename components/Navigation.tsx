@@ -153,6 +153,7 @@ export default function Navigation() {
     setCanShare(false) // 페이지를 옮기면 새 화면이 알려 줄 때까지 감춘다
     let answered = false
     function onMsg(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return
       if (e.data && e.data.sk === 'share-state') { answered = true; setCanShare(!!e.data.on) }
     }
     window.addEventListener('message', onMsg)
@@ -163,7 +164,7 @@ export default function Navigation() {
      */
     const t = setInterval(() => {
       if (answered) { clearInterval(t); return }
-      document.querySelector('iframe')?.contentWindow?.postMessage({ sk: 'share-ping' }, '*')
+      document.querySelector('iframe')?.contentWindow?.postMessage({ sk: 'share-ping' }, window.location.origin)
     }, 250)
     const stop = setTimeout(() => clearInterval(t), 6000)
     return () => { clearInterval(t); clearTimeout(stop); window.removeEventListener('message', onMsg) }
@@ -172,7 +173,7 @@ export default function Navigation() {
   function share() {
     // 카드를 그리는 데 필요한 DOM 이 미니앱 안에 있으므로, 만들기는 그쪽에 맡긴다
     const f = document.querySelector('iframe')
-    f?.contentWindow?.postMessage({ sk: 'share-click' }, '*')
+    f?.contentWindow?.postMessage({ sk: 'share-click' }, window.location.origin)
   }
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}

@@ -98,3 +98,20 @@
     _reset: function () { stack = []; quiet = 0; },
   };
 })(window);
+
+/*
+ * 하단 탭바 높이 수신 (2026-08-30) — 부모(IframeModule)가 재서 보내 준다.
+ * 미니앱의 fixed;bottom:0 요소(케어 정보바 · 레벨업 제출 버튼)가 폰에서 탭바에
+ * 덮이던 것을, CSS 변수 하나로 올려 세운다: bottom: var(--ax-tabbar, 0px).
+ * iframe 안에서는 탭바 높이를 알 수 없어 아는 쪽이 알려 주는 구조다.
+ */
+(function (global) {
+  'use strict';
+  global.addEventListener('message', function (e) {
+    if (e.origin !== global.location.origin) return;      /* 우리 출처만 */
+    var d = e.data;
+    if (!d || d.sk !== 'tabbar' || typeof d.h !== 'number') return;
+    var h = Math.max(0, Math.min(200, d.h));              /* 말이 안 되는 값은 자른다 */
+    document.documentElement.style.setProperty('--ax-tabbar', h + 'px');
+  });
+})(window);
