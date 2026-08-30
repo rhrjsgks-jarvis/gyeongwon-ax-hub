@@ -59,9 +59,16 @@ const NAV_GROUPS = [
     title: '매장운영 도구',
     icon: 'store' as IconName,
     items: [
-      { href: '/board',      label: '팀 게시판',       icon: 'chat' as IconName },
       { href: '/#coupon',    label: '쿠폰 배포 프로그램', icon: 'coupon' as IconName },
       { href: '/#concierge', label: '컨시어지',        icon: 'ticket' as IconName },
+    ],
+  },
+  {
+    /* 매장운영 도구가 아니라 별도 그룹, 자리는 그 하단 (2026-08-31 사장님 지시) */
+    title: '자유게시판',
+    icon: 'chat' as IconName,
+    items: [
+      { href: '/board', label: '자유게시판', icon: 'chat' as IconName },
     ],
   },
 ]

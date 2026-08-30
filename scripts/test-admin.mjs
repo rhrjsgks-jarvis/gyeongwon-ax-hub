@@ -699,7 +699,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else pass(`포스터 매장 목록 두 벌(option ${opts.size} · STORES ${inline ? inline.size : '?'}) = lib/stores.ts 활성 ${base.size}곳`);
 }
 
-/* ── 팀 게시판 Board.gs — 쓰는 칸과 읽는 칸이 맞는가 (2026-08-30 신설) ──
+/* ── 자유게시판 Board.gs — 쓰는 칸과 읽는 칸이 맞는가 (2026-08-30 신설) ──
  * Code.gs 가 겪은 그 사고("doPost 만 고치고 doGet 을 빠뜨려 시트엔 쌓이는데
  * 화면이 비어 보인다")를 게시판에서도 소스로 막는다. 배포는 구글에 있어
  * 저장소에서 세어 두는 것이 유일한 안전망이다.
@@ -744,7 +744,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (pageSrc.includes('dangerouslySetInnerHTML=')) {
     fail('[board] 화면이 dangerouslySetInnerHTML 을 쓴다 — 남이 쓴 글을 HTML 로 그리면 XSS 다'); bad++;
   }
-  if (!bad) console.log('OK: 팀 게시판 — Board.gs HEADER 7칸 · doPost·doGet 열 일치 · 주소 미노출 · XSS 없음');
+  if (!bad) console.log('OK: 자유게시판 — Board.gs HEADER 7칸 · doPost·doGet 열 일치 · 주소 미노출 · XSS 없음');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

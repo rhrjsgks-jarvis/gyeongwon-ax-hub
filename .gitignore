@@ -41,3 +41,6 @@ scripts/fixtures/plans-real/*.gif
 
 # 시험 결과를 시트로 보내는 판 — 주소가 박혀 있어 커밋하지 않는다(EXAM_SCRIPT_URL 로 만든다)
 tools/레벨업챌린지_시험_기록용.html
+
+.vercel
+.env*

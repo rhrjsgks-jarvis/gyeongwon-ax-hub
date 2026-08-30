@@ -1,7 +1,7 @@
 'use client'
 
 /*
- * 팀 게시판 (2026-08-30 사장님 요청 — *"별도로 게시판같은걸만들어서 여러가지 이야기를
+ * 자유게시판 (2026-08-30 사장님 요청 — *"별도로 게시판같은걸만들어서 여러가지 이야기를
  * 적을 수 있도록 하면 좋을것같습니다"*)
  *
  * 65개 매장 상담사들이 자유롭게 적는 자리다. 저장은 Google 시트
@@ -123,7 +123,7 @@ export default function BoardPage() {
             <Icon name="chat" size={20} />
           </div>
           <div>
-            <div className="text-[17px] font-extrabold leading-tight">팀 게시판</div>
+            <div className="text-[17px] font-extrabold leading-tight">자유게시판</div>
             <div className="text-[11.5px] mt-0.5" style={{ color: '#c7d2fe' }}>
               공지·정보·질문·건의 — 경원영업팀이 함께 적는 자리
             </div>
