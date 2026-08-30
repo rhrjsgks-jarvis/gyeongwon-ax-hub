@@ -1002,11 +1002,21 @@ try {
      */
     const sa = await browser.newContext({ viewport: { width: 390, height: 844 } });
     await sa.addInitScript(() => { try { sessionStorage.setItem('axhub_store', 'ZN01'); } catch (e) {} });
+    /*
+     * **설치형 흉내 — `history.length` 로는 못 막는다.** 뒤로 가도 앞 칸이 남아 있어
+     * length 가 줄지 않으므로, 이 스텁이 12번을 전부 통과시켜 앱이 진짜로
+     * `about:blank` 까지 나가 버렸다(그래서 종료 화면이 영영 안 뜬다).
+     * 설치형은 **시작 지면이 첫 칸**이라 우리가 쌓은 만큼만 물러날 수 있다 —
+     * 쌓은 횟수를 직접 세어 그만큼만 허용한다.
+     */
     await sa.addInitScript(() => {
-      let floor = 0;
+      let depth = 0;
       const realBack = history.back.bind(history);
-      window.addEventListener('load', () => { floor = history.length; });
-      history.back = function () { if (history.length <= floor) return; return realBack(); };
+      const realPush = history.pushState.bind(history);
+      history.pushState = function () { depth++; return realPush.apply(history, arguments); };
+      /* 브라우저 뒤로가기(playwright goBack)도 한 칸을 쓴다 — 안 세면 스텁이 헐거워진다 */
+      window.addEventListener('popstate', function () { if (depth > 0) depth--; });
+      history.back = function () { if (depth <= 0) return; return realBack(); };
     });
     const sp = await sa.newPage();
     await sp.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
