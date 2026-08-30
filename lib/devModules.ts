@@ -78,7 +78,7 @@ export const DEV_MODULES: DevModule[] = [
     // 보므로 정확히 '/dev/telecom' 은 이 페이지가, 그 아래 경로는 rewrite 가 받는다.
     href: '/dev/telecom',
     icon: 'phone',
-    title: '통신 요금제 상담 도구',
+    title: '통신향 상담기',
     desc: '3사 요금제 349건·부가서비스 542건·결합 27건·단말 출고가·제휴카드 40장 — 월납부금액과 할부기간 총액까지 계산',
     color: '#1428A0',
     bg: '#EEF2FF',

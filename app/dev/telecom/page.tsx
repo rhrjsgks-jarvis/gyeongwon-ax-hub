@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 /*
- * 통신 요금제 상담 도구 — **허브 껍데기 안에서** 연다 (2026-08-30 사장님 지시)
+ * 통신향 상담기 — **허브 껍데기 안에서** 연다 (2026-08-30 사장님 지시)
  * ---------------------------------------------------------------------------
  * 사장님 지시: *"요금제 어플 로그인시 세일즈코파일럿 하단 네비게이션이 사라져서
  * 사라지지않게되어야합니다."*
@@ -92,7 +92,7 @@ export default function TelecomToolPage() {
     >
       <iframe
         src="/dev/telecom/index.html"
-        title="통신 요금제 상담 도구"
+        title="통신향 상담기"
         className="block w-full h-full border-0"
       />
     </div>
