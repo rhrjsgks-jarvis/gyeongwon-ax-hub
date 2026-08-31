@@ -112,6 +112,16 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.08',
         status: 'live',
       },
+      {
+        href: '/reform',
+        icon: 'install',
+        title: '가구장 리폼 · 타공 규격',
+        desc: '삼성 인테리어핏 정찰제 6품목(냉장고장 45~163만) + 냉장고장 규격 라인업 8종·조합 7종 + 오븐·인덕션·식기세척기·후드·정수기 타공 치수 + 신규↔이전설치 접수처 구분',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.08',
+        status: 'live',
+      },
 
     ],
   },

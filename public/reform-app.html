@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>가구장 리폼 · 타공 규격 — 세일즈 코파일럿</title>
+<!--
+  가구장 리폼·타공 규격과 비용 (2026-08-31 사장님 요청 —
+  *"삼성닷컴에서 냉장고 리폼 등 규격·가격 스크래핑해서 제품상담도구 안에 섹션 만들어서"*).
+
+  ## 자료는 여기 없다
+  `public/reform.json` 을 받아 그린다. 원문은 `scripts/fixtures/reform-source.json` 이고
+  `npm run build:reform` 이 파생물을 만든다 — install-cost 와 같은 구조다.
+
+  ## 이 앱이 반드시 지키는 것
+  - **금액은 정찰제이되 최종 견적이 아니다** — 원문이 그렇게 적는다. 화면이 그대로 옮긴다.
+  - **출처가 갈리는 값은 한쪽을 고르지 않는다**(인덕션 전용 차단기) — 둘 다 적는다.
+  - **신규 설치와 이전설치의 접수처가 다르다** — 안 가르면 상담사가 틀린 번호를 준다.
+  - **확인 못 한 것을 「없음」으로 적지 않는다** — 두드려 본 곳과 함께 남긴다.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  :root {
+    --blue: #1428A0; --ink: #15181E; --mute: #6B7280; --line: #E5E8EB;
+    --bg: #F7F8FA; --card: #FFF; --warn: #B45309; --warnbg: #FFFBEB; --warnline: #FDE68A;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.62;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    padding-bottom: 48px; -webkit-text-size-adjust: 100%;
+  }
+
+  /* 헤더 — 아홉 앱이 같은 모양이어야 한다(남색 바 + 배지 + 제목 + 부제) */
+  .topbar { background: var(--blue); color: #fff; padding: 15px 0 16px; }
+  .topbar-in { max-width: 840px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 11px; }
+  .badge {
+    width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,.16);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .brand b { font-size: 15.5px; font-weight: 800; letter-spacing: -.3px; display: block; }
+  .brand span { font-size: 11px; color: rgba(255,255,255,.72); }
+
+  main { max-width: 840px; margin: 0 auto; padding: 14px 16px 0; }
+  @media (min-width: 1024px) { .topbar-in, main { max-width: 960px; } }
+  @media (min-width: 1440px) { .topbar-in, main { max-width: 1140px; } }
+
+  /* 검색 — 「어느 표에 있는지」까지가 이 창의 몫이다 */
+  .search { position: relative; margin-bottom: 12px; }
+  .search input {
+    width: 100%; border: 1px solid var(--line); border-radius: 11px; background: #fff;
+    padding: 11px 13px 11px 36px; font-size: 14px; font-family: inherit; color: var(--ink);
+  }
+  .search input:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--mute); }
+  .shits { font-size: 11.5px; color: var(--mute); margin: -4px 0 10px 2px; }
+  .shits:empty { display: none; }
+
+  /* 절 고르기 — 짧은 이름이 여럿이라 칩이 맞다(AS 센터 칸과 같은 규칙) */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 13px; }
+  .tab {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px;
+    padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit; color: #374151;
+  }
+  .tab:hover { background: #F0F3FA; }
+  .tab.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+
+  .sec { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  .sec > h2 { font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
+  .sec > .sub { font-size: 11.5px; color: var(--mute); margin-top: 3px; }
+
+  .blk { margin-top: 15px; }
+  .blk .cap { font-size: 12.5px; font-weight: 800; margin-bottom: 6px; }
+  .blk .cap .src {
+    font-size: 10px; font-weight: 600; color: var(--blue); background: #EEF2FF;
+    border-radius: 5px; padding: 1px 6px; margin-left: 6px; vertical-align: 1px;
+  }
+
+  /* 표 — **가로로 넘치면 표 안에서만 스크롤한다.** 본문이 옆으로 밀리면 안 된다 */
+  .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; min-width: 380px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #F1F3F5; vertical-align: top; }
+  th { background: #F8FAFC; font-weight: 700; font-size: 11.5px; color: #374151; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  /* 금액 칸은 오른쪽 정렬 + 굵게 — 상담에서 눈이 먼저 가는 값이다 */
+  td.money { text-align: right; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  tbody tr:hover { background: #FAFBFE; }
+
+  .note { font-size: 11.5px; color: var(--mute); background: #F8FAFC; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; margin-top: 7px; }
+  .warnbox { background: var(--warnbg); border: 1px solid var(--warnline); border-radius: 9px; padding: 10px 12px; margin-top: 7px; }
+  .warnbox .cap { color: var(--warn); }
+  .warnbox ul { margin: 0; padding-left: 17px; }
+  .warnbox li { font-size: 12px; color: #78350F; margin-bottom: 3px; }
+  .warnbox li:last-child { margin-bottom: 0; }
+
+  /* 전화 — **보이면 눌린다**(AS 앱이 세운 규칙) */
+  .telrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid #F1F3F5; }
+  .telrow:last-child { border-bottom: 0; }
+  .telrow .who { font-size: 12px; color: #374151; }
+  .tel {
+    border: 1px solid var(--line); background: #fff; color: var(--blue); border-radius: 8px;
+    padding: 4px 11px; font-size: 12.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+    white-space: nowrap; font-variant-numeric: tabular-nums;
+  }
+  .tel:hover { background: #F0F3FA; }
+
+  /* 출처가 갈리는 값 — **한쪽을 고르지 않는다.** 그것이 보이게 그린다 */
+  .conf { border: 1px solid #FDE68A; background: #FFFBEB; border-radius: 10px; padding: 11px 12px; margin-top: 7px; }
+  .conf .cap { color: var(--warn); }
+  .conf .pair { display: flex; gap: 8px; align-items: baseline; padding: 5px 0; font-size: 12.5px; }
+  .conf .pair b { color: var(--ink); }
+  .conf .who { color: var(--mute); font-size: 11.5px; min-width: 168px; }
+
+  /* 확인 못 한 것 — 「없다」가 아니라 「못 찾았다」다 */
+  .unk { font-size: 12px; padding: 7px 0; border-bottom: 1px dashed #E5E8EB; }
+  .unk:last-child { border-bottom: 0; }
+  .unk b { display: block; color: #374151; }
+  .unk span { color: var(--mute); font-size: 11.5px; }
+
+  .foot { font-size: 11px; color: var(--mute); text-align: center; padding: 14px 4px 0; line-height: 1.7; }
+  .foot a { color: var(--blue); }
+  .empty { color: var(--mute); font-size: 12.5px; text-align: center; padding: 26px 0; }
+  mark { background: #FEF08A; color: inherit; border-radius: 2px; padding: 0 1px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="badge">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 12h18M12 3v18"/>
+      </svg>
+    </div>
+    <div class="brand">
+      <b>가구장 리폼 · 타공 규격</b>
+      <span>냉장고장·싱크장 리폼 정찰제 · 품목별 타공 치수 · 접수처</span>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+    </svg>
+    <input id="q" type="search" placeholder="냉장고장 · 타공 · 세트 A · 후드 · 1588 …"
+      autocomplete="off" autocapitalize="off" spellcheck="false">
+  </div>
+  <div class="shits" id="shits"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="body"><div class="empty">불러오는 중…</div></div>
+  <div class="foot" id="foot"></div>
+</main>
+
+<script src="/share-kit.js" defer></script>
+<script src="/back-kit.js" defer></script>
+<script>
+(function () {
+  'use strict';
+  var DATA = null, cur = '', q = '';
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  /* **금액 칸을 알아본다** — 오른쪽 정렬·굵게 해야 상담에서 눈이 먼저 간다.
+     「원」이 붙었거나 순수 숫자·쉼표인 칸만. 「600mm 초과」 같은 조건 칸은 아니다. */
+  function isMoney(v) { return /^\+?[\d,]+(원|\s*\/\s*[\d,]+원)?$/.test(String(v).trim()); }
+
+  /* 찾은 말을 노랗게 — 표가 길어 어디에 걸렸는지 안 보이면 찾아 준 뜻이 없다.
+     **이스케이프한 뒤에 감싼다** — 순서를 바꾸면 태그가 글자로 뜬다(AS 앱이 데인 자리). */
+  function hi(s) {
+    var t = esc(s);
+    if (!q) return t;
+    var w = q.split(/\s+/).filter(function (x) { return x.length > 1; });
+    for (var i = 0; i < w.length; i++) {
+      t = t.replace(new RegExp('(' + w[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'), '<mark>$1</mark>');
+    }
+    return t;
+  }
+  function srcTag(id) {
+    if (!id || !DATA) return '';
+    var s = (DATA.sources || []).filter(function (x) { return x.id === id; })[0];
+    return s ? '<span class="src" title="' + esc(s.url || s.note || '') + '">' + esc(s.name) + '</span>' : '';
+  }
+
+  function block(b) {
+    var cap = b.cap ? '<div class="cap">' + hi(b.cap) + srcTag(b.src) + '</div>' : '';
+    if (b.type === 'table') {
+      return '<div class="blk">' + cap + '<div class="tw"><table><thead><tr>'
+        + b.head.map(function (h) { return '<th>' + hi(h) + '</th>'; }).join('')
+        + '</tr></thead><tbody>'
+        + b.rows.map(function (r) {
+            return '<tr>' + r.map(function (c) {
+              return '<td' + (isMoney(c) ? ' class="money"' : '') + '>' + hi(c) + '</td>';
+            }).join('') + '</tr>';
+          }).join('')
+        + '</tbody></table></div>'
+        + (b.note ? '<div class="note">' + hi(b.note) + '</div>' : '') + '</div>';
+    }
+    if (b.type === 'warn') {
+      return '<div class="blk"><div class="warnbox">'
+        + (b.cap ? '<div class="cap">' + hi(b.cap) + '</div>' : '')
+        + '<ul>' + b.items.map(function (i) { return '<li>' + hi(i) + '</li>'; }).join('') + '</ul></div></div>';
+    }
+    if (b.type === 'tel') {
+      return '<div class="blk">' + cap + '<div>'
+        + b.rows.map(function (r) {
+            var num = String(r[1]);
+            /* **거는 번호와 적는 번호를 가른다** — 「1588-3366」처럼 온전한 것만 버튼이다 */
+            var ok = /^[\d-]{7,}$/.test(num);
+            return '<div class="telrow"><span class="who">' + hi(r[0]) + '</span>'
+              + (ok
+                ? '<button class="tel" data-tel="' + esc(num.replace(/[^0-9]/g, '')) + '">' + esc(num) + '</button>'
+                : '<span class="who">' + esc(num) + '</span>') + '</div>';
+          }).join('')
+        + '</div>' + (b.note ? '<div class="note">' + hi(b.note) + '</div>' : '') + '</div>';
+    }
+    if (b.type === 'conflict') {
+      return '<div class="blk"><div class="conf">'
+        + '<div class="cap">' + hi(b.cap) + '</div>'
+        + b.rows.map(function (r) {
+            return '<div class="pair"><span class="who">' + hi(r[0]) + '</span><b>' + hi(r[1]) + '</b></div>';
+          }).join('')
+        + (b.note ? '<div class="note" style="margin-top:6px">' + hi(b.note) + '</div>' : '') + '</div></div>';
+    }
+    if (b.type === 'unknown') {
+      return '<div class="blk">' + cap + '<div>'
+        + b.rows.map(function (r) {
+            return '<div class="unk"><b>' + hi(r[0]) + '</b><span>' + hi(r[1]) + '</span></div>';
+          }).join('') + '</div></div>';
+    }
+    if (b.type === 'note') return '<div class="blk"><div class="note">' + hi(b.text) + '</div></div>';
+    return '';
+  }
+
+  /* 검색은 **절 단위**로 좁힌다 — 어느 표에 있는지까지가 이 창의 몫이고,
+     그 안에서 눈으로 찾는 것은 노란 표시가 돕는다. */
+  function matched() {
+    if (!q) return DATA.sections;
+    var w = q.toLowerCase().split(/\s+/).filter(function (x) { return x.length > 1; });
+    if (!w.length) return DATA.sections;
+    return DATA.sections.filter(function (s) {
+      return w.every(function (x) { return s.kw.indexOf(x) >= 0; });
+    });
+  }
+
+  function render() {
+    var list = matched();
+    var tabs = document.getElementById('tabs');
+    tabs.innerHTML = list.map(function (s) {
+      return '<button class="tab' + (s.id === cur ? ' on' : '') + '" data-id="' + esc(s.id) + '">'
+        + esc(s.title) + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(tabs.querySelectorAll('.tab'), function (b) {
+      b.onclick = function () { cur = b.dataset.id; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    });
+
+    var body = document.getElementById('body');
+    var hits = document.getElementById('shits');
+    if (!list.length) {
+      hits.textContent = '';
+      body.innerHTML = '<div class="empty">「' + esc(q) + '」로 찾은 것이 없습니다 — 다른 말로 찾아보세요.</div>';
+      return;
+    }
+    hits.textContent = q ? list.length + '개 절에서 찾았습니다' : '';
+    /* 찾는 중이면 걸린 절을 전부 펼친다(어디에 있는지가 궁금한 것이다).
+       평소에는 고른 절 하나만 — 한 화면에 다 펼치면 못 읽는다. */
+    var show = q ? list : list.filter(function (s) { return s.id === cur; });
+    if (!show.length) { cur = list[0].id; show = [list[0]]; }
+    body.innerHTML = show.map(function (s) {
+      return '<div class="sec"><h2>' + hi(s.title) + '</h2>'
+        + (s.sub ? '<div class="sub">' + hi(s.sub) + '</div>' : '')
+        + (s.blocks || []).map(block).join('') + '</div>';
+    }).join('');
+    wireTel();
+  }
+
+  /* **보이는 번호는 전부 눌린다** — AS 앱이 세운 규칙. 선택자를 `[data-tel]` 로
+     두어야 나중에 다른 자리에 번호를 넣어도 함께 걸린다. */
+  function wireTel() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tel]'), function (b) {
+      b.onclick = function () { location.href = 'tel:' + b.dataset.tel; };
+    });
+  }
+
+  fetch('/reform.json', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      DATA = j; cur = (j.sections[0] || {}).id || '';
+      document.getElementById('foot').innerHTML =
+        '자료 기준 <b>' + esc(j.collectedAt) + '</b> · 출처 '
+        + (j.sources || []).map(function (s) {
+            return s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noreferrer">' + esc(s.name) + '</a>' : esc(s.name);
+          }).join(' · ')
+        + '<br>금액은 정찰제이나 <b>현장 실측 후 최종 견적</b>이 확정됩니다 · 전 금액 VAT 포함';
+      render();
+      /* 통합검색이 보내는 딥링크 — 찾아 준 것과 다른 화면이 뜨면 찾아 준 뜻이 없다 */
+      var p = new URLSearchParams(location.search);
+      var want = p.get('sec') || p.get('q');
+      if (want) {
+        var hit = j.sections.filter(function (s) { return s.id === want || s.title.indexOf(want) >= 0; })[0];
+        if (hit) { cur = hit.id; render(); }
+        else { q = want; document.getElementById('q').value = want; render(); }
+      }
+      if (window.AX_LOG) window.AX_LOG('reform', 'page_view', '', true);
+    })
+    .catch(function () {
+      document.getElementById('body').innerHTML =
+        '<div class="empty">자료를 불러오지 못했습니다 — 잠시 뒤 다시 열어 주세요.</div>';
+    });
+
+  var qi = document.getElementById('q');
+  qi.oninput = function () { q = qi.value.trim(); render(); };
+})();
+</script>
+</body>
+</html>
