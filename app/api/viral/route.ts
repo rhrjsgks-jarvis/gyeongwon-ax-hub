@@ -42,8 +42,14 @@ export async function GET(req: Request) {
      5분은 캐시가 즉시 답한다(Vercel 함수 한도는 300초라 여유가 크다). */
   for (const ms of [20000, 30000]) {
     try {
+      /* **메모리 캐시(`cache` 변수)만으로는 안 듣는다.** 서버리스는 인스턴스마다
+         메모리가 따로라 요청이 다른 인스턴스로 가면 또 13초를 기다린다 — 실측으로
+         두 번째 요청도 13.0초였다. 이 저장소가 게시판에서 이미 겪은 함정이다.
+
+         그래서 **인스턴스 사이에 공유되는 Vercel Data Cache**(Next 의 fetch 캐시)를
+         함께 쓴다. 「지금 수집」 직후처럼 사람이 새로고침을 요구한 때만 건너뛴다. */
       const res = await fetch(`${VIRAL_GAS_URL}?json=1`, {
-        cache: 'no-store',
+        ...(fresh ? { cache: 'no-store' as const } : { next: { revalidate: 300 } }),
         redirect: 'follow',
         signal: AbortSignal.timeout(ms),
       })
