@@ -893,6 +893,10 @@ function collectReviews(mode) {
     props_().setProperty('_forceFull', '1');
     props_().setProperty('_cursor', '0');
     props_().setProperty('_tail', '0');
+    /* **이 바퀴가 언제 어디서 시작했는지** — 화면이 남은 시간을 이 둘로 낸다.
+       바퀴마다 다시 적어야 한다(옛 값으로 재면 남은 시간이 통째로 거짓이 된다). */
+    props_().setProperty('_cycleAt', String(Date.now()));
+    props_().setProperty('_cycleFrom', '0');
   }
   /* **둘이 동시에 돌지 못하게 막는다.** 이어달리기 트리거가 도는 중에 사장님이
      화면에서 「지금 수집」을 누르면 두 벌이 같은 시트에 쓴다 — 둘 다 자기 시작 시점의
@@ -911,7 +915,24 @@ function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
   var seen = {}, i, k, n;
   var t0 = Date.now();
-  var BUDGET_MS = 4.5 * 60 * 1000;      /* 6분 한도에서 여유를 둔다 — 시트 쓰기 시간이 남아야 한다 */
+  /* **3.5분이다 — 4.5분에서 줄였다**(2026-08-31). 마지막 시간 검사 뒤에도 꼬리 하나
+     (최대 20회 · 30초 안팎)를 더 돌고, 거기에 시트 쓰기·경쟁비교가 붙으면 6분을 넘긴다.
+     실제로 배포본이 **네 번을 돌고도 커서가 0에서 한 칸도 안 움직였다**(실측) —
+     강제 종료되면 그 실행이 통째로 사라지고 다음 실행이 같은 자리에서 또 죽는다. */
+  var BUDGET_MS = 3.5 * 60 * 1000;
+  /* **지금 돌고 있다는 것을 적어 둔다**(2026-08-31). 커서·사용량·로그는 전부 실행이
+     **끝날 때** 한 번에 찍히므로, 4.5분 도는 동안에는 **어떤 값도 안 변한다** —
+     새로고침해도 완전히 멈춘 것처럼 보인다. 사장님이 「멈췄다」고 느끼신 데에 이
+     눈먼 구간이 한몫했다. 시작 시각을 적어 두면 화면이 「N분째 도는 중」을 말할 수 있다.
+     **강제 종료되면 이 값이 남는다** — 그래서 화면은 「10분이 넘으면 죽은 것으로 본다」. */
+  props_().setProperty('_runAt', String(Date.now()));
+  /* **바퀴가 새로 시작하면 그 시각을 적는다** — 화면이 남은 시간을 「이 바퀴 경과 ÷
+     훑은 매장 × 남은 매장」으로 내는데, 옛 바퀴 시각으로 재면 통째로 거짓이 된다.
+     「전체 재수집」 버튼은 자기가 이미 적었으므로 여기서는 커서가 0일 때만 적는다. */
+  if (Number(props_().getProperty('_cursor') || 0) === 0 && !props_().getProperty('_cycleAt')) {
+    props_().setProperty('_cycleAt', String(Date.now()));
+    props_().setProperty('_cycleFrom', '0');
+  }
   var cursor = Number(props_().getProperty('_cursor') || 0);
   if (!(cursor >= 0) || cursor >= STORES.length) cursor = 0;
   /* **매장 안 어디까지 갔는지도 기억한다**(2026-08-31). 예전에는 `_cursor`(매장 번호)만
@@ -937,6 +958,7 @@ function sweep_(mode) {
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var calls = 0, got = 0, kept = 0, add = [], err = '';
   var saved = 0;   /* 아껴서 안 부른 호출 수 — 화면이 「얼마나 아꼈나」를 말한다 */
+  var flushed = 0; /* 매장 경계에서 이미 시트에 쓴 건수 — 보고 건수가 이것을 빠뜨리면 안 된다 */
   var kinds = ['blog', 'cafearticle'];
 
   /* **일일 한도를 여기서 한 번만 읽는다**(2026-08-31 사장님 요청).
@@ -1026,6 +1048,10 @@ function sweep_(mode) {
         /* 한 매장이 최대 32회(2종 x 꼬리말 8 x 2쪽)를 쓴다 — 매장 단위로만 보면
            한도를 그만큼 넘길 수 있어 호출 직전에도 본다 */
         if (over()) { hitLimit = true; stopped = true; cursor = i; tailSave = ti; break; }
+        /* **호출 직전에도 시간을 본다**(2026-08-31). 꼬리 경계에서만 보면 그 뒤로
+           최대 20회(30초 안팎)를 더 도는데, 그 오버슛이 6분 한도를 넘기면 **그 실행이
+           통째로 날아간다.** 여기서 보면 넘치는 것이 딱 1회다. */
+        if (Date.now() - t0 > BUDGET_MS) { stopped = true; cursor = i; tailSave = ti; break; }
         var j;
         try { j = search_(kinds[k], query, page * PAGE_SIZE + 1); calls++; }
         catch (e) { serr = String(e); break; }
@@ -1097,6 +1123,26 @@ function sweep_(mode) {
        error:"cafearticle:HTTP 401"`). 지금은 무료라 괜찮지만 유료로 바뀌면 헛돈
        130 회가 그대로 요금이 된다. 401·403 은 더 돌아도 결과가 같다. */
     if (serr && (serr.indexOf('스크립트 속성') >= 0 || serr.indexOf('401') >= 0 || serr.indexOf('403') >= 0)) break;
+
+    /* ── 매장 하나를 끝낼 때마다 저장한다 ──────────────────────────────
+     * 2026-08-31. 예전에는 시트 쓰기·커서 저장이 **전부 함수 끝**에 몰려 있어,
+     * 6분 강제 종료를 맞으면 **그 실행이 통째로 사라지고 커서도 그대로**였다.
+     * 그러면 다음 실행이 같은 자리에서 또 죽어 **영원히 제자리**다 —
+     * 실측으로 배포본이 네 번을 돌고도 커서가 0에서 한 칸도 안 움직였다.
+     *
+     * **유실을 한 매장 아래로 줄인다.** 쓰기가 매장당 한 번(65번)이지만 호출이
+     * 10,400번인 것에 견주면 값이 싸다.
+     *
+     * **커서를 시트 쓰기보다 먼저 올리지 말 것** — 쓰기가 실패하면 그 매장 글을
+     * 영영 못 넣는다. 순서는 반드시 **쓰기 → 커서**다. */
+    if (add.length) {
+      itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
+      flushed += add.length;
+      add = [];
+      sumCacheClear_();
+    }
+    props_().setProperty('_cursor', String(i + 1));
+    props_().setProperty('_tail', '0');
   }
 
   /* ── 매니저 이름 훑기 ────────────────────────────────────────
@@ -1204,7 +1250,12 @@ function sweep_(mode) {
     /* 전체 훑기를 마쳤으니 표식을 내린다 — 안 내리면 매일 전부 훑어 아낀 것이 없어진다 */
     props_().deleteProperty('_forceFull');
   }
-  if (!stopped) { cursor = 0; tailSave = 0; }
+  if (!stopped) {
+    cursor = 0; tailSave = 0;
+    /* 바퀴를 마쳤으니 시작 시각을 지운다 — 다음 바퀴가 자기 시각을 새로 적는다 */
+    props_().deleteProperty('_cycleAt');
+    props_().deleteProperty('_cycleFrom');
+  }
   props_().setProperty('_cursor', String(cursor));
   props_().setProperty('_tail', String(tailSave));
 
@@ -1226,12 +1277,14 @@ function sweep_(mode) {
   var chained = false;
   if (stopped && !hitLimit && !err) { chained = chain_(); } else { clearChain_(); }
 
-  sheet_(SHEET_LOG, LOG_HEADER).appendRow([new Date(), calls, got, kept, add.length, err]);
+  /* 끝났으니 「도는 중」 표식을 내린다 — 안 내리면 화면이 영영 「도는 중」이라 적는다 */
+  props_().deleteProperty('_runAt');
+  sheet_(SHEET_LOG, LOG_HEADER).appendRow([new Date(), calls, got, kept, flushed + add.length, err]);
   return {
     /* 이어달리기가 걸렸는지. 화면이 *"1분 뒤 스스로 이어 갑니다"* 를 적어야
        사장님이 버튼을 다시 누를지 말지 안다. */
     chained: chained,
-    calls: calls, got: got, kept: kept, added: add.length, error: err,
+    calls: calls, got: got, kept: kept, added: flushed + add.length, error: err,
     /* **오늘 어느 쪽으로 돌았는지 밝힌다** — 「새 글만 훑었다」와 「전부 훑었다」는
        다른 말이고, 새 글이 적은 이유가 되기 때문이다. `saved` 는 아껴서 안 부른 횟수다. */
     full: isFull, saved: saved,
@@ -1627,6 +1680,7 @@ function summary_() {
     /* **지금 전부 훑는 중인가** — 화면이 「전체 재수집이 도는 중입니다」를 적어야
        사장님이 「왜 이렇게 오래 걸리지」 하고 다시 누르지 않는다. */
     forceFull: String(props_().getProperty("_forceFull") || "") === "1",
+    runAt: Number(props_().getProperty("_runAt") || 0), now: Date.now(),
     fullAt: String(props_().getProperty("_fullAt") || ""),
     /* **지금 스스로 이어 돌고 있는가.** 이것이 참이면 화면은 「이어서 수집」을 권하지
        않고 *"1분마다 자동으로 이어 갑니다"* 를 적는다 — 안 그러면 사장님이 버튼을
@@ -1870,7 +1924,13 @@ function json_(o) {
  *
  * **못 넣어도 화면은 돈다.** 캐시는 빠르게 하는 장치이지 자료의 출처가 아니다.
  */
-var SUM_KEY = 'viral_sum';
+/* **집계에 필드를 더하거나 뜻을 바꾸면 이 번호를 올린다**(2026-08-31).
+   안 올리면 **새 코드를 배포해도 옛 캐시가 새 필드를 가린다** — 실제로 줄임말·매니저
+   카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
+   두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
+   이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
+var SUM_VER = 2;
+var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
 
@@ -1975,7 +2035,37 @@ function freshState_(d) {
     d.forceFull = String(props_().getProperty('_forceFull') || '') === '1';
     d.fullAt = String(props_().getProperty('_fullAt') || '');
     d.lastRun = lastRun_();
+    /* **줄임말은 사장님이 방금 등록했을 수 있다** — 집계와 함께 굳으면 등록하고도
+       목록에 안 보여 「저장이 안 됐다」로 읽힌다. 한 바퀴 최대 호출도 별칭 수에 따라
+       바뀌므로 함께 새로 낸다. */
+    /* 지금 돌고 있는가 — 화면이 「N분째」를 적는다. 강제 종료되면 값이 남으므로
+       **화면이 오래된 것은 죽은 것으로 본다**(여기서 판정하지 않는다). */
+    d.runAt = Number(props_().getProperty('_runAt') || 0);
+    d.now = Date.now();
+    d.cycleAt = Number(props_().getProperty('_cycleAt') || 0);
+    d.cycleFrom = Number(props_().getProperty('_cycleFrom') || 0);
+    d.alias = aliasAll_();
+    d.sweep = sweepCalls_();
   } catch (e) { /* 못 읽어도 집계는 그대로 쓴다 */ }
+  return d;
+}
+
+/**
+ * **진행 상황만** 돌려준다 — 화면이 몇 초마다 부른다(2026-08-31 사장님 요청:
+ * *"진행중인건지 멈춘건지 확인이 안 됩니다. 진행율이 실시간으로 표기되면 좋겠습니다.
+ * 완료까지 남은 시간이 얼마나 남았는지 보여주면 좋겠습니다"*).
+ *
+ * **`getSummary()` 를 부르면 안 된다** — 그쪽은 시트 6,800행을 읽어 집계하고 1MB 를
+ * 돌려준다. 몇 초마다 그것을 부르면 화면이 그 무게에 눌린다. 여기는 스크립트 속성과
+ * 로그 마지막 한 줄만 읽는다.
+ *
+ * **남은 시간은 이 바퀴의 실측에서 낸다** — 매장마다 크기가 달라 어림이지만,
+ * 이어달리기의 1분 대기까지 경과 시간에 이미 들어 있어 벽시계에 맞는다.
+ */
+function getProgress() {
+  var d = freshState_({ ok: true, stores: STORES.length });
+  d.cycleAt = Number(props_().getProperty('_cycleAt') || 0);
+  d.cycleFrom = Number(props_().getProperty('_cycleFrom') || 0);
   return d;
 }
 

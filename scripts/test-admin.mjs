@@ -932,7 +932,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
     /* ② `google.script.run` 이 부르는 이름은 **밑줄로 끝나면 안 된다**(비공개 취급) */
-    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews', 'setAlias'];
+    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews', 'setAlias', 'getProgress'];
     const miss = pub.filter((f) => !new RegExp(`^function ${f}\\(`, 'm').test(rv));
     if (miss.length) fail(`[바이럴] 화면이 부르는 함수가 없다: ${miss.join(', ')}`);
     else console.log(`OK: 바이럴 공개 함수 ${pub.length}개 — 화면에서 부를 수 있는 이름이다`);
@@ -978,7 +978,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ③-b **상태 값은 캐시를 타면 안 된다.** 집계(13초)는 담아 두는 것이 맞지만
        커서·사용량·마지막 실행까지 담으면 **실제로 전진하는데 화면이 6시간 굳는다** —
        사장님이 「여러 번 눌러도 80% 그대로」를 본 진짜 이유가 이것이다. */
-    const fresh = (rv.match(/function freshState_\(d\) \{([\s\S]{0,700}?)\n\}/) || [])[1] || '';
+    /* **글자 수로 창을 자르지 말 것** — 주석이 늘면 함수 끝을 못 찾아 「없다」로 잡는다
+       (이 저장소가 이미 두 번 데인 자리다). 함수 시작부터 닫는 줄까지 잘라 본다. */
+    const freshAt = rv.indexOf('function freshState_(d) {');
+    const fresh = freshAt < 0 ? '' : rv.slice(freshAt, rv.indexOf('\n}', freshAt));
     const need2 = ['cursor', 'dayUsed', 'chainOn', 'lastRun'];
     const missF = need2.filter((k) => !fresh.includes('d.' + k + ' ='));
     if (!fresh) fail('[바이럴] freshState_ 가 없다 — 캐시가 커서·사용량을 얼려 화면이 거짓말을 한다');
@@ -986,6 +989,34 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     else if (!/if \(hit\) \{ hit\.cached = true; return freshState_\(hit\); \}/.test(rv)) {
       fail('[바이럴] getSummary 가 캐시 히트에서 freshState_ 를 안 지난다 — 상태가 굳는다');
     } else console.log('OK: 바이럴 상태 값 — 캐시가 있어도 커서·사용량·마지막 실행은 새로 읽는다');
+
+    /* ③-b2 **캐시 키에 판 번호가 박혀 있어야 한다.** 없으면 새 필드를 더해 배포해도
+       옛 캐시(6시간)가 그것을 가려 **화면이 거짓말을 한다** — 실제로 줄임말 카드가
+       「아직 등록된 줄임말이 없습니다」라고 말했다(코드 표에 두 개가 있는데).
+       `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이다. */
+    if (!/var SUM_VER = \d+;/.test(rv) || !/var SUM_KEY = '[^']*' \+ SUM_VER;/.test(rv)) {
+      fail('[바이럴] 집계 캐시 키에 판 번호(SUM_VER)가 없다 — 새 필드를 더해도 옛 캐시가 가린다');
+    } else if (!/d\.alias = aliasAll_\(\);/.test(rv)) {
+      fail('[바이럴] 줄임말이 캐시와 함께 굳는다 — 등록하고도 목록에 안 보여 「저장이 안 됐다」로 읽힌다');
+    } else console.log('OK: 바이럴 캐시 판 번호 — 새 필드를 더해도 옛 캐시가 안 가린다');
+
+    /* ③-b3 **매장 하나를 끝낼 때마다 저장해야 한다.** 시트 쓰기·커서가 함수 끝에만
+       있으면 6분 강제 종료 때 **그 실행이 통째로 사라지고 커서도 그대로**라, 다음
+       실행이 같은 자리에서 또 죽어 영원히 제자리가 된다 — 배포본이 네 번을 돌고도
+       커서가 0에서 안 움직인 것을 실측했다.
+       **순서가 중요하다: 쓰기 → 커서.** 커서를 먼저 올리면 쓰기가 실패했을 때 그 매장
+       글을 영영 못 넣는다. */
+    const loopEnd = rv.indexOf("props_().setProperty('_cursor', String(i + 1));");
+    const writeAt = rv.indexOf('flushed += add.length;');
+    if (loopEnd < 0) {
+      fail('[바이럴] 매장마다 커서를 저장하지 않는다 — 강제 종료되면 그 실행이 통째로 날아가고 제자리가 된다');
+    } else if (writeAt < 0 || writeAt > loopEnd) {
+      fail('[바이럴] 매장 경계에서 시트 쓰기가 커서 저장보다 뒤다 — 쓰기가 실패하면 그 매장 글을 영영 못 넣는다');
+    } else if (!/added: flushed \+ add\.length/.test(rv)) {
+      fail('[바이럴] 보고 건수가 중간 저장분(flushed)을 빠뜨린다 — 화면이 실제보다 적게 말한다');
+    } else if (!/var BUDGET_MS = 3\.5 \* 60 \* 1000;/.test(rv)) {
+      fail('[바이럴] 예산이 3.5분이 아니다 — 오버슛까지 더하면 6분 한도를 넘겨 실행이 통째로 날아간다');
+    } else console.log('OK: 바이럴 중간 저장 — 매장마다 쓰기→커서 순으로 남기고, 예산 3.5분');
 
     /* ③-c **이미 가진 글을 다시 받지 않는다**(사장님 지적: 매일 10,400회는 낭비).
        신호는 **「이미 가진 링크를 만났다」** 여야 한다 — 「새 링크가 0건」으로 잡으면

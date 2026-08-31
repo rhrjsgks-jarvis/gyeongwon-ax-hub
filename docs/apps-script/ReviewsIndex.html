@@ -874,6 +874,50 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       .setAlias(store, words);
   }
 
+  /* ── 진행률을 몇 초마다 갱신한다 (2026-08-31 사장님 요청) ──────────────────
+   * *"진행중인건지 멈춘건지 확인이 안 됩니다. 진행율이 실시간으로 표기되면 좋겠습니다.
+   * 완료까지 남은시간이 얼마나 남았는지 보여주면 좋겠습니다"*.
+   *
+   * **`getSummary()` 를 부르면 안 된다** — 시트 6,800행을 읽어 1MB 를 돌려주므로
+   * 몇 초마다 부르면 화면이 그 무게에 눌린다. `getProgress()` 는 속성과 로그 한 줄만 읽는다.
+   *
+   * **돌고 있을 때만 돈다.** 늘 돌면 아무도 안 보는 화면에서 호출만 쌓인다.
+   * **응답이 늦으면 건너뛴다**(`busy`) — 겹쳐 부르면 요청이 밀린다.
+   * **한 번이라도 실패하면 멈춘다** — 조용히 계속 실패하는 폴링만큼 쓸모없는 것이 없다.
+   */
+  var progTimer = null, progBusy = false;
+
+  function pollProgress() {
+    if (progBusy) return;
+    if (!(window.google && google.script && google.script.run)) return;
+    progBusy = true;
+    google.script.run
+      .withSuccessHandler(function (d) {
+        progBusy = false;
+        if (!d) return;
+        /* **집계는 건드리지 않는다** — 진행에 관한 값만 갈아 끼운다.
+           목록·지도·순위를 다시 그리면 보던 자리가 튄다. */
+        ['cursor', 'tail', 'dayUsed', 'chainOn', 'chainErr', 'forceFull',
+         'runAt', 'now', 'cycleAt', 'cycleFrom', 'lastRun'].forEach(function (k) {
+          if (d[k] !== undefined) DATA[k] = d[k];
+        });
+        renderProgress();
+        renderLimit();
+        syncPoll();
+      })
+      .withFailureHandler(function () { progBusy = false; stopPoll(); })
+      .getProgress();
+  }
+
+  function stopPoll() { if (progTimer) { clearInterval(progTimer); progTimer = null; } }
+
+  /* 돌고 있으면 켜고 아니면 끈다 — 판정은 **서버가 준 사실**로만 한다 */
+  function syncPoll() {
+    var running = !!DATA.chainOn || !!Number(DATA.runAt || 0);
+    if (running && !progTimer) progTimer = setInterval(pollProgress, 12000);
+    else if (!running) stopPoll();
+  }
+
   function wireAlias() {
     var ok = document.getElementById('alias-ok');
     var st = document.getElementById('alias-store');
@@ -1809,6 +1853,32 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       /* **어느 쪽으로 도는지 함께 적는다** — 「전부 훑는 중」과 「새 글만」은
          걸리는 시간이 다르고, 건수가 적은 이유가 되기 때문이다. */
       if (DATA.forceFull) e.textContent += ' · 전체 재수집 중(오래 걸립니다)';
+      /* **지금 실제로 돌고 있으면 그렇게 적는다.** 커서·사용량·로그는 실행이 끝날 때
+         한 번에 찍히므로 4.5분 동안 **어떤 값도 안 변한다** — 새로고침해도 멈춘 것처럼
+         보인다. 사장님이 「멈췄다」고 느끼신 데에 이 눈먼 구간이 한몫했다.
+         **10분이 넘으면 죽은 것으로 본다** — 강제 종료되면 표식이 남기 때문이다.
+         있는 척하지 않는다. */
+      var ra = Number(DATA.runAt || 0), nw = Number(DATA.now || 0);
+      if (ra && nw > ra) {
+        var mins = Math.floor((nw - ra) / 60000);
+        if (mins < 10) {
+          e.textContent += ' · 지금 도는 중(' + (mins < 1 ? '1분 안' : mins + '분째') + ')';
+          e.className = 'prog auto';
+        } else {
+          e.textContent += ' · 직전 실행이 ' + mins + '분 전에 시작해 끝나지 않았습니다(강제 종료로 보입니다)';
+        }
+      }
+      /* **남은 시간을 이 바퀴의 실측에서 낸다**(사장님 요청). 매장마다 크기가 달라
+         어림이지만, 이어달리기의 1분 대기까지 경과 시간에 들어 있어 벽시계에 맞는다.
+         **한 매장도 못 끝냈으면 적지 않는다** — 나눌 것이 없는데 숫자를 만들면 거짓이다. */
+      var ca = Number(DATA.cycleAt || 0), cf = Number(DATA.cycleFrom || 0);
+      var done = cur - cf;
+      if (ca && nw > ca && done > 0 && cur < tot) {
+        var per = (nw - ca) / done;                  /* 매장 하나에 걸린 시간 */
+        var leftMin = Math.round(per * (tot - cur) / 60000);
+        e.textContent += ' · 남은 시간 대략 '
+          + (leftMin >= 60 ? Math.floor(leftMin / 60) + '시간 ' + (leftMin % 60) + '분' : Math.max(1, leftMin) + '분');
+      }
       e.className = 'prog' + (auto ? ' auto' : (mid ? ' mid' : ''));
     }
     /* **치울 것이 있을 때만 「중복 정리」를 띄운다.** 개수를 함께 적어야
@@ -1841,6 +1911,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     wireZoom();
     wireDrag();
     wireAlias();
+    syncPoll();
     /* rival 카드가 hidden 이 되거나 풀리면 「보이는 첫 카드」가 바뀐다 */
     (function () { var b = document.querySelector(".two"); if (b) markLead(b); })();
     renderLimit();

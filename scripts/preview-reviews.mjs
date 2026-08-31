@@ -116,7 +116,13 @@ const DATA = {
   ],
   mgrFull: 380, mgrRows: 2433,
   alias: { '신세계사우스시티': ['신사시티'], '갤러리아광교': ['갤광교', '광교갤러리아'] },
-  forceFull: false, fullAt: '2026-08-28',
+  /* **도는 중**으로 둔다 — 진행 줄·남은 시간이 실제로 그려지는지 눈으로 봐야 한다.
+     11/65 매장을 12분에 훑었으니 남은 54곳은 대략 59분이다. */
+  forceFull: true, fullAt: '', chainOn: true,
+  cursor: 11, tail: 0,
+  runAt: Date.now() - 90 * 1000,
+  cycleAt: Date.now() - 12 * 60 * 1000, cycleFrom: 0,
+  now: Date.now(),
   watch: CAFES.slice(0, 3).map((c, i) => ({ name: c, n: 120 - i * 40, naver: true })),
   recent
 };
