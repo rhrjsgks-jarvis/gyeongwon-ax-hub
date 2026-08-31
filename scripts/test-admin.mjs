@@ -1025,6 +1025,108 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
     }
 
+    /* ⑧ **「언제 쓰였나」와 「언제 찾았나」를 같은 축에 놓지 않는다** (2026-08-31).
+       카페 줄의 `date` 는 발견일(거의 늘 오늘)이고 블로그 줄만 진짜 작성일이라,
+       한 축으로 정렬하면 **카페가 맨 위를 통째로 차지한다** — 실측으로 화면에
+       내려보내는 3,000줄에 블로그가 **1건**뿐이었다(작성일이 진짜인 2,459건이
+       목록에서 사라졌다). 되돌아가면 화면에서만 보이는 종류라 검사가 붙든다. */
+    {
+      const cmp = (rv.match(/rows\.sort\(function \(a, b\) \{([\s\S]*?)\}\);/) || [])[1] || ''
+      if (!/a\.dated !== b\.dated/.test(cmp)) {
+        fail('[바이럴] 최근순 정렬이 작성일과 발견일을 같은 축에 놓는다 — 카페가 목록을 독차지한다');
+      } else {
+        /* 실제로 돌려 본다 — 정규식만 보면 부호가 뒤집혀도 통과한다 */
+        const f = new Function('rows', `rows.sort(function (a, b) {${cmp}}); return rows`);
+        const out = f([
+          { dated: false, date: '2026-08-31', t: '카페1' },
+          { dated: true, date: '2026-08-20', t: '블로그A' },
+          { dated: false, date: '2026-08-30', t: '카페2' },
+          { dated: true, date: '2026-08-25', t: '블로그B' }
+        ]);
+        const names = out.map((r) => r.t).join(',');
+        if (names !== '블로그B,블로그A,카페1,카페2') {
+          fail(`[바이럴] 정렬 결과가 틀리다 — ${names} (블로그B,블로그A,카페1,카페2 여야 한다)`);
+        } else console.log('OK: 바이럴 정렬 — 작성일 아는 글이 먼저, 그 안에서 최신순');
+      }
+
+      /* `recent` 를 앞에서 그냥 자르면 이번엔 카페가 한 줄도 안 간다 — 방향만 바뀐 같은 사고 */
+      /* **문자 수로도, 옆 필드 이름으로도 자르지 않는다.** `{0,300}` 은 주석 한 줄에
+         밀려 멀쩡한 코드를 「없다」고 잡았고, 뒤이어 앵커로 쓰던 `truncated:` 를 지우자
+         이번엔 범위가 통째로 비었다 — **검사가 이웃 코드에 기대면 그 이웃이 사라질 때
+         함께 죽는다.** 리턴 객체 끝(`};`)까지 잡고 **첫 주석 앞까지만** 본다
+         (주석 안의 낱말이 검사를 통과시키는 오탐도 함께 막힌다). */
+      const ri = rv.indexOf('recent:');
+      const re = rv.indexOf('};', ri);
+      const recentLine = ri < 0 || re < 0 ? '' : rv.slice(ri, re).split('/*')[0]
+      if (/recent: rows\.slice\(/.test(rv)) {
+        fail('[바이럴] recent 를 앞에서 통째로 자른다 — 한쪽 갈래가 화면에서 통째로 사라진다');
+      } else if (!/r\.dated/.test(recentLine) || !/!r\.dated/.test(recentLine)) {
+        fail('[바이럴] recent 가 두 갈래(작성일 아는 글 / 모르는 글)를 함께 담지 않는다');
+      } else {
+        console.log('OK: 바이럴 recent — 두 갈래를 절반씩 담아 소스 필터가 뜻을 갖는다');
+      }
+    }
+
+    /* ⑨ 화면이 발견일을 **작성일처럼 적지 않는가.** 「추정」이라 쓰면 *우리가 어림한
+       날짜* 로 읽히고, 아무 말도 안 붙이면 작성일로 읽힌다 — 둘 다 거짓이다. */
+    {
+      const idxPath = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+      if (fs.existsSync(idxPath)) {
+        const ix = fs.readFileSync(idxPath, 'utf8');
+        if (/>추정</.test(ix)) {
+          fail('[바이럴] 발견일에 「추정」 태그를 붙였다 — 우리가 어림한 날짜로 읽힌다');
+        } else if (!/발견 '/.test(ix) || !/'작성 '/.test(ix)) {
+          fail('[바이럴] 목록이 「작성」과 「발견」을 갈라 적지 않는다');
+        } else if (!/날짜기준/.test(ix)) {
+          fail('[바이럴] CSV 가 작성일과 발견일을 한 칸에 뭉갠다 — 엑셀로 돌린 사람이 전부 작성일로 읽는다');
+        } else {
+          console.log('OK: 바이럴 화면·CSV — 작성일과 발견일을 갈라 적는다');
+        }
+
+        /* 「여기부터는 작성일 미상」 경계선이 **필터를 걸어도 뜨는가.**
+           소스 필터를 「카페」로 걸면 목록이 처음부터 끝까지 발견일이라
+           `wasDated === true` 로 보면 설명이 통째로 사라진다 — 화면에서만 보이는
+           종류라 조건식을 뽑아 **실제로 돌려 본다**(정규식만 보면 부호가 뒤집혀도 통과한다). */
+        /* **역슬래시를 쓰지 않는다** — heredoc·셸을 거치면 조용히 먹혀
+           정규식이 다른 뜻이 된다(문법 오류가 안 나 더 위험하다). 이스케이프 대신
+           문자 클래스로 쓴다: [(] [)] [.] [{] */
+        const cond = (ix.match(/if [(](wasDated[^)]*?!r[.]dated)[)] [{]/) || [])[1];
+        if (!cond) {
+          fail('[바이럴] 목록에 작성일/발견일 경계 표시가 없다');
+        } else {
+          const show = new Function('wasDated', 'r', 'return !!(' + cond + ')');
+          const cases = [
+            [null, false, true, '전부 발견일(카페 필터) — 첫 줄에 뜬다'],
+            [true, false, true, '작성일 뒤 첫 발견일 — 경계에 뜬다'],
+            [false, false, false, '발견일이 이어짐 — 다시 안 뜬다'],
+            [null, true, false, '작성일로 시작 — 안 뜬다'],
+            [false, true, false, '발견일 뒤 작성일 — 안 뜬다']
+          ];
+          const bad = cases.filter((c) => show(c[0], { dated: c[1] }) !== c[2]);
+          if (bad.length) fail('[바이럴] 경계 표시 조건이 틀리다 — ' + bad.map((c) => c[3]).join(' / '));
+          /* 목록 전체가 발견일이면 「여기부터는」이 거짓이다 — 문구가 갈려 있어야 한다 */
+          else if (!/이 목록은 전부/.test(ix)) {
+            fail('[바이럴] 목록 전체가 발견일인데 「여기부터는」이라 적는다 — 화면이 거짓말을 한다');
+          } else console.log('OK: 바이럴 경계 표시 — 필터로 전부 발견일이 돼도 설명이 남는다');
+        }
+
+        /* 경계 자리를 **서버가 준 인덱스로 찾지 않는가.** 화면이 그리는 것은
+           `filtered()` 를 거친 목록이라 서버가 센 자리는 필터를 걸면 어긋난다. */
+        if (/recentDated/.test(ix) || /recentDated/.test(rv)) {
+          fail('[바이럴] 경계를 서버 인덱스(recentDated)로 찾는다 — 필터를 걸면 엉뚱한 줄에 선이 그어진다');
+        } else console.log('OK: 바이럴 경계 — 화면이 목록을 훑어 찾아 필터와 무관하게 맞다');
+
+        /* **받아온 것이 전부가 아니면 목록 끝에서 밝히는가.** 8,711건 중 3,000건만
+           내려받는데 아무 말이 없으면 맨 아래까지 내려간 사람이 「이게 전부」로 읽는다.
+           **정규식 대신 문자열 포함으로 본다** — 이스케이프가 없으면 먹힐 것도 없다. */
+        if (!ix.includes('건</b>만 받아 왔습니다')) {
+          fail('[바이럴] 목록이 잘렸는데 화면이 말하지 않는다 — 맨 아래까지 본 사람이 「이게 전부」로 읽는다');
+        } else if (!ix.includes('got < all')) {
+          fail('[바이럴] 잘림 안내를 받은 수와 전체 수로 판정하지 않는다 — 서버 값과 어긋날 수 있다');
+        } else console.log('OK: 바이럴 잘림 안내 — 받은 수와 전체 수를 화면이 직접 견준다');
+      }
+    }
+
     /* ⑥ 동시 실행 자물쇠 — 두 벌이 같은 시트에 쓰면 같은 글이 두 줄로 들어간다 */
     if (!/LockService\.getScriptLock\(\)/.test(rv) || !/releaseLock\(\)/.test(rv)) {
       fail('[바이럴] 동시 실행 자물쇠가 없다 — 이어달리기 중에 사람이 누르면 중복 줄이 쌓인다');
