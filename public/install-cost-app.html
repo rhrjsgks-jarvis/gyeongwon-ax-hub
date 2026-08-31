@@ -208,7 +208,7 @@
 <body>
 <div class="topbar">
   <div class="topbar-in">
-    <div class="hd-ico">🧾</div>
+    <div class="hd-ico ci" data-label="영수증">🧾</div>
     <div>
       <div class="hd-t">설치비용 · 사전준비</div>
       <div class="hd-s">신규 설치 추가비 · 이전설치 · 안전한 사용준비</div>
@@ -223,19 +223,24 @@
 <div class="sbar">
   <div class="sbar-in">
     <input id="sq" type="search" placeholder="사다리차 · 타공 · 앵글 · 멀티탭 · 이전설치…" autocomplete="off">
-    <button class="sclr" id="sclr" hidden aria-label="지우기">✕</button>
+    <button class="sclr ci" id="sclr" hidden aria-label="지우기" data-label="x">✖</button>
     <div class="sdrop" id="sdrop" hidden></div>
   </div>
 </div>
 
 <div class="tabs" id="tabs">
-  <button class="tab on" data-tab="new"><span class="tb-ico">🔧</span>신규 설치 추가비</button>
-  <button class="tab" data-tab="care"><span class="tb-ico">🚚</span>이전 · 재설치 · 철거</button>
-  <button class="tab" data-tab="prep"><span class="tb-ico">🔌</span>설치 전 준비</button>
+  <button class="tab on" data-tab="new"><span class="tb-ico ci" data-label="공구">🔧</span>신규 설치 추가비</button>
+  <button class="tab" data-tab="care"><span class="tb-ico ci" data-label="트럭">🚚</span>이전 · 재설치 · 철거</button>
+  <button class="tab" data-tab="prep"><span class="tb-ico ci" data-label="플러그">🔌</span>설치 전 준비</button>
 </div>
 
 <div class="wrap" id="body"><div class="empty">불러오는 중…</div></div>
 
+<!-- **이모지를 쓰지 않는다** — 이 저장소 규칙(OS 마다 모양이 다르고 삼성 블루와
+     무관한 색이 튀며 키우면 뭉갠다). 이 앱만 규칙 밖에 있어 2026-08-31 사장님 지시로
+     심벌(SVG)로 갈아 끼웠다. 이 스크립트가 스스로 문서를 훑어 바꾸고, MutationObserver
+     로 **나중에 그려지는 카테고리 칩까지** 잡는다. -->
+<script src="prod-symbols.js"></script>
 <script src="back-kit.js"></script>
 <script src="share-kit.js"></script>
 <script>

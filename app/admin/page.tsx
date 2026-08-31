@@ -127,7 +127,6 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
      (2026-08-11 발견). 운영 중인 모듈이 통계에서 통째로 빠지면 "안 쓴다"로 읽힌다. */
   as:      { label: 'AS 관련 정보',     icon: 'warranty', color: '#0D9488' },
   installcost: { label: '설치비용 · 사전준비', icon: 'bolt', color: '#0369A1' },
-  reform: { label: '가구장 리폼 · 타공 규격', icon: 'install', color: '#1428A0' },
   place:   { label: '가전 배치 시뮬레이터', icon: 'place',    color: '#4F46E5' },
   test:    { label: '레벨업 챌린지',    icon: 'quiz',     color: '#7C3AED' },
   quiz:    { label: 'URL 퀴즈',        icon: 'target',   color: '#DC2626' },

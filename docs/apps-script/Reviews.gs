@@ -798,6 +798,11 @@ function collectReviews() {
   if (add.length) {
     itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
   }
+  /* **한 바퀴를 마칠 때만 경쟁비교를 함께 돌린다**(최대 40회 · 한 바퀴의 2%).
+     중간에 돌리면 같은 날 여러 번 쌓여 어느 것이 그날 값인지 알 수 없다. */
+  var rivalRun = null;
+  if (!stopped && !err && !over()) { try { rivalRun = collectRival(); } catch (e3) { rivalRun = { error: String(e3) }; } }
+
   /* 한 바퀴를 마쳤으면 커서를 처음으로 — 다음 실행이 새로 훑는다 */
   if (!stopped) cursor = 0;
   props_().setProperty('_cursor', String(cursor));
@@ -814,7 +819,8 @@ function collectReviews() {
     cafeCalls: cafeCalls, cafeAdded: cafeAdd, cafes: CAFES.length,
     /* **한도로 멈춘 것과 시간으로 멈춘 것을 가른다** — 「이어서 수집」을 눌러도 되는지가
        다르다(시간이면 지금 눌러도 되고, 한도면 내일이거나 한도를 올려야 한다). */
-    hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: SWEEP_CALLS
+    hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: SWEEP_CALLS,
+    rival: rivalRun
   };
 }
 
@@ -981,6 +987,8 @@ function summary_() {
        *"이어서 수집하기 버튼은 안 나옵니다"*). 한 바퀴가 6분 한도에 걸려 매장 중간에서
        멈추는데, 화면이 그 사실을 안 적으면 **갤러리아광교가 왜 29건인지** 알 길이 없다. */
     cursor: Number(props_().getProperty("_cursor") || 0),
+    /* 당사 vs LG — **없으면 null 이다.** 0 으로 그리면 「LG 후기가 없다」로 읽힌다 */
+    rival: rival_(),
     /* **영업스케치 지역 6곳**(수원·용인·성남·평택·안양·강원).
        후기 0건인 매장도 목록에 있다 — 전점 표시(사장님 지시). */
     byRegion: byRegion,
@@ -1007,6 +1015,143 @@ function summary_() {
  * 취급해 클라이언트에서 막는다. 안쪽 함수는 밑줄을 유지하고(그 규칙이 이 파일 전체의
  * 관례다) 부를 수 있는 창구만 따로 낸다.
  */
+
+/* ── 당사 vs LG 후기 비중 ──────────────────────────────────────────
+ * 2026-08-31 사장님 요청: *"각 지점별 대조되는 X사(LG) 후기도 대조해서 당사A점과
+ * X사A점의 후기 비중이 100분율로 어디가 앞서는가도 비교하고 싶습니다"*.
+ *
+ * ## 매장 대 매장이 아니라 **지역 대 지역**이다
+ * 우리 매장 이름(북수원·갤러리아광교…)에 대응하는 LG 매장 이름을 우리는 모른다.
+ * 「당사 A점 ↔ X사 A점」을 억지로 이으면 **없는 짝을 지어내는 것**이라, 정직하게
+ * **영업스케치 지역 6곳**에서 견준다 — 「수원에서 삼성 몇 건 vs LG 몇 건」.
+ *
+ * ## 이 기능의 전부는 「양쪽에 같은 잣대」다
+ * 우리 매장 후기는 정교한 매장 판정(`hasStore_`·`isNoise_`·`belongsToOther_`)을
+ * 거치는데 LG 쪽에 그것을 안 대면 **우리에게 불리한 쪽으로 기운다** — 실측 표본에
+ * `LG 북가좌점`(서울!)·`LG에서 가전 졸업`(매장명 없음) 같은 것이 섞여 있었다.
+ * 그래서 **같은 질의 목록 · 같은 쪽수 · 같은 판정 함수**를 쓴다. 비중이 뜻을 가지려면
+ * 이것뿐이다.
+ *
+ * ## 상한에 닿으면 비중을 내지 않는다
+ * 네이버는 한 질의당 약 200건까지만 준다. 양쪽이 다 상한이면 「100 대 100 = 50%」가
+ * 나오는데 **그건 잰 것이 아니다**(실측으로 수원이 정확히 그랬다).
+ * 그때는 숫자를 내지 말고 **「상한이라 못 잽니다」라고 적는다** — 이 저장소가
+ * 「없음」과 「확인 못 함」을 가르는 그 규칙과 같다.
+ *
+ * ## 담는 곳을 가른다
+ * LG 후기는 **우리 매장 후기가 아니다.** 후기 시트(8,700건)에 섞으면 누적이 거짓이
+ * 되므로 별도 시트에 요약만 담는다.
+ */
+var SHEET_RIVAL = '경쟁비교';
+var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries'];
+
+/* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
+   `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
+   `하이프라자`(법인명)는 32/100, `best샵` 은 20/100 이라 잡음이 많아 뺐다. */
+var RIVAL_BRANDS = ['lg베스트샵', 'lg전자베스트샵', '베스트샵', 'lg전자 베스트샵'];
+
+/* 지역마다 **사람이 실제로 쓰는 지명**. 양쪽 브랜드가 **같은 목록**을 쓴다 —
+   여기가 갈리면 비중이 통째로 거짓이 된다.
+   「강원」은 사람이 안 쓰는 말이라 대표 도시로 나눠 묻는다. */
+var AREA_Q = {
+  '수원': ['수원'],
+  '용인': ['용인', '동탄'],
+  '성남': ['성남', '분당'],
+  '평택': ['평택'],
+  '안양': ['안양', '평촌'],
+  '강원': ['춘천', '원주', '강릉'],
+};
+
+/** 브랜드 표기 + 지명이 함께 있는 글인가. **양쪽이 이 함수 하나를 쓴다.** */
+function rivalHit_(text, brands, place) {
+  var t = norm_(text), i;
+  var brandOk = false;
+  for (i = 0; i < brands.length; i++) if (t.indexOf(norm_(brands[i])) >= 0) { brandOk = true; break; }
+  if (!brandOk) return false;
+  if (t.indexOf(norm_(place)) < 0) return false;
+  /* 축구단·굿즈샵 등은 양쪽 모두에 같은 잣대로 뺀다 */
+  return !isNoise_(t);
+}
+
+/**
+ * 지역별 당사 vs LG 후기 건수를 잰다.
+ *
+ * 호출 수 = 지명 10개 × 브랜드 2 × 2쪽 = **최대 40회**. 한 바퀴(2,096회)에 견주면
+ * 2% 라 매 수집마다 함께 돌려도 부담이 없다.
+ */
+function collectRival() {
+  var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
+  var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+  var areas = Object.keys(AREA_Q), rows = [], calls = 0, err = '';
+
+  for (var ai = 0; ai < areas.length; ai++) {
+    var area = areas[ai], places = AREA_Q[area];
+    var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
+    var capped = false;
+
+    for (var pi = 0; pi < places.length; pi++) {
+      var place = places[pi];
+      var side = [
+        ['ours', BRANDS, '삼성스토어 ' + place],
+        ['rival', RIVAL_BRANDS, 'LG베스트샵 ' + place],
+      ];
+      for (var si = 0; si < side.length; si++) {
+        var key = side[si][0], brands = side[si][1], q = side[si][2];
+        for (var page = 0; page < MAX_PAGES; page++) {
+          var j;
+          try { j = search_('cafearticle', q, page * PAGE_SIZE + 1); calls++; }
+          catch (e) { err = String(e); break; }
+          if (j.error) { err = j.error; break; }
+          var items = j.items || [];
+          for (var n = 0; n < items.length; n++) {
+            var it = items[n];
+            var text = (it.title || '') + ' ' + (it.description || '');
+            if (rivalHit_(text, brands, place)) got[key][String(it.link || '')] = 1;
+          }
+          if (items.length < PAGE_SIZE) break;
+          /* **마지막 쪽까지 꽉 찼으면 상한에 닿은 것이다** — 더 있는데 못 받았다는 뜻 */
+          if (page === MAX_PAGES - 1) capped = true;
+        }
+        if (err) break;
+      }
+      if (err) break;
+    }
+
+    var a = Object.keys(got.ours).length, b = Object.keys(got.rival).length;
+    rows.push([
+      stamp, area, a, b,
+      /* **상한에 닿았으면 비중을 내지 않는다** — 「100 대 100 = 50%」는 잰 것이 아니다 */
+      capped ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
+      capped ? 'Y' : '',
+      places.join(' · '),
+    ]);
+    if (err) break;
+  }
+
+  if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, RIVAL_HEADER.length).setValues(rows);
+  if (calls) addUsage_(calls);
+  return { rows: rows.length, calls: calls, error: err };
+}
+
+/** 화면에 낼 최신 한 회차. **없으면 없다고 한다** — 0 으로 그리지 않는다. */
+function rival_() {
+  var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
+  if (sh.getLastRow() < 2) return null;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, RIVAL_HEADER.length).getValues();
+  var last = '', i;
+  for (i = 0; i < v.length; i++) { var t = String(v[i][0]); if (t > last) last = t; }
+  var out = [];
+  for (i = 0; i < v.length; i++) {
+    if (String(v[i][0]) !== last) continue;
+    out.push({
+      area: String(v[i][1]), ours: Number(v[i][2]) || 0, rival: Number(v[i][3]) || 0,
+      pct: v[i][4] === '' || v[i][4] === null ? null : Number(v[i][4]),
+      capped: String(v[i][5]) === 'Y', queries: String(v[i][6]),
+    });
+  }
+  return { at: last, rows: out };
+}
+
 function getSummary() { return summary_(); }
 
 /* ── 화면 · JSON ─────────────────────────────────────────────── */

@@ -31,6 +31,18 @@ const OUT = path.join(ROOT, 'tools', '제품USP카드.html')
  * 고른 기준은 **갈래별 최상위**다. 같은 품목에 갈래가 여럿이면(냉장고 4도어·양문형·
  * 키친핏…) 그중 최상위 하나만 싣고, 나머지는 `docs/usp/` 원본에 있다. */
 const PICKS = [
+  /* ── 2026-08-31 추가 수집분 (사장님 지목 7개 라인업) ──
+     문서에는 14종이 들어왔는데 PICKS 에 없어 카드·PPT 로 안 넘어오고 있었다.
+     **라인업을 새로 수집하면 이 목록도 함께 늘릴 것** — 안 그러면 문서에만 남는다. */
+  ['OLED',          'KQ55SH85-1B',    '무빙스타일 OLED SH85 (2026)'],
+  ['Neo QLED 4K',   'KQ115QNF90FXKR', 'QNF90 — 115형 최고가'],
+  ['Neo QLED 8K',   'KQ75QNF900FXKR', 'QNF900 — 8K 최상위'],
+  ['냉장고 키친핏',   'RF60DB9A62APG',  'Infinite AI 정수기 4도어 키친핏 585L'],
+  ['냉장고 키친핏Max','RM70F63R2A',     'Bespoke AI 4도어 키친핏 Max 640L'],
+  ['원바디',         'WH90F2120GBHW',  'Bespoke AI 원바디 21/20kg'],
+  ['AI 건조기',      'DV20CB8800BE',   'Bespoke AI 건조기 20kg 올인원컨트롤'],
+  ['AI 콤보',        'WD90F25AHS',     'Bespoke AI 콤보 25/18kg'],
+  ['인피니트 인덕션',  'CC99F63G1DS',    'Infinite AI 인덕션 — 플렉스존'],
   ['TV',          'KMR85RH95AFXKR', 'Micro RGB — TV 최상위'],
   ['프로젝터',      'SP-LPDU9SAXXKR', 'The Premiere — 4K 초단초점 최상위'],
   ['사운드바',      'HW-Q990H/KR',    '11.1.4ch — 사운드바 최상위'],

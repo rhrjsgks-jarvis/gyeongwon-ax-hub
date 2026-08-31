@@ -352,24 +352,6 @@ function flatten(v, out = []) {
     href: link('prep') });
 }
 
-// ── 4-b. 가구장 리폼 · 타공 규격 ──
-// **절 단위로 담는다** — 표의 행을 다 넣으면 색인이 커지는데, 허브 검색이 할 일은
-// 「어느 표에 있는지」까지이고 그 안에서 다시 찾는 것은 앱의 검색창이 한다
-// (install-cost 에서 세운 규칙과 같다).
-{
-  const RF = JSON.parse(fs.readFileSync(pub('reform.json'), 'utf8'));
-  for (const sec of RF.sections) {
-    add({
-      t: 'cost', m: 'reform', title: sec.title,
-      sub: sec.sub || '가구장 리폼 · 타공 규격',
-      /* 화면에 적힌 말로 찾아져야 한다 — 절이 이미 만들어 둔 kw 를 그대로 쓴다 */
-      kw: [sec.title, sec.sub, '리폼 인테리어핏 가구장 냉장고장 싱크장 타공 개구부 규격 시공 정찰제', sec.kw]
-        .filter(Boolean).join(' '),
-      href: `/reform?sec=${encodeURIComponent(sec.id)}`,
-    });
-  }
-}
-
 // ── 5. 허브 모듈·외부 링크 (수동 정의 — 소스가 app/page.tsx라 여기서 별도 관리) ──
 // 쿠폰 프로그램 URL만은 app/page.tsx의 COUPON_LINKS에서 직접 읽는다.
 // 여기에 URL을 복사해두면 한쪽만 바뀌었을 때 검색 결과가 죽은 링크를 가리키게 된다.
