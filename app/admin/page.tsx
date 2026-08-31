@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { readLogs, fetchTeamLogs, GAS_CONNECTED, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, aggregateFunnel, aggregateWeakPlans, UNSET_STORE, exportCsv, excludeHubViews, LogEvent } from '@/lib/logEvent'
+import { readLogs, fetchTeamLogs, GAS_CONNECTED, aggregateByModule, aggregateByDay, aggregateByStore, aggregateStoreModules, aggregateFunnel, aggregateWeakPlans, UNSET_STORE, exportCsv, excludeHubViews, excludeTestStore, LogEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 import { SALES_HEADCOUNT } from '@/lib/stores'
 import { QUIZ_BANK_TOTAL } from '@/lib/quiz-stats'
@@ -186,18 +186,22 @@ export default function AdminPage() {
      실행시간 90분이 한도라 자동 로드까지 매번 두드리면 그 한도를 먹는다.
      **onClick 에 load 를 그대로 넘기지 말 것** — React 가 넘기는 MouseEvent 가
      `fresh` 자리에 들어가 늘 truthy 가 된다. */
+  /* 화면·CSV 모두 **같은 거름망**을 지난 로그를 본다 — 집계와 내보내기가 어긋나면
+     어느 쪽이 맞는지 알 수 없다. 빼는 것 둘: 허브 진입(사용이 아니다) · 본사 접속
+     (매장 사용이 아니다). 한 곳에서만 짓는다. */
+  const sift = (raw: LogEvent[]) => excludeTestStore(excludeHubViews(raw))
+
   const load = async (fresh = false) => {
     setReloading(true)
-    // 화면·CSV 모두 허브 메인 페이지뷰를 뺀 로그로 통일한다(집계와 내보내기가 어긋나지 않게).
     const team = await fetchTeamLogs({ fresh })
     if (team) {
-      setLogs(excludeHubViews(team.logs))
+      setLogs(sift(team.logs))
       setTeamWide(true)
       setTeamFailed(false)
       setDataCached(team.cached)
       setDataStale(team.stale)
     } else {
-      setLogs(excludeHubViews(readLogs()))
+      setLogs(sift(readLogs()))
       setTeamWide(false)
       setTeamFailed(GAS_CONNECTED)     /* 연동이 안 된 것과 못 받은 것은 다른 말이다 */
       setDataCached(false)
@@ -317,7 +321,7 @@ export default function AdminPage() {
           세일즈 코파일럿 · 사용 현황 · {teamWide ? '팀 전체 집계 (Google Sheets 연동)' : 'localStorage 기반 · 이 기기에서만 누적'}
         </p>
         <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          허브 메인화면 조회수는 집계에서 제외됩니다 (모든 모듈의 진입점이라 실사용 신호가 아님)
+          허브 메인화면 조회수 · 본사(경원영업팀) 접속은 집계에서 제외됩니다 — 진입은 사용이 아니고, 본사 조작은 매장 사용이 아닙니다
         </p>
         {/* 언제 받은 자료인지 밝히고, 한 번에 다시 받는 손잡이를 준다 */}
         <div className="flex items-center gap-2 mt-2">

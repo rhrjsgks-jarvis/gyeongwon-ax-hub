@@ -23,7 +23,7 @@ globalThis.URL.createObjectURL = (blob) => { lastBlob = blob; return 'blob:fake'
 const {
   readLogs, logEvent, logOnce, aggregateByModule, aggregateByDay, aggregateByStore,
   aggregateStoreModules, UNSET_STORE,
-  exportCsv, excludeHubViews, normalizeLogs, fetchTeamLogs, GAS_CONNECTED,
+  exportCsv, excludeHubViews, excludeTestStore, normalizeLogs, fetchTeamLogs, GAS_CONNECTED,
   aggregateFunnel, aggregateWeakPlans,
 } = await import('../lib/logEvent.ts');
 const LOG = { aggregateFunnel, aggregateWeakPlans };
@@ -581,9 +581,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!bad) console.log('OK: Apps Script — HEADER ' + header.length + '칸, doPost·doGet 이 같은 칸을 본다');
 }
 
-/* ── 테스트점(Z000)은 로그를 남기지 않는다 (2026-08-20 사장님 요청) ──
- * 관리자가 화면을 점검할 때 그 조작이 매장 통계에 섞이면 **집계가 오염된다.**
- * 실제 매장 사용량과 점검 클릭을 구분할 방법이 없어지므로, 아예 안 쌓는 쪽이 맞다.
+/* ── 본사(경원영업팀 · Z000)는 로그를 남기지 않는다 (2026-08-20 사장님 요청) ──
+ * 본사가 화면을 볼 때 그 조작이 매장 통계에 섞이면 **집계가 오염된다.**
+ * 실제 매장 사용량과 본사 클릭을 구분할 방법이 없어지므로, 아예 안 쌓는 쪽이 맞다.
+ *
+ * **이름은 2026-08-31 에 '테스트점' → '경원영업팀' 으로 바뀌었다**(사장님 지시).
+ * 하는 일은 그대로다 — 그래서 상수 이름(TEST_STORE_CODE)도 그대로 둔다.
+ * 이 검사가 **이름을 붙들고 있다** — 화면 문구를 바꾸면 여기가 먼저 깨진다.
  */
 {
   let bad = 0;
@@ -614,10 +618,45 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (S.matchStore('Z000')?.code !== S.TEST_STORE_CODE) {
     fail('[테스트점] 점코드로 못 들어간다 — 관리자가 쓸 수 없다'); bad++;
   }
-  if (S.matchStore('테스트점')?.code !== S.TEST_STORE_CODE) {
-    fail('[테스트점] 이름으로 못 들어간다'); bad++;
+  /* **본사는 점코드로만 들어온다**(2026-08-31 사장님 지시). 이름으로도 열어 두면
+     상담사가 매장명 대신 팀 이름을 쳐서 들어올 수 있고, 그러면 그 사람의 사용이
+     통째로 안 쌓인다 — 조용히 사라지는 종류라 막는다. */
+  if (S.matchStore('경원영업팀') !== null) {
+    fail('[본사] 이름(경원영업팀)으로 들어와진다 — 점코드로만 열려야 한다'); bad++;
   }
-  if (!bad) console.log('OK: 테스트점(Z000) — 로그를 남기지 않고, 다른 지점으로 바꾸면 다시 쌓인다');
+  if (S.matchStore('테스트점') !== null) {
+    fail('[본사] 옛 이름 「테스트점」이 아직 통한다'); bad++;
+  }
+  /* 열쇠를 좁힌 것이지 **이름을 없앤 것이 아니다** — 머리의 노란 칩이 이 값을 쓴다 */
+  if (S.storeName(S.TEST_STORE_CODE) !== '경원영업팀') {
+    fail('[본사] 화면 이름이 「경원영업팀」이 아니다 = ' + S.storeName(S.TEST_STORE_CODE)); bad++;
+  }
+  /* **매장은 여전히 이름으로도 들어와야 한다** — 본사만 좁혔는지 반대쪽도 본다.
+     한쪽만 검사하면 전부 막아 놓고도 통과한다. */
+  if (S.matchStore('스타필드수원')?.code !== 'ZN01') {
+    fail('[본사] 매장 이름 접속까지 막혔다 — 본사만 좁혔어야 한다'); bad++;
+  }
+  if (S.matchStore('스타필드 수원')?.code !== 'ZN01') {
+    fail('[본사] 매장 이름의 띄어쓰기 무시가 깨졌다'); bad++;
+  }
+
+  /* ── 시트에 남은 Z000 줄은 집계에서 뺀다 (2026-08-31 사장님 요청) ──
+   * 앱은 애초에 안 쌓지만, 장치가 서기 전(8/20)이나 스크립트로 직접 넣은 잔재가
+   * 시트에 남는다 — 실제로 uid=gs-check 한 줄이 그랬다. 읽는 자리에서 거른다. */
+  {
+    const rows = [
+      { ts: 1, date: '2026-08-20', module: 'hub', action: 'tab_switch', uid: 'gs-check', store: 'Z000', storeName: '경원영업팀' },
+      { ts: 2, date: '2026-08-20', module: 'finder', action: 'page_view', uid: 'u1', store: 'ZN01', storeName: '스타필드수원' },
+      { ts: 3, date: '2026-08-20', module: 'as', action: 'page_view', uid: 'u2' },   /* 옛 줄 — store 없음 */
+    ];
+    const kept = excludeTestStore(rows);
+    if (kept.length !== 2) { fail('[본사] Z000 줄이 집계에서 안 빠진다 = ' + kept.length + '건'); bad++; }
+    if (kept.some((e) => e.store === 'Z000')) { fail('[본사] Z000 줄이 남았다'); bad++; }
+    /* **지점을 고르기 전 옛 줄까지 지우면 안 된다** — 그건 '(미지정)' 으로 세어야 한다 */
+    if (!kept.some((e) => !e.store)) { fail('[본사] store 가 빈 옛 줄까지 지웠다 — (미지정)이 사라진다'); bad++; }
+  }
+
+  if (!bad) console.log('OK: 본사(경원영업팀 · Z000) — 로그를 안 쌓고, 시트에 남은 줄도 집계에서 뺀다');
 }
 
 // ── 상담이 어디까지 갔는가 · 인식이 나빴던 도면 (2026-08-29) ─────────────────
@@ -675,8 +714,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 {
   const posterSrc = fs.readFileSync(new URL('../public/poster-app.html', import.meta.url), 'utf8');
 
-  /* 기준 — lib/stores.ts 의 활성 지점(테스트점 Z000 은 포스터에 없어야 정상) */
-  const base = new Map(S.STORE_LIST.filter((s) => s.active === 'Y' && s.code !== 'Z000')
+  /* 기준 — lib/stores.ts 의 활성 매장(본사 Z000 은 포스터에 없어야 정상).
+     **ACTIVE_STORES 를 그대로 쓴다** — 여기서 조건을 따로 적으면 그쪽이 바뀔 때 어긋난다. */
+  const base = new Map(S.ACTIVE_STORES
     .map((s) => [s.code, s.name]));
 
   /* ① <option value="ZN01">이름</option> */

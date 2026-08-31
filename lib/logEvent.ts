@@ -238,6 +238,26 @@ export function excludeHubViews(logs: LogEvent[]): LogEvent[] {
   return logs.filter((e) => !(e.module === 'hub' && e.action === 'page_view'))
 }
 
+/**
+ * **본사(경원영업팀 · Z000) 접속을 집계에서 뺀다**(2026-08-31 사장님 요청 —
+ * *"테스트점은 삭제해주세요 … 로그는 여전히 취합하지않게해주세요"*).
+ *
+ * 그 지점은 `logEvent` 가 **애초에 아무것도 안 쌓게** 막고 있으므로, 시트에 남은
+ * Z000 줄은 그 장치가 서기 전(2026-08-20)이나 스크립트로 직접 넣은 **점검 잔재**다.
+ * 실제로 8/20 12:44 의 `uid=gs-check` 한 줄이 그렇게 남아 있었다.
+ *
+ * **시트 행을 지우는 대신 읽는 자리에서 거른다** — Apps Script 는 붙이기만 하고
+ * 지우기가 없어 여기서 행을 없앨 수 없고, 한 줄을 손으로 지워도 **또 생기면 같은
+ * 일을 반복**하게 된다. `excludeHubViews` 와 같은 자리에서 같은 원칙으로 거른다:
+ * 저쪽이 *"허브 진입은 사용이 아니다"* 라면 이쪽은 *"본사 접속은 매장 사용이 아니다"*.
+ *
+ * **옛 줄은 `store` 가 비어 있다**(지점을 고르기 전) — 그건 '(미지정)' 으로 남는다.
+ * 여기서 거르는 것은 **Z000 이라고 분명히 적힌 줄뿐**이다.
+ */
+export function excludeTestStore(logs: LogEvent[]): LogEvent[] {
+  return logs.filter((e) => !(e.store && isTestStore(e.store)))
+}
+
 export function aggregateByModule(logs: LogEvent[]) {
   const map: Record<string, number> = {}
   for (const ev of logs) {

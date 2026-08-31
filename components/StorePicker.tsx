@@ -194,7 +194,7 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
         </button>
         {code && (
           <p className="mt-2 text-[11px] text-center text-gray-400">
-            지금 {isTestStore(code) ? '테스트점 (로그 미기록)' : `${code} 로 접속 중`}
+            지금 {isTestStore(code) ? '경원영업팀 (로그 미기록)' : `${code} 로 접속 중`}
           </p>
         )}
       </div>

@@ -266,7 +266,13 @@ export default function Navigation() {
             /* 긴 이름(현대기아차연구소모바일 11자)이 320px 에서 공유 아이콘을 밀어냈다.
                **감추지 않고 줄인다** — 로그가 이 값으로 쌓이므로 사라지면 안 된다.
                눌러서 전체 이름을 볼 수 있다 */
-            className="text-white text-[11px] font-semibold rounded-full px-2 py-0.5 truncate max-w-[74px] sm:max-w-none"
+            className={`text-white text-[11px] font-semibold rounded-full px-2 py-0.5 truncate ${
+              /* **본사 칩은 줄이지 않는다** — 그 글자 전체가 「로그 미기록」이라는 경고라,
+                 잘리면 「경원영업팀…」만 남아 **경고가 통째로 사라진다**(실물에서 그랬다).
+                 매장명은 눌러서 볼 수 있지만 이 경고는 볼 길이 없다. 본사는 몇 사람만
+                 쓰는 상태라 그 폭을 내주어도 매장 화면이 좁아지지 않는다. */
+              isTestStore(store) ? '' : 'max-w-[74px] sm:max-w-none'
+            }`}
             style={{
               /* 테스트점은 **다른 색으로 표시한다** — 로그가 안 쌓이는 상태인데 평소와
                  똑같아 보이면, 점검이 끝난 뒤 되돌리는 것을 잊어 그 매장 통계가 통째로 빈다 */
@@ -274,7 +280,7 @@ export default function Navigation() {
               color: isTestStore(store) ? '#4a3200' : '#fff',
             }}
           >
-            {store ? (isTestStore(store) ? '테스트점 · 로그 미기록' : storeName(store) || store) : '지점 선택'}
+            {store ? (isTestStore(store) ? '경원영업팀 · 로그 미기록' : storeName(store) || store) : '지점 선택'}
           </button>
           <span className="hidden lg:inline text-white text-xs opacity-60">경원영업팀</span>
           {/* 개발자 문의 — 떠 있던 버튼을 여기로 옮겼다(FeedbackButton 주석 참조) */}
