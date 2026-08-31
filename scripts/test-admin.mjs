@@ -820,5 +820,55 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!bad) console.log('OK: 자유게시판 — Board.gs HEADER 7칸 · doPost·doGet 열 일치 · 주소 미노출 · XSS 없음');
 }
 
+/*
+ * ── Apps Script 파일에 **꼬리 쉼표(trailing comma)** 가 없는가 ──
+ *
+ * 2026-08-31 사장님이 붙여넣자 `SyntaxError: 예기치 않은 토큰 ';'` 이 났다.
+ * 원인은 배열·객체 마지막 원소 뒤의 쉼표다:
+ *
+ *     'ZRG1': '평택',     ← 이 쉼표
+ *   };
+ *
+ * **V8 은 허용하고 구형 Rhino 런타임은 거부한다.** 그래서 `node --check` 도 통과하고
+ * 우리 눈에도 멀쩡해 보이는데 **사장님 편집기에서만 터진다** — 원인이 멀어서 세 번
+ * 헛짚었다(파일 이름·붙여넣기 실수·파일 크기).
+ *
+ * **줄 번호도 어긋나게 만든다** — 파서가 그 자리에서 멈추지 않고 뒤에서 터지므로
+ * 오류가 엉뚱한 줄(1198행)을 가리켰다.
+ *
+ * 우리가 그 런타임을 고를 수는 없으므로 **아예 쓰지 않는 편이 안전하다.**
+ */
+{
+  const files = ['Reviews.gs', 'Code.gs', 'Board.gs', 'Exam.gs'];
+  /* 마지막 원소 뒤 쉼표 → 줄바꿈(주석이 끼어도) → 닫는 괄호 */
+  const RE = /,(\s*(?:\/\*[^*]*\*\/\s*)?[\r\n]\s*[\]}])/g;
+  let bad = 0, checked = 0;
+  for (const f of files) {
+    const at = new URL('../docs/apps-script/' + f, import.meta.url);
+    /* **없는 파일만 건너뛴다.** 처음에 `try { … } catch { continue }` 로 두었더니
+       경로 헬퍼가 없어 난 ReferenceError 까지 삼켜 **검사가 한 줄도 안 돌면서
+       ALL PASS 가 떴다** — 이 저장소가 되풀이해 경계하는 조용한 실패를 검사 자신이
+       저지른 셈이다. 읽기 실패는 이유를 갈라서 본다. */
+    if (!fs.existsSync(at)) continue;
+    const src = fs.readFileSync(at, 'utf8');
+    checked++;
+    const hits = src.match(RE);
+    if (hits) {
+      bad++;
+      /* 몇 번째 줄인지 알려 준다 — 안 그러면 70KB 에서 손으로 찾아야 한다 */
+      const lines = src.split('\n');
+      const where = [];
+      for (let i = 0; i < lines.length - 1; i++) {
+        if (!/,\s*(\/\*.*\*\/)?\s*$/.test(lines[i])) continue;
+        const next = (lines[i + 1] || '').trim();
+        if (/^[\]}]/.test(next)) where.push(i + 1);
+      }
+      fail(`[Apps Script] ${f} 에 꼬리 쉼표 ${hits.length}곳 — 구형 런타임이 SyntaxError 를 낸다`
+        + (where.length ? ` (${where.slice(0, 6).join(', ')}행)` : ''));
+    }
+  }
+  if (!bad && checked) console.log(`OK: Apps Script ${checked}개 파일에 꼬리 쉼표 없음 (구형 런타임 호환)`);
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

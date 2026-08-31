@@ -105,7 +105,7 @@ function doGet(e) {
         author: String(r[3] || ''),
         topic: String(r[4] || ''),
         title: String(r[5] || ''),
-        body: String(r[6] || ''),
+        body: String(r[6] || '')
       };
     }).filter(function (x) { return x.title && x.body; });
     posts.sort(function (a, b) { return b.ts - a.ts; });

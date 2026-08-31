@@ -177,7 +177,7 @@ function doGet(e) {
        * "지점이 있는데 이름이 없다"로 읽는다.
        */
       store: row[7] ? String(row[7]) : undefined,
-      storeName: row[8] ? String(row[8]) : undefined,
+      storeName: row[8] ? String(row[8]) : undefined
     });
   }
   logs.reverse();                         // 다시 시간순으로

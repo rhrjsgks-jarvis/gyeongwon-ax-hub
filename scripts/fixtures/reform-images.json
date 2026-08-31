@@ -1,0 +1,51 @@
+{
+ "_note": "인테리어핏 시공 사진. **표의 줄에 못 박은 것만 담는다** — 삼성 지면이 이미지 옆에 적어 둔 「세트 A 기본형」·「단품 B 틈새 마감」으로 이었다. 번호 순서로 붙이면 틀린다(우리 표는 A~F 다음에 단품, 지면은 D 다음에 단품이 온다). `npm run fetch:reformimg` 로 public/reform-img/ 에 받는다.",
+ "_robots": "images.samsung.com 은 허용(이 저장소가 install-img 로 이미 쓴다). 핫링크 차단이 있어 Referer 를 붙여 받는다.",
+ "collectedAt": "2026-08-31",
+ "groups": {
+  "used": [
+   {
+    "file": "reform_price_visual1-05.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-05.png",
+    "alt": "제품 설치 공간 확보를 위해 냉장고장과 김치냉장고장 사이의 중간 칸막이를 제거한 모습입니다. 냉장고장 안에는",
+    "near": "단품 A 중간 칸막이 제거 중간 칸막이 제거 제품 설치 공간 확보를 위해 냉장고장 사이의 칸막이(EP)를 제거 칸막이 제거 외 상부장 탈거, 고정 후 재설치까지 포함 단가 (원.VAT포함) 450,000 원"
+   },
+   {
+    "file": "reform_price_visual1-06.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-06.png",
+    "alt": "Bespoke 냉장고 4도어가 냉장고 장 안에 설치되어 있습니다. 냉장고 설치 후, 좌우 남는 공간 틈새 마",
+    "near": "단품 B 틈새 마감 틈새 마감 냉장고 설치 후 좌, 우, 상부 남는 공간 틈새 마감 (중간 칸막이 제거 없음) 단가 (원.VAT포함) 300,000 원"
+   },
+   {
+    "file": "reform_price_visual1-07.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-07.png",
+    "alt": "냉장고장 안에는 Bespoke 냉장고 4도어와 김치냉장고 4도어가 설치되어 있습니다. 냉장고장 우측에 키 큰",
+    "near": "단품 C 틈새장 또는 키큰장 제작 틈새장 또는 키큰장 제작 냉장고 설치 후 남는 공간에 장을 설치 (중간 칸막이 제거 없음) 수납장은 도어장, 레일장, 오픈장 등 선택 가능 기준 높이 : 2,300mm 가로 : 60"
+   },
+   {
+    "file": "reform_price_visual4-03.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual4-03.jpg",
+    "alt": "박스장 안에 에어드레서 제품이 있고, 제품 우측으로 수납장이 있습니다.",
+    "near": "단품 A 수납장 수납장 제작 에어드레서와 별도로 수납장만 단독으로 설치하는 시공 수납장은 도어장, 레일장, 오픈장 등 선택 가능 기준 높이 2,300mm, 가로 600mm, 깊이 600mm 단가 (원.VAT포함) 5"
+   },
+   {
+    "file": "reform_price_visual6-01.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual6-01.png",
+    "alt": "제품 설치 공간 확보를 위해 두 빌트인장 사이의 중간 칸막이를 제거한 모습입니다. 냉장고장 안에는 삼성 빌트",
+    "near": "단품 A 중간 칸막이 제거 중간 칸막이 제거 제품 설치 공간 확보를 위해 냉장고장 사이의 칸막이(EP) 제거 칸막이 제거 외 상부장 탈거, 고정 후 재설치까지 포함 단가 (원.VAT포함) 450,000 원"
+   },
+   {
+    "file": "reform_price_visual6-02.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual6-02.png",
+    "alt": "삼성 빌트인 냉장고 장 안에 설치되어 있습니다. 냉장고 설치 후, 좌우 남는 공간 틈새 마감 처리가 되었습니",
+    "near": "단품 B 틈새 마감 틈새 마감 냉장고 설치 후 좌, 우, 상부 남는 공간 틈새 마감 (중간 칸막이 제거 없음) 단가 (원.VAT포함) 300,000 원"
+   },
+   {
+    "file": "reform_price_visual6-03.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual6-03.png",
+    "alt": "냉장고장 안에는 삼성 빌트인 냉장고 두 대가 설치되어 있습니다. 냉장고장 우측에 키큰장이 설치되어 있습니다.",
+    "near": "단품 C 수납장 제작 틈새장 또는 키큰장 제작 수납장만 단독으로 설치하는 시공 (중간 칸막이 제거 없음) 수납장은 도어장, 레일장, 오픈장 등 선택 가능 기준 높이 : 2,300mm 가로 : 600mm 깊이 : 60"
+   }
+  ]
+ }
+}

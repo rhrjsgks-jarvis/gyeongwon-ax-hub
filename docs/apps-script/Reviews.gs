@@ -302,7 +302,7 @@ var AREA = {
   'ZRF7': '용인',     /* 현대기아차연구소모바일 */
   'ZRF8': '성남',     /* 판교SDS모바일 */
   'ZRF9': '용인',     /* 기흥SDR모바일 */
-  'ZRG1': '평택',     /* KGM평택모바일 */
+  'ZRG1': '평택'     /* KGM평택모바일 */
 };
 
 /**
@@ -384,7 +384,7 @@ var WATCH = [
   { name: '메이크마이웨딩', naver: true },
   { name: '레몬테라스', naver: true },
   { name: '요즘웨딩', naver: true },
-  { name: '웨딩북', naver: false, tag: '미포함', why: '네이버 카페가 아니라 별도 플랫폼(weddingbook.com)입니다. 리뷰 API 는 열려 있어 받을 수는 있으나, 파트너 6,223곳 전수에서 삼성스토어 24곳 중 경원 관할은 갤러리아광교 한 곳(리뷰 18건)뿐이라 아직 붙이지 않았습니다.' },
+  { name: '웨딩북', naver: false, tag: '미포함', why: '네이버 카페가 아니라 별도 플랫폼(weddingbook.com)입니다. 리뷰 API 는 열려 있어 받을 수는 있으나, 파트너 6,223곳 전수에서 삼성스토어 24곳 중 경원 관할은 갤러리아광교 한 곳(리뷰 18건)뿐이라 아직 붙이지 않았습니다.' }
 ];
 
 /* 지면에서 실제로 본 브랜드 표기만 넣는다. '삼성프라자'·'디지털프라자' 는 옛 이름인데
@@ -428,7 +428,7 @@ var KINDS = [
   ['모바일', ['모바일', '핸드폰', '갤럭시', '폴드', '플립', '스마트폰', '휴대폰',
               '버즈', '워치', '태블릿', '민팃']],
   ['구매', ['구매', '구입', '계약', '견적', '상담', '결제', '내돈내산', '후기',
-            '장만', '질렀', '가전완료', '해결했']],
+            '장만', '질렀', '가전완료', '해결했']]
 ];
 
 /** 제목·카페 이름을 보고 유형 하나를 고른다. 못 가르면 '기타'. */
@@ -728,7 +728,7 @@ function collectReviews() {
             /* **제목만 본다.** 카페 이름을 넣었더니 다이렉트웨딩 카페의 「설치 후기」가
                카페 이름의 '웨딩' 때문에 「혼수」가 되고, 입주예정자 카페의 「구매 후기」가
                「입주」가 됐다(실물 표본에서 잡았다). **카페 이름은 글쓴이가 고른 말이 아니다.** */
-            kindOf_(String(it.title || '')),
+            kindOf_(String(it.title || ''))
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
@@ -785,7 +785,7 @@ function collectReviews() {
                 STORES[cs][0], cName, '카페',
                 String(cit.title || '').replace(/<[^>]+>/g, ''), clink,
                 String(cit.cafename || ''), '', stamp,
-                kindOf_(String(cit.title || '')),
+                kindOf_(String(cit.title || ''))
               ]);
               cafeAdd++;
               break;
@@ -1067,7 +1067,7 @@ var AREA_Q = {
   '성남': ['성남', '분당'],
   '평택': ['평택'],
   '안양': ['안양', '평촌'],
-  '강원': ['춘천', '원주', '강릉'],
+  '강원': ['춘천', '원주', '강릉']
 };
 
 /** 브랜드 표기 + 지명이 함께 있는 글인가. **양쪽이 이 함수 하나를 쓴다.** */
@@ -1145,7 +1145,7 @@ function collectRival() {
       stamp, area, a, b,
       skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
       skew ? 'Y' : '',
-      places.join(' · '),
+      places.join(' · ')
     ]);
     if (err) break;
   }
@@ -1168,7 +1168,7 @@ function rival_() {
     out.push({
       area: String(v[i][1]), ours: Number(v[i][2]) || 0, rival: Number(v[i][3]) || 0,
       pct: v[i][4] === '' || v[i][4] === null ? null : Number(v[i][4]),
-      capped: String(v[i][5]) === 'Y', queries: String(v[i][6]),
+      capped: String(v[i][5]) === 'Y', queries: String(v[i][6])
     });
   }
   return { at: last, rows: out };
