@@ -55,6 +55,11 @@
   /* 한도가 한 바퀴에 모자라면 눈에 띄게 — 매일 중간에서 끊긴다는 뜻이다 */
   .limuse.low { color: #FCD34D; font-weight: 700; }
 
+  /* 어디까지 훑었는지 — 멈춰 있으면 눈에 띄어야 한다(이어서 눌러야 하니까) */
+  .prog { font-size: 10.5px; color: rgba(255,255,255,.6); }
+  .prog.mid { color: #FCD34D; font-weight: 700; }
+  .prog:empty { display: none; }
+
   /* 네 칸 — 일간·주간·월간·누적. 사장님이 요청하신 그 넷이다. */
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
   .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; }
@@ -189,6 +194,7 @@
     <p>네이버 블로그 · 카페(다이렉트웨딩 · 메이크마이웨딩 · 레몬테라스 · 요즘웨딩 · 맘카페 · 입주카페)</p>
     <div class="hrow">
       <span class="stamp" id="stamp">불러오는 중…</span>
+      <span class="prog" id="prog"></span>
       <button class="btn" id="run">지금 수집</button>
       <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
            한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
@@ -543,8 +549,26 @@
       : '한 바퀴에 최대 ' + nf(sweep) + '회';
   }
 
+  /* 어디까지 훑었는지 — **새로고침만 해도 보인다.**
+     _cursor 는 「다음에 시작할 매장 번호」다. 0 이면 한 바퀴를 마친 것이고,
+     0 이 아니면 그 자리에서 멈춘 것이라 **이어서 눌러야 한다.** */
+  function renderProgress() {
+    var b = document.getElementById('run'); if (!b) return;
+    var cur = Number(DATA.cursor || 0), tot = Number(DATA.stores || 0);
+    var mid = cur > 0 && tot > 0;
+    if (!b.disabled) b.textContent = mid ? '이어서 수집' : '지금 수집';
+    var e = document.getElementById('prog');
+    if (e) {
+      e.textContent = mid
+        ? '지난 수집이 ' + tot + '곳 중 ' + cur + '번째에서 멈췄습니다 — 이어서 눌러 주세요'
+        : (tot ? tot + '곳 한 바퀴를 마친 상태입니다' : '');
+      e.className = 'prog' + (mid ? ' mid' : '');
+    }
+  }
+
   function render() {
     renderLimit();
+    renderProgress();
     document.getElementById('k-day').textContent = nf(DATA.day);
     document.getElementById('k-week').textContent = nf(DATA.week);
     document.getElementById('k-month').textContent = nf(DATA.month);
@@ -705,6 +729,17 @@
           + nf(r.kept) + '건이 판정을 지났고, 그중 <b>새 글 ' + nf(r.added) + '건</b>을 더했습니다.'
           + (r.added === 0 ? ' <b>이미 모은 글은 다시 세지 않습니다</b> — 누적은 그대로입니다.' : '')
           + (r.error ? ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>' : '') + '</div>';
+        /* **한 바퀴를 다 못 돌았으면 그렇게 적는다** — 6분 한도라 중간에서 멈춘다.
+           안 적으면 *"왜 갤러리아광교가 29건이지"* 를 알 길이 없다. */
+        if (r.done === false) {
+          document.getElementById('status').innerHTML +=
+            '<div class="note warn" style="margin-top:6px"><b>한 바퀴를 다 돌지 못했습니다</b> — '
+            + nf(r.stores) + '곳 중 <b>' + nf(r.at) + '번째</b>까지 훑고 '
+            + (r.hitLimit ? '<b>일일 한도(' + nf(r.dailyLimit) + '회)</b>에 닿아' : '<b>6분 실행 한도</b>로')
+            + ' 멈췄습니다. <b>「이어서 수집」을 다시 눌러 주세요</b> — 멈춘 매장부터 이어 갑니다.'
+            + (r.hitLimit ? ' 한도를 올리거나 내일 이어도 됩니다.' : '')
+            + ' <b>이미 모은 글은 다시 세지 않습니다.</b></div>';
+        }
         b.textContent = '새로 ' + r.added + '건';
 
         /* **밑줄로 끝나는 이름은 부를 수 없다** — Apps Script 가 `summary_` 같은 이름을
@@ -713,7 +748,7 @@
            안 일어나고 버튼이 「수집 중…」에 멈춘 채 화면이 옛 상태로 남는다(실제로 그랬다). */
         google.script.run
           .withSuccessHandler(function (d) {
-            b.disabled = false; b.textContent = '지금 수집';
+            b.disabled = false;
             /* **성공 처리기에 왔다고 값이 온 것은 아니다** — 빈 값이면 화면이 0 이 된다.
                `applySummary` 가 걸러 내고, 못 그렸으면 위에 적어 둔 안내가 남는다. */
             var okd = applySummary(d);
@@ -726,7 +761,7 @@
             }
           })
           .withFailureHandler(function (e) {
-            b.disabled = false; b.textContent = '지금 수집';
+            b.disabled = false; renderProgress();
             document.getElementById('status').innerHTML =
               '<div class="note warn"><b>수집은 끝났지만 화면을 새로 그리지 못했습니다</b> — '
               + esc(e && e.message) + '<br><b>자료는 시트에 그대로 있습니다.</b> '
@@ -735,7 +770,7 @@
           .getSummary();
       })
       .withFailureHandler(function (e) {
-        b.disabled = false; b.textContent = '지금 수집';
+        b.disabled = false; renderProgress();
         /* **「자료가 사라진 것이 아니다」를 분명히 적는다.** 수집이 실패해도 이미 모은
            것은 시트에 그대로 있는데, 화면이 그 말을 안 하면 없어진 줄 안다. */
         document.getElementById('status').innerHTML =
