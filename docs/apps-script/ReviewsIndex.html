@@ -145,6 +145,21 @@
   .kchip b { font-size: 13px; font-weight: 800; }
   .kchip .pc { font-size: 10px; opacity: .7; }
 
+  /* 당사 vs LG — 한 줄에 두 값을 마주 보게 그린다. **어디가 앞서는지가 한눈에** 보여야 한다 */
+  .rv { display: grid; grid-template-columns: 62px 1fr 46px; gap: 9px; align-items: center; margin-bottom: 7px; }
+  .rv .nm { font-size: 12px; font-weight: 700; color: #374151; }
+  .rv .tr { display: flex; height: 15px; border-radius: 4px; overflow: hidden; background: #EEF1F6; }
+  .rv .us { background: var(--blue); }
+  .rv .th { background: #C0392B; }   /* LG 는 붉은 계열 — 브랜드 색이 실제로 그렇다 */
+  .rv .tr span { display: flex; align-items: center; justify-content: center;
+    font-size: 9.5px; font-weight: 800; color: #fff; }
+  .rv .vl { font-size: 12px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+  .rv .vl.win { color: var(--blue); }
+  .rv .vl.lose { color: #C0392B; }
+  .rv .vl.na { color: var(--mute); font-weight: 500; font-size: 10.5px; }
+  .rvleg { display: flex; gap: 12px; font-size: 10.5px; color: var(--mute); margin-bottom: 9px; }
+  .rvleg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
   /* 지역별 매장 — 묶음은 **「영업스케치」 지역 6곳**(수원·용인·성남·평택·안양·강원).
      **전점 65곳을 세운다** — 0건도 흐리게 남긴다(감추면 "우리 매장이 없다"로 읽힌다). */
   .rg { margin-bottom: 11px; }
@@ -230,6 +245,16 @@
   </div>
 
   <div class="two">
+    <!-- 당사 vs LG (2026-08-31 사장님 요청 — *"X사(LG) 후기도 대조해서 후기 비중이
+         100분율로 어디가 앞서는가"*). **자료가 없으면 이 카드는 아예 안 그린다** —
+         0 으로 그리면 「LG 후기가 없다」로 읽힌다. -->
+    <div class="card" id="rival-card" hidden>
+      <h2>당사 vs LG — 지역별 후기 비중</h2>
+      <div class="sub" id="rival-sub">–</div>
+      <div id="rival"></div>
+      <div class="note" id="rival-note"></div>
+    </div>
+
     <div class="card">
       <h2>매장별 — 지역순</h2>
       <!-- 2026-08-31 사장님 지시: *"지역별로 모아주시고 전점이 다 나와야 합니다"*.
@@ -476,6 +501,57 @@
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
 
+  /* 당사 vs LG — **양쪽에 같은 잣대를 댄 값만 그린다.**
+     같은 질의 목록·같은 쪽수·같은 판정 함수로 잰다. 한쪽만 정교하게 거르면
+     비중이 통째로 거짓이 된다 — 이 기능의 전부가 그것이다. */
+  function renderRival() {
+    var card = document.getElementById('rival-card'); if (!card) return;
+    var R = DATA.rival;
+    /* **자료가 없으면 카드를 아예 안 그린다** — 0 으로 그리면 「LG 후기가 없다」로 읽힌다 */
+    if (!R || !R.rows || !R.rows.length) { card.hidden = true; return; }
+    card.hidden = false;
+
+    var el = document.getElementById('rival');
+    var rows = R.rows.slice().sort(function (a, b) {
+      /* 못 잰 것은 뒤로, 나머지는 우리가 뒤진 곳부터 — **먼저 볼 것이 위에 와야 한다** */
+      if ((a.pct === null) !== (b.pct === null)) return a.pct === null ? 1 : -1;
+      return (a.pct || 0) - (b.pct || 0);
+    });
+    el.innerHTML =
+      '<div class="rvleg"><span><i style="background:var(--blue)"></i>당사</span>' +
+      '<span><i style="background:#C0392B"></i>LG</span></div>' +
+      rows.map(function (r) {
+        var tot = r.ours + r.rival;
+        var p = tot ? (r.ours / tot) * 100 : 50;
+        var na = r.pct === null;
+        return '<div class="rv"><div class="nm">' + esc(r.area) + '</div>' +
+          '<div class="tr" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + '건">' +
+          '<div class="us" style="width:' + p.toFixed(1) + '%"><span>' + nf(r.ours) + '</span></div>' +
+          '<div class="th" style="width:' + (100 - p).toFixed(1) + '%"><span>' + nf(r.rival) + '</span></div></div>' +
+          (na
+            ? '<div class="vl na">못 잼</div>'
+            : '<div class="vl ' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</div>') +
+          '</div>';
+      }).join('');
+
+    var win = rows.filter(function (r) { return r.pct !== null && r.pct > 50; }).length;
+    var lose = rows.filter(function (r) { return r.pct !== null && r.pct < 50; }).length;
+    var na = rows.filter(function (r) { return r.pct === null; }).length;
+    document.getElementById('rival-sub').textContent =
+      '영업스케치 지역 ' + rows.length + '곳 · 당사가 앞선 곳 ' + win + ' · LG 가 앞선 곳 ' + lose +
+      (na ? ' · 못 잰 곳 ' + na : '') + '  (' + esc(R.at) + ' 기준)';
+
+    /* **무엇을 잰 값인지 적는다.** 안 적으면 「우리가 몇 % 다」가 매출인지 후기인지
+       모른 채로 읽힌다 — 이 저장소가 대시보드에서 되풀이해 데인 자리다. */
+    document.getElementById('rival-note').innerHTML =
+      '<b>무엇을 잰 값인가</b> — 네이버 카페에서 <b>브랜드 이름과 지역이 함께 나오는 후기</b>를'
+      + ' 세었습니다. <b>양쪽에 같은 질의·같은 쪽수·같은 판정</b>을 씁니다 — 한쪽만 정교하게'
+      + ' 거르면 비중이 거짓이 됩니다.'
+      + ' <b>매출이 아니라 「글 수」</b>입니다.'
+      + ' 네이버가 질의당 200건에서 끊어 <b>절대 건수는 다 채울 수 없지만</b>, 양쪽이 같은'
+      + ' 속도로 늘고 있으면 비중은 믿을 만합니다 — <b>한쪽만 빠르게 늘면 「못 잼」으로 둡니다.</b>';
+  }
+
   function renderList() {
     var rows = filtered();
     var el = document.getElementById('list');
@@ -600,6 +676,7 @@
 
     renderKinds();
     renderWatch();
+    renderRival();
     renderRegions();
     renderRange();
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');

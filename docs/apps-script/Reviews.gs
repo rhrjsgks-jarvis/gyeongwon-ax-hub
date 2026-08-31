@@ -63,14 +63,22 @@ var MAX_PAGES = 2;
  * 「지금 수집」을 여러 번 누르면 그만큼 는다. **한도가 없으면 어느 날 조용히 막히고
  * 그날 수집이 통째로 빈다** — 그런데 화면에는 아무 표시도 안 난다.
  *
- * 기본 3,000 은 **한 바퀴 + 여유**다. 한 바퀴를 못 채우는 값(2,096 미만)을 넣으면
- * 매일 중간에서 끊기므로 화면이 그 사실을 경고한다.
+ * **기본 20,000 은 「사실상 안 걸리되 네이버보다 먼저 멈추는」 값이다**
+ * (2026-08-31 사장님 질문 *"일일 한도를 없애면 어떻습니까?"*).
+ *
+ * 없애는 것보다 높이는 편이 낫다 — 네이버 실제 한도가 **하루 25,000회**이고 한 바퀴가
+ * 약 2,450회(수집 2,096 + 경쟁비교 352)라 **하루 10바퀴면 네이버가 끊는다.**
+ * 한도를 없애면 그 순간 그날 수집이 통째로 죽는데 **화면에는 아무 표시도 안 난다** —
+ * 이 장치가 막으려던 것이 바로 그 조용한 실패다. 20,000 이면 하루 8바퀴라 실질적으로
+ * 안 걸리고, 걸리더라도 **네이버가 끊기 전에 우리가 먼저 멈춰 이유를 화면에 적는다.**
+ *
+ * 한 바퀴를 못 채우는 값(2,096 미만)을 넣으면 매일 중간에서 끊기므로 화면이 경고한다.
  *
  * **세는 곳은 한 곳뿐이다** — `collectReviews()` 의 `calls` 하나를 쓰고 끝에 한 번만
  * 저장한다. 부르는 자리마다 세면 두 숫자가 갈라진다(이 저장소가 상태줄·허브 카드
  * 개수에서 되풀이해 데인 자리). 속성 읽기가 2,000번 도는 것도 함께 막는다.
  */
-var DEFAULT_DAILY_LIMIT = 3000;
+var DEFAULT_DAILY_LIMIT = 20000;
 var SWEEP_CALLS = 2096;   /* 화면이 "한 바퀴에 모자란다"를 말할 수 있게 상수로 둔다 */
 
 /* **열은 뒤에만 붙인다** — 이 스크립트는 열을 자리로 쓰므로 가운데에 끼우면 그 아래
@@ -1084,45 +1092,59 @@ function collectRival() {
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
   var areas = Object.keys(AREA_Q), rows = [], calls = 0, err = '';
 
+  /* **꼬리말로 질의를 쪼갠다 — 양쪽에 똑같이.**
+     한 질의는 200건이 상한이라 쪼개지 않으면 6곳 전부 상한에 닿아 비중을 못 낸다
+     (실측). 우리 후기 수집이 이미 쓰는 수법이고, 여기서 중요한 것은 **삼성·LG 에
+     같은 꼬리말을 쓰는 것** — 한쪽만 쪼개면 그쪽만 많이 받아 비중이 거짓이 된다. */
+  var RTAILS = ['', ' 혼수', ' 구매', ' 후기'];
+
   for (var ai = 0; ai < areas.length; ai++) {
     var area = areas[ai], places = AREA_Q[area];
     var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
-    var capped = false;
+    var lastAdd = { ours: 0, rival: 0 };
 
-    for (var pi = 0; pi < places.length; pi++) {
-      var place = places[pi];
-      var side = [
-        ['ours', BRANDS, '삼성스토어 ' + place],
-        ['rival', RIVAL_BRANDS, 'LG베스트샵 ' + place],
-      ];
-      for (var si = 0; si < side.length; si++) {
-        var key = side[si][0], brands = side[si][1], q = side[si][2];
-        for (var page = 0; page < MAX_PAGES; page++) {
-          var j;
-          try { j = search_('cafearticle', q, page * PAGE_SIZE + 1); calls++; }
-          catch (e) { err = String(e); break; }
-          if (j.error) { err = j.error; break; }
-          var items = j.items || [];
-          for (var n = 0; n < items.length; n++) {
-            var it = items[n];
-            var text = (it.title || '') + ' ' + (it.description || '');
-            if (rivalHit_(text, brands, place)) got[key][String(it.link || '')] = 1;
+    var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
+    for (var si = 0; si < side.length; si++) {
+      var key = side[si][0], brands = side[si][1], bq = side[si][2];
+      for (var ti = 0; ti < RTAILS.length; ti++) {
+        var before = Object.keys(got[key]).length;
+        for (var pi = 0; pi < places.length; pi++) {
+          var place = places[pi];
+          var q = bq + ' ' + place + RTAILS[ti];
+          for (var page = 0; page < MAX_PAGES; page++) {
+            var j;
+            try { j = search_('cafearticle', q, page * PAGE_SIZE + 1); calls++; }
+            catch (e) { err = String(e); break; }
+            if (j.error) { err = j.error; break; }
+            var items = j.items || [];
+            for (var n = 0; n < items.length; n++) {
+              var it = items[n];
+              var text = (it.title || '') + ' ' + (it.description || '');
+              if (rivalHit_(text, brands, place)) got[key][String(it.link || '')] = 1;
+            }
+            if (items.length < PAGE_SIZE) break;
           }
-          if (items.length < PAGE_SIZE) break;
-          /* **마지막 쪽까지 꽉 찼으면 상한에 닿은 것이다** — 더 있는데 못 받았다는 뜻 */
-          if (page === MAX_PAGES - 1) capped = true;
+          if (err) break;
         }
+        if (ti === RTAILS.length - 1) lastAdd[key] = Object.keys(got[key]).length - before;
         if (err) break;
       }
       if (err) break;
     }
 
     var a = Object.keys(got.ours).length, b = Object.keys(got.rival).length;
+    /* ★ **「상한이면 못 잰다」는 쓸 수 없는 규칙이었다.**
+       네이버가 질의마다 끊으므로 절대 건수는 영영 못 채운다 — 그 규칙으로는 6곳 전부
+       비중이 빈칸이 되어 화면에 아무것도 안 뜬다(실측으로 그랬다).
+       **총량은 못 재도 비중은 잴 수 있다** — 실측에서 양쪽 증가율이 거의 같았다
+       (12%/12% · 14%/15% · 11%/9% · 15%/15%). 한쪽만 빠르게 늘면 그때가 못 믿을 때다.
+       그래서 **증가율 차이**를 본다: 8pt 넘게 벌어지면 비중을 내지 않는다. */
+    var gO = a ? lastAdd.ours / a : 0, gR = b ? lastAdd.rival / b : 0;
+    var skew = Math.abs(gO - gR) > 0.08;
     rows.push([
       stamp, area, a, b,
-      /* **상한에 닿았으면 비중을 내지 않는다** — 「100 대 100 = 50%」는 잰 것이 아니다 */
-      capped ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
-      capped ? 'Y' : '',
+      skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
+      skew ? 'Y' : '',
       places.join(' · '),
     ]);
     if (err) break;
