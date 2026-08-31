@@ -56,7 +56,8 @@
     "build:svc": "node scripts/build-svc.mjs",
     "audit:library": "node scripts/audit-library.mjs",
     "build:owncompare": "node scripts/build-own-compare.mjs",
-    "test:owncompare": "node scripts/test-own-compare.mjs"
+    "test:owncompare": "node scripts/test-own-compare.mjs",
+    "build:uspcards": "node scripts/build-usp-cards.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

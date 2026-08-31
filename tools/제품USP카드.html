@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제품 USP 카드 — 경원영업팀</title>
+<style>
+  /* 폰트를 바깥에서 받지 않는다 — 메일로 받은 PC 가 인터넷이 느리면 그동안 화면이 빈다.
+     OS 기본 한글 글꼴이면 인쇄 품질에 충분하다. */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --blue: #1428A0; --ink: #15181E; --mute: #5A6270; --line: #D8DDE5; }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", -apple-system, "Apple SD Gothic Neo", sans-serif;
+    color: var(--ink); background: #E9ECF1; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+
+  /* 화면에서 고르는 막대 — 인쇄에는 안 나온다 */
+  .bar { position: sticky; top: 0; z-index: 9; background: var(--blue); color: #fff; padding: 10px 14px; }
+  .bar h1 { font-size: 14px; font-weight: 800; }
+  .bar p { font-size: 11px; color: rgba(255,255,255,.72); margin-top: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .chip { border: 0; border-radius: 999px; padding: 3px 9px; font-size: 11px; cursor: pointer;
+          font-family: inherit; background: rgba(255,255,255,.18); color: #fff; }
+  .chip.on { background: #fff; color: var(--blue); font-weight: 700; }
+  .acts { display: flex; gap: 6px; margin-top: 8px; }
+  .btn { border: 0; border-radius: 7px; padding: 5px 11px; font-size: 11.5px; font-weight: 700;
+         cursor: pointer; font-family: inherit; background: #fff; color: var(--blue); }
+
+  /* A4 — 210 × 297mm. 여백은 시트가 만든다(인쇄창 여백 설정에 안 흔들린다) */
+  .page { display: flex; justify-content: center; padding: 14px 0; }
+  .sheet {
+    width: 210mm; min-height: 297mm; background: #fff; padding: 18mm 16mm 14mm;
+    box-shadow: 0 1px 6px rgba(0,0,0,.14); display: flex; flex-direction: column;
+  }
+
+  .hd { border-bottom: 2.5px solid var(--blue); padding-bottom: 9px; margin-bottom: 13px; }
+  .cat { color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .4px; }
+  .hd h1 { font-size: 21px; font-weight: 800; letter-spacing: -.5px; margin-top: 2px; line-height: 1.3; }
+  .hd .sub { font-size: 12.5px; color: var(--mute); margin-top: 3px; }
+  .hd .code { font-size: 11.5px; color: var(--blue); font-weight: 700; margin-top: 5px;
+              font-family: Consolas, "D2Coding", monospace; }
+
+  h2 { font-size: 12.5px; font-weight: 800; color: var(--blue); margin: 13px 0 7px;
+       padding-bottom: 3px; border-bottom: 1px solid var(--line); }
+  h2.w { color: #B45309; border-color: #FDE68A; }
+
+  .usp { list-style: none; }
+  .usp li { padding: 6px 0 6px 22px; position: relative; border-top: 1px solid #F0F2F5; }
+  .usp li:first-child { border-top: 0; }
+  .usp li::before {
+    content: counter(n); counter-increment: n; position: absolute; left: 0; top: 7px;
+    width: 16px; height: 16px; border-radius: 50%; background: var(--blue); color: #fff;
+    font-size: 10px; font-weight: 700; text-align: center; line-height: 16px;
+  }
+  .usp { counter-reset: n; }
+  .usp li b { font-size: 12.5px; font-weight: 700; display: block; line-height: 1.45; }
+  .usp li p { font-size: 11px; color: var(--mute); margin-top: 2px; line-height: 1.5; }
+  /* 삼성 공식 요약(uspDescList)은 표시를 달리한다 — 상담사가 그대로 읽어도 되는 문장이다 */
+  .usp li.off b::after {
+    content: "공식"; font-size: 8.5px; font-weight: 700; color: var(--blue);
+    background: #EEF2FF; border-radius: 4px; padding: 1px 4px; margin-left: 5px; vertical-align: 1px;
+  }
+
+  .spec { width: 100%; border-collapse: collapse; }
+  .spec tr { border-bottom: 1px solid #F0F2F5; }
+  .spec th { text-align: left; font-size: 11px; color: var(--mute); font-weight: 600;
+             padding: 4px 8px 4px 0; width: 34%; vertical-align: top; }
+  .spec td { font-size: 11.5px; padding: 4px 0; font-weight: 600; }
+
+  .warn { list-style: none; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 7px; padding: 8px 11px; }
+  .warn li { font-size: 10.5px; color: #92400E; padding-left: 11px; position: relative; line-height: 1.55; }
+  .warn li + li { margin-top: 4px; }
+  .warn li::before { content: "·"; position: absolute; left: 2px; font-weight: 700; }
+
+  .ft { margin-top: auto; padding-top: 9px; border-top: 1px solid var(--line);
+        display: flex; justify-content: space-between; font-size: 10px; color: #9AA1AC; }
+
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background: #fff; }
+    .bar { display: none; }
+    .page { padding: 0; page-break-after: always; break-after: page; }
+    .page:last-of-type { page-break-after: auto; break-after: auto; }
+    .sheet { box-shadow: none; width: 210mm; min-height: 297mm; }
+    .page[hidden] { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <h1>제품 USP 카드 — 경원영업팀</h1>
+  <p>품목별 하이엔드 24장 · 삼성닷컴 원문 기준 · A4 한 장에 한 제품</p>
+  <div class="chips" id="chips"></div>
+  <div class="acts">
+    <button class="btn" onclick="window.print()">인쇄 / PDF 저장</button>
+    <button class="btn" id="all">전체 선택</button>
+  </div>
+</div>
+
+
+<section class="page" data-cat="TV">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">TV</div>
+      <h1>2026 Micro RGB RH95 (214cm) · 7,990,000원</h1>
+      <div class="sub">Micro RGB — TV 최상위</div>
+      <div class="code">KMR85RH95AFXKR</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>디테일로 빚어낸 화질의 정점, Micro RGB 기술</b><p>삼성 Micro RGB TV는 마이크로 사이즈의 RGB 컬러 백라이트를 적용하여 실제에 가까운 정교한 색 정확도를 구현합니다. RGB 색상과 밝기를 세밀하게 제어하는 로컬 디밍 기술이 더해져 화면 속 이미지의 깊이감과 표현력이 더욱 풍부하게 살아나죠.</p>
+      </li><li>
+        <b>AI 엔진으로 살아나는 컬러, Micro RGB AI 엔진 Pro</b><p>지능적인 처리 기술로 한층 정교해진 색 표현을 만나보세요. Micro RGB AI 엔진 Pro가 각 RGB 컬러를 정밀하게 제어해 압도적인 선명함과 생동감 넘치는 화질을 구현합니다.</p>
+      </li><li>
+        <b>세계 최초 인증, 압도적 색 표현력 Micro RGB Precision Color 100</b><p>Micro RGB TV는 Micro RGB 기술과 Micro RGB AI 엔진 Pro를 통해 세계 최초로 BT.2020 기준 광색역을 구현하였습니다.…</p>
+      </li><li>
+        <b>빛 반사 걱정 없는, 무반사(Reflection Glare Free) 기술</b><p>UL로부터 인증 받은 Glare Free 기술로 실내 조명 아래처럼 밝은 환경에서도 빛 반사를 효과적으로 줄여줍니다. 콘텐츠 감상을 방해하는 요소 없이 선명한 화면과 깊고 선명한 리얼 블랙으로 몰입감을 끌어올려보세요.</p>
+      </li><li>
+        <b>무엇이든 물어보세요. Samsung Vision AI가 있습니다. Samsung Vision AI 컴패니언</b><p>Samsung Vision AI 컴패니언이 새롭게 정의하는 화면과의 상호작용으로, TV는 일상의 스마트한 동반자가 됩니다. 20년 이상의 TV 인사이트로 탄생한 Samsung Vision AI 컴패니언은 Gemini, Perplexity 등 주요…</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>화면크기</th><td>214 cm</td></tr><tr><th>해상도</th><td>3840 x 2160</td></tr><tr><th>주사율</th><td>165 Hz (VRR Support)</td></tr><tr><th>정격소비전력</th><td>450 W</td></tr><tr><th>사운드출력(RMS)</th><td>70</td></tr><tr><th>DLG</th><td>240 Hz</td></tr><tr><th>VRR (Variable Refresh Rate)</th><td>있음</td></tr><tr><th>빛 반사 기술</th><td>Glare Free</td></tr><tr><th>화질엔진</th><td>Micro RGB AI 엔진 Pro</td></tr><tr><th>HDR (High Dynamic Range)</th><td>Micro RGB HDR Pro</td></tr><tr><th>HDR 10+</th><td>지원 (Adaptive / Gaming / Advanced )</td></tr><tr><th>명암비</th><td>Micro RGB Technology</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>없다 — 위 항목은 전부 삼성닷컴 원문에서 확인했다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">1 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="프로젝터">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">프로젝터</div>
+      <h1>2024 The Premiere LPDU9 · 7,490,000원</h1>
+      <div class="sub">The Premiere — 4K 초단초점 최상위</div>
+      <div class="code">SP-LPDU9SAXXKR</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>4K 홈시네마를 완성하는 트리플 레이저 기술</b><p>집에서 프리미엄 영화관의 즐거움을 경험하세요. 레드, 블루, 그린을 분리해 표현하는 트리플 레이저가 실사에 가까운 4K 화질을 구현합니다.</p>
+      </li><li>
+        <b>공간에 여유를 더하는 초단초점 기술</b><p>이제 벽 바로 앞에 프로젝터를 설치해 보세요. 초단초점 기술로 짧은 거리에서도 최대 330cm의 4K 스크린을 만들 수 있습니다.</p>
+      </li><li>
+        <b>사운드 돔으로 몰입감을 극대화하는 파워풀 사운드</b><p>입체적인 사운드로 공간을 채워보세요. 40W의 강력한 출력과 4.2채널 사운드를 제공하며, 내장된 상향 스피커가 Dolby Atmos 사운드 돔을 형성해 몰입감을 높여줍니다.</p>
+      </li><li>
+        <b>작은 디테일까지 포착하는 최대 330cm 4K 스크린</b><p>마치 영화관에 온 것처럼 최대 330cm의 대화면에서 좋아하는 콘텐츠를 4K 화질로 감상하세요.</p>
+      </li><li>
+        <b>강력한 밝기로 살아나는 디테일</b><p>모든 장면을 생생하게 즐겨보세요. 3,450 ISO 루멘으로 밝은 공간에서도 그림자와 색상을 섬세하게 표현해 인상 깊은 경험을 제공합니다.</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>화면크기</th><td>254~330cm</td></tr><tr><th>해상도</th><td>3840 x 2160</td></tr><tr><th>HDMI 최대 지원 주사율</th><td>4K 60Hz (for HDMI 1/2/3)</td></tr><tr><th>밝기 (ISO 루멘)</th><td>3450 Lumen</td></tr><tr><th>정격소비전력</th><td>410W W</td></tr><tr><th>소음 (dB)</th><td>32dB(A)</td></tr><tr><th>사운드출력(RMS)</th><td>40W</td></tr><tr><th>광원</th><td>Triple Laser</td></tr><tr><th>광원 수명</th><td>20000hrs</td></tr><tr><th>투사율</th><td>0.189</td></tr><tr><th>디스플레이</th><td>DLP</td></tr><tr><th>화질엔진</th><td>NQP AI Processor</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>없다 — 위 항목은 전부 삼성닷컴 원문에서 확인했다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">2 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="사운드바">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">사운드바</div>
+      <h1>11.1.4ch 사운드바 Q990H · 1,990,000원</h1>
+      <div class="sub">11.1.4ch — 사운드바 최상위</div>
+      <div class="code">HW-Q990H/KR</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>온몸을 감싸는 압도적 서라운드 사운드</b><p>11.1.4ch 시네마틱 서라운드 사운드가 선사하는 압도적 사운드를 경험하세요. Q990H 사운드바는 리어 스피커를 포함한 11개의 전면 및 서라운드 채널과 1개의 서브우퍼 채널, 4개의 상향 채널을 갖추고 있어 모든 방향에 입체적으로 펼쳐지는 풍부한 사운드를 제공합니…</p>
+      </li><li>
+        <b>AI 저음 최적화가 탑재된 서브우퍼</b><p>공간에 자연스럽게 녹아드는 콤팩트한 서브우퍼의 강렬한 저음을 즐겨보세요. AI 기반의 비선형 제어 기술이 왜곡을 최소화하면서도 원음에 가까운 깊고 정교한 베이스 사운드를 구현합니다.</p>
+      </li><li>
+        <b>생생한 사운드를 만드는 무선 리어 스피커</b><p>두 개의 상향 무선 스피커로 영화관에 온 듯 실감 나는 사운드를 즐기세요. 전면이나 후면을 향해 배치하면 천장에 반사된 사운드가 머리 위로 쏟아져, 온몸을 감싸는 생생한 사운드를 경험할 수 있죠.</p>
+      </li><li>
+        <b>극도의 몰입감을 만드는 사운드의 비결</b><p>최상의 사운드 경험을 위해 더욱 세밀하게 설계된 Q990F는 ①전면 ②코너 및 측면 ③상향 스피커까지 3개 유형의 스피커가 내장되었습니다. 또한, 20cm 듀얼 유닛이 적용된 ④서브우퍼와 무선 리어 스피커까지 포함되어 한층 몰입감 넘치는 서라운드 사운드를 완성하죠.</p>
+      </li><li>
+        <b>손쉽게 연결하는 나만의 시네마틱 사운드</b><p>사운드바에 탑재된 Dolby Atmos®를 무선으로 연결하고 궁극의 3D 사운드에 흠뻑 빠져보세요. 주변에서부터 머리 위를 모두 감싸는 비트와 진동으로 마치 영화관에 온 듯한 웅장한 감동을 전해줍니다.</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>본체 크기 (가로x높이x깊이)</th><td>1232.0 x 70.8 x 138.0 mm</td></tr><tr><th>본체 무게</th><td>7.3 kg</td></tr><tr><th>채널 수</th><td>11.1.4</td></tr><tr><th>스피커 수</th><td>23</td></tr><tr><th>센터 스피커</th><td>있음</td></tr><tr><th>Up-firing 스피커</th><td>있음</td></tr><tr><th>Side-firing 스피커</th><td>있음</td></tr><tr><th>Wide-firing 스피커</th><td>있음</td></tr><tr><th>무선 서브우퍼 내장</th><td>있음</td></tr><tr><th>무선 리어 스피커 내장</th><td>있음</td></tr><tr><th>돌비</th><td>ATMOS Music,ATMOS,Dolby 5.1ch,Dolby Digital Plus,Dolby True HD</td></tr><tr><th>DTS</th><td>DTS-HD HRA,DTS-HD MA,DTS Express,DTS 5.1ch,DTS:X</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>없다 — 위 항목은 전부 삼성닷컴 원문에서 확인했다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">3 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="오디오">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">오디오</div>
+      <h1>JBL 4312G  프리미엄 스피커 · 3,460,000원</h1>
+      <div class="sub">JBL 4312G — 스피커 최상위</div>
+      <div class="code">JBL4312GBLK</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>JBL의 대표 모델로서의 클래식 아이덴티티</b><p>4312G 스피커는 JBL 특유의 클래식 아이덴티티를 그대로 이어갑니다. JBL 스튜디오 모니터 4312 시리즈의 최신 모델인 4312G 스피커를 만나보세요.</p>
+      </li><li>
+        <b>웅장한 울림을 만드는 30 cm 펄프콘 우퍼</b><p>4312G는 특유의 3way 스피커 구조를 적용하여 풍부한 저음과 다이내믹하고 깔끔한 고음을 표현합니다. 30 cm 퓨어 펄프콘 우퍼는 저역대의 웅장한 울림을 이끌어냅니다.…</p>
+      </li><li>
+        <b>강력한 중역대를 담당하는 12.5 cm 펄프콘 미드레인지</b><p>12.5 cm 폴리머 코팅 펄프콘 미드레인지는 중저음 해상력과 단단한 저음량을 유지시켜 줍니다. 탄탄한 중역대를 강력하게 발산하여 생동감 넘치는 소리를 표현합니다.</p>
+      </li><li>
+        <b>깔끔한 고음을 표현하는 2.5 cm 얼로이 트위터</b><p>4312G의 고음부는 2.5 cm 마그네슘/ 알루미늄 합금 다이어프램 트위터를 통해 발현됩니다. 빠른 반응과 깔끔한 고주파 음역을 위해 트위터 둘레에 페이스 플레이트와 웨이브 가이드가 적용되어 있습니다.</p>
+      </li><li>
+        <b>디테일한 사운드 조정을 위한 볼륨 조절 장치</b><p>2개의 볼륨 조절 장치가 있어서 음악 감상을 위한 디테일한 음향 조절이 가능합니다. 음악의 장르에 따라 최적의 사운드를 직접 찾아보세요.</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기</th><td>597 x 362 x 305mm</td></tr><tr><th>무게정보</th><td>각각 23.8kg(52.4lb)</td></tr><tr><th>추천 앰프 사양</th><td>10~200W RMS</td></tr><tr><th>드라이버 타입</th><td>트위터 : 25mm 마그네슘/알루미늄 합금 돔(054ALMg-1), 미드레인지 : 125mm 폴리머 코팅 퓨어 펄프 콘(Model JM125PC-8), 우퍼 : 300mm 퓨어 펄프 콘(JW300SW-8)</td></tr><tr><th>크로스오버 주파수</th><td>640Hz, 5kHz</td></tr><tr><th>주파수 응답</th><td>44Hz~40kHz(-6dB)</td></tr><tr><th>임피던스</th><td>6 ohms</td></tr><tr><th>외관</th><td>블랙</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>없다 — 위 항목은 전부 삼성닷컴 원문에서 확인했다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">4 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="냉장고">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">냉장고</div>
+      <h1>Bespoke AI 패밀리허브 4도어 864L (81.2cm, AI 푸드매니저)</h1>
+      <div class="sub">4도어 프리스탠딩 — 패밀리허브</div>
+      <div class="code">RM90H91B1W</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li class="off">
+        <b>완전 새로운 푸드 경험 AI 푸드매니저</b><p>냉장고 속 식재료를 AI 푸드매니저로 편리하게 관리해 보세요. 다양한 식재료를 알아서 인식하는 AI 비전에 Google Gemini를 결합하여 더욱 스마트해졌습니다.…</p>
+      </li><li class="off">
+        <b>스마트한 키친 라이프의 시작 패밀리허브</b>
+      </li><li class="off">
+        <b>평소엔 효율적으로 필요할 땐 강력하게 하이브리드 쿨링</b><p>평소에는 컴프레서 하나로 시원하고 효율적으로, 필요할 땐 펠티어 소자까지 두 개의 쿨링이 더 강력하게 작동합니다. 상황에 따라 알아서 움직이는 하이브리드 쿨링으로 에너지는 절약하고 신선함은 유지해 보세요.</p>
+      </li><li>
+        <b>나에게 딱 맞는 정보로 편리하게 사용하는 Now brief</b><p>시시각각 나의 맞춤 정보를 제공하는 Now brief로 날씨나 일정 확인은 물론 음식 취향에 따른 레시피 추천, 실시간 헬스 정보까지 확인할 수 있습니다.</p>
+      </li><li>
+        <b>자동 문 열림·문 닫힘으로 편리하게 오토 도어</b><p>양 손 가득 식재료를 들고 있어도 손쉽게 냉장실 문을 열고 닫을 수 있는 오토 도어를 만나보세요. 손으로 냉장실 도어부의 센서를 가볍게 터치하면 자동으로 열리고, 식재료 정리 후 문이 닫히는 방향으로 살짝 밀어주면 알아서 닫힙니다.…</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기(가로 × 높이 × 깊이)</th><td>912 × 1,853 × 916 mm</td></tr><tr><th>중량</th><td>176 kg</td></tr><tr><th>전체 용량(Liter)</th><td>864 ℓ</td></tr><tr><th>냉장실 용량(Liter)</th><td>509 ℓ</td></tr><tr><th>냉동실 용량(Liter)</th><td>355 ℓ</td></tr><tr><th>디스플레이 타입</th><td>32&quot; 패밀리허브</td></tr><tr><th>에너지소비효율등급</th><td>1등급</td></tr><tr><th>소비 전력(kWh/월)</th><td>42.7 kWh/월</td></tr><tr><th>컴프레서</th><td>AI 인버터 컴프레서</td></tr><tr><th>정격 전압</th><td>220V / 60Hz</td></tr><tr><th>제품 타입</th><td>Bespoke AI 패밀리허브</td></tr><tr><th>설치 타입</th><td>프리스탠딩</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>「AI 절약 모드 최대 25%」의 측정 조건(비교 기준 모델·시험 환경)은 지면 각주에만 있고 사양표에는 없다.</li><li>안전인증정보(인증기관·인증번호)와 법정 표시 7종은 일부러 뺐다 — 사양이 아니라 고지다.</li><li>푸드 관리부터 다양한 맞춤 정보 제공까지 AI 홈</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">5 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="김치냉장고">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">김치냉장고</div>
+      <h1>Bespoke AI 김치플러스 4도어 583L (냄새케어 메탈쿨링 김치통)</h1>
+      <div class="sub">스탠드형 4도어 — 최상위</div>
+      <div class="code">RK80F58B1A</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li class="off">
+        <b>자동 문열림으로 편리하게 오토 오픈 도어</b><p>무거운 김치통을 들고 있어도 손쉽게 냉장실 문을 열 수 있습니다. 손등, 손가락 등으로 도어부의 센서를 가볍게 터치하면 상칸 도어가 자동으로 열립니다.</p>
+      </li><li class="off">
+        <b>음성으로 더 쉽고 편리하게 빅스비 음성 인식</b><p>빅스비 음성 인식으로 김치냉장고 상태를 확인하고 다양한 서비스를 활용해 보세요. 음성 제어로 도어 오픈부터 온도 확인까지 김치냉장고를 더욱 편리하게 사용할 수 있습니다.</p>
+      </li><li class="off">
+        <b>냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링</b><p>냉기를 지켜주는 메탈쿨링 커튼+, 메탈쿨링 커버, 메탈쿨링 선반으로 내부 온도 변화를 최소화해 식재료를 신선하게 보관할 수 있습니다. 내상 후면을 플랫하게 처리하여 내부 공간도 한층 더 넓고 깔끔해졌죠.</p>
+      </li><li>
+        <b>냉기를 꽉 잡아 음식의 신선함을 지키는 메탈쿨링</b><p>냉기를 지켜주는 메탈쿨링 커튼+, 메탈쿨링 커버, 메탈쿨링 선반으로 내부 온도 변화를 최소화해 식재료를 신선하게 보관할 수 있습니다. 내상 후면을 플랫하게 처리하여 내부 공간도 한층 더 넓고 깔끔해졌죠.</p>
+      </li><li>
+        <b>육즙 손실 걱정없는 육류해동부터 과일숙성까지 맞춤숙성실의 다양한 모드</b><p>맞춤숙성실에서 식재료를 최적의 상태로 숙성해 보세요. 육즙 손실 걱정 없는 육류 해동은 물론, 보관이 까다롭고 후숙이 필요한 과일들을 냉장보다 빠르고 상온보다 신선하게 숙성할 수 있습니다.</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기(가로 × 높이 × 깊이)</th><td>799 x 1,853 x 892 mm</td></tr><tr><th>중량</th><td>180 kg</td></tr><tr><th>전체 용량(Liter)</th><td>583 ℓ</td></tr><tr><th>디스플레이 타입</th><td>히든 심플 디스플레이</td></tr><tr><th>에너지소비효율등급</th><td>1등급</td></tr><tr><th>소비 전력(kWh/월)</th><td>17.6 kWh/월</td></tr><tr><th>컴프레서</th><td>디지털 인버터 컴프레서</td></tr><tr><th>정격 전압</th><td>220V / 60Hz</td></tr><tr><th>제품 타입</th><td>Bespoke AI 김치플러스 4도어</td></tr><tr><th>설치 타입</th><td>프리스탠딩</td></tr><tr><th>상칸 용량</th><td>345 ℓ</td></tr><tr><th>중칸 용량</th><td>127 ℓ</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>이 갈래에서 삼성닷컴 지면으로 확인하지 못한 항목은 없다.</li><li>안전인증정보(인증기관·인증번호)와 법정 표시 7종은 일부러 뺐다 — 사양이 아니라 고지다.</li><li>사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">6 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="세탁기">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">세탁기</div>
+      <h1>Bespoke AI 세탁기 25kg (177.8mm LCD) · 2,149,000원</h1>
+      <div class="sub">Bespoke AI 세탁기 25kg</div>
+      <div class="code">WF90F25ADS</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>AI 세탁기의 새로운 기준을 세우다</b><p>시리즈 KV 문구</p>
+      </li><li>
+        <b>AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+</b><p>코스 시작만 누르면 세탁물의 무게·종류·오염도에 맞는 최적 코스로 맞춤세탁</p>
+      </li><li>
+        <b>손끝에서 시작하고 음성으로 완성되는 스마트 스크린</b><p>177.8mm 컬러 LCD, 빅스비 음성인식</p>
+      </li><li>
+        <b>세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어</b><p>세탁 후 자동 문 열림으로 내부 습도 저하</p>
+      </li><li>
+        <b>세탁물에 맞게 적정 세제를 알아서 세제자동투입</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기(가로×높이×깊이)</th><td>686 × 984 × 875 mm</td></tr><tr><th>무게</th><td>102 kg</td></tr><tr><th>세탁 용량</th><td>25 kg</td></tr><tr><th>전원 / 소비전력</th><td>220V/60Hz · 가열세탁 시 2,100 W</td></tr><tr><th>AI 진동소음저감 시스템</th><td>있음</td></tr><tr><th>에너지 소비효율</th><td>**1 등급**</td></tr><tr><th>디스플레이</th><td>Color LCD (177.8mm)</td></tr><tr><th>도어 타입</th><td>강화유리</td></tr><tr><th>오토 오픈 도어</th><td>있음</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>⚠️ 「국내 최대 용량 25kg」 — 각주가 *&quot;2025년 7월 1일 기준, 한국에너지공단에 신고된 가정용 세탁기 기준&quot;*</li><li>⚠️ 「국내 최초 미세플라스틱저감 코스」 — 파타고니아 협업이라는 근거는 PDP 에 있으나</li><li>소음(dB) 수치 — 사양표에 소음 항목 자체가 없다. 「AI 진동소음 저감 시스템 = 있음」만 확인됨.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">7 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="세탁건조기(콤보)">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">세탁건조기(콤보)</div>
+      <h1>Infinite AI 콤보 25/18kg (177.8mm LCD) · 6,690,000원</h1>
+      <div class="sub">Infinite AI 콤보 25/18kg</div>
+      <div class="code">WD99F25AHR</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>변치 않는 가치의 연속 인피니트 디자인</b><p>리얼 스테인리스, 살짝 닿는 손길로 열리는 **히든 도어**</p>
+      </li><li>
+        <b>나만의 여유 그대로 세탁건조를 한 번에 ONE 솔루션</b><p>세탁기→건조기 이동 없이, 버블워시와 인버터 히트펌프가 한 번에 마무리</p>
+      </li><li>
+        <b>국내 최대 용량으로 건조까지 빠르게 쾌속 코스 79분</b><p>셔츠 한 벌 **39분**, 일상 빨래 **79분** ⚠️</p>
+      </li><li>
+        <b>한눈에 보여주고 자연스럽게 대화하는 스마트 스크린</b><p>와이드 터치스크린 + 빅스비 대화형 음성인식, **전화 수신·인터넷·갤러리·타이머·날씨**까지</p>
+      </li><li>
+        <b>AI로 더욱 섬세하게, 세탁물에 맞는 최적의 코스로 작동하는 AI 맞춤+</b><p>무게·종류·오염도 감지로 맞춤 세탁, 건조도 센싱으로 맞춤 건조</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기</th><td>686 × 1,110 × **865** mm</td></tr><tr><th>무게</th><td>144 kg</td></tr><tr><th>세탁 / 건조 용량</th><td>25 kg / **18 kg**</td></tr><tr><th>소비전력</th><td>가열세탁 2,100 W / 건조 1,700 W</td></tr><tr><th>에너지 소비효율</th><td>**1 등급**</td></tr><tr><th>디스플레이</th><td>Color LCD (177.8mm)</td></tr><tr><th>오토 오픈 도어</th><td>있음</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>🔴 「세탁 25kg, 건조 20kg 국내 최대 용량」(목록 API 대표 USP) — 그대로 읽지 말 것.</li><li>⚠️ 「69분」·「79분」·「49분」·「39분」 — 코스·부하 조건이 붙는 값이다. PDP 각주 원문에</li><li>⚠️ 「국내 최초 미세플라스틱저감 코스」 — 「국내 최초」의 판정 근거 각주는 확인하지 못했다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">8 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="통돌이 세탁기">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">통돌이 세탁기</div>
+      <h1>AI 통버블 세탁기 19kg · 950,000원</h1>
+      <div class="sub">AI 통버블 19kg</div>
+      <div class="code">WA80F19SKB</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>AI로 세탁부터 탈수까지 알아서 AI 맞춤세탁</b>
+      </li><li>
+        <b>풍부한 버블로 깨끗한 세탁 버블폭포</b>
+      </li><li>
+        <b>에너지를 절약하는 확실한 방법 AI 절약 모드</b><p>SmartThings AI 절약 모드로 세탁 시 **최대 20% 절감**</p>
+      </li><li>
+        <b>제트샷으로 빠르고 강력하게 입체돌풍세탁</b><p>제트샷이 찌든 때 제거 + **세탁시간 최대 48% 단축**, 듀얼DD 모터와 12개 입체 날개</p>
+      </li><li>
+        <b>스테인리스 이중안심필터로 안심위생관리</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기</th><td>637 × 1,093 × 701 mm</td></tr><tr><th>무게</th><td>47 kg</td></tr><tr><th>세탁 용량</th><td>19 kg</td></tr><tr><th>소비전력</th><td>500 W</td></tr><tr><th>AI 진동소음저감 시스템</th><td>있음</td></tr><tr><th>모터 / 구동 방식</th><td>인버터 모터 · **듀얼DD**</td></tr><tr><th>에너지 소비효율</th><td>2 등급</td></tr><tr><th>디스플레이</th><td>LED</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>⚠️ `WA23A8375KV` 의 대표 USP 첫 줄이 「100대 한정판매」다. 판촉 문구이지 제품 USP 가 아니며</li><li>`WA23A8375KV` 는 구세대(`A` 계열)다. 최신 AI 기능(AI 맞춤세탁·AI 진동소음저감·코스연동)이 없다.</li><li>통돌이 전 모델 에너지 소비효율이 2등급이다(드럼은 1등급). 드럼 대비 약점이므로 먼저 밝힐 것.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">9 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="식기세척기">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">식기세척기</div>
+      <h1>Infinite AI 식기세척기 빌트인 14인용 (필터 내장형, 컵 맞춤 세척) · 2,210,000원</h1>
+      <div class="sub">Infinite AI 빌트인 14인용</div>
+      <div class="code">DW99F79E1UHCS</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>AI 맞춤 세척+</b><p>세척의 처음부터 끝까지 알아서</p>
+      </li><li>
+        <b>Seamless 디자인</b><p>키친 인테리어에 녹아드는 일체감</p>
+      </li><li>
+        <b>오토 오픈 도어</b><p>가벼운 푸시로 편리하게</p>
+      </li><li>
+        <b>플로어 디스플레이</b>
+      </li><li>
+        <b>대용량 맞춤 선반</b><p>효율적인 구조로 많은 그릇도 걱정 없이</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>크기</th><td>595 × 815 × 572 mm</td></tr><tr><th>무게</th><td>44 kg</td></tr><tr><th>에너지소비효율등급</th><td>**1등급**</td></tr><tr><th>소비전력 (1회, 표준코스)</th><td>**624.0 Wh/회**</td></tr><tr><th>통살균 / 고온살균 / 야간 저소음</th><td>있음 / 있음 / 있음</td></tr><tr><th>인버터 모터</th><td>있음</td></tr><tr><th>용량</th><td>**14 인용**</td></tr><tr><th>물사용량 (1인당 1회, 표준코스)</th><td>**1.1 L/인용**</td></tr><tr><th>세척시간 (1회, 표준코스)</th><td>194 분</td></tr><tr><th>정격 소비전력</th><td>2,050 W</td></tr><tr><th>세척코스 수</th><td>**15 EA**</td></tr><tr><th>**살균검증**</th><td>**Intertek 99.999%**</td></tr>
+    </table>
+
+    
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">10 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="에어컨">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">에어컨</div>
+      <h1>Bespoke AI 무풍콤보 갤러리 프로 청정 81.8/18.7㎡ · 7,300,000원</h1>
+      <div class="sub">무풍콤보 갤러리 프로 — 최상위</div>
+      <div class="code">AF90H25D36WRT</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>공간의 품격을 한층 높이는 패브릭 패턴과 일체형 바디로 완성된 세련된 디자인</b>
+      </li><li>
+        <b>업그레이드 된 AI 기능으로 상황·공간 맞춤형 기류를 제공하는 AI∙모션 바람</b>
+      </li><li>
+        <b>직바람 없는 무풍과 불필요하게 온도를 낮추지 않고, 춥지 않게 제습하는 쾌적제습이 만나 더욱 쾌적한 무풍콤보</b><p>와이드 무풍 — &quot;약 32만 개의 무풍홀에서 나오는 직바람 없는 무풍 냉방으로 시원함은 유지하고 무풍모드 소음 최소 28dB 이하로 줄여 기분 좋은 쾌적함을 오랫동안 유지합니다.&quot; 쾌적제습 — &quot;섬세한 냉매 조절 기술로 기존 제습 대비 추위 없이 쾌적하게 습도를 조절합…</p>
+      </li><li>
+        <b>스스로 공간까지 학습하여 상황에 맞게 온도, 습도를 알아서 맞춰주는 AI 쾌적</b><p>&quot;실제 에어컨을 이용하는 공간까지 학습해 내 생활 면적에 맞춰 알아서 운전&quot;</p>
+      </li><li>
+        <b>서큘레이터로 사각지대 걱정 없이 빠르게 하이패스 서큘 냉방</b><p>&quot;하이패스 방식으로 따뜻한 실내 공기를 흡입하자마자 팬에서 강력한 냉기를 만들어 바로 전면으로 뿜어주고, 서큘레이터 팬이 바람을 멀리까지 보내&quot;</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>실내기 크기 (가로×높이×깊이)</th><td>**360 × 1930 × 330 mm** (슬림)</td></tr><tr><th>이지오픈패널 · 이지오픈 팬 · 필터 안심 물세척</th><td>있음</td></tr><tr><th>냉방 면적</th><td>81.8 ㎡</td></tr><tr><th>냉방 에너지 소비효율등급</th><td>**2 등급**</td></tr><tr><th>정격 냉방 소비전력</th><td>2.40 kW</td></tr><tr><th>정격 / 최대 냉방 능력</th><td>9.00 kW / 11.80 kW</td></tr><tr><th>형태 / 디스플레이</th><td>무풍 / COLOR LCD</td></tr><tr><th>무풍 냉방·청정·제습</th><td>모두 있음</td></tr><tr><th>써큘레이터 급속 냉방</th><td>있음</td></tr><tr><th>PM 1.0 살균 필터 / PM 1.0 센서 / CAC 인증</th><td>있음 / 있음 / 있음</td></tr><tr><th>쾌적 제습 · 대용량 강력 제습</th><td>있음</td></tr><tr><th>UV LED 팬살균 · 워시클린 · AI 진단</th><td>있음</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>스탠드 단품 모델이 없어 스탠드만의 가격을 알 수 없다(7,300,000원은 벽걸이 포함 2-in-1 가격).</li><li>무풍홀 개수 &quot;약 32만 개&quot;는 지면 문구 그대로이고 사양표에는 항목이 없다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">11 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="벽걸이 에어컨">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">벽걸이 에어컨</div>
+      <h1>AI 무풍콤보 프로 벽걸이 청정 24.4㎡ · 1,610,000원</h1>
+      <div class="sub">무풍콤보 프로 벽걸이</div>
+      <div class="code">AR80H07D21WT</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>공간과 바람을 이어주는 우아함 심리스 그리드 디자인</b><p>&quot;슬림한 바디와 멀티 블레이드가 심플한 심리스 그리드 디자인을 이루어&quot;</p>
+      </li><li>
+        <b>모션 레이더와 모션 블레이드로 상황 공간 맞춤 AI∙모션 바람</b>
+      </li><li>
+        <b>직바람 없는 무풍과 … 쾌적제습이 만나 더욱 쾌적한 무풍콤보</b><p>와이드 무풍냉방 — &quot;21,200개의 무풍 홀에서 뿜어내는 차가운 냉기 … 무풍모드 소음은 25dB로 줄여&quot;</p>
+      </li><li>
+        <b>스스로 학습하여 온도, 습도를 알아서 맞춰주는 AI 쾌적</b>
+      </li><li>
+        <b>체계적으로 전기료를 관리해주는 AI 에너지 절약</b><p>&quot;무풍 모드 사용 시, MAX 냉방 대비 소비 전력 최대 77% 절약 … AI 절약 모드를 실행하면 최대 30%까지&quot;</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>실내기 크기</th><td>**820 × 366 × 230 mm**</td></tr><tr><th>냉방 면적</th><td>24.4 ㎡</td></tr><tr><th>냉방 에너지 소비효율등급</th><td>**1 등급**</td></tr><tr><th>정격 냉방 소비전력</th><td>0.70 kW</td></tr><tr><th>정격 / 최대 냉방 능력</th><td>3.00 kW / 4.00 kW</td></tr><tr><th>배관 길이</th><td>5.0 m</td></tr><tr><th>형태 / 디스플레이</th><td>무풍 / 888 Seg</td></tr><tr><th>오로라 라이팅</th><td>있음</td></tr><tr><th>무풍 냉방·청정·제습</th><td>모두 있음</td></tr><tr><th>PM 1.0 필터 / PM 1.0 센서 / 극세 필터 / CAC 인증</th><td>있음</td></tr><tr><th>강력 제습 · 쾌적 제습</th><td>있음</td></tr><tr><th>워시클린 · AI 진단 · 자동 건조 · 필터 안심 물세척</th><td>있음</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>없음.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">12 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="공기청정기">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">공기청정기</div>
+      <h1>Infinite AI 공기청정기 (100㎡, 리유저블 필터) · 1,649,000원</h1>
+      <div class="sub">스탠드형 최상위</div>
+      <div class="code">AP90H10198UDD</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>주기적으로 교체할 필요 없이 사용하는 리유저블 필터</b><p>&quot;워셔블 살균 집진 필터는 물 세척만으로 주기적으로 교체할 필요 없이 사용할 수 있어요. UV와 광촉매로 냄새 물질을 분해하는 광분해 탈취 필터도 UV 재생모드로 주기적으로 관리가 가능합니다.…</p>
+      </li><li>
+        <b>4면 흡입과 4면 토출로 더욱더 효과적이고 강력한 4way 서라운드 &amp; 부스터 청정</b><p>&quot;4면에서 오염된 공기를 흡입하고, 깨끗해진 공기를 4면으로 내보냅니다. 팝업 청정 부스터를 작동시키면 넓은 공간의 공기도 더 빠르게 청정 … 흡입구와 토출구 방향에 관계 없이 원하는 위치에서&quot;</p>
+      </li><li>
+        <b>어떤 공간에도 어우러지는 심플하고 감각적인 인피니트 디자인</b><p>&quot;슬림해진 디자인과 스트라이프 라인 사이로 보이는 투 톤 컬러의 대비&quot;</p>
+      </li><li>
+        <b>실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+</b><p>&quot;AI+ 청정 기술로 실내외 공기질을 비교 및 학습하여 오염도가 높아질 것을 예측하고 미리 실내 공기를 정화합니다.&quot;</p>
+      </li><li>
+        <b>최대 54%까지 에너지 절감 — AI 절약</b><p>&quot;실내 공기질이 좋아지면 스스로 팬을 꺼서 에너지가 최대 54%까지 절감됩니다. 팬이 꺼져도 센서가 켜져 있어 공기질이 나빠지면 알아서 다시 작동&quot;</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>제품 크기</th><td>320 × 1070 × 320 mm</td></tr><tr><th>제품 무게</th><td>25.2 kg</td></tr><tr><th>사용 면적</th><td>**100 ㎡**</td></tr><tr><th>프리필터</th><td>극세필터</td></tr><tr><th>집진필터</th><td>**워셔블 살균 집진 필터**</td></tr><tr><th>탈취필터</th><td>**광분해 탈취 필터**</td></tr><tr><th>UV 살균 LED</th><td>있음</td></tr><tr><th>센서</th><td>**레이저 PM 1.0 센서, 가스센서, 조도센서, 온도센서, 습도센서, CO2센서**</td></tr><tr><th>청정도 표시</th><td>PM1.0 / 2.5 / 10, 가스, 종합 청정도</td></tr><tr><th>디스플레이 형태</th><td>대화형 알림창</td></tr><tr><th>무풍 / 부스터 / 환기 알림 / 무드등 / 바퀴</th><td>모두 있음</td></tr><tr><th>자동</th><td>있음(스마트)</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>에너지 소비효율등급 — 이 모델 사양표에 항목 자체가 없다.</li><li>소음(dB) 사양 — 특장점 문구의 &quot;18dB 저소음 무풍청정&quot; 외에 사양표에 소음 항목이 없다.</li><li>CADR·청정화능력 수치 — 사양표에 없다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">13 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="로봇청소기">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">로봇청소기</div>
+      <h1>Bespoke AI 스팀 울트라 자동 급배수 (리폼비 포함) · 2,307,000원</h1>
+      <div class="sub">AI 스팀 울트라</div>
+      <div class="code">VR90F01SAG98CS</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>간편한 정수 공급, 오수 배출과 빌트인 설치까지 — 자동 급배수 시스템</b><p>&quot;급수관 연결을 통해 자동으로 깨끗한 물을 채우고 세척 후 더러운 물은 바로 연결된 배수관으로 버려, 별도로 물통을 채우거나 비울 필요가 없어 … 고온 세척과 99.999% 물걸레 스팀 살균, 열풍건조의 3단계 토탈 클리닝 시스템을 모두 제공하면서 부담 없이 빌트인 설…</p>
+      </li><li>
+        <b>다양한 설치 스타일과 전문 원데이 설치</b><p>일반 프리스탠딩 / 자동 급배수 빌트인 / 자동 급배수 프리스탠딩</p>
+      </li><li>
+        <b>가구장 맞춤 리폼부터 설치까지 삼성 전문가가 책임집니다</b><p>안심 가격(정찰제) · 안심 시공(**시공 1년 무상보증**) · 안심 자재(**E0 등급 자재**, 바닥재 6종 대응)</p>
+      </li><li>
+        <b>국내 최초 스팀 살균 기능이 탑재된 Bespoke AI 스팀 울트라</b><p>목록 USP 원문: &quot;99.999% 물걸레 스팀 살균으로 냄새까지 줄여주는 100°C 스팀 청정스테이션&quot;</p>
+      </li><li>
+        <b>높은 문턱과 매트를 넘나드는 주행 — 이지패스 휠</b><p>&quot;5개의 바퀴를 이용해 몸체를 들어 올려 단일 문턱 최대 45mm까지 안정적으로 넘어갈 수 있습니다.&quot;</p>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>본체 크기 / 무게</th><td>359 × 100 × 364 mm / 4.3 kg</td></tr><tr><th>소비 전력</th><td>(세트) 80W / (스테이션) 1200W</td></tr><tr><th>**소음**</th><td>**(물걸레+먼지흡입 마루) 저소음 63dB / (자동먼지비움) 87dB**</td></tr><tr><th>**흡입력**</th><td>**최대 10W** — *지면은 W 로만 적는다. **Pa 표기 없음***</td></tr><tr><th>충전시간</th><td>300분</td></tr><tr><th>CPU</th><td>Qualcomm QRB4210</td></tr><tr><th>청소시간</th><td>(먼지흡입) 저소음 220분 · 일반 140분 · 강력 130분 / (물걸레+먼지흡입) 저소음 150분 · 일반 100분 · 강력 90분</td></tr><tr><th>승월</th><td>단층형 45mm / 계단형 60mm</td></tr><tr><th>메인브러시</th><td>듀오 클리어 브러시 (리프팅 지원)</td></tr><tr><th>사이드 브러시</th><td>팝아웃 · 리프팅 지원</td></tr><tr><th>센서</th><td>3D 듀얼 장애물 · 범퍼 · 추락 · **dToF LiDAR** · 사물인식(LED RGB카메라) · 액체인식(IR LED / RGB 카메라)</td></tr><tr><th>먼지통</th><td>Bagless 0.2 ℓ</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>Pa(진공도) 수치 — 삼성은 이 제품의 흡입력을 W 로만 적는다. 지면·사양표 어디에도 Pa 가 없다.</li><li>배터리 용량(mAh) — 사양표에 &quot;리튬이온 = 있음&quot;만 있고 수치가 없다.</li><li>자동 급배수 모델의 청수통/오수통 용량 — 사양표에 항목이 없다(배관 직결 구조).</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">14 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="무선청소기">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">무선청소기</div>
+      <h1>Bespoke AI 제트 400W · 1,619,000원</h1>
+      <div class="sub">비스포크 AI 제트 울트라</div>
+      <div class="code">VS90F40CSK</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>훨씬 더 강력해진 최대 400W 흡입력</b><p>&quot;삼성의 특허 기술로 제작된 초경량 모터를 탑재해 가벼우면서도 흡입력은 기존 대비 29% 향상 … 3,970mAh의 대용량 배터리로 일반 모드에서는 최대 100분까지 사용&quot; 지면 헤드라인: &quot;400W. 따라올 수 없는 세계 최고 흡입력&quot;</p>
+      </li><li>
+        <b>청소 환경을 알아서 감지하는 AI+ 인증 무선 스틱 청소기</b><p>&quot;AI 모드 2.0은 다양한 환경에 맞게 알아서 흡입력을 조절 … 마루, 카펫, 매트 등의 바닥면 감지는 물론, 청소 중 브러시가 들리거나 벽면이나 구석에 밀착한 상황도 감지&quot;</p>
+      </li><li>
+        <b>눈에 보이지 않는 먼지까지 손쉽게 청소하는 에어 블로워</b><p>&quot;블로워 전용 모터가 최대 28m/s의 강력한 바람을 만들어 … 차량, 가구 틈새, 창틀같이 손이 닿지 않았던 부분&quot;</p>
+      </li><li>
+        <b>상황에 맞게 사용하는 블로워 모드</b><p>4가지 방식</p>
+      </li><li>
+        <b>21% 가벼워진 브러시 무게와 측면 하단 LED 라이트로 더 편리해진 청소</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>본체 크기 / 무게</th><td>**250 × 970 × 243 mm / 2.50 kg**</td></tr><tr><th>**흡입력**</th><td>**대용량 배터리 400W / 기본 배터리 250W**</td></tr><tr><th>청소시간 (대용량 배터리)</th><td>핸디 일반 100분 / 강력 49분 / 초강력 16분 / **제트 1분** · 브러시 일반 77분 / 강력 43분 / 초강력 22분 / 제트 18분 · 고온세척 50~160분</td></tr><tr><th>충전시간</th><td>대용량 300분 / 기본 210분</td></tr><tr><th>디지털 인버터 모터</th><td>있음</td></tr><tr><th>청소시간 (기본 배터리)</th><td>핸디 일반 60분 / 강력 30분 / 초강력 10분 / 제트 2.5분 · 브러시 일반 45분 / 강력 25분 / 초강력 12분 / 제트 10분 · 고온세척 30~100분</td></tr><tr><th>배터리</th><td>리튬 이온 · **25.2 V**</td></tr><tr><th>브러시 너비</th><td>250 mm</td></tr><tr><th>먼지용량</th><td>0.5 ℓ</td></tr><tr><th>메인 / 추가 브러시</th><td>**액티브 슬림 브러시** / **고온 세척 브러시**</td></tr><tr><th>거치대</th><td>**청정스테이션 일체형**</td></tr><tr><th>액세서리</th><td>솔브러시 · 틈새브러시 · 플렉스 연장관 · **에어 블로워** · **추가 배터리** · 항균 다회용포/일회용포</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>소음(dB) — 사양표에 항목이 없다. 지면 특장점에도 수치가 없다.</li><li>본체 단독 무게 2.50 kg 은 사양표 값이고, 브러시·연장관 장착 시 무게는 표기가 없다.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">15 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="스마트폰">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">스마트폰</div>
+      <h1>갤럭시 S26 울트라</h1>
+      <div class="sub">갤럭시 S26 울트라 — 바형 최상위</div>
+      <div class="code">SM-S948N</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>프라이버시 디스플레이를 탑재한 역대 가장 혁신적인 디스플레이</b>
+      </li><li>
+        <b>나이토그래피로 어둠속에서도 선명하고 AI로 진화된 차원이 다른 카메라 경험</b>
+      </li><li>
+        <b>뛰어난 내구성과 더욱 슬림해진 디자인</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>밝기 (PDP)</th><td>최대 **2,600nits**</td></tr><tr><th>배터리</th><td>**5,000mAh** · 비디오 재생 최대 **31시간** · 교체 불가</td></tr><tr><th>충전 (PDP)</th><td>초고속 충전 3.0 — 약 30분에 최대 75%</td></tr><tr><th>프로세서</th><td>CPU 4.74GHz · 3.6GHz, Octa-Core (**AP 명칭은 PDP 기준 갤럭시용 스냅드래곤® 8 Elite 5세대**)</td></tr><tr><th>메모리·저장</th><td>12GB / 256GB (사용 가능 224.3GB)</td></tr><tr><th>카메라 (PDP)</th><td>후면 **200MP 광각 F1.4** + **50MP 망원 F2.9**(5배·10배 광학 줌 수준) + **50MP 초광각** / 전면 **12MP** / **최대 100배 스페이스 줌**</td></tr><tr><th>디스플레이</th><td>174.9mm · 3120 x 1440 (Quad HD+) · Dynamic AMOLED 2X · 16M · **최대 120Hz**</td></tr><tr><th>S펜</th><td>지원</td></tr><tr><th>외관</th><td>163.6 x 78.1 x **7.9mm** · **214g**</td></tr><tr><th>네트워크</th><td>Dual-SIM (SIM 1 + eSIM / Dual eSIM)</td></tr><tr><th>연결</th><td>USB Type-C(USB 3.2 Gen 1) · Wi-Fi 802.11be(2.4+5+6GHz) · **Bluetooth v6.0** · NFC · **UWB**</td></tr><tr><th>동영상</th><td>UHD 8K (7680 x 4320) @60fps</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>IP 방수·방진 등급 — 지원 페이지 사양표에 항목이 없고 PDP 본문에서도 못 찾았다.</li><li>초광각 카메라 조리개값 — 광각 F1.4 · 망원 F2.9 만 원문이 이 모델 값으로 명시한다.</li><li>가격 — 목록 API `curPrice` 가 null.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">16 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="태블릿">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">태블릿</div>
+      <h1>(5G) · SM-X930N (Wi-Fi) — 갤럭시 탭 S11 울트라</h1>
+      <div class="sub">갤럭시 탭 S11 울트라</div>
+      <div class="code">SM-X936N</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>대화면 멀티태스킹에 최적화된 멀티모달 Galaxy AI</b>
+      </li><li>
+        <b>더 밝아진 369.9mm 대화면으로 몰입감 있는 시청경험</b>
+      </li><li>
+        <b>최신 AP의 향상된 성능으로 끊김없이 오래 사용</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>밝기 (PDP)</th><td>최대 **1,600nits** · HBM 야외 **1,000nits**</td></tr><tr><th>배터리</th><td>**11,600mAh** · 교체 불가 (PDP: **45W**)</td></tr><tr><th>프로세서</th><td>CPU 3.73GHz · 3.3GHz · 2.4GHz, Octa-Core</td></tr><tr><th>메모리·저장</th><td>12GB / 256GB · **microSD 최대 2TB** (PDP 비교표: 16GB·12GB / 1TB·512GB·256GB)</td></tr><tr><th>카메라</th><td>후면 **13.0MP + 8.0MP**(오토 포커스·플래시) / 전면 **12.0MP** / 동영상 4K @30fps</td></tr><tr><th>디스플레이</th><td>**369.9mm** · 2960 x 1848 (WQXGA+) · Dynamic AMOLED 2X · 16M</td></tr><tr><th>S펜</th><td>지원 (**충전 불필요 육각형 S펜**)</td></tr><tr><th>외관</th><td>208.5 x 326.3 x **5.1mm** · **695g** (Wi-Fi 692g)</td></tr><tr><th>연결</th><td>USB 3.2 Gen 1 · Wi-Fi 802.11be(2.4+5+6GHz) · Bluetooth v5.4 · **NFC 없음**</td></tr><tr><th>동영상</th><td>UHD 8K (7680 x 4320) @60fps</td></tr><tr><th>서비스</th><td>Samsung DeX · SmartThings 지원</td></tr><tr><th>보안 업데이트</th><td>**2032년 9월 30일**까지</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>AP 명칭 — PDP 는 *&quot;업그레이드 된 프로세서&quot;* 라고만 하고 지원 페이지도 클럭만 준다.</li><li>IP 방수·방진 등급 — 사양표에 행이 없다.</li><li>가격.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">17 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="워치">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">워치</div>
+      <h1>갤럭시 워치 울트라2 (LTE 자급제, 47mm)</h1>
+      <div class="sub">갤럭시 워치 울트라2</div>
+      <div class="code">SM-L715N</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>일상에서도 야외에서도, 올인원 스마트워치</b>
+      </li><li>
+        <b>800 mAh 대용량 배터리</b>
+      </li><li>
+        <b>프리미엄 디자인, 편안한 착용감</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>밝기 (PDP)</th><td>**최대 5,000니트** (스마트워치 최초)</td></tr><tr><th>배터리</th><td>**800mAh** · AOD 끔 최대 **80시간** / AOD 켬 최대 **60시간** · 교체 불가</td></tr><tr><th>충전 (PDP)</th><td>고주파 고속 충전 — 30분에 40%</td></tr><tr><th>프로세서</th><td>CPU 2.1GHz · 1.95GHz, Penta-Core (**PDP 기준 스냅드래곤® 웨어 엘리트, 3nm**)</td></tr><tr><th>메모리·저장</th><td>2GB / **64GB** (사용 가능 49.3GB)</td></tr><tr><th>디스플레이</th><td>**38.5mm**(1.52인치) · 498 x 498 · Super AMOLED · 16M</td></tr><tr><th>외관</th><td>47.4 x 47.1 x **10.7mm** · **61.5g** · 티타늄 바디</td></tr><tr><th>내구성</th><td>**10 ATM · IP69K** (PDP: **EN13319**, 최대 40m 다이빙)</td></tr><tr><th>센서</th><td>가속도 · 기압 · **생체전기 임피던스** · **전기 심박** · 자이로 · 지자기 · 조도 · **광학 심박** · **온도**</td></tr><tr><th>연결</th><td>Wi-Fi 802.11a/b/g/n(2.4+5GHz) · **Bluetooth v6.0** · NFC · GPS/Glonass/Beidou/Galileo/QZSS</td></tr><tr><th>OS</th><td>Wear OS Powered by Samsung</td></tr><tr><th>보안 업데이트</th><td>**2031년 7월 31일**까지</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>가격.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">18 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="버즈">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">버즈</div>
+      <h1>갤럭시 버즈4 프로</h1>
+      <div class="sub">갤럭시 버즈4 프로</div>
+      <div class="code">SM-R640N</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>디테일까지 놓치지 않는 Hi-Fi 사운드</b>
+      </li><li>
+        <b>빅데이터로 설계한 최적의 착용감</b>
+      </li><li>
+        <b>갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>배터리</th><td>이어버드 **61mAh** · 케이스 **530mAh** · 리튬 이온</td></tr><tr><th>충전</th><td>충전전력 **2.5 ~ 4.5W** (PDP: 케이스 무선 충전 지원)</td></tr><tr><th>스피커</th><td>**Enhanced 2-way** (PDP: 듀얼 앰프 · 우퍼 진동판 버즈3 프로 대비 **19.8%** 확대)</td></tr><tr><th>마이크</th><td>**6개**</td></tr><tr><th>음향 기능</th><td>액티브 노이즈 캔슬링 · 주변 소리 듣기 · 소음 제어 최적화 · **360 오디오** · 대화 감지 · **사이렌 감지** · Adaptive EQ · **Adaptive ANC** · **Super Wide Band**</td></tr><tr><th>오디오 코덱</th><td>AAC · SBC · **SSC(Samsung Seamless Codec)** · **SSC-UHQ** · LC3</td></tr><tr><th>음질 (PDP)</th><td>**24-bit / 96kHz** (SSC-UHQ) · 통화 **최대 16kHz SWB**</td></tr><tr><th>연결</th><td>**Bluetooth v6.1** · **LE 오디오** · 오토 스위치</td></tr><tr><th>센서</th><td>가속도 · 자이로 · 홀 · 압력 · 근접 · 터치 · **VPU(Voice Pickup Unit)**</td></tr><tr><th>이어버드</th><td>30.9 x 18.1 x 19.6mm · **5.1g**</td></tr><tr><th>케이스</th><td>51 x 28.3 x 51mm · **44.3g**</td></tr><tr><th>내구성</th><td>**IP57** (최대 30분 · 최대 1m 담수 실험실 조건)</td></tr>
+    </table>
+
+    <h2 class="w">상담 전 확인</h2>
+    <ul class="warn"><li>가격.</li></ul>
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">19 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="노트북">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">노트북</div>
+      <h1>갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC</h1>
+      <div class="sub">갤럭시 북6 울트라</div>
+      <div class="code">NT960UJH-XC94Y</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>완벽한 퍼포먼스를 위한 새로운 디자인과 설계</b>
+      </li><li>
+        <b>NVIDIA® Geforce® RTX™ 50 시리즈</b>
+      </li><li>
+        <b>학습과 업무를 도와주는 네비게이터 Galaxy AI</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>화면 크기</th><td>40.6 cm (16.0 inch)</td></tr><tr><th>무게</th><td>1.89 kg</td></tr><tr><th>터치스크린</th><td>Yes</td></tr><tr><th>해상도</th><td>2880 x 1800 (WQXGA+)</td></tr><tr><th>패널 종류</th><td>Dynamic AMOLED 2X, Anti-Reflective</td></tr><tr><th>배터리 용량 (Typical)</th><td>80.20 Wh</td></tr><tr><th>충전기</th><td>140W USB Type-C Adapter</td></tr><tr><th>CPU (이 SKU 기준)</th><td>Intel® Core™ Ultra 9 processor 386H</td></tr><tr><th>메모리 (이 SKU 기준)</th><td>64 GB / LPDDR5X (On Board)</td></tr><tr><th>저장장치 (이 SKU 기준)</th><td>2 TB NVMe SSD</td></tr><tr><th>카메라</th><td>2.0 MP</td></tr><tr><th>운영체제</th><td>Windows 11 Home</td></tr>
+    </table>
+
+    
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">20 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="모니터">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">모니터</div>
+      <h1>오디세이 Ark 2세대 G9 G97NC 4K 스마트 (LS55CG970)</h1>
+      <div class="sub">오디세이 Ark 2세대 G9</div>
+      <div class="code">LS55CG970NKXKR</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>탐험을 여는 새로운 시각 조종석 모드</b>
+      </li><li>
+        <b>대화면을 하나로 즐기는 멀티스크린 4분할 멀티뷰</b>
+      </li><li>
+        <b>게임을 승리로 이끄는 압도적 성능 165 Hz 주사율 &amp; 1 ms 응답속도</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>화면 크기</th><td>138.7 cm (55형)</td></tr><tr><th>해상도</th><td>3,840 x 2,160</td></tr><tr><th>주사율</th><td>Max 165 Hz</td></tr><tr><th>밝기</th><td>600 cd/㎡</td></tr><tr><th>패널 타입</th><td>VA</td></tr><tr><th>소비전력(Typical)</th><td>103.0 W</td></tr><tr><th>응답속도</th><td>1 (GTG)</td></tr><tr><th>평면 / 곡면</th><td>Curved · 1000 R</td></tr><tr><th>명암비</th><td>1,000,000:1 (Static) · Mega DCR</td></tr><tr><th>HDR</th><td>Quantum HDR 32x · HDR10+ Gaming</td></tr><tr><th>색재현성</th><td>DCI 95 % (Typ.)</td></tr><tr><th>스마트 기능</th><td>Smart</td></tr>
+    </table>
+
+    
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">21 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="인덕션">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">인덕션</div>
+      <h1>Infinite Line 후드일체형 인덕션</h1>
+      <div class="sub">Infinite Line 후드일체형</div>
+      <div class="code">CC99H84JAD</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>후드일체형으로 더 자유롭게</b>
+      </li><li>
+        <b>어디에 올려도 빈틈 걱정 없이 균일하게 화력을 전달하는 올 플렉스존</b>
+      </li><li>
+        <b>최대 7,400W의 강력한 화력으로 더 빠르고 완성도 있는 조리</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>외부 치수 (가로×세로×높이)</th><td>800 x 520 x 230 mm</td></tr><tr><th>무게 (제품/전체)</th><td>27.2 / 31 kg</td></tr><tr><th>에너지소비효율등급</th><td>1등급</td></tr><tr><th>소비전력</th><td>7,650 W</td></tr><tr><th>간섭소음절감(DNC)</th><td>없음</td></tr><tr><th>전체 출력</th><td>7.4 kW</td></tr><tr><th>화구 수</th><td>4 (플렉스) EA</td></tr><tr><th>플렉스존 사이즈</th><td>210 X 365 mm</td></tr><tr><th>플렉스 존(앞)</th><td>2.1 / 2.7 (Max) kW</td></tr><tr><th>플렉스 존(뒤)</th><td>2.1 / 2.7 (Max) kW</td></tr><tr><th>플렉스 존 전체</th><td>2.7 / 3.7 (Max) kW</td></tr><tr><th>부스터 수</th><td>4 EA</td></tr>
+    </table>
+
+    
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">22 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="오븐">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">오븐</div>
+      <h1>Infinite Line 빌트인 전기오븐 75L</h1>
+      <div class="sub">Infinite Line 빌트인 75L</div>
+      <div class="code">NV75T9879CD</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>상/하단 동시 조리 가능한 듀얼 쿡</b>
+      </li><li>
+        <b>기름 없이도 바삭하게 에어프라이</b>
+      </li><li>
+        <b>겉은 바삭, 속은 촉촉 고메 베이퍼</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>외관 크기 (가로×높이×깊이)</th><td>595 X 596 X 570 mm</td></tr><tr><th>무게</th><td>48.8 kg</td></tr><tr><th>소비전력 — 오븐</th><td>2,700 W</td></tr><tr><th>설치 방식</th><td>빌트인</td></tr><tr><th>용량</th><td>75 L</td></tr><tr><th>오븐 온도</th><td>30 ~ 275 ℃</td></tr><tr><th>히터</th><td>Sheath Heater (상 / 하단)</td></tr><tr><th>컨벡션</th><td>Fan + Heater</td></tr><tr><th>그릴 방식</th><td>와이드 듀얼그릴</td></tr><tr><th>스팀어시스트</th><td>있음</td></tr><tr><th>조리모드 — 오븐</th><td>있음</td></tr><tr><th>조리모드 — 전자레인지</th><td>없음</td></tr>
+    </table>
+
+    
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">23 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<section class="page" data-cat="전자레인지">
+  <div class="sheet">
+    <header class="hd">
+      <div class="cat">전자레인지</div>
+      <h1>Bespoke 전자레인지 23L (그릴 프라이)</h1>
+      <div class="sub">Bespoke 23L 그릴 프라이</div>
+      <div class="code">MG23T5018CC</div>
+    </header>
+
+    <h2>핵심 USP</h2>
+    <ol class="usp">
+      <li>
+        <b>그릴로 바삭하게 전자레인지로 빠르게 복합조리</b>
+      </li><li>
+        <b>빵 해동과 홈디저트도 간편하게 노오븐 베이킹</b>
+      </li><li>
+        <b>다양한 컬러 세련된 글라스 감성디자인</b>
+      </li>
+    </ol>
+
+    <h2>핵심 사양</h2>
+    <table class="spec">
+      <tr><th>외관 크기 (가로×높이×깊이)</th><td>489 x 275 x 381 mm</td></tr><tr><th>무게</th><td>13.0 kg</td></tr><tr><th>소비전력 — 그릴</th><td>1050 W</td></tr><tr><th>전자레인지 출력</th><td>700 W</td></tr><tr><th>설치 방식</th><td>프리스탠딩</td></tr><tr><th>용량</th><td>23 L (가용 10 L)</td></tr><tr><th>히터</th><td>Sheath heater</td></tr><tr><th>그릴 방식</th><td>그릴</td></tr><tr><th>조리모드 — 오븐</th><td>없음</td></tr><tr><th>조리모드 — 전자레인지</th><td>있음</td></tr><tr><th>조리모드 — 에어프라이</th><td>없음</td></tr><tr><th>조리모드 — 찜</th><td>없음</td></tr>
+    </table>
+
+    
+
+    <footer class="ft">
+      <span>삼성닷컴 원문 · 2026-08-31 조사</span>
+      <span class="no">24 / 24</span>
+    </footer>
+  </div>
+</section>
+
+<script>
+  /* 품목을 골라 그것만 인쇄한다 — 24장을 늘 다 뽑을 일은 없다.
+     hidden 속성으로 감추면 인쇄에서도 빠진다(위 @media print 규칙). */
+  var CATS = ["TV","프로젝터","사운드바","오디오","냉장고","김치냉장고","세탁기","세탁건조기(콤보)","통돌이 세탁기","식기세척기","에어컨","벽걸이 에어컨","공기청정기","로봇청소기","무선청소기","스마트폰","태블릿","워치","버즈","노트북","모니터","인덕션","오븐","전자레인지"];
+  var on = {};
+  CATS.forEach(function (c) { on[c] = true; });
+
+  function draw() {
+    document.getElementById('chips').innerHTML = CATS.map(function (c) {
+      return '<button class="chip' + (on[c] ? ' on' : '') + '" data-c="' + c + '">' + c + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (b) {
+      b.onclick = function () { on[b.dataset.c] = !on[b.dataset.c]; draw(); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.page'), function (p) {
+      p.hidden = !on[p.dataset.cat];
+    });
+  }
+  document.getElementById('all').onclick = function () {
+    var every = CATS.every(function (c) { return on[c]; });
+    CATS.forEach(function (c) { on[c] = !every; });
+    draw();
+  };
+  draw();
+</script>
+</body>
+</html>
