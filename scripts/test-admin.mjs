@@ -932,7 +932,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
     /* ② `google.script.run` 이 부르는 이름은 **밑줄로 끝나면 안 된다**(비공개 취급) */
-    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews'];
+    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews', 'setAlias'];
     const miss = pub.filter((f) => !new RegExp(`^function ${f}\\(`, 'm').test(rv));
     if (miss.length) fail(`[바이럴] 화면이 부르는 함수가 없다: ${miss.join(', ')}`);
     else console.log(`OK: 바이럴 공개 함수 ${pub.length}개 — 화면에서 부를 수 있는 이름이다`);
@@ -957,14 +957,46 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ③ 꼬리말 루프 안에 **시간 검사**가 있어야 한다. 매장 하나가 최대
        `TAILS × 2 × MAX_PAGES` 회라 6분을 넘길 수 있고, 넘기면 강제 종료돼
        **그때까지 받은 것이 시트에 안 써지고 통째로 날아간다.** */
-    const tailBody = (rv.match(/for \(var ti = 0; ti < TAILS\.length; ti\+\+\) \{([\s\S]{0,900})/) || [])[1] || '';
+    /* **루프 머리를 통째로 앵커로 쓰지 않는다** — 별칭이 들어오며 `TAILS.length` 가
+       `qs.length` 로 바뀌자 이 검사가 조용히 무력해졌다(실제로 그랬다). `var ti =` 로만
+       잡고 본문을 본다. */
+    const tailAt = rv.indexOf('for (var ti =');
+    const tailBody = tailAt < 0 ? '' : rv.slice(tailAt, tailAt + 900);
     if (!/Date\.now\(\) - t0 > BUDGET_MS/.test(tailBody)) {
       fail('[바이럴] 꼬리말 루프에 시간 검사가 없다 — 한 매장이 6분을 넘기면 그 실행이 통째로 날아간다');
     } else if (!/\}\s*\/\* TAILS \*\/\s*\n[\s\S]{0,400}?if \(stopped\) break;/.test(rv)) {
       fail('[바이럴] 꼬리말 도중 멈춤이 매장 루프를 안 끊는다 — 반만 훑은 매장을 건너뛴다');
+    } else if (!/tailSave = ti;/.test(rv) || !/setProperty\('_tail'/.test(rv)) {
+      /* **매장 안 진행 위치를 저장해야 한다.** 안 하면 한 매장이 예산을 못 끝낼 때
+         다음 실행이 그 매장 꼬리 0부터 다시 돌아 **진전 0의 무한 루프**가 된다 —
+         사장님이 본 「80% 에서 멈춘다」가 이 구조 위에 서 있었다. */
+      fail('[바이럴] 매장 안 진행 위치(_tail)를 저장하지 않는다 — 한 매장을 못 끝내면 영영 같은 자리에 머문다');
     } else {
-      console.log('OK: 바이럴 시간 검사 — 꼬리말 경계에서 끊고, 커서가 그 매장에 머문다');
+      console.log('OK: 바이럴 시간 검사 — 꼬리말 경계에서 끊고, 커서와 꼬리 위치가 그 매장에 머문다');
     }
+
+    /* ③-b **상태 값은 캐시를 타면 안 된다.** 집계(13초)는 담아 두는 것이 맞지만
+       커서·사용량·마지막 실행까지 담으면 **실제로 전진하는데 화면이 6시간 굳는다** —
+       사장님이 「여러 번 눌러도 80% 그대로」를 본 진짜 이유가 이것이다. */
+    const fresh = (rv.match(/function freshState_\(d\) \{([\s\S]{0,700}?)\n\}/) || [])[1] || '';
+    const need2 = ['cursor', 'dayUsed', 'chainOn', 'lastRun'];
+    const missF = need2.filter((k) => !fresh.includes('d.' + k + ' ='));
+    if (!fresh) fail('[바이럴] freshState_ 가 없다 — 캐시가 커서·사용량을 얼려 화면이 거짓말을 한다');
+    else if (missF.length) fail(`[바이럴] freshState_ 가 새로 안 읽는 값: ${missF.join(', ')}`);
+    else if (!/if \(hit\) \{ hit\.cached = true; return freshState_\(hit\); \}/.test(rv)) {
+      fail('[바이럴] getSummary 가 캐시 히트에서 freshState_ 를 안 지난다 — 상태가 굳는다');
+    } else console.log('OK: 바이럴 상태 값 — 캐시가 있어도 커서·사용량·마지막 실행은 새로 읽는다');
+
+    /* ③-c **이미 가진 글을 다시 받지 않는다**(사장님 지적: 매일 10,400회는 낭비).
+       신호는 **「이미 가진 링크를 만났다」** 여야 한다 — 「새 링크가 0건」으로 잡으면
+       우리 매장 글이 아닌 것은 저장하지 않아 **영원히 새 링크로 보여** 안 멈춘다. */
+    if (!/if \(seen\[link\]\) \{ hitSeen = true; continue; \}/.test(rv)) {
+      fail('[바이럴] 이미 가진 링크를 만난 것을 표시하지 않는다 — 매일 한 바퀴를 통째로 다시 받는다');
+    } else if (!/if \(!isFull && hitSeen\)/.test(rv)) {
+      fail('[바이럴] 이미 가진 영역에 닿아도 쪽 루프를 안 멈춘다');
+    } else if (!/FULL_EVERY_DAYS/.test(rv)) {
+      fail('[바이럴] 주기적 전체 훑기(그물)가 없다 — 네이버 정렬을 믿는 최적화는 그물이 있어야 한다');
+    } else console.log('OK: 바이럴 새 글만 훑기 — 이미 가진 영역에서 멈추고, 주기적으로 전부 훑는다');
 
     /* ④ 한 바퀴 최대 호출(`SWEEP_CALLS`)이 실제 상한보다 작으면 **화면이 틀린 경고**를 한다
        (한도가 넉넉한데 "모자란다"고 하거나 그 반대). 값을 손으로 적으므로 대조한다. */
@@ -977,7 +1009,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        배열 안의 점코드를 전부 센다. */
     const storeBlock = (rv.match(/var STORES = \[([\s\S]*?)\n\];/) || [])[1] || '';
     const nStores = (storeBlock.match(/\['[A-Z0-9]{4}'\s*,/g) || []).length;
-    const need = nStores * nTails * 2 * maxPages;
+    /* **줄임말(별칭)도 한 매장 몫을 더 쓴다** — 코드 표의 별칭 수를 함께 센다.
+       안 세면 별칭을 넣은 순간 상수가 낮아져 화면이 「한도가 넉넉하다」고 거짓말한다. */
+    const aliasStart = rv.indexOf('var ALIAS = {');
+    const aliasBlock = aliasStart < 0 ? '' : rv.slice(aliasStart, rv.indexOf('\n};', aliasStart));
+    /* 줄마다 `'매장': ['별칭', ...]` 이라, **대괄호 안의 따옴표 묶음만** 센다 */
+    const nAlias = (aliasBlock.match(/\[[^\]]*\]/g) || [])
+      .reduce((n, g) => n + (g.match(/'[^']+'/g) || []).length, 0);
+    const need = (nStores + Math.max(0, nAlias)) * nTails * 2 * maxPages;
     if (!maxPages || !sweep || !nTails || !nStores) {
       fail('[바이럴] MAX_PAGES · SWEEP_CALLS · TAILS · STORES 중 못 읽은 것이 있다');
     } else if (sweep < need) {

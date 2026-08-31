@@ -104,15 +104,22 @@ var DEFAULT_DAILY_LIMIT = 20000;
    65매장 × 꼬리 8 × 2소스 × 10쪽 = 10,400 · 관심 카페 2 × 4 × 10 = 80 · 경쟁비교 40.
    **실제로는 이보다 적다** — 빈 쪽이 나오면 그 자리에서 멈추므로 작은 매장은 10쪽을
    다 두드리지 않는다. 한도를 정할 때는 넉넉한 쪽으로 봐야 하므로 최대치를 적는다.
-   `MAX_PAGES` 를 바꾸면 **이 값도 함께 고칠 것** — 안 고치면 화면이 틀린 경고를 한다. */
-var SWEEP_CALLS = 10520;
+   `MAX_PAGES` 를 바꾸면 **이 값도 함께 고칠 것** — 안 고치면 화면이 틀린 경고를 한다.
+   **줄임말(별칭)도 한 매장 몫을 더 쓴다**(2026-08-31) — 코드 표의 별칭 2개까지 더해
+   67 × 8 × 2 × 10 = 10,720 · 카페 80 · 경쟁비교 40 = 10,840.
+   사장님이 화면에서 더 등록하실 수 있으므로 **화면에는 `sweepCalls_()` 로 그때그때
+   센 값을 보낸다** — 이 상수는 검사가 붙드는 하한이다. */
+var SWEEP_CALLS = 10840;
+/* **며칠에 한 번 전부 훑는가.** 평소에는 새 글이 없는 쪽에서 멈추고, 이레에 한 번은
+   처음부터 끝까지 두드려 그동안 놓친 것을 메운다(`sort=date` 를 믿는 최적화의 그물). */
+var FULL_EVERY_DAYS = 7;
 
 /* **열은 뒤에만 붙인다** — 이 스크립트는 열을 자리로 쓰므로 가운데에 끼우면 그 아래
    모든 줄이 한 칸씩 밀린다(Code.gs 가 지점 열을 더할 때 겪은 것과 같다). */
 /* **첫 열이 `date` 다 — 「작성일 우선, 없으면 발견일」.** 화면의 일간·주간·월간이 이
    값을 센다. 마지막 `seenAt` 은 **처음 본 날**이라 「새로 발견」을 세는 데만 쓴다.
    **열은 뒤에만 붙였다**(`seenAt`) — 가운데에 끼우면 그 아래 모든 줄이 한 칸씩 밀린다. */
-var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind'];
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr'];
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 65곳 — 경원영업팀 활성 지점 전부 ────────────────────
@@ -382,6 +389,68 @@ function mapCell_(code) {
 var QUERY = { '광주': '삼성스토어 경기광주' };
 var MATCH = { '광주': '경기광주' };
 
+/* ── 줄임말(별칭) ──────────────────────────────────────────────────
+ * 2026-08-31 사장님 지시: *"점명이 긴 경우 줄임말을 사용하는 경우도 있을 것 같습니다.
+ * 키워드를 등록해서 수집할 수 있는 기능을 넣어줄 수 있습니까? 예를 들면
+ * 신세계사우스시티=신사시티, 갤러리아광교=갤광교"*.
+ *
+ * **한 곳만 고치면 안 된다 — 세 곳이 함께 움직여야 한다:**
+ *   ① **검색 질의** — 그 말로 물어야 그 글이 잡힌다
+ *   ② **본문 대조**(`hasStore_`) — 잡아 놓고 정식 점명이 없다고 버리면 헛일이다
+ *   ③ **남의 매장 판정**(`belongsToOther_`) — 별칭도 이름이라 함께 봐야 한다
+ * ①만 고치면 **찾아 놓고 전부 버리고**, ②만 고치면 **애초에 안 잡힌다.**
+ *
+ * **브랜드 말과 붙어 있어야 한다는 규칙은 그대로다**(`hasStore_`). 그래서 글에
+ * `신사시티` 만 있으면 안 잡히고 `삼성스토어 신사시티` 라야 잡힌다 — 별칭은 짧아서
+ * 우연히 걸릴 위험이 큰데, 이 규칙이 그것을 막아 준다. **느슨하게 하지 말 것.**
+ *
+ * **여기 적는 것은 우리가 확인한 것뿐이다.** 사장님이 화면에서 더 넣으실 수 있고
+ * (`_alias` 스크립트 속성) `aliasOf_` 가 둘을 합친다 — 화면에서 넣은 것을 코드가
+ * 덮어쓰지 않는다.
+ *
+ * **한 글자·두 글자 별칭은 받지 않는다**(`aliasClean_`). `수원` 같은 말이 별칭으로
+ * 들어오면 브랜드와 붙은 다른 매장 글까지 통째로 끌어온다.
+ */
+var ALIAS = {
+  '신세계사우스시티': ['신사시티'],
+  '갤러리아광교': ['갤광교']
+};
+
+/* 코드 표 + 사장님이 화면에서 등록한 것을 합친다. 같은 말은 한 번만. */
+function aliasAll_() {
+  var out = {}, k, i, arr;
+  for (k in ALIAS) if (ALIAS.hasOwnProperty(k)) out[k] = ALIAS[k].slice();
+  var extra = {};
+  try { extra = JSON.parse(props_().getProperty('_alias') || '{}') || {}; } catch (e) { extra = {}; }
+  for (k in extra) {
+    if (!extra.hasOwnProperty(k)) continue;
+    arr = extra[k];
+    if (!(arr && arr.length)) continue;
+    if (!out[k]) out[k] = [];
+    for (i = 0; i < arr.length; i++) if (out[k].indexOf(arr[i]) < 0) out[k].push(arr[i]);
+  }
+  return out;
+}
+
+function aliasOf_(name, table) { return (table && table[name]) || []; }
+
+/* 별칭까지 세어 **한 바퀴 최대 호출**을 그때그때 낸다. 상수(`SWEEP_CALLS`)만 쓰면
+   사장님이 화면에서 별칭을 등록한 순간 화면이 옛 숫자로 「한도가 넉넉하다」고 말한다. */
+function sweepCalls_() {
+  var tab = aliasAll_(), n = 0, k;
+  for (k in tab) if (tab.hasOwnProperty(k)) n += tab[k].length;
+  return (STORES.length + n) * TAILS.length * 2 * MAX_PAGES + 80 + 40;
+}
+
+/* 등록값을 다듬는다. **막는 것이 이 함수의 값어치다** — 짧은 별칭 하나가
+   남의 매장 글을 통째로 끌어온다. */
+function aliasClean_(s) {
+  var t = String(s || '').replace(/\s+/g, '').trim();
+  if (t.length < 3) return '';        /* 두 글자 이하는 받지 않는다 */
+  if (t.length > 20) return '';
+  return t;
+}
+
 /* ── 질의를 쪼개 더 받는다 ────────────────────────────────────────
  * 2026-08-31 사장님 질문: *"후기수집이 1459건외에 더 없나요?"* — **훨씬 더 있다.**
  *
@@ -518,6 +587,58 @@ function hasStore_(text, name) {
   return false;
 }
 
+/* 정식 점명이든 줄임말이든 **하나만 걸리면 그 매장 글이다.**
+   브랜드와 붙어야 한다는 규칙은 그대로라, 짧은 별칭이 우연히 걸리는 일은 막힌다. */
+function hasAny_(text, names) {
+  for (var i = 0; i < names.length; i++) if (hasStore_(text, names[i])) return true;
+  return false;
+}
+
+/* ── 매니저 이름 뽑기 ──────────────────────────────────────────────
+ * 2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"* ·
+ * *"이름을 제목과 해시태그 내용에서 모두 검출해 주세요"*.
+ *
+ * **직함을 먼저 찾고 그 앞에서 이름을 뗀다.** 반대로 하면(이름 정규식이 먼저) 탐욕
+ * 매칭이 이름을 4글자까지 먹어 **`유찬혁부점장` 이 `[유찬혁부][점장]`** 이 된다
+ * (실측으로 잡았다). 직함은 **긴 것부터** 본다 — `부점장` 이 `점장` 보다 먼저다.
+ *
+ * **실측(제목 3,000건)** — 뒤집기 전 70건(2.3%) → 뒤집은 뒤 **301건(10%)**,
+ * 그리고 `부지 점장`·`유찬혁부 점장` 오탐이 사라졌다.
+ *
+ * **본문(해시태그)까지 봐야 제 몫을 한다** — 제목만 보면 10% 다. 매니저 이름은 대개
+ * 본문·해시태그에 나온다. 그래서 **수집할 때** 제목과 본문을 함께 훑어 열에 담는다.
+ * **이미 쌓인 글은 제목에서만** 뽑을 수 있다(본문을 저장하지 않았다) — 화면이 그
+ * 사실을 밝힌다. 있는 척하지 않는다.
+ */
+var MGR_TITLES = ['부지점장', '부점장', '부팀장', '수석매니저', '매니저', '점장', '팀장', '실장', '과장', '대리', '주임', '프로', '사원'];
+/* **이름이 아닌 말** — 실측에서 실제로 걸린 것만 적는다. 지어내지 않는다. */
+var MGR_NOTNAME = ['삼성', '스토어', '우리', '저희', '담당', '친절', '해당', '방문', '상담', '설치', '구매', '가전', '제품', '매장'];
+
+function mgrFind_(text) {
+  var t = String(text || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ');
+  var out = [], p, q, title, s, e, name;
+  for (p = 0; p < t.length; p++) {
+    title = '';
+    for (q = 0; q < MGR_TITLES.length; q++) {
+      if (t.substr(p, MGR_TITLES[q].length) === MGR_TITLES[q]) { title = MGR_TITLES[q]; break; }
+    }
+    if (!title) continue;
+    /* 직함 바로 앞의 한글 2~4자를 이름으로 본다. **띄어쓰기 하나까지만** 건너뛴다 —
+       더 건너뛰면 앞 문장의 낱말을 이름으로 집는다. 해시태그(`#윤현식매니저`)는 붙여
+       쓰므로 그대로 잡힌다. */
+    e = p;
+    if (e > 0 && (t.charAt(e - 1) === ' ' || t.charAt(e - 1) === '#')) e--;
+    s = e;
+    while (s > 0 && /[가-힣]/.test(t.charAt(s - 1)) && e - s < 4) s--;
+    name = t.substring(s, e);
+    p += title.length - 1;
+    if (name.length < 2) continue;                     /* 이름 없는 직함은 사람이 아니다 */
+    if (MGR_NOTNAME.indexOf(name) >= 0) continue;
+    if (out.indexOf(name + ' ' + title) < 0) out.push(name + ' ' + title);
+  }
+  return out;
+}
+
 function isNoise_(text) {
   var t = norm_(text), i;
   for (i = 0; i < NOISE.length; i++) if (t.indexOf(norm_(NOISE[i])) >= 0) return true;
@@ -597,7 +718,56 @@ function setDailyLimit(n) {
   if (n > 50000) return { ok: false, error: '한도는 50,000회 이하로 정해 주세요.' };
   props_().setProperty('_dailyLimit', String(n));
   var u = usage_();
-  return { ok: true, limit: n, used: u.n, sweep: SWEEP_CALLS };
+  return { ok: true, limit: n, used: u.n, sweep: sweepCalls_() };
+}
+
+/**
+ * 줄임말(별칭) 등록·삭제 — 화면에서 부른다(2026-08-31 사장님 요청).
+ *
+ * **막는 것이 이 함수의 값어치다:**
+ *   · 매장 이름이 목록에 실제로 있어야 한다(오타로 넣으면 영영 안 쓰인다)
+ *   · 세 글자 미만은 받지 않는다 — 짧은 별칭 하나가 남의 매장 글을 통째로 끌어온다
+ *   · 정식 점명과 같은 말은 받지 않는다(이미 그 말로 찾고 있다)
+ *   · 한 매장에 5개까지 — 별칭 하나가 **한 매장 몫(160회)** 을 더 쓴다
+ *
+ * **코드 표(`ALIAS`)는 지우지 못한다** — 그쪽은 우리가 확인해 넣은 것이라 화면에서
+ * 지웠다고 사라지면 다음 배포에 되살아나 사장님이 「지워지지 않는다」고 느낀다.
+ * 화면이 코드 표 항목을 「기본」으로 적고 삭제 단추를 달지 않는다.
+ */
+function setAlias(store, words) {
+  var i, ok = false;
+  for (i = 0; i < STORES.length; i++) if (STORES[i][1] === store) { ok = true; break; }
+  if (!ok) return { ok: false, error: '그런 매장이 없습니다: ' + store };
+
+  var list = [], w, dup = {};
+  words = words || [];
+  for (i = 0; i < words.length; i++) {
+    w = aliasClean_(words[i]);
+    if (!w) continue;
+    if (w === store) continue;                       /* 이미 그 말로 찾고 있다 */
+    if (dup[w]) continue;
+    dup[w] = 1;
+    list.push(w);
+  }
+  if (list.length > 5) return { ok: false, error: '한 매장에 별칭은 5개까지입니다(하나가 호출을 160회 더 씁니다).' };
+
+  var tab = {};
+  try { tab = JSON.parse(props_().getProperty('_alias') || '{}') || {}; } catch (e) { tab = {}; }
+  if (list.length) tab[store] = list; else delete tab[store];
+  props_().setProperty('_alias', JSON.stringify(tab));
+
+  /* **별칭을 넣거나 지웠으면 다음 수집은 전부 훑는다**(2026-08-31 사장님 지시 —
+     *"키워드를 넣고 바이럴 수집 버튼을 누르면 전면 재수집하도록 해주세요"*).
+     **반드시 필요하다.** 새 별칭으로 물으면 그 결과에는 **이미 가진 링크가 섞여 있어**
+     (같은 글을 정식 점명으로 이미 받았다) 새 글만 훑는 모드는 첫 쪽에서 끊긴다 —
+     그러면 그 별칭으로만 올라온 옛 글을 영영 못 찾는다.
+     커서도 처음으로 돌린다 — 중간부터 돌면 앞쪽 매장이 이번 바퀴에서 빠진다. */
+  props_().deleteProperty('_fullAt');
+  props_().setProperty('_cursor', '0');
+  props_().setProperty('_tail', '0');
+
+  sumCacheClear_();                                  /* 화면이 옛 목록을 보여주면 안 된다 */
+  return { ok: true, alias: aliasAll_(), sweep: sweepCalls_(), full: true };
 }
 
 /**
@@ -645,7 +815,9 @@ function diag_() {
   };
 }
 
-function search_(kind, query, start) {
+function search_(kind, query, start, display) {
+  /* **건수만 알고 싶을 때는 1건만 받는다**(매니저 이름 훑기). 응답의 `total` 은
+     몇 건을 받든 같은 값이라 100건을 받을 이유가 없다 — 전송량이 100분의 1이다. */
   var id = key_('NAVER_CLIENT_ID'), sec = key_('NAVER_CLIENT_SECRET');
   if (!id || !sec) throw new Error('스크립트 속성에 NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 을 넣어 주세요.');
   /* **한 번에 100건씩 받는다**(2026-08-31 사장님 지적 — *"총 후기가 1459건밖에 안 되나요?
@@ -654,7 +826,7 @@ function search_(kind, query, start) {
      실측: display 상한은 **100**(200 은 HTTP 400) · `start` 로 넘기면 **약 200 건까지**
      받힌다(start=201 부터 0건). 그래도 옛 30 건의 6.7 배다. */
   var url = API_BASE + '/' + kind + '?query=' + encodeURIComponent(query)
-    + '&display=' + PAGE_SIZE + '&start=' + (start || 1) + '&sort=date';
+    + '&display=' + (display || PAGE_SIZE) + '&start=' + (start || 1) + '&sort=date';
   var res = UrlFetchApp.fetch(url, {
     headers: { 'X-NCP-APIGW-API-KEY-ID': id, 'X-NCP-APIGW-API-KEY': sec },
     muteHttpExceptions: true
@@ -702,7 +874,26 @@ function sheet_(name, header) {
  * **`done:true` 가 나오면 한 바퀴가 끝난 것**이고 커서는 처음으로 돌아간다.
  */
 /* **수집이 끝나면 집계 캐시를 버린다** — 안 버리면 새로 모은 것이 최대 6시간 안 보인다 */
-function collectReviews() {
+/**
+ * 수집. 화면의 두 버튼이 `mode` 로 갈린다(2026-08-31 사장님 지시 —
+ * *"전체 재수집 버튼은 모든 바이럴을 최대한 긁어모으게 하고(시간 오래 걸려도 상관없음),
+ * 최근 일주일, 이런 식으로 최대한 빠르게 바이럴 수집할 수 있게 구축해 주세요"*).
+ *
+ *   `'full'`  — 처음부터 끝까지 전부 판다. 여러 번 이어 돌아 한 바퀴가 완성된다(≈10,400회)
+ *   `'quick'` — 이미 가진 글을 만나면 그 자리에서 멈춘다(≈1,000~2,000회)
+ *   그 밖    — 알아서: 이레에 한 번은 전부, 나머지 날은 새 글만
+ *
+ * **`full` 은 한 실행으로 안 끝난다.** 6분 한도가 있어 여러 번 이어 돌아야 하므로,
+ * 「전부 훑는 중」이라는 것을 **속성에 적어 두고** 이어달리기가 그것을 물려받는다 —
+ * 안 그러면 두 번째 실행부터 새 글만 훑어 반쪽이 된다.
+ */
+function collectReviews(mode) {
+  if (mode === 'full') {
+    /* 처음부터 다시 — 중간부터 돌면 앞쪽 매장이 이번 바퀴에서 빠진다 */
+    props_().setProperty('_forceFull', '1');
+    props_().setProperty('_cursor', '0');
+    props_().setProperty('_tail', '0');
+  }
   /* **둘이 동시에 돌지 못하게 막는다.** 이어달리기 트리거가 도는 중에 사장님이
      화면에서 「지금 수집」을 누르면 두 벌이 같은 시트에 쓴다 — 둘 다 자기 시작 시점의
      `seen` 을 들고 있어 **같은 글이 두 줄로 들어간다.** 30초를 기다려도 못 잡으면
@@ -712,27 +903,40 @@ function collectReviews() {
     return { calls: 0, got: 0, kept: 0, added: 0, error: '', busy: true,
       note: '이미 수집이 돌고 있습니다 — 끝나면 화면을 새로고침하세요.' };
   }
-  try { return sweep_(); } finally { lock.releaseLock(); }
+  try { return sweep_(mode); } finally { lock.releaseLock(); }
 }
 
 /** 실제 수집. `collectReviews` 가 자물쇠를 잡고 부른다. */
-function sweep_() {
+function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
   var seen = {}, i, k, n;
   var t0 = Date.now();
   var BUDGET_MS = 4.5 * 60 * 1000;      /* 6분 한도에서 여유를 둔다 — 시트 쓰기 시간이 남아야 한다 */
   var cursor = Number(props_().getProperty('_cursor') || 0);
   if (!(cursor >= 0) || cursor >= STORES.length) cursor = 0;
+  /* **매장 안 어디까지 갔는지도 기억한다**(2026-08-31). 예전에는 `_cursor`(매장 번호)만
+     적어서, **한 매장이 4.5분 안에 안 끝나면 다음 실행이 그 매장 꼬리 0부터 다시 돌았다**
+     — 진전이 0이라 커서가 영영 그 자리에 머문다. 실제로 65곳 중 52번째(80%)에서 서 있었고
+     사장님이 *"여러 번 눌러도 동일하다"* 고 하신 것이 이것이다.
+     `startAt` 을 따로 두는 이유: 아래에서 `cursor` 를 다시 쓰므로 「처음 시작한 매장」을
+     그것으로 판단하면 안 된다. */
+  var startAt = cursor;
+  var tail0 = Number(props_().getProperty('_tail') || 0);
+  if (!(tail0 >= 0) || tail0 >= TAILS.length) tail0 = 0;
+  var tailSave = 0;
   if (itemSheet.getLastRow() > 1) {
     var links = itemSheet.getRange(2, 6, itemSheet.getLastRow() - 1, 1).getValues();
     for (i = 0; i < links.length; i++) seen[String(links[i][0])] = true;
   }
 
+  /* 별칭 표는 **한 번만 읽는다** — 매장마다 속성을 읽으면 65번이 된다 */
+  var aliasTab = aliasAll_();
   var allNames = [];
   for (i = 0; i < STORES.length; i++) allNames.push(STORES[i][1]);
 
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var calls = 0, got = 0, kept = 0, add = [], err = '';
+  var saved = 0;   /* 아껴서 안 부른 호출 수 — 화면이 「얼마나 아꼈나」를 말한다 */
   var kinds = ['blog', 'cafearticle'];
 
   /* **일일 한도를 여기서 한 번만 읽는다**(2026-08-31 사장님 요청).
@@ -741,47 +945,110 @@ function sweep_() {
   var limit = dailyLimit_(), used0 = usage_().n, hitLimit = false;
   var over = function () { return used0 + calls >= limit; };
 
+  /* ── 이미 가진 글을 다시 받지 않는다 ─────────────────────────────
+   * 2026-08-31 사장님 지적: *"매일매일 최소 1회 이상 작동을 하는데 과거 수집된 자료가
+   * 매번 덮어씌워지면 너무 많은 토큰을 쓸데없이 낭비하게 될 것 같습니다."*
+   *
+   * **맞다. 한 바퀴 10,400회 중 거의 전부가 이미 가진 글이었다.** 링크로 걸러 버릴
+   * 뿐이지 받기는 다 받았다.
+   *
+   * **`sort=date` 라 새 글이 맨 앞에 온다.** 그래서 **한 쪽에 새 링크가 하나도 없으면
+   * 그 뒤는 전부 더 오래된 글**이고, 우리는 이미 갖고 있다 — 거기서 멈추면 된다.
+   * 첫 쪽부터 0건이면 그 질의는 새 글이 없는 것이라 한 번만 부르고 끝난다.
+   * 실측 기준 한 바퀴가 **10,400회 → 대략 1,000~2,000회**가 된다.
+   *
+   * **그물을 하나 남긴다 — 주 1회는 전부 훑는다.** 네이버 정렬을 100% 믿는 것이
+   * 이 최적화의 유일한 전제이고, 전제가 틀리면 **조용히 빠뜨린다**(0건이 아니라 조용히
+   * 적게 모으는 종류라 더 나쁘다). 이레에 한 번 전부 두드려 메운다.
+   *
+   * **화면이 어느 쪽으로 돌았는지 적는다** — 「오늘은 새 글만 훑었습니다」와
+   * 「오늘은 전부 훑었습니다」는 다른 말이고, 건수가 적은 이유가 되기 때문이다. */
+  var forceFull = String(props_().getProperty('_forceFull') || '') === '1';
+  var isFull;
+  if (mode === 'quick') {
+    /* **「최근 것만」은 전부 훑는 중이어도 그날은 빠르게 돈다** — 사장님이 지금
+       빨리 보고 싶어 누른 것이라, `_forceFull` 은 지우지 않고 그대로 둔다
+       (다음 이어달리기가 전체 훑기를 이어 간다). */
+    isFull = false;
+  } else if (mode === 'full' || forceFull) {
+    isFull = true;
+  } else {
+    var fullAt = String(props_().getProperty('_fullAt') || '');
+    isFull = true;
+    if (fullAt) {
+      var days = (new Date(stamp) - new Date(fullAt)) / 86400000;
+      isFull = !(days >= 0 && days < FULL_EVERY_DAYS);
+    }
+  }
+
   var stopped = false;
   for (i = cursor; i < STORES.length; i++) {
     /* **시간이 다 되면 그 자리에서 멈춘다** — 다음 실행이 여기서 이어받는다 */
-    if (Date.now() - t0 > BUDGET_MS) { cursor = i; stopped = true; break; }
+    if (Date.now() - t0 > BUDGET_MS) { cursor = i; tailSave = 0; stopped = true; break; }
     /* **한도도 같은 방식으로 멈춘다.** 커서를 남기므로 내일 이 매장부터 이어 간다 —
        한도에 걸렸다고 처음부터 다시 돌면 뒤쪽 매장은 영영 못 훑는다. */
-    if (over()) { cursor = i; stopped = true; hitLimit = true; break; }
+    if (over()) { cursor = i; tailSave = 0; stopped = true; hitLimit = true; break; }
     var code = STORES[i][0], name = STORES[i][1];
     var base = QUERY[name] || ('삼성스토어 ' + name);
     var mname = MATCH[name] || name;
+    /* **오류는 매장마다 새로 센다**(2026-08-31). 예전에는 `err` 하나를 한 바퀴 내내 들고
+       있어서, 한 매장에서 일시적 오류(타임아웃·HTTP 400)가 한 번 나면 **남은 매장 전부가
+       첫 호출에서 곧장 빠져나갔다** — 블로그 기본 질의 한 갈래만 훑고 지나가면서도
+       `stopped` 이 false 라 **「한 바퀴 완료」로 보고**했다. 조용히 반쪽만 모으는 종류다.
+       보고용 `err` 에는 **첫 오류만** 남긴다(마지막 것으로 덮으면 원인이 사라진다). */
+    var serr = '';
     /* **질의를 쪼개 여러 번 묻는다** — 한 질의는 200건이 상한이라 큰 매장을 다 못 받는다 */
-    for (var ti = 0; ti < TAILS.length; ti++) {
+    /* **줄임말도 함께 묻는다**(2026-08-31). 별칭 하나가 정식 점명과 같은 대접을 받아
+       꼬리말도 그대로 붙는다. **대조 이름에도 별칭을 넣어야 한다** — 안 넣으면
+       그 말로 찾아 놓고 「점명이 없다」로 전부 버려 한 건도 안 남는다. */
+    var als = aliasOf_(name, aliasTab);
+    var mnames = [mname], ai;
+    for (ai = 0; ai < als.length; ai++) mnames.push(als[ai]);
+    var qs = [], bq, tq;
+    for (ai = 0; ai <= als.length; ai++) {
+      bq = ai === 0 ? base : ('삼성스토어 ' + als[ai - 1]);
+      for (tq = 0; tq < TAILS.length; tq++) qs.push(bq + TAILS[tq]);
+    }
+    /* **이어받은 첫 매장만 저장해 둔 꼬리부터** 시작한다. 나머지 매장은 0부터다 —
+       `_tail` 은 `_cursor` 와 짝으로만 쓰이는 값이라 다른 매장에 쓰면 앞부분을 건너뛴다.
+       별칭이 지워져 질의 수가 줄었을 수 있으니 **범위를 벗어나면 0부터** 돈다. */
+    for (var ti = (i === startAt && tail0 < qs.length ? tail0 : 0); ti < qs.length; ti++) {
     /* **꼬리말 경계에서도 시간을 본다.** 매장 경계에서만 보던 시절에는 한 매장이
        32회(≈20초)라 괜찮았는데, `MAX_PAGES` 를 10 으로 올리며 **160회(≈1~3분)** 가 됐다.
        4.5분에 시작한 매장이 6분을 넘겨 **강제 종료되면 시트 쓰기까지 통째로 날아간다**
        (그때까지 받은 것이 전부 사라진다). 꼬리 하나는 20회(≈10~20초)라 여기서 끊으면
        안전하다. **그 매장을 다시 훑게 되지만 링크로 중복이 걸러지므로 손해는 호출뿐이다.** */
-    if (Date.now() - t0 > BUDGET_MS) { cursor = i; stopped = true; break; }
-    var query = base + TAILS[ti];
+    if (Date.now() - t0 > BUDGET_MS) { cursor = i; tailSave = ti; stopped = true; break; }
+    var query = qs[ti];
     for (k = 0; k < kinds.length; k++) {
       /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
       for (var page = 0; page < MAX_PAGES; page++) {
         /* 한 매장이 최대 32회(2종 x 꼬리말 8 x 2쪽)를 쓴다 — 매장 단위로만 보면
            한도를 그만큼 넘길 수 있어 호출 직전에도 본다 */
-        if (over()) { hitLimit = true; stopped = true; cursor = i; break; }
+        if (over()) { hitLimit = true; stopped = true; cursor = i; tailSave = ti; break; }
         var j;
         try { j = search_(kinds[k], query, page * PAGE_SIZE + 1); calls++; }
-        catch (e) { err = String(e); break; }
-        if (j.error) { err = kinds[k] + ':' + j.error; break; }
+        catch (e) { serr = String(e); break; }
+        if (j.error) { serr = kinds[k] + ':' + j.error; break; }
         var items = j.items || [];
         if (!items.length) break;                      /* 더 없으면 다음 쪽을 안 두드린다 */
+        /* **이미 가진 링크를 만났는가.** 이것이 「여기서 멈춰도 된다」는 신호다 —
+           「새 링크가 0건」으로 잡으면 안 된다. 우리 매장 글이 아닌 것은 저장하지 않아
+           **영원히 새 링크로 보이기** 때문에 그 신호는 절대 0이 되지 않는다. */
+        var hitSeen = false;
         for (n = 0; n < items.length; n++) {
           var it = items[n];
           got++;
           var text = (it.title || '') + ' ' + (it.description || '');
-          if (!hasStore_(text, mname)) continue;
+          if (!hasAny_(text, mnames)) continue;
           if (isNoise_(text)) continue;
           if (belongsToOther_(text, mname, allNames)) continue;
           kept++;
           var link = String(it.link || '');
-          if (!link || seen[link]) continue;
+          if (!link) continue;
+          /* **이미 가진 글을 만났다** — `sort=date` 라 이 아래는 전부 더 오래된 글이고,
+             그것을 저장한 그날 이미 훑은 영역이다. 쪽 루프가 여기서 멈춘다. */
+          if (seen[link]) { hitSeen = true; continue; }
           seen[link] = true;
           var post = String(it.postdate || '');
           add.push([
@@ -801,15 +1068,24 @@ function sweep_() {
             /* **제목만 본다.** 카페 이름을 넣었더니 다이렉트웨딩 카페의 「설치 후기」가
                카페 이름의 '웨딩' 때문에 「혼수」가 되고, 입주예정자 카페의 「구매 후기」가
                「입주」가 됐다(실물 표본에서 잡았다). **카페 이름은 글쓴이가 고른 말이 아니다.** */
-            kindOf_(String(it.title || ''))
+            kindOf_(String(it.title || '')),
+            /* **매니저 이름 — 제목과 본문(해시태그)을 함께 훑는다**(2026-08-31 사장님 지시).
+               여기서 뽑아 담아야 뜻이 있다 — 본문은 저장하지 않으므로 나중에는 못 뽑는다.
+               여럿이면 세로줄로 잇는다. */
+            mgrFind_(text).join('|')
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
+        /* **이미 가진 영역에 닿았으면 더 안 판다**(2026-08-31). 이것이 매일 10,400회를
+           1,000~2,000회로 줄인다. **주 1회 전체 훑기에서는 끄고** 처음부터 끝까지 판다 —
+           네이버 정렬을 믿는 최적화라 그물이 있어야 한다. */
+        if (!isFull && hitSeen) { saved += (MAX_PAGES - page - 1); break; }
       }
-      if (err || hitLimit) break;
+      if (serr || hitLimit) break;
     }
-    if (err || hitLimit) break;
+    if (serr || hitLimit) break;
     }   /* TAILS */
+    if (serr && !err) err = serr;   /* 보고용 — 첫 오류만 남긴다 */
     /* **꼬리말 도중에 멈췄으면 여기서 매장 루프도 끊는다.** 안 끊으면 다음 매장으로
        넘어간 뒤 매장 경계의 시간 검사가 `cursor = i+1` 을 적어 **반만 훑은 매장을
        건너뛴다.** 여기서 끊어야 커서가 그 매장에 머문다. */
@@ -820,7 +1096,36 @@ function sweep_() {
        아니라 정상 응답**이라 130 번을 다 돌았다(2026-08-31 실측: `calls:130 · got:0 ·
        error:"cafearticle:HTTP 401"`). 지금은 무료라 괜찮지만 유료로 바뀌면 헛돈
        130 회가 그대로 요금이 된다. 401·403 은 더 돌아도 결과가 같다. */
-    if (err && (err.indexOf('스크립트 속성') >= 0 || err.indexOf('401') >= 0 || err.indexOf('403') >= 0)) break;
+    if (serr && (serr.indexOf('스크립트 속성') >= 0 || serr.indexOf('401') >= 0 || serr.indexOf('403') >= 0)) break;
+  }
+
+  /* ── 매니저 이름 훑기 ────────────────────────────────────────
+   * 2026-08-31 사장님 제안: *"① 한 번이라도 언급되는 사람 이름을 모아 놓는다
+   * ② 해당 이름으로 검색해서 몇 건 나오는지 건수를 파악한다"*.
+   *
+   * **이름 하나에 호출 1회**다 — 네이버가 `total`(전체 건수)을 한 번에 준다.
+   * 20명이면 20회로, 한 바퀴 10,400회에 견주면 사실상 공짜다.
+   *
+   * **그런데 이 숫자는 우리가 가진 후기 건수와 다른 것이다.** 이쪽은 *"네이버 전체에
+   * 그 이름 + 그 매장으로 몇 건이 있는가"* 이고, 우리 집계는 *"우리가 모은 6,799건 중
+   * 몇 건이 그 사람을 말했는가"* 다. **화면이 둘을 갈라 적는다** — 합치면 거짓이 된다.
+   *
+   * 질의에 **매장 이름을 함께 넣는다** — 이름만으로 물으면 남의 동명이인이 섞인다.
+   */
+  var mgrCalls = 0;
+  if (!stopped && !err) {
+    var roster = mgrRoster_();                       /* 지금까지 모은 이름 — 언급 많은 순 */
+    var nv = {}, ri;
+    for (ri = 0; ri < roster.length; ri++) {
+      if (Date.now() - t0 > BUDGET_MS) break;
+      if (over()) { hitLimit = true; break; }
+      try {
+        var mq = search_('blog', '삼성스토어 ' + roster[ri].store + ' ' + roster[ri].name, 1, 1);
+        calls++; mgrCalls++;
+        if (mq && !mq.error) nv[roster[ri].name] = Number(mq.total) || 0;
+      } catch (e4) { break; }                        /* 부수 기능이라 여기서 조용히 접는다 */
+    }
+    if (mgrCalls) props_().setProperty('_mgrNaver', JSON.stringify(nv));
   }
 
   /* ── 관심 카페 훑기 ──────────────────────────────────────────
@@ -892,8 +1197,23 @@ function sweep_() {
   if (!stopped && !err && !over()) { try { rivalRun = collectRival(); } catch (e3) { rivalRun = { error: String(e3) }; } }
 
   /* 한 바퀴를 마쳤으면 커서를 처음으로 — 다음 실행이 새로 훑는다 */
-  if (!stopped) cursor = 0;
+  /* **한 바퀴를 전부 훑어 마쳤으면 그 날짜를 적는다** — 다음 이레 동안은 새 글만 훑는다.
+     중간에 멈춘 실행은 적지 않는다(반만 훑고 「전부 훑었다」고 하면 그물이 뚫린다). */
+  if (!stopped && isFull) {
+    props_().setProperty('_fullAt', stamp);
+    /* 전체 훑기를 마쳤으니 표식을 내린다 — 안 내리면 매일 전부 훑어 아낀 것이 없어진다 */
+    props_().deleteProperty('_forceFull');
+  }
+  if (!stopped) { cursor = 0; tailSave = 0; }
   props_().setProperty('_cursor', String(cursor));
+  props_().setProperty('_tail', String(tailSave));
+
+  /* **여기서 집계 캐시를 한 번 더 버린다**(2026-08-31). 위쪽은 `add.length` 가 있을 때만
+     버리는데, **새 글이 0건이어도 `커서`·`오늘 쓴 호출`·`마지막 실행`은 바뀐다.**
+     그것들이 전부 집계에 들어가므로 안 버리면 **최대 6시간 옛 값이 화면에 굳는다** —
+     실제로 전진하고 있는데 진행률이 80% 에서 멈춰 보이고, 사장님이 몇 번을 눌러도
+     화면이 똑같다. 위쪽 것은 그대로 둔다(6분 한도로 강제 종료되면 여기까지 못 온다). */
+  sumCacheClear_();
 
   /* ── 스스로 이어 돈다 ──────────────────────────────────────────
      **시간이 모자라 멈춘 것이면 1분 뒤 자기를 다시 부른다.** 이것이 없으면 사람이
@@ -912,6 +1232,9 @@ function sweep_() {
        사장님이 버튼을 다시 누를지 말지 안다. */
     chained: chained,
     calls: calls, got: got, kept: kept, added: add.length, error: err,
+    /* **오늘 어느 쪽으로 돌았는지 밝힌다** — 「새 글만 훑었다」와 「전부 훑었다」는
+       다른 말이고, 새 글이 적은 이유가 되기 때문이다. `saved` 는 아껴서 안 부른 횟수다. */
+    full: isFull, saved: saved,
     /* **어디까지 했는지 화면이 알아야 한다** — 안 그러면 *"왜 65곳이 아니라 20곳만 돌았지"*
        가 된다. `done:false` 면 「이어서 수집」을 한 번 더 누르면 된다. */
     done: !stopped, from: cursor, stores: STORES.length,
@@ -1090,6 +1413,12 @@ function readAll_() {
       /* **옛 줄에는 kind 칸이 없다** — 그때는 제목으로 그 자리에서 판정한다.
          다시 수집하지 않아도 옛 줄이 유형을 갖는다(날짜를 되살린 것과 같은 방식). */
       kind: String(v[i][9] || '') || kindOf_(String(v[i][4])),
+      /* **매니저 이름.** 수집할 때 제목+본문(해시태그)에서 뽑아 담는다.
+         **옛 줄에는 이 칸이 없어** 그때는 제목에서만 뽑는다 — 본문을 저장하지 않았으므로
+         되찾을 방법이 없다. 화면이 그 사실을 밝힌다(있는 척하지 않는다). */
+      mgr: String(v[i][10] || '') || mgrFind_(String(v[i][4])).join('|'),
+      /* 그 값이 본문까지 본 것인지 — 화면이 「제목에서만 뽑은 옛 글」을 가려 말한다 */
+      mgrFull: !!String(v[i][10] || ''),
       /* 작성일을 아는가 — 화면이 「추정」을 밝히는 데 쓴다. **있는 척하지 않는다.** */
       dated: post.length === 8,
       /* **지도 칸을 여기서 붙인다.** 화면이 점코드로 다시 판정하려면 `AREA` 65줄과
@@ -1237,11 +1566,43 @@ function summary_() {
 
   /* 마지막 수집이 언제 어떻게 끝났는지 함께 낸다 — **실패를 0 으로 그리지 않는다.**
      이 저장소가 로그 파이프라인에서 이미 데인 자리다(실패를 성공으로 읽어 전 항목 0). */
-  var log = sheet_(SHEET_LOG, LOG_HEADER), last = null;
-  if (log.getLastRow() > 1) {
-    var lv = log.getRange(log.getLastRow(), 1, 1, LOG_HEADER.length).getValues()[0];
-    last = { at: String(lv[0]), calls: lv[1], got: lv[2], kept: lv[3], added: lv[4], error: String(lv[5] || '') };
+  /* ── 매니저 언급 순위 ─────────────────────────────────────────────
+     2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"*.
+     **한 글에 같은 사람이 여러 번 나와도 한 번만 센다** — 안 그러면 이름을 많이 적는
+     글 한 편이 순위를 뒤집는다(사용 로그의 `logOnce` 와 같은 규칙).
+     **매장도 함께 센다** — 어느 매장 매니저인지가 곧 그 사람을 특정한다(동명이인 방지). */
+  var mgrN = {}, mgrStore = {}, mgrFullN = 0, mm, mi, mk;
+  for (i = 0; i < rows.length; i++) {
+    if (rows[i].mgrFull) mgrFullN++;
+    if (!rows[i].mgr) continue;
+    mm = String(rows[i].mgr).split('|');
+    for (mi = 0; mi < mm.length; mi++) {
+      mk = mm[mi];
+      if (!mk) continue;
+      mgrN[mk] = (mgrN[mk] || 0) + 1;
+      if (!mgrStore[mk]) mgrStore[mk] = {};
+      mgrStore[mk][rows[i].storeName] = (mgrStore[mk][rows[i].storeName] || 0) + 1;
+    }
   }
+  var mgrTop = [];
+  for (mk in mgrN) {
+    if (!mgrN.hasOwnProperty(mk)) continue;
+    /* 그 사람이 가장 많이 언급된 매장 — 「어느 매장 분인가」를 화면이 적는다 */
+    var bestS = '', bestN = 0, sk;
+    for (sk in mgrStore[mk]) if (mgrStore[mk][sk] > bestN) { bestN = mgrStore[mk][sk]; bestS = sk; }
+    mgrTop.push({ name: mk, n: mgrN[mk], store: bestS });
+  }
+  mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
+  mgrTop = mgrTop.slice(0, 20);   /* 화면은 10을 쓰고 나머지는 「더 보기」 몫이다 */
+  /* **네이버 전체 검색 건수를 함께 붙인다**(사장님 제안 ②). 우리 건수와 **다른 숫자**라
+     화면이 갈라 적는다 — 합치면 거짓이 된다. 아직 안 훑었으면 `null` 이다(0 이 아니다). */
+  var nvTab = {};
+  try { nvTab = JSON.parse(props_().getProperty('_mgrNaver') || '{}') || {}; } catch (e5) { nvTab = {}; }
+  for (mi = 0; mi < mgrTop.length; mi++) {
+    mgrTop[mi].naver = nvTab.hasOwnProperty(mgrTop[mi].name) ? nvTab[mgrTop[mi].name] : null;
+  }
+
+  var last = lastRun_();
 
   return {
     ok: true, at: new Date().toISOString(),
@@ -1259,6 +1620,14 @@ function summary_() {
        *"이어서 수집하기 버튼은 안 나옵니다"*). 한 바퀴가 6분 한도에 걸려 매장 중간에서
        멈추는데, 화면이 그 사실을 안 적으면 **갤러리아광교가 왜 29건인지** 알 길이 없다. */
     cursor: Number(props_().getProperty("_cursor") || 0),
+    /* **그 매장 안에서 몇 번째 질의까지 갔는가.** 커서만으로는 *"52번째에서 멈췄다"* 까지밖에
+       못 말한다 — 이 값이 있어야 **진전이 있는지 없는지**를 가를 수 있다(같은 커서인데
+       이 값이 오르면 돌고 있는 것이고, 둘 다 그대로면 갇힌 것이다). */
+    tail: Number(props_().getProperty("_tail") || 0),
+    /* **지금 전부 훑는 중인가** — 화면이 「전체 재수집이 도는 중입니다」를 적어야
+       사장님이 「왜 이렇게 오래 걸리지」 하고 다시 누르지 않는다. */
+    forceFull: String(props_().getProperty("_forceFull") || "") === "1",
+    fullAt: String(props_().getProperty("_fullAt") || ""),
     /* **지금 스스로 이어 돌고 있는가.** 이것이 참이면 화면은 「이어서 수집」을 권하지
        않고 *"1분마다 자동으로 이어 갑니다"* 를 적는다 — 안 그러면 사장님이 버튼을
        또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
@@ -1282,7 +1651,7 @@ function summary_() {
        `naver:false` 는 0 이 아니라 **못 닿는 곳**이라 건수를 적지 않는다. */
     watch: watch_(byCafe),
     /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
-    dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: SWEEP_CALLS,
+    dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
        함께수집이되어야합니다"*). 수집은 처음부터 `link` 열에 담고 있었는데 **화면이
@@ -1293,6 +1662,11 @@ function summary_() {
        그대로 자르면 이번엔 **카페가 한 줄도 안 간다** — 방향만 바뀌고 같은 사고다.
        **양쪽에서 절반씩** 담아 두 갈래가 다 보이게 한다(화면의 소스 필터가 뜻을 가지려면
        두 갈래가 다 있어야 한다). */
+    /* **매니저 언급 순위**(사장님 지시). `mgrFull` 은 **본문까지 본 글 수** —
+       나머지는 제목에서만 뽑은 옛 글이라 화면이 그 사실을 밝혀야 한다. */
+    mgrTop: mgrTop, mgrFull: mgrFullN, mgrRows: rows.length,
+    /* 등록된 줄임말 — 화면이 목록을 보여주고 사장님이 더 넣으신다 */
+    alias: aliasAll_(),
     lastRun: last,
     recent: rows.filter(function (r) { return r.dated; }).slice(0, 1500)
       .concat(rows.filter(function (r) { return !r.dated; }).slice(0, 1500))
@@ -1544,9 +1918,70 @@ function sumCacheClear_() {
  * **`doGet` 이 자료를 심지 않게 되면서 생긴 창구다.** 화면은 뼈대만 먼저 받고
  * 여기서 자료를 채운다 — 그동안 「불러오는 중」을 보여준다.
  */
+/* **상태 값은 캐시를 타지 않는다**(2026-08-31). 집계(13초)는 담아 두는 것이 맞지만
+   **「어디까지 갔나·오늘 얼마나 썼나·마지막 실행이 언제인가」는 읽기가 싸고, 담아 두면
+   화면이 거짓말을 한다** — 실제로 수집이 전진하는데 진행률이 80% 에 굳어 사장님이
+   몇 번을 눌러도 화면이 똑같았다.
+
+   **수집 끝에서 캐시를 버리는 것만으로는 부족하다** — 실행이 6분 한도로 강제 종료되면
+   그 줄에 닿지 못해 캐시가 그대로 남는다. 그러니 **읽을 때마다 새로 읽어 덮어쓴다.**
+   이것들은 스크립트 속성·시트 마지막 줄이라 값싸다. */
+/* 마지막 수집이 언제 어떻게 끝났는지. **집계와 따로 읽을 수 있어야 한다** —
+   캐시가 살아 있어도 이 값은 새로 읽어 화면이 지금을 말하게 한다. */
+/* 지금까지 모은 매니저 이름 명부 — 언급 많은 순 상위 20명.
+   **매장을 함께 들고 있어야 한다** — 이름만으로 네이버에 물으면 남의 동명이인이 섞인다. */
+function mgrRoster_() {
+  var s = sheet_(SHEET_ITEMS, HEADER);
+  if (s.getLastRow() < 2) return [];
+  var v = s.getRange(2, 3, s.getLastRow() - 1, HEADER.length - 2).getValues();  /* storeName..mgr */
+  var n = {}, st = {}, i, j, mm, k;
+  for (i = 0; i < v.length; i++) {
+    var store = String(v[i][0] || '');
+    var raw = String(v[i][8] || '') || mgrFind_(String(v[i][2] || '')).join('|');
+    if (!raw) continue;
+    mm = raw.split('|');
+    for (j = 0; j < mm.length; j++) {
+      if (!mm[j]) continue;
+      n[mm[j]] = (n[mm[j]] || 0) + 1;
+      if (!st[mm[j]]) st[mm[j]] = {};
+      st[mm[j]][store] = (st[mm[j]][store] || 0) + 1;
+    }
+  }
+  var out = [];
+  for (k in n) {
+    if (!n.hasOwnProperty(k)) continue;
+    var bs = '', bn = 0, sk;
+    for (sk in st[k]) if (st[k][sk] > bn) { bn = st[k][sk]; bs = sk; }
+    out.push({ name: k, n: n[k], store: bs });
+  }
+  out.sort(function (a, b) { return b.n - a.n; });
+  return out.slice(0, 20);
+}
+
+function lastRun_() {
+  var log = sheet_(SHEET_LOG, LOG_HEADER);
+  if (log.getLastRow() <= 1) return null;
+  var lv = log.getRange(log.getLastRow(), 1, 1, LOG_HEADER.length).getValues()[0];
+  return { at: String(lv[0]), calls: lv[1], got: lv[2], kept: lv[3], added: lv[4], error: String(lv[5] || '') };
+}
+
+function freshState_(d) {
+  try {
+    d.cursor = Number(props_().getProperty('_cursor') || 0);
+    d.tail = Number(props_().getProperty('_tail') || 0);
+    d.dayUsed = usage_().n;
+    d.chainOn = chainOn_();
+    d.chainErr = String(props_().getProperty('_chainErr') || '');
+    d.forceFull = String(props_().getProperty('_forceFull') || '') === '1';
+    d.fullAt = String(props_().getProperty('_fullAt') || '');
+    d.lastRun = lastRun_();
+  } catch (e) { /* 못 읽어도 집계는 그대로 쓴다 */ }
+  return d;
+}
+
 function getSummary() {
   var hit = sumCacheGet_();
-  if (hit) { hit.cached = true; return hit; }
+  if (hit) { hit.cached = true; return freshState_(hit); }
   var d = summary_();
   sumCachePut_(d);
   return d;

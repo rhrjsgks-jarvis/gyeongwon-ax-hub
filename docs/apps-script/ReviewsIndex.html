@@ -276,6 +276,40 @@
   /* 못 닿는 곳 — 0 건이 아니라 「받을 수 없다」다. 누를 수도 없다 */
   .wchip.na { cursor: default; color: var(--mute); background: #fff; border-style: dashed; }
   .wchip.na:hover { background: #fff; }
+  /* ── 매니저 순위 · 줄임말 등록 ──────────────────────────────────────
+     **두 숫자를 나란히 두되 굵기로 가른다** — 우리 후기 건수가 주인공이고
+     네이버 전체 건수는 참고다(동명이인이 섞이므로 같은 무게로 두면 안 된다). */
+  .mrow { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #F1F3F9; }
+  .mrow:last-child { border-bottom: 0; }
+  .mrk { width: 18px; text-align: right; font-size: 11px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .mrk.top { color: var(--blue); font-weight: 800; }
+  .mnm { font-weight: 700; font-size: 13px; }
+  .mst { font-size: 11px; color: var(--mute); }
+  .mbar { flex: 1; height: 6px; background: #EEF1F8; border-radius: 3px; overflow: hidden; }
+  .mbar i { display: block; height: 100%; background: var(--blue); border-radius: 3px; transition: width .55s ease-out; }
+  .mn { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+  .mnv { font-size: 10.5px; color: var(--mute); min-width: 52px; text-align: right; }
+  .alias-add { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0 6px; }
+  .alias-add input {
+    flex: 1; min-width: 120px; border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 9px; font-size: 12px; font-family: inherit;
+  }
+  .alias-add button {
+    border: 1px solid var(--blue); background: var(--blue); color: #fff; border-radius: 8px;
+    padding: 6px 13px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .alias-add button[disabled] { opacity: .5; cursor: default; }
+  .arow { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid #F1F3F9; font-size: 12px; }
+  .arow:last-child { border-bottom: 0; }
+  .arow .as { font-weight: 700; min-width: 96px; }
+  .arow .aw { flex: 1; color: #374151; }
+  .arow .ax {
+    border: 1px solid var(--line); background: #fff; border-radius: 7px; padding: 2px 8px;
+    font-size: 11px; cursor: pointer; font-family: inherit; color: var(--mute);
+  }
+  .arow .ax:hover { border-color: #DC2626; color: #DC2626; }
+  /* 코드 표에 있는 것은 지울 수 없다 — 지워도 다음 배포에 되살아나 「안 지워진다」가 된다 */
+  .arow .abase { font-size: 10.5px; color: var(--mute); }
   /* ── 지도 — 경원 관할(경기 5개 지역 · 강원 4개 시) ────────────────────────
      색은 삼성 블루 3단계다. **건수 그대로가 아니라 최대치 대비 비율**로 나눈다 —
      절대 기준을 박으면 후기가 늘어난 달에 온 지도가 새까매진다.
@@ -449,7 +483,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <div class="hrow">
       <span class="stamp" id="stamp">불러오는 중…</span>
       <span class="prog" id="prog"></span>
-      <button class="btn" id="run">지금 수집</button>
+      <!-- 2026-08-31 사장님 지시: *"전체 재수집 버튼은 모든 바이럴을 최대한 긁어모으게 하고
+           (시간 오래 걸려도 상관없음), 최근 일주일, 이런 식으로 최대한 빠르게 바이럴 수집할 수
+           있게 구축해 주세요"*. **두 버튼이 하는 일이 다르다** — 아래 안내가 그것을 적는다. -->
+      <button class="btn" id="run">최근 것만 수집</button>
+      <button class="btn" id="runfull">전체 재수집</button>
       <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
       <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
@@ -533,6 +571,30 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            아래 막대는 상위 12곳뿐이라 2~3건짜리는 영영 안 올라온다. -->
       <div class="watch" id="watch"></div>
       <div id="cafes"></div>
+    </div>
+    <div class="card" data-card="mgr">
+      <h2>가장 많이 언급되는 매니저</h2>
+      <!-- 2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"* ·
+           *"이름을 제목과 해시태그 내용에서 모두 검출해 주세요"*.
+           **두 숫자를 갈라 적는다** — ⓐ 우리 후기 중 언급 수(정확) ⓑ 네이버 전체
+           검색 건수(넓지만 동명이인 포함). 합치면 화면이 거짓말을 한다. -->
+      <div class="sub" id="mgr-sub">–</div>
+      <div id="mgrs"></div>
+    </div>
+    <div class="card" data-card="alias">
+      <h2>줄임말 등록</h2>
+      <!-- 2026-08-31 사장님 요청: *"점명이 긴 경우 줄임말을 사용하는 경우도 있을 것
+           같습니다 … 신세계사우스시티=신사시티, 갤러리아광교=갤광교"*.
+           **별칭 하나가 한 매장 몫(160회)을 더 쓴다** — 화면이 그것을 밝힌다. -->
+      <div class="sub" id="alias-sub">–</div>
+      <div class="alias-add">
+        <input id="alias-store" list="alias-stores" placeholder="매장 이름 (예: 갤러리아광교)" autocomplete="off">
+        <datalist id="alias-stores"></datalist>
+        <input id="alias-word" placeholder="줄임말 (세 글자 이상)" autocomplete="off">
+        <button id="alias-ok">등록</button>
+      </div>
+      <div id="alias-msg" class="sub"></div>
+      <div id="alias-list"></div>
     </div>
   </div>
 
@@ -703,6 +765,137 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 
   /* 관심 카페 — 시트의 카페 이름은 전체 이름(`레몬테라스 [인테리어,리폼,…]`)이라
      **부분일치로 거른다.** 그래서 `cafeFilter`(정확 일치)와 별도 손잡이가 필요하다. */
+  /* ── 가장 많이 언급되는 매니저 ──────────────────────────────────────
+     **두 숫자를 갈라 적는다** — 「우리 후기 중 언급」이 주인공이고 「네이버 전체 검색」은
+     참고다(동명이인이 섞인다). 같은 무게로 두면 화면이 거짓말을 한다. */
+  function renderMgrs() {
+    var el = document.getElementById('mgrs'); if (!el) return;
+    var top = (DATA.mgrTop || []).slice(0, 10);
+    var sub = document.getElementById('mgr-sub');
+    if (!top.length) {
+      el.innerHTML = '';
+      if (sub) sub.textContent = '아직 이름이 잡힌 후기가 없습니다.';
+      return;
+    }
+    /* **본문까지 본 글이 몇 건인지 밝힌다.** 옛 글은 제목에서만 뽑을 수 있다 —
+       본문을 저장하지 않았으므로 되찾을 방법이 없다. 감추면 순위가 실제보다 낮게
+       보이는 이유를 아무도 모른다. */
+    if (sub) {
+      var full = DATA.mgrFull || 0, all = DATA.mgrRows || 0;
+      sub.innerHTML = '제목과 본문(해시태그)에서 뽑습니다 · '
+        + (full >= all
+            ? '<b>' + nf(all) + '건 전부</b> 본문까지 봤습니다'
+            : '<b>' + nf(full) + '건</b>은 본문까지, 나머지 <b>' + nf(all - full)
+              + '건</b>은 <b>제목에서만</b> 봤습니다(옛 글은 본문을 저장하지 않았습니다)');
+    }
+    var max = top[0].n || 1;
+    el.innerHTML = top.map(function (m, i) {
+      /* 네이버 전체 건수는 **아직 안 훑었으면 `null`** 이다 — 0 으로 적으면
+         「그 이름으로 글이 없다」가 되어 거짓이 된다. */
+      var nv = (m.naver === null || m.naver === undefined)
+        ? '<span class="mnv" title="다음 수집 때 셉니다">–</span>'
+        : '<span class="mnv" title="네이버 전체 검색 건수(동명이인 포함)">네이버 ' + nf(m.naver) + '</span>';
+      return '<div class="mrow">'
+        + '<span class="mrk' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</span>'
+        + '<span><span class="mnm">' + esc(m.name) + '</span>'
+        + (m.store ? ' <span class="mst">' + esc(m.store) + '</span>' : '') + '</span>'
+        + '<span class="mbar"><i style="width:' + Math.round(m.n / max * 100) + '%"></i></span>'
+        + '<span class="mn">' + nf(m.n) + '</span>' + nv
+        + '</div>';
+    }).join('');
+  }
+
+  /* ── 줄임말 등록 ────────────────────────────────────────────────────
+     **코드 표에 있는 것은 지울 수 없다** — 지워도 다음 배포에 되살아나 사장님이
+     「지워지지 않는다」고 느낀다. 그래서 「기본」으로 적고 삭제 단추를 달지 않는다. */
+  var ALIAS_BASE = { '신세계사우스시티': ['신사시티'], '갤러리아광교': ['갤광교'] };
+
+  function renderAlias() {
+    var box = document.getElementById('alias-list'); if (!box) return;
+    var tab = DATA.alias || {}, keys = Object.keys(tab).sort();
+    var sub = document.getElementById('alias-sub');
+    if (sub) {
+      var n = 0;
+      keys.forEach(function (k) { n += tab[k].length; });
+      sub.innerHTML = '매장당 <b>5개</b>까지 · 등록하면 <b>삼성스토어 그 줄임말</b>로 올라온 후기도'
+        + ' 그 매장 후기로 잡힙니다 · <b>세 글자 이상</b>만 받습니다'
+        + '<br>지금 <b>' + n + '개</b> 등록 · 하나가 한 바퀴에 <b>호출 160회</b>를 더 씁니다'
+        + ' (한 바퀴 최대 <b>' + nf(DATA.sweep || 0) + '회</b>)';
+    }
+    /* 매장 이름 자동완성 — 오타로 넣으면 영영 안 쓰이므로 고를 수 있게 한다 */
+    var dl = document.getElementById('alias-stores');
+    if (dl && !dl.childElementCount) {
+      var names = Object.keys(DATA.byStore || {}).sort();
+      dl.innerHTML = names.map(function (s) { return '<option value="' + esc(s) + '">'; }).join('');
+    }
+    if (!keys.length) { box.innerHTML = '<div class="sub">아직 등록된 줄임말이 없습니다.</div>'; return; }
+    box.innerHTML = keys.map(function (k) {
+      var base = ALIAS_BASE[k] || [];
+      return '<div class="arow"><span class="as">' + esc(k) + '</span><span class="aw">'
+        + tab[k].map(function (w) {
+            return esc(w) + (base.indexOf(w) >= 0 ? ' <span class="abase">(기본)</span>' : '');
+          }).join(' · ')
+        + '</span>'
+        + (tab[k].filter(function (w) { return base.indexOf(w) < 0; }).length
+            ? '<button class="ax" data-store="' + esc(k) + '">직접 넣은 것 지우기</button>' : '')
+        + '</div>';
+    }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.ax'), function (b) {
+      b.onclick = function () { saveAlias(b.getAttribute('data-store'), []); };
+    });
+  }
+
+  function saveAlias(store, words) {
+    var msg = document.getElementById('alias-msg');
+    var ok = document.getElementById('alias-ok');
+    if (ok) ok.disabled = true;
+    if (msg) msg.textContent = '저장하는 중입니다…';
+    if (!(window.google && google.script && google.script.run)) {
+      if (msg) msg.textContent = '미리보기에서는 저장되지 않습니다.';
+      if (ok) ok.disabled = false;
+      return;
+    }
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (ok) ok.disabled = false;
+        if (!r || !r.ok) { if (msg) msg.textContent = (r && r.error) || '저장하지 못했습니다.'; return; }
+        DATA.alias = r.alias; DATA.sweep = r.sweep;
+        renderAlias();
+        /* **전면 재수집이 필요하다는 것을 반드시 적는다** — 안 적으면 사장님이 등록만
+           하고 기다리다가 *"등록했는데 안 잡힌다"* 가 된다. */
+        if (msg) msg.innerHTML = '저장했습니다. <b>이제 「지금 수집」을 누르면 처음부터 전부 다시 훑습니다</b>'
+          + ' — 그 줄임말로만 올라온 옛 후기까지 찾습니다.';
+        var w = document.getElementById('alias-word'); if (w) w.value = '';
+      })
+      .withFailureHandler(function (e) {
+        if (ok) ok.disabled = false;
+        if (msg) msg.textContent = '저장하지 못했습니다 — ' + esc((e && e.message) || '');
+      })
+      .setAlias(store, words);
+  }
+
+  function wireAlias() {
+    var ok = document.getElementById('alias-ok');
+    var st = document.getElementById('alias-store');
+    var wd = document.getElementById('alias-word');
+    if (!ok || !st || !wd) return;
+    ok.onclick = function () {
+      var store = st.value.trim(), word = wd.value.trim();
+      var msg = document.getElementById('alias-msg');
+      if (!store || !word) { if (msg) msg.textContent = '매장 이름과 줄임말을 모두 넣어 주세요.'; return; }
+      if (word.replace(/\s+/g, '').length < 3) {
+        /* **막는 이유를 적는다.** 짧은 별칭 하나가 남의 매장 글을 통째로 끌어온다 */
+        if (msg) msg.textContent = '줄임말은 세 글자 이상이어야 합니다 — 짧으면 다른 매장 글까지 끌어옵니다.';
+        return;
+      }
+      var cur = ((DATA.alias || {})[store] || []).slice();
+      if (cur.indexOf(word) >= 0) { if (msg) msg.textContent = '이미 등록된 줄임말입니다.'; return; }
+      cur.push(word);
+      saveAlias(store, cur);
+    };
+    wd.onkeydown = function (e) { if (e.key === 'Enter') ok.click(); };
+  }
+
   function renderWatch() {
     var el = document.getElementById('watch'); if (!el) return;
     var ws = DATA.watch || [];
@@ -1598,7 +1791,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     /* **스스로 이어 도는 중이면 사람을 부르지 않는다.** 이 구분이 없으면 사장님이
        버튼을 또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
     var auto = !!DATA.chainOn;
-    if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '지금 수집');
+    if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '최근 것만 수집');
+    /* **전체 재수집이 도는 중이면 그렇게 적는다** — 안 적으면 「왜 이렇게 오래
+       걸리지」 하고 다시 누르게 되고, 그러면 자물쇠에 막힌다. */
+    var fb = document.getElementById('runfull');
+    if (fb && !fb.disabled) fb.textContent = DATA.forceFull ? '전부 훑는 중' : '전체 재수집';
     var sb = document.getElementById('stop');
     if (sb) sb.hidden = !auto;
     var e = document.getElementById('prog');
@@ -1609,6 +1806,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         : (mid
             ? '지난 수집이 ' + tot + '곳 중 ' + cur + '번째(' + pctv + '%)에서 멈췄습니다 — 이어서 눌러 주세요'
             : (tot ? tot + '곳 한 바퀴를 마친 상태입니다' : ''));
+      /* **어느 쪽으로 도는지 함께 적는다** — 「전부 훑는 중」과 「새 글만」은
+         걸리는 시간이 다르고, 건수가 적은 이유가 되기 때문이다. */
+      if (DATA.forceFull) e.textContent += ' · 전체 재수집 중(오래 걸립니다)';
       e.className = 'prog' + (auto ? ' auto' : (mid ? ' mid' : ''));
     }
     /* **치울 것이 있을 때만 「중복 정리」를 띄운다.** 개수를 함께 적어야
@@ -1640,6 +1840,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     lastSig = sig;
     wireZoom();
     wireDrag();
+    wireAlias();
     /* rival 카드가 hidden 이 되거나 풀리면 「보이는 첫 카드」가 바뀐다 */
     (function () { var b = document.querySelector(".two"); if (b) markLead(b); })();
     renderLimit();
@@ -1669,6 +1870,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 
     renderKinds();
     renderWatch();
+    renderMgrs();
+    renderAlias();
     renderRival();
     renderRegions();
     renderRange();
@@ -1861,15 +2064,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       .dedupeReviews();
   };
 
-  document.getElementById('run').onclick = function () {
-    var b = this;
-    b.disabled = true; b.textContent = '수집 중… (1~2분)';
+  /* **두 버튼이 같은 길을 지나간다** — 하나만 고치는 사고를 막는다(이 저장소가
+     회전 단위·삭제에서 이미 세운 규칙). 다른 것은 `mode` 와 버튼 글자뿐이다. */
+  function runCollect(b, mode) {
+    var other = document.getElementById(mode === 'full' ? 'run' : 'runfull');
+    var label = b.textContent;
+    b.disabled = true; if (other) other.disabled = true;
+    b.textContent = mode === 'full' ? '전부 훑는 중…' : '수집 중… (1~2분)';
+    var undo = function () {
+      b.disabled = false; if (other) other.disabled = false; b.textContent = label;
+    };
     google.script.run
       .withSuccessHandler(function (r) {
         /* **이미 돌고 있으면 그렇게 말한다.** 자물쇠에 막힌 것을 「0건 수집」으로 적으면
            사장님이 본 그 사고(*"수집했는데 0이 됐다"*)가 되풀이된다. */
         if (r && r.busy) {
-          b.disabled = false; renderProgress();
+          undo(); renderProgress();
           document.getElementById('status').innerHTML =
             '<div class="note warn"><b>' + esc(r.note) + '</b></div>';
           return;
@@ -1905,7 +2115,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            안 일어나고 버튼이 「수집 중…」에 멈춘 채 화면이 옛 상태로 남는다(실제로 그랬다). */
         google.script.run
           .withSuccessHandler(function (d) {
-            b.disabled = false;
+            undo();
             /* **성공 처리기에 왔다고 값이 온 것은 아니다** — 빈 값이면 화면이 0 이 된다.
                `applySummary` 가 걸러 내고, 못 그렸으면 위에 적어 둔 안내가 남는다. */
             var okd = applySummary(d);
@@ -1918,7 +2128,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
             }
           })
           .withFailureHandler(function (e) {
-            b.disabled = false; renderProgress();
+            undo(); renderProgress();
             document.getElementById('status').innerHTML =
               '<div class="note warn"><b>수집은 끝났지만 화면을 새로 그리지 못했습니다</b> — '
               + esc(e && e.message) + '<br><b>자료는 시트에 그대로 있습니다.</b> '
@@ -1927,7 +2137,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           .getSummary();
       })
       .withFailureHandler(function (e) {
-        b.disabled = false; renderProgress();
+        undo(); renderProgress();
         /* **「자료가 사라진 것이 아니다」를 분명히 적는다.** 수집이 실패해도 이미 모은
            것은 시트에 그대로 있는데, 화면이 그 말을 안 하면 없어진 줄 안다. */
         document.getElementById('status').innerHTML =
@@ -1935,8 +2145,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           + '<br>Apps Script 는 한 번에 6분까지만 돌 수 있어 시간이 오래 걸리면 끊깁니다. '
           + '<b>이미 모은 자료는 시트에 그대로 있습니다</b> — 다시 눌러도 중복은 쌓이지 않습니다.</div>';
       })
-      .collectReviews();
-  };
+      .collectReviews(mode);
+  }
+
+  document.getElementById('run').onclick = function () { runCollect(this, 'quick'); };
+  document.getElementById('runfull').onclick = function () { runCollect(this, 'full'); };
+
 
   /* ── 부팅 ────────────────────────────────────────────────────────────────
    * 뼈대를 먼저 그리고(1~2초) 자료를 받아 다시 그린다.

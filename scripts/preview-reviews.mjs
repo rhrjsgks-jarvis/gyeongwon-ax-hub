@@ -105,6 +105,18 @@ const DATA = {
     { area: '안양', ours: 74, rival: 120, pct: 38 },
     { area: '강원', ours: 152, rival: 0, pct: null }
   ] },
+  /* 매니저 순위 — **네이버 건수를 안 잰 사람(null)을 하나 섞는다.** 0 으로 그리면
+     「그 이름으로 글이 없다」가 되어 거짓이다. */
+  mgrTop: [
+    { name: '윤현식 매니저', n: 33, store: '스타필드수원', naver: 412 },
+    { name: '신규철 부점장', n: 17, store: '분당', naver: 96 },
+    { name: '박승훈 매니저', n: 16, store: '동탄', naver: null },
+    { name: '한승훈 프로', n: 14, store: '평촌', naver: 58 },
+    { name: '정채승 매니저', n: 12, store: '갤러리아광교', naver: 31 }
+  ],
+  mgrFull: 380, mgrRows: 2433,
+  alias: { '신세계사우스시티': ['신사시티'], '갤러리아광교': ['갤광교', '광교갤러리아'] },
+  forceFull: false, fullAt: '2026-08-28',
   watch: CAFES.slice(0, 3).map((c, i) => ({ name: c, n: 120 - i * 40, naver: true })),
   recent
 };
