@@ -49,9 +49,18 @@ var API_BASE = 'https://naverapihub.apigw.ntruss.com/search/v1';
 var SHEET_ITEMS = '후기';
 var SHEET_LOG = '수집기록';
 
+/* 한 번에 받는 수와 몇 쪽까지 넘길지. **실측(2026-08-31)에서 나온 값이다** —
+   display 는 100 이 상한이고(200 은 HTTP 400) start 는 201 부터 0건이 온다.
+   즉 한 질의로 받을 수 있는 것은 **약 200건**이고 그 이상은 네이버가 안 준다. */
+var PAGE_SIZE = 100;
+var MAX_PAGES = 2;
+
 /* **열은 뒤에만 붙인다** — 이 스크립트는 열을 자리로 쓰므로 가운데에 끼우면 그 아래
    모든 줄이 한 칸씩 밀린다(Code.gs 가 지점 열을 더할 때 겪은 것과 같다). */
-var HEADER = ['foundAt', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate'];
+/* **첫 열이 `date` 다 — 「작성일 우선, 없으면 발견일」.** 화면의 일간·주간·월간이 이
+   값을 센다. 마지막 `seenAt` 은 **처음 본 날**이라 「새로 발견」을 세는 데만 쓴다.
+   **열은 뒤에만 붙였다**(`seenAt`) — 가운데에 끼우면 그 아래 모든 줄이 한 칸씩 밀린다. */
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt'];
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 65곳 — 경원영업팀 활성 지점 전부 ────────────────────
@@ -176,16 +185,74 @@ function belongsToOther_(text, name, allNames) {
 
 function props_() { return PropertiesService.getScriptProperties(); }
 
-function search_(kind, query) {
-  var p = props_();
-  var id = p.getProperty('NAVER_CLIENT_ID'), sec = p.getProperty('NAVER_CLIENT_SECRET');
+/**
+ * **키를 읽을 때 앞뒤 공백을 떼어 낸다.**
+ * 스크립트 속성에 붙여넣다 보면 줄바꿈·공백이 딸려 들어가는데, 그러면 헤더 값이
+ * 달라져 **401 이 난다.** 값은 멀쩡해 보이므로 화면으로는 영영 알 수 없다.
+ * (이 저장소가 관리자 비밀번호에서 이미 겪은 그 종류다 — *"붙여넣다 섞이는 것을
+ * 걷어낸다: 앞뒤 공백, 감싸는 따옴표"*.)
+ */
+function key_(name) {
+  var v = props_().getProperty(name);
+  return v == null ? '' : String(v).replace(/^[\s"']+|[\s"']+$/g, '');
+}
+
+/**
+ * **키가 제대로 들어왔는지 스크립트가 스스로 말한다** — `?diag=1`.
+ *
+ * 2026-08-31 사장님이 키를 넣으셨는데도 401 이 계속 났다. 같은 키가 로컬에서는
+ * 200 을 받으므로 **키가 아니라 Apps Script 가 그 값을 못 읽는 것**인데, 화면만
+ * 봐서는 이름 오타인지 「사용자 속성」에 넣은 것인지 공백이 섞인 것인지 가릴 수 없다.
+ * **값 자체는 절대 내보내지 않는다** — 길이와 앞 3글자만 보인다.
+ */
+function diag_() {
+  var sp = PropertiesService.getScriptProperties().getProperties();
+  var up = {};
+  try { up = PropertiesService.getUserProperties().getProperties(); } catch (e) { /* 무시 */ }
+  var peek = function (bag, k) {
+    var v = bag[k];
+    if (v == null) return '없음';
+    var s = String(v);
+    return '길이 ' + s.length + ' · 앞 3글자 "' + s.slice(0, 3) + '"'
+      + (s !== s.trim() ? ' · **앞뒤 공백 있음**' : '');
+  };
+  return {
+    스크립트속성_이름들: Object.keys(sp),
+    사용자속성_이름들: Object.keys(up),
+    NAVER_CLIENT_ID: peek(sp, 'NAVER_CLIENT_ID'),
+    NAVER_CLIENT_SECRET: peek(sp, 'NAVER_CLIENT_SECRET'),
+    사용자속성에_들어갔나: {
+      NAVER_CLIENT_ID: peek(up, 'NAVER_CLIENT_ID'),
+      NAVER_CLIENT_SECRET: peek(up, 'NAVER_CLIENT_SECRET')
+    },
+    지금_읽히는_값: { id: key_('NAVER_CLIENT_ID').length, secret: key_('NAVER_CLIENT_SECRET').length },
+    참고: 'ID 는 10 자, SECRET 은 40 자여야 한다. 값 자체는 내보내지 않는다.'
+  };
+}
+
+function search_(kind, query, start) {
+  var id = key_('NAVER_CLIENT_ID'), sec = key_('NAVER_CLIENT_SECRET');
   if (!id || !sec) throw new Error('스크립트 속성에 NAVER_CLIENT_ID / NAVER_CLIENT_SECRET 을 넣어 주세요.');
-  var url = API_BASE + '/' + kind + '?query=' + encodeURIComponent(query) + '&display=30&sort=date';
+  /* **한 번에 100건씩 받는다**(2026-08-31 사장님 지적 — *"총 후기가 1459건밖에 안 되나요?
+     모든 후기기록을 다 찾아서 업데이트해주세요"*).
+     처음에는 30 건이었는데 `북수원` 만 해도 카페 total 이 128 건이라 **한참 덜 모았다.**
+     실측: display 상한은 **100**(200 은 HTTP 400) · `start` 로 넘기면 **약 200 건까지**
+     받힌다(start=201 부터 0건). 그래도 옛 30 건의 6.7 배다. */
+  var url = API_BASE + '/' + kind + '?query=' + encodeURIComponent(query)
+    + '&display=' + PAGE_SIZE + '&start=' + (start || 1) + '&sort=date';
   var res = UrlFetchApp.fetch(url, {
     headers: { 'X-NCP-APIGW-API-KEY-ID': id, 'X-NCP-APIGW-API-KEY': sec },
     muteHttpExceptions: true
   });
-  if (res.getResponseCode() !== 200) return { items: [], error: 'HTTP ' + res.getResponseCode() };
+  /* **응답 본문까지 남긴다.** 상태 코드만 적으면 401 의 원인을 못 가른다 —
+     NCP 는 두 경우를 갈라 말해 준다(실측):
+       `Authentication information are missing` → **헤더가 안 실렸다**(빈 값)
+       `Invalid authentication information`      → **값이 틀렸다**
+     이 한 줄이 없어서 401 을 세 번 헛짚었다. */
+  if (res.getResponseCode() !== 200) {
+    var body = String(res.getContentText() || '').replace(/\s+/g, ' ').slice(0, 160);
+    return { items: [], error: 'HTTP ' + res.getResponseCode() + ' ' + body };
+  }
   try { return JSON.parse(res.getContentText()); } catch (e) { return { items: [], error: 'parse' }; }
 }
 
@@ -228,26 +295,45 @@ function collectReviews() {
     var query = QUERY[name] || ('삼성스토어 ' + name);
     var mname = MATCH[name] || name;
     for (k = 0; k < kinds.length; k++) {
-      var j;
-      try { j = search_(kinds[k], query); calls++; }
-      catch (e) { err = String(e); break; }
-      if (j.error) { err = kinds[k] + ':' + j.error; continue; }
-      var items = j.items || [];
-      for (n = 0; n < items.length; n++) {
-        var it = items[n];
-        got++;
-        var text = (it.title || '') + ' ' + (it.description || '');
-        if (!hasStore_(text, mname)) continue;
-        if (isNoise_(text)) continue;
-        if (belongsToOther_(text, mname, allNames)) continue;
-        kept++;
-        var link = String(it.link || '');
-        if (!link || seen[link]) continue;
-        seen[link] = true;
-        add.push([stamp, code, name, kinds[k] === 'blog' ? '블로그' : '카페',
-          String(it.title || '').replace(/<[^>]+>/g, ''), link,
-          String(it.cafename || ''), String(it.postdate || '')]);
+      /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
+      for (var page = 0; page < MAX_PAGES; page++) {
+        var j;
+        try { j = search_(kinds[k], query, page * PAGE_SIZE + 1); calls++; }
+        catch (e) { err = String(e); break; }
+        if (j.error) { err = kinds[k] + ':' + j.error; break; }
+        var items = j.items || [];
+        if (!items.length) break;                      /* 더 없으면 다음 쪽을 안 두드린다 */
+        for (n = 0; n < items.length; n++) {
+          var it = items[n];
+          got++;
+          var text = (it.title || '') + ' ' + (it.description || '');
+          if (!hasStore_(text, mname)) continue;
+          if (isNoise_(text)) continue;
+          if (belongsToOther_(text, mname, allNames)) continue;
+          kept++;
+          var link = String(it.link || '');
+          if (!link || seen[link]) continue;
+          seen[link] = true;
+          var post = String(it.postdate || '');
+          add.push([
+            /* **날짜는 「작성일」이 먼저다**(2026-08-31 사장님 지적 — *"후기가 올라온
+               날짜로 맞춰주세요. 시스템은 지금 만들었지만 후기가 모두 오늘 올라온 게
+               아닙니다"*). 블로그는 `postdate` 를 준다(YYYYMMDD).
+               **카페는 네이버가 작성일을 아예 안 준다** — 응답 필드가
+               `title·link·description·cafename·cafeurl` 다섯뿐이다(실측). 그때만
+               발견일로 적고 **화면이 그 사실을 밝힌다.** 있는 척하지 않는다. */
+            post.length === 8
+              ? post.slice(0, 4) + '-' + post.slice(4, 6) + '-' + post.slice(6, 8)
+              : stamp,
+            code, name, kinds[k] === 'blog' ? '블로그' : '카페',
+            String(it.title || '').replace(/<[^>]+>/g, ''), link,
+            String(it.cafename || ''), post,
+            stamp,                                     /* 처음 본 날 — 「새로 발견」을 세는 데 쓴다 */
+          ]);
+        }
+        if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
       }
+      if (err) break;
     }
     /* **인증이 막혔으면 첫 실패에서 멈춘다.**
        처음에는 `스크립트 속성` 문구를 던지는 예외만 잡았는데, **HTTP 401 은 예외가
@@ -280,11 +366,34 @@ function readAll_() {
   var s = sheet_(SHEET_ITEMS, HEADER);
   if (s.getLastRow() < 2) return [];
   var v = s.getRange(2, 1, s.getLastRow() - 1, HEADER.length).getValues(), out = [], i;
+  /* **시트는 날짜 칸을 `Date` 객체로 돌려준다.** 그대로 문자열로 만들면
+     `Mon Aug 31 2026 00:00:00 GMT+0900 (한국 표준시)` 가 화면에 그대로 찍힌다 —
+     **CLAUDE.md 가 사용 로그에서 이미 적어 둔 그 함정이다**(그때는 일별 추이 막대가
+     전부 0 이었다). **들어오는 자리에서 맞춘다.** */
+  var ymd = function (x) {
+    if (x instanceof Date) return Utilities.formatDate(x, 'Asia/Seoul', 'yyyy-MM-dd');
+    var t = String(x || '').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+    var d = new Date(t);
+    return isNaN(d.getTime()) ? t : Utilities.formatDate(d, 'Asia/Seoul', 'yyyy-MM-dd');
+  };
+
   for (i = 0; i < v.length; i++) {
+    /* `postdate` 도 시트가 숫자로 읽을 수 있다(20260830) — 문자열로 맞춘다 */
+    var post = String(v[i][7] == null ? '' : v[i][7]).replace(/[^0-9]/g, '');
     out.push({
-      foundAt: String(v[i][0]), store: String(v[i][1]), storeName: String(v[i][2]),
+      /* **옛 줄과 함께 산다.** 열을 바꾸기 전에 쌓인 줄은 첫 열이 「발견일」이고
+         `seenAt`(9번째)이 없다. 그때는 `postdate` 가 있으면 그것을 날짜로 쓰고,
+         없으면 첫 열을 그대로 쓴다 — **다시 수집하지 않아도 옛 줄이 제 날짜를 찾는다.** */
+      date: post.length === 8
+        ? post.slice(0, 4) + '-' + post.slice(4, 6) + '-' + post.slice(6, 8)
+        : ymd(v[i][0]),
+      store: String(v[i][1]), storeName: String(v[i][2]),
       src: String(v[i][3]), title: String(v[i][4]), link: String(v[i][5]),
-      cafe: String(v[i][6]), postdate: String(v[i][7])
+      cafe: String(v[i][6]), postdate: post,
+      seenAt: ymd(v[i][8] || v[i][0]),
+      /* 작성일을 아는가 — 화면이 「추정」을 밝히는 데 쓴다. **있는 척하지 않는다.** */
+      dated: post.length === 8
     });
   }
   return out;
@@ -297,20 +406,28 @@ function summary_() {
   var d7 = Utilities.formatDate(new Date(now.getTime() - 6 * 864e5), tz, 'yyyy-MM-dd');
   var d30 = Utilities.formatDate(new Date(now.getTime() - 29 * 864e5), tz, 'yyyy-MM-dd');
 
-  var day = 0, week = 0, month = 0;
-  var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {};
+  /* **날짜는 「작성일」 기준이다**(2026-08-31 사장님 지적). 옛 방식은 「발견일」이라
+     처음 수집한 날 1,459 건이 전부 그날로 몰렸다 — *"후기가 모두 오늘 올라온 게
+     아닙니다"*. 지금은 블로그가 주는 `postdate` 를 쓴다.
+     **카페는 네이버가 작성일을 안 준다** — 그 줄만 발견일이고 `dated:false` 로 표시해
+     화면이 그 사실을 밝힌다. 섞어 놓고 모른 척하면 화면이 거짓말을 한다. */
+  var day = 0, week = 0, month = 0, dated = 0, newToday = 0;
+  var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {};
   for (i = 0; i < rows.length; i++) {
-    var r = rows[i], f = r.foundAt;
+    var r = rows[i], f = r.date;
     if (f === d0) day++;
     if (f >= d7) week++;
     if (f >= d30) month++;
+    if (r.dated) dated++;
+    if (r.seenAt === d0) newToday++;          /* 오늘 **새로 발견**한 것 — 뜻이 다르다 */
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
     bySrc[r.src] = (bySrc[r.src] || 0) + 1;
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
     byDay[f] = (byDay[f] || 0) + 1;
+    byMonth[f.slice(0, 7)] = (byMonth[f.slice(0, 7)] || 0) + 1;
   }
-  /* 최근 순 */
-  rows.sort(function (a, b) { return a.foundAt < b.foundAt ? 1 : -1; });
+  /* 최근 순 — 작성일 기준 */
+  rows.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
 
   /* 마지막 수집이 언제 어떻게 끝났는지 함께 낸다 — **실패를 0 으로 그리지 않는다.**
      이 저장소가 로그 파이프라인에서 이미 데인 자리다(실패를 성공으로 읽어 전 항목 0). */
@@ -323,6 +440,9 @@ function summary_() {
   return {
     ok: true, at: new Date().toISOString(),
     total: rows.length, day: day, week: week, month: month,
+    /* **작성일을 아는 건수를 함께 낸다** — 화면이 *"1,459건 중 698건은 작성일을 안다"*
+       고 밝힐 수 있어야 한다. 카페는 네이버가 안 주므로 그 차이를 감추면 안 된다. */
+    dated: dated, newToday: newToday, byMonth: byMonth,
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
        함께수집이되어야합니다"*). 수집은 처음부터 `link` 열에 담고 있었는데 **화면이
@@ -357,6 +477,7 @@ function json_(o) {
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.json === '1') return json_(summary_());
+  if (p.diag === '1') return json_(diag_());     /* 키가 제대로 들어왔는지 — 값은 안 나온다 */
   if (p.run === '1') return json_(collectReviews());
   var t = HtmlService.createTemplateFromFile('ReviewsIndex');
   t.data = JSON.stringify(summary_());

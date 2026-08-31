@@ -356,13 +356,16 @@ function flatten(v, out = []) {
 // 쿠폰 프로그램 URL만은 app/page.tsx의 COUPON_LINKS에서 직접 읽는다.
 // 여기에 URL을 복사해두면 한쪽만 바뀌었을 때 검색 결과가 죽은 링크를 가리키게 된다.
 const readSrc = (p) => fs.readFileSync(path.join(__dirname, '..', ...p.split('/')), 'utf8').replace(/\r\n/g, '\n');
-function couponHref() {
+/* 링크 묶음(LinkListCard)의 주소를 소스에서 뽑는다. **여기에 복사해 두지 말 것** —
+   한쪽만 바뀌면 검색 결과가 죽은 링크를 가리킨다. */
+function linkHref(constName) {
   const src = readSrc('app/page.tsx');
-  const block = src.match(/const COUPON_LINKS = \[([\s\S]*?)\n\]/);
+  const block = src.match(new RegExp('const ' + constName + ' = \\[([\\s\\S]*?)\\n\\]'));
   const m = block && block[1].match(/href:\s*'([^']+)'/);
-  if (!m) throw new Error('app/page.tsx의 COUPON_LINKS에서 쿠폰 URL을 찾지 못했습니다');
+  if (!m) throw new Error(`app/page.tsx의 ${constName}에서 URL을 찾지 못했습니다`);
   return m[1];
 }
+const couponHref = () => linkHref('COUPON_LINKS');
 
 // 허브 모듈은 손으로 적지 않고 app/page.tsx의 MODULE_GROUPS에서 그대로 뽑는다.
 // 손으로 적으면 화면에 보이는 워딩(섹션명·카드 설명)이 인덱스에 빠져 검색이 안 된다

@@ -751,7 +751,169 @@ export default function AdminPage() {
             ))}
           </div>
         </div>
+
+        <ViralSection />
       </div>
+    </div>
+  )
+}
+
+/*
+ * ── 매장 바이럴 ────────────────────────────────────────────────
+ * 2026-08-31 사장님 지시: *"바이럴은 사용현황대시보드 안으로 별도 섹션을 구성해주세요"* ·
+ * *"관리자만 확인합니다"*.
+ *
+ * **허브에 두지 않는 이유가 그것이다.** 처음에 매장운영 도구 안에 링크 카드로 붙였는데,
+ * 허브는 상담사가 보는 화면이라 **비밀번호 없이 누구나** 열린다. 관리자 대시보드는
+ * 이미 비밀번호 뒤라 여기가 맞는 자리다(허브 카드·통합검색 색인·로그 배선은 되돌렸다).
+ *
+ * **링크만 두지 않고 숫자를 여기서 보여준다** — 대시보드를 여는 이유가 숫자를 보려는
+ * 것이라, 링크 하나만 있으면 매번 새 창을 열어야 한다.
+ *
+ * 자료는 Apps Script 웹앱의 `?json=1` 에서 받는다. **수집·저장·화면이 전부 구글
+ * 안에서 끝나므로**(전산PC 에서 Vercel 이 막힌다) 이쪽은 읽기만 한다.
+ */
+const VIRAL_URL = 'https://script.google.com/macros/s/AKfycbyfiNnGIrydVPOOs5BlcsMCgKFtv2EWfWQFjEqU1lZGNFHYoonRW2CTkwOi5-aPG4Q/exec'
+
+type ViralData = {
+  ok?: boolean
+  total?: number; day?: number; week?: number; month?: number
+  stores?: number
+  byStore?: Record<string, number>
+  byCafe?: Record<string, number>
+  bySrc?: Record<string, number>
+  lastRun?: { at: string; error: string } | null
+  recent?: { date?: string; foundAt?: string; storeName: string; src: string; title: string; link: string; cafe: string; dated?: boolean }[]
+}
+
+/*
+ * **시트가 날짜 칸을 `Date` 로 돌려준다** — 그대로 찍으면
+ * `Mon Aug 31 2026 00:00:00 GMT+0900 (한국 표준시)` 가 화면에 나온다(실물에서 봤다).
+ * Apps Script 쪽에서 맞추지만 **옛 배포본이 보낼 수도 있으니 여기서도 막는다** —
+ * 이 저장소가 사용 로그에서 이미 겪은 함정이라 양쪽에 둔다.
+ */
+function ymd(v?: string): string {
+  const t = String(v || '').trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t
+  const d = new Date(t)
+  return isNaN(d.getTime()) ? t : d.toISOString().slice(0, 10)
+}
+
+function ViralSection() {
+  const [d, setD] = useState<ViralData | null>(null)
+  const [state, setState] = useState<'loading' | 'ok' | 'fail'>('loading')
+
+  const load = () => {
+    setState('loading')
+    /* **서버 라우트를 거친다** — 브라우저에서 script.google.com 을 직접 부르면 CORS 로
+       막힌다(사용 로그가 `/api/logs` 를 거치는 것과 같은 이유). */
+    fetch('/api/viral', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((j) => { if (j && j.ok) { setD(j); setState('ok') } else setState('fail') })
+      .catch(() => setState('fail'))
+  }
+  useEffect(load, [])
+
+  const top = Object.entries(d?.byStore || {}).sort((a, b) => b[1] - a[1]).slice(0, 8)
+  const cafes = Object.entries(d?.byCafe || {}).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const hit = Object.values(d?.byStore || {}).filter((v) => v > 0).length
+
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <h2 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+          <Icon name="chat" size={15} style={{ color: '#0F766E' }} /> 매장 바이럴
+        </h2>
+        <a
+          href={VIRAL_URL} target="_blank" rel="noreferrer"
+          className="text-[11px] font-semibold rounded-lg px-2.5 py-1 text-white"
+          style={{ background: '#0F766E' }}
+        >
+          대시보드 열기
+        </a>
+      </div>
+      <p className="text-[11px] text-gray-400 mb-2.5">
+        네이버 블로그·카페(다이렉트웨딩 · 메이크마이웨딩 · 맘카페 · 입주카페)에 올라온 우리 매장 후기 ·
+        매일 새벽 자동 수집 · <b>일간·주간·월간은 「발견일」 기준</b>입니다
+      </p>
+
+      {state === 'loading' && <div className="text-xs text-gray-400 py-6 text-center">불러오는 중…</div>}
+
+      {/* **못 받았으면 0 을 그리지 않고 그렇게 적는다** — 이 저장소가 로그에서 이미 데인 자리다*/}
+      {state === 'fail' && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[11px] text-amber-800">
+          <b className="text-amber-900">바이럴 자료를 불러오지 못했습니다.</b> 아직 연동 전이거나
+          Apps Script 응답이 늦을 때 그렇습니다 — 위 <b>「대시보드 열기」</b>로 직접 확인할 수 있습니다.
+          <button onClick={load} className="ml-2 underline font-semibold">다시 시도</button>
+        </div>
+      )}
+
+      {state === 'ok' && d && (
+        <>
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {[
+              { n: d.day, l: '오늘' }, { n: d.week, l: '최근 7일' },
+              { n: d.month, l: '최근 30일' }, { n: d.total, l: '전체 누적' },
+            ].map((k) => (
+              <div key={k.l} className="bg-white rounded-xl border border-gray-100 p-2.5 text-center">
+                <p className="text-xl font-bold" style={{ color: '#0F766E' }}>{(k.n || 0).toLocaleString()}</p>
+                <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{k.l}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-white rounded-2xl border border-gray-100 p-3.5">
+              <p className="text-xs font-bold text-gray-700 mb-0.5">매장별 상위</p>
+              {/* **몇 곳 중 몇 곳인지 적는다** — 65곳을 전부 수집하므로 아직 0건인 곳이 있다.
+                  감추는 것과 없는 것은 다른 말이라, 안 적으면 "우리 매장이 없다"로 읽힌다 */}
+              <p className="text-[10px] text-gray-400 mb-2">후기가 잡힌 매장 {hit}곳 / 대상 {d.stores}곳</p>
+              {top.map(([name, n]) => (
+                <div key={name} className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] text-gray-600 w-24 truncate" title={name}>{name}</span>
+                  <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: (n / top[0][1]) * 100 + '%', background: '#0F766E' }} />
+                  </div>
+                  <span className="text-[10px] text-gray-400 w-8 text-right tabular-nums">{n}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 p-3.5">
+              <p className="text-xs font-bold text-gray-700 mb-0.5">어디에 올라오나</p>
+              <p className="text-[10px] text-gray-400 mb-2">
+                블로그 {(d.bySrc?.['블로그'] || 0).toLocaleString()} · 카페 {(d.bySrc?.['카페'] || 0).toLocaleString()}
+                {' · '}카페 {Object.keys(d.byCafe || {}).length}곳
+              </p>
+              {cafes.map(([name, n]) => (
+                <div key={name} className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] text-gray-600 flex-1 truncate" title={name}>{name}</span>
+                  <span className="text-[10px] text-gray-400 tabular-nums">{n}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-100 p-3.5 mt-3">
+            <p className="text-xs font-bold text-gray-700 mb-2">최근 후기</p>
+            {(d.recent || []).slice(0, 8).map((r) => (
+              <a
+                key={r.link} href={r.link} target="_blank" rel="noreferrer"
+                className="block py-1.5 border-t border-gray-50 first:border-t-0 hover:opacity-70"
+              >
+                <p className="text-[12px] font-semibold text-gray-800 truncate">{r.title}</p>
+                <p className="text-[10px] text-gray-400">
+                  <span className="font-semibold" style={{ color: '#0F766E' }}>{r.src}</span>
+                  {' · '}{r.storeName}{r.cafe ? ' · ' + r.cafe : ''}{' · '}{ymd(r.date || r.foundAt)}
+                </p>
+              </a>
+            ))}
+            <p className="text-[10px] text-gray-400 mt-2">
+              전체 목록·매장별 링크·CSV 내려받기는 <b>「대시보드 열기」</b>에서 볼 수 있습니다.
+            </p>
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -120,9 +120,9 @@
 
 <div class="wrap">
   <div class="kpis">
-    <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s">새로 발견</div></div>
-    <div class="kpi"><div class="n" id="k-week">–</div><div class="l">최근 7일</div><div class="s">새로 발견</div></div>
-    <div class="kpi"><div class="n" id="k-month">–</div><div class="l">최근 30일</div><div class="s">새로 발견</div></div>
+    <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s">작성일 기준</div></div>
+    <div class="kpi"><div class="n" id="k-week">–</div><div class="l">최근 7일</div><div class="s">작성일 기준</div></div>
+    <div class="kpi"><div class="n" id="k-month">–</div><div class="l">최근 30일</div><div class="s">작성일 기준</div></div>
     <div class="kpi"><div class="n" id="k-total">–</div><div class="l">전체 누적</div><div class="s" id="k-sub">–</div></div>
   </div>
 
@@ -145,7 +145,7 @@
     <div class="lhead">
       <div>
         <h2>후기 링크</h2>
-        <div class="sub">최근 발견 순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
+        <div class="sub">최근 순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
       </div>
       <button class="dl" id="csv">CSV 내려받기</button>
     </div>
@@ -154,11 +154,7 @@
     <div id="list"></div>
   </div>
 
-  <div class="note">
-    <b>세는 기준</b> — 일간·주간·월간은 <b>「발견일」</b>입니다. 카페 검색 결과에는 작성일이
-    아예 없어(블로그만 있습니다) 우리가 처음 본 날로 셉니다. 매일 새벽 3시에 자동으로 돌며
-    <b>같은 글은 링크로 걸러</b> 두 번 세지 않습니다. 블로그는 작성일을 함께 적습니다.
-  </div>
+  <div class="note" id="basis"></div>
 </div>
 
 <script>
@@ -246,7 +242,7 @@
       var m = ['<span class="tag' + (r.src === '카페' ? ' c' : '') + '">' + esc(r.src) + '</span>',
                '<b>' + esc(r.storeName) + '</b>'];
       if (r.cafe) m.push(esc(r.cafe));
-      m.push('발견 ' + esc(r.foundAt));
+      m.push(esc(r.date) + (r.dated ? '' : ' <span class="tag c">추정</span>'));
       /* 블로그만 작성일이 있다 — 없는 것을 있는 척하지 않는다 */
       if (r.postdate && r.postdate.length === 8) {
         m.push('작성 ' + r.postdate.slice(0, 4) + '-' + r.postdate.slice(4, 6) + '-' + r.postdate.slice(6, 8));
@@ -270,6 +266,19 @@
 
     bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores, 'store');
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
+
+    /* **작성일을 아는 것과 모르는 것을 갈라 적는다.** 카페는 네이버가 작성일을 안 주므로
+       그 줄은 우리가 처음 본 날이다 — 섞어 놓고 모른 척하면 화면이 거짓말을 한다. */
+    var undated = (DATA.total || 0) - (DATA.dated || 0);
+    document.getElementById('basis').innerHTML =
+      '<b>세는 기준</b> — 일간·주간·월간·누적은 <b>「작성일」</b>입니다.'
+      + ' 블로그는 네이버가 작성일을 주므로 그 날짜로 셉니다(<b>' + nf(DATA.dated) + '건</b>).'
+      + (undated > 0
+        ? ' <b>카페 ' + nf(undated) + '건은 네이버가 작성일을 주지 않아</b>(응답 필드에 아예 없습니다)'
+          + ' 우리가 처음 본 날로 적습니다 — 목록에서 <span class="tag c">추정</span> 으로 표시됩니다.'
+        : '')
+      + ' 매일 새벽 3시에 자동으로 돌며 <b>같은 글은 링크로 걸러</b> 두 번 세지 않습니다.'
+      + (DATA.newToday ? ' 오늘 새로 발견한 것은 <b>' + nf(DATA.newToday) + '건</b>입니다.' : '');
 
     document.getElementById('stamp').textContent =
       new Date(DATA.at).toLocaleString('ko-KR') + ' 기준';
@@ -308,10 +317,10 @@
      화면 건수와 CSV 건수가 어긋나지 않게 **같은 `filtered()` 를 본다.** */
   document.getElementById('csv').onclick = function () {
     var rows = filtered();
-    var head = ['발견일', '점코드', '지점명', '출처', '제목', 'URL', '카페', '작성일'];
+    var head = ['날짜', '점코드', '지점명', '출처', '제목', 'URL', '카페', '작성일'];
     var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
     var body = rows.map(function (r) {
-      return [r.foundAt, r.store, r.storeName, r.src, r.title, r.link, r.cafe, r.postdate].map(q).join(',');
+      return [r.date, r.store, r.storeName, r.src, r.title, r.link, r.cafe, r.postdate].map(q).join(',');
     });
     /* **BOM 을 붙인다** — 없으면 엑셀이 UTF-8 을 못 알아보고 한글이 통째로 깨진다 */
     var blob = new Blob(['﻿' + head.map(q).join(',') + '\n' + body.join('\n')], { type: 'text/csv' });
