@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  매장 언급 후기 대시보드 — Apps Script 가 서빙하는 화면 (2026-08-31)
+  경원영업팀 바이럴분석 대시보드 — Apps Script 가 서빙하는 화면 (2026-08-31)
 
   **Apps Script 편집기에서 파일 이름을 `ReviewsIndex` 로 만들 것**(확장자 없이).
   `Reviews.gs` 의 `doGet` 이 이 이름으로 찾는다.
@@ -45,6 +45,11 @@
   .kpi .n { font-size: 26px; font-weight: 800; color: var(--blue); letter-spacing: -1px; }
   .kpi .l { font-size: 11.5px; color: var(--mute); font-weight: 700; margin-top: 1px; }
   .kpi .s { font-size: 10px; color: #9AA1AC; margin-top: 2px; }
+  /* 누적이 이 화면의 주인공이다 — 「오늘 0」이 첫 칸이라 사라진 것처럼 읽혔다 */
+  .kpi.big { background: var(--blue); border-color: var(--blue); }
+  .kpi.big .n { color: #fff; }
+  .kpi.big .l { color: #BFC9F0; }
+  .kpi.big .s { color: #8FA0E0; }
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; margin-bottom: 14px; }
   .card h2 { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
@@ -105,11 +110,24 @@
     padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit;
   }
   .cntxt { font-size: 11px; color: var(--mute); }
+
+  /* 유형 칩 — 8종뿐이라 막대로 그리면 자리만 먹는다. 누르면 그 유형만 본다
+     (매장·카페 막대와 같은 규칙 — 건수만 있고 링크로 갈 길이 없으면 확인할 수가 없다). */
+  .kinds { display: flex; gap: 6px; flex-wrap: wrap; }
+  .kchip {
+    border: 1px solid var(--line); background: #fff; border-radius: 999px;
+    padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit;
+    color: #374151; display: flex; align-items: center; gap: 6px;
+  }
+  .kchip:hover { background: #F4F6FB; }
+  .kchip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .kchip b { font-size: 13px; font-weight: 800; }
+  .kchip .pc { font-size: 10px; opacity: .7; }
 </style>
 
 <header>
   <div class="wrap">
-    <h1>경원영업팀 · 매장 언급 후기</h1>
+    <h1>경원영업팀 바이럴분석</h1>
     <p>네이버 블로그 · 카페(다이렉트웨딩 · 메이크마이웨딩 · 맘카페 · 입주카페)</p>
     <div class="hrow">
       <span class="stamp" id="stamp">불러오는 중…</span>
@@ -120,13 +138,19 @@
 
 <div class="wrap">
   <div class="kpis">
-    <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s">작성일 기준</div></div>
-    <div class="kpi"><div class="n" id="k-week">–</div><div class="l">최근 7일</div><div class="s">작성일 기준</div></div>
-    <div class="kpi"><div class="n" id="k-month">–</div><div class="l">최근 30일</div><div class="s">작성일 기준</div></div>
-    <div class="kpi"><div class="n" id="k-total">–</div><div class="l">전체 누적</div><div class="s" id="k-sub">–</div></div>
+    <div class="kpi big"><div class="n" id="k-total">–</div><div class="l">전체 누적</div><div class="s" id="k-sub">–</div></div>
+    <div class="kpi"><div class="n" id="k-month">–</div><div class="l">최근 30일</div><div class="s">이 기간에 쓰인 글</div></div>
+    <div class="kpi"><div class="n" id="k-week">–</div><div class="l">최근 7일</div><div class="s">이 기간에 쓰인 글</div></div>
+    <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s">오늘 쓰인 글</div></div>
   </div>
 
   <div id="status"></div>
+
+  <div class="card">
+    <h2>후기 유형</h2>
+    <div class="sub">제목의 말로 가른다 · 눌러서 그 유형 링크만 보기</div>
+    <div class="kinds" id="kinds"></div>
+  </div>
 
   <div class="two">
     <div class="card">
@@ -162,6 +186,7 @@
   var srcFilter = '전체';
   var storeFilter = '';   /* 매장 막대를 눌러 걸린 값 */
   var cafeFilter = '';    /* 카페 막대를 눌러 걸린 값 */
+  var kindFilter = '';    /* 유형 칩을 눌러 걸린 값 */
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -214,7 +239,34 @@
       if (srcFilter !== '전체' && r.src !== srcFilter) return false;
       if (storeFilter && r.storeName !== storeFilter) return false;
       if (cafeFilter && r.cafe !== cafeFilter) return false;
+      if (kindFilter && r.kind !== kindFilter) return false;
       return true;
+    });
+  }
+
+  /* 유형 칩 — 많은 것부터. '기타'는 **감추지 않고 맨 뒤에 둔다**: 못 가른 것이
+     얼마나 되는지 보여야 판정을 고칠지 판단할 수 있다(0건도 세어 밝히는 것과 같은 규칙). */
+  function renderKinds() {
+    var el = document.getElementById('kinds'); if (!el) return;
+    var obj = DATA.byKind || {}, tot = 0, k;
+    for (k in obj) tot += obj[k];
+    var arr = Object.keys(obj).filter(function (x) { return obj[x] > 0; })
+      .sort(function (a, b) {
+        if (a === '기타') return 1; if (b === '기타') return -1;
+        return obj[b] - obj[a];
+      });
+    if (!arr.length || !tot) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
+    el.innerHTML = arr.map(function (x) {
+      return '<button class="kchip' + (kindFilter === x ? ' on' : '') + '" data-v="' + esc(x) + '">' +
+        esc(x) + ' <b>' + nf(obj[x]) + '</b>' +
+        '<span class="pc">' + Math.round(obj[x] / tot * 100) + '%</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.kchip'), function (b) {
+      b.onclick = function () {
+        kindFilter = kindFilter === b.dataset.v ? '' : b.dataset.v;
+        render();
+        document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
     });
   }
 
@@ -225,6 +277,7 @@
     var tags = [];
     if (storeFilter) tags.push(['매장', storeFilter, 'store']);
     if (cafeFilter) tags.push(['카페', cafeFilter, 'cafe']);
+    if (kindFilter) tags.push(['유형', kindFilter, 'kind']);
     document.getElementById('picked').innerHTML = tags.length
       ? tags.map(function (t) {
           return '<button class="pill" data-k="' + t[2] + '">' + esc(t[0]) + ' <b>' + esc(t[1]) + '</b> ✕</button>';
@@ -232,7 +285,9 @@
       : '';
     Array.prototype.forEach.call(document.querySelectorAll('#picked .pill'), function (b) {
       b.onclick = function () {
-        if (b.dataset.k === 'store') storeFilter = ''; else cafeFilter = '';
+        if (b.dataset.k === 'store') storeFilter = '';
+        else if (b.dataset.k === 'cafe') cafeFilter = '';
+        else kindFilter = '';
         render();
       };
     });
@@ -241,6 +296,7 @@
     el.innerHTML = rows.map(function (r) {
       var m = ['<span class="tag' + (r.src === '카페' ? ' c' : '') + '">' + esc(r.src) + '</span>',
                '<b>' + esc(r.storeName) + '</b>'];
+      if (r.kind) m.push('<b style="color:#0F766E">' + esc(r.kind) + '</b>');
       if (r.cafe) m.push(esc(r.cafe));
       m.push(esc(r.date) + (r.dated ? '' : ' <span class="tag c">추정</span>'));
       /* 블로그만 작성일이 있다 — 없는 것을 있는 척하지 않는다 */
@@ -264,6 +320,7 @@
     document.getElementById('store-sub').textContent =
       '후기가 잡힌 매장 ' + nStores + '곳 / 대상 ' + DATA.stores + '곳';
 
+    renderKinds();
     bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores, 'store');
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
 
@@ -317,16 +374,16 @@
      화면 건수와 CSV 건수가 어긋나지 않게 **같은 `filtered()` 를 본다.** */
   document.getElementById('csv').onclick = function () {
     var rows = filtered();
-    var head = ['날짜', '점코드', '지점명', '출처', '제목', 'URL', '카페', '작성일'];
+    var head = ['날짜', '점코드', '지점명', '출처', '유형', '제목', 'URL', '카페', '작성일'];
     var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
     var body = rows.map(function (r) {
-      return [r.date, r.store, r.storeName, r.src, r.title, r.link, r.cafe, r.postdate].map(q).join(',');
+      return [r.date, r.store, r.storeName, r.src, r.kind, r.title, r.link, r.cafe, r.postdate].map(q).join(',');
     });
     /* **BOM 을 붙인다** — 없으면 엑셀이 UTF-8 을 못 알아보고 한글이 통째로 깨진다 */
     var blob = new Blob(['﻿' + head.map(q).join(',') + '\n' + body.join('\n')], { type: 'text/csv' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = '매장후기_' + (storeFilter || cafeFilter || '전체') + '_'
+    a.download = '바이럴분석_' + (storeFilter || cafeFilter || kindFilter || '전체') + '_'
       + new Date().toISOString().slice(0, 10) + '.csv';
     a.click();
   };
@@ -336,18 +393,42 @@
     b.disabled = true; b.textContent = '수집 중… (1~2분)';
     google.script.run
       .withSuccessHandler(function (r) {
+        /* **수집 결과를 그대로 말한다.** `added:0` 은 실패가 아니라 *"새 글이 없었다"* 다 —
+           이미 있는 글은 링크로 걸러지므로 두 번째부터는 대개 0~몇 건이다.
+           이걸 안 밝히면 사장님처럼 *"수집했는데 0 이 됐다"* 로 읽힌다(2026-08-31 실제 신고). */
+        document.getElementById('status').innerHTML =
+          '<div class="note"><b>수집을 마쳤습니다</b> — ' + nf(r.got) + '건을 받아 '
+          + nf(r.kept) + '건이 판정을 지났고, 그중 <b>새 글 ' + nf(r.added) + '건</b>을 더했습니다.'
+          + (r.added === 0 ? ' <b>이미 모은 글은 다시 세지 않습니다</b> — 누적은 그대로입니다.' : '')
+          + (r.error ? ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>' : '') + '</div>';
         b.textContent = '새로 ' + r.added + '건';
+
         /* **밑줄로 끝나는 이름은 부를 수 없다** — Apps Script 가 `summary_` 같은 이름을
-           비공개로 취급해 `google.script.run` 에서 막는다. 그래서 공개 이름을 따로 둔다. */
-        google.script.run.withSuccessHandler(function (d) {
-          DATA = d; render();
-          b.disabled = false; b.textContent = '지금 수집';
-        }).getSummary();
+           비공개로 취급해 `google.script.run` 에서 막는다. 그래서 공개 이름을 따로 둔다.
+           **`withFailureHandler` 를 반드시 붙인다** — 없으면 이쪽이 실패했을 때 아무 일도
+           안 일어나고 버튼이 「수집 중…」에 멈춘 채 화면이 옛 상태로 남는다(실제로 그랬다). */
+        google.script.run
+          .withSuccessHandler(function (d) {
+            DATA = d; render();
+            b.disabled = false; b.textContent = '지금 수집';
+          })
+          .withFailureHandler(function (e) {
+            b.disabled = false; b.textContent = '지금 수집';
+            document.getElementById('status').innerHTML =
+              '<div class="note warn"><b>수집은 끝났지만 화면을 새로 그리지 못했습니다</b> — '
+              + esc(e && e.message) + '<br><b>자료는 시트에 그대로 있습니다.</b> '
+              + '<a href="">이 쪽을 새로고침</a>하면 보입니다.</div>';
+          })
+          .getSummary();
       })
       .withFailureHandler(function (e) {
         b.disabled = false; b.textContent = '지금 수집';
+        /* **「자료가 사라진 것이 아니다」를 분명히 적는다.** 수집이 실패해도 이미 모은
+           것은 시트에 그대로 있는데, 화면이 그 말을 안 하면 없어진 줄 안다. */
         document.getElementById('status').innerHTML =
-          '<div class="note warn"><b>수집에 실패했습니다</b> — ' + esc(e && e.message) + '</div>';
+          '<div class="note warn"><b>수집에 실패했습니다</b> — ' + esc(e && e.message)
+          + '<br>Apps Script 는 한 번에 6분까지만 돌 수 있어 시간이 오래 걸리면 끊깁니다. '
+          + '<b>이미 모은 자료는 시트에 그대로 있습니다</b> — 다시 눌러도 중복은 쌓이지 않습니다.</div>';
       })
       .collectReviews();
   };

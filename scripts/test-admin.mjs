@@ -266,11 +266,44 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const metaBlock = adminSrc2.match(/const MODULE_META[\s\S]*?\n\}/);
   const metaKeys = metaBlock ? [...metaBlock[0].matchAll(/\n\s{2}(\w+):\s*\{/g)].map((m) => m[1]) : [];
 
+  /*
+   * **사용 로그를 안 쌓는 모듈은 여기서 뺀다.**
+   * `viral`(매장 바이럴)은 자료가 Apps Script 시트에 따로 있고 우리 로그에는 한 줄도
+   * 안 쌓인다 — 관리자 대시보드에 **자기 절**이 따로 있어 모듈별 사용 현황 목록에
+   * 낄 자리가 아니다. 그런데 `LogModule` 유니온에는 남겨 둔다(빼면 집계 코드가 타입
+   * 에러를 낸다 — `planner`·`compareInstant` 와 같은 이유).
+   *
+   * **이 목록에 함부로 더하지 말 것** — 이 검사가 막는 사고는 *"모듈을 만들고
+   * MODULE_META 에 안 넣어 통계에 한 줄도 안 잡히는데 화면에는 아무 표시도 안 나는"*
+   * 것이다(실제로 AS·배치·포스터 셋이 그 상태로 방치돼 있었다). **로그를 쌓는
+   * 모듈이면 반드시 MODULE_META 에 넣어야 한다.**
+   */
+  const NO_LOG = ['viral'];
   if (!keys.length || !metaKeys.length) fail('[대시보드] LogModule / MODULE_META 를 읽지 못했다');
   else {
-    const missing = keys.filter((k) => !metaKeys.includes(k));
+    const missing = keys.filter((k) => !metaKeys.includes(k) && !NO_LOG.includes(k));
     if (missing.length) fail(`[대시보드] MODULE_META 에 없는 모듈: ${missing.join(', ')} — 사용 현황에 안 잡힌다`);
-    else console.log(`OK: 대시보드가 LogModule ${keys.length}개를 모두 표시 (누락 0)`);
+    else console.log(`OK: 대시보드가 LogModule ${keys.length - NO_LOG.length}개를 모두 표시 (누락 0 · 로그 없는 ${NO_LOG.join(',')} 제외)`);
+  }
+  /* **로그를 안 쌓는다는 것이 사실인지 확인한다** — `logEvent('viral', …)` 를 어딘가
+     쓰기 시작하면 위 예외가 조용히 통계를 삼킨다. 그때는 MODULE_META 에 넣어야 한다. */
+  /* **한 파일만 보면 못 잡는다** — 로그는 어느 화면에서든 남길 수 있으므로 app·components·lib
+     전부를 훑는다(이 저장소가 "한쪽만 고쳐 어긋난다"로 반복해서 데인 종류다). */
+  const srcFiles = [];
+  const walk = (dir) => {
+    for (const e of fs.readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.')) continue;
+      if (e.isDirectory()) walk(dir + e.name + '/');
+      else if (/\.(tsx|ts|mjs)$/.test(e.name)) srcFiles.push(dir + e.name);
+    }
+  };
+  ['../app/', '../components/', '../lib/'].forEach(walk);
+  const allSrc = srcFiles.map((f) => fs.readFileSync(new URL(f, import.meta.url), 'utf8')).join('\n');
+  for (const k of NO_LOG) {
+    const used = allSrc.includes(`logEvent('${k}'`) || allSrc.includes(`logKey="${k}"`)
+      || allSrc.includes(`logKey: '${k}'`) || allSrc.includes(`'${k}', '`);
+    if (used) fail(`[대시보드] '${k}' 가 로그를 쌓는데 MODULE_META 에 없다 — 통계에서 사라진다`);
+    else console.log(`OK: '${k}' 은 실제로 로그를 안 쌓는다 (소스 ${srcFiles.length}개 확인)`);
   }
 
   // 운영 종료·통합 모듈은 목록에서 감추되 라벨은 남는다

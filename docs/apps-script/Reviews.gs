@@ -60,7 +60,7 @@ var MAX_PAGES = 2;
 /* **첫 열이 `date` 다 — 「작성일 우선, 없으면 발견일」.** 화면의 일간·주간·월간이 이
    값을 센다. 마지막 `seenAt` 은 **처음 본 날**이라 「새로 발견」을 세는 데만 쓴다.
    **열은 뒤에만 붙였다**(`seenAt`) — 가운데에 끼우면 그 아래 모든 줄이 한 칸씩 밀린다. */
-var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt'];
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind'];
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 65곳 — 경원영업팀 활성 지점 전부 ────────────────────
@@ -107,6 +107,23 @@ var STORES = [
 var QUERY = { '광주': '삼성스토어 경기광주' };
 var MATCH = { '광주': '경기광주' };
 
+/* ── 질의를 쪼개 더 받는다 ────────────────────────────────────────
+ * 2026-08-31 사장님 질문: *"후기수집이 1459건외에 더 없나요?"* — **훨씬 더 있다.**
+ *
+ * 네이버는 **한 질의당 약 200건까지만** 준다(start=201 부터 0건, 실측). 그런데
+ * `갤러리아광교` 는 카페 total 이 **1,579건**이다 — 한 질의로는 손도 못 댄다.
+ *
+ * **꼬리말을 붙여 여러 질의로 물으면 각각 200건씩 받힌다.** 실측(갤러리아광교):
+ *   질의 1개 400건 → 10개 **1,340건(3.4배)**. 겹치는 것은 링크로 걸러진다.
+ *
+ * **꼬리말은 지어내지 않고 실제 1,459건에서 센 유형 낱말이다**(혼수 54% · 구매 32% ·
+ * 행사 29% · 입주 15%). 그래서 **유형 분류와 같은 말**을 쓴다 — 어느 질의로 잡혔는지가
+ * 곧 유형의 힌트가 된다.
+ *
+ * **효과가 작은 꼬리말은 넣지 않았다** — `박람회` 는 +6건뿐이었다(실측).
+ */
+var TAILS = ['', ' 혼수', ' 신혼가전', ' 입주', ' 설치', ' 구매', ' 상담', ' 견적'];
+
 /* 지면에서 실제로 본 브랜드 표기만 넣는다. '삼성프라자'·'디지털프라자' 는 옛 이름인데
    카페 글에 살아 있다("예전에는 삼성프라자라고 더 익숙하게 부르는 분들도 있던데"). */
 var BRANDS = ['삼성스토어', '삼성디지털프라자', '디지털프라자', '삼성프라자'];
@@ -118,6 +135,48 @@ var NOISE = ['블루윙즈', '수원fc', '직관', '굿즈', '앤썸', 'md스토
 
 /* 백화점·몰 꼬리표. 같은 지역에 일반점과 체인점이 **둘 다** 있을 때 가르는 데 쓴다. */
 var CHAINS = ['ak', '롯데', '신세계', '스타필드', '타임빌라스', '갤러리아', '이마트', '현대'];
+
+/* ── 후기 유형 ────────────────────────────────────────────────────
+ * 2026-08-31 사장님 요청: *"혼수후기인지 입주후기인지 구매후기인지 설치후기인지
+ * 후기들은 분석해서 유형별로 구분될수있도록"*.
+ *
+ * **낱말은 지어내지 않고 실제 1,459건에서 세어 뽑았다.** 실측 비율 —
+ * 혼수 54% · 구매 32% · 행사 29% · 입주 15% · 설치 3% · AS 2% · 안 걸림 17%.
+ *
+ * **순서가 규칙이다.** 703건이 여러 유형에 걸린다(「신혼가전 구매 후기」는 혼수이자
+ * 구매다). 위에서부터 처음 걸리는 하나를 쓰되 **가장 특이한 것을 앞에** 둔다.
+ * `구매` 는 어디에나 나오는 말이라 **맨 뒤**다 — 앞에 두면 전부 구매가 된다.
+ *
+ * **못 가른 것은 「기타」로 남긴다.** 그럴듯한 쪽에 밀어 넣지 않는다 — 이 저장소가
+ * 되풀이해 지킨 규칙이다(짐작해 채우면 화면이 거짓말을 한다).
+ */
+var KINDS = [
+  ['혼수', ['혼수', '신혼', '결혼준비', '예신', '예랑', '웨딩', '가전졸업', '졸업']],
+  ['입주', ['입주', '이사', '신축', '집들이', '분양', '사전점검']],
+  ['설치', ['설치', '배송', '기사님', '시공', '철거', '이전설치']],
+  ['AS',   ['as', '수리', '서비스센터', '고장', '점검']],
+  /* 행사 — 「오픈매장」·「Grand Open」·「리뉴얼」·「데이코 입점」이 기타에 몰려 있었다 */
+  ['행사', ['박람회', '이벤트', '행사', '오픈', 'open', '리뉴얼', '입점', '세일', '할인',
+            '특가', '특별전', '기획전', '프로모션', '초대권', '사전예약']],
+  /* 추천 — 매장·직원을 칭찬하는 글. 바이럴에서 값어치가 가장 큰 갈래라 따로 센다 */
+  ['추천', ['매니저님', '부점장님', '점장님', '판매명장', '추천', '칭찬', '감사', '친절']],
+  /* 모바일 — 안 걸린 254건에 「핸드폰 산 후기」·「폴드8 실물」이 많았다(실측).
+     **'모바일' 그 말 자체가 빠져 있어** 「…미래기술캠퍼스 모바일」이 기타로 샜다 */
+  ['모바일', ['모바일', '핸드폰', '갤럭시', '폴드', '플립', '스마트폰', '휴대폰',
+              '버즈', '워치', '태블릿', '민팃']],
+  ['구매', ['구매', '구입', '계약', '견적', '상담', '결제', '내돈내산', '후기',
+            '장만', '질렀', '가전완료', '해결했']],
+];
+
+/** 제목·카페 이름을 보고 유형 하나를 고른다. 못 가르면 '기타'. */
+function kindOf_(text) {
+  var t = norm_(text), i, j;
+  for (i = 0; i < KINDS.length; i++) {
+    var ws = KINDS[i][1];
+    for (j = 0; j < ws.length; j++) if (t.indexOf(norm_(ws[j])) >= 0) return KINDS[i][0];
+  }
+  return '기타';
+}
 
 /* ── 판정 ──────────────────────────────────────────────────────
  * **여기가 이 기능의 전부다.** 네이버 검색은 따옴표를 강제하지 않아(따옴표 유무로
@@ -275,9 +334,24 @@ function sheet_(name, header) {
  * 매일 돌면서 새로 잡힌 것만 더하므로 *"그날 새로 발견된 후기"* 라는 정직한 뜻이 된다.
  * 블로그는 작성일도 함께 담아 화면이 둘을 갈라 보여준다. **작성일인 척하지 않는다.**
  */
+/**
+ * **한 번에 다 못 돈다 — 이어서 돈다.**
+ *
+ * 질의를 8 갈래로 쪼개니(TAILS) 매장당 8×2소스×2쪽 = **32 회**, 65곳이면 **2,080 회**다.
+ * Apps Script 는 한 번에 **6분**까지만 도는데 그 안에 못 끝난다.
+ *
+ * 그래서 **어디까지 했는지 기억했다가 이어서 돈다**(`_cursor` 스크립트 속성).
+ * 시간이 다 되면 그 자리에서 멈추고 다음 실행이 이어받는다 — 하루 1회 트리거가
+ * 여러 번 돌아도, 화면에서 몇 번 더 눌러도 결국 한 바퀴를 마친다.
+ * **`done:true` 가 나오면 한 바퀴가 끝난 것**이고 커서는 처음으로 돌아간다.
+ */
 function collectReviews() {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
   var seen = {}, i, k, n;
+  var t0 = Date.now();
+  var BUDGET_MS = 4.5 * 60 * 1000;      /* 6분 한도에서 여유를 둔다 — 시트 쓰기 시간이 남아야 한다 */
+  var cursor = Number(props_().getProperty('_cursor') || 0);
+  if (!(cursor >= 0) || cursor >= STORES.length) cursor = 0;
   if (itemSheet.getLastRow() > 1) {
     var links = itemSheet.getRange(2, 6, itemSheet.getLastRow() - 1, 1).getValues();
     for (i = 0; i < links.length; i++) seen[String(links[i][0])] = true;
@@ -290,10 +364,16 @@ function collectReviews() {
   var calls = 0, got = 0, kept = 0, add = [], err = '';
   var kinds = ['blog', 'cafearticle'];
 
-  for (i = 0; i < STORES.length; i++) {
+  var stopped = false;
+  for (i = cursor; i < STORES.length; i++) {
+    /* **시간이 다 되면 그 자리에서 멈춘다** — 다음 실행이 여기서 이어받는다 */
+    if (Date.now() - t0 > BUDGET_MS) { cursor = i; stopped = true; break; }
     var code = STORES[i][0], name = STORES[i][1];
-    var query = QUERY[name] || ('삼성스토어 ' + name);
+    var base = QUERY[name] || ('삼성스토어 ' + name);
     var mname = MATCH[name] || name;
+    /* **질의를 쪼개 여러 번 묻는다** — 한 질의는 200건이 상한이라 큰 매장을 다 못 받는다 */
+    for (var ti = 0; ti < TAILS.length; ti++) {
+    var query = base + TAILS[ti];
     for (k = 0; k < kinds.length; k++) {
       /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
       for (var page = 0; page < MAX_PAGES; page++) {
@@ -329,12 +409,18 @@ function collectReviews() {
             String(it.title || '').replace(/<[^>]+>/g, ''), link,
             String(it.cafename || ''), post,
             stamp,                                     /* 처음 본 날 — 「새로 발견」을 세는 데 쓴다 */
+            /* **제목만 본다.** 카페 이름을 넣었더니 다이렉트웨딩 카페의 「설치 후기」가
+               카페 이름의 '웨딩' 때문에 「혼수」가 되고, 입주예정자 카페의 「구매 후기」가
+               「입주」가 됐다(실물 표본에서 잡았다). **카페 이름은 글쓴이가 고른 말이 아니다.** */
+            kindOf_(String(it.title || '')),
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
       }
       if (err) break;
     }
+    if (err) break;
+    }   /* TAILS */
     /* **인증이 막혔으면 첫 실패에서 멈춘다.**
        처음에는 `스크립트 속성` 문구를 던지는 예외만 잡았는데, **HTTP 401 은 예외가
        아니라 정상 응답**이라 130 번을 다 돌았다(2026-08-31 실측: `calls:130 · got:0 ·
@@ -346,8 +432,18 @@ function collectReviews() {
   if (add.length) {
     itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
   }
+  /* 한 바퀴를 마쳤으면 커서를 처음으로 — 다음 실행이 새로 훑는다 */
+  if (!stopped) cursor = 0;
+  props_().setProperty('_cursor', String(cursor));
+
   sheet_(SHEET_LOG, LOG_HEADER).appendRow([new Date(), calls, got, kept, add.length, err]);
-  return { calls: calls, got: got, kept: kept, added: add.length, error: err };
+  return {
+    calls: calls, got: got, kept: kept, added: add.length, error: err,
+    /* **어디까지 했는지 화면이 알아야 한다** — 안 그러면 *"왜 65곳이 아니라 20곳만 돌았지"*
+       가 된다. `done:false` 면 「이어서 수집」을 한 번 더 누르면 된다. */
+    done: !stopped, from: cursor, stores: STORES.length,
+    at: stopped ? cursor : STORES.length
+  };
 }
 
 /** 하루 1회 새벽 3시 트리거를 건다. **한 번만 실행하면 된다** — 중복은 스스로 지운다. */
@@ -392,6 +488,9 @@ function readAll_() {
       src: String(v[i][3]), title: String(v[i][4]), link: String(v[i][5]),
       cafe: String(v[i][6]), postdate: post,
       seenAt: ymd(v[i][8] || v[i][0]),
+      /* **옛 줄에는 kind 칸이 없다** — 그때는 제목으로 그 자리에서 판정한다.
+         다시 수집하지 않아도 옛 줄이 유형을 갖는다(날짜를 되살린 것과 같은 방식). */
+      kind: String(v[i][9] || '') || kindOf_(String(v[i][4])),
       /* 작성일을 아는가 — 화면이 「추정」을 밝히는 데 쓴다. **있는 척하지 않는다.** */
       dated: post.length === 8
     });
@@ -412,7 +511,7 @@ function summary_() {
      **카페는 네이버가 작성일을 안 준다** — 그 줄만 발견일이고 `dated:false` 로 표시해
      화면이 그 사실을 밝힌다. 섞어 놓고 모른 척하면 화면이 거짓말을 한다. */
   var day = 0, week = 0, month = 0, dated = 0, newToday = 0;
-  var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {};
+  var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
   for (i = 0; i < rows.length; i++) {
     var r = rows[i], f = r.date;
     if (f === d0) day++;
@@ -420,6 +519,7 @@ function summary_() {
     if (f >= d30) month++;
     if (r.dated) dated++;
     if (r.seenAt === d0) newToday++;          /* 오늘 **새로 발견**한 것 — 뜻이 다르다 */
+    byKind[r.kind] = (byKind[r.kind] || 0) + 1;
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
     bySrc[r.src] = (bySrc[r.src] || 0) + 1;
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
@@ -442,7 +542,7 @@ function summary_() {
     total: rows.length, day: day, week: week, month: month,
     /* **작성일을 아는 건수를 함께 낸다** — 화면이 *"1,459건 중 698건은 작성일을 안다"*
        고 밝힐 수 있어야 한다. 카페는 네이버가 안 주므로 그 차이를 감추면 안 된다. */
-    dated: dated, newToday: newToday, byMonth: byMonth,
+    dated: dated, newToday: newToday, byMonth: byMonth, byKind: byKind,
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
        함께수집이되어야합니다"*). 수집은 처음부터 `link` 열에 담고 있었는데 **화면이
@@ -482,6 +582,6 @@ function doGet(e) {
   var t = HtmlService.createTemplateFromFile('ReviewsIndex');
   t.data = JSON.stringify(summary_());
   return t.evaluate()
-    .setTitle('경원영업팀 매장 언급 후기')
+    .setTitle('경원영업팀 바이럴분석')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }

@@ -759,7 +759,7 @@ export default function AdminPage() {
 }
 
 /*
- * ── 매장 바이럴 ────────────────────────────────────────────────
+ * ── 경원영업팀 바이럴분석 ──────────────────────────────────────
  * 2026-08-31 사장님 지시: *"바이럴은 사용현황대시보드 안으로 별도 섹션을 구성해주세요"* ·
  * *"관리자만 확인합니다"*.
  *
@@ -782,8 +782,9 @@ type ViralData = {
   byStore?: Record<string, number>
   byCafe?: Record<string, number>
   bySrc?: Record<string, number>
+  byKind?: Record<string, number>
   lastRun?: { at: string; error: string } | null
-  recent?: { date?: string; foundAt?: string; storeName: string; src: string; title: string; link: string; cafe: string; dated?: boolean }[]
+  recent?: { date?: string; foundAt?: string; storeName: string; src: string; kind?: string; title: string; link: string; cafe: string; dated?: boolean }[]
 }
 
 /*
@@ -817,12 +818,16 @@ function ViralSection() {
   const top = Object.entries(d?.byStore || {}).sort((a, b) => b[1] - a[1]).slice(0, 8)
   const cafes = Object.entries(d?.byCafe || {}).sort((a, b) => b[1] - a[1]).slice(0, 5)
   const hit = Object.values(d?.byStore || {}).filter((v) => v > 0).length
+  const kindTotal = Object.values(d?.byKind || {}).reduce((a, b) => a + b, 0)
+  const kinds = Object.entries(d?.byKind || {})
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => (a[0] === '기타' ? 1 : b[0] === '기타' ? -1 : b[1] - a[1]))
 
   return (
     <div className="mt-5">
       <div className="flex items-center justify-between gap-2 mb-2">
         <h2 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-          <Icon name="chat" size={15} style={{ color: '#0F766E' }} /> 매장 바이럴
+          <Icon name="chat" size={15} style={{ color: '#0F766E' }} /> 경원영업팀 바이럴분석
         </h2>
         <a
           href={VIRAL_URL} target="_blank" rel="noreferrer"
@@ -834,7 +839,8 @@ function ViralSection() {
       </div>
       <p className="text-[11px] text-gray-400 mb-2.5">
         네이버 블로그·카페(다이렉트웨딩 · 메이크마이웨딩 · 맘카페 · 입주카페)에 올라온 우리 매장 후기 ·
-        매일 새벽 자동 수집 · <b>일간·주간·월간은 「발견일」 기준</b>입니다
+        매일 새벽 자동 수집 · <b>일간·주간·월간은 「작성일」 기준</b>입니다(작성일을 모르는
+        카페 글은 처음 본 날로 셉니다)
       </p>
 
       {state === 'loading' && <div className="text-xs text-gray-400 py-6 text-center">불러오는 중…</div>}
@@ -861,6 +867,30 @@ function ViralSection() {
               </div>
             ))}
           </div>
+
+          {/* 후기 유형 — 2026-08-31 사장님 요청(*"혼수후기인지 입주후기인지 구매후기인지
+              설치후기인지 유형별로 구분"*). **제목의 말로만 가른다** — 카페 이름을 함께
+              봤더니 다이렉트웨딩 카페의 「설치 후기」가 「혼수」가 됐다(실물 표본에서 잡았다). */}
+          {kinds.length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-3.5 mb-3">
+              <p className="text-xs font-bold text-gray-700 mb-0.5">후기 유형</p>
+              <p className="text-[10px] text-gray-400 mb-2">제목의 말로 가릅니다 · 못 가른 것은 「기타」</p>
+              <div className="flex flex-wrap gap-1.5">
+                {kinds.map(([k, v]) => (
+                  <span
+                    key={k}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] text-gray-600"
+                  >
+                    {k}
+                    <b className="text-[12px]" style={{ color: '#0F766E' }}>{v.toLocaleString()}</b>
+                    <span className="text-[9px] text-gray-400">
+                      {kindTotal ? Math.round((v / kindTotal) * 100) : 0}%
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="bg-white rounded-2xl border border-gray-100 p-3.5">
@@ -904,6 +934,7 @@ function ViralSection() {
                 <p className="text-[12px] font-semibold text-gray-800 truncate">{r.title}</p>
                 <p className="text-[10px] text-gray-400">
                   <span className="font-semibold" style={{ color: '#0F766E' }}>{r.src}</span>
+                  {r.kind ? ' · ' + r.kind : ''}
                   {' · '}{r.storeName}{r.cafe ? ' · ' + r.cafe : ''}{' · '}{ymd(r.date || r.foundAt)}
                 </p>
               </a>
