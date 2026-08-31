@@ -1425,6 +1425,18 @@
        "틈새장/키큰장 제작 (칸막이 제거 없음) · 2,300 × 600 × 600mm",
        "500,000원"
       ]
+     ],
+     "imgs": [
+      "",
+      "reform_price_visual1-01.png",
+      "reform_price_visual1-02_v2.png",
+      "reform_price_visual1-03-v2.jpg",
+      "",
+      "reform_price_visual1-11_v2.png",
+      "",
+      "reform_price_visual1-05.png",
+      "reform_price_visual1-06.png",
+      "reform_price_visual1-07.png"
      ]
     },
     {
@@ -1569,6 +1581,16 @@
        "세트에 기본 포함된 1도어 외 추가 시공, 규격은 세트 A 와 동일",
        "450,000원"
       ]
+     ],
+     "imgs": [
+      "",
+      "reform_price_visual1-08-v3.png",
+      "",
+      "",
+      "reform_price_visual6-01.png",
+      "reform_price_visual6-02.png",
+      "reform_price_visual6-03.png",
+      ""
      ]
     },
     {
@@ -1610,6 +1632,15 @@
        "미보관은 신규 제작",
        "100,000 / 250,000원"
       ]
+     ],
+     "imgs": [
+      "",
+      "reform_price_visual3-01.jpg",
+      "reform_price_visual3-02.jpg",
+      "reform_price_visual3-03.jpg",
+      "",
+      "",
+      ""
      ]
     },
     {
@@ -1710,6 +1741,12 @@
        "에어드레서와 별도 수납장 단독",
        "500,000원"
       ]
+     ],
+     "imgs": [
+      "",
+      "reform_price_visual4-01.jpg",
+      "reform_price_visual4-02.jpg",
+      "reform_price_visual4-03.jpg"
      ]
     },
     {
@@ -2190,8 +2227,7 @@
       ]
      ]
     }
-   ],
-   "icon": "🗄️"
+   ]
   }
  ],
  "safety": {

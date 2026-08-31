@@ -58,7 +58,8 @@
     "build:owncompare": "node scripts/build-own-compare.mjs",
     "test:owncompare": "node scripts/test-own-compare.mjs",
     "build:uspcards": "node scripts/build-usp-cards.mjs",
-    "build:usppt": "node scripts/build-usp-ppt.mjs"
+    "build:usppt": "node scripts/build-usp-ppt.mjs",
+    "fetch:reformimg": "node scripts/fetch-reform-img.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

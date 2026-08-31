@@ -870,5 +870,38 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!bad && checked) console.log(`OK: Apps Script ${checked}개 파일에 꼬리 쉼표 없음 (구형 런타임 호환)`);
 }
 
+/*
+ * ── HTML 템플릿에 **스크립트릿 기호가 딱 하나만** 있는가 ──
+ *
+ * 2026-08-31 — 스크립트가 통째로 죽었다. 화면은 `SyntaxError … ('Reviews' 파일, 1198행)`
+ * 인데 그 줄은 평범한 `return t.evaluate()` 였고 `?json=1` 은 1MB 를 정상으로 줬다.
+ *
+ * 범인은 **내가 주석에 그 기호를 설명하려고 그대로 적은 것**이었다.
+ * **Apps Script 템플릿 파서는 주석을 모른다** — HTML 을 훑다가 여는 기호를 만나면
+ * 거기서부터 코드로 읽으므로, 설명문이 통째로 스크립트릿이 되어 깨진 JS 를 만든다.
+ * 그리고 그 오류는 템플릿을 부른 자리(`t.evaluate()`)로 보고되어 **원인이 아주 멀어 보인다.**
+ *
+ * 이 화면은 자료를 한 번만 심으므로 **여는 기호는 정확히 하나여야 한다.**
+ */
+{
+  const at = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  if (fs.existsSync(at)) {
+    const src = fs.readFileSync(at, 'utf8');
+    const opens = (src.match(/<\?/g) || []).length;
+    if (opens !== 1) {
+      /* 어느 줄인지 알려 준다 — 874줄에서 손으로 찾을 수는 없다 */
+      const where = src.split('\n')
+        .map((l, i) => (l.includes('<?') ? i + 1 : 0)).filter(Boolean);
+      fail(`[Apps Script] ReviewsIndex 에 스크립트릿 여는 기호가 ${opens}개 — 정확히 1개여야 한다`
+        + ` (${where.join(', ')}행). **주석에도 적으면 안 된다** — 파서는 주석을 모른다`);
+    } else if (!/var DATA = <\?!= data \?>;/.test(src)) {
+      /* force-print 가 아니면 JSON 이 문자열이 되어 화면이 전부 0 이 된다 */
+      fail('[Apps Script] ReviewsIndex 의 자료 심는 자리가 force-print 가 아니다 — 화면이 전부 0 이 된다');
+    } else {
+      console.log('OK: ReviewsIndex 스크립트릿 1곳 · force-print (주석에 기호 없음)');
+    }
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

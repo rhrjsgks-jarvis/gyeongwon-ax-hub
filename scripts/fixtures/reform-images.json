@@ -5,6 +5,24 @@
  "groups": {
   "used": [
    {
+    "file": "reform_price_visual1-01.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-01.png",
+    "alt": "제품 설치 공간 확보를 위해 냉장고장과 김치냉장고장 사이의 중간 칸막이를 제거한 모습입니다. 냉장고장 안에는",
+    "near": "세트 A 기본형 중간 칸막이 제거 + 장 제작(틈새장) 제품 설치 공간 확보를 위해 냉장고장과 김치냉장고장 사이의 중간 칸막이 제거 (장 철거 포함) 제품 설치 후 남는 공간 30cm(권장) 이상일 때 틈새장 제작("
+   },
+   {
+    "file": "reform_price_visual1-02_v2.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-02_v2.png",
+    "alt": "냉장고장 중간 칸막이를 제거한 모습입니다.냉장고장 안에는 Bespoke 냉장고 4도어와 김치냉장고 4도어가 ",
+    "near": "세트 B 단순 마감형 중간 칸막이 제거 + 틈새 마감, 상부장 제작 기존 상부장, 수납장, 중간 칸막이를 철거하고 새로운 상부장 제작, 남는 공간은 단순 마감 하는 시공 제품 설치 후 남는 공간 30cm (권장) 이"
+   },
+   {
+    "file": "reform_price_visual1-03-v2.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-03-v2.jpg",
+    "alt": "냉장고장 중간 칸막이를 제거한 모습입니다.냉장고장 안에는 Bespoke 냉장고 4도어와 김치냉장고 4도어가 ",
+    "near": "세트 C 수납형 중간 칸막이 제거 + 장 제작(틈새장 또는 키큰장), 상부장 제작 기존 상부장, 수납장, 중간 칸막이를 철거하고 공간 활용을 위한 장 제작(틈새장 또는 키큰장)을 시공하여 가로 라인을 맞추고, 새로운"
+   },
+   {
     "file": "reform_price_visual1-05.png",
     "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-05.png",
     "alt": "제품 설치 공간 확보를 위해 냉장고장과 김치냉장고장 사이의 중간 칸막이를 제거한 모습입니다. 냉장고장 안에는",
@@ -21,6 +39,48 @@
     "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-07.png",
     "alt": "냉장고장 안에는 Bespoke 냉장고 4도어와 김치냉장고 4도어가 설치되어 있습니다. 냉장고장 우측에 키 큰",
     "near": "단품 C 틈새장 또는 키큰장 제작 틈새장 또는 키큰장 제작 냉장고 설치 후 남는 공간에 장을 설치 (중간 칸막이 제거 없음) 수납장은 도어장, 레일장, 오픈장 등 선택 가능 기준 높이 : 2,300mm 가로 : 60"
+   },
+   {
+    "file": "reform_price_visual1-08-v3.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-08-v3.png",
+    "alt": "빌트인 냉장고의 상부, 후면부, 좌/우를 박스형 판넬로 마감하여 박스장을 설치한 모습입니다. 박스장 안에는 ",
+    "near": "세트 A 기본형 상부장 일부 제거(필요 시) + 냉장고장 제작 1도어 냉장고장 단독 시공 (도어 제작, 상부장/하부지판 포함) 기준 높이 : 상부장/하부지판 포함 2,300mm 가로 : 좌우 EP판넬 포함 600mm"
+   },
+   {
+    "file": "reform_price_visual1-11_v2.png",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual1-11_v2.png",
+    "alt": "제품 설치 공간 확보를 위해 냉장고장과 김치냉장고장 사이의 중간 칸막이를 제거한 모습입니다. 냉장고장 안에는",
+    "near": "세트 E 기본형(슬라이딩) 중간 칸막이 제거 + 장 제작(슬라이딩 틈새장) 제품 설치 공간 확보를 위해 냉장고장과 김치냉장고장 사이의 중간칸막이를 제거하고 남는 공간에 슬라이딩 틈새장을 시공 제품 설치 후 남는 공간"
+   },
+   {
+    "file": "reform_price_visual3-01.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual3-01.jpg",
+    "alt": "주방의 싱크대 하부장 안에 Bespoke 콤팩트 오븐을 설치한 모습입니다.",
+    "near": "세트 A 싱크대 하부장 싱크대 하부장 제작 싱크대 하부에 설치하는 시공 (폭 600mm 규격장) 기준 서랍장 1개 포함 단가 (원.VAT포함) 220,000 원"
+   },
+   {
+    "file": "reform_price_visual3-02.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual3-02.jpg",
+    "alt": "주방의 박스장 안에 Bespoke 콤팩트 오븐을 설치한 모습입니다.",
+    "near": "세트 B 박스장 박스장 제작 오븐 설치를 위한 단독 박스장 시공 박스장은 도어장, 레일장, 오픈장 등 선택 가능 기준 제품 사이즈 + 설치 가이드 이내 필요 공간 확보 제작 높이 1,350mm, 가로 600mm, 깊"
+   },
+   {
+    "file": "reform_price_visual3-03.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual3-03.jpg",
+    "alt": "주방의 싱크대가 보이고 우측 수납장 안에 Bespoke 콤팩트 오븐을 설치한 모습입니다.",
+    "near": "세트 C 수납장 수납장 제작 오븐을 포함한 수납장 형태 또는 수납장만 단독으로 설치하는 시공 수납장은 도어장, 레일장, 오픈장 등 선택 가능 기준 높이 2,300mm, 가로 600mm, 깊이 600mm 단가 (원.V"
+   },
+   {
+    "file": "reform_price_visual4-01.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual4-01.jpg",
+    "alt": "상부장과 박스장을 설치한 모습입니다. 박스장 안에는 Bespoke AI 에어드레서 제품이 있습니다.",
+    "near": "세트 A 상부장형 박스장+상부장 제작 박스장 상부에 상부장(도어장)을 추가 설치하는 시공 기준 제품 사이즈 + 설치 가이드 이내 필요 공간 확보 제작 높이 2,300mm, 가로 600mm, 깊이 600mm 단가 (원"
+   },
+   {
+    "file": "reform_price_visual4-02.jpg",
+    "url": "https://images.samsung.com/kdp/static/mkt/Samsung-Care-Plus/CE/reform/reform_price_visual4-02.jpg",
+    "alt": "상부장, 박스장, 수납장을 을 설치한 모습입니다. 박스장 안에는 Bespoke AI 에어드레서 제품이 있습니",
+    "near": "세트 B 수납형 박스장+상부장+수납장 제작 에어드레서와 가로 도어라인을 맞춰 세로로 수납장을 설치한 후 상부장을 설치하는 시공 수납장은 도어장, 레일장, 오픈장 등 선택 가능 기준 수납장 : 가로 600mm, 높이 "
    },
    {
     "file": "reform_price_visual4-03.jpg",

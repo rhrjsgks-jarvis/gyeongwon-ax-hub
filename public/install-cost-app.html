@@ -135,6 +135,9 @@
   .r .v.free{color:#1428A0}
   .r .v.soft{font-size:13px;font-weight:700;color:#6b7280}
   /* 값이 여럿인 표(이전설치·재설치·철거 / 신제품·이전) — 이름 아래에 나란히 세운다 */
+  /* 시공 사진 — 줄 왼쪽에 작게. 커지면 표가 아니라 화보가 된다 */
+  .r .shot{width:58px;height:58px;flex:none;border-radius:8px;object-fit:cover;
+    background:#f1f3f6;border:1px solid #e5e7eb;margin-right:2px}
   .r.multi{display:block}
   .r.multi .nm{margin-bottom:7px}
   .vs{display:flex;flex-wrap:wrap;gap:8px}
@@ -310,11 +313,14 @@ function normalizeGrid(sec) {
   var uniq = function (a) { var o = [], p = null; a.forEach(function (x) { if (x !== p) { o.push(x); p = x; } }); return o; };
   return {
     vh: vi.map(function (i) { return last[i] || ''; }),
-    rows: sec.grid.slice(sec.headRows).map(function (r) {
+    rows: sec.grid.slice(sec.headRows).map(function (r, ri) {
       return {
         name: uniq(ni.map(function (i) { return r[i]; }).filter(Boolean)).join(' · '),
         vals: vi.map(function (i) { return r[i] || ''; }),
         note: ti.map(function (i) { return r[i]; }).filter(Boolean).join(' '),
+        /* 시공 사진 — **격자와 같은 자리로 온다.** 만드는 쪽에서 머리글 줄만큼 앞을
+           비워 두었으므로 여기서 다시 밀면 안 된다(밀면 사진이 딴 줄에 붙는다). */
+        img: sec.imgs ? (sec.imgs[ri + sec.headRows] || '') : '',
       };
     }),
   };
@@ -334,6 +340,23 @@ function normalizeRows(sec) {
   };
 }
 
+/*
+ * 시공 사진 한 장. **삼성닷컴 지면과 같은 그림**이다(2026-08-31 사장님 요청 —
+ * *"냉장고장 리폼 이미지도 홈페이지와 동일하게 추가해 주세요"*).
+ *
+ * **우리 저장소에서 받는다**(`/reform-img/`) — 설치가이드 규격도를 옮긴 것과 같은
+ * 이유다: 공유가 화면을 그대로 찍는데 다른 도메인 이미지는 CORS 가 막고, 매장 전파가
+ * 약하면 안 열리며, 삼성닷컴이 경로를 바꾸면 통째로 사라진다.
+ *
+ * **없으면 자리를 만들지 않는다** — 빈 칸이 늘어서면 표가 읽히지 않는다.
+ * `loading="lazy"` 로 두어 절을 열 때만 받는다.
+ */
+function shot(r) {
+  if (!r.img) return '';
+  return '<img class="shot" src="/reform-img/' + esc(r.img) + '" alt="' + esc(r.name)
+    + ' 시공 예시" loading="lazy" decoding="async">';
+}
+
 /* 「이름 → 금액」 한 줄. 값이 여럿이면 이름 아래에 나란히 둔다. */
 function listOf(n, pfx) {
   var multi = n.vh.length > 1;
@@ -341,7 +364,8 @@ function listOf(n, pfx) {
     var id = ' data-id="' + pfx + ':' + ri + '"';
     if (r.only) return '<div class="r only"' + id + '>' + esc(r.only) + '</div>';
     if (!multi) {
-      return '<div class="r"' + id + '><div class="nm">' + esc(r.name)
+      return '<div class="r"' + id + '>' + shot(r)
+        + '<div class="nm">' + esc(r.name)
         + (r.note ? '<div class="nt">' + esc(r.note) + '</div>' : '') + '</div>'
         + money(r.vals[0]) + '</div>';
     }
