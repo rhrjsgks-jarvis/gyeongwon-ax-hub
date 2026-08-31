@@ -889,18 +889,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const at = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
   if (fs.existsSync(at)) {
     const src = fs.readFileSync(at, 'utf8');
+    /* **이제는 하나도 없어야 한다**(2026-08-31 구조 변경). 자료를 HTML 에 심지 않고
+       화면이 뜬 뒤 `getSummary()` 로 받으므로 `createHtmlOutputFromFile` 을 쓴다 —
+       템플릿 평가를 아예 안 하므로 스크립틀릿이 남아 있으면 **글자로 그대로 화면에 뜬다.**
+       주석에 적는 것도 안 된다(그 함정으로 화면이 통째로 죽은 적이 있다). */
     const opens = (src.match(/<\?/g) || []).length;
-    if (opens !== 1) {
-      /* 어느 줄인지 알려 준다 — 874줄에서 손으로 찾을 수는 없다 */
+    if (opens !== 0) {
+      /* 어느 줄인지 알려 준다 — 1,900줄에서 손으로 찾을 수는 없다 */
       const where = src.split('\n')
         .map((l, i) => (l.includes('<?') ? i + 1 : 0)).filter(Boolean);
-      fail(`[Apps Script] ReviewsIndex 에 스크립트릿 여는 기호가 ${opens}개 — 정확히 1개여야 한다`
-        + ` (${where.join(', ')}행). **주석에도 적으면 안 된다** — 파서는 주석을 모른다`);
-    } else if (!/var DATA = <\?!= data \?>;/.test(src)) {
-      /* force-print 가 아니면 JSON 이 문자열이 되어 화면이 전부 0 이 된다 */
-      fail('[Apps Script] ReviewsIndex 의 자료 심는 자리가 force-print 가 아니다 — 화면이 전부 0 이 된다');
+      fail(`[Apps Script] ReviewsIndex 에 스크립트릿 기호가 ${opens}개 남았다 — 정적 출력이라 글자로 뜬다`
+        + ` (${where.join(', ')}행). **주석에도 적으면 안 된다.**`);
+    } else if (!src.includes('var DATA = {};')) {
+      fail('[Apps Script] ReviewsIndex 가 빈 자료로 시작하지 않는다 — 첫 render 가 그 자리에서 죽는다');
+    } else if (!src.includes('.getSummary();')) {
+      fail('[Apps Script] 화면이 자료를 받아 오지 않는다 — 뼈대만 뜨고 영영 빈 채로 남는다');
     } else {
-      console.log('OK: ReviewsIndex 스크립트릿 1곳 · force-print (주석에 기호 없음)');
+      console.log('OK: ReviewsIndex — 스크립틀릿 0 · 뼈대 먼저 뜨고 자료를 받아 채운다');
     }
   }
 
@@ -931,6 +936,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const miss = pub.filter((f) => !new RegExp(`^function ${f}\\(`, 'm').test(rv));
     if (miss.length) fail(`[바이럴] 화면이 부르는 함수가 없다: ${miss.join(', ')}`);
     else console.log(`OK: 바이럴 공개 함수 ${pub.length}개 — 화면에서 부를 수 있는 이름이다`);
+
+    /* ②-b **같은 이름의 함수를 두 번 선언하지 않는다.** JS 는 뒤엣것이 앞엣것을 조용히
+       덮으므로 오류도 경고도 안 난다 — 실제로 `getSummary` 가 두 벌이었다(캐시 있는 것 ·
+       없는 것). 순서가 반대였으면 **B안 캐시가 통째로 죽은 채** 아무도 몰랐을 것이다. */
+    const declSeen = {};
+    const declDup = [];
+    const declRe = /^function ([A-Za-z0-9_$]+)\s*\(/gm;
+    let declM;
+    while ((declM = declRe.exec(rv))) {
+      if (declSeen[declM[1]]) declDup.push(declM[1]);
+      else declSeen[declM[1]] = 1;
+    }
+    if (declDup.length) {
+      fail(`[바이럴] Reviews.gs 에 같은 이름의 함수가 두 벌이다: ${[...new Set(declDup)].join(', ')} — 뒤엣것이 조용히 이긴다`);
+    } else {
+      console.log(`OK: 바이럴 함수 선언 ${Object.keys(declSeen).length}개 — 이름 중복 없음`);
+    }
 
     /* ③ 꼬리말 루프 안에 **시간 검사**가 있어야 한다. 매장 하나가 최대
        `TAILS × 2 × MAX_PAGES` 회라 6분을 넘길 수 있고, 넘기면 강제 종료돼
@@ -994,8 +1016,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         };
         const run = (rows) => {
           const st = mk(rows);
-          const f = new Function('sheet_', 'SHEET_ITEMS', 'HEADER', fn + '; return dedupe_()');
-          const out = f(() => st.sheet, '후기', ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind']);
+          /* **함수를 떼어 돌리므로 그것이 부르는 것도 함께 넘겨야 한다.**
+             `dedupe_` 가 집계 캐시를 버리게 되면서 의존이 하나 늘었다 —
+             안 넘기면 `ReferenceError` 로 스위트가 통째로 죽는다(실제로 죽었다). */
+          const f = new Function('sheet_', 'SHEET_ITEMS', 'HEADER', 'sumCacheClear_',
+            fn + '; return dedupe_()');
+          const out = f(() => st.sheet, '후기', ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind'], () => {});
           return { out, st };
         };
         const row = (link, post, tag) => ['2026-08-01', 'Z001', '수원', '카페', tag, link, '', post, '2026-08-01', '구매'];

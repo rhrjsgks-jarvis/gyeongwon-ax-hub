@@ -701,6 +701,7 @@ function sheet_(name, header) {
  * 여러 번 돌아도, 화면에서 몇 번 더 눌러도 결국 한 바퀴를 마친다.
  * **`done:true` 가 나오면 한 바퀴가 끝난 것**이고 커서는 처음으로 돌아간다.
  */
+/* **수집이 끝나면 집계 캐시를 버린다** — 안 버리면 새로 모은 것이 최대 6시간 안 보인다 */
 function collectReviews() {
   /* **둘이 동시에 돌지 못하게 막는다.** 이어달리기 트리거가 도는 중에 사장님이
      화면에서 「지금 수집」을 누르면 두 벌이 같은 시트에 쓴다 — 둘 다 자기 시작 시점의
@@ -881,6 +882,9 @@ function sweep_() {
 
   if (add.length) {
     itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
+    /* **쓴 그 자리에서 집계 캐시를 버린다.** 함수 끝에서 버리면 6분 한도로 중간에
+       끊겼을 때 안 버려져, 새로 모은 것이 최대 6시간 안 보인다. */
+    sumCacheClear_();
   }
   /* **한 바퀴를 마칠 때만 경쟁비교를 함께 돌린다**(최대 40회 · 한 바퀴의 2%).
      중간에 돌리면 같은 날 여러 번 쌓여 어느 것이 그날 값인지 알 수 없다. */
@@ -979,6 +983,7 @@ function dedupe_() {
   /* 남길 것을 위에서부터 다시 쓰고, 남는 꼬리만 지운다 —
      시트를 통째로 지웠다가 쓰면 중간에 끊겼을 때 자료가 사라진다. */
   s.getRange(2, 1, keep.length, W).setValues(keep);
+  sumCacheClear_();   /* 중복을 치웠으면 건수가 바뀐다 */
   s.deleteRows(2 + keep.length, removed);
 
   return { before: vals.length, after: keep.length, removed: removed };
@@ -1437,7 +1442,10 @@ function collectRival() {
     if (err) break;
   }
 
-  if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, RIVAL_HEADER.length).setValues(rows);
+  if (rows.length) {
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, RIVAL_HEADER.length).setValues(rows);
+    sumCacheClear_();   /* 당사 vs LG 가 바뀐다 */
+  }
   if (calls) addUsage_(calls);
   return { rows: rows.length, calls: calls, error: err };
 }
@@ -1461,8 +1469,6 @@ function rival_() {
   return { at: last, rows: out };
 }
 
-function getSummary() { return summary_(); }
-
 /* ── 화면 · JSON ─────────────────────────────────────────────── */
 
 function json_(o) {
@@ -1475,14 +1481,94 @@ function json_(o) {
  * **전산PC 에서 열리는 것이 이 스크립트의 존재 이유다** — Vercel 이 막혀 있어
  * 사장님이 대시보드를 볼 수 없다(2026-08-31 확인: 구글 스크립트는 열린다).
  */
+/* ── 집계 캐시 (2026-08-31) ──────────────────────────────────────────────────
+ *
+ * `summary_()` 는 시트 6,800여 행을 읽어 집계한다 — 실측 **13초**. 화면을 열 때마다
+ * 그것을 다시 하는 것은 낭비다. **수집은 새벽 3시에 한 번 도는데** 집계는 볼 때마다
+ * 도는 셈이라, 결과를 담아 두면 그대로 쓸 수 있다.
+ *
+ * **`CacheService` 는 값 하나가 100KB 한도**라 1MB 결과를 통째로 못 넣는다.
+ * 90KB 조각으로 나눠 `putAll` 로 한 번에 넣고 `getAll` 로 한 번에 읽는다
+ * (조각마다 왕복하면 캐시가 느려져 뜻이 없다).
+ *
+ * **한 조각이라도 없으면 통째로 버린다.** 조각이 따로 만료되면 이어 붙인 JSON 이
+ * 깨지는데, 그러면 화면이 **조용히 틀린 값**을 그린다 — 다시 계산하는 편이 낫다.
+ *
+ * **못 넣어도 화면은 돈다.** 캐시는 빠르게 하는 장치이지 자료의 출처가 아니다.
+ */
+var SUM_KEY = 'viral_sum';
+var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
+var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
+
+function sumCacheGet_() {
+  try {
+    var c = CacheService.getScriptCache();
+    var n = Number(c.get(SUM_KEY + '_n') || 0);
+    if (!n) return null;
+    var keys = [], i;
+    for (i = 0; i < n; i++) keys.push(SUM_KEY + '_' + i);
+    var all = c.getAll(keys);
+    var s = '';
+    for (i = 0; i < n; i++) {
+      var part = all[SUM_KEY + '_' + i];
+      if (part == null) return null;   /* 한 조각이라도 없으면 못 쓴다 */
+      s += part;
+    }
+    var obj = JSON.parse(s);
+    return (obj && obj.ok === true) ? obj : null;
+  } catch (e) { return null; }
+}
+
+function sumCachePut_(obj) {
+  try {
+    var s = JSON.stringify(obj);
+    var map = {}, n = 0, i;
+    for (i = 0; i < s.length; i += SUM_CHUNK) {
+      map[SUM_KEY + '_' + n] = s.substring(i, i + SUM_CHUNK);
+      n++;
+    }
+    map[SUM_KEY + '_n'] = String(n);
+    CacheService.getScriptCache().putAll(map, SUM_TTL);
+  } catch (e) { /* 못 넣어도 화면은 돈다 */ }
+}
+
+/* 자료가 바뀌면 버린다 — 수집·중복정리 끝에서 부른다. **개수 키만 지우면 된다**
+   (조각이 남아도 개수를 모르면 안 읽는다). */
+function sumCacheClear_() {
+  try { CacheService.getScriptCache().remove(SUM_KEY + '_n'); } catch (e) { /* 무시 */ }
+}
+
+/**
+ * 화면이 뜬 뒤 자료를 받아 가는 자리(`google.script.run.getSummary()`).
+ *
+ * **`doGet` 이 자료를 심지 않게 되면서 생긴 창구다.** 화면은 뼈대만 먼저 받고
+ * 여기서 자료를 채운다 — 그동안 「불러오는 중」을 보여준다.
+ */
+function getSummary() {
+  var hit = sumCacheGet_();
+  if (hit) { hit.cached = true; return hit; }
+  var d = summary_();
+  sumCachePut_(d);
+  return d;
+}
+
 function doGet(e) {
   var p = (e && e.parameter) || {};
-  if (p.json === '1') return json_(summary_());
+  if (p.json === '1') return json_(getSummary());
   if (p.diag === '1') return json_(diag_());     /* 키가 제대로 들어왔는지 — 값은 안 나온다 */
   if (p.run === '1') return json_(collectReviews());
-  var t = HtmlService.createTemplateFromFile('ReviewsIndex');
-  t.data = JSON.stringify(summary_());
-  return t.evaluate()
+  /* ── 화면과 자료를 가른다 (2026-08-31) ─────────────────────────────────────
+   * 예전에는 여기서 `summary_()` 를 돌려 **1MB 자료를 HTML 안에 심었다.** 그래서
+   * 화면이 뜨기까지 **25~68초**가 걸렸고 그동안 백지였다(실측).
+   *
+   * 지금은 **뼈대만 보낸다**(144KB · 1~2초). 화면이 뜨자마자 `getSummary()` 를 불러
+   * 자료를 받아 채운다 — 참조 사이트(`mansuk0284-jpg.github.io/viral`)가 0.04초에
+   * 뜨는 이유가 정확히 이 구조다(HTML 먼저, 자료 나중).
+   *
+   * **`createHtmlOutputFromFile` 이다** — 템플릿 평가(`<?= ?>`)를 아예 안 한다.
+   * 1.95MB 문자열을 만들던 그 55초가 통째로 사라진다.
+   */
+  return HtmlService.createHtmlOutputFromFile('ReviewsIndex')
     .setTitle('경원영업팀 바이럴분석')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
 }

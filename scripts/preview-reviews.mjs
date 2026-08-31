@@ -109,36 +109,62 @@ const DATA = {
   recent
 };
 
+/* **자료를 HTML 에 심지 않는다**(2026-08-31 구조 변경). 실물과 같은 길을 타야 하므로
+   `google.script.run.getSummary()` 가 자료를 돌려주는 가짜를 심는다 — 그래야
+   「뼈대가 먼저 뜨고 자료가 나중에 채워지는」 그 흐름을 눈으로 볼 수 있다.
+
+   `VIRAL_JSON` 에 파일 경로를 주면 **실제 프로덕션 자료**로 띄운다:
+     VIRAL_JSON=/tmp/viral.json npm run preview:viral -- 8899 */
+const ext = process.env.VIRAL_JSON;
+const SHOW = ext ? JSON.parse(fs.readFileSync(ext, 'utf8')) : DATA;
+const REAL = SHOW.data || SHOW;
+delete REAL.cached;
+
 let html = fs.readFileSync(SRC, 'utf8');
-const before = html;
-html = html.replace('<?!= data ?>', JSON.stringify(DATA));
-if (html === before) {
-  console.error('[preview] `<?!= data ?>` 자리를 못 찾았다 — 템플릿이 바뀌었는지 볼 것');
+if (html.indexOf('<' + '?') >= 0) {
+  console.error('[preview] HTML 에 스크립틀릿이 남아 있다 — 정적 출력이라 글자로 뜬다');
   process.exit(1);
 }
-/* `google.script.run` 은 로컬에 없다. **없는 채로 두면 버튼 한 번에 화면이 죽어**
-   무엇을 보러 왔는지 알 수 없게 된다 — 부르면 콘솔에만 적는 가짜를 심는다. */
+
+/* 지연을 조금 준다(300ms) — 「뼈대 먼저」가 실제로 보이는지 눈으로 확인하려면
+   자료가 즉시 오면 안 된다. */
 const stub = [
   '<script>',
-  'window.google = { script: { run: new Proxy({}, { get: function (t, k) {',
-  '  if (k === "withSuccessHandler" || k === "withFailureHandler") return function () { return window.google.script.run; };',
-  '  return function () { console.log("[preview] google.script.run." + String(k) + " (로컬이라 아무 일도 하지 않는다)"); };',
-  '} }) } };',
+  'window.__VIRAL_FIXTURE = ' + JSON.stringify(REAL) + ';',
+  'window.google = { script: { run: (function () {',
+  '  var ok = null, ng = null;',
+  '  var api = {',
+  '    withSuccessHandler: function (f) { ok = f; return api; },',
+  '    withFailureHandler: function (f) { ng = f; return api; },',
+  '    getSummary: function () { setTimeout(function () { ok && ok(window.__VIRAL_FIXTURE); }, 300); },',
+  '    collectReviews: function () { console.log("[preview] collectReviews (로컬이라 아무 일도 하지 않는다)"); },',
+  '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {}',
+  '  };',
+  '  return api;',
+  '})() } };',
+  'try { localStorage.removeItem("viral_card_order"); } catch (e) {}',
   '</script>'
-].join('\n');
-html = html.replace('<script>', stub + '\n<script>');
+].join(String.fromCharCode(10));
+/* **첫 `<script>` 앞에만** 끼운다. `replace` 는 넣는 문자열의 달러+백틱을 특수 패턴으로
+   해석하고(CLAUDE.md 에 적힌 그 사고), `split/join` 은 **모든** `<script>` 를 바꿔
+   지도 블록에도 스텁이 들어간다. 자리를 찾아 잘라 붙이는 것이 유일하게 정확하다. */
+const at = html.indexOf('<script>');
+if (at < 0) { console.error('[preview] <script> 를 못 찾았다'); process.exit(1); }
+html = html.slice(0, at) + stub + String.fromCharCode(10) + html.slice(at);
 
 if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });
 fs.writeFileSync(OUT, html);
 console.log('[preview] .scratch/_viral.html — ' + (html.length / 1024).toFixed(0) + 'KB'
-  + ' · 지도 칸 ' + Object.keys(byMap).length + ' · 목록 ' + recent.length + '건');
+  + (ext ? ' · 실제 자료(' + ext + ')' : ' · 모의 자료')
+  + ' · 지도 칸 ' + Object.keys(REAL.byMap || {}).length
+  + ' · 목록 ' + (REAL.recent || []).length + '건');
 
 /* 포트를 주면 띄운다. 역슬래시를 쓰지 않는다(heredoc·셸이 먹는다). */
 const port = Number(process.argv[2] || 0);
 if (port) {
-  http.createServer((q, s) => {
-    s.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    fs.createReadStream(OUT).pipe(s);
+  http.createServer((q, s2) => {
+    s2.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    fs.createReadStream(OUT).pipe(s2);
   }).listen(port, '127.0.0.1', () => {
     console.log('[preview] http://127.0.0.1:' + port + '/  (Ctrl+C 로 끕니다)');
   });
