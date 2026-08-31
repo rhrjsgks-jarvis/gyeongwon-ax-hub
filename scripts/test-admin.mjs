@@ -1272,6 +1272,78 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         else console.log('OK: 바이럴 카드 펼치기 — 전용 버튼 · 한 번만 · 지도도 함께 커진다');
       }
 
+      /* ⓘ **카드 자리 바꾸기 · 지도 보강** (2026-08-31 사장님 요청 묶음).
+         화면에서만 보이는 것들이라 되돌아가면 아무도 모른다. */
+      {
+        const bad = [];
+
+        /* ① 카드 키 — **제목을 키로 쓰지 않는다.** 이 저장소는 화면 이름을 자주 고치는데
+           그때마다 사장님이 맞춰 둔 순서가 통째로 초기화된다. */
+        const keys = (ix2.match(/data-card="[a-z]+"/g) || []);
+        if (keys.length < 6) bad.push('카드 키(data-card)가 ' + keys.length + '개뿐이다');
+
+        /* ② 끌기 */
+        if (!/function wireDrag\(/.test(ix2)) bad.push('wireDrag 이 없다');
+        if (!/^\s+wireDrag\(\);/m.test(ix2)) bad.push('render 가 wireDrag 을 부르지 않는다');
+        /* **손잡이만 잡는다** — 카드 전체가 클릭 대상이면 지도 칸·매장 막대 조작이 죽는다 */
+        if (!/h\.addEventListener\('pointerdown'/.test(ix2)) bad.push('손잡이가 아닌 곳에서 끌기가 시작된다');
+        /* **move·up 은 document 가 받는다** — 손잡이에만 걸면 마우스가 벗어난 채 놓였을 때
+           끝나는 이벤트가 안 와 화면이 끌린 채로 잠긴다(실측으로 잠겼다) */
+        if (!/document\.addEventListener\('pointerup'/.test(ix2)) bad.push('놓기를 document 가 받지 않는다 — 화면이 잠길 수 있다');
+        /* **버튼을 뗀 채 움직이면 스스로 풀린다** — pointerup 이 유실돼도 복구된다 */
+        if (!/e\.buttons === 0/.test(ix2)) bad.push('놓기 이벤트가 유실됐을 때 스스로 풀리지 않는다');
+        /* **놓은 자리를 마지막에 반영** — 빠르게 끌면 중간 이동이 거의 없어 자리가 안 바뀐다 */
+        if (!/place\(e\);/.test(ix2)) bad.push('놓은 자리를 마지막으로 반영하지 않는다');
+
+        /* ③ 맨 앞 카드가 전체 폭 — `:first-child` 로는 안 된다(hidden 카드가 첫 자리를 먹는다) */
+        if (!ix2.includes('.card.lead { grid-column: 1 / -1; }')) bad.push('맨 앞 카드가 전체 폭이 아니다');
+        if (!/function markLead\(/.test(ix2)) bad.push('보이는 첫 카드를 찾는 markLead 가 없다');
+        if (/\.two > \.card:first-child \{ grid-column/.test(ix2)) {
+          bad.push(':first-child 로 전체 폭을 준다 — hidden 카드가 첫 자리를 먹으면 어긋난다');
+        }
+
+        /* ④ 순서 기억 — localStorage 가 막힌 곳이 있어 통째로 감싸야 한다 */
+        if (!/viral_card_order/.test(ix2)) bad.push('바꾼 순서를 기억하지 않는다');
+
+        /* ⑤ 지도 글자 선택 끄기 (사장님: *"깜빡깜빡거리는 텍스트"*) */
+        if (!/\.geo-svg \{[^}]*user-select: none/.test(ix2)) {
+          bad.push('지도에서 글자 선택이 켜져 있다 — 칸을 누르면 캐럿이 깜빡인다');
+        }
+
+        /* ⑥ 시·군 이름 전부 (사장님: *"지명을 알아야 공략하기가 좋습니다"*) */
+        if (!/GW_MAP\.sigun/.test(ix2)) bad.push('관할 밖 시·군 이름이 지도에 안 뜬다');
+
+        /* ⑦ 지도 아래 매장 목록 — **영업지역으로 묶는다**(사장님: *"원주 춘천 강릉 속초가
+           모두 분리되어 있는데 하나로 묶어 주시면 됩니다"*). 칸으로 묶으면 강원이 넷으로 갈린다. */
+        if (!/DATA\.byRegion \|\| \{\}, AC = DATA\.areaCells/.test(ix2)) {
+          bad.push('지도 아래 목록이 영업지역으로 묶이지 않는다 — 강원이 넷으로 갈린다');
+        }
+        if (!/data-cells=/.test(ix2)) bad.push('한 지역이 덮는 칸 목록이 없다 — 강원 네 칸이 함께 강조되지 않는다');
+        if (!/areaCells/.test(rv)) bad.push('서버가 영업지역→지도 칸 매핑을 내지 않는다');
+        if (!/byMapStores/.test(rv)) bad.push('서버가 칸별 매장 목록을 내지 않는다');
+
+        if (bad.length) fail('[바이럴] 카드/지도 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 카드 자리 바꾸기 · 지도 지명·매장 목록 (' + keys.length + '개 카드)');
+      }
+
+      /* ⓙ **목록 쪽 나누기** (2026-08-31 사장님: *"20 40 60 80 100개로 보고 나머지는
+         페이지화"*). 3,000건을 한 번에 그리면 화면이 끝없이 길어져 아래 카드가 안 보인다. */
+      {
+        const bad = [];
+        if (!/var pageSize = 20, page = 1;/.test(ix2)) bad.push('쪽 크기·쪽 번호가 없다');
+        if (!/[20, 40, 60, 80, 100]/.test(ix2)) bad.push('쪽 크기 선택(20·40·60·80·100)이 없다');
+        /* **정규식 대신 문자열 포함으로 본다** — 이스케이프가 없으면 heredoc·셸이
+           역슬래시를 먹어도 뜻이 안 바뀐다(이 회차에 여섯 번 데었다). */
+        if (!ix2.includes('rows.slice(from, from + pageSize)')) bad.push('한 쪽 분량만 그리지 않는다 — 전부 그리면 쪽이 뜻이 없다');
+        /* **쪽 수가 줄면 마지막 쪽으로 당긴다** — 안 그러면 필터를 좁혔을 때 빈 화면이 뜬다 */
+        if (!ix2.includes('if (page > pages) page = pages;')) bad.push('쪽 수가 줄었을 때 빈 화면이 뜬다');
+        /* **필터가 바뀌면 1쪽으로** — 바꾸는 길이 여덟이라 한 곳(서명)에서 본다 */
+        if (!/lastSig/.test(ix2)) bad.push('필터를 바꿔도 쪽이 그대로다 — 빈 화면이 뜬다');
+        if (bad.length) fail('[바이럴] 목록 쪽 나누기 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 목록 쪽 나누기 — 20~100 · 필터 바뀌면 1쪽');
+      }
+
+
 
 
     }

@@ -1152,7 +1152,7 @@ function summary_() {
   var day = 0, week = 0, month = 0, dated = 0, newToday = 0;
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
-  var byRegion = {}, byMap = {};
+  var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {};
 
   /* **후기가 0건인 매장도 목록에 세운다**(사장님: *"전점이 다 나와야 합니다"*).
      예전에는 잡힌 매장만 키가 생겨 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
@@ -1166,6 +1166,19 @@ function summary_() {
     var a0 = sido_(STORES[i][0]);
     if (!byRegion[a0]) byRegion[a0] = { n: 0, stores: [] };
     byRegion[a0].stores.push(STORES[i][1]);
+    /* **지도 칸별 매장 목록** (2026-08-31 사장님: *"지도에 지점이 다 보이게"*).
+       `byRegion` 은 영업지역 6곳이라 강원 9곳이 한 덩어리다 — 지도는 시로 갈리므로
+       칸 기준 목록이 따로 필요하다. **0건 매장도 담는다**(STORES 전체를 훑는다) —
+       빠지면 「우리 매장이 없다」로 읽힌다. */
+    var mc0 = mapCell_(STORES[i][0]);
+    if (!byMapStores[mc0]) byMapStores[mc0] = [];
+    byMapStores[mc0].push(STORES[i][1]);
+    /* **영업지역 → 지도 칸** (2026-08-31 사장님: *"원주 춘천 강릉 속초가 모두 분리되어
+       있는데 하나로 묶어 주시면 됩니다"*). 지도 아래 목록은 **영업지역 6곳**으로 묶고,
+       그 줄에 손을 얹으면 그 지역이 덮는 **칸 전부**가 지도에서 강조돼야 한다 —
+       강원 한 줄에 원주·춘천·강릉·속초 네 칸이 함께 밝아진다. */
+    if (!areaCells[a0]) areaCells[a0] = [];
+    if (areaCells[a0].indexOf(mc0) < 0) areaCells[a0].push(mc0);
   }
 
   for (i = 0; i < rows.length; i++) {
@@ -1255,6 +1268,10 @@ function summary_() {
     /* **지도 칸별 건수** — 경기는 AREA 5곳, 강원은 시 4곳(`mapCell_`).
        화면이 이 값으로 지도를 칠하고, 지역 막대는 `byRegion` 을 그대로 쓴다. */
     byMap: byMap,
+    /* 칸별 매장 목록 — 지도 아래 목록이 이것으로 그려지고, 누르면 그 칸이 강조된다 */
+    byMapStores: byMapStores,
+    /* 영업지역이 덮는 지도 칸 — 목록 한 줄에 손을 얹으면 이 칸들이 함께 밝아진다 */
+    areaCells: areaCells,
     /* **관심 카페는 건수가 적어도 늘 내려보낸다** — 상위 12곳 막대에는 2~3건짜리가
        영영 안 올라와, 넣어 달라고 한 카페가 화면에서 사라진다.
        `naver:false` 는 0 이 아니라 **못 닿는 곳**이라 건수를 적지 않는다. */

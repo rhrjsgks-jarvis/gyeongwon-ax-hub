@@ -169,6 +169,32 @@ for (const r of Object.keys(acc)) {
   const t = acc[r];
   labels[r] = { x: +(t.x / t.a).toFixed(P), y: +(t.y / t.a).toFixed(P) };
 }
+
+/* ── 시·군 이름표 — **관할 밖까지 전부** ────────────────────────────────────
+ * 2026-08-31 사장님: *"지도 안에 지역명 표시가 안 된 곳이 있는데 작은 글씨도 좋으니
+ * 표시되면 좋겠습니다. **지명을 알아야 공략하기가 좋습니다.**"*
+ *
+ * 칸 이름표(위)는 23개뿐이라 ①관할 밖 경기 24곳과 ②한 칸이 여러 시를 덮는 곳
+ * (성남 칸 안의 광주·이천·하남)이 **이름 없이 남아 있었다.**
+ *
+ * **칸 이름과 같은 자리에는 찍지 않는다** — 수원 칸은 수원시 하나라 두 번 찍히면
+ * 글자가 겹쳐 뭉갠다. 화면이 칸 이름을 먼저 그리고 그것과 같은 이름은 건너뛴다.
+ */
+const sigun = {};
+for (const f of src.features) {
+  const ring = biggestRing(f.coords);
+  const c = ring && ringCentroid(ring.map(([lon, lat]) => [X(lon), Y(lat)]));
+  if (!c) continue;
+  /* 시·군 하나가 여러 조각이면(구 단위) 가장 큰 조각에 찍는다 — 조각마다 찍으면
+     「수원시장안구」처럼 한 시에 이름이 넷 붙는다. */
+  /* **뒤에서 깎지 말고 앞에서 자른다.** `[가-힣]*구$` 로 깎았더니 「고양시일산서구」가
+     통째로 먹혀 **빈 이름**이 나왔다(실측). 첫 「시/군」 앞까지가 곧 시·군 이름이다 —
+     「고양시덕양구」→고양 · 「여주시」→여주 · 「시흥시」→시흥(비탐욕이라 안 깎인다). */
+  const nm = f.region || ((f.name.match(/^(.+?)(시|군)/) || [])[1] || f.name);
+  const prev = sigun[nm];
+  if (!prev || c.a > prev.a) sigun[nm] = { x: +c.x.toFixed(P), y: +c.y.toFixed(P), a: c.a };
+}
+for (const k of Object.keys(sigun)) delete sigun[k].a;
 /* 한 칸이 여러 시·군을 덮으면 화면이 그 사실을 밝혀야 한다 — 「성남」을 눌렀는데
    광주·이천·하남 건수가 함께 세어지는 이유가 화면 어디에도 없으면 안 된다. */
 const members = {};
@@ -195,7 +221,8 @@ const block = [
   '   출처 KOSTAT 2013 센서스용 행정구역경계(Free to share or remix).',
   '   **fetch 가 없다** — 사내망에서 CDN 이 막혀도 지도가 뜬다. */',
   'var GW_MAP = { svg: ' + jsStr(svg) + ', labels: ' + JSON.stringify(labels)
-    + ', members: ' + JSON.stringify(members) + ' };',
+    + ', members: ' + JSON.stringify(members)
+    + ', sigun: ' + JSON.stringify(sigun) + ' };',
   '</script>',
   END
 ].join('\n');
