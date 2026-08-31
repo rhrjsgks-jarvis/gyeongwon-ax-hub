@@ -152,7 +152,11 @@ function parseDoc(file) {
       if (/^#{1,4} /.test(L)) break
       const c = L.split('|').map(s => s.trim()).filter((s, i, a) => i > 0 && i < a.length - 1)
       if (c.length < 2 || /^-+$/.test(c[0]) || /^(묶음|항목|구분)$/.test(c[0])) continue
-      const row = c.length >= 3 ? { k: c[1], v: c[2] } : { k: c[0], v: c[1] }
+      /* **마크다운 표시를 걷어낸다** — 원본이 값 안에서 별표 강조를 쓴다(`**2,600nits**`).
+         HTML 카드에서는 덜 띄었지만 PPT 에서는 별표가 그대로 찍혀 눈에 걸린다.
+         카드에 실을 때만 지운다 — 원본 문서는 근거라 손대지 않는다. */
+      const md = (t) => String(t).replace(/\*\*/g, '').replace(/`/g, '').trim()
+      const row = c.length >= 3 ? { k: md(c[1]), v: md(c[2]) } : { k: md(c[0]), v: md(c[1]) }
       if (row.k && row.v && row.v !== '-') specs.push(row)
     }
 
@@ -416,18 +420,27 @@ function assertSelfContained(h) {
     if (m) throw new Error(`자립성 위반 — ${what} ${m.length}건: ${m.slice(0, 3).join(' , ')}`)
   }
 }
-assertSelfContained(html)
+/* **PPT 생성기가 이 값을 그대로 가져다 쓴다**(`build-usp-ppt.mjs`).
+   파서를 두 벌 두면 한쪽만 고쳐지는 것이 이 저장소가 되풀이해 데인 일이다.
+   원본은 `docs/usp/*.md` 하나뿐이고, 여기서 한 번만 읽는다. */
+export { CARDS }
 
-fs.mkdirSync(path.dirname(OUT), { recursive: true })
-fs.writeFileSync(OUT, html)
+/* 이 파일을 **직접 실행했을 때만** HTML 을 쓴다 — PPT 생성기가 import 할 때는
+   카드 자료만 가져가고 파일은 안 건드린다. */
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)
+if (isMain) {
+  assertSelfContained(html)
+  fs.mkdirSync(path.dirname(OUT), { recursive: true })
+  fs.writeFileSync(OUT, html)
 
-const kb = (fs.statSync(OUT).size / 1024).toFixed(0)
-console.log(`제품 USP 카드 — ${CARDS.length}장 · ${kb}KB`)
-console.log(`  ${path.relative(ROOT, OUT)}`)
-let thin = 0
-for (const c of CARDS) {
-  const flag = c.usp.length < 3 || c.spec.length < 5 ? '  ← 얇다' : ''
-  if (flag) thin++
-  console.log(`  ${c.cat.padEnd(14)} USP ${c.usp.length} · 사양 ${String(c.spec.length).padStart(2)} · 주의 ${c.warns.length}${flag}`)
+  const kb = (fs.statSync(OUT).size / 1024).toFixed(0)
+  console.log(`제품 USP 카드 — ${CARDS.length}장 · ${kb}KB`)
+  console.log(`  ${path.relative(ROOT, OUT)}`)
+  let thin = 0
+  for (const c of CARDS) {
+    const flag = c.usp.length < 3 || c.spec.length < 5 ? '  ← 얇다' : ''
+    if (flag) thin++
+    console.log(`  ${c.cat.padEnd(14)} USP ${c.usp.length} · 사양 ${String(c.spec.length).padStart(2)} · 주의 ${c.warns.length}${flag}`)
+  }
+  if (thin) console.log(`\n※ 내용이 얇은 카드 ${thin}장 — 원문에 그만큼밖에 없다(지어내지 않는다)`)
 }
-if (thin) console.log(`\n※ 내용이 얇은 카드 ${thin}장 — 원문에 그만큼밖에 없다(지어내지 않는다)`)

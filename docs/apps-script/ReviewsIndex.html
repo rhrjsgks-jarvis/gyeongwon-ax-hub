@@ -81,6 +81,7 @@
   .note { font-size: 11px; color: var(--mute); background: #F8FAFC; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
   .warn { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
   .empty { color: var(--mute); font-size: 12px; padding: 18px 0; text-align: center; }
+  .more { font-size: 10.5px; color: var(--mute); text-align: right; padding-top: 6px; }
 </style>
 
 <header>
@@ -141,18 +142,28 @@
   }
   function nf(n) { return Number(n || 0).toLocaleString('ko-KR'); }
 
-  /* 막대 — 값이 0 이면 그리지 않는다(빈 막대가 줄지어 서면 진짜 신호가 묻힌다) */
-  function bars(el, obj, limit) {
-    var arr = Object.keys(obj).map(function (k) { return [k, obj[k]]; })
-      .filter(function (p) { return p[1] > 0; })
-      .sort(function (a, b) { return b[1] - a[1]; }).slice(0, limit);
-    if (!arr.length) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
-    var max = arr[0][1];
-    el.innerHTML = arr.map(function (p) {
+  /* 막대 — 값이 0 이면 그리지 않는다(빈 막대가 줄지어 서면 진짜 신호가 묻힌다).
+     **다만 0 건도 세어서 밝힌다** — 65개 매장을 전부 수집하므로(2026-08-31 사장님 지시)
+     후기가 아직 없는 곳이 여럿이다. 안 적으면 *"우리 매장이 목록에 없다"* 로 읽힌다.
+     감추는 것과 없는 것은 다른 말이다. */
+  function bars(el, obj, limit, total) {
+    var all = Object.keys(obj).map(function (k) { return [k, obj[k]]; });
+    var arr = all.filter(function (p) { return p[1] > 0; })
+      .sort(function (a, b) { return b[1] - a[1]; });
+    var zero = (total || all.length) - arr.length;
+    var shown = arr.slice(0, limit);
+    if (!shown.length) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
+    var max = shown[0][1];
+    var html = shown.map(function (p) {
       return '<div class="bar"><div class="nm" title="' + esc(p[0]) + '">' + esc(p[0]) + '</div>' +
         '<div class="tr"><div class="fl" style="width:' + Math.max(3, p[1] / max * 100) + '%"></div></div>' +
         '<div class="vl">' + nf(p[1]) + '</div></div>';
     }).join('');
+    var tail = [];
+    if (arr.length > limit) tail.push('그 밖 ' + (arr.length - limit) + '곳');
+    if (zero > 0) tail.push('아직 0건 ' + zero + '곳');
+    if (tail.length) html += '<div class="more">' + tail.join(' · ') + '</div>';
+    el.innerHTML = html;
   }
 
   function renderList() {
@@ -187,7 +198,7 @@
     document.getElementById('store-sub').textContent =
       '후기가 잡힌 매장 ' + nStores + '곳 / 대상 ' + DATA.stores + '곳';
 
-    bars(document.getElementById('stores'), DATA.byStore || {}, 20);
+    bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores);
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12);
 
     document.getElementById('stamp').textContent =
