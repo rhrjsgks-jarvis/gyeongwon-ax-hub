@@ -925,7 +925,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
     /* ② `google.script.run` 이 부르는 이름은 **밑줄로 끝나면 안 된다**(비공개 취급) */
-    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit'];
+    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews'];
     const miss = pub.filter((f) => !new RegExp(`^function ${f}\\(`, 'm').test(rv));
     if (miss.length) fail(`[바이럴] 화면이 부르는 함수가 없다: ${miss.join(', ')}`);
     else console.log(`OK: 바이럴 공개 함수 ${pub.length}개 — 화면에서 부를 수 있는 이름이다`);
@@ -968,6 +968,61 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail(`[바이럴] PAGE_SIZE(${pageSize}) × MAX_PAGES(${maxPages}) = ${pageSize * maxPages} > 1000 — start 상한을 넘어 HTTP 400 이 난다`);
     } else {
       console.log(`OK: 바이럴 질의 깊이 ${pageSize * maxPages}건 ≤ 네이버 start 상한 1,000`);
+    }
+
+    /* ⑦ **중복 정리는 되돌릴 수 없다 — 가짜 시트로 실제 돌려 본다.**
+       규칙을 눈으로만 보면 "지울 것을 안 지운다"와 "지우면 안 될 것을 지운다"를 못 가른다.
+       `dedupe_` 만 떼어 내 Apps Script 흉내(sheet_)를 물려 돌린다. */
+    {
+      const fn = (rv.match(/function dedupe_\(\)[\s\S]*?\n\}/) || [])[0]
+      if (!fn) fail('[바이럴] dedupe_ 가 없다 — 중복을 치울 길이 없다');
+      else {
+        /* 시트 흉내 — 실제로 쓰인 값과 지운 줄 수를 들고 있는다 */
+        const mk = (rows) => {
+          const st = { rows: rows.map((r) => r.slice()), wrote: null, deleted: 0 };
+          st.sheet = {
+            getLastRow: () => st.rows.length + 1,
+            getRange: (r, c, n, w) => ({
+              getValues: () => st.rows.slice(r - 2, r - 2 + n).map((x) => x.slice(0, w)),
+              setValues: (v) => { st.wrote = v }
+            }),
+            deleteRows: (from, n) => { st.deleted = n }
+          };
+          return st;
+        };
+        const run = (rows) => {
+          const st = mk(rows);
+          const f = new Function('sheet_', 'SHEET_ITEMS', 'HEADER', fn + '; return dedupe_()');
+          const out = f(() => st.sheet, '후기', ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind']);
+          return { out, st };
+        };
+        const row = (link, post, tag) => ['2026-08-01', 'Z001', '수원', '카페', tag, link, '', post, '2026-08-01', '구매'];
+
+        /* ⓐ 같은 URL 두 벌 → 한 줄이 지워지고, **작성일이 있는 쪽이 남는다** */
+        const a = run([row('u1', '', '카페판'), row('u1', '20260715', '블로그판'), row('u2', '', '다른 글')]);
+        if (a.out.removed !== 1) fail(`[바이럴] 중복 정리가 안 문다 — removed=${a.out.removed} (1이어야 한다)`);
+        else if (a.st.wrote[0][4] !== '블로그판') fail('[바이럴] 중복 정리가 작성일 있는 줄을 안 남긴다 — 날짜 정보를 버린다');
+        else if (a.st.deleted !== 1) fail(`[바이럴] 지운 줄 수가 안 맞는다 — deleteRows(${a.st.deleted})`);
+        else console.log('OK: 바이럴 중복 정리 — 같은 URL 을 치우고 작성일 있는 줄을 남긴다');
+
+        /* ⓑ 중복이 없으면 **시트를 건드리지 않는다** */
+        const b = run([row('u1', '', 'a'), row('u2', '', 'b')]);
+        if (b.out.removed !== 0 || b.st.wrote || b.st.deleted) fail('[바이럴] 중복이 없는데 시트를 고쳤다');
+        else console.log('OK: 바이럴 중복 정리 — 치울 것이 없으면 시트를 건드리지 않는다');
+
+        /* ⓒ **주소가 빈 줄은 지우지 않는다** — 걸러낼 근거가 없다.
+           **줄을 넉넉히 둔다** — 적게 두면 ⓓ의 절반 안전선이 먼저 걸려 이 검사가
+           그 그늘에 가려진다(실제로 3줄로 두었다가 안 물었다). */
+        const c = run([row('', '', 'x'), row('', '', 'y'),
+          row('u1', '', 'a'), row('u2', '', 'b'), row('u3', '', 'c'), row('u4', '', 'd')]);
+        if (c.out.removed !== 0) fail('[바이럴] 주소가 빈 줄을 중복으로 보고 지웠다 — 근거 없이 지우면 안 된다');
+        else console.log('OK: 바이럴 중복 정리 — 주소가 빈 줄은 근거가 없어 그대로 둔다');
+
+        /* ⓓ **절반 넘게 지워야 하면 손대지 않는다.** 규칙이 잘못됐을 때의 마지막 안전선. */
+        const d = run([row('u', '', '1'), row('u', '', '2'), row('u', '', '3'), row('u', '', '4')]);
+        if (d.out.removed !== 0 || !d.out.error) fail('[바이럴] 절반 넘게 지우는데 안전선이 안 걸렸다');
+        else console.log('OK: 바이럴 중복 정리 — 절반을 넘으면 멈추고 이유를 말한다');
+      }
     }
 
     /* ⑥ 동시 실행 자물쇠 — 두 벌이 같은 시트에 쓰면 같은 글이 두 줄로 들어간다 */

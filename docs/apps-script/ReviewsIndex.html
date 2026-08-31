@@ -220,6 +220,9 @@
       <button class="btn" id="run">지금 수집</button>
       <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
       <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
+      <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
+           늘 띄워 두면 「눌러야 하나」 싶어지므로 **치울 것이 있을 때만** 나온다. -->
+      <button class="btn" id="dedupe" hidden>중복 정리</button>
       <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
            한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
       <span class="lim">
@@ -671,6 +674,14 @@
             : (tot ? tot + '곳 한 바퀴를 마친 상태입니다' : ''));
       e.className = 'prog' + (auto ? ' auto' : (mid ? ' mid' : ''));
     }
+    /* **치울 것이 있을 때만 「중복 정리」를 띄운다.** 개수를 함께 적어야
+       누를지 말지 판단할 수 있다(0 이면 버튼 자체가 없다). */
+    var db = document.getElementById('dedupe');
+    if (db) {
+      var dr = Number(DATA.dupRows || 0);
+      db.hidden = !dr;
+      if (dr && !db.disabled) db.textContent = '중복 정리 (' + nf(dr) + '줄)';
+    }
     /* 트리거를 못 걸었으면 **삼키지 않고 알린다** — 조용히 실패하면 위 초록 문구가
        거짓이 되고, 사장님은 자동으로 돌 줄 알고 기다린다. */
     if (DATA.chainErr && !auto) {
@@ -849,6 +860,45 @@
           + '<br>Apps Script 편집기의 <b>트리거</b> 화면에서 <code>continueSweep</code> 을 지우면 멈춥니다.</div>';
       })
       .stopSweep();
+  };
+
+  /* 같은 URL 이 두 번 이상 들어간 줄을 치운다(2026-08-31 사장님 지적).
+     **되돌릴 수 없는 일이라 무엇을 지우는지 먼저 밝히고 묻는다.** */
+  document.getElementById('dedupe').onclick = function () {
+    var b = this;
+    var dr = Number(DATA.dupRows || 0), dl = Number(DATA.dupLinks || 0);
+    if (!confirm('같은 주소가 두 번 이상 들어간 ' + nf(dr) + '줄을 지웁니다.\n'
+      + '(중복 링크 ' + nf(dl) + '개 · 남는 것은 ' + nf((DATA.total || 0) - dr) + '줄)\n\n'
+      + '작성일이 있는 줄을 남깁니다. 되돌릴 수 없습니다.')) return;
+    b.disabled = true; b.textContent = '정리 중…';
+    google.script.run
+      .withSuccessHandler(function (r) {
+        b.disabled = false;
+        if (r && r.busy) {
+          document.getElementById('status').innerHTML = '<div class="note warn"><b>' + esc(r.note) + '</b></div>';
+          return;
+        }
+        if (r && r.error) {
+          document.getElementById('status').innerHTML = '<div class="note warn"><b>정리하지 않았습니다</b> — ' + esc(r.error) + '</div>';
+          return;
+        }
+        document.getElementById('status').innerHTML =
+          '<div class="note"><b>중복 ' + nf(r.removed) + '줄을 지웠습니다</b> — '
+          + nf(r.before) + '줄 → <b>' + nf(r.after) + '줄</b>.'
+          + (r.removed === 0 ? ' 지울 것이 없었습니다.' : '')
+          + ' 앞으로는 수집이 겹쳐 돌아도 다시 쌓이지 않습니다.</div>';
+        google.script.run
+          .withSuccessHandler(function (d) { applySummary(d); })
+          .withFailureHandler(function () { b.textContent = '중복 정리'; })
+          .getSummary();
+      })
+      .withFailureHandler(function (e) {
+        b.disabled = false; b.textContent = '중복 정리';
+        document.getElementById('status').innerHTML =
+          '<div class="note warn"><b>정리하지 못했습니다</b> — ' + esc(e && e.message)
+          + '<br><b>자료는 그대로입니다.</b></div>';
+      })
+      .dedupeReviews();
   };
 
   document.getElementById('run').onclick = function () {

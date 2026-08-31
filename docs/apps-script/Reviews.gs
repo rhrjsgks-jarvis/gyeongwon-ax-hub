@@ -896,6 +896,68 @@ function sweep_() {
   };
 }
 
+/* ── 이미 쌓인 중복 정리 ──────────────────────────────────────────
+ * 2026-08-31 사장님 지적: *"중복후기가 있는것같은데 … 중복후기는 url로 걸러야할것같습니다"*.
+ *
+ * **원인은 동시 실행이었다**(실측). 배포본 3,000줄 표본에서 **784개 링크가 정확히 2회씩**
+ * 나왔고, 주소를 다듬어도 숫자가 그대로였다 — 표기 차이가 아니라 **완전히 같은 URL** 이다.
+ * 수집기는 처음부터 링크로 거르는데, 그 목록(`seen`)을 **실행 시작 때 시트에서 읽으므로**
+ * 두 벌이 겹쳐 돌면 서로를 못 본다(새벽 3시 트리거 + 사람이 누른 것). 전부 **정확히 2회**
+ * 인 것이 그 증거다 — 세 벌이 겹친 적은 없다.
+ *
+ * **앞으로는 자물쇠가 막는다.** 이 함수는 그 전에 쌓인 것을 치운다.
+ *
+ * **남길 줄을 고르는 규칙** — 정보가 많은 쪽을 남긴다:
+ *   ① `postdate`(작성일)가 있는 줄 ② 그다음은 먼저 들어온 줄(발견일이 이르다)
+ * 카페 훑기로 들어온 줄에는 작성일이 없으므로, 블로그 경로로 잡힌 같은 글이 있으면 그쪽이 남는다.
+ */
+function dedupeReviews() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(30 * 1000)) {
+    return { busy: true, note: '수집이 돌고 있습니다 — 끝난 뒤에 정리해 주세요.' };
+  }
+  try { return dedupe_(); } finally { lock.releaseLock(); }
+}
+
+function dedupe_() {
+  var s = sheet_(SHEET_ITEMS, HEADER);
+  var last = s.getLastRow();
+  if (last < 3) return { before: Math.max(last - 1, 0), after: Math.max(last - 1, 0), removed: 0 };
+  var W = HEADER.length;
+  var vals = s.getRange(2, 1, last - 1, W).getValues();
+  var LINK = 5, POST = 7;                    /* 0부터 — link 6번째 칸, postdate 8번째 칸 */
+
+  var idx = {}, keep = [];
+  for (var i = 0; i < vals.length; i++) {
+    var link = String(vals[i][LINK] || '');
+    /* **주소가 비어 있으면 걸러낼 근거가 없다** — 지우지 않고 그대로 둔다.
+       지우면 「중복이라 지웠다」가 거짓이 된다. */
+    if (!link) { keep.push(vals[i]); continue; }
+    var at = idx[link];
+    if (at === undefined) { idx[link] = keep.length; keep.push(vals[i]); continue; }
+    /* 이미 있다 — 작성일이 있는 쪽으로 바꿔 담는다(없으면 먼저 온 것을 그대로 둔다) */
+    var oldPost = String(keep[at][POST] || ''), newPost = String(vals[i][POST] || '');
+    if (!oldPost && newPost) keep[at] = vals[i];
+  }
+
+  var removed = vals.length - keep.length;
+  if (!removed) return { before: vals.length, after: vals.length, removed: 0 };
+
+  /* **절반 넘게 지우게 되면 손대지 않는다.** 규칙이 잘못됐을 때 자료가 통째로 날아가는
+     것을 막는 안전선이다 — 되돌릴 방법이 없으므로 의심스러우면 아무것도 하지 않는다. */
+  if (keep.length < vals.length / 2) {
+    return { before: vals.length, after: vals.length, removed: 0,
+      error: '지울 줄이 절반을 넘어(' + removed + '/' + vals.length + ') 손대지 않았습니다. 시트를 먼저 확인해 주세요.' };
+  }
+
+  /* 남길 것을 위에서부터 다시 쓰고, 남는 꼬리만 지운다 —
+     시트를 통째로 지웠다가 쓰면 중간에 끊겼을 때 자료가 사라진다. */
+  s.getRange(2, 1, keep.length, W).setValues(keep);
+  s.deleteRows(2 + keep.length, removed);
+
+  return { before: vals.length, after: keep.length, removed: removed };
+}
+
 /** 하루 1회 새벽 3시 트리거를 건다. **한 번만 실행하면 된다** — 중복은 스스로 지운다. */
 function setupTrigger() {
   var t = ScriptApp.getProjectTriggers(), i;
@@ -1046,6 +1108,16 @@ function summary_() {
      값인데, 그것을 그대로 「오늘 쓴 글」로 세고 있었다. **화면이 거짓말을 했다.**
      실측(2,802건 기준): 옛 방식 오늘 1,505 → 지금 **0** · 7일 1,520 → **15** · 30일 1,587 → **82**.
      **작성일을 모르는 글은 「전체 누적」에만 든다** — 있는 척하지 않는다. */
+  /* **같은 URL 이 두 번 이상 있는가.** 동시 실행으로 쌓인 것이라 화면이 개수를 밝히고
+     「중복 정리」 버튼을 띄운다 — 조용히 두면 매장별 건수가 부풀어 그대로 보고된다. */
+  var linkSeen = {}, dupRows = 0, dupLinks = 0;
+  for (i = 0; i < rows.length; i++) {
+    var lk = String(rows[i].link || "");
+    if (!lk) continue;
+    if (linkSeen[lk]) { dupRows++; if (linkSeen[lk] === 1) dupLinks++; linkSeen[lk]++; }
+    else linkSeen[lk] = 1;
+  }
+
   var day = 0, week = 0, month = 0, dated = 0, newToday = 0;
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
@@ -1119,6 +1191,8 @@ function summary_() {
        않고 *"1분마다 자동으로 이어 갑니다"* 를 적는다 — 안 그러면 사장님이 버튼을
        또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
     chainOn: chainOn_(), chainErr: String(props_().getProperty('_chainErr') || ''),
+    /* 같은 URL 이 두 번 이상 — 있으면 화면이 「중복 정리」를 띄운다 */
+    dupRows: dupRows, dupLinks: dupLinks,
     /* 당사 vs LG — **없으면 null 이다.** 0 으로 그리면 「LG 후기가 없다」로 읽힌다 */
     rival: rival_(),
     /* **영업스케치 지역 6곳**(수원·용인·성남·평택·안양·강원).
