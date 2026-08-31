@@ -55,6 +55,24 @@ var SHEET_LOG = '수집기록';
 var PAGE_SIZE = 100;
 var MAX_PAGES = 2;
 
+/* ── 일일 수집한도 ────────────────────────────────────────────────
+ * 2026-08-31 사장님 요청: *"지금 수집 버튼 옆에 일일 수집한도를 설정해주면 좋겠습니다"*.
+ *
+ * **한 바퀴가 최대 2,096회다** — 65곳 × 블로그·카페 2종 × 꼬리말 8 × 2쪽 = 2,080 에
+ * 관심 카페 16을 더한 값이다. 새벽 자동 수집은 하루 한 번이라 평소엔 그 안쪽이지만
+ * 「지금 수집」을 여러 번 누르면 그만큼 는다. **한도가 없으면 어느 날 조용히 막히고
+ * 그날 수집이 통째로 빈다** — 그런데 화면에는 아무 표시도 안 난다.
+ *
+ * 기본 3,000 은 **한 바퀴 + 여유**다. 한 바퀴를 못 채우는 값(2,096 미만)을 넣으면
+ * 매일 중간에서 끊기므로 화면이 그 사실을 경고한다.
+ *
+ * **세는 곳은 한 곳뿐이다** — `collectReviews()` 의 `calls` 하나를 쓰고 끝에 한 번만
+ * 저장한다. 부르는 자리마다 세면 두 숫자가 갈라진다(이 저장소가 상태줄·허브 카드
+ * 개수에서 되풀이해 데인 자리). 속성 읽기가 2,000번 도는 것도 함께 막는다.
+ */
+var DEFAULT_DAILY_LIMIT = 3000;
+var SWEEP_CALLS = 2096;   /* 화면이 "한 바퀴에 모자란다"를 말할 수 있게 상수로 둔다 */
+
 /* **열은 뒤에만 붙인다** — 이 스크립트는 열을 자리로 쓰므로 가운데에 끼우면 그 아래
    모든 줄이 한 칸씩 밀린다(Code.gs 가 지점 열을 더할 때 겪은 것과 같다). */
 /* **첫 열이 `date` 다 — 「작성일 우선, 없으면 발견일」.** 화면의 일간·주간·월간이 이
@@ -123,6 +141,46 @@ var MATCH = { '광주': '경기광주' };
  * **효과가 작은 꼬리말은 넣지 않았다** — `박람회` 는 +6건뿐이었다(실측).
  */
 var TAILS = ['', ' 혼수', ' 신혼가전', ' 입주', ' 설치', ' 구매', ' 상담', ' 견적'];
+
+/* ── 관심 카페 ────────────────────────────────────────────────────
+ * 2026-08-31 사장님 지시: *"경원영업팀 바이럴분석 에 카페추가해주세요
+ * 1.레몬테라스, 2.웨딩북, 3.요즘웨딩"*.
+ *
+ * **매장별로 돌지 않는다.** 질의에 카페 이름을 넣으면 그 카페 글이 걸린다 —
+ * 실측으로 `레몬테라스 삼성` 은 100건 중 **93건**이 그 카페였다. 그래서 카페당
+ * 몇 번만 물으면 **65개 매장이 한꺼번에** 잡히고, 어느 매장 글인지는 기존
+ * `hasStore_` 가 그대로 가른다(매장 × 카페로 돌면 195회가 더 든다).
+ *
+ * **`웨딩북` 은 여기 없다 — 네이버 카페가 아니다.** `웨딩북 삼성` 100건에 그 이름이
+ * **0건**이었고, 실제로는 별도 플랫폼(weddingbook.com)이다. 목록에 넣어 두면 늘
+ * 0건으로 남아 *"글이 없다"* 로 읽히므로 **넣지 않고 화면이 그 사실을 적는다**
+ * (「없음」과 「확인 못 함」을 가르는 이 저장소의 규칙과 같다).
+ *
+ * **다만 「받을 수 없다」는 아니다**(2026-08-31 조사). 리뷰 API 가 열려 있고
+ * (`app.wdgbook.com/v4/reviews/partners/{uuid}`) 인증도 없어 `UrlFetchApp` 으로 받힌다
+ * — 브라우저가 붙이는 `Origin` 만 없으면 200 이다(붙이면 403 이니 **넣지 말 것**).
+ * 안 붙인 이유는 **실익이다**: 파트너 6,223곳 전수에서 삼성스토어가 24곳인데
+ * **경원 관할은 갤러리아광교 한 곳(리뷰 18건)** 뿐이고 나머지 11개 시·강원 전역은 0곳이다.
+ * 리뷰가 몰린 브랜드 대표계정(724건)은 **지점 정보가 없어** 매장별 분석에 못 쓴다.
+ * **키워드 검색으로 판정하지 말 것** — `keyword=수원` 은 삼성 0곳을 준다(광교점 이름에
+ * '수원'이 없다). 디렉터리를 훑어야 한다. 자세한 것은 `.scratch/weddingbook-probe.md`.
+ *
+ * 실측(2026-08-31) — 레몬테라스 673건 받아 **우리 매장 11건** · 요즘웨딩 800건 받아
+ * **3건**, 열넷 다 그때까지 없던 글이었다.
+ */
+var CAFES = ['레몬테라스', '요즘웨딩'];
+var CAFE_TAILS = ['삼성스토어', '삼성스토어 혼수', '삼성 가전 후기', '삼성디지털프라자'];
+
+/* 화면의 「관심 카페」 — 사장님이 지목한 곳은 **건수가 적어도 늘 보여야 한다.**
+   상위 12곳 막대에는 2~3건짜리가 영영 안 올라와, 넣어 달라고 한 카페가 화면에서
+   사라진다. `naver:false` 는 이 수집기가 못 닿는 곳이라 **0 을 적지 않고 그 이유를 적는다.** */
+var WATCH = [
+  { name: '다이렉트 결혼준비', naver: true },
+  { name: '메이크마이웨딩', naver: true },
+  { name: '레몬테라스', naver: true },
+  { name: '요즘웨딩', naver: true },
+  { name: '웨딩북', naver: false, tag: '미포함', why: '네이버 카페가 아니라 별도 플랫폼(weddingbook.com)입니다. 리뷰 API 는 열려 있어 받을 수는 있으나, 파트너 6,223곳 전수에서 삼성스토어 24곳 중 경원 관할은 갤러리아광교 한 곳(리뷰 18건)뿐이라 아직 붙이지 않았습니다.' },
+];
 
 /* 지면에서 실제로 본 브랜드 표기만 넣는다. '삼성프라자'·'디지털프라자' 는 옛 이름인데
    카페 글에 살아 있다("예전에는 삼성프라자라고 더 익숙하게 부르는 분들도 있던데"). */
@@ -244,6 +302,47 @@ function belongsToOther_(text, name, allNames) {
 
 function props_() { return PropertiesService.getScriptProperties(); }
 
+function today_() { return Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'); }
+
+/**
+ * 오늘 쓴 호출 수. **날짜가 바뀌면 저절로 0 이다** — 자정에 지우는 트리거를 따로 두면
+ * 그것이 실패했을 때 한도가 영영 안 풀린다. 저장된 날짜와 오늘을 견주는 편이 안전하다.
+ */
+function usage_() {
+  var d = today_(), n = 0;
+  var raw = props_().getProperty('_dayUsage');
+  if (raw) {
+    try { var o = JSON.parse(raw); if (o && o.d === d) n = Number(o.n) || 0; } catch (e) {}
+  }
+  return { d: d, n: n };
+}
+function addUsage_(k) {
+  var u = usage_();
+  u.n += Number(k) || 0;
+  props_().setProperty('_dayUsage', JSON.stringify(u));
+  return u.n;
+}
+function dailyLimit_() {
+  var v = Number(props_().getProperty('_dailyLimit'));
+  return v > 0 ? v : DEFAULT_DAILY_LIMIT;
+}
+
+/**
+ * 화면에서 한도를 바꾼다(2026-08-31 사장님 요청).
+ *
+ * **0 이나 빈 값을 저장하지 않는다** — 그러면 영영 못 모으는데 화면에는 「한도 0」이라고만
+ * 뜬다. 위도 막는다: 한 바퀴가 2,096회라 그보다 훨씬 큰 값을 넣으면 한도를 둔 뜻이 없다.
+ * **막는 이유를 함께 돌려준다** — 왜 안 되는지 모르면 사장님이 같은 값을 또 넣는다.
+ */
+function setDailyLimit(n) {
+  n = Math.floor(Number(n));
+  if (!(n >= 100)) return { ok: false, error: '한도는 100회 이상이어야 합니다.' };
+  if (n > 50000) return { ok: false, error: '한도는 50,000회 이하로 정해 주세요.' };
+  props_().setProperty('_dailyLimit', String(n));
+  var u = usage_();
+  return { ok: true, limit: n, used: u.n, sweep: SWEEP_CALLS };
+}
+
 /**
  * **키를 읽을 때 앞뒤 공백을 떼어 낸다.**
  * 스크립트 속성에 붙여넣다 보면 줄바꿈·공백이 딸려 들어가는데, 그러면 헤더 값이
@@ -364,10 +463,19 @@ function collectReviews() {
   var calls = 0, got = 0, kept = 0, add = [], err = '';
   var kinds = ['blog', 'cafearticle'];
 
+  /* **일일 한도를 여기서 한 번만 읽는다**(2026-08-31 사장님 요청).
+     호출마다 속성을 읽으면 2,000번을 읽는 셈이라 느려지고, 무엇보다 **세는 곳이 둘이 되면
+     두 숫자가 갈라진다.** 남은 몫은 `limit - used0 - calls` 하나로만 판단한다. */
+  var limit = dailyLimit_(), used0 = usage_().n, hitLimit = false;
+  var over = function () { return used0 + calls >= limit; };
+
   var stopped = false;
   for (i = cursor; i < STORES.length; i++) {
     /* **시간이 다 되면 그 자리에서 멈춘다** — 다음 실행이 여기서 이어받는다 */
     if (Date.now() - t0 > BUDGET_MS) { cursor = i; stopped = true; break; }
+    /* **한도도 같은 방식으로 멈춘다.** 커서를 남기므로 내일 이 매장부터 이어 간다 —
+       한도에 걸렸다고 처음부터 다시 돌면 뒤쪽 매장은 영영 못 훑는다. */
+    if (over()) { cursor = i; stopped = true; hitLimit = true; break; }
     var code = STORES[i][0], name = STORES[i][1];
     var base = QUERY[name] || ('삼성스토어 ' + name);
     var mname = MATCH[name] || name;
@@ -377,6 +485,9 @@ function collectReviews() {
     for (k = 0; k < kinds.length; k++) {
       /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
       for (var page = 0; page < MAX_PAGES; page++) {
+        /* 한 매장이 최대 32회(2종 x 꼬리말 8 x 2쪽)를 쓴다 — 매장 단위로만 보면
+           한도를 그만큼 넘길 수 있어 호출 직전에도 본다 */
+        if (over()) { hitLimit = true; stopped = true; cursor = i; break; }
         var j;
         try { j = search_(kinds[k], query, page * PAGE_SIZE + 1); calls++; }
         catch (e) { err = String(e); break; }
@@ -417,10 +528,11 @@ function collectReviews() {
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
       }
-      if (err) break;
+      if (err || hitLimit) break;
     }
-    if (err) break;
+    if (err || hitLimit) break;
     }   /* TAILS */
+    if (hitLimit) break;
     /* **인증이 막혔으면 첫 실패에서 멈춘다.**
        처음에는 `스크립트 속성` 문구를 던지는 예외만 잡았는데, **HTTP 401 은 예외가
        아니라 정상 응답**이라 130 번을 다 돌았다(2026-08-31 실측: `calls:130 · got:0 ·
@@ -428,6 +540,63 @@ function collectReviews() {
        130 회가 그대로 요금이 된다. 401·403 은 더 돌아도 결과가 같다. */
     if (err && (err.indexOf('스크립트 속성') >= 0 || err.indexOf('401') >= 0 || err.indexOf('403') >= 0)) break;
   }
+
+  /* ── 관심 카페 훑기 ──────────────────────────────────────────
+     **매장 한 바퀴를 다 돈 뒤에만 돈다.** 중간에 끼우면 이어달리기(`_cursor`)가
+     매장을 가리키는 뜻을 잃는다. 시간이 모자라면 이번엔 건너뛰고 다음 차례에 한다 —
+     이 훑기는 카페당 8회라 짧다. */
+  var cafeCalls = 0, cafeAdd = 0;
+  if (!stopped && !err) {
+    for (var ci = 0; ci < CAFES.length; ci++) {
+      if (Date.now() - t0 > BUDGET_MS) break;
+      if (over()) { hitLimit = true; break; }
+      for (var cti = 0; cti < CAFE_TAILS.length; cti++) {
+        var cq = CAFES[ci] + ' ' + CAFE_TAILS[cti];
+        for (var cp = 0; cp < MAX_PAGES; cp++) {
+          if (over()) { hitLimit = true; break; }
+          var cj;
+          try { cj = search_('cafearticle', cq, cp * PAGE_SIZE + 1); calls++; cafeCalls++; }
+          catch (e2) { err = String(e2); break; }
+          if (cj.error) { err = 'cafearticle:' + cj.error; break; }
+          var cItems = cj.items || [];
+          if (!cItems.length) break;
+          for (var cn = 0; cn < cItems.length; cn++) {
+            var cit = cItems[cn];
+            got++;
+            var clink = String(cit.link || '');
+            if (!clink || seen[clink]) continue;
+            var ctext = (cit.title || '') + ' ' + (cit.description || '');
+            if (isNoise_(ctext)) continue;
+            /* **어느 매장 글인지는 65곳을 다 대 보고 가른다.** 매장별 질의가 아니라
+               카페별 질의라 우리가 미리 아는 매장이 없다 — 판정은 기존 함수 그대로다. */
+            for (var cs = 0; cs < STORES.length; cs++) {
+              var cName = STORES[cs][1], cMatch = MATCH[cName] || cName;
+              if (!hasStore_(ctext, cMatch)) continue;
+              if (belongsToOther_(ctext, cMatch, allNames)) continue;
+              kept++;
+              seen[clink] = true;
+              add.push([
+                stamp,                                 /* 카페는 네이버가 작성일을 안 준다 */
+                STORES[cs][0], cName, '카페',
+                String(cit.title || '').replace(/<[^>]+>/g, ''), clink,
+                String(cit.cafename || ''), '', stamp,
+                kindOf_(String(cit.title || '')),
+              ]);
+              cafeAdd++;
+              break;
+            }
+          }
+          if (cItems.length < PAGE_SIZE) break;
+        }
+        if (err) break;
+      }
+      if (err) break;
+    }
+  }
+
+  /* **쓴 만큼을 한 번에 적는다** — 호출마다 적으면 속성 쓰기가 2,000번이 된다.
+     중간에 6분 한도로 끊겨도 이 줄까지는 온다(그 위 루프가 시간을 보고 스스로 멈춘다). */
+  if (calls) addUsage_(calls);
 
   if (add.length) {
     itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
@@ -442,7 +611,13 @@ function collectReviews() {
     /* **어디까지 했는지 화면이 알아야 한다** — 안 그러면 *"왜 65곳이 아니라 20곳만 돌았지"*
        가 된다. `done:false` 면 「이어서 수집」을 한 번 더 누르면 된다. */
     done: !stopped, from: cursor, stores: STORES.length,
-    at: stopped ? cursor : STORES.length
+    at: stopped ? cursor : STORES.length,
+    /* 관심 카페 훑기를 실제로 돌았는지 · 몇 건 물었는지. **안 적으면 "왜 레몬테라스가
+       안 늘지"를 확인할 길이 없다** — 시간이 모자라 건너뛴 것과 0건인 것은 다른 말이다. */
+    cafeCalls: cafeCalls, cafeAdded: cafeAdd, cafes: CAFES.length,
+    /* **한도로 멈춘 것과 시간으로 멈춘 것을 가른다** — 「이어서 수집」을 눌러도 되는지가
+       다르다(시간이면 지금 눌러도 되고, 한도면 내일이거나 한도를 올려야 한다). */
+    hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: SWEEP_CALLS
   };
 }
 
@@ -498,6 +673,28 @@ function readAll_() {
   return out;
 }
 
+/**
+ * 관심 카페의 건수를 낸다.
+ *
+ * **이름이 정확히 일치하지 않는다** — 시트에 담기는 카페 이름은 네이버가 주는 전체
+ * 이름이라 `레몬테라스 [인테리어,리폼,DIY,요리,결혼,육아,커뮤니티]` 꼴이다.
+ * 그래서 **띄어쓰기를 지운 뒤 부분일치**로 본다(이 파일의 다른 판정과 같은 규칙).
+ * 여러 카페가 걸리면 **합쳐서 센다** — 「마마웨딩」처럼 이름이 조금씩 다른 형제 카페가 있다.
+ */
+function watch_(byCafe) {
+  var out = [], i, k, names = Object.keys(byCafe || {});
+  for (i = 0; i < WATCH.length; i++) {
+    var w = WATCH[i];
+    if (!w.naver) { out.push({ name: w.name, n: null, why: w.why || '' }); continue; }
+    var n = 0, hit = [];
+    for (k = 0; k < names.length; k++) {
+      if (norm_(names[k]).indexOf(norm_(w.name)) >= 0) { n += byCafe[names[k]]; hit.push(names[k]); }
+    }
+    out.push({ name: w.name, n: n, cafes: hit });
+  }
+  return out;
+}
+
 function summary_() {
   var rows = readAll_(), i;
   var tz = 'Asia/Seoul', now = new Date();
@@ -543,6 +740,12 @@ function summary_() {
     /* **작성일을 아는 건수를 함께 낸다** — 화면이 *"1,459건 중 698건은 작성일을 안다"*
        고 밝힐 수 있어야 한다. 카페는 네이버가 안 주므로 그 차이를 감추면 안 된다. */
     dated: dated, newToday: newToday, byMonth: byMonth, byKind: byKind,
+    /* **관심 카페는 건수가 적어도 늘 내려보낸다** — 상위 12곳 막대에는 2~3건짜리가
+       영영 안 올라와, 넣어 달라고 한 카페가 화면에서 사라진다.
+       `naver:false` 는 0 이 아니라 **못 닿는 곳**이라 건수를 적지 않는다. */
+    watch: watch_(byCafe),
+    /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
+    dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: SWEEP_CALLS,
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
        함께수집이되어야합니다"*). 수집은 처음부터 `link` 열에 담고 있었는데 **화면이

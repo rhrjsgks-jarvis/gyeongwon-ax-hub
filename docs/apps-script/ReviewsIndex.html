@@ -39,6 +39,22 @@
   .btn:disabled { opacity: .5; cursor: default; }
   .stamp { font-size: 11px; color: rgba(255,255,255,.65); }
 
+  /* 일일 수집한도 — 「지금 수집」 바로 옆이라 남색 바 위에 얹힌다 */
+  .lim {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; color: rgba(255,255,255,.75);
+    border-left: 1px solid rgba(255,255,255,.22); padding-left: 10px; margin-left: 2px;
+  }
+  .lim input {
+    width: 68px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12);
+    color: #fff; border-radius: 6px; padding: 4px 6px; font-size: 11.5px; font-family: inherit;
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .lim input:focus { outline: 2px solid rgba(255,255,255,.5); outline-offset: -1px; }
+  .limuse { font-size: 10.5px; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; }
+  /* 한도가 한 바퀴에 모자라면 눈에 띄게 — 매일 중간에서 끊긴다는 뜻이다 */
+  .limuse.low { color: #FCD34D; font-weight: 700; }
+
   /* 네 칸 — 일간·주간·월간·누적. 사장님이 요청하신 그 넷이다. */
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
   .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; }
@@ -123,15 +139,37 @@
   .kchip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
   .kchip b { font-size: 13px; font-weight: 800; }
   .kchip .pc { font-size: 10px; opacity: .7; }
+
+  /* 관심 카페 — 지목받은 곳은 건수가 적어도 늘 보인다 */
+  .watch { display: flex; gap: 5px; flex-wrap: wrap; margin: 2px 0 10px; }
+  .wchip {
+    border: 1px solid var(--line); background: #F8FAFF; border-radius: 8px;
+    padding: 4px 9px; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151;
+  }
+  .wchip:hover { background: #EEF2FF; }
+  .wchip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .wchip b { font-weight: 800; margin-left: 3px; }
+  /* 못 닿는 곳 — 0 건이 아니라 「받을 수 없다」다. 누를 수도 없다 */
+  .wchip.na { cursor: default; color: var(--mute); background: #fff; border-style: dashed; }
+  .wchip.na:hover { background: #fff; }
 </style>
 
 <header>
   <div class="wrap">
     <h1>경원영업팀 바이럴분석</h1>
-    <p>네이버 블로그 · 카페(다이렉트웨딩 · 메이크마이웨딩 · 맘카페 · 입주카페)</p>
+    <p>네이버 블로그 · 카페(다이렉트웨딩 · 메이크마이웨딩 · 레몬테라스 · 요즘웨딩 · 맘카페 · 입주카페)</p>
     <div class="hrow">
       <span class="stamp" id="stamp">불러오는 중…</span>
       <button class="btn" id="run">지금 수집</button>
+      <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
+           한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
+      <span class="lim">
+        <label for="lim">일일 한도</label>
+        <input id="lim" type="number" min="100" max="50000" step="100" inputmode="numeric">
+        <span>회</span>
+        <button class="btn" id="lim-save">저장</button>
+        <span class="limuse" id="lim-use">–</span>
+      </span>
     </div>
   </div>
 </header>
@@ -161,6 +199,9 @@
     <div class="card">
       <h2>어디에 올라오나</h2>
       <div class="sub">카페 이름 기준 · 블로그는 개인 블로그라 따로 세지 않는다</div>
+      <!-- 관심 카페 — 사장님이 지목한 곳은 **건수가 적어도 늘 보여야 한다.**
+           아래 막대는 상위 12곳뿐이라 2~3건짜리는 영영 안 올라온다. -->
+      <div class="watch" id="watch"></div>
       <div id="cafes"></div>
     </div>
   </div>
@@ -187,6 +228,7 @@
   var storeFilter = '';   /* 매장 막대를 눌러 걸린 값 */
   var cafeFilter = '';    /* 카페 막대를 눌러 걸린 값 */
   var kindFilter = '';    /* 유형 칩을 눌러 걸린 값 */
+  var watchFilter = '';   /* 관심 카페 칩 — 부분일치라 cafeFilter 와 따로 둔다 */
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -225,7 +267,7 @@
       b.onclick = function () {
         var v = b.dataset.v;
         if (b.dataset.k === 'store') { storeFilter = storeFilter === v ? '' : v; cafeFilter = ''; }
-        else { cafeFilter = cafeFilter === v ? '' : v; storeFilter = ''; }
+        else { cafeFilter = cafeFilter === v ? '' : v; storeFilter = ''; watchFilter = ''; }
         render();
         document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
       };
@@ -240,6 +282,7 @@
       if (storeFilter && r.storeName !== storeFilter) return false;
       if (cafeFilter && r.cafe !== cafeFilter) return false;
       if (kindFilter && r.kind !== kindFilter) return false;
+      if (watchFilter && String(r.cafe || '').replace(/s+/g, '').indexOf(watchFilter.replace(/s+/g, '')) < 0) return false;
       return true;
     });
   }
@@ -270,6 +313,31 @@
     });
   }
 
+  /* 관심 카페 — 시트의 카페 이름은 전체 이름(`레몬테라스 [인테리어,리폼,…]`)이라
+     **부분일치로 거른다.** 그래서 `cafeFilter`(정확 일치)와 별도 손잡이가 필요하다. */
+  function renderWatch() {
+    var el = document.getElementById('watch'); if (!el) return;
+    var ws = DATA.watch || [];
+    if (!ws.length) { el.innerHTML = ''; return; }
+    el.innerHTML = ws.map(function (w) {
+      /* **못 닿는 곳은 0 을 적지 않는다** — 「없다」와 「받을 수 없다」는 다른 말이다 */
+      if (w.n === null || w.n === undefined) {
+        return '<span class="wchip na" title="' + esc(w.why || '') + '">' +
+          esc(w.name) + ' <b>' + esc(w.tag || '미포함') + '</b></span>';
+      }
+      return '<button class="wchip' + (watchFilter === w.name ? ' on' : '') + '" data-v="' +
+        esc(w.name) + '">' + esc(w.name) + ' <b>' + nf(w.n) + '</b></button>';
+    }).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.wchip[data-v]'), function (b) {
+      b.onclick = function () {
+        watchFilter = watchFilter === b.dataset.v ? '' : b.dataset.v;
+        cafeFilter = '';
+        render();
+        document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
   function renderList() {
     var rows = filtered();
     var el = document.getElementById('list');
@@ -278,6 +346,7 @@
     if (storeFilter) tags.push(['매장', storeFilter, 'store']);
     if (cafeFilter) tags.push(['카페', cafeFilter, 'cafe']);
     if (kindFilter) tags.push(['유형', kindFilter, 'kind']);
+    if (watchFilter) tags.push(['관심 카페', watchFilter, 'watch']);
     document.getElementById('picked').innerHTML = tags.length
       ? tags.map(function (t) {
           return '<button class="pill" data-k="' + t[2] + '">' + esc(t[0]) + ' <b>' + esc(t[1]) + '</b> ✕</button>';
@@ -287,6 +356,7 @@
       b.onclick = function () {
         if (b.dataset.k === 'store') storeFilter = '';
         else if (b.dataset.k === 'cafe') cafeFilter = '';
+        else if (b.dataset.k === 'watch') watchFilter = '';
         else kindFilter = '';
         render();
       };
@@ -308,7 +378,51 @@
     }).join('');
   }
 
+  /* **모양이 아닌 것은 화면에 그리지 않는다.**
+   *
+   * 2026-08-31 사장님 신고: *"수집완료 후 새로고침을 하면 0 으로 숫자가 변경된다"*.
+   * 배포본을 직접 받아 보니 서버는 멀쩡했다(`전체 1,459 · 오늘 761`). 범인은 이 줄이다 —
+   * `nf(undefined)` 가 **"0"** 을 찍는다. 그래서 `getSummary()` 가 빈 값이나 오류 모양을
+   * 한 번만 돌려줘도 **화면 전체가 0** 이 되고, 자료는 시트에 그대로 있는데 사라진 것처럼 보인다.
+   *
+   * `/api/viral` 라우트에는 *"못 받았으면 0 을 내밀지 않는다"* 를 이미 넣어 두고
+   * **이 화면에는 안 넣었다.** 같은 규칙을 여기에도 둔다 — 옛 숫자를 지우지 않고
+   * **무엇이 왔는지 적는다**(다음에 또 나면 원인을 짚을 수 있어야 한다).
+   */
+  function applySummary(d) {
+    if (!d || typeof d.total !== 'number') {
+      var what = d === null ? 'null'
+        : d === undefined ? 'undefined'
+        : (typeof d) + (typeof d === 'object' ? ' {' + Object.keys(d).slice(0, 6).join(',') + '}' : '');
+      document.getElementById('status').innerHTML =
+        '<div class="note warn"><b>화면을 새로 그리지 못했습니다</b> — 받은 값이 요약이 아닙니다 ('
+        + esc(what) + ').<br><b>자료는 시트에 그대로 있습니다</b> — 위 숫자는 직전 값이고 '
+        + '<a href="">이 쪽을 새로고침</a>하면 최신으로 보입니다.</div>';
+      return false;
+    }
+    DATA = d; render(); return true;
+  }
+
+  /* 일일 수집한도 — **한도만 적지 않고 오늘 쓴 양을 함께 적는다.**
+     남은 몫을 모르면 「지금 수집」을 눌러도 될지 판단할 수가 없다. */
+  function renderLimit() {
+    var box = document.getElementById('lim'), use = document.getElementById('lim-use');
+    if (!box || !use) return;
+    var lim = Number(DATA.dailyLimit) || 0, used = Number(DATA.dayUsed) || 0;
+    var sweep = Number(DATA.sweep) || 0;
+    if (document.activeElement !== box) box.value = lim || '';
+    use.textContent = '오늘 ' + nf(used) + ' / ' + (lim ? nf(lim) : '–') + '회';
+    /* **한 바퀴에 모자라면 그렇게 적는다** — 안 적으면 매일 중간에서 끊기는데
+       화면에는 아무 표시도 안 난다(이 저장소가 되풀이해 경계하는 「조용한 실패」다). */
+    var low = lim > 0 && sweep > 0 && lim < sweep;
+    use.className = 'limuse' + (low ? ' low' : '');
+    use.title = low
+      ? '한 바퀴에 최대 ' + nf(sweep) + '회가 필요합니다 — 지금 한도로는 매번 중간에서 멈춥니다'
+      : '한 바퀴에 최대 ' + nf(sweep) + '회';
+  }
+
   function render() {
+    renderLimit();
     document.getElementById('k-day').textContent = nf(DATA.day);
     document.getElementById('k-week').textContent = nf(DATA.week);
     document.getElementById('k-month').textContent = nf(DATA.month);
@@ -321,6 +435,7 @@
       '후기가 잡힌 매장 ' + nStores + '곳 / 대상 ' + DATA.stores + '곳';
 
     renderKinds();
+    renderWatch();
     bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores, 'store');
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
 
@@ -355,7 +470,7 @@
           '<small>넣은 뒤 다시 배포할 필요 없이 「지금 수집」만 누르면 됩니다.</small>'
         : '<b>마지막 수집에서 오류가 있었습니다</b> — ' + esc(L.error)) + '</div>';
     } else if (!DATA.total) {
-      st.innerHTML = '<div class="note">아직 한 번도 수집하지 않았습니다. 위의 <b>「지금 수집」</b>을 눌러 주세요(44개 매장 × 2소스라 1~2분 걸립니다).</div>';
+      st.innerHTML = '<div class="note">아직 한 번도 수집하지 않았습니다. 위의 <b>「지금 수집」</b>을 눌러 주세요(65개 매장 × 2소스라 1~2분 걸립니다).</div>';
     } else st.innerHTML = '';
 
     /* 출처 거르개 */
@@ -383,9 +498,41 @@
     var blob = new Blob(['﻿' + head.map(q).join(',') + '\n' + body.join('\n')], { type: 'text/csv' });
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = '바이럴분석_' + (storeFilter || cafeFilter || kindFilter || '전체') + '_'
+    a.download = '바이럴분석_' + (storeFilter || cafeFilter || kindFilter || watchFilter || '전체') + '_'
       + new Date().toISOString().slice(0, 10) + '.csv';
     a.click();
+  };
+
+  /* 한도 저장 — **서버가 되돌려준 값으로 화면을 맞춘다.** 입력칸 값을 그대로 믿고
+     그리면 서버가 거절했을 때 화면과 실제가 갈린다(100 미만·50,000 초과는 거절된다). */
+  document.getElementById('lim-save').onclick = function () {
+    var b = this, v = Number(document.getElementById('lim').value);
+    b.disabled = true; b.textContent = '저장 중…';
+    google.script.run
+      .withSuccessHandler(function (r) {
+        b.disabled = false; b.textContent = '저장';
+        if (!r || !r.ok) {
+          document.getElementById('status').innerHTML =
+            '<div class="note warn"><b>한도를 바꾸지 못했습니다</b> — ' + esc((r && r.error) || '알 수 없는 오류') + '</div>';
+          renderLimit();   /* 입력칸을 실제 값으로 되돌린다 */
+          return;
+        }
+        DATA.dailyLimit = r.limit; DATA.dayUsed = r.used; DATA.sweep = r.sweep;
+        renderLimit();
+        document.getElementById('status').innerHTML =
+          '<div class="note"><b>일일 한도를 ' + nf(r.limit) + '회로 정했습니다</b> — 오늘 '
+          + nf(r.used) + '회 썼습니다.'
+          + (r.sweep && r.limit < r.sweep
+            ? ' <b style="color:#B45309">한 바퀴에 최대 ' + nf(r.sweep)
+              + '회가 필요해 매번 중간에서 멈춥니다</b> — 다음 실행이 멈춘 매장부터 이어 갑니다.'
+            : '') + '</div>';
+      })
+      .withFailureHandler(function (e) {
+        b.disabled = false; b.textContent = '저장';
+        document.getElementById('status').innerHTML =
+          '<div class="note warn"><b>한도를 바꾸지 못했습니다</b> — ' + esc(e && e.message) + '</div>';
+      })
+      .setDailyLimit(v);
   };
 
   document.getElementById('run').onclick = function () {
@@ -409,8 +556,17 @@
            안 일어나고 버튼이 「수집 중…」에 멈춘 채 화면이 옛 상태로 남는다(실제로 그랬다). */
         google.script.run
           .withSuccessHandler(function (d) {
-            DATA = d; render();
             b.disabled = false; b.textContent = '지금 수집';
+            /* **성공 처리기에 왔다고 값이 온 것은 아니다** — 빈 값이면 화면이 0 이 된다.
+               `applySummary` 가 걸러 내고, 못 그렸으면 위에 적어 둔 안내가 남는다. */
+            var okd = applySummary(d);
+            if (okd) {
+              /* 새 글이 있었으면 상태 줄이 방금 덮였다 — 다시 적어 준다 */
+              if (r.added > 0) {
+                document.getElementById('status').innerHTML =
+                  '<div class="note"><b>새 글 ' + nf(r.added) + '건을 더했습니다</b> — 위 숫자가 갱신됐습니다.</div>';
+              }
+            }
           })
           .withFailureHandler(function (e) {
             b.disabled = false; b.textContent = '지금 수집';
