@@ -1607,8 +1607,19 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   function renderRival() {
     var card = document.getElementById('rival-card'); if (!card) return;
     var R = DATA.rival;
-    /* **자료가 없으면 카드를 아예 안 그린다** — 0 으로 그리면 「LG 후기가 없다」로 읽힌다 */
-    if (!R || !R.rows || !R.rows.length) { card.hidden = true; return; }
+    /* **0 으로 그리지 않는다** — 「LG 후기가 없다」로 읽힌다. 대신 **왜 비었는지 적는다**
+       (2026-09-01 사장님 지적: *"동일 지역 내 LG 후기 비율은 왜 안 나오는 거죠?"*).
+       카드를 통째로 감췄더니 **왜 없는지 알 길이 없었다** — 화면에서 사라진 것과
+       「아직 안 쟀다」는 다른 말이다. 비교표의 「없음 / 미공개」를 가르는 규칙 그대로다. */
+    if (!R || !R.rows || !R.rows.length) {
+      var rel = document.getElementById('rival');
+      if (rel) {
+        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>다음 수집 때 함께 잽니다</b>'
+          + '(지역 6곳 · 40회). 삼성스토어와 LG베스트샵에 <b>같은 질의</b>를 던져 비중을 냅니다.</div>';
+        card.hidden = false;
+      } else card.hidden = true;
+      return;
+    }
     card.hidden = false;
 
     var el = document.getElementById('rival');
@@ -1831,7 +1842,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   function renderProgress() {
     var b = document.getElementById('run'); if (!b) return;
     var cur = Number(DATA.cursor || 0), tot = Number(DATA.stores || 0);
-    var mid = cur > 0 && tot > 0;
+    /* **`cur === tot` 은 「멈춘 것」이 아니라 「다 훑은 것」이다**(2026-09-01).
+       매장 하나를 끝낼 때마다 커서를 `i+1` 로 저장하므로, 마지막 매장을 끝내면
+       65 가 남는다. 그것을 「65곳 중 65번째에서 멈췄습니다 — 이어서 눌러 주세요」로
+       적으면 **다 해 놓고 또 누르게 만든다.** 서버는 다음 실행에서 0으로 되돌린다. */
+    var mid = cur > 0 && cur < tot;
     /* **스스로 이어 도는 중이면 사람을 부르지 않는다.** 이 구분이 없으면 사장님이
        버튼을 또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
     var auto = !!DATA.chainOn;

@@ -1145,6 +1145,18 @@ function sweep_(mode) {
     props_().setProperty('_tail', '0');
   }
 
+  /* ── LG 비교 (당사 vs LG 지역별 비중) ─────────────────────────────
+     **매장 훑기 바로 뒤, 매니저·카페 훑기보다 앞이다.** 40회짜리인데 맨 뒤에 두었더니
+     그 앞의 148회에 시간을 다 쓰고 **영영 자기 차례가 안 왔다**(2026-09-01 실측).
+     사장님이 화면에서 가장 먼저 찾는 값이라 순서를 앞으로 옮겼다.
+     **하루에 한 번** — 같은 날 여러 번 쌓이면 어느 것이 그날 값인지 알 수 없다.
+     **예외를 삼키지 않는다** — 조용히 실패하면 왜 비었는지 아무도 모른다. */
+  var rivalRun = null;
+  if (rivalDue_() && !err && !over()) {
+    try { rivalRun = collectRival(); props_().setProperty('_rivalAt', stamp); sumCacheClear_(); }
+    catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
+  }
+
   /* ── 매니저 이름 훑기 ────────────────────────────────────────
    * 2026-08-31 사장님 제안: *"① 한 번이라도 언급되는 사람 이름을 모아 놓는다
    * ② 해당 이름으로 검색해서 몇 건 나오는지 건수를 파악한다"*.
@@ -1166,7 +1178,12 @@ function sweep_(mode) {
       if (Date.now() - t0 > BUDGET_MS) break;
       if (over()) { hitLimit = true; break; }
       try {
-        var mq = search_('blog', '삼성스토어 ' + roster[ri].store + ' ' + roster[ri].name, 1, 1);
+        /* **매장 이름을 넣지 않는다**(2026-09-01 실측으로 고쳤다). 넣었더니
+           `삼성스토어 용인구성 김준수 매니저` 처럼 낱말 넷을 다 요구해 **우리 44건짜리
+           이름이 네이버 1건**으로 나왔다 — 글이 그 넷을 다 적는 일은 드물다.
+           브랜드 말(`삼성스토어`)은 남겨 엉뚱한 글을 거른다. 동명이인이 섞이는 것은
+           이 숫자의 성질이고, 화면이 「참고」로 적어 그것을 밝힌다. */
+        var mq = search_('blog', '삼성스토어 ' + roster[ri].name, 1, 1);
         calls++; mgrCalls++;
         if (mq && !mq.error) nv[roster[ri].name] = Number(mq.total) || 0;
       } catch (e4) { break; }                        /* 부수 기능이라 여기서 조용히 접는다 */
@@ -1237,10 +1254,6 @@ function sweep_(mode) {
        끊겼을 때 안 버려져, 새로 모은 것이 최대 6시간 안 보인다. */
     sumCacheClear_();
   }
-  /* **한 바퀴를 마칠 때만 경쟁비교를 함께 돌린다**(최대 40회 · 한 바퀴의 2%).
-     중간에 돌리면 같은 날 여러 번 쌓여 어느 것이 그날 값인지 알 수 없다. */
-  var rivalRun = null;
-  if (!stopped && !err && !over()) { try { rivalRun = collectRival(); } catch (e3) { rivalRun = { error: String(e3) }; } }
 
   /* 한 바퀴를 마쳤으면 커서를 처음으로 — 다음 실행이 새로 훑는다 */
   /* **한 바퀴를 전부 훑어 마쳤으면 그 날짜를 적는다** — 다음 이레 동안은 새 글만 훑는다.
@@ -1807,6 +1820,27 @@ function rivalHit_(text, brands, place) {
  * 호출 수 = 지명 10개 × 브랜드 2 × 2쪽 = **최대 40회**. 한 바퀴(2,096회)에 견주면
  * 2% 라 매 수집마다 함께 돌려도 부담이 없다.
  */
+/* ── LG 비교를 오늘 아직 안 돌았는가 ──────────────────────────────────
+ * 2026-09-01 사장님 지적: *"지금 100% 완료한 것 같은데 동일 지역 내 LG 후기 비율은
+ * 왜 안 나오는 거죠?"*
+ *
+ * **예전에는 「한 바퀴를 완주한 실행」에서만 돌았다**(`!stopped && !err && !over()`).
+ * 그런데 전체 재수집은 여러 번 이어 돌아야 하고, 마지막 실행은 매장 65곳을 훑은 뒤
+ * **매니저·카페 훑기까지** 하고 나서야 LG 차례다 — 거기서 6분 한도에 걸리면
+ * **LG 는 영영 자기 차례가 안 온다.** 실측으로 `fullAt` 이 빈 문자열이었다
+ * (한 번도 완주로 끝난 적이 없다).
+ *
+ * **LG 비교는 40회짜리다**(한 바퀴의 0.4%). 맨 뒤에서 순서를 기다릴 이유가 없어
+ * **하루에 한 번**으로 바꿨다 — 완주와 무관하다.
+ *
+ * **하루 한 번인 이유**는 「중간에 돌리면 같은 날 여러 번 쌓여 어느 것이 그날 값인지
+ * 알 수 없다」는 원래 규칙 그대로다. 날짜가 바뀌면 다시 돈다.
+ */
+function rivalDue_() {
+  return String(props_().getProperty('_rivalAt') || '')
+    !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+}
+
 function collectRival() {
   var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
