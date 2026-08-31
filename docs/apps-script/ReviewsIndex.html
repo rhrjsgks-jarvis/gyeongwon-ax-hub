@@ -277,8 +277,17 @@
     /* **마지막 수집이 실패했으면 그렇게 적는다** — 0 을 그냥 두면 "후기가 없다"로 읽힌다 */
     var st = document.getElementById('status'), L = DATA.lastRun;
     if (L && L.error) {
-      st.innerHTML = '<div class="note warn"><b>마지막 수집에서 오류가 있었습니다</b> — ' +
-        esc(L.error) + '<br>스크립트 속성에 <b>NAVER_CLIENT_ID · NAVER_CLIENT_SECRET</b> 이 들어 있는지 확인해 주세요.</div>';
+      /* **401 은 원인이 하나뿐이라 그것만 말한다.** "오류가 있었습니다" 로 뭉뚱그리면
+         무엇을 고쳐야 하는지 알 수 없다(2026-08-31 실측으로 실제로 겪은 자리다). */
+      var auth = /401|403|스크립트 속성/.test(L.error);
+      st.innerHTML = '<div class="note warn">' + (auth
+        ? '<b>네이버 API 키가 없거나 틀렸습니다</b> (' + esc(L.error) + ')<br>' +
+          'Apps Script 편집기 → <b>⚙ 프로젝트 설정 → 스크립트 속성</b>에 아래 둘을 넣어 주세요.<br>' +
+          '<b>NAVER_CLIENT_ID</b> · <b>NAVER_CLIENT_SECRET</b> ' +
+          '(<a href="https://console.ncloud.com/naver-api-hub/application">NAVER API HUB</a> 에서 발급 · ' +
+          '「사용자 속성」이 아니라 <b>「스크립트 속성」</b>입니다)<br>' +
+          '<small>넣은 뒤 다시 배포할 필요 없이 「지금 수집」만 누르면 됩니다.</small>'
+        : '<b>마지막 수집에서 오류가 있었습니다</b> — ' + esc(L.error)) + '</div>';
     } else if (!DATA.total) {
       st.innerHTML = '<div class="note">아직 한 번도 수집하지 않았습니다. 위의 <b>「지금 수집」</b>을 눌러 주세요(44개 매장 × 2소스라 1~2분 걸립니다).</div>';
     } else st.innerHTML = '';

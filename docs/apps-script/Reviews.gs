@@ -249,8 +249,12 @@ function collectReviews() {
           String(it.cafename || ''), String(it.postdate || '')]);
       }
     }
-    /* 키가 없으면 44곳을 다 돌 이유가 없다 — 첫 실패에서 멈추고 그 사실을 기록한다 */
-    if (err && err.indexOf('스크립트 속성') >= 0) break;
+    /* **인증이 막혔으면 첫 실패에서 멈춘다.**
+       처음에는 `스크립트 속성` 문구를 던지는 예외만 잡았는데, **HTTP 401 은 예외가
+       아니라 정상 응답**이라 130 번을 다 돌았다(2026-08-31 실측: `calls:130 · got:0 ·
+       error:"cafearticle:HTTP 401"`). 지금은 무료라 괜찮지만 유료로 바뀌면 헛돈
+       130 회가 그대로 요금이 된다. 401·403 은 더 돌아도 결과가 같다. */
+    if (err && (err.indexOf('스크립트 속성') >= 0 || err.indexOf('401') >= 0 || err.indexOf('403') >= 0)) break;
   }
 
   if (add.length) {
