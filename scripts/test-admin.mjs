@@ -1245,6 +1245,34 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         else console.log('OK: 바이럴 움직임 — 첫 화면만 · OS 가 끄라면 끈다');
       }
 
+      /* ⓗ **카드 펼치기** (2026-08-31 사장님: *"클릭하면 1단으로 확대하고 축소하고"*).
+         2단을 유지하되 한 장을 눌러 전체 폭으로 키운다 — 3단이냐 2단이냐를 미리 정할
+         필요가 없어진다. 되돌아가면 화면에서만 보이는 종류라 검사가 붙든다. */
+      {
+        const bad = [];
+        if (!/function wireZoom\(/.test(ix2)) bad.push('wireZoom 이 없다');
+        if (!/^\s+wireZoom\(\);/m.test(ix2)) bad.push('render 가 wireZoom 을 부르지 않는다');
+        if (!ix2.includes('.card.wide { grid-column: 1 / -1; }')) bad.push('펼친 카드가 전체 폭을 차지하지 않는다');
+        /* **한 번만 붙인다** — `render()` 는 필터를 바꿀 때마다 도는데 그때마다 붙이면
+           버튼이 쌓인다(카드는 다시 만들어지지 않는다). */
+        /* **「그 문자열이 있는가」로 보면 안 된다** — 가드를 지워도 값을 *설정하는* 줄이
+           남아 통과한다(실제로 되돌려 넣었더니 안 물었다). **조건문 안에서 return 을
+           막고 있는지**를 본다. 이스케이프 대신 문자 클래스를 쓴다(heredoc·셸이 역슬래시를 먹는다). */
+        if (!/if [(][^)]*dataset[.]zoomed[^)]*[)][^;]*return/.test(ix2)) {
+          bad.push('버튼이 여러 번 붙는 것을 막지 않는다 — 필터를 바꿀 때마다 버튼이 쌓인다');
+        }
+        /* **카드 전체를 클릭 대상으로 삼지 않는다** — 지도 칸·매장 막대의 클릭과 부딪힌다.
+           전용 버튼만 쓴다(안쪽 요소가 늘 우선이라는 이 저장소의 규칙). */
+        if (/\bcard\.onclick\s*=/.test(ix2)) bad.push('카드 전체에 클릭을 걸었다 — 지도·막대 조작과 부딪힌다');
+        /* 펼쳤는데 그림이 그대로면 펼친 뜻이 없다 */
+        if (!ix2.includes('.card.wide .geo-svg')) bad.push('펼쳐도 지도가 커지지 않는다');
+        /* 좁은 화면은 이미 1단이라 펼칠 것이 없다 */
+        if (!/@media \(max-width: 720px\) \{ \.zoom/.test(ix2)) bad.push('좁은 화면에서 버튼을 숨기지 않는다');
+        if (bad.length) fail('[바이럴] 카드 펼치기 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 카드 펼치기 — 전용 버튼 · 한 번만 · 지도도 함께 커진다');
+      }
+
+
 
     }
 
