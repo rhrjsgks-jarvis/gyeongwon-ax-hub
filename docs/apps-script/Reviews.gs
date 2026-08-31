@@ -611,8 +611,82 @@ function hasAny_(text, names) {
  * 사실을 밝힌다. 있는 척하지 않는다.
  */
 var MGR_TITLES = ['부지점장', '부점장', '부팀장', '수석매니저', '매니저', '점장', '팀장', '실장', '과장', '대리', '주임', '프로', '사원'];
-/* **이름이 아닌 말** — 실측에서 실제로 걸린 것만 적는다. 지어내지 않는다. */
-var MGR_NOTNAME = ['삼성', '스토어', '우리', '저희', '담당', '친절', '해당', '방문', '상담', '설치', '구매', '가전', '제품', '매장'];
+/* **이름이 아닌 말** — 실측에서 실제로 걸린 것만 적는다. 지어내지 않는다.
+   (2026-09-01 프로덕션 3,000건 검증에서 `견적서`·`행사정보`·`아카데미` 를 더했다) */
+var MGR_NOTNAME = ['삼성', '스토어', '우리', '저희', '담당', '친절', '해당', '방문', '상담', '구매',
+  '가전', '제품', '매장', '견적서', '행사정보', '아카데미', '서비스', '이벤트', '판매'];
+
+/* **직함 뒤에 붙어도 되는 글자** — 조사와 높임말이다.
+ * 2026-09-01 프로덕션 3,000건 검증에서 **오탐 여섯 중 여섯이 한 뿌리**였다:
+ *   `프로모션` · `프로필` · `프로3` · `프로레슨` → 전부 「프로」로 끊고 뒤를 안 봤다.
+ * 반대로 `매니저님`·`프로님`·`매니저가`·`부점장님` 은 정상이다.
+ * **직함 뒤가 이 글자들이 아니면 그 직함이 아니다** — 한 규칙이 여섯을 잡는다.
+ * 목록에 없는 글자(모·필·레·숫자)가 오면 사람 직함이 아니라고 본다. */
+var MGR_TAIL_OK = '님분께이가는은를을와과도도로에의만랑라야요';
+
+/* ── 매니저 명부 ────────────────────────────────────────────────────
+ * 2026-09-01 사장님 지시: *"추후 근무하는 매니저 이름을 넣으면 매니저별 몇 건의 후기가
+ * 있는지 검증이 가능하게 업데이트 해놔주세요"*.
+ *
+ * **명부가 하는 일이 셋이다:**
+ *   ① **직함이 갈린 같은 사람을 합친다.** 실측에서 `남수호 프로`(1) + `남수호 매니저`(1),
+ *      `엄기연 매니저`(1) + `엄기연 부점장`(1) 처럼 **한 사람이 둘로 갈려 순위에서
+ *      밀리고 있었다.** 이름으로 묶으면 진짜 건수가 나온다.
+ *   ② **0건도 보여준다.** 등록했는데 후기에 한 번도 안 나오면 그것이 곧 정보다 —
+ *      순위에만 있으면 「안 나오는 사람」은 화면에서 통째로 사라진다.
+ *   ③ **뽑아낸 이름이 진짜인지 가른다.** 실측 78개 중 `마태호 프로`(골프 아카데미)가
+ *      섞여 있었다. 문맥으로만 가릴 수 있는 종류라 **사람이 확인해 주는 것이 유일한 길**이다.
+ *
+ * **저장은 `{매장: [이름, ...]}`** 이고 이름은 **직함 없이** 적는다(`김준수`).
+ * 뽑아낸 키는 `김준수 매니저` 라 **앞 토막만 견준다.**
+ */
+function mgrNames_() {
+  try { return JSON.parse(props_().getProperty('_mgrList') || '{}') || {}; }
+  catch (e) { return {}; }
+}
+
+/* 이름 다듬기. **두 글자 이상 네 글자 이하** — 한 글자는 아무 데나 걸리고,
+   다섯 글자가 넘으면 이름이 아니다(직함이 붙었을 것이다). */
+function mgrNameClean_(s) {
+  var t = String(s || '').replace(/\s+/g, '');
+  var i;
+  /* 직함을 붙여 넣었으면 떼어 준다 — 사람은 「김준수 매니저」로 적기 쉽다 */
+  for (i = 0; i < MGR_TITLES.length; i++) {
+    if (t.length > MGR_TITLES[i].length && t.slice(-MGR_TITLES[i].length) === MGR_TITLES[i]) {
+      t = t.slice(0, t.length - MGR_TITLES[i].length);
+      break;
+    }
+  }
+  if (!/^[가-힣]{2,4}$/.test(t)) return '';
+  return t;
+}
+
+/**
+ * 매니저 명부 등록·삭제 — 화면에서 부른다.
+ * **막는 것이 이 함수의 값어치다:** 매장이 목록에 실제로 있어야 하고, 이름은 한글
+ * 2~4자여야 하며, 한 매장에 40명까지다(그보다 많으면 잘못 붙여 넣은 것이다).
+ */
+function setManagerNames(store, names) {
+  var i, ok = false;
+  for (i = 0; i < STORES.length; i++) if (STORES[i][1] === store) { ok = true; break; }
+  if (!ok) return { ok: false, error: '그런 매장이 없습니다: ' + store };
+
+  var list = [], w, dup = {};
+  names = names || [];
+  for (i = 0; i < names.length; i++) {
+    w = mgrNameClean_(names[i]);
+    if (!w || dup[w]) continue;
+    dup[w] = 1;
+    list.push(w);
+  }
+  if (list.length > 40) return { ok: false, error: '한 매장에 40명까지입니다.' };
+
+  var tab = mgrNames_();
+  if (list.length) tab[store] = list; else delete tab[store];
+  props_().setProperty('_mgrList', JSON.stringify(tab));
+  sumCacheClear_();          /* 건수는 집계에서 나오므로 다시 세야 한다 */
+  return { ok: true, mgrList: tab };
+}
 
 function mgrFind_(text) {
   var t = String(text || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ');
@@ -623,6 +697,13 @@ function mgrFind_(text) {
       if (t.substr(p, MGR_TITLES[q].length) === MGR_TITLES[q]) { title = MGR_TITLES[q]; break; }
     }
     if (!title) continue;
+    /* **직함 뒤 한 글자를 본다.** 한글·숫자가 이어지는데 조사·높임말이 아니면
+       그 직함이 아니다(`프로모션`·`프로필`·`프로3`·`프로레슨`·`대리점`). */
+    var after = t.charAt(p + title.length);
+    if (after && (/[0-9]/.test(after) || (/[가-힣]/.test(after) && MGR_TAIL_OK.indexOf(after) < 0))) {
+      p += title.length - 1;
+      continue;
+    }
     /* 직함 바로 앞의 한글 2~4자를 이름으로 본다. **띄어쓰기 하나까지만** 건너뛴다 —
        더 건너뛰면 앞 문장의 낱말을 이름으로 집는다. 해시태그(`#윤현식매니저`)는 붙여
        쓰므로 그대로 잡힌다. */
@@ -1668,6 +1749,33 @@ function summary_() {
     mgrTop[mi].naver = nvTab.hasOwnProperty(mgrTop[mi].name) ? nvTab[mgrTop[mi].name] : null;
   }
 
+  /* ── 명부에 있는 사람의 건수 ──────────────────────────────────────
+     **직함으로 갈린 것을 이름으로 합친다** — `남수호 프로` + `남수호 매니저` 는 한 사람이다.
+     **0건도 낸다** — 등록했는데 후기에 한 번도 안 나오는 것이 곧 정보다.
+     그리고 뽑아낸 이름이 **명부에 있는지**(`known`)를 표시해 사람이 검산할 수 있게 한다. */
+  var nameTab = mgrNames_(), known = {}, ms, mn, mj;
+  for (ms in nameTab) {
+    if (!nameTab.hasOwnProperty(ms)) continue;
+    for (mj = 0; mj < nameTab[ms].length; mj++) known[nameTab[ms][mj]] = ms;
+  }
+  var mgrKnown = [], sumN = {}, sumT = {};
+  for (mk in mgrN) {
+    if (!mgrN.hasOwnProperty(mk)) continue;
+    mn = mk.split(' ')[0];                       /* `김준수 매니저` → `김준수` */
+    if (!known.hasOwnProperty(mn)) continue;
+    sumN[mn] = (sumN[mn] || 0) + mgrN[mk];
+    if (!sumT[mn]) sumT[mn] = [];
+    if (sumT[mn].indexOf(mk.split(' ')[1]) < 0) sumT[mn].push(mk.split(' ')[1]);
+  }
+  for (mn in known) {
+    if (!known.hasOwnProperty(mn)) continue;
+    mgrKnown.push({ name: mn, store: known[mn], n: sumN[mn] || 0, titles: (sumT[mn] || []).join('·') });
+  }
+  mgrKnown.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
+  for (mi = 0; mi < mgrTop.length; mi++) {
+    mgrTop[mi].known = known.hasOwnProperty(mgrTop[mi].name.split(' ')[0]);
+  }
+
   var last = lastRun_();
 
   return {
@@ -1732,6 +1840,9 @@ function summary_() {
     /* **매니저 언급 순위**(사장님 지시). `mgrFull` 은 **본문까지 본 글 수** —
        나머지는 제목에서만 뽑은 옛 글이라 화면이 그 사실을 밝혀야 한다. */
     mgrTop: mgrTop, mgrFull: mgrFullN, mgrRows: rows.length,
+    /* **명부에 등록된 사람 전원의 건수** — 0건도 낸다(등록했는데 안 나오는 것이 정보다).
+       직함으로 갈린 것을 이름으로 합친 값이라 순위표보다 정확하다. */
+    mgrKnown: mgrKnown, mgrList: nameTab,
     /* 등록된 줄임말 — 화면이 목록을 보여주고 사장님이 더 넣으신다 */
     alias: aliasAll_(),
     lastRun: last,
@@ -2079,6 +2190,9 @@ function freshState_(d) {
     d.cycleAt = Number(props_().getProperty('_cycleAt') || 0);
     d.cycleFrom = Number(props_().getProperty('_cycleFrom') || 0);
     d.alias = aliasAll_();
+    /* 명부는 사장님이 방금 등록했을 수 있다 — 목록만은 늘 새로 읽는다
+       (건수는 집계에서 나오므로 `setManagerNames` 가 캐시를 버린다) */
+    d.mgrList = mgrNames_();
     d.sweep = sweepCalls_();
   } catch (e) { /* 못 읽어도 집계는 그대로 쓴다 */ }
   return d;

@@ -932,7 +932,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
     /* ② `google.script.run` 이 부르는 이름은 **밑줄로 끝나면 안 된다**(비공개 취급) */
-    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews', 'setAlias', 'getProgress'];
+    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit', 'dedupeReviews', 'setAlias', 'getProgress', 'setManagerNames'];
     const miss = pub.filter((f) => !new RegExp(`^function ${f}\\(`, 'm').test(rv));
     if (miss.length) fail(`[바이럴] 화면이 부르는 함수가 없다: ${miss.join(', ')}`);
     else console.log(`OK: 바이럴 공개 함수 ${pub.length}개 — 화면에서 부를 수 있는 이름이다`);
@@ -1051,6 +1051,58 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } else if (!vh.includes("hasAttribute('data-nolead')")) {
       fail('[바이럴] data-nolead 를 아무도 안 본다 — 표시만 하고 지키지 않는다');
     } else console.log('OK: 바이럴 비중 — 숫자가 아니면 못 잼 · 당사 vs LG 카드는 작게 고정');
+
+    /* ③-b6 **매니저 이름 뽑기와 명부.** 프로덕션 3,000건 검증에서 오탐 일곱이 나왔고
+       **여섯이 한 뿌리**였다 — 직함 뒤에 붙는 글자를 안 봤다(`프로모션`·`프로필`·
+       `프로3`·`프로레슨`). 그리고 명부가 있어야 **직함으로 갈린 같은 사람을 합치고**
+       (남수호 프로 + 남수호 매니저) **0건도 보여줄 수 있다.** */
+    {
+      const src2 = rv;
+      const grab = (name) => {
+        const at = src2.indexOf('function ' + name + '(');
+        if (at < 0) return '';
+        let d = 0;
+        for (let j = src2.indexOf('{', at); j < src2.length; j++) {
+          if (src2[j] === '{') d++;
+          else if (src2[j] === '}') { d--; if (!d) return src2.slice(at, j + 1); }
+        }
+        return '';
+      };
+      const pick = (re) => (src2.match(re) || [''])[0];
+      const head = pick(/var MGR_TITLES = \[[^\]]*\];/) + '\n'
+        + pick(/var MGR_NOTNAME = \[[\s\S]*?\];/) + '\n'
+        + pick(/var MGR_TAIL_OK = [^;]*;/);
+      let mgrFind = null;
+      try { mgrFind = new Function(head + '\n' + grab('mgrFind_') + '\nreturn mgrFind_;')(); } catch (e) { mgrFind = null; }
+      if (!mgrFind) {
+        fail('[바이럴] mgrFind_ 를 떼어 돌릴 수 없다 — 이름 뽑기를 검사할 수 없다');
+      } else {
+        /* **실제 프로덕션 제목에서 나온 것들이다.** 지어낸 예가 아니다. */
+        const cases = [
+          ['수원 삼성스토어 엄기연 매니저님 추천드립니다!', '엄기연 매니저'],
+          ['삼성스토어 평택점 제창우프로님에게 계약했어요.', '제창우 프로'],
+          ['#윤현식매니저 #갤러리아광교 혼수', '윤현식 매니저'],
+          ['김준수 매니저가 친절하게 설명해주셨어요', '김준수 매니저'],
+          ['삼성스토어 영통: 최신 기술과 다양한 프로모션의 완벽한 조화!', null],
+          ['[삼성스토어안성스타필드점] 9월 12일-18일 행사정보 프로필', null],
+          ['갤럭시 버즈 프로3 불량 삐소리ㅣ삼성전자서비스 동탄센터', null],
+          ['성남 골프연습장 맥시멈골프존 아카데미 프로레슨후기', null],
+          ['W32. 가전: 삼성스토어 용인구성 계약후기 (견적서&매니저 공유O)', null],
+          ['삼성스토어 수원 대리점 방문했어요', null]
+        ];
+        const bad = cases.filter(([t, want]) => {
+          const g = mgrFind(t);
+          return want === null ? g.length > 0 : g.indexOf(want) < 0;
+        });
+        if (bad.length) {
+          fail(`[바이럴] 매니저 이름 뽑기가 ${bad.length}건 틀린다 — 예: ${bad[0][0].slice(0, 40)}`);
+        } else if (!/function setManagerNames\(/.test(rv) || !/mgrKnown: mgrKnown/.test(rv)) {
+          fail('[바이럴] 매니저 명부가 없다 — 직함으로 갈린 같은 사람을 못 합치고 0건인 사람이 화면에서 사라진다');
+        } else if (!vh.includes('renderMgrBook();') || !vh.includes('wireMgrBook();')) {
+          fail('[바이럴] 명부를 화면이 안 그리거나 등록을 못 한다');
+        } else console.log(`OK: 바이럴 매니저 — 실제 제목 ${cases.length}건 판정 · 명부로 합산·0건 표시`);
+      }
+    }
 
     /* ③-c **이미 가진 글을 다시 받지 않는다**(사장님 지적: 매일 10,400회는 낭비).
        신호는 **「이미 가진 링크를 만났다」** 여야 한다 — 「새 링크가 0건」으로 잡으면

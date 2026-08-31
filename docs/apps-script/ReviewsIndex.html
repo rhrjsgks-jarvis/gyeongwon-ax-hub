@@ -320,6 +320,26 @@
   .arow .ax:hover { border-color: #DC2626; color: #DC2626; }
   /* 코드 표에 있는 것은 지울 수 없다 — 지워도 다음 배포에 되살아나 「안 지워진다」가 된다 */
   .arow .abase { font-size: 10.5px; color: var(--mute); }
+  /* ── 매니저 명부 ──────────────────────────────────────────────────
+     **접어 둔다.** 늘 펼쳐 두면 순위표(주인공)가 밀린다 — 등록은 가끔 하는 일이다. */
+  .mgrbook { margin-top: 10px; border-top: 1px solid #F1F3F9; padding-top: 8px; }
+  .mgrbook > summary {
+    cursor: pointer; font-size: 12px; font-weight: 700; color: var(--blue);
+    list-style: none; padding: 3px 0;
+  }
+  .mgrbook > summary::-webkit-details-marker { display: none; }
+  .mgrbook > summary::before { content: '▸ '; }
+  .mgrbook[open] > summary::before { content: '▾ '; }
+  /* **명부에 없는 이름은 흐리게** — 「확인된 사람」과 「아직 확인 안 된 이름」은 다른 말이다 */
+  .mrow .mck { font-size: 10px; color: var(--mute); }
+  .mrow .mck.on { color: var(--blue); font-weight: 800; }
+  /* 0건도 적는다 — 등록했는데 안 나오는 것이 곧 정보다 */
+  .krow { display: flex; align-items: center; gap: 7px; padding: 4px 0; border-bottom: 1px solid #F1F3F9; font-size: 12px; }
+  .krow:last-child { border-bottom: 0; }
+  .krow .kn { font-weight: 700; min-width: 62px; }
+  .krow .ks { color: var(--mute); flex: 1; }
+  .krow .kv { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 40px; text-align: right; }
+  .krow .kv.zero { color: var(--mute); font-weight: 500; }
   /* ── 지도 — 경원 관할(경기 5개 지역 · 강원 4개 시) ────────────────────────
      색은 삼성 블루 3단계다. **건수 그대로가 아니라 최대치 대비 비율**로 나눈다 —
      절대 기준을 박으면 후기가 늘어난 달에 온 지도가 새까매진다.
@@ -590,6 +610,21 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            검색 건수(넓지만 동명이인 포함). 합치면 화면이 거짓말을 한다. -->
       <div class="sub" id="mgr-sub">–</div>
       <div id="mgrs"></div>
+      <!-- 2026-09-01 사장님 지시: *"추후 근무하는 매니저 이름을 넣으면 매니저별 몇 건의
+           후기가 있는지 검증이 가능하게"*. **명부가 하는 일이 셋이다** — 직함으로 갈린
+           같은 사람을 합치고(남수호 프로 + 남수호 매니저), 0건도 보여주고, 뽑아낸 이름이
+           진짜인지 가른다(실측에서 골프 아카데미 프로가 섞여 있었다). -->
+      <details class="mgrbook">
+        <summary>매니저 명부 — 이름을 넣으면 그 사람 건수를 정확히 셉니다</summary>
+        <div class="sub" id="mgrbook-sub">–</div>
+        <div class="alias-add">
+          <input id="mgr-store" list="alias-stores" placeholder="매장 이름" autocomplete="off">
+          <input id="mgr-name" placeholder="이름 (쉼표로 여럿)" autocomplete="off">
+          <button id="mgr-ok">등록</button>
+        </div>
+        <div id="mgr-msg" class="sub"></div>
+        <div id="mgr-known"></div>
+      </details>
     </div>
     <div class="card" data-card="alias">
       <h2>줄임말 등록</h2>
@@ -805,14 +840,96 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var nv = (m.naver === null || m.naver === undefined)
         ? '<span class="mnv" title="다음 수집 때 셉니다">–</span>'
         : '<span class="mnv" title="네이버 전체 검색 건수(동명이인 포함)">네이버 ' + nf(m.naver) + '</span>';
+      /* **명부에 있는 사람인지 표시한다**(2026-09-01 사장님 요청). 뽑아낸 이름 중에는
+         진짜가 아닌 것이 섞인다 — 실측 78개에 골프 아카데미 프로가 하나 있었다.
+         문맥으로만 가릴 수 있는 종류라 **사람이 확인해 주는 것이 유일한 길**이다. */
+      var ck = m.known
+        ? '<span class="mck on" title="명부에 있는 이름입니다">✓</span>'
+        : '<span class="mck" title="아직 명부에 없습니다 — 아래에서 등록하면 검증됩니다">·</span>';
       return '<div class="mrow">'
         + '<span class="mrk' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</span>'
         + '<span><span class="mnm">' + esc(m.name) + '</span>'
         + (m.store ? ' <span class="mst">' + esc(m.store) + '</span>' : '') + '</span>'
         + '<span class="mbar"><i style="width:' + Math.round(m.n / max * 100) + '%"></i></span>'
-        + '<span class="mn">' + nf(m.n) + '</span>' + nv
+        + '<span class="mn">' + nf(m.n) + '</span>' + ck + nv
         + '</div>';
     }).join('');
+  }
+
+  /* ── 매니저 명부 (2026-09-01 사장님 요청) ─────────────────────────────
+     *"추후 근무하는 매니저 이름을 넣으면 매니저별 몇 건의 후기가 있는지 검증이 가능하게"*.
+     **0건도 적는다** — 등록했는데 후기에 한 번도 안 나오는 것이 곧 정보다.
+     순위표에만 있으면 「안 나오는 사람」은 화면에서 통째로 사라진다. */
+  function renderMgrBook() {
+    var box = document.getElementById('mgr-known'); if (!box) return;
+    var K = DATA.mgrKnown || [];
+    var L = DATA.mgrList || {};
+    var stores = Object.keys(L), total = 0;
+    stores.forEach(function (s) { total += L[s].length; });
+
+    var sub = document.getElementById('mgrbook-sub');
+    if (sub) {
+      sub.innerHTML = total
+        ? '등록 <b>' + total + '명</b> · 후기에 나온 사람 <b>'
+          + K.filter(function (k) { return k.n > 0; }).length + '명</b>'
+          + ' · <b>직함이 갈린 같은 사람을 합쳐</b> 셉니다(남수호 프로 + 남수호 매니저 = 한 사람)'
+        : '아직 등록된 이름이 없습니다. 매장과 이름을 넣으면 <b>그 사람 건수를 정확히</b> 셉니다'
+          + ' — <b>0건이면 0건이라고 적습니다</b>(후기에 안 나온다는 것도 정보입니다).';
+    }
+    if (!K.length) { box.innerHTML = ''; return; }
+    box.innerHTML = K.map(function (k) {
+      return '<div class="krow"><span class="kn">' + esc(k.name) + '</span>'
+        + '<span class="ks">' + esc(k.store) + (k.titles ? ' · ' + esc(k.titles) : '') + '</span>'
+        + '<span class="kv' + (k.n ? '' : ' zero') + '">' + nf(k.n) + '건</span></div>';
+    }).join('');
+  }
+
+  function saveManagers(store, names) {
+    var msg = document.getElementById('mgr-msg');
+    var ok = document.getElementById('mgr-ok');
+    if (ok) ok.disabled = true;
+    if (msg) msg.textContent = '저장하는 중입니다…';
+    if (!(window.google && google.script && google.script.run)) {
+      if (msg) msg.textContent = '미리보기에서는 저장되지 않습니다.';
+      if (ok) ok.disabled = false;
+      return;
+    }
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (ok) ok.disabled = false;
+        if (!r || !r.ok) { if (msg) msg.textContent = (r && r.error) || '저장하지 못했습니다.'; return; }
+        DATA.mgrList = r.mgrList;
+        renderMgrBook();
+        /* **건수는 집계에서 나온다** — 새로고침해야 보인다는 것을 적는다.
+           안 적으면 등록하고도 0건만 보고 「안 된다」로 읽는다. */
+        if (msg) msg.innerHTML = '저장했습니다. <b>새로고침하면 그 사람 건수가 나옵니다</b>'
+          + ' — 이미 모은 후기에서 바로 셉니다(다시 수집할 필요 없습니다).';
+        var w = document.getElementById('mgr-name'); if (w) w.value = '';
+      })
+      .withFailureHandler(function (e) {
+        if (ok) ok.disabled = false;
+        if (msg) msg.textContent = '저장하지 못했습니다 — ' + esc((e && e.message) || '');
+      })
+      .setManagerNames(store, names);
+  }
+
+  function wireMgrBook() {
+    var ok = document.getElementById('mgr-ok');
+    var st = document.getElementById('mgr-store');
+    var nm = document.getElementById('mgr-name');
+    if (!ok || !st || !nm) return;
+    ok.onclick = function () {
+      var store = st.value.trim();
+      var msg = document.getElementById('mgr-msg');
+      if (!store) { if (msg) msg.textContent = '매장 이름을 넣어 주세요.'; return; }
+      /* **쉼표로 여럿을 한 번에** — 한 명씩 넣게 하면 스무 명을 등록할 수가 없다 */
+      var add = nm.value.split(/[,·\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!add.length) { if (msg) msg.textContent = '이름을 넣어 주세요.'; return; }
+      var cur = ((DATA.mgrList || {})[store] || []).slice();
+      add.forEach(function (a) { if (cur.indexOf(a) < 0) cur.push(a); });
+      saveManagers(store, cur);
+    };
+    nm.onkeydown = function (e) { if (e.key === 'Enter') ok.click(); };
   }
 
   /* ── 줄임말 등록 ────────────────────────────────────────────────────
@@ -1954,6 +2071,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     wireZoom();
     wireDrag();
     wireAlias();
+    wireMgrBook();
     syncPoll();
     /* rival 카드가 hidden 이 되거나 풀리면 「보이는 첫 카드」가 바뀐다 */
     (function () { var b = document.querySelector(".two"); if (b) markLead(b); })();
@@ -1985,6 +2103,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     renderKinds();
     renderWatch();
     renderMgrs();
+    renderMgrBook();
     renderAlias();
     renderRival();
     renderRegions();
