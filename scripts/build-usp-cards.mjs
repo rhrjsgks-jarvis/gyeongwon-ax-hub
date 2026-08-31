@@ -126,25 +126,25 @@ function parseDoc(file) {
       return b ? b[1].trim().split('\n').map(s => s.replace(/^-\s*/, '').trim()) : []
     })()
 
-    /* **설명이 같은 줄에 없는 문서가 있다.** 에어컨 문서는 헤드라인만 번호로 적고
-       설명을 다음 줄 들여쓴 `- "…"` 로 단다. 같은 줄 뒤(`— 설명`)를 먼저 보고,
-       비었으면 다음 줄들에서 가져온다. */
+    /* **USP 가 두 곳에 나뉘어 있는 문서가 있다**(2026-08-31 사장님 지적으로 발견).
+       모바일·노트북 문서는 `### 핵심 USP` 에 3개(삼성 공식 요약)만 두고 나머지를
+       `**PDP 가 함께 내세우는 것**` 불릿으로 따로 적었다. 앞엣것만 보다가 그 두 문서의
+       카드가 3줄뿐이었다 — **원본에는 있는데 카드가 못 담고 있었다.** 둘 다 본다. */
     const usps = []
     const uspLines = (txt.split(/^#{1,4} +핵심 USP/m)[1] || '').split('\n')
     for (let n = 0; n < uspLines.length; n++) {
       const L = uspLines[n]
       if (/^#{1,4} /.test(L)) break
-      const m = L.match(/^\d+\.\s*\*\*(.+?)\*\*\s*[—–-]?\s*(.*)$/)
-      if (!m) continue
-      let d = m[2].trim()
-      if (!d) {
-        const more = []
-        for (let k = n + 1; k < uspLines.length && /^\s+[-*] /.test(uspLines[k]); k++) {
-          more.push(uspLines[k].replace(/^\s*[-*]\s*/, '').replace(/\*\*/g, '').replace(/^\*(.+?)\*/, '$1').trim())
-        }
-        d = more.join(' ')
+      const m = L.match(/^\d+\.\s*\*\*(.+?)\*\*/)
+      if (m) usps.push(dedupeHead(m[1]))
+    }
+    /* `**PDP 가 함께 내세우는 것**` 같은 덧붙임 블록의 불릿 — 굵게 표시된 앞머리가 키워드다 */
+    for (const blk of txt.split(/\*\*(?:PDP 가 함께 내세우는 것|그 밖에 내세우는 것|추가 셀링포인트)\*\*/).slice(1)) {
+      for (const L of blk.split('\n')) {
+        if (/^#{1,4} /.test(L)) break
+        const m = L.match(/^\s*[-*]\s*\*\*(.+?)\*\*/) || L.match(/^\s*[-*]\s+(.{4,60}?)(?:\s*[—–]|\.\s|$)/)
+        if (m) usps.push(dedupeHead(m[1].replace(/\*\*/g, '').trim()))
       }
-      usps.push({ h: dedupeHead(m[1]), d: d.replace(/\s+/g, ' ').trim() })
     }
 
     const specs = []
@@ -171,6 +171,9 @@ function parseDoc(file) {
 const ALL = []
 for (const f of fs.readdirSync(SRC).filter(x => x.endsWith('.md'))) ALL.push(...parseDoc(f))
 
+/* 주의사항이 아래를 얼마나 먹는지에 따라 USP 자리가 정해진다(실측). */
+const warnBudget = (n) => (n >= 3 ? 20 : n >= 1 ? 24 : 28)
+
 /* ── 카드 하나로 줄이기 ────────────────────────────────────────── */
 function toCard([cat, model, sub]) {
   /* 같은 모델이 두 절에 나오면(TV 문서는 `## 갈래` 와 `### 모델` 이 겹친다)
@@ -179,23 +182,23 @@ function toCard([cat, model, sub]) {
   if (!cands.length) throw new Error(`카드 원본을 못 찾았다: ${cat} / ${model}`)
   const s = cands.sort((a, b) => (b.usps.length + b.specs.length) - (a.usps.length + a.specs.length))[0]
 
-  /* USP — **삼성 공식 요약(uspDescList)을 먼저** 두고 모자라면 PDP 헤드라인으로 채운다.
-     공식 요약은 삼성이 제품마다 스스로 뽑은 3줄이라 상담사가 그대로 읽어도 된다. */
+  /* USP — **설명은 빼고 키워드(헤드라인)만 많이 담는다**(2026-08-31 사장님 지시:
+     *"USP 내용이 더 많이 들어가야 합니다. USP 설명은 빠져도 됩니다"*).
+     설명을 빼면 한 줄이 되므로 2단으로 세 배 넘게 들어간다.
+
+     **삼성 공식 요약(uspDescList)을 앞에 둔다** — 삼성이 제품마다 스스로 뽑은 3줄이라
+     상담사가 그대로 읽어도 되는 문장이고, 카드에서 배지로 구분한다. */
   const seen = new Set()
   const usp = []
-  for (const o of s.official) {
-    const h = dedupeHead(o)
-    if (seen.has(h)) continue
-    seen.add(h)
-    const m = s.usps.find(u => u.h.includes(h.slice(0, 8)) || h.includes(u.h.slice(0, 8)))
-    usp.push({ h, d: m ? clipDesc(m.d) : '', official: true })
+  const key = (t) => t.replace(/\s+/g, '').slice(0, 12)
+  const add = (t, official) => {
+    const h = dedupeHead(String(t || '').trim()).replace(/[.,·]\s*$/, '')
+    if (h.length < 4 || h.length > 46) return          /* 너무 짧으면 뜻이 없고, 너무 길면 문장이다 */
+    if (seen.has(key(h))) return
+    seen.add(key(h)); usp.push({ h, official })
   }
-  for (const u of s.usps) {
-    if (usp.length >= 5) break
-    if ([...seen].some(x => x.slice(0, 10) === u.h.slice(0, 10))) continue
-    seen.add(u.h)
-    usp.push({ h: u.h, d: clipDesc(u.d), official: false })
-  }
+  for (const o of s.official) add(o, true)
+  for (const u of s.usps) add(u, false)
 
   /* 사양 — 상담에서 묻는 것만, 목록 순서대로. 같은 항목이 두 번 오면 첫 번째만. */
   const spec = [], used = new Set()
@@ -210,7 +213,12 @@ function toCard([cat, model, sub]) {
 
   return {
     cat, sub, model: s.model, name: s.name, src: s.src,
-    usp: usp.slice(0, 5), spec: spec.slice(0, 12), warns: s.warns.slice(0, 3),
+    /* **USP 상한은 아래 칸이 얼마나 먹느냐에 달렸다** — 28 로 고정했더니 주의 3줄이
+       붙은 스마트폰만 63px 넘쳤다(인덕션은 USP 28·주의 0 이라 딱 맞았다).
+       **주의사항을 줄이는 선택지는 없다** — 현장에서 반박당하는 것이라 이 카드에서
+       가장 값어치 있는 부분이다. USP 쪽이 양보한다.
+       실측 기준: 주의 없으면 28 · 1~2줄이면 24 · 3줄이면 20. */
+    usp: usp.slice(0, warnBudget(s.warns.length)), spec: spec.slice(0, 12), warns: s.warns.slice(0, 3),
   }
 }
 
@@ -234,11 +242,9 @@ const cardHtml = (c, i) => `
       <div class="code">${esc(c.model)}</div>
     </header>
 
-    <h2>핵심 USP</h2>
+    <h2>핵심 USP <span class="cnt">${c.usp.length}</span></h2>
     <ol class="usp">
-      ${c.usp.map((u) => `<li${u.official ? ' class="off"' : ''}>
-        <b>${esc(u.h)}</b>${u.d ? `<p>${esc(u.d)}</p>` : ''}
-      </li>`).join('')}
+      ${c.usp.map((u) => `<li${u.official ? ' class="off"' : ''}>${esc(u.h)}</li>`).join('')}
     </ol>
 
     <h2>핵심 사양</h2>
@@ -302,21 +308,27 @@ const html = `<!DOCTYPE html>
        padding-bottom: 3px; border-bottom: 1px solid var(--line); }
   h2.w { color: #B45309; border-color: #FDE68A; }
 
-  .usp { list-style: none; }
-  .usp li { padding: 6px 0 6px 22px; position: relative; border-top: 1px solid #F0F2F5; }
-  .usp li:first-child { border-top: 0; }
-  .usp li::before {
-    content: counter(n); counter-increment: n; position: absolute; left: 0; top: 7px;
-    width: 16px; height: 16px; border-radius: 50%; background: var(--blue); color: #fff;
-    font-size: 10px; font-weight: 700; text-align: center; line-height: 16px;
+  /* **설명을 빼고 키워드만 2단으로** — 설명이 있던 때는 5개가 한계였는데 28개가 들어간다
+     (2026-08-31 사장님 지시). 단 사이 경계선을 두어 어느 단을 읽는지 눈이 안 헤맨다. */
+  .usp {
+    list-style: none; counter-reset: n;
+    column-count: 2; column-gap: 14px; column-rule: 1px solid #EEF0F4;
   }
-  .usp { counter-reset: n; }
-  .usp li b { font-size: 12.5px; font-weight: 700; display: block; line-height: 1.45; }
-  .usp li p { font-size: 11px; color: var(--mute); margin-top: 2px; line-height: 1.5; }
+  .usp li {
+    padding: 3.2px 0 3.2px 19px; position: relative; font-size: 11.5px; font-weight: 600;
+    line-height: 1.4; break-inside: avoid;
+  }
+  .usp li::before {
+    content: counter(n); counter-increment: n; position: absolute; left: 0; top: 4px;
+    width: 14px; height: 14px; border-radius: 50%; background: #E8ECF7; color: var(--blue);
+    font-size: 8.5px; font-weight: 700; text-align: center; line-height: 14px;
+  }
   /* 삼성 공식 요약(uspDescList)은 표시를 달리한다 — 상담사가 그대로 읽어도 되는 문장이다 */
-  .usp li.off b::after {
-    content: "공식"; font-size: 8.5px; font-weight: 700; color: var(--blue);
-    background: #EEF2FF; border-radius: 4px; padding: 1px 4px; margin-left: 5px; vertical-align: 1px;
+  .usp li.off { color: var(--blue); font-weight: 700; }
+  .usp li.off::before { background: var(--blue); color: #fff; }
+  .cnt {
+    font-size: 9.5px; font-weight: 700; color: var(--blue); background: #EEF2FF;
+    border-radius: 999px; padding: 1px 6px; margin-left: 5px; vertical-align: 1px;
   }
 
   .spec { width: 100%; border-collapse: collapse; }
