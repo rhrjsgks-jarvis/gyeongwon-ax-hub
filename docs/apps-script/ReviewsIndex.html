@@ -58,6 +58,9 @@
   /* 어디까지 훑었는지 — 멈춰 있으면 눈에 띄어야 한다(이어서 눌러야 하니까) */
   .prog { font-size: 10.5px; color: rgba(255,255,255,.6); }
   .prog.mid { color: #FCD34D; font-weight: 700; }
+  /* 스스로 이어 도는 중 — **노랑(멈췄다)과 갈라야 한다.** 노랑은 사람이 눌러야 한다는
+     뜻이고 초록은 가만히 두면 된다는 뜻이라, 같은 색이면 정반대로 읽힌다. */
+  .prog.auto { color: #86EFAC; font-weight: 700; }
   .prog:empty { display: none; }
 
   /* 네 칸 — 일간·주간·월간·누적. 사장님이 요청하신 그 넷이다. */
@@ -215,6 +218,8 @@
       <span class="stamp" id="stamp">불러오는 중…</span>
       <span class="prog" id="prog"></span>
       <button class="btn" id="run">지금 수집</button>
+      <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
+      <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
       <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
            한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
       <span class="lim">
@@ -650,13 +655,28 @@
     var b = document.getElementById('run'); if (!b) return;
     var cur = Number(DATA.cursor || 0), tot = Number(DATA.stores || 0);
     var mid = cur > 0 && tot > 0;
-    if (!b.disabled) b.textContent = mid ? '이어서 수집' : '지금 수집';
+    /* **스스로 이어 도는 중이면 사람을 부르지 않는다.** 이 구분이 없으면 사장님이
+       버튼을 또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
+    var auto = !!DATA.chainOn;
+    if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '지금 수집');
+    var sb = document.getElementById('stop');
+    if (sb) sb.hidden = !auto;
     var e = document.getElementById('prog');
     if (e) {
-      e.textContent = mid
-        ? '지난 수집이 ' + tot + '곳 중 ' + cur + '번째에서 멈췄습니다 — 이어서 눌러 주세요'
-        : (tot ? tot + '곳 한 바퀴를 마친 상태입니다' : '');
-      e.className = 'prog' + (mid ? ' mid' : '');
+      var pctv = tot ? Math.round((mid ? cur : tot) / tot * 100) : 0;
+      e.textContent = auto
+        ? '자동으로 이어 도는 중 — ' + tot + '곳 중 ' + cur + '번째 (' + pctv + '%) · 1분마다 스스로 이어 갑니다'
+        : (mid
+            ? '지난 수집이 ' + tot + '곳 중 ' + cur + '번째(' + pctv + '%)에서 멈췄습니다 — 이어서 눌러 주세요'
+            : (tot ? tot + '곳 한 바퀴를 마친 상태입니다' : ''));
+      e.className = 'prog' + (auto ? ' auto' : (mid ? ' mid' : ''));
+    }
+    /* 트리거를 못 걸었으면 **삼키지 않고 알린다** — 조용히 실패하면 위 초록 문구가
+       거짓이 되고, 사장님은 자동으로 돌 줄 알고 기다린다. */
+    if (DATA.chainErr && !auto) {
+      var st0 = document.getElementById('status');
+      if (st0) st0.innerHTML = '<div class="note warn"><b>자동 이어달리기를 걸지 못했습니다</b> — '
+        + esc(DATA.chainErr) + '<br>「이어서 수집」을 손으로 눌러 주세요.</div>';
     }
   }
 
@@ -811,11 +831,39 @@
       .setDailyLimit(v);
   };
 
+  /* 이어달리기를 사람이 멈춘다. **켜는 길만 있고 끄는 길이 없으면 켜기가 무섭다** —
+     이 저장소가 목록 서랍에 닫는 길을 다섯 개 둔 것과 같은 생각이다. */
+  document.getElementById('stop').onclick = function () {
+    var b = this; b.disabled = true; b.textContent = '멈추는 중…';
+    google.script.run
+      .withSuccessHandler(function (msg) {
+        b.disabled = false; b.textContent = '이어달리기 멈춤'; b.hidden = true;
+        DATA.chainOn = false; renderProgress();
+        document.getElementById('status').innerHTML = '<div class="note">' + esc(msg)
+          + ' <b>모은 자료는 그대로입니다</b> — 「이어서 수집」으로 언제든 다시 이어 갑니다.</div>';
+      })
+      .withFailureHandler(function (e) {
+        b.disabled = false; b.textContent = '이어달리기 멈춤';
+        document.getElementById('status').innerHTML =
+          '<div class="note warn"><b>멈추지 못했습니다</b> — ' + esc(e && e.message)
+          + '<br>Apps Script 편집기의 <b>트리거</b> 화면에서 <code>continueSweep</code> 을 지우면 멈춥니다.</div>';
+      })
+      .stopSweep();
+  };
+
   document.getElementById('run').onclick = function () {
     var b = this;
     b.disabled = true; b.textContent = '수집 중… (1~2분)';
     google.script.run
       .withSuccessHandler(function (r) {
+        /* **이미 돌고 있으면 그렇게 말한다.** 자물쇠에 막힌 것을 「0건 수집」으로 적으면
+           사장님이 본 그 사고(*"수집했는데 0이 됐다"*)가 되풀이된다. */
+        if (r && r.busy) {
+          b.disabled = false; renderProgress();
+          document.getElementById('status').innerHTML =
+            '<div class="note warn"><b>' + esc(r.note) + '</b></div>';
+          return;
+        }
         /* **수집 결과를 그대로 말한다.** `added:0` 은 실패가 아니라 *"새 글이 없었다"* 다 —
            이미 있는 글은 링크로 걸러지므로 두 번째부터는 대개 0~몇 건이다.
            이걸 안 밝히면 사장님처럼 *"수집했는데 0 이 됐다"* 로 읽힌다(2026-08-31 실제 신고). */
@@ -831,7 +879,11 @@
             '<div class="note warn" style="margin-top:6px"><b>한 바퀴를 다 돌지 못했습니다</b> — '
             + nf(r.stores) + '곳 중 <b>' + nf(r.at) + '번째</b>까지 훑고 '
             + (r.hitLimit ? '<b>일일 한도(' + nf(r.dailyLimit) + '회)</b>에 닿아' : '<b>6분 실행 한도</b>로')
-            + ' 멈췄습니다. <b>「이어서 수집」을 다시 눌러 주세요</b> — 멈춘 매장부터 이어 갑니다.'
+            + ' 멈췄습니다. '
+            /* **자동으로 이어 가면 사람을 부르지 않는다** — 부르면 눌러서 자물쇠에 막힌다 */
+            + (r.chained
+                ? '<b>1분 뒤 스스로 이어 갑니다</b> — 그냥 두시면 됩니다. 잠시 뒤 새로고침하면 늘어난 숫자가 보입니다.'
+                : '<b>「이어서 수집」을 다시 눌러 주세요</b> — 멈춘 매장부터 이어 갑니다.')
             + (r.hitLimit ? ' 한도를 올리거나 내일 이어도 됩니다.' : '')
             + ' <b>이미 모은 글은 다시 세지 않습니다.</b></div>';
         }

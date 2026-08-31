@@ -901,6 +901,82 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       console.log('OK: ReviewsIndex 스크립트릿 1곳 · force-print (주석에 기호 없음)');
     }
   }
+
+  /* ── 바이럴 수집기 — 이어달리기가 성립하는가 (2026-08-31) ────────────────
+   * 6분 한도를 넘기려고 **스스로 트리거를 걸어 이어 돈다.** 이 구조는 조용히 깨진다:
+   * 트리거 이름이 겹치면 새벽 트리거가 지워지고, 시간 검사가 빠지면 실행이 통째로
+   * 죽고, `MAX_PAGES` 만 올리면 화면이 틀린 한도 경고를 한다. 셋 다 화면에 표시가
+   * 안 나므로 검사가 붙들어야 한다.
+   */
+  const rvPath = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(rvPath)) {
+    const rv = fs.readFileSync(rvPath, 'utf8');
+
+    /* ① 이어달리기 트리거는 **다른 이름**이어야 한다 — 같은 이름이면
+       `setupTrigger` 의 「기존 것을 지운다」가 새벽 3시 트리거까지 지운다 */
+    const chainFn = (rv.match(/var CHAIN_FN = '([^']+)'/) || [])[1];
+    if (!chainFn) fail('[바이럴] CHAIN_FN 이 없다 — 이어달리기 트리거 이름을 상수로 둘 것');
+    else if (chainFn === 'collectReviews') {
+      fail('[바이럴] 이어달리기 트리거를 collectReviews 이름으로 걸면 setupTrigger 가 새벽 트리거까지 지운다');
+    } else if (!new RegExp(`^function ${chainFn}\\(`, 'm').test(rv)) {
+      fail(`[바이럴] 트리거가 부를 ${chainFn}() 함수가 없다 — 트리거는 걸리는데 아무 일도 안 일어난다`);
+    } else {
+      console.log(`OK: 바이럴 이어달리기 — 트리거 이름이 ${chainFn} 로 갈려 새벽 트리거를 안 건드린다`);
+    }
+
+    /* ② `google.script.run` 이 부르는 이름은 **밑줄로 끝나면 안 된다**(비공개 취급) */
+    const pub = ['collectReviews', 'stopSweep', 'getSummary', 'setDailyLimit'];
+    const miss = pub.filter((f) => !new RegExp(`^function ${f}\\(`, 'm').test(rv));
+    if (miss.length) fail(`[바이럴] 화면이 부르는 함수가 없다: ${miss.join(', ')}`);
+    else console.log(`OK: 바이럴 공개 함수 ${pub.length}개 — 화면에서 부를 수 있는 이름이다`);
+
+    /* ③ 꼬리말 루프 안에 **시간 검사**가 있어야 한다. 매장 하나가 최대
+       `TAILS × 2 × MAX_PAGES` 회라 6분을 넘길 수 있고, 넘기면 강제 종료돼
+       **그때까지 받은 것이 시트에 안 써지고 통째로 날아간다.** */
+    const tailBody = (rv.match(/for \(var ti = 0; ti < TAILS\.length; ti\+\+\) \{([\s\S]{0,900})/) || [])[1] || '';
+    if (!/Date\.now\(\) - t0 > BUDGET_MS/.test(tailBody)) {
+      fail('[바이럴] 꼬리말 루프에 시간 검사가 없다 — 한 매장이 6분을 넘기면 그 실행이 통째로 날아간다');
+    } else if (!/\}\s*\/\* TAILS \*\/\s*\n[\s\S]{0,400}?if \(stopped\) break;/.test(rv)) {
+      fail('[바이럴] 꼬리말 도중 멈춤이 매장 루프를 안 끊는다 — 반만 훑은 매장을 건너뛴다');
+    } else {
+      console.log('OK: 바이럴 시간 검사 — 꼬리말 경계에서 끊고, 커서가 그 매장에 머문다');
+    }
+
+    /* ④ 한 바퀴 최대 호출(`SWEEP_CALLS`)이 실제 상한보다 작으면 **화면이 틀린 경고**를 한다
+       (한도가 넉넉한데 "모자란다"고 하거나 그 반대). 값을 손으로 적으므로 대조한다. */
+    const nOf = (re) => Number((rv.match(re) || [])[1] || 0);
+    const maxPages = nOf(/var MAX_PAGES = (\d+)/);
+    const sweep = nOf(/var SWEEP_CALLS = (\d+)/);
+    const nTails = ((rv.match(/var TAILS = \[([^\]]*)\]/) || [])[1] || '').split(',').length;
+    /* **한 줄에 매장이 넷씩이라 줄 앵커로 세면 안 된다** — 65곳이 8곳으로 세어져
+       상한이 8배 낮게 잡히고, 그러면 이 검사가 아무것도 못 지킨다(실제로 그랬다).
+       배열 안의 점코드를 전부 센다. */
+    const storeBlock = (rv.match(/var STORES = \[([\s\S]*?)\n\];/) || [])[1] || '';
+    const nStores = (storeBlock.match(/\['[A-Z0-9]{4}'\s*,/g) || []).length;
+    const need = nStores * nTails * 2 * maxPages;
+    if (!maxPages || !sweep || !nTails || !nStores) {
+      fail('[바이럴] MAX_PAGES · SWEEP_CALLS · TAILS · STORES 중 못 읽은 것이 있다');
+    } else if (sweep < need) {
+      fail(`[바이럴] SWEEP_CALLS(${sweep}) < 실제 상한(${need} = 매장 ${nStores} × 꼬리 ${nTails} × 2소스 × ${maxPages}쪽) — MAX_PAGES 를 바꿨으면 함께 고칠 것`);
+    } else {
+      console.log(`OK: 바이럴 한 바퀴 최대 ${sweep}회 ≥ 상한 ${need}회 (매장 ${nStores} × 꼬리 ${nTails} × 2소스 × ${maxPages}쪽)`);
+    }
+
+    /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */
+    const pageSize = nOf(/var PAGE_SIZE = (\d+)/);
+    if (pageSize * maxPages > 1000) {
+      fail(`[바이럴] PAGE_SIZE(${pageSize}) × MAX_PAGES(${maxPages}) = ${pageSize * maxPages} > 1000 — start 상한을 넘어 HTTP 400 이 난다`);
+    } else {
+      console.log(`OK: 바이럴 질의 깊이 ${pageSize * maxPages}건 ≤ 네이버 start 상한 1,000`);
+    }
+
+    /* ⑥ 동시 실행 자물쇠 — 두 벌이 같은 시트에 쓰면 같은 글이 두 줄로 들어간다 */
+    if (!/LockService\.getScriptLock\(\)/.test(rv) || !/releaseLock\(\)/.test(rv)) {
+      fail('[바이럴] 동시 실행 자물쇠가 없다 — 이어달리기 중에 사람이 누르면 중복 줄이 쌓인다');
+    } else {
+      console.log('OK: 바이럴 자물쇠 — 이어달리기와 손수 수집이 겹쳐도 중복이 안 쌓인다');
+    }
+  }
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

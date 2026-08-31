@@ -49,11 +49,32 @@ var API_BASE = 'https://naverapihub.apigw.ntruss.com/search/v1';
 var SHEET_ITEMS = '후기';
 var SHEET_LOG = '수집기록';
 
-/* 한 번에 받는 수와 몇 쪽까지 넘길지. **실측(2026-08-31)에서 나온 값이다** —
-   display 는 100 이 상한이고(200 은 HTTP 400) start 는 201 부터 0건이 온다.
-   즉 한 질의로 받을 수 있는 것은 **약 200건**이고 그 이상은 네이버가 안 준다. */
+/* ── 한 질의로 어디까지 받히는가 ────────────────────────────────────
+ * **옛 주석이 「start 는 201 부터 0건」이라 적어 두었는데 그것이 틀렸다**(2026-08-31 재측정).
+ * 작은 질의 하나로 재고 전체에 일반화한 값이었고, 그 탓에 `MAX_PAGES = 2` 로
+ * **스스로 200건에서 끊고 있었다.** 사장님이 세 번 지적한 *"후기가 더 있는 걸로 안다"*
+ * 의 정체가 이것이다.
+ *
+ * 다시 재서 나온 값(`.scratch/_nvprobe2.mjs`):
+ *
+ * | | |
+ * |---|---|
+ * | `display` 상한 | **100** (200 은 HTTP 400) |
+ * | `start` 상한 | **1,000** — `start=901` 까지 100건씩 오고 **1001 부터 HTTP 400**(`Invalid start value`) |
+ * | 갤러리아광교 카페 한 질의 | `sort=date` 로 10쪽 = **고유 링크 1,000개 · 중복 0** |
+ * | 같은 질의 `sort=sim` | 10쪽을 받아도 **고유 390개** — 중복이 심하다 |
+ *
+ * 즉 한 질의로 **1,000건**까지 받히고 `sort=date` 면 그 1,000건이 전부 다른 글이다.
+ * 우리가 보던 200건은 그 5분의 1이었다.
+ *
+ * **`sort=sim` 을 함께 돌지 않는 이유** — 합집합을 재 보니 sim 이 222개를 더 주는데
+ * (390 중 겹침 168) 그 대가가 호출 10회다. date 는 호출당 100개, sim 은 22개라
+ * **같은 호출 예산이면 다른 매장을 한 곳 더 도는 편이 낫다.**
+ *
+ * **빈 쪽이 나오면 그 자리에서 멈춘다**(아래 루프) — 작은 매장에서 10쪽을 다 두드리지 않는다.
+ */
 var PAGE_SIZE = 100;
-var MAX_PAGES = 2;
+var MAX_PAGES = 10;
 
 /* ── 일일 수집한도 ────────────────────────────────────────────────
  * 2026-08-31 사장님 요청: *"지금 수집 버튼 옆에 일일 수집한도를 설정해주면 좋겠습니다"*.
@@ -79,7 +100,12 @@ var MAX_PAGES = 2;
  * 개수에서 되풀이해 데인 자리). 속성 읽기가 2,000번 도는 것도 함께 막는다.
  */
 var DEFAULT_DAILY_LIMIT = 20000;
-var SWEEP_CALLS = 2096;   /* 화면이 "한 바퀴에 모자란다"를 말할 수 있게 상수로 둔다 */
+/* 한 바퀴에 드는 **최대** 호출 — 화면이 "한도가 한 바퀴에 모자란다"를 말하는 근거다.
+   65매장 × 꼬리 8 × 2소스 × 10쪽 = 10,400 · 관심 카페 2 × 4 × 10 = 80 · 경쟁비교 40.
+   **실제로는 이보다 적다** — 빈 쪽이 나오면 그 자리에서 멈추므로 작은 매장은 10쪽을
+   다 두드리지 않는다. 한도를 정할 때는 넉넉한 쪽으로 봐야 하므로 최대치를 적는다.
+   `MAX_PAGES` 를 바꾸면 **이 값도 함께 고칠 것** — 안 고치면 화면이 틀린 경고를 한다. */
+var SWEEP_CALLS = 10520;
 
 /* **열은 뒤에만 붙인다** — 이 스크립트는 열을 자리로 쓰므로 가운데에 끼우면 그 아래
    모든 줄이 한 칸씩 밀린다(Code.gs 가 지점 열을 더할 때 겪은 것과 같다). */
@@ -650,6 +676,20 @@ function sheet_(name, header) {
  * **`done:true` 가 나오면 한 바퀴가 끝난 것**이고 커서는 처음으로 돌아간다.
  */
 function collectReviews() {
+  /* **둘이 동시에 돌지 못하게 막는다.** 이어달리기 트리거가 도는 중에 사장님이
+     화면에서 「지금 수집」을 누르면 두 벌이 같은 시트에 쓴다 — 둘 다 자기 시작 시점의
+     `seen` 을 들고 있어 **같은 글이 두 줄로 들어간다.** 30초를 기다려도 못 잡으면
+     그 사실을 그대로 돌려준다(조용히 아무 일도 안 하면 화면이 0건을 이상하게 여긴다). */
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(30 * 1000)) {
+    return { calls: 0, got: 0, kept: 0, added: 0, error: '', busy: true,
+      note: '이미 수집이 돌고 있습니다 — 끝나면 화면을 새로고침하세요.' };
+  }
+  try { return sweep_(); } finally { lock.releaseLock(); }
+}
+
+/** 실제 수집. `collectReviews` 가 자물쇠를 잡고 부른다. */
+function sweep_() {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
   var seen = {}, i, k, n;
   var t0 = Date.now();
@@ -686,6 +726,12 @@ function collectReviews() {
     var mname = MATCH[name] || name;
     /* **질의를 쪼개 여러 번 묻는다** — 한 질의는 200건이 상한이라 큰 매장을 다 못 받는다 */
     for (var ti = 0; ti < TAILS.length; ti++) {
+    /* **꼬리말 경계에서도 시간을 본다.** 매장 경계에서만 보던 시절에는 한 매장이
+       32회(≈20초)라 괜찮았는데, `MAX_PAGES` 를 10 으로 올리며 **160회(≈1~3분)** 가 됐다.
+       4.5분에 시작한 매장이 6분을 넘겨 **강제 종료되면 시트 쓰기까지 통째로 날아간다**
+       (그때까지 받은 것이 전부 사라진다). 꼬리 하나는 20회(≈10~20초)라 여기서 끊으면
+       안전하다. **그 매장을 다시 훑게 되지만 링크로 중복이 걸러지므로 손해는 호출뿐이다.** */
+    if (Date.now() - t0 > BUDGET_MS) { cursor = i; stopped = true; break; }
     var query = base + TAILS[ti];
     for (k = 0; k < kinds.length; k++) {
       /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
@@ -737,6 +783,10 @@ function collectReviews() {
     }
     if (err || hitLimit) break;
     }   /* TAILS */
+    /* **꼬리말 도중에 멈췄으면 여기서 매장 루프도 끊는다.** 안 끊으면 다음 매장으로
+       넘어간 뒤 매장 경계의 시간 검사가 `cursor = i+1` 을 적어 **반만 훑은 매장을
+       건너뛴다.** 여기서 끊어야 커서가 그 매장에 머문다. */
+    if (stopped) break;
     if (hitLimit) break;
     /* **인증이 막혔으면 첫 실패에서 멈춘다.**
        처음에는 `스크립트 속성` 문구를 던지는 예외만 잡았는데, **HTTP 401 은 예외가
@@ -815,8 +865,22 @@ function collectReviews() {
   if (!stopped) cursor = 0;
   props_().setProperty('_cursor', String(cursor));
 
+  /* ── 스스로 이어 돈다 ──────────────────────────────────────────
+     **시간이 모자라 멈춘 것이면 1분 뒤 자기를 다시 부른다.** 이것이 없으면 사람이
+     열 번 넘게 눌러야 한 바퀴가 끝나고, 실제로 65곳 중 **30곳에서 서 있었다**
+     (2026-08-31 배포본 실측 `cursor:30`). 사장님이 *"자료수집이 8711건에서 멈췄다"*
+     고 한 것이 이것이다.
+
+     **한도로 멈춘 것과 오류로 멈춘 것에는 걸지 않는다** — 더 돌아도 결과가 같고,
+     1분마다 헛도는 트리거만 남는다. 그때는 사람이 판단할 일이다. */
+  var chained = false;
+  if (stopped && !hitLimit && !err) { chained = chain_(); } else { clearChain_(); }
+
   sheet_(SHEET_LOG, LOG_HEADER).appendRow([new Date(), calls, got, kept, add.length, err]);
   return {
+    /* 이어달리기가 걸렸는지. 화면이 *"1분 뒤 스스로 이어 갑니다"* 를 적어야
+       사장님이 버튼을 다시 누를지 말지 안다. */
+    chained: chained,
     calls: calls, got: got, kept: kept, added: add.length, error: err,
     /* **어디까지 했는지 화면이 알아야 한다** — 안 그러면 *"왜 65곳이 아니라 20곳만 돌았지"*
        가 된다. `done:false` 면 「이어서 수집」을 한 번 더 누르면 된다. */
@@ -840,6 +904,62 @@ function setupTrigger() {
   }
   ScriptApp.newTrigger('collectReviews').timeBased().atHour(3).everyDays(1).create();
   return '하루 1회 새벽 3시 트리거를 걸었습니다.';
+}
+
+/* ── 이어달리기 ──────────────────────────────────────────────────────
+ * Apps Script 는 한 번에 **6분**까지만 돈다. 한 바퀴(65개 매장)는 그보다 훨씬 길어
+ * 예전에는 **사람이 열 번 넘게 눌러야** 끝났고, 실제로는 안 눌러서 서 있었다.
+ *
+ * **일회성 트리거를 스스로 걸어 이어 돈다.** Apps Script 에서 6분 한도를 넘기는
+ * 표준 방법이고, 우리 쪽 준비물은 커서(`_cursor`) 하나로 이미 다 갖춰져 있었다.
+ *
+ * **`collectReviews` 가 아니라 다른 이름(`continueSweep`)으로 건다** — 같은 이름으로
+ * 걸면 `setupTrigger` 의 「기존 것을 지운다」가 **새벽 3시 트리거까지 지운다.**
+ * 이름을 갈라 두면 서로를 건드리지 않는다.
+ */
+var CHAIN_FN = 'continueSweep';
+
+/** 이어달리기 트리거를 전부 지운다. **쌓이면 여러 벌이 동시에 돈다** — 자물쇠가
+ *  막아 주긴 하지만 헛도는 실행이 실행 한도를 먹는다. 지운 개수를 돌려준다. */
+function clearChain_() {
+  var t = ScriptApp.getProjectTriggers(), i, n = 0;
+  for (i = 0; i < t.length; i++) {
+    if (t[i].getHandlerFunction() === CHAIN_FN) { ScriptApp.deleteTrigger(t[i]); n++; }
+  }
+  return n;
+}
+
+/** 1분 뒤 이어 돌게 건다. **먼저 기존 것을 지운다** — 안 지우면 한 바퀴에 열 개가 쌓인다. */
+function chain_() {
+  try {
+    clearChain_();
+    ScriptApp.newTrigger(CHAIN_FN).timeBased().after(60 * 1000).create();
+    /* **지난 실패 표시를 지운다.** 안 지우면 한 번 실패한 뒤로는 잘 걸려도 화면이
+       계속 *"걸지 못했습니다"* 를 적는다 — 굳은 거짓이 된다. */
+    props_().deleteProperty('_chainErr');
+    return true;
+  } catch (e) {
+    /* 트리거 개수 한도(20개) 등으로 못 걸 수 있다. **삼키지 않고 알린다** —
+       조용히 실패하면 *"자동으로 이어 간다"* 는 화면 문구가 거짓이 된다. */
+    props_().setProperty('_chainErr', String(e).slice(0, 120));
+    return false;
+  }
+}
+
+/** 이어달리기가 부르는 자리. 하는 일은 수집 그대로다. */
+function continueSweep() { return collectReviews(); }
+
+/** 사람이 멈추고 싶을 때. 화면의 「멈춤」이 부른다. */
+function stopSweep() {
+  var n = clearChain_();
+  return n ? ('이어달리기를 멈췄습니다(트리거 ' + n + '개 해제).') : '돌고 있는 이어달리기가 없습니다.';
+}
+
+/** 지금 이어달리기가 걸려 있는가 — 화면이 「자동으로 이어 가는 중」을 적는 근거. */
+function chainOn_() {
+  var t = ScriptApp.getProjectTriggers(), i;
+  for (i = 0; i < t.length; i++) if (t[i].getHandlerFunction() === CHAIN_FN) return true;
+  return false;
 }
 
 /* ── 집계 ────────────────────────────────────────────────────── */
@@ -995,6 +1115,10 @@ function summary_() {
        *"이어서 수집하기 버튼은 안 나옵니다"*). 한 바퀴가 6분 한도에 걸려 매장 중간에서
        멈추는데, 화면이 그 사실을 안 적으면 **갤러리아광교가 왜 29건인지** 알 길이 없다. */
     cursor: Number(props_().getProperty("_cursor") || 0),
+    /* **지금 스스로 이어 돌고 있는가.** 이것이 참이면 화면은 「이어서 수집」을 권하지
+       않고 *"1분마다 자동으로 이어 갑니다"* 를 적는다 — 안 그러면 사장님이 버튼을
+       또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
+    chainOn: chainOn_(), chainErr: String(props_().getProperty('_chainErr') || ''),
     /* 당사 vs LG — **없으면 null 이다.** 0 으로 그리면 「LG 후기가 없다」로 읽힌다 */
     rival: rival_(),
     /* **영업스케치 지역 6곳**(수원·용인·성남·평택·안양·강원).
