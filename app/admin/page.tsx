@@ -783,6 +783,8 @@ type ViralData = {
   byCafe?: Record<string, number>
   bySrc?: Record<string, number>
   byKind?: Record<string, number>
+  byRegion?: Record<string, { n: number; stores: string[] }>
+  dated?: number; undated?: number; minDate?: string; maxDate?: string
   lastRun?: { at: string; error: string } | null
   recent?: { date?: string; foundAt?: string; storeName: string; src: string; kind?: string; title: string; link: string; cafe: string; dated?: boolean }[]
 }
@@ -815,7 +817,9 @@ function ViralSection() {
   }
   useEffect(load, [])
 
-  const top = Object.entries(d?.byStore || {}).sort((a, b) => b[1] - a[1]).slice(0, 8)
+  /* **지역별로 묶고 전점을 세운다**(2026-08-31 사장님 지시 — *"지역별로 모아주시고
+     전점이 다 나와야 합니다"*). 예전에는 상위 8곳만 막대로 그려 **49곳 중 8곳**만 보였다. */
+  const regions = Object.entries(d?.byRegion || {}).sort((a, b) => (b[1].n || 0) - (a[1].n || 0))
   const cafes = Object.entries(d?.byCafe || {}).sort((a, b) => b[1] - a[1]).slice(0, 5)
   const hit = Object.values(d?.byStore || {}).filter((v) => v > 0).length
   const kindTotal = Object.values(d?.byKind || {}).reduce((a, b) => a + b, 0)
@@ -838,9 +842,17 @@ function ViralSection() {
         </a>
       </div>
       <p className="text-[11px] text-gray-400 mb-2.5">
-        네이버 블로그·카페(다이렉트웨딩 · 메이크마이웨딩 · 맘카페 · 입주카페)에 올라온 우리 매장 후기 ·
-        매일 새벽 자동 수집 · <b>일간·주간·월간은 「작성일」 기준</b>입니다(작성일을 모르는
-        카페 글은 처음 본 날로 셉니다)
+        네이버 블로그·카페(다이렉트웨딩 · 메이크마이웨딩 · 레몬테라스 · 요즘웨딩 · 맘카페 · 입주카페)에
+        올라온 우리 매장 후기 · 매일 새벽 자동 수집
+        {/* **무엇을 세지 않았는지 적는다.** 카페 글은 네이버가 작성일을 아예 안 줘서
+            기간 집계에서 뺐다 — 안 적으면 사장님이 본 그 사고(「오늘 1,505건」인데
+            작성일을 아는 것은 0건)가 다시 난다. */}
+        <br />
+        <b>오늘·7일·30일은 작성일을 아는 글만</b> 셉니다
+        {d?.dated ? ' (' + d.dated.toLocaleString() + '건' : ''}
+        {d?.undated ? ' · 작성일 미상 ' + d.undated.toLocaleString() + '건 제외' : ''}
+        {d?.dated ? ')' : ''}
+        {d?.minDate && d?.maxDate ? ' · 작성일 범위 ' + d.minDate + ' ~ ' + d.maxDate : ''}
       </p>
 
       {state === 'loading' && <div className="text-xs text-gray-400 py-6 text-center">불러오는 중…</div>}
@@ -897,16 +909,37 @@ function ViralSection() {
               <p className="text-xs font-bold text-gray-700 mb-0.5">매장별 상위</p>
               {/* **몇 곳 중 몇 곳인지 적는다** — 65곳을 전부 수집하므로 아직 0건인 곳이 있다.
                   감추는 것과 없는 것은 다른 말이라, 안 적으면 "우리 매장이 없다"로 읽힌다 */}
-              <p className="text-[10px] text-gray-400 mb-2">후기가 잡힌 매장 {hit}곳 / 대상 {d.stores}곳</p>
-              {top.map(([name, n]) => (
-                <div key={name} className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] text-gray-600 w-24 truncate" title={name}>{name}</span>
-                  <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: (n / top[0][1]) * 100 + '%', background: '#0F766E' }} />
+              <p className="text-[10px] text-gray-400 mb-2">전점 {d.stores}곳 · 후기가 잡힌 곳 {hit}곳</p>
+              {/* **0건도 흐리게 남긴다** — 감추면 "우리 매장이 없다"로 읽힌다.
+                  오늘 0건이라고 내일도 0건인 것은 아니다. */}
+              <div className="max-h-64 overflow-y-auto pr-1">
+                {regions.map(([rg, v]) => (
+                  <div key={rg} className="mb-2">
+                    <p className="text-[10px] font-bold mb-1" style={{ color: '#0F766E' }}>
+                      {rg}<span className="font-normal text-gray-400 ml-1">
+                        {v.stores.length}곳 · {(v.n || 0).toLocaleString()}건</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {v.stores
+                        .slice()
+                        .sort((a, b) => ((d.byStore?.[b] || 0) - (d.byStore?.[a] || 0)))
+                        .map((nm) => {
+                          const c = d.byStore?.[nm] || 0
+                          return (
+                            <span
+                              key={nm}
+                              className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] ${
+                                c ? 'border-gray-200 text-gray-600' : 'border-gray-100 text-gray-300'
+                              }`}
+                            >
+                              {nm}<b className={c ? 'text-gray-800' : 'text-gray-300'}>{c}</b>
+                            </span>
+                          )
+                        })}
+                    </div>
                   </div>
-                  <span className="text-[10px] text-gray-400 w-8 text-right tabular-nums">{n}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 p-3.5">

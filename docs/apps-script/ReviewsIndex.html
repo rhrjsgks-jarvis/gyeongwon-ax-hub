@@ -140,6 +140,35 @@
   .kchip b { font-size: 13px; font-weight: 800; }
   .kchip .pc { font-size: 10px; opacity: .7; }
 
+  /* 지역별 매장 — **전점을 세운다.** 0건도 흐리게 남긴다(감추면 "우리 매장이 없다"로 읽힌다) */
+  .rg { margin-bottom: 11px; }
+  .rg-h { font-size: 11.5px; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
+  .rg-h span { font-weight: 500; color: var(--mute); margin-left: 5px; font-size: 10.5px; }
+  .rg-b { display: flex; gap: 4px; flex-wrap: wrap; }
+  .st {
+    border: 1px solid var(--line); background: #fff; border-radius: 7px;
+    padding: 3px 8px; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151;
+  }
+  .st:hover { background: #F4F6FB; }
+  .st.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .st b { font-weight: 800; margin-left: 4px; font-variant-numeric: tabular-nums; }
+  /* 0건 — **지우지 않고 흐리게.** 오늘 0건이라고 내일도 0건인 것은 아니다 */
+  .st.z { color: #B6BCC6; background: #FCFCFD; }
+  .st.z b { color: #C9CFD8; }
+
+  /* 날짜 범위 — 「몇일~몇일」(2026-08-31 사장님 요청) */
+  .range { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-bottom: 9px; font-size: 11px; color: var(--mute); }
+  .range input {
+    border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px;
+    font-size: 11px; font-family: inherit; color: var(--ink);
+  }
+  .range .rbtn {
+    border: 1px solid var(--line); background: #fff; color: var(--blue); border-radius: 6px;
+    padding: 3px 8px; font-size: 10.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .range .rbtn:hover { background: #F4F6FB; }
+  .range .rbtn.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
   /* 관심 카페 — 지목받은 곳은 건수가 적어도 늘 보인다 */
   .watch { display: flex; gap: 5px; flex-wrap: wrap; margin: 2px 0 10px; }
   .wchip {
@@ -177,9 +206,9 @@
 <div class="wrap">
   <div class="kpis">
     <div class="kpi big"><div class="n" id="k-total">–</div><div class="l">전체 누적</div><div class="s" id="k-sub">–</div></div>
-    <div class="kpi"><div class="n" id="k-month">–</div><div class="l">최근 30일</div><div class="s">이 기간에 쓰인 글</div></div>
-    <div class="kpi"><div class="n" id="k-week">–</div><div class="l">최근 7일</div><div class="s">이 기간에 쓰인 글</div></div>
-    <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s">오늘 쓰인 글</div></div>
+    <div class="kpi"><div class="n" id="k-month">–</div><div class="l">최근 30일</div><div class="s" id="k-m3">작성일 기준</div></div>
+    <div class="kpi"><div class="n" id="k-week">–</div><div class="l">최근 7일</div><div class="s" id="k-m2">작성일 기준</div></div>
+    <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s" id="k-m1">작성일 기준</div></div>
   </div>
 
   <div id="status"></div>
@@ -192,9 +221,12 @@
 
   <div class="two">
     <div class="card">
-      <h2>매장별</h2>
+      <h2>매장별 — 지역순</h2>
+      <!-- 2026-08-31 사장님 지시: *"지역별로 모아주시고 전점이 다 나와야 합니다"*.
+           예전에는 상위 20곳 막대라 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
+           "우리 매장이 없다"로 읽힌다. 0건도 흐리게 적어 **전점을 세운다.** -->
       <div class="sub" id="store-sub">–</div>
-      <div id="stores"></div>
+      <div id="regions"></div>
     </div>
     <div class="card">
       <h2>어디에 올라오나</h2>
@@ -214,6 +246,18 @@
       </div>
       <button class="dl" id="csv">CSV 내려받기</button>
     </div>
+    <!-- 날짜 범위 (2026-08-31 사장님 요청 — *"날짜별(몇일~몇일) 확인 가능하게"*).
+         **작성일 기준이다.** 카페 글은 네이버가 작성일을 안 줘서 이 거름망에 안 걸린다 —
+         그 사실을 옆에 적는다(감추면 "왜 안 나오지"가 된다). -->
+    <div class="range" id="range">
+      <span>작성일</span>
+      <input type="date" id="r-from"><span>~</span><input type="date" id="r-to">
+      <button class="rbtn" data-d="7">7일</button>
+      <button class="rbtn" data-d="30">30일</button>
+      <button class="rbtn" data-d="90">90일</button>
+      <button class="rbtn" data-d="0">전체</button>
+      <span class="cntxt" id="r-note"></span>
+    </div>
     <div class="picked" id="picked"></div>
     <div class="filter" id="filter"></div>
     <div id="list"></div>
@@ -229,6 +273,7 @@
   var cafeFilter = '';    /* 카페 막대를 눌러 걸린 값 */
   var kindFilter = '';    /* 유형 칩을 눌러 걸린 값 */
   var watchFilter = '';   /* 관심 카페 칩 — 부분일치라 cafeFilter 와 따로 둔다 */
+  var fromDate = '', toDate = '';   /* 작성일 범위 (몇일~몇일) */
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -283,6 +328,13 @@
       if (cafeFilter && r.cafe !== cafeFilter) return false;
       if (kindFilter && r.kind !== kindFilter) return false;
       if (watchFilter && String(r.cafe || '').replace(/s+/g, '').indexOf(watchFilter.replace(/s+/g, '')) < 0) return false;
+      /* **날짜 범위는 작성일을 아는 글에만 건다.** 카페 글은 날짜가 「처음 본 날」이라
+         그것으로 거르면 있지도 않은 사실을 말하게 된다 — 옆의 안내가 그 수를 적는다. */
+      if (fromDate || toDate) {
+        if (!r.dated) return false;
+        if (fromDate && r.date < fromDate) return false;
+        if (toDate && r.date > toDate) return false;
+      }
       return true;
     });
   }
@@ -338,6 +390,60 @@
     });
   }
 
+  /* 지역별 매장 — **전점을 세운다**(사장님: *"전점이 다 나와야 합니다"*).
+     시·군 안에서는 많은 것부터, 0건은 흐리게 뒤로. 누르면 그 매장 링크만 본다. */
+  function renderRegions() {
+    var el = document.getElementById('regions'); if (!el) return;
+    var reg = DATA.byRegion || {}, by = DATA.byStore || {};
+    var names = Object.keys(reg);
+    if (!names.length) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
+    names.sort(function (a, b) { return (reg[b].n || 0) - (reg[a].n || 0); });
+    el.innerHTML = names.map(function (rg) {
+      var list = (reg[rg].stores || []).slice().sort(function (a, b) {
+        return (by[b] || 0) - (by[a] || 0);
+      });
+      return '<div class="rg"><div class="rg-h">' + esc(rg) +
+        '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
+        list.map(function (nm) {
+          var v = by[nm] || 0;
+          return '<button class="st' + (v ? '' : ' z') + (storeFilter === nm ? ' on' : '') +
+            '" data-v="' + esc(nm) + '">' + esc(nm) + '<b>' + nf(v) + '</b></button>';
+        }).join('') + '</div></div>';
+    }).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.st'), function (b) {
+      b.onclick = function () {
+        storeFilter = storeFilter === b.dataset.v ? '' : b.dataset.v;
+        cafeFilter = ''; watchFilter = '';
+        render();
+        document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
+  /* 날짜 범위 — 입력칸과 빠른 버튼이 **같은 값을 본다**(따로 두면 화면이 어긋난다) */
+  function renderRange() {
+    var f = document.getElementById('r-from'), t = document.getElementById('r-to');
+    var note = document.getElementById('r-note'); if (!f || !t) return;
+    if (document.activeElement !== f) f.value = fromDate;
+    if (document.activeElement !== t) t.value = toDate;
+    if (DATA.minDate) { f.min = DATA.minDate; t.min = DATA.minDate; }
+    Array.prototype.forEach.call(document.querySelectorAll('#range .rbtn'), function (b) {
+      var d = Number(b.dataset.d);
+      var want = d ? ymdAgo(d - 1) : '';
+      b.className = 'rbtn' + ((fromDate === want && !toDate) ? ' on' : '');
+    });
+    /* **무엇이 이 거름망에 안 걸리는지 적는다** — 카페 글은 작성일을 모른다 */
+    if (note) {
+      note.textContent = (fromDate || toDate)
+        ? '작성일을 아는 글만 (' + nf(DATA.dated) + '건 중에서)'
+        : (DATA.undated ? '작성일 미상 ' + nf(DATA.undated) + '건은 범위로 못 거릅니다' : '');
+    }
+  }
+  function ymdAgo(n) {
+    var d = new Date(Date.now() - n * 864e5);
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+
   function renderList() {
     var rows = filtered();
     var el = document.getElementById('list');
@@ -347,6 +453,7 @@
     if (cafeFilter) tags.push(['카페', cafeFilter, 'cafe']);
     if (kindFilter) tags.push(['유형', kindFilter, 'kind']);
     if (watchFilter) tags.push(['관심 카페', watchFilter, 'watch']);
+    if (fromDate || toDate) tags.push(['작성일', (fromDate || '처음') + ' ~ ' + (toDate || '오늘'), 'range']);
     document.getElementById('picked').innerHTML = tags.length
       ? tags.map(function (t) {
           return '<button class="pill" data-k="' + t[2] + '">' + esc(t[0]) + ' <b>' + esc(t[1]) + '</b> ✕</button>';
@@ -357,6 +464,7 @@
         if (b.dataset.k === 'store') storeFilter = '';
         else if (b.dataset.k === 'cafe') cafeFilter = '';
         else if (b.dataset.k === 'watch') watchFilter = '';
+        else if (b.dataset.k === 'range') { fromDate = ''; toDate = ''; }
         else kindFilter = '';
         render();
       };
@@ -432,25 +540,41 @@
 
     var nStores = Object.keys(DATA.byStore || {}).filter(function (k) { return DATA.byStore[k] > 0; }).length;
     document.getElementById('store-sub').textContent =
-      '후기가 잡힌 매장 ' + nStores + '곳 / 대상 ' + DATA.stores + '곳';
+      '전점 ' + DATA.stores + '곳 · 후기가 잡힌 곳 ' + nStores + '곳 · 눌러서 그 매장 링크만 보기';
+    /* **작성일 기준임을 세 칸 모두에 적는다.** 작성일을 모르는 글이 있으면 그 수도 —
+       사장님이 본 그 사고(오늘 1,505건)가 여기를 안 적어서 났다. */
+    var mNote = '작성일 기준' + (DATA.undated ? ' · 미상 ' + nf(DATA.undated) + '건 제외' : '');
+    ['k-m1', 'k-m2', 'k-m3'].forEach(function (id) {
+      var e = document.getElementById(id); if (e) e.textContent = mNote;
+    });
 
     renderKinds();
     renderWatch();
-    bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores, 'store');
+    renderRegions();
+    renderRange();
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
 
     /* **작성일을 아는 것과 모르는 것을 갈라 적는다.** 카페는 네이버가 작성일을 안 주므로
        그 줄은 우리가 처음 본 날이다 — 섞어 놓고 모른 척하면 화면이 거짓말을 한다. */
-    var undated = (DATA.total || 0) - (DATA.dated || 0);
+    /* **여기가 사장님이 본 사고의 진원지다**(2026-08-31) — *"오늘 올라온 후기가 1505건인데
+       근거가 불분명하다"*. 그 1,505건은 전부 카페 글이고 **작성일을 아는 것이 0건**이었다.
+       네이버가 카페 작성일을 안 줘서 우리가 「처음 본 날」로 적어 둔 값인데, 그걸 그대로
+       「오늘 쓴 글」로 세고 있었다. 지금은 **작성일을 아는 글만** 일간·주간·월간에 든다. */
+    var undated = DATA.undated != null ? DATA.undated : ((DATA.total || 0) - (DATA.dated || 0));
+    var span = (DATA.minDate && DATA.maxDate)
+      ? ' 지금 모인 후기의 <b>작성일 범위는 ' + esc(DATA.minDate) + ' ~ ' + esc(DATA.maxDate) + '</b> 입니다.'
+      : '';
     document.getElementById('basis').innerHTML =
-      '<b>세는 기준</b> — 일간·주간·월간·누적은 <b>「작성일」</b>입니다.'
-      + ' 블로그는 네이버가 작성일을 주므로 그 날짜로 셉니다(<b>' + nf(DATA.dated) + '건</b>).'
+      '<b>세는 기준</b> — <b>오늘·최근 7일·최근 30일은 「작성일」을 아는 글만</b> 셉니다'
+      + ' (<b>' + nf(DATA.dated) + '건</b>). 블로그는 네이버가 작성일을 줍니다.' + span
       + (undated > 0
-        ? ' <b>카페 ' + nf(undated) + '건은 네이버가 작성일을 주지 않아</b>(응답 필드에 아예 없습니다)'
-          + ' 우리가 처음 본 날로 적습니다 — 목록에서 <span class="tag c">추정</span> 으로 표시됩니다.'
+        ? ' <b>카페 ' + nf(undated) + '건은 네이버가 작성일을 아예 주지 않아</b>(응답 필드에 없습니다)'
+          + ' <b>기간 집계에서 뺐습니다</b> — 「전체 누적」에는 들어 있고 목록에서'
+          + ' <span class="tag c">추정</span> 으로 표시됩니다.'
+          + ' 그 글들의 날짜는 <b>우리가 처음 본 날</b>이지 쓰인 날이 아닙니다.'
         : '')
       + ' 매일 새벽 3시에 자동으로 돌며 <b>같은 글은 링크로 걸러</b> 두 번 세지 않습니다.'
-      + (DATA.newToday ? ' 오늘 새로 발견한 것은 <b>' + nf(DATA.newToday) + '건</b>입니다.' : '');
+      + (DATA.newToday ? ' 오늘 <b>새로 발견</b>한 것은 <b>' + nf(DATA.newToday) + '건</b>입니다(쓰인 날과 다릅니다).' : '');
 
     document.getElementById('stamp').textContent =
       new Date(DATA.at).toLocaleString('ko-KR') + ' 기준';
@@ -502,6 +626,25 @@
       + new Date().toISOString().slice(0, 10) + '.csv';
     a.click();
   };
+
+  /* 날짜 범위 손잡이 — 입력칸 둘 + 빠른 버튼 넷. **모두 같은 두 변수만 만진다**
+     (따로 두면 버튼과 칸이 다른 말을 한다). */
+  ['r-from', 'r-to'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.onchange = function () {
+      if (id === 'r-from') fromDate = el.value; else toDate = el.value;
+      render();
+    };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#range .rbtn'), function (b) {
+    b.onclick = function () {
+      var d = Number(b.dataset.d);
+      if (!d) { fromDate = ''; toDate = ''; }
+      else { fromDate = ymdAgo(d - 1); toDate = ''; }
+      render();
+      document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  });
 
   /* 한도 저장 — **서버가 되돌려준 값으로 화면을 맞춘다.** 입력칸 값을 그대로 믿고
      그리면 서버가 거절했을 때 화면과 실제가 갈린다(100 미만·50,000 초과는 거절된다). */
