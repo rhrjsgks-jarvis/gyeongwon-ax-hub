@@ -145,7 +145,16 @@
   .kchip b { font-size: 13px; font-weight: 800; }
   .kchip .pc { font-size: 10px; opacity: .7; }
 
-  /* 지역별 매장 — **전점을 세운다.** 0건도 흐리게 남긴다(감추면 "우리 매장이 없다"로 읽힌다) */
+  /* 지역별 매장 — **전점을 세운다.** 0건도 흐리게 남긴다(감추면 "우리 매장이 없다"로 읽힌다).
+     2단이다 — 시·도(경기·강원)로 압축하고 그 안에 시·군. */
+  .sd { margin-bottom: 14px; }
+  .sd:last-child { margin-bottom: 0; }
+  .sd-h {
+    font-size: 12.5px; font-weight: 800; color: var(--ink);
+    border-bottom: 2px solid var(--blue); padding-bottom: 4px; margin-bottom: 8px;
+  }
+  .sd-h span { font-weight: 500; color: var(--mute); margin-left: 6px; font-size: 10.5px; }
+  .sd .rg { padding-left: 2px; }
   .rg { margin-bottom: 11px; }
   .rg-h { font-size: 11.5px; font-weight: 800; color: var(--blue); margin-bottom: 4px; }
   .rg-h span { font-weight: 500; color: var(--mute); margin-left: 5px; font-size: 10.5px; }
@@ -418,17 +427,39 @@
     var names = Object.keys(reg);
     if (!names.length) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
     names.sort(function (a, b) { return (reg[b].n || 0) - (reg[a].n || 0); });
-    el.innerHTML = names.map(function (rg) {
-      var list = (reg[rg].stores || []).slice().sort(function (a, b) {
-        return (by[b] || 0) - (by[a] || 0);
+
+    /* **시·도로 한 번 더 묶는다**(2026-08-31 사장님: *"지역을 경원영업팀 기준으로 압축"*).
+       경기가 55곳이라 시·군 16개를 평평하게 늘어놓으면 못 읽는다. 위는 경기·강원 둘로
+       접고 그 안에 시·군을 둔다 — 참고로 보라고 하신 경남팀 도구도 시·도 단위다.
+       **전점은 그대로 다 보인다**(앞선 지시). */
+    var sd = DATA.bySido || {}, order = Object.keys(sd);
+    if (!order.length) {   /* 옛 배포본이면 시·군만으로 그린다 — 화면이 비지 않게 */
+      order = ['']; sd[''] = { n: 0, stores: 0 };
+    }
+    order.sort(function (a, b) { return (sd[b].n || 0) - (sd[a].n || 0); });
+
+    el.innerHTML = order.map(function (s) {
+      var mine = names.filter(function (rg) {
+        return !s || (reg[rg].sido || rg.split(' ')[0]) === s;
       });
-      return '<div class="rg"><div class="rg-h">' + esc(rg) +
-        '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
-        list.map(function (nm) {
-          var v = by[nm] || 0;
-          return '<button class="st' + (v ? '' : ' z') + (storeFilter === nm ? ' on' : '') +
-            '" data-v="' + esc(nm) + '">' + esc(nm) + '<b>' + nf(v) + '</b></button>';
-        }).join('') + '</div></div>';
+      if (!mine.length) return '';
+      var head = s
+        ? '<div class="sd-h">' + esc(s) + '<span>' + nf(sd[s].stores) + '곳 · ' + nf(sd[s].n) + '건</span></div>'
+        : '';
+      return '<div class="sd">' + head + mine.map(function (rg) {
+        var list = (reg[rg].stores || []).slice().sort(function (a, b) {
+          return (by[b] || 0) - (by[a] || 0);
+        });
+        /* 시·도가 이미 앞에 적혔으니 시·군 이름에서 그 토막을 뗀다 — 「경기 경기 수원」이 된다 */
+        var label = s ? rg.replace(s, '').trim() || rg : rg;
+        return '<div class="rg"><div class="rg-h">' + esc(label) +
+          '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
+          list.map(function (nm) {
+            var v = by[nm] || 0;
+            return '<button class="st' + (v ? '' : ' z') + (storeFilter === nm ? ' on' : '') +
+              '" data-v="' + esc(nm) + '">' + esc(nm) + '<b>' + nf(v) + '</b></button>';
+          }).join('') + '</div></div>';
+      }).join('') + '</div>';
     }).join('');
     Array.prototype.forEach.call(el.querySelectorAll('.st'), function (b) {
       b.onclick = function () {

@@ -195,6 +195,27 @@ var REGION = {
   'ZRG1': '경기 평택'
 };
 
+/**
+ * 시·도 — **화면 맨 위 묶음**(2026-08-31 사장님 지시: *"지역을 경원영업팀 기준으로
+ * 압축해 주면 된다"*).
+ *
+ * 참고로 보라고 하신 경남팀 도구도 **시·도 단위**로 묶는다 — `store-scope.js` 에
+ * `const MY = ["부산", "울산", "경남"]` 가 박혀 있다. 경원은 **경기·강원 둘**이다.
+ *
+ * **2단으로 둔 이유** — 경기가 55곳이라 한 덩어리면 못 읽는다. 위는 시·도 둘로
+ * 압축하고 그 안에 시·군을 소제목으로 둔다. **「영업스케치」 편성을 받으면 가운데
+ * 단계(`REGION`)만 갈아 끼우면 되고** 위아래는 그대로다 — 지금 없는 자료에 기대지
+ * 않으면서 그것이 왔을 때 안 무너지는 구조다.
+ *
+ * **`REGION` 값의 앞 토막이 곧 시·도다** — 표를 따로 만들면 두 곳이 갈라진다
+ * (이 저장소가 상태줄·허브 카드 개수에서 되풀이해 데인 자리).
+ */
+function sido_(code) {
+  var r = REGION[code] || "";
+  var i = r.indexOf(" ");
+  return i > 0 ? r.slice(0, i) : (r || "기타");
+}
+
 /* ── 이름이 전국에 겹치는 매장은 **검색어를 좁힌다** ──
  * 「광주」는 배제어로 못 푼다. 실측 16건이 **전부 광주광역시**였고(신세계광주·풍암·
  * 광천·진월효천·김대중컨벤션센터) 그중 절반은 본문 어디에도 광주광역시 표시가 없다.
@@ -797,16 +818,18 @@ function summary_() {
   var day = 0, week = 0, month = 0, dated = 0, newToday = 0;
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
-  var byRegion = {};
+  var byRegion = {}, bySido = {};
 
   /* **후기가 0건인 매장도 목록에 세운다**(사장님: *"전점이 다 나와야 합니다"*).
      예전에는 잡힌 매장만 키가 생겨 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
      *"우리 매장이 없다"* 로 읽힌다. 감추는 것과 없는 것은 다른 말이다. */
   for (i = 0; i < STORES.length; i++) {
     byStore[STORES[i][1]] = 0;
-    var rg0 = REGION[STORES[i][0]] || '기타';
-    if (!byRegion[rg0]) byRegion[rg0] = { n: 0, stores: [] };
+    var rg0 = REGION[STORES[i][0]] || '기타', sd0 = sido_(STORES[i][0]);
+    if (!byRegion[rg0]) byRegion[rg0] = { n: 0, sido: sd0, stores: [] };
     byRegion[rg0].stores.push(STORES[i][1]);
+    if (!bySido[sd0]) bySido[sd0] = { n: 0, stores: 0 };
+    bySido[sd0].stores++;
   }
 
   for (i = 0; i < rows.length; i++) {
@@ -828,9 +851,11 @@ function summary_() {
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
     byDay[f] = (byDay[f] || 0) + 1;
     byMonth[f.slice(0, 7)] = (byMonth[f.slice(0, 7)] || 0) + 1;
-    var rg = REGION[r.store] || '기타';
-    if (!byRegion[rg]) byRegion[rg] = { n: 0, stores: [] };
+    var rg = REGION[r.store] || '기타', sd = sido_(r.store);
+    if (!byRegion[rg]) byRegion[rg] = { n: 0, sido: sd, stores: [] };
     byRegion[rg].n++;
+    if (!bySido[sd]) bySido[sd] = { n: 0, stores: 0 };
+    bySido[sd].n++;
   }
   /* 최근 순 — 작성일 기준 */
   rows.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
@@ -861,6 +886,8 @@ function summary_() {
     cursor: Number(props_().getProperty("_cursor") || 0),
     /* 지역별 — 시·군 16곳. 후기 0건인 매장도 목록에 있다(전점 표시) */
     byRegion: byRegion,
+    /* 시·도 — 화면 맨 위 묶음(경기·강원). 참고 도구도 같은 단위로 묶는다 */
+    bySido: bySido,
     /* **관심 카페는 건수가 적어도 늘 내려보낸다** — 상위 12곳 막대에는 2~3건짜리가
        영영 안 올라와, 넣어 달라고 한 카페가 화면에서 사라진다.
        `naver:false` 는 0 이 아니라 **못 닿는 곳**이라 건수를 적지 않는다. */
