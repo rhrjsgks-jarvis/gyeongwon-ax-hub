@@ -332,6 +332,11 @@
   .tbar { width: 100%; max-width: 46px; background: #1428A0; border-radius: 5px 5px 0 0; }
   .tcol.now .tbar { background: #1428A0; }
   .tcol.past .tbar { background: #A9B8E4; }
+  /* 누를 수 있다는 것이 보여야 한다 — 안 보이면 아무도 안 누른다 */
+  .tcol { cursor: pointer; }
+  .tcol:hover .tbar { filter: brightness(.92); }
+  .tcol.sel .tbar { background: #1428A0; outline: 2px solid #111827; outline-offset: 1px; }
+  .tcol.sel .tval, .tcol.sel .tlab { color: #1428A0; font-weight: 800; }
   .tval { font-size: 10.5px; font-weight: 700; color: #374151; }
   .tlab { font-size: 10px; color: #9CA3AF; white-space: nowrap; }
   .tdelta { font-size: 11px; color: #6B7280; margin-top: 8px; }
@@ -588,6 +593,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   /* 목록 쪽수 — **필터가 바뀌면 1쪽으로 돌아간다**(아래 `render`). 3쪽을 보다가
      매장을 바꿨는데 그대로 3쪽이면 빈 화면이 뜬다. */
   var pageSize = 20, page = 1;
+  var monthFilter = '';  /* 월별 추이 막대를 눌러 걸린 달 (YYYY-MM) */
   var mapFilter = '';     /* 지도 칸을 눌러 걸린 값 — 경기는 지역, 강원은 시 */
   var watchFilter = '';   /* 관심 카페 칩 — 부분일치라 cafeFilter 와 따로 둔다 */
   var fromDate = '', toDate = '';   /* 작성일 범위 (몇일~몇일) */
@@ -648,6 +654,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
          AREA 65줄과 강원 시 표를 화면에도 둬야 하고, 그러면 같은 표가 두 벌이 되어
          한쪽만 고치는 사고가 난다. */
       if (mapFilter && (r.mc || '') !== mapFilter) return false;
+      /* **월 필터는 작성일에만 건다.** 추이 막대가 작성일 아는 글만 세므로,
+         발견일까지 걸면 막대 건수와 목록 건수가 어긋난다 — 누른 것과 다른 수가 나온다. */
+      if (monthFilter && (!r.dated || String(r.date).slice(0, 7) !== monthFilter)) return false;
       if (watchFilter && String(r.cafe || '').replace(/s+/g, '').indexOf(watchFilter.replace(/s+/g, '')) < 0) return false;
       /* **날짜 범위는 작성일을 아는 글에만 건다.** 카페 글은 날짜가 「처음 본 날」이라
          그것으로 거르면 있지도 않은 사실을 말하게 된다 — 옆의 안내가 그 수를 적는다. */
@@ -1084,12 +1093,25 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     list.forEach(function (o) { if (o.v > max) max = o.v; });
     el.innerHTML = list.map(function (o, i) {
       var h = Math.max(o.v ? 3 : 0, Math.round(o.v / max * 112));
-      return "<div class='tcol " + (i === list.length - 1 ? "now" : "past") + "'>"
+      return "<div class='tcol " + (i === list.length - 1 ? "now" : "past")
+        + (monthFilter === o.k ? " sel" : "") + "' data-m='" + o.k + "'>"
         + "<div class='tval'>" + (o.v ? nf(o.v) : "") + "</div>"
         + "<div class='tbar' data-h='" + h + "' style='height:0' title='" + esc(o.k + " · " + nf(o.v) + "건") + "'></div>"
         + "<div class='tlab'>" + esc(o.lab) + "</div></div>";
     }).join("");
     growBars(el);
+    /* **막대를 누르면 그 달 후기만 본다**(2026-08-31 사장님 요청).
+       **0건인 달은 걸지 않는다** — 눌러도 빈 목록이 뜨고 「고장」으로 읽힌다. */
+    Array.prototype.forEach.call(el.querySelectorAll(".tcol"), function (col) {
+      var k = col.getAttribute("data-m");
+      if (!k || !(bm[k] > 0)) { col.style.cursor = "default"; return; }
+      col.title = k + " · " + nf(bm[k]) + "건 — 눌러서 이 달 후기만 보기";
+      col.onclick = function () {
+        monthFilter = monthFilter === k ? "" : k;
+        render();
+      };
+    });
+
     if (sub) {
       sub.innerHTML = "<b>작성일 기준</b>입니다"
         + (DATA.undated ? " — 작성일을 모르는 " + nf(DATA.undated) + "건은 세지 않았습니다" : "")
@@ -1389,6 +1411,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var el = document.getElementById('list');
     /* 무엇으로 걸렀는지 화면이 적는다 — 안 적으면 *"왜 몇 건뿐이지"* 가 된다 */
     var tags = [];
+    if (monthFilter) tags.push(['작성월', monthFilter, 'month']);
     if (mapFilter) tags.push(['지역', mapFilter, 'map']);
     if (storeFilter) tags.push(['매장', storeFilter, 'store']);
     if (cafeFilter) tags.push(['카페', cafeFilter, 'cafe']);
@@ -1402,7 +1425,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       : '';
     Array.prototype.forEach.call(document.querySelectorAll('#picked .pill'), function (b) {
       b.onclick = function () {
-        if (b.dataset.k === 'map') mapFilter = '';
+        if (b.dataset.k === 'month') monthFilter = '';
+        else if (b.dataset.k === 'map') mapFilter = '';
         else if (b.dataset.k === 'store') storeFilter = '';
         else if (b.dataset.k === 'cafe') cafeFilter = '';
         else if (b.dataset.k === 'watch') watchFilter = '';
@@ -1601,7 +1625,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
        칩 해제·지도 아래 목록)이라 그 자리마다 적으면 반드시 하나를 빠뜨린다 — 빠뜨린
        곳에서는 3쪽을 보다 매장을 바꿨는데 그대로 3쪽이라 **빈 화면**이 뜬다.
        여기 한 곳에서 서명으로 본다. */
-    var sig = [srcFilter, storeFilter, cafeFilter, kindFilter, watchFilter, mapFilter,
+    var sig = [srcFilter, storeFilter, cafeFilter, kindFilter, watchFilter, mapFilter, monthFilter,
       fromDate, toDate].join("|");
     if (lastSig !== null && sig !== lastSig) page = 1;
     lastSig = sig;

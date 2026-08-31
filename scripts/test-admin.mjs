@@ -1343,6 +1343,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         else console.log('OK: 바이럴 목록 쪽 나누기 — 20~100 · 필터 바뀌면 1쪽');
       }
 
+      /* ⓚ **월별 추이 막대를 눌러 그 달만 본다** (2026-08-31 사장님 요청). */
+      {
+        const bad = [];
+        if (!ix2.includes('var monthFilter')) bad.push('월 필터가 없다');
+        /* **작성일에만 건다** — 추이 막대가 작성일 아는 글만 세므로, 발견일까지 걸면
+           막대 건수와 목록 건수가 어긋난다(누른 것과 다른 수가 나온다). */
+        if (!ix2.includes("if (monthFilter && (!r.dated || String(r.date).slice(0, 7) !== monthFilter)) return false;")) {
+          bad.push('월 필터가 작성일 기준이 아니다 — 막대 건수와 목록이 어긋난다');
+        }
+        /* **0건인 달은 안 걸린다** — 눌러도 빈 목록이 뜨고 「고장」으로 읽힌다 */
+        if (!ix2.includes("if (!k || !(bm[k] > 0))")) bad.push('0건인 달도 눌린다 — 빈 목록이 뜬다');
+        /* 달을 바꾸면 1쪽으로 */
+        if (!ix2.includes("watchFilter, mapFilter, monthFilter,")) bad.push('달을 바꿔도 쪽이 그대로다');
+        if (bad.length) fail('[바이럴] 월별 필터 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 월별 필터 — 작성일 기준 · 0건 달 제외 · 1쪽 복귀');
+      }
+
 
 
 
