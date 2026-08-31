@@ -61,7 +61,9 @@
     "build:usppt": "node scripts/build-usp-ppt.mjs",
     "fetch:reformimg": "node scripts/fetch-reform-img.mjs",
     "build:uspmodel": "node scripts/build-usp-models-ppt.mjs",
-    "test:uspmodel": "node scripts/test-usp-models.mjs"
+    "test:uspmodel": "node scripts/test-usp-models.mjs",
+    "build:regionmap": "node scripts/build-region-map.mjs",
+    "preview:viral": "node scripts/preview-reviews.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

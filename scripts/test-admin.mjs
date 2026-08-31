@@ -30,6 +30,8 @@ const LOG = { aggregateFunnel, aggregateWeakPlans };
 const S = await import('../lib/stores.ts');
 
 import fs from 'fs';
+import { execFileSync } from 'child_process';
+import { fileURLToPath } from 'url';
 
 let ok = true;
 const fail = (msg) => { console.log('ERROR:', msg); ok = false; };
@@ -1125,6 +1127,125 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
           fail('[바이럴] 잘림 안내를 받은 수와 전체 수로 판정하지 않는다 — 서버 값과 어긋날 수 있다');
         } else console.log('OK: 바이럴 잘림 안내 — 받은 수와 전체 수를 화면이 직접 견준다');
       }
+    }
+
+    /* ⑩ **지도** — 2026-08-31 개편.
+       빌드가 만든 SVG 가 커밋본과 같은가 · 서버가 지도 칸을 세는가 · 화면이 그것을
+       그리는가. 셋 중 하나만 빠져도 지도가 조용히 빈 채로 배포된다. */
+    {
+      /* ⓐ 커밋본 == 재생성 (search-index·size-reps 와 같은 방식) */
+      const before = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+      let rebuilt = null;
+      try {
+        /* **`pathname` 을 그대로 쓰지 말 것** — 저장소 경로에 한글이 있어 `%EB%85%B8…`
+           로 인코딩된 채 넘어가고, 그러면 「파일이 없다」로 빌드가 실패한다.
+           `fileURLToPath` 만이 윈도우 경로를 바르게 되돌린다. */
+        execFileSync(process.execPath, [fileURLToPath(new URL('./build-region-map.mjs', import.meta.url))], { stdio: 'pipe' });
+        rebuilt = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+      } catch (e) {
+        fail('[바이럴] 지도 빌드가 실패한다 — ' + String(e.message).slice(0, 120));
+      }
+      if (rebuilt !== null) {
+        if (rebuilt !== before) {
+          fs.writeFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), before);
+          fail('[바이럴] 커밋된 지도가 낡았다 — `npm run build:regionmap` 을 돌려 커밋할 것');
+        } else console.log('OK: 바이럴 지도 — 커밋본이 재생성 결과와 같다');
+      }
+
+      /* ⓑ 지도 칸이 **집계 단위와 어긋나지 않는가.** 경기는 AREA 그대로, 강원만 시로
+         푼다 — 강원 시가 AREA 를 벗어나면 지도 합계와 지역 막대가 갈린다. */
+      const cellFn = (rv.match(/function mapCell_\(code\) \{[\s\S]*?\n\}/) || [''])[0];
+      if (!cellFn) {
+        fail('[바이럴] mapCell_ 이 없다 — 지도 칸을 셀 수가 없다');
+      } else if (!/강원/.test(cellFn)) {
+        fail('[바이럴] mapCell_ 이 강원을 시로 풀지 않는다 — 매장 9곳이 한 칸에 뭉개진다');
+      } else {
+        const gw = (rv.match(/var GW_CITY = \{[\s\S]*?\n\};/) || [''])[0];
+        const codes = (gw.match(/Z[A-Z0-9]{3}/g) || []);
+        /* 그 코드들이 **전부 AREA 에서 강원**이어야 한다. 하나라도 벗어나면 지도 합계가
+           지역 막대와 어긋나는데, 화면에서는 둘 다 그럴듯해 보여 못 잡는다. */
+        const areaSrc = (rv.match(/var AREA = \{[\s\S]*?\n\};/) || [''])[0];
+        const AREA = new Function('return ' + areaSrc.replace('var AREA = ', '').replace(/;$/, ''))();
+        const stray = codes.filter((c) => AREA[c] !== '강원');
+        if (!codes.length) fail('[바이럴] GW_CITY 가 비었다 — 강원이 한 칸으로 뭉개진다');
+        else if (stray.length) {
+          fail('[바이럴] GW_CITY 에 강원이 아닌 매장이 있다 (' + stray.join(' ') + ') — 지도 합계가 지역 막대와 어긋난다');
+        } else console.log('OK: 바이럴 지도 칸 — 강원 ' + codes.length + '곳이 전부 AREA 강원 안이다');
+      }
+
+      /* ⓒ **추이는 작성일을 아는 글만 센다.** 발견일이 섞이면 카페가 전부 이번 달로
+         몰려 이번 달 막대만 거대해진다 — 사장님이 두 번 지적한 그 사고와 같은 뿌리다. */
+      /* **첫 루프를 잡으면 안 된다** — `rows.length` 루프가 둘이고 앞엣것에는
+         `if (r.dated)` 가 없다(실제로 그렇게 헛돌아 멀쩡한 코드를 「틀렸다」고 잡았다).
+         루프를 특정하지 말고 **`if (r.dated)` 블록 전부**를 훑어 그중 하나가 추이를
+         세는지 본다 — 블록이 어느 루프에 있든 뜻은 같다. */
+      const blks = rv.match(/if \(r\.dated\) \{[\s\S]*?\n    \}/g) || [];
+      const datedBlk = blks.filter((b) => /byMonth\[/.test(b) && /byDay\[/.test(b))[0] || '';
+      if (!datedBlk) {
+        fail('[바이럴] 월별·일별 추이가 작성일 밖에서 세어진다 — 카페 발견일이 섞여 이번 달만 거대해진다');
+      } else console.log('OK: 바이럴 추이 — 작성일을 아는 글만 센다');
+
+      /* ⓓ 화면이 실제로 그리는가. 함수만 있고 부르지 않으면 카드가 빈 채로 남는다. */
+      const idxPath2 = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+      const ix2 = fs.readFileSync(idxPath2, 'utf8');
+      const misses = ['renderMap', 'renderTrend', 'renderDiag'].filter(
+        (f) => !(new RegExp('function ' + f + '\\(').test(ix2)) || !(new RegExp('^\\s+' + f + '\\(\\);', 'm').test(ix2)));
+      if (misses.length) {
+        fail('[바이럴] 화면이 ' + misses.join(' · ') + ' 를 정의하지 않았거나 부르지 않는다');
+      } else console.log('OK: 바이럴 화면 — 지도·추이·진단을 모두 그린다');
+
+      /* ⓔ **함수가 `<style>` 안에 들어가지 않았는가.** 앵커가 CSS 주석과 겹쳐 실제로
+         한 번 그렇게 들어갔다 — 브라우저가 조용히 무시해 문법 오류도 안 났다. */
+      const styleEnd = ix2.indexOf('</style>');
+      const firstFn = ix2.indexOf('function renderDiag(');
+      if (styleEnd > 0 && firstFn > 0 && firstFn < styleEnd) {
+        fail('[바이럴] 렌더 함수가 <style> 안에 있다 — 브라우저가 조용히 무시한다');
+      } else console.log('OK: 바이럴 화면 — 렌더 함수가 스크립트 안에 있다');
+
+      /* ⓕ **색 10단계** (2026-08-31 사장님: *"색상이 너무 단조롭습니다 10단계로"*).
+         CSS 와 계산식이 따로 놀면 v7 을 계산해 놓고 그 색이 없어 **투명하게 그려진다** —
+         화면에서는 「0건」과 똑같아 보여 못 잡는다. */
+      {
+        const miss = [];
+        for (let i = 1; i <= 10; i++) if (!ix2.includes('.geo-svg path.v' + i + ' {')) miss.push('v' + i);
+        if (miss.length) fail('[바이럴] 지도 색 단계가 빠졌다 — ' + miss.join(' ') + ' (계산은 되는데 색이 없어 투명해진다)');
+        else console.log('OK: 바이럴 지도 색 — 10단계가 모두 정의돼 있다');
+
+        /* 계산식을 **실제로 돌려** 본다. 정규식만 보면 지수가 뒤집혀도 통과한다. */
+        const lvSrc = (ix2.match(/var lv = function \(v\) \{[\s\S]*?\n    \};/) || [''])[0];
+        if (!lvSrc) {
+          fail('[바이럴] 지도 색 단계 계산식을 찾지 못했다');
+        } else {
+          const lv = new Function('max', lvSrc + ' return lv;')(412);
+          const vals = [412, 331, 268, 96, 88, 74, 41, 23, 1, 0];
+          const steps = vals.map(lv);
+          /* ①0건은 0단계 ②1건이라도 있으면 1단계 이상(0건과 색이 같아지면 안 된다)
+             ③최대는 10단계 ④**값이 크면 단계도 크거나 같다**(단조) — 어느 지수를
+             골라도 이것은 깨지지 않아야 하고, 깨지면 지도가 거짓말을 한다. */
+          const bad = [];
+          if (steps[steps.length - 1] !== 0) bad.push('0건이 0단계가 아니다');
+          if (steps[steps.length - 2] < 1) bad.push('1건이 0단계로 떨어진다');
+          if (steps[0] !== 10) bad.push('최대값이 10단계가 아니다');
+          for (let i = 1; i < vals.length; i++) if (steps[i] > steps[i - 1]) bad.push('단조가 깨진다(' + vals[i] + '>' + vals[i - 1] + ')');
+          if (bad.length) fail('[바이럴] 지도 색 단계가 틀리다 — ' + bad.join(' · '));
+          else console.log('OK: 바이럴 지도 색 — 단조 · 0건 구분 · 10단계 (' + steps.slice(0, 8).join(' ') + ')');
+        }
+      }
+
+      /* ⓖ **움직임은 OS 설정을 존중한다.** 어지럼증으로 움직임을 끈 사람에게
+         움직이는 화면은 쓸 수 없는 화면이 된다 — 부드러움은 덤이지 기능이 아니다. */
+      {
+        const bad = [];
+        if (!ix2.includes('prefers-reduced-motion: no-preference')) bad.push('CSS 전환이 reduced-motion 밖에 있다');
+        if (!ix2.includes('prefers-reduced-motion: reduce')) bad.push('스크립트가 reduced-motion 을 안 본다');
+        if (!/function countUp\(/.test(ix2)) bad.push('숫자 카운트업이 없다');
+        /* **첫 화면에서만 움직인다** — 필터를 바꿀 때마다 0부터 다시 세면 기다림이 된다 */
+        if (!/animated/.test(ix2)) bad.push('첫 렌더만 움직이는 장치가 없다');
+        if (bad.length) fail('[바이럴] 움직임 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 움직임 — 첫 화면만 · OS 가 끄라면 끈다');
+      }
+
+
     }
 
     /* ⑥ 동시 실행 자물쇠 — 두 벌이 같은 시트에 쓰면 같은 글이 두 줄로 들어간다 */

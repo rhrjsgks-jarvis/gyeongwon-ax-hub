@@ -1,0 +1,145 @@
+/**
+ * 바이럴분석기 화면을 **눈으로 보는** 하네스 — `npm run preview:viral`
+ *
+ * 이 화면은 Apps Script 배포본이라 **사장님만 볼 수 있었다.** 우리는 소스만 보고
+ * 고치고, 붙여 넣은 뒤에야 잘못을 알았다(스크립틀릿 한 글자에 화면이 통째로 죽은
+ * 적이 있다). `<?!= data ?>` 자리에 모의 JSON 을 넣으면 정적 HTML 이 되어 로컬에서
+ * 그대로 열린다.
+ *
+ *   npm run preview:viral          → .scratch/_viral.html 만 만든다
+ *   npm run preview:viral -- 8899  → 만들고 그 포트로 띄운다 (Ctrl+C 로 끈다)
+ *
+ * **`.scratch/` 가 아니라 여기 있는 이유.** 그쪽은 커밋되지 않아 이 PC 를 떠나면
+ * 사라진다. 이 하네스는 화면을 눈으로 보는 **유일한 길**이라 저장소가 들고 있어야 한다.
+ *
+ * **모의 데이터에 경계를 일부러 섞는다** — 0건 칸(속초) · 작성일 미상 · `pct:null`.
+ * 그래야 「0건과 관할 밖이 색으로 갈리는가」처럼 **경계에서만 드러나는 것**이 보인다.
+ * 실제로 이 하네스가 네 개를 잡았다(라벨 겹침 · 이름표가 칸 밖 · renderDiag 미정의 ·
+ * 진단 뒤 카드가 통째로 죽음). **소스만 봐서는 하나도 못 봤을 것이다.**
+ */
+import fs from 'node:fs';
+import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(HERE, '..');
+const SRC = path.join(ROOT, 'docs/apps-script/ReviewsIndex.html');
+const OUTDIR = path.join(ROOT, '.scratch');
+const OUT = path.join(OUTDIR, '_viral.html');
+
+/* 지도 칸 — 경기 5(영업지역) + 강원은 시. **0건 칸을 일부러 남긴다**(속초).
+   그래야 「0건(관할)」과 「관할 밖」이 색으로 갈리는지 눈으로 확인된다. */
+const byMap = {
+  수원: 412, 성남: 268, 용인: 331, 평택: 96, 안양: 74,
+  원주: 88, 춘천: 41, 강릉: 23, 속초: 0
+};
+const byRegion = {
+  수원: { n: 412, stores: ['스타필드수원', '북수원', '서수원', '영통', '권선', '수원', '롯데수원', 'AK수원', '갤러리아광교'] },
+  용인: { n: 331, stores: ['수지', '용인구성', '동탄', '용인기흥', '롯데동탄', '신세계사우스시티'] },
+  성남: { n: 268, stores: ['분당', '성남', 'AK분당', '현대판교', '하남미사', '신세계하남', '광주', '이천증포'] },
+  평택: { n: 96, stores: ['평택', '오산', '안성', '평택고덕', 'AK평택'] },
+  안양: { n: 74, stores: ['평촌', '안양본', '광명소하', '롯데평촌'] },
+  강원: { n: 152, stores: ['원주', '단구', '단계', 'AK원주', '춘천', '석사', '강릉', '강릉옥천', '속초'] }
+};
+const byStore = {};
+for (const r of Object.keys(byRegion)) {
+  const st = byRegion[r].stores;
+  st.forEach((n, i) => { byStore[n] = Math.max(0, Math.round(byRegion[r].n / st.length * (1.6 - i * 0.22))); });
+}
+const byMonth = {
+  '2026-03': 412, '2026-04': 587, '2026-05': 892,
+  '2026-06': 741, '2026-07': 1024, '2026-08': 1205
+};
+const byDay = {};
+for (let i = 0; i < 30; i++) {
+  const d = new Date(2026, 7, 31 - i);
+  byDay[d.toISOString().slice(0, 10)] = 20 + ((i * 7) % 40);   /* 고정값 — 돌릴 때마다 달라지면 눈으로 비교할 수가 없다 */
+}
+const CAFES = ['다이렉트결혼준비', '레몬테라스 [인테리어,리폼,DIY]', '부동산스터디', '맘스홀릭베이비', '지역맘카페'];
+const KINDS = { 구매: 980, 설치: 640, 비교: 410, 문의: 260, 기타: 143 };
+
+const recent = [];
+const stores = Object.keys(byStore);
+const cellOf = { 수원: '수원', 성남: '성남', 용인: '용인', 평택: '평택', 안양: '안양' };
+for (let i = 0; i < 240; i++) {
+  const dated = i < 150;                       /* 앞쪽은 작성일 아는 글 — 정렬·경계선 확인용 */
+  const st = stores[i % stores.length];
+  let region = '수원';
+  for (const r of Object.keys(byRegion)) if (byRegion[r].stores.indexOf(st) >= 0) region = r;
+  const mc = region === '강원' ? ['원주', '춘천', '강릉', '속초'][i % 4] : cellOf[region];
+  const d = new Date(2026, 7, 31 - (dated ? i % 90 : 0));
+  const ymd = d.toISOString().slice(0, 10);
+  recent.push({
+    date: ymd, dated: dated,
+    store: 'Z' + (100 + i), storeName: st, mc: mc,
+    src: i % 3 === 0 ? '블로그' : '카페',
+    kind: Object.keys(KINDS)[i % 5],
+    title: '[' + st + '] 혼수가전 ' + Object.keys(KINDS)[i % 5] + ' 후기 ' + (i + 1),
+    link: 'https://example.com/p/' + i,
+    cafe: i % 3 === 0 ? '' : CAFES[i % CAFES.length],
+    postdate: dated ? ymd.split('-').join('') : ''
+  });
+}
+
+const DATA = {
+  ok: true, at: '2026-08-31T12:00:00.000Z',
+  total: 2433, day: 38, week: 214, month: 1205,
+  dated: 1544, undated: 889, newToday: 41,
+  minDate: '2021-04-02', maxDate: '2026-08-31',
+  byMonth, byDay, byKind: KINDS, byRegion, byMap, byStore,
+  bySrc: { 블로그: 812, 카페: 1621 },
+  byCafe: CAFES.reduce((o, c, i) => (o[c] = 520 - i * 90, o), {}),
+  stores: 65,
+  cursor: 0, chainOn: false, chainErr: '',
+  dupRows: 0, dupLinks: 0,
+  dayUsed: 3120, dailyLimit: 20000, sweep: 10520,
+  lastRun: { at: '2026-08-31T12:00:00.000Z', n: 41, done: true, reason: '' },
+  /* **`pct:null` 을 하나 섞는다** — 못 잰 것과 0% 는 다른 말이라, 화면이 갈라 다루는지
+     여기서 드러난다(0 으로 그리면 「LG 후기가 없다」가 된다). */
+  rival: { rows: [
+    { area: '수원', ours: 412, rival: 96, pct: 81 },
+    { area: '용인', ours: 331, rival: 210, pct: 61 },
+    { area: '성남', ours: 268, rival: 301, pct: 47 },
+    { area: '평택', ours: 96, rival: 88, pct: 52 },
+    { area: '안양', ours: 74, rival: 120, pct: 38 },
+    { area: '강원', ours: 152, rival: 0, pct: null }
+  ] },
+  watch: CAFES.slice(0, 3).map((c, i) => ({ name: c, n: 120 - i * 40, naver: true })),
+  recent
+};
+
+let html = fs.readFileSync(SRC, 'utf8');
+const before = html;
+html = html.replace('<?!= data ?>', JSON.stringify(DATA));
+if (html === before) {
+  console.error('[preview] `<?!= data ?>` 자리를 못 찾았다 — 템플릿이 바뀌었는지 볼 것');
+  process.exit(1);
+}
+/* `google.script.run` 은 로컬에 없다. **없는 채로 두면 버튼 한 번에 화면이 죽어**
+   무엇을 보러 왔는지 알 수 없게 된다 — 부르면 콘솔에만 적는 가짜를 심는다. */
+const stub = [
+  '<script>',
+  'window.google = { script: { run: new Proxy({}, { get: function (t, k) {',
+  '  if (k === "withSuccessHandler" || k === "withFailureHandler") return function () { return window.google.script.run; };',
+  '  return function () { console.log("[preview] google.script.run." + String(k) + " (로컬이라 아무 일도 하지 않는다)"); };',
+  '} }) } };',
+  '</script>'
+].join('\n');
+html = html.replace('<script>', stub + '\n<script>');
+
+if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });
+fs.writeFileSync(OUT, html);
+console.log('[preview] .scratch/_viral.html — ' + (html.length / 1024).toFixed(0) + 'KB'
+  + ' · 지도 칸 ' + Object.keys(byMap).length + ' · 목록 ' + recent.length + '건');
+
+/* 포트를 주면 띄운다. 역슬래시를 쓰지 않는다(heredoc·셸이 먹는다). */
+const port = Number(process.argv[2] || 0);
+if (port) {
+  http.createServer((q, s) => {
+    s.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    fs.createReadStream(OUT).pipe(s);
+  }).listen(port, '127.0.0.1', () => {
+    console.log('[preview] http://127.0.0.1:' + port + '/  (Ctrl+C 로 끕니다)');
+  });
+}
