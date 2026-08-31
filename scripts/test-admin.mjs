@@ -988,7 +988,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     else if (missF.length) fail(`[바이럴] freshState_ 가 새로 안 읽는 값: ${missF.join(', ')}`);
     else if (!/if \(hit\) \{ hit\.cached = true; return freshState_\(hit\); \}/.test(rv)) {
       fail('[바이럴] getSummary 가 캐시 히트에서 freshState_ 를 안 지난다 — 상태가 굳는다');
-    } else console.log('OK: 바이럴 상태 값 — 캐시가 있어도 커서·사용량·마지막 실행은 새로 읽는다');
+    } else if (!/sumCachePut_\(d\);[\s\S]{0,400}?return freshState_\(d\);/.test(rv)) {
+      /* **캐시 미스일 때도 같은 길을 지나가야 한다.** 히트일 때만 거쳤더니 같은 함수가
+         경우에 따라 **다른 필드 구성**을 냈다(실측: 캐시 미스 응답에 `cycleAt` 이 없어
+         화면이 남은 시간을 못 냈다). 담아 둔 뒤에 불러야 상태가 캐시에 안 굳는다. */
+      fail('[바이럴] getSummary 가 캐시 미스에서 freshState_ 를 안 지난다 — 경우에 따라 필드 구성이 달라진다');
+    } else console.log('OK: 바이럴 상태 값 — 캐시 히트·미스 둘 다 같은 필드 구성을 낸다');
 
     /* ③-b2 **캐시 키에 판 번호가 박혀 있어야 한다.** 없으면 새 필드를 더해 배포해도
        옛 캐시(6시간)가 그것을 가려 **화면이 거짓말을 한다** — 실제로 줄임말 카드가
@@ -1029,6 +1034,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } else if (rv.indexOf('rivalRun = collectRival') > rv.indexOf('매니저 이름 훑기 ───')) {
       fail('[바이럴] LG 비교가 매니저·카페 훑기보다 뒤다 — 그 앞의 148회에 시간을 다 쓴다');
     } else console.log('OK: 바이럴 LG 비교 — 하루 한 번 · 매니저·카페보다 앞에서 돈다');
+
+    /* ③-b5 **비중은 「숫자가 아니면 못 잼」이어야 한다.** `=== null` 만 보면
+       undefined·NaN·빈 문자열이 새어 `undefined%` 가 화면에 찍힌다(2026-09-01 사장님
+       신고). 그리고 **당사 vs LG 카드는 작게 고정**한다(사장님 요청) — 여섯 줄짜리
+       표라 넓혀도 여백만 는다. */
+    /* **정규식을 쓰지 않는다** — 이 파일을 셸로 고치면 백슬래시가 먹혀 조용히 다른
+       뜻이 된다(이 회차에만 세 번 겪었다). 문자열 포함으로 충분한 검사다. */
+    const vh = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    if (vh.includes('r.pct === null')) {
+      fail('[바이럴] 비중 판정이 아직 === null 이다 — undefined·NaN 이 새어 화면에 찍힌다');
+    } else if (!vh.includes("typeof r.pct === 'number' && isFinite(r.pct)")) {
+      fail('[바이럴] 비중을 숫자로 확인하지 않는다');
+    } else if (!vh.includes('data-card="rival" data-nolead')) {
+      fail('[바이럴] 당사 vs LG 카드가 작게 고정돼 있지 않다 — 맨 앞에 오면 전체 폭이 된다');
+    } else if (!vh.includes("hasAttribute('data-nolead')")) {
+      fail('[바이럴] data-nolead 를 아무도 안 본다 — 표시만 하고 지키지 않는다');
+    } else console.log('OK: 바이럴 비중 — 숫자가 아니면 못 잼 · 당사 vs LG 카드는 작게 고정');
 
     /* ③-c **이미 가진 글을 다시 받지 않는다**(사장님 지적: 매일 10,400회는 낭비).
        신호는 **「이미 가진 링크를 만났다」** 여야 한다 — 「새 링크가 0건」으로 잡으면

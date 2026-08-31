@@ -146,7 +146,12 @@
   @media (max-width: 720px) { .zoom { display: none; } }
   .card h2 { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
   .card .sub { font-size: 11px; color: var(--mute); margin-bottom: 11px; }
+  /* **격자 칸은 내용보다 작아질 수 없다**(CSS 기본값 `min-width:auto`). 그래서 폰
+     390px 에서 카드가 391px 이 되어 **가로로 17px 넘쳤다**(2026-09-01 실측 · 이전부터
+     있던 것). `min-width: 0` 이 그 빗장을 푼다 — 넘치는 것은 각자 자기 안에서
+     `overflow-x` 로 감당한다. */
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .two > .card { min-width: 0; }
   @media (max-width: 760px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .two { grid-template-columns: 1fr; }
@@ -217,14 +222,19 @@
   .kchip .pc { font-size: 10px; opacity: .7; }
 
   /* 당사 vs LG — 한 줄에 두 값을 마주 보게 그린다. **어디가 앞서는지가 한눈에** 보여야 한다 */
-  .rv { display: grid; grid-template-columns: 62px 1fr 46px; gap: 9px; align-items: center; margin-bottom: 7px; }
-  .rv .nm { font-size: 12px; font-weight: 700; color: #374151; }
-  .rv .tr { display: flex; height: 15px; border-radius: 4px; overflow: hidden; background: #EEF1F6; }
+  /* **띠를 키웠다**(2026-09-01 사장님 요청 — *"띠가 너무 작습니다. 상단 비율 맞춰서
+     그래프를 크게 해주세요"*). 15 → 28px. 카드를 작게 고정했으므로(`data-nolead`)
+     폭은 그대로인데, **세로로 키우면 같은 자리에서 훨씬 잘 읽힌다.**
+     건수 글자도 9.5 → 12px 로 올려 띠 안에서 읽히게 했다 — 띠만 키우고 글자를 두면
+     빈 띠처럼 보인다. 이름·비중 칸도 함께 키워야 세 칸이 따로 놀지 않는다. */
+  .rv { display: grid; grid-template-columns: 66px 1fr 52px; gap: 10px; align-items: center; margin-bottom: 9px; }
+  .rv .nm { font-size: 13px; font-weight: 700; color: #374151; }
+  .rv .tr { display: flex; height: 28px; border-radius: 6px; overflow: hidden; background: #EEF1F6; }
   .rv .us { background: var(--blue); }
   .rv .th { background: #C0392B; }   /* LG 는 붉은 계열 — 브랜드 색이 실제로 그렇다 */
   .rv .tr span { display: flex; align-items: center; justify-content: center;
-    font-size: 9.5px; font-weight: 800; color: #fff; }
-  .rv .vl { font-size: 12px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+    font-size: 12px; font-weight: 800; color: #fff; }
+  .rv .vl { font-size: 14px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
   .rv .vl.win { color: var(--blue); }
   .rv .vl.lose { color: #C0392B; }
   .rv .vl.na { color: var(--mute); font-weight: 500; font-size: 10.5px; }
@@ -526,7 +536,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <!-- 당사 vs LG (2026-08-31 사장님 요청 — *"X사(LG) 후기도 대조해서 후기 비중이
          100분율로 어디가 앞서는가"*). **자료가 없으면 이 카드는 아예 안 그린다** —
          0 으로 그리면 「LG 후기가 없다」로 읽힌다. -->
-    <div class="card" id="rival-card" data-card="rival" hidden>
+    <div class="card" id="rival-card" data-card="rival" data-nolead hidden>
       <h2>당사 vs LG — 지역별 후기 비중</h2>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
@@ -1055,7 +1065,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var lead = null;
     Array.prototype.forEach.call(box.querySelectorAll('.card'), function (c) {
       c.classList.remove('lead');
-      if (!lead && !c.hidden) lead = c;
+      /* **작게 고정한 카드는 맨 앞이어도 안 늘린다**(2026-09-01 사장님 요청 —
+         *'당사 vs 타사 후기 비율표는 크게 만들 필요가 없습니다. 작게 고정해 주세요'*).
+         여섯 줄짜리 표라 폭을 넓혀도 여백만 늘고 오히려 읽기 어려워진다. */
+      if (!lead && !c.hidden && !c.hasAttribute('data-nolead')) lead = c;
     });
     if (lead) lead.classList.add('lead');
   }
@@ -1187,6 +1200,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     box.dataset.zoomed = '1';
     Array.prototype.forEach.call(box.children, function (card) {
       if (!card.classList || !card.classList.contains('card')) return;
+      /* 작게 고정한 카드에는 펼치기 단추를 달지 않는다 — 눌러도 될 일이 없는
+         단추가 있으면 「눌러도 아무 일이 없다」가 된다. */
+      if (card.hasAttribute('data-nolead')) return;
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'zoom';
@@ -1292,7 +1308,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     /* ⑤ 경쟁사 — **자료가 있을 때만.** 없으면 아무 말도 하지 않는다(0으로 그리면 거짓이다) */
     var R = DATA.rival;
     if (R && R.rows && R.rows.length) {
-      var lose = R.rows.filter(function (r) { return r.pct !== null && r.pct < 50; })
+      /* **여기도 「숫자가 아니면 못 잼」이다** — 네 번째 자리였다. 한 곳만 고치면
+         표는 「못 잼」인데 진단 문장은 그 지역을 「가장 많이 밀리는 곳」이라고 적는다. */
+      var okd = function (r) { return typeof r.pct === 'number' && isFinite(r.pct); };
+      var lose = R.rows.filter(function (r) { return okd(r) && r.pct < 50; })
         .sort(function (a, b) { return a.pct - b.pct; });
       if (lose.length) {
         out.push(['경쟁사와 견주면',
@@ -1625,16 +1644,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var el = document.getElementById('rival');
     var rows = R.rows.slice().sort(function (a, b) {
       /* 못 잰 것은 뒤로, 나머지는 우리가 뒤진 곳부터 — **먼저 볼 것이 위에 와야 한다** */
-      if ((a.pct === null) !== (b.pct === null)) return a.pct === null ? 1 : -1;
-      return (a.pct || 0) - (b.pct || 0);
+      var ok = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
+      if (ok(a) !== ok(b)) return ok(a) ? -1 : 1;
+      return (ok(a) ? a.pct : 0) - (ok(b) ? b.pct : 0);
     });
     el.innerHTML =
       '<div class="rvleg"><span><i style="background:var(--blue)"></i>당사</span>' +
       '<span><i style="background:#C0392B"></i>LG</span></div>' +
       rows.map(function (r) {
-        var tot = r.ours + r.rival;
-        var p = tot ? (r.ours / tot) * 100 : 50;
-        var na = r.pct === null;
+        var tot = (Number(r.ours) || 0) + (Number(r.rival) || 0);
+        var p = tot ? ((Number(r.ours) || 0) / tot) * 100 : 50;
+        /* **「숫자가 아니면 전부 못 잼」이다**(2026-09-01 사장님 지적 — *"용인 지역은
+           undefined 라고 표시되는데"*). 예전에는 null 인지만 봤는데, 그 판정은
+           **`undefined`·`NaN`·빈 문자열을 못 잡는다** — 하나라도 새면 `undefined%` 가
+           그대로 화면에 찍힌다. 실제로 LG 비교가 시트에 쓰이는 도중에 읽히면 그렇게 된다.
+           **모르는 것을 숫자인 척 그리지 않는다**(이 저장소의 첫 원칙). */
+        var na = !(typeof r.pct === 'number' && isFinite(r.pct));
         return '<div class="rv"><div class="nm">' + esc(r.area) + '</div>' +
           '<div class="tr" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + '건">' +
           '<div class="us" style="width:' + p.toFixed(1) + '%"><span>' + nf(r.ours) + '</span></div>' +
@@ -1645,9 +1670,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           '</div>';
       }).join('');
 
-    var win = rows.filter(function (r) { return r.pct !== null && r.pct > 50; }).length;
-    var lose = rows.filter(function (r) { return r.pct !== null && r.pct < 50; }).length;
-    var na = rows.filter(function (r) { return r.pct === null; }).length;
+    /* **세는 것도 같은 잣대를 쓴다** — 위에서는 「못 잼」인데 여기서는 숫자로 세면
+       머리글과 표가 어긋난다. 한 함수를 지나가게 한다. */
+    var okp = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
+    var win = rows.filter(function (r) { return okp(r) && r.pct > 50; }).length;
+    var lose = rows.filter(function (r) { return okp(r) && r.pct < 50; }).length;
+    var na = rows.filter(function (r) { return !okp(r); }).length;
     document.getElementById('rival-sub').textContent =
       '영업스케치 지역 ' + rows.length + '곳 · 당사가 앞선 곳 ' + win + ' · LG 가 앞선 곳 ' + lose +
       (na ? ' · 못 잰 곳 ' + na : '') + '  (' + esc(R.at) + ' 기준)';

@@ -2108,7 +2108,11 @@ function getSummary() {
   if (hit) { hit.cached = true; return freshState_(hit); }
   var d = summary_();
   sumCachePut_(d);
-  return d;
+  /* **캐시 미스일 때도 같은 길을 지나간다**(2026-09-01). 히트일 때만 `freshState_` 를
+     거쳤더니 **같은 함수가 경우에 따라 다른 필드 구성**을 냈다 — 실측으로 캐시 미스
+     응답에 `cycleAt` 이 아예 없어서 화면이 남은 시간을 못 냈다.
+     **담아 두기 전에 부르면 안 된다** — 그러면 상태 값이 캐시에 굳는다. */
+  return freshState_(d);
 }
 
 function doGet(e) {
