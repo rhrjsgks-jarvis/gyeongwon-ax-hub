@@ -82,6 +82,29 @@
   .warn { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
   .empty { color: var(--mute); font-size: 12px; padding: 18px 0; text-align: center; }
   .more { font-size: 10.5px; color: var(--mute); text-align: right; padding-top: 6px; }
+
+  /* 막대를 눌러 그 매장·카페의 링크만 보는 손잡이 — 누를 수 있다는 것이 보여야 한다 */
+  .bar.pick { cursor: pointer; border-radius: 6px; padding: 1px 4px; margin-left: -4px; }
+  .bar.pick:hover { background: #F4F6FB; }
+  .bar.pick.on { background: #EEF2FF; }
+  .bar.pick.on .nm { color: var(--blue); font-weight: 700; }
+
+  .lhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .lhead .sub { margin-bottom: 0; }
+  .dl {
+    flex-shrink: 0; border: 1px solid var(--line); background: #fff; color: var(--blue);
+    border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+  }
+  .dl:hover { background: #F4F6FB; }
+
+  .picked { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .picked:empty { display: none; }
+  .pill {
+    background: var(--blue); color: #fff; border: 0; border-radius: 999px;
+    padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit;
+  }
+  .cntxt { font-size: 11px; color: var(--mute); }
 </style>
 
 <header>
@@ -118,9 +141,15 @@
     </div>
   </div>
 
-  <div class="card">
-    <h2>후기 링크</h2>
-    <div class="sub" id="list-sub">최근 발견 순 · 눌러서 원문 열기</div>
+  <div class="card" id="list-card">
+    <div class="lhead">
+      <div>
+        <h2>후기 링크</h2>
+        <div class="sub">최근 발견 순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
+      </div>
+      <button class="dl" id="csv">CSV 내려받기</button>
+    </div>
+    <div class="picked" id="picked"></div>
     <div class="filter" id="filter"></div>
     <div id="list"></div>
   </div>
@@ -135,6 +164,8 @@
 <script>
   var DATA = <?= data ?>;
   var srcFilter = '전체';
+  var storeFilter = '';   /* 매장 막대를 눌러 걸린 값 */
+  var cafeFilter = '';    /* 카페 막대를 눌러 걸린 값 */
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -146,7 +177,7 @@
      **다만 0 건도 세어서 밝힌다** — 65개 매장을 전부 수집하므로(2026-08-31 사장님 지시)
      후기가 아직 없는 곳이 여럿이다. 안 적으면 *"우리 매장이 목록에 없다"* 로 읽힌다.
      감추는 것과 없는 것은 다른 말이다. */
-  function bars(el, obj, limit, total) {
+  function bars(el, obj, limit, total, kind) {
     var all = Object.keys(obj).map(function (k) { return [k, obj[k]]; });
     var arr = all.filter(function (p) { return p[1] > 0; })
       .sort(function (a, b) { return b[1] - a[1]; });
@@ -154,23 +185,62 @@
     var shown = arr.slice(0, limit);
     if (!shown.length) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
     var max = shown[0][1];
+    /* **막대를 누르면 그 건수의 링크만 본다**(2026-08-31 사장님 지시). 건수만 있고
+       링크로 갈 길이 없으면 *"북수원 50건"* 을 보고도 그 50 개를 확인할 수가 없다. */
     var html = shown.map(function (p) {
-      return '<div class="bar"><div class="nm" title="' + esc(p[0]) + '">' + esc(p[0]) + '</div>' +
+      var on = (kind === 'store' ? storeFilter : cafeFilter) === p[0];
+      return '<div class="bar pick' + (on ? ' on' : '') + '" data-k="' + esc(kind) + '" data-v="' + esc(p[0]) + '">' +
+        '<div class="nm" title="' + esc(p[0]) + '">' + esc(p[0]) + '</div>' +
         '<div class="tr"><div class="fl" style="width:' + Math.max(3, p[1] / max * 100) + '%"></div></div>' +
         '<div class="vl">' + nf(p[1]) + '</div></div>';
     }).join('');
     var tail = [];
     if (arr.length > limit) tail.push('그 밖 ' + (arr.length - limit) + '곳');
     if (zero > 0) tail.push('아직 0건 ' + zero + '곳');
-    if (tail.length) html += '<div class="more">' + tail.join(' · ') + '</div>';
+    tail.push('눌러서 링크 보기');
+    html += '<div class="more">' + tail.join(' · ') + '</div>';
     el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll('.pick'), function (b) {
+      b.onclick = function () {
+        var v = b.dataset.v;
+        if (b.dataset.k === 'store') { storeFilter = storeFilter === v ? '' : v; cafeFilter = ''; }
+        else { cafeFilter = cafeFilter === v ? '' : v; storeFilter = ''; }
+        render();
+        document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }
+
+  /* 지금 걸린 거름망을 지나는 줄 — 목록·CSV·건수가 **같은 함수를 본다.**
+     따로 세면 화면이 "50건"이라 적고 CSV 에는 48건이 담기는 어긋남이 난다. */
+  function filtered() {
+    return (DATA.recent || []).filter(function (r) {
+      if (srcFilter !== '전체' && r.src !== srcFilter) return false;
+      if (storeFilter && r.storeName !== storeFilter) return false;
+      if (cafeFilter && r.cafe !== cafeFilter) return false;
+      return true;
+    });
   }
 
   function renderList() {
-    var rows = (DATA.recent || []).filter(function (r) {
-      return srcFilter === '전체' || r.src === srcFilter;
-    });
+    var rows = filtered();
     var el = document.getElementById('list');
+    /* 무엇으로 걸렀는지 화면이 적는다 — 안 적으면 *"왜 몇 건뿐이지"* 가 된다 */
+    var tags = [];
+    if (storeFilter) tags.push(['매장', storeFilter, 'store']);
+    if (cafeFilter) tags.push(['카페', cafeFilter, 'cafe']);
+    document.getElementById('picked').innerHTML = tags.length
+      ? tags.map(function (t) {
+          return '<button class="pill" data-k="' + t[2] + '">' + esc(t[0]) + ' <b>' + esc(t[1]) + '</b> ✕</button>';
+        }).join('') + '<span class="cntxt">' + nf(rows.length) + '건</span>'
+      : '';
+    Array.prototype.forEach.call(document.querySelectorAll('#picked .pill'), function (b) {
+      b.onclick = function () {
+        if (b.dataset.k === 'store') storeFilter = ''; else cafeFilter = '';
+        render();
+      };
+    });
+
     if (!rows.length) { el.innerHTML = '<div class="empty">아직 수집된 후기가 없습니다 — 위의 「지금 수집」을 눌러 보세요</div>'; return; }
     el.innerHTML = rows.map(function (r) {
       var m = ['<span class="tag' + (r.src === '카페' ? ' c' : '') + '">' + esc(r.src) + '</span>',
@@ -198,8 +268,8 @@
     document.getElementById('store-sub').textContent =
       '후기가 잡힌 매장 ' + nStores + '곳 / 대상 ' + DATA.stores + '곳';
 
-    bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores);
-    bars(document.getElementById('cafes'), DATA.byCafe || {}, 12);
+    bars(document.getElementById('stores'), DATA.byStore || {}, 20, DATA.stores, 'store');
+    bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
 
     document.getElementById('stamp').textContent =
       new Date(DATA.at).toLocaleString('ko-KR') + ' 기준';
@@ -223,6 +293,25 @@
     });
     renderList();
   }
+
+  /* **CSV 로 내려받는다** — 화면에서 훑는 것과 엑셀로 돌리는 것은 다른 일이다.
+     지금 걸린 거름망 그대로 담으므로 *"북수원만"* 을 골라 그 링크만 받을 수 있다.
+     화면 건수와 CSV 건수가 어긋나지 않게 **같은 `filtered()` 를 본다.** */
+  document.getElementById('csv').onclick = function () {
+    var rows = filtered();
+    var head = ['발견일', '점코드', '지점명', '출처', '제목', 'URL', '카페', '작성일'];
+    var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+    var body = rows.map(function (r) {
+      return [r.foundAt, r.store, r.storeName, r.src, r.title, r.link, r.cafe, r.postdate].map(q).join(',');
+    });
+    /* **BOM 을 붙인다** — 없으면 엑셀이 UTF-8 을 못 알아보고 한글이 통째로 깨진다 */
+    var blob = new Blob(['﻿' + head.map(q).join(',') + '\n' + body.join('\n')], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '매장후기_' + (storeFilter || cafeFilter || '전체') + '_'
+      + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+  };
 
   document.getElementById('run').onclick = function () {
     var b = this;

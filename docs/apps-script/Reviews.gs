@@ -305,7 +305,7 @@ function summary_() {
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
     byDay[f] = (byDay[f] || 0) + 1;
   }
-  /* 최근 순 — 링크 목록은 화면이 200 건까지만 그린다(더 필요하면 시트를 연다) */
+  /* 최근 순 */
   rows.sort(function (a, b) { return a.foundAt < b.foundAt ? 1 : -1; });
 
   /* 마지막 수집이 언제 어떻게 끝났는지 함께 낸다 — **실패를 0 으로 그리지 않는다.**
@@ -320,7 +320,12 @@ function summary_() {
     ok: true, at: new Date().toISOString(),
     total: rows.length, day: day, week: week, month: month,
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
-    lastRun: last, recent: rows.slice(0, 200)
+    /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
+       함께수집이되어야합니다"*). 수집은 처음부터 `link` 열에 담고 있었는데 **화면이
+       200 건만 받아** 매장별로 골라 볼 수가 없었다. 건수와 링크가 이어져야 뜻이 있다.
+       3,000 건이면 JSON 약 600KB — 관리자 화면이라 감당한다(사용 로그 대시보드가
+       674KB 를 받는다). 그보다 많아지면 시트를 직접 여는 편이 낫다. */
+    lastRun: last, recent: rows.slice(0, 3000), truncated: rows.length > 3000
   };
 }
 
