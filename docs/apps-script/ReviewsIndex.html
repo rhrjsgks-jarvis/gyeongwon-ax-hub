@@ -382,6 +382,27 @@
   .geo-svg path.v8 { fill: #3D5DB6; }
   .geo-svg path.v9 { fill: #2743AB; }
   .geo-svg path.v10 { fill: #1428A0; }
+  /* ── 지역별 색 스펙트럼 (2026-09-01 사장님 요청) ─────────────────────────
+   *
+   * *"지역별(6개 지역) 컬러를 정해서 스펙트럼화하면 좋겠습니다."*
+   *
+   * **색상 = 지역 · 명도 = 건수.** 명도 사다리는 위 파랑 10단계의 밝기를 그대로
+   * 쓴다(지수 0.6 규칙과 농도 읽는 법이 안 바뀐다). **지역마다 따로 정규화하지
+   * 않는다** — 그러면 「같은 진하기가 다른 건수」가 되어 지도가 거짓말을 한다.
+   *
+   * 수원은 삼성 블루 계열 그대로다(10단계가 현행 #1428A0 과 사실상 같다).
+   *
+   * **적록색약에서 6색은 원리적으로 완전히 안 갈린다**(색상환이 무너져 3무리가
+   * 된다). 그런데 무너지는 세 짝(수원↔성남 · 용인↔강원 · 평택↔안양)이 지도에서
+   * **하나도 맞닿지 않는다** — 폴리곤 인접을 실제로 계산해 확인했다. 맞닿는 넷
+   * (성남↔용인 · 성남↔평택 · 수원↔용인 · 용인↔평택)은 색약에서도 ΔE 13~47 이다.
+   * 그래도 색에만 기대지 않게 **지도에 시·군 이름**이 함께 있다. */
+  .geo-svg path.r1.v1{fill:#e7e9f6} .geo-svg path.r1.v2{fill:#d7dbf1} .geo-svg path.r1.v3{fill:#c4c9ec} .geo-svg path.r1.v4{fill:#aeb5e7} .geo-svg path.r1.v5{fill:#959fe3} .geo-svg path.r1.v6{fill:#7a87e0} .geo-svg path.r1.v7{fill:#5d6edd} .geo-svg path.r1.v8{fill:#3d52db} .geo-svg path.r1.v9{fill:#2037cb} .geo-svg path.r1.v10{fill:#16289f}
+  .geo-svg path.r2.v1{fill:#f0e7f6} .geo-svg path.r2.v2{fill:#e6d6f1} .geo-svg path.r2.v3{fill:#dbc2eb} .geo-svg path.r2.v4{fill:#cfabe6} .geo-svg path.r2.v5{fill:#c190e2} .geo-svg path.r2.v6{fill:#b372de} .geo-svg path.r2.v7{fill:#a351da} .geo-svg path.r2.v8{fill:#9027d5} .geo-svg path.r2.v9{fill:#721bac} .geo-svg path.r2.v10{fill:#581286}
+  .geo-svg path.r3.v1{fill:#f5e6ee} .geo-svg path.r3.v2{fill:#f0d4e3} .geo-svg path.r3.v3{fill:#eabfd6} .geo-svg path.r3.v4{fill:#e5a6c7} .geo-svg path.r3.v5{fill:#e088b7} .geo-svg path.r3.v6{fill:#db64a3} .geo-svg path.r3.v7{fill:#d5378b} .geo-svg path.r3.v8{fill:#b62170} .geo-svg path.r3.v9{fill:#911758} .geo-svg path.r3.v10{fill:#700f43}
+  .geo-svg path.r4.v1{fill:#f3e8e1} .geo-svg path.r4.v2{fill:#edd8cc} .geo-svg path.r4.v3{fill:#e6c4b1} .geo-svg path.r4.v4{fill:#dfae92} .geo-svg path.r4.v5{fill:#d8946c} .geo-svg path.r4.v6{fill:#d27540} .geo-svg path.r4.v7{fill:#bc5e27} .geo-svg path.r4.v8{fill:#9c4b1d} .geo-svg path.r4.v9{fill:#7c3a14} .geo-svg path.r4.v10{fill:#5f2b0d}
+  .geo-svg path.r5.v1{fill:#ebecce} .geo-svg path.r5.v2{fill:#dee0a7} .geo-svg path.r5.v3{fill:#cdd16f} .geo-svg path.r5.v4{fill:#babf38} .geo-svg path.r5.v5{fill:#a6aa2d} .geo-svg path.r5.v6{fill:#8f9323} .geo-svg path.r5.v7{fill:#797d1a} .geo-svg path.r5.v8{fill:#636613} .geo-svg path.r5.v9{fill:#4e500d} .geo-svg path.r5.v10{fill:#3b3c08}
+  .geo-svg path.r6.v1{fill:#dbedf1} .geo-svg path.r6.v2{fill:#c0e2e9} .geo-svg path.r6.v3{fill:#9dd4df} .geo-svg path.r6.v4{fill:#70c4d5} .geo-svg path.r6.v5{fill:#37b2ca} .geo-svg path.r6.v6{fill:#2a9ab1} .geo-svg path.r6.v7{fill:#208397} .geo-svg path.r6.v8{fill:#176b7c} .geo-svg path.r6.v9{fill:#105462} .geo-svg path.r6.v10{fill:#0a404a}
   .geo-svg path.sel { stroke: #111827; stroke-width: 1.8; }
   /* 라벨 — 진한 칸 위에서는 흰 글자여야 읽힌다(파랑 위 회색은 안 보인다) */
   .geo-svg text { font-size: 7.5px; text-anchor: middle; pointer-events: none; fill: #9CA3AF; }
@@ -1571,6 +1592,19 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
      * 다만 어느 지수든 **값이 크면 단계도 크거나 같다**(단조)는 것은 깨지지 않는다.
      * 1건이라도 있으면 최소 1단계를 준다 — 0 으로 떨어지면 0건과 같아 보인다.
      */
+    /* 칸이 어느 영업지역에 속하는지 — 서버가 주는 `areaCells`(지역→칸)를 뒤집는다.
+       **표를 두 벌 적지 않는다** — 갈리면 지도와 막대가 다른 지역을 가리킨다. */
+    var RCOLOR = { '수원': 1, '성남': 2, '용인': 3, '평택': 4, '안양': 5, '강원': 6 };
+    var cellReg = {};
+    (function () {
+      var AC = DATA.areaCells || {};
+      Object.keys(AC).forEach(function (a) {
+        var n = RCOLOR[a];
+        if (!n) return;                       /* 모르는 지역은 기본 파랑 — 틀려도 안전한 쪽 */
+        (AC[a] || []).forEach(function (c) { cellReg[c] = n; });
+      });
+    })();
+
     var lv = function (v) {
       return !v ? 0 : Math.max(1, Math.min(10, Math.ceil(Math.pow(v / max, 0.6) * 10)));
     };
@@ -1581,7 +1615,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     Array.prototype.forEach.call(svg.querySelectorAll("path[data-cell]"), function (pa, pi) {
       if (CAN_ANIM && !animated) pa.style.transitionDelay = (pi % 20) * 12 + "ms";
       var c = pa.getAttribute("data-cell"), v = by[c] || 0, k = lv(v);
-      pa.setAttribute("class", "on" + (k ? " v" + k : "") + (mapFilter === c ? " sel" : ""));
+      var rc = cellReg[c];
+      pa.setAttribute("class", "on" + (k ? " v" + k : "") + (k && rc ? " r" + rc : "")
+        + (mapFilter === c ? " sel" : ""));
       /* **한 칸이 여러 시·군을 덮으면 그 사실을 적는다** — 「성남」을 눌렀는데 광주·이천·
          하남이 함께 세어지는 이유가 화면 어디에도 없으면 안 된다. */
       var mem = (GW_MAP.members && GW_MAP.members[c]) || [c];

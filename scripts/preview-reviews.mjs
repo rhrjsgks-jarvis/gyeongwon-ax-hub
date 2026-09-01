@@ -125,6 +125,12 @@ const DATA = {
   byMonth, byDay, byKind: KINDS, byRegion, byMap, byStore,
   bySrc: { 블로그: 812, 카페: 1621 },
   byStoreSrc, byStoreMonth, lastPost,
+  /* 지역 → 지도 칸. **지역별 색 스펙트럼이 이 값으로 칠한다** — 없으면 칸이
+     전부 기본 파랑이 되어 색이 안 붙은 것처럼 보인다(실물에서 잡았다). */
+  areaCells: Object.fromEntries(Object.keys(byRegion).map(r =>
+    [r, r === '강원' ? ['원주','춘천','강릉','속초'] : [cellOf[r]].filter(Boolean)])),
+  byMapStores: Object.fromEntries(Object.keys(byRegion).map(r =>
+    [r === '강원' ? '원주' : cellOf[r], byRegion[r].stores])),
   byCafe: CAFES.reduce((o, c, i) => (o[c] = 520 - i * 90, o), {}),
   stores: 65,
   cursor: 0, chainOn: false, chainErr: '',
