@@ -23,6 +23,10 @@ import { pathToFileURL } from 'node:url';
 import { buildExamTool, assertSelfContained, OUT, STATS, statsSource } from './build-exam-tool.mjs';
 import { buildLGQuestions, isStandaloneLG } from './build-lg-questions.mjs';
 import { readQB, LG_RE } from './lib/quiz-bank.mjs';
+import { buildNewModelQuestions } from './build-new-model-questions.mjs';
+
+/* 신규 44개 모델 문항 fixture — 「커밋본 == 재생성」을 대조한다 */
+const NM_OUT = 'scripts/fixtures/new-model-questions.json';
 
 let ok = true;
 const say = (c, m) => { console.log((c ? 'OK  ' : 'FAIL') + ': ' + m); if (!c) ok = false; };
@@ -42,7 +46,7 @@ say(committed === fresh,
    손으로 박아 둔 `574문` 이 실제 은행과 어긋난 채 오래 떠 있었다(2026-08-26 사장님 지적). */
 const statsNow = fs.existsSync(STATS) ? fs.readFileSync(STATS, 'utf8') : '';
 say(statsNow === statsSource(bank),
-  `커밋된 문항 수 파일 == 재생성한 것 (은행 ${bank.total} · 앱 ${bank.total - bank.b2bTotal})` +
+  `커밋된 문항 수 파일 == 재생성한 것 (은행 ${bank.total} · 앱 ${bank.appTotal})` +
   (statsNow === statsSource(bank) ? '' : ' — `npm run build:examtool` 을 돌리고 커밋할 것'));
 
 /* ── ①-b LG 비교 문항(C형) ──
@@ -60,6 +64,42 @@ const key = qs => qs.map(q => `${q.q}|${q.opts.join('|')}|${q.ans}`).sort().join
 say(key(cq) === key(buildLGQuestions()),
   `커밋된 C형 == 재생성한 것 (${cq.length}개)`
   + (key(cq) === key(buildLGQuestions()) ? '' : ' — `npm run build:lgq` 를 돌리고 커밋할 것'));
+
+/* ── ①-d 신규 44개 모델 (2026-09-01 사장님 지시) ──
+ * *"기존 시험지출력기 자료에서 **가전 관련 문항은 전부 삭제**하고 그 자리에 아래
+ * 신규 모델 목록만 사용해 … 새 문제를 출제해줘"* · 확정: 「시험지만 교체」(앱의 `QB`
+ * 는 그대로) · 「LG 비교 문항 85개는 유지」.
+ *
+ * 셋을 지킨다 — **커밋본이 최신인가 · 옛 가전 문항이 정말 빠졌는가 · 앱은 그대로인가.**
+ * 가운데가 핵심이다: 걸러 내는 규칙이 `buildBank()` 한 줄이라, 그 줄이 사라지면
+ * 830문항이 **조용히** 되살아나고 화면에는 아무 표시도 안 난다. */
+{
+  const nmKey = qs => qs.map(q => `${q.q}|${q.opts.join('|')}|${q.ans}|${q.lv}`).sort().join('\n');
+  const committedNm = JSON.parse(fs.readFileSync(NM_OUT, 'utf8')).items;
+  const freshNm = buildNewModelQuestions().items;
+  say(nmKey(committedNm) === nmKey(freshNm),
+    `커밋된 신규 모델 문항 == 재생성한 것 (${committedNm.length}개)`
+    + (nmKey(committedNm) === nmKey(freshNm) ? '' : ' — `npm run build:nmq` 를 돌리고 커밋할 것'));
+
+  /* 시험 도구 은행에 옛 가전 문항이 남아 있으면 안 된다 —
+     남는 CE 는 **LG 비교(C형) · 신규 모델 · 정책 문항** 셋뿐이다. */
+  const stale = bank.items.filter(q => q.div === 'CE' && !q.lg && !q.nm && q.type !== 'policy');
+  say(stale.length === 0, `시험 은행에 남은 옛 가전 문항 ${stale.length}개`
+    + (stale.length ? ` — 예: "${stale[0].q.slice(0, 50)}"` : ''));
+  say(bank.nmTotal >= 300 && bank.lgTotal === 85,
+    `신규 모델 ${bank.nmTotal}문항 · LG 비교 ${bank.lgTotal}문항(유지)`);
+
+  /* **앱은 건드리지 않았다.** `QB` 가 줄면 레벨업 챌린지가 조용히 얇아진다 —
+     사장님 결정이 「시험지만 교체」였다. */
+  say(bank.appTotal === ALL.length && ALL.length > 600,
+    `레벨업 챌린지 앱의 QB 는 그대로 (${ALL.length}문항)`);
+
+  /* 갈래가 한쪽으로 쏠리면 시험지가 같은 모양만 되풀이한다. 설치환경이 사장님
+     지시의 핵심이라 그쪽이 가장 두꺼워야 하고, 금액 암기가 은행을 덮으면 안 된다. */
+  const fam = bank.byFam || {};
+  say((fam.install || 0) >= 100, `설치환경 문항 ${fam.install || 0}개 (모델 사양 ${fam.spec || 0} · 설치비용 ${fam.cost || 0} · 셀링포인트 ${fam.usp || 0})`);
+  say((fam.cost || 0) <= bank.nmTotal * 0.25, `  └ 금액 문항이 신규 문항의 1/4 이하 (${fam.cost || 0}/${bank.nmTotal})`);
+}
 
 /* 지면에 브랜드가 보이면 그 자리가 곧 정답이라 "헷갈리게" 라는 지시와 어긋난다.
    보기에 드는 것은 `트루스팀`·`인버터 리니어 컴프레서` 같은 **고유 기술명**이어야 한다. */
@@ -87,7 +127,7 @@ say(shape.length === 0, 'C형은 삼성이 주어이고 지면에 LG 브랜드 �
   const longest = q => { let b = 0; for (let i = 1; i < q.opts.length; i++) if (q.opts[i].length > q.opts[b].length) b = i; return b; };
   const hit = items.filter(q => longest(q) === q.ans).length;
   const rate = hit / items.length * 100;
-  const CAP = 34;                       /* 실측 33.6%. 배치를 돌 때마다 함께 내릴 것 */
+  const CAP = 30;                       /* 실측 29.9%(2026-09-01 신규 모델 교체 후). 배치를 돌 때마다 함께 내릴 것 */
   say(rate <= CAP, `가장 긴 보기만 골랐을 때 ${rate.toFixed(1)}% (상한 ${CAP}% · 찍기 25%)`
     + (rate <= CAP ? '' : ' — 정답만 긴 문항이 늘었다. npm run fix:anslen 과 오답 다시쓰기'));
   const auto = items.filter(q => q.lg);

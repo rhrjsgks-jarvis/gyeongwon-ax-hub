@@ -110,7 +110,10 @@ export function statsSource(bank) {
   return `/* 자동 생성 — 손으로 고치지 말 것. \`npm run build:examtool\` 이 다시 쓴다.\n`
     + `   화면에 적는 개수를 데이터에서 세어 넣기 위한 파일이다. */\n`
     + `export const QUIZ_BANK_TOTAL = ${bank.total}          /* 시험지·웹시험이 뽑는 전체 은행 */\n`
-    + `export const QUIZ_APP_TOTAL = ${bank.total - (bank.b2bTotal || 0)}           /* 그중 레벨업 챌린지 앱에 실린 것 */\n`;
+    /* **둘을 빼서 구하지 말 것.** 2026-09-01 에 옛 가전 문항이 시험 도구에서만 빠지면서
+       두 은행이 갈렸다 — 앱은 `QB` 전체를 읽고 시험 도구는 걸러 낸 뒤 신규 모델 문항을
+       더한 것을 읽는다. `buildBank()` 가 `appTotal` 로 직접 세어 준다. */
+    + `export const QUIZ_APP_TOTAL = ${bank.appTotal}           /* 레벨업 챌린지 앱이 읽는 QB 전체 */\n`;
 }
 
 /* 직접 실행했을 때만 파일을 쓴다 — 테스트는 buildExamTool() 만 불러 대조한다 */

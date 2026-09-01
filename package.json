@@ -45,6 +45,7 @@
     "fix:opts": "node scripts/fix-options.mjs",
     "build:b2bq": "node scripts/build-b2b-questions.mjs",
     "build:lgq": "node scripts/build-lg-questions.mjs",
+    "build:nmq": "node scripts/build-new-model-questions.mjs",
     "build:examtool": "node scripts/build-exam-tool.mjs",
     "build:examweb": "node scripts/build-exam-web.mjs",
     "test:examtool": "node scripts/test-examtool.mjs",
