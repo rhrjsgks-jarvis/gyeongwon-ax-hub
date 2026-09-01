@@ -1335,7 +1335,18 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail('[바이럴] 확대하면 테두리가 배율만큼 굵어져 작은 칸이 선에 묻힌다');
     } else if (!h.includes('vbw * 0.0196')) {
       fail('[바이럴] 확대 글꼴이 보이는 폭에 비례하지 않는다 — 작은 칸에서 글자가 화면을 덮는다');
-    } else if (!h.includes('돋보기 — " + esc(mapFilter)')) {
+    /* **확대는 그 영업지역 전체를 칸별 색으로 본다**(2026-09-02 사장님:
+       *"평택을 누르면 평택지역만 보이고 그 내부에서도 관할구역별로 컬러가 다르게"*).
+       「평택」은 시 하나가 아니라 영업지역이다 — 오산·평택·안성 셋이다. */
+    } else if (!h.includes('AC[a2] || []).indexOf(cell) >= 0')) {
+      fail('[바이럴] 누른 칸의 영업지역을 안 찾는다 — 그 지역 전체가 아니라 칸 하나만 확대된다');
+    } else if (!h.includes('if (!zoom) paintCells(msvg, false);')) {
+      fail('[바이럴] 확대에도 paintCells 를 태운다 — 칸 색이 통째로 덮어써져 세 칸이 같은 색이 된다');
+    } else if (!h.includes('geo-metro path.z1')) {
+      fail('[바이럴] 칸마다 다른 색이 없다');
+    } else if (!h.includes('geo-zlist')) {
+      fail('[바이럴] 칸마다 어느 매장인지 안 적는다 — 지도로 못 쪼개는 것을 글자로도 안 준다');
+    } else if (!h.includes('돋보기 — " + esc(zoom.area)')) {
       fail('[바이럴] 확대 중인데 안내가 기본 화면 문구를 적는다 — 화면이 거짓말을 한다');
     } else if (!h.includes('geo-metro-wrap')) {
       fail('[바이럴] 돋보기를 담을 자리가 없다');

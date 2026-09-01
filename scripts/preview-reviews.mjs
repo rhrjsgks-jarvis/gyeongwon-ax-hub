@@ -158,8 +158,24 @@ const DATA = {
       : r === '용인' ? ['처인구','기흥구','수지구','화성']
       : r === '안양' ? ['만안구','동안구','광명']
       : ['평택','오산','안성'])])),
-  byMapStores: Object.fromEntries(Object.keys(byRegion).map(r =>
-    [r === '강원' ? '원주' : cellOf[r], byRegion[r].stores])),
+  /* **칸마다 그 칸의 매장만 담는다.** 예전에는 지역의 매장을 대표 칸 하나에
+     통째로 넣어, 확대 화면에서 「평택 칸에 오산·안성 매장」이 딸려 나왔다
+     (실물에서 잡았다). 매장 이름이 칸 이름으로 시작하면 그 칸으로 본다. */
+  byMapStores: (() => {
+    const out = {};
+    for (const r of Object.keys(byRegion)) {
+      const cells = r === '강원' ? ['원주', '춘천', '강릉', '속초'] : null;
+      for (const st of byRegion[r].stores) {
+        let cell = cells ? (cells.find((c) => st.startsWith(c)) || cells[0]) : cellOf[r];
+        if (!cells) {
+          const alt = ['오산', '안성', '광명', '화성', '광주', '이천', '하남'].find((c) => st.startsWith(c));
+          if (alt) cell = alt;
+        }
+        (out[cell] || (out[cell] = [])).push(st);
+      }
+    }
+    return out;
+  })(),
   byCafe: CAFES.reduce((o, c, i) => (o[c] = 520 - i * 90, o), {}),
   stores: 65,
   cursor: 0, chainOn: false, chainErr: '',
