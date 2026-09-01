@@ -948,6 +948,48 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 멈추지 않게 하는 마지막 장치 — 감시 트리거 (2026-09-01) ────────────────
+   * 사장님: *"멈추지 말고 100% 수집할 수 있게 해야 합니다."*
+   *
+   * 이어달리기는 **정상으로 끝났을 때만** 걸린다. 그래서 6분 한도로 강제 종료되거나
+   * 예외로 죽으면 아무도 다시 부르지 않아 영영 선다. 예산을 3.5분으로 줄인 것은
+   * 확률을 낮출 뿐 없애지 못한다. **실행을 시작할 때 먼저** 걸어 두어야 한다. */
+  {
+    const gs8 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    if (fs.existsSync(gs8)) {
+      const g = fs.readFileSync(gs8, 'utf8');
+      const runAtIdx = g.indexOf("setProperty('_runAt'");
+      const armIdx = g.indexOf('armWatchdog_();');
+      if (!g.includes('function armWatchdog_')) {
+        fail('[바이럴] 감시 트리거가 없다 — 6분 강제 종료나 예외로 죽으면 영영 선다');
+      /* **시작할 때** 걸어야 한다. 끝에서 걸면 죽었을 때 못 건다 */
+      } else if (armIdx < 0 || runAtEarly(g)) {
+        fail('[바이럴] 감시 트리거를 실행 시작에 안 건다 — 죽으면 아무도 안 부른다');
+      /* 늘 같은 자리에서 죽으면 6분마다 헛돌며 하루 한도를 태운다 */
+      } else if (!g.includes('WATCH_MAX')) {
+        fail('[바이럴] 되살아난 횟수를 안 센다 — 늘 죽는 오류면 6분마다 헛돌며 한도를 태운다');
+      /* 정상으로 끝나면 셈을 되돌려야 오래 도는 바퀴가 스스로 멈추지 않는다 */
+      } else if (!g.includes("setProperty('_watchN', '0')")) {
+        fail('[바이럴] 정상 종료에 되살아난 셈을 안 되돌린다 — 오래 도는 바퀴가 스스로 멈춘다');
+      /* 트리거가 발화했는데 자물쇠를 못 잡으면 그 회차가 통째로 사라진다 */
+      } else if (g.split('armWatchdog_();').length - 1 < 2) {
+        fail('[바이럴] 자물쇠를 못 잡았을 때 다시 걸지 않는다 — 그 회차가 사라져 체인이 끊긴다');
+      } else {
+        console.log('OK: 바이럴 감시 트리거 — 시작할 때 걸고, 정상 종료에 셈을 되돌리고, 헛돌면 멈춘다');
+      }
+    }
+    /* 감시 트리거가 `_runAt` 기록 **바로 뒤**에 오는지 본다.
+       **첫 번째 armWatchdog_() 를 잡으면 안 된다** — 자물쇠 실패 분기가 앞에 있어
+       늘 「시작에 안 건다」로 잡힌다(실제로 그렇게 헛돌았다). `_runAt` 자리에서부터
+       찾아야 한다. 이 저장소가 되풀이해 데인 「첫 매치를 잡는」 병이다. */
+    function runAtEarly(g) {
+      const a = g.indexOf("setProperty('_runAt'");
+      if (a < 0) return true;
+      const b = g.indexOf('armWatchdog_();', a);
+      return !(b > a && b - a < 700);
+    }
+  }
+
   /* ── 카카오톡 채널은 후기가 아니다 (2026-09-01 사장님 지시) ───────────────
    * *"웹검색 중에 카카오톡 채널은 제외하도록 하겠습니다."*
    * 매장이 자기 채널로 올린 지면이라 브랜드+매장 판정을 그대로 지나는데 후기가
