@@ -647,7 +647,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <div class="lhead">
       <div>
         <h2>후기 링크</h2>
-        <div class="sub">최근 순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
+        <div class="sub">작성일을 아는 글 먼저 · 그 안에서 최신순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
       </div>
       <button class="dl" id="csv">CSV 내려받기</button>
     </div>
@@ -1880,8 +1880,14 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
        지웠다. 받은 수와 전체 수를 여기서 견주면 **서버가 어떻게 자르든 늘 맞다.** */
     var got = (DATA.recent || []).length, all = DATA.total || 0;
     if (got < all) {
+      var gotSrc = { '블로그': 0, '카페': 0 };
+      var rec = DATA.recent || [];
+      for (var gi = 0; gi < rec.length; gi++) if (gotSrc[rec[gi].src] !== undefined) gotSrc[rec[gi].src]++;
+      var allSrc = DATA.bySrc || {};
       html += '<div class="split">전체 <b>' + nf(all) + '건</b> 중 <b>' + nf(got)
-        + '건</b>만 받아 왔습니다 — 작성일을 아는 글과 모르는 글에서 각각 최근 1,500건입니다.'
+        + '건</b>만 받아 왔습니다 — 작성일을 아는 글과 모르는 글에서 각각 최근 1,500건입니다'
+        + ' (블로그 ' + nf(gotSrc['블로그']) + '/' + nf(allSrc['블로그'] || 0)
+        + ' · 카페 ' + nf(gotSrc['카페']) + '/' + nf(allSrc['카페'] || 0) + ').'
         + ' 나머지는 시트를 직접 열어 보세요.</div>';
     }
 
@@ -1901,7 +1907,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       + '<button type="button" class="pgb" data-pg="' + (page + 1) + '"' + (page === pages ? ' disabled' : '') + '>다음 ›</button> '
       + '<button type="button" class="pgb" data-pg="' + pages + '"' + (page === pages ? ' disabled' : '') + '>끝 »</button>'
       + '</span></div>';
-    el.innerHTML = bar + html + bar;
+    /* 이 쪽에 카페가 한 줄도 없는데 아래에 있으면, 그 사실과 갈 길을 적는다.
+       조건을 「전체 보기 + 이 쪽에 없음 + 아래에 있음」 으로 좁힌다 — 카페 쪽으로
+       넘어간 뒤에도 계속 뜨면 잔소리가 되고, 그러면 아무도 안 읽는다. */
+    var nDated = 0, nUndated = 0;
+    for (var li = 0; li < rows.length; li++) { if (rows[li].dated) nDated++; else nUndated++; }
+    var pageHasUndated = false;
+    for (var vi = 0; vi < view.length; vi++) if (!view[vi].dated) pageHasUndated = true;
+    var lead = '';
+    if (srcFilter === '전체' && nUndated > 0 && nDated > 0 && !pageHasUndated) {
+      var cafePage = Math.floor(nDated / pageSize) + 1;
+      lead = '<div class="split">이 목록은 <b>작성일을 아는 글</b>(' + nf(nDated) + '건)이 먼저 오고,';
+      lead += ' <b>작성일을 모르는 글</b> ' + nf(nUndated) + '건은 <b>' + nf(cafePage) + '쪽</b>부터 있습니다';
+      lead += ' — 네이버가 카페 글의 작성일을 주지 않아 뒤로 보냅니다.';
+      lead += ' <button type="button" class="pgb jumpc">카페만 보기</button></div>';
+    }
+    el.innerHTML = bar + lead + html + bar;
 
     Array.prototype.forEach.call(el.querySelectorAll('.pgb[data-sz]'), function (b) {
       b.onclick = function () { pageSize = +b.dataset.sz; page = 1; renderList(); };
@@ -1918,6 +1939,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         if (card && card.scrollIntoView) card.scrollIntoView({ block: 'start' });
       };
     });
+    /* 출처 칩과 **같은 일**을 한다 — 두 길이 다르게 동작하면 화면이 두 말을 한다. */
+    var jumpc = el.querySelector('.jumpc');
+    if (jumpc) jumpc.onclick = function () { srcFilter = '카페'; page = 1; render(); };
   }
 
   /** 한 줄. **경계 표시와 갈라 둔다** — 목록을 그리는 곳이 둘이 되면 한쪽만 고쳐진다. */
