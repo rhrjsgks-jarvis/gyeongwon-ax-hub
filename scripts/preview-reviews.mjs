@@ -99,6 +99,10 @@ for (let i = 0; i < 240; i++) {
      그 상태로는 「작성일 모름」 표시도, 정렬 경계도 제대로 검증되지 않는다. */
   const src = i % 3 === 0 ? '블로그' : '카페';
   const dated = src === '블로그';
+  /* **경계가 증명된 카페 글** — 글번호가 그 카페 최대치보다 커서 지난 수집 이후에
+     쓰인 것이 확실한 글. 발견일을 작성일로 쓰고 화면이 ≈ 를 붙인다.
+     하네스에 이 경우가 없으면 그 표시를 영영 검증하지 못한다. */
+  const approx = !dated && i % 7 === 0;
   const st = stores[i % stores.length];
   let region = '수원';
   for (const r of Object.keys(byRegion)) if (byRegion[r].stores.indexOf(st) >= 0) region = r;
@@ -106,7 +110,7 @@ for (let i = 0; i < 240; i++) {
   const d = new Date(2026, 7, 31 - (dated ? i % 90 : 0));
   const ymd = d.toISOString().slice(0, 10);
   recent.push({
-    date: ymd, dated: dated,
+    date: ymd, dated: dated || approx, approx: approx,
     store: 'Z' + (100 + i), storeName: st, mc: mc,
     src: src,
     kind: Object.keys(KINDS)[i % 5],

@@ -119,7 +119,14 @@ var FULL_EVERY_DAYS = 7;
 /* **첫 열이 `date` 다 — 「작성일 우선, 없으면 발견일」.** 화면의 일간·주간·월간이 이
    값을 센다. 마지막 `seenAt` 은 **처음 본 날**이라 「새로 발견」을 세는 데만 쓴다.
    **열은 뒤에만 붙였다**(`seenAt`) — 가운데에 끼우면 그 아래 모든 줄이 한 칸씩 밀린다. */
-var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr'];
+/* `dateBasis` — 그 줄의 날짜가 **어디서 왔는가**. 값은 셋뿐이다:
+     ''      … 블로그가 준 작성일(정확)
+     '새글'  … 카페인데 **글번호가 그 카페에서 우리가 본 최대치보다 커서** 지난
+               수집 이후에 쓰인 것이 증명된 글. 발견일을 작성일로 쓴다(오차는
+               수집 주기 안쪽). **추정이 아니라 경계가 증명되는 값이다.**
+     '미상'  … 카페인데 그 증명이 안 되는 글. 작성일을 모른다고 적는다.
+   **뒤에만 붙인다** — 가운데 끼우면 그 아래 모든 옛 줄이 한 칸씩 밀린다. */
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis'];
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 65곳 — 경원영업팀 활성 지점 전부 ────────────────────
@@ -991,6 +998,48 @@ function collectReviews(mode) {
   try { return sweep_(mode); } finally { lock.releaseLock(); }
 }
 
+/** 카페 글 링크에서 **카페 id 와 글번호**를 뽑는다.
+ *  `cafe.naver.com/{카페}/{번호}` 가 지금 형태이고, 옛 `?articleid=` 꼴도 받는다.
+ *  못 읽으면 null — 못 읽은 것을 새 글로 치면 **엉뚱한 날짜를 적게 된다.**
+ *  정규식을 쓰지 않는다(이 저장소가 셸을 거치며 역슬래시를 먹혀 조용히 깨진 적이 여럿). */
+function cafeNo_(link) {
+  var u = String(link || '');
+  var at = u.indexOf('cafe.naver.com/');
+  if (at < 0) return null;
+  var rest = u.slice(at + 'cafe.naver.com/'.length);
+  var q = rest.indexOf('?'), qs = q < 0 ? '' : rest.slice(q + 1);
+  if (q >= 0) rest = rest.slice(0, q);
+  var seg = rest.split('/').filter(function (x) { return x; });
+  var id = seg[0] || '';
+  var no = seg.length > 1 ? seg[seg.length - 1] : '';
+  if (!no && qs) {                                  /* 옛 꼴: ?clubid=..&articleid=123 */
+    var ps = qs.split('&');
+    for (var i = 0; i < ps.length; i++) {
+      var kv = ps[i].split('=');
+      if (String(kv[0]).toLowerCase() === 'articleid') no = kv[1] || '';
+      if (String(kv[0]).toLowerCase() === 'clubid') id = id || kv[1] || '';
+    }
+  }
+  if (!id || !no) return null;
+  for (var c = 0; c < no.length; c++) {              /* 숫자만 받는다 */
+    if (no.charAt(c) < '0' || no.charAt(c) > '9') return null;
+  }
+  return { id: id, no: Number(no) };
+}
+
+/** 시트에 쓰기 전에 **칸 수를 확인한다.**
+ *  `setValues` 는 폭이 어긋나면 던지는데, 그 예외가 수집 한 판을 통째로 날린다
+ *  (모은 글도 커서도 사라진다). 실제로 `mgr` 열이 늘 때 한 줄만 안 고쳐져 그랬다.
+ *  여기서 먼저 잡으면 **어느 줄이 몇 칸인지**가 오류에 찍혀 원인이 바로 보인다. */
+function assertRow_(rows) {
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].length !== HEADER.length) {
+      throw new Error('시트 칸 수가 어긋납니다 — ' + i + '번째 줄이 ' + rows[i].length
+        + '칸인데 HEADER 는 ' + HEADER.length + '칸입니다. 행을 만드는 곳을 다 고쳤는지 보세요.');
+    }
+  }
+}
+
 /** 실제 수집. `collectReviews` 가 자물쇠를 잡고 부른다. */
 function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
@@ -1026,9 +1075,19 @@ function sweep_(mode) {
   var tail0 = Number(props_().getProperty('_tail') || 0);
   if (!(tail0 >= 0) || tail0 >= TAILS.length) tail0 = 0;
   var tailSave = 0;
+  /* **카페별로 우리가 본 최대 글번호**를 함께 만든다. 새 글의 작성일을 가르는
+     근거다 — 글번호가 이보다 크면 그 글은 우리가 그 카페를 마지막으로 훑은
+     뒤에 쓰인 것이라, 발견일과 작성일의 차이가 **수집 주기 안**으로 묶인다.
+     같은 루프에서 만든다(시트를 두 번 읽으면 그만큼 느려진다). */
+  var maxNo = {};
   if (itemSheet.getLastRow() > 1) {
     var links = itemSheet.getRange(2, 6, itemSheet.getLastRow() - 1, 1).getValues();
-    for (i = 0; i < links.length; i++) seen[String(links[i][0])] = true;
+    for (i = 0; i < links.length; i++) {
+      var lk0 = String(links[i][0]);
+      seen[lk0] = true;
+      var cn0 = cafeNo_(lk0);
+      if (cn0 && !(maxNo[cn0.id] >= cn0.no)) maxNo[cn0.id] = cn0.no;
+    }
   }
 
   /* 별칭 표는 **한 번만 읽는다** — 매장마다 속성을 읽으면 65번이 된다 */
@@ -1158,6 +1217,18 @@ function sweep_(mode) {
           if (seen[link]) { hitSeen = true; continue; }
           seen[link] = true;
           var post = String(it.postdate || '');
+          /* **카페 글의 작성일을 가른다**(2026-09-01 사장님 결정 — "채운다, 새 글만").
+             네이버는 카페 작성일을 공개 API 로 주지 않는다(문서·실호출로 확인).
+             그래도 **글번호가 그 카페에서 우리가 본 최대치보다 크면** 그 글은 지난
+             수집 이후에 쓰인 것이 증명되므로, 발견일과의 차이가 수집 주기 안이다.
+             **추정이 아니라 경계가 증명되는 값**이라 이 저장소 원칙에 어긋나지 않는다.
+             그 카페를 처음 보는 경우(최대치가 없다)에는 **모른다고 둔다** — 안전한 쪽. */
+          var basis = '';
+          if (post.length !== 8) {
+            var cn = cafeNo_(link);
+            basis = (cn && maxNo[cn.id] > 0 && cn.no > maxNo[cn.id]) ? '새글' : '미상';
+            if (cn && !(maxNo[cn.id] >= cn.no)) maxNo[cn.id] = cn.no;
+          }
           add.push([
             /* **날짜는 「작성일」이 먼저다**(2026-08-31 사장님 지적 — *"후기가 올라온
                날짜로 맞춰주세요. 시스템은 지금 만들었지만 후기가 모두 오늘 올라온 게
@@ -1179,7 +1250,8 @@ function sweep_(mode) {
             /* **매니저 이름 — 제목과 본문(해시태그)을 함께 훑는다**(2026-08-31 사장님 지시).
                여기서 뽑아 담아야 뜻이 있다 — 본문은 저장하지 않으므로 나중에는 못 뽑는다.
                여럿이면 세로줄로 잇는다. */
-            mgrFind_(text).join('|')
+            mgrFind_(text).join('|'),
+            basis
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
@@ -1217,6 +1289,7 @@ function sweep_(mode) {
      * **커서를 시트 쓰기보다 먼저 올리지 말 것** — 쓰기가 실패하면 그 매장 글을
      * 영영 못 넣는다. 순서는 반드시 **쓰기 → 커서**다. */
     if (add.length) {
+      assertRow_(add);
       itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
       flushed += add.length;
       add = [];
@@ -1306,12 +1379,22 @@ function sweep_(mode) {
               if (belongsToOther_(ctext, cMatch, allNames)) continue;
               kept++;
               seen[clink] = true;
+              /* **칸 수가 HEADER 와 같아야 한다.** 2026-08-25 에 `mgr` 열이 늘었는데
+                 이 줄만 안 고쳐져 **10칸**이었다 — `setValues` 가 11칸을 기대하므로
+                 그 자리에서 던지고, **그 실행에서 모은 것이 통째로 날아가며 커서도
+                 저장되지 않는다.** 커서가 44/65 에 선 채 이어달리기도 안 걸린 원인이다.
+                 아래 `assertRow_` 가 다시는 조용히 어긋나지 않게 막는다. */
+              var cbn = cafeNo_(clink);
+              var cbasis = (cbn && maxNo[cbn.id] > 0 && cbn.no > maxNo[cbn.id]) ? '새글' : '미상';
+              if (cbn && !(maxNo[cbn.id] >= cbn.no)) maxNo[cbn.id] = cbn.no;
               add.push([
                 stamp,                                 /* 카페는 네이버가 작성일을 안 준다 */
                 STORES[cs][0], cName, '카페',
                 String(cit.title || '').replace(/<[^>]+>/g, ''), clink,
                 String(cit.cafename || ''), '', stamp,
-                kindOf_(String(cit.title || ''))
+                kindOf_(String(cit.title || '')),
+                mgrFind_(ctext).join('|'),
+                cbasis
               ]);
               cafeAdd++;
               break;
@@ -1330,6 +1413,7 @@ function sweep_(mode) {
   if (calls) addUsage_(calls);
 
   if (add.length) {
+    assertRow_(add);
     itemSheet.getRange(itemSheet.getLastRow() + 1, 1, add.length, HEADER.length).setValues(add);
     /* **쓴 그 자리에서 집계 캐시를 버린다.** 함수 끝에서 버리면 6분 한도로 중간에
        끊겼을 때 안 버려져, 새로 모은 것이 최대 6시간 안 보인다. */
@@ -1566,8 +1650,15 @@ function readAll_() {
       mgr: String(v[i][10] || '') || mgrFind_(String(v[i][4])).join('|'),
       /* 그 값이 본문까지 본 것인지 — 화면이 「제목에서만 뽑은 옛 글」을 가려 말한다 */
       mgrFull: !!String(v[i][10] || ''),
-      /* 작성일을 아는가 — 화면이 「추정」을 밝히는 데 쓴다. **있는 척하지 않는다.** */
-      dated: post.length === 8,
+      /* ── 작성일을 아는가 (2026-09-01 개정) ────────────────────────────────
+       * 블로그는 `postdate` 를 준다(정확). 카페는 네이버가 안 주지만, **글번호가
+       * 그 카페에서 우리가 본 최대치보다 컸던 글**은 지난 수집 이후에 쓰인 것이
+       * 증명되므로 발견일을 작성일로 쓴다 — 오차가 수집 주기 안으로 묶인다.
+       * 그 판정은 **수집할 때** 하고(`dateBasis`), 여기서는 읽기만 한다.
+       * **추정이 아니라 경계가 증명되는 값**이라 있는 척하는 것이 아니다.
+       * 다만 정확도가 다르므로 `approx` 로 갈라 화면이 그 사실을 밝힌다. */
+      dated: post.length === 8 || String(v[i][11] || '') === '새글',
+      approx: post.length !== 8 && String(v[i][11] || '') === '새글',
       /* **지도 칸을 여기서 붙인다.** 화면이 점코드로 다시 판정하려면 `AREA` 65줄과
          `GW_CITY` 를 화면에도 둬야 하고, 그러면 **같은 표가 두 벌이 되어** 한쪽만
          고치는 사고가 난다(이 저장소가 허브 카드 개수·앱 버전으로 이미 데인 종류다).
@@ -1631,6 +1722,9 @@ function summary_() {
   }
 
   var day = 0, week = 0, month = 0, dated = 0, newToday = 0;
+  /* 작성일을 아는 글 중 **발견일로 채운 것**(카페 새 글). 정확도가 달라 따로 센다 —
+     화면이 「그중 N건은 ±수집주기」라고 밝힌다. 뭉개면 화면이 있는 척하게 된다. */
+  var approxN = 0;
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
   var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {};
@@ -1690,6 +1784,7 @@ function summary_() {
     var r = rows[i], f = r.date;
     if (r.dated) {
       dated++;
+      if (r.approx) approxN++;
       if (f === d0) day++;
       if (f >= d7) week++;
       if (f >= d30) month++;
@@ -1862,6 +1957,7 @@ function summary_() {
     watch: watch_(byCafe),
     /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
+    approx: approxN,
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,

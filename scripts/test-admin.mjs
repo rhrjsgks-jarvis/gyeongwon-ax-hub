@@ -948,6 +948,67 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 시트 칸 수가 어긋나 수집 한 판이 통째로 날아가던 것 (2026-09-01) ──────
+   *
+   * `mgr` 열이 늘었을 때(2026-08-25) **카페 훑기 쪽 행만 안 고쳐져 10칸**이었다.
+   * `setValues` 는 HEADER 폭을 기대하므로 그 자리에서 던지는데, 그 예외가
+   * **모은 글도 커서도 함께 날린다** — 커서가 44/65 에 선 채 이어달리기도
+   * 안 걸린 원인이다. 조용한 사고라 화면에는 「진전 없음」으로만 보인다. */
+  {
+    const gs2 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    if (fs.existsSync(gs2)) {
+      const g = fs.readFileSync(gs2, 'utf8');
+      /* **정규식을 쓰지 않는다** — 이 저장소는 셸·heredoc 이 역슬래시를 먹어
+         정규식이 조용히 다른 뜻이 되는 사고를 여러 번 겪었다. 문법 오류가 안 나서
+         더 위험하다. 문자열 세기로 충분한 자리다. */
+      const writes = g.split('setValues(add)').length - 1;
+      const guards = g.split('assertRow_(add)').length - 1;
+      if (!writes) {
+        fail('[바이럴] 시트에 쓰는 자리를 못 찾았다 — 검사가 무의미해졌으니 앵커를 고칠 것');
+      } else if (guards < writes) {
+        fail(`[바이럴] 시트 쓰기 ${writes}곳 중 ${guards}곳만 칸 수를 확인한다 — 어긋나면 그 실행이 통째로 날아간다`);
+      } else if (!g.includes('function assertRow_')) {
+        fail('[바이럴] assertRow_ 가 없다 — 칸 수가 어긋나도 원인이 오류에 안 찍힌다');
+      /* **뒤에만 붙인다** — 가운데 끼우면 그 아래 옛 줄이 한 칸씩 밀린다 */
+      } else if (!g.includes("'mgr', 'dateBasis']")) {
+        fail('[바이럴] dateBasis 가 HEADER 맨 뒤가 아니다 — 가운데 끼우면 옛 줄이 한 칸씩 밀린다');
+      } else {
+        console.log(`OK: 바이럴 시트 쓰기 ${writes}곳 모두 칸 수를 먼저 확인한다`);
+      }
+    }
+  }
+
+  /* ── 카페 새 글의 작성일 (2026-09-01 사장님 결정 — "채운다, 새 글만") ───────
+   *
+   * 네이버는 카페 작성일을 공개 API 로 주지 않는다(문서·실호출로 확인). 그래도
+   * **글번호가 그 카페에서 우리가 본 최대치보다 크면** 그 글은 지난 수집 이후에
+   * 쓰인 것이 증명되므로 발견일과의 차이가 수집 주기 안이다.
+   * **추정이 아니라 경계가 증명되는 값**이라 원칙에 어긋나지 않는다 —
+   * 다만 정확도가 다르므로 화면이 갈라 적어야 한다. */
+  {
+    const gs3 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    const ix5 = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+    if (fs.existsSync(gs3) && fs.existsSync(ix5)) {
+      const g = fs.readFileSync(gs3, 'utf8');
+      const x = fs.readFileSync(ix5, 'utf8');
+      if (!g.includes('function cafeNo_')) {
+        fail('[바이럴] 글번호 파서가 없다 — 새 글을 가릴 근거가 사라진다');
+      /* **그 카페를 처음 보면 모른다고 둔다** — 최대치가 없는데 새 글로 치면
+         옛 글에 오늘 날짜를 적게 된다. 안전한 쪽으로 물러서야 한다. */
+      } else if (!g.includes('maxNo[cn.id] > 0 && cn.no > maxNo[cn.id]')) {
+        fail('[바이럴] 최대 글번호가 없을 때도 새 글로 친다 — 2023년 글에 오늘 날짜를 적게 된다');
+      } else if (!g.includes('approx:')) {
+        fail('[바이럴] 정확한 작성일과 경계증명 작성일을 안 가른다 — 화면이 있는 척하게 된다');
+      } else if (!x.includes('작성 ≈ ')) {
+        fail('[바이럴] 화면이 경계증명 작성일에 ≈ 를 안 붙인다 — 정확한 값과 똑같아 보인다');
+      } else if (!x.includes('오차는 수집 주기 안입니다')) {
+        fail('[바이럴] 오차 범위를 안 밝힌다 — 근거 없이 날짜를 적은 것으로 읽힌다');
+      } else {
+        console.log('OK: 바이럴 카페 새 글 — 경계가 증명된 것만 작성일로 쓰고 ≈ 로 갈라 적는다');
+      }
+    }
+  }
+
   /* ── 지도 지역별 색 스펙트럼 (2026-09-01 사장님 요청) ──────────────────────
    *
    * *"지도에 모두 같은 컬러로 되어 있는데 지역별(6개 지역) 컬러를 정해서
