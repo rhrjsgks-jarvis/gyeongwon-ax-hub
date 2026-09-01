@@ -1853,7 +1853,55 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       };
     });
 
-    if (!rows.length) { el.innerHTML = '<div class="empty">아직 수집된 후기가 없습니다 — 위의 「지금 수집」을 눌러 보세요</div>'; return; }
+    /* ── 0건일 때 — **「자료가 없다」와 「조건에 맞는 것이 없다」를 가른다** (2026-09-01)
+     *
+     * 사장님 신고: *"카페나 블로그를 눌렀을 때 아무것도 안 보입니다."*
+     * 예전에는 필터로 0건이어도 **「아직 수집된 후기가 없습니다 — 「지금 수집」을
+     * 눌러 보세요」** 라고 적었다. 7,453건이 있는데 화면이 없다고 말한 셈이다.
+     *
+     * **왜 0건이 되는가** — 집계와 목록의 모집단이 다르다. 카페 카드·매장 막대는
+     * **전체**로 세는데(byCafe 990곳) 목록은 **최근 3,000건 표본**만 받는다.
+     * 그래서 집계에 보이는 카페를 눌러도 그 글이 표본 밖이면 목록이 빈다.
+     * 고칠 것은 필터가 아니라 **화면이 그 사실을 말하는가** 다.
+     *
+     * 전체 건수를 아는 조건은 그 수를 적는다 — 「없다」와 「여기 없다」는 다른 말이다. */
+    if (!rows.length) {
+      var on = [];
+      if (srcFilter !== '전체') on.push(['출처', srcFilter, (DATA.bySrc || {})[srcFilter]]);
+      if (storeFilter) on.push(['매장', storeFilter, (DATA.byStore || {})[storeFilter]]);
+      if (cafeFilter) on.push(['카페', cafeFilter, (DATA.byCafe || {})[cafeFilter]]);
+      if (kindFilter) on.push(['유형', kindFilter, (DATA.byKind || {})[kindFilter]]);
+      if (mapFilter) on.push(['지역', mapFilter, (DATA.byMap || {})[mapFilter]]);
+      if (monthFilter) on.push(['작성월', monthFilter, (DATA.byMonth || {})[monthFilter]]);
+      if (watchFilter) on.push(['관심 카페', watchFilter, undefined]);
+      if (fromDate || toDate) on.push(['작성일', (fromDate || '처음') + ' ~ ' + (toDate || '오늘'), undefined]);
+      if (!on.length) {
+        /* 조건이 하나도 없는데 0건 — 그때만 「아직 수집 전」이 사실이다 */
+        el.innerHTML = '<div class="empty">아직 수집된 후기가 없습니다 — 위의 「지금 수집」을 눌러 보세요</div>';
+        return;
+      }
+      var h0 = '<div class="empty"><b>고르신 조건에 맞는 글이 이 목록에 없습니다.</b><br>';
+      /* **전체에는 있는데 목록에만 없는 경우를 분명히 적는다** — 그래야 사장님이
+         「수집이 안 됐구나」로 오해하지 않는다. */
+      var known = [];
+      for (var oi = 0; oi < on.length; oi++) {
+        if (typeof on[oi][2] === 'number' && on[oi][2] > 0) known.push(on[oi][0] + ' ' + on[oi][1] + ' — 전체 ' + nf(on[oi][2]) + '건');
+      }
+      if (known.length) {
+        h0 += '<span class="mini">' + esc(known.join(' · ')) + '</span><br>';
+        h0 += '<span class="mini">전체에는 있지만 <b>목록은 최근 ' + nf((DATA.recent || []).length)
+          + '건만</b> 받아 옵니다 — 그 표본 밖이면 여기 안 보입니다. 시트를 직접 열면 전부 있습니다.</span><br>';
+      }
+      h0 += '<button type="button" class="pgb clrall">조건 모두 지우기</button></div>';
+      el.innerHTML = h0;
+      var ca = el.querySelector('.clrall');
+      if (ca) ca.onclick = function () {
+        srcFilter = '전체'; storeFilter = ''; cafeFilter = ''; kindFilter = '';
+        watchFilter = ''; mapFilter = ''; monthFilter = ''; fromDate = ''; toDate = '';
+        page = 1; render();
+      };
+      return;
+    }
     /* **경계를 눈에 보이게 긋는다.** 위는 작성일을 아는 글(진짜 시간순), 아래는
        발견일뿐인 글이다. 선이 없으면 아래쪽 날짜가 위쪽과 같은 뜻으로 읽힌다.
 
