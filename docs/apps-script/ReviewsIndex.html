@@ -761,6 +761,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   var mapFilter = '';     /* 지도 칸을 눌러 걸린 값 — 경기는 지역, 강원은 시 */
   var watchFilter = '';   /* 관심 카페 칩 — 부분일치라 cafeFilter 와 따로 둔다 */
   var fromDate = '', toDate = '';   /* 작성일 범위 (몇일~몇일) */
+  /* **작성일을 모르는 글만 보기**(2026-09-01 사장님 지시 — *"작성일을 모르는 것은
+     날짜 분류에서 제외해 주세요, 기타로 분류합니다"*). 날짜 필터는 원래 그 글들을
+     빼는데, 뺀 것을 **볼 길이 없었다** — 「기타」가 그 자리다. */
+  var dateOther = false;
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -824,6 +828,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (watchFilter && String(r.cafe || '').replace(/s+/g, '').indexOf(watchFilter.replace(/s+/g, '')) < 0) return false;
       /* **날짜 범위는 작성일을 아는 글에만 건다.** 카페 글은 날짜가 「처음 본 날」이라
          그것으로 거르면 있지도 않은 사실을 말하게 된다 — 옆의 안내가 그 수를 적는다. */
+      /* **「기타」는 작성일을 모르는 글만.** 날짜 범위와 함께 걸리지 않는다 —
+         모르는 글에 범위를 거는 것은 뜻이 없다(칩을 누를 때 범위를 지운다). */
+      if (dateOther && r.dated) return false;
       if (fromDate || toDate) {
         if (!r.dated) return false;
         if (fromDate && r.date < fromDate) return false;
@@ -1879,12 +1886,26 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           var on2 = (fromDate === yy + '-01-01' && toDate === yy + '-12-31');
           yh += '<button type="button" class="rbtn ybtn' + (on2 ? ' on' : '') + '" data-y="' + yy + '">' + yy + '</button>';
         }
+        /* **「기타」** — 작성일을 모르는 글(카페·웹). 건수를 함께 적어 두면
+           「왜 연도 합이 전체와 다르지」가 그 자리에서 풀린다. */
+        if (DATA.undated) {
+          yh += '<button type="button" class="rbtn ybtn' + (dateOther ? ' on' : '')
+            + '" data-y="기타" title="네이버가 카페·웹 글의 작성일을 주지 않습니다">기타 '
+            + nf(DATA.undated) + '</button>';
+        }
         yb.innerHTML = yh;
         Array.prototype.forEach.call(yb.querySelectorAll('.ybtn'), function (b2) {
           b2.onclick = function () {
             var y = b2.dataset.y;
-            if (fromDate === y + '-01-01' && toDate === y + '-12-31') { fromDate = ''; toDate = ''; }
-            else { fromDate = y + '-01-01'; toDate = y + '-12-31'; }
+            if (y === '기타') {
+              /* 「기타」와 날짜 범위는 함께 걸리지 않는다 — 모르는 글에 범위는 뜻이 없다 */
+              dateOther = !dateOther;
+              if (dateOther) { fromDate = ''; toDate = ''; }
+            } else {
+              dateOther = false;
+              if (fromDate === y + '-01-01' && toDate === y + '-12-31') { fromDate = ''; toDate = ''; }
+              else { fromDate = y + '-01-01'; toDate = y + '-12-31'; }
+            }
             page = 1; render();
           };
         });
@@ -1892,9 +1913,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     }
     /* **무엇이 이 거름망에 안 걸리는지 적는다** — 카페 글은 작성일을 모른다 */
     if (note) {
-      note.textContent = (fromDate || toDate)
-        ? '작성일을 아는 글만 (' + nf(DATA.dated) + '건 중에서)'
-        : (DATA.undated ? '작성일 미상 ' + nf(DATA.undated) + '건은 범위로 못 거릅니다' : '');
+      note.textContent = dateOther
+        ? '작성일을 모르는 글만 — 네이버가 카페·웹 글의 작성일을 주지 않습니다'
+        : ((fromDate || toDate)
+            ? '작성일을 아는 글만 (' + nf(DATA.dated) + '건 중에서)'
+            : (DATA.undated ? '작성일 미상 ' + nf(DATA.undated) + '건은 「기타」에서 봅니다' : ''));
     }
   }
   function ymdAgo(n) {
@@ -2041,6 +2064,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     if (kindFilter) tags.push(['유형', kindFilter, 'kind']);
     if (watchFilter) tags.push(['관심 카페', watchFilter, 'watch']);
     if (fromDate || toDate) tags.push(['작성일', (fromDate || '처음') + ' ~ ' + (toDate || '오늘'), 'range']);
+    if (dateOther) tags.push(['작성일', '기타(모름)', 'other']);
     document.getElementById('picked').innerHTML = tags.length
       ? tags.map(function (t) {
           return '<button class="pill" data-k="' + t[2] + '">' + esc(t[0]) + ' <b>' + esc(t[1]) + '</b> ✕</button>';
@@ -2054,6 +2078,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         else if (b.dataset.k === 'cafe') cafeFilter = '';
         else if (b.dataset.k === 'watch') watchFilter = '';
         else if (b.dataset.k === 'range') { fromDate = ''; toDate = ''; }
+        else if (b.dataset.k === 'other') dateOther = false;
         else kindFilter = '';
         render();
       };
@@ -2081,6 +2106,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (monthFilter) on.push(['작성월', monthFilter, (DATA.byMonth || {})[monthFilter]]);
       if (watchFilter) on.push(['관심 카페', watchFilter, undefined]);
       if (fromDate || toDate) on.push(['작성일', (fromDate || '처음') + ' ~ ' + (toDate || '오늘'), undefined]);
+      if (dateOther) on.push(['작성일', '기타(모름)', DATA.undated]);
       if (!on.length) {
         /* 조건이 하나도 없는데 0건 — 그때만 「아직 수집 전」이 사실이다 */
         el.innerHTML = '<div class="empty">아직 수집된 후기가 없습니다 — 위의 「지금 수집」을 눌러 보세요</div>';
@@ -2103,7 +2129,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var ca = el.querySelector('.clrall');
       if (ca) ca.onclick = function () {
         srcFilter = '전체'; storeFilter = ''; cafeFilter = ''; kindFilter = '';
-        watchFilter = ''; mapFilter = ''; monthFilter = ''; fromDate = ''; toDate = '';
+        watchFilter = ''; mapFilter = ''; monthFilter = ''; fromDate = ''; toDate = ''; dateOther = false;
         page = 1; render();
       };
       return;
@@ -2475,7 +2501,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
        곳에서는 3쪽을 보다 매장을 바꿨는데 그대로 3쪽이라 **빈 화면**이 뜬다.
        여기 한 곳에서 서명으로 본다. */
     var sig = [srcFilter, storeFilter, cafeFilter, kindFilter, watchFilter, mapFilter, monthFilter,
-      fromDate, toDate].join("|");
+      fromDate, toDate, dateOther].join("|");
     if (lastSig !== null && sig !== lastSig) page = 1;
     lastSig = sig;
     wireZoom();
@@ -2547,6 +2573,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       new Date(DATA.at).toLocaleString('ko-KR') + ' 기준';
 
     /* **마지막 수집이 실패했으면 그렇게 적는다** — 0 을 그냥 두면 "후기가 없다"로 읽힌다 */
+    /* ── 갈래 하나의 일시 오류를 「고장」으로 읽히게 하지 않는다 (2026-09-01) ──
+     *
+     * 사장님 신고 — *"마지막 수집에서 오류가 있었습니다 — webkr:HTTP 500 …SE99"*.
+     * 실제로는 멈추지 않았다(그 갈래만 건너뛰고 웹 503건을 이미 모았다). 그런데
+     * 화면이 **네이버가 준 JSON 을 그대로** 붉게 찍어 큰일이 난 것처럼 보였다.
+     *
+     * **오류를 감추지 않는다** — 무엇이 어떻게 됐는지 사람 말로 적고 원문은
+     * 도구설명에 남긴다. 인증 오류(401·403)는 진짜로 멈추는 것이라 그대로 크게 알린다. */
+    function softErr(e) {
+      var t = String(e || '');
+      var m = t.match(/^(blog|cafearticle|webkr):/);
+      if (!m) return null;
+      if (/401|403|스크립트 속성/.test(t)) return null;   /* 진짜로 멈추는 오류 */
+      var nm = m[1] === 'blog' ? '블로그' : (m[1] === 'webkr' ? '웹문서' : '카페');
+      return nm + ' 검색이 잠깐 응답하지 않았습니다 (네이버 쪽 일시 오류)';
+    }
     var st = document.getElementById('status'), L = DATA.lastRun;
     if (L && L.error) {
       /* **401 은 원인이 하나뿐이라 그것만 말한다.** "오류가 있었습니다" 로 뭉뚱그리면
@@ -2559,7 +2601,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           '(<a href="https://console.ncloud.com/naver-api-hub/application">NAVER API HUB</a> 에서 발급 · ' +
           '「사용자 속성」이 아니라 <b>「스크립트 속성」</b>입니다)<br>' +
           '<small>넣은 뒤 다시 배포할 필요 없이 「지금 수집」만 누르면 됩니다.</small>'
-        : '<b>마지막 수집에서 오류가 있었습니다</b> — ' + esc(L.error)) + '</div>';
+        : (softErr(L.error)
+            ? '<b>' + esc(softErr(L.error)) + '</b> — 그 갈래만 건너뛰고 <b>나머지는 그대로 훑었습니다.</b>'
+              + ' 수집은 멈추지 않았고 다음 회차에 다시 시도합니다.'
+              + ' <span class="mini" title="' + esc(L.error) + '">(원문 보기: 마우스를 올리세요)</span>'
+            : '<b>마지막 수집에서 오류가 있었습니다</b> — ' + esc(L.error))) + '</div>';
     } else if (!DATA.total) {
       st.innerHTML = '<div class="note">아직 한 번도 수집하지 않았습니다. 위의 <b>「지금 수집」</b>을 눌러 주세요(65개 매장 × 2소스라 1~2분 걸립니다).</div>';
     } else st.innerHTML = '';
@@ -2612,7 +2658,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   Array.prototype.forEach.call(document.querySelectorAll('#range .rbtn'), function (b) {
     b.onclick = function () {
       var d = Number(b.dataset.d);
-      if (!d) { fromDate = ''; toDate = ''; }
+      if (!d) { fromDate = ''; toDate = ''; dateOther = false; }
       else { fromDate = ymdAgo(d - 1); toDate = ''; }
       render();
       document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2777,7 +2823,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           '<div class="note"><b>수집을 마쳤습니다</b> — ' + nf(r.got) + '건을 받아 '
           + nf(r.kept) + '건이 판정을 지났고, 그중 <b>새 글 ' + nf(r.added) + '건</b>을 더했습니다.'
           + (r.added === 0 ? ' <b>이미 모은 글은 다시 세지 않습니다</b> — 누적은 그대로입니다.' : '')
-          + (r.error ? ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>' : '') + '</div>';
+          + (r.error
+              ? (softErr(r.error)
+                  ? ' <span style="color:#B45309" title="' + esc(r.error) + '">'
+                    + esc(softErr(r.error)) + ' — 그 갈래만 건너뛰었고 나머지는 그대로 훑었습니다.</span>'
+                  : ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>')
+              : '') + '</div>';
         /* **꺼진 갈래를 밝힌다.** 네이버가 한 갈래만 500 을 내는 일이 있는데(실제로
            웹문서가 그랬다), 조용히 빼면 「왜 웹 글이 안 늘지」를 알 길이 없다.
            나머지 갈래는 계속 돈다 — 그 사실도 함께 적어야 「고장」으로 안 읽힌다. */
