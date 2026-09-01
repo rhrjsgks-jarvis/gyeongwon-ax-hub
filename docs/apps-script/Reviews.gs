@@ -1395,6 +1395,7 @@ function sweep_(mode) {
        다음 실행이 또 돌아 **여덟 번 잇달아 죽자 감시 트리거가 포기했다.**
        한 바퀴를 못 끝내면 다음 실행이 **이어서** 돈다(지역 커서). */
     try {
+      props_().setProperty('_rivalTry', String(Number(props_().getProperty('_rivalTry') || 0) + 1));
       rivalRun = collectRival(t0 + RIVAL_MS);
       if (rivalRun && rivalRun.done) props_().setProperty('_rivalAt', stamp);
       sumCacheClear_();
@@ -2349,6 +2350,12 @@ function summary_() {
     mgrKnown: mgrKnown, mgrList: nameTab,
     /* 등록된 줄임말 — 화면이 목록을 보여주고 사장님이 더 넣으신다 */
     alias: aliasAll_(),
+    /* **LG 비교가 어디까지 갔는지 화면이 볼 수 있어야 한다.** 안 보이면 왜 수원만
+       뜨는지 추측으로 파게 된다(실제로 그랬다). */
+    rivalAt: String(props_().getProperty('_rivalAt') || ''),
+    rivalCur: String(props_().getProperty('_rivalCur') || ''),
+    rivalTry: Number(props_().getProperty('_rivalTry') || 0),
+    rivalAreas: Object.keys(AREA_Q).length,
     lastRun: last,
     /* ── 삭제된 글 (2026-09-02) ─────────────────────────────────────────
      * **화면이 반드시 밝혀야 한다** — 안 적으면 「삭제된 글은 다 빠졌다」로 읽히는데
@@ -2468,9 +2475,32 @@ function rivalHit_(text, brands, place) {
  * **하루 한 번인 이유**는 「중간에 돌리면 같은 날 여러 번 쌓여 어느 것이 그날 값인지
  * 알 수 없다」는 원래 규칙 그대로다. 날짜가 바뀌면 다시 돈다.
  */
+/* **표식이 아니라 결과로 판정한다** (2026-09-02 사장님 재지적 — *"배포하고 새로고침을
+   해봐도 여전히 수원 지역만 확인됩니다"*).
+
+   `_rivalAt`(오늘 한 번 돌았다) 하나로 가늠했는데, 그 표식이 **한 지역만 쓰고도**
+   서 버릴 수 있다. 그러면 다음 실행부터 「오늘은 이미 했다」로 건너뛰어 **영영
+   나머지 다섯 지역을 채우지 못한다** — 화면에는 수원만 남는다.
+
+   그래서 시트를 실제로 보고 **여섯 지역이 다 있는가**로 묻는다. 어떤 상태에서
+   시작하든 스스로 낫는다. (이 저장소가 개구부·닫기 반경에서 세운 규칙 그대로다 —
+   *"막은 자리는 개구부로 보고되므로 결과로 판정할 수 있다"*.)
+
+   **끝없이 되풀이하지 않게 하루 시도 횟수를 센다** — 한 지역이 늘 실패하면
+   매 실행마다 헛돌아 다른 일까지 굶는다. 12번이면 여섯 지역을 채우고도 남는다. */
+var RIVAL_TRY_MAX = 12;
+
 function rivalDue_() {
-  return String(props_().getProperty('_rivalAt') || '')
-    !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  var p = props_();
+  if (String(p.getProperty('_rivalTryAt') || '') !== today) {
+    p.setProperty('_rivalTryAt', today); p.setProperty('_rivalTry', '0');
+  }
+  if (Number(p.getProperty('_rivalTry') || 0) >= RIVAL_TRY_MAX) return false;
+  if (String(p.getProperty('_rivalAt') || '') !== today) return true;
+  /* 표식은 섰는데 지역이 모자라면 아직 안 끝난 것이다 */
+  var r = rival_();
+  return !r || !r.rows || r.rows.length < Object.keys(AREA_Q).length;
 }
 
 /** 삼성 vs LG. **마감 시각(`deadline`)을 받아 그 전에 멈춘다.**

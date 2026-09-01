@@ -153,35 +153,24 @@ function readJson(rel) {
 const readB2B = () => readJson('scripts/fixtures/b2b-questions.json');
 const readNewModels = () => readJson('scripts/fixtures/new-model-questions.json');
 
-/* ## 옛 가전 문항은 **시험 도구에서만** 뺀다 (2026-09-01 사장님 지시)
+/* ## 앱과 시험 도구는 **같은 은행을 본다** (2026-09-02 사장님 지시)
  *
- * *"기존 시험지출력기 자료에서 **가전 관련 문항은 전부 삭제**하고 그 자리에 아래
- * 신규 모델 목록만 사용해 … 새 문제를 출제해줘"* · 확정된 결정 둘 —
- * **「시험지만 교체」**(레벨업 챌린지 앱의 `QB` 는 건드리지 않는다)와
- * **LG 비교 문항 85개는 유지**.
+ * *"시험지 출력기와 레벨업테스트를 동기화해주세요"*.
  *
- * 그래서 지우는 것이 아니라 **여기서 걸러 낸다.** 기준이 한 줄이다:
+ * 하루 전에는 **「시험지만 교체」**였다. 그래서 이 파일이 옛 가전을 걸러 내고
+ * B2B·신규 문항을 여기서 덧붙였다 — 앱은 그대로 두려고 만든 우회로였다.
+ * **지금은 그 일을 `build:appbank` 가 `QB` 안에서 한다.** 그러니 여기서 또 하면
+ * 두 번 걸러지고 두 번 붙는다.
  *
- *     div === 'CE' && !lg     →  시험 도구 은행에서 뺀다
- *
- * LG 비교 문항(C형)은 `lg:1` 표식이 있어 이 한 줄로 그대로 남고, MX(휴대폰·웨어러블·
- * 갤럭시탭·갤럭시북)도 남는다. **B2B 의 CE 문항도 함께 빠진다** — 그쪽도 옛 모델
- * 사양이라 사장님이 말한 「가전 관련 문항」이다.
- *
- * **문자열로 옛 모델을 골라내지 않는다** — 모델코드 목록을 손으로 적으면 하나만
- * 빠뜨려도 조용히 남고, 새 문항이 늘 때마다 그 목록을 다시 손봐야 한다.
- *
- * **정책 문항은 남긴다.** 사장님이 지운 것은 *"가전 관련 문항"*(모델 사양)이지
- * 제도·정책이 아니고, 이 은행은 정책/제품 갈래를 따로 세어 화면에 밝힌다 —
- * 빼면 정책이 0건이 되어 그 표기가 뜻을 잃는다(은행에 정책 문항은 1건뿐이다). */
-const isOldAppliance = x => x.div === 'CE' && !x.lg && x.type !== 'policy';
-
+ * **이 파일은 다시 「`QB` 를 읽어 갈래·난이도를 매기는」 일만 한다.**
+ * 문항을 더하거나 빼는 규칙을 여기 되살리지 말 것 — 두 곳이 갈리면
+ * 화면에 뜨는 은행과 인쇄되는 은행이 다시 달라진다. */
 export function buildBank() {
   const QB = readQB();
   const items = [];
   let seq = 0;
   let appTotal = 0;
-  const push = q => { if (isOldAppliance(q)) return; q.i = seq++; items.push(q); };
+  const push = q => { q.i = seq++; items.push(q); };
 
   for (const [cat, list] of Object.entries(QB)) {
     for (const q of list) {
@@ -194,30 +183,12 @@ export function buildBank() {
         lv: levelOf(q),
         lg: isLG(q) ? 1 : 0,
         q: q.q, opts: q.opts, ans: q.ans, exp: q.exp || '',
+        /* 어디서 온 문항인가 — `build:appbank` 가 `QB` 에 달아 둔 표식을 그대로 옮긴다.
+           화면·검사가 「신규 44모델 몇 개」를 세는 데 쓴다. */
+        b2b: q.src === 'b2b' ? 1 : 0, nm: q.src === 'nm' ? 1 : 0, fam: q.fam,
       });
     }
   }
-  /* B2B(SOHO몰) 수치 문항 — MX(갤럭시북·갤럭시탭)만 남고 CE 는 위 규칙으로 빠진다 */
-  for (const q of readB2B()) {
-    push({
-      cat: q.cat, type: 'product',
-      div: MX_CATS.has(q.cat) ? 'MX' : 'CE',
-      lv: levelOf(q), lg: 0, b2b: 1,
-      q: q.q, opts: q.opts, ans: q.ans, exp: q.exp || '',
-    });
-  }
-  /* 신규 44개 모델 문항 — 옛 가전 문항이 비운 자리를 채운다(`npm run build:nmq`).
-     전부 CE 이므로 `isOldAppliance` 에 걸리지 않게 `nm` 표식으로 통과시킨다. */
-  for (const q of readNewModels()) {
-    q.i = seq++;
-    items.push({
-      i: q.i, cat: q.cat, type: 'product',
-      div: MX_CATS.has(q.cat) ? 'MX' : 'CE',
-      lv: q.lv || levelOf(q), lg: 0, nm: 1, fam: q.fam,
-      q: q.q, opts: q.opts, ans: q.ans, exp: q.exp || '',
-    });
-  }
-
   const count = (key, filter) => items.filter(filter || (() => true))
     .reduce((a, x) => (a[x[key]] = (a[x[key]] || 0) + 1, a), {});
   return {

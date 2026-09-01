@@ -82,17 +82,26 @@ say(key(cq) === key(buildLGQuestions()),
     + (nmKey(committedNm) === nmKey(freshNm) ? '' : ' — `npm run build:nmq` 를 돌리고 커밋할 것'));
 
   /* 시험 도구 은행에 옛 가전 문항이 남아 있으면 안 된다 —
-     남는 CE 는 **LG 비교(C형) · 신규 모델 · 정책 문항** 셋뿐이다. */
-  const stale = bank.items.filter(q => q.div === 'CE' && !q.lg && !q.nm && q.type !== 'policy');
+     남는 CE 는 **LG 비교(C형) · 신규 모델 · B2B · 정책 문항** 넷이다.
+
+     **B2B 는 「옛 가전」이 아니다**(2026-09-02 사장님 지시: *"시험출력기에 B2B
+     제품은 살려주세요"*). 하루 전에는 「가전 관련 문항은 전부 삭제」를 B2B 에도
+     그대로 적용해 CE 310문항을 뺐는데, **성격이 다르다** — 옛 소비자 모델 사양이
+     아니라 **SOHO몰 법인 판매 사양**이라 신규 44모델이 대신해 주지 못한다.
+     빼면 그 상담이 시험에서 통째로 사라진다. */
+  const stale = bank.items.filter(q => q.div === 'CE' && !q.lg && !q.nm && !q.b2b && q.type !== 'policy');
   say(stale.length === 0, `시험 은행에 남은 옛 가전 문항 ${stale.length}개`
     + (stale.length ? ` — 예: "${stale[0].q.slice(0, 50)}"` : ''));
   say(bank.nmTotal >= 300 && bank.lgTotal === 85,
     `신규 모델 ${bank.nmTotal}문항 · LG 비교 ${bank.lgTotal}문항(유지)`);
 
-  /* **앱은 건드리지 않았다.** `QB` 가 줄면 레벨업 챌린지가 조용히 얇아진다 —
-     사장님 결정이 「시험지만 교체」였다. */
-  say(bank.appTotal === ALL.length && ALL.length > 600,
-    `레벨업 챌린지 앱의 QB 는 그대로 (${ALL.length}문항)`);
+  /* **앱과 시험 도구가 같은 은행을 본다**(2026-09-02 사장님 지시: *"시험지 출력기와
+     레벨업테스트를 동기화해주세요"*). 하루 전의 「시험지만 교체」를 뒤집은 것이다.
+
+     이제 시험 은행은 `QB` 를 **그대로** 읽는다 — 더하거나 빼는 규칙이 `quiz-bank.mjs`
+     로 돌아오면 두 곳이 다시 갈린다. `appTotal === total` 이 그것을 붙든다. */
+  say(bank.appTotal === ALL.length && bank.appTotal === bank.total && ALL.length > 600,
+    `앱과 시험지가 같은 은행 (${ALL.length}문항)`);
 
   /* 갈래가 한쪽으로 쏠리면 시험지가 같은 모양만 되풀이한다. 설치환경이 사장님
      지시의 핵심이라 그쪽이 가장 두꺼워야 하고, 금액 암기가 은행을 덮으면 안 된다. */

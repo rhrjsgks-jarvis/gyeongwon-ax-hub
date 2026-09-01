@@ -1409,6 +1409,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail('[바이럴] 회차 도장을 기억하지 않는다 — 이어 돌면 지역마다 도장이 달라 마지막 조각만 화면에 뜬다');
     } else if (!g.includes('cyStamp, area, a, b,')) {
       fail('[바이럴] 줄에 회차 도장을 안 찍는다');
+    /* **표식이 아니라 결과로 판정한다** — `_rivalAt` 하나만 보면 한 지역만 쓰고도
+       표식이 서 버려 다음 실행부터 「오늘은 했다」로 건너뛴다(실제로 그랬다). */
+    } else if (!g.includes('r.rows.length < Object.keys(AREA_Q).length')) {
+      fail('[바이럴] LG 비교가 표식만 보고 건너뛴다 — 한 지역만 채워도 오늘은 끝난 것이 된다');
+    } else if (!g.includes('RIVAL_TRY_MAX')) {
+      fail('[바이럴] 되풀이 상한이 없다 — 한 지역이 늘 실패하면 매 실행이 헛돌아 다른 일까지 굶는다');
+    } else if (!g.includes('rivalCur:')) {
+      fail('[바이럴] 어디까지 갔는지 화면이 못 본다 — 왜 수원만 뜨는지 또 추측으로 파게 된다');
     } else if (!g.includes("deleteProperty('_rivalStamp')")) {
       fail('[바이럴] 회차를 마쳐도 도장을 안 지운다 — 다음 바퀴가 옛 도장을 물려받는다');
     } else if (!g.includes("'_rivalCur', '_rivalStamp'")) {
