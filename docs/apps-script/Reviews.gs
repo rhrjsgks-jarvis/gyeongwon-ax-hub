@@ -1176,6 +1176,31 @@ function srcName_(kind) {
   return '카페';
 }
 
+/** **한 번만 도는 되돌리기** — 기준선이 자라던 시절에 매긴 「새글」을 「미상」으로.
+ *
+ *  2026-09-01, 기준선(카페별 최대 글번호)을 수집 도중에도 갱신하는 버그가 있었다.
+ *  자료를 비운 직후라 기준선이 비어 있는 채 자라서, **같은 카페의 옛 글이 서로를
+ *  기준으로 삼아 「오늘 쓰인 글」로 잡혔다**(사장님이 33건을 보고 지적했다).
+ *
+ *  코드는 고쳤지만 **이미 그렇게 적힌 줄이 남는다.** 사람이 다시 비우게 하는 대신
+ *  다음 수집이 스스로 되돌린다 — 그 판정은 근거가 없었으므로 「미상」이 정직하다.
+ *  한 번만 돈다(`_basisFix`). 되돌린 뒤로는 새 기준선이 제 몫을 한다. */
+function repairBasis_(sh) {
+  if (props_().getProperty('_basisFix')) return 0;
+  var last = sh.getLastRow();
+  if (last < 2) { props_().setProperty('_basisFix', '1'); return 0; }
+  var col = HEADER.length;                       /* dateBasis 는 맨 뒤 칸이다 */
+  var rg = sh.getRange(2, col, last - 1, 1);
+  var v = rg.getValues(), n = 0, i;
+  for (i = 0; i < v.length; i++) {
+    if (String(v[i][0]) === '새글') { v[i][0] = '미상'; n++; }
+  }
+  if (n) rg.setValues(v);
+  props_().setProperty('_basisFix', '1');
+  if (n) sumCacheClear_();
+  return n;
+}
+
 /** 실제 수집. `collectReviews` 가 자물쇠를 잡고 부른다. */
 function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
@@ -1214,6 +1239,8 @@ function sweep_(mode) {
      실패) 6분 뒤에 스스로 되살아난다. 정상으로 끝나면 아래에서 1분짜리로 바꾸거나
      지운다 — `chain_`·`clearChain_` 이 둘 다 기존 트리거를 먼저 지우므로 겹치지 않는다. */
   armWatchdog_();
+  /* 기준선이 자라던 시절의 판정을 되돌린다 — 한 번만 돈다 */
+  var fixed = repairBasis_(itemSheet);
   /* **바퀴가 새로 시작하면 그 시각을 적는다** — 화면이 남은 시간을 「이 바퀴 경과 ÷
      훑은 매장 × 남은 매장」으로 내는데, 옛 바퀴 시각으로 재면 통째로 거짓이 된다.
      「전체 재수집」 버튼은 자기가 이미 적었으므로 여기서는 커서가 0일 때만 적는다. */
@@ -1233,10 +1260,21 @@ function sweep_(mode) {
   var tail0 = Number(props_().getProperty('_tail') || 0);
   if (!(tail0 >= 0) || tail0 >= TAILS.length) tail0 = 0;
   var tailSave = 0;
-  /* **카페별로 우리가 본 최대 글번호**를 함께 만든다. 새 글의 작성일을 가르는
-     근거다 — 글번호가 이보다 크면 그 글은 우리가 그 카페를 마지막으로 훑은
-     뒤에 쓰인 것이라, 발견일과 작성일의 차이가 **수집 주기 안**으로 묶인다.
-     같은 루프에서 만든다(시트를 두 번 읽으면 그만큼 느려진다). */
+  /* ── 카페별 최대 글번호 = **이전 수집까지의 기준선** ──────────────────────
+   *
+   * 글번호가 이보다 크면 그 글은 우리가 그 카페를 마지막으로 훑은 뒤에 쓰인
+   * 것이라, 발견일과 작성일의 차이가 수집 주기 안으로 묶인다.
+   *
+   * **수집 도중에 갱신하면 안 된다**(2026-09-01 사장님 지적으로 잡았다).
+   * 자료를 비운 직후에는 기준선이 비어 있는데, 그것이 이번 실행 중에 자라면
+   * 같은 카페의 다른 글이 서로를 기준으로 삼는다 —
+   *   질의 A 가 1000번을 봄 → 기준선 1000
+   *   질의 B 가 같은 카페 1200번을 봄 → 1200 > 1000 → **「새 글」로 오판**
+   * 실제로 같은 카페에서 2~3건씩 오늘 글로 잡혔고 제목도 옛 글이었다.
+   *
+   * **기준선은 「이전 수집 시점」이어야 뜻이 있다.** 그래서 시트에서 한 번 읽고
+   * 그대로 얼린다. 처음 모으는 카페는 기준선이 없어 전부 「미상」이 된다 —
+   * 그것이 정직하다(언제 쓰였는지 우리는 정말 모른다). 다음 바퀴부터 제 몫을 한다. */
   var maxNo = {};
   if (itemSheet.getLastRow() > 1) {
     var links = itemSheet.getRange(2, 6, itemSheet.getLastRow() - 1, 1).getValues();
@@ -1244,7 +1282,7 @@ function sweep_(mode) {
       var lk0 = String(links[i][0]);
       seen[lk0] = true;
       var cn0 = cafeNo_(lk0);
-      if (cn0 && !(maxNo[cn0.id] >= cn0.no)) maxNo[cn0.id] = cn0.no;
+      if (cn0 && !(maxNo[cn0.id] >= cn0.no)) maxNo[cn0.id] = cn0.no;   /* 시트에서만 채운다 */
     }
   }
 
@@ -1406,7 +1444,8 @@ function sweep_(mode) {
           if (post.length !== 8) {
             var cn = cafeNo_(link);
             basis = (cn && maxNo[cn.id] > 0 && cn.no > maxNo[cn.id]) ? '새글' : '미상';
-            if (cn && !(maxNo[cn.id] >= cn.no)) maxNo[cn.id] = cn.no;
+            /* **여기서 기준선을 올리지 않는다** — 올리면 같은 카페의 다른 글이
+               서로를 기준으로 삼아 옛 글이 「새 글」로 잡힌다(위 주석 참조). */
           }
           add.push([
             /* **날짜는 「작성일」이 먼저다**(2026-08-31 사장님 지적 — *"후기가 올라온
@@ -1565,7 +1604,6 @@ function sweep_(mode) {
                  아래 `assertRow_` 가 다시는 조용히 어긋나지 않게 막는다. */
               var cbn = cafeNo_(clink);
               var cbasis = (cbn && maxNo[cbn.id] > 0 && cbn.no > maxNo[cbn.id]) ? '새글' : '미상';
-              if (cbn && !(maxNo[cbn.id] >= cbn.no)) maxNo[cbn.id] = cbn.no;
               add.push([
                 stamp,                                 /* 카페는 네이버가 작성일을 안 준다 */
                 STORES[cs][0], cName, '카페',
@@ -1657,6 +1695,8 @@ function sweep_(mode) {
     /* **이번 실행에서 꺼진 갈래** — 조용히 빼면 「왜 웹 글이 안 늘지」를 알 수 없다.
        화면이 이 값을 보고 한 줄 적는다. */
     srcOff: Object.keys(kindOff).map(function (x) { return srcName_(x); }),
+    /* 되돌린 줄 수 — 화면이 「N건의 작성일 근거를 되돌렸습니다」로 밝힌다 */
+    basisFixed: fixed,
     done: !stopped, from: cursor, stores: STORES.length,
     at: stopped ? cursor : STORES.length,
     /* 관심 카페 훑기를 실제로 돌았는지 · 몇 건 물었는지. **안 적으면 "왜 레몬테라스가
