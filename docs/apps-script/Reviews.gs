@@ -727,6 +727,26 @@ function mgrFind_(text) {
   return out;
 }
 
+/* ── 주소로 거르는 것 (2026-09-01 사장님 지시) ─────────────────────────────
+ *
+ * *"웹검색 중에 카카오톡 채널은 제외하도록 하겠습니다."*
+ *
+ * 웹문서 갈래를 넣으면서 **매장이 자기 카카오톡 채널로 올린 지면**이 잡힌다.
+ * 브랜드 말과 매장 이름이 함께 있으니 판정을 그대로 지나는데, **후기가 아니라
+ * 매장 자기 홍보 지면**이라 건수만 부풀린다.
+ *
+ * **글자가 아니라 주소로 거른다** — 제목·본문에는 「카카오톡」이 안 나오는 경우가
+ * 많고, 반대로 후기 본문에 「카톡으로 문의했다」가 나오면 멀쩡한 글이 날아간다.
+ * 이 저장소가 부분일치로 되풀이해 데인 그 병이다.
+ *
+ * **양쪽에 똑같이 건다** — 우리 수집과 경쟁비교에 다른 잣대를 쓰면 비중이 거짓이 된다. */
+var LINK_NOISE = ['pf.kakao.com', 'plus.kakao.com', 'talk.kakao.com'];
+function linkNoise_(link) {
+  var u = String(link || '').toLowerCase(), i;
+  for (i = 0; i < LINK_NOISE.length; i++) if (u.indexOf(LINK_NOISE[i]) >= 0) return true;
+  return false;
+}
+
 function isNoise_(text) {
   var t = norm_(text), i;
   for (i = 0; i < NOISE.length; i++) if (t.indexOf(norm_(NOISE[i])) >= 0) return true;
@@ -1065,6 +1085,24 @@ function srcName_(kind) {
 function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
   var seen = {}, i, k, n;
+  /* ── 한 갈래가 죽어도 나머지는 계속 돈다 (2026-09-01) ─────────────────────
+   *
+   * 웹문서(webkr)를 갈래에 더한 날, 그것이 `HTTP 500 SE99`(네이버 시스템 에러)를
+   * 내면서 **수집이 6번 매장에서 영영 섰다.** 오류 하나가 세 겹으로 번졌다 —
+   * ①그 매장의 남은 질의를 통째로 건너뛰고 ②실행 전체에 오류 표시가 남고
+   * ③그래서 이어달리기가 안 걸렸다.
+   *
+   * **갈래가 둘일 때는 안 드러났다.** 블로그·카페가 둘 다 안정적이었기 때문이다.
+   * 갈래를 늘리면 「하나가 죽으면 어떻게 되는가」를 함께 설계해야 한다.
+   *
+   * 그래서 **갈래별로 연속 실패를 세고, 3번이면 이번 실행에서 그 갈래를 끈다.**
+   * 한 번 성공하면 셈을 되돌린다(일시 오류였다는 뜻이다). */
+  /* **더 돌아도 소용없는 오류인가.** 인증이 막힌 것(401·403·키 없음)만 그렇다 —
+     그때는 이어달리기를 걸지 않는다. 갈래 하나가 500 을 내는 것은 그런 오류가
+     아닌데, 예전에는 그것까지 이어달리기를 막아 **6번 매장에서 영영 섰다.** */
+  var fatal = false;
+  var kindFail = {}, kindOff = {};
+  var KIND_FAIL_MAX = 3;
   var t0 = Date.now();
   /* **3.5분이다 — 4.5분에서 줄였다**(2026-08-31). 마지막 시간 검사 뒤에도 꼬리 하나
      (최대 20회 · 30초 안팎)를 더 돌고, 거기에 시트 쓰기·경쟁비교가 붙으면 6분을 넘긴다.
@@ -1209,6 +1247,7 @@ function sweep_(mode) {
     if (Date.now() - t0 > BUDGET_MS) { cursor = i; tailSave = ti; stopped = true; break; }
     var query = qs[ti];
     for (k = 0; k < kinds.length; k++) {
+      if (kindOff[kinds[k]]) continue;             /* 이번 실행에서 꺼진 갈래 */
       /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
       for (var page = 0; page < MAX_PAGES; page++) {
         /* 한 매장이 최대 32회(2종 x 꼬리말 8 x 2쪽)를 쓴다 — 매장 단위로만 보면
@@ -1218,10 +1257,24 @@ function sweep_(mode) {
            최대 20회(30초 안팎)를 더 도는데, 그 오버슛이 6분 한도를 넘기면 **그 실행이
            통째로 날아간다.** 여기서 보면 넘치는 것이 딱 1회다. */
         if (Date.now() - t0 > BUDGET_MS) { stopped = true; cursor = i; tailSave = ti; break; }
-        var j;
+        var j, kerr = '';
         try { j = search_(kinds[k], query, page * PAGE_SIZE + 1); calls++; }
-        catch (e) { serr = String(e); break; }
-        if (j.error) { serr = kinds[k] + ':' + j.error; break; }
+        catch (e) { kerr = String(e); }
+        if (!kerr && j && j.error) kerr = kinds[k] + ':' + j.error;
+        if (kerr) {
+          /* **인증이 막힌 것은 갈래 문제가 아니다** — 더 돌아도 결과가 같으므로
+             예전대로 그 실행을 멈춘다(401·403·키 없음). */
+          if (kerr.indexOf('스크립트 속성') >= 0 || kerr.indexOf('401') >= 0 || kerr.indexOf('403') >= 0) {
+            serr = kerr; fatal = true; break;
+          }
+          /* 그 밖의 오류는 **그 갈래만** 접는다. 다른 갈래와 남은 질의는 계속 돈다.
+             연속 3번이면 이번 실행에서 그 갈래를 끈다 — 헛도는 호출을 아낀다. */
+          kindFail[kinds[k]] = (kindFail[kinds[k]] || 0) + 1;
+          if (kindFail[kinds[k]] >= KIND_FAIL_MAX) kindOff[kinds[k]] = 1;
+          if (!err) err = kerr;                    /* 보고용 — 첫 오류만 */
+          break;                                   /* 이 갈래의 쪽 루프만 끝낸다 */
+        }
+        kindFail[kinds[k]] = 0;                    /* 성공했으면 셈을 되돌린다 */
         var items = j.items || [];
         if (!items.length) break;                      /* 더 없으면 다음 쪽을 안 두드린다 */
         /* **이미 가진 링크를 만났는가.** 이것이 「여기서 멈춰도 된다」는 신호다 —
@@ -1238,6 +1291,7 @@ function sweep_(mode) {
           kept++;
           var link = String(it.link || '');
           if (!link) continue;
+          if (linkNoise_(link)) continue;          /* 카카오톡 채널 등 — 후기가 아니다 */
           /* **이미 가진 글을 만났다** — `sort=date` 라 이 아래는 전부 더 오래된 글이고,
              그것을 저장한 그날 이미 훑은 영역이다. 쪽 루프가 여기서 멈춘다. */
           if (seen[link]) { hitSeen = true; continue; }
@@ -1394,7 +1448,7 @@ function sweep_(mode) {
             var cit = cItems[cn];
             got++;
             var clink = String(cit.link || '');
-            if (!clink || seen[clink]) continue;
+            if (!clink || seen[clink] || linkNoise_(clink)) continue;
             var ctext = (cit.title || '') + ' ' + (cit.description || '');
             if (isNoise_(ctext)) continue;
             /* **어느 매장 글인지는 65곳을 다 대 보고 가른다.** 매장별 질의가 아니라
@@ -1479,7 +1533,11 @@ function sweep_(mode) {
      **한도로 멈춘 것과 오류로 멈춘 것에는 걸지 않는다** — 더 돌아도 결과가 같고,
      1분마다 헛도는 트리거만 남는다. 그때는 사람이 판단할 일이다. */
   var chained = false;
-  if (stopped && !hitLimit && !err) { chained = chain_(); } else { clearChain_(); }
+  /* **일시 오류로 이어달리기를 막지 않는다**(2026-09-01 정정). 예전에는 `!err` 였는데,
+     갈래 하나가 500 을 내면 그 표시가 남아 이어달리기가 안 걸렸다 — 실제로 웹문서가
+     `HTTP 500 SE99` 를 내며 **커서 6/65 에서 영영 섰다.** 더 돌아도 소용없는 것은
+     인증이 막힌 경우뿐이므로 그때만 안 건다. */
+  if (stopped && !hitLimit && !fatal) { chained = chain_(); } else { clearChain_(); }
 
   /* 끝났으니 「도는 중」 표식을 내린다 — 안 내리면 화면이 영영 「도는 중」이라 적는다 */
   props_().deleteProperty('_runAt');
@@ -1494,6 +1552,9 @@ function sweep_(mode) {
     full: isFull, saved: saved,
     /* **어디까지 했는지 화면이 알아야 한다** — 안 그러면 *"왜 65곳이 아니라 20곳만 돌았지"*
        가 된다. `done:false` 면 「이어서 수집」을 한 번 더 누르면 된다. */
+    /* **이번 실행에서 꺼진 갈래** — 조용히 빼면 「왜 웹 글이 안 늘지」를 알 수 없다.
+       화면이 이 값을 보고 한 줄 적는다. */
+    srcOff: Object.keys(kindOff).map(function (x) { return srcName_(x); }),
     done: !stopped, from: cursor, stores: STORES.length,
     at: stopped ? cursor : STORES.length,
     /* 관심 카페 훑기를 실제로 돌았는지 · 몇 건 물었는지. **안 적으면 "왜 레몬테라스가
@@ -2196,8 +2257,10 @@ function collectRival() {
               for (var n = 0; n < items.length; n++) {
                 var it = items[n];
                 var text = (it.title || '') + ' ' + (it.description || '');
+                var lk0 = String(it.link || '');
+                if (linkNoise_(lk0)) continue;     /* 양쪽에 똑같이 — 한쪽만 걸면 비중이 거짓 */
                 if (!rivalHit_(text, brands, place)) continue;
-                var lk = String(it.link || '');
+                var lk = lk0;
                 if (got[key][lk]) continue;        /* 이미 센 글 */
                 got[key][lk] = 1;
                 var sname = srcName_(SRCS[sj]);

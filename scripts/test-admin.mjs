@@ -948,6 +948,71 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 카카오톡 채널은 후기가 아니다 (2026-09-01 사장님 지시) ───────────────
+   * *"웹검색 중에 카카오톡 채널은 제외하도록 하겠습니다."*
+   * 매장이 자기 채널로 올린 지면이라 브랜드+매장 판정을 그대로 지나는데 후기가
+   * 아니다. **글자가 아니라 주소로 거른다** — 후기 본문의 "카톡으로 문의했다"가
+   * 날아가면 안 된다(이 저장소가 부분일치로 되풀이해 데인 병이다). */
+  {
+    const gs7 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    if (fs.existsSync(gs7)) {
+      const g = fs.readFileSync(gs7, 'utf8');
+      const hits = g.split('linkNoise_(').length - 1;
+      if (!g.includes('function linkNoise_')) {
+        fail('[바이럴] 주소로 거르는 장치가 없다 — 카카오톡 채널이 후기로 잡힌다');
+      } else if (!g.includes("'pf.kakao.com'")) {
+        fail('[바이럴] 카카오톡 채널 주소가 목록에 없다');
+      /* 선언 1 + 쓰는 곳 3(매장 질의·카페 훑기·경쟁비교) = 4 */
+      } else if (hits < 4) {
+        fail(`[바이럴] 주소 거르기를 ${hits - 1}곳에만 걸었다 — 우리 수집과 경쟁비교에 다른 잣대를 쓰면 비중이 거짓이 된다`);
+      } else {
+        console.log('OK: 바이럴 카카오톡 채널 제외 — 글자가 아니라 주소로, 우리·경쟁 양쪽에 똑같이');
+      }
+    }
+  }
+
+  /* ── 한 갈래가 죽어도 나머지는 계속 돈다 (2026-09-01, 실제로 섰다) ──────────
+   *
+   * 웹문서(webkr)를 갈래에 더한 날, 그것이 `HTTP 500 SE99` 를 내면서 **수집이
+   * 6/65 에서 영영 섰다.** 프로덕션 실측 — cursor 6 · chainOn false ·
+   * error "webkr:HTTP 500 … SE99" · 한도는 1,029/20,000 로 여유.
+   *
+   * 오류 하나가 세 겹으로 번졌다 — ①그 매장의 남은 질의를 통째로 건너뛰고
+   * ②실행 전체에 오류 표시가 남고 ③그래서 이어달리기가 안 걸렸다.
+   * **갈래가 둘일 때는 안 드러났다**(블로그·카페가 둘 다 안정적이었다).
+   * 갈래를 늘리면 「하나가 죽으면 어떻게 되는가」를 함께 설계해야 한다. */
+  {
+    const gs6 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    const ix8 = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+    if (fs.existsSync(gs6) && fs.existsSync(ix8)) {
+      const g = fs.readFileSync(gs6, 'utf8');
+      const x = fs.readFileSync(ix8, 'utf8');
+      /* **이어달리기를 막는 것은 인증 오류뿐이어야 한다.** `!err` 로 두면 갈래
+         하나의 일시 500 이 그 실행을 영영 세운다 — 실제로 그랬다. */
+      if (g.includes('stopped && !hitLimit && !err')) {
+        fail('[바이럴] 일시 오류가 이어달리기를 막는다 — 갈래 하나가 500 을 내면 수집이 영영 선다');
+      } else if (!g.includes('stopped && !hitLimit && !fatal')) {
+        fail('[바이럴] 이어달리기 조건이 fatal 기준이 아니다 — 무엇이 진짜로 멈춰야 하는 오류인지 갈리지 않는다');
+      /* 인증이 막힌 것만 fatal — 더 돌아도 결과가 같다 */
+      } else if (!g.includes('fatal = true')) {
+        fail('[바이럴] fatal 을 세우는 곳이 없다 — 인증이 막혀도 헛돌게 된다');
+      /* 갈래 오류가 그 매장의 남은 질의를 죽이면 안 된다 */
+      } else if (!g.includes('kindOff') || !g.includes('kindFail')) {
+        fail('[바이럴] 갈래별 실패를 세지 않는다 — 죽은 갈래를 계속 두드려 호출을 버린다');
+      /* 성공하면 셈을 되돌려야 일시 오류로 갈래가 영영 꺼지지 않는다 */
+      } else if (!g.includes('kindFail[kinds[k]] = 0;')) {
+        fail('[바이럴] 갈래가 한 번 성공해도 실패 셈이 안 줄어든다 — 일시 오류로 영영 꺼진다');
+      /* 조용히 빼면 「왜 웹 글이 안 늘지」를 알 길이 없다 */
+      } else if (!g.includes('srcOff:')) {
+        fail('[바이럴] 꺼진 갈래를 보고하지 않는다 — 조용히 빠지면 아무도 모른다');
+      } else if (!x.includes('검색이 이번에 응답하지 않아 건너뛰었습니다')) {
+        fail('[바이럴] 화면이 꺼진 갈래를 안 밝힌다 — 「왜 웹 글이 안 늘지」를 알 수 없다');
+      } else {
+        console.log('OK: 바이럴 갈래 격리 — 하나가 죽어도 나머지는 돌고, 이어달리기는 인증 오류에만 멈춘다');
+      }
+    }
+  }
+
   /* ── 블로그·카페·웹 세 갈래 · 경쟁비교 디테일 (2026-09-01 사장님 지시) ──────
    *
    * *"블로그 카페 웹 잘 분석 바랍니다"* · *"지역별 후기 수집할 때 삼성 vs LG

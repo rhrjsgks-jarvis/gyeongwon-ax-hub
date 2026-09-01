@@ -2702,6 +2702,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           + nf(r.kept) + '건이 판정을 지났고, 그중 <b>새 글 ' + nf(r.added) + '건</b>을 더했습니다.'
           + (r.added === 0 ? ' <b>이미 모은 글은 다시 세지 않습니다</b> — 누적은 그대로입니다.' : '')
           + (r.error ? ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>' : '') + '</div>';
+        /* **꺼진 갈래를 밝힌다.** 네이버가 한 갈래만 500 을 내는 일이 있는데(실제로
+           웹문서가 그랬다), 조용히 빼면 「왜 웹 글이 안 늘지」를 알 길이 없다.
+           나머지 갈래는 계속 돈다 — 그 사실도 함께 적어야 「고장」으로 안 읽힌다. */
+        if (r.srcOff && r.srcOff.length) {
+          document.getElementById('status').innerHTML +=
+            '<div class="note warn" style="margin-top:6px"><b>' + esc(r.srcOff.join(' · '))
+            + ' 검색이 이번에 응답하지 않아 건너뛰었습니다</b> — 네이버 쪽 일시 오류입니다.'
+            + ' 나머지 갈래는 그대로 훑었고, 다음 수집 때 다시 시도합니다.</div>';
+        }
         /* **한 바퀴를 다 못 돌았으면 그렇게 적는다** — 6분 한도라 중간에서 멈춘다.
            안 적으면 *"왜 갤러리아광교가 29건이지"* 를 알 길이 없다. */
         if (r.done === false) {
