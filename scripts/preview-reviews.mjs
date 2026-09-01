@@ -93,7 +93,12 @@ const recent = [];
 const stores = Object.keys(byStore);
 const cellOf = { 수원: '수원', 성남: '성남', 용인: '용인', 평택: '평택', 안양: '안양' };
 for (let i = 0; i < 240; i++) {
-  const dated = i < 150;                       /* 앞쪽은 작성일 아는 글 — 정렬·경계선 확인용 */
+  /* **작성일을 아는 글 = 블로그다.** 네이버 카페 검색 응답에는 작성일 필드가 아예
+     없어 실측으로 `dated` 와 블로그가 1:1 로 일치한다(2,678 = 2,678).
+     예전 하네스는 `i < 150` 이라 **카페 줄에도 작성일이 붙어** 실물과 달랐다 —
+     그 상태로는 「작성일 모름」 표시도, 정렬 경계도 제대로 검증되지 않는다. */
+  const src = i % 3 === 0 ? '블로그' : '카페';
+  const dated = src === '블로그';
   const st = stores[i % stores.length];
   let region = '수원';
   for (const r of Object.keys(byRegion)) if (byRegion[r].stores.indexOf(st) >= 0) region = r;
@@ -103,11 +108,11 @@ for (let i = 0; i < 240; i++) {
   recent.push({
     date: ymd, dated: dated,
     store: 'Z' + (100 + i), storeName: st, mc: mc,
-    src: i % 3 === 0 ? '블로그' : '카페',
+    src: src,
     kind: Object.keys(KINDS)[i % 5],
     title: '[' + st + '] 혼수가전 ' + Object.keys(KINDS)[i % 5] + ' 후기 ' + (i + 1),
     link: 'https://example.com/p/' + i,
-    cafe: i % 3 === 0 ? '' : CAFES[i % CAFES.length],
+    cafe: src === '블로그' ? '' : CAFES[i % CAFES.length],
     postdate: dated ? ymd.split('-').join('') : ''
   });
 }

@@ -170,6 +170,7 @@
   .item a { color: var(--ink); text-decoration: none; font-size: 12.5px; font-weight: 600; }
   .item a:hover { color: var(--blue); text-decoration: underline; }
   .meta { font-size: 10.5px; color: var(--mute); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .yrs { display: inline-flex; gap: 4px; margin-left: 6px; }
   .tag { background: #EEF2FF; color: var(--blue); border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: 10px; }
   /* 매장 신호 — 기존 색 변수만 쓴다(의존성 0) */
   .sighd { font-size: 11px; font-weight: 800; color: var(--blue); margin: 10px 0 4px; }
@@ -676,6 +677,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <button class="rbtn" data-d="30">30일</button>
       <button class="rbtn" data-d="90">90일</button>
       <button class="rbtn" data-d="0">전체</button>
+      <!-- 연도 칩 (2026-09-01 사장님 요청 — *"2026년 후기만 몰아본다든지"*).
+           **자료에 있는 해만 세운다** — 없는 해를 세우면 눌러도 0건이다.
+           `minDate`~`maxDate` 가 작성일 범위라 그대로 쓴다. -->
+      <span class="yrs" id="r-years"></span>
       <span class="cntxt" id="r-note"></span>
     </div>
     <div class="picked" id="picked"></div>
@@ -1740,6 +1745,29 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var want = d ? ymdAgo(d - 1) : '';
       b.className = 'rbtn' + ((fromDate === want && !toDate) ? ' on' : '');
     });
+    /* 연도 칩 — 자료가 걸친 해만. 오래된 해부터가 아니라 **최신 해부터** 왼쪽에 둔다
+       (상담에서 먼저 찾는 것이 올해다). */
+    var yb = document.getElementById('r-years');
+    if (yb) {
+      var y1 = Number(String(DATA.minDate || '').slice(0, 4));
+      var y2 = Number(String(DATA.maxDate || '').slice(0, 4));
+      if (y1 && y2 && y2 >= y1 && y2 - y1 < 30) {
+        var yh = '';
+        for (var yy = y2; yy >= y1; yy--) {
+          var on2 = (fromDate === yy + '-01-01' && toDate === yy + '-12-31');
+          yh += '<button type="button" class="rbtn ybtn' + (on2 ? ' on' : '') + '" data-y="' + yy + '">' + yy + '</button>';
+        }
+        yb.innerHTML = yh;
+        Array.prototype.forEach.call(yb.querySelectorAll('.ybtn'), function (b2) {
+          b2.onclick = function () {
+            var y = b2.dataset.y;
+            if (fromDate === y + '-01-01' && toDate === y + '-12-31') { fromDate = ''; toDate = ''; }
+            else { fromDate = y + '-01-01'; toDate = y + '-12-31'; }
+            page = 1; render();
+          };
+        });
+      } else { yb.innerHTML = ''; }
+    }
     /* **무엇이 이 거름망에 안 걸리는지 적는다** — 카페 글은 작성일을 모른다 */
     if (note) {
       note.textContent = (fromDate || toDate)
@@ -2016,10 +2044,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       /* **「추정」이라 적으면 안 된다** — 우리가 어림한 날짜로 읽힌다.
          카페 줄의 이 값은 **우리가 그 글을 처음 본 날**이지 글쓴이가 쓴 날이 아니다.
          뜻을 그대로 적는다(2026-08-31 사장님 검증 요청에서 갈라낸 구분). */
+      /* **발견일을 날짜처럼 적지 않는다** (2026-09-01 사장님: *"발견일은 중요하지
+         않습니다"* · *"2023년 글도 8월 31일 발견으로 나옵니다. 문제가 심각합니다"*).
+         예전에는 「발견 2026-08-31」이라 적어 **2023년 글이 2026년 글처럼 읽혔다.**
+         날짜 자리에는 모른다고 적고, 발견일은 도구설명으로 물러난다 — 지우지는
+         않는다(언제 우리 그물에 걸렸는지는 수집 상태를 볼 때 쓰인다). */
       m.push(r.dated
         ? '작성 ' + esc(r.date)
-        : '<span class="tag c" title="네이버가 카페 글의 작성일을 주지 않아, 우리가 처음 찾은 날입니다">발견 '
-          + esc(r.date) + '</span>');
+        : '<span class="tag c" title="네이버가 카페 글의 작성일을 주지 않습니다. 우리가 처음 찾은 날은 '
+          + esc(r.date) + ' 입니다">작성일 모름</span>');
       /* 작성일은 바로 위 줄이 이미 적었다 — 두 번 적으면 같은 날짜가 나란히 두 번 나온다 */
       return '<div class="item"><a href="' + esc(r.link) + '">' + esc(r.title) + '</a>' +
         '<div class="meta">' + m.join('<span style="color:#D1D5DB">·</span>') + '</div></div>';
