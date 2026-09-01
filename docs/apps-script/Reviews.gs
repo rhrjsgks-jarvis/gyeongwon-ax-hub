@@ -1232,6 +1232,12 @@ function sweep_(mode) {
      실제로 배포본이 **네 번을 돌고도 커서가 0에서 한 칸도 안 움직였다**(실측) —
      강제 종료되면 그 실행이 통째로 사라지고 다음 실행이 같은 자리에서 또 죽는다. */
   var BUDGET_MS = 3.5 * 60 * 1000;
+  /* **LG 비교는 자기 몫의 시간을 따로 받는다**(2026-09-02). 예전에는 매장 훑기와
+     같은 `t0 + BUDGET_MS` 를 받았는데, **그 앞의 매장 훑기가 그 예산을 이미 다 쓰고**
+     넘겨주므로 이어 돌 때마다 첫 줄에서 곧장 멈췄다 — 지역 커서가 1(성남)에 박힌 채
+     **수원 한 곳만 화면에 남았다**(사장님 지적). 지금은 매장 훑기보다 **먼저** 돌고
+     자기 예산을 쓴다. 하루 한 번이라 며칠씩 매장 훑기를 굶기지 않는다. */
+  var RIVAL_MS = 90 * 1000;
   /* **지금 돌고 있다는 것을 적어 둔다**(2026-08-31). 커서·사용량·로그는 전부 실행이
      **끝날 때** 한 번에 찍히므로, 4.5분 도는 동안에는 **어떤 값도 안 변한다** —
      새로고침해도 완전히 멈춘 것처럼 보인다. 사장님이 「멈췄다」고 느끼신 데에 이
@@ -1360,6 +1366,28 @@ function sweep_(mode) {
       var days = (new Date(stamp) - new Date(fullAt)) / 86400000;
       isFull = !(days >= 0 && days < FULL_EVERY_DAYS);
     }
+  }
+
+
+  /* ── LG 비교 (당사 vs LG 지역별 비중) ─────────────────────────────
+     **매장 훑기보다도 앞이다.** 40회짜리인데 맨 뒤에 두었더니
+     그 앞의 148회에 시간을 다 쓰고 **영영 자기 차례가 안 왔다**(2026-09-01 실측).
+     사장님이 화면에서 가장 먼저 찾는 값이라 순서를 앞으로 옮겼다. **그런데 매장 훑기
+     뒤에 두는 것으로는 모자랐다** — 시간을 그쪽이 다 쓰고 넘겨 이어 돌 자리가 없었다.
+     **하루에 한 번** — 같은 날 여러 번 쌓이면 어느 것이 그날 값인지 알 수 없다.
+     **예외를 삼키지 않는다** — 조용히 실패하면 왜 비었는지 아무도 모른다. */
+  var rivalRun = null;
+  if (rivalDue_() && !err && !over()) {
+    /* **마감 시각을 넘긴다.** 경쟁비교는 갈래가 셋이 되며 일이 3배가 됐는데
+       시간 검사가 없어 매번 6분을 넘겨 죽었다 — 못 끝내니 `_rivalAt` 도 안 적히고
+       다음 실행이 또 돌아 **여덟 번 잇달아 죽자 감시 트리거가 포기했다.**
+       한 바퀴를 못 끝내면 다음 실행이 **이어서** 돈다(지역 커서). */
+    try {
+      rivalRun = collectRival(t0 + RIVAL_MS);
+      if (rivalRun && rivalRun.done) props_().setProperty('_rivalAt', stamp);
+      sumCacheClear_();
+    }
+    catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
   }
 
   var stopped = false;
@@ -1533,26 +1561,6 @@ function sweep_(mode) {
     }
     props_().setProperty('_cursor', String(i + 1));
     props_().setProperty('_tail', '0');
-  }
-
-  /* ── LG 비교 (당사 vs LG 지역별 비중) ─────────────────────────────
-     **매장 훑기 바로 뒤, 매니저·카페 훑기보다 앞이다.** 40회짜리인데 맨 뒤에 두었더니
-     그 앞의 148회에 시간을 다 쓰고 **영영 자기 차례가 안 왔다**(2026-09-01 실측).
-     사장님이 화면에서 가장 먼저 찾는 값이라 순서를 앞으로 옮겼다.
-     **하루에 한 번** — 같은 날 여러 번 쌓이면 어느 것이 그날 값인지 알 수 없다.
-     **예외를 삼키지 않는다** — 조용히 실패하면 왜 비었는지 아무도 모른다. */
-  var rivalRun = null;
-  if (rivalDue_() && !err && !over()) {
-    /* **마감 시각을 넘긴다.** 경쟁비교는 갈래가 셋이 되며 일이 3배가 됐는데
-       시간 검사가 없어 매번 6분을 넘겨 죽었다 — 못 끝내니 `_rivalAt` 도 안 적히고
-       다음 실행이 또 돌아 **여덟 번 잇달아 죽자 감시 트리거가 포기했다.**
-       한 바퀴를 못 끝내면 다음 실행이 **이어서** 돈다(지역 커서). */
-    try {
-      rivalRun = collectRival(t0 + BUDGET_MS);
-      if (rivalRun && rivalRun.done) props_().setProperty('_rivalAt', stamp);
-      sumCacheClear_();
-    }
-    catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
   }
 
   /* ── 매니저 이름 훑기 ────────────────────────────────────────
@@ -1917,7 +1925,7 @@ function resetAll() {
     });
     /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
        옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
-    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr']
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp']
       .forEach(function (k) { props_().deleteProperty(k); });
     props_().setProperty('_cursor', '0');
     sumCacheClear_();
@@ -2427,6 +2435,15 @@ function collectRival(deadline) {
   var areas = Object.keys(AREA_Q), rows = [], calls = 0, err = '';
   var from = Number(props_().getProperty('_rivalCur') || 0);
   if (!(from >= 0) || from >= areas.length) from = 0;
+  /* ── **한 회차는 도장이 하나다** (2026-09-02) ────────────────────────────
+   * `rival_()` 은 **가장 늦은 도장을 가진 줄만** 화면에 낸다 — 한 회차가 통째로
+   * 쓰이던 시절의 규칙이다. 그런데 이어 돌기가 생기며 지역마다 도장이 달라져
+   * **마지막 조각 한 지역만 남았다**(수원만 보이던 증상의 나머지 절반).
+   * 그래서 회차를 시작할 때 도장을 적어 두고 이어 돌 때 그대로 쓴다.
+   * **도장을 모르는데 중간부터라면 처음부터 다시 돈다** — 앞서 쓴 줄들이 어느
+   * 도장을 달고 있는지 알 수 없어, 이어 붙이면 화면에 반쪽만 뜬다. */
+  var cyStamp = String(props_().getProperty('_rivalStamp') || '');
+  if (!cyStamp || from === 0) { cyStamp = stamp; props_().setProperty('_rivalStamp', cyStamp); from = 0; }
   var stoppedR = false;
 
   /* **꼬리말로 질의를 쪼갠다 — 양쪽에 똑같이.**
@@ -2513,7 +2530,7 @@ function collectRival(deadline) {
     var gO = a ? lastAdd.ours / a : 0, gR = b ? lastAdd.rival / b : 0;
     var skew = Math.abs(gO - gR) > 0.08;
     rows.push([
-      stamp, area, a, b,
+      cyStamp, area, a, b,
       skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
       skew ? 'Y' : '',
       places.join(' · '),
@@ -2529,7 +2546,7 @@ function collectRival(deadline) {
   if (calls) addUsage_(calls);
   /* 어디까지 했는지 적는다. 한 바퀴를 마쳤으면 지운다 — 다음 바퀴가 처음부터 돈다. */
   var done = !stoppedR && !err;
-  if (done) props_().deleteProperty('_rivalCur');
+  if (done) { props_().deleteProperty('_rivalCur'); props_().deleteProperty('_rivalStamp'); }
   else props_().setProperty('_rivalCur', String(ai));
   return { rows: rows.length, calls: calls, error: err, done: done, at: ai, areas: areas.length };
 }

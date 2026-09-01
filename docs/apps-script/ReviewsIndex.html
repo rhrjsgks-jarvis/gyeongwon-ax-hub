@@ -766,6 +766,46 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
      날짜 분류에서 제외해 주세요, 기타로 분류합니다"*). 날짜 필터는 원래 그 글들을
      빼는데, 뺀 것을 **볼 길이 없었다** — 「기타」가 그 자리다. */
   var dateOther = false;
+  /* ── **같은 글은 한 줄로 접는다** (2026-09-02 사장님 결정 ⓐ) ────────────
+   * 주소가 같은 중복은 이미 `dedupeReviews` 가 치운다(실측 0건). 그런데 화면에
+   * 중복처럼 보이는 것이 따로 있다 — **한 블로거가 같은 제목으로 여러 번 올린**
+   * 홍보글이다(실측 158묶음 · 122묶음이 같은 곳 안에서 반복 · 최대 6회).
+   *
+   * **지우지 않는다.** 서로 다른 주소의 실재하는 글이라 「중복」이 아니고,
+   * 지우면 되돌릴 수 없다. 접는 것은 언제든 펼 수 있다.
+   *
+   * **작성일을 아는 글과 모르는 글은 섞어 접지 않는다** — 목록 가운데 그어지는
+   * 경계선이 그 둘을 가르는데, 섞어 접으면 그 선의 뜻이 무너진다. */
+  var foldDup = true;
+
+  /** 접는 열쇠 — 제목(태그·공백 제거) + 매장 + 작성일을 아는가 */
+  function foldKey(r) {
+    var t = String(r.title || '').replace(/<[^>]*>/g, '').replace(/[ 	]/g, '').toLowerCase();
+    return t + '|' + String(r.store || '') + '|' + (r.dated ? '1' : '0');
+  }
+
+  /** 목록을 묶음으로 접는다. 끄면 한 줄에 한 묶음이라 결과가 원래와 같다. */
+  function foldRows(rows) {
+    var out = [], idx = {}, i, k;
+    for (i = 0; i < rows.length; i++) {
+      if (!foldDup) { out.push({ r: rows[i], dups: [] }); continue; }
+      k = foldKey(rows[i]);
+      if (idx[k] === undefined) { idx[k] = out.length; out.push({ r: rows[i], dups: [] }); }
+      else out[idx[k]].dups.push(rows[i]);
+    }
+    return out;
+  }
+
+  /* 접힌 묶음 — 「감춘 것」이 아니라 「접은 것」으로 보여야 한다 */
+  (function () {
+    var st = document.createElement('style');
+    st.textContent = '.foldwrap{margin:-2px 0 6px 0}'
+      + '.foldb{font-size:11.5px;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;'
+      + 'border-radius:999px;padding:2px 9px;cursor:pointer}'
+      + '.foldb:hover{background:#E2E8F0}'
+      + '.folded{border-left:2px solid #E2E8F0;margin:5px 0 0 8px;padding-left:8px}';
+    document.head.appendChild(st);
+  })();
 
   function esc(s) {
     return String(s == null ? '' : s)
@@ -2150,14 +2190,18 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
      * **쪽 수가 줄면 마지막 쪽으로 당긴다** — 필터를 좁혀 3쪽이 1쪽이 됐는데 그대로
      * 3쪽을 보고 있으면 **빈 화면**이 뜨고, 사람은 「없다」로 읽는다.
      */
-    var total = rows.length;
+    /* **쪽 나누기는 접은 뒤에 한다.** 접기 전에 나누면 한 쪽에 같은 글이
+       여섯 줄 들어차 20건짜리 쪽이 사실상 15건이 된다. */
+    var groups = foldRows(rows);
+    var total = groups.length, raw = rows.length;
     var pages = Math.max(1, Math.ceil(total / pageSize));
     if (page > pages) page = pages;
     var from = (page - 1) * pageSize;
-    var view = rows.slice(from, from + pageSize);
+    var view = groups.slice(from, from + pageSize);
 
     var wasDated = null;
-    var html = view.map(function (r) {
+    var html = view.map(function (gp, gi2) {
+      var r = gp.r;
       var sep = '';
       if (wasDated !== false && !r.dated) {
         sep = '<div class="split">' + (wasDated === null ? '이 목록은 전부 ' : '여기부터는 ')
@@ -2165,7 +2209,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           + '작성일을 주지 않아 <b>우리가 처음 찾은 날</b>을 적었습니다. 일간·주간·월간에는 세지 않습니다.</div>';
       }
       wasDated = !!r.dated;
-      return sep + itemHtml(r);
+      /* **접힌 것을 감추지 않고 「외 N건」으로 밝힌다.** 몇 건이 접혔는지
+         안 적으면 화면이 자료를 조용히 줄인 것이 된다. 눌러서 펼 수 있다. */
+      if (!gp.dups.length) return sep + itemHtml(r);
+      return sep + itemHtml(r)
+        + '<div class="foldwrap">'
+        + '<button type="button" class="foldb" data-gi="' + (from + gi2) + '">'
+        + '같은 제목 <b>외 ' + gp.dups.length + '건</b> 펼치기</button>'
+        + '<div class="folded" hidden>' + gp.dups.map(itemHtml).join('') + '</div>'
+        + '</div>';
     }).join('');
 
     /* **받아온 것이 전부가 아니면 목록 끝에서 그렇게 적는다.** 8,711건 중 3,000건만
@@ -2195,7 +2247,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
             + '" data-sz="' + n2 + '">' + n2 + '</button>';
         }).join('')
       + '</span>'
-      + '<span>' + nf(total) + '건 중 <b class="pgnum">' + nf(from + 1) + '~' + nf(from + view.length) + '</b></span>'
+      + '<span>' + nf(total) + '건 중 <b class="pgnum">' + nf(from + 1) + '~' + nf(from + view.length) + '</b>'
+      /* **원본 건수를 함께 적는다.** 접힌 수만 보이면 자료가 준 것으로 읽힌다 —
+         「몇 건이 빠졌는지 적는다」는 이 화면의 규칙 그대로다. */
+      + (foldDup && raw > total ? ' <span class="cntxt">(같은 제목 접음 · 원본 ' + nf(raw) + '건)</span>' : '')
+      + '</span>'
+      + '<span><button type="button" class="pgb foldall">' + (foldDup ? '같은 글 펴기' : '같은 글 접기') + '</button></span>'
       + '<span style="margin-left:auto">'
       + '<button type="button" class="pgb" data-pg="1"' + (page === 1 ? ' disabled' : '') + '>« 처음</button> '
       + '<button type="button" class="pgb" data-pg="' + (page - 1) + '"' + (page === 1 ? ' disabled' : '') + '>‹ 이전</button> '
@@ -2209,10 +2266,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var nDated = 0, nUndated = 0;
     for (var li = 0; li < rows.length; li++) { if (rows[li].dated) nDated++; else nUndated++; }
     var pageHasUndated = false;
-    for (var vi = 0; vi < view.length; vi++) if (!view[vi].dated) pageHasUndated = true;
+    /* **`view` 가 묶음이 되었으므로 안쪽 줄(`.r`)을 본다.** 묶음에서 그 칸을 바로 읽으면
+       늘 `undefined` 라 조건이 항상 참이 되어 **안내가 영영 안 뜬다** — 조용히 사라지는 종류다. */
+    for (var vi = 0; vi < view.length; vi++) if (!view[vi].r.dated) pageHasUndated = true;
     var lead = '';
     if (srcFilter === '전체' && nUndated > 0 && nDated > 0 && !pageHasUndated) {
-      var cafePage = Math.floor(nDated / pageSize) + 1;
+      /* 쪽은 묶음으로 세므로 여기서도 묶음으로 센다 — 원본 건수로 세면 엉뚱한 쪽을 가리킨다 */
+      var gDated = 0;
+      for (var gj = 0; gj < groups.length; gj++) if (groups[gj].r.dated) gDated++;
+      var cafePage = Math.floor(gDated / pageSize) + 1;
       lead = '<div class="split">이 목록은 <b>작성일을 아는 글</b>(' + nf(nDated) + '건)이 먼저 오고,';
       lead += ' <b>작성일을 모르는 글</b> ' + nf(nUndated) + '건은 <b>' + nf(cafePage) + '쪽</b>부터 있습니다';
       lead += ' — 네이버가 카페 글의 작성일을 주지 않아 뒤로 보냅니다.';
@@ -2238,6 +2300,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     /* 출처 칩과 **같은 일**을 한다 — 두 길이 다르게 동작하면 화면이 두 말을 한다. */
     var jumpc = el.querySelector('.jumpc');
     if (jumpc) jumpc.onclick = function () { srcFilter = '카페'; page = 1; render(); };
+
+    /* 「외 N건 펼치기」 — **자리를 지킨 채 그 자리에서 편다.** 다시 그리면
+       스크롤이 위로 튀어 무엇을 보고 있었는지 잃는다. */
+    Array.prototype.forEach.call(el.querySelectorAll('.foldb'), function (b) {
+      b.onclick = function () {
+        var box = b.parentNode.querySelector('.folded');
+        if (!box) return;
+        box.hidden = !box.hidden;
+        b.innerHTML = box.hidden ? b.innerHTML.split('접기').join('펼치기') : b.innerHTML.split('펼치기').join('접기');
+      };
+    });
+    /* 접기 자체를 껐다 켠다 — **1쪽으로 되돌린다.** 줄 수가 바뀌어 보던 쪽이
+       빈 화면이 될 수 있고, 그러면 사람은 「없다」로 읽는다. */
+    Array.prototype.forEach.call(el.querySelectorAll('.foldall'), function (b) {
+      b.onclick = function () { foldDup = !foldDup; page = 1; renderList(); };
+    });
   }
 
   /** 한 줄. **경계 표시와 갈라 둔다** — 목록을 그리는 곳이 둘이 되면 한쪽만 고쳐진다. */

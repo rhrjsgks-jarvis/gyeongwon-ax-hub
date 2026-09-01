@@ -1296,6 +1296,77 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 같은 제목은 한 줄로 접는다 (2026-09-02 사장님 결정 ⓐ) ──────────────
+   * *"중복된 후기는 url 기준으로 모두 삭제할 필요가 있습니다"* → 재 보니 **주소
+   * 기준 중복은 이미 0건**이고(dedupe 가 돌고 있다), 화면에 중복처럼 보이는 것은
+   * **한 블로거가 같은 제목으로 여러 번 올린 홍보글**이었다(실측 158묶음).
+   *
+   * 사장님이 ⓐ(접어서 보여주기)를 고르셨다. **지우지 않는다** — 서로 다른 주소의
+   * 실재하는 글이고, 지우면 되돌릴 수 없다.
+   *
+   * **네 가지를 지킨다** — 하나만 빠져도 화면이 자료를 조용히 줄인 것이 된다:
+   *  ① 접는다  ② 몇 건이 접혔는지 적는다  ③ 펼 수 있다  ④ 원본 건수를 함께 적는다 */
+  {
+    const h = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    if (!h.includes('function foldRows')) {
+      fail('[바이럴] 같은 제목을 접지 않는다');
+    } else if (!h.includes('var groups = foldRows(rows)')) {
+      fail('[바이럴] 쪽 나누기가 접기보다 앞이다 — 한 쪽에 같은 글이 여러 줄 들어찬다');
+    } else if (!h.includes('같은 제목 <b>외 ')) {
+      fail('[바이럴] 몇 건이 접혔는지 안 적는다 — 화면이 자료를 조용히 줄인 것이 된다');
+    } else if (!h.includes('class="folded" hidden')) {
+      fail('[바이럴] 접힌 것을 아예 안 담는다 — 펼 수가 없다');
+    } else if (!h.includes('원본 ')) {
+      fail('[바이럴] 원본 건수를 함께 안 적는다');
+    } else if (!h.includes('foldall')) {
+      fail('[바이럴] 접기를 끄는 길이 없다');
+    } else if (h.includes('view[vi].dated')) {
+      fail('[바이럴] 묶음에서 .dated 를 바로 읽는다 — 늘 undefined 라 카페 안내가 영영 안 뜬다');
+    } else if (!h.includes('groups[gj].r.dated')) {
+      fail('[바이럴] 카페가 몇 쪽부터인지를 원본 건수로 센다 — 접으면 엉뚱한 쪽을 가리킨다');
+    } else if (h.indexOf("r.dated ? '1' : '0'") < 0) {
+      fail('[바이럴] 작성일을 아는 글과 모르는 글을 섞어 접는다 — 목록 가운데 경계선의 뜻이 무너진다');
+    } else {
+      console.log('OK: 바이럴 같은 제목 접기 — 접고 · 밝히고 · 펼 수 있고 · 원본을 함께 적는다');
+    }
+  }
+
+  /* ── LG 비교가 여섯 지역을 다 채운다 (2026-09-02 사장님 지적) ────────────
+   * *"지난번엔 지역별로 LG 랑 편차가 몇 퍼센트인지 나왔는데 왜 이번엔 수원만 보이나요?"*
+   *
+   * 원인이 **둘이었고 둘 다 이어 돌기가 생기며 났다**:
+   *  ① 예산 — 매장 훑기가 `t0 + BUDGET_MS` 를 다 쓰고 넘겨, 이어 도는 실행마다
+   *     첫 줄에서 곧장 멈췄다(지역 커서가 1에 박힘). 지금은 **매장 훑기보다 먼저**
+   *     돌고 **자기 예산**(`RIVAL_MS`)을 쓴다.
+   *  ② 도장 — `rival_()` 이 「가장 늦은 도장」만 그리는데 지역마다 도장이 달라져
+   *     마지막 조각만 남았다. 지금은 회차 하나에 도장 하나다(`_rivalStamp`).
+   *
+   * **둘 다 검사한다** — 한쪽만 고치면 여전히 반쪽만 뜬다. */
+  {
+    const g = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const iRival = g.indexOf('rivalRun = collectRival');
+    const iLoop  = g.indexOf('for (i = cursor; i < STORES.length; i++)');
+    if (iRival < 0 || iLoop < 0) {
+      fail('[바이럴] LG 비교나 매장 훑기를 못 찾음 — 검사가 낡았다');
+    } else if (iRival > iLoop) {
+      fail('[바이럴] LG 비교가 매장 훑기 뒤에 있다 — 시간을 그쪽이 다 쓰고 넘겨 영영 이어 돌지 못한다');
+    } else if (!g.includes('collectRival(t0 + RIVAL_MS)')) {
+      fail('[바이럴] LG 비교가 자기 예산을 안 쓴다 — 남의 예산을 물려받으면 0개 지역을 돈다');
+    } else if (!g.includes('var RIVAL_MS')) {
+      fail('[바이럴] RIVAL_MS 가 없다');
+    } else if (!g.includes("props_().getProperty('_rivalStamp')")) {
+      fail('[바이럴] 회차 도장을 기억하지 않는다 — 이어 돌면 지역마다 도장이 달라 마지막 조각만 화면에 뜬다');
+    } else if (!g.includes('cyStamp, area, a, b,')) {
+      fail('[바이럴] 줄에 회차 도장을 안 찍는다');
+    } else if (!g.includes("deleteProperty('_rivalStamp')")) {
+      fail('[바이럴] 회차를 마쳐도 도장을 안 지운다 — 다음 바퀴가 옛 도장을 물려받는다');
+    } else if (!g.includes("'_rivalCur', '_rivalStamp'")) {
+      fail('[바이럴] 자료를 비워도 회차 상태가 남는다 — 다음 수집이 중간부터 돈다');
+    } else {
+      console.log('OK: 바이럴 LG 비교 — 매장 훑기보다 먼저 · 자기 예산 · 회차 도장 하나');
+    }
+  }
+
   /* ── 작성일을 모르는 글은 「기타」로 (2026-09-01 사장님 지시) ──────────────
    * *"작성일을 모르는 것은 날짜 분류에서 제외해 주세요, 기타로 분류합니다."*
    *
@@ -2136,7 +2207,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         if (!/[20, 40, 60, 80, 100]/.test(ix2)) bad.push('쪽 크기 선택(20·40·60·80·100)이 없다');
         /* **정규식 대신 문자열 포함으로 본다** — 이스케이프가 없으면 heredoc·셸이
            역슬래시를 먹어도 뜻이 안 바뀐다(이 회차에 여섯 번 데었다). */
-        if (!ix2.includes('rows.slice(from, from + pageSize)')) bad.push('한 쪽 분량만 그리지 않는다 — 전부 그리면 쪽이 뜻이 없다');
+        /* **이름이 `rows` → `groups` 로 바뀌었다**(같은 제목 접기, 2026-09-02).
+           뜻은 그대로다 — 「한 쪽 분량만 잘라 그리는가」. */
+        if (!ix2.includes('groups.slice(from, from + pageSize)')) bad.push('한 쪽 분량만 그리지 않는다 — 전부 그리면 쪽이 뜻이 없다');
         /* **쪽 수가 줄면 마지막 쪽으로 당긴다** — 안 그러면 필터를 좁혔을 때 빈 화면이 뜬다 */
         if (!ix2.includes('if (page > pages) page = pages;')) bad.push('쪽 수가 줄었을 때 빈 화면이 뜬다');
         /* **필터가 바뀌면 1쪽으로** — 바꾸는 길이 여덟이라 한 곳(서명)에서 본다 */

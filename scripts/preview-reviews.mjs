@@ -116,7 +116,10 @@ for (let i = 0; i < 240; i++) {
      쓰인 것이 확실한 글. 발견일을 작성일로 쓰고 화면이 ≈ 를 붙인다.
      하네스에 이 경우가 없으면 그 표시를 영영 검증하지 못한다. */
   const approx = !dated && i % 7 === 0;
-  const st = stores[i % stores.length];
+  /* 11줄에 한 번은 **같은 매장의 같은 제목**이 되게 한다 — 접기 길을 지나가려면
+     매장까지 같아야 한다(열쇠가 제목+매장이다). */
+  const dupRow = i % 11 === 0;
+  const st = dupRow ? stores[0] : stores[i % stores.length];
   let region = '수원';
   for (const r of Object.keys(byRegion)) if (byRegion[r].stores.indexOf(st) >= 0) region = r;
   const mc = region === '강원' ? ['원주', '춘천', '강릉', '속초'][i % 4] : cellOf[region];
@@ -124,10 +127,14 @@ for (let i = 0; i < 240; i++) {
   const ymd = d.toISOString().slice(0, 10);
   recent.push({
     date: ymd, dated: dated || approx, approx: approx,
-    store: 'Z' + (100 + i), storeName: st, mc: mc,
+    store: 'Z' + (100 + stores.indexOf(st)), storeName: st, mc: mc,
     src: src,
     kind: Object.keys(KINDS)[i % 5],
-    title: '[' + st + '] 혼수가전 ' + Object.keys(KINDS)[i % 5] + ' 후기 ' + (i + 1),
+    /* **같은 제목을 일부러 섞는다**(2026-09-02). 실물에는 한 블로거가 같은 제목으로
+       여러 번 올린 홍보글이 158묶음 있다 — 모의에 없으면 「접기」 길을 한 번도
+       지나가지 않아, 화면을 눈으로 봐도 그 자리가 비어 보인다. */
+    title: (dupRow ? '[' + st + '] 위드유 웨딩박람회 일정과 혜택 안내'
+                         : '[' + st + '] 혼수가전 ' + Object.keys(KINDS)[i % 5] + ' 후기 ' + (i + 1)),
     link: 'https://example.com/p/' + i,
     cafe: src === '블로그' ? '' : CAFES[i % CAFES.length],
     postdate: dated ? ymd.split('-').join('') : ''
