@@ -1190,6 +1190,33 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 트리거가 남아 있다고 도는 것은 아니다 (2026-09-02 사장님이 걸렸다) ─────
+   *
+   * 자동 재개가 여덟 번 실패로 포기했는데 **옛 트리거가 남아 `chainOn:true`** 로
+   * 왔다. 그때 버튼이 「지금 한 번 더」라 적혀 **「안 눌러도 되나 보다」로 읽혔고**,
+   * 아무도 안 눌러 밤새 멈춰 있을 뻔했다.
+   *
+   * 죽은 신호가 둘이다 — `chainErr` 가 있거나 「도는 중」이 10분을 넘었을 때.
+   * 화면이 이미 쓰는 기준(10분)을 그대로 쓴다. */
+  {
+    const ixD = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+    if (fs.existsSync(ixD)) {
+      const x = fs.readFileSync(ixD, 'utf8');
+      if (x.includes('var auto = !!DATA.chainOn;')) {
+        fail('[바이럴] 트리거가 있으면 도는 것으로 친다 — 포기한 상태에서도 「안 눌러도 된다」로 읽힌다');
+      } else if (!x.includes('!DATA.chainErr')) {
+        fail('[바이럴] 자동 재개가 포기했는데도 자동으로 친다');
+      } else if (!x.includes('runMin > 10')) {
+        fail('[바이럴] 「도는 중」이 굳은 것을 자동으로 친다 — 10분이 넘으면 죽은 것이다');
+      /* 멈췄으면 무엇을 누를지 그 자리에 적어야 한다 */
+      } else if (!x.includes('자동 이어가기가 멈춰 있습니다')) {
+        fail('[바이럴] 멈춘 사실과 무엇을 누를지 화면이 안 적는다');
+      } else {
+        console.log('OK: 바이럴 이어달리기 표시 — 트리거가 남아도 죽었으면 자동이 아니라고 적는다');
+      }
+    }
+  }
+
   /* ── 꼬리 작업이 6분을 넘겨 수집을 여덟 번 죽이고 있었다 (2026-09-01) ──────
    *
    * 경쟁비교에 웹문서를 더하며 일이 3배가 됐는데 **시간 검사가 없었다.**

@@ -553,6 +553,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            새 줄이 다른 것을 담는다 — 섞어 두면 「블로그 36%」 같은 값이 반은 옛
            규칙, 반은 새 규칙이 되어 화면이 조용히 틀린다. -->
       <button class="btn danger" id="wipe">자료 비우고 처음부터</button>
+      <div id="chainerr"></div>
       <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
       <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
@@ -2325,9 +2326,24 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
        적으면 **다 해 놓고 또 누르게 만든다.** 서버는 다음 실행에서 0으로 되돌린다. */
     var mid = cur > 0 && cur < tot;
     /* **스스로 이어 도는 중이면 사람을 부르지 않는다.** 이 구분이 없으면 사장님이
-       버튼을 또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다. */
-    var auto = !!DATA.chainOn;
+       버튼을 또 눌러 자물쇠에 막히고 *"눌러도 아무 일이 없다"* 가 된다.
+
+       **다만 트리거가 남아 있다고 도는 것은 아니다**(2026-09-02 사장님이 걸렸다).
+       자동 재개가 포기한 상태(`chainErr`)에서도 옛 트리거가 남아 `chainOn` 이
+       true 로 오고, 그때 버튼이 「지금 한 번 더」라 적혀 **「안 눌러도 되나 보다」로**
+       읽힌다. 그리고 아무도 안 눌러 밤새 멈춰 있게 된다.
+       또 하나 — **「도는 중」이 10분을 넘으면 죽은 것**이다(화면이 이미 쓰는 기준). */
+    var runMin = DATA.runAt ? (Date.now() - Number(DATA.runAt)) / 60000 : 0;
+    var auto = !!DATA.chainOn && !DATA.chainErr && !(runMin > 10);
     if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '최근 것만 수집');
+    /* 자동 재개가 포기했으면 **무엇을 누르면 되는지**를 그 자리에 적는다.
+       예전 문구는 「전체 재수집을 눌러 다시 시작하세요」였는데, 원인이 꼬리 작업
+       하나였고 매장 수집은 멀쩡했다 — 처음부터 돌면 이미 모은 것을 또 훑는다. */
+    if (DATA.chainErr) {
+      var eb = document.getElementById('chainerr');
+      if (eb) eb.innerHTML = '<div class="note warn"><b>자동 이어가기가 멈춰 있습니다</b> — 위의 <b>「'
+        + esc(b.textContent) + '」</b> 를 한 번 눌러 주세요. 그 실행이 끝나면 다시 스스로 이어 갑니다.<br><span class="mini">' + esc(DATA.chainErr) + '</span></div>';
+    }
     /* **전체 재수집이 도는 중이면 그렇게 적는다** — 안 적으면 「왜 이렇게 오래
        걸리지」 하고 다시 누르게 되고, 그러면 자물쇠에 막힌다. */
     var fb = document.getElementById('runfull');
