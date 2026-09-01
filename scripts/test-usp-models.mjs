@@ -16,21 +16,23 @@ const M = J.models
 let ok = true
 const fail = (m) => { ok = false; console.log('FAIL: ' + m) }
 
-/* ① 사장님이 지목한 29개가 그대로 있는가. **줄어도 늘어도 안 된다** —
+/* ① 사장님이 지목한 44개가 그대로 있는가. **줄어도 늘어도 안 된다** —
    빠지면 그 모델을 안 다룬 것이고, 늘면 시키지 않은 것이 섞인 것이다. */
 const WANT = [
-  'KMR85RH95AFXKR', 'KMR85RH9FAFXKR', 'KQ77SH95AFXKR', 'KQ77SH93AFXKR', 'KQ85LSH03WFXKR',
+  'KMR85RH95AFXKR', 'KMR85RH9GAFXKR', 'KQ77SH95AFXKR', 'KQ77SH93AFXKR', 'KQ85LSH03WFXKR',
+  'KU85MH80AFXKR', 'KU27LSFM7AXXKR',
   'HW-Q930H', 'HW-Q990H',
-  'RM90H91B1W', 'RM80H91S1X', 'RM80H64S2A',
+  'RM90H91B1W', 'RM80H91S1X', 'RM70H91RMA', 'RM80H64S2A', 'RM90H64P2W',
   'RK80F49C1X', 'RK80F42C2A',
   'RWP90H15AN*',
-  'WD90H25AH*', 'WH90F2522AAH*', 'DF90H24R5C',
+  'WD90H25AH*', 'WH90F2522AAH*', 'WD80H25BHS', 'DV10BB8440GB', 'WA80F19SKB',
+  'WW13BB844DGB', 'WF90F25AD*', 'DV90F22CD*', 'DF90H24R5C', 'DF18CB8700CR',
   'AF90H19D38WR*', 'AF70F19D24IR*',
   'AP90H10198EDD', 'AP90H10163EDD', 'AP70F06103RVD',
   'VS90F40CN*', 'VS70H18GV*',
   'VR90F01SAG*', 'VR90F01AAG*',
-  'CC99H63I1D', 'CC99F63G1DS', 'CC99F63U1DS', 'CC80H63G1HS'
-]
+  'CC99H63I1D', 'CC99F63G1DS', 'CC99F63U1DS', 'CC80H63G1HS',
+  'DW99F79E1US*', 'DW90F79F1US*', 'DW80F75L1U*', 'DW90F79P']
 const have = M.map((m) => m.model)
 const miss = WANT.filter((w) => !have.includes(w))
 const extra = have.filter((h) => !WANT.includes(h))
