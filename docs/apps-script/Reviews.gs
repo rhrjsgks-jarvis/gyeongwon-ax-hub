@@ -1959,7 +1959,7 @@ function resetAll() {
     });
     /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
        옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
-    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_deadAt', '_deadErr']
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_deadAt', '_deadErr', '_stage']
       .forEach(function (k) { props_().deleteProperty(k); });
     props_().setProperty('_cursor', '0');
     sumCacheClear_();
@@ -2357,11 +2357,7 @@ function summary_() {
     alias: aliasAll_(),
     /* **LG 비교가 어디까지 갔는지 화면이 볼 수 있어야 한다.** 안 보이면 왜 수원만
        뜨는지 추측으로 파게 된다(실제로 그랬다). */
-    stage: String(props_().getProperty('_stage') || ''),
-    rivalAt: String(props_().getProperty('_rivalAt') || ''),
-    rivalCur: String(props_().getProperty('_rivalCur') || ''),
-    rivalTry: Number(props_().getProperty('_rivalTry') || 0),
-    rivalAreas: Object.keys(AREA_Q).length,
+    /* 진단 값은 `freshState_` 가 낸다 — 여기 두면 집계 캐시에 굳는다(위 주석) */
     lastRun: last,
     /* ── 삭제된 글 (2026-09-02) ─────────────────────────────────────────
      * **화면이 반드시 밝혀야 한다** — 안 적으면 「삭제된 글은 다 빠졌다」로 읽히는데
@@ -2938,6 +2934,16 @@ function freshState_(d) {
        바뀌므로 함께 새로 낸다. */
     /* 지금 돌고 있는가 — 화면이 「N분째」를 적는다. 강제 종료되면 값이 남으므로
        **화면이 오래된 것은 죽은 것으로 본다**(여기서 판정하지 않는다). */
+    /* **진단 값은 여기 있어야 한다**(2026-09-02에 데었다). `summary_` 의 반환값에만
+       두었더니 **6시간짜리 집계 캐시에 갇혀** 배포를 하고도 발자국이 안 보였다 —
+       그래서 「배포가 안 됐나」를 또 의심하게 됐다. 상태는 볼 때마다 새로 읽는다.
+       (이 파일이 이미 `cursor`·`dayUsed`·`lastRun` 을 그렇게 옮겨 둔 그 자리다.) */
+    d.stage = String(props_().getProperty('_stage') || '');
+    d.rivalAt = String(props_().getProperty('_rivalAt') || '');
+    d.rivalCur = String(props_().getProperty('_rivalCur') || '');
+    d.rivalTry = Number(props_().getProperty('_rivalTry') || 0);
+    d.rivalAreas = Object.keys(AREA_Q).length;
+    d.deadAt = String(props_().getProperty('_deadAt') || '');
     d.runAt = Number(props_().getProperty('_runAt') || 0);
     d.now = Date.now();
     d.cycleAt = Number(props_().getProperty('_cycleAt') || 0);

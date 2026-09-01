@@ -1462,7 +1462,17 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail('[바이럴] LG 비교가 표식만 보고 건너뛴다 — 한 지역만 채워도 오늘은 끝난 것이 된다');
     } else if (!g.includes('RIVAL_TRY_MAX')) {
       fail('[바이럴] 되풀이 상한이 없다 — 한 지역이 늘 실패하면 매 실행이 헛돌아 다른 일까지 굶는다');
-    } else if (!g.includes('rivalCur:')) {
+    /* **진단 값은 집계 캐시를 타면 안 된다**(2026-09-02에 데었다). `summary_` 의
+       반환값에만 두었더니 6시간짜리 캐시에 갇혀 배포하고도 발자국이 안 보였고,
+       그래서 「배포가 안 됐나」를 또 의심하게 됐다. `freshState_` 가 내야 한다. */
+    } else if (!g.includes('d.rivalCur =') || !g.includes('d.stage =')) {
+      fail('[바이럴] 진단 값을 freshState_ 가 안 낸다 — 집계 캐시에 갇혀 6시간 옛 값이 굳는다');
+    } else if (g.includes('    rivalCur: String(props_')) {
+      fail('[바이럴] 진단 값이 집계 반환값에도 있다 — 두 곳에 두면 어느 것이 이겼는지 알 수 없다');
+    } else if (!g.includes('function stage_')) {
+      fail('[바이럴] 실행 발자국이 없다 — 도중에 죽으면 어디서 멈췄는지 볼 길이 없다');
+    } else if ((g.split('stage_(').length - 1) < 5) {
+      fail('[바이럴] 발자국이 너무 적다 — 단계를 좁히지 못하면 또 추측으로 파게 된다');
       fail('[바이럴] 어디까지 갔는지 화면이 못 본다 — 왜 수원만 뜨는지 또 추측으로 파게 된다');
     } else if (!g.includes("deleteProperty('_rivalStamp')")) {
       fail('[바이럴] 회차를 마쳐도 도장을 안 지운다 — 다음 바퀴가 옛 도장을 물려받는다');
