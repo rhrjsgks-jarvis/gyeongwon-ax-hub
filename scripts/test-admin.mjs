@@ -1297,6 +1297,39 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 돋보기 — 자치구 넷을 크게 (2026-09-02) ──────────────────────────────
+   * 시·구 분할은 돌고 있었는데 **화면에서 안 보였다** — 실측으로 팔달구가
+   * viewBox 400 기준 **9.1 × 6.6** 이라 지도의 0.05% 다. 쪼갠 뜻이 살려면 보여야 한다.
+   *
+   * **`d` 를 다시 만들지 않는다** — 같은 문자열을 transform 으로 옮겨 쓰므로 두
+   * 지도가 어긋날 수 없다. 칠하기·겹침 걷어내기도 본 지도와 **같은 함수**를 탄다. */
+  {
+    const h = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const b = fs.readFileSync(new URL('../scripts/build-region-map.mjs', import.meta.url), 'utf8');
+    const gu = (h.match(/data-cell="[가-힣]{2}구"/g) || []).length;
+    if (!b.includes('metroPaths.push')) {
+      fail('[바이럴] 돋보기용 조각을 안 모은다');
+    } else if (!h.includes('GW_MAP.metro')) {
+      fail('[바이럴] 돋보기 SVG 가 안 실렸다 — build:regionmap 을 돌리고 커밋할 것');
+    } else if (!h.includes('function paintCells')) {
+      fail('[바이럴] 칠하는 규칙이 함수가 아니다 — 두 지도가 조용히 갈린다');
+    } else if ((h.split('paintCells(').length - 1) < 3) {
+      fail('[바이럴] 돋보기가 같은 칠하기 함수를 안 쓴다');
+    } else if (!h.includes('function dropOverlaps')) {
+      fail('[바이럴] 겹침 걷어내기가 함수가 아니다');
+    } else if ((h.split('dropOverlaps(').length - 1) < 3) {
+      fail('[바이럴] 돋보기가 겹침을 안 걷어낸다 — 이름표가 서로 먹는다');
+    } else if (!h.includes('var MFS = 1.6;')) {
+      fail('[바이럴] 돋보기 글꼴이 실측값(1.6)이 아니다 — 1.8 이면 팔달구가 밀려 빠진다');
+    } else if (gu < 12) {
+      fail(`[바이럴] 지도에 자치구 칸이 ${gu}곳뿐이다 — 12곳이어야 한다`);
+    } else if (!h.includes('geo-metro-wrap')) {
+      fail('[바이럴] 돋보기를 담을 자리가 없다');
+    } else {
+      console.log('OK: 바이럴 지도 돋보기 — 자치구 12곳 · 같은 좌표 · 칠하기와 겹침을 본 지도와 공유');
+    }
+  }
+
   /* ── 삭제된 글은 지우지 않고 표시만 한다 (2026-09-02 사장님 결정) ──────────
    * *"새로 전체수집을 할 때 삭제된 글은 자동으로 제외해 주셔야 합니다"* → 조사해
    * 보니 **판정할 수 있는 것이 블로그뿐**이다(카페는 robots 가 `Disallow: /`).

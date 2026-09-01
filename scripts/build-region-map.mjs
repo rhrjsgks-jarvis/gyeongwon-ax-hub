@@ -158,6 +158,7 @@ function biggestRing(coords) {
 }
 
 const paths = [];
+const metroPaths = [];
 const acc = {};                       /* 지도 칸 -> {x,y,a} 면적 가중 누적 */
 for (const f of src.features) {
   const d = polyToPath(f.coords);
@@ -175,6 +176,9 @@ for (const f of src.features) {
     if (x < t.x1) t.x1 = x; if (x > t.x2) t.x2 = x;
     if (y < t.y1) t.y1 = y; if (y > t.y2) t.y2 = y;
   });
+  /* **자치구 조각은 따로도 모은다** — 보조 지도(돋보기)가 같은 `d` 를 다시 쓴다.
+     좌표를 새로 계산하지 않으므로 두 지도가 어긋날 수 없다. */
+  if (GU_CITY[f.region]) metroPaths.push({ cell: cell, sigun: f.region, code: f.code, d: d });
   paths.push('<path data-cell="' + cell + '" data-sigun="' + f.region
     + '" data-code="' + f.code + '" d="' + d + '"/>');
   /* ── 이름표 자리 — **대표 시의 중심**이다 ─────────────────────────────────
@@ -264,6 +268,49 @@ const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="geo-svg" xmlns="http:
    따옴표만 막으면 된다(SVG 에 역슬래시는 없다). */
 const jsStr = (s) => "'" + s.split("'").join("\\'") + "'";
 
+
+/* ── 보조 지도(돋보기) — 자치구가 있는 네 시만 크게 (2026-09-02) ───────────
+ *
+ * **쪼갠 뜻이 살려면 보여야 한다.** 실측으로 팔달구는 viewBox 400 기준 **9.1 × 6.6**
+ * 이라 지도의 0.05% 다 — 이름표가 안 들어가고 눌러 짚기도 어렵다. 정작 후기의
+ * 대부분이 그 넷에서 나오는데(수원·성남·안양·용인) 화면에서는 왼쪽 아래 구석에
+ * 뭉쳐 있다.
+ *
+ * **`d` 를 다시 만들지 않는다** — 같은 문자열을 `transform` 으로 옮겨 쓴다.
+ * 좌표를 새로 계산하면 두 지도가 조용히 어긋난다(표를 두 벌 적지 말라는 그 이유다).
+ */
+const mb = { x1: 1e9, y1: 1e9, x2: -1e9, y2: -1e9 };
+for (const c of Object.keys(cellBox)) {
+  if (!metroPaths.some((p) => p.cell === c)) continue;
+  const t = cellBox[c];
+  if (t.x1 < mb.x1) mb.x1 = t.x1; if (t.x2 > mb.x2) mb.x2 = t.x2;
+  if (t.y1 < mb.y1) mb.y1 = t.y1; if (t.y2 > mb.y2) mb.y2 = t.y2;
+}
+const MPAD = 2;
+const mW = +(mb.x2 - mb.x1 + MPAD * 2).toFixed(P);
+const mH = +(mb.y2 - mb.y1 + MPAD * 2).toFixed(P);
+const metro = metroPaths.length
+  ? [
+      '<svg viewBox="0 0 ' + mW + ' ' + mH
+        + '" class="geo-svg geo-metro" xmlns="http://www.w3.org/2000/svg"',
+      ' role="img" aria-label="수원·성남·안양·용인 자치구 확대">',
+      '<g transform="translate(' + (MPAD - mb.x1).toFixed(P)
+        + ' ' + (MPAD - mb.y1).toFixed(P) + ')">',
+      metroPaths.map((p) => '<path data-cell="' + p.cell
+        + '" data-sigun="' + p.sigun + '" data-code="' + p.code
+        + '" d="' + p.d + '"/>').join(''),
+      '</g></svg>'
+    ].join('')
+  : '';
+
+/* 보조 지도의 이름표 — **본 지도의 자리를 그대로 옮긴다**(같은 좌표계다).
+   확대되어 자리가 넉넉하므로 「구」를 떼지 않고 온전히 적는다. */
+const metroLabels = {};
+for (const c of Object.keys(labels)) {
+  if (!metroPaths.some((p) => p.cell === c)) continue;
+  const l = labels[c];
+  metroLabels[c] = { x: +(l.x - mb.x1 + MPAD).toFixed(P), y: +(l.y - mb.y1 + MPAD).toFixed(P) };
+}
 const block = [
   BEGIN,
   '<script>',
@@ -272,6 +319,7 @@ const block = [
   '   출처 KOSTAT 2013 센서스용 행정구역경계(Free to share or remix).',
   '   **fetch 가 없다** — 사내망에서 CDN 이 막혀도 지도가 뜬다. */',
   'var GW_MAP = { svg: ' + jsStr(svg) + ', labels: ' + JSON.stringify(labels)
+    + ', metro: ' + jsStr(metro) + ', metroLabels: ' + JSON.stringify(metroLabels)
     + ', members: ' + JSON.stringify(members)
     + ', sigun: ' + JSON.stringify(sigun) + ' };',
   '</script>',
@@ -294,4 +342,6 @@ fs.writeFileSync(OUT, next);
 console.log('[build:regionmap] viewBox 0 0 ' + W + ' ' + H
   + ' · path ' + paths.length + ' · 지역 ' + Object.keys(labels).length
   + ' · SVG ' + (svg.length / 1024).toFixed(1) + 'KB'
+  + ' · 돋보기 ' + Object.keys(metroLabels).length + '구 ' + mW + 'x' + mH
+  + ' (' + (metro.length / 1024).toFixed(1) + 'KB)'
   + (changed ? '' : ' (변화 없음)'));
