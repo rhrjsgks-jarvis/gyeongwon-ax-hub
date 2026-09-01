@@ -948,6 +948,74 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 블로그·카페·웹 세 갈래 · 경쟁비교 디테일 (2026-09-01 사장님 지시) ──────
+   *
+   * *"블로그 카페 웹 잘 분석 바랍니다"* · *"지역별 후기 수집할 때 삼성 vs LG
+   * 제대로 수집해서 디테일한 비교가 필요합니다"*.
+   *
+   * 경쟁비교가 **카페만** 훑고 있었다 — 우리 후기의 36%가 블로그인데 비교에서
+   * 통째로 빠져 있었다. 양쪽에 똑같이 넣어야 한다(한쪽만 늘리면 비중이 거짓). */
+  {
+    const gs4 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    const ix6 = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+    if (fs.existsSync(gs4) && fs.existsSync(ix6)) {
+      const g = fs.readFileSync(gs4, 'utf8');
+      const x = fs.readFileSync(ix6, 'utf8');
+      if (!g.includes("['blog', 'cafearticle', 'webkr']")) {
+        fail('[바이럴] 수집이 세 갈래(블로그·카페·웹)를 다 훑지 않는다');
+      /* **양쪽에 똑같이** — 한쪽만 늘리면 그쪽만 많이 받아 비중이 그 자리에서 거짓이 된다 */
+      } else if (g.split("['blog', 'cafearticle', 'webkr']").length - 1 < 2) {
+        fail('[바이럴] 경쟁비교가 우리 수집과 다른 갈래를 훑는다 — 비중이 거짓이 된다');
+      /* 출처 이름을 두 곳에서 적으면 한쪽만 고쳐져 「웹」이 「카페」로 쌓인다 */
+      } else if (!g.includes('function srcName_')) {
+        fail('[바이럴] 출처 이름을 한 곳에서 안 만든다 — 두 곳이 갈리면 웹이 카페로 쌓인다');
+      } else if (!x.includes("['전체', '블로그', '카페', '웹']")) {
+        fail('[바이럴] 화면 출처 칩에 「웹」이 없다 — 모으기만 하고 볼 수가 없다');
+      /* 갈래별 비교 — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다 */
+      } else if (!x.includes('rival-break')) {
+        fail('[바이럴] 경쟁비교에 갈래별(출처·유형·월) 절이 없다');
+      /* **월별은 블로그만** — 카페·웹은 작성일이 없어 넣으면 이번 달만 거대해진다 */
+      } else if (!x.includes('블로그만 셉니다 — 카페·웹 글에는 작성일이 없습니다')) {
+        fail('[바이럴] 경쟁비교 월별이 무엇만 세는지 안 밝힌다');
+      /* 옛 회차에는 갈래 칸이 없다 — 깨진 JSON 에 던지면 화면 전체가 죽는다 */
+      } else if (!g.includes('function jparse_')) {
+        fail('[바이럴] 갈래 JSON 을 안전하게 안 읽는다 — 깨진 칸 하나가 화면을 통째로 죽인다');
+      } else {
+        console.log('OK: 바이럴 세 갈래(블로그·카페·웹) · 경쟁비교 출처·유형·월별');
+      }
+    }
+  }
+
+  /* ── 자료 비우고 처음부터 (2026-09-01 사장님 허락) ────────────────────────
+   * 열이 늘고 출처가 셋이 되면서 옛 줄과 새 줄이 다른 것을 담는다 — 섞어 두면
+   * 「블로그 36%」 같은 값이 반은 옛 규칙, 반은 새 규칙이 되어 조용히 틀린다. */
+  {
+    const gs5 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    const ix7 = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+    if (fs.existsSync(gs5) && fs.existsSync(ix7)) {
+      const g = fs.readFileSync(gs5, 'utf8');
+      const x = fs.readFileSync(ix7, 'utf8');
+      if (!g.includes('function resetAll')) {
+        fail('[바이럴] 자료를 비우는 길이 없다 — 옛 규칙 줄과 새 규칙 줄이 영영 섞인다');
+      /* 되돌릴 수 없는 일이라 두 번 물어야 한다 */
+      } else if (!x.includes('정말 지우려면')) {
+        fail('[바이럴] 자료 비우기가 한 번만 묻는다 — 옆 단추와 나란히 있어 실수로 눌린다');
+      /* 안 끄면 지운 직후에 옛 커서로 이어 돈다 */
+      /* 안 끄면 지운 직후에 옛 커서로 이어 돈다. **줄바꿈을 검사에 쓰지 않는다** —
+         셸·heredoc 이 이스케이프를 먹어 조용히 다른 뜻이 된다(이번에도 밟았다).
+         resetAll 안에서 불리는지는 **자리 비교**로 충분하다. */
+      } else if (g.indexOf('clearChain_()', g.indexOf('function resetAll')) < 0
+        || g.indexOf('clearChain_()', g.indexOf('function resetAll')) > g.indexOf('function resetAll') + 900) {
+        fail('[바이럴] 자료를 비우면서 이어달리기를 안 끈다 — 지운 직후 옛 커서로 이어 돈다');
+      /* 열이 늘었는데 머리글이 낡은 채 남으면 사람이 열어 볼 때 칸 이름이 안 맞는다 */
+      } else if (!g.includes('s.getMaxColumns() < header.length')) {
+        fail('[바이럴] 열이 늘어도 시트 격자·머리글을 안 넓힌다 — getRange 가 던질 수 있다');
+      } else {
+        console.log('OK: 바이럴 자료 비우기 — 두 번 묻고, 이어달리기를 끄고, 커서를 처음으로');
+      }
+    }
+  }
+
   /* ── 시트 칸 수가 어긋나 수집 한 판이 통째로 날아가던 것 (2026-09-01) ──────
    *
    * `mgr` 열이 늘었을 때(2026-08-25) **카페 훑기 쪽 행만 안 고쳐져 10칸**이었다.

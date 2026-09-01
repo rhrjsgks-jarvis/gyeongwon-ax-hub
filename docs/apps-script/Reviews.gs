@@ -931,11 +931,24 @@ function search_(kind, query, start, display) {
   try { return JSON.parse(res.getContentText()); } catch (e) { return { items: [], error: 'parse' }; }
 }
 
+/** 시트를 가져온다. **열이 늘면 머리글과 격자를 함께 넓힌다.**
+ *
+ *  예전에는 비어 있을 때만 머리글을 썼다. 그래서 열을 하나 더하면 **옛 시트의
+ *  머리글이 낡은 채 남고**(사람이 열어 보면 칸 이름이 안 맞는다), 격자 폭이
+ *  모자라면 `getRange` 가 그 자리에서 던진다 — 그 예외가 수집 한 판을 날린다.
+ *  우리가 만든 시트라 머리글은 우리 것이다. 자료는 건드리지 않는다. */
 function sheet_(name, header) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var s = ss.getSheetByName(name);
   if (!s) s = ss.insertSheet(name);
-  if (s.getLastRow() === 0) s.appendRow(header);
+  if (s.getMaxColumns() < header.length) {
+    s.insertColumnsAfter(s.getMaxColumns(), header.length - s.getMaxColumns());
+  }
+  if (s.getLastRow() === 0) {
+    s.getRange(1, 1, 1, header.length).setValues([header]);
+  } else if (s.getLastColumn() < header.length) {
+    s.getRange(1, 1, 1, header.length).setValues([header]);
+  }
   return s;
 }
 
@@ -1040,6 +1053,14 @@ function assertRow_(rows) {
   }
 }
 
+/** 검색 갈래 → 화면에 적는 출처 이름. **한 곳에서만 적는다** —
+ *  수집·경쟁비교 두 곳이 따로 적으면 한쪽만 고쳐져 「웹」이 「카페」로 쌓인다. */
+function srcName_(kind) {
+  if (kind === 'blog') return '블로그';
+  if (kind === 'webkr') return '웹';
+  return '카페';
+}
+
 /** 실제 수집. `collectReviews` 가 자물쇠를 잡고 부른다. */
 function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
@@ -1099,7 +1120,12 @@ function sweep_(mode) {
   var calls = 0, got = 0, kept = 0, add = [], err = '';
   var saved = 0;   /* 아껴서 안 부른 호출 수 — 화면이 「얼마나 아꼈나」를 말한다 */
   var flushed = 0; /* 매장 경계에서 이미 시트에 쓴 건수 — 보고 건수가 이것을 빠뜨리면 안 된다 */
-  var kinds = ['blog', 'cafearticle'];
+  /* **웹문서까지 훑는다**(2026-09-01 사장님: *"블로그 카페 웹 잘 분석 바랍니다"*).
+     블로그·카페 밖(티스토리·커뮤니티·뉴스)의 후기가 통째로 빠져 있었다.
+     **판정은 그대로다** — 브랜드 말 + 매장 이름이 함께 있어야 담기므로
+     갈래가 늘어도 잡음이 그만큼 늘지는 않는다. 링크로 중복을 없앤다.
+     **웹문서에는 작성일이 없다**(블로그만 준다) — 카페와 같은 취급이다. */
+  var kinds = ['blog', 'cafearticle', 'webkr'];
 
   /* **일일 한도를 여기서 한 번만 읽는다**(2026-08-31 사장님 요청).
      호출마다 속성을 읽으면 2,000번을 읽는 셈이라 느려지고, 무엇보다 **세는 곳이 둘이 되면
@@ -1239,7 +1265,7 @@ function sweep_(mode) {
             post.length === 8
               ? post.slice(0, 4) + '-' + post.slice(4, 6) + '-' + post.slice(6, 8)
               : stamp,
-            code, name, kinds[k] === 'blog' ? '블로그' : '카페',
+            code, name, srcName_(kinds[k]),
             String(it.title || '').replace(/<[^>]+>/g, ''), link,
             String(it.cafename || ''), post,
             stamp,                                     /* 처음 본 날 — 「새로 발견」을 세는 데 쓴다 */
@@ -1596,6 +1622,43 @@ function chain_() {
 /** 이어달리기가 부르는 자리. 하는 일은 수집 그대로다. */
 function continueSweep() { return collectReviews(); }
 
+/** **모은 자료를 비우고 처음부터 다시 시작한다.**
+ *
+ *  2026-09-01 사장님 허락 — *"정확하게 하기 위해서 자료를 모두 지우고 다시
+ *  수집해도 가능하니 제대로 분석할 수 있게 해 주세요"*.
+ *
+ *  열이 늘고(작성일 근거·경쟁비교 갈래) 출처가 셋이 되면서 **옛 줄과 새 줄이
+ *  다른 것을 담는다.** 섞어 두면 「블로그 36%」 같은 값이 반은 옛 규칙, 반은
+ *  새 규칙이 되어 화면이 조용히 틀린다. 그래서 비우고 다시 모으는 길을 둔다.
+ *
+ *  **되돌릴 수 없다.** 화면이 두 번 묻고, 여기서도 무엇을 지웠는지 돌려준다.
+ *  이어달리기 트리거도 함께 끈다 — 안 끄면 지운 직후에 옛 커서로 이어 돈다. */
+function resetAll() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return { ok: false, msg: '수집이 도는 중입니다 — 끝난 뒤에 다시 눌러 주세요.' };
+  try {
+    clearChain_();
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var wiped = [];
+    [[SHEET_ITEMS, HEADER], [SHEET_RIVAL, RIVAL_HEADER], [SHEET_LOG, LOG_HEADER]].forEach(function (pair) {
+      var sh = ss.getSheetByName(pair[0]);
+      if (!sh) return;
+      var n = Math.max(0, sh.getLastRow() - 1);
+      if (n) sh.deleteRows(2, n);
+      /* 머리글을 지금 판으로 다시 쓴다 — 열이 늘어난 뒤라 옛 이름이 남아 있다 */
+      if (sh.getMaxColumns() >= pair[1].length) sh.getRange(1, 1, 1, pair[1].length).setValues([pair[1]]);
+      wiped.push(pair[0] + ' ' + n + '줄');
+    });
+    /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
+       옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr']
+      .forEach(function (k) { props_().deleteProperty(k); });
+    props_().setProperty('_cursor', '0');
+    sumCacheClear_();
+    return { ok: true, msg: '비웠습니다 — ' + wiped.join(' · ') + '. 이제 「전체 재수집」을 눌러 주세요.' };
+  } finally { lock.releaseLock(); }
+}
+
 /** 사람이 멈추고 싶을 때. 화면의 「멈춤」이 부른다. */
 function stopSweep() {
   var n = clearChain_();
@@ -1726,7 +1789,7 @@ function summary_() {
      화면이 「그중 N건은 ±수집주기」라고 밝힌다. 뭉개면 화면이 있는 척하게 된다. */
   var approxN = 0;
   var minDate = '', maxDate = '';
-  var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
+  var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0, '웹': 0 }, byDay = {}, byMonth = {}, byKind = {};
   var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {};
   /* ── 매장별 세 갈래 (2026-09-01) ─────────────────────────────────────────
    * **셋을 한 루프에서 낸다** — 따로 돌면 같은 자료를 세 번 훑는다.
@@ -2028,7 +2091,11 @@ function summary_() {
  * 되므로 별도 시트에 요약만 담는다.
  */
 var SHEET_RIVAL = '경쟁비교';
-var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries'];
+/* **뒤에만 붙인다** — 가운데 끼우면 옛 회차가 한 칸씩 밀린다.
+   `srcJson`·`kindJson`·`monthJson` 은 갈래별 건수를 담는다. 칸으로 펴면 20개가
+   넘고 갈래가 늘 때마다 열이 늘어난다 — 우리 시트라 JSON 한 칸이 낫다. */
+var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries',
+  'srcJson', 'kindJson', 'monthJson'];
 
 /* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
    `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
@@ -2100,6 +2167,10 @@ function collectRival() {
     var area = areas[ai], places = AREA_Q[area];
     var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
     var lastAdd = { ours: 0, rival: 0 };
+    /* **갈래별로도 센다** — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다.
+       소스(블로그/카페) · 유형(구매·설치·비교…) · 월(블로그 작성일 기준). */
+    var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 } };
+    var byKind = {}, byMon = {};
 
     var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
     for (var si = 0; si < side.length; si++) {
@@ -2109,18 +2180,43 @@ function collectRival() {
         for (var pi = 0; pi < places.length; pi++) {
           var place = places[pi];
           var q = bq + ' ' + place + RTAILS[ti];
-          for (var page = 0; page < MAX_PAGES; page++) {
-            var j;
-            try { j = search_('cafearticle', q, page * PAGE_SIZE + 1); calls++; }
-            catch (e) { err = String(e); break; }
-            if (j.error) { err = j.error; break; }
-            var items = j.items || [];
-            for (var n = 0; n < items.length; n++) {
-              var it = items[n];
-              var text = (it.title || '') + ' ' + (it.description || '');
-              if (rivalHit_(text, brands, place)) got[key][String(it.link || '')] = 1;
+          /* **블로그도 훑는다**(2026-09-01 사장님: *"삼성 vs LG 제대로 수집해서
+             디테일한 비교가 필요합니다"*). 예전에는 카페만 봤다 — 우리 후기의 36%가
+             블로그인데 경쟁비교에서 통째로 빠져 있었다. **양쪽에 똑같이 넣는다** —
+             한쪽만 늘리면 비중이 그 자리에서 거짓이 된다.
+             덤이 하나 더 있다: **블로그는 작성일을 주므로 추이 비교가 된다.** */
+          var SRCS = ['blog', 'cafearticle', 'webkr'];
+          for (var sj = 0; sj < SRCS.length; sj++) {
+            for (var page = 0; page < MAX_PAGES; page++) {
+              var j;
+              try { j = search_(SRCS[sj], q, page * PAGE_SIZE + 1); calls++; }
+              catch (e) { err = String(e); break; }
+              if (j.error) { err = j.error; break; }
+              var items = j.items || [];
+              for (var n = 0; n < items.length; n++) {
+                var it = items[n];
+                var text = (it.title || '') + ' ' + (it.description || '');
+                if (!rivalHit_(text, brands, place)) continue;
+                var lk = String(it.link || '');
+                if (got[key][lk]) continue;        /* 이미 센 글 */
+                got[key][lk] = 1;
+                var sname = srcName_(SRCS[sj]);
+                bySrc[key][sname]++;
+                var kd = kindOf_(String(it.title || ''));
+                if (!byKind[kd]) byKind[kd] = { o: 0, r: 0 };
+                byKind[kd][key === 'ours' ? 'o' : 'r']++;
+                /* **월별은 블로그만** — 카페는 작성일이 없어 넣으면 이번 달만
+                   거대해진다(이 화면이 이미 두 번 데인 사고다). */
+                var pd = String(it.postdate || '');
+                if (pd.length === 8) {
+                  var mk = pd.slice(0, 4) + '-' + pd.slice(4, 6);
+                  if (!byMon[mk]) byMon[mk] = { o: 0, r: 0 };
+                  byMon[mk][key === 'ours' ? 'o' : 'r']++;
+                }
+              }
+              if (items.length < PAGE_SIZE) break;
             }
-            if (items.length < PAGE_SIZE) break;
+            if (err) break;
           }
           if (err) break;
         }
@@ -2143,7 +2239,8 @@ function collectRival() {
       stamp, area, a, b,
       skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
       skew ? 'Y' : '',
-      places.join(' · ')
+      places.join(' · '),
+      JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon)
     ]);
     if (err) break;
   }
@@ -2154,6 +2251,13 @@ function collectRival() {
   }
   if (calls) addUsage_(calls);
   return { rows: rows.length, calls: calls, error: err };
+}
+
+/** 시트 칸의 JSON 을 읽는다. **깨져 있으면 빈 객체다** — 던지면 화면 전체가 죽는다. */
+function jparse_(x) {
+  var t = String(x == null ? '' : x);
+  if (!t) return {};
+  try { return JSON.parse(t) || {}; } catch (e) { return {}; }
 }
 
 /** 화면에 낼 최신 한 회차. **없으면 없다고 한다** — 0 으로 그리지 않는다. */
@@ -2169,7 +2273,10 @@ function rival_() {
     out.push({
       area: String(v[i][1]), ours: Number(v[i][2]) || 0, rival: Number(v[i][3]) || 0,
       pct: v[i][4] === '' || v[i][4] === null ? null : Number(v[i][4]),
-      capped: String(v[i][5]) === 'Y', queries: String(v[i][6])
+      capped: String(v[i][5]) === 'Y', queries: String(v[i][6]),
+      /* **옛 회차에는 이 칸이 없다** — 그때는 빈 객체로 둔다(0 으로 그리면
+         「없다」가 되어 거짓이다). 화면이 비었으면 그 절을 안 그린다. */
+      bySrc: jparse_(v[i][7]), byKind: jparse_(v[i][8]), byMonth: jparse_(v[i][9])
     });
   }
   return { at: last, rows: out };

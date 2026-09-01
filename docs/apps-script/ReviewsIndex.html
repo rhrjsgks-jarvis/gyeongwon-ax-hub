@@ -171,6 +171,8 @@
   .item a:hover { color: var(--blue); text-decoration: underline; }
   .meta { font-size: 10.5px; color: var(--mute); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .yrs { display: inline-flex; gap: 4px; margin-left: 6px; }
+  /* 되돌릴 수 없는 단추는 다르게 보여야 한다 — 옆 단추와 같은 모양이면 실수로 눌린다 */
+  .btn.danger { border-color: #E5A0A0; color: #B42318; }
   .tag { background: #EEF2FF; color: var(--blue); border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: 10px; }
   /* 매장 신호 — 기존 색 변수만 쓴다(의존성 0) */
   .sighd { font-size: 11px; font-weight: 800; color: var(--blue); margin: 10px 0 4px; }
@@ -546,6 +548,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            있게 구축해 주세요"*. **두 버튼이 하는 일이 다르다** — 아래 안내가 그것을 적는다. -->
       <button class="btn" id="run">최근 것만 수집</button>
       <button class="btn" id="runfull">전체 재수집</button>
+      <!-- 2026-09-01 사장님 허락 — *"자료를 모두 지우고 다시 수집해도 가능하니
+           제대로 분석할 수 있게 해 주세요"*. 열이 늘고 출처가 셋이 되면서 옛 줄과
+           새 줄이 다른 것을 담는다 — 섞어 두면 「블로그 36%」 같은 값이 반은 옛
+           규칙, 반은 새 규칙이 되어 화면이 조용히 틀린다. -->
+      <button class="btn danger" id="wipe">자료 비우고 처음부터</button>
       <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
       <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
@@ -588,6 +595,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <h2>당사 vs LG — 지역별 후기 비중</h2>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
+      <!-- 갈래별 — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다.
+           출처(어디에서 싸우나) · 유형(무슨 이야기인가) · 월(흐름이 어느 쪽인가). -->
+      <div id="rival-break"></div>
       <div class="note" id="rival-note"></div>
     </div>
 
@@ -1866,6 +1876,62 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           '</div>';
       }).join('');
 
+    /* ── 갈래별 (2026-09-01 사장님: *"디테일한 비교가 필요합니다"*) ───────────
+     * 지역 여섯을 **합쳐서** 낸다 — 지역별로 또 쪼개면 칸이 18개가 되어 못 읽는다.
+     * 월별은 **블로그만** 든다(카페·웹은 작성일이 없다) — 그 사실을 적는다. */
+    (function () {
+      var box = document.getElementById('rival-break');
+      if (!box) return;
+      var sum = function (pick) {
+        var acc = {};
+        rows.forEach(function (r) {
+          var m = pick(r) || {};
+          Object.keys(m).forEach(function (k) {
+            if (!acc[k]) acc[k] = { o: 0, r: 0 };
+            if (typeof m[k] === 'object') { acc[k].o += (m[k].o || 0); acc[k].r += (m[k].r || 0); }
+          });
+        });
+        return acc;
+      };
+      /* 출처는 모양이 다르다 — {ours:{블로그:n}, rival:{…}} */
+      var srcAcc = {};
+      rows.forEach(function (r) {
+        var b = r.bySrc || {};
+        ['ours', 'rival'].forEach(function (side) {
+          Object.keys(b[side] || {}).forEach(function (k) {
+            if (!srcAcc[k]) srcAcc[k] = { o: 0, r: 0 };
+            srcAcc[k][side === 'ours' ? 'o' : 'r'] += (b[side][k] || 0);
+          });
+        });
+      });
+      var kindAcc = sum(function (r) { return r.byKind; });
+      var monAcc = sum(function (r) { return r.byMonth; });
+
+      var bar = function (o, r2) {
+        var t = o + r2;
+        if (!t) return '<span class="mini">못 잼</span>';
+        var p = o * 100 / t;
+        return '<div class="tr"><div class="us" style="width:' + p.toFixed(1) + '%"></div>'
+          + '<div class="th" style="width:' + (100 - p).toFixed(1) + '%"></div></div>'
+          + '<span class="mini">' + Math.round(p) + '% · ' + nf(o) + ' vs ' + nf(r2) + '</span>';
+      };
+      var sect = function (title, acc, note, order) {
+        var ks = order || Object.keys(acc).sort();
+        ks = ks.filter(function (k) { return acc[k] && (acc[k].o + acc[k].r) > 0; });
+        if (!ks.length) return '';
+        return '<div class="sighd">' + esc(title) + '</div>'
+          + (note ? '<div class="mini">' + esc(note) + '</div>' : '')
+          + ks.map(function (k) {
+              return '<div class="sigrow"><b>' + esc(k) + '</b> ' + bar(acc[k].o, acc[k].r) + '</div>';
+            }).join('');
+      };
+      var monKeys = Object.keys(monAcc).sort().slice(-6);
+      box.innerHTML = sect('어디에서 싸우나 — 출처별', srcAcc, '', ['블로그', '카페', '웹'])
+        + sect('무슨 이야기인가 — 유형별', kindAcc, '')
+        + sect('흐름은 어느 쪽인가 — 월별', monAcc,
+            '블로그만 셉니다 — 카페·웹 글에는 작성일이 없습니다', monKeys);
+    })();
+
     /* **세는 것도 같은 잣대를 쓴다** — 위에서는 「못 잼」인데 여기서는 숫자로 세면
        머리글과 표가 어긋난다. 한 함수를 지나가게 한다. */
     var okp = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
@@ -1879,7 +1945,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     /* **무엇을 잰 값인지 적는다.** 안 적으면 「우리가 몇 % 다」가 매출인지 후기인지
        모른 채로 읽힌다 — 이 저장소가 대시보드에서 되풀이해 데인 자리다. */
     document.getElementById('rival-note').innerHTML =
-      '<b>무엇을 잰 값인가</b> — 네이버 카페에서 <b>브랜드 이름과 지역이 함께 나오는 후기</b>를'
+      '<b>무엇을 잰 값인가</b> — 네이버 <b>블로그·카페·웹문서</b>에서 <b>브랜드 이름과 지역이 함께 나오는 후기</b>를'
       + ' 세었습니다. <b>양쪽에 같은 질의·같은 쪽수·같은 판정</b>을 씁니다 — 한쪽만 정교하게'
       + ' 거르면 비중이 거짓이 됩니다.'
       + ' <b>매출이 아니라 「글 수」</b>입니다.'
@@ -2424,7 +2490,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 
     /* 출처 거르개 */
     var f = document.getElementById('filter');
-    f.innerHTML = ['전체', '블로그', '카페'].map(function (k) {
+    /* 「웹」은 웹문서 검색(webkr) — 티스토리·커뮤니티처럼 블로그·카페 밖의 글이다.
+       2026-09-01 사장님: *"블로그 카페 웹 잘 분석 바랍니다"*. */
+    f.innerHTML = ['전체', '블로그', '카페', '웹'].map(function (k) {
       return '<button class="chip' + (k === srcFilter ? ' on' : '') + '" data-k="' + k + '">' + k + '</button>';
     }).join('');
     Array.prototype.forEach.call(f.querySelectorAll('.chip'), function (b) {
@@ -2525,6 +2593,38 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           + '<br>Apps Script 편집기의 <b>트리거</b> 화면에서 <code>continueSweep</code> 을 지우면 멈춥니다.</div>';
       })
       .stopSweep();
+  };
+
+  /* **모은 자료를 비운다.** 되돌릴 수 없어 두 번 묻는다 — 건수를 적어 보이고,
+     그다음 「지웁니다」를 직접 치게 한다. 실수로 한 번 눌러 사라지면 안 된다. */
+  document.getElementById('wipe').onclick = function () {
+    var b = this;
+    var n = Number(DATA.total || 0);
+    /* **줄바꿈을 이스케이프로 적지 않는다** — 이 저장소는 셸·heredoc 이 역슬래시를
+       먹어 문자열이 그 자리에서 깨지는 사고를 여러 번 겪었다. 문자 코드로 만든다. */
+    var NL = String.fromCharCode(10);
+    if (!confirm('모은 후기 ' + nf(n) + '줄과 경쟁비교·수집기록을 전부 지웁니다.' + NL + NL
+      + '되돌릴 수 없습니다. 지운 뒤 「전체 재수집」을 눌러 처음부터 다시 모읍니다' + NL
+      + '(65개 매장 한 바퀴라 여러 번 이어 돕니다).')) return;
+    /* 한 번 더 묻는다 — 옆 단추와 나란히 있어 실수로 눌릴 수 있다 */
+    if (prompt('정말 지우려면 아래에 「지웁니다」 라고 쳐 주세요.') !== '지웁니다') return;
+    b.disabled = true; b.textContent = '비우는 중…';
+    google.script.run
+      .withSuccessHandler(function (res) {
+        b.disabled = false; b.textContent = '자료 비우고 처음부터';
+        var ok = res && res.ok;
+        document.getElementById('status').innerHTML = '<div class="note' + (ok ? '' : ' warn') + '">'
+          + esc((res && res.msg) || '알 수 없는 응답') + '</div>';
+        /* **비운 뒤에는 통째로 다시 읽는다.** 화면 상태(필터·쪽·연도 칩)가 지운
+           자료를 가리키고 있어, 부분 갱신하면 빈 목록에 옛 조건이 걸린 채로 남는다. */
+        if (ok) setTimeout(function () { location.reload(); }, 900);
+      })
+      .withFailureHandler(function (e) {
+        b.disabled = false; b.textContent = '자료 비우고 처음부터';
+        document.getElementById('status').innerHTML = '<div class="note warn"><b>비우지 못했습니다</b> — '
+          + esc(e && e.message) + '</div>';
+      })
+      .resetAll();
   };
 
   /* 같은 URL 이 두 번 이상 들어간 줄을 치운다(2026-08-31 사장님 지적).
