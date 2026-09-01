@@ -1190,6 +1190,50 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 지도를 시·구까지 쪼갰다 (2026-09-01 사장님 지시) ─────────────────────
+   *
+   * *"시·구까지 쪼개서 구현 가능할까요? 같은 수원이라고 해도 상권이 다르고 후기가
+   * 다를 수 있습니다."*
+   *
+   * 경계 데이터에 자치구 12개가 이미 별도 폴리곤으로 있었다. 막던 것은 지도가
+   * 아니라 **매장이 어느 구에 있는가**였고, 네이버 지역검색(사장님이 알려 준 방법)
+   * 으로 채웠다. `scripts/fixtures/store-gu.json` 이 근거와 함께 원본을 들고 있다. */
+  {
+    const gs9 = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    const ix9 = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+    const fx9 = new URL('../scripts/fixtures/store-gu.json', import.meta.url);
+    if (fs.existsSync(gs9) && fs.existsSync(ix9) && fs.existsSync(fx9)) {
+      const g = fs.readFileSync(gs9, 'utf8');
+      const x = fs.readFileSync(ix9, 'utf8');
+      const fx = JSON.parse(fs.readFileSync(fx9, 'utf8'))['매장'];
+      /* **표가 두 벌이면 갈린다** — fixture 가 원본이고 .gs 는 옮겨 적은 것이다.
+         한 곳만 고치면 지도가 조용히 옛 구를 칠한다. */
+      const miss = fx.filter((r) => !g.includes("'" + r.name + "': '" + r['구'] + "'"));
+      const gu12 = ['영통구','권선구','팔달구','장안구','분당구','수정구','중원구','동안구','만안구','수지구','기흥구','처인구'];
+      const noCell = gu12.filter((k) => !x.includes('data-cell="' + k + '"'));
+      if (miss.length) {
+        fail(`[바이럴] GU 표가 fixture 와 어긋난다: ${miss.slice(0, 3).map((r) => r.name).join(', ')} — 지도가 조용히 옛 구를 칠한다`);
+      } else if (noCell.length) {
+        fail(`[바이럴] 지도에 자치구 칸이 없다: ${noCell.join(', ')} — build:regionmap 을 다시 돌릴 것`);
+      /* 구를 모르면 짐작해 넣지 않는다 — 지도는 멀쩡해 보이는데 엉뚱한 구가 칠해진다 */
+      } else if (!g.includes('GU[name] || si')) {
+        fail('[바이럴] 구를 모르는 매장을 어딘가에 넣는다 — 짐작으로 칠하면 아무도 못 알아챈다');
+      } else if (!x.includes('어느 구인지 몰라 지도에 안 칠했습니다')) {
+        fail('[바이럴] 구 미상 건수를 안 밝힌다 — 합계가 안 맞는 이유를 알 수 없다');
+      /* 자치구로 쪼개면 경기 남부가 빽빽해져 글자가 서로 먹는다 */
+      } else if (!x.includes('4.4 로도 안 들어간다')) {
+        fail('[바이럴] 칸에 안 들어가는 이름표를 줄이거나 빼지 않는다 — 글자가 서로 먹는다');
+      } else if (!x.includes('겹치는 이름표는 작은 칸 것부터 뺀다')) {
+        fail('[바이럴] 겹친 이름표를 안 뺀다 — 크기만 봐서는 이웃끼리의 충돌을 못 막는다');
+      /* 구조를 바꾸면 옛 전제로 쓴 문구가 그 자리에서 거짓이 된다 */
+      } else if (x.includes('성남에 광주·이천·하남이 듭니다')) {
+        fail('[바이럴] 지도 설명이 옛 구조를 말한다 — 이제 칸은 영업지역이 아니라 시·군이다');
+      } else {
+        console.log(`OK: 바이럴 지도 시·구 — 자치구 12칸 · 매장 ${fx.length}곳 대응 · 구 미상은 밝히고 안 칠한다`);
+      }
+    }
+  }
+
   /* ── 지도 지역별 색 스펙트럼 (2026-09-01 사장님 요청) ──────────────────────
    *
    * *"지도에 모두 같은 컬러로 되어 있는데 지역별(6개 지역) 컬러를 정해서

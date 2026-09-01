@@ -37,12 +37,35 @@ const SRC = path.join(ROOT, 'scripts/fixtures/gw-municipalities.json');
  *   용인 ← 화성(「동탄」·「롯데동탄」·「남양모바일」·「화성캠퍼스모바일」)
  *   안양 ← 광명(「광명소하」·「광명기아자동차모바일」)
  */
-const CELL = {
-  수원: '수원', 성남: '성남', 광주: '성남', 이천: '성남', 하남: '성남',
-  평택: '평택', 오산: '평택', 안성: '평택',
-  용인: '용인', 화성: '용인',
-  안양: '안양', 광명: '안양'
-};
+/* ── 칸을 무엇으로 삼는가 (2026-09-01 개정) ───────────────────────────────
+ *
+ * 예전에는 이 표가 시·군을 **영업지역 이름으로 합쳤다** — 광주·이천·하남을 성남으로,
+ * 화성을 용인으로, 광명을 안양으로. 그래서 광주 매장 후기가 성남 색으로 칠해졌다.
+ * 편성은 그렇지만 **후기가 난 자리는 아니다.**
+ *
+ * 지금은 **시·군이 곧 칸**이고, 자치구가 있는 네 시(수원·성남·안양·용인)는 **구**까지
+ * 내려간다. 사장님 지시 — *"같은 수원이라고 해도 상권이 다르고 후기가 다를 수
+ * 있습니다."* 경계 데이터에 12구가 이미 별도 폴리곤으로 있어 새 자료가 필요 없다.
+ *
+ * **합계는 그대로 맞는다** — 화면의 지역 막대는 `AREA` 6곳이고, `areaCells` 가
+ * 「그 지역이 덮는 칸들」을 넘겨 한 줄에 손을 얹으면 그 칸 전부가 밝아진다.
+ * 강원을 네 시로 푼 선례와 같은 구조다. */
+const GU_CITY = { 수원: 1, 성남: 1, 안양: 1, 용인: 1 };
+/** `수원시영통구` → `영통구`. 자치구가 있는 시에서만 쓴다. */
+function guOf(name) {
+  /* **탐욕 매칭을 조심할 것** — `[가-힣]+구$` 는 `수원시영통구` 를 통째로 문다.
+     자치구 이름은 전부 두 글자 + 구 다(영통·팔달·권선·장안·분당·중원·수정·
+     동안·만안·수지·기흥·처인). 이 저장소가 부분일치로 되풀이해 데인 병이다. */
+  const m = String(name || '').match(/([가-힣]{2}구)$/);
+  return m ? m[1] : '';
+}
+/** 폴리곤 하나가 어느 칸인가 */
+/** 칸 경계상자 — 이름표 글꼴을 고르는 데 쓴다. **쓰는 곳보다 앞에 둔다**(const 는 TDZ 다) */
+const cellBox = {};
+function cellOf(f) {
+  if (GU_CITY[f.region]) return guOf(f.name) || f.region;
+  return f.region;
+}
 const OUT = path.join(ROOT, 'docs/apps-script/ReviewsIndex.html');
 
 /* 화면 폭 기준. 세로는 실제 종횡비대로 따라간다 — 억지로 맞추면 지도가 찌그러진다. */
@@ -144,7 +167,14 @@ for (const f of src.features) {
     continue;
   }
   /* 경기는 CELL 이 묶고, 강원은 표에 없으니 시 이름이 그대로 칸이 된다 */
-  const cell = CELL[f.region] || f.region;
+  const cell = cellOf(f);
+  /* 칸 경계상자 — 여러 폴리곤이 한 칸이면 합친다 */
+  eachPt(f.coords, (lon, lat) => {
+    const x = X(lon), y = Y(lat);
+    const t = cellBox[cell] || (cellBox[cell] = { x1: 1e9, y1: 1e9, x2: -1e9, y2: -1e9 });
+    if (x < t.x1) t.x1 = x; if (x > t.x2) t.x2 = x;
+    if (y < t.y1) t.y1 = y; if (y > t.y2) t.y2 = y;
+  });
   paths.push('<path data-cell="' + cell + '" data-sigun="' + f.region
     + '" data-code="' + f.code + '" d="' + d + '"/>');
   /* ── 이름표 자리 — **대표 시의 중심**이다 ─────────────────────────────────
@@ -155,7 +185,10 @@ for (const f of src.features) {
    * 칸 이름은 곧 대표 시 이름이므로(용인 칸 → 용인시) 그 시 위에 찍으면 **이름과
    * 자리가 맞고 칸 밖으로 나갈 수도 없다.** 강원은 1:1 이라 그대로다.
    */
-  if (f.region === cell) {
+  /* **구 칸은 자기 폴리곤이 곧 그 칸이다** — `region`(시)과 `cell`(구)이 다르지만
+     이름표를 찍어야 한다. 예전 조건(`region === cell`)만 두면 12개 구가 통째로
+     이름 없이 남는다(실제로 그랬다). */
+  if (f.region === cell || guOf(f.name) === cell) {
     const ring = biggestRing(f.coords);
     const c = ring && ringCentroid(ring.map(([lon, lat]) => [X(lon), Y(lat)]));
     if (c) {
@@ -164,10 +197,28 @@ for (const f of src.features) {
     }
   }
 }
+/* **자치구 칸은 「구」를 떼고 적는다.** viewBox 400 기준으로 동안구 7.8 · 영통구
+   7.9 라 세 글자가 안 들어간다(실측). 두 글자면 12곳 중 10곳이 들어간다.
+   칸 id 는 `영통구` 그대로 두고 **화면에 적는 말만** 줄인다 — id 를 줄이면
+   강원 `양구`(군)와 부딪힌다. */
+const GU_SET = new Set(Object.keys(GU_CITY));
+function labelText(cell) {
+  if (!/[가-힣]{2}구$/.test(cell)) return cell;
+  /* 그 구가 자치구가 있는 네 시의 것인지 확인한다 — 강원 `양구`(군)는 그대로 둔다 */
+  const owner = src.features.find((f) => guOf(f.name) === cell);
+  return owner && GU_SET.has(owner.region) ? cell.slice(0, -1) : cell;
+}
 const labels = {};
 for (const r of Object.keys(acc)) {
   const t = acc[r];
   labels[r] = { x: +(t.x / t.a).toFixed(P), y: +(t.y / t.a).toFixed(P) };
+  const lt = labelText(r);
+  if (lt !== r) labels[r].t = lt;          /* 다를 때만 실어 파일을 안 키운다 */
+  /* **칸이 얼마나 넓은가** — 화면이 이 값으로 글꼴을 고르고, 그래도 안 들어가면
+     이름표를 생략한다. 자치구로 쪼개면 경기 남부가 빽빽해져(x 50~130 에 12구)
+     글자가 서로 먹는다 — 크기를 재서 스스로 물러서게 하는 편이 낫다. */
+  const bb = cellBox[r];
+  if (bb) { labels[r].w = +(bb.x2 - bb.x1).toFixed(P); labels[r].h = +(bb.y2 - bb.y1).toFixed(P); }
 }
 
 /* ── 시·군 이름표 — **관할 밖까지 전부** ────────────────────────────────────
@@ -200,7 +251,7 @@ for (const k of Object.keys(sigun)) delete sigun[k].a;
 const members = {};
 for (const f of src.features) {
   if (!f.mine) continue;
-  const cell = CELL[f.region] || f.region;
+  const cell = cellOf(f);
   if (!members[cell]) members[cell] = [];
   if (members[cell].indexOf(f.region) < 0) members[cell].push(f.region);
 }
