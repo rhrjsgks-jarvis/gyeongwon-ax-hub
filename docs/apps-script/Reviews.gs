@@ -1634,12 +1634,36 @@ function summary_() {
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0 }, byDay = {}, byMonth = {}, byKind = {};
   var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {};
+  /* ── 매장별 세 갈래 (2026-09-01) ─────────────────────────────────────────
+   * **셋을 한 루프에서 낸다** — 따로 돌면 같은 자료를 세 번 훑는다.
+   *
+   * · byStoreSrc  블로그/카페 구성. **다른 두 지표의 신뢰도 표시**다 —
+   *               블로그 비중이 매장마다 9~100% 라(실측), 작성일 기반 지표가
+   *               어떤 매장에서는 후기의 9% 만 보고 말한다.
+   * · byStoreMonth 매장별 월 건수. **판정(급증·급감)은 화면이 한다** — 문턱을
+   *               서버가 박으면 사장님이 조정할 수 없고, 이 저장소가 이미
+   *               서버가 미리 계산해 내려보낸 경계 인덱스·잘림 표시로 두 번 데었다(그 값이
+   *               화면 사정이 바뀌는 순간 조용히 거짓이 된다).
+   * · lastPost   매장별 마지막 **작성일**. 누적 순위표에서는 안 보이는 신호다 —
+   *               안성은 누적 213건인데 마지막 블로그 후기가 5개월 전이다.
+   *
+   * **셋 다 작성일/출처가 근거라 카페는 월 집계에 안 든다.** 화면이 그 사실을
+   * 매장 줄마다 적어야 한다(그래서 byStoreSrc 를 함께 낸다). */
+  var byStoreSrc = {}, byStoreMonth = {}, lastPost = {};
+  /* 최근 12개월만 담는다 — 매장 65 × 전 기간이면 쓸데없이 커지고, 급증·급감은
+     직전 완결 월과 그 앞 3개월만 보면 된다. */
+  var monthFloor = Utilities.formatDate(new Date(now.getTime() - 400 * 864e5), tz, 'yyyy-MM');
 
   /* **후기가 0건인 매장도 목록에 세운다**(사장님: *"전점이 다 나와야 합니다"*).
      예전에는 잡힌 매장만 키가 생겨 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
      *"우리 매장이 없다"* 로 읽힌다. 감추는 것과 없는 것은 다른 말이다. */
   for (i = 0; i < STORES.length; i++) {
     byStore[STORES[i][1]] = 0;
+    /* **0건 매장도 키를 만든다** — byStore 와 같은 이유다. 빠지면 화면에서
+       그 매장이 사라져 「우리 매장이 없다」로 읽힌다. */
+    byStoreSrc[STORES[i][1]] = { b: 0, c: 0 };
+    byStoreMonth[STORES[i][1]] = {};
+    lastPost[STORES[i][1]] = '';
     /* **묶음은 영업스케치 지역 하나뿐이다.** 한때 시·군을 한 층 더 뒀는데
        시·군과 지역이 1:1이 아니라 어긋났다 — 화성DSR모바일은 시·군이 화성인데
        편성은 수원이고, 미래기술캠퍼스모바일은 시·군이 수원인데 편성은 용인이다.
@@ -1679,11 +1703,22 @@ function summary_() {
          같은 뿌리다. 화면이 「작성일 기준」이라 적고, 뺀 건수도 함께 적는다. */
       byDay[f] = (byDay[f] || 0) + 1;
       byMonth[f.slice(0, 7)] = (byMonth[f.slice(0, 7)] || 0) + 1;
+      /* 매장별 월 집계·마지막 작성일 — **작성일을 아는 글만**. 카페 줄의 date 는
+         발견일이라 여기 넣으면 이번 달만 거대해진다(이미 두 번 데인 자리다). */
+      var sm = f.slice(0, 7);
+      if (sm >= monthFloor) {
+        if (!byStoreMonth[r.storeName]) byStoreMonth[r.storeName] = {};
+        byStoreMonth[r.storeName][sm] = (byStoreMonth[r.storeName][sm] || 0) + 1;
+      }
+      if (!lastPost[r.storeName] || f > lastPost[r.storeName]) lastPost[r.storeName] = f;
     }
     if (r.seenAt === d0) newToday++;          /* 오늘 **새로 발견**한 것 — 뜻이 다르다 */
     byKind[r.kind] = (byKind[r.kind] || 0) + 1;
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
     bySrc[r.src] = (bySrc[r.src] || 0) + 1;
+    /* 채널 구성 — **작성일과 무관하게 전 건을 센다**(출처는 늘 안다) */
+    if (!byStoreSrc[r.storeName]) byStoreSrc[r.storeName] = { b: 0, c: 0 };
+    if (r.src === '카페') byStoreSrc[r.storeName].c++; else byStoreSrc[r.storeName].b++;
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
     var a = sido_(r.store);
     /* 지도 칸 — 강원만 시로 갈린다(`mapCell_` 주석 참조) */
@@ -1828,6 +1863,8 @@ function summary_() {
     /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
+    /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
+    byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
        함께수집이되어야합니다"*). 수집은 처음부터 `link` 열에 담고 있었는데 **화면이
        200 건만 받아** 매장별로 골라 볼 수가 없었다. 건수와 링크가 이어져야 뜻이 있다.
@@ -2074,7 +2111,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 2;
+var SUM_VER = 3;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

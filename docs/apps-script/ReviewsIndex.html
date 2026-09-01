@@ -171,6 +171,12 @@
   .item a:hover { color: var(--blue); text-decoration: underline; }
   .meta { font-size: 10.5px; color: var(--mute); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .tag { background: #EEF2FF; color: var(--blue); border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: 10px; }
+  /* 매장 신호 — 기존 색 변수만 쓴다(의존성 0) */
+  .sighd { font-size: 11px; font-weight: 800; color: var(--blue); margin: 10px 0 4px; }
+  .sighd:first-child { margin-top: 0; }
+  .sigrow { font-size: 12.5px; line-height: 1.7; padding: 3px 0; border-bottom: 1px solid #F1F3F7; }
+  .sigrow:last-child { border-bottom: 0; }
+  .mini { font-size: 11px; color: #8A90A0; }
   .tag.c { background: #F0FDF4; color: #15803D; }
 
   .filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -593,6 +599,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            "우리 매장이 없다"로 읽힌다. 0건도 흐리게 적어 **전점을 세운다.** -->
       <div class="sub" id="store-sub">–</div>
       <div id="regions"></div>
+    </div>
+    <div class="card" data-card="signal">
+      <h2>매장 신호</h2>
+      <!-- 누적 순위표에서는 절대 안 보이는 것 둘 — **자기 과거 대비**와 **마지막 후기**.
+           안성은 누적 213건(상위 9위)인데 마지막 블로그 후기가 5개월 전이다.
+           매장 규모 자료가 없어(lib/stores.ts 는 code·name·active 셋뿐) 매장끼리
+           절대 건수를 견주는 것은 규모 비교가 못 된다 — 그래서 자기 과거와 견준다. -->
+      <div class="sub" id="sig-sub">–</div>
+      <div id="signals"></div>
     </div>
     <div class="card" data-card="cafe">
       <h2>어디에 올라오나</h2>
@@ -2083,6 +2098,110 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   }
 
   var lastSig = null;   /* 직전 필터 서명 — 바뀌면 1쪽으로 돌아간다 */
+  /* ── 매장 신호 — 급증·급감 / 침묵 (2026-09-01) ─────────────────────────────
+   *
+   * **판정을 서버가 아니라 여기서 한다.** 문턱을 서버에 박으면 조정할 수 없고,
+   * 이 저장소는 서버가 미리 계산한 값이 화면 사정이 바뀌며 조용히 거짓이 되는
+   * 사고를 두 번 겪었다. 서버는 매장별 월 집계만 주고 해석은 화면이 한다.
+   *
+   * **문턱이 이 지표의 전부다.** 문턱 없이 배수만 보면 상위가 전부 `1건 → 6배` ·
+   * `0건 → ∞` 인 잡음이다(실측). 매장별 월 건수가 대개 한 자릿수라 포아송 잡음이
+   * 배수를 지배한다. 그래서 최소 건수를 함께 요구한다.
+   *
+   * **이번 달로 견주지 않는다.** 오늘이 9/1 이면 9월은 3건이라 전 매장이 급감으로
+   * 잡힌다. 반드시 **직전 완결 월**과 견준다. */
+  var SIG_MIN = 8, SIG_UP = 2.0, SIG_DOWN = 0.5, SIG_QUIET = 20;
+  /* **침묵에도 문턱이 있어야 한다.** 없이 「가장 오래된 6곳」을 뽑으면 전 매장이
+     활발할 때도 6곳이 채워져 멀쩡한 매장이 조용한 것처럼 보인다(실물에서 잡았다).
+     90일 — 월 단위 자료라 두 달을 넘겨야 「오래」라 부를 수 있다. */
+  var SIG_QUIET_DAYS = 90;
+
+  function ymAdd(ym, d) {
+    var y = +ym.slice(0, 4), m = +ym.slice(5, 7) + d;
+    while (m < 1) { m += 12; y--; }
+    while (m > 12) { m -= 12; y++; }
+    return y + "-" + (m < 10 ? "0" : "") + m;
+  }
+
+  /* 블로그 비중 — **다른 두 신호의 신뢰도 표시**다. 실측으로 매장마다 9~100% 라,
+     작성일 기반 신호가 어떤 매장에서는 그 매장 후기의 9% 만 보고 말한다. */
+  function blogPct(name) {
+    var v = (DATA.byStoreSrc || {})[name];
+    if (!v) return null;
+    var t = v.b + v.c;
+    return t ? Math.round(v.b * 100 / t) : null;
+  }
+  function pctTag(name) {
+    var p = blogPct(name);
+    if (p === null) return "";
+    var weak = p < 50;
+    return ' <span class="tag' + (weak ? " c" : "") + '">블로그 ' + p + "%</span>"
+      + (weak ? ' <span class="mini">카페 위주라 이 신호를 신뢰하지 마세요</span>' : "");
+  }
+
+  function renderSignals() {
+    var el = document.getElementById("signals"); if (!el) return;
+    var bm = DATA.byStoreMonth || {}, lp = DATA.lastPost || {}, bs = DATA.byStore || {};
+    var today = (DATA.at || "").slice(0, 7);
+    if (!today) { el.innerHTML = ""; return; }
+    var cur = ymAdd(today, -1);                     /* 직전 완결 월 */
+    var base3 = [ymAdd(cur, -1), ymAdd(cur, -2), ymAdd(cur, -3)];
+
+    var up = [], down = [];
+    Object.keys(bm).forEach(function (name) {
+      var m = bm[name] || {};
+      var c = m[cur] || 0;
+      var b = (m[base3[0]] || 0) + (m[base3[1]] || 0) + (m[base3[2]] || 0);
+      var avg = b / 3;
+      if (!avg) return;                              /* 0 으로 나누지 않는다 */
+      var x = c / avg;
+      if (c >= SIG_MIN && x >= SIG_UP) up.push([name, c, avg, x]);
+      else if (avg >= SIG_MIN && x <= SIG_DOWN) down.push([name, c, avg, x]);
+    });
+    up.sort(function (a, b2) { return b2[3] - a[3]; });
+    down.sort(function (a, b2) { return a[3] - b2[3]; });
+
+    /* 침묵 — 누적이 어느 정도 있는데 마지막 작성일이 오래된 곳.
+       **작성일이 아예 없는 매장은 빼지 않고 따로 센다** — 그 17곳은 대부분
+       사업장 안 모바일 전용점이라 원래 블로그 후기가 안 나오는 업태다.
+       0건을 「죽었다」로 적으면 화면이 거짓말을 한다. */
+    var quiet = [], noPost = 0;
+    var cutoff = new Date(Date.parse(DATA.at || '') - SIG_QUIET_DAYS * 864e5);
+    var cutoffS = isNaN(cutoff.getTime()) ? '' : cutoff.toISOString().slice(0, 10);
+    Object.keys(bs).forEach(function (name) {
+      if ((bs[name] || 0) < SIG_QUIET) return;
+      var d = lp[name];
+      if (!d) { noPost++; return; }
+      if (cutoffS && d >= cutoffS) return;      /* 최근에 글이 있으면 조용한 것이 아니다 */
+      quiet.push([name, d, bs[name]]);
+    });
+    quiet.sort(function (a, b2) { return a[1] < b2[1] ? -1 : 1; });
+    quiet = quiet.slice(0, 6);
+
+    function rows(list, fmt) {
+      return list.map(function (r) {
+        return '<div class="sigrow"><b>' + esc(r[0]) + "</b> " + fmt(r) + pctTag(r[0]) + "</div>";
+      }).join("");
+    }
+    var h = "";
+    if (up.length) h += '<div class="sighd">늘었습니다</div>' + rows(up, function (r) {
+      return nf(r[1]) + "건 · 앞 3개월 평균 " + r[2].toFixed(1) + "건 — <b>" + r[3].toFixed(1) + "배</b>";
+    });
+    if (down.length) h += '<div class="sighd">줄었습니다</div>' + rows(down, function (r) {
+      return nf(r[1]) + "건 · 앞 3개월 평균 " + r[2].toFixed(1) + "건 — <b>" + r[3].toFixed(1) + "배</b>";
+    });
+    if (quiet.length) h += '<div class="sighd">오래 조용합니다</div>' + rows(quiet, function (r) {
+      return "마지막 후기 <b>" + r[1] + "</b> · 누적 " + nf(r[2]) + "건";
+    });
+    if (!h) h = '<div class="mini">문턱(월 ' + SIG_MIN + "건 이상 · 2배/0.5배)을 넘는 매장이 없습니다.</div>";
+    if (noPost) h += '<div class="mini">작성일 있는 후기가 한 건도 없는 매장 ' + noPost
+      + "곳은 뺐습니다 — 사업장 안 모바일 전용점이 대부분이라 원래 블로그 후기가 안 나옵니다.</div>";
+    el.innerHTML = h;
+    var sub = document.getElementById("sig-sub");
+    if (sub) sub.textContent = cur + " 기준(" + today + "은 아직 진행 중) · 조용함은 " + SIG_QUIET_DAYS + "일 · 작성일을 아는 글만 셉니다"
+      + " — 카페 글에는 작성일이 없어 이 신호에 들지 않습니다";
+  }
+
   function render() {
     /* **필터가 바뀌면 1쪽으로.** 필터를 바꾸는 길이 여덟(지도·매장·카페·유형·관심·기간·
        칩 해제·지도 아래 목록)이라 그 자리마다 적으면 반드시 하나를 빠뜨린다 — 빠뜨린
@@ -2103,6 +2222,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     renderProgress();
     renderTrend();
     renderDiag();
+    renderSignals();
     renderMap();
     /* **자료가 온 뒤에야 「한 번 움직였다」로 친다.** 뼈대 렌더에서 세우면 정작
        숫자가 채워질 때는 이미 「두 번째」라 한 번도 안 움직인다. */

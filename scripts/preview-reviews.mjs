@@ -56,6 +56,36 @@ for (let i = 0; i < 30; i++) {
   const d = new Date(2026, 7, 31 - i);
   byDay[d.toISOString().slice(0, 10)] = 20 + ((i * 7) % 40);   /* 고정값 — 돌릴 때마다 달라지면 눈으로 비교할 수가 없다 */
 }
+/* ── 매장 신호(급증·급감·침묵) 모의 자료 ─────────────────────────────────────
+ * **경계를 일부러 섞는다** — 이 하네스의 값어치가 거기 있다.
+ *   · 급증 1곳 · 급감 1곳 · 문턱 아슬하게 못 넘는 1곳(잡음이 안 뜨는지)
+ *   · 카페 위주 매장 1곳 — 「신뢰하지 마세요」 경고가 뜨는지
+ *   · 작성일이 아예 없는 매장 — 침묵으로 잘못 세지 않는지
+ * 실제 자료(VIRAL_JSON)를 쓰면 이 값은 덮인다. */
+const sigStores = Object.keys(byStore).filter(n => byStore[n] > 0);
+const byStoreMonth = {}, byStoreSrc = {}, lastPost = {};
+sigStores.forEach((n, i) => {
+  /* 기본은 평탄 — 신호가 안 떠야 정상이다 */
+  byStoreMonth[n] = { '2026-04': 6, '2026-05': 6, '2026-06': 6, '2026-07': 6 };
+  byStoreSrc[n] = { b: 70, c: 30 };
+  lastPost[n] = '2026-07-28';
+});
+if (sigStores[0]) {                            /* 급증 — 3배 */
+  byStoreMonth[sigStores[0]] = { '2026-04': 9, '2026-05': 10, '2026-06': 11, '2026-07': 30 };
+}
+if (sigStores[1]) {                            /* 급감 — 0.3배 */
+  byStoreMonth[sigStores[1]] = { '2026-04': 20, '2026-05': 22, '2026-06': 18, '2026-07': 6 };
+}
+if (sigStores[2]) {                            /* 문턱 미달 — 배수는 크지만 건수가 적다 */
+  byStoreMonth[sigStores[2]] = { '2026-04': 1, '2026-05': 0, '2026-06': 1, '2026-07': 5 };
+}
+if (sigStores[3]) {                            /* 카페 위주 — 경고가 붙어야 한다 */
+  byStoreSrc[sigStores[3]] = { b: 9, c: 91 };
+  byStoreMonth[sigStores[3]] = { '2026-04': 10, '2026-05': 11, '2026-06': 9, '2026-07': 26 };
+}
+if (sigStores[4]) lastPost[sigStores[4]] = '2025-06-02';   /* 침묵 — 15개월 */
+if (sigStores[5]) lastPost[sigStores[5]] = '';             /* 작성일 없음 — 침묵으로 세면 안 된다 */
+
 const CAFES = ['다이렉트결혼준비', '레몬테라스 [인테리어,리폼,DIY]', '부동산스터디', '맘스홀릭베이비', '지역맘카페'];
 const KINDS = { 구매: 980, 설치: 640, 비교: 410, 문의: 260, 기타: 143 };
 
@@ -89,6 +119,7 @@ const DATA = {
   minDate: '2021-04-02', maxDate: '2026-08-31',
   byMonth, byDay, byKind: KINDS, byRegion, byMap, byStore,
   bySrc: { 블로그: 812, 카페: 1621 },
+  byStoreSrc, byStoreMonth, lastPost,
   byCafe: CAFES.reduce((o, c, i) => (o[c] = 520 - i * 90, o), {}),
   stores: 65,
   cursor: 0, chainOn: false, chainErr: '',
