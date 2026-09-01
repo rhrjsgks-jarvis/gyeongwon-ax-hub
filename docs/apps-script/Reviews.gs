@@ -1186,9 +1186,12 @@ function srcName_(kind) {
  *  다음 수집이 스스로 되돌린다 — 그 판정은 근거가 없었으므로 「미상」이 정직하다.
  *  한 번만 돈다(`_basisFix`). 되돌린 뒤로는 새 기준선이 제 몫을 한다. */
 function repairBasis_(sh) {
-  if (props_().getProperty('_basisFix')) return 0;
+  /* **판 번호를 올린다**(2026-09-02). 1판은 「한 실행 안에서 자라던 것」을 되돌렸고,
+     2판은 **첫 한 바퀴 동안 실행 사이에서 자라던 것**을 되돌린다. 첫 완주 전에
+     매긴 「새글」은 전부 근거가 없다 — 아직 발견 중이었기 때문이다. */
+  if (props_().getProperty('_basisFix2')) return 0;
   var last = sh.getLastRow();
-  if (last < 2) { props_().setProperty('_basisFix', '1'); return 0; }
+  if (last < 2) { props_().setProperty('_basisFix2', '1'); return 0; }
   var col = HEADER.length;                       /* dateBasis 는 맨 뒤 칸이다 */
   var rg = sh.getRange(2, col, last - 1, 1);
   var v = rg.getValues(), n = 0, i;
@@ -1196,7 +1199,7 @@ function repairBasis_(sh) {
     if (String(v[i][0]) === '새글') { v[i][0] = '미상'; n++; }
   }
   if (n) rg.setValues(v);
-  props_().setProperty('_basisFix', '1');
+  props_().setProperty('_basisFix2', '1');
   if (n) sumCacheClear_();
   return n;
 }
@@ -1275,6 +1278,21 @@ function sweep_(mode) {
    * **기준선은 「이전 수집 시점」이어야 뜻이 있다.** 그래서 시트에서 한 번 읽고
    * 그대로 얼린다. 처음 모으는 카페는 기준선이 없어 전부 「미상」이 된다 —
    * 그것이 정직하다(언제 쓰였는지 우리는 정말 모른다). 다음 바퀴부터 제 몫을 한다. */
+  /* ── 기준선은 **한 바퀴를 마친 뒤**에야 뜻이 있다 (2026-09-02) ─────────────
+   *
+   * 어제는 「한 실행 안에서」 기준선이 자라는 것을 막았다. 그런데 **첫 한 바퀴
+   * 동안에는 실행과 실행 사이에서 자란다** —
+   *   1회차: 카페 X 의 1000번을 처음 보고 시트에 저장 → 기준선이 생김
+   *   2회차: 같은 카페 1200번을 봄 → 1200 > 1000 → **「새 글」로 오판**
+   * 새로 쓰인 것이 아니라 **우리가 아직 못 본 것**이었을 뿐이다.
+   *
+   * 실측으로 드러났다 — 첫 완주 직후 「오늘」이 212건인데 **블로그는 0건**이었다.
+   * 수집이 03:11 에 끝났으니 자정~새벽 3시에 쓰인 글만 오늘일 수 있는데,
+   * 그 세 시간에 카페만 212건일 수는 없다.
+   *
+   * 그래서 **한 바퀴를 마친 적이 있을 때만** 새 글로 판정한다(`_fullAt`).
+   * 그 전에는 전부 「미상」이다 — 아직 발견 중이라 기준이 될 수 없다. */
+  var baselineOk = !!props_().getProperty('_fullAt');
   var maxNo = {};
   if (itemSheet.getLastRow() > 1) {
     var links = itemSheet.getRange(2, 6, itemSheet.getLastRow() - 1, 1).getValues();
@@ -1443,7 +1461,7 @@ function sweep_(mode) {
           var basis = '';
           if (post.length !== 8) {
             var cn = cafeNo_(link);
-            basis = (cn && maxNo[cn.id] > 0 && cn.no > maxNo[cn.id]) ? '새글' : '미상';
+            basis = (baselineOk && cn && maxNo[cn.id] > 0 && cn.no > maxNo[cn.id]) ? '새글' : '미상';
             /* **여기서 기준선을 올리지 않는다** — 올리면 같은 카페의 다른 글이
                서로를 기준으로 삼아 옛 글이 「새 글」로 잡힌다(위 주석 참조). */
           }
@@ -1616,7 +1634,7 @@ function sweep_(mode) {
                  저장되지 않는다.** 커서가 44/65 에 선 채 이어달리기도 안 걸린 원인이다.
                  아래 `assertRow_` 가 다시는 조용히 어긋나지 않게 막는다. */
               var cbn = cafeNo_(clink);
-              var cbasis = (cbn && maxNo[cbn.id] > 0 && cbn.no > maxNo[cbn.id]) ? '새글' : '미상';
+              var cbasis = (baselineOk && cbn && maxNo[cbn.id] > 0 && cbn.no > maxNo[cbn.id]) ? '새글' : '미상';
               add.push([
                 stamp,                                 /* 카페는 네이버가 작성일을 안 준다 */
                 STORES[cs][0], cName, '카페',
