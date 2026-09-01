@@ -1190,6 +1190,42 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ── 꼬리 작업이 6분을 넘겨 수집을 여덟 번 죽이고 있었다 (2026-09-01) ──────
+   *
+   * 경쟁비교에 웹문서를 더하며 일이 3배가 됐는데 **시간 검사가 없었다.**
+   * 매번 6분을 넘겨 죽었고, 못 끝내니 `_rivalAt` 도 안 적혀 다음 실행이 또 돌았다.
+   * 여덟 번 잇달아 죽자 감시 트리거가 스스로 포기했다(설계대로지만 원인은 여기였다).
+   *
+   * **되살아난 셈을 함수 맨 끝에서 되돌린 것도 잘못이었다** — 매장 수집은 멀쩡히
+   * 했는데 뒤따르는 꼬리 작업이 죽으면 셈이 안 줄었다. 매장 한 바퀴를 마친 자리에서
+   * 되돌려야 「이 실행은 제 몫을 했다」가 제대로 셈에 반영된다. */
+  {
+    const gsC = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+    if (fs.existsSync(gsC)) {
+      const g = fs.readFileSync(gsC, 'utf8');
+      const rv = g.indexOf('function collectRival');
+      const seg = rv < 0 ? '' : g.slice(rv, rv + 4000);
+      const watchAt = g.indexOf("setProperty('_watchN', '0')");
+      const cafeAt = g.indexOf('var cafeCalls = 0');
+      if (!seg) {
+        fail('[바이럴] collectRival 을 못 찾았다 — 검사가 무의미해졌으니 앵커를 고칠 것');
+      } else if (seg.indexOf('deadline') < 0) {
+        fail('[바이럴] 경쟁비교에 시간 검사가 없다 — 6분을 넘겨 그 실행이 통째로 죽는다');
+      /* 못 끝냈으면 이어서 돌아야 한다 — 매번 처음부터면 영영 못 끝낸다 */
+      } else if (seg.indexOf('_rivalCur') < 0) {
+        fail('[바이럴] 경쟁비교가 이어서 돌지 않는다 — 한 바퀴를 못 끝내면 영영 못 끝낸다');
+      /* 못 끝냈는데 완료로 적으면 그날 다시 시도하지 않는다 */
+      } else if (g.indexOf('rivalRun.done) props_().setProperty(') < 0) {
+        fail('[바이럴] 경쟁비교를 못 끝냈는데 완료로 적는다 — 반쪽 자료가 그날 하루 굳는다');
+      /* 되살아난 셈은 매장 루프를 마친 자리에서 되돌려야 한다 */
+      } else if (watchAt < 0 || cafeAt < 0 || watchAt > cafeAt) {
+        fail('[바이럴] 되살아난 셈을 꼬리 작업 뒤에서 되돌린다 — 꼬리가 죽으면 멀쩡한 실행도 실패로 센다');
+      } else {
+        console.log('OK: 바이럴 꼬리 작업 — 경쟁비교에 시간 검사·이어달리기 · 셈은 매장 루프 직후에 되돌린다');
+      }
+    }
+  }
+
   /* ── 카페 새 글 기준선은 「이전 수집 시점」이어야 한다 (2026-09-01) ─────────
    *
    * 사장님 지적 — *"오늘 건수가 33건으로 수집되고 있습니다. 수정이 필요해 보입니다."*

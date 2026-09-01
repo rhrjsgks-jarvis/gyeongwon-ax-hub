@@ -1525,7 +1525,15 @@ function sweep_(mode) {
      **예외를 삼키지 않는다** — 조용히 실패하면 왜 비었는지 아무도 모른다. */
   var rivalRun = null;
   if (rivalDue_() && !err && !over()) {
-    try { rivalRun = collectRival(); props_().setProperty('_rivalAt', stamp); sumCacheClear_(); }
+    /* **마감 시각을 넘긴다.** 경쟁비교는 갈래가 셋이 되며 일이 3배가 됐는데
+       시간 검사가 없어 매번 6분을 넘겨 죽었다 — 못 끝내니 `_rivalAt` 도 안 적히고
+       다음 실행이 또 돌아 **여덟 번 잇달아 죽자 감시 트리거가 포기했다.**
+       한 바퀴를 못 끝내면 다음 실행이 **이어서** 돈다(지역 커서). */
+    try {
+      rivalRun = collectRival(t0 + BUDGET_MS);
+      if (rivalRun && rivalRun.done) props_().setProperty('_rivalAt', stamp);
+      sumCacheClear_();
+    }
     catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
   }
 
@@ -1567,6 +1575,11 @@ function sweep_(mode) {
      **매장 한 바퀴를 다 돈 뒤에만 돈다.** 중간에 끼우면 이어달리기(`_cursor`)가
      매장을 가리키는 뜻을 잃는다. 시간이 모자라면 이번엔 건너뛰고 다음 차례에 한다 —
      이 훑기는 카페당 8회라 짧다. */
+  /* **되살아난 횟수를 여기서 되돌린다**(2026-09-01 정정). 예전에는 함수 맨 끝에서
+     되돌렸는데, 그 뒤에 오는 카페 훑기·경쟁비교가 6분을 넘겨 죽으면 **매장 수집은
+     멀쩡히 했는데도** 셈이 안 줄어 여덟 번 만에 감시 트리거가 포기했다.
+     매장 한 바퀴를 여기까지 온 것이 곧 「이 실행은 제 몫을 했다」는 뜻이다. */
+  props_().setProperty('_watchN', '0');
   var cafeCalls = 0, cafeAdd = 0;
   if (!stopped && !err) {
     for (var ci = 0; ci < CAFES.length; ci++) {
@@ -1669,9 +1682,7 @@ function sweep_(mode) {
 
      **한도로 멈춘 것과 오류로 멈춘 것에는 걸지 않는다** — 더 돌아도 결과가 같고,
      1분마다 헛도는 트리거만 남는다. 그때는 사람이 판단할 일이다. */
-  /* **여기까지 왔다 = 정상으로 끝났다.** 되살아난 횟수를 0 으로 되돌린다 —
-     안 되돌리면 오래 도는 바퀴가 여덟 번을 채워 스스로 멈춘다. */
-  props_().setProperty('_watchN', '0');
+  /* (되살아난 횟수는 매장 루프를 마친 자리에서 이미 되돌렸다) */
   var chained = false;
   /* **일시 오류로 이어달리기를 막지 않는다**(2026-09-01 정정). 예전에는 `!err` 였는데,
      갈래 하나가 500 을 내면 그 표시가 남아 이어달리기가 안 걸렸다 — 실제로 웹문서가
@@ -2389,10 +2400,16 @@ function rivalDue_() {
     !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
 }
 
-function collectRival() {
+/** 삼성 vs LG. **마감 시각(`deadline`)을 받아 그 전에 멈춘다.**
+ *  한 바퀴를 못 끝내면 어디까지 했는지 적어 두고(`_rivalCur`) 다음 실행이 이어 돈다 —
+ *  매장 수집이 커서로 이어 도는 것과 같은 방식이다. */
+function collectRival(deadline) {
   var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
   var areas = Object.keys(AREA_Q), rows = [], calls = 0, err = '';
+  var from = Number(props_().getProperty('_rivalCur') || 0);
+  if (!(from >= 0) || from >= areas.length) from = 0;
+  var stoppedR = false;
 
   /* **꼬리말로 질의를 쪼갠다 — 양쪽에 똑같이.**
      한 질의는 200건이 상한이라 쪼개지 않으면 6곳 전부 상한에 닿아 비중을 못 낸다
@@ -2400,7 +2417,10 @@ function collectRival() {
      같은 꼬리말을 쓰는 것** — 한쪽만 쪼개면 그쪽만 많이 받아 비중이 거짓이 된다. */
   var RTAILS = ['', ' 혼수', ' 구매', ' 후기'];
 
-  for (var ai = 0; ai < areas.length; ai++) {
+  for (var ai = from; ai < areas.length; ai++) {
+    /* **지역 하나를 시작하기 전에 시간을 본다.** 한 지역이 수백 회라 도중에
+       끊으면 그 지역 비중이 반쪽이 된다 — 지역 경계에서만 끊는다. */
+    if (deadline && Date.now() > deadline) { stoppedR = true; break; }
     var area = areas[ai], places = AREA_Q[area];
     var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
     var lastAdd = { ours: 0, rival: 0 };
@@ -2489,7 +2509,11 @@ function collectRival() {
     sumCacheClear_();   /* 당사 vs LG 가 바뀐다 */
   }
   if (calls) addUsage_(calls);
-  return { rows: rows.length, calls: calls, error: err };
+  /* 어디까지 했는지 적는다. 한 바퀴를 마쳤으면 지운다 — 다음 바퀴가 처음부터 돈다. */
+  var done = !stoppedR && !err;
+  if (done) props_().deleteProperty('_rivalCur');
+  else props_().setProperty('_rivalCur', String(ai));
+  return { rows: rows.length, calls: calls, error: err, done: done, at: ai, areas: areas.length };
 }
 
 /** 시트 칸의 JSON 을 읽는다. **깨져 있으면 빈 객체다** — 던지면 화면 전체가 죽는다. */
