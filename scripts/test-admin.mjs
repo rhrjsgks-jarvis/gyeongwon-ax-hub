@@ -1150,9 +1150,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         fail(`[바이럴] 시트 쓰기 ${writes}곳 중 ${guards}곳만 칸 수를 확인한다 — 어긋나면 그 실행이 통째로 날아간다`);
       } else if (!g.includes('function assertRow_')) {
         fail('[바이럴] assertRow_ 가 없다 — 칸 수가 어긋나도 원인이 오류에 안 찍힌다');
-      /* **뒤에만 붙인다** — 가운데 끼우면 그 아래 옛 줄이 한 칸씩 밀린다 */
-      } else if (!g.includes("'mgr', 'dateBasis']")) {
-        fail('[바이럴] dateBasis 가 HEADER 맨 뒤가 아니다 — 가운데 끼우면 옛 줄이 한 칸씩 밀린다');
+      /* **뒤에만 붙인다** — 가운데 끼우면 그 아래 옛 줄이 한 칸씩 밀린다.
+         칸이 늘 때마다 이 줄을 따라 고치되 **순서가 그대로인지**를 본다. */
+      } else if (!g.includes("'mgr', 'dateBasis', 'deadN', 'deadAt']")) {
+        fail('[바이럴] 새 칸을 맨 뒤에 안 붙였다 — 가운데 끼우면 그 아래 옛 줄이 통째로 한 칸씩 밀린다');
       } else {
         console.log(`OK: 바이럴 시트 쓰기 ${writes}곳 모두 칸 수를 먼저 확인한다`);
       }
@@ -1293,6 +1294,56 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       } else {
         console.log('OK: 바이럴 카페 새 글 기준선 — 한 바퀴를 마친 뒤에만 · 수집 중에는 안 올린다');
       }
+    }
+  }
+
+  /* ── 삭제된 글은 지우지 않고 표시만 한다 (2026-09-02 사장님 결정) ──────────
+   * *"새로 전체수집을 할 때 삭제된 글은 자동으로 제외해 주셔야 합니다"* → 조사해
+   * 보니 **판정할 수 있는 것이 블로그뿐**이다(카페는 robots 가 `Disallow: /`).
+   * 그래서 사장님이 「표시만」을 고르셨다.
+   *
+   * **열이 늘면 조용히 깨지는 곳들을 함께 지킨다** — 이 검사의 값어치가 거기 있다. */
+  {
+    const g = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const h = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    if (!g.includes("'deadN', 'deadAt'")) {
+      fail('[바이럴] 살았는지 적을 칸이 없다');
+    } else if (g.includes('var col = HEADER.length;')) {
+      fail('[바이럴] 되돌리기가 맨 뒤 칸을 쓴다 — 이제 그 자리는 deadAt 이라 모든 글이 삭제된 것이 된다');
+    } else if (!g.includes("HEADER.indexOf('dateBasis') + 1")) {
+      fail('[바이럴] 되돌리기가 칸을 이름으로 안 찾는다');
+    } else if ((g.split('deadN · deadAt — 아직 확인 전이다').length - 1) !== 2) {
+      fail('[바이럴] 줄을 만드는 두 곳 중 한 곳이 새 칸을 안 채운다 — assertRow_ 가 수집 한 판을 통째로 던진다');
+    } else if (!g.includes('function deadUrl_')) {
+      fail('[바이럴] 두드릴 주소를 안 만든다 — 시트의 blog.naver.com 주소는 없는 글도 200 이라 판정이 안 된다');
+    } else if (!g.includes("'https://m.blog.naver.com/'")) {
+      fail('[바이럴] m. 으로 안 바꾼다 — 프레임셋 껍데기라 없는 글도 200 이다');
+    } else if (!g.includes('nUnknown++')) {
+      fail('[바이럴] 일시 오류를 삭제와 안 가른다 — 실측 0.67% 가 매 회차 오판된다');
+    } else if (!g.includes('DEAD_SPIKE') || !g.includes('DEAD_CEILING')) {
+      fail('[바이럴] 안전선이 없다 — 네이버 장애나 우리 버그로 한 번에 대량 오판된다');
+    } else if (!g.includes('DEAD_N')) {
+      fail('[바이럴] 한 번의 404 로 죽었다고 한다');
+    } else if (g.includes('addUsage_(dead') || g.includes('addUsage_(nUnknown')) {
+      fail('[바이럴] 검증을 네이버 검색 예산에 센다 — 검색이 아니라 한 바퀴 예산만 줄어든다');
+    } else if (g.indexOf("var deadRun") > g.indexOf("for (i = cursor; i < STORES.length; i++)")) {
+      fail('[바이럴] 삭제 확인이 매장 훑기 뒤에 있다 — LG 비교와 같은 함정(영영 차례를 못 받는다)');
+    } else if (!g.includes("if (String(v[i][11] || '')) continue;")) {
+      fail('[바이럴] 매니저 순위가 삭제된 글을 계속 센다 — readAll_ 을 안 거치므로 따로 걸러야 한다');
+    } else if (!g.includes('if (all[i].dead) deadList.push(all[i]); else rows.push(all[i]);')) {
+      fail('[바이럴] 집계에서 삭제된 글을 안 뺀다');
+    } else if (!g.includes('list: deadList.slice(0, 500)')) {
+      fail('[바이럴] 삭제된 글을 화면으로 내려보내지 않는다 — 지운 것과 다를 바가 없다');
+    } else if (!h.includes('var showDead')) {
+      fail('[바이럴] 화면에 삭제된 글을 볼 길이 없다');
+    } else if (!h.includes('카페 글은 확인할 수 없습니다')) {
+      fail('[바이럴] 확인할 수 없는 갈래를 안 밝힌다 — 「삭제된 글은 다 빠졌다」로 읽힌다');
+    } else if (!h.includes('지우지 않았습니다')) {
+      fail('[바이럴] 지우지 않았다는 것을 화면이 안 말한다');
+    } else if (!h.includes('dd.err ?')) {
+      fail('[바이럴] 안전선에 걸린 이유를 화면이 안 적는다 — 검증이 도는 줄 안다');
+    } else {
+      console.log('OK: 바이럴 삭제된 글 — 지우지 않고 표시 · 확인 못 하는 갈래를 밝힌다 · 안전선 셋');
     }
   }
 

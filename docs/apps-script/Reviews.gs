@@ -126,7 +126,12 @@ var FULL_EVERY_DAYS = 7;
                수집 주기 안쪽). **추정이 아니라 경계가 증명되는 값이다.**
      '미상'  … 카페인데 그 증명이 안 되는 글. 작성일을 모른다고 적는다.
    **뒤에만 붙인다** — 가운데 끼우면 그 아래 모든 옛 줄이 한 칸씩 밀린다. */
-var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis'];
+/* `deadN`·`deadAt` — **그 글이 아직 살아 있는가**(2026-09-02 사장님 결정).
+ *  `deadN`  연속으로 404 를 받은 횟수. 200 이 한 번 오면 0 으로 되돌린다.
+ *  `deadAt` 삭제로 판정한 날. 빈칸이면 살아 있다.
+ *  **지우지 않고 표시만 한다** — 판정할 수 있는 것이 블로그뿐이라(카페는 robots 로
+ *  막혀 있다) 지우면 블로그만 줄어 화면의 갈래 비율이 조용히 거짓이 된다. */
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis', 'deadN', 'deadAt'];
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 65곳 — 경원영업팀 활성 지점 전부 ────────────────────
@@ -1192,7 +1197,10 @@ function repairBasis_(sh) {
   if (props_().getProperty('_basisFix2')) return 0;
   var last = sh.getLastRow();
   if (last < 2) { props_().setProperty('_basisFix2', '1'); return 0; }
-  var col = HEADER.length;                       /* dateBasis 는 맨 뒤 칸이다 */
+  /* **`HEADER.length` 로 잡으면 안 된다**(2026-09-02). 그때는 `dateBasis` 가 맨 뒤
+     칸이었는데 뒤에 `deadN`·`deadAt` 이 붙었다 — 그대로 두면 이 함수가 **`deadAt`
+     칸에 「미상」을 써서** 모든 글을 삭제된 것으로 만든다. 이름으로 찾을 것. */
+  var col = HEADER.indexOf('dateBasis') + 1;
   var rg = sh.getRange(2, col, last - 1, 1);
   var v = rg.getValues(), n = 0, i;
   for (i = 0; i < v.length; i++) {
@@ -1238,6 +1246,10 @@ function sweep_(mode) {
      **수원 한 곳만 화면에 남았다**(사장님 지적). 지금은 매장 훑기보다 **먼저** 돌고
      자기 예산을 쓴다. 하루 한 번이라 며칠씩 매장 훑기를 굶기지 않는다. */
   var RIVAL_MS = 90 * 1000;
+  /* 살았는지 두드리는 것은 **검색이 아니라서 네이버 예산을 안 먹는다** — 대신
+     Apps Script `UrlFetchApp` 한도를 함께 쓴다(한 바퀴 검색 4,810 + 검증 2,740 =
+     7,550 이라 소비자 계정 20,000 에도 여유가 있다). 시간만 떼어 준다. */
+  var DEAD_MS = 45 * 1000;
   /* **지금 돌고 있다는 것을 적어 둔다**(2026-08-31). 커서·사용량·로그는 전부 실행이
      **끝날 때** 한 번에 찍히므로, 4.5분 도는 동안에는 **어떤 값도 안 변한다** —
      새로고침해도 완전히 멈춘 것처럼 보인다. 사장님이 「멈췄다」고 느끼신 데에 이
@@ -1390,6 +1402,20 @@ function sweep_(mode) {
     catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
   }
 
+  /* ── 삭제된 글 확인 (2026-09-02) ────────────────────────────────────────
+     **매장 훑기보다 앞이다** — LG 비교가 뒤에 있다가 영영 차례를 못 받은 것과
+     같은 함정을 되풀이하지 않는다. 검색 예산을 안 쓰므로 **매일** 돈다.
+     한 번에 다 못 해도 좋다 — 다음 실행이 이어서 두드린다(안 두드린 줄은 그대로다).
+     **예외를 삼키지 않는다** — 조용히 실패하면 화면이 「확인했다」로 읽힌다. */
+  var deadRun = null;
+  if (deadDue_() && !over()) {
+    try {
+      deadRun = verifyDead_(Date.now() + DEAD_MS);
+      props_().setProperty('_deadErr', String((deadRun && deadRun.error) || ''));
+    }
+    catch (e4) { deadRun = { error: String(e4) }; props_().setProperty('_deadErr', String(e4)); }
+  }
+
   var stopped = false;
   for (i = cursor; i < STORES.length; i++) {
     /* **시간이 다 되면 그 자리에서 멈춘다** — 다음 실행이 여기서 이어받는다 */
@@ -1515,7 +1541,7 @@ function sweep_(mode) {
                여기서 뽑아 담아야 뜻이 있다 — 본문은 저장하지 않으므로 나중에는 못 뽑는다.
                여럿이면 세로줄로 잇는다. */
             mgrFind_(text).join('|'),
-            basis
+            basis, '', ''                       /* deadN · deadAt — 아직 확인 전이다 */
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
@@ -1650,7 +1676,7 @@ function sweep_(mode) {
                 String(cit.cafename || ''), '', stamp,
                 kindOf_(String(cit.title || '')),
                 mgrFind_(ctext).join('|'),
-                cbasis
+                cbasis, '', ''                   /* deadN · deadAt — 아직 확인 전이다 */
               ]);
               cafeAdd++;
               break;
@@ -1734,6 +1760,8 @@ function sweep_(mode) {
     srcOff: Object.keys(kindOff).map(function (x) { return srcName_(x); }),
     /* 되돌린 줄 수 — 화면이 「N건의 작성일 근거를 되돌렸습니다」로 밝힌다 */
     basisFixed: fixed,
+    /* 이번에 몇 개를 두드렸고 무엇이 나왔는지 — 조용히 돌면 도는지 알 수 없다 */
+    dead: deadRun,
     done: !stopped, from: cursor, stores: STORES.length,
     at: stopped ? cursor : STORES.length,
     /* 관심 카페 훑기를 실제로 돌았는지 · 몇 건 물었는지. **안 적으면 "왜 레몬테라스가
@@ -1925,7 +1953,7 @@ function resetAll() {
     });
     /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
        옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
-    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp']
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_deadAt', '_deadErr']
       .forEach(function (k) { props_().deleteProperty(k); });
     props_().setProperty('_cursor', '0');
     sumCacheClear_();
@@ -2000,7 +2028,10 @@ function readAll_() {
          `GW_CITY` 를 화면에도 둬야 하고, 그러면 **같은 표가 두 벌이 되어** 한쪽만
          고치는 사고가 난다(이 저장소가 허브 카드 개수·앱 버전으로 이미 데인 종류다).
          한 글자짜리 필드 하나가 3,000줄에 붙어도 20KB 남짓이라 값이 싸다. */
-      mc: mapCell_(String(v[i][1]))
+      mc: mapCell_(String(v[i][1])),
+      /* **삭제로 판정된 글.** 지우지 않고 표시만 하므로 여기서 갈래만 낸다 —
+         집계는 빼고, 목록은 「삭제된 글 보기」를 켜면 보여준다. */
+      dead: !!String(v[i][13] || '')
     });
   }
   return out;
@@ -2029,7 +2060,10 @@ function watch_(byCafe) {
 }
 
 function summary_() {
-  var rows = readAll_(), i;
+  /* **삭제된 글은 집계에서 빼되 목록으로는 볼 수 있게 남긴다**(2026-09-02 사장님
+     결정: *"표시만 하는 걸로"*). 통째로 버리면 「지운 것」과 다를 바가 없다. */
+  var all = readAll_(), rows = [], deadList = [], i;
+  for (i = 0; i < all.length; i++) { if (all[i].dead) deadList.push(all[i]); else rows.push(all[i]); }
   var tz = 'Asia/Seoul', now = new Date();
   var d0 = Utilities.formatDate(now, tz, 'yyyy-MM-dd');
   var d7 = Utilities.formatDate(new Date(now.getTime() - 6 * 864e5), tz, 'yyyy-MM-dd');
@@ -2316,6 +2350,19 @@ function summary_() {
     /* 등록된 줄임말 — 화면이 목록을 보여주고 사장님이 더 넣으신다 */
     alias: aliasAll_(),
     lastRun: last,
+    /* ── 삭제된 글 (2026-09-02) ─────────────────────────────────────────
+     * **화면이 반드시 밝혀야 한다** — 안 적으면 「삭제된 글은 다 빠졌다」로 읽히는데
+     * 실제로는 **블로그만** 확인할 수 있다. 카페는 robots 로 막혀 있어 그 글이
+     * 살아 있는지 알 방법이 없다(「없음」과 「미공개」를 가르는 규칙 그대로다). */
+    dead: {
+      n: deadList.length,
+      at: String(props_().getProperty('_deadAt') || ''),
+      /* 확인할 수 있는 갈래와 그렇지 못한 갈래를 갈라 적는다 */
+      canSrc: ['블로그'],
+      err: String(props_().getProperty('_deadErr') || ''),
+      /* 목록으로 볼 수 있게 조금 남긴다 — 통째로 버리면 지운 것과 다를 바가 없다 */
+      list: deadList.slice(0, 500)
+    },
     recent: rows.filter(function (r) { return r.dated; }).slice(0, 1500)
       .concat(rows.filter(function (r) { return !r.dated; }).slice(0, 1500))
     /* **경계 인덱스를 내려보내지 않는다.** 화면이 그리는 것은 `filtered()` 를 거친
@@ -2580,6 +2627,121 @@ function rival_() {
   return { at: last, rows: out };
 }
 
+/* ── 삭제된 글 — **지우지 않고 표시만 한다** (2026-09-02 사장님 결정) ─────────
+ *
+ * *"새로 전체수집을 할 때 삭제된 글은 자동으로 제외해 주셔야 합니다"* → 조사해 보니
+ * **판정할 수 있는 것이 블로그뿐**이다.
+ *
+ *   블로그 27%  `m.blog.naver.com/{id}/{no}` 에 HEAD → 200/404 로 깨끗하게 갈린다
+ *   카페  47%  **불가** — `cafe.naver.com/robots.txt` 가 `User-agent: * / Disallow: /`
+ *   웹    25%  호스트 101개, robots 가 제각각이라 전수 확인 전에는 손대지 않는다
+ *
+ * **지우지 않는 이유가 넷이다:**
+ *  ① 되돌릴 수 없는데 추정이다 — 블로그가 통째로 사라진 경우는 200 이 와서 못 잡고,
+ *     비공개로 바꾼 글이 404 인지 200 인지는 재 보지 못했다.
+ *  ② **비율이 조용히 거짓이 된다** — 블로그만 줄어 화면의 갈래 비중이 무너진다.
+ *  ③ 삭제된 글도 그때 있었던 사실이다 — 지난 보고와 어긋난다.
+ *  ④ 되살아난다(비공개 → 공개). 지우면 다음 바퀴에 새 글로 들어와 **발견일이 오늘로**
+ *     찍혀 「오늘 새 글」이 거짓이 된다.
+ *
+ * **시트에 저장된 주소로는 판정 자체가 안 된다** — `blog.naver.com/{id}/{no}` 는
+ * 프레임셋 껍데기라 **없는 글도 200**(실측 8/8). `m.` 으로 바꿔야 404 가 온다.
+ */
+var DEAD_N       = 3;      /* 서로 다른 실행에서 이만큼 연속 404 여야 죽었다고 한다 */
+var DEAD_BURST   = 50;     /* `fetchAll` 한 묶음 (실측 0.57초) */
+var DEAD_SPIKE   = 0.05;   /* 한 회차에 404 가 이 비율을 넘으면 그 회차를 통째로 버린다 */
+var DEAD_CEILING = 0.20;   /* 누적 판정이 대상의 이 비율을 넘으면 더 판정하지 않는다 */
+
+/** 시트 주소 → 두드릴 주소. **못 만들면 대상에서 뺀다**(카페·웹·티스토리). */
+function deadUrl_(link) {
+  var t = String(link == null ? '' : link);
+  var p = 'https://blog.naver.com/';
+  if (t.indexOf(p) !== 0) return null;
+  var rest = t.slice(p.length).split('?')[0].split('#')[0].split('/');
+  if (rest.length < 2 || !rest[0] || !rest[1]) return null;
+  var no = rest[1];
+  for (var i = 0; i < no.length; i++) if (no.charAt(i) < '0' || no.charAt(i) > '9') return null;
+  return 'https://m.blog.naver.com/' + rest[0] + '/' + no;
+}
+
+/**
+ * 살아 있는지 두드려 본다. **네이버 검색 API 예산을 쓰지 않는다** — 검색이 아니다.
+ * 그래서 `addUsage_` 에 절대 세지 말 것(세면 한 바퀴 예산이 통째로 줄어든다).
+ *
+ * **한 번의 실패는 삭제가 아니다** — 실측으로 0.67%(8/1,200)가 `ECONNRESET` 이었고
+ * 재시도에서 전부 200 이었다. `0`·5xx·429 는 「모름」이라 아무것도 세지 않는다.
+ */
+function verifyDead_(deadline) {
+  var sh = sheet_(SHEET_ITEMS, HEADER);
+  var last = sh.getLastRow();
+  if (last < 2) return { checked: 0, target: 0 };
+  var W = HEADER.length;
+  var vals = sh.getRange(2, 1, last - 1, W).getValues();
+  var LINK = HEADER.indexOf('link'), NCOL = HEADER.indexOf('deadN'), ACOL = HEADER.indexOf('deadAt');
+
+  var todo = [], already = 0, i;
+  for (i = 0; i < vals.length; i++) {
+    if (String(vals[i][ACOL] || '')) { already++; continue; }   /* 이미 죽었다고 본 줄은 다시 안 두드린다 */
+    var u = deadUrl_(vals[i][LINK]);
+    if (u) todo.push({ row: i, url: u });
+  }
+  var target = todo.length + already;
+
+  /* **안전선 ① — 이미 너무 많이 죽었다면 우리 방법이 틀린 것이다.** */
+  if (target && already > target * DEAD_CEILING) {
+    return { checked: 0, target: target, dead: already,
+      error: '삭제 판정이 ' + already + '건이라 대상의 '
+        + Math.round(DEAD_CEILING * 100) + '% 를 넘었습니다 — 더 판정하지 않았습니다.' };
+  }
+
+  var n404 = 0, n200 = 0, nUnknown = 0, checked = 0, hit = [], b, j;
+  for (b = 0; b < todo.length; b += DEAD_BURST) {
+    if (deadline && Date.now() > deadline) break;   /* 다음 실행이 이어 돈다 */
+    var chunk = todo.slice(b, b + DEAD_BURST);
+    var reqs = [];
+    for (j = 0; j < chunk.length; j++) {
+      reqs.push({ url: chunk[j].url, method: 'head', muteHttpExceptions: true, followRedirects: false });
+    }
+    var res;
+    try { res = UrlFetchApp.fetchAll(reqs); }
+    catch (e) { nUnknown += chunk.length; continue; }   /* 묶음이 통째로 실패 = 모름 */
+    for (j = 0; j < res.length; j++) {
+      var code = res[j].getResponseCode(), row = chunk[j].row;
+      checked++;
+      if (code === 200) { vals[row][NCOL] = 0; n200++; }        /* 되살아나면 되돌린다 */
+      else if (code === 404) { hit.push(row); n404++; }
+      else nUnknown++;                                          /* 0·5xx·429 = 모름 */
+    }
+  }
+
+  /* **안전선 ② — 한 회차에 404 가 쏟아지면 그 회차를 통째로 버린다.**
+     실측 3,150건에서 정상 404 율은 0 이었다. 5% 는 네이버 장애이거나 우리 버그다. */
+  if (checked && n404 > checked * DEAD_SPIKE) {
+    return { checked: checked, target: target, dead: already, spike: n404,
+      error: '이번 확인에서 404 가 ' + n404 + '/' + checked
+        + '건이라 반영하지 않았습니다 — 네이버 장애일 수 있습니다.' };
+  }
+
+  var newlyDead = 0, today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  for (j = 0; j < hit.length; j++) {
+    var r = hit[j];
+    vals[r][NCOL] = Number(vals[r][NCOL] || 0) + 1;
+    if (vals[r][NCOL] >= DEAD_N) { vals[r][ACOL] = today; newlyDead++; }
+  }
+
+  if (checked) sh.getRange(2, 1, vals.length, W).setValues(vals);
+  props_().setProperty('_deadAt', today);
+  if (newlyDead || n200) sumCacheClear_();
+  return { checked: checked, alive: n200, gone: n404, unknown: nUnknown,
+           newlyDead: newlyDead, target: target, dead: already + newlyDead };
+}
+
+/** 오늘 이미 확인했는가 — 검색 예산을 안 쓰므로 **매일** 돌 수 있다. */
+function deadDue_() {
+  return String(props_().getProperty('_deadAt') || '')
+    !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+}
+
 /* ── 화면 · JSON ─────────────────────────────────────────────── */
 
 function json_(o) {
@@ -2680,6 +2842,10 @@ function mgrRoster_() {
   var n = {}, st = {}, i, j, mm, k;
   for (i = 0; i < v.length; i++) {
     var store = String(v[i][0] || '');
+    /* **삭제된 글은 매니저 순위에서도 뺀다.** 이 함수는 `readAll_` 을 안 거치고
+       시트를 직접 읽으므로, 여기에 안 넣으면 **순위만 죽은 글을 계속 센다.**
+       열이 3번째부터라 `deadAt`(12번째)은 여기서 v[i][11] 이다. */
+    if (String(v[i][11] || '')) continue;
     var raw = String(v[i][8] || '') || mgrFind_(String(v[i][2] || '')).join('|');
     if (!raw) continue;
     mm = raw.split('|');

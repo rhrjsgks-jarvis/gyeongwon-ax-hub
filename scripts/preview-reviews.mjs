@@ -213,7 +213,15 @@ const DATA = {
   cycleAt: Date.now() - 12 * 60 * 1000, cycleFrom: 0,
   now: Date.now(),
   watch: CAFES.slice(0, 3).map((c, i) => ({ name: c, n: 120 - i * 40, naver: true })),
-  recent
+  recent,
+  /* **삭제로 판정된 글도 섞는다** — 없으면 「삭제된 글 보기」와 안내를 한 번도
+     지나가지 않아, 화면을 눈으로 봐도 그 자리가 비어 보인다. */
+  dead: {
+    n: 3, at: '2026-09-02', canSrc: ['블로그'], err: '',
+    list: recent.slice(0, 3).map(function (r, i) {
+      return Object.assign({}, r, { dead: true, title: '[삭제됨] ' + r.title, link: 'https://blog.naver.com/x/' + i });
+    })
+  }
 };
 
 /* **자료를 HTML 에 심지 않는다**(2026-08-31 구조 변경). 실물과 같은 길을 타야 하므로
