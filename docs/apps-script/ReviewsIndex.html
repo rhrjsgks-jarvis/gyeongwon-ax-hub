@@ -367,6 +367,10 @@
   .geometro { margin: 10px 0 0; padding: 9px 0 0; border-top: 1px dashed #E5E7EB; }
   .geometro .msub { font-size: 11.5px; color: #64748B; margin: 0 0 4px; }
   .geo-metro { max-width: 420px; }
+  /* **선 굵기는 확대 배율을 따라가면 안 된다.** stroke-width 는 좌표계 단위라
+     팔달구(폭 17)를 840px 로 늘리면 0.6 이 화면에서 30px 이 된다 — 칸이 테두리에
+     묻힌다(실물에서 그렇게 됐다). `non-scaling-stroke` 는 화면 픽셀로 고정한다. */
+  .geo-metro path { vector-effect: non-scaling-stroke; stroke-width: 1.1px; }
   .card.wide .geo-metro { max-width: 640px; }
   .geo-svg { width: 100%; display: block; margin: 0 auto;
     -webkit-user-select: none; user-select: none; }
@@ -559,6 +563,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            규칙, 반은 새 규칙이 되어 화면이 조용히 틀린다. -->
       <button class="btn danger" id="wipe">자료 비우고 처음부터</button>
       <div id="chainerr"></div>
+      <!-- 실행이 어디까지 갔는지 — 도중에 죽으면 lastRun 이 안 쓰여 화면이 조용해진다 -->
+      <div id="runstage" class="sub"></div>
       <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
       <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
@@ -1824,11 +1830,58 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
      *
      * **없으면 조용히 감춘다** — 빌드가 낡아 `metro` 가 안 실린 배포본에서도
      * 화면이 죽지 않아야 한다(본 지도와 같은 규칙). */
+    /* ── 누른 칸을 돋보기가 따라간다 (2026-09-02 사장님 요청) ────────────────
+     * *"클릭한 지도가 자동으로 확대되면 좋겠습니다."*
+     *
+     * **새 자료를 만들지 않는다.** 본 지도 SVG 에 모든 칸의 `path` 가 이미 있으므로
+     * 그 자리를 재서(`getBBox`) viewBox 를 그 칸에 맞추고, 걸치는 이웃까지 복제해
+     * 온다 — 이웃이 없으면 그 칸이 어디쯤인지 알 수가 없다.
+     *
+     * **좌표계가 같아서 이름표를 그대로 쓸 수 있다** — 돋보기 기본 화면이 이미
+     * 그렇게 만들어져 있고, 여기서도 같은 규칙을 탄다.
+     */
+    function zoomSvg(cell) {
+      var own = [].slice.call(svg.querySelectorAll('path[data-cell="' + cell + '"]'));
+      if (!own.length) return null;
+      var x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, i2, r2;
+      for (i2 = 0; i2 < own.length; i2++) {
+        try { r2 = own[i2].getBBox(); } catch (e2) { r2 = null; }
+        if (!r2) continue;
+        if (r2.x < x0) x0 = r2.x; if (r2.y < y0) y0 = r2.y;
+        if (r2.x + r2.width > x1) x1 = r2.x + r2.width;
+        if (r2.y + r2.height > y1) y1 = r2.y + r2.height;
+      }
+      if (x1 < x0) return null;
+      /* 여백은 칸 크기에 비례해 준다 — 고정값이면 큰 칸(처인구 45)에서는 답답하고
+         작은 칸(팔달구 9)에서는 이웃이 통째로 안 들어온다. */
+      var pad = Math.max(3, Math.max(x1 - x0, y1 - y0) * 0.45);
+      var bx = x0 - pad, by = y0 - pad, bw = (x1 - x0) + pad * 2, bh = (y1 - y0) + pad * 2;
+      var ns = "http://www.w3.org/2000/svg";
+      var out = document.createElementNS(ns, "svg");
+      out.setAttribute("viewBox", bx.toFixed(2) + " " + by.toFixed(2) + " " + bw.toFixed(2) + " " + bh.toFixed(2));
+      out.setAttribute("class", "geo-svg geo-metro");
+      out.setAttribute("role", "img");
+      out.setAttribute("aria-label", cell + " 확대");
+      /* 걸치는 것만 복제한다 — 62개를 통째로 담으면 브라우저가 안 보이는 것까지 그린다 */
+      var all = [].slice.call(svg.querySelectorAll("path"));
+      for (i2 = 0; i2 < all.length; i2++) {
+        try { r2 = all[i2].getBBox(); } catch (e3) { r2 = null; }
+        if (!r2) continue;
+        if (r2.x > bx + bw || r2.x + r2.width < bx || r2.y > by + bh || r2.y + r2.height < by) continue;
+        out.appendChild(all[i2].cloneNode(false));
+      }
+      return { el: out, box: { x: bx, y: by, w: bw, h: bh } };
+    }
+
     var mw = document.getElementById("geo-metro-wrap");
     var mel = document.getElementById("geo-metro");
-    if (mw && mel && GW_MAP.metro) {
+    /* **고른 칸이 있으면 그것을 확대한다**(사장님 요청). 없으면 기본 화면 —
+       자치구 넷. 둘을 한 자리에 두어 화면이 늘지 않는다. */
+    var zoom = mapFilter ? zoomSvg(mapFilter) : null;
+    if (mw && mel && (zoom || GW_MAP.metro)) {
       mw.hidden = false;
-      mel.innerHTML = GW_MAP.metro;
+      mel.innerHTML = "";
+      if (zoom) mel.appendChild(zoom.el); else mel.innerHTML = GW_MAP.metro;
       var msvg = mel.querySelector("svg");
       if (msvg) {
         paintCells(msvg, false);
@@ -1841,13 +1894,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            같은 함수가 걷어낸다. 한글 한 글자는 글꼴의 약 0.95배 폭을 먹는다. */
         /* **1.6 은 실측에서 골랐다** — 1.8 이면 팔달구가 이웃에 밀려 빠지고(12곳 중 11),
            1.6 부터 12곳이 다 들어간다. 더 줄일 이유가 없다. */
-        var MFS = 1.6;
+        /* 글꼴은 **보이는 폭에 비례**해야 한다 — 확대 배율이 칸마다 달라
+           고정값을 쓰면 작은 칸에서는 글자가 화면을 덮는다(4.6 으로 한 번 덮었다). */
+        var vbw = zoom ? zoom.box.w : 81.6;
+        var MFS = vbw * 0.0196;          /* 기본 화면(81.6)에서 1.6 이 되는 비율 */
+        /* 확대 화면은 **그 상자 안에 드는 칸을 전부** 적는다 — 기본 화면은 자치구만. */
+        var src2 = zoom ? GW_MAP.labels : GW_MAP.metroLabels;
         var mt = "";
-        Object.keys(GW_MAP.metroLabels || {}).forEach(function (c) {
-          var q = GW_MAP.metroLabels[c], v = by[c] || 0, k = lv(v);
+        Object.keys(src2 || {}).forEach(function (c) {
+          var q0 = src2[c]; if (!q0) return;
+          var q = zoom ? GW_MAP.labels[c] : q0;
+          if (zoom && (q.x < zoom.box.x || q.x > zoom.box.x + zoom.box.w
+            || q.y < zoom.box.y || q.y > zoom.box.y + zoom.box.h)) return;
+          var v = by[c] || 0, k = lv(v);
           var w = (GW_MAP.labels[c] || {}).w || 0;
           var f = w ? Math.min(MFS, w / (c.length * 0.95)) : MFS;
-          if (f < 1.1) return;              /* 이만큼도 안 들어가면 툴팁이 대신한다 */
+          if (f < MFS * 0.55) return;      /* 이만큼도 안 들어가면 툴팁이 대신한다 */
           mt += "<text class=" + JSON.stringify(k >= 6 ? "hi" : (v ? "on" : ""))
             + " x=" + JSON.stringify(String(q.x))
             + " y=" + JSON.stringify(String(q.y + f * 0.35))
@@ -1863,9 +1925,20 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         Object.keys(GW_MAP.metroLabels || {}).forEach(function (c) {
           var v = by[c] || 0; mn += v; if (v) mc++;
         });
-        msub.innerHTML = "<b>돋보기 — 수원 · 성남 · 안양 · 용인</b> 자치구 "
-          + Object.keys(GW_MAP.metroLabels || {}).length + "곳 중 <b>" + mc
-          + "곳</b>에서 <b>" + nf(mn) + "건</b>. 위 지도에서는 너무 작아 이름이 안 들어갑니다.";
+        /* **무엇을 보고 있는지 화면이 말한다** — 확대와 기본은 다른 그림인데
+           같은 문구를 쓰면 「자치구 12곳」이라 적힌 채 평택이 떠 있게 된다. */
+        if (zoom) {
+          var mem2 = (GW_MAP.members && GW_MAP.members[mapFilter]) || [mapFilter];
+          msub.innerHTML = "<b>돋보기 — " + esc(mapFilter) + "</b>"
+            + (mem2.length > 1 ? " (" + esc(mem2.join(" · ")) + ")" : "")
+            + " <b>" + nf(by[mapFilter] || 0) + "건</b>."
+            + " 칸을 한 번 더 누르면 지도 전체로 돌아갑니다.";
+        } else {
+          msub.innerHTML = "<b>돋보기 — 수원 · 성남 · 안양 · 용인</b> 자치구 "
+            + Object.keys(GW_MAP.metroLabels || {}).length + "곳 중 <b>" + mc
+            + "곳</b>에서 <b>" + nf(mn) + "건</b>. 위 지도에서는 너무 작아 이름이 안 들어갑니다."
+            + " <b>칸을 누르면 그 칸을 크게 봅니다.</b>";
+        }
       }
     } else if (mw) { mw.hidden = true; }
 
@@ -2517,6 +2590,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
        읽힌다. 그리고 아무도 안 눌러 밤새 멈춰 있게 된다.
        또 하나 — **「도는 중」이 10분을 넘으면 죽은 것**이다(화면이 이미 쓰는 기준). */
     var runMin = DATA.runAt ? (Date.now() - Number(DATA.runAt)) / 60000 : 0;
+    /* **어디까지 갔는지 적는다**(2026-09-02). 실행이 도중에 죽으면 `lastRun` 이
+       안 쓰여 화면에 아무 표시도 안 난다 — 그러면 왜 안 끝나는지 추측으로 파게
+       된다(오늘 실제로 세 번 헛짚었다). 발자국이 있으면 한눈에 보인다. */
+    var stEl = document.getElementById("runstage");
+    if (stEl) {
+      stEl.innerHTML = DATA.stage
+        ? "마지막 발자국 <b>" + esc(DATA.stage) + "</b>"
+          + (runMin > 8 ? " — <b style=\"color:#B91C1C\">" + runMin.toFixed(0)
+              + "분째 그대로입니다.</b> 수집 단추를 한 번 눌러 주세요." : "")
+        : "";
+    }
     var auto = !!DATA.chainOn && !DATA.chainErr && !(runMin > 10);
     if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '최근 것만 수집');
     /* 자동 재개가 포기했으면 **무엇을 누르면 되는지**를 그 자리에 적는다.

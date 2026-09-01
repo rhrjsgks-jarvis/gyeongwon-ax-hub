@@ -1319,10 +1319,24 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail('[바이럴] 겹침 걷어내기가 함수가 아니다');
     } else if ((h.split('dropOverlaps(').length - 1) < 3) {
       fail('[바이럴] 돋보기가 겹침을 안 걷어낸다 — 이름표가 서로 먹는다');
-    } else if (!h.includes('var MFS = 1.6;')) {
-      fail('[바이럴] 돋보기 글꼴이 실측값(1.6)이 아니다 — 1.8 이면 팔달구가 밀려 빠진다');
+    /* **글꼴은 보이는 폭에 비례한다.** 기본 화면(폭 81.6)에서 1.6 이 되는 비율이
+       0.0196 이고, 그 값은 실측에서 골랐다 — 1.8 이면 팔달구가 이웃에 밀려 빠진다. */
+    } else if (!h.includes('vbw * 0.0196')) {
+      fail('[바이럴] 돋보기 글꼴이 폭에 비례하지 않는다 — 확대 배율이 칸마다 달라 고정값은 못 쓴다');
     } else if (gu < 12) {
       fail(`[바이럴] 지도에 자치구 칸이 ${gu}곳뿐이다 — 12곳이어야 한다`);
+    /* **누른 칸을 돋보기가 따라간다**(2026-09-02 사장님 요청). 새 자료를 만들지
+       않고 본 지도의 `path` 를 복제해 viewBox 만 맞춘다 — 두 지도가 어긋날 수 없다. */
+    } else if (!h.includes('function zoomSvg')) {
+      fail('[바이럴] 누른 칸을 확대하지 않는다');
+    } else if (!h.includes('var zoom = mapFilter ? zoomSvg(mapFilter) : null;')) {
+      fail('[바이럴] 고른 칸이 있어도 기본 화면만 보여준다');
+    } else if (!h.includes('vector-effect: non-scaling-stroke')) {
+      fail('[바이럴] 확대하면 테두리가 배율만큼 굵어져 작은 칸이 선에 묻힌다');
+    } else if (!h.includes('vbw * 0.0196')) {
+      fail('[바이럴] 확대 글꼴이 보이는 폭에 비례하지 않는다 — 작은 칸에서 글자가 화면을 덮는다');
+    } else if (!h.includes('돋보기 — " + esc(mapFilter)')) {
+      fail('[바이럴] 확대 중인데 안내가 기본 화면 문구를 적는다 — 화면이 거짓말을 한다');
     } else if (!h.includes('geo-metro-wrap')) {
       fail('[바이럴] 돋보기를 담을 자리가 없다');
     } else {

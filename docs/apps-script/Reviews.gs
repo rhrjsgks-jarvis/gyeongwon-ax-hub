@@ -1260,6 +1260,7 @@ function sweep_(mode) {
      실패) 6분 뒤에 스스로 되살아난다. 정상으로 끝나면 아래에서 1분짜리로 바꾸거나
      지운다 — `chain_`·`clearChain_` 이 둘 다 기존 트리거를 먼저 지우므로 겹치지 않는다. */
   armWatchdog_();
+  stage_('시작');
   /* 기준선이 자라던 시절의 판정을 되돌린다 — 한 번만 돈다 */
   var fixed = repairBasis_(itemSheet);
   /* **바퀴가 새로 시작하면 그 시각을 적는다** — 화면이 남은 시간을 「이 바퀴 경과 ÷
@@ -1389,7 +1390,9 @@ function sweep_(mode) {
      **하루에 한 번** — 같은 날 여러 번 쌓이면 어느 것이 그날 값인지 알 수 없다.
      **예외를 삼키지 않는다** — 조용히 실패하면 왜 비었는지 아무도 모른다. */
   var rivalRun = null;
+  stage_('LG비교 앞');
   if (rivalDue_() && !err && !over()) {
+    stage_('LG비교 도는 중');
     /* **마감 시각을 넘긴다.** 경쟁비교는 갈래가 셋이 되며 일이 3배가 됐는데
        시간 검사가 없어 매번 6분을 넘겨 죽었다 — 못 끝내니 `_rivalAt` 도 안 적히고
        다음 실행이 또 돌아 **여덟 번 잇달아 죽자 감시 트리거가 포기했다.**
@@ -1409,6 +1412,7 @@ function sweep_(mode) {
      한 번에 다 못 해도 좋다 — 다음 실행이 이어서 두드린다(안 두드린 줄은 그대로다).
      **예외를 삼키지 않는다** — 조용히 실패하면 화면이 「확인했다」로 읽힌다. */
   var deadRun = null;
+  stage_('삭제확인 앞');
   if (deadDue_() && !over()) {
     try {
       deadRun = verifyDead_(Date.now() + DEAD_MS);
@@ -1417,6 +1421,7 @@ function sweep_(mode) {
     catch (e4) { deadRun = { error: String(e4) }; props_().setProperty('_deadErr', String(e4)); }
   }
 
+  stage_('매장 훑기 앞');
   var stopped = false;
   for (i = cursor; i < STORES.length; i++) {
     /* **시간이 다 되면 그 자리에서 멈춘다** — 다음 실행이 여기서 이어받는다 */
@@ -2352,6 +2357,7 @@ function summary_() {
     alias: aliasAll_(),
     /* **LG 비교가 어디까지 갔는지 화면이 볼 수 있어야 한다.** 안 보이면 왜 수원만
        뜨는지 추측으로 파게 된다(실제로 그랬다). */
+    stage: String(props_().getProperty('_stage') || ''),
     rivalAt: String(props_().getProperty('_rivalAt') || ''),
     rivalCur: String(props_().getProperty('_rivalCur') || ''),
     rivalTry: Number(props_().getProperty('_rivalTry') || 0),
@@ -2489,6 +2495,19 @@ function rivalHit_(text, brands, place) {
    **끝없이 되풀이하지 않게 하루 시도 횟수를 센다** — 한 지역이 늘 실패하면
    매 실행마다 헛돌아 다른 일까지 굶는다. 12번이면 여섯 지역을 채우고도 남는다. */
 var RIVAL_TRY_MAX = 12;
+
+/* ── 실행이 어디까지 갔는지 남긴다 (2026-09-02) ────────────────────────────
+ * 강원 한 지역이 끝나지 않는데 **실행이 어디서 죽는지 볼 길이 없었다** — `lastRun`
+ * 은 정상으로 끝나야 쓰이므로 도중에 죽으면 아무것도 안 남는다. 그래서 단계마다
+ * 발자국을 찍는다. 속성 쓰기 한 번이라 값이 싸고, 화면이 그것을 읽어 적는다.
+ *
+ * **추측으로 파지 않기 위한 장치다** — 오늘 같은 증상으로 세 번 헛짚었다. */
+function stage_(name) {
+  try {
+    props_().setProperty('_stage', name + ' @ '
+      + Utilities.formatDate(new Date(), 'Asia/Seoul', 'HH:mm:ss'));
+  } catch (e) { /* 발자국 때문에 수집이 죽으면 안 된다 */ }
+}
 
 function rivalDue_() {
   var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
