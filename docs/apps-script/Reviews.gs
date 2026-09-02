@@ -664,6 +664,46 @@ var SDP = [
   { name: '횡성', q: '삼성스토어 횡성', sigun: '횡성', area: '강원', self: true },
   { name: '신갈대리점', q: '삼성전자 신갈대리점', sigun: '용인', area: '용인', self: false }
 ];
+/* ── 지역 색 (2026-09-02 사장님 요청 *"컬러를 관리자가 원하면 변경가능하도록"*) ──
+ *
+ * **기준색 6개만 저장한다.** 지도의 명도 10단계는 화면이 이 색에서 만들어 낸다 —
+ * 예전에는 60개 규칙이 CSS 에 박혀 있어 색 하나를 바꾸려면 열 줄을 손으로 고쳐야 했다.
+ * **아이콘도 같은 색을 쓴다** — 같은 지역이 지도와 매장 칸에서 다른 색이면 눈이 헤맨다.
+ *
+ * 기본값은 지금 지도의 v8 색 그대로다(수원은 삼성 블루 계열). 바꾼 값은 스크립트
+ * 속성에 남고, **못 읽으면 기본값으로 돌아간다** — 색이 깨져 화면이 안 보이는 것보다 낫다. */
+var AREA_COLOR_DEFAULT = {
+  '수원': '#3d52db', '성남': '#9027d5', '용인': '#b62170',
+  '평택': '#9c4b1d', '안양': '#636613', '강원': '#176b7c'
+};
+function areaColors_() {
+  var out = {}, k;
+  for (k in AREA_COLOR_DEFAULT) if (AREA_COLOR_DEFAULT.hasOwnProperty(k)) out[k] = AREA_COLOR_DEFAULT[k];
+  try {
+    var saved = JSON.parse(props_().getProperty('_areaColors') || '{}') || {};
+    for (k in saved) if (saved.hasOwnProperty(k) && out.hasOwnProperty(k) && /^#[0-9a-fA-F]{6}$/.test(saved[k])) {
+      out[k] = String(saved[k]).toLowerCase();
+    }
+  } catch (e) { /* 깨졌으면 기본값 — 색이 없어 화면이 안 보이는 것보다 낫다 */ }
+  return out;
+}
+/** 화면의 색 고르개가 부른다. **모르는 지역·형식이 틀린 색은 안 받는다** —
+    받아 두면 화면이 그 자리에서 깨진다. 되돌리려면 빈 객체를 보내면 된다. */
+function setAreaColors(map) {
+  var keep = {}, k, n = 0;
+  if (map && typeof map === 'object') {
+    for (k in map) {
+      if (!map.hasOwnProperty(k) || !AREA_COLOR_DEFAULT.hasOwnProperty(k)) continue;
+      if (!/^#[0-9a-fA-F]{6}$/.test(String(map[k]))) continue;
+      keep[k] = String(map[k]).toLowerCase(); n++;
+    }
+  }
+  if (n) props_().setProperty('_areaColors', JSON.stringify(keep));
+  else props_().deleteProperty('_areaColors');
+  /* 색은 집계가 아니라 화면 값이라 캐시를 버릴 필요가 없다 — freshState_ 가 볼 때마다 읽는다 */
+  return { ok: true, colors: areaColors_(), saved: n };
+}
+
 var SHEET_SDP = 'SDP';
 var SDP_HEADER = ['at', 'store', 'sigun', 'area', 'n', 'blog', 'cafe', 'kinds', 'sample'];
 /* **적게 두드린다.** 이 항목이 답하는 것은 *"이슈가 있나"* 이지 「전수 수집」이 아니다.
@@ -3768,6 +3808,8 @@ function freshState_(d) {
        세 번 물으셨다. 이름이 있어야 화면이 무엇이 없는지 적을 수 있다.
        **도시까지 함께 보낸다** — 「11개 도시 중 8번째」 같은 진행을 화면이 낼 수 있다. */
     d.rivalAreaNames = Object.keys(AREA_Q);
+    /* **색은 볼 때마다 새로 읽는다** — 집계 캐시에 갇히면 바꾸고도 6시간 옛 색이다 */
+    d.areaColors = areaColors_();
     d.rivalUnits = rivalUnits_().length;
     d.deadAt = String(props_().getProperty('_deadAt') || '');
     d.runAt = Number(props_().getProperty('_runAt') || 0);

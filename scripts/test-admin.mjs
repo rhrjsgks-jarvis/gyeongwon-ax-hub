@@ -2109,6 +2109,36 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
       if (bad5.length) { ok = false; console.log('ERROR: [바이럴] ' + bad5.join(' · ')); }
       else console.log('OK: 바이럴 SDP — 8곳 · 하남·철원·문막 제외 · 우리 글이 안 새고 · 표본이 작다고 밝힌다');
+
+      /* ④-f **지역 색을 관리자가 바꾼다**(2026-09-02 사장님 요청). 색 하나가 지도와
+         매장 칸 **두 곳**에 걸려 있어, 한쪽만 바뀌면 같은 지역이 두 색으로 보인다. */
+      const bad6 = [];
+      const scr5 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+      if (!rv.includes('function setAreaColors(map)')) bad6.push('setAreaColors 가 없다 — 색을 바꿀 길이 없다');
+      /* 아무 값이나 받으면 화면이 그 자리에서 깨진다 */
+      if (!rv.includes('if (!/^#[0-9a-fA-F]{6}$/.test(String(map[k]))) continue;')) {
+        bad6.push('색 형식을 안 가린다 — 아무 값이나 받으면 화면이 깨진다');
+      }
+      if (!rv.includes('!AREA_COLOR_DEFAULT.hasOwnProperty(k)')) {
+        bad6.push('모르는 지역 이름을 받는다 — 쓰이지 않는 값이 조용히 쌓인다');
+      }
+      /* 캐시에 갇히면 바꾸고도 6시간 옛 색이다 — dailyLimit 에서 이미 겪은 자리다 */
+      if (!rv.includes('d.areaColors = areaColors_();')) {
+        bad6.push('색을 상태로 안 보낸다 — 바꾸고도 최대 6시간 옛 색이 보인다');
+      }
+      /* 화면: 지도 사다리와 아이콘을 **한 색에서** 만들어야 둘이 안 갈린다 */
+      if (!scr5.includes('function applyAreaColors()')) bad6.push('화면이 색을 적용하지 않는다');
+      if (!scr5.includes(".geo-svg path.r' + n + '.v'") || !scr5.includes(".st.a' + n + ' .ic{background:'")) {
+        bad6.push('지도와 아이콘을 같은 색에서 만들지 않는다 — 같은 지역이 두 색으로 보인다');
+      }
+      /* 60줄 정적 규칙은 폴백으로 남아야 한다 — JS 가 못 돌면 지도가 회색이 된다 */
+      if (!scr5.includes('.geo-svg path.r1.v1{fill:')) {
+        bad6.push('정적 색 폴백을 지웠다 — 스크립트가 못 돌면 지도가 통째로 회색이 된다');
+      }
+      /* 되돌릴 길이 없으면 색을 잘못 골랐을 때 갇힌다 */
+      if (!scr5.includes('acol-reset')) bad6.push('기본값으로 되돌릴 길이 없다');
+      if (bad6.length) { ok = false; console.log('ERROR: [바이럴] ' + bad6.join(' · ')); }
+      else console.log('OK: 바이럴 지역 색 — 관리자가 바꾸고 · 지도와 아이콘이 같은 색 · 폴백과 되돌리기가 있다');
     }
 
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */
@@ -2316,9 +2346,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       {
         const scr2 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
         const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
-        /* 체이닝(`.withSuccessHandler(...).getSummary()`) 끝에 오는 이름만 고른다 */
-        const called = [...new Set([...scr2.matchAll(/\n\s*\.([a-zA-Z][A-Za-z0-9_]*)\(\);/g)].map((m) => m[1]))]
-          .filter((n) => n !== 'withSuccessHandler' && n !== 'withFailureHandler');
+        /* **인자 있는 호출도 잡아야 한다**(2026-09-02). 예전 규칙은 `.name();` 만 봐서
+           `.setAreaColors(map);` 를 놓쳤다 — 그 함수가 서버에 없어도 검사가 통과한다.
+           그래서 **뒤집어 본다**: 서버의 공개 함수(밑줄 없는 이름) 중 화면이 `.이름(` 으로
+           부르는 것을 모은다. 이러면 인자가 있든 없든 다 걸린다. */
+        const pub = [...new Set([...rv.matchAll(/\nfunction ([a-z][A-Za-z0-9]*)\(/g)].map((m) => m[1]))]
+          .filter((n) => n !== 'doGet' && n !== 'doPost');
+        const called = pub.filter((n) => scr2.includes('.' + n + '('));
         const noSrv = called.filter((n) => !rv.includes('function ' + n + '('));
         const noStub = called.filter((n) => !new RegExp('\\b' + n + ': function').test(pv));
         if (!called.length) fail('[바이럴] 화면이 부르는 서버 함수를 못 찾았다 — 이 검사가 아무것도 못 지킨다');

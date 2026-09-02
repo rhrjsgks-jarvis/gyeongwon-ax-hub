@@ -278,12 +278,37 @@
   /* **건수는 아래 줄에 크게** — 사장님이 「00점 내려쓰기 00건」이라 지목한 그 모양이다 */
   .st b { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
   .st .u { font-weight: 500; font-size: 10px; color: var(--mute); }
+  /* **아이콘은 지역 색이다**(2026-09-02 사장님 요청 *"아이콘넣어주세요"*).
+     색은 지어내지 않고 **지도의 6지역 스펙트럼(v8)을 그대로** 쓴다 — 같은 지역이
+     지도와 매장 칸에서 다른 색이면 눈이 헤맨다. 매장마다 다른 그림을 주지 않는 이유는
+     65곳이라 그림이 65가지가 되면 오히려 안 읽히기 때문이다. 구분은 **색이 한다.** */
+  .st .ic { width: 30px; height: 30px; border-radius: 9px; display: flex;
+            align-items: center; justify-content: center; color: #fff; background: #9AA4B2;
+            flex: 0 0 auto; margin-bottom: 1px; }
+  .st .ic svg { width: 17px; height: 17px; }
+  .st.a1 .ic { background: #3d52db; }   /* 수원 — 지도 r1 */
+  .st.a2 .ic { background: #9027d5; }   /* 성남 — r2 */
+  .st.a3 .ic { background: #b62170; }   /* 용인 — r3 */
+  .st.a4 .ic { background: #9c4b1d; }   /* 평택 — r4 */
+  .st.a5 .ic { background: #636613; }   /* 안양 — r5 */
+  .st.a6 .ic { background: #176b7c; }   /* 강원 — r6 */
+  /* 0건은 아이콘도 흐리게 — 지우지는 않는다(오늘 0건이 내일 0건은 아니다) */
+  .st.z .ic { background: #E3E7ED; color: #B6BCC6; }
+  /* 고른 칸은 바탕이 남색이라 아이콘을 흰 바탕에 지역색 글자로 뒤집는다 */
+  .st.on .ic { background: rgba(255,255,255,.92); color: var(--blue); }
   .st.on .u { color: rgba(255,255,255,.75); }
   /* 0건 — **지우지 않고 흐리게.** 오늘 0건이라고 내일도 0건인 것은 아니다 */
   .st.z { color: #B6BCC6; background: #FCFCFD; }
   .st.z b { color: #C9CFD8; }
 
   /* 왼쪽 매장 격자 · 오른쪽 지점별 분석. 좁은 화면에서는 아래로 쌓인다 */
+  /* 색 고르개 — 지도 카드 아래 한 줄 */
+  .acolbox { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .acol { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px;
+          font-size: 12px; color: #374151; cursor: pointer; }
+  .acol input[type=color] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line);
+                            border-radius: 5px; background: none; cursor: pointer; }
+
   .stwrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
   @media (min-width: 1000px) { .stwrap { grid-template-columns: 1fr 300px; align-items: start; } }
   .stdet { border: 1px solid var(--line); border-radius: 11px; background: #FCFDFF; padding: 12px; }
@@ -746,6 +771,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       </div>
       <div class="geoleg" id="geo-leg"></div>
       <div class="gstores" id="geo-stores"></div>
+      <!-- 지역 색 고르개 (2026-09-02 사장님 요청 *"컬러를 관리자가 원하면 변경가능하도록"*).
+           **지도 카드 안에 둔다** — 색이 무엇을 바꾸는지 바로 위에 보여야 고르기 쉽다.
+           바꾸면 매장 칸 아이콘도 함께 바뀐다(같은 지역이 두 곳에서 다른 색이면 눈이 헤맨다). -->
+      <div class="acolbox" id="areacol"></div>
     </div>
     <div class="card" data-card="store">
       <h2>매장별 — 지역순</h2>
@@ -1745,6 +1774,7 @@ function wireSecs() {
     /* 칸이 어느 영업지역에 속하는지 — 서버가 주는 `areaCells`(지역→칸)를 뒤집는다.
        **표를 두 벌 적지 않는다** — 갈리면 지도와 막대가 다른 지역을 가리킨다. */
     var RCOLOR = { '수원': 1, '성남': 2, '용인': 3, '평택': 4, '안양': 5, '강원': 6 };
+    /* 지도 안에만 있던 것을 밖으로 뺀다 — 매장 칸 아이콘도 같은 대응을 써야 한다 */
     var cellReg = {};
     (function () {
       var AC = DATA.areaCells || {};
@@ -2231,6 +2261,87 @@ function wireSecs() {
    * **채널 이름은 카페 이름이다.** 블로그 글은 블로거 이름이 시트에 없어(HEADER 에 그
    * 칸이 없다) 「네이버 블로그」로 묶는다 — **없는 것을 지어내지 않는다.** 화면이 그
    * 사실을 한 줄로 밝힌다. */
+  /* ── 지역 색을 관리자가 바꾼다 (2026-09-02 사장님 요청) ─────────────────────
+   * *"컬러를 관리자가 원하면 변경가능하도록 할수있습니까?"*
+   *
+   * **기준색 하나에서 명도 10단계를 만들어 낸다.** 예전에는 60개 규칙이 CSS 에 박혀
+   * 있어 색 하나를 바꾸려면 열 줄을 손으로 고쳐야 했다.
+   * **CSS 의 60줄은 그대로 둔다** — 폴백이다. 이 함수가 못 돌아도 지도가 회색이 되지
+   * 않는다(생성한 규칙이 뒤에 오므로 이긴다).
+   * **아이콘도 같은 색을 쓴다** — 같은 지역이 지도와 매장 칸에서 다른 색이면 눈이 헤맨다. */
+  var AREA_N = { '수원': 1, '성남': 2, '용인': 3, '평택': 4, '안양': 5, '강원': 6 };
+  function hex2rgb(h) {
+    var m = /^#([0-9a-f]{6})$/i.exec(String(h || ''));
+    if (!m) return null;
+    var v = parseInt(m[1], 16);
+    return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+  }
+  function rgb2hex(c) {
+    return '#' + c.map(function (x) {
+      var t = Math.max(0, Math.min(255, Math.round(x))).toString(16);
+      return t.length < 2 ? '0' + t : t;
+    }).join('');
+  }
+  /* 흰색과 섞어 밝게 · 검정과 섞어 어둡게. **사다리 모양은 지금 지도 그대로**다 —
+     v8 이 기준색이고 v1 이 가장 옅다(농도 읽는 법이 안 바뀐다). */
+  function shade(base, wr, br) {
+    var c = hex2rgb(base); if (!c) return base;
+    var o = c.map(function (x) { return x + (255 - x) * wr; });
+    if (br) o = o.map(function (x) { return x * (1 - br); });
+    return rgb2hex(o);
+  }
+  var LADDER = [[0.90, 0], [0.80, 0], [0.68, 0], [0.56, 0], [0.42, 0],
+                [0.28, 0], [0.14, 0], [0, 0], [0, 0.20], [0, 0.38]];
+  function applyAreaColors() {
+    var cols = DATA.areaColors;
+    if (!cols) return;                       /* 옛 서버면 CSS 폴백 그대로 */
+    var css = [], a, n, i;
+    for (a in cols) {
+      if (!cols.hasOwnProperty(a) || !AREA_N[a]) continue;
+      n = AREA_N[a];
+      for (i = 0; i < LADDER.length; i++) {
+        css.push('.geo-svg path.r' + n + '.v' + (i + 1) + '{fill:' + shade(cols[a], LADDER[i][0], LADDER[i][1]) + '}');
+      }
+      css.push('.st.a' + n + ' .ic{background:' + cols[a] + '}');
+    }
+    var tag = document.getElementById('areacss');
+    if (!tag) { tag = document.createElement('style'); tag.id = 'areacss'; document.head.appendChild(tag); }
+    tag.textContent = css.join(String.fromCharCode(10));
+  }
+
+  /* 색 고르개 — 지도 카드 아래. **되돌리는 길을 함께 둔다**(고르다 못 알아보게 되면
+     되돌릴 방법이 없으면 갇힌다). */
+  function wireAreaColors() {
+    var box = document.getElementById('areacol');
+    if (!box || box.dataset.wired) return;
+    var cols = DATA.areaColors; if (!cols) { box.innerHTML = ''; return; }
+    box.dataset.wired = '1';
+    var names = Object.keys(AREA_N);
+    box.innerHTML = '<div class="note" style="margin-bottom:6px">지역 색 — 바꾸면 <b>지도와 매장 칸</b>에 함께 적용됩니다.</div>'
+      + names.map(function (a) {
+          return '<label class="acol"><input type="color" data-a="' + esc(a) + '" value="'
+            + esc(cols[a] || '#888888') + '">' + esc(a) + '</label>';
+        }).join('')
+      + '<button type="button" class="btn" id="acol-reset" style="margin-left:6px">기본값으로</button>';
+    var send = function (map) {
+      if (!(window.google && google.script && google.script.run)) return;
+      google.script.run.withSuccessHandler(function (r) {
+        if (r && r.colors) { DATA.areaColors = r.colors; applyAreaColors(); }
+      }).setAreaColors(map);
+    };
+    Array.prototype.forEach.call(box.querySelectorAll('input[type=color]'), function (inp) {
+      inp.onchange = function () {
+        var map = {};
+        Array.prototype.forEach.call(box.querySelectorAll('input[type=color]'), function (x) {
+          map[x.dataset.a] = x.value;
+        });
+        DATA.areaColors = map; applyAreaColors();   /* 눈에 먼저 보이게 */
+        send(map);
+      };
+    });
+    var rst = document.getElementById('acol-reset');
+    if (rst) rst.onclick = function () { box.dataset.wired = ''; send({}); };
+  }
   function renderStoreDetail() {
     var el = document.getElementById('store-detail'); if (!el) return;
     var by = DATA.byStore || {}, chAll = DATA.byStoreChan || {};
@@ -2287,9 +2398,12 @@ function wireSecs() {
         '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
         list.map(function (nm) {
           var v = by[nm] || 0;
-          /* **점명 줄 · 건수 줄** — 사장님이 지목한 「00점 내려쓰기 00건」 모양이다 */
-          return '<button class="st' + (v ? '' : ' z') + (storeFilter === nm ? ' on' : '') +
-            '" data-v="' + esc(nm) + '"><span>' + esc(nm) + '</span>' +
+          /* **점명 줄 · 건수 줄** — 사장님이 지목한 「00점 내려쓰기 00건」 모양이다.
+             아이콘 색은 그 지역 것이다(지도와 같은 색). */
+          return '<button class="st a' + (RCOLOR[rg] || 0) + (v ? '' : ' z') +
+            (storeFilter === nm ? ' on' : '') +
+            '" data-v="' + esc(nm) + '"><span class="ic">' + SHOP_SVG + '</span>' +
+            '<span>' + esc(nm) + '</span>' +
             '<b>' + nf(v) + '<span class="u">건</span></b></button>';
         }).join('') + '</div></div>';
     }).join('');
@@ -3255,6 +3369,8 @@ function renderList() {
     renderPromo();
     renderTrend();
     renderDiag();
+    applyAreaColors();
+    wireAreaColors();
     renderStoreDetail();
     renderSdp();
     renderSignals();

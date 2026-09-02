@@ -283,7 +283,10 @@ if (html.indexOf('<' + '?') >= 0) {
    자료가 즉시 오면 안 된다. */
 const stub = [
   '<script>',
-  'window.__VIRAL_FIXTURE = ' + JSON.stringify(REAL) + ';',
+  'window.__VIRAL_FIXTURE = ' + JSON.stringify(Object.assign({
+  areaColors: { 수원: '#3d52db', 성남: '#9027d5', 용인: '#b62170',
+               평택: '#9c4b1d', 안양: '#636613', 강원: '#176b7c' }
+}, REAL)) + ';',
   'window.google = { script: { run: (function () {',
   '  var ok = null, ng = null;',
   '  var api = {',
@@ -297,6 +300,8 @@ const stub = [
   '    getProgress: function () { setTimeout(function () { ok && ok({}); }, 100); },',
   '    runRival: function () { console.log("[preview] runRival (로컬이라 아무 일도 하지 않는다)"); },',
   '    setManagerNames: function () {}, setAlias: function () {}, setupTrigger: function () {},',
+  /* 색을 바꾸면 서버가 다듬은 값을 돌려준다 — 화면이 그것으로 다시 칠한다 */
+  '    setAreaColors: function (m) { setTimeout(function () { ok && ok({ ok: true, colors: m && Object.keys(m).length ? m : window.__VIRAL_FIXTURE.areaColors }); }, 50); },',
   '    resetAll: function () {}, continueSweep: function () {},',
   '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {}',
   '  };',
