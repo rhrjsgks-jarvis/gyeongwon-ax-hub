@@ -1966,6 +1966,36 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       console.log(`OK: 바이럴 한 바퀴 최대 ${sweep}회 ≥ 상한 ${need}회 (매장 ${nStores} × 꼬리 ${nTails} × 갈래 ${nKinds} × ${maxPages}쪽 + LG ${nUnits}도시)`);
     }
 
+    /* ④-b **「완료」로 보고해도 되는가 · 「멈춤」이 정말 멈추는가 · 별칭이 세 곳 다 도는가**
+       (2026-09-02). 셋 다 *"조용히 반쪽만 하고 다 한 척"* 하는 종류라 한데 묶는다. */
+    {
+      const bad2 = [];
+      /* 갈래를 하나라도 껐으면 「전부 훑었다」가 아니다 — 이레 동안 그물이 뚫린다 */
+      if (!/if \(!stopped && isFull && !kindDown\)/.test(rv)) {
+        bad2.push('갈래를 끄고도 _fullAt 을 찍는다 — 그 갈래 옛 글을 이레 동안 못 모은다');
+      }
+      /* 「멈춤」이 도는 실행에 닿는가 — 트리거만 지우면 1~6분을 그대로 이어 돈다 */
+      if (!rv.includes("props_().setProperty('_stopReq'")) {
+        bad2.push('stopSweep 이 도는 실행에 알리지 않는다 — 「멈췄습니다」가 거짓이 된다');
+      }
+      if (!rv.includes("if (props_().getProperty('_stopReq'))")) {
+        bad2.push('sweep_ 이 중단 표식을 안 읽는다 — 멈추라고 해도 계속 돈다');
+      }
+      /* 멈춘 것에 이어달리기를 걸면 1분 뒤 스스로 다시 돈다 — 「멈춤」이 무의미해진다 */
+      if (!/!hitLimit && !fatal && !halted/.test(rv)) {
+        bad2.push('사람이 멈춘 실행에 이어달리기를 건다 — 1분 뒤 다시 돈다');
+      }
+      /* 별칭은 세 곳이 함께 움직여야 한다(질의 · 본문 대조 · 남의 매장 판정) */
+      if (!rv.includes('var cNames = [cMatch].concat(aliasOf_(cName, aliasTab));')) {
+        bad2.push('관심 카페 훑기가 별칭을 안 쓴다 — 그 말로 찾아 놓고 「점명이 없다」로 버린다');
+      }
+      if (!/allNames\.push\(al0\[aj\]\)/.test(rv)) {
+        bad2.push('남의 매장 판정에 별칭이 빠졌다 — 별칭으로 적힌 글을 남의 것으로 오판한다');
+      }
+      if (bad2.length) { ok = false; console.log('ERROR: [바이럴] ' + bad2.join(' · ')); }
+      else console.log('OK: 바이럴 — 반쪽 훑기는 「완료」로 안 세고 · 「멈춤」이 도는 실행을 세우고 · 별칭이 세 곳 다 돈다');
+    }
+
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */
     const pageSize = nOf(/var PAGE_SIZE = (\d+)/);
     if (pageSize * maxPages > 1000) {

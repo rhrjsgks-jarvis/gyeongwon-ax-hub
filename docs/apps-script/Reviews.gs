@@ -1359,7 +1359,15 @@ function sweep_(mode) {
   /* 별칭 표는 **한 번만 읽는다** — 매장마다 속성을 읽으면 65번이 된다 */
   var aliasTab = aliasAll_();
   var allNames = [];
-  for (i = 0; i < STORES.length; i++) allNames.push(STORES[i][1]);
+  for (i = 0; i < STORES.length; i++) {
+    allNames.push(STORES[i][1]);
+    /* **별칭도 「매장 이름」이다**(2026-09-02). 이 목록은 *"이 글이 남의 매장 것인가"* 를
+       가리는 데 쓰이는데 정식 점명만 들어 있었다 — 글이 *"삼성스토어 신사시티"* 라고만
+       적혀 있으면 그 매장 것인 줄 몰라 남의 매장 판정이 헛돈다. 별칭이 함께 움직여야
+       하는 세 곳(질의 · 본문 대조 · 남의 매장 판정) 중 하나가 빠져 있었다. */
+    var al0 = aliasOf_(STORES[i][1], aliasTab);
+    for (var aj = 0; aj < al0.length; aj++) allNames.push(al0[aj]);
+  }
 
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var calls = 0, got = 0, kept = 0, add = [], err = '';
@@ -1455,10 +1463,21 @@ function sweep_(mode) {
   }
 
   stage_('매장 훑기 앞');
-  var stopped = false;
+  var stopped = false, halted = false;
+  /* **묵은 중단 표식을 먼저 지운다** — 안 지우면 다음 실행이 시작하자마자 선다 */
+  props_().deleteProperty('_stopReq');
   for (i = cursor; i < STORES.length; i++) {
     /* **시간이 다 되면 그 자리에서 멈춘다** — 다음 실행이 여기서 이어받는다 */
     if (Date.now() - t0 > BUDGET_MS) { cursor = i; tailSave = 0; stopped = true; break; }
+    /* **사람이 「멈춤」을 눌렀으면 선다**(2026-09-02). 예전에는 트리거만 지워서
+       도는 실행이 1~6분을 그대로 이어 돌고 끝에서 이어달리기를 다시 걸었다 —
+       화면은 「멈췄습니다」라고 적는데 수집은 계속됐다.
+       시간 검사와 **같은 자리**라 반쪽 매장이 남지 않고 커서도 제자리에 선다. */
+    if (props_().getProperty('_stopReq')) {
+      cursor = i; tailSave = 0; stopped = true; halted = true;
+      props_().deleteProperty('_stopReq');
+      break;
+    }
     /* **한도도 같은 방식으로 멈춘다.** 커서를 남기므로 내일 이 매장부터 이어 간다 —
        한도에 걸렸다고 처음부터 다시 돌면 뒤쪽 매장은 영영 못 훑는다. */
     if (over()) { cursor = i; tailSave = 0; stopped = true; hitLimit = true; break; }
@@ -1706,7 +1725,14 @@ function sweep_(mode) {
                카페별 질의라 우리가 미리 아는 매장이 없다 — 판정은 기존 함수 그대로다. */
             for (var cs = 0; cs < STORES.length; cs++) {
               var cName = STORES[cs][1], cMatch = MATCH[cName] || cName;
-              if (!hasStore_(ctext, cMatch)) continue;
+              /* **관심 카페 훑기도 별칭을 쓴다**(2026-09-02). 여기만 정식 점명으로
+                 대 보고 있어, 글이 *"삼성스토어 신사시티"*·*"삼성스토어 갤광교"* 라고만
+                 적혀 있으면 **65곳 중 어느 것과도 안 맞아 받아 놓고 버렸다.**
+                 이 파일이 이미 경고한 그 실패다 — *"그 말로 찾아 놓고 「점명이 없다」로
+                 전부 버려 한 건도 안 남는다"*. 사장님이 별칭을 늘릴수록 격차가 커진다.
+                 **브랜드 말과 붙어 있어야 한다는 규칙은 그대로다**(`hasStore_`). */
+              var cNames = [cMatch].concat(aliasOf_(cName, aliasTab));
+              if (!hasAny_(ctext, cNames)) continue;
               if (belongsToOther_(ctext, cMatch, allNames)) continue;
               kept++;
               seen[clink] = true;
@@ -1753,7 +1779,16 @@ function sweep_(mode) {
   /* 한 바퀴를 마쳤으면 커서를 처음으로 — 다음 실행이 새로 훑는다 */
   /* **한 바퀴를 전부 훑어 마쳤으면 그 날짜를 적는다** — 다음 이레 동안은 새 글만 훑는다.
      중간에 멈춘 실행은 적지 않는다(반만 훑고 「전부 훑었다」고 하면 그물이 뚫린다). */
-  if (!stopped && isFull) {
+  /* **갈래를 하나라도 껐으면 「전부 훑었다」가 아니다**(2026-09-02). 한 갈래가 연속
+     3번 실패하면 그 실행에서 통째로 꺼지는데(`kindOff`), 이 판정이 `stopped` 만 보고
+     그것을 안 봤다. 웹문서가 `HTTP 500 SE99` 를 내는 것은 실제로 겪은 일이라(1222행
+     주석의 실측), 매장 #10 에서 webkr 을 끄고 나머지 55곳을 blog·cafe 로만 훑어 끝내면
+     `_fullAt` 이 오늘로 찍히고 **이레 동안 새 글만 훑는다** — 그 55곳의 웹문서 옛 글은
+     다음 전체 훑기까지 못 모은다. 화면이 `srcOff` 로 한 줄 알리지만 그 줄은 그 실행에서만
+     보이고 `_fullAt` 은 이레를 간다.
+     바로 위 주석이 *"반만 훑고 「전부 훑었다」고 하면 그물이 뚫린다"* 고 적어 둔 그 자리다. */
+  var kindDown = Object.keys(kindOff).length;
+  if (!stopped && isFull && !kindDown) {
     props_().setProperty('_fullAt', stamp);
     /* 전체 훑기를 마쳤으니 표식을 내린다 — 안 내리면 매일 전부 훑어 아낀 것이 없어진다 */
     props_().deleteProperty('_forceFull');
@@ -1788,7 +1823,9 @@ function sweep_(mode) {
      갈래 하나가 500 을 내면 그 표시가 남아 이어달리기가 안 걸렸다 — 실제로 웹문서가
      `HTTP 500 SE99` 를 내며 **커서 6/65 에서 영영 섰다.** 더 돌아도 소용없는 것은
      인증이 막힌 경우뿐이므로 그때만 안 건다. */
-  if (stopped && !hitLimit && !fatal) { chained = chain_(); } else { clearChain_(); }
+  /* **사람이 멈춘 것(`halted`)에는 이어달리기를 걸지 않는다** — 걸면 1분 뒤 스스로
+     다시 돌아 「멈춤」이 아무 일도 안 한 것이 된다. 한도·인증 오류를 안 거는 것과 같은 이유다. */
+  if (stopped && !hitLimit && !fatal && !halted) { chained = chain_(); } else { clearChain_(); }
 
   /* 끝났으니 「도는 중」 표식을 내린다 — 안 내리면 화면이 영영 「도는 중」이라 적는다 */
   props_().deleteProperty('_runAt');
@@ -2009,9 +2046,23 @@ function resetAll() {
   } finally { lock.releaseLock(); }
 }
 
-/** 사람이 멈추고 싶을 때. 화면의 「멈춤」이 부른다. */
+/** 사람이 멈추고 싶을 때. 화면의 「멈춤」이 부른다.
+ *
+ *  **트리거만 지우면 「멈췄습니다」가 거짓이 된다**(2026-09-02). 지금 돌고 있는
+ *  실행은 어떤 중단 신호도 읽지 않아 **1~6분을 그대로 이어 돌고**, 끝에서 `chain_()`
+ *  을 다시 걸어 아무 일도 없던 것이 된다. 사장님은 *"이어달리기를 멈췄습니다"* 를
+ *  보고도 수집이 계속되는 것을 보게 된다.
+ *  그래서 **표식을 남겨 도는 실행이 스스로 서게** 한다 — 매장 경계에서 읽는다
+ *  (시간·한도 검사와 같은 자리라 반쪽 매장이 남지 않고 커서도 제자리에 선다). */
 function stopSweep() {
   var n = clearChain_();
+  props_().setProperty('_stopReq', String(Date.now()));
+  var running = Number(props_().getProperty('_runAt') || 0) > 0;
+  if (running) {
+    return n
+      ? ('멈추라고 알렸습니다 — 지금 도는 실행은 다음 매장 경계에서 섭니다(트리거 ' + n + '개 해제).')
+      : '멈추라고 알렸습니다 — 지금 도는 실행은 다음 매장 경계에서 섭니다.';
+  }
   return n ? ('이어달리기를 멈췄습니다(트리거 ' + n + '개 해제).') : '돌고 있는 이어달리기가 없습니다.';
 }
 
@@ -2868,7 +2919,16 @@ function collectRival(deadline) {
       skew ? 'Y' : '',
       place,
       JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon),
-      JSON.stringify({ ours: topN_(byChan.ours, 12), rival: topN_(byChan.rival, 12) }),
+      /* **도시마다 자르면 지역 순위에서 1위가 통째로 사라진다**(2026-09-02).
+         `rival_()` 은 도시 줄들을 더해 지역 순위를 만드는데, 여기서 12개로 자르면
+         **세 도시에 고르게 퍼진 채널**은 합계가 1위여도 어느 도시에서도 12위 안에
+         못 들어 사라진다. 실측(강원 3도시): 공통채널이 도시마다 40건씩 합계 120건으로
+         지역 1위인데 화면 1~3위는 도시 하나에 몰린 99건짜리들이었고 **공통채널은 없었다.**
+         도시가 하나인 지역(수원·평택)은 정상이라 **지역마다 정확도가 달랐다.**
+         40 으로 넓힌다 — 시트 칸은 5만 자이고 40개 × 양 진영 × 채널명 20자 남짓이면
+         2천 자가 안 돼 넉넉하다. **통째로 담지 않는 이유는 그대로다** — 채널이 수백 개라
+         칸이 넘친다. 화면이 보여주는 것이 상위 10개 안팎이라 40이면 합산이 안 흔들린다. */
+      JSON.stringify({ ours: topN_(byChan.ours, 40), rival: topN_(byChan.rival, 40) }),
       JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample)
     ]);
     /* **도시 하나를 끝낼 때마다 커서를 적는다.** 실행이 그 뒤에 죽어도 여기까지는
