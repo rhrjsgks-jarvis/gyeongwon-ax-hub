@@ -327,6 +327,7 @@ for (const c of Object.keys(labels)) {
 const SUB = path.join(ROOT, 'scripts/fixtures/gw-submunicipalities.json');
 const subSrc = fs.existsSync(SUB) ? JSON.parse(fs.readFileSync(SUB, 'utf8')) : { cities: {} };
 const sub = {};
+const subGeo = {};   /* 시마다 좌표 변환 — 매장 핀을 같은 자로 찍는다 */
 let subN = 0;
 for (const city of Object.keys(subSrc.cities || {})) {
   const list = subSrc.cities[city];
@@ -387,8 +388,56 @@ for (const city of Object.keys(subSrc.cities || {})) {
     items[i].t = t;
   }
   sub[city] = { h: SH, items };
+  subGeo[city] = { sx: SX, sy: SY };
   subN += items.length;
 }
+
+/* ── 매장 위치 (2026-09-02 사장님 요청: *"우리매장위치도 표시해주세요"*) ──────────
+ * **좌표는 지어내지 않는다.** 카카오맵에서 찾아 `store-geo.json` 에 굳혀 둔 값만 쓴다
+ * (그 파일이 장소 이름·주소를 함께 들고 있어 되짚을 수 있다). 파일이 없으면 핀도 없다.
+ *
+ * **어느 시인지도 짐작하지 않는다** — 점이 어느 폴리곤 안에 드는지로 정한다.
+ * 관할 폴리곤 어디에도 안 들면 **버리고 보고한다**(좌표가 틀렸다는 뜻이다).
+ */
+const GEO = path.join(ROOT, 'scripts/fixtures/store-geo.json');
+const geo = fs.existsSync(GEO) ? JSON.parse(fs.readFileSync(GEO, 'utf8')) : { stores: [] };
+const inRing = (ring, x, y) => {
+  let hit = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit;
+  }
+  return hit;
+};
+const pins = [];
+const pinLost = [];
+for (const st of (geo.stores || [])) {
+  if (!st.ok || typeof st.lat !== 'number' || typeof st.lng !== 'number') continue;
+  /* **어느 시인지는 주소가 정한다**(fixture 의 `region`). 지도 폴리곤은 단순화본이라
+     경계에 붙은 매장이 옆 시로 넘어간다 — 삼성스토어 평택이 실제로는 안성시 공도읍인데
+     점 판정으로는 평택시에 떨어졌다. 점은 좌표대로 찍되 소속은 주소를 따른다. */
+  const f = src.features.find((x) => x.mine && x.region === st.region);
+  if (!f) { pinLost.push(st.name + '(' + (st.region || '시 모름') + ')'); continue; }
+  /* **관할 안에 있기는 한지는 여전히 본다** — 좌표가 통째로 엉뚱하면 여기서 걸린다.
+     경계에 붙어 옆 시로 떨어지는 것은 정상이므로 「어느 관할이든」으로 본다. */
+  let inGw = false;
+  for (const g of src.features) {
+    if (!g.mine || inGw) continue;
+    const walk = (c) => { if (inGw) return; if (typeof c[0][0] === 'number') { if (inRing(c, st.lng, st.lat)) inGw = true; } else c.forEach(walk); };
+    walk(g.coords);
+  }
+  if (!inGw) { pinLost.push(st.name + '(관할 밖)'); continue; }
+  pins.push({ n: st.name, city: st.region, cell: cellOf(f),
+    x: X(st.lng), y: Y(st.lat), lat: st.lat, lng: st.lng });
+}
+/* 시 안쪽 화면에서 쓸 자리 — 그 시의 좌표계로 다시 잰다 */
+for (const city of Object.keys(sub)) {
+  const mine = pins.filter((p) => p.city === city);
+  if (!mine.length) continue;
+  const g = subGeo[city];
+  sub[city].pins = mine.map((p) => ({ n: p.n, x: g.sx(p.lng), y: g.sy(p.lat) }));
+}
+for (const p of pins) { delete p.lat; delete p.lng; }
 
 const block = [
   BEGIN,
@@ -401,7 +450,8 @@ const block = [
     + ', metro: ' + jsStr(metro) + ', metroLabels: ' + JSON.stringify(metroLabels)
     + ', members: ' + JSON.stringify(members)
     + ', sigun: ' + JSON.stringify(sigun)
-    + ', sub: ' + JSON.stringify(sub) + ' };',
+    + ', sub: ' + JSON.stringify(sub)
+    + ', pins: ' + JSON.stringify(pins) + ' };',
   '</script>',
   END
 ].join('\n');
@@ -425,4 +475,6 @@ console.log('[build:regionmap] viewBox 0 0 ' + W + ' ' + H
   + ' · 돋보기 ' + Object.keys(metroLabels).length + '구 ' + mW + 'x' + mH
   + ' (' + (metro.length / 1024).toFixed(1) + 'KB)'
   + ' · 시 안쪽 ' + Object.keys(sub).length + '시 ' + subN + '곳'
+  + ' · 매장 핀 ' + pins.length + '곳'
+  + (pinLost.length ? ' (관할 밖이라 버린 것 ' + pinLost.length + ': ' + pinLost.join(', ') + ')' : '')
   + (changed ? '' : ' (변화 없음)'));

@@ -2419,6 +2419,61 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         if (bad.length) fail('[바이럴] 시 안쪽 확대 — ' + bad.join(' · '));
         else console.log('OK: 바이럴 시 안쪽 확대 — 읍·면 ' + cities.length + '시 ' + items + '곳 · 이웃끼리 색이 겹치지 않는다');
       }
+      /* ⓛ **매장 위치** (2026-09-02 사장님: *"지도가 확장되었으면 이제 우리매장위치도
+         표시해주세요"*). **좌표를 지어내지 않는 것**이 이 구간이 지키는 전부다 —
+         시청 좌표나 시 중심으로 대신하면 지도가 **실제로는 매장이 없는 자리**를 가리킨다. */
+      {
+        const bad = [];
+        const g = JSON.parse(fs.readFileSync(new URL('../scripts/fixtures/store-geo.json', import.meta.url), 'utf8'));
+        const st = g.stores || [];
+        const okS = st.filter((x) => x.ok);
+        if (st.length < 60) bad.push('매장이 ' + st.length + '곳뿐이다');
+        if (!String(g._src || '').includes('카카오')) bad.push('좌표 출처가 안 적혀 있다');
+        for (const x of okS) {
+          if (typeof x.lat !== 'number' || typeof x.lng !== 'number') { bad.push(x.name + ' 좌표가 숫자가 아니다'); continue; }
+          /* 경기·강원 밖이면 좌표가 통째로 엉뚱한 것이다 */
+          if (!(x.lat > 36.5 && x.lat < 38.8 && x.lng > 126.3 && x.lng < 129.6)) bad.push(x.name + ' 좌표가 경기·강원 밖이다');
+          /* **근거를 남긴다** — 어느 장소를 집었는지 적혀 있어야 되짚을 수 있다 */
+          if (!String(x.place || '').includes('삼성')) bad.push(x.name + ' 이 집은 장소 이름에 삼성이 없다');
+          if (!x.addr) bad.push(x.name + ' 주소가 없다');
+          if (!x.region) bad.push(x.name + ' 어느 시인지가 없다');
+        }
+        /* **못 찾은 것에 좌표가 있으면 안 된다** — 지어낸 값이 흘러든 것이다 */
+        for (const x of st) {
+          if (x.ok) continue;
+          if (x.lat !== undefined || x.lng !== undefined) bad.push(x.name + ' 은 못 찾았다면서 좌표가 있다');
+          if (!x.why) bad.push(x.name + ' 을 왜 못 찾았는지 안 적혀 있다');
+        }
+        /* **같은 좌표를 쓰는 곳은 그 사실이 적혀 있어야 한다**(같은 건물이라 그렇다) */
+        const seen = {};
+        for (const x of okS) {
+          const k = x.lat + ',' + x.lng;
+          if (seen[k] && !x.note && !st.find((y) => y.name === seen[k] && y.note)) {
+            bad.push(x.name + ' 이 ' + seen[k] + ' 과 좌표가 같은데 이유가 안 적혀 있다');
+          }
+          seen[k] = seen[k] || x.name;
+        }
+
+        /* 지도에 실렸는가 — **버려진 것이 있으면 수가 안 맞는다**(빌드가 관할 밖을 버린다) */
+        const pm = ix2.indexOf(', pins: [');
+        if (pm < 0) bad.push('GW_MAP 에 매장 핀이 없다');
+        else {
+          const pins = JSON.parse(ix2.slice(ix2.indexOf('[', pm + 6), ix2.indexOf(']', pm) + 1));
+          if (pins.length !== okS.length) bad.push('핀 ' + pins.length + '개 ↔ 좌표 ' + okS.length + '곳 — 빌드가 버린 것이 있다');
+          for (const q of pins) if (typeof q.x !== 'number' || typeof q.y !== 'number' || !q.cell) bad.push('핀 ' + q.n + ' 이 덜 채워졌다');
+        }
+        /* 화면 — **테두리는 배율과 무관해야 한다**(구 확대에서 지도를 통째로 덮었다) */
+        if (!ix2.includes('function pinSvg(')) bad.push('핀을 그리는 곳이 없다');
+        if (!ix2.includes('.geo .pin { fill: #111827')) bad.push('핀 모양 규칙이 없다');
+        if (!/.geo .pinlab {[^}]*non-scaling-stroke/.test(ix2)) bad.push('이름표 테두리가 배율을 탄다 — 확대하면 지도를 덮는다');
+        /* **본 지도에는 이름을 안 적는다** — 64개 이름이면 지도가 글자에 덮인다 */
+        if (!ix2.includes('pinSvg(GW_MAP.pins, 1.5, 0)')) bad.push('본 지도가 이름 없이 점만 찍지 않는다');
+        /* **그리는 차례**: 도형 → 매장 → 지역 이름. 뒤집으면 점이 덮이거나 이름이 지워진다 */
+        if (!ix2.includes('hp + pinSvg(sb.pins, 11, 21) + ht')) bad.push('읍·면 화면의 그리는 차례가 바뀌었다');
+
+        if (bad.length) fail('[바이럴] 매장 위치 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 매장 위치 — ' + okS.length + '곳 좌표(근거 있음) · 못 찾은 ' + (st.length - okS.length) + '곳은 비웠다');
+      }
       /* ⓘ **지도 보강 · 매장 목록** (2026-08-31 사장님 요청 묶음).
          화면에서만 보이는 것들이라 되돌아가면 아무도 모른다. */
       {
