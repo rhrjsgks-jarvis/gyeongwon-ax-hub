@@ -2029,6 +2029,40 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
       if (bad3.length) { ok = false; console.log('ERROR: [바이럴] ' + bad3.join(' · ')); }
       else console.log('OK: 바이럴 — 글 단위로 세고 · 잰 값을 잃지 않고 · 동명이인을 가르고 · 잘림을 밝힌다');
+
+      /* ④-d **자라면 드러나는 것들**(2026-09-02 · 하급 4건). 지금은 안 틀리지만
+         자료가 늘거나 한도를 낮추면 그 자리에서 조용히 틀린다. */
+      const bad4 = [];
+      /* 예산 안에 못 끝내는 도시를 영영 버리지 않는가 — 하루 5,760회를 헛쓰는 자리다 */
+      if (!rv.includes('var pageCap = Math.max(2, Math.min(MAX_PAGES, Number(stuck[place]) || MAX_PAGES));')) {
+        bad4.push('LG 비교가 도시마다 쪽 수를 조절하지 않는다 — 큰 도시는 예산에 걸려 영영 안 채워진다');
+      }
+      if (!/if \(hard\) \{\s*stuck\[place\] = Math\.max\(2, Math\.floor\(pageCap \/ 2\)\);/.test(rv)) {
+        bad4.push('시간에 걸린 도시의 쪽 수를 줄이지 않는다 — 다음에도 같은 자리에서 버린다');
+      }
+      if (!rv.includes("if (stuck[place]) { delete stuck[place];")) {
+        bad4.push('끝낸 도시의 표식을 안 지운다 — 한 번 걸리면 영영 얕게 돈다');
+      }
+      /* 한도 판정이 LG 호출을 세는가 — 한도를 낮춰 두면 그만큼 그대로 초과한다 */
+      if (!rv.includes('return used0 + calls + extraCalls >= limit;')) {
+        bad4.push('한도 판정이 LG 비교 호출을 안 센다 — 최대 2,640회만큼 늦게 멈춘다');
+      }
+      /* 삭제 확인이 이어 도는가 — 커서가 없으면 늘 시트 앞부분만 본다 */
+      if (!rv.includes("var cur0 = Number(props_().getProperty('_deadCur') || 0);")) {
+        bad4.push('삭제 확인에 커서가 없다 — 줄이 늘면 뒷부분은 영영 확인되지 않는다');
+      }
+      if (!rv.includes("if (!cutShort) { props_().setProperty('_deadAt', today);")) {
+        bad4.push('중간에 끊겨도 「오늘 했다」를 찍는다 — 그날 내내 이어서 못 돈다');
+      }
+      /* 스키마 판 번호 — 다음 변경 때 옛 회차에 이어 붙어 값이 2배가 되는 것을 막는다 */
+      if (!rv.includes('var RIVAL_SCHEMA = ')) {
+        bad4.push('RIVAL_SCHEMA 가 없다 — 칸을 더하면 옛 회차에 이어 붙어 값이 뒤섞인다');
+      }
+      if (!rv.includes("props_().getProperty('_rivalSchema')")) {
+        bad4.push('판 번호를 보지 않는다 — 결과 판정만으로는 지난번 그 변경 하나만 알아본다');
+      }
+      if (bad4.length) { ok = false; console.log('ERROR: [바이럴] ' + bad4.join(' · ')); }
+      else console.log('OK: 바이럴 — 큰 도시도 끝나고 · 한도가 LG 를 세고 · 삭제확인이 이어 돌고 · 판 번호로 회차를 가른다');
     }
 
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */
@@ -2751,7 +2785,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!rv.includes('fatal = true; stopped = true;')) {
         bad.push('인증 오류가 stopped 을 안 세운다 — 반쪽만 훑고 「한 바퀴 완료」로 보고한다');
       }
-      if (!rv.includes('if (hard || err) { stoppedR = true; break; }')) {
+      if (!/if \(hard \|\| err\) \{[\s\S]{0,600}stoppedR = true; break;/.test(rv)) {
         bad.push('반쪽 줄을 버리지 않는다(시간·오류 둘 다) — 반쪽 비중이 화면에 나간다');
       }
       /* ⓓ 도시마다 커서를 적는다 — 함수 끝에서 한 번만 적으면 죽을 때 전부 잃는다 */

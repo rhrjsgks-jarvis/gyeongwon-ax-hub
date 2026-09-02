@@ -1388,7 +1388,12 @@ function sweep_(mode) {
      호출마다 속성을 읽으면 2,000번을 읽는 셈이라 느려지고, 무엇보다 **세는 곳이 둘이 되면
      두 숫자가 갈라진다.** 남은 몫은 `limit - used0 - calls` 하나로만 판단한다. */
   var limit = dailyLimit_(), used0 = usage_().n, hitLimit = false;
-  var over = function () { return used0 + calls >= limit; };
+  /* **다른 함수가 쓴 호출도 함께 센다**(2026-09-02). LG 비교는 자기 안에서
+     `addUsage_` 를 부르고 그 횟수가 여기 `calls` 에 안 들어와, 한도 판정이 최대
+     2,640회만큼 늦게 참이 됐다. 기본 한도 20,000 · 네이버 25,000 이라 지금은 안 터지지만
+     **사장님이 한도를 낮춰 두면 그만큼 그대로 초과한다.** */
+  var extraCalls = 0;
+  var over = function () { return used0 + calls + extraCalls >= limit; };
 
   /* ── 이미 가진 글을 다시 받지 않는다 ─────────────────────────────
    * 2026-08-31 사장님 지적: *"매일매일 최소 1회 이상 작동을 하는데 과거 수집된 자료가
@@ -1445,6 +1450,8 @@ function sweep_(mode) {
     try {
       props_().setProperty('_rivalTry', String(Number(props_().getProperty('_rivalTry') || 0) + 1));
       rivalRun = collectRival(t0 + RIVAL_MS);
+      /* 그 안에서 쓴 호출을 한도 판정에 넣는다 — 아래 매장 훑기가 이 값을 본다 */
+      extraCalls += Number((rivalRun && rivalRun.calls) || 0);
       if (rivalRun && rivalRun.done) props_().setProperty('_rivalAt', stamp);
       sumCacheClear_();
     }
@@ -2571,6 +2578,11 @@ var SHEET_RIVAL = '경쟁비교';
    넘고 갈래가 늘 때마다 열이 늘어난다 — 우리 시트라 JSON 한 칸이 낫다. */
 var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries',
   'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson'];
+/* **줄의 뜻이 바뀌면 이 번호를 올린다.** 칸을 더하거나 기존 칸의 뜻을 바꾸면 옛 회차에
+   이어 붙어 값이 뒤섞인다 — 「평택 2,008 → 4,025」가 그렇게 났다. 번호가 다르면
+   이어 붙지 않고 새 회차로 시작한다.
+   2 = 도시 단위(한 줄에 도시 하나) + 채널 40개 + byProd·sample 칸. */
+var RIVAL_SCHEMA = 2;
 
 /* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
    `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
@@ -2831,13 +2843,35 @@ function collectRival(deadline) {
    * 옛 스키마다(새 코드는 한 줄에 도시 하나만 적는다). 어떤 상태에서 시작하든 스스로
    * 낫는다 — 이 파일이 `rivalDue_` 에서 이미 세운 방식 그대로다. */
   if (cyStamp && from > 0 && oldSchemaCycle_(cyStamp)) { cyStamp = ''; }
-  if (!cyStamp || from === 0) { cyStamp = stamp; props_().setProperty('_rivalStamp', cyStamp); from = 0; }
+  /* **판 번호로도 가른다**(2026-09-02). 위 판정은 `queries` 에 도시가 여럿인지를 보는데,
+     그것은 **지난번 그 변경 하나만** 알아본다 — 줄에 판 번호가 없으니 `RIVAL_HEADER` 에
+     칸을 더하는 다음 변경에는 아무 방어가 없다. 이 저장소가 이미 겪은 사고(옛 회차에
+     이어 붙어 값이 2배)가 그대로 되풀이될 자리다.
+     **칸을 더하거나 뜻을 바꾸면 `RIVAL_SCHEMA` 를 올릴 것** — 그러면 이어 붙지 않고
+     새 회차로 시작한다. 결과 판정(위)과 함께 두 겹이다. */
+  if (cyStamp && String(props_().getProperty('_rivalSchema') || '') !== String(RIVAL_SCHEMA)) { cyStamp = ''; }
+  if (!cyStamp || from === 0) {
+    cyStamp = stamp;
+    props_().setProperty('_rivalStamp', cyStamp);
+    props_().setProperty('_rivalSchema', String(RIVAL_SCHEMA));
+    from = 0;
+  }
   var stoppedR = false, hard = false;
 
   /* **꼬리말로 질의를 쪼갠다 — 양쪽에 똑같이.**
      한 질의는 200건이 상한이라 쪼개지 않으면 6곳 전부 상한에 닿아 비중을 못 낸다
      (실측). 우리 후기 수집이 이미 쓰는 수법이고, 여기서 중요한 것은 **삼성·LG 에
      같은 꼬리말을 쓰는 것** — 한쪽만 쪼개면 그쪽만 많이 받아 비중이 거짓이 된다. */
+  /* **예산 안에 못 끝내는 도시가 있다**(2026-09-02). 한 도시 최대는
+     2진영 × 꼬리 4 × 소스 3 × 10쪽 = 240회이고 실측 1.41초/회면 **338초** 인데
+     `RIVAL_MS` 는 300초다 — 글이 가장 많은 도시(수원 3,889건급)는 하드 스톱에 걸려
+     **일을 통째로 버리고 커서도 안 오른다.** 다음 실행이 같은 도시를 처음부터 또 돌아
+     하루 상한(24회)까지 **5,760회를 헛쓰고 그 도시는 영영 안 채워진다.**
+     그래서 **걸린 도시는 다음번에 쪽 수를 반으로 줄인다** — 반드시 끝나는 쪽으로
+     수렴한다. **양 진영에 똑같이 줄이므로 비중은 안 깨진다**(한쪽만 줄이면 거짓이 된다).
+     끝내면 표식을 지워 다음에는 다시 10쪽으로 돈다. */
+  var stuck = {};
+  try { stuck = JSON.parse(props_().getProperty('_rivalStuck') || '{}') || {}; } catch (eS) { stuck = {}; }
   var ui, spent = 0, ranUnits = 0;
 
   for (ui = from; ui < units.length; ui++) {
@@ -2852,6 +2886,8 @@ function collectRival(deadline) {
     if (deadline && Date.now() > deadline - perUnit) { stoppedR = true; break; }
     var unitT0 = Date.now();
     var area = units[ui][0], place = units[ui][1];
+    /* 이 도시가 지난번 예산에 걸렸으면 그때 줄여 둔 쪽 수로 돈다(최소 2쪽) */
+    var pageCap = Math.max(2, Math.min(MAX_PAGES, Number(stuck[place]) || MAX_PAGES));
     stage_('LG비교 ' + area + ' / ' + place + ' (' + (ui + 1) + '/' + units.length + ')');
     var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
     var lastAdd = { ours: 0, rival: 0 };
@@ -2876,7 +2912,7 @@ function collectRival(deadline) {
            덤이 하나 더 있다: **블로그는 작성일을 주므로 추이 비교가 된다.** */
         var SRCS = ['blog', 'cafearticle', 'webkr'];
         for (var sj = 0; sj < SRCS.length; sj++) {
-          for (var page = 0; page < MAX_PAGES; page++) {
+          for (var page = 0; page < pageCap; page++) {
             /* **하드 스톱.** 여기까지 왔으면 이 도시는 예상보다 오래 걸린 것이다 —
                더 가면 6분 한도에 죽어 **이 실행이 통째로 사라진다.** 반쪽을 저장하지
                않고 버린 뒤 멈춘다(다음 실행이 이 도시부터 처음부터 다시 돈다). */
@@ -2944,7 +2980,15 @@ function collectRival(deadline) {
        `_rivalCur` 를 `ui+1` 로 전진시킨 뒤 함수 끝이 `ui` 로 되돌려, 다음 실행이 **이미
        쓴 도시를 다시 훑어 같은 도장에 같은 도시가 두 줄**이 됐다(지역 합산 2배 —
        「평택 2,008 → 4,025」와 같은 뿌리다). 줄을 안 쓰면 커서가 전진하지 않는다. */
-    if (hard || err) { stoppedR = true; break; }
+    if (hard || err) {
+      /* **시간에 걸린 것이면 다음번엔 얕게 돈다** — 안 그러면 이 도시는 영영 못 끝낸다.
+         오류(`err`)는 시간 문제가 아니므로 쪽 수를 줄이지 않는다. */
+      if (hard) {
+        stuck[place] = Math.max(2, Math.floor(pageCap / 2));
+        props_().setProperty('_rivalStuck', JSON.stringify(stuck));
+      }
+      stoppedR = true; break;
+    }
 
     var a = Object.keys(got.ours).length, b = Object.keys(got.rival).length;
     /* ★ **「상한이면 못 잰다」는 쓸 수 없는 규칙이었다.**
@@ -2975,6 +3019,8 @@ function collectRival(deadline) {
     ]);
     /* **도시 하나를 끝낼 때마다 커서를 적는다.** 실행이 그 뒤에 죽어도 여기까지는
        남는다 — 예전에는 함수 끝에서 한 번만 적어 6분에 죽으면 전부 잃었다. */
+    /* 끝냈으니 「걸린 도시」 표식을 지운다 — 다음에는 다시 10쪽으로 돈다 */
+    if (stuck[place]) { delete stuck[place]; props_().setProperty('_rivalStuck', JSON.stringify(stuck)); }
     props_().setProperty('_rivalCur', String(ui + 1));
     spent += Date.now() - unitT0; ranUnits++;
     if (err) break;
@@ -3272,8 +3318,16 @@ function verifyDead_(deadline) {
   }
 
   var n404 = 0, n200 = 0, nUnknown = 0, checked = 0, hit = [], b, j;
-  for (b = 0; b < todo.length; b += DEAD_BURST) {
-    if (deadline && Date.now() > deadline) break;   /* 다음 실행이 이어 돈다 */
+  /* **어디까지 두드렸는지 기억한다**(2026-09-02). 예전에는 커서가 없어 `todo` 를 매번
+     시트 맨 위부터 다시 만들었다 — **늘 같은 앞부분만** 확인됐다. 한 실행에 약 78묶음
+     (≈3,900건)이라 블로그 줄이 그보다 적은 지금은 우연히 다 덮지만, **넘는 순간 뒷부분은
+     영영 확인되지 않는다.** 커서는 `todo` 안의 자리라, 줄이 늘거나 이미 죽은 줄이 생기면
+     범위를 벗어날 수 있다 — 그때는 0부터 돈다. */
+  var cur0 = Number(props_().getProperty('_deadCur') || 0);
+  if (!(cur0 >= 0) || cur0 >= todo.length) cur0 = 0;
+  var cutShort = false;
+  for (b = cur0; b < todo.length; b += DEAD_BURST) {
+    if (deadline && Date.now() > deadline) { cutShort = true; props_().setProperty('_deadCur', String(b)); break; }
     var chunk = todo.slice(b, b + DEAD_BURST);
     var reqs = [];
     for (j = 0; j < chunk.length; j++) {
@@ -3307,10 +3361,16 @@ function verifyDead_(deadline) {
   }
 
   if (checked) sh.getRange(2, 1, vals.length, W).setValues(vals);
-  props_().setProperty('_deadAt', today);
+  /* **다 돌았을 때만 「오늘 했다」를 찍는다.** 예전에는 중간에 끊겨도 찍어서
+     `deadDue_()` 가 그날 내내 false 가 됐다 — 주석은 *"다음 실행이 이어서 두드린다"* 고
+     적었는데 **이어서 돌 기회가 없었다.** 끊긴 회차는 표식을 안 남기고 커서만 남긴다. */
+  if (!cutShort) { props_().setProperty('_deadAt', today); props_().deleteProperty('_deadCur'); }
   if (newlyDead || n200) sumCacheClear_();
   return { checked: checked, alive: n200, gone: n404, unknown: nUnknown,
-           newlyDead: newlyDead, target: target, dead: already + newlyDead };
+           newlyDead: newlyDead, target: target, dead: already + newlyDead,
+           /* 화면이 「아직 다 못 두드렸습니다」를 적을 근거 — 조용히 반만 하고 끝내지 않는다 */
+           partial: cutShort, at: cutShort ? Number(props_().getProperty('_deadCur') || 0) : todo.length,
+           todo: todo.length };
 }
 
 /** 오늘 이미 확인했는가 — 검색 예산을 안 쓰므로 **매일** 돌 수 있다. */
