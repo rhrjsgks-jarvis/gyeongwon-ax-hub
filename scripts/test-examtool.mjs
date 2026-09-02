@@ -590,12 +590,40 @@ say(fs.existsSync(pdf), 'A4 PDF 생성 (' + (fs.statSync(pdf).size / 1024).toFix
   if (!gen.includes('(L.usp || []).length * 2 < (H.usp || []).length')) {
     bad.push('자료 결손 가드가 없다 — 「자료가 없다」를 「기능이 없다」로 낸다');
   }
-  if (!gen.includes('!ws.some(w => lowBlob.includes(w))')) {
-    bad.push('유무 차이 판정이 없다 — 등급 차이(Pro/일반)를 「없다」로 낸다');
-  }
   if (!gen.includes('flat(H.name) === flat(L.name)) continue')) {
     bad.push('같은 이름 제외가 없다 — 변형끼리 견주는 문항이 나온다');
   }
+  /* **유무 차이는 문자열이 아니라 동작으로 지킨다**(2026-09-02). 예전에는 생성기 소스에
+     특정 한 줄이 있는지만 봤는데, **그 줄을 지워도 값을 설정하는 다른 줄이 남아 통과**하는
+     종류라(이 저장소가 `dataset.zoomed` 에서 이미 데였다) 검사가 제 일을 안 한다.
+     지금은 **나온 문항마다 원문에 근거가 실제로 있는지** 대조한다:
+       ① 정답이 그 모델(L)의 「미적용」 노트에 적혀 있는가
+       ② 그 노트의 **값 칸**(콜론 뒤 괄호 앞)이 정답을 되풀이하지 않는가
+          — 되풀이하면 L 도 그것을 가진 것이고, 없는 것은 괄호 안의 상위 등급이다
+            (`SH85 : AI 축구모드 (AI 축구모드 Pro 미적용)`). */
+  const guides = JSON.parse(fs.readFileSync(
+    new URL('../scripts/fixtures/usp-guides.json', import.meta.url), 'utf8')).models;
+  const MISS = /미적용|미지원|없음|해당\s*없|불가/;
+  let unproven = 0, tierGrade = 0;
+  for (const t of tier) {
+    /* 질문이 「H」에는 있지만 「L」에는 없는 것은? 꼴이라 뒤 이름이 L 이다 */
+    const nm = [...String(t.q).matchAll(/「([^」]+)」/g)].map((m) => m[1]);
+    if (nm.length < 2) continue;
+    const L = guides.find((g) => g.name.trim() === nm[1].trim());
+    if (!L) { unproven++; continue; }
+    const ansText = t.opts[t.ans];
+    const lacks = (L.notes || []).filter((n) => MISS.test(n));
+    const proven = lacks.some((n) => {
+      if (!n.includes(ansText)) return false;
+      const c = n.lastIndexOf(':');
+      const val = (c >= 0 ? n.slice(c + 1) : n).split('(')[0];
+      if (val.includes(ansText)) { tierGrade++; return false; }   /* 등급 차이지 유무 차이가 아니다 */
+      return true;
+    });
+    if (!proven) unproven++;
+  }
+  if (unproven) bad.push(`정답에 원문 근거가 없는 등급비교 ${unproven}건`);
+  if (tierGrade) bad.push(`등급 차이(Pro/일반)를 「없다」로 낸 것 ${tierGrade}건`);
 
   if (bad.length) { ok = false; console.log('FAIL: 등급 비교 문항 — ' + bad.slice(0, 4).join(' · ')); }
   else say(true, '등급 비교 문항 ' + tier.length + '개 — 이름이 다른 형제끼리 · 근거 있음 · 보기 길이 균형');

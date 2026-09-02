@@ -503,9 +503,16 @@ const seenUsp = new Set();
  */
 function tierQuestions(guides) {
   const out = [];
-  const key = s => flat(s).toLowerCase();
-  const words = s => [...(String(s).match(/[A-Za-z][A-Za-z0-9+]{2,}/g) || []),
-                      ...(String(s).match(/[가-힣]{2,}/g) || [])].map(key);
+  /* **기능 이름은 usp·heads 줄의 앞 토막이다** — 가이드가 `무반사 기술 — UL 인증을 …`
+     꼴로 적는다. 설명까지 통째로 보기로 쓰면 100자가 넘어 읽지 않고도 찍힌다. */
+  const featOf = (u) => { const i = String(u).search(/\s[—–-]\s/); return (i > 0 ? String(u).slice(0, i) : String(u)).trim(); };
+  /* 보기 길이 6~46자 — 냉장고 가이드는 특장점을 **문장으로** 적어 그대로 쓰면
+     보기가 23~60자로 널뛴다. **정답만 길면 읽지 않고도 찍힌다.** */
+  const fits = (f) => f.length >= 8 && f.length <= 46;
+  /* 가이드가 **없다고 못 박은** 표현. 「안 내세운다」가 아니라 「없다」여야 한다. */
+  const MISSING = /미적용|미지원|없음|해당\s*없|불가/;
+  /* 그 모델이 **실제로 가진** 기능 이름 — 오답은 여기서만 뽑는다 */
+  const featuresOf = (m) => [...new Set([...(m.usp || []), ...(m.heads || [])].map(featOf).filter(fits))];
 
   /* **같은 파일 · 같은 품목끼리만** 짝짓는다 — 다른 가이드끼리 견주면 근거가 둘이 되고,
      수집 시점이 달라 같은 기능을 다르게 적었을 수 있다. */
@@ -522,37 +529,57 @@ function tierQuestions(guides) {
     for (const H of arr) {
       for (const L of arr) {
         if (H === L) continue;
-        /* **이름이 같은 짝은 뺀다.** 색상·용량 변형이 같은 이름으로 여러 줄 들어 있어
-           (김치플러스 8종) *"둘 중 어느 것"* 을 물을 수가 없다 — 화면이 같은 이름
-           두 개를 보기로 내밀게 된다. */
+        /* **이름이 같은 짝은 뺀다.** 색상·용량 변형이 같은 이름으로 여러 줄 들어 있으면
+           *"둘 중 어느 것"* 을 물을 수가 없다 — 화면이 같은 이름 둘을 보기로 내민다. */
         if (flat(H.name) === flat(L.name)) continue;
-        /* **「기능이 없다」와 「자료가 없다」는 다른 말이다.** 가이드는 시리즈 대표 한 줄에
-           특장점을 몰아 적고 형제 줄은 비워 두는 일이 있다 — 무풍콤보 갤러리 프로가
-           **usp 32개 vs 1개**다. 그대로 견주면 *"이 모델에는 32가지가 없다"* 는 거짓이
-           32문항 쏟아진다. **한쪽이 절반도 안 되면 견주지 않는다.** */
+
+        /* **정답은 추론하지 않는다 — 원문이 "미적용"이라 적은 것만 쓴다.**
+           예전에는 두 등급의 usp 를 문자열로 견줘 *"H 에만 있는 줄"* 을 정답으로 삼았는데,
+           그 방식은 **두 등급이 똑같은 문장을 3개 이상 공유**해야 오답이 채워진다.
+           2026-09-02 에 가이드 11종을 전수로 다시 뽑으니 등급마다 문구가 제각각이라
+           그 겹침이 사라져 **11 → 2문항**이 됐다. 자료가 좋아졌는데 문항이 준 것이다.
+           지금은 가이드가 표에 적어 둔 **"SH85 : Glare Free - (미적용)"** 을 근거로 쓴다 —
+           추론이 아니라 원문이고, 같은 자료에서 **32짝**이 성립한다(실측). */
+        /* **자료 결손** — 가이드는 시리즈 대표 한 줄에 특장점을 몰아 적고 형제 줄은
+           비워 두는 일이 있다(무풍콤보 갤러리 프로가 usp 32 vs 1). **한쪽이 절반도 안 되면
+           견주지 않는다** — 그대로 견주면 *"이 모델에는 32가지가 없다"* 가 쏟아진다. */
         if ((L.usp || []).length * 2 < (H.usp || []).length) continue;
-        const lowBlob = key((L.usp || []).join(' '));
-        /* **보기 길이를 맞춘다**(8~46자, 셀링포인트 문항과 같은 규칙). 냉장고 가이드는
-           특장점을 **문장으로** 적어(「냉장고와 냉장고장의 최소 간격이 4mm로 …」 38자)
-           그대로 쓰면 보기가 23~60자로 널뛴다 — **정답만 길면 읽지 않고도 찍힌다.** */
-        const fits = t => t.length >= 8 && t.length <= 46;
-        const only = (H.usp || []).filter((t) => {
-          if (!fits(t) || (L.usp || []).includes(t)) return false;
-          const ws = words(t);
-          if (!ws.length) return false;
-          return !ws.some(w => lowBlob.includes(w));   /* 하위에 흔적조차 없어야 한다 */
+
+        const lacks = (L.notes || []).filter(n => MISSING.test(n));
+        if (!lacks.length) continue;
+        const lHas = featuresOf(L);
+        /* **「등급 차이」와 「유무 차이」를 반드시 가른다.**
+           원문이 `AI 축구모드 표 — SH85 : AI 축구모드 (AI 축구모드 Pro 미적용)` 이라 적으면
+           **없는 것은 「AI 축구모드」가 아니라 「AI 축구모드 Pro」다** — SH85 도 축구모드는 갖고
+           있다. 그대로 정답으로 내면 거짓이다.
+           가르는 자리는 **값 칸**이다: 콜론 뒤 괄호 앞이 그 모델이 실제로 가진 값이라,
+           거기에 기능 이름이 되풀이되면 **가진 것**이다.
+           (`SH85 : Glare Free - (미적용)` 은 값이 `-` 라 진짜 없는 것이다.) */
+        const lacksFeature = (f) => lacks.some((n) => {
+          if (!n.includes(f)) return false;
+          const c = n.lastIndexOf(':');
+          const val = (c >= 0 ? n.slice(c + 1) : n).split('(')[0];
+          return !val.includes(f);
         });
-        const both = (H.usp || []).filter(t => fits(t) && (L.usp || []).includes(t));
-        if (!only.length || both.length < 3) continue;
+        const only = [...new Set(featuresOf(H).filter(lacksFeature))]
+          /* 한쪽에서는 없다 하고 그 모델 제 문구에는 남아 있으면 근거가 서로 어긋난 것이다 */
+          .filter(f => !lHas.includes(f));
+        if (!only.length) continue;
+
+        /* **오답은 L 이 실제로 가진 것에서만 뽑는다.** 그래야 *"H에는 있고 L에는 없는 것"* 의
+           오답으로 성립한다(L 이 가졌으니 정답일 수 없다). **제3 모델에서 빌리지 말 것** —
+           그 기능이 L 에도 있을 수 있어 *"안 내세운다 ≠ 없다"* 가 그대로 되살아난다. */
+        const bad0 = lHas.filter(f => !lacksFeature(f) && !only.includes(f));
+        if (bad0.length < 3) continue;
 
         const cat = CAT_OF_USP[H.cat] || CAT_OF_USP[L.cat];
         if (!cat) continue;                       /* 문제은행 칸을 모르면 만들지 않는다 */
         /* **한 짝에서 한 문항만** — 더 내면 보기 넷이 그대로 되풀이돼 패턴이 읽힌다 */
         const ans = only[slot(H.name + L.name, only.length)];
         /* 오답도 **짝마다 다른 자리**에서 뽑는다(늘 앞 셋이면 같은 보기가 반복된다) */
-        const st = slot(H.name + L.name + '#b', both.length);
+        const st = slot(H.name + L.name + '#b', bad0.length);
         const bad = [];
-        for (let i = 0; i < both.length && bad.length < 3; i++) bad.push(both[(st + i) % both.length]);
+        for (let i = 0; i < bad0.length && bad.length < 3; i++) bad.push(bad0[(st + i) % bad0.length]);
         if (bad.length < 3) continue;
 
         const hn = H.name.trim(), ln = L.name.trim();
@@ -561,8 +588,8 @@ function tierQuestions(guides) {
         seenTier.add(q);
         const { opts, ans: at } = place(ans, bad, q);
         out.push({ cat, q, opts, ans: at, lv: '중', nm: 1, fam: 'tier',
-          exp: `「${ans}」${eunn(ans)} ${hn}에만 적용된다. 나머지 세 보기는 ${hn}·${ln} 두 모델 모두 갖고 있다. `
-             + `(근거: ${H.src})` });
+          exp: `「${ans}」${eunn(ans)} ${hn}에만 적용된다 — 가이드가 ${ln} 에 대해 미적용이라 밝혔다. `
+             + `나머지 세 보기는 ${ln} 도 갖고 있다. (근거: ${H.src} / ${L.src})` });
       }
     }
   }
