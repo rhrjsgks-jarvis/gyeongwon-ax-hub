@@ -519,6 +519,30 @@ const pdf = path.join(dir, 'sample.pdf');
 await page.pdf({ path: pdf, format: 'A4', printBackground: true });
 say(fs.existsSync(pdf), 'A4 PDF 생성 (' + (fs.statSync(pdf).size / 1024).toFixed(0) + 'KB)');
 
+/* ── 세일즈가이드 USP 원본 (2026-09-02 사장님 요청) ─────────────────────────
+ * *"구글드라이브에 추가된 파일들을 분석해서 제품별 USP를 다시정리해주세요"*
+ *
+ * `usp-guides.json` 은 **손으로 옮긴 원문 창고**라 재생성 대조를 할 수 없다. 대신
+ * **되짚을 수 있는가**를 지킨다 — 출처 없이 들어온 문구는 지어낸 것과 구분되지 않는다.
+ */
+{
+  const g = JSON.parse(fs.readFileSync(new URL('../scripts/fixtures/usp-guides.json', import.meta.url), 'utf8'));
+  const rows = g.models || [];
+  const noFile = rows.filter((r) => !r.file).length;
+  const noWhat = rows.filter((r) => !r.model && !r.name).length;
+  const empty = rows.filter((r) => !(r.usp && r.usp.length) && !(r.heads && r.heads.length) && !r.note).length;
+  const noSrc = rows.filter((r) => !r.src).length;
+  say(rows.length > 0, 'USP 원본 ' + rows.length + '항목');
+  say(noFile === 0, '항목마다 어느 파일에서 왔는지 적혀 있다' + (noFile ? ' (빠진 것 ' + noFile + ')' : ''));
+  say(noWhat === 0, '항목마다 모델코드나 제품명이 있다' + (noWhat ? ' (빠진 것 ' + noWhat + ')' : ''));
+  say(empty === 0, '빈 항목이 없다' + (empty ? ' (' + empty + '개)' : ''));
+  /* 쪽수까지 적힌 것이 대부분이어야 한다 — 없으면 원문에서 되짚을 수가 없다 */
+  say(noSrc <= rows.length * 0.2, '출처(쪽)가 8할 이상 적혀 있다 (없는 것 ' + noSrc + ')');
+  /* **두 자료가 같은 것을 담고 있는지 검산** — 모델별USP.pptx 는 usp-models.json 의 출처다 */
+  const ppt = rows.filter((r) => r.file === '모델별USP.pptx').length;
+  const um = JSON.parse(fs.readFileSync(new URL('../scripts/fixtures/usp-models.json', import.meta.url), 'utf8')).models.length;
+  say(ppt === um, '모델별USP.pptx ' + ppt + '건 == usp-models.json ' + um + '건');
+}
 say(outside.length === 0, '바깥으로 나간 요청 0' + (outside.length ? ': ' + outside[0] : ''));
 say(errs.length === 0, '콘솔 오류 없음' + (errs.length ? ': ' + errs[0] : ''));
 console.log('\n안내문: ' + a.hint);
