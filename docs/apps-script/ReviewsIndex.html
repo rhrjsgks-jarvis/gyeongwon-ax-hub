@@ -90,14 +90,28 @@
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; margin-bottom: 14px;
     position: relative; }
 
-  /* ── 접이식 섹션 박스 (2026-09-02) — AS 앱 .cats/.cat 값을 그대로 베꼈다. 눈대중으로 맞추지 말 것 ── */
-  .secs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 7px; margin-bottom: 16px; }
-  .sec { border: 1px solid #e5e7eb; background: #fff; border-radius: 11px; padding: 9px 6px; font-size: 12.5px; font-weight: 600; text-align: center; cursor: pointer; transition: .12s; color: #374151; font-family: inherit; }
-  .sec .ci { display: block; margin-bottom: 4px; line-height: 1; }
-  .sec .ci svg { width: 22px; height: 22px; margin: 0 auto; display: block; }
+  /* ── 접이식 섹션 박스 ─────────────────────────────────────────────────
+   * 2026-09-02 사장님: *"아이콘을 지금보다 4배이상키워주세요 가로 3개정도또는4개정도면
+   * 충분할정도로 … 어떤 내용이들어있는지 축소판으로 보여줘도좋습니다"*.
+   *
+   * **칸 수를 auto-fill 에 맡기지 않는다.** 폭에 따라 다섯·여섯 칸이 되어 박스가 도로
+   * 작아진다 — 한 줄에 몇 개인지를 못 박아야 크기가 지켜진다(폰 2 · 태블릿 3 · PC 4).
+   * 아이콘 22 → 46px(넓이 4.4배). 미리보기(`.pv`)가 붙어 글자가 왼쪽 정렬이다.
+   */
+  .secs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  @media (min-width: 560px) { .secs { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 900px) { .secs { grid-template-columns: repeat(4, 1fr); } }
+  .sec { border: 1px solid #e5e7eb; background: #fff; border-radius: 14px; padding: 14px 13px;
+    font-size: 14px; font-weight: 700; text-align: left; cursor: pointer; transition: .12s;
+    color: #374151; font-family: inherit; display: flex; flex-direction: column; gap: 3px; min-height: 112px; }
+  .sec .ci { display: block; line-height: 1; margin-bottom: 5px; }
+  .sec .ci svg { width: 46px; height: 46px; display: block; }
+  .sec .pv { font-size: 11px; font-weight: 500; color: var(--mute); line-height: 1.45; }
   .sec:hover { border-color: #c7d2fe; }
   .sec.on { background: #1428A0; border-color: #1428A0; color: #fff; }
-  @media (max-width: 520px) { .secs { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); } }
+  .sec.on .pv { color: #C3CDF0; }
+  @media (max-width: 520px) { .sec { min-height: 104px; padding: 12px 11px; font-size: 13px; }
+    .sec .ci svg { width: 40px; height: 40px; } }
   .card h2 { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
   .card .sub { font-size: 11px; color: var(--mute); margin-bottom: 11px; }
   @media (max-width: 760px) {
@@ -119,7 +133,11 @@
   .meta { font-size: 10.5px; color: var(--mute); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .yrs { display: inline-flex; gap: 4px; margin-left: 6px; }
   /* 되돌릴 수 없는 단추는 다르게 보여야 한다 — 옆 단추와 같은 모양이면 실수로 눌린다 */
-  .btn.danger { border-color: #E5A0A0; color: #B42318; }
+  /* **남색 머리 위에 앉는 버튼이다** — 진한 빨강(#B42318)은 그 위에서 사실상 안 읽힌다
+     (실물에서 글자가 뭉개져 보였다). 되돌릴 수 없는 버튼이라 더 위험하다.
+     밝은 살구빛으로 바꾸고 테두리·바탕으로 「위험」을 표시한다. */
+  .btn.danger { border-color: #F0A9A2; color: #FFC9C3; background: rgba(192, 57, 43, .28); }
+  .btn.danger:hover { background: rgba(192, 57, 43, .45); color: #fff; }
   .tag { background: #EEF2FF; color: var(--blue); border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: 10px; }
   /* 매장 신호 — 기존 색 변수만 쓴다(의존성 0) */
   .sighd { font-size: 11px; font-weight: 800; color: var(--blue); margin: 10px 0 4px; }
@@ -1301,6 +1319,68 @@ function secOpen() {
   return SEC_DEFAULT.slice();
 }
 function secSave(list) { try { localStorage.setItem(SEC_KEY, JSON.stringify(list)); } catch (e) {} }
+/* 박스가 「무엇이 들어 있는지」를 미리 보여준다 (2026-09-02 사장님 요청).
+ * **화면 어딘가에 그대로 있는 값만 적는다** — 여기서 새로 계산해 내놓으면 카드와 어긋난다.
+ * **모르면 아무 말도 안 적는다** — 0 으로 적으면 「없다」가 되어 거짓이 된다. */
+function topOf(o) {
+  if (!o || typeof o !== 'object') return null;
+  var ks = Object.keys(o), best = null, n = 0;
+  for (var i = 0; i < ks.length; i++) {
+    var v = o[ks[i]];
+    if (typeof v !== 'number' || !isFinite(v)) return null;   /* 모양이 다르면 손대지 않는다 */
+    n++;
+    if (!best || v > best.v) best = { k: ks[i], v: v };
+  }
+  return n ? { n: n, k: best.k, v: best.v } : null;
+}
+function secPeek(k) {
+  try {
+    var D = DATA || {}, t, rr;
+    if (k === 'rival' || k === 'promo') {
+      rr = ((D.rival || {}).rows) || [];
+      if (!rr.length) return '아직 안 쟀습니다';
+      if (k === 'rival') {
+        var win = 0, lose = 0, na = 0;
+        rr.forEach(function (r) {
+          if (!(typeof r.pct === 'number' && isFinite(r.pct))) na++;
+          else if (r.pct >= 50) win++; else lose++;
+        });
+        return '지역 ' + rr.length + '곳 · 당사 우세 ' + win + ' · LG 우세 ' + lose + (na ? ' · 못 잼 ' + na : '');
+      }
+      var ch = {}, pr = {};
+      rr.forEach(function (r) {
+        Object.keys(((r.byChan || {}).rival) || {}).forEach(function (x) { ch[x] = 1; });
+        Object.keys(((r.byProd || {}).prod) || {}).forEach(function (x) { pr[x] = 1; });
+      });
+      var nc = Object.keys(ch).length, np = Object.keys(pr).length;
+      return nc || np ? 'LG 채널 ' + nc + '곳 · 품목 ' + np + '가지' : '다음 수집부터 채워집니다';
+    }
+    if (k === 'trend' || k === 'diag') {
+      t = topOf(D.byMonth);
+      var mm = typeof D.month === 'number' ? nf(D.month) + '건' : null;
+      if (k === 'diag') return mm ? '이번 달 ' + mm + ' 기준 진단' : '';
+      return (t ? t.n + '개월' : '') + (t && mm ? ' · ' : '') + (mm ? '이번 달 ' + mm : '');
+    }
+    if (k === 'map') { t = topOf(D.byMap); return t ? '칸 ' + t.n + '곳 · 최다 ' + t.k + ' ' + nf(t.v) + '건' : ''; }
+    if (k === 'store') { t = topOf(D.byStore); return t ? '매장 ' + t.n + '곳 · 1위 ' + t.k + ' ' + nf(t.v) + '건' : ''; }
+    if (k === 'cafe') { t = topOf(D.byCafe); return t ? '카페 ' + t.n + '곳 · 최다 ' + t.k : ''; }
+    if (k === 'signal') { t = topOf(D.byStore); return t ? '매장 ' + t.n + '곳의 흐름과 마지막 후기' : ''; }
+    if (k === 'mgr') {
+      var mt = D.mgrTop || [];
+      return mt.length ? '이름 ' + mt.length + '명 · 1위 ' + mt[0].name + ' ' + nf(mt[0].n) + '건' : '';
+    }
+    if (k === 'alias') {
+      var al = D.alias || {}, c = 0;
+      Object.keys(al).forEach(function (x) { c += (al[x] || []).length; });
+      return c ? '줄임말 ' + c + '개 · 매장 ' + Object.keys(al).length + '곳' : '등록된 줄임말이 없습니다';
+    }
+    if (k === 'list') {
+      var all = typeof D.total === 'number' ? nf(D.total) + '건' : '';
+      return all ? '전체 ' + all + (typeof D.undated === 'number' && D.undated ? ' · 작성일 미상 ' + nf(D.undated) : '') : '';
+    }
+  } catch (e) {}
+  return '';
+}
 /* 박스의 on/off 와 카드의 hidden 을 열린 목록 하나에서 함께 정한다 — 두 곳이 따로 놀면 「켜졌는데 안 보인다」가 된다 */
 function applySecs() {
   var open = secOpen();
@@ -1312,6 +1392,10 @@ function applySecs() {
     boxes[i].setAttribute('aria-pressed', on ? 'true' : 'false');
     var card = document.querySelector('.card[data-card="' + k + '"]');
     if (card) card.hidden = !on;
+    /* 미리보기 — 마크업에 열한 번 적지 않고 여기서 붙인다(빠뜨릴 자리를 만들지 않는다) */
+    var pv = boxes[i].querySelector('.pv');
+    if (!pv) { pv = document.createElement('span'); pv.className = 'pv'; boxes[i].appendChild(pv); }
+    pv.textContent = secPeek(k);
   }
 }
 function wireSecs() {

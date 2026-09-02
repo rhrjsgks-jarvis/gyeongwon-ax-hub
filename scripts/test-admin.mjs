@@ -2264,8 +2264,24 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         const cards = ix2.split('data-card="').length - 1 - (ix2.split('[data-card="').length - 1);
         if (boxes < 8) bad.push('섹션 박스가 ' + boxes + '개뿐이다');
         if (boxes !== cards) bad.push('박스 ' + boxes + '개 ↔ 카드 ' + cards + '개 — 짝이 안 맞는다');
-        /* **AS 앱 칸 규격을 그대로 베꼈다** — 눈대중으로 맞추지 말 것 */
-        if (!ix2.includes('minmax(104px, 1fr)')) bad.push('박스 칸 규격이 AS 앱(.cats)과 다르다');
+        /* **한 줄에 몇 개인지를 못 박는다**(2026-09-02 사장님: *"가로 3개정도또는4개정도"*).
+           `auto-fill` 로 두면 폭에 따라 다섯·여섯 칸이 되어 박스가 도로 작아진다. */
+        /* **.secs 안에서 본다** — 맨 repeat(2, 1fr) 로 찾으면 .kpis 규칙이 걸린다 */
+        for (const g of ['.secs { display: grid; grid-template-columns: repeat(2, 1fr)',
+                         '.secs { grid-template-columns: repeat(3, 1fr)',
+                         '.secs { grid-template-columns: repeat(4, 1fr)']) {
+          if (!ix2.includes(g)) bad.push('한 줄 칸 수 규칙이 없다: ' + g.slice(6, 46));
+        }
+        if (ix2.includes('.secs { display: grid; grid-template-columns: repeat(auto-fill')) {
+          bad.push('auto-fill 로 되돌아갔다 — 폭에 따라 박스가 도로 작아진다');
+        }
+        /* **아이콘 4배 이상**(넓이 기준) — 22px 이던 것을 46px 로 키웠다 */
+        if (!ix2.includes('.sec .ci svg { width: 46px; height: 46px;')) bad.push('아이콘이 46px 이 아니다');
+        /* **박스가 무엇이 들어 있는지 미리 보여준다** — 사장님이 함께 요청한 「축소판」 */
+        if (!ix2.includes('function secPeek(')) bad.push('미리보기(secPeek)가 없다');
+        if (!ix2.includes("pv.textContent = secPeek(k);")) bad.push('applySecs 가 미리보기를 채우지 않는다');
+        /* **모르면 아무 말도 안 적는다** — 0 으로 적으면 「없다」가 되어 거짓이 된다 */
+        if (!ix2.includes('if (typeof v !== ')) bad.push('미리보기가 자료 모양을 확인하지 않는다');
         if (!ix2.includes('.sec.on { background: #1428A0')) bad.push('열린 박스가 삼성 블루로 켜지지 않는다');
         /* 열린 목록은 기억하되 **막힌 환경에서도 화면은 돌아야 한다** */
         if (!ix2.includes('viral_secs_v1')) bad.push('열린 섹션을 기억하지 않는다');
