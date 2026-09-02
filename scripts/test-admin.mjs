@@ -1860,11 +1860,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail('[바이럴] 비중 판정이 아직 === null 이다 — undefined·NaN 이 새어 화면에 찍힌다');
     } else if (!vh.includes("typeof r.pct === 'number' && isFinite(r.pct)")) {
       fail('[바이럴] 비중을 숫자로 확인하지 않는다');
-    } else if (!vh.includes('data-card="rival" data-nolead')) {
-      fail('[바이럴] 당사 vs LG 카드가 작게 고정돼 있지 않다 — 맨 앞에 오면 전체 폭이 된다');
-    } else if (!vh.includes("hasAttribute('data-nolead')")) {
-      fail('[바이럴] data-nolead 를 아무도 안 본다 — 표시만 하고 지키지 않는다');
-    } else console.log('OK: 바이럴 비중 — 숫자가 아니면 못 잼 · 당사 vs LG 카드는 작게 고정');
+    } else if (!vh.includes('data-card="rival"')) {
+      fail('[바이럴] 당사 vs LG 카드에 섹션 키(data-card)가 없다 — 접이식이 열고 닫을 수 없다');
+    } else console.log('OK: 바이럴 비중 — 숫자가 아니면 못 잼 · 당사 vs LG 는 접이식 섹션이다');
 
     /* ③-b6 **매니저 이름 뽑기와 명부.** 프로덕션 3,000건 검증에서 오탐 일곱이 나왔고
        **여섯이 한 뿌리**였다 — 직함 뒤에 붙는 글자를 안 봤다(`프로모션`·`프로필`·
@@ -2245,34 +2243,42 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         else console.log('OK: 바이럴 움직임 — 첫 화면만 · OS 가 끄라면 끈다');
       }
 
-      /* ⓗ **카드 펼치기** (2026-08-31 사장님: *"클릭하면 1단으로 확대하고 축소하고"*).
-         2단을 유지하되 한 장을 눌러 전체 폭으로 키운다 — 3단이냐 2단이냐를 미리 정할
-         필요가 없어진다. 되돌아가면 화면에서만 보이는 종류라 검사가 붙든다. */
+      /* ⓗ **접이식 섹션** (2026-09-02 사장님: *"섹션을 폴더화하여 클릭하면 보이게 …
+         지금 섹션별 확대 축소 식으로 여러개를 누르면 다 보이고 닫고 … 이렇게하면 드래그해서
+         위치변경하는 기능은 필요가없을것같습니다"*). AI구독 케어·AS 앱의 품목 칸과 같은
+         심벌 박스로 폴더화했다. 되돌아가면 화면에서만 보이는 종류라 검사가 붙든다. */
       {
         const bad = [];
-        if (!/function wireZoom\(/.test(ix2)) bad.push('wireZoom 이 없다');
-        if (!/^\s+wireZoom\(\);/m.test(ix2)) bad.push('render 가 wireZoom 을 부르지 않는다');
-        if (!ix2.includes('.card.wide { grid-column: 1 / -1; }')) bad.push('펼친 카드가 전체 폭을 차지하지 않는다');
-        /* **한 번만 붙인다** — `render()` 는 필터를 바꿀 때마다 도는데 그때마다 붙이면
-           버튼이 쌓인다(카드는 다시 만들어지지 않는다). */
-        /* **「그 문자열이 있는가」로 보면 안 된다** — 가드를 지워도 값을 *설정하는* 줄이
-           남아 통과한다(실제로 되돌려 넣었더니 안 물었다). **조건문 안에서 return 을
-           막고 있는지**를 본다. 이스케이프 대신 문자 클래스를 쓴다(heredoc·셸이 역슬래시를 먹는다). */
-        if (!/if [(][^)]*dataset[.]zoomed[^)]*[)][^;]*return/.test(ix2)) {
-          bad.push('버튼이 여러 번 붙는 것을 막지 않는다 — 필터를 바꿀 때마다 버튼이 쌓인다');
+        if (!ix2.includes('function applySecs(')) bad.push('applySecs 가 없다');
+        if (!ix2.includes('function wireSecs(')) bad.push('wireSecs 가 없다');
+        /* **박스를 먼저 보이게 하고 그려야 한다** — 막대·지도는 픽셀로 재서 그리므로
+           숨긴 채 그린 것은 폭이 0 이다. render() 에서 renderTrend 보다 앞서야 한다. */
+        const iSec = ix2.indexOf('wireSecs(); applySecs();');
+        const iTrend = ix2.indexOf('renderTrend();');
+        if (iSec < 0) bad.push('render 가 wireSecs·applySecs 를 부르지 않는다');
+        else if (iTrend < 0 || iTrend < iSec) bad.push('applySecs 가 renderTrend 보다 뒤에 있다 — 숨긴 채 그리면 막대 폭이 0 이다');
+        /* **박스와 카드가 1:1** — 짝이 안 맞으면 「켜졌는데 안 보인다」가 된다 */
+        const boxes = ix2.split('class="sec" data-sec="').length - 1;
+        /* **선택자 문자열까지 세면 안 된다** — applySecs·wireSecs 의
+           `.card[data-card="…"]` 두 곳이 카드로 잡혀 짝이 안 맞는 것처럼 보인다. */
+        const cards = ix2.split('data-card="').length - 1 - (ix2.split('[data-card="').length - 1);
+        if (boxes < 8) bad.push('섹션 박스가 ' + boxes + '개뿐이다');
+        if (boxes !== cards) bad.push('박스 ' + boxes + '개 ↔ 카드 ' + cards + '개 — 짝이 안 맞는다');
+        /* **AS 앱 칸 규격을 그대로 베꼈다** — 눈대중으로 맞추지 말 것 */
+        if (!ix2.includes('minmax(104px, 1fr)')) bad.push('박스 칸 규격이 AS 앱(.cats)과 다르다');
+        if (!ix2.includes('.sec.on { background: #1428A0')) bad.push('열린 박스가 삼성 블루로 켜지지 않는다');
+        /* 열린 목록은 기억하되 **막힌 환경에서도 화면은 돌아야 한다** */
+        if (!ix2.includes('viral_secs_v1')) bad.push('열린 섹션을 기억하지 않는다');
+        if (!ix2.includes('catch (e) {}')) bad.push('localStorage 를 try/catch 로 감싸지 않았다');
+        /* **없앤 것이 되살아나지 않는지** — 끌기·⤢ 펼치기는 접이식이 대신한다 */
+        for (const gone of ['wireZoom', 'wireDrag', 'markLead', 'data-nolead', 'card.wide']) {
+          if (ix2.includes(gone)) bad.push('없앤 ' + gone + ' 가 남아 있다');
         }
-        /* **카드 전체를 클릭 대상으로 삼지 않는다** — 지도 칸·매장 막대의 클릭과 부딪힌다.
-           전용 버튼만 쓴다(안쪽 요소가 늘 우선이라는 이 저장소의 규칙). */
-        if (/\bcard\.onclick\s*=/.test(ix2)) bad.push('카드 전체에 클릭을 걸었다 — 지도·막대 조작과 부딪힌다');
-        /* 펼쳤는데 그림이 그대로면 펼친 뜻이 없다 */
-        if (!ix2.includes('.card.wide .geo-svg')) bad.push('펼쳐도 지도가 커지지 않는다');
-        /* 좁은 화면은 이미 1단이라 펼칠 것이 없다 */
-        if (!/@media \(max-width: 720px\) \{ \.zoom/.test(ix2)) bad.push('좁은 화면에서 버튼을 숨기지 않는다');
-        if (bad.length) fail('[바이럴] 카드 펼치기 — ' + bad.join(' · '));
-        else console.log('OK: 바이럴 카드 펼치기 — 전용 버튼 · 한 번만 · 지도도 함께 커진다');
+        if (bad.length) fail('[바이럴] 접이식 섹션 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 접이식 — 박스 ' + boxes + '개 ↔ 카드 ' + cards + '개 · 먼저 보이게 하고 그린다 · 열린 것을 기억한다');
       }
 
-      /* ⓘ **카드 자리 바꾸기 · 지도 보강** (2026-08-31 사장님 요청 묶음).
+      /* ⓘ **지도 보강 · 매장 목록** (2026-08-31 사장님 요청 묶음).
          화면에서만 보이는 것들이라 되돌아가면 아무도 모른다. */
       {
         const bad = [];
@@ -2282,28 +2288,6 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         const keys = (ix2.match(/data-card="[a-z]+"/g) || []);
         if (keys.length < 6) bad.push('카드 키(data-card)가 ' + keys.length + '개뿐이다');
 
-        /* ② 끌기 */
-        if (!/function wireDrag\(/.test(ix2)) bad.push('wireDrag 이 없다');
-        if (!/^\s+wireDrag\(\);/m.test(ix2)) bad.push('render 가 wireDrag 을 부르지 않는다');
-        /* **손잡이만 잡는다** — 카드 전체가 클릭 대상이면 지도 칸·매장 막대 조작이 죽는다 */
-        if (!/h\.addEventListener\('pointerdown'/.test(ix2)) bad.push('손잡이가 아닌 곳에서 끌기가 시작된다');
-        /* **move·up 은 document 가 받는다** — 손잡이에만 걸면 마우스가 벗어난 채 놓였을 때
-           끝나는 이벤트가 안 와 화면이 끌린 채로 잠긴다(실측으로 잠겼다) */
-        if (!/document\.addEventListener\('pointerup'/.test(ix2)) bad.push('놓기를 document 가 받지 않는다 — 화면이 잠길 수 있다');
-        /* **버튼을 뗀 채 움직이면 스스로 풀린다** — pointerup 이 유실돼도 복구된다 */
-        if (!/e\.buttons === 0/.test(ix2)) bad.push('놓기 이벤트가 유실됐을 때 스스로 풀리지 않는다');
-        /* **놓은 자리를 마지막에 반영** — 빠르게 끌면 중간 이동이 거의 없어 자리가 안 바뀐다 */
-        if (!/place\(e\);/.test(ix2)) bad.push('놓은 자리를 마지막으로 반영하지 않는다');
-
-        /* ③ 맨 앞 카드가 전체 폭 — `:first-child` 로는 안 된다(hidden 카드가 첫 자리를 먹는다) */
-        if (!ix2.includes('.card.lead { grid-column: 1 / -1; }')) bad.push('맨 앞 카드가 전체 폭이 아니다');
-        if (!/function markLead\(/.test(ix2)) bad.push('보이는 첫 카드를 찾는 markLead 가 없다');
-        if (/\.two > \.card:first-child \{ grid-column/.test(ix2)) {
-          bad.push(':first-child 로 전체 폭을 준다 — hidden 카드가 첫 자리를 먹으면 어긋난다');
-        }
-
-        /* ④ 순서 기억 — localStorage 가 막힌 곳이 있어 통째로 감싸야 한다 */
-        if (!/viral_card_order/.test(ix2)) bad.push('바꾼 순서를 기억하지 않는다');
 
         /* ⑤ 지도 글자 선택 끄기 (사장님: *"깜빡깜빡거리는 텍스트"*) */
         if (!/\.geo-svg \{[^}]*user-select: none/.test(ix2)) {

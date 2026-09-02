@@ -90,71 +90,18 @@
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 15px 16px; margin-bottom: 14px;
     position: relative; }
 
-  /* ── 카드 펼치기 (2026-08-31 사장님 요청) ─────────────────────────────────
-     2단으로 두되 **한 장을 눌러 전체 폭으로 키운다.** 지도를 크게 보고 싶을 때
-     3단이냐 2단이냐를 미리 정할 필요가 없어진다 — 보는 사람이 그때 정한다.
-
-     **카드 아무 데나 눌러서 펼치면 안 된다.** 지도 칸을 누르면 그 지역 필터가 걸리고
-     매장 막대를 누르면 그 매장 링크가 걸린다 — 카드 전체가 클릭 대상이면 그 조작들과
-     부딪힌다. 그래서 **전용 버튼**을 둔다(안쪽 요소가 늘 우선이라는 이 저장소의 규칙). */
-  .zoom { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--line); border-radius: 8px; background: #fff;
-    color: var(--mute); font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
-  .zoom:hover { border-color: var(--blue); color: var(--blue); }
-  .card.wide { grid-column: 1 / -1; }
-
-  /* ── 카드 자리 바꾸기 (2026-08-31 사장님 요청) ─────────────────────────────
-     *"마음대로 위치를 바꿀 수 있게 … 가장 위에 올리면 2칸을 모두 쓰고 아래는 2칸씩"*.
-
-     **맨 앞 카드는 자동으로 전체 폭**이다. `:first-child` 로는 안 된다 — 「당사 vs LG」
-     카드가 자료 없이 `hidden` 이 되면 **보이지 않는 카드가 첫 자리를 먹어** 실제 첫
-     카드가 2칸을 못 쓴다. 그래서 JS 가 **보이는 첫 카드**에 `.lead` 를 붙인다. */
-  .card.lead { grid-column: 1 / -1; }
-  /* 이미 전체 폭이라 펼치기 버튼이 할 일이 없다 — 눌러도 아무 일이 없으면 고장으로 읽힌다 */
-  .card.lead .zoom { display: none; }
-
-  /* 손잡이 — **카드 아무 데나 잡으면 안 된다**(지도 칸·매장 막대 클릭과 부딪힌다).
-     `touch-action:none` 이라야 폰에서 끌 때 화면이 함께 스크롤되지 않는다. */
-  .grab { position: absolute; top: 10px; right: 42px; width: 26px; height: 26px;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--line); border-radius: 8px; background: #fff;
-    color: var(--mute); font-size: 13px; line-height: 1; padding: 0;
-    cursor: grab; touch-action: none; user-select: none; }
-  .grab:hover { border-color: var(--blue); color: var(--blue); }
-  .card.lead .grab { right: 10px; }   /* 펼치기 버튼이 숨으니 그 자리로 */
-  .card.dragging { opacity: .4; cursor: grabbing; }
-  /* 끄는 동안 지나치는 카드의 글자가 딸려 선택되면 파랗게 물들어 어지럽다 */
-  body.dragging, body.dragging * { -webkit-user-select: none; user-select: none; }
-  /* 놓일 자리를 **선으로 보여준다** — 안 보이면 어디로 가는지 모르고 끌게 된다 */
-  .card.over { outline: 2px dashed var(--blue); outline-offset: -2px; }
-  @media (max-width: 720px) { .grab { right: 10px; } }
-  /* **펼친 카드가 있을 때만** 뒤 카드를 빈자리로 당긴다(`dense`). 안 그러면 펼친 카드
-     앞줄에 빈 칸이 남는다 — 실측으로 진단 카드 오른쪽이 통째로 비었다.
-     **늘 켜 두지 않는다** — 평소에도 카드 크기에 따라 순서가 뒤바뀌어, 화면을 볼 때마다
-     카드가 다른 자리에 있게 된다. `:has` 를 모르는 브라우저는 이 규칙을 통째로 무시하고
-     빈 칸이 남을 뿐이라 **틀리는 방향이 안전하다.** */
-  .two:has(.card.wide) { grid-auto-flow: dense; }
-  .card.wide .zoom { color: var(--blue); border-color: var(--blue); }
-  /* 펼치면 지도도 함께 커진다 — 카드만 넓어지고 그림이 그대로면 펼친 뜻이 없다 */
-  /* **펼치면 폭을 다 쓴다**(2026-08-31 사장님: *"확대하면 화면에 꽉 차게 만들어주세요
-     UI가 중앙에만 몰려 있습니다"*). 860px 상한을 두었더니 카드가 1,400px 로 넓어져도
-     지도는 860px 만 쓰고 좌우가 통째로 비었다 — 펼친 뜻이 없어진다.
-     세로는 비율대로 따라 커진다(억지로 맞추면 지도가 찌그러진다). */
-  .card.wide .geo-svg { max-width: none; width: 100%; }
-  /* **좁은 화면에서는 이미 1단**이라 펼칠 것이 없다 — 버튼을 숨긴다 */
-  @media (max-width: 720px) { .zoom { display: none; } }
+  /* ── 접이식 섹션 박스 (2026-09-02) — AS 앱 .cats/.cat 값을 그대로 베꼈다. 눈대중으로 맞추지 말 것 ── */
+  .secs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 7px; margin-bottom: 16px; }
+  .sec { border: 1px solid #e5e7eb; background: #fff; border-radius: 11px; padding: 9px 6px; font-size: 12.5px; font-weight: 600; text-align: center; cursor: pointer; transition: .12s; color: #374151; font-family: inherit; }
+  .sec .ci { display: block; margin-bottom: 4px; line-height: 1; }
+  .sec .ci svg { width: 22px; height: 22px; margin: 0 auto; display: block; }
+  .sec:hover { border-color: #c7d2fe; }
+  .sec.on { background: #1428A0; border-color: #1428A0; color: #fff; }
+  @media (max-width: 520px) { .secs { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); } }
   .card h2 { font-size: 13px; font-weight: 800; margin-bottom: 3px; }
   .card .sub { font-size: 11px; color: var(--mute); margin-bottom: 11px; }
-  /* **격자 칸은 내용보다 작아질 수 없다**(CSS 기본값 `min-width:auto`). 그래서 폰
-     390px 에서 카드가 391px 이 되어 **가로로 17px 넘쳤다**(2026-09-01 실측 · 이전부터
-     있던 것). `min-width: 0` 이 그 빗장을 푼다 — 넘치는 것은 각자 자기 안에서
-     `overflow-x` 로 감당한다. */
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .two > .card { min-width: 0; }
   @media (max-width: 760px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
-    .two { grid-template-columns: 1fr; }
   }
 
   /* 막대 — 매장별·카페별 */
@@ -232,7 +179,7 @@
 
   /* 당사 vs LG — 한 줄에 두 값을 마주 보게 그린다. **어디가 앞서는지가 한눈에** 보여야 한다 */
   /* **띠를 키웠다**(2026-09-01 사장님 요청 — *"띠가 너무 작습니다. 상단 비율 맞춰서
-     그래프를 크게 해주세요"*). 15 → 28px. 카드를 작게 고정했으므로(`data-nolead`)
+     그래프를 크게 해주세요"*). 15 → 28px. 카드를 작게 두므로
      폭은 그대로인데, **세로로 키우면 같은 자리에서 훨씬 잘 읽힌다.**
      건수 글자도 9.5 → 12px 로 올려 띠 안에서 읽히게 했다 — 띠만 키우고 글자를 두면
      빈 띠처럼 보인다. 이름·비중 칸도 함께 키워야 세 칸이 따로 놀지 않는다. */
@@ -389,7 +336,6 @@
   .zcell i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
   .zcell b { color: #0F172A; }
   .zcell s { text-decoration: none; color: #64748B; }
-  .card.wide .geo-metro { max-width: 640px; }
   .geo-svg { width: 100%; display: block; margin: 0 auto;
     -webkit-user-select: none; user-select: none; }
   .geo-svg path { fill: #fff; stroke: #E5E7EB; stroke-width: .6; stroke-linejoin: round; }
@@ -616,12 +562,26 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <div class="sub">제목의 말로 가른다 · 눌러서 그 유형 링크만 보기</div>
     <div class="kinds" id="kinds"></div>
   </div>
+<!-- 접이식 섹션 박스 — 누르면 그 섹션이 열리고 여러 개를 동시에 열 수 있다. 열린 것은 기억한다 -->
+<div class="secs" id="secs" role="group" aria-label="섹션 열기">
+  <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs LG</button>
+  <button type="button" class="sec" data-sec="trend" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M4 16l5-6 4 3 7-8"/></svg></span>월별 추이</button>
+  <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>이번 달 진단</button>
+  <button type="button" class="sec" data-sec="map" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span>지도</button>
+  <button type="button" class="sec" data-sec="store" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M10 20v-6h4v6"/></svg></span>매장별</button>
+  <button type="button" class="sec" data-sec="signal" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20v-8M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0"/><circle cx="12" cy="11" r="1.5"/></svg></span>매장 신호</button>
+  <button type="button" class="sec" data-sec="cafe" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M7 4v2M10 4v2M13 4v2"/></svg></span>어디에 올라오나</button>
+  <button type="button" class="sec" data-sec="mgr" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg></span>매니저</button>
+  <button type="button" class="sec" data-sec="alias" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l9-9h8v8l-9 9z"/><circle cx="16" cy="8" r="1.5"/></svg></span>줄임말</button>
+  <button type="button" class="sec" data-sec="list" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></span>후기 링크</button>
+</div>
 
-  <div class="two">
+
+<div class="secbody">
     <!-- 당사 vs LG (2026-08-31 사장님 요청 — *"X사(LG) 후기도 대조해서 후기 비중이
          100분율로 어디가 앞서는가"*). **자료가 없으면 이 카드는 아예 안 그린다** —
          0 으로 그리면 「LG 후기가 없다」로 읽힌다. -->
-    <div class="card" id="rival-card" data-card="rival" data-nolead hidden>
+    <div class="card" id="rival-card" data-card="rival">
       <h2>당사 vs LG — 지역별 후기 비중</h2>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
@@ -732,7 +692,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     </div>
   </div>
 
-  <div class="card" id="list-card">
+  <div class="card" id="list-card" data-card="list">
     <div class="lhead">
       <div>
         <h2>후기 링크</h2>
@@ -1300,195 +1260,47 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     });
   }
 
-  /* ── 카드 펼치기 ──────────────────────────────────────────────────────────
-   * 2단 그리드에서 카드 한 장을 **전체 폭으로** 키운다(다시 누르면 되돌아온다).
-   *
-   * **버튼을 손으로 여섯 번 적지 않는다.** 카드가 늘 때마다 빠뜨리게 되고, 빠뜨린
-   * 카드만 펼칠 수 없는데 화면에는 아무 표시도 안 난다 — 이 저장소가 허브 카드·앱
-   * 버전에서 반복해서 데인 종류다. `.two` 안의 카드를 훑어 한 번에 붙인다.
-   *
-   * **한 번만 붙인다.** `render()` 는 필터를 바꿀 때마다 도는데 그때마다 붙이면
-   * 버튼이 쌓인다(카드는 다시 만들어지지 않는다).
-   */
-  /* ── 카드 자리 바꾸기 ─────────────────────────────────────────────────────
-   * 손잡이(⠿)를 끌어 카드 순서를 바꾼다. **맨 앞 카드는 자동으로 전체 폭**이고
-   * 나머지는 2칸씩 흐른다(사장님 요청).
-   *
-   * **HTML5 Drag&Drop 을 쓰지 않는다** — 터치에서 아예 안 되고 드래그 이미지 제어가
-   * 브라우저마다 다르다. 포인터 이벤트면 마우스·손가락이 같은 길로 간다(배치
-   * 시뮬레이터가 이미 그 길로 갔다).
-   *
-   * **카드 아무 데나 잡으면 안 된다** — 지도 칸 클릭·매장 막대 클릭이 죽는다.
-   * 전용 손잡이만 쓴다(펼치기 버튼과 같은 원칙).
-   */
-  var ORDER_KEY = 'viral_card_order';
-
-  /* **보이는 첫 카드**에 `.lead` 를 준다. `:first-child` 로는 안 된다 —
-     「당사 vs LG」가 자료 없이 hidden 이면 보이지 않는 카드가 첫 자리를 먹는다. */
-  function markLead(box) {
-    var lead = null;
-    Array.prototype.forEach.call(box.querySelectorAll('.card'), function (c) {
-      c.classList.remove('lead');
-      /* **작게 고정한 카드는 맨 앞이어도 안 늘린다**(2026-09-01 사장님 요청 —
-         *'당사 vs 타사 후기 비율표는 크게 만들 필요가 없습니다. 작게 고정해 주세요'*).
-         여섯 줄짜리 표라 폭을 넓혀도 여백만 늘고 오히려 읽기 어려워진다. */
-      if (!lead && !c.hidden && !c.hasAttribute('data-nolead')) lead = c;
-    });
-    if (lead) lead.classList.add('lead');
+/* ── 접이식 섹션 (2026-09-02 사장님 요청) ─────────────────────────────────
+ * 섹션을 심벌 박스로 폴더화한다 — AI구독 케어·AS 앱의 품목 칸과 같은 모양이다.
+ * 박스를 누르면 그 섹션이 열리고, 여러 개를 동시에 열 수 있으며, 다시 누르면 닫힌다.
+ * 열린 목록은 localStorage 에 기억한다(막힌 환경이 있어 통째로 감싼다 — 못 기억할 뿐 화면은 돈다).
+ * 끌어서 자리 바꾸기·⤢ 펼치기는 이 방식이 대신하므로 없앴다(사장님: "드래그해서 위치변경하는 기능은 필요가없을것같습니다").
+ */
+var SEC_KEY = 'viral_secs_v1';
+var SEC_DEFAULT = ['rival', 'map', 'store', 'list'];
+function secOpen() {
+  try {
+    var v = JSON.parse(localStorage.getItem(SEC_KEY) || 'null');
+    if (v && typeof v.length === 'number') return v;
+  } catch (e) {}
+  return SEC_DEFAULT.slice();
+}
+function secSave(list) { try { localStorage.setItem(SEC_KEY, JSON.stringify(list)); } catch (e) {} }
+/* 박스의 on/off 와 카드의 hidden 을 열린 목록 하나에서 함께 정한다 — 두 곳이 따로 놀면 「켜졌는데 안 보인다」가 된다 */
+function applySecs() {
+  var open = secOpen();
+  var boxes = document.querySelectorAll('#secs .sec');
+  for (var i = 0; i < boxes.length; i++) {
+    var k = boxes[i].getAttribute('data-sec');
+    var on = open.indexOf(k) >= 0;
+    boxes[i].classList.toggle('on', on);
+    boxes[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    var card = document.querySelector('.card[data-card="' + k + '"]');
+    if (card) card.hidden = !on;
   }
-
-  /* 저장·복원. **localStorage 가 막힌 곳이 있다**(사생활 보호 모드 등) — 막혀도
-     화면은 그대로 돌아야 하므로 통째로 감싼다(순서만 기억 못 할 뿐이다). */
-  function loadOrder() {
-    try {
-      var v = JSON.parse(window.localStorage.getItem(ORDER_KEY) || 'null');
-      return (v && v.length) ? v : null;
-    } catch (e) { return null; }
-  }
-  function saveOrder(box) {
-    try {
-      var ks = Array.prototype.map.call(box.querySelectorAll('.card'), function (c) {
-        return c.getAttribute('data-card') || '';
-      }).filter(Boolean);
-      window.localStorage.setItem(ORDER_KEY, JSON.stringify(ks));
-    } catch (e) { /* 못 저장해도 이번 화면은 그대로 쓴다 */ }
-  }
-  /* 저장된 순서를 되돌린다. **모르는 키는 건너뛰고 빠진 카드는 제자리에 남긴다** —
-     카드가 늘거나 이름이 바뀌어도 화면이 무너지지 않는다. */
-  function applyOrder(box) {
-    var ks = loadOrder(); if (!ks) return;
-    for (var i = 0; i < ks.length; i++) {
-      var el = box.querySelector('.card[data-card="' + ks[i] + '"]');
-      if (el) box.appendChild(el);
-    }
-    /* 저장 목록에 없던 카드(새로 생긴 것)는 위 루프가 안 건드려 앞쪽에 남는다 —
-       뒤로 밀어 두면 새 카드가 조용히 맨 앞을 차지하는 일이 없다. */
-    Array.prototype.forEach.call(box.querySelectorAll('.card'), function (c) {
-      if (ks.indexOf(c.getAttribute('data-card')) < 0) box.appendChild(c);
-    });
-  }
-
-  function wireDrag() {
-    var box = document.querySelector('.two'); if (!box || box.dataset.dragged) return;
-    box.dataset.dragged = '1';
-    applyOrder(box);
-
-    var drag = null;   /* 지금 끌고 있는 카드 */
-
-    Array.prototype.forEach.call(box.querySelectorAll('.card'), function (card) {
-      var h = document.createElement('button');
-      h.type = 'button';
-      h.className = 'grab';
-      h.textContent = '⠿';
-      h.title = '끌어서 자리 바꾸기 — 맨 위로 올리면 전체 폭이 됩니다';
-      h.setAttribute('aria-label', h.title);
-
-      h.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
-        drag = card;
-        card.classList.add('dragging');
-        document.body.classList.add('dragging');
-        /* **잡기 실패는 삼킨다** — 이미 놓인 포인터면 예외가 나는데, 그것 하나가
-           이후 포인터 처리를 통째로 죽인 적이 있다(배치 시뮬레이터). */
-        try { h.setPointerCapture(e.pointerId); } catch (err) { /* 무시 */ }
-      });
-
-      /* **move·up 은 document 가 받는다**(아래 한 번만 등록). 손잡이에만 걸면
-         `setPointerCapture` 가 실패하거나 마우스가 손잡이를 벗어난 채 놓였을 때
-         **끝나는 이벤트가 안 와 화면이 끌린 채로 잠긴다** — 실제로 그렇게 잠겼다. */
-      card.appendChild(h);
-    });
-
-    function onMove(e) {
-        if (!drag) return;
-        /* **버튼을 뗀 채 움직이면 이미 놓은 것이다.** `pointerup` 은 브라우저 밖에서
-           놓거나 이벤트가 씹히면 오지 않는데, 그러면 카드가 반투명한 채로 굳어
-           **화면이 잠긴다**(실측으로 잠겼다). 여기서 스스로 풀린다. */
-        if (e.buttons === 0) { end(e); return; }
-        place(e);
-    }
-
-    /* 자리 옮기기 본체 — `onMove` 와 `end` 가 함께 쓴다 */
-    function place(e) {
-        if (!drag) return;
-        /* 끌리는 카드 자신이 잡히면 안 된다 — 잠깐 투명하게 두고 그 아래를 본다 */
-        var keep = drag.style.pointerEvents;
-        drag.style.pointerEvents = 'none';
-        var el = document.elementFromPoint(e.clientX, e.clientY);
-        drag.style.pointerEvents = keep;
-        var over = el && el.closest ? el.closest('.card') : null;
-        if (!over || over === drag || over.parentNode !== box) return;
-
-        Array.prototype.forEach.call(box.querySelectorAll('.card'), function (c) {
-          c.classList.remove('over');
-        });
-        over.classList.add('over');
-
-        /* 지나친 카드의 **가운데를 넘었을 때만** 자리를 바꾼다. 경계에서 바꾸면
-           카드 둘이 서로 밀며 떨리고(무한 교환), 어디로 가는지 알 수 없게 된다. */
-        var r = over.getBoundingClientRect();
-        var after = (e.clientY - r.top) > r.height / 2;
-        box.insertBefore(drag, after ? over.nextSibling : over);
-        markLead(box);
-    }
-
-    function end(e) {
-        if (!drag) return;
-        /* **놓은 자리를 마지막으로 한 번 반영한다.** 빠르게 끌면 중간 이동이 거의
-           발생하지 않아 자리가 안 바뀐 채로 끝난다(실측으로 그랬다) — 사람이 보기에는
-           「끌었는데 아무 일도 안 일어났다」가 된다.
-           **`place()` 로 부른다** — `onMove` 를 부르면 그쪽이 다시 `end` 를 불러
-           서로를 부르는 고리가 된다(버튼을 뗀 상태이므로 반드시 그렇게 된다). */
-        if (e && typeof e.clientX === "number") place(e);
-        drag.classList.remove('dragging');
-        document.body.classList.remove('dragging');
-        Array.prototype.forEach.call(box.querySelectorAll('.card'), function (c) {
-          c.classList.remove('over');
-        });
-        drag = null;
-        markLead(box);
-        saveOrder(box);
-        /* **놓은 뒤 다시 그린다.** 맨 앞으로 온 카드는 폭이 두 배가 되는데, 막대는
-           픽셀로 계산해 둔 값이라 그냥 두면 넓어진 카드 안에서 짧게 남는다. */
-        if (typeof render === 'function') render();
-    }
-
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', end);
-    document.addEventListener('pointercancel', end);
-    markLead(box);
-  }
-
-  function wireZoom() {
-    var box = document.querySelector('.two'); if (!box || box.dataset.zoomed) return;
-    box.dataset.zoomed = '1';
-    Array.prototype.forEach.call(box.children, function (card) {
-      if (!card.classList || !card.classList.contains('card')) return;
-      /* 작게 고정한 카드에는 펼치기 단추를 달지 않는다 — 눌러도 될 일이 없는
-         단추가 있으면 「눌러도 아무 일이 없다」가 된다. */
-      if (card.hasAttribute('data-nolead')) return;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'zoom';
-      b.setAttribute('aria-expanded', 'false');
-      var sync = function () {
-        var on = card.classList.contains('wide');
-        b.textContent = on ? '⤡' : '⤢';
-        b.title = on ? '원래 크기로' : '넓게 보기';
-        b.setAttribute('aria-label', b.title);
-        b.setAttribute('aria-expanded', on ? 'true' : 'false');
-      };
-      b.onclick = function () {
-        card.classList.toggle('wide');
-        sync();
-        /* **펼친 뒤 다시 그린다.** 지도는 SVG 라 폭이 바뀌면 저절로 늘어나지만,
-           막대는 픽셀로 계산해 둔 값이라 그대로 두면 넓어진 카드 안에서 짧게 남는다. */
-        if (typeof render === 'function') render();
-      };
-      sync();
-      card.appendChild(b);
-    });
-  }
+}
+function wireSecs() {
+  var box = document.getElementById('secs'); if (!box || box.dataset.wired) return; box.dataset.wired = '1';
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest('.sec'); if (!b) return;
+    var k = b.getAttribute('data-sec'); var open = secOpen(); var i = open.indexOf(k);
+    if (i >= 0) open.splice(i, 1); else open.push(k);
+    secSave(open);
+    /* 막대·지도는 픽셀로 재서 그리므로 숨긴 채 그린 것은 폭이 0 이다 — render() 가 applySecs 를 먼저 부르고 다시 그린다 */
+    render();
+    if (i < 0) { var card = document.querySelector('.card[data-card="' + k + '"]'); if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  });
+}
 
   function renderDiag() {
     var el = document.getElementById('diag'); if (!el) return;
@@ -2208,11 +2020,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (rel) {
         rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>다음 수집 때 함께 잽니다</b>'
           + '(지역 6곳 · 40회). 삼성스토어와 LG베스트샵에 <b>같은 질의</b>를 던져 비중을 냅니다.</div>';
-        card.hidden = false;
-      } else card.hidden = true;
+        /* 보임은 applySecs 가 정한다 */
+      }
       return;
     }
-    card.hidden = false;
+    /* 보임은 applySecs 가 정한다 */
 
     var el = document.getElementById('rival');
     var rows = R.rows.slice().sort(function (a, b) {
@@ -2865,13 +2677,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       fromDate, toDate, dateOther].join("|");
     if (lastSig !== null && sig !== lastSig) page = 1;
     lastSig = sig;
-    wireZoom();
-    wireDrag();
+  wireSecs(); applySecs(); /* 접이식 — 카드를 먼저 보이게 하고 그려야 막대·지도 폭이 0 이 아니다 */
     wireAlias();
     wireMgrBook();
     syncPoll();
-    /* rival 카드가 hidden 이 되거나 풀리면 「보이는 첫 카드」가 바뀐다 */
-    (function () { var b = document.querySelector(".two"); if (b) markLead(b); })();
     renderLimit();
     renderProgress();
     renderTrend();
