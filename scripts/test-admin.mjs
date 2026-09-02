@@ -2034,7 +2034,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
          자료가 늘거나 한도를 낮추면 그 자리에서 조용히 틀린다. */
       const bad4 = [];
       /* 예산 안에 못 끝내는 도시를 영영 버리지 않는가 — 하루 5,760회를 헛쓰는 자리다 */
-      if (!rv.includes('var pageCap = Math.max(2, Math.min(MAX_PAGES, Number(stuck[place]) || MAX_PAGES));')) {
+      /* **깊이는 `RIVAL_PAGES` 다**(2026-09-02). 진영이 둘에서 넷이 되며 10쪽을 그대로
+         돌면 하루 21,500회로 한도를 넘어 5쪽으로 줄였다 — 네 진영에 똑같이 줄이므로
+         점유율은 안 깨진다. */
+      if (!rv.includes('var pageCap = Math.max(2, Math.min(RIVAL_PAGES, Number(stuck[place]) || RIVAL_PAGES));')) {
         bad4.push('LG 비교가 도시마다 쪽 수를 조절하지 않는다 — 큰 도시는 예산에 걸려 영영 안 채워진다');
       }
       if (!/if \(hard\) \{\s*stuck\[place\] = Math\.max\(2, Math\.floor\(pageCap \/ 2\)\);/.test(rv)) {

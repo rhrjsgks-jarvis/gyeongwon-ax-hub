@@ -564,7 +564,7 @@ function sweepCalls_() {
   var cafe = CAFES.length * kinds * MAX_PAGES;          /* 관심 카페 훑기 */
   var mgr = 20;                                          /* 매니저 이름 네이버 건수 */
   var sdp = SDP.length * 2 * SDP_PAGES;                  /* SDP — 2갈래 × 3쪽 */
-  var rival = rivalUnits_().length * 2 * RTAILS.length * kinds * MAX_PAGES;
+  var rival = rivalUnits_().length * 4 * RTAILS.length * kinds * RIVAL_PAGES;   /* 진영 넷 */
   return store + cafe + mgr + sdp + rival;
 }
 /* **LG 비교 질의 꼬리말.** `collectRival` 안의 지역 변수였는데 밖으로 올렸다 —
@@ -670,6 +670,11 @@ var SDP_HEADER = ['at', 'store', 'sigun', 'area', 'n', 'blog', 'cafe', 'kinds', 
    8곳 × 2갈래 × 3쪽 = **48회** — 한 바퀴 18,800회에 견주면 사실상 공짜다.
    매장 훑기처럼 꼬리말 8개를 붙이면 1,920회가 되어 한도를 위협한다. */
 var SDP_PAGES = 3;
+/* **경쟁비교 깊이**(2026-09-02). 진영이 둘에서 넷이 되며 그대로 10쪽을 돌면 하루
+   21,500회로 한도 20,000 을 넘는다. 5쪽으로 줄이면 4사를 돌아도 2,640회로 **지금과
+   같다**. **네 진영에 똑같이 줄이므로 점유율은 안 깨진다** — 이 화면이 전수가 아니라
+   비중을 보는 곳이라는 것이 이 결정의 근거다(사장님이 고른 쪽). */
+var RIVAL_PAGES = 5;
 var SDP_MS = 40 * 1000;
 /** 오늘 이미 훑었는가. **하루 한 번이면 족하다** — 이 항목은 「이슈가 있나」에 답한다. */
 function sdpDue_() {
@@ -2381,7 +2386,7 @@ function summary_() {
   var approxN = 0;
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0, '웹': 0 }, byDay = {}, byMonth = {}, byKind = {};
-  var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {};
+  var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {}, byStoreChan = {};
   /* ── 매장별 세 갈래 (2026-09-01) ─────────────────────────────────────────
    * **셋을 한 루프에서 낸다** — 따로 돌면 같은 자료를 세 번 훑는다.
    *
@@ -2489,6 +2494,13 @@ function summary_() {
     else if (r.src === '웹') byStoreSrc[r.storeName].w++;
     else byStoreSrc[r.storeName].b++;
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
+    /* **매장별 채널** (2026-09-02 사장님 요청 — *"지점을 누르면 오른쪽에 지점별 분석으로
+       넘어가고 1.다이렉트웨딩 00건 2.메이크마이웨딩 00건 이런식으로 나열"*).
+       카페 글은 카페 이름, 그 밖은 출처 이름(블로그·웹)으로 묶는다 — 블로거 이름은
+       시트에 없어(HEADER 에 그 칸이 없다) 지어낼 수 없다. **없는 것을 만들지 않는다.** */
+    if (!byStoreChan[r.storeName]) byStoreChan[r.storeName] = {};
+    var chName = r.cafe ? String(r.cafe) : (r.src === '블로그' ? '네이버 블로그' : '웹문서');
+    byStoreChan[r.storeName][chName] = (byStoreChan[r.storeName][chName] || 0) + 1;
     var a = sido_(r.store);
     /* 지도 칸 — 강원만 시로 갈린다(`mapCell_` 주석 참조) */
     var mc = mapCell_(r.store);
@@ -2646,6 +2658,13 @@ function summary_() {
     byMapStores: byMapStores,
     /* 영업지역이 덮는 지도 칸 — 목록 한 줄에 손을 얹으면 이 칸들이 함께 밝아진다 */
     areaCells: areaCells,
+    /* **매장별 채널 상위 12** — 화면의 「지점별 분석」이 쓴다. 통째로 담으면 매장 65곳 ×
+       채널 수백 개라 응답이 커진다. 12 면 순위표가 안 흔들린다(LG 채널 표와 같은 판단). */
+    byStoreChan: (function () {
+      var out = {}, k;
+      for (k in byStoreChan) if (byStoreChan.hasOwnProperty(k)) out[k] = topN_(byStoreChan[k], 12);
+      return out;
+    })(),
     /* **관심 카페는 건수가 적어도 늘 내려보낸다** — 상위 12곳 막대에는 2~3건짜리가
        영영 안 올라와, 넣어 달라고 한 카페가 화면에서 사라진다.
        `naver:false` 는 0 이 아니라 **못 닿는 곳**이라 건수를 적지 않는다. */
@@ -2742,18 +2761,25 @@ var SHEET_RIVAL = '경쟁비교';
 /* **뒤에만 붙인다** — 가운데 끼우면 옛 회차가 한 칸씩 밀린다.
    `srcJson`·`kindJson`·`monthJson` 은 갈래별 건수를 담는다. 칸으로 펴면 20개가
    넘고 갈래가 늘 때마다 열이 늘어난다 — 우리 시트라 JSON 한 칸이 낫다. */
+/* `hi`·`el` 은 **맨 뒤에 붙인다** — 가운데에 끼우면 옛 줄이 통째로 한 칸씩 밀린다 */
 var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries',
-  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson'];
+  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson', 'hi', 'el'];
 /* **줄의 뜻이 바뀌면 이 번호를 올린다.** 칸을 더하거나 기존 칸의 뜻을 바꾸면 옛 회차에
    이어 붙어 값이 뒤섞인다 — 「평택 2,008 → 4,025」가 그렇게 났다. 번호가 다르면
    이어 붙지 않고 새 회차로 시작한다.
    2 = 도시 단위(한 줄에 도시 하나) + 채널 40개 + byProd·sample 칸. */
-var RIVAL_SCHEMA = 2;
+var RIVAL_SCHEMA = 3;   /* 3 = 4사(하이마트·전자랜드 추가) · 점유율이 4사 기준 */
 
 /* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
    `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
    `하이프라자`(법인명)는 32/100, `best샵` 은 20/100 이라 잡음이 많아 뺐다. */
 var RIVAL_BRANDS = ['lg베스트샵', 'lg전자베스트샵', '베스트샵', 'lg전자 베스트샵'];
+/* 하이마트·전자랜드 (2026-09-02 사장님 요청 — *"하이마트와 전자랜드도 정보 수집을
+   함께하려고합니다"*). LG 와 같은 규칙이다 — **표기가 갈리는 것만 넣는다.**
+   `롯데하이마트`·`하이마트` 는 같은 곳이고, 전자랜드는 `전자랜드`·`전자랜드파워센터`
+   두 표기를 쓴다. **`파워센터` 만으로는 넣지 않는다** — 다른 업종 상호에 흔하다. */
+var HI_BRANDS = ['롯데하이마트', '하이마트'];
+var EL_BRANDS = ['전자랜드', '전자랜드파워센터'];
 
 /* 지역마다 **사람이 실제로 쓰는 지명**. 양쪽 브랜드가 **같은 목록**을 쓴다 —
    여기가 갈리면 비중이 통째로 거짓이 된다.
@@ -3053,19 +3079,29 @@ function collectRival(deadline) {
     var unitT0 = Date.now();
     var area = units[ui][0], place = units[ui][1];
     /* 이 도시가 지난번 예산에 걸렸으면 그때 줄여 둔 쪽 수로 돈다(최소 2쪽) */
-    var pageCap = Math.max(2, Math.min(MAX_PAGES, Number(stuck[place]) || MAX_PAGES));
+    var pageCap = Math.max(2, Math.min(RIVAL_PAGES, Number(stuck[place]) || RIVAL_PAGES));
     stage_('LG비교 ' + area + ' / ' + place + ' (' + (ui + 1) + '/' + units.length + ')');
-    var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
-    var lastAdd = { ours: 0, rival: 0 };
+    var got = { ours: {}, rival: {}, hi: {}, el: {} };   /* 링크로 중복을 없앤다 */
+    var lastAdd = { ours: 0, rival: 0, hi: 0, el: 0 };
     /* **갈래별로도 센다** — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다.
        소스(블로그/카페) · 유형(구매·설치·비교…) · 월(블로그 작성일 기준). */
-    var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 } };
+    var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 },
+                  hi: { 블로그: 0, 카페: 0, 웹: 0 }, el: { 블로그: 0, 카페: 0, 웹: 0 } };
     var byKind = {}, byMon = {};
     /* **어디에 · 무엇을** (2026-09-02). 채널은 양쪽 따로, 품목은 한 표에 o/r 로 담는다 */
-    var byChan = { ours: {}, rival: {} }, byProd = {}, noProd = { o: 0, r: 0 }, rvSample = [];
+    /* **품목·유형은 한 표에 진영 글자로 담는다** — o(당사) r(LG) h(하이마트) e(전자랜드).
+       진영마다 표를 따로 두면 시트 칸이 네 배가 되고 화면도 네 번 훑어야 한다. */
+    var byChan = { ours: {}, rival: {}, hi: {}, el: {} }, byProd = {},
+        noProd = { o: 0, r: 0, h: 0, e: 0 }, rvSample = [];
+    var CH = { ours: 'o', rival: 'r', hi: 'h', el: 'e' };
     hard = false;
 
-    var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
+    /* **진영이 넷이다**(2026-09-02). 비중의 뜻이 「당사 vs LG」에서
+       **「그 지역 가전 후기 중 우리 몫」**으로 바뀐다 — 사장님이 고른 쪽이다.
+       **질의는 브랜드마다 사람들이 실제로 쓰는 말**로 묻는다. 판정은 그 뒤에 브랜드
+       표로 다시 거르므로(`rivalHit_`) 질의가 넓어도 남의 글이 안 섞인다. */
+    var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵'],
+                ['hi', HI_BRANDS, '롯데하이마트'], ['el', EL_BRANDS, '전자랜드']];
     for (var si = 0; si < side.length; si++) {
       var key = side[si][0], brands = side[si][1], bq = side[si][2];
       for (var ti = 0; ti < RTAILS.length; ti++) {
@@ -3102,26 +3138,30 @@ function collectRival(deadline) {
               var ch = chanOf_(SRCS[sj], it, lk0);
               if (ch) { byChan[key][ch] = (byChan[key][ch] || 0) + 1; }
               var ps = prodOf_(String(it.title || '')), pj;
-              if (!ps.length) noProd[key === 'ours' ? 'o' : 'r']++;
+              if (!ps.length) noProd[CH[key]]++;
               for (pj = 0; pj < ps.length; pj++) {
-                if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0 };
-                byProd[ps[pj]][key === 'ours' ? 'o' : 'r']++;
+                if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0, h: 0, e: 0 };
+                byProd[ps[pj]][CH[key]]++;
               }
               /* **표본은 LG 쪽만 · 도시당 8건.** 사장님이 실물을 열어 볼 수 있어야
                  숫자를 검산할 수 있다(이 저장소가 실물 확인을 늘 요구하는 이유다). */
-              if (key === 'rival' && rvSample.length < 8) {
-                rvSample.push({ t: plain_(it.title), l: lk0, c: ch, s: sname, d: String(it.postdate || '') });
+              /* **표본은 경쟁 3사 전부에서** — 어느 브랜드 글인지 함께 적는다.
+                 예전에는 LG 만 담았는데, 하이마트·전자랜드가 들어오면 그 숫자를 실물로
+                 검산할 길이 없어진다(이 화면이 늘 요구하는 것이다). */
+              if (key !== 'ours' && rvSample.length < 9) {
+                rvSample.push({ t: plain_(it.title), l: lk0, c: ch, s: sname, b: bq,
+                  d: String(it.postdate || '') });
               }
               var kd = kindOf_(String(it.title || ''));
-              if (!byKind[kd]) byKind[kd] = { o: 0, r: 0 };
-              byKind[kd][key === 'ours' ? 'o' : 'r']++;
+              if (!byKind[kd]) byKind[kd] = { o: 0, r: 0, h: 0, e: 0 };
+              byKind[kd][CH[key]]++;
               /* **월별은 블로그만** — 카페는 작성일이 없어 넣으면 이번 달만
                  거대해진다(이 화면이 이미 두 번 데인 사고다). */
               var pd = String(it.postdate || '');
               if (pd.length === 8) {
                 var mk = pd.slice(0, 4) + '-' + pd.slice(4, 6);
-                if (!byMon[mk]) byMon[mk] = { o: 0, r: 0 };
-                byMon[mk][key === 'ours' ? 'o' : 'r']++;
+                if (!byMon[mk]) byMon[mk] = { o: 0, r: 0, h: 0, e: 0 };
+                byMon[mk][CH[key]]++;
               }
             }
             if (items.length < PAGE_SIZE) break;
@@ -3150,24 +3190,33 @@ function collectRival(deadline) {
       /* **시간에 걸린 것이면 다음번엔 얕게 돈다** — 안 그러면 이 도시는 영영 못 끝낸다.
          오류(`err`)는 시간 문제가 아니므로 쪽 수를 줄이지 않는다. */
       if (hard) {
-        stuck[place] = Math.max(2, Math.floor(pageCap / 2));
+        stuck[place] = Math.max(2, Math.floor(pageCap / 2));   /* 다음번엔 얕게 */
         props_().setProperty('_rivalStuck', JSON.stringify(stuck));
       }
       stoppedR = true; break;
     }
 
     var a = Object.keys(got.ours).length, b = Object.keys(got.rival).length;
+    var hN = Object.keys(got.hi).length, eN = Object.keys(got.el).length;
     /* ★ **「상한이면 못 잰다」는 쓸 수 없는 규칙이었다.**
        네이버가 질의마다 끊으므로 절대 건수는 영영 못 채운다 — 그 규칙으로는 6곳 전부
        비중이 빈칸이 되어 화면에 아무것도 안 뜬다(실측으로 그랬다).
        **총량은 못 재도 비중은 잴 수 있다** — 실측에서 양쪽 증가율이 거의 같았다
        (12%/12% · 14%/15% · 11%/9% · 15%/15%). 한쪽만 빠르게 늘면 그때가 못 믿을 때다.
        그래서 **증가율 차이**를 본다: 8pt 넘게 벌어지면 비중을 내지 않는다. */
-    var gO = a ? lastAdd.ours / a : 0, gR = b ? lastAdd.rival / b : 0;
-    var skew = Math.abs(gO - gR) > 0.08;
+    /* **네 진영의 증가율을 함께 본다.** 하나라도 8pt 넘게 벌어지면 그 회차의 점유율은
+       못 믿는다 — 한쪽만 빠르게 늘고 있다는 뜻이라 비중이 그 자리에서 거짓이 된다. */
+    var gr = [a ? lastAdd.ours / a : 0, b ? lastAdd.rival / b : 0,
+              hN ? lastAdd.hi / hN : 0, eN ? lastAdd.el / eN : 0];
+    var gMin = Math.min.apply(null, gr), gMax = Math.max.apply(null, gr);
+    var skew = (gMax - gMin) > 0.08;
     rows.push([
       cyStamp, area, a, b,
-      skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
+      /* **점유율 = 당사 ÷ 네 곳 전부**(2026-09-02 사장님 결정). 예전에는 당사 ÷ (당사+LG)
+         라 2자 비교였다 — 「그 지역 가전 후기 중 우리 몫」으로 뜻이 바뀌었다.
+         RIVAL_SCHEMA 를 올렸으므로 옛 회차에 이어 붙지 않는다(뜻이 다른 값이 섞이면
+         화면이 조용히 거짓이 된다 — 「평택 2,008 → 4,025」가 그 사고였다). */
+      skew ? '' : ((a + b + hN + eN) > 0 ? Math.round((a / (a + b + hN + eN)) * 100) : ''),
       skew ? 'Y' : '',
       place,
       JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon),
@@ -3180,8 +3229,10 @@ function collectRival(deadline) {
          40 으로 넓힌다 — 시트 칸은 5만 자이고 40개 × 양 진영 × 채널명 20자 남짓이면
          2천 자가 안 돼 넉넉하다. **통째로 담지 않는 이유는 그대로다** — 채널이 수백 개라
          칸이 넘친다. 화면이 보여주는 것이 상위 10개 안팎이라 40이면 합산이 안 흔들린다. */
-      JSON.stringify({ ours: topN_(byChan.ours, 40), rival: topN_(byChan.rival, 40) }),
-      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample)
+      JSON.stringify({ ours: topN_(byChan.ours, 40), rival: topN_(byChan.rival, 40),
+        hi: topN_(byChan.hi, 40), el: topN_(byChan.el, 40) }),
+      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample),
+      hN, eN
     ]);
     /* **도시 하나를 끝낼 때마다 커서를 적는다.** 실행이 그 뒤에 죽어도 여기까지는
        남는다 — 예전에는 함수 끝에서 한 번만 적어 6분에 죽으면 전부 잃었다. */
@@ -3369,7 +3420,7 @@ function rival_() {
     if (lastIdx[area + '|' + String(v[i][6] || '')] !== i) continue;   /* 같은 도시는 마지막 줄만 */
     if (!by[area]) {
       by[area] = {
-        area: area, ours: 0, rival: 0, capped: false, q: [],
+        area: area, ours: 0, rival: 0, hi: 0, el: 0, capped: false, q: [],
         bySrc: {}, byKind: {}, byMonth: {}, byChan: {}, byProd: {}, sample: []
       };
       order.push(area);
@@ -3377,6 +3428,10 @@ function rival_() {
     var g = by[area];
     g.ours += Number(v[i][2]) || 0;
     g.rival += Number(v[i][3]) || 0;
+    /* **옛 회차에는 이 칸이 없다** — 그때는 0 이다. 판 번호(RIVAL_SCHEMA)가 달라
+       옛 회차에 이어 붙지는 않지만, 시트에 남은 옛 줄을 읽을 수는 있다. */
+    g.hi += Number(v[i][13]) || 0;
+    g.el += Number(v[i][14]) || 0;
     if (String(v[i][5]) === 'Y') g.capped = true;
     var qq = String(v[i][6] || '');
     if (qq && g.q.indexOf(qq) < 0) g.q.push(qq);
@@ -3393,7 +3448,10 @@ function rival_() {
   }
   var out = [];
   for (i = 0; i < order.length; i++) {
-    var r = by[order[i]], tot = r.ours + r.rival;
+    /* **점유율은 네 곳 전부를 분모로 한다**(2026-09-02 사장님 결정) — 「그 지역 가전
+       후기 중 우리 몫」이다. 예전 2자 비교(당사 ÷ (당사+LG))와 뜻이 다르므로
+       RIVAL_SCHEMA 를 3 으로 올려 옛 회차와 섞이지 않게 했다. */
+    var r = by[order[i]], tot = r.ours + r.rival + r.hi + r.el;
     /* **도시를 다 못 쟀으면 그 지역 비중은 못 잰 것이다**(2026-09-02).
        실측으로 강원이 `ours 100 · rival 0 · pct 100%` 로 화면에 **초록 100%** 였는데,
        `queries` 가 「춘천」 하나뿐이었다 — 강원은 춘천·원주·강릉 셋이다. 그 춘천 0건도
@@ -3405,7 +3463,7 @@ function rival_() {
     var wantN = (AREA_Q[r.area] || []).length;
     var half = wantN > 0 && r.q.length > 0 && r.q.length < wantN;
     out.push({
-      area: r.area, ours: r.ours, rival: r.rival,
+      area: r.area, ours: r.ours, rival: r.rival, hi: r.hi, el: r.el,
       pct: (r.capped || half || tot === 0) ? null : Math.round((r.ours / tot) * 100),
       capped: r.capped, half: half, cities: r.q.length, wantCities: wantN,
       queries: r.q.join(' · '),

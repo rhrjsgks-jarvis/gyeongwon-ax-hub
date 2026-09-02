@@ -216,6 +216,11 @@
   .rv .tr { display: flex; height: 28px; border-radius: 6px; overflow: hidden; background: #EEF1F6; }
   .rv .us { background: var(--blue); }
   .rv .th { background: #C0392B; }   /* LG 는 붉은 계열 — 브랜드 색이 실제로 그렇다 */
+  /* 하이마트·전자랜드 (2026-09-02). **네 색이 서로 구분돼야 한다** — 남색·빨강 옆에
+     주황·보라를 둔다. 색맹 대비로 막대 위 숫자를 늘 함께 적는다. */
+  .rv .hm { background: #E67E22; }
+  .rv .el { background: #7E57C2; }
+  .rv .tr.na .hm, .rv .tr.na .el { background: #D7DBE2; }
   /* **못 잰 지역은 막대도 회색이다**(2026-09-02). 라벨만 「못 잼」으로 두었더니
      반쪽으로 잰 강원이 `당사 100 · LG 0` 이라 **폭 100% 남색 막대**가 되어 여섯 지역 중
      가장 긴 막대였다 — 회색은 오른쪽 52px 라벨 한 곳뿐이라 **막대만 훑으면 최고 성적
@@ -254,17 +259,46 @@
     border-bottom: 2px solid var(--blue); padding-bottom: 4px; margin-bottom: 7px;
   }
   .rg-h span { font-weight: 500; color: var(--mute); margin-left: 5px; font-size: 10.5px; }
-  .rg-b { display: flex; gap: 4px; flex-wrap: wrap; }
+  /* ── 매장 칸 (2026-09-02 사장님 요청) ────────────────────────────────────
+     *"각 지점별 바이럴 건수를 박스에 담아(지금은 작은텍스트) 세일즈코파일럿앱의
+     폴더박스크기처럼 각점별로 00점 내려쓰기 00건 이런식으로"*.
+     **규격은 눈대중이 아니라 본체 AS 앱의 `.cat` 값을 그대로 베꼈다** —
+     `minmax(104px,1fr)` · gap 7 · radius 11. 이 저장소가 이미 두 번 그렇게 맞췄다
+     (도시 고르기 · AS 센터 찾기). 65곳이라 이보다 키우면 한 화면에 안 들어온다. */
+  .rg-b { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 7px; }
+  @media (max-width: 520px) { .rg-b { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); } }
   .st {
-    border: 1px solid var(--line); background: #fff; border-radius: 7px;
-    padding: 3px 8px; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151;
+    border: 1px solid var(--line); background: #fff; border-radius: 11px;
+    padding: 9px 6px; cursor: pointer; font-family: inherit; color: #374151;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+    font-size: 12.5px; font-weight: 600; line-height: 1.25;
   }
   .st:hover { background: #F4F6FB; }
   .st.on { background: var(--blue); border-color: var(--blue); color: #fff; }
-  .st b { font-weight: 800; margin-left: 4px; font-variant-numeric: tabular-nums; }
+  /* **건수는 아래 줄에 크게** — 사장님이 「00점 내려쓰기 00건」이라 지목한 그 모양이다 */
+  .st b { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
+  .st .u { font-weight: 500; font-size: 10px; color: var(--mute); }
+  .st.on .u { color: rgba(255,255,255,.75); }
   /* 0건 — **지우지 않고 흐리게.** 오늘 0건이라고 내일도 0건인 것은 아니다 */
   .st.z { color: #B6BCC6; background: #FCFCFD; }
   .st.z b { color: #C9CFD8; }
+
+  /* 왼쪽 매장 격자 · 오른쪽 지점별 분석. 좁은 화면에서는 아래로 쌓인다 */
+  .stwrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 1000px) { .stwrap { grid-template-columns: 1fr 300px; align-items: start; } }
+  .stdet { border: 1px solid var(--line); border-radius: 11px; background: #FCFDFF; padding: 12px; }
+  .stdet h3 { font-size: 13.5px; font-weight: 800; letter-spacing: -.2px; }
+  .stdet .big { font-size: 26px; font-weight: 800; letter-spacing: -.6px; color: var(--blue);
+                font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
+  .stdet .big span { font-size: 12px; font-weight: 600; color: var(--mute); margin-left: 2px; }
+  .stdet ol { list-style: none; counter-reset: c; }
+  .stdet li { counter-increment: c; display: flex; align-items: baseline; gap: 6px;
+              padding: 4px 0; border-bottom: 1px solid #F1F3F7; font-size: 12.5px; }
+  .stdet li:last-child { border-bottom: 0; }
+  .stdet li::before { content: counter(c) '.'; color: var(--mute); font-weight: 700;
+                      min-width: 15px; font-variant-numeric: tabular-nums; }
+  .stdet li em { font-style: normal; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stdet li b { font-weight: 800; font-variant-numeric: tabular-nums; }
 
   /* 날짜 범위 — 「몇일~몇일」(2026-08-31 사장님 요청) */
   .range { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-bottom: 9px; font-size: 11px; color: var(--mute); }
@@ -629,7 +663,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   </div>
 <!-- 접이식 섹션 박스 — 누르면 그 섹션이 열리고 여러 개를 동시에 열 수 있다. 열린 것은 기억한다 -->
 <div class="secs" id="secs" role="group" aria-label="섹션 열기">
-  <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs LG</button>
+  <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs 경쟁 3사</button>
   <button type="button" class="sec" data-sec="promo" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h3l5 4V6l-5 4zM17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>LG 홍보 경로</button>
   <button type="button" class="sec" data-sec="trend" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M4 16l5-6 4 3 7-8"/></svg></span>월별 추이</button>
   <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>이번 달 진단</button>
@@ -649,7 +683,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
          100분율로 어디가 앞서는가"*). **자료가 없으면 이 카드는 아예 안 그린다** —
          0 으로 그리면 「LG 후기가 없다」로 읽힌다. -->
     <div class="card" id="rival-card" data-card="rival">
-      <h2>당사 vs LG — 지역별 후기 비중</h2>
+      <h2>당사 vs 경쟁 3사 — 지역별 점유율</h2>
+      <!-- 2026-09-02 사장님 요청으로 하이마트·전자랜드를 더했다. **비중의 뜻이 바뀌었다** —
+           예전 「당사 ÷ (당사+LG)」에서 **「그 지역 가전 후기 중 우리 몫」**이 됐다.
+           옛 회차와 섞이면 화면이 조용히 거짓이 되므로 RIVAL_SCHEMA 를 3 으로 올렸다. -->
+      <div class="note" style="margin:2px 0 8px">
+        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#1428A0;margin-right:3px"></span>당사
+        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#C0392B;margin:0 3px 0 8px"></span>LG베스트샵
+        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#E67E22;margin:0 3px 0 8px"></span>하이마트
+        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#7E57C2;margin:0 3px 0 8px"></span>전자랜드
+        <b style="margin-left:8px">오른쪽 %는 당사 점유율</b>입니다.
+      </div>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
       <!-- 갈래별 — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다.
@@ -709,7 +753,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            예전에는 상위 20곳 막대라 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
            "우리 매장이 없다"로 읽힌다. 0건도 흐리게 적어 **전점을 세운다.** -->
       <div class="sub" id="store-sub">–</div>
-      <div id="regions"></div>
+      <div class="stwrap">
+        <div id="regions"></div>
+        <div class="stdet" id="store-detail"></div>
+      </div>
     </div>
     <div class="card" data-card="sdp">
       <h2>SDP — 개인대리점</h2>
@@ -2177,6 +2224,47 @@ function wireSecs() {
 
   }
 
+  /* ── 지점별 분석 (2026-09-02 사장님 요청) ────────────────────────────────
+   * *"각지점을 누르면 총 바이럴건수 오른쪽에 지점별 분석으로 넘어가고 오른쪽에 순서대로
+   * 1.다이렉트웨딩 00건 2.메이크마이웨딩 00건 이런식으로 나열"*.
+   *
+   * **채널 이름은 카페 이름이다.** 블로그 글은 블로거 이름이 시트에 없어(HEADER 에 그
+   * 칸이 없다) 「네이버 블로그」로 묶는다 — **없는 것을 지어내지 않는다.** 화면이 그
+   * 사실을 한 줄로 밝힌다. */
+  function renderStoreDetail() {
+    var el = document.getElementById('store-detail'); if (!el) return;
+    var by = DATA.byStore || {}, chAll = DATA.byStoreChan || {};
+    if (!storeFilter) {
+      el.innerHTML = '<h3>지점별 분석</h3>'
+        + '<div class="note" style="margin-top:6px">왼쪽에서 <b>지점을 누르면</b>'
+        + ' 그 지점의 후기가 <b>어느 채널에서</b> 나왔는지 순위로 보여 드립니다.</div>';
+      return;
+    }
+    var n = by[storeFilter] || 0;
+    var ch = chAll[storeFilter] || {};
+    var keys = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; });
+    var list = keys.length
+      ? '<ol>' + keys.map(function (k) {
+          return '<li><em>' + esc(k) + '</em><b>' + nf(ch[k]) + '</b><span class="u">건</span></li>';
+        }).join('') + '</ol>'
+      /* **0 으로 그리지 않는다** — 「채널을 모른다」와 「후기가 없다」는 다른 말이다 */
+      : '<div class="note">' + (n ? '채널을 가릴 수 없는 글입니다.' : '아직 후기가 없습니다.') + '</div>';
+    el.innerHTML = '<h3>' + esc(storeFilter) + '</h3>'
+      + '<div class="big">' + nf(n) + '<span>건</span></div>'
+      + list
+      + '<div class="note" style="margin-top:8px">카페는 <b>카페 이름</b>, 블로그·웹은'
+      + ' 출처로 묶었습니다 — 블로거 이름은 저장하지 않아 가릴 수 없습니다.</div>'
+      + '<button type="button" class="btn" id="godet" style="margin-top:8px;width:100%">이 지점 후기 링크 보기</button>';
+    var go = document.getElementById('godet');
+    if (go) go.onclick = function () {
+      var card = document.getElementById('list-card');
+      /* 후기 링크 카드가 접혀 있으면 펴 준다 — 접힌 곳으로 데려가면 아무 일도 안 한 것처럼 보인다 */
+      var box = document.querySelector('.sec[data-sec="list"]');
+      if (box && box.getAttribute('aria-pressed') !== 'true') box.click();
+      if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  }
+
   function renderRegions() {
     var el = document.getElementById('regions'); if (!el) return;
     var reg = DATA.byRegion || {}, by = DATA.byStore || {};
@@ -2199,8 +2287,10 @@ function wireSecs() {
         '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
         list.map(function (nm) {
           var v = by[nm] || 0;
+          /* **점명 줄 · 건수 줄** — 사장님이 지목한 「00점 내려쓰기 00건」 모양이다 */
           return '<button class="st' + (v ? '' : ' z') + (storeFilter === nm ? ' on' : '') +
-            '" data-v="' + esc(nm) + '">' + esc(nm) + '<b>' + nf(v) + '</b></button>';
+            '" data-v="' + esc(nm) + '"><span>' + esc(nm) + '</span>' +
+            '<b>' + nf(v) + '<span class="u">건</span></b></button>';
         }).join('') + '</div></div>';
     }).join('');
     Array.prototype.forEach.call(el.querySelectorAll('.st'), function (b) {
@@ -2208,7 +2298,14 @@ function wireSecs() {
         storeFilter = storeFilter === b.dataset.v ? '' : b.dataset.v;
         cafeFilter = ''; watchFilter = '';
         render();
-        document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        /* **바로 후기 목록으로 튀지 않는다**(2026-09-02). 사장님 지시가
+           *"각지점을 누르면 총 바이럴건수 오른쪽에 지점별 분석으로 넘어가고"* 라,
+           먼저 오른쪽 분석을 보여 준다 — 후기 링크는 거기서 버튼으로 간다.
+           좁은 화면에서는 분석이 격자 아래에 쌓이므로 그리로 데려간다. */
+        var det = document.getElementById('store-detail');
+        if (det && window.innerWidth < 1000 && det.scrollIntoView) {
+          det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       };
     });
   }
@@ -2308,8 +2405,19 @@ function wireSecs() {
       '<div class="rvleg"><span><i style="background:var(--blue)"></i>당사</span>' +
       '<span><i style="background:#C0392B"></i>LG</span></div>' +
       rows.map(function (r) {
-        var tot = (Number(r.ours) || 0) + (Number(r.rival) || 0);
-        var p = tot ? ((Number(r.ours) || 0) / tot) * 100 : 50;
+        /* **분모는 네 곳 전부**(2026-09-02 사장님 결정) — 「그 지역 가전 후기 중 우리 몫」.
+           옛 회차에는 hi·el 칸이 없어 0 이라, 그 줄은 예전과 같은 2자 비교로 그려진다. */
+        var vO = Number(r.ours) || 0, vL = Number(r.rival) || 0;
+        var vH = Number(r.hi) || 0, vE = Number(r.el) || 0;
+        var tot = vO + vL + vH + vE;
+        var p = tot ? (vO / tot) * 100 : 25;
+        var pl = tot ? (vL / tot) * 100 : 25;
+        var ph = tot ? (vH / tot) * 100 : 25;
+        var pe = tot ? (vE / tot) * 100 : 25;
+        /* 0 인 진영은 칸을 안 그린다 — 폭 0 짜리 조각이 테두리로 남아 지저분해진다 */
+        var seg = function (cls, w, v) {
+          return v ? '<div class="' + cls + '" style="width:' + w.toFixed(1) + '%"><span>' + nf(v) + '</span></div>' : '';
+        };
         /* **「숫자가 아니면 전부 못 잼」이다**(2026-09-01 사장님 지적 — *"용인 지역은
            undefined 라고 표시되는데"*). 예전에는 null 인지만 봤는데, 그 판정은
            **`undefined`·`NaN`·빈 문자열을 못 잡는다** — 하나라도 새면 `undefined%` 가
@@ -2317,10 +2425,9 @@ function wireSecs() {
            **모르는 것을 숫자인 척 그리지 않는다**(이 저장소의 첫 원칙). */
         var na = !(typeof r.pct === 'number' && isFinite(r.pct));
         return '<div class="rv"><div class="nm">' + esc(r.area) + '</div>' +
-          '<div class="tr' + (na ? ' na' : '') + '" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + '건'
+          '<div class="tr' + (na ? ' na' : '') + '" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + ' · 하이마트 ' + nf(r.hi || 0) + ' · 전자랜드 ' + nf(r.el || 0) + '건'
             + (na ? (r.half ? ' (도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 비중을 낼 수 없습니다)' : ' (양쪽 증가율이 벌어져 비중을 믿을 수 없습니다)') : '') + '">' +
-          '<div class="us" style="width:' + p.toFixed(1) + '%"><span>' + nf(r.ours) + '</span></div>' +
-          '<div class="th" style="width:' + (100 - p).toFixed(1) + '%"><span>' + nf(r.rival) + '</span></div></div>' +
+          seg('us', p, vO) + seg('th', pl, vL) + seg('hm', ph, vH) + seg('el', pe, vE) + '</div>' +
           (na
             ? '<div class="vl na" title="' + (r.half
                 ? esc(r.area + josa(r.area, '은', '는') + ' 도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 나머지가 빠져 비중을 낼 수 없습니다')
@@ -3148,6 +3255,7 @@ function renderList() {
     renderPromo();
     renderTrend();
     renderDiag();
+    renderStoreDetail();
     renderSdp();
     renderSignals();
     renderMap();
