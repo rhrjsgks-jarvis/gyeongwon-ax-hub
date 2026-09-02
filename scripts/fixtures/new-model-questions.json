@@ -1,7 +1,7 @@
 {
  "_note": "2026-09-01 사장님 지시로 시험지의 가전 문항을 신규 44개 모델로 갈았다. 네 갈래(모델 사양·설치환경·설치 비용·셀링포인트) 모두 커밋된 원문에서만 값을 가져오며 지어낸 수치가 없다. npm run build:nmq 로 다시 만든다. 레벨업 챌린지 앱(QB)은 건드리지 않는다 — 시험 도구만 이 파일을 읽는다.",
  "_source": "scripts/fixtures/usp-models.json · public/finder-app.html(PRODUCTS) · public/finder-extra.json · public/install-app.html(INSTALL_DB) · public/install-cost.json",
- "count": 412,
+ "count": 423,
  "items": [
   {
    "cat": "TV",
@@ -6182,6 +6182,171 @@
    "nm": 1,
    "fam": "usp",
    "exp": "「유산균 아삭 숙성」은 Bespoke AI 김치플러스 4도어 키친핏 420L(RK70F42F2X)의 공식 셀링포인트다. 나머지 보기는 다른 신규 모델이며 그 문구를 싣지 않는다. (근거: 삼성닷컴 목록 API uspDescList·제품 지면 특장점, 2026-09-01 수집)"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「Micro RGB RH95」에는 있지만 「Micro RGB RH9G」에는 없는 것은?",
+   "opts": [
+    "Vision AI 컴패니언",
+    "Glare Free(무반사 기술) 적용",
+    "AI 축구모드 Pro",
+    "무선 원커넥트 박스(WOC) 지원"
+   ],
+   "ans": 3,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「무선 원커넥트 박스(WOC) 지원」은 Micro RGB RH95에만 적용된다. 나머지 세 보기는 Micro RGB RH95·Micro RGB RH9G 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.10-21 (Micro RGB 스펙표))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「Micro RGB RH95」에는 있지만 「Micro RGB RH85」에는 없는 것은?",
+   "opts": [
+    "무선 원커넥트 박스(WOC) 지원",
+    "Micro RGB AI 엔진",
+    "Micro RGB 정밀 컬러 100",
+    "Vision AI 컴패니언"
+   ],
+   "ans": 0,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「무선 원커넥트 박스(WOC) 지원」은 Micro RGB RH95에만 적용된다. 나머지 세 보기는 Micro RGB RH95·Micro RGB RH85 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.10-21 (Micro RGB 스펙표))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「OLED SH95」에는 있지만 「OLED SH93」에는 없는 것은?",
+   "opts": [
+    "AI 축구 모드 Pro",
+    "AI 사운드 컨트롤 Pro",
+    "무반사 기술(Glare Free)",
+    "무선 원커넥트 박스(WOC)"
+   ],
+   "ans": 3,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「무선 원커넥트 박스(WOC)」는 OLED SH95에만 적용된다. 나머지 세 보기는 OLED SH95·OLED SH93 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.22-32 (OLED 스펙표, FloatLayer Design은 SH95 한정))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「OLED SH95」에는 있지만 「OLED SH90」에는 없는 것은?",
+   "opts": [
+    "AI 사운드 컨트롤 Pro",
+    "무반사 기술(Glare Free)",
+    "FloatLayer Design",
+    "얼티밋 게이밍 팩(모션터보 165Hz)"
+   ],
+   "ans": 2,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「FloatLayer Design」는 OLED SH95에만 적용된다. 나머지 세 보기는 OLED SH95·OLED SH90 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.22-32 (OLED 스펙표, FloatLayer Design은 SH95 한정))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「Neo QLED 4K QNH83/QNH80」에는 있지만 「Neo QLED 4K QNH70」에는 없는 것은?",
+   "opts": [
+    "퀀텀 Mini LED",
+    "오토 HDR 리마스터링",
+    "리얼 QLED 100% 컬러볼륨",
+    "Vision AI 컴패니언"
+   ],
+   "ans": 1,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「오토 HDR 리마스터링」은 Neo QLED 4K QNH83/QNH80에만 적용된다. 나머지 세 보기는 Neo QLED 4K QNH83/QNH80·Neo QLED 4K QNH70 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.33-42 (Neo QLED 스펙표, QNH80 기준))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「Neo QLED 4K QNH83/QNH80」에는 있지만 「Mini LED MH80」에는 없는 것은?",
+   "opts": [
+    "모션 터보 144Hz",
+    "Vision AI 컴패니언",
+    "컬러 부스터 Pro",
+    "4K AI 화질 업스케일링"
+   ],
+   "ans": 3,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「4K AI 화질 업스케일링」은 Neo QLED 4K QNH83/QNH80에만 적용된다. 나머지 세 보기는 Neo QLED 4K QNH83/QNH80·Mini LED MH80 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.33-42 (Neo QLED 스펙표, QNH80 기준))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「Neo QLED 4K QNH70」에는 있지만 「Mini LED MH80」에는 없는 것은?",
+   "opts": [
+    "AI 축구 모드",
+    "Vision AI 컴패니언",
+    "컬러 부스터 Pro",
+    "4K 화질 업스케일링"
+   ],
+   "ans": 3,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「4K 화질 업스케일링」은 Neo QLED 4K QNH70에만 적용된다. 나머지 세 보기는 Neo QLED 4K QNH70·Mini LED MH80 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.33-42 (Neo QLED 스펙표, 오토 HDR 리마스터링·돌비 애트모스 미적용))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「Neo QLED 4K QNH70」에는 있지만 「Mini LED MH70」에는 없는 것은?",
+   "opts": [
+    "리얼 QLED 100% 컬러볼륨",
+    "모션 터보 60Hz",
+    "Vision AI 컴패니언",
+    "컬러 부스터 Pro"
+   ],
+   "ans": 0,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「리얼 QLED 100% 컬러볼륨」은 Neo QLED 4K QNH70에만 적용된다. 나머지 세 보기는 Neo QLED 4K QNH70·Mini LED MH70 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.33-42 (Neo QLED 스펙표, 오토 HDR 리마스터링·돌비 애트모스 미적용))"
+  },
+  {
+   "cat": "TV",
+   "q": "세일즈가이드 기준, 「The Frame Pro (LSH03W)」에는 있지만 「The Frame (LSH03E)」에는 없는 것은?",
+   "opts": [
+    "팬톤 아트풀 컬러 검증",
+    "Vision AI 컴패니언",
+    "무선 원커넥트 박스",
+    "모던 프레임 디자인"
+   ],
+   "ans": 2,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「무선 원커넥트 박스」는 The Frame Pro (LSH03W)에만 적용된다. 나머지 세 보기는 The Frame Pro (LSH03W)·The Frame (LSH03E) 두 모델 모두 갖고 있다. (근거: 2026 삼성 TV/오디오 세일즈 가이드 p.50-62 (Frame 스펙표))"
+  },
+  {
+   "cat": "냉장고",
+   "q": "세일즈가이드 기준, 「Bespoke AI 패밀리허브 키친핏 Max (22.5cm)」에는 있지만 「Bespoke AI 패밀리허브 (81.2cm)」에는 없는 것은?",
+   "opts": [
+    "빅스비 음성 인식으로 냉장고 상태를 확인하고, 다양한 서비스를 활용할 수 있습니다",
+    "완전 새로운 푸드 경험, AI 푸드매니저",
+    "냉장고와 냉장고장의 최소 간격이 4mm로 키친장에 딱 맞게 설치됩니다",
+    "AI 비전에 Google Gemini를 결합하여 더욱 스마트해졌습니다"
+   ],
+   "ans": 2,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「냉장고와 냉장고장의 최소 간격이 4mm로 키친장에 딱 맞게 설치됩니다」는 Bespoke AI 패밀리허브 키친핏 Max (22.5cm)에만 적용된다. 나머지 세 보기는 Bespoke AI 패밀리허브 키친핏 Max (22.5cm)·Bespoke AI 패밀리허브 (81.2cm) 두 모델 모두 갖고 있다. (근거: 2026 Bespoke AI 냉장고 세일즈가이드 p.5)"
+  },
+  {
+   "cat": "냉장고",
+   "q": "세일즈가이드 기준, 「Bespoke AI 패밀리허브 (81.2cm)」에는 있지만 「Bespoke AI 패밀리허브 키친핏 Max (22.5cm)」에는 없는 것은?",
+   "opts": [
+    "평소엔 효율적으로 필요할 땐 강력하게 AI 하이브리드 쿨링",
+    "음성으로 더 쉽고 편리하게 빅스비 음성 인식",
+    "소비 전력을 줄여주는 에너지효율등급 1등급",
+    "빅스비 음성 인식으로 냉장고 상태를 확인하고, 다양한 서비스를 활용할 수 있습니다"
+   ],
+   "ans": 2,
+   "lv": "중",
+   "nm": 1,
+   "fam": "tier",
+   "exp": "「소비 전력을 줄여주는 에너지효율등급 1등급」은 Bespoke AI 패밀리허브 (81.2cm)에만 적용된다. 나머지 세 보기는 Bespoke AI 패밀리허브 (81.2cm)·Bespoke AI 패밀리허브 키친핏 Max (22.5cm) 두 모델 모두 갖고 있다. (근거: 2026 Bespoke AI 냉장고 세일즈가이드 p.26)"
   }
  ]
 }

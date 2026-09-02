@@ -546,6 +546,61 @@ say(fs.existsSync(pdf), 'A4 PDF 생성 (' + (fs.statSync(pdf).size / 1024).toFix
      지목된 모델을 빠뜨린 것이라 여전히 걸러야 한다. */
   say(um >= ppt, 'usp-models.json ' + um + '건이 모델별USP.pptx ' + ppt + '건보다 적지 않다');
 }
+/* ── 등급 비교 문항 (2026-09-02 사장님 요청 — *"세일즈가이드를 참조해서 개선"*) ────
+ * 세일즈가이드가 **같은 스펙표에 나란히 적은 형제 등급**의 차이를 묻는다.
+ * 매장에서 가장 많이 받는 질문(*"SH95 랑 SH85 뭐가 달라요?"*)인데 문항이 한 건도
+ * 없었다. **「없다」고 말하는 문항이라 근거가 특히 중요하다** — 아래가 그 안전선이다. */
+{
+  const bad = [];
+  const nm = JSON.parse(fs.readFileSync(NM_OUT, 'utf8'));
+  const tier = (nm.items || []).filter(q => q.fam === 'tier');
+  if (!tier.length) bad.push('등급 비교 문항이 한 건도 없다 — 갈래가 사라졌다');
+
+  for (const q of tier) {
+    /* ⓐ **두 모델 이름이 서로 달라야 한다.** 가이드에는 색상·용량 변형이 **같은 이름**으로
+       여러 줄 들어 있어(김치플러스 10종·무풍콤보 18종), 그대로 짝지으면 화면이
+       *"둘 중 어느 것"* 을 묻게 된다 — 사람이 고를 수가 없다. */
+    const names = [...q.q.matchAll(/「(.+?)」/g)].map(m => m[1].replace(/\s/g, ''));
+    if (names.length !== 2) bad.push('질문이 두 모델을 「」로 밝히지 않는다: ' + q.q.slice(0, 40));
+    else if (names[0] === names[1]) bad.push('같은 이름 둘을 견준다 — 고를 수가 없다: ' + q.q.slice(0, 50));
+    /* ⓑ 보기 길이 — **정답만 길면 읽지 않고도 찍힌다** */
+    for (const o of q.opts) {
+      if (o.length < 8 || o.length > 46) bad.push('보기 길이가 8~46자를 벗어난다(' + o.length + '자): ' + o.slice(0, 30));
+    }
+    /* ⓒ 보기가 서로 달라야 한다 */
+    if (new Set(q.opts).size !== q.opts.length) bad.push('보기가 겹친다: ' + q.q.slice(0, 40));
+    /* ⓓ **근거를 밝힌다** — 「없다」는 주장이라 어느 가이드 몇 쪽인지가 있어야 한다 */
+    if (!/근거:/.test(q.exp || '')) bad.push('해설에 근거가 없다: ' + q.q.slice(0, 40));
+    /* ⓔ 난이도는 '중' — 비교·판단이라 용어정리의 그 자리다 */
+    if (q.lv !== '중') bad.push('난이도가 중이 아니다: ' + q.lv);
+  }
+
+  /* ⓕ **정답이 「가장 긴 보기」에 몰리지 않는가** — 문제를 안 읽고 찍는 전략을 막는다 */
+  if (tier.length) {
+    const longest = q => { let b = 0; for (let i = 1; i < q.opts.length; i++) if (q.opts[i].length > q.opts[b].length) b = i; return b; };
+    const rate = tier.filter(q => longest(q) === q.ans).length / tier.length * 100;
+    if (rate > 40) bad.push('가장 긴 보기만 골라도 ' + rate.toFixed(0) + '% 맞는다 (상한 40%)');
+  }
+
+  /* ⓖ **생성기의 안전장치가 살아 있는가.** 아래 둘이 빠지면 조용히 거짓 문항이 쏟아진다:
+       · 자료 결손 — 가이드가 시리즈 대표 한 줄에만 특장점을 적고 형제는 비워 두는 일이
+         있다(무풍콤보 usp 32 vs 1). 그대로 견주면 *"이 모델에는 32가지가 없다"* 가 된다.
+       · 유무 차이 — 「AI 축구모드 Pro」 vs 「AI 축구모드」는 **등급 차이**라 "없다"가 거짓이다. */
+  const gen = fs.readFileSync('scripts/build-new-model-questions.mjs', 'utf8');
+  if (!gen.includes('(L.usp || []).length * 2 < (H.usp || []).length')) {
+    bad.push('자료 결손 가드가 없다 — 「자료가 없다」를 「기능이 없다」로 낸다');
+  }
+  if (!gen.includes('!ws.some(w => lowBlob.includes(w))')) {
+    bad.push('유무 차이 판정이 없다 — 등급 차이(Pro/일반)를 「없다」로 낸다');
+  }
+  if (!gen.includes('flat(H.name) === flat(L.name)) continue')) {
+    bad.push('같은 이름 제외가 없다 — 변형끼리 견주는 문항이 나온다');
+  }
+
+  if (bad.length) { ok = false; console.log('FAIL: 등급 비교 문항 — ' + bad.slice(0, 4).join(' · ')); }
+  else say(true, '등급 비교 문항 ' + tier.length + '개 — 이름이 다른 형제끼리 · 근거 있음 · 보기 길이 균형');
+}
+
 say(outside.length === 0, '바깥으로 나간 요청 0' + (outside.length ? ': ' + outside[0] : ''));
 say(errs.length === 0, '콘솔 오류 없음' + (errs.length ? ': ' + errs[0] : ''));
 console.log('\n안내문: ' + a.hint);

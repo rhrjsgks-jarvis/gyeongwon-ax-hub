@@ -474,6 +474,102 @@ function uspQuestions(models) {
 }
 const seenUsp = new Set();
 
+/* ══════════════════════════════════════════════════════════════════════
+   ⑤ 등급 비교 — 세일즈가이드가 같은 표에 나란히 적은 형제 모델 (중)
+   ══════════════════════════════════════════════════════════════════════ */
+/* 2026-09-02 사장님 요청 — *"시험지출력기 문제를 세일즈가이드를 참조해서 개선해줘"*.
+ *
+ * ## 왜 이 갈래인가
+ * 셀링포인트 문항 80개는 전부 **「이 문구를 내세우는 제품은?」 한 형태**이고 난이도가
+ * 죄다 「하」다. 그런데 **매장에서 가장 많이 받는 질문은 그것이 아니다** —
+ * *"SH95 랑 SH85 뭐가 달라요?"* 다. 그 지식이 문항에 **한 건도 없었다.**
+ *
+ * 세일즈가이드는 그 답을 이미 갖고 있다. 같은 스펙표에 등급을 나란히 적고, 노트에
+ * *"SH85 — Glare Free·WOC 미적용"* 처럼 **없는 것까지 밝힌다.**
+ *
+ * ## 「없다」를 말할 수 있는 이유
+ * CLAUDE.md 는 *"셀링포인트가 **아닌** 것은?" 형태를 만들지 않는다 — "안 내세운다"와
+ * "없다"는 다른 말"* 이라고 못 박았다. 그 경고는 **다른 제품의 문구를 빌려 올 때**의
+ * 이야기다. 여기서는 가이드가 **같은 표 안에서 등급별로** 적었으므로 근거가 다르다.
+ *
+ * ## 「등급 차이」와 「유무 차이」를 반드시 가른다
+ *   「AI 축구모드 Pro」 vs 「AI 축구모드」  → **등급 차이** — 하위에도 있다. 쓰면 거짓
+ *   「FloatLayer Design」 vs 없음          → **유무 차이** — 이것만 쓴다
+ * 가르는 법: 상위 문구의 핵심어가 **하위 usp 어디에도 없어야** 한다.
+ *
+ * ## 오답은 「둘 다 가진 것」에서만 뽑는다
+ * 그래야 정답이 하나로 남는다. 상위에만 있는 것이 여럿이어도(SH95 는 7개) 오답에
+ * 섞이지 않으므로 안전하다.
+ */
+function tierQuestions(guides) {
+  const out = [];
+  const key = s => flat(s).toLowerCase();
+  const words = s => [...(String(s).match(/[A-Za-z][A-Za-z0-9+]{2,}/g) || []),
+                      ...(String(s).match(/[가-힣]{2,}/g) || [])].map(key);
+
+  /* **같은 파일 · 같은 품목끼리만** 짝짓는다 — 다른 가이드끼리 견주면 근거가 둘이 되고,
+     수집 시점이 달라 같은 기능을 다르게 적었을 수 있다. */
+  const grp = new Map();
+  for (const m of guides) {
+    if (!(m.usp || []).length || !m.name) continue;
+    const k = m.file + '|' + m.cat;
+    if (!grp.has(k)) grp.set(k, []);
+    grp.get(k).push(m);
+  }
+
+  for (const arr of grp.values()) {
+    if (arr.length < 2) continue;
+    for (const H of arr) {
+      for (const L of arr) {
+        if (H === L) continue;
+        /* **이름이 같은 짝은 뺀다.** 색상·용량 변형이 같은 이름으로 여러 줄 들어 있어
+           (김치플러스 8종) *"둘 중 어느 것"* 을 물을 수가 없다 — 화면이 같은 이름
+           두 개를 보기로 내밀게 된다. */
+        if (flat(H.name) === flat(L.name)) continue;
+        /* **「기능이 없다」와 「자료가 없다」는 다른 말이다.** 가이드는 시리즈 대표 한 줄에
+           특장점을 몰아 적고 형제 줄은 비워 두는 일이 있다 — 무풍콤보 갤러리 프로가
+           **usp 32개 vs 1개**다. 그대로 견주면 *"이 모델에는 32가지가 없다"* 는 거짓이
+           32문항 쏟아진다. **한쪽이 절반도 안 되면 견주지 않는다.** */
+        if ((L.usp || []).length * 2 < (H.usp || []).length) continue;
+        const lowBlob = key((L.usp || []).join(' '));
+        /* **보기 길이를 맞춘다**(8~46자, 셀링포인트 문항과 같은 규칙). 냉장고 가이드는
+           특장점을 **문장으로** 적어(「냉장고와 냉장고장의 최소 간격이 4mm로 …」 38자)
+           그대로 쓰면 보기가 23~60자로 널뛴다 — **정답만 길면 읽지 않고도 찍힌다.** */
+        const fits = t => t.length >= 8 && t.length <= 46;
+        const only = (H.usp || []).filter((t) => {
+          if (!fits(t) || (L.usp || []).includes(t)) return false;
+          const ws = words(t);
+          if (!ws.length) return false;
+          return !ws.some(w => lowBlob.includes(w));   /* 하위에 흔적조차 없어야 한다 */
+        });
+        const both = (H.usp || []).filter(t => fits(t) && (L.usp || []).includes(t));
+        if (!only.length || both.length < 3) continue;
+
+        const cat = CAT_OF_USP[H.cat] || CAT_OF_USP[L.cat];
+        if (!cat) continue;                       /* 문제은행 칸을 모르면 만들지 않는다 */
+        /* **한 짝에서 한 문항만** — 더 내면 보기 넷이 그대로 되풀이돼 패턴이 읽힌다 */
+        const ans = only[slot(H.name + L.name, only.length)];
+        /* 오답도 **짝마다 다른 자리**에서 뽑는다(늘 앞 셋이면 같은 보기가 반복된다) */
+        const st = slot(H.name + L.name + '#b', both.length);
+        const bad = [];
+        for (let i = 0; i < both.length && bad.length < 3; i++) bad.push(both[(st + i) % both.length]);
+        if (bad.length < 3) continue;
+
+        const hn = H.name.trim(), ln = L.name.trim();
+        const q = `세일즈가이드 기준, 「${hn}」에는 있지만 「${ln}」에는 없는 것은?`;
+        if (seenTier.has(q) || leaksAnswer(q, ans)) continue;
+        seenTier.add(q);
+        const { opts, ans: at } = place(ans, bad, q);
+        out.push({ cat, q, opts, ans: at, lv: '중', nm: 1, fam: 'tier',
+          exp: `「${ans}」${eunn(ans)} ${hn}에만 적용된다. 나머지 세 보기는 ${hn}·${ln} 두 모델 모두 갖고 있다. `
+             + `(근거: ${H.src})` });
+      }
+    }
+  }
+  return out;
+}
+const seenTier = new Set();
+
 /* ══════════════════════════════════════════════════════════════════════ */
 /** 44개 모델 명부 — 사양이 있는 것만 `code` 가 채워진다.
  *  **근접 코드의 값을 옮겨 적지 않는다** — 세대가 다르면 다른 물건이다. */
@@ -495,6 +591,14 @@ export function registry() {
   });
 }
 
+/** 세일즈가이드 원문 창고 — **등급 비교 문항만** 여기서 온다.
+ *  `usp-models.json`(명부)은 라인업 대표만 담지만, 가이드는 **같은 표의 형제 등급**을
+ *  전부 들고 있다 — SH95·SH93·SH90·SH85 처럼. 그 차이가 매장의 첫 질문이다. */
+function readGuides() {
+  const p = path.join(ROOT, 'scripts', 'fixtures', 'usp-guides.json');
+  return JSON.parse(fs.readFileSync(p, 'utf8')).models;
+}
+
 export function buildNewModelQuestions() {
   const models = registry();
   const specs = readSpecs();
@@ -505,6 +609,7 @@ export function buildNewModelQuestions() {
     ...installQuestions(db),
     ...costQuestions(cost),
     ...uspQuestions(models),
+    ...tierQuestions(readGuides()),
   ];
   /* 같은 문항이 두 번 실리면 한 시험지에 같은 것이 나올 수 있다 */
   const seen = new Set(), uniq = [];
