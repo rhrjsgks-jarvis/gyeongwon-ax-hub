@@ -44,3 +44,8 @@ tools/레벨업챌린지_시험_기록용.html
 
 .vercel
 .env*
+
+# 삼성 공식 세일즈가이드 PDF — 저작권 자료라 public repo 에 올리지 않는다.
+# 여기서 뽑은 **파생 측정값**(scripts/fixtures/usp-guides.json)만 커밋한다 —
+# 분양 도면을 안 올리고 벽선 좌표만 올리는 것과 같은 규칙이다.
+2026세일즈가이드/
