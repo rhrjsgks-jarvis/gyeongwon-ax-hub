@@ -16,8 +16,14 @@ const M = J.models
 let ok = true
 const fail = (m) => { ok = false; console.log('FAIL: ' + m) }
 
-/* ① 사장님이 지목한 44개가 그대로 있는가. **줄어도 늘어도 안 된다** —
-   빠지면 그 모델을 안 다룬 것이고, 늘면 시키지 않은 것이 섞인 것이다. */
+/* ① 명부가 그대로인가. **줄어도 늘어도 안 된다** — 빠지면 그 모델을 안 다룬 것이고,
+   늘면 시키지 않은 것이 섞인 것이다.
+
+   **44 → 55 로 늘렸다**(2026-09-02 사장님 승인 — *"벽걸이 에어컨 포함해서 열 가지 다
+   반영해주세요"*). 앞 44 는 사장님이 2026-09-01 에 지목한 것이고, 뒤 11 은 드라이브에
+   올라온 **삼성 공식 세일즈가이드**에만 있던 라인업이다(원문은 `usp-guides.json`).
+   **색상·용량 변형은 안 넣었다** — 같은 문구를 여러 줄이 가지면 아래 ② 검사가 물고,
+   무엇보다 "이 문구를 내세우는 제품은?" 문항이 성립하지 않는다. */
 const WANT = [
   'KMR85RH95AFXKR', 'KMR85RH9GAFXKR', 'KQ77SH95AFXKR', 'KQ77SH93AFXKR', 'KQ85LSH03WFXKR',
   'KU85MH80AFXKR', 'KU27LSFM7AXXKR',
@@ -32,13 +38,21 @@ const WANT = [
   'VS90F40CN*', 'VS70H18GV*',
   'VR90F01SAG*', 'VR90F01AAG*',
   'CC99H63I1D', 'CC99F63G1DS', 'CC99F63U1DS', 'CC80H63G1HS',
-  'DW99F79E1US*', 'DW90F79F1US*', 'DW80F75L1U*', 'DW90F79P']
+  'DW99F79E1US*', 'DW90F79F1US*', 'DW80F75L1U*', 'DW90F79P',
+  /* ── 2026-09-02 추가 — 세일즈가이드에만 있던 라인업 11종 ── */
+  'AR80H07D21W/KO', 'AR80H06D2A1Q', 'AR70H06D1A1Q',   /* 벽걸이 에어컨 — 명부에 한 종도 없었다 */
+  'KMR115MRF95XKR',                                    /* Micro RGB 115형 */
+  'AP70F03102RVD',                                     /* 블루스카이 3100 */
+  'WD90H25BHW',                                        /* 콤보 MID */
+  'DF90H24R4D', 'DF80H24R1C',                          /* 에어드레서 R4·R1 */
+  'HW-QS90H/KR', 'HW-LS50H/KR',                        /* 사운드바 QS90H · Music Studio 5 */
+  'RK70F42F2X']                                        /* 김치 키친핏 420L */
 const have = M.map((m) => m.model)
 const miss = WANT.filter((w) => !have.includes(w))
 const extra = have.filter((h) => !WANT.includes(h))
 if (miss.length) fail(`지목 모델이 빠졌다: ${miss.join(', ')}`)
 if (extra.length) fail(`지목하지 않은 모델이 섞였다: ${extra.join(', ')}`)
-if (!miss.length && !extra.length) console.log(`OK: 사장님이 지목한 ${WANT.length}개 모델이 그대로다`)
+if (!miss.length && !extra.length) console.log(`OK: 명부 ${WANT.length}개 모델이 그대로다 (지목 44 + 가이드 11)`)
 
 /* ② **못 찾은 모델에 남의 문구가 들어가지 않았는가.** 다른 모델의 USP 와 글자가 같으면
    옮겨 적은 것이다(같은 제품군이라 우연히 겹치는 일은 3줄 전부에서는 없다). */

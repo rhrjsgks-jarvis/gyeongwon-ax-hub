@@ -541,7 +541,10 @@ say(fs.existsSync(pdf), 'A4 PDF 생성 (' + (fs.statSync(pdf).size / 1024).toFix
   /* **두 자료가 같은 것을 담고 있는지 검산** — 모델별USP.pptx 는 usp-models.json 의 출처다 */
   const ppt = rows.filter((r) => r.file === '모델별USP.pptx').length;
   const um = JSON.parse(fs.readFileSync(new URL('../scripts/fixtures/usp-models.json', import.meta.url), 'utf8')).models.length;
-  say(ppt === um, '모델별USP.pptx ' + ppt + '건 == usp-models.json ' + um + '건');
+  /* **PPT 44 == 명부 44 였던 검사를 「적지 않다」로 바꿨다**(2026-09-02) — 사장님 승인으로
+     가이드에만 있던 11종을 명부에 더해 55 가 됐다. 명부가 PPT 보다 적으면 그때는
+     지목된 모델을 빠뜨린 것이라 여전히 걸러야 한다. */
+  say(um >= ppt, 'usp-models.json ' + um + '건이 모델별USP.pptx ' + ppt + '건보다 적지 않다');
 }
 say(outside.length === 0, '바깥으로 나간 요청 0' + (outside.length ? ': ' + outside[0] : ''));
 say(errs.length === 0, '콘솔 오류 없음' + (errs.length ? ': ' + errs[0] : ''));
