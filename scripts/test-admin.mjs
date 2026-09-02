@@ -2323,9 +2323,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         const tabAt = gsP.indexOf('var PROD_Q = [');
         const tabEnd = gsP.indexOf('];', tabAt);
         const tab = tabAt < 0 ? '' : gsP.slice(tabAt, tabEnd + 2);
+        /* **부분일치가 무는 흔한 말 표**(`그램` → 인스타그램·프로그램). `prodOf_` 가 이것을
+           쓰므로 함께 떼어 와야 한다 — 안 그러면 `prodHas_ is not defined` 로 죽는다. */
+        const notAt = gsP.indexOf('var PROD_NOT = {');
+        const notEnd = gsP.indexOf('};', notAt);
+        const notTab = notAt < 0 ? '' : gsP.slice(notAt, notEnd + 2);
         let prodOf = null, chanOf = null;
         try {
-          prodOf = new Function(cut('norm_') + tab + cut('prodOf_') + ' return prodOf_;')();
+          prodOf = new Function(cut('norm_') + tab + notTab + cut('prodHas_') + cut('prodOf_') + ' return prodOf_;')();
           chanOf = new Function(cut('plain_') + cut('chanOf_') + ' return chanOf_;')();
         } catch (e) { prodOf = null; }
 
@@ -2340,6 +2345,18 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
           if (prodOf('에어드레서 설치')[0] !== '의류관리기') bad.push('에어드레서가 의류관리기로 안 묶인다');
           /* **없으면 없다고 한다** — 아무거나 집어넣으면 「무엇을 미나」가 거짓이 된다 */
           if (prodOf('수원점 다녀왔어요 후기').length) bad.push('품목이 없는 제목에서 품목을 만들어 낸다');
+          /* **`그램` 부분일치**(2026-09-02). 후기 제목에 「인스타그램」은 아주 흔한데
+             그 제목이 통째로 노트북으로 세어졌다. 양쪽에 똑같이 걸려 비중은 안 깨지지만
+             품목 순위가 깨져 *"LG 는 노트북을 민다"* 는 없는 결론이 나온다.
+             **막는 쪽과 잡는 쪽을 함께 본다** — 한쪽만 보면 문턱을 올려도 통과한다. */
+          ['인스타그램 이벤트 후기', '프로그램 안내', '아기 몸무게 3킬로그램'].forEach((t) => {
+            if (prodOf('삼성스토어 수원 ' + t).indexOf('노트북') >= 0) {
+              bad.push(`「${t}」가 노트북으로 세어진다 — 부분일치 가드가 없다`);
+            }
+          });
+          if (prodOf('LG 그램 노트북 후기').indexOf('노트북') < 0) bad.push('진짜 그램을 못 잡는다 — 가드가 너무 세다');
+          if (prodOf('tvN 드라마 협찬').indexOf('TV') >= 0) bad.push('tvN 이 TV 로 세어진다');
+          if (prodOf('삼성 TV 후기').indexOf('TV') < 0) bad.push('진짜 TV 를 못 잡는다 — 가드가 너무 세다');
           /* 한 글에 둘이 적혀 있으면 둘 다 */
           if (prodOf('세탁기 건조기 같이 샀어요').length !== 2) bad.push('제목에 적힌 품목을 다 세지 않는다');
           /* 채널 — 카페는 카페 이름, 블로그는 블로그 이름, 웹은 호스트 */
@@ -2571,8 +2588,19 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         bad.push('도시 안 하드 스톱이 없다 — 오래 걸리는 도시에서 실행이 통째로 죽는다');
       }
       /* ⓒ **반쪽은 저장하지 않는다** — 한쪽 진영만 훑고 끊긴 줄을 쓰면 비중이 거짓이 된다 */
-      if (!rv.includes('if (hard) { stoppedR = true; break; }')) {
-        bad.push('하드 스톱에 걸린 도시를 그대로 저장한다 — 반쪽 비중이 화면에 나간다');
+      /* **`err` 도 함께 봐야 한다**(2026-09-02). 예전에는 시간(`hard`)만 보고 오류는
+         지나쳐, LG 쪽 첫 호출이 500 이면 `rival=0 · pct=100%` 짜리 반쪽 줄이 시트에
+         들어갔다 — 화면은 그것을 *"그 지역에 LG 후기가 없다"* 로 읽는다. 줄을 안 쓰면
+         커서도 전진하지 않아 「같은 도시가 두 줄」 사고까지 함께 막힌다. */
+      /* **인증 오류가 「한 바퀴 완료」로 둔갑하지 않는가**(2026-09-02). `fatal` 만 세우고
+         `stopped` 을 안 세워서, 매장 셋만 훑고 401 을 맞은 실행이 끝에서 `_fullAt` 을
+         오늘로 찍고(그 뒤 이레 동안 새 글만 훑는다) 커서를 0 으로 되돌린 뒤 `done:true`
+         로 보고했다 — 못 훑은 62개 매장의 옛 글을 영영 못 채운다. */
+      if (!rv.includes('fatal = true; stopped = true;')) {
+        bad.push('인증 오류가 stopped 을 안 세운다 — 반쪽만 훑고 「한 바퀴 완료」로 보고한다');
+      }
+      if (!rv.includes('if (hard || err) { stoppedR = true; break; }')) {
+        bad.push('반쪽 줄을 버리지 않는다(시간·오류 둘 다) — 반쪽 비중이 화면에 나간다');
       }
       /* ⓓ 도시마다 커서를 적는다 — 함수 끝에서 한 번만 적으면 죽을 때 전부 잃는다 */
       if (!rv.includes("props_().setProperty('_rivalCur', String(ui + 1));")) {
