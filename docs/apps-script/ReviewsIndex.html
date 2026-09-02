@@ -251,6 +251,31 @@
   .rvleg { display: flex; gap: 12px; font-size: 10.5px; color: var(--mute); margin-bottom: 9px; }
   .rvleg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 
+  /* ── 지역별 회사 차트 — 세로 막대 (2026-09-03 사장님 선택) ──────────────
+     예전에는 가로 100% 스택이라 **비중만** 보이고 절대 크기가 통째로 사라졌다.
+     실측으로 용인 6,917건 · 안양 4,292건인데 두 줄이 화면에서 같은 길이였다 —
+     *"어느 지역 판이 큰가"* 를 답할 수 없었다. 세로 막대는 회사별 건수를 그대로
+     세워 비중과 크기를 **함께** 보여준다. 막대 높이는 여섯 지역을 가로질러 같은
+     자로 잰다(지역마다 자를 새로 잡으면 지역끼리 견줄 수가 없다). */
+  .rvg4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 13px; }
+  .rvg4 .u { text-align: center; }
+  .rvg4 .plot { display: flex; align-items: flex-end; gap: 5px; height: 108px;
+                border-bottom: 1px solid #E5E7EB; }
+  .rvg4 .plot span { flex: 1; border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
+  .rvg4 .plot span em { position: absolute; top: -13px; left: -2px; right: -2px; text-align: center;
+                        font-style: normal; font-size: 9.5px; font-weight: 700; color: #374151; }
+  .rvg4 .nm { font-size: 12.5px; font-weight: 700; margin-top: 7px; }
+  .rvg4 .cnt { font-size: 10.5px; color: var(--mute); }
+  .rvg4 .u.na .plot span { background: #C7CDD6 !important; }
+  /* 색은 가로 막대와 **같은 값을 쓴다** — 두 곳에 따로 적으면 같은 회사가 두 색이 된다 */
+  .rvg4 .us { background: var(--blue); }
+  .rvg4 .th { background: #C0392B; }
+  .rvg4 .hm { background: #E67E22; }
+  .rvg4 .el { background: #7E57C2; }
+  .rvg4 .win { color: var(--blue); }
+  .rvg4 .lose { color: #C0392B; }
+  .rvg4 .namark { color: #9AA4B2; }
+
   /* ── 경쟁사 갈래 칩 (2026-09-03 사장님 요청 — *"굉장히 복잡해보입니다 … 히트맵처럼 깔끔하게"*)
      예전에는 100% 스택 막대가 **15개**였다. 값이 전부 61~82% 라 **막대 길이가 다 비슷해
      차이가 안 보이는데** 세로로만 800px 을 먹었다 — 자리는 가장 많이 쓰면서 정작 읽히지 않았다.
@@ -263,6 +288,33 @@
   .rvc .v { font-size: 10px; font-weight: 600; opacity: .76; }
   /* 못 잰 칸은 회색이고 숫자를 크게 적지 않는다 — 0% 로 칠하면 「완패」로 읽힌다 */
   .rvc.na .p { font-size: 12px; font-weight: 700; opacity: .9; }
+
+  /* ── 구성 한눈에 — 도넛 2 · 점 장표 2 (2026-09-03 사장님 선택) ──────────────
+     넷 다 **지금 화면이 글로만 설명하던 것**이다. 특히 「작성일을 아는 글은 26%뿐」은
+     여러 곳에서 문장으로 되풀이되는데(사장님이 세 번 물으신 그 지점), 점 100개 중
+     26개만 칠하면 한 번에 끝난다. **자료는 전부 화면이 이미 들고 있다** — 서버를
+     건드리지 않는다(byStore·storeType·bySrc·dated/undated·stores). */
+  .mixg { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 16px; }
+  .mixu { border: 1px solid #EEF0F4; border-radius: 12px; padding: 13px 14px; }
+  .mixu h3 { margin: 0 0 2px; font-size: 12.5px; font-weight: 800; color: var(--ink); }
+  .mixu .why { margin: 0 0 10px; font-size: 10.5px; color: var(--mute); line-height: 1.5; }
+  .mixu .row { display: flex; gap: 13px; align-items: center; }
+  /* 도넛 — conic-gradient 하나로 그린다(라이브러리를 부르지 않는다) */
+  .ring { width: 96px; height: 96px; border-radius: 50%; position: relative; flex: 0 0 auto; }
+  .ring::after { content: ''; position: absolute; inset: 19px; background: #fff; border-radius: 50%; }
+  .ring .mid { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column;
+               align-items: center; justify-content: center; }
+  .ring .mid b { font-size: 19px; font-weight: 800; letter-spacing: -.6px; }
+  .ring .mid s { text-decoration: none; font-size: 9px; color: var(--mute); font-weight: 700; }
+  /* 점 장표 — 100점(또는 매장 수)을 격자로. 점 하나가 곧 1% 또는 매장 하나다 */
+  .dotg { display: grid; gap: 2px; flex: 0 0 auto; }
+  .dotg i { display: block; width: 9px; height: 9px; border-radius: 2px; background: #E3E7ED; }
+  .mixl { font-size: 10.5px; line-height: 1.65; flex: 1; min-width: 0; }
+  .mixl div { display: flex; align-items: center; gap: 5px; }
+  .mixl i { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; }
+  .mixl b { font-weight: 700; }
+  .mixl span { color: var(--mute); margin-left: auto; font-variant-numeric: tabular-nums; }
+  .mixn { margin-top: 9px; font-size: 10.5px; color: var(--mute); line-height: 1.55; }
 
   /* 지역별 매장 — 묶음은 **「영업스케치」 지역 6곳**(수원·용인·성남·평택·안양·강원).
      **전점 62곳을 세운다** — 0건도 흐리게 남긴다(감추면 "우리 매장이 없다"로 읽힌다). */
@@ -771,6 +823,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   <button type="button" class="sec" data-sec="map" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span>지도</button>
   <button type="button" class="sec" data-sec="store" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M10 20v-6h4v6"/></svg></span>매장별</button>
   <button type="button" class="sec" data-sec="heat" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/></svg></span>히트맵</button>
+  <button type="button" class="sec" data-sec="mix" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l5.7 5.7"/></svg></span>구성 한눈에</button>
   <button type="button" class="sec" data-sec="sdp" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16"/><path d="M9 20v-5h6v5"/><circle cx="18.5" cy="5.5" r="2.5"/></svg></span>SDP 개인대리점</button>
   <button type="button" class="sec" data-sec="signal" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20v-8M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0"/><circle cx="12" cy="11" r="1.5"/></svg></span>매장 신호</button>
   <button type="button" class="sec" data-sec="cafe" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M7 4v2M10 4v2M13 4v2"/></svg></span>어디에 올라오나</button>
@@ -884,6 +937,14 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           <span style="width:11px;height:11px;border-radius:3px;background:#5A5F6B;display:inline-block"></span>
           전월이 0이거나 못 잼 — <b>증감률을 적지 않습니다</b></span>
       </div>
+    </div>
+    <!-- 구성 한눈에 (2026-09-03 사장님 선택) — 도넛 2 · 점 장표 2.
+         **한 카드에 모은다.** 관련 카드마다 흩어 놓는 편이 맥락에는 맞지만, 카드가
+         전부 닫힘으로 시작하므로(2026-09-02 사장님 지시) 흩어 놓으면 아무도 못 본다. -->
+    <div class="card" data-card="mix">
+      <h2>구성 한눈에</h2>
+      <div class="sub">넷 다 <b>지금까지 글로만 적혀 있던 것</b>입니다 — 그림 하나가 문장 여러 줄을 대신합니다.</div>
+      <div class="mixg" id="mix"></div>
     </div>
     <div class="card" data-card="sdp">
       <h2>SDP — 개인대리점</h2>
@@ -1588,6 +1649,11 @@ function secPeek(k) {
     if (!hn) return '';
     var hm = heatMonths();
     return hn + '곳' + (hm.cur && hm.prev ? ' · ' + heatMonLabel(hm.cur) + ' vs ' + heatMonLabel(hm.prev) : '');
+  }
+  /* 구성 한눈에 — **카드가 적는 값 그대로**(여기서 새로 계산하면 카드와 어긋난다) */
+  if (k === 'mix') {
+    var mt = Number((DATA || {}).total) || 0, md = Number((DATA || {}).dated) || 0;
+    return mt ? '작성일 아는 글 ' + Math.round(md / mt * 100) + '% · 유형·출처 구성' : '';
   }
   try {
     var D = DATA || {}, t, rr;
@@ -2703,6 +2769,104 @@ function wireSecs() {
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
 
+  /* ── 구성 한눈에 — 도넛 2 · 점 장표 2 (2026-09-03 사장님 선택) ─────────────
+   * **여기서 새로 재지 않는다** — 화면이 이미 들고 있는 값만 다시 그린다. 새로 계산하면
+   * 다른 카드와 어긋난다(이 화면이 서버가 미리 계산해 내려보낸 경계값·잘림 표시에서
+   * 이미 두 번 겪은 사고다 — 서버는 자료를, 판단은 그리는 쪽이 한다).
+   * 자료가 없으면 그 칸을 아예 안 그린다 — 0 으로 그리면 「없다」는 거짓이 된다. */
+  function donutHtml(parts, mid, sub) {
+    var tot = 0, i;
+    for (i = 0; i < parts.length; i++) tot += parts[i].v;
+    if (!tot) return '';
+    var a = 0, stops = [], legend = '';
+    for (i = 0; i < parts.length; i++) {
+      var deg = parts[i].v / tot * 360;
+      if (deg > 0) { stops.push(parts[i].c + ' ' + a.toFixed(2) + 'deg ' + (a + deg).toFixed(2) + 'deg'); a += deg; }
+      legend += '<div><i style="background:' + parts[i].c + '"></i><b>' + esc(parts[i].k) + '</b>'
+        + '<span>' + nf(parts[i].v) + ' · ' + Math.round(parts[i].v / tot * 100) + '%</span></div>';
+    }
+    return '<div class="row"><div class="ring" style="background:conic-gradient(' + stops.join(',') + ')">'
+      + '<span class="mid"><b style="color:' + parts[0].c + '">' + mid + '</b><s>' + esc(sub) + '</s></span></div>'
+      + '<div class="mixl">' + legend + '</div></div>';
+  }
+  /** 점 격자 — `on` 개가 칠해진다. **점 하나가 무엇인지**를 부르는 쪽이 정한다(1% 또는 매장 1곳) */
+  function dotsHtml(on, total, color, cols) {
+    var g = '', i;
+    for (i = 0; i < total; i++) g += '<i' + (i < on ? ' style="background:' + color + '"' : '') + '></i>';
+    return '<div class="dotg" style="grid-template-columns:repeat(' + cols + ',9px)">' + g + '</div>';
+  }
+  function renderMix() {
+    var box = document.getElementById('mix'); if (!box) return;
+    var D = DATA, out = [], BLUE = '#1428A0';
+
+    /* ① 매장 유형별 후기 — 새로 만든 유형 심벌과 짝이다.
+       **유형을 모르는 매장은 「미상」으로 따로 센다** — 로드샵에 넣으면 조용히 부풀린다. */
+    var bs = D.byStore || {}, stp = D.storeType || {}, byT = {};
+    Object.keys(bs).forEach(function (k) {
+      var t = (stp[k] || {}).t || '미상';
+      byT[t] = (byT[t] || 0) + (bs[k] || 0);
+    });
+    var TC = { 로드샵: BLUE, 백화점: '#C0392B', 사업장: '#E67E22', 복합몰: '#7E57C2',
+               마트: '#2E9E5B', 인샵: '#0E7490', 미상: '#9AA4B2' };
+    var tk = Object.keys(byT).filter(function (k) { return byT[k] > 0; })
+      .sort(function (a, b) { return byT[b] - byT[a]; });
+    if (tk.length) {
+      var tTot = 0; tk.forEach(function (k) { tTot += byT[k]; });
+      out.push('<div class="mixu"><h3>매장 유형별 후기</h3>'
+        + '<p class="why">어떤 유형의 매장에서 후기가 나오는지. 유형은 <b>점코드가 가릅니다</b>.</p>'
+        + donutHtml(tk.map(function (k) { return { k: k, v: byT[k], c: TC[k] || '#9AA4B2' }; }),
+            Math.round(byT[tk[0]] / tTot * 100) + '%', tk[0])
+        + '</div>');
+    }
+
+    /* ② 출처 구성 — 카페가 절반이라는 사실이 아래 ③ 의 원인이다(짝으로 읽힌다) */
+    var src = D.bySrc || {};
+    var sk = ['카페', '블로그', '웹'].filter(function (k) { return (src[k] || 0) > 0; });
+    if (sk.length) {
+      var SC = { 카페: '#7E57C2', 블로그: '#2E9E5B', 웹: '#6B7280' };
+      var sTot = 0; sk.forEach(function (k) { sTot += src[k]; });
+      var top = sk.slice().sort(function (a, b) { return src[b] - src[a]; })[0];
+      out.push('<div class="mixu"><h3>어디에서 나오나 — 출처</h3>'
+        + '<p class="why">카페가 절반이라는 것이 <b>오른쪽 「작성일」 문제의 원인</b>입니다.</p>'
+        + donutHtml(sk.map(function (k) { return { k: k, v: src[k], c: SC[k] }; }),
+            Math.round(src[top] / sTot * 100) + '%', top)
+        + '</div>');
+    }
+
+    /* ③ 작성일을 아는 글 — 점 100개 중 몇 개. **이 화면이 가장 자주 글로 설명하던 것이다.** */
+    var tot = Number(D.total) || 0, dat = Number(D.dated) || 0;
+    if (tot > 0) {
+      var pc = Math.round(dat / tot * 100);
+      out.push('<div class="mixu"><h3>작성일을 아는 글</h3>'
+        + '<p class="why">점 100개가 전체입니다. <b>일·주·월·추이는 칠해진 점만</b> 세어 냅니다.</p>'
+        + '<div class="row">' + dotsHtml(pc, 100, '#2E9E5B', 10)
+        + '<div class="mixl"><div><i style="background:#2E9E5B"></i><b>작성일 아는 글</b>'
+        + '<span>' + nf(dat) + ' · ' + pc + '%</span></div>'
+        + '<div><i style="background:#E3E7ED"></i><b>모르는 글</b>'
+        + '<span>' + nf(tot - dat) + ' · ' + (100 - pc) + '%</span></div></div></div>'
+        + '<div class="mixn">네이버가 <b>카페·웹 글의 작성일을 주지 않습니다</b> — 값이 없는 것이지 '
+        + '글이 없다는 뜻이 아닙니다.</div></div>');
+    }
+
+    /* ④ 매장 커버리지 — **점 하나가 매장 하나다**(1% 가 아니다). 62곳이라 격자가 딱 맞는다. */
+    var all = Number(D.stores) || 0;
+    if (all > 0) {
+      var live = 0;
+      Object.keys(bs).forEach(function (k) { if (bs[k] > 0) live++; });
+      if (live > all) live = all;   /* 옛 회차의 자점 줄이 섞여도 화면이 62곳을 넘겨 적지 않는다 */
+      out.push('<div class="mixu"><h3>매장 커버리지</h3>'
+        + '<p class="why">점 하나가 <b>매장 하나</b>입니다 — 전점 ' + nf(all) + '곳.</p>'
+        + '<div class="row">' + dotsHtml(live, all, BLUE, 10)
+        + '<div class="mixl"><div><i style="background:' + BLUE + '"></i><b>후기가 잡힌 곳</b>'
+        + '<span>' + nf(live) + '곳</span></div>'
+        + '<div><i style="background:#E3E7ED"></i><b>아직 없는 곳</b>'
+        + '<span>' + nf(all - live) + '곳</span></div></div></div>'
+        + '<div class="mixn">0건은 <b>「없는 것」이 아니라 「아직 안 잡힌 것」</b>입니다.</div></div>');
+    }
+
+    box.innerHTML = out.join('') || '<div class="note">아직 그릴 자료가 없습니다.</div>';
+  }
+
   /* 당사 vs LG — **양쪽에 같은 잣대를 댄 값만 그린다.**
      같은 질의 목록·같은 쪽수·같은 판정 함수로 잰다. 한쪽만 정교하게 거르면
      비중이 통째로 거짓이 된다 — 이 기능의 전부가 그것이다. */
@@ -2734,38 +2898,46 @@ function wireSecs() {
     /* **범례를 여기서 또 그리지 않는다**(2026-09-03). 카드 머리에 이미 4색 범례가 있는데
        여기가 「당사·LG」 2색을 한 번 더 그려, 같은 화면이 **2사 비교인지 4사 비교인지**
        두 말을 하고 있었다(경쟁 4사로 넓힌 뒤 남은 찌꺼기다). 범례는 한 곳에서만 적는다. */
-    el.innerHTML =
+    /* ── 지역별 회사 차트 — 세로 막대 (2026-09-03 사장님 선택) ────────────────
+     * 예전 가로 100% 스택은 **비중만** 보이고 절대 크기가 통째로 사라졌다.
+     * 실측 — 용인 6,917건 · 안양 4,292건인데 두 줄이 화면에서 **같은 길이**였다.
+     * *"어느 지역 판이 큰가"* 를 답할 수 없었고, 그 답이 곧 영업 우선순위다.
+     *
+     * **막대 높이는 여섯 지역을 가로질러 같은 자로 잰다**(`mx`). 지역마다 자를 새로
+     * 잡으면 각 지역 1위가 늘 천장에 닿아 **지역끼리 견줄 수가 없다** — 세로 막대로
+     * 바꾸는 이유가 그것인데 거기서 무너진다. */
+    var mx = 0;
+    rows.forEach(function (r) {
+      [r.ours, r.rival, r.hi, r.el].forEach(function (v) { v = Number(v) || 0; if (v > mx) mx = v; });
+    });
+    el.innerHTML = '<div class="rvg4">' +
       rows.map(function (r) {
         /* **분모는 네 곳 전부**(2026-09-02 사장님 결정) — 「그 지역 가전 후기 중 우리 몫」.
-           옛 회차에는 hi·el 칸이 없어 0 이라, 그 줄은 예전과 같은 2자 비교로 그려진다. */
-        var vO = Number(r.ours) || 0, vL = Number(r.rival) || 0;
-        var vH = Number(r.hi) || 0, vE = Number(r.el) || 0;
-        var tot = vO + vL + vH + vE;
-        var p = tot ? (vO / tot) * 100 : 25;
-        var pl = tot ? (vL / tot) * 100 : 25;
-        var ph = tot ? (vH / tot) * 100 : 25;
-        var pe = tot ? (vE / tot) * 100 : 25;
-        /* 0 인 진영은 칸을 안 그린다 — 폭 0 짜리 조각이 테두리로 남아 지저분해진다 */
-        var seg = function (cls, w, v) {
-          return v ? '<div class="' + cls + '" style="width:' + w.toFixed(1) + '%"><span>' + nf(v) + '</span></div>' : '';
-        };
+           옛 회차에는 hi·el 칸이 없어 0 이라, 그 줄은 예전과 같은 2자 비교가 된다. */
+        var v = { us: Number(r.ours) || 0, th: Number(r.rival) || 0,
+                  hm: Number(r.hi) || 0, el: Number(r.el) || 0 };
         /* **「숫자가 아니면 전부 못 잼」이다**(2026-09-01 사장님 지적 — *"용인 지역은
-           undefined 라고 표시되는데"*). 예전에는 null 인지만 봤는데, 그 판정은
-           **`undefined`·`NaN`·빈 문자열을 못 잡는다** — 하나라도 새면 `undefined%` 가
-           그대로 화면에 찍힌다. 실제로 LG 비교가 시트에 쓰이는 도중에 읽히면 그렇게 된다.
-           **모르는 것을 숫자인 척 그리지 않는다**(이 저장소의 첫 원칙). */
+           undefined 라고 표시되는데"*). `null` 만 보면 `undefined`·`NaN`·빈 문자열이 새어
+           `undefined%` 가 그대로 찍힌다 — **모르는 것을 숫자인 척 그리지 않는다.** */
         var na = !(typeof r.pct === 'number' && isFinite(r.pct));
-        return '<div class="rv"><div class="nm">' + esc(r.area) + '</div>' +
-          '<div class="tr' + (na ? ' na' : '') + '" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + ' · 하이마트 ' + nf(r.hi || 0) + ' · 전자랜드 ' + nf(r.el || 0) + '건'
-            + (na ? (r.half ? ' (도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 비중을 낼 수 없습니다)' : ' (양쪽 증가율이 벌어져 비중을 믿을 수 없습니다)') : '') + '">' +
-          seg('us', p, vO) + seg('th', pl, vL) + seg('hm', ph, vH) + seg('el', pe, vE) + '</div>' +
-          (na
-            ? '<div class="vl na" title="' + (r.half
-                ? esc(r.area + josa(r.area, '은', '는') + ' 도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 나머지가 빠져 비중을 낼 수 없습니다')
-                : '양쪽 증가율이 벌어져 비중을 믿을 수 없습니다') + '">못 잼</div>'
-            : '<div class="vl ' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</div>') +
-          '</div>';
-      }).join('');
+        var bars = ['us', 'th', 'hm', 'el'].map(function (k) {
+          /* 0 인 회사도 **자리는 남긴다** — 세로 막대는 자리가 곧 회사라, 빼면 옆 회사
+             막대가 그 자리로 밀려 색과 회사가 어긋난다(가로 스택과 다른 점이다). */
+          var h = mx ? Math.max(2, v[k] / mx * 100) : 2;
+          return '<span class="' + k + '" style="height:' + h.toFixed(1) + '%"><em>'
+            + (v[k] ? nf(v[k]) : '') + '</em></span>';
+        }).join('');
+        var tip = r.area + ' — 당사 ' + nf(v.us) + ' · LG ' + nf(v.th)
+          + ' · 하이마트 ' + nf(v.hm) + ' · 전자랜드 ' + nf(v.el) + '건'
+          + (na ? (r.half ? ' (도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 비중을 낼 수 없습니다)'
+                          : ' (양쪽 증가율이 벌어져 비중을 믿을 수 없습니다)') : '');
+        return '<div class="u' + (na ? ' na' : '') + '" title="' + esc(tip) + '">'
+          + '<div class="plot">' + bars + '</div>'
+          + '<div class="nm">' + esc(r.area) + ' '
+          + (na ? '<span class="namark">못 잼</span>'
+                : '<span class="' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</span>') + '</div>'
+          + '<div class="cnt">당사·LG·하이마트·전자랜드</div></div>';
+      }).join('') + '</div>';
 
     /* ── **빠진 지역을 이름으로 적는다** (2026-09-02 사장님 3회 지적) ──────────
      * 예전에는 있는 것만 그리고 **없는 것에 대해 아무 말도 안 했다** — 강원이 매번
@@ -3771,11 +3943,43 @@ function renderList() {
     heatLay(items, 0, 0, W, H, out);
     out.forEach(function (c) {
       var d = c.d, clk = !chan;
-      var cap = chan ? 20 : (regionTiles ? 26 : 18);
-      var fs = Math.max(8, Math.min(cap, Math.min(c.w / 4.4, c.h / 3.0)));
+      /* ── 글자 크기 (2026-09-03 사장님 요청 — *"텍스트가 히트맵 크기에 맞춰 조절되어야"*)
+         예전 식(`min(w/4.4, h/3.0)` · 상한 18)은 **칸 넓이만** 봤다. 그래서 셋이 어긋났다:
+         ① **이름 길이를 안 본다** — 「갤러리아광교」(6자)와 「수원」(2자)이 같은 칸에서 같은
+            크기라 긴 이름이 칸을 넘쳤다(실물에서 「수원삼성전기모바일」이 뭉갰다).
+         ② **상한 18px 에 막혀** 425×195 짜리 큰 칸이 허전했다 — finviz 가 MSFT 를 크게
+            쓰는 것이 이 화면의 전부인데, 큰 칸을 안 키우면 트리맵을 쓰는 뜻이 없다.
+         ③ **높이 기준이 늘 3줄치**였다 — 낮고 넓은 칸은 이름 한 줄만 뜨는데도 3줄로 나눴다.
+         지금은 **넓이 × 이름 길이 × 실제로 뜰 줄 수** 셋이 함께 정한다. */
+      var cap = chan ? 24 : (regionTiles ? 48 : 40);
+      var nlen = Math.max(2, String(d.nm).length);
+      /* 아래 두 줄이 실제로 뜨는지 먼저 판정한다 — 뜨는 줄 수만큼만 높이를 나눈다 */
+      var line2 = c.h > 33 && c.w > 46;
+      var line3 = !chan && c.h > 50 && c.w > 58;
+      var lines = 1 + (line2 ? 1 : 0) + (line3 ? 1 : 0);
+      /* 이름이 줄바꿈되므로 **넓이**로 잰다 — 한글 한 글자가 대략 0.92em × 1.15em 이고
+         이름에 칸의 45% 를 준다(나머지는 아래 줄과 여백 몫). */
+      var byArea = Math.sqrt(0.45 * c.w * c.h / (nlen * 1.06));
+      var byH = c.h / (lines * 1.35 + 0.5);
+      /* **이름이 두 줄을 넘지 않게 한다.** 넓이만 보면 좁고 높은 칸에서 글자가 커져
+         「안양본」이 세로로 한 자씩 쪼개진다(실물에서 그랬다) — 세로로 쓴 한글은
+         가로보다 훨씬 읽기 나쁘다. 한 줄에 절반씩 들어갈 크기를 상한으로 둔다. */
+      /* 짧은 이름은 한 줄에 다 넣고, 5자부터 두 줄까지 허용한다 */
+      var byLine = (c.w - 6) / ((nlen <= 4 ? nlen : Math.ceil(nlen / 2)) * 0.95);
+      var fs = Math.min(cap, byArea, byH, byLine);
       var lab = '';
-      if (c.w > 32 && c.h > 17) {
-        lab = '<span class="cn" style="font-size:' + fs.toFixed(1) + 'px">' + esc(d.nm) + '</span>';
+      /* **너무 작으면 아예 안 적는다** — 7.5px 아래로 내려가면 읽히지도 않으면서 칸만 더럽힌다.
+         이름은 툴팁에 그대로 있다(finviz 도 작은 칸에는 티커를 안 적는다). */
+      if (c.w > 30 && c.h > 17 && fs >= 7.5) {
+        /* **두 줄로 갈릴 이름은 우리가 고르게 나눈다.** 브라우저에 맡기면 들어가는 데까지
+           채우고 넘겨 「스타필드수 / 원」처럼 한 글자만 떨어진다(실물에서 그랬다). */
+        var nmh = esc(d.nm);
+        var per = Math.floor((c.w - 6) / (fs * 0.92));
+        if (per >= 1 && per < nlen) {
+          var half = Math.ceil(nlen / 2);
+          if (half <= per) nmh = esc(d.nm.slice(0, half)) + '<br>' + esc(d.nm.slice(half));
+        }
+        lab = '<span class="cn" style="font-size:' + fs.toFixed(1) + 'px">' + nmh + '</span>';
         if (c.h > 33 && c.w > 46) {
           var main = chan ? d.cnt + '건' : (byG ? heatPct(d.g) : nf(d.cnt) + '건');
           lab += '<span class="cg" style="font-size:' + (fs * 0.68).toFixed(1) + 'px">' + main + '</span>';
@@ -3869,6 +4073,7 @@ function renderList() {
     renderSignals();
     renderMap();
     renderHeat();
+    renderMix();
     /* **자료가 온 뒤에야 「한 번 움직였다」로 친다.** 뼈대 렌더에서 세우면 정작
        숫자가 채워질 때는 이미 「두 번째」라 한 번도 안 움직인다. */
     if (DATA_READY) setTimeout(function () { animated = true; }, 0);
