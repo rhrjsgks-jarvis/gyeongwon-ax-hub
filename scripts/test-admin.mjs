@@ -1335,11 +1335,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       fail('[바이럴] 확대하면 테두리가 배율만큼 굵어져 작은 칸이 선에 묻힌다');
     } else if (!h.includes('vbw * 0.0196')) {
       fail('[바이럴] 확대 글꼴이 보이는 폭에 비례하지 않는다 — 작은 칸에서 글자가 화면을 덮는다');
-    /* **확대는 그 영업지역 전체를 칸별 색으로 본다**(2026-09-02 사장님:
-       *"평택을 누르면 평택지역만 보이고 그 내부에서도 관할구역별로 컬러가 다르게"*).
-       「평택」은 시 하나가 아니라 영업지역이다 — 오산·평택·안성 셋이다. */
-    } else if (!h.includes('AC[a2] || []).indexOf(cell) >= 0')) {
-      fail('[바이럴] 누른 칸의 영업지역을 안 찾는다 — 그 지역 전체가 아니라 칸 하나만 확대된다');
+    /* **확대는 그 시 안쪽을 본다**(2026-09-02 사장님: *"시를 눌렀을때 해당시 안에 무슨
+       구 가있고 … 성남시를 누르면 분당구 수정구 이런식으로"*). 그 전에는 **영업지역**
+       전체를 폈는데(성남 → 광주·이천·하남까지) 사장님이 보고 싶은 것은 시 안이다.
+       자치구가 있으면 구, 없으면 읍·면·동 — 자세한 것은 ⓚ 구간이 지킨다. */
+    } else if (!h.includes('pa0.getAttribute("data-sigun")')) {
+      fail('[바이럴] 확대가 누른 칸의 시를 찾지 않는다 — 시 안쪽을 펼 수가 없다');
     } else if (!h.includes('if (!zoom) paintCells(msvg, false);')) {
       fail('[바이럴] 확대에도 paintCells 를 태운다 — 칸 색이 통째로 덮어써져 세 칸이 같은 색이 된다');
     } else if (!h.includes('geo-metro path.z1')) {
@@ -2359,6 +2360,64 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
         if (bad.length) fail('[바이럴] LG 홍보 경로 — ' + bad.join(' · '));
         else console.log('OK: 바이럴 LG 홍보 경로 — 채널·품목·표본 · 김치냉장고를 두 번 안 센다 · 스타일러↔에어드레서 한 칸');
+      }
+      /* ⓚ **시 안쪽 확대** (2026-09-02 사장님: *"시를 눌렀을때 해당시 안에 무슨 구 가있고
+         그 구에 색을 강조했으면 … 이천의경우는 읍이나 면이 되겠네요"*).
+         예전에는 **영업지역** 전체를 폈다 — 성남을 누르면 광주·이천·하남까지 떴다. */
+      {
+        const bad = [];
+        const sub = JSON.parse(fs.readFileSync(new URL('../scripts/fixtures/gw-submunicipalities.json', import.meta.url), 'utf8'));
+        const cities = Object.keys(sub.cities || {});
+        if (cities.length < 20) bad.push('읍·면 fixture 에 시·군이 ' + cities.length + '곳뿐이다');
+        /* **자치구가 있는 넷은 담지 않는다** — 그쪽은 한 단계 아래가 「구」다 */
+        for (const g of ['수원', '성남', '안양', '용인']) {
+          if (cities.indexOf(g) >= 0) bad.push(g + ' 은 자치구가 있어 읍·면을 담으면 안 된다');
+        }
+        if (!String(sub._src || '').includes('KOSTAT')) bad.push('읍·면 fixture 에 출처가 없다');
+
+        /* 화면 쪽 — 시를 `data-sigun` 으로 찾고, 영업지역으로 펴지 않는다 */
+        if (!ix2.includes('GW_MAP.sub')) bad.push('읍·면 자료를 화면이 안 쓴다');
+        if (!ix2.includes('pa0.getAttribute("data-sigun")')) bad.push('누른 칸의 시를 data-sigun 으로 찾지 않는다');
+        const zs = ix2.slice(ix2.indexOf('function zoomSvg('), ix2.indexOf('var mw = document.getElementById("geo-metro-wrap")'));
+        if (zs.includes('DATA.areaCells')) bad.push('확대가 아직 영업지역을 편다 — 성남을 누르면 광주·이천·하남까지 뜬다');
+        /* **「없음」과 「자료가 없다」를 가른다** — 읍·면별 건수는 우리에게 없다 */
+        if (!ix2.includes('읍·면별 건수는 자료가 없습니다')) bad.push('읍·면 화면이 건수 자료가 없다는 사실을 안 적는다');
+        if (!ix2.includes('sb.items[i2].t')) bad.push('빌드가 골라 둔 색을 안 쓴다');
+
+        /* **이웃끼리 같은 색이 되지 않았는가.** 8색을 순서대로 돌리면 붙은 두 면이 같은
+           색이 되어 한 덩어리로 읽힌다(이천 설성면·장호원읍이 실제로 그랬다).
+           **맞닿음은 꼭짓점 공유로 본다** — 경계상자로 어림하면 안 닿는 면까지 이웃이 되어
+           검사가 멀쩡한 채색을 물었다(실제로 14건을 잘못 잡았다). */
+        const mj = ix2.indexOf(', sub: {');
+        let clash = 0, items = 0;
+        if (mj > 0) {
+          /* **중괄호를 세어 끊는다** — `'} };'` 를 찾으면 GW_MAP 자체의 닫힘과 겹쳐
+             한 글자가 더 붙는다(실제로 JSON.parse 가 죽었다). */
+          const st2 = ix2.indexOf('{', mj + 6);
+          let dep = 0, en2 = st2;
+          for (let i = st2; i < ix2.length; i++) {
+            if (ix2[i] === '{') dep++;
+            else if (ix2[i] === '}') { dep--; if (!dep) { en2 = i + 1; break; } }
+          }
+          const gm = JSON.parse(ix2.slice(st2, en2));
+          for (const c of Object.keys(gm)) {
+            const its = (gm[c].items || []).map((it) => ({
+              t: it.t,
+              p: new Set(String(it.d).split(/[MLZ]/).map((x) => x.trim()).filter(Boolean)),
+            }));
+            items += its.length;
+            for (const it of its) if (!(it.t >= 1 && it.t <= 8)) bad.push(c + ' 에 색이 없는 조각이 있다');
+            for (let i = 0; i < its.length; i++) for (let j = i + 1; j < its.length; j++) {
+              if (its[i].t !== its[j].t) continue;
+              let n = 0;
+              for (const p of its[i].p) if (its[j].p.has(p) && ++n >= 2) break;
+              if (n >= 2) clash++;
+            }
+          }
+        } else bad.push('GW_MAP 에 sub 가 없다');
+        if (clash) bad.push('맞닿은 조각끼리 같은 색인 짝이 ' + clash + '건이다');
+        if (bad.length) fail('[바이럴] 시 안쪽 확대 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 시 안쪽 확대 — 읍·면 ' + cities.length + '시 ' + items + '곳 · 이웃끼리 색이 겹치지 않는다');
       }
       /* ⓘ **지도 보강 · 매장 목록** (2026-08-31 사장님 요청 묶음).
          화면에서만 보이는 것들이라 되돌아가면 아무도 모른다. */

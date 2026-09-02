@@ -311,6 +311,85 @@ for (const c of Object.keys(labels)) {
   const l = labels[c];
   metroLabels[c] = { x: +(l.x - mb.x1 + MPAD).toFixed(P), y: +(l.y - mb.y1 + MPAD).toFixed(P) };
 }
+/* ── 시 안쪽 — 읍·면·동 (2026-09-02 사장님 요청) ────────────────────────────
+ * *"시를 눌렀을때 해당시 안에 무슨 구 가있고 그 구에 색을 강조했으면 …
+ * 이천의경우는 읍이나 면이 되겠네요"*
+ *
+ * **자치구가 있는 넷은 여기 없다** — 그쪽은 한 단계 아래가 「구」이고 본 지도가 이미
+ * 구 단위로 칸을 나눠 두었다(돋보기가 그것을 크게 그린다).
+ *
+ * **시마다 제 좌표계를 쓴다**(가로 1000). 본 지도 좌표를 그대로 쓰면 이천 같은 시가
+ * 20단위 안에 들어가 소수 1자리로는 경계가 계단으로 보인다.
+ *
+ * **건수로 칠하지 않는다** — 읍·면별 후기 수는 우리에게 없다(후기는 매장 단위로 모으고
+ * 매장은 시 단위다). 화면이 그 사실을 적는다.
+ */
+const SUB = path.join(ROOT, 'scripts/fixtures/gw-submunicipalities.json');
+const subSrc = fs.existsSync(SUB) ? JSON.parse(fs.readFileSync(SUB, 'utf8')) : { cities: {} };
+const sub = {};
+let subN = 0;
+for (const city of Object.keys(subSrc.cities || {})) {
+  const list = subSrc.cities[city];
+  let a1 = 1e9, a2 = -1e9, b1 = 1e9, b2 = -1e9;
+  for (const f of list) eachPt(f.coords, (lon, lat) => {
+    if (lon < a1) a1 = lon; if (lon > a2) a2 = lon;
+    if (lat < b1) b1 = lat; if (lat > b2) b2 = lat;
+  });
+  if (a2 <= a1 || b2 <= b1) continue;
+  const k = Math.cos(((b1 + b2) / 2) * Math.PI / 180);
+  const SW = 1000, sc = SW / ((a2 - a1) * k);
+  const SH = Math.round((b2 - b1) * sc * 10) / 10;
+  const SX = (lon) => +(((lon - a1) * k) * sc).toFixed(P);
+  const SY = (lat) => +((b2 - lat) * sc).toFixed(P);
+  const toPath = (c) => {
+    if (typeof c[0][0] === 'number') {
+      let d = '';
+      for (let i = 0; i < c.length; i++) d += (i === 0 ? 'M' : 'L') + SX(c[i][0]) + ' ' + SY(c[i][1]);
+      return d + 'Z';
+    }
+    return c.map(toPath).join('');
+  };
+  const items = [];
+  for (const f of list) {
+    const ring = biggestRing(f.coords);
+    const c = ring && ringCentroid(ring.map(([lon, lat]) => [SX(lon), SY(lat)]));
+    const it = { n: f.name, d: toPath(f.coords) };
+    if (c) { it.x = +c.x.toFixed(P); it.y = +c.y.toFixed(P); }
+    items.push(it);
+  }
+  /* **이웃끼리 같은 색이 되지 않게 고른다**(그리디 채색). 8색을 순서대로 돌리면
+     붙어 있는 두 면이 같은 색이 되어 한 덩어리로 읽힌다 — 이천에서 설성면·장호원읍이
+     실제로 그랬다(실물 확인). 여기서 색은 **자료가 아니라 모양을 가르는 것**이므로
+     '이웃과 다르기만' 하면 된다.
+
+     **맞닿음은 꼭짓점 공유로 본다.** 경계상자로 어림했더니 실제로는 안 닿는 면까지
+     이웃이 되어 8색을 다 써 버리고 오히려 겹쳤다(평택에서 그랬다). KOSTAT 폴리곤은
+     맞닿는 변의 점을 **똑같이** 갖고 있어, 같은 점을 둘 이상 나눠 가지면 맞닿은 것이다.
+     평면 지도라 네 색이면 되므로 여덟이면 넉넉하다. */
+  const pts = items.map((it) => {
+    const set = new Set();
+    for (const seg of it.d.split(/[MLZ]/)) {
+      const t2 = seg.trim();
+      if (t2) set.add(t2);
+    }
+    return set;
+  });
+  const touch = (i, j) => {
+    let n = 0;
+    for (const p of pts[i]) if (pts[j].has(p) && ++n >= 2) return true;
+    return false;
+  };
+  for (let i = 0; i < items.length; i++) {
+    const used = {};
+    for (let j = 0; j < i; j++) if (touch(i, j)) used[items[j].t] = 1;
+    let t = 1;
+    while (t < 8 && used[t]) t++;
+    items[i].t = t;
+  }
+  sub[city] = { h: SH, items };
+  subN += items.length;
+}
+
 const block = [
   BEGIN,
   '<script>',
@@ -321,7 +400,8 @@ const block = [
   'var GW_MAP = { svg: ' + jsStr(svg) + ', labels: ' + JSON.stringify(labels)
     + ', metro: ' + jsStr(metro) + ', metroLabels: ' + JSON.stringify(metroLabels)
     + ', members: ' + JSON.stringify(members)
-    + ', sigun: ' + JSON.stringify(sigun) + ' };',
+    + ', sigun: ' + JSON.stringify(sigun)
+    + ', sub: ' + JSON.stringify(sub) + ' };',
   '</script>',
   END
 ].join('\n');
@@ -344,4 +424,5 @@ console.log('[build:regionmap] viewBox 0 0 ' + W + ' ' + H
   + ' · SVG ' + (svg.length / 1024).toFixed(1) + 'KB'
   + ' · 돋보기 ' + Object.keys(metroLabels).length + '구 ' + mW + 'x' + mH
   + ' (' + (metro.length / 1024).toFixed(1) + 'KB)'
+  + ' · 시 안쪽 ' + Object.keys(sub).length + '시 ' + subN + '곳'
   + (changed ? '' : ' (변화 없음)'));
