@@ -1946,13 +1946,24 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* 줄마다 `'매장': ['별칭', ...]` 이라, **대괄호 안의 따옴표 묶음만** 센다 */
     const nAlias = (aliasBlock.match(/\[[^\]]*\]/g) || [])
       .reduce((n, g) => n + (g.match(/'[^']+'/g) || []).length, 0);
-    const need = (nStores + Math.max(0, nAlias)) * nTails * 2 * maxPages;
-    if (!maxPages || !sweep || !nTails || !nStores) {
-      fail('[바이럴] MAX_PAGES · SWEEP_CALLS · TAILS · STORES 중 못 읽은 것이 있다');
+    /* **갈래는 셋이다**(`blog · cafearticle · webkr`) — 예전 `* 2` 는 웹 갈래가 생기기
+       전 값이라 상한을 낮게 잡았고, 그래서 7,960회를 적게 세는 것을 **이 검사가 못 물었다.**
+       LG 비교도 40 이 아니라 도시 × 진영 2 × 꼬리 × 갈래 × 쪽이다. 숫자를 박지 말고
+       **소스의 상수에서 끌어내** 코드가 바뀌면 따라오게 한다. */
+    const nKinds = ((rv.match(/var kinds = \[([^\]]*)\]/) || [])[1] || '').split(',').filter((x) => x.trim()).length || 3;
+    const nRTails = ((rv.match(/var RTAILS = \[([^\]]*)\]/) || [])[1] || '').split(',').filter((x) => x.trim()).length;
+    const areaQ = (rv.match(/var AREA_Q = \{[\s\S]*?\n\};/) || [''])[0];
+    const nUnits = (areaQ.match(/'[^']+'/g) || []).length - (areaQ.match(/^\s*'[^']+':/gm) || []).length;
+    const need = (nStores + Math.max(0, nAlias)) * nTails * nKinds * maxPages
+      + (nUnits > 0 && nRTails ? nUnits * 2 * nRTails * nKinds * maxPages : 0);
+    if (!maxPages || !sweep || !nTails || !nStores || !nRTails) {
+      fail('[바이럴] MAX_PAGES · SWEEP_CALLS · TAILS · STORES · RTAILS 중 못 읽은 것이 있다');
     } else if (sweep < need) {
-      fail(`[바이럴] SWEEP_CALLS(${sweep}) < 실제 상한(${need} = 매장 ${nStores} × 꼬리 ${nTails} × 2소스 × ${maxPages}쪽) — MAX_PAGES 를 바꿨으면 함께 고칠 것`);
+      fail(`[바이럴] SWEEP_CALLS(${sweep}) < 실제 상한(${need} = 매장 ${nStores} × 꼬리 ${nTails} × 갈래 ${nKinds} × ${maxPages}쪽 + LG 도시 ${nUnits} × 2 × ${nRTails} × ${nKinds} × ${maxPages}) — 갈래·쪽수를 바꿨으면 함께 고칠 것`);
+    } else if (!rv.includes('sweep: sweepCalls_()')) {
+      fail('[바이럴] 화면에 상수를 보낸다 — 사장님이 별칭을 등록하면 옛 숫자로 「넉넉하다」고 말한다');
     } else {
-      console.log(`OK: 바이럴 한 바퀴 최대 ${sweep}회 ≥ 상한 ${need}회 (매장 ${nStores} × 꼬리 ${nTails} × 2소스 × ${maxPages}쪽)`);
+      console.log(`OK: 바이럴 한 바퀴 최대 ${sweep}회 ≥ 상한 ${need}회 (매장 ${nStores} × 꼬리 ${nTails} × 갈래 ${nKinds} × ${maxPages}쪽 + LG ${nUnits}도시)`);
     }
 
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */

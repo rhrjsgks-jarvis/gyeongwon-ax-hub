@@ -105,11 +105,15 @@ var DEFAULT_DAILY_LIMIT = 20000;
    **실제로는 이보다 적다** — 빈 쪽이 나오면 그 자리에서 멈추므로 작은 매장은 10쪽을
    다 두드리지 않는다. 한도를 정할 때는 넉넉한 쪽으로 봐야 하므로 최대치를 적는다.
    `MAX_PAGES` 를 바꾸면 **이 값도 함께 고칠 것** — 안 고치면 화면이 틀린 경고를 한다.
-   **줄임말(별칭)도 한 매장 몫을 더 쓴다**(2026-08-31) — 코드 표의 별칭 2개까지 더해
-   67 × 8 × 2 × 10 = 10,720 · 카페 80 · 경쟁비교 40 = 10,840.
-   사장님이 화면에서 더 등록하실 수 있으므로 **화면에는 `sweepCalls_()` 로 그때그때
-   센 값을 보낸다** — 이 상수는 검사가 붙드는 하한이다. */
-var SWEEP_CALLS = 10840;
+   **줄임말(별칭)도 한 매장 몫을 더 쓴다**(2026-08-31).
+   **2026-09-02 정정 — 7,960회를 적게 세고 있었다.** 갈래를 2 로 셌는데 실제로는
+   셋이고(`blog · cafearticle · webkr`), LG 비교를 40 으로 셌는데 도시 단위로 바뀌며
+   2,640회가 됐다. 한도 경고가 이 값 위에 서 있어 화면이 *"넉넉하다"* 고 거짓을 말했다.
+   지금: 매장 65 × 꼬리 8 × 갈래 3 × 10쪽 = 15,600 · 카페 2 × 3 × 10 = 60 ·
+   매니저 20 · LG 도시 11 × 2 × 꼬리 4 × 3 × 10 = 2,640 → **18,800**.
+   사장님이 화면에서 별칭을 더 등록하실 수 있으므로 **화면에는 `sweepCalls_()` 로
+   그때그때 센 값을 보낸다** — 이 상수는 검사가 붙드는 하한이다. */
+var SWEEP_CALLS = 18800;
 /* **며칠에 한 번 전부 훑는가.** 평소에는 새 글이 없는 쪽에서 멈추고, 이레에 한 번은
    처음부터 끝까지 두드려 그동안 놓친 것을 메운다(`sort=date` 를 믿는 최적화의 그물). */
 var FULL_EVERY_DAYS = 7;
@@ -550,8 +554,23 @@ function aliasOf_(name, table) { return (table && table[name]) || []; }
 function sweepCalls_() {
   var tab = aliasAll_(), n = 0, k;
   for (k in tab) if (tab.hasOwnProperty(k)) n += tab[k].length;
-  return (STORES.length + n) * TAILS.length * 2 * MAX_PAGES + 80 + 40;
+  /* **갈래는 셋이다**(`blog · cafearticle · webkr`, 1354행). 예전 `* 2` 는 웹 갈래가
+     생기기 전 값이고, **LG 비교도 40 이 아니라 도시 11 × 진영 2 × 꼬리 4 × 소스 3 ×
+     10쪽 = 2,640회**다(2729·2766행). 그 탓에 한 바퀴를 7,960회 적게 세어 화면이
+     *"한도가 넉넉하다"* 고 말했다 — 한도 경고가 그 값 위에 서 있어 틀린 말을 한다.
+     세는 값을 상수에서 끌어내 **코드가 바뀌면 따라오게** 한다(손으로 적으면 또 굳는다). */
+  var kinds = 3;                      /* blog · cafearticle · webkr */
+  var store = (STORES.length + n) * TAILS.length * kinds * MAX_PAGES;
+  var cafe = CAFES.length * kinds * MAX_PAGES;          /* 관심 카페 훑기 */
+  var mgr = 20;                                          /* 매니저 이름 네이버 건수 */
+  var rival = rivalUnits_().length * 2 * RTAILS.length * kinds * MAX_PAGES;
+  return store + cafe + mgr + rival;
 }
+/* **LG 비교 질의 꼬리말.** `collectRival` 안의 지역 변수였는데 밖으로 올렸다 —
+   호출 수 계산(`sweepCalls_`)이 이 개수를 알아야 하는데, 두 곳에 따로 적으면 한쪽만
+   고쳤을 때 화면이 조용히 옛 숫자로 「한도가 넉넉하다」고 말한다. 이 저장소가 허브 카드
+   개수·앱 버전에서 반복해서 데인 종류다. */
+var RTAILS = ['', ' 혼수', ' 구매', ' 후기'];
 
 /* 등록값을 다듬는다. **막는 것이 이 함수의 값어치다** — 짧은 별칭 하나가
    남의 매장 글을 통째로 끌어온다. */
@@ -1798,7 +1817,7 @@ function sweep_(mode) {
     cafeCalls: cafeCalls, cafeAdded: cafeAdd, cafes: CAFES.length,
     /* **한도로 멈춘 것과 시간으로 멈춘 것을 가른다** — 「이어서 수집」을 눌러도 되는지가
        다르다(시간이면 지금 눌러도 되고, 한도면 내일이거나 한도를 올려야 한다). */
-    hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: SWEEP_CALLS,
+    hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: sweepCalls_(),
     rival: rivalRun
   };
 }
@@ -2726,7 +2745,6 @@ function collectRival(deadline) {
      한 질의는 200건이 상한이라 쪼개지 않으면 6곳 전부 상한에 닿아 비중을 못 낸다
      (실측). 우리 후기 수집이 이미 쓰는 수법이고, 여기서 중요한 것은 **삼성·LG 에
      같은 꼬리말을 쓰는 것** — 한쪽만 쪼개면 그쪽만 많이 받아 비중이 거짓이 된다. */
-  var RTAILS = ['', ' 혼수', ' 구매', ' 후기'];
   var ui, spent = 0, ranUnits = 0;
 
   for (ui = from; ui < units.length; ui++) {
@@ -2945,7 +2963,15 @@ function runRival() {
     if (!r.done && !r.error) { try { chain_(); chained = true; } catch (e2) { /* 아래에서 알린다 */ } }
     return { ok: true, rows: r.rows, calls: r.calls, error: r.error, done: r.done,
       at: r.at, units: r.areas, left: Math.max(0, r.areas - r.at), chained: chained };
-  } finally { lock.releaseLock(); }
+  } finally {
+    /* **「도는 중」 표식을 반드시 내린다**(2026-09-02). 세우기만 하고 안 지워서,
+       버튼을 누르고 10분이 지나면 아무 문제가 없어도 화면이 영영
+       **「직전 실행이 N분 전에 시작해 끝나지 않았습니다(강제 종료로 보입니다)」**를
+       적고 12초마다 서버를 두드렸다 — 다음 `sweep_` 이 끝나야 사라진다.
+       지우는 곳이 `sweep_` 끝 한 곳뿐이었다. `finally` 에 두어 던져도 내려간다. */
+    props_().deleteProperty('_runAt');
+    lock.releaseLock();
+  }
 }
 
 /** 시트 칸의 JSON 을 읽는다. **깨져 있으면 빈 객체다** — 던지면 화면 전체가 죽는다. */
