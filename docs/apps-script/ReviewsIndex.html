@@ -1830,7 +1830,12 @@ function wireSecs() {
     if (kk.length) {
       out.push(['무엇을 이야기하나',
         '가장 많이 이야기되는 것은 <b>' + esc(kk[0]) + '</b>(' + nf(bk[kk[0]]) + '건 · ' + pc(bk[kk[0]], ksum) + '%)'
-        + (kk.length > 1 ? '이고 ' + kk.slice(1).map(esc).join(' · ') + '이(가) 뒤를 잇습니다.' : '입니다.')]);
+        /* 조사는 **마지막 낱말**을 보고 고른다 — `이(가)` 를 그대로 적으면 화면이 어설프다
+           (실물에서 「기타 · 구매이(가) 뒤를 잇습니다」로 떴다). `josa` 가 받침을 본다. */
+        + (kk.length > 1
+            ? '이고 ' + kk.slice(1).map(esc).join(' · ')
+              + josa(kk[kk.length - 1], '이', '가') + ' 뒤를 잇습니다.'
+            : '입니다.')]);
       acts.push(['hq', '본사',
         '후기에서 가장 많이 나오는 말이 <b>' + esc(kk[0]) + '</b>(' + pc(bk[kk[0]], ksum) + '%)입니다 — '
         + '그 주제의 콘텐츠·응대 가이드를 먼저 만들면 가장 많은 고객이 읽습니다.']);
@@ -1840,6 +1845,10 @@ function wireSecs() {
     var bs = DATA.byStore || {}, sk = top(bs, 3);
     var live = Object.keys(bs).filter(function (k) { return bs[k] > 0; }).length;
     var all = DATA.stores || 0;
+    /* **전점 수를 넘겨 적지 않는다**(2026-09-03 실물에서 발견 — 화면이 「전점 62곳 가운데
+       63곳에서 후기가 잡혔습니다」라고 **스스로 모순되는 말**을 하고 있었다). 시트에
+       옛 자점 이름으로 쌓인 줄이 남아 `byStore` 키가 표보다 많을 때 이렇게 된다. */
+    if (live > all && all) live = all;
     if (sk.length) {
       out.push(['어느 매장이 많나',
         '전점 ' + nf(all) + '곳 가운데 <b>' + nf(live) + '곳</b>에서 후기가 잡혔습니다. '
@@ -3703,12 +3712,16 @@ function renderList() {
     var t = v.b + v.c + (v.w || 0);
     return t ? Math.round(v.b * 100 / t) : null;
   }
+  /* **경고를 줄마다 되풀이하지 않는다**(2026-09-03). 문턱이 50% 인데 **전체 블로그 비율이
+     26%** 라 거의 모든 매장이 걸렸다 — 실측으로 10줄 중 10줄에 같은 경고가 붙어 있었다.
+     **모든 줄에 붙는 경고는 경고가 아니라 잡음**이고, 그러면 정작 심한 곳이 묻힌다.
+     비율은 배지로 늘 보여 주되(색이 세기를 말한다) 문장은 **카드 부제에 한 번만** 적는다. */
   function pctTag(name) {
     var p = blogPct(name);
     if (p === null) return "";
-    var weak = p < 50;
-    return ' <span class="tag' + (weak ? " c" : "") + '">블로그 ' + p + "%</span>"
-      + (weak ? ' <span class="mini">카페 위주라 이 신호를 신뢰하지 마세요</span>' : "");
+    return ' <span class="tag' + (p < 50 ? " c" : "") + '" title="'
+      + (p < 50 ? '카페 글이 많아 이 신호를 그대로 믿기 어렵습니다' : '블로그 글이 많아 이 신호를 믿을 만합니다')
+      + '">블로그 ' + p + "%</span>";
   }
 
   /* ── SDP — 개인대리점 (2026-09-02 사장님 요청) ─────────────────────────
@@ -3831,8 +3844,11 @@ function renderList() {
       + "곳은 뺐습니다 — 사업장 안 모바일 전용점이 대부분이라 원래 블로그 후기가 안 나옵니다.</div>";
     el.innerHTML = h;
     var sub = document.getElementById("sig-sub");
-    if (sub) sub.textContent = cur + " 기준(" + today + "은 아직 진행 중) · 조용함은 " + SIG_QUIET_DAYS + "일 · 작성일을 아는 글만 셉니다"
-      + " — 카페 글에는 작성일이 없어 이 신호에 들지 않습니다";
+    /* **「블로그 %」의 뜻을 여기 한 번만 적는다** — 예전에는 줄마다 같은 경고를 달아
+       10줄 전부에 붙었다(전체 블로그 비율이 26% 라 거의 다 걸린다). */
+    if (sub) sub.innerHTML = esc(cur) + " 기준(" + esc(today) + "은 아직 진행 중) · 조용함은 "
+      + SIG_QUIET_DAYS + "일 · <b>작성일을 아는 글만</b> 셉니다 — 카페 글에는 작성일이 없어 이 신호에 들지 않습니다."
+      + ' 줄 끝의 <span class="tag c">블로그 %</span>가 낮을수록 <b>그 매장은 카페 글 위주</b>라 이 신호를 그대로 믿기 어렵습니다.';
   }
 
   /* ── 히트맵 ─────────────────────────────────────────────────────────
