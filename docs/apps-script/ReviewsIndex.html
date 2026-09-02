@@ -144,6 +144,16 @@
   .sighd:first-child { margin-top: 0; }
   .sigrow { font-size: 12.5px; line-height: 1.7; padding: 3px 0; border-bottom: 1px solid #F1F3F7; }
   .sigrow:last-child { border-bottom: 0; }
+  /* **막대 규칙이 `.rv` 안에만 걸려 있었다**(2026-09-02 실물에서 발견). `bar()` 가
+     `.tr/.us/.th` 를 뱉는데 CSS 는 `.rv .tr` 이라 `.sigrow` 안에서는 하나도 안 걸려
+     **높이 0 · 배경 없음**이 됐다 — 출처·유형·월별 막대 11개가 세 폭(390·768·1440)
+     전부에서 통째로 안 보였다. 값은 글자로 보이므로 정보가 사라지진 않지만 **폭 대비가
+     사라져 「어디에서 밀리나」를 한눈에 못 읽는다.** 지역 막대(28px)보다 낮게 두어
+     주인공을 가리지 않게 한다. */
+  .sigrow .tr { display: flex; height: 10px; border-radius: 5px; overflow: hidden;
+                background: #EEF1F6; margin: 3px 0 2px; }
+  .sigrow .us { background: var(--blue); }
+  .sigrow .th { background: #C0392B; }
   .mini { font-size: 11px; color: #8A90A0; }
   .tag.c { background: #F0FDF4; color: #15803D; }
 
@@ -206,6 +216,13 @@
   .rv .tr { display: flex; height: 28px; border-radius: 6px; overflow: hidden; background: #EEF1F6; }
   .rv .us { background: var(--blue); }
   .rv .th { background: #C0392B; }   /* LG 는 붉은 계열 — 브랜드 색이 실제로 그렇다 */
+  /* **못 잰 지역은 막대도 회색이다**(2026-09-02). 라벨만 「못 잼」으로 두었더니
+     반쪽으로 잰 강원이 `당사 100 · LG 0` 이라 **폭 100% 남색 막대**가 되어 여섯 지역 중
+     가장 긴 막대였다 — 회색은 오른쪽 52px 라벨 한 곳뿐이라 **막대만 훑으면 최고 성적
+     지역으로 읽힌다.** 건수는 그대로 두되(사실이다) 색으로 「이 값은 못 믿는다」를 말한다. */
+  .rv .tr.na .us { background: #9AA4B2; }
+  .rv .tr.na .th { background: #C9CFD8; }
+  .rv .tr.na span { color: #33383F; }
   .rv .tr span { display: flex; align-items: center; justify-content: center;
     font-size: 12px; font-weight: 800; color: #fff; }
   .rv .vl { font-size: 14px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
@@ -1461,8 +1478,12 @@ function wireSecs() {
     /* ① 총량 — **작성일 미상을 반드시 함께 적는다.** 안 적으면 기간 수치가
        전체인 줄로 읽힌다(사장님이 두 번 지적한 그 자리다). */
     var sc = DATA.bySrc || {};
+    /* **웹도 함께 적는다**(2026-09-02). 출처가 셋인데 둘만 적어 **합이 안 맞았다** —
+       실측으로 「2,433건입니다 — 블로그 812 · 카페 1,300」(합 2,112)이라 321건이 어디로
+       갔는지 알 수 없었다. 이 절은 스스로 *"아래 문장의 숫자는 모두 이 화면 안에 그대로
+       있는 값입니다"* 라고 적어 두므로 더 나쁘다. */
     var p1 = '지금까지 모인 후기는 <b>' + nf(tot) + '건</b>입니다 — 블로그 ' + nf(sc['블로그'] || 0)
-      + '건 · 카페 ' + nf(sc['카페'] || 0) + '건.';
+      + '건 · 카페 ' + nf(sc['카페'] || 0) + '건 · 웹 ' + nf(sc['웹'] || 0) + '건.';
     if (DATA.undated) {
       p1 += ' 이 가운데 <b class="warn">' + nf(DATA.undated) + '건</b>은 네이버가 작성일을 주지 않아'
         + ' 일간·주간·월간과 추이에서 빠져 있습니다(전체 누적에는 들어 있습니다).';
@@ -2284,12 +2305,13 @@ function wireSecs() {
            **모르는 것을 숫자인 척 그리지 않는다**(이 저장소의 첫 원칙). */
         var na = !(typeof r.pct === 'number' && isFinite(r.pct));
         return '<div class="rv"><div class="nm">' + esc(r.area) + '</div>' +
-          '<div class="tr" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + '건">' +
+          '<div class="tr' + (na ? ' na' : '') + '" title="' + esc(r.area) + ' — 당사 ' + nf(r.ours) + ' · LG ' + nf(r.rival) + '건'
+            + (na ? (r.half ? ' (도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 비중을 낼 수 없습니다)' : ' (양쪽 증가율이 벌어져 비중을 믿을 수 없습니다)') : '') + '">' +
           '<div class="us" style="width:' + p.toFixed(1) + '%"><span>' + nf(r.ours) + '</span></div>' +
           '<div class="th" style="width:' + (100 - p).toFixed(1) + '%"><span>' + nf(r.rival) + '</span></div></div>' +
           (na
             ? '<div class="vl na" title="' + (r.half
-                ? esc(r.area + ' 은(는) 도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 나머지가 빠져 비중을 낼 수 없습니다')
+                ? esc(r.area + josa(r.area, '은', '는') + ' 도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 나머지가 빠져 비중을 낼 수 없습니다')
                 : '양쪽 증가율이 벌어져 비중을 믿을 수 없습니다') + '">못 잼</div>'
             : '<div class="vl ' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</div>') +
           '</div>';
@@ -3079,7 +3101,9 @@ function renderList() {
     countUp(document.getElementById('k-month'), DATA.month);
     countUp(document.getElementById('k-total'), DATA.total);
     var s = DATA.bySrc || {};
-    document.getElementById('k-sub').textContent = '블로그 ' + nf(s['블로그']) + ' · 카페 ' + nf(s['카페']);
+    /* 출처는 셋이다 — 둘만 적으면 합이 총계와 안 맞아 보는 사람이 셈을 못 한다 */
+    document.getElementById('k-sub').textContent =
+      '블로그 ' + nf(s['블로그'] || 0) + ' · 카페 ' + nf(s['카페'] || 0) + ' · 웹 ' + nf(s['웹'] || 0);
 
     var nStores = Object.keys(DATA.byStore || {}).filter(function (k) { return DATA.byStore[k] > 0; }).length;
     document.getElementById('store-sub').textContent =
