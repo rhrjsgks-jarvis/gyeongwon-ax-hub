@@ -1994,6 +1994,41 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
       if (bad2.length) { ok = false; console.log('ERROR: [바이럴] ' + bad2.join(' · ')); }
       else console.log('OK: 바이럴 — 반쪽 훑기는 「완료」로 안 세고 · 「멈춤」이 도는 실행을 세우고 · 별칭이 세 곳 다 돈다');
+
+      /* ④-c **세는 단위가 「글」인가 · 잰 값을 잃지 않는가 · 동명이인을 가르는가**
+         (2026-09-02). 셋 다 **화면의 숫자가 조용히 틀리는** 종류다. */
+      const bad3 = [];
+      /* 중복 줄을 집계에서 건너뛰는가 — 안 하면 total·일주월·지도·매장별이 전부 부푼다 */
+      if (!rv.includes('if (lk2) { if (seenLink[lk2]) continue; seenLink[lk2] = 1; }')) {
+        bad3.push('집계가 줄 단위로 센다 — 중복 링크가 모든 숫자를 부풀린다');
+      }
+      /* 매니저 네이버 건수를 통째로 덮으면 어제 잰 값이 「못 잼」으로 되돌아간다 */
+      if (!/nv = JSON\.parse\(props_\(\)\.getProperty\('_mgrNaver'\)/.test(rv)) {
+        bad3.push('_mgrNaver 를 통째로 덮는다 — 중간에 끊기면 어제 잰 값이 사라진다');
+      }
+      if (/nv\[roster\[ri\]\.name\] = Number\(mq\.total\) \|\| 0;/.test(rv)) {
+        bad3.push('total 을 못 읽었을 때 0 으로 적는다 — 「없음」과 「못 잼」이 뭉개진다');
+      }
+      /* 명부 건수를 매장|이름으로 가르는가 — 이름만 쓰면 동명이인이 한 줄로 합쳐진다 */
+      if (!rv.includes("kk = sName + '|' + mn;")) {
+        bad3.push('명부 건수를 이름만으로 합친다 — 동명이인이 한 매장으로 뭉개진다');
+      }
+      /* 한도를 바꾸면 캐시를 버리고, 상태로도 새로 읽는가 */
+      if (!/sumCacheClear_\(\);[\s\S]{0,200}return \{ ok: true, limit: n/.test(rv)) {
+        bad3.push('한도를 바꿔도 집계 캐시를 안 버린다 — 새로고침하면 옛 한도로 되돌아간다');
+      }
+      if (!rv.includes('d.dailyLimit = dailyLimit_();')) {
+        bad3.push('한도를 상태로 안 보낸다 — dayUsed 만 새 값이라 남은 막대가 어긋난다');
+      }
+      /* 삭제 목록이 잘렸으면 화면이 그 사실을 적는가 */
+      {
+        const scr3 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+        if (!scr3.includes('dd.n > dShown')) {
+          bad3.push('삭제 목록이 500건에서 잘리는데 화면이 그 사실을 안 적는다');
+        }
+      }
+      if (bad3.length) { ok = false; console.log('ERROR: [바이럴] ' + bad3.join(' · ')); }
+      else console.log('OK: 바이럴 — 글 단위로 세고 · 잰 값을 잃지 않고 · 동명이인을 가르고 · 잘림을 밝힌다');
     }
 
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */

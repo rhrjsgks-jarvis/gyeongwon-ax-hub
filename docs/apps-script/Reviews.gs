@@ -948,6 +948,10 @@ function setDailyLimit(n) {
   if (!(n >= 100)) return { ok: false, error: '한도는 100회 이상이어야 합니다.' };
   if (n > 50000) return { ok: false, error: '한도는 50,000회 이하로 정해 주세요.' };
   props_().setProperty('_dailyLimit', String(n));
+  /* **집계 캐시를 버린다**(2026-09-02). 안 버리면 누른 직후에는 응답으로 화면이
+     고쳐지지만 **새로고침하면 옛 한도로 되돌아간다** — 최대 6시간. dayUsed 만 새
+     값이라 「한도까지 남음」 막대가 어긋난 두 값으로 그려진다. */
+  sumCacheClear_();
   var u = usage_();
   return { ok: true, limit: n, used: u.n, sweep: sweepCalls_() };
 }
@@ -1672,7 +1676,12 @@ function sweep_(mode) {
   var mgrCalls = 0;
   if (!stopped && !err) {
     var roster = mgrRoster_();                       /* 지금까지 모은 이름 — 언급 많은 순 */
+    /* **어제 잰 값 위에 얹는다 — 통째로 갈아 끼우지 않는다**(2026-09-02).
+       예산·한도로 중간에 끊기면 못 훑은 이름의 어제 값이 사라져 화면이 「–」(아직 안
+       쟀음)로 되돌아갔다. 실측: 어제 3명을 재 두고 오늘 1명만 돌고 끊기면 나머지 둘이
+       사라진다. **「없음」과 「못 잼」을 가르는 이 화면의 규칙**이 여기서 무너졌다. */
     var nv = {}, ri;
+    try { nv = JSON.parse(props_().getProperty('_mgrNaver') || '{}') || {}; } catch (e5) { nv = {}; }
     for (ri = 0; ri < roster.length; ri++) {
       if (Date.now() - t0 > BUDGET_MS) break;
       if (over()) { hitLimit = true; break; }
@@ -1684,7 +1693,11 @@ function sweep_(mode) {
            이 숫자의 성질이고, 화면이 「참고」로 적어 그것을 밝힌다. */
         var mq = search_('blog', '삼성스토어 ' + roster[ri].name, 1, 1);
         calls++; mgrCalls++;
-        if (mq && !mq.error) nv[roster[ri].name] = Number(mq.total) || 0;
+        /* **`total` 을 못 읽었으면 적지 않는다.** `|| 0` 으로 두면 「그 이름으로 글이
+           없다」는 거짓이 된다 — 못 읽은 것과 0건은 다른 말이다(이 화면의 첫 규칙). */
+        if (mq && !mq.error && mq.total !== undefined && mq.total !== null && isFinite(Number(mq.total))) {
+          nv[roster[ri].name] = Number(mq.total);
+        }
       } catch (e4) { break; }                        /* 부수 기능이라 여기서 조용히 접는다 */
     }
     if (mgrCalls) props_().setProperty('_mgrNaver', JSON.stringify(nv));
@@ -2225,7 +2238,7 @@ function summary_() {
     byStore[STORES[i][1]] = 0;
     /* **0건 매장도 키를 만든다** — byStore 와 같은 이유다. 빠지면 화면에서
        그 매장이 사라져 「우리 매장이 없다」로 읽힌다. */
-    byStoreSrc[STORES[i][1]] = { b: 0, c: 0 };
+    byStoreSrc[STORES[i][1]] = { b: 0, c: 0, w: 0 };   /* 웹까지 셋 — 세는 쪽과 짝이 맞아야 한다 */
     byStoreMonth[STORES[i][1]] = {};
     lastPost[STORES[i][1]] = '';
     /* **묶음은 영업스케치 지역 하나뿐이다.** 한때 시·군을 한 층 더 뒀는데
@@ -2250,8 +2263,18 @@ function summary_() {
     if (areaCells[a0].indexOf(mc0) < 0) areaCells[a0].push(mc0);
   }
 
+  /* **같은 글은 한 번만 센다**(2026-09-02). 바로 위에서 중복 링크를 세어 놓고도
+     집계는 **줄 단위**로 그대로 세고 있었다 — 세는 단위가 「글」이 아니라 「줄」이었다.
+     total · 일/주/월 · byDay · byMonth · byMap · byRegion · bySrc · byStore ·
+     byStoreMonth · 매니저 순위가 전부 여기서 나오므로 **화면의 모든 숫자가 부풀었다**
+     (실측: 원본 6줄 · 고유 3건 → 집계는 전부 6). 화면은 「중복이 있다」까지만 말하고
+     **얼마나 틀렸는지는 말하지 않았고**, 사람이 「중복 정리」를 누르기 전까지 그대로 보고됐다.
+     주소가 빈 줄은 걸러낼 근거가 없으므로 그대로 센다(중복 정리도 그렇게 한다). */
+  var seenLink = {};
   for (i = 0; i < rows.length; i++) {
     var r = rows[i], f = r.date;
+    var lk2 = String(r.link || '');
+    if (lk2) { if (seenLink[lk2]) continue; seenLink[lk2] = 1; }
     if (r.dated) {
       dated++;
       if (r.approx) approxN++;
@@ -2368,18 +2391,37 @@ function summary_() {
     if (!nameTab.hasOwnProperty(ms)) continue;
     for (mj = 0; mj < nameTab[ms].length; mj++) known[nameTab[ms][mj]] = ms;
   }
-  var mgrKnown = [], sumN = {}, sumT = {};
+  /* **동명이인을 한 사람으로 뭉개지 않는다**(2026-09-02). 예전에는 이름만으로 합치고
+     매장은 `known[name]` 에 **나중 매장이 덮어썼다** — 수원 김민수 40건 · 평택 김민수
+     4건을 등록하면 화면이 *"김민수(평택) 44건"* 한 줄로 적어 **그 매장 성과가 11배로
+     부풀고 수원 김민수는 화면에서 사라졌다**(실측). 65개 매장 500명이면 동명이인은
+     드물지 않다. `mgrStore` 가 (이름+직함, 매장)별 건수를 이미 들고 있어 그것으로 가른다.
+     묶는 키는 **매장|이름** 이고, 직함으로 갈린 것은 그대로 합친다
+     (`남수호 프로` + `남수호 매니저` 는 한 사람이다). */
+  var mgrKnown = [], sumN = {}, sumT = {}, sName, kk;
   for (mk in mgrN) {
     if (!mgrN.hasOwnProperty(mk)) continue;
     mn = mk.split(' ')[0];                       /* `김준수 매니저` → `김준수` */
-    if (!known.hasOwnProperty(mn)) continue;
-    sumN[mn] = (sumN[mn] || 0) + mgrN[mk];
-    if (!sumT[mn]) sumT[mn] = [];
-    if (sumT[mn].indexOf(mk.split(' ')[1]) < 0) sumT[mn].push(mk.split(' ')[1]);
+    var st = mgrStore[mk] || {};
+    for (sName in st) {
+      if (!st.hasOwnProperty(sName)) continue;
+      /* **그 매장 명부에 그 이름이 있을 때만 센다** — 남의 매장 글에 이름이 나왔다고
+         그 사람 건수로 세면 다른 매장 성과가 섞인다. */
+      if (!(nameTab[sName] && nameTab[sName].indexOf(mn) >= 0)) continue;
+      kk = sName + '|' + mn;
+      sumN[kk] = (sumN[kk] || 0) + st[sName];
+      if (!sumT[kk]) sumT[kk] = [];
+      if (mk.split(' ')[1] && sumT[kk].indexOf(mk.split(' ')[1]) < 0) sumT[kk].push(mk.split(' ')[1]);
+    }
   }
-  for (mn in known) {
-    if (!known.hasOwnProperty(mn)) continue;
-    mgrKnown.push({ name: mn, store: known[mn], n: sumN[mn] || 0, titles: (sumT[mn] || []).join('·') });
+  /* **명부 전체를 훑어 0건도 낸다** — 등록했는데 후기에 한 번도 안 나오는 것이 곧 정보다 */
+  for (ms in nameTab) {
+    if (!nameTab.hasOwnProperty(ms)) continue;
+    for (mj = 0; mj < nameTab[ms].length; mj++) {
+      mn = nameTab[ms][mj];
+      kk = ms + '|' + mn;
+      mgrKnown.push({ name: mn, store: ms, n: sumN[kk] || 0, titles: (sumT[kk] || []).join('·') });
+    }
   }
   mgrKnown.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
   for (mi = 0; mi < mgrTop.length; mi++) {
@@ -3403,6 +3445,10 @@ function freshState_(d) {
     d.cursor = Number(props_().getProperty('_cursor') || 0);
     d.tail = Number(props_().getProperty('_tail') || 0);
     d.dayUsed = usage_().n;
+    /* **한도도 볼 때마다 새로 읽는다** — summary_ 반환값에만 두면 6시간 캐시에 갇혀
+       화면이 옛 한도를 말한다. dayUsed 와 짝으로 쓰이는 값이라 한쪽만 새것이면
+       「한도까지 남음」이 어긋난 두 값으로 그려진다. */
+    d.dailyLimit = dailyLimit_();
     d.chainOn = chainOn_();
     d.chainErr = String(props_().getProperty('_chainErr') || '');
     d.forceFull = String(props_().getProperty('_forceFull') || '') === '1';
