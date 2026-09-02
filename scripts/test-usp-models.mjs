@@ -46,13 +46,29 @@ const WANT = [
   'WD90H25BHW',                                        /* 콤보 MID */
   'DF90H24R4D', 'DF80H24R1C',                          /* 에어드레서 R4·R1 */
   'HW-QS90H/KR', 'HW-LS50H/KR',                        /* 사운드바 QS90H · Music Studio 5 */
-  'RK70F42F2X']                                        /* 김치 키친핏 420L */
+  'RK70F42F2X',                                        /* 김치 키친핏 420L */
+  /* ── 2026-09-02 2차 추가 — 세일즈가이드 11종을 전수로 다시 뽑아 15종(RH95·RH9G·MH80 은 이미 명부에 있어 뺐다) ────────────
+     사장님 지시: *"PDF세일즈가이드를 적극적으로 참고해서 다시 만들어주세요 — 기존건
+     없다고 생각하고"* → *"USP 명부 늘리고 PPT부터"*.
+     TV 가 13종 들어온 것이 핵심이다 — **등급이 매장의 첫 질문**인데(*"SH95 랑 SH85 뭐가
+     달라요?"*) 명부에 8종뿐이었다.
+     **모델코드는 가이드에 없다** — TV·오디오 가이드는 SKU 를 싣지 않는다. 그래서 우리가
+     수집한 삼성닷컴 현행 목록에서 **그 등급의 실재 단품 SKU** 를 대표로 붙였다(지어내지
+     않았고, `KMR100RH85-93` 같은 묶음 코드는 피했다). 등급이 같으면 셀링포인트가 같다. */
+  'KMR85RH85AFXKR',                                    /* Micro RGB RH85 */
+  'KQ83SH95AEXKR', 'KQ83SH93AEXKR', 'KQ83SH90AEXKR', 'KQ83SH85AEXKR',   /* OLED 4등급 */
+  'KQ100QNH80FXKR', 'KQ85QNH70AFXKR',                  /* Neo QLED */
+  'KU100MH90FXKR', 'KU85MH70AFXKR',                    /* Mini LED */
+  'KQ98LSH03EFXKR',                                    /* The Frame */
+  'KU98UH9000FXKR', 'KU85UH8000FXKR',                  /* Crystal UHD */
+  'RK80F42E2A', 'RK70F42M2A',                          /* 김치 E·M 타입 */
+  'AF90H25D36WN']                                      /* 무풍콤보 갤러리 프로 */
 const have = M.map((m) => m.model)
 const miss = WANT.filter((w) => !have.includes(w))
 const extra = have.filter((h) => !WANT.includes(h))
 if (miss.length) fail(`지목 모델이 빠졌다: ${miss.join(', ')}`)
 if (extra.length) fail(`지목하지 않은 모델이 섞였다: ${extra.join(', ')}`)
-if (!miss.length && !extra.length) console.log(`OK: 명부 ${WANT.length}개 모델이 그대로다 (지목 44 + 가이드 11)`)
+if (!miss.length && !extra.length) console.log(`OK: 명부 ${WANT.length}개 모델이 그대로다 (지목 44 + 가이드 11 + 가이드 전수 15)`)
 
 /* ② **못 찾은 모델에 남의 문구가 들어가지 않았는가.** 다른 모델의 USP 와 글자가 같으면
    옮겨 적은 것이다(같은 제품군이라 우연히 겹치는 일은 3줄 전부에서는 없다). */
