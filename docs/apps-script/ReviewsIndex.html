@@ -430,8 +430,9 @@
   .acol input[type=color] { width: 26px; height: 22px; padding: 0; border: 1px solid var(--line);
                             border-radius: 5px; background: none; cursor: pointer; }
 
-  .stwrap { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  @media (min-width: 1000px) { .stwrap { grid-template-columns: 1fr 300px; align-items: start; } }
+  /* 지역 묶음 = 왼쪽 매장 칸 + 오른쪽 그 지역 분석. 좁은 화면에서는 아래로 쌓인다 */
+  .rgwrap { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
+  @media (min-width: 1000px) { .rgwrap { grid-template-columns: 1fr 300px; align-items: start; } }
   .stdet { border: 1px solid var(--line); border-radius: 11px; background: #FCFDFF; padding: 12px; }
   .stdet h3 { font-size: 13.5px; font-weight: 800; letter-spacing: -.2px; }
   .stdet .big { font-size: 26px; font-weight: 800; letter-spacing: -.6px; color: var(--blue);
@@ -934,10 +935,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            예전에는 상위 20곳 막대라 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
            "우리 매장이 없다"로 읽힌다. 0건도 흐리게 적어 **전점을 세운다.** -->
       <div class="sub" id="store-sub">–</div>
-      <div class="stwrap">
-        <div id="regions"></div>
-        <div class="stdet" id="store-detail"></div>
-      </div>
+      <!-- **분석 칸을 지역마다 둔다**(2026-09-03 사장님 지적 — *"세부내역이 가장 최상단에
+           고정으로 위치하다 보니 아래로 내려가서 평택·강원 지역을 클릭하면 세부내역이
+           보이지 않습니다"*). 예전에는 카드 맨 위에 하나뿐이라, 아래쪽 지역을 누르면
+           **화면 밖에서 갱신돼** 아무 일도 안 일어난 것처럼 보였다. -->
+      <div id="regions"></div>
     </div>
     <!-- 2026-09-02 사장님 요청 — finviz 화면을 그대로. **크기 = 건수 또는 등락률 ·
          색 = 전월 대비.** 전점 → 지점 → 채널 3단으로 눌러 들어간다. -->
@@ -1927,9 +1929,12 @@ function wireSecs() {
     });
 
     if (sub) {
+      /* **왜 모르는지는 여기서 설명하지 않는다**(2026-09-03 정리). 같은 말이 화면 여섯
+         곳에 문장으로 흩어져 있었다 — 「구성 한눈에」의 점 장표가 그림 하나로 대신한다.
+         다만 **이 차트가 무엇을 세는지**는 여기 남는다(안 적으면 숫자를 오독한다). */
       sub.innerHTML = "<b>작성일 기준</b>입니다"
         + (DATA.undated ? " — 작성일을 모르는 " + nf(DATA.undated) + "건은 세지 않았습니다" : "")
-        + ". 네이버가 카페 글의 작성일을 주지 않아 그 글들은 추이에 넣을 수가 없습니다.";
+        + ' (<b>왜 모르는지는 「구성 한눈에」</b>에서 봅니다).';
     }
     /* 직전 달과 견준다. **직전이 0이면 배수를 말하지 않는다** — 0에서 늘어난 것은
        몇 % 가 아니라 그냥 「새로 생겼다」이고, 나눗셈은 무한대가 된다. */
@@ -2428,18 +2433,20 @@ function wireSecs() {
         var list = ((REG[area] && REG[area].stores) || []).slice()
           .sort(function (a, b) { return (BS[b] || 0) - (BS[a] || 0); });
         var cells = AC[area] || [area];
+        /* **매장 칩 62개는 여기 안 그린다**(2026-09-03 사장님: *"정보들이 여러 곳으로
+           흩어져 있어서 보기가 헷갈린다"*). 「매장별」 카드가 **같은 자료를 같은 묶음으로**
+           더 잘 그린다(칸 + 지역 색 + 유형 심벌 + 지점별 분석) — 여기 또 늘어놓으면
+           같은 것을 두 모양으로 보게 된다.
+           **지역 줄은 남긴다** — 통째로 지우면 「줄에 손을 얹으면 그 지역 칸이 굵어진다」는
+           지도와의 연결까지 잃는데, 그 연결은 매장별 카드에 없다. */
         return '<div class="gsrow" data-cells="' + esc(cells.join(',')) + '">'
           + '<div class="gsh">' + esc(area) + '지역'
           + (cells.length > 1 ? '<i>' + esc(cells.join(' · ')) + '</i>' : '')
           + '<i>' + list.length + '곳 · ' + nf((REG[area] && REG[area].n) || 0) + '건</i></div>'
-          + list.map(function (nm) {
-              var v = BS[nm] || 0;
-              return '<button type="button" class="gschip' + (v ? '' : ' z')
-                + (storeFilter === nm ? ' on' : '') + '" data-v="' + esc(nm) + '">'
-                + esc(nm) + '<b>' + nf(v) + '</b></button>';
-            }).join('')
           + '</div>';
-      }).join('');
+      }).join('')
+        + '<div class="mini" style="margin-top:7px">줄에 손을 얹으면 그 지역 칸이 굵어집니다 · '
+        + '<b>매장 하나하나는 「매장별」 카드</b>에서 봅니다.</div>';
 
       /* 칸 강조 — 목록 줄 어디에 손을 얹어도 그 칸이 굵어진다 */
       /* 한 지역이 여러 칸을 덮으므로 **칸 목록**을 받는다(강원 → 원주·춘천·강릉·속초) */
@@ -2644,15 +2651,27 @@ function wireSecs() {
     var rst = document.getElementById('acol-reset');
     if (rst) rst.onclick = function () { box.dataset.wired = ''; send({}); };
   }
+  /* 고른 매장이 어느 지역인가 — 분석 칸을 그 지역 오른쪽에만 그리려면 알아야 한다 */
+  function areaOfStore(nm) {
+    var reg = DATA.byRegion || {}, k;
+    for (k in reg) { if (((reg[k] || {}).stores || []).indexOf(nm) >= 0) return k; }
+    return '';
+  }
   function renderStoreDetail() {
-    var el = document.getElementById('store-detail'); if (!el) return;
+    var boxes = document.querySelectorAll('.stdet[data-area]');
+    if (!boxes.length) return;
     var by = DATA.byStore || {}, chAll = DATA.byStoreChan || {};
-    if (!storeFilter) {
-      el.innerHTML = '<h3>지점별 분석</h3>'
+    var hit = storeFilter ? areaOfStore(storeFilter) : '';
+    /* **고른 지역 것만 채우고 나머지는 안내로 되돌린다.** 안 되돌리면 다른 지역을 눌렀을 때
+       옛 지점 분석이 남아 **화면이 두 지점을 동시에 말한다.** */
+    var el = null;
+    Array.prototype.forEach.call(boxes, function (b2) {
+      if (b2.getAttribute('data-area') === hit) { el = b2; return; }
+      b2.innerHTML = '<h3>지점별 분석</h3>'
         + '<div class="note" style="margin-top:6px">왼쪽에서 <b>지점을 누르면</b>'
-        + ' 그 지점의 후기가 <b>어느 채널에서</b> 나왔는지 순위로 보여 드립니다.</div>';
-      return;
-    }
+        + ' 그 지점의 후기가 <b>어느 채널에서</b> 나왔는지 여기 보여 드립니다.</div>';
+    });
+    if (!el) return;
     var n = by[storeFilter] || 0;
     var ch = chAll[storeFilter] || {};
     var keys = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; });
@@ -2703,7 +2722,11 @@ function wireSecs() {
       var list = (reg[rg].stores || []).slice().sort(function (a, b) {
         return (by[b] || 0) - (by[a] || 0);
       });
-      return '<div class="rg"><div class="rg-h">' + esc(rg) + '지역' +
+      /* **지역마다 자기 분석 칸을 오른쪽에 갖는다**(2026-09-03). 카드 맨 위에 하나만
+         두었더니 아래쪽 지역(평택·강원)을 누를 때 **화면 밖에서 갱신돼** 눌러도 아무 일이
+         없는 것처럼 보였다 — 이 저장소가 「접힌 곳으로 데려가지 않는다」로 이미 세운 규칙과
+         같은 종류다. `data-area` 로 어느 지역 것인지 표시해 두고 렌더가 그것을 찾는다. */
+      return '<div class="rgwrap"><div class="rg"><div class="rg-h">' + esc(rg) + '지역' +
         '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
         list.map(function (nm) {
           var v = by[nm] || 0;
@@ -2716,7 +2739,8 @@ function wireSecs() {
             '<span class="ic">' + storeIcon(nm) + '</span>' +
             '<span>' + esc(nm) + '</span>' +
             '<b>' + nf(v) + '<span class="u">건</span></b></button>';
-        }).join('') + '</div></div>';
+        }).join('') + '</div></div>'
+        + '<div class="stdet" data-area="' + esc(rg) + '"></div></div>';
     }).join('');
     Array.prototype.forEach.call(el.querySelectorAll('.st'), function (b) {
       b.onclick = function () {
@@ -4135,7 +4159,6 @@ function renderList() {
     renderDiag();
     applyAreaColors();
     wireAreaColors();
-    renderStoreDetail();
     renderSdp();
     renderSignals();
     renderMap();
@@ -4170,6 +4193,10 @@ function renderList() {
     renderAlias();
     renderRival();
     renderRegions();
+    /* **반드시 `renderRegions()` 뒤여야 한다**(2026-09-03). 분석 칸이 지역 격자 안에
+       생기므로, 먼저 부르면 격자가 다시 그려지며 **방금 채운 칸이 통째로 비워진다** —
+       예외도 오류도 없이 조용히 빈칸이 된다(실제로 그렇게 한 번 비었다). */
+    renderStoreDetail();
     renderRange();
     bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
 
