@@ -2952,6 +2952,17 @@ function rival_() {
     if (!mixed[ar]) mixed[ar] = { old: 0, neo: 0 };
     mixed[ar][multi ? 'old' : 'neo']++;
   }
+  /* ── **같은 (지역, 도시)가 두 줄이면 마지막 것만 쓴다** (2026-09-02 2차) ─────────
+   * 위 「섞임」 판정은 `queries` 로 옛 줄을 가리는데, **도시가 하나인 지역**(수원·평택)은
+   * 옛 지역 줄도 `평택`, 새 도시 줄도 `평택` 이라 **글자가 똑같아 못 가른다.**
+   * 실제로 안양은 고쳐졌는데 **평택만 4,025(2배)로 남았다.**
+   * 시트는 덧붙여 쓰므로 **뒤엣것이 최신**이다 — 그것만 쓴다.
+   * 한 회차에 같은 도시를 두 번 쓰는 일은 정상적으로는 없다(커서가 도시마다 전진한다). */
+  var lastIdx = {};
+  for (i = 0; i < v.length; i++) {
+    if (String(v[i][0]) !== last) continue;
+    lastIdx[String(v[i][1]) + '|' + String(v[i][6] || '')] = i;
+  }
 
   var by = {}, order = [];
   for (i = 0; i < v.length; i++) {
@@ -2959,6 +2970,7 @@ function rival_() {
     var area = String(v[i][1]);
     var mx = mixed[area];
     if (mx && mx.old && mx.neo && String(v[i][6] || '').indexOf(' · ') >= 0) continue;
+    if (lastIdx[area + '|' + String(v[i][6] || '')] !== i) continue;   /* 같은 도시는 마지막 줄만 */
     if (!by[area]) {
       by[area] = {
         area: area, ours: 0, rival: 0, capped: false, q: [],
