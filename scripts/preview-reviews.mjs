@@ -141,6 +141,34 @@ for (let i = 0; i < 240; i++) {
   });
 }
 
+/* 매장 유형 — 실물은 서버가 점코드로 가른다(ZH 백화점 · ZR 사업장 · Z### 로드샵).
+   미리보기는 이름으로 대충 흉내만 낸다 — **경계를 일부러 섞는다**(백화점 브랜드 마크,
+   사업장, 유형을 모르는 곳)라야 화면이 그 경우를 어떻게 그리는지 눈으로 볼 수 있다. */
+const storeType = {};
+for (const n of Object.keys(byStore)) {
+  const b = ["AK", "롯데", "신세계", "현대", "갤러리아", "타임빌라스"].find(x => n.startsWith(x));
+  if (b) storeType[n] = { t: "백화점", b };
+  else if (/캠퍼스|SDI|SDS|DSR|기아|삼성전기|에버랜드|KGM|연구소/.test(n)) storeType[n] = { t: "사업장", b: "" };
+  else if (n.startsWith("스타필드")) storeType[n] = { t: "복합몰", b: "" };
+  else if (n.startsWith("이마트")) storeType[n] = { t: "마트", b: "" };
+  else storeType[n] = { t: "로드샵", b: "" };
+}
+/* 유형을 모르는 곳도 하나 둔다 — 옛 서버 자료에는 이 표가 없어 화면이 물러서야 한다 */
+delete storeType[Object.keys(byStore)[3]];
+
+/* 매장별 채널 — 히트맵 3단(지점 → 채널)이 쓴다 */
+const byStoreChan = {};
+for (const [n, v] of Object.entries(byStore)) {
+  if (!v) continue;
+  byStoreChan[n] = {
+    "다이렉트결혼준비": Math.round(v * 0.30), "네이버 블로그": Math.round(v * 0.22),
+    "맘카페": Math.round(v * 0.14), "웨딩카페": Math.round(v * 0.11),
+    "지역 커뮤니티": Math.round(v * 0.08), "오늘의집": Math.round(v * 0.06),
+    "웹문서": Math.round(v * 0.05), "기타 카페": Math.round(v * 0.04)
+  };
+  for (const k of Object.keys(byStoreChan[n])) if (!byStoreChan[n][k]) delete byStoreChan[n][k];
+}
+
 const DATA = {
   ok: true, at: '2026-08-31T12:00:00.000Z',
   total: 2433, day: 38, week: 214, month: 1205,
@@ -149,6 +177,7 @@ const DATA = {
   byMonth, byDay, byKind: KINDS, byRegion, byMap, byStore,
   bySrc: { 블로그: 812, 카페: 1300, 웹: 321 },
   byStoreSrc, byStoreMonth, lastPost,
+  storeType, byStoreChan,
   /* **매장별 채널** — 「지점별 분석」이 이것으로 1·2·3 순위를 그린다. 없으면 그 자리가
      늘 비어 있어 **화면을 눈으로 봐도 그 기능을 검증하지 못한다**(실물 확인에서 그랬다).
      카페 이름 + 「네이버 블로그」·「웹문서」 — 실물과 같은 모양으로 섞는다. */
@@ -192,7 +221,7 @@ const DATA = {
     return out;
   })(),
   byCafe: CAFES.reduce((o, c, i) => (o[c] = 520 - i * 90, o), {}),
-  stores: 65,
+  stores: 62,   /* 실물은 Reviews.gs 의 STORES 수 — 2026-09-02 에 65 → 62 가 됐다 */
   cursor: 0, chainOn: false, chainErr: '',
   dupRows: 0, dupLinks: 0,
   dayUsed: 3120, dailyLimit: 20000, sweep: 10520,

@@ -2551,7 +2551,15 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         if (!ix2.includes('if (typeof v !== ')) bad.push('미리보기가 자료 모양을 확인하지 않는다');
         if (!ix2.includes('.sec.on { background: #1428A0')) bad.push('열린 박스가 삼성 블루로 켜지지 않는다');
         /* 열린 목록은 기억하되 **막힌 환경에서도 화면은 돌아야 한다** */
-        if (!ix2.includes('viral_secs_v1')) bad.push('열린 섹션을 기억하지 않는다');
+        /* **키 이름을 박지 않는다** — 기본값을 바꿀 때마다 키를 올려야 하고(안 올리면
+           저장된 옛 목록이 이겨서 바뀐 기본값이 아무에게도 안 보인다) 그때마다 이 검사가
+           헛되이 깨진다. 지키려는 것은 *"기억하는가"* 이지 키 이름이 아니다. */
+        /* **정규식을 쓰지 않는다** — 이 저장소는 셸을 거치며 역슬래시가 먹혀 정규식이
+           조용히 다른 뜻이 되는 일을 반복해서 겪었다(실제로 여기서도 한 번 먹혔다). */
+        if (!ix2.includes('viral_secs_v')) bad.push('열린 섹션을 기억하지 않는다');
+        /* **기본은 전부 닫힘**(2026-09-02 사장님 지시 — *"기본화면은 심벌들로 진행하고싶습니다"*).
+           키를 올리는 것이 짝이다 — 안 올리면 저장된 옛 목록이 이겨서 바뀐 기본값이 안 보인다. */
+        if (!ix2.includes('var SEC_DEFAULT = [];')) bad.push('기본이 전부 닫힘이 아니다 — 기본화면이 심벌만이어야 한다');
         if (!ix2.includes('catch (e) {}')) bad.push('localStorage 를 try/catch 로 감싸지 않았다');
         /* **없앤 것이 되살아나지 않는지** — 끌기·⤢ 펼치기는 접이식이 대신한다 */
         for (const gone of ['wireZoom', 'wireDrag', 'markLead', 'data-nolead', 'card.wide']) {
