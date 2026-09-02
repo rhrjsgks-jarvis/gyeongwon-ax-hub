@@ -1249,7 +1249,8 @@ function sweep_(mode) {
      매번 그 자리에서 끊겼고, 하루 시도 한도(12번)를 다 태우고도 한 번도 못 넘겼다
      (2026-09-02 프로덕션 실측: `rivalCur 5` · `rivalTry 12` · `rivalAt` 빈칸).
      **지역 도중에 끊으면 그 지역 비중이 반쪽이 되므로** 시간을 늘리는 쪽이 맞다. */
-  var RIVAL_MS = 300 * 1000;
+  /* **상수는 전역에 있다**(`RIVAL_MS`) — 화면의 「LG 비교 갱신」 버튼도 같은 값을
+     써야 한다. 여기 지역변수로 두었더니 두 길이 다른 예산을 쓸 뻔했다. */
   /* 살았는지 두드리는 것은 **검색이 아니라서 네이버 예산을 안 먹는다** — 대신
      Apps Script `UrlFetchApp` 한도를 함께 쓴다(한 바퀴 검색 4,810 + 검증 2,740 =
      7,550 이라 소비자 계정 20,000 에도 여유가 있다). 시간만 떼어 준다. */
@@ -2495,9 +2496,14 @@ function rivalHit_(text, brands, place) {
    **끝없이 되풀이하지 않게 하루 시도 횟수를 센다** — 한 지역이 늘 실패하면
    매 실행마다 헛돌아 다른 일까지 굶는다. 12번이면 여섯 지역을 채우고도 남는다. */
 var RIVAL_TRY_MAX = 24;
-/* 도시 하나를 훑는 데 걸리는 시간(어림). 지역마다 도시 수가 달라 이 값으로 몫을 잡는다.
-   실측으로 도시 하나가 수십 초라, 넉넉히 잡아도 300초 예산 안에서 강원(셋)이 돈다. */
-var RIVAL_PER_PLACE_MS = 70 * 1000;
+/* **한 실행이 LG 비교에 쓰는 시간.** 6분 한도 중 이만큼만 쓰고 나머지는 매장 훑기에
+   넘긴다. 화면의 「LG 비교 갱신」 버튼도 같은 값을 쓴다 — 두 길이 다른 예산을 쓰면
+   버튼으로 될 때와 안 될 때가 갈린다. */
+var RIVAL_MS = 300 * 1000;
+/* 도시 하나를 훑는 데 걸리는 시간 — **첫 도시에만 쓰는 어림값**이다.
+   그 뒤로는 실제로 걸린 시간을 재서 쓴다(`collectRival` 의 `perUnit`) — 도시마다
+   글 수가 달라 고정값으로는 늘 헛일이 나거나 시간을 남긴다. */
+var RIVAL_PER_PLACE_MS = 120 * 1000;
 
 /* ── 실행이 어디까지 갔는지 남긴다 (2026-09-02) ────────────────────────────
  * 강원 한 지역이 끝나지 않는데 **실행이 어디서 죽는지 볼 길이 없었다** — `lastRun`
@@ -2525,9 +2531,6 @@ function rivalDue_() {
   return !r || !r.rows || r.rows.length < Object.keys(AREA_Q).length;
 }
 
-/** 삼성 vs LG. **마감 시각(`deadline`)을 받아 그 전에 멈춘다.**
- *  한 바퀴를 못 끝내면 어디까지 했는지 적어 두고(`_rivalCur`) 다음 실행이 이어 돈다 —
- *  매장 수집이 커서로 이어 도는 것과 같은 방식이다. */
 /* ── LG 는 어디에 무엇을 올리나 (2026-09-02 사장님 요청) ────────────────────
  * *"LG는 어느경로로 어떻게 어떤걸 홍보하는지도 분석하는내용이 있으면좋겠습니다"*
  *
@@ -2613,39 +2616,76 @@ function topN_(obj, n) {
   return out;
 }
 
+
+/**
+ * 삼성 vs LG. **마감 시각(`deadline`)을 받아 그 전에 멈춘다.**
+ *
+ * ── **일하는 단위는 도시, 보고하는 단위는 지역이다** (2026-09-02) ────────────
+ *
+ * 예전에는 **지역 하나를 통째로** 돌았다. 그런데 지역마다 도시 수가 달라 일이 최대
+ * 세 배로 벌어진다 — 강원(춘천·원주·강릉)이 그렇다:
+ *
+ *     강원 = 도시 3 x 진영 2 x 꼬리말 4 x 소스 3 x 10쪽 = 720회 = 288~432초
+ *     수원 = 도시 1                                     = 240회 =  96~144초
+ *
+ * 그리고 **지역 안에는 시간 검사가 하나도 없었다** — 한 번 시작하면 끝까지 간다.
+ * 그래서 강원은 매번 **6분 실행 한도를 넘겨 강제 종료**됐고, 죽으면 그 실행이 통째로
+ * 사라져 `_rivalAt` 도 안 적히고 다음 실행이 같은 자리에서 또 죽었다. 하루 시도
+ * 한도를 다 태우고도 한 번도 못 넘겼다(프로덕션 실측: `rivalCur 5` 에 박힌 채
+ * `stage` 가 「LG비교 도는 중」에서 8분째 멈춰 있었다).
+ *
+ * **예산을 늘리는 쪽으로는 못 고친다** — 6분이 절대선이고 강원이 그것을 넘는다.
+ * 그래서 **일의 단위를 도시로 쪼갠다.** 한 도시는 240회(96~144초)라 6분 안에
+ * 확실히 끝나고, 도시 경계에서 이어 돌 수 있다.
+ *
+ * **「지역 도중에 끊으면 비중이 반쪽이 된다」는 옛 규칙은 그대로 지킨다** — 시트에
+ * 도시 단위로 쓰고 `rival_()` 이 **읽을 때 지역으로 합산한다.** 화면이 보는 단위는
+ * 예전과 똑같이 여섯 지역이다(사장님이 정한 영업스케치 지역 그대로).
+ * 지도가 「칸은 영업지역, 강원만 시로 푼다」로 두 층을 가른 것과 같은 판단이다.
+ *
+ * **안전벨트가 두 겹이다.** 도시를 시작하기 전에 한 번(`RIVAL_PER_PLACE_MS`),
+ * 그리고 도시 안 매 호출마다 한 번(하드 스톱). 뒤엣것에 걸리면 **그 도시 줄을 쓰지
+ * 않고 버린다** — 반쪽짜리 도시를 저장하면 그 지역 비중이 조용히 거짓이 된다.
+ * 헛일이 되지만 앞 검사가 있어 드물고, 6분에 죽어 통째로 잃는 것보다 훨씬 싸다.
+ */
 function collectRival(deadline) {
   var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
-  var areas = Object.keys(AREA_Q), rows = [], calls = 0, err = '';
+  var units = rivalUnits_();
+  var rows = [], calls = 0, err = '';
   var from = Number(props_().getProperty('_rivalCur') || 0);
-  if (!(from >= 0) || from >= areas.length) from = 0;
+  if (!(from >= 0) || from >= units.length) from = 0;
   /* ── **한 회차는 도장이 하나다** (2026-09-02) ────────────────────────────
    * `rival_()` 은 **가장 늦은 도장을 가진 줄만** 화면에 낸다 — 한 회차가 통째로
-   * 쓰이던 시절의 규칙이다. 그런데 이어 돌기가 생기며 지역마다 도장이 달라져
-   * **마지막 조각 한 지역만 남았다**(수원만 보이던 증상의 나머지 절반).
+   * 쓰이던 시절의 규칙이다. 그런데 이어 돌기가 생기며 조각마다 도장이 달라져
+   * **마지막 조각 하나만 남았다**(수원만 보이던 증상의 나머지 절반).
    * 그래서 회차를 시작할 때 도장을 적어 두고 이어 돌 때 그대로 쓴다.
    * **도장을 모르는데 중간부터라면 처음부터 다시 돈다** — 앞서 쓴 줄들이 어느
    * 도장을 달고 있는지 알 수 없어, 이어 붙이면 화면에 반쪽만 뜬다. */
   var cyStamp = String(props_().getProperty('_rivalStamp') || '');
   if (!cyStamp || from === 0) { cyStamp = stamp; props_().setProperty('_rivalStamp', cyStamp); from = 0; }
-  var stoppedR = false;
+  var stoppedR = false, hard = false;
 
   /* **꼬리말로 질의를 쪼갠다 — 양쪽에 똑같이.**
      한 질의는 200건이 상한이라 쪼개지 않으면 6곳 전부 상한에 닿아 비중을 못 낸다
      (실측). 우리 후기 수집이 이미 쓰는 수법이고, 여기서 중요한 것은 **삼성·LG 에
      같은 꼬리말을 쓰는 것** — 한쪽만 쪼개면 그쪽만 많이 받아 비중이 거짓이 된다. */
   var RTAILS = ['', ' 혼수', ' 구매', ' 후기'];
+  var ui, spent = 0, ranUnits = 0;
 
-  for (var ai = from; ai < areas.length; ai++) {
-    /* **지역 하나를 시작하기 전에 시간을 본다.** 한 지역이 수백 회라 도중에
-       끊으면 그 지역 비중이 반쪽이 된다 — 지역 경계에서만 끊는다.
+  for (ui = from; ui < units.length; ui++) {
+    /* **도시 하나를 시작하기 전에 시간을 본다.** 남은 시간이 아니라 「이 도시에
+       필요한 시간」을 본다 — 마감까지 1초만 남아도 시작해 버리면 반드시 그 자리에서
+       끊긴다(강원이 실제로 그랬다).
 
-       **남은 시간이 아니라 「이 지역에 필요한 시간」을 본다.** 지역마다 도시 수가
-       달라(강원은 셋) 일이 세 배인데, 마감까지 1초만 남아도 시작해 버리면 반드시
-       그 자리에서 끊긴다 — 강원이 실제로 그랬다(12번 시도해 한 번도 못 넘겼다).
-       그래서 **그 지역 몫만큼 남아 있을 때만** 시작한다. */
-    var area = areas[ai], places = AREA_Q[area];
-    if (deadline && Date.now() > deadline - RIVAL_PER_PLACE_MS * places.length) { stoppedR = true; break; }
+       **얼마나 걸리는지는 재서 안다.** 첫 도시만 어림값을 쓰고, 그 뒤로는 방금 돈
+       도시들의 평균에 20% 여유를 얹는다 — 도시마다 글 수가 달라(수원 3,889건 vs
+       태백급 수백 건) 고정값으로는 헛일이 나거나 시간을 남긴다. */
+    var perUnit = ranUnits ? (spent / ranUnits) * 1.2 : RIVAL_PER_PLACE_MS;
+    if (deadline && Date.now() > deadline - perUnit) { stoppedR = true; break; }
+    var unitT0 = Date.now();
+    var area = units[ui][0], place = units[ui][1];
+    stage_('LG비교 ' + area + ' / ' + place + ' (' + (ui + 1) + '/' + units.length + ')');
     var got = { ours: {}, rival: {} };     /* 링크로 중복을 없앤다 */
     var lastAdd = { ours: 0, rival: 0 };
     /* **갈래별로도 센다** — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다.
@@ -2654,75 +2694,80 @@ function collectRival(deadline) {
     var byKind = {}, byMon = {};
     /* **어디에 · 무엇을** (2026-09-02). 채널은 양쪽 따로, 품목은 한 표에 o/r 로 담는다 */
     var byChan = { ours: {}, rival: {} }, byProd = {}, noProd = { o: 0, r: 0 }, rvSample = [];
+    hard = false;
 
     var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
     for (var si = 0; si < side.length; si++) {
       var key = side[si][0], brands = side[si][1], bq = side[si][2];
       for (var ti = 0; ti < RTAILS.length; ti++) {
         var before = Object.keys(got[key]).length;
-        for (var pi = 0; pi < places.length; pi++) {
-          var place = places[pi];
-          var q = bq + ' ' + place + RTAILS[ti];
-          /* **블로그도 훑는다**(2026-09-01 사장님: *"삼성 vs LG 제대로 수집해서
-             디테일한 비교가 필요합니다"*). 예전에는 카페만 봤다 — 우리 후기의 36%가
-             블로그인데 경쟁비교에서 통째로 빠져 있었다. **양쪽에 똑같이 넣는다** —
-             한쪽만 늘리면 비중이 그 자리에서 거짓이 된다.
-             덤이 하나 더 있다: **블로그는 작성일을 주므로 추이 비교가 된다.** */
-          var SRCS = ['blog', 'cafearticle', 'webkr'];
-          for (var sj = 0; sj < SRCS.length; sj++) {
-            for (var page = 0; page < MAX_PAGES; page++) {
-              var j;
-              try { j = search_(SRCS[sj], q, page * PAGE_SIZE + 1); calls++; }
-              catch (e) { err = String(e); break; }
-              if (j.error) { err = j.error; break; }
-              var items = j.items || [];
-              for (var n = 0; n < items.length; n++) {
-                var it = items[n];
-                var text = (it.title || '') + ' ' + (it.description || '');
-                var lk0 = String(it.link || '');
-                if (linkNoise_(lk0)) continue;     /* 양쪽에 똑같이 — 한쪽만 걸면 비중이 거짓 */
-                if (!rivalHit_(text, brands, place)) continue;
-                var lk = lk0;
-                if (got[key][lk]) continue;        /* 이미 센 글 */
-                got[key][lk] = 1;
-                var sname = srcName_(SRCS[sj]);
-                bySrc[key][sname]++;
-                var ch = chanOf_(SRCS[sj], it, lk0);
-                if (ch) { byChan[key][ch] = (byChan[key][ch] || 0) + 1; }
-                var ps = prodOf_(String(it.title || '')), pj;
-                if (!ps.length) noProd[key === 'ours' ? 'o' : 'r']++;
-                for (pj = 0; pj < ps.length; pj++) {
-                  if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0 };
-                  byProd[ps[pj]][key === 'ours' ? 'o' : 'r']++;
-                }
-                /* **표본은 LG 쪽만 · 지역당 8건.** 사장님이 실물을 열어 볼 수 있어야
-                   숫자를 검산할 수 있다(이 저장소가 실물 확인을 늘 요구하는 이유다). */
-                if (key === 'rival' && rvSample.length < 8) {
-                  rvSample.push({ t: plain_(it.title), l: lk0, c: ch, s: sname, d: String(it.postdate || '') });
-                }
-                var kd = kindOf_(String(it.title || ''));
-                if (!byKind[kd]) byKind[kd] = { o: 0, r: 0 };
-                byKind[kd][key === 'ours' ? 'o' : 'r']++;
-                /* **월별은 블로그만** — 카페는 작성일이 없어 넣으면 이번 달만
-                   거대해진다(이 화면이 이미 두 번 데인 사고다). */
-                var pd = String(it.postdate || '');
-                if (pd.length === 8) {
-                  var mk = pd.slice(0, 4) + '-' + pd.slice(4, 6);
-                  if (!byMon[mk]) byMon[mk] = { o: 0, r: 0 };
-                  byMon[mk][key === 'ours' ? 'o' : 'r']++;
-                }
+        var q = bq + ' ' + place + RTAILS[ti];
+        /* **블로그도 훑는다**(2026-09-01 사장님: *"삼성 vs LG 제대로 수집해서
+           디테일한 비교가 필요합니다"*). 예전에는 카페만 봤다 — 우리 후기의 36%가
+           블로그인데 경쟁비교에서 통째로 빠져 있었다. **양쪽에 똑같이 넣는다** —
+           한쪽만 늘리면 비중이 그 자리에서 거짓이 된다.
+           덤이 하나 더 있다: **블로그는 작성일을 주므로 추이 비교가 된다.** */
+        var SRCS = ['blog', 'cafearticle', 'webkr'];
+        for (var sj = 0; sj < SRCS.length; sj++) {
+          for (var page = 0; page < MAX_PAGES; page++) {
+            /* **하드 스톱.** 여기까지 왔으면 이 도시는 예상보다 오래 걸린 것이다 —
+               더 가면 6분 한도에 죽어 **이 실행이 통째로 사라진다.** 반쪽을 저장하지
+               않고 버린 뒤 멈춘다(다음 실행이 이 도시부터 처음부터 다시 돈다). */
+            if (deadline && Date.now() > deadline) { hard = true; break; }
+            var j;
+            try { j = search_(SRCS[sj], q, page * PAGE_SIZE + 1); calls++; }
+            catch (e) { err = String(e); break; }
+            if (j.error) { err = j.error; break; }
+            var items = j.items || [];
+            for (var n = 0; n < items.length; n++) {
+              var it = items[n];
+              var text = (it.title || '') + ' ' + (it.description || '');
+              var lk0 = String(it.link || '');
+              if (linkNoise_(lk0)) continue;     /* 양쪽에 똑같이 — 한쪽만 걸면 비중이 거짓 */
+              if (!rivalHit_(text, brands, place)) continue;
+              var lk = lk0;
+              if (got[key][lk]) continue;        /* 이미 센 글 */
+              got[key][lk] = 1;
+              var sname = srcName_(SRCS[sj]);
+              bySrc[key][sname]++;
+              var ch = chanOf_(SRCS[sj], it, lk0);
+              if (ch) { byChan[key][ch] = (byChan[key][ch] || 0) + 1; }
+              var ps = prodOf_(String(it.title || '')), pj;
+              if (!ps.length) noProd[key === 'ours' ? 'o' : 'r']++;
+              for (pj = 0; pj < ps.length; pj++) {
+                if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0 };
+                byProd[ps[pj]][key === 'ours' ? 'o' : 'r']++;
               }
-              if (items.length < PAGE_SIZE) break;
+              /* **표본은 LG 쪽만 · 도시당 8건.** 사장님이 실물을 열어 볼 수 있어야
+                 숫자를 검산할 수 있다(이 저장소가 실물 확인을 늘 요구하는 이유다). */
+              if (key === 'rival' && rvSample.length < 8) {
+                rvSample.push({ t: plain_(it.title), l: lk0, c: ch, s: sname, d: String(it.postdate || '') });
+              }
+              var kd = kindOf_(String(it.title || ''));
+              if (!byKind[kd]) byKind[kd] = { o: 0, r: 0 };
+              byKind[kd][key === 'ours' ? 'o' : 'r']++;
+              /* **월별은 블로그만** — 카페는 작성일이 없어 넣으면 이번 달만
+                 거대해진다(이 화면이 이미 두 번 데인 사고다). */
+              var pd = String(it.postdate || '');
+              if (pd.length === 8) {
+                var mk = pd.slice(0, 4) + '-' + pd.slice(4, 6);
+                if (!byMon[mk]) byMon[mk] = { o: 0, r: 0 };
+                byMon[mk][key === 'ours' ? 'o' : 'r']++;
+              }
             }
-            if (err) break;
+            if (items.length < PAGE_SIZE) break;
           }
-          if (err) break;
+          if (err || hard) break;
         }
         if (ti === RTAILS.length - 1) lastAdd[key] = Object.keys(got[key]).length - before;
-        if (err) break;
+        if (err || hard) break;
       }
-      if (err) break;
+      if (err || hard) break;
     }
+
+    /* **반쪽은 저장하지 않는다.** 한쪽 진영만 훑고 끊긴 줄을 쓰면 그 지역 비중이
+       조용히 거짓이 된다 — 「없음」과 「못 잼」을 가르는 이 화면의 규칙 그대로다. */
+    if (hard) { stoppedR = true; break; }
 
     var a = Object.keys(got.ours).length, b = Object.keys(got.rival).length;
     /* ★ **「상한이면 못 잰다」는 쓸 수 없는 규칙이었다.**
@@ -2737,11 +2782,15 @@ function collectRival(deadline) {
       cyStamp, area, a, b,
       skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
       skew ? 'Y' : '',
-      places.join(' · '),
+      place,
       JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon),
       JSON.stringify({ ours: topN_(byChan.ours, 12), rival: topN_(byChan.rival, 12) }),
       JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample)
     ]);
+    /* **도시 하나를 끝낼 때마다 커서를 적는다.** 실행이 그 뒤에 죽어도 여기까지는
+       남는다 — 예전에는 함수 끝에서 한 번만 적어 6분에 죽으면 전부 잃었다. */
+    props_().setProperty('_rivalCur', String(ui + 1));
+    spent += Date.now() - unitT0; ranUnits++;
     if (err) break;
   }
 
@@ -2751,10 +2800,68 @@ function collectRival(deadline) {
   }
   if (calls) addUsage_(calls);
   /* 어디까지 했는지 적는다. 한 바퀴를 마쳤으면 지운다 — 다음 바퀴가 처음부터 돈다. */
-  var done = !stoppedR && !err;
+  var done = !stoppedR && !err && ui >= units.length;
   if (done) { props_().deleteProperty('_rivalCur'); props_().deleteProperty('_rivalStamp'); }
-  else props_().setProperty('_rivalCur', String(ai));
-  return { rows: rows.length, calls: calls, error: err, done: done, at: ai, areas: areas.length };
+  else props_().setProperty('_rivalCur', String(ui));
+  return { rows: rows.length, calls: calls, error: err, done: done, at: ui, areas: units.length };
+}
+
+/** **(지역, 도시) 쌍**을 순서대로. 일의 단위이자 이어 돌기의 커서 단위다. */
+function rivalUnits_() {
+  var out = [], names = Object.keys(AREA_Q), i, j;
+  for (i = 0; i < names.length; i++) {
+    var pl = AREA_Q[names[i]];
+    for (j = 0; j < pl.length; j++) out.push([names[i], pl[j]]);
+  }
+  return out;
+}
+
+/**
+ * 화면의 **「LG 비교 갱신」 버튼** (2026-09-02 사장님 요청 — *"lg홍보경로도 비어있습니다.
+ * 무슨 버튼을 눌르면 업데이트가되는지 만들어주세요"*).
+ *
+ * **왜 버튼이 필요한가.** LG 비교는 하루 한 번 수집에 얹혀 돌았다. 그런데 그 한 번이
+ * 강원에서 죽으면 **손쓸 길이 없었다** — 사장님이 화면에서 기다리는 수밖에.
+ * 그리고 「LG 홍보 경로」(채널·품목·표본)는 **이 회차가 새로 돌아야만** 채워진다.
+ * 옛 회차 줄에는 그 칸 자체가 없기 때문이다.
+ *
+ * **「지금 수집」과 다른 점** — 매장 훑기·매니저·카페를 건너뛰고 **LG 비교만** 돈다.
+ * 그래서 300초 예산을 통째로 쓴다(그쪽 길에서는 앞의 일들과 나눠 쓴다).
+ *
+ * **사람이 누른 것은 한도로 막지 않는다.** 오늘 이미 돌았어도(`_rivalAt`) 다시 돈다 —
+ * 「눌렀는데 아무 일도 안 일어난다」가 이 화면에서 가장 나쁜 고장이다.
+ */
+function runRival() {
+  /* **수집과 같은 자물쇠를 쓴다.** 두 벌이 같은 시트에 쓰면 같은 회차가 두 줄로 들어가
+     `rival_()` 의 합산이 두 배가 된다(중복 정리가 이미 데인 그 사고와 같은 뿌리다). */
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10 * 1000)) {
+    return { ok: false, busy: true,
+      note: '지금 수집이 돌고 있습니다 — 끝난 뒤에 다시 눌러 주세요.' };
+  }
+  try {
+    var t0 = Date.now();
+    props_().setProperty('_runAt', String(t0));
+    stage_('LG비교 (버튼)');
+    var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+    props_().deleteProperty('_rivalAt');
+    var units = rivalUnits_().length;
+    var r = { rows: 0, calls: 0, error: '', done: false, at: 0, areas: units };
+    try {
+      r = collectRival(t0 + RIVAL_MS);
+      if (r && r.done) props_().setProperty('_rivalAt', today);
+    } catch (e) { r.error = String(e); }
+    /* **집계 캐시를 버린다** — 안 버리면 최대 6시간 옛 값이 화면에 굳어
+       「눌렀는데 그대로」가 된다(이 화면이 이미 한 번 겪은 사고다). */
+    sumCacheClear_();
+    stage_(r.done ? 'LG비교 마침 (버튼)' : 'LG비교 멈춤 (버튼)');
+    /* **못 끝냈으면 스스로 이어 간다** — 사람을 다시 부르면 자물쇠에 막힌다.
+       `clearChain_` 은 부르지 않는다: 매장 수집 쪽 이어달리기까지 끊긴다. */
+    var chained = false;
+    if (!r.done && !r.error) { try { chain_(); chained = true; } catch (e2) { /* 아래에서 알린다 */ } }
+    return { ok: true, rows: r.rows, calls: r.calls, error: r.error, done: r.done,
+      at: r.at, units: r.areas, left: Math.max(0, r.areas - r.at), chained: chained };
+  } finally { lock.releaseLock(); }
 }
 
 /** 시트 칸의 JSON 을 읽는다. **깨져 있으면 빈 객체다** — 던지면 화면 전체가 죽는다. */
@@ -2764,24 +2871,81 @@ function jparse_(x) {
   try { return JSON.parse(t) || {}; } catch (e) { return {}; }
 }
 
-/** 화면에 낼 최신 한 회차. **없으면 없다고 한다** — 0 으로 그리지 않는다. */
+/**
+ * 숫자 트리를 더한다. **깊이를 묻지 않는다** — `{블로그:3}` 도 `{ours:{블로그:3}}` 도
+ * 같은 함수로 합쳐진다. 도시 줄을 지역으로 묶을 때 `bySrc`·`byKind`·`byMonth`·
+ * `byChan`·`byProd` 다섯이 전부 이 모양이라 하나면 된다.
+ * **숫자가 아닌 값은 건너뛴다** — 옛 회차의 깨진 칸이 섞여도 화면이 죽지 않는다.
+ */
+function mergeNum_(dst, src) {
+  if (!src || typeof src !== 'object') return dst;
+  var k = Object.keys(src), i;
+  for (i = 0; i < k.length; i++) {
+    var sv = src[k[i]];
+    if (typeof sv === 'number') dst[k[i]] = (Number(dst[k[i]]) || 0) + sv;
+    else if (sv && typeof sv === 'object') {
+      if (!dst[k[i]] || typeof dst[k[i]] !== 'object') dst[k[i]] = {};
+      mergeNum_(dst[k[i]], sv);
+    }
+  }
+  return dst;
+}
+
+/**
+ * 화면에 낼 최신 한 회차. **없으면 없다고 한다** — 0 으로 그리지 않는다.
+ *
+ * ── **도시 줄을 지역으로 합산한다** (2026-09-02) ──────────────────────────
+ * `collectRival` 이 **도시 단위로** 쓴다(강원이 6분 한도에 죽던 것을 그렇게 고쳤다).
+ * 화면이 보는 단위는 예전과 똑같이 **여섯 지역**이라, 읽을 때 여기서 묶는다.
+ * **옛 회차는 지역당 줄이 하나라 그대로 통과한다** — 합산이 항등이 된다.
+ *
+ * **비중은 합산한 뒤 다시 계산한다** — 도시별 비중을 평균 내면 글이 적은 도시가
+ * 큰 도시와 같은 무게를 갖는다. **한 도시라도 못 잰(`capped`) 지역은 비중을 비운다** —
+ * 반쪽 근거로 낸 숫자를 화면에 띄우지 않는다는 이 화면의 규칙 그대로다.
+ */
 function rival_() {
   var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
   if (sh.getLastRow() < 2) return null;
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, RIVAL_HEADER.length).getValues();
   var last = '', i;
   for (i = 0; i < v.length; i++) { var t = String(v[i][0]); if (t > last) last = t; }
-  var out = [];
+  var by = {}, order = [];
   for (i = 0; i < v.length; i++) {
     if (String(v[i][0]) !== last) continue;
+    var area = String(v[i][1]);
+    if (!by[area]) {
+      by[area] = {
+        area: area, ours: 0, rival: 0, capped: false, q: [],
+        bySrc: {}, byKind: {}, byMonth: {}, byChan: {}, byProd: {}, sample: []
+      };
+      order.push(area);
+    }
+    var g = by[area];
+    g.ours += Number(v[i][2]) || 0;
+    g.rival += Number(v[i][3]) || 0;
+    if (String(v[i][5]) === 'Y') g.capped = true;
+    var qq = String(v[i][6] || '');
+    if (qq && g.q.indexOf(qq) < 0) g.q.push(qq);
+    /* **옛 회차에는 이 칸이 없다** — 그때는 빈 객체로 둔다(0 으로 그리면
+       「없다」가 되어 거짓이다). 화면이 비었으면 그 절을 안 그린다. */
+    mergeNum_(g.bySrc, jparse_(v[i][7]));
+    mergeNum_(g.byKind, jparse_(v[i][8]));
+    mergeNum_(g.byMonth, jparse_(v[i][9]));
+    mergeNum_(g.byChan, jparse_(v[i][10]));
+    mergeNum_(g.byProd, jparse_(v[i][11]));
+    var sp = jparse_(v[i][12]);
+    /* 표본은 배열이라 따로 — **지역당 8건까지**(도시가 셋이어도 화면은 그대로다) */
+    if (sp && sp.length) for (var sk = 0; sk < sp.length && g.sample.length < 8; sk++) g.sample.push(sp[sk]);
+  }
+  var out = [];
+  for (i = 0; i < order.length; i++) {
+    var r = by[order[i]], tot = r.ours + r.rival;
     out.push({
-      area: String(v[i][1]), ours: Number(v[i][2]) || 0, rival: Number(v[i][3]) || 0,
-      pct: v[i][4] === '' || v[i][4] === null ? null : Number(v[i][4]),
-      capped: String(v[i][5]) === 'Y', queries: String(v[i][6]),
-      /* **옛 회차에는 이 칸이 없다** — 그때는 빈 객체로 둔다(0 으로 그리면
-         「없다」가 되어 거짓이다). 화면이 비었으면 그 절을 안 그린다. */
-      bySrc: jparse_(v[i][7]), byKind: jparse_(v[i][8]), byMonth: jparse_(v[i][9]),
-      byChan: jparse_(v[i][10]), byProd: jparse_(v[i][11]), sample: jparse_(v[i][12])
+      area: r.area, ours: r.ours, rival: r.rival,
+      pct: r.capped || tot === 0 ? null : Math.round((r.ours / tot) * 100),
+      capped: r.capped, queries: r.q.join(' · '),
+      bySrc: r.bySrc, byKind: r.byKind, byMonth: r.byMonth,
+      byChan: r.byChan, byProd: r.byProd, sample: r.sample
     });
   }
   return { at: last, rows: out };
@@ -3058,6 +3222,12 @@ function freshState_(d) {
     d.rivalCur = String(props_().getProperty('_rivalCur') || '');
     d.rivalTry = Number(props_().getProperty('_rivalTry') || 0);
     d.rivalAreas = Object.keys(AREA_Q).length;
+    /* **기대 지역을 이름으로 보낸다**(2026-09-02). 개수만 보내던 시절에는 화면이
+       *"강원이 빠졌다"* 를 말할 수 없어 **다섯 곳만 조용히 그렸다** — 사장님이 그것을
+       세 번 물으셨다. 이름이 있어야 화면이 무엇이 없는지 적을 수 있다.
+       **도시까지 함께 보낸다** — 「11개 도시 중 8번째」 같은 진행을 화면이 낼 수 있다. */
+    d.rivalAreaNames = Object.keys(AREA_Q);
+    d.rivalUnits = rivalUnits_().length;
     d.deadAt = String(props_().getProperty('_deadAt') || '');
     d.runAt = Number(props_().getProperty('_runAt') || 0);
     d.now = Date.now();

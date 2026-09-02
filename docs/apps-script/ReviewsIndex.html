@@ -577,6 +577,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
            늘 띄워 두면 「눌러야 하나」 싶어지므로 **치울 것이 있을 때만** 나온다. -->
       <button class="btn" id="dedupe" hidden>중복 정리</button>
+      <!-- 2026-09-02 사장님 요청 — *"lg홍보경로도 비어있습니다. 무슨 버튼을 눌르면
+           업데이트가되는지 만들어주세요"*. **「지금 수집」과 하는 일이 다르다** —
+           매장 훑기를 건너뛰고 LG 비교만 돌아 300초 예산을 통째로 쓴다.
+           「당사 vs LG」와 「LG 홍보 경로」 둘 다 이 한 번으로 채워진다. -->
+      <button class="btn" id="runrival">LG 비교 갱신</button>
       <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
            한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
       <span class="lim">
@@ -871,6 +876,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
   function nf(n) { return Number(n || 0).toLocaleString('ko-KR'); }
+  /** 받침을 보고 조사를 고른다 — 「강원 은(는)」처럼 적으면 화면이 어설퍼진다.
+      한글이 아니면 받침 있는 쪽을 쓴다(영문·숫자 뒤에는 그쪽이 덜 어색하다). */
+  function josa(word, withJong, without) {
+    var t = String(word || '');
+    if (!t) return withJong;
+    var c = t.charCodeAt(t.length - 1);
+    if (c < 0xAC00 || c > 0xD7A3) return withJong;
+    return ((c - 0xAC00) % 28) ? withJong : without;
+  }
 
   /* 막대 — 값이 0 이면 그리지 않는다(빈 막대가 줄지어 서면 진짜 신호가 묻힌다).
      **다만 0 건도 세어서 밝힌다** — 65개 매장을 전부 수집하므로(2026-08-31 사장님 지시)
@@ -2224,8 +2238,8 @@ function wireSecs() {
     if (!R || !R.rows || !R.rows.length) {
       var rel = document.getElementById('rival');
       if (rel) {
-        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>다음 수집 때 함께 잽니다</b>'
-          + '(지역 6곳 · 40회). 삼성스토어와 LG베스트샵에 <b>같은 질의</b>를 던져 비중을 냅니다.</div>';
+        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>맨 위 「LG 비교 갱신」 버튼</b>을 '
+          + '누르면 지금 바로 잽니다(최대 5분). 삼성스토어와 LG베스트샵에 <b>같은 질의</b>를 던져 비중을 냅니다.</div>';
         /* 보임은 applySecs 가 정한다 */
       }
       return;
@@ -2260,6 +2274,26 @@ function wireSecs() {
             : '<div class="vl ' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</div>') +
           '</div>';
       }).join('');
+
+    /* ── **빠진 지역을 이름으로 적는다** (2026-09-02 사장님 3회 지적) ──────────
+     * 예전에는 있는 것만 그리고 **없는 것에 대해 아무 말도 안 했다** — 강원이 매번
+     * 6분 한도에 죽어 다섯 곳만 뜨는데 화면이 침묵하니, 사장님은 *"강원 지역 타사비중
+     * 안 나오고 있습니다"* 를 세 번 물으셔야 했다.
+     * **화면에서 사라진 것과 「아직 안 쟀다」는 다른 말이다** — 이 화면이 「없음 /
+     * 못 잼 / 미공개」를 가르는 그 규칙 그대로다. */
+    var want = DATA.rivalAreaNames || [];
+    if (want.length) {
+      var have = {};
+      rows.forEach(function (r) { have[r.area] = 1; });
+      var miss = want.filter(function (a) { return !have[a]; });
+      if (miss.length) {
+        el.innerHTML += '<div class="note warn" style="margin-top:8px"><b>'
+          + esc(miss.join(' · ')) + '</b>' + josa(miss[miss.length - 1], '은', '는')
+          + ' 아직 못 쟀습니다 — 값이 없는 것이지 '
+          + '<b>LG 후기가 없다는 뜻이 아닙니다</b>. '
+          + '맨 위 <b>「LG 비교 갱신」</b>을 누르면 멈춘 도시부터 이어서 잽니다.</div>';
+      }
+    }
 
     /* ── 갈래별 (2026-09-01 사장님: *"디테일한 비교가 필요합니다"*) ───────────
      * 지역 여섯을 **합쳐서** 낸다 — 지역별로 또 쪼개면 칸이 18개가 되어 못 읽는다.
@@ -2351,8 +2385,9 @@ function renderPromo() {
   if (!box) return;
   var R = DATA.rival, rows = (R && R.rows) || [];
   if (!rows.length) {
-    if (sub) sub.textContent = '아직 안 쟀습니다 — 다음 수집 때 채워집니다';
-    box.innerHTML = '<div class="pnote">당사 vs LG 자료가 아직 없습니다. 하루 한 번 도는 비교가 끝나면 여기가 채워집니다.</div>';
+    if (sub) sub.textContent = '아직 안 쟀습니다 — 맨 위 「LG 비교 갱신」을 누르세요';
+    box.innerHTML = '<div class="pnote">당사 vs LG 자료가 아직 없습니다. '
+      + '<b>맨 위 「LG 비교 갱신」 버튼</b>을 누르면 지금 바로 채웁니다(최대 5분).</div>';
     return;
   }
 
@@ -2375,8 +2410,11 @@ function renderPromo() {
 
   var nChan = Object.keys(chan.rival).length + Object.keys(chan.ours).length;
   if (!nChan && !Object.keys(prod).length) {
-    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다';
-    box.innerHTML = '<div class="pnote">이 비교 회차는 채널·품목을 세기 전에 돈 것입니다 — 다음 수집부터 채워집니다. 그 전에도 위 「당사 vs LG」의 비중·출처는 그대로 볼 수 있습니다.</div>';
+    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다 — 맨 위 「LG 비교 갱신」을 누르세요';
+    box.innerHTML = '<div class="pnote">이 비교 회차는 <b>채널·품목을 세기 전에 돈 것</b>입니다 — '
+      + '옛 회차 줄에는 그 칸 자체가 없어 되살릴 방법이 없습니다. '
+      + '<b>맨 위 「LG 비교 갱신」 버튼</b>을 누르면 새 회차를 돌아 여기를 채웁니다(최대 5분, '
+      + '11개 도시라 몇 번 이어 돕니다). 그 전에도 위 「당사 vs LG」의 비중·출처는 그대로 볼 수 있습니다.</div>';
     return;
   }
 
@@ -3367,6 +3405,64 @@ function renderList() {
 
   document.getElementById('run').onclick = function () { runCollect(this, 'quick'); };
   document.getElementById('runfull').onclick = function () { runCollect(this, 'full'); };
+
+  /* ── 「LG 비교 갱신」 (2026-09-02 사장님 요청) ────────────────────────────
+   * *"lg홍보경로도 비어있습니다. 무슨 버튼을 눌르면 업데이트가되는지 만들어주세요"*.
+   *
+   * **한 번에 다 못 끝낸다** — 6분 한도라 도시 두셋씩 이어 돈다(11도시).
+   * 그래서 **어디까지 갔는지와 스스로 이어 가는지를 반드시 적는다** — 안 적으면
+   * 「눌렀는데 절반만 나온다」로 읽힌다.
+   */
+  document.getElementById('runrival').onclick = function () {
+    var b = this, label = b.textContent;
+    b.disabled = true; b.textContent = 'LG 비교 중… (최대 5분)';
+    var undo = function () { b.disabled = false; b.textContent = label; };
+    var st = document.getElementById('status');
+    st.innerHTML = '<div class="note"><b>LG 비교를 돌고 있습니다</b> — 최대 5분 걸립니다. '
+      + '이 쪽을 닫지 마세요.</div>';
+    if (!(window.google && google.script && google.script.run)) {
+      undo(); st.innerHTML = '<div class="note warn">미리보기에서는 돌지 않습니다.</div>'; return;
+    }
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (r && r.busy) {
+          undo();
+          st.innerHTML = '<div class="note warn"><b>' + esc(r.note) + '</b></div>';
+          return;
+        }
+        var msg = '<div class="note"><b>LG 비교를 '
+          + (r.done ? '한 바퀴 마쳤습니다' : '돌았습니다') + '</b> — '
+          + nf(r.units) + '개 도시 중 <b>' + nf(r.at) + '번째</b>까지 훑어 '
+          + nf(r.rows) + '곳을 새로 적었습니다.';
+        if (!r.done) {
+          msg += ' 6분 실행 한도로 멈췄고 <b>' + nf(r.left) + '곳이 남았습니다</b> — '
+            + (r.chained
+                ? '<b>1분 뒤 스스로 이어 갑니다.</b> 그냥 두셨다가 잠시 뒤 새로고침하시면 됩니다.'
+                : '<b>이 버튼을 다시 눌러 주세요</b> — 멈춘 도시부터 이어 갑니다.');
+        }
+        if (r.error) msg += ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>';
+        msg += '</div>';
+        st.innerHTML = msg;
+        /* **화면을 새로 그린다** — 안 그리면 방금 채운 값이 안 보여
+           「눌렀는데 그대로」가 된다. 실패해도 자료는 시트에 있다는 것을 적는다. */
+        google.script.run
+          .withSuccessHandler(function (d) { undo(); applySummary(d); })
+          .withFailureHandler(function (e) {
+            undo();
+            st.innerHTML += '<div class="note warn" style="margin-top:6px">'
+              + '<b>비교는 끝났지만 화면을 새로 그리지 못했습니다</b> — ' + esc(e && e.message)
+              + '<br><b>자료는 시트에 그대로 있습니다.</b> <a href="">이 쪽을 새로고침</a>하면 보입니다.</div>';
+          })
+          .getSummary();
+      })
+      .withFailureHandler(function (e) {
+        undo();
+        st.innerHTML = '<div class="note warn"><b>LG 비교에 실패했습니다</b> — '
+          + esc(e && e.message) + '<br>Apps Script 는 한 번에 6분까지만 돌 수 있습니다. '
+          + '<b>이미 적은 것은 시트에 그대로 있습니다</b> — 다시 누르면 멈춘 도시부터 이어 갑니다.</div>';
+      })
+      .runRival();
+  };
 
 
   /* ── 부팅 ────────────────────────────────────────────────────────────────

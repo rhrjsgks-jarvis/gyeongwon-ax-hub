@@ -2553,6 +2553,104 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } else {
       console.log('OK: 바이럴 자물쇠 — 이어달리기와 손수 수집이 겹쳐도 중복이 안 쌓인다');
     }
+
+    /* ── ⑦ LG 비교: 도시 단위로 일하고 지역으로 합쳐 보고한다 (2026-09-02) ──────
+       강원(도시 3)이 매번 6분 한도에 죽어 **다섯 지역만 뜨는데 화면이 침묵했다** —
+       사장님이 세 번 물으셨다. 일의 단위를 도시로 쪼개고 읽을 때 지역으로 합친다. */
+    {
+      const bad = [];
+      const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+
+      /* ⓐ 도시 단위로 돈다 — 지역을 통째로 도는 옛 구조로 되돌아가면 강원이 또 죽는다 */
+      if (!rv.includes('function rivalUnits_(')) bad.push('rivalUnits_ 가 없다 — 도시 단위 커서가 사라졌다');
+      if (rv.includes('RIVAL_PER_PLACE_MS * places.length')) {
+        bad.push('지역 통째 루프로 되돌아갔다 — 강원이 다시 6분 한도에 죽는다');
+      }
+      /* ⓑ **하드 스톱** — 도시 안에서도 마감을 보지 않으면 6분에 죽어 실행이 통째로 사라진다 */
+      if (!rv.includes('if (deadline && Date.now() > deadline) { hard = true; break; }')) {
+        bad.push('도시 안 하드 스톱이 없다 — 오래 걸리는 도시에서 실행이 통째로 죽는다');
+      }
+      /* ⓒ **반쪽은 저장하지 않는다** — 한쪽 진영만 훑고 끊긴 줄을 쓰면 비중이 거짓이 된다 */
+      if (!rv.includes('if (hard) { stoppedR = true; break; }')) {
+        bad.push('하드 스톱에 걸린 도시를 그대로 저장한다 — 반쪽 비중이 화면에 나간다');
+      }
+      /* ⓓ 도시마다 커서를 적는다 — 함수 끝에서 한 번만 적으면 죽을 때 전부 잃는다 */
+      if (!rv.includes("props_().setProperty('_rivalCur', String(ui + 1));")) {
+        bad.push('도시마다 커서를 안 적는다 — 실행이 죽으면 그 회차를 통째로 잃는다');
+      }
+      /* ⓔ 걸린 시간을 재서 다음 도시 시작 여부를 정한다 */
+      if (!rv.includes('spent / ranUnits')) bad.push('도시 소요 시간을 재지 않는다 — 고정값은 헛일이 나거나 시간을 남긴다');
+
+      /* ⓕ **떼어 돌린다** — 도시 줄 셋이 지역 하나로 합쳐지는가.
+             문자열 존재만 보면 합산 규칙이 뒤집혀도 통과한다. */
+      const cutFn = (name) => {
+        const at = rv.indexOf('function ' + name + '(');
+        if (at < 0) return '';
+        let d = 0;
+        for (let j = rv.indexOf('{', at); j < rv.length; j++) {
+          if (rv[j] === '{') d++;
+          else if (rv[j] === '}') { d--; if (!d) return rv.slice(at, j + 1); }
+        }
+        return '';
+      };
+      let mergeNum = null;
+      try { mergeNum = new Function(cutFn('mergeNum_') + ' return mergeNum_;')(); }
+      catch (e) { mergeNum = null; }
+      if (!mergeNum) bad.push('mergeNum_ 를 떼어 돌릴 수 없다 — 합산 규칙을 검사할 수 없다');
+      else {
+        /* 깊이를 묻지 않고 더한다 — bySrc(2단) · byKind(2단) · byProd(3단)가 전부 이 모양이다 */
+        const d1 = mergeNum({}, { ours: { 블로그: 3, 카페: 1 } });
+        mergeNum(d1, { ours: { 블로그: 2, 웹: 5 }, rival: { 카페: 4 } });
+        if (d1.ours.블로그 !== 5 || d1.ours.카페 !== 1 || d1.ours.웹 !== 5 || d1.rival.카페 !== 4) {
+          bad.push('mergeNum_ 이 중첩 숫자를 제대로 더하지 못한다: ' + JSON.stringify(d1));
+        }
+        const d2 = mergeNum({}, { prod: { 냉장고: { o: 1, r: 2 } }, none: { o: 3, r: 0 } });
+        mergeNum(d2, { prod: { 냉장고: { o: 4, r: 0 }, TV: { o: 1, r: 1 } }, none: { o: 2, r: 5 } });
+        if (d2.prod.냉장고.o !== 5 || d2.prod.냉장고.r !== 2 || d2.prod.TV.o !== 1 || d2.none.o !== 5 || d2.none.r !== 5) {
+          bad.push('mergeNum_ 이 3단(byProd)을 제대로 더하지 못한다: ' + JSON.stringify(d2));
+        }
+        /* **숫자가 아닌 값에 걸려 죽지 않는다** — 옛 회차의 깨진 칸이 섞여도 화면이 살아야 한다 */
+        try { mergeNum({}, { a: 'xx', b: null, c: 3 }); } catch (e) { bad.push('mergeNum_ 이 숫자가 아닌 값에 죽는다'); }
+      }
+
+      /* ⓖ **비중은 합산한 뒤 다시 계산한다** — 도시별 비중을 평균 내면 작은 도시가 큰 도시와 같은 무게가 된다.
+             그리고 한 도시라도 못 잰 지역은 비중을 비운다. */
+      if (!rv.includes('pct: r.capped || tot === 0 ? null : Math.round((r.ours / tot) * 100)')) {
+        bad.push('rival_() 이 합산 뒤 비중을 다시 계산하지 않는다');
+      }
+
+      /* ⓗ **버튼** (사장님 요청) — 서버 진입점 · 화면 버튼 · 그 둘이 이어져 있는가 */
+      if (!rv.includes('function runRival()')) bad.push('runRival() 이 없다 — 화면에서 LG 비교를 돌릴 길이 없다');
+      if (!rv.includes("props_().deleteProperty('_rivalAt');")) {
+        bad.push('버튼이 오늘 표식을 지우지 않는다 — 눌러도 「오늘은 이미 했다」로 건너뛴다');
+      }
+      if (!/sumCacheClear_\(\);[\s\S]{0,400}stage_\(r\.done/.test(rv)) {
+        bad.push('버튼이 집계 캐시를 안 버린다 — 최대 6시간 옛 값이 화면에 굳는다');
+      }
+      if (!ix.includes('id="runrival"')) bad.push('화면에 「LG 비교 갱신」 버튼이 없다');
+      if (!ix.includes('.runRival();')) bad.push('버튼이 runRival 을 부르지 않는다');
+
+      /* ⓘ **빠진 지역을 이름으로 적는다** — 이 침묵이 사장님을 세 번 묻게 했다 */
+      if (!rv.includes('d.rivalAreaNames = Object.keys(AREA_Q);')) {
+        bad.push('기대 지역 이름을 안 보낸다 — 화면이 무엇이 빠졌는지 말할 수 없다');
+      }
+      if (!ix.includes('아직 못 쟀습니다')) bad.push('빠진 지역을 화면이 적지 않는다 — 조용히 다섯 곳만 그린다');
+      if (!ix.includes("josa(miss[miss.length - 1], '은', '는')")) {
+        bad.push('조사를 받침으로 고르지 않는다 — 「강원 은(는)」이 그대로 나간다');
+      }
+
+      /* ⓙ **collectRival 이 쓰는 것들이 살아 있는가.** 2026-09-02 에 이 블록을 갈아
+             끼우다 `plain_`·`chanOf_`·`prodOf_`·`topN_`·`PROD_Q` 를 통째로 삼켰다 —
+             **문법 검사는 통과했다**(없는 함수를 부르는 것은 런타임 오류라). 배포했으면
+             LG 비교가 그 자리에서 죽었을 것이다. */
+      ['plain_', 'chanOf_', 'prodOf_', 'topN_', 'rivalHit_', 'srcName_', 'kindOf_', 'linkNoise_'].forEach((f) => {
+        if (!rv.includes('function ' + f + '(')) bad.push('collectRival 이 쓰는 ' + f + ' 가 사라졌다');
+      });
+      if (!rv.includes('var PROD_Q = [')) bad.push('PROD_Q 표가 사라졌다 — 품목을 못 센다');
+
+      if (bad.length) fail('[바이럴] LG 비교 도시 단위 — ' + bad.join(' · '));
+      else console.log('OK: 바이럴 LG 비교 — 도시 단위로 돌고 지역으로 합산 · 버튼 · 빠진 지역을 이름으로 적는다');
+    }
   }
 }
 
