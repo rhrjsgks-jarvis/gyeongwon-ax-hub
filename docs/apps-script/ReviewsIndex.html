@@ -303,6 +303,18 @@
 
   /* 왼쪽 매장 격자 · 오른쪽 지점별 분석. 좁은 화면에서는 아래로 쌓인다 */
   /* 색 고르개 — 지도 카드 아래 한 줄 */
+  /* 「어디에 올라오나」 칸 — 매장 칸과 같은 규격. 이름이 길어(「레몬테라스 [인테리어,
+     리폼,DIY]」) 두 줄까지 보이게 하고 넘치면 말줄임한다. */
+  .st.bx .bxn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+                overflow: hidden; word-break: break-all; min-height: 30px; }
+  .st.bx .ic { background: #5B6472; }
+  .st.bx.on .ic { background: rgba(255,255,255,.92); color: var(--blue); }
+  .st.bx .mini-tr { display: block; width: 100%; height: 3px; border-radius: 2px;
+                    background: #EEF1F6; margin-top: 3px; overflow: hidden; }
+  .st.bx .mini-tr i { display: block; height: 100%; background: var(--blue); }
+  .st.bx.on .mini-tr { background: rgba(255,255,255,.35); }
+  .st.bx.on .mini-tr i { background: #fff; }
+
   .acolbox { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
   .acol { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px;
           font-size: 12px; color: #374151; cursor: pointer; }
@@ -1005,13 +1017,21 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var max = shown[0][1];
     /* **막대를 누르면 그 건수의 링크만 본다**(2026-08-31 사장님 지시). 건수만 있고
        링크로 갈 길이 없으면 *"북수원 50건"* 을 보고도 그 50 개를 확인할 수가 없다. */
-    var html = shown.map(function (p) {
+    /* **박스로 그린다**(2026-09-02 사장님 지적 — *"하단에 아주작은글씨로 나오는데
+       각 올라오는 유형별로 폴더처럼 박스안에 다이렉트웨딩 00건 이런식으로 …
+       지금은 시인성이 좋지않습니다"*).
+       규격은 매장 칸(`.st`)과 같다 — 같은 화면에서 두 격자가 다른 크기면 눈이 헤맨다.
+       **막대를 없애지 않고 칸 안에 얇게 깐다** — 「어디가 많은가」를 폭으로도 읽는다. */
+    var html = '<div class="rg-b">' + shown.map(function (p) {
       var on = (kind === 'store' ? storeFilter : cafeFilter) === p[0];
-      return '<div class="bar pick' + (on ? ' on' : '') + '" data-k="' + esc(kind) + '" data-v="' + esc(p[0]) + '">' +
-        '<div class="nm" title="' + esc(p[0]) + '">' + esc(p[0]) + '</div>' +
-        '<div class="tr"><div class="fl" style="width:' + Math.max(3, p[1] / max * 100) + '%"></div></div>' +
-        '<div class="vl">' + nf(p[1]) + '</div></div>';
-    }).join('');
+      return '<button class="st bx pick' + (on ? ' on' : '') + '" data-k="' + esc(kind) + '"' +
+        ' data-v="' + esc(p[0]) + '" title="' + esc(p[0]) + '">' +
+        '<span class="ic">' + CAFE_SVG + '</span>' +
+        '<span class="bxn">' + esc(p[0]) + '</span>' +
+        '<b>' + nf(p[1]) + '<span class="u">건</span></b>' +
+        '<span class="mini-tr"><i style="width:' + Math.max(4, p[1] / max * 100) + '%"></i></span>' +
+        '</button>';
+    }).join('') + '</div>';
     var tail = [];
     if (arr.length > limit) tail.push('그 밖 ' + (arr.length - limit) + '곳');
     if (zero > 0) tail.push('아직 0건 ' + zero + '곳');
@@ -2270,6 +2290,11 @@ function wireSecs() {
    * 않는다(생성한 규칙이 뒤에 오므로 이긴다).
    * **아이콘도 같은 색을 쓴다** — 같은 지역이 지도와 매장 칸에서 다른 색이면 눈이 헤맨다. */
   var AREA_N = { '수원': 1, '성남': 2, '용인': 3, '평택': 4, '안양': 5, '강원': 6 };
+  /* 카페 아이콘 — 이모지를 쓰지 않는다(OS 마다 모양이 다르다). 본체와 같은 규칙:
+     24×24 · stroke 1.6 · currentColor. */
+  var CAFE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"' +
+    ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M4 5h16v10a3 3 0 0 1-3 3H9l-5 3z"/><path d="M8 10h8M8 13.5h5"/></svg>';
   function hex2rgb(h) {
     var m = /^#([0-9a-f]{6})$/i.exec(String(h || ''));
     if (!m) return null;
