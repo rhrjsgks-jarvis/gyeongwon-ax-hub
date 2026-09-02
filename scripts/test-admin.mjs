@@ -2151,6 +2151,30 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         } else console.log('OK: 바이럴 지도 — 커밋본이 재생성 결과와 같다');
       }
 
+      /* ⓐ-2 **화면이 부르는 서버 함수가 실제로 있는가**(2026-09-02 신설).
+         `google.script.run.xxx()` 는 **없는 이름을 불러도 조용히 실패하지 않고 던진다.**
+         그러면 진행률 폴링은 `progBusy` 가 참으로 굳어 **그 세션 내내 죽는다** — 화면은
+         멀쩡해 보이는데 진행 표시만 옛 값에서 멈추는 조용한 고장이다.
+         **미리보기 하네스도 함께 본다.** 하네스에 스텁이 빠지면 그 오류가 콘솔을 채워
+         정작 보려던 진짜 결함이 묻힌다 — 이 화면을 눈으로 보는 유일한 길이라 더 나쁘다. */
+      {
+        const scr2 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+        const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+        /* 체이닝(`.withSuccessHandler(...).getSummary()`) 끝에 오는 이름만 고른다 */
+        const called = [...new Set([...scr2.matchAll(/\n\s*\.([a-zA-Z][A-Za-z0-9_]*)\(\);/g)].map((m) => m[1]))]
+          .filter((n) => n !== 'withSuccessHandler' && n !== 'withFailureHandler');
+        const noSrv = called.filter((n) => !rv.includes('function ' + n + '('));
+        const noStub = called.filter((n) => !new RegExp('\\b' + n + ': function').test(pv));
+        if (!called.length) fail('[바이럴] 화면이 부르는 서버 함수를 못 찾았다 — 이 검사가 아무것도 못 지킨다');
+        else if (noSrv.length) fail('[바이럴] 화면이 없는 서버 함수를 부른다: ' + noSrv.join(', ') + ' — 그 자리에서 던진다');
+        else if (noStub.length) fail('[바이럴] 미리보기 하네스에 스텁이 없다: ' + noStub.join(', ') + ' — 콘솔 오류에 진짜 결함이 묻힌다');
+        else console.log('OK: 바이럴 — 화면이 부르는 서버 함수 ' + called.length + '개가 Reviews.gs·하네스 양쪽에 있다');
+        /* 던져도 폴링이 안 죽는가 — 굳으면 진행 표시가 조용히 멈춘다 */
+        if (!/catch \(e\) \{ progBusy = false; stopPoll\(\); \}/.test(scr2)) {
+          fail('[바이럴] getProgress 가 던지면 progBusy 가 굳는다 — 그 세션의 진행률 폴링이 영구히 죽는다');
+        }
+      }
+
       /* ⓑ 지도 칸이 **집계 단위와 어긋나지 않는가.** 경기는 AREA 그대로, 강원만 시로
          푼다 — 강원 시가 AREA 를 벗어나면 지도 합계와 지역 막대가 갈린다. */
       const cellFn = (rv.match(/function mapCell_\(code\) \{[\s\S]*?\n\}/) || [''])[0];
@@ -2170,6 +2194,58 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         else if (stray.length) {
           fail('[바이럴] GW_CITY 에 강원이 아닌 매장이 있다 (' + stray.join(' ') + ') — 지도 합계가 지역 막대와 어긋난다');
         } else console.log('OK: 바이럴 지도 칸 — 강원 ' + codes.length + '곳이 전부 AREA 강원 안이다');
+
+        /* ⓑ-2 **지도에 없는 칸을 가리키는 매장이 「몰래」 늘지 않는가**(2026-09-02 신설).
+           `mapCell_` 은 구를 모르면 시 이름을 그대로 돌려주는데, 그 시가 구로 갈려
+           있으면 **그런 칸은 지도에 없어 그 매장 후기가 어디에도 안 칠해진다.**
+           지금 그런 매장은 **「수원」(Z619) 하나이고 그것은 결함이 아니라 결정이다** —
+           소재지는 용인 기흥구인데 편성은 수원이라(2026-09-01 사장님 확정 *"Z619는
+           수원으로 편입해 주세요"*) **알면서도 구를 단정하지 않기로 했다.** 화면이
+           *"어느 구인지 몰라 지도에 안 칠했습니다"* 로 건수를 밝힌다.
+           그래서 **0 을 요구하지 않고 「등재된 것만」을 요구한다** — 새 매장이 조용히
+           지도에서 사라지는 것은 막고, 사장님이 정한 예외는 통과시킨다.
+           예외 목록의 출처는 `store-gu.json` 의 `_구를 모르는 매장` 이다(코드가 적혀 있다).
+           **문자열이 아니라 실제로 돌려서** 본다 — 소스에 그 줄이 있는지만 보면
+           다른 줄이 남아 통과하는 종류라 검사가 제 일을 안 한다. */
+        try {
+          const grab = (re) => (rv.match(re) || [''])[0];
+          /* 함수를 이름으로 떼어 온다 — `cutFn` 은 이 아래에서 정의돼 여기서는 못 쓴다 */
+          const take = (n) => {
+            const i = rv.indexOf('function ' + n + '(');
+            if (i < 0) return '';
+            const j = rv.indexOf('\n}', i);
+            return j < 0 ? '' : rv.slice(i, j + 2) + '\n';
+          };
+          const env = grab(/var STORES = \[[\s\S]*?\n\];/) + grab(/var REGION = \{[\s\S]*?\n\};/)
+            + grab(/var AREA = \{[\s\S]*?\n\};/) + grab(/var GU = \{[\s\S]*?\n\};/)
+            + grab(/var GU_CITY = \{[\s\S]*?\n\};/) + grab(/var GW_CITY = \{[\s\S]*?\n\};/)
+            + ' var STORE_NAME = null;'
+            + take('sido_') + take('sigun_') + take('storeName_') + take('mapCell_');
+          const f = new Function(env + ' return { STORES: STORES, mapCell_: mapCell_ };')();
+          /* 지도 SVG 가 실제로 그리는 칸 이름 — 문자열로 적지 않고 화면에서 뽑는다 */
+          const scr = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+          const cells = new Set([...scr.matchAll(/data-cell="([^"'+]+)"/g)].map((m) => m[1]));
+          /* 사장님이 「구를 단정하지 않는다」고 정한 매장 — fixture 가 코드를 적어 둔다 */
+          const guFx = new URL('../scripts/fixtures/store-gu.json', import.meta.url);
+          const known = new Set(
+            (JSON.parse(fs.readFileSync(guFx, 'utf8'))['_구를 모르는 매장'] || [])
+              .flatMap((t) => String(t).match(/Z[A-Z0-9]{3}/g) || []));
+          const lost = f.STORES.map((s) => [s[0], s[1], f.mapCell_(s[0])])
+            .filter((x) => !cells.has(x[2]));
+          const stray2 = lost.filter((x) => !known.has(x[0]));
+          if (!cells.size) fail('[바이럴] 지도에서 data-cell 을 못 찾았다 — 이 검사가 아무것도 못 지킨다');
+          else if (!known.size) fail('[바이럴] 구 미상 예외 목록이 비었다 — 이 검사가 아무것도 못 지킨다');
+          else if (stray2.length) {
+            fail('[바이럴] 지도에 없는 칸을 가리키는 매장 ' + stray2.length + '곳 — 그 후기가 지도에서 조용히 사라진다: '
+              + stray2.map((x) => x[1] + '(' + x[0] + ')→' + x[2]).join(', ')
+              + ' (일부러 그런 것이면 store-gu.json 의 `_구를 모르는 매장` 에 사유와 코드를 적을 것)');
+          } else {
+            console.log('OK: 바이럴 지도 — 매장 ' + f.STORES.length + '곳 중 ' + (f.STORES.length - lost.length)
+              + '곳이 실재하는 칸 ' + cells.size + '개 안 · 구 미상 ' + lost.length + '곳은 전부 등재된 예외다');
+          }
+        } catch (e) {
+          fail('[바이럴] mapCell_ 을 떼어 돌릴 수 없다 — 매장이 칸에 드는지 검사할 수 없다: ' + e.message);
+        }
       }
 
       /* ⓒ **추이는 작성일을 아는 글만 센다.** 발견일이 섞이면 카페가 전부 이번 달로

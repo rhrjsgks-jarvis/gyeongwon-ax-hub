@@ -291,6 +291,13 @@ const stub = [
   '    withFailureHandler: function (f) { ng = f; return api; },',
   '    getSummary: function () { setTimeout(function () { ok && ok(window.__VIRAL_FIXTURE); }, 300); },',
   '    collectReviews: function () { console.log("[preview] collectReviews (로컬이라 아무 일도 하지 않는다)"); },',
+  /* **서버에 있는 함수는 여기에도 있어야 한다.** 하나라도 빠지면 화면이 그것을 부르는
+     순간 콘솔 오류가 나고, 진행률 폴링은 `progBusy` 가 참으로 굳어 **그 세션 내내 죽는다**.
+     그러면 이 하네스로 화면을 보는 뜻이 없어진다 — 진짜 결함이 그 오류에 묻힌다. */
+  '    getProgress: function () { setTimeout(function () { ok && ok({}); }, 100); },',
+  '    runRival: function () { console.log("[preview] runRival (로컬이라 아무 일도 하지 않는다)"); },',
+  '    setManagerNames: function () {}, setAlias: function () {}, setupTrigger: function () {},',
+  '    resetAll: function () {}, continueSweep: function () {},',
   '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {}',
   '  };',
   '  return api;',
