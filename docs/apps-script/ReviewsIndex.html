@@ -265,27 +265,44 @@
      **규격은 눈대중이 아니라 본체 AS 앱의 `.cat` 값을 그대로 베꼈다** —
      `minmax(104px,1fr)` · gap 7 · radius 11. 이 저장소가 이미 두 번 그렇게 맞췄다
      (도시 고르기 · AS 센터 찾기). 65곳이라 이보다 키우면 한 화면에 안 들어온다. */
-  .rg-b { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 7px; }
-  @media (max-width: 520px) { .rg-b { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); } }
+  /* **시안 A 로 확정**(2026-09-02 사장님 선택). 참조 사이트(mansuk0284-jpg.github.io/viral)
+     의 카드 구조 그대로 — 아이콘 40px · 숫자 26px · 카드 위에 지역 색 띠.
+     **부제 줄은 뺐다** — 참조에는 있지만 여기서는 이미 지역별로 묶여 있어 중복이다.
+     65곳이면 약 9줄이 된다. 시인성을 택한 결정이라 줄 수는 감수한다. */
+  .rg-b { display: grid; grid-template-columns: repeat(auto-fill, minmax(152px, 1fr)); gap: 10px; }
+  @media (max-width: 520px) { .rg-b { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); } }
   .st {
-    border: 1px solid var(--line); background: #fff; border-radius: 11px;
-    padding: 9px 6px; cursor: pointer; font-family: inherit; color: #374151;
-    display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
-    font-size: 12.5px; font-weight: 600; line-height: 1.25;
+    border: 1px solid #E8EBF0; background: #fff; border-radius: 14px;
+    padding: 14px 10px 13px; cursor: pointer; font-family: inherit; color: #374151;
+    display: flex; flex-direction: column; align-items: center; gap: 1px; text-align: center;
+    font-size: 13px; font-weight: 700; line-height: 1.3; letter-spacing: -.2px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04); position: relative; overflow: hidden;
   }
+  /* 카드 위 지역 색 띠 — 아이콘과 같은 색이라 지역이 두 번 보인다(멀리서도 읽힌다) */
+  .st::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: #9AA4B2; }
+  .st.a1::before { background: #3d52db; } .st.a2::before { background: #9027d5; }
+  .st.a3::before { background: #b62170; } .st.a4::before { background: #9c4b1d; }
+  .st.a5::before { background: #636613; } .st.a6::before { background: #176b7c; }
+  .st.z::before { background: #E3E7ED; }
+  .st.on::before { background: rgba(255,255,255,.55); }
   .st:hover { background: #F4F6FB; }
   .st.on { background: var(--blue); border-color: var(--blue); color: #fff; }
   /* **건수는 아래 줄에 크게** — 사장님이 「00점 내려쓰기 00건」이라 지목한 그 모양이다 */
-  .st b { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; letter-spacing: -.3px; }
-  .st .u { font-weight: 500; font-size: 10px; color: var(--mute); }
+  .st b { font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums;
+          letter-spacing: -.8px; margin-top: 4px; color: #5B6472; }
+  .st.a1 b { color: #3d52db; } .st.a2 b { color: #9027d5; } .st.a3 b { color: #b62170; }
+  .st.a4 b { color: #9c4b1d; } .st.a5 b { color: #636613; } .st.a6 b { color: #176b7c; }
+  .st.on b { color: #fff; }
+  .st .u { font-weight: 600; font-size: 11px; color: #8B93A1; margin-left: 1px; }
+  .st.on .u { color: rgba(255,255,255,.8); }
   /* **아이콘은 지역 색이다**(2026-09-02 사장님 요청 *"아이콘넣어주세요"*).
      색은 지어내지 않고 **지도의 6지역 스펙트럼(v8)을 그대로** 쓴다 — 같은 지역이
      지도와 매장 칸에서 다른 색이면 눈이 헤맨다. 매장마다 다른 그림을 주지 않는 이유는
      65곳이라 그림이 65가지가 되면 오히려 안 읽히기 때문이다. 구분은 **색이 한다.** */
-  .st .ic { width: 30px; height: 30px; border-radius: 9px; display: flex;
+  .st .ic { width: 40px; height: 40px; border-radius: 12px; display: flex;
             align-items: center; justify-content: center; color: #fff; background: #9AA4B2;
-            flex: 0 0 auto; margin-bottom: 1px; }
-  .st .ic svg { width: 17px; height: 17px; }
+            flex: 0 0 auto; margin: 2px 0 7px; }
+  .st .ic svg { width: 22px; height: 22px; }
   .st.a1 .ic { background: #3d52db; }   /* 수원 — 지도 r1 */
   .st.a2 .ic { background: #9027d5; }   /* 성남 — r2 */
   .st.a3 .ic { background: #b62170; }   /* 용인 — r3 */
@@ -299,18 +316,18 @@
   .st.on .u { color: rgba(255,255,255,.75); }
   /* 0건 — **지우지 않고 흐리게.** 오늘 0건이라고 내일도 0건인 것은 아니다 */
   .st.z { color: #B6BCC6; background: #FCFCFD; }
-  .st.z b { color: #C9CFD8; }
+  .st.z b, .st.z.a1 b, .st.z.a2 b, .st.z.a3 b, .st.z.a4 b, .st.z.a5 b, .st.z.a6 b { color: #C9CFD8; }
 
   /* 왼쪽 매장 격자 · 오른쪽 지점별 분석. 좁은 화면에서는 아래로 쌓인다 */
   /* 색 고르개 — 지도 카드 아래 한 줄 */
   /* 「어디에 올라오나」 칸 — 매장 칸과 같은 규격. 이름이 길어(「레몬테라스 [인테리어,
      리폼,DIY]」) 두 줄까지 보이게 하고 넘치면 말줄임한다. */
   .st.bx .bxn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-                overflow: hidden; word-break: break-all; min-height: 30px; }
+                overflow: hidden; word-break: break-all; min-height: 34px; }
   .st.bx .ic { background: #5B6472; }
   .st.bx.on .ic { background: rgba(255,255,255,.92); color: var(--blue); }
-  .st.bx .mini-tr { display: block; width: 100%; height: 3px; border-radius: 2px;
-                    background: #EEF1F6; margin-top: 3px; overflow: hidden; }
+  .st.bx .mini-tr { display: block; width: 100%; height: 4px; border-radius: 2px;
+                    background: #EEF1F6; margin-top: 6px; overflow: hidden; }
   .st.bx .mini-tr i { display: block; height: 100%; background: var(--blue); }
   .st.bx.on .mini-tr { background: rgba(255,255,255,.35); }
   .st.bx.on .mini-tr i { background: #fff; }

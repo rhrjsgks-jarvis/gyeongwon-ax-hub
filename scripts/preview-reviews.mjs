@@ -149,6 +149,21 @@ const DATA = {
   byMonth, byDay, byKind: KINDS, byRegion, byMap, byStore,
   bySrc: { 블로그: 812, 카페: 1300, 웹: 321 },
   byStoreSrc, byStoreMonth, lastPost,
+  /* **매장별 채널** — 「지점별 분석」이 이것으로 1·2·3 순위를 그린다. 없으면 그 자리가
+     늘 비어 있어 **화면을 눈으로 봐도 그 기능을 검증하지 못한다**(실물 확인에서 그랬다).
+     카페 이름 + 「네이버 블로그」·「웹문서」 — 실물과 같은 모양으로 섞는다. */
+  byStoreChan: (() => {
+    const out = {};
+    Object.keys(byStore).forEach((nm, i) => {
+      const n0 = byStore[nm]; if (!n0) { out[nm] = {}; return; }
+      const o2 = {};
+      CAFES.forEach((c, j) => { const v = Math.round(n0 * [0.42, 0.23, 0.14, 0.08, 0.04][j]); if (v) o2[c] = v; });
+      o2['네이버 블로그'] = Math.max(1, Math.round(n0 * 0.07));
+      o2['웹문서'] = Math.max(0, Math.round(n0 * 0.02));
+      out[nm] = o2;
+    });
+    return out;
+  })(),
   /* 지역 → 지도 칸. **지역별 색 스펙트럼이 이 값으로 칠한다** — 없으면 칸이
      전부 기본 파랑이 되어 색이 안 붙은 것처럼 보인다(실물에서 잡았다). */
   areaCells: Object.fromEntries(Object.keys(byRegion).map(r =>
