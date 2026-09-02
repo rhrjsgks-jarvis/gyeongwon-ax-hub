@@ -2063,6 +2063,49 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
       if (bad4.length) { ok = false; console.log('ERROR: [바이럴] ' + bad4.join(' · ')); }
       else console.log('OK: 바이럴 — 큰 도시도 끝나고 · 한도가 LG 를 세고 · 삭제확인이 이어 돌고 · 판 번호로 회차를 가른다');
+
+      /* ④-e **SDP(개인대리점)** — 2026-09-02 사장님 요청. 조사에서 31곳을 찾았지만
+         **8곳만 싣기로 결정했다**(사장님 승인 *"의견대로 수렴"*). 그 결정이 코드에
+         그대로 있는지 지킨다 — 특히 **하남을 되돌려 넣으면 안 된다**(40건 중 33건이
+         우리 신세계하남·하남미사 글이라 그 숫자가 그 자리에서 거짓이 된다). */
+      const bad5 = [];
+      const sdpSrc = (rv.match(/var SDP = \[[\s\S]*?\n\];/) || [''])[0];
+      if (!sdpSrc) bad5.push('SDP 명부가 없다');
+      else {
+        const names = (sdpSrc.match(/name: '([^']+)'/g) || []).map((x) => x.split("'")[1]);
+        if (names.length !== 8) bad5.push(`SDP 명부가 8곳이 아니다(${names.length}곳) — 늘리려면 검출을 먼저 재고 사장님 승인을 받을 것`);
+        ['하남', '철원', '문막'].forEach((n) => {
+          if (names.indexOf(n) >= 0) {
+            bad5.push(`SDP 에 「${n}」이 들어 있다 — 통과분이 우리 매장 글이거나 후기가 아니라 뺀 곳이다`);
+          }
+        });
+      }
+      /* 우리 글이 SDP 로 새지 않는가 — 하남이 83% 오염이던 그 자리다 */
+      if (!rv.includes("if (belongsToOther_(text, s.name, others)) continue;")) {
+        bad5.push('SDP 가 「남의 매장」 판정을 안 한다 — 우리 글이 SDP 건수로 샌다');
+      }
+      if (!/for \(i = 0; i < STORES\.length; i\+\+\) others\.push\(STORES\[i\]\[1\]\);/.test(rv)) {
+        bad5.push('SDP 의 「남의 매장」 목록에 우리 65곳이 없다');
+      }
+      /* 마지막 회차만 읽는가 — 옛 회차와 합치면 같은 글이 여러 번 세어진다 */
+      if (!rv.includes("if (String(v[i][0]) !== last) continue;")) {
+        bad5.push('sdp_() 가 마지막 회차만 읽지 않는다 — 옛 회차와 합쳐 부풀어난다');
+      }
+      /* 표본이 작다는 사실을 화면이 적는가 — 안 적으면 우리 매장 건수와 같은 무게로 읽힌다 */
+      {
+        const scr4 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+        if (!scr4.includes('data-sec="sdp"') || !scr4.includes('data-card="sdp"')) {
+          bad5.push('SDP 박스·카드가 화면에 없다');
+        }
+        if (!scr4.includes('같은 무게로 읽지 마십시오')) {
+          bad5.push('SDP 표본이 작다는 사실을 화면이 안 적는다 — 우리 매장 건수처럼 읽힌다');
+        }
+        if (!scr4.includes('매장 자체 글 위주')) {
+          bad5.push('매장이 스스로 올린 글임을 안 밝힌다 — 고객 후기와 다른 것이다');
+        }
+      }
+      if (bad5.length) { ok = false; console.log('ERROR: [바이럴] ' + bad5.join(' · ')); }
+      else console.log('OK: 바이럴 SDP — 8곳 · 하남·철원·문막 제외 · 우리 글이 안 새고 · 표본이 작다고 밝힌다');
     }
 
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */

@@ -113,7 +113,7 @@ var DEFAULT_DAILY_LIMIT = 20000;
    매니저 20 · LG 도시 11 × 2 × 꼬리 4 × 3 × 10 = 2,640 → **18,800**.
    사장님이 화면에서 별칭을 더 등록하실 수 있으므로 **화면에는 `sweepCalls_()` 로
    그때그때 센 값을 보낸다** — 이 상수는 검사가 붙드는 하한이다. */
-var SWEEP_CALLS = 18800;
+var SWEEP_CALLS = 18848;
 /* **며칠에 한 번 전부 훑는가.** 평소에는 새 글이 없는 쪽에서 멈추고, 이레에 한 번은
    처음부터 끝까지 두드려 그동안 놓친 것을 메운다(`sort=date` 를 믿는 최적화의 그물). */
 var FULL_EVERY_DAYS = 7;
@@ -563,8 +563,9 @@ function sweepCalls_() {
   var store = (STORES.length + n) * TAILS.length * kinds * MAX_PAGES;
   var cafe = CAFES.length * kinds * MAX_PAGES;          /* 관심 카페 훑기 */
   var mgr = 20;                                          /* 매니저 이름 네이버 건수 */
+  var sdp = SDP.length * 2 * SDP_PAGES;                  /* SDP — 2갈래 × 3쪽 */
   var rival = rivalUnits_().length * 2 * RTAILS.length * kinds * MAX_PAGES;
-  return store + cafe + mgr + rival;
+  return store + cafe + mgr + sdp + rival;
 }
 /* **LG 비교 질의 꼬리말.** `collectRival` 안의 지역 변수였는데 밖으로 올렸다 —
    호출 수 계산(`sweepCalls_`)이 이 개수를 알아야 하는데, 두 곳에 따로 적으면 한쪽만
@@ -626,6 +627,153 @@ var TAILS = ['', ' 혼수', ' 신혼가전', ' 입주', ' 설치', ' 구매', ' 
  */
 var CAFES = ['레몬테라스', '요즘웨딩'];
 var CAFE_TAILS = ['삼성스토어', '삼성스토어 혼수', '삼성 가전 후기', '삼성디지털프라자'];
+
+/* ── SDP — 경원 관할 안의 **개인대리점** (2026-09-02 사장님 요청) ──────────────
+ *
+ * *"경원지역내 삼성스토어 개인대리점(경원영업팀이 아닌 삼성스토어 점포명) 지역별로
+ * 후기를 검출 가능한지도 확인해서 SDP라는 항목으로 항목신설"*.
+ *
+ * **판정은 뺄셈이다.** 개인대리점을 공식으로 열거하는 출처를 못 찾아, 지도의 삼성스토어
+ * 전부에서 삼성전자판매 직영 385곳을 뺐다. **우리 65곳 중 63곳이 그 385와 점코드로
+ * 일치**해 방법 자체는 검산된다. 관할 안에서 31곳이 나왔다.
+ *
+ * **그런데 31곳을 다 넣지 않는다 — 8곳만 넣는다.** 사장님 승인(*"의견대로 수렴"*):
+ *   · 0건 20곳 — 그중 11곳은 **네이버에 글 자체가 없다.** 규칙을 손봐도 안 나오므로
+ *     항목만 늘리고 화면을 비운다.
+ *   · **하남 뺌** — 네 번 검색해 받은 40건 중 **33건(83%)이 우리 신세계하남·하남미사
+ *     글**이다. 「신세계백화점 하남 삼성스토어」 형태가 인접 규칙을 그대로 통과한다.
+ *     붙이는 순간 그 숫자가 거짓이 된다.
+ *   · **철원·문막 뺌** — 통과한 것이 각각 **법무법인 블로그의 AS센터 안내**와
+ *     **버스 승강장 위치 안내**다. 후기가 아니다.
+ *
+ * **`self` 는 「매장이 스스로 올린 글이 대부분」이라는 표시다** — 고객 후기와 다른 것이라
+ * 화면이 그 사실을 적는다. 0 으로 감추지도, 후기인 척하지도 않는다.
+ *
+ * **`q` 는 물을 때 쓸 말이다.** 사람들이 부르는 이름이 점포명과 다른 곳이 있다 —
+ * 동해는 점포명이 「동해천곡모바일」인데 후기는 전부 「삼성스토어 동해점」으로 적는다.
+ *
+ * **`신송탄` 을 `송탄` 으로 넓히지 말 것** — 우리 평택 5곳이 통째로 딸려 온다.
+ * 조사 원본은 `.scratch/viral-audit/sdp-stores.json`(커밋되지 않는다). */
+var SDP = [
+  { name: '용인시청', q: '삼성스토어 용인시청', sigun: '용인', area: '용인', self: false },
+  { name: '동해점', q: '삼성스토어 동해점', sigun: '동해', area: '강원', self: false },
+  { name: '장호원', q: '삼성스토어 장호원', sigun: '이천', area: '성남', self: false },
+  { name: '삼척점', q: '삼성스토어 삼척점', sigun: '삼척', area: '강원', self: false },
+  { name: '발안', q: '삼성스토어 발안', sigun: '화성', area: '용인', self: true },
+  { name: '영월', q: '삼성스토어 영월', sigun: '영월', area: '강원', self: true },
+  { name: '횡성', q: '삼성스토어 횡성', sigun: '횡성', area: '강원', self: true },
+  { name: '신갈대리점', q: '삼성전자 신갈대리점', sigun: '용인', area: '용인', self: false }
+];
+var SHEET_SDP = 'SDP';
+var SDP_HEADER = ['at', 'store', 'sigun', 'area', 'n', 'blog', 'cafe', 'kinds', 'sample'];
+/* **적게 두드린다.** 이 항목이 답하는 것은 *"이슈가 있나"* 이지 「전수 수집」이 아니다.
+   8곳 × 2갈래 × 3쪽 = **48회** — 한 바퀴 18,800회에 견주면 사실상 공짜다.
+   매장 훑기처럼 꼬리말 8개를 붙이면 1,920회가 되어 한도를 위협한다. */
+var SDP_PAGES = 3;
+var SDP_MS = 40 * 1000;
+/** 오늘 이미 훑었는가. **하루 한 번이면 족하다** — 이 항목은 「이슈가 있나」에 답한다. */
+function sdpDue_() {
+  return String(props_().getProperty('_sdpAt') || '')
+    !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+}
+
+/**
+ * SDP 훑기. **우리 매장 수집과 같은 판정을 쓴다** — 브랜드 말과 점명이 붙어 있어야 하고
+ * (`hasStore_`), 다른 매장 이름이 더 가까우면 버린다(`belongsToOther_`).
+ * **「남의 매장」에 우리 65곳과 다른 SDP 를 함께 넣는다** — 안 넣으면 하남 같은 곳에서
+ * 우리 글이 SDP 건수로 새어 든다(조사에서 83%가 그랬다).
+ *
+ * 시트에는 **글을 담지 않고 매장당 한 줄**만 쓴다(경쟁비교 표와 같은 모양). 이 항목이
+ * 답하는 것은 *"이슈가 있나"* 라 건수·유형·표본 몇 건이면 족하고, 글을 담으면 우리
+ * 후기 시트와 섞여 매장별 집계가 오염된다.
+ */
+function collectSdp(deadline) {
+  var sh = sheet_(SHEET_SDP, SDP_HEADER);
+  var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+  var others = [], i, j, k, p;
+  for (i = 0; i < STORES.length; i++) others.push(STORES[i][1]);
+  for (i = 0; i < SDP.length; i++) others.push(SDP[i].name);
+  /* **이름을 `kinds` 로 두지 말 것** — 매장 훑기의 `var kinds = ['blog','cafearticle','webkr']`
+     와 겹쳐, 소스에서 갈래 수를 세는 검사가 **먼저 나오는 이것을 집어** 상한을 낮게 잡았다.
+     SDP 는 웹문서를 안 본다(개인대리점 글은 블로그·카페에만 있다 — 조사 실측). */
+  var sdpKinds = ['blog', 'cafearticle'];
+  var rows = [], calls = 0, err = '';
+  for (i = 0; i < SDP.length; i++) {
+    if (deadline && Date.now() > deadline) { err = err || '시간'; break; }
+    var s = SDP[i], seen = {}, byKind = {}, sample = [], nb = 0, nc = 0;
+    for (k = 0; k < sdpKinds.length && !err; k++) {
+      for (p = 0; p < SDP_PAGES; p++) {
+        if (deadline && Date.now() > deadline) { err = err || '시간'; break; }
+        var jr;
+        try { jr = search_(sdpKinds[k], s.q, p * PAGE_SIZE + 1); calls++; }
+        catch (e) { err = String(e); break; }
+        if (jr && jr.error) { err = sdpKinds[k] + ':' + jr.error; break; }
+        var items = (jr && jr.items) || [];
+        if (!items.length) break;
+        for (j = 0; j < items.length; j++) {
+          var it = items[j], lk = String(it.link || '');
+          if (!lk || seen[lk] || linkNoise_(lk)) continue;
+          var text = plain_(String(it.title || '') + ' ' + String(it.description || ''));
+          if (!hasStore_(text, s.name)) continue;
+          /* **다른 매장 이름이 더 가까우면 버린다** — 우리 글이 SDP 로 새는 것을 막는다 */
+          if (belongsToOther_(text, s.name, others)) continue;
+          seen[lk] = 1;
+          if (sdpKinds[k] === 'blog') nb++; else nc++;
+          var kd = kindOf_(String(it.title || ''));
+          byKind[kd] = (byKind[kd] || 0) + 1;
+          if (sample.length < 5) sample.push({ t: plain_(it.title), l: lk, s: srcName_(sdpKinds[k]) });
+        }
+        if (items.length < PAGE_SIZE) break;
+      }
+    }
+    rows.push([stamp, s.name, s.sigun, s.area, nb + nc, nb, nc,
+      JSON.stringify(byKind), JSON.stringify(sample)]);
+  }
+  if (rows.length) {
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, SDP_HEADER.length).setValues(rows);
+    sumCacheClear_();
+  }
+  if (calls) addUsage_(calls);
+  return { rows: rows.length, calls: calls, error: err, at: stamp, stores: SDP.length };
+}
+
+/** 가장 최근 회차만 읽는다 — 옛 회차와 합치면 같은 글이 여러 번 세어진다
+ *  (경쟁비교가 그 사고로 두 번 데인 그대로다). */
+function sdp_() {
+  var sh, v;
+  try {
+    sh = sheet_(SHEET_SDP, SDP_HEADER);
+    if (sh.getLastRow() < 2) return null;
+    v = sh.getRange(2, 1, sh.getLastRow() - 1, SDP_HEADER.length).getValues();
+  } catch (e) { return null; }
+  var last = '', i;
+  for (i = 0; i < v.length; i++) { var t = String(v[i][0] || ''); if (t > last) last = t; }
+  if (!last) return null;
+  var selfOf = {}, j;
+  for (j = 0; j < SDP.length; j++) selfOf[SDP[j].name] = !!SDP[j].self;
+  var stores = [], byArea = {}, total = 0, kinds = {};
+  var seenStore = {};
+  for (i = v.length - 1; i >= 0; i--) {          /* 뒤에서부터 — 같은 매장은 마지막 줄만 */
+    if (String(v[i][0]) !== last) continue;
+    var nm = String(v[i][1]);
+    if (seenStore[nm]) continue;
+    seenStore[nm] = 1;
+    var n = Number(v[i][4]) || 0;
+    total += n;
+    var ar = String(v[i][3] || '');
+    byArea[ar] = (byArea[ar] || 0) + n;
+    mergeNum_(kinds, jparse_(v[i][7]));
+    var sp = jparse_(v[i][8]);
+    stores.push({ name: nm, sigun: String(v[i][2] || ''), area: ar, n: n,
+      blog: Number(v[i][5]) || 0, cafe: Number(v[i][6]) || 0,
+      self: !!selfOf[nm], sample: (sp && sp.length) ? sp : [] });
+  }
+  stores.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
+  return { at: last, total: total, stores: stores, byArea: byArea, byKind: kinds,
+    /* **조사에서 걸러낸 것을 화면이 밝힌다** — 「31곳 중 8곳」이라고 말하지 않으면
+       사장님이 *"개인대리점이 8곳뿐인가"* 로 읽는다. */
+    found: 31, listed: SDP.length, zero: 20, excluded: 3 };
+}
 
 /* 화면의 「관심 카페」 — 사장님이 지목한 곳은 **건수가 적어도 늘 보여야 한다.**
    상위 12곳 막대에는 2~3건짜리가 영영 안 올라와, 넣어 달라고 한 카페가 화면에서
@@ -1719,6 +1867,20 @@ function sweep_(mode) {
      멀쩡히 했는데도** 셈이 안 줄어 여덟 번 만에 감시 트리거가 포기했다.
      매장 한 바퀴를 여기까지 온 것이 곧 「이 실행은 제 몫을 했다」는 뜻이다. */
   props_().setProperty('_watchN', '0');
+
+  /* ── SDP 훑기 (2026-09-02) ────────────────────────────────────────────
+     **매장 한 바퀴를 다 돈 뒤에만 돈다** — 관심 카페와 같은 이유다(중간에 끼우면
+     이어달리기 커서가 매장을 가리키는 뜻을 잃는다). 8곳 × 2갈래 × 3쪽 = 48회라 짧다.
+     **하루 한 번이면 족하다** — 이 항목이 답하는 것은 *"이슈가 있나"* 다. */
+  var sdpRun = null;
+  if (!stopped && !err && !over() && sdpDue_()) {
+    try {
+      sdpRun = collectSdp(Date.now() + SDP_MS);
+      if (sdpRun && !sdpRun.error) props_().setProperty('_sdpAt', stamp);
+      extraCalls += Number((sdpRun && sdpRun.calls) || 0);
+    } catch (e6) { sdpRun = { error: String(e6) }; }
+  }
+
   var cafeCalls = 0, cafeAdd = 0;
   if (!stopped && !err) {
     for (var ci = 0; ci < CAFES.length; ci++) {
@@ -1875,7 +2037,9 @@ function sweep_(mode) {
     /* **한도로 멈춘 것과 시간으로 멈춘 것을 가른다** — 「이어서 수집」을 눌러도 되는지가
        다르다(시간이면 지금 눌러도 되고, 한도면 내일이거나 한도를 올려야 한다). */
     hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: sweepCalls_(),
-    rival: rivalRun
+    rival: rivalRun,
+    /* **돌았는지 · 몇 곳을 물었는지.** 안 적으면 「왜 SDP 가 안 늘지」를 확인할 길이 없다 */
+    sdp: sdpRun
   };
 }
 
@@ -2470,6 +2634,8 @@ function summary_() {
     dupRows: dupRows, dupLinks: dupLinks,
     /* 당사 vs LG — **없으면 null 이다.** 0 으로 그리면 「LG 후기가 없다」로 읽힌다 */
     rival: rival_(),
+    /* **SDP(개인대리점)** — 2026-09-02 사장님 요청. 없으면 null 이고 화면이 그 절을 안 그린다 */
+    sdp: sdp_(),
     /* **영업스케치 지역 6곳**(수원·용인·성남·평택·안양·강원).
        후기 0건인 매장도 목록에 있다 — 전점 표시(사장님 지시). */
     byRegion: byRegion,

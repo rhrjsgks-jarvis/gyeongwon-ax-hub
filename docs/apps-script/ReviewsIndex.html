@@ -635,6 +635,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>이번 달 진단</button>
   <button type="button" class="sec" data-sec="map" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span>지도</button>
   <button type="button" class="sec" data-sec="store" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M10 20v-6h4v6"/></svg></span>매장별</button>
+  <button type="button" class="sec" data-sec="sdp" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16"/><path d="M9 20v-5h6v5"/><circle cx="18.5" cy="5.5" r="2.5"/></svg></span>SDP 개인대리점</button>
   <button type="button" class="sec" data-sec="signal" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20v-8M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0"/><circle cx="12" cy="11" r="1.5"/></svg></span>매장 신호</button>
   <button type="button" class="sec" data-sec="cafe" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M7 4v2M10 4v2M13 4v2"/></svg></span>어디에 올라오나</button>
   <button type="button" class="sec" data-sec="mgr" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg></span>매니저</button>
@@ -709,6 +710,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            "우리 매장이 없다"로 읽힌다. 0건도 흐리게 적어 **전점을 세운다.** -->
       <div class="sub" id="store-sub">–</div>
       <div id="regions"></div>
+    </div>
+    <div class="card" data-card="sdp">
+      <h2>SDP — 개인대리점</h2>
+      <!-- 2026-09-02 사장님 요청. **경원영업팀이 아닌 삼성스토어 점포**다.
+           개인대리점을 공식으로 열거하는 출처가 없어 **뺄셈으로** 찾았다 —
+           지도의 삼성스토어에서 삼성전자판매 직영 385곳을 뺐고, 우리 65곳 중 63곳이
+           그 385와 점코드로 일치해 방법이 검산된다. 관할 안에서 31곳이 나왔다.
+           **그중 8곳만 싣는다** — 20곳은 0건(11곳은 네이버에 글 자체가 없다)이고,
+           하남·철원·문막은 통과분이 우리 글이거나 후기가 아니라 뺐다. -->
+      <div class="sub" id="sdp-sub">–</div>
+      <div id="sdp"></div>
     </div>
     <div class="card" data-card="signal">
       <h2>매장 신호</h2>
@@ -3010,6 +3022,51 @@ function renderList() {
       + (weak ? ' <span class="mini">카페 위주라 이 신호를 신뢰하지 마세요</span>' : "");
   }
 
+  /* ── SDP — 개인대리점 (2026-09-02 사장님 요청) ─────────────────────────
+   * **표본이 작다는 사실을 반드시 함께 적는다.** 31곳 중 8곳만 실었고 그중 셋은
+   * 매장이 스스로 올린 글이 대부분이다 — 안 적으면 사장님이 이 숫자를 우리 매장
+   * 건수와 같은 무게로 읽는다. 이 화면이 「없음 / 못 잼 / 미공개」를 가르는 규칙 그대로다. */
+  function renderSdp() {
+    var el = document.getElementById("sdp"); if (!el) return;
+    var sub = document.getElementById("sdp-sub");
+    var d = DATA.sdp;
+    if (!d || !d.stores || !d.stores.length) {
+      el.innerHTML = '<div class="note">아직 안 쟀습니다 — 다음 수집 때 채워집니다.'
+        + ' <b>값이 없는 것이지 후기가 없다는 뜻이 아닙니다.</b></div>';
+      if (sub) sub.textContent = "–";
+      return;
+    }
+    if (sub) {
+      sub.innerHTML = "관할에서 찾은 <b>" + nf(d.found) + "곳</b> 중 <b>" + nf(d.listed)
+        + "곳</b>만 싣습니다 — " + nf(d.zero) + "곳은 0건이고(그중 11곳은 네이버에 글 자체가 없습니다)"
+        + " " + nf(d.excluded) + "곳은 통과분이 우리 매장 글이거나 후기가 아니라 뺐습니다."
+        + " 마지막 확인 " + esc(String(d.at || "").slice(0, 16)) + ".";
+    }
+    var max = 0;
+    d.stores.forEach(function (x) { if (x.n > max) max = x.n; });
+    var rows = d.stores.map(function (x) {
+      var w = max ? Math.round(x.n * 100 / max) : 0;
+      return '<div class="sigrow"><b>' + esc(x.name) + '</b>'
+        + ' <span class="mini">' + esc(x.sigun) + ' · ' + esc(x.area) + '</span>'
+        + (x.self ? ' <span class="tag c">매장 자체 글 위주</span>' : "")
+        + '<div class="tr"><div class="us" style="width:' + w + '%"></div>'
+        + '<div class="th" style="width:' + (100 - w) + '%"></div></div>'
+        + '<span class="mini">' + nf(x.n) + '건 · 블로그 ' + nf(x.blog) + ' · 카페 ' + nf(x.cafe) + '</span>'
+        + '</div>';
+    }).join("");
+    var areas = Object.keys(d.byArea || {}).sort(function (a, b) { return d.byArea[b] - d.byArea[a]; });
+    var byArea = areas.length
+      ? '<div class="note" style="margin-top:8px">지역별 — '
+        + areas.map(function (a) { return "<b>" + esc(a) + "</b> " + nf(d.byArea[a]) + "건"; }).join(" · ")
+        + '</div>'
+      : "";
+    el.innerHTML = rows + byArea
+      + '<div class="note warn" style="margin-top:8px"><b>이 숫자를 우리 매장 건수와 같은 무게로 읽지 마십시오.</b>'
+      + ' 개인대리점은 표본이 작고(8곳 합계 ' + nf(d.total) + '건),'
+      + ' 「매장 자체 글 위주」로 표시된 곳은 <b>고객 후기가 아니라 매장이 직접 올린 글</b>입니다.'
+      + ' 이 항목은 「이슈가 있나」를 보는 용도입니다.</div>';
+  }
+
   function renderSignals() {
     var el = document.getElementById("signals"); if (!el) return;
     var bm = DATA.byStoreMonth || {}, lp = DATA.lastPost || {}, bs = DATA.byStore || {};
@@ -3091,6 +3148,7 @@ function renderList() {
     renderPromo();
     renderTrend();
     renderDiag();
+    renderSdp();
     renderSignals();
     renderMap();
     /* **자료가 온 뒤에야 「한 번 움직였다」로 친다.** 뼈대 렌더에서 세우면 정작
