@@ -2663,6 +2663,16 @@ function collectRival(deadline) {
    * **도장을 모르는데 중간부터라면 처음부터 다시 돈다** — 앞서 쓴 줄들이 어느
    * 도장을 달고 있는지 알 수 없어, 이어 붙이면 화면에 반쪽만 뜬다. */
   var cyStamp = String(props_().getProperty('_rivalStamp') || '');
+  /* ── **옛 스키마 회차에는 이어 붙이지 않는다** (2026-09-02, 배포 직후 실측으로 잡음) ──
+   * 도시 단위로 바꾸기 전의 회차는 **한 지역이 한 줄**이다. 그 회차에 이어 붙으면
+   * `rival_()` 이 같은 도장을 전부 합치므로 **옛 지역 줄 + 새 도시 줄이 이중 계산**된다 —
+   * 프로덕션에서 **평택 2,008 → 4,025(2배)** 가 됐고 안양 질의가 `안양 · 평촌 · 안양`
+   * 으로 「안양」을 두 번 적었다.
+   *
+   * **판정은 결과로 한다** — 그 도장의 줄 중 `queries` 에 도시가 여럿인 것이 있으면
+   * 옛 스키마다(새 코드는 한 줄에 도시 하나만 적는다). 어떤 상태에서 시작하든 스스로
+   * 낫는다 — 이 파일이 `rivalDue_` 에서 이미 세운 방식 그대로다. */
+  if (cyStamp && from > 0 && oldSchemaCycle_(cyStamp)) { cyStamp = ''; }
   if (!cyStamp || from === 0) { cyStamp = stamp; props_().setProperty('_rivalStamp', cyStamp); from = 0; }
   var stoppedR = false, hard = false;
 
@@ -2806,6 +2816,24 @@ function collectRival(deadline) {
   return { rows: rows.length, calls: calls, error: err, done: done, at: ui, areas: units.length };
 }
 
+/**
+ * 그 회차가 **도시 단위로 바꾸기 전의 것**인가. 한 줄에 도시가 여럿(`안양 · 평촌`)이면
+ * 옛 스키마다 — 새 코드는 한 줄에 도시 하나만 적는다.
+ * **시트를 읽어 판정한다**(표식이 아니라 결과). 어떤 상태에서 시작하든 스스로 낫는다.
+ */
+function oldSchemaCycle_(stampStr) {
+  try {
+    var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
+    if (sh.getLastRow() < 2) return false;
+    var v = sh.getRange(2, 1, sh.getLastRow() - 1, RIVAL_HEADER.length).getValues();
+    for (var i = 0; i < v.length; i++) {
+      if (String(v[i][0]) !== stampStr) continue;
+      if (String(v[i][6] || '').indexOf(' · ') >= 0) return true;
+    }
+  } catch (e) { /* 못 읽으면 이어 붙이던 대로 둔다 — 여기서 던지면 수집이 죽는다 */ }
+  return false;
+}
+
 /** **(지역, 도시) 쌍**을 순서대로. 일의 단위이자 이어 돌기의 커서 단위다. */
 function rivalUnits_() {
   var out = [], names = Object.keys(AREA_Q), i, j;
@@ -2909,10 +2937,28 @@ function rival_() {
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, RIVAL_HEADER.length).getValues();
   var last = '', i;
   for (i = 0; i < v.length; i++) { var t = String(v[i][0]); if (t > last) last = t; }
+  /* ── **한 회차에 옛 줄과 새 줄이 섞이면 옛 줄을 버린다** (2026-09-02) ──────────
+   * 도시 단위로 바꾼 직후, 이어 돌기가 **옛 회차 도장을 그대로 물려받아** 새 도시 줄을
+   * 옛 지역 줄 옆에 붙였다 — 합산이 두 번 세어져 **평택이 2,008 → 4,025** 가 됐다.
+   * 수집 쪽은 고쳤지만(`oldSchemaCycle_`) **이미 시트에 남은 회차는 그대로**라, 읽을 때도
+   * 막는다. 가르는 것은 `queries` 다 — 도시가 여럿이면 옛 줄이다.
+   * **섞였을 때만 버린다.** 회차 전체가 옛 줄이면(도시 단위 이전의 정상 회차) 그대로 쓴다 —
+   * 안 그러면 옛 자료가 통째로 화면에서 사라진다. */
+  var mixed = {};
+  for (i = 0; i < v.length; i++) {
+    if (String(v[i][0]) !== last) continue;
+    var ar = String(v[i][1]);
+    var multi = String(v[i][6] || '').indexOf(' · ') >= 0;
+    if (!mixed[ar]) mixed[ar] = { old: 0, neo: 0 };
+    mixed[ar][multi ? 'old' : 'neo']++;
+  }
+
   var by = {}, order = [];
   for (i = 0; i < v.length; i++) {
     if (String(v[i][0]) !== last) continue;
     var area = String(v[i][1]);
+    var mx = mixed[area];
+    if (mx && mx.old && mx.neo && String(v[i][6] || '').indexOf(' · ') >= 0) continue;
     if (!by[area]) {
       by[area] = {
         area: area, ours: 0, rival: 0, capped: false, q: [],

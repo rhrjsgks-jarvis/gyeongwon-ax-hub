@@ -2619,6 +2619,52 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         bad.push('rival_() 이 합산 뒤 비중을 다시 계산하지 않는다');
       }
 
+      /* ⓖ-2 **옛 줄과 새 줄이 한 회차에 섞이면 옛 줄을 버린다** — 2026-09-02 배포 직후
+             실제로 이 사고가 났다(평택 2,008 → 4,025, 안양 질의가 `안양 · 평촌 · 안양`).
+             이어 돌기가 **옛 회차 도장을 물려받아** 도시 줄을 지역 줄 옆에 붙였다.
+             **떼어 돌려 본다** — 문자열만 보면 판정이 뒤집혀도 통과한다. */
+      if (!rv.includes('function oldSchemaCycle_(')) {
+        bad.push('oldSchemaCycle_ 이 없다 — 옛 회차에 이어 붙어 값이 두 배가 된다');
+      }
+      if (!rv.includes('if (cyStamp && from > 0 && oldSchemaCycle_(cyStamp)) { cyStamp = \'\'; }')) {
+        bad.push('이어 돌기 전에 옛 스키마인지 보지 않는다');
+      }
+      let rivalFn = null;
+      try {
+        /* 시트를 흉내 낸 것으로 갈아 끼운다 — `at` 이 같은 회차에 **옛 지역 줄 + 새 도시 줄**이 섞인 상태 */
+        const stub = `
+          var RIVAL_HEADER = ['at','area','ours','rival','pct','capped','queries','s','k','m','c','p','x'];
+          var SHEET_RIVAL = 'x';
+          var ROWS = [
+            ['T1','평택',2008,1099,65,'','평택','{}','{}','{}','{}','{}','[]'],
+            ['T1','평택',2017,1088,65,'','평택2','{}','{}','{}','{}','{}','[]'],
+            ['T1','안양',1103,812,58,'','안양 · 평촌','{}','{}','{}','{}','{}','[]'],
+            ['T1','안양',647,499,56,'','안양','{}','{}','{}','{}','{}','[]'],
+            ['T1','수원',1614,2275,42,'','수원','{}','{}','{}','{}','{}','[]']
+          ];
+          function sheet_(){ return { getLastRow: function(){ return ROWS.length + 1; },
+            getRange: function(){ return { getValues: function(){ return ROWS; } }; } }; }
+          function jparse_(x){ try { return JSON.parse(x) || {}; } catch(e){ return {}; } }
+        `;
+        rivalFn = new Function(stub + cutFn('mergeNum_') + cutFn('rival_') + ' return rival_;')();
+      } catch (e) { rivalFn = null; }
+      if (!rivalFn) bad.push('rival_() 을 떼어 돌릴 수 없다 — 합산 규칙을 검사할 수 없다');
+      else {
+        const r = rivalFn();
+        const get = (a) => (r.rows || []).find(x => x.area === a);
+        /* 평택은 **도시 줄 둘**(섞임 아님)이라 그대로 합쳐야 한다 — 2008+2017 = 4025 */
+        if (!get('평택') || get('평택').ours !== 4025) {
+          bad.push('도시 줄 둘을 합치지 못한다: ' + JSON.stringify(get('평택')));
+        }
+        /* 안양은 **옛 줄(안양 · 평촌) + 새 줄(안양)** 이 섞였다 → 옛 줄을 버려 647 이어야 한다.
+           안 버리면 1103+647 = 1750 이 되는데, 프로덕션에서 실제로 그 값이 나왔다. */
+        if (!get('안양') || get('안양').ours !== 647) {
+          bad.push('섞인 회차에서 옛 줄을 안 버린다(1750 이 되면 그 사고다): ' + JSON.stringify(get('안양')));
+        }
+        /* **회차 전체가 옛 줄이면 그대로 쓴다** — 안 그러면 옛 자료가 통째로 사라진다 */
+        if (!get('수원') || get('수원').ours !== 1614) bad.push('섞이지 않은 줄까지 버린다');
+      }
+
       /* ⓗ **버튼** (사장님 요청) — 서버 진입점 · 화면 버튼 · 그 둘이 이어져 있는가 */
       if (!rv.includes('function runRival()')) bad.push('runRival() 이 없다 — 화면에서 LG 비교를 돌릴 길이 없다');
       if (!rv.includes("props_().deleteProperty('_rivalAt');")) {
