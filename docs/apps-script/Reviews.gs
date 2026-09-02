@@ -2425,7 +2425,7 @@ var SHEET_RIVAL = '경쟁비교';
    `srcJson`·`kindJson`·`monthJson` 은 갈래별 건수를 담는다. 칸으로 펴면 20개가
    넘고 갈래가 늘 때마다 열이 늘어난다 — 우리 시트라 JSON 한 칸이 낫다. */
 var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries',
-  'srcJson', 'kindJson', 'monthJson'];
+  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson'];
 
 /* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
    `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
@@ -2521,6 +2521,91 @@ function rivalDue_() {
 /** 삼성 vs LG. **마감 시각(`deadline`)을 받아 그 전에 멈춘다.**
  *  한 바퀴를 못 끝내면 어디까지 했는지 적어 두고(`_rivalCur`) 다음 실행이 이어 돈다 —
  *  매장 수집이 커서로 이어 도는 것과 같은 방식이다. */
+/* ── LG 는 어디에 무엇을 올리나 (2026-09-02 사장님 요청) ────────────────────
+ * *"LG는 어느경로로 어떻게 어떤걸 홍보하는지도 분석하는내용이 있으면좋겠습니다"*
+ *
+ * 지금까지 센 것은 **출처(블로그/카페/웹) · 유형 · 월**뿐이라 *"어디가 밀리나"* 까지만
+ * 답할 수 있었다. 둘을 더한다 —
+ *   ① **채널**  어느 카페·어느 블로그에 올라오는가(`cafename`·`bloggername`·웹 호스트)
+ *   ② **품목**  제목에 어떤 제품이 적혀 있는가
+ * 그리고 **표본 링크**를 남겨 실물을 열어 볼 수 있게 한다.
+ *
+ * **양쪽에 똑같이 센다.** 한쪽만 세면 「LG 가 카페를 많이 쓴다」가 우리 것과 견줄 수
+ * 없는 말이 된다 — 이 함수가 비중을 낼 때 이미 지키는 규칙 그대로다.
+ */
+
+/** 태그·엔티티를 걷어낸 글자. **정규식을 쓰지 않는다** — 이 파일을 셸로 고치면
+    역슬래시가 먹혀 조용히 다른 뜻이 된다(이 저장소가 여러 번 겪었다). */
+function plain_(s) {
+  var t = String(s || ''), out = '', keep = true;
+  for (var i = 0; i < t.length; i++) {
+    var c = t.charAt(i);
+    if (c === '<') { keep = false; continue; }
+    if (c === '>') { keep = true; continue; }
+    if (keep) out += c;
+  }
+  return out.split('&quot;').join('"').split('&amp;').join('&').split('&nbsp;').join(' ').trim();
+}
+
+/** 그 글이 올라온 자리. **모르면 빈 문자열** — '기타'로 뭉뚱그리면 「어디에」가 사라진다. */
+function chanOf_(kind, it, link) {
+  if (kind === 'cafearticle') return plain_(it.cafename);
+  if (kind === 'blog') return plain_(it.bloggername);
+  var t = String(link || ''), i = t.indexOf('//');
+  if (i < 0) return '';
+  var h = t.slice(i + 2), j = h.indexOf('/');
+  return j >= 0 ? h.slice(0, j) : h;
+}
+
+/* 품목 표. **긴 이름이 먼저다** — `김치냉장고` 를 뒤에 두면 `냉장고` 가 먼저 물어
+   김치냉장고가 통째로 냉장고로 잡힌다(이 저장소가 부분일치로 여러 번 데인 종류다).
+   **삼성 말과 LG 말을 한 칸에 묶는다** — 에어드레서 ↔ 스타일러는 같은 품목이고,
+   갈라 두면 *"LG 는 스타일러를 민다"* 를 우리 것과 견줄 수가 없다. */
+var PROD_Q = [
+  ['김치냉장고', ['김치냉장고', '김치플러스', '디오스김치']],
+  ['의류관리기', ['에어드레서', '스타일러']],
+  ['공기청정기', ['공기청정기', '블루스카이', '퓨리케어에어']],
+  ['정수기', ['정수기']],
+  ['식기세척기', ['식기세척기']],
+  ['전자레인지·오븐', ['전자레인지', '광파오븐', '오븐']],
+  ['인덕션', ['인덕션', '전기레인지', '하이라이트']],
+  ['청소기', ['청소기', '코드제로', '비스포크제트']],
+  ['건조기', ['건조기']],
+  ['세탁기', ['세탁기', '워시타워', '워시콤보', '통돌이', '드럼세탁', '트롬']],
+  ['냉장고', ['냉장고', '비스포크냉장', '오브제냉장']],
+  ['에어컨', ['에어컨', '무풍', '휘센']],
+  ['TV', ['tv', '올레드', 'oled', 'qled', '마이크로rgb']],
+  ['노트북', ['노트북', '갤럭시북', '그램']],
+  ['휴대폰', ['갤럭시s', '갤럭시z', '스마트폰', '아이폰']]
+];
+
+/** 제목에 적힌 품목 전부. **제목만 본다** — `kindOf_` 와 같은 규칙이다(본문·카페
+    이름까지 넣으면 엉뚱한 말에 걸린다). 하나도 없으면 빈 배열이고 화면이 그렇게 적는다. */
+function prodOf_(title) {
+  var t = norm_(title), out = [], i, j;
+  for (i = 0; i < PROD_Q.length; i++) {
+    var name = PROD_Q[i][0], keys = PROD_Q[i][1];
+    for (j = 0; j < keys.length; j++) {
+      if (t.indexOf(keys[j]) >= 0) { out.push(name); break; }
+    }
+  }
+  /* **김치냉장고를 냉장고로 또 세지 않는다** — 표 순서만으로는 못 막는다(둘 다 문다) */
+  if (out.indexOf('김치냉장고') >= 0) {
+    var k = out.indexOf('냉장고');
+    if (k >= 0) out.splice(k, 1);
+  }
+  return out;
+}
+
+/** 큰 것부터 N 개만. 채널이 수백 개라 통째로 담으면 시트 칸(5만 자)이 넘친다. */
+function topN_(obj, n) {
+  var ks = Object.keys(obj);
+  ks.sort(function (a, b) { return obj[b] - obj[a]; });
+  var out = {};
+  for (var i = 0; i < ks.length && i < n; i++) out[ks[i]] = obj[ks[i]];
+  return out;
+}
+
 function collectRival(deadline) {
   var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
@@ -2555,6 +2640,8 @@ function collectRival(deadline) {
        소스(블로그/카페) · 유형(구매·설치·비교…) · 월(블로그 작성일 기준). */
     var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 } };
     var byKind = {}, byMon = {};
+    /* **어디에 · 무엇을** (2026-09-02). 채널은 양쪽 따로, 품목은 한 표에 o/r 로 담는다 */
+    var byChan = { ours: {}, rival: {} }, byProd = {}, noProd = { o: 0, r: 0 }, rvSample = [];
 
     var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
     for (var si = 0; si < side.length; si++) {
@@ -2588,6 +2675,19 @@ function collectRival(deadline) {
                 got[key][lk] = 1;
                 var sname = srcName_(SRCS[sj]);
                 bySrc[key][sname]++;
+                var ch = chanOf_(SRCS[sj], it, lk0);
+                if (ch) { byChan[key][ch] = (byChan[key][ch] || 0) + 1; }
+                var ps = prodOf_(String(it.title || '')), pj;
+                if (!ps.length) noProd[key === 'ours' ? 'o' : 'r']++;
+                for (pj = 0; pj < ps.length; pj++) {
+                  if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0 };
+                  byProd[ps[pj]][key === 'ours' ? 'o' : 'r']++;
+                }
+                /* **표본은 LG 쪽만 · 지역당 8건.** 사장님이 실물을 열어 볼 수 있어야
+                   숫자를 검산할 수 있다(이 저장소가 실물 확인을 늘 요구하는 이유다). */
+                if (key === 'rival' && rvSample.length < 8) {
+                  rvSample.push({ t: plain_(it.title), l: lk0, c: ch, s: sname, d: String(it.postdate || '') });
+                }
                 var kd = kindOf_(String(it.title || ''));
                 if (!byKind[kd]) byKind[kd] = { o: 0, r: 0 };
                 byKind[kd][key === 'ours' ? 'o' : 'r']++;
@@ -2626,7 +2726,9 @@ function collectRival(deadline) {
       skew ? '' : (a + b > 0 ? Math.round((a / (a + b)) * 100) : ''),
       skew ? 'Y' : '',
       places.join(' · '),
-      JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon)
+      JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon),
+      JSON.stringify({ ours: topN_(byChan.ours, 12), rival: topN_(byChan.rival, 12) }),
+      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample)
     ]);
     if (err) break;
   }
@@ -2666,7 +2768,8 @@ function rival_() {
       capped: String(v[i][5]) === 'Y', queries: String(v[i][6]),
       /* **옛 회차에는 이 칸이 없다** — 그때는 빈 객체로 둔다(0 으로 그리면
          「없다」가 되어 거짓이다). 화면이 비었으면 그 절을 안 그린다. */
-      bySrc: jparse_(v[i][7]), byKind: jparse_(v[i][8]), byMonth: jparse_(v[i][9])
+      bySrc: jparse_(v[i][7]), byKind: jparse_(v[i][8]), byMonth: jparse_(v[i][9]),
+      byChan: jparse_(v[i][10]), byProd: jparse_(v[i][11]), sample: jparse_(v[i][12])
     });
   }
   return { at: last, rows: out };

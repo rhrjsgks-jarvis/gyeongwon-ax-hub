@@ -2278,6 +2278,72 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         else console.log('OK: 바이럴 접이식 — 박스 ' + boxes + '개 ↔ 카드 ' + cards + '개 · 먼저 보이게 하고 그린다 · 열린 것을 기억한다');
       }
 
+      /* ⓙ **LG 홍보 경로** (2026-09-02 사장님: *"LG는 어느경로로 어떻게 어떤걸
+         홍보하는지도 분석하는내용이 있으면좋겠습니다"*). 지금까지 센 것은 출처·유형·월
+         뿐이라 *"어디가 밀리나"* 까지만 답할 수 있었다. **어느 채널에 · 무엇을**을 더했다. */
+      {
+        const bad = [];
+        const gsP = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+
+        /* **시트 열은 뒤에만 붙인다** — 가운데에 끼우면 옛 줄이 통째로 한 칸씩 밀린다.
+           그리고 **쓰는 칸 ↔ 읽는 칸 번호**가 어긋나면 조용히 빈다(이 저장소가 이미 겪었다). */
+        if (!gsP.includes("'monthJson', 'chanJson', 'prodJson', 'sampleJson'")) {
+          bad.push('RIVAL_HEADER 뒤에 채널·품목·표본 칸이 없다');
+        }
+        if (!gsP.includes('jparse_(v[i][12])')) bad.push('표본 칸을 읽지 않는다 — 시트엔 있는데 화면이 못 본다');
+
+        /* **떼어 돌려 본다.** 문자열 존재만 보면 규칙이 뒤집혀도 통과한다. */
+        const cut = (name) => {
+          const at = gsP.indexOf('function ' + name + '(');
+          if (at < 0) return '';
+          let d = 0;
+          for (let j = gsP.indexOf('{', at); j < gsP.length; j++) {
+            if (gsP[j] === '{') d++;
+            else if (gsP[j] === '}') { d--; if (!d) return gsP.slice(at, j + 1); }
+          }
+          return '';
+        };
+        const tabAt = gsP.indexOf('var PROD_Q = [');
+        const tabEnd = gsP.indexOf('];', tabAt);
+        const tab = tabAt < 0 ? '' : gsP.slice(tabAt, tabEnd + 2);
+        let prodOf = null, chanOf = null;
+        try {
+          prodOf = new Function(cut('norm_') + tab + cut('prodOf_') + ' return prodOf_;')();
+          chanOf = new Function(cut('plain_') + cut('chanOf_') + ' return chanOf_;')();
+        } catch (e) { prodOf = null; }
+
+        if (!prodOf || !chanOf) bad.push('prodOf_·chanOf_ 를 떼어 돌릴 수 없다 — 규칙을 검사할 수 없다');
+        else {
+          /* **김치냉장고를 냉장고로 또 세지 않는다** — 부분일치로 이 저장소가 여러 번 데였다 */
+          const k = prodOf('LG 베스트샵 김치냉장고 후기');
+          if (k.indexOf('김치냉장고') < 0) bad.push('김치냉장고를 못 잡는다');
+          if (k.indexOf('냉장고') >= 0) bad.push('김치냉장고가 냉장고로도 세어진다 — 한 글이 두 번 잡힌다');
+          /* **삼성 말과 LG 말이 한 칸이어야 견줄 수 있다** — 갈라 두면 "LG 는 스타일러를 민다" 를 못 낸다 */
+          if (prodOf('스타일러 구매')[0] !== '의류관리기') bad.push('스타일러가 의류관리기로 안 묶인다');
+          if (prodOf('에어드레서 설치')[0] !== '의류관리기') bad.push('에어드레서가 의류관리기로 안 묶인다');
+          /* **없으면 없다고 한다** — 아무거나 집어넣으면 「무엇을 미나」가 거짓이 된다 */
+          if (prodOf('수원점 다녀왔어요 후기').length) bad.push('품목이 없는 제목에서 품목을 만들어 낸다');
+          /* 한 글에 둘이 적혀 있으면 둘 다 */
+          if (prodOf('세탁기 건조기 같이 샀어요').length !== 2) bad.push('제목에 적힌 품목을 다 세지 않는다');
+          /* 채널 — 카페는 카페 이름, 블로그는 블로그 이름, 웹은 호스트 */
+          if (chanOf('cafearticle', { cafename: '다이렉트웨딩' }, 'https://cafe.naver.com/a/1') !== '다이렉트웨딩') bad.push('카페 이름을 채널로 쓰지 않는다');
+          if (chanOf('blog', { bloggername: '요즘신혼' }, 'https://blog.naver.com/b/2') !== '요즘신혼') bad.push('블로그 이름을 채널로 쓰지 않는다');
+          if (chanOf('webkr', {}, 'https://lgbestshop.co.kr/x/y') !== 'lgbestshop.co.kr') bad.push('웹 호스트를 채널로 쓰지 않는다');
+        }
+
+        /* 화면 — 카드·박스·렌더가 다 있어야 한 벌이다 */
+        if (!ix2.includes('function renderPromo(')) bad.push('renderPromo 가 없다');
+        if (!ix2.includes('    renderPromo();')) bad.push('render 가 renderPromo 를 부르지 않는다');
+        if (!ix2.includes('data-sec="promo"')) bad.push('접이식 박스에 LG 홍보 경로가 없다');
+        if (!ix2.includes('data-card="promo"')) bad.push('LG 홍보 경로 카드가 없다');
+        /* **`jparse_` 는 빈 칸을 `{}` 로 돌려준다** — 배열인지 보고 써야 `.forEach` 가 안 터진다 */
+        if (!ix2.includes('Array.isArray(r.sample)')) bad.push('표본이 배열인지 안 보고 쓴다 — 옛 회차에서 화면이 죽는다');
+        /* **없음과 아직 안 잼을 가른다** — 0 으로 그리면 「LG 가 안 민다」가 된다 */
+        if (!ix2.includes('아직 안 쟀습니다')) bad.push('자료가 없을 때 「없다」와 「아직 안 쟀다」를 가르지 않는다');
+
+        if (bad.length) fail('[바이럴] LG 홍보 경로 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 LG 홍보 경로 — 채널·품목·표본 · 김치냉장고를 두 번 안 센다 · 스타일러↔에어드레서 한 칸');
+      }
       /* ⓘ **지도 보강 · 매장 목록** (2026-08-31 사장님 요청 묶음).
          화면에서만 보이는 것들이라 되돌아가면 아무도 모른다. */
       {

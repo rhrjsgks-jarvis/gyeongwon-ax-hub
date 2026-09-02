@@ -194,6 +194,20 @@
   .rv .vl.win { color: var(--blue); }
   .rv .vl.lose { color: #C0392B; }
   .rv .vl.na { color: var(--mute); font-weight: 500; font-size: 10.5px; }
+  /* LG 홍보 경로 (2026-09-02) — 채널·품목·표본 */
+  .pgrp { margin-top: 13px; }
+  .pgrp h3 { font-size: 11.5px; font-weight: 800; color: var(--blue); margin-bottom: 2px; }
+  .pgrp .pnote { font-size: 10.5px; color: var(--mute); margin-bottom: 7px; }
+  .pch { display: grid; grid-template-columns: minmax(84px, 200px) 1fr 92px; gap: 10px; align-items: center; margin-bottom: 5px; }
+  .pch .nm { font-size: 11.5px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pch .tr { background: #EEF1F6; border-radius: 999px; height: 9px; overflow: hidden; }
+  .pch .fl { height: 100%; border-radius: 999px; }
+  .pch .vl { font-size: 10.5px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+  .psamp { padding: 7px 0; border-top: 1px solid #F1F3F5; }
+  .psamp a { color: var(--ink); text-decoration: none; font-size: 12px; font-weight: 600; }
+  .psamp a:hover { color: #C0392B; text-decoration: underline; }
+  .psamp .meta { font-size: 10.5px; color: var(--mute); margin-top: 2px; }
+  @media (max-width: 520px) { .pch { grid-template-columns: minmax(60px, 108px) 1fr 74px; gap: 7px; } }
   .rvleg { display: flex; gap: 12px; font-size: 10.5px; color: var(--mute); margin-bottom: 9px; }
   .rvleg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 
@@ -565,6 +579,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 <!-- 접이식 섹션 박스 — 누르면 그 섹션이 열리고 여러 개를 동시에 열 수 있다. 열린 것은 기억한다 -->
 <div class="secs" id="secs" role="group" aria-label="섹션 열기">
   <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs LG</button>
+  <button type="button" class="sec" data-sec="promo" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h3l5 4V6l-5 4zM17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>LG 홍보 경로</button>
   <button type="button" class="sec" data-sec="trend" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M4 16l5-6 4 3 7-8"/></svg></span>월별 추이</button>
   <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>이번 달 진단</button>
   <button type="button" class="sec" data-sec="map" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span>지도</button>
@@ -589,6 +604,16 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            출처(어디에서 싸우나) · 유형(무슨 이야기인가) · 월(흐름이 어느 쪽인가). -->
       <div id="rival-break"></div>
       <div class="note" id="rival-note"></div>
+    </div>
+
+    <!-- LG 홍보 경로 (2026-09-02 사장님: *"LG는 어느경로로 어떻게 어떤걸 홍보하는지도
+         분석하는내용이 있으면좋겠습니다"*). 비중(어디가 밀리나)·출처(어디에서 싸우나)
+         까지는 위 카드가 답한다. 여기서 답하는 것은 **어느 카페·어느 블로그에** 올라오고
+         **제목에 어떤 품목이 적혀 있는가**다. -->
+    <div class="card" data-card="promo">
+      <h2>LG 홍보 경로 — 어디에 무엇을</h2>
+      <div class="sub" id="promo-sub">–</div>
+      <div id="promo"></div>
     </div>
 
     <div class="card" data-card="trend">
@@ -2132,7 +2157,101 @@ function wireSecs() {
       + ' 속도로 늘고 있으면 비중은 믿을 만합니다 — <b>한쪽만 빠르게 늘면 「못 잼」으로 둡니다.</b>';
   }
 
-  function renderList() {
+  /* ── LG 홍보 경로 (2026-09-02 사장님 요청) ────────────────────────────────
+ * *"LG는 어느경로로 어떻게 어떤걸 홍보하는지도 분석하는내용이 있으면좋겠습니다"*
+ *
+ * **양쪽을 나란히 놓는다.** LG 채널만 세면 「많다」가 견줄 데가 없는 말이 된다 —
+ * 이 화면이 비중을 낼 때 이미 지키는 규칙 그대로다.
+ * **표본 링크를 함께 낸다** — 숫자를 실물로 검산할 수 있어야 한다.
+ * **없음과 아직 안 잼을 가른다** — 0 으로 그리면 「LG 가 그 품목을 안 민다」가 된다.
+ */
+function renderPromo() {
+  var box = document.getElementById('promo'), sub = document.getElementById('promo-sub');
+  if (!box) return;
+  var R = DATA.rival, rows = (R && R.rows) || [];
+  if (!rows.length) {
+    if (sub) sub.textContent = '아직 안 쟀습니다 — 다음 수집 때 채워집니다';
+    box.innerHTML = '<div class="pnote">당사 vs LG 자료가 아직 없습니다. 하루 한 번 도는 비교가 끝나면 여기가 채워집니다.</div>';
+    return;
+  }
+
+  /* 지역 여섯을 합친다 — 지역별로 또 쪼개면 칸이 수십 개가 되어 못 읽는다 */
+  var chan = { ours: {}, rival: {} }, prod = {}, none = { o: 0, r: 0 }, samp = [];
+  rows.forEach(function (r) {
+    var c = r.byChan || {};
+    ['ours', 'rival'].forEach(function (side) {
+      Object.keys(c[side] || {}).forEach(function (k) { chan[side][k] = (chan[side][k] || 0) + (c[side][k] || 0); });
+    });
+    var p = r.byProd || {};
+    Object.keys(p.prod || {}).forEach(function (k) {
+      if (!prod[k]) prod[k] = { o: 0, r: 0 };
+      prod[k].o += (p.prod[k].o || 0); prod[k].r += (p.prod[k].r || 0);
+    });
+    none.o += ((p.none || {}).o || 0); none.r += ((p.none || {}).r || 0);
+    /* **`jparse_` 는 빈 칸을 `{}` 로 돌려준다** — 배열인지 보고 써야 한다 */
+    if (Array.isArray(r.sample)) r.sample.forEach(function (x) { samp.push(x); });
+  });
+
+  var nChan = Object.keys(chan.rival).length + Object.keys(chan.ours).length;
+  if (!nChan && !Object.keys(prod).length) {
+    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다';
+    box.innerHTML = '<div class="pnote">이 비교 회차는 채널·품목을 세기 전에 돈 것입니다 — 다음 수집부터 채워집니다. 그 전에도 위 「당사 vs LG」의 비중·출처는 그대로 볼 수 있습니다.</div>';
+    return;
+  }
+
+  var chList = function (m, color, cmp) {
+    var ks = Object.keys(m); ks.sort(function (a, b) { return m[b] - m[a]; });
+    ks = ks.slice(0, 10);
+    if (!ks.length) return '<div class="pnote">없습니다.</div>';
+    var max = m[ks[0]] || 1;
+    return ks.map(function (k) {
+      var w = Math.max(3, Math.round(m[k] * 100 / max));
+      return '<div class="pch"><div class="nm" title="' + esc(k) + '">' + esc(k) + '</div>'
+        + '<div class="tr"><div class="fl" style="width:' + w + '%;background:' + color + '"></div></div>'
+        + '<div class="vl">' + nf(m[k]) + '건 · 상대 ' + nf(cmp[k] || 0) + '</div></div>';
+    }).join('');
+  };
+
+  var prodKs = Object.keys(prod).filter(function (k) { return (prod[k].o + prod[k].r) > 0; });
+  prodKs.sort(function (a, b) { return (prod[b].o + prod[b].r) - (prod[a].o + prod[a].r); });
+  var prodHtml = prodKs.length ? prodKs.map(function (k) {
+    var o = prod[k].o, r2 = prod[k].r, t = o + r2, p = t ? o * 100 / t : 50;
+    return '<div class="rv"><div class="nm">' + esc(k) + '</div>'
+      + '<div class="tr" title="' + esc(k) + ' — 당사 ' + nf(o) + ' · LG ' + nf(r2) + '건">'
+      + '<div class="us" style="width:' + p.toFixed(1) + '%"><span>' + nf(o) + '</span></div>'
+      + '<div class="th" style="width:' + (100 - p).toFixed(1) + '%"><span>' + nf(r2) + '</span></div></div>'
+      + '<div class="vl ' + (p >= 50 ? 'win' : 'lose') + '">' + Math.round(p) + '%</div></div>';
+  }).join('') : '<div class="pnote">제목에 품목이 적힌 글이 없습니다.</div>';
+
+  /* **표본은 LG 쪽만 · 지역당 8건**이라 전부 실어도 길지 않다 */
+  var sampHtml = samp.length ? samp.slice(0, 24).map(function (x) {
+    var d = String(x.d || '');
+    var when = d.length === 8 ? ' · ' + d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6) : '';
+    return '<div class="psamp"><a href="' + esc(x.l || '') + '" target="_blank" rel="noopener">'
+      + esc(x.t || '(제목 없음)') + '</a>'
+      + '<div class="meta">' + esc(x.s || '') + (x.c ? ' · ' + esc(x.c) : '') + when + '</div></div>';
+  }).join('') : '<div class="pnote">표본이 아직 없습니다.</div>';
+
+  if (sub) {
+    sub.textContent = '최신 비교 회차(' + (R.at || '') + ') 기준 · 지역 ' + rows.length + '곳을 합쳤습니다 · 품목은 제목에 적힌 말로만 셉니다';
+  }
+  box.innerHTML =
+    '<div class="pgrp"><h3>LG 글이 많은 자리</h3>'
+    + '<div class="pnote">카페는 카페 이름, 블로그는 블로그 이름, 웹은 주소의 호스트입니다. 「상대」는 같은 자리의 당사 글 수입니다.</div>'
+    + chList(chan.rival, '#C0392B', chan.ours) + '</div>'
+    + '<div class="pgrp"><h3>당사 글이 많은 자리</h3>'
+    + chList(chan.ours, 'var(--blue)', chan.rival) + '</div>'
+    + '<div class="pgrp"><h3>무엇을 올리나 — 제목에 적힌 품목</h3>'
+    + '<div class="pnote">제목만 봅니다 — 본문·카페 이름까지 넣으면 엉뚱한 말에 걸립니다. 한 글에 두 품목이 적혀 있으면 둘 다 셉니다.</div>'
+    + '<div class="rvleg"><span><i style="background:var(--blue)"></i>당사</span><span><i style="background:#C0392B"></i>LG</span></div>'
+    + prodHtml
+    + '<div class="pnote">제목에 품목이 안 적힌 글 — 당사 ' + nf(none.o) + '건 · LG ' + nf(none.r) + '건</div></div>'
+    + '<div class="pgrp"><h3>LG 글 표본</h3>'
+    + '<div class="pnote">숫자를 실물로 검산하시라고 지역마다 몇 건씩 남겨 둡니다.</div>'
+    + sampHtml + '</div>';
+}
+
+function renderList() {
     var rows = filtered();
     var el = document.getElementById('list');
     /* 무엇으로 걸렀는지 화면이 적는다 — 안 적으면 *"왜 몇 건뿐이지"* 가 된다 */
@@ -2683,6 +2802,7 @@ function wireSecs() {
     syncPoll();
     renderLimit();
     renderProgress();
+    renderPromo();
     renderTrend();
     renderDiag();
     renderSignals();
