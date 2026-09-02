@@ -2288,7 +2288,9 @@ function wireSecs() {
           '<div class="us" style="width:' + p.toFixed(1) + '%"><span>' + nf(r.ours) + '</span></div>' +
           '<div class="th" style="width:' + (100 - p).toFixed(1) + '%"><span>' + nf(r.rival) + '</span></div></div>' +
           (na
-            ? '<div class="vl na">못 잼</div>'
+            ? '<div class="vl na" title="' + (r.half
+                ? esc(r.area + ' 은(는) 도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 나머지가 빠져 비중을 낼 수 없습니다')
+                : '양쪽 증가율이 벌어져 비중을 믿을 수 없습니다') + '">못 잼</div>'
             : '<div class="vl ' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</div>') +
           '</div>';
       }).join('');
@@ -2311,6 +2313,19 @@ function wireSecs() {
           + '<b>LG 후기가 없다는 뜻이 아닙니다</b>. '
           + '맨 위 <b>「LG 비교 갱신」</b>을 누르면 멈춘 도시부터 이어서 잽니다.</div>';
       }
+    }
+    /* **「줄이 있다」와 「다 쟀다」는 다른 말이다**(2026-09-02). 위 안내는 지역 줄이
+       아예 없을 때만 뜬다 — 그래서 강원이 `queries` 「춘천」 하나로 `ours 100 · rival 0 ·
+       pct 100%` 인 반쪽 줄을 갖고도 그냥 통과해 **초록 100%** 로 그려졌다.
+       화면이 *"강원엔 LG 후기가 없다"* 고 말하고 있었는데, 실제로는 네이버 블로그
+       「LG베스트샵 춘천」만 239건이다. 도시를 다 못 쟀으면 그 사실을 적는다. */
+    var halfRows = rows.filter(function (r) { return r.half; });
+    if (halfRows.length) {
+      el.innerHTML += '<div class="note warn" style="margin-top:8px"><b>'
+        + esc(halfRows.map(function (r) { return r.area + '(' + r.cities + '/' + r.wantCities + '곳)'; }).join(' · '))
+        + '</b> — 도시를 다 못 쟀습니다. 건수는 그 도시들만의 것이고 <b>비중은 내지 않았습니다</b>'
+        + ' — 남은 도시가 빠진 채로 비율을 내면 화면이 거짓을 말합니다.'
+        + ' 맨 위 <b>「LG 비교 갱신」</b>을 누르면 남은 도시를 마저 잽니다.</div>';
     }
 
     /* ── 갈래별 (2026-09-01 사장님: *"디테일한 비교가 필요합니다"*) ───────────

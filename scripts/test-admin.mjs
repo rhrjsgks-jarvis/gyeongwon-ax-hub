@@ -2795,8 +2795,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
       /* ⓖ **비중은 합산한 뒤 다시 계산한다** — 도시별 비중을 평균 내면 작은 도시가 큰 도시와 같은 무게가 된다.
              그리고 한 도시라도 못 잰 지역은 비중을 비운다. */
-      if (!rv.includes('pct: r.capped || tot === 0 ? null : Math.round((r.ours / tot) * 100)')) {
-        bad.push('rival_() 이 합산 뒤 비중을 다시 계산하지 않는다');
+      /* **`half` 가 함께 들어간다**(2026-09-02) — 도시를 다 못 쟀으면 비중을 안 낸다.
+         실측으로 강원이 `queries` 「춘천」 하나로 `ours 100 · rival 0 · pct 100%` 인
+         반쪽 줄을 갖고 있었고, 화면이 초록 100% 로 그려 *"강원엔 LG 후기가 없다"* 고
+         말했다 — 실제로는 네이버 블로그 「LG베스트샵 춘천」만 239건이다. */
+      if (!rv.includes('pct: (r.capped || half || tot === 0) ? null : Math.round((r.ours / tot) * 100)')) {
+        bad.push('rival_() 이 합산 뒤 비중을 다시 계산하지 않거나, 반쪽으로 잰 지역의 비중을 그대로 낸다');
       }
 
       /* ⓖ-2 **옛 줄과 새 줄이 한 회차에 섞이면 옛 줄을 버린다** — 2026-09-02 배포 직후
@@ -2825,13 +2829,21 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
             ['T1','안양',1103,812,58,'','안양 · 평촌','{}','{}','{}','{}','{}','[]'],
             ['T1','안양',400,300,57,'','안양','{}','{}','{}','{}','{}','[]'],
             ['T1','안양',247,199,55,'','평촌','{}','{}','{}','{}','{}','[]'],
-            ['T1','수원',1614,2275,42,'','수원','{}','{}','{}','{}','{}','[]']
+            ['T1','수원',1614,2275,42,'','수원','{}','{}','{}','{}','{}','[]'],
+            /* **프로덕션에서 실제로 난 반쪽 줄**(2026-09-02): 강원은 춘천·원주·강릉 셋인데
+               춘천 하나만 있고 rival=0 이라 화면이 초록 100% 로 "LG 후기가 없다"고 말했다.
+               실제로는 네이버 블로그 「LG베스트샵 춘천」만 239건이다. */
+            ['T1','강원',100,0,100,'','춘천','{}','{}','{}','{}','{}','[]']
           ];
           function sheet_(){ return { getLastRow: function(){ return ROWS.length + 1; },
             getRange: function(){ return { getValues: function(){ return ROWS; } }; } }; }
           function jparse_(x){ try { return JSON.parse(x) || {}; } catch(e){ return {}; } }
         `;
-        rivalFn = new Function(stub + cutFn('mergeNum_') + cutFn('rival_') + ' return rival_;')();
+        /* `rival_()` 이 **지역마다 도시를 다 쟀는지** 보므로 그 표가 필요하다 —
+           반쪽 줄(강원이 춘천 하나로 100%)을 「못 잼」으로 돌리는 판정의 근거다.
+           **소스에서 떼어 온다** — 여기 손으로 적으면 도시가 바뀔 때 갈린다. */
+        const areaQSrc = (rv.match(/var AREA_Q = \{[\s\S]*?\n\};/) || [''])[0];
+        rivalFn = new Function(stub + areaQSrc + cutFn('mergeNum_') + cutFn('rival_') + ' return rival_;')();
       } catch (e) { rivalFn = null; }
       if (!rivalFn) bad.push('rival_() 을 떼어 돌릴 수 없다 — 합산 규칙을 검사할 수 없다');
       else {
@@ -2851,6 +2863,17 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         }
         /* **회차 전체가 옛 줄이면 그대로 쓴다** — 안 그러면 옛 자료가 통째로 사라진다 */
         if (!get('수원') || get('수원').ours !== 1614) bad.push('섞이지 않은 줄까지 버린다');
+        /* **도시를 다 못 쟀으면 비중을 내지 않는다.** 건수는 그대로 두고 `pct` 만 비운다 —
+           지우면 그 자체가 또 다른 거짓이다. 몇 곳 중 몇 곳인지도 함께 보내야 화면이
+           이유를 적을 수 있다. */
+        const gw = get('강원');
+        if (!gw) bad.push('반쪽으로 잰 지역이 통째로 빠졌다 — 건수는 남겨야 한다');
+        else if (gw.pct !== null) bad.push(`도시를 다 못 쟀는데 비중을 낸다(${gw.pct}%) — 화면이 「LG 후기가 없다」로 그린다`);
+        else if (!gw.half || gw.cities !== 1 || gw.wantCities < 2) {
+          bad.push(`반쪽인 사실을 화면에 못 알린다: ${JSON.stringify({ half: gw.half, cities: gw.cities, want: gw.wantCities })}`);
+        }
+        /* 다 잰 지역은 그대로 비중이 나와야 한다 — 한쪽만 보면 문턱을 올려도 통과한다 */
+        if (get('수원') && get('수원').pct !== 42) bad.push('다 잰 지역의 비중까지 비운다 — 가드가 너무 세다');
       }
 
       /* ⓗ **버튼** (사장님 요청) — 서버 진입점 · 화면 버튼 · 그 둘이 이어져 있는가 */

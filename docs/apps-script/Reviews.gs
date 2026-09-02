@@ -3182,10 +3182,21 @@ function rival_() {
   var out = [];
   for (i = 0; i < order.length; i++) {
     var r = by[order[i]], tot = r.ours + r.rival;
+    /* **도시를 다 못 쟀으면 그 지역 비중은 못 잰 것이다**(2026-09-02).
+       실측으로 강원이 `ours 100 · rival 0 · pct 100%` 로 화면에 **초록 100%** 였는데,
+       `queries` 가 「춘천」 하나뿐이었다 — 강원은 춘천·원주·강릉 셋이다. 그 춘천 0건도
+       실제 0이 아니었다(네이버 블로그 「LG베스트샵 춘천」이 239건). 옛 코드의 오류-중단
+       경로가 반쪽 줄을 남긴 것이고, 화면은 *"강원엔 LG 후기가 없다"* 고 말하고 있었다.
+       **줄이 있기만 하면 통과시키던 것이 구멍이었다** — 몇 도시를 쟀는지까지 봐야 한다.
+       `pct` 를 비워 「못 잼」으로 만들고(회색), 몇 곳 중 몇 곳인지를 함께 보낸다.
+       **건수는 그대로 보낸다** — 지우면 그 자체가 또 다른 거짓이다. */
+    var wantN = (AREA_Q[r.area] || []).length;
+    var half = wantN > 0 && r.q.length > 0 && r.q.length < wantN;
     out.push({
       area: r.area, ours: r.ours, rival: r.rival,
-      pct: r.capped || tot === 0 ? null : Math.round((r.ours / tot) * 100),
-      capped: r.capped, queries: r.q.join(' · '),
+      pct: (r.capped || half || tot === 0) ? null : Math.round((r.ours / tot) * 100),
+      capped: r.capped, half: half, cities: r.q.length, wantCities: wantN,
+      queries: r.q.join(' · '),
       bySrc: r.bySrc, byKind: r.byKind, byMonth: r.byMonth,
       byChan: r.byChan, byProd: r.byProd, sample: r.sample
     });
