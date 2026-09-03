@@ -321,7 +321,20 @@ function distM_(a, b, c, d) {
  * 화면에서 사실처럼 읽힌다.
  */
 function lgMatchOne_(code, name, lat, lng, manual) {
-  if (manual) return { shop: manual, dist: null, how: 'manual' };
+  /* **사람이 고른 짝이어도 거리·유형은 낸다**(2026-09-03). 예전에는 그 자리에서
+     돌려보내 `dist: null · how: 'manual'` 이었는데, 사장님이 요구한 것은
+     *"매칭된 LG 매장명, **거리**, **매칭 유형**(백화점 내 / 최근접)을 함께 노출"* 이다.
+     고른 짝을 존중하되 **그 짝이 같은 건물인지는 좌표가 말해 준다.** */
+  if (manual) {
+    var md = null, mi;
+    for (mi = 0; mi < LG_SHOPS.length; mi++) {
+      if (LG_SHOPS[mi][0] !== manual) continue;
+      md = distM_(lat, lng, LG_SHOPS[mi][2], LG_SHOPS[mi][3]);
+      break;
+    }
+    return { shop: manual, dist: md, manual: true,
+             how: (md !== null && md <= DEPT_SAME_M) ? 'dept' : 'manual' };
+  }
   if (typeof lat !== 'number' || typeof lng !== 'number') {
     return { shop: '', dist: null, how: '', why: '매장 좌표를 모릅니다' };
   }
@@ -348,7 +361,9 @@ function lgMatchOne_(code, name, lat, lng, manual) {
 
 /** 전 매장의 짝. 화면이 히트맵·지도·지점별 분석에서 함께 쓴다. */
 function lgMatchAll_() {
-  var manual = lgPairs_(), geo = STORE_GEO || {}, out = {}, i, code, name, g;
+  /* **사람이 고친 것만** 넘긴다 — 코드 표(`LG_PAIR`)는 자동 제안이라 좌표 판정을
+     그대로 돌려야 「같은 백화점 안」인지가 나온다 */
+  var manual = lgPairsManual_(), geo = STORE_GEO || {}, out = {}, i, code, name, g;
   for (i = 0; i < STORES.length; i++) {
     code = STORES[i][0]; name = STORES[i][1];
     g = geo[name] || {};
@@ -1571,6 +1586,15 @@ var LG_PAIR = {
 /** 코드 표 + 화면에서 바꾼 것을 합친다. **화면 쪽이 이긴다** — 자동 짝은 제안이고
  *  사람이 고친 것이 정답이다(매니저 명부와 반대 방향이라 헷갈리지 말 것:
  *  그쪽은 공식 목록이라 코드가 이기고, 이쪽은 추정이라 사람이 이긴다). */
+/** 사람이 **직접 고친** 짝만. `LG_PAIR`(코드 표)는 좌표로 낸 자동 제안이라 여기 안 넣는다 —
+ *  넣으면 62곳 전부가 「사람이 고른 짝」이 되어 **좌표 판정이 한 번도 안 돈다**
+ *  (실물에서 그랬다: 백화점 12곳이 전부 `manual` 이라 ▣ 표식이 0개였다). */
+function lgPairsManual_() {
+  var mine = {};
+  try { mine = JSON.parse(props_().getProperty('_lgPair') || '{}') || {}; } catch (e) { mine = {}; }
+  return mine;
+}
+
 function lgPairs_() {
   var out = {}, k;
   for (k in LG_PAIR) if (LG_PAIR.hasOwnProperty(k)) out[k] = LG_PAIR[k];

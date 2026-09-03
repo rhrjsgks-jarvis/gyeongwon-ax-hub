@@ -3177,9 +3177,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ③ **칸에 실어 보내는 필드** — 이 자리에서 필드를 빠뜨려 이미 세 번 데었다
            (share·noPrev 를 안 실어 「작성일 모름」·「null→119건」, store 를 안 실어
            매장 이름 대신 「0→7건」이 떴다). */
-    if (!ix.includes('store: d.store, known: d.known })')) {
-      bad.push('칸에 매장·명부 표식을 안 싣는다 — 부제가 엉뚱한 글자가 된다');
-    }
+    /* **앵커를 닫는 괄호까지 잡지 말 것** — 필드를 하나 더하면 그 자리에서 깨져
+       멀쩡한 코드를 「틀렸다」고 잡는다(연도 축을 넣다 실제로 그랬다).
+       **안 바뀔 조각**으로 잡고, 실어야 하는 필드를 하나씩 센다. */
+    ['store: d.store', 'known: d.known', 'year: d.year', 'prevYear: d.prevYear'].forEach(function (f) {
+      if (!ix.includes(f)) bad.push('칸에 ' + f + ' 를 안 싣는다 — 부제가 엉뚱한 글자가 된다');
+    });
 
     /* ④ 매니저에 없는 것을 살려 두지 않는다 — 눌러도 뜻이 없는 버튼은 「고장」이다 */
     if (!ix.includes("var chan = heatWho === 'mgr' ? false")) {
@@ -3195,6 +3198,78 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (bad.length) fail('[바이럴] 매니저 히트맵 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 매니저 히트맵 — 칸은 사람 · 색은 전월 대비 · 자료 없으면 감춘다');
   }
+}
+
+/* ── 히트맵 연도 축 · LG 연도별 (2026-09-03 사장님 지시) ────────────────────
+ * *"히트맵에 2025년과 2026년 자료만 … 기본 화면은 2026년(당해) … 2025년 대비 증감은
+ *   버튼으로"* · *"LG도 삼성스토어 수집과 동일하게 과거 총후기합은 수치로 보관하고
+ *   (23년24년까지) 25년과 26년은 삼성스토어와 동일하게"*.
+ *
+ * **가장 위험한 것은 「같은 기간」이라는 거짓말이다.** 우리 자료는 2025-07 부터인데
+ * 화면이 *"양쪽 다 1~9월"* 이라 적고 없는 여섯 달을 0으로 세어 **+368%** 를 내밀고
+ * 있었다(겹치는 달만 보면 +127%). 그래서 `heatCmpMonths()` 를 **떼어 실제로 돌린다** —
+ * 문자열이 있는지만 보면 규칙이 바뀌어도 통과한다. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ① 겹치는 달 규칙을 떼어 돌린다 */
+  const m = ix.match(/function heatCmpMonths\(\)[\s\S]*?\n  \}/);
+  if (!m) bad.push('heatCmpMonths 가 없다 — 연도 비교가 「같은 기간」을 지킬 수 없다');
+  else {
+    const run = (bm, cur, prev) => {
+      const fn = new Function('DATA', 'heatYears',
+        m[0].replace('function heatCmpMonths()', 'return (function ()') + ')();');
+      return fn({ byStoreMonth: bm }, () => ({ cur, prev }));
+    };
+    /* 실제 프로덕션 모양 — 작년이 7월부터, 당해는 9월이 진행 중 */
+    const bm = { A: { '2025-07': 5, '2025-08': 5, '2025-09': 5,
+                      '2026-01': 9, '2026-07': 9, '2026-08': 9, '2026-09': 1 } };
+    const got = run(bm, '2026', '2025');
+    if (got.join(',') !== '07,08') {
+      bad.push('겹치는 달이 [07,08] 이어야 하는데 [' + got.join(',') + '] 이다'
+        + ' — 작년에 없는 달을 0으로 세거나 진행 중인 달을 넣고 있다');
+    }
+    /* 두 해가 한 달도 안 겹치면 빈 배열 — 「견줄 수 없다」를 0 으로 그리지 않는다 */
+    const none = run({ A: { '2025-01': 3, '2026-08': 3, '2026-09': 1 } }, '2026', '2025');
+    if (none.length) bad.push('겹치는 달이 없는데 ' + none.length + '개를 내놓는다');
+  }
+
+  /* ② 당해만 볼 때는 증감을 안 적고, 「작성일 모름」도 안 붙인다 */
+  if (!ix.includes("heatYear !== 'cmp' ? ''")) {
+    bad.push('당해만 볼 때 증감을 지우지 않는다 — 그때는 색도 건수라 두 말을 한다');
+  }
+  if (!ix.includes("!heatKind && !d.year) sub2 = '작성일 모름'")) {
+    bad.push('연도 축에서 「작성일 모름」을 막지 않는다 — 그 칸은 작성일을 알아서 센 것이다');
+  }
+  /* ③ 기본은 당해년도 — 이 한 줄이 사장님 지시의 핵심이다 */
+  if (!/var heatYear = 'cur'/.test(ix)) {
+    bad.push('히트맵 기본이 당해년도가 아니다');
+  }
+  /* ④ 주차·유형·매니저를 고르면 연도 축이 아니다 — 버튼을 감춘다 */
+  if (!ix.includes('var yrAxis = !week && !mgrView && !heatKind;')) {
+    bad.push('연도 축 판정이 주차·유형·매니저를 가르지 않는다');
+  }
+
+  /* ⑤ LG 연도 표 — 당해·직전해만 비중, 그 앞은 숫자만 */
+  if (!ix.includes('function yearTable()')) bad.push('LG 연도 표가 없다');
+  if (!ix.includes("var KEEP = Number(cur) - 3;")) {
+    bad.push('LG 연도 표가 23·24년까지 줄로 적지 않는다');
+  }
+  if (!ix.includes("var live = (y === cur || y === prev);")) {
+    bad.push('LG 연도 표가 당해·직전해만 비중을 내지 않는다 — 「숫자만 보관」이 무너진다');
+  }
+  /* **지우지 않는다** — LG 비교는 애초에 숫자만 저장한다 */
+  if (/rollRival|purgeRival/.test(ix)) {
+    bad.push('LG 비교를 지우려 든다 — 보관하라는 지시와 어긋난다');
+  }
+  /* ⑥ LG 증감도 겹치는 달만 */
+  if (!ix.includes("if (!ym[prev + '-' + m2]) return;")) {
+    bad.push('LG 증감이 작년에 없는 달을 0 으로 센다');
+  }
+
+  if (bad.length) fail('[바이럴] 연도 축 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · LG 23/24는 숫자만');
 }
 
 /* ── 화면 규격 (2026-09-03 사장님 지시 — *"인터페이스도 좀 통일하고 보기 좋게"*) ──
