@@ -3817,6 +3817,64 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (bad.length) fail('[바이럴] 쿼터 날짜 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 쿼터 날짜 — 카운터는 태평양 · 도장은 한국 · 화면이 글자로 적는다(폰에 hover 없음)');
   }
+
+  /* ── LG 비교 예약 (2026-09-03) ──────────────────────────────────────────
+   * 「LG 비교 갱신」은 수집과 **같은 자물쇠**를 쓰는데, 전체 재수집이 62곳을 여러 날에
+   * 나눠 도는 동안에는 그 자물쇠를 못 잡는다 — 실측으로 사장님이 눌러도 회차·시도 수가
+   * **한 톨도 안 움직였고** 화면은 「끝난 뒤에 다시 눌러 주세요」라고 했다(그 «끝»이
+   * 며칠 뒤다). 그래서 막히면 표식을 세워 두고 다음 회차가 먼저 돈다.
+   * 되돌리면 **버튼이 조용히 헛돈다** — 화면에는 아무 표시도 안 난다. */
+  {
+    const bad = [];
+    const rv = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+
+    /* ① 막히면 포기하지 말고 예약한다 */
+    const busyAt = rv.indexOf('if (!lock.tryLock(10 * 1000))');
+    const busyBlk = busyAt >= 0 ? rv.slice(busyAt, busyAt + 900) : '';
+    if (!busyBlk) bad.push('runRival 의 자물쇠 분기를 못 찾겠다');
+    else {
+      if (!busyBlk.includes("setProperty('_rivalWant', '1')")) {
+        bad.push('자물쇠에 막혔을 때 예약을 안 한다 — 며칠 동안 버튼이 헛돈다');
+      }
+      /* **반환값 형태로 좁힌다** — 그냥 문구로 찾으면 위 주석의 인용까지 물어
+         멀쩡한 코드를 「되돌아갔다」고 잡는다(이 저장소가 이미 겪은 앵커 함정이다). */
+      if (busyBlk.includes("note: '지금 수집이 돌고 있습니다")) {
+        bad.push('「끝난 뒤에 다시 눌러 주세요」로 되돌아갔다 — 그 끝이 며칠 뒤라 거짓이다');
+      }
+    }
+
+    /* ② 예약은 하루 표식·시도 한도보다 세다 — 그래야 다음 회차가 실제로 돈다.
+          **순서가 핵심이다**: 한도 검사보다 뒤에 있으면 한도를 다 쓴 날엔 안 돈다. */
+    const dueAt = rv.indexOf('function rivalDue_()');
+    const dueBlk = dueAt >= 0 ? rv.slice(dueAt, dueAt + 1600) : '';
+    if (!dueBlk) bad.push('rivalDue_ 를 못 찾겠다');
+    else {
+      /* **코드 형태로 찾는다** — 맨 `_rivalWant` 로 찾으면 바로 위 설명 주석이
+         먼저 걸려, 순서를 뒤집어도 통과한다(실제로 그렇게 헛돌았다). */
+      const iWant = dueBlk.indexOf("getProperty('_rivalWant')");
+      const iCap = dueBlk.indexOf('>= RIVAL_TRY_MAX');
+      const iAt = dueBlk.indexOf("getProperty('_rivalAt')");
+      if (iWant < 0) bad.push('rivalDue_ 가 예약을 안 본다 — 예약해도 다음 회차가 안 돈다');
+      else if (iCap >= 0 && iWant > iCap) bad.push('예약 검사가 시도 한도보다 뒤에 있다 — 한도를 쓴 날엔 예약이 무시된다');
+      else if (iAt >= 0 && iWant > iAt) bad.push('예약 검사가 하루 표식보다 뒤에 있다 — 오늘 이미 돈 날엔 예약이 무시된다');
+    }
+
+    /* ③ 처리했으면 내린다 — 안 내리면 매 회차가 LG 비교를 다시 돌아 매장 훑기가 굶는다 */
+    if (!rv.includes("deleteProperty('_rivalWant')")) {
+      bad.push('완주해도 예약을 안 내린다 — 매 회차마다 LG 비교를 다시 돈다');
+    }
+    /* ④ 화면이 예약됐다는 사실을 안다 — 안 보내면 「눌렀는데 아무 일도 없다」가 된다 */
+    if (!rv.includes('d.rivalWant =')) bad.push('doGet 이 예약 상태를 안 보낸다');
+    if (!ix.includes('DATA.rivalWant')) bad.push('화면이 예약 상태를 안 적는다 — 새로고침하면 사라진다');
+    if (!ix.includes('r.queued')) bad.push('버튼이 예약 응답을 안 다룬다');
+    /* ⑤ 자료 비우기가 예약도 함께 지운다 — 남으면 초기화 뒤에도 LG 비교부터 돈다 */
+    const resetLine = (rv.match(/\['_cursor',[^\]]*\]/) || [''])[0];
+    if (resetLine && !resetLine.includes('_rivalWant')) bad.push('초기화 목록에 _rivalWant 가 빠졌다');
+
+    if (bad.length) fail('[바이럴] LG 비교 예약 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 LG 비교 예약 — 막히면 예약 · 한도보다 세다 · 처리하면 내린다 · 화면이 적는다');
+  }
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

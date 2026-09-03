@@ -2559,6 +2559,9 @@ function sweep_(mode) {
       /* 그 안에서 쓴 호출을 한도 판정에 넣는다 — 아래 매장 훑기가 이 값을 본다 */
       extraCalls += Number((rivalRun && rivalRun.calls) || 0);
       if (rivalRun && rivalRun.done) props_().setProperty('_rivalAt', stamp);
+      /* **예약을 처리했으면 내린다** — 안 내리면 매 회차마다 LG 비교를 다시 돌아
+         매장 훑기가 영영 예산을 못 받는다. 못 끝냈으면 그대로 두어 이어 돈다. */
+      if (rivalRun && rivalRun.done) props_().deleteProperty('_rivalWant');
       sumCacheClear_();
     }
     catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
@@ -3412,7 +3415,7 @@ function resetAll() {
     });
     /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
        옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
-    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_deadAt', '_deadErr', '_stage']
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_rivalWant', '_deadAt', '_deadErr', '_stage']
       .forEach(function (k) { props_().deleteProperty(k); });
     props_().setProperty('_cursor', '0');
     sumCacheClear_();
@@ -4410,6 +4413,17 @@ function rivalDue_() {
   if (String(p.getProperty('_rivalTryAt') || '') !== today) {
     p.setProperty('_rivalTryAt', today); p.setProperty('_rivalTry', '0');
   }
+  /* ── **사람이 예약한 것은 하루 표식·시도 한도보다 세다** (2026-09-03) ─────────
+   * 「LG 비교 갱신」은 수집과 같은 자물쇠를 쓰는데, **전체 재수집이 도는 동안에는
+   * 그 자물쇠를 며칠 동안 못 잡는다** — 실측으로 사장님이 눌러도 아무 일이 없었고
+   * 화면은 「끝난 뒤에 다시 눌러 주세요」라고 했지만 **그 끝이 며칠 뒤**였다.
+   * 그래서 막히면 `_rivalWant` 를 세워 두고, 다음 회차가 그것을 보고 먼저 돈다.
+   *
+   * **한도(`RIVAL_TRY_MAX`)보다 먼저 본다** — 그날 자동 시도를 다 써 버린 뒤에도
+   * 사람이 요청하면 돌아야 한다(「사람이 누른 것은 한도로 막지 않는다」는 이 파일의
+   * 규칙이 자물쇠 앞에서 무너져 있었다). **쿼터(`over()`)는 그대로 지킨다** —
+   * 그쪽은 구글이 끊는 것이라 우리가 넘길 수 있는 선이 아니다. */
+  if (String(p.getProperty('_rivalWant') || '') === '1') return true;
   if (Number(p.getProperty('_rivalTry') || 0) >= RIVAL_TRY_MAX) return false;
   if (String(p.getProperty('_rivalAt') || '') !== today) return true;
   /* 표식은 섰는데 지역이 모자라면 아직 안 끝난 것이다 */
@@ -4845,8 +4859,15 @@ function runRival() {
      `rival_()` 의 합산이 두 배가 된다(중복 정리가 이미 데인 그 사고와 같은 뿌리다). */
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10 * 1000)) {
-    return { ok: false, busy: true,
-      note: '지금 수집이 돌고 있습니다 — 끝난 뒤에 다시 눌러 주세요.' };
+    /* ── **막히면 포기하지 말고 예약한다** (2026-09-03) ──────────────────────
+     * 예전에는 「끝난 뒤에 다시 눌러 주세요」로 끝냈는데, **전체 재수집이 62곳을
+     * 여러 날에 나눠 도는 동안에는 그 «끝»이 며칠 뒤**라 몇 번을 눌러도 계속
+     * 막혔다(실측 — 사장님이 눌렀는데 회차·시도 수가 한 톨도 안 움직였다).
+     * 표식을 세워 두면 **이어달리기가 1~6분 뒤 다음 회차에서 먼저 돈다.**
+     * 사람은 한 번만 누르면 된다. */
+    props_().setProperty('_rivalWant', '1');
+    return { ok: true, queued: true,
+      note: '지금 수집이 돌고 있어 바로 시작하지 못했습니다 — 다음 회차에 먼저 돌도록 예약했습니다.' };
   }
   try {
     var t0 = Date.now();
@@ -4854,12 +4875,17 @@ function runRival() {
     stage_('LG비교 (버튼)');
     var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
     props_().deleteProperty('_rivalAt');
+    /* 손수 도는 동안에는 예약이 필요 없다 — 못 끝내면 아래에서 다시 세운다 */
+    props_().deleteProperty('_rivalWant');
     var units = rivalUnits_().length;
     var r = { rows: 0, calls: 0, error: '', done: false, at: 0, areas: units };
     try {
       r = collectRival(t0 + RIVAL_MS);
       if (r && r.done) props_().setProperty('_rivalAt', today);
-    } catch (e) { r.error = String(e); }
+      /* **못 끝냈으면 예약을 다시 세운다** — 한 도시가 예산을 넘으면 여기서 멈추는데,
+         표식이 없으면 오늘 표식(`_rivalAt`)에 걸려 다음 회차가 안 돈다. */
+      else props_().setProperty('_rivalWant', '1');
+    } catch (e) { r.error = String(e); props_().setProperty('_rivalWant', '1'); }
     /* **집계 캐시를 버린다** — 안 버리면 최대 6시간 옛 값이 화면에 굳어
        「눌렀는데 그대로」가 된다(이 화면이 이미 한 번 겪은 사고다). */
     sumCacheClear_();
@@ -5304,6 +5330,9 @@ function freshState_(d) {
     d.rivalAt = String(props_().getProperty('_rivalAt') || '');
     d.rivalCur = String(props_().getProperty('_rivalCur') || '');
     d.rivalTry = Number(props_().getProperty('_rivalTry') || 0);
+    /* **예약됐다는 사실을 화면이 알아야 한다** — 안 보내면 「눌렀는데 아무 일도
+       안 일어난다」가 된다(사장님이 실제로 그렇게 겪었다). */
+    d.rivalWant = String(props_().getProperty('_rivalWant') || '') === '1';
     d.rivalAreas = Object.keys(AREA_Q).length;
     /* **기대 지역을 이름으로 보낸다**(2026-09-02). 개수만 보내던 시절에는 화면이
        *"강원이 빠졌다"* 를 말할 수 없어 **다섯 곳만 조용히 그렸다** — 사장님이 그것을
