@@ -409,6 +409,13 @@ const inRing = (ring, x, y) => {
   }
   return hit;
 };
+/* ── LG베스트샵 핀 (2026-09-03 사장님 지시) ───────────────────────────────
+ * *"LG지점명을 지도에 넣어주시고 제가 어느 매장과 매칭을 시킬지 변경 가능하도록"*.
+ * 우리 핀과 **같은 좌표계**로 찍는다 — 그래야 「우리 옆에 LG 가 있나」가 보인다.
+ * 관할 판정은 수집 때 주소로 이미 했으므로 여기서는 좌표만 옮긴다. */
+const lgSrc = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/lg-shops.json'), 'utf8'));
+const lgPins = [];
+
 const pins = [];
 const pinLost = [];
 for (const st of (geo.stores || [])) {
@@ -437,6 +444,19 @@ for (const city of Object.keys(sub)) {
   const g = subGeo[city];
   sub[city].pins = mine.map((p) => ({ n: p.n, x: g.sx(p.lng), y: g.sy(p.lat) }));
 }
+/* LG 핀 — 본 지도 좌표 · 시 안쪽 화면 좌표 둘 다 */
+for (const sh of (lgSrc.shops || [])) {
+  if (typeof sh.lat !== 'number' || typeof sh.lng !== 'number') continue;
+  lgPins.push({ n: sh.name, city: sh.sigun, x: X(sh.lng), y: Y(sh.lat), lat: sh.lat, lng: sh.lng });
+}
+for (const city of Object.keys(sub)) {
+  const mine = lgPins.filter((q) => q.city === city);
+  if (!mine.length || !subGeo[city]) continue;
+  const g = subGeo[city];
+  sub[city].lgPins = mine.map((q) => ({ n: q.n, x: g.sx(q.lng), y: g.sy(q.lat) }));
+}
+for (const q of lgPins) { delete q.lat; delete q.lng; }
+
 for (const p of pins) { delete p.lat; delete p.lng; }
 
 const block = [
@@ -451,7 +471,8 @@ const block = [
     + ', members: ' + JSON.stringify(members)
     + ', sigun: ' + JSON.stringify(sigun)
     + ', sub: ' + JSON.stringify(sub)
-    + ', pins: ' + JSON.stringify(pins) + ' };',
+    + ', pins: ' + JSON.stringify(pins)
+    + ', lgPins: ' + JSON.stringify(lgPins) + ' };',
   '</script>',
   END
 ].join('\n');
@@ -475,6 +496,6 @@ console.log('[build:regionmap] viewBox 0 0 ' + W + ' ' + H
   + ' · 돋보기 ' + Object.keys(metroLabels).length + '구 ' + mW + 'x' + mH
   + ' (' + (metro.length / 1024).toFixed(1) + 'KB)'
   + ' · 시 안쪽 ' + Object.keys(sub).length + '시 ' + subN + '곳'
-  + ' · 매장 핀 ' + pins.length + '곳'
+  + ' · 매장 핀 ' + pins.length + '곳' + ' · LG 핀 ' + lgPins.length + '곳'
   + (pinLost.length ? ' (관할 밖이라 버린 것 ' + pinLost.length + ': ' + pinLost.join(', ') + ')' : '')
   + (changed ? '' : ' (변화 없음)'));
