@@ -1147,7 +1147,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div id="aud-out" class="sub"></div>
 
       <!-- ── 옛 자료 지우기 ────────────────────────────────────────────── -->
-      <h3>오래된 후기 지우기</h3>
+      <h3>오래된 후기 — 숫자만 남기기</h3>
       <div class="sub" id="purge-sub">–</div>
       <div class="alias-add">
         <button id="purge-dry">몇 건인지 먼저 보기</button>
@@ -1565,13 +1565,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var dry = document.getElementById('purge-dry'), del = document.getElementById('purge-go');
     var pout = document.getElementById('purge-out'), psub = document.getElementById('purge-sub');
     if (psub) psub.innerHTML = '작성일이 <b>' + esc(DATA.minYmd || '2025-01-01')
-      + '</b> 보다 이른 글을 지웁니다. <b>작성일을 아는 글만</b> 지웁니다 — '
-      + '카페 글은 네이버가 작성일을 주지 않아 <b>지울 근거가 없습니다</b>.';
+      + '</b> 보다 이른 글은 <b>건수만 남기고 링크를 지웁니다</b> — '
+      + '연월·매장·유형·출처별 숫자는 「옛자료요약」 시트에 남아 월별 추이·매장별에 '
+      + '그대로 들어갑니다. <b>작성일을 아는 글만</b> 다룹니다 — '
+      + '카페 글은 네이버가 작성일을 주지 않아 <b>판단할 근거가 없습니다</b>.';
     var show = function (r, done) {
       if (!pout) return;
       if (!r || !r.ok) { pout.innerHTML = '<b class="warn">' + esc((r && r.msg) || '실패') + '</b>'; return; }
-      pout.innerHTML = (done ? '<b>지웠습니다</b> — ' : '')
-        + '전체 ' + nf(r.total) + '건 · <b>지울 것 ' + nf(r.drop) + '건</b> · 남길 것 ' + nf(r.keep || 0) + '건'
+      pout.innerHTML = (done ? '<b>옮겼습니다</b> — ' : '')
+        + '전체 ' + nf(r.total) + '건 · <b>숫자만 남길 것 ' + nf(r.drop) + '건</b>'
+        + (r.rollCells ? '(요약 ' + nf(r.rollCells) + '칸)' : '')
+        + ' · 그대로 둘 것 ' + nf(r.keep || 0) + '건'
         + '<br><span class="cntxt">그중 <b>' + nf(r.unknown || 0) + '건</b>은 작성일을 몰라 '
         + '판단하지 않았습니다 — 지운 것이 아니라 <b>지울 근거가 없는 것</b>입니다.</span>'
         + (r.msg ? '<br>' + esc(r.msg) : '');
@@ -1588,8 +1592,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     };
     if (del) del.onclick = function () {
       /* **되돌릴 수 없다** — 무엇을 지우는지 먼저 밝히고 묻는다 */
-      if (!confirm('작성일이 ' + (DATA.minYmd || '2025-01-01') + ' 보다 이른 글을 지웁니다.'
-        + NLC + '되돌릴 수 없습니다. 계속할까요?')) return;
+      if (!confirm('작성일이 ' + (DATA.minYmd || '2025-01-01') + ' 보다 이른 글의 링크를 지웁니다.'
+        + NLC + '건수는 「옛자료요약」 시트에 남아 추이·매장별에 계속 들어갑니다.'
+        + NLC + '링크는 되돌릴 수 없습니다. 계속할까요?')) return;
       del.disabled = true;
       google.script.run.withSuccessHandler(function (r) { del.disabled = false; show(r, true); })
         .withFailureHandler(function (e) { del.disabled = false; if (pout) pout.textContent = String(e && e.message); })
@@ -2252,9 +2257,15 @@ function wireSecs() {
       /* **왜 모르는지는 여기서 설명하지 않는다**(2026-09-03 정리). 같은 말이 화면 여섯
          곳에 문장으로 흩어져 있었다 — 「구성 한눈에」의 점 장표가 그림 하나로 대신한다.
          다만 **이 차트가 무엇을 세는지**는 여기 남는다(안 적으면 숫자를 오독한다). */
+      /* **요약만 있는 구간을 밝힌다**(2026-09-03) — 그 달의 막대는 서 있는데
+         목록에서 그 글을 열 수 없다. 안 적으면 「링크가 왜 없지」가 된다. */
+      var rollNote = (DATA.rollTotal && DATA.rollFrom)
+        ? " · <b>" + esc(DATA.rollFrom) + " ~ " + esc(DATA.rollTo) + "</b> 은 <b>건수만</b> 있습니다("
+          + nf(DATA.rollTotal) + "건 — 링크는 지웠습니다)"
+        : "";
       sub.innerHTML = "<b>작성일 기준</b>입니다"
         + (DATA.undated ? " — 작성일을 모르는 " + nf(DATA.undated) + "건은 세지 않았습니다" : "")
-        + ' (<b>왜 모르는지는 「구성 한눈에」</b>에서 봅니다).';
+        + ' (<b>왜 모르는지는 「구성 한눈에」</b>에서 봅니다)' + rollNote + '.';
     }
     /* 직전 달과 견준다. **직전이 0이면 배수를 말하지 않는다** — 0에서 늘어난 것은
        몇 % 가 아니라 그냥 「새로 생겼다」이고, 나눗셈은 무한대가 된다. */

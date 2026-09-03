@@ -48,6 +48,19 @@ var API_BASE = 'https://naverapihub.apigw.ntruss.com/search/v1';
 
 var SHEET_ITEMS = '후기';
 var SHEET_LOG = '수집기록';
+/* ── 옛 자료 요약 (2026-09-03 사장님 지시) ────────────────────────────────
+ * *"경원영업팀 전체 후기건수(숫자만) 누적기록으로 관리하고 23년 24년도 살려주세요.
+ *  단, 23년 24년도도 전체후기건수처럼 숫자만 기록하고 url 자료는 불필요합니다.
+ *  url 자료까지 필요한 건 당해년도와 직전년도 뿐입니다."*
+ *
+ * URL 줄을 지우기 **전에** 이 시트로 집계를 옮긴다. 그래야 옛 건수가 살아 있으면서
+ * 자료 크기는 줄어든다(2023~2024 가 1,457줄 → 조합 수백 줄).
+ *
+ * **연월 × 매장 × 유형 × 출처**로 남긴다 — 화면이 쓰는 넷(월별 추이 · 매장별 ·
+ * 유형별 · 출처별)을 이것 하나로 전부 복원할 수 있는 **가장 작은 단위**다.
+ * 더 잘게(일별·카페별) 남기면 줄이 늘고, 더 굵게(연도별) 남기면 월별 추이가 죽는다. */
+var SHEET_ROLL = '옛자료요약';
+var ROLL_HEADER = ['ym', 'storeName', 'kind', 'src', 'n', 'rolledAt'];
 
 /* ── 한 질의로 어디까지 받히는가 ────────────────────────────────────
  * **옛 주석이 「start 는 201 부터 0건」이라 적어 두었는데 그것이 틀렸다**(2026-08-31 재측정).
@@ -1825,6 +1838,56 @@ function belongsToOther_(text, name, allNames) {
 
 /* ── 수집 ────────────────────────────────────────────────────── */
 
+/** 옛 자료 요약을 읽는다. **없으면 빈 것을 돌려준다** — 시트를 만들지 않는다
+ *  (읽기만 하는 자리에서 시트를 만들면 권한·잠금 문제가 엉뚱한 데서 터진다). */
+function rollRead_() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ROLL);
+  if (!sh || sh.getLastRow() < 2) return [];
+  var w = ROLL_HEADER.length;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, w).getValues();
+  var out = [], i;
+  for (i = 0; i < v.length; i++) {
+    var n = Number(v[i][4]) || 0;
+    if (!n) continue;
+    out.push({ ym: String(v[i][0] || ''), storeName: String(v[i][1] || ''),
+               kind: String(v[i][2] || ''), src: String(v[i][3] || ''), n: n });
+  }
+  return out;
+}
+
+/** 요약에 **더한다**(덮어쓰지 않는다). 같은 칸이 이미 있으면 합친다 —
+ *  두 번 돌려도 건수가 늘기만 하고 사라지지 않아야 한다. */
+function rollAdd_(rows) {
+  if (!rows || !rows.length) return 0;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_ROLL);
+  if (!sh) {
+    sh = ss.insertSheet(SHEET_ROLL);
+    sh.getRange(1, 1, 1, ROLL_HEADER.length).setValues([ROLL_HEADER]);
+  }
+  var cur = rollRead_(), map = {}, i, k;
+  for (i = 0; i < cur.length; i++) {
+    k = cur[i].ym + '|' + cur[i].storeName + '|' + cur[i].kind + '|' + cur[i].src;
+    map[k] = (map[k] || 0) + cur[i].n;
+  }
+  for (i = 0; i < rows.length; i++) {
+    k = rows[i].ym + '|' + rows[i].storeName + '|' + rows[i].kind + '|' + rows[i].src;
+    map[k] = (map[k] || 0) + rows[i].n;
+  }
+  var at = new Date().toISOString().slice(0, 10);
+  var out = [];
+  for (k in map) if (map.hasOwnProperty(k)) {
+    var t = k.split('|');
+    out.push([t[0], t[1], t[2], t[3], map[k], at]);
+  }
+  out.sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : (a[1] < b[1] ? -1 : 1); });
+  /* **머리글만 남기고 다시 쓴다** — 합친 결과라 줄 수가 달라진다 */
+  var last = sh.getLastRow();
+  if (last > 1) sh.deleteRows(2, last - 1);
+  if (out.length) sh.getRange(2, 1, out.length, ROLL_HEADER.length).setValues(out);
+  return out.length;
+}
+
 function props_() { return PropertiesService.getScriptProperties(); }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -3226,6 +3289,10 @@ function purgeOld(dryRun) {
     var w = HEADER.length;
     var v = sh.getRange(2, 1, last - 1, w).getValues();
     var iDate = HEADER.indexOf('date'), iPost = HEADER.indexOf('postdate'), iBasis = HEADER.indexOf('dateBasis');
+    var iName = HEADER.indexOf('storeName'), iKind = HEADER.indexOf('kind'), iSrc = HEADER.indexOf('src');
+    /* **지우기 전에 집계를 뽑는다**(2026-09-03 사장님 지시 — *"23·24년도도 숫자만 기록하고
+       url 자료는 불필요"*). 지운 뒤에는 되짚을 방법이 없으므로 **같은 루프에서** 모은다. */
+    var roll = {};
     var keepRows = [], drop = 0, unknown = 0, i, r;
     for (i = 0; i < v.length; i++) {
       r = v[i];
@@ -3235,7 +3302,14 @@ function purgeOld(dryRun) {
       var pd = String(r[iPost] || '');
       if (pd.length !== 8) { unknown++; keepRows.push(r); continue; }
       var ymd = pd.slice(0, 4) + '-' + pd.slice(4, 6) + '-' + pd.slice(6);
-      if (ymd < MIN_YMD) { drop++; continue; }
+      if (ymd < MIN_YMD) {
+        drop++;
+        /* 연월 × 매장 × 유형 × 출처 — 화면이 쓰는 넷을 이것으로 복원한다 */
+        var rk = ymd.slice(0, 7) + '|' + foldStoreName_(String(r[iName] || ''))
+               + '|' + String(r[iKind] || '') + '|' + String(r[iSrc] || '');
+        roll[rk] = (roll[rk] || 0) + 1;
+        continue;
+      }
       keepRows.push(r);
     }
 
@@ -3247,16 +3321,28 @@ function purgeOld(dryRun) {
                msg: '지울 줄이 ' + drop + '건으로 전체(' + v.length + ')의 절반을 넘습니다 — '
                   + '규칙이 잘못됐을 수 있어 손대지 않았습니다.' };
     }
+    /* 요약으로 옮길 줄 — 미리보기에서도 몇 칸이 되는지 알려 준다 */
+    var rollRows = [], rkk;
+    for (rkk in roll) if (roll.hasOwnProperty(rkk)) {
+      var tt = rkk.split('|');
+      rollRows.push({ ym: tt[0], storeName: tt[1], kind: tt[2], src: tt[3], n: roll[rkk] });
+    }
     if (dryRun) {
       return { ok: true, dry: true, total: v.length, drop: drop, keep: keepRows.length,
-               unknown: unknown, min: MIN_YMD };
+               unknown: unknown, min: MIN_YMD, rollCells: rollRows.length };
     }
+
+    /* **요약을 먼저 쓴다** — 지우고 나서 쓰다 실패하면 자료가 통째로 사라진다.
+       요약이 먼저 들어가면 최악의 경우 「건수는 남고 URL 만 남은」 상태가 되는데,
+       그쪽이 훨씬 안전하다(이 저장소가 「지우기 전에 백업」으로 세운 규칙과 같다). */
+    var rolled = rollAdd_(rollRows);
 
     if (keepRows.length) sh.getRange(2, 1, keepRows.length, w).setValues(keepRows);
     var tail = v.length - keepRows.length;
     if (tail > 0) sh.deleteRows(2 + keepRows.length, tail);
     sumCacheClear_();
-    return { ok: true, total: v.length, drop: drop, keep: keepRows.length, unknown: unknown, min: MIN_YMD };
+    return { ok: true, total: v.length, drop: drop, keep: keepRows.length, unknown: unknown,
+             min: MIN_YMD, rollCells: rolled };
   } finally { lock.releaseLock(); }
 }
 
@@ -3739,9 +3825,35 @@ function summary_() {
 
   var last = lastRun_();
 
+  /* ── 옛 자료 요약을 합친다 (2026-09-03 사장님 지시) ──────────────────────
+   * URL 줄은 지웠지만 **건수는 살아 있어야 한다** — *"23년 24년도 살려주세요"*.
+   * 화면이 쓰는 넷(월별 추이 · 매장별 · 유형별 · 출처별)에만 더한다.
+   *
+   * **더하지 않는 것**: `recent`(목록) · `byStoreWeek`(주차) · `byStoreChan`(채널) ·
+   * `byMap`(지도) · `rival`. 그 자료를 안 남겼기 때문이다 —
+   * **없는 것을 있는 척하면 화면이 거짓말을 한다.**
+   * 그래서 `total` 도 **따로 적는다**(`rollTotal`) — 목록에 없는 건수를 전체에 섞으면
+   * 「2,000건인데 목록이 500건뿐」이 되어 사장님이 그 차이를 못 읽는다. */
+  var roll = [], rollTotal = 0, rollMin = '', rollMax = '';
+  try { roll = rollRead_(); } catch (e0) { roll = []; }
+  for (var ri = 0; ri < roll.length; ri++) {
+    var rr = roll[ri];
+    rollTotal += rr.n;
+    if (rr.ym) {
+      byMonth[rr.ym] = (byMonth[rr.ym] || 0) + rr.n;
+      if (!rollMin || rr.ym < rollMin) rollMin = rr.ym;
+      if (!rollMax || rr.ym > rollMax) rollMax = rr.ym;
+    }
+    if (rr.kind) byKind[rr.kind] = (byKind[rr.kind] || 0) + rr.n;
+    if (rr.src && bySrc.hasOwnProperty(rr.src)) bySrc[rr.src] += rr.n;
+    if (rr.storeName && byStore.hasOwnProperty(rr.storeName)) byStore[rr.storeName] += rr.n;
+  }
+
   return {
     ok: true, at: new Date().toISOString(),
     total: rows.length, day: day, week: week, month: month,
+    /* **요약분은 갈라 적는다** — 목록에 없는 건수라 전체에 섞으면 화면이 두 말을 한다 */
+    rollTotal: rollTotal, rollFrom: rollMin, rollTo: rollMax, rollCells: roll.length,
     /* **작성일을 아는 건수를 함께 낸다** — 화면이 *"1,459건 중 698건은 작성일을 안다"*
        고 밝힐 수 있어야 한다. 카페는 네이버가 안 주므로 그 차이를 감추면 안 된다. */
     dated: dated, newToday: newToday, byMonth: byMonth, byKind: byKind,
@@ -4790,7 +4902,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 14;
+var SUM_VER = 15;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

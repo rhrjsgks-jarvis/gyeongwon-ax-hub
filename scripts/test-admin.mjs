@@ -3452,6 +3452,24 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!rv.includes('sh.deleteRows(2 + keepRows.length, tail)')) bad.push('통째로 지웠다 쓴다 — 중간에 끊기면 자료가 사라진다');
     if (!ix.includes('지울 근거가 없는 것')) bad.push('화면이 미상을 「못 지운다」고 안 밝힌다');
 
+    /* ②-b **옛 자료는 숫자만 남긴다**(2026-09-03 사장님 지시 — *"23년 24년도 살려주세요.
+           단, 숫자만 기록하고 url 자료는 불필요. url 까지 필요한 건 당해년도와 직전년도뿐"*). */
+    if (!rv.includes("var SHEET_ROLL = '옛자료요약';")) bad.push('요약 시트가 없다');
+    if (!rv.includes('function rollAdd_(rows)')) bad.push('요약에 더하는 함수가 없다');
+    /* **더한다 — 덮지 않는다.** 두 번 돌려도 건수가 사라지면 안 된다 */
+    if (!rv.includes('map[k] = (map[k] || 0) + cur[i].n;')) bad.push('요약을 덮어쓴다 — 두 번 돌리면 옛 건수가 사라진다');
+    /* **요약을 먼저 쓰고 지운다** — 순서가 뒤집히면 실패 시 자료가 통째로 사라진다 */
+    const iRoll = rv.indexOf('var rolled = rollAdd_(rollRows);');
+    const iDel = rv.indexOf('sh.deleteRows(2 + keepRows.length, tail)');
+    if (iRoll < 0) bad.push('지우기 전에 요약을 안 남긴다');
+    else if (iDel >= 0 && iRoll > iDel) bad.push('요약보다 삭제가 먼저다 — 실패하면 건수까지 사라진다');
+    /* 집계가 요약을 합치는가 — 안 합치면 「살려 주세요」가 뜻이 없다 */
+    if (!rv.includes('byMonth[rr.ym] = (byMonth[rr.ym] || 0) + rr.n;')) bad.push('월별 추이에 요약을 안 더한다');
+    if (!rv.includes('rollTotal: rollTotal')) bad.push('요약 건수를 화면에 안 보낸다');
+    /* **total 에 섞지 않는다** — 목록에 없는 건수라 섞으면 「2,000건인데 목록이 500건」이 된다 */
+    if (rv.includes('total: rows.length + rollTotal')) bad.push('요약을 total 에 섞었다 — 목록과 어긋난다');
+    if (!ix.includes('건수만</b> 있습니다')) bad.push('화면이 「숫자만 있는 구간」을 안 밝힌다');
+
     /* ③ 감사 — **네이버 total 을 분모로 쓰지 않는다**(정렬마다 다르고 실제와 어긋난다) */
     if (!rv.includes('function auditStore(storeName, opt)')) bad.push('검출 감사가 없다');
     if (!rv.includes("var sorts = opt.sortsOnly ? [opt.sortsOnly] : ['date', 'sim'];")) {
