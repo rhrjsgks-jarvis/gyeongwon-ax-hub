@@ -3282,6 +3282,31 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* ⑧ **균형점은 회사 수가 정한다** (2026-09-03 배포 확인에서 발견)
+     4사로 넓히며 분모만 넷으로 바꾸고 판정은 2사 시절 50% 를 두어, 화면이
+     「당사가 앞선 곳 0곳」이라 말하고 있었다 — 용인은 4사 중 45.7% 로 1위다. */
+  {
+    /* **정규식을 쓰지 않는다** — 함수 본문을 여닫는 글자로 잘라 낸다 */
+    const at = ix.indexOf('function rvBase(r) {');
+    if (at < 0) bad.push('rvBase 가 없다 — 4사 비교에 2사 기준을 쓰게 된다');
+    else {
+      const end = ix.indexOf(String.fromCharCode(10) + '  }', at);
+      const src = ix.slice(at, end + 4);
+      const fn = new Function('return (' + src.replace('function rvBase', 'function') + ')')();
+      /* 4사 줄 — 용인 실측 */
+      if (fn({ ours: 3158, rival: 1370, hi: 2030, el: 359 }) !== 25) {
+        bad.push('4사 줄의 균형점이 25 가 아니다 — 「앞선 곳 0」이 된다');
+      }
+      /* 옛 회차는 hi·el 칸이 없어 2사다 — 그 줄은 50 이어야 한다 */
+      if (fn({ ours: 100, rival: 80, hi: 0, el: 0 }) !== 50) {
+        bad.push('2사 줄(옛 회차)의 균형점이 50 이 아니다');
+      }
+    }
+    if (ix.includes('r.pct >= 50') || ix.includes('r.pct < 50') || ix.includes('r.pct > 50')) {
+      bad.push('아직 50% 로 승패를 가른다 — 4사에서는 영원히 「앞선 곳 0」이 된다');
+    }
+  }
+
   if (bad.length) fail('[바이럴] 연도 축 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · LG 23/24는 숫자만');
 }

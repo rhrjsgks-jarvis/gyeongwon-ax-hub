@@ -323,6 +323,11 @@
           font-size: var(--fs-mini); font-variant-numeric: tabular-nums; }
   .rvyr th, .rvyr td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--line); }
   .rvyr thead th { text-align: right; color: var(--mute); font-weight: 700; }
+  /* **첫 열은 머리글도 왼쪽** — 값은 왼쪽인데 머리만 오른쪽이면 어느 열인지 눈이 헤맨다 */
+  .rvyr th:first-child { text-align: left; }
+  /* **비중 칸은 폭을 묶는다** — 배경색이 셀을 다 채우는데 남은 폭을 이 열이 전부
+     가져가 빨간 띠가 표를 가로질렀다(실물에서 봤다). 글자만큼만 칠한다. */
+  .rvyr th:last-child, .rvyr td.pc { width: 58px; }
   .rvyr tbody th { text-align: left; font-weight: 700; white-space: nowrap; }
   /* **보관용 해는 흐리게** — 지금 싸움과 한눈에 갈려야 한다 */
   .rvyr tbody tr:not(.live) th, .rvyr tbody tr:not(.live) td { color: var(--mute); }
@@ -979,7 +984,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#C0392B;margin:0 3px 0 8px"></span>LG베스트샵
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#E67E22;margin:0 3px 0 8px"></span>하이마트
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#7E57C2;margin:0 3px 0 8px"></span>전자랜드
-        <b style="margin-left:8px">오른쪽 %는 당사 점유율</b>입니다.
+        <b style="margin-left:8px">오른쪽 %는 4사 중 당사 몫</b>입니다 —
+        <b>넷이 똑같이 나누면 25%</b> 라 그보다 높으면 앞선 것입니다.
       </div>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
@@ -2024,7 +2030,7 @@ function secPeek(k) {
         var win = 0, lose = 0, na = 0;
         rr.forEach(function (r) {
           if (!(typeof r.pct === 'number' && isFinite(r.pct))) na++;
-          else if (r.pct >= 50) win++; else lose++;
+          else if (rvWin(r)) win++; else lose++;
         });
         return '지역 ' + rr.length + '곳 · 당사 우세 ' + win + ' · LG 우세 ' + lose + (na ? ' · 못 잼 ' + na : '');
       }
@@ -2200,8 +2206,9 @@ function wireSecs() {
       /* **여기도 「숫자가 아니면 못 잼」이다** — 네 번째 자리였다. 한 곳만 고치면
          표는 「못 잼」인데 진단 문장은 그 지역을 「가장 많이 밀리는 곳」이라고 적는다. */
       var okd = function (r) { return typeof r.pct === 'number' && isFinite(r.pct); };
-      var lose = R.rows.filter(function (r) { return okd(r) && r.pct < 50; })
-        .sort(function (a, b) { return a.pct - b.pct; });
+      /* **균형점 대비로 정렬한다** — 4사 줄과 2사 줄이 섞이면 raw % 로는 못 견준다 */
+      var lose = R.rows.filter(function (r) { return okd(r) && !rvWin(r); })
+        .sort(function (a, b) { return (a.pct - rvBase(a)) - (b.pct - rvBase(b)); });
       if (lose.length) {
         out.push(['경쟁사와 견주면',
           '우리가 뒤진 지역이 <b class="warn">' + lose.length + '곳</b>입니다 — 가장 많이 밀리는 곳은 '
@@ -3419,7 +3426,7 @@ function wireSecs() {
           + '<div class="plot">' + bars + '</div>'
           + '<div class="nm">' + esc(r.area) + ' '
           + (na ? '<span class="namark">못 잼</span>'
-                : '<span class="' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</span>') + '</div>'
+                : '<span class="' + (rvWin(r) ? 'win' : 'lose') + '">' + r.pct + '%</span>') + '</div>'
           + '</div>';
       }).join('') + '</div>';
 
@@ -3491,7 +3498,7 @@ function wireSecs() {
          61~82% 라 **막대 길이가 다 비슷해 아무 차이도 안 보였다** — 우열을 색이 말한다. */
       var chip = function (k, o, r2) {
         var t = o + r2, p = t ? o * 100 / t : null;
-        var bg = rvColor(p);
+        var bg = rvColor(p);   /* 2사 칩 — 균형 50% */
         return '<div class="rvc' + (p === null ? ' na' : '') + '" style="background:' + bg + ';color:' + inkOn(bg) + '"'
           + ' title="' + esc(k) + ' — 당사 ' + nf(o) + '건 · 경쟁 ' + nf(r2) + '건">'
           + '<b>' + esc(k) + '</b><div class="p">' + (p === null ? '못 잼' : Math.round(p) + '%')
@@ -3508,7 +3515,8 @@ function wireSecs() {
             }).join('') + '</div>';
       };
       var monKeys = Object.keys(monAcc).sort().slice(-6);
-      box.innerHTML = '<div class="mini" style="margin-bottom:5px">칸 안의 %는 <b>당사 몫</b>입니다 — '
+      box.innerHTML = '<div class="mini" style="margin-bottom:5px">아래 칸은 <b>당사 vs LG 둘만</b> 견줍니다'
+          + '(균형 50%) — <b>위 지역 막대는 4사 분모</b>라 같은 %가 아닙니다. '
           + '<b>진한 초록일수록 우리가 앞서고 진한 빨강일수록 밀립니다</b>(히트맵과 같은 색).</div>'
         + sect('어디에서 싸우나 — 출처별', srcAcc, '', ['블로그', '카페', '웹'])
         + sect('무슨 이야기인가 — 유형별', kindAcc, '')
@@ -3573,7 +3581,10 @@ function wireSecs() {
           /* **비중은 당해·직전해만** 적는다. 23·24년에도 적으면 「숫자만 보관」이라는
              지시가 무너지고, 무엇보다 그 해는 **더 이상 안 늘어나는 숫자**라 비중을
              나란히 놓으면 지금 싸움처럼 읽힌다. */
-          var bg = live && p !== null ? rvColor(p) : '';
+          /* **연도 표도 4사다** — 균형점 25%. 2사 칩과 같은 자를 쓰면 22% 가
+               진한 빨강이 되어 「모든 해에 밀린다」로 읽힌다. */
+          var bg = live && p !== null
+            ? rvColor(p, rvBase({ ours: v.o, rival: v.r, hi: v.h, el: v.e })) : '';
           return '<tr' + (live ? ' class="live"' : '') + '>'
             + '<th>' + esc(label) + '</th>'
             + '<td>' + nf(v.o) + '</td><td>' + nf(v.r) + '</td>'
@@ -3659,11 +3670,11 @@ function wireSecs() {
     /* **세는 것도 같은 잣대를 쓴다** — 위에서는 「못 잼」인데 여기서는 숫자로 세면
        머리글과 표가 어긋난다. 한 함수를 지나가게 한다. */
     var okp = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
-    var win = rows.filter(function (r) { return okp(r) && r.pct > 50; }).length;
-    var lose = rows.filter(function (r) { return okp(r) && r.pct < 50; }).length;
+    var win = rows.filter(function (r) { return okp(r) && rvWin(r); }).length;
+    var lose = rows.filter(function (r) { return okp(r) && !rvWin(r); }).length;
     var na = rows.filter(function (r) { return !okp(r); }).length;
     document.getElementById('rival-sub').textContent =
-      '영업스케치 지역 ' + rows.length + '곳 · 당사가 앞선 곳 ' + win + ' · LG 가 앞선 곳 ' + lose +
+      '영업스케치 지역 ' + rows.length + '곳 · 당사가 앞선 곳 ' + win + ' · 밀리는 곳 ' + lose +
       (na ? ' · 못 잰 곳 ' + na : '') + '  (' + esc(R.at) + ' 기준)';
 
     /* **무엇을 잰 값인지 적는다.** 안 적으면 「우리가 몇 % 다」가 매출인지 후기인지
@@ -4890,9 +4901,29 @@ function renderList() {
   }
   /* 점유율 → 색. **중립은 50%** 이고 25%·75% 에서 가장 진해진다.
      **못 잰 것은 회색** — 0% 로 칠하면 「완패」라는 거짓이 된다. */
-  function rvColor(p) {
+  /** ── **균형점은 회사 수가 정한다** (2026-09-03 사장님 배포 확인에서 발견) ──
+   *
+   *  경쟁 4사로 넓히면서 **분모만 넷으로 바꾸고 판정은 2사 시절 50% 그대로** 두었다.
+   *  그래서 화면이 **「당사가 앞선 곳 0곳」** 이라 말하고 있었다 — 실측으로 용인은
+   *  당사 3,158 · LG 1,370 · 하이마트 2,030 · 전자랜드 359 로 **4사 중 45.7%,**
+   *  압도적 1위인데 진한 빨강에 「밀림」이었다. **4사 균형점은 25% 다.**
+   *
+   *  **25 를 못 박지 않는다** — 옛 회차에는 `hi`·`el` 칸이 없어 그 줄은 2사 비교이고
+   *  균형점이 50 이다(CLAUDE.md 가 이미 적어 둔 그대로). 값이 있는 회사를 세어 낸다. */
+  function rvBase(r) {
+    var n = 0;
+    ['ours', 'rival', 'hi', 'el'].forEach(function (k) { if (Number(r[k]) > 0) n++; });
+    return 100 / Math.max(2, n);
+  }
+  /** 그 줄에서 우리가 앞섰는가 — 균형점을 넘겼는지로 본다 */
+  function rvWin(r) { return r.pct >= rvBase(r); }
+
+  /** `base` 를 안 주면 50 — **2사 칩**(출처·유형·월·채널·품목)이 그대로 쓴다.
+   *  그쪽은 `sum()` 이 당사·LG 만 접으므로 균형점이 진짜 50 이다. */
+  function rvColor(p, base) {
     if (p === null) return 'rgb(214,218,224)';
-    var d = p - 50, t = Math.min(Math.abs(d) / 25, 1);
+    var B = base || 50;
+    var d = p - B, t = Math.min(Math.abs(d) / (B / 2), 1);
     return rampColor(Math.abs(d) < 1 ? 0 : 0.22 + 0.78 * t, d > 0);
   }
   /** **Squarified 트리맵** — Bruls·Huizing·van Wijk(2000, VisSym).
