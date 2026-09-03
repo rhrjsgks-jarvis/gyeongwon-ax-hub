@@ -802,6 +802,10 @@
   .hm .cell .cn { font-weight: 800; letter-spacing: -.3px; }
   .hm .cell .cg { font-weight: 700; opacity: .95; }
   .hm .cell .cv { font-weight: 600; opacity: .78; }
+  /* LG 매칭 표식 — **글자가 아니라 기호**다. 칸이 좁아 이름을 넣으면 뭉갠다 */
+  .hm .cell .lgd, .hm .cell .lgx { position: absolute; top: 3px; right: 5px;
+    font-size: var(--fs-mini); opacity: .62; font-weight: 800; }
+  .hm .cell .lgx { color: #C0392B; opacity: .8; }
   .hmnav { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 12px; flex-wrap: wrap; }
   .hmnav .bk { border: 1px solid var(--line); background: #fff; color: #374151; font-weight: 700;
                border-radius: var(--ctl-r); padding: var(--ctl-py) var(--ctl-px);
@@ -814,6 +818,25 @@
   .hmwk .wk i { font-style: normal; opacity: .62; margin-left: 4px; font-size: var(--fs-mini); }
   .hmwk .wk.on i { opacity: .85; }
   .hmwk .lbl { font-size: var(--fs-mini); color: var(--mute); margin-right: 2px; }
+  /* 드롭다운·날짜 — **모바일에서 한 손으로 누를 크기**(사장님 지시).
+     손가락 목표는 44px 을 권하지만 이 줄에 넷이 들어가야 해 **36px** 로 두었다.
+     그보다 낮추지 말 것 — 폰에서 옆 칸을 누르게 된다. */
+  .hmwk select, .hmwk input[type="date"] {
+    min-height: 36px; border: 1px solid var(--line); border-radius: var(--ctl-r);
+    padding: 0 9px; font-family: inherit; font-size: var(--ctl-fs);
+    background: #fff; color: var(--ink);
+  }
+  .hmwk select { font-weight: 700; max-width: 190px; }
+  .hmwk select:focus, .hmwk input[type="date"]:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+  .hmwk-dates { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .hmwk .tw { color: var(--mute); font-size: var(--fs-mini); }
+  /* 폰에서는 **두 줄로 접는다** — 한 줄에 넷을 욱여넣으면 날짜 칸이 눌린다 */
+  @media (max-width: 560px) {
+    .hmwk { gap: 5px; }
+    .hmwk select { max-width: none; flex: 1 1 100%; }
+    .hmwk-dates { flex: 1 1 100%; }
+    .hmwk input[type="date"] { flex: 1 1 0; min-width: 0; }
+  }
   .hmnav .bk.on { background: #EEF1FB; border-color: #C7D2F0; color: var(--blue); }
   .hmnav .crumb { font-weight: 700; color: #374151; }
   .hmnav .crumb em { font-style: normal; font-weight: 500; color: var(--mute); }
@@ -1030,17 +1053,28 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
              매니저 수집 전에는 눌러도 빈 히트맵이라 「고장」으로 보인다. -->
         <button type="button" class="bk" id="hm-who" hidden>매니저로 보기</button>
       </div>
-      <!-- 주차 거르개 (2026-09-03 사장님 지시 — *"내가 몇 주차를 클릭하면 히트맵은
-           지점이 나오게"*). **칸은 늘 지점이고 주차는 기간만 정한다.**
-           한때 칸 자체를 주차로 만들었다가 지적을 받았다 — 되돌리지 말 것.
-           칩은 화면이 자료에서 만든다(주차를 여기 박으면 해가 바뀔 때 굳는다). -->
-      <div class="hmwk" id="hm-weeks"></div>
+      <!-- 기간 거르개 (2026-09-03 사장님 지시) ─────────────────────────────
+           *"현재 주차별 버튼(칩) 방식은 전부 제거한다. 대신 ①주차 선택 드롭다운
+            ②직접 날짜 지정"* · *"드롭다운 선택 시 해당 주 날짜 범위가 date input에
+            자동 반영, 날짜를 직접 바꾸면 드롭다운은 '직접 지정'으로 전환"*.
+           **칸은 늘 지점이고 기간만 정한다** — 한때 칸 자체를 주차로 만들었다가
+           지적을 받았다(되돌리지 말 것). -->
+      <div class="hmwk" id="hm-weeks">
+        <label class="lbl" for="hm-wsel">기간</label>
+        <select id="hm-wsel" aria-label="주차 선택"></select>
+        <span class="hmwk-dates">
+          <input type="date" id="hm-from" aria-label="시작일">
+          <span class="tw">~</span>
+          <input type="date" id="hm-to" aria-label="종료일">
+        </span>
+        <button type="button" class="chip" id="hm-wclear" hidden>전체 기간</button>
+        <span class="cntxt" id="hm-wnote"></span>
+      </div>
       <div class="hm" id="hm"></div>
       <div class="hmleg" id="hm-leg">
         <span id="hm-legt">전월 대비</span><b style="color:#C8324B" id="hm-legl">−15%</b>
         <span class="sc" id="hm-scale"></span><b style="color:#12805C" id="hm-legr">+15%</b>
         <span style="display:inline-flex;align-items:center;gap:5px;margin-left:8px">
-          <span style="width:11px;height:11px;border-radius:3px;background:rgb(214,218,224);border:1px solid #C7CCD4;display:inline-block"></span>
           <span id="hm-legz">전월이 0이거나 못 잼</span> — <b>증감률을 적지 않습니다</b></span>
       </div>
     </div>
@@ -4115,7 +4149,10 @@ function renderList() {
    *  지금은 히트맵 자체에 주차별로 나옵니다. 원하는 부분이 이게 아닙니다."*
    * 예전에는 `heatMode='week'` 라 **칸이 주차**였다 — 지점이 사라졌다.
    * 지금은 칸이 늘 지점이고, 주차는 **어느 기간을 볼지**만 정한다. */
-  var heatWeek = '';        /* '' 전체 기간 · 'YYYY-Www' 그 주만 */
+  var heatWeek = '';        /* '' 전체 기간 · 'YYYY-Www' 그 주만 · 'custom' 직접 지정 */
+  /* 직접 지정한 기간(YYYY-MM-DD). **주차와 따로 든다** — 드롭다운을 「직접 지정」으로
+     바꿔도 고른 주가 남아 있으면 화면이 두 말을 한다. */
+  var heatFrom = '', heatTo = '';
   /* ── 무엇을 칸으로 그릴 것인가 (2026-09-03 사장님 지시) ──────────────────────
    * *"매니저 후기 수집별 지금은 베스트10으로 되어 있는데 수집된 매니저를 토대로
    *  히트맵으로 볼 수 있게 히트맵 안으로 편입해주세요."*
@@ -4170,6 +4207,65 @@ function renderList() {
     return Object.keys(seen).length;
   }
 
+  /** 'YYYY-Www' → 그 주의 **월요일·일요일**(YYYY-MM-DD).
+   *  ISO 정의 그대로 — 1월 4일이 든 주가 W01 이고 주는 월요일에 시작한다.
+   *  **손으로 계산하지 않는다** — 해가 바뀌는 자리에서 틀린다. */
+  function weekRange(w) {
+    var t = String(w || '');
+    if (t.length !== 8 || t.charAt(4) !== '-' || t.charAt(5) !== 'W') return null;
+    var y = +t.slice(0, 4), n = +t.slice(6);
+    if (!(y > 1900) || !(n >= 1 && n <= 53)) return null;
+    var jan4 = new Date(Date.UTC(y, 0, 4));
+    var mon1 = new Date(jan4);
+    mon1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1));
+    var a = new Date(mon1);
+    a.setUTCDate(mon1.getUTCDate() + (n - 1) * 7);
+    var b = new Date(a);
+    b.setUTCDate(a.getUTCDate() + 6);
+    var f = function (d) { return d.toISOString().slice(0, 10); };
+    return { from: f(a), to: f(b) };
+  }
+  /** 'YYYY-MM-DD' → 'YYYY-Www'. 날짜를 직접 고쳤을 때 그 주를 되짚는 데 쓴다. */
+  function weekOfDate(ymd) {
+    var t2 = String(ymd || '');
+    if (t2.length !== 10 || t2.charAt(4) !== '-' || t2.charAt(7) !== '-') return '';
+    var yy = +t2.slice(0, 4), mm = +t2.slice(5, 7), dd = +t2.slice(8);
+    if (!(yy > 1900) || !(mm >= 1 && mm <= 12) || !(dd >= 1 && dd <= 31)) return '';
+    var d = new Date(Date.UTC(yy, mm - 1, dd));
+    var t = new Date(d);
+    t.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    var n = Math.ceil(((t - y0) / 86400000 + 1) / 7);
+    return t.getUTCFullYear() + '-W' + (n < 10 ? '0' + n : String(n));
+  }
+  /** 「2026년 3월 2주차」 — 사장님이 지시한 표기. **그 달의 몇째 주인지**를 적는다
+   *  (ISO 주 번호 36 은 사람이 읽는 말이 아니다). 기준은 그 주의 **목요일이 속한 달**
+   *  — ISO 가 해를 정하는 방식과 같아, 달을 걸친 주가 한쪽으로만 간다. */
+  function weekLabelLong(w) {
+    var r = weekRange(w);
+    if (!r) return w;
+    var thu = new Date(r.from + 'T00:00:00Z');
+    thu.setUTCDate(thu.getUTCDate() + 3);
+    var y = thu.getUTCFullYear(), mo = thu.getUTCMonth() + 1;
+    /* 그 달 첫 목요일이 든 주가 그 달 1주차 */
+    var f1 = new Date(Date.UTC(y, mo - 1, 1));
+    var add = (4 - (f1.getUTCDay() || 7) + 7) % 7;
+    var thu1 = new Date(f1); thu1.setUTCDate(1 + add);
+    var nth = Math.round((thu - thu1) / 604800000) + 1;
+    return y + '년 ' + mo + '월 ' + nth + '주차';
+  }
+
+  /** 지금 고른 기간을 사람이 읽는 말로. **직접 지정이면 날짜 범위**를 적는다 —
+   *  「직접 지정」이라고만 쓰면 무엇을 보고 있는지 화면이 말해 주지 않는다. */
+  function periodLabel() {
+    if (!heatWeek) return '';
+    if (heatWeek !== 'custom') return weekLabelLong(heatWeek);
+    if (!heatFrom || !heatTo) return '직접 지정(기간 미완성)';
+    var a = heatFrom < heatTo ? heatFrom : heatTo;
+    var b = heatFrom < heatTo ? heatTo : heatFrom;
+    return a + ' ~ ' + b;
+  }
+
   function prevWeekKey(w) {
     var m = /^(d{4})-W(d{2})$/.exec(String(w));
     if (!m) return '';
@@ -4214,7 +4310,41 @@ function renderList() {
        이었다. 매장이 매주 후기를 받지 않아 앞 주가 대개 비어 있고, 있어도 1~2건이라
        ±100% 가 남발된다. 평소 평균은 **0인 주도 세어** 낸다(빠뜨리면 뜸한 매장이
        늘 「평소만큼」이 되어 색이 거짓말을 한다). */
-    var bw = DATA.byStoreWeek || {}, wAll = [], wAvg = {};
+    /* **유형 버튼과 같은 자료를 본다** — 4종 묶음이 있으면 그쪽 주차 표를 쓴다.
+       섞으면 「혼수 후기」를 골랐는데 주차 칸이 9종 키를 찾아 0건이 된다. */
+    var bw = ((DATA.byStoreKind4 && DATA.byStoreWeek4) ? DATA.byStoreWeek4 : DATA.byStoreWeek) || {};
+    var wAll = [], wAvg = {};
+    /* **고른 기간에 드는 주**(하나 또는 여럿). 「직접 지정」이면 시작·종료 사이의
+       주를 전부 담는다 — 사장님 지시: *"직접 날짜 지정 … 임의 기간 조회"*.
+       **주 단위로 센다** — 자료가 주별로만 쌓여 있어 그 안에서 날짜를 더 못 가른다.
+       화면이 그 사실을 적는다(고른 날짜가 주 중간이면 그 주가 통째로 든다). */
+    var pickWeeks = (function () {
+      if (!heatWeek) return [];
+      if (heatWeek !== 'custom') return [heatWeek];
+      if (!heatFrom || !heatTo) return [];
+      var ws = {}, sN0, wN0;
+      for (sN0 in bw) if (bw.hasOwnProperty(sN0)) {
+        for (wN0 in bw[sN0]) if (bw[sN0].hasOwnProperty(wN0)) ws[wN0] = 1;
+      }
+      var lo = heatFrom < heatTo ? heatFrom : heatTo;
+      var hi = heatFrom < heatTo ? heatTo : heatFrom;
+      return Object.keys(ws).filter(function (w) {
+        var r = weekRange(w);
+        /* 겹치기만 해도 담는다 — 주의 일부가 걸치면 그 주 자료가 그 기간에 든다 */
+        return r && r.to >= lo && r.from <= hi;
+      }).sort();
+    })();
+    /** 그 매장의 **고른 기간 합계**. 주가 여럿이면 더한다. */
+    var weekSum = function (nm2) {
+      var m0 = bw[nm2] || {}, n0 = 0, i0, kk0;
+      for (i0 = 0; i0 < pickWeeks.length; i0++) {
+        var mm0 = m0[pickWeeks[i0]];
+        if (!mm0) continue;
+        if (heatKind) { n0 += mm0[heatKind] || 0; continue; }
+        for (kk0 in mm0) if (mm0.hasOwnProperty(kk0)) n0 += mm0[kk0];
+      }
+      return n0;
+    };
     if (heatWeek) {
       var sN, wN, seen = {};
       for (sN in bw) if (bw.hasOwnProperty(sN)) {
@@ -4247,19 +4377,24 @@ function renderList() {
         if (heatWeek) {
           /* 그 주 · 그 매장. **전주 대비**로 색을 낸다 — 주차는 시간 축이라 그 견줌이 맞다.
              **앞 주가 자료에 없으면 「못 잼」이지 0 이 아니다**(0→N 이라 적으면 거짓말이다). */
-          var wm = (bw[nm] || {})[heatWeek] || {}, wn = 0, kw;
-          for (kw in wm) if (wm.hasOwnProperty(kw)) wn += wm[kw];
-          if (heatKind) wn = wm[heatKind] || 0;
+          /* **고른 기간의 합**이다(한 주일 수도, 여러 주일 수도 있다) */
+          var wn = weekSum(nm);
           /* **평소가 0 이면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니라 「새로 생겼다」다
              (이 화면이 전월 대비에서 이미 세운 규칙 그대로다). */
-          var av = wAvg[nm];
+          /* **평소가 0 이면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니라 「새로 생겼다」다.
+             **여러 주를 골랐으면 평소도 그만큼 곱한다** — 3주치 합을 1주 평균과 견주면
+             늘 「평소의 3배」가 되어 색이 거짓말을 한다. */
+          var av1 = wAvg[nm];
+          var av = (av1 === null || av1 === undefined) ? null : av1 * Math.max(1, pickWeeks.length);
           out.push({ nm: nm, key: nm, reg: rg, cnt: wn, cur: wn,
-                     prev: (av === null || av === undefined) ? null : av,
-                     noPrev: !av, week: heatWeek, wAvg: av,
+                     prev: av, noPrev: !av, week: heatWeek, wAvg: av,
+                     weeks: pickWeeks.length,
                      g: av ? (wn - av) / av * 100 : null });
         } else if (heatKind) {
           /* 크기 = 그 유형 건수 · 색 = 그 매장 비중 − 전체 평균(%p) */
-          var km = bk[nm] || {}, kn = km[heatKind] || 0, tot2 = 0, k3;
+          /* 4종 묶음이 있으면 그것으로 센다(위 유형 버튼과 **같은 자료**여야 한다) */
+          var km = ((DATA.byStoreKind4 && DATA.kind4Names) ? (DATA.byStoreKind4[nm] || {}) : (bk[nm] || {}));
+          var kn = km[heatKind] || 0, tot2 = 0, k3;
           for (k3 in km) if (km.hasOwnProperty(k3)) tot2 += km[k3];
           out.push({ nm: nm, key: nm, reg: rg, cnt: kn, cur: 0, prev: 0, kind: heatKind,
                      share: tot2 ? kn / tot2 * 100 : null,
@@ -4340,10 +4475,35 @@ function renderList() {
   /** `span` 은 **색이 가장 진해지는 지점**(%)이다. 달 단위는 ±15% 로 충분하지만
    *  **주 단위는 표본이 1~5건이라 ±15% 로 두면 전 칸이 포화된다**(실물에서 그랬다).
    *  주는 ±60% — 1건이 2건이 되면 진한 초록, 3건이 2건이면 옅은 빨강쯤이 된다. */
-  function heatColor(g, span) {
-    if (g === null) return 'rgb(214,218,224)';
-    var t = Math.min(Math.abs(g) / (span || 15), 1);
-    return rampColor(Math.abs(g) < 0.5 ? 0 : 0.22 + 0.78 * t, g > 0);
+  /* ══════════════════════════════════════════════════════════════════
+   * 히트맵 색 — **파스텔 단일 계열** (2026-09-03 사장님 지시)
+   * ══════════════════════════════════════════════════════════════════
+   * *"현재 히트맵 색상이 주식 차트(빨강/파랑 대비) 느낌이라 부담스럽다.
+   *  파스텔톤 단일 계열 그라데이션으로 바꾼다 … 값 구간을 임의로 나누지 말고
+   *  실제 수치에 비례한 연속 스케일 적용"*.
+   *
+   * **색이 뜻하는 것이 바뀌었다** — 예전 빨강/초록은 「전월 대비 늘었나 줄었나」라
+   * 양방향이었다. 단일 계열은 한 방향만 표현할 수 있으므로 **색 = 건수**로 옮겼다.
+   * 증감은 사라지지 않고 **칸 글자**(`평소 32.5 → 11건`)와 말풍선이 그대로 말한다.
+   *
+   * **구간을 나누지 않는다** — 값 ÷ 그 판의 최대값을 그대로 쓴다(선형).
+   * **연회청 → 삼성 블루.** 채도가 낮아 파스텔이고 브랜드 색과 이어진다.
+   * 명도 대비 실측 — 0%:18.6 · 25%:12.2 · 50%:7.5 · 75%:4.9 · 100%:9.3 (전부 4.5 이상).
+   * `inkOn` 이 휘도 0.19 를 경계로 글자를 검정↔흰색으로 바꾼다. */
+  var HEAT_LO = [237, 241, 250];   /* 가장 낮은 값 — 흰 배경과 구분되는 만큼만 옅다 */
+  var HEAT_HI = [45, 66, 140];     /* 가장 높은 값 — 삼성 블루보다 살짝 부드럽다 */
+  /**
+   * `v` 를 `max` 에 대해 칠한다. **0~1 을 벗어나면 자른다** — 최대값을 잘못 넘기면
+   * 색이 범위를 벗어나 아무 색이나 나온다.
+   * `max` 가 0 이거나 값이 없으면 **회색**이다 — 「0건」과 「못 잼」은 다른 말이고,
+   * 이 화면은 그 둘을 늘 갈라 왔다.
+   */
+  function heatColor(v, max) {
+    if (v === null || v === undefined) return 'rgb(214,218,224)';
+    var t = (max > 0) ? Math.max(0, Math.min(1, v / max)) : 0;
+    return 'rgb(' + HEAT_LO.map(function (a, i) {
+      return Math.round(a + (HEAT_HI[i] - a) * t);
+    }).join(',') + ')';
   }
   /* 점유율 → 색. **중립은 50%** 이고 25%·75% 에서 가장 진해진다.
      **못 잰 것은 회색** — 0% 로 칠하면 「완패」라는 거짓이 된다. */
@@ -4425,6 +4585,9 @@ function renderList() {
     return nm === '네이버 블로그' ? 'b' : (nm === '웹문서' ? 'w' : 'c');
   }
 
+  /* 말풍선 줄바꿈 — **소스에 역슬래시를 적지 않는다**(셸·heredoc 이 먹어 실제 개행이
+     되고 문법이 깨진다. 이 저장소가 여러 번 데인 함정이다). */
+  var NLC = String.fromCharCode(10);
   function renderHeat() {
     var box = document.getElementById('hm'); if (!box) return;
     var bk = document.getElementById('hm-back'), cr = document.getElementById('hm-crumb');
@@ -4464,16 +4627,40 @@ function renderList() {
         heatPath = []; heatKind = ''; heatWeek = '';
         renderHeat();
       });
-      var bw = document.getElementById('hm-weeks');
-      if (bw) bw.addEventListener('click', function (e) {
-        var t = e.target.closest ? e.target.closest('.wk') : null;
-        if (!t || !t.hasAttribute('data-wk')) return;
-        var v = t.getAttribute('data-wk');
-        heatWeek = (heatWeek === v) ? '' : v;   /* 다시 누르면 전체 기간 */
+      /* ── 기간 거르개 (2026-09-03 사장님 지시) ────────────────────────────
+       * *"드롭다운 선택 시 해당 주 날짜 범위가 date input에 자동 반영,
+       *  날짜를 직접 바꾸면 드롭다운은 '직접 지정'으로 전환"*.
+       * **한 곳에서 상태를 바꾸고 다시 그린다** — 두 손잡이가 각자 화면을 고치면
+       * 「드롭다운은 3주차인데 날짜는 다른 주」가 된다. */
+      var wsel = document.getElementById('hm-wsel');
+      if (wsel) wsel.addEventListener('change', function () {
+        var v = wsel.value;
+        heatWeek = v;
+        if (v === 'custom') {
+          /* 「직접 지정」을 고르면 **지금 날짜 칸 값을 그대로 쓴다** — 비었으면 그 사실을 적는다 */
+          var f1 = document.getElementById('hm-from'), t1 = document.getElementById('hm-to');
+          heatFrom = (f1 && f1.value) || ''; heatTo = (t1 && t1.value) || '';
+        } else { heatFrom = ''; heatTo = ''; }
         /* **드릴다운은 처음으로 돌린다** — 기간을 바꾸면 안에 있던 매장이 0건일 수 있고,
            그때 빈 화면이 뜨면 「고장」으로 보인다. */
         heatPath = [];
         renderHeat();
+      });
+      var wf = document.getElementById('hm-from'), wt = document.getElementById('hm-to');
+      var onDate = function () {
+        heatFrom = (wf && wf.value) || '';
+        heatTo = (wt && wt.value) || '';
+        /* **날짜를 손으로 고치면 드롭다운은 「직접 지정」으로 넘어간다**(사장님 지시).
+           고른 주를 그대로 두면 화면이 두 말을 한다. */
+        heatWeek = (heatFrom || heatTo) ? 'custom' : '';
+        heatPath = [];
+        renderHeat();
+      };
+      if (wf) wf.addEventListener('change', onDate);
+      if (wt) wt.addEventListener('change', onDate);
+      var wclr = document.getElementById('hm-wclear');
+      if (wclr) wclr.addEventListener('click', function () {
+        heatWeek = ''; heatFrom = ''; heatTo = ''; heatPath = []; renderHeat();
       });
       /* 창 크기가 바뀌면 다시 그린다 — 칸 좌표가 픽셀이라 안 그리면 어긋난 채 남는다 */
       var rt; window.addEventListener('resize', function () {
@@ -4500,8 +4687,9 @@ function renderList() {
     /* `week` 는 **모드가 아니라 "주차를 골랐는가"** 다(2026-09-03). 칸은 늘 지점이라
        드릴다운·크기 버튼은 그대로 살아 있다 — 옛 주차 모드는 그것들을 죽였다. */
     var week = !!heatWeek;
-    /* 색이 가장 진해지는 지점 — 주는 표본이 작아 넓게 잡는다(위 heatColor 주석 참조) */
-    var heatSpan = week ? 60 : 15;
+    /* **색은 건수에 비례한다**(2026-09-03 사장님 지시). 최대값은 지금 그려지는
+       판에서 낸다 — 전체 기준으로 잡으면 한 주만 볼 때 전 칸이 거의 흰색이 된다. */
+    var heatMax = 0;
     /* **매니저에는 채널 자료가 없다** — 드릴다운하면 빈 화면이 뜬다 */
     var chan = heatWho === 'mgr' ? false : (heatMode === 'flat' ? lv === 1 : lv === 2);
     var byG = (heatSize === 'g' && !chan);
@@ -4510,6 +4698,7 @@ function renderList() {
 
     /* 무엇을 그릴지 */
     var items = [], drop = 0, flat0 = 0, zeroN = 0;
+    /* `heatMax` 는 items 를 다 담은 뒤에 낸다 — 아래 트리맵 직전에서 정한다 */
     if (chan) {
       var who = heatPath[heatPath.length - 1];
       var ch = (DATA.byStoreChan || {})[who] || {}, k;
@@ -4562,9 +4751,21 @@ function renderList() {
   if (hcard && hcard.hidden) return;
   var W = box.clientWidth - 14, H = box.clientHeight - 14, out = [], html = '';
   if (W <= 0 || H <= 0) { requestAnimationFrame(function () { renderHeat(); }); return; }
+    /* **판의 최대 건수** — 색이 여기에 비례한다(구간을 나누지 않는다).
+       지금 그려지는 것들 안에서 낸다: 전체 기준으로 잡으면 한 주만 볼 때 전 칸이
+       거의 흰색이 되어 서로 구분이 안 된다. */
+    heatMax = 0;
+    for (var mi2 = 0; mi2 < items.length; mi2++) {
+      if (items[mi2].cnt > heatMax) heatMax = items[mi2].cnt;
+    }
     heatLay(items, 0, 0, W, H, out);
     out.forEach(function (c) {
       var d = c.d, clk = !chan;
+      /* ── LG 매칭 (2026-09-03 사장님 지시) ────────────────────────────────
+       * *"매칭된 LG 매장명, 거리, 매칭 유형(백화점 내 / 최근접)을 함께 노출"*.
+       * **말풍선에 넣는다** — 칸 안은 이미 이름·건수·증감 세 줄이라 더 넣으면 뭉갠다.
+       * 칸 옆에는 표식만 붙이고(아래), 자세한 것은 손을 얹으면 나온다. */
+      var lgm = (DATA.lgMatch || {})[d.nm];
       /* ── 글자 크기 (2026-09-03 사장님 요청 — *"텍스트가 히트맵 크기에 맞춰 조절되어야"*)
          예전 식(`min(w/4.4, h/3.0)` · 상한 18)은 **칸 넓이만** 봤다. 그래서 셋이 어긋났다:
          ① **이름 길이를 안 본다** — 「갤러리아광교」(6자)와 「수원」(2자)이 같은 칸에서 같은
@@ -4624,7 +4825,24 @@ function renderList() {
                         : (d.prev || d.cur ? d.prev + '→' + d.cur + '건' : ''))));
           if (!d.isReg && !sub2 && !heatKind) sub2 = '작성일 모름';
           if (sub2) lab += '<span class="cv" style="font-size:' + (fs * 0.52).toFixed(1) + 'px">' + sub2 + '</span>';
+          /* **LG 매칭 표식** — 글자를 더 넣지 않고 기호 하나만 둔다(칸이 좁다).
+             ▣ 같은 백화점 안 · ✕ 매칭 없음 · 최근접은 표식 없음(대부분이라 붙이면 지저분하다). */
+          if (lgm && c.w > 70) {
+            if (!lgm.shop) lab += '<span class="lgx" title="LG 매칭 없음">✕</span>';
+            else if (lgm.how === 'dept') lab += '<span class="lgd" title="같은 백화점 안 LG">▣</span>';
+          }
         }
+      }
+      var lgTip = '';
+      if (lgm) {
+        lgTip = lgm.shop
+          ? NLC + 'LG ' + lgm.shop
+            + (typeof lgm.dist === 'number' ? ' · ' + (lgm.dist < 1000
+                ? Math.round(lgm.dist) + 'm' : (lgm.dist / 1000).toFixed(1) + 'km') : '')
+            + ' · ' + (lgm.how === 'dept' ? '같은 백화점 안'
+                     : lgm.how === 'manual' ? '사람이 고른 짝' : '가장 가까운 곳')
+          /* **왜 없는지 적는다** — 「매칭 없음」만 쓰면 자료가 없는 건지 규칙 때문인지 모른다 */
+          : NLC + 'LG 매칭 없음' + (lgm.why ? ' — ' + lgm.why : '');
       }
       var tip = chan
         ? d.nm + ' ' + d.cnt + '건'
@@ -4632,12 +4850,15 @@ function renderList() {
           + (d.isReg ? ' · ' + d.n + '곳'
               : week
                 ? (d.noPrev ? ' · 평소를 몰라 견줄 수 없습니다'
-                    : ' · 평소 주당 ' + d.prev.toFixed(1) + '건 → ' + weekLabel(heatWeek) + ' ' + d.cur + '건')
+                    : ' · 평소 ' + d.prev.toFixed(1) + '건 → ' + periodLabel() + ' ' + d.cur + '건')
                 : ' · ' + heatMonLabel(M.prev) + ' ' + d.prev + '건 → ' + heatMonLabel(M.cur) + ' ' + d.cur + '건')
-          + (d.g === null ? (week ? '' : ' · 전월을 몰라 증감 없음') : ' · ' + heatPct(d.g));
+          + (d.g === null ? (week ? '' : ' · 전월을 몰라 증감 없음') : ' · ' + heatPct(d.g))
+          + lgTip;
       /* **글자색은 배경 밝기가 정한다.** 밝은 초록 칸에 흰 글자를 두면 대비가 2.7:1 로
          기준(4.5:1)에 한참 못 미쳐 **잘 크는 매장의 이름만 안 읽힌다**(재서 확인했다). */
-      var bg = chan ? HEAT_CHC[d.k] : heatColor(d.g, heatSpan);
+      /* **건수로 칠한다**(2026-09-03) — 색이 증감이던 시절에는 `d.g` 를 넘겼다.
+         `heatMax` 는 지금 그려지는 판의 최대 건수다(아래에서 낸다). */
+      var bg = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatMax);
       html += '<div class="cell' + (clk ? ' clk' : '') + '"' +
         (clk ? ' data-k="' + esc(d.key) + '"' : '') +
         ' title="' + esc(tip) + '" style="left:' + (c.x + 7) + 'px;top:' + (c.y + 7) + 'px;width:' +
@@ -4650,29 +4871,30 @@ function renderList() {
        적혀 있으면 화면이 조용히 거짓을 말한다. */
     var lt = document.getElementById('hm-legt'), ll = document.getElementById('hm-legl'),
         lr = document.getElementById('hm-legr');
-    /* **주차 모드에서는 유형을 골라도 색이 「비중」이 아니라 「전주 대비」다** —
-       heatKind 만 보고 정하면 범례가 「혼수 비중」이라 적혀 화면이 거짓을 말한다
-       (실물에서 그랬다). 색을 정하는 곳과 범례가 **같은 조건**을 봐야 한다. */
-    var shareMode = heatKind && !week;
-    if (lt) lt.textContent = shareMode ? heatKind + ' 비중 (전 매장 평균 대비)'
-                                       : (week ? '평소 주당 대비' : '전월 대비');
-    /* **범례 숫자도 척도를 따라간다.** 주는 ±60% 인데 「±15%」라 적혀 있으면
-       상담사가 색을 4배로 잘못 읽는다 — 척도를 넓힌 것 자체가 무의미해진다. */
+    /* ── 범례 (2026-09-03 사장님 지시 — *"범례에 최소값·최대값과 색 스케일을 표시"*) ──
+     * 색이 **건수**를 뜻하게 되었으므로 범례도 건수를 적는다.
+     * **최소·최대는 지금 그려진 판에서 낸다** — 화면과 다른 수를 적으면 범례가
+     * 화면을 설명하지 못한다. */
+    var shareMode = false;      /* 색은 늘 건수다 — 유형·주차와 무관하다 */
+    var heatMin = 0;
+    for (var li = 0; li < items.length; li++) {
+      if (li === 0 || items[li].cnt < heatMin) heatMin = items[li].cnt;
+    }
+    if (lt) lt.textContent = '건수';
     /* **색띠는 매번 다시 그린다.** 한때 초기화에서 한 번만 그렸는데, 그 자리에는
-       `heatSpan` 이 아직 없어 색이 NaN 이 되어 **띠가 통째로 비었다**(실물에서 봤다).
-       무엇보다 척도가 모드마다 바뀌므로 한 번만 그리면 그 자체가 거짓이 된다. */
+       최대값이 아직 없어 색이 NaN 이 되어 **띠가 통째로 비었다**(실물에서 봤다). */
     var sc2 = document.getElementById('hm-scale');
     if (sc2) {
-      var span2 = shareMode ? 15 : heatSpan;
-      sc2.innerHTML = [-1, -0.6, -0.27, 0, 0.27, 0.6, 1].map(function (r) {
-        return '<span style="background:' + heatColor(r * span2, span2) + '"></span>';
+      sc2.innerHTML = [0, 0.2, 0.4, 0.6, 0.8, 1].map(function (r) {
+        return '<span style="background:' + heatColor(r, 1) + '"></span>';
       }).join('');
     }
-    if (ll) ll.textContent = shareMode ? '−15%p' : ('−' + heatSpan + '%');
-    if (lr) lr.textContent = shareMode ? '+15%p' : ('+' + heatSpan + '%');
+    if (ll) ll.textContent = items.length ? nf(heatMin) + '건' : '–';
+    if (lr) lr.textContent = items.length ? nf(heatMax) + '건' : '–';
     var lz = document.getElementById('hm-legz');
-    if (lz) lz.textContent = shareMode ? '유형 글이 없어 못 잼'
-                                       : ((week ? '평소 주당' : '전월') + '이 0이거나 못 잼');
+    /* 색이 건수가 되면서 「못 잼」 칸이 사라졌다 — 0건은 애초에 칸이 안 그려진다.
+       대신 **증감이 어디로 갔는지**를 적는다(칸 글자와 말풍선이 들고 있다). */
+    if (lz) lz.textContent = '증감은 칸 안 작은 글씨와 말풍선에 있습니다';
     bs.textContent = '크기: ' + (heatSize === 'n' ? '건수' : '등락률');
     bs.classList.toggle('on', heatSize === 'g');
     /* 유형 버튼 — **화면이 목록을 박지 않고 자료에서 만든다.** 서버가 세는 말이 바뀌면
@@ -4680,18 +4902,37 @@ function renderList() {
        — 전부 두면 조작줄이 두 줄이 되어 히트맵이 그만큼 밀린다. */
     var kbox = document.getElementById('hm-kinds');
     if (kbox) {
-      var bkAll = DATA.byStoreKind || {}, sumK = {}, kx, ky;
+      /* ── 후기 4종 (2026-09-03 사장님 지시) ──────────────────────────────
+       * *"① 매니저 후기 ② 혼수 후기 ③ 입주 후기 ④ 기타 후기"*.
+       * **서버가 세어 준 `byStoreKind4` 를 쓴다** — 화면이 9종에서 다시 묶으면
+       * 매니저 후기를 가릴 수가 없다(그것은 `kind` 가 아니라 `mgr` 로 정해진다).
+       * **자료가 없으면(옛 서버) 예전 9종으로 물러선다** — 갑자기 빈 줄이 되면
+       * 「고장」으로 보인다. */
+      var use4 = !!(DATA.byStoreKind4 && DATA.kind4Names);
+      var bkAll = (use4 ? DATA.byStoreKind4 : DATA.byStoreKind) || {}, sumK = {}, kx, ky;
       for (kx in bkAll) if (bkAll.hasOwnProperty(kx)) {
         for (ky in bkAll[kx]) if (bkAll[kx].hasOwnProperty(ky)) sumK[ky] = (sumK[ky] || 0) + bkAll[kx][ky];
       }
-      var ks = Object.keys(sumK).sort(function (a, b) { return sumK[b] - sumK[a]; }).slice(0, 6);
-      /* **고른 유형이 상위 6 밖이면 그것도 남긴다** — 안 그러면 누른 버튼이 사라진다 */
-      if (heatKind && ks.indexOf(heatKind) < 0) ks.push(heatKind);
+      var ks;
+      if (use4) {
+        /* **네 칸을 늘 같은 순서로 보여준다** — 건수 순으로 두면 볼 때마다 자리가 바뀐다.
+           **0건이어도 남긴다** — 빼면 「그런 후기가 없다」가 아니라 「그런 갈래가 없다」로 읽힌다. */
+        ks = DATA.kind4Names.map(function (x) { return x[0]; });
+      } else {
+        ks = Object.keys(sumK).sort(function (a, b) { return sumK[b] - sumK[a]; }).slice(0, 6);
+        /* **고른 유형이 상위 6 밖이면 그것도 남긴다** — 안 그러면 누른 버튼이 사라진다 */
+        if (heatKind && ks.indexOf(heatKind) < 0) ks.push(heatKind);
+      }
+      /* 화면에 적는 이름 — 키(`manager`)가 아니라 사람 말(`매니저 후기`) */
+      var k4name = {};
+      if (use4) DATA.kind4Names.forEach(function (x) { k4name[x[0]] = x[1]; });
+      var kLabel = function (k) { return k4name[k] || k; };
       kbox.innerHTML = ks.length
         ? ks.map(function (k) {
             return '<button type="button" class="bk' + (heatKind === k ? ' on' : '') + '"'
-              + ' data-kind="' + esc(k) + '" title="' + esc(k) + ' 글만 보기(' + nf(sumK[k]) + '건)">'
-              + esc(k) + '</button>';
+              + ' data-kind="' + esc(k) + '" title="' + esc(kLabel(k)) + '만 보기('
+              + nf(sumK[k] || 0) + '건)">'
+              + esc(kLabel(k)) + '</button>';
           }).join('')
         : '';
     }
@@ -4713,16 +4954,41 @@ function renderList() {
       var wlist = Object.keys(wsum).sort();
       /* **자료가 없으면 줄 자체를 안 그린다** — 빈 줄은 「고장」으로 보인다.
          옛 서버가 보낸 자료에는 이 항목이 아예 없다(다시 수집하기 전까지). */
-      if (!wlist.length) { wbox.innerHTML = ''; wbox.style.display = 'none'; }
-      else {
+      var sel = document.getElementById('hm-wsel');
+      var f0 = document.getElementById('hm-from'), t0 = document.getElementById('hm-to');
+      var clr = document.getElementById('hm-wclear'), note = document.getElementById('hm-wnote');
+      if (!wlist.length) { wbox.style.display = 'none'; }
+      else if (sel) {
         wbox.style.display = '';
-        wbox.innerHTML = '<span class="lbl">주차</span>'
-          + '<button type="button" class="wk' + (heatWeek ? '' : ' on') + '" data-wk="">전체 기간</button>'
-          + wlist.map(function (w3) {
-              return '<button type="button" class="wk' + (heatWeek === w3 ? ' on' : '') + '"'
-                + ' data-wk="' + esc(w3) + '" title="' + esc(w3) + '">'
-                + esc(weekLabel(w3)) + '<i>' + nf(wsum[w3]) + '</i></button>';
-            }).join('');
+        /* 드롭다운 — **최신 주차가 위**로 온다(사장님: *"최신 주차가 기본 선택"*).
+           **건수를 함께 적는다** — 실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라
+           숫자가 없으면 골라 보고서야 빈 히트맵을 만난다. */
+        var opts = ['<option value="">전체 기간</option>'];
+        for (var wi2 = wlist.length - 1; wi2 >= 0; wi2--) {
+          var w3 = wlist[wi2];
+          opts.push('<option value="' + esc(w3) + '"' + (heatWeek === w3 ? ' selected' : '') + '>'
+            + esc(weekLabelLong(w3)) + ' (' + nf(wsum[w3]) + '건)</option>');
+        }
+        /* **「직접 지정」은 자료가 아니라 상태다** — 날짜를 손으로 고치면 여기로 온다 */
+        opts.push('<option value="custom"' + (heatWeek === 'custom' ? ' selected' : '') + '>직접 지정</option>');
+        sel.innerHTML = opts.join('');
+        sel.value = heatWeek || '';
+
+        /* 날짜 칸 — 고른 주의 범위를 **자동으로 채운다**(사장님 지시) */
+        var rg = heatWeek === 'custom' ? { from: heatFrom, to: heatTo } : weekRange(heatWeek);
+        if (f0) f0.value = rg ? rg.from : '';
+        if (t0) t0.value = rg ? rg.to : '';
+        /* 자료가 있는 범위를 넘겨 고르지 않게 막는다 — 넘기면 늘 0건이라 「고장」으로 보인다 */
+        var lo = weekRange(wlist[0]), hi = weekRange(wlist[wlist.length - 1]);
+        if (f0 && lo) { f0.min = lo.from; f0.max = hi ? hi.to : ''; }
+        if (t0 && lo) { t0.min = lo.from; t0.max = hi ? hi.to : ''; }
+
+        if (clr) clr.hidden = !heatWeek;
+        if (note) {
+          note.textContent = heatWeek === 'custom'
+            ? (heatFrom && heatTo ? '직접 지정한 기간입니다 — 그 안에 든 주를 모두 셉니다.' : '시작일과 종료일을 모두 넣어 주세요.')
+            : (heatWeek ? '' : '기간을 고르면 그 기간의 지점만 봅니다.');
+        }
       }
     }
     /* ── 지점 ↔ 매니저 ─────────────────────────────────────────────────
@@ -4760,19 +5026,18 @@ function renderList() {
           + '<b>명부에 등록된 이름</b>이면 아래에 ✓ 가 붙습니다. 같은 사람이 직함에 따라 '
           + '갈리지 않게 명부가 합쳐 줍니다.'
         : week
-        ? '<b>' + esc(weekLabel(heatWeek)) + '</b>만 봅니다 — <b>칸은 지점</b> · 크기 = '
-          + (heatKind ? esc(heatKind) + ' 건수' : '건수')
-          + ' · <b>칸 색 = 그 매장의 평소 주당 대비</b>(최근 ' + weekSpan() + '주 평균). '
+        ? '<b>' + esc(periodLabel()) + '</b>만 봅니다 — <b>칸은 지점</b> · '
+          + '크기와 색 모두 <b>' + (heatKind ? esc(heatKind) + ' 건수' : '건수') + '</b>입니다(진할수록 많음). '
           + '<b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 안 줍니다) — 그래서 '
           + '한 주에 값이 있는 매장이 <b>7~17곳</b>뿐입니다. 0건 매장은 칸을 못 그려 빠집니다.'
+          + (heatWeek === 'custom'
+              ? ' <b>자료가 주 단위로만 쌓여 있어</b> 고르신 날짜에 걸친 주는 통째로 셉니다.'
+              : '')
         : heatKind
-        ? '<b>' + esc(heatKind) + '</b> 글만 봅니다 — 칸 크기 = 그 유형 건수 · '
-          + '<b>칸 색 = 그 매장에서 ' + esc(heatKind) + '가 차지하는 비중</b>(전 매장 평균보다 '
-          + '높으면 초록). 월별 자료에는 유형 구분이 없어 <b>전월 대비는 낼 수 없습니다</b>. '
+        ? '<b>' + esc(heatKind) + '</b> 글만 봅니다 — 칸 크기와 색 모두 <b>그 유형 건수</b>입니다(진할수록 많음). '
           + '유형 버튼을 다시 누르면 전체로 돌아갑니다.'
-        : '칸 크기 = ' + (byG ? '등락률' : '건수') + ' · 칸 색 = 전월 대비 · ' +
-          esc(basis).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') +
-          '. <b>크기는 모든 글, 색은 작성일을 아는 글</b>로 냅니다(카페는 네이버가 작성일을 안 줍니다).';
+        : '칸 크기 = ' + (byG ? '등락률' : '건수') + ' · <b>칸 색 = 건수</b>(진할수록 많음). '
+          + '증감은 칸 안 작은 글씨에 적습니다 — ' + esc(basis).split('**').join('') + '.';
     }
     if (chan) {
       bk.textContent = heatMode === 'flat' ? '← 전점' : '← ' + heatPath[0] + '지역';
@@ -4792,7 +5057,7 @@ function renderList() {
        ①제목에 그 주를 적고 ②「전월 대비」를 「전주 대비」로 바꾸는 것뿐이다.
        (옛 코드는 여기서 「주차별 N주」라 적었는데, 이제 그것은 거짓이다.) */
     var per = week ? '평소 주당 대비' : '전월 대비';
-    var wtag = week ? esc(weekLabel(heatWeek)) + ' · ' : '';
+    var wtag = week ? esc(periodLabel()) + ' · ' : '';
     /* **값이 있는 매장 수를 함께 적는다** — 한 주만 보면 대부분의 매장이 0건이라
        칸이 안 그려지는데, 그 사실을 안 적으면 「매장이 사라졌다」로 읽힌다. */
     var live = week ? rows.filter(function (r) { return r.cnt > 0; }).length : 0;

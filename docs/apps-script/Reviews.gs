@@ -253,6 +253,87 @@ function foldStoreCode_(c) { return MERGED_CODE[String(c || '')] || c; }
  * ⑴ 서비스점 ↔ 일반점은 이름에도 점코드에도 근거가 없다.
  * ⑵ 인샵은 ZN01(스타필드)·ZMF6(이마트)·ZIN5(남양) 셋이 후보인데 확정할 근거가 없다.
  * 목록을 받으면 그때 붙인다. */
+/* ══════════════════════════════════════════════════════════════════════
+ * 백화점 입점 · LG 베스트샵 매칭 (2026-09-03 사장님 지시)
+ * ══════════════════════════════════════════════════════════════════════
+ * *"백화점 입점 매장은 반드시 같은 백화점 내 LG 매장하고만 매칭한다.
+ *  같은 백화점 안에 LG 매장이 없으면 '매칭 없음'으로 표시하고 거리 기준 매칭으로
+ *  넘기지 않는다."*
+ *
+ * **필드를 새로 만들지 않았다** — 점코드가 이미 가른다(`ZH` = 백화점). 새 열을 두면
+ * 두 곳이 같은 것을 말하게 되고, 어긋나면 어느 쪽이 맞는지 알 수 없다.
+ * 다만 **AK분당은 점코드가 로드샵인데 실제로는 백화점 입점**이라(2026-09-03 사장님 확인)
+ * 예외로 등재한다. **짐작으로 넣지 않는다** — 사람이 확인해 준 것만 적는다.
+ *
+ * **같은 건물인지는 이름이 아니라 좌표로 본다.** 이름으로 재려다 `AK PLAZA 수원점` 과
+ * `AK수원` 을 다른 브랜드로 갈라 「매칭 없음」이라 잘못 보고했다(2026-09-03).
+ * 실측: 백화점 12곳의 같은 건물 LG 가 **8~226m**, 그다음이 **315m~2.5km** 로
+ * 사이가 넉넉히 벌어져 **250m** 로 자르면 정확히 갈린다. */
+var DEPT_EXTRA = { 'AK분당': 1 };        /* 점코드가 안 밝히는 백화점 입점 — 사장님 확인분 */
+var DEPT_SAME_M = 250;                   /* 같은 건물로 보는 거리(m) — 위 실측 근거 */
+
+/** 백화점 입점인가. **점코드가 먼저, 예외는 사람이 확인해 준 것만.** */
+function isDept_(code, name) {
+  return String(code || '').indexOf('ZH') === 0 || !!DEPT_EXTRA[name];
+}
+
+/** 하버사인 거리(m). 좌표가 없으면 `null` — **0 을 돌려주면 「같은 자리」가 된다.** */
+function distM_(a, b, c, d) {
+  if (typeof a !== 'number' || typeof b !== 'number' || typeof c !== 'number' || typeof d !== 'number') return null;
+  var R = 6371000, r = Math.PI / 180;
+  var x = Math.sin((c - a) * r / 2) * Math.sin((c - a) * r / 2)
+        + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) * Math.sin((d - b) * r / 2);
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+/**
+ * 매장 하나의 LG 짝을 낸다.
+ * 돌려주는 것 — `{ shop, dist, how }`. `how` 는 `'dept'`(백화점 내) · `'near'`(최근접) ·
+ * `'manual'`(사람이 고침) · `''`(매칭 없음).
+ *
+ * **사람이 고친 짝이 가장 세다** — 화면에서 고르는 손잡이가 이미 있고(`setLgPair`),
+ * 자동은 어디까지나 제안이다.
+ * **좌표를 모르면 매칭하지 않는다** — 「모른다」와 「없다」는 다른 말이고, 지어낸 짝은
+ * 화면에서 사실처럼 읽힌다.
+ */
+function lgMatchOne_(code, name, lat, lng, manual) {
+  if (manual) return { shop: manual, dist: null, how: 'manual' };
+  if (typeof lat !== 'number' || typeof lng !== 'number') {
+    return { shop: '', dist: null, how: '', why: '매장 좌표를 모릅니다' };
+  }
+  var best = null, i, d;
+  for (i = 0; i < LG_SHOPS.length; i++) {
+    d = distM_(lat, lng, LG_SHOPS[i][2], LG_SHOPS[i][3]);
+    if (d === null) continue;
+    if (!best || d < best.dist) best = { shop: LG_SHOPS[i][0], dist: d };
+  }
+  if (!best) return { shop: '', dist: null, how: '', why: 'LG 지점 좌표가 없습니다' };
+
+  if (isDept_(code, name)) {
+    /* **같은 건물이 아니면 거리 매칭으로 넘기지 않는다**(사장님 지시).
+       백화점 매장의 경쟁 상대는 같은 건물 LG 이지, 2km 밖 로드샵이 아니다. */
+    if (best.dist > DEPT_SAME_M) {
+      return { shop: '', dist: best.dist, how: '',
+               why: '같은 백화점 안에 LG 베스트샵이 없습니다 (가장 가까운 곳도 '
+                  + Math.round(best.dist) + 'm)' };
+    }
+    return { shop: best.shop, dist: best.dist, how: 'dept' };
+  }
+  return { shop: best.shop, dist: best.dist, how: 'near' };
+}
+
+/** 전 매장의 짝. 화면이 히트맵·지도·지점별 분석에서 함께 쓴다. */
+function lgMatchAll_() {
+  var manual = lgPairs_(), geo = STORE_GEO || {}, out = {}, i, code, name, g;
+  for (i = 0; i < STORES.length; i++) {
+    code = STORES[i][0]; name = STORES[i][1];
+    g = geo[name] || {};
+    out[name] = lgMatchOne_(code, name, g.lat, g.lng, manual[name]);
+    out[name].dept = isDept_(code, name);
+  }
+  return out;
+}
+
 function storeType_(code) {
   var c = String(code || '');
   if (c.indexOf('ZH') === 0) return '백화점';
@@ -997,6 +1078,100 @@ var KINDS = [
 ];
 
 /** 제목·카페 이름을 보고 유형 하나를 고른다. 못 가르면 '기타'. */
+/* ══════════════════════════════════════════════════════════════════════
+ * 후기 4종 묶음 (2026-09-03 사장님 지시)
+ * ══════════════════════════════════════════════════════════════════════
+ * *"① 매니저 후기 ② 혼수 후기 ③ 입주 후기 ④ 기타 후기"* ·
+ * *"조회 시 엔드포인트 파라미터(?type=manager|player|movein|etc)로 필터링"*.
+ *
+ * **기존 9종(`kind`)을 줄이지 않았다.** 줄이면 구매 1,441 · 행사 788 · 모바일 425 ·
+ * 설치 159 · AS 72 건의 구분이 **영영 사라진다**(되살리려면 전 건을 다시 분류해야 한다).
+ * 대신 그 위에 **묶음 하나를 얹는다** — 화면과 `?type=` 이 이것을 쓴다.
+ *
+ * **매니저 후기는 유형이 아니라 「이름이 잡혔는가」다.** `kind` 에는 `추천` 이 따로
+ * 있는데(매니저님·칭찬·친절) 그것과 같지 않다 — 이름이 실제로 적힌 글만 매니저 후기다.
+ * **매니저가 먼저다** — 「윤현식 매니저님께 혼수 상담」은 두 갈래에 다 들지만,
+ * 사장님이 물으신 것은 *"매니저 후기"* 이므로 그쪽으로 센다.
+ *
+ * 미지정 자료(옛 줄)는 `kind` 가 비어 있어 자동으로 `etc` 로 떨어진다 —
+ * 지시하신 *"카테고리 미지정 기존 데이터는 '기타 후기'로 기본 처리"* 그대로다. */
+var KIND4 = [
+  ['manager', '매니저 후기'],
+  ['wedding', '혼수 후기'],
+  ['movein',  '입주 후기'],
+  ['etc',     '기타 후기']
+];
+/** 한 줄이 어느 묶음인가. **매니저가 가장 세다**(위 주석 참조). */
+function kind4_(row) {
+  if (row && row.mgr) return 'manager';
+  var k = row && row.kind;
+  if (k === '혼수') return 'wedding';
+  if (k === '입주') return 'movein';
+  return 'etc';
+}
+/** 파라미터 값을 받아 묶음 키로. **모르는 값은 「전체」로 본다** — 오타 하나에
+ *  0건을 돌려주면 「자료가 없다」로 읽힌다. 무엇을 무시했는지는 응답이 밝힌다. */
+function kind4Of_(v) {
+  var t = String(v || '').trim().toLowerCase();
+  for (var i = 0; i < KIND4.length; i++) if (KIND4[i][0] === t) return t;
+  /* 한글로 쳐도 받는다 — 사장님이 주소창에 직접 넣을 수 있다 */
+  if (t === '매니저') return 'manager';
+  if (t === '혼수') return 'wedding';
+  if (t === '입주') return 'movein';
+  if (t === '기타') return 'etc';
+  return '';
+}
+
+/**
+ * `?type=` 이 왔을 때 **그 갈래만** 담아 돌려준다.
+ *
+ * **원본을 고치지 않는다** — `getSummary()` 결과는 캐시에 들어 있어, 여기서 손대면
+ * 다음에 `?json=1`(전체)로 물어도 걸러진 값이 나간다. 얕은 사본을 만든다.
+ *
+ * **바꿀 수 있는 것만 바꾼다.** 매장별·주차별은 4종 집계가 있어 정확히 갈리지만,
+ * 월별·출처별·지도는 4종으로 나눠 세어 두지 않았다 — **그것들은 그대로 두고
+ * `typeScope` 로 「무엇이 걸렸고 무엇이 안 걸렸는지」를 밝힌다.**
+ * 조용히 전체 값을 그 갈래인 척 내보내면 화면이 거짓말을 한다.
+ */
+function filterKind4_(sum, t4) {
+  var out = {}, k;
+  for (k in sum) if (sum.hasOwnProperty(k)) out[k] = sum[k];
+  out.type = t4;
+
+  var byStore = {}, s4 = sum.byStoreKind4 || {}, st, tot = 0;
+  for (st in s4) if (s4.hasOwnProperty(st)) {
+    byStore[st] = s4[st][t4] || 0;
+    tot += byStore[st];
+  }
+  /* **0건 매장도 남긴다** — 빼면 「그 매장이 없다」로 읽힌다(이 화면이 이미 세운 규칙) */
+  var all = sum.byStore || {};
+  for (st in all) if (all.hasOwnProperty(st) && !byStore.hasOwnProperty(st)) byStore[st] = 0;
+
+  out.byStore = byStore;
+  out.total = tot;
+  out.byKind4 = {};
+  out.byKind4[t4] = tot;
+  /* 주차 × 매장 — 4종으로 갈라 둔 것이 있으므로 그 갈래만 남긴다 */
+  var w4 = sum.byStoreWeek4 || {}, ow = {}, wk;
+  for (st in w4) if (w4.hasOwnProperty(st)) {
+    for (wk in w4[st]) if (w4[st].hasOwnProperty(wk)) {
+      if (!w4[st][wk][t4]) continue;
+      if (!ow[st]) ow[st] = {};
+      ow[st][wk] = w4[st][wk][t4];
+    }
+  }
+  out.byStoreWeek = ow;
+
+  /* **무엇이 안 걸렸는지 밝힌다** — 이 항목들은 4종으로 세어 두지 않아 전체 값 그대로다 */
+  out.typeScope = {
+    filtered: ['total', 'byStore', 'byStoreWeek', 'byKind4'],
+    unfiltered: ['byMonth', 'byDay', 'bySrc', 'byMap', 'byRegion', 'byCafe', 'recent', 'rival'],
+    note: '위 unfiltered 항목은 유형별로 세어 두지 않아 전체 값 그대로입니다 — '
+        + '그 갈래의 값이 아닙니다.'
+  };
+  return out;
+}
+
 function kindOf_(text) {
   var t = norm_(text), i, j;
   for (i = 0; i < KINDS.length; i++) {
@@ -1099,6 +1274,85 @@ var MGR_TAIL_OK = '님분께이가는은를을와과도도로에의만랑라야�
  * (이 저장소가 동명 지역으로 이미 데인 자리다). 경기 12개 시 52 + 강원 19 = **71곳**.
  *
  * 다시 받으려면 .scratch/_lgcollect.mjs (로컬 전용). */
+/* ── 매장 좌표 (`scripts/fixtures/store-geo.json` 에서 옮겼다) ────────────────
+ * 서버가 LG 짝을 낼 때 쓴다. **손으로 옮겨 적지 않았다** — 한 자리만 틀려도
+ * 엉뚱한 LG 와 짝이 되고, 화면은 그것을 사실처럼 보여준다.
+ * 다시 만들려면 `node .scratch/_geogen.mjs`(로컬 전용).
+ * **못 찾은 매장은 담지 않는다** — 좌표를 지어내면 지도가 실제로는 매장이 없는
+ * 자리를 가리킨다(그 fixture 가 세운 규칙 그대로다). */
+var STORE_GEO_ROWS = [
+  ['스타필드수원', 37.2873924, 126.9915605],
+  ['오산', 37.1422417, 127.0726791],
+  ['수지', 37.3114788, 127.0779493],
+  ['강릉옥천', 37.7580333, 128.8966777],
+  ['단구', 37.3278486, 127.953282],
+  ['석사', 37.8569217, 127.7396084],
+  ['속초', 38.1893089, 128.5810738],
+  ['평택', 36.9933173, 127.1366825],
+  ['분당', 37.3862318, 127.1205536],
+  ['북수원', 37.2925989, 127.0183043],
+  ['광주', 37.4179451, 127.2475366],
+  ['안성', 37.012728, 127.2589087],
+  ['평택고덕', 37.0555882, 127.0610243],
+  ['이천증포', 37.2882769, 127.4544953],
+  ['평촌', 37.3899144, 126.9740004],
+  ['안양모바일', 37.3941322, 126.9258168],
+  ['용인구성', 37.3050234, 127.1064972],
+  ['서수원', 37.2768155, 126.9692794],
+  ['영통', 37.2459826, 127.0524445],
+  ['디지털시티모바일', 37.2560471, 127.0514256],
+  ['광명소하', 37.4483754, 126.8828512],
+  ['성남', 37.4337033, 127.1280733],
+  ['AK분당', 37.3849807, 127.1230938],
+  ['원주', 37.3283034, 127.9235441],
+  ['춘천', 37.8623357, 127.7182945],
+  ['평택세교', 37.0103038, 127.0723988],
+  ['용인처인모바일', 37.2475601, 127.2123266],
+  ['권선', 37.2524603, 127.019491],
+  ['안양본', 37.392333, 126.9534391],
+  ['수원', 37.2679004, 127.0699229],
+  ['동탄', 37.2224932, 127.0746477],
+  ['강릉', 37.7706862, 128.9207769],
+  ['단계', 37.3576976, 127.937575],
+  ['하남미사', 37.5646737, 127.1988856],
+  ['용인기흥', 37.2235019, 127.1142401],
+  ['롯데평촌', 37.3905035, 126.9508024],
+  ['롯데수원', 37.2644366, 126.998875],
+  ['현대판교', 37.3921158, 127.1121341],
+  ['신세계사우스시티', 37.3246136, 127.1080197],
+  ['AK수원', 37.2663223, 127.0004072],
+  ['AK평택', 36.9908779, 127.0853742],
+  ['AK원주', 37.3458163, 127.9279488],
+  ['신세계하남', 37.5452577, 127.2222148],
+  ['갤러리아광교', 37.285335, 127.0570187],
+  ['롯데동탄', 37.2003815, 127.0973188],
+  ['타임빌라스수원', 37.2644651, 126.9977513],
+  ['남양모바일', 37.2122073, 126.8251184],
+  ['이마트안양', 37.3983756, 126.9353531],
+  ['기흥캠퍼스모바일', 37.231524, 127.0853334],
+  ['화성캠퍼스모바일', 37.222629, 127.0677845],
+  ['수원삼성전기모바일', 37.2645367, 127.0552263],
+  ['광명기아자동차모바일', 37.4380606, 126.8836947],
+  ['화성DSR모바일', 37.2252184, 127.0701205],
+  ['미래기술캠퍼스모바일', 37.2530761, 127.054238],
+  ['디지털시티2모바일', 37.2560471, 127.0514256],
+  ['용인에버랜드모바일', 37.2920603, 127.2173194],
+  ['평택캠퍼스모바일', 37.0375827, 127.051969],
+  ['기흥삼성SDI모바일', 37.2366873, 127.1116678],
+  ['현대기아차연구소모바일', 37.1552772, 126.8230829],
+  ['판교SDS모바일', 37.4121797, 127.0978547],
+  ['기흥SDR모바일', 37.2269622, 127.08764],
+  ['KGM평택모바일', 37.0282867, 127.0952752]
+];
+/** 이름 → {lat,lng}. 배열로 두는 것은 사람이 읽기 쉬워서이고, 찾을 때는 표로 바꾼다 */
+var STORE_GEO = (function () {
+  var m = {}, i;
+  for (i = 0; i < STORE_GEO_ROWS.length; i++) {
+    m[STORE_GEO_ROWS[i][0]] = { lat: STORE_GEO_ROWS[i][1], lng: STORE_GEO_ROWS[i][2] };
+  }
+  return m;
+})();
+
 var LG_SHOPS = [
   ['강릉교동점', '강릉', 37.755124, 128.880794],
   ['강릉본점', '강릉', 37.770211, 128.919912],
@@ -2923,6 +3177,8 @@ function summary_() {
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0, '웹': 0 }, byDay = {}, byMonth = {}, byKind = {};
   var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {}, byStoreChan = {}, byStoreKind = {}, byWeekKind = {};
   var byStoreWeek = {};
+  /* 4종 묶음(2026-09-03) — 전체 · 매장별 · 주차×매장별. **기존 9종은 그대로 둔다.** */
+  var byKind4 = {}, byStoreKind4 = {}, byStoreWeek4 = {};
   /* ── 매장별 세 갈래 (2026-09-01) ─────────────────────────────────────────
    * **셋을 한 루프에서 낸다** — 따로 돌면 같은 자료를 세 번 훑는다.
    *
@@ -3028,6 +3284,11 @@ function summary_() {
        (`byStoreChan` 이 같은 이유로 그렇게 한다). */
     if (!byStoreKind[r.storeName]) byStoreKind[r.storeName] = {};
     byStoreKind[r.storeName][r.kind] = (byStoreKind[r.storeName][r.kind] || 0) + 1;
+    /* 4종 묶음 — **같은 줄을 한 번만 센다**(kind4_ 가 하나만 돌려준다) */
+    var k4 = kind4_(r);
+    byKind4[k4] = (byKind4[k4] || 0) + 1;
+    if (!byStoreKind4[r.storeName]) byStoreKind4[r.storeName] = {};
+    byStoreKind4[r.storeName][k4] = (byStoreKind4[r.storeName][k4] || 0) + 1;
     /* **주차별 × 유형**(2026-09-03 사장님 요청 — *"1주차 2주차 이런 식으로 주차별
        혼수후기 입주후기 기타후기 건수"*). **매장까지 쪼개지 않는다** — 작성일을 아는 글이
        2,671건뿐이라 매장 62 × 주 12 × 유형 9 로 나누면 칸마다 1건 미만이 되어 잡음이다.
@@ -3048,6 +3309,10 @@ function summary_() {
         if (!byStoreWeek[r.storeName]) byStoreWeek[r.storeName] = {};
         if (!byStoreWeek[r.storeName][wk]) byStoreWeek[r.storeName][wk] = {};
         byStoreWeek[r.storeName][wk][r.kind] = (byStoreWeek[r.storeName][wk][r.kind] || 0) + 1;
+        /* 4종도 같은 칸에 — 화면의 주차 드롭다운이 유형과 함께 걸린다 */
+        if (!byStoreWeek4[r.storeName]) byStoreWeek4[r.storeName] = {};
+        if (!byStoreWeek4[r.storeName][wk]) byStoreWeek4[r.storeName][wk] = {};
+        byStoreWeek4[r.storeName][wk][k4] = (byStoreWeek4[r.storeName][wk][k4] || 0) + 1;
       }
     }
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
@@ -3276,6 +3541,12 @@ function summary_() {
     /* **최근 주차만 담는다** — 108주를 통째로 보내면 칩 줄이 화면을 덮고 캐시 조각도 는다.
        자르는 것은 서버에서 한다(화면이 자르면 「없는 주」와 「안 보낸 주」가 뭉개진다). */
     byStoreWeek: trimWeeks_(byStoreWeek, WEEK_KEEP),
+    /* 4종 묶음(2026-09-03 사장님 지시) — 기존 `byKind`(9종)는 그대로 함께 나간다 */
+    byKind4: byKind4, byStoreKind4: byStoreKind4,
+    byStoreWeek4: trimWeeks_(byStoreWeek4, WEEK_KEEP),
+    kind4Names: KIND4,
+    /* LG 짝 — 백화점은 같은 건물끼리만, 나머지는 최근접(위 `lgMatchOne_` 주석 참조) */
+    lgMatch: lgMatchAll_(),
     weekKeep: WEEK_KEEP,
     /* 매장 유형 — 점코드가 가르므로 **서버만 알 수 있다**(화면에는 점명만 간다) */
     storeType: storeTypes_(),
@@ -4239,7 +4510,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 10;
+var SUM_VER = 11;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
@@ -4422,7 +4693,26 @@ function getSummary() {
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
-  if (p.json === '1') return json_(getSummary());
+  /* ── `?json=1&type=…` (2026-09-03 사장님 지시) ────────────────────────────
+   * *"조회 시 엔드포인트 파라미터(예: ?type=manager|player|movein|etc)로 필터링되게
+   *  한다. '전체' 옵션도 포함(파라미터 미지정 시 전체 반환)."*
+   *
+   * 이 웹앱은 REST 서버가 아니라 Apps Script 라 **엔드포인트가 `doGet` 하나**다.
+   * 그래서 같은 주소에 `type` 을 더한다 — 미지정이면 지금까지와 **똑같이** 전체가 나간다
+   * (기존 화면·연동이 그대로 돌아야 한다).
+   *
+   * **집계를 다시 돌리지 않는다** — 이미 낸 4종 집계에서 그 갈래만 뽑는다.
+   * 다시 돌리면 왕복이 13초가 되고, 무엇보다 두 곳에서 세면 값이 갈린다. */
+  if (p.json === '1') {
+    var sum = getSummary();
+    var t4 = kind4Of_(p.type);
+    if (!t4) {
+      /* **오타는 조용히 넘기지 않는다** — 「전체」와 「그 값을 못 알아들었다」는 다른 말이다 */
+      if (p.type) sum.typeIgnored = String(p.type);
+      return json_(sum);
+    }
+    return json_(filterKind4_(sum, t4));
+  }
   if (p.diag === '1') return json_(diag_());     /* 키가 제대로 들어왔는지 — 값은 안 나온다 */
   if (p.run === '1') return json_(collectReviews());
   /* ── 화면과 자료를 가른다 (2026-08-31) ─────────────────────────────────────

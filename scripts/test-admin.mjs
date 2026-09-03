@@ -3127,9 +3127,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ⑤ **색 척도와 범례가 같은 값을 쓴다.** 주는 표본이 1~5건이라 ±15% 로는 통째로
            포화되고, 범례가 ±15% 라 적혀 있으면 색을 4배로 잘못 읽는다. */
-    if (!ix.includes('var heatSpan = week ? 60 : 15;')) bad.push('주차에서 색 척도를 넓히지 않는다 — 전 칸이 포화된다');
-    if (!ix.includes("('−' + heatSpan + '%')")) bad.push('범례 숫자가 척도를 안 따라간다');
-    if (!ix.includes('heatColor(d.g, heatSpan)')) bad.push('칸이 척도를 안 쓴다');
+    if (!ix.includes('var HEAT_LO = ') || !ix.includes('var HEAT_HI = ')) bad.push('파스텔 단일 계열 색이 없다');
+    if (ix.includes('rampColor(') && ix.includes('heatColor(d.g')) bad.push('칸이 아직 증감으로 칠해진다 — 색은 건수다');
+    if (!ix.includes('heatColor(d.cnt, heatMax)')) bad.push('칸을 건수로 칠하지 않는다');
+    if (!ix.includes("nf(heatMin) + '건'") || !ix.includes("nf(heatMax) + '건'")) bad.push('범례가 최소·최대 건수를 안 적는다');
+    if (ix.includes('Math.min(Math.abs(g) / (span')) bad.push('옛 증감 색 함수가 남아 있다');
     if (!ix.includes('sc2.innerHTML')) {
       bad.push('색띠를 매번 다시 그리지 않는다 — 초기화 때는 척도가 없어 띠가 통째로 빈다');
     }
@@ -3303,6 +3305,68 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     if (bad.length) fail('[바이럴] 관리자 잠금 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 관리자 잠금 — 비밀번호는 속성에만 · 서버가 검증 · 관리 함수도 토큰을 요구');
+  }
+}
+
+/* ── 2026-09-03 사장님 요구 넷 ─────────────────────────────────────────────
+ * ①후기 4종 ②주차 드롭다운·날짜 ③LG 매칭 비중 ④파스텔 히트맵. */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const rvp = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(ixp) && fs.existsSync(rvp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const rv = fs.readFileSync(rvp, 'utf8');
+    const bad = [];
+
+    /* ① 4종 — **기존 9종을 줄이지 않았는가.** 줄이면 구매·행사·모바일 구분이 영영 사라진다 */
+    if (!rv.includes("['혼수', ['혼수', '신혼'")) bad.push('기존 9종 분류가 사라졌다 — 되돌릴 수 없는 손실이다');
+    if (!rv.includes('function kind4_(row)')) bad.push('4종 묶음 규칙이 없다');
+    /* 매니저가 가장 세다 — 유형이 아니라 「이름이 잡혔는가」로 정해진다 */
+    if (!rv.includes("if (row && row.mgr) return 'manager';")) bad.push('매니저 후기를 mgr 로 가리지 않는다');
+    if (!rv.includes('byKind4: byKind4')) bad.push('4종 집계를 안 보낸다');
+    /* 미지정 자료는 기타로 — 지시하신 기본 처리 */
+    if (!rv.includes("return 'etc';")) bad.push('미지정을 기타로 떨어뜨리지 않는다');
+    /* ?type= — 미지정이면 전체가 나가야 한다(기존 연동이 그대로 돌아야 한다) */
+    if (!rv.includes('function kind4Of_(v)')) bad.push('?type= 파라미터를 못 읽는다');
+    if (!rv.includes('function filterKind4_(sum, t4)')) bad.push('type 필터가 없다');
+    if (!rv.includes('if (!t4)')) bad.push('type 미지정일 때 전체를 안 돌려준다');
+    /* **못 거른 항목을 밝히는가** — 조용히 전체 값을 그 갈래인 척 내보내면 거짓이다 */
+    if (!rv.includes('typeScope')) bad.push('필터가 안 걸린 항목을 밝히지 않는다');
+
+    /* ② 주차 UI — 칩은 없애고 드롭다운·날짜로 */
+    if (ix.includes("class=\"wk\" data-wk")) bad.push('주차 칩이 남아 있다 — 전부 제거하라는 지시였다');
+    if (!ix.includes('id="hm-wsel"')) bad.push('주차 드롭다운이 없다');
+    if (!ix.includes('id="hm-from"') || !ix.includes('id="hm-to"')) bad.push('날짜 입력이 없다');
+    if (!ix.includes('function weekRange(w)')) bad.push('주차→날짜 변환이 없다');
+    /* 연동 — 날짜를 고치면 드롭다운이 「직접 지정」으로 */
+    if (!ix.includes("heatWeek = (heatFrom || heatTo) ? 'custom' : ''")) bad.push('날짜를 고쳐도 드롭다운이 안 바뀐다');
+    if (!ix.includes('function weekLabelLong(w)')) bad.push('「2026년 3월 2주차」 표기가 없다');
+    /* 한 손 조작 — 36px 아래로 내리면 폰에서 옆 칸을 누른다 */
+    if (!ix.includes('min-height: 36px')) bad.push('드롭다운·날짜가 한 손으로 누를 크기가 아니다');
+
+    /* ③ LG 매칭 — 백화점은 같은 건물끼리만 */
+    if (!rv.includes('function lgMatchOne_(')) bad.push('LG 매칭 함수가 없다');
+    if (!rv.includes('var DEPT_SAME_M = 250')) bad.push('같은 건물 판정 거리가 없다');
+    /* **거리 매칭으로 넘기지 않는다**(사장님 지시) — 이 분기가 빠지면 2km 밖 로드샵과 짝이 된다 */
+    if (!rv.includes('if (best.dist > DEPT_SAME_M)')) bad.push('백화점인데 먼 곳과 매칭한다 — 넘기지 말라는 지시였다');
+    if (!rv.includes("DEPT_EXTRA = { 'AK분당': 1 }")) bad.push('AK분당 예외가 빠졌다(사장님 확인분)');
+    if (!rv.includes('lgMatch: lgMatchAll_()')) bad.push('매칭 결과를 화면에 안 보낸다');
+    /* 매장명·거리·유형 셋을 함께 노출 */
+    ['LG ' + "' + lgm.shop", 'lgm.dist', '같은 백화점 안', '가장 가까운 곳'].forEach((t) => {
+      if (!ix.includes(t)) bad.push('말풍선에 ' + t.slice(0, 12) + ' 가 없다');
+    });
+    if (!ix.includes('LG 매칭 없음')) bad.push('매칭 없음을 표시하지 않는다');
+
+    /* ④ 파스텔 히트맵 */
+    if (!ix.includes('var HEAT_LO = [237, 241, 250]')) bad.push('파스텔 저채도 시작색이 아니다');
+    if (!ix.includes('var HEAT_HI = [45, 66, 140]')) bad.push('파스텔 끝색이 아니다');
+    /* 구간을 나누지 않는다 — v/max 그대로 */
+    if (!ix.includes('Math.max(0, Math.min(1, v / max))')) bad.push('연속 스케일이 아니다 — 구간을 나누지 말라는 지시였다');
+    if (!ix.includes('heatColor(d.cnt, heatMax)')) bad.push('칸을 건수로 칠하지 않는다');
+    if (!ix.includes('function inkOn(')) bad.push('명도 대비로 글자색을 고르지 않는다');
+
+    if (bad.length) fail('[바이럴] 요구 넷 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 요구 넷 — 4종·주차UI·LG매칭·파스텔 (기존 9종 유지)');
   }
 }
 
