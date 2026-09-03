@@ -72,6 +72,8 @@ header{position:sticky;top:0;z-index:20;background:var(--navy);color:#fff;
 .q{background:#fff;border-radius:12px;padding:18px 18px 14px;margin:14px 0;
    box-shadow:0 1px 4px rgba(20,40,160,.06)}
 .q .qh{display:flex;gap:9px;font-size:16px;font-weight:700;line-height:1.5;margin-bottom:12px}
+/* B2B 배지 — 법인 전용 모델이라 응시자가 알아야 한다(2026-09-03 사장님 요청) */
+.b2b{display:inline-block;border:1px solid #1428A0;color:#1428A0;font-size:11px;font-weight:800;border-radius:4px;padding:1px 4px;margin-right:5px;vertical-align:2px}
 .q .qn{color:var(--navy);min-width:26px}
 .opt{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;border:1.5px solid var(--line);
      border-radius:9px;margin:0 0 7px;cursor:pointer;font-size:14.5px;background:#fff}
@@ -401,7 +403,7 @@ function setup(){
   /* 보기 순서도 응시자마다 섞는다 — 같은 문항이라도 답 위치가 달라야 한다 */
   picked.list = picked.list.map(function(q){
     var idx = shuffle(q.opts.map(function(_, i){ return i; }), rnd);
-    return { q:q.q, exp:q.exp, lv:q.lv, lg:q.lg, cat:q.cat,
+    return { q:q.q, exp:q.exp, lv:q.lv, lg:q.lg, b2b:q.b2b, cat:q.cat,
              opts: idx.map(function(i){ return q.opts[i]; }),
              ans: idx.indexOf(q.ans) };
   });
@@ -451,7 +453,8 @@ function render(){
   picked.list.forEach(function(q, i){
     h += '<div class="q" data-i="' + i + '" data-lv="' + esc(q.lv) + '"' +
          (q.lg ? ' data-lg="1"' : '') + '>' +
-         '<div class="qh"><span class="qn">' + (i + 1) + '.</span><span>' + esc(q.q) + '</span></div>';
+         '<div class="qh"><span class="qn">' + (i + 1) + '.</span><span>'
+         + (q.b2b ? '<span class="b2b">B2B</span>' : '') + esc(q.q) + '</span></div>';
     q.opts.forEach(function(o, j){
       h += '<div class="opt" data-i="' + i + '" data-j="' + j + '">' +
            '<span class="no">' + NO[j] + '</span><span>' + esc(o) + '</span></div>';

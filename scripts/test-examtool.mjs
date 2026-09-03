@@ -207,6 +207,10 @@ const grab = () => page.evaluate(() => {
     div: el.dataset.div || '',
     lv: el.dataset.lv || '',
     lg: el.dataset.lg === '1',
+    b2b: el.dataset.b2b === '1',
+    /* **배지가 실제로 그려졌는가** — 표식만 보면 안 된다. 실제로  필드를
+       문항 객체에 안 실어 **표식도 배지도 0개**였던 적이 있다(추첨은 멀쩡했다). */
+    b2bMark: !!el.querySelector('.b2b'),
   }));
   /* 시험지 지면에 난이도 글자가 새어 나갔는지 — 사장님 지시가 "시험지에 난이도표시X" 다 */
   const examText = exam.map(s => s.innerText).join(' ');
@@ -284,6 +288,24 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
   const lg = a.qs.filter(q => q.lg).length;
   say(lg === 6, 'LG 비교 문항 6개 고정 (실제 ' + lg + ')');
   say(a.hint.indexOf('LG 비교 6문항') >= 0, '안내문이 LG 문항 수를 밝힌다');
+}
+
+/*
+ * **B2B 문항은 지면에 밝힌다** — 2026-09-03 사장님 요청(*"B2B 모델은 B2B 문제라고
+ * 표기해주시면 좋겠습니다"*). 법인 전용 모델이라 소비자 매장에서 못 보는 제품이고,
+ * 모르면 「내가 모르는 제품이 나왔다」로만 읽힌다.
+ *
+ * **표식과 배지를 함께 본다.** 처음 붙였을 때 b2b 필드를 문항 객체에 안 실어
+ * 12번 뽑아도 배지가 0개였다 — 추첨은 멀쩡했고(160문항 중 60개가 원본에서 B2B)
+ * **예외도 오류도 없이 그냥 안 떴다.** 표식만 검사하면 그 결함을 못 잡는다.
+ */
+{
+  const marked = a.qs.filter(q => q.b2b).length;
+  const drawn = a.qs.filter(q => q.b2bMark).length;
+  say(marked === drawn, 'B2B 표식과 배지가 짝이 맞는다 (표식 ' + marked + ' · 배지 ' + drawn + ')');
+  /* 은행의 38.8% 가 B2B 라 20문항이면 거의 늘 하나는 든다. 다만 무작위라
+     **0개일 수도 있으므로 "있으면 배지가 붙는가"만** 지킨다 — 개수를 박으면 헛되이 깨진다. */
+  if (drawn) say(true, 'B2B 문항에 배지가 붙는다 (' + drawn + '개)');
 }
 /*
  * **한 장만 보고 통과시키지 말 것.** 위 셋(CE/MX · 난이도 · LG)은 추첨마다 다시 맞춰야
