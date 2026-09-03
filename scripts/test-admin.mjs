@@ -3791,8 +3791,31 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes("'쿼터 ' + nf(used)")) bad.push('화면이 쿼터 기준임을 안 밝힌다');
     if (!ix.includes('태평양 자정(한국 16~17시)에 초기화')) bad.push('언제 풀리는지 화면이 안 적는다');
 
+    /* **hover 로만 말하지 않는다** (2026-09-03). 「한 바퀴가 한도를 넘는다」와
+       「언제 풀리는지」를 `title` 에만 적어 두었더니 **폰에서 아무 표시도 안 났다** —
+       매장 기기가 폰인 경우가 많고, 안 보이면 사장님은 매일 끊기는 것을 고장으로 읽는다. */
+    if (!ix.includes('id="lim-note"')) bad.push('쿼터 안내를 적을 자리(lim-note)가 없다');
+    if (!ix.includes("getElementById('lim-note')")) bad.push('renderLimit 이 lim-note 를 안 채운다 — 자리만 있고 늘 빈다');
+    /* 그 안내는 본문 규격(--fs-mini)이어야 한다 — 예외로 둔 10.5px 상태표시가 아니다 */
+    if (!/[.]limnote\s*\{[^}]*var\(--fs-mini\)/.test(ix)) bad.push('lim-note 가 본문 글자 규격을 안 쓴다');
+    /* 두 사실을 **둘 다** 글자로 적는가 — 하나만 적으면 나머지가 여전히 hover 뿐이다 */
+    const noteBlock = ix.slice(ix.indexOf("getElementById('lim-note')"));
+    const noteBody = noteBlock.slice(0, 700);
+    if (!noteBody.includes('회가 필요한데 한도는')) bad.push('한 바퀴가 한도를 넘는 사실을 글자로 안 적는다');
+    if (!noteBody.includes('태평양 자정')) bad.push('리셋 시각을 글자로 안 적는다');
+    /* **미리보기 모의값이 그 줄을 실제로 그려야 한다** — sweep 이 한도보다 작으면
+       이 안내가 하네스에서 **한 번도 안 그려져** 눈으로 볼 수가 없다(프로덕션은 넘는다). */
+    /* 경로는 URL 객체로 넘긴다 — 저장소 경로에 한글이 있어 `.pathname` 을 쓰면
+       `%EB%85%B8…` 로 인코딩된 채 넘어가 「파일이 없다」가 된다(이 파일의 관례). */
+    const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+    const mock = pv.match(/dayUsed:\s*\d[\d,]*,\s*dailyLimit:\s*(\d+),\s*sweep:\s*(\d+)/);
+    if (!mock) bad.push('미리보기 모의 자료에서 한도·한 바퀴를 못 찾겠다');
+    else if (Number(mock[2]) <= Number(mock[1])) {
+      bad.push('미리보기 모의 sweep(' + mock[2] + ')이 한도(' + mock[1] + ') 아래다 — 경고 줄을 눈으로 볼 수 없다');
+    }
+
     if (bad.length) fail('[바이럴] 쿼터 날짜 — ' + bad.join(' · '));
-    else console.log('OK: 바이럴 쿼터 날짜 — 카운터는 태평양 · 도장은 한국 · 화면이 그렇게 적는다');
+    else console.log('OK: 바이럴 쿼터 날짜 — 카운터는 태평양 · 도장은 한국 · 화면이 글자로 적는다(폰에 hover 없음)');
   }
 }
 

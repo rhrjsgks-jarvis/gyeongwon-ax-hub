@@ -384,7 +384,10 @@ const DATA = {
   stores: 62,   /* 실물은 Reviews.gs 의 STORES 수 — 2026-09-02 에 65 → 62 가 됐다 */
   cursor: 0, chainOn: false, chainErr: '',
   dupRows: 0, dupLinks: 0,
-  dayUsed: 3120, dailyLimit: 20000, sweep: 10520,
+  /* **한 바퀴(sweep)가 한도를 넘는 실측 상태를 그대로 둔다** (2026-09-03).
+     프로덕션이 20,858 > 20,000 이라 매일 중간에서 끊기는데, 모의값을 한도 아래로
+     두면 그 경고 줄이 미리보기에서 **한 번도 안 그려져** 눈으로 볼 수가 없다. */
+  dayUsed: 3120, dailyLimit: 20000, sweep: 20858,
   lastRun: { at: '2026-08-31T12:00:00.000Z', n: 41, done: true, reason: '' },
   /* **`pct:null` 을 하나 섞는다** — 못 잰 것과 0% 는 다른 말이라, 화면이 갈라 다루는지
      여기서 드러난다(0 으로 그리면 「LG 후기가 없다」가 된다). */
