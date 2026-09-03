@@ -80,6 +80,15 @@
   }
   .lim input:focus { outline: 2px solid rgba(255,255,255,.5); outline-offset: -1px; }
   .limuse { font-size: 10.5px; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; }
+  /* 관리 손잡이 접기 — **감추지 않는다.** 한 번 누르면 그대로 나온다 */
+  .hmore { display: inline-block; }
+  .hmore > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255,255,255,.18); color: #fff; border-radius: var(--ctl-r);
+    padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs); font-weight: 700; }
+  .hmore > summary::-webkit-details-marker { display: none; }
+  .hmore > summary::after { content: '▾'; font-size: var(--fs-mini); opacity: .8; }
+  .hmore[open] > summary::after { content: '▴'; }
+  .hmore-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
   /* 한도가 한 바퀴에 모자라면 눈에 띄게 — 매일 중간에서 끊긴다는 뜻이다 */
   .limuse.low { color: #FCD34D; font-weight: 700; }
 
@@ -842,11 +851,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            제대로 분석할 수 있게 해 주세요"*. 열이 늘고 출처가 셋이 되면서 옛 줄과
            새 줄이 다른 것을 담는다 — 섞어 두면 「블로그 36%」 같은 값이 반은 옛
            규칙, 반은 새 규칙이 되어 화면이 조용히 틀린다. -->
-      <button class="btn danger" id="wipe">자료 비우고 처음부터</button>
       <div id="chainerr"></div>
       <!-- 실행이 어디까지 갔는지 — 도중에 죽으면 lastRun 이 안 쓰여 화면이 조용해진다 -->
       <div id="runstage" class="sub"></div>
-      <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.** -->
+      <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.**
+           접이식 밖에 둔다 — 돌고 있을 때만 나타나므로 그때는 바로 보여야 한다. -->
       <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
            늘 띄워 두면 「눌러야 하나」 싶어지므로 **치울 것이 있을 때만** 나온다. -->
@@ -855,16 +864,26 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            업데이트가되는지 만들어주세요"*. **「지금 수집」과 하는 일이 다르다** —
            매장 훑기를 건너뛰고 LG 비교만 돌아 300초 예산을 통째로 쓴다.
            「당사 vs LG」와 「LG 홍보 경로」 둘 다 이 한 번으로 채워진다. -->
-      <button class="btn" id="runrival">LG 비교 갱신</button>
-      <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
-           한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
-      <span class="lim">
-        <label for="lim">일일 한도</label>
-        <input id="lim" type="number" min="100" max="50000" step="100" inputmode="numeric">
-        <span>회</span>
-        <button class="btn" id="lim-save">저장</button>
-        <span class="limuse" id="lim-use">–</span>
-      </span>
+      <!-- 가끔 쓰는 손잡이는 접는다 — **감추는 것이 아니라 한 번 누르면 나온다.**
+           폰에서 버튼이 네 줄이라 머리가 화면의 3분의 1을 먹고 있었다. -->
+      <details class="hmore">
+        <summary>관리</summary>
+        <div class="hmore-in">
+          <button class="btn" id="runrival">LG 비교 갱신</button>
+          <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
+               한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
+          <span class="lim">
+            <label for="lim">일일 한도</label>
+            <input id="lim" type="number" min="100" max="50000" step="100" inputmode="numeric">
+            <span>회</span>
+            <button class="btn" id="lim-save">저장</button>
+            <span class="limuse" id="lim-use">–</span>
+          </span>
+          <!-- 2026-09-01 사장님 허락 — *"자료를 모두 지우고 다시 수집해도 가능하니
+               제대로 분석할 수 있게 해 주세요"*. **되돌릴 수 없으므로 맨 뒤에 둔다.** -->
+          <button class="btn danger" id="wipe">자료 비우고 처음부터</button>
+        </div>
+      </details>
     </div>
   </div>
 </header>

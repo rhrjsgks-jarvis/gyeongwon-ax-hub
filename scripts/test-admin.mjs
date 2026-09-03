@@ -3234,6 +3234,18 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('매니저 순위 카드가 되살아났다 — 히트맵과 같은 것을 두 번 말한다');
     }
 
+
+    /* ⑦ 머리 — **감추지 않고 접는다.** 폰에서 버튼이 네 줄이라 머리가 화면의
+           3분의 1(301px)을 먹었다. 자주 쓰는 수집 둘은 밖에 남는다. */
+    if (!ix.includes('<details class="hmore">')) bad.push('머리 관리 접이식이 없다');
+    ['id="run"', 'id="runfull"', 'id="stop"'].forEach((t) => {
+      const i = ix.indexOf(t), j = ix.indexOf('<details class="hmore">');
+      if (i < 0 || (j >= 0 && i > j)) bad.push(t + ' 이 접이식 안으로 들어갔다 — 자주 쓰는 것은 밖에 둔다');
+    });
+    ['id="runrival"', 'id="lim"', 'id="wipe"'].forEach((t) => {
+      const i = ix.indexOf(t), j = ix.indexOf('<details class="hmore">');
+      if (i >= 0 && j >= 0 && i < j) bad.push(t + ' 이 접이식 밖에 남았다');
+    });
     if (bad.length) fail('[바이럴] 화면 규격 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 화면 규격 — 토큰 · 11px 이하 없음 · 컨트롤 한 규격 · 자리표시자 없음');
   }
