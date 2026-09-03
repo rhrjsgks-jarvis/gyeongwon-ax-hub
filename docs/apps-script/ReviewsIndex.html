@@ -750,6 +750,11 @@
               display: flex; flex-direction: column; align-items: center; justify-content: center;
               color: #fff; text-align: center; line-height: 1.15; }
   .hm .cell.clk { cursor: pointer; }
+  /* **「못 잼」에 사선 무늬를 넣었다가 되돌렸다**(2026-09-03). 중립 회색과 휘도 대비가
+     1.25:1 이라 색만으로는 안 갈려서 무늬를 시도했는데, **실측으로 60칸 중 37칸(62%)이
+     「못 잼」**이었다 — 예외 표시가 아니라 기본 상태라 화면 대부분이 사선이 된다.
+     게다가 그 칸들은 이미 **「작성일 모름」이라고 글자로 적고 있어** 색에만 기대지 않는다.
+     **다시 넣지 말 것** — 재 보고 버린 것이다. */
   .hm .cell.clk:hover { filter: brightness(1.14); }
   .hm .cell .cn { font-weight: 800; letter-spacing: -.3px; }
   .hm .cell .cg { font-weight: 700; opacity: .95; }
@@ -3069,7 +3074,8 @@ function wireSecs() {
          61~82% 라 **막대 길이가 다 비슷해 아무 차이도 안 보였다** — 우열을 색이 말한다. */
       var chip = function (k, o, r2) {
         var t = o + r2, p = t ? o * 100 / t : null;
-        return '<div class="rvc' + (p === null ? ' na' : '') + '" style="background:' + rvColor(p) + '"'
+        var bg = rvColor(p);
+        return '<div class="rvc' + (p === null ? ' na' : '') + '" style="background:' + bg + ';color:' + inkOn(bg) + '"'
           + ' title="' + esc(k) + ' — 당사 ' + nf(o) + '건 · 경쟁 ' + nf(r2) + '건">'
           + '<b>' + esc(k) + '</b><div class="p">' + (p === null ? '못 잼' : Math.round(p) + '%')
           + '</div><div class="v">' + nf(o) + ' vs ' + nf(r2) + '</div></div>';
@@ -3187,7 +3193,8 @@ function renderPromo() {
     return '<div class="rvg rvg-w">' + pick.map(function (k2) {
       var o = mine[k2] || 0, r2 = theirs[k2] || 0, t2 = o + r2;
       var p = t2 ? o * 100 / t2 : null;
-      return '<div class="rvc" style="background:' + rvColor(p) + '"'
+      var bg2 = rvColor(p);
+        return '<div class="rvc" style="background:' + bg2 + ';color:' + inkOn(bg2) + '"'
         + ' title="' + esc(k2) + ' — 당사 ' + nf(o) + '건 · LG ' + nf(r2) + '건">'
         + '<b>' + esc(k2) + '</b><div class="p">' + (p === null ? '–' : Math.round(p) + '%') + '</div>'
         + '<div class="v">' + nf(o) + ' vs ' + nf(r2) + '</div></div>';
@@ -3201,7 +3208,8 @@ function renderPromo() {
   var prodHtml = prodKs.length
     ? '<div class="rvg">' + prodKs.map(function (k) {
         var o = prod[k].o, r2 = prod[k].r, t = o + r2, p = t ? o * 100 / t : null;
-        return '<div class="rvc" style="background:' + rvColor(p) + '"'
+        var bg2 = rvColor(p);
+        return '<div class="rvc" style="background:' + bg2 + ';color:' + inkOn(bg2) + '"'
           + ' title="' + esc(k) + ' — 당사 ' + nf(o) + '건 · LG ' + nf(r2) + '건">'
           + '<b>' + esc(k) + '</b><div class="p">' + (p === null ? '–' : Math.round(p) + '%') + '</div>'
           + '<div class="v">' + nf(o) + ' vs ' + nf(r2) + '</div></div>';
@@ -3910,10 +3918,34 @@ function renderList() {
      「우세」가 두 화면에서 다른 색이 되어 눈이 헤맨다(이 저장소가 반복해서 데인 자리다).
      `m` 은 0~1 진하기, `up` 은 좋은 쪽인가. **중립점이 무엇인지는 부르는 쪽이 정한다** —
      히트맵은 증감 0%, 경쟁사 칩은 점유율 50%. */
+  /* ── **휘도가 방향을 담는다** (2026-09-03) ───────────────────────────────
+   * 예전 램프는 **크기를 휘도에, 방향을 색상에만** 실었다. 그래서 0% 가 골짜기가 되어
+   * 양쪽이 똑같이 밝아졌고, 재 보니 **−30%(휘도 0.180)와 +6%(0.183)가 같은 밝기**였다 —
+   * 폭락한 매장과 살짝 오른 매장이 흑백에서 구분되지 않는다.
+   * 게다가 **적록색각(남성 8%)에서는 색상 차이의 90% 가 사라진다**(±9% 짝의 색차가
+   * 87.6 → 8.8). 색상만으로 방향을 말하면 12명 중 1명은 못 읽는다.
+   *
+   * **색은 그대로 빨강↔초록이다**(사장님이 finviz 를 보고 고르셨다). 바꿔도 안 낫는다 —
+   * 색각 안전 팔레트가 사는 이유인 파랑↔노랑 축은 빨강↔초록을 유지하면 못 쓴다.
+   * 대신 **휘도를 단조로** 만든다: 하락은 어둡게 · 중립은 중간 · 상승은 밝게.
+   * 그러면 흑백으로 봐도, 색각 이상으로 봐도 방향이 남는다. */
+  var RAMP_MID = [104, 110, 124];      /* 중립 — 예전보다 밝다(휘도 골짜기를 없앤다) */
+  var RAMP_DOWN = [138, 26, 36];       /* 하락 끝 — 어두운 빨강 */
+  var RAMP_UP = [86, 208, 130];        /* 상승 끝 — 밝은 초록 */
   function rampColor(m, up) {
-    var base = [74, 79, 91], tgt = up ? [34, 180, 90] : [214, 60, 72];
-    return 'rgb(' + base.map(function (b, i) { return Math.round(b + (tgt[i] - b) * m); }).join(',') + ')';
+    var tgt = up ? RAMP_UP : RAMP_DOWN;
+    return 'rgb(' + RAMP_MID.map(function (b, i) { return Math.round(b + (tgt[i] - b) * m); }).join(',') + ')';
   }
+  /* WCAG 상대휘도 — **글자색을 정하는 데 쓴다.** 밝은 초록 칸에 흰 글자를 두면
+     대비가 2.7:1 로 기준(4.5:1)에 한참 못 미친다. 배경 밝기를 보고 흑백을 고른다. */
+  function lumOf(css) {
+    var m = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(String(css));
+    if (!m) return 0;
+    var f = function (v) { v = v / 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(+m[1]) + 0.7152 * f(+m[2]) + 0.0722 * f(+m[3]);
+  }
+  /** 그 배경 위에서 읽히는 글자색. 문턱 0.19 는 흰 글자와 검은 글자의 대비가 뒤집히는 자리다. */
+  function inkOn(css) { return lumOf(css) > 0.19 ? '#0B1220' : '#fff'; }
   /* 증감 → 색. ±15% 에서 가장 진해진다. **못 잰 것은 회색** — 0 으로 칠하면 「제자리」가 된다. */
   function heatColor(g) {
     if (g === null) return 'rgb(90,95,107)';
@@ -3927,23 +3959,72 @@ function renderList() {
     var d = p - 50, t = Math.min(Math.abs(d) / 25, 1);
     return rampColor(Math.abs(d) < 1 ? 0 : 0.22 + 0.78 * t, d > 0);
   }
-  /** 이분 분할 트리맵 — 값이 큰 쪽부터 넣고 **긴 변으로** 자른다(칸이 정사각형에 가까워진다) */
+  /** **Squarified 트리맵** — Bruls·Huizing·van Wijk(2000, VisSym).
+   *
+   * 예전에는 이분 분할(binary split)이었다. 그 방식은 **칸 종횡비가 크다는 것이 알려진
+   * 성질**이고, 이 화면에서는 **종횡비가 곧 글자 크기다**(글자 식이 칸 넓이·높이로 정해진다).
+   * 사장님이 지적한 *"글자가 히트맵 크기에 맞춰 조절되어야"* 의 뿌리가 여기였다.
+   *
+   * 규칙은 하나다 — **남은 판의 짧은 변에 줄을 붙이고, 그 줄이 나빠지기 직전에 닫는다.**
+   * `worst(R,w) = max( w²·r₊/s² , s²/(w²·r₋) )` 가 그 줄에서 가장 찌그러진 칸의 종횡비다.
+   *
+   * **논문에 인쇄된 의사코드는 비교 방향이 뒤집혀 있다**(저자도 아는 오식이고 후속
+   * 재현본들도 그대로 옮겼다). 인쇄된 대로 쓰면 *"나빠지면 넣는다"* 가 되어 논문 자신이
+   * 밝힌 의도(*"adding a rectangle to the row will improve the layout"*)와 정반대다 —
+   * 논문 예제로 재 보면 종횡비 중앙 1.50 → **2.67**, 최악 2.78 → **7.11** 로 무너진다.
+   * 여기서는 **뜻대로** 「나빠지지 않으면 넣는다」로 쓴다.
+   *
+   * 실측(전점 41곳 · 986×986 판) — 종횡비 중앙 1.45 → **1.17** · 2 초과 칸 6 → **0** ·
+   * 이름 글자 중앙 27.5 → **30.9px**. 무작위 200회에서 176:20 으로 낫다.
+   * 논문 예제(6×4 · 6,6,4,3,2,2,1)를 그대로 재현하고 넓이 보존·겹침 0 을 확인했다.
+   *
+   * **`v <= 0` 인 항목은 넓이를 못 만들어 버려진다.** 부르는 쪽이 자리끼움(`v: 0.35`)을
+   * 넣고 있어 지금은 안 걸리지만, **그 가드가 사라지면 매장이 조용히 사라진다.** */
   function heatLay(items, x, y, w, h, out) {
     if (!items.length || w <= 0 || h <= 0) return;
-    if (items.length === 1) { out.push({ d: items[0], x: x, y: y, w: w, h: h }); return; }
     var tot = 0, i;
     for (i = 0; i < items.length; i++) tot += items[i].v;
-    var acc = 0, best = Infinity, bi = 1;
-    for (i = 1; i < items.length; i++) {
-      acc += items[i - 1].v;
-      var dd = Math.abs(acc - tot / 2);
-      if (dd < best) { best = dd; bi = i; }
+    if (tot <= 0) return;
+    /* **정규화는 필수다** — `worst` 가 배율 불변이 아니라 값을 픽셀 넓이로 맞춰야 한다 */
+    var scale = (w * h) / tot;
+    var cx = x, cy = y, cw = w, ch = h;
+    var row = [], sum = 0, mn = Infinity, mx = 0, k = 0;
+
+    function worst(s, side, lo, hi) {
+      var s2 = s * s, w2 = side * side;
+      return Math.max(w2 * hi / s2, s2 / (w2 * lo));
     }
-    var a = 0;
-    for (i = 0; i < bi; i++) a += items[i].v;
-    var f = tot ? a / tot : 0.5;
-    if (w >= h) { heatLay(items.slice(0, bi), x, y, w * f, h, out); heatLay(items.slice(bi), x + w * f, y, w * (1 - f), h, out); }
-    else { heatLay(items.slice(0, bi), x, y, w, h * f, out); heatLay(items.slice(bi), x, y + h * f, w, h * (1 - f), out); }
+    function flush() {
+      var side = Math.min(cw, ch), thick = sum / side, px = cx, py = cy, j;
+      if (cw >= ch) {                      /* 짧은 변이 세로 → 왼쪽에 세로 줄 */
+        for (j = 0; j < row.length; j++) {
+          out.push({ d: row[j].d, x: px, y: py, w: thick, h: row[j].a / thick });
+          py += row[j].a / thick;
+        }
+        cx += thick; cw -= thick;
+      } else {                             /* 짧은 변이 가로 → 위에 가로 줄 */
+        for (j = 0; j < row.length; j++) {
+          out.push({ d: row[j].d, x: px, y: py, w: row[j].a / thick, h: thick });
+          px += row[j].a / thick;
+        }
+        cy += thick; ch -= thick;
+      }
+      row = []; sum = 0; mn = Infinity; mx = 0;
+    }
+    while (k < items.length) {
+      var a = items[k].v * scale;
+      if (a <= 0) { k++; continue; }
+      var side = Math.min(cw, ch);
+      if (row.length &&
+          worst(sum + a, side, Math.min(mn, a), Math.max(mx, a)) > worst(sum, side, mn, mx)) {
+        flush(); continue;                 /* 줄을 닫고 남은 판에서 짧은 변을 다시 잰다 */
+      }
+      row.push({ d: items[k], a: a }); sum += a;
+      if (a < mn) mn = a;
+      if (a > mx) mx = a;
+      k++;
+    }
+    if (row.length) flush();
   }
   /* 채널 단계의 색 — **증감이 아니다.** 채널별 전월 자료가 없어 갈래(카페·블로그·웹)를 뜻한다. */
   var HEAT_CHC = { c: 'rgb(120,86,196)', b: 'rgb(38,124,150)', w: 'rgb(96,104,122)' };
@@ -4006,7 +4087,7 @@ function renderList() {
     if (leg) leg.style.display = chan ? 'none' : '';
 
     /* 무엇을 그릴지 */
-    var items = [], drop = 0, flat0 = 0;
+    var items = [], drop = 0, flat0 = 0, zeroN = 0;
     if (chan) {
       var who = heatPath[heatPath.length - 1];
       var ch = (DATA.byStoreChan || {})[who] || {}, k;
@@ -4033,7 +4114,11 @@ function renderList() {
         if (Math.abs(d.g) < 0.05) { flat0++; continue; }
           v = Math.abs(d.g);
         } else v = d.cnt;
-        if (v <= 0) { items.push({ nm: d.nm, key: d.key, v: 0.35, cnt: 0, cur: d.cur, prev: d.prev, g: d.g, n: d.n, isReg: d.isReg }); continue; }
+        /* **0건은 넓이를 못 그린다 — 자리끼움 대신 빼고 그 사실을 적는다**(2026-09-03).
+           예전에는 `v: 0.35` 를 넣었는데, 최대 88 대 0.35 라 **넓이 비가 251:1** 이 되어
+           그 칸이 16×18px 로 나왔다 — 이름도 못 적으면서 옆 칸들까지 찌그러뜨린다.
+           **조용히 빼지 않는다** — 몇 곳인지 화면이 적는다(등락률 모드가 이미 그렇게 한다). */
+        if (v <= 0) { zeroN++; continue; }
         items.push({ nm: d.nm, key: d.key, v: v, cnt: d.cnt, cur: d.cur, prev: d.prev, g: d.g, n: d.n, isReg: d.isReg });
       }
     }
@@ -4106,10 +4191,13 @@ function renderList() {
         : d.nm + ' · 총 ' + nf(d.cnt) + '건'
           + (d.isReg ? ' · ' + d.n + '곳' : ' · ' + heatMonLabel(M.prev) + ' ' + d.prev + '건 → ' + heatMonLabel(M.cur) + ' ' + d.cur + '건')
           + (d.g === null ? ' · 전월을 몰라 증감 없음' : ' · ' + heatPct(d.g));
+      /* **글자색은 배경 밝기가 정한다.** 밝은 초록 칸에 흰 글자를 두면 대비가 2.7:1 로
+         기준(4.5:1)에 한참 못 미쳐 **잘 크는 매장의 이름만 안 읽힌다**(재서 확인했다). */
+      var bg = chan ? HEAT_CHC[d.k] : heatColor(d.g);
       html += '<div class="cell' + (clk ? ' clk' : '') + '"' +
         (clk ? ' data-k="' + esc(d.key) + '"' : '') +
         ' title="' + esc(tip) + '" style="left:' + (c.x + 7) + 'px;top:' + (c.y + 7) + 'px;width:' +
-        c.w + 'px;height:' + c.h + 'px;background:' + (chan ? HEAT_CHC[d.k] : heatColor(d.g)) + '">' + lab + '</div>';
+        c.w + 'px;height:' + c.h + 'px;background:' + bg + ';color:' + inkOn(bg) + '">' + lab + '</div>';
     });
     box.innerHTML = html;
 
@@ -4139,14 +4227,16 @@ function renderList() {
     var why = [];
   if (drop) why.push(drop + '곳은 전월을 몰라');
   if (flat0) why.push(flat0 + '곳은 변화가 없어');
+  /* **0건도 밝힌다** — 넓이를 못 그려 뺀 것이지 「그 매장이 없다」가 아니다 */
+  if (zeroN) why.push(zeroN + '곳은 0건이라');
   var note = why.length ? ' <b style="color:#B45309">· ' + why.join(' · ') + ' 뺐습니다</b>' : '';
     if (heatMode === 'flat') {
       var gr = heatGrowth(rows);
       cr.innerHTML = '경원 전점 <em>' + rows.length + '곳 · ' + nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건' +
-        (gr.g === null ? '' : ' · 전월 대비 ' + heatPct(gr.g)) + (byG ? note : '') + '</em>';
+        (gr.g === null ? '' : ' · 전월 대비 ' + heatPct(gr.g)) + (byG || zeroN ? note : '') + '</em>';
     } else if (lv === 0) {
       cr.innerHTML = '지역별 <em>' + order.length + '개 지역 · ' +
-        nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건' + (byG ? note : '') + '</em>';
+        nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건' + (byG || zeroN ? note : '') + '</em>';
     } else {
       var rr = byReg[heatPath[0]] || [], g1 = heatGrowth(rr);
       cr.innerHTML = esc(heatPath[0]) + '지역 <em>' + rr.length + '곳 · ' +
