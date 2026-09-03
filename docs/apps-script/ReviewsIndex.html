@@ -955,16 +955,23 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <button type="button" class="bk" id="hm-back" disabled>← 전체</button>
         <span class="crumb" id="hm-crumb">–</span>
         <span class="sp"></span>
+        <!-- 유형 거르개 (2026-09-03 사장님 요청 — *"히트맵도 혼수 입주 구분할 수 있게"*).
+             자료가 오면 화면이 채운다 — 유형 목록을 여기 박지 않는다(서버가 세는 말이
+             바뀌면 화면이 옛 말을 들고 있게 된다). -->
+        <span id="hm-kinds"></span>
         <button type="button" class="bk" id="hm-size">크기: 건수</button>
         <button type="button" class="bk" id="hm-mode">지역별로 보기</button>
+        <!-- 주차별 (2026-09-03 사장님 요청 — *"1주차 2주차 이런 식으로 주차별 혼수후기
+             입주후기 기타후기 건수"*). **칸이 주차다** — 매장까지 쪼개면 표본이 없다. -->
+        <button type="button" class="bk" id="hm-week">주차별로 보기</button>
       </div>
       <div class="hm" id="hm"></div>
       <div class="hmleg" id="hm-leg">
-        <span>전월 대비</span><b style="color:#C8324B">−15%</b>
-        <span class="sc" id="hm-scale"></span><b style="color:#12805C">+15%</b>
+        <span id="hm-legt">전월 대비</span><b style="color:#C8324B" id="hm-legl">−15%</b>
+        <span class="sc" id="hm-scale"></span><b style="color:#12805C" id="hm-legr">+15%</b>
         <span style="display:inline-flex;align-items:center;gap:5px;margin-left:8px">
           <span style="width:11px;height:11px;border-radius:3px;background:#5A5F6B;display:inline-block"></span>
-          전월이 0이거나 못 잼 — <b>증감률을 적지 않습니다</b></span>
+          <span id="hm-legz">전월이 0이거나 못 잼</span> — <b>증감률을 적지 않습니다</b></span>
       </div>
     </div>
     <!-- 구성 한눈에 (2026-09-03 사장님 선택) — 도넛 2 · 점 장표 2.
@@ -3872,6 +3879,12 @@ function renderList() {
   var heatMode = 'flat';    /* 'flat' 전점 한 판 · 'region' 지역 → 지점 */
   var heatSize = 'n';       /* 'n' 건수 · 'g' 등락률 */
   var heatPath = [];        /* flat: [] | [점명] · region: [] | [지역] | [지역, 점명] */
+  /* **유형 거르개**(2026-09-03 사장님 요청 — *"히트맵도 혼수 입주 구분할 수 있게"*).
+     '' 이면 전체다. 유형을 고르면 **크기는 그 유형 건수**가 되고, **색은 전월 대비가
+     아니라 「그 매장에서 그 유형이 차지하는 비중이 전체 평균보다 높은가」** 가 된다 —
+     월별 자료(byStoreMonth)에는 유형 구분이 없어 등락을 낼 수가 없다.
+     **없는 것을 있는 척 그리지 않는다** — 화면이 색의 뜻이 바뀐 것을 적는다. */
+  var heatKind = '';
 
   /* **완결된 달끼리 견준다.** 달력의 이번 달을 그대로 쓰면 달 초에는 며칠치뿐이라
      전 매장이 −90%대로 새빨갛게 뜬다 — 자료가 아니라 달이 안 끝난 탓인데 화면은
@@ -3888,19 +3901,50 @@ function renderList() {
     return { cur: ks[ks.length - 1] || '', prev: ks[ks.length - 2] || '' };
   }
   function heatMonLabel(m) { return m ? (+m.slice(5, 7)) + '월' : '–'; }
+  /** 주차 이름 — `2026-W36` → `36주`. **「1주차」로 다시 번호를 매기지 않는다** —
+   *  화면이 자기만의 번호를 쓰면 시트·달력과 대조할 수가 없다(ISO 주 번호가 표준이다).
+   *  해가 바뀌면 그 사실이 보이게 앞에 해를 붙인다. */
+  function weekLabel(w) {
+    if (!w) return '–';
+    var m = /^(\d{4})-W(\d{2})$/.exec(w);
+    if (!m) return w;
+    var thisYear = String(new Date().getFullYear());
+    return (m[1] === thisYear ? '' : m[1].slice(2) + '년 ') + (+m[2]) + '주';
+  }
 
   /** 히트맵 한 줄 — 한 매장. `g` 는 **전월이 0이거나 모르면 null** 이다(0에서 늘어난
    *  것은 몇 %가 아니라 「새로 생겼다」이고, 넓이가 음수일 수도 없다). */
   function heatRows() {
     var reg = DATA.byRegion || {}, by = DATA.byStore || {}, bm = DATA.byStoreMonth || {};
+    var bk = DATA.byStoreKind || {};
+    /* 유형을 골랐으면 **전체 평균 비중**을 먼저 낸다 — 색의 중립점이 그것이다.
+       (혼수가 전체의 36% 라면, 혼수 50% 인 매장이 「혼수 중심」이고 20% 는 아니다) */
+    var kAvg = 0;
+    if (heatKind) {
+      var kt = 0, at = 0, kk;
+      for (kk in bk) if (bk.hasOwnProperty(kk)) {
+        var m2 = bk[kk], k2;
+        for (k2 in m2) if (m2.hasOwnProperty(k2)) { at += m2[k2]; if (k2 === heatKind) kt += m2[k2]; }
+      }
+      kAvg = at ? kt / at * 100 : 0;
+    }
     var M = heatMonths(), out = [], rg;
     for (rg in reg) if (reg.hasOwnProperty(rg)) {
       var list = reg[rg].stores || [];
       for (var i = 0; i < list.length; i++) {
         var nm = list[i], mm = bm[nm] || {};
         var c = M.cur ? (mm[M.cur] || 0) : 0, p = M.prev ? (mm[M.prev] || 0) : 0;
-        out.push({ nm: nm, key: nm, reg: rg, cnt: by[nm] || 0, cur: c, prev: p,
-                   g: p ? (c - p) / p * 100 : null });
+        if (heatKind) {
+          /* 크기 = 그 유형 건수 · 색 = 그 매장 비중 − 전체 평균(%p) */
+          var km = bk[nm] || {}, kn = km[heatKind] || 0, tot2 = 0, k3;
+          for (k3 in km) if (km.hasOwnProperty(k3)) tot2 += km[k3];
+          out.push({ nm: nm, key: nm, reg: rg, cnt: kn, cur: 0, prev: 0, kind: heatKind,
+                     share: tot2 ? kn / tot2 * 100 : null,
+                     g: tot2 ? (kn / tot2 * 100 - kAvg) : null });
+        } else {
+          out.push({ nm: nm, key: nm, reg: rg, cnt: by[nm] || 0, cur: c, prev: p,
+                     g: p ? (c - p) / p * 100 : null });
+        }
       }
     }
     return out;
@@ -4047,11 +4091,25 @@ function renderList() {
         if (t && t.getAttribute('data-k')) { heatPath.push(t.getAttribute('data-k')); renderHeat(); }
       });
       bk.addEventListener('click', function () { heatPath.pop(); renderHeat(); });
+      /* 유형 버튼 — **손잡이를 묶음에 한 번만 걸고 눌린 것을 찾는다**(버튼마다 걸면
+         목록이 다시 그려질 때마다 손잡이가 쌓인다). */
+      var kb = document.getElementById('hm-kinds');
+      if (kb) kb.addEventListener('click', function (e) {
+        var t = e.target.closest ? e.target.closest('.bk') : null;
+        if (!t || !t.hasAttribute('data-kind')) return;
+        var v = t.getAttribute('data-kind');
+        heatKind = (heatKind === v) ? '' : v;   /* 다시 누르면 전체로 */
+        renderHeat();
+      });
       bs.addEventListener('click', function () {
         heatSize = heatSize === 'n' ? 'g' : 'n'; renderHeat();
       });
       bmd.addEventListener('click', function () {
         heatMode = heatMode === 'flat' ? 'region' : 'flat'; heatPath = []; renderHeat();
+      });
+      var bw = document.getElementById('hm-week');
+      if (bw) bw.addEventListener('click', function () {
+        heatMode = heatMode === 'week' ? 'flat' : 'week'; heatPath = []; renderHeat();
       });
       /* 창 크기가 바뀌면 다시 그린다 — 칸 좌표가 픽셀이라 안 그리면 어긋난 채 남는다 */
       var rt; window.addEventListener('resize', function () {
@@ -4081,7 +4139,9 @@ function renderList() {
     for (i = 0; i < rows.length; i++) stMap[rows[i].nm] = rows[i];
 
     var lv = heatPath.length;
-    var chan = (heatMode === 'flat' ? lv === 1 : lv === 2);
+    var week = (heatMode === 'week');
+    /* 주차 모드에는 드릴다운이 없다 — 칸이 주차라 더 들어갈 데가 없다 */
+    var chan = week ? false : (heatMode === 'flat' ? lv === 1 : lv === 2);
     var byG = (heatSize === 'g' && !chan);
     var regionTiles = (heatMode === 'region' && lv === 0);
     if (leg) leg.style.display = chan ? 'none' : '';
@@ -4096,7 +4156,33 @@ function renderList() {
       }
     } else {
       var src;
-      if (heatMode === 'flat') src = rows;
+      if (week) {
+        /* ── 주차별 — **칸이 주차다**(2026-09-03 사장님 요청) ────────────────
+         * 매장까지 쪼개지 않는 이유는 서버 주석에 적어 두었다 — 작성일을 아는 글이
+         * 2,671건뿐이라 매장 62 × 주 12 × 유형 9 로 나누면 칸마다 1건 미만이다.
+         * **유형 버튼과 함께 쓰면** 「1주차 혼수 N건」이 된다.
+         * 색은 **전주 대비**다(주차는 시간 축이라 그 견줌이 자연스럽다). */
+        var wk = DATA.byWeekKind || {}, wks = Object.keys(wk).sort();
+        wks = wks.slice(-12);                       /* 최근 12주 — 더 늘리면 칸이 잘다 */
+        src = wks.map(function (w2, wi) {
+          var m3 = wk[w2] || {}, tot3 = 0, k4;
+          for (k4 in m3) if (m3.hasOwnProperty(k4)) tot3 += m3[k4];
+          var cnt3 = heatKind ? (m3[heatKind] || 0) : tot3;
+          /* 전주 값 — 목록에 앞 주가 있을 때만. **없으면 「못 잼」이지 0 이 아니다.** */
+          var pv = null;
+          if (wi > 0) {
+            var pm = wk[wks[wi - 1]] || {}, pt = 0, k5;
+            for (k5 in pm) if (pm.hasOwnProperty(k5)) pt += pm[k5];
+            pv = heatKind ? (pm[heatKind] || 0) : pt;
+          }
+          /* **전주를 모르면 0 으로 적지 않는다** — 첫 주는 앞이 목록 밖이라 모르는 것이지
+             0건이 아니다. 「0→43건」이라고 적으면 화면이 거짓을 말한다(실물에서 그랬다). */
+          return { nm: weekLabel(w2), key: w2, cnt: cnt3, cur: cnt3,
+                   prev: pv, noPrev: pv === null,
+                   g: (pv ? (cnt3 - pv) / pv * 100 : null) };
+        });
+      }
+      else if (heatMode === 'flat') src = rows;
       else if (lv === 0) {
         src = order.map(function (rg) {
           var gr = heatGrowth(byReg[rg]), c = 0, p = 0, n = 0;
@@ -4119,7 +4205,12 @@ function renderList() {
            그 칸이 16×18px 로 나왔다 — 이름도 못 적으면서 옆 칸들까지 찌그러뜨린다.
            **조용히 빼지 않는다** — 몇 곳인지 화면이 적는다(등락률 모드가 이미 그렇게 한다). */
         if (v <= 0) { zeroN++; continue; }
-        items.push({ nm: d.nm, key: d.key, v: v, cnt: d.cnt, cur: d.cur, prev: d.prev, g: d.g, n: d.n, isReg: d.isReg });
+        /* **필드를 여기서 골라 새 객체를 만든다 — 빠뜨리면 뒤에서 조용히 사라진다.**
+           실제로 `share`·`noPrev` 를 안 실어 유형 모드가 「작성일 모름」을, 주차 첫 칸이
+           「null→119건」을 적었다(둘 다 거짓). 오늘 시험지 B2B 배지에서 겪은 것과 같은
+           종류다 — **표식을 더할 때 이 줄을 함께 볼 것.** */
+        items.push({ nm: d.nm, key: d.key, v: v, cnt: d.cnt, cur: d.cur, prev: d.prev, g: d.g,
+                     n: d.n, isReg: d.isReg, share: d.share, noPrev: d.noPrev });
       }
     }
     items.sort(function (a, b) { return b.v - a.v; });
@@ -4179,10 +4270,15 @@ function renderList() {
         /* **전월 → 당월 건수를 함께 적는다**(2026-09-02 사장님 요청) — 등락률만으로는
            3건이 6건이 된 것인지 300건이 600건이 된 것인지 알 수 없다. */
         if (!chan && c.h > 50 && c.w > 58) {
+          /* **유형 모드에서는 「작성일 모름」이 거짓이다** — 그 모드는 전월 대비를 아예
+             안 내므로 작성일과 무관하다. 대신 색의 뜻인 **비중**을 적는다. */
           var sub2 = d.isReg
             ? d.n + '곳'
-            : (d.prev || d.cur ? d.prev + '→' + d.cur + '건' : '');
-          if (!d.isReg && !sub2) sub2 = '작성일 모름';
+            : (typeof d.share === 'number'
+                ? Math.round(d.share) + '%'
+                : (d.noPrev ? '전주 모름'
+                    : (d.prev || d.cur ? d.prev + '→' + d.cur + '건' : '')));
+          if (!d.isReg && !sub2 && !heatKind) sub2 = '작성일 모름';
           if (sub2) lab += '<span class="cv" style="font-size:' + (fs * 0.52).toFixed(1) + 'px">' + sub2 + '</span>';
         }
       }
@@ -4202,9 +4298,50 @@ function renderList() {
     box.innerHTML = html;
 
     /* 버튼 · 빵부스러기 — 숫자의 근거를 함께 적는다 */
+    /* **범례도 모드를 따라간다** — 색의 뜻이 바뀌었는데 범례가 「전월 대비」라고
+       적혀 있으면 화면이 조용히 거짓을 말한다. */
+    var lt = document.getElementById('hm-legt'), ll = document.getElementById('hm-legl'),
+        lr = document.getElementById('hm-legr');
+    /* **주차 모드에서는 유형을 골라도 색이 「비중」이 아니라 「전주 대비」다** —
+       heatKind 만 보고 정하면 범례가 「혼수 비중」이라 적혀 화면이 거짓을 말한다
+       (실물에서 그랬다). 색을 정하는 곳과 범례가 **같은 조건**을 봐야 한다. */
+    var shareMode = heatKind && !week;
+    if (lt) lt.textContent = shareMode ? heatKind + ' 비중 (전 매장 평균 대비)'
+                                       : (week ? '전주 대비' : '전월 대비');
+    if (ll) ll.textContent = shareMode ? '−15%p' : '−15%';
+    if (lr) lr.textContent = shareMode ? '+15%p' : '+15%';
+    var lz = document.getElementById('hm-legz');
+    if (lz) lz.textContent = shareMode ? '유형 글이 없어 못 잼'
+                                       : ((week ? '전주' : '전월') + '가 0이거나 못 잼');
     bs.textContent = '크기: ' + (heatSize === 'n' ? '건수' : '등락률');
     bs.classList.toggle('on', heatSize === 'g');
-    bmd.textContent = heatMode === 'flat' ? '지역별로 보기' : '전점으로 보기';
+    /* 유형 버튼 — **화면이 목록을 박지 않고 자료에서 만든다.** 서버가 세는 말이 바뀌면
+       (지금 9가지) 화면이 옛 말을 들고 있지 않게 한다. 건수 많은 순으로 상위 6개만
+       — 전부 두면 조작줄이 두 줄이 되어 히트맵이 그만큼 밀린다. */
+    var kbox = document.getElementById('hm-kinds');
+    if (kbox) {
+      var bkAll = DATA.byStoreKind || {}, sumK = {}, kx, ky;
+      for (kx in bkAll) if (bkAll.hasOwnProperty(kx)) {
+        for (ky in bkAll[kx]) if (bkAll[kx].hasOwnProperty(ky)) sumK[ky] = (sumK[ky] || 0) + bkAll[kx][ky];
+      }
+      var ks = Object.keys(sumK).sort(function (a, b) { return sumK[b] - sumK[a]; }).slice(0, 6);
+      /* **고른 유형이 상위 6 밖이면 그것도 남긴다** — 안 그러면 누른 버튼이 사라진다 */
+      if (heatKind && ks.indexOf(heatKind) < 0) ks.push(heatKind);
+      kbox.innerHTML = ks.length
+        ? ks.map(function (k) {
+            return '<button type="button" class="bk' + (heatKind === k ? ' on' : '') + '"'
+              + ' data-kind="' + esc(k) + '" title="' + esc(k) + ' 글만 보기(' + nf(sumK[k]) + '건)">'
+              + esc(k) + '</button>';
+          }).join('')
+        : '';
+    }
+    bmd.textContent = (heatMode === 'region') ? '전점으로 보기' : '지역별로 보기';
+    var bwk = document.getElementById('hm-week');
+    if (bwk) { bwk.textContent = week ? '전점으로 보기' : '주차별로 보기'; bwk.classList.toggle('on', week); }
+    /* **주차 모드에서는 「지역별」·「크기」 버튼을 감춘다** — 눌러도 뜻이 없는 버튼이
+       살아 있으면 「눌러도 아무 일이 없다」가 된다(이 화면이 이미 세운 규칙이다). */
+    bmd.style.display = week ? 'none' : '';
+    bs.style.display = week ? 'none' : '';
     bmd.classList.toggle('on', heatMode === 'region');
     bk.disabled = lv === 0;
 
@@ -4212,9 +4349,22 @@ function renderList() {
       ? heatMonLabel(M.cur) + ' vs ' + heatMonLabel(M.prev) + ' — **완결된 달끼리** 견줍니다'
       : '견줄 완결된 달이 두 개가 안 됩니다 — 증감을 못 냅니다';
     if (sub) {
-      sub.innerHTML = '칸 크기 = ' + (byG ? '등락률' : '건수') + ' · 칸 색 = 전월 대비 · ' +
-        esc(basis).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') +
-        '. <b>크기는 모든 글, 색은 작성일을 아는 글</b>로 냅니다(카페는 네이버가 작성일을 안 줍니다).';
+      /* **유형을 고르면 색의 뜻이 바뀐다 — 반드시 적는다.** 월별 자료에 유형 구분이
+         없어 등락을 못 내므로, 색은 「그 매장에서 그 유형이 차지하는 비중」이 된다.
+         안 적으면 같은 초록이 어떤 때는 「늘었다」, 어떤 때는 「비중이 높다」가 되어
+         화면이 조용히 두 말을 한다. */
+      sub.innerHTML = week
+        ? '<b>주차별</b>로 봅니다 — 칸 = ISO 주차 · 크기 = ' + (heatKind ? esc(heatKind) + ' 건수' : '건수')
+          + ' · <b>칸 색 = 전주 대비</b>. <b>전 매장을 합친 값</b>이고 <b>작성일을 아는 글만</b> 셉니다 — '
+          + '매장까지 쪼개면 칸마다 1건 미만이 되어 잡음이 됩니다. 유형 버튼과 함께 쓰면 「N주 혼수 몇 건」이 나옵니다.'
+        : heatKind
+        ? '<b>' + esc(heatKind) + '</b> 글만 봅니다 — 칸 크기 = 그 유형 건수 · '
+          + '<b>칸 색 = 그 매장에서 ' + esc(heatKind) + '가 차지하는 비중</b>(전 매장 평균보다 '
+          + '높으면 초록). 월별 자료에는 유형 구분이 없어 <b>전월 대비는 낼 수 없습니다</b>. '
+          + '유형 버튼을 다시 누르면 전체로 돌아갑니다.'
+        : '칸 크기 = ' + (byG ? '등락률' : '건수') + ' · 칸 색 = 전월 대비 · ' +
+          esc(basis).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') +
+          '. <b>크기는 모든 글, 색은 작성일을 아는 글</b>로 냅니다(카페는 네이버가 작성일을 안 줍니다).';
     }
     if (chan) {
       bk.textContent = heatMode === 'flat' ? '← 전점' : '← ' + heatPath[0] + '지역';
@@ -4230,7 +4380,14 @@ function renderList() {
   /* **0건도 밝힌다** — 넓이를 못 그려 뺀 것이지 「그 매장이 없다」가 아니다 */
   if (zeroN) why.push(zeroN + '곳은 0건이라');
   var note = why.length ? ' <b style="color:#B45309">· ' + why.join(' · ') + ' 뺐습니다</b>' : '';
-    if (heatMode === 'flat') {
+    if (week) {
+      /* **주차 모드는 자기 문구를 쓴다** — 그대로 두면 「지역별 6개 지역」이라고
+         적혀 화면이 거짓을 말한다(실물에서 그랬다). 전 매장을 합친 값이라는 것도 밝힌다. */
+      var wsum = items.reduce(function (a, it) { return a + (it.cnt || 0); }, 0);
+      cr.innerHTML = '주차별 <em>' + items.length + '주 · '
+        + (heatKind ? esc(heatKind) + ' ' : '') + nf(wsum) + '건 · <b>전 매장 합계</b> · '
+        + '작성일을 아는 글만</em>';
+    } else if (heatMode === 'flat') {
       var gr = heatGrowth(rows);
       cr.innerHTML = '경원 전점 <em>' + rows.length + '곳 · ' + nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건' +
         (gr.g === null ? '' : ' · 전월 대비 ' + heatPct(gr.g)) + (byG || zeroN ? note : '') + '</em>';

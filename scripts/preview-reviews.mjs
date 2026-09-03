@@ -169,6 +169,32 @@ for (const [n, v] of Object.entries(byStore)) {
   for (const k of Object.keys(byStoreChan[n])) if (!byStoreChan[n][k]) delete byStoreChan[n][k];
 }
 
+/* 매장별 유형 — 히트맵 혼수·입주 거르개가 쓴다. **매장마다 비중을 다르게 둔다** —
+   전부 같으면 색이 통째로 중립이 되어 그 기능을 눈으로 검증할 수가 없다. */
+const byStoreKind = {};
+Object.keys(byStore).forEach((n, i) => {
+  const v = byStore[n]; if (!v) return;
+  const w = 0.15 + (i % 5) * 0.13;   /* 혼수 비중을 매장마다 0.15~0.67 로 흩는다 */
+  byStoreKind[n] = {
+    혼수: Math.round(v * w), 입주: Math.round(v * 0.10), 구매: Math.round(v * 0.18),
+    설치: Math.round(v * 0.06), 기타: Math.max(0, v - Math.round(v * (w + 0.34)))
+  };
+  Object.keys(byStoreKind[n]).forEach(k => { if (!byStoreKind[n][k]) delete byStoreKind[n][k]; });
+});
+
+/* 주차별 x 유형 — 히트맵 「주차별」 모드가 쓴다. **주마다 흐름을 다르게 둔다** —
+   평탄하면 색이 통째로 중립이라 전주 대비를 눈으로 검증할 수 없다. */
+const byWeekKind = {};
+for (let i = 0; i < 12; i++) {
+  const wk = '2026-W' + String(25 + i).padStart(2, '0');
+  const base = 120 + Math.round(Math.sin(i / 2) * 45) + i * 6;
+  byWeekKind[wk] = {
+    혼수: Math.round(base * 0.36), 입주: Math.round(base * 0.11),
+    구매: Math.round(base * 0.17), 설치: Math.round(base * 0.05),
+    기타: Math.round(base * 0.31)
+  };
+}
+
 const DATA = {
   ok: true, at: '2026-08-31T12:00:00.000Z',
   total: 2433, day: 38, week: 214, month: 1205,
@@ -177,7 +203,7 @@ const DATA = {
   byMonth, byDay, byKind: KINDS, byRegion, byMap, byStore,
   bySrc: { 블로그: 812, 카페: 1300, 웹: 321 },
   byStoreSrc, byStoreMonth, lastPost,
-  storeType, byStoreChan,
+  storeType, byStoreChan, byStoreKind, byWeekKind,
   /* **매장별 채널** — 「지점별 분석」이 이것으로 1·2·3 순위를 그린다. 없으면 그 자리가
      늘 비어 있어 **화면을 눈으로 봐도 그 기능을 검증하지 못한다**(실물 확인에서 그랬다).
      카페 이름 + 「네이버 블로그」·「웹문서」 — 실물과 같은 모양으로 섞는다. */

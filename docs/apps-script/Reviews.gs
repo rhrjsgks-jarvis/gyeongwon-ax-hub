@@ -179,6 +179,21 @@ var STORES = [
   ['ZRF9', '기흥SDR모바일'], ['ZRG1', 'KGM평택모바일']
 ];
 
+/** ISO 8601 주차 —  꼴. **월 경계로 자르지 않는다**(달마다 주 수가 달라
+ *  「5주차」가 어떤 달에는 없다). 목요일이 든 주를 그 해의 주로 세는 국제 규칙이다. */
+function isoWeek_(ymd) {
+  var m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(String(ymd || ''));
+  if (!m) return '';
+  var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  /* 목요일로 옮긴다 — 그 주가 속한 해가 목요일로 정해진다 */
+  var day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  var y = d.getUTCFullYear();
+  var jan1 = new Date(Date.UTC(y, 0, 1));
+  var wk = Math.ceil(((d - jan1) / 86400000 + 1) / 7);
+  return y + '-W' + (wk < 10 ? '0' + wk : wk);
+}
+
 /* ── 모점에 편입된 자점 ──────────────────────────────────────────
  * 2026-09-02 사장님 확인 — *"AK분당모바일과 현대판교모바일은 자점이고 모점으로 편입해주면
  * 됩니다"*. `ALIAS` 는 **앞으로 수집할 것**을 모점으로 보내지만, 시트에 이미 자점 이름으로
@@ -2507,7 +2522,7 @@ function summary_() {
   var approxN = 0;
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0, '웹': 0 }, byDay = {}, byMonth = {}, byKind = {};
-  var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {}, byStoreChan = {};
+  var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {}, byStoreChan = {}, byStoreKind = {}, byWeekKind = {};
   /* ── 매장별 세 갈래 (2026-09-01) ─────────────────────────────────────────
    * **셋을 한 루프에서 낸다** — 따로 돌면 같은 자료를 세 번 훑는다.
    *
@@ -2607,6 +2622,25 @@ function summary_() {
     }
     if (r.seenAt === d0) newToday++;          /* 오늘 **새로 발견**한 것 — 뜻이 다르다 */
     byKind[r.kind] = (byKind[r.kind] || 0) + 1;
+    /* **매장별 유형**(2026-09-03 사장님 요청 — *"히트맵도 혼수 입주 구분할 수 있게"*).
+       새로 수집할 것이 없다 — 줄마다 `kind` 가 이미 있어 여기서 한 번 더 세면 된다.
+       **작성일과 무관하게 전 건을 센다** — 유형은 제목에서 가르므로 늘 안다
+       (`byStoreChan` 이 같은 이유로 그렇게 한다). */
+    if (!byStoreKind[r.storeName]) byStoreKind[r.storeName] = {};
+    byStoreKind[r.storeName][r.kind] = (byStoreKind[r.storeName][r.kind] || 0) + 1;
+    /* **주차별 × 유형**(2026-09-03 사장님 요청 — *"1주차 2주차 이런 식으로 주차별
+       혼수후기 입주후기 기타후기 건수"*). **매장까지 쪼개지 않는다** — 작성일을 아는 글이
+       2,671건뿐이라 매장 62 × 주 12 × 유형 9 로 나누면 칸마다 1건 미만이 되어 잡음이다.
+       전 매장을 합치면 주당 200건대라 견딘다.
+       **작성일을 아는 글만** 센다 — 카페 줄의 날짜는 발견일이라 넣으면 이번 주만 거대해진다
+       (이 화면이 추이에서 두 번 데인 자리다). */
+    if (r.dated && r.date) {
+      var wk = isoWeek_(r.date);
+      if (wk) {
+        if (!byWeekKind[wk]) byWeekKind[wk] = {};
+        byWeekKind[wk][r.kind] = (byWeekKind[wk][r.kind] || 0) + 1;
+      }
+    }
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
     bySrc[r.src] = (bySrc[r.src] || 0) + 1;
     /* 채널 구성 — **작성일과 무관하게 전 건을 센다**(출처는 늘 안다) */
@@ -2804,6 +2838,11 @@ function summary_() {
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
+    /* **매장별 유형** — 히트맵의 혼수·입주 거르개가 쓴다. 유형이 9가지뿐이라
+       상위로 자르지 않고 통째로 담는다(채널과 달리 수백 개가 아니다). */
+    byStoreKind: byStoreKind,
+    /* 주차별 × 유형 — 히트맵의 「주차별」 모드가 쓴다. 매장은 안 쪼갠다(표본이 없다) */
+    byWeekKind: byWeekKind,
     /* 매장 유형 — 점코드가 가르므로 **서버만 알 수 있다**(화면에는 점명만 간다) */
     storeType: storeTypes_(),
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
@@ -3766,7 +3805,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 3;
+var SUM_VER = 5;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
