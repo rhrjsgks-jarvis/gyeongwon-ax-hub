@@ -2149,6 +2149,40 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!scr5.includes('acol-reset')) bad6.push('기본값으로 되돌릴 길이 없다');
       if (bad6.length) { ok = false; console.log('ERROR: [바이럴] ' + bad6.join(' · ')); }
       else console.log('OK: 바이럴 지역 색 — 관리자가 바꾸고 · 지도와 아이콘이 같은 색 · 폴백과 되돌리기가 있다');
+
+      /* ── 매니저 명부 (2026-09-03 사장님 지시 — "이름과 지점만 수집") ──────────
+       * **이 저장소는 public 이다.** 원본 응답에는 1,828명의 010 번호·이메일·사원번호가
+       * 함께 오므로, 새는 순간 그대로 공개된다. 그래서 검사가 붙든다 —
+       * 서비스센터 수집에서 이미 세운 규칙(뽑아 담는 화이트리스트)과 같은 자리다.
+       *
+       * **개수를 박지 않는다** — 매니저는 드나든다. 지키려는 것은 "명부가 있는가"와
+       * "개인정보가 없는가"이지 276이라는 숫자가 아니다. */
+      {
+        const bad7 = [];
+        const gsrc = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+        const mb = gsrc.match(/var MGR_BOOK = \{([\s\S]*?)\n\};/);
+        if (!mb) bad7.push('MGR_BOOK 명부가 없다');
+        else {
+          const body = mb[1];
+          /* 매장 줄 수 — 절반 아래로 떨어지면 수집이 반쪽으로 덮인 것이다 */
+          const rows = (body.match(/^\s*'[^']+':\s*\[/gm) || []).length;
+          if (rows < 30) bad7.push(`명부가 ${rows}개 매장뿐이다 — 반쪽으로 덮였을 수 있다`);
+          /* **개인정보 셋** — 하나라도 있으면 즉시 실패 */
+          if (/01[016789][-\s]?\d{3,4}[-\s]?\d{4}/.test(body)) bad7.push('명부에 휴대폰 번호가 있다');
+          if (/@/.test(body)) bad7.push('명부에 이메일이 있다');
+          if (/\d{5,}/.test(body)) bad7.push('명부에 긴 숫자가 있다 — 사원번호일 수 있다');
+          /* 이름은 한글 2~4자만 — 직함이 붙어 들어오면 대조가 어긋난다 */
+          const odd = [...body.matchAll(/'([^']+)'/g)].map(m2 => m2[1])
+            .filter(v => !/^[가-힣A-Za-z0-9]{2,12}$/.test(v));
+          if (odd.length) bad7.push(`명부에 이상한 값 ${odd.length}개 (예: ${odd[0]})`);
+        }
+        /* **코드 표와 화면 등록분을 합치는가** — 합치지 않으면 사장님이 화면에서 넣은
+           이름이 조용히 무시된다(반대로 코드 표만 쓰면 신규 입사자를 못 넣는다). */
+        if (!/for \(k in MGR_BOOK\)/.test(gsrc)) bad7.push('mgrNames_ 가 코드 표를 안 읽는다');
+        if (!/_mgrList/.test(gsrc)) bad7.push('mgrNames_ 가 화면 등록분을 안 읽는다');
+        if (bad7.length) bad7.forEach(m3 => fail(`[바이럴] ${m3}`));
+        else console.log('OK: 바이럴 매니저 명부 — 이름·지점만 · 개인정보 0건 · 코드 표와 등록분을 합친다');
+      }
     }
 
     /* ⑤ `start` 상한은 네이버가 1,000 이다 — 넘기면 HTTP 400 이라 그 쪽이 통째로 버려진다 */
