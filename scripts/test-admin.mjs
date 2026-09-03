@@ -2321,11 +2321,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         /* **역슬래시를 쓰지 않는다** — heredoc·셸을 거치면 조용히 먹혀
            정규식이 다른 뜻이 된다(문법 오류가 안 나 더 위험하다). 이스케이프 대신
            문자 클래스로 쓴다: [(] [)] [.] [{] */
-        const cond = (ix.match(/if [(](wasDated[^)]*?!r[.]dated)[)] [{]/) || [])[1];
+        const cond = (ix.match(/if [(]([^)]*wasDated[^)]*?!r[.]dated)[)] [{]/) || [])[1];
         if (!cond) {
           fail('[바이럴] 목록에 작성일/발견일 경계 표시가 없다');
         } else {
-          const show = new Function('wasDated', 'r', 'return !!(' + cond + ')');
+          /* `drewSplit` 은 **한 쪽에 한 번만** 긋기 위한 빗장이다(실물에서 다섯 번 그어졌다).
+             아직 안 그은 상태(false)로 두고 나머지 조건을 검사한다. */
+          const show = new Function('wasDated', 'r', 'drewSplit', 'return !!(' + cond + ')');
           const cases = [
             [null, false, true, '전부 발견일(카페 필터) — 첫 줄에 뜬다'],
             [true, false, true, '작성일 뒤 첫 발견일 — 경계에 뜬다'],
@@ -2333,7 +2335,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
             [null, true, false, '작성일로 시작 — 안 뜬다'],
             [false, true, false, '발견일 뒤 작성일 — 안 뜬다']
           ];
-          const bad = cases.filter((c) => show(c[0], { dated: c[1] }) !== c[2]);
+          const bad = cases.filter((c) => show(c[0], { dated: c[1] }, false) !== c[2]);
+          /* **이미 그었으면 다시 안 긋는가** — 이 빗장이 빠지면 안내가 되풀이된다 */
+          if (/drewSplit/.test(cond) && show(true, { dated: false }, true)) {
+            bad.push([0, 0, 0, '이미 그었는데 또 긋는다']);
+          }
           if (bad.length) fail('[바이럴] 경계 표시 조건이 틀리다 — ' + bad.map((c) => c[3]).join(' / '));
           /* 목록 전체가 발견일이면 「여기부터는」이 거짓이다 — 문구가 갈려 있어야 한다 */
           else if (!/이 목록은 전부/.test(ix)) {
@@ -3183,6 +3189,53 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     if (bad.length) fail('[바이럴] 매니저 히트맵 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 매니저 히트맵 — 칸은 사람 · 색은 전월 대비 · 자료 없으면 감춘다');
+  }
+}
+
+/* ── 화면 규격 (2026-09-03 사장님 지시 — *"인터페이스도 좀 통일하고 보기 좋게"*) ──
+ * 재고를 내니 **버튼 서식 14가지 · 글자 8단계**였고 11px 이하가 311개였다.
+ * 값을 각 규칙에 흩뿌린 결과라, 토큰으로 묶고 **여기서 붙든다** —
+ * 안 그러면 다음에 규칙 하나를 더할 때 또 흩어진다. */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  if (fs.existsSync(ixp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const bad = [];
+
+    /* ① 토큰이 있는가 */
+    ['--fs-mini', '--fs-body', '--fs-lead', '--ctl-fs', '--ctl-py', '--ctl-px', '--ctl-r', '--ctl-rp']
+      .forEach((t) => { if (!ix.includes(t + ':')) bad.push('토큰 ' + t + ' 이 없다'); });
+
+    /* ② **11px 이하를 새로 쓰지 않는다.** 사장님이 「작아서 안 보인다」고 지적한 그것 —
+           히트맵 칸(.cell)은 칸 크기에 맞춰 줄어드는 것이라 예외다. */
+    /* 정규식·개행을 소스에 직접 적지 않는다 — 셸을 거치며 역슬래시가 먹힌다 */
+    const NL = String.fromCharCode(10), B = String.fromCharCode(92);
+    const reSmall = new RegExp("font-size:" + B + "s*(?:[0-9]|10|11)(?:" + B + "." + B + "d)?px");
+    const reKeep = new RegExp("[.]cell|[.]geo-svg|header |[.]stamp|[.]limuse|[.]prog|[.]pill|[.]brand");
+    const small = ix.split(NL).filter((ln) => reSmall.test(ln)).filter((ln) => !reKeep.test(ln));
+    if (small.length) bad.push('11px 이하 글자가 ' + small.length + '곳 남았다 — ' + small[0].trim().slice(0, 44));
+
+    /* ③ **누르는 것은 한 규격**을 쓴다. 칩·버튼이 제각각이면 같은 일을 하는 것이
+           달라 보여, 상담사가 「이건 다른 종류인가」를 매번 판단하게 된다. */
+    ['.chip, .kchip, .wchip, .range .rbtn, .hmwk .wk', 'var(--ctl-fs)']
+      .forEach((t) => { if (!ix.includes(t)) bad.push('공통 컨트롤 규칙(' + t.slice(0, 20) + ')이 없다'); });
+    /* 옛 규격이 되살아나면 공통 규칙을 덮는다(CSS 는 나중 것이 이긴다) */
+    if (/.kchip {[^}]*font-size:s*12px/.test(ix)) bad.push('kchip 이 제 크기를 다시 갖는다');
+    if (/.wchip {[^}]*border-radius:s*8px/.test(ix)) bad.push('wchip 이 사각으로 돌아갔다');
+
+    /* ④ **자리표시자 「–」를 화면에 남기지 않는다** — 만들다 만 화면으로 보인다 */
+    if (/sub.textContent = "–"/.test(ix)) bad.push('부제에 자리표시자 「–」가 남아 있다');
+
+    /* ⑤ **경계선은 한 번만** — 실물에서 다섯 번 그어졌다 */
+    if (!ix.includes('drewSplit')) bad.push('작성일 경계선을 한 번만 긋는 빗장이 없다');
+
+    /* ⑥ 매니저 순위는 히트맵이 그린다 — 카드에 상위 10칩을 되살리면 같은 말을 두 번 한다 */
+    if (ix.includes('<h2>가장 많이 언급되는 매니저</h2>')) {
+      bad.push('매니저 순위 카드가 되살아났다 — 히트맵과 같은 것을 두 번 말한다');
+    }
+
+    if (bad.length) fail('[바이럴] 화면 규격 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 화면 규격 — 토큰 · 11px 이하 없음 · 컨트롤 한 규격 · 자리표시자 없음');
   }
 }
 

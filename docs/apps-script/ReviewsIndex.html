@@ -19,6 +19,22 @@
   :root {
     --blue: #1428A0; --ink: #15181E; --mute: #6B7280; --line: #E5E8EB;
     --bg: #F7F8FA; --card: #FFF;
+
+    /* ── 글자·컨트롤 규격 (2026-09-03 사장님 지시 — *"인터페이스도 좀 통일하고"*) ──
+     * 재고를 내니 **버튼 서식 14가지 · 글자 크기 8단계**였고, 11px 이하가 311개였다
+     * (사장님이 *"작은 텍스트로 되어 있는 것들 보기가 어렵다"* 고 지적한 그것).
+     *
+     * **11.5px 아래로 내려가지 않는다.** 그보다 작으면 매장 화면에서 못 읽는다.
+     * 값을 각 규칙에 흩뿌리지 말고 **여기서만** 정한다 — 흩뿌린 결과가 14가지였다. */
+    --fs-mini: 11.5px;   /* 보조 설명 — 이 화면의 가장 작은 글자다 */
+    --fs-body: 12.5px;   /* 본문 */
+    --fs-lead: 13px;     /* 카드 제목·강조 */
+
+    /* 누르는 것(버튼·칩)은 **크기·여백·모서리를 하나로** 쓴다. 색만 갈린다. */
+    --ctl-fs: 12px;
+    --ctl-py: 5px; --ctl-px: 11px;
+    --ctl-r: 8px;        /* 사각 — 버튼 */
+    --ctl-rp: 999px;     /* 알약 — 거르개 칩 */
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -39,9 +55,14 @@
   header h1 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
   header p { font-size: 11.5px; color: rgba(255,255,255,.72); margin-top: 3px; }
   .hrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  /* ── 버튼 — **넷이 제각각이던 것을 한 규격으로** (2026-09-03) ──────────────
+   * btn(11.5px 머리 위) · bk(12px 히트맵) · pgb(11.5px 쪽) · dl(11px 내려받기).
+   * 크기·여백·모서리는 같게 두고 **색만** 갈린다 — 같은 일을 하는 것이 달라 보이면
+   * 상담사가 「이건 다른 종류인가」를 매번 판단하게 된다. */
   .btn {
-    background: rgba(255,255,255,.18); color: #fff; border: 0; border-radius: 8px;
-    padding: 5px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+    background: rgba(255,255,255,.18); color: #fff; border: 0;
+    border-radius: var(--ctl-r); padding: var(--ctl-py) var(--ctl-px);
+    font-size: var(--ctl-fs); font-weight: 700; cursor: pointer; font-family: inherit;
   }
   .btn:disabled { opacity: .5; cursor: default; }
   .stamp { font-size: 11px; color: rgba(255,255,255,.65); }
@@ -49,12 +70,12 @@
   /* 일일 수집한도 — 「지금 수집」 바로 옆이라 남색 바 위에 얹힌다 */
   .lim {
     display: inline-flex; align-items: center; gap: 5px;
-    font-size: 11px; color: rgba(255,255,255,.75);
+    font-size: var(--fs-mini); color: rgba(255,255,255,.75);
     border-left: 1px solid rgba(255,255,255,.22); padding-left: 10px; margin-left: 2px;
   }
   .lim input {
     width: 68px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12);
-    color: #fff; border-radius: 6px; padding: 4px 6px; font-size: 11.5px; font-family: inherit;
+    color: #fff; border-radius: 6px; padding: 4px 6px; font-size: var(--fs-mini); font-family: inherit;
     text-align: right; font-variant-numeric: tabular-nums;
   }
   .lim input:focus { outline: 2px solid rgba(255,255,255,.5); outline-offset: -1px; }
@@ -73,14 +94,14 @@
   /* 「여기부터는 작성일 미상」 경계. **눈에 띄어야 뜻이 있다** — 흐리게 두면
      아래쪽 날짜가 위쪽과 같은 뜻으로 읽힌다. */
   .split { margin: 14px 0 8px; padding: 9px 12px; border-radius: 10px;
-    background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; font-size: 11.5px; line-height: 1.6; }
+    background: #FFFBEB; border: 1px solid #FDE68A; color: #92400E; font-size: var(--fs-mini); line-height: 1.6; }
 
   /* 네 칸 — 일간·주간·월간·누적. 사장님이 요청하신 그 넷이다. */
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
   .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; }
   .kpi .n { font-size: 26px; font-weight: 800; color: var(--blue); letter-spacing: -1px; }
-  .kpi .l { font-size: 11.5px; color: var(--mute); font-weight: 700; margin-top: 1px; }
-  .kpi .s { font-size: 10px; color: #9AA1AC; margin-top: 2px; }
+  .kpi .l { font-size: var(--fs-mini); color: var(--mute); font-weight: 700; margin-top: 1px; }
+  .kpi .s { font-size: var(--fs-mini); color: #9AA1AC; margin-top: 2px; }
   /* 누적이 이 화면의 주인공이다 — 「오늘 0」이 첫 칸이라 사라진 것처럼 읽혔다 */
   .kpi.big { background: var(--blue); border-color: var(--blue); }
   .kpi.big .n { color: #fff; }
@@ -106,7 +127,7 @@
     color: #374151; font-family: inherit; display: flex; flex-direction: column; gap: 3px; min-height: 112px; }
   .sec .ci { display: block; line-height: 1; margin-bottom: 5px; }
   .sec .ci svg { width: 46px; height: 46px; display: block; }
-  .sec .pv { font-size: 11px; font-weight: 500; color: var(--mute); line-height: 1.45; }
+  .sec .pv { font-size: var(--fs-mini); font-weight: 500; color: var(--mute); line-height: 1.45; }
   .sec:hover { border-color: #c7d2fe; }
   .sec.on { background: #1428A0; border-color: #1428A0; color: #fff; }
   .sec.on .pv { color: #C3CDF0; }
@@ -120,25 +141,25 @@
 
   /* 막대 — 매장별·카페별 */
   .bar { display: grid; grid-template-columns: 108px 1fr 40px; gap: 8px; align-items: center; margin-bottom: 5px; }
-  .bar .nm { font-size: 11.5px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .nm { font-size: var(--fs-mini); color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .bar .tr { background: #EEF1F6; border-radius: 999px; height: 9px; overflow: hidden; }
   .bar .fl { background: linear-gradient(90deg, #1428A0, #3B5BDB); height: 100%; border-radius: 999px; }
-  .bar .vl { font-size: 11px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+  .bar .vl { font-size: var(--fs-mini); color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
 
   /* 링크 목록 */
   .item { padding: 9px 0; border-top: 1px solid #F1F3F5; }
   .item:first-child { border-top: 0; }
   .item a { color: var(--ink); text-decoration: none; font-size: 12.5px; font-weight: 600; }
   .item a:hover { color: var(--blue); text-decoration: underline; }
-  .meta { font-size: 10.5px; color: var(--mute); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .yrs { display: inline-flex; gap: 4px; margin-left: 6px; }
+  .meta { font-size: var(--fs-mini); color: var(--mute); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .yrs { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; min-width: 0; }
   /* 되돌릴 수 없는 단추는 다르게 보여야 한다 — 옆 단추와 같은 모양이면 실수로 눌린다 */
   /* **남색 머리 위에 앉는 버튼이다** — 진한 빨강(#B42318)은 그 위에서 사실상 안 읽힌다
      (실물에서 글자가 뭉개져 보였다). 되돌릴 수 없는 버튼이라 더 위험하다.
      밝은 살구빛으로 바꾸고 테두리·바탕으로 「위험」을 표시한다. */
   .btn.danger { border-color: #F0A9A2; color: #FFC9C3; background: rgba(192, 57, 43, .28); }
   .btn.danger:hover { background: rgba(192, 57, 43, .45); color: #fff; }
-  .tag { background: #EEF2FF; color: var(--blue); border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: 11.5px; }
+  .tag { background: #EEF2FF; color: var(--blue); border-radius: 5px; padding: 1px 6px; font-weight: 700; font-size: var(--fs-mini); }
   /* 매장 신호 — 기존 색 변수만 쓴다(의존성 0) */
   .sighd { font-size: 12.5px; font-weight: 800; color: var(--blue); margin: 10px 0 4px; }
   .sighd:first-child { margin-top: 0; }
@@ -158,9 +179,20 @@
   .tag.c { background: #F0FDF4; color: #15803D; }
 
   .filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-  .chip {
-    border: 1px solid var(--line); background: #fff; border-radius: 999px;
-    padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151;
+  /* ── 거르개 칩 — **여섯 가지가 제각각이던 것을 한 규격으로** (2026-09-03) ──────
+   * chip(11px) · kchip(12px) · wchip(11px·사각) · rbtn(10.5px) ·
+   * wk(11.5px) · foldb(11.5px) 가 **같은 일을 하면서 크기가 다 달랐다.**
+   * 누르면 걸러지는 것은 전부 이 규격을 쓴다 — 색으로만 갈린다. */
+  .chip, .kchip, .wchip, .range .rbtn, .hmwk .wk {
+    border: 1px solid var(--line); background: #fff; border-radius: var(--ctl-rp);
+    padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs);
+    cursor: pointer; font-family: inherit; color: #374151; line-height: 1.35;
+  }
+  .chip:hover, .kchip:hover, .wchip:hover, .range .rbtn:hover, .hmwk .wk:hover {
+    background: #F4F6FB; border-color: var(--blue);
+  }
+  .chip.on, .kchip.on, .wchip.on, .range .rbtn.on, .hmwk .wk.on {
+    background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700;
   }
   .chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
 
@@ -179,8 +211,8 @@
   .lhead .sub { margin-bottom: 0; }
   .dl {
     flex-shrink: 0; border: 1px solid var(--line); background: #fff; color: var(--blue);
-    border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 700;
-    cursor: pointer; font-family: inherit;
+    border-radius: var(--ctl-r); padding: var(--ctl-py) var(--ctl-px);
+    font-size: var(--ctl-fs); font-weight: 700; cursor: pointer; font-family: inherit;
   }
   .dl:hover { background: #F4F6FB; }
 
@@ -188,22 +220,17 @@
   .picked:empty { display: none; }
   .pill {
     background: var(--blue); color: #fff; border: 0; border-radius: 999px;
-    padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit;
+    padding: 3px 10px; font-size: var(--fs-mini); cursor: pointer; font-family: inherit;
   }
-  .cntxt { font-size: 11px; color: var(--mute); }
+  .cntxt { font-size: var(--fs-mini); color: var(--mute); }
 
   /* 유형 칩 — 8종뿐이라 막대로 그리면 자리만 먹는다. 누르면 그 유형만 본다
      (매장·카페 막대와 같은 규칙 — 건수만 있고 링크로 갈 길이 없으면 확인할 수가 없다). */
   .kinds { display: flex; gap: 6px; flex-wrap: wrap; }
-  .kchip {
-    border: 1px solid var(--line); background: #fff; border-radius: 999px;
-    padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: inherit;
-    color: #374151; display: flex; align-items: center; gap: 6px;
-  }
-  .kchip:hover { background: #F4F6FB; }
-  .kchip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  /* 규격은 위 공통 규칙이 정한다 — 여기서는 **이 칩만의 배치**만 적는다 */
+  .kchip { display: inline-flex; align-items: center; gap: 6px; }
   .kchip b { font-size: 13px; font-weight: 800; }
-  .kchip .pc { font-size: 10px; opacity: .7; }
+  .kchip .pc { font-size: var(--fs-mini); opacity: .7; }
 
   /* 당사 vs LG — 한 줄에 두 값을 마주 보게 그린다. **어디가 앞서는지가 한눈에** 보여야 한다 */
   /* **띠를 키웠다**(2026-09-01 사장님 요청 — *"띠가 너무 작습니다. 상단 비율 맞춰서
@@ -233,22 +260,22 @@
   .rv .vl { font-size: 14px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
   .rv .vl.win { color: var(--blue); }
   .rv .vl.lose { color: #C0392B; }
-  .rv .vl.na { color: var(--mute); font-weight: 500; font-size: 10.5px; }
+  .rv .vl.na { color: var(--mute); font-weight: 500; font-size: var(--fs-mini); }
   /* LG 홍보 경로 (2026-09-02) — 채널·품목·표본 */
   .pgrp { margin-top: 13px; }
-  .pgrp h3 { font-size: 11.5px; font-weight: 800; color: var(--blue); margin-bottom: 2px; }
+  .pgrp h3 { font-size: var(--fs-body); font-weight: 800; color: var(--blue); margin-bottom: 2px; }
   .pgrp .pnote { font-size: 12px; color: var(--mute); margin-bottom: 7px; }
   .pch { display: grid; grid-template-columns: minmax(84px, 200px) 1fr 92px; gap: 10px; align-items: center; margin-bottom: 5px; }
-  .pch .nm { font-size: 11.5px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pch .nm { font-size: var(--fs-mini); color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pch .tr { background: #EEF1F6; border-radius: 999px; height: 9px; overflow: hidden; }
   .pch .fl { height: 100%; border-radius: 999px; }
-  .pch .vl { font-size: 10.5px; color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+  .pch .vl { font-size: var(--fs-mini); color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
   .psamp { padding: 7px 0; border-top: 1px solid #F1F3F5; }
   .psamp a { color: var(--ink); text-decoration: none; font-size: 12px; font-weight: 600; }
   .psamp a:hover { color: #C0392B; text-decoration: underline; }
-  .psamp .meta { font-size: 11.5px; color: var(--mute); margin-top: 2px; }
+  .psamp .meta { font-size: var(--fs-mini); color: var(--mute); margin-top: 2px; }
   @media (max-width: 520px) { .pch { grid-template-columns: minmax(60px, 108px) 1fr 74px; gap: 7px; } }
-  .rvleg { display: flex; gap: 12px; font-size: 10.5px; color: var(--mute); margin-bottom: 9px; }
+  .rvleg { display: flex; gap: 12px; font-size: var(--fs-mini); color: var(--mute); margin-bottom: 9px; }
   .rvleg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
 
   /* ── 지역별 회사 차트 — 세로 막대 (2026-09-03 사장님 선택) ──────────────
@@ -263,9 +290,9 @@
                 border-bottom: 1px solid #E5E7EB; }
   .rvg4 .plot span { flex: 1; border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
   .rvg4 .plot span em { position: absolute; top: -13px; left: -2px; right: -2px; text-align: center;
-                        font-style: normal; font-size: 11px; font-weight: 700; color: #374151; }
+                        font-style: normal; font-size: var(--fs-mini); font-weight: 700; color: #374151; }
   .rvg4 .nm { font-size: 12.5px; font-weight: 700; margin-top: 7px; }
-  .rvg4 .cnt { font-size: 11.5px; color: var(--mute); }
+  .rvg4 .cnt { font-size: var(--fs-mini); color: var(--mute); }
   .rvg4 .u.na .plot span { background: #C7CDD6 !important; }
   /* 색은 가로 막대와 **같은 값을 쓴다** — 두 곳에 따로 적으면 같은 회사가 두 색이 된다 */
   .rvg4 .us { background: var(--blue); }
@@ -284,7 +311,7 @@
   .rvg { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 5px; margin-bottom: 5px; }
   /* 채널 칸은 이름이 길다(「메이크마이웨딩 - 결혼준비」·「www.wisecable.com」) — 더 넓게 준다 */
   .rvg-w { grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); }
-  .rvg-w .rvc b { font-size: 11.5px; word-break: break-all; }
+  .rvg-w .rvc b { font-size: var(--fs-mini); word-break: break-all; }
 
   /* ── 매니저 칩 (2026-09-03 사장님 요청) ─────────────────────────────────
      예전에는 가로막대 10줄이었다. **여기 색은 우열이 아니라 크기다** — 매니저 순위는
@@ -293,21 +320,21 @@
   .mgg { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 6px; }
   .mgc { border-radius: 9px; padding: 8px 7px 7px; color: #fff; text-align: center;
          line-height: 1.25; position: relative; }
-  .mgc .rk { position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: 800; opacity: .75; }
-  .mgc .ck { position: absolute; top: 4px; right: 6px; font-size: 11.5px; font-weight: 800; opacity: .55; }
+  .mgc .rk { position: absolute; top: 4px; left: 6px; font-size: var(--fs-mini); font-weight: 800; opacity: .75; }
+  .mgc .ck { position: absolute; top: 4px; right: 6px; font-size: var(--fs-mini); font-weight: 800; opacity: .55; }
   .mgc .ck.on { opacity: 1; }
   .mgc b { display: block; font-size: 12.5px; font-weight: 700; }
   .mgc .n { font-size: 19px; font-weight: 800; letter-spacing: -.5px; margin: 1px 0; }
-  .mgc .n s { text-decoration: none; font-size: 11px; font-weight: 600; opacity: .8; margin-left: 1px; }
-  .mgc .st { font-size: 11px; font-weight: 600; opacity: .8; }
-  .mgc .nv { font-size: 10.5px; opacity: .68; margin-top: 2px; }
+  .mgc .n s { text-decoration: none; font-size: var(--fs-mini); font-weight: 600; opacity: .8; margin-left: 1px; }
+  .mgc .st { font-size: var(--fs-mini); font-weight: 600; opacity: .8; }
+  .mgc .nv { font-size: var(--fs-mini); opacity: .68; margin-top: 2px; }
   /* 「매장 자체 글 위주」 — 칸 안에서 **경고로 보여야 한다**(고객 후기가 아니라는 뜻이다) */
-  .mgc .self { margin-top: 5px; font-size: 10.5px; font-weight: 700; border-radius: 5px;
+  .mgc .self { margin-top: 5px; font-size: var(--fs-mini); font-weight: 700; border-radius: 5px;
                padding: 2px 4px; background: rgba(255,255,255,.22); }
   .rvc { border-radius: 8px; padding: 7px 6px; color: #fff; text-align: center; line-height: 1.22; }
   .rvc b { display: block; font-size: 12px; font-weight: 700; opacity: .93; }
   .rvc .p { font-size: 16px; font-weight: 800; letter-spacing: -.4px; margin: 1px 0; }
-  .rvc .v { font-size: 11.5px; font-weight: 600; opacity: .76; }
+  .rvc .v { font-size: var(--fs-mini); font-weight: 600; opacity: .76; }
   /* 못 잰 칸은 회색이고 숫자를 크게 적지 않는다 — 0% 로 칠하면 「완패」로 읽힌다 */
   .rvc.na .p { font-size: 12px; font-weight: 700; opacity: .9; }
 
@@ -318,7 +345,7 @@
      건드리지 않는다(byStore·storeType·bySrc·dated/undated·stores). */
   .mixg { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: 16px; }
   .mixu { border: 1px solid #EEF0F4; border-radius: 12px; padding: 13px 14px; }
-  .mixu h3 { margin: 0 0 2px; font-size: 12.5px; font-weight: 800; color: var(--ink); }
+  .mixu h3 { margin: 0 0 2px; font-size: var(--fs-body); font-weight: 800; color: var(--ink); }
   .mixu .why { margin: 0 0 10px; font-size: 12px; color: var(--mute); line-height: 1.5; }
   .mixu .row { display: flex; gap: 13px; align-items: center; }
   /* 도넛 — conic-gradient 하나로 그린다(라이브러리를 부르지 않는다) */
@@ -327,12 +354,13 @@
   .ring .mid { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column;
                align-items: center; justify-content: center; }
   .ring .mid b { font-size: 19px; font-weight: 800; letter-spacing: -.6px; }
-  .ring .mid s { text-decoration: none; font-size: 10.5px; color: var(--mute); font-weight: 700; }
+  .ring .mid s { text-decoration: none; font-size: var(--fs-mini); color: var(--mute); font-weight: 700; }
   /* 점 장표 — 100점(또는 매장 수)을 격자로. 점 하나가 곧 1% 또는 매장 하나다 */
   .dotg { display: grid; gap: 2px; flex: 0 0 auto; }
   .dotg i { display: block; width: 9px; height: 9px; border-radius: 2px; background: #E3E7ED; }
   .mixl { font-size: 12px; line-height: 1.65; flex: 1; min-width: 0; }
-  .mixl div { display: flex; align-items: center; gap: 5px; }
+  .mixl div { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .mixl b { white-space: nowrap; }   /* 이름은 자르지 않는다 — 값이 다음 줄로 간다 */
   .mixl i { width: 9px; height: 9px; border-radius: 2px; flex: 0 0 auto; }
   .mixl b { font-weight: 700; }
   .mixl span { color: var(--mute); margin-left: auto; font-variant-numeric: tabular-nums; }
@@ -434,7 +462,9 @@
   .rgwrap { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 14px; }
   @media (min-width: 1000px) { .rgwrap { grid-template-columns: 1fr 300px; align-items: start; } }
   .stdet { border: 1px solid var(--line); border-radius: 11px; background: #FCFDFF; padding: 12px; }
-  .stdet h3 { font-size: 13.5px; font-weight: 800; letter-spacing: -.2px; }
+  .stdet h3 { font-size: var(--fs-body); font-weight: 800; letter-spacing: -.2px; }
+  /* 안 고른 상태 — **한 줄**이다. 여섯 지역에 세 줄짜리 안내가 반복되면 화면을 먹는다 */
+  .stdet-hint { margin-top: 5px; font-size: var(--fs-mini); color: var(--mute); }
   .stdet .big { font-size: 26px; font-weight: 800; letter-spacing: -.6px; color: var(--blue);
                 font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
   .stdet .big span { font-size: 12px; font-weight: 600; color: var(--mute); margin-left: 2px; }
@@ -447,31 +477,23 @@
   .stdet li em { font-style: normal; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stdet li b { font-weight: 800; font-variant-numeric: tabular-nums; }
   .lgpair { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
-  .lgpair h4 { margin: 0 0 5px; font-size: 12px; font-weight: 800; color: #C0392B; }
+  .lgpair h4 { margin: 0 0 5px; font-size: var(--fs-body); font-weight: 800; color: #C0392B; }
   .lgpair select { width: 100%; padding: 5px 7px; border: 1px solid #DDE1E8; border-radius: 7px;
                    font-family: inherit; font-size: 12px; background: #fff; color: var(--ink); }
 
   /* 날짜 범위 — 「몇일~몇일」(2026-08-31 사장님 요청) */
-  .range { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-bottom: 9px; font-size: 11px; color: var(--mute); }
+  .range { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-bottom: 9px; font-size: var(--fs-mini); color: var(--mute); }
   .range input {
     border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px;
-    font-size: 11px; font-family: inherit; color: var(--ink);
+    font-size: var(--fs-mini); font-family: inherit; color: var(--ink);
   }
-  .range .rbtn {
-    border: 1px solid var(--line); background: #fff; color: var(--blue); border-radius: 6px;
-    padding: 3px 8px; font-size: 10.5px; font-weight: 700; cursor: pointer; font-family: inherit;
-  }
-  .range .rbtn:hover { background: #F4F6FB; }
-  .range .rbtn.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .range .rbtn { color: var(--blue); font-weight: 700; }
+
 
   /* 관심 카페 — 지목받은 곳은 건수가 적어도 늘 보인다 */
   .watch { display: flex; gap: 5px; flex-wrap: wrap; margin: 2px 0 10px; }
-  .wchip {
-    border: 1px solid var(--line); background: #F8FAFF; border-radius: 8px;
-    padding: 4px 9px; font-size: 11px; cursor: pointer; font-family: inherit; color: #374151;
-  }
-  .wchip:hover { background: #EEF2FF; }
-  .wchip.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+  /* 관심 카페 — **옅은 파란 바탕**으로만 갈린다(규격은 공통) */
+  .wchip { background: #F8FAFF; }
   .wchip b { font-weight: 800; margin-left: 3px; }
   /* 못 닿는 곳 — 0 건이 아니라 「받을 수 없다」다. 누를 수도 없다 */
   .wchip.na { cursor: default; color: var(--mute); background: #fff; border-style: dashed; }
@@ -481,22 +503,23 @@
      네이버 전체 건수는 참고다(동명이인이 섞이므로 같은 무게로 두면 안 된다). */
   .mrow { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #F1F3F9; }
   .mrow:last-child { border-bottom: 0; }
-  .mrk { width: 18px; text-align: right; font-size: 11px; color: var(--mute); font-variant-numeric: tabular-nums; }
+  .mrk { width: 18px; text-align: right; font-size: var(--fs-mini); color: var(--mute); font-variant-numeric: tabular-nums; }
   .mrk.top { color: var(--blue); font-weight: 800; }
   .mnm { font-weight: 700; font-size: 13px; }
-  .mst { font-size: 11px; color: var(--mute); }
+  .mst { font-size: var(--fs-mini); color: var(--mute); }
   .mbar { flex: 1; height: 6px; background: #EEF1F8; border-radius: 3px; overflow: hidden; }
   .mbar i { display: block; height: 100%; background: var(--blue); border-radius: 3px; transition: width .55s ease-out; }
   .mn { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
-  .mnv { font-size: 10.5px; color: var(--mute); min-width: 52px; text-align: right; }
+  .mnv { font-size: var(--fs-mini); color: var(--mute); min-width: 52px; text-align: right; }
   .alias-add { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0 6px; }
   .alias-add input {
-    flex: 1; min-width: 120px; border: 1px solid var(--line); border-radius: 8px;
-    padding: 6px 9px; font-size: 12px; font-family: inherit;
+    flex: 1; min-width: 120px; border: 1px solid var(--line); border-radius: var(--ctl-r);
+    padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs); font-family: inherit;
   }
   .alias-add button {
-    border: 1px solid var(--blue); background: var(--blue); color: #fff; border-radius: 8px;
-    padding: 6px 13px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    border: 1px solid var(--blue); background: var(--blue); color: #fff;
+    border-radius: var(--ctl-r); padding: var(--ctl-py) var(--ctl-px);
+    font-size: var(--ctl-fs); font-weight: 700; cursor: pointer; font-family: inherit;
   }
   .alias-add button[disabled] { opacity: .5; cursor: default; }
   .arow { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid #F1F3F9; font-size: 12px; }
@@ -504,12 +527,13 @@
   .arow .as { font-weight: 700; min-width: 96px; }
   .arow .aw { flex: 1; color: #374151; }
   .arow .ax {
-    border: 1px solid var(--line); background: #fff; border-radius: 7px; padding: 2px 8px;
-    font-size: 11px; cursor: pointer; font-family: inherit; color: var(--mute);
+    border: 1px solid var(--line); background: #fff; border-radius: var(--ctl-r);
+    padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs);
+    cursor: pointer; font-family: inherit; color: var(--mute);
   }
   .arow .ax:hover { border-color: #DC2626; color: #DC2626; }
   /* 코드 표에 있는 것은 지울 수 없다 — 지워도 다음 배포에 되살아나 「안 지워진다」가 된다 */
-  .arow .abase { font-size: 10.5px; color: var(--mute); }
+  .arow .abase { font-size: var(--fs-mini); color: var(--mute); }
   /* ── 매니저 명부 ──────────────────────────────────────────────────
      **접어 둔다.** 늘 펼쳐 두면 순위표(주인공)가 밀린다 — 등록은 가끔 하는 일이다. */
   .mgrbook { margin-top: 10px; border-top: 1px solid #F1F3F9; padding-top: 8px; }
@@ -521,7 +545,7 @@
   .mgrbook > summary::before { content: '▸ '; }
   .mgrbook[open] > summary::before { content: '▾ '; }
   /* **명부에 없는 이름은 흐리게** — 「확인된 사람」과 「아직 확인 안 된 이름」은 다른 말이다 */
-  .mrow .mck { font-size: 10px; color: var(--mute); }
+  .mrow .mck { font-size: var(--fs-mini); color: var(--mute); }
   .mrow .mck.on { color: var(--blue); font-weight: 800; }
   /* 0건도 적는다 — 등록했는데 안 나오는 것이 곧 정보다 */
   .krow { display: flex; align-items: center; gap: 7px; padding: 4px 0; border-bottom: 1px solid #F1F3F9; font-size: 12px; }
@@ -546,7 +570,7 @@
      좌우가 놀았다(실측). 카드 폭을 그대로 따른다. */
   /* 돋보기 — 본 지도와 **같은 색 규칙**을 쓴다(`.geo-svg` 를 함께 단다) */
   .geometro { margin: 10px 0 0; padding: 9px 0 0; border-top: 1px dashed #E5E7EB; }
-  .geometro .msub { font-size: 11.5px; color: #64748B; margin: 0 0 4px; }
+  .geometro .msub { font-size: var(--fs-mini); color: #64748B; margin: 0 0 4px; }
   .geo-metro { max-width: 420px; }
   /* 읍·면 화면은 조각이 열넷~스물둘이라 420px 로는 이름이 서로 밀린다(실물 확인) */
   .geo-metro.sub { max-width: 560px; }
@@ -582,7 +606,7 @@
   .geo-metro path.z8 { fill: #8C4A2F; }
   .geo-metro path.zoff { fill: #F1F2F4; stroke: #E5E7EB; }
   .zlist { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 8px 0 0; }
-  .zcell { font-size: 11.5px; color: #334155; display: flex; align-items: center; gap: 4px; }
+  .zcell { font-size: var(--fs-mini); color: #334155; display: flex; align-items: center; gap: 4px; }
   .zcell i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
   .zcell b { color: #0F172A; }
   .zcell s { text-decoration: none; color: #64748B; }
@@ -655,8 +679,8 @@
   .tcol.sel .tbar { background: #1428A0; outline: 2px solid #111827; outline-offset: 1px; }
   .tcol.sel .tval, .tcol.sel .tlab { color: #1428A0; font-weight: 800; }
   .tval { font-size: 12px; font-weight: 700; color: #374151; }
-  .tlab { font-size: 11.5px; color: #9CA3AF; white-space: nowrap; }
-  .tdelta { font-size: 11px; color: #6B7280; margin-top: 8px; }
+  .tlab { font-size: var(--fs-mini); color: #9CA3AF; white-space: nowrap; }
+  .tdelta { font-size: var(--fs-mini); color: #6B7280; margin-top: 8px; }
   .tdelta b.up { color: #1428A0; }
   .tdelta b.dn { color: #B3261E; }
 
@@ -665,14 +689,14 @@
      쓰는 값은 전부 화면 어딘가에 그대로 있는 것**이어야 한다 — 지어낸 해석을 얹지 않는다. */
   .diag { display: grid; gap: 10px; }
   .dsec { border-left: 3px solid #1428A0; padding: 2px 0 2px 11px; }
-  .dsec h3 { font-size: 12.5px; margin: 0 0 5px; color: #111827; }
+  .dsec h3 { font-size: var(--fs-body); font-weight: 800; margin: 0 0 5px; color: #111827; }
   .dsec p { margin: 0 0 6px; font-size: 12.5px; line-height: 1.75; color: #374151; }
   .dsec p:last-child { margin-bottom: 0; }
   .dsec b { color: #1428A0; }
   .dsec b.warn { color: #B3261E; }
   .act { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 8px; font-size: 12.5px; line-height: 1.7; }
   .act:last-child { margin-bottom: 0; }
-  .actb { flex: none; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  .actb { flex: none; font-size: var(--fs-mini); font-weight: 700; padding: 2px 8px; border-radius: 999px;
     background: #EEF2FF; color: #1428A0; margin-top: 2px; }
   .act.team .actb { background: #E8F5EC; color: #197E4E; }
   .act.store .actb { background: #FDF2E3; color: #92400E; }
@@ -687,9 +711,9 @@
   .gstores { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
   .gsrow { margin-bottom: 7px; }
   .gsrow:last-child { margin-bottom: 0; }
-  .gsh { font-size: 11px; font-weight: 800; color: #374151; margin-bottom: 3px; }
+  .gsh { font-size: var(--fs-mini); font-weight: 800; color: #374151; margin-bottom: 3px; }
   .gsh i { font-style: normal; font-weight: 600; color: var(--mute); margin-left: 5px; }
-  .gschip { display: inline-block; font-size: 10.5px; padding: 2px 7px; margin: 0 3px 3px 0;
+  .gschip { display: inline-block; font-size: var(--fs-mini); padding: 2px 7px; margin: 0 3px 3px 0;
     border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #374151;
     cursor: pointer; }
   .gschip b { color: var(--blue); margin-left: 3px; }
@@ -702,15 +726,16 @@
   /* ── 목록 쪽수 (2026-08-31 사장님: *"20 40 60 80 100개로 보고 나머지는 페이지화"*) ──
      3,000건을 한 번에 그리면 화면이 끝없이 길어져 아래 카드가 보이지 않는다. */
   .pager { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    margin: 10px 0 4px; font-size: 11.5px; color: var(--mute); }
+    margin: 10px 0 4px; font-size: var(--fs-mini); color: var(--mute); }
   .pager .sz { display: flex; gap: 4px; }
-  .pgb { font-size: 11.5px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 8px;
-    background: #fff; color: #374151; cursor: pointer; }
+  .pgb { font-size: var(--ctl-fs); padding: var(--ctl-py) var(--ctl-px);
+    border: 1px solid var(--line); border-radius: var(--ctl-r);
+    background: #fff; color: #374151; cursor: pointer; font-family: inherit; }
   .pgb.on { border-color: var(--blue); background: var(--blue); color: #fff; font-weight: 700; }
   .pgb[disabled] { opacity: .4; cursor: default; }
   .pgnum { font-weight: 700; color: #374151; }
   .geoleg { display: flex; gap: 12px; align-items: center; justify-content: center;
-    margin-top: 8px; font-size: 11px; color: #6B7280; flex-wrap: wrap; }
+    margin-top: 8px; font-size: var(--fs-mini); color: #6B7280; flex-wrap: wrap; }
   .geoleg i { display: inline-block; width: 11px; height: 11px; border-radius: 3px;
     border: 1px solid #E5E7EB; margin-right: 4px; vertical-align: -1px; }
   /* 10칸은 이름표를 다 붙일 수 없다 — **띠로 보이고 양 끝에만 말을 적는다** */
@@ -769,25 +794,22 @@
   .hm .cell .cg { font-weight: 700; opacity: .95; }
   .hm .cell .cv { font-weight: 600; opacity: .78; }
   .hmnav { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 12px; flex-wrap: wrap; }
-  .hmnav .bk { border: 1px solid #DDE1E8; background: #fff; color: #374151; font-weight: 700;
-               border-radius: 9px; padding: 5px 11px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .hmnav .bk { border: 1px solid var(--line); background: #fff; color: #374151; font-weight: 700;
+               border-radius: var(--ctl-r); padding: var(--ctl-py) var(--ctl-px);
+               font-size: var(--ctl-fs); cursor: pointer; font-family: inherit; }
   .hmnav .bk:disabled { opacity: .4; cursor: default; }
   .hmwk { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 7px; align-items: center; }
-  .hmwk .wk { border: 1px solid #DDE1E8; background: #fff; border-radius: 999px;
-              padding: 3px 9px; font-family: inherit; font-size: 11.5px; color: var(--ink);
-              cursor: pointer; line-height: 1.5; }
-  .hmwk .wk:hover { border-color: var(--blue); }
-  .hmwk .wk.on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+
   /* **건수를 함께 적는다** — 어느 주에 자료가 있는지 눌러 보기 전에 알아야 한다.
      실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라, 이 숫자가 없으면 빈 히트맵을 만난다. */
-  .hmwk .wk i { font-style: normal; opacity: .62; margin-left: 4px; font-size: 10.5px; }
+  .hmwk .wk i { font-style: normal; opacity: .62; margin-left: 4px; font-size: var(--fs-mini); }
   .hmwk .wk.on i { opacity: .85; }
-  .hmwk .lbl { font-size: 11.5px; color: var(--mute); margin-right: 2px; }
+  .hmwk .lbl { font-size: var(--fs-mini); color: var(--mute); margin-right: 2px; }
   .hmnav .bk.on { background: #EEF1FB; border-color: #C7D2F0; color: var(--blue); }
   .hmnav .crumb { font-weight: 700; color: #374151; }
   .hmnav .crumb em { font-style: normal; font-weight: 500; color: var(--mute); }
   .hmnav .sp { margin-left: auto; }
-  .hmleg { display: flex; align-items: center; gap: 7px; margin-top: 11px; font-size: 11px;
+  .hmleg { display: flex; align-items: center; gap: 7px; margin-top: 11px; font-size: var(--fs-mini);
            color: var(--mute); flex-wrap: wrap; }
   .hmleg .sc { display: flex; }
   .hmleg .sc span { width: 19px; height: 11px; }
@@ -995,7 +1017,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <span id="hm-legt">전월 대비</span><b style="color:#C8324B" id="hm-legl">−15%</b>
         <span class="sc" id="hm-scale"></span><b style="color:#12805C" id="hm-legr">+15%</b>
         <span style="display:inline-flex;align-items:center;gap:5px;margin-left:8px">
-          <span style="width:11px;height:11px;border-radius:3px;background:#5A5F6B;display:inline-block"></span>
+          <span style="width:11px;height:11px;border-radius:3px;background:rgb(214,218,224);border:1px solid #C7CCD4;display:inline-block"></span>
           <span id="hm-legz">전월이 0이거나 못 잼</span> — <b>증감률을 적지 않습니다</b></span>
       </div>
     </div>
@@ -1029,14 +1051,14 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     </div>
     <div class="card" data-card="cafe">
       <h2>어디에 올라오나</h2>
-      <div class="sub">카페 이름 기준 · 블로그는 개인 블로그라 따로 세지 않는다</div>
+      <div class="sub">카페 이름 기준입니다 · 블로그는 개인 블로그라 따로 세지 않습니다</div>
       <!-- 관심 카페 — 사장님이 지목한 곳은 **건수가 적어도 늘 보여야 한다.**
            아래 막대는 상위 12곳뿐이라 2~3건짜리는 영영 안 올라온다. -->
       <div class="watch" id="watch"></div>
       <div id="cafes"></div>
     </div>
     <div class="card" data-card="mgr">
-      <h2>가장 많이 언급되는 매니저</h2>
+      <h2>매니저 명부</h2>
       <!-- 2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"* ·
            *"이름을 제목과 해시태그 내용에서 모두 검출해 주세요"*.
            **두 숫자를 갈라 적는다** — ⓐ 우리 후기 중 언급 수(정확) ⓑ 네이버 전체
@@ -1047,8 +1069,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            후기가 있는지 검증이 가능하게"*. **명부가 하는 일이 셋이다** — 직함으로 갈린
            같은 사람을 합치고(남수호 프로 + 남수호 매니저), 0건도 보여주고, 뽑아낸 이름이
            진짜인지 가른다(실측에서 골프 아카데미 프로가 섞여 있었다). -->
-      <details class="mgrbook">
-        <summary>매니저 명부 — 이름을 넣으면 그 사람 건수를 정확히 셉니다</summary>
+      <details class="mgrbook" open>
+        <summary hidden></summary>
         <div class="sub" id="mgrbook-sub">–</div>
         <div class="alias-add">
           <input id="mgr-store" list="alias-stores" placeholder="매장 이름" autocomplete="off">
@@ -1191,8 +1213,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   (function () {
     var st = document.createElement('style');
     st.textContent = '.foldwrap{margin:-2px 0 6px 0}'
-      + '.foldb{font-size:11.5px;color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;'
-      + 'border-radius:999px;padding:2px 9px;cursor:pointer}'
+      + '.foldb{font-size:var(--ctl-fs);color:#475569;background:#F1F5F9;border:1px solid #E2E8F0;'
+      + 'border-radius:var(--ctl-rp);padding:var(--ctl-py) var(--ctl-px);cursor:pointer;font-family:inherit}'
       + '.foldb:hover{background:#E2E8F0}'
       + '.folded{border-left:2px solid #E2E8F0;margin:5px 0 0 8px;padding-left:8px}';
     document.head.appendChild(st);
@@ -1325,52 +1347,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
      참고다(동명이인이 섞인다). 같은 무게로 두면 화면이 거짓말을 한다. */
   function renderMgrs() {
     var el = document.getElementById('mgrs'); if (!el) return;
-    var top = (DATA.mgrTop || []).slice(0, 10);
+    var top = (DATA.mgrTop || []);
     var sub = document.getElementById('mgr-sub');
-    if (!top.length) {
-      el.innerHTML = '';
-      if (sub) sub.textContent = '아직 이름이 잡힌 후기가 없습니다.';
-      return;
-    }
-    /* **본문까지 본 글이 몇 건인지 밝힌다.** 옛 글은 제목에서만 뽑을 수 있다 —
-       본문을 저장하지 않았으므로 되찾을 방법이 없다. 감추면 순위가 실제보다 낮게
-       보이는 이유를 아무도 모른다. */
+    /* **순위는 히트맵이 그린다** — 여기서는 그 사실만 알리고 명부에 자리를 내준다.
+       상위 10칩을 함께 두면 같은 것을 두 번 말한다(사장님이 편입하라 한 그것). */
+    el.innerHTML = '';
     if (sub) {
-      var full = DATA.mgrFull || 0, all = DATA.mgrRows || 0;
-      sub.innerHTML = '제목과 본문(해시태그)에서 뽑습니다 · '
-        + (full >= all
-            ? '<b>' + nf(all) + '건 전부</b> 본문까지 봤습니다'
-            : '<b>' + nf(full) + '건</b>은 본문까지, 나머지 <b>' + nf(all - full)
-              + '건</b>은 <b>제목에서만</b> 봤습니다(옛 글은 본문을 저장하지 않았습니다)');
+      if (!top.length) { sub.textContent = '아직 이름이 잡힌 후기가 없습니다.'; return; }
+      var full0 = DATA.mgrFull || 0, all0 = DATA.mgrRows || 0;
+      sub.innerHTML = '언급 순위는 <b>히트맵에서 「매니저로 보기」</b>를 누르면 봅니다 — '
+        + '여기서는 <b>이름을 등록해 검증</b>합니다. 이름은 제목과 본문(해시태그)에서 뽑고, '
+        + (full0 >= all0
+            ? '<b>' + nf(all0) + '건 전부</b> 본문까지 봤습니다.'
+            : '<b>' + nf(full0) + '건</b>은 본문까지, 나머지 <b>' + nf(all0 - full0)
+              + '건</b>은 <b>제목에서만</b> 봤습니다(옛 글은 본문을 저장하지 않았습니다).');
     }
-    var max = top[0].n || 1;
-    /* 진하기는 **건수 크기**다(우열이 아니다) — 밝은 파랑 → 삼성 블루. 가장 옅은 칸에서도
-       흰 글자가 읽히도록 0.30 아래로는 안 내려간다. */
-    var shade = function (v) {
-      var t = 0.30 + 0.70 * (max ? v / max : 1);
-      var a = [123, 145, 214], b2 = [20, 40, 160];
-      return 'rgb(' + a.map(function (x, j) { return Math.round(x + (b2[j] - x) * t); }).join(',') + ')';
-    };
-    el.innerHTML = '<div class="mgg">' + top.map(function (m, i) {
-      /* 네이버 전체 건수는 **아직 안 훑었으면 `null`** 이다 — 0 으로 적으면
-         「그 이름으로 글이 없다」가 되어 거짓이 된다. */
-      var nv = (m.naver === null || m.naver === undefined)
-        ? '<div class="nv" title="다음 수집 때 셉니다">네이버 –</div>'
-        : '<div class="nv" title="네이버 전체 검색 건수(동명이인 포함)">네이버 ' + nf(m.naver) + '</div>';
-      /* **명부에 있는 사람인지 표시한다**(2026-09-01 사장님 요청). 뽑아낸 이름 중에는
-         진짜가 아닌 것이 섞인다 — 실측 78개에 골프 아카데미 프로가 하나 있었다.
-         문맥으로만 가릴 수 있는 종류라 **사람이 확인해 주는 것이 유일한 길**이다. */
-      var ck = m.known
-        ? '<span class="ck on" title="명부에 있는 이름입니다">✓</span>'
-        : '<span class="ck" title="아직 명부에 없습니다 — 아래에서 등록하면 검증됩니다">·</span>';
-      return '<div class="mgc" style="background:' + shade(m.n) + '"'
-        + ' title="' + esc(m.name) + (m.store ? ' · ' + esc(m.store) : '') + ' — 우리 후기 ' + nf(m.n) + '건">'
-        + '<span class="rk">' + (i + 1) + '</span>' + ck
-        + '<b>' + esc(m.name) + '</b>'
-        + '<div class="n">' + nf(m.n) + '<s>건</s></div>'
-        + (m.store ? '<div class="st">' + esc(m.store) + '</div>' : '')
-        + nv + '</div>';
-    }).join('') + '</div>';
+    return;
   }
 
   /* ── 매니저 명부 (2026-09-01 사장님 요청) ─────────────────────────────
@@ -2012,7 +2004,7 @@ function wireSecs() {
        왜 안 보이는지 적는다(빌드를 안 돌렸거나 붙여넣기가 반쪽인 경우다). */
     if (typeof GW_MAP === "undefined" || !GW_MAP.svg) {
       el.innerHTML = "<div class='empty'>지도 자료가 없습니다 — ReviewsIndex 를 다시 붙여 넣어 주세요</div>";
-      if (sub) sub.textContent = "–";
+      if (sub) sub.textContent = "지도를 그릴 수 없습니다 — 아래 안내를 봐 주세요.";
       return;
     }
     var by = DATA.byMap || {};
@@ -2773,8 +2765,7 @@ function wireSecs() {
     Array.prototype.forEach.call(boxes, function (b2) {
       if (b2.getAttribute('data-area') === hit) { el = b2; return; }
       b2.innerHTML = '<h3>지점별 분석</h3>'
-        + '<div class="note" style="margin-top:6px">왼쪽에서 <b>지점을 누르면</b>'
-        + ' 그 지점의 후기가 <b>어느 채널에서</b> 나왔는지 여기 보여 드립니다.</div>';
+        + '<div class="stdet-hint">왼쪽에서 <b>지점을 누르면</b> 여기 나옵니다</div>';
     });
     if (!el) return;
     var n = by[storeFilter] || 0;
@@ -3125,7 +3116,7 @@ function wireSecs() {
           + '<div class="nm">' + esc(r.area) + ' '
           + (na ? '<span class="namark">못 잼</span>'
                 : '<span class="' + (r.pct >= 50 ? 'win' : 'lose') + '">' + r.pct + '%</span>') + '</div>'
-          + '<div class="cnt">당사·LG·하이마트·전자랜드</div></div>';
+          + '</div>';
       }).join('') + '</div>';
 
     /* ── **빠진 지역을 이름으로 적는다** (2026-09-02 사장님 3회 지적) ──────────
@@ -3471,11 +3462,16 @@ function renderList() {
     var from = (page - 1) * pageSize;
     var view = groups.slice(from, from + pageSize);
 
-    var wasDated = null;
+    var wasDated = null, drewSplit = false;
     var html = view.map(function (gp, gi2) {
       var r = gp.r;
       var sep = '';
-      if (wasDated !== false && !r.dated) {
+      /* **선은 한 쪽에 한 번만 긋는다** (2026-09-03 실물 확인 — 다섯 번 그어졌다).
+         서버가 「작성일 아는 글 먼저」로 정렬해 주지만, 필터·접기·쪽나누기를 지나며
+         순서가 흔들리면 경계를 여러 번 만난다. 그때 같은 안내가 되풀이되면
+         **목록이 그만큼 길어지고 정작 그 문장을 안 읽게 된다.** */
+      if (!drewSplit && wasDated !== false && !r.dated) {
+        drewSplit = true;
         sep = '<div class="split">' + (wasDated === null ? '이 목록은 전부 ' : '여기부터는 ')
           + '<b>작성일을 모르는 글</b>입니다 — 네이버가 카페 글의 '
           + '작성일을 주지 않아 <b>우리가 처음 찾은 날</b>을 적었습니다. 일간·주간·월간에는 세지 않습니다.</div>';
@@ -3865,7 +3861,7 @@ function renderList() {
     if (!d || !d.stores || !d.stores.length) {
       el.innerHTML = '<div class="note">아직 안 쟀습니다 — 다음 수집 때 채워집니다.'
         + ' <b>값이 없는 것이지 후기가 없다는 뜻이 아닙니다.</b></div>';
-      if (sub) sub.textContent = "–";
+      if (sub) sub.textContent = "관할 개인대리점(SDP)의 후기 건수입니다 — 아직 수집 전입니다.";
       return;
     }
     if (sub) {
@@ -4201,7 +4197,7 @@ function renderList() {
    * 색각 안전 팔레트가 사는 이유인 파랑↔노랑 축은 빨강↔초록을 유지하면 못 쓴다.
    * 대신 **휘도를 단조로** 만든다: 하락은 어둡게 · 중립은 중간 · 상승은 밝게.
    * 그러면 흑백으로 봐도, 색각 이상으로 봐도 방향이 남는다. */
-  var RAMP_MID = [104, 110, 124];      /* 중립 — 예전보다 밝다(휘도 골짜기를 없앤다) */
+  var RAMP_MID = [142, 148, 159];      /* 중립 — 휘도 0.294(빨강 0.063 · 초록 0.487 사이) */
   var RAMP_DOWN = [138, 26, 36];       /* 하락 끝 — 어두운 빨강 */
   var RAMP_UP = [86, 208, 130];        /* 상승 끝 — 밝은 초록 */
   function rampColor(m, up) {
@@ -4223,14 +4219,14 @@ function renderList() {
    *  **주 단위는 표본이 1~5건이라 ±15% 로 두면 전 칸이 포화된다**(실물에서 그랬다).
    *  주는 ±60% — 1건이 2건이 되면 진한 초록, 3건이 2건이면 옅은 빨강쯤이 된다. */
   function heatColor(g, span) {
-    if (g === null) return 'rgb(90,95,107)';
+    if (g === null) return 'rgb(214,218,224)';
     var t = Math.min(Math.abs(g) / (span || 15), 1);
     return rampColor(Math.abs(g) < 0.5 ? 0 : 0.22 + 0.78 * t, g > 0);
   }
   /* 점유율 → 색. **중립은 50%** 이고 25%·75% 에서 가장 진해진다.
      **못 잰 것은 회색** — 0% 로 칠하면 「완패」라는 거짓이 된다. */
   function rvColor(p) {
-    if (p === null) return 'rgb(90,95,107)';
+    if (p === null) return 'rgb(214,218,224)';
     var d = p - 50, t = Math.min(Math.abs(d) / 25, 1);
     return rampColor(Math.abs(d) < 1 ? 0 : 0.22 + 0.78 * t, d > 0);
   }
