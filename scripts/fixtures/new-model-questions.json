@@ -1,7 +1,7 @@
 {
  "_note": "2026-09-01 사장님 지시로 시험지의 가전 문항을 신규 44개 모델로 갈았다. 네 갈래(모델 사양·설치환경·설치 비용·셀링포인트) 모두 커밋된 원문에서만 값을 가져오며 지어낸 수치가 없다. npm run build:nmq 로 다시 만든다. 레벨업 챌린지 앱(QB)은 건드리지 않는다 — 시험 도구만 이 파일을 읽는다.",
  "_source": "scripts/fixtures/usp-models.json · public/finder-app.html(PRODUCTS) · public/finder-extra.json · public/install-app.html(INSTALL_DB) · public/install-cost.json",
- "count": 482,
+ "count": 481,
  "items": [
   {
    "cat": "TV",
@@ -4232,21 +4232,6 @@
    "nm": 1,
    "fam": "install",
    "exp": "상단 25mm · 후면 15mm 는 대용량·일반용량, Bespoke·비Bespoke 전 라인업 공통이다. 좌우만 라인업에 따라 갈린다. (근거: 설치환경 가이드 「에어드레서」)"
-  },
-  {
-   "cat": "에어드레서",
-   "q": "에어드레서 좌우 이격이 14mm 로 더 넓게 필요한 라인업은?",
-   "opts": [
-    "구형 Bespoke(DF10A9500CG·DF60A8500CG)",
-    "Bespoke AI 대용량 DF*0H24R** 라인",
-    "Bespoke AI 일반용량 DF18CB****** 라인",
-    "비Bespoke 에어드레서 DF10T9700BG 라인"
-   ],
-   "ans": 0,
-   "lv": "중",
-   "nm": 1,
-   "fam": "install",
-   "exp": "판매 중인 모델코드 기준으로 먼저 확인해야 한다 — 구형 Bespoke 블루 라인만 14mm 다. (근거: 설치환경 가이드 「에어드레서」)"
   },
   {
    "cat": "에어드레서",
