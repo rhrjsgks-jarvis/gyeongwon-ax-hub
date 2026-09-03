@@ -3418,6 +3418,21 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('0건 문구가 남아 있다');
   }
 
+  /* ⑧ **당사 vs LG 둘만** (2026-09-03 사장님 지시) + 가로 막대 */
+  if (ix.includes("['us', 'th', 'hm', 'el']")) bad.push('지역 막대가 아직 4사를 그린다');
+  if (!ix.includes('var pct2 = tot2 ? Math.round(v.us / tot2 * 100) : null;')) {
+    bad.push('화면이 서버의 4사 pct 를 그대로 쓴다 — 둘만 그리는데 %가 어긋난다');
+  }
+  if (!ix.includes('.rvg4 .plot div { height:')) bad.push('지역 막대가 가로가 아니다');
+  if (ix.includes('넷이 똑같이 나누면 25%')) bad.push('범례가 아직 4사 균형점을 적는다');
+  /* **막대가 100% 로 뻗으면 최댓값 숫자가 잘린다**(실물에서 봤다) */
+  if (!ix.includes('v[k] / mx * 86')) bad.push('막대가 숫자 자리를 안 남긴다');
+
+  /* ⑨ **빈 값을 스크립트 속성에 저장하지 않는다** (사장님 신고: _deadErr 값이없다) */
+  if (gs.includes("setProperty('_deadErr', String((deadRun")) {
+    bad.push('_deadErr 에 빈 문자열을 저장한다 — Apps Script 가 거부한다');
+  }
+
   if (bad.length) fail('[바이럴] 매장 대 매장 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 매장 대 매장 — 양쪽을 같은 질의로 · 색은 우리 몫 · 자료 없으면 감춘다');
 }

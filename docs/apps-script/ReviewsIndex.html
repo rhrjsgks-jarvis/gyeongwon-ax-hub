@@ -293,16 +293,18 @@
      *"어느 지역 판이 큰가"* 를 답할 수 없었다. 세로 막대는 회사별 건수를 그대로
      세워 비중과 크기를 **함께** 보여준다. 막대 높이는 여섯 지역을 가로질러 같은
      자로 잰다(지역마다 자를 새로 잡으면 지역끼리 견줄 수가 없다). */
-  .rvg4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 13px; }
-  .rvg4 .u { text-align: center; }
-  .rvg4 .plot { display: flex; align-items: flex-end; gap: 5px; height: 108px;
-                border-bottom: 1px solid #E5E7EB; }
-  .rvg4 .plot span { flex: 1; border-radius: 3px 3px 0 0; position: relative; min-height: 2px; }
-  .rvg4 .plot span em { position: absolute; top: -13px; left: -2px; right: -2px; text-align: center;
-                        font-style: normal; font-size: var(--fs-mini); font-weight: 700; color: #374151; }
-  .rvg4 .nm { font-size: 12.5px; font-weight: 700; margin-top: 7px; }
+  /* 가로 막대 — 지역 이름이 왼쪽에 줄줄이 서서 여섯 지역이 한눈에 읽힌다 */
+  .rvg4 { display: block; }
+  .rvg4 .u { display: block; margin-bottom: 11px; }
+  .rvg4 .plot { display: block; }
+  .rvg4 .plot div { height: 17px; border-radius: 0 3px 3px 0; position: relative;
+                    margin-bottom: 3px; min-width: 2px; }
+  .rvg4 .plot div em { position: absolute; left: 100%; top: 0; line-height: 17px;
+                       margin-left: 5px; white-space: nowrap;
+                       font-style: normal; font-size: var(--fs-mini); font-weight: 700; color: #374151; }
+  .rvg4 .nm { font-size: 12.5px; font-weight: 700; margin-bottom: 4px; }
   .rvg4 .cnt { font-size: var(--fs-mini); color: var(--mute); }
-  .rvg4 .u.na .plot span { background: #C7CDD6 !important; }
+  .rvg4 .u.na .plot div { background: #C7CDD6 !important; }
   /* 색은 가로 막대와 **같은 값을 쓴다** — 두 곳에 따로 적으면 같은 회사가 두 색이 된다 */
   .rvg4 .us { background: var(--blue); }
   .rvg4 .th { background: #C0392B; }
@@ -984,10 +986,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="note" style="margin:2px 0 8px">
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#1428A0;margin-right:3px"></span>당사
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#C0392B;margin:0 3px 0 8px"></span>LG베스트샵
-        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#E67E22;margin:0 3px 0 8px"></span>하이마트
-        <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#7E57C2;margin:0 3px 0 8px"></span>전자랜드
-        <b style="margin-left:8px">오른쪽 %는 4사 중 당사 몫</b>입니다 —
-        <b>넷이 똑같이 나누면 25%</b> 라 그보다 높으면 앞선 것입니다.
+        <b style="margin-left:8px">오른쪽 %는 당사 몫</b>입니다 —
+        <b>둘이 반반이면 50%</b> 라 그보다 높으면 앞선 것입니다.
+        <span class="cntxt" style="display:block;margin-top:3px">하이마트·전자랜드는 화면에서 뺐습니다(2026-09-03) —
+        자료는 그대로 모으고 있어 다시 넣을 수 있습니다.</span>
       </div>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
@@ -2073,7 +2075,10 @@ function secPeek(k) {
         var win = 0, lose = 0, na = 0;
         rr.forEach(function (r) {
           if (!(typeof r.pct === 'number' && isFinite(r.pct))) na++;
-          else if (rvWin(r)) win++; else lose++;
+          else {
+            var t2 = (Number(r.ours) || 0) + (Number(r.rival) || 0);
+            if (t2 && (Number(r.ours) || 0) / t2 >= 0.5) win++; else lose++;
+          }
         });
         return '지역 ' + rr.length + '곳 · 당사 우세 ' + win + ' · LG 우세 ' + lose + (na ? ' · 못 잼 ' + na : '');
       }
@@ -2249,9 +2254,14 @@ function wireSecs() {
       /* **여기도 「숫자가 아니면 못 잼」이다** — 네 번째 자리였다. 한 곳만 고치면
          표는 「못 잼」인데 진단 문장은 그 지역을 「가장 많이 밀리는 곳」이라고 적는다. */
       var okd = function (r) { return typeof r.pct === 'number' && isFinite(r.pct); };
-      /* **균형점 대비로 정렬한다** — 4사 줄과 2사 줄이 섞이면 raw % 로는 못 견준다 */
-      var lose = R.rows.filter(function (r) { return okd(r) && !rvWin(r); })
-        .sort(function (a, b) { return (a.pct - rvBase(a)) - (b.pct - rvBase(b)); });
+      /* **화면과 같은 잣대(당사 vs LG)로 낸다** — 화면은 둘만 그리는데 진단이 4사
+         분모로 말하면 같은 지역을 두고 두 말을 한다. */
+      var p2 = function (r) {
+        var t = (Number(r.ours) || 0) + (Number(r.rival) || 0);
+        return t ? (Number(r.ours) || 0) / t * 100 : null;
+      };
+      var lose = R.rows.filter(function (r) { var q = p2(r); return okd(r) && q !== null && q < 50; })
+        .sort(function (a, b) { return p2(a) - p2(b); });
       if (lose.length) {
         out.push(['경쟁사와 견주면',
           '우리가 뒤진 지역이 <b class="warn">' + lose.length + '곳</b>입니다 — 가장 많이 밀리는 곳은 '
@@ -3461,34 +3471,47 @@ function wireSecs() {
      * 바꾸는 이유가 그것인데 거기서 무너진다. */
     var mx = 0;
     rows.forEach(function (r) {
-      [r.ours, r.rival, r.hi, r.el].forEach(function (v) { v = Number(v) || 0; if (v > mx) mx = v; });
+      [r.ours, r.rival].forEach(function (v) { v = Number(v) || 0; if (v > mx) mx = v; });
     });
     el.innerHTML = '<div class="rvg4">' +
       rows.map(function (r) {
         /* **분모는 네 곳 전부**(2026-09-02 사장님 결정) — 「그 지역 가전 후기 중 우리 몫」.
            옛 회차에는 hi·el 칸이 없어 0 이라, 그 줄은 예전과 같은 2자 비교가 된다. */
-        var v = { us: Number(r.ours) || 0, th: Number(r.rival) || 0,
-                  hm: Number(r.hi) || 0, el: Number(r.el) || 0 };
+        /* **하이마트·전자랜드는 뺀다**(2026-09-03 사장님 지시 — *"당사 vs 경쟁사
+           하이마트와 전자랜드는 제외하는걸로 변경"*). 자료는 그대로 두고 화면에서만
+           뺀다 — 다시 넣으라 하시면 되돌릴 수 있어야 한다.
+           **분모가 둘이 되었으므로 균형점은 50% 다**(rvBase 가 값 있는 회사를 센다). */
+        var v = { us: Number(r.ours) || 0, th: Number(r.rival) || 0 };
         /* **「숫자가 아니면 전부 못 잼」이다**(2026-09-01 사장님 지적 — *"용인 지역은
            undefined 라고 표시되는데"*). `null` 만 보면 `undefined`·`NaN`·빈 문자열이 새어
            `undefined%` 가 그대로 찍힌다 — **모르는 것을 숫자인 척 그리지 않는다.** */
         var na = !(typeof r.pct === 'number' && isFinite(r.pct));
-        var bars = ['us', 'th', 'hm', 'el'].map(function (k) {
-          /* 0 인 회사도 **자리는 남긴다** — 세로 막대는 자리가 곧 회사라, 빼면 옆 회사
-             막대가 그 자리로 밀려 색과 회사가 어긋난다(가로 스택과 다른 점이다). */
-          var h = mx ? Math.max(2, v[k] / mx * 100) : 2;
-          return '<span class="' + k + '" style="height:' + h.toFixed(1) + '%"><em>'
-            + (v[k] ? nf(v[k]) : '') + '</em></span>';
+        /* **서버 pct 는 4사 분모다** — 둘만 그리는 화면에서 그대로 쓰면 거짓이 된다.
+           여기서 다시 낸다(당사 ÷ (당사+LG)). */
+        var tot2 = v.us + v.th;
+        var pct2 = tot2 ? Math.round(v.us / tot2 * 100) : null;
+        if (pct2 === null) na = true;
+        /* **가로 막대**(2026-09-03 사장님 지시). 세로였을 때는 지역 이름이 아래에
+           붙어 여섯 지역을 훑으려면 눈이 계속 오르내렸다. 가로면 이름이 왼쪽에
+           줄줄이 서서 한 번에 읽힌다.
+           **길이 자는 여섯 지역이 공유한다**(`mx`) — 지역마다 새로 잡으면 각 지역
+           1위가 늘 천장에 닿아 지역끼리 견줄 수가 없다(세로였을 때와 같은 이유). */
+        var bars = ['us', 'th'].map(function (k) {
+          /* **86% 까지만 뻗는다** — 건수를 막대 끝 오른쪽에 적으므로 100% 로 두면
+             가장 큰 지역의 숫자가 화면 밖으로 잘린다(실물에서 봤다). */
+          var w2 = mx ? Math.max(1.5, v[k] / mx * 86) : 1.5;
+          return '<div class="' + k + '" style="width:' + w2.toFixed(1) + '%"><em>'
+            + (v[k] ? nf(v[k]) : '') + '</em></div>';
         }).join('');
-        var tip = r.area + ' — 당사 ' + nf(v.us) + ' · LG ' + nf(v.th)
-          + ' · 하이마트 ' + nf(v.hm) + ' · 전자랜드 ' + nf(v.el) + '건'
+        var tip = r.area + ' — 당사 ' + nf(v.us) + ' · LG ' + nf(v.th) + '건'
+          + (pct2 === null ? '' : ' · 우리 몫 ' + pct2 + '% (둘이 반반이면 50%)')
           + (na ? (r.half ? ' (도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 비중을 낼 수 없습니다)'
                           : ' (양쪽 증가율이 벌어져 비중을 믿을 수 없습니다)') : '');
         return '<div class="u' + (na ? ' na' : '') + '" title="' + esc(tip) + '">'
-          + '<div class="plot">' + bars + '</div>'
           + '<div class="nm">' + esc(r.area) + ' '
           + (na ? '<span class="namark">못 잼</span>'
-                : '<span class="' + (rvWin(r) ? 'win' : 'lose') + '">' + r.pct + '%</span>') + '</div>'
+                : '<span class="' + (pct2 >= 50 ? 'win' : 'lose') + '">' + pct2 + '%</span>') + '</div>'
+          + '<div class="plot">' + bars + '</div>'
           + '</div>';
       }).join('') + '</div>';
 
@@ -3577,8 +3600,9 @@ function wireSecs() {
             }).join('') + '</div>';
       };
       var monKeys = Object.keys(monAcc).sort().slice(-6);
-      box.innerHTML = '<div class="mini" style="margin-bottom:5px">아래 칸은 <b>당사 vs LG 둘만</b> 견줍니다'
-          + '(균형 50%) — <b>위 지역 막대는 4사 분모</b>라 같은 %가 아닙니다. '
+      /* **위 막대도 이제 2사다**(2026-09-03) — 「4사 분모라 다르다」는 그 자리에서 거짓이 됐다. */
+      box.innerHTML = '<div class="mini" style="margin-bottom:5px">칸 안의 %는 <b>당사 몫</b>입니다'
+          + '(당사 vs LG · 둘이 반반이면 50%). '
           + '<b>진한 초록일수록 우리가 앞서고 진한 빨강일수록 밀립니다</b>(히트맵과 같은 색).</div>'
         + sect('어디에서 싸우나 — 출처별', srcAcc, '', ['블로그', '카페', '웹'])
         + sect('무슨 이야기인가 — 유형별', kindAcc, '')
@@ -3732,8 +3756,14 @@ function wireSecs() {
     /* **세는 것도 같은 잣대를 쓴다** — 위에서는 「못 잼」인데 여기서는 숫자로 세면
        머리글과 표가 어긋난다. 한 함수를 지나가게 한다. */
     var okp = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
-    var win = rows.filter(function (r) { return okp(r) && rvWin(r); }).length;
-    var lose = rows.filter(function (r) { return okp(r) && !rvWin(r); }).length;
+    /* **화면이 둘만 그리므로 판정도 둘로 한다**(2026-09-03) — 서버 `pct` 는 4사
+       분모라 그대로 쓰면 화면의 %와 머리글이 어긋난다. */
+    var pctOf = function (r) {
+      var t = (Number(r.ours) || 0) + (Number(r.rival) || 0);
+      return t ? (Number(r.ours) || 0) / t * 100 : null;
+    };
+    var win = rows.filter(function (r) { var q = pctOf(r); return okp(r) && q !== null && q >= 50; }).length;
+    var lose = rows.filter(function (r) { var q = pctOf(r); return okp(r) && q !== null && q < 50; }).length;
     var na = rows.filter(function (r) { return !okp(r); }).length;
     document.getElementById('rival-sub').textContent =
       '영업스케치 지역 ' + rows.length + '곳 · 당사가 앞선 곳 ' + win + ' · 밀리는 곳 ' + lose +

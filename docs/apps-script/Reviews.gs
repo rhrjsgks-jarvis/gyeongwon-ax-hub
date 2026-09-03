@@ -2555,7 +2555,12 @@ function sweep_(mode) {
   if (deadDue_() && !over()) {
     try {
       deadRun = verifyDead_(Date.now() + DEAD_MS);
-      props_().setProperty('_deadErr', String((deadRun && deadRun.error) || ''));
+      /* **빈 값을 저장하지 않는다**(2026-09-03 사장님 신고 — *"_deadErr 값이없다고
+         나옵니다"*). Apps Script 의 setProperty 는 빈 문자열을 거부한다 —
+         오류가 없으면 그 속성을 **지운다**. 그래야 「지난번 오류」가 남지도 않는다. */
+      var de = String((deadRun && deadRun.error) || '');
+      if (de) props_().setProperty('_deadErr', de);
+      else props_().deleteProperty('_deadErr');
     }
     catch (e4) { deadRun = { error: String(e4) }; props_().setProperty('_deadErr', String(e4)); }
   }
