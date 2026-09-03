@@ -3251,5 +3251,60 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 }
 
+/* ── 바이럴 관리자 잠금 (2026-09-03 사장님 지시) ─────────────────────────────
+ * *"기존에 매니저탭은 관리자항목으로(신규생성) 넣어주세요 관리자는 비밀번호를 치고
+ *  접속하게 해야합니다."*
+ * **가장 위험한 것은 비밀번호가 저장소에 새는 것**이다 — 이 저장소는 public 이다. */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const rvp = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(ixp) && fs.existsSync(rvp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const rv = fs.readFileSync(rvp, 'utf8');
+    const bad = [];
+
+    /* ① **비밀번호가 소스에 없어야 한다.** 스크립트 속성에서만 읽는다. */
+    if (!rv.includes("props_().getProperty(ADMIN_PROP)")) bad.push('비밀번호를 스크립트 속성에서 읽지 않는다');
+    /* 값이 소스에 박혔는가 — 정규식 대신 문자열로 본다 */
+    const litAt = rv.indexOf("ADMIN_PW = '") >= 0 || rv.indexOf('ADMIN_PW = "') >= 0;
+    if (litAt) bad.push('비밀번호가 소스에 박혀 있다 — 이 저장소는 public 이다');
+    /* 기본값(폴백)을 두면 그것이 곧 공개 비밀번호다 */
+    if (rv.includes("want || '") || rv.includes('want || "')) bad.push('비밀번호에 기본값이 있다 — 그것이 곧 공개 비밀번호가 된다');
+
+    /* ② **서버가 검증한다.** 화면에서 견주면 소스를 보는 사람에게 그대로 드러난다. */
+    if (!rv.includes('function adminAuth(')) bad.push('서버에 adminAuth 가 없다');
+    if (!rv.includes('function adminOk_(')) bad.push('토큰 검증 함수가 없다');
+    /* **관리 함수가 토큰을 요구해야 한다** — 화면만 잠그면 서버는 열려 있다.
+       웹앱 주소를 아는 사람은 google.script.run 을 직접 부를 수 있다. */
+    if (!rv.includes('function setManagerNames(store, names, token)')) {
+      bad.push('setManagerNames 가 토큰을 안 받는다');
+    }
+    if (!rv.includes('if (!adminOk_(token))')) bad.push('setManagerNames 가 토큰을 검사하지 않는다');
+    if (!ix.includes('.setManagerNames(store, names, admToken)')) bad.push('화면이 토큰을 안 보낸다');
+
+    /* ③ 무차별 대입을 막는다 · 왜 틀렸는지는 알려 주지 않는다 */
+    if (!rv.includes('ADMIN_TRY_MAX')) bad.push('시도 제한이 없다');
+    if (!rv.includes('function admEq_(')) bad.push('상수시간 비교가 없다');
+
+    /* ④ **탭을 닫으면 잠긴다.** localStorage 면 브라우저를 껐다 켜도 열려 있다 —
+           매장 기기를 여럿이 쓰므로 잠근 뜻이 없어진다. */
+    if (!ix.includes("var ADM_KEY = 'viral_adm'")) bad.push('관리자 세션 키가 없다');
+    if (ix.includes('localStorage.setItem(ADM_KEY') || ix.includes('localStorage.getItem(ADM_KEY')) bad.push('관리자 세션을 localStorage 에 둔다 — 껐다 켜도 열려 있다');
+    if (!ix.includes('sessionStorage.setItem(ADM_KEY')) bad.push('관리자 세션이 sessionStorage 가 아니다');
+
+    /* ⑤ 매니저 탭이 관리자 안으로 갔는가 */
+    if (!ix.includes('data-sec="admin"')) bad.push('관리자 심벌 박스가 없다');
+    if (!ix.includes('data-card="admin"')) bad.push('관리자 카드가 없다');
+    if (ix.includes('data-sec="mgr"') || ix.includes('data-card="mgr"')) {
+      bad.push('매니저 탭이 그대로 남아 있다 — 관리자 안으로 옮기라는 지시였다');
+    }
+    /* 잠금 화면과 본문이 갈려 있어야 한다 */
+    if (!ix.includes('id="adm-lock"') || !ix.includes('id="adm-body"')) bad.push('잠금/본문이 갈려 있지 않다');
+
+    if (bad.length) fail('[바이럴] 관리자 잠금 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 관리자 잠금 — 비밀번호는 속성에만 · 서버가 검증 · 관리 함수도 토큰을 요구');
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

@@ -410,7 +410,14 @@ const stub = [
      그러면 이 하네스로 화면을 보는 뜻이 없어진다 — 진짜 결함이 그 오류에 묻힌다. */
   '    getProgress: function () { setTimeout(function () { ok && ok({}); }, 100); },',
   '    runRival: function () { console.log("[preview] runRival (로컬이라 아무 일도 하지 않는다)"); },',
-  '    setManagerNames: function () {}, setAlias: function () {}, setupTrigger: function () {},',
+  '    setManagerNames: function () { setTimeout(function () { ok && ok({ ok: true }); }, 60); },',
+  '    setAlias: function () {}, setupTrigger: function () {},',
+  '    adminAuth: function (pw) {',
+  '      setTimeout(function () {',
+  '        if (String(pw) === "1234") ok && ok({ ok: true, token: "preview-token", ttl: 7200 });',
+  '        else ok && ok({ ok: false, why: "비밀번호가 다릅니다." });',
+  '      }, 120);',
+  '    },',
   /* LG 짝 — **성공한 척 돌려줘야 화면의 뒷일까지 지나간다**(지도의 채운 핀 갱신 등).
      아무 일도 안 하면 「저장하는 중…」에서 멈춰 그 자리를 눈으로 볼 수가 없다. */
   '    setLgPair: function (store, shop) {',

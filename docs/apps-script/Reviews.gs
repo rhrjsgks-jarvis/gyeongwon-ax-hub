@@ -1407,7 +1407,8 @@ function mgrNameClean_(s) {
  * **막는 것이 이 함수의 값어치다:** 매장이 목록에 실제로 있어야 하고, 이름은 한글
  * 2~4자여야 하며, 한 매장에 40명까지다(그보다 많으면 잘못 붙여 넣은 것이다).
  */
-function setManagerNames(store, names) {
+function setManagerNames(store, names, token) {
+  if (!adminOk_(token)) return { ok: false, error: '관리자 확인이 필요합니다 — 다시 로그인해 주세요.' };
   var i, ok = false;
   for (i = 0; i < STORES.length; i++) if (STORES[i][1] === store) { ok = true; break; }
   if (!ok) return { ok: false, error: '그런 매장이 없습니다: ' + store };
@@ -1521,6 +1522,82 @@ function belongsToOther_(text, name, allNames) {
 /* ── 수집 ────────────────────────────────────────────────────── */
 
 function props_() { return PropertiesService.getScriptProperties(); }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * 관리자 잠금 (2026-09-03 사장님 지시 — *"관리자는 비밀번호를 치고 접속하게"*)
+ * ══════════════════════════════════════════════════════════════════════
+ * **비밀번호를 이 파일에 적으면 안 된다.** 이 저장소는 public 이라 커밋하는 순간
+ * 누구나 받아 간다(세일즈 코파일럿 본체가 `ADMIN_PW` 를 환경변수에만 두는 것과 같다).
+ * 스크립트 속성에 넣고 **서버가 검증**하며, 화면에는 결과와 토큰만 돌려준다.
+ *
+ * 설정: Apps Script 편집기 → 프로젝트 설정 → 스크립트 속성 → `ADMIN_PW` 추가.
+ * **없으면 잠근 채로 둔다**(fail closed) — 기본 비밀번호를 두면 그것이 곧 공개 비밀번호다.
+ */
+var ADMIN_PROP = 'ADMIN_PW';
+var ADMIN_TTL = 7200;        /* 토큰 2시간 — 매장 화면을 열어 둔 채 자리를 비울 수 있다 */
+var ADMIN_TRY_MAX = 10;      /* 10분에 10회 — 한 기기 무차별 대입은 실질적으로 막힌다 */
+var ADMIN_TRY_TTL = 600;
+
+/** 붙여넣다 섞이는 것을 걷어낸다 — 앞뒤 공백·감싸는 따옴표.
+ *  (본체 `lib/adminAuth.ts` 가 같은 이유로 같은 일을 한다 — 사람이 붙여넣다 틀리는
+ *  사고가 훨씬 잦다.) */
+function admClean_(v) {
+  var t = String(v == null ? '' : v).trim();
+  if (t.length >= 2 && ((t.charAt(0) === '"' && t.charAt(t.length - 1) === '"')
+                     || (t.charAt(0) === "'" && t.charAt(t.length - 1) === "'"))) {
+    t = t.slice(1, -1).trim();
+  }
+  return t;
+}
+
+/** 상수시간 비교 — 길이가 다르면 그 자리에서 다르다고 하되, **같은 길이에서는
+ *  앞자리가 달라도 끝까지 돈다**(어디까지 맞았는지 시간으로 새어 나가지 않게). */
+function admEq_(a, b) {
+  if (a.length !== b.length) return false;
+  var d = 0;
+  for (var i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+
+/**
+ * 비밀번호 검증. **왜 틀렸는지는 알려 주지 않는다** — 「그런 비밀번호가 없다」와
+ * 「다르다」를 가르면 하나씩 넣어 보며 찾아낼 수 있다.
+ * 다만 **미설정만은 밝힌다** — 그것은 비밀이 아니라 설정이 안 된 상태이고,
+ * 안 밝히면 사장님이 「비밀번호가 틀렸나」를 영영 붙들게 된다.
+ */
+function adminAuth(pw) {
+  var want = admClean_(props_().getProperty(ADMIN_PROP));
+  if (!want) {
+    return { ok: false, unset: true,
+             why: '관리자 비밀번호가 설정되지 않았습니다 — Apps Script 편집기의 '
+                + '「프로젝트 설정 → 스크립트 속성」에 ADMIN_PW 를 넣어 주세요.' };
+  }
+  /* 시도 제한 — 캐시라 인스턴스별이지만 한 기기 대입은 막힌다 */
+  var c = CacheService.getScriptCache(), key = 'adm_try';
+  var n = Number(c.get(key) || 0);
+  if (n >= ADMIN_TRY_MAX) return { ok: false, why: '시도가 너무 잦습니다 — 10분 뒤에 다시 해 주세요.' };
+
+  if (!admEq_(admClean_(pw), want)) {
+    c.put(key, String(n + 1), ADMIN_TRY_TTL);
+    return { ok: false, why: '비밀번호가 다릅니다.' };
+  }
+  c.remove(key);
+  /* 토큰 — 임의 32자. 캐시에 두어 2시간 뒤 스스로 사라진다 */
+  var t = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 8);
+  c.put('adm_' + t, '1', ADMIN_TTL);
+  return { ok: true, token: t, ttl: ADMIN_TTL };
+}
+
+/** 토큰이 살아 있는가. **화면만 잠그면 서버는 열려 있다** — 관리 함수가 이것을 지난다. */
+function adminOk_(token) {
+  var t = admClean_(token);
+  if (!t) return false;
+  return CacheService.getScriptCache().get('adm_' + t) === '1';
+}
+
+/** 관리자 비밀번호가 **설정돼 있는지**만 알린다(값은 절대 내보내지 않는다).
+ *  화면이 「설정하세요」와 「비밀번호를 치세요」를 갈라 적을 수 있어야 한다. */
+function adminReady() { return { set: !!admClean_(props_().getProperty(ADMIN_PROP)) }; }
 
 function today_() { return Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'); }
 
@@ -4162,7 +4239,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 9;
+var SUM_VER = 10;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

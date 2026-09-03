@@ -916,7 +916,11 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   <button type="button" class="sec" data-sec="sdp" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16"/><path d="M9 20v-5h6v5"/><circle cx="18.5" cy="5.5" r="2.5"/></svg></span>SDP 개인대리점</button>
   <button type="button" class="sec" data-sec="signal" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20v-8M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0"/><circle cx="12" cy="11" r="1.5"/></svg></span>매장 신호</button>
   <button type="button" class="sec" data-sec="cafe" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M7 4v2M10 4v2M13 4v2"/></svg></span>어디에 올라오나</button>
-  <button type="button" class="sec" data-sec="mgr" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/></svg></span>매니저</button>
+  <!-- 관리자 (2026-09-03 사장님 지시 — *"기존에 매니저탭은 관리자항목으로(신규생성)
+       넣어주세요 관리자는 비밀번호를 치고 접속하게 해야합니다"*).
+       매니저 **순위**는 히트맵으로 갔고, 남은 **명부 등록**은 관리 성격이라 여기로 옮겼다.
+       심벌은 자물쇠 — 다른 박스와 한눈에 갈려야 「누르면 잠겨 있다」가 예상된다. -->
+  <button type="button" class="sec" data-sec="admin" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>관리자</button>
   <button type="button" class="sec" data-sec="alias" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l9-9h8v8l-9 9z"/><circle cx="16" cy="8" r="1.5"/></svg></span>줄임말</button>
   <button type="button" class="sec" data-sec="list" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg></span>후기 링크</button>
 </div>
@@ -1076,8 +1080,21 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="watch" id="watch"></div>
       <div id="cafes"></div>
     </div>
-    <div class="card" data-card="mgr">
-      <h2>매니저 명부</h2>
+    <div class="card" data-card="admin">
+      <h2>관리자</h2>
+      <div class="sub" id="adm-sub">비밀번호를 넣으면 관리 항목이 열립니다.</div>
+      <!-- 잠금 — **비밀번호는 서버가 검증한다.** 화면에서 견주면 소스를 보는 사람에게
+           그대로 드러난다(이 저장소는 public 이다). 통과하면 서버가 토큰을 주고,
+           관리 동작은 그 토큰을 함께 보낸다 — **화면만 잠그면 서버는 열려 있다.** -->
+      <div id="adm-lock">
+        <div class="alias-add">
+          <input id="adm-pw" type="password" placeholder="관리자 비밀번호" autocomplete="off">
+          <button id="adm-ok">들어가기</button>
+        </div>
+        <div id="adm-msg" class="sub"></div>
+      </div>
+      <div id="adm-body" hidden>
+      <h3>매니저 명부</h3>
       <!-- 2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"* ·
            *"이름을 제목과 해시태그 내용에서 모두 검출해 주세요"*.
            **두 숫자를 갈라 적는다** — ⓐ 우리 후기 중 언급 수(정확) ⓑ 네이버 전체
@@ -1099,6 +1116,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <div id="mgr-msg" class="sub"></div>
         <div id="mgr-known"></div>
       </details>
+      </div>
     </div>
     <div class="card" data-card="alias">
       <h2>줄임말 등록</h2>
@@ -1384,6 +1402,90 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     return;
   }
 
+  /* ══════════════════════════════════════════════════════════════════
+   * 관리자 잠금 (2026-09-03 사장님 지시 — *"관리자는 비밀번호를 치고 접속"*)
+   * ══════════════════════════════════════════════════════════════════
+   * **비밀번호는 서버가 검증한다.** 화면에서 견주면 소스를 보는 사람에게 그대로
+   * 드러난다 — 이 저장소는 public 이고 Apps Script 화면은 누구나 열 수 있다.
+   *
+   * 통과하면 서버가 **토큰**을 주고, 관리 동작(`setManagerNames`)은 그것을 함께
+   * 보낸다. **화면만 잠그면 서버는 열려 있다** — 웹앱 주소를 아는 사람은
+   * `google.script.run` 을 직접 부를 수 있다.
+   *
+   * **`sessionStorage` 를 쓴다** — 탭을 닫으면 지워진다. 매장 기기를 여럿이 쓰므로
+   * 브라우저를 껐다 켜도 열려 있으면 잠근 뜻이 없다(본체 관리자 화면과 같은 규칙).
+   * 막힌 환경이 있어 통째로 감싼다 — 못 기억할 뿐 그 판에서는 그대로 쓴다. */
+  var ADM_KEY = 'viral_adm';
+  var admToken = '';
+  function admLoad() {
+    try {
+      var v = JSON.parse(sessionStorage.getItem(ADM_KEY) || 'null');
+      if (v && v.t && v.exp > Date.now()) return v.t;
+    } catch (e) {}
+    return '';
+  }
+  function admSave(t, ttl) {
+    try { sessionStorage.setItem(ADM_KEY, JSON.stringify({ t: t, exp: Date.now() + (ttl || 7200) * 1000 })); } catch (e) {}
+  }
+  function admClear() { try { sessionStorage.removeItem(ADM_KEY); } catch (e) {} }
+
+  /** 잠금/해제 화면을 그린다. **자료가 없어도 돈다** — 이 카드는 수집과 무관하다. */
+  function renderAdmin() {
+    var lock = document.getElementById('adm-lock'), body = document.getElementById('adm-body');
+    var sub = document.getElementById('adm-sub');
+    if (!lock || !body) return;
+    var on = !!admToken;
+    lock.hidden = on;
+    body.hidden = !on;
+    if (sub) {
+      sub.innerHTML = on
+        ? '열려 있습니다 — <b>탭을 닫으면 다시 잠깁니다.</b> '
+          + '<button type="button" class="btn" id="adm-out" style="background:#EEF2FF;color:var(--blue)">잠그기</button>'
+        : '매니저 명부처럼 <b>값을 고치는 항목</b>은 여기서 다룹니다 — 비밀번호를 넣어 주세요.';
+      var out = document.getElementById('adm-out');
+      if (out) out.onclick = function () { admToken = ''; admClear(); renderAdmin(); };
+    }
+    if (on) { renderMgrBook(); }
+  }
+
+  function wireAdmin() {
+    var ok = document.getElementById('adm-ok'), pw = document.getElementById('adm-pw');
+    var msg = document.getElementById('adm-msg');
+    if (!ok || !pw) return;
+    var go = function () {
+      var v = pw.value || '';
+      if (!v) { if (msg) msg.textContent = '비밀번호를 넣어 주세요.'; return; }
+      if (!(window.google && google.script && google.script.run)) {
+        if (msg) msg.textContent = '미리보기에서는 확인할 수 없습니다.';
+        return;
+      }
+      ok.disabled = true;
+      if (msg) msg.textContent = '확인하는 중입니다…';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          ok.disabled = false;
+          if (r && r.ok) {
+            admToken = r.token; admSave(r.token, r.ttl);
+            pw.value = '';
+            if (msg) msg.textContent = '';
+            renderAdmin();
+            return;
+          }
+          /* **미설정만은 밝힌다** — 비밀이 아니라 설정이 안 된 상태다.
+             안 밝히면 사장님이 「비밀번호가 틀렸나」를 영영 붙들게 된다. */
+          if (msg) msg.innerHTML = '<b class="warn">' + esc((r && r.why) || '확인하지 못했습니다') + '</b>';
+        })
+        .withFailureHandler(function (e) {
+          ok.disabled = false;
+          if (msg) msg.innerHTML = '<b class="warn">확인하지 못했습니다 — ' + esc(e && e.message) + '</b>';
+        })
+        .adminAuth(v);
+    };
+    ok.onclick = go;
+    /* 엔터로도 들어간다 — 비밀번호 칸에서 버튼을 찾아 누르게 하면 손이 한 번 더 간다 */
+    pw.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+  }
+
   /* ── 매니저 명부 (2026-09-01 사장님 요청) ─────────────────────────────
      *"추후 근무하는 매니저 이름을 넣으면 매니저별 몇 건의 후기가 있는지 검증이 가능하게"*.
      **0건도 적는다** — 등록했는데 후기에 한 번도 안 나오는 것이 곧 정보다.
@@ -1438,7 +1540,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         if (ok) ok.disabled = false;
         if (msg) msg.textContent = '저장하지 못했습니다 — ' + esc((e && e.message) || '');
       })
-      .setManagerNames(store, names);
+      /* **토큰을 함께 보낸다** — 서버가 확인한다. 화면만 잠그면 서버는 열려 있다 */
+      .setManagerNames(store, names, admToken);
   }
 
   function wireMgrBook() {
@@ -4724,9 +4827,11 @@ function renderList() {
       fromDate, toDate, dateOther].join("|");
     if (lastSig !== null && sig !== lastSig) page = 1;
     lastSig = sig;
+  admToken = admToken || admLoad();   /* 같은 탭이면 다시 묻지 않는다 */
   wireSecs(); applySecs(); /* 접이식 — 카드를 먼저 보이게 하고 그려야 막대·지도 폭이 0 이 아니다 */
     wireAlias();
     wireMgrBook();
+    wireAdmin();
     syncPoll();
     renderLimit();
     renderProgress();
@@ -4765,7 +4870,10 @@ function renderList() {
     renderKinds();
     renderWatch();
     renderMgrs();
-    renderMgrBook();
+    /* **명부는 관리자 안에 있다** — 잠겨 있으면 그리지 않는다(잠금 해제 때 그린다).
+       그리기 자체는 값을 새지 않지만, 잠긴 카드 안에 내용이 남아 있으면
+       「잠근 것이 아니라 접어 둔 것」이 된다. */
+    renderAdmin();
     renderAlias();
     renderRival();
     renderRegions();
