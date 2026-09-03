@@ -3385,6 +3385,39 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* ④ 비용을 밝힌다 — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다 */
   if (!ix.includes('3,720회')) bad.push('수집 비용을 화면이 밝히지 않는다');
 
+  /* ⑤ **한도를 세고 지킨다** — 안 세면 화면의 「오늘 쓴 호출」이 거짓이 되고,
+     다 쓴 채로 시작하면 커서만 헛돌아 사람은 왜 안 되는지 모른다. */
+  {
+    const at3 = gs.indexOf('function collectStoreRival(');
+    const end3 = gs.indexOf(String.fromCharCode(10) + '}', at3);
+    const body = gs.slice(at3, end3);
+    if (body.indexOf('addUsage_(calls)') < 0) {
+      bad.push('쓴 호출을 안 센다 — 화면의 「오늘 쓴 호출」이 거짓이 된다');
+    }
+    if (body.indexOf('used0 >= lim') < 0) {
+      bad.push('한도를 다 썼는데 시작한다 — 커서만 헛돈다');
+    }
+  }
+
+  /* ⑥ **드릴다운·지점별 분석이 연도로 맞아야 한다** (2026-09-03 사장님 지적)
+     칸이 「2026년 138건」인데 눌러 들어가면 채널 합이 1,100건이 넘었다. */
+  if (!gs.includes('byStoreChanY:')) bad.push('서버가 연도별 채널을 안 보낸다');
+  if (!ix.includes('function chanOfStore(store)')) bad.push('화면에 chanOfStore 가 없다');
+  if (ix.includes('(DATA.byStoreChan || {})[who]')) {
+    bad.push('드릴다운이 아직 전 기간 채널을 쓴다 — 칸과 두 말을 한다');
+  }
+  if (!ix.includes('var CH = chanOfStore(storeFilter);')) {
+    bad.push('지점별 분석이 연도로 안 맞는다');
+  }
+  /* **전 기간 수도 함께 밝힌다** — 「138건」만 보면 그 매장 후기가 그만큼인 줄 안다 */
+  if (!ix.includes('전 기간 누적은')) {
+    bad.push('전 기간 누적을 안 밝힌다 — 138 과 1,185 의 차이를 알 수 없다');
+  }
+  /* ⑦ **0건 문구는 뺐다**(사장님: "0건인것은 화면에서 안나와도됩니다") */
+  if (ix.includes("why.push(zeroN")) {
+    bad.push('0건 문구가 남아 있다');
+  }
+
   if (bad.length) fail('[바이럴] 매장 대 매장 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 매장 대 매장 — 양쪽을 같은 질의로 · 색은 우리 몫 · 자료 없으면 감춘다');
 }

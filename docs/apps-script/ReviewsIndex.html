@@ -506,6 +506,8 @@
                       min-width: 15px; font-variant-numeric: tabular-nums; }
   .stdet li em { font-style: normal; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stdet li b { font-weight: 800; font-variant-numeric: tabular-nums; }
+  /* 연도 배지 — 이 패널이 어느 해를 말하는지 제목이 밝힌다 */
+  .stdet h3 .yb { font-size: var(--fs-mini); font-weight: 700; color: var(--mute); margin-left: 5px; }
   .lgpair { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line); }
   .lgpair h4 { margin: 0 0 5px; font-size: var(--fs-body); font-weight: 800; color: #C0392B; }
   .lgpair select { width: 100%; padding: 5px 7px; border: 1px solid #DDE1E8; border-radius: 7px;
@@ -3109,7 +3111,9 @@ function wireSecs() {
   function renderStoreDetail() {
     var boxes = document.querySelectorAll('.stdet[data-area]');
     if (!boxes.length) return;
-    var by = DATA.byStore || {}, chAll = DATA.byStoreChan || {};
+    /* **연도로 맞춘다** — 히트맵 칸이 「2026년 138건」인데 여기가 전 기간이면
+       같은 화면이 두 말을 한다(사장님 지적). */
+    var by = DATA.byStore || {};
     var hit = storeFilter ? areaOfStore(storeFilter) : '';
     /* **고른 지역 것만 채우고 나머지는 안내로 되돌린다.** 안 되돌리면 다른 지역을 눌렀을 때
        옛 지점 분석이 남아 **화면이 두 지점을 동시에 말한다.** */
@@ -3120,8 +3124,14 @@ function wireSecs() {
         + '<div class="stdet-hint">왼쪽에서 <b>지점을 누르면</b> 여기 나옵니다</div>';
     });
     if (!el) return;
-    var n = by[storeFilter] || 0;
-    var ch = chAll[storeFilter] || {};
+    /* **큰 숫자도 그 해 것이어야 한다** — 히트맵 칸이 「2026년 138건」인데 여기가
+       1,185건이면 같은 화면이 두 말을 한다(사장님 지적). */
+    var CH = chanOfStore(storeFilter);
+    var ch = CH.m;
+    var n = CH.year
+      ? Object.keys(ch).reduce(function (a2, k2) { return a2 + ch[k2]; }, 0)
+      : (by[storeFilter] || 0);
+    var allN = by[storeFilter] || 0;
     var keys = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; });
     var list = keys.length
       ? '<ol>' + keys.map(function (k) {
@@ -3129,11 +3139,18 @@ function wireSecs() {
         }).join('') + '</ol>'
       /* **0 으로 그리지 않는다** — 「채널을 모른다」와 「후기가 없다」는 다른 말이다 */
       : '<div class="note">' + (n ? '채널을 가릴 수 없는 글입니다.' : '아직 후기가 없습니다.') + '</div>';
-    el.innerHTML = '<h3>' + esc(storeFilter) + '</h3>'
+    el.innerHTML = '<h3>' + esc(storeFilter) + (CH.year ? ' <span class="yb">' + CH.year + '년</span>' : '') + '</h3>'
       + '<div class="big">' + nf(n) + '<span>건</span></div>'
+      /* **전 기간 수를 함께 적는다** — 「138건」만 보면 그 매장 후기가 그만큼인 줄 안다.
+         작성일을 아는 글만 연도로 셀 수 있어서 생기는 차이다(전체의 26%). */
+      + (CH.year && allN > n
+          ? '<div class="note">전 기간 누적은 <b>' + nf(allN) + '건</b>입니다 —'
+            + ' 연도로 셀 수 있는 것은 <b>작성일을 아는 글</b>뿐입니다.</div>'
+          : '')
       + list
       + '<div class="note" style="margin-top:8px">카페는 <b>카페 이름</b>, 블로그·웹은'
-      + ' 출처로 묶었습니다 — 블로거 이름은 저장하지 않아 가릴 수 없습니다.</div>'
+      + ' 출처로 묶었습니다 — 블로거 이름은 저장하지 않아 가릴 수 없습니다.'
+      + (CH.year ? '' : ' <b>전 기간</b> 기준입니다(옛 자료라 연도로 못 나눕니다).') + '</div>'
       /* ── 경쟁 LG 지점 짝 (2026-09-03 사장님 지시) ─────────────────────────
        * *"LG지점명을 지도에 넣어주시고 제가 어느 매장과 매칭을 시킬지 변경 가능하도록"*.
        * 자동 짝은 **좌표로 낸 제안**이라(중앙값 0.26km) 틀릴 수 있다 — 사람이 고친다.
@@ -3168,6 +3185,10 @@ function wireSecs() {
     };
     var go = document.getElementById('godet');
     if (go) go.onclick = function () {
+      /* **그 해만 보여준다**(2026-09-03 사장님 지적) — 칸이 「2026년 138건」인데
+         목록에 1,185건이 나오면 화면이 두 말을 한다. 연도 칩이 쓰는 것과 **같은
+         범위 필터**를 세운다(두 벌로 두면 한쪽만 고치는 사고가 난다). */
+      if (CH.year) { fromDate = CH.year + '-01-01'; toDate = CH.year + '-12-31'; dateOther = false; page = 1; render(); }
       var card = document.getElementById('list-card');
       /* 후기 링크 카드가 접혀 있으면 펴 준다 — 접힌 곳으로 데려가면 아무 일도 안 한 것처럼 보인다 */
       var box = document.querySelector('.sec[data-sec="list"]');
@@ -4561,6 +4582,24 @@ function renderList() {
    *     2025-09 는 한 달 전체 40건이다. 넣으면 그 매장이 급감한 것으로 보인다).
    *
    *  **빈 배열이면 견줄 수 없다는 뜻이다** — 0 으로 그리지 말고 화면이 그렇게 적는다. */
+  /** ── **지금 보고 있는 해의 채널** (2026-09-03 사장님 지적) ─────────────────
+   *  *"갤러리아광교(138건)를 누르면 138건에대한 정보가나와야하는데 총누적관련
+   *  정보가 나오고있습니다"*.
+   *
+   *  `byStoreChan` 은 **전 기간 누적**이라 칸이 138건인데 눌러 들어가면 채널 합이
+   *  **1,100건**이 넘었다 — 화면이 두 말을 한다. 연도로 나눈 `byStoreChanY` 를 쓴다.
+   *
+   *  **옛 서버 자료에는 이 칸이 없다** — 그때는 예전 값으로 물러서되, 화면이
+   *  「전 기간」이라고 적는다(조용히 다른 잣대를 쓰지 않는다). */
+  function chanOfStore(store) {
+    var y = (DATA.byStoreChanY || {})[store];
+    if (y) {
+      var Y = heatYears();
+      return { m: y[Y.cur] || {}, year: Y.cur };
+    }
+    return { m: (DATA.byStoreChan || {})[store] || {}, year: null };
+  }
+
   function heatCmpMonths() {
     var Y = heatYears(), bm = DATA.byStoreMonth || {}, has = {}, k, m;
     for (k in bm) if (bm.hasOwnProperty(k)) {
@@ -5213,7 +5252,7 @@ function renderList() {
     /* `heatMax` 는 items 를 다 담은 뒤에 낸다 — 아래 트리맵 직전에서 정한다 */
     if (chan) {
       var who = heatPath[heatPath.length - 1];
-      var ch = (DATA.byStoreChan || {})[who] || {}, k;
+      var ch = chanOfStore(who).m, k;
       for (k in ch) if (ch.hasOwnProperty(k)) {
         items.push({ nm: k, v: ch[k], cnt: ch[k], k: heatChanKind(k) });
       }
@@ -5648,7 +5687,8 @@ function renderList() {
     if (chan) {
       bk.textContent = heatMode === 'flat' ? '← 전점' : '← ' + heatPath[0] + '지역';
       var st = stMap[heatPath[heatPath.length - 1]];
-      cr.innerHTML = esc(heatPath[heatPath.length - 1]) + ' <em>총 ' + nf(st ? st.cnt : 0) + '건 · ' +
+      var CHY = chanOfStore(heatPath[heatPath.length - 1]);
+      cr.innerHTML = esc(heatPath[heatPath.length - 1]) + ' <em>' + (CHY.year ? CHY.year + '년 ' : '총 ') + nf(st ? st.cnt : 0) + '건 · ' +
         '<b style="color:#B45309">색은 증감이 아니라 갈래입니다 — 채널별 전월 자료가 없습니다</b></em>';
       return;
     }
@@ -5656,8 +5696,9 @@ function renderList() {
     var why = [];
   if (drop) why.push(drop + '곳은 전월을 몰라');
   if (flat0) why.push(flat0 + '곳은 변화가 없어');
-  /* **0건도 밝힌다** — 넓이를 못 그려 뺀 것이지 「그 매장이 없다」가 아니다 */
-  if (zeroN) why.push(zeroN + '곳은 0건이라');
+  /* **0건은 적지 않는다**(2026-09-03 사장님: *"0건인것은 화면에서 안나와도됩니다"*).
+     그리지 않는 것은 그대로이고, 세어 알리던 문구만 뺀다 — 그 해에 글이 없는 매장은
+     화면에서 빠지는 것이 자연스럽고, 매번 「25곳은 0건이라 뺐습니다」를 읽을 이유가 없다. */
   var note = why.length ? ' <b style="color:#B45309">· ' + why.join(' · ') + ' 뺐습니다</b>' : '';
     /* 주차를 골랐어도 **칸은 지점**이므로 아래 분기를 그대로 탄다. 바뀌는 것은
        ①제목에 그 주를 적고 ②「전월 대비」를 「전주 대비」로 바꾸는 것뿐이다.

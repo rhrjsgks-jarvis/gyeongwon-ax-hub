@@ -328,6 +328,31 @@ const DATA = {
     });
     return out;
   })(),
+  /* 매장 → 연도 → 채널. **여기 없으면 그 기능을 눈으로 못 본다** — 화면이
+     옛 자료 폴백(전 기간)을 타서 「연도로 맞췄다」를 확인할 수가 없다.
+     연도 합이 byStoreMonth 의 그 해 합과 **맞아떨어지게** 만든다(실물과 같은 성질). */
+  byStoreChanY: (() => {
+    const out = {};
+    Object.keys(byStore).forEach((nm) => {
+      const mm = byStoreMonth[nm] || {};
+      const yr = {};
+      Object.keys(mm).forEach((k) => { const y = k.slice(0, 4); yr[y] = (yr[y] || 0) + mm[k]; });
+      const o = {};
+      Object.keys(yr).forEach((y) => {
+        const n0 = yr[y]; if (!n0) return;
+        const o2 = {};
+        let left = n0;
+        CAFES.forEach((c, j) => {
+          const v = Math.round(n0 * [0.42, 0.23, 0.14, 0.08, 0.04][j]);
+          if (v && left > 0) { o2[c] = Math.min(v, left); left -= o2[c]; }
+        });
+        if (left > 0) { o2['네이버 블로그'] = left; }
+        o[y] = o2;
+      });
+      out[nm] = o;
+    });
+    return out;
+  })(),
   /* 지역 → 지도 칸. **지역별 색 스펙트럼이 이 값으로 칠한다** — 없으면 칸이
      전부 기본 파랑이 되어 색이 안 붙은 것처럼 보인다(실물에서 잡았다). */
   areaCells: Object.fromEntries(Object.keys(byRegion).map(r =>

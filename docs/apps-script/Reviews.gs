@@ -3566,7 +3566,7 @@ function summary_() {
    *
    * **셋 다 작성일/출처가 근거라 카페는 월 집계에 안 든다.** 화면이 그 사실을
    * 매장 줄마다 적어야 한다(그래서 byStoreSrc 를 함께 낸다). */
-  var byStoreSrc = {}, byStoreMonth = {}, lastPost = {};
+  var byStoreSrc = {}, byStoreMonth = {}, lastPost = {}, byStoreChanY = {};
   /* ── **직전해 1월부터 담는다** (2026-09-03 사장님 지적으로 발견) ────────────
    * 예전에는 `now - 400일` 이었다. 급증·급감만 보던 시절에는 맞는 값이었는데,
    * 히트맵에 **연도 축**이 생기면서 그 상수가 조용히 자료를 잘랐다 —
@@ -3659,6 +3659,20 @@ function summary_() {
       if (sm >= monthFloor) {
         if (!byStoreMonth[r.storeName]) byStoreMonth[r.storeName] = {};
         byStoreMonth[r.storeName][sm] = (byStoreMonth[r.storeName][sm] || 0) + 1;
+      }
+      /* ── **채널도 연도로 나눈다** (2026-09-03 사장님 지적) ────────────────
+       * *"갤러리아광교(138건)를 누르면 138건에대한 정보가나와야하는데 총누적관련
+       * 정보가 나오고있습니다"*.
+       *
+       * `byStoreChan` 은 **전 기간 누적**이라 칸이 「138건」인데 눌러 들어가면
+       * 채널 합이 **1,100건**이 넘었다 — 화면이 두 말을 한다.
+       * **작성일을 아는 글만** 이 블록에 들어오므로 여기서 세면 히트맵과 잣대가 같다. */
+      if (sm >= monthFloor) {
+        var chY = r.cafe ? String(r.cafe) : (r.src === '블로그' ? '네이버 블로그' : '웹문서');
+        var yKey = f.slice(0, 4);
+        if (!byStoreChanY[r.storeName]) byStoreChanY[r.storeName] = {};
+        if (!byStoreChanY[r.storeName][yKey]) byStoreChanY[r.storeName][yKey] = {};
+        byStoreChanY[r.storeName][yKey][chY] = (byStoreChanY[r.storeName][yKey][chY] || 0) + 1;
       }
       if (!lastPost[r.storeName] || f > lastPost[r.storeName]) lastPost[r.storeName] = f;
     }
@@ -3951,6 +3965,18 @@ function summary_() {
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
+    /* 매장 → 연도 → 채널 상위 12. **연도별로 자른다** — 통째로 자르면 그 해에만
+       있는 채널이 밀려 사라진다. */
+    byStoreChanY: (function () {
+      var o = {}, k, y;
+      for (k in byStoreChanY) if (byStoreChanY.hasOwnProperty(k)) {
+        o[k] = {};
+        for (y in byStoreChanY[k]) if (byStoreChanY[k].hasOwnProperty(y)) {
+          o[k][y] = topN_(byStoreChanY[k][y], 12);
+        }
+      }
+      return o;
+    })(),
     /* **매장별 유형** — 히트맵의 혼수·입주 거르개가 쓴다. 유형이 9가지뿐이라
        상위로 자르지 않고 통째로 담는다(채널과 달리 수백 개가 아니다). */
     byStoreKind: byStoreKind,
@@ -4153,6 +4179,12 @@ function collectStoreRival(reset) {
     }
     var done = srivalDone_(stamp);
 
+    /* **한도를 넘으면 시작하지 않는다** — 시작해 놓고 첫 호출에서 죽으면
+       커서만 헛돌고 사람은 왜 안 되는지 모른다. */
+    var lim = dailyLimit_(), used0 = usage_().n;
+    if (used0 >= lim) {
+      return { ok: false, why: '오늘 호출 한도를 다 썼습니다(' + used0 + '/' + lim + ') — 내일 다시 눌러 주세요.' };
+    }
     var sh = sheet_(SHEET_SRIVAL, SRIVAL_HEADER);
     var t0 = Date.now(), calls = 0, wrote = 0, err = '';
     var SRCS = ['blog', 'cafearticle', 'webkr'];
@@ -4161,6 +4193,7 @@ function collectStoreRival(reset) {
       /* **남은 시간이 아니라 「이 매장에 필요한 시간」을 본다** — 1초 남았을 때
          시작하면 반드시 그 자리에서 끊긴다(LG 비교에서 이미 데인 자리다). */
       if (Date.now() - t0 > SRIVAL_MS - SRIVAL_PER_MS) break;
+      if (used0 + calls >= lim) break;      /* 한도에 닿으면 멈춘다 — 다음 실행이 이어 간다 */
       var st = names[ui], shop = pairs[st].shop;
       if (done[st]) { props.setProperty('_srivalCur', String(ui + 1)); continue; }
 
@@ -4203,6 +4236,9 @@ function collectStoreRival(reset) {
       props.setProperty('_srivalCur', String(ui + 1));
     }
 
+    /* **쓴 만큼 센다** — 안 세면 화면의 「오늘 쓴 호출」이 거짓이 되고,
+       다른 수집이 남은 예산을 잘못 계산한다(이 파일의 다른 수집은 전부 센다). */
+    if (calls) addUsage_(calls);
     sumCacheClear_();
     var doneAll = ui >= names.length;
     if (doneAll) props.setProperty('_srivalAt', new Date().toISOString());
@@ -5093,7 +5129,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 17;
+var SUM_VER = 18;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
