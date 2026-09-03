@@ -320,13 +320,28 @@ const DATA = {
   rivalUnits: 11,
   /* 매니저 순위 — **네이버 건수를 안 잰 사람(null)을 하나 섞는다.** 0 으로 그리면
      「그 이름으로 글이 없다」가 되어 거짓이다. */
-  mgrTop: [
-    { name: '윤현식 매니저', n: 33, store: '스타필드수원', naver: 412, known: true },
-    { name: '신규철 부점장', n: 17, store: '분당', naver: 96 },
-    { name: '박승훈 매니저', n: 16, store: '동탄', naver: null, known: false },
-    { name: '한승훈 프로', n: 14, store: '평촌', naver: 58 },
-    { name: '정채승 매니저', n: 12, store: '갤러리아광교', naver: 31 }
-  ],
+  mgrTop: (() => {
+    const base = [
+      ['윤현식 매니저', 33, '스타필드수원', 412, true], ['신규철 부점장', 17, '분당', 96, false],
+      ['박승훈 매니저', 16, '동탄', null, false], ['한승훈 프로', 14, '평촌', 58, false],
+      ['정채승 매니저', 12, '갤러리아광교', 31, true], ['김준수 매니저', 11, '용인구성', 40, true],
+      ['남수호 프로', 9, '갤러리아광교', 12, true], ['엄기연 부점장', 8, '수지', null, false],
+      ['제창우 매니저', 7, '평택', 22, false], ['민경태 매니저', 6, '원주', 9, true],
+      ['한진모 매니저', 5, '춘천', null, false], ['이가온 프로', 4, '북수원', 7, false],
+      ['서지훈 매니저', 4, '영통', 5, false], ['오세림 매니저', 3, '광주', null, true],
+      ['정하늘 프로', 3, '안성', 4, false], ['배도현 매니저', 2, '강릉', null, false]
+    ];
+    const anyStore = Object.keys(byStoreMonth)[0];
+    const ms = Object.keys(byStoreMonth[anyStore] || byMonth).sort();
+    const cur = ms[ms.length - 1], prev = ms[ms.length - 2];
+    return base.map(([name, n, store, naver, known], i) => {
+      const mon = {};
+      /* 5명 중 1명은 **전월이 없다** — 「전월 모름」 회색 칸이 실제로 뜨는지 봐야 한다 */
+      if (i % 5 !== 3 && prev) mon[prev] = Math.max(1, Math.round(n * 0.22) + (i % 3));
+      if (cur) mon[cur] = Math.max(1, Math.round(n * 0.26) - (i % 4));
+      return { name, n, store, naver, known, mon };
+    });
+  })(),
   mgrFull: 380, mgrRows: 2433,
   /* 명부 — **0건인 사람을 반드시 섞는다.** 「등록했는데 후기에 안 나온다」가
      화면에 제대로 뜨는지는 그 경우에만 드러난다. */

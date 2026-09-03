@@ -981,6 +981,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <span id="hm-kinds"></span>
         <button type="button" class="bk" id="hm-size">크기: 건수</button>
         <button type="button" class="bk" id="hm-mode">지역별로 보기</button>
+        <!-- 지점 ↔ 매니저 (2026-09-03 사장님 지시). **자료가 없으면 화면이 감춘다** —
+             매니저 수집 전에는 눌러도 빈 히트맵이라 「고장」으로 보인다. -->
+        <button type="button" class="bk" id="hm-who" hidden>매니저로 보기</button>
       </div>
       <!-- 주차 거르개 (2026-09-03 사장님 지시 — *"내가 몇 주차를 클릭하면 히트맵은
            지점이 나오게"*). **칸은 늘 지점이고 주차는 기간만 정한다.**
@@ -3995,6 +3998,13 @@ function renderList() {
    * 예전에는 `heatMode='week'` 라 **칸이 주차**였다 — 지점이 사라졌다.
    * 지금은 칸이 늘 지점이고, 주차는 **어느 기간을 볼지**만 정한다. */
   var heatWeek = '';        /* '' 전체 기간 · 'YYYY-Www' 그 주만 */
+  /* ── 무엇을 칸으로 그릴 것인가 (2026-09-03 사장님 지시) ──────────────────────
+   * *"매니저 후기 수집별 지금은 베스트10으로 되어 있는데 수집된 매니저를 토대로
+   *  히트맵으로 볼 수 있게 히트맵 안으로 편입해주세요."*
+   * 매니저는 **기간이 아니라 대상**이라 칸이 되는 것이 맞다(주차와 다르다 — 그쪽은
+   * 기간이라 필터로 두었다). 지점 히트맵과 같은 자[尺]를 쓴다: 크기 = 언급 건수,
+   * 색 = 전월 대비. */
+  var heatWho = 'store';    /* 'store' 지점 · 'mgr' 매니저 */
   var heatSize = 'n';       /* 'n' 건수 · 'g' 등락률 */
   var heatPath = [];        /* flat: [] | [점명] · region: [] | [지역] | [지역, 점명] */
   /* **유형 거르개**(2026-09-03 사장님 요청 — *"히트맵도 혼수 입주 구분할 수 있게"*).
@@ -4063,6 +4073,11 @@ function renderList() {
   /** 히트맵 한 줄 — 한 매장. `g` 는 **전월이 0이거나 모르면 null** 이다(0에서 늘어난
    *  것은 몇 %가 아니라 「새로 생겼다」이고, 넓이가 음수일 수도 없다). */
   function heatRows() {
+    /* ── 매니저 히트맵 (2026-09-03) ────────────────────────────────────────
+     * 지점 히트맵과 **같은 자**를 쓴다 — 크기 = 언급 건수, 색 = 전월 대비.
+     * 지역은 **그 사람이 가장 많이 언급된 매장**의 지역이다(`mgrTop[].store`).
+     * 화면이 `byRegion` 으로 찾는다 — 서버가 또 정하면 두 곳이 어긋난다. */
+    if (heatWho === 'mgr') return mgrRows();
     var reg = DATA.byRegion || {}, by = DATA.byStore || {}, bm = DATA.byStoreMonth || {};
     var bk = DATA.byStoreKind || {};
     /* 유형을 골랐으면 **전체 평균 비중**을 먼저 낸다 — 색의 중립점이 그것이다.
@@ -4139,6 +4154,29 @@ function renderList() {
     }
     return out;
   }
+  /** 매니저 한 줄. **명부에 있는지도 싣는다** — 화면이 검증된 이름과 아닌 것을 가른다. */
+  function mgrRows() {
+    var top = DATA.mgrTop || [], M = heatMonths(), out = [];
+    /* 매장 → 지역 (한 번만 만든다) */
+    var reg = DATA.byRegion || {}, s2r = {}, rg, j;
+    for (rg in reg) if (reg.hasOwnProperty(rg)) {
+      var ls = reg[rg].stores || [];
+      for (j = 0; j < ls.length; j++) s2r[ls[j]] = rg;
+    }
+    for (var i = 0; i < top.length; i++) {
+      var t = top[i], mon = t.mon || {};
+      var c = M.cur ? (mon[M.cur] || 0) : 0, p2 = M.prev ? (mon[M.prev] || 0) : 0;
+      out.push({
+        nm: t.name, key: t.name, reg: s2r[t.store] || '기타',
+        cnt: t.n || 0, cur: c, prev: p2, store: t.store || '', known: !!t.known,
+        /* **전월이 0이거나 모르면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니다
+           (지점 히트맵이 이미 세운 규칙 그대로다). */
+        g: p2 ? (c - p2) / p2 * 100 : null
+      });
+    }
+    return out;
+  }
+
   function heatGrowth(rows) {
     var c = 0, p = 0, skip = 0;
     for (var i = 0; i < rows.length; i++) {
@@ -4300,6 +4338,14 @@ function renderList() {
       bmd.addEventListener('click', function () {
         heatMode = heatMode === 'flat' ? 'region' : 'flat'; heatPath = []; renderHeat();
       });
+      var bwho = document.getElementById('hm-who');
+      if (bwho) bwho.addEventListener('click', function () {
+        heatWho = heatWho === 'mgr' ? 'store' : 'mgr';
+        /* **드릴다운·유형·주차를 처음으로 돌린다** — 매니저에는 채널·유형 자료가 없어
+           그대로 두면 빈 화면이 뜨고, 그때 「고장」으로 읽힌다. */
+        heatPath = []; heatKind = ''; heatWeek = '';
+        renderHeat();
+      });
       var bw = document.getElementById('hm-weeks');
       if (bw) bw.addEventListener('click', function (e) {
         var t = e.target.closest ? e.target.closest('.wk') : null;
@@ -4338,7 +4384,8 @@ function renderList() {
     var week = !!heatWeek;
     /* 색이 가장 진해지는 지점 — 주는 표본이 작아 넓게 잡는다(위 heatColor 주석 참조) */
     var heatSpan = week ? 60 : 15;
-    var chan = (heatMode === 'flat' ? lv === 1 : lv === 2);
+    /* **매니저에는 채널 자료가 없다** — 드릴다운하면 빈 화면이 뜬다 */
+    var chan = heatWho === 'mgr' ? false : (heatMode === 'flat' ? lv === 1 : lv === 2);
     var byG = (heatSize === 'g' && !chan);
     var regionTiles = (heatMode === 'region' && lv === 0);
     if (leg) leg.style.display = chan ? 'none' : '';
@@ -4383,7 +4430,8 @@ function renderList() {
            「null→119건」을 적었다(둘 다 거짓). 오늘 시험지 B2B 배지에서 겪은 것과 같은
            종류다 — **표식을 더할 때 이 줄을 함께 볼 것.** */
         items.push({ nm: d.nm, key: d.key, v: v, cnt: d.cnt, cur: d.cur, prev: d.prev, g: d.g,
-                     n: d.n, isReg: d.isReg, share: d.share, noPrev: d.noPrev });
+                     n: d.n, isReg: d.isReg, share: d.share, noPrev: d.noPrev,
+                     store: d.store, known: d.known });
       }
     }
     items.sort(function (a, b) { return b.v - a.v; });
@@ -4445,7 +4493,9 @@ function renderList() {
         if (!chan && c.h > 50 && c.w > 58) {
           /* **유형 모드에서는 「작성일 모름」이 거짓이다** — 그 모드는 전월 대비를 아예
              안 내므로 작성일과 무관하다. 대신 색의 뜻인 **비중**을 적는다. */
-          var sub2 = d.isReg
+          var sub2 = d.store !== undefined
+            ? (d.store ? (d.known ? '✓ ' : '') + d.store : (d.known ? '✓ ' : '') + '매장 미상')
+            : d.isReg
             ? d.n + '곳'
             : (typeof d.share === 'number'
                 ? Math.round(d.share) + '%'
@@ -4557,6 +4607,24 @@ function renderList() {
             }).join('');
       }
     }
+    /* ── 지점 ↔ 매니저 ─────────────────────────────────────────────────
+     * **자료가 없으면 버튼을 감춘다** — 매니저 수집 전에는 눌러도 빈 히트맵이라
+     * 「눌러도 아무 일이 없다」가 된다(이 화면이 이미 세운 규칙이다). */
+    var bwho2 = document.getElementById('hm-who');
+    if (bwho2) {
+      var hasMgr = (DATA.mgrTop || []).length >= 3;
+      bwho2.hidden = !hasMgr;
+      bwho2.textContent = heatWho === 'mgr' ? '지점으로 보기' : '매니저로 보기';
+      bwho2.classList.toggle('on', heatWho === 'mgr');
+      /* 자료가 사라졌는데 매니저를 보고 있으면 되돌린다 — 빈 화면을 남기지 않는다 */
+      if (!hasMgr && heatWho === 'mgr') { heatWho = 'store'; renderHeat(); return; }
+    }
+    /* **매니저에는 유형·주차 자료가 없다** — 눌러도 뜻이 없는 버튼을 살려 두지 않는다 */
+    var mgrView = heatWho === 'mgr';
+    if (kbox) kbox.style.display = mgrView ? 'none' : '';
+    if (wbox) wbox.style.display = (mgrView || !(DATA.byStoreWeek || {}) ) ? 'none' : wbox.style.display;
+    if (mgrView && wbox) wbox.style.display = 'none';
+    bmd.style.display = mgrView ? 'none' : '';
     bmd.classList.toggle('on', heatMode === 'region');
     bk.disabled = lv === 0;
 
@@ -4568,7 +4636,12 @@ function renderList() {
          없어 등락을 못 내므로, 색은 「그 매장에서 그 유형이 차지하는 비중」이 된다.
          안 적으면 같은 초록이 어떤 때는 「늘었다」, 어떤 때는 「비중이 높다」가 되어
          화면이 조용히 두 말을 한다. */
-      sub.innerHTML = week
+      sub.innerHTML = mgrView
+        ? '<b>매니저</b>를 봅니다 — 칸 = 사람 · 크기 = 후기에 언급된 건수 · '
+          + '<b>칸 색 = 전월 대비</b>. 이름은 <b>후기 제목·본문에서 뽑은 것</b>이고, '
+          + '<b>명부에 등록된 이름</b>이면 아래에 ✓ 가 붙습니다. 같은 사람이 직함에 따라 '
+          + '갈리지 않게 명부가 합쳐 줍니다.'
+        : week
         ? '<b>' + esc(weekLabel(heatWeek)) + '</b>만 봅니다 — <b>칸은 지점</b> · 크기 = '
           + (heatKind ? esc(heatKind) + ' 건수' : '건수')
           + ' · <b>칸 색 = 그 매장의 평소 주당 대비</b>(최근 ' + weekSpan() + '주 평균). '
@@ -4605,7 +4678,12 @@ function renderList() {
     /* **값이 있는 매장 수를 함께 적는다** — 한 주만 보면 대부분의 매장이 0건이라
        칸이 안 그려지는데, 그 사실을 안 적으면 「매장이 사라졌다」로 읽힌다. */
     var live = week ? rows.filter(function (r) { return r.cnt > 0; }).length : 0;
-    if (heatMode === 'flat') {
+    if (mgrView) {
+      var gm = heatGrowth(rows);
+      cr.innerHTML = '매니저 <em>' + rows.length + '명 · '
+        + nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건 언급'
+        + (gm.g === null ? '' : ' · 전월 대비 ' + heatPct(gm.g)) + '</em>';
+    } else if (heatMode === 'flat') {
       var gr = heatGrowth(rows);
       cr.innerHTML = '경원 전점 <em>' + wtag
         + (week ? live + '곳에 글이 있습니다(전체 ' + rows.length + '곳) · ' : rows.length + '곳 · ')

@@ -3029,6 +3029,11 @@ function summary_() {
      **한 글에 같은 사람이 여러 번 나와도 한 번만 센다** — 안 그러면 이름을 많이 적는
      글 한 편이 순위를 뒤집는다(사용 로그의 `logOnce` 와 같은 규칙).
      **매장도 함께 센다** — 어느 매장 매니저인지가 곧 그 사람을 특정한다(동명이인 방지). */
+  /* **매니저 × 월**(2026-09-03 사장님 지시 — *"수집된 매니저를 토대로 히트맵으로 볼 수
+     있게 히트맵 안으로 편입해주세요"*). 히트맵 칸 색은 전월 대비라 월별이 있어야 한다.
+     **작성일을 아는 글만** 센다 — 카페 줄의 날짜는 발견일이라 넣으면 이번 달만 거대해진다
+     (이 화면이 추이·주차에서 이미 두 번 데인 자리다). */
+  var mgrMon = {};
   var mgrN = {}, mgrStore = {}, mgrFullN = 0, mm, mi, mk;
   for (i = 0; i < rows.length; i++) {
     if (rows[i].mgrFull) mgrFullN++;
@@ -3040,6 +3045,11 @@ function summary_() {
       mgrN[mk] = (mgrN[mk] || 0) + 1;
       if (!mgrStore[mk]) mgrStore[mk] = {};
       mgrStore[mk][rows[i].storeName] = (mgrStore[mk][rows[i].storeName] || 0) + 1;
+      if (rows[i].dated && rows[i].date) {
+        var mmo = String(rows[i].date).slice(0, 7);
+        if (!mgrMon[mk]) mgrMon[mk] = {};
+        mgrMon[mk][mmo] = (mgrMon[mk][mmo] || 0) + 1;
+      }
     }
   }
   var mgrTop = [];
@@ -3048,10 +3058,13 @@ function summary_() {
     /* 그 사람이 가장 많이 언급된 매장 — 「어느 매장 분인가」를 화면이 적는다 */
     var bestS = '', bestN = 0, sk;
     for (sk in mgrStore[mk]) if (mgrStore[mk][sk] > bestN) { bestN = mgrStore[mk][sk]; bestS = sk; }
-    mgrTop.push({ name: mk, n: mgrN[mk], store: bestS });
+    mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {} });
   }
   mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
-  mgrTop = mgrTop.slice(0, 20);   /* 화면은 10을 쓰고 나머지는 「더 보기」 몫이다 */
+  /* **60명까지 싣는다**(2026-09-03). 예전에는 20명이었는데 순위표만 쓸 때의 값이다 —
+     히트맵은 전원을 한 판에 그리는 그림이라 20명으로 자르면 **꼬리가 통째로 사라지고**
+     「그 매니저는 언급이 없다」로 읽힌다. 60명이면 자료 크기도 미미하다(이름·건수·월별). */
+  mgrTop = mgrTop.slice(0, 60);
   /* **네이버 전체 검색 건수를 함께 붙인다**(사장님 제안 ②). 우리 건수와 **다른 숫자**라
      화면이 갈라 적는다 — 합치면 거짓이 된다. 아직 안 훑었으면 `null` 이다(0 이 아니다). */
   var nvTab = {};
@@ -4149,7 +4162,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 7;
+var SUM_VER = 8;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

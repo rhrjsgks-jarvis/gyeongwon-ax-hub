@@ -3133,5 +3133,58 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 }
 
+/* ── 매니저 히트맵 (2026-09-03 사장님 지시) ────────────────────────────────
+ * *"매니저 후기 수집별 지금은 베스트10으로 되어 있는데 수집된 매니저를 토대로
+ *  히트맵으로 볼 수 있게 히트맵 안으로 편입해주세요."*
+ * 매니저는 **기간이 아니라 대상**이라 칸이 되는 것이 맞다(주차와 다르다). */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const rvp = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(ixp) && fs.existsSync(rvp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const rv = fs.readFileSync(rvp, 'utf8');
+    const bad = [];
+
+    /* ① 서버가 **매니저 × 월**을 낸다 — 히트맵 색이 전월 대비라 월별이 있어야 한다 */
+    if (!rv.includes('mgrMon[mk][mmo]')) bad.push('서버가 매니저 x 월을 세지 않는다 — 색을 낼 수 없다');
+    if (!rv.includes('mon: mgrMon[mk] || {}')) bad.push('mgrTop 이 월별을 안 싣는다');
+    /* **작성일을 아는 글만** — 발견일을 섞으면 이번 달만 거대해진다(이미 두 번 데인 자리) */
+    if (!rv.includes('if (rows[i].dated && rows[i].date) {')) {
+      bad.push('매니저 월별이 작성일을 안 가린다');
+    }
+    /* 순위표 20명은 히트맵에 모자라다 — 꼬리가 잘리면 「언급이 없다」로 읽힌다 */
+    if (rv.includes('mgrTop.slice(0, 20)')) bad.push('mgrTop 이 20명뿐이다 — 히트맵 꼬리가 잘린다');
+
+    /* ② 화면 — 전환·자료 없을 때 감추기 */
+    if (!ix.includes("var heatWho = 'store'")) bad.push('지점/매니저 전환 상태가 없다');
+    if (!ix.includes('id="hm-who"')) bad.push('전환 버튼이 없다');
+    if (!ix.includes('bwho2.hidden = !hasMgr;')) {
+      bad.push('자료가 없을 때 버튼을 감추지 않는다 — 눌러도 빈 히트맵이라 고장으로 보인다');
+    }
+    if (!ix.includes("if (!hasMgr && heatWho === 'mgr')")) {
+      bad.push('자료가 사라졌는데 매니저를 보고 있으면 되돌리지 않는다');
+    }
+    if (!ix.includes('function mgrRows()')) bad.push('매니저 줄을 만드는 함수가 없다');
+
+    /* ③ **칸에 실어 보내는 필드** — 이 자리에서 필드를 빠뜨려 이미 세 번 데었다
+           (share·noPrev 를 안 실어 「작성일 모름」·「null→119건」, store 를 안 실어
+           매장 이름 대신 「0→7건」이 떴다). */
+    if (!ix.includes('store: d.store, known: d.known })')) {
+      bad.push('칸에 매장·명부 표식을 안 싣는다 — 부제가 엉뚱한 글자가 된다');
+    }
+
+    /* ④ 매니저에 없는 것을 살려 두지 않는다 — 눌러도 뜻이 없는 버튼은 「고장」이다 */
+    if (!ix.includes("var chan = heatWho === 'mgr' ? false")) {
+      bad.push('매니저에서 채널 드릴다운을 막지 않는다 — 빈 화면이 뜬다');
+    }
+    if (!ix.includes("if (kbox) kbox.style.display = mgrView ? 'none' : '';")) {
+      bad.push('매니저에서 유형 버튼을 감추지 않는다');
+    }
+
+    if (bad.length) fail('[바이럴] 매니저 히트맵 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 매니저 히트맵 — 칸은 사람 · 색은 전월 대비 · 자료 없으면 감춘다');
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
