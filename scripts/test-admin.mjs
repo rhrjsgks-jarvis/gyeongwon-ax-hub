@@ -1932,7 +1932,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        우리 매장 글이 아닌 것은 저장하지 않아 **영원히 새 링크로 보여** 안 멈춘다. */
     if (!/if \(seen\[link\]\) \{ hitSeen = true; continue; \}/.test(rv)) {
       fail('[바이럴] 이미 가진 링크를 만난 것을 표시하지 않는다 — 매일 한 바퀴를 통째로 다시 받는다');
-    } else if (!/if \(!isFull && hitSeen\)/.test(rv)) {
+    } else if (rv.indexOf('isFull') < 0 || rv.indexOf('hitSeen) { saved') < 0) {
       fail('[바이럴] 이미 가진 영역에 닿아도 쪽 루프를 안 멈춘다');
     } else if (!/FULL_EVERY_DAYS/.test(rv)) {
       fail('[바이럴] 주기적 전체 훑기(그물)가 없다 — 네이버 정렬을 믿는 최적화는 그물이 있어야 한다');
@@ -3424,6 +3424,54 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     if (bad.length) fail('[바이럴] 매니저 클릭·0건·인원 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 매니저 — 칸 클릭으로 후기 · 0건 숨김 · 인식 인원 밝힘');
+  }
+}
+
+/* ── 검출 정확도 · 옛 자료 (2026-09-03 사장님 지시) ─────────────────────────
+ * *"빠지지 않게 검출하는 방법을 만들어 주세요"* · *"2025년 자료까지 남기게"*. */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const rvp = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(ixp) && fs.existsSync(rvp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const rv = fs.readFileSync(rvp, 'utf8');
+    const bad = [];
+
+    /* ① 하한 — **지우기와 짝이다.** 하한이 없으면 지워도 다음 수집이 다시 가져온다 */
+    if (!rv.includes("var MIN_YMD = '2025-01-01';")) bad.push('하한이 2025-01-01 이 아니다');
+    if (!rv.includes('if (ymd0 < MIN_YMD)')) bad.push('수집이 하한을 안 본다 — 지워도 다시 들어온다');
+    /* **작성일을 아는 글에만 건다** — 카페는 74%가 미상이라 발견일로 판단하면
+       옛 글이 남고 새 글이 지워진다 */
+    if (!rv.includes('if (pd0.length === 8)')) bad.push('작성일을 모르는 글까지 거른다');
+    if (!rv.includes('tooOld++')) bad.push('걸러낸 수를 안 센다 — 조용히 버리면 왜 안 느는지 모른다');
+
+    /* ② 지우기 — 안전선·미상 처리 */
+    if (!rv.includes('function purgeOld(dryRun)')) bad.push('옛 자료 지우기가 없다');
+    if (!rv.includes('if (drop > v.length / 2)')) bad.push('절반 안전선이 없다 — 되돌릴 수 없는 일이다');
+    if (!rv.includes('if (pd.length !== 8) { unknown++;')) bad.push('작성일 미상을 지운다 — 근거가 없다');
+    if (!rv.includes('sh.deleteRows(2 + keepRows.length, tail)')) bad.push('통째로 지웠다 쓴다 — 중간에 끊기면 자료가 사라진다');
+    if (!ix.includes('지울 근거가 없는 것')) bad.push('화면이 미상을 「못 지운다」고 안 밝힌다');
+
+    /* ③ 감사 — **네이버 total 을 분모로 쓰지 않는다**(정렬마다 다르고 실제와 어긋난다) */
+    if (!rv.includes('function auditStore(storeName, opt)')) bad.push('검출 감사가 없다');
+    if (!rv.includes("var sorts = opt.sortsOnly ? [opt.sortsOnly] : ['date', 'sim'];")) {
+      bad.push('감사가 date·sim 양쪽을 안 훑는다 — 한쪽만으로는 놓치는 것을 못 잰다');
+    }
+    if (!rv.includes('if (ymd < MIN_YMD) continue;')) bad.push('감사가 하한 밖 글을 분모에 넣는다 — 정확도가 거짓으로 낮아진다');
+    if (!rv.includes('if (missed.length < 20)')) bad.push('놓친 글 표본을 안 남긴다 — 개수만으로는 원인을 모른다');
+    if (!ix.includes('id="aud-go"')) bad.push('감사 버튼이 없다');
+
+    /* ④ 누락 줄이기 — sim 을 **기본 질의에만** 건다(전 꼬리말이면 한도를 넘는다) */
+    if (!rv.includes("var sorts = (isFull && ti === 0) ? ['date', 'sim'] : ['date'];")) {
+      bad.push('전체 재수집이 sim 을 안 돌거나 범위가 다르다');
+    }
+    if (!rv.includes("sorts[srt] === 'date' && hitSeen")) {
+      bad.push('sim 에서도 조기 종료를 쓴다 — 관련도순이라 「그 아래는 다 봤다」가 성립하지 않는다');
+    }
+    if (!rv.includes('+ (STORES.length + n) * kinds * MAX_PAGES;')) bad.push('호출 예산에 sim 몫이 안 들어갔다');
+
+    if (bad.length) fail('[바이럴] 검출 정확도·옛 자료 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 검출 — 하한 2025 · 지우기(미상 보존) · 감사(date+sim) · sim 수집');
   }
 }
 

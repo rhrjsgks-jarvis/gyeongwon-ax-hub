@@ -74,6 +74,17 @@ var SHEET_LOG = '수집기록';
  * **빈 쪽이 나오면 그 자리에서 멈춘다**(아래 루프) — 작은 매장에서 10쪽을 다 두드리지 않는다.
  */
 var PAGE_SIZE = 100;
+/* ── 언제부터의 글을 담는가 (2026-09-03 사장님 지시) ──────────────────────
+ * *"후기검출도 2026년 이전 자료는 불필요하니 모두 삭제"* → *"2025년 자료까지
+ *  남기게 해주세요 작년과 올해 비교는 필요해 보입니다"*.
+ *
+ * **지우기만 하면 다음 수집이 그대로 다시 가져온다**(`seen` 에서 빠지므로).
+ * 그래서 하한을 두어 **애초에 안 담는다** — 지우기와 이 상수가 짝이다.
+ *
+ * **작성일을 아는 글에만 건다.** 카페 글은 네이버가 작성일을 주지 않아
+ * 전체의 74%가 미상이다 — 발견일로 판단하면 옛 글이 남고 새 글이 지워진다. */
+var MIN_YMD = '2025-01-01';
+
 var MAX_PAGES = 10;
 
 /* ── 일일 수집한도 ────────────────────────────────────────────────
@@ -762,7 +773,13 @@ function sweepCalls_() {
      *"한도가 넉넉하다"* 고 말했다 — 한도 경고가 그 값 위에 서 있어 틀린 말을 한다.
      세는 값을 상수에서 끌어내 **코드가 바뀌면 따라오게** 한다(손으로 적으면 또 굳는다). */
   var kinds = 3;                      /* blog · cafearticle · webkr */
-  var store = (STORES.length + n) * TAILS.length * kinds * MAX_PAGES;
+  /* **정렬 두 갈래**(date · sim) — 전체 재수집에서 매장 훑기가 두 배다(2026-09-03).
+     「최근 것만」은 date 하나라 절반이다. **큰 쪽으로 잡는다** — 화면 경고는
+     「이 한도로 한 바퀴가 도는가」를 묻는 것이고, 그 한 바퀴는 전체 재수집이다. */
+  var store = (STORES.length + n) * TAILS.length * kinds * MAX_PAGES
+    /* **sim 은 기본 질의(꼬리말 0번)에만** 건다 — 전 꼬리말에 걸면 한 바퀴가 일일
+       한도를 넘는다(실측 29,760회). 추가분은 매장 x 갈래 x 쪽뿐이다. */
+    + (STORES.length + n) * kinds * MAX_PAGES;
   var cafe = CAFES.length * kinds * MAX_PAGES;          /* 관심 카페 훑기 */
   var mgr = 20;                                          /* 매니저 이름 네이버 건수 */
   var sdp = SDP.length * 2 * SDP_PAGES;                  /* SDP — 2갈래 × 3쪽 */
@@ -2025,7 +2042,7 @@ function diag_() {
   };
 }
 
-function search_(kind, query, start, display) {
+function search_(kind, query, start, display, sort) {
   /* **건수만 알고 싶을 때는 1건만 받는다**(매니저 이름 훑기). 응답의 `total` 은
      몇 건을 받든 같은 값이라 100건을 받을 이유가 없다 — 전송량이 100분의 1이다. */
   var id = key_('NAVER_CLIENT_ID'), sec = key_('NAVER_CLIENT_SECRET');
@@ -2035,8 +2052,13 @@ function search_(kind, query, start, display) {
      처음에는 30 건이었는데 `북수원` 만 해도 카페 total 이 128 건이라 **한참 덜 모았다.**
      실측: display 상한은 **100**(200 은 HTTP 400) · `start` 로 넘기면 **약 200 건까지**
      받힌다(start=201 부터 0건). 그래도 옛 30 건의 6.7 배다. */
+  /* **정렬을 받는다**(2026-09-03). 평소 수집은 `date`(최신순)로 돈다 — 그래야
+     「이미 가진 글을 만났다」가 「그 아래는 다 봤다」는 뜻이 되어 일찍 멈출 수 있다.
+     `sim` 은 **감사**가 쓴다: 실측으로 date 1,000건에 sim 을 더하면 합집합이
+     1,222건이라, 지금 수집이 무엇을 놓치는지 그것으로 잰다. */
   var url = API_BASE + '/' + kind + '?query=' + encodeURIComponent(query)
-    + '&display=' + (display || PAGE_SIZE) + '&start=' + (start || 1) + '&sort=date';
+    + '&display=' + (display || PAGE_SIZE) + '&start=' + (start || 1)
+    + '&sort=' + (sort || 'date');
   var res = UrlFetchApp.fetch(url, {
     headers: { 'X-NCP-APIGW-API-KEY-ID': id, 'X-NCP-APIGW-API-KEY': sec },
     muteHttpExceptions: true
@@ -2350,6 +2372,9 @@ function sweep_(mode) {
 
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var calls = 0, got = 0, kept = 0, add = [], err = '';
+  /* 하한(MIN_YMD)보다 오래돼 안 담은 수 — **몇 건을 걸렀는지 보고한다**(조용히 버리면
+     「왜 건수가 안 느나」를 알 수 없다) */
+  var tooOld = 0;
   var saved = 0;   /* 아껴서 안 부른 호출 수 — 화면이 「얼마나 아꼈나」를 말한다 */
   var flushed = 0; /* 매장 경계에서 이미 시트에 쓴 건수 — 보고 건수가 이것을 빠뜨리면 안 된다 */
   /* **웹문서까지 훑는다**(2026-09-01 사장님: *"블로그 카페 웹 잘 분석 바랍니다"*).
@@ -2501,7 +2526,22 @@ function sweep_(mode) {
     var query = qs[ti];
     for (k = 0; k < kinds.length; k++) {
       if (kindOff[kinds[k]]) continue;             /* 이번 실행에서 꺼진 갈래 */
-      /* **여러 쪽을 돈다** — 한 쪽(100건)으로는 total 이 큰 매장을 다 못 받는다 */
+      /* ── 정렬 두 갈래 (2026-09-03 사장님 지시 — *"빠지지 않게 검출"*) ────────
+       * `date`(최신순)만으로는 **한 질의당 1,000건이 상한**이다(`start` 상한).
+       * 실측(CLAUDE.md): 같은 질의를 `sim` 으로도 훑으면 합집합이 **1,000 → 1,222건**
+       * (+22%)이 된다. 예전에는 *"같은 예산이면 다른 매장을 도는 편이 낫다"* 고
+       * 판단했는데, **사장님이 정확도를 우선**한다고 하셨으므로 뒤집는다.
+       *
+       * **전체 재수집에서만 돈다.** 「최근 것만」은 `date` 라야 「이미 가진 글을 만났다」가
+       * 「그 아래는 다 봤다」는 뜻이 되어 일찍 멈출 수 있다 — `sim` 은 순서가 관련도라
+       * 그 신호가 성립하지 않는다(멈출 수 없어 늘 10쪽을 다 돈다). */
+      /* **`sim` 은 기본 질의(꼬리말 없는 매장명)에만 건다.** 꼬리말까지 두 배로 돌면
+         매장 훑기가 29,760회가 되어 **일일 한도(20,000)를 한 바퀴에 넘긴다**(실측).
+         꼬리말은 이미 `date` 로 넓히고 있고, CLAUDE.md 의 +22% 실측도 **기본 질의**
+         하나를 date·sim 으로 견준 값이다 — 여기에 거는 것이 그 실측과 같은 조건이다.
+         추가 비용은 62매장 × 3갈래 × 10쪽 = **1,860회**뿐이다. */
+      var sorts = (isFull && ti === 0) ? ['date', 'sim'] : ['date'];
+      for (var srt = 0; srt < sorts.length; srt++) {
       for (var page = 0; page < MAX_PAGES; page++) {
         /* 한 매장이 최대 32회(2종 x 꼬리말 8 x 2쪽)를 쓴다 — 매장 단위로만 보면
            한도를 그만큼 넘길 수 있어 호출 직전에도 본다 */
@@ -2511,7 +2551,7 @@ function sweep_(mode) {
            통째로 날아간다.** 여기서 보면 넘치는 것이 딱 1회다. */
         if (Date.now() - t0 > BUDGET_MS) { stopped = true; cursor = i; tailSave = ti; break; }
         var j, kerr = '';
-        try { j = search_(kinds[k], query, page * PAGE_SIZE + 1); calls++; }
+        try { j = search_(kinds[k], query, page * PAGE_SIZE + 1, PAGE_SIZE, sorts[srt]); calls++; }
         catch (e) { kerr = String(e); }
         if (!kerr && j && j.error) kerr = kinds[k] + ':' + j.error;
         if (kerr) {
@@ -2557,6 +2597,16 @@ function sweep_(mode) {
           /* **이미 가진 글을 만났다** — `sort=date` 라 이 아래는 전부 더 오래된 글이고,
              그것을 저장한 그날 이미 훑은 영역이다. 쪽 루프가 여기서 멈춘다. */
           if (seen[link]) { hitSeen = true; continue; }
+          /* **하한보다 오래된 글은 담지 않는다**(2026-09-03 사장님 지시).
+             `postdate` 는 블로그가 준 작성일이라 **정확할 때만** 거른다 —
+             카페처럼 모르는 것은 담는다(모르는 것을 오래됐다고 단정할 수 없다).
+             `seen` 에는 넣어 둔다 — 안 그러면 다음 쪽마다 같은 글을 또 만나
+             `hitSeen` 이 안 서고 쪽을 끝까지 돈다(호출 낭비). */
+          var pd0 = String(it.postdate || '');
+          if (pd0.length === 8) {
+            var ymd0 = pd0.slice(0, 4) + '-' + pd0.slice(4, 6) + '-' + pd0.slice(6);
+            if (ymd0 < MIN_YMD) { seen[link] = true; tooOld++; continue; }
+          }
           seen[link] = true;
           var post = String(it.postdate || '');
           /* **카페 글의 작성일을 가른다**(2026-09-01 사장님 결정 — "채운다, 새 글만").
@@ -2601,7 +2651,12 @@ function sweep_(mode) {
         /* **이미 가진 영역에 닿았으면 더 안 판다**(2026-08-31). 이것이 매일 10,400회를
            1,000~2,000회로 줄인다. **주 1회 전체 훑기에서는 끄고** 처음부터 끝까지 판다 —
            네이버 정렬을 믿는 최적화라 그물이 있어야 한다. */
-        if (!isFull && hitSeen) { saved += (MAX_PAGES - page - 1); break; }
+        /* **`sim` 에서는 이 신호를 쓰지 않는다** — 순서가 관련도라 「그 아래는 다 봤다」가
+           성립하지 않는다(빠른 모드는 `date` 만 돌므로 실제로는 걸릴 일이 없다). */
+        if (!isFull && sorts[srt] === 'date' && hitSeen) { saved += (MAX_PAGES - page - 1); break; }
+      }
+      /* 정렬 루프 닫기 — **중단 신호를 여기서도 전파한다**(안 하면 sim 을 계속 돈다) */
+      if (serr || hitLimit || stopped) break;
       }
       if (serr || hitLimit) break;
     }
@@ -2844,6 +2899,7 @@ function sweep_(mode) {
        사장님이 버튼을 다시 누를지 말지 안다. */
     chained: chained,
     calls: calls, got: got, kept: kept, added: flushed + add.length, error: err,
+    tooOld: tooOld,   /* MIN_YMD 보다 오래돼 안 담은 수 */
     /* **오늘 어느 쪽으로 돌았는지 밝힌다** — 「새 글만 훑었다」와 「전부 훑었다」는
        다른 말이고, 새 글이 적은 이유가 되기 때문이다. `saved` 는 아껴서 안 부른 횟수다. */
     full: isFull, saved: saved,
@@ -3031,6 +3087,179 @@ function continueSweep() { return collectReviews(); }
  *
  *  **되돌릴 수 없다.** 화면이 두 번 묻고, 여기서도 무엇을 지웠는지 돌려준다.
  *  이어달리기 트리거도 함께 끈다 — 안 끄면 지운 직후에 옛 커서로 이어 돈다. */
+/**
+ * ── 하한보다 오래된 글 지우기 (2026-09-03 사장님 지시) ────────────────────
+ * *"2026년 이전 자료는 불필요하니 모두 삭제"* → *"2025년 자료까지 남기게"*.
+ *
+ * **작성일을 아는 글만 지운다.** 카페 글은 네이버가 작성일을 주지 않아 전체의 74%가
+ * 미상인데, 발견일로 판단하면 **옛 글이 남고 새 글이 지워진다**(발견일은 늘 최근이다).
+ * 지울 수 없는 것은 **몇 건인지 밝힌다** — 조용히 두면 「다 지웠다」로 읽힌다.
+ *
+ * **절반을 넘게 지우게 되면 손대지 않는다.** 되돌릴 방법이 없으므로, 규칙이 잘못됐을
+ * 때의 마지막 안전선이다(`dedupeReviews` 가 세운 것과 같은 규칙).
+ *
+ * **통째로 지웠다가 다시 쓰지 않는다** — 남길 것을 위에서부터 다시 쓰고 꼬리만 지운다.
+ * 중간에 끊기면 자료가 사라진다.
+ */
+/**
+ * ══════════════════════════════════════════════════════════════════════
+ * 검출 감사 — **한 매장을 끝까지 훑어 지금 수집이 몇 %를 잡는지 잰다**
+ * ══════════════════════════════════════════════════════════════════════
+ * 2026-09-03 사장님 지시: *"각 지점 후기가 잘 검출이 되는지 여러 번 테스트해 보고
+ * 빠지지 않게 검출하는 방법을 만들어 주세요. 예를 들어 실제 후기가 1000건인데
+ * 900건만 나온다 이러면 정확도가 너무 떨어지기 때문입니다."*
+ *
+ * **`total` 을 정답으로 쓰지 않는다.** 네이버가 주는 `total` 은 정렬마다 다르고
+ * (실측 sim 3,772 ↔ date 1,579) 실제로 받히는 것과도 다르다 — 그것을 분모로 삼으면
+ * 「우리가 40%밖에 못 잡는다」 같은 거짓 결론이 나온다.
+ *
+ * 대신 **우리가 받을 수 있는 최대**를 분모로 쓴다: 같은 질의를 `date`·`sim` 양쪽으로
+ * 끝까지(각 1,000건) 훑어 **합집합**을 내고, 그중 몇 개가 시트에 있는지 센다.
+ * 이것이 「지금 방식이 놓치는 것」의 정직한 크기다.
+ *
+ * **호출을 많이 쓴다** — 한 매장에 꼬리말 × 소스 × 정렬 × 10쪽이라 최대 수백 회다.
+ * 그래서 **한 매장씩만** 돌고, 하루 한도를 그대로 지킨다.
+ */
+function auditStore(storeName, opt) {
+  opt = opt || {};
+  var i, k, ti, page;
+  var st = null;
+  for (i = 0; i < STORES.length; i++) if (STORES[i][1] === storeName) { st = STORES[i]; break; }
+  if (!st) return { ok: false, msg: '그런 매장이 없습니다: ' + storeName };
+
+  var mname = st[1];
+  var mnames = [mname].concat(aliasOf_(mname) || []);
+  var allNames = [];
+  for (i = 0; i < STORES.length; i++) allNames.push(STORES[i][1]);
+
+  /* 시트에 이미 있는 그 매장 링크 */
+  var have = {}, haveN = 0;
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ITEMS);
+  if (sh && sh.getLastRow() > 1) {
+    var w = HEADER.length, iName = HEADER.indexOf('storeName'), iLink = HEADER.indexOf('link');
+    var v = sh.getRange(2, 1, sh.getLastRow() - 1, w).getValues();
+    for (i = 0; i < v.length; i++) {
+      if (foldStoreName_(String(v[i][iName])) !== mname) continue;
+      have[String(v[i][iLink])] = 1; haveN++;
+    }
+  }
+
+  /* 받을 수 있는 최대 — date·sim 양쪽으로 끝까지 */
+  var kinds = ['blog', 'cafearticle', 'webkr'];
+  var sorts = opt.sortsOnly ? [opt.sortsOnly] : ['date', 'sim'];
+  var qs = [mname];
+  for (i = 0; i < TAILS.length; i++) qs.push(mname + ' ' + TAILS[i]);
+  var al = aliasOf_(mname) || [];
+  for (i = 0; i < al.length; i++) qs.push(al[i]);
+
+  var uni = {}, uniN = 0, calls = 0, missed = [], err = '';
+  var t0 = Date.now(), BUDGET = 270000;   /* 4.5분 — 6분 한도 안에서 끝낸다 */
+  var stopped = false;
+
+  outer:
+  for (ti = 0; ti < qs.length; ti++) {
+    for (k = 0; k < kinds.length; k++) {
+      for (var si = 0; si < sorts.length; si++) {
+        for (page = 0; page < MAX_PAGES; page++) {
+          if (Date.now() - t0 > BUDGET) { stopped = true; break outer; }
+          var j;
+          try { j = search_(kinds[k], qs[ti], page * PAGE_SIZE + 1, PAGE_SIZE, sorts[si]); calls++; }
+          catch (e) { err = String(e); break outer; }
+          var items = (j && j.items) || [];
+          if (!items.length) break;
+          for (var n = 0; n < items.length; n++) {
+            var it = items[n];
+            var text = (it.title || '') + ' ' + (it.description || '');
+            if (!hasAny_(text, mnames)) continue;
+            if (isNoise_(text)) continue;
+            if (belongsToOther_(text, mname, allNames)) continue;
+            var link = String(it.link || '');
+            if (!link || linkNoise_(link)) continue;
+            /* **하한보다 오래된 글은 분모에서 뺀다** — 우리가 일부러 안 담는 것이라
+               「놓쳤다」로 세면 정확도가 거짓으로 낮아진다. */
+            var pd = String(it.postdate || '');
+            if (pd.length === 8) {
+              var ymd = pd.slice(0, 4) + '-' + pd.slice(4, 6) + '-' + pd.slice(6);
+              if (ymd < MIN_YMD) continue;
+            }
+            if (uni[link]) continue;
+            uni[link] = 1; uniN++;
+            if (!have[link]) {
+              /* 놓친 글 — **표본을 남긴다.** 개수만 알면 왜 놓쳤는지 알 수 없다 */
+              if (missed.length < 20) {
+                missed.push({ title: plain_(it.title || '').slice(0, 60), link: link,
+                              src: srcName_(kinds[k]), q: qs[ti], sort: sorts[si], page: page + 1 });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  var hit = 0, key;
+  for (key in uni) if (uni.hasOwnProperty(key) && have[key]) hit++;
+  return {
+    ok: true, store: mname,
+    reachable: uniN,          /* 우리가 받을 수 있는 최대(합집합) */
+    inSheet: haveN,           /* 시트에 있는 그 매장 건수 */
+    hit: hit,                 /* 그중 합집합에도 있는 것 */
+    missing: uniN - hit,      /* 받을 수 있는데 없는 것 */
+    rate: uniN ? Math.round(hit / uniN * 1000) / 10 : null,
+    calls: calls, queries: qs.length, sorts: sorts, stopped: stopped, error: err,
+    sample: missed,
+    note: '분모는 네이버 total 이 아니라 **date·sim 양쪽으로 끝까지 훑은 합집합**입니다. '
+        + 'total 은 정렬마다 다르고 실제로 받히는 수와도 달라 분모로 쓸 수 없습니다. '
+        + (MIN_YMD ? MIN_YMD + ' 보다 오래된 글은 일부러 안 담으므로 분모에서 뺐습니다.' : '')
+  };
+}
+
+function purgeOld(dryRun) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return { ok: false, msg: '수집이 도는 중입니다 — 끝난 뒤에 다시 눌러 주세요.' };
+  try {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ITEMS);
+    if (!sh) return { ok: false, msg: '자료 시트가 없습니다.' };
+    var last = sh.getLastRow();
+    if (last < 2) return { ok: true, total: 0, drop: 0, keep: 0, unknown: 0, msg: '지울 것이 없습니다.' };
+
+    var w = HEADER.length;
+    var v = sh.getRange(2, 1, last - 1, w).getValues();
+    var iDate = HEADER.indexOf('date'), iPost = HEADER.indexOf('postdate'), iBasis = HEADER.indexOf('dateBasis');
+    var keepRows = [], drop = 0, unknown = 0, i, r;
+    for (i = 0; i < v.length; i++) {
+      r = v[i];
+      /* 작성일을 아는가 — **블로그가 준 `postdate`(8자리)만 믿는다.**
+         `dateBasis` 가 '새글'인 카페 글은 발견일을 작성일로 쓴 것이라 최근이고,
+         '미상'은 애초에 모른다. 둘 다 하한 판정 대상이 아니다. */
+      var pd = String(r[iPost] || '');
+      if (pd.length !== 8) { unknown++; keepRows.push(r); continue; }
+      var ymd = pd.slice(0, 4) + '-' + pd.slice(4, 6) + '-' + pd.slice(6);
+      if (ymd < MIN_YMD) { drop++; continue; }
+      keepRows.push(r);
+    }
+
+    if (!drop) return { ok: true, total: v.length, drop: 0, keep: v.length, unknown: unknown,
+                        min: MIN_YMD, msg: MIN_YMD + ' 보다 오래된 글이 없습니다.' };
+    /* **절반 안전선** — 규칙이 잘못됐을 때 마지막으로 막아 준다 */
+    if (drop > v.length / 2) {
+      return { ok: false, total: v.length, drop: drop, unknown: unknown, min: MIN_YMD,
+               msg: '지울 줄이 ' + drop + '건으로 전체(' + v.length + ')의 절반을 넘습니다 — '
+                  + '규칙이 잘못됐을 수 있어 손대지 않았습니다.' };
+    }
+    if (dryRun) {
+      return { ok: true, dry: true, total: v.length, drop: drop, keep: keepRows.length,
+               unknown: unknown, min: MIN_YMD };
+    }
+
+    if (keepRows.length) sh.getRange(2, 1, keepRows.length, w).setValues(keepRows);
+    var tail = v.length - keepRows.length;
+    if (tail > 0) sh.deleteRows(2 + keepRows.length, tail);
+    sumCacheClear_();
+    return { ok: true, total: v.length, drop: drop, keep: keepRows.length, unknown: unknown, min: MIN_YMD };
+  } finally { lock.releaseLock(); }
+}
+
 function resetAll() {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(5000)) return { ok: false, msg: '수집이 도는 중입니다 — 끝난 뒤에 다시 눌러 주세요.' };
@@ -3611,6 +3840,8 @@ function summary_() {
     mgrTop: mgrTop, mgrFull: mgrFullN, mgrRows: rows.length,
     /* **인식된 전체 인원**과 그중 화면에 실은 수. 화면이 「N명 중 M명」을 적는다 */
     mgrAll: mgrAllN, mgrOnce: mgrOnce,
+    /* 화면이 「언제부터의 글인가」를 적는다 — 상수를 화면에 또 적으면 어긋난다 */
+    minYmd: MIN_YMD,
     /* **명부에 등록된 사람 전원의 건수** — 0건도 낸다(등록했는데 안 나오는 것이 정보다).
        직함으로 갈린 것을 이름으로 합친 값이라 순위표보다 정확하다. */
     mgrKnown: mgrKnown, mgrList: nameTab,
@@ -4559,7 +4790,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 13;
+var SUM_VER = 14;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

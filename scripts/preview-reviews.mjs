@@ -414,6 +414,7 @@ const DATA = {
     });
   })(),
   mgrFull: 380, mgrRows: 2433, mgrAll: 161, mgrOnce: 74,
+  minYmd: '2025-01-01',
   /* 명부 — **0건인 사람을 반드시 섞는다.** 「등록했는데 후기에 안 나온다」가
      화면에 제대로 뜨는지는 그 경우에만 드러난다. */
   mgrList: { '갤러리아광교': ['윤현식', '신규철', '남수호', '홍길동'], '용인구성': ['김준수'] },
@@ -483,6 +484,14 @@ const stub = [
   '    runRival: function () { console.log("[preview] runRival (로컬이라 아무 일도 하지 않는다)"); },',
   '    setManagerNames: function () { setTimeout(function () { ok && ok({ ok: true }); }, 60); },',
   '    setAlias: function () {}, setupTrigger: function () {},',
+  '    auditStore: function (nm) { setTimeout(function () { ok && ok({ ok: true, store: nm,',
+  '      reachable: 118, inSheet: 88, hit: 101, missing: 17, rate: 85.6, calls: 342,',
+  '      queries: 9, sorts: ["date","sim"], stopped: false, error: "",',
+  '      sample: [{ title: "수지점 혼수가전 상담 후기", link: "https://example.com/1",',
+  '        src: "카페", q: "수지 혼수", sort: "sim", page: 3 }],',
+  '      note: "분모는 date·sim 합집합입니다." }); }, 400); },',
+  '    purgeOld: function (dry) { setTimeout(function () { ok && ok({ ok: true, dry: !!dry,',
+  '      total: 2433, drop: 412, keep: 2021, unknown: 889, min: "2025-01-01" }); }, 300); },',
   '    adminAuth: function (pw) {',
   '      setTimeout(function () {',
   '        if (String(pw) === "1234") ok && ok({ ok: true, token: "preview-token", ttl: 7200 });',

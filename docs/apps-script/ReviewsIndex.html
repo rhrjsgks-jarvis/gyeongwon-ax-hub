@@ -1133,6 +1133,28 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <div id="adm-msg" class="sub"></div>
       </div>
       <div id="adm-body" hidden>
+      <!-- ── 검출 감사 (2026-09-03 사장님 지시) ────────────────────────────
+           *"각 지점 후기가 잘 검출이 되는지 여러 번 테스트해 보고 빠지지 않게 검출하는
+            방법을 만들어 주세요"*. 한 매장을 date·sim 양쪽으로 끝까지 훑어 **받을 수
+            있는 최대**를 내고, 그중 몇 %가 시트에 있는지 잰다. -->
+      <h3>검출 감사 — 이 매장을 몇 % 잡고 있나</h3>
+      <div class="sub">한 매장을 <b>끝까지 다시 훑어</b> 지금 자료와 견줍니다 —
+        호출을 수백 회 쓰므로 <b>한 매장씩</b> 돌립니다.</div>
+      <div class="alias-add">
+        <input id="aud-store" list="alias-stores" placeholder="매장 이름" autocomplete="off">
+        <button id="aud-go">감사</button>
+      </div>
+      <div id="aud-out" class="sub"></div>
+
+      <!-- ── 옛 자료 지우기 ────────────────────────────────────────────── -->
+      <h3>오래된 후기 지우기</h3>
+      <div class="sub" id="purge-sub">–</div>
+      <div class="alias-add">
+        <button id="purge-dry">몇 건인지 먼저 보기</button>
+        <button id="purge-go" class="danger" hidden>지우기</button>
+      </div>
+      <div id="purge-out" class="sub"></div>
+
       <h3>매니저 명부</h3>
       <!-- 2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"* ·
            *"이름을 제목과 해시태그 내용에서 모두 검출해 주세요"*.
@@ -1493,6 +1515,86 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (out) out.onclick = function () { admToken = ''; admClear(); renderAdmin(); };
     }
     if (on) { renderMgrBook(); }
+  }
+
+  /** 검출 감사 · 옛 자료 지우기 — **관리자 안에서만** 돈다(값을 바꾸는 일이다). */
+  function wireAudit() {
+    var go = document.getElementById('aud-go'), inp = document.getElementById('aud-store');
+    var out = document.getElementById('aud-out');
+    if (go && inp) go.onclick = function () {
+      var nm = (inp.value || '').trim();
+      if (!nm) { if (out) out.textContent = '매장 이름을 넣어 주세요.'; return; }
+      if (!(window.google && google.script && google.script.run)) {
+        if (out) out.textContent = '미리보기에서는 돌릴 수 없습니다.'; return;
+      }
+      go.disabled = true;
+      /* **오래 걸린다는 것을 미리 알린다** — 몇 분이 걸리는데 아무 말이 없으면
+         고장으로 보고 다시 누른다(그러면 호출을 두 배로 쓴다). */
+      if (out) out.innerHTML = '<b>훑는 중입니다 — 몇 분 걸립니다.</b> '
+        + '한 매장을 date·sim 양쪽으로 끝까지 봅니다.';
+      google.script.run
+        .withSuccessHandler(function (r) {
+          go.disabled = false;
+          if (!r || !r.ok) { if (out) out.innerHTML = '<b class="warn">' + esc((r && r.msg) || '실패') + '</b>'; return; }
+          var lines = [];
+          lines.push('<b>' + esc(r.store) + '</b> — 받을 수 있는 글 <b>' + nf(r.reachable) + '건</b> 중 '
+            + '<b>' + nf(r.hit) + '건</b>이 자료에 있습니다'
+            + (r.rate === null ? '' : ' (<b>' + r.rate + '%</b>)'));
+          if (r.missing) lines.push('<b class="warn">놓친 글 ' + nf(r.missing) + '건</b>');
+          lines.push('호출 ' + nf(r.calls) + '회 · 질의 ' + r.queries + '가지 · 정렬 ' + (r.sorts || []).join('·')
+            + (r.stopped ? ' · <b class="warn">시간이 모자라 도중에 멈췄습니다</b>' : ''));
+          if (r.error) lines.push('<b class="warn">' + esc(r.error) + '</b>');
+          if ((r.sample || []).length) {
+            lines.push('<b>놓친 글 표본</b>');
+            r.sample.forEach(function (x) {
+              lines.push('· <a href="' + esc(x.link) + '" target="_blank" rel="noreferrer">'
+                + esc(x.title || '(제목 없음)') + '</a> <span class="cntxt">' + esc(x.src)
+                + ' · 질의 「' + esc(x.q) + '」 · ' + esc(x.sort) + ' ' + x.page + '쪽</span>');
+            });
+          }
+          lines.push('<span class="cntxt">' + esc(r.note) + '</span>');
+          if (out) out.innerHTML = lines.join('<br>');
+        })
+        .withFailureHandler(function (e) {
+          go.disabled = false;
+          if (out) out.innerHTML = '<b class="warn">' + esc(e && e.message) + '</b>';
+        })
+        .auditStore(nm, {});
+    };
+
+    var dry = document.getElementById('purge-dry'), del = document.getElementById('purge-go');
+    var pout = document.getElementById('purge-out'), psub = document.getElementById('purge-sub');
+    if (psub) psub.innerHTML = '작성일이 <b>' + esc(DATA.minYmd || '2025-01-01')
+      + '</b> 보다 이른 글을 지웁니다. <b>작성일을 아는 글만</b> 지웁니다 — '
+      + '카페 글은 네이버가 작성일을 주지 않아 <b>지울 근거가 없습니다</b>.';
+    var show = function (r, done) {
+      if (!pout) return;
+      if (!r || !r.ok) { pout.innerHTML = '<b class="warn">' + esc((r && r.msg) || '실패') + '</b>'; return; }
+      pout.innerHTML = (done ? '<b>지웠습니다</b> — ' : '')
+        + '전체 ' + nf(r.total) + '건 · <b>지울 것 ' + nf(r.drop) + '건</b> · 남길 것 ' + nf(r.keep || 0) + '건'
+        + '<br><span class="cntxt">그중 <b>' + nf(r.unknown || 0) + '건</b>은 작성일을 몰라 '
+        + '판단하지 않았습니다 — 지운 것이 아니라 <b>지울 근거가 없는 것</b>입니다.</span>'
+        + (r.msg ? '<br>' + esc(r.msg) : '');
+      if (del) del.hidden = done || !r.drop;
+    };
+    if (dry) dry.onclick = function () {
+      if (!(window.google && google.script && google.script.run)) {
+        if (pout) pout.textContent = '미리보기에서는 돌릴 수 없습니다.'; return;
+      }
+      dry.disabled = true;
+      google.script.run.withSuccessHandler(function (r) { dry.disabled = false; show(r, false); })
+        .withFailureHandler(function (e) { dry.disabled = false; if (pout) pout.textContent = String(e && e.message); })
+        .purgeOld(true);
+    };
+    if (del) del.onclick = function () {
+      /* **되돌릴 수 없다** — 무엇을 지우는지 먼저 밝히고 묻는다 */
+      if (!confirm('작성일이 ' + (DATA.minYmd || '2025-01-01') + ' 보다 이른 글을 지웁니다.'
+        + NLC + '되돌릴 수 없습니다. 계속할까요?')) return;
+      del.disabled = true;
+      google.script.run.withSuccessHandler(function (r) { del.disabled = false; show(r, true); })
+        .withFailureHandler(function (e) { del.disabled = false; if (pout) pout.textContent = String(e && e.message); })
+        .purgeOld(false);
+    };
   }
 
   function wireAdmin() {
@@ -5176,6 +5278,7 @@ function renderList() {
     wireAlias();
     wireMgrBook();
     wireAdmin();
+    wireAudit();
     syncPoll();
     renderLimit();
     renderProgress();
