@@ -181,6 +181,31 @@ var STORES = [
 
 /** ISO 8601 주차 —  꼴. **월 경계로 자르지 않는다**(달마다 주 수가 달라
  *  「5주차」가 어떤 달에는 없다). 목요일이 든 주를 그 해의 주로 세는 국제 규칙이다. */
+/** 히트맵 주차 필터가 보여줄 주 수. **20주면 넉 달 반**이라 계절 흐름이 보이고,
+ *  칩 줄이 두 줄을 안 넘는다(실측 20칩 = 폰에서 2줄). */
+var WEEK_KEEP = 20;
+
+/** `{매장: {주차: {유형: n}}}` 에서 **가장 최근 N개 주차만** 남긴다.
+ *  매장마다 따로 자르면 매장별로 다른 주를 들고 있게 되어 칩 줄을 만들 수가 없다 —
+ *  **전체에서 주차 목록을 먼저 정하고** 그것으로 자른다. */
+function trimWeeks_(bsw, keep) {
+  var all = {}, st, wk;
+  for (st in bsw) if (bsw.hasOwnProperty(st)) {
+    for (wk in bsw[st]) if (bsw[st].hasOwnProperty(wk)) all[wk] = 1;
+  }
+  var ws = Object.keys(all).sort();
+  if (ws.length <= keep) return bsw;
+  var live = {};
+  ws.slice(ws.length - keep).forEach(function (w) { live[w] = 1; });
+  var out = {};
+  for (st in bsw) if (bsw.hasOwnProperty(st)) {
+    var m = {}, any = false;
+    for (wk in bsw[st]) if (bsw[st].hasOwnProperty(wk) && live[wk]) { m[wk] = bsw[st][wk]; any = true; }
+    if (any) out[st] = m;
+  }
+  return out;
+}
+
 function isoWeek_(ymd) {
   var m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(String(ymd || ''));
   if (!m) return '';
@@ -2820,6 +2845,7 @@ function summary_() {
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0, '웹': 0 }, byDay = {}, byMonth = {}, byKind = {};
   var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {}, byStoreChan = {}, byStoreKind = {}, byWeekKind = {};
+  var byStoreWeek = {};
   /* ── 매장별 세 갈래 (2026-09-01) ─────────────────────────────────────────
    * **셋을 한 루프에서 낸다** — 따로 돌면 같은 자료를 세 번 훑는다.
    *
@@ -2936,6 +2962,15 @@ function summary_() {
       if (wk) {
         if (!byWeekKind[wk]) byWeekKind[wk] = {};
         byWeekKind[wk][r.kind] = (byWeekKind[wk][r.kind] || 0) + 1;
+        /* **주차 × 매장 × 유형**(2026-09-03 사장님 지시 — *"내가 몇 주차를 클릭하거나
+           날짜를 설정하면 히트맵은 지점이 나오게"*). 주차는 **칸이 아니라 필터**다.
+           바로 위 주석이 *"매장까지 쪼개지 않는다 — 잡음이다"* 라 적어 둔 그 걱정은
+           **사실이다**(실측: 한 주에 값이 있는 매장 7~17곳 · 칸 값 68%가 1건).
+           그래도 담는 이유는 *"그 주에 어느 지점이 후기를 받았나"* 가 상담에서 쓰이기
+           때문이고, **얇다는 사실은 화면이 적는다**(주차 칩에 건수·매장 수를 함께 띄운다). */
+        if (!byStoreWeek[r.storeName]) byStoreWeek[r.storeName] = {};
+        if (!byStoreWeek[r.storeName][wk]) byStoreWeek[r.storeName][wk] = {};
+        byStoreWeek[r.storeName][wk][r.kind] = (byStoreWeek[r.storeName][wk][r.kind] || 0) + 1;
       }
     }
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
@@ -3148,6 +3183,10 @@ function summary_() {
     lgPair: lgPairs_(),
     /* 주차별 × 유형 — 히트맵의 「주차별」 모드가 쓴다. 매장은 안 쪼갠다(표본이 없다) */
     byWeekKind: byWeekKind,
+    /* **최근 주차만 담는다** — 108주를 통째로 보내면 칩 줄이 화면을 덮고 캐시 조각도 는다.
+       자르는 것은 서버에서 한다(화면이 자르면 「없는 주」와 「안 보낸 주」가 뭉개진다). */
+    byStoreWeek: trimWeeks_(byStoreWeek, WEEK_KEEP),
+    weekKeep: WEEK_KEEP,
     /* 매장 유형 — 점코드가 가르므로 **서버만 알 수 있다**(화면에는 점명만 간다) */
     storeType: storeTypes_(),
     /* **링크를 전부 내려보낸다**(2026-08-31 사장님 지시 — *"해당 바이럴건수에 url도
@@ -4110,7 +4149,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 6;
+var SUM_VER = 7;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

@@ -3077,5 +3077,61 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 }
 
+/* ── 바이럴 히트맵 주차 — **칸은 지점, 주차는 필터다** (2026-09-03 사장님 지시) ──
+ * *"내가 몇 주차를 클릭하거나 날짜를 설정하면 히트맵은 지점이 나오게 해주시면 됩니다.
+ *  지금은 히트맵 자체에 주차별로 나옵니다. 원하는 부분이 이게 아닙니다."*
+ * 한때 히트맵 **모드**에 주차를 두어 **칸 자체가 주차**가 됐고 지적을 받았다 — 되돌리면
+ * 화면에서만 보이므로 여기서 붙든다. */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const rvp = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(ixp) && fs.existsSync(rvp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const rv = fs.readFileSync(rvp, 'utf8');
+    const bad = [];
+
+    /* ① 서버가 **지점 × 주차**를 낸다. 주차별 합계만으로는 칸을 지점으로 못 그린다. */
+    if (!rv.includes('byStoreWeek[r.storeName][wk][r.kind]')) {
+      bad.push('서버가 지점 x 주차를 세지 않는다 — 주차를 골라도 칸을 지점으로 못 그린다');
+    }
+    if (!rv.includes('byStoreWeek: trimWeeks_(byStoreWeek, WEEK_KEEP)')) {
+      bad.push('byStoreWeek 를 안 보내거나 자르지 않는다');
+    }
+
+    /* ② **칸을 주차로 만들던 옛 모드가 되살아나면 안 된다.** */
+    if (ix.includes("heatMode === 'week'") || ix.includes("heatMode = 'week'")) {
+      bad.push('주차가 다시 모드가 됐다 — 칸이 주차가 되어 지점이 사라진다(사장님이 지적한 그것)');
+    }
+    if (!ix.includes("var heatWeek = ''")) bad.push('주차 필터 상태(heatWeek)가 없다');
+    if (!ix.includes('var week = !!heatWeek;')) bad.push('week 가 「주차를 골랐는가」가 아니다');
+
+    /* ③ 칩 줄 — **건수를 함께 적는다.** 한 주에 값이 있는 매장이 7~17곳뿐이라
+           숫자가 없으면 눌러 보고서야 빈 히트맵을 만난다. */
+    if (!ix.includes('id="hm-weeks"')) bad.push('주차 칩 줄이 없다');
+    if (!ix.includes("wbox.style.display = 'none'")) {
+      bad.push('자료가 없을 때 칩 줄을 감추지 않는다 — 빈 줄은 고장으로 보인다');
+    }
+    if (!ix.includes('nf(wsum[w3])')) bad.push('칩에 건수를 안 적는다');
+
+    /* ④ **평소 평균은 「글이 있었던 주」로 나눈다.** 전체 주로 나누면 선택 편향이 생겨
+           (칸이 그려진 매장은 그 주에 1건 이상이므로) **전 칸이 최대 초록**이 된다. */
+    if (!ix.includes('wAvg[sN] = liveW ? tt / liveW : null;')) {
+      bad.push('평소 평균을 0인 주까지 세어 낸다 — 그 주에 글이 있다는 이유만으로 늘 「평소보다 많다」가 된다');
+    }
+
+    /* ⑤ **색 척도와 범례가 같은 값을 쓴다.** 주는 표본이 1~5건이라 ±15% 로는 통째로
+           포화되고, 범례가 ±15% 라 적혀 있으면 색을 4배로 잘못 읽는다. */
+    if (!ix.includes('var heatSpan = week ? 60 : 15;')) bad.push('주차에서 색 척도를 넓히지 않는다 — 전 칸이 포화된다');
+    if (!ix.includes("('−' + heatSpan + '%')")) bad.push('범례 숫자가 척도를 안 따라간다');
+    if (!ix.includes('heatColor(d.g, heatSpan)')) bad.push('칸이 척도를 안 쓴다');
+    if (!ix.includes('sc2.innerHTML')) {
+      bad.push('색띠를 매번 다시 그리지 않는다 — 초기화 때는 척도가 없어 띠가 통째로 빈다');
+    }
+
+    if (bad.length) fail('[바이럴] 히트맵 주차 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 히트맵 주차 — 칸은 지점 · 주차는 필터 · 평소 대비 · 척도와 범례가 같다');
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

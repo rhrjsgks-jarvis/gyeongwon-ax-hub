@@ -58,6 +58,9 @@ const M = 0.6
   })
 }
 
+let idxPages = 1
+/* 8pt 로도 상자를 넘는 장표 — 잘라 내지 않고 빌드가 알린다 */
+const overflow = []
 /* ── 목차 ────────────────────────────────────────────────────── */
 {
   const s = pptx.addSlide()
@@ -73,17 +76,48 @@ const M = 0.6
     rows.push([
       { text: m.cat },
       { text: m.model },
-      { text: (m.name || '').slice(0, 40) },
+      /* 34자 — 6.0" 열에 10.5pt 로 한 줄에 들어가는 한계다(전각 기준 41자) */
+      { text: (m.name || '').slice(0, 34) },
       /* **못 찾은 것을 0 으로 적지 않고 「미확인」이라 적는다** — 0 은 *"USP 가 없다"* 로
          읽히는데 사실은 *"근거를 못 찾았다"* 다. 이 저장소가 비교표에서 「없음」과
          「미공개」를 가르는 규칙과 같다. */
       { text: n ? String(n) + '줄' : '미확인', options: { align: 'center', color: n ? INK : 'B45309', bold: !n } }
     ])
   }
-  s.addTable(rows, {
-    x: M, y: 1.05, w: W - M * 2, colW: [1.9, 2.4, 6.0, 1.83],
-    fontSize: 10.5, color: INK, border: { pt: 0.5, color: LINE }, valign: 'middle', rowH: 0.2
-  })
+  /* ── 목차를 쪽으로 나눈다 (2026-09-03) ────────────────────────────────
+   * 예전에는 한 장에 전부(머리 1 + 모델 70 = 71행 × 0.2" = 14.2")를 그렸다.
+   * y 1.05 에서 시작하니 끝이 **15.25"** — 슬라이드가 7.5" 라 **절반 이상이 안 보였다.**
+   * 모델이 44 → 70종으로 늘며 생긴 것으로 보인다(그때는 한 장에 들어갔을 것이다).
+   *
+   * **글꼴을 줄여 욱여넣지 않는다** — 목차는 사람이 훑는 것이라 10.5pt 아래로 내리면
+   * 있으나 마나다. 쪽을 늘리는 쪽을 골랐다(장표가 한 장 느는 값은 싸다). */
+  const ROW_H = 0.2, TOP = 1.05, BOTTOM = 7.0
+  /* **행 높이는 rowH 가 아니라 실측이다.** rowH 는 최소값이라 제품명이 줄바꿈되면
+     행이 커진다 — 실물을 찍어 재니 0.28" 였고 1쪽에서 마지막 행이 잘렸다.
+     제품명을 34자로 자르면 대개 한 줄에 들어가지만, **자르는 것에 기대지 않고**
+     실측값으로 쪽을 나눈다(글자가 긴 모델이 하나만 있어도 다시 잘린다). */
+  const ROW_REAL = 0.28
+  const PER = Math.max(10, Math.floor((BOTTOM - TOP) / ROW_REAL) - 1)   /* 머리 한 줄 몫을 뺀다 */
+  const head = rows[0], body = rows.slice(1)
+  const pages = Math.max(1, Math.ceil(body.length / PER))
+  for (let pi = 0; pi < pages; pi++) {
+    const part = body.slice(pi * PER, (pi + 1) * PER)
+    /* 첫 쪽은 이미 만든 슬라이드를 쓰고, 둘째 쪽부터 새로 만든다 */
+    const sp = pi === 0 ? s : pptx.addSlide()
+    if (pi > 0) {
+      sp.addText('목차 (이어서)', { x: M, y: 0.42, w: 6, h: 0.4, fontSize: 18, bold: true, color: BLUE })
+    }
+    if (pages > 1) {
+      sp.addText(`${pi + 1} / ${pages}`, {
+        x: W - M - 1.2, y: 0.5, w: 1.2, h: 0.3, fontSize: 10.5, color: MUTE, align: 'right'
+      })
+    }
+    sp.addTable([head].concat(part), {
+      x: M, y: TOP, w: W - M * 2, colW: [1.9, 2.4, 6.0, 1.83],
+      fontSize: 10.5, color: INK, border: { pt: 0.5, color: LINE }, valign: 'middle', rowH: ROW_H
+    })
+  }
+  idxPages = pages
 }
 
 /** 글자 수에 맞춰 글꼴을 줄인다. **넘치면 잘리는 것이 아니라 상자 밖으로 나간다.** */
@@ -107,22 +141,85 @@ for (const m of MODELS) {
     x: W - M - 3.4, y: 0.52, w: 3.4, h: 0.5, fontSize: 12, color: 'C7D2FE', align: 'right'
   })
 
+  /* usp 가 전폭을 쓰면 오른쪽 키워드 칸을 접는다 — 블록 밖에서도 봐야 해 여기서 선언한다 */
+  let uspWide = false
+
   /* 왼쪽 — 공식 셀링포인트 3줄. **이것이 주인공이다**(삼성이 제품마다 공식으로 싣는 말). */
   const usp = m.usp || []
   s.addText('공식 셀링포인트', { x: M, y: 1.55, w: 5.4, h: 0.3, fontSize: 12, bold: true, color: BLUE })
   if (usp.length) {
+    /* ── 항목을 **글자 수만큼** 쌓는다 (2026-09-03) ─────────────────────────
+     * 예전에는 `y = 2.06 + i * 1.24` 라는 **고정 간격**이었다. 글자 수와 무관하게
+     * 항목마다 1.24" 씩 내려가니 **4번째부터 상자 밖**(바닥 5.8")이고, 5번째부터는
+     * 슬라이드(7.5") 자체를 넘는다 — 실측으로 **12장이 그랬고 최악이 16.75"** 였다.
+     * 그 장표들은 **내용이 안 보이는 채로** 나가고 있었다.
+     *
+     * 지금은 ①글자 수로 줄 수를 세어 높이를 누적하고 ②전부가 상자에 들어가는 가장 큰
+     * 글꼴을 찾는다(16 → 8pt). 한 줄에 들어가는 글자 수는 한글 전각을 가정해
+     * `폭 ÷ 글꼴` 로 잡는다 — **보수적인 쪽**이라 실제로는 조금 더 들어간다. */
+    const BOX_Y = 1.9, PAD = 0.16, GAP = 0.08, MIN_H = 0.40
+    /* 상자 바닥은 6.70" 까지 — 구분선(6.78")과 겹치지 않는 한계다 */
+    const MAX_H = 6.70 - BOX_Y
+    const NUM_W = 0.46                       /* 번호 원이 먹는 폭 */
+    /** 열 수 `cols` 로 담아 본다. 열이 늘면 폭은 좁아지고 높이는 줄어든다. */
+    const plan = (fs2, cols, boxW) => {
+      const colW = (boxW - 0.22 - PAD) / cols
+      const txtW = colW - NUM_W
+      const perLine = Math.max(6, Math.floor(txtW * 72 / fs2))   /* 전각 가정 */
+      const lineH = fs2 * 1.28 / 72
+      const per = Math.ceil(usp.length / cols)
+      const rows = []
+      let need = 0
+      for (var c = 0; c < cols; c++) {
+        let y = BOX_Y + PAD
+        usp.slice(c * per, (c + 1) * per).forEach((u) => {
+          const h = Math.max(MIN_H, Math.ceil(String(u).length / perLine) * lineH + 0.10)
+          rows.push({ u, y: y, h: h, x: M + 0.22 + c * colW, tx: M + 0.22 + c * colW + NUM_W, tw: txtW })
+          y += h + GAP
+        })
+        need = Math.max(need, y - GAP + PAD - BOX_Y)
+      }
+      return { rows: rows, need: need, fs: fs2, cols: cols, boxW: boxW }
+    }
+    /* **한 칸으로 안 되면 폭을 넓혀 두 열로 편다**(2026-09-03).
+     * usp 10~12줄은 4.6" 폭에 물리적으로 안 들어간다 — 세로가 모자란 것이 아니라
+     * **가로가 좁은** 것이라, 글꼴을 더 줄이는 대신 오른쪽 키워드 칸 자리까지 쓴다.
+     * 키워드는 usp 헤드라인에서 뽑은 파생물이라 그 장표에서만 접어도 손해가 작다 —
+     * 다만 **조용히 없애지 않고** 아래에 한 줄로 그 사실을 적는다. */
+    const WIDE_W = W - M * 2
+    let lay = plan(16, 1, 5.5)
+    for (var f = 16; f > 8 && lay.need > MAX_H; f -= 0.5) lay = plan(f, 1, 5.5)
+    if (lay.need > MAX_H) {
+      uspWide = true
+      lay = plan(13, 2, WIDE_W)
+      for (var f2 = 13; f2 > 8 && lay.need > MAX_H; f2 -= 0.5) lay = plan(f2, 2, WIDE_W)
+    }
+    const fsz = lay.fs
+    /* **여기서도 넘치면 잘라 내지 않고 알린다** — 조용히 잘리면 아무도 모른다 */
+    if (lay.need > MAX_H) overflow.push(`${m.model} (usp ${usp.length}줄 · ${lay.need.toFixed(2)}")`)
+    const boxH = Math.min(MAX_H, Math.max(3.9, lay.need))
     s.addShape(pptx.ShapeType.roundRect, {
-      x: M, y: 1.9, w: 5.5, h: 3.9, fill: { color: SOFT }, line: { color: 'C7D2FE', width: 0.75 }, rectRadius: 0.12
+      x: M, y: BOX_Y, w: lay.boxW, h: boxH, fill: { color: SOFT }, line: { color: 'C7D2FE', width: 0.75 }, rectRadius: 0.12
     })
-    usp.forEach((u, i) => {
+    if (uspWide) {
+      s.addText('※ 셀링포인트가 많아 이 장표에서는 핵심 키워드 칸을 접었습니다.', {
+        x: M, y: BOX_Y + boxH + 0.06, w: WIDE_W, h: 0.24, fontSize: 9.5, italic: true, color: MUTE
+      })
+    }
+    lay.rows.forEach((r, i) => {
+      /* **두 자리 수는 글꼴을 줄인다** — 0.34" 원에 13pt 로 "12" 를 넣으면
+         세로로 눌려 두 줄이 된다(실물에서 봤다). */
+      const numFs = Math.max(8, Math.min(13, fsz * 0.82)) * (i >= 9 ? 0.78 : 1)
       s.addText(String(i + 1), {
-        x: M + 0.22, y: 2.12 + i * 1.24, w: 0.34, h: 0.34,
-        fontSize: 13, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle',
+        x: r.x, y: r.y + (r.h - 0.34) / 2, w: 0.34, h: 0.34,
+        fontSize: numFs, bold: true, color: 'FFFFFF',
+        margin: 0,
+        align: 'center', valign: 'middle',
         shape: pptx.ShapeType.ellipse, fill: { color: BLUE }
       })
-      s.addText(u, {
-        x: M + 0.68, y: 2.06 + i * 1.24, w: 4.6, h: 1.05,
-        fontSize: fitSize(u, 16, 34), bold: true, color: INK, valign: 'middle'
+      s.addText(r.u, {
+        x: r.tx, y: r.y, w: r.tw, h: r.h,
+        fontSize: fsz, bold: true, color: INK, valign: 'middle'
       })
     })
   } else {
@@ -144,7 +241,12 @@ for (const m of MODELS) {
   }
 
   /* 오른쪽 — 핵심 키워드. 사장님 지시: *"USP 설명은 빠져도 됩니다(키워드만 있어도 됩니다)"* */
+  /* **usp 가 전폭을 쓰는 장표에서는 그리지 않는다** — 겹쳐 찍히면 둘 다 못 읽는다 */
+  /* **uspWide 면 이 칸을 통째로 건너뛴다.** 목록만 비우면 제목과 「제목이 없습니다」
+     안내가 그대로 남아 전폭 usp 위에 **겹쳐 찍힌다** — 좌표 검산은 통과하고
+     실물을 찍어서야 드러났다. */
   const keys = (m.heads || []).filter((h) => h.length <= 50).slice(0, 22)
+  if (!uspWide) {
   s.addText(`핵심 키워드${keys.length ? ` (${keys.length})` : ''}`, {
     x: M + 5.85, y: 1.55, w: 5.4, h: 0.3, fontSize: 12, bold: true, color: BLUE
   })
@@ -168,6 +270,7 @@ for (const m of MODELS) {
       : '이 모델의 상세 지면을 찾지 못해 키워드도 받지 못했습니다.', {
       x: M + 5.85, y: 1.95, w: 5.9, h: 0.5, fontSize: 11, color: MUTE, italic: true
     })
+  }
   }
 
   /* 바닥 — 출처. **어디서 온 말인지 없으면 상담사가 근거로 못 쓴다.** */
@@ -193,10 +296,15 @@ const need = MODELS.reduce((a, m) => a + (m.usp || []).length, 0)
 const kept = MODELS.reduce((a, m) => a + (m.heads || []).filter((h) => h.length <= 50).slice(0, 22).length, 0)
 const noUsp = MODELS.filter((m) => !(m.usp || []).length)
 
-console.log(`${path.relative(ROOT, OUT)} — 슬라이드 ${MODELS.length + 2}장 (표지 · 목차 · 모델 ${MODELS.length})`)
+console.log(`${path.relative(ROOT, OUT)} — 슬라이드 ${MODELS.length + 1 + idxPages}장 (표지 · 목차 ${idxPages} · 모델 ${MODELS.length})`)
 console.log(`  공식 셀링포인트 ${need}줄 · 핵심 키워드 ${kept}개 · ${(zipBuf.length / 1024).toFixed(0)}KB`)
 if (noUsp.length) {
   console.log(`  USP 미확인 ${noUsp.length}건 — ${noUsp.map((m) => m.model).join(', ')}`)
   console.log('  (지어내지 않고 「확정하지 못했습니다」로 적었습니다)')
 }
 void texts
+/* **넘친 장표는 조용히 두지 않는다** — 8pt 로도 안 들어가면 글을 줄이거나 칸을 넓혀야 한다.
+   잘라 내면 그 장표를 읽는 사람은 자기가 덜 봤다는 것조차 모른다. */
+if (overflow.length) {
+  console.log(`  ⚠ 상자를 넘는 장표 ${overflow.length}건 — ${overflow.join(', ')}`)
+}
