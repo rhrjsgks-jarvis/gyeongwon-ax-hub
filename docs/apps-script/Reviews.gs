@@ -3403,10 +3403,17 @@ function summary_() {
     mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {} });
   }
   mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
-  /* **60명까지 싣는다**(2026-09-03). 예전에는 20명이었는데 순위표만 쓸 때의 값이다 —
-     히트맵은 전원을 한 판에 그리는 그림이라 20명으로 자르면 **꼬리가 통째로 사라지고**
-     「그 매니저는 언급이 없다」로 읽힌다. 60명이면 자료 크기도 미미하다(이름·건수·월별). */
-  mgrTop = mgrTop.slice(0, 60);
+  /* **자르기 전에 전체 인원을 센다** — 실측(2026-09-03) 60위가 6건이라 그 아래로도
+     많이 잘렸다. 사장님이 *"인식된 인원수가 몇 명이죠?"* 라고 물으신 것이 이 지점이다.
+     **자른 사실을 화면이 밝혀야 한다** — 안 밝히면 60명이 전부인 줄 안다. */
+  var mgrAllN = mgrTop.length;
+  /* 꼬리가 얼마나 얇은지도 함께 — 「1건뿐인 이름」은 오탐일 가능성이 크다 */
+  var mgrOnce = 0;
+  for (mi = 0; mi < mgrTop.length; mi++) if (mgrTop[mi].n === 1) mgrOnce++;
+  /* **200명까지 싣는다**(2026-09-03). 60명은 순위표 시절 값이라 히트맵에서 꼬리가
+     통째로 사라졌다. 이름·건수·월별뿐이라 200명이어도 자료가 미미하다.
+     **그래도 자른다** — 1건짜리 오탐까지 전부 그리면 판이 읽히지 않는다. */
+  mgrTop = mgrTop.slice(0, 200);
   /* **네이버 전체 검색 건수를 함께 붙인다**(사장님 제안 ②). 우리 건수와 **다른 숫자**라
      화면이 갈라 적는다 — 합치면 거짓이 된다. 아직 안 훑었으면 `null` 이다(0 이 아니다). */
   var nvTab = {};
@@ -3562,6 +3569,8 @@ function summary_() {
     /* **매니저 언급 순위**(사장님 지시). `mgrFull` 은 **본문까지 본 글 수** —
        나머지는 제목에서만 뽑은 옛 글이라 화면이 그 사실을 밝혀야 한다. */
     mgrTop: mgrTop, mgrFull: mgrFullN, mgrRows: rows.length,
+    /* **인식된 전체 인원**과 그중 화면에 실은 수. 화면이 「N명 중 M명」을 적는다 */
+    mgrAll: mgrAllN, mgrOnce: mgrOnce,
     /* **명부에 등록된 사람 전원의 건수** — 0건도 낸다(등록했는데 안 나오는 것이 정보다).
        직함으로 갈린 것을 이름으로 합친 값이라 순위표보다 정확하다. */
     mgrKnown: mgrKnown, mgrList: nameTab,
@@ -4510,7 +4519,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 11;
+var SUM_VER = 12;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

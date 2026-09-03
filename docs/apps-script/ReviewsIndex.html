@@ -474,6 +474,11 @@
   .stdet h3 { font-size: var(--fs-body); font-weight: 800; letter-spacing: -.2px; }
   /* 안 고른 상태 — **한 줄**이다. 여섯 지역에 세 줄짜리 안내가 반복되면 화면을 먹는다 */
   .stdet-hint { margin-top: 5px; font-size: var(--fs-mini); color: var(--mute); }
+  /* 매니저 거르개 표시 — **푸는 길이 함께 있어야 한다**(걸어 놓고 못 풀면 갇힌다) */
+  .lmgr { margin-top: 6px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
+    background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: var(--ctl-r);
+    padding: var(--ctl-py) var(--ctl-px); font-size: var(--fs-mini); color: var(--ink); }
+  .lmgr b { font-weight: 800; }
   .stdet .big { font-size: 26px; font-weight: 800; letter-spacing: -.6px; color: var(--blue);
                 font-variant-numeric: tabular-nums; margin: 2px 0 8px; }
   .stdet .big span { font-size: 12px; font-weight: 600; color: var(--mute); margin-left: 2px; }
@@ -1173,7 +1178,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <div class="lhead">
       <div>
         <h2>후기 링크</h2>
-        <div class="sub">작성일을 아는 글 먼저 · 그 안에서 최신순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
+        <div class="sub" id="list-sub">작성일을 아는 글 먼저 · 그 안에서 최신순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
+        <!-- 매니저로 걸렸을 때만 나온다 — **걸린 줄 모르면 「후기가 이것뿐」으로 읽는다** -->
+        <div id="list-mgr" class="lmgr" hidden></div>
       </div>
       <button class="dl" id="csv">CSV 내려받기</button>
     </div>
@@ -1231,6 +1238,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   var DATA_READY = false;   /* 자료가 왔는가 — 화면이 「불러오는 중」과 「0건」을 가른다 */
   var srcFilter = '전체';
   var storeFilter = '';   /* 매장 막대를 눌러 걸린 값 */
+  /* 매니저 이름으로 거르기 (2026-09-03 사장님 지시 —
+     *"히트맵에서 매니저이름을 클릭하면 해당후기가 보이게 해주세요"*). */
+  var mgrFilter = '';
   var cafeFilter = '';    /* 카페 막대를 눌러 걸린 값 */
   var kindFilter = '';    /* 유형 칩을 눌러 걸린 값 */
   /* 목록 쪽수 — **필터가 바뀌면 1쪽으로 돌아간다**(아래 `render`). 3쪽을 보다가
@@ -1363,6 +1373,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (storeFilter && r.storeName !== storeFilter) return false;
       if (cafeFilter && r.cafe !== cafeFilter) return false;
       if (kindFilter && r.kind !== kindFilter) return false;
+      /* **매니저는 한 글에 여럿일 수 있다**(mgr 이 | 로 이어진다) — 포함으로 본다.
+         부분일치로 보면 「김영훈 매니저」가 「김영훈 부점장」도 문다(다른 사람일 수 있다). */
+      if (mgrFilter && String(r.mgr || '').split('|').indexOf(mgrFilter) < 0) return false;
       /* **`mc`(지도 칸)는 서버가 붙여 준다** — 점코드로 화면이 다시 판정하려면
          AREA 65줄과 강원 시 표를 화면에도 둬야 하고, 그러면 같은 표가 두 벌이 되어
          한쪽만 고치는 사고가 난다. */
@@ -1533,15 +1546,24 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 
     var sub = document.getElementById('mgrbook-sub');
     if (sub) {
+      var zeroN = K.filter(function (k) { return !k.n; }).length;
       sub.innerHTML = total
         ? '등록 <b>' + total + '명</b> · 후기에 나온 사람 <b>'
           + K.filter(function (k) { return k.n > 0; }).length + '명</b>'
+          /* **감춘 수는 적는다** — 아예 안 적으면 「내가 넣은 이름이 사라졌다」로 읽힌다 */
+          + (zeroN ? ' · <b>0건 ' + zeroN + '명은 목록에서 뺐습니다</b>' : '')
           + ' · <b>직함이 갈린 같은 사람을 합쳐</b> 셉니다(남수호 프로 + 남수호 매니저 = 한 사람)'
-        : '아직 등록된 이름이 없습니다. 매장과 이름을 넣으면 <b>그 사람 건수를 정확히</b> 셉니다'
-          + ' — <b>0건이면 0건이라고 적습니다</b>(후기에 안 나온다는 것도 정보입니다).';
+        : '아직 등록된 이름이 없습니다. 매장과 이름을 넣으면 <b>그 사람 건수를 정확히</b> 셉니다.';
     }
     if (!K.length) { box.innerHTML = ''; return; }
-    box.innerHTML = K.map(function (k) {
+    /* **0건은 목록에서 뺀다**(위 주석 참조). 몇 명인지는 부제가 적는다. */
+    var Kv = K.filter(function (k) { return k.n > 0; });
+    if (!Kv.length) {
+      box.innerHTML = '<div class="note">등록하신 이름이 <b>아직 후기에 나오지 않았습니다</b> — '
+        + '값이 없는 것이지 이름이 안 들어간 것이 아닙니다.</div>';
+      return;
+    }
+    box.innerHTML = Kv.map(function (k) {
       return '<div class="krow"><span class="kn">' + esc(k.name) + '</span>'
         + '<span class="ks">' + esc(k.store) + (k.titles ? ' · ' + esc(k.titles) : '') + '</span>'
         + '<span class="kv' + (k.n ? '' : ' zero') + '">' + nf(k.n) + '건</span></div>';
@@ -4600,7 +4622,27 @@ function renderList() {
       nav.dataset.wired = '1';
       box.addEventListener('click', function (e) {
         var t = e.target.closest ? e.target.closest('.cell') : null;
-        if (t && t.getAttribute('data-k')) { heatPath.push(t.getAttribute('data-k')); renderHeat(); }
+        if (!t || !t.getAttribute('data-k')) return;
+        var key = t.getAttribute('data-k');
+        /* ── 매니저 칸을 누르면 **그 사람 후기**를 본다 (2026-09-03 사장님 지시) ──
+         * *"히트맵에서 매니저이름을 클릭하면 해당후기가 보이게 해주세요"*.
+         * 매니저에는 드릴다운이 없으므로(채널·지역 자료가 없다) 그 자리를 목록으로 쓴다.
+         * **다른 거르개는 풀어 준다** — 매장·카페·유형이 걸린 채면 그 사람 글이
+         * 안 보이는데 화면은 「후기가 없다」로 읽힌다. */
+        if (heatWho === 'mgr') {
+          mgrFilter = (mgrFilter === key) ? '' : key;
+          storeFilter = ''; cafeFilter = ''; watchFilter = ''; kindFilter = '';
+          page = 1;
+          render();
+          /* **목록 카드를 열고 그리로 데려간다** — 접혀 있으면 눌러도 아무 일이 없다 */
+          var open = secOpen();
+          if (open.indexOf('list') < 0) { open.push('list'); secSave(open); applySecs(); render(); }
+          var lc = document.getElementById('list-card');
+          if (lc && lc.scrollIntoView) lc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        heatPath.push(key);
+        renderHeat();
       });
       bk.addEventListener('click', function () { heatPath.pop(); renderHeat(); });
       /* 유형 버튼 — **손잡이를 묶음에 한 번만 걸고 눌린 것을 찾는다**(버튼마다 걸면
@@ -5021,10 +5063,15 @@ function renderList() {
          안 적으면 같은 초록이 어떤 때는 「늘었다」, 어떤 때는 「비중이 높다」가 되어
          화면이 조용히 두 말을 한다. */
       sub.innerHTML = mgrView
-        ? '<b>매니저</b>를 봅니다 — 칸 = 사람 · 크기 = 후기에 언급된 건수 · '
-          + '<b>칸 색 = 전월 대비</b>. 이름은 <b>후기 제목·본문에서 뽑은 것</b>이고, '
-          + '<b>명부에 등록된 이름</b>이면 아래에 ✓ 가 붙습니다. 같은 사람이 직함에 따라 '
-          + '갈리지 않게 명부가 합쳐 줍니다.'
+        ? '<b>매니저</b>를 봅니다 — 칸 = 사람 · 크기와 색 모두 <b>언급된 건수</b>입니다. '
+          /* **자른 사실을 밝힌다**(2026-09-03 사장님 질문). 안 밝히면 화면에 보이는 수가
+             전부인 줄 안다 — 실측으로 60위가 6건이라 그 아래로 많이 잘려 있었다. */
+          + (DATA.mgrAll && DATA.mgrAll > (DATA.mgrTop || []).length
+              ? '인식된 이름은 <b>' + nf(DATA.mgrAll) + '명</b>이고 그중 <b>'
+                + nf((DATA.mgrTop || []).length) + '명</b>을 그립니다(건수 순). '
+              : '인식된 이름 <b>' + nf((DATA.mgrTop || []).length) + '명</b>을 모두 그립니다. ')
+          + '<b>칸을 누르면 그 사람이 언급된 후기</b>가 아래 목록에 나옵니다. '
+          + '이름은 후기 제목·본문에서 뽑은 것이고, <b>명부에 등록된 이름</b>이면 ✓ 가 붙습니다.'
         : week
         ? '<b>' + esc(periodLabel()) + '</b>만 봅니다 — <b>칸은 지점</b> · '
           + '크기와 색 모두 <b>' + (heatKind ? esc(heatKind) + ' 건수' : '건수') + '</b>입니다(진할수록 많음). '
@@ -5083,6 +5130,18 @@ function renderList() {
     }
   }
 
+  /** 매니저로 걸렸음을 목록 머리에 적는다. **푸는 버튼을 함께 둔다.** */
+  function renderMgrFilter() {
+    var el = document.getElementById('list-mgr');
+    if (!el) return;
+    if (!mgrFilter) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    el.innerHTML = '<b>' + esc(mgrFilter) + '</b> 님이 언급된 후기만 봅니다'
+      + '<button type="button" class="chip" id="mgr-clear">전체 후기로</button>';
+    var c = document.getElementById('mgr-clear');
+    if (c) c.onclick = function () { mgrFilter = ''; page = 1; render(); };
+  }
+
   function render() {
     /* **필터가 바뀌면 1쪽으로.** 필터를 바꾸는 길이 여덟(지도·매장·카페·유형·관심·기간·
        칩 해제·지도 아래 목록)이라 그 자리마다 적으면 반드시 하나를 빠뜨린다 — 빠뜨린
@@ -5135,6 +5194,7 @@ function renderList() {
     renderKinds();
     renderWatch();
     renderMgrs();
+    renderMgrFilter();
     /* **명부는 관리자 안에 있다** — 잠겨 있으면 그리지 않는다(잠금 해제 때 그린다).
        그리기 자체는 값을 새지 않지만, 잠긴 카드 안에 내용이 남아 있으면
        「잠근 것이 아니라 접어 둔 것」이 된다. */

@@ -3370,5 +3370,43 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 }
 
+/* ── 매니저 클릭 · 0건 숨김 · 인원수 (2026-09-03 사장님 지시 셋) ───────────── */
+{
+  const ixp = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const rvp = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (fs.existsSync(ixp) && fs.existsSync(rvp)) {
+    const ix = fs.readFileSync(ixp, 'utf8');
+    const rv = fs.readFileSync(rvp, 'utf8');
+    const bad = [];
+
+    /* ① 매니저 칸을 누르면 그 사람 후기 — **상태·필터·화면 셋이 다 있어야 한다.**
+           하나만 빠져도 칩은 뜨는데 목록이 안 걸린다(실제로 그랬다). */
+    if (!ix.includes("var mgrFilter = ''")) bad.push('mgrFilter 상태가 없다');
+    if (!ix.includes("if (mgrFilter && String(r.mgr")) bad.push('목록이 매니저로 안 걸린다 — 칩만 뜨고 목록은 그대로다');
+    if (!ix.includes("if (heatWho === 'mgr') {") || !ix.includes('mgrFilter = (mgrFilter === key)')) {
+      bad.push('매니저 칸 클릭이 목록으로 안 간다');
+    }
+    /* 다른 거르개를 풀어 준다 — 걸린 채면 그 사람 글이 안 보이는데 「없다」로 읽힌다 */
+    if (!ix.includes("storeFilter = ''; cafeFilter = ''; watchFilter = ''; kindFilter = '';")) {
+      bad.push('매니저를 고를 때 다른 거르개를 안 푼다');
+    }
+    if (!ix.includes('function renderMgrFilter()')) bad.push('걸린 매니저를 화면이 안 적는다');
+    if (!ix.includes("id='mgr-clear'") && !ix.includes('id="mgr-clear"')) bad.push('푸는 버튼이 없다 — 걸어 놓고 못 풀면 갇힌다');
+
+    /* ② 0건은 목록에 안 적는다 — **감춘 수는 밝힌다**(안 밝히면 「내 이름이 사라졌다」) */
+    if (!ix.includes('var Kv = K.filter(function (k) { return k.n > 0; });')) bad.push('명부에서 0건을 안 뺀다');
+    if (!ix.includes('명은 목록에서 뺐습니다')) bad.push('0건을 몇 명 뺐는지 안 적는다');
+
+    /* ③ 인식 인원 — 자른 사실을 밝힌다(사장님이 「60명만 보인다」고 물으셨다) */
+    if (!rv.includes('var mgrAllN = mgrTop.length;')) bad.push('자르기 전 인원을 안 센다');
+    if (!rv.includes('mgrAll: mgrAllN')) bad.push('인원수를 안 보낸다');
+    if (!rv.includes('mgrTop.slice(0, 200)')) bad.push('히트맵에 실는 인원이 200명이 아니다');
+    if (!ix.includes('DATA.mgrAll && DATA.mgrAll >')) bad.push('화면이 「N명 중 M명」을 안 적는다');
+
+    if (bad.length) fail('[바이럴] 매니저 클릭·0건·인원 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 매니저 — 칸 클릭으로 후기 · 0건 숨김 · 인식 인원 밝힘');
+  }
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
