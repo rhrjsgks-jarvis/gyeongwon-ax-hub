@@ -1095,15 +1095,18 @@ var KINDS = [
  *
  * 미지정 자료(옛 줄)는 `kind` 가 비어 있어 자동으로 `etc` 로 떨어진다 —
  * 지시하신 *"카테고리 미지정 기존 데이터는 '기타 후기'로 기본 처리"* 그대로다. */
+/* **매니저는 유형이 아니다**(2026-09-03 사장님 정정 — *"가장 왼쪽에 매니저 후기는
+   필요 없는 버튼입니다. 가장 오른쪽에 「매니저로 보기」를 누르고 혼수 입주 기타 후기를
+   필터링할 수 있어야 합니다"*). 매니저는 **무엇을 칸으로 그릴지**를 정하는 축이고,
+   유형은 그 위에 겹쳐 거는 축이다 — 한 줄에 섞어 두면 「매니저 혼수 후기」를 볼 수 없다. */
 var KIND4 = [
-  ['manager', '매니저 후기'],
   ['wedding', '혼수 후기'],
   ['movein',  '입주 후기'],
   ['etc',     '기타 후기']
 ];
-/** 한 줄이 어느 묶음인가. **매니저가 가장 세다**(위 주석 참조). */
+/** 한 줄이 어느 묶음인가. **매니저 여부는 보지 않는다**(위 주석 참조) —
+ *  그래야 매니저 글도 혼수·입주·기타 중 하나로 들어가 겹쳐 걸 수 있다. */
 function kind4_(row) {
-  if (row && row.mgr) return 'manager';
   var k = row && row.kind;
   if (k === '혼수') return 'wedding';
   if (k === '입주') return 'movein';
@@ -1114,6 +1117,9 @@ function kind4_(row) {
 function kind4Of_(v) {
   var t = String(v || '').trim().toLowerCase();
   for (var i = 0; i < KIND4.length; i++) if (KIND4[i][0] === t) return t;
+  /* **`manager` 는 화면 버튼에서는 뺐지만 엔드포인트에는 남긴다** — 「이름이 잡힌 글」을
+     뽑는 것은 여전히 쓸모가 있고, 이미 이 주소를 쓰는 곳이 있을 수 있다. */
+  if (t === 'manager') return 'manager';
   /* 한글로 쳐도 받는다 — 사장님이 주소창에 직접 넣을 수 있다 */
   if (t === '매니저') return 'manager';
   if (t === '혼수') return 'wedding';
@@ -1137,6 +1143,33 @@ function filterKind4_(sum, t4) {
   var out = {}, k;
   for (k in sum) if (sum.hasOwnProperty(k)) out[k] = sum[k];
   out.type = t4;
+
+  /* **`manager` 는 유형 묶음이 아니다**(화면 버튼에서 뺐다) — `byStoreKind4` 에 그 키가
+     없으므로 매니저별 집계(`mgrTop`)로 낸다. 안 그러면 전 매장 0건이 나간다. */
+  if (t4 === 'manager') {
+    var mb = {}, mt = 0, i0, j0;
+    var tops = sum.mgrTop || [];
+    for (i0 = 0; i0 < tops.length; i0++) {
+      /* `mgrTop[].store` 는 **가장 많이 언급된 매장**이라 그 사람 글이 다른 매장에도
+         있을 수 있다. 매장별 정확한 수는 세어 두지 않았으므로 **그 사실을 밝힌다.** */
+      var nm0 = tops[i0].store;
+      if (!nm0) continue;
+      mb[nm0] = (mb[nm0] || 0) + (tops[i0].n || 0);
+      mt += tops[i0].n || 0;
+    }
+    var all0 = sum.byStore || {};
+    for (j0 in all0) if (all0.hasOwnProperty(j0) && !mb.hasOwnProperty(j0)) mb[j0] = 0;
+    out.byStore = mb;
+    out.total = mt;
+    out.typeScope = {
+      filtered: ['total', 'byStore'],
+      unfiltered: ['byStoreWeek', 'byMonth', 'byDay', 'bySrc', 'byMap', 'byRegion', 'byCafe', 'recent', 'rival'],
+      note: '매니저는 유형 묶음이 아니라 「이름이 잡힌 글」입니다. 매장별 수는 '
+          + '그 사람이 가장 많이 언급된 매장으로 몰아 세었습니다 — 한 사람의 글이 '
+          + '다른 매장에도 있을 수 있습니다.'
+    };
+    return out;
+  }
 
   var byStore = {}, s4 = sum.byStoreKind4 || {}, st, tot = 0;
   for (st in s4) if (s4.hasOwnProperty(st)) {
@@ -3375,7 +3408,7 @@ function summary_() {
      있게 히트맵 안으로 편입해주세요"*). 히트맵 칸 색은 전월 대비라 월별이 있어야 한다.
      **작성일을 아는 글만** 센다 — 카페 줄의 날짜는 발견일이라 넣으면 이번 달만 거대해진다
      (이 화면이 추이·주차에서 이미 두 번 데인 자리다). */
-  var mgrMon = {};
+  var mgrMon = {}, mgrKind = {};
   var mgrN = {}, mgrStore = {}, mgrFullN = 0, mm, mi, mk;
   for (i = 0; i < rows.length; i++) {
     if (rows[i].mgrFull) mgrFullN++;
@@ -3387,6 +3420,12 @@ function summary_() {
       mgrN[mk] = (mgrN[mk] || 0) + 1;
       if (!mgrStore[mk]) mgrStore[mk] = {};
       mgrStore[mk][rows[i].storeName] = (mgrStore[mk][rows[i].storeName] || 0) + 1;
+      /* **매니저 × 유형**(2026-09-03 사장님 지시) — 「매니저로 보기」에서 혼수·입주·기타를
+         겹쳐 걸려면 있어야 한다. `kind4_` 가 매니저를 안 보므로 한 사람의 글이
+         혼수·입주·기타로 갈린다. */
+      var mk4 = kind4_(rows[i]);
+      if (!mgrKind[mk]) mgrKind[mk] = {};
+      mgrKind[mk][mk4] = (mgrKind[mk][mk4] || 0) + 1;
       if (rows[i].dated && rows[i].date) {
         var mmo = String(rows[i].date).slice(0, 7);
         if (!mgrMon[mk]) mgrMon[mk] = {};
@@ -3400,7 +3439,8 @@ function summary_() {
     /* 그 사람이 가장 많이 언급된 매장 — 「어느 매장 분인가」를 화면이 적는다 */
     var bestS = '', bestN = 0, sk;
     for (sk in mgrStore[mk]) if (mgrStore[mk][sk] > bestN) { bestN = mgrStore[mk][sk]; bestS = sk; }
-    mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {} });
+    mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {},
+                  kind4: mgrKind[mk] || {} });
   }
   mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
   /* **자르기 전에 전체 인원을 센다** — 실측(2026-09-03) 60위가 6건이라 그 아래로도
@@ -4519,7 +4559,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 12;
+var SUM_VER = 13;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

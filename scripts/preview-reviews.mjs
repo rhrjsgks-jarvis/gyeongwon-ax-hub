@@ -229,15 +229,13 @@ const DATA = {
   bySrc: { 블로그: 812, 카페: 1300, 웹: 321 },
   byStoreSrc, byStoreMonth, lastPost,
   storeType, byStoreChan, byStoreKind, byWeekKind, byStoreWeek, weekKeep: 20,
-  kind4Names: [['manager', '매니저 후기'], ['wedding', '혼수 후기'],
-               ['movein', '입주 후기'], ['etc', '기타 후기']],
+  kind4Names: [['wedding', '혼수 후기'], ['movein', '입주 후기'], ['etc', '기타 후기']],
   byKind4: (() => {
-    const o = { manager: 0, wedding: 0, movein: 0, etc: 0 };
+    const o = { wedding: 0, movein: 0, etc: 0 };
     Object.entries(byStoreKind).forEach(([, m]) => {
       o.wedding += m['혼수'] || 0; o.movein += m['입주'] || 0;
       o.etc += (m['구매'] || 0) + (m['설치'] || 0) + (m['기타'] || 0);
     });
-    o.manager = 380;   /* 이름이 잡힌 글 — mgrFull 과 같은 값 */
     return o;
   })(),
   byStoreKind4: (() => {
@@ -245,9 +243,7 @@ const DATA = {
     Object.entries(byStoreKind).forEach(([n, m], i) => {
       o[n] = {
         wedding: m['혼수'] || 0, movein: m['입주'] || 0,
-        etc: (m['구매'] || 0) + (m['설치'] || 0) + (m['기타'] || 0),
-        /* 매니저는 일부 매장에만 — **0건 매장이 있어야** 그 표시를 눈으로 볼 수 있다 */
-        manager: i % 3 === 0 ? Math.max(1, Math.round((m['혼수'] || 0) * 0.12)) : 0
+        etc: (m['구매'] || 0) + (m['설치'] || 0) + (m['기타'] || 0)
       };
       Object.keys(o[n]).forEach((k) => { if (!o[n][k]) delete o[n][k]; });
     });
@@ -409,7 +405,12 @@ const DATA = {
       /* 5명 중 1명은 **전월이 없다** — 「전월 모름」 회색 칸이 실제로 뜨는지 봐야 한다 */
       if (i % 5 !== 3 && prev) mon[prev] = Math.max(1, Math.round(n * 0.22) + (i % 3));
       if (cur) mon[cur] = Math.max(1, Math.round(n * 0.26) - (i % 4));
-      return { name, n, store, naver, known, mon };
+      /* 매니저 × 유형 — **어떤 사람은 특정 유형이 0건**이어야 「빠지는가」를 볼 수 있다 */
+      const w = Math.round(n * (0.3 + (i % 4) * 0.15));
+      const mv = i % 3 === 0 ? 0 : Math.max(1, Math.round(n * 0.15));
+      const kind4 = { wedding: w, movein: mv, etc: Math.max(0, n - w - mv) };
+      Object.keys(kind4).forEach((k) => { if (!kind4[k]) delete kind4[k]; });
+      return { name, n, store, naver, known, mon, kind4 };
     });
   })(),
   mgrFull: 380, mgrRows: 2433, mgrAll: 161, mgrOnce: 74,

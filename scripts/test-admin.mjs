@@ -3185,8 +3185,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes("var chan = heatWho === 'mgr' ? false")) {
       bad.push('매니저에서 채널 드릴다운을 막지 않는다 — 빈 화면이 뜬다');
     }
-    if (!ix.includes("if (kbox) kbox.style.display = mgrView ? 'none' : '';")) {
-      bad.push('매니저에서 유형 버튼을 감추지 않는다');
+    /* **2026-09-03 사장님 정정으로 뜻이 뒤집혔다** — 매니저 보기에서도 유형을 걸어야
+       한다(「매니저로 보기를 누르고 혼수 입주 기타 후기를 필터링할 수 있어야」).
+       주차는 여전히 감춘다 — 매니저 x 주차는 세어 두지 않았다. */
+    if (!ix.includes("if (mgrView && wbox) wbox.style.display = 'none';")) {
+      bad.push("매니저에서 주차 거르개를 감추지 않는다 — 자료가 없어 0건이 나온다");
     }
 
     if (bad.length) fail('[바이럴] 매니저 히트맵 — ' + bad.join(' · '));
@@ -3322,7 +3325,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!rv.includes("['혼수', ['혼수', '신혼'")) bad.push('기존 9종 분류가 사라졌다 — 되돌릴 수 없는 손실이다');
     if (!rv.includes('function kind4_(row)')) bad.push('4종 묶음 규칙이 없다');
     /* 매니저가 가장 세다 — 유형이 아니라 「이름이 잡혔는가」로 정해진다 */
-    if (!rv.includes("if (row && row.mgr) return 'manager';")) bad.push('매니저 후기를 mgr 로 가리지 않는다');
+    /* **매니저는 유형이 아니다**(2026-09-03 사장님 정정). 유형 묶음에 넣으면
+       「매니저 혼수 후기」를 볼 수 없다 — 한 축에 두 가지를 섞은 셈이 된다. */
+    if (rv.includes("if (row && row.mgr) return 'manager';")) {
+      bad.push('매니저가 아직 유형 묶음에 있다 — 「매니저로 보기」와 유형을 겹쳐 걸 수 없다');
+    }
+    if (!rv.includes("['wedding', '혼수 후기'],")) bad.push('유형 3종이 아니다');
+    if (rv.includes("['manager', '매니저 후기'],")) bad.push('매니저 후기 버튼이 남아 있다');
+    /* 엔드포인트에는 남긴다 — 「이름이 잡힌 글」을 뽑는 것은 여전히 쓸모가 있다 */
+    if (!rv.includes("if (t === 'manager') return 'manager';")) bad.push('?type=manager 를 못 읽는다');
+    /* 매니저 × 유형 — 겹쳐 걸려면 서버가 세어야 한다 */
+    if (!rv.includes('mgrKind[mk][mk4]')) bad.push('매니저 x 유형을 세지 않는다');
+    if (!rv.includes('kind4: mgrKind[mk] || {}')) bad.push('mgrTop 이 유형별 건수를 안 싣는다');
+    /* 화면 — 매니저 보기에서 유형 버튼을 감추지 않는다 */
+    if (ix.includes("if (kbox) kbox.style.display = mgrView ? 'none' : '';")) {
+      bad.push('매니저 보기에서 유형 버튼을 감춘다 — 필터링할 수 있어야 한다는 지시였다');
+    }
+    if (!ix.includes('var kn4 = heatKind ?')) bad.push('매니저를 유형으로 안 센다');
     if (!rv.includes('byKind4: byKind4')) bad.push('4종 집계를 안 보낸다');
     /* 미지정 자료는 기타로 — 지시하신 기본 처리 */
     if (!rv.includes("return 'etc';")) bad.push('미지정을 기타로 떨어뜨리지 않는다');
