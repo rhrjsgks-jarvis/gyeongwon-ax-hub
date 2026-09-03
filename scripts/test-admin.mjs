@@ -3268,6 +3268,20 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('LG 증감이 작년에 없는 달을 0 으로 센다');
   }
 
+  /* ⑦ **월 집계 하한은 연 단위여야 한다** (2026-09-03 사장님 지적으로 발견)
+     'now - 400일' 이라 2026-09-03 에 2025-07 에서 잘렸다 — 작성일을 아는 2,671건 중
+     844건만 화면에 나갔고 2025년은 616건 중 249건뿐이었다. 「며칠 전」으로 잡으면
+     오늘이 며칠이냐에 따라 작년 시작이 잘려 연도 비교가 반쪽이 된다. */
+  {
+    const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    if (gs.includes('monthFloor = Utilities.formatDate(new Date(now.getTime() - ')) {
+      bad.push('byStoreMonth 하한이 「며칠 전」이다 — 연도 비교가 반쪽이 된다');
+    }
+    if (!gs.includes("var monthFloor = (Number(Utilities.formatDate(now, tz, 'yyyy')) - 1) + '-01';")) {
+      bad.push('byStoreMonth 하한이 직전해 1월이 아니다');
+    }
+  }
+
   if (bad.length) fail('[바이럴] 연도 축 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · LG 23/24는 숫자만');
 }
