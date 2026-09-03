@@ -3760,6 +3760,40 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (bad.length) fail('[바이럴] 검출 정확도·옛 자료 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 검출 — 하한 2025 · 지우기(미상 보존) · 감사(date+sim) · sim 수집');
   }
+
+  /* ── 쿼터 날짜 ─────────────────────────────────────────────────────────
+   * **호출 카운터의 하루는 한국 날짜가 아니라 태평양 날짜다** (2026-09-03).
+   * 구글 UrlFetch 쿼터가 태평양 자정(= KST 16~17시)에 리셋되는데 카운터가
+   * `Asia/Seoul` 로 세고 있었다. 두 경계가 8시간 어긋나 **`dayUsed 11,234/20,000`
+   * 으로 「여유 있다」면서 구글은 초과를 던졌고**, 그 뒤 16시간의 실행이 전부
+   * 첫 호출에서 죽었다 — 맨 앞에 둔 LG 비교가 `rivalTry 12 / rivalCur 0` 이었다.
+   *
+   * **되돌리면 화면에서만 보인다**(숫자는 그럴듯하고 오류는 남의 탓으로 보인다).
+   * 그래서 검사가 붙든다. `today_()` 는 그대로여야 한다 — 그쪽은 화면·도장용이다. */
+  {
+    const rv = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const bad = [];
+    if (!rv.includes("function quotaDay_() { return Utilities.formatDate(new Date(), 'America/Los_Angeles', 'yyyy-MM-dd'); }")) {
+      bad.push('quotaDay_ 가 없거나 태평양이 아니다');
+    }
+    /* 카운터가 실제로 그것을 쓰는가 — 함수만 있고 안 쓰면 아무것도 안 고쳐진다 */
+    const iU = rv.indexOf('function usage_() {');
+    const body = iU < 0 ? '' : rv.slice(iU, iU + 200);
+    if (iU < 0) bad.push('usage_ 가 없다');
+    else if (!body.includes('var d = quotaDay_()')) bad.push('usage_ 가 쿼터 날짜를 안 쓴다 — 한국 자정에 카운터만 0 이 된다');
+    /* `today_()` 는 한국 날짜 그대로여야 한다(회차 도장·화면 표기) */
+    if (!rv.includes("function today_() { return Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'); }")) {
+      bad.push('today_ 가 바뀌었다 — 회차 도장과 화면 날짜는 한국 시각이어야 한다');
+    }
+    /* 화면이 「오늘」이라 적으면 그 자리에서 거짓이 된다(16~17시에 0 으로 돌아간다) */
+    if (ix.includes("'오늘 ' + nf(used)")) bad.push('화면이 「오늘」이라 적는다 — 쿼터는 한국 자정에 안 풀린다');
+    if (!ix.includes("'쿼터 ' + nf(used)")) bad.push('화면이 쿼터 기준임을 안 밝힌다');
+    if (!ix.includes('태평양 자정(한국 16~17시)에 초기화')) bad.push('언제 풀리는지 화면이 안 적는다');
+
+    if (bad.length) fail('[바이럴] 쿼터 날짜 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 쿼터 날짜 — 카운터는 태평양 · 도장은 한국 · 화면이 그렇게 적는다');
+  }
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

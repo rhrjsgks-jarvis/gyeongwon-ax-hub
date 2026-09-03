@@ -1993,11 +1993,30 @@ function adminReady() { return { set: !!admClean_(props_().getProperty(ADMIN_PRO
 function today_() { return Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'); }
 
 /**
+ * **쿼터 날짜는 한국 날짜가 아니다** (2026-09-03 실측으로 잡음).
+ *
+ * 호출 카운터는 `Asia/Seoul` 자정에 0 이 되는데 **구글 UrlFetch 쿼터는 태평양
+ * 자정(= KST 16~17시)에 리셋된다.** 두 경계가 8시간 어긋나 이런 일이 벌어졌다:
+ *
+ *   16시 구글 리셋 → 우리 카운터는 아직 높아 `over()` 가 일찍 멈춘다(덜 쓴다)
+ *   자정 우리만 0 → 구글은 그 사이 쓴 만큼 남아 있는데 우리는 20,000 이 있다고 믿는다
+ *   → **`dayUsed 11,234/20,000` 로 「여유 있다」면서 구글은 `하루에 urlfetch 서비스를
+ *      너무 많이 호출했습니다` 를 던진다.** 그 뒤 16시간은 모든 실행이 첫 호출에서 죽는다.
+ *
+ * 실측(2026-09-03 배포본) — **`rivalTry 12 / rivalCur 0`**. 맨 앞에 둔 LG 비교가
+ * 12번 시도해 **한 도시도 못 끝냈다**. 새벽 3시 트리거도 이 죽은 구간에 있다.
+ *
+ * **`today_()` 는 그대로 둔다** — 그쪽은 화면에 적고 회차 도장으로 쓰는 「우리 날짜」라
+ * 한국 시각이 맞다. 바꾸는 것은 **쿼터를 세는 날짜 하나**뿐이다.
+ */
+function quotaDay_() { return Utilities.formatDate(new Date(), 'America/Los_Angeles', 'yyyy-MM-dd'); }
+
+/**
  * 오늘 쓴 호출 수. **날짜가 바뀌면 저절로 0 이다** — 자정에 지우는 트리거를 따로 두면
  * 그것이 실패했을 때 한도가 영영 안 풀린다. 저장된 날짜와 오늘을 견주는 편이 안전하다.
  */
 function usage_() {
-  var d = today_(), n = 0;
+  var d = quotaDay_(), n = 0;
   var raw = props_().getProperty('_dayUsage');
   if (raw) {
     try { var o = JSON.parse(raw); if (o && o.d === d) n = Number(o.n) || 0; } catch (e) {}
