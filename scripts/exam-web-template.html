@@ -235,7 +235,7 @@ function setup(){
   /* 보기 순서도 응시자마다 섞는다 — 같은 문항이라도 답 위치가 달라야 한다 */
   picked.list = picked.list.map(function(q){
     var idx = shuffle(q.opts.map(function(_, i){ return i; }), rnd);
-    return { q:q.q, exp:q.exp, lv:q.lv, lg:q.lg, b2b:q.b2b, cat:q.cat,
+    return { q:q.q, exp:q.exp, lv:q.lv, lg:q.lg, b2b:q.b2b, b2bOnly:q.b2bOnly, cat:q.cat,
              opts: idx.map(function(i){ return q.opts[i]; }),
              ans: idx.indexOf(q.ans) };
   });
@@ -286,7 +286,7 @@ function render(){
     h += '<div class="q" data-i="' + i + '" data-lv="' + esc(q.lv) + '"' +
          (q.lg ? ' data-lg="1"' : '') + '>' +
          '<div class="qh"><span class="qn">' + (i + 1) + '.</span><span>'
-         + (q.b2b ? '<span class="b2b">B2B</span>' : '') + esc(q.q) + '</span></div>';
+         + (q.b2bOnly ? '<span class="b2b">B2B</span>' : '') + esc(q.q) + '</span></div>';
     q.opts.forEach(function(o, j){
       h += '<div class="opt" data-i="' + i + '" data-j="' + j + '">' +
            '<span class="no">' + NO[j] + '</span><span>' + esc(o) + '</span></div>';

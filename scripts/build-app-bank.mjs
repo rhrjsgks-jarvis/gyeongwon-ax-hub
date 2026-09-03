@@ -96,7 +96,8 @@ export function buildQB(oldQB) {
      대신해 주지 못한다. 빼면 그 상담이 시험에서 통째로 사라진다. */
   let nB2B = 0;
   for (const q of readJson('scripts/fixtures/b2b-questions.json')) {
-    add(q.cat, { q: q.q, opts: q.opts, ans: q.ans, exp: q.exp || '', src: 'b2b' });
+    add(q.cat, { q: q.q, opts: q.opts, ans: q.ans, exp: q.exp || '', src: 'b2b',
+      b2bOnly: q.b2bOnly ? 1 : 0 });
     nB2B++;
   }
 

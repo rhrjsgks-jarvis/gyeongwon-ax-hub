@@ -344,7 +344,74 @@ export function buildB2BQuestions() {
    * 
    */
 
+  markB2BOnly(out);
   return { items: out, skippedLabels: [...skipped].sort() };
+}
+
+/** ── B2B **전용** 모델인지 표시한다 (2026-09-03 사장님 지시) ───────────────────
+ * *"시험지 출력기 B2B 표시가 B2B 전용 모델에만 표시되면 좋겠습니다."*
+ *
+ * 예전에는 이 은행에서 온 461문항 **전부**에 배지가 붙었다. 그런데 SOHO몰은
+ * **일반 제품도 함께 판다** — 갤럭시북·TV·냉장고가 그렇다. 그 문항에 「B2B」라
+ * 적으면 상담사가 *"이건 일반 매장에선 못 파는 모델"* 로 잘못 읽는다.
+ *
+ * 가르는 근거는 **일반 채널에 그 모델코드가 있는가**다(제품 상세검색 DB =
+ * 카탈로그 + 삼성닷컴 전수). 있으면 전용이 아니다.
+ * - **질문과 보기를 함께 훑는다** — 「다음 중 …가 가장 큰 모델은?」 은 질문에
+ *   코드가 없고 보기에만 있다(71문항이 그렇다).
+ * - **하나라도 일반 채널에 있으면 전용이 아니다.** 한 문항이 여러 모델을 견주는데
+ *   그중 하나가 일반 판매면 「B2B 전용」이라는 말이 그 자리에서 거짓이 된다.
+ * - **코드를 하나도 못 뽑으면 붙이지 않는다.** 「모른다」와 「전용이다」는 다른 말이고,
+ *   이 저장소는 근거 없는 표시를 화면에 만들지 않는다.
+ * - **유통 접미(S·KR)만 다른 것은 같은 제품으로 본다.** 그 이상 느슨하게 보면
+ *   접두가 겹치는 다른 세대를 같은 제품으로 오인한다(실측으로 갤럭시북이 그랬다). */
+function markB2BOnly(items) {
+  const codes = new Set();
+  const add = (c) => { if (c) codes.add(String(c).toUpperCase()); };
+  try {
+    const fh = fs.readFileSync('public/finder-app.html', 'utf8');
+    (fh.match(/"model":"[A-Z0-9][A-Z0-9-/*.]{4,}"/g) || []).forEach((m) => add(m.slice(9, -1)));
+  } catch (e) { /* 없으면 아래에서 알린다 */ }
+  try {
+    const ex = JSON.parse(fs.readFileSync('public/finder-extra.json', 'utf8'));
+    (ex.add || ex.products || []).forEach((q) => add(q.model));
+  } catch (e) { /* 선택 자료다 */ }
+  /* **일반 채널 목록을 못 읽으면 표시하지 않는다** — 목록이 비면 전부 「전용」이 되어
+     지금보다 나쁜 거짓이 된다. 조용히 그러지 않게 던진다. */
+  if (codes.size < 100) {
+    throw new Error('일반 채널 모델코드를 ' + codes.size + '개밖에 못 읽었습니다 — '
+      + 'public/finder-app.html 을 확인하세요. 이대로면 전 문항이 「B2B 전용」이 됩니다.');
+  }
+  const has = (c) => codes.has(c) || codes.has(c + 'S') || codes.has(c + 'KR')
+    || (c.endsWith('S') && codes.has(c.slice(0, -1)))
+    || (c.endsWith('KR') && codes.has(c.slice(0, -2)));
+  const pick = (t) => {
+    const s2 = String(t || '').toUpperCase(), out = [];
+    let m;
+    const re1 = /(([A-Z0-9][A-Z0-9-/*.]{5,}))/g;
+    while ((m = re1.exec(s2))) out.push(m[1]);
+    const re2 = /([A-Z]{2}[A-Z0-9-/*.]{5,})/g;
+    while ((m = re2.exec(s2))) out.push(m[1]);
+    return out;
+  };
+  /* **업소용·산업용은 채널과 무관하게 B2B 다**(2026-09-03 사장님 지시 —
+     *"업소용(산업용) 제품은 모두 B2B로 분류해주세요"*). 「상업용 스탠딩 에어컨」·
+     업소용 냉장고는 카탈로그에 실려 제품 상세검색에서 찾아지지만, **매장에서 소비자에게
+     파는 물건이 아니다.** 그래서 코드 대조보다 이 판정이 먼저다.
+     **제품 이름에 그 말이 있을 때만** 본다 — 짐작으로 넓히면 일반 제품이 끌려온다. */
+  const IND = /(상업용|업소용|산업용|시스템s*에어컨|싱글s*에어컨|천장형|사이니지)/;
+  const industrial = (q) => IND.test(String(q.q || ''))
+    || (q.opts || []).some((o) => IND.test(String(o)));
+
+  let only = 0, gen = 0, unk = 0, ind = 0;
+  for (const q of items) {
+    if (industrial(q)) { q.b2bOnly = 1; only++; ind++; continue; }
+    const cs = pick(q.q).concat((q.opts || []).flatMap(pick));
+    if (!cs.length) { unk++; continue; }
+    if (cs.some(has)) { gen++; continue; }
+    q.b2bOnly = 1; only++;
+  }
+  return { only, gen, unk, ind };
 }
 
 if (process.argv[1] && process.argv[1].endsWith('build-b2b-questions.mjs')) {
@@ -359,5 +426,7 @@ if (process.argv[1] && process.argv[1].endsWith('build-b2b-questions.mjs')) {
   for (const q of items) by[q.cat] = (by[q.cat] || 0) + 1;
   console.log(`생성 ${items.length}문항 → ${OUT}`);
   console.log('카테고리별:', Object.entries(by).sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${n}`).join(' · '));
+  const onlyN = items.filter((q) => q.b2bOnly).length;
+  console.log(`B2B 전용 표시 ${onlyN}문항 (나머지 ${items.length - onlyN}개는 일반 채널에도 있는 모델이거나 모델 미상)`);
   console.log(`법정 표시로 뺀 라벨 ${skippedLabels.length}종:`, skippedLabels.slice(0, 12).join(' · '));
 }

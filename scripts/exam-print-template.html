@@ -240,7 +240,7 @@ function render(code, n, mxPct, mix){
     /* **필요한 필드를 여기서 골라 새 객체를 만든다** — 빠뜨리면 뒤에서 조용히 사라진다.
        실제로 `b2b` 를 안 실어 배지가 한 번도 안 떴다(추첨은 멀쩡했다 — 160문항 중 60개가
        원본에서 B2B 였는데 표시는 0개). **표식을 더할 때 이 줄을 함께 볼 것.** */
-    return { q:q.q, cat:q.cat, type:q.type, div:q.div, lv:q.lv, lg:q.lg, b2b:q.b2b, exp:q.exp,
+    return { q:q.q, cat:q.cat, type:q.type, div:q.div, lv:q.lv, lg:q.lg, b2b:q.b2b, b2bOnly:q.b2bOnly, exp:q.exp,
              opts: order.map(function(i){ return q.opts[i]; }),
              ans: order.indexOf(q.ans) };
   });
@@ -287,9 +287,9 @@ function render(code, n, mxPct, mix){
          법인 전용 모델이라 소비자 매장에서 못 보는 제품이고, 모르면 「내가 모르는 제품이
          나왔다」로만 읽힌다. 그래서 `data-b2b` 표식과 **눈에 보이는 배지**를 함께 단다. */
       h += '<div class="q" data-div="' + esc(q.div) + '" data-lv="' + esc(q.lv) + '"' +
-           (q.lg ? ' data-lg="1"' : '') + (q.b2b ? ' data-b2b="1"' : '') +
+           (q.lg ? ' data-lg="1"' : '') + (q.b2bOnly ? ' data-b2b="1"' : '') +
            '><div class="qh"><span class="qn">' + (from+k+1) + '.</span>' +
-           '<span class="qt">' + (q.b2b ? '<span class="b2b">B2B</span>' : '') +
+           '<span class="qt">' + (q.b2bOnly ? '<span class="b2b">B2B</span>' : '') +
            esc(q.q) + '</span></div><ul class="opts">';
       q.opts.forEach(function(o, i){
         h += '<li><span class="no">' + NO[i] + '</span><span>' + esc(o) + '</span></li>';

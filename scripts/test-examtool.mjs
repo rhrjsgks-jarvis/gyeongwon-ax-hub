@@ -306,6 +306,46 @@ say(new Set(a.qs.map(q => q.q)).size === a.qs.length, '문항 중복 없음');
   /* 은행의 38.8% 가 B2B 라 20문항이면 거의 늘 하나는 든다. 다만 무작위라
      **0개일 수도 있으므로 "있으면 배지가 붙는가"만** 지킨다 — 개수를 박으면 헛되이 깨진다. */
   if (drawn) say(true, 'B2B 문항에 배지가 붙는다 (' + drawn + '개)');
+
+  /* ── **배지는 B2B 「전용」 모델에만** (2026-09-03 사장님 지시) ─────────────────
+   * *"시험지 출력기 B2B 표시가 B2B 전용 모델에만 표시되면 좋겠습니다."*
+   * SOHO몰은 갤럭시북·TV 같은 **일반 제품도 판다** — 461문항 전부에 배지를 달면
+   * 상담사가 *"일반 매장에선 못 파는 모델"* 로 잘못 읽는다(실측 207개만 전용).
+   *
+   * 표식이 **세 곳을 거쳐** 온다(생성기 → appbank → quiz-bank → 틀). 하나만 빠뜨려도
+   * **배지가 조용히 0개**가 된다 — 실제로 appbank 에서 빠뜨려 12판 0배지였다. */
+  const b2bSrc = JSON.parse(fs.readFileSync(new URL('fixtures/b2b-questions.json', import.meta.url), 'utf8'));
+  /* **문항 텍스트만으로는 짝을 못 찾는다** — 「다음 중 소비전력이 가장 큰 모델은?」 처럼
+     여러 카테고리가 같은 문장을 쓴다(보기가 달라 서로 다른 문항이다). 보기까지 넣어
+     열쇠를 만든다. 시험지는 보기 순서를 섞으므로 **정렬해서** 맞춘다. */
+  const keyOf = (q, o) => q + '||' + [...(o || [])].map(String).sort().join('|');
+  const onlySet = new Set(b2bSrc.items.filter(q => q.b2bOnly).map(q => keyOf(q.q, q.opts)));
+  const allSet = new Set(b2bSrc.items.map(q => keyOf(q.q, q.opts)));
+  const wrong = a.qs.filter(q => q.b2bMark && allSet.has(keyOf(q.q, q.opts)) && !onlySet.has(keyOf(q.q, q.opts)));
+  const miss = a.qs.filter(q => !q.b2bMark && onlySet.has(keyOf(q.q, q.opts)));
+  say(!wrong.length, '전용이 아닌 모델에는 배지를 안 단다'
+    + (wrong.length ? ' — ' + wrong[0].q.slice(0, 46) : ''));
+  /* **짝을 하나도 못 찾으면 이 검사는 아무것도 못 지킨다** — 열쇠가 어긋나도
+     wrong·miss 가 0 이라 조용히 통과한다. 실제로 맞춰 본 것이 있는지 함께 본다. */
+  const matched = a.qs.filter(q => allSet.has(keyOf(q.q, q.opts))).length;
+  say(matched > 0, 'B2B 문항을 은행과 짝지어 검사했다 (' + matched + '개)');
+  say(!miss.length, '전용 모델에는 배지가 빠지지 않는다'
+    + (miss.length ? ' — ' + miss[0].q.slice(0, 46) : ''));
+  say(b2bSrc.items.some(q => q.b2bOnly) && b2bSrc.items.some(q => !q.b2bOnly),
+    '판정이 갈린다 — 전용 ' + onlySet.size + ' · 일반 채널에도 있음 ' + (allSet.size - onlySet.size));
+
+  /* 표식이 지나는 세 곳 — 하나라도 빠지면 배지가 조용히 사라진다 */
+  const rd = (f) => fs.readFileSync(new URL('../' + f, import.meta.url), 'utf8');
+  say(rd('scripts/build-b2b-questions.mjs').includes('function markB2BOnly('),
+    '생성기가 일반 채널과 대조해 전용 여부를 정한다');
+  say(rd('scripts/build-app-bank.mjs').includes('b2bOnly: q.b2bOnly ? 1 : 0'),
+    'appbank 가 표식을 옮긴다');
+  say(rd('scripts/lib/quiz-bank.mjs').includes('b2bOnly: q.b2bOnly ? 1 : 0'),
+    '은행이 표식을 옮긴다');
+  say(rd('scripts/exam-print-template.html').includes("q.b2bOnly ? '<span class=\"b2b\">B2B</span>' : ''"),
+    'A4 시험지가 전용일 때만 배지를 그린다');
+  say(rd('scripts/exam-web-template.html').includes("q.b2bOnly ? '<span class=\"b2b\">B2B</span>' : ''"),
+    '웹 시험이 전용일 때만 배지를 그린다');
 }
 /*
  * **한 장만 보고 통과시키지 말 것.** 위 셋(CE/MX · 난이도 · LG)은 추첨마다 다시 맞춰야
