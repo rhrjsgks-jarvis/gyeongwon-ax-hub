@@ -536,6 +536,10 @@ const stub = [
   '        src: "카페", q: "수지 혼수", sort: "sim", page: 3 }],',
   '      note: "분모는 date·sim 합집합입니다." }); }, 400); },',
   /* 매장 대 매장 — **못 끝낸 회차**를 흉내 낸다(이어달리기 안내가 보여야 한다) */
+  /* 쿼터 확인 — **막힌 쪽**을 흉내 낸다(그 문구가 화면에서 어떻게 보이는지 봐야 한다) */
+  '    quotaTest: function () { setTimeout(function () { ok && ok({ ok: false,',
+  '      why: "Exception: 하루에 urlfetch 서비스를 너무 많이 호출했습니다.",',
+  '      used: 10876, limit: 20000 }); }, 400); },',
   '    collectStoreRival: function () { setTimeout(function () { ok && ok({ ok: true,',
   '      wrote: 9, calls: 540, cur: 9, tot: 62, done: false, error: "" }); }, 500); },',
   '    purgeOld: function (dry) { setTimeout(function () { ok && ok({ ok: true, dry: !!dry,',

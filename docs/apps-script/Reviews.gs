@@ -4165,6 +4165,30 @@ function storeRival_() {
  * **반쪽은 저장하지 않는다** — 한쪽 진영만 훑고 끊긴 줄을 쓰면 그 매장 비중이
  * 조용히 거짓이 된다(「당사 vs LG」와 같은 규칙).
  */
+/**
+ * **구글 호출 쿼터가 풀렸는지 한 번 두드려 본다** (2026-09-03 사장님 제안).
+ *
+ * 우리 카운터(`dayUsed`)는 **우리가 쓴 수**일 뿐이라, 같은 계정의 다른 스크립트
+ * (사용 로그·시험·쿠폰·게시판)가 쓴 몫을 모른다 — 그래서 카운터가 10,876 인데도
+ * 구글은 초과라고 한다. **실제로 한 번 호출해 보는 것이 유일하게 확실한 확인**이다.
+ *
+ * 비용은 **1회**다. google.com 을 두드리는 이유는 네이버 키를 안 쓰고도
+ * UrlFetch 쿼터만 정확히 재기 때문이다.
+ */
+function quotaTest() {
+  try {
+    var r = UrlFetchApp.fetch('https://www.google.com', { muteHttpExceptions: true });
+    /* 이 한 번도 우리 몫이므로 센다 — 안 세면 카운터가 조금씩 어긋난다 */
+    addUsage_(1);
+    return { ok: true, code: r.getResponseCode(),
+      used: usage_().n, limit: dailyLimit_() };
+  } catch (e) {
+    /* **오류 문구를 그대로 돌려준다** — 「막혔다」와 「네트워크가 이상하다」는 다른 말이다 */
+    return { ok: false, why: String(e && e.message || e),
+      used: usage_().n, limit: dailyLimit_() };
+  }
+}
+
 function collectStoreRival(reset) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(1000)) return { ok: false, busy: true };

@@ -3410,8 +3410,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('지점별 분석이 연도로 안 맞는다');
   }
   /* **전 기간 수도 함께 밝힌다** — 「138건」만 보면 그 매장 후기가 그만큼인 줄 안다 */
-  if (!ix.includes('전 기간 누적은')) {
-    bad.push('전 기간 누적을 안 밝힌다 — 138 과 1,185 의 차이를 알 수 없다');
+  if (!ix.includes('아래 채널은 <b>전 기간')) {
+    bad.push('채널이 전 기간 기준임을 안 밝힌다 — 138 과 1,185 의 차이를 알 수 없다');
   }
   /* ⑦ **0건 문구는 뺐다**(사장님: "0건인것은 화면에서 안나와도됩니다") */
   if (ix.includes("why.push(zeroN")) {
@@ -3432,6 +3432,33 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (gs.includes("setProperty('_deadErr', String((deadRun")) {
     bad.push('_deadErr 에 빈 문자열을 저장한다 — Apps Script 가 거부한다');
   }
+
+  /* ⑩ **수집 버튼은 관리자 잠금 안에 있어야 한다** (2026-09-03 사장님 지시)
+     머리에 두면 상담사가 실수로 누르고, 두 곳에 흩어지면 매번 찾게 된다.
+     되돌릴 수 없는 「자료 비우기」는 그 안에서도 맨 뒤다. */
+  {
+    const at4 = ix.indexOf('id="adm-body"');
+    const hdr = ix.slice(0, ix.indexOf('</header>'));
+    ['id="run"', 'id="runfull"', 'id="wipe"', 'id="runrival"'].forEach((f) => {
+      if (hdr.indexOf(f) >= 0) bad.push("수집 버튼(" + f + ")이 아직 머리에 있다");
+    });
+    if (at4 < 0) bad.push("adm-body 를 못 찾았다");
+    else {
+      const body = ix.slice(at4);
+      ['id="run"', 'id="runfull"', 'id="wipe"', 'id="sriv-go"'].forEach((f) => {
+        if (body.indexOf(f) < 0) bad.push(f + " 가 관리자 잠금 안에 없다");
+      });
+    }
+  }
+
+  /* ⑪ **쿼터 확인**(2026-09-03 사장님 제안) — 우리 카운터는 우리가 쓴 몫만 알아서
+     같은 계정의 다른 스크립트가 쓴 것을 모른다. 실제로 한 번 호출해 보는 것이
+     유일하게 확실한 확인이다. **오류 문구를 그대로 보여줘야** 「쿼터」인지 다른
+     문제인지 갈린다. */
+  if (!gs.includes('function quotaTest()')) bad.push('quotaTest 가 없다');
+  if (!gs.includes('addUsage_(1)')) bad.push('쿼터 확인이 자기 호출을 안 센다');
+  if (!ix.includes('id="quota-go"')) bad.push('화면에 쿼터 확인 버튼이 없다');
+  if (!ix.includes('아직 막혀 있습니다')) bad.push('막혔을 때 그 사실을 안 적는다');
 
   if (bad.length) fail('[바이럴] 매장 대 매장 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 매장 대 매장 — 양쪽을 같은 질의로 · 색은 우리 몫 · 자료 없으면 감춘다');
@@ -3480,9 +3507,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
 
-    /* ⑦ 머리 — **감추지 않고 접는다.** 폰에서 버튼이 네 줄이라 머리가 화면의
-           3분의 1(301px)을 먹었다. 자주 쓰는 수집 둘은 밖에 남는다. */
-    if (!ix.includes('<details class="hmore">')) bad.push('머리 관리 접이식이 없다');
+    /* ⑦ **머리에는 상태만 남는다** (2026-09-03 사장님 지시로 수집 버튼을
+           관리자 항목으로 옮겼다). 접을 것이 없어 접이식도 함께 사라졌다. */
+    if (ix.slice(0, ix.indexOf("</header>")).indexOf("hmore") >= 0) {
+      bad.push("머리에 관리 접이식이 남아 있다 — 수집 버튼은 관리자 항목으로 옮겼다");
+    }
     ['id="run"', 'id="runfull"', 'id="stop"'].forEach((t) => {
       const i = ix.indexOf(t), j = ix.indexOf('<details class="hmore">');
       if (i < 0 || (j >= 0 && i > j)) bad.push(t + ' 이 접이식 안으로 들어갔다 — 자주 쓰는 것은 밖에 둔다');

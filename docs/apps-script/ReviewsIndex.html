@@ -81,14 +81,6 @@
   .lim input:focus { outline: 2px solid rgba(255,255,255,.5); outline-offset: -1px; }
   .limuse { font-size: 10.5px; color: rgba(255,255,255,.6); font-variant-numeric: tabular-nums; }
   /* 관리 손잡이 접기 — **감추지 않는다.** 한 번 누르면 그대로 나온다 */
-  .hmore { display: inline-block; }
-  .hmore > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(255,255,255,.18); color: #fff; border-radius: var(--ctl-r);
-    padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs); font-weight: 700; }
-  .hmore > summary::-webkit-details-marker { display: none; }
-  .hmore > summary::after { content: '▾'; font-size: var(--fs-mini); opacity: .8; }
-  .hmore[open] > summary::after { content: '▴'; }
-  .hmore-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 7px; }
   /* 한도가 한 바퀴에 모자라면 눈에 띄게 — 매일 중간에서 끊긴다는 뜻이다 */
   .limuse.low { color: #FCD34D; font-weight: 700; }
 
@@ -893,8 +885,13 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <!-- 2026-08-31 사장님 지시: *"전체 재수집 버튼은 모든 바이럴을 최대한 긁어모으게 하고
            (시간 오래 걸려도 상관없음), 최근 일주일, 이런 식으로 최대한 빠르게 바이럴 수집할 수
            있게 구축해 주세요"*. **두 버튼이 하는 일이 다르다** — 아래 안내가 그것을 적는다. -->
-      <button class="btn" id="run">최근 것만 수집</button>
-      <button class="btn" id="runfull">전체 재수집</button>
+      <!-- ── **수집 버튼은 관리자 항목으로 옮겼다** (2026-09-03 사장님 지시) ──
+           *"지금 인터페이스가 상단에 관리가있고 섹션에도 관리자가있는데 정보수집
+           버튼관련 … 관리자항목으로넣어주세요"*.
+           수집·삭제는 **관리자가 하는 일**이라 잠금 안에 있어야 하고, 두 곳에
+           흩어져 있으면 어디를 눌러야 하는지 매번 찾게 된다.
+           **머리에는 상태만 남긴다** — 마지막 수집 시각·진행률·오류는 조작이
+           아니라 정보라 누구나 봐야 한다. -->
       <!-- 2026-09-01 사장님 허락 — *"자료를 모두 지우고 다시 수집해도 가능하니
            제대로 분석할 수 있게 해 주세요"*. 열이 늘고 출처가 셋이 되면서 옛 줄과
            새 줄이 다른 것을 담는다 — 섞어 두면 「블로그 36%」 같은 값이 반은 옛
@@ -904,34 +901,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div id="runstage" class="sub"></div>
       <!-- 스스로 이어 도는 중에만 보인다. **멈출 길이 없으면 켜기도 무섭다.**
            접이식 밖에 둔다 — 돌고 있을 때만 나타나므로 그때는 바로 보여야 한다. -->
-      <button class="btn" id="stop" hidden>이어달리기 멈춤</button>
+
       <!-- 같은 URL 이 두 번 이상 있을 때만 보인다(2026-08-31 사장님 지적).
            늘 띄워 두면 「눌러야 하나」 싶어지므로 **치울 것이 있을 때만** 나온다. -->
-      <button class="btn" id="dedupe" hidden>중복 정리</button>
+
       <!-- 2026-09-02 사장님 요청 — *"lg홍보경로도 비어있습니다. 무슨 버튼을 눌르면
            업데이트가되는지 만들어주세요"*. **「지금 수집」과 하는 일이 다르다** —
            매장 훑기를 건너뛰고 LG 비교만 돌아 300초 예산을 통째로 쓴다.
            「당사 vs LG」와 「LG 홍보 경로」 둘 다 이 한 번으로 채워진다. -->
       <!-- 가끔 쓰는 손잡이는 접는다 — **감추는 것이 아니라 한 번 누르면 나온다.**
            폰에서 버튼이 네 줄이라 머리가 화면의 3분의 1을 먹고 있었다. -->
-      <details class="hmore">
-        <summary>관리</summary>
-        <div class="hmore-in">
-          <button class="btn" id="runrival">LG 비교 갱신</button>
-          <!-- 일일 수집한도 (2026-08-31 사장님 요청) — **오늘 쓴 양을 함께 적는다.**
-               한도만 있고 쓴 양이 없으면 남은 몫을 가늠할 수 없다. -->
-          <span class="lim">
-            <label for="lim">일일 한도</label>
-            <input id="lim" type="number" min="100" max="50000" step="100" inputmode="numeric">
-            <span>회</span>
-            <button class="btn" id="lim-save">저장</button>
-            <span class="limuse" id="lim-use">–</span>
-          </span>
-          <!-- 2026-09-01 사장님 허락 — *"자료를 모두 지우고 다시 수집해도 가능하니
-               제대로 분석할 수 있게 해 주세요"*. **되돌릴 수 없으므로 맨 뒤에 둔다.** -->
-          <button class="btn danger" id="wipe">자료 비우고 처음부터</button>
-        </div>
-      </details>
+
     </div>
   </div>
 </header>
@@ -1160,14 +1140,39 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            *"각 지점 후기가 잘 검출이 되는지 여러 번 테스트해 보고 빠지지 않게 검출하는
             방법을 만들어 주세요"*. 한 매장을 date·sim 양쪽으로 끝까지 훑어 **받을 수
             있는 최대**를 내고, 그중 몇 %가 시트에 있는지 잰다. -->
-      <h3>검출 감사 — 이 매장을 몇 % 잡고 있나</h3>
-      <div class="sub">한 매장을 <b>끝까지 다시 훑어</b> 지금 자료와 견줍니다 —
-        호출을 수백 회 쓰므로 <b>한 매장씩</b> 돌립니다.</div>
+      <!-- ── 자료 수집 (2026-09-03 사장님 지시로 머리에서 옮겨 왔다) ────────
+           **맨 위에 둔다** — 가장 자주 누르는 것이다. 되돌릴 수 없는
+           「자료 비우고 처음부터」는 이 절 맨 뒤로 보낸다. -->
+      <h3>자료 수집</h3>
+      <div class="sub"><b>최근 것만</b>은 이미 가진 영역에서 멈춥니다(빠릅니다).
+        <b>전체 재수집</b>은 처음부터 끝까지 팝니다 — 여러 번 이어 돌아야 합니다.</div>
       <div class="alias-add">
-        <input id="aud-store" list="alias-stores" placeholder="매장 이름" autocomplete="off">
-        <button id="aud-go">감사</button>
+        <button id="run">최근 것만 수집</button>
+        <button id="runfull">전체 재수집</button>
+        <button id="runrival">LG 비교 갱신</button>
       </div>
-      <div id="aud-out" class="sub"></div>
+      <div class="alias-add" style="margin-top:6px">
+        <button id="stop" hidden>이어달리기 멈춤</button>
+        <button id="dedupe" hidden>중복 정리</button>
+      </div>
+      <!-- 일일 수집한도 — **오늘 쓴 양을 함께 적는다.** 한도만 있고 쓴 양이
+           없으면 남은 몫을 가늠할 수 없다. -->
+      <!-- **쿼터가 풀렸는지 한 번 두드려 본다** (2026-09-03 사장님 제안).
+           우리 카운터는 우리가 쓴 몫만 알아서, 같은 계정의 다른 스크립트가 쓴 것을
+           모른다 — 실제로 호출해 보는 것이 유일하게 확실하다. 비용 1회. -->
+      <div class="alias-add" style="margin-top:6px">
+        <button id="quota-go">지금 호출이 되는지 확인</button>
+        <span class="sub" id="quota-msg"></span>
+      </div>
+      <div class="alias-add" style="margin-top:6px">
+        <span class="lim">
+          <label for="lim">일일 한도</label>
+          <input id="lim" type="number" min="100" max="50000" step="100" inputmode="numeric">
+          <span>회</span>
+          <button class="btn" id="lim-save">저장</button>
+          <span class="limuse" id="lim-use">–</span>
+        </span>
+      </div>
 
       <!-- ── 매장 대 매장 (2026-09-03 사장님 지시) ──────────────────────
            *"같은 지역내 삼성스토어 갤러리아광교 매장 후기와 LG베스트샵
@@ -1181,6 +1186,16 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <button id="sriv-go">매장 대 매장 수집</button>
       </div>
       <div id="sriv-msg" class="sub"></div>
+
+      <h3>검출 감사 — 이 매장을 몇 % 잡고 있나</h3>
+      <div class="sub">한 매장을 <b>끝까지 다시 훑어</b> 지금 자료와 견줍니다 —
+        호출을 수백 회 쓰므로 <b>한 매장씩</b> 돌립니다.</div>
+      <div class="alias-add">
+        <input id="aud-store" list="alias-stores" placeholder="매장 이름" autocomplete="off">
+        <button id="aud-go">감사</button>
+      </div>
+      <div id="aud-out" class="sub"></div>
+
 
       <!-- ── 옛 자료 지우기 ────────────────────────────────────────────── -->
       <h3>오래된 후기 — 숫자만 남기기</h3>
@@ -1213,6 +1228,14 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <div id="mgr-msg" class="sub"></div>
         <div id="mgr-known"></div>
       </details>
+
+      <!-- **되돌릴 수 없으므로 관리자 항목 맨 뒤에 둔다** (2026-09-03) -->
+      <h3>자료 비우기</h3>
+      <div class="sub">모든 후기와 커서를 지우고 처음부터 다시 모읍니다.
+        <b>되돌릴 수 없습니다.</b></div>
+      <div class="alias-add">
+        <button id="wipe" class="danger">자료 비우고 처음부터</button>
+      </div>
       </div>
     </div>
     <div class="card" data-card="alias">
@@ -1229,7 +1252,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       </div>
       <div id="alias-msg" class="sub"></div>
       <div id="alias-list"></div>
-    </div>
+
+</div>
   </div>
 
   <div class="card" id="list-card" data-card="list">
@@ -1555,6 +1579,32 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 
   /** 검출 감사 · 옛 자료 지우기 — **관리자 안에서만** 돈다(값을 바꾸는 일이다). */
   function wireAudit() {
+    var qg = document.getElementById('quota-go');
+    if (qg && !qg.dataset.wired) {
+      qg.dataset.wired = '1';
+      qg.onclick = function () {
+        var m = document.getElementById('quota-msg');
+        qg.disabled = true;
+        if (m) m.textContent = '두드려 보는 중…';
+        google.script.run
+          .withSuccessHandler(function (r) {
+            qg.disabled = false;
+            if (!m) return;
+            var used = (r && typeof r.used === 'number')
+              ? ' (우리가 쓴 호출 ' + nf(r.used) + ' / ' + nf(r.limit) + ')' : '';
+            m.innerHTML = (r && r.ok)
+              ? '<b style="color:#0F7B3F">호출됩니다</b> — 응답 ' + r.code + '.'
+                + ' 이제 수집을 눌러도 됩니다.' + used
+              /* **오류 문구를 그대로 보여준다** — 「쿼터」인지 다른 문제인지 갈린다 */
+              : '<b class="warn">아직 막혀 있습니다</b> — ' + esc((r && r.why) || '알 수 없는 이유') + used;
+          })
+          .withFailureHandler(function (e) {
+            qg.disabled = false;
+            if (m) m.innerHTML = '<b class="warn">확인하지 못했습니다</b> — ' + esc(e && e.message);
+          })
+          .quotaTest();
+      };
+    }
     var sg = document.getElementById('sriv-go');
     if (sg && !sg.dataset.wired) {
       sg.dataset.wired = '1';
@@ -3137,11 +3187,9 @@ function wireSecs() {
     /* **큰 숫자도 그 해 것이어야 한다** — 히트맵 칸이 「2026년 138건」인데 여기가
        1,185건이면 같은 화면이 두 말을 한다(사장님 지적). */
     var CH = chanOfStore(storeFilter);
-    var ch = CH.m;
-    var n = CH.year
-      ? Object.keys(ch).reduce(function (a2, k2) { return a2 + ch[k2]; }, 0)
-      : (by[storeFilter] || 0);
-    var allN = by[storeFilter] || 0;
+    var ch = CH.m;                          /* 채널 목록 — 전 기간 */
+    var allN = by[storeFilter] || 0;        /* 전 기간 누적 */
+    var n = CH.year ? CH.yearN : allN;      /* 큰 숫자 — 히트맵 칸과 같은 값 */
     var keys = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; });
     var list = keys.length
       ? '<ol>' + keys.map(function (k) {
@@ -3151,16 +3199,17 @@ function wireSecs() {
       : '<div class="note">' + (n ? '채널을 가릴 수 없는 글입니다.' : '아직 후기가 없습니다.') + '</div>';
     el.innerHTML = '<h3>' + esc(storeFilter) + (CH.year ? ' <span class="yb">' + CH.year + '년</span>' : '') + '</h3>'
       + '<div class="big">' + nf(n) + '<span>건</span></div>'
-      /* **전 기간 수를 함께 적는다** — 「138건」만 보면 그 매장 후기가 그만큼인 줄 안다.
-         작성일을 아는 글만 연도로 셀 수 있어서 생기는 차이다(전체의 26%). */
+      /* **두 숫자가 무엇인지 적는다** — 큰 숫자는 그 해, 아래 채널은 전 기간이다.
+         안 적으면 138 과 1,185 가 왜 다른지 알 수 없다. */
       + (CH.year && allN > n
-          ? '<div class="note">전 기간 누적은 <b>' + nf(allN) + '건</b>입니다 —'
-            + ' 연도로 셀 수 있는 것은 <b>작성일을 아는 글</b>뿐입니다.</div>'
+          ? '<div class="note">아래 채널은 <b>전 기간 ' + nf(allN) + '건</b> 기준입니다 —'
+            + ' 연도로 나눌 수 있는 것은 <b>블로그</b>뿐이라(네이버가 카페·웹 작성일을'
+            + ' 주지 않습니다) 연도로 자르면 <b>카페가 통째로 빠집니다</b>.</div>'
           : '')
       + list
       + '<div class="note" style="margin-top:8px">카페는 <b>카페 이름</b>, 블로그·웹은'
       + ' 출처로 묶었습니다 — 블로거 이름은 저장하지 않아 가릴 수 없습니다.'
-      + (CH.year ? '' : ' <b>전 기간</b> 기준입니다(옛 자료라 연도로 못 나눕니다).') + '</div>'
+      + '</div>'
       /* ── 경쟁 LG 지점 짝 (2026-09-03 사장님 지시) ─────────────────────────
        * *"LG지점명을 지도에 넣어주시고 제가 어느 매장과 매칭을 시킬지 변경 가능하도록"*.
        * 자동 짝은 **좌표로 낸 제안**이라(중앙값 0.26km) 틀릴 수 있다 — 사람이 고친다.
@@ -3198,7 +3247,9 @@ function wireSecs() {
       /* **그 해만 보여준다**(2026-09-03 사장님 지적) — 칸이 「2026년 138건」인데
          목록에 1,185건이 나오면 화면이 두 말을 한다. 연도 칩이 쓰는 것과 **같은
          범위 필터**를 세운다(두 벌로 두면 한쪽만 고치는 사고가 난다). */
-      if (CH.year) { fromDate = CH.year + '-01-01'; toDate = CH.year + '-12-31'; dateOther = false; page = 1; render(); }
+      /* **목록도 전 기간이다**(2026-09-03 B안) — 채널이 전 기간인데 목록만 그 해면
+         「다이렉트 결혼준비 560건」을 눌러 봐도 그 글들이 안 나온다. */
+      fromDate = ''; toDate = ''; dateOther = false; page = 1; render();
       var card = document.getElementById('list-card');
       /* 후기 링크 카드가 접혀 있으면 펴 준다 — 접힌 곳으로 데려가면 아무 일도 안 한 것처럼 보인다 */
       var box = document.querySelector('.sec[data-sec="list"]');
@@ -4622,12 +4673,27 @@ function renderList() {
    *  **옛 서버 자료에는 이 칸이 없다** — 그때는 예전 값으로 물러서되, 화면이
    *  「전 기간」이라고 적는다(조용히 다른 잣대를 쓰지 않는다). */
   function chanOfStore(store) {
-    var y = (DATA.byStoreChanY || {})[store];
+    /* ── **채널 목록은 전 기간이다** (2026-09-03 사장님 B안 결정) ──────────
+     * 연도로 나눴더니 **카페가 통째로 빠져 「블로그만」**이 됐다 — 네이버가 카페·웹
+     * 글의 작성일을 주지 않기 때문이다. 실측(갤러리아광교 1,185건):
+     *
+     *   블로그 364건 — 작성일 있음   ← 연도로 나눌 수 있는 것은 이것뿐이다
+     *   카페  731건 — 작성일 없음
+     *   웹     90건 — 작성일 없음
+     *
+     * 카페가 주력 채널인데 그것이 사라지면 *"어디에서 싸우나"* 를 답할 수 없다.
+     * 그래서 **채널은 전 기간**으로 보여주고 **큰 숫자는 그 해**로 둔다 —
+     * 히트맵 칸과 큰 숫자가 같은 값이어야 하고, 두 숫자가 무엇인지 화면이 적는다.
+     *
+     * 서버는 `byStoreChanY` 를 계속 보낸다 — 언젠가 카페 작성일을 얻게 되면
+     * 여기 한 줄만 고치면 된다. */
+    var y = (DATA.byStoreChanY || {})[store], yn = 0, yr = null;
     if (y) {
-      var Y = heatYears();
-      return { m: y[Y.cur] || {}, year: Y.cur };
+      yr = heatYears().cur;
+      var m2 = y[yr] || {}, k2;
+      for (k2 in m2) if (m2.hasOwnProperty(k2)) yn += m2[k2];
     }
-    return { m: (DATA.byStoreChan || {})[store] || {}, year: null };
+    return { m: (DATA.byStoreChan || {})[store] || {}, year: yr, yearN: yn };
   }
 
   function heatCmpMonths() {
@@ -5283,6 +5349,10 @@ function renderList() {
     if (chan) {
       var who = heatPath[heatPath.length - 1];
       var ch = chanOfStore(who).m, k;
+      /* **채널 합을 따로 센다** — 칸은 그 해 건수인데 여기는 전 기간이라
+         칸의 수를 그대로 적으면 아래 칸들의 합과 어긋난다(사장님이 지적한 그 어긋남이다). */
+      var chanTotal = 0;
+      for (k in ch) if (ch.hasOwnProperty(k)) chanTotal += ch[k];
       for (k in ch) if (ch.hasOwnProperty(k)) {
         items.push({ nm: k, v: ch[k], cnt: ch[k], k: heatChanKind(k) });
       }
@@ -5717,9 +5787,8 @@ function renderList() {
     if (chan) {
       bk.textContent = heatMode === 'flat' ? '← 전점' : '← ' + heatPath[0] + '지역';
       var st = stMap[heatPath[heatPath.length - 1]];
-      var CHY = chanOfStore(heatPath[heatPath.length - 1]);
-      cr.innerHTML = esc(heatPath[heatPath.length - 1]) + ' <em>' + (CHY.year ? CHY.year + '년 ' : '총 ') + nf(st ? st.cnt : 0) + '건 · ' +
-        '<b style="color:#B45309">색은 증감이 아니라 갈래입니다 — 채널별 전월 자료가 없습니다</b></em>';
+      cr.innerHTML = esc(heatPath[heatPath.length - 1]) + ' <em>전 기간 ' + nf(chanTotal) + '건 · ' +
+        '<b style="color:#B45309">색은 증감이 아니라 갈래입니다 · 채널은 전 기간 기준입니다</b></em>';
       return;
     }
     bk.textContent = '← 전체';
