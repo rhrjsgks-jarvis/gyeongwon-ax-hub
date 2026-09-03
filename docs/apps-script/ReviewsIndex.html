@@ -1072,6 +1072,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <button type="button" class="bk" id="hm-size">크기: 건수</button>
         <!-- 연도 (2026-09-03 사장님 지시) — **기본은 당해년도만**, 누르면 작년 대비 -->
         <button type="button" class="bk" id="hm-year">작년 대비 보기</button>
+        <button type="button" class="bk" id="hm-lg">LG 대비로 보기</button>
         <button type="button" class="bk" id="hm-mode">지역별로 보기</button>
         <!-- 지점 ↔ 매니저 (2026-09-03 사장님 지시). **자료가 없으면 화면이 감춘다** —
              매니저 수집 전에는 눌러도 빈 히트맵이라 「고장」으로 보인다. -->
@@ -1164,6 +1165,19 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <button id="aud-go">감사</button>
       </div>
       <div id="aud-out" class="sub"></div>
+
+      <!-- ── 매장 대 매장 (2026-09-03 사장님 지시) ──────────────────────
+           *"같은 지역내 삼성스토어 갤러리아광교 매장 후기와 LG베스트샵
+           갤러리아광교 매장 후기 비중이 나오게"*.
+           **비용을 먼저 밝힌다** — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다. -->
+      <h3>매장 대 매장 — LG 짝과 1:1</h3>
+      <div class="sub">「삼성스토어 <b>갤러리아광교</b>」 ↔ 「LG베스트샵 <b>갤러리아 광교점</b>」처럼
+        <b>매장 이름</b>으로 양쪽을 셉니다. 「당사 vs LG」 카드는 <b>지명</b>으로 세는 다른 값입니다.
+        최대 <b>3,720회</b>(하루 예산의 19%) — 못 끝내면 <b>스스로 이어 갑니다</b>.</div>
+      <div class="alias-add">
+        <button id="sriv-go">매장 대 매장 수집</button>
+      </div>
+      <div id="sriv-msg" class="sub"></div>
 
       <!-- ── 옛 자료 지우기 ────────────────────────────────────────────── -->
       <h3>오래된 후기 — 숫자만 남기기</h3>
@@ -1538,6 +1552,34 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 
   /** 검출 감사 · 옛 자료 지우기 — **관리자 안에서만** 돈다(값을 바꾸는 일이다). */
   function wireAudit() {
+    var sg = document.getElementById('sriv-go');
+    if (sg && !sg.dataset.wired) {
+      sg.dataset.wired = '1';
+      sg.onclick = function () {
+        var m = document.getElementById('sriv-msg');
+        sg.disabled = true;
+        if (m) m.textContent = '재는 중입니다 — 최대 5분 걸립니다…';
+        google.script.run
+          .withSuccessHandler(function (r) {
+            sg.disabled = false;
+            if (!r || !r.ok) {
+              if (m) m.innerHTML = '<b class="warn">못 쟀습니다</b> — '
+                + esc((r && (r.why || (r.busy ? '다른 작업이 돌고 있습니다' : ''))) || '알 수 없는 이유');
+              return;
+            }
+            if (m) m.innerHTML = '<b>' + r.cur + ' / ' + r.tot + '곳</b> · 이번에 ' + r.wrote
+              + '곳 · ' + r.calls + '회 호출'
+              + (r.done ? ' — <b>다 쟀습니다.</b> 새로고침하면 히트맵에 「LG 대비로 보기」가 생깁니다.'
+                 : ' — 남은 곳은 <b>1분 뒤 스스로 이어 갑니다.</b>')
+              + (r.error ? ' <b class="warn">' + esc(r.error) + '</b>' : '');
+          })
+          .withFailureHandler(function (e) {
+            sg.disabled = false;
+            if (m) m.innerHTML = '<b class="warn">못 쟀습니다</b> — ' + esc(e && e.message);
+          })
+          .collectStoreRival(false);
+      };
+    }
     var go = document.getElementById('aud-go'), inp = document.getElementById('aud-store');
     var out = document.getElementById('aud-out');
     if (go && inp) go.onclick = function () {
@@ -4658,12 +4700,44 @@ function renderList() {
 
   /** 히트맵 한 줄 — 한 매장. `g` 는 **전월이 0이거나 모르면 null** 이다(0에서 늘어난
    *  것은 몇 %가 아니라 「새로 생겼다」이고, 넓이가 음수일 수도 없다). */
+  /** ── **매장 대 매장 — 우리 지점 vs 그 지점의 LG 짝** (2026-09-03 사장님 지시) ──
+   *
+   *  *"같은 지역내 삼성스토어 갤러리아광교 매장 후기와 LG베스트샵 갤러리아광교
+   *  매장 후기 비중이 나오게 해달라는것입니다"*.
+   *
+   *  칸 = 우리 매장 · **넓이 = 양쪽 합**(그 자리 싸움의 크기) · **색 = 우리 몫**.
+   *  넓이를 우리 건수로 잡으면 우리가 많은 곳이 크게 보여 *"어디가 큰 싸움인가"* 를
+   *  못 읽는다 — 지역 막대가 4사 합을 그리는 것과 같은 판단이다.
+   *
+   *  **2사 비교라 균형점은 50% 다** — 지역 막대(4사·25%)와 다르므로 화면이 적는다. */
+  function lgRows() {
+    var SR = DATA.storeRival;
+    if (!SR || !SR.rows || !SR.rows.length) return [];
+    var reg = DATA.byRegion || {};
+    var out = [];
+    SR.rows.forEach(function (r) {
+      var tot = (r.ours || 0) + (r.rival || 0);
+      if (!tot) return;                       /* 양쪽 다 0 이면 그릴 것이 없다 */
+      out.push({
+        nm: r.store, key: r.store, reg: reg[r.store] || '기타',
+        cnt: tot, cur: r.ours || 0, prev: r.rival || 0,
+        shop: r.shop, capped: !!r.capped,
+        /* **색은 「우리 몫 − 50」** — heatColor 가 아니라 rvColor 를 쓰므로
+           g 를 그대로 넘기지 않고 lgPct 를 따로 싣는다(아래 렌더가 본다). */
+        lgPct: (typeof r.pct === 'number' && isFinite(r.pct)) ? r.pct : null,
+        g: null, noPrev: false
+      });
+    });
+    return out;
+  }
+
   function heatRows() {
     /* ── 매니저 히트맵 (2026-09-03) ────────────────────────────────────────
      * 지점 히트맵과 **같은 자**를 쓴다 — 크기 = 언급 건수, 색 = 전월 대비.
      * 지역은 **그 사람이 가장 많이 언급된 매장**의 지역이다(`mgrTop[].store`).
      * 화면이 `byRegion` 으로 찾는다 — 서버가 또 정하면 두 곳이 어긋난다. */
     if (heatWho === 'mgr') return mgrRows();
+    if (heatWho === 'lg') return lgRows();
     var reg = DATA.byRegion || {}, by = DATA.byStore || {}, bm = DATA.byStoreMonth || {};
     var bk = DATA.byStoreKind || {};
     /* 유형을 골랐으면 **전체 평균 비중**을 먼저 낸다 — 색의 중립점이 그것이다.
@@ -5066,6 +5140,14 @@ function renderList() {
         heatPath = [];
         renderHeat();
       });
+      var blg = document.getElementById('hm-lg');
+      if (blg) blg.addEventListener('click', function () {
+        heatWho = heatWho === 'lg' ? 'store' : 'lg';
+        /* **다른 축은 되돌린다** — 매장 대 매장에는 주차·연도·유형 자료가 없다.
+           걸린 채로 두면 0건이 나오는데 화면은 「후기가 없다」로 읽힌다. */
+        heatPath = []; heatWeek = ''; heatFrom = ''; heatTo = ''; heatKind = ''; heatYear = 'cur';
+        renderHeat();
+      });
       var bwho = document.getElementById('hm-who');
       if (bwho) bwho.addEventListener('click', function () {
         heatWho = heatWho === 'mgr' ? 'store' : 'mgr';
@@ -5142,7 +5224,7 @@ function renderList() {
     var chan = heatWho === 'mgr' ? false : (heatMode === 'flat' ? lv === 1 : lv === 2);
     var byG = (heatSize === 'g' && !chan);
     var regionTiles = (heatMode === 'region' && lv === 0);
-    if (leg) leg.style.display = chan ? 'none' : '';
+    if (leg) leg.style.display = (chan || heatWho === 'lg') ? 'none' : '';
 
     /* 무엇을 그릴지 */
     var items = [], drop = 0, flat0 = 0, zeroN = 0;
@@ -5187,7 +5269,11 @@ function renderList() {
         items.push({ nm: d.nm, key: d.key, v: v, cnt: d.cnt, cur: d.cur, prev: d.prev, g: d.g,
                      n: d.n, isReg: d.isReg, share: d.share, noPrev: d.noPrev,
                      store: d.store, known: d.known,
-                     year: d.year, prevYear: d.prevYear });
+                     year: d.year, prevYear: d.prevYear,
+                     /* **LG 대비 보기** — 이 셋을 빠뜨리면 칸이 통째로 검정이 된다
+                        (색이 lgPct 로 나오는데 undefined 가 넘어간다). 이 자리에서
+                        필드를 빠뜨려 데인 것이 이번이 네 번째다. */
+                     lgPct: d.lgPct, shop: d.shop, capped: d.capped });
       }
     }
     items.sort(function (a, b) { return b.v - a.v; });
@@ -5282,7 +5368,12 @@ function renderList() {
           /* **연도 축에서는 붙이지 않는다** — 그 칸은 작성일을 알아서 그 해로 센 것이라
              「작성일 모름」이 그 자리에서 거짓이 된다(당해만 볼 때 부제가 비는 것은
              증감을 일부러 안 적기 때문이지 자료가 없어서가 아니다). */
-          if (!d.isReg && !sub2 && !heatKind && !d.year) sub2 = '작성일 모름';
+          /* **LG 대비 보기** — 양쪽 건수를 적는다. 비중은 색이 말하고 %는 칸이 좁으면
+             안 들어가므로, 사람이 검산할 수 있는 **원래 숫자**를 적는다. */
+          if (heatWho === 'lg') {
+            sub2 = d.capped ? '못 잼(상한)' : nf(d.cur) + ' vs ' + nf(d.prev);
+          }
+          if (!d.isReg && !sub2 && !heatKind && !d.year && heatWho !== 'lg') sub2 = '작성일 모름';
           if (sub2) lab += '<span class="cv" style="font-size:' + (fs * 0.52).toFixed(1) + 'px">' + sub2 + '</span>';
           /* **LG 매칭 표식** — 글자를 더 넣지 않고 기호 하나만 둔다(칸이 좁다).
              ▣ 같은 백화점 안 · ✕ 매칭 없음 · 최근접은 표식 없음(대부분이라 붙이면 지저분하다). */
@@ -5305,6 +5396,12 @@ function renderList() {
           /* **왜 없는지 적는다** — 「매칭 없음」만 쓰면 자료가 없는 건지 규칙 때문인지 모른다 */
           : NLC + 'LG 매칭 없음' + (lgm.why ? ' — ' + lgm.why : '');
       }
+      /* LG 대비 보기에서는 짝과 비중을 말풍선이 밝힌다 */
+      var lgvTip = (heatWho === 'lg' && d.shop)
+        ? NLC + 'LG ' + d.shop + ' — 당사 ' + nf(d.cur) + ' vs LG ' + nf(d.prev) + '건'
+          + (d.lgPct === null ? ' (상한에 닿아 비중을 못 냅니다)'
+             : ' · 우리 몫 ' + d.lgPct + '% (둘이 반반이면 50%)')
+        : '';
       var tip = chan
         ? d.nm + ' ' + d.cnt + '건'
         : d.nm + ' · 총 ' + nf(d.cnt) + '건'
@@ -5316,13 +5413,16 @@ function renderList() {
                 ? (d.noPrev ? ' · ' + d.prevYear + '년 자료가 없습니다'
                     : ' · ' + d.prevYear + '년 ' + d.prev + '건 → ' + d.year + '년 ' + d.cur + '건')
                 : ' · ' + heatMonLabel(M.prev) + ' ' + d.prev + '건 → ' + heatMonLabel(M.cur) + ' ' + d.cur + '건')
-          + (d.g === null ? (week ? '' : ' · 전월을 몰라 증감 없음') : ' · ' + heatPct(d.g))
-          + lgTip;
+          + (heatWho === 'lg' ? '' : (d.g === null ? (week ? '' : ' · 전월을 몰라 증감 없음') : ' · ' + heatPct(d.g)))
+          + lgvTip + lgTip;
       /* **글자색은 배경 밝기가 정한다.** 밝은 초록 칸에 흰 글자를 두면 대비가 2.7:1 로
          기준(4.5:1)에 한참 못 미쳐 **잘 크는 매장의 이름만 안 읽힌다**(재서 확인했다). */
       /* **건수로 칠한다**(2026-09-03) — 색이 증감이던 시절에는 `d.g` 를 넘겼다.
          `heatMax` 는 지금 그려지는 판의 최대 건수다(아래에서 낸다). */
-      var bg = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatMax);
+      /* **LG 대비 보기는 색이 「우리 몫」이다** — 건수가 아니다.
+         2사 비교라 균형점 50%(지역 막대의 4사·25% 와 다르다). */
+      var bg = chan ? HEAT_CHC[d.k]
+        : (heatWho === 'lg' ? rvColor(d.lgPct) : heatColor(d.cnt, heatMax));
       html += '<div class="cell' + (clk ? ' clk' : '') + '"' +
         (clk ? ' data-k="' + esc(d.key) + '"' : '') +
         ' title="' + esc(tip) + '" style="left:' + (c.x + 7) + 'px;top:' + (c.y + 7) + 'px;width:' +
@@ -5463,10 +5563,21 @@ function renderList() {
       bwho2.hidden = !hasMgr;
       bwho2.textContent = heatWho === 'mgr' ? '지점으로 보기' : '매니저로 보기';
       bwho2.classList.toggle('on', heatWho === 'mgr');
+      /* ── 「LG 대비」 버튼 — **자료가 없으면 감춘다** (눌러도 빈 화면이면 고장으로 보인다) */
+      var blg2 = document.getElementById('hm-lg');
+      if (blg2) {
+        var hasLg = !!(DATA.storeRival && DATA.storeRival.rows && DATA.storeRival.rows.length);
+        blg2.style.display = hasLg ? '' : 'none';
+        blg2.textContent = heatWho === 'lg' ? '지점으로 보기' : 'LG 대비로 보기';
+        blg2.classList.toggle('on', heatWho === 'lg');
+        if (!hasLg && heatWho === 'lg') { heatWho = 'store'; renderHeat(); return; }
+      }
       /* 자료가 사라졌는데 매니저를 보고 있으면 되돌린다 — 빈 화면을 남기지 않는다 */
       if (!hasMgr && heatWho === 'mgr') { heatWho = 'store'; renderHeat(); return; }
     }
     var mgrView = heatWho === 'mgr';
+    var lgView = heatWho === 'lg';
+    var lgView = heatWho === 'lg';
     /* **매니저 보기에서도 유형은 걸린다**(2026-09-03 사장님 지시 — *"「매니저로 보기」를
        누르고 혼수 입주 기타 후기를 필터링할 수 있어야 합니다"*). 서버가 매니저 × 유형을
        세어 주므로(`mgrTop[].kind4`) 겹쳐 걸 수 있다.
@@ -5573,7 +5684,15 @@ function renderList() {
     /* **값이 있는 매장 수를 함께 적는다** — 한 주만 보면 대부분의 매장이 0건이라
        칸이 안 그려지는데, 그 사실을 안 적으면 「매장이 사라졌다」로 읽힌다. */
     var live = week ? rows.filter(function (r) { return r.cnt > 0; }).length : 0;
-    if (mgrView) {
+    if (lgView) {
+      /* **2사 비교라 균형점 50% 다** — 지역 막대(4사·25%)와 다르므로 반드시 적는다.
+         안 적으면 40% 가 왜 밀리는 것인지 알 수 없다. */
+      var w = rows.filter(function (r) { return r.lgPct !== null && r.lgPct >= 50; }).length;
+      var nn = rows.filter(function (r) { return r.lgPct === null; }).length;
+      cr.innerHTML = 'LG 짝과 1:1 <em>' + rows.length + '곳 · 앞선 곳 ' + w
+        + ' · 밀리는 곳 ' + (rows.length - w - nn) + (nn ? ' · 못 잼 ' + nn : '')
+        + ' · 둘이 반반이면 50%</em>';
+    } else if (mgrView) {
       var gm = heatGrowth(rows);
       cr.innerHTML = '매니저 <em>' + rows.length + '명 · '
         + nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건 언급'

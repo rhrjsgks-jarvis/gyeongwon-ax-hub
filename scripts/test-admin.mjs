@@ -3239,7 +3239,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!ix.includes("heatYear !== 'cmp' ? ''")) {
     bad.push('당해만 볼 때 증감을 지우지 않는다 — 그때는 색도 건수라 두 말을 한다');
   }
-  if (!ix.includes("!heatKind && !d.year) sub2 = '작성일 모름'")) {
+  if (!ix.includes("!d.year && heatWho !== 'lg') sub2 = '작성일 모름'")) {
     bad.push('연도 축에서 「작성일 모름」을 막지 않는다 — 그 칸은 작성일을 알아서 센 것이다');
   }
   /* ③ 기본은 당해년도 — 이 한 줄이 사장님 지시의 핵심이다 */
@@ -3309,6 +3309,72 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 연도 축 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · LG 23/24는 숫자만');
+}
+
+/* ── 매장 대 매장 — LG 짝과 1:1 (2026-09-03 사장님 지시) ────────────────────
+ * *"같은 지역내 삼성스토어 갤러리아광교 매장 후기와 LG베스트샵 갤러리아광교 매장
+ * 후기 비중이 나오게 해달라는것입니다"*.
+ *
+ * **`byStore` 를 그대로 쓰면 안 된다** — 꼬리말 8개·별칭까지 붙인 값이라 LG 쪽과
+ * 잣대가 다르다. 양쪽을 여기서 다시, 똑같이 센다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ① 서버 — 수집·읽기 */
+  if (!gs.includes('function collectStoreRival(')) bad.push('collectStoreRival 이 없다');
+  if (!gs.includes('function storeRival_()')) bad.push('storeRival_ 이 없다');
+  if (!gs.includes('storeRival: storeRival_(),')) bad.push('응답에 storeRival 을 안 싣는다');
+  /* **반쪽을 저장하면 그 매장 비중이 조용히 거짓이 된다** */
+  if (!gs.includes('if (hard || err) break;')) {
+    bad.push('끊겼을 때 줄을 안 쓰는 가드가 없다 — 반쪽 줄이 시트에 들어간다');
+  }
+
+  /* ② 지점명 → 판정 말. 떼어 실제로 돌린다 */
+  {
+    const at = gs.indexOf('function shopPlace_(shop) {');
+    if (at < 0) bad.push('shopPlace_ 가 없다');
+    else {
+      const end = gs.indexOf(String.fromCharCode(10) + '}', at);
+      const fn = new Function('return (' + gs.slice(at, end + 2).replace('function shopPlace_', 'function') + ')')();
+      const want = [['AK PLAZA 분당점', '분당'], ['갤러리아 광교점', '광교'],
+                    ['경기광주본점', '경기광주'], ['남수원점', '남수원'],
+                    ['강릉옥천점', '강릉옥천'], ['평택본점', '평택']];
+      want.forEach(([a2, b2]) => {
+        const got = fn(a2);
+        if (got !== b2) bad.push('shopPlace_("' + a2 + '") 가 "' + b2 + '" 가 아니라 "' + got + '"');
+      });
+    }
+  }
+
+  /* ③ 화면 — 축·필드·버튼 */
+  if (!ix.includes('function lgRows()')) bad.push('lgRows 가 없다');
+  if (!ix.includes("if (heatWho === 'lg') return lgRows();")) bad.push('히트맵이 LG 축을 안 탄다');
+  /* **이 자리에서 필드를 빠뜨려 네 번 데었다** — 빠지면 칸이 통째로 검정이 된다 */
+  ['lgPct: d.lgPct', 'shop: d.shop', 'capped: d.capped'].forEach((f) => {
+    if (!ix.includes(f)) bad.push('칸에 ' + f + ' 를 안 싣는다 — 색이 통째로 죽는다');
+  });
+  if (!ix.includes("heatWho === 'lg' ? rvColor(d.lgPct)")) {
+    bad.push('LG 축에서 색이 「우리 몫」이 아니다');
+  }
+  /* **자료가 없으면 버튼을 감춘다** — 눌러도 빈 화면이면 고장으로 보인다 */
+  if (!ix.includes("blg2.style.display = hasLg ? '' : 'none';")) {
+    bad.push('자료가 없을 때 LG 버튼을 감추지 않는다');
+  }
+  /* **2사라 균형점 50%** — 지역 막대(4사·25%)와 다르므로 화면이 적어야 한다 */
+  if (!ix.includes('둘이 반반이면 50%')) {
+    bad.push('LG 축이 균형점 50% 를 밝히지 않는다 — 40% 가 왜 밀리는지 알 수 없다');
+  }
+  /* **다른 축은 되돌린다** — 주차·연도·유형 자료가 없어 0건이 나온다 */
+  if (!ix.includes("heatKind = ''; heatYear = 'cur';")) {
+    bad.push('LG 축으로 넘어갈 때 다른 축을 안 푼다 — 0건이 나오는데 「후기가 없다」로 읽힌다');
+  }
+  /* ④ 비용을 밝힌다 — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다 */
+  if (!ix.includes('3,720회')) bad.push('수집 비용을 화면이 밝히지 않는다');
+
+  if (bad.length) fail('[바이럴] 매장 대 매장 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 매장 대 매장 — 양쪽을 같은 질의로 · 색은 우리 몫 · 자료 없으면 감춘다');
 }
 
 /* ── 화면 규격 (2026-09-03 사장님 지시 — *"인터페이스도 좀 통일하고 보기 좋게"*) ──

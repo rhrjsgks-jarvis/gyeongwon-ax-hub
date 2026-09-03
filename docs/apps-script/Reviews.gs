@@ -3973,6 +3973,8 @@ function summary_() {
     kind4Names: KIND4,
     /* LG 짝 — 백화점은 같은 건물끼리만, 나머지는 최근접(위 `lgMatchOne_` 주석 참조) */
     lgMatch: lgMatchAll_(),
+    /* **매장 대 매장** — 없으면 null 이고 화면이 「아직 안 쟀다」로 적는다 */
+    storeRival: storeRival_(),
     weekKeep: WEEK_KEEP,
     /* 매장 유형 — 점코드가 가르므로 **서버만 알 수 있다**(화면에는 점명만 간다) */
     storeType: storeTypes_(),
@@ -4062,6 +4064,157 @@ function summary_() {
  * LG 후기는 **우리 매장 후기가 아니다.** 후기 시트(8,700건)에 섞으면 누적이 거짓이
  * 되므로 별도 시트에 요약만 담는다.
  */
+/* ══ 매장 대 매장 — 우리 지점 vs 그 지점의 LG 짝 (2026-09-03 사장님 지시) ══════
+ *
+ * *"같은 지역내 삼성스토어 갤러리아광교 매장 후기와 LG베스트샵 갤러리아광교 매장
+ * 후기 비중이 나오게 해달라는것입니다"*.
+ *
+ * **기존 「당사 vs LG」와 무엇이 다른가** — 그쪽은 「삼성스토어 **수원**」처럼
+ * **지명**으로 묻는다(양쪽에 같은 말을 던져야 공정해서다). 이쪽은 **매장 이름**으로
+ * 묻는다: 「삼성스토어 갤러리아광교」 ↔ 「LG베스트샵 갤러리아 광교점」.
+ *
+ * **`byStore` 를 그대로 쓰면 안 된다.** 그쪽은 꼬리말 8개·별칭까지 붙여 훑은 값이라
+ * LG 쪽(별칭이 없다)과 잣대가 다르다 — 나란히 적으면 비중이 그 자리에서 거짓이 된다
+ * (이 파일이 「당사 vs LG」에서 이미 못 박은 규칙: **양쪽에 같은 질의·같은 쪽수·같은 판정**).
+ * 그래서 **양쪽을 여기서 다시, 똑같이** 센다 — 꼬리말 없이 브랜드+이름만.
+ *
+ * 호출 수 = 매장 62 × 진영 2 × 소스 3 × 10쪽 = **최대 3,720회**(하루 예산의 19%).
+ * 한 실행에 다 못 하므로 커서로 이어 돈다(매장 하나가 60회 ≈ 30초).
+ */
+var SHEET_SRIVAL = '매장경쟁';
+var SRIVAL_HEADER = ['at', 'store', 'shop', 'ours', 'rival', 'pct', 'capped', 'queries'];
+var SRIVAL_MS = 300 * 1000;              /* 6분 한도 안에서 쓸 예산 */
+var SRIVAL_PER_MS = 45 * 1000;           /* 매장 하나에 넉넉히 — 모자라면 다음 실행으로 */
+var SRIVAL_CAP = 2900;                   /* 3소스 × 10쪽 × 100 = 3,000 — 여기 닿으면 「못 잼」 */
+
+/** LG 지점명에서 **판정에 쓸 지역 말**을 뽑는다.
+ *
+ *  질의는 지점명 그대로 던지지만, 본문 판정까지 그 이름으로 하면 표기가 조금만
+ *  달라도 통째로 0건이 된다(「AK PLAZA 분당점」 ↔ 본문의 「AK플라자 분당」).
+ *  꼬리의 `본점`·`점` 을 떼고 **마지막 조각**을 쓴다 —
+ *  `AK PLAZA 분당점` → `분당` · `갤러리아 광교점` → `광교` · `경기광주본점` → `경기광주`. */
+function shopPlace_(shop) {
+  var t = String(shop || '').trim();
+  if (t.slice(-2) === '본점') t = t.slice(0, -2);
+  else if (t.slice(-1) === '점') t = t.slice(0, -1);
+  var parts = t.split(' ');
+  return parts[parts.length - 1] || t;
+}
+
+/** 그 회차에 이미 쓴 매장 — 이어 돌 때 같은 줄을 두 번 쓰지 않는다 */
+function srivalDone_(stamp) {
+  var sh = sheet_(SHEET_SRIVAL, SRIVAL_HEADER), out = {};
+  if (sh.getLastRow() < 2) return out;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues(), i;
+  for (i = 0; i < v.length; i++) if (String(v[i][0]) === stamp) out[String(v[i][1])] = 1;
+  return out;
+}
+
+/** 최신 회차의 매장별 비중. 없으면 null — **0 으로 그리지 않는다.** */
+function storeRival_() {
+  var sh = sheet_(SHEET_SRIVAL, SRIVAL_HEADER);
+  if (sh.getLastRow() < 2) return null;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, SRIVAL_HEADER.length).getValues();
+  var last = '', i;
+  for (i = 0; i < v.length; i++) { var t = String(v[i][0]); if (t > last) last = t; }
+  var rows = [];
+  for (i = 0; i < v.length; i++) {
+    if (String(v[i][0]) !== last) continue;
+    rows.push({ store: String(v[i][1]), shop: String(v[i][2]),
+      ours: Number(v[i][3]) || 0, rival: Number(v[i][4]) || 0,
+      pct: v[i][5] === '' || v[i][5] === null ? null : Number(v[i][5]),
+      capped: v[i][6] === true || String(v[i][6]) === 'true' });
+  }
+  return rows.length ? { at: last, rows: rows } : null;
+}
+
+/**
+ * 매장 대 매장 수집. 시간이 모자라면 커서를 남기고 스스로 이어 돈다.
+ *
+ * **반쪽은 저장하지 않는다** — 한쪽 진영만 훑고 끊긴 줄을 쓰면 그 매장 비중이
+ * 조용히 거짓이 된다(「당사 vs LG」와 같은 규칙).
+ */
+function collectStoreRival(reset) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return { ok: false, busy: true };
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var pairs = lgMatchAll_(), names = [], k;
+    for (k in pairs) if (pairs.hasOwnProperty(k) && pairs[k] && pairs[k].shop) names.push(k);
+    names.sort();
+    if (!names.length) return { ok: false, why: 'LG 짝이 하나도 없습니다' };
+
+    var stamp = props.getProperty('_srivalStamp') || '';
+    var cur = Number(props.getProperty('_srivalCur') || 0);
+    if (reset || !stamp || cur >= names.length) {
+      stamp = new Date().toISOString(); cur = 0;
+      props.setProperty('_srivalStamp', stamp);
+      props.setProperty('_srivalCur', '0');
+    }
+    var done = srivalDone_(stamp);
+
+    var sh = sheet_(SHEET_SRIVAL, SRIVAL_HEADER);
+    var t0 = Date.now(), calls = 0, wrote = 0, err = '';
+    var SRCS = ['blog', 'cafearticle', 'webkr'];
+    var ui;
+    for (ui = cur; ui < names.length; ui++) {
+      /* **남은 시간이 아니라 「이 매장에 필요한 시간」을 본다** — 1초 남았을 때
+         시작하면 반드시 그 자리에서 끊긴다(LG 비교에서 이미 데인 자리다). */
+      if (Date.now() - t0 > SRIVAL_MS - SRIVAL_PER_MS) break;
+      var st = names[ui], shop = pairs[st].shop;
+      if (done[st]) { props.setProperty('_srivalCur', String(ui + 1)); continue; }
+
+      var side = [['ours', BRANDS, '삼성스토어', st],
+                  ['rival', RIVAL_BRANDS, 'LG베스트샵', shopPlace_(shop)]];
+      var got = { ours: {}, rival: {} }, hard = false, qs = [];
+      for (var si = 0; si < side.length && !hard && !err; si++) {
+        var key = side[si][0], brands = side[si][1], bq = side[si][2], place = side[si][3];
+        var q = bq + ' ' + (si === 0 ? st : shop);
+        qs.push(q);
+        for (var sj = 0; sj < SRCS.length && !hard && !err; sj++) {
+          for (var page = 0; page < MAX_PAGES; page++) {
+            if (Date.now() - t0 > SRIVAL_MS) { hard = true; break; }
+            var res = search_(SRCS[sj], q, page * PAGE_SIZE + 1, PAGE_SIZE, 'date');
+            calls++;
+            if (res.error) { err = res.error; break; }
+            var items = res.items || [];
+            for (var ii = 0; ii < items.length; ii++) {
+              var it = items[ii];
+              var lk = String(it.link || '');
+              if (linkNoise_(lk)) continue;
+              var text = (it.title || '') + ' ' + (it.description || '');
+              if (!rivalHit_(text, brands, place)) continue;
+              got[key][lk] = 1;
+            }
+            if (items.length < PAGE_SIZE) break;
+          }
+        }
+      }
+      /* **끊겼으면 줄을 쓰지 않는다** — 커서도 전진하지 않아 다음 실행이 이 매장부터 */
+      if (hard || err) break;
+
+      var o = Object.keys(got.ours).length, r = Object.keys(got.rival).length;
+      var capped = o >= SRIVAL_CAP || r >= SRIVAL_CAP;
+      var tot = o + r;
+      sh.appendRow([stamp, st, shop, o, r,
+        (capped || tot === 0) ? '' : Math.round(o / tot * 100),
+        capped, qs.join(' | ')]);
+      wrote++;
+      props.setProperty('_srivalCur', String(ui + 1));
+    }
+
+    sumCacheClear_();
+    var doneAll = ui >= names.length;
+    if (doneAll) props.setProperty('_srivalAt', new Date().toISOString());
+    /* **못 끝냈으면 스스로 이어 간다** — 사람이 여러 번 누르게 하지 않는다 */
+    if (!doneAll && !err) chain_();
+    return { ok: true, wrote: wrote, calls: calls, cur: ui, tot: names.length,
+      done: doneAll, error: err };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 var SHEET_RIVAL = '경쟁비교';
 /* **뒤에만 붙인다** — 가운데 끼우면 옛 회차가 한 칸씩 밀린다.
    `srcJson`·`kindJson`·`monthJson` 은 갈래별 건수를 담는다. 칸으로 펴면 20개가
@@ -4940,7 +5093,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 16;
+var SUM_VER = 17;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
