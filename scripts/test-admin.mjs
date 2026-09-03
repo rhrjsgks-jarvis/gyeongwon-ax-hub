@@ -3239,7 +3239,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!ix.includes("heatYear !== 'cmp' ? ''")) {
     bad.push('당해만 볼 때 증감을 지우지 않는다 — 그때는 색도 건수라 두 말을 한다');
   }
-  if (!ix.includes("!d.year && heatWho !== 'lg') sub2 = '작성일 모름'")) {
+  if (!ix.includes("!heatKind && !d.year) sub2 = '작성일 모름'")) {
     bad.push('연도 축에서 「작성일 모름」을 막지 않는다 — 그 칸은 작성일을 알아서 센 것이다');
   }
   /* ③ 기본은 당해년도 — 이 한 줄이 사장님 지시의 핵심이다 */
@@ -3348,27 +3348,39 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
-  /* ③ 화면 — 축·필드·버튼 */
-  if (!ix.includes('function lgRows()')) bad.push('lgRows 가 없다');
-  if (!ix.includes("if (heatWho === 'lg') return lgRows();")) bad.push('히트맵이 LG 축을 안 탄다');
-  /* **이 자리에서 필드를 빠뜨려 네 번 데었다** — 빠지면 칸이 통째로 검정이 된다 */
-  ['lgPct: d.lgPct', 'shop: d.shop', 'capped: d.capped'].forEach((f) => {
-    if (!ix.includes(f)) bad.push('칸에 ' + f + ' 를 안 싣는다 — 색이 통째로 죽는다');
-  });
-  if (!ix.includes("heatWho === 'lg' ? rvColor(d.lgPct)")) {
-    bad.push('LG 축에서 색이 「우리 몫」이 아니다');
+  /* ③ 화면 — **별도 보기 축이 아니라 칸 안에** 파랑:빨강 (2026-09-03 사장님 재지시)
+     *"지금 블루컬러는 베이스로하고있는데 LG는 지점명 안들어가도되니 레드계열로
+     색상을 넣어서 비중을 확인해주면됩니다"* — 축을 두면 두 곳이 같은 말을 한다. */
+  if (ix.includes('function lgRows()') || ix.includes("id=\"hm-lg\"")) {
+    bad.push('별도 보기 축이 남아 있다 — 칸에 통합했으므로 두 곳이 같은 말을 한다');
   }
-  /* **자료가 없으면 버튼을 감춘다** — 눌러도 빈 화면이면 고장으로 보인다 */
-  if (!ix.includes("blg2.style.display = hasLg ? '' : 'none';")) {
-    bad.push('자료가 없을 때 LG 버튼을 감추지 않는다');
+  if (!ix.includes('linear-gradient(90deg,')) {
+    bad.push('칸을 파랑:빨강으로 나누지 않는다');
   }
-  /* **2사라 균형점 50%** — 지역 막대(4사·25%)와 다르므로 화면이 적어야 한다 */
-  if (!ix.includes('둘이 반반이면 50%')) {
-    bad.push('LG 축이 균형점 50% 를 밝히지 않는다 — 40% 가 왜 밀리는지 알 수 없다');
+  /* **빨강도 건수 농도를 따라가야 한다** — 고정색이면 옅은 파랑 옆에서 빨강만 튄다 */
+  if (!ix.includes('lgColor(d.cnt, heatMax)')) {
+    bad.push('LG 빨강이 건수 농도를 안 따라간다 — 50% 인데 LG 가 이기는 것처럼 보인다');
   }
-  /* **다른 축은 되돌린다** — 주차·연도·유형 자료가 없어 0건이 나온다 */
-  if (!ix.includes("heatKind = ''; heatYear = 'cur';")) {
-    bad.push('LG 축으로 넘어갈 때 다른 축을 안 푼다 — 0건이 나오는데 「후기가 없다」로 읽힌다');
+  {
+    const at2 = ix.indexOf('function lgColor(v, max) {');
+    if (at2 < 0) bad.push('lgColor 가 없다');
+    else {
+      const lo = ix.indexOf('var LG_LO = ');
+      const line = ix.slice(lo, ix.indexOf(String.fromCharCode(10), lo));
+      /* 짙은 쪽 휘도가 파랑(0.063)과 너무 벌어지면 면적으로 못 읽는다 */
+      const hi = JSON.parse(line.slice(line.indexOf('LG_HI = [') + 8, line.lastIndexOf(']') + 1));
+      const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+      const L = 0.2126 * f(hi[0]) + 0.7152 * f(hi[1]) + 0.0722 * f(hi[2]);
+      if (L > 0.13) bad.push('LG 빨강이 너무 밝다(휘도 ' + L.toFixed(3) + ') — 파랑(0.063) 옆에서 튄다');
+    }
+  }
+  /* **마우스를 올리면 어느 점인지·몇 건인지** */
+  if (!ix.includes("NLC + 'LG ' + srt.shop")) {
+    bad.push('말풍선이 LG 지점명·건수를 안 적는다');
+  }
+  /* **「아직 안 쟀다」와 「없다」는 다른 말이다** */
+  if (!ix.includes('LG 짝 비중은 아직 재지 않았습니다')) {
+    bad.push('자료가 없을 때 화면이 침묵한다 — 사장님이 「안 된다」로 읽는다');
   }
   /* ④ 비용을 밝힌다 — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다 */
   if (!ix.includes('3,720회')) bad.push('수집 비용을 화면이 밝히지 않는다');
