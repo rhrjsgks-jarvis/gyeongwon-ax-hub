@@ -2029,6 +2029,27 @@ function addUsage_(k) {
   props_().setProperty('_dayUsage', JSON.stringify(u));
   return u.n;
 }
+
+/**
+ * 쿼터가 언제 풀리는지 — **구글 UrlFetch 쿼터는 태평양 자정에 초기화된다.**
+ *
+ * **화면에서 어림하면 한 시간 틀린다** — 태평양은 서머타임이 있어 한국 기준으로
+ * 16시(여름)와 17시(겨울)로 갈린다. 시간대 계산은 서버에 맡긴다.
+ *
+ * 이 값이 필요한 이유 — 한도에 닿으면 버튼을 눌러도 **호출 0회로 되돌아가고
+ * 오류도 안 난다.** 화면이 「다시 눌러 주세요」라고 하면 사장님은 눌러도 아무 일이
+ * 없는 버튼을 계속 누르게 된다(2026-09-04 실제로 그랬다). **언제 풀리는지**를
+ * 말해야 기다릴지 한도를 올릴지 판단할 수 있다.
+ */
+function quotaReset_() {
+  var now = new Date();
+  var pt = Utilities.formatDate(now, 'America/Los_Angeles', 'HH:mm');
+  var mins = (24 - Number(pt.slice(0, 2))) * 60 - Number(pt.slice(3, 5));
+  return {
+    min: mins,
+    at: Utilities.formatDate(new Date(now.getTime() + mins * 60000), 'Asia/Seoul', 'HH:mm')
+  };
+}
 function dailyLimit_() {
   var v = Number(props_().getProperty('_dailyLimit'));
   return v > 0 ? v : DEFAULT_DAILY_LIMIT;
@@ -3034,6 +3055,9 @@ function sweep_(mode) {
     /* **한도로 멈춘 것과 시간으로 멈춘 것을 가른다** — 「이어서 수집」을 눌러도 되는지가
        다르다(시간이면 지금 눌러도 되고, 한도면 내일이거나 한도를 올려야 한다). */
     hitLimit: hitLimit, dayUsed: used0 + calls, dailyLimit: limit, sweep: sweepCalls_(),
+    /* 한도로 멈췄으면 **언제 풀리는지**를 함께 준다 — 「다시 눌러 주세요」는
+       그 순간 거짓이 되므로, 화면이 기다릴 시각을 말할 수 있어야 한다. */
+    quotaResetMin: quotaReset_().min, quotaResetAt: quotaReset_().at,
     rival: rivalRun,
     /* **돌았는지 · 몇 곳을 물었는지.** 안 적으면 「왜 SDP 가 안 늘지」를 확인할 길이 없다 */
     sdp: sdpRun
@@ -5333,6 +5357,10 @@ function freshState_(d) {
     /* **예약됐다는 사실을 화면이 알아야 한다** — 안 보내면 「눌렀는데 아무 일도
        안 일어난다」가 된다(사장님이 실제로 그렇게 겪었다). */
     d.rivalWant = String(props_().getProperty('_rivalWant') || '') === '1';
+    /* **쿼터가 언제 풀리는지** — 다 쓴 날에는 버튼이 조용히 되돌아가므로,
+       화면이 「기다리면 된다」를 말할 수 있어야 한다. */
+    var qr = quotaReset_();
+    d.quotaResetMin = qr.min; d.quotaResetAt = qr.at;
     d.rivalAreas = Object.keys(AREA_Q).length;
     /* **기대 지역을 이름으로 보낸다**(2026-09-02). 개수만 보내던 시절에는 화면이
        *"강원이 빠졌다"* 를 말할 수 없어 **다섯 곳만 조용히 그렸다** — 사장님이 그것을

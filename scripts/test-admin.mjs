@@ -3800,7 +3800,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!/[.]limnote\s*\{[^}]*var\(--fs-mini\)/.test(ix)) bad.push('lim-note 가 본문 글자 규격을 안 쓴다');
     /* 두 사실을 **둘 다** 글자로 적는가 — 하나만 적으면 나머지가 여전히 hover 뿐이다 */
     const noteBlock = ix.slice(ix.indexOf("getElementById('lim-note')"));
-    const noteBody = noteBlock.slice(0, 700);
+    /* 범위를 넉넉히 잡는다 — 좁게 자르면 안내 문장이 하나 늘 때마다 검사가 헛돈다
+       (실제로 쿼터 소진 안내를 앞에 붙이자 700자를 넘어 「안 적는다」로 잡혔다). */
+    const noteBody = noteBlock.slice(0, 1600);
     if (!noteBody.includes('회가 필요한데 한도는')) bad.push('한 바퀴가 한도를 넘는 사실을 글자로 안 적는다');
     if (!noteBody.includes('태평양 자정')) bad.push('리셋 시각을 글자로 안 적는다');
     /* **미리보기 모의값이 그 줄을 실제로 그려야 한다** — sweep 이 한도보다 작으면
@@ -3874,6 +3876,64 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     if (bad.length) fail('[바이럴] LG 비교 예약 — ' + bad.join(' · '));
     else console.log('OK: 바이럴 LG 비교 예약 — 막히면 예약 · 한도보다 세다 · 처리하면 내린다 · 화면이 적는다');
+  }
+
+  /* ── 쿼터를 다 썼을 때 (2026-09-04) ─────────────────────────────────────
+   * 한도에 닿으면 수집 버튼이 **호출 0회로 조용히 되돌아간다** — 오류도 안 난다.
+   * 그런데 화면은 그때도 「이어서 눌러 주세요」라고 적어, 사장님이 눌러도 아무 일이
+   * 없는 버튼을 계속 누르셨다(*"바뀌지않고 멈추고있습니다"*). 서버는 한도로 멈추면
+   * `chain_()` 도 안 부르므로 **늘 그 가지로 떨어진다** — 우연이 아니라 구조였다.
+   * 되돌리면 같은 혼란이 그대로 되풀이된다. */
+  {
+    const bad = [];
+    const rv = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+
+    /* ① 서버가 「언제 풀리는지」를 안다. **시간대 계산은 서버 몫이다** —
+          태평양은 서머타임이 있어 한국 기준 16시/17시로 갈린다. */
+    if (!rv.includes('function quotaReset_()')) bad.push('quotaReset_ 이 없다 — 언제 풀리는지 아무도 모른다');
+    else if (!/quotaReset_[\s\S]{0,400}America\/Los_Angeles/.test(rv)) {
+      bad.push('quotaReset_ 이 태평양 시간대를 안 쓴다 — 서머타임에 한 시간 틀린다');
+    }
+    /* ② 화면 두 곳(새로고침만 해도 보이는 곳 · 버튼 응답)에 보낸다 */
+    if (!rv.includes('d.quotaResetAt =')) bad.push('doGet 이 리셋 시각을 안 보낸다 — 새로고침해도 안 보인다');
+    if (!rv.includes('quotaResetAt: quotaReset_()')) bad.push('수집 반환값에 리셋 시각이 없다 — 버튼 응답이 시각을 못 적는다');
+
+    /* ③ **한도로 멈췄으면 「다시 눌러 주세요」라고 하지 않는다.**
+          이것이 이 절의 핵심이다 — 눌러도 소용없는 버튼을 누르라고 말하면 안 된다. */
+    const hitAt = ix.indexOf('r.hitLimit');
+    const hitBlk = hitAt >= 0 ? ix.slice(Math.max(0, hitAt - 400), hitAt + 1400) : '';
+    if (!hitBlk) bad.push('버튼 응답의 한도 분기를 못 찾겠다');
+    else {
+      if (!hitBlk.includes('다시 눌러도 돌지 않습니다')) {
+        bad.push('한도로 멈췄을 때 「눌러도 안 된다」를 안 적는다');
+      }
+      /* 한도 가지 안에서 「다시 눌러 주세요」가 나오면 모순이다 — 삼항의 한도 쪽만 본다 */
+      const limSide = hitBlk.slice(hitBlk.indexOf('다시 눌러도 돌지 않습니다'));
+      const elseAt = limSide.indexOf('r.chained');
+      if (elseAt > 0 && limSide.slice(0, elseAt).includes('「이어서 수집」을 다시 눌러 주세요')) {
+        bad.push('한도 가지가 여전히 「다시 눌러 주세요」라고 한다');
+      }
+    }
+
+    /* ④ **새로고침만 해도 보인다** — 버튼을 눌러야 알 수 있으면 늦다.
+          사장님이 보신 문구가 바로 이 줄(`renderProgress`)이었다. */
+    const progAt = ix.indexOf("var pctv = tot ?");
+    const progBlk = progAt >= 0 ? ix.slice(progAt, progAt + 1600) : '';
+    if (!progBlk) bad.push('renderProgress 의 문구 블록을 못 찾겠다');
+    else {
+      if (!progBlk.includes('DATA.dailyLimit') || !progBlk.includes('DATA.dayUsed')) {
+        bad.push('진행 표시가 쿼터를 안 본다 — 다 쓴 날에도 「이어서 눌러 주세요」라고 한다');
+      }
+      if (!progBlk.includes('눌러도 돌지 않습니다')) bad.push('진행 표시가 「눌러도 안 된다」를 안 적는다');
+    }
+    /* ⑤ 한도 안내(`#lim-note`)도 다 쓴 것을 먼저 말한다 */
+    const noteAt = ix.indexOf("getElementById('lim-note')");
+    const noteBlk = noteAt >= 0 ? ix.slice(noteAt, noteAt + 900) : '';
+    if (!noteBlk.includes('쿼터를 다 썼습니다')) bad.push('한도 안내가 「다 썼다」를 안 적는다');
+
+    if (bad.length) fail('[바이럴] 쿼터 소진 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 쿼터 소진 — 언제 풀리는지 알고 · 눌러도 안 된다고 적고 · 새로고침만 해도 보인다');
   }
 }
 
