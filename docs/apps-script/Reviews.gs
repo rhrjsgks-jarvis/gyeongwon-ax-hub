@@ -824,7 +824,12 @@ function sweepCalls_() {
   var mgr = 20;                                          /* 매니저 이름 네이버 건수 */
   var sdp = SDP.length * 2 * SDP_PAGES;                  /* SDP — 2갈래 × 3쪽 */
   var rival = rivalUnits_().length * 4 * RTAILS.length * kinds * RIVAL_PAGES;   /* 진영 넷 */
-  return store + cafe + mgr + sdp + rival;
+  /* **「삭제된 글 확인」이 빠져 있었다** (2026-09-04). `fetchAll` 은 코드에선 한 줄이라
+     눈에 안 띄는데 **쿼터는 요청 수만큼** 먹는다 — 한 실행에 최대 78묶음 × 50 = 3,900회다
+     (주석의 실측값). 그 탓에 한 바퀴 추정이 그만큼 작았고, 화면이 「한도가 넉넉하다」고
+     말했다. **큰 쪽으로 잡는다** — 이 함수의 규칙 그대로다(하루 한 번이라 한 바퀴에 한 번). */
+  var dead = DEAD_MAX_PER_RUN;
+  return store + cafe + mgr + sdp + rival + dead;
 }
 /* **LG 비교 질의 꼬리말.** `collectRival` 안의 지역 변수였는데 밖으로 올렸다 —
    호출 수 계산(`sweepCalls_`)이 이 개수를 알아야 하는데, 두 곳에 따로 적으면 한쪽만
@@ -5413,6 +5418,9 @@ function rival_() {
  */
 var DEAD_N       = 3;      /* 서로 다른 실행에서 이만큼 연속 404 여야 죽었다고 한다 */
 var DEAD_BURST   = 50;     /* `fetchAll` 한 묶음 (실측 0.57초) */
+/* 한 실행에 두드릴 수 있는 최대 — 시간 예산이 78묶음쯤에서 끊는다(주석의 실측).
+   **`sweepCalls_` 가 이 값을 쓴다** — 여기가 빠져 있어 한 바퀴 추정이 3,900회 작았다. */
+var DEAD_MAX_PER_RUN = 78 * 50;
 var DEAD_SPIKE   = 0.05;   /* 한 회차에 404 가 이 비율을 넘으면 그 회차를 통째로 버린다 */
 var DEAD_CEILING = 0.20;   /* 누적 판정이 대상의 이 비율을 넘으면 더 판정하지 않는다 */
 
@@ -5469,11 +5477,23 @@ function verifyDead_(deadline) {
   var cutShort = false;
   for (b = cur0; b < todo.length; b += DEAD_BURST) {
     if (deadline && Date.now() > deadline) { cutShort = true; props_().setProperty('_deadCur', String(b)); break; }
+    /* ── **쿼터를 묶음마다 다시 본다** (2026-09-04) ─────────────────────────
+     * 예전에는 이 절에 들어오기 전 한 번만 봤다(`deadDue_() && !over()`). 그래서
+     * 일단 들어오면 한도를 넘겨도 **3,900건을 끝까지 두드렸다.** 그 뒤 남은 수집이
+     * 전부 첫 호출에서 죽는다. */
+    if (over()) { cutShort = true; props_().setProperty('_deadCur', String(b)); break; }
     var chunk = todo.slice(b, b + DEAD_BURST);
     var reqs = [];
     for (j = 0; j < chunk.length; j++) {
       reqs.push({ url: chunk[j].url, method: 'head', muteHttpExceptions: true, followRedirects: false });
     }
+    /* ── **`fetchAll` 은 코드에선 한 줄이지만 쿼터는 요청 수만큼 먹는다** ────────
+     * 이 절이 카운터를 한 번도 안 불러 **하루 최대 3,900회가 밖에서 빠져나갔다**
+     * (2026-09-04 사장님 질문에서 드러났다 — *"20000으로변경하면 구글스크립트
+     * 전체 수집량이보이나요?"*). 그 탓에 화면은 「429 회 썼다」고 하는데 구글은
+     * 이미 막고 있었고, 우리는 그것을 *"다른 스크립트가 썼나 보다"* 로 읽었다.
+     * **던지기 전에 센다** — 실패해도 쿼터는 이미 나갔다. */
+    addUsage_(reqs.length);
     var res;
     try { res = UrlFetchApp.fetchAll(reqs); }
     catch (e) { nUnknown += chunk.length; continue; }   /* 묶음이 통째로 실패 = 모름 */

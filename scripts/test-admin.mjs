@@ -4229,5 +4229,68 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 구글 한도 — 우리 몫과 갈라 적고 · 막힌 지점을 남기고 · 오늘 것만 말한다');
 }
 
+/* ── 모든 UrlFetch 가 카운터에 잡히는가 (2026-09-04) ──────────────────────
+ * 사장님 질문 *"20000으로변경하면 구글스크립트 전체 수집량이보이나요?"* 에서 드러났다.
+ * 「삭제된 글 확인」이 `fetchAll` 로 **한 실행에 최대 3,900건**을 두드리는데
+ * `addUsage_` 를 한 번도 안 불렀다 — 코드에선 한 줄이라 눈에 안 띄지만
+ * **쿼터는 요청 수만큼 먹는다.** 그 탓에 화면이 「429회 썼다」고 하는 동안 구글은
+ * 이미 막고 있었고, 우리는 그것을 「다른 스크립트 탓」으로 읽었다.
+ *
+ * **세는 곳을 빠뜨리는 사고는 조용하다** — 오류도 안 나고 화면은 낙관만 한다.
+ * 이 저장소가 `collectStoreRival` 에서 이미 한 번 겪었다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* fetch 지점마다 그 주변에 세는 코드가 있어야 한다 */
+  const lines = gs.split('\n');
+  const fetchAt = [];
+  lines.forEach((l, i) => { if (/UrlFetchApp\.fetch(All)?\s*\(/.test(l)) fetchAt.push(i); });
+  if (fetchAt.length < 4) bad.push(`UrlFetch 지점이 ${fetchAt.length}곳뿐이다 — 앵커가 낡았는지 보라`);
+  /* **앞뒤를 넉넉히 본다.** 세는 자리가 fetch 「뒤」인 경우가 있고(데이터랩은
+     응답을 받고 나서 센다), `search_` 는 그 함수 안이 아니라 **호출자가** 센다.
+     좁게 잡았더니 멀쩡한 두 곳을 「샌다」고 잡았다 — 검사가 헛돌면 진짜 누락이 묻힌다. */
+  /* 그 줄이 어느 함수 안인가 — `search_` 안의 fetch 는 **호출자가 세는 설계**라
+     예외다(아래 호출부 검사가 대신 지킨다). 함수 이름을 위로 거슬러 찾는다. */
+  const fnOf = (i) => {
+    for (let k = i; k >= 0; k--) {
+      const m = /^function ([A-Za-z0-9_]+)\s*\(/.exec(lines[k]);
+      if (m) return m[1];
+    }
+    return '';
+  };
+  for (const i of fetchAt) {
+    if (fnOf(i) === 'search_') continue;
+    const near = lines.slice(Math.max(0, i - 30), i + 30).join('\n');
+    const counted = /addUsage_\(/.test(near) || /calls\+\+/.test(near) || /calls \+= /.test(near);
+    if (!counted) bad.push(`${i + 1}행 UrlFetch 가 카운터에 안 잡힌다 — 쿼터가 조용히 샌다`);
+  }
+  /* **`search_` 는 호출자가 센다** — 그 약속이 지켜지는지 호출부마다 본다.
+     함수 안에서 세지 않는 설계라, 호출자 하나가 빠지면 그만큼 조용히 샌다. */
+  lines.forEach((l, i) => {
+    if (!/[^n]\bsearch_\(/.test(l)) return;                    /* 정의(function search_) 제외 */
+    if (/function search_/.test(l)) return;
+    const near = lines.slice(i, i + 3).join('\n');
+    if (!/calls\+\+|calls \+= |addUsage_\(/.test(near))
+      bad.push(`${i + 1}행 search_ 호출이 안 세어진다 — 호출자가 세는 설계다`);
+  });
+  /* fetchAll 은 특히 — 요청 수만큼 세야 한다(1 이 아니다) */
+  const fa = gs.indexOf('UrlFetchApp.fetchAll(');
+  if (fa < 0) bad.push('fetchAll 을 못 찾았다 — 앵커가 낡았다');
+  else {
+    const near = gs.slice(Math.max(0, fa - 900), fa);
+    if (!/addUsage_\(reqs\.length\)/.test(near))
+      bad.push('fetchAll 이 요청 수만큼 안 센다 — 한 실행에 수천 회가 밖으로 샌다');
+    if (!/if \(over\(\)\) \{ cutShort = true/.test(near))
+      bad.push('삭제 확인이 묶음마다 쿼터를 안 본다 — 한 번 들어오면 한도를 넘겨도 끝까지 두드린다');
+  }
+  /* 한 바퀴 추정에도 그 몫이 들어가야 한다 */
+  if (!/var dead = DEAD_MAX_PER_RUN;/.test(gs))
+    bad.push('sweepCalls_ 에 삭제 확인 몫이 빠졌다 — 한 바퀴 추정이 3,900회 작아진다');
+
+  if (bad.length) fail('[바이럴] UrlFetch 계수 — ' + bad.join(' · '));
+  else console.log(`OK: 바이럴 UrlFetch 계수 — ${fetchAt.length}곳 전부 카운터에 잡힌다(fetchAll 은 요청 수만큼)`);
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
