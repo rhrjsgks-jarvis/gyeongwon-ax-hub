@@ -4499,12 +4499,27 @@ var AREA_Q = {
  *
  * 마지막 줄이 요점이다 — 영업에는 **수요가 선행지표**다.
  *
- * ## 키가 한 벌 더 필요하다
+ * ## 호스트가 검색과 다르다 — **`naveropenapi` 이지 `naverapihub` 가 아니다**
  *
- * 검색 API 는 HUB(NCP)로 이관됐는데 **데이터랩은 옛 체계에 그대로 있다**(2026-09-04
- * 실측: HUB 경로는 404 `URL not found`, 옛 주소는 401 `NID AUTH Result Invalid` —
- * 404 와 401 의 차이가 「주소가 없다」와 「주소는 있는데 이 키가 아니다」를 가른다).
- * 그래서 **스크립트 속성 이름을 갈라 둔다** — 섞이면 401 만 보고 원인을 못 찾는다.
+ * 둘 다 NCP 인데 **게이트웨이가 다르다**(2026-09-04 실측):
+ *
+ * | | |
+ * |---|---|
+ * | `naveropenapi.apigw.ntruss.com/datalab/v1/search` | **401 Invalid** — 경로 있음 |
+ * | `naverapihub.apigw.ntruss.com/datalab/v1/search`  | 404 URL not found — 경로 없음 |
+ *
+ * 그 전에 옛 주소(`openapi.naver.com`)와 HUB 경로 **9개**를 두드려 전부 404 였다.
+ * **404 와 401 의 차이가 「주소가 없다」와 「주소는 있는데 키가 아니다」를 가른다** —
+ * 이 갈림이 없었으면 「데이터랩은 NCP 에 없다」고 잘못 결론지을 뻔했다(실제로 한 번
+ * 그렇게 적었다). 호스트를 바꿔 보는 데까지 가야 했다.
+ *
+ * 헤더는 **NCP 것**이다 — 옛 헤더로 보내면 `Authentication information are missing`
+ * 이 온다(헤더 이름 자체를 모른다는 뜻이다).
+ *
+ * **키는 검색 API 와 같은 Application 에서 나온다**(2026-09-04 사장님 확인 —
+ * *"데이터랩이 NAVER API HUB에있어서 추가했습니다. ID와 시크릿은 기존것과 통합"*).
+ * 다만 API 를 추가하면 **시크릿이 재발급될 수 있으므로** 스크립트 속성 이름은
+ * 갈라 둔다 — 한쪽만 갱신해도 다른 쪽이 안 죽는다.
  *
  * ## 함정 셋 — 재 보고 확인했다
  *
@@ -4518,7 +4533,9 @@ var AREA_Q = {
  *   사람들이 *"LG베스트샵 수원"* 이라고 안 칠 뿐이다.
  *   → **브랜드 비교는 전국 단위로만. 지역은 같은 브랜드의 추세·급등에 쓴다.**
  */
-var TREND_URL = 'https://openapi.naver.com/v1/datalab/search';
+/* **`naveropenapi` 다 — 검색 API 의 `naverapihub` 와 다른 게이트웨이다**(위 주석 참조).
+   `naverapihub` 쪽은 404 라, 여기를 잘못 적으면 「경로가 없다」로만 보이고 원인을 못 찾는다. */
+var TREND_URL = 'https://naveropenapi.apigw.ntruss.com/datalab/v1/search';
 var SHEET_TREND = '검색관심도';
 var TREND_HEADER = ['at', 'scope', 'group', 'period', 'ratio'];
 /** 전국 브랜드 — 이것만 비중으로 읽는다(지역+브랜드는 위 함정 참조) */
@@ -4538,28 +4555,16 @@ function trendKey_() {
   var sec = String(p.getProperty('DATALAB_CLIENT_SECRET') || '').trim();
   if (!id || !sec) {
     throw new Error('스크립트 속성에 DATALAB_CLIENT_ID / DATALAB_CLIENT_SECRET 을 넣어 주세요. '
-      + 'developers.naver.com 에서 애플리케이션을 등록하고 「데이터랩(검색어 트렌드)」을 고르면 발급됩니다. '
-      + '검색 API 키(NAVER_CLIENT_ID)와 다른 체계라 그 값을 넣으면 401 이 납니다.');
+      + 'NAVER API HUB(console.ncloud.com)의 같은 Application 에서 「데이터랩」을 추가하면 쓸 수 있습니다 — '
+      + '검색 API 와 같은 키입니다. 다만 API 를 추가하면 시크릿이 재발급될 수 있으니 그때 값을 다시 넣어 주세요.');
   }
-  /* ── **검색 API 키를 넣었는지 그 자리에서 가른다** (2026-09-04) ─────────────
-   * 실제로 이 사고가 났다. 오류는 `NID AUTH Result Invalid (1000)` 인데, 그것만으로는
-   * *"키가 틀렸다"* 이상을 알 수 없어 어디를 고쳐야 할지 모른다.
-   *
-   * **키를 화면에 내보내지 않는다** — 이 저장소는 public 이고 오류 문구는 화면에 뜬다.
-   * *"검색 API 키와 같은 값이다"* 라는 **사실만** 말한다. 길이도 자릿수만 적는다
-   * (NCP 시크릿은 약 40자, developers.naver.com 은 약 10자로 확연히 다르다). */
-  var nid = String(p.getProperty('NAVER_CLIENT_ID') || '').trim();
-  var nsec = String(p.getProperty('NAVER_CLIENT_SECRET') || '').trim();
-  if ((nid && id === nid) || (nsec && sec === nsec)) {
-    throw new Error('DATALAB_ 키에 검색 API 키(NAVER_CLIENT_ID/SECRET)와 같은 값이 들어 있습니다 — '
-      + '데이터랩은 developers.naver.com 의 다른 체계라 그 값으로는 401 이 납니다. '
-      + '내 애플리케이션 → API 설정에서 「데이터랩(검색어 트렌드)」을 고르고 발급받은 값을 넣어 주세요.');
-  }
-  if (sec.length > 20) {
-    throw new Error('DATALAB_CLIENT_SECRET 이 ' + sec.length + '자입니다 — '
-      + 'developers.naver.com 시크릿은 보통 10자 안팎이고, 40자쯤이면 검색 API(NCP) 키입니다. '
-      + '값을 다시 확인해 주세요.');
-  }
+  /* **검색 API 와 같은 키가 정상이다**(2026-09-04 사장님 확인 — 같은 NCP Application
+     에서 데이터랩을 추가했다). 한때 「같은 값이면 오류」로 막아 뒀는데, 그것은 데이터랩이
+     옛 체계에 있다고 잘못 안 동안의 규칙이라 **정상 키를 막는 셈이었다.** 되돌렸다.
+     `trendCall_` 이 401 본문을 그대로 실어 보내므로 원인은 거기서 갈린다:
+       `Invalid authentication information` → 값이 틀렸다(API 를 추가하며 재발급됐을 수 있다)
+       `Authentication information are missing` → 헤더 이름이 틀렸다
+       `이 Application에서 활성화되어 있지 않습니다` → 콘솔에서 데이터랩을 켜야 한다 */
   return { id: id, sec: sec };
 }
 
@@ -4572,7 +4577,9 @@ function trendCall_(groups, from, to) {
   var k = trendKey_();
   var res = UrlFetchApp.fetch(TREND_URL, {
     method: 'post', contentType: 'application/json',
-    headers: { 'X-Naver-Client-Id': k.id, 'X-Naver-Client-Secret': k.sec },
+    /* **NCP 헤더다** — 옛 헤더(`X-Naver-Client-Id`)로 보내면 게이트웨이가
+       `Authentication information are missing` 을 준다(이름 자체를 모른다는 뜻이다). */
+    headers: { 'X-NCP-APIGW-API-KEY-ID': k.id, 'X-NCP-APIGW-API-KEY': k.sec },
     payload: JSON.stringify({
       startDate: from, endDate: to, timeUnit: 'month',
       keywordGroups: groups.map(function (g) { return { groupName: g[0], keywords: g[1] }; })

@@ -4128,16 +4128,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const pv = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
   const bad = [];
 
-  /* ① 주소와 헤더가 옛 체계여야 한다 — HUB 에는 그 경로가 없다(404 로 확인했다) */
-  if (!gs.includes('https://openapi.naver.com/v1/datalab/search'))
-    bad.push('데이터랩 주소가 옛 체계(openapi.naver.com)가 아니다 — HUB 에는 그 경로가 없다');
-  if (!gs.includes("'X-Naver-Client-Id'") || !gs.includes("'X-Naver-Client-Secret'"))
-    bad.push('데이터랩 헤더가 옛 체계가 아니다 — NCP 헤더를 보내면 401 이 난다');
-  /* ② 키를 갈라 둔다 — 섞이면 401 만 보고 원인을 못 찾는다 */
+  /* ① **호스트가 검색과 다르다** — 데이터랩은 `naveropenapi`, 검색은 `naverapihub`.
+     실측(2026-09-04): naveropenapi 는 401(경로 있음), naverapihub 는 404(경로 없음).
+     여기를 잘못 적으면 「경로가 없다」로만 보여 원인을 못 찾는다(실제로 그렇게 9개
+     경로를 헛짚고 「데이터랩은 NCP 에 없다」고 잘못 결론지을 뻔했다). */
+  if (!gs.includes('https://naveropenapi.apigw.ntruss.com/datalab/v1/search'))
+    bad.push('데이터랩 주소가 naveropenapi 게이트웨이가 아니다 — naverapihub 쪽은 404 다');
+  const tc = gs.indexOf('function trendCall_(');
+  if (tc < 0) bad.push('trendCall_ 이 없다');
+  else if (!/X-NCP-APIGW-API-KEY-ID[\s\S]{0,120}X-NCP-APIGW-API-KEY/.test(gs.slice(tc, tc + 1200)))
+    bad.push('데이터랩 헤더가 NCP 것이 아니다 — 옛 헤더는 「Authentication information are missing」이 난다');
+  /* ② 속성 이름은 갈라 둔다 — 같은 키라도 API 추가 시 재발급될 수 있어, 한쪽만
+     갱신해도 다른 쪽이 안 죽어야 한다 */
   if (!gs.includes('DATALAB_CLIENT_ID') || !gs.includes('DATALAB_CLIENT_SECRET'))
-    bad.push('데이터랩 키를 검색 API 키와 갈라 두지 않았다');
-  if (/getProperty\('NAVER_CLIENT_ID'\)[\s\S]{0,200}TREND_URL/.test(gs))
-    bad.push('데이터랩에 검색 API 키를 쓴다 — 다른 체계라 401 이 난다');
+    bad.push('데이터랩 키 속성 이름을 갈라 두지 않았다');
+  /* **같은 값이라고 막으면 안 된다** — 검색과 같은 NCP Application 키가 정상이다 */
+  if (/id === nid|sec === nsec/.test(gs))
+    bad.push('검색 API 와 같은 키를 막는다 — 같은 Application 이라 그것이 정상이다');
   /* ③ 그룹 5개 상한 — 넘기면 그 호출이 통째로 실패한다 */
   if (!/groups\.length > 5/.test(gs)) bad.push('그룹 5개 상한을 안 지킨다');
   /* ④ 지역은 브랜드를 섞지 않는다 — 검색어 습관이 지배해 수원에서 98.9% 가 나온다 */
@@ -4171,22 +4178,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* ⑧ **검색 API 키를 넣었는지 그 자리에서 가른다** (2026-09-04 실제로 그 사고가 났다).
      `NID AUTH Result Invalid` 만으로는 어디를 고쳐야 할지 모른다.
      **다만 키를 오류 문구에 실으면 안 된다** — 이 저장소는 public 이고 화면에 뜬다. */
-  const tk = gs.indexOf('function trendKey_()');
-  if (tk < 0) bad.push('trendKey_ 이 없다');
-  else {
-    const blk = gs.slice(tk, tk + 1800);
-    if (!/id === nid|sec === nsec/.test(blk))
-      bad.push('검색 API 키를 넣었는지 안 가른다 — 401 만 보고 원인을 못 찾는다');
-    if (!/sec\.length > 20/.test(blk))
-      bad.push('시크릿 길이로 체계를 안 가른다(NCP 40자 · developers 10자)');
-    /* 키 자체를 문구에 넣으면 안 된다 — 변수를 **그대로** 이어 붙이는지 본다.
-       `sec.length` 는 자릿수라 안전하다(그것이 체계를 가르는 단서다). */
-    if (/Error\([^)]*\+\s*(id|sec|nid|nsec)\s*(?![.\w])/.test(blk))
-      bad.push('오류 문구에 키 값을 싣는다 — public repo 이고 화면에 그대로 뜬다');
-  }
 
   if (bad.length) fail('[바이럴] 검색 관심도 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 검색 관심도 — 옛 체계 키를 갈라 쓰고 · 지역엔 브랜드를 안 섞고 · 빠진 달을 0 으로 안 본다');
+  else console.log('OK: 바이럴 검색 관심도 — naveropenapi 게이트웨이 · NCP 헤더 · 지역엔 브랜드를 안 섞고 · 빠진 달을 0 으로 안 본다');
 }
 
 /* ── 구글 UrlFetch 한도 (2026-09-04 사장님 요청) ─────────────────────────
