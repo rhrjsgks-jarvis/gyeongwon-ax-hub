@@ -59,6 +59,21 @@ const standalone = ALL.filter(isStandaloneLG);
 say(standalone.length === 0, 'LG 를 통으로 묻는 문항 0개'
   + (standalone.length ? ` — ${standalone.length}개 발견: "${standalone[0].q}"` : ''));
 
+/* **`LG U+` 는 통신사이지 경쟁사가 아니다**(2026-09-04). 삼성 제품명이 유통 채널을
+   그대로 달고 있어 사양 비교 문항 4개가 위 검사에 걸렸다 — 단어 경계로는 못 거른다
+   (`LG U+` 는 뒤가 공백이라 경계 조건을 정상 통과한다). 이 오탐은 검사만 헛도는 것이
+   아니라 `build-lg-questions.mjs` 가 같은 판정으로 은행에서 문항을 **지운다.**
+   양쪽을 함께 본다 — 한쪽만 보면 규칙을 아무거나 느슨하게 해도 통과한다. */
+for (const [s, want] of [
+  ['갤럭시 S23 FE 통신사폰 (SKT/KT/LG U+)(SM-S711NZPWKOD)', false],
+  ['갤럭시 버디3 사업자향 (LG U+)(SM-A156LZKALUC)', false],
+  ['LG 유플러스 전용 모델', false],
+  ['LG 트롬 워시타워', true],
+  ['LG전자 디오스 얼음정수기', true],
+  ['DLG 확장 120Hz', false],
+]) say(LG_RE.test(s) === want,
+  `LG 판정 — ${JSON.stringify(s)} → ${want ? 'LG' : 'LG 아님'}`);
+
 const cq = ALL.filter(q => q.lg === 1);
 const key = qs => qs.map(q => `${q.q}|${q.opts.join('|')}|${q.ans}`).sort().join('\n');
 say(key(cq) === key(buildLGQuestions()),
@@ -689,6 +704,89 @@ say(fs.existsSync(pdf), 'A4 PDF 생성 (' + (fs.statSync(pdf).size / 1024).toFix
 
   if (bad.length) { ok = false; console.log('FAIL: 등급 비교 문항 — ' + bad.slice(0, 4).join(' · ')); }
   else say(true, '등급 비교 문항 ' + tier.length + '개 — 이름이 다른 형제끼리 · 근거 있음 · 보기 길이 균형');
+}
+
+/* ── 기능 유무 · 수치 비교 (2026-09-04 — 삼성닷컴 사양으로 얇은 칸을 채웠다) ────
+ * 재고 조사에서 둘이 나왔다 — 은행이 '상' 으로 68% 쏠렸고, TV 242 ↔ 전자레인지 3 으로
+ * 칸이 통째로 얇다. 두 갈래를 더해 **'하'와 '중'만** 만들고 **모자란 칸에만** 넣는다.
+ *
+ * **문자열이 있는지로 보지 않는다** — 이 저장소가 그렇게 여러 번 데였다.
+ * 나온 문항마다 **원문(모델 사양표)을 다시 읽어** 정답·오답을 대조한다. */
+{
+  const { readSpecs, fxOf } = await import('../scripts/lib/new-model-sources.mjs');
+  const specs = readSpecs();
+  const secCodes = new Set(JSON.parse(fs.readFileSync(
+    new URL('../scripts/fixtures/sec-catalog.json', import.meta.url), 'utf8')).items.map((x) => x.code));
+  const nmj = JSON.parse(fs.readFileSync(NM_OUT, 'utf8')).items || [];
+  const feat = nmj.filter((q) => q.fam === 'feat');
+  const wcmp = nmj.filter((q) => q.fam === 'wcmp');
+  const bad = [];
+  const flat2 = (x) => String(x).replace(/\s/g, '');
+  const YESV = /^(있음|지원|적용|탑재|제공)$/;
+  const NOV = /^(없음|미지원|미적용|미탑재|해당없음|해당 없음)$/;
+
+  if (!feat.length) bad.push('기능 유무 문항이 한 건도 없다 — 갈래가 사라졌다');
+  if (!wcmp.length) bad.push('수치 비교 문항이 한 건도 없다 — 갈래가 사라졌다');
+
+  /* ⓐ 기능 유무 — 보기 넷이 **모두 그 모델 제 사양표**에 있고 있음/없음이 맞아야 한다 */
+  for (const q of feat) {
+    const code = (String(q.q).match(/\(([A-Za-z0-9][A-Za-z0-9\-/*.]{3,})\)에/) || [])[1];
+    if (!code) { bad.push('제목에서 모델코드를 못 읽었다: ' + q.q.slice(0, 40)); continue; }
+    if (!secCodes.has(code)) bad.push('삼성닷컴 현행 목록에 없는 모델: ' + code);
+    const fx = new Map(fxOf(specs, code).map(([k, v]) => [flat2(k), String(v).trim()]));
+    const neg = q.q.includes('적용되지 않는');
+    q.opts.forEach((o, i) => {
+      const v = fx.get(flat2(o));
+      if (v === undefined) { bad.push(`${code} 사양표에 보기 "${o}" 가 없다`); return; }
+      const want = neg ? (i === q.ans ? NOV : YESV) : (i === q.ans ? YESV : NOV);
+      if (!want.test(v)) bad.push(`${code} "${o}" = "${v}" — ${i === q.ans ? '정답' : '오답'} 조건에 안 맞는다`);
+    });
+    /* 보기 넷이 **같은 말이면 안 된다.** 「UV살균 LED」와 「UV LED 살균」이 한 모델에
+       함께 있어 실제로 보기 둘이 같은 말이 됐다 — 토막을 정렬해서 본다. */
+    const key = (k) => (String(k).toLowerCase().match(/[가-힣]+|[a-z0-9]+/g) || []).sort().join('|');
+    const ks = q.opts.map(key);
+    if (new Set(ks).size !== 4) bad.push('보기 넷 중 같은 말이 있다: ' + q.q.slice(0, 40));
+    for (const a2 of ks) for (const b2 of ks) {
+      if (a2 !== b2 && (a2.includes(b2) || b2.includes(a2))) bad.push('보기가 서로를 품는다: ' + a2 + ' / ' + b2);
+    }
+  }
+
+  /* ⓑ 수치 비교 — 정답 자리가 실제 최대인가 · 단위가 넷 다 같은가 */
+  for (const q of wcmp) {
+    const label = (String(q.q).match(/^다음 중 (.+?)(?:이|가) 가장 큰 것은\?$/) || [])[1];
+    if (!label) { bad.push('제목에서 라벨을 못 읽었다: ' + q.q.slice(0, 40)); continue; }
+    const vals = [];
+    for (const o of q.opts) {
+      const c = (String(o).match(/\(([^()]+)\)$/) || [])[1];
+      if (!c || !secCodes.has(c)) { bad.push(`보기 "${o}" 의 모델코드를 현행 목록에서 못 찾았다`); vals.push(null); continue; }
+      const row = fxOf(specs, c).find(([k]) => flat2(k) === flat2(label));
+      if (!row) { bad.push(`${c} 사양표에 "${label}" 이 없다`); vals.push(null); continue; }
+      vals.push(String(row[1]).trim());
+    }
+    if (vals.some((v) => v === null)) continue;
+    const num = (v) => parseFloat(((String(v).match(/\d+(?:[.,]\d+)?/g) || [])[0] || '0').replace(/,/g, ''));
+    const ns = vals.map(num), top = Math.max(...ns);
+    if (ns.filter((x) => x === top).length !== 1) bad.push('최대가 둘 이상이다: ' + q.q.slice(0, 40));
+    else if (ns.indexOf(top) !== q.ans) bad.push('정답 자리가 실제 최대와 다르다: ' + q.q.slice(0, 40));
+    /* **단위가 다르면 크고 작음을 물을 수 없다** — 「5 ATM」과 「IP68」을 견주게 된다 */
+    const unit = (v) => String(v).replace(/[\d,.]+/g, '').replace(/\s+/g, '').toLowerCase();
+    if (new Set(vals.map(unit)).size !== 1) bad.push('보기 넷의 단위가 다르다: ' + vals.join(' / '));
+  }
+
+  /* ⓒ **'상' 을 한 문항도 만들지 않는다** — 은행이 이미 '상' 68% 라 더하면 나빠진다 */
+  const hard = [...feat, ...wcmp].filter((q) => q.lv === '상');
+  if (hard.length) bad.push(`새 갈래가 '상' 을 ${hard.length}건 만들었다 — 하·중만 만들어야 한다`);
+
+  /* ⓓ **두꺼운 칸에는 한 문항도 더하지 않는다.** 재료는 TV·에어컨·냉장고가 가장 많아
+     그냥 만들면 불균형이 오히려 커진다 — 「모자란 칸부터」가 이 갈래의 목적이다. */
+  const FAT = ['TV', '에어컨', '냉장고', '김치냉장고', '갤럭시북', '갤럭시탭'];
+  const spill = [...feat, ...wcmp].filter((q) => FAT.includes(q.cat));
+  if (spill.length) bad.push(`이미 두꺼운 칸에 ${spill.length}건이 들어갔다 (${spill[0].cat})`);
+
+  if (bad.length) { ok = false; console.log('FAIL: 기능 유무·수치 비교 — ' + bad.slice(0, 4).join(' · ')); }
+  else {
+    say(true, `기능 유무 ${feat.length}개 · 수치 비교 ${wcmp.length}개 — 사양표 대조 통과 · 하/중만 · 얇은 칸만`);
+  }
 }
 
 say(outside.length === 0, '바깥으로 나간 요청 0' + (outside.length ? ': ' + outside[0] : ''));

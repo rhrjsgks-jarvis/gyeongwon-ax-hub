@@ -39,6 +39,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readModels, readSpecs, fxOf, readInstallDB, readInstallCost, installText, ROOT } from './lib/new-model-sources.mjs';
 import { INSTALL_QUESTIONS } from './fixtures/new-model-install.mjs';
+import { readQB } from './lib/quiz-bank.mjs';
 
 const OUT = path.join(ROOT, 'scripts', 'fixtures', 'new-model-questions.json');
 
@@ -598,6 +599,246 @@ function tierQuestions(guides) {
 const seenTier = new Set();
 
 /* ══════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   ⑥⑦ 삼성닷컴 현행 사양으로 **얇은 칸을 채운다** — 기능 유무(하) · 수치 비교(중)
+   ══════════════════════════════════════════════════════════════════════ */
+/* 2026-09-04 재고 조사에서 나온 두 가지를 함께 고친다.
+ *
+ * ## ① 은행이 '상'으로 쏠려 있다 — 806 / 1,187 (68%)
+ * ①~⑤ 갈래 중 사양·비용이 전부 수치 암기라 그렇다. **더 넣을 것은 '하'와 '중'이다.**
+ * 여기서 '상'을 한 문항도 만들지 않는 이유가 그것이다.
+ *
+ * ## ② 칸이 통째로 얇다 — TV 242 ↔ 전자레인지/오븐 3 (80배)
+ * 그래서 **모자란 칸부터 채운다**(`FLOOR`). 이미 두꺼운 칸(TV·에어컨·냉장고)에는
+ * 한 문항도 더하지 않는다 — 재료는 그쪽이 가장 많지만, 넣으면 불균형이 커진다.
+ *
+ * ## 「주력 모델」을 어떻게 고르나
+ * **삼성닷컴 현행 목록에 있는 모델**만 쓴다(`scripts/fixtures/sec-catalog.json`, 1,896종).
+ * 그 목록에 실려 있다는 것이 곧 *"지금 파는 모델"* 이라는 뜻이고, 이 저장소가 가진
+ * 유일한 판매 여부 근거다. **인기·판매량으로 고르지 않는다** — 그런 자료가 없다.
+ *
+ * ## 지어낸 값이 한 톨도 없다
+ *   ⑥ 기능 유무 … 보기 넷이 **전부 그 모델 제 사양표의 라벨**이다. 정답은 원문이
+ *      「없음/미지원」이라 적은 것이고 오답은 「있음/지원」이라 적은 것이다.
+ *      **모델을 가로지르지 않으므로** *"안 내세운다 ≠ 없다"* 함정이 원천적으로 없다
+ *      (등급 비교 ⑤가 「미적용」 표기만 쓰는 것과 같은 근거다).
+ *   ⑦ 수치 비교 … 보기 넷이 전부 실측값이고 최대가 유일할 때만 낸다. 단정하는 것이 없다.
+ */
+const SEC_CATALOG = path.join(ROOT, 'scripts', 'fixtures', 'sec-catalog.json');
+
+/* 모델파인더 카테고리 → 문제은행 칸. **없는 칸을 새로 만들지 않는다** —
+   냉동고·업소용 냉장고·모니터·프린터·SSD 는 문제은행에 칸이 없어 통째로 뺀다. */
+const WIDE_CAT = {
+  TV: 'TV', 에어컨: '에어컨', 냉장고: '냉장고', 김치냉장고: '김치냉장고', '세탁기·콤보': '세탁기',
+  건조기: '건조기', 청소기: '청소기', 공기청정기: '공기청정기', 식기세척기: '식기세척기',
+  '인덕션/전기레인지': '인덕션/전기레인지', 에어드레서: '에어드레서', 정수기: '정수기',
+  사운드바: '사운드바', '전자레인지/오븐': '전자레인지/오븐',
+  스마트폰: '휴대폰', '스마트폰(폴더블)': '휴대폰', '스마트폰(A시리즈)': '휴대폰',
+  워치: '웨어러블', 버즈: '웨어러블', 핏: '웨어러블', 태블릿: '갤럭시탭', 노트북: '갤럭시북',
+};
+
+/* **채워 올릴 목표선.** 지금 은행에서 세탁기 59 · 김치냉장고 63 이 중간 크기라
+   그 언저리를 목표로 잡았다. 이미 이보다 두꺼운 칸에는 더하지 않는다.
+   재료가 모자라 목표선에 못 닿는 칸이 있는 것은 정상이다 — **지어내서 채우지 않는다.** */
+const FLOOR = 60;
+
+const YESV = /^(있음|지원|적용|탑재|제공)$/;
+const NOV = /^(없음|미지원|미적용|미탑재|해당없음|해당 없음)$/;
+
+/* 기능 라벨이 아닌 것 — 이름이 속성(형태·타입·방식)이면 「적용되지 않는 항목」으로
+   읽기가 어색하고, 치수·색상·전원은 시험 지식이 아니다. */
+const FEAT_SKIP = /형태|타입|방식|종류|색상|컬러|color|치수|크기|사이즈|무게|중량|전원|소비전력|용량|등급|재질|원산지|보증/i;
+
+/* 라벨을 같은 뜻끼리 묶는 열쇠. **한 모델이 `SmartThings Hub 없음` 과
+   `SmartThings 모바일 앱 지원 있음` 을 함께 갖는 일이 실제로 있다**(세탁기 44종).
+   그대로 두면 보기 넷이 서로 모순되므로, 같은 열쇠끼리 있음·없음이 갈리면 그 열쇠를
+   통째로 버린다. 부분일치로 데인 이 저장소의 규칙대로 **넉넉히 잡아 버리는 쪽**이다. */
+const LABEL_ALIAS = [
+  [/smartthings|스마트 ?싱스/i, 'smartthings'], [/bixby|빅스비/i, 'bixby'],
+  [/wi-?fi|와이 ?파이|무선 ?랜/i, 'wifi'], [/bluetooth|블루투스/i, 'bluetooth'],
+  [/dolby ?atmos|돌비 ?애트모스/i, 'atmos'],
+];
+/* **토막을 정렬해서 본다.** 공백만 지우면 「UV살균 LED」와 「UV LED 살균」이 다른 열쇠가
+   되어 한 모델의 보기 넷에 **같은 말이 두 번** 들어간다(공기청정기에서 실제로 그랬다).
+   말 순서가 달라도 같은 항목이면 같은 열쇠가 나오게 한다. */
+function labelKey(k) {
+  for (const [re, to] of LABEL_ALIAS) if (re.test(k)) return to;
+  const toks = String(k).toLowerCase().match(/[가-힣]+|[a-z0-9]+/g) || [];
+  return toks.sort().join('|') || flat(k).toLowerCase();
+}
+
+/** 삼성닷컴 현행 목록 — 「지금 파는 모델」의 유일한 근거 */
+function readSecCodes() {
+  return new Set(JSON.parse(fs.readFileSync(SEC_CATALOG, 'utf8')).items.map(x => x.code));
+}
+
+/* 제품군 이름이 시험 지면에 그대로 나가므로 쓸 수 없는 것은 거른다.
+   `스펙 정의 (건조기)`·`기타 (현행)` 은 수집 과정의 자리표시자이고,
+   묶음(`더블 패키지`·`+상단 설치 키트`)은 이 저장소가 모델파인더에서 이미 빼는 것이다. */
+const BAD_GROUP = /스펙 ?정의|^기타|미확인|현행\)|✅|테스트/;
+const IS_BUNDLE = /더블 ?패키지|패키지$|\+ ?상단 ?설치|\+ ?필터|세트$|먼지봉투|다회용포|리폼비|\+[^(]*케이스/;
+
+/** 넓힌 후보 모델 — 삼성닷컴 현행 · 문제은행 칸이 있는 것 · 이름이 쓸 만한 것 */
+function widePool(specs) {
+  const sec = readSecCodes();
+  const out = [];
+  for (const p of specs.all) {
+    if (!p.model || !sec.has(p.model)) continue;
+    const cat = WIDE_CAT[p.cat];
+    if (!cat) continue;
+    const name = String(p.group || '').trim();
+    if (!name || name.length > 44 || BAD_GROUP.test(name) || IS_BUNDLE.test(name)) continue;
+    out.push({ cat, name, code: p.model, fx: fxOf(specs, p.model) });
+  }
+  out.sort((a, b) => (a.cat + a.code).localeCompare(b.cat + b.code));
+  return out;
+}
+
+/** ⑥ 기능 유무 — 보기 넷이 **한 모델 제 사양표**에서 나온다 */
+function featQuestions(pool) {
+  const out = [], seenSet = new Set();
+  for (const m of pool) {
+    const yes = [], no = [], byKey = new Map();
+    for (const [k, v] of m.fx) {
+      const label = String(k).trim(), val = String(v).trim();
+      if (!YESV.test(val) && !NOV.test(val)) continue;
+      if (FEAT_SKIP.test(label) || skipLabel(label)) continue;
+      /* 사양표가 여러 항목을 한 줄에 묶어 적은 것(「무풍 / 취침 / 자동」)은 보기로 못 쓴다 —
+         "적용되지 않는 항목" 이 셋 중 어느 것인지가 흐려진다. */
+      if (label.includes('/')) continue;
+      if (label.length < 2 || label.length > 24) continue;
+      const key = labelKey(label);
+      if (byKey.has(key)) {                       /* 같은 뜻인데 값이 갈리면 통째로 버린다 */
+        if (byKey.get(key).yes !== YESV.test(val)) byKey.get(key).bad = true;
+        continue;
+      }
+      byKey.set(key, { label, yes: YESV.test(val), bad: false });
+    }
+    for (const r of byKey.values()) { if (r.bad) continue; (r.yes ? yes : no).push(r.label); }
+    /* 열쇠가 서로를 품으면(`WiFi` ⊂ `WiFi 다이렉트`) 보기 넷에 함께 넣지 않는다 */
+    const disjoint = (list) => {
+      const keep = [];
+      for (const a of list) if (!keep.some(b => {
+        const x = labelKey(a), y = labelKey(b);
+        return x.includes(y) || y.includes(x);
+      })) keep.push(a);
+      return keep;
+    };
+    const Y = disjoint(yes), N = disjoint(no);
+    const forms = [];
+    if (N.length >= 1 && Y.length >= 3) forms.push({ ans: N, bad: Y, neg: true });
+    if (Y.length >= 1 && N.length >= 3) forms.push({ ans: Y, bad: N, neg: false });
+    for (const f of forms) {
+      const ans = f.ans[slot(m.code + (f.neg ? '#n' : '#y'), f.ans.length)];
+      const st = slot(m.code + '#b' + (f.neg ? 'n' : 'y'), f.bad.length);
+      const bad = [];
+      for (let i = 0; i < f.bad.length && bad.length < 3; i++) {
+        const c = f.bad[(st + i) % f.bad.length];
+        const x = labelKey(ans), y = labelKey(c);
+        if (x.includes(y) || y.includes(x)) continue;
+        if (!bad.includes(c)) bad.push(c);
+      }
+      if (bad.length < 3) continue;
+      /* 같은 사양표를 가진 형제 SKU 가 쌍둥이 문항을 만든다 — 보기 묶음으로 걸러 낸다 */
+      const sig = m.cat + '|' + f.neg + '|' + [ans, ...bad].map(flat).sort().join('|');
+      if (seenSet.has(sig)) continue;
+      seenSet.add(sig);
+      const q = `삼성 ${m.name}(${m.code})에 ${f.neg ? '적용되지 않는' : '적용되는'} 항목은?`;
+      if (leaksAnswer(q, ans) || bad.some(b => leaksAnswer(q, b))) continue;
+      const { opts, ans: at } = place(ans, bad, q);
+      out.push({ cat: m.cat, q, opts, ans: at, lv: '하', nm: 1, fam: 'feat',
+        exp: `${m.name}(${m.code}) 사양표 — ${ans}: ${f.neg ? '없음' : '있음'} / `
+           + bad.map(b => `${b}: ${f.neg ? '있음' : '없음'}`).join(' · ')
+           + `. 보기 넷이 모두 이 모델의 사양표 항목이다. (근거: 모델파인더 DB — 삼성닷컴 사양)` });
+    }
+  }
+  return out;
+}
+
+/** ⑦ 수치 비교 — 넓힌 후보로 '중' 을 만든다. 값이 넷 다 실측이라 단정하는 것이 없다. */
+/* **크고 작음을 물을 수 없는 라벨.** 그냥 두면 「전자파적합성 등록번호가 가장 큰 것은?」
+   같은 문항이 나온다(실측) — 등록번호·인증번호는 수치가 아니라 식별자다. */
+const NOT_MEASURABLE = /번호|등록|인증|규격|코드|일자|년월|연월|시리얼|버전/;
+function wideCompareQuestions(pool) {
+  const by = {};
+  for (const m of pool) for (const [k, v] of m.fx) {
+    const label = String(k).trim(), val = String(v).trim();
+    if (skipLabel(label) || isColor(label) || NOT_MEASURABLE.test(label)) continue;
+    if (!val || val.length > 26 || numOf(val).length !== 1) continue;
+    ((by[m.cat] = by[m.cat] || {})[label] = by[m.cat][label] || []).push({ ...m, val });
+  }
+  const out = [];
+  for (const [cat, labels] of Object.entries(by)) {
+    for (const [label, rows] of Object.entries(labels)) {
+      /* 같은 값·같은 이름은 한 번만 — 형제 SKU 가 보기 넷을 채우면 시험이 안 된다 */
+      const uniq = [...new Map(rows.map(r => [flat(r.val), r])).values()]
+        .filter((r, i, a) => a.findIndex(x => flat(x.name) === flat(r.name)) === i);
+      if (uniq.length < 4) continue;
+      const num = v => parseFloat((numOf(v)[0] || '0').replace(/,/g, ''));
+      const st = slot(cat + label, uniq.length);
+      const four = Array.from({ length: 4 }, (_, i) => uniq[(st + i) % uniq.length]);
+      const vals = four.map(r => num(r.val));
+      /* **단위가 다르면 크고 작음을 물을 수 없다.** 「내구성」이 한쪽은 「5 ATM」,
+         한쪽은 「IP68」이라 그대로 두면 5 와 68 을 견주는 거짓 문항이 나온다(실측).
+         숫자를 지운 나머지가 곧 단위이고, 넷이 같을 때만 낸다. */
+      const unit = v => String(v).replace(/[\d,.]+/g, '').replace(/\s+/g, '').toLowerCase();
+      if (new Set(four.map(r => unit(r.val))).size !== 1) continue;
+      const top = Math.max(...vals);
+      if (vals.filter(v => v === top).length !== 1) continue;   /* 최대가 둘이면 정답이 둘 */
+      const q = `다음 중 ${label}${iga(label)} 가장 큰 것은?`;
+      const opts = four.map(r => `${r.name}(${r.code})`);
+      if (new Set(opts.map(flat)).size !== 4) continue;
+      if (opts.some(o => leaksAnswer(q, o))) continue;
+      /* **제품군 이름이 답을 흘린다** — 「건조 용량이 가장 큰 것은?」인데 보기가
+         「AI 건조기 21kg / … 22kg」이면 사양을 몰라도 맞힌다(실측). 이긴 모델의
+         이름에 그 값의 숫자가 그대로 있으면 버린다. */
+      const win = four[vals.indexOf(top)];
+      if ((String(win.name).match(/\d+(?:[.,]\d+)?/g) || [])
+        .some(x => parseFloat(x.replace(/,/g, '')) === top)) continue;
+      out.push({ cat, q, opts, ans: vals.indexOf(top), lv: '중', nm: 1, fam: 'wcmp',
+        exp: four.map(r => `${r.code} ${r.val}`).join(' / ')
+           + `. 가장 큰 것은 ${four[vals.indexOf(top)].code}(${four[vals.indexOf(top)].val})다. `
+           + `(근거: 모델파인더 DB — 삼성닷컴 사양)` });
+    }
+  }
+  return out;
+}
+
+/** 지금 은행이 칸마다 몇 문항인가 — **커밋된 자료만** 보고 센다.
+ *  `QB` 의 손으로 쓴 문항은 `build:appbank` 가 남기는 것과 **같은 규칙**으로 센다
+ *  (그쪽이 지우는 옛 가전을 여기서 세면 목표선이 어긋난다). */
+function baseCounts(made) {
+  const n = {};
+  const bump = (cat) => { n[cat] = (n[cat] || 0) + 1; };
+  const MXC = new Set(['휴대폰', '웨어러블', '갤럭시탭', '갤럭시북']);
+  const POL = /정책|프로모션|인센티브|미리장만|거주중|재고 ?소진|패키지 ?포인트|구독클럽|사은품|증정|무상 ?지원|대상 ?모델/;
+  for (const [cat, list] of Object.entries(readQB())) {
+    for (const q of list) {
+      if (q.src) continue;                                  /* 지난 회차의 생성분 */
+      const blob = q.q + ' ' + q.opts.join(' ') + ' ' + (q.exp || '');
+      if (!MXC.has(cat) && q.lg !== 1 && q.type !== 'policy' && !POL.test(blob)) continue;
+      bump(cat);
+    }
+  }
+  const b2b = path.join(ROOT, 'scripts', 'fixtures', 'b2b-questions.json');
+  if (fs.existsSync(b2b)) for (const q of (JSON.parse(fs.readFileSync(b2b, 'utf8')).items || [])) bump(q.cat);
+  for (const q of made) bump(q.cat);
+  return n;
+}
+
+/** 목표선까지만 담는다 — **모자란 칸부터**. 넉넉한 칸에는 한 문항도 더하지 않는다. */
+function fillThin(made, cand) {
+  const room = baseCounts(made);
+  const out = [];
+  for (const q of cand) {
+    const left = FLOOR - (room[q.cat] || 0);
+    if (left <= 0) continue;
+    room[q.cat] = (room[q.cat] || 0) + 1;
+    out.push(q);
+  }
+  return out;
+}
+
 /** 44개 모델 명부 — 사양이 있는 것만 `code` 가 채워진다.
  *  **근접 코드의 값을 옮겨 적지 않는다** — 세대가 다르면 다른 물건이다. */
 export function registry() {
@@ -631,13 +872,17 @@ export function buildNewModelQuestions() {
   const specs = readSpecs();
   const db = readInstallDB();
   const cost = readInstallCost();
-  const items = [
+  const made = [
     ...specQuestions(models.filter(m => m.code), specs),
     ...installQuestions(db),
     ...costQuestions(cost),
     ...uspQuestions(models),
     ...tierQuestions(readGuides()),
   ];
+  /* ⑥⑦ 은 **모자란 칸만** 채운다 — 앞의 다섯 갈래를 다 만든 뒤에 남은 자리를 센다.
+     '하'(기능 유무)를 먼저 담는다: 은행이 '상'으로 쏠려 있어 그쪽이 더 급하다. */
+  const pool = widePool(specs);
+  const items = [...made, ...fillThin(made, [...featQuestions(pool), ...wideCompareQuestions(pool)])];
   /* 같은 문항이 두 번 실리면 한 시험지에 같은 것이 나올 수 있다 */
   const seen = new Set(), uniq = [];
   for (const q of items) { if (seen.has(q.q)) continue; seen.add(q.q); uniq.push(q); }
