@@ -216,7 +216,7 @@ function tailStats_() {
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, TAIL_HEADER.length).getValues();
   var byStore = {}, byTail = {}, runs = {}, i;
   for (i = 0; i < v.length; i++) {
-    var at = String(v[i][0]), s = String(v[i][1]), t = String(v[i][2]);
+    var at = cellStamp_(v[i][0]), s = String(v[i][1]), t = String(v[i][2]);
     var g = Number(v[i][3]) || 0, k = Number(v[i][4]) || 0;
     if (!s || !t) continue;
     runs[at] = 1;
@@ -1112,14 +1112,14 @@ function sdp_() {
     v = sh.getRange(2, 1, sh.getLastRow() - 1, SDP_HEADER.length).getValues();
   } catch (e) { return null; }
   var last = '', i;
-  for (i = 0; i < v.length; i++) { var t = String(v[i][0] || ''); if (t > last) last = t; }
+  for (i = 0; i < v.length; i++) { var t = cellStamp_(v[i][0]); if (t > last) last = t; }
   if (!last) return null;
   var selfOf = {}, j;
   for (j = 0; j < SDP.length; j++) selfOf[SDP[j].name] = !!SDP[j].self;
   var stores = [], byArea = {}, total = 0, kinds = {};
   var seenStore = {};
   for (i = v.length - 1; i >= 0; i--) {          /* 뒤에서부터 — 같은 매장은 마지막 줄만 */
-    if (String(v[i][0]) !== last) continue;
+    if (cellStamp_(v[i][0]) !== last) continue;
     var nm = String(v[i][1]);
     if (seenStore[nm]) continue;
     seenStore[nm] = 1;
@@ -2064,6 +2064,41 @@ function adminOk_(token) {
 function adminReady() { return { set: !!admClean_(props_().getProperty(ADMIN_PROP)) }; }
 
 function today_() { return Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'); }
+/**
+ * **시트가 도장을 날짜 값으로 바꿔 돌려준다 — 되돌린다** (2026-09-05 실측으로 잡음).
+ *
+ * 사장님 지적 *"당사 vs LG 가 며칠째 안 바뀝니다"*. 재 보니 **LG 비교는 오늘도
+ * 완주했다**(`rivalAt 2026-09-05` · `rivalCur` 빈칸) — 그런데 화면은 **09-02 값**이었다.
+ *
+ * 원인은 수집이 아니라 **읽는 쪽**이다. 도장을 `'yyyy-MM-dd HH:mm'` 로 쓰는데 시트가
+ * 그것을 **날짜 값으로 자동 변환**해 `getValues()` 가 Date 객체를 돌려준다.
+ * `String(Date)` 는 **`"Wed Sep 02 2026 19:06:00 GMT+0900 (한국 표준시)"`** 라
+ * 맨 앞이 요일 이름이고, `rival_()` 은 `t > last` 로 **사전순 최대**를 고른다:
+ *
+ *     Fri < Mon < Sat < Sun < Thu < Tue < Wed
+ *
+ * **수요일 회차는 어떤 요일에도 지지 않는다.** 09-02 가 수요일이라 그날 이후로
+ * 어떤 회차도 화면에 오르지 못했다 — 0건이 아니라 **그럴듯한데 굳은 값**이라
+ * 화면만 봐서는 못 잡는다(사장님이 「안 바뀐다」로만 알 수 있었던 이유다).
+ *
+ * **읽는 쪽에서 고친다.** 쓰는 형식을 바꾸면 이미 쌓인 줄은 그대로 Date 라 섞이는데,
+ * 되돌려 읽으면 **옛 줄과 새 줄이 한 형식이 되어 그 자리에서 낫는다** — 이 파일이
+ * 「섞인 회차」를 읽는 쪽에서도 막은 것과 같은 판단이다.
+ *
+ * **같은 병이 셋 더 있었다** — `sdp_()`(최신 회차 고르기) · `trendWipe_()`(오늘 줄을
+ * 지우고 다시 쓰는데 비교가 영영 안 맞아 **줄이 쌓인다**) · `tailStats_()`(회차 수 세기).
+ * **글자로 쓴 도장(`매장경쟁` 의 ISO)은 그대로 지나간다** — 문자열은 손대지 않는다.
+ *
+ * `instanceof Date` 로 보지 않는다 — 다른 realm 에서 온 값이면 거짓이 된다
+ * (이 저장소가 jsdom 에서 이미 데인 함정이다). **오리 판정**으로 본다.
+ */
+function cellStamp_(c) {
+  if (c && typeof c.getTime === 'function' && !isNaN(c.getTime())) {
+    return Utilities.formatDate(c, 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+  }
+  return String(c == null ? '' : c);
+}
+
 
 /**
  * **쿼터 날짜는 한국 날짜가 아니다** (2026-09-03 실측으로 잡음).
@@ -4386,7 +4421,7 @@ function srivalDone_(stamp) {
   var sh = sheet_(SHEET_SRIVAL, SRIVAL_HEADER), out = {};
   if (sh.getLastRow() < 2) return out;
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues(), i;
-  for (i = 0; i < v.length; i++) if (String(v[i][0]) === stamp) out[String(v[i][1])] = 1;
+  for (i = 0; i < v.length; i++) if (cellStamp_(v[i][0]) === stamp) out[String(v[i][1])] = 1;
   return out;
 }
 
@@ -4396,10 +4431,10 @@ function storeRival_() {
   if (sh.getLastRow() < 2) return null;
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, SRIVAL_HEADER.length).getValues();
   var last = '', i;
-  for (i = 0; i < v.length; i++) { var t = String(v[i][0]); if (t > last) last = t; }
+  for (i = 0; i < v.length; i++) { var t = cellStamp_(v[i][0]); if (t > last) last = t; }
   var rows = [];
   for (i = 0; i < v.length; i++) {
-    if (String(v[i][0]) !== last) continue;
+    if (cellStamp_(v[i][0]) !== last) continue;
     rows.push({ store: String(v[i][1]), shop: String(v[i][2]),
       ours: Number(v[i][3]) || 0, rival: Number(v[i][4]) || 0,
       pct: v[i][5] === '' || v[i][5] === null ? null : Number(v[i][5]),
@@ -4744,7 +4779,11 @@ function trendWipe_(sh, stamp) {
   if (last < 2) return;
   var v = sh.getRange(2, 1, last - 1, 1).getValues();
   var keep = [], i;
-  for (i = 0; i < v.length; i++) if (String(v[i][0]) !== String(stamp)) keep.push(i);
+  /* **날짜만 견준다** — 검색관심도 도장은 `yyyy-MM-dd` 인데 시트가 날짜
+     값으로 바꾸면 되돌린 글자에 `00:00` 이 붙는다. 시각까지 견주면 영영 안 맞아
+     **오늘 줄이 안 지워지고 쌓인다** — 두 번 눌러도 합산이 두 배가 되지 않게 하려고
+     만든 함수인데 정반대가 된다. */
+  for (i = 0; i < v.length; i++) if (cellStamp_(v[i][0]).slice(0, 10) !== String(stamp).slice(0, 10)) keep.push(i);
   if (keep.length === v.length) return;                 /* 지울 것이 없다 */
   var all = sh.getRange(2, 1, last - 1, TREND_HEADER.length).getValues();
   var out = [];
@@ -4764,7 +4803,7 @@ function trend_() {
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, TREND_HEADER.length).getValues();
   var brand = {}, area = {}, at = '';
   for (var i = 0; i < v.length; i++) {
-    var stamp = String(v[i][0]), scope = String(v[i][1]), g = String(v[i][2]);
+    var stamp = cellStamp_(v[i][0]).slice(0, 10), scope = String(v[i][1]), g = String(v[i][2]);
     var period = String(v[i][3]).slice(0, 7), ratio = Number(v[i][4]);
     if (!g || !period) continue;
     if (stamp > at) at = stamp;
@@ -5259,7 +5298,7 @@ function oldSchemaCycle_(stampStr) {
     if (sh.getLastRow() < 2) return false;
     var v = sh.getRange(2, 1, sh.getLastRow() - 1, RIVAL_HEADER.length).getValues();
     for (var i = 0; i < v.length; i++) {
-      if (String(v[i][0]) !== stampStr) continue;
+      if (cellStamp_(v[i][0]) !== stampStr) continue;
       if (String(v[i][6] || '').indexOf(' · ') >= 0) return true;
     }
   } catch (e) { /* 못 읽으면 이어 붙이던 대로 둔다 — 여기서 던지면 수집이 죽는다 */ }
@@ -5409,7 +5448,7 @@ function rival_() {
   if (sh.getLastRow() < 2) return null;
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, RIVAL_HEADER.length).getValues();
   var last = '', i;
-  for (i = 0; i < v.length; i++) { var t = String(v[i][0]); if (t > last) last = t; }
+  for (i = 0; i < v.length; i++) { var t = cellStamp_(v[i][0]); if (t > last) last = t; }
   /* ── **한 회차에 옛 줄과 새 줄이 섞이면 옛 줄을 버린다** (2026-09-02) ──────────
    * 도시 단위로 바꾼 직후, 이어 돌기가 **옛 회차 도장을 그대로 물려받아** 새 도시 줄을
    * 옛 지역 줄 옆에 붙였다 — 합산이 두 번 세어져 **평택이 2,008 → 4,025** 가 됐다.
@@ -5419,7 +5458,7 @@ function rival_() {
    * 안 그러면 옛 자료가 통째로 화면에서 사라진다. */
   var mixed = {};
   for (i = 0; i < v.length; i++) {
-    if (String(v[i][0]) !== last) continue;
+    if (cellStamp_(v[i][0]) !== last) continue;
     var ar = String(v[i][1]);
     var multi = String(v[i][6] || '').indexOf(' · ') >= 0;
     if (!mixed[ar]) mixed[ar] = { old: 0, neo: 0 };
@@ -5433,13 +5472,13 @@ function rival_() {
    * 한 회차에 같은 도시를 두 번 쓰는 일은 정상적으로는 없다(커서가 도시마다 전진한다). */
   var lastIdx = {};
   for (i = 0; i < v.length; i++) {
-    if (String(v[i][0]) !== last) continue;
+    if (cellStamp_(v[i][0]) !== last) continue;
     lastIdx[String(v[i][1]) + '|' + String(v[i][6] || '')] = i;
   }
 
   var by = {}, order = [];
   for (i = 0; i < v.length; i++) {
-    if (String(v[i][0]) !== last) continue;
+    if (cellStamp_(v[i][0]) !== last) continue;
     var area = String(v[i][1]);
     var mx = mixed[area];
     if (mx && mx.old && mx.neo && String(v[i][6] || '').indexOf(' · ') >= 0) continue;

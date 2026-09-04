@@ -2103,8 +2103,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!/for \(i = 0; i < STORES\.length; i\+\+\) others\.push\(STORES\[i\]\[1\]\);/.test(rv)) {
         bad5.push('SDP 의 「남의 매장」 목록에 우리 65곳이 없다');
       }
-      /* 마지막 회차만 읽는가 — 옛 회차와 합치면 같은 글이 여러 번 세어진다 */
-      if (!rv.includes("if (String(v[i][0]) !== last) continue;")) {
+      /* 마지막 회차만 읽는가 — 옛 회차와 합치면 같은 글이 여러 번 세어진다.
+         **도장은 cellStamp_ 로 되돌려 견준다**(2026-09-05) — 시트가 날짜 값으로
+         바꿔 돌려주므로 String(셀) 로 보면 한 줄도 안 맞는다. */
+      if (!rv.includes("if (cellStamp_(v[i][0]) !== last) continue;")) {
         bad5.push('sdp_() 가 마지막 회차만 읽지 않는다 — 옛 회차와 합쳐 부풀어난다');
       }
       /* 표본이 작다는 사실을 화면이 적는가 — 안 적으면 우리 매장 건수와 같은 무게로 읽힌다 */
@@ -2948,6 +2950,17 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         }
         return '';
       };
+
+      /* Apps Script 의 `Utilities` 를 흉내 낸다 — 떼어 돌리는 함수들이 쓰는 것은
+         `formatDate` 하나다. **`cutFn` 바로 아래에 둔다** — 아래쪽 하네스가 전부 이것을
+         받아야 하는데, 쓰는 자리마다 따로 만들면 한 곳만 고치는 사고가 난다. */
+      const uStub = [
+        'var Utilities = { formatDate: function (d) {',
+        '  var z = function (n) { return (n < 10 ? "0" : "") + n; };',
+        '  return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()) +',
+        '    " " + z(d.getHours()) + ":" + z(d.getMinutes());',
+        '} };',
+      ].join('\n');
       let mergeNum = null;
       try { mergeNum = new Function(cutFn('mergeNum_') + ' return mergeNum_;')(); }
       catch (e) { mergeNum = null; }
@@ -3018,7 +3031,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
            반쪽 줄(강원이 춘천 하나로 100%)을 「못 잼」으로 돌리는 판정의 근거다.
            **소스에서 떼어 온다** — 여기 손으로 적으면 도시가 바뀔 때 갈린다. */
         const areaQSrc = (rv.match(/var AREA_Q = \{[\s\S]*?\n\};/) || [''])[0];
-        rivalFn = new Function(stub + areaQSrc + cutFn('mergeNum_') + cutFn('rival_') + ' return rival_;')();
+        /* **떼어 돌리는 함수의 의존이 늘면 함께 넘겨야 한다** — 도장 정규화(cellStamp_)를
+           빼면 스위트가 ReferenceError 로 통째로 죽는다(이 저장소가 이미 한 번 겪었다). */
+        rivalFn = new Function(uStub + stub + areaQSrc + cutFn('cellStamp_') + cutFn('mergeNum_') + cutFn('rival_') + ' return rival_;')();
       } catch (e) { rivalFn = null; }
       if (!rivalFn) bad.push('rival_() 을 떼어 돌릴 수 없다 — 합산 규칙을 검사할 수 없다');
       else {
@@ -3049,6 +3064,55 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         }
         /* 다 잰 지역은 그대로 비중이 나와야 한다 — 한쪽만 보면 문턱을 올려도 통과한다 */
         if (get('수원') && get('수원').pct !== 42) bad.push('다 잰 지역의 비중까지 비운다 — 가드가 너무 세다');
+      }
+
+
+      /* ⓖ-2 **시트가 도장을 날짜 값으로 바꿔 돌려준다** (2026-09-05 실측으로 잡음).
+       *
+       * 사장님 지적 — 「당사 vs LG 가 며칠째 안 바뀝니다」. 프로덕션을 재 보니
+       * LG 비교는 **오늘도 완주했는데**(`rivalAt` 이 오늘 · `rivalCur` 빈칸)
+       * 화면은 09-02 값이었다. 원인은 수집이 아니라 **읽는 쪽**이다 —
+       * `'yyyy-MM-dd HH:mm'` 로 쓴 도장을 시트가 **날짜 값으로 자동 변환**해
+       * `getValues()` 가 Date 를 돌려주고, `String(Date)` 는 「Wed Sep 02 …」라
+       * **요일 이름이 맨 앞**이다. 사전순 최대를 고르면
+       * Fri < Mon < Sat < Sun < Thu < Tue < Wed — **수요일이 영원히 이긴다.**
+       *
+       * **떼어 돌린다.** 문자열만 보면 정규화를 빼도 통과한다. 시트가 하는 그대로
+       * Date 객체를 넣고 **토요일 회차가 이기는지**를 본다.
+       */
+      if (!rv.includes('function cellStamp_(')) {
+        bad.push('cellStamp_ 이 없다 — 도장이 날짜 값으로 오면 수요일 회차가 영원히 이긴다');
+      }
+      let stampFn = null;
+      try {
+        stampFn = new Function(uStub + cutFn('cellStamp_') + ' return cellStamp_;')();
+      } catch (e) { stampFn = null; }
+      if (!stampFn) bad.push('cellStamp_ 을 떼어 돌릴 수 없다 — 도장 정규화를 검사할 수 없다');
+      else {
+        /* ① Date 를 도장으로 되돌린다 — 시트가 돌려주는 그 모양 그대로 */
+        const wed = stampFn(new Date(2026, 8, 2, 19, 6));
+        const sat = stampFn(new Date(2026, 8, 5, 8, 12));
+        if (wed !== '2026-09-02 19:06') bad.push('날짜 값을 도장으로 못 되돌린다: ' + wed);
+        /* ② **토요일이 수요일을 이겨야 한다** — 이 한 줄이 사장님이 사흘 본 그 증상이다 */
+        if (!(sat > wed)) bad.push('되돌린 뒤에도 수요일 회차가 이긴다 — 화면이 옛 값에 굳는다');
+        /* ③ **글자로 쓴 도장은 손대지 않는다** — 매장경쟁은 ISO 문자열로 쓴다 */
+        const iso = '2026-09-03T06:25:11.433Z';
+        if (stampFn(iso) !== iso) bad.push('글자로 쓴 도장까지 바꾼다 — 매장경쟁 회차가 안 맞는다');
+        if (stampFn('') !== '' || stampFn(null) !== '') bad.push('빈 칸이 빈 글자가 아니다');
+      }
+
+      /* **읽는 곳마다 걸려 있는가.** 한 곳만 빠져도 그 표만 옛 회차에 굳는데
+         화면에는 아무 표시도 안 난다(이 저장소가 되풀이해 데인 종류다). */
+      if (rv.includes('String(v[i][0]) !== last')) {
+        bad.push('회차 필터가 아직 String(셀) 로 견준다 — 날짜 값이 오면 한 줄도 안 맞는다');
+      }
+      if (rv.includes('var t = String(v[i][0]')) {
+        bad.push('최신 회차를 String(셀) 로 고른다 — 수요일 회차가 영원히 이긴다');
+      }
+      /* ④ **검색관심도는 날짜만 견준다** — 도장이 yyyy-MM-dd 라 되돌리면 00:00 이 붙는다.
+         시각까지 견주면 오늘 줄이 안 지워져 **두 번 누르면 합산이 두 배**가 된다. */
+      if (!rv.includes('cellStamp_(v[i][0]).slice(0, 10) !== String(stamp).slice(0, 10)')) {
+        bad.push('검색관심도가 오늘 줄을 날짜로 견주지 않는다 — 지워지지 않고 쌓인다');
       }
 
       /* ⓗ **버튼** (사장님 요청) — 서버 진입점 · 화면 버튼 · 그 둘이 이어져 있는가 */
