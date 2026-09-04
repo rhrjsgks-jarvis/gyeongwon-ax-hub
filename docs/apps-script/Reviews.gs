@@ -4541,6 +4541,25 @@ function trendKey_() {
       + 'developers.naver.com 에서 애플리케이션을 등록하고 「데이터랩(검색어 트렌드)」을 고르면 발급됩니다. '
       + '검색 API 키(NAVER_CLIENT_ID)와 다른 체계라 그 값을 넣으면 401 이 납니다.');
   }
+  /* ── **검색 API 키를 넣었는지 그 자리에서 가른다** (2026-09-04) ─────────────
+   * 실제로 이 사고가 났다. 오류는 `NID AUTH Result Invalid (1000)` 인데, 그것만으로는
+   * *"키가 틀렸다"* 이상을 알 수 없어 어디를 고쳐야 할지 모른다.
+   *
+   * **키를 화면에 내보내지 않는다** — 이 저장소는 public 이고 오류 문구는 화면에 뜬다.
+   * *"검색 API 키와 같은 값이다"* 라는 **사실만** 말한다. 길이도 자릿수만 적는다
+   * (NCP 시크릿은 약 40자, developers.naver.com 은 약 10자로 확연히 다르다). */
+  var nid = String(p.getProperty('NAVER_CLIENT_ID') || '').trim();
+  var nsec = String(p.getProperty('NAVER_CLIENT_SECRET') || '').trim();
+  if ((nid && id === nid) || (nsec && sec === nsec)) {
+    throw new Error('DATALAB_ 키에 검색 API 키(NAVER_CLIENT_ID/SECRET)와 같은 값이 들어 있습니다 — '
+      + '데이터랩은 developers.naver.com 의 다른 체계라 그 값으로는 401 이 납니다. '
+      + '내 애플리케이션 → API 설정에서 「데이터랩(검색어 트렌드)」을 고르고 발급받은 값을 넣어 주세요.');
+  }
+  if (sec.length > 20) {
+    throw new Error('DATALAB_CLIENT_SECRET 이 ' + sec.length + '자입니다 — '
+      + 'developers.naver.com 시크릿은 보통 10자 안팎이고, 40자쯤이면 검색 API(NCP) 키입니다. '
+      + '값을 다시 확인해 주세요.');
+  }
   return { id: id, sec: sec };
 }
 

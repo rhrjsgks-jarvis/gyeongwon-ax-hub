@@ -4168,6 +4168,22 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!pv.includes('runTrend:')) bad.push('미리보기 하네스에 runTrend 스텁이 없다 — 누르면 화면이 죽는다');
   /* ⑦ 없으면 null — 0 으로 보내면 화면이 「검색이 없다」로 그린다 */
   if (!gs.includes('trend: trend_()')) bad.push('집계가 trend 를 안 내보낸다');
+  /* ⑧ **검색 API 키를 넣었는지 그 자리에서 가른다** (2026-09-04 실제로 그 사고가 났다).
+     `NID AUTH Result Invalid` 만으로는 어디를 고쳐야 할지 모른다.
+     **다만 키를 오류 문구에 실으면 안 된다** — 이 저장소는 public 이고 화면에 뜬다. */
+  const tk = gs.indexOf('function trendKey_()');
+  if (tk < 0) bad.push('trendKey_ 이 없다');
+  else {
+    const blk = gs.slice(tk, tk + 1800);
+    if (!/id === nid|sec === nsec/.test(blk))
+      bad.push('검색 API 키를 넣었는지 안 가른다 — 401 만 보고 원인을 못 찾는다');
+    if (!/sec\.length > 20/.test(blk))
+      bad.push('시크릿 길이로 체계를 안 가른다(NCP 40자 · developers 10자)');
+    /* 키 자체를 문구에 넣으면 안 된다 — 변수를 **그대로** 이어 붙이는지 본다.
+       `sec.length` 는 자릿수라 안전하다(그것이 체계를 가르는 단서다). */
+    if (/Error\([^)]*\+\s*(id|sec|nid|nsec)\s*(?![.\w])/.test(blk))
+      bad.push('오류 문구에 키 값을 싣는다 — public repo 이고 화면에 그대로 뜬다');
+  }
 
   if (bad.length) fail('[바이럴] 검색 관심도 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 검색 관심도 — 옛 체계 키를 갈라 쓰고 · 지역엔 브랜드를 안 섞고 · 빠진 달을 0 으로 안 본다');
