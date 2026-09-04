@@ -1076,6 +1076,45 @@ const CAT_QUERIES = {
     }
   }
 
+  /* ── 12. 제조사 공식 셀링포인트 (2026-09-04) ────────────────────────────
+   * 삼성닷컴 목록 API 의 `uspDescList` 와 고객 평점. **카탈로그 USP(`p.usp`)와
+   * 출처가 다르므로 화면에서 갈라야 한다** — 상담사가 고객에게 그대로 읽어도 되는
+   * 것은 제조사 공식 문구뿐이다. 섞으면 그 구분이 사라진다.
+   *
+   * jsdom 에는 `fetch` 가 없어 이 절은 화면에 안 뜬다(그것이 정상이다 —
+   * 자료가 없으면 아무것도 그리지 않는 것이 규칙이다). 그래서 **소스와 자료**를 본다. */
+  {
+    console.log('── 12. 제조사 공식 셀링포인트 ──');
+    const bad = [];
+    const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'finder-app.html'), 'utf8');
+    const uspPath = new URL('../public/sec-usp.json', import.meta.url);
+    if (!fs.existsSync(uspPath)) {
+      bad.push('public/sec-usp.json 이 없다 — `node scripts/build-usp.mjs` 로 만든다');
+    } else {
+      const doc = JSON.parse(fs.readFileSync(uspPath, 'utf8'));
+      const m = doc.m || {};
+      const n = Object.keys(m).length;
+      if (n < 500) bad.push('맵이 ' + n + '종뿐이다 — 수집이 반쪽인지 확인할 것');
+      /* 담긴 것은 셀링포인트나 평점 중 하나는 있어야 한다 — 빈 껍데기면 절이 빈다 */
+      const empty = Object.keys(m).filter((k) => !(m[k].u || []).length && !m[k].g);
+      if (empty.length) bad.push('빈 항목 ' + empty.length + '종');
+
+      /* **화면이 실제로 그리는가** — 파일만 있고 안 읽으면 아무 일도 안 난다 */
+      if (!src.includes('function officialUsp')) bad.push('finder 가 공식 셀링포인트를 안 그린다');
+      if (!src.includes("fetch('sec-usp.json')")) bad.push('finder 가 자료를 안 받는다');
+      /* **카탈로그 USP 와 갈라져 있는가** — 두 절의 제목이 달라야 한다 */
+      if (!src.includes('제조사 공식 셀링포인트')) bad.push('공식 문구임을 안 밝힌다');
+      if (!src.includes('핵심 키워드 · USP')) bad.push('카탈로그 USP 절이 사라졌다 — 둘은 출처가 달라 함께 있어야 한다');
+      if (!src.includes('그대로 읽으셔도 됩니다')) bad.push('「그대로 읽어도 된다」를 안 적는다');
+      /* **없으면 안 그린다** — 비슷한 모델 문구를 옮겨 적지 않는 것이 이 저장소의 첫 원칙 */
+      if (!/officialUsp[\s\S]{0,400}if\(!rec\) return ""/.test(src)) {
+        bad.push('자료가 없을 때 빈 문자열을 안 돌려준다 — 없는 문구를 지어낼 자리다');
+      }
+    }
+    if (bad.length) fail('[12] 공식 셀링포인트: ' + bad.join(' / '));
+    else console.log('  자료·렌더·카탈로그 USP 와 분리 ✓');
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })().catch((e) => {

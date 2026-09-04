@@ -1195,6 +1195,68 @@ function resetUrlTabInputs() {
   }
 
   // ══════════════════════════════════════════
+  // [20] 제조사 공식 셀링포인트 (2026-09-04)
+  //
+  // 삼성닷컴 목록 API 의 `uspDescList` 를 별도 절로 보여준다. **기능 비교(`on`)에는
+  // 넣지 않는다** — 그쪽은 `scoreS += samOnly.length` 로 개수가 그대로 종합 스코어라,
+  // 삼성 쪽만 부으면 **점수가 근거 없이 올라가고 현장에서 반박당한다**("국내 일체형
+  // 최대용량" 사고와 같은 종류다). 되돌리면 조용히 점수가 부풀려진다.
+  // ══════════════════════════════════════════
+  {
+    const bad = [];
+    const uspPath = new URL('../public/compare-usp.json', import.meta.url);
+    if (!fs.existsSync(uspPath)) {
+      bad.push('public/compare-usp.json 이 없다 — `node scripts/build-compare-usp.mjs` 로 만든다');
+    } else {
+      const doc = JSON.parse(fs.readFileSync(uspPath, 'utf8'));
+      const models = doc.models || {};
+      const names = Object.keys(models);
+      if (names.length < 20) bad.push('공식 셀링포인트가 ' + names.length + '종뿐이다 — 수집이 반쪽인지 확인할 것');
+
+      /* ① **`on` 에 새어 들어가지 않았는가** — 이 절의 핵심이다.
+            USP 문장이 기능 칩에 섞이면 그 개수만큼 삼성 점수가 오른다. */
+      const samAll = [];
+      Object.values(DB).forEach((v) => (v.samsung || []).forEach((m) => samAll.push(m)));
+      /* **한 줄 겹치는 것은 우연이다** — 우리가 독립적으로 쓴 명사구가 공식 문구와
+         같을 수 있다(실측: `Micro RGB AI 엔진 Pro` 1종 1줄). 부어 넣었다면 세 줄이
+         통째로 들어가므로 **2줄 이상**을 신호로 본다. 한 줄로 잡으면 멀쩡한 항목을
+         물어 검사가 헛돈다(이 저장소가 앵커·부분일치로 되풀이해 데인 종류다). */
+      for (const m of samAll) {
+        const rec = models[m.name];
+        if (!rec) continue;
+        const leaked = (rec.usp || []).filter((u) => (m.on || []).includes(u));
+        if (leaked.length >= 2) {
+          bad.push(m.name + ' 의 기능 목록에 공식 USP 가 ' + leaked.length + '줄 섞였다 — 종합 스코어가 부풀려진다: '
+            + leaked[0].slice(0, 30));
+        }
+      }
+
+      /* ② **없는 모델을 지어내지 않았는가** — 담긴 이름은 전부 DB 에 실재해야 한다 */
+      const samNames = new Set(samAll.map((m) => m.name));
+      const ghost = names.filter((n) => !samNames.has(n));
+      if (ghost.length) bad.push('DB 에 없는 모델이 담겼다: ' + ghost.slice(0, 2).join(' · '));
+
+      /* ③ 담긴 것은 전부 문구를 갖는다 — 빈 껍데기면 화면이 빈 절을 그린다 */
+      const empty = names.filter((n) => !(models[n].usp || []).length);
+      if (empty.length) bad.push('문구가 빈 항목 ' + empty.length + '종');
+
+      /* ④ 화면이 **출처를 밝히는가.** 우리가 쓴 셀링포인트와 갈라 보이지 않으면
+            상담사가 어느 것을 고객에게 그대로 읽어도 되는지 알 수 없다. */
+      /* **화면에 실제로 그리는 문자열로 좁힌다** — 맨 문구로 찾으면 위 설명 주석이 먼저
+         걸려, 렌더 코드에서 빼도 통과한다(실제로 그렇게 헛돌았다). 이모지는 주석에 없다. */
+      if (!rawHtml.includes('📣 제조사 공식 셀링포인트')) bad.push('화면이 공식 문구임을 안 밝힌다');
+      if (!rawHtml.includes('그대로 읽으셔도 됩니다')) bad.push('화면이 「그대로 읽어도 된다」를 안 적는다');
+      /* ⑤ 평점은 **경쟁사 값이 없다는 것**을 함께 적어야 한다 — 안 적으면 「우리가 이겼다」로 읽힌다 */
+      if (!rawHtml.includes('비교가 아니라 참고')) bad.push('평점이 비교가 아님을 안 밝힌다');
+      /* ⑥ 자료를 실제로 그리는가 — 파일만 있고 화면이 안 읽으면 아무 일도 안 난다 */
+      if (!rawHtml.includes('renderOfficialUsp')) bad.push('화면이 공식 셀링포인트를 그리지 않는다');
+      if (!rawHtml.includes('compare-usp.json')) bad.push('화면이 자료를 받지 않는다');
+    }
+    if (bad.length) fail('[20] 공식 셀링포인트: ' + bad.join(' / '));
+    else console.log('[20] 공식 셀링포인트 — `on` 에 안 섞임 · 출처 밝힘 · 평점은 참고임을 적음 OK');
+  }
+
+  // ══════════════════════════════════════════
   // 결과
   // ══════════════════════════════════════════
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');

@@ -408,7 +408,19 @@
  * 사이드바·앱 헤더처럼 한 줄뿐인 자리는 모델파인더만 쓴다 — 옛 이름은 카드 부제와
  * 검색어에 남으므로 '제품 상세검색'으로 찾던 사람도 그대로 찾는다.
  */
-const CACHE_VERSION = 'axhub-v252';
+/*
+ * v253 (2026-09-04) — 타사비교에 **제조사 공식 셀링포인트**를 붙였다
+ * (compare-app.html + 새 자료 compare-usp.json).
+ *
+ * 삼성닷컴 목록 API 가 제품마다 싣는 uspDescList 세 줄이다. 우리가 쓴 문구가 아니라
+ * 제조사 공식 문구라 상담사가 고객에게 그대로 읽어도 된다. 58종 중 39종.
+ *
+ * **기능 비교(on)에는 넣지 않았다** — 그쪽은 개수가 그대로 종합 스코어라
+ * 삼성 쪽만 부으면 점수가 근거 없이 올라가고 현장에서 반박당한다.
+ *
+ * 새 자료 파일이라 여기를 안 올리면 이미 쓰던 기기가 **그 절을 아예 못 받는다.**
+ */
+const CACHE_VERSION = 'axhub-v253';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -438,7 +450,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
+const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers|compare-usp|sec-usp)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

@@ -118,6 +118,14 @@ table.spec tr:last-child td{border-bottom:none}
 .flagrow{display:flex;flex-wrap:wrap;gap:5px}
 .flg{font-size:11px;font-weight:600;background:var(--blue-soft);color:var(--blue);padding:4px 9px;border-radius:6px}
 .flg.no{background:#F0F2F6;color:#9AA8BB;text-decoration:line-through}
+/* 제조사 공식 셀링포인트 — 위 「핵심 키워드」(칩)와 **모양으로 갈라야** 한다.
+   그쪽은 우리가 뽑은 키워드, 이쪽은 삼성이 싣는 문장이다. */
+.uspo-star{font-weight:700;color:#B45309;letter-spacing:0;margin-left:4px}
+.uspo-box{background:var(--blue-soft);border-radius:8px;padding:8px 10px}
+.uspo-li{font-size:12px;line-height:1.6;color:#1F2937;padding-left:11px;position:relative}
+.uspo-li+.uspo-li{margin-top:4px}
+.uspo-li::before{content:'·';position:absolute;left:3px;font-weight:800;color:var(--blue)}
+.uspo-sub{font-size:10.5px;color:var(--sub);margin-top:5px;line-height:1.5}
 /* 핵심 키워드·USP — 상담에서 바로 쓰는 셀링포인트라 기능칩과 구분되는 색으로 둔다 */
 .flg.usp{background:#FFF4E5;color:#B45309;font-weight:700}
 /* 카탈로그에 실제로 실린 모델임을 표시 — 삼성닷컴 조사 기반 모델과 구분한다 */
@@ -1548,7 +1556,37 @@ function rdetail(p){
     ${p.on.length?`<h5>탑재 기능</h5><div class="flagrow">${p.on.map(f=>`<span class="flg">${esc(f)}</span>`).join("")}</div>`:""}
     ${p.off.length?`<h5>미탑재 — 과장 안내 주의</h5><div class="flagrow">${p.off.map(f=>`<span class="flg no">${esc(f)}</span>`).join("")}</div>`:""}
     ${p.usp&&p.usp.length?`<h5>핵심 키워드 · USP</h5><div class="flagrow">${p.usp.map(f=>`<span class="flg usp">${esc(f)}</span>`).join("")}</div>`:""}
+    ${officialUsp(p)}
   </div>`;
+}
+
+/* ── 제조사 공식 셀링포인트 (2026-09-04) ──────────────────────────────────
+ * 삼성닷컴이 제품 지면에 싣는 `uspDescList` 세 줄과 고객 평점이다.
+ *
+ * **위 「핵심 키워드 · USP」와 갈라서 보여준다.** 그쪽은 카탈로그에서 우리가 뽑은
+ * 키워드이고 이것은 **제조사 공식 문구**라, 상담사가 고객에게 그대로 읽어도 되는
+ * 것은 이쪽뿐이다. 출처가 다르면 화면에서도 갈라야 그 구분이 전달된다.
+ *
+ * **없으면 아무것도 그리지 않는다** — 1,839종에만 있고, 비슷한 모델의 문구를
+ * 옮겨 적으면 그 자리에서 거짓이 된다(이 저장소의 첫 원칙).
+ */
+function officialUsp(p){
+  const M = window.__SECUSP; if(!M || !p.model) return "";
+  const code = String(p.model).toUpperCase();
+  let rec = M[code];
+  if(!rec){
+    /* 우리 DB 코드와 삼성닷컴 코드가 다른 경우가 있다(색상·유통 접미).
+       **접두로만 본다** — 아무 데나 일치로 보면 다른 제품 문구가 붙는다. */
+    const c = code.replace(/[*]/g, "");
+    for(const k in M){ if(k.startsWith(c) || c.startsWith(k)){ rec = M[k]; break; } }
+  }
+  if(!rec) return "";
+  const star = rec.g ? `<span class="uspo-star">★ ${rec.g} · 리뷰 ${Number(rec.r).toLocaleString()}건</span>` : "";
+  const list = (rec.u||[]).map(u=>`<div class="uspo-li">${esc(u)}</div>`).join("");
+  if(!list && !star) return "";
+  return `<h5>제조사 공식 셀링포인트 ${star}</h5>
+    ${list?`<div class="uspo-box">${list}</div>
+    <div class="uspo-sub">삼성닷컴이 제품 지면에 싣는 문구라 <b>고객에게 그대로 읽으셔도 됩니다.</b></div>`:""}`;
 }
 /*
  * 상세를 펼쳐 둔 채 휴대폰 뒤로가기를 누르면 앱을 통째로 벗어났다. 펼침도 "연 것"이므로
@@ -2226,6 +2264,22 @@ setMode("kw");
  * **기존 값은 덮지 않는다** — 카탈로그 대조로 넣은 값이 기준이고, 없던 항목만 채운다.
  * 실패하면 조용히 넘어간다. 전파가 끊긴 매장에서 기존 532종은 그대로 써야 한다.
  */
+/* ── 제조사 공식 셀링포인트·평점 (2026-09-04) ────────────────────────────
+ * 삼성닷컴 목록 API 의 `uspDescList` 와 고객 평점(1,839종). **경량 맵**이라
+ * 382KB(gzip 51KB)이고, 상세를 펼칠 때만 쓰이므로 뒤에서 받아도 늦지 않다.
+ *
+ * **받은 뒤 이미 펼쳐 둔 상세를 다시 그린다** — 안 그리면 딥링크로 들어와 상세가
+ * 먼저 열린 경우 그 카드에만 영영 안 뜬다(`finder-extra` 가 캐시 때문에 겪은 것과
+ * 같은 종류다). 실패하면 조용히 넘어간다 — 이것 때문에 검색이 막히면 안 된다. */
+(function(){
+  if (typeof fetch !== 'function') return;   /* jsdom 검사에는 fetch 가 없다 */
+  fetch('sec-usp.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    if (!j || !j.m) return;
+    window.__SECUSP = j.m;
+    if (typeof openId !== 'undefined' && openId != null && typeof renderResults === 'function') renderResults();
+  }).catch(function () { /* 없으면 그 절만 안 뜬다 */ });
+})();
+
 (function(){
   fetch('finder-extra.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
     if (!j) return;
