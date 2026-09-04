@@ -4119,6 +4119,53 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 질의 꼬리말 — 뒤에만 붙이고 · 두 곳 다 적고 · 옛 줄은 「모른다」로 가른다');
 }
 
+/* ── 히트맵 LG 지점명·건수 (2026-09-04 사장님 요청) ──────────────────────
+ * *"엘지부분에도 텍스트로 LG어디지점인지 삼성과 동일하게 지점명과 숫자로"*.
+ *
+ * 만들면서 **같은 함정을 세 번 밟았다** — `srm`·`bg` 를 아래에서 선언하는데 위에서
+ * 써서 `var` 호이스팅으로 `undefined` 가 됐다(오류도 안 난다). 그리고 고정색을
+ * 썼다가 대비 **1.01:1** 로 통째로 안 보였다 — 칸 배경 농도가 건수를 따라 달라지기
+ * 때문이다. 셋 다 여기서 지킨다. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+  const at = ix.indexOf("class=\"lgn\"");
+  if (at < 0) bad.push('LG 지점명 줄(.lgn)이 없다');
+  else {
+    /* 그 줄을 만드는 블록 */
+    const blk = ix.slice(Math.max(0, at - 2200), at + 300);
+    /* ① 선언보다 앞에서 쓰지 않는다 — 지역 변수를 따로 낸다 */
+    if (!/var srmL = \(window\.__SR/.test(blk))
+      bad.push('__SR 을 지역 변수로 다시 안 꺼낸다 — 아래 선언을 쓰면 호이스팅으로 늘 undefined 다');
+    if (!/var bgL = /.test(blk))
+      bad.push('배경색을 지역 변수로 다시 안 낸다 — 같은 호이스팅 함정이다');
+    /* ② 색은 배경 밝기가 정한다 — **문자열이 아니라 결과로 본다.**
+       `inkOn(bgL)` 이 적혀 있어도 앞에 조건이 붙으면 안 도는데 문자열 검사는 통과한다
+       (실제로 그렇게 헛돌았다). 판정식을 떼어 밝은 배경·어두운 배경 둘로 돌려 본다. */
+    const im = /var lgInk = ([^;]+);/.exec(blk);
+    if (!im) bad.push('lgInk 를 정하는 곳이 없다');
+    else {
+      const fn = new Function('inkOn', 'bgL', 'return ' + im[1] + ';');
+      const onDark = fn(() => '#fff', '#1428A0');
+      const onLight = fn(() => '#2A2F38', '#EEF2FF');
+      if (onDark === onLight)
+        bad.push('배경이 밝든 어둡든 같은 색이다 — 고정색은 대비 1.01:1 이 된다(실측)');
+      if (!/^#/.test(String(onDark)) || !/^#/.test(String(onLight)))
+        bad.push('lgInk 가 색을 안 돌려준다: ' + JSON.stringify([onDark, onLight]));
+    }
+    if (/\.hm \.cell \.lgn \{[^}]*color:/.test(ix))
+      bad.push('.lgn 에 CSS 고정색이 있다 — 칸 배경 농도가 건수를 따라 달라져 못 쓴다');
+    /* ③ 칸이 좁으면 안 그린다 — 이 화면이 이미 쓰는 계단 */
+    if (!/c\.w > 96 && c\.h > 66/.test(blk))
+      bad.push('넓은 칸에만 그리는 조건이 없다 — 작은 칸에서 뭉갠다');
+    /* ④ 글자 크기를 칸 폭에서 낸다 — 고정 비율이면 긴 이름이 칸 밖으로 나간다 */
+    if (!/c\.w - 8\) \/ \(lgTxt\.length/.test(blk))
+      bad.push('글자 크기를 칸 폭에서 안 낸다 — 긴 이름이 칸 밖으로 나간다(실측 +87~176px)');
+  }
+  if (bad.length) fail('[바이럴] 히트맵 LG 표기 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 히트맵 LG 표기 — 지점명·건수를 넓은 칸에 적고 · 색은 배경이 정하고 · 칸 안에 들어간다');
+}
+
 /* ── 검색 관심도 — 네이버 데이터랩 (2026-09-04) ──────────────────────────
  * 후기 수집이 못 하는 것을 한다 — 작성일 100% · 1회에 20개월 · **수요** 측 지표.
  * 실측으로 확인한 함정 셋을 코드가 지키는지 본다. */

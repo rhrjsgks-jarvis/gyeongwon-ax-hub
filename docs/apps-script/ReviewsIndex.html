@@ -851,6 +851,19 @@
   .hm .cell .lgd, .hm .cell .lgx { position: absolute; top: 3px; right: 5px;
     font-size: var(--fs-mini); opacity: .62; font-weight: 800; }
   .hm .cell .lgx { color: #C0392B; opacity: .8; }
+  /* ── LG 지점명·건수 (2026-09-04 사장님 요청) ─────────────────────────────
+     처음에는 **빨강 위에 얹으려** 했다 — 어느 색이 누구인지 눈으로 이어지게.
+     **재 보니 그 자리가 없다**: 빨강 폭이 31~61px 뿐이라(우리가 이기는 칸일수록
+     더 좁다) 글자가 87~176px 씩 삐져나갔다. 빨강 안에 넣으려면 4~5px 로 줄여야
+     하는데 그러면 안 읽힌다.
+
+     그래서 **칸 가운데에 한 줄로** 두고, 「LG 것」이라는 표시는 **색이 한다** —
+     연한 빨강 글자에 어두운 그림자. 자리 걱정이 없고 칸 배경이 어떻든 읽힌다. */
+  /* **색은 인라인으로 준다** — 칸 배경 농도가 건수를 따라 달라져 고정색은 못 쓴다
+     (실측 대비 1.01:1 로 통째로 안 보였다). `inkOn` 이 밝기를 보고 정한다.
+     그림자도 주지 않는다 — 어두운 글자일 때는 검은 그림자가 오히려 뭉갠다. */
+  .hm .cell .lgn { margin-top: 3px; font-weight: 800; letter-spacing: -.2px;
+    white-space: nowrap; max-width: 96%; overflow: hidden; text-overflow: ellipsis; }
   .hmnav { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 12px; flex-wrap: wrap; }
   .hmnav .bk { border: 1px solid var(--line); background: #fff; color: #374151; font-weight: 700;
                border-radius: var(--ctl-r); padding: var(--ctl-py) var(--ctl-px);
@@ -5791,6 +5804,51 @@ function renderList() {
           if (lgm && c.w > 70) {
             if (!lgm.shop) lab += '<span class="lgx" title="LG 매칭 없음">✕</span>';
             else if (lgm.how === 'dept') lab += '<span class="lgd" title="같은 백화점 안 LG">▣</span>';
+          }
+          /* ── **빨강 쪽에도 LG 지점명과 건수를 적는다** (2026-09-04 사장님 요청) ──
+           * *"엘지부분에도 텍스트로 LG어디지점인지 삼성과 동일하게 지점명과 숫자로"*.
+           *
+           * 예전에는 *"이름이 길어 세 줄짜리 칸이 뭉갠다"* 며 말풍선에만 두었다.
+           * **재 보니 그 전제가 반만 맞다** — LG 이름은 4~12자로 우리 이름보다 짧고,
+           * 대부분 우리 지점명과 겹쳐(`강릉 ↔ 강릉본점`) 꼬리를 떼면 훨씬 짧아진다.
+           * 문제는 이름이 아니라 **칸 크기 편차**다(실측 18×34 ~ 246×459).
+           *
+           * 그래서 **넓은 칸에만** 적는다 — 이 화면이 이미 쓰는 방식 그대로다
+           * (`c.h > 33` 에서 건수를, `c.h > 50` 에서 부제를 붙이는 그 계단).
+           * **빨강 쪽에 놓아** 어느 색이 누구인지 눈으로 이어진다. */
+          /* **`srm` 을 여기서 다시 꺼낸다** — 아래 배경 그리는 곳(5872행대)의 `srm` 은
+             이 블록보다 뒤에 선언돼, 그대로 쓰면 `var` 호이스팅으로 늘 `undefined` 다
+             (실제로 그렇게 만들어 「칸이 큰데도 안 그려진다」를 겪었다. 이 저장소가
+             `lgm` 에서 이미 한 번 데인 함정이다). */
+          var srmL = (window.__SR || {})[d.nm];
+          if (srmL && srmL.pct !== null && srmL.shop && !chan && !d.isReg && c.w > 96 && c.h > 66) {
+            /* 우리 이름과 겹치는 앞부분을 떼면 짧아진다 — `강릉 ↔ 강릉본점` → `본점`.
+               다만 **다 떼면 이름이 사라지므로**(같은 이름) 그때는 원래 것을 쓴다. */
+            var lgn = String(srmL.shop);
+            if (lgn.indexOf(d.nm) === 0 && lgn.length > d.nm.length) lgn = lgn.slice(d.nm.length);
+            var lgTxt = 'LG ' + lgn + ' ' + nf(srmL.rival) + '건';
+            /* **글자 크기를 칸 폭에서 낸다** — 이름 크기의 절반으로 고정했더니
+               긴 이름(`AK PLAZA 평택점`)이 칸 밖으로 나갔다(실측 +87~176px).
+               한 줄에 들어갈 크기를 상한으로 두고, 그래도 길면 이름을 줄인다. */
+            var lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
+            if (lgFs < 7) {
+              /* 이름을 줄여 한 번 더 — 건수는 남긴다(그것이 이 줄의 요점이다) */
+              var room = Math.max(2, Math.floor((c.w - 8) / (7 * 0.62)) - (nf(srmL.rival) + '건 LG ').length);
+              if (lgn.length > room) { lgn = lgn.slice(0, room) + '…'; lgTxt = 'LG ' + lgn + ' ' + nf(srmL.rival) + '건'; }
+              lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
+            }
+            /* **글자색은 배경 밝기가 정한다** — 고정색을 썼더니 대비가 1.01~1.06:1 이
+               되어 통째로 안 보였다(연한 파랑 배경 위의 연한 빨강). 칸 배경은 건수에
+               따라 농도가 달라지므로 고정색은 이 화면에서 못 쓴다 — 「일일 한도」 칸에서
+               오늘 겪은 그 사고와 같은 뿌리다. `inkOn` 이 이미 그 판정을 한다.
+               **빨강 기운은 남긴다** — 그것이 「LG 것」이라는 유일한 표시다. */
+            /* **`bg` 도 아래(5889행대)에서 선언된다** — 그대로 쓰면 호이스팅으로
+               `undefined` 라 색이 안 바뀐다(`srm` 과 똑같은 함정을 연달아 밟았다).
+               여기서 다시 낸다 — 같은 식이라 값이 어긋나지 않는다. */
+            var bgL = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatMax);
+            var lgInk = inkOn(bgL) === '#fff' ? '#FFD9D4' : '#9B1C10';
+            if (lgFs >= 6.5) lab += '<span class="lgn" style="font-size:' + lgFs.toFixed(1)
+              + 'px;color:' + lgInk + '">' + esc(lgTxt) + '</span>';
           }
         }
       }
