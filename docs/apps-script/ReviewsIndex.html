@@ -1222,6 +1222,20 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            옆 칸이 되어 한도 입력칸을 밀어낸다. -->
       <div class="limnote" id="lim-note"></div>
 
+      <!-- ── 검색 관심도 (2026-09-04) ──────────────────────────────────────
+           네이버 데이터랩. **후기 수집이 못 하는 것을 한다** — 작성일 100% ·
+           1회에 20개월 · 무엇보다 「후기가 몇 건 올라왔나」(공급)가 아니라
+           「사람들이 얼마나 찾나」(수요)를 잰다. 하루 7회면 끝난다. -->
+      <h3>검색 관심도</h3>
+      <div class="sub">네이버에서 <b>얼마나 찾는지</b>를 봅니다 — 후기 건수(공급)와 다른 축입니다.
+        하루 <b>7회</b>면 끝납니다(전국 1 + 지역 6).
+        <b>데이터랩 전용 키</b>가 필요합니다(검색 API 키와 다른 체계입니다).</div>
+      <div class="alias-add">
+        <button id="runtrend">검색 관심도 갱신</button>
+        <span class="sub" id="trend-msg"></span>
+      </div>
+      <div id="trendbox" class="sub" style="margin-top:8px">—</div>
+
       <!-- ── 질의 꼬리말 성적 (2026-09-04) ─────────────────────────────────
            매장 하나를 꼬리말 8개로 훑는데 어느 것이 값어치를 하는지 한 번도 기록한
            적이 없었다. 표본 3매장을 재 보니 매장 크기에 따라 완전히 갈렸다 —
@@ -4337,6 +4351,69 @@ function renderList() {
   }
 
   /**
+   * 검색 관심도 — 네이버 데이터랩 (2026-09-04).
+   *
+   * **빠진 달을 0 으로 그리지 않는다.** 최소 검색량 미만이면 그 달이 응답에서 통째로
+   * 빠진다 — *"검색이 없었다"* 가 아니라 *"안 준다"* 이다. 선을 끊어 그린다.
+   *
+   * **브랜드 비중은 전국 것만 쓴다.** 지역+브랜드는 검색어 습관이 지배해
+   * 수원에서 98.9% 가 나오는데 후기 기반은 22~46% 다(재서 확인했다).
+   */
+  function renderInterest() {
+    var box = document.getElementById('trendbox'); if (!box) return;
+    var t = DATA.trend;
+    if (!t || !t.brand || !Object.keys(t.brand).length) {
+      box.innerHTML = '<b>아직 모으지 않았습니다.</b> 관리자 항목의 「검색 관심도 갱신」을 누르면 '
+        + '최근 20개월치가 한 번에 들어옵니다(7회 호출).';
+      return;
+    }
+    var months = [];
+    for (var g in t.brand) for (var p in t.brand[g]) if (months.indexOf(p) < 0) months.push(p);
+    months.sort();
+    var last = months[months.length - 1] || '';
+    var names = Object.keys(t.brand);
+    /* 마지막 달 비중 — **그 달 값이 있는 브랜드끼리만** 센다(없는 것을 0 으로 넣지 않는다) */
+    var vals = [], tot = 0, i;
+    for (i = 0; i < names.length; i++) {
+      var v = t.brand[names[i]][last];
+      if (typeof v === 'number') { vals.push([names[i], v]); tot += v; }
+    }
+    vals.sort(function (a, b) { return b[1] - a[1]; });
+    var h = '<div class="sub" style="margin-bottom:6px">' + esc(last) + ' 기준 · '
+      + '<b>' + esc(t.at || '') + '</b> 에 모았습니다</div>';
+    h += '<table class="tailtab"><tbody>';
+    for (i = 0; i < vals.length; i++) {
+      var pct = tot ? Math.round(vals[i][1] / tot * 100) : 0;
+      h += '<tr><td>' + esc(vals[i][0]) + '</td><td class="num">' + vals[i][1].toFixed(1) + '</td>'
+        + '<td class="num">' + pct + '%</td>'
+        + '<td class="bar"><i style="width:' + (vals[i][1] / (vals[0][1] || 1) * 100) + '%"></i></td></tr>';
+    }
+    h += '</tbody></table>';
+    /* 지역은 **추세만** — 비중으로 적지 않는다(위 주석 참조) */
+    var an = Object.keys(t.area || {});
+    if (an.length) {
+      h += '<div class="sub" style="margin-top:10px"><b>지역별 삼성 검색 추세</b> — '
+        + '지역끼리 견주지 마세요(검색어 습관이 달라 뜻이 없습니다). 각 지역 안의 오르내림만 봅니다.</div>';
+      h += '<table class="tailtab"><tbody>';
+      for (i = 0; i < an.length; i++) {
+        var d = t.area[an[i]], ms = Object.keys(d).sort();
+        var cur = ms.length ? d[ms[ms.length - 1]] : null;
+        var prev = ms.length > 1 ? d[ms[ms.length - 2]] : null;
+        var delta = (typeof cur === 'number' && typeof prev === 'number' && prev > 0)
+          ? Math.round((cur - prev) / prev * 100) : null;
+        h += '<tr><td>' + esc(an[i]) + '</td>'
+          + '<td class="num">' + (typeof cur === 'number' ? cur.toFixed(1) : '–') + '</td>'
+          + '<td class="num">' + (delta === null ? '–' : (delta > 0 ? '+' : '') + delta + '%') + '</td>'
+          + '<td class="bar"></td></tr>';
+      }
+      h += '</tbody></table>';
+      h += '<div class="sub" style="margin-top:6px">「–」는 <b>0 이 아니라 모른다</b>는 뜻입니다 — '
+        + '검색량이 네이버 최소치에 못 미치면 그 달이 응답에서 통째로 빠집니다.</div>';
+    }
+    box.innerHTML = h;
+  }
+
+  /**
    * 질의 꼬리말별 성적 (2026-09-04).
    *
    * **없는 것과 모르는 것을 가른다.** 이 칸이 생기기 전에 담긴 글은 `q` 가 비어 있고,
@@ -6069,6 +6146,7 @@ function renderList() {
     syncPoll();
     renderLimit();
     renderTails();
+    renderInterest();
     renderProgress();
     renderPromo();
     renderTrend();
@@ -6288,6 +6366,36 @@ function renderList() {
           + '<br>Apps Script 편집기의 <b>트리거</b> 화면에서 <code>continueSweep</code> 을 지우면 멈춥니다.</div>';
       })
       .stopSweep();
+  };
+
+  /* 검색 관심도 갱신 (2026-09-04). **7회면 끝나므로** 다른 수집처럼 예약·자물쇠가 없다.
+     **오류를 그대로 적는다** — 키가 잘못 들어갔으면 그 자리에서 알아야 하고,
+     401 이면 「검색 API 키를 넣은 것 아닌가」까지 서버가 문장에 담아 보낸다. */
+  document.getElementById('runtrend').onclick = function () {
+    var b = this, msg = document.getElementById('trend-msg');
+    b.disabled = true; b.textContent = '모으는 중…';
+    if (msg) msg.textContent = '';
+    google.script.run
+      .withSuccessHandler(function (r) {
+        b.disabled = false; b.textContent = '검색 관심도 갱신';
+        if (msg) msg.textContent = (r && r.note) || '';
+        if (r && r.ok) {
+          /* 새로 모았으면 화면을 바로 채운다 — 새로고침을 시키지 않는다 */
+          google.script.run.withSuccessHandler(function (s) {
+            if (s && s.trend) { DATA.trend = s.trend; renderInterest(); }
+          }).getSummary();
+        } else if (r && r.errors && r.errors.length) {
+          document.getElementById('status').innerHTML =
+            '<div class="note warn"><b>검색 관심도를 못 모았습니다</b><br>' + esc(r.errors.join(' · ')) + '</div>';
+        }
+      })
+      .withFailureHandler(function (e) {
+        b.disabled = false; b.textContent = '검색 관심도 갱신';
+        if (msg) msg.textContent = '';
+        document.getElementById('status').innerHTML =
+          '<div class="note warn"><b>검색 관심도를 못 모았습니다</b> — ' + esc(e && e.message) + '</div>';
+      })
+      .runTrend();
   };
 
   /* **전체 재수집만 끈다** (2026-09-04). 「이어달리기 멈춤」은 트리거만 끄고 표식은

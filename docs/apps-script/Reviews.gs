@@ -4077,6 +4077,9 @@ function summary_() {
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
     byTail: byTail, byStoreTail: byStoreTail, tailUnknown: tailUnknown,
+    /* 검색 관심도 (2026-09-04) — **없으면 null 이다.** 0 으로 보내면 화면이
+       「검색이 없다」로 그린다. 아직 안 모은 것과 없는 것은 다른 말이다. */
+    trend: trend_(),
     /* 매장 → 연도 → 채널 상위 12. **연도별로 자른다** — 통째로 자르면 그 해에만
        있는 채널이 밀려 사라진다. */
     byStoreChanY: (function () {
@@ -4422,6 +4425,190 @@ var AREA_Q = {
   '안양': ['안양', '평촌'],
   '강원': ['춘천', '원주', '강릉']
 };
+
+/* ══ 검색 관심도 — 네이버 데이터랩 (2026-09-04) ══════════════════════════
+ *
+ * **지금 도구가 못 하는 셋을 한꺼번에 메운다.**
+ *
+ * | | 후기 수집 | 데이터랩 |
+ * |---|---|---|
+ * | 날짜 | **32%만 안다**(카페·웹에 필드가 없다) | **100%** |
+ * | 호출 | 매장당 160회 | **1회에 20개월치** |
+ * | 재는 것 | *"후기가 몇 건 올라왔나"*(**공급**) | *"사람들이 얼마나 찾나"*(**수요**) |
+ *
+ * 마지막 줄이 요점이다 — 영업에는 **수요가 선행지표**다.
+ *
+ * ## 키가 한 벌 더 필요하다
+ *
+ * 검색 API 는 HUB(NCP)로 이관됐는데 **데이터랩은 옛 체계에 그대로 있다**(2026-09-04
+ * 실측: HUB 경로는 404 `URL not found`, 옛 주소는 401 `NID AUTH Result Invalid` —
+ * 404 와 401 의 차이가 「주소가 없다」와 「주소는 있는데 이 키가 아니다」를 가른다).
+ * 그래서 **스크립트 속성 이름을 갈라 둔다** — 섞이면 401 만 보고 원인을 못 찾는다.
+ *
+ * ## 함정 셋 — 재 보고 확인했다
+ *
+ * - **빠진 달을 0 으로 읽지 말 것.** 최소 검색량 미만이면 **그 달이 응답에서 통째로
+ *   빠진다**(`LG 원주` 는 8개월 중 한 달만 왔다). *"검색이 없었다"* 가 아니라
+ *   *"안 준다"* 이다 — 이 화면이 「없음 / 못 잼 / 미공개」를 가르는 규칙 그대로다.
+ * - **`ratio` 는 그 요청 안에서만 비교된다.** 한 요청의 최대값을 100 으로 잡아 전
+ *   그룹에 같은 배율을 건다 — 다른 요청끼리 견주면 뜻이 없다.
+ * - **지역+브랜드 절대 비교는 검색어 습관이 지배한다.** `삼성스토어 수원 40.4` vs
+ *   `LG베스트샵 수원 0.45` → 98.9% 가 나오는데, 후기 기반 비중은 22~46% 다.
+ *   사람들이 *"LG베스트샵 수원"* 이라고 안 칠 뿐이다.
+ *   → **브랜드 비교는 전국 단위로만. 지역은 같은 브랜드의 추세·급등에 쓴다.**
+ */
+var TREND_URL = 'https://openapi.naver.com/v1/datalab/search';
+var SHEET_TREND = '검색관심도';
+var TREND_HEADER = ['at', 'scope', 'group', 'period', 'ratio'];
+/** 전국 브랜드 — 이것만 비중으로 읽는다(지역+브랜드는 위 함정 참조) */
+var TREND_BRANDS = [
+  ['삼성', ['삼성스토어', '삼성디지털프라자']],
+  ['LG', ['LG베스트샵', '엘지베스트샵']],
+  ['하이마트', ['하이마트', '롯데하이마트']],
+  ['전자랜드', ['전자랜드']]
+];
+/** 몇 달치를 볼 것인가 — 20개월이면 작년 같은 달과 견줄 수 있다 */
+var TREND_MONTHS = 20;
+
+/** 데이터랩 키. **검색 API 키와 다른 체계다** — 섞이면 401 만 보고 원인을 못 찾는다. */
+function trendKey_() {
+  var p = props_();
+  var id = String(p.getProperty('DATALAB_CLIENT_ID') || '').trim();
+  var sec = String(p.getProperty('DATALAB_CLIENT_SECRET') || '').trim();
+  if (!id || !sec) {
+    throw new Error('스크립트 속성에 DATALAB_CLIENT_ID / DATALAB_CLIENT_SECRET 을 넣어 주세요. '
+      + 'developers.naver.com 에서 애플리케이션을 등록하고 「데이터랩(검색어 트렌드)」을 고르면 발급됩니다. '
+      + '검색 API 키(NAVER_CLIENT_ID)와 다른 체계라 그 값을 넣으면 401 이 납니다.');
+  }
+  return { id: id, sec: sec };
+}
+
+/**
+ * 한 번 부른다. **그룹은 최대 5개**(네이버 문서).
+ * 오류는 삼키지 않고 본문까지 남긴다 — 401 의 원인을 가르려면 그것이 필요하다.
+ */
+function trendCall_(groups, from, to) {
+  if (groups.length > 5) throw new Error('데이터랩은 한 번에 최대 5그룹입니다(요청 ' + groups.length + '개).');
+  var k = trendKey_();
+  var res = UrlFetchApp.fetch(TREND_URL, {
+    method: 'post', contentType: 'application/json',
+    headers: { 'X-Naver-Client-Id': k.id, 'X-Naver-Client-Secret': k.sec },
+    payload: JSON.stringify({
+      startDate: from, endDate: to, timeUnit: 'month',
+      keywordGroups: groups.map(function (g) { return { groupName: g[0], keywords: g[1] }; })
+    }),
+    muteHttpExceptions: true
+  });
+  addUsage_(1);
+  var code = res.getResponseCode(), body = res.getContentText();
+  if (code !== 200) {
+    throw new Error('데이터랩 HTTP ' + code + ' — ' + String(body).slice(0, 200)
+      + (code === 401 ? ' (키가 검색 API 것이면 이 오류가 납니다 — 데이터랩 전용 키가 필요합니다)' : ''));
+  }
+  var j = JSON.parse(body);
+  return (j && j.results) || [];
+}
+
+/** yyyy-mm-01 · n개월 전 */
+function trendFrom_(n) {
+  var d = new Date();
+  d.setMonth(d.getMonth() - (n - 1));
+  return Utilities.formatDate(d, 'Asia/Seoul', 'yyyy-MM') + '-01';
+}
+
+/**
+ * 검색 관심도를 모은다 — **하루 7회**(전국 1 + 지역 6).
+ *
+ * **지역은 브랜드를 섞지 않는다**(위 함정 셋 참조) — 지역별로 삼성 하나만 물어
+ * **그 지역 안의 추세·급등**을 본다. 브랜드 비중은 전국 요청 하나가 낸다.
+ *
+ * **한 지역을 한 요청으로** 부른다. 여러 지역을 한 요청에 담으면 지역 간 비교가
+ * 가능해지지만, 그 비교는 검색어 습관이 지배해 뜻이 없다 — 담지 않는 편이 정직하다.
+ */
+function collectTrend() {
+  var from = trendFrom_(TREND_MONTHS);
+  var to = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  var stamp = today_();
+  var rows = [], errs = [];
+
+  /* ① 전국 브랜드 — 비중으로 읽어도 되는 유일한 자리 */
+  try {
+    var r0 = trendCall_(TREND_BRANDS, from, to);
+    for (var i = 0; i < r0.length; i++) {
+      var g = r0[i], data = g.data || [];
+      for (var j = 0; j < data.length; j++)
+        rows.push([stamp, '전국', g.title, data[j].period, data[j].ratio]);
+    }
+  } catch (e) { errs.push('전국: ' + String(e.message || e)); }
+
+  /* ② 지역별 삼성 — 그 지역 안의 추세만 본다 */
+  var areas = Object.keys(AREA_Q);
+  for (var a = 0; a < areas.length; a++) {
+    var name = areas[a], places = AREA_Q[name];
+    /* 그 지역의 도시들을 한 그룹에 넣는다 — 합산되어 지역 하나의 값이 된다 */
+    var kws = [];
+    for (var p = 0; p < places.length; p++) {
+      kws.push('삼성스토어 ' + places[p]);
+      kws.push('삼성디지털프라자 ' + places[p]);
+    }
+    try {
+      var r = trendCall_([[name, kws]], from, to);
+      var gd = (r[0] && r[0].data) || [];
+      for (var q = 0; q < gd.length; q++)
+        rows.push([stamp, '지역', name, gd[q].period, gd[q].ratio]);
+    } catch (e2) { errs.push(name + ': ' + String(e2.message || e2)); }
+  }
+
+  if (rows.length) {
+    var sh = sheet_(SHEET_TREND, TREND_HEADER);
+    /* **같은 날 것은 갈아 끼운다** — 두 번 누르면 같은 달이 두 줄이 되어 합산이 두 배가 된다 */
+    trendWipe_(sh, stamp);
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, TREND_HEADER.length).setValues(rows);
+    props_().setProperty('_trendAt', stamp);
+    sumCacheClear_();
+  }
+  return { rows: rows.length, errors: errs,
+    msg: rows.length
+      ? ('검색 관심도 ' + rows.length + '줄을 모았습니다' + (errs.length ? ' (일부 실패 ' + errs.length + '건)' : '.'))
+      : ('한 줄도 못 모았습니다 — ' + (errs[0] || '원인 미상')) };
+}
+
+/** 같은 날 줄을 지운다 — 두 번 눌러도 합산이 두 배가 되지 않게 */
+function trendWipe_(sh, stamp) {
+  var last = sh.getLastRow();
+  if (last < 2) return;
+  var v = sh.getRange(2, 1, last - 1, 1).getValues();
+  var keep = [], i;
+  for (i = 0; i < v.length; i++) if (String(v[i][0]) !== String(stamp)) keep.push(i);
+  if (keep.length === v.length) return;                 /* 지울 것이 없다 */
+  var all = sh.getRange(2, 1, last - 1, TREND_HEADER.length).getValues();
+  var out = [];
+  for (i = 0; i < keep.length; i++) out.push(all[keep[i]]);
+  sh.getRange(2, 1, last - 1, TREND_HEADER.length).clearContent();
+  if (out.length) sh.getRange(2, 1, out.length, TREND_HEADER.length).setValues(out);
+}
+
+/**
+ * 화면에 보낼 모양으로 읽는다.
+ * **빠진 달을 0 으로 채우지 않는다** — 최소 검색량 미만이라 안 온 것이지 0 이 아니다.
+ */
+function trend_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_TREND);
+  if (!sh || sh.getLastRow() < 2) return null;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, TREND_HEADER.length).getValues();
+  var brand = {}, area = {}, at = '';
+  for (var i = 0; i < v.length; i++) {
+    var stamp = String(v[i][0]), scope = String(v[i][1]), g = String(v[i][2]);
+    var period = String(v[i][3]).slice(0, 7), ratio = Number(v[i][4]);
+    if (!g || !period) continue;
+    if (stamp > at) at = stamp;
+    var box = scope === '전국' ? brand : area;
+    if (!box[g]) box[g] = {};
+    box[g][period] = ratio;
+  }
+  return { at: at, brand: brand, area: area, months: TREND_MONTHS };
+}
 
 /** 브랜드 표기 + 지명이 함께 있는 글인가. **양쪽이 이 함수 하나를 쓴다.** */
 function rivalHit_(text, brands, place) {
@@ -4939,6 +5126,24 @@ function rivalUnits_() {
  * **사람이 누른 것은 한도로 막지 않는다.** 오늘 이미 돌았어도(`_rivalAt`) 다시 돈다 —
  * 「눌렀는데 아무 일도 안 일어난다」가 이 화면에서 가장 나쁜 고장이다.
  */
+/**
+ * 화면의 **「검색 관심도 갱신」 버튼** (2026-09-04).
+ *
+ * **7회면 끝난다** — 매장 훑기(매장당 160회)와는 자릿수가 다르다. 그래서 자물쇠를
+ * 기다리지 않고 바로 돈다: 다른 수집과 같은 시트를 쓰지 않으므로 부딪힐 것이 없다.
+ *
+ * **오류를 삼키지 않는다.** 키가 잘못 들어갔으면 그 자리에서 알아야 한다 —
+ * 401 이면 「검색 API 키를 넣은 것 아닌가」까지 화면이 적는다.
+ */
+function runTrend() {
+  try {
+    var r = collectTrend();
+    return { ok: r.rows > 0, rows: r.rows, errors: r.errors, note: r.msg };
+  } catch (e) {
+    return { ok: false, rows: 0, errors: [String(e.message || e)], note: String(e.message || e) };
+  }
+}
+
 function runRival() {
   /* **수집과 같은 자물쇠를 쓴다.** 두 벌이 같은 시트에 쓰면 같은 회차가 두 줄로 들어가
      `rival_()` 의 합산이 두 배가 된다(중복 정리가 이미 데인 그 사고와 같은 뿌리다). */

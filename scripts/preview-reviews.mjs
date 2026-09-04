@@ -567,7 +567,9 @@ const stub = [
   '    resetAll: function () {}, continueSweep: function () {},',
   '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {},',
   /* 2026-09-04 — 「전체 재수집 취소」. 스텁이 없으면 눌렀을 때 화면이 그 자리에서 죽는다 */
-  '    cancelFull: function () {}',
+  '    cancelFull: function () {},',
+  /* 2026-09-04 — 「검색 관심도 갱신」(데이터랩) */
+  '    runTrend: function () {}',
   '  };',
   '  return api;',
   '})() } };',

@@ -4119,5 +4119,59 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 질의 꼬리말 — 뒤에만 붙이고 · 두 곳 다 적고 · 옛 줄은 「모른다」로 가른다');
 }
 
+/* ── 검색 관심도 — 네이버 데이터랩 (2026-09-04) ──────────────────────────
+ * 후기 수집이 못 하는 것을 한다 — 작성일 100% · 1회에 20개월 · **수요** 측 지표.
+ * 실측으로 확인한 함정 셋을 코드가 지키는지 본다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const pv = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ① 주소와 헤더가 옛 체계여야 한다 — HUB 에는 그 경로가 없다(404 로 확인했다) */
+  if (!gs.includes('https://openapi.naver.com/v1/datalab/search'))
+    bad.push('데이터랩 주소가 옛 체계(openapi.naver.com)가 아니다 — HUB 에는 그 경로가 없다');
+  if (!gs.includes("'X-Naver-Client-Id'") || !gs.includes("'X-Naver-Client-Secret'"))
+    bad.push('데이터랩 헤더가 옛 체계가 아니다 — NCP 헤더를 보내면 401 이 난다');
+  /* ② 키를 갈라 둔다 — 섞이면 401 만 보고 원인을 못 찾는다 */
+  if (!gs.includes('DATALAB_CLIENT_ID') || !gs.includes('DATALAB_CLIENT_SECRET'))
+    bad.push('데이터랩 키를 검색 API 키와 갈라 두지 않았다');
+  if (/getProperty\('NAVER_CLIENT_ID'\)[\s\S]{0,200}TREND_URL/.test(gs))
+    bad.push('데이터랩에 검색 API 키를 쓴다 — 다른 체계라 401 이 난다');
+  /* ③ 그룹 5개 상한 — 넘기면 그 호출이 통째로 실패한다 */
+  if (!/groups\.length > 5/.test(gs)) bad.push('그룹 5개 상한을 안 지킨다');
+  /* ④ 지역은 브랜드를 섞지 않는다 — 검색어 습관이 지배해 수원에서 98.9% 가 나온다 */
+  const ct = gs.indexOf('function collectTrend()');
+  if (ct < 0) bad.push('collectTrend() 가 없다');
+  else {
+    const blk = gs.slice(ct, ct + 2600);
+    if (/LG베스트샵|엘지베스트샵/.test(blk.slice(blk.indexOf('② 지역별'))))
+      bad.push('지역 질의에 경쟁사를 섞었다 — 검색어 습관이 지배해 비중이 거짓이 된다');
+    if (!blk.includes('AREA_Q')) bad.push('지역을 AREA_Q 에서 안 가져온다 — 두 벌로 적으면 어긋난다');
+    if (!blk.includes('trendWipe_')) bad.push('같은 날 줄을 안 지운다 — 두 번 누르면 합산이 두 배가 된다');
+  }
+  /* ⑤ 빠진 달을 0 으로 채우지 않는다 */
+  if (!/빠진 달을 0 으로 채우지 않는다|빠진 달을 0 으로 그리지 않는다/.test(gs + ix))
+    bad.push('빠진 달을 0 으로 다루지 않는다는 근거가 코드에 없다');
+  const ri = ix.indexOf('function renderInterest()');
+  if (ri < 0) bad.push('renderInterest() 가 없다');
+  else {
+    const blk = ix.slice(ri, ri + 3200);
+    if (!blk.includes('아직 모으지 않았습니다')) bad.push('자료가 없을 때 그 사실을 안 적는다');
+    if (!blk.includes('0 이 아니라 모른다')) bad.push('빠진 달을 「모른다」로 밝히지 않는다');
+    if (!blk.includes('지역끼리 견주지 마세요')) bad.push('지역 간 비교를 막는 안내가 없다');
+  }
+  /* ⑥ 화면·스텁 배선 */
+  if (!ix.includes('.runTrend();')) bad.push('화면에 갱신 버튼 배선이 없다');
+  if (!ix.includes('id="runtrend"')) bad.push('갱신 버튼 마크업이 없다');
+  if (!/renderTails\(\);\s*\n\s*renderInterest\(\);/.test(ix)) bad.push('renderInterest 를 그리는 곳이 없다');
+  if (!pv.includes('runTrend:')) bad.push('미리보기 하네스에 runTrend 스텁이 없다 — 누르면 화면이 죽는다');
+  /* ⑦ 없으면 null — 0 으로 보내면 화면이 「검색이 없다」로 그린다 */
+  if (!gs.includes('trend: trend_()')) bad.push('집계가 trend 를 안 내보낸다');
+
+  if (bad.length) fail('[바이럴] 검색 관심도 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 검색 관심도 — 옛 체계 키를 갈라 쓰고 · 지역엔 브랜드를 안 섞고 · 빠진 달을 0 으로 안 본다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
