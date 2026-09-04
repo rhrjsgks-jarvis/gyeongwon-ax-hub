@@ -4173,5 +4173,61 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 검색 관심도 — 옛 체계 키를 갈라 쓰고 · 지역엔 브랜드를 안 섞고 · 빠진 달을 0 으로 안 본다');
 }
 
+/* ── 구글 UrlFetch 한도 (2026-09-04 사장님 요청) ─────────────────────────
+ * *"구글한도도 일2만회로 지정되어있는것같습니다. 이것도 한도를 볼 수 있으면"*.
+ *
+ * Apps Script 에는 남은 쿼터를 묻는 API 가 없다. 대신 **막힌 순간 우리 카운터가
+ * 몇이었는지**를 남긴다 — 그 차이가 곧 다른 스크립트가 쓴 양이다.
+ * 실측(2026-09-04): 우리 429 / 50,000 인데 구글이 막았다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* 판정을 떼어 실제로 돌린다 — 한국어·영어 둘 다 오고, 엉뚱한 오류를 물면 안 된다 */
+  const gb = gs.indexOf('function googleBlocked_(');
+  if (gb < 0) bad.push('googleBlocked_ 이 없다');
+  else {
+    const end = gs.indexOf('\n}', gb);
+    const fn = new Function(gs.slice(gb, end + 2) + '; return googleBlocked_;')();
+    for (const [msg, want] of [
+      ['Exception: 하루에 urlfetch 서비스를 너무 많이 호출했습니다.', true],
+      ['Exception: Service invoked too many times for one day: urlfetch.', true],
+      ['Exception: 스크립트 속성에 NAVER_CLIENT_ID 를 넣어 주세요.', false],
+      ['데이터랩 HTTP 401 — NID AUTH Result Invalid', false],
+      ['Exception: Service invoked too many times for one day: email.', false],
+      ['', false],
+    ]) if (fn(msg) !== want) bad.push(`판정 어긋남 — ${JSON.stringify(msg.slice(0, 40))} → ${fn(msg)}(기대 ${want})`);
+  }
+  /* 그날 처음 것만 남긴다 — 덮어쓰면 「가장 낮은 지점」을 잃는다 */
+  const nb = gs.indexOf('function noteGoogleBlock_(');
+  if (nb < 0) bad.push('noteGoogleBlock_ 이 없다');
+  else {
+    const blk = gs.slice(nb, nb + 700);
+    if (!blk.includes('JSON.parse(raw).d === d) return')) bad.push('같은 날 것을 덮어쓴다 — 가장 낮은 지점을 잃는다');
+    if (!blk.includes('usage_().n')) bad.push('막힌 순간의 우리 카운터를 안 남긴다 — 그 값이 이 기능의 전부다');
+    if (!blk.includes('quotaDay_()')) bad.push('날짜를 태평양 기준으로 안 센다 — 우리 카운터와 경계가 어긋난다');
+  }
+  /* 어제 것을 오늘 일로 읽지 않는다 */
+  if (!/o\.d === quotaDay_\(\) \?/.test(gs)) bad.push('googleBlock_ 이 오늘 것만 돌려주지 않는다');
+  /* 부르는 곳 — 수집과 데이터랩 둘 다 */
+  if ((gs.match(/noteGoogleBlock_\(/g) || []).length < 4)
+    bad.push('noteGoogleBlock_ 을 부르는 곳이 모자란다(정의 1 + 수집 1 + 데이터랩 2)');
+  /* 화면에 보내고 그린다 */
+  if (!gs.includes('d.googleQuota = googleQuota_()')) bad.push('구글 한도를 화면에 안 보낸다');
+  if (!gs.includes('d.gBlock = googleBlock_()')) bad.push('막힌 지점을 화면에 안 보낸다');
+  if (!ix.includes('id="gquota"')) bad.push('구글 한도 줄이 화면에 없다');
+  const ge = ix.indexOf("getElementById('gquota')");
+  if (ge < 0) bad.push('구글 한도 줄을 채우는 곳이 없다');
+  else {
+    const blk = ix.slice(ge, ge + 1100);
+    if (!blk.includes('그때 우리 몫은')) bad.push('막힌 지점의 우리 몫을 안 적는다');
+    if (!blk.includes('다른 스크립트')) bad.push('우리 카운터가 우리 몫만이라는 사실을 안 밝힌다');
+  }
+
+  if (bad.length) fail('[바이럴] 구글 한도 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 구글 한도 — 우리 몫과 갈라 적고 · 막힌 지점을 남기고 · 오늘 것만 말한다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

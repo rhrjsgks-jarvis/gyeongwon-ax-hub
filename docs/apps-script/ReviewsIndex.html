@@ -1217,6 +1217,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           <span class="limuse" id="lim-use">–</span>
         </span>
       </div>
+      <!-- 구글 UrlFetch 한도 — **위 「쿼터」와 다른 값이다.** 우리는 우리 몫만 세는데
+           구글은 같은 계정의 다른 스크립트까지 합쳐 막는다(2026-09-04 사장님 요청). -->
+      <div class="limuse" id="gquota" style="margin-top:4px"></div>
       <!-- 폰에는 hover 가 없다 — 한 바퀴 부족·리셋 시각을 글자로 적는다.
            **`.alias-add`(flex) 밖에 둔다** — 안에 넣으면 아래 줄이 아니라
            옆 칸이 되어 한도 입력칸을 밀어낸다. -->
@@ -4490,6 +4493,31 @@ function renderList() {
        오후 5시에 숫자가 0 으로 돌아가는 것이 고장으로 보이고, 자정에 0 이 될 것으로
        읽혀 「아직 여유가 있다」는 거짓 판단을 부른다. */
     use.textContent = '쿼터 ' + nf(used) + ' / ' + (lim ? nf(lim) : '–') + '회';
+    /* ── **구글 한도는 우리 한도와 다른 값이다** (2026-09-04 사장님 요청) ──────
+     * *"네이버 수집한도도있지만 구글한도도 일2만회로 지정되어있는것같습니다.
+     *   이것도 한도를 볼 수 있으면 좋을것같습니다."*
+     *
+     * 위 「쿼터 N / M」은 **우리가 쓴 몫**이다. 구글은 같은 계정의 다른 스크립트
+     * (사용 로그·시험·쿠폰·게시판)까지 합쳐 20,000 에서 막으므로 **우리 카운터가
+     * 여유라도 막힌다** — 실제로 429 / 50,000 인데 막혔다.
+     *
+     * **막힌 지점을 적는 것이 이 줄의 값어치다.** Apps Script 에는 남은 쿼터를 묻는
+     * API 가 없어 「얼마 남았나」는 알 수 없지만, **막힌 순간 우리 몫이 몇이었나**는
+     * 정확히 안다 — 그 차이가 곧 다른 스크립트가 쓴 양이다. */
+    var gEl = document.getElementById('gquota');
+    if (gEl) {
+      var gq = Number(DATA.googleQuota) || 0;
+      var gb = DATA.gBlock;
+      if (gb && typeof gb.used === 'number') {
+        gEl.className = 'limuse low';
+        gEl.textContent = '구글이 오늘 ' + esc(gb.at || '') + '에 막았습니다 — 그때 우리 몫은 '
+          + nf(gb.used) + '회였습니다(구글 한도 ' + nf(gq) + '회, 다른 스크립트와 나눠 씁니다)';
+      } else {
+        gEl.className = 'limuse';
+        gEl.textContent = '구글 한도 ' + nf(gq) + '회 — 위 숫자는 우리 몫만입니다'
+          + '(같은 계정의 다른 스크립트가 쓴 것은 세지 못합니다)';
+      }
+    }
     /* **한 바퀴에 모자라면 그렇게 적는다** — 안 적으면 매일 중간에서 끊기는데
        화면에는 아무 표시도 안 난다(이 저장소가 되풀이해 경계하는 「조용한 실패」다). */
     var low = lim > 0 && sweep > 0 && lim < sweep;

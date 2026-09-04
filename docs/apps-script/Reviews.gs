@@ -2027,6 +2027,58 @@ function quotaDay_() { return Utilities.formatDate(new Date(), 'America/Los_Ange
  * 오늘 쓴 호출 수. **날짜가 바뀌면 저절로 0 이다** — 자정에 지우는 트리거를 따로 두면
  * 그것이 실패했을 때 한도가 영영 안 풀린다. 저장된 날짜와 오늘을 견주는 편이 안전하다.
  */
+/* ── 구글이 실제로 막은 지점 (2026-09-04 사장님 요청) ──────────────────────
+ * *"네이버 수집한도도있지만 구글한도도 일2만회로 지정되어있는것같습니다.
+ *   이것도 한도를 볼 수 있으면 좋을것같습니다."*
+ *
+ * **Apps Script 에는 남은 UrlFetch 쿼터를 묻는 API 가 없다**(메일은
+ * `MailApp.getRemainingDailyQuota()` 가 있는데 UrlFetch 는 없다). 그래서
+ * *"구글이 얼마 남았나"* 를 직접 물을 수는 없다.
+ *
+ * **대신 막힌 순간을 기록한다.** 구글이 던질 때 **우리 카운터가 몇이었는지** 남기면
+ * *"오늘은 우리 몫 429 에서 막혔다"* 를 말할 수 있고, 그 차이가 곧 **같은 계정의
+ * 다른 스크립트(사용 로그·시험·쿠폰·게시판)가 쓴 양**이다. 직접 못 재는 값을
+ * 관측으로 좁히는 것이다.
+ *
+ * 실제로 2026-09-04 에 **우리 카운터 429 / 50,000 인데 구글이 막았다** — 화면은
+ * 그동안 *"49,571회 남았다"* 고 적고 있었다. */
+var GOOGLE_QUOTA_DEFAULT = 20000;      /* 소비자 계정. Workspace 는 100,000 */
+
+/** 이 오류가 구글 UrlFetch 한도인가. **한국어·영어 둘 다 온다.** */
+function googleBlocked_(msg) {
+  var t = String(msg || '');
+  return t.indexOf('urlfetch') >= 0 && (
+    t.indexOf('너무 많이 호출') >= 0 ||
+    t.indexOf('too many times') >= 0);
+}
+
+/** 막힌 지점을 남긴다 — **덮어쓰지 않고 그날 처음 것만** 둔다(가장 낮은 지점이 참값에 가깝다) */
+function noteGoogleBlock_(msg) {
+  if (!googleBlocked_(msg)) return;
+  var d = quotaDay_();
+  var raw = props_().getProperty('_gBlock');
+  if (raw) { try { if (JSON.parse(raw).d === d) return; } catch (e) {} }
+  props_().setProperty('_gBlock', JSON.stringify({
+    d: d, used: usage_().n, at: Utilities.formatDate(new Date(), 'Asia/Seoul', 'HH:mm')
+  }));
+}
+
+/** 화면이 읽을 모양. **오늘 것이 아니면 안 보낸다** — 어제 막힌 것을 지금 일로 읽으면 안 된다. */
+function googleBlock_() {
+  var raw = props_().getProperty('_gBlock');
+  if (!raw) return null;
+  try {
+    var o = JSON.parse(raw);
+    return o && o.d === quotaDay_() ? { used: Number(o.used) || 0, at: String(o.at || '') } : null;
+  } catch (e) { return null; }
+}
+
+/** 구글 한도 — 사람이 고칠 수 있다(Workspace 면 100,000) */
+function googleQuota_() {
+  var v = Number(props_().getProperty('_googleQuota'));
+  return v > 0 ? v : GOOGLE_QUOTA_DEFAULT;
+}
+
 function usage_() {
   var d = quotaDay_(), n = 0;
   var raw = props_().getProperty('_dayUsage');
@@ -3042,6 +3094,10 @@ function sweep_(mode) {
 
   /* 끝났으니 「도는 중」 표식을 내린다 — 안 내리면 화면이 영영 「도는 중」이라 적는다 */
   props_().deleteProperty('_runAt');
+  /* **구글이 막았으면 그 지점을 남긴다** — 우리 카운터는 여유라고 하는데 구글이
+     막는 일이 실제로 있다(2026-09-04: 우리 429 / 50,000 인데 막혔다). 그때 우리
+     카운터가 몇이었는지가 곧 「다른 스크립트가 얼마나 썼나」의 간접 측정이다. */
+  noteGoogleBlock_(err);
   sheet_(SHEET_LOG, LOG_HEADER).appendRow([new Date(), calls, got, kept, flushed + add.length, err]);
   return {
     /* 이어달리기가 걸렸는지. 화면이 *"1분 뒤 스스로 이어 갑니다"* 를 적어야
@@ -5138,8 +5194,11 @@ function rivalUnits_() {
 function runTrend() {
   try {
     var r = collectTrend();
+    /* 부분 실패도 구글 한도일 수 있다 — 그 지점을 남겨야 화면이 원인을 가른다 */
+    for (var i = 0; i < (r.errors || []).length; i++) noteGoogleBlock_(r.errors[i]);
     return { ok: r.rows > 0, rows: r.rows, errors: r.errors, note: r.msg };
   } catch (e) {
+    noteGoogleBlock_(String(e.message || e));
     return { ok: false, rows: 0, errors: [String(e.message || e)], note: String(e.message || e) };
   }
 }
@@ -5602,6 +5661,14 @@ function freshState_(d) {
        화면이 옛 한도를 말한다. dayUsed 와 짝으로 쓰이는 값이라 한쪽만 새것이면
        「한도까지 남음」이 어긋난 두 값으로 그려진다. */
     d.dailyLimit = dailyLimit_();
+    /* **구글 한도는 우리 한도와 다른 값이다** (2026-09-04 사장님 요청).
+       우리 카운터는 우리가 쓴 몫만 세는데, 같은 계정의 다른 스크립트(사용 로그·
+       시험·쿠폰·게시판)가 같은 20,000회를 나눠 쓴다. 그래서 화면이 「49,571회
+       남았다」고 하는 동안 구글은 이미 막고 있었다. **둘을 나란히 적어야** 그
+       어긋남이 보인다. 막힌 지점은 볼 때마다 새로 읽는다 — 캐시에 갇히면
+       「오늘 막혔다」가 어제 일로 남는다. */
+    d.googleQuota = googleQuota_();
+    d.gBlock = googleBlock_();
     d.chainOn = chainOn_();
     d.chainErr = String(props_().getProperty('_chainErr') || '');
     d.forceFull = String(props_().getProperty('_forceFull') || '') === '1';
