@@ -4035,8 +4035,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const ratioOnWhite = (c) => (1.05) / (lum(c) + 0.05);
 
   /* 규칙마다 `color:` 를 뽑아 흰 배경 대비를 잰다 */
+  /* `.prog` 셋도 2026-09-04 에 머리(남색)에서 관리자 카드(흰색)로 옮겼다 —
+     사장님 지시 *"「62곳 한 바퀴를 마친 상태입니다 …」 는 관리자만 알아야 할 항목"*.
+     옮기면서 색을 안 따라 보내면 같은 사고가 그대로 반복된다. */
   for (const [sel, min] of [['.lim', 4.5], ['.limuse', 4.5], ['.limuse.low', 4.5],
-    ['.limnote', 4.5], ['.limnote.low', 4.5]]) {
+    ['.limnote', 4.5], ['.limnote.low', 4.5],
+    ['.prog', 4.5], ['.prog.mid', 4.5], ['.prog.auto', 4.5]]) {
     /* `.lim` 이 `.limuse` 를 물지 않게 **뒤에 여는 중괄호를 요구한다** —
        `.lim {` 은 맞고 `.limuse {`·`.lim input {` 은 안 맞는다. */
     const re = new RegExp(sel.replace(/\./g, '[.]') + '\\s*\\{([^}]*)\\}');
