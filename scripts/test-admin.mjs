@@ -4119,6 +4119,60 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 질의 꼬리말 — 뒤에만 붙이고 · 두 곳 다 적고 · 옛 줄은 「모른다」로 가른다');
 }
 
+/* ── 꼬리말 수확률 계수기 (2026-09-05) ───────────────────────────────────
+ * 글에 붙이는 `q` 칸(2026-09-04)만으로는 부족하다는 것이 하루 만에 드러났다 —
+ * 한 바퀴를 다 돌았는데 **25건**뿐이었다. 새 글에만 붙기 때문이고(하루 5~10건),
+ * 무엇보다 **준 것만** 세어서 「이 꼬리말이 아무것도 안 준다」를 영영 알 수 없다.
+ * 그 판정에는 **안 준 것**이 필요하다.
+ *
+ * `got`/`kept` 는 새 글이 없어도 매번 발생하므로, 꼬리말별로 세면 **한 회차에**
+ * 62매장 × 8꼬리말이 채워진다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* 집계 함수를 떼어 실제로 돌린다 — 문자열만 보면 세는 자리가 빠져도 통과한다 */
+  const ta = gs.indexOf('function tally_(');
+  const tr = gs.indexOf('function tailStatRows_(');
+  if (ta < 0 || tr < 0) bad.push('tally_ / tailStatRows_ 가 없다');
+  else {
+    const src = gs.slice(ta, gs.indexOf('\n}', tr) + 2);
+    const { tally, rows } = new Function(src + '; return { tally: tally_, rows: tailStatRows_ };')();
+    const box = {};
+    tally(box, '수원', '기본', 'got');
+    tally(box, '수원', '기본', 'got');
+    tally(box, '수원', '기본', 'kept');
+    tally(box, '수원', '혼수', 'got');          /* 받았는데 한 건도 못 건진 칸 */
+    const out = rows(box, '2026-09-05');
+    const 기본 = out.find((r) => r[2] === '기본');
+    const 혼수 = out.find((r) => r[2] === '혼수');
+    if (!기본 || 기본[3] !== 2 || 기본[4] !== 1) bad.push('got/kept 를 따로 안 센다: ' + JSON.stringify(기본));
+    /* **0건 칸이 남아야 한다** — 「안 준다」가 이 자료의 핵심이다 */
+    if (!혼수 || 혼수[3] !== 1 || 혼수[4] !== 0)
+      bad.push('한 건도 못 건진 칸을 안 남긴다 — 그것이 절감의 근거다: ' + JSON.stringify(혼수));
+  }
+  /* 세는 자리가 두 곳(got · kept)이어야 한다 */
+  if ((gs.match(/tally_\(tailStat/g) || []).length < 2)
+    bad.push('got 과 kept 를 둘 다 세지 않는다 — 하나만 세면 수확률이 안 나온다');
+  /* 시트·집계·화면 배선 */
+  if (!gs.includes('tailStats: tailStats_()')) bad.push('집계가 tailStats 를 안 내보낸다');
+  if (!gs.includes('function tailStats_()')) bad.push('여러 회차를 합쳐 읽는 곳이 없다');
+  if (!ix.includes('function renderTailYield(')) bad.push('화면에 수확률 표가 없다');
+  else {
+    const blk = ix.slice(ix.indexOf('function renderTailYield('), ix.indexOf('function renderTailYield(') + 3000);
+    /* **몇 회차를 합친 것인지 밝혀야 한다** — 한 회차만 보면 못 훑은 매장이 0건으로 보인다 */
+    if (!/ts\.runs/.test(blk)) bad.push('몇 회차를 합쳤는지 안 적는다 — 한 회차의 0건은 「안 준다」가 아니다');
+    if (!/c\.got > 0/.test(blk)) bad.push('안 훑은 칸과 못 건진 칸을 안 가른다');
+  }
+  /* 수확률 표가 먼저 나와야 한다 — 그쪽이 훨씬 빨리 채워진다 */
+  if (!/DATA\.tailStats[\s\S]{0,200}renderTailYield/.test(ix))
+    bad.push('수확률 자료가 있어도 옛 표를 먼저 그린다');
+
+  if (bad.length) fail('[바이럴] 꼬리말 수확률 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 꼬리말 수확률 — got/kept 를 따로 세고 · 0건 칸을 남기고 · 회차 수를 밝힌다');
+}
+
 /* ── 히트맵 LG 지점명·건수 (2026-09-04 사장님 요청) ──────────────────────
  * *"엘지부분에도 텍스트로 LG어디지점인지 삼성과 동일하게 지점명과 숫자로"*.
  *

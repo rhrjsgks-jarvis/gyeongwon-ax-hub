@@ -4430,6 +4430,64 @@ function renderList() {
   }
 
   /**
+   * 꼬리말 수확률 — **어느 꼬리말이 헛도는가** (2026-09-05).
+   *
+   * 표본 3매장 실측(2026-09-04)이 이미 보여 준 것: 수확률이 「신혼가전」 17.5% 부터
+   * 「꼬리 없음」 1.8% 까지 갈리고, **매장 크기가 그것을 가른다** — 큰 매장은 8개를
+   * 다 쓰는데 작은 매장은 두셋뿐이고 나머지는 호출만 태운다. 그 판단을 62매장으로
+   * 넓히는 표다.
+   *
+   * **한 회차만 보고 「안 준다」로 읽지 않는다** — 실행이 도중에 끊기면 못 훑은
+   * 매장이 0건으로 보인다. 몇 회차를 합친 것인지 화면이 함께 적는다.
+   */
+  function renderTailYield(box, ts) {
+    var bt = ts.byTail, keys = Object.keys(bt);
+    keys.sort(function (a, b) {
+      var ra = bt[a].got ? bt[a].kept / bt[a].got : 0, rb = bt[b].got ? bt[b].kept / bt[b].got : 0;
+      return rb - ra;
+    });
+    var h = '<div class="sub" style="margin-bottom:6px">수집 <b>' + ts.runs
+      + '회차</b>를 합쳐 셌습니다 · <b>받은 수</b> 대비 <b>우리 매장 글</b>의 비율입니다</div>';
+    h += '<table class="tailtab"><tbody>';
+    var best = bt[keys[0]] && bt[keys[0]].got ? bt[keys[0]].kept / bt[keys[0]].got : 1;
+    for (var i = 0; i < keys.length; i++) {
+      var v = bt[keys[i]], r = v.got ? v.kept / v.got : 0;
+      h += '<tr><td>' + esc(keys[i]) + '</td>'
+        + '<td class="num">' + nf(v.kept) + ' / ' + nf(v.got) + '</td>'
+        + '<td class="num">' + (v.got ? (r * 100).toFixed(1) + '%' : '–') + '</td>'
+        + '<td class="bar"><i style="width:' + Math.round(r / (best || 1) * 100) + '%"></i></td></tr>';
+    }
+    h += '</tbody></table>';
+
+    /* **매장별로 헛도는 꼬리말** — 이것이 절감의 근거다.
+       받은 것은 있는데 건진 것이 0인 칸만 센다(안 훑은 칸과 갈린다). */
+    var waste = [], s;
+    for (s in ts.byStore) if (ts.byStore.hasOwnProperty(s)) {
+      var zero = [], any = false, t2;
+      for (t2 in ts.byStore[s]) if (ts.byStore[s].hasOwnProperty(t2)) {
+        var c = ts.byStore[s][t2];
+        if (c.got > 0) { any = true; if (!c.kept) zero.push(t2); }
+      }
+      if (any && zero.length) waste.push({ store: s, tails: zero });
+    }
+    waste.sort(function (a, b) { return b.tails.length - a.tails.length; });
+    if (waste.length) {
+      h += '<div class="sub" style="margin-top:10px"><b>이 매장에서 한 건도 안 건진 꼬리말</b> — '
+        + '건너뛰면 그 매장 호출이 줄어듭니다. <b>' + ts.runs + '회차 기준</b>이라 '
+        + '회차가 쌓일수록 확실해집니다.</div>';
+      h += '<table class="tailtab"><tbody>';
+      for (var w = 0; w < Math.min(waste.length, 12); w++)
+        h += '<tr><td>' + esc(waste[w].store) + '</td>'
+          + '<td class="num">' + waste[w].tails.length + '개</td>'
+          + '<td colspan="2">' + esc(waste[w].tails.join(' · ')) + '</td></tr>';
+      h += '</tbody></table>';
+      if (waste.length > 12) h += '<div class="sub" style="margin-top:4px">…그 밖에 '
+        + (waste.length - 12) + '곳</div>';
+    }
+    box.innerHTML = h;
+  }
+
+  /**
    * 질의 꼬리말별 성적 (2026-09-04).
    *
    * **없는 것과 모르는 것을 가른다.** 이 칸이 생기기 전에 담긴 글은 `q` 가 비어 있고,
@@ -4438,12 +4496,22 @@ function renderList() {
    */
   function renderTails() {
     var box = document.getElementById('tailbox'); if (!box) return;
+    /* ── **수확률 표가 먼저다** (2026-09-05) ──────────────────────────────
+     * 아래 `byTail`(글에 붙인 `q` 칸)은 **새 글에만** 생겨 하루 5~10건씩만 늘어,
+     * 62매장 실측까지 몇 달이 걸린다. 게다가 **준 것만** 세어서 「이 꼬리말이
+     * 아무것도 안 준다」를 영영 알 수 없다 — 그 판정에는 **안 준 것**이 필요하다.
+     * `tailStats` 는 수집할 때 받은 수(`got`)와 건진 수(`kept`)를 함께 세므로
+     * **한 회차만 돌아도** 그 표가 채워진다. */
+    var ts = DATA.tailStats;
+    if (ts && ts.byTail && Object.keys(ts.byTail).length) { renderTailYield(box, ts); return; }
+
     var t = DATA.byTail || {}, unknown = Number(DATA.tailUnknown || 0);
     var keys = Object.keys(t);
     if (!keys.length) {
-      box.innerHTML = '<b>아직 쌓이지 않았습니다.</b> 글마다 「어느 질의가 줬는지」를 이번에 적기 '
-        + '시작했습니다 — 다음 수집이 한 바퀴 돌면 매장별로 어느 꼬리말이 값어치를 하는지 보입니다.'
-        + (unknown ? ' (지금까지 모은 ' + nf(unknown) + '건은 그 칸이 없어 알 수 없습니다.)' : '');
+      box.innerHTML = '<b>아직 쌓이지 않았습니다.</b> 다음 수집이 한 바퀴 돌면 '
+        + '매장별로 어느 꼬리말이 값어치를 하는지 보입니다 — 받은 수와 건진 수를 함께 세므로 '
+        + '<b>새 글이 없어도</b> 채워집니다.'
+        + (unknown ? ' (지금까지 모은 ' + nf(unknown) + '건은 그 칸이 없어 어느 질의가 줬는지 모릅니다.)' : '');
       return;
     }
     var tot = 0, i;

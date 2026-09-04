@@ -172,6 +172,62 @@ var FULL_EVERY_DAYS = 7;
 var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis', 'deadN', 'deadAt', 'q'];
 /** 꼬리말을 시트에 적는 말로. 빈 꼬리말(기본 질의)도 **적어야** 「모른다」와 갈린다. */
 function tailTag_(t) { return String(t || '').trim() || '기본'; }
+
+/* ── 꼬리말 수확 계수기 (2026-09-05) ───────────────────────────────────────
+ * `{매장: {꼬리말: {got, kept}}}`. **새 글이 없어도 쌓인다** — 그것이 요점이다.
+ *
+ * 글에 붙이는 `q` 칸(2026-09-04)은 새 글에만 생겨 하루 5~10건씩만 늘고, 62매장 ×
+ * 8꼬리말 실측까지 몇 달이 걸린다. 게다가 **준 것만** 기록해서 「이 꼬리말이
+ * 아무것도 안 준다」를 영영 알 수 없다 — 그 판정에는 **안 준 것**이 필요하다.
+ *
+ * 여기서 세면 다음 수집 한 번에 그 표가 채워진다. 표본 3매장 실측(2026-09-04)이
+ * 이미 보여 준 것 — 큰 매장은 꼬리말 8개를 다 쓰는데 작은 매장은 두셋뿐이고
+ * 나머지는 호출만 태운다. 그 판단을 62매장 전체로 넓히는 자료다. */
+function tally_(box, store, tail, key) {
+  if (!box[store]) box[store] = {};
+  if (!box[store][tail]) box[store][tail] = { got: 0, kept: 0 };
+  box[store][tail][key]++;
+}
+
+/** 시트에 담을 줄로 편다. **0건도 남긴다** — 「안 준다」가 이 자료의 핵심이다. */
+function tailStatRows_(box, stamp) {
+  var out = [], s, t;
+  for (s in box) if (box.hasOwnProperty(s)) {
+    for (t in box[s]) if (box[s].hasOwnProperty(t)) {
+      var v = box[s][t];
+      out.push([stamp, s, t, v.got, v.kept]);
+    }
+  }
+  return out;
+}
+var SHEET_TAIL = '꼬리말성적';
+var TAIL_HEADER = ['at', 'store', 'tail', 'got', 'kept'];
+
+/**
+ * 쌓인 회차를 합쳐 읽는다 — **한 회차만 보면 거짓이 된다.**
+ * 실행이 도중에 끊기면 그 회차에서 못 훑은 매장이 「0건」으로 보이는데, 그것은
+ * 「이 꼬리말이 아무것도 안 준다」와 완전히 다른 말이다. 여러 회차를 더해야
+ * 그 구분이 선다(`runs` 로 몇 회차를 봤는지 함께 밝힌다).
+ */
+function tailStats_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_TAIL);
+  if (!sh || sh.getLastRow() < 2) return null;
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, TAIL_HEADER.length).getValues();
+  var byStore = {}, byTail = {}, runs = {}, i;
+  for (i = 0; i < v.length; i++) {
+    var at = String(v[i][0]), s = String(v[i][1]), t = String(v[i][2]);
+    var g = Number(v[i][3]) || 0, k = Number(v[i][4]) || 0;
+    if (!s || !t) continue;
+    runs[at] = 1;
+    if (!byStore[s]) byStore[s] = {};
+    if (!byStore[s][t]) byStore[s][t] = { got: 0, kept: 0 };
+    byStore[s][t].got += g; byStore[s][t].kept += k;
+    if (!byTail[t]) byTail[t] = { got: 0, kept: 0 };
+    byTail[t].got += g; byTail[t].kept += k;
+  }
+  return { byStore: byStore, byTail: byTail, runs: Object.keys(runs).length };
+}
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 62곳 — 경원영업팀 활성 지점 ──────────────────────
@@ -2568,6 +2624,9 @@ function sweep_(mode) {
 
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var calls = 0, got = 0, kept = 0, add = [], err = '';
+  /* 꼬리말별 수확 — `{매장: {꼬리말: {got, kept}}}`. **새 글이 없어도 쌓인다**
+     (글에 붙이는 `q` 칸은 새 글에만 생겨 하루 5~10건씩만 늘었다). */
+  var tailStat = {};
   /* 하한(MIN_YMD)보다 오래돼 안 담은 수 — **몇 건을 걸렀는지 보고한다**(조용히 버리면
      「왜 건수가 안 느나」를 알 수 없다) */
   var tooOld = 0;
@@ -2791,10 +2850,18 @@ function sweep_(mode) {
           var it = items[n];
           got++;
           var text = (it.title || '') + ' ' + (it.description || '');
+          /* **꼬리말별 수확을 여기서 센다** (2026-09-05). 글에 붙이는 `q` 칸은
+             **새 글에만** 생겨서 하루 5~10건씩만 쌓인다 — 62매장 × 8꼬리말 실측까지
+             몇 달이 걸린다. 그런데 `got`/`kept` 는 **새 글이 없어도 매번 발생하므로**,
+             여기서 세면 **다음 수집 한 번에** 그 표가 채워진다.
+             (「이 꼬리말이 아무것도 안 준다」를 알려면 **안 준 것도 세어야** 하는데,
+              `q` 칸은 준 것만 기록한다 — 그것이 이 계수기가 필요한 이유다.) */
+          tally_(tailStat, mname, tailTag_(TAILS[ti]), 'got');
           if (!hasAny_(text, mnames)) continue;
           if (isNoise_(text)) continue;
           if (belongsToOther_(text, mname, allNames)) continue;
           kept++;
+          tally_(tailStat, mname, tailTag_(TAILS[ti]), 'kept');
           var link = String(it.link || '');
           if (!link) continue;
           if (linkNoise_(link)) continue;          /* 카카오톡 채널 등 — 후기가 아니다 */
@@ -3103,6 +3170,14 @@ function sweep_(mode) {
      막는 일이 실제로 있다(2026-09-04: 우리 429 / 50,000 인데 막혔다). 그때 우리
      카운터가 몇이었는지가 곧 「다른 스크립트가 얼마나 썼나」의 간접 측정이다. */
   noteGoogleBlock_(err);
+  /* **꼬리말 성적을 남긴다** (2026-09-05). 회차마다 한 줄씩 쌓아 **여러 회차를 합쳐**
+     읽는다 — 한 회차만 보면 그 실행이 훑다 만 매장이 「0건」으로 보인다.
+     `at` 이 회차 도장이라 화면이 합칠 때 그 구분을 쓴다. */
+  var tailRows = tailStatRows_(tailStat, today_());
+  if (tailRows.length) {
+    var tsh = sheet_(SHEET_TAIL, TAIL_HEADER);
+    tsh.getRange(tsh.getLastRow() + 1, 1, tailRows.length, TAIL_HEADER.length).setValues(tailRows);
+  }
   sheet_(SHEET_LOG, LOG_HEADER).appendRow([new Date(), calls, got, kept, flushed + add.length, err]);
   return {
     /* 이어달리기가 걸렸는지. 화면이 *"1분 뒤 스스로 이어 갑니다"* 를 적어야
@@ -4141,6 +4216,9 @@ function summary_() {
     /* 검색 관심도 (2026-09-04) — **없으면 null 이다.** 0 으로 보내면 화면이
        「검색이 없다」로 그린다. 아직 안 모은 것과 없는 것은 다른 말이다. */
     trend: trend_(),
+    /* 꼬리말 수확 (2026-09-05) — 매장별로 어느 꼬리말이 값어치를 하는가.
+       **없으면 null** — 같은 이유다. */
+    tailStats: tailStats_(),
     /* 매장 → 연도 → 채널 상위 12. **연도별로 자른다** — 통째로 자르면 그 해에만
        있는 채널이 밀려 사라진다. */
     byStoreChanY: (function () {
