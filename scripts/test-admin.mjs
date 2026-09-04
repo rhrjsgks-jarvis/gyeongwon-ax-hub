@@ -3937,5 +3937,131 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 }
 
+/* ── 바이럴 「지금부터 끝낼 수 있는가」 (2026-09-04) ──────────────────────────
+ * 화면은 *「전체가 되는가」*(한도 < 한 바퀴)와 *「다 썼는가」*(쓴 것 ≥ 한도)만 물었다.
+ * 그 사이에 **둘 다 아닌데 못 끝내는 상태**가 있고, 실측이 정확히 그것이었다 —
+ * 한도 28,700 · 쓴 것 26,427 · sweep 20,858 이라 두 조건이 다 거짓인데, 남은
+ * 2,273 회로 남은 18곳(약 6,056회)을 못 끝냈다. **그동안 화면은 「남은 시간 6시간
+ * 14분」이라고 적어 기다리면 된다고 말했다.**
+ *
+ * **규칙을 떼어 실제로 돌린다** — 문자열만 보면 조건이 바뀌어도 통과한다
+ * (이 파일이 `rival_()` 을 가짜 시트로 돌려 이중 계산을 잡은 것과 같은 방식). */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  const at = ix.indexOf('function quotaShort()');
+  if (at < 0) bad.push('quotaShort() 가 없다 — 「지금부터 끝낼 수 있는가」를 묻는 곳이 사라졌다');
+  else {
+    const end = ix.indexOf('\n  }', at);
+    const src = ix.slice(at, end + 4);
+    const fn = new Function('DATA', 'nf', src + '; return quotaShort();');
+    const NF = (n) => String(n);
+    const cases = [
+      ['실측 그대로 — 못 끝낸다',
+        { dailyLimit: 28700, dayUsed: 26427, sweep: 20858, cursor: 44, stores: 62 }, true],
+      ['남은 쿼터가 넉넉하면 조용하다',
+        { dailyLimit: 28700, dayUsed: 1000, sweep: 20858, cursor: 44, stores: 62 }, false],
+      ['한 바퀴를 마쳤으면 말하지 않는다 (cursor 0)',
+        { dailyLimit: 28700, dayUsed: 26427, sweep: 20858, cursor: 0, stores: 62 }, false],
+      ['커서가 끝에 닿았어도 말하지 않는다',
+        { dailyLimit: 28700, dayUsed: 26427, sweep: 20858, cursor: 62, stores: 62 }, false],
+      ['모르면 아무 말도 하지 않는다 (한도 없음)',
+        { dailyLimit: 0, dayUsed: 26427, sweep: 20858, cursor: 44, stores: 62 }, false],
+      ['모르면 아무 말도 하지 않는다 (sweep 없음)',
+        { dailyLimit: 28700, dayUsed: 26427, sweep: 0, cursor: 44, stores: 62 }, false],
+    ];
+    for (const [label, data, want] of cases) {
+      const got = !!fn(data, NF);
+      if (got !== want) bad.push(`${label} → ${got ? '말했다' : '말 안 했다'}(기대 ${want ? '말한다' : '안 한다'})`);
+    }
+    /* 실측 값에서 나온 수치가 문장에 실려야 한다 — 근거 없는 경고는 읽히지 않는다 */
+    const msg = String(fn({ dailyLimit: 28700, dayUsed: 26427, sweep: 20858, cursor: 44, stores: 62 }, NF));
+    if (!msg.includes('2273') || !msg.includes('18')) bad.push('경고에 남은 쿼터·남은 매장 수가 안 실린다');
+  }
+
+  /* 「남은 시간」 옆에 붙어야 한다 — 거짓 희망을 주던 자리가 바로 거기다 */
+  const pg = ix.indexOf('남은 시간 대략');
+  if (pg < 0 || !ix.slice(pg, pg + 1200).includes('quotaShort()'))
+    bad.push('「남은 시간」 옆에서 쿼터를 보지 않는다 — 기다리면 된다는 거짓 희망이 남는다');
+  /* 색을 정하는 곳이 하나여야 한다 — 뒤 줄이 앞 줄을 덮어써 경고 색이 사라진 적이 있다 */
+  if (!ix.includes("'prog' + (qs ? ' mid'"))
+    bad.push('쿼터 부족이 auto 를 못 이긴다 — 초록으로 덮여 안심 신호가 된다');
+
+  /* 「전체 재수집 취소」 — 켜는 길만 있고 끄는 길이 없으면 켜기가 무섭다 */
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const cf = gs.indexOf('function cancelFull()');
+  if (cf < 0) bad.push('cancelFull() 이 없다 — 전체 재수집을 끌 길이 다시 사라졌다');
+  else {
+    const blk = gs.slice(cf, cf + 900);
+    if (!blk.includes("deleteProperty('_forceFull')")) bad.push('cancelFull 이 _forceFull 을 안 지운다');
+    if (/deleteProperty\('_cursor'\)|setProperty\('_cursor'/.test(blk))
+      bad.push('cancelFull 이 커서를 건드린다 — 훑은 매장을 다시 훑어 쿼터를 또 태운다');
+    if (!blk.includes('sumCacheClear_')) bad.push('cancelFull 이 집계 캐시를 안 버린다 — 최대 6시간 옛 값이 남는다');
+  }
+  if (!ix.includes('.cancelFull();')) bad.push('화면에 「전체 재수집 취소」를 부르는 곳이 없다');
+  if (!ix.includes("cf.hidden = !DATA.forceFull")) bad.push('취소 버튼이 전체 재수집 중일 때만 뜨지 않는다');
+
+  /* 누르기 전에 며칠 걸리는지 말한다 — 지금까지는 누른 뒤에야 알았다 */
+  const rf = ix.indexOf("getElementById('runfull').onclick");
+  if (rf < 0 || !ix.slice(rf, rf + 1200).includes('confirm('))
+    bad.push('「전체 재수집」을 누르기 전에 며칠 걸리는지 묻지 않는다');
+
+  if (bad.length) fail('[바이럴] 지금부터 끝낼 수 있는가 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 진행 가늠 — 남은 쿼터로 못 끝내면 그렇게 적고 · 끌 수 있고 · 누르기 전에 묻는다');
+}
+
+/* ── 일일 한도 칸이 **읽히는가** (2026-09-04 사장님 보고) ─────────────────────
+ * *"관리자안에 쿼터한도설정하는 텍스트가 보이지않습니다"*. 이 칸은 남색 머리에
+ * 있다가 2026-09-03 에 **흰 관리자 카드**로 옮겨졌는데 색이 안 따라왔다 —
+ * 흰 글자가 흰 배경에 놓여 대비가 정확히 **1 : 1** 이었다.
+ *
+ * **크기로는 못 잡는다.** 요소는 멀쩡히 있고 폭·높이도 정상이라, 처음 측정에서
+ * `w=50 h=18` 로 「보인다」고 읽었다. 실물을 찍고서야 드러났다.
+ * 여기서는 **휘도를 재서** 지킨다 — 색 이름이 바뀌어도 대비가 살아 있으면 통과한다. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+  const hex = (s) => {
+    const m = /^#([0-9a-f]{6})$/i.exec(s.trim());
+    if (!m) return null;
+    const n = parseInt(m[1], 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  };
+  const lum = (c) => {
+    const f = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2];
+  };
+  const ratioOnWhite = (c) => (1.05) / (lum(c) + 0.05);
+
+  /* 규칙마다 `color:` 를 뽑아 흰 배경 대비를 잰다 */
+  for (const [sel, min] of [['.lim', 4.5], ['.limuse', 4.5], ['.limuse.low', 4.5],
+    ['.limnote', 4.5], ['.limnote.low', 4.5]]) {
+    /* `.lim` 이 `.limuse` 를 물지 않게 **뒤에 여는 중괄호를 요구한다** —
+       `.lim {` 은 맞고 `.limuse {`·`.lim input {` 은 안 맞는다. */
+    const re = new RegExp(sel.replace(/\./g, '[.]') + '\\s*\\{([^}]*)\\}');
+    const m = re.exec(ix);
+    if (!m) { bad.push(sel + ' 규칙이 없다'); continue; }
+    const cm = /color:\s*([^;]+);/.exec(m[1]);
+    if (!cm) { bad.push(sel + ' 에 color 가 없다'); continue; }
+    const raw = cm[1].trim();
+    /* **흰 글자를 흰 배경에 두는 그 사고를 이름으로도 막는다** */
+    if (/rgba\(\s*255\s*,\s*255\s*,\s*255/.test(raw) || /^#fff/i.test(raw)) {
+      bad.push(sel + ' 이 흰 글자다 — 흰 관리자 카드 안이라 안 읽힌다');
+      continue;
+    }
+    const c = hex(raw);
+    if (!c) { bad.push(sel + ' 색을 읽지 못했다: ' + raw); continue; }
+    const r = ratioOnWhite(c);
+    if (r < min) bad.push(sel + ' 대비 ' + r.toFixed(2) + ':1 (최소 ' + min + ')');
+  }
+  /* 입력칸도 — 반투명 흰 배경에 흰 글자면 값이 안 보인다 */
+  const im = /\.lim input\s*\{([^}]*)\}/.exec(ix);
+  if (im && /color:\s*#fff/i.test(im[1])) bad.push('.lim input 글자가 흰색이다 — 넣은 숫자가 안 보인다');
+
+  if (bad.length) fail('[바이럴] 일일 한도 칸 대비 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 일일 한도 칸 — 흰 카드 위에서 라벨·쿼터·안내가 전부 읽힌다(대비 4.5:1 이상)');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

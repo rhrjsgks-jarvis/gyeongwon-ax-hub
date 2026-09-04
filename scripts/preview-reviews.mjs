@@ -565,7 +565,9 @@ const stub = [
   /* 색을 바꾸면 서버가 다듬은 값을 돌려준다 — 화면이 그것으로 다시 칠한다 */
   '    setAreaColors: function (m) { setTimeout(function () { ok && ok({ ok: true, colors: m && Object.keys(m).length ? m : window.__VIRAL_FIXTURE.areaColors }); }, 50); },',
   '    resetAll: function () {}, continueSweep: function () {},',
-  '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {}',
+  '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {},',
+  /* 2026-09-04 — 「전체 재수집 취소」. 스텁이 없으면 눌렀을 때 화면이 그 자리에서 죽는다 */
+  '    cancelFull: function () {}',
   '  };',
   '  return api;',
   '})() } };',
