@@ -2475,9 +2475,17 @@ function wireSecs() {
         ? " · <b>" + esc(DATA.rollFrom) + " ~ " + esc(DATA.rollTo) + "</b> 은 <b>건수만</b> 있습니다("
           + nf(DATA.rollTotal) + "건 — 링크는 지웠습니다)"
         : "";
+      /* **발견일로 잰 글은 훑은 날에 몰린다**(2026-09-05). 실측으로 09-03 하루에
+         207건이 쌓여 막대가 「그날 207건이 올라왔다」로 그려졌다 — 그날 훑었을 뿐이다.
+         달 단위로는 대개 같은 달이라 견딜 만하지만, **그 사실을 적어야** 사장님이
+         급증을 오독하지 않는다. 이 달의 몫만 적는다(전체를 적으면 어느 달인지 모른다). */
+      var amn = DATA.approxMon || {}, curKey = list.length ? list[list.length - 1].k : "";
+      var curApx = Number(amn[curKey] || 0);
       sub.innerHTML = "<b>작성일 기준</b>입니다"
         + (DATA.undated ? " — 작성일을 모르는 " + nf(DATA.undated) + "건은 세지 않았습니다" : "")
-        + ' (<b>왜 모르는지는 「구성 한눈에」</b>에서 봅니다)' + rollNote + '.';
+        + ' (<b>왜 모르는지는 「구성 한눈에」</b>에서 봅니다)' + rollNote
+        + (curApx ? '. 이번 달 <b>' + nf(curApx) + '건</b>은 <b>발견일로 잰 것</b>이라 훑은 날에 몰려 있습니다' : "")
+        + '.';
     }
     /* 직전 달과 견준다. **직전이 0이면 배수를 말하지 않는다** — 0에서 늘어난 것은
        몇 % 가 아니라 그냥 「새로 생겼다」이고, 나눗셈은 무한대가 된다. */
@@ -6330,8 +6338,16 @@ function renderList() {
     /* **작성일 기준임을 세 칸 모두에 적는다.** 작성일을 모르는 글이 있으면 그 수도 —
        사장님이 본 그 사고(오늘 1,505건)가 여기를 안 적어서 났다. */
     var mNote = '작성일 기준' + (DATA.undated ? ' · 미상 ' + nf(DATA.undated) + '건 제외' : '');
+    /* ── **창마다 「발견일로 잰 것」을 적는다** (2026-09-05 실측으로 잡음) ──────────
+       화면이 「최근 7일 240건」이라 적고 있었는데 그중 **215건(90%)이 발견일로 잰
+       카페 글**이었다 — 진짜 작성일은 25건이다. 안 적으면 「일주일에 240건이나」로
+       읽힌다. **틀린 값은 아니다**(그 사이에 쓰인 것이 증명된다) — 뜻이 다를 뿐이라
+       빼지 않고 갈라 적는다. 이 화면이 「없음 / 미공개 / 비대상」을 가른 것과 같다. */
+    var apx = { 'k-m1': DATA.approxDay, 'k-m2': DATA.approxWeek, 'k-m3': DATA.approxMonth };
     ['k-m1', 'k-m2', 'k-m3'].forEach(function (id) {
-      var e = document.getElementById(id); if (e) e.textContent = mNote;
+      var e = document.getElementById(id); if (!e) return;
+      var a = Number(apx[id] || 0);
+      e.textContent = mNote + (a ? ' · 발견일로 잰 것 ' + nf(a) + '건' : '');
     });
 
     renderKinds();

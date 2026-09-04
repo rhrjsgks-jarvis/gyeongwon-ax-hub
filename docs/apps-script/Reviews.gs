@@ -3813,6 +3813,10 @@ function summary_() {
   /* 작성일을 아는 글 중 **발견일로 채운 것**(카페 새 글). 정확도가 달라 따로 센다 —
      화면이 「그중 N건은 ±수집주기」라고 밝힌다. 뭉개면 화면이 있는 척하게 된다. */
   var approxN = 0;
+  /* 창별로도 센다 — 「최근 7일 N건」이 무엇으로 이루어졌는지 화면이 밝혀야 한다 */
+  var approxDay = 0, approxWeek = 0, approxMonth = 0;
+  /* **월별로도 센다** — 월 막대가 발견일 뭉텅이로 부풀었는지 눈으로 검산할 수 있게 */
+  var approxMon = {};
   var minDate = '', maxDate = '';
   var byStore = {}, byCafe = {}, bySrc = { '블로그': 0, '카페': 0, '웹': 0 }, byDay = {}, byMonth = {}, byKind = {};
   var byRegion = {}, byMap = {}, byMapStores = {}, areaCells = {}, byStoreChan = {}, byStoreKind = {}, byWeekKind = {};
@@ -3912,9 +3916,23 @@ function summary_() {
     if (r.dated) {
       dated++;
       if (r.approx) approxN++;
-      if (f === d0) day++;
-      if (f >= d7) week++;
-      if (f >= d30) month++;
+      /* ── **창마다 발견일로 잰 글을 따로 센다** (2026-09-05 실측으로 잡음) ─────────
+       * 화면이 「최근 7일 240건」이라 적고 있었는데 재 보니 **215건(90%)이 발견일로
+       * 잰 카페 글**이었고 진짜 작성일은 25건이었다. 그리고 그 215건이 **09-03 하루에
+       * 통째로 몰려** 일별 막대가 「그날 207건이 올라왔다」로 그려졌다 — 그날 훑었을 뿐이다.
+       *
+       * **틀린 값은 아니다** — 글번호가 직전 최대치보다 컸으므로 그 사이에 쓰인 것이
+       * 증명된다. 그래서 창(7일·30일) 안에 드는 것은 맞다. **뜻이 다를 뿐이다** —
+       * 「그 주에 쓰인 글」이 아니라 「그 주 이후에 쓰인 것이 증명된 글」이고,
+       * **날짜는 우리가 훑은 날**이라 일 단위로는 뭉텅이가 된다.
+       *
+       * 그래서 **빼지 않고 갈라 적는다** — 이 저장소가 「없음 / 미공개 / 비대상」을
+       * 가른 것과 같은 규칙이다. 빼면 카페가 통째로 사라지고(우리 글의 54%다),
+       * 뭉개면 화면이 있는 척한다. **판정은 화면이 한다** — 서버는 재료만 낸다.
+       */
+      if (f === d0) { day++; if (r.approx) approxDay++; }
+      if (f >= d7) { week++; if (r.approx) approxWeek++; }
+      if (f >= d30) { month++; if (r.approx) approxMonth++; }
       /* **작성일 범위** — 사장님: *"언제까지 후기가 검출된 건지도 알고 싶습니다"*.
          작성일을 아는 글에서만 낸다(모르는 글의 날짜는 발견일이라 범위가 거짓이 된다). */
       if (!minDate || f < minDate) minDate = f;
@@ -3925,6 +3943,8 @@ function summary_() {
          같은 뿌리다. 화면이 「작성일 기준」이라 적고, 뺀 건수도 함께 적는다. */
       byDay[f] = (byDay[f] || 0) + 1;
       byMonth[f.slice(0, 7)] = (byMonth[f.slice(0, 7)] || 0) + 1;
+      /* 그 달의 몇 건이 발견일로 잰 것인가 — 월 막대를 눈으로 검산하는 근거다 */
+      if (r.approx) approxMon[f.slice(0, 7)] = (approxMon[f.slice(0, 7)] || 0) + 1;
       /* 매장별 월 집계·마지막 작성일 — **작성일을 아는 글만**. 카페 줄의 date 는
          발견일이라 여기 넣으면 이번 달만 거대해진다(이미 두 번 데인 자리다). */
       var sm = f.slice(0, 7);
@@ -4244,6 +4264,10 @@ function summary_() {
     /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
     approx: approxN,
+    /* **창별·월별 발견일 몫.** 화면이 「그중 N건은 발견일로 잰 것」이라 적는다 —
+       뭉개면 「최근 7일 240건」이 그 주에 쓰인 글로 읽힌다(실제로는 25건이었다). */
+    approxDay: approxDay, approxWeek: approxWeek, approxMonth: approxMonth,
+    approxMon: approxMon,
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
