@@ -4345,6 +4345,25 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!/var dead = DEAD_MAX_PER_RUN;/.test(gs))
     bad.push('sweepCalls_ 에 삭제 확인 몫이 빠졌다 — 한 바퀴 추정이 3,900회 작아진다');
 
+  /* ── 삭제 확인을 며칠에 나눈다 (2026-09-04) ────────────────────────────
+   * 한 바퀴 24,758회 > 구글 20,000회. 그 초과분의 절반 이상이 이 절이었다(3,900회).
+   * **위험이 없는 절감이다** — 커서가 자리를 기억해 빠뜨리는 글이 없고, 판정이
+   * 며칠 늦어질 뿐이다(원래 하루 한 번인 값이다). */
+  if (!/var DEAD_BURSTS_PER_RUN = (\d+);/.test(gs))
+    bad.push('한 회차 묶음 상한(DEAD_BURSTS_PER_RUN)이 없다 — 한 번에 3,900회를 쓴다');
+  else {
+    const n = Number(/var DEAD_BURSTS_PER_RUN = (\d+);/.exec(gs)[1]);
+    const burst = Number(/var DEAD_BURST\s*=\s*(\d+);/.exec(gs)[1]);
+    if (n * burst > 2000)
+      bad.push(`한 회차 ${n * burst}회는 너무 많다 — 나누는 뜻이 없다`);
+    if (!/if \(bursts >= DEAD_BURSTS_PER_RUN\) \{ cutShort = true/.test(gs))
+      bad.push('상한만 있고 루프가 그것을 안 지킨다');
+    /* **끊긴 회차에 「오늘 했다」를 찍으면 안 된다** — 그러면 그날 더 못 돌아
+       며칠에 나누는 것이 아니라 영영 안 끝난다 */
+    if (!/if \(!cutShort\) \{ props_\(\)\.setProperty\('_deadAt'/.test(gs))
+      bad.push('끊긴 회차에도 「오늘 했다」를 찍는다 — 그러면 영영 안 끝난다');
+  }
+
   if (bad.length) fail('[바이럴] UrlFetch 계수 — ' + bad.join(' · '));
   else console.log(`OK: 바이럴 UrlFetch 계수 — ${fetchAt.length}곳 전부 카운터에 잡힌다(fetchAll 은 요청 수만큼)`);
 }

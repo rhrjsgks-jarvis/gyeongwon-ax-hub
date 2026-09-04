@@ -5444,9 +5444,21 @@ function rival_() {
  */
 var DEAD_N       = 3;      /* 서로 다른 실행에서 이만큼 연속 404 여야 죽었다고 한다 */
 var DEAD_BURST   = 50;     /* `fetchAll` 한 묶음 (실측 0.57초) */
-/* 한 실행에 두드릴 수 있는 최대 — 시간 예산이 78묶음쯤에서 끊는다(주석의 실측).
-   **`sweepCalls_` 가 이 값을 쓴다** — 여기가 빠져 있어 한 바퀴 추정이 3,900회 작았다. */
-var DEAD_MAX_PER_RUN = 78 * 50;
+/* ── 한 회차에 두드릴 최대 (2026-09-04) ─────────────────────────────────
+ * 예전에는 시간 예산이 78묶음(3,900회)쯤에서 끊었다. 그런데 **한 바퀴가 24,758회로
+ * 구글 한도 20,000 을 넘어** 전체 재수집이 하루에 구조적으로 안 끝난다 —
+ * 그 초과분의 절반 이상이 이 절이다(3,900회 · 15.6%).
+ *
+ * **며칠에 나눠 돈다.** 커서(`_deadCur`)가 이미 어디까지 두드렸는지 기억하므로
+ * 상한만 두면 된다 — 같은 양을 3일에 걸쳐 돌 뿐, 빠뜨리는 글은 없다.
+ *
+ * **위험이 없는 절감이다** — 삭제 판정이 최대 3일 늦어질 뿐이고, 그 판정은 원래
+ * 하루 한 번이다(급한 값이 아니다). 매장 훑기 쪽 절감(기본 질의 쪽수·sim)은
+ * **무엇을 덜 모을지 정하는 일**이라 사람이 정해야 하지만, 이쪽은 그렇지 않다.
+ *
+ * **`sweepCalls_` 가 이 값을 쓴다** — 여기가 빠져 있어 한 바퀴 추정이 3,900회 작았다. */
+var DEAD_BURSTS_PER_RUN = 26;               /* 묶음 수 — 3일이면 78묶음(옛 한 회차분) */
+var DEAD_MAX_PER_RUN = DEAD_BURSTS_PER_RUN * DEAD_BURST;
 var DEAD_SPIKE   = 0.05;   /* 한 회차에 404 가 이 비율을 넘으면 그 회차를 통째로 버린다 */
 var DEAD_CEILING = 0.20;   /* 누적 판정이 대상의 이 비율을 넘으면 더 판정하지 않는다 */
 
@@ -5501,8 +5513,13 @@ function verifyDead_(deadline) {
   var cur0 = Number(props_().getProperty('_deadCur') || 0);
   if (!(cur0 >= 0) || cur0 >= todo.length) cur0 = 0;
   var cutShort = false;
+  var bursts = 0;
   for (b = cur0; b < todo.length; b += DEAD_BURST) {
     if (deadline && Date.now() > deadline) { cutShort = true; props_().setProperty('_deadCur', String(b)); break; }
+    /* **한 회차 상한** (2026-09-04) — 며칠에 나눠 돈다. 커서가 자리를 기억하므로
+       빠뜨리는 글은 없고, 한 바퀴가 구글 한도를 넘던 것이 이만큼 내려간다. */
+    if (bursts >= DEAD_BURSTS_PER_RUN) { cutShort = true; props_().setProperty('_deadCur', String(b)); break; }
+    bursts++;
     /* ── **쿼터를 묶음마다 다시 본다** (2026-09-04) ─────────────────────────
      * 예전에는 이 절에 들어오기 전 한 번만 봤다(`deadDue_() && !over()`). 그래서
      * 일단 들어오면 한도를 넘겨도 **3,900건을 끝까지 두드렸다.** 그 뒤 남은 수집이
