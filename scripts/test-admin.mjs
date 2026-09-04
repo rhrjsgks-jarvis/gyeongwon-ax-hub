@@ -1152,7 +1152,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         fail('[바이럴] assertRow_ 가 없다 — 칸 수가 어긋나도 원인이 오류에 안 찍힌다');
       /* **뒤에만 붙인다** — 가운데 끼우면 그 아래 옛 줄이 한 칸씩 밀린다.
          칸이 늘 때마다 이 줄을 따라 고치되 **순서가 그대로인지**를 본다. */
-      } else if (!g.includes("'mgr', 'dateBasis', 'deadN', 'deadAt']")) {
+      /* 2026-09-04 `q`(어느 질의가 이 글을 줬는가)를 맨 뒤에 더했다 — 앵커도 함께 옮긴다.
+         **앞부분(…'deadN', 'deadAt')이 그대로인지**가 요점이다: 그 순서가 바뀌면
+         옛 줄이 밀린다. */
+      } else if (!g.includes("'mgr', 'dateBasis', 'deadN', 'deadAt', 'q']")) {
         fail('[바이럴] 새 칸을 맨 뒤에 안 붙였다 — 가운데 끼우면 그 아래 옛 줄이 통째로 한 칸씩 밀린다');
       } else {
         console.log(`OK: 바이럴 시트 쓰기 ${writes}곳 모두 칸 수를 먼저 확인한다`);
@@ -4065,6 +4068,55 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 일일 한도 칸 대비 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 일일 한도 칸 — 흰 카드 위에서 라벨·쿼터·안내가 전부 읽힌다(대비 4.5:1 이상)');
+}
+
+/* ── 질의 꼬리말 기록 (2026-09-04) ────────────────────────────────────────
+ * 매장 하나를 꼬리말 8개로 훑는데 어느 것이 값어치를 하는지 기록한 적이 없었다.
+ * 표본 3매장 실측 — 수확률이 「신혼가전」 17.5% 부터 「꼬리 없음」 1.8% 까지 갈리고,
+ * 작은 매장(권선·오산)은 기본 질의가 **0건**이다. 62매장을 새로 두드려 재는 대신
+ * 글마다 꼬리말을 적어 다음 회차부터 저절로 쌓이게 했다(비용 0).
+ *
+ * **칸은 뒤에만 붙여야 한다** — 가운데에 끼우면 옛 줄이 통째로 한 칸씩 밀린다.
+ * **옛 줄의 빈 칸은 「모른다」이지 「기본 질의」가 아니다.** */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  const hm = /var HEADER = \[([^\]]*)\]/.exec(gs);
+  if (!hm) bad.push('HEADER 를 못 찾았다');
+  else {
+    const cols = hm[1].split(',').map((s) => s.trim().replace(/^'|'$/g, ''));
+    if (cols[cols.length - 1] !== 'q') bad.push('q 가 HEADER 맨 뒤가 아니다 — 가운데면 옛 줄이 한 칸씩 밀린다');
+    /* 행을 만드는 곳이 전부 HEADER 칸 수와 맞아야 한다(assertRow_ 가 런타임에 던지지만
+       배포 전에 잡는 편이 낫다). 매장 훑기·카페 훑기 두 곳이다. */
+    const pushes = gs.match(/add\.push\(\[/g) || [];
+    if (pushes.length !== 2) bad.push('add.push 가 ' + pushes.length + '곳이다 — 둘을 다 고쳤는지 보라');
+    if (!gs.includes('tailTag_(TAILS[ti])')) bad.push('매장 훑기가 꼬리말을 안 적는다');
+    if (!gs.includes("'카페훑기'")) bad.push('카페 훑기가 자기 표식을 안 적는다');
+  }
+  /* 읽는 쪽 — 옛 줄은 빈 문자열이어야 하고, 그것을 「기본」으로 바꿔치기하면 안 된다 */
+  if (!/q: String\(v\[i\]\[14\] \|\| ''\)/.test(gs)) bad.push('readAll_ 이 q 를 15번째 칸에서 안 읽는다');
+  if (/q: String\(v\[i\]\[14\][^)]*\) \|\| '기본'/.test(gs)) bad.push('옛 줄의 빈 칸을 「기본」으로 바꿔치기한다 — 모르는 것을 아는 척한다');
+  /* 집계 — 모르는 것을 따로 센다 */
+  if (!gs.includes('tailUnknown++')) bad.push('모르는 것(옛 줄)을 따로 안 센다');
+  if (!/byTail: byTail, byStoreTail: byStoreTail, tailUnknown: tailUnknown/.test(gs))
+    bad.push('집계 결과를 화면에 안 보낸다');
+  /* 캐시 — 안 올리면 최대 6시간 옛 집계가 굳는다 */
+  const sv = /var SUM_VER = (\d+);/.exec(gs);
+  if (!sv || Number(sv[1]) < 19) bad.push('SUM_VER 를 안 올렸다 — 옛 집계가 최대 6시간 남는다');
+  /* 화면 — 자료가 없으면 0 으로 그리지 않고 그렇게 적는다 */
+  const rt = ix.indexOf('function renderTails()');
+  if (rt < 0) bad.push('renderTails() 가 없다');
+  else {
+    const blk = ix.slice(rt, rt + 1800);
+    if (!blk.includes('아직 쌓이지 않았습니다')) bad.push('자료가 없을 때 그 사실을 안 적는다');
+    if (!blk.includes('어느 질의가 줬는지 모릅니다')) bad.push('옛 글을 「모른다」로 밝히지 않는다');
+  }
+  if (!/renderLimit\(\);\s*\n\s*renderTails\(\);/.test(ix)) bad.push('renderTails 를 그리는 곳이 없다');
+
+  if (bad.length) fail('[바이럴] 질의 꼬리말 기록 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 질의 꼬리말 — 뒤에만 붙이고 · 두 곳 다 적고 · 옛 줄은 「모른다」로 가른다');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

@@ -159,7 +159,19 @@ var FULL_EVERY_DAYS = 7;
  *  `deadAt` 삭제로 판정한 날. 빈칸이면 살아 있다.
  *  **지우지 않고 표시만 한다** — 판정할 수 있는 것이 블로그뿐이라(카페는 robots 로
  *  막혀 있다) 지우면 블로그만 줄어 화면의 갈래 비율이 조용히 거짓이 된다. */
-var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis', 'deadN', 'deadAt'];
+/* **`q` 는 「어느 질의가 이 글을 줬는가」다** (2026-09-04). 매장 하나를 꼬리말 8개로
+   훑는데 어느 꼬리말이 값어치를 하는지 **한 번도 기록한 적이 없었다** — 표본 3매장을
+   재 보니 매장 크기에 따라 완전히 갈렸다(갤러리아광교는 8개 다 잡는데 권선·오산은
+   꼬리 없는 기본 질의가 **0건**이다. 「권선」이 흔한 지명이라 최신 300건이 무관한 글로 찬다).
+   62매장 × 8꼬리말을 새로 두드려 재려면 쿼터가 큰데, **이 칸 하나면 다음 회차부터
+   저절로 쌓인다**(비용 0).
+
+   **칸은 뒤에만 붙인다** — 가운데에 끼우면 그 아래 모든 옛 줄이 한 칸씩 밀린다.
+   옛 줄은 이 칸이 비어 있고, 그것은 **「기본 질의로 들어왔다」가 아니라 「모른다」**다 —
+   화면이 그 둘을 갈라 적는다. */
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis', 'deadN', 'deadAt', 'q'];
+/** 꼬리말을 시트에 적는 말로. 빈 꼬리말(기본 질의)도 **적어야** 「모른다」와 갈린다. */
+function tailTag_(t) { return String(t || '').trim() || '기본'; }
 var LOG_HEADER = ['at', 'calls', 'got', 'kept', 'added', 'error'];
 
 /* ── 대상 매장 62곳 — 경원영업팀 활성 지점 ──────────────────────
@@ -2779,7 +2791,8 @@ function sweep_(mode) {
                여기서 뽑아 담아야 뜻이 있다 — 본문은 저장하지 않으므로 나중에는 못 뽑는다.
                여럿이면 세로줄로 잇는다. */
             mgrFind_(text).join('|'),
-            basis, '', ''                       /* deadN · deadAt — 아직 확인 전이다 */
+            basis, '', '',                      /* deadN · deadAt — 아직 확인 전이다 */
+            tailTag_(TAILS[ti])                 /* 이 글을 준 질의 꼬리말 */
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
@@ -2949,7 +2962,8 @@ function sweep_(mode) {
                 String(cit.cafename || ''), '', stamp,
                 kindOf_(String(cit.title || '')),
                 mgrFind_(ctext).join('|'),
-                cbasis, '', ''                   /* deadN · deadAt — 아직 확인 전이다 */
+                cbasis, '', '',                  /* deadN · deadAt — 아직 확인 전이다 */
+                '카페훑기'                        /* 꼬리말이 아니라 카페 이름으로 물은 것이다 */
               ]);
               cafeAdd++;
               break;
@@ -3559,7 +3573,11 @@ function readAll_() {
       mc: mapCell_(String(v[i][1])),
       /* **삭제로 판정된 글.** 지우지 않고 표시만 하므로 여기서 갈래만 낸다 —
          집계는 빼고, 목록은 「삭제된 글 보기」를 켜면 보여준다. */
-      dead: !!String(v[i][13] || '')
+      dead: !!String(v[i][13] || ''),
+      /* **어느 질의가 이 글을 줬는가** (2026-09-04, 15번째 칸). **옛 줄에는 없다** —
+         빈 문자열은 「기본 질의로 들어왔다」가 아니라 **「모른다」**다. 집계가
+         `tailUnknown` 으로 따로 세고 화면이 그 사실을 적는다. */
+      q: String(v[i][14] || '')
     });
   }
   return out;
@@ -3646,6 +3664,10 @@ function summary_() {
    * **셋 다 작성일/출처가 근거라 카페는 월 집계에 안 든다.** 화면이 그 사실을
    * 매장 줄마다 적어야 한다(그래서 byStoreSrc 를 함께 낸다). */
   var byStoreSrc = {}, byStoreMonth = {}, lastPost = {}, byStoreChanY = {};
+  /* 질의 꼬리말별 (2026-09-04) — 매장마다 값어치 있는 꼬리말이 다르다.
+     `tailUnknown` 은 **옛 줄**이다(그 칸이 생기기 전에 담긴 글). 「기본 질의」와
+     갈라 세어야 화면이 「모른다」를 「기본이 줬다」로 바꿔 말하지 않는다. */
+  var byTail = {}, byStoreTail = {}, tailUnknown = 0;
   /* ── **직전해 1월부터 담는다** (2026-09-03 사장님 지적으로 발견) ────────────
    * 예전에는 `now - 400일` 이었다. 급증·급감만 보던 시절에는 맞는 값이었는데,
    * 히트맵에 **연도 축**이 생기면서 그 상수가 조용히 자료를 잘랐다 —
@@ -3809,6 +3831,16 @@ function summary_() {
     if (r.src === '카페') byStoreSrc[r.storeName].c++;
     else if (r.src === '웹') byStoreSrc[r.storeName].w++;
     else byStoreSrc[r.storeName].b++;
+    /* **어느 질의가 이 글을 줬는가** (2026-09-04). 매장마다 값어치 있는 꼬리말이
+       다르다 — 큰 매장은 8개를 다 쓰는데 작은 매장은 두셋뿐이고, 나머지는 호출만
+       태운다. **옛 줄은 이 칸이 비어 있고 그것은 「모른다」다** — `기본` 과 갈라
+       세어야 화면이 거짓말을 하지 않는다. */
+    var qv = String(r.q || '');
+    if (qv) {
+      byTail[qv] = (byTail[qv] || 0) + 1;
+      if (!byStoreTail[r.storeName]) byStoreTail[r.storeName] = {};
+      byStoreTail[r.storeName][qv] = (byStoreTail[r.storeName][qv] || 0) + 1;
+    } else tailUnknown++;
     if (r.cafe) byCafe[r.cafe] = (byCafe[r.cafe] || 0) + 1;
     /* **매장별 채널** (2026-09-02 사장님 요청 — *"지점을 누르면 오른쪽에 지점별 분석으로
        넘어가고 1.다이렉트웨딩 00건 2.메이크마이웨딩 00건 이런식으로 나열"*).
@@ -4044,6 +4076,7 @@ function summary_() {
     stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
+    byTail: byTail, byStoreTail: byStoreTail, tailUnknown: tailUnknown,
     /* 매장 → 연도 → 채널 상위 12. **연도별로 자른다** — 통째로 자르면 그 해에만
        있는 채널이 밀려 사라진다. */
     byStoreChanY: (function () {
@@ -5255,7 +5288,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 18;
+var SUM_VER = 19;
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

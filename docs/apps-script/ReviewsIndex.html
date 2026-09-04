@@ -101,6 +101,12 @@
   .limnote { font-size: var(--fs-mini); color: #4B5563; line-height: 1.5; margin-top: 4px; }
   .limnote.low { color: #B45309; font-weight: 700; }
   .limnote:empty { display: none; }
+  /* 질의 꼬리말 성적 — 흰 관리자 카드 안이다(색을 남색 머리용으로 두지 말 것) */
+  .tailtab { width: 100%; border-collapse: collapse; font-size: 12.5px; color: #15181E; }
+  .tailtab td { padding: 3px 6px 3px 0; border-bottom: 1px solid #F1F3F5; }
+  .tailtab td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tailtab td.bar { width: 45%; padding-right: 0; }
+  .tailtab td.bar i { display: block; height: 8px; border-radius: 4px; background: #1428A0; min-width: 2px; }
 
   /* 어디까지 훑었는지 — 멈춰 있으면 눈에 띄어야 한다(이어서 눌러야 하니까) */
   /* ── 진행 상태 — **흰 관리자 카드 안이다** (2026-09-04 머리에서 옮겨 왔다) ──
@@ -1215,6 +1221,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            **`.alias-add`(flex) 밖에 둔다** — 안에 넣으면 아래 줄이 아니라
            옆 칸이 되어 한도 입력칸을 밀어낸다. -->
       <div class="limnote" id="lim-note"></div>
+
+      <!-- ── 질의 꼬리말 성적 (2026-09-04) ─────────────────────────────────
+           매장 하나를 꼬리말 8개로 훑는데 어느 것이 값어치를 하는지 한 번도 기록한
+           적이 없었다. 표본 3매장을 재 보니 매장 크기에 따라 완전히 갈렸다 —
+           큰 매장은 8개를 다 쓰는데 작은 매장은 두셋뿐이고 나머지는 호출만 태운다.
+           **62매장을 새로 두드려 재는 대신** 글마다 꼬리말을 적어(`q` 칸) 다음
+           회차부터 저절로 쌓이게 했다. 비용 0. -->
+      <h3>질의 꼬리말 성적</h3>
+      <div class="sub">매장마다 값어치 있는 꼬리말이 다릅니다 — 안 잡히는 꼬리말을
+        건너뛰면 그 매장 호출이 줄어듭니다. <b>다음 수집부터 쌓입니다.</b></div>
+      <div id="tailbox" class="sub">—</div>
 
       <!-- ── 매장 대 매장 (2026-09-03 사장님 지시) ──────────────────────
            *"같은 지역내 삼성스토어 갤러리아광교 매장 후기와 LG베스트샵
@@ -4320,6 +4337,42 @@ function renderList() {
   }
 
   /**
+   * 질의 꼬리말별 성적 (2026-09-04).
+   *
+   * **없는 것과 모르는 것을 가른다.** 이 칸이 생기기 전에 담긴 글은 `q` 가 비어 있고,
+   * 그것은 「기본 질의가 줬다」가 아니라 **「모른다」**다 — 0 으로 그리거나 기본에
+   * 몰아 세면 화면이 거짓말을 한다(이 화면이 되풀이해 지키는 규칙이다).
+   */
+  function renderTails() {
+    var box = document.getElementById('tailbox'); if (!box) return;
+    var t = DATA.byTail || {}, unknown = Number(DATA.tailUnknown || 0);
+    var keys = Object.keys(t);
+    if (!keys.length) {
+      box.innerHTML = '<b>아직 쌓이지 않았습니다.</b> 글마다 「어느 질의가 줬는지」를 이번에 적기 '
+        + '시작했습니다 — 다음 수집이 한 바퀴 돌면 매장별로 어느 꼬리말이 값어치를 하는지 보입니다.'
+        + (unknown ? ' (지금까지 모은 ' + nf(unknown) + '건은 그 칸이 없어 알 수 없습니다.)' : '');
+      return;
+    }
+    var tot = 0, i;
+    for (i = 0; i < keys.length; i++) tot += t[keys[i]];
+    keys.sort(function (a, b) { return t[b] - t[a]; });
+    var max = t[keys[0]] || 1;
+    var h = '<table class="tailtab"><tbody>';
+    for (i = 0; i < keys.length; i++) {
+      var n = t[keys[i]], pct = tot ? Math.round(n / tot * 100) : 0;
+      h += '<tr><td>' + esc(keys[i]) + '</td>'
+        + '<td class="num">' + nf(n) + '</td>'
+        + '<td class="num">' + pct + '%</td>'
+        + '<td class="bar"><i style="width:' + Math.round(n / max * 100) + '%"></i></td></tr>';
+    }
+    h += '</tbody></table>';
+    /* **모르는 것을 밝힌다** — 안 적으면 이 표가 전체인 줄 안다 */
+    if (unknown) h += '<div class="sub" style="margin-top:6px">옛 글 <b>' + nf(unknown)
+      + '건</b>은 이 칸이 생기기 전에 담겨 <b>어느 질의가 줬는지 모릅니다</b> — 위 표에 없습니다.</div>';
+    box.innerHTML = h;
+  }
+
+  /**
    * **남은 쿼터로 이 바퀴를 끝낼 수 있는가** — 못 하면 그 사실을 한 문장으로.
    *
    * 2026-09-04 에 드러난 빈틈이다. 화면은 *「전체가 되는가」*(한도 < 한 바퀴)와
@@ -6015,6 +6068,7 @@ function renderList() {
     wireAudit();
     syncPoll();
     renderLimit();
+    renderTails();
     renderProgress();
     renderPromo();
     renderTrend();
