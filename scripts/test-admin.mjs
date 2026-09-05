@@ -2583,7 +2583,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         const boxes = ix2.split('class="sec" data-sec="').length - 1;
         /* **선택자 문자열까지 세면 안 된다** — applySecs·wireSecs 의
            `.card[data-card="…"]` 두 곳이 카드로 잡혀 짝이 안 맞는 것처럼 보인다. */
-        const cards = ix2.split('data-card="').length - 1 - (ix2.split('[data-card="').length - 1);
+        /* **관리자 카드는 팝업 안이라 짝에서 뺀다**(2026-09-05) — 심벌 박스가 없다. */
+        const cards = ix2.split('data-card="').length - 1
+          - (ix2.split('[data-card="').length - 1)
+          - (ix2.includes('id="admmodal"') ? 1 : 0);
         if (boxes < 8) bad.push('섹션 박스가 ' + boxes + '개뿐이다');
         if (boxes !== cards) bad.push('박스 ' + boxes + '개 ↔ 카드 ' + cards + '개 — 짝이 안 맞는다');
         /* **한 줄에 몇 개인지를 못 박는다**(2026-09-02 사장님: *"가로 3개정도또는4개정도"*).
@@ -3562,6 +3565,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   {
     const gsB = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
     const ixB = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const pvB = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
     const bB = [];
     const cutB = (f) => {
       const at = gsB.indexOf('function ' + f + '(');
@@ -3594,6 +3598,19 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ⓑ **비용은 서버가 한 곳에서 센다** — 화면이 따로 세면 상수가 바뀔 때 어긋난다 */
     if (!gsB.includes('function actionCosts_(')) bB.push('actionCosts_ 가 없다 — 화면이 비용을 지어내게 된다');
     if (!gsB.includes('costs: actionCosts_(),')) bB.push('비용을 화면에 안 보낸다');
+    /* **매장 대 매장 비용은 붙은 LG 지점 수만큼 늘어난다**(짝이 1:N 이 됐다).
+       `× 2` 로 굳히면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
+       수집기와 **같은 함수**(`lgMatchAll_`)를 지나가는지도 함께 본다. */
+    {
+      const m = gsB.match(/srival:[\s\S]{0,600}?\n\s{4}\/\* 검색 관심도/);
+      const seg = m ? m[0] : '';
+      if (!seg) bB.push('srival 비용 계산을 못 찾았다');
+      else {
+        if (/STORES\.length\s*\*\s*2\s*\*/.test(seg)) bB.push('매장 대 매장 비용이 「매장 × 2」로 굳어 있다 — 짝이 1:N 이다');
+        if (!seg.includes('lgMatchAll_()')) bB.push('매장 대 매장 비용이 수집기와 다른 표를 본다');
+        if (!seg.includes('lgShopList_')) bB.push('매장 대 매장 비용이 지점 수를 안 센다');
+      }
+    }
 
     /* ⓒ **화면 — 수집은 한 자리에서만.** 고른 것 하나만 보인다 */
     if (!ixB.includes('id="what"')) bB.push('수집 선택칸이 없다 — 버튼이 흩어져 있다');
@@ -3631,6 +3648,22 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ⓕ **자동 수집 다시 걸기는 멈췄을 때만** — 평소에 떠 있으면 눌러 보게 되고,
            멀쩡한 트리거를 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
     if (!ixB.includes('rb.hidden = !missed;')) bB.push('「자동 수집 다시 걸기」가 늘 떠 있다');
+
+    /* ⓖ **모르는 것을 0 으로 적지 않는다.** 옛 서버 자료에는 `googleQuota` 가 없어
+           그대로 적으면 화면이 「구글 한도 0회」라고 말한다 — 「없다」와 「아직 못
+           받았다」는 다른 말이다(이 화면이 여러 곳에서 못 박은 규칙). 떼어 돌려 본다. */
+    {
+      const m = ixB.match(/var gqTxt = [^;]+;/);
+      if (!m) bB.push('구글 한도가 0 일 때를 안 가른다 — 「구글 한도 0회」라고 적게 된다');
+      else {
+        const f = new Function('gq', 'nf', 'var ' + m[0].slice(4) + ' return gqTxt;');
+        const nf = (n) => String(n);
+        if (/\b0\b/.test(f(0, nf))) bB.push('구글 한도를 모를 때 0 이라고 적는다: ' + f(0, nf));
+        if (f(20000, nf).indexOf('20000') < 0) bB.push('구글 한도를 알 때 값을 안 적는다: ' + f(20000, nf));
+      }
+      /* 미리보기 모의 자료에도 있어야 그 줄을 **눈으로 볼 수 있다** */
+      if (!pvB.includes('googleQuota:')) bB.push('미리보기 모의에 googleQuota 가 없다 — 그 줄이 한 번도 안 그려진다');
+    }
 
     if (bB.length) { ok = false; console.log('ERROR: [바이럴] 버튼 정리 — ' + bB.join(' · ')); }
     else console.log('OK: 바이럴 버튼 정리 — 수집은 한 자리 · 비용을 미리 적고 · 감사에 자물쇠·한도·계수');
@@ -3736,8 +3769,16 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!ix.includes('LG 짝 비중은 아직 재지 않았습니다')) {
     bad.push('자료가 없을 때 화면이 침묵한다 — 사장님이 「안 된다」로 읽는다');
   }
-  /* ④ 비용을 밝힌다 — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다 */
-  if (!ix.includes('3,720회')) bad.push('수집 비용을 화면이 밝히지 않는다');
+  /* ④ 비용을 밝힌다 — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다.
+     **숫자를 검사에 박지 않는다.** 예전에는 `'3,720회'` 를 찾았는데, 짝이 1:N 이 되며
+     그 값 자체가 거짓이 됐다 — 검사가 그 거짓을 지키고 있었다(이 저장소가 못 박은
+     「검사는 바뀔 수 있는 것을 고정값으로 붙들면 안 된다」 그대로다).
+     지금은 **비용을 어디서 보는지 화면이 가리키는가**와 그 자리가 자료로 도는가를 본다. */
+  if (!/드는 호출은 위 .{0,3}수집.{0,3} 줄이 적습니다/.test(ix)) {
+    bad.push('매장 대 매장 비용을 어디서 보는지 화면이 안 가리킨다');
+  }
+  if (!ix.includes("id=\"what-cost\"")) bad.push('예상 호출을 적는 자리가 없다');
+  if (!ix.includes('var costs = DATA.costs || {};')) bad.push('예상 호출을 자료가 아니라 손으로 적는다');
 
   /* ⑤ **한도를 세고 지킨다** — 안 세면 화면의 「오늘 쓴 호출」이 거짓이 되고,
      다 쓴 채로 시작하면 커서만 헛돌아 사람은 왜 안 되는지 모른다. */
@@ -3792,7 +3833,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
      되돌릴 수 없는 「자료 비우기」는 그 안에서도 맨 뒤다. */
   {
     const at4 = ix.indexOf('id="adm-body"');
-    const hdr = ix.slice(0, ix.indexOf('</header>'));
+    /* **`indexOf` 가 -1 이면 `slice(0,-1)` 이 파일 전체가 된다**(2026-09-05에 실제로
+       그렇게 헛돌았다) — 못 찾으면 검사할 수 없다고 말한다. */
+    const hEnd = ix.indexOf('</header>');
+    if (hEnd < 0) bad.push('</header> 를 못 찾았다 — 머리 검사를 할 수 없다');
+    const hdr = hEnd < 0 ? '' : ix.slice(0, hEnd);
     ['id="run"', 'id="runfull"', 'id="wipe"', 'id="runrival"'].forEach((f) => {
       if (hdr.indexOf(f) >= 0) bad.push("수집 버튼(" + f + ")이 아직 머리에 있다");
     });
@@ -3837,7 +3882,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* 정규식·개행을 소스에 직접 적지 않는다 — 셸을 거치며 역슬래시가 먹힌다 */
     const NL = String.fromCharCode(10), B = String.fromCharCode(92);
     const reSmall = new RegExp("font-size:" + B + "s*(?:[0-9]|10|11)(?:" + B + "." + B + "d)?px");
-    const reKeep = new RegExp("[.]cell|[.]geo-svg|header |[.]stamp|[.]limuse|[.]prog|[.]pill|[.]brand");
+    /*  은 **머리 안**이다 — 머리 부제(11.5px)와 같은 무게로 맞춘 것이라 예외다 */
+    const reKeep = new RegExp("[.]cell|[.]geo-svg|header |[.]stamp|[.]limuse|[.]prog|[.]pill|[.]brand|#admopen");
     const small = ix.split(NL).filter((ln) => reSmall.test(ln)).filter((ln) => !reKeep.test(ln));
     if (small.length) bad.push('11px 이하 글자가 ' + small.length + '곳 남았다 — ' + small[0].trim().slice(0, 44));
 
@@ -3921,7 +3967,21 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes('sessionStorage.setItem(ADM_KEY')) bad.push('관리자 세션이 sessionStorage 가 아니다');
 
     /* ⑤ 매니저 탭이 관리자 안으로 갔는가 */
-    if (!ix.includes('data-sec="admin"')) bad.push('관리자 심벌 박스가 없다');
+    /* **관리자는 우측 상단 작은 버튼 + 팝업이다**(2026-09-05 사장님 지시) —
+       심벌 박스 하나를 차지하던 것을 옮겼다. 상담사가 볼 화면에 관리자만 쓰는 것이
+       자리를 먹고 있었다. **잠금은 그대로다** — 누가 눌러도 비밀번호가 먼저 막는다. */
+    if (ix.includes('data-sec="admin"')) bad.push('관리자가 아직 심벌 박스다 — 팝업으로 옮겼다');
+    if (!ix.includes('id="admopen"')) bad.push('우측 상단 관리자 버튼이 없다');
+    if (!ix.includes('id="admmodal"')) bad.push('관리자 팝업이 없다');
+    /* **display:flex 가 hidden 을 이긴다** — 안 보이는 채로 온 화면을 덮어
+       아무것도 못 누르게 된다(실물에서 실제로 그랬다). */
+    if (!ix.includes('.admbg[hidden] { display: none !important; }')) {
+      bad.push('팝업이 숨어도 화면을 덮는다 — display:flex 가 hidden 을 이긴다');
+    }
+    /* **닫는 길이 여럿이어야 한다** — 하나가 막히면 갇힌다 */
+    ['admclose', 'e.target === bg', 'Escape'].forEach(function (w) {
+      if (!ix.includes(w)) bad.push('팝업을 닫는 길이 모자란다: ' + w);
+    });
     if (!ix.includes('data-card="admin"')) bad.push('관리자 카드가 없다');
     if (ix.includes('data-sec="mgr"') || ix.includes('data-card="mgr"')) {
       bad.push('매니저 탭이 그대로 남아 있다 — 관리자 안으로 옮기라는 지시였다');

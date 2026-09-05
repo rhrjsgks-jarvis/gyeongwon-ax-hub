@@ -924,8 +924,20 @@ function actionCosts_() {
     quick: quick,
     full: sweepCalls_(),
     rival: rivalUnits_().length * 4 * RTAILS.length * kinds * RIVAL_PAGES,
-    /* 매장 대 매장 — 매장 × 진영 2 × 소스 3 × 10쪽 */
-    srival: STORES.length * 2 * kinds * MAX_PAGES,
+    /* 매장 대 매장 — 매장마다 (우리 1 + 붙은 LG 지점 수) × 소스 3 × 10쪽.
+       **`× 2` 로 굳히지 말 것** — 짝이 1:N 이 된 뒤로 지점을 둘·셋 붙인 매장이 있어
+       그렇게 세면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
+       짝이 없는 매장은 애초에 훑지 않으므로 0 이다(수집기와 같은 판정). */
+    srival: (function () {
+      /* **수집기와 같은 함수를 지나간다**(`lgMatchAll_`). 따로 세면 한쪽만
+         고쳤을 때 화면이 옛 숫자로 「넉넉하다」고 말한다. */
+      var pr = lgMatchAll_(), c = 0, k, sh;
+      for (k in pr) if (pr.hasOwnProperty(k) && pr[k]) {
+        sh = lgShopList_(pr[k].shops || pr[k].shop);
+        if (sh.length) c += (1 + sh.length) * kinds * MAX_PAGES;
+      }
+      return c;
+    })(),
     /* 검색 관심도 — 전국 1 + 지역 6 */
     trend: 7,
     /* 감사 한 매장 — 질의(꼬리말 + 별칭) × 소스 3 × 정렬 2 × 10쪽 */
