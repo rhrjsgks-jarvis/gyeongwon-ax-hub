@@ -1841,6 +1841,9 @@ function setLgPair(store, shop, token) {
      커서를 되돌려 다음 실행이 처음부터 돈다(조용히 옛 값을 두면 화면이 거짓이 된다). */
   props_().deleteProperty('_srivalCur');
   props_().deleteProperty('_srivalStamp');
+  /* **오늘 표식도 지운다**(2026-09-05) — 「수집」이 하루 한 번 도는 문지기
+     (`srivalDue_`)를 두면서, 이것을 안 지우면 짝을 바꿔도 **내일까지** 안 돈다. */
+  props_().deleteProperty('_srivalAt');
   /* **집계 캐시를 버린다** — 안 버리면 최대 6시간 옛 짝이 화면에 남는다 */
   sumCacheClear_();
   return { ok: true, store: store, shops: list, pairs: lgPairs_() };
@@ -2897,6 +2900,37 @@ function sweep_(mode) {
     catch (e3) { rivalRun = { error: String(e3) }; if (!err) err = 'rival:' + String(e3); }
   }
 
+  /* ── 매장 대 매장 · 검색 관심도 (2026-09-05 사장님 지시로 「수집」에 합쳤다) ──────
+     *"최대한 서치기능을 함축해서 한번에 사용해야합니다"*. 버튼을 다섯 두고 순서를
+     알려 드리는 것보다 **알 필요가 없게** 만드는 편이 낫다.
+
+     **남은 시간을 보고 시작한다.** 앞의 LG 비교가 자기 예산(300초)을 다 쓰고 넘기면
+     여기서 또 300초를 쓸 수 없다 — 6분 한도를 넘겨 그 실행이 통째로 사라진다
+     (LG 비교가 강원에서 이미 겪은 자리다). 시간이 모자라면 **안 시작하고**
+     이어달리기가 다음 실행에서 한다. */
+  var PIPE_MS = 300 * 1000;                       /* 6분 한도 안에서 파이프라인이 쓸 총 예산 */
+  var msLeft = function () { return PIPE_MS - (Date.now() - t0); };
+  var srivalRun = null;
+  stage_('매장대매장 앞');
+  if (srivalDue_() && !over() && msLeft() > SRIVAL_PER_MS + 10000) {
+    stage_('매장대매장 도는 중');
+    try {
+      srivalRun = collectStoreRival(false, Date.now() + Math.min(SRIVAL_MS, msLeft() - 10000));
+      extraCalls += Number((srivalRun && srivalRun.calls) || 0);
+      /* **끝냈을 때만 오늘 표식을 적는다** — 반만 하고 적으면 나머지 매장이 내일까지 빈다 */
+      if (srivalRun && srivalRun.done) props_().setProperty('_srivalAt', stamp);
+      sumCacheClear_();
+    } catch (e5) { srivalRun = { error: String(e5) }; if (!err) err = 'srival:' + String(e5); }
+  }
+  /* 검색 관심도 — 7회짜리라 시간·한도를 거의 안 쓴다. `collectTrend` 가 `_trendAt` 을 적는다.
+     **데이터랩 전용 키가 없으면 그 안에서 오류로 끝난다** — 삼키지 않고 화면이 적는다. */
+  var trendRun = null;
+  if (trendDue_() && !over() && msLeft() > 20000) {
+    stage_('검색관심도 도는 중');
+    try { trendRun = collectTrend(); sumCacheClear_(); }
+    catch (e6) { trendRun = { error: String(e6) }; }
+  }
+
   /* ── 삭제된 글 확인 (2026-09-02) ────────────────────────────────────────
      **매장 훑기보다 앞이다** — LG 비교가 뒤에 있다가 영영 차례를 못 받은 것과
      같은 함정을 되풀이하지 않는다. 검색 예산을 안 쓰므로 **매일** 돈다.
@@ -3390,6 +3424,10 @@ function sweep_(mode) {
        그 순간 거짓이 되므로, 화면이 기다릴 시각을 말할 수 있어야 한다. */
     quotaResetMin: quotaReset_().min, quotaResetAt: quotaReset_().at,
     rival: rivalRun,
+    /* **합친 단계도 무엇을 했는지 돌려준다**(2026-09-05) — 「수집」 하나가 여럿을
+       하게 됐으므로, 안 적으면 사장님이 **무엇이 돌았는지 알 길이 없다.**
+       안 돌았으면 `null` 이다(0 이 아니다 — 「했는데 0건」과 다른 말이다). */
+    srival: srivalRun, trend: trendRun,
     /* **돌았는지 · 몇 곳을 물었는지.** 안 적으면 「왜 SDP 가 안 늘지」를 확인할 길이 없다 */
     sdp: sdpRun
   };
@@ -3832,7 +3870,7 @@ function resetAll() {
     });
     /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
        옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
-    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_rivalWant', '_deadAt', '_deadErr', '_stage']
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_rivalWant', '_deadAt', '_deadErr', '_stage', '_srivalAt', '_srivalCur', '_srivalStamp', '_trendAt']
       .forEach(function (k) { props_().deleteProperty(k); });
     props_().setProperty('_cursor', '0');
     sumCacheClear_();
@@ -4520,6 +4558,12 @@ function summary_() {
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
     /* **버튼마다 얼마를 쓰는가** — 누르기 전에 화면이 적는다(2026-09-05) */
     costs: actionCosts_(),
+    /* ── **오늘 아직 안 한 것** (2026-09-05 사장님 지시) ────────────────────────
+     * *"어떤버튼을 어떤순서로해야하는지 알려주세요"*. 순서를 알려 드리는 것보다
+     * **화면이 그때그때 말하게** 하는 편이 낫다 — 배포할 때마다 순서가 달라지면
+     * 적어 드린 글이 그 자리에서 낡는다. 「수집」 하나가 이 넷을 차례로 하므로,
+     * 화면은 **무엇이 남았는지**만 적으면 된다. */
+    due: { rival: rivalDue_(), srival: srivalDue_(), trend: trendDue_(), dead: deadDue_() },
     approx: approxN,
     /* **창별·월별 발견일 몫.** 화면이 「그중 N건은 발견일로 잰 것」이라 적는다 —
        뭉개면 「최근 7일 240건」이 그 주에 쓰인 글로 읽힌다(실제로는 25건이었다). */
@@ -4777,7 +4821,14 @@ function quotaTest() {
   }
 }
 
-function collectStoreRival(reset) {
+/**
+ * 매장 대 매장 — 우리 지점 vs 그 지점의 LG 짝.
+ *
+ * **`deadline` 을 받는다**(2026-09-05). 예전에는 늘 자기 예산(`SRIVAL_MS` 300초)을
+ * 통째로 썼는데, 「수집」 하나에 합치면서 **앞 단계가 이미 쓴 시간을 모른 채** 300초를
+ * 더 쓰면 6분 한도를 넘겨 그 실행이 통째로 사라진다. 안 주면 예전과 똑같이 돈다.
+ */
+function collectStoreRival(reset, deadline) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(1000)) return { ok: false, busy: true };
   try {
@@ -4820,12 +4871,14 @@ function collectStoreRival(reset) {
     }
     var sh = sheet_(SHEET_SRIVAL, SRIVAL_HEADER);
     var t0 = Date.now(), calls = 0, wrote = 0, err = '';
+    /* 안 주면 예전과 같다 — 「수집」에 합칠 때만 앞 단계가 쓴 시간을 반영해 준다 */
+    var srEnd = Number(deadline) || (t0 + SRIVAL_MS);
     var SRCS = ['blog', 'cafearticle', 'webkr'];
     var ui;
     for (ui = cur; ui < names.length; ui++) {
       /* **남은 시간이 아니라 「이 매장에 필요한 시간」을 본다** — 1초 남았을 때
          시작하면 반드시 그 자리에서 끊긴다(LG 비교에서 이미 데인 자리다). */
-      if (Date.now() - t0 > SRIVAL_MS - SRIVAL_PER_MS) break;
+      if (Date.now() > srEnd - SRIVAL_PER_MS) break;
       if (used0 + calls >= lim) break;      /* 한도에 닿으면 멈춘다 — 다음 실행이 이어 간다 */
       var st = names[ui];
       /* ── **LG 짝이 여럿일 수 있다** (2026-09-05 사장님 지시) ────────────────────
@@ -4848,7 +4901,7 @@ function collectStoreRival(reset) {
         qs.push(q);
         for (var sj = 0; sj < SRCS.length && !hard && !err; sj++) {
           for (var page = 0; page < MAX_PAGES; page++) {
-            if (Date.now() - t0 > SRIVAL_MS) { hard = true; break; }
+            if (Date.now() > srEnd) { hard = true; break; }
             var res = search_(SRCS[sj], q, page * PAGE_SIZE + 1, PAGE_SIZE, 'date');
             calls++;
             if (res.error) { err = res.error; break; }
@@ -6058,6 +6111,27 @@ function verifyDead_(deadline) {
 function deadDue_() {
   return String(props_().getProperty('_deadAt') || '')
     !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+}
+
+/* ── **「수집」 하나가 오늘 할 것을 다 한다** (2026-09-05 사장님 지시) ───────────────
+ * *"최대한 서치기능을 함축해서 한번에 사용해야합니다"*.
+ *
+ * 예전에는 수집 갈래가 다섯이라 **사장님이 순서를 외워야 했다**(자동 다시 걸기 →
+ * LG 비교 → 매장 대 매장 → 최근 것만). 순서를 알려 드리는 것보다 **알 필요가 없게
+ * 만드는 편**이 낫다 — 아래 두 문지기가 「오늘 아직 안 한 것」을 가려 주고,
+ * `collectReviews` 가 차례로 돈다. 못 끝내면 이어달리기가 이어 간다.
+ *
+ * **하루 한 번인 이유는 자료의 성격이다** — 같은 날 여러 회차가 쌓이면 어느 것이
+ * 그날 값인지 알 수 없다(경쟁비교가 이미 그 규칙으로 돈다). */
+/** 매장 대 매장이 오늘 아직 안 돌았는가. 짝을 바꾸면 `setLgPair` 가 커서·도장을
+ *  지우므로 그 즉시 다시 돈다 — 바뀐 짝으로 다시 재야 하기 때문이다. */
+function srivalDue_() {
+  return String(props_().getProperty('_srivalAt') || '') !== today_();
+}
+/** 검색 관심도가 오늘 아직 안 돌았는가. **7회짜리라** 시간·한도를 거의 안 쓴다
+ *  (`collectTrend` 가 끝에서 `_trendAt` 을 적는다 — 여기서 또 적지 않는다). */
+function trendDue_() {
+  return String(props_().getProperty('_trendAt') || '') !== today_();
 }
 
 /* ── 화면 · JSON ─────────────────────────────────────────────── */

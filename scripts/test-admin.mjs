@@ -3156,8 +3156,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!/sumCacheClear_\(\);[\s\S]{0,400}stage_\(r\.done/.test(rv)) {
         bad.push('버튼이 집계 캐시를 안 버린다 — 최대 6시간 옛 값이 화면에 굳는다');
       }
-      if (!ix.includes('id="runrival"')) bad.push('화면에 「LG 비교 갱신」 버튼이 없다');
-      if (!ix.includes('.runRival();')) bad.push('버튼이 runRival 을 부르지 않는다');
+      /* **버튼을 없애고 「수집」 안으로 넣었다**(2026-09-05 사장님 지시 —
+         *"최대한 서치기능을 함축해서 한번에 사용해야합니다"*). 그래서 검사도
+         「그 버튼이 있는가」가 아니라 **「수집」이 LG 비교를 안에서 도는가**를 본다.
+         `runRival()` 함수 자체는 남는다 — 예약(`_rivalWant`) 경로가 쓴다. */
+      if (ix.includes('id="runrival"')) bad.push('「LG 비교 갱신」 버튼이 되살아났다 — 「수집」에 합쳤다');
+      if (!rv.includes('function runRival()')) bad.push('runRival() 이 사라졌다 — 예약 경로가 죽는다');
 
       /* ⓘ **빠진 지역을 이름으로 적는다** — 이 침묵이 사장님을 세 번 묻게 했다 */
       if (!rv.includes('d.rivalAreaNames = Object.keys(AREA_Q);')) {
@@ -3566,18 +3570,25 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ⓓ **떼어 돌린다** — 판정이 뒤집혀도 문자열만 보면 통과한다.
            「오늘 새벽 3시」가 기준이다. 「몇 시간 전인가」로 잡으면 정상적으로 밤에
            끝난 상태(3시 이후 ~ 다음 3시)를 자꾸 경고한다. */
-    const at2 = ixW.indexOf('var stalled = document.getElementById("stalled");');
-    if (at2 < 0) bW.push('멈춤 판정 블록이 없다');
-    else {
-      const blk2 = ixW.slice(at2, at2 + 1400);
-      if (!blk2.includes('d3.setHours(3, 0, 0, 0)')) bW.push('판정 기준이 「오늘 새벽 3시」가 아니다');
-      if (!blk2.includes('!runMin')) bW.push('실행이 도는 중에도 멈췄다고 적는다');
+    /* **판정을 검사가 베껴 갖고 있으면 안 된다**(2026-09-05 정정) — 예전에는 같은 식을
+       `new Function` 에 **손으로 다시 적어** 돌렸다. 화면 쪽 규칙이 바뀌어도 검사는
+       옛 식을 통과시킨다(그 자체가 이 저장소가 못 박은 「한 곳에서만」 위반이다).
+       지금은 **진짜 `sweepMissed` 를 떼어 와** 돌린다. 그리고 「지금 할 일」 줄도
+       같은 함수를 봐야 화면이 두 말을 하지 않는다. */
+    if (!ixW.includes('function sweepMissed(runMin)')) bW.push('멈춤 판정이 한 곳에 없다');
+    if (!ixW.includes('sweepMissed(runMin)') || !ixW.includes('sweepMissed(0)')) {
+      bW.push('진행 상태와 「지금 할 일」이 같은 판정을 안 본다');
+    }
+    {
+      const m2 = ixW.match(/function sweepMissed\(runMin\)[\s\S]*?\n  \}/);
+      if (!m2) bW.push('멈춤 판정 블록이 없다');
+      else if (!m2[0].includes('d3.setHours(3, 0, 0, 0)')) bW.push('판정 기준이 「오늘 새벽 3시」가 아니다');
+      else if (!m2[0].includes('!runMin')) bW.push('실행이 도는 중에도 멈췄다고 적는다');
       let judge = null;
       try {
-        judge = new Function('lrMs', 'nowMs', 'runMin',
-          'var d3 = new Date(nowMs); d3.setHours(3, 0, 0, 0);'
-          + ' var past3 = nowMs > d3.getTime() + 30 * 60000;'
-          + ' return !!(lrMs > 0 && past3 && lrMs < d3.getTime() && !runMin);');
+        const f = new Function('DATA', m2[0] + ' return sweepMissed;');
+        judge = (lrMs, nowMs, runMin) =>
+          f({ lastRun: lrMs ? { ms: lrMs } : null, now: nowMs })(runMin);
       } catch (e) { judge = null; }
       if (!judge) bW.push('멈춤 판정을 떼어 돌릴 수 없다');
       else {
@@ -3709,11 +3720,30 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ixB.includes('if (typeof syncWhat === \'function\') syncWhat();')) {
       bB.push('렌더에서 syncWhat 을 안 부른다 — 자료가 와도 예상 호출이 안 바뀐다');
     }
-    /* 다섯 갈래가 모두 선택지에 있는가 — 하나 빠지면 그 수집을 돌릴 길이 사라진다 */
-    ['run', 'runfull', 'runrival', 'sriv-go', 'runtrend'].forEach((id) => {
+    /* ── **갈래는 둘뿐이다** (2026-09-05 사장님 지시) ─────────────────────────
+     * *"쓸모없는 버튼은 삭제해주세요(중복기능은 합쳐주세요) 최대한 서치기능을
+     * 함축해서 한번에 사용해야합니다"*. LG 비교·매장 대 매장·검색 관심도는
+     * 「수집」 안에서 오늘 할 것만 골라 돈다 — 사장님이 **순서를 외울 필요가 없다.**
+     * 남은 둘은 갈래가 아니라 **모드**다(새 글만 / 처음부터). */
+    ['run', 'runfull'].forEach((id) => {
       if (!ixB.includes('<option value="' + id + '">')) bB.push(id + ' 가 수집 선택지에 없다');
       if (!ixB.includes('id="' + id + '"')) bB.push(id + ' 버튼이 사라졌다 — 핸들러가 죽는다');
     });
+    ['runrival', 'sriv-go', 'runtrend'].forEach((id) => {
+      if (ixB.includes('id="' + id + '"')) bB.push(id + ' 버튼이 되살아났다 — 「수집」에 합쳤다');
+    });
+    /* **서버가 정말 그것들을 안에서 도는가** — 버튼만 없애고 안 돌면 자료가 안 늘어난다 */
+    ['function srivalDue_(', 'function trendDue_('].forEach((w) => {
+      if (!gsB.includes(w)) bB.push('문지기가 없다: ' + w);
+    });
+    if (!gsB.includes('srivalRun = collectStoreRival(false, Date.now()')) {
+      bB.push('「수집」이 매장 대 매장을 안 돈다');
+    }
+    if (!gsB.includes('trendRun = collectTrend();')) bB.push('「수집」이 검색 관심도를 안 돈다');
+    /* **남은 시간을 보고 시작한다** — 앞 단계가 예산을 다 쓰고 넘기면 6분을 넘겨
+       그 실행이 통째로 사라진다(LG 비교가 강원에서 이미 겪은 자리다). */
+    if (!gsB.includes('var msLeft = function ()')) bB.push('남은 시간을 안 보고 시작한다');
+    if (!/collectStoreRival\(reset, deadline\)/.test(gsB)) bB.push('매장 대 매장이 마감 시각을 안 받는다');
 
     /* ⓓ **남은 몫은 둘 중 작은 쪽이다** — 우리 한도(50,000)로만 적으면 「남은 41,829회」라
            말해 놓고 구글이 11,829 에서 끊는다. **떼어 돌려 본다.** */
@@ -3887,8 +3917,62 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
     }
 
+    /* ⓘ **톱니바퀴(설정)** (2026-09-05 사장님 지시) — 자물쇠는 「잠겼다」는 뜻이라
+       무엇이 들어 있는지를 말하지 않았다. 톱니바퀴는 어느 화면에서나 「설정」으로 읽힌다.
+       **글자를 없앴으므로 손가락이 닿을 크기(34px)를 지켜야 한다.** */
+    if (!/id="admopen"[\s\S]{0,400}<circle cx="12" cy="12" r="3\.1"\/>/.test(ixC)) {
+      bC.push('설정 단추가 톱니바퀴가 아니다');
+    }
+    if (!/#admopen \{[^}]*width: 34px/.test(ixC)) bC.push('설정 단추가 손가락 크기(34px)가 아니다');
+    if (!/aria-label="설정\(관리자\)"/.test(ixC)) bC.push('글자를 없앴는데 읽어 줄 이름이 없다');
+    /* 움직임은 **덤이지 기능이 아니다** — 어지럼증으로 그 설정을 켠 사람에게는 못 쓸 화면이 된다 */
+    if (!/prefers-reduced-motion[\s\S]{0,200}#admopen svg/.test(ixC)) {
+      bC.push('톱니바퀴 회전이 prefers-reduced-motion 을 안 본다');
+    }
+
+    /* ⓙ **「지금 할 일」** — 사장님 *"어떤버튼을 어떤순서로해야하는지 알려주세요"*.
+       적어 드린 순서는 다음 배포에 낡는다. 화면이 그때그때 말하게 하고, **다섯 갈래를
+       떼어 돌려** 본다(문자열만 보면 판정이 뒤집혀도 통과한다). */
+    if (!ixC.includes('function renderTodo(')) bC.push('「지금 할 일」을 적는 곳이 없다');
+    if (!ixC.includes('id="todo"')) bC.push('「지금 할 일」 자리가 없다');
+    if (!/renderProgress\(\);[\s\S]{0,240}renderTodo\(\);/.test(ixC)) {
+      bC.push('「지금 할 일」이 진행 상태보다 먼저 그려진다 — 옛 상태로 적는다');
+    }
+    {
+      const m = ixC.match(/function renderTodo\(\)[\s\S]*?\n  \}/);
+      const sm = ixC.match(/function sweepMissed\(runMin\)[\s\S]*?\n  \}/);
+      if (!m || !sm) bC.push('「지금 할 일」을 떼어 낼 수 없다');
+      else {
+        const run = (DATA) => {
+          const el = { className: '', innerHTML: '' };
+          const f = new Function('DATA', 'document', 'esc', 'sweepMissed_src',
+            sm[0] + m[0] + ' renderTodo(); return null;');
+          f(DATA, { getElementById: (id) => (id === 'todo' ? el : null) }, (x) => String(x));
+          return el;
+        };
+        const base = { due: { rival: true, srival: true, trend: false },
+          dailyLimit: 20000, googleQuota: 20000, dayUsed: 3120,
+          lastRun: { ms: Date.now() }, now: Date.now(), chainOn: false, runAt: 0 };
+        const norm = run(base);
+        if (norm.innerHTML.indexOf('수집') < 0) bC.push('평소에 무엇을 누르라고 안 적는다');
+        if (norm.innerHTML.indexOf('LG 비교') < 0) bC.push('무엇이 남았는지 안 적는다');
+        const done = run(Object.assign({}, base, { due: { rival: false, srival: false, trend: false } }));
+        if (done.innerHTML.indexOf('다 했습니다') < 0) bC.push('다 했을 때 그렇게 안 적는다');
+        const outq = run(Object.assign({}, base, { dayUsed: 99999, quotaResetAt: '16:00' }));
+        if (outq.innerHTML.indexOf('16:00') < 0) bC.push('쿼터를 다 썼는데 언제 풀리는지 안 적는다');
+        if (outq.className.indexOf('low') < 0) bC.push('쿼터 소진을 평소와 같은 색으로 적는다');
+        const busy = run(Object.assign({}, base, { chainOn: true }));
+        if (busy.innerHTML.indexOf('누르실 것이 없습니다') < 0) bC.push('도는 중인데 또 누르라고 한다');
+        /* **멈췄으면 그것이 먼저다** — 눌러도 안 돌면 나머지 안내가 뜻이 없다 */
+        const nowMs = new Date(2026, 8, 5, 10, 24).getTime();
+        const dead = run(Object.assign({}, base,
+          { now: nowMs, lastRun: { ms: new Date(2026, 8, 5, 1, 54).getTime() } }));
+        if (dead.innerHTML.indexOf('자동 수집 다시 걸기') < 0) bC.push('멈췄는데 다시 걸라고 안 한다');
+      }
+    }
+
     if (bC.length) { ok = false; console.log('ERROR: [바이럴] 재고 조사 — ' + bC.join(' · ')); }
-    else console.log('OK: 바이럴 재고 조사 — 심벌·표 막대·유형 이름·승패 판정·폰 이동·매장 수');
+    else console.log('OK: 바이럴 재고 조사 — 심벌·표 막대·유형 이름·승패 판정·폰 이동·매장 수·톱니바퀴·지금 할 일');
   }
 
   /* ⑧ **균형점은 회사 수가 정한다** (2026-09-03 배포 확인에서 발견)
@@ -4070,7 +4154,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (at4 < 0) bad.push("adm-body 를 못 찾았다");
     else {
       const body = ix.slice(at4);
-      ['id="run"', 'id="runfull"', 'id="wipe"', 'id="sriv-go"'].forEach((f) => {
+      /* 「매장 대 매장 수집」 버튼은 2026-09-05 에 「수집」으로 합쳐 없앴다 */
+      ['id="run"', 'id="runfull"', 'id="wipe"'].forEach((f) => {
         if (body.indexOf(f) < 0) bad.push(f + " 가 관리자 잠금 안에 없다");
       });
     }
@@ -4080,10 +4165,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
      같은 계정의 다른 스크립트가 쓴 것을 모른다. 실제로 한 번 호출해 보는 것이
      유일하게 확실한 확인이다. **오류 문구를 그대로 보여줘야** 「쿼터」인지 다른
      문제인지 갈린다. */
+  /* **버튼은 지웠다**(2026-09-05 사장님 지시로 쓸모없는 버튼 정리). 화면이 이미
+     쿼터 N/M · 구글 한도 · 마지막 실행 오류를 적고, 한 번 두드려 보는 것은
+     「수집」을 누르는 것과 같은 답을 준다. **서버 함수는 남긴다** — 나중에
+     다시 필요해지면 배선만 하면 되고, 지우면 그 판단까지 사라진다. */
   if (!gs.includes('function quotaTest()')) bad.push('quotaTest 가 없다');
   if (!gs.includes('addUsage_(1)')) bad.push('쿼터 확인이 자기 호출을 안 센다');
-  if (!ix.includes('id="quota-go"')) bad.push('화면에 쿼터 확인 버튼이 없다');
-  if (!ix.includes('아직 막혀 있습니다')) bad.push('막혔을 때 그 사실을 안 적는다');
+  if (ix.includes('id="quota-go"')) bad.push('쿼터 확인 버튼이 되살아났다 — 화면이 이미 적는다');
 
   if (bad.length) fail('[바이럴] 매장 대 매장 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 매장 대 매장 — 양쪽을 같은 질의로 · 색은 우리 몫 · 자료 없으면 감춘다');
@@ -4519,7 +4607,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ④ 화면이 예약됐다는 사실을 안다 — 안 보내면 「눌렀는데 아무 일도 없다」가 된다 */
     if (!rv.includes('d.rivalWant =')) bad.push('doGet 이 예약 상태를 안 보낸다');
     if (!ix.includes('DATA.rivalWant')) bad.push('화면이 예약 상태를 안 적는다 — 새로고침하면 사라진다');
-    if (!ix.includes('r.queued')) bad.push('버튼이 예약 응답을 안 다룬다');
+    /* 「LG 비교 갱신」 버튼은 2026-09-05 에 「수집」으로 합쳤다 — 예약을 받아
+       처리하는 것은 서버(collectReviews)이고, 화면은 그 상태를 적기만 한다. */
+    if (!rv.includes('_rivalWant')) bad.push('서버가 예약을 안 다룬다');
     /* ⑤ 자료 비우기가 예약도 함께 지운다 — 남으면 초기화 뒤에도 LG 비교부터 돈다 */
     const resetLine = (rv.match(/\['_cursor',[^\]]*\]/) || [''])[0];
     if (resetLine && !resetLine.includes('_rivalWant')) bad.push('초기화 목록에 _rivalWant 가 빠졌다');
@@ -4649,8 +4739,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('cancelFull 이 커서를 건드린다 — 훑은 매장을 다시 훑어 쿼터를 또 태운다');
     if (!blk.includes('sumCacheClear_')) bad.push('cancelFull 이 집계 캐시를 안 버린다 — 최대 6시간 옛 값이 남는다');
   }
-  if (!ix.includes('.cancelFull();')) bad.push('화면에 「전체 재수집 취소」를 부르는 곳이 없다');
-  if (!ix.includes("cf.hidden = !DATA.forceFull")) bad.push('취소 버튼이 전체 재수집 중일 때만 뜨지 않는다');
+  /* **「수집 멈춤」에 합쳤다**(2026-09-05 사장님 지시로 중복 버튼을 줄였다) —
+     둘 다 뜻이 「그만」인데 버튼이 둘이면 무엇을 눌러야 멈추는지 헷갈린다.
+     멈출 때 전체 재수집 중이었으면 그 표식도 함께 내린다. */
+  if (!ix.includes('.cancelFull();')) bad.push('화면에 cancelFull 을 부르는 곳이 없다');
+  if (ix.includes('id="cancelfull"')) bad.push('「전체 재수집 취소」 버튼이 되살아났다 — 「수집 멈춤」에 합쳤다');
+  if (!ix.includes('var wasFull = !!DATA.forceFull;')) {
+    bad.push('멈춤이 전체 재수집 표식을 안 내린다 — 다시 돌 때 또 처음부터 판다');
+  }
 
   /* 누르기 전에 며칠 걸리는지 말한다 — 지금까지는 누른 뒤에야 알았다 */
   const rf = ix.indexOf("getElementById('runfull').onclick");
@@ -4926,8 +5022,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!blk.includes('지역끼리 견주지 마세요')) bad.push('지역 간 비교를 막는 안내가 없다');
   }
   /* ⑥ 화면·스텁 배선 */
-  if (!ix.includes('.runTrend();')) bad.push('화면에 갱신 버튼 배선이 없다');
-  if (!ix.includes('id="runtrend"')) bad.push('갱신 버튼 마크업이 없다');
+  /* **버튼을 없애고 「수집」 안으로 넣었다**(2026-09-05). 7회짜리라 다른 수집을
+     굶기지 않고, 사장님이 따로 고를 이유가 없다. 서버가 정말 도는지를 본다. */
+  if (ix.includes('id="runtrend"')) bad.push('갱신 버튼이 되살아났다 — 「수집」에 합쳤다');
+  if (!gs.includes('function trendDue_(')) bad.push('오늘 했는지 가리는 문지기가 없다');
+  if (!gs.includes('trendRun = collectTrend();')) bad.push('「수집」이 검색 관심도를 안 돈다');
   if (!/renderTails\(\);\s*\n\s*renderInterest\(\);/.test(ix)) bad.push('renderInterest 를 그리는 곳이 없다');
   if (!pv.includes('runTrend:')) bad.push('미리보기 하네스에 runTrend 스텁이 없다 — 누르면 화면이 죽는다');
   /* ⑦ 없으면 null — 0 으로 보내면 화면이 「검색이 없다」로 그린다 */

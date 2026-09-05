@@ -411,6 +411,9 @@ const DATA = {
      **경계를 일부러 섞는다** — 남은 몫(20,000 − 3,120 = 16,880)보다 큰 것(full)과
      작은 것(rival·srival·trend)을 함께 두어 경고가 붙는 쪽·안 붙는 쪽을 다 본다. */
   costs: { quick: 8420, full: 22158, rival: 1320, srival: 4560, trend: 7, audit: 540 },
+  /* **오늘 아직 안 한 것** — 「지금 할 일」 줄이 이것으로 무엇이 남았는지 적는다.
+     하나는 이미 한 것으로 두어(trend:false) **다 남은 경우와 일부만 남은 경우**를 함께 본다. */
+  due: { rival: true, srival: true, trend: false, dead: true },
   /* 쿼터가 언제 풀리는지 — 서버가 태평양 시간대로 계산해 준다(여름 16시·겨울 17시) */
   quotaResetAt: '16:00', quotaResetMin: 571,
   lastRun: { at: '2026-08-31T12:00:00.000Z', n: 41, done: true, reason: '' },

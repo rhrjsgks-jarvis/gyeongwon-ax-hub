@@ -57,13 +57,31 @@
    * **글자를 남긴다** — 자물쇠만 두면 무엇인지 몰라 누르지 않는다(이 저장소가
    * 심벌 박스에서 이미 배운 것이다). 좁은 화면에서는 글자만 줄인다. */
   header .wrap { position: relative; }
-  #admopen { position: absolute; top: 0; right: 0; font-size: 11.5px; font-weight: 700;
-             display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px;
+  /* **톱니바퀴 하나짜리 동그란 단추**(2026-09-05). 글자를 없앴으므로 **손가락이 닿을
+     크기**(34px)를 지켜야 한다 — 아이콘만 남으면 알약보다 작아지기 쉽다. */
+  #admopen { position: absolute; top: 0; right: 0; width: 34px; height: 34px; padding: 0;
+             display: inline-flex; align-items: center; justify-content: center;
              border-radius: 999px; cursor: pointer; line-height: 1;
              background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.26); color: #fff; }
-  #admopen:hover { background: rgba(255,255,255,.24); }
-  #admopen svg { width: 13px; height: 13px; }
-  @media (max-width: 520px) { #admopen span { display: none; } #admopen { padding: 6px; } }
+  #admopen:hover { background: rgba(255,255,255,.26); }
+  /* 돌아가는 것이 아니라 **눌러 여는 것**이라 회전은 살짝만 준다 */
+  #admopen svg { width: 18px; height: 18px; transition: transform .25s ease; }
+  #admopen:hover svg { transform: rotate(45deg); }
+  #admopen[aria-expanded="true"] { background: rgba(255,255,255,.30); }
+  @media (prefers-reduced-motion: reduce) { #admopen svg { transition: none; }
+    #admopen:hover svg { transform: none; } }
+  /* **지금 할 일** — 관리자 항목 맨 위. 눈에 먼저 닿아야 뜻이 있다. */
+  .todo { background: #EEF2FF; border: 1px solid #C7D2F0; border-radius: 10px;
+          padding: 10px 12px; margin: 0 0 12px; font-size: var(--fs-body); line-height: 1.55; }
+  .todo b { color: var(--blue); }
+  .todo.wait { background: #F3F4F6; border-color: #E5E7EB; }
+  .todo.wait b { color: #374151; }
+  .todo.low { background: #FEF3C7; border-color: #FCD34D; }
+  .todo.low b { color: #B45309; }
+  /* 번호 동그라미 — **가장 작은 글자 토큰을 쓴다**(숫자를 박으면 그것만 따로 굳는다) */
+  .todo .n { display: inline-block; min-width: 18px; height: 18px; line-height: 18px;
+             text-align: center; border-radius: 999px; background: var(--blue); color: #fff;
+             font-size: var(--fs-mini); font-weight: 800; margin-right: 5px; }
   /* 팝업 — **화면을 덮되 스크롤은 안쪽에서** 돈다(관리자 항목이 길다) */
   .admbg { position: fixed; inset: 0; background: rgba(17,24,39,.55); z-index: 90;
            display: flex; align-items: flex-start; justify-content: center; padding: 24px 12px;
@@ -951,10 +969,18 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
          예전에는 심벌 박스 하나를 차지하고 카드가 화면에 길게 눌러앉았다 — 상담사가
          볼 화면에 **관리자만 쓰는 것**이 늘 자리를 먹고 있었다. 팝업으로 옮기면
          그 자리가 비고, 누가 눌러도 잠금이 먼저 막는다(잠금은 그대로다). -->
-    <button type="button" id="admopen" aria-haspopup="dialog" aria-expanded="false" title="관리자">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      <span>관리자</span>
+    <!-- **톱니바퀴(설정)다**(2026-09-05 사장님 지시 — *"오른쪽 상단에 톱니바퀴(설정)
+         형식으로"*). 예전 자물쇠는 「잠겨 있다」는 뜻이라 **무엇이 들어 있는지**를
+         말하지 않았다. 톱니바퀴는 어느 화면에서나 「설정」으로 읽힌다.
+         **글자를 없앴다** — 톱니바퀴가 이미 뜻을 말하므로 「관리자」를 덧붙이면
+         폰에서 자리만 먹는다. 소리내어 읽는 기기에는 `aria-label` 이 말한다. -->
+    <button type="button" id="admopen" aria-haspopup="dialog" aria-expanded="false"
+            aria-label="설정(관리자)" title="설정(관리자)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3.1"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.08A1.65 1.65 0 0 0 10.09 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
     </button>
     <h1>경원영업팀 바이럴분석</h1>
     <p>네이버 블로그 · 카페(다이렉트웨딩 · 메이크마이웨딩 · 레몬테라스 · 요즘웨딩 · 맘카페 · 입주카페)</p>
@@ -1292,8 +1318,14 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <!-- ── 자료 수집 (2026-09-03 사장님 지시로 머리에서 옮겨 왔다) ────────
            **맨 위에 둔다** — 가장 자주 누르는 것이다. 되돌릴 수 없는
            「자료 비우고 처음부터」는 이 절 맨 뒤로 보낸다. -->
+      <!-- ── **지금 할 일** (2026-09-05 사장님 지시) ────────────────────────
+           *"업데이트하고나서 어떤버튼을 어떤순서로해야하는지 알려주세요"*.
+           **적어 드린 순서는 다음 배포에 낡는다** — 화면이 그때그때 말하게 한다.
+           맨 위에 둔다(들어오자마자 눈에 닿아야 뜻이 있다). -->
+      <div id="todo" class="todo"></div>
       <h3>자료 수집</h3>
-      <div class="sub"><b>최근 것만</b>은 이미 가진 영역에서 멈춥니다(빠릅니다).
+      <div class="sub"><b>수집</b>이 오늘 안 한 것을 <b>차례로 다</b> 합니다 —
+        LG 비교 · 매장 대 매장 · 검색 관심도까지 알아서 돕니다.
         <b>전체 재수집</b>은 처음부터 끝까지 팝니다 — 여러 번 이어 돌아야 합니다.</div>
       <!-- ── 진행 상태 (2026-09-04 머리에서 옮겨 왔다) ──────────────────────
            사장님 지시: *"「62곳 한 바퀴를 마친 상태입니다 / 마지막 발자국 …」 은
@@ -1322,29 +1354,26 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            `collectRival` 을 갈아 끼우다 함수 다섯을 삼킨 적이 있다). -->
       <div class="alias-add">
         <select id="what" aria-label="무엇을 수집할까요">
-          <option value="run">최근 것만 수집</option>
-          <option value="runfull">전체 재수집</option>
-          <option value="runrival">LG 비교</option>
-          <option value="sriv-go">매장 대 매장</option>
-          <option value="runtrend">검색 관심도</option>
+          <!-- **갈래가 다섯이던 것을 둘로 줄였다**(2026-09-05 사장님 지시).
+               LG 비교 · 매장 대 매장 · 검색 관심도는 이제 **「수집」 안에서** 오늘
+               할 것만 골라 차례로 돈다(`srivalDue_`·`trendDue_`·`rivalDue_`) —
+               사장님이 **순서를 외울 필요가 없다.** 남은 둘은 갈래가 아니라 **모드**다:
+               새 글만 훑을 것인가, 처음부터 다시 팔 것인가. -->
+          <option value="run">수집 — 오늘 할 것 전부</option>
+          <option value="runfull">전체 재수집 — 처음부터</option>
         </select>
-        <button id="run">최근 것만 수집</button>
+        <button id="run">수집</button>
         <button id="runfull" hidden>전체 재수집</button>
-        <button id="runrival" hidden>LG 비교 갱신</button>
-        <button id="sriv-go" hidden>매장 대 매장 수집</button>
-        <button id="runtrend" hidden>검색 관심도 갱신</button>
       </div>
       <!-- **누르기 전에 얼마를 쓰는지 적는다** — 사장님 걱정의 절반이 이것이었다.
            숫자는 서버가 한 곳에서 센다(`actionCosts_`) — 화면이 따로 세면 상수가
            바뀔 때 한쪽만 고쳐져 조용히 옛 숫자를 말한다. -->
       <div class="sub" id="what-cost"></div>
       <div class="alias-add" style="margin-top:6px">
-        <button id="stop" hidden>이어달리기 멈춤</button>
-        <!-- **전체 재수집을 끌 길이 없었다** (2026-09-04). 한 번 켜지면 한 바퀴를
-             완전히 마쳐야만 표식이 내려가는데, 한 바퀴가 하루 한도에 육박해 못 끝내면
-             다음 날 또 처음부터다 — 실제로 이틀째 그 상태였고 그 사이 「최근 것만」은
-             한 번도 못 돌았다. 돌고 있을 때만 나타난다. -->
-        <button id="cancelfull" hidden>전체 재수집 취소</button>
+        <button id="stop" hidden>수집 멈춤</button>
+        <!-- 「전체 재수집 취소」는 「수집 멈춤」에 합쳤다(2026-09-05 사장님 지시로
+             중복 버튼을 줄였다). 전체 재수집 중에 멈추면 그 표식도 함께 내려간다 —
+             안 내리면 다시 돌 때 또 처음부터 판다. -->
         <button id="dedupe" hidden>중복 정리</button>
         <!-- **새벽 3시 트리거를 다시 건다** — 구글이 반복 실패로 트리거를 끄는 일이
              있고 그것은 Apps Script 실행 기록에만 남는다. 원인을 짐작해 고치는 대신
@@ -1357,8 +1386,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            우리 카운터는 우리가 쓴 몫만 알아서, 같은 계정의 다른 스크립트가 쓴 것을
            모른다 — 실제로 호출해 보는 것이 유일하게 확실하다. 비용 1회. -->
       <div class="alias-add" style="margin-top:6px">
-        <button id="quota-go">지금 호출이 되는지 확인</button>
-        <span class="sub" id="quota-msg"></span>
+        <!-- 「지금 호출이 되는지 확인」은 지웠다(2026-09-05) — 화면이 이미
+             쿼터 N/M · 구글 한도 · 마지막 실행 오류를 적는다. 한 번 두드려 보는 것은
+             「수집」을 누르는 것과 같은 답을 준다. -->
       </div>
       <div class="alias-add" style="margin-top:6px">
         <span class="lim">
@@ -1385,9 +1415,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="sub">네이버에서 <b>얼마나 찾는지</b>를 봅니다 — 후기 건수(공급)와 다른 축입니다.
         하루 <b>7회</b>면 끝납니다(전국 1 + 지역 6).
         <b>데이터랩 전용 키</b>가 필요합니다(검색 API 키와 다른 체계입니다).</div>
-      <!-- 버튼은 위 「수집」 줄로 옮겼다(2026-09-05) — 한 자리에서만 돌린다 -->
-      <div class="sub">돌리려면 위 <b>「수집」</b>에서 <b>검색 관심도</b>를 고르세요.
-        <span id="trend-msg"></span></div>
+      <!-- **따로 돌릴 필요가 없다**(2026-09-05) — 「수집」이 오늘 아직 안 했으면
+           스스로 한다(`trendDue_`). 7회짜리라 다른 수집을 굶기지 않는다. -->
+      <div class="sub"><b>「수집」</b>을 누르면 오늘 안 했을 때 알아서 함께 모읍니다.</div>
       <div id="trendbox" class="sub" style="margin-top:8px">—</div>
 
       <!-- ── 질의 꼬리말 성적 (2026-09-04) ─────────────────────────────────
@@ -1411,9 +1441,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         한 매장에 LG 지점을 <b>최대 3곳</b>까지 붙일 수 있고(「매장별」에서 지점을 누르면 고칩니다)
         그만큼 호출이 늡니다 — <b>드는 호출은 위 「수집」 줄이 적습니다</b>.
         못 끝내면 <b>스스로 이어 갑니다</b>.</div>
-      <!-- 버튼은 위 「수집」 줄로 옮겼다(2026-09-05) -->
-      <div class="sub">돌리려면 위 <b>「수집」</b>에서 <b>매장 대 매장</b>을 고르세요.</div>
-      <div id="sriv-msg" class="sub"></div>
+      <!-- **따로 돌릴 필요가 없다**(2026-09-05) — 「수집」이 오늘 아직 안 했으면
+           스스로 한다(`srivalDue_`). 짝을 바꾸면 그 즉시 다시 잰다. -->
+      <div class="sub"><b>「수집」</b>을 누르면 오늘 안 했을 때 알아서 함께 잽니다 —
+        LG 짝을 바꾸면 그 자리에서 다시 잽니다.</div>
 
       <h3>검출 감사 — 이 매장을 몇 % 잡고 있나</h3>
       <div class="sub">한 매장을 <b>끝까지 다시 훑어</b> 지금 자료와 견줍니다 —
@@ -1753,65 +1784,86 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var out = document.getElementById('adm-out');
       if (out) out.onclick = function () { admToken = ''; admClear(); renderAdmin(); };
     }
-    if (on) { renderMgrBook(); }
+    if (on) { renderMgrBook(); renderTodo(); }
+  }
+
+  /** 자동 수집이 **오늘 한 번도 안 돌았는가.**
+   *
+   *  **판정은 「오늘 새벽 3시」다.** 자동 수집이 그때 도니, 지금이 3시 반을 지났는데
+   *  마지막 실행이 그보다 앞이면 오늘 한 번도 안 돈 것이다. 「몇 시간 전인가」로 잡으면
+   *  정상적으로 밤에 끝난 상태(3시 이후 ~ 다음 3시)를 자꾸 경고한다 — **매일 뜨는
+   *  경고는 아무도 안 읽는다.**
+   *
+   *  **모르는 것은 「멈췄다」가 아니다** — 마지막 실행을 아예 모르면 판정하지 않는다.
+   *  진행 상태 줄과 「지금 할 일」이 **같은 규칙**을 봐야 화면이 두 말을 하지 않는다. */
+  function sweepMissed(runMin) {
+    var lrMs = (DATA.lastRun && DATA.lastRun.ms) ? Number(DATA.lastRun.ms) : 0;
+    if (!lrMs) return false;
+    var nowMs = Number(DATA.now) || Date.now();
+    var d3 = new Date(nowMs); d3.setHours(3, 0, 0, 0);
+    if (nowMs <= d3.getTime() + 30 * 60000) return false;   /* 아직 올 시간이다 */
+    return lrMs < d3.getTime() && !runMin;
+  }
+
+  /** ── **지금 할 일** (2026-09-05 사장님 지시) ────────────────────────────────
+   *  *"업데이트하고나서 어떤버튼을 어떤순서로해야하는지 알려주세요"*.
+   *
+   *  **적어 드린 순서는 다음 배포에 낡는다.** 그래서 화면이 그때그때 말한다 —
+   *  누를 것이 하나뿐이면 그 하나를, 없으면 없다고, 못 누를 상태면 왜인지.
+   *
+   *  **순서를 판정하는 규칙은 여기 한 곳에만 둔다** — 「수집」 안내 문구와 이 줄이
+   *  따로 놀면 같은 화면이 두 말을 한다.
+   */
+  function renderTodo() {
+    var el = document.getElementById('todo');
+    if (!el) return;
+    var due = DATA.due || {};
+    var lim1 = Number(DATA.dailyLimit) || 0, lim2 = Number(DATA.googleQuota) || 0;
+    var lim = (lim1 && lim2) ? Math.min(lim1, lim2) : (lim1 || lim2);
+    var left = Math.max(0, lim - (Number(DATA.dayUsed) || 0));
+    var step = function (n, txt) { return '<span class="n">' + n + '</span>' + txt; };
+
+    /* ① 자동 수집이 멈췄으면 그것이 먼저다 — 눌러도 안 돌면 나머지가 뜻이 없다 */
+    var missed = sweepMissed(0);
+    if (missed) {
+      el.className = 'todo low';
+      el.innerHTML = step(1, '<b>자동 수집이 멈춰 있습니다</b> — 아래 '
+        + '<b>「자동 수집 다시 걸기」</b>를 먼저 눌러 주세요.')
+        + '<br>' + step(2, '그다음 <b>「수집」</b> 한 번이면 오늘 할 것을 다 합니다.');
+      return;
+    }
+    /* ② 쿼터를 다 썼으면 눌러도 돌지 않는다 — 「누르세요」가 그 순간 거짓이 된다 */
+    if (lim > 0 && left <= 0) {
+      el.className = 'todo low';
+      el.innerHTML = '<b>오늘 쓸 수 있는 호출을 다 썼습니다.</b> 지금은 눌러도 돌지 않습니다 — '
+        + (DATA.quotaResetAt ? '<b>' + esc(String(DATA.quotaResetAt)) + '</b>에 풀립니다.'
+                             : '쿼터가 풀린 뒤에 눌러 주세요.');
+      return;
+    }
+    /* ③ 이미 돌고 있으면 누를 것이 없다 */
+    if (DATA.chainOn || DATA.runAt) {
+      el.className = 'todo wait';
+      el.innerHTML = '<b>지금 자동으로 돌고 있습니다</b> — 누르실 것이 없습니다. '
+        + '끝날 때까지 두시면 됩니다(멈추려면 아래 「수집 멈춤」).';
+      return;
+    }
+    /* ④ 평소 — 「수집」 하나. **무엇이 남았는지 함께 적는다**(그것이 곧 근거다) */
+    var rest = [];
+    if (due.rival) rest.push('LG 비교');
+    if (due.srival) rest.push('매장 대 매장');
+    if (due.trend) rest.push('검색 관심도');
+    el.className = 'todo';
+    el.innerHTML = step(1, '<b>「수집」</b>을 한 번 누르시면 됩니다 — '
+      + '오늘 안 한 것을 <b>차례로 다</b> 합니다.')
+      + '<br><span class="cntxt">'
+      + (rest.length
+          ? '오늘 아직 안 한 것: <b>' + esc(rest.join(' · ')) + '</b> · 매장 훑기'
+          : '오늘 것은 이미 다 했습니다 — 눌러도 새 글만 훑어 금방 끝납니다.')
+      + '</span>';
   }
 
   /** 검출 감사 · 옛 자료 지우기 — **관리자 안에서만** 돈다(값을 바꾸는 일이다). */
   function wireAudit() {
-    var qg = document.getElementById('quota-go');
-    if (qg && !qg.dataset.wired) {
-      qg.dataset.wired = '1';
-      qg.onclick = function () {
-        var m = document.getElementById('quota-msg');
-        qg.disabled = true;
-        if (m) m.textContent = '두드려 보는 중…';
-        google.script.run
-          .withSuccessHandler(function (r) {
-            qg.disabled = false;
-            if (!m) return;
-            var used = (r && typeof r.used === 'number')
-              ? ' (우리가 쓴 호출 ' + nf(r.used) + ' / ' + nf(r.limit) + ')' : '';
-            m.innerHTML = (r && r.ok)
-              ? '<b style="color:#0F7B3F">호출됩니다</b> — 응답 ' + r.code + '.'
-                + ' 이제 수집을 눌러도 됩니다.' + used
-              /* **오류 문구를 그대로 보여준다** — 「쿼터」인지 다른 문제인지 갈린다 */
-              : '<b class="warn">아직 막혀 있습니다</b> — ' + esc((r && r.why) || '알 수 없는 이유') + used;
-          })
-          .withFailureHandler(function (e) {
-            qg.disabled = false;
-            if (m) m.innerHTML = '<b class="warn">확인하지 못했습니다</b> — ' + esc(e && e.message);
-          })
-          .quotaTest();
-      };
-    }
-    var sg = document.getElementById('sriv-go');
-    if (sg && !sg.dataset.wired) {
-      sg.dataset.wired = '1';
-      sg.onclick = function () {
-        var m = document.getElementById('sriv-msg');
-        sg.disabled = true;
-        if (m) m.textContent = '재는 중입니다 — 최대 5분 걸립니다…';
-        google.script.run
-          .withSuccessHandler(function (r) {
-            sg.disabled = false;
-            if (!r || !r.ok) {
-              if (m) m.innerHTML = '<b class="warn">못 쟀습니다</b> — '
-                + esc((r && (r.why || (r.busy ? '다른 작업이 돌고 있습니다' : ''))) || '알 수 없는 이유');
-              return;
-            }
-            if (m) m.innerHTML = '<b>' + r.cur + ' / ' + r.tot + '곳</b> · 이번에 ' + r.wrote
-              + '곳 · ' + r.calls + '회 호출'
-              + (r.done ? ' — <b>다 쟀습니다.</b> 새로고침하면 히트맵에 「LG 대비로 보기」가 생깁니다.'
-                 : ' — 남은 곳은 <b>1분 뒤 스스로 이어 갑니다.</b>')
-              + (r.error ? ' <b class="warn">' + esc(r.error) + '</b>' : '');
-          })
-          .withFailureHandler(function (e) {
-            sg.disabled = false;
-            if (m) m.innerHTML = '<b class="warn">못 쟀습니다</b> — ' + esc(e && e.message);
-          })
-          .collectStoreRival(false);
-      };
-    }
     var go = document.getElementById('aud-go'), inp = document.getElementById('aud-store');
     var out = document.getElementById('aud-out');
     if (go && inp) go.onclick = function () {
@@ -3793,7 +3845,7 @@ function wireSecs() {
     if (!R || !R.rows || !R.rows.length) {
       var rel = document.getElementById('rival');
       if (rel) {
-        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>관리자의 「수집」에서 <b>LG 비교</b></b>을 '
+        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>오른쪽 위 톱니바퀴에서 「수집」</b>을 '
           + '누르면 지금 바로 잽니다(최대 5분). 삼성스토어와 LG베스트샵에 <b>같은 질의</b>를 던져 비중을 냅니다.</div>';
         /* 보임은 applySecs 가 정한다 */
       }
@@ -3884,7 +3936,7 @@ function wireSecs() {
           + esc(miss.join(' · ')) + '</b>' + josa(miss[miss.length - 1], '은', '는')
           + ' 아직 못 쟀습니다 — 값이 없는 것이지 '
           + '<b>LG 후기가 없다는 뜻이 아닙니다</b>. '
-          + '관리자의 「수집」에서 <b>LG 비교</b>를 고르면 멈춘 도시부터 이어서 잽니다.</div>';
+          + '「수집」을 누르면 멈춘 도시부터 이어서 잽니다(따로 고를 것이 없습니다).</div>';
       }
     }
     /* **「줄이 있다」와 「다 쟀다」는 다른 말이다**(2026-09-02). 위 안내는 지역 줄이
@@ -3898,7 +3950,7 @@ function wireSecs() {
         + esc(halfRows.map(function (r) { return r.area + '(' + r.cities + '/' + r.wantCities + '곳)'; }).join(' · '))
         + '</b> — 도시를 다 못 쟀습니다. 건수는 그 도시들만의 것이고 <b>비중은 내지 않았습니다</b>'
         + ' — 남은 도시가 빠진 채로 비율을 내면 화면이 거짓을 말합니다.'
-        + ' 관리자의 「수집」에서 <b>LG 비교</b>를 고르면 남은 도시를 마저 잽니다.</div>';
+        + ' 「수집」을 누르면 남은 도시를 마저 잽니다(따로 고를 것이 없습니다).</div>';
     }
 
     /* ── 갈래별 (2026-09-01 사장님: *"디테일한 비교가 필요합니다"*) ───────────
@@ -4140,9 +4192,9 @@ function renderPromo() {
   if (!box) return;
   var R = DATA.rival, rows = (R && R.rows) || [];
   if (!rows.length) {
-    if (sub) sub.textContent = '아직 안 쟀습니다 — 관리자의 「수집」에서 「LG 비교」를 고르세요';
+    if (sub) sub.textContent = '아직 안 쟀습니다 — 오른쪽 위 톱니바퀴에서 「수집」을 누르세요';
     box.innerHTML = '<div class="pnote">당사 vs LG 자료가 아직 없습니다. '
-      + '<b>관리자의 「수집」에서 <b>LG 비교</b></b>을 누르면 지금 바로 채웁니다(최대 5분).</div>';
+      + '<b>오른쪽 위 톱니바퀴 → 「수집」</b>을 누르면 오늘 안 했을 때 바로 채웁니다(최대 5분).</div>';
     return;
   }
 
@@ -4165,10 +4217,10 @@ function renderPromo() {
 
   var nChan = Object.keys(chan.rival).length + Object.keys(chan.ours).length;
   if (!nChan && !Object.keys(prod).length) {
-    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다 — 관리자의 「수집」에서 「LG 비교」를 고르세요';
+    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다 — 오른쪽 위 톱니바퀴에서 「수집」을 누르세요';
     box.innerHTML = '<div class="pnote">이 비교 회차는 <b>채널·품목을 세기 전에 돈 것</b>입니다 — '
       + '옛 회차 줄에는 그 칸 자체가 없어 되살릴 방법이 없습니다. '
-      + '<b>관리자의 「수집」에서 <b>LG 비교</b></b>을 누르면 새 회차를 돌아 여기를 채웁니다(최대 5분, '
+      + '<b>오른쪽 위 톱니바퀴 → 「수집」</b>을 누르면 새 회차를 돌아 여기를 채웁니다(최대 5분, '
       + '11개 도시라 몇 번 이어 돕니다). 그 전에도 위 「당사 vs LG」의 비중·출처는 그대로 볼 수 있습니다.</div>';
     return;
   }
@@ -4587,7 +4639,7 @@ function renderList() {
     var t = DATA.trend;
     if (!t || !t.brand || !Object.keys(t.brand).length) {
       /* **버튼을 위 「수집」 줄로 옮겼다**(2026-09-05) — 옛 문구를 두면 없는 버튼을 찾게 된다 */
-      box.innerHTML = '<b>아직 모으지 않았습니다.</b> 오른쪽 위 <b>「관리자」</b>를 눌러 「수집」에서 <b>검색 관심도</b>를 고르면 '
+      box.innerHTML = '<b>아직 모으지 않았습니다.</b> 오른쪽 위 <b>톱니바퀴 → 「수집」</b>을 누르면 '
         + '최근 20개월치가 한 번에 들어옵니다(7회 호출).';
       return;
     }
@@ -4903,9 +4955,9 @@ function renderList() {
     if (stalled) {
       var lrMs = (DATA.lastRun && DATA.lastRun.ms) ? Number(DATA.lastRun.ms) : 0;
       var nowMs = Number(DATA.now) || Date.now();
-      var d3 = new Date(nowMs); d3.setHours(3, 0, 0, 0);   /* 오늘 새벽 3시 */
-      var past3 = nowMs > d3.getTime() + 30 * 60000;        /* 3시 반은 지나야 판정한다 */
-      var missed = lrMs > 0 && past3 && lrMs < d3.getTime() && !runMin;
+      /* **판정은 sweepMissed 한 곳에만** — 「지금 할 일」 줄도 같은 규칙을 봐야
+         한다(두 곳에 적으면 한쪽만 고쳐져 화면이 두 말을 한다). */
+      var missed = sweepMissed(runMin);
       var hrs = lrMs ? (nowMs - lrMs) / 3600000 : 0;
       /* **멈췄을 때만 보인다** — 평소에 떠 있으면 「눌러도 되나」 하고 누르게 되고,
          트리거가 멀쩡한데 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
@@ -4915,12 +4967,12 @@ function renderList() {
         ? '<div class="note warn"><b>오늘 자동 수집이 돌지 않았습니다</b> — 마지막 수집이 <b>'
           + hrs.toFixed(0) + '시간 전</b>(' + esc(String(DATA.lastRun.at).slice(0, 24)) + ')입니다.'
           + ' 새벽 3시 트리거가 꺼진 것으로 보입니다 — 구글은 실행이 거듭 실패하면 트리거를 끕니다.'
-          + '<br>오른쪽 위 <b>「관리자」</b>를 눌러 <b>「자동 수집 다시 걸기」</b>를 눌러 주세요. 그 전까지는 위의'
-          + ' <b>「최근 것만 수집」</b>으로 손수 돌릴 수 있습니다.</div>'
+          + '<br>오른쪽 위 <b>톱니바퀴</b>를 눌러 <b>「자동 수집 다시 걸기」</b>를 눌러 주세요. 그 전까지는 위의'
+          + ' <b>「수집」</b>으로 손수 돌릴 수 있습니다.</div>'
         : "";
     }
     var auto = !!DATA.chainOn && !DATA.chainErr && !(runMin > 10);
-    if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '최근 것만 수집');
+    if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '수집');
     /* 자동 재개가 포기했으면 **무엇을 누르면 되는지**를 그 자리에 적는다.
        예전 문구는 「전체 재수집을 눌러 다시 시작하세요」였는데, 원인이 꼬리 작업
        하나였고 매장 수집은 멀쩡했다 — 처음부터 돌면 이미 모은 것을 또 훑는다. */
@@ -4935,10 +4987,7 @@ function renderList() {
     if (fb && !fb.disabled) fb.textContent = DATA.forceFull ? '전부 훑는 중' : '전체 재수집';
     var sb = document.getElementById('stop');
     if (sb) sb.hidden = !auto;
-    /* **전체 재수집 중일 때만 취소 버튼을 띄운다** — 아닐 때 있으면 누를 일 없는
-       버튼이 자리만 먹고, 무엇을 끄는 버튼인지도 헷갈린다. */
-    var cf = document.getElementById('cancelfull');
-    if (cf && !cf.disabled) cf.hidden = !DATA.forceFull;
+    /* 「전체 재수집 취소」는 「수집 멈춤」에 합쳤다(2026-09-05) — 둘 다 뜻이 「그만」이다. */
     /* **자료가 오면 예상 호출·남은 몫이 바뀐다** — 첫 렌더에서 한 번, 그 뒤로도 */
     if (typeof syncWhat === 'function') syncWhat();
     var e = document.getElementById('prog');
@@ -6605,8 +6654,8 @@ function renderList() {
         if (mgrView || chan) return '';
         var SR = DATA.storeRival;
         if (!SR || !SR.rows || !SR.rows.length) {
-          return ' <b class="warn">LG 짝 비중은 아직 재지 않았습니다</b> — 오른쪽 위 <b>「관리자」</b>의'
-            + ' <b>「수집」에서 <b>매장 대 매장</b>을 고르면 칸이 <b>파랑(우리) : 빨강(LG)</b> 으로 갈립니다.';
+          return ' <b class="warn">LG 짝 비중은 아직 재지 않았습니다</b> — 오른쪽 위 <b>톱니바퀴 → 「수집」</b>을'
+            + ' 누르면 칸이 <b>파랑(우리) : 빨강(LG)</b> 으로 갈립니다.';
         }
         var n = 0, hasMon = false;
         SR.rows.forEach(function (r) { if (r.pct !== null) n++; if (r.mon) hasMon = true; });
@@ -6615,8 +6664,8 @@ function renderList() {
            보인다"* 고 한 자리다. 새 회차 자료가 있으면 축을 따라가고, 없으면 전 기간인
            것을 **밝힌다**(조용히 두면 그 어긋남이 안 보인다). */
         var scopeTxt = !hasMon
-          ? '<b class="warn">전 기간 기준</b>이라 칸 크기와 잣대가 다릅니다 — 오른쪽 위 <b>「관리자」</b>의'
-            + ' 「수집」에서 <b>매장 대 매장</b>을 골라 다시 누르면 연도별로 갈립니다'
+          ? '<b class="warn">전 기간 기준</b>이라 칸 크기와 잣대가 다릅니다 — 오른쪽 위 <b>톱니바퀴 → 「수집」</b>을'
+            + ' 다시 누르면 연도별로 갈립니다'
           : '<b>' + esc(heatYears().cur) + '년</b> 기준입니다';
         return ' 칸의 <b style="color:#B02A20">빨강</b>이 <b>LG 짝 매장의 몫</b>입니다('
           + nf(n) + '곳) — ' + scopeTxt + '. <b>마우스를 올리면</b> 어느 지점인지와 양쪽 건수가 나옵니다.';
@@ -6795,6 +6844,9 @@ function renderList() {
     renderTails();
     renderInterest();
     renderProgress();
+    /* **`renderProgress` 뒤여야 한다** — 「지금 할 일」이 그쪽과 같은 판정
+       (`sweepMissed`)을 보는데, 앞에 두면 자료가 오기 전 상태로 적는다. */
+    renderTodo();
     renderPromo();
     renderTrend();
     renderDiag();
@@ -7009,13 +7061,24 @@ function renderList() {
     var b = this; b.disabled = true; b.textContent = '멈추는 중…';
     google.script.run
       .withSuccessHandler(function (msg) {
-        b.disabled = false; b.textContent = '이어달리기 멈춤'; b.hidden = true;
-        DATA.chainOn = false; renderProgress();
+        b.disabled = false; b.textContent = '수집 멈춤'; b.hidden = true;
+        DATA.chainOn = false;
+        /* **「전체 재수집 취소」를 여기 합쳤다**(2026-09-05 사장님 지시로 중복 버튼을
+           줄였다). 둘 다 뜻이 「그만」인데 버튼이 둘이면 무엇을 눌러야 멈추는지
+           헷갈린다. 전체 재수집 중이었으면 그 표식도 함께 내린다 — 안 내리면
+           다시 돌 때 또 처음부터 판다. */
+        var wasFull = !!DATA.forceFull;
+        if (wasFull && window.google && google.script && google.script.run) {
+          DATA.forceFull = false;
+          google.script.run.withSuccessHandler(function () { renderLimit(); }).cancelFull();
+        }
+        renderProgress();
         document.getElementById('status').innerHTML = '<div class="note">' + esc(msg)
-          + ' <b>모은 자료는 그대로입니다</b> — 「이어서 수집」으로 언제든 다시 이어 갑니다.</div>';
+          + (wasFull ? ' <b>전체 재수집도 껐습니다.</b>' : '')
+          + ' <b>모은 자료와 진행 위치는 그대로입니다</b> — 「수집」으로 언제든 다시 이어 갑니다.</div>';
       })
       .withFailureHandler(function (e) {
-        b.disabled = false; b.textContent = '이어달리기 멈춤';
+        b.disabled = false; b.textContent = '수집 멈춤';
         document.getElementById('status').innerHTML =
           '<div class="note warn"><b>멈추지 못했습니다</b> — ' + esc(e && e.message)
           + '<br>Apps Script 편집기의 <b>트리거</b> 화면에서 <code>continueSweep</code> 을 지우면 멈춥니다.</div>';
@@ -7026,54 +7089,10 @@ function renderList() {
   /* 검색 관심도 갱신 (2026-09-04). **7회면 끝나므로** 다른 수집처럼 예약·자물쇠가 없다.
      **오류를 그대로 적는다** — 키가 잘못 들어갔으면 그 자리에서 알아야 하고,
      401 이면 「검색 API 키를 넣은 것 아닌가」까지 서버가 문장에 담아 보낸다. */
-  document.getElementById('runtrend').onclick = function () {
-    var b = this, msg = document.getElementById('trend-msg');
-    b.disabled = true; b.textContent = '모으는 중…';
-    if (msg) msg.textContent = '';
-    google.script.run
-      .withSuccessHandler(function (r) {
-        b.disabled = false; b.textContent = '검색 관심도 갱신';
-        if (msg) msg.textContent = (r && r.note) || '';
-        if (r && r.ok) {
-          /* 새로 모았으면 화면을 바로 채운다 — 새로고침을 시키지 않는다 */
-          google.script.run.withSuccessHandler(function (s) {
-            if (s && s.trend) { DATA.trend = s.trend; renderInterest(); }
-          }).getSummary();
-        } else if (r && r.errors && r.errors.length) {
-          document.getElementById('status').innerHTML =
-            '<div class="note warn"><b>검색 관심도를 못 모았습니다</b><br>' + esc(r.errors.join(' · ')) + '</div>';
-        }
-      })
-      .withFailureHandler(function (e) {
-        b.disabled = false; b.textContent = '검색 관심도 갱신';
-        if (msg) msg.textContent = '';
-        document.getElementById('status').innerHTML =
-          '<div class="note warn"><b>검색 관심도를 못 모았습니다</b> — ' + esc(e && e.message) + '</div>';
-      })
-      .runTrend();
-  };
-
   /* **전체 재수집만 끈다** (2026-09-04). 「이어달리기 멈춤」은 트리거만 끄고 표식은
      그대로라, 다시 돌기 시작하면 또 전부 훑는다. 이쪽은 표식을 내려 **다음 회차부터
      새 글만** 훑게 한다 — 모은 자료도, 어디까지 훑었는지도 건드리지 않는다.
      되돌릴 수 있는 조작이라 묻지 않는다(다시 누르면 그만이다). */
-  document.getElementById('cancelfull').onclick = function () {
-    var b = this; b.disabled = true; b.textContent = '끄는 중…';
-    google.script.run
-      .withSuccessHandler(function (msg) {
-        b.disabled = false; b.textContent = '전체 재수집 취소'; b.hidden = true;
-        DATA.forceFull = false; renderProgress(); renderLimit();
-        document.getElementById('status').innerHTML = '<div class="note">' + esc(msg)
-          + ' <b>모은 자료와 진행 위치는 그대로입니다</b> — 남은 매장은 새 글만 훑어 훨씬 빨리 끝납니다.</div>';
-      })
-      .withFailureHandler(function (e) {
-        b.disabled = false; b.textContent = '전체 재수집 취소';
-        document.getElementById('status').innerHTML =
-          '<div class="note warn"><b>끄지 못했습니다</b> — ' + esc(e && e.message) + '</div>';
-      })
-      .cancelFull();
-  };
-
   /* ── **자동 수집을 다시 건다** (2026-09-05) ──────────────────────────────
    * 실측으로 마지막 실행 01:54 로부터 8시간 30분 동안 아무것도 안 돌았다.
    * 구글은 실행이 거듭 실패하면 트리거를 끄는데, 그 사실은 Apps Script 실행
@@ -7096,7 +7115,7 @@ function renderList() {
         }
         box.innerHTML = '<div class="note"><b>' + esc(r.msg || '트리거를 다시 걸었습니다.') + '</b>'
           + (r.cleared ? ' 멈춰 있던 이어달리기 트리거 ' + r.cleared + '개도 걷어냈습니다.' : '')
-          + ' 오늘 몫이 급하면 위의 <b>「최근 것만 수집」</b>을 한 번 눌러 주세요.</div>';
+          + ' 오늘 몫이 급하면 위의 <b>「수집」</b>을 한 번 눌러 주세요.</div>';
         /* 경고를 그 자리에서 지운다 — 눌렀는데 그대로면 안 된 줄 안다 */
         var w = document.getElementById('stalled'); if (w) w.innerHTML = '';
       })
@@ -7306,21 +7325,12 @@ function renderList() {
    * **비용을 그 자리에 적는다.** 숫자는 서버가 한 곳에서 센다(`actionCosts_`) —
    * 화면이 따로 세면 상수가 바뀔 때 한쪽만 고쳐져 조용히 옛 숫자를 말한다.
    */
-  var WHAT_KEY = { run: 'quick', runfull: 'full', runrival: 'rival', 'sriv-go': 'srival', runtrend: 'trend' };
+  /* **갈래가 둘이다**(2026-09-05) — LG 비교·매장 대 매장·검색 관심도는 「수집」
+     안에서 오늘 할 것만 골라 돈다. 남은 둘은 갈래가 아니라 **모드**다. */
+  var WHAT_KEY = { run: 'quick', runfull: 'full' };
   var WHAT_NOTE = {
-    run: '이미 가진 글을 만나면 멈춥니다 — 실제로는 훨씬 적게 씁니다',
+    run: '오늘 안 한 것을 차례로 다 합니다 — LG 비교 · 매장 대 매장 · 검색 관심도까지',
     runfull: '한 바퀴를 처음부터 끝까지 팝니다 — 여러 날에 나눠 돕니다',
-    runrival: '지역 6곳 × 당사·LG — 「당사 vs LG」 카드가 이 자료입니다',
-    /* **매장 수를 글자로 박지 않는다**(2026-09-05) — `DATA.stores` 가 들고 있고,
-       매장이 늘거나 줄면 이 줄만 조용히 거짓이 된다. 그리고 「× 당사·LG」는 **1:1 시절
-       산수**다 — 짝이 1:N 이 되어 매장마다 붙은 지점 수가 다르다(바로 위 「예상 N회」가
-       실제 값을 적는다). **모르면 개수를 안 적는다** — 0곳이라 적으면 거짓이 된다. */
-    'sriv-go': function () {
-      var n = Number(DATA.stores) || 0;
-      return (n ? '매장 ' + nf(n) + '곳' : '매장')
-        + ' × (당사 + 붙은 LG 지점) — 히트맵 빨강이 이 자료입니다';
-    },
-    runtrend: '데이터랩 — 후기 건수가 아니라 「얼마나 찾는가」입니다'
   };
   /** 값이 함수면 그때 부른다 — 자료가 온 뒤라야 매장 수를 안다 */
   function whatNote(v) {
@@ -7378,7 +7388,7 @@ function renderList() {
       var NL = String.fromCharCode(10);
       if (!confirm('전체 재수집은 한 바퀴에 약 ' + nf(sweep) + '회가 필요한데'
         + ' 지금 남은 쿼터는 ' + nf(Math.max(0, left)) + '회입니다.' + NL + NL
-        + '이대로면 ' + days + '일쯤 걸리고, 그동안 「최근 것만 수집」은 돌지 않아'
+        + '이대로면 ' + days + '일쯤 걸리고, 그동안 「수집」은 돌지 않아'
         + ' 새 글을 못 잡습니다.' + NL + NL
         + '그래도 시작할까요? (도중에 「전체 재수집 취소」로 끌 수 있습니다)')) return;
     }
@@ -7392,68 +7402,6 @@ function renderList() {
    * 그래서 **어디까지 갔는지와 스스로 이어 가는지를 반드시 적는다** — 안 적으면
    * 「눌렀는데 절반만 나온다」로 읽힌다.
    */
-  document.getElementById('runrival').onclick = function () {
-    var b = this, label = b.textContent;
-    b.disabled = true; b.textContent = 'LG 비교 중… (최대 5분)';
-    var undo = function () { b.disabled = false; b.textContent = label; };
-    var st = document.getElementById('status');
-    st.innerHTML = '<div class="note"><b>LG 비교를 돌고 있습니다</b> — 최대 5분 걸립니다. '
-      + '이 쪽을 닫지 마세요.</div>';
-    if (!(window.google && google.script && google.script.run)) {
-      undo(); st.innerHTML = '<div class="note warn">미리보기에서는 돌지 않습니다.</div>'; return;
-    }
-    google.script.run
-      .withSuccessHandler(function (r) {
-        /* ── **막히면 예약됐다고 적는다** (2026-09-03) ────────────────────────
-         * 예전에는 「끝난 뒤에 다시 눌러 주세요」였는데, 전체 재수집이 도는 동안에는
-         * 그 «끝»이 **며칠 뒤**라 몇 번을 눌러도 계속 막혔다. 이제 서버가 표식을
-         * 세워 두고 다음 회차가 먼저 돈다 — **다시 누를 필요가 없다고 말해야** 한다.
-         * (옛 `busy` 응답도 계속 받는다 — 서버가 아직 옛 판일 수 있다.) */
-        if (r && (r.queued || r.busy)) {
-          undo();
-          st.innerHTML = '<div class="note' + (r.queued ? '' : ' warn') + '"><b>' + esc(r.note) + '</b>'
-            + (r.queued
-              ? '<br>다시 누르지 않으셔도 됩니다 — <b>1~6분 뒤</b> 다음 회차가 LG 비교부터 돕니다. '
-                + '잠시 뒤 이 쪽을 새로고침해 보세요.'
-              : '')
-            + '</div>';
-          return;
-        }
-        var msg = '<div class="note"><b>LG 비교를 '
-          + (r.done ? '한 바퀴 마쳤습니다' : '돌았습니다') + '</b> — '
-          + nf(r.units) + '개 도시 중 <b>' + nf(r.at) + '번째</b>까지 훑어 '
-          + nf(r.rows) + '곳을 새로 적었습니다.';
-        if (!r.done) {
-          msg += ' 6분 실행 한도로 멈췄고 <b>' + nf(r.left) + '곳이 남았습니다</b> — '
-            + (r.chained
-                ? '<b>1분 뒤 스스로 이어 갑니다.</b> 그냥 두셨다가 잠시 뒤 새로고침하시면 됩니다.'
-                : '<b>이 버튼을 다시 눌러 주세요</b> — 멈춘 도시부터 이어 갑니다.');
-        }
-        if (r.error) msg += ' <span style="color:#B45309">오류: ' + esc(r.error) + '</span>';
-        msg += '</div>';
-        st.innerHTML = msg;
-        /* **화면을 새로 그린다** — 안 그리면 방금 채운 값이 안 보여
-           「눌렀는데 그대로」가 된다. 실패해도 자료는 시트에 있다는 것을 적는다. */
-        google.script.run
-          .withSuccessHandler(function (d) { undo(); applySummary(d); })
-          .withFailureHandler(function (e) {
-            undo();
-            st.innerHTML += '<div class="note warn" style="margin-top:6px">'
-              + '<b>비교는 끝났지만 화면을 새로 그리지 못했습니다</b> — ' + esc(e && e.message)
-              + '<br><b>자료는 시트에 그대로 있습니다.</b> <a href="">이 쪽을 새로고침</a>하면 보입니다.</div>';
-          })
-          .getSummary();
-      })
-      .withFailureHandler(function (e) {
-        undo();
-        st.innerHTML = '<div class="note warn"><b>LG 비교에 실패했습니다</b> — '
-          + esc(e && e.message) + '<br>Apps Script 는 한 번에 6분까지만 돌 수 있습니다. '
-          + '<b>이미 적은 것은 시트에 그대로 있습니다</b> — 다시 누르면 멈춘 도시부터 이어 갑니다.</div>';
-      })
-      .runRival();
-  };
-
-
   /* ── 부팅 ────────────────────────────────────────────────────────────────
    * 뼈대를 먼저 그리고(1~2초) 자료를 받아 다시 그린다.
    * **실패를 실패라고 적는다** — 조용히 빈 화면을 두면 「자료가 없다」로 읽힌다
