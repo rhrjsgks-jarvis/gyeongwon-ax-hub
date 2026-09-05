@@ -486,7 +486,20 @@ const DATA = {
       const mv = i % 3 === 0 ? 0 : Math.max(1, Math.round(n * 0.15));
       const kind4 = { wedding: w, movein: mv, etc: Math.max(0, n - w - mv) };
       Object.keys(kind4).forEach((k) => { if (!kind4[k]) delete kind4[k]; });
-      return { name, n, store, naver, known, mon, kind4 };
+      /* ── 매니저 × 주차 × 유형 (2026-09-06) ────────────────────────────────
+       * 지점 주차(`byStoreWeek`)와 **같은 주 이름**을 쓴다 — 축을 바꿔도 드롭다운의
+       * 주 목록이 같아야 「지점에는 있는 주가 매니저에는 없다」가 안 생긴다.
+       * **경계를 일부러 섞는다** — 어떤 사람은 몇 주만, 어떤 사람은 한 주도 없다
+       * (그래야 「그 주에 글이 있는 N명」과 빈 칸 처리가 눈에 보인다). */
+      const wk4 = {};
+      for (let q = 0; q < 12; q++) {
+        if ((i + q) % 3 === 0) continue;          /* 뜸한 주 */
+        if (i >= 13) continue;                    /* 주차 자료가 아예 없는 사람 셋 */
+        const wk = '2026-W' + String(25 + q).padStart(2, '0');
+        wk4[wk] = { wedding: 1 + ((i + q) % 3) };
+        if ((i + q) % 4 === 0) wk4[wk].movein = 1;
+      }
+      return { name, n, store, naver, known, mon, kind4, wk4 };
     });
   })(),
   mgrFull: 380, mgrRows: 2433, mgrAll: 161, mgrOnce: 74,

@@ -4398,6 +4398,16 @@ function summary_() {
      (이 화면이 추이·주차에서 이미 두 번 데인 자리다). */
   var mgrMon = {}, mgrKind = {};
   var mgrKindY = {};
+  /* ── **매니저 × 주차 × 유형** (2026-09-06 사장님 지시) ──────────────────────
+   * *"매니저별 보기도 주차별로 볼 수 있게해야합니다. 히트맵내의 모든정보는 동일한
+   *  인터페이스와 동일한 정보를 기준으로 보여줘야합니다."*
+   *
+   * 예전에는 이 칸이 없어 **매니저 보기에서 주차 거르개를 통째로 감췄고**, 주차를
+   * 보다가 매니저로 넘어가면 `heatWeek` 를 지웠다 — 같은 화면이 두 잣대를 썼다.
+   * 지점(`byStoreWeek4`)과 **같은 모양**으로 담아 화면이 같은 함수로 읽게 한다.
+   *
+   * **작성일을 아는 글만** 든다(이 블록 안이다) — 지점 주차와 같은 제약이다. */
+  var mgrWeek4 = {};
   var mgrN = {}, mgrStore = {}, mgrFullN = 0, mm, mi, mk;
   for (i = 0; i < rows.length; i++) {
     if (rows[i].mgrFull) mgrFullN++;
@@ -4431,9 +4441,19 @@ function summary_() {
         if (!mgrKindY[mk]) mgrKindY[mk] = {};
         if (!mgrKindY[mk][myy]) mgrKindY[mk][myy] = {};
         mgrKindY[mk][myy][mk4] = (mgrKindY[mk][myy][mk4] || 0) + 1;
+        /* 주차 × 유형 — 지점과 **같은 모양**이라 화면이 같은 함수로 읽는다 */
+        var mwk = isoWeek_(rows[i].date);
+        if (mwk) {
+          if (!mgrWeek4[mk]) mgrWeek4[mk] = {};
+          if (!mgrWeek4[mk][mwk]) mgrWeek4[mk][mwk] = {};
+          mgrWeek4[mk][mwk][mk4] = (mgrWeek4[mk][mwk][mk4] || 0) + 1;
+        }
       }
     }
   }
+  /* 지점 주차와 **같은 창**만 남긴다 — 창이 다르면 드롭다운의 주 목록이 갈려
+     「지점에는 있는 주가 매니저에는 없다」가 된다. */
+  var mgrWeek4Cut = trimWeeks_(mgrWeek4, WEEK_KEEP);
   var mgrTop = [];
   for (mk in mgrN) {
     if (!mgrN.hasOwnProperty(mk)) continue;
@@ -4443,7 +4463,10 @@ function summary_() {
     mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {},
                   kind4: mgrKind[mk] || {},
                   /* 연도별 유형 — 히트맵이 지점과 같은 잣대를 쓰게 한다(2026-09-05) */
-                  kindY: mgrKindY[mk] || {} });
+                  kindY: mgrKindY[mk] || {},
+                  /* 주차별 유형 — 지점과 **같은 모양**이라 화면이 같은 함수로 읽는다(2026-09-06).
+                     지점 주차와 같은 창(`WEEK_KEEP`)만 담는다 — 응답이 커지면 안 된다. */
+                  wk4: mgrWeek4Cut[mk] || {} });
   }
   mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
   /* **자르기 전에 전체 인원을 센다** — 실측(2026-09-03) 60위가 6건이라 그 아래로도
@@ -6271,7 +6294,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 20;   /* 20 = 월별 하한 2023-01 · 창별 approx · storeRival 월별 */
+var SUM_VER = 21;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

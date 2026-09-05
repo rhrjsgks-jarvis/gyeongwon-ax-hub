@@ -3227,7 +3227,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ④ **평소 평균은 「글이 있었던 주」로 나눈다.** 전체 주로 나누면 선택 편향이 생겨
            (칸이 그려진 매장은 그 주에 1건 이상이므로) **전 칸이 최대 초록**이 된다. */
-    if (!ix.includes('wAvg[sN] = liveW ? tt / liveW : null;')) {
+    /* **계산은 `weekAgg` 한 곳으로 옮겼다**(2026-09-06) — 매니저 보기가 같은 함수를
+       쓴다. 규칙 자체는 아래 「매니저 주차」 절이 **떼어 돌려** 검사한다. */
+    if (!ix.includes('if (!live) return null;')) {
       bad.push('평소 평균을 0인 주까지 세어 낸다 — 그 주에 글이 있다는 이유만으로 늘 「평소보다 많다」가 된다');
     }
 
@@ -3294,11 +3296,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes("var chan = heatWho === 'mgr' ? false")) {
       bad.push('매니저에서 채널 드릴다운을 막지 않는다 — 빈 화면이 뜬다');
     }
-    /* **2026-09-03 사장님 정정으로 뜻이 뒤집혔다** — 매니저 보기에서도 유형을 걸어야
-       한다(「매니저로 보기를 누르고 혼수 입주 기타 후기를 필터링할 수 있어야」).
-       주차는 여전히 감춘다 — 매니저 x 주차는 세어 두지 않았다. */
-    if (!ix.includes("if (mgrView && wbox) wbox.style.display = 'none';")) {
-      bad.push("매니저에서 주차 거르개를 감추지 않는다 — 자료가 없어 0건이 나온다");
+    /* **2026-09-03 사장님 정정으로 뜻이 뒤집혔고, 2026-09-06 에 또 한 번 뒤집혔다** —
+       유형에 이어 **주차도** 매니저에서 걸어야 한다(*"매니저별 보기도 주차별로 볼 수
+       있게해야합니다"*). 서버가 `mgrTop[].wk4` 를 세어 주므로 감출 이유가 사라졌다.
+       감추는 것은 **자료가 없을 때뿐**이고, 그 검사는 위 ③(`wlist` 가 비면 감춘다)이 한다. */
+    if (ix.includes("if (mgrView && wbox) wbox.style.display = 'none';")) {
+      bad.push('매니저에서 주차 거르개를 통째로 감춘다 — 같은 화면이 두 잣대를 쓴다');
     }
 
     if (bad.length) fail('[바이럴] 매니저 히트맵 — ' + bad.join(' · '));
@@ -5467,6 +5470,117 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 매일/주1회 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 매일/주1회 — 주기 상수 3 · 문지기 3 · 규칙 7경우 · 화면 표시 · 비용 이중계산 방지');
+}
+
+
+/* ── **매니저 보기도 주차로 본다** (2026-09-06 사장님 지시) ─────────────────
+ * *"매니저별 보기도 주차별로 볼 수 있게해야합니다. 제가 말씀드린 히트맵내의 모든정보는
+ *  동일한 인터페이스와 동일한 정보를 기준으로 보여줘야합니다."*
+ *
+ * 예전에는 주차 계산이 `heatRows` 안에만 있어 매니저 보기에서 거르개를 **통째로 감췄고**
+ * 축을 바꿀 때 `heatWeek` 를 지웠다 — 같은 화면이 「지점은 주차로, 매니저는 월로」
+ * 두 잣대를 썼다. 되돌아가면 **화면에서만 보인다.** */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+  const cut = (s, head) => {
+    const at = s.indexOf(head);
+    return at < 0 ? '' : s.slice(at, s.indexOf('\n  }', at) + 4);
+  };
+
+  /* ⓐ 서버 — 매니저 × 주차 × 유형을 지점과 **같은 모양**으로 담는가 */
+  if (gs.indexOf('var mgrWeek4 = {};') < 0)
+    bad.push('mgrWeek4 가 없다 — 매니저 주차를 세지 않는다');
+  if (gs.indexOf('mgrWeek4[mk][mwk][mk4] = (mgrWeek4[mk][mwk][mk4] || 0) + 1;') < 0)
+    bad.push('매니저 주차를 유형까지 갈라 세지 않는다 — 유형을 겹쳐 걸 수 없다');
+  if (gs.indexOf('wk4: mgrWeek4Cut[mk] || {}') < 0)
+    bad.push('mgrTop 이 wk4 를 안 싣는다 — 화면이 못 읽는다');
+  if (gs.indexOf('trimWeeks_(mgrWeek4, WEEK_KEEP)') < 0)
+    bad.push('매니저 주차를 지점과 같은 창으로 안 자른다 — 드롭다운의 주 목록이 갈린다');
+  {
+    /* **작성일을 아는 글만** 세야 한다 — 카페 줄의 날짜는 발견일이라 넣으면
+       이번 주만 거대해진다(이 화면이 추이·주차에서 두 번 데인 자리다).
+       그 블록 안에 있는지 위치로 본다. */
+    const dated = gs.indexOf('if (rows[i].dated && rows[i].date) {');
+    const wk = gs.indexOf('var mwk = isoWeek_(rows[i].date);');
+    const kY = gs.indexOf('mgrKindY[mk][myy][mk4] =');
+    if (dated < 0 || wk < 0 || kY < 0) bad.push('매니저 주차 앵커가 낡았다');
+    else if (!(wk > dated && wk > kY))
+      bad.push('매니저 주차가 「작성일을 아는 글」 블록 밖에 있다 — 발견일이 섞인다');
+  }
+  {
+    const m = /var SUM_VER = (\d+);/.exec(gs);
+    if (!m) bad.push('SUM_VER 가 없다');
+    else if (Number(m[1]) < 21)
+      bad.push('SUM_VER 를 안 올렸다 — 최대 6시간 옛 집계가 굳어 매니저 주차가 안 보인다');
+  }
+
+  /* ⓑ 화면 — **한 함수**로 읽는가(두 벌이면 같은 주가 두 화면에서 다른 건수가 된다) */
+  for (const [fn, why] of [['function weekAgg(bw)', '주차 합계·평소 평균'],
+                           ['function weekSrc(who)', '축별 주차 자료'],
+                           ['function weekList(bw)', '주 목록']]) {
+    if (ix.indexOf(fn) < 0) bad.push(`${why} 함수(${fn})가 없다`);
+  }
+  {
+    const hr = cut(ix, '  function heatRows() {');
+    const mr = cut(ix, '  function mgrRows() {');
+    if (!hr || !mr) bad.push('heatRows/mgrRows 를 못 떼어 냈다 — 앵커가 낡았다');
+    if (hr && hr.indexOf('weekAgg(') < 0) bad.push('지점 히트맵이 weekAgg 를 안 쓴다');
+    if (mr && mr.indexOf('weekAgg(') < 0) bad.push('매니저 히트맵이 weekAgg 를 안 쓴다 — 주차를 못 본다');
+    /* 옛 사본이 남아 있으면 두 벌이 된다 */
+    if (hr && hr.indexOf('var pickWeeks = (function () {') >= 0)
+      bad.push('heatRows 에 옛 주차 계산이 남았다 — 두 벌이면 갈라진다');
+  }
+  /* ⓒ 거르개를 매니저에서 감추지 않는가 · 축을 바꿔도 기간을 들고 가는가 */
+  if (ix.indexOf("if (mgrView && wbox) wbox.style.display = 'none';") >= 0)
+    bad.push('매니저 보기에서 주차 거르개를 통째로 감춘다');
+  if (ix.indexOf("heatPath = []; heatWeek = '';\n        renderHeat();") >= 0)
+    bad.push('축을 바꿀 때 기간을 무조건 지운다 — 같은 화면이 두 잣대를 쓴다');
+  if (ix.indexOf("if (heatWeek && !Object.keys(weekSrc()).length)") < 0)
+    bad.push('넘어간 축에 주차 자료가 없을 때 안 푼다 — 빈 화면이 된다');
+  /* ⓓ 화면이 그 사실을 적는가 */
+  if (ix.indexOf("'기간을 고르면 그 기간의 ' + whoW + '만 봅니다.'") < 0)
+    bad.push('기간 안내가 축을 안 따라간다 — 매니저를 보며 「지점만 봅니다」라고 적는다');
+  if (ix.indexOf("cr.innerHTML = '매니저 <em>' + wtag") < 0)
+    bad.push('매니저 빵부스러기가 기간을 안 적는다 — 무엇을 보고 있는지 모른다');
+  if (ix.indexOf('매니저 주차 자료가 없어 월 기준입니다') < 0)
+    bad.push('옛 서버 자료로 월에 물러섰을 때 그 사실을 안 적는다');
+  if (ix.indexOf("if (week && d.store !== undefined && c.h > 74)") < 0)
+    bad.push('매니저 칸에 「평소 대비」를 안 적는다 — 범례가 없는 글씨를 가리킨다');
+
+  /* ⓔ **규칙을 떼어 실제로 돌려 본다** — 문자열만 보면 식이 바뀌어도 통과한다 */
+  {
+    const src = cut(ix, '  function weekList(bw)') + '\n' + cut(ix, '  function weekAgg(bw)')
+      + '\n' + cut(ix, '  function weekRange(w)');
+    const mk = new Function('heatWeek', 'heatKind', 'heatFrom', 'heatTo',
+      src + '; return weekAgg;');
+    const bw = {
+      A: { '2026-W30': { wedding: 2, etc: 1 }, '2026-W31': { wedding: 4 }, '2026-W33': { wedding: 6 } },
+      B: { '2026-W31': { etc: 3 } }
+    };
+    /* 한 주 — 합계와 「글이 있었던 주」 평균 */
+    let a = mk('2026-W31', '', '', '')(bw);
+    if (a.sum('A') !== 4) bad.push(`한 주 합계 ${a.sum('A')} (기대 4)`);
+    if (Math.abs(a.avg('A') - 13 / 3) > 1e-9) bad.push(`평소 평균 ${a.avg('A')} (기대 13/3 — 글이 있었던 3주)`);
+    if (a.avg('C') !== null) bad.push('자료가 없는 키의 평소는 null 이어야 한다 — 0 이면 「제자리」가 된다');
+    /* 유형을 걸면 그 유형만 */
+    a = mk('2026-W30', 'wedding', '', '')(bw);
+    if (a.sum('A') !== 2) bad.push(`유형을 건 합계 ${a.sum('A')} (기대 2)`);
+    /* 여러 주 — 평소도 그만큼 곱한다(3주치 합을 1주 평균과 견주면 늘 「3배」다) */
+    a = mk('custom', '', '2026-07-20', '2026-08-09')(bw);
+    /* **자료에 있는 주만 담는다** — W32 는 표에 없으므로 W30·W31 둘이다
+       (없는 주를 0으로 세면 평소가 묽어져 색이 거짓말을 한다). */
+    if (a.picks.length !== 2) bad.push(`걸친 주 ${a.picks.length}개 (기대 2 — W30·W31)`);
+    const one = mk('2026-W31', '', '', '')(bw);
+    if (!(a.avg('A') > one.avg('A'))) bad.push('여러 주를 골랐는데 평소를 안 곱한다 — 늘 「평소의 N배」가 된다');
+    /* 기간을 안 골랐으면 아무것도 안 센다 */
+    a = mk('', '', '', '')(bw);
+    if (a.picks.length !== 0 || a.sum('A') !== 0) bad.push('기간을 안 골랐는데 세고 있다');
+  }
+
+  if (bad.length) fail('[바이럴] 매니저 주차 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 매니저 주차 — 서버 wk4 · 한 함수(weekAgg) · 거르개 유지 · 화면 표기 · 규칙 6경우');
 }
 
 

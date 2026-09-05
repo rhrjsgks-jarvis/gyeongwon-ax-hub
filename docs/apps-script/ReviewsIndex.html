@@ -5629,6 +5629,79 @@ function renderList() {
   }
 
 
+  /* ── **주차 자료는 지점·매니저가 같은 함수로 읽는다** (2026-09-06 사장님 지시) ──
+   * *"매니저별 보기도 주차별로 볼 수 있게 … 히트맵내의 모든정보는 동일한 인터페이스와
+   *  동일한 정보를 기준으로 보여줘야합니다."*
+   *
+   * 예전에는 주차 계산이 `heatRows` 안에만 있어 **매니저 보기에서는 통째로 감췄다** —
+   * 같은 화면이 「지점은 주차로, 매니저는 월로」 두 잣대를 썼다. 자료 모양이 같으므로
+   * (`{키: {주차: {유형: 건수}}}`) 읽는 함수도 하나면 된다. 두 벌로 두면 한쪽만
+   * 고쳤을 때 **같은 주가 두 화면에서 다른 건수**가 된다.
+   */
+  /** 지금 보고 있는 축의 주차 자료 — 지점이면 매장별, 매니저면 사람별. */
+  function weekSrc(who) {
+    if ((who || heatWho) === 'mgr') {
+      var out = {}, tp = DATA.mgrTop || [];
+      for (var i = 0; i < tp.length; i++) if (tp[i].wk4) out[tp[i].name] = tp[i].wk4;
+      return out;
+    }
+    /* **유형 버튼과 같은 자료를 본다** — 4종 묶음이 있으면 그쪽 주차 표를 쓴다.
+       섞으면 「혼수 후기」를 골랐는데 주차 칸이 9종 키를 찾아 0건이 된다. */
+    return ((DATA.byStoreKind4 && DATA.byStoreWeek4) ? DATA.byStoreWeek4 : DATA.byStoreWeek) || {};
+  }
+  /** 그 자료에 담긴 주 목록(오름차순). 드롭다운과 판정이 같은 목록을 봐야 한다. */
+  function weekList(bw) {
+    var seen = {}, a, b;
+    for (a in bw) if (bw.hasOwnProperty(a)) for (b in bw[a]) if (bw[a].hasOwnProperty(b)) seen[b] = 1;
+    return Object.keys(seen).sort();
+  }
+  /**
+   * 고른 기간의 합계와 평소 평균을 낸다 — **지점·매니저가 이 하나를 함께 쓴다.**
+   *   picks  고른 기간에 드는 주(하나 또는 여럿)
+   *   sum(k) 그 키의 고른 기간 합계
+   *   avg(k) **글이 있었던 주**의 평균 × 고른 주 수 (색의 기준)
+   */
+  function weekAgg(bw) {
+    /* 「직접 지정」이면 시작·종료 사이의 주를 전부 담는다 — 사장님 지시:
+       *"직접 날짜 지정 … 임의 기간 조회"*. **주 단위로 센다** — 자료가 주별로만
+       쌓여 있어 그 안에서 날짜를 더 못 가른다. 화면이 그 사실을 적는다. */
+    var picks = (function () {
+      if (!heatWeek) return [];
+      if (heatWeek !== 'custom') return [heatWeek];
+      if (!heatFrom || !heatTo) return [];
+      var lo = heatFrom < heatTo ? heatFrom : heatTo;
+      var hi = heatFrom < heatTo ? heatTo : heatFrom;
+      return weekList(bw).filter(function (w) {
+        var r = weekRange(w);
+        /* 겹치기만 해도 담는다 — 주의 일부가 걸치면 그 주 자료가 그 기간에 든다 */
+        return r && r.to >= lo && r.from <= hi;
+      });
+    })();
+    var one = function (m) {
+      var n = 0, k;
+      if (!m) return 0;
+      if (heatKind) return m[heatKind] || 0;
+      for (k in m) if (m.hasOwnProperty(k)) n += m[k];
+      return n;
+    };
+    var sum = function (key) {
+      var m0 = bw[key] || {}, n = 0, i;
+      for (i = 0; i < picks.length; i++) n += one(m0[picks[i]]);
+      return n;
+    };
+    /* **글이 있었던 주만** 나눈다 — 뜻은 「이 칸에 후기가 올 때 보통 몇 건인가」다.
+       0인 주까지 세면 그 주에 글이 있다는 이유만으로 늘 「평소보다 많다」가 된다.
+       **여러 주를 골랐으면 평소도 그만큼 곱한다** — 3주치 합을 1주 평균과 견주면
+       늘 「평소의 3배」가 되어 색이 거짓말을 한다. */
+    var avg = function (key) {
+      var m0 = bw[key] || {}, tt = 0, live = 0, w, v;
+      for (w in m0) if (m0.hasOwnProperty(w)) { v = one(m0[w]); tt += v; if (v > 0) live++; }
+      if (!live) return null;
+      return tt / live * Math.max(1, picks.length);
+    };
+    return { picks: picks, sum: sum, avg: avg };
+  }
+
   /** 히트맵 한 줄 — 한 매장. `g` 는 **전월이 0이거나 모르면 null** 이다(0에서 늘어난
    *  것은 몇 %가 아니라 「새로 생겼다」이고, 넓이가 음수일 수도 없다). */
   function heatRows() {
@@ -5655,64 +5728,10 @@ function renderList() {
        이었다. 매장이 매주 후기를 받지 않아 앞 주가 대개 비어 있고, 있어도 1~2건이라
        ±100% 가 남발된다. 평소 평균은 **0인 주도 세어** 낸다(빠뜨리면 뜸한 매장이
        늘 「평소만큼」이 되어 색이 거짓말을 한다). */
-    /* **유형 버튼과 같은 자료를 본다** — 4종 묶음이 있으면 그쪽 주차 표를 쓴다.
-       섞으면 「혼수 후기」를 골랐는데 주차 칸이 9종 키를 찾아 0건이 된다. */
-    var bw = ((DATA.byStoreKind4 && DATA.byStoreWeek4) ? DATA.byStoreWeek4 : DATA.byStoreWeek) || {};
-    var wAll = [], wAvg = {};
-    /* **고른 기간에 드는 주**(하나 또는 여럿). 「직접 지정」이면 시작·종료 사이의
-       주를 전부 담는다 — 사장님 지시: *"직접 날짜 지정 … 임의 기간 조회"*.
-       **주 단위로 센다** — 자료가 주별로만 쌓여 있어 그 안에서 날짜를 더 못 가른다.
-       화면이 그 사실을 적는다(고른 날짜가 주 중간이면 그 주가 통째로 든다). */
-    var pickWeeks = (function () {
-      if (!heatWeek) return [];
-      if (heatWeek !== 'custom') return [heatWeek];
-      if (!heatFrom || !heatTo) return [];
-      var ws = {}, sN0, wN0;
-      for (sN0 in bw) if (bw.hasOwnProperty(sN0)) {
-        for (wN0 in bw[sN0]) if (bw[sN0].hasOwnProperty(wN0)) ws[wN0] = 1;
-      }
-      var lo = heatFrom < heatTo ? heatFrom : heatTo;
-      var hi = heatFrom < heatTo ? heatTo : heatFrom;
-      return Object.keys(ws).filter(function (w) {
-        var r = weekRange(w);
-        /* 겹치기만 해도 담는다 — 주의 일부가 걸치면 그 주 자료가 그 기간에 든다 */
-        return r && r.to >= lo && r.from <= hi;
-      }).sort();
-    })();
-    /** 그 매장의 **고른 기간 합계**. 주가 여럿이면 더한다. */
-    var weekSum = function (nm2) {
-      var m0 = bw[nm2] || {}, n0 = 0, i0, kk0;
-      for (i0 = 0; i0 < pickWeeks.length; i0++) {
-        var mm0 = m0[pickWeeks[i0]];
-        if (!mm0) continue;
-        if (heatKind) { n0 += mm0[heatKind] || 0; continue; }
-        for (kk0 in mm0) if (mm0.hasOwnProperty(kk0)) n0 += mm0[kk0];
-      }
-      return n0;
-    };
-    if (heatWeek) {
-      var sN, wN, seen = {};
-      for (sN in bw) if (bw.hasOwnProperty(sN)) {
-        for (wN in bw[sN]) if (bw[sN].hasOwnProperty(wN)) seen[wN] = 1;
-      }
-      wAll = Object.keys(seen);
-      for (sN in bw) if (bw.hasOwnProperty(sN)) {
-        var tt = 0, wm2;
-        for (wN in bw[sN]) if (bw[sN].hasOwnProperty(wN)) {
-          wm2 = bw[sN][wN];
-          for (var kq in wm2) if (wm2.hasOwnProperty(kq)) { if (!heatKind || kq === heatKind) tt += wm2[kq]; }
-        }
-        /* **글이 있었던 주만** 나눈다 — 뜻은 「이 매장에 후기가 올 때 보통 몇 건인가」다.
-           0인 주까지 세면 그 주에 글이 있다는 이유만으로 늘 「평소보다 많다」가 된다. */
-        var liveW = 0, wq;
-        for (wq in bw[sN]) if (bw[sN].hasOwnProperty(wq)) {
-          var mq = bw[sN][wq], sq = 0, kq2;
-          for (kq2 in mq) if (mq.hasOwnProperty(kq2)) { if (!heatKind || kq2 === heatKind) sq += mq[kq2]; }
-          if (sq > 0) liveW++;
-        }
-        wAvg[sN] = liveW ? tt / liveW : null;
-      }
-    }
+    /* **주차 계산은 `weekAgg` 한 곳에 있다**(2026-09-06) — 매니저 보기가 같은 함수를
+       쓴다. 여기서 따로 세면 같은 주가 두 화면에서 다른 건수가 된다. */
+    var WA = weekAgg(weekSrc('store'));
+    var pickWeeks = WA.picks;
     var M = heatMonths(), out = [], rg;
     for (rg in reg) if (reg.hasOwnProperty(rg)) {
       var list = reg[rg].stores || [];
@@ -5723,14 +5742,10 @@ function renderList() {
           /* 그 주 · 그 매장. **전주 대비**로 색을 낸다 — 주차는 시간 축이라 그 견줌이 맞다.
              **앞 주가 자료에 없으면 「못 잼」이지 0 이 아니다**(0→N 이라 적으면 거짓말이다). */
           /* **고른 기간의 합**이다(한 주일 수도, 여러 주일 수도 있다) */
-          var wn = weekSum(nm);
+          var wn = WA.sum(nm);
           /* **평소가 0 이면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니라 「새로 생겼다」다
-             (이 화면이 전월 대비에서 이미 세운 규칙 그대로다). */
-          /* **평소가 0 이면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니라 「새로 생겼다」다.
-             **여러 주를 골랐으면 평소도 그만큼 곱한다** — 3주치 합을 1주 평균과 견주면
-             늘 「평소의 3배」가 되어 색이 거짓말을 한다. */
-          var av1 = wAvg[nm];
-          var av = (av1 === null || av1 === undefined) ? null : av1 * Math.max(1, pickWeeks.length);
+             (이 화면이 전월 대비에서 이미 세운 규칙 그대로다). 곱셈 보정은 `weekAgg` 안에 있다. */
+          var av = WA.avg(nm);
           out.push({ nm: nm, key: nm, reg: rg, cnt: wn, cur: wn,
                      prev: av, noPrev: !av, week: heatWeek, wAvg: av,
                      weeks: pickWeeks.length,
@@ -5791,10 +5806,16 @@ function renderList() {
      *
      * 예전에는 매니저만 **월 기준**이라 같은 화면이 두 잣대를 썼다(빵부스러기가
      * 「전월 대비 -72.7%」였다). 이제 연도 축을 그대로 탄다 — 크기는 그 해 건수,
-     * 색은 전년 대비. **주차를 보고 있으면 예전처럼 월로 물러선다**(매니저 자료에는
-     * 주차 표가 없다) — 없는 것을 있는 척 그리지 않는다.
+     * 색은 전년 대비.
+     *
+     * **주차도 지점과 같은 함수로 읽는다**(2026-09-06 사장님 지시) — 서버가
+     * `mgrTop[].wk4` 를 지점 주차와 **같은 모양**으로 준다. 옛 서버 자료에는 그 칸이
+     * 없으므로 그때만 월로 물러서고 **화면이 그 사실을 적는다**(없는 것을 있는 척
+     * 그리지 않는다).
      */
     var top = DATA.mgrTop || [], M = heatMonths(), out = [];
+    var MW = weekSrc('mgr'), hasMW = Object.keys(MW).length > 0;
+    var WA2 = (heatWeek && hasMW) ? weekAgg(MW) : null;
     var MY = heatYears(), mgrYr = !heatWeek;
     /* 매장 → 지역 (한 번만 만든다) */
     var reg = DATA.byRegion || {}, s2r = {}, rg, j;
@@ -5817,6 +5838,20 @@ function renderList() {
         return n2;
       };
       var kY = t.kindY || null;
+      /* ── 주차 축 — **지점과 같은 함수**(`weekAgg`)로 낸다 ─────────────────
+       * 크기는 고른 기간 합, 색은 **평소 주당 대비**. 지점 히트맵과 규칙이 한 글자도
+       * 다르지 않아야 「같은 주 · 같은 잣대」가 성립한다. */
+      if (WA2) {
+        var wn2 = WA2.sum(t.name), av2 = WA2.avg(t.name);
+        out.push({
+          nm: t.name, key: t.name, reg: s2r[t.store] || '기타',
+          cnt: wn2, cur: wn2, prev: av2, noPrev: !av2,
+          week: heatWeek, wAvg: av2, weeks: WA2.picks.length,
+          store: t.store || '', known: !!t.known, hasK4: !!t.kind4, hasKY: !!kY,
+          g: av2 ? (wn2 - av2) / av2 * 100 : null
+        });
+        continue;
+      }
       var kn4;
       if (!mgrYr) kn4 = heatKind ? ((t.kind4 || {})[heatKind] || 0) : (t.n || 0);
       else if (!heatKind) kn4 = yrSum(MY.cur);
@@ -5833,6 +5868,8 @@ function renderList() {
         year: mgrYr ? MY.cur : null, prevYear: mgrYr ? MY.prev : null,
         noPrev: mgrYr ? !kp4 : !p2,
         hasKY: !!kY,
+        /* **주차를 골랐는데 자료가 없다** — 월로 물러섰다는 사실을 화면이 적는다 */
+        weekFallback: !!heatWeek && !hasMW,
         store: t.store || '', known: !!t.known,
         hasK4: !!t.kind4,
         /* **전월이 0이거나 모르면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니다
@@ -6166,10 +6203,15 @@ function renderList() {
       var bwho = document.getElementById('hm-who');
       if (bwho) bwho.addEventListener('click', function () {
         heatWho = heatWho === 'mgr' ? 'store' : 'mgr';
-        /* **유형은 그대로 둔다**(2026-09-03) — 「혼수」를 보다가 매니저로 넘어가면
-           「혼수를 많이 받은 매니저」가 나오는 것이 자연스럽다.
-           **드릴다운·주차는 되돌린다** — 매니저에는 그 자료가 없어 빈 화면이 된다. */
-        heatPath = []; heatWeek = '';
+        /* **유형과 주차를 그대로 들고 넘어간다**(2026-09-06 사장님 지시 — *"동일한
+           인터페이스와 동일한 정보를 기준으로"*). 「9월 1주차 혼수」를 보다가 매니저로
+           넘어가면 **그 주 그 유형의 매니저**가 나와야 한다 — 예전에는 주차를 지워
+           같은 화면이 두 잣대를 썼다.
+           **넘어간 쪽에 주차 자료가 없으면 푼다** — 옛 서버 자료에는 `wk4` 가 없어
+           그대로 두면 빈 화면이 된다(있는 척하지 않는다).
+           **드릴다운만 되돌린다** — 축이 바뀌면 안에 있던 칸이 사라진다. */
+        heatPath = [];
+        if (heatWeek && !Object.keys(weekSrc()).length) { heatWeek = ''; heatFrom = ''; heatTo = ''; }
         renderHeat();
       });
       /* ── 기간 거르개 (2026-09-03 사장님 지시) ────────────────────────────
@@ -6399,6 +6441,17 @@ function renderList() {
              증감을 일부러 안 적기 때문이지 자료가 없어서가 아니다). */
           if (!d.isReg && !sub2 && !heatKind && !d.year && !d.mon) sub2 = '작성일 모름';
           if (sub2) lab += '<span class="cv" style="font-size:' + (fs * 0.52).toFixed(1) + 'px">' + sub2 + '</span>';
+          /* ── **매니저 칸에도 「평소 대비」를 적는다** (2026-09-06 사장님 지시) ──────
+           * *"동일한 인터페이스와 동일한 정보를 기준으로 보여줘야합니다"*.
+           * 매니저 칸은 부제 자리를 **매장 이름**이 쓴다(동명이인을 가르는 값이라
+           * 뺄 수 없다). 그래서 지점 칸이 부제에 적는 그 값을 **한 줄 더** 붙인다 —
+           * 안 그러면 범례가 *"평소 주당 대비는 칸 안 작은 글씨에 있습니다"* 라고
+           * 적어 두고 정작 그 글씨가 없다(실물에서 봤다).
+           * **칸이 낮으면 붙이지 않는다** — 글자가 겹치느니 말풍선에 맡긴다. */
+          if (week && d.store !== undefined && c.h > 74) {
+            var sub3 = d.noPrev ? '평소 모름' : '평소 ' + d.prev.toFixed(1) + '→' + d.cur + '건';
+            lab += '<span class="cv" style="font-size:' + (fs * 0.52).toFixed(1) + 'px">' + sub3 + '</span>';
+          }
           /* **LG 매칭 표식** — 글자를 더 넣지 않고 기호 하나만 둔다(칸이 좁다).
              ▣ 같은 백화점 안 · ✕ 매칭 없음 · 최근접은 표식 없음(대부분이라 붙이면 지저분하다). */
           if (lgm && c.w > 70) {
@@ -6623,7 +6676,10 @@ function renderList() {
      * 빼면 「그 주가 없다」로 읽히는데 실제로는 「그 주에 글이 없다」이다. */
     var wbox = document.getElementById('hm-weeks');
     if (wbox) {
-      var bsw = DATA.byStoreWeek || {}, wsum = {}, ws1, wk1;
+      /* **지금 보고 있는 축의 주차 자료를 센다**(2026-09-06). 매니저를 보면서 지점
+         건수를 적으면 골라 보고서야 다른 숫자를 만난다 — 드롭다운과 칸이 같은 표를
+         봐야 한다. `weekSrc` 가 축을 가른다(판정도 같은 함수를 쓴다). */
+      var bsw = weekSrc(), wsum = {}, ws1, wk1;
       for (ws1 in bsw) if (bsw.hasOwnProperty(ws1)) {
         for (wk1 in bsw[ws1]) if (bsw[ws1].hasOwnProperty(wk1)) {
           var mw = bsw[ws1][wk1], kz, nz = 0;
@@ -6665,9 +6721,10 @@ function renderList() {
 
         if (clr) clr.hidden = !heatWeek;
         if (note) {
+          var whoW = heatWho === 'mgr' ? '매니저' : '지점';
           note.textContent = heatWeek === 'custom'
             ? (heatFrom && heatTo ? '직접 지정한 기간입니다 — 그 안에 든 주를 모두 셉니다.' : '시작일과 종료일을 모두 넣어 주세요.')
-            : (heatWeek ? '' : '기간을 고르면 그 기간의 지점만 봅니다.');
+            : (heatWeek ? '' : '기간을 고르면 그 기간의 ' + whoW + '만 봅니다.');
         }
       }
     }
@@ -6685,13 +6742,13 @@ function renderList() {
       if (!hasMgr && heatWho === 'mgr') { heatWho = 'store'; renderHeat(); return; }
     }
     var mgrView = heatWho === 'mgr';
-    /* **매니저 보기에서도 유형은 걸린다**(2026-09-03 사장님 지시 — *"「매니저로 보기」를
-       누르고 혼수 입주 기타 후기를 필터링할 수 있어야 합니다"*). 서버가 매니저 × 유형을
-       세어 주므로(`mgrTop[].kind4`) 겹쳐 걸 수 있다.
-       **주차는 여전히 감춘다** — 매니저 × 주차는 세어 두지 않았다(있는 척하면 0건이 나온다). */
+    /* **매니저 보기에서도 유형·주차가 걸린다**(2026-09-03·2026-09-06 사장님 지시 —
+       *"「매니저로 보기」를 누르고 혼수 입주 기타 후기를 필터링할 수 있어야 합니다"* ·
+       *"매니저별 보기도 주차별로 볼 수 있게해야합니다"*). 서버가 매니저 × 유형
+       (`mgrTop[].kind4`)과 매니저 × 주차(`mgrTop[].wk4`)를 세어 준다.
+       **감추는 것은 자료가 없을 때뿐이다** — 위에서 `wlist` 가 비면 이미 감췄다
+       (옛 서버 자료에는 `wk4` 가 없다). 있는 척하지도, 없는데 감추지도 않는다. */
     if (kbox) kbox.style.display = '';
-    if (wbox) wbox.style.display = (mgrView || !(DATA.byStoreWeek || {}) ) ? 'none' : wbox.style.display;
-    if (mgrView && wbox) wbox.style.display = 'none';
     bmd.style.display = mgrView ? 'none' : '';
     var byr2 = document.getElementById('hm-year');
     if (byr2) {
@@ -6889,15 +6946,26 @@ function renderList() {
     var live = week ? rows.filter(function (r) { return r.cnt > 0; }).length : 0;
     if (mgrView) {
       var gm = heatGrowth(rows);
-      cr.innerHTML = '매니저 <em>' + (yrAxis ? YY.cur + '년 · ' : '') + rows.length + '명 · '
+      /* **지점 빵부스러기와 같은 모양으로 적는다**(2026-09-06 사장님 지시 — *"동일한
+         인터페이스와 동일한 정보를 기준으로"*). 기간 표식(`wtag`)·글이 있는 칸 수·
+         증감 문구를 지점 쪽과 같은 값에서 낸다 — 예전에는 매니저만 기간을 안 적어
+         「9월 1주차」를 보고 있는데 머리는 그 사실을 말하지 않았다. */
+      cr.innerHTML = '매니저 <em>' + wtag
+        + (week ? live + '명에 글이 있습니다(전체 ' + rows.length + '명) · '
+                : rows.length + '명 · ')
         + nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건 언급'
         /* **연도 축이면 「전년 대비」다**(2026-09-05) — 「전월 대비」로 두면 화면이
-           거짓을 말한다. 그리고 **당해만 볼 때는 증감을 안 적는다**(지점 히트맵과 같다). */
-        + (gm.g === null || (yrAxis && heatYear !== 'cmp') ? ''
+           거짓을 말한다. 그리고 **당해만 볼 때는 증감을 안 적는다**(지점 히트맵과 같다).
+           **주차 축에서는 지점과 똑같이 안 적는다** — 칸마다 평소 대비가 붙는다. */
+        + (week || gm.g === null || (yrAxis && heatYear !== 'cmp') ? ''
             : ' · ' + (yrAxis ? YY.prev + '년 대비 ' : '전월 대비 ') + heatPct(gm.g))
         /* **유형을 걸었는데 옛 서버 자료면 연도로 못 자른다** — 그 사실을 적는다 */
         + ((yrAxis && heatKind && rows.length && rows[0].hasKY === false)
             ? ' · <b class="warn">유형은 전 기간 기준입니다</b>' : '')
+        /* **주차를 골랐는데 매니저 주차 자료가 없다** — 월로 물러섰다고 밝힌다
+           (조용히 다른 잣대를 쓰지 않는다). */
+        + ((rows.length && rows[0].weekFallback)
+            ? ' · <b class="warn">매니저 주차 자료가 없어 월 기준입니다</b>' : '')
         + '</em>';
     } else if (heatMode === 'flat') {
       var gr = heatGrowth(rows);
