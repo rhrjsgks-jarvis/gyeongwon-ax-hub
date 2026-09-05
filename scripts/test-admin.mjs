@@ -3466,6 +3466,92 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     else console.log('OK: 바이럴 히트맵 연도 축 — 당사·LG 가 같은 잣대 · 누적 2023~ · 옛 회차는 전 기간으로 물러서고 밝힌다');
   }
 
+
+  /* ── ⑩ **자동 수집이 멈춘 것을 화면이 말한다** (2026-09-05 실측으로 필요해졌다) ────
+   *
+   * 실측 — 마지막 실행 01:54 로부터 **8시간 30분** 동안 아무것도 안 돌았다
+   * (`runAt 0` · `dayUsed` 그대로 · `stage` 가 01:53 에 멎어 있다). 그런데 **화면은
+   * 아무 말도 안 했다** — 기존 경고(`runstage`)는 실행이 **도는 중**일 때만 뜨고
+   * (`runAt > 0`), 끝난 뒤 다음 실행이 영영 안 오는 경우가 사각지대였다.
+   *
+   * **왜 안 도는지는 밖에서 확정할 수 없다**(구글이 반복 실패로 트리거를 끄는 일이
+   * 있고 그것은 Apps Script 실행 기록에만 남는다). 그래서 원인을 짐작해 고치는 대신
+   * **다시 걸 길**을 화면에 두었다.
+   */
+  {
+    const gsW = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ixW = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const pvW = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+    const bW = [];
+
+    /* ⓐ 서버 — 숫자로 낸다. 글자를 화면에서 파싱하면 시트가 돌려주는 모양에 기대게 되고,
+           이 파일이 오늘 그 함정(요일 이름 사전순)으로 회차 고르기를 사흘 망쳤다. */
+    if (!gsW.includes('ms: (ms0 && !isNaN(ms0)) ? ms0 : 0')) {
+      bW.push('lastRun 에 밀리초가 없다 — 화면이 「몇 시간째」를 재려면 숫자가 필요하다');
+    }
+    /* ⓑ 서버 — 다시 거는 길. **관리자만** · 좀비 이어달리기도 함께 걷어낸다 */
+    if (!gsW.includes('function rearmTrigger(')) bW.push('rearmTrigger 가 없다 — 화면에서 트리거를 다시 걸 길이 없다');
+    if (!gsW.includes("if (!adminOk_(token)) return { ok: false, error: '관리자 확인이 필요합니다")) {
+      bW.push('rearmTrigger 가 관리자 확인을 안 한다 — 트리거를 만드는 일이다');
+    }
+    {
+      /* 그 함수 안에서 좀비를 걷어내고 새로 거는지 — 블록을 떼어 본다 */
+      const at = gsW.indexOf('function rearmTrigger(');
+      const blk = at < 0 ? '' : gsW.slice(at, at + 900);
+      if (!blk.includes('clearChain_()')) bW.push('좀비 이어달리기 트리거를 안 걷어낸다 — chainOn 이 true 인 채로 남는다');
+      if (!blk.includes('setupTrigger()')) bW.push('새벽 3시 트리거를 다시 걸지 않는다');
+      if (!blk.includes('catch (e)')) bW.push('오류를 삼킨다 — 조용히 실패하면 「걸었습니다」가 거짓이 된다');
+    }
+
+    /* ⓒ 화면 — 경고 자리 · 버튼 · 부르는 곳 */
+    if (!ixW.includes('id="stalled"')) bW.push('멈춤 경고 자리가 없다');
+    if (!ixW.includes('id="rearm"')) bW.push('「자동 수집 다시 걸기」 버튼이 없다');
+    if (!ixW.includes('.rearmTrigger(admToken);')) bW.push('버튼이 관리자 토큰을 안 넘긴다');
+    if (!ixW.includes('오늘 자동 수집이 돌지 않았습니다')) bW.push('멈췄을 때 무슨 일인지 안 적는다');
+    /* **실패를 실패라고 적는가** — 이 저장소가 시험 결과 전송에서 못 박은 규칙이다 */
+    if (!ixW.includes('걸지 못했습니다')) bW.push('실패를 실패라고 안 적는다');
+    /* **미리보기 스텁** — 없으면 버튼 한 번에 화면이 죽어 무엇을 보러 왔는지 알 수 없다 */
+    if (!pvW.includes('rearmTrigger: function ()')) bW.push('미리보기에 rearmTrigger 스텁이 없다');
+
+    /* ⓓ **떼어 돌린다** — 판정이 뒤집혀도 문자열만 보면 통과한다.
+           「오늘 새벽 3시」가 기준이다. 「몇 시간 전인가」로 잡으면 정상적으로 밤에
+           끝난 상태(3시 이후 ~ 다음 3시)를 자꾸 경고한다. */
+    const at2 = ixW.indexOf('var stalled = document.getElementById("stalled");');
+    if (at2 < 0) bW.push('멈춤 판정 블록이 없다');
+    else {
+      const blk2 = ixW.slice(at2, at2 + 1400);
+      if (!blk2.includes('d3.setHours(3, 0, 0, 0)')) bW.push('판정 기준이 「오늘 새벽 3시」가 아니다');
+      if (!blk2.includes('!runMin')) bW.push('실행이 도는 중에도 멈췄다고 적는다');
+      let judge = null;
+      try {
+        judge = new Function('lrMs', 'nowMs', 'runMin',
+          'var d3 = new Date(nowMs); d3.setHours(3, 0, 0, 0);'
+          + ' var past3 = nowMs > d3.getTime() + 30 * 60000;'
+          + ' return !!(lrMs > 0 && past3 && lrMs < d3.getTime() && !runMin);');
+      } catch (e) { judge = null; }
+      if (!judge) bW.push('멈춤 판정을 떼어 돌릴 수 없다');
+      else {
+        const day = new Date(2026, 8, 5, 10, 24).getTime();          /* 오늘 10:24 */
+        const three = new Date(2026, 8, 5, 3, 0, 0, 0).getTime();
+        /* ① 실측 그대로 — 01:54 에 끝나고 그 뒤로 없음 → 경고 */
+        if (!judge(new Date(2026, 8, 5, 1, 54).getTime(), day, 0)) bW.push('실측 상황(01:54 뒤로 없음)에서 경고를 안 낸다');
+        /* ② 오늘 3시 이후에 돌았으면 조용해야 한다 */
+        if (judge(three + 40 * 60000, day, 0)) bW.push('정상인데 경고를 낸다 — 매일 뜨면 아무도 안 읽는다');
+        /* ③ 새벽 2시에는 판정하지 않는다 — 아직 3시가 안 왔다 */
+        if (judge(new Date(2026, 8, 4, 23, 0).getTime(), new Date(2026, 8, 5, 2, 0).getTime(), 0)) {
+          bW.push('3시 전에 판정한다 — 매일 새벽에 헛경고가 뜬다');
+        }
+        /* ④ 돌고 있는 중이면 조용하다 — 그때는 runstage 가 말한다 */
+        if (judge(new Date(2026, 8, 5, 1, 54).getTime(), day, 12)) bW.push('실행이 도는 중에도 경고한다 — 두 줄이 두 말을 한다');
+        /* ⑤ 기록이 아예 없으면 판정하지 않는다 — 「모른다」를 「멈췄다」로 바꿔 말하지 않는다 */
+        if (judge(0, day, 0)) bW.push('마지막 실행을 모르는데 멈췄다고 단정한다');
+      }
+    }
+
+    if (bW.length) { ok = false; console.log('ERROR: [바이럴] 수집 멈춤 알림 — ' + bW.join(' · ')); }
+    else console.log('OK: 바이럴 수집 멈춤 — 오늘 3시 기준으로 판정 · 다시 걸 수 있고 · 실패를 실패라고 적는다');
+  }
+
   /* ⑧ **균형점은 회사 수가 정한다** (2026-09-03 배포 확인에서 발견)
      4사로 넓히며 분모만 넷으로 바꾸고 판정은 2사 시절 50% 를 두어, 화면이
      「당사가 앞선 곳 0곳」이라 말하고 있었다 — 용인은 4사 중 45.7% 로 1위다. */

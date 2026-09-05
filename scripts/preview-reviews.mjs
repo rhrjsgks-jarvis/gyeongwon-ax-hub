@@ -568,6 +568,8 @@ const stub = [
   '    setDailyLimit: function () {}, dedupeReviews: function () {}, stopSweep: function () {},',
   /* 2026-09-04 — 「전체 재수집 취소」. 스텁이 없으면 눌렀을 때 화면이 그 자리에서 죽는다 */
   '    cancelFull: function () {},',
+  /* **스텁을 빠뜨리면 버튼 한 번에 화면이 죽는다** — 무엇을 보러 왔는지 알 수 없게 된다 */
+  '    rearmTrigger: function () { setTimeout(function () { ok && ok({ ok: true, cleared: 2, msg: "트리거를 다시 걸었습니다." }); }, 200); },',
   /* 2026-09-04 — 「검색 관심도 갱신」(데이터랩) */
   '    runTrend: function () {}',
   '  };',

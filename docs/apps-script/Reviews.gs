@@ -3322,6 +3322,35 @@ function setupTrigger() {
   return '하루 1회 새벽 3시 트리거를 걸었습니다.';
 }
 
+/**
+ * **화면에서 자동 수집을 다시 건다** (2026-09-05 실측으로 필요해졌다).
+ *
+ * 실측 — 마지막 실행 01:54, 그로부터 **8시간 30분** 동안 아무것도 안 돌았다
+ * (`runAt 0` · `dayUsed` 그대로 · `stage` 가 01:53 에 멎어 있다). 새벽 3시
+ * 트리거가 그날 한 번도 안 돌았다는 뜻이다.
+ *
+ * **왜 안 도는지는 밖에서 확정할 수 없다** — 구글이 반복 실패로 트리거를 끄는 일이
+ * 있고(어제 쿼터 예외가 있었다) 그것은 Apps Script 실행 기록에만 남는다. 그래서
+ * **원인을 짐작해 고치는 대신 다시 걸 길을 화면에 둔다.**
+ *
+ * `chainOn: true` 를 「돌고 있다」로 읽지 말 것 — 발화가 끝난 일회성 트리거를 지우는
+ * 것은 다음 sweep 뿐이라, 그 sweep 이 죽으면 아무도 안 지운다. **다 죽었는데 true 다.**
+ * 그래서 여기서 **좀비 이어달리기 트리거도 함께 걷어낸다.**
+ *
+ * **관리자만** — 트리거를 만드는 일이라 아무나 누르면 안 된다.
+ */
+function rearmTrigger(token) {
+  if (!adminOk_(token)) return { ok: false, error: '관리자 확인이 필요합니다 — 다시 로그인해 주세요.' };
+  try {
+    var dead = clearChain_();          /* 좀비 이어달리기부터 걷어낸다 */
+    var msg = setupTrigger();          /* 새벽 3시 트리거를 새로 건다 */
+    return { ok: true, cleared: dead, msg: msg };
+  } catch (e) {
+    /* **오류를 삼키지 않는다** — 조용히 실패하면 화면의 「다시 걸었습니다」가 거짓이 된다 */
+    return { ok: false, error: String(e && e.message || e) };
+  }
+}
+
 /* ── 이어달리기 ──────────────────────────────────────────────────────
  * Apps Script 는 한 번에 **6분**까지만 돈다. 한 바퀴(65개 매장)는 그보다 훨씬 길어
  * 예전에는 **사람이 열 번 넘게 눌러야** 끝났고, 실제로는 안 눌러서 서 있었다.
@@ -5912,7 +5941,14 @@ function lastRun_() {
   var log = sheet_(SHEET_LOG, LOG_HEADER);
   if (log.getLastRow() <= 1) return null;
   var lv = log.getRange(log.getLastRow(), 1, 1, LOG_HEADER.length).getValues()[0];
-  return { at: String(lv[0]), calls: lv[1], got: lv[2], kept: lv[3], added: lv[4], error: String(lv[5] || '') };
+  /* **밀리초를 함께 낸다**(2026-09-05) — 화면이 「마지막 수집이 몇 시간 전인가」를
+     재려면 숫자가 필요하다. 글자를 화면에서 파싱하면 시트가 돌려주는 모양
+     (Date 객체 → 「Sat Sep 05 …」)에 기대게 되는데, 이 파일이 오늘 그 함정으로
+     회차 고르기를 사흘 망쳤다. **숫자는 서버가 낸다.** */
+  var ms0 = 0;
+  try { ms0 = (lv[0] && typeof lv[0].getTime === 'function') ? lv[0].getTime() : new Date(String(lv[0])).getTime(); } catch (e) { ms0 = 0; }
+  return { at: String(lv[0]), ms: (ms0 && !isNaN(ms0)) ? ms0 : 0,
+    calls: lv[1], got: lv[2], kept: lv[3], added: lv[4], error: String(lv[5] || '') };
 }
 
 function freshState_(d) {
