@@ -4608,21 +4608,10 @@ function summary_() {
     watch: watch_(byCafe),
     /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
-    /* **버튼마다 얼마를 쓰는가** — 누르기 전에 화면이 적는다(2026-09-05) */
-    costs: actionCosts_(),
-    /* ── **이번 차례인 것** (2026-09-05 사장님 지시 · 2026-09-06 매일/주1회로 갈랐다) ──
-     * *"어떤버튼을 어떤순서로해야하는지 알려주세요"*. 순서를 알려 드리는 것보다
-     * **화면이 그때그때 말하게** 하는 편이 낫다 — 배포할 때마다 순서가 달라지면
-     * 적어 드린 글이 그 자리에서 낡는다. 「수집」 하나가 이 넷을 차례로 하므로,
-     * 화면은 **무엇이 남았는지**만 적으면 된다. */
-    due: { rival: rivalDue_(), srival: srivalDue_(), trend: trendDue_(), dead: deadDue_() },
-    /* **다음 차례까지 며칠 남았나** — 화면이 「이번 주 것은 N일 뒤」라고 적을 수 있어야
-       *"왜 오늘은 LG 비교를 안 하지"* 를 안 묻게 된다(2026-09-06). 0 이면 이번에 한다. */
-    dueIn: {
-      rival: dueInDays_('_rivalAt', RIVAL_EVERY_DAYS),
-      srival: dueInDays_('_srivalAt', SRIVAL_EVERY_DAYS),
-      trend: dueInDays_('_trendAt', TREND_EVERY_DAYS)
-    },
+    /* **`costs`·`due`·`dueIn` 은 여기 있지 않다** — `freshState_` 가 볼 때마다 새로
+       낸다. 이 반환값은 **6시간 집계 캐시에 갇히므로**, 여기 두면 「수집」이 돌아
+       차례가 끝난 뒤에도 화면이 최대 6시간 「아직 안 했습니다」라고 말한다
+       (이 파일이 `cursor`·`lastRun`·`stage` 에서 이미 세 번 데인 자리다). */
     approx: approxN,
     /* **창별·월별 발견일 몫.** 화면이 「그중 N건은 발견일로 잰 것」이라 적는다 —
        뭉개면 「최근 7일 240건」이 그 주에 쓰인 글로 읽힌다(실제로는 25건이었다). */
@@ -6389,7 +6378,7 @@ function lastRun_() {
     calls: lv[1], got: lv[2], kept: lv[3], added: lv[4], error: String(lv[5] || '') };
 }
 
-function freshState_(d) {
+function freshState_(d, full) {
   try {
     d.cursor = Number(props_().getProperty('_cursor') || 0);
     d.tail = Number(props_().getProperty('_tail') || 0);
@@ -6450,6 +6439,23 @@ function freshState_(d) {
        (건수는 집계에서 나오므로 `setManagerNames` 가 캐시를 버린다) */
     d.mgrList = mgrNames_();
     d.sweep = sweepCalls_();
+    /* ── **차례와 비용도 볼 때마다 새로 낸다** (2026-09-06) ─────────────────────
+     * 「수집」이 돌아 `_trendAt` 을 찍은 뒤에도 집계 캐시가 6시간 살아 있으면 화면은
+     * 「검색 관심도가 이번 차례」라고 계속 말한다 — 그러면 사장님이 다시 누르시고
+     * 그 실행은 문지기에 막혀 **헛돈다.** 비용 줄도 그 값 위에 서 있어 함께 어긋난다.
+     * 스크립트 속성 읽기라 값싸다(`sweep` 을 바로 위에서 내는 것과 같은 무게다). */
+    /* **진행 폴링에서는 내지 않는다**(`full` 이 거짓). 화면이 `getProgress` 를 몇 초마다
+       부르는데 `rivalDue_()` 는 조건에 따라 경쟁비교 시트를 읽는다 — 몇 초마다 시트를
+       읽게 만들 값이 아니다. 자료를 통째로 받는 `getSummary` 에서만 낸다. */
+    if (full) {
+      d.due = { rival: rivalDue_(), srival: srivalDue_(), trend: trendDue_(), dead: deadDue_() };
+      d.dueIn = {
+        rival: dueInDays_('_rivalAt', RIVAL_EVERY_DAYS),
+        srival: dueInDays_('_srivalAt', SRIVAL_EVERY_DAYS),
+        trend: dueInDays_('_trendAt', TREND_EVERY_DAYS)
+      };
+      d.costs = actionCosts_();
+    }
   } catch (e) { /* 못 읽어도 집계는 그대로 쓴다 */ }
   return d;
 }
@@ -6475,14 +6481,14 @@ function getProgress() {
 
 function getSummary() {
   var hit = sumCacheGet_();
-  if (hit) { hit.cached = true; return freshState_(hit); }
+  if (hit) { hit.cached = true; return freshState_(hit, true); }
   var d = summary_();
   sumCachePut_(d);
   /* **캐시 미스일 때도 같은 길을 지나간다**(2026-09-01). 히트일 때만 `freshState_` 를
      거쳤더니 **같은 함수가 경우에 따라 다른 필드 구성**을 냈다 — 실측으로 캐시 미스
      응답에 `cycleAt` 이 아예 없어서 화면이 남은 시간을 못 냈다.
      **담아 두기 전에 부르면 안 된다** — 그러면 상태 값이 캐시에 굳는다. */
-  return freshState_(d);
+  return freshState_(d, true);
 }
 
 function doGet(e) {

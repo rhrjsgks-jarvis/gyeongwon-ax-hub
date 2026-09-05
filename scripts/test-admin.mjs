@@ -1808,15 +1808,17 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        사장님이 「여러 번 눌러도 80% 그대로」를 본 진짜 이유가 이것이다. */
     /* **글자 수로 창을 자르지 말 것** — 주석이 늘면 함수 끝을 못 찾아 「없다」로 잡는다
        (이 저장소가 이미 두 번 데인 자리다). 함수 시작부터 닫는 줄까지 잘라 본다. */
-    const freshAt = rv.indexOf('function freshState_(d) {');
+    /* **인자가 늘어도 찾는다** — `(d) {` 로 못 박았더니 `full` 을 더한 순간
+       빈 문자열이 되어 「함수가 없다」로 잡았다(2026-09-06). */
+    const freshAt = rv.indexOf('function freshState_(');
     const fresh = freshAt < 0 ? '' : rv.slice(freshAt, rv.indexOf('\n}', freshAt));
     const need2 = ['cursor', 'dayUsed', 'chainOn', 'lastRun'];
     const missF = need2.filter((k) => !fresh.includes('d.' + k + ' ='));
     if (!fresh) fail('[바이럴] freshState_ 가 없다 — 캐시가 커서·사용량을 얼려 화면이 거짓말을 한다');
     else if (missF.length) fail(`[바이럴] freshState_ 가 새로 안 읽는 값: ${missF.join(', ')}`);
-    else if (!/if \(hit\) \{ hit\.cached = true; return freshState_\(hit\); \}/.test(rv)) {
+    else if (!/if \(hit\) \{ hit\.cached = true; return freshState_\(hit[^)]*\); \}/.test(rv)) {
       fail('[바이럴] getSummary 가 캐시 히트에서 freshState_ 를 안 지난다 — 상태가 굳는다');
-    } else if (!/sumCachePut_\(d\);[\s\S]{0,400}?return freshState_\(d\);/.test(rv)) {
+    } else if (!/sumCachePut_\(d\);[\s\S]{0,400}?return freshState_\(d[^)]*\);/.test(rv)) {
       /* **캐시 미스일 때도 같은 길을 지나가야 한다.** 히트일 때만 거쳤더니 같은 함수가
          경우에 따라 **다른 필드 구성**을 냈다(실측: 캐시 미스 응답에 `cycleAt` 이 없어
          화면이 남은 시간을 못 냈다). 담아 둔 뒤에 불러야 상태가 캐시에 안 굳는다. */
@@ -3680,7 +3682,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ⓑ **비용은 서버가 한 곳에서 센다** — 화면이 따로 세면 상수가 바뀔 때 어긋난다 */
     if (!gsB.includes('function actionCosts_(')) bB.push('actionCosts_ 가 없다 — 화면이 비용을 지어내게 된다');
-    if (!gsB.includes('costs: actionCosts_(),')) bB.push('비용을 화면에 안 보낸다');
+    /* **`freshState_` 가 낸다** — `summary_` 반환값에 두면 6시간 집계 캐시에 갇혀
+       화면이 옛 비용을 적는다(2026-09-06에 옮겼다). */
+    if (!gsB.includes('d.costs = actionCosts_();')) bB.push('비용을 화면에 안 보낸다');
     /* **매장 대 매장 비용은 붙은 LG 지점 수만큼 늘어난다**(짝이 1:N 이 됐다).
        `× 2` 로 굳히면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
        수집기와 **같은 함수**(`lgMatchAll_`)를 지나가는지도 함께 본다. */
@@ -5403,9 +5407,29 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
-  /* ⓓ 화면이 며칠 남았는지 적으려면 서버가 그 칸을 내야 한다 */
-  if (gs.indexOf('dueIn: {') < 0 || gs.indexOf('rival: dueInDays_') < 0)
-    bad.push('summary_ 가 dueIn 을 안 낸다 — 화면이 「다음 차례 N일 뒤」를 못 적는다');
+  /* ⓓ 화면이 며칠 남았는지 적으려면 서버가 그 칸을 내야 한다 —
+     **그런데 집계 캐시(6시간)에 갇히면 안 된다.** 「수집」이 돌아 차례가 끝난 뒤에도
+     화면이 「아직 안 했습니다」라고 말하면 사장님이 다시 누르시고 그 실행은 헛돈다.
+     이 파일이 `cursor`·`lastRun`·`stage` 에서 이미 세 번 데인 자리다(2026-09-06). */
+  if (gs.indexOf('rival: dueInDays_') < 0)
+    bad.push('dueIn 을 아예 안 낸다 — 화면이 「다음 차례 N일 뒤」를 못 적는다');
+  {
+    const fresh = bodyOf('freshState_'), sum = bodyOf('summary_');
+    if (!fresh) bad.push('freshState_ 를 못 찾았다');
+    for (const k of ['d.due =', 'd.dueIn =', 'd.costs =']) {
+      if (fresh.indexOf(k) < 0) bad.push(`freshState_ 가 ${k.slice(2, -2)} 를 안 낸다 — 6시간 캐시에 갇힌다`);
+    }
+    /* 반환값(캐시에 담기는 쪽)에 남아 있으면 그쪽이 이겨 옛 값이 굳는다 */
+    for (const k of ['\n    due: {', '\n    dueIn: {', '\n    costs: actionCosts_()']) {
+      if (sum.indexOf(k) >= 0) bad.push(`summary_ 반환값에 ${k.trim()} 가 남았다 — 캐시에 굳는다`);
+    }
+    /* **진행 폴링(getProgress)에서는 내지 않는다** — 몇 초마다 시트를 읽게 된다 */
+    if (fresh.indexOf('if (full) {') < 0)
+      bad.push('freshState_ 가 진행 폴링에서도 차례를 낸다 — rivalDue_ 가 시트를 읽는다');
+    const prog = bodyOf('getProgress');
+    if (prog && /freshState_\([^)]*,\s*true/.test(prog))
+      bad.push('getProgress 가 full 로 부른다 — 몇 초마다 시트를 읽는다');
+  }
 
   /* ⓔ 화면 — 「오늘 아직 안 한 것」은 이제 거짓이다 */
   if (ix.indexOf('오늘 아직 안 한 것:') >= 0)
