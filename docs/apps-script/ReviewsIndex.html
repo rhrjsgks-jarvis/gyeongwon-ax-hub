@@ -70,6 +70,15 @@
   #admopen[aria-expanded="true"] { background: rgba(255,255,255,.30); }
   @media (prefers-reduced-motion: reduce) { #admopen svg { transition: none; }
     #admopen:hover svg { transform: none; } }
+  /* 접어 둔 설명 — **평소에는 자리를 안 먹고, 궁금할 때만 편다.**
+     설명글이 늘 펴져 있으면 정작 눌러야 할 버튼이 아래로 밀린다. */
+  details.help { margin: -4px 0 10px; }
+  details.help > summary { cursor: pointer; font-size: var(--fs-mini); color: var(--blue);
+                           font-weight: 700; list-style: none; display: inline-block;
+                           padding: 3px 8px; border-radius: 999px; background: #EEF2FF; }
+  details.help > summary::-webkit-details-marker { display: none; }
+  details.help > summary::before { content: "? "; }
+  details.help[open] > summary { margin-bottom: 2px; }
   /* **지금 할 일** — 관리자 항목 맨 위. 눈에 먼저 닿아야 뜻이 있다. */
   .todo { background: #EEF2FF; border: 1px solid #C7D2F0; border-radius: 10px;
           padding: 10px 12px; margin: 0 0 12px; font-size: var(--fs-body); line-height: 1.55; }
@@ -1327,6 +1336,21 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="sub"><b>수집</b>이 오늘 안 한 것을 <b>차례로 다</b> 합니다 —
         LG 비교 · 매장 대 매장 · 검색 관심도까지 알아서 돕니다.
         <b>전체 재수집</b>은 처음부터 끝까지 팝니다 — 여러 번 이어 돌아야 합니다.</div>
+      <!-- **「같은 것을 또 모으는 것 아닌가」에 화면이 답한다** (2026-09-05 사장님 질문) -->
+      <details class="help"><summary>「수집」이 같은 글을 또 모으지는 않나요?</summary>
+        <div class="sub" style="margin-top:6px">
+          <b>아닙니다.</b> 두 겹으로 막습니다.
+          <br>① <b>링크로 거릅니다</b> — 시트에 이미 있는 주소는 다시 적지 않습니다.
+          같은 글이 두 줄이 되는 일이 없습니다.
+          <br>② <b>이미 가진 글을 만나면 그 자리에서 멈춥니다</b> — 네이버는 최신순으로
+          주므로 아는 글이 나온 아래는 전부 지난번에 훑은 자리입니다. 그래서 보통
+          <b>첫 쪽만</b> 보고 넘어갑니다(수집이 끝나면 <b>몇 쪽을 건너뛰었는지</b> 적습니다).
+          <br>③ 다만 <b>주에 한 번은 자동 수집이 처음부터 팝니다</b> — ②가 네이버의
+          최신순 정렬을 믿는 것이라 <b>그물</b>이 있어야 합니다.
+          <b>사장님이 「수집」을 누르실 때는 절대 전부 파지 않습니다</b>(그건
+          「처음부터 다시」를 고르셨을 때뿐입니다).
+        </div>
+      </details>
       <!-- ── 진행 상태 (2026-09-04 머리에서 옮겨 왔다) ──────────────────────
            사장님 지시: *"「62곳 한 바퀴를 마친 상태입니다 / 마지막 발자국 …」 은
            관리자만 알아야 할 항목"*. 상담사·일반 사용자에게는 수집 진행이 알 일이
@@ -7225,6 +7249,15 @@ function renderList() {
           '<div class="note"><b>수집을 마쳤습니다</b> — ' + nf(r.got) + '건을 받아 '
           + nf(r.kept) + '건이 판정을 지났고, 그중 <b>새 글 ' + nf(r.added) + '건</b>을 더했습니다.'
           + (r.added === 0 ? ' <b>이미 모은 글은 다시 세지 않습니다</b> — 누적은 그대로입니다.' : '')
+          /* ── **아낀 호출을 적는다** (2026-09-05 사장님 질문) ────────────────────
+           * *"수집 버튼 1개밖에없으면 이미 수집된파일도 재수집하는거아닌가요?"*
+           * 서버는 `saved` 를 세는데 **화면이 안 적고 있었다.** 이 한 줄이 그 질문에
+           * 누를 때마다 답한다 — 「이미 가진 영역이라 여기서 멈췄다」가 곧 근거다.
+           * **전체 재수집에서는 안 적는다** — 그때는 일부러 끝까지 판다. */
+          + (!r.full && r.saved
+              ? ' <b>이미 가진 영역이라 ' + nf(r.saved) + '쪽을 건너뛰었습니다</b>'
+                + ' — 그만큼 호출을 안 썼습니다.'
+              : '')
           + (r.error
               ? (softErr(r.error)
                   ? ' <span style="color:#B45309" title="' + esc(r.error) + '">'
@@ -7263,7 +7296,7 @@ function renderList() {
                 : (r.chained
                     /* **자동으로 이어 가면 사람을 부르지 않는다** — 부르면 눌러서 자물쇠에 막힌다 */
                     ? '<b>1분 뒤 스스로 이어 갑니다</b> — 그냥 두시면 됩니다. 잠시 뒤 새로고침하면 늘어난 숫자가 보입니다.'
-                    : '<b>「이어서 수집」을 다시 눌러 주세요</b> — 멈춘 매장부터 이어 갑니다.'))
+                    : '<b>「수집」을 다시 눌러 주세요</b> — 멈춘 매장부터 이어 갑니다.'))
             + ' <b>이미 모은 글은 다시 세지 않습니다.</b></div>';
         }
         /* **트리거를 고쳤으면 조용히 넘어가지 않는다**(2026-09-05). 「자동 수집 다시

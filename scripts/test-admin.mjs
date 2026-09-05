@@ -3999,6 +3999,30 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
     }
 
+    /* ⓚ **「같은 것을 또 모으는 것 아닌가」에 화면이 답한다** (2026-09-05 사장님 질문).
+       서버는 `saved`(아껴서 안 부른 쪽 수)를 세는데 **화면이 안 적고 있었다** —
+       그 한 줄이 누를 때마다 그 질문에 답한다. **전체 재수집에서는 안 적는다**
+       (그때는 일부러 끝까지 판다). */
+    if (!gsC.includes('full: isFull, saved: saved,')) bC.push('아낀 호출을 안 돌려준다');
+    /* **주석에 그 말을 인용해 두면 검사가 스스로 통과한다**(방금 그렇게 한 번 데었다) —
+       글이 아니라 **그 값을 화면에 넣는 코드**를 찾는다. */
+    if (!ixC.includes("nf(r.saved) + '쪽을 건너뛰었습니다")) bC.push('아낀 호출을 화면이 안 적는다');
+    if (!/!r\.full && r\.saved/.test(ixC)) bC.push('전체 재수집에서도 「건너뛰었다」고 적는다');
+    if (!ixC.includes('같은 글을 또 모으지는 않나요')) bC.push('되묻기 쉬운 것을 화면이 미리 안 답한다');
+    /* **멈추는 근거가 살아 있는가** — 이 둘이 없으면 매번 끝까지 판다 */
+    if (!gsC.includes('if (seen[link]) { hitSeen = true; continue; }')) {
+      bC.push('이미 가진 링크를 만나도 표시를 안 한다');
+    }
+    if (!gsC.includes("if (!isFull && sorts[srt] === 'date' && hitSeen)")) {
+      bC.push('이미 가진 영역에서 안 멈춘다 — 매번 끝까지 판다');
+    }
+    /* **주 1회 그물** — 멈추기는 네이버 정렬을 믿는 최적화라 이것이 있어야 한다 */
+    if (!/var FULL_EVERY_DAYS = \d+;/.test(gsC)) bC.push('전체 훑기 그물이 없다');
+    /* **사장님이 누르는 「수집」은 절대 전부 파지 않는다** */
+    if (!/mode === 'quick'[\s\S]{0,600}isFull = false;/.test(gsC)) {
+      bC.push('「수집」이 전체를 팔 수 있다 — 사장님이 누른 것은 빠르게 돌아야 한다');
+    }
+
     if (bC.length) { ok = false; console.log('ERROR: [바이럴] 재고 조사 — ' + bC.join(' · ')); }
     else console.log('OK: 바이럴 재고 조사 — 심벌·표 막대·유형 이름·승패 판정·폰 이동·매장 수·톱니바퀴·지금 할 일');
   }
