@@ -5619,7 +5619,15 @@ function collectRival(deadline) {
               var sname = srcName_(SRCS[sj]);
               bySrc[key][sname]++;
               var ch = chanOf_(SRCS[sj], it, lk0);
-              if (ch) { byChan[key][ch] = (byChan[key][ch] || 0) + 1; }
+              /* ── **당사 칸만 있다 — 쓰는 쪽도 그것을 알아야 한다** (2026-09-06) ────
+               * `byChan` 을 `{ ours: {} }` 로 줄이면서(「LG 는 건수만」) **쓰는 줄을
+               * 안 고쳤다.** LG 글을 처음 만나는 순간 `byChan['rival']` 이 undefined 라
+               * `TypeError` 로 죽는다 — 실제로 배포본에서 그랬다:
+               *   `rival:TypeError: Cannot read properties of undefined (reading '소중한 날들의 아카이브')`
+               * 죽으면 `done` 이 안 서고 `_rivalAt` 도 안 찍혀 **매 실행마다 다시 돌며
+               * 호출만 태운다**(하루 24번까지). 자료가 안 쌓이는데 쿼터는 준다.
+               * **칸이 있을 때만 센다** — 없는 진영은 세지 않는 것이 지시 그대로다. */
+              if (ch && byChan[key]) { byChan[key][ch] = (byChan[key][ch] || 0) + 1; }
               var ps = prodOf_(String(it.title || '')), pj;
               if (!ps.length) noProd[CH[key]]++;
               for (pj = 0; pj < ps.length; pj++) {

@@ -4033,6 +4033,33 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
     }
 
+    /* ── **한쪽만 있는 칸에 양쪽을 쓰지 않는다** (2026-09-06 배포본 실측으로 잡음) ────
+     * `byChan` 을 `{ ours: {} }` 로 줄이면서(「LG 는 건수만」) 쓰는 줄을 안 고쳐,
+     * LG 글을 처음 만나는 순간 `TypeError` 로 죽었다. 죽으면 `done` 이 안 서고
+     * `_rivalAt` 도 안 찍혀 **매 실행마다 다시 돌며 호출만 태운다.**
+     * **자료는 안 쌓이는데 쿼터는 준다** — 가장 나쁜 종류의 낭비다. */
+    {
+      const seg = gsC.match(/var byChan = \{[^}]*\}[^;]*;/);
+      const wri = gsC.match(/byChan\[key\]\[ch\] = /);
+      if (!seg) bC.push('byChan 선언을 못 찾았다');
+      else if (!/ours: \{\}/.test(seg[0])) bC.push('byChan 이 당사 칸을 안 만든다');
+      else if (!/rival:/.test(seg[0]) && wri) {
+        /* 한쪽만 만드는데 양쪽에 쓰면 반드시 죽는다 — 가드가 있어야 한다 */
+        if (!gsC.includes('if (ch && byChan[key])')) {
+          bC.push('한쪽만 있는 byChan 에 진영을 안 가리고 쓴다 — LG 글에서 죽는다');
+        }
+      }
+      /* **떼어 돌려 본다** — 문자열만 보면 가드가 헛돌아도 통과한다 */
+      const g = gsC.match(/if \(ch && byChan\[key\]\) \{[^}]*\}/);
+      if (g) {
+        const f = new Function('byChan', 'key', 'ch', g[0] + ' return true;');
+        try { f({ ours: {} }, 'rival', '카페이름'); } catch (e) { bC.push('가드가 있는데도 죽는다'); }
+        const box = { ours: {} };
+        f(box, 'ours', '카페이름');
+        if (box.ours['카페이름'] !== 1) bC.push('당사 채널을 안 센다');
+      }
+    }
+
     /* ⓚ **「같은 것을 또 모으는 것 아닌가」에 화면이 답한다** (2026-09-05 사장님 질문).
        서버는 `saved`(아껴서 안 부른 쪽 수)를 세는데 **화면이 안 적고 있었다** —
        그 한 줄이 누를 때마다 그 질문에 답한다. **전체 재수집에서는 안 적는다**
