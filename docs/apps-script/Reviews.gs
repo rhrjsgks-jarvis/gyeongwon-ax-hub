@@ -104,6 +104,9 @@ var PAGE_SIZE = 100;
 var MIN_YMD = '2023-01-01';
 
 var MAX_PAGES = 10;
+/** **마른 질의를 접는 쪽 수** — 우리 글이 한 건도 없으면 이만큼만 보고 그만둔다.
+ *  실측 근거는 `collectReviews` 안의 그 자리(2026-09-06 · 못 건지는 조합이 쪽의 43%). */
+var DRY_PAGES = 2;
 
 /* ── 일일 수집한도 ────────────────────────────────────────────────
  * 2026-08-31 사장님 요청: *"지금 수집 버튼 옆에 일일 수집한도를 설정해주면 좋겠습니다"*.
@@ -952,6 +955,9 @@ function actionCosts_() {
     srival: srivalCalls_(),
     /* 검색 관심도 — 전국 1 + 지역 6 */
     trend: 7,
+    /* 삭제된 글 확인 — 한 실행 상한(월 1회 · 여러 날에 나눠 돈다). 검색이 아니라
+       `fetchAll` 이라 네이버 예산은 안 쓰지만 **구글 UrlFetch 는 요청 수만큼** 쓴다. */
+    dead: DEAD_MAX_PER_RUN,
     /* 감사 한 매장 — 질의(꼬리말 + 별칭) × 소스 3 × 정렬 2 × 10쪽 */
     audit: (TAILS.length + 1) * kinds * 2 * MAX_PAGES
   };
@@ -2728,7 +2734,6 @@ function sweep_(mode) {
   /* 살았는지 두드리는 것은 **검색이 아니라서 네이버 예산을 안 먹는다** — 대신
      Apps Script `UrlFetchApp` 한도를 함께 쓴다(한 바퀴 검색 4,810 + 검증 2,740 =
      7,550 이라 소비자 계정 20,000 에도 여유가 있다). 시간만 떼어 준다. */
-  var DEAD_MS = 45 * 1000;
   /* **지금 돌고 있다는 것을 적어 둔다**(2026-08-31). 커서·사용량·로그는 전부 실행이
      **끝날 때** 한 번에 찍히므로, 4.5분 도는 동안에는 **어떤 값도 안 변한다** —
      새로고침해도 완전히 멈춘 것처럼 보인다. 사장님이 「멈췄다」고 느끼신 데에 이
@@ -2946,7 +2951,8 @@ function sweep_(mode) {
 
   /* ── 삭제된 글 확인 (2026-09-02) ────────────────────────────────────────
      **매장 훑기보다 앞이다** — LG 비교가 뒤에 있다가 영영 차례를 못 받은 것과
-     같은 함정을 되풀이하지 않는다. 검색 예산을 안 쓰므로 **매일** 돈다.
+     같은 함정을 되풀이하지 않는다. **월 1회다**(2026-09-06 사장님 지시) — 검색 예산은
+     안 쓰지만 구글 UrlFetch 를 한 바퀴 3,900회 쓴다.
      한 번에 다 못 해도 좋다 — 다음 실행이 이어서 두드린다(안 두드린 줄은 그대로다).
      **예외를 삼키지 않는다** — 조용히 실패하면 화면이 「확인했다」로 읽힌다. */
   var deadRun = null;
@@ -3033,6 +3039,9 @@ function sweep_(mode) {
          추가 비용은 62매장 × 3갈래 × 10쪽 = **1,860회**뿐이다. */
       var sorts = (isFull && ti === 0) ? ['date', 'sim'] : ['date'];
       for (var srt = 0; srt < sorts.length; srt++) {
+      /* **이 질의가 우리 글을 하나라도 주는가** — 아래 「마른 질의」 관문이 쓴다.
+         질의(꼬리말 × 갈래 × 정렬)마다 새로 센다. */
+      var qKept = 0;
       for (var page = 0; page < MAX_PAGES; page++) {
         /* 한 매장이 최대 32회(2종 x 꼬리말 8 x 2쪽)를 쓴다 — 매장 단위로만 보면
            한도를 그만큼 넘길 수 있어 호출 직전에도 본다 */
@@ -3088,7 +3097,7 @@ function sweep_(mode) {
           if (!hasAny_(text, mnames)) continue;
           if (isNoise_(text)) continue;
           if (belongsToOther_(text, mname, allNames)) continue;
-          kept++;
+          kept++; qKept++;
           tally_(tailStat, mname, tailTag_(TAILS[ti]), 'kept');
           var link = String(it.link || '');
           if (!link) continue;
@@ -3154,6 +3163,25 @@ function sweep_(mode) {
         /* **`sim` 에서는 이 신호를 쓰지 않는다** — 순서가 관련도라 「그 아래는 다 봤다」가
            성립하지 않는다(빠른 모드는 `date` 만 돌므로 실제로는 걸릴 일이 없다). */
         if (!isFull && sorts[srt] === 'date' && hitSeen) { saved += (MAX_PAGES - page - 1); break; }
+        /* ── **마른 질의는 얕게 판다** (2026-09-06 사장님 지적 — *"낭비되는 한도가 많습니다"*) ──
+         *
+         * `hitSeen` 은 **아는 글을 만나야** 선다. 그런데 우리 매장 글이 **한 건도 없는**
+         * 질의는 저장할 것도 만날 것도 없어 그 신호가 **영원히 안 서고 10쪽을 끝까지 판다.**
+         *
+         * 실측(2026-09-06 · 62매장 전수 1회차, `_waste2.mjs`):
+         *   · 495개 (매장 × 꼬리말) 조합 중 **113개(23%)가 한 건도 못 건졌는데**
+         *     그 조합이 **판 쪽의 43%** 를 먹었다.
+         *   · 꼬리말별 수확률 — 기본 15.4% · 상담 11.4% · 혼수/구매 9.5% · 입주 5.0% ·
+         *     견적 3.6% · 신혼가전 2.4% · **설치 1.2%**(33,497건 받아 405건).
+         *
+         * **첫 두 쪽이 빈손이면 그 질의는 접는다.** `date` 정렬이라 1·2쪽이 가장 최신인데
+         * 거기 우리 글이 없으면 더 오래된 쪽에는 더 없다(있었다면 지난 회차에 담겨
+         * `hitSeen` 이 섰을 것이다). **전체 재수집에서는 끄지 않는다** — 그쪽은 그물이다.
+         *
+         * **`DRY_PAGES` 를 1로 내리지 말 것** — 첫 쪽이 우연히 광고글로 채워지는 매장이
+         * 있다(실측에서 `got` 1,000 에 `kept` 1 인 조합이 있었다). 2쪽이면 200건을 보고
+         * 판단한다. */
+        if (!isFull && qKept === 0 && page + 1 >= DRY_PAGES) { saved += (MAX_PAGES - page - 1); break; }
       }
       /* 정렬 루프 닫기 — **중단 신호를 여기서도 전파한다**(안 하면 sim 을 계속 돈다) */
       if (serr || hitLimit || stopped) break;
@@ -5848,6 +5876,68 @@ function runTrend() {
   }
 }
 
+/* ── **수집 체계 — 갈래마다 손잡이를 되돌린다** (2026-09-06 사장님 지시) ────────────
+ * *"버튼을 너무 줄이는것도 방법이 아닌것같습니다. 수집체계를 재정립해야할것같습니다.
+ *  낭비되는 한도가 많습니다."*
+ *
+ * 하나로 합치니 **무엇이 언제 도는지 보이지 않았다** — 「수집」을 눌러도 그 안에서
+ * 무엇이 돌았는지는 끝나고 나서야 알았다. 그렇다고 예전처럼 버튼을 흩어 두면 순서를
+ * 외워야 한다. **표 안에 둔다** — 갈래마다 주기·마지막 실행·다음 차례·비용을 나란히
+ * 적고 그 줄에서 바로 돌린다. 버튼 수가 아니라 **체계가 보이는가**가 요점이다.
+ *
+ * **사람이 누른 것은 주기로 막지 않는다**(이 파일의 규칙 그대로) — 쿼터는 지킨다.
+ */
+function runJob(name) {
+  if (name === 'rival') return runRival();        /* 예약 장치가 있어 그쪽을 그대로 쓴다 */
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10 * 1000)) {
+    return { ok: true, busy: true,
+      note: '지금 수집이 돌고 있어 시작하지 못했습니다 — 끝난 뒤에 눌러 주세요.' };
+  }
+  try {
+    var t0 = Date.now();
+    props_().setProperty('_runAt', String(t0));
+    /* **쿼터를 다 썼으면 시작하지 않는다** — 시작해 놓고 첫 호출에서 죽으면
+       커서만 헛돈다(이 파일이 이미 세운 규칙). */
+    if (over()) {
+      return { ok: true, error: '오늘 쓸 수 있는 호출을 다 썼습니다 — 쿼터가 풀린 뒤에 눌러 주세요.' };
+    }
+    var stamp = today_(), r = null, label = '';
+    if (name === 'srival') {
+      label = '매장 대 매장';
+      stage_('매장대매장 (버튼)');
+      r = collectStoreRival(false, Date.now() + SRIVAL_MS);
+      /* **끝냈을 때만 표식을 적는다** — 반만 하고 적으면 나머지 매장이 다음 주까지 빈다 */
+      if (r && r.done) props_().setProperty('_srivalAt', stamp);
+    } else if (name === 'trend') {
+      label = '검색 관심도';
+      stage_('검색관심도 (버튼)');
+      r = collectTrend();                          /* 스스로 `_trendAt` 을 적는다 */
+    } else if (name === 'dead') {
+      label = '삭제된 글 확인';
+      stage_('삭제확인 (버튼)');
+      r = verifyDead_(Date.now() + DEAD_MS);       /* 스스로 `_deadAt` 을 적는다(다 마쳤을 때만) */
+      var de = String((r && r.error) || '');
+      if (de) props_().setProperty('_deadErr', de);
+      else props_().deleteProperty('_deadErr');
+    } else {
+      return { ok: false, error: '모르는 작업입니다: ' + String(name) };
+    }
+    /* **집계 캐시를 버린다** — 안 버리면 최대 6시간 옛 값이 굳어 「눌렀는데 그대로」가 된다 */
+    sumCacheClear_();
+    stage_(label + ' 마침 (버튼)');
+    /* **못 끝냈으면 스스로 이어 간다** — 사람을 다시 부르면 자물쇠에 막힌다.
+       `clearChain_` 은 부르지 않는다(매장 수집 쪽 이어달리기까지 끊긴다). */
+    var chained = false;
+    if (r && r.done === false && !r.error) { try { chain_(); chained = true; } catch (e2) { /* 아래에서 알린다 */ } }
+    return { ok: true, job: name, label: label, chained: chained, r: r,
+      used: usage_().n, limit: dailyLimit_() };
+  } finally {
+    props_().deleteProperty('_runAt');
+    try { lock.releaseLock(); } catch (e) { /* 이미 풀렸으면 그만이다 */ }
+  }
+}
+
 function runRival() {
   /* **수집과 같은 자물쇠를 쓴다.** 두 벌이 같은 시트에 쓰면 같은 회차가 두 줄로 들어가
      `rival_()` 의 합산이 두 배가 된다(중복 정리가 이미 데인 그 사고와 같은 뿌리다). */
@@ -6188,10 +6278,19 @@ function verifyDead_(deadline) {
            todo: todo.length };
 }
 
-/** 오늘 이미 확인했는가 — 검색 예산을 안 쓰므로 **매일** 돌 수 있다. */
+/**
+ * 삭제된 글 확인이 이번 차례인가 — **월 1회**(2026-09-06 사장님 지시:
+ * *"삭제된글확인은 한달에 한번만해도됩니다"*).
+ *
+ * **검색 예산은 안 쓰지만 구글 UrlFetch 는 쓴다** — 한 바퀴 최대 3,900회로
+ * 매장 훑기 다음으로 큰 몫이었다(3일에 나눠 돌아도 하루 1,300회). 후기가 지워지는
+ * 일은 드물게 일어나므로 **매일 확인할 값이 아니다.**
+ *
+ * **나눠 도는 장치는 그대로 둔다**(`_deadCur`) — 월 1회여도 3,900회를 한 실행에
+ * 몰면 6분 한도를 넘긴다. 그 달의 며칠에 걸쳐 마치고 나서 표식을 찍는다.
+ */
 function deadDue_() {
-  return String(props_().getProperty('_deadAt') || '')
-    !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  return dueEvery_('_deadAt', DEAD_EVERY_DAYS);
 }
 
 /* ── **매일 할 것과 주 1회 할 것을 나눈다** (2026-09-06 사장님 지시) ───────────────
@@ -6217,6 +6316,10 @@ function deadDue_() {
 var RIVAL_EVERY_DAYS = 7;    /* LG 비교 — 지역 6곳 */
 var SRIVAL_EVERY_DAYS = 7;   /* 매장 대 매장 — 매장 62곳 */
 var TREND_EVERY_DAYS = 7;    /* 검색 관심도 — 데이터랩(월 단위 값) */
+var DEAD_EVERY_DAYS = 30;    /* 삭제된 글 확인 — 2026-09-06 사장님 지시(월 1회) */
+/** 삭제 확인이 한 실행에서 쓸 시간. **전역이다** — 파이프라인과 「그 작업만 돌리기」가
+ *  같은 예산을 써야 한다(`RIVAL_MS` 를 전역으로 올린 것과 같은 이유). */
+var DEAD_MS = 45 * 1000;
 
 /**
  * 그 표식이 **며칠 지났는가**로 차례를 가린다.
@@ -6475,9 +6578,19 @@ function freshState_(d, full) {
       d.dueIn = {
         rival: dueInDays_('_rivalAt', RIVAL_EVERY_DAYS),
         srival: dueInDays_('_srivalAt', SRIVAL_EVERY_DAYS),
-        trend: dueInDays_('_trendAt', TREND_EVERY_DAYS)
+        trend: dueInDays_('_trendAt', TREND_EVERY_DAYS),
+        dead: dueInDays_('_deadAt', DEAD_EVERY_DAYS)
       };
       d.costs = actionCosts_();
+      /* **갈래마다 마지막으로 끝낸 날** — 관리자 「수집 체계」 표가 적는다.
+         비면 「아직」이다(0 으로 적으면 「했는데 0건」으로 읽힌다). */
+      d.jobAt = {
+        rival: String(props_().getProperty('_rivalAt') || ''),
+        srival: String(props_().getProperty('_srivalAt') || ''),
+        trend: String(props_().getProperty('_trendAt') || ''),
+        dead: String(props_().getProperty('_deadAt') || ''),
+        sweep: String(props_().getProperty('_fullAt') || '')
+      };
     }
   } catch (e) { /* 못 읽어도 집계는 그대로 쓴다 */ }
   return d;

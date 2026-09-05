@@ -410,16 +410,21 @@ const DATA = {
      「남은 몫으로는 한 번에 못 끝냅니다」 경고가 **한 번도 안 그려진다**(2026-09-05).
      **경계를 일부러 섞는다** — 남은 몫(20,000 − 3,120 = 16,880)보다 큰 것(full)과
      작은 것(rival·srival·trend)을 함께 두어 경고가 붙는 쪽·안 붙는 쪽을 다 본다. */
-  costs: { quick: 8420, full: 22158, rival: 1320, srival: 4560, trend: 7, audit: 540 },
+  costs: { quick: 8420, full: 22158, rival: 1320, srival: 4560, trend: 7, dead: 1300, audit: 540 },
   /* **오늘 아직 안 한 것** — 「지금 할 일」 줄이 이것으로 무엇이 남았는지 적는다.
      하나는 이미 한 것으로 두어(trend:false) **다 남은 경우와 일부만 남은 경우**를 함께 본다. */
-  due: { rival: true, srival: true, trend: false, dead: true },
+  due: { rival: true, srival: true, trend: false, dead: false },
   /* **경계를 일부러 섞는다** — 이번에 하는 것 둘(rival·srival)과 아직 차례가 아닌 것
      하나(trend, 4일 뒤). 안 섞으면 「다음 차례 —」 줄이 한 번도 안 그려진다. */
-  dueIn: { rival: 0, srival: 0, trend: 4 },
+  dueIn: { rival: 0, srival: 0, trend: 4, dead: 12 },
+  /* **갈래마다 마지막으로 끝낸 날** — 「아직」을 일부러 하나 섞는다(검색 관심도).
+     0 이나 오늘로 채우면 화면이 「했다」로 적어 그 자리에서 거짓이 된다. */
+  jobAt: { rival: '2026-09-05', srival: '2026-09-06', trend: '', dead: '2026-08-25', sweep: '2026-09-02' },
   /* 쿼터가 언제 풀리는지 — 서버가 태평양 시간대로 계산해 준다(여름 16시·겨울 17시) */
   quotaResetAt: '16:00', quotaResetMin: 571,
-  lastRun: { at: '2026-08-31T12:00:00.000Z', n: 41, done: true, reason: '' },
+  /* **`ms` 를 함께 둔다** — 화면이 「마지막 실행」을 숫자에서 낸다(글자를 파싱하면
+     시트가 돌려주는 모양에 기대게 된다 — 이 저장소가 회차 고르기에서 데인 자리다). */
+  lastRun: { at: '2026-08-31T12:00:00.000Z', ms: Date.UTC(2026, 7, 31, 12), n: 41, done: true, reason: '', calls: 2199, added: 37 },
   /* **`pct:null` 을 하나 섞는다** — 못 잰 것과 0% 는 다른 말이라, 화면이 갈라 다루는지
      여기서 드러난다(0 으로 그리면 「LG 후기가 없다」가 된다). */
   rival: { at: '2026-08-31 03:10', rows: [
@@ -613,7 +618,9 @@ const stub = [
   /* **스텁을 빠뜨리면 버튼 한 번에 화면이 죽는다** — 무엇을 보러 왔는지 알 수 없게 된다 */
   '    rearmTrigger: function () { setTimeout(function () { ok && ok({ ok: true, cleared: 2, msg: "트리거를 다시 걸었습니다." }); }, 200); },',
   /* 2026-09-04 — 「검색 관심도 갱신」(데이터랩) */
-  '    runTrend: function () {}',
+  '    runTrend: function () {},',
+  /* 2026-09-06 — 「수집 체계」 표의 「지금」. **스텁이 없으면 눌렀을 때 화면이 죽는다** */
+  '    runJob: function (id) { setTimeout(function () { ok && ok({ ok: true, job: id, label: "(미리보기) " + id, r: { done: true } }); }, 300); }',
   '  };',
   '  return api;',
   '})() } };',

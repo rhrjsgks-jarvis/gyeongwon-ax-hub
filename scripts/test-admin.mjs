@@ -4731,8 +4731,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const rv = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
     const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
 
-    /* ① 막히면 포기하지 말고 예약한다 */
-    const busyAt = rv.indexOf('if (!lock.tryLock(10 * 1000))');
+    /* ① 막히면 포기하지 말고 예약한다.
+       **`runRival` 안에서 찾는다** — 파일 전체에서 첫 자물쇠를 집으면 2026-09-06 에
+       생긴 `runJob` 의 것을 보게 되어 멀쩡한 코드를 「예약을 안 한다」고 잡는다. */
+    const rrAt = rv.indexOf('function runRival() {');
+    const busyAt = rv.indexOf('if (!lock.tryLock(10 * 1000))', rrAt < 0 ? 0 : rrAt);
     const busyBlk = busyAt >= 0 ? rv.slice(busyAt, busyAt + 900) : '';
     if (!busyBlk) bad.push('runRival 의 자물쇠 분기를 못 찾겠다');
     else {
@@ -5581,6 +5584,127 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 매니저 주차 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 매니저 주차 — 서버 wk4 · 한 함수(weekAgg) · 거르개 유지 · 화면 표기 · 규칙 6경우');
+}
+
+
+/* ── **수집 체계 재정립 · 마른 질의** (2026-09-06 사장님 지시) ─────────────────
+ * *"삭제된글확인은 한달에 한번만해도됩니다 / 버튼을 너무 줄이는것도 방법이 아닌것같습니다.
+ *  수집체계를 재정립해야할것같습니다. 낭비되는 한도가 많습니다."*
+ *
+ * 실측(62매장 전수 1회차, `.scratch/_waste2.mjs`) —
+ *   · 495개 (매장 × 꼬리말) 조합 중 **113개(23%)가 한 건도 못 건졌는데 쪽의 43%** 를 먹었다.
+ *   · `hitSeen` 은 **아는 글을 만나야** 서는데, 우리 글이 한 건도 없는 질의는 만날 것이
+ *     없어 그 신호가 영원히 안 서고 10쪽을 끝까지 판다.
+ * 되돌리면 그 43%가 조용히 되살아난다 — 화면에는 아무 표시도 안 난다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ⓐ 삭제 확인 — 월 1회 */
+  {
+    const m = /var DEAD_EVERY_DAYS = ([0-9]+);/.exec(gs);
+    if (!m) bad.push('DEAD_EVERY_DAYS 가 없다 — 삭제 확인이 다시 매일 돈다(한 바퀴 3,900회)');
+    else if (Number(m[1]) < 28) bad.push('DEAD_EVERY_DAYS 가 ' + m[1] + ' 이다 — 사장님 지시는 월 1회다');
+    const at = gs.indexOf('function deadDue_(');
+    const body = at < 0 ? '' : gs.slice(at, gs.indexOf('\n}', at));
+    if (!body) bad.push('deadDue_ 를 못 찾았다');
+    else if (body.indexOf("dueEvery_('_deadAt', DEAD_EVERY_DAYS)") < 0)
+      bad.push('deadDue_ 가 주기 상수를 안 본다 — 다시 매일 돈다');
+    /* **나눠 도는 장치는 그대로 두어야 한다** — 월 1회여도 3,900회를 한 실행에 몰면 6분을 넘긴다 */
+    if (gs.indexOf('DEAD_BURSTS_PER_RUN') < 0)
+      bad.push('삭제 확인을 나눠 도는 장치가 사라졌다 — 한 실행에 3,900회를 쓴다');
+  }
+
+  /* ⓑ 마른 질의 관문 */
+  {
+    const m = /var DRY_PAGES = ([0-9]+);/.exec(gs);
+    if (!m) bad.push('DRY_PAGES 가 없다 — 못 건지는 질의가 10쪽을 끝까지 판다');
+    else if (Number(m[1]) < 2)
+      bad.push('DRY_PAGES 가 ' + m[1] + ' 이다 — 첫 쪽이 광고글로 채워진 매장을 통째로 놓친다');
+    else if (Number(m[1]) > 4)
+      bad.push('DRY_PAGES 가 ' + m[1] + ' 이다 — 너무 깊어 아끼는 뜻이 없다');
+    if (gs.indexOf('if (!isFull && qKept === 0 && page + 1 >= DRY_PAGES)') < 0)
+      bad.push('마른 질의 관문이 없다 — 실측으로 쪽의 43% 가 여기서 샜다');
+    /* **전체 재수집에서는 끄지 않는다** — 그쪽은 그물이라 끝까지 판다 */
+    if (gs.indexOf('if (!isFull && sorts[srt] === \'date\' && hitSeen)') < 0)
+      bad.push('「이미 가진 영역에서 멈춘다」가 사라졌다');
+    /* 질의마다 새로 세는가 — 매장 단위로 세면 첫 꼬리말이 건진 뒤 나머지가 다 깊게 판다 */
+    const qa = gs.indexOf('var qKept = 0;');
+    const sa = gs.indexOf('for (var srt = 0; srt < sorts.length; srt++) {');
+    const pa = gs.indexOf('for (var page = 0; page < MAX_PAGES; page++) {');
+    if (qa < 0 || sa < 0 || pa < 0) bad.push('마른 질의 계수기 앵커가 낡았다');
+    else if (!(qa > sa && qa < pa))
+      bad.push('qKept 를 질의마다 새로 안 센다 — 한 번 건지면 나머지 질의가 다 깊게 판다');
+    if (gs.indexOf('kept++; qKept++;') < 0)
+      bad.push('qKept 를 안 올린다 — 관문이 늘 참이라 두 쪽만 보고 끝난다');
+  }
+
+  /* ⓒ 갈래마다 손잡이 — 서버 */
+  {
+    const at = gs.indexOf('function runJob(name) {');
+    const body = at < 0 ? '' : gs.slice(at, gs.indexOf('\n}\n\nfunction runRival', at));
+    if (!body) bad.push('runJob 이 없다 — 「수집 체계」 표의 「지금」이 눌려도 아무 일이 없다');
+    else {
+      for (const k of ['srival', 'trend', 'dead'])
+        if (body.indexOf("name === '" + k + "'") < 0) bad.push('runJob 이 ' + k + ' 를 모른다');
+      if (body.indexOf("if (name === 'rival') return runRival();") < 0)
+        bad.push('runJob 이 LG 비교를 runRival 에 안 넘긴다 — 예약 장치를 잃는다');
+      if (body.indexOf('LockService.getScriptLock()') < 0)
+        bad.push('runJob 이 자물쇠를 안 쓴다 — 수집과 겹치면 같은 회차가 두 줄이 된다');
+      if (body.indexOf('if (over())') < 0)
+        bad.push('runJob 이 쿼터를 안 본다 — 시작해 놓고 첫 호출에서 죽는다');
+      if (body.indexOf('sumCacheClear_();') < 0)
+        bad.push('runJob 이 집계 캐시를 안 버린다 — 최대 6시간 「눌렀는데 그대로」다');
+      /* **끝냈을 때만 표식을 적는다** — 반만 하고 적으면 나머지가 다음 주까지 빈다 */
+      if (body.indexOf("if (r && r.done) props_().setProperty('_srivalAt', stamp);") < 0)
+        bad.push('runJob 이 반만 하고 「했다」를 찍는다');
+    }
+  }
+
+  /* ⓓ 비용·차례를 화면에 보낸다 */
+  if (gs.indexOf('dead: DEAD_MAX_PER_RUN,') < 0)
+    bad.push('삭제 확인 비용을 안 보낸다 — 표의 「한 바퀴」 칸이 빈다');
+  if (gs.indexOf("dead: dueInDays_('_deadAt', DEAD_EVERY_DAYS)") < 0)
+    bad.push('삭제 확인의 다음 차례를 안 보낸다');
+  if (gs.indexOf('d.jobAt = {') < 0)
+    bad.push('갈래별 마지막 실행 날짜를 안 보낸다 — 표가 「마지막」 칸을 못 적는다');
+
+  /* ⓔ 화면 — 표가 있는가 · 두 곳이 갈리지 않는가 */
+  if (ix.indexOf('<table class="jobs" id="jobs">') < 0) bad.push('수집 체계 표가 없다');
+  if (ix.indexOf('<thead><tr><th>작업</th>') < 0)
+    bad.push('표에 머리글이 없다 — 「2026-09-02」가 무엇인지 알 수 없다');
+  {
+    const at = ix.indexOf('  var JOBS = [');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  ];', at));
+    if (!body) bad.push('JOBS 목록이 없다');
+    else for (const k of ['sweep', 'rival', 'srival', 'trend', 'dead'])
+      if (body.indexOf("id: '" + k + "'") < 0) bad.push('JOBS 에 ' + k + ' 가 없다');
+  }
+  if (ix.indexOf('    renderJobs();\n    wireJobs();') < 0)
+    bad.push('렌더 차례에 표를 안 그린다');
+  if (ix.indexOf("if (!tb || tb.dataset.wired) return;") < 0)
+    bad.push('표 배선을 한 번만 걸지 않는다 — 렌더마다 쌓여 한 번 눌러도 여러 번 돈다');
+  /* **새 후기 훑기는 「수집」과 같은 길이어야 한다** — 따로 만들면 두 길이 갈린다 */
+  if (ix.indexOf("if (id === 'sweep') { runCollect(document.getElementById('run'), 'quick'); return; }") < 0)
+    bad.push('표의 「새 후기 훑기」가 「수집」과 다른 길로 간다');
+  /* **모르는 것을 「안 했다」로 바꿔 말하지 않는다** */
+  if (ix.indexOf("(last ? esc(last) : '아직')") < 0)
+    bad.push('마지막 실행을 모를 때 「아직」이라 안 적는다');
+  /* 도는 중에는 못 누른다 — 눌러도 자물쇠에 막힌다 */
+  if (ix.indexOf("(running ? ' disabled") < 0)
+    bad.push('도는 중에도 「지금」이 눌린다 — 눌러도 아무 일이 없다');
+  /* 미리보기 스텁 — 없으면 버튼 한 번에 화면이 죽는다 */
+  {
+    const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+    if (pv.indexOf('runJob: function') < 0)
+      bad.push('미리보기에 runJob 스텁이 없다 — 눌렀을 때 화면이 죽는다');
+    if (pv.indexOf('jobAt:') < 0)
+      bad.push('미리보기 모의에 jobAt 이 없다 — 표의 「마지막」 칸을 눈으로 볼 수 없다');
+  }
+
+  if (bad.length) fail('[바이럴] 수집 체계 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 수집 체계 — 삭제 확인 월 1회 · 마른 질의 관문 · runJob 4갈래 · 표 5줄 · 미리보기 스텁');
 }
 
 
