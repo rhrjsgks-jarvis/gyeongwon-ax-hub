@@ -4009,6 +4009,38 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ixC.includes("nf(r.saved) + '쪽을 건너뛰었습니다")) bC.push('아낀 호출을 화면이 안 적는다');
     if (!/!r\.full && r\.saved/.test(ixC)) bC.push('전체 재수집에서도 「건너뛰었다」고 적는다');
     if (!ixC.includes('같은 글을 또 모으지는 않나요')) bC.push('되묻기 쉬운 것을 화면이 미리 안 답한다');
+    /* ── **「수집이 정확히 무엇을 하나」도 화면이 답한다** (2026-09-05 사장님 질문) ───
+     * 화면에 적은 차례가 **서버 파이프라인과 짝이 맞아야** 한다 — 단계를 빼거나 더하면
+     * 이 설명이 그 자리에서 거짓이 된다. 각 줄에 대응하는 **진짜 코드**가 있는지 본다. */
+    if (!ixC.includes('「수집」이 정확히 무엇을 하나요')) bC.push('「수집」이 무엇을 하는지 화면이 안 적는다');
+    {
+      const need = [
+        ['자동 수집 살피기', 'var triggerFix = ensureDaily_();'],
+        ['LG 비교', 'rivalRun = collectRival('],
+        ['매장 대 매장', 'srivalRun = collectStoreRival('],
+        ['검색 관심도', 'trendRun = collectTrend();'],
+        ['삭제된 글 확인', 'deadRun = verifyDead_('],
+        ['매장 훑기', "stage_('매장 훑기 앞')"],
+        ['개인대리점', 'sdpRun = collectSdp(']
+      ];
+      /* **차례 블록 안에서만 찾는다** — 「검색 관심도」 같은 말은 화면 다른 곳에도
+         있어 파일 전체에서 찾으면 차례에서 빠져도 통과한다(실제로 안 물었다). */
+      const pipeAt = ixC.indexOf('<div class="pipe">');
+      const pipe = pipeAt < 0 ? '' : ixC.slice(pipeAt, ixC.indexOf('</div>', ixC.indexOf('</div>', pipeAt) + 6) + 6);
+      const pipeBlk = pipeAt < 0 ? '' : ixC.slice(pipeAt, pipeAt + 1600);
+      if (!pipe) bC.push('「수집」 차례 블록이 없다');
+      need.forEach((row) => {
+        if (pipeBlk.indexOf(row[0]) < 0) bC.push('차례에 「' + row[0] + '」 단계가 없다');
+        if (!gsC.includes(row[1])) bC.push('차례는 「' + row[0] + '」이라는데 그 단계가 서버에 없다');
+      });
+      /* 단계 수가 맞는가 — 줄을 지우면 위 검사가 잡지만, **더하면** 이것이 잡는다 */
+      const rows = (pipeBlk.match(/<div><i>/g) || []).length;
+      if (rows !== need.length) bC.push('차례가 ' + rows + '줄인데 검사는 ' + need.length + '개를 안다');
+      /* **안 하는 일도 적어야** 「수집 하나로 다 되나」에 정직하게 답한다 */
+      ['값을 고치는 일', '지우는 일', '검출률 확인'].forEach((w) => {
+        if (!ixC.includes(w)) bC.push('「수집」이 안 하는 일을 안 적는다: ' + w);
+      });
+    }
     /* **멈추는 근거가 살아 있는가** — 이 둘이 없으면 매번 끝까지 판다 */
     if (!gsC.includes('if (seen[link]) { hitSeen = true; continue; }')) {
       bC.push('이미 가진 링크를 만나도 표시를 안 한다');
