@@ -84,6 +84,12 @@
   .pipe > div { padding: 3px 0 3px 4px; border-left: 2px solid #C7D2F0; margin-bottom: 2px; }
   .pipe > div > i { display: inline-block; min-width: 16px; font-style: normal;
                     color: var(--blue); font-weight: 800; }
+  /* **매일 / 주 1회 표식** (2026-09-06). 이 화면의 가장 작은 글자(--fs-mini)를 지킨다 —
+     칩이라고 더 줄이면 정작 가르려던 것이 안 읽힌다. 흰 바탕 대비는 둘 다 7:1 이상. */
+  .pipe .wk, .pipe .dy { display: inline-block; font-size: var(--fs-mini); font-weight: 700;
+                         line-height: 1.3; padding: 0 5px; border-radius: 999px; margin-right: 3px; }
+  .pipe .wk { background: #FEF3C7; color: #92400E; }
+  .pipe .dy { background: #E0E7FF; color: #3730A3; }
   /* **지금 할 일** — 관리자 항목 맨 위. 눈에 먼저 닿아야 뜻이 있다. */
   .todo { background: #EEF2FF; border: 1px solid #C7D2F0; border-radius: 10px;
           padding: 10px 12px; margin: 0 0 12px; font-size: var(--fs-body); line-height: 1.55; }
@@ -1338,8 +1344,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            맨 위에 둔다(들어오자마자 눈에 닿아야 뜻이 있다). -->
       <div id="todo" class="todo"></div>
       <h3>자료 수집</h3>
-      <div class="sub"><b>수집</b>이 오늘 안 한 것을 <b>차례로 다</b> 합니다 —
-        LG 비교 · 매장 대 매장 · 검색 관심도까지 알아서 돕니다.
+      <div class="sub"><b>수집</b>이 <b>이번 차례인 것을 차례로 다</b> 합니다 —
+        <b>매일</b> 새 후기를 훑고, <b>주 1회</b> LG 비교 · 매장 대 매장 · 검색 관심도를 돕니다.
         <b>전체 재수집</b>은 처음부터 끝까지 팝니다 — 여러 번 이어 돌아야 합니다.</div>
       <!-- **「수집이 정확히 무엇을 하나」에 화면이 답한다** (2026-09-05 사장님 질문).
            말로 드리면 또 물으시게 된다 — 그 자리에 심는다.
@@ -1347,17 +1353,18 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            `test-admin` 이 각 줄이 실제 단계와 짝이 있는지 대조한다. -->
       <details class="help"><summary>「수집」이 정확히 무엇을 하나요?</summary>
         <div class="sub" style="margin-top:6px">
-          누르면 <b>아래를 차례로</b> 합니다. <b>①~⑤ 는 하루 한 번</b>이라 이미 했으면
-          건너뜁니다 — 무엇이 남았는지는 맨 위 <b>「지금 할 일」</b>이 적습니다.
+          누르면 <b>아래를 차례로</b> 합니다. <b>차례가 아닌 것은 건너뜁니다</b> —
+          무엇을 하는지는 맨 위 <b>「지금 할 일」</b>이 적습니다.
+          <b>②③④ 는 주 1회</b>입니다(지역·매장 단위 총량이라 하루로는 거의 안 움직입니다).
           <div class="pipe">
             <div><i>①</i> <b>자동 수집 살피기</b> — 새벽 3시 트리거가 없거나 꺼져 있으면 다시 겁니다</div>
-            <div><i>②</i> <b>LG 비교</b> — 영업지역 6곳에서 당사 vs LG 후기 몫</div>
-            <div><i>③</i> <b>매장 대 매장</b> — 매장마다 LG 짝 지점과 견줍니다(히트맵 빨강)</div>
-            <div><i>④</i> <b>검색 관심도</b> — 네이버에서 얼마나 찾는지(데이터랩)</div>
-            <div><i>⑤</i> <b>삭제된 글 확인</b> — 지워진 후기를 표시합니다(검색 호출은 안 씁니다)</div>
-            <div><i>⑥</i> <b>매장 훑기</b> — 관할 매장 전부의 새 후기.
+            <div><i>②</i> <b class="wk">주1</b> <b>LG 비교</b> — 영업지역 6곳에서 당사 vs LG 후기 몫</div>
+            <div><i>③</i> <b class="wk">주1</b> <b>매장 대 매장</b> — 매장마다 LG 짝 지점과 견줍니다(히트맵 빨강)</div>
+            <div><i>④</i> <b class="wk">주1</b> <b>검색 관심도</b> — 네이버에서 얼마나 찾는지(데이터랩)</div>
+            <div><i>⑤</i> <b class="dy">매일</b> <b>삭제된 글 확인</b> — 지워진 후기를 표시합니다(검색 호출은 안 씁니다)</div>
+            <div><i>⑥</i> <b class="dy">매일</b> <b>매장 훑기</b> — 관할 매장 전부의 새 후기.
               <b>여기가 대부분의 시간과 호출을 씁니다</b>(매장 수는 위 진행 줄이 적습니다)</div>
-            <div><i>⑦</i> <b>매니저 · 관심 카페 · 개인대리점</b> — 매장 한 바퀴를 다 돈 뒤에만 돕니다</div>
+            <div><i>⑦</i> <b class="dy">매일</b> <b>매니저 · 관심 카페 · 개인대리점</b> — 매장 한 바퀴를 다 돈 뒤에만 돕니다</div>
           </div>
           <b>6분을 넘기면 그 자리에서 멈추고 1분 뒤 스스로 이어 갑니다</b> —
           그래서 한 번 누르면 대개 여러 번 나눠 돕니다.
@@ -1414,7 +1421,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
                할 것만 골라 차례로 돈다(`srivalDue_`·`trendDue_`·`rivalDue_`) —
                사장님이 **순서를 외울 필요가 없다.** 남은 둘은 갈래가 아니라 **모드**다:
                새 글만 훑을 것인가, 처음부터 다시 팔 것인가. -->
-          <option value="run">오늘 할 것 전부</option>
+          <option value="run">이번 차례 전부</option>
           <option value="runfull">처음부터 다시 (여러 날 걸립니다)</option>
         </select>
         <button id="run">수집</button>
@@ -1473,7 +1480,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="sub">네이버에서 <b>얼마나 찾는지</b>를 봅니다 — 후기 건수(공급)와 다른 축입니다.
         하루 <b>7회</b>면 끝납니다(전국 1 + 지역 6).
         <b>데이터랩 전용 키</b>가 필요합니다(검색 API 키와 다른 체계입니다).</div>
-      <!-- **따로 돌릴 필요가 없다**(2026-09-05) — 「수집」이 오늘 아직 안 했으면
+      <!-- **따로 돌릴 필요가 없다**(2026-09-05) — 「수집」이 차례가 됐으면
            스스로 한다(`trendDue_`). 7회짜리라 다른 수집을 굶기지 않는다. -->
       <div class="sub"><b>「수집」</b>을 누르면 오늘 안 했을 때 알아서 함께 모읍니다.</div>
       <div id="trendbox" class="sub" style="margin-top:8px">—</div>
@@ -1499,7 +1506,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         한 매장에 LG 지점을 <b>최대 3곳</b>까지 붙일 수 있고(「매장별」에서 지점을 누르면 고칩니다)
         그만큼 호출이 늡니다 — <b>드는 호출은 위 「수집」 줄이 적습니다</b>.
         못 끝내면 <b>스스로 이어 갑니다</b>.</div>
-      <!-- **따로 돌릴 필요가 없다**(2026-09-05) — 「수집」이 오늘 아직 안 했으면
+      <!-- **따로 돌릴 필요가 없다**(2026-09-05) — 「수집」이 차례가 됐으면
            스스로 한다(`srivalDue_`). 짝을 바꾸면 그 즉시 다시 잰다. -->
       <div class="sub"><b>「수집」</b>을 누르면 오늘 안 했을 때 알아서 함께 잽니다 —
         LG 짝을 바꾸면 그 자리에서 다시 잽니다.</div>
@@ -1895,7 +1902,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         + '<b>「수집」</b>을 한 번 눌러 주세요.')
         + '<br><span class="cntxt">'
         + (canFix
-            ? '누르시면 오늘 할 것을 다 하고, <b>자동 수집도 함께 다시 겁니다.</b>'
+            ? '누르시면 이번 차례인 것을 다 하고, <b>자동 수집도 함께 다시 겁니다.</b>'
             : '<b class="warn">서버가 옛 판이라 자동 수집은 다시 걸리지 않습니다</b> — '
               + 'Reviews.gs 를 붙여넣고 재배포해 주세요.')
         + '</span>';
@@ -1922,23 +1929,34 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
        그때 「이미 다 했습니다」라고 적으면 **그 자리에서 거짓**이 된다 —
        실제로 배포본이 그 상태였다(화면은 새 판, `Reviews.gs` 는 옛 판). */
     var knowDue = due && typeof due.rival === 'boolean';
-    var rest = [];
+    /* **매일 것과 주 1회 것을 갈라 적는다** (2026-09-06 사장님 지시).
+       *"수집버튼을 매일해야할것 매주해야할것 나눠주세요"*. 갈라 두지 않으면
+       *"왜 오늘은 LG 비교를 안 하지"* 를 매번 물으시게 된다 — **다음 차례까지
+       며칠 남았는지**를 함께 적어 「빠진 것」과 「아직 차례가 아닌 것」을 가른다. */
+    var dueIn = DATA.dueIn || {};
+    var WEEKLY = [['rival', 'LG 비교'], ['srival', '매장 대 매장'], ['trend', '검색 관심도']];
+    var rest = [], later = [];
     if (knowDue) {
-      if (due.rival) rest.push('LG 비교');
-      if (due.srival) rest.push('매장 대 매장');
-      if (due.trend) rest.push('검색 관심도');
+      for (var wi = 0; wi < WEEKLY.length; wi++) {
+        var wk = WEEKLY[wi][0], wn = WEEKLY[wi][1];
+        if (due[wk]) { rest.push(wn); continue; }
+        var wd = Number(dueIn[wk]);
+        later.push(wn + (wd > 0 ? ' ' + wd + '일 뒤' : ''));
+      }
     }
     el.className = 'todo';
     el.innerHTML = step(1, '<b>「수집」</b>을 한 번 누르시면 됩니다 — '
-      + '오늘 안 한 것을 <b>차례로 다</b> 합니다.')
+      + '이번 차례인 것을 <b>차례로 다</b> 합니다.')
       + '<br><span class="cntxt">'
       + (!knowDue
           ? '<b class="warn">서버가 옛 판입니다</b> — 무엇이 남았는지 알 수 없고, '
             + 'LG 비교 · 매장 대 매장 · 검색 관심도가 함께 돌지 않습니다. '
             + '<b>Reviews.gs 를 붙여넣고 재배포해 주세요.</b>'
           : rest.length
-            ? '오늘 아직 안 한 것: <b>' + esc(rest.join(' · ')) + '</b> · 매장 훑기'
-            : '오늘 것은 이미 다 했습니다 — 눌러도 새 글만 훑어 금방 끝납니다.')
+            ? '이번에 할 것: <b>매장 훑기</b>(매일) · <b>' + esc(rest.join(' · ')) + '</b>(주 1회)'
+              + (later.length ? ' · 다음 차례 — ' + esc(later.join(' · ')) : '')
+            : '오늘은 <b>매장 훑기</b>만 합니다 — 주 1회짜리는 아직 차례가 아닙니다'
+              + (later.length ? '(' + esc(later.join(' · ')) + ')' : '') + '.')
       + '</span>';
   }
 
@@ -7417,7 +7435,7 @@ function renderList() {
     /* **「예상」은 위쪽 한계다** — 매장 훑기는 이미 가진 글을 만나면 그 쪽에서 멈추므로
        실제로는 훨씬 적게 쓴다. 그 말을 빼면 「22,555회」가 실제로 드는 값처럼 읽혀
        사장님이 누르기를 망설이신다(2026-09-06 되살렸다). */
-    run: '오늘 안 한 것을 차례로 다 합니다 — LG 비교 · 매장 대 매장 · 검색 관심도까지. '
+    run: '이번 차례인 것을 차례로 다 합니다 — 매일 매장 훑기, 주 1회 LG 비교 · 매장 대 매장 · 검색 관심도. '
       + '위 숫자는 위쪽 한계이고, 매장 훑기는 이미 가진 글을 만나면 멈춰 실제로는 훨씬 적게 씁니다',
     runfull: '한 바퀴를 처음부터 끝까지 팝니다 — 여러 날에 나눠 돕니다',
   };
@@ -7448,8 +7466,10 @@ function renderList() {
      * **`due` 를 보고 더한다** — 오늘 이미 한 것은 안 돈다. 자료가 스스로 판정하므로
      * 갈래가 늘어도 따라온다. **옛 서버에는 `due` 가 없다** — 그때는 못 더하고,
      * 「지금 할 일」이 그 사실을 이미 밝힌다. */
+    /* **「전체 재수집」에는 더하지 않는다** — `costs.full`(= `sweepCalls_`)이 이미
+       한 바퀴 전부(주 1회짜리 포함)를 담는다. 더하면 두 번 세어진다(2026-09-06). */
     var due2 = DATA.due || {};
-    if (v === 'run' || v === 'runfull') {
+    if (v === 'run') {
       if (due2.rival) need += Number(costs.rival || 0);
       if (due2.srival) need += Number(costs.srival || 0);
       if (due2.trend) need += Number(costs.trend || 0);

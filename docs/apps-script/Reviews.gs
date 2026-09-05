@@ -872,6 +872,25 @@ function aliasOf_(name, table) { return (table && table[name]) || []; }
 
 /* 별칭까지 세어 **한 바퀴 최대 호출**을 그때그때 낸다. 상수(`SWEEP_CALLS`)만 쓰면
    사장님이 화면에서 별칭을 등록한 순간 화면이 옛 숫자로 「한도가 넉넉하다」고 말한다. */
+/**
+ * **매장 대 매장 한 바퀴 호출 수** — 매장마다 (우리 1 + 붙은 LG 지점 수) x 소스 3 x 쪽수.
+ *
+ * **`x 2` 로 굳히지 말 것** — 짝이 1:N 이 된 뒤로 지점을 둘·셋 붙인 매장이 있어
+ * 그렇게 세면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
+ * 짝이 없는 매장은 애초에 훑지 않으므로 0 이다(**수집기와 같은 판정** `lgMatchAll_`).
+ *
+ * **한 바퀴 추정(`sweepCalls_`)과 버튼 비용(`actionCosts_`)이 이 함수를 함께 쓴다** —
+ * 두 곳에 따로 적었더니 한 바퀴 쪽에서 3,720회가 통째로 빠져 있었다(2026-09-06).
+ */
+function srivalCalls_() {
+  var pr = lgMatchAll_(), c = 0, k, sh;
+  for (k in pr) if (pr.hasOwnProperty(k) && pr[k]) {
+    sh = lgShopList_(pr[k].shops || pr[k].shop);
+    if (sh.length) c += (1 + sh.length) * 3 * MAX_PAGES;   /* 소스 3갈래 */
+  }
+  return c;
+}
+
 function sweepCalls_() {
   var tab = aliasAll_(), n = 0, k;
   for (k in tab) if (tab.hasOwnProperty(k)) n += tab[k].length;
@@ -900,7 +919,10 @@ function sweepCalls_() {
      (주석의 실측값). 그 탓에 한 바퀴 추정이 그만큼 작았고, 화면이 「한도가 넉넉하다」고
      말했다. **큰 쪽으로 잡는다** — 이 함수의 규칙 그대로다(하루 한 번이라 한 바퀴에 한 번). */
   var dead = DEAD_MAX_PER_RUN;
-  return store + cafe + mgr + sdp + rival + dead;
+  /* **주 1회짜리도 한 바퀴에 한 번은 돈다** — 매장 대 매장 3,720회와 검색 관심도 7회가
+     빠져 있어 한 바퀴를 그만큼 적게 세고 있었다(2026-09-06). 「한 바퀴가 한도를 넘는가」
+     경고가 이 값 위에 서 있어, 적게 세면 화면이 「넉넉하다」고 틀린 말을 한다. */
+  return store + cafe + mgr + sdp + rival + dead + srivalCalls_() + 7;
 }
 
 /**
@@ -927,20 +949,7 @@ function actionCosts_() {
     quick: quick,
     full: sweepCalls_(),
     rival: rivalUnits_().length * rivalSides_().length * RTAILS.length * kinds * RIVAL_PAGES,
-    /* 매장 대 매장 — 매장마다 (우리 1 + 붙은 LG 지점 수) × 소스 3 × 10쪽.
-       **`× 2` 로 굳히지 말 것** — 짝이 1:N 이 된 뒤로 지점을 둘·셋 붙인 매장이 있어
-       그렇게 세면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
-       짝이 없는 매장은 애초에 훑지 않으므로 0 이다(수집기와 같은 판정). */
-    srival: (function () {
-      /* **수집기와 같은 함수를 지나간다**(`lgMatchAll_`). 따로 세면 한쪽만
-         고쳤을 때 화면이 옛 숫자로 「넉넉하다」고 말한다. */
-      var pr = lgMatchAll_(), c = 0, k, sh;
-      for (k in pr) if (pr.hasOwnProperty(k) && pr[k]) {
-        sh = lgShopList_(pr[k].shops || pr[k].shop);
-        if (sh.length) c += (1 + sh.length) * kinds * MAX_PAGES;
-      }
-      return c;
-    })(),
+    srival: srivalCalls_(),
     /* 검색 관심도 — 전국 1 + 지역 6 */
     trend: 7,
     /* 감사 한 매장 — 질의(꼬리말 + 별칭) × 소스 3 × 정렬 2 × 10쪽 */
@@ -4601,12 +4610,19 @@ function summary_() {
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
     /* **버튼마다 얼마를 쓰는가** — 누르기 전에 화면이 적는다(2026-09-05) */
     costs: actionCosts_(),
-    /* ── **오늘 아직 안 한 것** (2026-09-05 사장님 지시) ────────────────────────
+    /* ── **이번 차례인 것** (2026-09-05 사장님 지시 · 2026-09-06 매일/주1회로 갈랐다) ──
      * *"어떤버튼을 어떤순서로해야하는지 알려주세요"*. 순서를 알려 드리는 것보다
      * **화면이 그때그때 말하게** 하는 편이 낫다 — 배포할 때마다 순서가 달라지면
      * 적어 드린 글이 그 자리에서 낡는다. 「수집」 하나가 이 넷을 차례로 하므로,
      * 화면은 **무엇이 남았는지**만 적으면 된다. */
     due: { rival: rivalDue_(), srival: srivalDue_(), trend: trendDue_(), dead: deadDue_() },
+    /* **다음 차례까지 며칠 남았나** — 화면이 「이번 주 것은 N일 뒤」라고 적을 수 있어야
+       *"왜 오늘은 LG 비교를 안 하지"* 를 안 묻게 된다(2026-09-06). 0 이면 이번에 한다. */
+    dueIn: {
+      rival: dueInDays_('_rivalAt', RIVAL_EVERY_DAYS),
+      srival: dueInDays_('_srivalAt', SRIVAL_EVERY_DAYS),
+      trend: dueInDays_('_trendAt', TREND_EVERY_DAYS)
+    },
     approx: approxN,
     /* **창별·월별 발견일 몫.** 화면이 「그중 N건은 발견일로 잰 것」이라 적는다 —
        뭉개면 「최근 7일 240건」이 그 주에 쓰인 글로 읽힌다(실제로는 25건이었다). */
@@ -5277,7 +5293,7 @@ function rivalHit_(text, brands, place) {
  * 호출 수 = 지명 10개 × 브랜드 2 × 2쪽 = **최대 40회**. 한 바퀴(2,096회)에 견주면
  * 2% 라 매 수집마다 함께 돌려도 부담이 없다.
  */
-/* ── LG 비교를 오늘 아직 안 돌았는가 ──────────────────────────────────
+/* ── LG 비교가 이번 차례인가(**주 1회**) ──────────────────────────────
  * 2026-09-01 사장님 지적: *"지금 100% 완료한 것 같은데 동일 지역 내 LG 후기 비율은
  * 왜 안 나오는 거죠?"*
  *
@@ -5347,7 +5363,9 @@ function rivalDue_() {
    * 그쪽은 구글이 끊는 것이라 우리가 넘길 수 있는 선이 아니다. */
   if (String(p.getProperty('_rivalWant') || '') === '1') return true;
   if (Number(p.getProperty('_rivalTry') || 0) >= RIVAL_TRY_MAX) return false;
-  if (String(p.getProperty('_rivalAt') || '') !== today) return true;
+  /* **주 1회다**(2026-09-06 사장님 지시) — 지역 단위 총량이라 하루로는 거의 안 움직인다.
+     예약(`_rivalWant`)과 시도 한도는 위에서 이미 보았다 — 사람이 부른 것은 이 문지기보다 세다. */
+  if (dueEvery_('_rivalAt', RIVAL_EVERY_DAYS)) return true;
   /* 표식은 섰는데 지역이 모자라면 아직 안 끝난 것이다 */
   var r = rival_();
   return !r || !r.rows || r.rows.length < Object.keys(AREA_Q).length;
@@ -6164,25 +6182,72 @@ function deadDue_() {
     !== Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
 }
 
-/* ── **「수집」 하나가 오늘 할 것을 다 한다** (2026-09-05 사장님 지시) ───────────────
+/* ── **매일 할 것과 주 1회 할 것을 나눈다** (2026-09-06 사장님 지시) ───────────────
+ * *"수집버튼을 매일해야할것 매주해야할것 나눠주세요"*.
+ *
+ * **가르는 기준은 「자료가 얼마나 빨리 바뀌는가」다.**
+ *
+ * | | 무엇 | 상한 | 왜 |
+ * |---|---|---|---|
+ * | **매일** | 매장 훑기 | ~1,500 | **새 글이 매일 올라온다** — 이것이 본업이다 |
+ * | 매일 | 삭제 확인 | 1,300 | 이미 3일에 나눠 돈다 |
+ * | 매일 | 매니저·카페·SDP | ~220 | 싸다 — 나눌 이유가 없다 |
+ * | **주 1회** | LG 비교 | 1,320 | **지역 단위 총량**이라 하루로는 거의 안 움직인다 |
+ * | **주 1회** | 매장 대 매장 | 3,720 | 매장 단위 총량 — 더 안 움직인다. **하루 몫의 19%** 를 매일 쓰고 있었다 |
+ * | **주 1회** | 검색 관심도 | 7 | 데이터랩이 **월 단위** 값을 준다 — 매일 물을 값이 아니다 |
+ *
+ * 실측(2026-09-06) — 매일 몫이 **약 8,400 → 3,000회**(한도의 15%)가 되고,
+ * 주 1회 몫이 몰리는 날도 8,000회 안쪽이다. 무엇보다 **새 후기가 몇 시간 일찍 들어온다** —
+ * 예전에는 매장 대 매장 3,720회(분당 16~33회라 2~4시간)를 먼저 쓰고 나서야 훑었다.
+ *
+ * **아직 한 번도 못 한 것은 날짜와 무관하게 돈다**(표식이 비어 있으면 `true`) —
+ * 처음 켤 때와 자료를 비운 뒤에 저절로 채워진다. */
+var RIVAL_EVERY_DAYS = 7;    /* LG 비교 — 지역 6곳 */
+var SRIVAL_EVERY_DAYS = 7;   /* 매장 대 매장 — 매장 62곳 */
+var TREND_EVERY_DAYS = 7;    /* 검색 관심도 — 데이터랩(월 단위 값) */
+
+/**
+ * 그 표식이 **며칠 지났는가**로 차례를 가린다.
+ *
+ * **한 번도 안 했으면 무조건 돈다** — 「모른다」를 「했다」로 바꿔 말하지 않는다.
+ * 날짜가 미래로 적혀 있어도(시계 문제) 돈다 — 굶기는 쪽보다 한 번 더 도는 쪽이 안전하다.
+ */
+function dueEvery_(prop, days) {
+  var at = String(props_().getProperty(prop) || '');
+  if (!at) return true;
+  var gap = (new Date(today_()) - new Date(at)) / 86400000;
+  return !(gap >= 0 && gap < days);
+}
+/** 다음 차례까지 며칠 남았나 — 화면이 「이번 주 것」을 적을 때 쓴다. 모르면 0. */
+function dueInDays_(prop, days) {
+  var at = String(props_().getProperty(prop) || '');
+  if (!at) return 0;
+  var gap = (new Date(today_()) - new Date(at)) / 86400000;
+  if (!(gap >= 0)) return 0;
+  return Math.max(0, days - Math.floor(gap));
+}
+
+/* ── **「수집」 하나가 이번 차례인 것을 다 한다** (2026-09-05 사장님 지시) ─────────
  * *"최대한 서치기능을 함축해서 한번에 사용해야합니다"*.
  *
  * 예전에는 수집 갈래가 다섯이라 **사장님이 순서를 외워야 했다**(자동 다시 걸기 →
  * LG 비교 → 매장 대 매장 → 최근 것만). 순서를 알려 드리는 것보다 **알 필요가 없게
- * 만드는 편**이 낫다 — 아래 두 문지기가 「오늘 아직 안 한 것」을 가려 주고,
+ * 만드는 편**이 낫다 — 아래 문지기들이 「이번에 할 것」을 가려 주고,
  * `collectReviews` 가 차례로 돈다. 못 끝내면 이어달리기가 이어 간다.
  *
- * **하루 한 번인 이유는 자료의 성격이다** — 같은 날 여러 회차가 쌓이면 어느 것이
- * 그날 값인지 알 수 없다(경쟁비교가 이미 그 규칙으로 돈다). */
-/** 매장 대 매장이 오늘 아직 안 돌았는가. 짝을 바꾸면 `setLgPair` 가 커서·도장을
+ * **차례는 자료가 얼마나 빨리 바뀌는가로 정한다**(위 EVERY_DAYS 절) — 매장 훑기·삭제
+ * 확인·매니저는 매일, LG 비교·매장 대 매장·검색 관심도는 주 1회다. 하루 안에 같은 갈래를
+ * 두 번 돌지는 않는다 — 같은 날 여러 회차가 쌓이면 어느 것이 그날 값인지 알 수 없다
+ * (경쟁비교가 이미 그 규칙으로 돈다). */
+/** 매장 대 매장이 이번 차례인가(**주 1회**). 짝을 바꾸면 `setLgPair` 가 커서·도장을
  *  지우므로 그 즉시 다시 돈다 — 바뀐 짝으로 다시 재야 하기 때문이다. */
 function srivalDue_() {
-  return String(props_().getProperty('_srivalAt') || '') !== today_();
+  return dueEvery_('_srivalAt', SRIVAL_EVERY_DAYS);
 }
-/** 검색 관심도가 오늘 아직 안 돌았는가. **7회짜리라** 시간·한도를 거의 안 쓴다
+/** 검색 관심도가 이번 차례인가(**주 1회** — 데이터랩이 월 단위 값을 준다).
  *  (`collectTrend` 가 끝에서 `_trendAt` 을 적는다 — 여기서 또 적지 않는다). */
 function trendDue_() {
-  return String(props_().getProperty('_trendAt') || '') !== today_();
+  return dueEvery_('_trendAt', TREND_EVERY_DAYS);
 }
 
 /* ── 화면 · JSON ─────────────────────────────────────────────── */

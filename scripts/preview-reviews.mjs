@@ -414,6 +414,9 @@ const DATA = {
   /* **오늘 아직 안 한 것** — 「지금 할 일」 줄이 이것으로 무엇이 남았는지 적는다.
      하나는 이미 한 것으로 두어(trend:false) **다 남은 경우와 일부만 남은 경우**를 함께 본다. */
   due: { rival: true, srival: true, trend: false, dead: true },
+  /* **경계를 일부러 섞는다** — 이번에 하는 것 둘(rival·srival)과 아직 차례가 아닌 것
+     하나(trend, 4일 뒤). 안 섞으면 「다음 차례 —」 줄이 한 번도 안 그려진다. */
+  dueIn: { rival: 0, srival: 0, trend: 4 },
   /* 쿼터가 언제 풀리는지 — 서버가 태평양 시간대로 계산해 준다(여름 16시·겨울 17시) */
   quotaResetAt: '16:00', quotaResetMin: 571,
   lastRun: { at: '2026-08-31T12:00:00.000Z', n: 41, done: true, reason: '' },

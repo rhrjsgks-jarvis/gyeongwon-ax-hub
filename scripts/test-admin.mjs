@@ -3685,14 +3685,18 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        `× 2` 로 굳히면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
        수집기와 **같은 함수**(`lgMatchAll_`)를 지나가는지도 함께 본다. */
     {
-      const m = gsB.match(/srival:[\s\S]{0,600}?\n\s{4}\/\* 검색 관심도/);
-      const seg = m ? m[0] : '';
-      if (!seg) bB.push('srival 비용 계산을 못 찾았다');
+      /* **계산은 `srivalCalls_` 한 곳에 있다**(2026-09-06). 한 바퀴 추정(`sweepCalls_`)도
+         같은 함수를 쓰므로, 여기서는 그 함수 본문을 따라가 본다 — 값을 박아 두면
+         쪽수·소스 갈래가 바뀔 때 검사가 옛 숫자를 붙들고 헛돈다. */
+      const at2 = gsB.indexOf('function srivalCalls_() {');
+      const seg = at2 < 0 ? '' : gsB.slice(at2, gsB.indexOf('\n}', at2));
+      if (!seg) bB.push('srivalCalls_ 를 못 찾았다');
       else {
         if (/STORES\.length\s*\*\s*2\s*\*/.test(seg)) bB.push('매장 대 매장 비용이 「매장 × 2」로 굳어 있다 — 짝이 1:N 이다');
         if (!seg.includes('lgMatchAll_()')) bB.push('매장 대 매장 비용이 수집기와 다른 표를 본다');
         if (!seg.includes('lgShopList_')) bB.push('매장 대 매장 비용이 지점 수를 안 센다');
       }
+      if (!gsB.includes('srival: srivalCalls_(),')) bB.push('actionCosts_ 가 그 함수를 안 쓴다 — 두 곳이 갈라진다');
     }
     /* ── **경쟁비교 진영 수도 한 곳에서만 센다** (2026-09-05) ────────────────────
      * 4사 → 2사로 줄인 뒤에도 `sweepCalls_`·`actionCosts_` 만 `* 4` 로 남아
@@ -4002,8 +4006,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         const norm = run(base);
         if (norm.innerHTML.indexOf('수집') < 0) bC.push('평소에 무엇을 누르라고 안 적는다');
         if (norm.innerHTML.indexOf('LG 비교') < 0) bC.push('무엇이 남았는지 안 적는다');
-        const done = run(Object.assign({}, base, { due: { rival: false, srival: false, trend: false } }));
-        if (done.innerHTML.indexOf('다 했습니다') < 0) bC.push('다 했을 때 그렇게 안 적는다');
+        /* **주 1회짜리가 차례가 아닌 날**(2026-09-06) — 예전 「오늘 것은 이미 다 했습니다」는
+           그 자리에서 거짓이 됐다(매장 훑기는 매일 돈다). 화면은 「오늘은 매장 훑기만」과
+           **다음 차례가 며칠 뒤인지**를 적어야 한다. */
+        const done = run(Object.assign({}, base, { due: { rival: false, srival: false, trend: false },
+          dueIn: { rival: 5, srival: 2, trend: 4 } }));
+        if (done.innerHTML.indexOf('매장 훑기') < 0) bC.push('차례가 아닌 날에 무엇을 하는지 안 적는다');
+        if (done.innerHTML.indexOf('5일 뒤') < 0) bC.push('다음 차례가 며칠 뒤인지 안 적는다');
+        if (done.innerHTML.indexOf('다 했습니다') >= 0) bC.push('「다 했습니다」는 거짓이다 — 매장 훑기는 매일 돈다');
         /* **「모른다」를 「다 했다」로 바꿔 말하지 않는다**(2026-09-05 배포본에서 잡음) —
            화면만 먼저 붙여넣으면 `due` 가 없다. 그때 「이미 다 했습니다」는 거짓이다. */
         const old = run(Object.assign({}, base, { due: undefined }));
@@ -5321,6 +5331,120 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (bad.length) fail('[바이럴] UrlFetch 계수 — ' + bad.join(' · '));
   else console.log(`OK: 바이럴 UrlFetch 계수 — ${fetchAt.length}곳 전부 카운터에 잡힌다(fetchAll 은 요청 수만큼)`);
 }
+
+/* ── **매일 할 것 / 주 1회 할 것** (2026-09-06 사장님 지시) ─────────────────
+ * *"수집버튼을 매일해야할것 매주해야할것 나눠주세요"*.
+ *
+ * 나누는 것 자체보다 **되돌아가는 것**이 위험하다 — 문지기 하나만 다시 「하루 한 번」이
+ * 되면 매장 대 매장 3,720회가 **매일** 돌아 새 후기가 몇 시간 늦게 들어오는데
+ * 화면에는 아무 표시도 안 난다. 그래서 상수·문지기·화면 문구를 함께 붙든다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ⓐ 주기 상수 — 하루로 되돌리면 나눈 뜻이 없다 */
+  for (const [k, nm] of [['RIVAL_EVERY_DAYS', 'LG 비교'], ['SRIVAL_EVERY_DAYS', '매장 대 매장'],
+                         ['TREND_EVERY_DAYS', '검색 관심도']]) {
+    const m = new RegExp('var ' + k + ' = ([0-9]+);').exec(gs);
+    if (!m) bad.push(k + ' 가 없다 — ' + nm + ' 주기를 못 정한다');
+    else if (Number(m[1]) < 2) bad.push(k + ' 가 ' + m[1] + ' 이다 — ' + nm + ' 이 다시 매일 돈다(3,720회짜리도 있다)');
+  }
+
+  /* ⓑ 세 문지기가 전부 그 규칙을 지나가는가 — 한 곳만 옛 「오늘 했나」로 남으면 조용히 매일 돈다.
+     **함수 본문을 이름으로 떼어 낸다** — 파일 전체에서 문자열만 찾으면 주석에도 걸린다. */
+  const bodyOf = (name) => {
+    /* **인자가 있는 함수도 떼어 낸다** — `() {` 로 찾으면 `dueEvery_(prop, days)` 를
+       못 찾아 빈 문자열이 되고, 그러면 검사가 조용히 아무것도 안 본다. */
+    const at = gs.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    const end = gs.indexOf('\n}', at);
+    return end < 0 ? '' : gs.slice(at, end + 2);
+  };
+  for (const [fn, prop, konst] of [['srivalDue_', '_srivalAt', 'SRIVAL_EVERY_DAYS'],
+                                   ['trendDue_', '_trendAt', 'TREND_EVERY_DAYS'],
+                                   ['rivalDue_', '_rivalAt', 'RIVAL_EVERY_DAYS']]) {
+    const body = bodyOf(fn);
+    if (!body) { bad.push(fn + ' 을 못 찾았다 — 앵커가 낡았다'); continue; }
+    if (body.indexOf("dueEvery_('" + prop + "', " + konst + ')') < 0)
+      bad.push(fn + ' 이 dueEvery_ 를 안 쓴다 — 주기 상수를 무시하고 매일 돈다');
+    /* **사람이 예약한 것은 주기보다 세다** — 그 규칙을 이번 변경이 지웠는지 함께 본다 */
+    if (fn === 'rivalDue_' && body.indexOf('_rivalWant') < 0)
+      bad.push('rivalDue_ 에서 예약(_rivalWant)이 사라졌다 — 사장님이 눌러도 안 돈다');
+  }
+
+  /* ⓒ **규칙을 떼어 실제로 돌려 본다** — 문자열만 보면 식이 바뀌어도 통과한다 */
+  {
+    const src = bodyOf('dueEvery_') + '\n' + gs.slice(gs.indexOf('function dueInDays_'),
+      gs.indexOf('\n}', gs.indexOf('function dueInDays_')) + 2);
+    const ago = (d) => {
+      const t = new Date(Date.now() - d * 86400000);
+      return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0')
+        + '-' + String(t.getDate()).padStart(2, '0');
+    };
+    let stamp = '';
+    const mk = new Function('props_', 'today_',
+      src + '; return { due: dueEvery_, left: dueInDays_ };');
+    const api = mk(() => ({ getProperty: () => stamp }), () => ago(0));
+    const cases = [
+      ['한 번도 안 했다', '', true, 0],
+      ['오늘 했다', ago(0), false, 7],
+      ['3일 전', ago(3), false, 4],
+      ['6일 전', ago(6), false, 1],
+      ['7일 전', ago(7), true, 0],
+      ['8일 전', ago(8), true, 0],
+      ['미래 날짜(시계 문제)', ago(-3), true, 0]
+    ];
+    for (const [nm, st, wantDue, wantIn] of cases) {
+      stamp = st;
+      const gotDue = api.due('_x', 7), gotIn = api.left('_x', 7);
+      if (gotDue !== wantDue) bad.push('dueEvery_ 「' + nm + '」 → ' + gotDue + ' (기대 ' + wantDue + ')');
+      if (gotIn !== wantIn) bad.push('dueInDays_ 「' + nm + '」 → ' + gotIn + ' (기대 ' + wantIn + ')');
+    }
+  }
+
+  /* ⓓ 화면이 며칠 남았는지 적으려면 서버가 그 칸을 내야 한다 */
+  if (gs.indexOf('dueIn: {') < 0 || gs.indexOf('rival: dueInDays_') < 0)
+    bad.push('summary_ 가 dueIn 을 안 낸다 — 화면이 「다음 차례 N일 뒤」를 못 적는다');
+
+  /* ⓔ 화면 — 「오늘 아직 안 한 것」은 이제 거짓이다 */
+  if (ix.indexOf('오늘 아직 안 한 것:') >= 0)
+    bad.push('화면이 아직 「오늘 아직 안 한 것」이라 적는다 — 주 1회짜리가 섞여 거짓이 된다');
+  if (ix.indexOf("'이번에 할 것: <b>매장 훑기</b>(매일)") < 0)
+    bad.push('화면이 매일/주1회를 안 가른다');
+  if (ix.indexOf("'일 뒤'") < 0 || ix.indexOf('다음 차례 — ') < 0)
+    bad.push('화면이 「다음 차례 N일 뒤」를 안 적는다 — 「빠진 것」과 구분되지 않는다');
+  if (ix.indexOf('<b>①~⑤ 는 하루 한 번</b>') >= 0)
+    bad.push('도움말이 아직 「①~⑤ 는 하루 한 번」이라 적는다 — ②③④ 는 주 1회다');
+  for (const n of ['②', '③', '④']) {
+    if (ix.indexOf('<div><i>' + n + '</i> <b class="wk">주1</b>') < 0)
+      bad.push('도움말 ' + n + ' 에 「주1」 표시가 없다');
+  }
+  for (const n of ['⑤', '⑥', '⑦']) {
+    if (ix.indexOf('<div><i>' + n + '</i> <b class="dy">매일</b>') < 0)
+      bad.push('도움말 ' + n + ' 에 「매일」 표시가 없다');
+  }
+  {
+    /* 표식이 이 화면의 가장 작은 글자(--fs-mini)보다 작아지면 정작 가르려던 것이 안 읽힌다 */
+    const at = ix.indexOf('.pipe .wk, .pipe .dy {');
+    if (at < 0) bad.push('매일/주1회 표식 규칙이 없다');
+    else if (ix.slice(at, ix.indexOf('}', at)).indexOf('var(--fs-mini)') < 0)
+      bad.push('매일/주1회 표식이 이 화면의 가장 작은 글자보다 작다 — 안 읽힌다');
+  }
+
+  /* ⓕ 한 바퀴 추정에 주 1회짜리가 들어가는가 (안 들어가면 「넉넉하다」고 거짓말한다) */
+  if (gs.indexOf('return store + cafe + mgr + sdp + rival + dead + srivalCalls_()') < 0)
+    bad.push('sweepCalls_ 에 매장 대 매장 몫이 빠졌다 — 한 바퀴 추정이 3,720회 작아진다');
+  if (gs.indexOf('srival: srivalCalls_(),') < 0)
+    bad.push('actionCosts_ 가 srivalCalls_ 를 안 쓴다 — 두 곳이 따로 세면 갈라진다');
+  /* **전체 재수집에는 더하지 않는다** — costs.full 이 이미 담고 있어 두 번 세어진다 */
+  if (ix.indexOf("if (v === 'run' || v === 'runfull') {") >= 0)
+    bad.push('화면이 「전체 재수집」에도 주 1회 몫을 더한다 — 두 번 세어진다');
+
+  if (bad.length) fail('[바이럴] 매일/주1회 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 매일/주1회 — 주기 상수 3 · 문지기 3 · 규칙 7경우 · 화면 표시 · 비용 이중계산 방지');
+}
+
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
