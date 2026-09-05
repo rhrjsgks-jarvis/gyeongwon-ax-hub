@@ -3306,8 +3306,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!ix.includes("heatYear !== 'cmp' ? ''")) {
     bad.push('당해만 볼 때 증감을 지우지 않는다 — 그때는 색도 건수라 두 말을 한다');
   }
-  if (!ix.includes("!heatKind && !d.year) sub2 = '작성일 모름'")) {
-    bad.push('연도 축에서 「작성일 모름」을 막지 않는다 — 그 칸은 작성일을 알아서 센 것이다');
+  /* **누적 축도 같다**(2026-09-05) — 그 칸도 작성일을 알아서 센 것이라 「작성일 모름」이
+     그 자리에서 거짓이 된다. 두 축 모두 막는지 본다. */
+  if (!ix.includes("!heatKind && !d.year && !d.cum) sub2 = '작성일 모름'")) {
+    bad.push('연도·누적 축에서 「작성일 모름」을 막지 않는다 — 그 칸은 작성일을 알아서 센 것이다');
   }
   /* ③ 기본은 당해년도 — 이 한 줄이 사장님 지시의 핵심이다 */
   if (!/var heatYear = 'cur'/.test(ix)) {
@@ -3344,9 +3346,124 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (gs.includes('monthFloor = Utilities.formatDate(new Date(now.getTime() - ')) {
       bad.push('byStoreMonth 하한이 「며칠 전」이다 — 연도 비교가 반쪽이 된다');
     }
-    if (!gs.includes("var monthFloor = (Number(Utilities.formatDate(now, tz, 'yyyy')) - 1) + '-01';")) {
-      bad.push('byStoreMonth 하한이 직전해 1월이 아니다');
+    /* **2026-09-05 사장님 지시로 2023-01 까지 넓혔다** — 직전해 1월로 두면 히트맵이
+       2025-01 부터만 볼 수 있어 2023~2024 의 1,457건이 통째로 빠졌다.
+       **직전해보다 늦어지면 안 된다** — 연도 대비 축(올해 vs 작년)이 반쪽이 된다. */
+    if (!gs.includes("var MONTH_FLOOR_Y = '2023';")) {
+      bad.push('byStoreMonth 하한 상수(MONTH_FLOOR_Y)가 없다 — 누적 축이 볼 자료가 없다');
     }
+    if (!gs.includes("var monthFloor = (MONTH_FLOOR_Y < prevY ? MONTH_FLOOR_Y : prevY) + '-01';")) {
+      bad.push('하한이 직전해보다 늦어질 수 있다 — 연도 대비 축이 반쪽이 된다');
+    }
+  }
+
+
+  /* ── ⑨ **히트맵 연도 축 — 당사·LG 가 같은 잣대** (2026-09-05 사장님 지시) ────────
+   *
+   * *"히트맵에는 당해(26년)만 볼 수 있게 / 당사 LG 모두 / 23년~현재까지 누적수치도"*.
+   *
+   * 예전에는 칸 크기·파랑이 **당해 건수**인데 빨강(LG 몫)은 `storeRival` 의 **전 기간**
+   * 비중이었다 — 한 칸 안에서 두 잣대가 섞였다. 사장님이 *"LG 자료가 많아 보인다"*
+   * 고 한 자리가 여기다.
+   *
+   * **추가 호출이 없다** — 이미 받아 온 글에서 월만 세면 된다.
+   */
+  {
+    const gs2 = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ix2 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const b9 = [];
+
+    /* ⓐ 서버가 매장 대 매장에 월별을 담는가 */
+    if (!gs2.includes("'queries', 'monJson']")) b9.push('매장경쟁에 monJson 칸이 없다 — 연도별 LG 몫을 낼 자료가 없다');
+    if (!gs2.includes('var SRIVAL_SCHEMA')) b9.push('SRIVAL_SCHEMA 가 없다 — 옛 회차에 이어 붙어 월 자료가 반쪽이 된다');
+    if (!gs2.includes("props.getProperty('_srivalSchema')")) b9.push('판이 바뀌어도 새 회차로 시작하지 않는다');
+    /* **작성일을 주는 것은 블로그뿐이다** — 없는 글을 0으로 세면 「그 해에 없었다」가 된다 */
+    if (!gs2.includes("got[key][lk] = pd9.length === 8 ? (pd9.slice(0, 4) + '-' + pd9.slice(4, 6)) : '';")) {
+      b9.push('링크마다 월을 안 담는다 — 작성일 없는 글을 0 으로 세면 거짓이 된다');
+    }
+    if (!gs2.includes('JSON.stringify(mon9)')) b9.push('월별을 줄에 안 쓴다');
+
+    /* ⓑ 읽는 쪽 — 옛 회차는 null 로 (0 으로 채우지 않는다) */
+    if (!gs2.includes('mon: (mon0 && mon0.o) ? mon0 : null')) {
+      b9.push('옛 회차의 월 자료를 0 으로 채운다 — 「모른다」가 「없다」가 된다');
+    }
+
+    /* ⓒ 화면 — 축이 셋이고, LG 몫이 축을 따라간다 */
+    if (!ix2.includes("var HEAT_CUM_FROM = '2023';")) b9.push('누적 축의 시작 해가 없다');
+    if (!ix2.includes('function srShare(')) b9.push('srShare 가 없다 — LG 몫이 축을 못 따라간다');
+    if (!ix2.includes('function cumSpan(')) b9.push('cumSpan 이 없다 — 실제로 덮는 해를 못 적는다');
+    if (!ix2.includes('function yearFromSum(')) b9.push('구간 합이 없다 — 누적을 못 센다');
+    if (!ix2.includes('id="hm-cum"')) b9.push('화면에 누적 보기 버튼이 없다');
+    if (!ix2.includes("heatYear = heatYear === 'cum' ? 'cur' : 'cum';")) b9.push('누적 버튼이 축을 안 바꾼다');
+    /* **같은 축이라 서로 꺼야 한다** — 겹쳐 걸면 칸 크기가 무엇인지 알 수 없다 */
+    if (!ix2.includes("byr2.classList.toggle('on', heatYear === 'cmp');")) b9.push('작년 대비 버튼 상태 표시가 없다');
+    if (!ix2.includes("bcum2.classList.toggle('on', heatYear === 'cum');")) b9.push('누적 버튼 상태 표시가 없다');
+    /* **칸 색·칸 글자·말풍선이 한 함수를 지나가야 한다** — 따로 읽으면 면적과 건수가 어긋난다 */
+    if (ix2.includes("var srm = (window.__SR || {})[d.nm];")) b9.push('칸 색이 아직 전 기간 값을 쓴다');
+    if (ix2.includes("var srt = (window.__SR || {})[d.nm];")) b9.push('말풍선이 아직 전 기간 값을 쓴다');
+    /* **어느 구간을 잰 값인지 반드시 적는다** */
+    if (!ix2.includes('칸 크기와 잣대가 다릅니다')) b9.push('옛 회차 자료일 때 잣대가 다른 것을 안 적는다');
+    /* **누적 축은 증감을 내지 않는다** — 견줄 앞 구간이 없다 */
+    if (!ix2.includes('증감은 내지 않습니다')) b9.push('누적 축에서 증감을 안 낸다는 사실을 안 적는다');
+    /* **왜 2023 부터인지 화면이 밝힌다** — 안 적으면 임의로 자른 것으로 보인다 */
+    if (!ix2.includes('디지털프라자')) b9.push('누적이 2023부터인 이유(브랜드 개명)를 화면이 안 적는다');
+
+    /* ⓓ **떼어 돌린다** — 문자열만 보면 계산이 뒤집혀도 통과한다 */
+    let srFn = null;
+    try {
+      const cutIx = (name) => {
+        const at = ix2.indexOf('function ' + name + '(');
+        if (at < 0) return '';
+        let d = 0;
+        for (let j = ix2.indexOf('{', at); j < ix2.length; j++) {
+          if (ix2[j] === '{') d++;
+          else if (ix2[j] === '}') { d--; if (!d) return ix2.slice(at, j + 1); }
+        }
+        return '';
+      };
+      const env = [
+        "var HEAT_CUM_FROM = '2023';",
+        "var heatYear = 'cur';",
+        "var window = { __SR: {} };",
+        "var DATA = { byStoreMonth: { 갑: { '2023-05': 1, '2025-03': 2, '2026-04': 5 } } };",
+        "function heatYears() { return { cur: '2026', prev: '2025' }; }",
+      ].join('\n');
+      srFn = new Function(env + cutIx('srShare') + cutIx('cumSpan') + cutIx('yearFromSum')
+        + ' return { srShare: srShare, cumSpan: cumSpan, yearFromSum: yearFromSum, set: function (y, sr) { heatYear = y; window.__SR = sr; } };')();
+    } catch (e) { srFn = null; }
+    if (!srFn) b9.push('srShare 를 떼어 돌릴 수 없다 — 계산을 검사할 수 없다');
+    else {
+      const SR = { 갑: { store: '갑', shop: 'LG갑점', ours: 100, rival: 50, pct: 67, capped: false,
+        mon: { o: { '2023-05': 10, '2025-03': 20, '2026-04': 30 },
+               r: { '2023-05': 40, '2025-03': 5, '2026-04': 10 } } } };
+      /* 당해(2026): 우리 30 vs LG 10 → 75% */
+      srFn.set('cur', SR);
+      const a1 = srFn.srShare('갑');
+      if (!a1 || a1.pct !== 75 || a1.scope !== 'year') b9.push('당해 축에서 그 해 몫을 안 낸다: ' + JSON.stringify(a1));
+      /* 누적(2023~): 우리 60 vs LG 55 → 52% */
+      srFn.set('cum', SR);
+      const a2 = srFn.srShare('갑');
+      if (!a2 || a2.pct !== 52 || a2.scope !== 'cum') b9.push('누적 축에서 구간 합을 안 낸다: ' + JSON.stringify(a2));
+      /* **옛 회차(월 자료 없음)는 전 기간으로 물러서고 그 사실을 알린다** */
+      srFn.set('cur', { 갑: { store: '갑', shop: 'LG갑점', ours: 100, rival: 50, pct: 67, capped: false, mon: null } });
+      const a3 = srFn.srShare('갑');
+      if (!a3 || a3.pct !== 67 || a3.scope !== 'all') b9.push('옛 회차에서 전 기간으로 안 물러선다: ' + JSON.stringify(a3));
+      /* **상한에 닿았으면 아무 값도 내지 않는다** — 50% 로 그리면 거짓이다 */
+      srFn.set('cur', { 갑: { store: '갑', shop: 'LG갑점', ours: 2900, rival: 2900, pct: null, capped: true, mon: null } });
+      if (srFn.srShare('갑') !== null) b9.push('상한에 닿았는데 비중을 낸다');
+      /* **그 해에 작성일을 아는 글이 없으면 「못 잼」이다** — 0% 로 그리면 「LG가 없다」가 된다 */
+      srFn.set('cur', { 갑: { store: '갑', shop: 'LG갑점', ours: 10, rival: 5, pct: 67, capped: false,
+        mon: { o: { '2023-05': 3 }, r: { '2023-05': 2 } } } });
+      const a4 = srFn.srShare('갑');
+      if (!a4 || a4.pct !== null) b9.push('그 해 자료가 없는데 비중을 낸다: ' + JSON.stringify(a4));
+      /* 누적 구간 — 자료에 없는 해는 빼고 적는다 */
+      const sp = srFn.cumSpan();
+      if (sp.from !== '2023' || sp.to !== '2026') b9.push('누적 구간을 잘못 적는다: ' + JSON.stringify(sp));
+      if (srFn.yearFromSum('갑', '2023') !== 8) b9.push('구간 합이 틀리다');
+    }
+
+    if (b9.length) { ok = false; console.log('ERROR: [바이럴] 히트맵 연도 축 — ' + b9.join(' · ')); }
+    else console.log('OK: 바이럴 히트맵 연도 축 — 당사·LG 가 같은 잣대 · 누적 2023~ · 옛 회차는 전 기간으로 물러서고 밝힌다');
   }
 
   /* ⑧ **균형점은 회사 수가 정한다** (2026-09-03 배포 확인에서 발견)
@@ -4252,9 +4369,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else {
     /* 그 줄을 만드는 블록 */
     const blk = ix.slice(Math.max(0, at - 2200), at + 300);
-    /* ① 선언보다 앞에서 쓰지 않는다 — 지역 변수를 따로 낸다 */
-    if (!/var srmL = \(window\.__SR/.test(blk))
-      bad.push('__SR 을 지역 변수로 다시 안 꺼낸다 — 아래 선언을 쓰면 호이스팅으로 늘 undefined 다');
+    /* ① 선언보다 앞에서 쓰지 않는다 — 지역 변수를 따로 낸다.
+       **2026-09-05 부터 srShare() 를 지나간다** — 칸 색과 같은 값을 써야 빨강 면적과
+       적힌 건수가 안 어긋난다(면적은 당해인데 글자는 전 기간이던 사고). */
+    if (!blk.includes('var srmL = srShare(d.nm);'))
+      bad.push('LG 지점명 줄이 칸 색과 다른 값을 쓴다 — 면적과 건수가 어긋난다');
     if (!/var bgL = /.test(blk))
       bad.push('배경색을 지역 변수로 다시 안 낸다 — 같은 호이스팅 함정이다');
     /* ② 색은 배경 밝기가 정한다 — **문자열이 아니라 결과로 본다.**

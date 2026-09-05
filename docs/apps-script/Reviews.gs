@@ -3859,7 +3859,25 @@ function summary_() {
    * 크기 걱정은 없다: 매장 65 × 24개월 = 1,560칸(지금 15개월에 975칸).
    * 하한을 **연 단위로** 잡아야 연도 비교가 반쪽이 안 된다 — 400일처럼 「며칠 전」
    * 으로 잡으면 오늘이 며칠이냐에 따라 작년 시작이 잘린다. */
-  var monthFloor = (Number(Utilities.formatDate(now, tz, 'yyyy')) - 1) + '-01';
+  /* ── **2023년 1월까지 넓힌다** (2026-09-05 사장님 지시) ──────────────────────
+   * *"23년~현재까지 누적수치도 볼 수 있게해주세요"*.
+   *
+   * 직전해 1월로 두면 히트맵이 **2025-01 부터**만 볼 수 있다 — 실측으로 2023~2024 의
+   * **1,457건**이 통째로 빠져 있었다(작성일을 아는 3,221건의 45%다).
+   *
+   * **왜 2023 인가** — 그 앞은 세어도 뜻이 없다. 같은 날 실측:
+   *   2006~2022 합 당사 12건 vs LG 658건 · 2023 당사 558건
+   * 삼성이 2022년경 「디지털프라자 → 삼성스토어」로 바꿨는데 질의는 「삼성스토어」
+   * 하나만 던진다 — **당사 옛 글만 구조적으로 안 걸린다.** 그 구간을 누적에 넣으면
+   * 화면이 거짓말을 한다.
+   *
+   * **직전해보다 늦어지지 않게 한다** — 해가 바뀌어 `MONTH_FLOOR_Y` 를 지나쳐도
+   * 연도 대비 축(올해 vs 작년)이 반쪽이 되면 안 된다.
+   *
+   * 크기: 매장 62 × 45개월 = 2,790칸(실측 6KB → 13KB). 전체 응답이 1,172KB 라 값이 싸다. */
+  var MONTH_FLOOR_Y = '2023';
+  var prevY = String(Number(Utilities.formatDate(now, tz, 'yyyy')) - 1);
+  var monthFloor = (MONTH_FLOOR_Y < prevY ? MONTH_FLOOR_Y : prevY) + '-01';
 
   /* **후기가 0건인 매장도 목록에 세운다**(사장님: *"전점이 다 나와야 합니다"*).
      예전에는 잡힌 매장만 키가 생겨 **49곳만** 떴다 — 화면에서 사라진 16곳을 보고
@@ -4421,7 +4439,24 @@ function summary_() {
  * 한 실행에 다 못 하므로 커서로 이어 돈다(매장 하나가 60회 ≈ 30초).
  */
 var SHEET_SRIVAL = '매장경쟁';
-var SRIVAL_HEADER = ['at', 'store', 'shop', 'ours', 'rival', 'pct', 'capped', 'queries'];
+/* `monJson` 은 **맨 뒤에 붙인다** — 가운데 끼우면 옛 줄이 한 칸씩 밀린다.
+   양쪽의 **월별 건수**를 담는다: {o:{'2026-01':n,...}, r:{...}}.
+
+   ── **왜 필요했나** (2026-09-05 사장님 지시) ──────────────────────────────
+   *"히트맵에는 당해(26년)만 볼 수 있게 / 당사 LG 모두"*.
+
+   히트맵 칸의 **크기·파랑은 당해 건수**(byStoreMonth)인데 **빨강(LG 몫)은 전 기간**
+   이었다 — 한 칸 안에서 두 잣대가 섞여 있었다. 사장님이 *"LG 자료가 많아 보인다"*
+   고 한 자리가 여기다(2026년 184건 옆에 전 기간 LG 건수가 붙어 있었다).
+
+   **추가 호출이 없다** — 이미 받아 온 글에서 월만 세면 된다. 다만 **작성일을 주는
+   것은 블로그뿐**이라(카페·웹은 네이버가 안 준다) 연도로 나눌 수 있는 것은 그것뿐이다.
+   **그것이 오히려 옳다** — 당사 쪽 칸도 같은 제약을 받는 자료(byStoreMonth)를 쓰므로
+   **양쪽이 같은 잣대**가 된다. 화면이 그 사실을 적는다. */
+var SRIVAL_HEADER = ['at', 'store', 'shop', 'ours', 'rival', 'pct', 'capped', 'queries', 'monJson'];
+/* **줄의 뜻이 바뀌면 올린다** — 옛 회차에 이어 붙으면 월 자료가 반쪽인 채로 화면에
+   나가 「그 매장만 26년 자료가 없다」가 된다(경쟁비교가 이미 데인 그 사고다). */
+var SRIVAL_SCHEMA = 2;
 var SRIVAL_MS = 300 * 1000;              /* 6분 한도 안에서 쓸 예산 */
 var SRIVAL_PER_MS = 45 * 1000;           /* 매장 하나에 넉넉히 — 모자라면 다음 실행으로 */
 var SRIVAL_CAP = 2900;                   /* 3소스 × 10쪽 × 100 = 3,000 — 여기 닿으면 「못 잼」 */
@@ -4459,10 +4494,15 @@ function storeRival_() {
   var rows = [];
   for (i = 0; i < v.length; i++) {
     if (cellStamp_(v[i][0]) !== last) continue;
+    /* **옛 회차에는 이 칸이 없다** — 그때는 빈 객체다. 0 으로 채우지 않는다:
+       「그 해에 없었다」와 「연도를 모른다」는 다른 말이고, 화면이 그것을 가려
+       전 기간으로 물러서며 그 사실을 적는다. */
+    var mon0 = jparse_(v[i][8]);
     rows.push({ store: String(v[i][1]), shop: String(v[i][2]),
       ours: Number(v[i][3]) || 0, rival: Number(v[i][4]) || 0,
       pct: v[i][5] === '' || v[i][5] === null ? null : Number(v[i][5]),
-      capped: v[i][6] === true || String(v[i][6]) === 'true' });
+      capped: v[i][6] === true || String(v[i][6]) === 'true',
+      mon: (mon0 && mon0.o) ? mon0 : null });
   }
   return rows.length ? { at: last, rows: rows } : null;
 }
@@ -4509,6 +4549,14 @@ function collectStoreRival(reset) {
 
     var stamp = props.getProperty('_srivalStamp') || '';
     var cur = Number(props.getProperty('_srivalCur') || 0);
+    /* **판이 바뀌면 이어 붙지 않는다**(2026-09-05). `monJson` 이 생기며 줄의 뜻이
+       바뀌었다 — 옛 회차에 이어 붙으면 **한 회차 안에 월 자료가 있는 줄과 없는 줄이
+       섞여** 화면이 「그 매장만 26년 자료가 없다」로 그린다. 경쟁비교가 같은 사고로
+       두 번 데었다(평택 2,008 → 4,025). 번호가 다르면 처음부터 돈다. */
+    if (String(props.getProperty('_srivalSchema') || '') !== String(SRIVAL_SCHEMA)) {
+      stamp = ''; cur = 0;
+      props.setProperty('_srivalSchema', String(SRIVAL_SCHEMA));
+    }
     if (reset || !stamp || cur >= names.length) {
       stamp = new Date().toISOString(); cur = 0;
       props.setProperty('_srivalStamp', stamp);
@@ -4554,7 +4602,11 @@ function collectStoreRival(reset) {
               if (linkNoise_(lk)) continue;
               var text = (it.title || '') + ' ' + (it.description || '');
               if (!rivalHit_(text, brands, place)) continue;
-              got[key][lk] = 1;
+              /* **월을 함께 담는다** — 링크로 중복을 거르는 것은 그대로다.
+                 블로그만 `postdate` 를 준다. 없으면 빈 글자이고 **연도 집계에서 빠진다** —
+                 0 으로 세면 「그 해에 없었다」가 되어 거짓이 된다. */
+              var pd9 = String(it.postdate || '').replace(/[^0-9]/g, '');
+              got[key][lk] = pd9.length === 8 ? (pd9.slice(0, 4) + '-' + pd9.slice(4, 6)) : '';
             }
             if (items.length < PAGE_SIZE) break;
           }
@@ -4566,9 +4618,16 @@ function collectStoreRival(reset) {
       var o = Object.keys(got.ours).length, r = Object.keys(got.rival).length;
       var capped = o >= SRIVAL_CAP || r >= SRIVAL_CAP;
       var tot = o + r;
+      /* **양쪽 월별.** 링크마다 담아 둔 월을 센다 — 작성일을 모르는 글(카페·웹)은
+         빈 글자라 어느 달에도 안 든다. 그래서 이 표의 합은 `o`·`r` 보다 작다. */
+      var mon9 = { o: {}, r: {} };
+      ['ours', 'rival'].forEach(function (kk9) {
+        var box9 = mon9[kk9 === 'ours' ? 'o' : 'r'], gg9 = got[kk9], lk9;
+        for (lk9 in gg9) if (gg9.hasOwnProperty(lk9) && gg9[lk9]) box9[gg9[lk9]] = (box9[gg9[lk9]] || 0) + 1;
+      });
       sh.appendRow([stamp, st, shop, o, r,
         (capped || tot === 0) ? '' : Math.round(o / tot * 100),
-        capped, qs.join(' | ')]);
+        capped, qs.join(' | '), JSON.stringify(mon9)]);
       wrote++;
       props.setProperty('_srivalCur', String(ui + 1));
     }
@@ -5756,7 +5815,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 19;
+var SUM_VER = 20;   /* 20 = 월별 하한 2023-01 · 창별 approx · storeRival 월별 */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
