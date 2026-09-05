@@ -887,6 +887,39 @@ function sweepCalls_() {
   var dead = DEAD_MAX_PER_RUN;
   return store + cafe + mgr + sdp + rival + dead;
 }
+
+/**
+ * **버튼마다 얼마를 쓰는가** (2026-09-05 사장님 우려로 붙였다).
+ *
+ * 사장님: *"버튼이 너무많아 중복수집이 우려됩니다. 한도가 남용될까 걱정입니다."*
+ *
+ * 걱정의 절반은 **비용이 안 보이는 것**이었다 — 누르기 전에 얼마를 쓰는지 화면이
+ * 한 번도 말한 적이 없다(전체 재수집만 예외). **여기서 한 번에 센다** — 화면이
+ * 따로 세면 상수가 바뀔 때 한쪽만 고쳐져 조용히 옛 숫자를 말한다(이 저장소가
+ * 허브 카드 개수·앱 버전에서 되풀이해 데인 종류다).
+ *
+ * 값은 **상한**이다 — 「최근 것만」은 이미 가진 글을 만나면 멈추므로 실제로는
+ * 훨씬 적다(실측 1,000~2,000회). 그 사실은 화면이 적는다.
+ */
+function actionCosts_() {
+  var tab = aliasAll_(), n = 0, k;
+  for (k in tab) if (tab.hasOwnProperty(k)) n += tab[k].length;
+  var kinds = 3;
+  /* 「최근 것만」은 정렬이 date 하나다 — sim 추가분이 없다 */
+  var quick = (STORES.length + n) * TAILS.length * kinds * MAX_PAGES
+    + CAFES.length * kinds * MAX_PAGES + 20 + SDP.length * 2 * SDP_PAGES + DEAD_MAX_PER_RUN;
+  return {
+    quick: quick,
+    full: sweepCalls_(),
+    rival: rivalUnits_().length * 4 * RTAILS.length * kinds * RIVAL_PAGES,
+    /* 매장 대 매장 — 매장 × 진영 2 × 소스 3 × 10쪽 */
+    srival: STORES.length * 2 * kinds * MAX_PAGES,
+    /* 검색 관심도 — 전국 1 + 지역 6 */
+    trend: 7,
+    /* 감사 한 매장 — 질의(꼬리말 + 별칭) × 소스 3 × 정렬 2 × 10쪽 */
+    audit: (TAILS.length + 1) * kinds * 2 * MAX_PAGES
+  };
+}
 /* **LG 비교 질의 꼬리말.** `collectRival` 안의 지역 변수였는데 밖으로 올렸다 —
    호출 수 계산(`sweepCalls_`)이 이 개수를 알아야 하는데, 두 곳에 따로 적으면 한쪽만
    고쳤을 때 화면이 조용히 옛 숫자로 「한도가 넉넉하다」고 말한다. 이 저장소가 허브 카드
@@ -3472,12 +3505,39 @@ function continueSweep() { return collectReviews(); }
  * **호출을 많이 쓴다** — 한 매장에 꼬리말 × 소스 × 정렬 × 10쪽이라 최대 수백 회다.
  * 그래서 **한 매장씩만** 돌고, 하루 한도를 그대로 지킨다.
  */
+/* ── **감사는 한 번에 최대 480회다** (2026-09-05 사장님 우려로 재서 잡음) ──────────
+ * 사장님: *"버튼이 너무 많아 중복수집이 우려됩니다. 한도가 남용될까 걱정입니다."*
+ *
+ * 재 보니 정확한 걱정이었다. 이 함수는 **질의(꼬리말 8 + 별칭) × 소스 3 × 정렬 2 ×
+ * 10쪽 = 최대 480회**를 쓰는데 셋이 다 없었다:
+ *
+ *   자물쇠 없음   → 수집이 도는 중에도 같이 돈다(둘이 같은 시트를 만진다)
+ *   한도 확인 없음 → 다 써도 시작한다
+ *   `addUsage_` 없음 → **카운터에 안 잡힌다** ← 가장 나쁘다
+ *
+ * 마지막이 왜 가장 나쁜가 — 화면의 「오늘 쓴 호출」이 그만큼 거짓이 되고, **다른
+ * 수집이 남은 예산을 잘못 계산해** 시작했다가 첫 호출에서 죽는다. 이 파일이 다른
+ * 수집에서는 전부 세고 있었는데 여기만 빠져 있었다.
+ *
+ * 옛 검사는 `calls++` 가 `search_` 옆에 있는지만 봤다 — **센 값을 카운터로
+ * 넘기는지**는 안 봤다. 그래서 통과하고 있었다. */
 function auditStore(storeName, opt) {
   opt = opt || {};
   var i, k, ti, page;
   var st = null;
   for (i = 0; i < STORES.length; i++) if (STORES[i][1] === storeName) { st = STORES[i]; break; }
   if (!st) return { ok: false, msg: '그런 매장이 없습니다: ' + storeName };
+
+  /* **수집과 겹치지 않게 한다** — 같은 스크립트 자물쇠라 어느 수집이 돌고 있으면 못 잡는다 */
+  var auLock = LockService.getScriptLock();
+  if (!auLock.tryLock(1000)) return { ok: false, msg: '지금 수집이 돌고 있습니다 — 끝난 뒤 눌러 주세요.' };
+  try {
+  /* **한도를 넘었으면 시작하지 않는다** — 시작해 놓고 첫 호출에서 죽으면
+     사람은 왜 안 되는지 모른다(다른 수집이 이미 쓰는 규칙이다). */
+  var auLim = dailyLimit_(), auUsed = usage_().n;
+  if (auUsed >= auLim) {
+    return { ok: false, msg: '오늘 호출 한도를 다 썼습니다(' + auUsed + '/' + auLim + ') — 내일 다시 눌러 주세요.' };
+  }
 
   var mname = st[1];
   var mnames = [mname].concat(aliasOf_(mname) || []);
@@ -3551,6 +3611,8 @@ function auditStore(storeName, opt) {
 
   var hit = 0, key;
   for (key in uni) if (uni.hasOwnProperty(key) && have[key]) hit++;
+  /* **센 것을 카운터로 넘긴다** — 이 한 줄이 빠져 최대 480회가 조용히 샜다 */
+  if (calls) addUsage_(calls);
   return {
     ok: true, store: mname,
     reachable: uniN,          /* 우리가 받을 수 있는 최대(합집합) */
@@ -3564,6 +3626,10 @@ function auditStore(storeName, opt) {
         + 'total 은 정렬마다 다르고 실제로 받히는 수와도 달라 분모로 쓸 수 없습니다. '
         + (MIN_YMD ? MIN_YMD + ' 보다 오래된 글은 일부러 안 담으므로 분모에서 뺐습니다.' : '')
   };
+  } finally {
+    /* **무슨 일이 있어도 놓는다** — 안 놓으면 다음 수집이 전부 「돌고 있습니다」로 막힌다 */
+    auLock.releaseLock();
+  }
 }
 
 function purgeOld(dryRun) {
@@ -4310,6 +4376,8 @@ function summary_() {
     watch: watch_(byCafe),
     /* 한도 — 수집을 누르지 않아도 화면이 오늘 얼마나 썼는지 보여야 한다 */
     dayUsed: usage_().n, dailyLimit: dailyLimit_(), sweep: sweepCalls_(),
+    /* **버튼마다 얼마를 쓰는가** — 누르기 전에 화면이 적는다(2026-09-05) */
+    costs: actionCosts_(),
     approx: approxN,
     /* **창별·월별 발견일 몫.** 화면이 「그중 N건은 발견일로 잰 것」이라 적는다 —
        뭉개면 「최근 7일 240건」이 그 주에 쓰인 글로 읽힌다(실제로는 25건이었다). */
@@ -5452,6 +5520,13 @@ function rivalUnits_() {
  * 401 이면 「검색 API 키를 넣은 것 아닌가」까지 화면이 적는다.
  */
 function runTrend() {
+  /* **수집과 같은 자물쇠를 쓴다**(2026-09-05). 호출은 6~12회로 작지만 **같은 시트를
+     만진다** — 수집이 도는 중에 겹치면 오늘 줄을 지우고 다시 쓰는 중간에 끼어든다.
+     LG 비교가 이미 같은 이유로 자물쇠를 쓴다. */
+  var tLock = LockService.getScriptLock();
+  if (!tLock.tryLock(1000)) {
+    return { ok: false, rows: 0, errors: [], note: '지금 수집이 돌고 있습니다 — 끝난 뒤 눌러 주세요.' };
+  }
   try {
     var r = collectTrend();
     /* 부분 실패도 구글 한도일 수 있다 — 그 지점을 남겨야 화면이 원인을 가른다 */
@@ -5460,6 +5535,8 @@ function runTrend() {
   } catch (e) {
     noteGoogleBlock_(String(e.message || e));
     return { ok: false, rows: 0, errors: [String(e.message || e)], note: String(e.message || e) };
+  } finally {
+    tLock.releaseLock();
   }
 }
 

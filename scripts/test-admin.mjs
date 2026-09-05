@@ -3552,6 +3552,97 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     else console.log('OK: 바이럴 수집 멈춤 — 오늘 3시 기준으로 판정 · 다시 걸 수 있고 · 실패를 실패라고 적는다');
   }
 
+
+  /* ── ⑪ **버튼 정리 · 중복 수집 · 한도 남용** (2026-09-05 사장님 우려) ───────────
+   *
+   * *"버튼이 너무많아 중복수집이 우려됩니다. 한도가 남용될까 걱정입니다.
+   *   버튼 정리가 필요해보입니다."*
+   *
+   * 재 보니 걱정이 정확했다. **감사(`auditStore`)가 한 번에 최대 480회**를 쓰는데
+   * 자물쇠·한도 확인·계수가 **셋 다 없었다** — 특히 `addUsage_` 가 없어 **카운터에
+   * 안 잡혔다**(화면의 「오늘 쓴 호출」이 그만큼 거짓이고, 다른 수집이 남은 예산을
+   * 잘못 계산해 시작했다가 첫 호출에서 죽는다).
+   *
+   * 옛 검사는 `calls++` 가 `search_` 옆에 있는지만 봤다 — **센 값을 카운터로 넘기는지**
+   * 는 안 봤다. 그래서 통과하고 있었다.
+   */
+  {
+    const gsB = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ixB = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const bB = [];
+    const cutB = (f) => {
+      const at = gsB.indexOf('function ' + f + '(');
+      if (at < 0) return '';
+      let d = 0;
+      for (let j = gsB.indexOf('{', at); j < gsB.length; j++) {
+        if (gsB[j] === '{') d++;
+        else if (gsB[j] === '}') { d--; if (!d) return gsB.slice(at, j + 1); }
+      }
+      return '';
+    };
+
+    /* ⓐ **호출을 쓰는 서버 함수는 셋을 다 갖춰야 한다** — 자물쇠 · 한도 · 계수.
+           한 곳이라도 빠지면 그 버튼이 조용히 예산을 태운다. */
+    [['auditStore', '감사'], ['collectStoreRival', '매장 대 매장']].forEach(([f, label]) => {
+      const b = cutB(f);
+      if (!b) { bB.push(label + ' 함수를 못 찾았다'); return; }
+      if (!/tryLock/.test(b)) bB.push(label + ' 에 자물쇠가 없다 — 수집이 도는 중에도 같이 돈다');
+      if (!/dailyLimit_/.test(b)) bB.push(label + ' 이 한도를 안 본다 — 다 써도 시작한다');
+      if (!/addUsage_\(/.test(b)) bB.push(label + ' 이 카운터에 안 넘긴다 — 쓴 만큼이 조용히 샌다');
+      if (/tryLock/.test(b) && !/releaseLock/.test(b)) bB.push(label + ' 이 자물쇠를 안 놓는다 — 다음 수집이 전부 막힌다');
+    });
+    /* 검색 관심도는 호출이 7회라 한도 확인은 없어도 되지만 **같은 시트를 만진다** */
+    {
+      const b = cutB('runTrend');
+      if (!/tryLock/.test(b)) bB.push('검색 관심도에 자물쇠가 없다 — 수집 중에 같은 시트를 만진다');
+      if (!/releaseLock/.test(b)) bB.push('검색 관심도가 자물쇠를 안 놓는다');
+    }
+
+    /* ⓑ **비용은 서버가 한 곳에서 센다** — 화면이 따로 세면 상수가 바뀔 때 어긋난다 */
+    if (!gsB.includes('function actionCosts_(')) bB.push('actionCosts_ 가 없다 — 화면이 비용을 지어내게 된다');
+    if (!gsB.includes('costs: actionCosts_(),')) bB.push('비용을 화면에 안 보낸다');
+
+    /* ⓒ **화면 — 수집은 한 자리에서만.** 고른 것 하나만 보인다 */
+    if (!ixB.includes('id="what"')) bB.push('수집 선택칸이 없다 — 버튼이 흩어져 있다');
+    if (!ixB.includes('function syncWhat(')) bB.push('고른 것만 보이게 하는 함수가 없다');
+    if (!ixB.includes('if (typeof syncWhat === \'function\') syncWhat();')) {
+      bB.push('렌더에서 syncWhat 을 안 부른다 — 자료가 와도 예상 호출이 안 바뀐다');
+    }
+    /* 다섯 갈래가 모두 선택지에 있는가 — 하나 빠지면 그 수집을 돌릴 길이 사라진다 */
+    ['run', 'runfull', 'runrival', 'sriv-go', 'runtrend'].forEach((id) => {
+      if (!ixB.includes('<option value="' + id + '">')) bB.push(id + ' 가 수집 선택지에 없다');
+      if (!ixB.includes('id="' + id + '"')) bB.push(id + ' 버튼이 사라졌다 — 핸들러가 죽는다');
+    });
+
+    /* ⓓ **남은 몫은 둘 중 작은 쪽이다** — 우리 한도(50,000)로만 적으면 「남은 41,829회」라
+           말해 놓고 구글이 11,829 에서 끊는다. **떼어 돌려 본다.** */
+    if (!ixB.includes('var lim = (lim1 && lim2) ? Math.min(lim1, lim2) : (lim1 || lim2);')) {
+      bB.push('남은 몫을 우리 한도로만 잰다 — 구글이 먼저 끊는다');
+    }
+    {
+      const f = new Function('lim1', 'lim2', 'used',
+        'var lim = (lim1 && lim2) ? Math.min(lim1, lim2) : (lim1 || lim2);'
+        + ' return Math.max(0, lim - used);');
+      if (f(50000, 20000, 8171) !== 11829) bB.push('작은 쪽 한도 계산이 틀리다: ' + f(50000, 20000, 8171));
+      if (f(50000, 0, 8171) !== 41829) bB.push('구글 한도를 모를 때 우리 한도로 물러서지 않는다');
+    }
+
+    /* ⓔ **버튼을 옮겼으면 그 버튼을 가리키던 문구도 함께 고친다** — 구조를 바꾸면
+           예전 전제로 쓴 문구가 그 자리에서 거짓이 된다(이 저장소가 되풀이해 데인 종류다).
+           **주석은 봐주지 않는다** — 화면 글자만 본다. */
+    ['「LG 비교 갱신」', '「매장 대 매장 수집」', '「검색 관심도 갱신」'].forEach((w) => {
+      const lines = ixB.split(/\r?\n/).filter((l) => l.includes(w) && !l.trim().startsWith('/*') && !l.trim().startsWith('*'));
+      if (lines.length) bB.push('없는 버튼을 가리키는 문구가 남았다: ' + w + ' (' + lines.length + '곳)');
+    });
+
+    /* ⓕ **자동 수집 다시 걸기는 멈췄을 때만** — 평소에 떠 있으면 눌러 보게 되고,
+           멀쩡한 트리거를 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
+    if (!ixB.includes('rb.hidden = !missed;')) bB.push('「자동 수집 다시 걸기」가 늘 떠 있다');
+
+    if (bB.length) { ok = false; console.log('ERROR: [바이럴] 버튼 정리 — ' + bB.join(' · ')); }
+    else console.log('OK: 바이럴 버튼 정리 — 수집은 한 자리 · 비용을 미리 적고 · 감사에 자물쇠·한도·계수');
+  }
+
   /* ⑧ **균형점은 회사 수가 정한다** (2026-09-03 배포 확인에서 발견)
      4사로 넓히며 분모만 넷으로 바꾸고 판정은 2사 시절 50% 를 두어, 화면이
      「당사가 앞선 곳 0곳」이라 말하고 있었다 — 용인은 4사 중 45.7% 로 1위다. */

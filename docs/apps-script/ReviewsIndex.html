@@ -1204,11 +1204,34 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            아무 말도 안 했다 — 기존 경고(`runstage`)는 **실행이 도는 중일 때만**
            뜬다(`runAt > 0`). 끝난 뒤 다음 실행이 영영 안 오는 경우가 사각지대였다. -->
       <div id="stalled"></div>
+      <!-- ── **수집 버튼을 한 줄로 모았다** (2026-09-05 사장님 우려) ──────────────
+           *"버튼이 너무많아 중복수집이 우려됩니다. 한도가 남용될까 걱정입니다."*
+
+           흩어져 있던 다섯(최근 것만·전체 재수집·LG 비교·매장 대 매장·검색 관심도)을
+           한 자리에 모으고 **고른 것 하나만** 보인다. 여러 개를 잇달아 누르는 일이
+           구조적으로 사라진다.
+
+           **버튼과 핸들러는 그대로다** — 자리만 옮겼다. 각 버튼이 들고 있는 확인·라벨·
+           잠금 로직을 한 곳으로 합치면 그 과정에서 반드시 하나를 흘린다(이 저장소가
+           `collectRival` 을 갈아 끼우다 함수 다섯을 삼킨 적이 있다). -->
       <div class="alias-add">
+        <select id="what" aria-label="무엇을 수집할까요">
+          <option value="run">최근 것만 수집</option>
+          <option value="runfull">전체 재수집</option>
+          <option value="runrival">LG 비교</option>
+          <option value="sriv-go">매장 대 매장</option>
+          <option value="runtrend">검색 관심도</option>
+        </select>
         <button id="run">최근 것만 수집</button>
-        <button id="runfull">전체 재수집</button>
-        <button id="runrival">LG 비교 갱신</button>
+        <button id="runfull" hidden>전체 재수집</button>
+        <button id="runrival" hidden>LG 비교 갱신</button>
+        <button id="sriv-go" hidden>매장 대 매장 수집</button>
+        <button id="runtrend" hidden>검색 관심도 갱신</button>
       </div>
+      <!-- **누르기 전에 얼마를 쓰는지 적는다** — 사장님 걱정의 절반이 이것이었다.
+           숫자는 서버가 한 곳에서 센다(`actionCosts_`) — 화면이 따로 세면 상수가
+           바뀔 때 한쪽만 고쳐져 조용히 옛 숫자를 말한다. -->
+      <div class="sub" id="what-cost"></div>
       <div class="alias-add" style="margin-top:6px">
         <button id="stop" hidden>이어달리기 멈춤</button>
         <!-- **전체 재수집을 끌 길이 없었다** (2026-09-04). 한 번 켜지면 한 바퀴를
@@ -1220,7 +1243,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <!-- **새벽 3시 트리거를 다시 건다** — 구글이 반복 실패로 트리거를 끄는 일이
              있고 그것은 Apps Script 실행 기록에만 남는다. 원인을 짐작해 고치는 대신
              다시 걸 길을 여기 둔다. 좀비 이어달리기 트리거도 함께 걷어낸다. -->
-        <button id="rearm">자동 수집 다시 걸기</button>
+        <button id="rearm" hidden>자동 수집 다시 걸기</button>
       </div>
       <!-- 일일 수집한도 — **오늘 쓴 양을 함께 적는다.** 한도만 있고 쓴 양이
            없으면 남은 몫을 가늠할 수 없다. -->
@@ -1256,10 +1279,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="sub">네이버에서 <b>얼마나 찾는지</b>를 봅니다 — 후기 건수(공급)와 다른 축입니다.
         하루 <b>7회</b>면 끝납니다(전국 1 + 지역 6).
         <b>데이터랩 전용 키</b>가 필요합니다(검색 API 키와 다른 체계입니다).</div>
-      <div class="alias-add">
-        <button id="runtrend">검색 관심도 갱신</button>
-        <span class="sub" id="trend-msg"></span>
-      </div>
+      <!-- 버튼은 위 「수집」 줄로 옮겼다(2026-09-05) — 한 자리에서만 돌린다 -->
+      <div class="sub">돌리려면 위 <b>「수집」</b>에서 <b>검색 관심도</b>를 고르세요.
+        <span id="trend-msg"></span></div>
       <div id="trendbox" class="sub" style="margin-top:8px">—</div>
 
       <!-- ── 질의 꼬리말 성적 (2026-09-04) ─────────────────────────────────
@@ -1281,9 +1303,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="sub">「삼성스토어 <b>갤러리아광교</b>」 ↔ 「LG베스트샵 <b>갤러리아 광교점</b>」처럼
         <b>매장 이름</b>으로 양쪽을 셉니다. 「당사 vs LG」 카드는 <b>지명</b>으로 세는 다른 값입니다.
         최대 <b>3,720회</b>(하루 예산의 19%) — 못 끝내면 <b>스스로 이어 갑니다</b>.</div>
-      <div class="alias-add">
-        <button id="sriv-go">매장 대 매장 수집</button>
-      </div>
+      <!-- 버튼은 위 「수집」 줄로 옮겼다(2026-09-05) -->
+      <div class="sub">돌리려면 위 <b>「수집」</b>에서 <b>매장 대 매장</b>을 고르세요.</div>
       <div id="sriv-msg" class="sub"></div>
 
       <h3>검출 감사 — 이 매장을 몇 % 잡고 있나</h3>
@@ -3608,7 +3629,7 @@ function wireSecs() {
     if (!R || !R.rows || !R.rows.length) {
       var rel = document.getElementById('rival');
       if (rel) {
-        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>맨 위 「LG 비교 갱신」 버튼</b>을 '
+        rel.innerHTML = '<div class="sub">아직 재지 않았습니다 — <b>관리자의 「수집」에서 <b>LG 비교</b></b>을 '
           + '누르면 지금 바로 잽니다(최대 5분). 삼성스토어와 LG베스트샵에 <b>같은 질의</b>를 던져 비중을 냅니다.</div>';
         /* 보임은 applySecs 가 정한다 */
       }
@@ -3696,7 +3717,7 @@ function wireSecs() {
           + esc(miss.join(' · ')) + '</b>' + josa(miss[miss.length - 1], '은', '는')
           + ' 아직 못 쟀습니다 — 값이 없는 것이지 '
           + '<b>LG 후기가 없다는 뜻이 아닙니다</b>. '
-          + '맨 위 <b>「LG 비교 갱신」</b>을 누르면 멈춘 도시부터 이어서 잽니다.</div>';
+          + '관리자의 「수집」에서 <b>LG 비교</b>를 고르면 멈춘 도시부터 이어서 잽니다.</div>';
       }
     }
     /* **「줄이 있다」와 「다 쟀다」는 다른 말이다**(2026-09-02). 위 안내는 지역 줄이
@@ -3710,7 +3731,7 @@ function wireSecs() {
         + esc(halfRows.map(function (r) { return r.area + '(' + r.cities + '/' + r.wantCities + '곳)'; }).join(' · '))
         + '</b> — 도시를 다 못 쟀습니다. 건수는 그 도시들만의 것이고 <b>비중은 내지 않았습니다</b>'
         + ' — 남은 도시가 빠진 채로 비율을 내면 화면이 거짓을 말합니다.'
-        + ' 맨 위 <b>「LG 비교 갱신」</b>을 누르면 남은 도시를 마저 잽니다.</div>';
+        + ' 관리자의 「수집」에서 <b>LG 비교</b>를 고르면 남은 도시를 마저 잽니다.</div>';
     }
 
     /* ── 갈래별 (2026-09-01 사장님: *"디테일한 비교가 필요합니다"*) ───────────
@@ -3958,9 +3979,9 @@ function renderPromo() {
   if (!box) return;
   var R = DATA.rival, rows = (R && R.rows) || [];
   if (!rows.length) {
-    if (sub) sub.textContent = '아직 안 쟀습니다 — 맨 위 「LG 비교 갱신」을 누르세요';
+    if (sub) sub.textContent = '아직 안 쟀습니다 — 관리자의 「수집」에서 「LG 비교」를 고르세요';
     box.innerHTML = '<div class="pnote">당사 vs LG 자료가 아직 없습니다. '
-      + '<b>맨 위 「LG 비교 갱신」 버튼</b>을 누르면 지금 바로 채웁니다(최대 5분).</div>';
+      + '<b>관리자의 「수집」에서 <b>LG 비교</b></b>을 누르면 지금 바로 채웁니다(최대 5분).</div>';
     return;
   }
 
@@ -3983,10 +4004,10 @@ function renderPromo() {
 
   var nChan = Object.keys(chan.rival).length + Object.keys(chan.ours).length;
   if (!nChan && !Object.keys(prod).length) {
-    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다 — 맨 위 「LG 비교 갱신」을 누르세요';
+    if (sub) sub.textContent = '이 회차에는 채널·품목이 없습니다 — 관리자의 「수집」에서 「LG 비교」를 고르세요';
     box.innerHTML = '<div class="pnote">이 비교 회차는 <b>채널·품목을 세기 전에 돈 것</b>입니다 — '
       + '옛 회차 줄에는 그 칸 자체가 없어 되살릴 방법이 없습니다. '
-      + '<b>맨 위 「LG 비교 갱신」 버튼</b>을 누르면 새 회차를 돌아 여기를 채웁니다(최대 5분, '
+      + '<b>관리자의 「수집」에서 <b>LG 비교</b></b>을 누르면 새 회차를 돌아 여기를 채웁니다(최대 5분, '
       + '11개 도시라 몇 번 이어 돕니다). 그 전에도 위 「당사 vs LG」의 비중·출처는 그대로 볼 수 있습니다.</div>';
     return;
   }
@@ -4404,7 +4425,8 @@ function renderList() {
     var box = document.getElementById('trendbox'); if (!box) return;
     var t = DATA.trend;
     if (!t || !t.brand || !Object.keys(t.brand).length) {
-      box.innerHTML = '<b>아직 모으지 않았습니다.</b> 관리자 항목의 「검색 관심도 갱신」을 누르면 '
+      /* **버튼을 위 「수집」 줄로 옮겼다**(2026-09-05) — 옛 문구를 두면 없는 버튼을 찾게 된다 */
+      box.innerHTML = '<b>아직 모으지 않았습니다.</b> 관리자 항목의 「수집」에서 <b>검색 관심도</b>를 고르면 '
         + '최근 20개월치가 한 번에 들어옵니다(7회 호출).';
       return;
     }
@@ -4720,6 +4742,10 @@ function renderList() {
       var past3 = nowMs > d3.getTime() + 30 * 60000;        /* 3시 반은 지나야 판정한다 */
       var missed = lrMs > 0 && past3 && lrMs < d3.getTime() && !runMin;
       var hrs = lrMs ? (nowMs - lrMs) / 3600000 : 0;
+      /* **멈췄을 때만 보인다** — 평소에 떠 있으면 「눌러도 되나」 하고 누르게 되고,
+         트리거가 멀쩡한데 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
+      var rb = document.getElementById('rearm');
+      if (rb && !rb.disabled) rb.hidden = !missed;
       stalled.innerHTML = missed
         ? '<div class="note warn"><b>오늘 자동 수집이 돌지 않았습니다</b> — 마지막 수집이 <b>'
           + hrs.toFixed(0) + '시간 전</b>(' + esc(String(DATA.lastRun.at).slice(0, 24)) + ')입니다.'
@@ -4748,6 +4774,8 @@ function renderList() {
        버튼이 자리만 먹고, 무엇을 끄는 버튼인지도 헷갈린다. */
     var cf = document.getElementById('cancelfull');
     if (cf && !cf.disabled) cf.hidden = !DATA.forceFull;
+    /* **자료가 오면 예상 호출·남은 몫이 바뀐다** — 첫 렌더에서 한 번, 그 뒤로도 */
+    if (typeof syncWhat === 'function') syncWhat();
     var e = document.getElementById('prog');
     if (e) {
       var pctv = tot ? Math.round((mid ? cur : tot) / tot * 100) : 0;
@@ -6353,7 +6381,7 @@ function renderList() {
         var SR = DATA.storeRival;
         if (!SR || !SR.rows || !SR.rows.length) {
           return ' <b class="warn">LG 짝 비중은 아직 재지 않았습니다</b> — 관리자 항목의'
-            + ' <b>「매장 대 매장 수집」</b>을 누르면 칸이 <b>파랑(우리) : 빨강(LG)</b> 으로 갈립니다.';
+            + ' <b>「수집」에서 <b>매장 대 매장</b>을 고르면 칸이 <b>파랑(우리) : 빨강(LG)</b> 으로 갈립니다.';
         }
         var n = 0, hasMon = false;
         SR.rows.forEach(function (r) { if (r.pct !== null) n++; if (r.mon) hasMon = true; });
@@ -6364,7 +6392,7 @@ function renderList() {
         var sp3 = cumSpan();
         var scopeTxt = !hasMon
           ? '<b class="warn">전 기간 기준</b>이라 칸 크기와 잣대가 다릅니다 — 관리자 항목의'
-            + ' <b>「매장 대 매장 수집」</b>을 다시 누르면 연도별로 갈립니다'
+            + ' 「수집」에서 <b>매장 대 매장</b>을 골라 다시 누르면 연도별로 갈립니다'
           : heatYear === 'cum' ? '<b>' + esc(sp3.from + '~' + sp3.to) + ' 누적</b> 기준입니다'
           : '<b>' + esc(heatYears().cur) + '년</b> 기준입니다';
         return ' 칸의 <b style="color:#B02A20">빨강</b>이 <b>LG 짝 매장의 몫</b>입니다('
@@ -7035,6 +7063,62 @@ function renderList() {
       })
       .collectReviews(mode);
   }
+
+
+  /* ── **수집은 한 자리에서만 돌린다** (2026-09-05 사장님 우려) ─────────────────
+   * *"버튼이 너무많아 중복수집이 우려됩니다. 한도가 남용될까 걱정입니다."*
+   *
+   * 고른 것 **하나만** 보인다. 버튼과 핸들러는 그대로 두고 보임만 바꾼다 — 각 버튼이
+   * 들고 있는 확인·라벨·잠금 로직을 합치면 그 과정에서 반드시 하나를 흘린다.
+   *
+   * **비용을 그 자리에 적는다.** 숫자는 서버가 한 곳에서 센다(`actionCosts_`) —
+   * 화면이 따로 세면 상수가 바뀔 때 한쪽만 고쳐져 조용히 옛 숫자를 말한다.
+   */
+  var WHAT_KEY = { run: 'quick', runfull: 'full', runrival: 'rival', 'sriv-go': 'srival', runtrend: 'trend' };
+  var WHAT_NOTE = {
+    run: '이미 가진 글을 만나면 멈춥니다 — 실제로는 훨씬 적게 씁니다',
+    runfull: '한 바퀴를 처음부터 끝까지 팝니다 — 여러 날에 나눠 돕니다',
+    runrival: '지역 6곳 × 4사(당사·LG·하이마트·전자랜드)',
+    'sriv-go': '매장 62곳 × 당사·LG — 히트맵 빨강이 이 자료입니다',
+    runtrend: '데이터랩 — 후기 건수가 아니라 「얼마나 찾는가」입니다'
+  };
+  function syncWhat() {
+    var sel = document.getElementById('what');
+    var box = document.getElementById('what-cost');
+    if (!sel) return;
+    var v = sel.value, id;
+    /* 고른 것만 보인다 — 나머지는 숨긴다(핸들러는 그대로 산다) */
+    for (id in WHAT_KEY) if (WHAT_KEY.hasOwnProperty(id)) {
+      var b = document.getElementById(id);
+      if (b) b.hidden = (id !== v);
+    }
+    if (!box) return;
+    var costs = DATA.costs || {};
+    var need = Number(costs[WHAT_KEY[v]] || 0);
+    /* ── **남은 몫은 둘 중 작은 쪽이다** (2026-09-05) ────────────────────────
+     * 우리 한도(`dailyLimit`, 기본 50,000)와 구글 한도(`googleQuota`, 20,000)가
+     * 다르다. **끊는 것은 구글이다** — 우리 한도로만 적으면 「남은 41,829회」라고
+     * 말해 놓고 11,829회에서 죽는다. 이 화면이 이미 다른 곳에서 못 박은 규칙이다
+     * (「네이버 키를 더 받아도 안 풀린다 — 보내는 쪽이 Apps Script 다」). */
+    var lim1 = Number(DATA.dailyLimit) || 0, lim2 = Number(DATA.googleQuota) || 0;
+    var lim = (lim1 && lim2) ? Math.min(lim1, lim2) : (lim1 || lim2);
+    var used = Number(DATA.dayUsed) || 0;
+    var left = Math.max(0, lim - used);
+    /* **모르면 숫자를 지어내지 않는다** — 옛 서버 자료에는 이 칸이 없다 */
+    if (!need) {
+      box.innerHTML = '<span class="cntxt">' + esc(WHAT_NOTE[v] || '') + '</span>';
+      return;
+    }
+    var over = lim > 0 && need > left;
+    box.innerHTML = '예상 <b>' + nf(need) + '회</b> · 오늘 남은 <b>' + nf(left) + '회</b>'
+      + (lim2 && lim2 <= lim1 ? '<span class="cntxt">(구글 한도 기준)</span>' : '')
+      + (over ? ' — <b class="warn">남은 몫으로는 한 번에 못 끝냅니다.</b> 못 끝낸 만큼은 다음 실행이 이어 갑니다.' : '')
+      + '<br><span class="cntxt">' + esc(WHAT_NOTE[v] || '') + '</span>';
+  }
+  (function () {
+    var sel = document.getElementById('what');
+    if (sel) sel.addEventListener('change', syncWhat);
+  })();
 
   document.getElementById('run').onclick = function () { runCollect(this, 'quick'); };
   /* **누르기 전에 며칠 걸리는지 말한다** (2026-09-04). 지금까지는 누른 뒤에야 알았고,
