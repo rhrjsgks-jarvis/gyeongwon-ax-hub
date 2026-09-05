@@ -196,12 +196,13 @@
     .kpis { grid-template-columns: repeat(2, 1fr); }
   }
 
-  /* 막대 — 매장별·카페별 */
-  .bar { display: grid; grid-template-columns: 108px 1fr 40px; gap: 8px; align-items: center; margin-bottom: 5px; }
-  .bar .nm { font-size: var(--fs-mini); color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar .tr { background: #EEF1F6; border-radius: 999px; height: 9px; overflow: hidden; }
-  .bar .fl { background: linear-gradient(90deg, #1428A0, #3B5BDB); height: 100%; border-radius: 999px; }
-  .bar .vl { font-size: var(--fs-mini); color: var(--mute); text-align: right; font-variant-numeric: tabular-nums; }
+  /* ── 옛 「막대」 격자를 지웠다 (2026-09-05) ────────────────────────────────
+     매장별·카페별이 칸(`.st.bx`)으로 바뀌면서 `.bar` 를 **컨테이너로 쓰는 곳이
+     한 곳도 없어졌다.** 그런데 그 이름을 **꼬리말 성적·검색 관심도 표가 셀 클래스로**
+     쓰고 있어(`<td class="bar">`), `display:grid` 가 셀에 걸려 **막대가 첫 108px
+     트랙 안에 갇혔다** — 표 폭이 400px 이어도 막대는 108px 에서 끊겼다.
+     `.tailtab td.bar` 는 `width`·`padding` 만 정해 `display` 를 안 덮는다.
+     죽은 규칙이 늘 무해한 것은 아니다 — 이름이 겹치면 산 코드를 망친다. */
 
   /* 링크 목록 */
   .item { padding: 9px 0; border-top: 1px solid #F1F3F5; }
@@ -258,11 +259,8 @@
   .empty { color: var(--mute); font-size: 12px; padding: 18px 0; text-align: center; }
   .more { font-size: 12px; color: var(--mute); text-align: right; padding-top: 6px; }
 
-  /* 막대를 눌러 그 매장·카페의 링크만 보는 손잡이 — 누를 수 있다는 것이 보여야 한다 */
-  .bar.pick { cursor: pointer; border-radius: 6px; padding: 1px 4px; margin-left: -4px; }
-  .bar.pick:hover { background: #F4F6FB; }
-  .bar.pick.on { background: #EEF2FF; }
-  .bar.pick.on .nm { color: var(--blue); font-weight: 700; }
+  /* 옛 `.bar.pick`(막대를 눌러 그 매장 링크만 보기)도 함께 지웠다 — 지금은
+     칸(`.st.bx.pick`)이 그 일을 한다. 위 절 참조. */
 
   .lhead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
   .lhead .sub { margin-bottom: 0; }
@@ -489,7 +487,8 @@
      색은 지어내지 않고 **지도의 6지역 스펙트럼(v8)을 그대로** 쓴다 — 같은 지역이
      지도와 매장 칸에서 다른 색이면 눈이 헤맨다. 매장마다 다른 그림을 주지 않는 이유는
      62곳이라 그림이 62가지가 되면 오히려 안 읽히기 때문이다.
-     **색은 지역, 그림은 유형이다**(2026-09-02) — 두 가지를 한 칸에서 함께 읽는다. */
+     **색은 지역, 그림은 유형이다**(2026-09-02) — 두 가지를 한 칸에서 함께 읽는다.
+
      **심벌은 크게 쓴다**(2026-09-03 사장님 지적 — *"유형별 심벌 만들어서 크게 바꿔달라"*).
      40px 로는 백화점 이름 마크(「갤러리아」 4자)가 6px 로 줄어 **글자로 안 읽혔다** —
      유형을 그림으로 가르자고 만든 것인데 정작 그 그림이 안 보이면 뜻이 없다.
@@ -795,14 +794,8 @@
   .gsrow:last-child { margin-bottom: 0; }
   .gsh { font-size: var(--fs-mini); font-weight: 800; color: #374151; margin-bottom: 3px; }
   .gsh i { font-style: normal; font-weight: 600; color: var(--mute); margin-left: 5px; }
-  .gschip { display: inline-block; font-size: var(--fs-mini); padding: 2px 7px; margin: 0 3px 3px 0;
     border: 1px solid var(--line); border-radius: 999px; background: #fff; color: #374151;
     cursor: pointer; }
-  .gschip b { color: var(--blue); margin-left: 3px; }
-  .gschip.z { color: #9CA3AF; }          /* 0건 — **감추지 않는다**(빠지면 없는 매장이 된다) */
-  .gschip.z b { color: #C0C6D0; }
-  .gschip.on { border-color: var(--blue); background: #EEF2FF; }
-  .gschip:hover { border-color: var(--blue); }
   /* 목록에 손을 얹었을 때 지도에서 그 칸을 굵게 — 어디쯤인지가 이것으로 전달된다 */
   .geo-svg path.hl { stroke: #111827; stroke-width: 1.8; }
   /* ── 목록 쪽수 (2026-08-31 사장님: *"20 40 60 80 100개로 보고 나머지는 페이지화"*) ──
@@ -1155,6 +1148,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <!-- 지점 ↔ 매니저 (2026-09-03 사장님 지시). **자료가 없으면 화면이 감춘다** —
              매니저 수집 전에는 눌러도 빈 히트맵이라 「고장」으로 보인다. -->
         <button type="button" class="bk" id="hm-who" hidden>매니저로 보기</button>
+        <!-- **막았으면 왜 막았는지 적는다** (2026-09-05) — 「눌렀는데 아무 일도 안
+             일어난다」가 이 화면에서 가장 나쁜 고장이다. 다음 렌더에서 지워진다. -->
+        <span class="cntxt" id="hm-note"></span>
       </div>
       <!-- 기간 거르개 (2026-09-03 사장님 지시) ─────────────────────────────
            *"현재 주차별 버튼(칩) 방식은 전부 제거한다. 대신 ①주차 선택 드롭다운
@@ -2307,11 +2303,10 @@ function secPeek(k) {
       if (k === 'rival') {
         var win = 0, lose = 0, na = 0;
         rr.forEach(function (r) {
-          if (!(typeof r.pct === 'number' && isFinite(r.pct))) na++;
-          else {
-            var t2 = (Number(r.ours) || 0) + (Number(r.rival) || 0);
-            if (t2 && (Number(r.ours) || 0) / t2 >= 0.5) win++; else lose++;
-          }
+          /* **판정은 `rvWin` 한 곳에서만** — 미리보기와 카드 머리글이 갈리면
+             박스에 적힌 수와 열어 본 수가 다르다(2026-09-05). */
+          var w = (typeof r.pct === 'number' && isFinite(r.pct)) ? rvWin(r.ours, r.rival) : null;
+          if (w === null) na++; else if (w) win++; else lose++;
         });
         return '지역 ' + rr.length + '곳 · 당사 우세 ' + win + ' · LG 우세 ' + lose + (na ? ' · 못 잼 ' + na : '');
       }
@@ -2333,6 +2328,16 @@ function secPeek(k) {
     if (k === 'store') { t = topOf(D.byStore); return t ? '매장 ' + t.n + '곳 · 1위 ' + t.k + ' ' + nf(t.v) + '건' : ''; }
     if (k === 'cafe') { t = topOf(D.byCafe); return t ? '카페 ' + t.n + '곳 · 최다 ' + t.k : ''; }
     if (k === 'signal') { t = topOf(D.byStore); return t ? '매장 ' + t.n + '곳의 흐름과 마지막 후기' : ''; }
+    /* SDP — **갈래가 아예 없어 이 박스만 부제가 비어 있었다**(2026-09-05 실물에서 잡음).
+       열두 박스가 채워진 옆에서 혼자 비면 고장으로 읽힌다. 「아직 안 쟀습니다」는
+       지어낸 값이 아니라 **사실**이므로 적어도 된다(0 으로 적는 것과는 다르다). */
+    if (k === 'sdp') {
+      var sd = D.sdp;
+      if (!sd || !sd.stores || !sd.stores.length) return '아직 안 쟀습니다';
+      var sn = 0;
+      sd.stores.forEach(function (x) { sn += Number(x.n) || 0; });
+      return '개인대리점 ' + nf(sd.listed || sd.stores.length) + '곳 · ' + nf(sn) + '건';
+    }
     if (k === 'mgr') {
       var mt = D.mgrTop || [];
       return mt.length ? '이름 ' + mt.length + '명 · 1위 ' + mt[0].name + ' ' + nf(mt[0].n) + '건' : '';
@@ -2526,11 +2531,10 @@ function wireSecs() {
       var okd = function (r) { return typeof r.pct === 'number' && isFinite(r.pct); };
       /* **화면과 같은 잣대(당사 vs LG)로 낸다** — 화면은 둘만 그리는데 진단이 4사
          분모로 말하면 같은 지역을 두고 두 말을 한다. */
-      var p2 = function (r) {
-        var t = (Number(r.ours) || 0) + (Number(r.rival) || 0);
-        return t ? (Number(r.ours) || 0) / t * 100 : null;
-      };
-      var lose = R.rows.filter(function (r) { var q = p2(r); return okd(r) && q !== null && q < 50; })
+      /* 판정 식은 rvShare / rvWin 한 곳에만 — 진단과 카드가 갈리면
+         같은 지역을 두고 두 말을 한다(2026-09-05). */
+      var p2 = function (r) { return rvShare(r.ours, r.rival); };
+      var lose = R.rows.filter(function (r) { return okd(r) && rvWin(r.ours, r.rival) === false; })
         .sort(function (a, b) { return p2(a) - p2(b); });
       if (lose.length) {
         out.push(['경쟁사와 견주면',
@@ -2866,8 +2870,15 @@ function wireSecs() {
      *  있는지가 지도에서 바로 보여야 짝을 고칠 마음이 든다. */
     function lgPinSvg(list, r, fsz) {
       if (!list || !list.length) return "";
-      var paired = {}, pr = DATA.lgPair || {}, k2;
-      for (k2 in pr) if (pr.hasOwnProperty(k2) && pr[k2]) paired[pr[k2]] = 1;
+      /* **짝은 여럿일 수 있다**(1:N). 예전에는 `paired[pr[k2]] = 1` 이라 값이 배열이면
+         열쇠가 `"A,B"` 가 되어 **지도의 LG 핀이 하나도 「짝 맺힘」으로 안 칠해졌다.**
+         `lgPairBox` 는 제대로 갈랐는데 여기만 안 따라왔다 — 두 곳이 따로 풀면
+         반드시 한쪽이 뒤처진다(2026-09-05). */
+      var paired = {}, pr = DATA.lgPair || {}, k2, li, ls;
+      for (k2 in pr) if (pr.hasOwnProperty(k2) && pr[k2]) {
+        ls = pairList(pr[k2]);
+        for (li = 0; li < ls.length; li++) paired[ls[li]] = 1;
+      }
       var h = "";
       for (var i2 = 0; i2 < list.length; i2++) {
         var q = list[i2];
@@ -3174,13 +3185,6 @@ function wireSecs() {
         /* 손가락에도 통해야 한다 — 폰에서는 hover 가 없다 */
         row.addEventListener('touchstart', function () { hl(cells); }, { passive: true });
       });
-      Array.prototype.forEach.call(gs.querySelectorAll('.gschip'), function (b) {
-        b.onclick = function () {
-          storeFilter = storeFilter === b.dataset.v ? '' : b.dataset.v;
-          cafeFilter = ''; watchFilter = '';
-          render();
-        };
-      });
     }
 
   }
@@ -3371,13 +3375,29 @@ function wireSecs() {
   }
   /** 그 매장의 LG 짝 고르개. **자료가 없으면 아무것도 그리지 않는다** —
    *  옛 서버가 보낸 자료에는 `lgShops` 가 없어, 빈 드롭다운을 내밀면 고장으로 보인다. */
+  /** LG 짝을 **늘 지점 이름 배열로** 돌려준다.
+   *
+   *  값이 두 모양이다 — 코드 표의 기본값은 문자열 하나, 사장님이 화면에서 고친 것은
+   *  배열이다(서버 `lgPairs_` 가 둘을 섞어 내보낸다). **푸는 자리가 둘이면 반드시
+   *  한쪽이 뒤처진다** — 실제로 지도(`lgPinSvg`)만 안 따라와 짝 맺힌 핀이 하나도
+   *  안 칠해졌다. 서버의 `lgShopList_` 와 같은 일을 하는 화면 쪽 짝이다. */
+  function pairList(raw) {
+    if (!raw) return [];
+    if (Object.prototype.toString.call(raw) === "[object Array]") {
+      var out = [], i, x;
+      for (i = 0; i < raw.length; i++) { x = String(raw[i] || "").trim(); if (x && out.indexOf(x) < 0) out.push(x); }
+      return out;
+    }
+    var s = String(raw).trim();
+    return s ? [s] : [];
+  }
+
   function lgPairBox(store) {
     var shops = DATA.lgShops || [], pair = DATA.lgPair || {};
     if (!shops.length) return "";
     /* **여러 곳을 붙일 수 있다**(2026-09-05 사장님 지시) — *"당사A매장과 LG A매장
        B매장을 한번에 볼 수도있기에"*. 옛 값은 문자열 하나라 배열로 맞춘다. */
-    var raw = pair[store];
-    var now = (Object.prototype.toString.call(raw) === "[object Array]") ? raw : (raw ? [raw] : []);
+    var now = pairList(pair[store]);
     /* **가까운 시·군 것을 위로 올린다** — 71곳을 이름순으로 늘어놓으면 못 고른다.
        그 매장이 속한 지역의 지점을 먼저 보이고 나머지는 아래에 둔다. */
     var area = areaOfStore(store), near = [], rest = [];
@@ -3585,7 +3605,13 @@ function wireSecs() {
            *"각지점을 누르면 총 바이럴건수 오른쪽에 지점별 분석으로 넘어가고"* 라,
            먼저 오른쪽 분석을 보여 준다 — 후기 링크는 거기서 버튼으로 간다.
            좁은 화면에서는 분석이 격자 아래에 쌓이므로 그리로 데려간다. */
-        var det = document.getElementById('store-detail');
+        /* **`#store-detail` 은 없어진 id 였다**(2026-09-05 재고에서 잡음).
+           2026-09-03 에 분석 칸을 지역마다 두면서(`.stdet[data-area]`) 단일 id 가
+           사라졌는데 이 줄만 안 따라와, **폰에서 매장을 눌러도 아무 데도 안 갔다** —
+           사장님이 *"평택·강원을 클릭하면 세부내역이 보이지 않습니다"* 라고 지적한
+           그 증상의 나머지 반쪽이다. 누른 매장이 **속한 지역의** 칸으로 데려간다. */
+        var wrap = b.closest ? b.closest('.rgwrap') : null;
+        var det = wrap ? wrap.querySelector('.stdet') : null;
         if (det && window.innerWidth < 1000 && det.scrollIntoView) {
           det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -3812,8 +3838,10 @@ function wireSecs() {
         var na = !(typeof r.pct === 'number' && isFinite(r.pct));
         /* **서버 pct 는 4사 분모다** — 둘만 그리는 화면에서 그대로 쓰면 거짓이 된다.
            여기서 다시 낸다(당사 ÷ (당사+LG)). */
-        var tot2 = v.us + v.th;
-        var pct2 = tot2 ? Math.round(v.us / tot2 * 100) : null;
+        /* **반올림해서 견주지 않는다**(2026-09-05) — 49.6% 가 「50% 우세」로 뜨는데
+           같은 카드 머리글은 「밀림」으로 세고 있었다. 판정은 실제 값으로, 표기는
+           `rvPctText` 가 균형점을 넘기지 않게 적는다. */
+        var pct2 = rvShare(v.us, v.th);
         if (pct2 === null) na = true;
         /* **가로 막대**(2026-09-03 사장님 지시). 세로였을 때는 지역 이름이 아래에
            붙어 여섯 지역을 훑으려면 눈이 계속 오르내렸다. 가로면 이름이 왼쪽에
@@ -3828,13 +3856,14 @@ function wireSecs() {
             + (v[k] ? nf(v[k]) : '') + '</em></div>';
         }).join('');
         var tip = r.area + ' — 당사 ' + nf(v.us) + ' · LG ' + nf(v.th) + '건'
-          + (pct2 === null ? '' : ' · 우리 몫 ' + pct2 + '% (둘이 반반이면 50%)')
+          + (pct2 === null ? '' : ' · 우리 몫 ' + rvPctText(pct2) + '% (둘이 반반이면 50%)')
           + (na ? (r.half ? ' (도시 ' + r.wantCities + '곳 중 ' + r.cities + '곳만 쟀습니다 — 비중을 낼 수 없습니다)'
                           : ' (양쪽 증가율이 벌어져 비중을 믿을 수 없습니다)') : '');
         return '<div class="u' + (na ? ' na' : '') + '" title="' + esc(tip) + '">'
           + '<div class="nm">' + esc(r.area) + ' '
           + (na ? '<span class="namark">못 잼</span>'
-                : '<span class="' + (pct2 >= 50 ? 'win' : 'lose') + '">' + pct2 + '%</span>') + '</div>'
+                : '<span class="' + (rvWin(v.us, v.th) ? 'win' : 'lose') + '">'
+                  + rvPctText(pct2) + '%</span>') + '</div>'
           + '<div class="plot">' + bars + '</div>'
           + '</div>';
       }).join('') + '</div>';
@@ -4077,13 +4106,11 @@ function wireSecs() {
        머리글과 표가 어긋난다. 한 함수를 지나가게 한다. */
     var okp = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
     /* **화면이 둘만 그리므로 판정도 둘로 한다**(2026-09-03) — 서버 `pct` 는 4사
-       분모라 그대로 쓰면 화면의 %와 머리글이 어긋난다. */
-    var pctOf = function (r) {
-      var t = (Number(r.ours) || 0) + (Number(r.rival) || 0);
-      return t ? (Number(r.ours) || 0) / t * 100 : null;
-    };
-    var win = rows.filter(function (r) { var q = pctOf(r); return okp(r) && q !== null && q >= 50; }).length;
-    var lose = rows.filter(function (r) { var q = pctOf(r); return okp(r) && q !== null && q < 50; }).length;
+       분모라 그대로 쓰면 화면의 %와 머리글이 어긋난다. 그 식은 `rvShare` 로 옮겼다.
+       **판정은 rvWin 한 곳에서만** — 막대는 반올림해 견주고 여기는 안 견줘서
+       49.6% 지역이 막대에서는 우세, 이 머리글에서는 밀림이었다(2026-09-05). */
+    var win = rows.filter(function (r) { return okp(r) && rvWin(r.ours, r.rival) === true; }).length;
+    var lose = rows.filter(function (r) { return okp(r) && rvWin(r.ours, r.rival) === false; }).length;
     var na = rows.filter(function (r) { return !okp(r); }).length;
     document.getElementById('rival-sub').textContent =
       '영업스케치 지역 ' + rows.length + '곳 · 당사가 앞선 곳 ' + win + ' · 밀리는 곳 ' + lose +
@@ -5373,6 +5400,14 @@ function renderList() {
     return out.sort();
   }
 
+  /** 히트맵 조작을 막았을 때 **이유를 그 자리에 적는다.** 조용히 무시하면
+      「눌렀는데 아무 일도 안 일어난다」가 되어 고장으로 읽힌다. */
+  function heatNote(msg) {
+    var el = document.getElementById('hm-note');
+    if (!el) return;
+    el.innerHTML = msg ? '<b class="warn">' + esc(msg) + '</b>' : '';
+  }
+
   /** 견주는 달을 사람 말로 — `7·8월` */
   function cmpMonLabel(ms) {
     return ms.map(function (x) { return Number(x); }).join('·') + '월';
@@ -5390,28 +5425,9 @@ function renderList() {
     return { cur: ks[ks.length - 1] || '', prev: ks[ks.length - 2] || '' };
   }
   function heatMonLabel(m) { return m ? (+m.slice(5, 7)) + '월' : '–'; }
-  /** 주차 이름 — `2026-W36` → `36주`. **「1주차」로 다시 번호를 매기지 않는다** —
-   *  화면이 자기만의 번호를 쓰면 시트·달력과 대조할 수가 없다(ISO 주 번호가 표준이다).
-   *  해가 바뀌면 그 사실이 보이게 앞에 해를 붙인다. */
-  function weekLabel(w) {
-    if (!w) return '–';
-    var m = /^(\d{4})-W(\d{2})$/.exec(w);
-    if (!m) return w;
-    var thisYear = String(new Date().getFullYear());
-    return (m[1] === thisYear ? '' : m[1].slice(2) + '년 ') + (+m[2]) + '주';
-  }
 
   /** 'YYYY-Www' 의 **한 주 앞** 키. 해가 바뀌는 자리(W01)를 손으로 계산하면 틀리므로
    *  **그 주의 목요일에서 7일을 빼고 다시 ISO 주차를 낸다** — 정의 그대로다. */
-  /** 자료가 담고 있는 주 수. **화면이 숫자를 지어내지 않게** 자료에서 센다
-   *  (서버 `WEEK_KEEP` 을 화면에 또 적으면 한쪽만 고쳤을 때 거짓이 된다). */
-  function weekSpan() {
-    var bw = DATA.byStoreWeek || {}, seen = {}, a, b;
-    for (a in bw) if (bw.hasOwnProperty(a)) {
-      for (b in bw[a]) if (bw[a].hasOwnProperty(b)) seen[b] = 1;
-    }
-    return Object.keys(seen).length;
-  }
 
   /** 'YYYY-Www' → 그 주의 **월요일·일요일**(YYYY-MM-DD).
    *  ISO 정의 그대로 — 1월 4일이 든 주가 W01 이고 주는 월요일에 시작한다.
@@ -5430,19 +5446,6 @@ function renderList() {
     b.setUTCDate(a.getUTCDate() + 6);
     var f = function (d) { return d.toISOString().slice(0, 10); };
     return { from: f(a), to: f(b) };
-  }
-  /** 'YYYY-MM-DD' → 'YYYY-Www'. 날짜를 직접 고쳤을 때 그 주를 되짚는 데 쓴다. */
-  function weekOfDate(ymd) {
-    var t2 = String(ymd || '');
-    if (t2.length !== 10 || t2.charAt(4) !== '-' || t2.charAt(7) !== '-') return '';
-    var yy = +t2.slice(0, 4), mm = +t2.slice(5, 7), dd = +t2.slice(8);
-    if (!(yy > 1900) || !(mm >= 1 && mm <= 12) || !(dd >= 1 && dd <= 31)) return '';
-    var d = new Date(Date.UTC(yy, mm - 1, dd));
-    var t = new Date(d);
-    t.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
-    var n = Math.ceil(((t - y0) / 86400000 + 1) / 7);
-    return t.getUTCFullYear() + '-W' + (n < 10 ? '0' + n : String(n));
   }
   /** 「2026년 3월 2주차」 — 사장님이 지시한 표기. **그 달의 몇째 주인지**를 적는다
    *  (ISO 주 번호 36 은 사람이 읽는 말이 아니다). 기준은 그 주의 **목요일이 속한 달**
@@ -5472,23 +5475,6 @@ function renderList() {
     return a + ' ~ ' + b;
   }
 
-  function prevWeekKey(w) {
-    var m = /^(d{4})-W(d{2})$/.exec(String(w));
-    if (!m) return '';
-    var y = +m[1], n = +m[2];
-    /* ISO: 그 해 1월 4일이 든 주가 W01 이고, 주는 월요일에 시작한다 */
-    var jan4 = new Date(Date.UTC(y, 0, 4));
-    var mon1 = new Date(jan4);
-    mon1.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1));
-    var thu = new Date(mon1);
-    thu.setUTCDate(mon1.getUTCDate() + (n - 1) * 7 + 3 - 7);   /* 한 주 앞의 목요일 */
-    var y2 = thu.getUTCFullYear();
-    var j4 = new Date(Date.UTC(y2, 0, 4));
-    var m1 = new Date(j4);
-    m1.setUTCDate(j4.getUTCDate() - ((j4.getUTCDay() || 7) - 1));
-    var wn = Math.round((thu - m1) / 604800000) + 1;
-    return y2 + '-W' + (wn < 10 ? '0' + wn : String(wn));
-  }
 
   /** 히트맵 한 줄 — 한 매장. `g` 는 **전월이 0이거나 모르면 null** 이다(0에서 늘어난
    *  것은 몇 %가 아니라 「새로 생겼다」이고, 넓이가 음수일 수도 없다). */
@@ -5819,8 +5805,28 @@ function renderList() {
     ['ours', 'rival', 'hi', 'el'].forEach(function (k) { if (Number(r[k]) > 0) n++; });
     return 100 / Math.max(2, n);
   }
-  /** 그 줄에서 우리가 앞섰는가 — 균형점을 넘겼는지로 본다 */
-  function rvWin(r) { return r.pct >= rvBase(r); }
+  /** ── **당사 몫은 한 식에서만 나온다** (2026-09-05) ───────────────────────────
+   *  같은 판정이 네 곳(심벌 박스 미리보기 · 막대 · 카드 머리글 · 진단)에 흩어져 있었고
+   *  **한 곳만 반올림한 뒤 견줬다.** 그래서 당사 496 · LG 504(49.6%)인 지역이
+   *  막대에는 「50% 파랑(우세)」로 뜨는데 바로 위 머리글은 「밀리는 곳」으로 세고
+   *  진단 카드도 「뒤진 지역」에 넣었다 — **한 카드가 두 말을 한다.**
+   *  **못 잰 것은 `null` 이다** — 0% 로 두면 「우리 글이 없다」가 되어 거짓이다. */
+  function rvShare(ours, rival) {
+    var o = Number(ours) || 0, v = Number(rival) || 0, t = o + v;
+    return t ? (o / t * 100) : null;
+  }
+  /** 앞섰는가 — **반올림한 값이 아니라 실제 값**으로 본다. 못 잰 줄은 `null`
+   *  (「졌다」가 아니다 — 세는 쪽이 그 셋을 갈라야 한다). */
+  function rvWin(ours, rival, base) {
+    var p = rvShare(ours, rival);
+    return p === null ? null : (p >= (base || 50));
+  }
+  /** 화면에 적는 몫. **반올림이 균형점을 넘기면 소수 한 자리로 적는다** —
+   *  「50%」라 적어 놓고 「밀림」으로 칠하면 그 자리에서 화면이 두 말을 한다. */
+  function rvPctText(p, base) {
+    var B = base || 50, n = Math.round(p);
+    return ((n >= B) === (p >= B)) ? String(n) : p.toFixed(1);
+  }
 
   /** `base` 를 안 주면 50 — **2사 칩**(출처·유형·월·채널·품목)이 그대로 쓴다.
    *  그쪽은 `sum()` 이 당사·LG 만 접으므로 균형점이 진짜 50 이다. */
@@ -5913,6 +5919,18 @@ function renderList() {
 
   function renderHeat() {
     var box = document.getElementById('hm'); if (!box) return;
+    /* 막힌 이유는 **다음 조작까지만** 남긴다 — 굳으면 그 자체가 거짓이 된다 */
+    heatNote('');
+    /* ── **견줄 달이 없으면 그 축에 서 있지 않는다** (2026-09-05) ──────────────────
+     * `heatCmpMonths()` 는 **두 해에 다 있는 달**만 돌려준다. 가장 이른 해를 고르면
+     * 빈 배열이 되고, 그러면 `yearSum` 이 전 매장 0 을 내 트리맵이 **화면만 한 검정
+     * 사각형**을 그린다(실물에서 확인했다 — 머리도 「41곳 · 0건」이었다).
+     * 들어가는 길이 둘이라(버튼 · 연도 드롭다운) **판정을 여기 한 곳에 둔다.** */
+    if (heatYear === 'cmp' && !heatCmpMonths().length) {
+      var yBack = heatYears();
+      heatYear = 'cur';
+      heatNote(yBack.prev + '년에 견줄 달이 없어 ' + yBack.cur + '년만 봅니다 — 두 해에 다 있는 달만 견줍니다.');
+    }
     var bk = document.getElementById('hm-back'), cr = document.getElementById('hm-crumb');
     var sub = document.getElementById('heat-sub'), leg = document.getElementById('hm-leg');
     var bs = document.getElementById('hm-size'), bmd = document.getElementById('hm-mode');
@@ -5983,6 +6001,8 @@ function renderList() {
         renderHeat();
       });
       if (byr) byr.addEventListener('click', function () {
+        /* 견줄 달이 없으면 `renderHeat` 이 되돌리고 이유를 적는다 —
+           **판정은 한 곳에만 둔다**(연도 드롭다운으로도 같은 일이 난다). */
         heatYear = heatYear === 'cmp' ? 'cur' : 'cmp';
         /* **기간을 골랐으면 푼다** — 연도와 주차는 같은 축이라 겹쳐 걸면 화면이 두 말을 한다 */
         heatWeek = ''; heatFrom = ''; heatTo = '';
@@ -6377,7 +6397,6 @@ function renderList() {
      * 색이 **건수**를 뜻하게 되었으므로 범례도 건수를 적는다.
      * **최소·최대는 지금 그려진 판에서 낸다** — 화면과 다른 수를 적으면 범례가
      * 화면을 설명하지 못한다. */
-    var shareMode = false;      /* 색은 늘 건수다 — 유형·주차와 무관하다 */
     var heatMin = 0;
     for (var li = 0; li < items.length; li++) {
       if (li === 0 || items[li].cnt < heatMin) heatMin = items[li].cnt;
@@ -6526,6 +6545,17 @@ function renderList() {
       var Y2 = heatYears();
       byr2.textContent = heatYear === 'cmp' ? Y2.cur + ' vs ' + Y2.prev : Y2.prev + '년 대비 보기';
       byr2.classList.toggle('on', heatYear === 'cmp');
+      /* ── **견줄 달이 없으면 누를 수 없게 한다** (2026-09-05) ────────────────────
+       * `heatCmpMonths()` 는 **두 해에 다 있는 달**만 돌려준다. 가장 이른 해를 고르면
+       * 앞 해가 아예 없어 빈 배열이 되는데, 그대로 그리면 `yearSum` 이 전 매장 0 을
+       * 내고 트리맵이 **화면만 한 검정 사각형** 하나를 그린다(실물에서 확인했다).
+       * 「없다」와 「견줄 수 없다」는 다른 말이고, 0 으로 그리면 화면이 거짓말을 한다.
+       *
+       * **감추지 않고 막는다** — 감추면 왜 사라졌는지 알 수 없다. 막고 이유를 적는다. */
+      var cmpOK = heatCmpMonths().length > 0;
+      byr2.disabled = !cmpOK && heatYear !== 'cmp';
+      /* `.hmnav .bk:disabled` 가 이미 흐리게 그린다 — 클래스를 따로 만들지 않는다 */
+      byr2.title = cmpOK ? '' : Y2.prev + '년에 견줄 달이 없습니다 — 두 해에 다 있는 달만 견줍니다';
       /* **기간·매니저·유형을 보고 있으면 뜻이 없다** — 그때는 연도 축이 안 돈다 */
       /* **매니저·유형에서도 뜬다**(2026-09-05) — 「같은 기준으로 필터링」이라는 지시다.
          주차를 보고 있을 때만 숨긴다(그때는 연도 축이 안 돈다). */
@@ -6606,14 +6636,14 @@ function renderList() {
           + '이름은 후기 제목·본문에서 뽑은 것이고, <b>명부에 등록된 이름</b>이면 ✓ 가 붙습니다.'
         : week
         ? '<b>' + esc(periodLabel()) + '</b>만 봅니다 — <b>칸은 지점</b> · '
-          + '크기와 색 모두 <b>' + (heatKind ? esc(heatKind) + ' 건수' : '건수') + '</b>입니다(진할수록 많음). '
+          + '크기와 색 모두 <b>' + (heatKind ? esc(kLabel(heatKind)) + ' 건수' : '건수') + '</b>입니다(진할수록 많음). '
           + '<b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 안 줍니다) — 그래서 '
           + '한 주에 값이 있는 매장이 <b>7~17곳</b>뿐입니다. 0건 매장은 칸을 못 그려 빠집니다.'
           + (heatWeek === 'custom'
               ? ' <b>자료가 주 단위로만 쌓여 있어</b> 고르신 날짜에 걸친 주는 통째로 셉니다.'
               : '')
         : heatKind
-        ? '<b>' + esc(heatKind) + '</b> 글만 봅니다 — 칸 크기와 색 모두 <b>그 유형 건수</b>입니다(진할수록 많음). '
+        ? '<b>' + esc(kLabel(heatKind)) + '</b> 글만 봅니다 — 칸 크기와 색 모두 <b>그 유형 건수</b>입니다(진할수록 많음). '
           + '유형 버튼을 다시 누르면 전체로 돌아갑니다.'
         : (function () {
             var Y3 = heatYears();
@@ -7280,10 +7310,23 @@ function renderList() {
   var WHAT_NOTE = {
     run: '이미 가진 글을 만나면 멈춥니다 — 실제로는 훨씬 적게 씁니다',
     runfull: '한 바퀴를 처음부터 끝까지 팝니다 — 여러 날에 나눠 돕니다',
-    runrival: '지역 6곳 × 4사(당사·LG·하이마트·전자랜드)',
-    'sriv-go': '매장 62곳 × 당사·LG — 히트맵 빨강이 이 자료입니다',
+    runrival: '지역 6곳 × 당사·LG — 「당사 vs LG」 카드가 이 자료입니다',
+    /* **매장 수를 글자로 박지 않는다**(2026-09-05) — `DATA.stores` 가 들고 있고,
+       매장이 늘거나 줄면 이 줄만 조용히 거짓이 된다. 그리고 「× 당사·LG」는 **1:1 시절
+       산수**다 — 짝이 1:N 이 되어 매장마다 붙은 지점 수가 다르다(바로 위 「예상 N회」가
+       실제 값을 적는다). **모르면 개수를 안 적는다** — 0곳이라 적으면 거짓이 된다. */
+    'sriv-go': function () {
+      var n = Number(DATA.stores) || 0;
+      return (n ? '매장 ' + nf(n) + '곳' : '매장')
+        + ' × (당사 + 붙은 LG 지점) — 히트맵 빨강이 이 자료입니다';
+    },
     runtrend: '데이터랩 — 후기 건수가 아니라 「얼마나 찾는가」입니다'
   };
+  /** 값이 함수면 그때 부른다 — 자료가 온 뒤라야 매장 수를 안다 */
+  function whatNote(v) {
+    var w = WHAT_NOTE[v];
+    return (typeof w === 'function') ? w() : (w || '');
+  }
   function syncWhat() {
     var sel = document.getElementById('what');
     var box = document.getElementById('what-cost');
@@ -7308,14 +7351,14 @@ function renderList() {
     var left = Math.max(0, lim - used);
     /* **모르면 숫자를 지어내지 않는다** — 옛 서버 자료에는 이 칸이 없다 */
     if (!need) {
-      box.innerHTML = '<span class="cntxt">' + esc(WHAT_NOTE[v] || '') + '</span>';
+      box.innerHTML = '<span class="cntxt">' + esc(whatNote(v)) + '</span>';
       return;
     }
     var over = lim > 0 && need > left;
     box.innerHTML = '예상 <b>' + nf(need) + '회</b> · 오늘 남은 <b>' + nf(left) + '회</b>'
       + (lim2 && lim2 <= lim1 ? '<span class="cntxt">(구글 한도 기준)</span>' : '')
       + (over ? ' — <b class="warn">남은 몫으로는 한 번에 못 끝냅니다.</b> 못 끝낸 만큼은 다음 실행이 이어 갑니다.' : '')
-      + '<br><span class="cntxt">' + esc(WHAT_NOTE[v] || '') + '</span>';
+      + '<br><span class="cntxt">' + esc(whatNote(v)) + '</span>';
   }
   (function () {
     var sel = document.getElementById('what');

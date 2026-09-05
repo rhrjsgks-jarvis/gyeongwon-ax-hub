@@ -3117,6 +3117,36 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!rv.includes('cellStamp_(v[i][0]).slice(0, 10) !== String(stamp).slice(0, 10)')) {
         bad.push('검색관심도가 오늘 줄을 날짜로 견주지 않는다 — 지워지지 않고 쌓인다');
       }
+      /* ── **도장은 한 서식으로만 쓴다** (2026-09-05) ────────────────────────────
+       * 매장 대 매장만 `toISOString()` 이었다. 시트가 그것을 날짜로 굳히면
+       * `cellStamp_` 가 `'yyyy-MM-dd HH:mm'` 를 돌려줘 **ISO 와 영영 안 맞고**,
+       * `srivalDone_` 이 늘 비어 **이미 끝낸 매장을 다시 훑는다**(쿼터 낭비).
+       * 「수요일 도장」과 같은 병이다. */
+      if (/props\.setProperty\('_srivalStamp', *new Date\(\)\.toISOString\(\)\)/.test(rv)
+          || /stamp = new Date\(\)\.toISOString\(\); *cur = 0/.test(rv)) {
+        bad.push('매장 대 매장 도장이 ISO 라 되읽은 값과 영영 안 맞는다');
+      }
+      if (!/_srivalStamp[\s\S]{0,200}/.test(rv)) bad.push('_srivalStamp 를 못 찾았다');
+      {
+        const seg = rv.slice(rv.indexOf('if (reset || !stamp || cur >= names.length) {'));
+        if (seg.slice(0, 900).indexOf("Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm')") < 0) {
+          bad.push('매장 대 매장 도장이 다른 도장과 다른 서식이다');
+        }
+      }
+      /* **옛 요약분이 5종 필터에서 사라지면 안 된다** — 유형을 고르면 `byStore` 가
+         `byStoreKind4` 로 갈아 끼워지므로, 거기 안 더하면 2023~2024 가 조용히 없어진다. */
+      {
+        const seg = rv.slice(rv.indexOf('for (var ri = 0; ri < roll.length; ri++) {'));
+        const body = seg.slice(0, 1600);
+        if (body.indexOf('byKind4[') < 0 || body.indexOf('byStoreKind4[') < 0) {
+          bad.push('옛 요약분이 5종 묶음에 안 들어간다 — 유형을 고르면 2023~2024 가 사라진다');
+        }
+        if (body.indexOf('kind4_(') < 0) bad.push('옛 요약분을 9종 → 5종으로 옮기는 규칙이 없다');
+      }
+      /* **`ym` 도 시트가 날짜로 바꿔 돌려줄 수 있다** — 월별 추이에 쓰레기 열쇠가 든다 */
+      if (!rv.includes("ym: cellStamp_(v[i][0]).slice(0, 7)")) {
+        bad.push('옛자료요약의 연월을 시트가 날짜로 바꿔도 안 되돌린다');
+      }
 
       /* ⓗ **버튼** (사장님 요청) — 서버 진입점 · 화면 버튼 · 그 둘이 이어져 있는가 */
       if (!rv.includes('function runRival()')) bad.push('runRival() 이 없다 — 화면에서 LG 비교를 돌릴 길이 없다');
@@ -3459,6 +3489,30 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!a4 || a4.pct !== null) b9.push('그 해 자료가 없는데 비중을 낸다: ' + JSON.stringify(a4));
     }
 
+    /* ── **견줄 달이 없는 해에서 검정 사각형을 그리지 않는다** (2026-09-05 실물에서 잡음)
+     *  `heatCmpMonths()` 가 빈 배열이면 `yearSum` 이 전 매장 0 을 내고 트리맵이
+     *  **화면만 한 검정 사각형** 하나를 그린다(머리는 「41곳 · 0건」). 들어가는 길이
+     *  둘이라(버튼 · 연도 드롭다운) **판정은 renderHeat 한 곳**에 있어야 한다. */
+    if (!ix.includes("if (heatYear === 'cmp' && !heatCmpMonths().length) {")) {
+      b9.push('견줄 달이 없을 때 연도 비교 축을 안 되돌린다 — 검정 사각형이 그려진다');
+    }
+    if (!ix.includes('function heatNote(')) b9.push('막은 이유를 적을 자리가 없다');
+    if (!ix.includes('id="hm-note"')) b9.push('hm-note 칸이 없다 — heatNote 가 아무 데도 안 적는다');
+    /* 되돌리는 자리에서 **이유를 적는가** — 조용히 되돌리면 「눌렀는데 안 바뀐다」가 된다 */
+    {
+      const seg = ix.slice(ix.indexOf("if (heatYear === 'cmp' && !heatCmpMonths().length) {"));
+      if (seg && seg.slice(0, 400).indexOf('heatNote(') < 0) {
+        b9.push('연도 비교를 되돌리면서 이유를 안 적는다');
+      }
+    }
+    /* 버튼도 막는다 — 눌러서 빈 화면이 되는 길을 열어 두지 않는다 */
+    if (!ix.includes('byr2.disabled = !cmpOK')) b9.push('견줄 달이 없어도 「전년 대비」 버튼이 눌린다');
+    /* **미리보기 모의에 앞 해가 있어야** 그 축을 한 번이라도 눈으로 볼 수 있다 */
+    {
+      const pv9 = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+      if (!pv9.includes("'2025-04':")) b9.push('미리보기 모의에 앞 해가 없다 — 전년 대비 축이 한 번도 안 그려진다');
+    }
+
     if (b9.length) { ok = false; console.log('ERROR: [바이럴] 히트맵 연도 축 — ' + b9.join(' · ')); }
     else console.log('OK: 바이럴 히트맵 연도 축 — 1년 단위 · 고른 해를 당사·LG 가 함께 따라간다');
   }
@@ -3611,6 +3665,43 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         if (!seg.includes('lgShopList_')) bB.push('매장 대 매장 비용이 지점 수를 안 센다');
       }
     }
+    /* ── **경쟁비교 진영 수도 한 곳에서만 센다** (2026-09-05) ────────────────────
+     * 4사 → 2사로 줄인 뒤에도 `sweepCalls_`·`actionCosts_` 만 `* 4` 로 남아
+     * 한 바퀴를 **1,320회 과대 계상**했고, 「이 한도로는 못 끝낸다」 경고가 그 값 위에
+     * 서 있어 **없는 부족을 경고했다.** 진영 표는 `rivalSides_()` 한 곳에 있어야 한다. */
+    if (!gsB.includes('function rivalSides_(')) bB.push('진영 표가 한 곳에 없다 — 비용이 또 굳는다');
+    if (/rivalUnits_\(\)\.length \* \d+ \*/.test(gsB)) {
+      bB.push('경쟁비교 비용이 진영 수를 숫자로 박고 있다 — 진영이 바뀌면 조용히 틀린다');
+    }
+    ['var rival = rivalUnits_().length * rivalSides_().length',
+     'rival: rivalUnits_().length * rivalSides_().length'].forEach((w) => {
+      if (!gsB.includes(w)) bB.push('비용이 rivalSides_ 를 안 지나간다: ' + w.slice(0, 24));
+    });
+    if (!gsB.includes('var side = rivalSides_();')) bB.push('수집기가 진영 표를 따로 적는다');
+    /* 진영이 정말 둘인가 — **떼어 돌려 본다**(숫자를 검사에 박지 않는다) */
+    {
+      const m = gsB.match(/function rivalSides_\(\)[\s\S]*?\n\}/);
+      if (!m) bB.push('rivalSides_ 를 못 찾았다');
+      else {
+        const n = (new Function('BRANDS', 'RIVAL_BRANDS', m[0] + ' return rivalSides_();'))([], []).length;
+        if (n !== 2) bB.push('진영이 둘이 아니다(' + n + ') — 하이마트·전자랜드가 되살아났다');
+      }
+    }
+    /* ── **`?type=` 한글 이름을 손으로 적지 않는다** — 이사·모바일이 빠져 있었다 */
+    {
+      const K = (gsB.match(/var KIND5 = \[[\s\S]*?\];/) || [])[0];
+      const F = (gsB.match(/function kind4Of_\(v\)[\s\S]*?\n\}/) || [])[0];
+      if (!K || !F) bB.push('KIND5 / kind4Of_ 를 못 찾았다');
+      else {
+        const f = new Function(K + F + 'return kind4Of_;')();
+        K.match(/\['([a-z]+)', *'([^']+)'\]/g).forEach((row) => {
+          const mm = row.match(/\['([a-z]+)', *'([^']+)'\]/);
+          const ko = mm[2].replace(/\s*후기\s*$/, '');
+          if (f(ko) !== mm[1]) bB.push('?type=' + ko + ' 가 안 걸린다(조용히 전체가 나간다)');
+        });
+        if (f('없는말') !== '') bB.push('없는 말을 갈래로 받아들인다');
+      }
+    }
 
     /* ⓒ **화면 — 수집은 한 자리에서만.** 고른 것 하나만 보인다 */
     if (!ixB.includes('id="what"')) bB.push('수집 선택칸이 없다 — 버튼이 흩어져 있다');
@@ -3649,6 +3740,41 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
            멀쩡한 트리거를 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
     if (!ixB.includes('rb.hidden = !missed;')) bB.push('「자동 수집 다시 걸기」가 늘 떠 있다');
 
+    /* ── **1:N 짝을 푸는 자리는 하나다** (2026-09-05) ──────────────────────────
+     * 지도(`lgPinSvg`)만 `paired[pr[k2]] = 1` 로 남아, 값이 배열이면 열쇠가 `"A,B"` 가
+     * 되어 **짝 맺힌 핀이 하나도 안 칠해졌다.** `lgPairBox` 는 제대로 갈랐는데 한쪽만
+     * 뒤처진 것이다 — 푸는 자리를 둘로 두면 반드시 다시 어긋난다. */
+    if (!ixB.includes('function pairList(')) bB.push('짝을 푸는 공용 함수가 없다');
+    /* **주석은 봐준다** — 이 결함을 적어 둔 주석에 그 코드가 그대로 인용돼 있어,
+       파일 전체에서 찾으면 고쳐 놓고도 스스로 문다(실제로 그랬다). */
+    if (ixB.split(/\r?\n/).some((l) => l.includes('paired[pr[k2]] = 1')
+        && !l.trim().startsWith('*') && !l.trim().startsWith('/*'))) {
+      bB.push('지도가 1:N 짝을 못 푼다 — 배열이면 핀이 안 칠해진다');
+    }
+    {
+      const m = ixB.match(/function pairList\(raw\)[\s\S]*?\n  \}/);
+      if (!m) bB.push('pairList 를 못 찾았다');
+      else {
+        const f = new Function(m[0] + ' return pairList;')();
+        if (JSON.stringify(f(['A', 'B'])) !== '["A","B"]') bB.push('pairList 가 배열을 못 푼다');
+        if (JSON.stringify(f('A')) !== '["A"]') bB.push('pairList 가 옛 문자열을 못 푼다');
+        if (JSON.stringify(f('')) !== '[]' || JSON.stringify(f(null)) !== '[]') bB.push('pairList 가 빈 값을 안 가른다');
+      }
+    }
+    /* **미리보기 모의에 1:N 짝이 있어야** 그 길을 눈으로 볼 수 있다 */
+    if (!/"갤러리아광교":\s*\[/.test(pvB)) bB.push('미리보기 모의에 여럿 짝이 없다 — 1:N 이 한 번도 안 그려진다');
+    /* **SDP 박스만 부제가 비어 있었다** — secPeek 에 갈래가 아예 없었다 */
+    if (!ixB.includes("if (k === 'sdp') {")) bB.push('SDP 심벌 박스 부제를 안 만든다 — 혼자 비어 고장으로 읽힌다');
+    /* **없는 브랜드를 「세고 있다」고 말하지 않는다** — 2사로 줄였다.
+       **「뺐습니다」라고 밝히는 문구는 남겨야 한다**(사라진 이유를 알 길이 그것뿐이다) —
+       그래서 브랜드 낱말을 통째로 막지 않고, **4사를 세는 척하는 라벨**만 본다. */
+    if (/4사\s*\(당사·LG·하이마트·전자랜드\)/.test(ixB)) {
+      bB.push('수집 라벨이 아직 4사라고 말한다');
+    }
+    if (!ixB.includes('하이마트·전자랜드는 <b>수집도 화면도 뺐습니다</b>')) {
+      bB.push('경쟁사를 왜 뺐는지 화면이 안 밝힌다 — 사장님이 「사라졌다」로 읽는다');
+    }
+
     /* ⓖ **모르는 것을 0 으로 적지 않는다.** 옛 서버 자료에는 `googleQuota` 가 없어
            그대로 적으면 화면이 「구글 한도 0회」라고 말한다 — 「없다」와 「아직 못
            받았다」는 다른 말이다(이 화면이 여러 곳에서 못 박은 규칙). 떼어 돌려 본다. */
@@ -3667,6 +3793,102 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     if (bB.length) { ok = false; console.log('ERROR: [바이럴] 버튼 정리 — ' + bB.join(' · ')); }
     else console.log('OK: 바이럴 버튼 정리 — 수집은 한 자리 · 비용을 미리 적고 · 감사에 자물쇠·한도·계수');
+  }
+
+  /* ── ⑫ **재고 조사에서 잡은 것** (2026-09-05) ────────────────────────────────
+   * 사장님 *"그외 개선해야할것들은 추가 개선작업을 해주세요"*. 화면을 훑어 찾은 것들이라
+   * **되돌아가도 화면에서만 보인다** — 하나하나 붙들어 둔다. */
+  {
+    const gsC = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+    const ixC = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+    const pvC = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+    const bC = [];
+
+    /* ⓐ **CSS 주석이 안 닫히면 뒤 블록을 통째로 삼킨다.** 실제로 `.st .ic`(매장 심벌
+       56px·흰색)가 삼켜져 **2026-09-03 지시가 화면에 한 번도 반영된 적이 없었다.**
+       스타일 블록을 훑어 **짝 없는 주석 닫기**를 센다.
+       (이 주석에 그 두 글자를 그대로 쓰면 여기서 닫힌다 — 방금 그렇게 한 번 데었다.) */
+    {
+      const s0 = ixC.indexOf('<style');
+      const s1 = ixC.indexOf('</style>');
+      if (s0 < 0 || s1 < 0) bC.push('스타일 블록을 못 찾았다');
+      else {
+        const css = ixC.slice(ixC.indexOf('>', s0) + 1, s1);
+        let i = 0, stray = 0, inC = false;
+        while (i < css.length - 1) {
+          if (!inC && css[i] === '/' && css[i + 1] === '*') { inC = true; i += 2; continue; }
+          if (css[i] === '*' && css[i + 1] === '/') { if (inC) inC = false; else stray++; i += 2; continue; }
+          i++;
+        }
+        if (stray) bC.push('스타일에 짝 없는 주석 닫기가 ' + stray + '개 — 뒤 블록이 선택자로 먹힌다');
+        if (inC) bC.push('스타일 주석이 안 닫혔다 — 그 뒤 규칙이 통째로 죽는다');
+      }
+    }
+    if (!/\.st \.ic \{[^}]*width: 56px/.test(ixC)) bC.push('매장 심벌 56px 규칙이 없다');
+
+    /* ⓑ **죽은 `.bar` 격자가 산 코드를 망치고 있었다** — 이름이 겹친 `<td class="bar">`
+       에 `display:grid` 가 걸려 막대가 첫 108px 트랙에 갇혔다. */
+    if (/^\s*\.bar \{/m.test(ixC)) bC.push('죽은 .bar 격자가 되살아났다 — 표 안 막대가 108px 에 갇힌다');
+    if (!ixC.includes('.tailtab td.bar')) bC.push('표 셀 막대 규칙이 사라졌다');
+
+    /* ⓒ **개발자 키를 화면에 적지 않는다** — `wedding` 이 그대로 찍히고 있었다 */
+    if (ixC.includes('esc(heatKind)')) bC.push('히트맵이 유형 키를 그대로 적는다(「wedding 건수」)');
+    if (!ixC.includes('esc(kLabel(heatKind))')) bC.push('유형 이름을 사람 말로 옮기지 않는다');
+
+    /* ⓓ **승패 판정은 한 식에서만** — 네 곳 중 한 곳만 반올림해 견줬다 */
+    ['function rvShare(', 'function rvWin(', 'function rvPctText('].forEach((w) => {
+      if (!ixC.includes(w)) bC.push('판정 함수가 없다: ' + w);
+    });
+    if (ixC.includes('var pctOf = function (r) {')) bC.push('승패 판정이 아직 따로 있다(pctOf)');
+    if (/pct2 >= 50 \? 'win'/.test(ixC)) bC.push('막대가 반올림한 값으로 승패를 가른다');
+    {
+      const m = ixC.match(/function rvShare\(ours, rival\)[\s\S]*?\n  \}/);
+      const w = ixC.match(/function rvWin\(ours, rival, base\)[\s\S]*?\n  \}/);
+      const t = ixC.match(/function rvPctText\(p, base\)[\s\S]*?\n  \}/);
+      if (!m || !w || !t) bC.push('판정 함수를 떼어 낼 수 없다');
+      else {
+        const f = new Function(m[0] + w[0] + t[0] + ' return { s: rvShare, w: rvWin, t: rvPctText };')();
+        if (f.s(0, 0) !== null) bC.push('못 잰 줄을 0% 로 만든다 — 「우리 글이 없다」가 된다');
+        if (f.w(0, 0) !== null) bC.push('못 잰 줄을 「졌다」로 센다');
+        if (f.w(496, 504) !== false || f.w(504, 496) !== true) bC.push('승패가 실제 값으로 안 갈린다');
+        /* **표기가 판정을 배반하면 안 된다** — 49.6% 를 「50%」라 적고 밀림으로 칠했다 */
+        if (f.t(49.6) !== '49.6') bC.push('반올림이 균형점을 넘겨도 그대로 적는다: ' + f.t(49.6));
+        if (f.t(73.1) !== '73') bC.push('멀쩡한 값을 소수로 적는다: ' + f.t(73.1));
+      }
+    }
+
+    /* ⓔ **폰에서 매장을 누르면 그 지역 분석으로 간다** — 없어진 id 를 찾고 있었다 */
+    if (ixC.includes("getElementById('store-detail')")) bC.push('없어진 #store-detail 을 아직 찾는다');
+    if (!ixC.includes("b.closest('.rgwrap')")) bC.push('누른 매장이 속한 지역 칸을 못 찾는다');
+
+    /* ⓕ **매장 수를 글자로 박지 않는다** */
+    if (/매장 62곳/.test(ixC)) bC.push('매장 수가 화면에 박혀 있다 — 늘거나 줄면 조용히 거짓이 된다');
+    if (!ixC.includes('function whatNote(')) bC.push('자료가 온 뒤에 안내를 만드는 길이 없다');
+
+    /* ⓖ **미리보기가 그 길을 지나가야 눈으로 볼 수 있다** */
+    if (!pvC.includes('costs:')) bC.push('미리보기 모의에 비용이 없다 — 「예상 N회」가 한 번도 안 그려진다');
+    {
+      const m = pvC.match(/costs: \{[^}]*\}/);
+      if (m) {
+        const c = new Function('return ' + m[0].replace('costs: ', '') + ';')();
+        const left = 20000 - 3120;
+        const over = Object.keys(c).filter((k) => c[k] > left).length;
+        const under = Object.keys(c).filter((k) => c[k] > 0 && c[k] <= left).length;
+        if (!over || !under) bC.push('모의 비용이 한쪽뿐이다 — 경고가 붙는 쪽·안 붙는 쪽을 다 봐야 한다');
+      }
+    }
+
+    /* ⓗ **`?type=` 다섯 갈래가 서버에서 다 걸린다**(위 ⑪에서 이미 보지만, 갈래 수는 여기서) */
+    {
+      const K = (gsC.match(/var KIND5 = \[[\s\S]*?\];/) || [])[0];
+      if (!K) bC.push('KIND5 를 못 찾았다');
+      else if ((K.match(/\['[a-z]+', *'/g) || []).length !== 5) {
+        bC.push('후기 갈래가 다섯이 아니다 — 사장님이 정한 수다');
+      }
+    }
+
+    if (bC.length) { ok = false; console.log('ERROR: [바이럴] 재고 조사 — ' + bC.join(' · ')); }
+    else console.log('OK: 바이럴 재고 조사 — 심벌·표 막대·유형 이름·승패 판정·폰 이동·매장 수');
   }
 
   /* ⑧ **균형점은 회사 수가 정한다** (2026-09-03 배포 확인에서 발견)
@@ -3815,7 +4037,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   /* ⑧ **당사 vs LG 둘만** (2026-09-03 사장님 지시) + 가로 막대 */
   if (ix.includes("['us', 'th', 'hm', 'el']")) bad.push('지역 막대가 아직 4사를 그린다');
-  if (!ix.includes('var pct2 = tot2 ? Math.round(v.us / tot2 * 100) : null;')) {
+  /* **식을 박지 않는다** — 예전에는 `Math.round(v.us / tot2 * 100)` 을 글자로 찾았는데,
+     반올림을 걷어내며(승패 판정과 어긋났다) 그 자체가 낡은 값이 됐다. 뜻은
+     *"서버의 4사 `pct` 를 그대로 쓰지 말고 당사·LG 둘로 다시 낸다"* 이고,
+     지금은 `rvShare` 한 곳이 그 일을 한다. */
+  if (!ix.includes('var pct2 = rvShare(v.us, v.th);')) {
     bad.push('화면이 서버의 4사 pct 를 그대로 쓴다 — 둘만 그리는데 %가 어긋난다');
   }
   if (!ix.includes('.rvg4 .plot div { height:')) bad.push('지역 막대가 가로가 아니다');

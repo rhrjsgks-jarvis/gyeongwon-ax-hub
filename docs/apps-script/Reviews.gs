@@ -876,10 +876,13 @@ function sweepCalls_() {
   var tab = aliasAll_(), n = 0, k;
   for (k in tab) if (tab.hasOwnProperty(k)) n += tab[k].length;
   /* **갈래는 셋이다**(`blog · cafearticle · webkr`, 1354행). 예전 `* 2` 는 웹 갈래가
-     생기기 전 값이고, **LG 비교도 40 이 아니라 도시 11 × 진영 2 × 꼬리 4 × 소스 3 ×
-     10쪽 = 2,640회**다(2729·2766행). 그 탓에 한 바퀴를 7,960회 적게 세어 화면이
-     *"한도가 넉넉하다"* 고 말했다 — 한도 경고가 그 값 위에 서 있어 틀린 말을 한다.
-     세는 값을 상수에서 끌어내 **코드가 바뀌면 따라오게** 한다(손으로 적으면 또 굳는다). */
+     생기기 전 값이고, LG 비교도 한때 `40` 으로 굳어 있어 한 바퀴를 7,960회 적게 세어
+     화면이 *"한도가 넉넉하다"* 고 말했다 — 한도 경고가 이 값 위에 서 있어 틀린 말을 한다.
+
+     **여기에 숫자를 적지 않는다**(2026-09-05). 손으로 적은 「= 2,640회」가 4사 → 2사로
+     줄고 쪽수가 10 → 5 로 바뀐 뒤에도 그대로 남아 주석과 코드가 서로 다른 말을 했다.
+     세는 값은 전부 **상수·함수에서 끌어낸다**(`rivalSides_`·`RTAILS`·`RIVAL_PAGES`) —
+     코드가 바뀌면 따라오고, 실제 값이 궁금하면 화면의 「예상 N회」가 적는다. */
   var kinds = 3;                      /* blog · cafearticle · webkr */
   /* **정렬 두 갈래**(date · sim) — 전체 재수집에서 매장 훑기가 두 배다(2026-09-03).
      「최근 것만」은 date 하나라 절반이다. **큰 쪽으로 잡는다** — 화면 경고는
@@ -891,7 +894,7 @@ function sweepCalls_() {
   var cafe = CAFES.length * kinds * MAX_PAGES;          /* 관심 카페 훑기 */
   var mgr = 20;                                          /* 매니저 이름 네이버 건수 */
   var sdp = SDP.length * 2 * SDP_PAGES;                  /* SDP — 2갈래 × 3쪽 */
-  var rival = rivalUnits_().length * 4 * RTAILS.length * kinds * RIVAL_PAGES;   /* 진영 넷 */
+  var rival = rivalUnits_().length * rivalSides_().length * RTAILS.length * kinds * RIVAL_PAGES;
   /* **「삭제된 글 확인」이 빠져 있었다** (2026-09-04). `fetchAll` 은 코드에선 한 줄이라
      눈에 안 띄는데 **쿼터는 요청 수만큼** 먹는다 — 한 실행에 최대 78묶음 × 50 = 3,900회다
      (주석의 실측값). 그 탓에 한 바퀴 추정이 그만큼 작았고, 화면이 「한도가 넉넉하다」고
@@ -923,7 +926,7 @@ function actionCosts_() {
   return {
     quick: quick,
     full: sweepCalls_(),
-    rival: rivalUnits_().length * 4 * RTAILS.length * kinds * RIVAL_PAGES,
+    rival: rivalUnits_().length * rivalSides_().length * RTAILS.length * kinds * RIVAL_PAGES,
     /* 매장 대 매장 — 매장마다 (우리 1 + 붙은 LG 지점 수) × 소스 3 × 10쪽.
        **`× 2` 로 굳히지 말 것** — 짝이 1:N 이 된 뒤로 지점을 둘·셋 붙인 매장이 있어
        그렇게 세면 화면이 실제보다 적게 적고 「한도가 넉넉하다」고 거짓말을 한다.
@@ -949,6 +952,23 @@ function actionCosts_() {
    고쳤을 때 화면이 조용히 옛 숫자로 「한도가 넉넉하다」고 말한다. 이 저장소가 허브 카드
    개수·앱 버전에서 반복해서 데인 종류다. */
 var RTAILS = ['', ' 혼수', ' 구매', ' 후기'];
+
+/**
+ * **경쟁비교 진영 표 — 여기 한 곳에만 둔다.**
+ *
+ * `collectRival` 안의 지역 변수였는데, 비용 계산(`sweepCalls_`·`actionCosts_`)이
+ * 개수를 **따로 적고 있었다.** 4사 → 2사로 줄인 뒤에도 그쪽만 `* 4` 로 남아
+ * 한 바퀴를 **1,320회 과대 계상**했고, 화면의 「이 한도로는 한 바퀴를 못 끝낸다」
+ * 경고가 그 값 위에 서 있어 **없는 부족을 경고했다.** `RTAILS` 를 밖으로 올린 것과
+ * 같은 이유다 — 두 곳에 적으면 한쪽만 고쳤을 때 화면이 조용히 옛 숫자를 말한다.
+ *
+ * **`var` 가 아니라 함수인 이유** — `BRANDS`(1213행)·`RIVAL_BRANDS`(4885행)가
+ * 이 줄보다 뒤에 있어 최상위 `var` 로 두면 초기화 시점에 `undefined` 를 담는다.
+ * 함수 선언은 끌어올려지고 값은 **부를 때** 읽는다.
+ */
+function rivalSides_() {
+  return [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
+}
 
 /* 등록값을 다듬는다. **막는 것이 이 함수의 값어치다** — 짧은 별칭 하나가
    남의 매장 글을 통째로 끌어온다. */
@@ -1316,9 +1336,14 @@ function kind4Of_(v) {
   if (t === 'manager') return 'manager';
   /* 한글로 쳐도 받는다 — 사장님이 주소창에 직접 넣을 수 있다 */
   if (t === '매니저') return 'manager';
-  if (t === '혼수') return 'wedding';
-  if (t === '입주') return 'movein';
-  if (t === '기타') return 'etc';
+  /* **한글 이름을 손으로 적지 않는다**(2026-09-05). 예전에는 혼수·입주·기타 셋만
+     적혀 있어 `?type=이사`·`?type=모바일` 이 **조용히 전체를 돌려줬다** — 사장님이
+     「이사만 봤다」고 읽으면 그 순간 거짓이 된다. `KIND5` 에서 끌어내면 갈래가
+     늘어도 따라온다(라벨이 `'이사 후기'` 라 꼬리말을 뗀다). */
+  for (var j = 0; j < KIND5.length; j++) {
+    var lab = String(KIND5[j][1] || '').replace(/\s*후기\s*$/, '').trim();
+    if (lab && (t === lab || t === KIND5[j][1])) return KIND5[j][0];
+  }
   return '';
 }
 
@@ -2063,7 +2088,11 @@ function rollRead_() {
   for (i = 0; i < v.length; i++) {
     var n = Number(v[i][4]) || 0;
     if (!n) continue;
-    out.push({ ym: String(v[i][0] || ''), storeName: String(v[i][1] || ''),
+    /* **`ym` 도 시트가 날짜로 바꿔 돌려줄 수 있다** (2026-09-05). `'2026-01'` 을
+       `setValues` 로 쓰면 로케일에 따라 Date 로 굳고, `String(...)` 하면
+       `"Thu Jan 01 2026 …"` 이 되어 **월별 추이에 쓰레기 열쇠가 들어간다.**
+       도장에서 이미 겪은 그 병이라 같은 함수(`cellStamp_`)로 되돌리고 앞 7자만 쓴다. */
+    out.push({ ym: cellStamp_(v[i][0]).slice(0, 7), storeName: String(v[i][1] || ''),
                kind: String(v[i][2] || ''), src: String(v[i][3] || ''), n: n });
   }
   return out;
@@ -4396,10 +4425,10 @@ function summary_() {
 
   /* ── 옛 자료 요약을 합친다 (2026-09-03 사장님 지시) ──────────────────────
    * URL 줄은 지웠지만 **건수는 살아 있어야 한다** — *"23년 24년도 살려주세요"*.
-   * 화면이 쓰는 넷(월별 추이 · 매장별 · 유형별 · 출처별)에만 더한다.
+   * 화면이 쓰는 다섯(월별 추이 · 매장별 · 유형별 · 출처별 · **5종 묶음**)에 더한다.
    *
-   * **더하지 않는 것**: `recent`(목록) · `byStoreWeek`(주차) · `byStoreChan`(채널) ·
-   * `byMap`(지도) · `rival`. 그 자료를 안 남겼기 때문이다 —
+   * **더하지 않는 것**: `recent`(목록) · `byStoreWeek`·`byStoreWeek4`(주차) ·
+   * `byStoreChan`(채널) · `byMap`(지도) · `rival`. 그 자료를 안 남겼기 때문이다 —
    * **없는 것을 있는 척하면 화면이 거짓말을 한다.**
    * 그래서 `total` 도 **따로 적는다**(`rollTotal`) — 목록에 없는 건수를 전체에 섞으면
    * 「2,000건인데 목록이 500건뿐」이 되어 사장님이 그 차이를 못 읽는다. */
@@ -4416,6 +4445,17 @@ function summary_() {
     if (rr.kind) byKind[rr.kind] = (byKind[rr.kind] || 0) + rr.n;
     if (rr.src && bySrc.hasOwnProperty(rr.src)) bySrc[rr.src] += rr.n;
     if (rr.storeName && byStore.hasOwnProperty(rr.storeName)) byStore[rr.storeName] += rr.n;
+    /* ── **5종 묶음에도 더한다** (2026-09-05) ────────────────────────────────
+     * 예전에는 `byKind`(9종)·`byStore` 에만 더했다. 그런데 사장님이 유형을 고르면
+     * `filterKind4_` 가 `byStore` 를 **`byStoreKind4` 로 통째로 갈아 끼우므로**,
+     * 옛 요약분(2023~2024)이 **조용히 사라졌다** — 「없다」로 읽히는데 실제로는 있다.
+     * 요약 줄에 9종 `kind` 가 남아 있어 `kind4_` 로 그대로 옮길 수 있다. */
+    if (rr.storeName && byStore.hasOwnProperty(rr.storeName)) {
+      var rk4 = kind4_({ kind: rr.kind });
+      byKind4[rk4] = (byKind4[rk4] || 0) + rr.n;
+      if (!byStoreKind4[rr.storeName]) byStoreKind4[rr.storeName] = {};
+      byStoreKind4[rr.storeName][rk4] = (byStoreKind4[rr.storeName][rk4] || 0) + rr.n;
+    }
   }
 
   return {
@@ -4758,7 +4798,15 @@ function collectStoreRival(reset) {
       props.setProperty('_srivalSchema', String(SRIVAL_SCHEMA));
     }
     if (reset || !stamp || cur >= names.length) {
-      stamp = new Date().toISOString(); cur = 0;
+      /* ── **도장은 한 서식으로만 쓴다** (2026-09-05) ──────────────────────────
+       * 여기만 `new Date().toISOString()` 이었다. 시트는 그 값을 **날짜로 바꿔
+       * 보관할 수 있고**, 되읽을 때 `cellStamp_` 가 `'yyyy-MM-dd HH:mm'` 로 되돌리므로
+       * **ISO 문자열과는 영영 안 맞는다** — `srivalDone_` 이 늘 비어 돌아와 이어 돌 때
+       * **이미 끝낸 매장을 다시 훑는다**(쿼터 낭비 + 같은 회차 중복 줄).
+       * 「수요일 도장」과 **같은 병**이고, 고치는 법도 같다 — 쓰는 서식을 읽는 서식에 맞춘다.
+       * 경쟁비교(`_rivalStamp`)가 이미 이 서식을 쓴다. */
+      stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
+      cur = 0;
       props.setProperty('_srivalStamp', stamp);
       props.setProperty('_srivalCur', '0');
     }
@@ -5422,8 +5470,10 @@ function collectRival(deadline) {
     var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 } };
     var byKind = {}, byMon = {};
     /* **어디에 · 무엇을** (2026-09-02). 채널은 양쪽 따로, 품목은 한 표에 o/r 로 담는다 */
-    /* **품목·유형은 한 표에 진영 글자로 담는다** — o(당사) r(LG) h(하이마트) e(전자랜드).
-       진영마다 표를 따로 두면 시트 칸이 네 배가 되고 화면도 네 번 훑어야 한다. */
+    /* **품목·유형은 한 표에 진영 글자로 담는다** — o(당사) r(LG).
+       진영마다 표를 따로 두면 시트 칸이 배로 늘고 화면도 두 번 훑어야 한다.
+       **h(하이마트)·e(전자랜드) 칸은 2026-09-05 에 뺐다** — 진영이 둘이라 영영 0 인데
+       시트에 계속 쓰이고 화면까지 나가, 다음 사람이 4사가 아직 도는 줄 안다. */
     /* **채널은 당사만 담는다** — LG 는 건수만이라는 지시(2026-09-05). 히트맵에서
        지점을 눌렀을 때 「어느 경로로 들어온 글인가」를 보는 데 쓴다. */
     var byChan = { ours: {} }, byProd = {},
@@ -5438,7 +5488,7 @@ function collectRival(deadline) {
     /* **진영은 둘이다**(2026-09-05 사장님 지시로 4 → 2). 비중의 뜻이 「그 지역 가전
        후기 중 우리 몫」에서 **「당사 vs LG」**로 돌아간다 — 균형점이 50% 다.
        `RIVAL_SCHEMA` 를 올렸으므로 옛 4사 회차에 이어 붙지 않는다. */
-    var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
+    var side = rivalSides_();
     for (var si = 0; si < side.length; si++) {
       var key = side[si][0], brands = side[si][1], bq = side[si][2];
       for (var ti = 0; ti < RTAILS.length; ti++) {
@@ -5490,14 +5540,14 @@ function collectRival(deadline) {
                   d: String(it.postdate || '') });
               }
               var kd = kindOf_(String(it.title || ''));
-              if (!byKind[kd]) byKind[kd] = { o: 0, r: 0, h: 0, e: 0 };
+              if (!byKind[kd]) byKind[kd] = { o: 0, r: 0 };
               byKind[kd][CH[key]]++;
               /* **월별은 블로그만** — 카페는 작성일이 없어 넣으면 이번 달만
                  거대해진다(이 화면이 이미 두 번 데인 사고다). */
               var pd = String(it.postdate || '');
               if (pd.length === 8) {
                 var mk = pd.slice(0, 4) + '-' + pd.slice(4, 6);
-                if (!byMon[mk]) byMon[mk] = { o: 0, r: 0, h: 0, e: 0 };
+                if (!byMon[mk]) byMon[mk] = { o: 0, r: 0 };
                 byMon[mk][CH[key]]++;
               }
             }
