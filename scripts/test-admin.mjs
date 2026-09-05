@@ -3919,6 +3919,28 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (/매장 62곳/.test(ixC)) bC.push('매장 수가 화면에 박혀 있다 — 늘거나 줄면 조용히 거짓이 된다');
     if (!ixC.includes('function whatNote(')) bC.push('자료가 온 뒤에 안내를 만드는 길이 없다');
 
+    /* ── **예상 호출이 오늘 함께 도는 것을 더해야 한다** (2026-09-06 배포본 실측) ──
+     * 「수집」에 LG 비교·매장 대 매장·검색 관심도를 합쳤는데 예상은 `costs.quick` 만
+     * 보고 있었다 — 실측 **17,508 이라 적고 실제 22,555**(5,047회 부족). 화면이
+     * 「남은 20,000 이니 된다」고 말하는데 실제로는 한도를 2,555회 넘는다.
+     * **떼어 돌려 본다** — 문자열만 보면 다시 어긋나도 통과한다. */
+    if (!ixC.includes('var due2 = DATA.due || {};')) bC.push('예상 호출이 오늘 함께 도는 것을 안 더한다');
+    {
+      const m = ixC.match(/var need = Number\(costs\[WHAT_KEY\[v\]\] \|\| 0\);[\s\S]*?\n    \}/);
+      if (!m) bC.push('예상 호출 계산을 떼어 낼 수 없다');
+      else {
+        const f = new Function('DATA', 'costs', 'WHAT_KEY', 'v', m[0] + ' return need;');
+        const KEY = { run: 'quick', runfull: 'full' };
+        const C = { quick: 17508, full: 22158, rival: 1320, srival: 3720, trend: 7 };
+        const all = { due: { rival: true, srival: true, trend: true } };
+        if (f(all, C, KEY, 'run') !== 22555) bC.push('오늘 것을 다 더하지 않는다: ' + f(all, C, KEY, 'run'));
+        const none = { due: { rival: false, srival: false, trend: false } };
+        if (f(none, C, KEY, 'run') !== 17508) bC.push('이미 한 것까지 더한다: ' + f(none, C, KEY, 'run'));
+        /* 옛 서버에는 `due` 가 없다 — 그때는 못 더하는 것이 맞다(0 으로 지어내지 않는다) */
+        if (f({}, C, KEY, 'run') !== 17508) bC.push('due 가 없을 때 값을 지어낸다');
+      }
+    }
+
     /* ⓖ **미리보기가 그 길을 지나가야 눈으로 볼 수 있다** */
     if (!pvC.includes('costs:')) bC.push('미리보기 모의에 비용이 없다 — 「예상 N회」가 한 번도 안 그려진다');
     {
