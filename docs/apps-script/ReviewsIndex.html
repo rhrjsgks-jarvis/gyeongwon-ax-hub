@@ -1888,10 +1888,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var missed = sweepMissed(0);
     if (missed) {
       el.className = 'todo low';
+      /* **서버가 옛 판이면 「함께 다시 겁니다」는 지킬 수 없는 약속이다** —
+         `ensureDaily_` 가 새 `Reviews.gs` 에만 있다. 화면이 못 지킬 말을 하지 않는다. */
+      var canFix = DATA.due && typeof DATA.due.rival === 'boolean';
       el.innerHTML = step(1, '<b>오늘 자동 수집이 돌지 않았습니다</b> — '
         + '<b>「수집」</b>을 한 번 눌러 주세요.')
-        + '<br><span class="cntxt">누르시면 오늘 할 것을 다 하고, '
-        + '<b>자동 수집도 함께 다시 겁니다.</b></span>';
+        + '<br><span class="cntxt">'
+        + (canFix
+            ? '누르시면 오늘 할 것을 다 하고, <b>자동 수집도 함께 다시 겁니다.</b>'
+            : '<b class="warn">서버가 옛 판이라 자동 수집은 다시 걸리지 않습니다</b> — '
+              + 'Reviews.gs 를 붙여넣고 재배포해 주세요.')
+        + '</span>';
       return;
     }
     /* ② 쿼터를 다 썼으면 눌러도 돌지 않는다 — 「누르세요」가 그 순간 거짓이 된다 */
@@ -1910,17 +1917,28 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       return;
     }
     /* ④ 평소 — 「수집」 하나. **무엇이 남았는지 함께 적는다**(그것이 곧 근거다) */
+    /* **「모른다」를 「다 했다」로 바꿔 말하지 않는다**(2026-09-05 실측으로 잡음).
+       `due` 는 새 서버에만 있는 칸이라, **화면만 먼저 붙여넣으면** 이 값이 없다.
+       그때 「이미 다 했습니다」라고 적으면 **그 자리에서 거짓**이 된다 —
+       실제로 배포본이 그 상태였다(화면은 새 판, `Reviews.gs` 는 옛 판). */
+    var knowDue = due && typeof due.rival === 'boolean';
     var rest = [];
-    if (due.rival) rest.push('LG 비교');
-    if (due.srival) rest.push('매장 대 매장');
-    if (due.trend) rest.push('검색 관심도');
+    if (knowDue) {
+      if (due.rival) rest.push('LG 비교');
+      if (due.srival) rest.push('매장 대 매장');
+      if (due.trend) rest.push('검색 관심도');
+    }
     el.className = 'todo';
     el.innerHTML = step(1, '<b>「수집」</b>을 한 번 누르시면 됩니다 — '
       + '오늘 안 한 것을 <b>차례로 다</b> 합니다.')
       + '<br><span class="cntxt">'
-      + (rest.length
-          ? '오늘 아직 안 한 것: <b>' + esc(rest.join(' · ')) + '</b> · 매장 훑기'
-          : '오늘 것은 이미 다 했습니다 — 눌러도 새 글만 훑어 금방 끝납니다.')
+      + (!knowDue
+          ? '<b class="warn">서버가 옛 판입니다</b> — 무엇이 남았는지 알 수 없고, '
+            + 'LG 비교 · 매장 대 매장 · 검색 관심도가 함께 돌지 않습니다. '
+            + '<b>Reviews.gs 를 붙여넣고 재배포해 주세요.</b>'
+          : rest.length
+            ? '오늘 아직 안 한 것: <b>' + esc(rest.join(' · ')) + '</b> · 매장 훑기'
+            : '오늘 것은 이미 다 했습니다 — 눌러도 새 글만 훑어 금방 끝납니다.')
       + '</span>';
   }
 

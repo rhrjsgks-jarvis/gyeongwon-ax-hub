@@ -3982,6 +3982,18 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         if (norm.innerHTML.indexOf('LG 비교') < 0) bC.push('무엇이 남았는지 안 적는다');
         const done = run(Object.assign({}, base, { due: { rival: false, srival: false, trend: false } }));
         if (done.innerHTML.indexOf('다 했습니다') < 0) bC.push('다 했을 때 그렇게 안 적는다');
+        /* **「모른다」를 「다 했다」로 바꿔 말하지 않는다**(2026-09-05 배포본에서 잡음) —
+           화면만 먼저 붙여넣으면 `due` 가 없다. 그때 「이미 다 했습니다」는 거짓이다. */
+        const old = run(Object.assign({}, base, { due: undefined }));
+        if (old.innerHTML.indexOf('다 했습니다') >= 0) bC.push('모르는데 「다 했다」고 적는다');
+        if (old.innerHTML.indexOf('옛 판') < 0) bC.push('서버가 옛 판인 것을 안 밝힌다');
+        /* 멈춤 안내도 **못 지킬 약속**을 하지 않는다 */
+        const nowMs2 = new Date(2026, 8, 5, 10, 24).getTime();
+        const deadOld = run(Object.assign({}, base, { due: undefined, now: nowMs2,
+          lastRun: { ms: new Date(2026, 8, 5, 1, 54).getTime() } }));
+        if (deadOld.innerHTML.indexOf('함께 다시 겁니다') >= 0) {
+          bC.push('옛 서버인데 「자동 수집도 함께 다시 겁니다」라고 약속한다');
+        }
         const outq = run(Object.assign({}, base, { dayUsed: 99999, quotaResetAt: '16:00' }));
         if (outq.innerHTML.indexOf('16:00') < 0) bC.push('쿼터를 다 썼는데 언제 풀리는지 안 적는다');
         if (outq.className.indexOf('low') < 0) bC.push('쿼터 소진을 평소와 같은 색으로 적는다');
