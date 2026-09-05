@@ -3559,8 +3559,26 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ⓒ 화면 — 경고 자리 · 버튼 · 부르는 곳 */
     if (!ixW.includes('id="stalled"')) bW.push('멈춤 경고 자리가 없다');
-    if (!ixW.includes('id="rearm"')) bW.push('「자동 수집 다시 걸기」 버튼이 없다');
-    if (!ixW.includes('.rearmTrigger(admToken);')) bW.push('버튼이 관리자 토큰을 안 넘긴다');
+    /* ── **버튼을 없애고 서버가 알아서 한다** (2026-09-05 사장님 지시) ────────────
+     * *"이것들은 모두 있어야 하는 버튼입니까? … 더 간소화 할 수 있을것 같습니다"*.
+     * **눌러야 하는 상황을 코드가 알 수 있다** — 없으면 만들고, 오늘 새벽에 안 돌았으면
+     * 꺼진 것으로 보고 다시 건다(ensureDaily_). 알 수 있는 것을 사람에게 시키지 않는다.
+     * **rearmTrigger 서버 함수는 남긴다** — 나중에 다시 필요하면 배선만 하면 된다. */
+    if (ixW.includes('id="rearm"')) bW.push('「자동 수집 다시 걸기」 버튼이 되살아났다 — 「수집」이 알아서 한다');
+    if (!gsW.includes('function ensureDaily_(')) bW.push('트리거를 살려 두는 함수가 없다');
+    if (!gsW.includes('var triggerFix = ensureDaily_();')) bW.push('「수집」이 트리거를 안 살핀다');
+    /* **맨 앞이라야** 이 실행이 나중에 죽어도 트리거는 이미 살아 있다 */
+    if (!/setProperty\('_runAt'[\s\S]{0,400}var triggerFix = ensureDaily_\(\);/.test(gsW)) {
+      bW.push('트리거 살피기가 수집 맨 앞이 아니다');
+    }
+    /* **조용히 고치지 않는다** — 무엇을 했는지 안 적으면 사장님이 영영 모른다 */
+    if (!gsW.includes('triggerFix: triggerFix,')) bW.push('무엇을 고쳤는지 안 돌려준다');
+    if (!ixW.includes('자동 수집을 다시 걸었습니다')) bW.push('화면이 그 사실을 안 적는다');
+    /* **새벽 3시 반 전에는 다시 걸지 않는다** — 그때 도는 것이 바로 그 트리거라
+       자기를 실행 중에 지우게 된다 */
+    if (!/function ensureDaily_\(\)[\s\S]{0,1200}30 \* 60000/.test(gsW)) {
+      bW.push('트리거가 자기를 실행 중에 지울 수 있다');
+    }
     if (!ixW.includes('오늘 자동 수집이 돌지 않았습니다')) bW.push('멈췄을 때 무슨 일인지 안 적는다');
     /* **실패를 실패라고 적는가** — 이 저장소가 시험 결과 전송에서 못 박은 규칙이다 */
     if (!ixW.includes('걸지 못했습니다')) bW.push('실패를 실패라고 안 적는다');
@@ -3766,9 +3784,15 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (lines.length) bB.push('없는 버튼을 가리키는 문구가 남았다: ' + w + ' (' + lines.length + '곳)');
     });
 
-    /* ⓕ **자동 수집 다시 걸기는 멈췄을 때만** — 평소에 떠 있으면 눌러 보게 되고,
-           멀쩡한 트리거를 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
-    if (!ixB.includes('rb.hidden = !missed;')) bB.push('「자동 수집 다시 걸기」가 늘 떠 있다');
+    /* ⓕ **버튼 이름은 하나다** (2026-09-05 사장님 지시). 예전에는 「지금 한 번 더」·
+           「이어서 수집」·「수집」 셋으로 갈렸는데, 「지금 한 번 더」는 눌러 봐야
+           자물쇠에 막힌다 — 그때는 **잠근다.** 진행 상태 줄이 이미 어디까지 갔는지 적는다. */
+    if (/'지금 한 번 더' :/.test(ixB)) bB.push('도는 중에 「지금 한 번 더」로 이름이 바뀐다');
+    if (!ixB.includes("b.textContent = '수집';")) bB.push('수집 버튼 이름이 하나가 아니다');
+    if (!ixB.includes('b.disabled = auto;')) bB.push('자동으로 도는 중에도 누를 수 있다 — 자물쇠에 막힌다');
+    /* **「보내는 중」과 「도는 중」을 가른다** — 하나로 뭉치면 보내는 중인 버튼이 되살아난다 */
+    if (!ixB.includes("b.dataset.busy = '1';")) bB.push('보내는 중을 따로 표시하지 않는다');
+    if (!ixB.includes('delete b.dataset.busy;')) bB.push('보내기가 끝나도 표시를 안 지운다');
 
     /* ── **1:N 짝을 푸는 자리는 하나다** (2026-09-05) ──────────────────────────
      * 지도(`lgPinSvg`)만 `paired[pr[k2]] = 1` 로 남아, 값이 배열이면 열쇠가 `"A,B"` 가
@@ -3967,7 +3991,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         const nowMs = new Date(2026, 8, 5, 10, 24).getTime();
         const dead = run(Object.assign({}, base,
           { now: nowMs, lastRun: { ms: new Date(2026, 8, 5, 1, 54).getTime() } }));
-        if (dead.innerHTML.indexOf('자동 수집 다시 걸기') < 0) bC.push('멈췄는데 다시 걸라고 안 한다');
+        /* **멈췄어도 누를 것은 「수집」 하나다** — 다시 거는 일은 서버가 한다.
+           그래도 **멈췄다는 사실은 적어야** 왜 자료가 안 늘었는지 알 수 있다. */
+        if (dead.innerHTML.indexOf('돌지 않았습니다') < 0) bC.push('멈춘 사실을 안 적는다');
+        if (dead.innerHTML.indexOf('수집') < 0) bC.push('멈췄는데 무엇을 누르라고 안 한다');
+        if (dead.className.indexOf('low') < 0) bC.push('멈춤을 평소와 같은 색으로 적는다');
       }
     }
 

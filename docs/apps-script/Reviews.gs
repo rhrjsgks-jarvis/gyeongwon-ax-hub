@@ -2726,6 +2726,10 @@ function sweep_(mode) {
      눈먼 구간이 한몫했다. 시작 시각을 적어 두면 화면이 「N분째 도는 중」을 말할 수 있다.
      **강제 종료되면 이 값이 남는다** — 그래서 화면은 「10분이 넘으면 죽은 것으로 본다」. */
   props_().setProperty('_runAt', String(Date.now()));
+  /* **자동 수집 트리거를 여기서 살려 둔다**(2026-09-05) — 「자동 수집 다시 걸기」
+     버튼을 없앴다. **맨 앞이라야** 이 실행이 나중에 죽어도 트리거는 이미 살아 있다.
+     무엇을 했는지는 응답에 실어 화면이 적는다(조용히 고치면 알 길이 없다). */
+  var triggerFix = ensureDaily_();
   /* **여기서 먼저 건다.** 이 줄 뒤로 무슨 일이 나도(6분 강제 종료·예외·시트 쓰기
      실패) 6분 뒤에 스스로 되살아난다. 정상으로 끝나면 아래에서 1분짜리로 바꾸거나
      지운다 — `chain_`·`clearChain_` 이 둘 다 기존 트리거를 먼저 지우므로 겹치지 않는다. */
@@ -3428,6 +3432,8 @@ function sweep_(mode) {
        하게 됐으므로, 안 적으면 사장님이 **무엇이 돌았는지 알 길이 없다.**
        안 돌았으면 `null` 이다(0 이 아니다 — 「했는데 0건」과 다른 말이다). */
     srival: srivalRun, trend: trendRun,
+    /* '' · 'made'(없어서 만듦) · 'rearmed'(꺼져 있어 다시 걺) — 화면이 그 사실을 적는다 */
+    triggerFix: triggerFix,
     /* **돌았는지 · 몇 곳을 물었는지.** 안 적으면 「왜 SDP 가 안 늘지」를 확인할 길이 없다 */
     sdp: sdpRun
   };
@@ -3497,6 +3503,43 @@ function dedupe_() {
 }
 
 /** 하루 1회 새벽 3시 트리거를 건다. **한 번만 실행하면 된다** — 중복은 스스로 지운다. */
+/**
+ * **자동 수집 트리거를 살아 있게 한다** (2026-09-05 사장님 지시로 버튼을 없앴다).
+ *
+ * *"이것들은 모두 있어야 하는 버튼입니까? … 더 간소화 할 수 있을것 같습니다"*.
+ * 「자동 수집 다시 걸기」는 **사람이 눌러야만** 낫는 버튼이었다 — 그런데 눌러야 하는
+ * 상황(트리거가 죽음)을 **코드가 알 수 있다.** 알 수 있는 것을 사람에게 시키지 않는다.
+ *
+ * 두 경우를 가른다:
+ *  ① **아예 없다** — 만든다.
+ *  ② **있는데 오늘 새벽에 안 돌았다** — 구글이 꺼 둔 것으로 보고 지우고 다시 건다.
+ *     (구글은 실행이 거듭 실패하면 트리거를 끄는데, 꺼진 트리거도 목록에는 남는다.)
+ *
+ * **새벽 3시 반 전에는 ②를 하지 않는다** — 그 시각에 도는 것은 **바로 그 트리거**라,
+ * 자기를 실행 중에 지우게 된다. 판정 시각은 화면의 `sweepMissed` 와 같다.
+ */
+function ensureDaily_() {
+  var t, i, has = false;
+  try { t = ScriptApp.getProjectTriggers(); } catch (e) { return ''; }
+  for (i = 0; i < t.length; i++) {
+    if (t[i].getHandlerFunction() === 'collectReviews') has = true;
+  }
+  if (!has) {
+    try { ScriptApp.newTrigger('collectReviews').timeBased().atHour(3).everyDays(1).create(); }
+    catch (e2) { return ''; }
+    return 'made';
+  }
+  /* ② 있는데 오늘 안 돌았다 — 꺼진 것으로 본다 */
+  var now = Date.now();
+  var d3 = new Date(now); d3.setHours(3, 0, 0, 0);
+  if (now <= d3.getTime() + 30 * 60000) return '';      /* 아직 올 시간이다 */
+  var lr = 0;
+  try { lr = Number(lastRun_().ms) || 0; } catch (e3) { lr = 0; }
+  if (!lr || lr >= d3.getTime()) return '';             /* 모르거나 이미 돌았다 */
+  try { setupTrigger(); } catch (e4) { return ''; }
+  return 'rearmed';
+}
+
 function setupTrigger() {
   var t = ScriptApp.getProjectTriggers(), i;
   for (i = 0; i < t.length; i++) {

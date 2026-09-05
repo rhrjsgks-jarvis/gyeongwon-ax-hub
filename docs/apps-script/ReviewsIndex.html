@@ -1359,8 +1359,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
                할 것만 골라 차례로 돈다(`srivalDue_`·`trendDue_`·`rivalDue_`) —
                사장님이 **순서를 외울 필요가 없다.** 남은 둘은 갈래가 아니라 **모드**다:
                새 글만 훑을 것인가, 처음부터 다시 팔 것인가. -->
-          <option value="run">수집 — 오늘 할 것 전부</option>
-          <option value="runfull">전체 재수집 — 처음부터</option>
+          <option value="run">오늘 할 것 전부</option>
+          <option value="runfull">처음부터 다시 (여러 날 걸립니다)</option>
         </select>
         <button id="run">수집</button>
         <button id="runfull" hidden>전체 재수집</button>
@@ -1378,7 +1378,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <!-- **새벽 3시 트리거를 다시 건다** — 구글이 반복 실패로 트리거를 끄는 일이
              있고 그것은 Apps Script 실행 기록에만 남는다. 원인을 짐작해 고치는 대신
              다시 걸 길을 여기 둔다. 좀비 이어달리기 트리거도 함께 걷어낸다. -->
-        <button id="rearm" hidden>자동 수집 다시 걸기</button>
+        <!-- 「자동 수집 다시 걸기」는 지웠다(2026-09-05 사장님 지시로 버튼을 줄였다).
+             **눌러야 하는 상황을 코드가 알 수 있다** — 「수집」이 돌 때 서버가
+             트리거를 살펴 없거나 꺼져 있으면 다시 건다(`ensureDaily_`).
+             알 수 있는 것을 사람에게 시키지 않는다. -->
       </div>
       <!-- 일일 수집한도 — **오늘 쓴 양을 함께 적는다.** 한도만 있고 쓴 양이
            없으면 남은 몫을 가늠할 수 없다. -->
@@ -1451,7 +1454,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         호출을 수백 회 쓰므로 <b>한 매장씩</b> 돌립니다.</div>
       <div class="alias-add">
         <input id="aud-store" list="alias-stores" placeholder="매장 이름" autocomplete="off">
-        <button id="aud-go">감사</button>
+        <button id="aud-go">검출률 확인</button>
       </div>
       <div id="aud-out" class="sub"></div>
 
@@ -1460,8 +1463,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <h3>오래된 후기 — 숫자만 남기기</h3>
       <div class="sub" id="purge-sub">–</div>
       <div class="alias-add">
-        <button id="purge-dry">몇 건인지 먼저 보기</button>
-        <button id="purge-go" class="danger" hidden>지우기</button>
+        <button id="purge-dry">지울 건수 보기</button>
+        <button id="purge-go" class="danger" hidden>링크만 지우기</button>
       </div>
       <div id="purge-out" class="sub"></div>
 
@@ -1823,13 +1826,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var left = Math.max(0, lim - (Number(DATA.dayUsed) || 0));
     var step = function (n, txt) { return '<span class="n">' + n + '</span>' + txt; };
 
-    /* ① 자동 수집이 멈췄으면 그것이 먼저다 — 눌러도 안 돌면 나머지가 뜻이 없다 */
+    /* ① 자동 수집이 멈췄어도 **누를 것은 「수집」 하나다**(2026-09-05).
+       예전에는 「먼저 다시 걸기 → 그다음 수집」 두 단계였는데, 다시 거는 일은
+       **코드가 할 수 있다**(`ensureDaily_`) — 알 수 있는 것을 사람에게 시키지 않는다.
+       그래도 **멈췄다는 사실은 적는다**(감추면 왜 자료가 안 늘었는지 알 길이 없다). */
     var missed = sweepMissed(0);
     if (missed) {
       el.className = 'todo low';
-      el.innerHTML = step(1, '<b>자동 수집이 멈춰 있습니다</b> — 아래 '
-        + '<b>「자동 수집 다시 걸기」</b>를 먼저 눌러 주세요.')
-        + '<br>' + step(2, '그다음 <b>「수집」</b> 한 번이면 오늘 할 것을 다 합니다.');
+      el.innerHTML = step(1, '<b>오늘 자동 수집이 돌지 않았습니다</b> — '
+        + '<b>「수집」</b>을 한 번 눌러 주세요.')
+        + '<br><span class="cntxt">누르시면 오늘 할 것을 다 하고, '
+        + '<b>자동 수집도 함께 다시 겁니다.</b></span>';
       return;
     }
     /* ② 쿼터를 다 썼으면 눌러도 돌지 않는다 — 「누르세요」가 그 순간 거짓이 된다 */
@@ -4959,20 +4966,26 @@ function renderList() {
          한다(두 곳에 적으면 한쪽만 고쳐져 화면이 두 말을 한다). */
       var missed = sweepMissed(runMin);
       var hrs = lrMs ? (nowMs - lrMs) / 3600000 : 0;
-      /* **멈췄을 때만 보인다** — 평소에 떠 있으면 「눌러도 되나」 하고 누르게 되고,
-         트리거가 멀쩡한데 다시 걸면 그 실행이 한 번 더 도는 셈이다. */
-      var rb = document.getElementById('rearm');
-      if (rb && !rb.disabled) rb.hidden = !missed;
       stalled.innerHTML = missed
         ? '<div class="note warn"><b>오늘 자동 수집이 돌지 않았습니다</b> — 마지막 수집이 <b>'
           + hrs.toFixed(0) + '시간 전</b>(' + esc(String(DATA.lastRun.at).slice(0, 24)) + ')입니다.'
           + ' 새벽 3시 트리거가 꺼진 것으로 보입니다 — 구글은 실행이 거듭 실패하면 트리거를 끕니다.'
-          + '<br>오른쪽 위 <b>톱니바퀴</b>를 눌러 <b>「자동 수집 다시 걸기」</b>를 눌러 주세요. 그 전까지는 위의'
-          + ' <b>「수집」</b>으로 손수 돌릴 수 있습니다.</div>'
+          + '<br><b>「수집」</b>을 한 번 눌러 주세요 — 그때 트리거도 <b>함께 다시 겁니다.</b></div>'
         : "";
     }
     var auto = !!DATA.chainOn && !DATA.chainErr && !(runMin > 10);
-    if (!b.disabled) b.textContent = auto ? '지금 한 번 더' : (mid ? '이어서 수집' : '수집');
+    /* ── **이름은 하나 · 도는 중에는 잠근다** (2026-09-05 사장님 지시) ──────────
+     * 예전에는 「지금 한 번 더」·「이어서 수집」·「수집」 셋으로 갈렸다.
+     *  · **「지금 한 번 더」는 눌러 봐야 자물쇠에 막힌다** — 누를 수 있게 두면
+     *    「눌러도 아무 일이 없다」가 된다. 그때는 **잠근다.**
+     *  · 「이어서 수집」은 진행 상태 줄이 이미 「62곳 중 11번째에서 멈췄습니다 —
+     *    이어서 눌러 주세요」라고 적는다. 버튼이 그 말을 또 할 이유가 없다.
+     * **한 버튼 · 한 이름**이 이 화면의 규칙이다. */
+    if (!b.dataset.busy) {
+      b.textContent = '수집';
+      b.disabled = auto;
+      b.title = auto ? '자동으로 도는 중입니다 — 끝나면 다시 누를 수 있습니다' : '';
+    }
     /* 자동 재개가 포기했으면 **무엇을 누르면 되는지**를 그 자리에 적는다.
        예전 문구는 「전체 재수집을 눌러 다시 시작하세요」였는데, 원인이 꼬리 작업
        하나였고 매장 수집은 멀쩡했다 — 처음부터 돌면 이미 모은 것을 또 훑는다. */
@@ -7101,32 +7114,6 @@ function renderList() {
    *
    * **되돌릴 수 있는 일이라 묻지 않는다**(트리거를 새로 걸 뿐이다). 자료를 지우는
    * 것과 다르다 — 이 화면이 이미 「이어달리기 멈춤」에서 세운 기준 그대로다. */
-  document.getElementById('rearm').onclick = function () {
-    var b = this; b.disabled = true; b.textContent = '거는 중…';
-    google.script.run
-      .withSuccessHandler(function (r) {
-        b.disabled = false; b.textContent = '자동 수집 다시 걸기';
-        var box = document.getElementById('status');
-        if (!r || !r.ok) {
-          /* **실패를 실패라고 적는다** — 조용히 넘기면 「걸었습니다」가 거짓이 된다 */
-          box.innerHTML = '<div class="note warn"><b>걸지 못했습니다</b> — '
-            + esc((r && (r.error || r.msg)) || '알 수 없는 오류') + '</div>';
-          return;
-        }
-        box.innerHTML = '<div class="note"><b>' + esc(r.msg || '트리거를 다시 걸었습니다.') + '</b>'
-          + (r.cleared ? ' 멈춰 있던 이어달리기 트리거 ' + r.cleared + '개도 걷어냈습니다.' : '')
-          + ' 오늘 몫이 급하면 위의 <b>「수집」</b>을 한 번 눌러 주세요.</div>';
-        /* 경고를 그 자리에서 지운다 — 눌렀는데 그대로면 안 된 줄 안다 */
-        var w = document.getElementById('stalled'); if (w) w.innerHTML = '';
-      })
-      .withFailureHandler(function (e) {
-        b.disabled = false; b.textContent = '자동 수집 다시 걸기';
-        document.getElementById('status').innerHTML =
-          '<div class="note warn"><b>걸지 못했습니다</b> — ' + esc(e && e.message) + '</div>';
-      })
-      .rearmTrigger(admToken);
-  };
-
   /* **모은 자료를 비운다.** 되돌릴 수 없어 두 번 묻는다 — 건수를 적어 보이고,
      그다음 「지웁니다」를 직접 치게 한다. 실수로 한 번 눌러 사라지면 안 된다. */
   document.getElementById('wipe').onclick = function () {
@@ -7211,9 +7198,14 @@ function renderList() {
   function runCollect(b, mode) {
     var other = document.getElementById(mode === 'full' ? 'run' : 'runfull');
     var label = b.textContent;
+    /* **「보내는 중」과 「자동으로 도는 중」을 가른다**(2026-09-05). 둘 다 `disabled`
+       하나로 표현하던 탓에, 렌더가 도는 사이 **보내는 중인 버튼이 되살아났다.**
+       `busy` 표식이 있는 동안에는 렌더가 이 버튼을 건드리지 않는다. */
+    b.dataset.busy = '1';
     b.disabled = true; if (other) other.disabled = true;
     b.textContent = mode === 'full' ? '전부 훑는 중…' : '수집 중… (1~2분)';
     var undo = function () {
+      delete b.dataset.busy;
       b.disabled = false; if (other) other.disabled = false; b.textContent = label;
     };
     google.script.run
@@ -7273,6 +7265,17 @@ function renderList() {
                     ? '<b>1분 뒤 스스로 이어 갑니다</b> — 그냥 두시면 됩니다. 잠시 뒤 새로고침하면 늘어난 숫자가 보입니다.'
                     : '<b>「이어서 수집」을 다시 눌러 주세요</b> — 멈춘 매장부터 이어 갑니다.'))
             + ' <b>이미 모은 글은 다시 세지 않습니다.</b></div>';
+        }
+        /* **트리거를 고쳤으면 조용히 넘어가지 않는다**(2026-09-05). 「자동 수집 다시
+           걸기」 버튼을 없애고 서버가 알아서 하게 했으므로, **무엇을 했는지 안 적으면
+           사장님이 그 사실을 영영 모른다.** 고칠 것이 없었으면 아무 말도 안 한다. */
+        if (r && r.triggerFix) {
+          var st2 = document.getElementById('status');
+          if (st2) st2.innerHTML = (st2.innerHTML || '')
+            + '<div class="note"><b>자동 수집을 다시 걸었습니다</b> — '
+            + (r.triggerFix === 'made' ? '트리거가 없어져 새로 만들었습니다.'
+                                       : '꺼져 있어 다시 걸었습니다.')
+            + ' 내일 새벽 3시부터 스스로 돕니다.</div>';
         }
         b.textContent = '새로 ' + r.added + '건';
 
