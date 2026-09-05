@@ -844,7 +844,13 @@
      게다가 그 칸들은 이미 **「작성일 모름」이라고 글자로 적고 있어** 색에만 기대지 않는다.
      **다시 넣지 말 것** — 재 보고 버린 것이다. */
   .hm .cell.clk:hover { filter: brightness(1.14); }
-  .hm .cell .cn { font-weight: 800; letter-spacing: -.3px; }
+  /* **긴 이름이 건수를 밀어냈다** (2026-09-05 실물에서 잡음) — 「신세계사우스시티」가
+     세 줄로 접히며 아래 「20건」이 칸 밖으로 나갔다. 이름을 **두 줄로 묶고** 건수는
+     줄어들지 않게 한다 — 칸에서 가장 중요한 것이 건수다(이름은 말풍선에도 있다). */
+  .hm .cell .cn { font-weight: 800; letter-spacing: -.3px;
+                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+                  overflow: hidden; max-width: 100%; }
+  .hm .cell .cg, .hm .cell .cv, .hm .cell .lgn { flex-shrink: 0; }
   .hm .cell .cg { font-weight: 700; opacity: .95; }
   .hm .cell .cv { font-weight: 600; opacity: .78; }
   /* LG 매칭 표식 — **글자가 아니라 기호**다. 칸이 좁아 이름을 넣으면 뭉갠다 */
@@ -975,7 +981,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   </div>
 <!-- 접이식 섹션 박스 — 누르면 그 섹션이 열리고 여러 개를 동시에 열 수 있다. 열린 것은 기억한다 -->
 <div class="secs" id="secs" role="group" aria-label="섹션 열기">
-  <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs 경쟁 3사</button>
+  <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs LG</button>
   <button type="button" class="sec" data-sec="promo" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h3l5 4V6l-5 4zM17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>LG 홍보 경로</button>
   <button type="button" class="sec" data-sec="trend" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M4 16l5-6 4 3 7-8"/></svg></span>월별 추이</button>
   <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>이번 달 진단</button>
@@ -1001,17 +1007,18 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
          100분율로 어디가 앞서는가"*). **자료가 없으면 이 카드는 아예 안 그린다** —
          0 으로 그리면 「LG 후기가 없다」로 읽힌다. -->
     <div class="card" id="rival-card" data-card="rival">
-      <h2>당사 vs 경쟁 3사 — 지역별 점유율</h2>
-      <!-- 2026-09-02 사장님 요청으로 하이마트·전자랜드를 더했다. **비중의 뜻이 바뀌었다** —
-           예전 「당사 ÷ (당사+LG)」에서 **「그 지역 가전 후기 중 우리 몫」**이 됐다.
-           옛 회차와 섞이면 화면이 조용히 거짓이 되므로 RIVAL_SCHEMA 를 3 으로 올렸다. -->
+      <h2>당사 vs LG — 지역별 점유율</h2>
+      <!-- **당사 vs LG 둘만이다** (2026-09-05 사장님 지시 — *"하이마트 전자랜드정보
+           일괄삭제(불필요함)"*). 비중이 「당사 ÷ (당사+LG)」로 돌아가 **균형점이 50%** 다.
+           수집도 두 진영만 돈다 — 도시당 2,640 → 1,320회로 절반이 됐다.
+           옛 4사 회차와 섞이면 화면이 조용히 거짓이 되므로 RIVAL_SCHEMA 를 4 로 올렸다. -->
       <div class="note" style="margin:2px 0 8px">
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#1428A0;margin-right:3px"></span>당사
         <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#C0392B;margin:0 3px 0 8px"></span>LG베스트샵
         <b style="margin-left:8px">오른쪽 %는 당사 몫</b>입니다 —
         <b>둘이 반반이면 50%</b> 라 그보다 높으면 앞선 것입니다.
-        <span class="cntxt" style="display:block;margin-top:3px">하이마트·전자랜드는 화면에서 뺐습니다(2026-09-03) —
-        자료는 그대로 모으고 있어 다시 넣을 수 있습니다.</span>
+        <span class="cntxt" style="display:block;margin-top:3px">하이마트·전자랜드는 <b>수집도 화면도 뺐습니다</b>(2026-09-05) —
+        시트에 쌓인 옛 회차는 남아 있지만 판 번호가 달라 읽지 않습니다.</span>
       </div>
       <div class="sub" id="rival-sub">–</div>
       <div id="rival"></div>
@@ -1098,7 +1105,14 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <button type="button" class="bk" id="hm-size">크기: 건수</button>
         <!-- 연도 (2026-09-03 사장님 지시) — **기본은 당해년도만**, 누르면 작년 대비 -->
         <button type="button" class="bk" id="hm-year">작년 대비 보기</button>
-        <button type="button" class="bk" id="hm-cum">누적 보기</button>
+        <!-- **전월 대비** (2026-09-05 사장님 지시 — *"전월대비도 모든항목에 추가"*).
+             연도 축과 **같은 자리**를 다투므로 서로 끈다 — 겹쳐 걸면 칸 색이 무엇인지
+             알 수 없다(누적 축을 「작년 대비」와 서로 끄게 한 것과 같은 판단). -->
+        <button type="button" class="bk" id="hm-mom">전월 대비 보기</button>
+        <!-- **1년 단위로 본다** (2026-09-05 사장님 지시) —
+             *"1년단위로 볼수있게해주고, 당해와 전년 비교만하면됩니다"*.
+             어제 넣은 누적 축(2023~현재 합계)은 내렸다 — 오늘 지시가 1년 단위다. -->
+        <select id="hm-yr" class="bk" aria-label="어느 해를 볼까요"></select>
         <button type="button" class="bk" id="hm-mode">지역별로 보기</button>
         <!-- 지점 ↔ 매니저 (2026-09-03 사장님 지시). **자료가 없으면 화면이 감춘다** —
              매니저 수집 전에는 눌러도 빈 히트맵이라 「고장」으로 보인다. -->
@@ -1126,7 +1140,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <span id="hm-legt">전월 대비</span><b style="color:#C8324B" id="hm-legl">−15%</b>
         <span class="sc" id="hm-scale"></span><b style="color:#12805C" id="hm-legr">+15%</b>
         <span style="display:inline-flex;align-items:center;gap:5px;margin-left:8px">
-          <span id="hm-legz">전월이 0이거나 못 잼</span> — <b>증감률을 적지 않습니다</b></span>
+          <span id="hm-legz"></span></span>
       </div>
     </div>
     <!-- 구성 한눈에 (2026-09-03 사장님 선택) — 도넛 2 · 점 장표 2.
@@ -3274,7 +3288,10 @@ function wireSecs() {
   function lgPairBox(store) {
     var shops = DATA.lgShops || [], pair = DATA.lgPair || {};
     if (!shops.length) return "";
-    var now = pair[store] || "";
+    /* **여러 곳을 붙일 수 있다**(2026-09-05 사장님 지시) — *"당사A매장과 LG A매장
+       B매장을 한번에 볼 수도있기에"*. 옛 값은 문자열 하나라 배열로 맞춘다. */
+    var raw = pair[store];
+    var now = (Object.prototype.toString.call(raw) === "[object Array]") ? raw : (raw ? [raw] : []);
     /* **가까운 시·군 것을 위로 올린다** — 71곳을 이름순으로 늘어놓으면 못 고른다.
        그 매장이 속한 지역의 지점을 먼저 보이고 나머지는 아래에 둔다. */
     var area = areaOfStore(store), near = [], rest = [];
@@ -3283,17 +3300,20 @@ function wireSecs() {
         ? near : rest).push(shops[i]);
     }
     var opt = function (x) {
-      return '<option value="' + esc(x.n) + '"' + (x.n === now ? " selected" : "") + '>'
+      return '<option value="' + esc(x.n) + '"' + (now.indexOf(x.n) >= 0 ? " selected" : "") + '>'
         + esc(x.n) + " (" + esc(x.g) + ")</option>";
     };
     return '<div class="lgpair"><h4>경쟁 LG 지점</h4>'
-      + '<select id="lgsel" aria-label="이 매장과 견줄 LG 지점">'
-      + '<option value="">— 짝 없음 —</option>'
+      + '<select id="lgsel" multiple size="6" aria-label="이 매장과 견줄 LG 지점(여럿 고를 수 있습니다)">'
       + (near.length ? '<optgroup label="가까운 곳">' + near.map(opt).join("") + "</optgroup>" : "")
       + (rest.length ? '<optgroup label="그 밖">' + rest.map(opt).join("") + "</optgroup>" : "")
       + "</select>"
-      + '<div class="mini" id="lgmsg">자동으로 <b>가장 가까운 지점</b>을 골라 두었습니다 — '
-      + "바꾸시면 그대로 저장됩니다.</div></div>";
+      + '<div class="alias-add" style="margin-top:5px">'
+      + '<button type="button" class="btn" id="lgsave">이 짝으로 저장</button>'
+      + '<button type="button" class="btn" id="lgclear">짝 없음</button></div>'
+      + '<div class="mini" id="lgmsg">백화점은 <b>같은 건물</b>, 그 밖은 <b>가장 가까운 지점</b>을'
+      + ' 자동으로 골라 두었습니다. <b>Ctrl(⌘)</b> 을 누른 채 여러 곳을 고를 수 있습니다(최대 3곳) —'
+      + ' 저장하면 <b>매장 대 매장 수집</b>이 처음부터 다시 돕니다.</div></div>';
   }
 
   function renderStoreDetail() {
@@ -3352,30 +3372,62 @@ function wireSecs() {
        * 잣대가 달라 지역별로 −1,344 ~ +3,027 어긋난다. 나란히 적으면 거짓이 된다. */
       + lgPairBox(storeFilter)
       + '<button type="button" class="btn" id="godet" style="margin-top:8px;width:100%">이 지점 후기 링크 보기</button>';
-    /* 짝을 바꾸면 **그 자리에서 저장한다** — 「저장」 버튼을 따로 두면 안 누르고 나간다.
-       서버가 실재하는 지점만 받으므로 오타로 짝이 사라질 일은 없다. */
+    /* ── **짝은 여럿일 수 있다 · 관리자만 바꾼다** (2026-09-05 사장님 지시) ─────────
+     * *"매칭을 변경할수있는 관리자 시스템이필요합니다"*.
+     *
+     * **바꾸는 즉시 저장하던 것을 「저장」 버튼으로 바꿨다** — 여럿을 고르는 중에는
+     * 클릭마다 저장되면 중간 상태가 서버에 쌓이고, 그때마다 매장 대 매장 커서가
+     * 되돌아간다(짝이 바뀌면 다시 재야 하기 때문이다).
+     *
+     * **관리자 토큰을 넘긴다** — 짝을 바꾸면 「당사 vs LG」 비중이 통째로 달라진다.
+     */
     var sel = document.getElementById('lgsel');
-    if (sel) sel.onchange = function () {
-      var msg = document.getElementById('lgmsg'), v = sel.value, who = storeFilter;
+    var saveLg = function (list) {
+      var msg = document.getElementById('lgmsg'), who = storeFilter;
+      if (!(window.google && google.script && google.script.run)) {
+        if (msg) msg.innerHTML = '<b class="warn">미리보기에서는 저장되지 않습니다.</b>';
+        return;
+      }
       if (msg) msg.textContent = '저장하는 중…';
-      sel.disabled = true;
+      if (sel) sel.disabled = true;
       google.script.run
         .withSuccessHandler(function (r) {
-          sel.disabled = false;
+          if (sel) sel.disabled = false;
           if (!r || !r.ok) {
+            /* **실패를 실패라고 적는다** — 조용히 넘기면 고른 것과 화면이 어긋난다 */
             if (msg) msg.innerHTML = '<b class="warn">저장하지 못했습니다</b> — ' + esc((r && r.why) || '알 수 없는 이유');
             return;
           }
           DATA.lgPair = r.pairs || DATA.lgPair;
-          if (msg) msg.innerHTML = v ? '<b>' + esc(v) + '</b> 로 저장했습니다.' : '짝을 뗐습니다.';
+          if (msg) msg.innerHTML = (r.shops && r.shops.length)
+            ? '<b>' + esc(r.shops.join(' · ')) + '</b> 로 저장했습니다 — <b>매장 대 매장 수집</b>을 다시 돌리면 반영됩니다.'
+            : '짝을 뗐습니다.';
           /* 지도의 채운 핀이 따라와야 한다 — 안 그리면 화면이 옛 짝을 보여준다 */
           renderMap();
         })
         .withFailureHandler(function (e) {
-          sel.disabled = false;
+          if (sel) sel.disabled = false;
           if (msg) msg.innerHTML = '<b class="warn">저장하지 못했습니다</b> — ' + esc(e && e.message);
         })
-        .setLgPair(who, v);
+        .setLgPair(storeFilter, list, admToken);
+    };
+    var lgsv = document.getElementById('lgsave');
+    if (lgsv) lgsv.onclick = function () {
+      if (!sel) return;
+      var picked = [];
+      Array.prototype.forEach.call(sel.selectedOptions || [], function (o) { if (o.value) picked.push(o.value); });
+      /* **서버가 3곳으로 묶는다** — 화면에서도 미리 알린다(눌러 놓고 잘리면 어리둥절하다) */
+      if (picked.length > 3) {
+        var m2 = document.getElementById('lgmsg');
+        if (m2) m2.innerHTML = '<b class="warn">최대 3곳까지입니다</b> — 앞의 세 곳만 저장합니다.';
+        picked = picked.slice(0, 3);
+      }
+      saveLg(picked);
+    };
+    var lgcl = document.getElementById('lgclear');
+    if (lgcl) lgcl.onclick = function () {
+      if (sel) Array.prototype.forEach.call(sel.options, function (o) { o.selected = false; });
+      saveLg([]);
     };
     var go = document.getElementById('godet');
     if (go) go.onclick = function () {
@@ -3814,20 +3866,18 @@ function wireSecs() {
        * 안 적으면 *"617건인데 왜 위에는 9,830건이지"* 가 된다(이 화면이 「없음」과
        * 「못 잼」을 가르는 그 규칙이다). */
       function yearTable() {
-        /* 4사를 다 접는다 — 위 sum() 은 당사·경쟁 둘만 접어 하이마트·전자랜드가 사라진다 */
+        /* **당사·LG 둘만 접는다**(2026-09-05 사장님 지시로 하이마트·전자랜드를 뺐다) */
         var yr = {}, ym = {}, kn = 0;
         rows.forEach(function (r) {
           var m = r.byMonth || {};
           Object.keys(m).forEach(function (k) {
             var y = String(k).slice(0, 4), v = m[k] || {};
-            if (!yr[y]) yr[y] = { o: 0, r: 0, h: 0, e: 0 };
+            if (!yr[y]) yr[y] = { o: 0, r: 0 };
             /* 월 칸을 함께 들고 있는다 — 아래 「같은 기간」 증감이 쓴다 */
-            if (!ym[k]) ym[k] = { o: 0, r: 0, h: 0, e: 0 };
+            if (!ym[k]) ym[k] = { o: 0, r: 0 };
             ym[k].o += v.o || 0; ym[k].r += v.r || 0;
-            ym[k].h += v.h || 0; ym[k].e += v.e || 0;
             yr[y].o += v.o || 0; yr[y].r += v.r || 0;
-            yr[y].h += v.h || 0; yr[y].e += v.e || 0;
-            kn += (v.o || 0) + (v.r || 0) + (v.h || 0) + (v.e || 0);
+            kn += (v.o || 0) + (v.r || 0);
           });
         });
         var ys = Object.keys(yr).sort();
@@ -3836,31 +3886,29 @@ function wireSecs() {
            화면이 통째로 비는 것을 막는다(히트맵 heatYears() 와 같은 규칙). */
         var cur = ys[ys.length - 1], prev = String(Number(cur) - 1);
         var KEEP = Number(cur) - 3;            /* 23·24년까지 줄로 적고 그 앞은 묶는다 */
-        var old = { o: 0, r: 0, h: 0, e: 0 }, oldFrom = null, oldTo = null;
+        var old = { o: 0, r: 0 }, oldFrom = null, oldTo = null;
         var shown = [];
         ys.forEach(function (y) {
           if (Number(y) >= KEEP) { shown.push(y); return; }
           var v = yr[y];
-          old.o += v.o; old.r += v.r; old.h += v.h; old.e += v.e;
+          old.o += v.o; old.r += v.r;
           if (!oldFrom || y < oldFrom) oldFrom = y;
           if (!oldTo || y > oldTo) oldTo = y;
         });
         shown.reverse();                       /* 최신이 위 — 먼저 볼 것이 위에 온다 */
 
-        var tot = function (v) { return v.o + v.r + v.h + v.e; };
+        var tot = function (v) { return v.o + v.r; };
         var line = function (label, v, live) {
           var t = tot(v), p = t ? v.o * 100 / t : null;
           /* **비중은 당해·직전해만** 적는다. 23·24년에도 적으면 「숫자만 보관」이라는
              지시가 무너지고, 무엇보다 그 해는 **더 이상 안 늘어나는 숫자**라 비중을
              나란히 놓으면 지금 싸움처럼 읽힌다. */
-          /* **연도 표도 4사다** — 균형점 25%. 2사 칩과 같은 자를 쓰면 22% 가
-               진한 빨강이 되어 「모든 해에 밀린다」로 읽힌다. */
+          /* **2사다**(2026-09-05 사장님 지시로 하이마트·전자랜드를 뺐다) — 균형점 50% */
           var bg = live && p !== null
-            ? rvColor(p, rvBase({ ours: v.o, rival: v.r, hi: v.h, el: v.e })) : '';
+            ? rvColor(p, rvBase({ ours: v.o, rival: v.r })) : '';
           return '<tr' + (live ? ' class="live"' : '') + '>'
             + '<th>' + esc(label) + '</th>'
             + '<td>' + nf(v.o) + '</td><td>' + nf(v.r) + '</td>'
-            + '<td>' + nf(v.h) + '</td><td>' + nf(v.e) + '</td>'
             + (live
                 ? '<td class="pc"' + (bg ? ' style="background:' + bg + ';color:' + inkOn(bg) + '"' : '')
                   + '>' + (p === null ? '—' : Math.round(p) + '%') + '</td>'
@@ -3905,10 +3953,10 @@ function wireSecs() {
           });
           use.sort();
           var ytd = function (y) {
-            var a = { o: 0, r: 0, h: 0, e: 0 };
+            var a = { o: 0, r: 0 };
             use.forEach(function (m2) {
               var v = ym[y + '-' + m2]; if (!v) return;
-              a.o += v.o; a.r += v.r; a.h += v.h; a.e += v.e;
+              a.o += v.o; a.r += v.r;
             });
             return a;
           };
@@ -3924,7 +3972,7 @@ function wireSecs() {
             : '<div class="mini" style="margin-top:5px"><b>' + prev + '년 대비</b> '
               + '(양쪽 다 <b>' + use.map(function (x) { return Number(x); }).join('·') + '월</b>만'
               + ' 견줍니다 — <b>두 해에 다 있고 아직 진행 중이 아닌 달</b>입니다) — '
-              + [mk('o', '당사'), mk('r', 'LG'), mk('h', '하이마트'), mk('e', '전자랜드')].join(' · ')
+              + [mk('o', '당사'), mk('r', 'LG')].join(' · ')
               + '</div>';
         }
 
@@ -3934,7 +3982,7 @@ function wireSecs() {
           + '<b>' + esc(cur) + '·' + esc(prev) + '년만 비중을 냅니다</b> — 그 앞은 더 이상'
           + ' 늘지 않는 숫자라 <b>보관용</b>입니다.</div>'
           + '<table class="rvyr"><thead><tr><th>연도</th><th>당사</th><th>LG</th>'
-          + '<th>하이마트</th><th>전자랜드</th><th>당사 몫</th></tr></thead>'
+          + '<th>당사 몫</th></tr></thead>'
           + '<tbody>' + body + '</tbody></table>' + gr;
       }
     })();
@@ -5067,23 +5115,10 @@ function renderList() {
    * **기본은 당해년도**다. `'cmp'` 는 「올해 vs 작년」 — 크기는 올해 건수, 색은 증감.
    * 2024년 이전은 URL 을 지웠고 요약(건수)만 있어 **히트맵에서는 아예 뺀다** —
    * 매장별로 남긴 요약은 있지만 주차·채널이 없어 히트맵의 다른 축과 어긋난다. */
-  var heatYear = 'cur';     /* 'cur' 올해만 · 'cmp' 올해 vs 작년 · 'cum' 누적 */
-  /* ── **누적 축** (2026-09-05 사장님 지시) ────────────────────────────────
-   * *"23년~현재까지 누적수치도 볼 수 있게해주세요"*.
-   *
-   * **왜 2023 부터인가** — 그 앞은 세어도 뜻이 없다. 같은 날 실측으로
-   * 타사비교 연도별이 이렇게 나왔다(양쪽 **같은 질의·같은 쪽수**다):
-   *
-   *     2006~2022 합  당사 12건 · LG 658건 · 하이마트 485 · 전자랜드 1,223
-   *     2023          당사 558 · LG 244   ← 한 해에 46배가 뛰는 일은 없다
-   *
-   * 삼성이 2022년경 **「디지털프라자 → 삼성스토어」로 브랜드를 바꿨고** 질의는
-   * 「삼성스토어」 하나만 던진다(판정은 옛 이름까지 보는데 질의가 안 던진다).
-   * LG·하이마트·전자랜드는 이름을 안 바꿔 옛 글이 그대로 잡힌다 — **당사만
-   * 구조적으로 빠진다.** 그 구간을 누적에 넣으면 화면이 거짓말을 한다.
-   *
-   * **자료에 없는 해는 저절로 빠진다** — 이 값은 하한일 뿐이다. */
-  var HEAT_CUM_FROM = '2023';
+  var heatYear = 'cur';     /* 'cur' 그 해만 · 'cmp' 그 해 vs 전년 · 'mom' 전월 대비 */
+  /* **보고 있는 해**(2026-09-05 사장님 지시로 1년 단위). 빈 값이면 자료의 마지막 해다 —
+     시계에서 내면 자료가 없는 해를 가리킬 수 있다(`heatYears()` 가 이미 세운 규칙). */
+  var heatPickY = '';
   var heatSize = 'n';       /* 'n' 건수 · 'g' 등락률 */
   var heatPath = [];        /* flat: [] | [점명] · region: [] | [지역] | [지역, 점명] */
   /* **유형 거르개**(2026-09-03 사장님 요청 — *"히트맵도 혼수 입주 구분할 수 있게"*).
@@ -5098,6 +5133,13 @@ function renderList() {
      폭락으로 보인다. 그래서 **이번 달은 빼고** 그 앞의 두 달을 쓴다. */
   /** 올해·작년 — **자료에서 낸다**(시계에서 내면 자료가 없는 해를 가리킬 수 있다).
    *  `byStoreMonth` 에 있는 가장 늦은 달의 해가 「올해」다. */
+  /** 자료가 걸친 해(오름차순). 연도 고르기가 이 목록으로 만들어진다 —
+   *  **화면이 해를 지어내지 않는다**(없는 해를 고르면 빈 화면이 된다). */
+  function yearsIn(monthKeys) {
+    var set = {}, i;
+    for (i = 0; i < monthKeys.length; i++) set[String(monthKeys[i]).slice(0, 4)] = 1;
+    return Object.keys(set).sort();
+  }
   function heatYears() {
     var bm = DATA.byStoreMonth || {}, set = {}, k, m;
     for (k in bm) if (bm.hasOwnProperty(k)) {
@@ -5105,8 +5147,11 @@ function renderList() {
       for (m in mm) if (mm.hasOwnProperty(m)) set[m] = 1;
     }
     var ks = Object.keys(set).sort();
-    var cur = ks.length ? ks[ks.length - 1].slice(0, 4) : String(new Date().getFullYear());
-    return { cur: cur, prev: String(+cur - 1) };
+    var last = ks.length ? ks[ks.length - 1].slice(0, 4) : String(new Date().getFullYear());
+    /* **고른 해가 있으면 그것이 「당해」다**(2026-09-05) — 1년 단위로 보되 비교는
+       늘 그 해 vs 그 전 해다. 고르지 않았으면 자료의 마지막 해. */
+    var cur = (heatPickY && ks.some(function (m) { return m.slice(0, 4) === heatPickY; })) ? heatPickY : last;
+    return { cur: cur, prev: String(+cur - 1), last: last, years: yearsIn(ks) };
   }
   /** 그 매장의 **한 해 건수**. `byStoreMonth` 를 해로 합친다. */
   /** 그 해 그 매장 건수. `upto`(MM)를 주면 **그 달까지만** 센다.
@@ -5124,28 +5169,7 @@ function renderList() {
     return n;
   }
 
-  /** 그 매장의 **해 구간 합**(from 년 이후 전부). 누적 축이 쓴다.
-   *  `yearSum` 을 해마다 부르지 않고 한 번에 훑는다 — 같은 자료를 여러 번 돌 이유가 없다. */
-  function yearFromSum(nm, from) {
-    var mm = (DATA.byStoreMonth || {})[nm] || {}, n = 0, m;
-    for (m in mm) if (mm.hasOwnProperty(m) && m.slice(0, 4) >= from) n += mm[m];
-    return n;
-  }
 
-  /** 누적 축이 **실제로 덮는 해 구간**. 자료에 없는 해는 빼고 사람 말로 적는다 —
-   *  「2023~2026」이라 적었는데 2023 자료가 없으면 그 자리에서 거짓이 된다. */
-  function cumSpan() {
-    var bm = DATA.byStoreMonth || {}, lo = '', hi = '', k, m;
-    for (k in bm) if (bm.hasOwnProperty(k)) {
-      for (m in bm[k]) if (bm[k].hasOwnProperty(m)) {
-        var y = m.slice(0, 4);
-        if (y < HEAT_CUM_FROM) continue;
-        if (!lo || y < lo) lo = y;
-        if (!hi || y > hi) hi = y;
-      }
-    }
-    return { from: lo || HEAT_CUM_FROM, to: hi || heatYears().cur };
-  }
 
   /** ── **LG 몫도 지금 보고 있는 축을 따라간다** (2026-09-05 사장님 지시) ────────
    *  *"히트맵에는 당해(26년)만 볼 수 있게 / 당사 LG 모두"*.
@@ -5159,23 +5183,23 @@ function renderList() {
   function srShare(nm) {
     var r = (window.__SR || {})[nm];
     if (!r || r.capped) return null;
-    if (!r.mon || !(heatYear === 'cur' || heatYear === 'cmp' || heatYear === 'cum')) {
+    if (!r.mon) {
       /* **숫자가 아니면 못 잼이다** — === null 만 보면 undefined·NaN 이 새어
          화면에 undefined% 가 찍힌다(사장님이 이미 한 번 신고한 자리다). */
       return (typeof r.pct === 'number' && isFinite(r.pct))
         ? { pct: r.pct, ours: r.ours, rival: r.rival, shop: r.shop, scope: 'all' } : null;
     }
-    var from = heatYear === 'cum' ? HEAT_CUM_FROM : heatYears().cur;
-    var only = heatYear === 'cum' ? null : heatYears().cur;
+    /* **보고 있는 해만**(2026-09-05 사장님 지시로 1년 단위) — 칸 크기와 같은 잣대다 */
+    var only = heatYears().cur;
     var o = 0, v = 0, m;
-    for (m in r.mon.o) if (r.mon.o.hasOwnProperty(m) && (only ? m.slice(0, 4) === only : m.slice(0, 4) >= from)) o += r.mon.o[m];
-    for (m in r.mon.r) if (r.mon.r.hasOwnProperty(m) && (only ? m.slice(0, 4) === only : m.slice(0, 4) >= from)) v += r.mon.r[m];
+    for (m in r.mon.o) if (r.mon.o.hasOwnProperty(m) && m.slice(0, 4) === only) o += r.mon.o[m];
+    for (m in r.mon.r) if (r.mon.r.hasOwnProperty(m) && m.slice(0, 4) === only) v += r.mon.r[m];
     var t = o + v;
     /* **양쪽 다 0 이면 「없다」가 아니라 「못 잰다」다** — 그 해 작성일을 아는 글이
        한 건도 없었다는 뜻이라, 빨강을 안 그리고 말풍선이 이유를 적는다. */
-    if (!t) return { pct: null, ours: 0, rival: 0, shop: r.shop, scope: heatYear === 'cum' ? 'cum' : 'year' };
+    if (!t) return { pct: null, ours: 0, rival: 0, shop: r.shop, scope: 'year' };
     return { pct: Math.round(o / t * 100), ours: o, rival: v, shop: r.shop,
-             scope: heatYear === 'cum' ? 'cum' : 'year' };
+             scope: 'year' };
   }
 
   /** **작년과 실제로 견줄 수 있는 달**(MM 배열). 조건 셋을 다 넘긴 달만 남는다:
@@ -5235,16 +5259,7 @@ function renderList() {
      * 함께 적는다** — 「어디에서 싸우나」를 잃지 않으면서 합이 맞는다. */
     var allCh = (DATA.byStoreChan || {})[store] || {};
     var scoped = null, scopeLab = '';
-    if (heatYear === 'cum' && y) {
-      scoped = {};
-      var yr2, k3;
-      for (yr2 in y) if (y.hasOwnProperty(yr2) && yr2 >= HEAT_CUM_FROM) {
-        for (k3 in y[yr2]) if (y[yr2].hasOwnProperty(k3)) scoped[k3] = (scoped[k3] || 0) + y[yr2][k3];
-      }
-      var sp6 = cumSpan(); scopeLab = sp6.from + '~' + sp6.to + ' 누적';
-      /* 그 구간에 한 건도 없으면 「없다」가 아니라 「못 잰다」다 — 전 기간으로 물러선다 */
-      if (!Object.keys(scoped).length) scoped = null;
-    } else if (y && y[yr]) { scoped = y[yr]; scopeLab = yr + '년'; }
+    if (y && y[yr]) { scoped = y[yr]; scopeLab = yr + '년'; }
     return { m: scoped || allCh, all: allCh, scoped: !!scoped, scopeLab: scopeLab,
              year: yr, yearN: yn };
   }
@@ -5499,15 +5514,26 @@ function renderList() {
           var Y = heatYears();
           /* **작년은 같은 달까지만** — 그래야 증감이 사실이 된다(위 yearSum 주석).
          칸에 적는 건수(`cnt`)는 **당해 전체**다 — 그쪽은 「올해 몇 건인가」라 자르면 안 된다. */
+          /* ── **전월 대비** (2026-09-05 사장님 지시) ───────────────────────────
+           * *"전월대비도 모든항목에 추가해주세요"*.
+           *
+           * **완결된 두 달을 견준다**(`heatMonths()`) — 달력의 이번 달은 며칠치뿐이라
+           * 그대로 쓰면 전 매장이 −90%대로 새빨갛게 뜬다(자료가 아니라 달이 안 끝난
+           * 탓인데 화면은 폭락으로 보인다). 그 규칙은 이 화면이 이미 세워 두었다.
+           *
+           * **크기는 그 달 건수**다 — 연도 축이 「그 해 건수」인 것과 같은 결이다. */
+          if (heatYear === 'mom') {
+            var mmv = DATA.byStoreMonth || {};
+            var mc = (mmv[nm] || {})[M.cur] || 0, mp = (mmv[nm] || {})[M.prev] || 0;
+            out.push({ nm: nm, key: nm, reg: rg, cnt: mc, cur: mc, prev: mp,
+                       noPrev: !mp, mon: M.cur, prevMon: M.prev,
+                       g: mp ? (mc - mp) / mp * 100 : null });
+            continue;
+          }
       var CM = heatYear === 'cmp' ? heatCmpMonths() : null;
       /* **누적 축은 견줄 앞 구간이 없다** — 증감을 내지 않고 건수만 그린다.
          0 으로 두면 「제자리」가 되어 거짓이 되므로 null 로 둔다(화면이 그렇게 적는다). */
-      if (heatYear === 'cum') {
-        var sp1 = cumSpan(), yz = yearFromSum(nm, HEAT_CUM_FROM);
-        out.push({ nm: nm, key: nm, reg: rg, cnt: yz, cur: yz, prev: 0,
-                   noPrev: true, cum: sp1.from + '~' + sp1.to, g: null });
-        continue;
-      }
+
       var yc = yearSum(nm, Y.cur, CM), yp = yearSum(nm, Y.prev, CM);
           out.push({ nm: nm, key: nm, reg: rg, cnt: yc, cur: yc, prev: yp,
                      noPrev: !yp, year: Y.cur, prevYear: Y.prev,
@@ -5531,7 +5557,16 @@ function renderList() {
   }
   /** 매니저 한 줄. **명부에 있는지도 싣는다** — 화면이 검증된 이름과 아닌 것을 가른다. */
   function mgrRows() {
+    /* ── **지점 히트맵과 같은 잣대를 쓴다** (2026-09-05 사장님 지시) ─────────────
+     * *"매니저별 후기순위 히트맵을 [수집기준]에 맞춰 동일하게 필터링"*.
+     *
+     * 예전에는 매니저만 **월 기준**이라 같은 화면이 두 잣대를 썼다(빵부스러기가
+     * 「전월 대비 -72.7%」였다). 이제 연도 축을 그대로 탄다 — 크기는 그 해 건수,
+     * 색은 전년 대비. **주차를 보고 있으면 예전처럼 월로 물러선다**(매니저 자료에는
+     * 주차 표가 없다) — 없는 것을 있는 척 그리지 않는다.
+     */
     var top = DATA.mgrTop || [], M = heatMonths(), out = [];
+    var MY = heatYears(), mgrYr = !heatWeek;
     /* 매장 → 지역 (한 번만 만든다) */
     var reg = DATA.byRegion || {}, s2r = {}, rg, j;
     for (rg in reg) if (reg.hasOwnProperty(rg)) {
@@ -5544,14 +5579,36 @@ function renderList() {
       /* **고른 유형으로 센다**(2026-09-03 사장님 지시). 서버가 매니저 × 유형을 준다.
          **옛 서버 자료에는 `kind4` 가 없다** — 그때는 유형을 못 걸고 전체를 그린다.
          화면이 그 사실을 적는다(아래 안내). */
-      var kn4 = heatKind ? ((t.kind4 || {})[heatKind] || 0) : (t.n || 0);
+      /* **그 해 건수** — `mon`(연도별 월)에서 합친다. 유형을 걸면 `kindY`(연도×유형)를
+         쓴다. **옛 서버 자료에는 `kindY` 가 없다** — 그때는 전 기간 유형으로 물러서고
+         화면이 그 사실을 적는다(0 으로 그리면 「그 해에 없었다」가 되어 거짓이다). */
+      var yrSum = function (y) {
+        var n2 = 0, mm2;
+        for (mm2 in mon) if (mon.hasOwnProperty(mm2) && mm2.slice(0, 4) === y) n2 += mon[mm2];
+        return n2;
+      };
+      var kY = t.kindY || null;
+      var kn4;
+      if (!mgrYr) kn4 = heatKind ? ((t.kind4 || {})[heatKind] || 0) : (t.n || 0);
+      else if (!heatKind) kn4 = yrSum(MY.cur);
+      else if (kY) kn4 = ((kY[MY.cur] || {})[heatKind] || 0);
+      else kn4 = ((t.kind4 || {})[heatKind] || 0);
+      /* 전년 — 색(증감)이 쓴다 */
+      var kp4 = !mgrYr ? 0
+        : !heatKind ? yrSum(MY.prev)
+        : kY ? ((kY[MY.prev] || {})[heatKind] || 0) : 0;
       out.push({
         nm: t.name, key: t.name, reg: s2r[t.store] || '기타',
-        cnt: kn4, cur: c, prev: p2, store: t.store || '', known: !!t.known,
+        cnt: kn4,
+        cur: mgrYr ? kn4 : c, prev: mgrYr ? kp4 : p2,
+        year: mgrYr ? MY.cur : null, prevYear: mgrYr ? MY.prev : null,
+        noPrev: mgrYr ? !kp4 : !p2,
+        hasKY: !!kY,
+        store: t.store || '', known: !!t.known,
         hasK4: !!t.kind4,
         /* **전월이 0이거나 모르면 못 잰다** — 0에서 늘어난 것은 몇 %가 아니다
            (지점 히트맵이 이미 세운 규칙 그대로다). */
-        g: p2 ? (c - p2) / p2 * 100 : null
+        g: mgrYr ? (kp4 ? (kn4 - kp4) / kp4 * 100 : null) : (p2 ? (c - p2) / p2 * 100 : null)
       });
     }
     /* **유형을 걸면 0건인 사람이 생긴다** — 어차피 칸을 못 그리므로 여기서 뺀다.
@@ -5663,6 +5720,10 @@ function renderList() {
     }).join(',') + ')';
   }
 
+  /* **2026-09-05 사장님 지시로 진영이 둘로 돌아갔다** — 하이마트·전자랜드를 뺐다.
+     그래도 **값이 있는 회사를 세는 방식은 그대로 둔다**: 시트에 남은 4사 회차를
+     읽게 될 수 있고, 그때는 균형점이 25 여야 한다. 못 박으면 그 줄이 통째로
+     「밀림」으로 그려진다(이 함수가 애초에 그것 때문에 생겼다). */
   function rvBase(r) {
     var n = 0;
     ['ours', 'rival', 'hi', 'el'].forEach(function (k) { if (Number(r[k]) > 0) n++; });
@@ -5813,14 +5874,24 @@ function renderList() {
       });
       /* **누적 축**(2026-09-05 사장님 지시). 「작년 대비」와 **같은 축**이라 서로
          끈다 — 둘을 겹쳐 걸면 칸 크기가 무엇인지 알 수 없다. */
-      var bcum = document.getElementById('hm-cum');
-      if (bcum) bcum.addEventListener('click', function () {
-        heatYear = heatYear === 'cum' ? 'cur' : 'cum';
+      /* **해를 고른다**(2026-09-05 사장님 지시로 1년 단위). 주차는 **당해에만** 뜻이
+         있으므로 해를 바꾸면 푼다 — 남겨 두면 없는 주를 고른 채가 되어 0건이 된다. */
+      var bpy = document.getElementById('hm-yr');
+      if (bpy) bpy.addEventListener('change', function () {
+        heatPickY = this.value || '';
         heatWeek = ''; heatFrom = ''; heatTo = '';
         heatPath = [];
         renderHeat();
       });
       var byr = document.getElementById('hm-year');
+      var bmom = document.getElementById('hm-mom');
+      if (bmom) bmom.addEventListener('click', function () {
+        heatYear = heatYear === 'mom' ? 'cur' : 'mom';
+        /* 주차와 같은 축이라 푼다 — 겹쳐 걸면 화면이 두 말을 한다 */
+        heatWeek = ''; heatFrom = ''; heatTo = '';
+        heatPath = [];
+        renderHeat();
+      });
       if (byr) byr.addEventListener('click', function () {
         heatYear = heatYear === 'cmp' ? 'cur' : 'cmp';
         /* **기간을 골랐으면 푼다** — 연도와 주차는 같은 축이라 겹쳐 걸면 화면이 두 말을 한다 */
@@ -5961,7 +6032,7 @@ function renderList() {
         items.push({ nm: d.nm, key: d.key, v: v, cnt: d.cnt, cur: d.cur, prev: d.prev, g: d.g,
                      n: d.n, isReg: d.isReg, share: d.share, noPrev: d.noPrev,
                      store: d.store, known: d.known,
-                     year: d.year, prevYear: d.prevYear, cum: d.cum,
+                     year: d.year, prevYear: d.prevYear, mon: d.mon, prevMon: d.prevMon,
                      /* **LG 대비 보기** — 이 셋을 빠뜨리면 칸이 통째로 검정이 된다
                         (색이 lgPct 로 나오는데 undefined 가 넘어간다). 이 자리에서
                         필드를 빠뜨려 데인 것이 이번이 네 번째다. */
@@ -6053,17 +6124,17 @@ function renderList() {
                        `cur`(당해만)일 때는 증감을 안 적는다 — 그때는 색도 건수다. */
                     /* **누적 축은 견줄 앞 구간이 없다** — 아무것도 적지 않는다.
                        「전월 모름」을 적으면 안내(「증감은 내지 않습니다」)와 두 말이 된다. */
-                    : (d.cum ? ''
-                        : d.year
+                    : (d.mon ? (d.noPrev ? heatMonLabel(d.prevMon) + ' 없음' : d.prev + '→' + d.cur + '건')
+                    : (d.year
                         ? (heatYear !== 'cmp' ? ''
                             : d.noPrev ? d.prevYear + '년 없음'
                             : d.prev + '→' + d.cur + '건')
                         : (d.noPrev ? '전월 모름'
-                            : (d.prev || d.cur ? d.prev + '→' + d.cur + '건' : '')))));
+                            : (d.prev || d.cur ? d.prev + '→' + d.cur + '건' : ''))))));
           /* **연도 축에서는 붙이지 않는다** — 그 칸은 작성일을 알아서 그 해로 센 것이라
              「작성일 모름」이 그 자리에서 거짓이 된다(당해만 볼 때 부제가 비는 것은
              증감을 일부러 안 적기 때문이지 자료가 없어서가 아니다). */
-          if (!d.isReg && !sub2 && !heatKind && !d.year && !d.cum) sub2 = '작성일 모름';
+          if (!d.isReg && !sub2 && !heatKind && !d.year && !d.mon) sub2 = '작성일 모름';
           if (sub2) lab += '<span class="cv" style="font-size:' + (fs * 0.52).toFixed(1) + 'px">' + sub2 + '</span>';
           /* **LG 매칭 표식** — 글자를 더 넣지 않고 기호 하나만 둔다(칸이 좁다).
              ▣ 같은 백화점 안 · ✕ 매칭 없음 · 최근접은 표식 없음(대부분이라 붙이면 지저분하다). */
@@ -6089,11 +6160,22 @@ function renderList() {
           /* **칸 색과 같은 값을 쓴다**(2026-09-05) — 따로 읽으면 빨강 면적과 적힌
              건수가 어긋난다(면적은 당해, 글자는 전 기간). 한 함수를 지나간다. */
           var srmL = srShare(d.nm);
+          /* ── **잣대가 다르면 칸에 적지 않는다** (2026-09-05 실물에서 잡음) ──────────
+           * 갤러리아광교 칸이 「184건」(2026년)인데 그 아래 「LG 갤러리아 광교점 369건」
+           * (전 기간)이 나란히 있었다 — **한 칸 안에 두 잣대**다. 그대로 읽으면
+           * *"우리 184 vs LG 369"* 가 되어 거짓이다(실제 2026년 LG 는 훨씬 적다).
+           * 잣대가 같을 때만(`scope` 가 'year'·'cum') 적는다 — 전 기간으로 물러선
+           * 상태에서는 **면적만** 두고 숫자는 말풍선이 밝힌다. */
+          if (srmL && srmL.scope === 'all') srmL = null;
           if (srmL && srmL.pct !== null && srmL.shop && !chan && !d.isReg && c.w > 96 && c.h > 66) {
             /* 우리 이름과 겹치는 앞부분을 떼면 짧아진다 — `강릉 ↔ 강릉본점` → `본점`.
                다만 **다 떼면 이름이 사라지므로**(같은 이름) 그때는 원래 것을 쓴다. */
             var lgn = String(srmL.shop);
-            if (lgn.indexOf(d.nm) === 0 && lgn.length > d.nm.length) lgn = lgn.slice(d.nm.length);
+            /* **떼고 나서 뜻이 남을 때만 뗀다**(2026-09-05 실물에서 잡음) — 광명소하 칸에
+               「LG 점 3건」이 떠 있었다. 지점명이 「광명소하점」이라 매장 이름을 떼니
+               「점」 한 글자가 남은 것이다. **두 글자도 안 남으면 통째로 둔다.** */
+            var lgcut = (lgn.indexOf(d.nm) === 0) ? lgn.slice(d.nm.length) : lgn;
+            if (lgcut.length >= 2 && lgcut !== '점') lgn = lgcut;
             var lgTxt = 'LG ' + lgn + ' ' + nf(srmL.rival) + '건';
             /* **글자 크기를 칸 폭에서 낸다** — 이름 크기의 절반으로 고정했더니
                긴 이름(`AK PLAZA 평택점`)이 칸 밖으로 나갔다(실측 +87~176px).
@@ -6101,8 +6183,14 @@ function renderList() {
             var lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
             if (lgFs < 7) {
               /* 이름을 줄여 한 번 더 — 건수는 남긴다(그것이 이 줄의 요점이다) */
+              /* **너무 짧게 자르면 「LG 점 21건」이 된다**(2026-09-05 실물). 이름이
+                 4글자도 못 남으면 **이름을 통째로 빼고 건수만** 적는다 — 잘린 한 글자
+                 보다 「LG 21건」이 정직하다(어느 지점인지는 말풍선이 밝힌다). */
               var room = Math.max(2, Math.floor((c.w - 8) / (7 * 0.62)) - (nf(srmL.rival) + '건 LG ').length);
-              if (lgn.length > room) { lgn = lgn.slice(0, room) + '…'; lgTxt = 'LG ' + lgn + ' ' + nf(srmL.rival) + '건'; }
+              if (lgn.length > room) {
+                lgTxt = (room >= 4) ? ('LG ' + lgn.slice(0, room) + '… ' + nf(srmL.rival) + '건')
+                                    : ('LG ' + nf(srmL.rival) + '건');
+              }
               lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
             }
             /* **글자색은 배경 밝기가 정한다** — 고정색을 썼더니 대비가 1.01~1.06:1 이
@@ -6139,7 +6227,6 @@ function renderList() {
       /* **어느 구간을 잰 값인지 반드시 적는다**(2026-09-05). 옛 회차 자료면 전 기간이라
          칸 크기(당해)와 잣대가 다르다 — 안 적으면 그 어긋남이 보이지 않는다. */
       var srScope = !srt ? '' : srt.scope === 'year' ? (heatYears().cur + '년 기준')
-        : srt.scope === 'cum' ? ((d.cum || (HEAT_CUM_FROM + '~')) + ' 누적 기준')
         : '전 기간 기준 — 칸 크기와 잣대가 다릅니다';
       var lgvTip = srt
         ? NLC + 'LG ' + srt.shop
@@ -6155,8 +6242,6 @@ function renderList() {
               : week
                 ? (d.noPrev ? ' · 평소를 몰라 견줄 수 없습니다'
                     : ' · 평소 ' + d.prev.toFixed(1) + '건 → ' + periodLabel() + ' ' + d.cur + '건')
-                : d.cum
-                ? ' · ' + d.cum + ' 누적(작성일을 아는 글만)'
                 : d.year
                 ? (d.noPrev ? ' · ' + d.prevYear + '년 자료가 없습니다'
                     : ' · ' + d.prevYear + '년 ' + d.prev + '건 → ' + d.year + '년 ' + d.cur + '건')
@@ -6222,9 +6307,13 @@ function renderList() {
     /* 색이 건수가 되면서 「못 잼」 칸이 사라졌다 — 0건은 애초에 칸이 안 그려진다.
        대신 **증감이 어디로 갔는지**를 적는다(칸 글자와 말풍선이 들고 있다). */
     /* **누적 축에는 증감이 아예 없다** — 「칸 안에 있습니다」라고 적으면 찾게 만든다 */
-    if (lz) lz.textContent = heatYear === 'cum'
-      ? '앞 구간이 없어 증감을 내지 않습니다'
-      : '증감은 칸 안 작은 글씨와 말풍선에 있습니다';
+    /* **증감을 적는 것은 「전년 대비」뿐이다**(2026-09-05 실물에서 잡음). 당해만
+       볼 때는 칸에도 말풍선에도 증감이 없는데 범례가 「칸 안에 있습니다」라고 해
+       **없는 것을 찾게 만들었다.** 화면이 두 말을 하면 안 된다. */
+    if (lz) lz.textContent = (heatYear === 'cmp' || heatYear === 'mom')
+      ? '증감은 칸 안 작은 글씨와 말풍선에 있습니다'
+      : (week ? '평소 주당 대비는 칸 안 작은 글씨에 있습니다'
+              : '건수만 봅니다 — 증감은 「전년 대비」·「전월 대비」에서 나옵니다');
     bs.textContent = '크기: ' + (heatSize === 'n' ? '건수' : '등락률');
     bs.classList.toggle('on', heatSize === 'g');
     /* 유형 버튼 — **화면이 목록을 박지 않고 자료에서 만든다.** 서버가 세는 말이 바뀌면
@@ -6348,14 +6437,30 @@ function renderList() {
       byr2.textContent = heatYear === 'cmp' ? Y2.cur + ' vs ' + Y2.prev : Y2.prev + '년 대비 보기';
       byr2.classList.toggle('on', heatYear === 'cmp');
       /* **기간·매니저·유형을 보고 있으면 뜻이 없다** — 그때는 연도 축이 안 돈다 */
-      byr2.style.display = (week || mgrView || heatKind) ? 'none' : '';
+      /* **매니저·유형에서도 뜬다**(2026-09-05) — 「같은 기준으로 필터링」이라는 지시다.
+         주차를 보고 있을 때만 숨긴다(그때는 연도 축이 안 돈다). */
+      byr2.style.display = (week || heatYear === 'mom') ? 'none' : '';
     }
-    var bcum2 = document.getElementById('hm-cum');
-    if (bcum2) {
-      var sp2 = cumSpan();
-      bcum2.textContent = heatYear === 'cum' ? (sp2.from + '~' + sp2.to + ' 누적') : (sp2.from + '년~ 누적 보기');
-      bcum2.classList.toggle('on', heatYear === 'cum');
-      bcum2.style.display = (week || mgrView || heatKind) ? 'none' : '';
+    var bmom2 = document.getElementById('hm-mom');
+    if (bmom2) {
+      var M2 = heatMonths();
+      bmom2.textContent = heatYear === 'mom'
+        ? (heatMonLabel(M2.prev) + ' → ' + heatMonLabel(M2.cur))
+        : '전월 대비 보기';
+      bmom2.classList.toggle('on', heatYear === 'mom');
+      bmom2.style.display = week ? 'none' : '';
+    }
+    /* **연도 고르기** — 자료가 걸친 해만 세운다. **유형을 걸어도 뜬다**(2026-09-05
+       사장님 지시: *"매니저별 후기순위 히트맵을 [수집기준]에 맞춰 동일하게 필터링"*) —
+       매니저·유형에서도 해를 고를 수 있어야 잣대가 통일된다. */
+    var bpy2 = document.getElementById('hm-yr');
+    if (bpy2) {
+      var Y4 = heatYears(), ys = Y4.years || [Y4.cur];
+      var want = ys.map(function (y) { return '<option value="' + y + '">' + y + '년</option>'; }).join('');
+      if (bpy2.dataset.built !== want) { bpy2.innerHTML = want; bpy2.dataset.built = want; }
+      bpy2.value = Y4.cur;
+      /* **전월 대비에서는 뜻이 없다** — 그때 축은 달이다 */
+      bpy2.style.display = (week || heatYear === 'mom') ? 'none' : '';
     }
     bmd.classList.toggle('on', heatMode === 'region');
     bk.disabled = lv === 0;
@@ -6389,11 +6494,9 @@ function renderList() {
            빨강은 전 기간이라 한 칸에 두 잣대가 섞여 있었다 — 사장님이 *"LG 자료가 많아
            보인다"* 고 한 자리다. 새 회차 자료가 있으면 축을 따라가고, 없으면 전 기간인
            것을 **밝힌다**(조용히 두면 그 어긋남이 안 보인다). */
-        var sp3 = cumSpan();
         var scopeTxt = !hasMon
           ? '<b class="warn">전 기간 기준</b>이라 칸 크기와 잣대가 다릅니다 — 관리자 항목의'
             + ' 「수집」에서 <b>매장 대 매장</b>을 골라 다시 누르면 연도별로 갈립니다'
-          : heatYear === 'cum' ? '<b>' + esc(sp3.from + '~' + sp3.to) + ' 누적</b> 기준입니다'
           : '<b>' + esc(heatYears().cur) + '년</b> 기준입니다';
         return ' 칸의 <b style="color:#B02A20">빨강</b>이 <b>LG 짝 매장의 몫</b>입니다('
           + nf(n) + '곳) — ' + scopeTxt + '. <b>마우스를 올리면</b> 어느 지점인지와 양쪽 건수가 나옵니다.';
@@ -6426,16 +6529,15 @@ function renderList() {
             var Y3 = heatYears();
             /* **연도 축을 쓰면 그 사실을 적는다.** 이 자료는 `byStoreMonth` 에서 오고
                그것은 **작성일을 아는 글만** 담는다 — 카페 74%가 빠진다는 것을 밝혀야 한다. */
-            var sp4 = cumSpan();
-            if (heatYear === 'cum') {
-              return '<b>' + esc(sp4.from + '~' + sp4.to) + ' 누적</b>을 봅니다 · 칸 크기와 색 = <b>건수</b>(진할수록 많음)'
-                + '. 앞 구간이 없어 <b>증감은 내지 않습니다</b>.'
-                + ' <b>' + esc(HEAT_CUM_FROM) + '년부터</b>인 이유는, 그 앞은 삼성이 <b>「디지털프라자」</b> 로 불리던 때라'
-                + ' 「삼성스토어」 로 묻는 우리 질의에 <b>당사 글만 구조적으로 안 걸리기</b> 때문입니다'
-                + '(실측: 2022년까지 당사 12건 vs LG 658건).'
-                + ' <b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 주지 않습니다) — 그래서 전체 누적보다 적습니다.'
-                + lgNote
-                + '<br><span class="cntxt">2024년 이전은 링크를 지우고 건수만 남겨 목록에서는 안 열립니다.</span>';
+            /* **전월 대비면 그렇게 적는다**(2026-09-05) — 연도 안내를 그대로 두면
+               칸은 8월인데 머리는 「2026년만 봅니다」라 화면이 두 말을 한다. */
+            if (heatYear === 'mom') {
+              var M9 = heatMonths();
+              return '<b>' + esc(heatMonLabel(M9.cur)) + '</b>을 봅니다 · 칸 크기와 색 = <b>건수</b>'
+                + ' · 칸 안 작은 글씨가 <b>' + esc(heatMonLabel(M9.prev)) + ' → ' + esc(heatMonLabel(M9.cur)) + '</b> 입니다.'
+                + ' <b>완결된 두 달</b>만 견줍니다 — 달력의 이번 달은 며칠치뿐이라 넣으면 전 매장이 폭락으로 보입니다.'
+                + ' <b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 주지 않습니다).'
+                + lgNote;
             }
             return '<b>' + esc(Y3.cur) + '년</b>만 봅니다 · 칸 크기와 색 = <b>건수</b>(진할수록 많음)'
               + (heatYear === 'cmp'
@@ -6444,7 +6546,7 @@ function renderList() {
               + '. <b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 주지 않습니다) — '
               + '그래서 전체 누적보다 적습니다.'
               + lgNote
-              + '<br><span class="cntxt">2024년 이전은 링크를 지우고 건수만 남겨 히트맵에서는 빠집니다.</span>';
+              + '<br><span class="cntxt">수집 기준은 <b>2023년 이후</b>입니다 — 그 앞은 삼성이 「디지털프라자」로 불리던 때라 「삼성스토어」로 묻는 우리 질의에 당사 글만 구조적으로 안 걸립니다.</span>';
           })();
     }
     if (chan) {
@@ -6487,20 +6589,23 @@ function renderList() {
      *
      * **주차·유형·매니저를 고르면 연도 축이 아니다**(그 셋은 다른 잣대로 센다).
      * 그때는 표식을 안 붙이고 연도 버튼도 숨긴다 — 붙이면 화면이 두 말을 한다. */
-    var yrAxis = !week && !mgrView && !heatKind;
+    /* **연도 축은 어디서나 돈다**(2026-09-05 사장님 지시로 넓혔다) — *"매니저별 후기순위
+       히트맵을 [수집기준]에 맞춰 동일하게 필터링"*. 매니저·유형에서도 같은 해를 본다.
+       **주차를 보고 있을 때만 끈다** — 그때는 축이 주차다(같은 화면이 두 잣대를 쓰면 안 된다). */
+    var yrAxis = !week && heatYear !== 'mom';
     var YY = yrAxis ? heatYears() : null;
     /* **견주는 달을 화면에 적는다.** 우리 자료는 2025-07 부터라 「작년 같은 기간」이
        여섯 달을 0으로 세고 있었다 — 실측 +368% 가 겹치는 달만 보면 뜻이 달라진다. */
     var CMM = (yrAxis && heatYear === 'cmp') ? heatCmpMonths() : null;
     var per = week ? '평소 주당 대비'
       : yrAxis ? YY.prev + '년 ' + (CMM && CMM.length ? cmpMonLabel(CMM) : '같은 기간') + ' 대비'
+      : (heatYear === 'mom') ? heatMonLabel(M.prev) + ' 대비'
       : '전월 대비';
     /* **누적 축이면 그 구간을 적는다**(2026-09-05) — 「2026년」이라 적어 두면
        칸은 2023~2026 인데 머리는 2026 이라 화면이 두 말을 한다(실물에서 봤다). */
     var wtag = week ? esc(periodLabel()) + ' · '
-      : yrAxis ? (heatYear === 'cum'
-          ? (function () { var sp5 = cumSpan(); return sp5.from + '~' + sp5.to + ' 누적 · '; })()
-          : heatYear === 'cmp'
+      : (heatYear === 'mom') ? (heatMonLabel(M.cur) + ' (' + heatMonLabel(M.prev) + ' 대비) · ')
+      : yrAxis ? (heatYear === 'cmp'
           ? (CMM && CMM.length
               ? YY.cur + '년 ' + cmpMonLabel(CMM) + ' (' + YY.prev + '년 대비) · '
               : YY.cur + '년 · ')
@@ -6511,9 +6616,16 @@ function renderList() {
     var live = week ? rows.filter(function (r) { return r.cnt > 0; }).length : 0;
     if (mgrView) {
       var gm = heatGrowth(rows);
-      cr.innerHTML = '매니저 <em>' + rows.length + '명 · '
+      cr.innerHTML = '매니저 <em>' + (yrAxis ? YY.cur + '년 · ' : '') + rows.length + '명 · '
         + nf(rows.reduce(function (a, r) { return a + r.cnt; }, 0)) + '건 언급'
-        + (gm.g === null ? '' : ' · 전월 대비 ' + heatPct(gm.g)) + '</em>';
+        /* **연도 축이면 「전년 대비」다**(2026-09-05) — 「전월 대비」로 두면 화면이
+           거짓을 말한다. 그리고 **당해만 볼 때는 증감을 안 적는다**(지점 히트맵과 같다). */
+        + (gm.g === null || (yrAxis && heatYear !== 'cmp') ? ''
+            : ' · ' + (yrAxis ? YY.prev + '년 대비 ' : '전월 대비 ') + heatPct(gm.g))
+        /* **유형을 걸었는데 옛 서버 자료면 연도로 못 자른다** — 그 사실을 적는다 */
+        + ((yrAxis && heatKind && rows.length && rows[0].hasKY === false)
+            ? ' · <b class="warn">유형은 전 기간 기준입니다</b>' : '')
+        + '</em>';
     } else if (heatMode === 'flat') {
       var gr = heatGrowth(rows);
       cr.innerHTML = '경원 전점 <em>' + wtag

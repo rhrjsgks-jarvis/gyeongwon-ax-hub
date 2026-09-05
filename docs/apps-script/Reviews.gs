@@ -96,7 +96,12 @@ var PAGE_SIZE = 100;
  *
  * **작성일을 아는 글에만 건다.** 카페 글은 네이버가 작성일을 주지 않아
  * 전체의 74%가 미상이다 — 발견일로 판단하면 옛 글이 남고 새 글이 지워진다. */
-var MIN_YMD = '2025-01-01';
+/* **2026-09-05 사장님 지시로 2023-01-01 로 내렸다** — *"[수집기준]은 23년도이후
+   자료면 충분함"*. 그 앞을 담아도 뜻이 없다: 삼성이 2022년경 「디지털프라자 →
+   삼성스토어」로 브랜드를 바꿔 **당사 옛 글만 구조적으로 안 걸린다**(실측: 2022년까지
+   당사 12건 vs LG 658건). 히트맵 연도 축·`monthFloor` 와 **같은 해**로 맞춘다 —
+   수집 기준과 보는 기준이 어긋나면 화면이 「없는 해」를 그린다. */
+var MIN_YMD = '2023-01-01';
 
 var MAX_PAGES = 10;
 
@@ -393,18 +398,24 @@ function lgMatchOne_(code, name, lat, lng, manual) {
      돌려보내 `dist: null · how: 'manual'` 이었는데, 사장님이 요구한 것은
      *"매칭된 LG 매장명, **거리**, **매칭 유형**(백화점 내 / 최근접)을 함께 노출"* 이다.
      고른 짝을 존중하되 **그 짝이 같은 건물인지는 좌표가 말해 준다.** */
-  if (manual) {
-    var md = null, mi;
-    for (mi = 0; mi < LG_SHOPS.length; mi++) {
-      if (LG_SHOPS[mi][0] !== manual) continue;
-      md = distM_(lat, lng, LG_SHOPS[mi][2], LG_SHOPS[mi][3]);
-      break;
+  /* **사람이 고른 것은 여럿일 수 있다**(2026-09-05). 거리는 **가장 가까운 곳** 기준으로
+     내고, 목록은 그대로 돌려준다 — 화면이 「A · B」로 적는다. */
+  var mlist = lgShopList_(manual);
+  if (mlist.length) {
+    var md = null, mi, mj, dd;
+    for (mj = 0; mj < mlist.length; mj++) {
+      for (mi = 0; mi < LG_SHOPS.length; mi++) {
+        if (LG_SHOPS[mi][0] !== mlist[mj]) continue;
+        dd = distM_(lat, lng, LG_SHOPS[mi][2], LG_SHOPS[mi][3]);
+        if (dd !== null && (md === null || dd < md)) md = dd;
+        break;
+      }
     }
-    return { shop: manual, dist: md, manual: true,
+    return { shop: mlist[0], shops: mlist, dist: md, manual: true,
              how: (md !== null && md <= DEPT_SAME_M) ? 'dept' : 'manual' };
   }
   if (typeof lat !== 'number' || typeof lng !== 'number') {
-    return { shop: '', dist: null, how: '', why: '매장 좌표를 모릅니다' };
+    return { shop: '', shops: [], dist: null, how: '', why: '매장 좌표를 모릅니다' };
   }
   var best = null, i, d;
   for (i = 0; i < LG_SHOPS.length; i++) {
@@ -412,19 +423,20 @@ function lgMatchOne_(code, name, lat, lng, manual) {
     if (d === null) continue;
     if (!best || d < best.dist) best = { shop: LG_SHOPS[i][0], dist: d };
   }
-  if (!best) return { shop: '', dist: null, how: '', why: 'LG 지점 좌표가 없습니다' };
+  if (!best) return { shop: '', shops: [], dist: null, how: '', why: 'LG 지점 좌표가 없습니다' };
 
   if (isDept_(code, name)) {
     /* **같은 건물이 아니면 거리 매칭으로 넘기지 않는다**(사장님 지시).
        백화점 매장의 경쟁 상대는 같은 건물 LG 이지, 2km 밖 로드샵이 아니다. */
     if (best.dist > DEPT_SAME_M) {
-      return { shop: '', dist: best.dist, how: '',
+      return { shop: '', shops: [], dist: best.dist, how: '',
                why: '같은 백화점 안에 LG 베스트샵이 없습니다 (가장 가까운 곳도 '
                   + Math.round(best.dist) + 'm)' };
     }
-    return { shop: best.shop, dist: best.dist, how: 'dept' };
+    return { shop: best.shop, shops: [best.shop], dist: best.dist, how: 'dept' };
   }
-  return { shop: best.shop, dist: best.dist, how: 'near' };
+  /* **백화점이 아니면 거리순이 맞다**(2026-09-05 사장님 확인) — 그대로 둔다 */
+  return { shop: best.shop, shops: [best.shop], dist: best.dist, how: 'near' };
 }
 
 /** 전 매장의 짝. 화면이 히트맵·지도·지점별 분석에서 함께 쓴다. */
@@ -1212,7 +1224,12 @@ var CHAINS = ['ak', '롯데', '신세계', '스타필드', '타임빌라스', '�
  */
 var KINDS = [
   ['혼수', ['혼수', '신혼', '결혼준비', '예신', '예랑', '웨딩', '가전졸업', '졸업']],
-  ['입주', ['입주', '이사', '신축', '집들이', '분양', '사전점검']],
+  ['입주', ['입주', '신축', '집들이', '분양', '사전점검']],
+  /* **이사는 입주와 다른 말이다**(2026-09-05 사장님 지시로 갈랐다) — 필터가
+     혼수·입주·**이사**·모바일·기타 다섯이라 두 갈래가 한 칸에 있으면 못 가른다.
+     **입주보다 뒤에 둔다** — 「입주 이사」처럼 둘 다 든 글은 입주가 먼저 잡는다
+     (새 아파트 입주가 더 좁은 뜻이다). */
+  ['이사', ['이사', '이삿짐', '이전설치', '전셋집', '월세집', '반전세']],
   ['설치', ['설치', '배송', '기사님', '시공', '철거', '이전설치']],
   ['AS',   ['as', '수리', '서비스센터', '고장', '점검']],
   /* 행사 — 「오픈매장」·「Grand Open」·「리뉴얼」·「데이코 입점」이 기타에 몰려 있었다 */
@@ -1250,24 +1267,38 @@ var KINDS = [
    필요 없는 버튼입니다. 가장 오른쪽에 「매니저로 보기」를 누르고 혼수 입주 기타 후기를
    필터링할 수 있어야 합니다"*). 매니저는 **무엇을 칸으로 그릴지**를 정하는 축이고,
    유형은 그 위에 겹쳐 거는 축이다 — 한 줄에 섞어 두면 「매니저 혼수 후기」를 볼 수 없다. */
-var KIND4 = [
+/* ── **필터 다섯** (2026-09-05 사장님 지시) ────────────────────────────────
+   *"바이럴필터는 혼수, 입주, 이사, 모바일, 기타 로 해주면되고"*.
+
+   9종 원본(`KINDS`)은 그대로 두고 **그 위에 묶음 하나**를 얹는다 — 줄이면 구매
+   2,150 · 행사 1,557 · 설치 · AS 의 구분이 영영 사라진다(이 파일이 3종을 얹을 때
+   세운 규칙 그대로다).
+
+   **이름을 KIND4 로 두지 않는다** — 다섯인데 4 라 적으면 다음 사람이 헷갈린다. */
+var KIND5 = [
   ['wedding', '혼수 후기'],
   ['movein',  '입주 후기'],
+  ['moving',  '이사 후기'],
+  ['mobile',  '모바일 후기'],
   ['etc',     '기타 후기']
 ];
+/* **옛 이름을 남긴다** — 다른 곳이 `KIND4` 를 부를 수 있다(한 곳만 고치면 조용히 깨진다) */
+var KIND4 = KIND5;
 /** 한 줄이 어느 묶음인가. **매니저 여부는 보지 않는다**(위 주석 참조) —
  *  그래야 매니저 글도 혼수·입주·기타 중 하나로 들어가 겹쳐 걸 수 있다. */
 function kind4_(row) {
   var k = row && row.kind;
   if (k === '혼수') return 'wedding';
   if (k === '입주') return 'movein';
+  if (k === '이사') return 'moving';
+  if (k === '모바일') return 'mobile';
   return 'etc';
 }
 /** 파라미터 값을 받아 묶음 키로. **모르는 값은 「전체」로 본다** — 오타 하나에
  *  0건을 돌려주면 「자료가 없다」로 읽힌다. 무엇을 무시했는지는 응답이 밝힌다. */
 function kind4Of_(v) {
   var t = String(v || '').trim().toLowerCase();
-  for (var i = 0; i < KIND4.length; i++) if (KIND4[i][0] === t) return t;
+  for (var i = 0; i < KIND5.length; i++) if (KIND5[i][0] === t) return t;
   /* **`manager` 는 화면 버튼에서는 뺐지만 엔드포인트에는 남긴다** — 「이름이 잡힌 글」을
      뽑는 것은 여전히 쓸모가 있고, 이미 이 주소를 쓰는 곳이 있을 수 있다. */
   if (t === 'manager') return 'manager';
@@ -1695,6 +1726,29 @@ var LG_PAIR = {
 /** 사람이 **직접 고친** 짝만. `LG_PAIR`(코드 표)는 좌표로 낸 자동 제안이라 여기 안 넣는다 —
  *  넣으면 62곳 전부가 「사람이 고른 짝」이 되어 **좌표 판정이 한 번도 안 돈다**
  *  (실물에서 그랬다: 백화점 12곳이 전부 `manual` 이라 ▣ 표식이 0개였다). */
+/* ── **한 매장에 LG 여러 곳을 붙일 수 있다** (2026-09-05 사장님 지시) ──────────────
+ * *"당사A매장과 LG A매장 B매장을 한번에 볼 수도있기에 매칭을 변경할수있는 관리자
+ * 시스템이필요합니다"*.
+ *
+ * 옛 값은 **문자열 하나**였다(`{매장: 'LG지점'}`). 배열로 바꾸되 **옛 값도 그대로
+ * 읽는다** — 속성에 이미 쌓인 것을 못 읽으면 사장님이 고쳐 둔 짝이 통째로 사라진다.
+ * `LG_PAIR`(코드 표)도 문자열이라 같은 정규화를 지난다.
+ *
+ * **몇 곳까지인가** — 매장마다 LG 지점 수만큼 질의가 늘어난다(매장 대 매장 수집).
+ * `LG_PAIR_MAX` 로 묶어 한도가 조용히 배로 뛰는 것을 막는다.
+ */
+var LG_PAIR_MAX = 3;
+/** 값이 무엇이든 **지점 이름 배열**로. 빈 값은 「짝 없음」이라 빈 배열이다. */
+function lgShopList_(v) {
+  var out = [], i, x;
+  if (v === null || v === undefined) return out;
+  var arr = Object.prototype.toString.call(v) === '[object Array]' ? v : [v];
+  for (i = 0; i < arr.length; i++) {
+    x = String(arr[i] || '').trim();
+    if (x && out.indexOf(x) < 0) out.push(x);
+  }
+  return out.slice(0, LG_PAIR_MAX);
+}
 function lgPairsManual_() {
   var mine = {};
   try { mine = JSON.parse(props_().getProperty('_lgPair') || '{}') || {}; } catch (e) { mine = {}; }
@@ -1713,28 +1767,46 @@ function lgPairs_() {
   return out;
 }
 
-/** 화면에서 짝을 바꾼다. **실재하는 지점만 받는다** — 오타가 들어오면 그 매장의 짝이
- *  조용히 사라진다. 빈 문자열은 「짝 없음」으로 받아들인다(일부러 떼는 것이다). */
-function setLgPair(store, shop) {
+/**
+ * 화면에서 짝을 바꾼다. **여러 곳을 붙일 수 있다**(2026-09-05 사장님 지시) —
+ * *"당사A매장과 LG A매장 B매장을 한번에 볼 수도있기에"*.
+ *
+ * **실재하는 지점만 받는다** — 오타가 들어오면 그 매장의 짝이 조용히 사라진다.
+ * 빈 값(빈 배열·빈 문자열)은 「짝 없음」으로 받아들인다(일부러 떼는 것이다).
+ *
+ * **관리자만**(2026-09-05) — 짝을 바꾸면 「당사 vs LG」 비중이 통째로 달라진다.
+ * 매니저 명부와 같은 급이라 같은 잠금을 쓴다.
+ *
+ * **`shop` 이라는 이름을 그대로 둔다** — 문자열 하나로 부르던 옛 화면이 있어도
+ * 그대로 돈다(`lgShopList_` 가 무엇이 오든 배열로 만든다).
+ */
+function setLgPair(store, shop, token) {
+  if (!adminOk_(token)) return { ok: false, why: '관리자 확인이 필요합니다 — 다시 로그인해 주세요.' };
   store = String(store || "").trim();
-  shop = String(shop || "").trim();
   if (!store) return { ok: false, why: "매장을 지정하지 않았습니다" };
   /* 우리 매장이 맞는지 — 없는 매장 이름이 속성에 쌓이면 아무도 못 지운다 */
-  var okStore = false, i;
+  var okStore = false, i, j;
   for (i = 0; i < STORES.length; i++) if (STORES[i][1] === store) { okStore = true; break; }
   if (!okStore) return { ok: false, why: store + " 는 우리 매장 목록에 없습니다" };
-  if (shop) {
+  var list = lgShopList_(shop);
+  /* **하나라도 없는 이름이면 통째로 거부한다** — 절반만 저장하면 사장님이 고른 것과
+     화면이 어긋나고, 어느 것이 빠졌는지 알 길이 없다. */
+  for (j = 0; j < list.length; j++) {
     var okShop = false;
-    for (i = 0; i < LG_SHOPS.length; i++) if (LG_SHOPS[i][0] === shop) { okShop = true; break; }
-    if (!okShop) return { ok: false, why: shop + " 는 LG 지점 목록에 없습니다" };
+    for (i = 0; i < LG_SHOPS.length; i++) if (LG_SHOPS[i][0] === list[j]) { okShop = true; break; }
+    if (!okShop) return { ok: false, why: list[j] + " 는 LG 지점 목록에 없습니다" };
   }
   var mine = {};
   try { mine = JSON.parse(props_().getProperty("_lgPair") || "{}") || {}; } catch (e) { mine = {}; }
-  mine[store] = shop;   /* 빈 문자열이면 「짝 없음」 */
+  mine[store] = list;   /* 빈 배열이면 「짝 없음」 */
   props_().setProperty("_lgPair", JSON.stringify(mine));
+  /* **매장 대 매장을 다시 재야 한다** — 짝이 바뀌면 그 매장의 LG 건수가 딴것이 된다.
+     커서를 되돌려 다음 실행이 처음부터 돈다(조용히 옛 값을 두면 화면이 거짓이 된다). */
+  props_().deleteProperty('_srivalCur');
+  props_().deleteProperty('_srivalStamp');
   /* **집계 캐시를 버린다** — 안 버리면 최대 6시간 옛 짝이 화면에 남는다 */
   sumCacheClear_();
-  return { ok: true, store: store, shop: shop, pairs: lgPairs_() };
+  return { ok: true, store: store, shops: list, pairs: lgPairs_() };
 }
 
 /* ── 매니저 명부 (2026-09-03 사장님 지시 — *"매니저는 이름과 지점만 수집해주세요"*) ──
@@ -3970,7 +4042,10 @@ function summary_() {
    * 연도 대비 축(올해 vs 작년)이 반쪽이 되면 안 된다.
    *
    * 크기: 매장 62 × 45개월 = 2,790칸(실측 6KB → 13KB). 전체 응답이 1,172KB 라 값이 싸다. */
-  var MONTH_FLOOR_Y = '2023';
+  /* **수집 기준과 같은 해여야 한다**(2026-09-05) — 어긋나면 화면이 「없는 해」를
+     그리거나(보는 쪽이 넓을 때) 모은 자료가 화면에서 사라진다(좁을 때).
+     `MIN_YMD` 에서 끌어낸다 — 손으로 두 번 적으면 한쪽만 고쳐진다. */
+  var MONTH_FLOOR_Y = String(MIN_YMD).slice(0, 4);
   var prevY = String(Number(Utilities.formatDate(now, tz, 'yyyy')) - 1);
   var monthFloor = (MONTH_FLOOR_Y < prevY ? MONTH_FLOOR_Y : prevY) + '-01';
 
@@ -4191,6 +4266,7 @@ function summary_() {
      **작성일을 아는 글만** 센다 — 카페 줄의 날짜는 발견일이라 넣으면 이번 달만 거대해진다
      (이 화면이 추이·주차에서 이미 두 번 데인 자리다). */
   var mgrMon = {}, mgrKind = {};
+  var mgrKindY = {};
   var mgrN = {}, mgrStore = {}, mgrFullN = 0, mm, mi, mk;
   for (i = 0; i < rows.length; i++) {
     if (rows[i].mgrFull) mgrFullN++;
@@ -4212,6 +4288,18 @@ function summary_() {
         var mmo = String(rows[i].date).slice(0, 7);
         if (!mgrMon[mk]) mgrMon[mk] = {};
         mgrMon[mk][mmo] = (mgrMon[mk][mmo] || 0) + 1;
+        /* ── **연도 × 유형** (2026-09-05 사장님 지시) ────────────────────────
+         * *"매니저별 후기순위 히트맵을 [수집기준]에 맞춰 동일하게 필터링"*.
+         *
+         * 지점 히트맵은 연도로 자르는데 매니저는 전 기간이라 **두 화면이 다른 잣대**를
+         * 쓰고 있었다. `kind4` 는 연도 구분이 없어 유형을 걸면 연도로 못 잘랐다 —
+         * 여기서 함께 세면 화면이 지어내지 않고 그대로 쓴다.
+         *
+         * **작성일을 아는 글만** 든다(이 블록 안이다) — 지점 히트맵과 같은 제약이다. */
+        var myy = String(rows[i].date).slice(0, 4);
+        if (!mgrKindY[mk]) mgrKindY[mk] = {};
+        if (!mgrKindY[mk][myy]) mgrKindY[mk][myy] = {};
+        mgrKindY[mk][myy][mk4] = (mgrKindY[mk][myy][mk4] || 0) + 1;
       }
     }
   }
@@ -4222,7 +4310,9 @@ function summary_() {
     var bestS = '', bestN = 0, sk;
     for (sk in mgrStore[mk]) if (mgrStore[mk][sk] > bestN) { bestN = mgrStore[mk][sk]; bestS = sk; }
     mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {},
-                  kind4: mgrKind[mk] || {} });
+                  kind4: mgrKind[mk] || {},
+                  /* 연도별 유형 — 히트맵이 지점과 같은 잣대를 쓰게 한다(2026-09-05) */
+                  kindY: mgrKindY[mk] || {} });
   }
   mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
   /* **자르기 전에 전체 인원을 센다** — 실측(2026-09-03) 60위가 6건이라 그 아래로도
@@ -4424,7 +4514,8 @@ function summary_() {
     /* 4종 묶음(2026-09-03 사장님 지시) — 기존 `byKind`(9종)는 그대로 함께 나간다 */
     byKind4: byKind4, byStoreKind4: byStoreKind4,
     byStoreWeek4: trimWeeks_(byStoreWeek4, WEEK_KEEP),
-    kind4Names: KIND4,
+    /* **다섯 갈래** — 화면 버튼이 이 목록에서 만들어진다(2026-09-05) */
+    kind4Names: KIND5,
     /* LG 짝 — 백화점은 같은 건물끼리만, 나머지는 최근접(위 `lgMatchOne_` 주석 참조) */
     lgMatch: lgMatchAll_(),
     /* **매장 대 매장** — 없으면 null 이고 화면이 「아직 안 쟀다」로 적는다 */
@@ -4640,7 +4731,7 @@ function collectStoreRival(reset) {
   try {
     var props = PropertiesService.getScriptProperties();
     var pairs = lgMatchAll_(), names = [], k;
-    for (k in pairs) if (pairs.hasOwnProperty(k) && pairs[k] && pairs[k].shop) names.push(k);
+    for (k in pairs) if (pairs.hasOwnProperty(k) && pairs[k] && lgShopList_(pairs[k].shops || pairs[k].shop).length) names.push(k);
     names.sort();
     if (!names.length) return { ok: false, why: 'LG 짝이 하나도 없습니다' };
 
@@ -4676,15 +4767,24 @@ function collectStoreRival(reset) {
          시작하면 반드시 그 자리에서 끊긴다(LG 비교에서 이미 데인 자리다). */
       if (Date.now() - t0 > SRIVAL_MS - SRIVAL_PER_MS) break;
       if (used0 + calls >= lim) break;      /* 한도에 닿으면 멈춘다 — 다음 실행이 이어 간다 */
-      var st = names[ui], shop = pairs[st].shop;
+      var st = names[ui];
+      /* ── **LG 짝이 여럿일 수 있다** (2026-09-05 사장님 지시) ────────────────────
+       * *"당사A매장과 LG A매장 B매장을 한번에 볼 수도있기에"*.
+       *
+       * 지점마다 따로 묻고 **링크로 합친다** — 두 지점을 다 쓴 글이 있어도 한 번만
+       * 세어진다(`got.rival` 이 링크 열쇠다). 판정 지역 말도 그 지점 것으로 바꾼다.
+       * **비용은 지점 수만큼** 늘어난다 — `LG_PAIR_MAX` 가 3 으로 묶는다. */
+      var shops = lgShopList_(pairs[st].shops || pairs[st].shop);
       if (done[st]) { props.setProperty('_srivalCur', String(ui + 1)); continue; }
 
-      var side = [['ours', BRANDS, '삼성스토어', st],
-                  ['rival', RIVAL_BRANDS, 'LG베스트샵', shopPlace_(shop)]];
+      var side = [['ours', BRANDS, '삼성스토어', st, st]];
+      for (var sk = 0; sk < shops.length; sk++) {
+        side.push(['rival', RIVAL_BRANDS, 'LG베스트샵', shopPlace_(shops[sk]), shops[sk]]);
+      }
       var got = { ours: {}, rival: {} }, hard = false, qs = [];
       for (var si = 0; si < side.length && !hard && !err; si++) {
         var key = side[si][0], brands = side[si][1], bq = side[si][2], place = side[si][3];
-        var q = bq + ' ' + (si === 0 ? st : shop);
+        var q = bq + ' ' + side[si][4];
         qs.push(q);
         for (var sj = 0; sj < SRCS.length && !hard && !err; sj++) {
           for (var page = 0; page < MAX_PAGES; page++) {
@@ -4722,7 +4822,7 @@ function collectStoreRival(reset) {
         var box9 = mon9[kk9 === 'ours' ? 'o' : 'r'], gg9 = got[kk9], lk9;
         for (lk9 in gg9) if (gg9.hasOwnProperty(lk9) && gg9[lk9]) box9[gg9[lk9]] = (box9[gg9[lk9]] || 0) + 1;
       });
-      sh.appendRow([stamp, st, shop, o, r,
+      sh.appendRow([stamp, st, shops.join(' · '), o, r,
         (capped || tot === 0) ? '' : Math.round(o / tot * 100),
         capped, qs.join(' | '), JSON.stringify(mon9)]);
       wrote++;
@@ -4748,14 +4848,24 @@ var SHEET_RIVAL = '경쟁비교';
 /* **뒤에만 붙인다** — 가운데 끼우면 옛 회차가 한 칸씩 밀린다.
    `srcJson`·`kindJson`·`monthJson` 은 갈래별 건수를 담는다. 칸으로 펴면 20개가
    넘고 갈래가 늘 때마다 열이 늘어난다 — 우리 시트라 JSON 한 칸이 낫다. */
-/* `hi`·`el` 은 **맨 뒤에 붙인다** — 가운데에 끼우면 옛 줄이 통째로 한 칸씩 밀린다 */
+/* ── **하이마트·전자랜드를 뺐다** (2026-09-05 사장님 지시) ────────────────────
+   *"하이마트 전자랜드정보 일괄삭제(불필요함)"* · *"LG바이럴수집(건수만)"*.
+
+   **호출이 절반이 된다** — 진영 4 → 2 라 도시당 2,640 → 1,320회다. 사장님이 같은
+   자리에서 「한도가 남용될까 걱정」이라 한 것과 맞물린다.
+
+   **줄을 지우지 않고 판 번호로 끊는다.** 시트에서 옛 회차를 지우는 것은 되돌릴 수
+   없고, `rival_()` 은 **가장 늦은 도장 하나만** 읽으므로 새 회차가 쓰이는 순간
+   옛 줄은 화면에서 완전히 사라진다. 자료를 남겨 두면 나중에 되짚을 수 있다.
+
+   **`chanJson` 은 당사 것만 담는다** — LG 는 건수만이라는 지시 그대로다. */
 var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries',
-  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson', 'hi', 'el'];
+  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson'];
 /* **줄의 뜻이 바뀌면 이 번호를 올린다.** 칸을 더하거나 기존 칸의 뜻을 바꾸면 옛 회차에
    이어 붙어 값이 뒤섞인다 — 「평택 2,008 → 4,025」가 그렇게 났다. 번호가 다르면
    이어 붙지 않고 새 회차로 시작한다.
    2 = 도시 단위(한 줄에 도시 하나) + 채널 40개 + byProd·sample 칸. */
-var RIVAL_SCHEMA = 3;   /* 3 = 4사(하이마트·전자랜드 추가) · 점유율이 4사 기준 */
+var RIVAL_SCHEMA = 4;   /* 4 = 당사·LG 둘만(하이마트·전자랜드 제거) · 점유율이 2사 기준 */
 
 /* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
    `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
@@ -4765,8 +4875,8 @@ var RIVAL_BRANDS = ['lg베스트샵', 'lg전자베스트샵', '베스트샵', 'l
    함께하려고합니다"*). LG 와 같은 규칙이다 — **표기가 갈리는 것만 넣는다.**
    `롯데하이마트`·`하이마트` 는 같은 곳이고, 전자랜드는 `전자랜드`·`전자랜드파워센터`
    두 표기를 쓴다. **`파워센터` 만으로는 넣지 않는다** — 다른 업종 상호에 흔하다. */
-var HI_BRANDS = ['롯데하이마트', '하이마트'];
-var EL_BRANDS = ['전자랜드', '전자랜드파워센터'];
+/* 하이마트·전자랜드 브랜드 표는 2026-09-05 에 지웠다(사장님: 불필요함).
+   되살리려면 이 자리에 다시 두고 `side` 배열과 `RIVAL_HEADER` 를 함께 고칠 것. */
 
 /* 지역마다 **사람이 실제로 쓰는 지명**. 양쪽 브랜드가 **같은 목록**을 쓴다 —
    여기가 갈리면 비중이 통째로 거짓이 된다.
@@ -5293,27 +5403,30 @@ function collectRival(deadline) {
     /* 이 도시가 지난번 예산에 걸렸으면 그때 줄여 둔 쪽 수로 돈다(최소 2쪽) */
     var pageCap = Math.max(2, Math.min(RIVAL_PAGES, Number(stuck[place]) || RIVAL_PAGES));
     stage_('LG비교 ' + area + ' / ' + place + ' (' + (ui + 1) + '/' + units.length + ')');
-    var got = { ours: {}, rival: {}, hi: {}, el: {} };   /* 링크로 중복을 없앤다 */
-    var lastAdd = { ours: 0, rival: 0, hi: 0, el: 0 };
+    var got = { ours: {}, rival: {} };   /* 링크로 중복을 없앤다 */
+    var lastAdd = { ours: 0, rival: 0 };
     /* **갈래별로도 센다** — 「어디가 밀리나」만으로는 무엇을 할지 안 나온다.
        소스(블로그/카페) · 유형(구매·설치·비교…) · 월(블로그 작성일 기준). */
-    var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 },
-                  hi: { 블로그: 0, 카페: 0, 웹: 0 }, el: { 블로그: 0, 카페: 0, 웹: 0 } };
+    var bySrc = { ours: { 블로그: 0, 카페: 0, 웹: 0 }, rival: { 블로그: 0, 카페: 0, 웹: 0 } };
     var byKind = {}, byMon = {};
     /* **어디에 · 무엇을** (2026-09-02). 채널은 양쪽 따로, 품목은 한 표에 o/r 로 담는다 */
     /* **품목·유형은 한 표에 진영 글자로 담는다** — o(당사) r(LG) h(하이마트) e(전자랜드).
        진영마다 표를 따로 두면 시트 칸이 네 배가 되고 화면도 네 번 훑어야 한다. */
-    var byChan = { ours: {}, rival: {}, hi: {}, el: {} }, byProd = {},
-        noProd = { o: 0, r: 0, h: 0, e: 0 }, rvSample = [];
-    var CH = { ours: 'o', rival: 'r', hi: 'h', el: 'e' };
+    /* **채널은 당사만 담는다** — LG 는 건수만이라는 지시(2026-09-05). 히트맵에서
+       지점을 눌렀을 때 「어느 경로로 들어온 글인가」를 보는 데 쓴다. */
+    var byChan = { ours: {} }, byProd = {},
+        noProd = { o: 0, r: 0 }, rvSample = [];
+    var CH = { ours: 'o', rival: 'r' };
     hard = false;
 
     /* **진영이 넷이다**(2026-09-02). 비중의 뜻이 「당사 vs LG」에서
        **「그 지역 가전 후기 중 우리 몫」**으로 바뀐다 — 사장님이 고른 쪽이다.
        **질의는 브랜드마다 사람들이 실제로 쓰는 말**로 묻는다. 판정은 그 뒤에 브랜드
        표로 다시 거르므로(`rivalHit_`) 질의가 넓어도 남의 글이 안 섞인다. */
-    var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵'],
-                ['hi', HI_BRANDS, '롯데하이마트'], ['el', EL_BRANDS, '전자랜드']];
+    /* **진영은 둘이다**(2026-09-05 사장님 지시로 4 → 2). 비중의 뜻이 「그 지역 가전
+       후기 중 우리 몫」에서 **「당사 vs LG」**로 돌아간다 — 균형점이 50% 다.
+       `RIVAL_SCHEMA` 를 올렸으므로 옛 4사 회차에 이어 붙지 않는다. */
+    var side = [['ours', BRANDS, '삼성스토어'], ['rival', RIVAL_BRANDS, 'LG베스트샵']];
     for (var si = 0; si < side.length; si++) {
       var key = side[si][0], brands = side[si][1], bq = side[si][2];
       for (var ti = 0; ti < RTAILS.length; ti++) {
@@ -5352,7 +5465,7 @@ function collectRival(deadline) {
               var ps = prodOf_(String(it.title || '')), pj;
               if (!ps.length) noProd[CH[key]]++;
               for (pj = 0; pj < ps.length; pj++) {
-                if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0, h: 0, e: 0 };
+                if (!byProd[ps[pj]]) byProd[ps[pj]] = { o: 0, r: 0 };
                 byProd[ps[pj]][CH[key]]++;
               }
               /* **표본은 LG 쪽만 · 도시당 8건.** 사장님이 실물을 열어 볼 수 있어야
@@ -5409,7 +5522,6 @@ function collectRival(deadline) {
     }
 
     var a = Object.keys(got.ours).length, b = Object.keys(got.rival).length;
-    var hN = Object.keys(got.hi).length, eN = Object.keys(got.el).length;
     /* ★ **「상한이면 못 잰다」는 쓸 수 없는 규칙이었다.**
        네이버가 질의마다 끊으므로 절대 건수는 영영 못 채운다 — 그 규칙으로는 6곳 전부
        비중이 빈칸이 되어 화면에 아무것도 안 뜬다(실측으로 그랬다).
@@ -5418,8 +5530,7 @@ function collectRival(deadline) {
        그래서 **증가율 차이**를 본다: 8pt 넘게 벌어지면 비중을 내지 않는다. */
     /* **네 진영의 증가율을 함께 본다.** 하나라도 8pt 넘게 벌어지면 그 회차의 점유율은
        못 믿는다 — 한쪽만 빠르게 늘고 있다는 뜻이라 비중이 그 자리에서 거짓이 된다. */
-    var gr = [a ? lastAdd.ours / a : 0, b ? lastAdd.rival / b : 0,
-              hN ? lastAdd.hi / hN : 0, eN ? lastAdd.el / eN : 0];
+    var gr = [a ? lastAdd.ours / a : 0, b ? lastAdd.rival / b : 0];
     var gMin = Math.min.apply(null, gr), gMax = Math.max.apply(null, gr);
     var skew = (gMax - gMin) > 0.08;
     rows.push([
@@ -5428,7 +5539,9 @@ function collectRival(deadline) {
          라 2자 비교였다 — 「그 지역 가전 후기 중 우리 몫」으로 뜻이 바뀌었다.
          RIVAL_SCHEMA 를 올렸으므로 옛 회차에 이어 붙지 않는다(뜻이 다른 값이 섞이면
          화면이 조용히 거짓이 된다 — 「평택 2,008 → 4,025」가 그 사고였다). */
-      skew ? '' : ((a + b + hN + eN) > 0 ? Math.round((a / (a + b + hN + eN)) * 100) : ''),
+      /* **점유율 = 당사 ÷ (당사 + LG)**(2026-09-05 사장님 지시로 4사 → 2사).
+         균형점이 50% 로 돌아간다 — 화면 범례도 함께 고칠 것. */
+      skew ? '' : ((a + b) > 0 ? Math.round((a / (a + b)) * 100) : ''),
       skew ? 'Y' : '',
       place,
       JSON.stringify(bySrc), JSON.stringify(byKind), JSON.stringify(byMon),
@@ -5441,10 +5554,9 @@ function collectRival(deadline) {
          40 으로 넓힌다 — 시트 칸은 5만 자이고 40개 × 양 진영 × 채널명 20자 남짓이면
          2천 자가 안 돼 넉넉하다. **통째로 담지 않는 이유는 그대로다** — 채널이 수백 개라
          칸이 넘친다. 화면이 보여주는 것이 상위 10개 안팎이라 40이면 합산이 안 흔들린다. */
-      JSON.stringify({ ours: topN_(byChan.ours, 40), rival: topN_(byChan.rival, 40),
-        hi: topN_(byChan.hi, 40), el: topN_(byChan.el, 40) }),
-      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample),
-      hN, eN
+      /* **당사 채널만** — LG 는 건수만이라는 지시(2026-09-05) */
+      JSON.stringify({ ours: topN_(byChan.ours, 40) }),
+      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample)
     ]);
     /* **도시 하나를 끝낼 때마다 커서를 적는다.** 실행이 그 뒤에 죽어도 여기까지는
        남는다 — 예전에는 함수 끝에서 한 번만 적어 6분에 죽으면 전부 잃었다. */
@@ -5674,7 +5786,7 @@ function rival_() {
     if (lastIdx[area + '|' + String(v[i][6] || '')] !== i) continue;   /* 같은 도시는 마지막 줄만 */
     if (!by[area]) {
       by[area] = {
-        area: area, ours: 0, rival: 0, hi: 0, el: 0, capped: false, q: [],
+        area: area, ours: 0, rival: 0, capped: false, q: [],
         bySrc: {}, byKind: {}, byMonth: {}, byChan: {}, byProd: {}, sample: []
       };
       order.push(area);
@@ -5682,10 +5794,7 @@ function rival_() {
     var g = by[area];
     g.ours += Number(v[i][2]) || 0;
     g.rival += Number(v[i][3]) || 0;
-    /* **옛 회차에는 이 칸이 없다** — 그때는 0 이다. 판 번호(RIVAL_SCHEMA)가 달라
-       옛 회차에 이어 붙지는 않지만, 시트에 남은 옛 줄을 읽을 수는 있다. */
-    g.hi += Number(v[i][13]) || 0;
-    g.el += Number(v[i][14]) || 0;
+    /* 하이마트·전자랜드 칸은 2026-09-05 에 뺐다 — 그 줄들은 판 번호가 달라 안 읽힌다 */
     if (String(v[i][5]) === 'Y') g.capped = true;
     var qq = String(v[i][6] || '');
     if (qq && g.q.indexOf(qq) < 0) g.q.push(qq);
@@ -5702,10 +5811,10 @@ function rival_() {
   }
   var out = [];
   for (i = 0; i < order.length; i++) {
-    /* **점유율은 네 곳 전부를 분모로 한다**(2026-09-02 사장님 결정) — 「그 지역 가전
-       후기 중 우리 몫」이다. 예전 2자 비교(당사 ÷ (당사+LG))와 뜻이 다르므로
-       RIVAL_SCHEMA 를 3 으로 올려 옛 회차와 섞이지 않게 했다. */
-    var r = by[order[i]], tot = r.ours + r.rival + r.hi + r.el;
+    /* **점유율은 당사 ÷ (당사 + LG)**(2026-09-05 사장님 지시로 4사 → 2사).
+       하이마트·전자랜드를 뺐으므로 균형점이 50% 로 돌아간다. RIVAL_SCHEMA 를 4 로
+       올려 4사 회차와 섞이지 않게 했다 — 뜻이 다른 값이 섞이면 화면이 조용히 거짓이 된다. */
+    var r = by[order[i]], tot = r.ours + r.rival;
     /* **도시를 다 못 쟀으면 그 지역 비중은 못 잰 것이다**(2026-09-02).
        실측으로 강원이 `ours 100 · rival 0 · pct 100%` 로 화면에 **초록 100%** 였는데,
        `queries` 가 「춘천」 하나뿐이었다 — 강원은 춘천·원주·강릉 셋이다. 그 춘천 0건도
@@ -5717,7 +5826,7 @@ function rival_() {
     var wantN = (AREA_Q[r.area] || []).length;
     var half = wantN > 0 && r.q.length > 0 && r.q.length < wantN;
     out.push({
-      area: r.area, ours: r.ours, rival: r.rival, hi: r.hi, el: r.el,
+      area: r.area, ours: r.ours, rival: r.rival,
       pct: (r.capped || half || tot === 0) ? null : Math.round((r.ours / tot) * 100),
       capped: r.capped, half: half, cities: r.q.length, wantCities: wantN,
       queries: r.q.join(' · '),
