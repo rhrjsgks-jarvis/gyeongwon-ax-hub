@@ -5864,6 +5864,29 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (ix.indexOf('if (cand < 9) break;') < 0)
     bad.push('글자를 끝없이 줄인다 — 9px 아래는 안 읽혀 적는 뜻이 없다');
 
+  /* ── **칸 글자에 투명도를 주지 않는다** (2026-09-06 사장님 지적으로 잡았다) ──────
+   * *"텍스트가 잘 안보이는것같습니다"* — 색이 아니라 **투명도**였다. 흰 글자를 78% 로
+   * 깔면 실제로는 회색이 되어 어두운 칸에서 **3.55:1** 까지 떨어진다(0.95 도 4.47).
+   * 대비 검사는 글자색을 순검정/흰색으로 보고 계산하므로 **이 손실을 못 잡는다** —
+   * 규칙을 따로 둔다. 위계는 크기와 굵기로 준다. */
+  for (const sel of ['.hm .cell .cg', '.hm .cell .cv', '.hm .cell .cn']) {
+    const at2 = ix.indexOf('  ' + sel + ' {');
+    if (at2 < 0) continue;                       /* 없는 규칙은 볼 것이 없다 */
+    const blk = ix.slice(at2, ix.indexOf('}', at2));
+    const m2 = /opacity:\s*([0-9.]+)/.exec(blk);
+    if (m2 && Number(m2[1]) < 1)
+      bad.push(sel + ' 에 투명도 ' + m2[1] + ' 이 걸려 있다 — 글자 대비가 조용히 깎인다');
+  }
+  {
+    /* 모서리 기호(▣ ✕)는 글자가 아니지만 뜻을 담는다 — 비문자 요소 기준 3:1.
+       0.62 는 어두운 칸에서 2.85:1 이라 못 넘긴다(실측). */
+    const at2 = ix.indexOf('.hm .cell .lgd, .hm .cell .lgx {');
+    const blk = at2 < 0 ? '' : ix.slice(at2, ix.indexOf('}', at2));
+    const m2 = /opacity:\s*([0-9.]+)/.exec(blk);
+    if (m2 && Number(m2[1]) < 0.8)
+      bad.push('칸 모서리 기호가 너무 흐리다(투명도 ' + m2[1] + ') — 3:1 을 못 넘긴다');
+  }
+
   /* ⓒ **색을 바꿨으면 그 색을 가리키는 문구도 함께 바꾼다** */
   if (/칸의 <b style="color:[^"]*">빨강<\/b>/.test(ix))
     bad.push("안내가 아직 「빨강」이라 적는다 — 화면은 따뜻한 회색이다");
