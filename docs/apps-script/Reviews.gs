@@ -4774,10 +4774,19 @@ function summary_() {
     /* LG 지점과 짝 — 지도 핀과 짝 바꾸기 화면이 쓴다. 좌표는 지도 빌더가 이미
        갖고 있으므로 여기서는 **이름·시군만** 보낸다(응답을 키우지 않는다). */
     lgShops: (function () {
+      /* **좌표를 함께 보낸다**(2026-09-06). 화면이 「가까운 곳」을 지역 이름으로
+         가르고 있었는데, 영업지역 6곳 ↔ LG 시군 24종이라 이름이 안 겹치면 통째로
+         밀린다 — 실측으로 **강원 9매장은 0곳**이었다(LG 는 강릉·원주·춘천으로 적는다).
+         거리로 줄 세우면 이름 매칭이 아예 필요 없다. */
       var o = [], i;
-      for (i = 0; i < LG_SHOPS.length; i++) o.push({ n: LG_SHOPS[i][0], g: LG_SHOPS[i][1] });
+      for (i = 0; i < LG_SHOPS.length; i++) {
+        o.push({ n: LG_SHOPS[i][0], g: LG_SHOPS[i][1], y: LG_SHOPS[i][2], x: LG_SHOPS[i][3] });
+      }
       return o;
     })(),
+    /* 우리 매장 좌표 — 위와 짝이다. **좌표를 모르는 매장이 있다**(`ok:false`),
+       그때는 화면이 지역 이름으로 물러선다. */
+    storeGeo: STORE_GEO,
     lgPair: lgPairs_(),
     /* **사람이 직접 고친 것만** 따로 보낸다(2026-09-06). `lgPair` 는 코드 표
        (`LG_PAIR`, 좌표로 낸 자동 제안)와 수기를 합친 값이라, 그것으로 「수기」를
@@ -6479,7 +6488,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 22;   /* 21 = 매니저 주차(mgrTop[].wk4) */
+var SUM_VER = 23;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

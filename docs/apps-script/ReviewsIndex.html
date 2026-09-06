@@ -1773,6 +1773,46 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   function nf(n) { return Number(n || 0).toLocaleString('ko-KR'); }
   /** 받침을 보고 조사를 고른다 — 「강원 은(는)」처럼 적으면 화면이 어설퍼진다.
       한글이 아니면 받침 있는 쪽을 쓴다(영문·숫자 뒤에는 그쪽이 덜 어색하다). */
+  /** **현지 날짜**(YYYY-MM-DD). `toISOString()` 은 UTC 라 한국 00~09시에 찍으면
+   *  **전날**이 된다 — 실측으로 09-06 06:55 실행이 표에 09-05 로 떴다.
+   *  ISO 주 계산(`weekRange`)은 `Date.UTC` 로 일관되게 다루므로 **거기는 쓰지 않는다.** */
+  function ymdLocal(d) {
+    var x = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(x.getTime())) return '';
+    var m = x.getMonth() + 1, day = x.getDate();
+    return x.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+  }
+
+  /** 마지막 수집이 며칠 전인가 — **자동을 꺼 두셨을 때만** 센다(켜져 있으면
+   *  `sweepMissed` 가 이미 경보를 띄운다). 오늘 돌았으면 0(안 적는다).
+   *  모르면 0 — **「모른다」를 「오래됐다」로 바꿔 말하지 않는다.** */
+  function sweepStaleDays(now, lastMs, autoOn) {
+    var ad = DATA.autoDaily;
+    var off = (autoOn === undefined) ? !!(ad && ad.on === false) : !autoOn;
+    if (!off) return 0;
+    var ms = (lastMs === undefined) ? Number(DATA.lastRun && DATA.lastRun.ms) || 0 : Number(lastMs) || 0;
+    if (!ms) return 0;
+    var n = (now === undefined) ? new Date() : new Date(now);
+    var a = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    var b = new Date(ms);
+    var c = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    var d = Math.round((a - c) / 864e5);
+    return d > 0 ? d : 0;
+  }
+
+  /** 두 좌표 사이 미터. 지도가 쓰는 것과 같은 하버사인이다. */
+  function distM(y1, x1, y2, x2) {
+    var R = 6371000, r = Math.PI / 180;
+    var t = Math.sin((y2 - y1) * r / 2);
+    var u = Math.sin((x2 - x1) * r / 2);
+    var a = t * t + Math.cos(y1 * r) * Math.cos(y2 * r) * u * u;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+  }
+  /** 사람이 읽는 거리 — 1km 넘으면 km. */
+  function distText(m) {
+    return m < 1000 ? Math.round(m) + 'm' : (m / 1000).toFixed(m < 10000 ? 1 : 0) + 'km';
+  }
+
   function josa(word, withJong, without) {
     var t = String(word || '');
     if (!t) return withJong;
@@ -2135,7 +2175,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var last = String(at[j.id] || '');
       if (j.id === 'sweep') {
         var lms = Number(DATA.lastRun && DATA.lastRun.ms) || 0;
-        last = lms ? new Date(lms).toISOString().slice(0, 10) : '';
+        last = lms ? ymdLocal(lms) : '';
       }
       var c = Number(costs[j.cost] || 0);
       html += '<tr class="' + (isDue ? 'due' : '') + '">'
@@ -2272,6 +2312,13 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
    * `lgPairManual` 을 본다. **없으면 「모른다」고 적는다** — 수기로 단정하지 않는다.
    */
   var lgpStore = '', lgpPick = [], lgpAll = false;
+  /** 가까운 순으로 먼저 보여줄 지점 수. 늘리면 목록이 길어지고 줄이면 손이 는다. */
+  var LGP_NEAR = 10;
+  /** 그 매장 좌표를 아는가 — **정렬과 안내가 같은 답을 봐야** 화면이 두 말을 안 한다. */
+  function hasGeoOf(store) {
+    var g = (DATA.storeGeo || {})[store];
+    return !!(g && typeof g.lat === 'number' && typeof g.lng === 'number');
+  }
 
   /** 수기 짝만. 옛 서버 자료면 `null` — 「모른다」와 「없다」는 다른 말이다. */
   function lgpManual() {
@@ -2323,20 +2370,48 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (step) step.textContent = '② 매장을 먼저 고르시면 LG 지점이 나옵니다';
       return;
     }
-    if (step) step.textContent = '② ' + lgpStore + ' 와 견줄 LG 지점 — 누르면 고르고, 다시 누르면 뗍니다(최대 3곳)';
-    var shops = DATA.lgShops || [], area = areaOfStore(lgpStore), near = [], rest = [], i;
-    for (i = 0; i < shops.length; i++) {
-      (String(shops[i].g || '').indexOf(area) >= 0 || String(area).indexOf(shops[i].g) >= 0
-        ? near : rest).push(shops[i]);
+    if (step) step.textContent = '② ' + lgpStore + josa(lgpStore, '과 ', '와 ') + '견줄 LG 지점 — '
+      + (hasGeoOf(lgpStore) ? '가까운 순입니다. ' : '')
+      + '누르면 고르고, 다시 누르면 뗍니다(최대 3곳)';
+    /* **거리로 가른다**(2026-09-06 사장님 지적). 예전에는 영업지역 이름이 지점의
+       시군에 들어 있는지로 갈랐는데, 영업지역 6곳 ↔ LG 시군 24종이라 이름이 안
+       겹치면 통째로 밀린다 — 실측으로 **강원 9매장이 0곳**이었고 광명·화성·안성·
+       하남·이천·광주 지점도 「그 밖」에 숨어 있었다. */
+    var shops = (DATA.lgShops || []).slice(), near = [], rest = [], i;
+    var geo = (DATA.storeGeo || {})[lgpStore];
+    var hasGeo = !!(geo && typeof geo.lat === 'number' && typeof geo.lng === 'number');
+    if (hasGeo) {
+      for (i = 0; i < shops.length; i++) {
+        shops[i] = { n: shops[i].n, g: shops[i].g,
+          m: (typeof shops[i].y === 'number') ? distM(geo.lat, geo.lng, shops[i].y, shops[i].x) : Infinity };
+      }
+      shops.sort(function (a, b) { return a.m - b.m; });
+      near = shops.slice(0, LGP_NEAR);
+      rest = shops.slice(LGP_NEAR);
+      /* **고른 지점은 거리와 무관하게 앞에 둔다** — 수기로 먼 곳을 짝지으셨으면
+         그것이 접힌 자리에 숨으면 안 된다(고른 것이 안 보이는 화면이 된다). */
+      for (i = rest.length - 1; i >= 0; i--) {
+        if (lgpPick.indexOf(rest[i].n) >= 0) near.push(rest.splice(i, 1)[0]);
+      }
+    } else {
+      /* **좌표를 모르면 지역 이름으로 물러서고 그 사실을 적는다**(아래 안내) */
+      var area = areaOfStore(lgpStore);
+      for (i = 0; i < shops.length; i++) {
+        (String(shops[i].g || '').indexOf(area) >= 0 || String(area).indexOf(shops[i].g) >= 0
+          ? near : rest).push(shops[i]);
+      }
     }
     var cell = function (x) {
       return '<button type="button" class="lgpc' + (lgpPick.indexOf(x.n) >= 0 ? ' on' : '')
         + '" data-shop="' + esc(x.n) + '">'
         + '<span class="lgpc-n">' + esc(x.n) + '</span>'
-        + '<span class="lgpc-g">' + esc(x.g) + '</span></button>';
+        + '<span class="lgpc-g">' + esc(x.g)
+        /* **거리를 적는다** — 왜 이 순서인지 눈으로 검산할 수 있어야 한다 */
+        + (typeof x.m === 'number' && isFinite(x.m) ? ' · ' + distText(x.m) : '')
+        + '</span></button>';
     };
     var html = near.map(cell).join('');
-    if (lgpAll) html += '<div class="lgp-rg">그 밖</div>' + rest.map(cell).join('');
+    if (lgpAll) html += '<div class="lgp-rg">그 밖 — 먼 순</div>' + rest.map(cell).join('');
     box.innerHTML = html || '<div class="sub">이 지역에 LG 지점이 없습니다.</div>';
     if (more) {
       more.hidden = !rest.length;
@@ -5536,7 +5611,13 @@ function renderList() {
        된다(오늘 실제로 세 번 헛짚었다). 발자국이 있으면 한눈에 보인다. */
     var stEl = document.getElementById("runstage");
     if (stEl) {
-      stEl.innerHTML = DATA.stage
+      /* **정상으로 끝났으면 발자국을 안 적는다**(2026-09-06 실물에서 잡았다).
+         발자국은 *"도중에 죽으면 어디까지 갔는지"* 를 위한 것이라, 완주한 뒤에도
+         남겨 두면 바로 위 「62곳 한 바퀴를 마친 상태입니다」와 **두 말을 한다.**
+         셋이 다 맞아야 완주다 — 도는 중이 아니고 · 커서가 0 이고 · 오류가 없다. */
+      var doneOk = !DATA.runAt && !Number(DATA.cursor)
+        && !(DATA.lastRun && DATA.lastRun.error);
+      stEl.innerHTML = (DATA.stage && !doneOk)
         ? "마지막 발자국 <b>" + esc(DATA.stage) + "</b>"
           + (runMin > 8 ? " — <b style=\"color:#B91C1C\">" + runMin.toFixed(0)
               + "분째 그대로입니다.</b> 수집 단추를 한 번 눌러 주세요." : "")
@@ -5618,6 +5699,12 @@ function renderList() {
                   ? '쿼터를 다 써 지금은 눌러도 돌지 않습니다' + (qAt ? '(' + qAt + '에 풀립니다)' : '')
                   : '이어서 눌러 주세요')
             : (tot ? tot + '곳 한 바퀴를 마친 상태입니다' : ''));
+      /* **자동을 껐으면 며칠이 지나도 경보가 없다** — 꺼 두신 것은 고장이 아니라
+         경보를 안 띄우는 것이 맞다(「sweepMissed」). 그러면 **며칠 안 누르셔도 아무
+         표시가 없어 자료가 조용히 낡는다.** 경보가 아니라 **사실**로 적는다.
+         오늘 돌았으면 적지 않는다 — 정상인 날 매번 뜨면 아무도 안 읽는다. */
+      var staleD = sweepStaleDays();
+      if (staleD > 0) e.textContent += ' · 마지막 수집 ' + staleD + '일 전';
       /* **어느 쪽으로 도는지 함께 적는다** — 「전부 훑는 중」과 「새 글만」은
          걸리는 시간이 다르고, 건수가 적은 이유가 되기 때문이다. */
       if (DATA.forceFull) e.textContent += ' · 전체 재수집 중(오래 걸립니다)';
@@ -5818,7 +5905,7 @@ function renderList() {
        0건을 「죽었다」로 적으면 화면이 거짓말을 한다. */
     var quiet = [], noPost = 0;
     var cutoff = new Date(Date.parse(DATA.at || '') - SIG_QUIET_DAYS * 864e5);
-    var cutoffS = isNaN(cutoff.getTime()) ? '' : cutoff.toISOString().slice(0, 10);
+    var cutoffS = ymdLocal(cutoff);   /* 견주는 `lp[name]` 이 현지 날짜다 */
     Object.keys(bs).forEach(function (name) {
       if ((bs[name] || 0) < SIG_QUIET) return;
       var d = lp[name];
@@ -7778,7 +7865,7 @@ function renderList() {
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = '바이럴분석_' + (storeFilter || cafeFilter || kindFilter || watchFilter || '전체') + '_'
-      + new Date().toISOString().slice(0, 10) + '.csv';
+      + ymdLocal(new Date()) + '.csv';
     a.click();
   };
 

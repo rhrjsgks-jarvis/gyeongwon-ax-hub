@@ -6149,5 +6149,161 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 LG 지점 짝 — 관리자에서 찾는다 · 칸으로 고른다 · 저장 길 하나 · 수기/기본 구분 · 해당없음≠되돌리기');
 }
 
+/* ── **날짜가 하루 밀렸다 · 완주가 멈춤으로 읽혔다** (2026-09-06) ─────────────────
+ * 자동 수집을 끄신 뒤 배포본을 열어 보고 잡은 셋이다.
+ *
+ * ① `toISOString()` 은 **UTC** 다 — 한국(+9)에서 00~09시에 찍으면 **전날**이 된다.
+ *    실측으로 마지막 실행 **09-06 06:55** 가 수집 체계 표에 **09-05** 로 떴다.
+ *    이 저장소가 백업 폴더 이름에서 이미 겪은 그 함정이다.
+ * ② 완주했는데 「마지막 발자국 …」이 남아 **바로 위 「한 바퀴를 마친 상태입니다」와
+ *    두 말을 했다.** 발자국은 *"도중에 죽으면 어디까지 갔는지"* 를 위한 것이다.
+ * ③ 자동을 끄면 `sweepMissed` 가 경보를 안 띄운다(그것이 맞다 — 꺼 둔 것은 고장이
+ *    아니다). 그러면 **며칠 안 누르셔도 아무 표시가 없어 자료가 조용히 낡는다.** */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ⓐ 현지 날짜 헬퍼가 있고, 날짜를 적는 자리가 그것을 지나가는가 */
+  if (ix.indexOf('function ymdLocal(') < 0) bad.push('현지 날짜 헬퍼가 없다 — toISOString 은 UTC 라 하루 밀린다');
+  if (ix.indexOf('last = lms ? ymdLocal(lms)') < 0)
+    bad.push('수집 체계 표가 UTC 날짜를 적는다 — 새벽에 돌면 전날로 찍힌다');
+  if (ix.indexOf('var cutoffS = ymdLocal(cutoff)') < 0)
+    bad.push('「조용한 매장」 경계가 UTC 다 — 견주는 작성일은 현지 날짜다');
+  if (ix.indexOf("ymdLocal(new Date()) + '.csv'") < 0)
+    bad.push('CSV 파일 이름이 UTC 다 — 새벽에 내보내면 전날 이름이 붙는다');
+  /* **`weekRange` 는 손대지 않는다** — 거기는 `Date.UTC` 로 만들어 UTC 로 일관되게
+     다루므로 UTC 가 맞다. 남은 `toISOString` 은 그 안의 것뿐이어야 한다. */
+  {
+    const at = ix.indexOf('function weekRange(');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at));
+    const CALL = '.' + 'toISOString(';   /* 멤버 호출 — 설명 주석에는 점이 없다 */
+    const total = ix.split(CALL).length - 1;
+    const inWeek = body ? body.split(CALL).length - 1 : 0;
+    if (!body) bad.push('weekRange 를 못 찾았다 — 앵커가 낡았다');
+    else if (total !== inWeek)
+      bad.push('weekRange 밖에 toISOString 이 ' + (total - inWeek) + '곳 남았다 — 하루 밀릴 자리다');
+  }
+  /* 판정을 **떼어 돌려** 본다 — 자정 경계가 맞아야 한다 */
+  {
+    const at = ix.indexOf('function ymdLocal(');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at) + 4);
+    if (body) {
+      const f = new Function('return ' + body)();
+      /* 06:55 KST 는 UTC 로 전날 21:55 다 — 그래도 그날이어야 한다 */
+      const got = f(new Date(2026, 8, 6, 6, 55).getTime());
+      if (got !== '2026-09-06') bad.push('현지 날짜가 틀리다 — 06:55 KST 가 ' + got);
+      if (f(new Date(2026, 0, 1, 0, 10)) !== '2026-01-01') bad.push('자정 직후가 전날로 찍힌다');
+      if (f('말이 안 되는 값') !== '') bad.push('못 읽는 값에 아무 날짜나 내놓는다');
+    }
+  }
+
+  /* ⓑ 정상으로 끝났으면 발자국을 안 적는다 */
+  if (ix.indexOf('var doneOk = !DATA.runAt && !Number(DATA.cursor)') < 0)
+    bad.push('완주 판정이 없다 — 다 끝났는데 「마지막 발자국」이 남아 멈춘 것처럼 읽힌다');
+  if (ix.indexOf('stEl.innerHTML = (DATA.stage && !doneOk)') < 0)
+    bad.push('완주해도 발자국을 적는다 — 바로 위 줄과 두 말을 한다');
+
+  /* ⓒ 자동을 껐으면 마지막 수집이 며칠 전인지 적는다 */
+  if (ix.indexOf('function sweepStaleDays(') < 0) bad.push('묵은 날을 세는 길이 없다');
+  if (ix.indexOf("' · 마지막 수집 ' + staleD + '일 전'") < 0)
+    bad.push('자동을 껐는데 며칠째 안 돌았는지 화면이 안 적는다 — 자료가 조용히 낡는다');
+  {
+    const at = ix.indexOf('function sweepStaleDays(');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at) + 4);
+    if (body) {
+      const f = new Function('DATA', 'return ' + body)({ autoDaily: { on: false }, lastRun: { ms: 0 } });
+      const D = (y, m, d, h) => new Date(y, m - 1, d, h || 12).getTime();
+      const cases = [
+        ['자동이 켜져 있으면 안 센다(그때는 경보가 따로 뜬다)', f(D(2026, 9, 6), D(2026, 9, 1), true), 0],
+        ['오늘 돌았으면 안 적는다', f(D(2026, 9, 6, 22), D(2026, 9, 6, 6), false), 0],
+        ['어제', f(D(2026, 9, 6), D(2026, 9, 5), false), 1],
+        ['닷새 전', f(D(2026, 9, 6), D(2026, 9, 1), false), 5],
+        ['모르면 0 — 「모른다」를 「오래됐다」로 바꿔 말하지 않는다', f(D(2026, 9, 6), 0, false), 0],
+        ['미래(시계 문제)', f(D(2026, 9, 6), D(2026, 9, 8), false), 0]
+      ];
+      for (const [nm, got, want] of cases) if (got !== want) bad.push('묵은 날 — ' + nm + ' → ' + got + '(기대 ' + want + ')');
+    }
+  }
+
+  if (bad.length) fail('[바이럴] 날짜·발자국 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 날짜·발자국 — 현지 날짜(UTC 아님) · 완주는 발자국 안 남긴다 · 자동 껐으면 묵은 날을 적는다');
+}
+
+/* ── **LG 지점이 안 보이던 매장이 있었다** (2026-09-06 사장님 지적) ────────────────
+ * *"당사 vs 타사(LG) 매칭에 LG점포가 안보이는것이있는것같습니다."*
+ *
+ * 짝 고르개가 「가까운 곳」을 **영업지역 이름**으로 갈랐는데, 영업지역 6곳 ↔ LG 지점
+ * 시군 **24종**이라 이름이 안 겹치면 통째로 밀린다. 실측:
+ *   강원 9매장 → **0곳** (LG 는 강릉·원주·춘천… 으로 적는다)
+ *   안양 4곳(광명 4 빠짐) · 성남 6곳(하남·이천·광주 7 빠짐) · 용인 8곳(화성 7 빠짐)
+ *
+ * 서버가 좌표를 이미 갖고 있어(`STORE_GEO` · `LG_SHOPS`) 보내기만 하면 **거리순**으로
+ * 줄 세울 수 있다 — 이름 매칭이 아예 필요 없어진다. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ⓐ 서버가 좌표를 보내는가 */
+  if (gs.indexOf('o.push({ n: LG_SHOPS[i][0], g: LG_SHOPS[i][1], y: LG_SHOPS[i][2], x: LG_SHOPS[i][3] })') < 0)
+    bad.push('서버가 LG 지점 좌표를 안 보낸다 — 화면이 거리로 줄 세울 수 없다');
+  if (gs.indexOf('storeGeo: STORE_GEO') < 0) bad.push('서버가 우리 매장 좌표를 안 보낸다');
+
+  /* ⓑ 화면이 거리로 가르는가 — **지역 이름 매칭으로 되돌아가면 안 된다** */
+  if (ix.indexOf('shops.sort(function (a, b) { return a.m - b.m; })') < 0)
+    bad.push('지점을 거리순으로 안 세운다 — 지역 이름으로 가르면 강원 9매장이 0곳이 된다');
+  if (ix.indexOf('function distM(') < 0) bad.push('거리 계산이 없다');
+  /* **고른 지점은 거리와 무관하게 앞에** — 수기로 먼 곳을 짝지으면 접힌 자리에 숨는다 */
+  if (ix.indexOf('if (lgpPick.indexOf(rest[i].n) >= 0) near.push(rest.splice(i, 1)[0]);') < 0)
+    bad.push('고른 지점이 「그 밖」에 숨을 수 있다');
+  /* **좌표를 모르면 물러서고 그 사실이 화면에 드러나야 한다** */
+  if (ix.indexOf('function hasGeoOf(') < 0) bad.push('좌표를 아는지 판정하는 길이 없다');
+  if (ix.indexOf("hasGeoOf(lgpStore) ? '가까운 순입니다. ' : ''") < 0)
+    bad.push('가까운 순인지 아닌지를 화면이 안 밝힌다 — 좌표를 모르는 매장에서 거짓이 된다');
+  /* 거리를 칸에 적어야 왜 그 순서인지 눈으로 검산된다 */
+  if (ix.indexOf('function distText(') < 0 || ix.indexOf("' · ' + distText(x.m)") < 0)
+    bad.push('칸에 거리를 안 적는다 — 왜 이 순서인지 검산할 수 없다');
+  /* 조사 — 「영통 와」가 아니라 「영통과」 */
+  if (ix.indexOf("josa(lgpStore, '과 ', '와 ')") < 0)
+    bad.push('안내가 받침을 안 본다 — 「영통 와 견줄」이 된다');
+
+  /* ⓒ 거리 계산을 **떼어 돌려** 본다 — 하버사인은 조용히 틀리기 쉽다
+     (실제로 √를 두 번 걸어 2.5km 가 177km 로 나왔다) */
+  {
+    const at = ix.indexOf('function distM(');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at) + 4);
+    if (body) {
+      const f = new Function('return ' + body)();
+      const near = (got, want, tol, nm) => {
+        if (!(Math.abs(got - want) <= tol)) bad.push('거리 — ' + nm + ' → ' + Math.round(got) + '(기대 ' + want + '±' + tol + ')');
+      };
+      near(f(37.77, 128.92, 37.77, 128.92), 0, 1, '같은 자리');
+      near(f(37.770211, 128.919912, 37.758392, 128.896228), 2460, 120, '강릉본점↔강릉옥천점');
+      near(f(37.5665, 126.9780, 35.1796, 129.0756), 325000, 8000, '서울↔부산');
+    }
+  }
+  /* 사람이 읽는 표기 */
+  {
+    const at = ix.indexOf('function distText(');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at) + 4);
+    if (body) {
+      const f = new Function('return ' + body)();
+      if (f(127) !== '127m') bad.push('거리 표기 — 127 → ' + f(127));
+      if (f(2460) !== '2.5km') bad.push('거리 표기 — 2460 → ' + f(2460));
+      if (f(55000) !== '55km') bad.push('거리 표기 — 55000 → ' + f(55000));
+    }
+  }
+
+  /* ⓓ 미리보기 모의에 좌표가 있어야 **주 경로를 눈으로 볼 수 있다** */
+  {
+    const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+    if (pv.indexOf('storeGeo: (() => {') < 0) bad.push('미리보기 모의에 매장 좌표가 없다 — 거리순 경로를 한 번도 안 지나간다');
+    if (pv.indexOf('y: x.lat, x: x.lng') < 0) bad.push('미리보기 모의 지점에 좌표가 없다');
+  }
+
+  if (bad.length) fail('[바이럴] LG 지점 거리순 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 LG 지점 거리순 — 좌표를 보낸다 · 거리로 줄 세운다 · 고른 것은 앞에 · 거리를 적는다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
