@@ -1396,7 +1396,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           무엇을 하는지는 맨 위 <b>「지금 할 일」</b>이 적습니다.
           <b>②③④ 는 주 1회</b>입니다(지역·매장 단위 총량이라 하루로는 거의 안 움직입니다).
           <div class="pipe">
-            <div><i>①</i> <b>자동 수집 살피기</b> — 새벽 3시 트리거가 없거나 꺼져 있으면 다시 겁니다</div>
+            <div><i>①</i> <b>자동 수집 살피기</b> — <b>켜 두셨을 때만</b> 살핍니다(구글이 꺼 놓았으면 다시 겁니다). 꺼 두셨으면 아무것도 하지 않습니다</div>
             <div><i>②</i> <b class="wk">주1</b> <b>LG 비교</b> — 영업지역 6곳에서 당사 vs LG 후기 몫</div>
             <div><i>③</i> <b class="wk">주1</b> <b>매장 대 매장</b> — 매장마다 LG 짝 지점과 견줍니다(히트맵 오른쪽 앰버)</div>
             <div><i>④</i> <b class="wk">주1</b> <b>검색 관심도</b> — 네이버에서 얼마나 찾는지(데이터랩)</div>
@@ -1482,6 +1482,13 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           <thead><tr><th>작업</th><th>주기</th><th>마지막</th><th>다음</th><th class="co">한 바퀴</th><th></th></tr></thead>
           <tbody></tbody>
         </table>
+        <!-- **자동 수집 스위치** (2026-09-06 사장님이 새벽 3시 트리거를 지우셨다).
+             예전에는 「수집」을 누르는 순간 코드가 **없으면 다시 만들어** 사장님 결정을
+             조용히 뒤집었다. 이제 되살리지 않고, **켜고 끄는 것을 여기서 정한다.** -->
+        <div class="alias-add" id="autobox" style="margin-top:6px">
+          <span class="limuse" id="autotxt">–</span>
+          <button type="button" class="btn" id="autobtn" hidden>자동 수집 켜기</button>
+        </div>
         <div class="sub" id="jobs-note"></div>
       </details>
       <div class="alias-add" style="margin-top:6px">
@@ -1915,6 +1922,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
    *  **모르는 것은 「멈췄다」가 아니다** — 마지막 실행을 아예 모르면 판정하지 않는다.
    *  진행 상태 줄과 「지금 할 일」이 **같은 규칙**을 봐야 화면이 두 말을 하지 않는다. */
   function sweepMissed(runMin) {
+    /* **꺼 두신 것은 고장이 아니다** (2026-09-06 사장님이 새벽 3시 트리거를 지우셨다).
+       자동 수집이 없으면 「오늘 안 돌았다」가 당연한 상태다 — 경고로 적으면 매일
+       거짓 경보가 뜨고, 그러면 진짜 멈춤을 알아볼 수 없게 된다.
+       **옛 서버 자료에는 이 칸이 없다** — 그때는 예전처럼 판정한다(있는 척하지 않는다). */
+    var ad = DATA.autoDaily;
+    if (ad && ad.on === false) return false;
     var lrMs = (DATA.lastRun && DATA.lastRun.ms) ? Number(DATA.lastRun.ms) : 0;
     if (!lrMs) return false;
     var nowMs = Number(DATA.now) || Date.now();
@@ -1998,15 +2011,21 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       }
     }
     el.className = 'todo';
+    /* **자동이 꺼져 있으면 그 사실을 적는다**(2026-09-06) — 안 적으면 「왜 어제 자료가
+       안 늘었지」를 매번 되짚게 된다. 경고가 아니라 상태다(사장님이 끄신 것이다). */
+    var adT = DATA.autoDaily, offT = !!(adT && adT.on === false);
     el.innerHTML = step(1, '<b>「수집」</b>을 한 번 누르시면 됩니다 — '
       + '이번 차례인 것을 <b>차례로 다</b> 합니다.')
       + '<br><span class="cntxt">'
+      + (offT ? '<b>자동 수집이 꺼져 있습니다</b> — 누르실 때만 돕니다. ' : '')
       + (!knowDue
           ? '<b class="warn">서버가 옛 판입니다</b> — 무엇이 남았는지 알 수 없고, '
             + 'LG 비교 · 매장 대 매장 · 검색 관심도가 함께 돌지 않습니다. '
             + '<b>Reviews.gs 를 붙여넣고 재배포해 주세요.</b>'
           : rest.length
-            ? '이번에 할 것: <b>매장 훑기</b>(매일) · <b>' + esc(rest.join(' · ')) + '</b>(주 1회)'
+            /* **자동이 꺼져 있으면 「(매일)」이 거짓이다** — 누를 때만 돈다(2026-09-06) */
+            ? '이번에 할 것: <b>매장 훑기</b>' + (offT ? '' : '(매일)')
+              + ' · <b>' + esc(rest.join(' · ')) + '</b>(주 1회)'
               + (later.length ? ' · 다음 차례 — ' + esc(later.join(' · ')) : '')
             : '오늘은 <b>매장 훑기</b>만 합니다 — 주 1회짜리는 아직 차례가 아닙니다'
               + (later.length ? '(' + esc(later.join(' · ')) + ')' : '') + '.')
@@ -2053,6 +2072,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       return;
     }
     var running = !!(DATA.chainOn || DATA.runAt);
+    /* **자동 수집이 꺼져 있으면 「매일」이 거짓이다** — 누를 때만 돈다(2026-09-06). */
+    var ad = DATA.autoDaily, autoOff = !!(ad && ad.on === false);
     var html = '';
     for (var i = 0; i < JOBS.length; i++) {
       var j = JOBS[i];
@@ -2070,7 +2091,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var c = Number(costs[j.cost] || 0);
       html += '<tr class="' + (isDue ? 'due' : '') + '">'
         + '<td class="nm" title="' + esc(j.why) + '">' + esc(j.nm) + '</td>'
-        + '<td class="cy"><span class="cyc ' + CYC[j.cyc][1] + '">' + CYC[j.cyc][0] + '</span></td>'
+        /* **자동이 꺼져 있으면 주기가 「누를 때」다** — 「매일」이라 적으면 거짓이 된다.
+           주 1회·월 1회 줄은 그대로다(그쪽은 「눌러도 그 주기 안에서만 돈다」는 뜻이라
+           자동 여부와 무관하게 참이다). */
+        + '<td class="cy">' + (autoOff && j.cyc === 'd'
+            ? '<span class="cyc m" title="자동 수집이 꺼져 있습니다">누를 때</span>'
+            : '<span class="cyc ' + CYC[j.cyc][1] + '">' + CYC[j.cyc][0] + '</span>') + '</td>'
         /* **「아직」과 「했다」를 가른다** — 빈 표식을 오늘로 적으면 거짓이 된다 */
         + '<td class="at">' + (last ? esc(last) : '아직') + '</td>'
         + '<td class="at">' + (isDue ? '<b>이번 차례</b>'
@@ -2081,6 +2107,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         + '</tr>';
     }
     tb.innerHTML = html;
+    /* ── 자동 수집 스위치 (2026-09-06) ────────────────────────────────────────
+     * **모르는 것을 「꺼짐」으로 적지 않는다** — 옛 서버 자료에는 이 칸이 없고,
+     * 트리거 목록을 못 읽는 경우(`null`)도 있다. 그때는 스위치를 감춘다. */
+    var atx = document.getElementById('autotxt'), abt = document.getElementById('autobtn');
+    if (atx && abt) {
+      if (!ad || ad.on === null || ad.on === undefined) {
+        atx.innerHTML = '자동 수집: <b>모름</b>' + (ad ? '' : ' — 서버가 옛 판입니다');
+        abt.hidden = true;
+      } else if (ad.on) {
+        atx.innerHTML = '자동 수집 <b>켜짐</b> — 매일 새벽 3시에 돕니다.';
+        abt.hidden = false; abt.textContent = '자동 수집 끄기';
+      } else {
+        atx.innerHTML = '자동 수집 <b>꺼짐</b> — <b>「수집」을 누르실 때만</b> 돕니다.';
+        abt.hidden = false; abt.textContent = '자동 수집 켜기';
+      }
+    }
     if (note) {
       /* **표가 「수집」과 어떤 사이인지 밝힌다** — 안 적으면 둘 중 무엇을 눌러야
          하는지 매번 판단하게 된다. */
@@ -2096,6 +2138,38 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     var tb = document.querySelector('#jobs tbody');
     if (!tb || tb.dataset.wired) return;
     tb.dataset.wired = '1';
+    /* 자동 수집 스위치 — 같은 자리에서 한 번만 건다 */
+    var abt = document.getElementById('autobtn');
+    if (abt && !abt.dataset.wired) {
+      abt.dataset.wired = '1';
+      abt.onclick = function () {
+        var ad2 = DATA.autoDaily || {}, turnOn = !ad2.on;
+        /* **끄는 것은 되돌릴 수 있으므로 묻지 않는다.** 켜는 것도 마찬가지다 —
+           대신 무엇이 바뀌는지는 위 줄이 곧바로 적는다. */
+        if (!(window.google && google.script && google.script.run)) {
+          var n1 = document.getElementById('jobs-note');
+          if (n1) n1.textContent = '미리보기에서는 바꿀 수 없습니다.';
+          return;
+        }
+        var was = abt.textContent;
+        abt.disabled = true; abt.textContent = '바꾸는 중…';
+        google.script.run
+          .withSuccessHandler(function (r) {
+            abt.disabled = false; abt.textContent = was;
+            var n2 = document.getElementById('jobs-note');
+            if (!r || !r.ok) { if (n2) n2.innerHTML = '<b class="warn">바꾸지 못했습니다</b> — ' + esc((r && r.error) || '알 수 없는 이유'); return; }
+            if (n2) n2.textContent = r.msg || '';
+            /* 자료를 다시 받아 스위치·표를 새로 그린다 — 안 그리면 「눌렀는데 그대로」다 */
+            google.script.run.withSuccessHandler(function (d) { applySummary(d); }).getSummary();
+          })
+          .withFailureHandler(function (e) {
+            abt.disabled = false; abt.textContent = was;
+            var n3 = document.getElementById('jobs-note');
+            if (n3) n3.innerHTML = '<b class="warn">바꾸지 못했습니다</b> — ' + esc(e && e.message);
+          })
+          .setAutoDaily(turnOn);
+      };
+    }
     tb.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-job]') : null;
       if (!b || b.disabled) return;

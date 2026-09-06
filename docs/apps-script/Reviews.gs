@@ -3556,12 +3556,26 @@ function dedupe_() {
  * 자기를 실행 중에 지우게 된다. 판정 시각은 화면의 `sweepMissed` 와 같다.
  */
 function ensureDaily_() {
+  /* ── **사장님이 끄셨으면 되살리지 않는다** (2026-09-06 지시) ──────────────────
+   * *"새벽3시 자동수집기능 삭제했습니다"*. 예전 판은 「수집」을 누르는 순간
+   * **없으면 만든다** 였다 — 편집기에서 직접 지우셔도 **한 번 누르면 되살아나**
+   * 코드가 사장님 결정을 조용히 뒤집는다.
+   *
+   * 그래서 **뜻(`_autoOn`)을 먼저 본다**:
+   *   '0' 끔 — 아무것도 안 한다 · '1' 켬 — 예전대로 만들고 되건다
+   *   없음  — **지금 있는 상태를 따른다**(있으면 되걸기만, 없으면 안 만든다).
+   * 마지막 규칙 덕에 **사장님이 지우신 순간 그대로 꺼진 상태가 된다** — 따로
+   * 스위치를 누르지 않아도 된다. 다시 켜는 것은 화면의 「자동 수집」 스위치다. */
+  var want = String(props_().getProperty('_autoOn') || '');
+  if (want === '0') return '';
   var t, i, has = false;
   try { t = ScriptApp.getProjectTriggers(); } catch (e) { return ''; }
   for (i = 0; i < t.length; i++) {
     if (t[i].getHandlerFunction() === 'collectReviews') has = true;
   }
   if (!has) {
+    /* **뜻을 밝히지 않았는데 없으면 만들지 않는다** — 위 주석 그대로 */
+    if (want !== '1') return '';
     try { ScriptApp.newTrigger('collectReviews').timeBased().atHour(3).everyDays(1).create(); }
     catch (e2) { return ''; }
     return 'made';
@@ -3575,6 +3589,45 @@ function ensureDaily_() {
   if (!lr || lr >= d3.getTime()) return '';             /* 모르거나 이미 돌았다 */
   try { setupTrigger(); } catch (e4) { return ''; }
   return 'rearmed';
+}
+
+/**
+ * **자동 수집을 켜고 끈다** — 화면의 스위치가 부른다 (2026-09-06 사장님 지시).
+ *
+ * 사장님이 편집기에서 트리거를 지우셨을 때 「수집」 한 번에 되살아나던 것을 막으면서
+ * (`ensureDaily_`), **다시 켤 길**은 있어야 한다. 뜻을 속성에 적어 두므로
+ * 구글이 트리거를 꺼도 다음 「수집」이 되건다(켠 상태일 때만).
+ *
+ * **끌 때는 트리거를 실제로 지운다** — 뜻만 적고 두면 그것이 계속 돌아 화면과 어긋난다.
+ * **이어달리기 트리거는 건드리지 않는다** — 그쪽은 돌던 수집을 마저 하는 장치라,
+ * 여기서 지우면 반쯤 훑은 한 바퀴가 그대로 멈춘다.
+ */
+function setAutoDaily(on) {
+  var want = on ? '1' : '0';
+  props_().setProperty('_autoOn', want);
+  var t, i, n = 0;
+  try { t = ScriptApp.getProjectTriggers(); } catch (e) { return { ok: false, error: String(e) }; }
+  for (i = 0; i < t.length; i++) {
+    if (t[i].getHandlerFunction() === 'collectReviews') {
+      try { ScriptApp.deleteTrigger(t[i]); n++; } catch (e2) { /* 하나 못 지워도 나머지는 지운다 */ }
+    }
+  }
+  if (on) {
+    try { ScriptApp.newTrigger('collectReviews').timeBased().atHour(3).everyDays(1).create(); }
+    catch (e3) { return { ok: false, error: String(e3) }; }
+  }
+  return { ok: true, on: !!on, removed: n,
+    msg: on ? '자동 수집을 켰습니다 — 새벽 3시에 돕니다.'
+            : '자동 수집을 껐습니다 — 이제 「수집」을 누르실 때만 돕니다.' };
+}
+
+/** 지금 새벽 3시 트리거가 걸려 있는가 — 화면이 스위치 상태를 그린다. */
+function autoDailyOn_() {
+  try {
+    var t = ScriptApp.getProjectTriggers(), i;
+    for (i = 0; i < t.length; i++) if (t[i].getHandlerFunction() === 'collectReviews') return true;
+  } catch (e) { /* 못 읽으면 모르는 것이다 — 아래에서 null 로 둔다 */ return null; }
+  return false;
 }
 
 function setupTrigger() {
@@ -6582,6 +6635,10 @@ function freshState_(d, full) {
         dead: dueInDays_('_deadAt', DEAD_EVERY_DAYS)
       };
       d.costs = actionCosts_();
+      /* **자동 수집이 켜져 있는가** (2026-09-06) — 꺼져 있으면 화면이 「멈췄다」고
+         경고하면 안 된다(사장님이 끄신 것이지 고장이 아니다). `on` 은 지금 트리거가
+         실제로 있는가, `want` 는 사장님이 밝힌 뜻이다(빈 값이면 아직 안 정하셨다). */
+      d.autoDaily = { on: autoDailyOn_(), want: String(props_().getProperty('_autoOn') || '') };
       /* **갈래마다 마지막으로 끝낸 날** — 관리자 「수집 체계」 표가 적는다.
          비면 「아직」이다(0 으로 적으면 「했는데 0건」으로 읽힌다). */
       d.jobAt = {

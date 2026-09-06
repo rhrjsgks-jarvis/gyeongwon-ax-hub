@@ -5462,7 +5462,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* ⓔ 화면 — 「오늘 아직 안 한 것」은 이제 거짓이다 */
   if (ix.indexOf('오늘 아직 안 한 것:') >= 0)
     bad.push('화면이 아직 「오늘 아직 안 한 것」이라 적는다 — 주 1회짜리가 섞여 거짓이 된다');
-  if (ix.indexOf("'이번에 할 것: <b>매장 훑기</b>(매일)") < 0)
+  /* **「(매일)」은 자동이 켜져 있을 때만 붙는다**(2026-09-06) — 사장님이 끄시면
+     누를 때만 도는데 「매일」이라 적으면 그 자리에서 거짓이 된다. */
+  if (ix.indexOf("'이번에 할 것: <b>매장 훑기</b>'") < 0)
     bad.push('화면이 매일/주1회를 안 가른다');
   if (ix.indexOf("'일 뒤'") < 0 || ix.indexOf('다음 차례 — ') < 0)
     bad.push('화면이 「다음 차례 N일 뒤」를 안 적는다 — 「빠진 것」과 구분되지 않는다');
@@ -5893,6 +5895,106 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 히트맵 색 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 히트맵 색 — 대비·단조성·적록 색각 재서 통과 · 칸에 삼성/LG · 문구 일치');
+}
+
+
+/* ── **자동 수집을 껐으면 되살리지 않는다** (2026-09-06 사장님 지시) ─────────────
+ * *"새벽3시 자동수집기능 삭제했습니다"*.
+ *
+ * 예전 판은 「수집」을 누르는 순간 `ensureDaily_` 가 **없으면 만들었다** — 편집기에서
+ * 직접 지우셔도 **한 번 누르면 되살아나** 코드가 사장님 결정을 조용히 뒤집는다.
+ * 되돌아가면 화면에는 아무 표시도 안 난다(트리거는 Apps Script 편집기에만 보인다). */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+  /* **함수 본문은 중괄호를 세어 자른다.**
+     `\n}` 로 자르면 화면(HTML) 안의 두 칸 들여쓴 함수가 **파일 끝까지** 잡혀 다른
+     함수의 글자가 섞이고, `\n  }` 를 더하면 이번엔 서버(.gs)의 함수가 **첫 블록에서**
+     잘린다 — 둘 다 검사가 아무것도 못 지키게 만든다(오늘 양쪽을 다 겪었다).
+     따옴표 안의 중괄호만 건너뛰면 이 파일들에는 충분하다. */
+  const bodyOf = (s, name) => {
+    const at = s.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    const open = s.indexOf('{', at);
+    if (open < 0) return '';
+    let depth = 0, q = '';
+    for (let i = open; i < s.length; i++) {
+      const c = s[i];
+      if (q) { if (c === '\\') i++; else if (c === q) q = ''; continue; }
+      if (c === '"' || c === "'") { q = c; continue; }
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (!depth) return s.slice(at, i + 1); }
+    }
+    return '';
+  };
+
+  /* ⓐ 서버 — 뜻을 보고, 뜻이 없으면 지금 상태를 따른다 */
+  {
+    const body = bodyOf(gs, 'ensureDaily_');
+    if (!body) bad.push('ensureDaily_ 를 못 찾았다 — 앵커가 낡았다');
+    else {
+      if (body.indexOf("props_().getProperty('_autoOn')") < 0)
+        bad.push('ensureDaily_ 가 뜻(_autoOn)을 안 본다 — 껐는데 「수집」 한 번에 되살아난다');
+      if (body.indexOf("if (want === '0') return '';") < 0)
+        bad.push('껐을 때(_autoOn=0) 되살리지 않는다는 분기가 없다');
+      /* **뜻이 없을 때 만들지 않아야 한다** — 사장님이 편집기에서 지우신 그 상태다 */
+      if (body.indexOf("if (want !== '1') return '';") < 0)
+        bad.push('뜻을 안 밝혔는데 트리거를 만든다 — 편집기에서 지우신 것이 되살아난다');
+      /* 켜 두셨을 때 구글이 꺼 놓으면 되거는 길은 남아야 한다 */
+      if (body.indexOf('setupTrigger()') < 0)
+        bad.push('켜 두셨는데 구글이 꺼 놓으면 되거는 길이 사라졌다');
+    }
+  }
+  /* ⓑ 켜고 끄는 길 · 상태를 화면에 보낸다 */
+  {
+    const body = bodyOf(gs, 'setAutoDaily');
+    if (!body) bad.push('setAutoDaily 가 없다 — 한 번 끄면 화면에서 다시 켤 수 없다');
+    else {
+      if (body.indexOf("setProperty('_autoOn', want)") < 0) bad.push('setAutoDaily 가 뜻을 안 적는다');
+      /* **끌 때는 실제로 지운다** — 뜻만 적고 두면 그것이 계속 돌아 화면과 어긋난다 */
+      if (body.indexOf('deleteTrigger') < 0) bad.push('끄면서 트리거를 안 지운다 — 화면은 꺼짐인데 새벽에 돈다');
+      /* **이어달리기 트리거는 건드리지 않는다** — 반쯤 훑은 한 바퀴가 멈춘다 */
+      if (body.indexOf("'collectReviews'") < 0)
+        bad.push('지우는 대상을 안 좁혔다 — 이어달리기까지 지우면 반쯤 훑은 바퀴가 멈춘다');
+    }
+    if (gs.indexOf('function autoDailyOn_()') < 0) bad.push('지금 켜져 있는지 읽는 길이 없다');
+    if (gs.indexOf('d.autoDaily = { on: autoDailyOn_()') < 0)
+      bad.push('자동 수집 상태를 화면에 안 보낸다 — 스위치를 그릴 수 없다');
+  }
+  /* ⓒ 화면 — 꺼진 것은 고장이 아니다 */
+  {
+    const body = bodyOf(ix, 'sweepMissed');
+    if (!body) bad.push('sweepMissed 를 못 찾았다');
+    else if (body.indexOf('ad.on === false') < 0)
+      bad.push('자동을 꺼 두셨는데 「오늘 안 돌았다」고 경고한다 — 매일 뜨는 거짓 경보가 된다');
+  }
+  if (ix.indexOf("id=\"autobtn\"") < 0) bad.push('자동 수집 스위치가 없다 — 한 번 끄면 다시 못 켠다');
+  if (ix.indexOf('.setAutoDaily(turnOn);') < 0) bad.push('스위치가 서버를 안 부른다');
+  if (ix.indexOf('자동 수집 <b>꺼짐</b>') < 0 || ix.indexOf('자동 수집 <b>켜짐</b>') < 0)
+    bad.push('스위치가 지금 상태를 안 적는다');
+  /* **모르는 것을 「꺼짐」으로 적지 않는다** — 옛 서버 자료·트리거를 못 읽는 경우 */
+  if (ix.indexOf("ad.on === null || ad.on === undefined") < 0)
+    bad.push('상태를 모를 때도 꺼짐/켜짐 중 하나로 단정한다');
+  /* **꺼져 있으면 「매일」이 거짓이다** */
+  if (ix.indexOf("autoOff && j.cyc === 'd'") < 0)
+    bad.push('자동이 꺼졌는데 표가 「매일」이라 적는다');
+  if (ix.indexOf("(offT ? '' : '(매일)')") < 0)
+    bad.push('「지금 할 일」이 자동이 꺼진 뒤에도 「(매일)」이라 적는다');
+  if (ix.indexOf('자동 수집이 꺼져 있습니다') < 0)
+    bad.push('「지금 할 일」이 자동이 꺼진 사실을 안 적는다');
+  /* 파이프 도움말도 함께 고쳐야 한다 — 구조를 바꾸면 옛 전제로 쓴 문구가 거짓이 된다 */
+  if (ix.indexOf('새벽 3시 트리거가 없거나 꺼져 있으면 다시 겁니다') >= 0)
+    bad.push('도움말이 아직 「없으면 다시 겁니다」라 적는다 — 이제 껐으면 안 만든다');
+  /* 미리보기 스텁 — 없으면 버튼 한 번에 화면이 죽는다 */
+  {
+    const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+    if (pv.indexOf('setAutoDaily: function') < 0) bad.push('미리보기에 setAutoDaily 스텁이 없다');
+    if (pv.indexOf('autoDaily: {') < 0) bad.push('미리보기 모의에 autoDaily 가 없다 — 스위치를 눈으로 볼 수 없다');
+  }
+
+  if (bad.length) fail('[바이럴] 자동 수집 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 자동 수집 — 껐으면 안 되살린다 · 스위치 · 꺼짐은 고장이 아니다 · 「매일」 표기');
 }
 
 

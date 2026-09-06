@@ -419,6 +419,9 @@ const DATA = {
   dueIn: { rival: 0, srival: 0, trend: 4, dead: 12 },
   /* **갈래마다 마지막으로 끝낸 날** — 「아직」을 일부러 하나 섞는다(검색 관심도).
      0 이나 오늘로 채우면 화면이 「했다」로 적어 그 자리에서 거짓이 된다. */
+  /* **자동 수집 스위치** — 꺼진 상태를 기본으로 둔다(2026-09-06 사장님이 지우셨다).
+     그래야 「꺼짐」 안내와 「누를 때」 배지가 미리보기에서 눈에 보인다. */
+  autoDaily: { on: false, want: '' },
   jobAt: { rival: '2026-09-05', srival: '2026-09-06', trend: '', dead: '2026-08-25', sweep: '2026-09-02' },
   /* 쿼터가 언제 풀리는지 — 서버가 태평양 시간대로 계산해 준다(여름 16시·겨울 17시) */
   quotaResetAt: '16:00', quotaResetMin: 571,
@@ -620,7 +623,9 @@ const stub = [
   /* 2026-09-04 — 「검색 관심도 갱신」(데이터랩) */
   '    runTrend: function () {},',
   /* 2026-09-06 — 「수집 체계」 표의 「지금」. **스텁이 없으면 눌렀을 때 화면이 죽는다** */
-  '    runJob: function (id) { setTimeout(function () { ok && ok({ ok: true, job: id, label: "(미리보기) " + id, r: { done: true } }); }, 300); }',
+  '    runJob: function (id) { setTimeout(function () { ok && ok({ ok: true, job: id, label: "(미리보기) " + id, r: { done: true } }); }, 300); },',
+  /* 2026-09-06 — 「자동 수집 켜기/끄기」. 스텁이 없으면 눌렀을 때 화면이 죽는다 */
+  '    setAutoDaily: function (on) { setTimeout(function () { ok && ok({ ok: true, on: !!on, msg: on ? "(미리보기) 켰습니다" : "(미리보기) 껐습니다" }); }, 200); }',
   '  };',
   '  return api;',
   '})() } };',
