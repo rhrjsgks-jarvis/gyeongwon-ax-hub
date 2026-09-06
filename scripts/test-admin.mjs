@@ -6047,6 +6047,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
+  /* **긴 이름이 칸 밖으로 잘리면 안 된다** — 사업장 매장 12곳이 실제로 잘려 있었다.
+     `word-break:keep-all` 만으로는 한 어절이 칸보다 길 때 그대로 넘친다. */
+  if (ix.indexOf('overflow-wrap:anywhere') < 0)
+    bad.push('긴 매장 이름이 칸 밖으로 잘린다 — keep-all 만으로는 한 어절을 못 꺾는다');
+
   /* ⓑ 그리는 길에 배선했는가 — 함수만 있고 안 부르면 화면에 아무것도 안 뜬다 */
   const wire = 'lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();';
   const n = ix.split(wire).length - 1;
