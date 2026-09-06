@@ -940,6 +940,11 @@
                   overflow: hidden; max-width: 100%; }
   .hm .cell .cg, .hm .cell .cv, .hm .cell .lgn { flex-shrink: 0; }
   .hm .cell .cg { font-weight: 700; opacity: .95; }
+  /* 「삼성 N · LG M」 — 각자 **자기 색 위에** 놓는다(왼쪽 틸 · 오른쪽 코랄).
+     `opacity` 를 물려받으면 대비가 4.5:1 아래로 떨어진다 — 여기서만 1 로 되돌린다. */
+  .hm .cell .cg.two { display: flex; justify-content: space-between; gap: 6px;
+                      width: 100%; opacity: 1; }
+  .hm .cell .cg.two b { font-weight: 700; white-space: nowrap; }
   .hm .cell .cv { font-weight: 600; opacity: .78; }
   /* LG 매칭 표식 — **글자가 아니라 기호**다. 칸이 좁아 이름을 넣으면 뭉갠다 */
   .hm .cell .lgd, .hm .cell .lgx { position: absolute; top: 3px; right: 5px;
@@ -1388,7 +1393,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           <div class="pipe">
             <div><i>①</i> <b>자동 수집 살피기</b> — 새벽 3시 트리거가 없거나 꺼져 있으면 다시 겁니다</div>
             <div><i>②</i> <b class="wk">주1</b> <b>LG 비교</b> — 영업지역 6곳에서 당사 vs LG 후기 몫</div>
-            <div><i>③</i> <b class="wk">주1</b> <b>매장 대 매장</b> — 매장마다 LG 짝 지점과 견줍니다(히트맵 빨강)</div>
+            <div><i>③</i> <b class="wk">주1</b> <b>매장 대 매장</b> — 매장마다 LG 짝 지점과 견줍니다(히트맵 주황빛)</div>
             <div><i>④</i> <b class="wk">주1</b> <b>검색 관심도</b> — 네이버에서 얼마나 찾는지(데이터랩)</div>
             <div><i>⑤</i> <b class="dy">매일</b> <b>삭제된 글 확인</b> — 지워진 후기를 표시합니다(검색 호출은 안 씁니다)</div>
             <div><i>⑥</i> <b class="dy">매일</b> <b>매장 훑기</b> — 관할 매장 전부의 새 후기.
@@ -2019,7 +2024,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     { id: 'rival', nm: 'LG 비교', cyc: 'w', cost: 'rival',
       why: '영업지역 6곳에서 당사 vs LG 후기 몫' },
     { id: 'srival', nm: '매장 대 매장', cyc: 'w', cost: 'srival',
-      why: '매장마다 LG 짝 지점과 견줍니다(히트맵 빨강)' },
+      why: '매장마다 LG 짝 지점과 견줍니다(히트맵 주황빛)' },
     { id: 'trend', nm: '검색 관심도', cyc: 'w', cost: 'trend',
       why: '네이버에서 얼마나 찾는지(데이터랩)' },
     { id: 'dead', nm: '삭제된 글 확인', cyc: 'm', cost: 'dead',
@@ -5613,6 +5618,23 @@ function renderList() {
    *
    *  **옛 회차에는 월 자료가 없다**(`mon` 이 null). 그때는 전 기간으로 물러서고
    *  `scope` 로 그 사실을 알린다 — 0 으로 그리면 「LG 후기가 없다」가 되어 거짓이다. */
+  /* **글자 폭을 캔버스로 잰다** — 칸에 들어가는지 판단할 때 쓴다.
+     어림(한글 1em · 숫자 0.6em)은 큰 칸에서 20%쯤 과대평가해 **들어가는 자리도
+     안 적게** 만들었다. 컨텍스트는 한 번만 만든다(칸마다 만들면 무겁다). */
+  var measCtx = null;
+  function textW(t, px) {
+    try {
+      if (!measCtx) measCtx = document.createElement('canvas').getContext('2d');
+      measCtx.font = '700 ' + px + 'px -apple-system, "Malgun Gothic", sans-serif';
+      return measCtx.measureText(t).width;
+    } catch (e) {
+      /* 캔버스를 못 쓰면 **어림으로 물러선다** — 크게 잡아 안 적는 쪽이 안전하다 */
+      var w = 0;
+      for (var q = 0; q < t.length; q++) w += /[가-힣]/.test(t.charAt(q)) ? px : px * 0.6;
+      return w;
+    }
+  }
+
   function srShare(nm) {
     var r = (window.__SR || {})[nm];
     if (!r || r.capped) return null;
@@ -6087,7 +6109,13 @@ function renderList() {
     return 0.2126 * f(+m[1]) + 0.7152 * f(+m[2]) + 0.0722 * f(+m[3]);
   }
   /** 그 배경 위에서 읽히는 글자색. 문턱 0.19 는 흰 글자와 검은 글자의 대비가 뒤집히는 자리다. */
-  function inkOn(css) { return lumOf(css) > 0.19 ? '#0B1220' : '#fff'; }
+  /* ── **어두운 글자는 완전한 검정이어야 한다** (2026-09-06 재서 잡았다) ──────────
+   * 4.5:1 을 넘기려면 **흰 글자는 휘도 ≤ 0.1833**, **검은 글자는 ≥ 4.5(Li+0.05)−0.05**
+   * 여야 한다. `#0B1220` 은 휘도가 0.0061 이라 그 하한이 **0.202** 로 올라가 흰색
+   * 상한(0.1833)과 **겹치는 창이 아예 없다** — 어떤 문턱을 골라도 램프 어딘가가
+   * **4.4:1 대**로 떨어진다(실측: 후보 B 가 4.3:1 이었다).
+   * 순검정이면 창이 0.175~0.1833 이라 **0.179** 가 안전하다(.scratch/_ink3.mjs). */
+  function inkOn(css) { return lumOf(css) > 0.179 ? '#000' : '#fff'; }
   /* 증감 → 색. ±15% 에서 가장 진해진다. **못 잰 것은 회색** — 0 으로 칠하면 「제자리」가 된다. */
   /** `span` 은 **색이 가장 진해지는 지점**(%)이다. 달 단위는 ±15% 로 충분하지만
    *  **주 단위는 표본이 1~5건이라 ±15% 로 두면 전 칸이 포화된다**(실물에서 그랬다).
@@ -6107,8 +6135,20 @@ function renderList() {
    * **연회청 → 삼성 블루.** 채도가 낮아 파스텔이고 브랜드 색과 이어진다.
    * 명도 대비 실측 — 0%:18.6 · 25%:12.2 · 50%:7.5 · 75%:4.9 · 100%:9.3 (전부 4.5 이상).
    * `inkOn` 이 휘도 0.19 를 경계로 글자를 검정↔흰색으로 바꾼다. */
-  var HEAT_LO = [237, 241, 250];   /* 가장 낮은 값 — 흰 배경과 구분되는 만큼만 옅다 */
-  var HEAT_HI = [45, 66, 140];     /* 가장 높은 값 — 삼성 블루보다 살짝 부드럽다 */
+  /* ── **틸 ↔ 코랄** (2026-09-06 사장님 지시) ────────────────────────────────
+   * *"히트맵 컬러가 너무 촌스러워 시각적으로 눈에 잘 안띕니다"* ·
+   * *"삼성컬러가 꼭 블루일 필요는없습니다"*.
+   *
+   * 브랜드 제약을 풀고 **읽기 좋은 짝**을 골랐다. 데이터 시각화에서 두 갈래를 가르는
+   * 정석은 셋이다 — 파랑↔주황 · **청록(틸)↔코랄** · 초록↔자주. 빨강↔초록만 피한다.
+   *
+   * 후보 아홉을 실물 배치로 찍어 재고 골랐다(`.scratch/_palette.mjs`·`_palette2.mjs`):
+   *   글자 대비 **4.9:1** · 단조성 ✓ · 진영 구분 정상 **72** · **적록 색각 60** ✓
+   * 옛 남색↔벽돌빨강은 적록 색각 구분이 **41** 이었고 톤이 무거웠다.
+   *
+   * **밝은 끝을 흰색으로 두지 않는다** — 작은 칸이 배경과 붙어 「칸이 없다」로 보인다. */
+  var HEAT_LO = [223, 243, 243];   /* 가장 낮은 값 — 흰 배경과 구분되는 만큼만 옅다 */
+  var HEAT_HI = [11, 106, 112];    /* 가장 높은 값 — 짙은 청록 */
   /**
    * `v` 를 `max` 에 대해 칠한다. **0~1 을 벗어나면 자른다** — 최대값을 잘못 넘기면
    * 색이 범위를 벗어나 아무 색이나 나온다.
@@ -6141,7 +6181,9 @@ function renderList() {
    * **0.110([176,42,32])** 이 「밀림」 계열을 유지하면서 파랑과 가장 균형이 맞는다
    * (0.143 은 2.3배 밝아 빨강만 튀고, 0.082 는 기존 「밀림」 색에서 너무 멀다).
    * 옅은 쪽은 파랑 LO(0.878)와 거의 같은 0.872 로 맞춘다. */
-  var LG_LO = [252, 237, 234], LG_HI = [176, 42, 32];
+  /* **코랄** — 같은 농도에서 틸과 가장 크게 갈리면서 갈색으로 안 죽는다
+     (앰버 후보 H 는 색각 구분 67 로 더 높지만 큰 칸이 탁해 보였다 — 실물로 견줬다). */
+  var LG_LO = [255, 235, 228], LG_HI = [214, 76, 46];
   function lgColor(v, max) {
     var t = (max > 0) ? Math.max(0, Math.min(1, v / max)) : 0;
     return 'rgb(' + LG_LO.map(function (a, i) {
@@ -6571,7 +6613,50 @@ function renderList() {
         lab = '<span class="cn" style="font-size:' + fs.toFixed(1) + 'px">' + nmh + '</span>';
         if (c.h > 33 && c.w > 46) {
           var main = chan ? d.cnt + '건' : (byG ? heatPct(d.g) : nf(d.cnt) + '건');
-          lab += '<span class="cg" style="font-size:' + (fs * 0.68).toFixed(1) + 'px">' + main + '</span>';
+          /* ── **칸에 「삼성 N · LG M」을 적는다** (2026-09-06 사장님 요청) ──────────
+           * *"삼성 엘지 텍스트도 잘 보이면 좋겠고"*.
+           *
+           * 예전에는 우리 건수만 적고 LG 는 **빨강 면적과 말풍선**으로만 알렸다 —
+           * 폰에는 hover 가 없어 **사실상 안 보였다.**
+           *
+           * **각자 자기 색 위에 놓고 그 색으로 글자를 고른다** — 칸 배경이 왼쪽 틸,
+           * 오른쪽 코랄로 갈리므로 한 색으로 쓰면 한쪽이 반드시 안 읽힌다.
+           * 폭이 좁으면(<86px) 붙이지 않는다 — 두 숫자가 겹치느니 옛 표기가 낫다. */
+          var srm2 = (!chan && !d.isReg && !byG) ? srShare(d.nm) : null;
+          var two = null;
+          if (srm2 && srm2.pct !== null) {
+            var sTxt = '삼성 ' + nf(srm2.ours), lTxt = 'LG ' + nf(srm2.rival);
+            /* **안 들어가면 한 단계씩 줄여 본다** — 0.62 하나로 잡았더니 158px 칸에서
+               163px 이 필요해 **네 자리 숫자인 칸만 통째로 안 적혔다**(실물에서 봤다).
+               9px 아래로는 내려가지 않는다 — 그보다 작으면 안 읽혀 적는 뜻이 없다. */
+            var fs2 = 0;
+            /* **들어가는지 재고 나서 적는다** — 안 재면 「LG 1,20」처럼 잘린다(실물에서 봤다).
+               **글자 폭을 어림하지 않고 캔버스로 잰다** — 한글 1em·숫자 0.6em 으로
+               어림했더니 큰 칸에서 20%쯤 과대평가해 **들어가는 자리도 안 적었다.** */
+            var wS = 0, wL = 0;
+            for (var fq = 0; fq < 3; fq++) {
+              var cand = fs * [0.62, 0.55, 0.48][fq];
+              if (cand < 9) break;
+              wS = textW(sTxt, cand); wL = textW(lTxt, cand);
+              if (wS + wL + 14 <= c.w) { fs2 = cand; break; }
+            }
+            if (fs2) {
+              /* **글자색은 그 글자가 실제로 얹히는 색이 정한다.** LG 라벨은 오른쪽 끝에
+                 붙는데 **코랄 띠가 그보다 좁으면 틸 위에 놓인다** — 코랄 기준으로
+                 칠하면 그 칸에서만 글자가 안 읽힌다(실물에서 「AK평택」이 그랬다). */
+              var bgS = heatColor(d.cnt, heatMax), bgL = lgColor(d.cnt, heatMax);
+              var lgW = c.w * (1 - srm2.pct / 100);
+              two = '<span class="cg two" style="font-size:' + fs2.toFixed(1) + 'px">'
+                + '<b style="color:' + inkOn(bgS) + '">' + sTxt + '</b>'
+                + '<b style="color:' + inkOn(lgW >= wL + 8 ? bgL : bgS) + '">' + lTxt + '</b>'
+                + '</span>';
+            }
+          }
+          if (two) {
+            lab += two;
+          } else {
+            lab += '<span class="cg" style="font-size:' + (fs * 0.68).toFixed(1) + 'px">' + main + '</span>';
+          }
         }
         /* **전월 → 당월 건수를 함께 적는다**(2026-09-02 사장님 요청) — 등락률만으로는
            3건이 6건이 된 것인지 300건이 600건이 된 것인지 알 수 없다. */
@@ -6991,7 +7076,7 @@ function renderList() {
           ? '<b class="warn">전 기간 기준</b>이라 칸 크기와 잣대가 다릅니다 — 오른쪽 위 <b>톱니바퀴 → 「수집」</b>을'
             + ' 다시 누르면 연도별로 갈립니다'
           : '<b>' + esc(heatYears().cur) + '년</b> 기준입니다';
-        return ' 칸의 <b style="color:#B02A20">빨강</b>이 <b>LG 짝 매장의 몫</b>입니다('
+        return ' 칸의 <b style="color:#C2452B">주황빛</b>이 <b>LG 짝 매장의 몫</b>입니다('
           + nf(n) + '곳) — ' + scopeTxt + '. <b>마우스를 올리면</b> 어느 지점인지와 양쪽 건수가 나옵니다.';
       })();
       sub.innerHTML = mgrView

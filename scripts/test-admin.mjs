@@ -4222,11 +4222,21 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     else {
       const lo = ix.indexOf('var LG_LO = ');
       const line = ix.slice(lo, ix.indexOf(String.fromCharCode(10), lo));
-      /* 짙은 쪽 휘도가 파랑(0.063)과 너무 벌어지면 면적으로 못 읽는다 */
+      /* **한쪽만 튀면 안 된다** — 짙은 끝의 밝기가 크게 벌어지면 면적이 아니라 색만 보인다.
+         **파랑 0.063 을 못 박지 않는다**(2026-09-06 색을 바꾸며 고쳤다) — 그러면 색을
+         갈 때마다 이 검사가 멀쩡한 판을 문다. 두 램프를 소스에서 읽어 **서로** 견준다. */
       const hi = JSON.parse(line.slice(line.indexOf('LG_HI = [') + 8, line.lastIndexOf(']') + 1));
+      const oh = /var HEAT_HI = \[([0-9]+), ([0-9]+), ([0-9]+)\]/.exec(ix);
       const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
-      const L = 0.2126 * f(hi[0]) + 0.7152 * f(hi[1]) + 0.0722 * f(hi[2]);
-      if (L > 0.13) bad.push('LG 빨강이 너무 밝다(휘도 ' + L.toFixed(3) + ') — 파랑(0.063) 옆에서 튄다');
+      const lumOf = (c) => 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+      const L = lumOf(hi);
+      if (!oh) bad.push('당사 램프의 짙은 끝을 못 읽었다 — 앵커가 낡았다');
+      else {
+        const Lo = lumOf([Number(oh[1]), Number(oh[2]), Number(oh[3])]);
+        const r = Math.max(L, Lo) / Math.min(L, Lo);
+        if (r > 2.2)
+          bad.push('두 진영의 짙은 끝 밝기가 ' + r.toFixed(1) + '배 벌어졌다 — 밝은 쪽만 튄다');
+      }
     }
   }
   /* **마우스를 올리면 어느 점인지·몇 건인지** */
@@ -4543,9 +4553,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     });
     if (!ix.includes('LG 매칭 없음')) bad.push('매칭 없음을 표시하지 않는다');
 
-    /* ④ 파스텔 히트맵 */
-    if (!ix.includes('var HEAT_LO = [237, 241, 250]')) bad.push('파스텔 저채도 시작색이 아니다');
-    if (!ix.includes('var HEAT_HI = [45, 66, 140]')) bad.push('파스텔 끝색이 아니다');
+    /* ④ 단일 계열 히트맵 — **색값을 못 박지 않는다**(2026-09-06 사장님이 색을 바꾸셨다).
+       값을 박아 두면 색을 갈 때마다 멀쩡한 판을 문다. 여기서는 **구조**만 본다:
+       램프가 있고 값에 비례해 섞는가. 대비·단조성·색각 구분은 「히트맵 색」 절이
+       소스에서 뽑아 **재서** 지킨다. */
+    if (!/var HEAT_LO = \[[0-9]+, [0-9]+, [0-9]+\]/.test(ix)) bad.push('히트맵 시작색이 없다');
+    if (!/var HEAT_HI = \[[0-9]+, [0-9]+, [0-9]+\]/.test(ix)) bad.push('히트맵 끝색이 없다');
+    if (!ix.includes('HEAT_LO.map(function (a, i)')) bad.push('건수에 비례해 섞지 않는다');
     /* 구간을 나누지 않는다 — v/max 그대로 */
     if (!ix.includes('Math.max(0, Math.min(1, v / max))')) bad.push('연속 스케일이 아니다 — 구간을 나누지 말라는 지시였다');
     if (!ix.includes('heatColor(d.cnt, heatMax)')) bad.push('칸을 건수로 칠하지 않는다');
@@ -5705,6 +5719,116 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 수집 체계 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 수집 체계 — 삭제 확인 월 1회 · 마른 질의 관문 · runJob 4갈래 · 표 5줄 · 미리보기 스텁');
+}
+
+
+/* ── **히트맵 색 · 칸 안의 삼성/LG** (2026-09-06 사장님 지시) ─────────────────
+ * *"히트맵 컬러가 너무 촌스러워 시각적으로 눈에 잘 안띕니다. 삼성 엘지 텍스트도 잘
+ *  보이면 좋겠고"* · *"삼성컬러가 꼭 블루일 필요는없습니다"*.
+ *
+ * 색을 눈으로만 고르지 않는다 — **소스에서 램프를 뽑아 재서** 지킨다:
+ *   ① 글자 대비 4.5:1(램프 여섯 단계 전부) ② 값이 크면 색도 진하다(단조성)
+ *   ③ 적록 색각에서도 두 진영이 갈린다.
+ * 옛 남색↔벽돌빨강은 ③이 41 이었고, 그것을 되돌리면 이 검사가 문다. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* 램프를 소스에서 뽑는다 — 값을 검사에 베껴 적으면 바꿀 때마다 두 곳을 고쳐야 한다 */
+  const rgbOf = (name) => {
+    const m = new RegExp('var ' + name + ' = [[]([0-9]+), ([0-9]+), ([0-9]+)\\]').exec(ix)
+      || new RegExp(name + ' = [[]([0-9]+), ([0-9]+), ([0-9]+)\\]').exec(ix);
+    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+  };
+  const sLo = rgbOf('HEAT_LO'), sHi = rgbOf('HEAT_HI'), lLo = rgbOf('LG_LO'), lHi = rgbOf('LG_HI');
+  if (!sLo || !sHi || !lLo || !lHi) bad.push('히트맵 램프를 못 읽었다 — 앵커가 낡았다');
+  else {
+    const srgb = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const lum = ([r, g, b]) => 0.2126 * srgb(r) + 0.7152 * srgb(g) + 0.0722 * srgb(b);
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const deuter = ([r, g, b]) => [
+      Math.round(0.625 * r + 0.375 * g), Math.round(0.7 * r + 0.3 * g), Math.round(0.3 * g + 0.7 * b)];
+
+    /* 화면이 쓰는 글자색 규칙을 **소스에서** 읽는다 */
+    const mi = /lumOf\(css\) > ([0-9.]+) \? '(#[0-9a-fA-F]{3,6})' : '#fff'/.exec(ix);
+    if (!mi) bad.push('inkOn 규칙을 못 읽었다 — 앵커가 낡았다');
+    else {
+      const th = Number(mi[1]);
+      const hx = mi[2].length === 4
+        ? [1, 2, 3].map((i) => parseInt(mi[2][i] + mi[2][i], 16))
+        : [1, 3, 5].map((i) => parseInt(mi[2].slice(i, i + 2), 16));
+      const Li = lum(hx);
+      /* **창이 있어야 한다** — 어두운 글자가 순검정이 아니면 검은 글자 하한이
+         흰 글자 상한(0.1833)을 넘어 **어떤 문턱을 골라도 4.4:1 대**가 나온다. */
+      const bMin = 4.5 * (Li + 0.05) - 0.05, wMax = 1.05 / 4.5 - 0.05;
+      if (bMin > wMax)
+        bad.push('어두운 글자가 너무 밝다(' + mi[2] + ') — 4.5:1 을 넘길 문턱이 아예 없다');
+      else if (!(th >= bMin && th <= wMax))
+        bad.push('글자 뒤집는 문턱 ' + th + ' 이 창(' + bMin.toFixed(3) + '~' + wMax.toFixed(3) + ') 밖이다');
+
+      const ink = (c) => (lum(c) > th ? hx : [255, 255, 255]);
+      const ratio = (a, b) => {
+        const x = lum(a), y = lum(b), hi = Math.max(x, y), lo = Math.min(x, y);
+        return (hi + 0.05) / (lo + 0.05);
+      };
+      let worst = 99;
+      for (let i = 0; i <= 5; i++) {
+        for (const [a, b] of [[sLo, sHi], [lLo, lHi]]) {
+          const c = mix(a, b, i / 5);
+          worst = Math.min(worst, ratio(c, ink(c)));
+        }
+      }
+      if (worst < 4.5) bad.push('램프 어딘가에서 글자 대비가 ' + worst.toFixed(1) + ':1 이다(4.5 미만)');
+    }
+
+    /* 단조성 — 값이 크면 색도 진해야 한다 */
+    for (const [a, b, nm] of [[sLo, sHi, '당사'], [lLo, lHi, 'LG']]) {
+      let prev = 9;
+      for (let i = 0; i <= 5; i++) {
+        const L = lum(mix(a, b, i / 5));
+        if (L > prev) { bad.push(nm + ' 램프가 단조롭지 않다 — 진한 칸이 더 밝아진다'); break; }
+        prev = L;
+      }
+    }
+    /* 적록 색각에서도 두 진영이 갈리는가 — 옛 남색↔벽돌빨강은 41 이었다 */
+    let sep = 999;
+    for (let i = 1; i <= 5; i++) {
+      const a = deuter(mix(sLo, sHi, i / 5)), b = deuter(mix(lLo, lHi, i / 5));
+      sep = Math.min(sep, Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]));
+    }
+    if (sep < 55)
+      bad.push('적록 색각에서 두 진영 구분이 ' + Math.round(sep) + ' 이다 — 55 이상이어야 한다');
+    /* **밝은 끝이 흰색이면 작은 칸이 배경과 붙는다** — 「칸이 없다」로 보인다 */
+    for (const [c, nm] of [[sLo, '당사'], [lLo, 'LG']])
+      if (lum(c) > 0.93) bad.push(nm + ' 램프의 밝은 끝이 거의 흰색이다 — 작은 칸이 안 보인다');
+  }
+
+  /* ⓑ 칸 안의 「삼성 N · LG M」 */
+  /* **글자만 찾으면 안 된다** — 조건을 `if (false)` 로 바꿔도 그 글자는 남는다(실제로
+     되돌려 넣어 보니 안 물렸다). 만드는 곳과 **붙이는 곳**을 함께 본다. */
+  if (ix.indexOf('cg two') < 0)
+    bad.push('칸에 삼성/LG 건수를 안 적는다 — 폰에는 hover 가 없어 말풍선만으로는 안 보인다');
+  if (ix.indexOf('if (two) {\n            lab += two;') < 0)
+    bad.push('만들어 놓고 칸에 안 붙인다 — 화면에는 옛 「N건」만 뜬다');
+  if (ix.indexOf('function textW(t, px)') < 0)
+    bad.push('글자 폭을 재는 함수가 없다 — 어림하면 「LG 1,20」처럼 잘리거나 들어갈 자리도 안 적는다');
+  if (ix.indexOf('measureText(t).width') < 0)
+    bad.push('글자 폭을 캔버스로 안 잰다');
+  /* **글자색은 그 글자가 실제로 얹히는 색이 정한다** — 코랄 띠가 좁으면 LG 라벨이 틸 위다 */
+  if (ix.indexOf('inkOn(lgW >= wL + 8 ? bgL : bgS)') < 0)
+    bad.push('LG 라벨을 늘 코랄 기준으로 칠한다 — 띠가 좁은 칸에서 글자가 안 읽힌다');
+  /* 안 들어가면 줄여 보고, 그래도 안 되면 옛 표기로 물러선다 */
+  if (ix.indexOf('[0.62, 0.55, 0.48]') < 0)
+    bad.push('안 들어갈 때 글자를 줄여 보지 않는다 — 네 자리 숫자인 칸만 통째로 빠진다');
+  if (ix.indexOf('if (cand < 9) break;') < 0)
+    bad.push('글자를 끝없이 줄인다 — 9px 아래는 안 읽혀 적는 뜻이 없다');
+
+  /* ⓒ **색을 바꿨으면 그 색을 가리키는 문구도 함께 바꾼다** */
+  if (/칸의 <b style="color:[^"]*">빨강<\/b>/.test(ix))
+    bad.push('안내가 아직 「빨강」이라 적는다 — 화면은 주황빛이다');
+
+  if (bad.length) fail('[바이럴] 히트맵 색 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 히트맵 색 — 대비·단조성·적록 색각 재서 통과 · 칸에 삼성/LG · 문구 일치');
 }
 
 
