@@ -3465,7 +3465,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       const env = [
         "var heatPickY = '';",
         "var window = { __SR: {} };",
-        "var DATA = { byStoreMonth: { 갑: { '2023-05': 1, '2025-03': 2, '2026-04': 5 } } };",
+        "var DATA = { byStoreMonth: { 갑: { '2023-05': 1, '2025-03': 2, '2026-04': 5 } },"
+          + " lgPair: { 갑: 'LG갑점' } };",
+        /* **의존이 늘면 함께 넘긴다** — 2026-09-07 에 짝·축을 보게 되었다 */
+        "var heatYear = 'cur';",
+        "function pairList(v) { return (v == null ? [] : (Array.isArray(v) ? v : [v])).filter(Boolean); }",
         "function heatYears() { return { cur: heatPickY || '2026', prev: String((+(heatPickY || '2026')) - 1) }; }",
       ].join('\n');
       srFn = new Function(env + cutIx('srShare')
@@ -6303,6 +6307,92 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] LG 지점 거리순 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 LG 지점 거리순 — 좌표를 보낸다 · 거리로 줄 세운다 · 고른 것은 앞에 · 거리를 적는다');
+}
+
+/* ── **원주에 「LG 매장이 없다」로 보이던 것** (2026-09-07 사장님 지적) ─────────────
+ * *"경원지역에 LG매장이 분명히있다고 지도에도 표시해주셨는데 히트맵에 사용할 후기작성
+ *  대조할 매장에는 없다고나오는 매장이있습니다. 대표적으로 원주지역입니다."*
+ *
+ * 자료는 멀쩡했다 — 원주는 **전 기간 당사 951 vs LG 92건**이다. 칸이 당해년도만 세는데
+ * **LG 는 작성일을 아는 글이 거의 없어**(카페·웹은 날짜를 안 준다) 당해 0건이 되고,
+ * 화면이 「LG 0」이라 적으니 「매장이 없다」로 읽혔다.
+ *
+ * 파다가 셋을 더 찾았다 — 넷을 함께 고쳤다. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* `srShare` 를 **떼어 돌린다** — 규칙이 여럿 물려 있어 문자열로는 못 지킨다 */
+  const at = ix.indexOf('  function srShare(nm) {');
+  const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at) + 4);
+  if (!body) bad.push('srShare 를 못 찾았다 — 앵커가 낡았다');
+  else {
+    const make = (opt) => {
+      const env = {
+        window: { __SR: { X: opt.row } },
+        DATA: { lgPair: { X: opt.pair } },
+        heatYear: opt.axis || 'cur',
+        heatYears: () => ({ cur: '2026', prev: '2025' }),
+        pairList: (v) => (v == null ? [] : (Array.isArray(v) ? v : [v])).filter(Boolean)
+      };
+      return new Function('window', 'DATA', 'heatYear', 'heatYears', 'pairList',
+        'return (' + body.trim() + ')')(env.window, env.DATA, env.heatYear, env.heatYears, env.pairList)('X');
+    };
+    const mon = (o, r) => ({ o: o, r: r });
+
+    /* ⓐ **「해당없음」으로 정하신 매장은 아예 안 견준다** — 사장님 결정이다.
+       실측으로 「디지털시티모바일」이 해당없음인데 옛 짝(영통점)으로 견주고 있었다. */
+    {
+      const got = make({ pair: [], row: { shop: '영통점', ours: 10, rival: 5, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
+      if (got !== null) bad.push('「해당없음」인데 견준다 — 사장님 결정을 화면이 무시한다');
+    }
+    /* ⓑ **짝을 바꾸셨으면 옛 회차 값이라고 밝힌다** — 실측으로 「분당」이 그랬다 */
+    {
+      const got = make({ pair: ['분당본점'], row: { shop: 'AK PLAZA 분당점', ours: 9, rival: 7, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
+      if (!got || got.stale !== true) bad.push('짝을 바꿨는데 옛 값이라고 안 밝힌다');
+      const same = make({ pair: ['영통점'], row: { shop: '영통점', ours: 9, rival: 7, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
+      if (!same || same.stale !== false) bad.push('안 바꿨는데 바뀌었다고 한다');
+    }
+    /* ⓒ **보고 있는 축을 따라간다** — 누적 축인데 당해만 세면 한 칸에 두 잣대가 섞인다 */
+    {
+      const row = { shop: 'A', ours: 99, rival: 99, mon: mon({ '2026-01': 2, '2024-01': 8 }, { '2026-01': 2, '2024-01': 8 }) };
+      const cur = make({ pair: ['A'], row: row, axis: 'cur' });
+      const cum = make({ pair: ['A'], row: row, axis: 'cum' });
+      if (!cur || cur.ours !== 2) bad.push('당해 축이 당해만 안 센다');
+      if (!cum || cum.ours !== 10) bad.push('누적 축인데 당해만 센다 — 칸 크기와 잣대가 어긋난다');
+      if (!cum || cum.scope !== 'cum') bad.push('누적 축인데 scope 가 cum 이 아니다');
+    }
+    /* ⓓ **한쪽 표본이 0인데 전 기간에는 있으면 못 잰 것이다** — 원주가 통째로 파랑
+       (당해 LG 0 · 전 기간 92건)이었고 단구는 통째로 빨강(당해 우리 0 · 전 기간 27건)이었다 */
+    {
+      const g1 = make({ pair: ['A'], row: { shop: 'A', ours: 951, rival: 92, mon: mon({ '2026-01': 144 }, {}) } });
+      if (!g1 || g1.pct !== null || g1.thin !== true) bad.push('LG 표본이 0인데 100% 로 칠한다 — 「완승」으로 읽힌다');
+      if (!g1 || g1.allRival !== 92) bad.push('전 기간 값을 안 낸다 — 0 이 「매장이 없다」로 읽힌다');
+      const g2 = make({ pair: ['A'], row: { shop: 'A', ours: 27, rival: 97, mon: mon({}, { '2026-01': 1 }) } });
+      if (!g2 || g2.pct !== null || g2.thin !== true) bad.push('우리 표본이 0인데 0% 로 칠한다 — 「완패」로 읽힌다');
+      /* **전 기간에도 0이면 진짜 0이다** — 그때는 비중이 맞다 */
+      const g3 = make({ pair: ['A'], row: { shop: 'A', ours: 50, rival: 0, mon: mon({ '2026-01': 50 }, {}) } });
+      if (!g3 || g3.pct !== 100) bad.push('전 기간에도 LG 가 0인데 못 잼으로 뭉갠다 — 진짜 0 과 못 잼은 다르다');
+    }
+  }
+
+  /* ⓔ 화면이 이유를 적는가 */
+  if (ix.indexOf('LG 후기가 없는 것이 아닙니다') < 0)
+    bad.push('LG 0건의 이유를 안 적는다 — 「매장이 없다」로 읽힌다');
+  if (ix.indexOf('짝을 바꾸셨습니다') < 0) bad.push('짝이 바뀐 사실을 말풍선이 안 적는다');
+  if (ix.indexOf("'2023년~ 누적 기준'") < 0) bad.push('누적 축의 잣대를 말풍선이 안 밝힌다');
+  if (ix.indexOf('한쪽이 0이라 비중을 못 잽니다') < 0)
+    bad.push('한쪽만 0 인 것과 양쪽 0 인 것을 말풍선이 안 가른다');
+  /* **폰에는 hover 가 없다** — 칸에도 적혀야 한다. 0 이 아니라 – 로. */
+  if (ix.indexOf("(srm2.thin && !srm2.rival ? '–' : nf(srm2.rival))") < 0)
+    bad.push('칸이 못 잰 LG 를 0 으로 적는다 — 폰에서 「매장이 없다」로 읽힌다');
+  if (ix.indexOf('if (srm2 && (srm2.pct !== null || srm2.thin))') < 0)
+    bad.push('못 잰 칸에 두 라벨을 아예 안 적는다 — 폰에서 LG 가 통째로 사라진다');
+  if (ix.indexOf('var lgW = (srm2.pct === null) ? 0 : c.w') < 0)
+    bad.push('못 잰 칸에서 LG 글자를 코랄 기준으로 칠한다 — 배경이 한 색이라 안 읽힌다');
+
+  if (bad.length) fail('[바이럴] LG 비중 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 LG 비중 — 해당없음은 안 견준다 · 짝 바뀜을 밝힌다 · 축을 따라간다 · 한쪽 0 은 못 잼');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

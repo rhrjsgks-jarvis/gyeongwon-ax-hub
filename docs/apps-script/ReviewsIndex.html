@@ -6063,23 +6063,48 @@ function renderList() {
   function srShare(nm) {
     var r = (window.__SR || {})[nm];
     if (!r || r.capped) return null;
+    /* ── **짝이 바뀌었으면 옛 회차로 견주지 않는다** (2026-09-07) ──────────────
+     * 회차는 그때의 짝으로 잰 값이다. `setLgPair` 가 커서·도장을 지워 다음 수집이
+     * 다시 재지만, **그 전까지 시트의 옛 줄이 그대로 읽힌다.**
+     * 실측 — 사장님이 「디지털시티모바일」을 **해당없음**으로 정하셨는데 화면은 계속
+     * 영통점과 견주고 있었고, 「분당」은 분당본점으로 바꾸셨는데 AK PLAZA 분당점으로
+     * 재고 있었다. **사장님 결정을 화면이 무시하는 셈이라 가장 나쁘다.** */
+    var nowPair = pairList((DATA.lgPair || {})[nm]);
+    /* 견주지 않기로 하신 매장은 **아예 안 그린다** — 0 으로 그리면 「LG 가 없다」가 된다 */
+    if (!nowPair.length) return null;
+    var stale = nowPair.indexOf(String(r.shop || '')) < 0;
     if (!r.mon) {
       /* **숫자가 아니면 못 잼이다** — === null 만 보면 undefined·NaN 이 새어
          화면에 undefined% 가 찍힌다(사장님이 이미 한 번 신고한 자리다). */
       return (typeof r.pct === 'number' && isFinite(r.pct))
-        ? { pct: r.pct, ours: r.ours, rival: r.rival, shop: r.shop, scope: 'all' } : null;
+        ? { pct: r.pct, ours: r.ours, rival: r.rival, shop: r.shop, scope: 'all', stale: stale } : null;
     }
-    /* **보고 있는 해만**(2026-09-05 사장님 지시로 1년 단위) — 칸 크기와 같은 잣대다 */
+    /* ── **보고 있는 축을 따라간다** (2026-09-07) ──────────────────────────────
+     * 예전에는 축이 「누적(2023~)」이어도 **당해만** 셌다 — 칸 크기는 누적인데
+     * 비중은 당해라 **한 칸 안에서 두 잣대**가 섞였다(사장님이 이미 한 번 지적한
+     * 종류다). 축이 누적이면 비중도 누적으로 센다. */
+    var cum = (typeof heatYear !== 'undefined' && heatYear === 'cum');
     var only = heatYears().cur;
+    var keep = function (m) { return cum ? true : m.slice(0, 4) === only; };
     var o = 0, v = 0, m;
-    for (m in r.mon.o) if (r.mon.o.hasOwnProperty(m) && m.slice(0, 4) === only) o += r.mon.o[m];
-    for (m in r.mon.r) if (r.mon.r.hasOwnProperty(m) && m.slice(0, 4) === only) v += r.mon.r[m];
+    for (m in r.mon.o) if (r.mon.o.hasOwnProperty(m) && keep(m)) o += r.mon.o[m];
+    for (m in r.mon.r) if (r.mon.r.hasOwnProperty(m) && keep(m)) v += r.mon.r[m];
     var t = o + v;
-    /* **양쪽 다 0 이면 「없다」가 아니라 「못 잰다」다** — 그 해 작성일을 아는 글이
+    /* **전 기간 값을 함께 낸다** — 「그 해 LG 0건」과 「LG 매장이 없다」는 다른 말인데
+       0 만 적으면 뒤엣것으로 읽힌다(사장님이 원주에서 그렇게 읽으셨다). */
+    var out = { shop: r.shop, scope: cum ? 'cum' : 'year', stale: stale,
+                allOurs: r.ours, allRival: r.rival };
+    /* **양쪽 다 0 이면 「없다」가 아니라 「못 잰다」다** — 그 구간에 작성일을 아는 글이
        한 건도 없었다는 뜻이라, 빨강을 안 그리고 말풍선이 이유를 적는다. */
-    if (!t) return { pct: null, ours: 0, rival: 0, shop: r.shop, scope: 'year' };
-    return { pct: Math.round(o / t * 100), ours: o, rival: v, shop: r.shop,
-             scope: 'year' };
+    if (!t) { out.pct = null; out.ours = 0; out.rival = 0; return out; }
+    out.ours = o; out.rival = v;
+    /* **한쪽 표본이 0인데 전 기간에는 있으면 못 잰 것이다**(2026-09-07).
+       그대로 100%/0% 로 칠하면 「완승」·「완패」로 읽히는데 근거가 없다 —
+       원주가 그래서 통째로 파랑(당해 LG 0 · 전 기간 92건)이었고, 단구는 통째로
+       빨강(당해 우리 0 · 전 기간 27건)이었다. **전 기간에도 0이면 진짜 0이다.** */
+    if ((!v && out.allRival > 0) || (!o && out.allOurs > 0)) { out.pct = null; out.thin = true; return out; }
+    out.pct = Math.round(o / t * 100);
+    return out;
   }
 
   /** **작년과 실제로 견줄 수 있는 달**(MM 배열). 조건 셋을 다 넘긴 달만 남는다:
@@ -7064,8 +7089,11 @@ function renderList() {
            * 폭이 좁으면(<86px) 붙이지 않는다 — 두 숫자가 겹치느니 옛 표기가 낫다. */
           var srm2 = (!chan && !d.isReg && !byG) ? srShare(d.nm) : null;
           var two = null;
-          if (srm2 && srm2.pct !== null) {
-            var sTxt = '삼성 ' + nf(srm2.ours), lTxt = 'LG ' + nf(srm2.rival);
+          /* **못 잰 것도 적는다**(2026-09-07) — 안 적으면 폰에서 LG 가 통째로 사라진다.
+             한쪽이 0 이라 비중을 못 잰 경우(thin)는 그쪽을 – 로 적는다. */
+          if (srm2 && (srm2.pct !== null || srm2.thin)) {
+            var sTxt = '삼성 ' + (srm2.thin && !srm2.ours ? '–' : nf(srm2.ours));
+            var lTxt = 'LG ' + (srm2.thin && !srm2.rival ? '–' : nf(srm2.rival));
             /* **안 들어가면 한 단계씩 줄여 본다** — 0.62 하나로 잡았더니 158px 칸에서
                163px 이 필요해 **네 자리 숫자인 칸만 통째로 안 적혔다**(실물에서 봤다).
                9px 아래로는 내려가지 않는다 — 그보다 작으면 안 읽혀 적는 뜻이 없다. */
@@ -7085,7 +7113,9 @@ function renderList() {
                  붙는데 **코랄 띠가 그보다 좁으면 틸 위에 놓인다** — 코랄 기준으로
                  칠하면 그 칸에서만 글자가 안 읽힌다(실물에서 「AK평택」이 그랬다). */
               var bgS = heatColor(d.cnt, heatMax), bgL = lgColor(d.cnt, heatMax);
-              var lgW = c.w * (1 - srm2.pct / 100);
+              /* **못 잰 칸은 갈리지 않는다** — 배경이 통째로 우리 색이라 LG 글자도
+                 그 색 위에 놓인다(코랄 기준으로 칠하면 안 읽힌다). */
+              var lgW = (srm2.pct === null) ? 0 : c.w * (1 - srm2.pct / 100);
               two = '<span class="cg two" style="font-size:' + fs2.toFixed(1) + 'px">'
                 + '<b style="color:' + inkOn(bgS) + '">' + sTxt + '</b>'
                 + '<b style="color:' + inkOn(lgW >= wL + 8 ? bgL : bgS) + '">' + lTxt + '</b>'
@@ -7230,14 +7260,37 @@ function renderList() {
       var srt = srShare(d.nm);
       /* **어느 구간을 잰 값인지 반드시 적는다**(2026-09-05). 옛 회차 자료면 전 기간이라
          칸 크기(당해)와 잣대가 다르다 — 안 적으면 그 어긋남이 보이지 않는다. */
-      var srScope = !srt ? '' : srt.scope === 'year' ? (heatYears().cur + '년 기준')
+      var srScope = !srt ? ''
+        : srt.scope === 'year' ? (heatYears().cur + '년 기준')
+        : srt.scope === 'cum' ? '2023년~ 누적 기준'
         : '전 기간 기준 — 칸 크기와 잣대가 다릅니다';
+      /* **「그 구간에 0건」과 「LG 매장이 없다」는 다른 말이다**(2026-09-07 사장님 지적).
+         LG 는 작성일을 아는 글이 거의 없어(카페·웹은 날짜를 안 준다) 당해로 세면
+         0 이 되기 쉽다 — 실측으로 원주는 **당해 0건인데 전 기간 92건**이다.
+         0 만 적으면 「매장이 없다」로 읽히므로 **전 기간 값을 함께** 적는다. */
+      var srWhy = '';
+      if (srt && srt.pct !== null && !srt.rival && srt.allRival > 0) {
+        srWhy = NLC + '※ LG 후기가 없는 것이 아닙니다 — 전 기간으로는 '
+          + nf(srt.allRival) + '건입니다. 카페·웹 글은 작성일이 없어 연도로 못 셉니다.';
+      } else if (srt && srt.pct === null && (srt.allOurs > 0 || srt.allRival > 0)) {
+        srWhy = NLC + '※ 한쪽에 그 구간 글이 없어 비중을 못 잽니다 — 전 기간으로는 당사 '
+          + nf(srt.allOurs) + ' vs LG ' + nf(srt.allRival) + '건입니다.'
+          + NLC + '   카페·웹 글은 작성일이 없어 연도로 못 셉니다.';
+      }
+      /* **짝을 바꾸셨으면 옛 값이라고 밝힌다** — 조용히 옛 짝으로 견주면 사장님이
+         고치신 것이 화면에 반영이 안 된 것처럼 보인다(실제로 「분당」이 그랬다). */
+      var srStale = (srt && srt.stale)
+        ? NLC + '※ 짝을 바꾸셨습니다 — 이 값은 옛 짝(' + srt.shop + ')으로 잰 것입니다. '
+          + '다음 「매장 대 매장」 수집에서 다시 잽니다.'
+        : '';
       var lgvTip = srt
         ? NLC + 'LG ' + srt.shop
           + (srt.pct === null
-              ? ' — 그 구간에 작성일을 아는 글이 없어 못 잽니다'
+              ? (srt.thin
+                  ? ' — 당사 ' + nf(srt.ours) + ' vs LG ' + nf(srt.rival) + '건, 한쪽이 0이라 비중을 못 잽니다'
+                  : ' — 그 구간에 작성일을 아는 글이 없어 못 잽니다')
               : ' — 당사 ' + nf(srt.ours) + ' vs LG ' + nf(srt.rival) + '건 · 우리 몫 ' + srt.pct + '%')
-          + ' (' + srScope + ')'
+          + ' (' + srScope + ')' + srWhy + srStale
         : '';
       var tip = chan
         ? d.nm + ' ' + d.cnt + '건'
