@@ -327,7 +327,10 @@ const DATA = {
       { store: '속초', shop: '속초점', ours: 0, rival: 0, pct: null, capped: false }
     ]
   },
-  lgPair: { "갤러리아광교": ["갤러리아 광교점", "수원본점"], "북수원": ["정자사거리점"] },
+  lgPair: {"스타필드수원":"정자사거리점","오산":"오산본점","수지":"수지점","강릉옥천":"강릉옥천점","단구":"단구점","석사":"춘천본점","속초":"속초점","평택":"남평택점","분당":"AK PLAZA 분당점","북수원":["정자사거리점","남수원점"],"광주":"경기광주본점","안성":"안성점","평택고덕":"평택고덕점","이천증포":"이천본점","평촌":"평촌본점","안양모바일":"안양점","용인구성":"구성본점","서수원":"서수원점","영통":"영통점","디지털시티모바일":"영통점","광명소하":"광명소하점","성남":"모란점","AK분당":"AK PLAZA 분당점","원주":"남원주점","춘천":"춘천퇴계점","평택세교":"평택본점","용인처인모바일":"용인처인본점","권선":"남수원점","안양본":"롯데 평촌점","수원":"광교점","동탄":"동탄1신도시점","강릉":"강릉본점","단계":"단계점","하남미사":"미사본점","용인기흥":"용인기흥점","롯데평촌":"롯데 평촌점","롯데수원":"롯데 타임빌라스 수원점","현대판교":"현대 판교점","신세계사우스시티":"신세계 사우스시티점","AK수원":"AK PLAZA 수원점","AK평택":"AK PLAZA 평택점","AK원주":"AK PLAZA 원주점","신세계하남":"신세계 하남점","갤러리아광교":["갤러리아 광교점","수원본점"],"롯데동탄":"롯데 동탄점","타임빌라스수원":"롯데 타임빌라스 수원점","남양모바일":"화성발안점","이마트안양":"안양점","기흥캠퍼스모바일":"동탄1신도시점","화성캠퍼스모바일":"동탄1신도시점","수원삼성전기모바일":"광교점","광명기아자동차모바일":"광명소하점","화성DSR모바일":"동탄1신도시점","미래기술캠퍼스모바일":"영통점","디지털시티2모바일":"영통점","용인에버랜드모바일":"용인처인본점","평택캠퍼스모바일":"평택고덕점","기흥삼성SDI모바일":"용인기흥점","현대기아차연구소모바일":"화성발안점","판교SDS모바일":"현대 판교점","기흥SDR모바일":"동탄1신도시점","KGM평택모바일":"평택본점"},
+  /* **수기만** — `lgPair` 는 코드 표(자동 제안)와 합친 값이라 그것으로 「수기」를
+     판정하면 62곳 전부가 수기가 된다. 배지 넷이 다 보이게 둘을 다르게 둔다. */
+  lgPairManual: { "갤러리아광교": ["갤러리아 광교점", "수원본점"], "북수원": [] },
   /* **매장별 채널** — 「지점별 분석」이 이것으로 1·2·3 순위를 그린다. 없으면 그 자리가
      늘 비어 있어 **화면을 눈으로 봐도 그 기능을 검증하지 못한다**(실물 확인에서 그랬다).
      카페 이름 + 「네이버 블로그」·「웹문서」 — 실물과 같은 모양으로 섞는다. */
@@ -614,7 +617,20 @@ const stub = [
   '      var list = shop == null ? [] : (Object.prototype.toString.call(shop) === "[object Array]" ? shop : [shop]);',
   '      list = list.filter(function (x) { return x; }).slice(0, 3);',
   '      if (list.length) pr[store] = list; else delete pr[store];',
-  '      setTimeout(function () { ok && ok({ ok: true, store: store, shops: list, pairs: pr }); }, 60);',
+  '      var mn = window.__VIRAL_FIXTURE.lgPairManual || (window.__VIRAL_FIXTURE.lgPairManual = {});',
+  '      mn[store] = list;',
+  '      setTimeout(function () { ok && ok({ ok: true, store: store, shops: list, pairs: pr, manual: mn }); }, 60);',
+  '    },',
+  /* 「자동으로 되돌리기」 — **수기 항목 자체를 지운다**(해당없음과 다른 일이다).
+     스텁이 없으면 그 버튼 한 번에 화면이 죽어 무엇을 보러 왔는지 알 수 없다. */
+  '    clearLgPair: function (store) {',
+  '      var mn = window.__VIRAL_FIXTURE.lgPairManual || {};',
+  '      delete mn[store];',
+  '      var pr = window.__VIRAL_FIXTURE.lgPair || {};',
+  '      var au = (window.__VIRAL_FIXTURE.lgMatch || {})[store];',
+  '      if (au && au.shop) pr[store] = au.shop; else delete pr[store];',
+  '      var back = pr[store] ? [pr[store]] : [];',
+  '      setTimeout(function () { ok && ok({ ok: true, store: store, shops: back, pairs: pr, manual: mn }); }, 60);',
   '    },',
   /* 색을 바꾸면 서버가 다듬은 값을 돌려준다 — 화면이 그것으로 다시 칠한다 */
   '    setAreaColors: function (m) { setTimeout(function () { ok && ok({ ok: true, colors: m && Object.keys(m).length ? m : window.__VIRAL_FIXTURE.areaColors }); }, 50); },',

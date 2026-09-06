@@ -1861,7 +1861,32 @@ function setLgPair(store, shop, token) {
   props_().deleteProperty('_srivalAt');
   /* **집계 캐시를 버린다** — 안 버리면 최대 6시간 옛 짝이 화면에 남는다 */
   sumCacheClear_();
-  return { ok: true, store: store, shops: list, pairs: lgPairs_() };
+  return { ok: true, store: store, shops: list, pairs: lgPairs_(), manual: mine };
+}
+
+/**
+ * **수기 짝을 통째로 뗀다** — 「해당없음」과 다른 일이다(2026-09-06).
+ *
+ * `setLgPair(store, [])` 는 **빈 배열을 저장한다** — `lgPairs_()` 에서 빈 배열도
+ * truthy 라 코드 표(`LG_PAIR`) 값을 덮어 「짝 없음」이 된다. 그것이 「해당없음」의 뜻이다.
+ * 반면 「자동으로 되돌리기」는 *자동에 맡긴다* 는 뜻이라 **수기 항목 자체를 지워야**
+ * 코드 표·좌표 판정으로 돌아간다. 둘을 한 함수로 두면 뜻이 하나로 뭉개진다.
+ */
+function clearLgPair(store, token) {
+  if (!adminOk_(token)) return { ok: false, why: '관리자 확인이 필요합니다 — 다시 로그인해 주세요.' };
+  store = String(store || '').trim();
+  if (!store) return { ok: false, why: '매장을 지정하지 않았습니다' };
+  var mine = lgPairsManual_();
+  delete mine[store];
+  props_().setProperty('_lgPair', JSON.stringify(mine));
+  /* 짝이 바뀌면 그 매장의 LG 건수가 딴것이다 — 다시 재게 커서·도장을 되돌린다
+     (`setLgPair` 와 같은 뒷정리다. 한쪽만 하면 내일까지 옛 값이 화면에 남는다). */
+  props_().deleteProperty('_srivalCur');
+  props_().deleteProperty('_srivalStamp');
+  props_().deleteProperty('_srivalAt');
+  sumCacheClear_();
+  return { ok: true, store: store, shops: lgShopList_(lgPairs_()[store]),
+           pairs: lgPairs_(), manual: mine };
 }
 
 /* ── 매니저 명부 (2026-09-03 사장님 지시 — *"매니저는 이름과 지점만 수집해주세요"*) ──
@@ -4754,6 +4779,10 @@ function summary_() {
       return o;
     })(),
     lgPair: lgPairs_(),
+    /* **사람이 직접 고친 것만** 따로 보낸다(2026-09-06). `lgPair` 는 코드 표
+       (`LG_PAIR`, 좌표로 낸 자동 제안)와 수기를 합친 값이라, 그것으로 「수기」를
+       판정하면 **62곳 전부가 수기**가 되어 배지가 아무것도 못 가른다. */
+    lgPairManual: lgPairsManual_(),
     /* 주차별 × 유형 — 히트맵의 「주차별」 모드가 쓴다. 매장은 안 쪼갠다(표본이 없다) */
     byWeekKind: byWeekKind,
     /* **최근 주차만 담는다** — 108주를 통째로 보내면 칩 줄이 화면을 덮고 캐시 조각도 는다.
@@ -6450,7 +6479,7 @@ function json_(o) {
    카드를 넣고 배포했더니 화면이 *"아직 등록된 줄임말이 없습니다"* 라고 말했다(코드 표에
    두 개가 있는데). `sw.js` 의 `CACHE_VERSION` 과 같은 규칙이고, 그때는 캐시가 없어서
    이 장치를 안 달았다. **키 이름이 바뀌면 옛 조각은 6시간 뒤 저절로 사라진다.** */
-var SUM_VER = 21;   /* 21 = 매니저 주차(mgrTop[].wk4) */
+var SUM_VER = 22;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

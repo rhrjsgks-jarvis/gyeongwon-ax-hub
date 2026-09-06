@@ -6000,80 +6000,148 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
 /* ── **LG 지점 짝을 찾을 수 있어야 한다** (2026-09-06 사장님 지시) ────────────────
  * *"LG매장명을 당사 매장과 매칭하는 시스템을 구축해달라고 요청드렸는데 어디에 있는지
- *  못찾겠습니다."*
+ *  못찾겠습니다."* — 히트맵에서 지점을 눌러야 나오는 자리라 찾을 수가 없었다. 값을
+ * 고치는 일(일일 한도·매니저 명부·자료 비우기)은 전부 관리자 항목에 있는데 이것만
+ * 딴 데 있었다.
  *
- * **있기는 있었다** — 히트맵에서 지점을 눌러야 나오는 「지점별 분석」 안이라 찾을 수가
- * 없었다. 값을 고치는 일(일일 한도·매니저 명부·자료 비우기)은 전부 관리자 항목에
- * 있는데 **이것만 딴 데 있었다.**
+ * *"짝을지을때 삼성매장클릭 LG매장클릭(복수선택가능) … 짝이없는 매장은 해당없음
+ *  버튼으로"* — 드롭다운을 **칸**으로 바꿨다(Ctrl 다중선택은 폰에서 사실상 불가능하다).
  *
- * 히트맵 안의 것은 지우지 않았다(그 지점을 보다가 바로 고치는 자리다). 대신
- * **저장하는 길을 하나로 모았다** — 두 벌로 두면 한쪽만 고쳤을 때 「여기서 저장하면
- * 되는데 저기서는 안 된다」가 된다. */
+ * 히트맵 안의 것은 지우지 않았다. 대신 **저장하는 길을 하나로 모았다** — 두 벌로 두면
+ * 한쪽만 고쳤을 때 「여기서 저장하면 되는데 저기서는 안 된다」가 된다. */
 {
   const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
   const bad = [];
 
   /* ⓐ 관리자 항목에 있는가 — 이것이 사장님이 못 찾으신 그 자리다 */
-  for (const id of ['lgp-store', 'lgp-sel', 'lgp-save', 'lgp-clear', 'lgp-auto', 'lgp-list']) {
-    if (ix.indexOf('id="' + id + '"') < 0) bad.push('관리자 항목에 ' + id + ' 가 없다 — 다시 찾을 수 없는 자리로 돌아갔다');
+  for (const id of ['lgp-stores', 'lgp-shops', 'lgp-save', 'lgp-none', 'lgp-auto', 'lgp-more', 'lgp-list']) {
+    if (ix.indexOf('id="' + id + '"') < 0) bad.push('관리자 항목에 ' + id + ' 가 없다');
   }
-  /* **관리자 팝업 안에 있어야 한다** — 밖에 있으면 잠금이 안 걸리고 찾기도 어렵다.
-     닫는 표식이 없어 끝을 못 재므로 **팝업 안이 확실한 이웃**(매니저 명부)과의
-     앞뒤 관계로 본다. */
+  /* **관리자 팝업 안에 있어야 한다**. 닫는 표식이 없어 끝을 못 재므로 **팝업 안이
+     확실한 이웃**(매니저 명부)과의 앞뒤 관계로 본다. */
   {
     const win = ix.indexOf('<div class="admwin"');
-    const at = ix.indexOf('id="lgp-store"');
+    const at = ix.indexOf('id="lgp-stores"');
     const mgr = ix.indexOf('id="mgr-store"');
     if (win < 0 || mgr < 0) bad.push('관리자 팝업 앵커가 낡았다 — 담긴 자리를 잴 수 없다');
     else if (!(at > win && at < mgr)) bad.push('LG 짝 상자가 관리자 팝업 안(매니저 명부 앞)에 없다');
+  }
+  /* **드롭다운으로 되돌아가지 않았는가** — 폰에서 Ctrl 다중선택은 사실상 불가능하다 */
+  if (ix.indexOf('id="lgp-sel"') >= 0 || ix.indexOf('id="lgp-store"') >= 0)
+    bad.push('드롭다운 방식으로 되돌아갔다 — 사장님 지시는 칸을 눌러 고르는 것이다');
+  /* 칸 규격은 **AS 앱을 그대로 베낀다**(눈대중으로 맞추지 않는다) */
+  {
+    const as = fs.readFileSync(new URL('../public/as-app.html', import.meta.url), 'utf8');
+    const grab = (s, sel) => {
+      const at = s.indexOf(sel);
+      return at < 0 ? '' : s.slice(at + sel.length, s.indexOf('}', at)).replace(/\s+/g, '');
+    };
+    const pair = [['.svcg{', '.lgpg{'], ['.svcc{', '.lgpc{']];
+    for (const [a, b] of pair) {
+      const A = grab(as, a), B = grab(ix, b);
+      if (!A || !B) { bad.push('칸 규격을 못 읽었다 (' + a + ' / ' + b + ')'); continue; }
+      for (const k of ['minmax(104px,1fr)', 'gap:7px', 'border-radius:11px', 'padding:9px6px']) {
+        if (A.indexOf(k) >= 0 && B.indexOf(k) < 0) bad.push('칸 규격이 AS 앱과 어긋난다 — ' + k);
+      }
+    }
   }
 
   /* ⓑ 그리는 길에 배선했는가 — 함수만 있고 안 부르면 화면에 아무것도 안 뜬다 */
   const wire = 'lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();';
   const n = ix.split(wire).length - 1;
   if (n < 2) bad.push('LG 짝을 그리는 길이 ' + n + '곳뿐이다 — 팝업을 열 때와 자료가 온 뒤 둘 다 그려야 한다');
+  /* 칸은 다시 그려지므로 **상자에서 받아야** 한다(낱낱이 걸면 다시 그릴 때마다 사라진다).
+     **범위를 함수 본문으로 좁힌다** — 같은 글자가 파일 다른 곳에도 있어 전체에서
+     찾으면 지워도 통과한다(실제로 안 물었다). */
+  {
+    const at = ix.indexOf('function wireLgPairs()');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at));
+    if (!body) bad.push('wireLgPairs 를 못 찾았다 — 앵커가 낡았다');
+    else {
+      if (body.indexOf("box.addEventListener('click'") < 0) bad.push('매장 칸을 이벤트 위임으로 안 받는다');
+      /* 표시를 **적는 것**과 그것으로 **되돌아가는 관문** 둘 다 있어야 한다 —
+         하나만 보면 다른 하나를 지워도 통과한다(실제로 안 물었다). */
+      if (body.indexOf('box.dataset.wired =') < 0 || body.indexOf('box.dataset.wired) return') < 0)
+        bad.push('배선을 한 번만 한다는 관문이 없다 — 렌더마다 걸면 핸들러가 쌓인다');
+    }
+  }
 
   /* ⓒ **저장하는 길은 하나다** — 히트맵 안의 상자도 같은 함수를 지나가야 한다 */
   if (ix.indexOf('function saveLgPair(') < 0) bad.push('공용 저장 함수(saveLgPair)가 없다');
   if (ix.indexOf('saveLgPair(storeFilter, list,') < 0)
     bad.push('히트맵 안의 상자가 공용 저장 길을 안 지나간다 — 두 벌이 되어 한쪽만 고쳐진다');
-  /* 옛 사본이 되살아나면 안 된다 */
-  if (ix.indexOf('.setLgPair(storeFilter, list, admToken)') >= 0)
-    bad.push('히트맵 안에 옛 저장 사본이 남아 있다');
   if ((ix.split('.setLgPair(').length - 1) !== 1)
     bad.push('setLgPair 를 부르는 곳이 하나가 아니다 — 저장 길이 갈렸다');
 
-  /* ⓓ 자동과 수기를 가른다 — 사장님이 고치신 것이 어디인지 보여야 한다 */
-  for (const w of ['수기', '같은 건물', '가까운 곳']) {
-    if (ix.indexOf("'<span class=\"cyc") < 0 || ix.indexOf(w) < 0) bad.push('짝 표가 「' + w + '」을 안 적는다');
+  /* ⓓ **「수기」와 「기본」을 가른다** — 2026-09-06 배포본에서 실제로 어긋나 있었다.
+     `lgPair` 는 코드 표(자동 제안)+수기를 합친 값이라 그것으로 판정하면 62곳 전부가 수기다. */
+  if (gs.indexOf('lgPairManual: lgPairsManual_()') < 0)
+    bad.push('서버가 수기 짝만 따로 안 보낸다 — 화면이 62곳 전부를 「수기」로 적는다');
+  /* **부분일치를 막는다** — 이름을 `…ManualX` 로 바꿔도 통과했다(이 저장소가
+     되풀이해 데인 함정이다). 뒤에 식별자 글자가 오면 다른 이름이다. */
+  if (!/DATA[.]lgPairManual[^A-Za-z0-9_]/.test(ix)) bad.push('화면이 수기 목록을 안 본다');
+  /* **모르는 것을 「수기」로 단정하지 않는다** — 옛 서버 자료면 그 칸이 없다 */
+  if (ix.indexOf("if (man === null) return") < 0 && ix.indexOf('man === null ?') < 0)
+    bad.push('옛 서버 자료일 때 「모른다」로 물러서지 않는다');
+  for (const w of ['수기', '같은 건물', '가까운 곳', '해당없음']) {
+    if (ix.indexOf(w) < 0) bad.push('짝 표가 「' + w + '」을 안 적는다');
   }
   /* **짝이 없는 곳을 감추지 않는다** — 감추면 손댈 곳을 못 찾는다 */
   if (ix.indexOf('짝 없음 ') < 0) bad.push('짝이 없는 매장 수를 안 밝힌다');
 
-  /* ⓔ **「자동으로 되돌리기」와 「짝 없음」은 다른 일이다** — 하나로 합치면 뜻이 사라진다 */
-  if (ix.indexOf('자동으로 되돌렸습니다') < 0)
-    bad.push('자동으로 되돌리는 길이 없다 — 수기 짝을 뗄 방법이 「짝 없음」뿐이면 견주기를 아예 끄게 된다');
+  /* ⓔ **「해당없음」과 「자동으로 되돌리기」는 다른 일이다** — 앞은 *견주지 않는다*,
+     뒤는 *자동에 맡긴다*. 서버도 그래서 함수가 둘이어야 한다: `setLgPair(store, [])` 는
+     빈 배열을 저장해 코드 표를 덮고, `clearLgPair` 는 수기 항목 자체를 지운다. */
+  if (gs.indexOf('function clearLgPair(') < 0)
+    bad.push('수기 짝을 떼는 서버 함수가 없다 — 「해당없음」과 「되돌리기」가 같은 일이 된다');
+  {
+    const at = gs.indexOf('function clearLgPair(');
+    const body = at < 0 ? '' : gs.slice(at, gs.indexOf('\n}', at));
+    if (body && body.indexOf('delete mine[store]') < 0) bad.push('clearLgPair 가 수기 항목을 안 지운다');
+    if (body && body.indexOf("deleteProperty('_srivalAt')") < 0)
+      bad.push('clearLgPair 가 오늘 표식을 안 지운다 — 짝을 바꿔도 내일까지 다시 안 잰다');
+  }
+  if (ix.indexOf('run.clearLgPair(store, admToken)') < 0) bad.push('화면이 되돌리는 길을 안 부른다');
+  if (ix.indexOf('자동으로 되돌렸습니다') < 0) bad.push('되돌린 결과를 화면이 안 적는다');
+  /* **되돌리기 버튼은 수기 짝이 있을 때만** — 자동인 매장에는 되돌릴 것이 없다 */
+  if (ix.indexOf("au.hidden = !(man &&") < 0) bad.push('되돌리기 버튼이 늘 떠 있다 — 눌러도 할 일이 없다');
 
   /* ⓕ **조사를 붙이지 않는다** — `josa` 는 ㄹ 받침(서울로)을 못 가른다 */
-  if (ix.indexOf("</b> 로 저장했습니다") >= 0)
+  if (ix.indexOf('</b> 로 저장했습니다') >= 0)
     bad.push('저장 문구가 「수원본점 로」처럼 조사를 잘못 붙인다');
 
   /* ⓖ 미리보기 — 스텁이 **서버와 같은 모양**을 돌려줘야 그 자리를 눈으로 볼 수 있다 */
   {
     const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
     if (pv.indexOf('setLgPair: function') < 0) bad.push('미리보기에 setLgPair 스텁이 없다');
-    else if (pv.indexOf('shops: list') < 0)
-      bad.push('미리보기 스텁이 shops 를 안 돌려준다 — 성공했는데 화면이 「짝을 뗐습니다」라고 적는다');
-    /* **모의 짝을 62곳 전부로 두지 말 것** — `lgPairs_()` 는 수기로 저장한 것만
-       돌려주므로 그럴 수가 없고, 그러면 「자동」 배지를 한 번도 눈으로 못 본다 */
-    const m = pv.match(/\n  lgPair: \{([^\n]*)\}/);
-    if (!m) bad.push('미리보기 모의에 lgPair 가 없다');
-    else if ((m[1].split('":').length - 1) > 10)
-      bad.push('미리보기 모의 짝이 너무 많다 — 자동으로 잡히는 경우를 눈으로 볼 수 없다');
+    else {
+      /* **그 스텁 안에서** 본다 — 파일 전체로 보면 clearLgPair 쪽 `manual` 이 대신 걸린다 */
+      const at = pv.indexOf("setLgPair: function");
+      const body = at < 0 ? '' : pv.slice(at, pv.indexOf("'    },'", at));
+      if (body.indexOf('manual: mn') < 0)
+        bad.push('미리보기 스텁이 manual 을 안 돌려준다 — 저장해도 배지가 옛 값으로 남는다');
+    }
+    if (pv.indexOf('clearLgPair: function') < 0)
+      bad.push('미리보기에 clearLgPair 스텁이 없다 — 「되돌리기」 한 번에 화면이 죽는다');
+    /* **되돌리면 자동으로 돌아가는 것까지 흉내 내야** 그 자리를 눈으로 볼 수 있다 */
+    else if (pv.indexOf('if (au && au.shop) pr[store] = au.shop') < 0)
+      bad.push('되돌리기 스텁이 짝을 통째로 지운다 — 프로덕션은 자동으로 되돌아간다');
+    if (pv.indexOf('lgPairManual:') < 0) bad.push('미리보기 모의에 lgPairManual 이 없다');
+    else {
+      /* **수기가 적어야** 「자동」 배지를 눈으로 볼 수 있다. 반대로 `lgPair` 는
+         서버가 실제로 돌려주는 대로 많아야 한다(짧게 줄이면 프로덕션에 없는 상태가 된다). */
+      const man = pv.match(/\n  lgPairManual: \{([^\n]*)\}/);
+      const all = pv.match(/\n  lgPair: \{([^\n]*)\}/);
+      if (man && (man[1].split('":').length - 1) > 6)
+        bad.push('미리보기 모의 수기 짝이 너무 많다 — 자동 배지를 눈으로 볼 수 없다');
+      if (all && (all[1].split('":').length - 1) < 20)
+        bad.push('미리보기 모의 lgPair 가 너무 적다 — 프로덕션에 없는 「짝 없음」 상태를 보게 된다');
+    }
   }
 
   if (bad.length) fail('[바이럴] LG 지점 짝 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 LG 지점 짝 — 관리자에서 찾을 수 있다 · 저장 길 하나 · 자동/수기 구분 · 미리보기');
+  else console.log('OK: 바이럴 LG 지점 짝 — 관리자에서 찾는다 · 칸으로 고른다 · 저장 길 하나 · 수기/기본 구분 · 해당없음≠되돌리기');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
