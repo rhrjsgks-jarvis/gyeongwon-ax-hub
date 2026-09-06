@@ -1590,6 +1590,29 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       </div>
       <div id="purge-out" class="sub"></div>
 
+      <!-- ── **LG 지점 짝** (2026-09-06 사장님 지시) ────────────────────────────
+           *"LG매장명을 당사 매장과 매칭하는 시스템을 구축해달라고 요청드렸는데 어디에
+           있는지 못찾겠습니다."*
+
+           **있기는 있었다** — 히트맵에서 지점을 눌러야 나오는 「지점별 분석」 안이라
+           **찾을 수가 없었다.** 값을 고치는 일은 전부 관리자 항목에 있는데(일일 한도 ·
+           매니저 명부 · 자료 비우기) 이것만 딴 데 있었다. **여기로 옮겨 온다** —
+           히트맵 안의 것은 그대로 둔다(그 지점을 보다가 바로 고치는 자리다). -->
+      <h3>LG 지점 짝</h3>
+      <div class="sub" id="lgp-sub">–</div>
+      <div class="alias-add">
+        <select id="lgp-store" aria-label="우리 매장"></select>
+        <button class="btn" id="lgp-auto">자동으로 되돌리기</button>
+      </div>
+      <select id="lgp-sel" multiple size="7" aria-label="이 매장과 견줄 LG 지점(여럿 고를 수 있습니다)"
+              style="width:100%;margin-top:5px"></select>
+      <div class="alias-add" style="margin-top:5px">
+        <button class="btn" id="lgp-save">이 짝으로 저장</button>
+        <button class="btn" id="lgp-clear">짝 없음</button>
+      </div>
+      <div class="sub" id="lgp-msg"></div>
+      <div id="lgp-list"></div>
+
       <h3>매니저 명부</h3>
       <!-- 2026-08-31 사장님 지시: *"후기에 가장 많이 언급되는 매니저 이름 top10"* ·
            *"이름을 제목과 해시태그 내용에서 모두 검출해 주세요"*.
@@ -1909,7 +1932,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       var out = document.getElementById('adm-out');
       if (out) out.onclick = function () { admToken = ''; admClear(); renderAdmin(); };
     }
-    if (on) { renderMgrBook(); renderTodo(); renderJobs(); wireJobs(); }
+    if (on) { renderMgrBook(); renderTodo(); renderJobs(); wireJobs();
+               lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs(); }
   }
 
   /** 자동 수집이 **오늘 한 번도 안 돌았는가.**
@@ -2205,6 +2229,175 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         .withFailureHandler(function (e2) { done('실패했습니다 — ' + String(e2 && e2.message || e2)); })
         .runJob(id);
     });
+  }
+
+  /* ── **LG 지점 짝 — 관리자 항목** (2026-09-06 사장님 지시) ──────────────────
+   * *"LG매장명을 당사 매장과 매칭하는 시스템을 구축해달라고 요청드렸는데 어디에
+   *  있는지 못찾겠습니다."*
+   *
+   * **있기는 있었다** — 히트맵에서 지점을 눌러야 나오는 「지점별 분석」 안이라
+   * 찾을 수가 없었다. 값을 고치는 일은 전부 관리자 항목에 있는데 이것만 딴 데 있었다.
+   *
+   * **히트맵 안의 것을 지우지 않는다** — 그 지점을 보다가 바로 고치는 자리다.
+   * 대신 **저장하는 길은 하나**(`saveLgPair`)로 모은다. 두 벌로 두면 한쪽만 고쳤을 때
+   * 「여기서 저장하면 되는데 저기서는 안 된다」가 된다.
+   */
+  /** 62곳 전부 — 지역으로 묶어 고르기 쉽게 한다(이름만 늘어놓으면 못 찾는다). */
+  function lgpFillStores() {
+    var sel = document.getElementById('lgp-store');
+    if (!sel || sel.dataset.filled) return;
+    var reg = DATA.byRegion || {}, html = '', rg, i;
+    for (rg in reg) if (reg.hasOwnProperty(rg)) {
+      var ls = (reg[rg].stores || []).slice().sort();
+      if (!ls.length) continue;
+      html += '<optgroup label="' + esc(rg) + '">';
+      for (i = 0; i < ls.length; i++) html += '<option value="' + esc(ls[i]) + '">' + esc(ls[i]) + '</option>';
+      html += '</optgroup>';
+    }
+    if (!html) return;
+    sel.innerHTML = html;
+    sel.dataset.filled = '1';
+  }
+
+  /** 고른 매장의 LG 지점 목록 — 가까운 지역 것을 위로(히트맵 안의 것과 같은 규칙). */
+  function lgpFillShops() {
+    var st = document.getElementById('lgp-store'), sel = document.getElementById('lgp-sel');
+    if (!st || !sel) return;
+    var store = st.value, shops = DATA.lgShops || [], pair = DATA.lgPair || {};
+    var now = pairList(pair[store]);
+    var area = areaOfStore(store), near = [], rest = [], i;
+    for (i = 0; i < shops.length; i++) {
+      (String(shops[i].g || '').indexOf(area) >= 0 || String(area).indexOf(shops[i].g) >= 0
+        ? near : rest).push(shops[i]);
+    }
+    var opt = function (x) {
+      return '<option value="' + esc(x.n) + '"' + (now.indexOf(x.n) >= 0 ? ' selected' : '') + '>'
+        + esc(x.n) + ' (' + esc(x.g) + ')</option>';
+    };
+    sel.innerHTML = (near.length ? '<optgroup label="가까운 곳">' + near.map(opt).join('') + '</optgroup>' : '')
+      + (rest.length ? '<optgroup label="그 밖">' + rest.map(opt).join('') + '</optgroup>' : '');
+    /* **지금이 자동인지 수기인지 밝힌다** — 안 적으면 「내가 고친 것인가」를 알 수 없다 */
+    var m = (DATA.lgMatch || {})[store] || {};
+    var msg = document.getElementById('lgp-msg');
+    if (msg) {
+      msg.innerHTML = now.length
+        ? '지금 <b>' + esc(now.join(' · ')) + '</b> — <b>수기로 정하신 짝</b>입니다.'
+        : (m.shop
+            ? '지금 <b>' + esc(m.shop) + '</b> — <b>자동</b>으로 고른 짝입니다'
+              + (m.how === 'dept' ? '(같은 백화점 안)'
+                 : (typeof m.dist === 'number' ? '(' + Math.round(m.dist) + 'm)' : '')) + '.'
+            : '<b class="warn">짝이 없습니다</b> — ' + esc(m.why || '가까운 LG 지점을 못 찾았습니다') + '.');
+    }
+  }
+
+  /** 지금 짝 전부를 한 표로 — **어디를 손대야 하는지 한눈에 보여야** 찾아 들어간다. */
+  function renderLgPairs() {
+    var box = document.getElementById('lgp-list'), sub = document.getElementById('lgp-sub');
+    if (!box) return;
+    var mt = DATA.lgMatch || {}, pair = DATA.lgPair || {}, reg = DATA.byRegion || {};
+    var rows = [], rg, i, man = 0, none = 0;
+    for (rg in reg) if (reg.hasOwnProperty(rg)) {
+      var ls = (reg[rg].stores || []).slice().sort();
+      for (i = 0; i < ls.length; i++) {
+        var nm = ls[i], p = pairList(pair[nm]), m = mt[nm] || {};
+        var shops = p.length ? p : pairList(m.shops || m.shop);
+        if (p.length) man++;
+        if (!shops.length) none++;
+        rows.push({ nm: nm, rg: rg, shops: shops, manual: p.length > 0, how: m.how, dist: m.dist });
+      }
+    }
+    if (sub) {
+      sub.innerHTML = '우리 매장 <b>' + rows.length + '곳</b> · 수기로 정하신 것 <b>' + man + '곳</b>'
+        + (none ? ' · <b class="warn">짝 없음 ' + none + '곳</b>' : '')
+        + ' — 매장을 고르고 LG 지점을 <b>Ctrl(⌘)</b> 로 최대 3곳까지 고른 뒤 <b>저장</b>하세요. '
+        + '저장하면 <b>매장 대 매장 수집</b>이 그 짝으로 다시 잽니다.';
+    }
+    var html = '<table class="jobs"><thead><tr><th>우리 매장</th><th>LG 지점</th><th>정한 방법</th></tr></thead><tbody>';
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      html += '<tr><td class="nm">' + esc(r.nm) + '</td>'
+        + '<td>' + (r.shops.length ? esc(r.shops.join(' · ')) : '<b class="warn">없음</b>') + '</td>'
+        /* **자동과 수기를 가른다** — 사장님이 고치신 것이 어디인지 보여야 한다 */
+        + '<td class="cy">' + (r.manual ? '<span class="cyc w">수기</span>'
+            : r.how === 'dept' ? '<span class="cyc d">같은 건물</span>'
+            : r.shops.length ? '<span class="cyc m">가까운 곳'
+                + (typeof r.dist === 'number' ? ' ' + Math.round(r.dist) + 'm' : '') + '</span>'
+            : '') + '</td></tr>';
+    }
+    box.innerHTML = html + '</tbody></table>';
+  }
+
+  /** **저장하는 길은 하나다** — 히트맵 안의 상자와 관리자 항목이 같은 함수를 지나간다. */
+  function saveLgPair(store, list, msgEl, done) {
+    var say = function (h) { if (msgEl) msgEl.innerHTML = h; };
+    if (!store) { say('<b class="warn">매장을 먼저 고르세요.</b>'); return; }
+    if (!(window.google && google.script && google.script.run)) {
+      say('<b class="warn">미리보기에서는 저장되지 않습니다.</b>'); return;
+    }
+    say('저장하는 중…');
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (!r || !r.ok) {
+          /* **실패를 실패라고 적는다** — 조용히 넘기면 고른 것과 화면이 어긋난다 */
+          say('<b class="warn">저장하지 못했습니다</b> — ' + esc((r && r.why) || '알 수 없는 이유'));
+          if (done) done(false);
+          return;
+        }
+        DATA.lgPair = r.pairs || DATA.lgPair;
+        say((r.shops && r.shops.length)
+          ? '<b>' + esc(r.shops.join(' · ')) + '</b> — 이 짝으로 저장했습니다. <b>매장 대 매장 수집</b>을 다시 돌리면 반영됩니다.'
+          : '짝을 뗐습니다.');
+        /* 지도의 채운 핀·짝 표가 따라와야 한다 — 안 그리면 화면이 옛 짝을 보여준다 */
+        renderMap(); renderLgPairs();
+        if (done) done(true);
+      })
+      .withFailureHandler(function (e) {
+        say('<b class="warn">저장하지 못했습니다</b> — ' + esc(e && e.message));
+        if (done) done(false);
+      })
+      .setLgPair(store, list, admToken);
+  }
+
+  /** 관리자 항목의 짝 상자 — **한 번만 배선한다**(렌더마다 걸면 쌓인다). */
+  function wireLgPairs() {
+    var st = document.getElementById('lgp-store');
+    if (!st || st.dataset.wired) return;
+    st.dataset.wired = '1';
+    st.addEventListener('change', lgpFillShops);
+    var pick = function () {
+      var sel = document.getElementById('lgp-sel'), out = [];
+      Array.prototype.forEach.call((sel && sel.selectedOptions) || [], function (o) { if (o.value) out.push(o.value); });
+      return out;
+    };
+    var msg = document.getElementById('lgp-msg');
+    var sv = document.getElementById('lgp-save');
+    if (sv) sv.onclick = function () {
+      var list = pick();
+      /* **서버가 3곳으로 묶는다** — 화면에서도 미리 알린다(눌러 놓고 잘리면 어리둥절하다) */
+      if (list.length > 3) {
+        if (msg) msg.innerHTML = '<b class="warn">최대 3곳까지입니다</b> — 앞의 세 곳만 저장합니다.';
+        list = list.slice(0, 3);
+      }
+      saveLgPair(st.value, list, msg);
+    };
+    var cl = document.getElementById('lgp-clear');
+    if (cl) cl.onclick = function () {
+      var sel = document.getElementById('lgp-sel');
+      if (sel) Array.prototype.forEach.call(sel.options, function (o) { o.selected = false; });
+      saveLgPair(st.value, [], msg);
+    };
+    /* **자동으로 되돌리기** — 수기 짝을 떼면 서버가 다시 좌표로 고른다.
+       「짝 없음」과 다른 일이다: 그쪽은 **견주지 않는다**는 뜻이고 이쪽은 **자동에 맡긴다**. */
+    var au = document.getElementById('lgp-auto');
+    if (au) au.onclick = function () {
+      saveLgPair(st.value, [], msg, function (ok) {
+        if (!ok) return;
+        var m = (DATA.lgMatch || {})[st.value] || {};
+        if (msg) msg.innerHTML = '자동으로 되돌렸습니다 — '
+          + (m.shop ? '<b>' + esc(m.shop) + '</b> 로 잡힙니다.' : '<b class="warn">자동으로도 못 찾습니다.</b>');
+        lgpFillShops();
+      });
+    };
   }
 
   /** 검출 감사 · 옛 자료 지우기 — **관리자 안에서만** 돈다(값을 바꾸는 일이다). */
@@ -3885,34 +4078,13 @@ function wireSecs() {
      * **관리자 토큰을 넘긴다** — 짝을 바꾸면 「당사 vs LG」 비중이 통째로 달라진다.
      */
     var sel = document.getElementById('lgsel');
+    /* **저장하는 길은 하나다**(`saveLgPair`) — 관리자 항목의 상자와 같은 함수를
+       지나간다. 두 벌로 두면 한쪽만 고쳤을 때 「여기선 되는데 저기선 안 된다」가 된다. */
     var saveLg = function (list) {
-      var msg = document.getElementById('lgmsg'), who = storeFilter;
-      if (!(window.google && google.script && google.script.run)) {
-        if (msg) msg.innerHTML = '<b class="warn">미리보기에서는 저장되지 않습니다.</b>';
-        return;
-      }
-      if (msg) msg.textContent = '저장하는 중…';
+      saveLgPair(storeFilter, list, document.getElementById('lgmsg'), function (ok) {
+        if (sel) sel.disabled = false;
+      });
       if (sel) sel.disabled = true;
-      google.script.run
-        .withSuccessHandler(function (r) {
-          if (sel) sel.disabled = false;
-          if (!r || !r.ok) {
-            /* **실패를 실패라고 적는다** — 조용히 넘기면 고른 것과 화면이 어긋난다 */
-            if (msg) msg.innerHTML = '<b class="warn">저장하지 못했습니다</b> — ' + esc((r && r.why) || '알 수 없는 이유');
-            return;
-          }
-          DATA.lgPair = r.pairs || DATA.lgPair;
-          if (msg) msg.innerHTML = (r.shops && r.shops.length)
-            ? '<b>' + esc(r.shops.join(' · ')) + '</b> 로 저장했습니다 — <b>매장 대 매장 수집</b>을 다시 돌리면 반영됩니다.'
-            : '짝을 뗐습니다.';
-          /* 지도의 채운 핀이 따라와야 한다 — 안 그리면 화면이 옛 짝을 보여준다 */
-          renderMap();
-        })
-        .withFailureHandler(function (e) {
-          if (sel) sel.disabled = false;
-          if (msg) msg.innerHTML = '<b class="warn">저장하지 못했습니다</b> — ' + esc(e && e.message);
-        })
-        .setLgPair(storeFilter, list, admToken);
     };
     var lgsv = document.getElementById('lgsave');
     if (lgsv) lgsv.onclick = function () {
@@ -7364,6 +7536,8 @@ function renderList() {
     /* 「지금 할 일」과 **같은 `due` 를 본다** — 두 곳이 따로 판단하면 갈린다 */
     renderJobs();
     wireJobs();
+    /* LG 짝 — **자료가 온 뒤에 채운다**(매장 목록·짝이 DATA 에서 온다) */
+    lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();
     renderPromo();
     renderTrend();
     renderDiag();
