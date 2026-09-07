@@ -5680,7 +5680,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         bad.push('runJob 이 LG 비교를 runRival 에 안 넘긴다 — 예약 장치를 잃는다');
       if (body.indexOf('LockService.getScriptLock()') < 0)
         bad.push('runJob 이 자물쇠를 안 쓴다 — 수집과 겹치면 같은 회차가 두 줄이 된다');
-      if (body.indexOf('if (over())') < 0)
+      /* **어떻게 보는지는 안 박는다** — `over()` 는 sweep_ 의 지역 함수라
+         여기서 부르면 ReferenceError 다(2026-09-07에 그렇게 죽어 있었고,
+         이 검사가 그 버그를 요구하고 있었다). 「쿼터를 본다」만 지킨다. */
+      if (body.indexOf('dailyLimit_()') < 0 && body.indexOf('if (over())') < 0)
         bad.push('runJob 이 쿼터를 안 본다 — 시작해 놓고 첫 호출에서 죽는다');
       if (body.indexOf('sumCacheClear_();') < 0)
         bad.push('runJob 이 집계 캐시를 안 버린다 — 최대 6시간 「눌렀는데 그대로」다');
@@ -6452,6 +6455,64 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 칸 숫자 자리 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 칸 숫자 자리 — 이름은 위, 숫자는 바닥(테두리에서 2px)');
+}
+
+/* ── **`over is not defined` 가 화면에 떠 있었다** (2026-09-07) ───────────────────
+ * 「후기 링크」 카드에 `ReferenceError: over is not defined` 가 **글자로** 나가 있었다.
+ *
+ * `over()` 는 **`sweep_()` 의 지역 함수**인데(700줄이 넘는 함수라 전역처럼 보인다)
+ * **다른 두 함수**가 그것을 불렀다 — `verifyDead_()` 와 `runJob()`.
+ *   · `verifyDead_` → **삭제된 글 확인이 한 번도 못 돌았다**(예외가 `_deadErr` 로 저장)
+ *   · `runJob`      → **관리자 「수집 체계」 표의 「지금」 버튼이 통째로 죽는다**
+ *
+ * 긴 함수의 지역 클로저를 밖에서 부르는 것이 이 사고의 온상이다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+
+  /* ⓐ **스코프 밖에서 지역 헬퍼를 부르지 않는다** — 줄마다 감싸는 함수를 보고 판정한다 */
+  {
+    const L = gs.split('\n');
+    const fns = [];
+    L.forEach((l, i) => { const m = l.match(/^function ([A-Za-z0-9_]+)/); if (m) fns.push({ n: m[1], i: i }); });
+    const owner = (i) => { let f = null; for (const x of fns) { if (x.i <= i) f = x; else break; } return f ? f.n : '(최상위)'; };
+    /* `over` 를 자기 안에 정의한 함수 목록 */
+    const defines = new Set();
+    L.forEach((l, i) => { if (/^\s+var over =/.test(l)) defines.add(owner(i)); });
+    if (!defines.size) bad.push('over 정의를 못 찾았다 — 앵커가 낡았다');
+    L.forEach((l, i) => {
+      const t = l.trim();
+      if (!/over\(\)/.test(l) || t.startsWith('*') || t.startsWith('/*') || t.startsWith('//')) return;
+      const o = owner(i);
+      if (!defines.has(o)) bad.push(o + ' 가 스코프 밖의 over() 를 부른다(' + (i + 1) + '행) — ReferenceError 로 죽는다');
+    });
+  }
+  /* ⓑ 두 자리를 못 박아 둔다 — 되돌아가면 각각 무엇이 죽는지 */
+  {
+    const at = gs.indexOf('function verifyDead_(');
+    const body = at < 0 ? '' : gs.slice(at, gs.indexOf('\n}', at));
+    if (!body) bad.push('verifyDead_ 를 못 찾았다');
+    else {
+      if (body.indexOf('var over = (typeof isOver === \'function\') ? isOver') < 0)
+        bad.push('verifyDead_ 가 쿼터 판정을 스스로 갖지 않는다 — 삭제 확인이 통째로 죽는다');
+      if (gs.indexOf('verifyDead_(Date.now() + DEAD_MS, over)') < 0)
+        bad.push('sweep_ 이 자기 판정을 안 넘긴다 — 그 실행에서 방금 쓴 호출이 안 세어진다');
+    }
+    if (gs.indexOf('if (usage_().n >= dailyLimit_()) {') < 0)
+      bad.push('runJob 이 쿼터를 스코프 밖 over() 로 본다 — 「지금」 버튼이 통째로 죽는다');
+  }
+
+  /* ⓒ **개발자 오류를 사장님 화면에 그대로 뿌리지 않는다** — 감추지도 않는다 */
+  if (ix.indexOf('삭제 확인이 실패했습니다') < 0)
+    bad.push('삭제 확인 실패를 사람 말로 안 적는다');
+  if (ix.indexOf("title=\"' + esc(dd.err) + '\"") < 0)
+    bad.push('오류 원문을 어디에도 안 남긴다 — 무엇이 잘못됐는지 못 본다');
+  if (ix.indexOf("j.id === 'dead' && DATA.dead && DATA.dead.err") < 0)
+    bad.push('관리자 표가 오류 원문을 안 적는다');
+
+  if (bad.length) fail('[바이럴] over 스코프 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 over 스코프 — 지역 헬퍼를 밖에서 안 부른다 · 오류는 사람 말로(원문은 관리자)');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

@@ -2192,7 +2192,12 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
             ? '<span class="cyc m" title="자동 수집이 꺼져 있습니다">누를 때</span>'
             : '<span class="cyc ' + CYC[j.cyc][1] + '">' + CYC[j.cyc][0] + '</span>') + '</td>'
         /* **「아직」과 「했다」를 가른다** — 빈 표식을 오늘로 적으면 거짓이 된다 */
-        + '<td class="at">' + (last ? esc(last) : '아직') + '</td>'
+        + '<td class="at">' + (last ? esc(last) : '아직')
+            /* **오류는 관리자에게 원문 그대로** — 사람 말로 바꾼 것은 목록 안내 쪽이다.
+               여기서 감추면 무엇이 잘못됐는지 아무도 못 본다. */
+            + (j.id === 'dead' && DATA.dead && DATA.dead.err
+                ? '<div class="sub" style="color:#B91C1C;margin-top:2px">' + esc(DATA.dead.err) + '</div>' : '')
+          + '</td>'
         + '<td class="at">' + (isDue ? '<b>이번 차례</b>'
             : (left > 0 ? left + '일 뒤' : '—')) + '</td>'
         + '<td class="co">' + (c ? nf(c) + '회' : '—') + '</td>'
@@ -5197,7 +5202,10 @@ function renderList() {
         + ' (마지막 확인 ' + esc(dd.at) + ' · ' + nf(dd.n || 0) + '건 제외).'
         + ' <b>카페 글은 확인할 수 없습니다</b> — 네이버 카페가 자동 접근을 막고 있어'
         + ' (robots) 그 글이 살아 있는지 알 방법이 없습니다. 웹 글도 마찬가지입니다.'
-        + (dd.err ? ' <b style="color:#B91C1C">' + esc(dd.err) + '</b>' : '')
+        /* **개발자 메시지를 그대로 적지 않는다**(2026-09-07) — 실제로
+           `ReferenceError: over is not defined` 가 이 자리에 나가 있었다.
+           **감추지는 않는다** — 사람 말로 적고 원문은 title 과 관리자 표에 남긴다. */
+        + (dd.err ? ' <b style="color:#B91C1C" title="' + esc(dd.err) + '">삭제 확인이 실패했습니다 — 위 「제외」 건수가 낡았을 수 있습니다.</b>' : '')
         + '</div>';
     }
     if (srcFilter === '전체' && nUndated > 0 && nDated > 0 && !pageHasUndated) {

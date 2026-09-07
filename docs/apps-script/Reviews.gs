@@ -2984,7 +2984,7 @@ function sweep_(mode) {
   stage_('삭제확인 앞');
   if (deadDue_() && !over()) {
     try {
-      deadRun = verifyDead_(Date.now() + DEAD_MS);
+      deadRun = verifyDead_(Date.now() + DEAD_MS, over);   /* **자기 판정을 넘긴다** — 그 실행에서 쓴 것까지 센다 */
       /* **빈 값을 저장하지 않는다**(2026-09-03 사장님 신고 — *"_deadErr 값이없다고
          나옵니다"*). Apps Script 의 setProperty 는 빈 문자열을 거부한다 —
          오류가 없으면 그 속성을 **지운다**. 그래야 「지난번 오류」가 남지도 않는다. */
@@ -5989,8 +5989,11 @@ function runJob(name) {
     var t0 = Date.now();
     props_().setProperty('_runAt', String(t0));
     /* **쿼터를 다 썼으면 시작하지 않는다** — 시작해 놓고 첫 호출에서 죽으면
-       커서만 헛돈다(이 파일이 이미 세운 규칙). */
-    if (over()) {
+       커서만 헛돈다(이 파일이 이미 세운 규칙).
+       **`over` 는 `sweep_` 의 지역 함수다**(2026-09-07에 잡았다) — 그대로 부르면
+       ReferenceError 로 이 버튼이 통째로 죽는다. 여기서 저장된 값으로 판정한다
+       (실행 시작 시점이라 그 값이면 충분하다). */
+    if (usage_().n >= dailyLimit_()) {
       return { ok: true, error: '오늘 쓸 수 있는 호출을 다 썼습니다 — 쿼터가 풀린 뒤에 눌러 주세요.' };
     }
     var stamp = today_(), r = null, label = '';
@@ -6273,7 +6276,13 @@ function deadUrl_(link) {
  * **한 번의 실패는 삭제가 아니다** — 실측으로 0.67%(8/1,200)가 `ECONNRESET` 이었고
  * 재시도에서 전부 200 이었다. `0`·5xx·429 는 「모름」이라 아무것도 세지 않는다.
  */
-function verifyDead_(deadline) {
+function verifyDead_(deadline, isOver) {
+  /* **쿼터 판정을 받아 쓴다**(2026-09-07). 예전에는 `sweep_` 의 지역 함수 `over` 를
+     그대로 불러 **ReferenceError** 로 죽었다 — 삭제 확인이 한 번도 못 돌았고 그 오류가
+     화면에 글자로 나갔다. 안 주면 스스로 판정하되, 그쪽은 **저장된 값**이라 그 실행에서
+     방금 쓴 것이 빠진다(그래서 `sweep_` 은 자기 판정을 넘긴다). */
+  var over = (typeof isOver === 'function') ? isOver
+    : function () { return usage_().n >= dailyLimit_(); };
   var sh = sheet_(SHEET_ITEMS, HEADER);
   var last = sh.getLastRow();
   if (last < 2) return { checked: 0, target: 0 };
