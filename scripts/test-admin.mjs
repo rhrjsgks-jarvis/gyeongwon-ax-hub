@@ -6160,7 +6160,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (ix.indexOf('run.clearLgPair(store, admToken)') < 0) bad.push('화면이 되돌리는 길을 안 부른다');
   if (ix.indexOf('자동으로 되돌렸습니다') < 0) bad.push('되돌린 결과를 화면이 안 적는다');
   /* **되돌리기 버튼은 수기 짝이 있을 때만** — 자동인 매장에는 되돌릴 것이 없다 */
-  if (ix.indexOf("au.hidden = !(man &&") < 0) bad.push('되돌리기 버튼이 늘 떠 있다 — 눌러도 할 일이 없다');
+  /* **뜻으로 본다** — 「수기 짝이 있을 때만 보인다」이지 그 표현이 아니다.
+     여럿 고를 수 있게 되며 `anyMan`(하나라도 수기)으로 바뀌었다. */
+  if (!/au\.hidden = !\s*\(?\s*(man &&|anyMan)/.test(ix))
+    bad.push('되돌리기 버튼이 늘 떠 있다 — 눌러도 할 일이 없다');
 
   /* ⓕ **조사를 붙이지 않는다** — `josa` 는 ㄹ 받침(서울로)을 못 가른다 */
   if (ix.indexOf('</b> 로 저장했습니다') >= 0)
@@ -6301,6 +6304,70 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         bad.push('표에 지역 머리줄이 없다 — 62줄을 구분 없이 늘어놓으면 어느 지역인지 모른다');
     }
   }
+  /* ⓖ **좌우 둘 다 복수 선택** (2026-09-07 사장님 지시 — *"당사 타사 매칭버튼누르는걸
+     좌우로 모두선택가능토록 해주세요 지역특성상 접경지역이있습니다"*).
+     실측 — **한 LG 지점에 우리 매장이 둘 붙은 곳이 4곳**(롯데 타임빌라스 수원점 ←
+     롯데수원·타임빌라스수원 등)인데 예전에는 매장마다 따로 눌러 저장해야 했다. */
+  {
+    /* 상태가 배열이어야 한다 — 문자열 하나로 되돌리면 왼쪽이 다시 라디오가 된다 */
+    if (/var lgpStore\b/.test(ix))
+      bad.push('왼쪽 매장이 하나만 골라진다 — 접경 지역에서 두 매장을 한 번에 못 잇는다');
+    if (ix.indexOf('var lgpStores = []') < 0) bad.push('고른 매장을 배열로 안 들고 있다');
+    /* 칸을 다시 누르면 떼어져야 한다 */
+    const wa = ix.indexOf('function wireLgPairs()');
+    const wb = wa < 0 ? '' : ix.slice(wa, ix.indexOf('\n  }', wa));
+    if (wb && wb.indexOf('if (at >= 0) lgpStores.splice(at, 1); else lgpStores.push(nm);') < 0)
+      bad.push('왼쪽 매장이 토글이 아니다 — 여러 곳을 고르거나 뗄 수 없다');
+    /* **합집합이어야 한다** — 교집합이면 짝이 다른 둘을 고르는 순간 비어
+       「저장하면 둘 다 짝이 없어지는」 위험한 상태가 된다 */
+    if (ix.indexOf('function lgpUnion(') < 0) bad.push('고른 매장들의 짝을 합집합으로 안 모은다');
+    {
+      const ua = ix.indexOf('function lgpUnion(');
+      const ub = ua < 0 ? '' : ix.slice(ua, ix.indexOf('\n  }', ua));
+      if (ub && ub.indexOf('if (out.indexOf(ls[k]) < 0) out.push(ls[k]);') < 0)
+        bad.push('lgpUnion 이 합집합이 아니다 — 교집합이면 짝이 다른 둘을 고를 때 비어 버린다');
+    }
+    /* **순차로 저장한다** — 동시에 보내면 서버가 속성을 읽고-고치고-쓰는 사이
+       서로 덮어써 마지막 것만 남는다 */
+    if (ix.indexOf('function saveLgPairMany(') < 0) bad.push('여러 매장에 한 번에 저장하는 길이 없다');
+    {
+      const ma = ix.indexOf('function saveLgPairMany(');
+      const mb = ma < 0 ? '' : ix.slice(ma, ix.indexOf('\n  }', ma));
+      if (mb) {
+        if (mb.indexOf('if (ok) okN++; else failed.push(st);') < 0 || mb.indexOf('next();') < 0)
+          bad.push('여러 매장 저장이 순차가 아니다 — 동시에 보내면 마지막 것만 남는다');
+        if (mb.indexOf("if (stores.length === 1) { saveLgPair(stores[0], list, msgEl); return; }") < 0)
+          bad.push('한 곳일 때 예전 길로 안 간다 — 흔한 경우가 그것이다');
+        /* 낱낱의 결과가 진행 표시를 덮으면 안 된다 */
+        if (mb.indexOf('saveLgPair(st, list, null, function (ok)') < 0)
+          bad.push('낱낱의 저장이 제 메시지를 적는다 — 진행 표시를 덮는다');
+        /* **판정문 자체를 본다** — `failed.length` 는 메시지에도 나와,
+           그것만 찾으면 판정을 지워도 통과한다(되돌려 넣어 실제로 안 물었다) */
+        if (mb.indexOf('say(failed.length') < 0)
+          bad.push('일부만 저장된 상태를 안 알린다 — 화면과 자료가 어긋난 채로 남는다');
+      }
+    }
+    /* 세 버튼이 전부 고른 매장 **전부**에 걸려야 한다 */
+    /* **범위를 `wireLgPairs` 본문으로 좁힌다** — `lgp-auto` 는 보임 판정(`lgpFillShops`)
+       과 클릭 배선 **두 곳**에 나와, 파일 전체에서 찾으면 엉뚱한 쪽을 집는다
+       (이 저장소가 되풀이해 데인 함정이다 — 앵커는 유일한지 확인하고 쓴다). */
+    for (const [id, nm] of [['lgp-save', '저장'], ['lgp-none', '해당없음'], ['lgp-auto', '되돌리기']]) {
+      const at = wb.indexOf("getElementById('" + id + "')");
+      const near = at < 0 ? '' : wb.slice(at, at + 260);
+      if (!near || near.indexOf('saveLgPairMany(lgpStores') < 0)
+        bad.push(nm + ' 버튼이 고른 매장 전부에 안 걸린다');
+    }
+    /* **지금 짝이 서로 다르면 밝힌다** — 합집합을 켜 두면 전부 같아 보인다 */
+    if (ix.indexOf('지금 짝이 서로 다릅니다') < 0)
+      bad.push('여럿 골랐을 때 지금 짝이 다른 것을 안 밝힌다 — 무엇이 바뀌는지 모른 채 저장한다');
+    /* 화면이 복수 선택을 안내하는가 */
+    /* **두 자리 다 본다** — `||` 로 두면 한쪽을 지워도 통과한다(실제로 안 물었다).
+       부제는 처음 보는 사람에게, 빈 상태 안내는 매장을 안 골랐을 때 알린다. */
+    if (ix.indexOf('양쪽 다 여러 곳') < 0)
+      bad.push('부제가 양쪽 복수 선택을 안 적는다');
+    if (ix.indexOf('여러 곳을 고르실 수 있습니다') < 0)
+      bad.push('매장을 안 골랐을 때 여러 곳을 고를 수 있다는 것을 안 알린다');
+  }
 
   if (bad.length) fail('[바이럴] 왼쪽 삼성 · 오른쪽 LG — ' + bad.join(' · '));
   else console.log('OK: 바이럴 짝 고르개 — 왼쪽 삼성 · 오른쪽 LG · 지역 칩 · 폰에서도 두 칼럼 · 해당없음≠없음');
@@ -6430,14 +6497,17 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
   if (ix.indexOf('function distM(') < 0) bad.push('거리 계산이 없다');
   /* **좌표를 모르면 물러서고 그 사실이 화면에 드러나야 한다** */
-  if (ix.indexOf('function hasGeoOf(') < 0) bad.push('좌표를 아는지 판정하는 길이 없다');
-  if (ix.indexOf("hasGeoOf(lgpStore) ? '가까운 시군부터 전부 나옵니다. '") < 0)
+  /* 좌표를 아는지 판정하는 길 — 별도 함수였다가 `lgpFillShops` 안으로 들어왔다
+     (여럿 고르면 「그중 하나라도 아는가」라 매장 하나로는 못 판정한다) */
+  if (!/var hasGeo = geos\.length > 0;/.test(ix)) bad.push('좌표를 아는지 판정하는 길이 없다');
+  /* **좌표를 아는지로 갈라 적는가** — 변수 이름이 아니라 그 뜻을 본다 */
+  if (!/hasGeo \? '가까운 시군부터 전부 나옵니다\. ' : '전부 나옵니다\. '/.test(ix))
     bad.push('가까운 순인지 아닌지를 화면이 안 밝힌다 — 좌표를 모르는 매장에서 거짓이 된다');
   /* 거리를 칸에 적어야 왜 그 순서인지 눈으로 검산된다 */
   if (ix.indexOf('function distText(') < 0 || ix.indexOf('distText(x.m)') < 0)
     bad.push('칸에 거리를 안 적는다 — 왜 이 순서인지 검산할 수 없다');
   /* 조사 — 「영통 와」가 아니라 「영통과」 */
-  if (ix.indexOf("josa(lgpStore, '과 ', '와 ')") < 0)
+  if (ix.indexOf("josa(main, '과 ', '와 ')") < 0)
     bad.push('안내가 받침을 안 본다 — 「영통 와 견줄」이 된다');
 
   /* ⓒ 거리 계산을 **떼어 돌려** 본다 — 하버사인은 조용히 틀리기 쉽다
