@@ -1767,7 +1767,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-07-7b318ce7';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-08-762e589e';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -6761,7 +6761,7 @@ function renderList() {
       if (WA2) {
         var wn2 = WA2.sum(t.name), av2 = WA2.avg(t.name);
         out.push({
-          nm: t.name, key: t.name, reg: s2r[t.store] || '기타',
+          nm: t.name, key: t.name, reg: s2r[t.store] || '기타', titles: t.titles || null,
           cnt: wn2, cur: wn2, prev: av2, noPrev: !av2,
           week: heatWeek, wAvg: av2, weeks: WA2.picks.length,
           store: t.store || '', known: !!t.known, hasK4: !!t.kind4, hasKY: !!kY,
@@ -6779,7 +6779,7 @@ function renderList() {
         : !heatKind ? yrSum(MY.prev)
         : kY ? ((kY[MY.prev] || {})[heatKind] || 0) : 0;
       out.push({
-        nm: t.name, key: t.name, reg: s2r[t.store] || '기타',
+        nm: t.name, key: t.name, reg: s2r[t.store] || '기타', titles: t.titles || null,
         cnt: kn4,
         cur: mgrYr ? kn4 : c, prev: mgrYr ? kp4 : p2,
         year: mgrYr ? MY.cur : null, prevYear: mgrYr ? MY.prev : null,
@@ -7293,7 +7293,10 @@ function renderList() {
                      /* **LG 대비 보기** — 이 셋을 빠뜨리면 칸이 통째로 검정이 된다
                         (색이 lgPct 로 나오는데 undefined 가 넘어간다). 이 자리에서
                         필드를 빠뜨려 데인 것이 이번이 네 번째다. */
-                     lgPct: d.lgPct, shop: d.shop, capped: d.capped });
+                     lgPct: d.lgPct, shop: d.shop, capped: d.capped,
+                     /* 합쳐진 직함 — 말풍선이 적는다(2026-09-07). 이 줄을 빠뜨리면
+                        말풍선에 아무것도 안 뜨는데 **오류도 안 난다** */
+                     titles: d.titles });
       }
     }
     items.sort(function (a, b) { return b.v - a.v; });
@@ -7593,6 +7596,10 @@ function renderList() {
                     : ' · ' + d.prevYear + '년 ' + d.prev + '건 → ' + d.year + '년 ' + d.cur + '건')
                 : ' · ' + heatMonLabel(M.prev) + ' ' + d.prev + '건 → ' + heatMonLabel(M.cur) + ' ' + d.cur + '건')
           + (d.g === null ? (week ? '' : ' · 전월을 몰라 증감 없음') : ' · ' + heatPct(d.g))
+          /* **합쳐진 직함을 밝힌다**(2026-09-07 사장님 지시로 이름으로 합친 뒤).
+             칸 부제 자리는 매장 이름이 쓰므로(동명이인을 가르는 값이라 뺄 수 없다)
+             여기 둔다 — 무엇이 합쳐졌는지 눈으로 검산할 수 있어야 한다. */
+          + (d.titles && d.titles.length > 1 ? ' · ' + d.titles.join('·') + ' 를 합쳤습니다' : '')
           + lgvTip + lgTip;
       /* **글자색은 배경 밝기가 정한다.** 밝은 초록 칸에 흰 글자를 두면 대비가 2.7:1 로
          기준(4.5:1)에 한참 못 미쳐 **잘 크는 매장의 이름만 안 읽힌다**(재서 확인했다). */

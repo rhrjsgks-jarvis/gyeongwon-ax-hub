@@ -3263,7 +3263,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ① 서버가 **매니저 × 월**을 낸다 — 히트맵 색이 전월 대비라 월별이 있어야 한다 */
     if (!rv.includes('mgrMon[mk][mmo]')) bad.push('서버가 매니저 x 월을 세지 않는다 — 색을 낼 수 없다');
-    if (!rv.includes('mon: mgrMon[mk] || {}')) bad.push('mgrTop 이 월별을 안 싣는다');
+    if (rv.indexOf('mon: mgrMon[mk]') < 0 && rv.indexOf('mergeNum_(M.mon, mgrMon[mk]') < 0)
+      bad.push('mgrTop 이 월별을 안 싣는다');
     /* **작성일을 아는 글만** — 발견일을 섞으면 이번 달만 거대해진다(이미 두 번 데인 자리) */
     if (!rv.includes('if (rows[i].dated && rows[i].date) {')) {
       bad.push('매니저 월별이 작성일을 안 가린다');
@@ -4523,7 +4524,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!rv.includes("if (t === 'manager') return 'manager';")) bad.push('?type=manager 를 못 읽는다');
     /* 매니저 × 유형 — 겹쳐 걸려면 서버가 세어야 한다 */
     if (!rv.includes('mgrKind[mk][mk4]')) bad.push('매니저 x 유형을 세지 않는다');
-    if (!rv.includes('kind4: mgrKind[mk] || {}')) bad.push('mgrTop 이 유형별 건수를 안 싣는다');
+    if (rv.indexOf('kind4: mgrKind[mk]') < 0 && rv.indexOf('mergeNum_(M.kind4, mgrKind[mk]') < 0)
+      bad.push('mgrTop 이 유형별 건수를 안 싣는다');
     /* 화면 — 매니저 보기에서 유형 버튼을 감추지 않는다 */
     if (ix.includes("if (kbox) kbox.style.display = mgrView ? 'none' : '';")) {
       bad.push('매니저 보기에서 유형 버튼을 감춘다 — 필터링할 수 있어야 한다는 지시였다');
@@ -4533,7 +4535,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('매니저를 유형으로 안 센다');
     }
     /* **연도 × 유형을 서버가 낸다** — 없으면 유형을 걸었을 때 연도로 못 자른다 */
-    if (!rv.includes('kindY: mgrKindY[mk] || {}')) bad.push('mgrTop 이 연도별 유형을 안 싣는다');
+    if (rv.indexOf('kindY: mgrKindY[mk]') < 0 && rv.indexOf('mergeNum_(M.kindY, mgrKindY[mk]') < 0)
+      bad.push('mgrTop 이 연도별 유형을 안 싣는다');
     if (!ix.includes('else if (kY) kn4 = ((kY[MY.cur] || {})[heatKind] || 0);')) {
       bad.push('매니저 유형을 연도로 안 자른다 — 지점 히트맵과 잣대가 다르다');
     }
@@ -5531,7 +5534,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('mgrWeek4 가 없다 — 매니저 주차를 세지 않는다');
   if (gs.indexOf('mgrWeek4[mk][mwk][mk4] = (mgrWeek4[mk][mwk][mk4] || 0) + 1;') < 0)
     bad.push('매니저 주차를 유형까지 갈라 세지 않는다 — 유형을 겹쳐 걸 수 없다');
-  if (gs.indexOf('wk4: mgrWeek4Cut[mk] || {}') < 0)
+  if (gs.indexOf('wk4: mgrWeek4Cut[mk]') < 0 && gs.indexOf('mergeNum_(M.wk4, mgrWeek4Cut[mk]') < 0)
     bad.push('mgrTop 이 wk4 를 안 싣는다 — 화면이 못 읽는다');
   if (gs.indexOf('trimWeeks_(mgrWeek4, WEEK_KEEP)') < 0)
     bad.push('매니저 주차를 지점과 같은 창으로 안 자른다 — 드롭다운의 주 목록이 갈린다');
@@ -6812,6 +6815,87 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   if (bad.length) fail('[바이럴] 판 표식 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 판 표식 — gsVer 가 내용 해시와 맞고 캐시를 안 탄다');
+}
+
+/* ── **직함으로 갈린 같은 이름을 합친다** (2026-09-07 사장님 지시) ────────────────
+ * *"매니저이름중 동일이름에 부점장 프로 로 나뉘어있는 프로가있습니다. 찾아서
+ *  통일시켜주세요 이름으로 합쳐주세요"*
+ *
+ * 실측 — **27명이 갈려 있었다.** 「지현」이 네 갈래(부점장·부지점장·프로·매니저)로
+ * 57건이 흩어져 순위에서 밀렸다. 명부(`mgrKnown`)는 이미 합치고 있었는데
+ * **순위·히트맵이 쓰는 `mgrTop` 만 갈린 채**였다.
+ */
+{
+  const bad = [];
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+
+  /* ⓐ 서버가 이름으로 합치는가 — **자르기 전에** 합쳐야 한다(200명으로 자른다) */
+  if (gs.indexOf('var mgrTop = [], mgrBy = {}, mgrOrd = []') < 0)
+    bad.push('mgrTop 을 이름으로 안 합친다 — 「지현 부점장」과 「지현 프로」가 따로 센다');
+  {
+    const at = gs.indexOf('var mgrTop = [], mgrBy');
+    const cut = gs.indexOf('mgrTop.sort(function', at);
+    const body = at < 0 || cut < 0 ? '' : gs.slice(at, cut);
+    if (!body) bad.push('mgrTop 을 만드는 블록을 못 찾았다 — 앵커가 낡았다');
+    else {
+      if (body.indexOf('mgrNameClean_(mk)') < 0)
+        bad.push('직함을 떼는 함수를 안 쓴다 — 명부와 다른 규칙이 되면 둘이 갈린다');
+      /* 네 갈래는 깊이만 다른 숫자 트리 — 같은 함수로 합쳐야 한다 */
+      for (const f of ['M.mon', 'M.kind4', 'M.kindY', 'M.wk4', 'M._st']) {
+        if (body.indexOf('mergeNum_(' + f) < 0)
+          bad.push(f + ' 를 안 합친다 — 조각 중 하나만 남아 건수가 어긋난다');
+      }
+      /* 매장은 **합산한 뒤에** 고른다 — 갈래마다 고르면 조각 하나의 매장이 대표가 된다 */
+      if (body.indexOf('titles') < 0) bad.push('합쳐진 직함을 안 담는다 — 무엇이 합쳐졌는지 검산할 수 없다');
+    }
+    /* **자르기 전에** 합치는가 — 뒤에서 자르므로 순서가 뒤집히면 조각이 밀려 사라진다 */
+    const mAt = gs.indexOf('var mgrTop = [], mgrBy');
+    const cAt = gs.indexOf('mgrTop.length > ');
+    if (mAt >= 0 && cAt >= 0 && mAt > cAt)
+      bad.push('자른 뒤에 합친다 — 갈린 조각이 잘려 나가 합칠 기회가 사라진다');
+  }
+
+  /* ⓑ 이름이 아닌 말 — **읽을 때도 거른다**(수집 때만 거르면 쌓인 자료에 남는다) */
+  for (const w of ['담해주신', '내해주신', '해주시는']) {
+    if (gs.indexOf("'" + w + "'") < 0) bad.push('이름 아닌 말 「' + w + '」을 안 거른다');
+  }
+  if (gs.indexOf('MGR_NOTNAME.indexOf(mgrNameClean_(mk) || mk) >= 0) continue;') < 0)
+    bad.push('집계에서 이름 아닌 말을 안 거른다 — 이미 쌓인 자료에 옛 판정이 남는다');
+
+  /* ⓒ 화면이 합쳐진 직함을 밝히는가 — **셋이 이어져야** 말풍선에 뜬다 */
+  if ((ix.match(/titles: t\.titles \|\| null/g) || []).length !== 2)
+    bad.push('매니저 줄에 titles 를 안 싣는다(주차 축·그 밖 두 곳이어야 한다)');
+  if (ix.indexOf('titles: d.titles });') < 0)
+    bad.push('items 로 옮길 때 titles 를 빠뜨린다 — 말풍선이 비는데 오류도 안 난다');
+  if (ix.indexOf("d.titles.length > 1 ? ' · ' + d.titles.join('·') + ' 를 합쳤습니다'") < 0)
+    bad.push('말풍선이 합쳐진 직함을 안 적는다 — 무엇이 합쳐졌는지 검산할 수 없다');
+
+  /* ⓓ 미리보기 모의도 **서버 반환 모양**이어야 한다 — 아니면 그 경로를 눈으로 못 본다 */
+  {
+    const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+    if (pv.indexOf('known, titles, mon, kind4, wk4') < 0)
+      bad.push('미리보기 모의가 titles 를 안 준다 — 말풍선을 한 번도 눈으로 못 본다');
+    /* **`mgrTop` 의 base 만 본다** — 파일 전체에서 찾으면 후기 줄의 `mgr` 열 모의가
+       걸린다. 그쪽은 시트 원본을 흉내 낸 것이라 **직함이 붙어 있는 것이 맞다**. */
+    {
+      const at = pv.indexOf('mgrTop: (() => {');
+      const base = at < 0 ? '' : pv.slice(at, pv.indexOf('];', at));
+      if (!base) bad.push('미리보기 모의의 mgrTop 을 못 찾았다 — 앵커가 낡았다');
+      else {
+        /* 직함 둘 이상인 사람이 있어야 「…를 합쳤습니다」를 눈으로 본다 */
+        if (base.indexOf("', '") < 0 || base.indexOf('[') < 0)
+          bad.push('미리보기 모의에 직함 목록이 없다');
+        if (base.indexOf("['부점장', '부지점장', '프로', '매니저']") < 0)
+          bad.push('미리보기 모의에 직함 넷인 사람이 없다 — 실측의 「지현」이 그랬다');
+        if (base.indexOf(' 매니저\',') >= 0 || base.indexOf(' 프로\',') >= 0)
+          bad.push('미리보기 모의가 아직 직함 붙은 이름이다 — 서버 반환 모양과 다르다');
+      }
+    }
+  }
+
+  if (bad.length) fail('[바이럴] 매니저 이름 합치기 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 매니저 이름 합치기 — 자르기 전에 이름으로 · 네 갈래 다 합산 · 말풍선이 밝힌다');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

@@ -1500,7 +1500,12 @@ var MGR_TITLES = ['부지점장', '부점장', '부팀장', '수석매니저', '
 /* **이름이 아닌 말** — 실측에서 실제로 걸린 것만 적는다. 지어내지 않는다.
    (2026-09-01 프로덕션 3,000건 검증에서 `견적서`·`행사정보`·`아카데미` 를 더했다) */
 var MGR_NOTNAME = ['삼성', '스토어', '우리', '저희', '담당', '친절', '해당', '방문', '상담', '구매',
-  '가전', '제품', '매장', '견적서', '행사정보', '아카데미', '서비스', '이벤트', '판매'];
+  '가전', '제품', '매장', '견적서', '행사정보', '아카데미', '서비스', '이벤트', '판매',
+  /* 2026-09-07 실측에서 나온 것 — **용언 활용형·부사라 이름일 수 없다.**
+     앞 넷은 직함 앞 4자를 이름으로 보는 규칙에 긴 서술어가 걸린 것이다
+     (「상**담해주신** 매니저」 · 「안**내해주신** 매니저」).
+     **성씨 목록으로 거르지 말 것** — `두혁`(분당, 명부에 실재) 같은 진짜 이름이 걸린다. */
+  '담해주신', '내해주신', '해주시는', '친절한', '그리고', '좋은', '만난', '받은', '가능하며'];
 
 /* **직함 뒤에 붙어도 되는 글자** — 조사와 높임말이다.
  * 2026-09-01 프로덕션 3,000건 검증에서 **오탐 여섯 중 여섯이 한 뿌리**였다:
@@ -4522,6 +4527,12 @@ function summary_() {
     for (mi = 0; mi < mm.length; mi++) {
       mk = mm[mi];
       if (!mk) continue;
+      /* **읽을 때 한 번 더 거른다**(2026-09-07). `mgrFind_` 는 **수집할 때** 거르므로
+         이미 시트에 쌓인 `mgr` 열에는 옛 판정이 남는다 — 여기서 거르면 **이미 쌓인
+         자료에서도 그 자리에서 사라진다**(자료를 지우는 것이 아니라 안 세는 것이라
+         목록을 되돌리면 다시 보인다). 실측으로 「담해주신」·「내해주신」 같은
+         서술어 조각 아홉이 순위에 올라 있었다. */
+      if (MGR_NOTNAME.indexOf(mgrNameClean_(mk) || mk) >= 0) continue;
       mgrN[mk] = (mgrN[mk] || 0) + 1;
       if (!mgrStore[mk]) mgrStore[mk] = {};
       mgrStore[mk][rows[i].storeName] = (mgrStore[mk][rows[i].storeName] || 0) + 1;
@@ -4560,19 +4571,52 @@ function summary_() {
   /* 지점 주차와 **같은 창**만 남긴다 — 창이 다르면 드롭다운의 주 목록이 갈려
      「지점에는 있는 주가 매니저에는 없다」가 된다. */
   var mgrWeek4Cut = trimWeeks_(mgrWeek4, WEEK_KEEP);
-  var mgrTop = [];
+  /* ── **직함으로 갈린 같은 이름을 합친다** (2026-09-07 사장님 지시) ────────────
+   * *"매니저이름중 동일이름에 부점장 프로 로 나뉘어있는 프로가있습니다. 찾아서
+   *  통일시켜주세요 **이름으로 합쳐주세요**"*
+   *
+   * 실측 — **27명이 갈려 있었다.** 「지현」은 **네 갈래**(부점장·부지점장·프로·매니저)로
+   * 57건이 흩어져 순위에서 밀렸고, 「한승훈」 49건 · 「이학천」 44건도 그랬다.
+   *
+   * **명부(`mgrKnown`)는 이미 이렇게 합치고 있었다** — 안 합쳐진 것은 여기(`mgrTop`)뿐이라
+   * 순위·히트맵만 갈려 보였다. 같은 규칙을 여기에도 적용한다.
+   *
+   * **자르기 전에 합친다** — 뒤에서 200명으로 자르는데, 갈린 조각이 그 밖으로 밀리면
+   * 합칠 기회 자체가 사라진다(「지현 매니저 3건」이 그런 자리에 있었다).
+   *
+   * **매장이 달라도 합친다** — `store` 는 「가장 많이 언급된 매장」이라(이 파일 1387행
+   * 주석) 그 사람 글이 다른 매장에도 있을 수 있다. 매장이 다르다고 동명이인이라
+   * 단정할 수 없고, 사장님 지시가 「이름으로」다. 대신 **어떤 직함들이 합쳐졌는지
+   * `titles` 로 밝힌다** — 명부 목록이 이미 쓰는 방식이다.
+   */
+  var mgrTop = [], mgrBy = {}, mgrOrd = [];
   for (mk in mgrN) {
     if (!mgrN.hasOwnProperty(mk)) continue;
-    /* 그 사람이 가장 많이 언급된 매장 — 「어느 매장 분인가」를 화면이 적는다 */
-    var bestS = '', bestN = 0, sk;
-    for (sk in mgrStore[mk]) if (mgrStore[mk][sk] > bestN) { bestN = mgrStore[mk][sk]; bestS = sk; }
-    mgrTop.push({ name: mk, n: mgrN[mk], store: bestS, mon: mgrMon[mk] || {},
-                  kind4: mgrKind[mk] || {},
-                  /* 연도별 유형 — 히트맵이 지점과 같은 잣대를 쓰게 한다(2026-09-05) */
-                  kindY: mgrKindY[mk] || {},
-                  /* 주차별 유형 — 지점과 **같은 모양**이라 화면이 같은 함수로 읽는다(2026-09-06).
-                     지점 주차와 같은 창(`WEEK_KEEP`)만 담는다 — 응답이 커지면 안 된다. */
-                  wk4: mgrWeek4Cut[mk] || {} });
+    var mnm = mgrNameClean_(mk) || mk;          /* 「김준수 매니저」 → 「김준수」 */
+    var mtt = String(mk).slice(mnm.length).trim();   /* 남은 꼬리가 직함이다 */
+    if (!mgrBy[mnm]) {
+      mgrBy[mnm] = { name: mnm, n: 0, store: '', mon: {}, kind4: {}, kindY: {}, wk4: {},
+                     titles: [], _st: {} };
+      mgrOrd.push(mnm);
+    }
+    var M = mgrBy[mnm];
+    M.n += mgrN[mk];
+    if (mtt && M.titles.indexOf(mtt) < 0) M.titles.push(mtt);
+    /* 네 갈래는 **깊이만 다른 숫자 트리**라 같은 함수로 합친다(LG 비교가 쓰는 그것) */
+    mergeNum_(M.mon, mgrMon[mk] || {});
+    mergeNum_(M.kind4, mgrKind[mk] || {});
+    mergeNum_(M.kindY, mgrKindY[mk] || {});
+    mergeNum_(M.wk4, mgrWeek4Cut[mk] || {});
+    /* 매장도 **합산한 뒤에** 가장 많은 곳을 고른다 — 갈래마다 따로 고르면
+       조각 중 하나의 매장이 대표가 되어 실제와 어긋난다 */
+    mergeNum_(M._st, mgrStore[mk] || {});
+  }
+  for (mi = 0; mi < mgrOrd.length; mi++) {
+    var MM = mgrBy[mgrOrd[mi]], bestS = '', bestN = 0, sk;
+    for (sk in MM._st) if (MM._st[sk] > bestN) { bestN = MM._st[sk]; bestS = sk; }
+    MM.store = bestS;
+    delete MM._st;
+    mgrTop.push(MM);
   }
   mgrTop.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
   /* **자르기 전에 전체 인원을 센다** — 실측(2026-09-03) 60위가 6건이라 그 아래로도
@@ -6501,7 +6545,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-07-1494b55d';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-08-db6744b9';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 23;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;

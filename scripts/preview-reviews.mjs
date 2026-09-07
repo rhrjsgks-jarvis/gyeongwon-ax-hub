@@ -497,20 +497,28 @@ const DATA = {
   /* 매니저 순위 — **네이버 건수를 안 잰 사람(null)을 하나 섞는다.** 0 으로 그리면
      「그 이름으로 글이 없다」가 되어 거짓이다. */
   mgrTop: (() => {
+    /* **이름으로 합친 모양이다**(2026-09-07) — 서버가 직함으로 갈린 것을 합쳐
+       `titles` 와 함께 보낸다. **직함 둘 이상인 사람을 섞는다** — 안 섞으면
+       말풍선의 「…를 합쳤습니다」를 한 번도 눈으로 못 본다.
+       실측에서 「지현」이 네 갈래(부점장·부지점장·프로·매니저)였다. */
     const base = [
-      ['윤현식 매니저', 33, '스타필드수원', 412, true], ['신규철 부점장', 17, '분당', 96, false],
-      ['박승훈 매니저', 16, '동탄', null, false], ['한승훈 프로', 14, '평촌', 58, false],
-      ['정채승 매니저', 12, '갤러리아광교', 31, true], ['김준수 매니저', 11, '용인구성', 40, true],
-      ['남수호 프로', 9, '갤러리아광교', 12, true], ['엄기연 부점장', 8, '수지', null, false],
-      ['제창우 매니저', 7, '평택', 22, false], ['민경태 매니저', 6, '원주', 9, true],
-      ['한진모 매니저', 5, '춘천', null, false], ['이가온 프로', 4, '북수원', 7, false],
-      ['서지훈 매니저', 4, '영통', 5, false], ['오세림 매니저', 3, '광주', null, true],
-      ['정하늘 프로', 3, '안성', 4, false], ['배도현 매니저', 2, '강릉', null, false]
+      ['윤현식', 33, '스타필드수원', 412, true, ['매니저', '프로']],
+      ['신규철', 17, '분당', 96, false, ['부점장', '프로']],
+      ['박승훈', 16, '동탄', null, false, ['매니저']],
+      ['한승훈', 14, '평촌', 58, false, ['부점장', '부지점장', '프로', '매니저']],
+      ['정채승', 12, '갤러리아광교', 31, true, ['매니저', '프로']],
+      ['김준수', 11, '용인구성', 40, true, ['매니저']],
+      ['남수호', 9, '갤러리아광교', 12, true, ['프로', '매니저']],
+      ['엄기연', 8, '수지', null, false, ['부점장']],
+      ['제창우', 7, '평택', 22, false, ['매니저']], ['민경태', 6, '원주', 9, true, ['매니저']],
+      ['한진모', 5, '춘천', null, false, ['매니저']], ['이가온', 4, '북수원', 7, false, ['프로']],
+      ['서지훈', 4, '영통', 5, false, ['매니저']], ['오세림', 3, '광주', null, true, ['매니저']],
+      ['정하늘', 3, '안성', 4, false, ['프로']], ['배도현', 2, '강릉', null, false, ['매니저']]
     ];
     const anyStore = Object.keys(byStoreMonth)[0];
     const ms = Object.keys(byStoreMonth[anyStore] || byMonth).sort();
     const cur = ms[ms.length - 1], prev = ms[ms.length - 2];
-    return base.map(([name, n, store, naver, known], i) => {
+    return base.map(([name, n, store, naver, known, titles], i) => {
       const mon = {};
       /* 5명 중 1명은 **전월이 없다** — 「전월 모름」 회색 칸이 실제로 뜨는지 봐야 한다 */
       if (i % 5 !== 3 && prev) mon[prev] = Math.max(1, Math.round(n * 0.22) + (i % 3));
@@ -533,7 +541,7 @@ const DATA = {
         wk4[wk] = { wedding: 1 + ((i + q) % 3) };
         if ((i + q) % 4 === 0) wk4[wk].movein = 1;
       }
-      return { name, n, store, naver, known, mon, kind4, wk4 };
+      return { name, n, store, naver, known, titles, mon, kind4, wk4 };
     });
   })(),
   mgrFull: 380, mgrRows: 2433, mgrAll: 161, mgrOnce: 74,
