@@ -6403,15 +6403,17 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
  *   2026-09-06  「삼성 160 · LG 17」        ← *"삼성 엘지 텍스트도 잘 보이게"*
  * **뒤엣것을 넣을 때 앞엣것을 안 걷어냈다.** 실측으로 16개 칸이 그랬다.
  *
- * 두 요청을 다 지키면서 중복만 없앤다 — **두 라벨이 있으면 아래 줄은 지점명만.**
- * 두 라벨이 없는 좁은 칸에서는 그 줄이 유일한 LG 정보라 「LG 이름 N건」 그대로다. */
+ * **2026-09-07 사장님 재지시로 그 줄을 통째로 뺐다** — *"삼성숫자 엘지숫자 이게 더
+ * 직관적입니다. 히트맵안에 점명이 써있기때문입니다"*. 칸에 우리 점명이 이미 크게 있고
+ * 짝은 1:1 이라, 어느 LG 지점인지는 말풍선에서 확인하면 되는 부가 정보다.
+ * 두 라벨이 없는 좁은 칸에서는 남긴다 — 거기서는 그 줄이 유일한 LG 정보다. */
 {
   const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
   const bad = [];
 
   /* 두 라벨이 있으면 건수도 「LG」 접두도 안 붙인다 */
-  if (ix.indexOf("var lgTxt = two ? lgn : ('LG ' + lgn + ' ' + nf(srmL.rival) + '건');") < 0)
-    bad.push('칸이 LG 건수를 두 번 적는다 — 「삼성 160 · LG 17」 아래 「LG … 17건」이 또 나온다');
+  if (ix.indexOf("var lgTxt = two ? '' : ('LG ' + lgn + ' ' + nf(srmL.rival) + '건');") < 0)
+    bad.push('두 라벨이 있는데 LG 지점명 줄을 또 적는다 — 칸에 우리 점명이 이미 있다');
   /* 좁아서 줄일 때도 마찬가지 — 「LG 17건」으로 물러서면 또 겹친다 */
   if (ix.indexOf("var tail = two ? '' : (nf(srmL.rival) + '건 LG ');") < 0)
     bad.push('좁은 칸 폴백이 건수를 다시 붙인다');
@@ -6422,7 +6424,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('빈 줄을 그린다 — 이름이 안 들어가면 아예 안 적어야 한다');
 
   if (bad.length) fail('[바이럴] 칸 중복 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 칸 중복 — LG 건수를 한 번만 적는다(좁은 칸은 그 줄이 유일해 그대로)');
+  else console.log('OK: 바이럴 칸 중복 — 두 라벨이 있으면 지점명 줄을 안 적는다(좁은 칸은 그대로)');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
