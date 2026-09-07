@@ -131,7 +131,9 @@
     font-size: var(--ctl-fs); font-weight: 700; cursor: pointer; font-family: inherit;
   }
   .btn:disabled { opacity: .5; cursor: default; }
-  .stamp { font-size: 11px; color: rgba(255,255,255,.65); }
+  /* 11px 이었다 — 이 화면의 11.5px 하한을 스스로 어기고 있었다(2026-09-07).
+     대비는 6.37:1 로 넉넉해 크기만 올린다. */
+  .stamp { font-size: var(--fs-mini); color: rgba(255,255,255,.65); }
 
   /* ── 일일 수집한도 ──────────────────────────────────────────────────
      **흰 관리자 카드 안이다.** 옛 주석은 *"「지금 수집」 바로 옆이라 남색 바 위에

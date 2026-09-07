@@ -4379,9 +4379,15 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
            히트맵 칸(.cell)은 칸 크기에 맞춰 줄어드는 것이라 예외다. */
     /* 정규식·개행을 소스에 직접 적지 않는다 — 셸을 거치며 역슬래시가 먹힌다 */
     const NL = String.fromCharCode(10), B = String.fromCharCode(92);
-    const reSmall = new RegExp("font-size:" + B + "s*(?:[0-9]|10|11)(?:" + B + "." + B + "d)?px");
-    /*  은 **머리 안**이다 — 머리 부제(11.5px)와 같은 무게로 맞춘 것이라 예외다 */
-    const reKeep = new RegExp("[.]cell|[.]geo-svg|header |[.]stamp|[.]limuse|[.]prog|[.]pill|[.]brand|#admopen");
+    /* **11.5px 은 통과해야 한다**(2026-09-07에 잡았다) — 예전 식은 `11` 을 매치한 뒤
+       소수부를 선택으로 두어 `11.5px` 도 걸렸다. 하한이 11.5 이므로 **11.0~11.4 만** 잡는다. */
+    const reSmall = new RegExp("font-size:" + B + "s*(?:[0-9](?:" + B + "." + B + "d)?"
+      + "|10(?:" + B + "." + B + "d)?|11(?:" + B + ".[0-4])?)px(?![0-9])");
+    /* **예외는 크기가 자동으로 정해지는 것뿐이다**(2026-09-07 재서 정리) —
+       히트맵 칸은 칸 크기에, 지도 이름표는 SVG 배율에 맞춰 줄어든다.
+       예전에는 여섯이 더 있었는데 재 보니 전부 11.5px 이상이라 필요 없었고,
+       그 목록이  가 11px 인 것을 **가려 주고 있었다.** */
+    const reKeep = new RegExp("[.]cell|[.]geo-svg");
     const small = ix.split(NL).filter((ln) => reSmall.test(ln)).filter((ln) => !reKeep.test(ln));
     if (small.length) bad.push('11px 이하 글자가 ' + small.length + '곳 남았다 — ' + small[0].trim().slice(0, 44));
 
