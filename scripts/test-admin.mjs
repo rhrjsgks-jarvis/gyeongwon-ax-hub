@@ -6065,7 +6065,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const bad = [];
 
   /* ⓐ 관리자 항목에 있는가 — 이것이 사장님이 못 찾으신 그 자리다 */
-  for (const id of ['lgp-stores', 'lgp-shops', 'lgp-save', 'lgp-none', 'lgp-auto', 'lgp-more', 'lgp-list']) {
+  for (const id of ['lgp-stores', 'lgp-shops', 'lgp-save', 'lgp-none', 'lgp-auto', 'lgp-list']) {
     if (ix.indexOf('id="' + id + '"') < 0) bad.push('관리자 항목에 ' + id + ' 가 없다');
   }
   /* **관리자 팝업 안에 있어야 한다**. 닫는 표식이 없어 끝을 못 재므로 **팝업 안이
@@ -6406,19 +6406,35 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('서버가 LG 지점 좌표를 안 보낸다 — 화면이 거리로 줄 세울 수 없다');
   if (gs.indexOf('storeGeo: STORE_GEO') < 0) bad.push('서버가 우리 매장 좌표를 안 보낸다');
 
-  /* ⓑ 화면이 거리로 가르는가 — **지역 이름 매칭으로 되돌아가면 안 된다** */
-  if (ix.indexOf('shops.sort(function (a, b) { return a.m - b.m; })') < 0)
-    bad.push('지점을 거리순으로 안 세운다 — 지역 이름으로 가르면 강원 9매장이 0곳이 된다');
+  /* ⓑ 화면이 거리로 가르는가 — **지역 이름 매칭으로 되돌아가면 안 된다**.
+     **구현 문자열을 못 박지 않는다**(2026-09-07). 예전 검사는 `shops.sort(…)` 를
+     통째로 요구해 「전부 나열」로 바꾸자 **뜻은 그대로인데 물었다** — 지켜야 할 것은
+     *"거리로 줄 세운다"* 는 뜻이지 그 표현이 아니다. */
+  {
+    const at = ix.indexOf('function lgpFillShops()');
+    const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at));
+    if (!body) bad.push('lgpFillShops 를 못 찾았다 — 앵커가 낡았다');
+    else {
+      /* 지점끼리 · 묶음끼리 **둘 다** 거리로 세워야 한다 — 하나만 보면 절반을 놓친다 */
+      if (!/\.sort\(function \([a-z], [a-z]\) \{ return [a-z]\.m - [a-z]\.m/.test(body))
+        bad.push('지점을 거리순으로 안 세운다 — 지역 이름으로 가르면 강원 9매장이 0곳이 된다');
+      if (!/\.sort\(function \([a-z], [a-z]\) \{ return [a-z]\.min - [a-z]\.min/.test(body))
+        bad.push('시군 묶음을 가까운 순으로 안 세운다 — 관련 지역이 아래로 밀린다');
+      /* **전부 나열한다** — 접어서 감추면 다른 지역 지점이 짝인 45%(실측 28/62곳)를 못 찾는다 */
+      if (body.indexOf('lgpAll') >= 0)
+        bad.push('지점을 접어서 감춘다 — 사장님이 「전체나열」로 정하신 것을 되돌렸다');
+      /* 고른 것이 스크롤 밖에 있으면 데려온다(예전에는 「그 밖」에서 앞으로 끌어냈다) */
+      if (body.indexOf("scrollIntoView({ block: 'nearest' })") < 0)
+        bad.push('고른 지점이 스크롤 밖에 있어도 안 데려온다 — 안 보이면 고른 줄 모른다');
+    }
+  }
   if (ix.indexOf('function distM(') < 0) bad.push('거리 계산이 없다');
-  /* **고른 지점은 거리와 무관하게 앞에** — 수기로 먼 곳을 짝지으면 접힌 자리에 숨는다 */
-  if (ix.indexOf('if (lgpPick.indexOf(rest[i].n) >= 0) near.push(rest.splice(i, 1)[0]);') < 0)
-    bad.push('고른 지점이 「그 밖」에 숨을 수 있다');
   /* **좌표를 모르면 물러서고 그 사실이 화면에 드러나야 한다** */
   if (ix.indexOf('function hasGeoOf(') < 0) bad.push('좌표를 아는지 판정하는 길이 없다');
-  if (ix.indexOf("hasGeoOf(lgpStore) ? '가까운 순입니다. ' : ''") < 0)
+  if (ix.indexOf("hasGeoOf(lgpStore) ? '가까운 시군부터 전부 나옵니다. '") < 0)
     bad.push('가까운 순인지 아닌지를 화면이 안 밝힌다 — 좌표를 모르는 매장에서 거짓이 된다');
   /* 거리를 칸에 적어야 왜 그 순서인지 눈으로 검산된다 */
-  if (ix.indexOf('function distText(') < 0 || ix.indexOf("' · ' + distText(x.m)") < 0)
+  if (ix.indexOf('function distText(') < 0 || ix.indexOf('distText(x.m)') < 0)
     bad.push('칸에 거리를 안 적는다 — 왜 이 순서인지 검산할 수 없다');
   /* 조사 — 「영통 와」가 아니라 「영통과」 */
   if (ix.indexOf("josa(lgpStore, '과 ', '와 ')") < 0)
@@ -6701,6 +6717,27 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   {
     const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
     if (pv.indexOf('gsVer:') < 0) bad.push('미리보기 모의에 gsVer 가 없다');
+  }
+  /* **표식을 HTML 주석으로 되돌리지 말 것** (2026-09-07) — Apps Script 는 서빙할 때
+     HTML 주석을 전부 지운다(실측 원본 77개 → 서빙본 0개. CSS 주석도 0개).
+     그 자리에 두면 **붙여넣기가 멀쩡히 끝났는데도 영원히 「옛 판」이라고 보고**한다
+     (실제로 그렇게 잘못 보고했다 — 내용 일곱은 전부 들어가 있었다). */
+  if (/<!--\s*IX_VER/.test(ix))
+    bad.push('화면 표식이 HTML 주석에 있다 — Apps Script 가 서빙 때 지워 확인이 영영 안 된다');
+  if (!/^var IX_VER = '[^']*';/m.test(ix))
+    bad.push('화면 표식이 JS 변수(var IX_VER)가 아니다 — 서빙본에 안 남는다');
+  /* **`<script>` 안에 있어야** 서빙본에 남는다 — 그 밖이면 그냥 글자다 */
+  {
+    const at = ix.search(/^var IX_VER = /m);
+    const sc = ix.lastIndexOf('<script>', at), ec = ix.lastIndexOf('</script>', at);
+    if (at >= 0 && !(sc >= 0 && sc > ec))
+      bad.push('IX_VER 이 <script> 밖에 있다 — 서빙본에서 코드로 안 남는다');
+  }
+  /* 배포본 대조가 그 모양을 찾는가 — 넣는 법과 찾는 법이 갈리면 영영 못 맞춘다 */
+  {
+    const st = fs.readFileSync(new URL('../scripts/stamp-gs.mjs', import.meta.url), 'utf8');
+    if (st.indexOf("IX_VER *= *'([0-9a-z-]+)'") < 0)
+      bad.push('--remote 가 옛 주석 모양을 찾는다 — 넣는 법과 찾는 법이 갈렸다');
   }
 
   if (bad.length) fail('[바이럴] 판 표식 — ' + bad.join(' · '));

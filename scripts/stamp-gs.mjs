@@ -25,7 +25,18 @@ const GS = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs',
 const LINE = /^var GS_VER = '[^']*';.*$/m;
 /* 화면 파일도 같은 방식으로 — **붙여넣기는 파일별이라 따로 어긋난다** */
 const IX = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'apps-script', 'ReviewsIndex.html');
-const IXLINE = /^<!-- IX_VER: [^>]*-->$/m;
+/* ── **표식은 서빙본에 살아남는 자리에 둔다** (2026-09-07) ──────────────────────
+ * 예전에는 HTML 주석(`<!-- IX_VER: … -->`)이었는데 **Apps Script 는 서빙할 때
+ * HTML 주석을 전부 지운다**(실측 — 원본 77개 → 서빙본 0개. CSS 주석도 0개).
+ * 즉 그 표식은 **배포되었는지 확인할 수 없는 자리**에 있었고, `--remote` 는
+ * 붙여넣기가 멀쩡히 끝났는데도 **영원히 「옛 판」이라고 보고**했다.
+ * (2026-09-07 실제로 그렇게 잘못 보고했다 — 내용 일곱은 전부 들어가 있었다.)
+ *
+ * 그래서 `.gs` 와 **같은 모양**(`var X_VER = '…';`)으로 맞춘다 — JS 코드는 서빙본에
+ * 그대로 남는다. 넣는 법·찾는 법·해시에서 빼는 법이 한 규칙이 되는 덤도 있다.
+ * **다시 주석으로 옮기지 말 것.**
+ */
+const IXLINE = /^var IX_VER = '[^']*';.*$/m;
 
 /** 표식 줄 자신은 빼고 해시한다 — 안 그러면 찍을 때마다 값이 또 달라진다 */
 export function gsHash(src) {
@@ -40,11 +51,12 @@ export function gsStamp(src) {
 /** 화면 파일 표식 — 서버와 같은 규칙(자기 줄을 빼고 해시) */
 export function ixHash(src) {
   /* **줄과 개행을 함께 지운다** — 내용만 지우면 빈 줄이 남아 찍기 전/후 해시가 갈린다 */
-  const cut = new RegExp('^<!-- IX_VER: [^' + String.fromCharCode(10) + ']*' + String.fromCharCode(10) + '?', 'm');
+  const cut = new RegExp('^var IX_VER = ' + String.fromCharCode(39) + '[^' + String.fromCharCode(39)
+    + ']*' + String.fromCharCode(39) + ';.*' + String.fromCharCode(10) + '?', 'm');
   return crypto.createHash('sha1').update(src.replace(cut, ''), 'utf8').digest('hex').slice(0, 8);
 }
 export function ixStampOk(src) {
-  const m = src.match(/^<!-- IX_VER: ([^ ]+) -->$/m);
+  const m = src.match(/^var IX_VER = '([^']*)';/m);
   if (!m) return { ok: false, why: 'IX_VER 이 없다' };
   const want = ixHash(src);
   return String(m[1]).split('-').pop() === want ? { ok: true, ver: m[1] }
@@ -81,7 +93,7 @@ if (process.argv[1] && process.argv[1].endsWith('stamp-gs.mjs')) {
     const raw = await (await fetch(url)).text();
     const B = String.fromCharCode(92);
     const html = raw.split(B).join('');
-    const im = html.match(/IX_VER: ([0-9a-z-]+)/);
+    const im = html.match(/IX_VER *= *'([0-9a-z-]+)'/);
     const iGot = im ? im[1] : '';
     const line = (nm, got, mine) => {
       const same = mine.ok && got === mine.ver;
@@ -99,8 +111,23 @@ if (process.argv[1] && process.argv[1].endsWith('stamp-gs.mjs')) {
   console.log('[stamp] .gs   ' + ver);
   const d = new Date(), p = (n) => String(n).padStart(2, '0');
   const iver = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' + ixHash(ixSrc);
-  const DOC = /^<!doctype html>/im;
-  fs.writeFileSync(IX, IXLINE.test(ixSrc) ? ixSrc.replace(IXLINE, '<!-- IX_VER: ' + iver + ' -->')
-    : ixSrc.replace(DOC, function (m) { return m + String.fromCharCode(10) + '<!-- IX_VER: ' + iver + ' -->'; }));
+  const LN = String.fromCharCode(10), Q = String.fromCharCode(39);
+  const stampLine = 'var IX_VER = ' + Q + iver + Q + ';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */';
+  /* 없으면 `<script>` 다음 줄에 넣는다 — 서빙본에 살아남는 자리다.
+     **다만 빌드가 만드는 블록은 피한다** — 첫 `<script>` 가 `REGION-MAP`(지도)이라
+     거기 넣으면 `build:regionmap` 재생성 대조가 그 자리에서 깨진다(실제로 깨졌다).
+     **생성 영역에는 아무것도 넣지 않는다.** */
+  const SC = '<script>';
+  fs.writeFileSync(IX, IXLINE.test(ixSrc) ? ixSrc.replace(IXLINE, stampLine)
+    : (function () {
+        /* **`REGION-MAP:BEGIN` 은 `<script>` **앞**의 HTML 주석**이라 블록 안을
+           뒤지면 못 찾는다(그렇게 해서 지도 블록에 넣었다가 재생성 대조가 깨졌다).
+           생성 영역의 **끝 다음부터** 찾는다. */
+        const END = ixSrc.indexOf('REGION-MAP:END');
+        const from = END < 0 ? 0 : END;
+        const at = ixSrc.indexOf(SC, from);
+        if (at < 0) throw new Error('ReviewsIndex.html 에 쓸 수 있는 <script> 가 없다');
+        return ixSrc.slice(0, at + SC.length) + LN + stampLine + ixSrc.slice(at + SC.length);
+      })());
   console.log('[stamp] .html ' + iver);
 }
