@@ -7210,7 +7210,11 @@ function renderList() {
                「점」 한 글자가 남은 것이다. **두 글자도 안 남으면 통째로 둔다.** */
             var lgcut = (lgn.indexOf(d.nm) === 0) ? lgn.slice(d.nm.length) : lgn;
             if (lgcut.length >= 2 && lgcut !== '점') lgn = lgcut;
-            var lgTxt = 'LG ' + lgn + ' ' + nf(srmL.rival) + '건';
+            /* **두 라벨이 이미 건수를 말했으면 여기서는 지점명만**(2026-09-07).
+               둘 다 적으면 「삼성 160 · LG 17」 바로 아래 「LG … 17건」이 되어
+               같은 사실이 두 번이다(사장님이 「2중으로 보인다」고 지적하신 자리).
+               두 라벨이 없는 좁은 칸에서는 이 줄이 유일한 LG 정보라 건수를 남긴다. */
+            var lgTxt = two ? lgn : ('LG ' + lgn + ' ' + nf(srmL.rival) + '건');
             /* **글자 크기를 칸 폭에서 낸다** — 이름 크기의 절반으로 고정했더니
                긴 이름(`AK PLAZA 평택점`)이 칸 밖으로 나갔다(실측 +87~176px).
                한 줄에 들어갈 크기를 상한으로 두고, 그래도 길면 이름을 줄인다. */
@@ -7220,10 +7224,13 @@ function renderList() {
               /* **너무 짧게 자르면 「LG 점 21건」이 된다**(2026-09-05 실물). 이름이
                  4글자도 못 남으면 **이름을 통째로 빼고 건수만** 적는다 — 잘린 한 글자
                  보다 「LG 21건」이 정직하다(어느 지점인지는 말풍선이 밝힌다). */
-              var room = Math.max(2, Math.floor((c.w - 8) / (7 * 0.62)) - (nf(srmL.rival) + '건 LG ').length);
+              var tail = two ? '' : (nf(srmL.rival) + '건 LG ');
+              var room = Math.max(2, Math.floor((c.w - 8) / (7 * 0.62)) - tail.length);
               if (lgn.length > room) {
-                lgTxt = (room >= 4) ? ('LG ' + lgn.slice(0, room) + '… ' + nf(srmL.rival) + '건')
-                                    : ('LG ' + nf(srmL.rival) + '건');
+                /* **이름이 안 들어가면 이 줄을 아예 안 적는다**(두 라벨이 있을 때).
+                   「LG 17건」으로 물러서면 위 줄과 또 겹친다 — 그것이 이 수정의 요점이다. */
+                lgTxt = (room >= 4) ? ((two ? '' : 'LG ') + lgn.slice(0, room) + '…' + (two ? '' : ' ' + nf(srmL.rival) + '건'))
+                                    : (two ? '' : ('LG ' + nf(srmL.rival) + '건'));
               }
               lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
             }
@@ -7237,7 +7244,7 @@ function renderList() {
                여기서 다시 낸다 — 같은 식이라 값이 어긋나지 않는다. */
             var bgL = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatMax);
             var lgInk = inkOn(bgL) === '#fff' ? '#FFD9D4' : '#9B1C10';
-            if (lgFs >= 6.5) lab += '<span class="lgn" style="font-size:' + lgFs.toFixed(1)
+            if (lgTxt && lgFs >= 6.5) lab += '<span class="lgn" style="font-size:' + lgFs.toFixed(1)
               + 'px;color:' + lgInk + '">' + esc(lgTxt) + '</span>';
           }
         }
