@@ -6531,6 +6531,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
  * 사람이 올리는 것을 잊을 수 없다 — 잊으면 이 검사가 문다. */
 {
   const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
   const bad = [];
 
   if (!/^var GS_VER = '[^']+';/m.test(gs)) bad.push('GS_VER 표식이 없다 — 붙여넣기 확인을 못 한다');
@@ -6544,9 +6545,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
   /* **표식이 내용과 맞는가** — 안 맞으면 `.gs` 를 고치고 안 찍은 것이다 */
   {
-    const { gsStampOk } = await import('./stamp-gs.mjs');
+    const { gsStampOk, ixStampOk } = await import('./stamp-gs.mjs');
     const r = gsStampOk(gs);
     if (!r.ok) bad.push(r.why + ' — `npm run stamp:gs` 를 돌려 다시 찍을 것');
+    /* **화면 파일도** — 한 배포에 두 파일이 들어가지만 붙여넣기는 파일별이라
+       따로 어긋난다(2026-09-07 에 .html 은 넷만 · .gs 는 통째로 옛 판이었다) */
+    const ri = ixStampOk(ix);
+    if (!ri.ok) bad.push(ri.why + ' — `npm run stamp:gs` 를 돌려 다시 찍을 것');
   }
   /* 미리보기 모의에도 있어야 화면 쪽 경로를 눈으로 볼 수 있다 */
   {
