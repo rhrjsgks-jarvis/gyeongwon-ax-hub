@@ -945,7 +945,8 @@
         margin: 0 auto; }
   .hm .cell { position: absolute; border: 1px solid #22252D; overflow: hidden;
               display: flex; flex-direction: column; align-items: center; justify-content: center;
-              color: #fff; text-align: center; line-height: 1.15; }
+              color: #fff; text-align: center; line-height: 1.15;
+              padding: 2px 0; box-sizing: border-box; }
   .hm .cell.clk { cursor: pointer; }
   /* **「못 잼」에 사선 무늬를 넣었다가 되돌렸다**(2026-09-03). 중립 회색과 휘도 대비가
      1.25:1 이라 색만으로는 안 갈려서 무늬를 시도했는데, **실측으로 60칸 중 37칸(62%)이
@@ -964,7 +965,11 @@
      사장님: *"텍스트가 잘 안보이는것같습니다"*. 색이 아니라 **투명도**였다 —
      흰 글자를 78% 로 깔면 실제로는 회색이 되어 어두운 칸에서 **3.55:1** 까지 떨어진다
      (0.95 도 4.47 로 기준 미달). 위계는 **크기와 굵기**로 준다(.scratch/_opa.mjs). */
-  .hm .cell .cg { font-weight: 700; }
+  /* **숫자는 하단에**(2026-09-07 사장님 지시). `margin-top:auto` 가 남는 공간을 먹어
+     이름이 위로, 숫자가 바닥으로 간다(부제도 뒤따라 함께 내려간다).
+     **테두리에 딱 붙이지 않는다** — 2px 만 띄운다. */
+  .hm .cell .cg { font-weight: 700; margin-top: auto; margin-bottom: 2px; }
+  .hm .cell .cg + .cv, .hm .cell .cg + .cg { margin-top: 0; }
   /* 「삼성 N · LG M」 — 각자 **자기 색 위에** 놓는다(왼쪽 틸 · 오른쪽 앰버). */
   .hm .cell .cg.two { display: flex; justify-content: space-between; gap: 6px; width: 100%; }
   .hm .cell .cg.two b { font-weight: 700; white-space: nowrap; }

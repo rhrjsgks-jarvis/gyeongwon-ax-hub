@@ -6427,5 +6427,32 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 칸 중복 — 두 라벨이 있으면 지점명 줄을 안 적는다(좁은 칸은 그대로)');
 }
 
+/* ── **숫자는 칸 하단에** (2026-09-07 사장님 지시) ────────────────────────────────
+ * *"숫자는 하단에 위치시켜주세요"*.
+ *
+ * 칸이 `justify-content:center` 라 이름·숫자가 전부 가운데 모여 있었다.
+ * 건수 줄에 **`margin-top:auto`** 를 주면 남는 공간을 그것이 먹어 **이름은 위,
+ * 숫자는 바닥**이 된다(auto 마진은 `justify-content` 를 이긴다 — flex 의 관용구다).
+ * 실측 — 칸 69~519px 전부 **숫자 바닥까지 5px** · 칸 밖으로 나간 글자 0. */
+{
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const bad = [];
+  const rule = (sel) => {
+    const at = ix.indexOf(sel);
+    return at < 0 ? '' : ix.slice(at + sel.length, ix.indexOf('}', at)).replace(/\s+/g, '');
+  };
+  const cg = rule('.hm .cell .cg {');
+  if (!cg) bad.push('칸 건수 규칙을 못 찾았다 — 앵커가 낡았다');
+  else if (cg.indexOf('margin-top:auto') < 0)
+    bad.push('숫자가 하단에 안 붙는다 — margin-top:auto 가 빠졌다');
+  /* **테두리에 딱 붙이지 않는다** — 이름이 위로 가면서 위 테두리에 닿았다 */
+  const cell = rule('.hm .cell { position: absolute;');
+  if (cell && cell.indexOf('padding:2px0') < 0)
+    bad.push('칸 안쪽 여백이 없다 — 이름이 테두리에 붙는다');
+
+  if (bad.length) fail('[바이럴] 칸 숫자 자리 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 칸 숫자 자리 — 이름은 위, 숫자는 바닥(테두리에서 2px)');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
