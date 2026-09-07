@@ -6521,5 +6521,42 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 over 스코프 — 지역 헬퍼를 밖에서 안 부른다 · 오류는 사람 말로(원문은 관리자)');
 }
 
+/* ── **붙여넣은 `.gs` 가 새 판인지 확인할 길이 없었다** (2026-09-07) ────────────────
+ * *"배포 완료했습니다"* → *"확인해 보니 확정할 수 없습니다"* 왕복이 이 세션에서만
+ * **여섯 번**. 서버 코드는 응답 스키마를 안 바꾸면 **밖에서 볼 방법이 없다** —
+ * 저장된 오류 문자열(`_deadErr`)은 **옛 값**이라 증거가 못 되는데 그것으로 한 번
+ * 오진까지 했다(「.gs 가 옛 판이다」).
+ *
+ * `?json=1` 에 `gsVer` 를 실어 **받는 즉시** 확정한다. 값은 **파일 내용의 해시**라
+ * 사람이 올리는 것을 잊을 수 없다 — 잊으면 이 검사가 문다. */
+{
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const bad = [];
+
+  if (!/^var GS_VER = '[^']+';/m.test(gs)) bad.push('GS_VER 표식이 없다 — 붙여넣기 확인을 못 한다');
+  /* **캐시에 굳으면 확인이 거짓이 된다** — `freshState_` 안이어야 한다 */
+  {
+    const at = gs.indexOf('function freshState_(');
+    const body = at < 0 ? '' : gs.slice(at, gs.indexOf('\n}', at));
+    if (!body) bad.push('freshState_ 를 못 찾았다');
+    else if (body.indexOf('d.gsVer = GS_VER;') < 0)
+      bad.push('gsVer 를 캐시 타는 자리에 넣었다 — 최대 6시간 옛 값을 돌려줘 확인이 거짓이 된다');
+  }
+  /* **표식이 내용과 맞는가** — 안 맞으면 `.gs` 를 고치고 안 찍은 것이다 */
+  {
+    const { gsStampOk } = await import('./stamp-gs.mjs');
+    const r = gsStampOk(gs);
+    if (!r.ok) bad.push(r.why + ' — `npm run stamp:gs` 를 돌려 다시 찍을 것');
+  }
+  /* 미리보기 모의에도 있어야 화면 쪽 경로를 눈으로 볼 수 있다 */
+  {
+    const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+    if (pv.indexOf('gsVer:') < 0) bad.push('미리보기 모의에 gsVer 가 없다');
+  }
+
+  if (bad.length) fail('[바이럴] 판 표식 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 판 표식 — gsVer 가 내용 해시와 맞고 캐시를 안 탄다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

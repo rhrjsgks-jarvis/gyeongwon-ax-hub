@@ -67,7 +67,8 @@
     "preview:viral": "node scripts/preview-reviews.mjs",
     "build:appbank": "node scripts/build-app-bank.mjs",
     "build:usp": "node scripts/build-usp.mjs",
-    "fetch:usp": "node scripts/fetch-sec-usp.mjs"
+    "fetch:usp": "node scripts/fetch-sec-usp.mjs",
+    "stamp:gs": "node scripts/stamp-gs.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",
