@@ -92,7 +92,14 @@ if (process.argv[1] && process.argv[1].endsWith('stamp-gs.mjs')) {
        역슬래시를 걷어낸다(이 저장소가 배포 확인에서 두 번 데인 자리). */
     const raw = await (await fetch(url)).text();
     const B = String.fromCharCode(92);
-    const html = raw.split(B).join('');
+    /* **이스케이프를 끝까지 푼다**(2026-09-08). 역슬래시만 지우면 `\x3d`(=)와
+       `\x27`(')가 **`x3d`·`x27` 로 남아** 표식을 못 찾는다 — 실제로 붙여넣기가
+       멀쩡히 끝났는데 「표식 없음 — 옛 판」이라 보고했다(내용은 전부 들어가 있었다).
+       **문자로 되돌린 뒤** 남은 역슬래시를 지운다 — 순서가 뒤집히면 찌꺼기가 남는다. */
+    const hex = new RegExp(B + B + 'x([0-9A-Fa-f]{2})', 'g');
+    const uni = new RegExp(B + B + 'u([0-9A-Fa-f]{4})', 'g');
+    const unesc = function (m, h) { return String.fromCharCode(parseInt(h, 16)); };
+    const html = raw.replace(hex, unesc).replace(uni, unesc).split(B).join('');
     const im = html.match(/IX_VER *= *'([0-9a-z-]+)'/);
     const iGot = im ? im[1] : '';
     const line = (nm, got, mine) => {

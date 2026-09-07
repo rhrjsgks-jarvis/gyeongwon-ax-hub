@@ -6812,6 +6812,40 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (st.indexOf("IX_VER *= *'([0-9a-z-]+)'") < 0)
       bad.push('--remote 가 옛 주석 모양을 찾는다 — 넣는 법과 찾는 법이 갈렸다');
   }
+  /* **배포본 대조는 이스케이프를 끝까지 풀어야 한다** (2026-09-08) ────────────
+     Apps Script 는 `=` 와 `'` 까지 `\x3d`·`\x27` 로 이스케이프해 서빙한다
+     (실측 — `var IX_VER \x3d \x272026-09-08-762e589e\x27;`).
+     역슬래시만 지우면 **`x3d`·`x27` 이 남아** 표식을 못 찾는다 — 그래서 붙여넣기가
+     멀쩡히 끝났는데도 **「표식 없음 — 옛 판」이라 보고**했다(내용은 전부 들어가 있었다).
+     이 파일이 어제 *"이스케이프를 끝까지 풀 것"* 이라 적어 두고 정작 `--remote` 에는
+     그 규칙을 안 썼다. **되돌리면 사장님이 없는 문제를 고치려 붙여넣기를 되풀이하신다.** */
+  {
+    const st = fs.readFileSync(new URL('../scripts/stamp-gs.mjs', import.meta.url), 'utf8');
+    if (st.indexOf("'x([0-9A-Fa-f]{2})'") < 0)
+      bad.push('--remote 가 \\xNN 이스케이프를 안 푼다 — 표식을 영영 못 찾는다');
+    /* **정의가 아니라 쓰이는지 본다** — 정의만 남기고 사용을 지워도 통과했다 */
+    if (st.indexOf("'u([0-9A-Fa-f]{4})'") < 0 || st.indexOf('.replace(uni') < 0)
+      bad.push('--remote 가 \\uNNNN 이스케이프를 안 푼다');
+    /* **순서가 중요하다** — 역슬래시를 먼저 지우면 `x3d` 찌꺼기가 남는다 */
+    const at = st.indexOf('const html = raw');
+    const line = at < 0 ? '' : st.slice(at, st.indexOf('\n', at));
+    if (!line) bad.push('--remote 의 서빙본 처리 줄을 못 찾았다 — 앵커가 낡았다');
+    else if (line.indexOf('.replace(hex') < 0 || line.indexOf('.split(B)') < 0
+             || line.indexOf('.replace(hex') > line.indexOf('.split(B)'))
+      bad.push('--remote 가 역슬래시를 먼저 지운다 — x3d·x27 찌꺼기가 남아 못 찾는다');
+    /* 판정을 **떼어 돌려** 본다 — 실측 서빙본 모양 그대로 */
+    {
+      const B = String.fromCharCode(92);
+      const served = 'ptx3e' + B + B + 'nvar IX_VER ' + B + 'x3d ' + B + 'x272026-09-08-762e589e' + B + 'x27;';
+      const hex = new RegExp(B + B + 'x([0-9A-Fa-f]{2})', 'g');
+      const uni = new RegExp(B + B + 'u([0-9A-Fa-f]{4})', 'g');
+      const un = (m, h) => String.fromCharCode(parseInt(h, 16));
+      const got = served.replace(hex, un).replace(uni, un).split(B).join('');
+      const m = got.match(/IX_VER *= *'([0-9a-z-]+)'/);
+      if (!m || m[1] !== '2026-09-08-762e589e')
+        bad.push('이스케이프 푸는 규칙이 실측 서빙본에서 표식을 못 뽑는다: ' + JSON.stringify(got.slice(0, 60)));
+    }
+  }
 
   if (bad.length) fail('[바이럴] 판 표식 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 판 표식 — gsVer 가 내용 해시와 맞고 캐시를 안 탄다');
