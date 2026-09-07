@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IX_VER: 2026-09-07-aff3e25c -->
+<!-- IX_VER: 2026-09-07-e43603c0 -->
 <!--
   경원영업팀 바이럴분석 대시보드 — Apps Script 가 서빙하는 화면 (2026-08-31)
 
@@ -196,11 +196,64 @@
   .lgpc .lgpc-g{display:block;font-size:var(--fs-mini);color:#9aa0a6;margin-top:3px}
   .lgpc.on{background:#1428A0;border-color:#1428A0;color:#fff}
   .lgpc.on .lgpc-g{color:#fff;opacity:.85}
-  /* **짝이 없는 매장을 눈에 띄게 한다** — 감추면 정작 손댈 곳을 못 찾는다 */
+  /* **짝이 없는 매장을 눈에 띄게 한다** — 감추면 정작 손댈 곳을 못 찾는다.
+     다만 **「없음」에만 붙인다**(2026-09-07). 「해당없음」은 사장님이 *일부러* 정하신
+     것이라 손댈 곳이 아니다 — 실측으로 빨갛던 17곳이 **전부 해당없음이고 진짜
+     없음은 0곳**이었다. 둘을 같은 빨강으로 두면 손댈 곳을 찾으라고 만든 표시가
+     이미 정해 둔 것을 가리킨다(「없음 / 못 잼」을 늘 갈라 온 이 화면의 규칙 그대로). */
   .lgpc.nopair{border-color:#fca5a5}
   .lgpc.nopair .lgpc-g{color:#b45309}
+  /* 해당없음 — 정해 두신 것이라 **담담하게**. 경고색을 쓰지 않는다. */
+  .lgpc.naset .lgpc-g{color:#9aa0a6;font-style:italic}
   .lgp-step{font-size:var(--fs-mini);font-weight:700;color:#4B5563;margin:8px 0 5px}
   .lgpg .lgp-rg{grid-column:1/-1;font-size:var(--fs-mini);font-weight:700;color:#9aa0a6;margin-top:2px}
+
+  /* ── **왼쪽 삼성 · 오른쪽 LG** (2026-09-07 사장님 지시) ─────────────────────
+     *"어디가 삼성이고 어디가 엘지인지 알아보기가 힘듭니다. 왼쪽 삼성 오른쪽엘지 로
+      구분하고 같은 지역별로 보기좋게 설정해주세요 그래야 지역별로 매칭하기 쉽습니다."*
+
+     실측(고치기 전) — 매장 상자 높이 **1,046px** 이고 LG 지점 상자가 그 아래
+     y=1,536 에 있었다. 매장을 고르면 **화면 밖으로 나가** 짝을 지으려면 위아래를
+     계속 오갔다. 게다가 칸 안 큰 글씨가 우리, 작은 회색이 LG 짝인데 **그것을
+     말해 주는 것이 아무 데도 없었다.**
+
+     **색은 지어내지 않는다** — 히트맵이 이미 쓰는 **틸(당사) ↔ 앰버(LG)** 를
+     그대로 가져온다(그 화면을 매일 보시므로 같은 색이 같은 뜻이어야 한다).
+     다만 **히트맵 앰버 최고값 rgb(176,132,66) 을 그대로 쓰면 안 된다** — 거기서는
+     배경이고 글자는 `inkOn` 이 어둡게 뒤집는데, 흰 글자 버튼으로 옮기면 대비가
+     **3.37:1** 로 무너진다. 이 파일이 앰버 글자색으로 이미 쓰는 `#8A6A2E`(5.02:1)를
+     쓴다. 틸 `#005C6E` 는 7.62:1. **재서 고른 값이라 눈대중으로 바꾸지 말 것.** */
+  .lgp-two{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start}
+  .lgp-pane{min-width:0}   /* 격자 칸은 내용보다 못 줄어든다 — 없으면 긴 이름이 넘친다 */
+  .lgp-ph{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;
+    color:#374151;padding:0 0 5px;border-bottom:2px solid #e5e7eb;margin-bottom:7px}
+  .lgp-ph i{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+  .lgp-ph .s{font-size:var(--fs-mini);font-weight:600;color:#9aa0a6}
+  .lgp-pane.us .lgp-ph{border-bottom-color:#005C6E}
+  .lgp-pane.us .lgp-ph i{background:#005C6E}
+  .lgp-pane.lg .lgp-ph{border-bottom-color:#8A6A2E}
+  .lgp-pane.lg .lgp-ph i{background:#8A6A2E}
+  /* 두 칼럼이라 칸이 좁다 — AS 앱 104px 을 그대로 두면 한 줄에 하나뿐이다 */
+  .lgp-pane .lgpg{grid-template-columns:repeat(auto-fill,minmax(92px,1fr));margin-bottom:6px}
+  /* **고른 칸은 그 쪽 색으로 켜진다** — 양쪽이 같은 남색이면 다시 구분이 사라진다 */
+  .lgp-pane.us .lgpc.on{background:#005C6E;border-color:#005C6E}
+  .lgp-pane.lg .lgpc.on{background:#8A6A2E;border-color:#8A6A2E}
+  /* 지역 칩 — 62곳을 한 번에 깔면 위 실측대로 1,046px 이다. 한 지역만 본다 */
+  .lgp-rgs{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 9px}
+  .lgp-rgc{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:5px 11px;
+    font-family:inherit;font-size:var(--fs-mini);font-weight:700;color:#4B5563;cursor:pointer;transition:.12s}
+  .lgp-rgc:hover{border-color:#c7d2fe}
+  .lgp-rgc.on{background:#005C6E;border-color:#005C6E;color:#fff}
+  .lgp-rgc .n{opacity:.75;font-weight:600;margin-left:4px}
+  /* 표에도 지역을 적는다 — 62줄을 구분 없이 늘어놓으면 어디가 어딘지 모른다 */
+  .jobs tr.rgh td{padding-top:10px;font-size:var(--fs-mini);font-weight:800;color:#005C6E;border-bottom-color:#e5e7eb}
+  /* 폰(≤560px)에서도 **두 칼럼을 지킨다** — 세로로 쌓으면 사장님이 지시하신
+     「왼쪽 삼성 오른쪽 LG」가 그 자리에서 사라진다. 칸만 좁힌다. */
+  @media (max-width:560px){
+    .lgp-two{gap:7px}
+    .lgp-pane .lgpg{grid-template-columns:1fr;gap:5px}
+    .lgp-ph{font-size:var(--fs-mini)}
+  }
   .jobs { width: 100%; border-collapse: collapse; font-size: 12.5px; color: #15181E; margin: 6px 0 4px; }
   .jobs td { padding: 5px 6px 5px 0; border-bottom: 1px solid #F1F3F5; vertical-align: middle; }
   .jobs th { padding: 2px 6px 4px 0; text-align: left; font-size: var(--fs-mini); font-weight: 700;
@@ -1633,11 +1686,22 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            드롭다운의 Ctrl 다중선택은 **폰에서 사실상 불가능**했다 — 칸을 눌러 고른다.
            규격은 AS 앱의 `.svcg`/`.svcc` 를 그대로 베낀다(눈대중으로 맞추지 않는다). -->
       <div class="sub" id="lgp-sub">–</div>
-      <div class="lgp-step">① 우리 매장을 누르세요</div>
-      <div class="lgpg" id="lgp-stores"></div>
-      <div class="lgp-step" id="lgp-step2">② 견줄 LG 지점을 누르세요 — 다시 누르면 뗍니다(최대 3곳)</div>
-      <div class="lgpg" id="lgp-shops"></div>
-      <button class="btn" id="lgp-more" type="button" hidden>그 밖 지점 보기</button>
+      <!-- 2026-09-07 사장님 지시: *"왼쪽 삼성 오른쪽엘지 로 구분하고 같은 지역별로"*.
+           지역 칩으로 **한 지역만** 보고(62곳을 다 깔면 1,046px 이다), 그 아래를
+           두 칼럼으로 갈라 **왼쪽 삼성 · 오른쪽 LG** 를 이름표와 색으로 못 박는다. -->
+      <div class="lgp-rgs" id="lgp-regions"></div>
+      <div class="lgp-two">
+        <div class="lgp-pane us">
+          <div class="lgp-ph"><i></i>삼성 <span class="s" id="lgp-us-n"></span></div>
+          <div class="lgpg" id="lgp-stores"></div>
+        </div>
+        <div class="lgp-pane lg">
+          <div class="lgp-ph"><i></i>LG <span class="s" id="lgp-lg-n"></span></div>
+          <div class="lgpg" id="lgp-shops"></div>
+          <button class="btn" id="lgp-more" type="button" hidden>그 밖 지점 보기</button>
+        </div>
+      </div>
+      <div class="lgp-step" id="lgp-step2"></div>
       <div class="alias-add" style="margin-top:6px">
         <button class="btn" id="lgp-save" type="button">이 짝으로 저장</button>
         <button class="btn" id="lgp-none" type="button">해당없음</button>
@@ -2006,7 +2070,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       if (out) out.onclick = function () { admToken = ''; admClear(); renderAdmin(); };
     }
     if (on) { renderMgrBook(); renderTodo(); renderJobs(); wireJobs();
-               lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs(); }
+               lgpEnsure(); lgpFillRegions(); lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs(); }
   }
 
   /** 자동 수집이 **오늘 한 번도 안 돌았는가.**
@@ -2325,6 +2389,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
    * `lgPairManual` 을 본다. **없으면 「모른다」고 적는다** — 수기로 단정하지 않는다.
    */
   var lgpStore = '', lgpPick = [], lgpAll = false;
+  /** 지금 보고 있는 영업지역. **62곳을 한 번에 깔면 1,046px**(실측)이라 한 지역만 본다. */
+  var lgpRegion = '';
   /** 가까운 순으로 먼저 보여줄 지점 수. 늘리면 목록이 길어지고 줄이면 손이 는다. */
   var LGP_NEAR = 10;
   /** 그 매장 좌표를 아는가 — **정렬과 안내가 같은 답을 봐야** 화면이 두 말을 안 한다. */
@@ -2350,42 +2416,71 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     return { shops: shops, tag: '가까운 곳' + (typeof m.dist === 'number' ? ' ' + Math.round(m.dist) + 'm' : ''), cls: 'm' };
   }
 
-  /** ① 우리 매장 칸 — 지역으로 묶는다(62곳을 이름만 늘어놓으면 못 찾는다). */
-  function lgpFillStores() {
-    var box = document.getElementById('lgp-stores');
+  /** 그 지역의 우리 매장 — 이름순. 지역이 없으면 첫 지역으로 물러선다. */
+  function lgpStoresOf(rg) {
+    var r = (DATA.byRegion || {})[rg];
+    return r ? (r.stores || []).slice().sort() : [];
+  }
+  /** 지역 칩 — **짝 없는 곳 수를 함께 적는다**(어디를 손대야 하는지가 곧 그 숫자다). */
+  function lgpFillRegions() {
+    var box = document.getElementById('lgp-regions');
     if (!box) return;
     var reg = DATA.byRegion || {}, html = '', rg, i;
     for (rg in reg) if (reg.hasOwnProperty(rg)) {
-      var ls = (reg[rg].stores || []).slice().sort();
+      var ls = lgpStoresOf(rg);
       if (!ls.length) continue;
-      html += '<div class="lgp-rg">' + esc(rg) + '</div>';
-      for (i = 0; i < ls.length; i++) {
-        var h = lgpHow(ls[i]);
-        html += '<button type="button" class="lgpc' + (ls[i] === lgpStore ? ' on' : '')
-          + (h.shops.length ? '' : ' nopair') + '" data-store="' + esc(ls[i]) + '">'
-          + '<span class="lgpc-n">' + esc(ls[i]) + '</span>'
-          + '<span class="lgpc-g">' + esc(h.shops.length ? h.shops.join(' · ') : h.tag) + '</span></button>';
-      }
+      /* **손댈 곳만 센다** — 해당없음(정해 두신 것)을 세면 다 해 놓고도 남은 것처럼 보인다 */
+      var todo = 0;
+      for (i = 0; i < ls.length; i++) if (lgpHow(ls[i]).tag === '없음') todo++;
+      html += '<button type="button" class="lgp-rgc' + (rg === lgpRegion ? ' on' : '')
+        + '" data-rg="' + esc(rg) + '">' + esc(rg)
+        + '<span class="n">' + ls.length + '곳'
+        /* 0 이면 아무 말도 안 한다 — 다 됐다는 뜻이다 */
+        + (todo ? ' · 짝없음 ' + todo : '') + '</span></button>';
     }
-    box.innerHTML = html || '<div class="sub">매장 목록을 아직 못 받았습니다.</div>';
+    box.innerHTML = html;
+  }
+
+  /** ① 우리 매장 칸 — **그 지역 것만**(왼쪽 칼럼). 지역 이름은 위 칩이 이미 말한다. */
+  function lgpFillStores() {
+    var box = document.getElementById('lgp-stores'), cnt = document.getElementById('lgp-us-n');
+    if (!box) return;
+    var ls = lgpStoresOf(lgpRegion), html = '', i;
+    for (i = 0; i < ls.length; i++) {
+      var h = lgpHow(ls[i]);
+      html += '<button type="button" class="lgpc' + (ls[i] === lgpStore ? ' on' : '')
+        /* **경고는 「없음」에만** — 해당없음은 정해 두신 것이다(위 CSS 주석) */
+        + (h.shops.length ? '' : (h.tag === '해당없음' ? ' naset' : ' nopair')) + '" data-store="' + esc(ls[i]) + '">'
+        + '<span class="lgpc-n">' + esc(ls[i]) + '</span>'
+        /* 칸 아래에 **지금 짝**을 적는다 — 이 칼럼이 삼성이라고 머리가 말하므로
+           작은 글씨는 「이 매장에 지금 붙어 있는 LG 지점」으로 읽힌다 */
+        + '<span class="lgpc-g">' + esc(h.shops.length ? h.shops.join(' · ') : h.tag) + '</span></button>';
+    }
+    box.innerHTML = html || '<div class="sub">위에서 지역을 고르세요.</div>';
+    if (cnt) cnt.textContent = ls.length ? '— ' + lgpRegion + ' ' + ls.length + '곳' : '';
   }
 
   /** ② LG 지점 칸 — 그 매장 지역 것을 먼저, 나머지는 눌러야 펼친다(71곳이 다 깔리면 길다). */
   function lgpFillShops() {
     var box = document.getElementById('lgp-shops'), more = document.getElementById('lgp-more');
-    var step = document.getElementById('lgp-step2');
+    var step = document.getElementById('lgp-step2'), cnt = document.getElementById('lgp-lg-n');
     if (!box) return;
     if (!lgpStore) {
-      box.innerHTML = '';
+      box.innerHTML = '<div class="sub">왼쪽에서 매장을 고르세요.</div>';
       if (more) more.hidden = true;
+      if (cnt) cnt.textContent = '';
       var au0 = document.getElementById('lgp-auto');
       if (au0) au0.hidden = true;
-      if (step) step.textContent = '② 매장을 먼저 고르시면 LG 지점이 나옵니다';
+      if (step) step.textContent = '왼쪽 삼성 매장을 고르시면 오른쪽에 견줄 LG 지점이 나옵니다.';
       return;
     }
-    if (step) step.textContent = '② ' + lgpStore + josa(lgpStore, '과 ', '와 ') + '견줄 LG 지점 — '
+    /* **칼럼 머리가 「무엇과 견주는가」를 적는다** — 두 칼럼이 나란히 서면
+       오른쪽이 어느 매장에 대한 목록인지가 안 보인다. */
+    if (cnt) cnt.textContent = '— ' + lgpStore + josa(lgpStore, '과', '와') + ' 견줄 곳';
+    if (step) step.textContent = '왼쪽 ' + lgpStore + josa(lgpStore, '과 ', '와 ')
+      + '견줄 LG 지점을 오른쪽에서 고르세요 — '
       + (hasGeoOf(lgpStore) ? '가까운 순입니다. ' : '')
-      + '누르면 고르고, 다시 누르면 뗍니다(최대 3곳)';
+      + '누르면 고르고, 다시 누르면 뗍니다(최대 3곳).';
     /* **거리로 가른다**(2026-09-06 사장님 지적). 예전에는 영업지역 이름이 지점의
        시군에 들어 있는지로 갈랐는데, 영업지역 6곳 ↔ LG 시군 24종이라 이름이 안
        겹치면 통째로 밀린다 — 실측으로 **강원 9매장이 0곳**이었고 광명·화성·안성·
@@ -2448,28 +2543,51 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   function renderLgPairs() {
     var box = document.getElementById('lgp-list'), sub = document.getElementById('lgp-sub');
     if (!box) return;
-    var reg = DATA.byRegion || {}, man = lgpManual(), rows = [], rg, i, nman = 0, none = 0;
+    var reg = DATA.byRegion || {}, man = lgpManual(), rows = [], rg, i, nman = 0, none = 0, nna = 0;
     for (rg in reg) if (reg.hasOwnProperty(rg)) {
-      var ls = (reg[rg].stores || []).slice().sort();
+      var ls = lgpStoresOf(rg);
+      if (!ls.length) continue;
+      /* **표에도 지역을 적는다**(2026-09-07 사장님 지시 — *"같은 지역별로"*).
+         62줄을 구분 없이 늘어놓으면 어느 줄이 어느 지역인지 알 수가 없다. */
+      rows.push({ rg: rg, n: ls.length });
       for (i = 0; i < ls.length; i++) {
         var h = lgpHow(ls[i]);
         if (h.tag === '수기' || h.tag === '해당없음') nman++;
-        if (!h.shops.length) none++;
+        /* **손댈 곳(없음)과 정해 두신 것(해당없음)을 갈라 센다** — 뭉치면 경고가
+           거짓이 된다(실측 17곳이 전부 해당없음이고 없음은 0곳이었다) */
+        if (h.tag === '없음') none++;
+        if (h.tag === '해당없음') nna++;
         rows.push({ nm: ls[i], h: h });
       }
     }
     if (sub) {
-      sub.innerHTML = '우리 매장 <b>' + rows.length + '곳</b>'
+      /* **머리줄을 매장으로 세지 말 것** — 62곳이 68곳이 된다 */
+      var nst = 0;
+      for (i = 0; i < rows.length; i++) if (rows[i].nm) nst++;
+      sub.innerHTML = '우리 매장 <b>' + nst + '곳</b>'
         + (man === null ? ' · <b class="warn">수기/기본을 가를 수 없습니다</b>(옛 서버 자료)'
                         : ' · 수기로 정하신 것 <b>' + nman + '곳</b>')
+        /* **경고는 손댈 곳에만** — 해당없음은 사실로 담담하게 적는다 */
         + (none ? ' · <b class="warn">짝 없음 ' + none + '곳</b>' : '')
-        + ' — 매장을 누르고 LG 지점을 누른 뒤 <b>저장</b>하세요. '
+        + (nna ? ' · 해당없음 <b>' + nna + '곳</b>' : '')
+        + ' — 지역을 고르고 <b>왼쪽 삼성</b> 매장 · <b>오른쪽 LG</b> 지점을 누른 뒤 <b>저장</b>하세요. '
         + '저장하면 <b>매장 대 매장 수집</b>이 그 짝으로 다시 잽니다.';
     }
-    var html = '<table class="jobs"><thead><tr><th>우리 매장</th><th>LG 지점</th><th>정한 방법</th></tr></thead><tbody>';
+    /* 칸 이름이 **브랜드를 못 박는다** — 「우리 매장 / LG 지점」만으로는 두 칼럼
+       화면과 말이 어긋난다(위는 삼성/LG 라 적는다). */
+    var html = '<table class="jobs"><thead><tr><th>삼성 (우리 매장)</th><th>LG 지점</th><th>정한 방법</th></tr></thead><tbody>';
     for (i = 0; i < rows.length; i++) {
+      if (rows[i].rg) {
+        html += '<tr class="rgh"><td colspan="3">' + esc(rows[i].rg) + ' <span class="cntxt">'
+          + rows[i].n + '곳</span></td></tr>';
+        continue;
+      }
       html += '<tr><td class="nm">' + esc(rows[i].nm) + '</td>'
-        + '<td>' + (rows[i].h.shops.length ? esc(rows[i].h.shops.join(' · ')) : '<b class="warn">없음</b>') + '</td>'
+        /* **해당없음 줄을 경고색으로 칠하지 않는다** — 옆 칸에 이미 「해당없음」
+           배지가 있어 주황이 둘이 되면 정해 두신 것이 문제로 읽힌다(실물에서 봤다) */
+        + '<td>' + (rows[i].h.shops.length ? esc(rows[i].h.shops.join(' · '))
+            : (rows[i].h.tag === '해당없음' ? '<span class="cntxt">견주지 않음</span>'
+                                            : '<b class="warn">없음</b>')) + '</td>'
         /* **자동과 수기를 가른다** — 사장님이 고치신 것이 어디인지 보여야 한다 */
         + '<td class="cy">' + (rows[i].h.cls
             ? '<span class="cyc ' + rows[i].h.cls + '">' + esc(rows[i].h.tag) + '</span>'
@@ -2496,7 +2614,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
          고른 짝이 켜져 있어야 한다(고르지도 않은 것이 켜져 보이면 안 된다). */
       if (store === lgpStore) lgpPick = pairList((DATA.lgPair || {})[store]);
       /* 지도의 채운 핀·짝 표·칸이 따라와야 한다 — 안 그리면 화면이 옛 짝을 보여준다 */
-      renderMap(); renderLgPairs(); lgpFillStores(); lgpFillShops();
+      /* **칩도 다시 그린다** — 저장하면 그 지역 「짝없음 N」이 바뀐다. 안 그리면
+         칩이 옛 숫자를 들고 있어 화면이 두 말을 한다. */
+      renderMap(); renderLgPairs(); lgpFillRegions(); lgpFillStores(); lgpFillShops();
     };
     var undo = list === null;
     var run = google.script.run
@@ -2531,12 +2651,45 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     else run.setLgPair(store, list, admToken);
   }
 
+  /** 아직 지역을 안 골랐으면 첫 지역 · 그 지역 첫 매장을 잡는다.
+      **양쪽 칼럼이 늘 차 있어야 한다** — 오른쪽이 비어 있으면 화면이 반쪽으로 보이고,
+      사장님이 「매장을 먼저」라는 한 단계를 매번 더 밟게 된다(AS 센터 찾기가
+      *"한 곳만 남으면 자동으로 고른다"* 로 이미 세운 규칙과 같다). */
+  function lgpEnsure() {
+    var reg = DATA.byRegion || {}, ks = [], rg;
+    for (rg in reg) if (reg.hasOwnProperty(rg) && lgpStoresOf(rg).length) ks.push(rg);
+    if (!ks.length) return;
+    /* 고른 매장이 있으면 **그 매장의 지역**이 이긴다 — 히트맵에서 넘어온 경우다 */
+    if (lgpStore) {
+      for (rg = 0; rg < ks.length; rg++) {
+        if (lgpStoresOf(ks[rg]).indexOf(lgpStore) >= 0) { lgpRegion = ks[rg]; return; }
+      }
+    }
+    if (ks.indexOf(lgpRegion) < 0) lgpRegion = ks[0];
+    var ls = lgpStoresOf(lgpRegion);
+    if (ls.indexOf(lgpStore) < 0) {
+      lgpStore = ls[0] || '';
+      lgpPick = pairList((DATA.lgPair || {})[lgpStore]);
+      lgpAll = false;
+    }
+  }
+
   /** 관리자 항목의 짝 고르개 — **한 번만 배선한다**(렌더마다 걸면 쌓인다). */
   function wireLgPairs() {
     var box = document.getElementById('lgp-stores');
     if (!box || box.dataset.wired) return;
     box.dataset.wired = '1';
     var msg = function () { return document.getElementById('lgp-msg'); };
+    /* 지역 칩 — 누르면 그 지역 **첫 매장까지 잡는다**(위 `lgpEnsure`) */
+    var rgs = document.getElementById('lgp-regions');
+    if (rgs) rgs.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-rg]') : null;
+      if (!b) return;
+      lgpRegion = b.getAttribute('data-rg');
+      lgpStore = '';
+      lgpEnsure();
+      lgpFillRegions(); lgpFillStores(); lgpFillShops();
+    });
     /* 칸은 다시 그려지므로 **낱낱이 걸지 않고 상자에서 받는다**(이벤트 위임) */
     box.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('[data-store]') : null;
@@ -7787,7 +7940,7 @@ function renderList() {
     renderJobs();
     wireJobs();
     /* LG 짝 — **자료가 온 뒤에 채운다**(매장 목록·짝이 DATA 에서 온다) */
-    lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();
+    lgpEnsure(); lgpFillRegions(); lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();
     renderPromo();
     renderTrend();
     renderDiag();

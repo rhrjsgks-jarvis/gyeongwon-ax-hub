@@ -6162,6 +6162,113 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 LG 지점 짝 — 관리자에서 찾는다 · 칸으로 고른다 · 저장 길 하나 · 수기/기본 구분 · 해당없음≠되돌리기');
 }
 
+/* ── **왼쪽 삼성 · 오른쪽 LG · 지역별** (2026-09-07 사장님 지시) ────────────────
+ * *"어디가 삼성이고 어디가 엘지인지 알아보기가 힘듭니다. 왼쪽 삼성 오른쪽엘지 로
+ *  구분하고 같은 지역별로 보기좋게 설정해주세요 그래야 지역별로 매칭하기 쉽습니다."*
+ *
+ * 되돌아가면 **화면에서만 보인다** — 소스는 멀쩡해 보이고 사장님만 다시 겪는다.
+ * 실측(고치기 전) — 매장 상자 **1,046px** 아래 y=1,536 에 LG 상자라 위아래를 오갔다.
+ */
+{
+  const bad = [];
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  /** 그 규칙 블록만 떼어 온다 — 파일 전체에서 찾으면 다른 규칙이 걸린다. */
+  const rule = (sel) => {
+    const at = ix.indexOf(sel + '{');
+    if (at < 0) return '';
+    return ix.slice(at + sel.length + 1, ix.indexOf('}', at));
+  };
+  /** 함수 본문 — **범위를 좁힌다**(같은 글자가 파일 다른 곳에도 있으면 지워도 통과한다) */
+  const fn = (name) => {
+    const at = ix.indexOf('function ' + name + '()');
+    return at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at));
+  };
+
+  /* ⓐ **두 칼럼** — 세로로 쌓으면 지시가 그 자리에서 사라진다 */
+  const two = rule('.lgp-two');
+  if (!two) bad.push('두 칼럼 상자(.lgp-two)가 없다');
+  else if (two.indexOf('grid-template-columns:1fr 1fr') < 0)
+    bad.push('.lgp-two 가 두 칼럼이 아니다 — 왼쪽 삼성 · 오른쪽 LG 가 무너진다');
+
+  /* ⓑ **왼쪽이 삼성이다** — 순서가 뒤집히면 지시와 정반대가 된다 */
+  const usAt = ix.indexOf('lgp-pane us'), lgAt = ix.indexOf('lgp-pane lg');
+  if (usAt < 0 || lgAt < 0) bad.push('삼성/LG 칼럼 표시(.lgp-pane.us · .lgp-pane.lg)가 없다');
+  else if (usAt > lgAt) bad.push('LG 칼럼이 삼성보다 왼쪽에 있다 — 사장님 지시와 반대다');
+  /* **브랜드를 글자로도 적는다** — 색만으로는 색각에 따라 안 갈린다 */
+  if (ix.indexOf('lgp-ph"><i></i>삼성') < 0) bad.push('왼쪽 칼럼 머리에 「삼성」이 안 적혀 있다');
+  if (ix.indexOf('lgp-ph"><i></i>LG') < 0) bad.push('오른쪽 칼럼 머리에 「LG」가 안 적혀 있다');
+
+  /* ⓒ **폰에서도 두 칼럼** — 쌓으면 「왼쪽 삼성 오른쪽 LG」가 폰에서만 사라진다 */
+  {
+    const at = ix.indexOf('@media (max-width:560px){');
+    const blk = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at));
+    if (blk && blk.indexOf('.lgp-two{grid-template-columns:1fr}') >= 0)
+      bad.push('폰에서 두 칼럼이 한 칼럼으로 쌓인다 — 지시가 폰에서만 무너진다');
+  }
+
+  /* ⓓ **색은 재서 고른 값이다** — 히트맵 앰버 최고값을 그대로 쓰면 3.37:1 로 무너진다.
+     **색값을 검사에 베껴 적지 않는다**(색을 갈 때 멀쩡한 판을 문다) — 소스에서 뽑아 잰다. */
+  {
+    const lum = (r, g, b) => {
+      const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+    };
+    for (const [side, nm] of [['us', '삼성'], ['lg', 'LG']]) {
+      const css = rule('.lgp-pane.' + side + ' .lgpc.on');
+      const m = /background:(#[0-9A-Fa-f]{6})/.exec(css || '');
+      if (!m) { bad.push(nm + ' 칼럼의 고른 칸 색이 없다 — 양쪽이 같은 색이면 구분이 사라진다'); continue; }
+      const rgb = [1, 3, 5].map((i) => parseInt(m[1].slice(i, i + 2), 16));
+      const c = 1.05 / (lum(rgb[0], rgb[1], rgb[2]) + 0.05);
+      if (c < 4.5) bad.push(nm + ' 칼럼 고른 칸 ' + m[1] + ' 위 흰 글자가 ' + c.toFixed(2) + ':1 — 4.5:1 미만이라 안 읽힌다');
+    }
+  }
+
+  /* ⓔ **지역 칩** — 62곳을 한 번에 깔면 1,046px 이다(실측). 세 진입점이 다 지나가야 한다. */
+  if (ix.indexOf('function lgpFillRegions()') < 0) bad.push('지역 칩을 그리는 함수가 없다');
+  if (ix.indexOf('function lgpEnsure()') < 0) bad.push('지역·매장을 잡아 주는 함수가 없다 — 오른쪽 칼럼이 비어 보인다');
+  {
+    const wire = 'lgpEnsure(); lgpFillRegions(); lgpFillStores(); lgpFillShops();';
+    const n = ix.split(wire).length - 1;
+    if (n < 2) bad.push('지역 칩을 그리는 길이 ' + n + '곳뿐이다 — 그 길로 들어오면 지역이 빈다');
+    /* 저장 뒤에도 칩이 따라와야 한다 — 「짝없음 N」이 그 자리에서 바뀐다 */
+    if (ix.indexOf('renderMap(); renderLgPairs(); lgpFillRegions();') < 0)
+      bad.push('저장 뒤 지역 칩을 다시 안 그린다 — 칩이 옛 숫자를 들고 있다');
+  }
+
+  /* ⓕ **「해당없음」과 「없음」은 다른 말이다** — 실측으로 화면이 「짝 없음 17곳」이라
+     빨갛게 외치는데 **진짜 손댈 곳은 0곳**이고 17곳 전부 정해 두신 것이었다.
+     `lgpHow` 는 이미 태그로 갈라 놓았는데 **화면 쪽 넷이 전부 뭉개고 있었다** —
+     판정을 갈라 놓고 표시가 뭉개면 그 판정은 없는 것과 같다. */
+  {
+    const st = fn('lgpFillStores');
+    if (!st) bad.push('lgpFillStores 를 못 찾았다 — 앵커가 낡았다');
+    else if (st.indexOf("h.tag === '해당없음' ? ' naset' : ' nopair'") < 0)
+      bad.push('칸이 해당없음과 없음을 같은 경고색으로 칠한다 — 손댈 곳을 가리키는 표시가 거짓이 된다');
+
+    const rg = fn('lgpFillRegions');
+    if (rg && rg.indexOf("lgpHow(ls[i]).tag === '없음'") < 0)
+      bad.push('지역 칩의 「짝없음」이 해당없음까지 센다 — 다 해 놓고도 남은 것처럼 보인다');
+
+    const pb = fn('renderLgPairs');
+    if (pb) {
+      if (pb.indexOf("if (h.tag === '없음') none++;") < 0)
+        bad.push('부제의 「짝 없음」이 해당없음까지 센다');
+      if (pb.indexOf("if (h.tag === '해당없음') nna++;") < 0)
+        bad.push('부제가 해당없음을 따로 안 적는다 — 정해 두신 것이 화면에서 사라진다');
+      if (pb.indexOf("rows[i].h.tag === '해당없음' ? '<span class=") < 0)
+        bad.push('표의 해당없음 줄이 경고색이다 — 주황이 둘이라 정해 두신 것이 문제로 읽힌다');
+      /* **머리줄을 매장으로 세지 말 것** — 62곳이 68곳이 된다 */
+      if (pb.indexOf('if (rows[i].nm) nst++;') < 0)
+        bad.push('지역 머리줄을 매장 수에 섞어 센다 — 62곳이 68곳으로 뜬다');
+      if (pb.indexOf('rows.push({ rg: rg, n: ls.length });') < 0)
+        bad.push('표에 지역 머리줄이 없다 — 62줄을 구분 없이 늘어놓으면 어느 지역인지 모른다');
+    }
+  }
+
+  if (bad.length) fail('[바이럴] 왼쪽 삼성 · 오른쪽 LG — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 짝 고르개 — 왼쪽 삼성 · 오른쪽 LG · 지역 칩 · 폰에서도 두 칼럼 · 해당없음≠없음');
+}
+
 /* ── **날짜가 하루 밀렸다 · 완주가 멈춤으로 읽혔다** (2026-09-06) ─────────────────
  * 자동 수집을 끄신 뒤 배포본을 열어 보고 잡은 셋이다.
  *
