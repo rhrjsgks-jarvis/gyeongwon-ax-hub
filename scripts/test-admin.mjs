@@ -5740,6 +5740,43 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('미리보기 모의에 jobAt 이 없다 — 표의 「마지막」 칸을 눈으로 볼 수 없다');
   }
 
+  /* ── **폰에서 표가 넘치면 안 된다** (2026-09-07 사장님 지시) ────────────────
+   * 실측 — 폰 390px 에서 표 **389px** vs 창 **366px**(넘침 23) · 320px 에서 93.
+   * 원인이 둘이었고 **둘 다 nowrap 이 상속되는 자리**였다:
+   *
+   * ① `td.co` 만 접고 **`th.co` 를 안 접었다** — 머리 칸 45px 이 그대로 남았다.
+   *    `table-layout:auto` 는 머리 칸 폭도 표 전체 폭 계산에 넣는다.
+   * ② `td.at { white-space: nowrap }` 이 그 안의 `<div class="sub">` 까지 내려가
+   *    **저장된 `ReferenceError…` 한 줄이 표를 통째로 넓혔다**(그것을 지우면 334px).
+   *    오류는 **관리자에게 원문 그대로 보여야 하므로**(이 파일이 이미 못 박았다)
+   *    지우지 않고 **꺾을 권한을 그 조각에만 준다** — 날짜는 nowrap 그대로다.
+   *
+   * 고친 뒤 실측 — 320·360·390·430·520·560px **전부 넘침 0** · 날짜 1줄 · 오류 원문 그대로.
+   */
+  {
+    /** 그 규칙 블록만 떼어 온다 — 파일 전체에서 찾으면 다른 규칙이 걸린다. */
+    const rule = (sel) => {
+      const at = ix.indexOf(sel + ' {');
+      const at2 = at < 0 ? ix.indexOf(sel + '{') : at;
+      if (at2 < 0) return '';
+      return ix.slice(at2, ix.indexOf('}', at2));
+    };
+    /* ① 머리도 함께 접는가 */
+    const co = rule('.jobs th.co, .jobs td.co');
+    if (!co || co.indexOf('display: none') < 0)
+      bad.push('폰에서 비용 칸의 **머리(th.co)** 를 안 접는다 — 머리 45px 이 남아 표가 넘친다');
+    /* ② 오류 원문만 꺾는가 — 날짜는 nowrap 그대로여야 한다 */
+    const sub = rule('.jobs td.at .sub');
+    if (!sub || sub.indexOf('white-space: normal') < 0)
+      bad.push('오류 원문이 안 꺾인다 — 저장된 오류 한 줄이 표를 통째로 넓힌다');
+    const at = rule('.jobs td.at');
+    if (!at || at.indexOf('white-space: nowrap') < 0)
+      bad.push('td.at 의 nowrap 이 사라졌다 — 날짜가 「2026-」/「09-06」 으로 갈린다');
+    /* ③ **오류를 지워 해결하지 않았는가** — 관리자에게는 원문 그대로 보여야 한다 */
+    if (ix.indexOf("esc(DATA.dead.err)") < 0)
+      bad.push('삭제 확인 오류 원문을 화면에서 지웠다 — 관리자가 무엇이 잘못됐는지 못 본다');
+  }
+
   if (bad.length) fail('[바이럴] 수집 체계 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 수집 체계 — 삭제 확인 월 1회 · 마른 질의 관문 · runJob 4갈래 · 표 5줄 · 미리보기 스텁');
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IX_VER: 2026-09-07-e43603c0 -->
+<!-- IX_VER: 2026-09-07-e6305ac1 -->
 <!--
   경원영업팀 바이럴분석 대시보드 — Apps Script 가 서빙하는 화면 (2026-08-31)
 
@@ -262,6 +262,13 @@
   .jobs td.nm { font-weight: 700; }
   .jobs td.cy { white-space: nowrap; }
   .jobs td.at { color: #4B5563; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  /* **오류 원문만 꺾는다**(2026-09-07). `white-space` 는 상속되므로 위 `nowrap` 이
+     아래 `<div class="sub">` 까지 내려가 **저장된 `ReferenceError…` 한 줄이 표를
+     통째로 넓히고 있었다**(실측 폰 389px vs 창 366px — 오류를 지우면 334px).
+     오류는 **관리자에게 원문 그대로 보여야 하므로**(아래 렌더 주석) 지우지 않고
+     **꺾을 권한을 그 조각에만 준다** — 날짜는 위 `nowrap` 그대로라 안 갈린다.
+     `anywhere` 는 공백 없는 긴 문자열(주소 등)이 와도 칸을 안 넘게 한다. */
+  .jobs td.at .sub { white-space: normal; overflow-wrap: anywhere; }
   .jobs td.co { text-align: right; color: #4B5563; white-space: nowrap; font-variant-numeric: tabular-nums; }
   .jobs td.go { text-align: right; padding-right: 0; white-space: nowrap; }
   /* 주기 표식 — 파이프 도움말의 배지와 **같은 색**이라야 두 곳이 같은 말로 읽힌다 */
@@ -277,7 +284,11 @@
                  border: 1px solid #C7D2F0; background: #fff; color: #1428A0; cursor: pointer; }
   .jobs button[disabled] { opacity: .45; cursor: default; }
   @media (max-width: 520px) {
-    .jobs td.co { display: none; }   /* 폰에서는 비용 칸을 접는다 — 위 「예상 N회」가 이미 적는다 */
+    /* 폰에서는 비용 칸을 접는다 — 위 「예상 N회」가 이미 적는다.
+       **`th` 도 함께 접어야 한다**(2026-09-07 사장님 지시로 재서 잡았다). `td` 만 접었더니
+       **머리 칸 45px 이 그대로 남아** 표가 창(366px)보다 33px 넓었다 — `table-layout:auto`
+       는 머리 칸 폭도 표 전체 폭 계산에 넣는다. 반응형 표에서 칸을 접을 때 되풀이되는 함정이다. */
+    .jobs th.co, .jobs td.co { display: none; }
   }
 
   /* 어디까지 훑었는지 — 멈춰 있으면 눈에 띄어야 한다(이어서 눌러야 하니까) */
