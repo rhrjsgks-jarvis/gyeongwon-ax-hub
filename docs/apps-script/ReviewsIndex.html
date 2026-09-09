@@ -1850,7 +1850,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-09-1fe96a17';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-09-d67abe7f';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -3655,10 +3655,41 @@ function wireSecs() {
       if (note) note.textContent = '';
       return;
     }
-    /* **「이번 주」는 고른 기간을 따른다** — 위 기간 막대에서 주를 고르면 그 주,
-       안 골랐으면 자료의 마지막 주. 두 곳이 다른 주를 말하면 화면이 어긋난다. */
-    var curW = (heatWeek && heatWeek !== 'custom' && wl.indexOf(heatWeek) >= 0)
-      ? heatWeek : wl[wl.length - 1];
+    /* ── **진행 중인 주를 기본으로 삼지 않는다** (2026-09-09 배포 확인에서 잡았다) ──
+     * 실측으로 화요일에 열었더니 *"9월 2주차 16건 — 지난주 253건 대비 −94%"* 가
+     * 떴다. **이번 주는 이틀치인데 지난주는 7일치**라, 견주면 무조건 폭락으로 보인다.
+     * 이 화면이 전월 대비에서 이미 못 박은 함정인데(*"달력의 이번 달은 며칠치뿐이라
+     * 넣으면 전 매장이 폭락으로 보인다"*) 주간 리포트에 그 규칙을 안 옮겼다.
+     *
+     * **고르신 주는 그대로 존중한다** — 기간 막대에서 이번 주를 고르시면 그 주를
+     * 보여드리되 **며칠치인지 적는다**(감추지 않는다). 안 고르셨을 때만 완결된
+     * 마지막 주로 물러선다. */
+    var today = ymdLocal(new Date());
+    var weekDone = function (w) {
+      var r = weekRange(w);
+      return !!(r && r.to < today);
+    };
+    var curW;
+    if (heatWeek && heatWeek !== 'custom' && wl.indexOf(heatWeek) >= 0) {
+      curW = heatWeek;
+    } else {
+      curW = wl[wl.length - 1];
+      /* 완결된 주가 하나도 없으면(자료가 이번 주뿐) 마지막 주를 그대로 쓴다 —
+         「없다」로 비우면 리포트가 통째로 사라진다. */
+      for (var wi = wl.length - 1; wi >= 0; wi--) {
+        if (weekDone(wl[wi])) { curW = wl[wi]; break; }
+      }
+    }
+    /* 며칠치인지 — 진행 중인 주에만 적는다(완결된 주에 적으면 군더더기다) */
+    var partDays = 0;
+    if (!weekDone(curW)) {
+      var pr0 = weekRange(curW);
+      if (pr0) {
+        var d0 = new Date(pr0.from + 'T00:00:00Z').getTime();
+        var d1 = new Date(today + 'T00:00:00Z').getTime();
+        partDays = Math.max(1, Math.min(7, Math.round((d1 - d0) / 864e5) + 1));
+      }
+    }
     var ci = wl.indexOf(curW);
     var prevW = ci > 0 ? wl[ci - 1] : null;
     var weeks = wl.slice(Math.max(0, ci - 11), ci + 1);
@@ -3704,7 +3735,10 @@ function wireSecs() {
     /* ── 4~5줄 요약 ─────────────────────────────────────────────────── */
     var sum5 = [];
     sum5.push('<b>' + esc(weekLabelLong(curW)) + '</b> ' + esc(who) + ' 후기 <b>' + nf(cur) + '건</b>'
-      + (prevW ? ' — ' + deltaText(cur, prev) : '') + '.');
+      + (prevW ? ' — ' + deltaText(cur, prev) : '') + '.'
+      /* **아직 안 끝난 주라는 것을 반드시 적는다** — 안 적으면 「−94%」가 실제로
+         꺾인 것으로 읽힌다(며칠치를 7일치와 견준 것뿐이다). */
+      + (partDays ? ' <b class="warn">아직 ' + partDays + '일치</b>라 지난주(7일)와 견주면 낮게 보입니다.' : ''));
     if (ksum) {
       var kTop = Object.keys(kk).sort(function (a, b) { return kk[b] - kk[a]; })[0];
       sum5.push('가장 많이 이야기된 것은 <b>' + esc(kLabel(kTop)) + '</b>('
@@ -3763,7 +3797,9 @@ function wireSecs() {
       + '<p class="cntxt" style="margin-top:6px">'
       + (rg ? '이번 주 ' + esc(rg.from) + ' ~ ' + esc(rg.to) + ' · ' : '')
       + '막대 색은 그 앞 주 대비 등락 · <b>작성일을 아는 글만</b> 셉니다'
-      + '(네이버가 카페·웹 글의 작성일을 주지 않습니다).</p></div>';
+      + '(네이버가 카페·웹 글의 작성일을 주지 않습니다).'
+      + (partDays ? ' <b class="warn">이번 주는 아직 ' + partDays + '일치입니다.</b>' : '')
+      + '</p></div>';
 
     /* ── 근거 — **접어 둔다.** 지우지 않는 이유는 요약을 검산할 수 있어야 하기 때문이다 */
     var more = '';
