@@ -403,15 +403,15 @@
    * chip(11px) · kchip(12px) · wchip(11px·사각) · rbtn(10.5px) ·
    * wk(11.5px) · foldb(11.5px) 가 **같은 일을 하면서 크기가 다 달랐다.**
    * 누르면 걸러지는 것은 전부 이 규격을 쓴다 — 색으로만 갈린다. */
-  .chip, .kchip, .wchip, .range .rbtn, .hmwk .wk {
+  .chip, .kchip, .wchip, .range .rbtn, .period .rbtn, .hmwk .wk {
     border: 1px solid var(--line); background: #fff; border-radius: var(--ctl-rp);
     padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs);
     cursor: pointer; font-family: inherit; color: #374151; line-height: 1.35;
   }
-  .chip:hover, .kchip:hover, .wchip:hover, .range .rbtn:hover, .hmwk .wk:hover {
+  .chip:hover, .kchip:hover, .wchip:hover, .range .rbtn:hover, .period .rbtn:hover, .hmwk .wk:hover {
     background: #F4F6FB; border-color: var(--blue);
   }
-  .chip.on, .kchip.on, .wchip.on, .range .rbtn.on, .hmwk .wk.on {
+  .chip.on, .kchip.on, .wchip.on, .range .rbtn.on, .period .rbtn.on, .hmwk .wk.on {
     background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700;
   }
   .chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
@@ -730,7 +730,7 @@
     border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px;
     font-size: var(--fs-mini); font-family: inherit; color: var(--ink);
   }
-  .range .rbtn { color: var(--blue); font-weight: 700; }
+  .range .rbtn, .period .rbtn { color: var(--blue); font-weight: 700; }
 
 
   /* 관심 카페 — 지목받은 곳은 건수가 적어도 늘 보인다 */
@@ -931,6 +931,49 @@
      숫자를 늘어놓기만 하면 보는 사람이 매번 스스로 해석해야 한다. 다만 **문장에
      쓰는 값은 전부 화면 어딘가에 그대로 있는 것**이어야 한다 — 지어낸 해석을 얹지 않는다. */
   .diag { display: grid; gap: 10px; }
+  /* ── 리포트 (2026-09-09) ─────────────────────────────────────────────
+     `.dsec` 규격을 그대로 쓴다 — 같은 카드 안에서 두 벌로 적으면 한쪽만 고쳐져
+     주간 절과 종합 절이 다르게 보인다. 여기서는 **자리와 그림**만 더한다. */
+  /* ── 4~5줄 요약 (2026-09-09 사장님 지시: *"내용은 약4~5줄로요약"*) ──────────
+     **결론을 맨 위에 놓고 근거는 접는다.** 상담·회의에서 이 화면을 읽는 시간은 몇
+     초라, 절이 아홉이면 아무도 끝까지 안 읽는다. 근거 절은 지우지 않고 접어 둔다 —
+     없애면 요약을 검산할 길이 사라진다(이 화면이 늘 지켜 온 규칙이다). */
+  .dsum { border-left: 3px solid #1428A0; padding: 4px 0 4px 11px; margin: 0 0 10px; }
+  .dsum h3 { font-size: var(--fs-body); font-weight: 800; margin: 0 0 6px; color: #111827; }
+  .dsum ol { margin: 0; padding-left: 18px; }
+  .dsum li { font-size: 13px; line-height: 1.85; color: #1F2937; margin-bottom: 1px; }
+  .dsum b { color: #1428A0; }
+  .dsum b.warn { color: #B3261E; }
+  /* 접이식 근거 — **열려 있는지 기억하지 않는다.** 요약이 주인공이라 늘 접힌 채로 시작한다 */
+  .rpmore { margin: 2px 0 10px; }
+  .rpmore > summary { cursor: pointer; font-size: var(--fs-mini); color: var(--blue);
+                      font-weight: 700; padding: 5px 0; list-style: none; }
+  .rpmore > summary::-webkit-details-marker { display: none; }
+  .rpmore > summary::before { content: "▸ "; }
+  .rpmore[open] > summary::before { content: "▾ "; }
+  .rpmore > div { padding-top: 4px; }
+  .rpnav { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 0 0 10px; }
+  .rpnav select { max-width: 220px; }
+  .rpwk { margin: 0 0 12px; }
+  /* 주간 막대 — 값이 아니라 **모양**을 보는 그림이라 축을 그리지 않는다.
+     숫자는 바로 위 문장이 이미 말한다(두 곳이 같은 말을 하면 어긋날 자리가 생긴다). */
+  .wkbars { display: flex; align-items: flex-end; gap: 3px; height: 56px; margin: 7px 0 4px; }
+  .wkbars .wb { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column;
+                justify-content: flex-end; height: 100%; }
+  .wkbars .wb i { display: block; border-radius: 3px 3px 0 0; min-height: 2px; }
+  .wkbars .wb.now i { outline: 2px solid #1428A0; outline-offset: -1px; }
+  /* **11.5px 아래로 내려가지 않는다** — 이 화면이 못 박은 하한이다(작은 글씨가
+     안 읽힌다). 눈금은 달이 바뀌는 자리에만 적어 3~4개뿐이라 자리는 넉넉하다. */
+  .wkax { display: flex; gap: 3px; font-size: var(--fs-mini); color: var(--mute); }
+  .wkax span { flex: 1 1 0; min-width: 0; text-align: center; overflow: hidden; white-space: nowrap; }
+  /* 순위 막대 — 지역 막대(`.bar`)와 달리 **한 줄에 이름·막대·수**를 놓는다 */
+  .rprank { display: grid; grid-template-columns: 96px 1fr 64px; gap: 6px; align-items: center;
+            font-size: 12px; margin-bottom: 4px; }
+  .rprank .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #374151; }
+  .rprank .tr { background: #EEF1F6; border-radius: 4px; height: 13px; overflow: hidden; }
+  .rprank .tr i { display: block; height: 100%; border-radius: 4px; }
+  .rprank .vv { text-align: right; color: #374151; font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { .rprank { grid-template-columns: 74px 1fr 56px; } }
   .dsec { border-left: 3px solid #1428A0; padding: 2px 0 2px 11px; }
   .dsec h3 { font-size: var(--fs-body); font-weight: 800; margin: 0 0 5px; color: #111827; }
   .dsec p { margin: 0 0 6px; font-size: 12.5px; line-height: 1.75; color: #374151; }
@@ -1074,30 +1117,43 @@
                font-size: var(--ctl-fs); cursor: pointer; font-family: inherit; }
   .hmnav .bk:disabled { opacity: .4; cursor: default; }
   .hmwk { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 7px; align-items: center; }
+  /* ── 기간 막대 — **화면 맨 위 한 곳** (2026-09-09 사장님 지시) ──────────────
+     *"바이럴분석기 날짜인터페이스 최상단으로 통일"*.
+     예전에는 히트맵 카드 안(`#hm-weeks`)과 후기 링크 카드 안(`#range`) 두 곳에
+     흩어져 있어, 히트맵은 9월 1주차를 보는데 아래 목록은 전 기간이라
+     **한 화면이 두 기간을 말했다.** 지금은 여기서 정한 하나가 전부에 걸린다.
+     규격은 `.hmwk` 를 그대로 쓴다 — 두 벌로 적으면 한쪽만 고쳐져 어긋난다. */
+  .period {
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+    margin: 0 0 10px; padding: 9px 11px;
+    background: #fff; border: 1px solid var(--line); border-radius: var(--card-r, 12px);
+  }
+  .period .yrs { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+  .period .sp { margin-left: auto; }
 
   /* **건수를 함께 적는다** — 어느 주에 자료가 있는지 눌러 보기 전에 알아야 한다.
      실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라, 이 숫자가 없으면 빈 히트맵을 만난다. */
-  .hmwk .wk i { font-style: normal; opacity: .62; margin-left: 4px; font-size: var(--fs-mini); }
-  .hmwk .wk.on i { opacity: .85; }
-  .hmwk .lbl { font-size: var(--fs-mini); color: var(--mute); margin-right: 2px; }
+  .period .wk i, .hmwk .wk i { font-style: normal; opacity: .62; margin-left: 4px; font-size: var(--fs-mini); }
+  .period .wk.on i, .hmwk .wk.on i { opacity: .85; }
+  .period .lbl, .hmwk .lbl { font-size: var(--fs-mini); color: var(--mute); margin-right: 2px; }
   /* 드롭다운·날짜 — **모바일에서 한 손으로 누를 크기**(사장님 지시).
      손가락 목표는 44px 을 권하지만 이 줄에 넷이 들어가야 해 **36px** 로 두었다.
      그보다 낮추지 말 것 — 폰에서 옆 칸을 누르게 된다. */
-  .hmwk select, .hmwk input[type="date"] {
+  .period select, .period input[type="date"], .hmwk select, .hmwk input[type="date"] {
     min-height: 36px; border: 1px solid var(--line); border-radius: var(--ctl-r);
     padding: 0 9px; font-family: inherit; font-size: var(--ctl-fs);
     background: #fff; color: var(--ink);
   }
-  .hmwk select { font-weight: 700; max-width: 190px; }
-  .hmwk select:focus, .hmwk input[type="date"]:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+  .period select, .hmwk select { font-weight: 700; max-width: 190px; }
+  .period select:focus, .period input[type="date"]:focus, .hmwk select:focus, .hmwk input[type="date"]:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
   .hmwk-dates { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-  .hmwk .tw { color: var(--mute); font-size: var(--fs-mini); }
+  .period .tw, .hmwk .tw { color: var(--mute); font-size: var(--fs-mini); }
   /* 폰에서는 **두 줄로 접는다** — 한 줄에 넷을 욱여넣으면 날짜 칸이 눌린다 */
   @media (max-width: 560px) {
-    .hmwk { gap: 5px; }
-    .hmwk select { max-width: none; flex: 1 1 100%; }
+    .period, .hmwk { gap: 5px; }
+    .period select, .hmwk select { max-width: none; flex: 1 1 100%; }
     .hmwk-dates { flex: 1 1 100%; }
-    .hmwk input[type="date"] { flex: 1 1 0; min-width: 0; }
+    .period input[type="date"], .hmwk input[type="date"] { flex: 1 1 0; min-width: 0; }
   }
   .hmnav .bk.on { background: #EEF1FB; border-color: #C7D2F0; color: var(--blue); }
   .hmnav .crumb { font-weight: 700; color: #374151; }
@@ -1189,6 +1245,38 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <div class="kpi"><div class="n" id="k-day">–</div><div class="l">오늘</div><div class="s" id="k-m1">작성일 기준</div></div>
   </div>
 
+  <!-- ── 기간 — **여기서 정한 하나가 화면 전체에 걸린다** (2026-09-09 사장님 지시)
+       *"바이럴분석기 날짜인터페이스 최상단으로 통일"*.
+
+       **id 를 한 글자도 안 바꿨다.** `hm-wsel`·`hm-from`·`hm-to`·`hm-wclear`·`hm-wnote`
+       는 히트맵 카드에서, `.rbtn`·`r-years`·`r-note` 는 후기 링크 카드에서 그대로
+       옮겨 온 것이다 — 옮기면서 안을 고치면 그 과정에서 반드시 하나를 흘린다
+       (이 저장소가 관리자 팝업에서 이미 세운 규칙이다).
+
+       **자를 수 있는 단위가 둘이라는 것을 화면이 적는다** — 목록은 글마다 작성일이
+       있어 하루 단위로 자르는데, 히트맵 자료(`wk4`)는 **주 단위로만** 쌓여 있어
+       걸친 주를 통째로 본다. 안 적으면 「왜 건수가 다르지」가 된다. -->
+  <div class="period" id="period">
+    <label class="lbl" for="hm-wsel">기간</label>
+    <select id="hm-wsel" aria-label="주차 선택"></select>
+    <span class="hmwk-dates">
+      <input type="date" id="hm-from" aria-label="시작일">
+      <span class="tw">~</span>
+      <input type="date" id="hm-to" aria-label="종료일">
+    </span>
+    <button type="button" class="rbtn" data-d="7">7일</button>
+    <button type="button" class="rbtn" data-d="30">30일</button>
+    <button type="button" class="rbtn" data-d="90">90일</button>
+    <button type="button" class="rbtn" data-d="0">전체</button>
+    <span class="yrs" id="r-years"></span>
+    <!-- 「전체 기간」 버튼은 없앴다(2026-09-09) — 바로 왼쪽 「전체」가 같은 일을 한다.
+         같은 일을 하는 손잡이가 둘이면 어느 것을 눌러야 하는지 매번 판단하게 된다.
+         `hm-wclear` 를 찾는 코드에는 null 가드가 있어 그대로 돈다. -->
+    <span class="sp"></span>
+    <span class="cntxt" id="hm-wnote"></span>
+    <span class="cntxt" id="r-note"></span>
+  </div>
+
   <div id="status"></div>
 
   <div class="card">
@@ -1201,7 +1289,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   <button type="button" class="sec" data-sec="rival" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16M7 20h10M4 8h16M6 8l-3 6h6l-3-6zM18 8l-3 6h6l-3-6z"/></svg></span>당사 vs LG</button>
   <button type="button" class="sec" data-sec="promo" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h3l5 4V6l-5 4zM17 9a4 4 0 0 1 0 6M19.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>LG 홍보 경로</button>
   <button type="button" class="sec" data-sec="trend" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M4 16l5-6 4 3 7-8"/></svg></span>월별 추이</button>
-  <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>이번 달 진단</button>
+  <button type="button" class="sec" data-sec="diag" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>리포트</button>
   <button type="button" class="sec" data-sec="map" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg></span>지도</button>
   <button type="button" class="sec" data-sec="store" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16M10 20v-6h4v6"/></svg></span>매장별</button>
   <button type="button" class="sec" data-sec="heat" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h8v8H3zM13 3h8v5h-8zM13 10h8v11h-8zM3 13h8v8H3z"/></svg></span>히트맵</button>
@@ -1260,10 +1348,33 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="trend" id="trend"></div>
       <div class="tdelta" id="tr-delta"></div>
     </div>
+    <!-- ── 리포트 (2026-09-09 사장님 지시) ────────────────────────────────
+         *"주간리포트 나오게(AI분석) / 종합진단 / 점을 클릭했을때 / 경원영업팀
+          전체리포트(시각화포함)"*.
+
+         **카드를 새로 만들지 않고 「이번 달 진단」을 넓혔다.** 종합 진단과 주간
+         리포트는 같은 것을 다른 기간으로 말하는 것이라, 카드가 둘이면 같은 화면이
+         두 곳에서 같은 말을 한다(사장님이 「중복기능은 합쳐주세요」로 이미 정하셨다).
+
+         **「AI분석」이라 적지 않는다.** 생성형 AI 를 부르지 않고 숫자를 규칙으로 읽어
+         문장을 만든다 — AI 라 적으면 그 자리에서 거짓이 된다. 부제가 그 사실을 밝힌다. -->
     <div class="card" data-card="diag">
-      <h2>이번 달 진단</h2>
-      <div class="sub">아래 문장의 숫자는 모두 이 화면 안에 그대로 있는 값입니다 — 따로 계산하지 않았습니다.</div>
-      <div class="diag" id="diag"></div>
+      <h2>리포트</h2>
+      <div class="sub">주간 · 종합 진단을 문장과 그림으로 봅니다 — 아래 숫자는 모두 이 화면 안에 그대로 있는 값입니다.
+        <b>생성형 AI 가 쓴 글이 아니라</b> 자료를 규칙으로 읽어 만든 문장입니다.</div>
+      <div class="rpnav" id="rp-nav">
+        <button type="button" class="bk on" id="rp-team">경원영업팀 전체</button>
+        <select id="rp-store" class="bk" aria-label="지점 고르기"></select>
+        <span class="cntxt" id="rp-note"></span>
+      </div>
+      <div class="rpwk" id="rp-week"></div>
+      <!-- **종합 진단은 접어 둔다**(2026-09-09 사장님 지시: "내용은 약4~5줄로요약").
+           지우지 않는 이유는 위 요약을 검산할 근거이기 때문이다 — 없애면 요약이
+           어디서 나온 값인지 확인할 길이 사라진다. -->
+      <details class="rpmore" id="diag-more">
+        <summary>종합 진단 · 실행 제안 보기</summary>
+        <div class="diag" id="diag"></div>
+      </details>
     </div>
     <div class="card" data-card="map">
       <h2>지도 — 어디에서 나오나</h2>
@@ -1337,23 +1448,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
              일어난다」가 이 화면에서 가장 나쁜 고장이다. 다음 렌더에서 지워진다. -->
         <span class="cntxt" id="hm-note"></span>
       </div>
-      <!-- 기간 거르개 (2026-09-03 사장님 지시) ─────────────────────────────
-           *"현재 주차별 버튼(칩) 방식은 전부 제거한다. 대신 ①주차 선택 드롭다운
-            ②직접 날짜 지정"* · *"드롭다운 선택 시 해당 주 날짜 범위가 date input에
-            자동 반영, 날짜를 직접 바꾸면 드롭다운은 '직접 지정'으로 전환"*.
-           **칸은 늘 지점이고 기간만 정한다** — 한때 칸 자체를 주차로 만들었다가
-           지적을 받았다(되돌리지 말 것). -->
-      <div class="hmwk" id="hm-weeks">
-        <label class="lbl" for="hm-wsel">기간</label>
-        <select id="hm-wsel" aria-label="주차 선택"></select>
-        <span class="hmwk-dates">
-          <input type="date" id="hm-from" aria-label="시작일">
-          <span class="tw">~</span>
-          <input type="date" id="hm-to" aria-label="종료일">
-        </span>
-        <button type="button" class="chip" id="hm-wclear" hidden>전체 기간</button>
-        <span class="cntxt" id="hm-wnote"></span>
-      </div>
+      <!-- 기간 거르개는 **화면 맨 위 `#period` 로 옮겼다**(2026-09-09 사장님 지시).
+           옛 마크업을 여기 남겨 두면 같은 id 가 둘이 되어 `getElementById` 가
+           어느 것을 집을지 알 수 없다 — 통째로 걷어낸다. -->
       <div class="hm" id="hm"></div>
       <div class="hmleg" id="hm-leg">
         <span id="hm-legt">전월 대비</span><b style="color:#C8324B" id="hm-legl">−15%</b>
@@ -1426,22 +1523,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       </div>
       <button class="dl" id="csv">CSV 내려받기</button>
     </div>
-    <!-- 날짜 범위 (2026-08-31 사장님 요청 — *"날짜별(몇일~몇일) 확인 가능하게"*).
-         **작성일 기준이다.** 카페 글은 네이버가 작성일을 안 줘서 이 거름망에 안 걸린다 —
-         그 사실을 옆에 적는다(감추면 "왜 안 나오지"가 된다). -->
-    <div class="range" id="range">
-      <span>작성일</span>
-      <input type="date" id="r-from"><span>~</span><input type="date" id="r-to">
-      <button class="rbtn" data-d="7">7일</button>
-      <button class="rbtn" data-d="30">30일</button>
-      <button class="rbtn" data-d="90">90일</button>
-      <button class="rbtn" data-d="0">전체</button>
-      <!-- 연도 칩 (2026-09-01 사장님 요청 — *"2026년 후기만 몰아본다든지"*).
-           **자료에 있는 해만 세운다** — 없는 해를 세우면 눌러도 0건이다.
-           `minDate`~`maxDate` 가 작성일 범위라 그대로 쓴다. -->
-      <span class="yrs" id="r-years"></span>
-      <span class="cntxt" id="r-note"></span>
-    </div>
+    <!-- 날짜 범위는 **화면 맨 위 `#period` 로 옮겼다**(2026-09-09 사장님 지시).
+         날짜 칸이 두 벌이면 「통일」이 아니다 — `hm-from`/`hm-to` 하나만 남는다. -->
     <div class="picked" id="picked"></div>
     <div class="filter" id="filter"></div>
     <div id="list"></div>
@@ -1767,7 +1850,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-08-762e589e';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-09-1fe96a17';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -3452,6 +3535,302 @@ function wireSecs() {
   });
 }
 
+  /* ══════════════════════════════════════════════════════════════════════
+   * 리포트 — 주간 · 종합 (2026-09-09 사장님 지시)
+   * ══════════════════════════════════════════════════════════════════════
+   * *"주간리포트 나오게(AI분석) / 종합진단 / 점을 클릭했을때 /
+   *   경원영업팀 전체리포트(시각화포함)"*.
+   *
+   * **여기서 새로 재지 않는다.** 화면이 이미 들고 있는 자료(`byStoreWeek4`·`byStore`·
+   * `srShare`)만 다시 읽어 문장과 그림으로 만든다 — 새로 계산하면 다른 카드와 어긋난다
+   * (이 화면이 서버가 미리 계산해 내려보낸 값에서 이미 두 번 겪은 사고다).
+   *
+   * **생성형 AI 를 부르지 않는다.** Apps Script 에서 외부 AI 를 부르려면 키와 비용이
+   * 들고 하루 쿼터도 함께 쓴다. 지금은 규칙으로 읽고 **화면이 그 사실을 밝힌다** —
+   * 「AI 분석」이라 적어 놓고 규칙이면 그 자리에서 거짓이 된다. */
+  var reportStore = '';   /* '' 경원영업팀 전체 · 매장 이름이면 그 지점 */
+
+  /** 그 주의 건수. `store` 가 없으면 전 매장 합. */
+  function wkSum(bw, store, w) {
+    var t = 0, keys = store ? [store] : Object.keys(bw), i, m, k;
+    for (i = 0; i < keys.length; i++) {
+      m = bw[keys[i]] && bw[keys[i]][w];
+      if (!m) continue;
+      for (k in m) if (m.hasOwnProperty(k)) t += m[k];
+    }
+    return t;
+  }
+  /** 그 주의 유형별 건수(4종). */
+  function wkKinds(bw, store, w) {
+    var out = {}, keys = store ? [store] : Object.keys(bw), i, m, k;
+    for (i = 0; i < keys.length; i++) {
+      m = bw[keys[i]] && bw[keys[i]][w];
+      if (!m) continue;
+      for (k in m) if (m.hasOwnProperty(k)) out[k] = (out[k] || 0) + m[k];
+    }
+    return out;
+  }
+  /** 늘고 줄어든 정도. 앞이 0 이면 **배수를 말하지 않는다** — 0 에서 늘어난 것은
+   *  「몇 %」가 아니라 「새로 생겼다」이다(이 화면이 월별 추이에서 이미 세운 규칙). */
+  function deltaText(cur, prev) {
+    if (!prev) return cur ? '지난주에는 없었습니다' : '지난주도 없었습니다';
+    var g = (cur - prev) / prev * 100;
+    if (Math.abs(g) < 1) return '지난주와 비슷합니다';
+    return '지난주 ' + nf(prev) + '건 대비 <b class="' + (g > 0 ? '' : 'warn') + '">'
+      + (g > 0 ? '+' : '') + g.toFixed(0) + '%</b>';
+  }
+  /** 12주 막대. **축을 그리지 않는다** — 값은 바로 위 문장이 말한다. */
+  function wkBars(bw, store, weeks, curW) {
+    var vals = weeks.map(function (w) { return wkSum(bw, store, w); });
+    var mx = Math.max.apply(null, vals.concat([1]));
+    var bars = weeks.map(function (w, i) {
+      var h = Math.round(vals[i] / mx * 100);
+      var g = (i > 0 && vals[i - 1]) ? (vals[i] - vals[i - 1]) / vals[i - 1] * 100 : null;
+      return '<span class="wb' + (w === curW ? ' now' : '') + '" title="' + esc(weekLabelLong(w))
+        + ' · ' + nf(vals[i]) + '건"><i style="height:' + Math.max(h, 2) + '%;background:'
+        + growColor(g, GROW_SAT) + '"></i></span>';
+    }).join('');
+    /* 눈금은 **달이 바뀌는 자리에만** 적는다 — 12칸에 전부 적으면 글자가 뭉갠다 */
+    var ax = weeks.map(function (w, i) {
+      var r = weekRange(w), mo = r ? Number(r.from.slice(5, 7)) : 0;
+      var pr = i > 0 ? weekRange(weeks[i - 1]) : null;
+      var pm = pr ? Number(pr.from.slice(5, 7)) : -1;
+      return '<span>' + (mo !== pm ? mo + '월' : '') + '</span>';
+    }).join('');
+    return '<div class="wkbars">' + bars + '</div><div class="wkax">' + ax + '</div>';
+  }
+  /** 순위 막대 — 이름 · 막대 · 값. */
+  function rankBars(rows, color) {
+    var mx = Math.max.apply(null, rows.map(function (r) { return r.v; }).concat([1]));
+    return rows.map(function (r) {
+      return '<div class="rprank"><span class="nm" title="' + esc(r.nm) + '">' + esc(r.nm) + '</span>'
+        + '<span class="tr"><i style="width:' + Math.max(2, Math.round(r.v / mx * 100)) + '%;background:'
+        + (r.c || color || '#1428A0') + '"></i></span>'
+        + '<span class="vv">' + esc(r.t !== undefined ? r.t : nf(r.v)) + '</span></div>';
+    }).join('');
+  }
+
+  function renderReport() {
+    var el = document.getElementById('rp-week');
+    var sel = document.getElementById('rp-store');
+    var bteam = document.getElementById('rp-team');
+    var note = document.getElementById('rp-note');
+    if (!el) return;
+
+    /* 지점 드롭다운 — **후기가 있는 매장만** 세운다(0건을 고르면 빈 리포트가 된다) */
+    if (sel) {
+      var by = DATA.byStore || {};
+      var names = Object.keys(by).filter(function (k) { return by[k] > 0; });
+      names.sort(function (a, b) { return by[b] - by[a]; });
+      /* **고른 매장이 목록에서 빠지면 전체로 되돌린다** — 안 그러면 화면 아래에
+         그 결과에 없는 지점의 리포트가 남아 화면이 거짓말을 한다. */
+      if (reportStore && names.indexOf(reportStore) < 0) reportStore = '';
+      var sig = names.join('|');
+      if (sel.dataset.sig !== sig) {
+        sel.dataset.sig = sig;
+        sel.innerHTML = '<option value="">지점 고르기…</option>' + names.map(function (n) {
+          return '<option value="' + esc(n) + '">' + esc(n) + ' (' + nf(by[n]) + '건)</option>';
+        }).join('');
+      }
+      sel.value = reportStore;
+      if (!sel.dataset.wired) {
+        sel.dataset.wired = '1';
+        sel.addEventListener('change', function () { reportStore = sel.value; render(); });
+      }
+    }
+    if (bteam) {
+      bteam.classList.toggle('on', !reportStore);
+      if (!bteam.dataset.wired) {
+        bteam.dataset.wired = '1';
+        bteam.addEventListener('click', function () { reportStore = ''; render(); });
+      }
+    }
+
+    var bw = weekSrc('store');
+    var wl = weekList(bw);
+    if (!wl.length) {
+      /* **「없다」와 「아직 안 모았다」를 가른다** — 옛 서버 자료에는 주간 칸이 없다 */
+      el.innerHTML = '<div class="dsum"><h3>주간 리포트</h3><p>주간 자료가 아직 없습니다 — '
+        + '관리자의 「수집」을 한 번 돌리면 채워집니다.</p></div>';
+      if (note) note.textContent = '';
+      return;
+    }
+    /* **「이번 주」는 고른 기간을 따른다** — 위 기간 막대에서 주를 고르면 그 주,
+       안 골랐으면 자료의 마지막 주. 두 곳이 다른 주를 말하면 화면이 어긋난다. */
+    var curW = (heatWeek && heatWeek !== 'custom' && wl.indexOf(heatWeek) >= 0)
+      ? heatWeek : wl[wl.length - 1];
+    var ci = wl.indexOf(curW);
+    var prevW = ci > 0 ? wl[ci - 1] : null;
+    var weeks = wl.slice(Math.max(0, ci - 11), ci + 1);
+
+    var who = reportStore || '경원영업팀 전체';
+    var cur = wkSum(bw, reportStore, curW);
+    var prev = prevW ? wkSum(bw, reportStore, prevW) : 0;
+
+    /* ── 근거를 **먼저 계산한다** — 요약이 그 값을 그대로 쓴다.
+       두 곳에서 따로 계산하면 요약과 근거가 반드시 갈린다. */
+    var kk = wkKinds(bw, reportStore, curW), ksum = 0, kn;
+    for (kn in kk) if (kk.hasOwnProperty(kn)) ksum += kk[kn];
+
+    var mvUp = [], mvDn = [], mvNew = [];
+    var allCur = [], rk = -1, rkAll = 0, srp = null;
+    var byS = DATA.byStore || {};
+    if (!reportStore) {
+      var movers = [];
+      Object.keys(bw).forEach(function (st) {
+        var c = wkSum(bw, st, curW), q = prevW ? wkSum(bw, st, prevW) : 0;
+        if (!c && !q) return;
+        movers.push({ nm: st, cur: c, prev: q, g: q ? (c - q) / q * 100 : null });
+      });
+      mvUp = movers.filter(function (m) { return m.g !== null && m.g > 0; })
+        .sort(function (a, b) { return b.g - a.g; }).slice(0, 5);
+      mvDn = movers.filter(function (m) { return m.g !== null && m.g < 0; })
+        .sort(function (a, b) { return a.g - b.g; }).slice(0, 5);
+      /* **「새로 생긴 곳」을 증감에 섞지 않는다** — 0 에서 늘어난 것은 몇 %가 아니다 */
+      mvNew = movers.filter(function (m) { return m.g === null && m.cur > 0; })
+        .sort(function (a, b) { return b.cur - a.cur; });
+    } else {
+      Object.keys(bw).forEach(function (st) {
+        var v = wkSum(bw, st, curW); if (v > 0) allCur.push({ nm: st, v: v });
+      });
+      allCur.sort(function (a, b) { return b.v - a.v; });
+      for (var ri = 0; ri < allCur.length; ri++) if (allCur[ri].nm === reportStore) { rk = ri + 1; break; }
+      var allNames = Object.keys(byS).filter(function (k) { return byS[k] > 0; })
+        .sort(function (a, b) { return byS[b] - byS[a]; });
+      rkAll = allNames.indexOf(reportStore) + 1;
+      srp = (typeof srShare === 'function') ? srShare(reportStore) : null;
+    }
+
+    /* ── 4~5줄 요약 ─────────────────────────────────────────────────── */
+    var sum5 = [];
+    sum5.push('<b>' + esc(weekLabelLong(curW)) + '</b> ' + esc(who) + ' 후기 <b>' + nf(cur) + '건</b>'
+      + (prevW ? ' — ' + deltaText(cur, prev) : '') + '.');
+    if (ksum) {
+      var kTop = Object.keys(kk).sort(function (a, b) { return kk[b] - kk[a]; })[0];
+      sum5.push('가장 많이 이야기된 것은 <b>' + esc(kLabel(kTop)) + '</b>('
+        + Math.round(kk[kTop] / ksum * 100) + '%)입니다.');
+    }
+    if (!reportStore) {
+      if (mvUp.length) {
+        sum5.push('가장 많이 는 곳은 <b>' + esc(mvUp[0].nm) + '</b>('
+          + nf(mvUp[0].prev) + ' → ' + nf(mvUp[0].cur) + '건)입니다.');
+      }
+      if (mvDn.length) {
+        sum5.push('가장 많이 준 곳은 <b class="warn">' + esc(mvDn[0].nm) + '</b>('
+          + nf(mvDn[0].prev) + ' → ' + nf(mvDn[0].cur) + '건) — 여기부터 보셔야 합니다.');
+      }
+      /* 경쟁사 — **못 잰 지역은 세지 않는다**(0% 로 치면 「완패」라는 거짓이 된다) */
+      var rvv = (DATA.rival && DATA.rival.rows) || [];
+      /* ── **아래 「경쟁사와 견주면」과 한 글자도 다르면 안 된다** (2026-09-09 실물에서 잡았다)
+       * 처음에는 정렬 없이 첫 항목을 집고 판정도 4사 기준(`r.base`)이라, 요약이
+       * *"가장 큰 곳 성남"* 이라 적고 바로 아래 진단은 *"가장 많이 밀리는 곳은 강원"*
+       * 이라 적었다 — **한 화면이 두 말을 했다.** 판정·정렬·잣대를 그쪽과 똑같이 쓴다
+       * (화면은 당사 vs LG 둘만 그리므로 균형점도 2사 기준 50 이다). */
+      var okd5 = function (r) { return typeof r.pct === 'number' && isFinite(r.pct); };
+      var lose5 = rvv.filter(function (r) { return okd5(r) && rvWin(r.ours, r.rival) === false; })
+        .sort(function (a, b) { return rvShare(a.ours, a.rival) - rvShare(b.ours, b.rival); });
+      if (rvv.length) {
+        sum5.push(lose5.length
+          ? '경쟁사에 밀리는 지역이 <b class="warn">' + lose5.length + '곳</b>입니다 — 가장 많이 밀리는 곳은 '
+            + '<b>' + esc(lose5[0].area) + '</b>(당사 ' + nf(lose5[0].ours) + ' vs LG ' + nf(lose5[0].rival) + ')입니다.'
+          : '경쟁사와 견주면 <b>전 지역에서 앞서고</b> 있습니다.');
+      }
+    } else {
+      sum5.push(rk > 0
+        ? '이번 주 팀 안 <b>' + rk + '위</b>입니다(글이 있는 ' + allCur.length + '곳 중).'
+        : '이번 주에는 <b class="warn">잡힌 글이 없습니다</b>.');
+      if (rkAll > 0) {
+        sum5.push('전 기간 누적으로는 <b>' + rkAll + '위</b>(' + nf(byS[reportStore]) + '건)입니다.');
+      }
+      if (srp) {
+        sum5.push(srp.pct === null
+          ? 'LG 짝 매장과는 <b class="warn">아직 견줄 자료가 없습니다</b> — 「없다」가 아니라 「못 잰다」입니다.'
+          : 'LG 짝 매장과 견주면 우리 몫이 <b' + (srp.pct >= 50 ? '' : ' class="warn"') + '>'
+            + srp.pct + '%</b>입니다(당사 ' + nf(srp.ours) + ' vs LG ' + nf(srp.rival) + '건).');
+      }
+    }
+    /* **다섯 줄을 넘기지 않는다** — 사장님이 못 박은 길이다. 넘치는 것은 아래 근거에 있다. */
+    sum5 = sum5.slice(0, 5);
+
+    var html = '<div class="dsum"><h3>' + esc(who) + ' · 주간 요약</h3><ol>'
+      + sum5.map(function (t) { return '<li>' + t + '</li>'; }).join('')
+      + '</ol></div>';
+
+    /* ── 그림은 요약 바로 아래 — **접지 않는다**(사장님이 「시각화 포함」을 못 박으셨다) */
+    var rg = weekRange(curW);
+    html += '<div class="dsec"><h3>최근 ' + weeks.length + '주</h3>'
+      + wkBars(bw, reportStore, weeks, curW)
+      + '<p class="cntxt" style="margin-top:6px">'
+      + (rg ? '이번 주 ' + esc(rg.from) + ' ~ ' + esc(rg.to) + ' · ' : '')
+      + '막대 색은 그 앞 주 대비 등락 · <b>작성일을 아는 글만</b> 셉니다'
+      + '(네이버가 카페·웹 글의 작성일을 주지 않습니다).</p></div>';
+
+    /* ── 근거 — **접어 둔다.** 지우지 않는 이유는 요약을 검산할 수 있어야 하기 때문이다 */
+    var more = '';
+    if (ksum) {
+      var korder = Object.keys(kk).sort(function (a, b) { return kk[b] - kk[a]; });
+      more += '<div class="dsec"><h3>무엇을 이야기했나</h3>'
+        + rankBars(korder.map(function (k) {
+            return { nm: kLabel(k), v: kk[k], t: nf(kk[k]) + '건 · ' + Math.round(kk[k] / ksum * 100) + '%' };
+          }), '#1428A0')
+        + '</div>';
+    }
+    if (!reportStore) {
+      if (mvUp.length || mvDn.length) {
+        var h = '';
+        if (mvUp.length) {
+          h += '<p>가장 많이 는 곳 5</p>'
+            + rankBars(mvUp.map(function (m) {
+                return { nm: m.nm, v: m.cur, c: growColor(m.g, GROW_SAT),
+                         t: nf(m.cur) + '건 (+' + m.g.toFixed(0) + '%)' };
+              }));
+        }
+        if (mvDn.length) {
+          h += '<p style="margin-top:9px">가장 많이 준 곳 5</p>'
+            + rankBars(mvDn.map(function (m) {
+                return { nm: m.nm, v: m.prev, c: growColor(m.g, GROW_SAT),
+                         t: nf(m.cur) + '건 (' + m.g.toFixed(0) + '%)' };
+              }));
+        }
+        if (mvNew.length) {
+          h += '<p style="margin-top:9px" class="cntxt">지난주에 없다가 이번 주에 생긴 곳 '
+            + mvNew.length + '곳 — ' + mvNew.slice(0, 4).map(function (m) {
+                return esc(m.nm) + ' ' + nf(m.cur) + '건';
+              }).join(' · ') + (mvNew.length > 4 ? ' 외' : '') + '</p>';
+        }
+        more += '<div class="dsec"><h3>어디가 늘고 어디가 꺾였나</h3>' + h + '</div>';
+      }
+    } else {
+      /* **고른 지점은 순위가 낮아도 반드시 그린다**(2026-09-09 실물에서 잡았다) —
+         상위 8곳만 그렸더니 16위인 매장이 **자기 순위 그림에 없었다.** */
+      var shown = allCur.slice(0, 8);
+      var meIn = shown.some(function (m) { return m.nm === reportStore; });
+      if (!meIn && rk > 0) shown = shown.concat([allCur[rk - 1]]);
+      more += '<div class="dsec"><h3>팀 안에서 어디쯤인가</h3>'
+        + rankBars(shown.map(function (m) {
+            return { nm: m.nm, v: m.v, c: m.nm === reportStore ? '#1428A0' : '#B7C2D8',
+                     t: nf(m.v) + '건' + (m.nm === reportStore && rk > 8 ? ' · ' + rk + '위' : '') };
+          }))
+        + (!meIn && rk > 8 ? '<p class="cntxt" style="margin-top:4px">상위 8곳과 '
+            + esc(reportStore) + '만 그렸습니다.</p>' : '')
+        + '</div>';
+      if (srp && srp.pct !== null) {
+        more += '<div class="dsec"><h3>LG 짝과 견주면</h3>'
+          + rankBars([{ nm: '당사', v: srp.ours, c: '#005C6E' },
+                      { nm: 'LG', v: srp.rival, c: '#B08442' }]) + '</div>';
+      }
+    }
+    if (more) {
+      html += '<details class="rpmore"><summary>근거 자세히 보기</summary><div>' + more + '</div></details>';
+    }
+    el.innerHTML = html;
+    if (note) {
+      note.textContent = reportStore
+        ? '히트맵 칸을 눌러도 그 지점 리포트로 옵니다.'
+        : '지점을 고르면 그 지점 리포트로 바뀝니다.';
+    }
+  }
+
   function renderDiag() {
     var el = document.getElementById('diag'); if (!el) return;
     var out = [], acts = [];
@@ -4631,12 +5010,11 @@ function wireSecs() {
 
   /* 날짜 범위 — 입력칸과 빠른 버튼이 **같은 값을 본다**(따로 두면 화면이 어긋난다) */
   function renderRange() {
-    var f = document.getElementById('r-from'), t = document.getElementById('r-to');
-    var note = document.getElementById('r-note'); if (!f || !t) return;
-    if (document.activeElement !== f) f.value = fromDate;
-    if (document.activeElement !== t) t.value = toDate;
-    if (DATA.minDate) { f.min = DATA.minDate; t.min = DATA.minDate; }
-    Array.prototype.forEach.call(document.querySelectorAll('#range .rbtn'), function (b) {
+    var note = document.getElementById('r-note');
+    /* **날짜 칸은 여기서 안 만진다** — `renderHeatWeeks` 가 `hm-from`/`hm-to` 를
+       그린다. 두 곳이 같은 칸을 그리면 서로 덮어써 「드롭다운은 3주차인데 날짜는
+       다른 주」가 된다(이 화면이 기간 거르개를 처음 만들 때 세운 규칙이다). */
+    Array.prototype.forEach.call(document.querySelectorAll('#period .rbtn'), function (b) {
       var d = Number(b.dataset.d);
       var want = d ? ymdAgo(d - 1) : '';
       b.className = 'rbtn' + ((fromDate === want && !toDate) ? ' on' : '');
@@ -4667,11 +5045,11 @@ function wireSecs() {
             if (y === '기타') {
               /* 「기타」와 날짜 범위는 함께 걸리지 않는다 — 모르는 글에 범위는 뜻이 없다 */
               dateOther = !dateOther;
-              if (dateOther) { fromDate = ''; toDate = ''; }
+              if (dateOther) setPeriod('', '');
             } else {
               dateOther = false;
-              if (fromDate === y + '-01-01' && toDate === y + '-12-31') { fromDate = ''; toDate = ''; }
-              else { fromDate = y + '-01-01'; toDate = y + '-12-31'; }
+              if (fromDate === y + '-01-01' && toDate === y + '-12-31') setPeriod('', '');
+              else setPeriod(y + '-01-01', y + '-12-31');
             }
             page = 1; render();
           };
@@ -6245,6 +6623,37 @@ function renderList() {
   /* 직접 지정한 기간(YYYY-MM-DD). **주차와 따로 든다** — 드롭다운을 「직접 지정」으로
      바꿔도 고른 주가 남아 있으면 화면이 두 말을 한다. */
   var heatFrom = '', heatTo = '';
+
+  /* ── 기간은 **하나다** (2026-09-09 사장님 지시: "날짜인터페이스 최상단으로 통일") ──
+   *
+   * 예전에는 상태가 두 벌이었다 — 히트맵은 `heatWeek`/`heatFrom`/`heatTo`,
+   * 목록은 `fromDate`/`toDate`. 그래서 히트맵이 「9월 1주차」인데 아래 목록은
+   * 전 기간이라 **한 화면이 두 기간을 말했다.**
+   *
+   * 지금은 **`heatWeek`/`heatFrom`/`heatTo` 가 진실의 원천**이고
+   * `fromDate`/`toDate` 는 거기서 파생한다. 상태를 통째로 갈아엎지 않은 이유는
+   * `heatWeek` 을 읽는 곳이 스무 곳이 넘어 **옮기다 반드시 하나를 흘리기** 때문이다.
+   *
+   * **자를 수 있는 단위가 다르다는 것을 잊지 말 것** — 목록은 글마다 작성일이 있어
+   * 하루로 자르지만 히트맵 자료(`wk4`)는 주 단위라 걸친 주를 통째로 본다.
+   * 그래서 「9월 1주차」를 고르면 목록도 정확히 그 주의 날짜 범위가 된다. */
+  function syncPeriod() {
+    if (!heatWeek) { fromDate = ''; toDate = ''; return; }
+    if (heatWeek === 'custom') { fromDate = heatFrom || ''; toDate = heatTo || ''; return; }
+    var rg = weekRange(heatWeek);
+    fromDate = rg ? rg.from : '';
+    toDate = rg ? rg.to : '';
+  }
+  /** 날짜 범위로 기간을 정한다(빠른 버튼·연도 칩이 쓴다). 비우면 전체 기간. */
+  function setPeriod(from, to) {
+    heatFrom = from || '';
+    heatTo = to || '';
+    heatWeek = (heatFrom || heatTo) ? 'custom' : '';
+    /* **드릴다운은 처음으로 돌린다** — 기간을 바꾸면 안에 있던 매장이 0건일 수 있고,
+       그때 빈 화면이 뜨면 「고장」으로 보인다. */
+    heatPath = [];
+    syncPeriod();
+  }
   /* ── 무엇을 칸으로 그릴 것인가 (2026-09-03 사장님 지시) ──────────────────────
    * *"매니저 후기 수집별 지금은 베스트10으로 되어 있는데 수집된 매니저를 토대로
    *  히트맵으로 볼 수 있게 히트맵 안으로 편입해주세요."*
@@ -6892,6 +7301,50 @@ function renderList() {
    * `max` 가 0 이거나 값이 없으면 **회색**이다 — 「0건」과 「못 잼」은 다른 말이고,
    * 이 화면은 그 둘을 늘 갈라 왔다.
    */
+  /* ══════════════════════════════════════════════════════════════════
+   * **칸 색은 등락이다 — 주식 히트맵처럼** (2026-09-09 사장님 지시)
+   * ══════════════════════════════════════════════════════════════════
+   * *"히트맵컬러 주식처럼(재미)"*.
+   *
+   * **2026-09-03·09-06 의 「단일 계열」 결정을 뒤집는다.** 그때는 *"주식 차트 느낌이라
+   * 부담스럽다"* 셔서 파스텔 한 갈래(연회청 → 틸)로 바꿨는데, 오늘 지시가 반대다.
+   * **되돌리지 말 것 — 뒤집힌 것은 취향이 아니라 목적이다**: 단일 계열은 「어디가
+   * 큰가」만 말하고 「어디가 꺾였나」는 못 말한다. 카드 제목이 *"어디가 크고 어디가
+   * 꺾였나"* 인데 색이 절반만 답하고 있었다.
+   *
+   * finviz 가 그렇듯 **크기는 규모(건수), 색은 등락**이다. 칸 크기는 한 줄도 안 바꿨다.
+   *
+   * **초록↔빨강을 유지하는 이유**는 위 `rampColor` 주석 그대로다 — 사장님이 finviz 를
+   * 보고 고르신 짝이고, 휘도가 단조라(하락 어둡게 · 중립 중간 · 상승 밝게) 흑백에서도
+   * 적록 색각에서도 방향이 남는다. **한국 주식의 「상승 빨강」으로 뒤집지 말 것.**
+   *
+   * ── **%가 아니라 배수로 잰다**(로그) ─────────────────────────────────
+   * 처음에 ±15% 선형으로 칠했더니 실측으로 **92%가 포화**였다(당해 92 · 전월 83 ·
+   * 전년 94). 후기 건수는 작은 수라 **1건이 3건이 되면 +200%** 다 — 주가와 달리
+   * ±15% 는 일상적인 변동이라 색이 아무것도 못 말한다.
+   *
+   * **그리고 선형으로는 못 맞춘다** — 상승은 배수라 무한대인데 하락은 **−100%가
+   * 바닥**이다. 포화점을 ±150% 로 넓히면 하락 쪽은 영영 포화되지 않아 빨강이
+   * 흐려진다. 로그(배수)는 그 비대칭을 원리적으로 없앤다: **3배 늘거나 3분의 1로
+   * 줄면 양쪽이 똑같이 진하다.**
+   *
+   * `lv` 는 **몇 배에서 가장 진해지는가**를 log2 로 적은 값이다.
+   * 기본 log2(3)=1.585 → 3배. **주 단위는 표본이 1~5건이라 더 넓게** log2(5)=2.32.
+   * **못 잰 것은 회색** — 0 으로 칠하면 「제자리」라는 거짓이 된다.
+   */
+  var GROW_SAT = 3;      /* 몇 배에서 색이 가장 진해지는가(달·해 기준) */
+  var GROW_SAT_WK = 5;   /* 주 단위 — 표본이 작아 더 넓게 */
+  function growColor(g, sat) {
+    if (g === null || g === undefined || !isFinite(g)) return 'rgb(214,218,224)';
+    var L = Math.log(sat || GROW_SAT) / Math.LN2;
+    var ratio = 1 + g / 100;
+    /* −100%(0건이 됨)는 log 가 발산한다 — 바닥에서 자른다 */
+    if (ratio < 0.01) ratio = 0.01;
+    var e = Math.log(ratio) / Math.LN2;
+    var t = Math.min(Math.abs(e) / L, 1);
+    /* 1.5% 미만(≈±1%)은 중립 — 소수점 흔들림에 색이 튀지 않게 한다 */
+    return rampColor(Math.abs(e) < 0.02 ? 0 : 0.18 + 0.82 * t, e > 0);
+  }
   function heatColor(v, max) {
     if (v === null || v === undefined) return 'rgb(214,218,224)';
     var t = (max > 0) ? Math.max(0, Math.min(1, v / max)) : 0;
@@ -7057,7 +7510,84 @@ function renderList() {
   /* 유형 키 → 사람 말. **버튼과 안내가 같은 말을 써야 한다**(키 `wedding` 을 그대로
      적으면 화면이 개발자 말을 한다). 표는 버튼 블록이 채우고 둘이 함께 읽는다. */
   var k4name = {};
-  function kLabel(k) { return k4name[k] || k; }
+  /** 유형 키 → 화면 이름. **렌더 순서에 매이면 안 된다**(2026-09-09 실물에서 잡았다) —
+   *  `k4name` 은 `renderHeat()` 안에서 채워지는데, 그보다 먼저 도는 `renderReport()`
+   *  가 부르면 비어 있어 **개발자 키(`wedding`·`etc`)가 화면에 그대로 찍혔다.**
+   *  이 화면이 유형 키를 날것으로 찍어 이미 한 번 데인 자리라, 표를 안 거치고도 찾는다. */
+  function kLabel(k) {
+    if (k4name[k]) return k4name[k];
+    var n = DATA.kind4Names || [];
+    for (var i = 0; i < n.length; i++) if (n[i][0] === k) return n[i][1];
+    return k;
+  }
+
+  /* ── 기간 막대 채우기 (2026-09-09 사장님 지시로 히트맵에서 떼어냈다) ────────
+   * 예전에는 `renderHeat()` 안에 있었다. 기간 막대가 히트맵 카드 안이었을 때는
+   * 그래도 됐지만, **화면 맨 위로 올린 뒤로는 카드가 닫혀 있으면 채워지지 않는다** —
+   * 카드가 닫히면 `#hm` 의 폭이 0 이라 트리맵 그리기가 앞에서 되돌아가기 때문이다.
+   * 실측으로 **카드를 열기 전 옵션 0개 · 연 뒤 22개**였다. 맨 위 막대가 비어 보이면
+   * 기간을 정할 길이 없는 것과 같으므로 `render()` 가 직접 부른다. */
+  function renderPeriodBar() {
+  /* **기간 막대는 화면 맨 위에 있다**(2026-09-09) — 예전 `#hm-weeks` 는 히트맵
+     카드 안이었다. 여기서 감추는 것은 **주차 드롭다운뿐**이다: 막대에는 빠른 버튼과
+     연도 칩이 함께 있어 통째로 감추면 기간을 정할 길이 사라진다. */
+  var wbox = document.getElementById('hm-wsel');
+  if (wbox) {
+    /* **지금 보고 있는 축의 주차 자료를 센다**(2026-09-06). 매니저를 보면서 지점
+       건수를 적으면 골라 보고서야 다른 숫자를 만난다 — 드롭다운과 칸이 같은 표를
+       봐야 한다. `weekSrc` 가 축을 가른다(판정도 같은 함수를 쓴다). */
+    var bsw = weekSrc(), wsum = {}, ws1, wk1;
+    for (ws1 in bsw) if (bsw.hasOwnProperty(ws1)) {
+      for (wk1 in bsw[ws1]) if (bsw[ws1].hasOwnProperty(wk1)) {
+        var mw = bsw[ws1][wk1], kz, nz = 0;
+        for (kz in mw) if (mw.hasOwnProperty(kz)) { if (!heatKind || kz === heatKind) nz += mw[kz]; }
+        wsum[wk1] = (wsum[wk1] || 0) + nz;
+      }
+    }
+    var wlist = Object.keys(wsum).sort();
+    /* **자료가 없으면 줄 자체를 안 그린다** — 빈 줄은 「고장」으로 보인다.
+       옛 서버가 보낸 자료에는 이 항목이 아예 없다(다시 수집하기 전까지). */
+    var sel = document.getElementById('hm-wsel');
+    var f0 = document.getElementById('hm-from'), t0 = document.getElementById('hm-to');
+    var clr = document.getElementById('hm-wclear'), note = document.getElementById('hm-wnote');
+    /* 주차 자료가 없으면 **드롭다운과 그 이름표만** 감춘다(옛 서버 자료에는 `wk4` 가 없다) */
+    var wlab = document.querySelector('#period .lbl');
+    if (!wlist.length) { wbox.style.display = 'none'; if (wlab) wlab.style.display = 'none'; }
+    else if (sel) {
+      wbox.style.display = ''; if (wlab) wlab.style.display = '';
+      /* 드롭다운 — **최신 주차가 위**로 온다(사장님: *"최신 주차가 기본 선택"*).
+         **건수를 함께 적는다** — 실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라
+         숫자가 없으면 골라 보고서야 빈 히트맵을 만난다. */
+      var opts = ['<option value="">전체 기간</option>'];
+      for (var wi2 = wlist.length - 1; wi2 >= 0; wi2--) {
+        var w3 = wlist[wi2];
+        opts.push('<option value="' + esc(w3) + '"' + (heatWeek === w3 ? ' selected' : '') + '>'
+          + esc(weekLabelLong(w3)) + ' (' + nf(wsum[w3]) + '건)</option>');
+      }
+      /* **「직접 지정」은 자료가 아니라 상태다** — 날짜를 손으로 고치면 여기로 온다 */
+      opts.push('<option value="custom"' + (heatWeek === 'custom' ? ' selected' : '') + '>직접 지정</option>');
+      sel.innerHTML = opts.join('');
+      sel.value = heatWeek || '';
+
+      /* 날짜 칸 — 고른 주의 범위를 **자동으로 채운다**(사장님 지시) */
+      var rg = heatWeek === 'custom' ? { from: heatFrom, to: heatTo } : weekRange(heatWeek);
+      if (f0) f0.value = rg ? rg.from : '';
+      if (t0) t0.value = rg ? rg.to : '';
+      /* 자료가 있는 범위를 넘겨 고르지 않게 막는다 — 넘기면 늘 0건이라 「고장」으로 보인다 */
+      var lo = weekRange(wlist[0]), hi = weekRange(wlist[wlist.length - 1]);
+      if (f0 && lo) { f0.min = lo.from; f0.max = hi ? hi.to : ''; }
+      if (t0 && lo) { t0.min = lo.from; t0.max = hi ? hi.to : ''; }
+
+      if (clr) clr.hidden = !heatWeek;
+      if (note) {
+        var whoW = heatWho === 'mgr' ? '매니저' : '지점';
+        note.textContent = heatWeek === 'custom'
+          ? (heatFrom && heatTo ? '직접 지정한 기간입니다 — 그 안에 든 주를 모두 셉니다.' : '시작일과 종료일을 모두 넣어 주세요.')
+          : (heatWeek ? '' : '기간을 고르면 그 기간의 ' + whoW + '만 봅니다.');
+      }
+    }
+  }
+  }
 
   function renderHeat() {
     var box = document.getElementById('hm'); if (!box) return;
@@ -7102,8 +7632,28 @@ function renderList() {
           if (lc && lc.scrollIntoView) lc.scrollIntoView({ behavior: 'smooth', block: 'start' });
           return;
         }
+        /* ── **지점을 누르면 그 지점 리포트가 함께 채워진다** (2026-09-09 사장님 지시)
+         * *"점을 클릭했을때 / 경원영업팀 전체리포트(시각화포함)"*.
+         *
+         * **드릴다운(어느 경로로 올라왔나)은 그대로 둔다** — 2026-09-04 사장님이
+         * 따로 요청하신 기능이라 없애면 안 된다. 리포트는 **함께** 바뀐다.
+         *
+         * **지점인지 지역인지는 이름으로 가른다** — 지역 이름은 `byStore` 에 없다.
+         * 칸에 그 표시를 심지 않는 이유는, 심으면 칸을 만드는 곳마다 빠뜨릴 자리가
+         * 생기기 때문이다(이 화면이 `items.push` 에서 되풀이해 겪은 사고다). */
+        if ((DATA.byStore || {})[key] !== undefined) {
+          reportStore = key;
+          /* **리포트 카드를 열어 둔다** — 접혀 있으면 바꿔 놓고도 아무 일이 없어 보인다.
+             다만 **스크롤은 하지 않는다** — 드릴다운을 보려고 누른 것일 수도 있어
+             화면을 뺏으면 안 된다. 대신 아래 안내가 어디를 보라고 적는다. */
+          var op2 = secOpen();
+          if (op2.indexOf('diag') < 0) { op2.push('diag'); secSave(op2); }
+        }
         heatPath.push(key);
-        renderHeat();
+        render();
+        /* **조사를 붙이지 않는다** — 「~로/으로」는 받침만으로 못 가른다(ㄹ 받침이
+           예외라 `josa` 로도 틀린다). 조사가 없는 문장이 유일하게 안전하다. */
+        if (reportStore === key) heatNote('위 「리포트」를 채웠습니다 — ' + key);
       });
       bk.addEventListener('click', function () { heatPath.pop(); renderHeat(); });
       /* 유형 버튼 — **손잡이를 묶음에 한 번만 걸고 눌린 것을 찾는다**(버튼마다 걸면
@@ -7129,7 +7679,7 @@ function renderList() {
       var bpy = document.getElementById('hm-yr');
       if (bpy) bpy.addEventListener('change', function () {
         heatPickY = this.value || '';
-        heatWeek = ''; heatFrom = ''; heatTo = '';
+        heatWeek = ''; heatFrom = ''; heatTo = ''; syncPeriod();
         heatPath = [];
         renderHeat();
       });
@@ -7138,7 +7688,7 @@ function renderList() {
       if (bmom) bmom.addEventListener('click', function () {
         heatYear = heatYear === 'mom' ? 'cur' : 'mom';
         /* 주차와 같은 축이라 푼다 — 겹쳐 걸면 화면이 두 말을 한다 */
-        heatWeek = ''; heatFrom = ''; heatTo = '';
+        heatWeek = ''; heatFrom = ''; heatTo = ''; syncPeriod();
         heatPath = [];
         renderHeat();
       });
@@ -7147,7 +7697,7 @@ function renderList() {
            **판정은 한 곳에만 둔다**(연도 드롭다운으로도 같은 일이 난다). */
         heatYear = heatYear === 'cmp' ? 'cur' : 'cmp';
         /* **기간을 골랐으면 푼다** — 연도와 주차는 같은 축이라 겹쳐 걸면 화면이 두 말을 한다 */
-        heatWeek = ''; heatFrom = ''; heatTo = '';
+        heatWeek = ''; heatFrom = ''; heatTo = ''; syncPeriod();
         heatPath = [];
         renderHeat();
       });
@@ -7163,7 +7713,7 @@ function renderList() {
            그대로 두면 빈 화면이 된다(있는 척하지 않는다).
            **드릴다운만 되돌린다** — 축이 바뀌면 안에 있던 칸이 사라진다. */
         heatPath = [];
-        if (heatWeek && !Object.keys(weekSrc()).length) { heatWeek = ''; heatFrom = ''; heatTo = ''; }
+        if (heatWeek && !Object.keys(weekSrc()).length) { heatWeek = ''; heatFrom = ''; heatTo = ''; syncPeriod(); }
         renderHeat();
       });
       /* ── 기간 거르개 (2026-09-03 사장님 지시) ────────────────────────────
@@ -7183,7 +7733,9 @@ function renderList() {
         /* **드릴다운은 처음으로 돌린다** — 기간을 바꾸면 안에 있던 매장이 0건일 수 있고,
            그때 빈 화면이 뜨면 「고장」으로 보인다. */
         heatPath = [];
-        renderHeat();
+        /* **목록·KPI 도 함께 따라간다**(2026-09-09 기간 통일) — `renderHeat()` 만
+           부르면 히트맵은 그 주인데 아래 목록은 전 기간이라 화면이 두 말을 한다. */
+        syncPeriod(); page = 1; render();
       });
       var wf = document.getElementById('hm-from'), wt = document.getElementById('hm-to');
       var onDate = function () {
@@ -7193,13 +7745,13 @@ function renderList() {
            고른 주를 그대로 두면 화면이 두 말을 한다. */
         heatWeek = (heatFrom || heatTo) ? 'custom' : '';
         heatPath = [];
-        renderHeat();
+        syncPeriod(); page = 1; render();
       };
       if (wf) wf.addEventListener('change', onDate);
       if (wt) wt.addEventListener('change', onDate);
       var wclr = document.getElementById('hm-wclear');
       if (wclr) wclr.addEventListener('click', function () {
-        heatWeek = ''; heatFrom = ''; heatTo = ''; heatPath = []; renderHeat();
+        heatWeek = ''; heatFrom = ''; heatTo = ''; heatPath = []; syncPeriod(); page = 1; render();
       });
       /* 창 크기가 바뀌면 다시 그린다 — 칸 좌표가 픽셀이라 안 그리면 어긋난 채 남는다 */
       var rt; window.addEventListener('resize', function () {
@@ -7232,6 +7784,8 @@ function renderList() {
       return o;
     })();
     var week = !!heatWeek;
+    /* 색이 가장 진해지는 **배수**. 실측 근거는 `growColor` 주석에 있다. */
+    var heatSpan = week ? GROW_SAT_WK : GROW_SAT;
     /* **색은 건수에 비례한다**(2026-09-03 사장님 지시). 최대값은 지금 그려지는
        판에서 낸다 — 전체 기준으로 잡으면 한 주만 볼 때 전 칸이 거의 흰색이 된다. */
     var heatMax = 0;
@@ -7603,9 +8157,10 @@ function renderList() {
           + lgvTip + lgTip;
       /* **글자색은 배경 밝기가 정한다.** 밝은 초록 칸에 흰 글자를 두면 대비가 2.7:1 로
          기준(4.5:1)에 한참 못 미쳐 **잘 크는 매장의 이름만 안 읽힌다**(재서 확인했다). */
-      /* **건수로 칠한다**(2026-09-03) — 색이 증감이던 시절에는 `d.g` 를 넘겼다.
-         `heatMax` 는 지금 그려지는 판의 최대 건수다(아래에서 낸다). */
-      var bg = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatMax);
+      /* **등락으로 칠한다**(2026-09-09 사장님 지시 — 주식 히트맵처럼).
+         크기가 규모, 색이 등락이다. `heatSpan` 은 색이 가장 진해지는 지점(%)으로
+         주 단위는 표본이 작아 넓게 잡는다. 채널 드릴다운은 갈래가 곧 뜻이라 그대로. */
+      var bg = chan ? HEAT_CHC[d.k] : growColor(d.g, heatSpan);
       /* ── **한 칸 안에 파랑 : 빨강** (2026-09-03 사장님 지시) ────────────────
        * *"지금 블루컬러는 베이스로하고있는데 LG는 지점명 안들어가도되니 레드계열로
        * 색상을 넣어서 비중을 확인해주면됩니다"*.
@@ -7644,17 +8199,22 @@ function renderList() {
     for (var li = 0; li < items.length; li++) {
       if (li === 0 || items[li].cnt < heatMin) heatMin = items[li].cnt;
     }
-    if (lt) lt.textContent = '건수';
+    /* **색은 등락이다**(2026-09-09) — 크기가 규모, 색이 등락(주식 히트맵과 같다).
+       범례가 「건수」라고 적혀 있으면 화면이 조용히 거짓을 말한다. */
+    if (lt) lt.textContent = week ? '평소 주당 대비' : (heatYear === 'cmp' ? '전년 대비' : '전월 대비');
     /* **색띠는 매번 다시 그린다.** 한때 초기화에서 한 번만 그렸는데, 그 자리에는
        최대값이 아직 없어 색이 NaN 이 되어 **띠가 통째로 비었다**(실물에서 봤다). */
     var sc2 = document.getElementById('hm-scale');
     if (sc2) {
-      sc2.innerHTML = [0, 0.2, 0.4, 0.6, 0.8, 1].map(function (r) {
-        return '<span style="background:' + heatColor(r, 1) + '"></span>';
+      /* 배수 축이라 **양 끝이 대칭**이다 — `÷3 … ×3`. %로 적으면 −67% ~ +200% 라
+         한쪽이 커 보여 색이 비대칭인 줄 오해한다. */
+      sc2.innerHTML = [-1, -0.55, -0.15, 0.15, 0.55, 1].map(function (r) {
+        var mul = Math.pow(heatSpan, r);        /* r=−1 → 1/3배 · r=+1 → 3배 */
+        return '<span style="background:' + growColor((mul - 1) * 100, heatSpan) + '"></span>';
       }).join('');
     }
-    if (ll) ll.textContent = items.length ? nf(heatMin) + '건' : '–';
-    if (lr) lr.textContent = items.length ? nf(heatMax) + '건' : '–';
+    if (ll) ll.textContent = '÷' + heatSpan;
+    if (lr) lr.textContent = '×' + heatSpan;
     var lz = document.getElementById('hm-legz');
     /* 색이 건수가 되면서 「못 잼」 칸이 사라졌다 — 0건은 애초에 칸이 안 그려진다.
        대신 **증감이 어디로 갔는지**를 적는다(칸 글자와 말풍선이 들고 있다). */
@@ -7662,10 +8222,9 @@ function renderList() {
     /* **증감을 적는 것은 「전년 대비」뿐이다**(2026-09-05 실물에서 잡음). 당해만
        볼 때는 칸에도 말풍선에도 증감이 없는데 범례가 「칸 안에 있습니다」라고 해
        **없는 것을 찾게 만들었다.** 화면이 두 말을 하면 안 된다. */
-    if (lz) lz.textContent = (heatYear === 'cmp' || heatYear === 'mom')
-      ? '증감은 칸 안 작은 글씨와 말풍선에 있습니다'
-      : (week ? '평소 주당 대비는 칸 안 작은 글씨에 있습니다'
-              : '건수만 봅니다 — 증감은 「전년 대비」·「전월 대비」에서 나옵니다');
+    /* **회색이 무슨 뜻인지 반드시 적는다** — 「제자리」로 읽으면 거짓이 된다.
+       칸 크기는 여전히 건수라 그 사실도 함께 적는다(색만 바뀐 것이다). */
+    if (lz) lz.textContent = '칸 크기는 건수 · ' + heatSpan + '배 늘거나 줄면 색이 가장 진합니다 · 회색은 견줄 자료가 없는 곳';
     bs.textContent = '크기: ' + (heatSize === 'n' ? '건수' : '등락률');
     bs.classList.toggle('on', heatSize === 'g');
     /* 유형 버튼 — **화면이 목록을 박지 않고 자료에서 만든다.** 서버가 세는 말이 바뀌면
@@ -7711,60 +8270,6 @@ function renderList() {
      * **칩에 건수를 함께 적는다.** 실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라,
      * 숫자가 없으면 눌러 보고서야 빈 히트맵을 만난다. **0건 주도 남긴다** —
      * 빼면 「그 주가 없다」로 읽히는데 실제로는 「그 주에 글이 없다」이다. */
-    var wbox = document.getElementById('hm-weeks');
-    if (wbox) {
-      /* **지금 보고 있는 축의 주차 자료를 센다**(2026-09-06). 매니저를 보면서 지점
-         건수를 적으면 골라 보고서야 다른 숫자를 만난다 — 드롭다운과 칸이 같은 표를
-         봐야 한다. `weekSrc` 가 축을 가른다(판정도 같은 함수를 쓴다). */
-      var bsw = weekSrc(), wsum = {}, ws1, wk1;
-      for (ws1 in bsw) if (bsw.hasOwnProperty(ws1)) {
-        for (wk1 in bsw[ws1]) if (bsw[ws1].hasOwnProperty(wk1)) {
-          var mw = bsw[ws1][wk1], kz, nz = 0;
-          for (kz in mw) if (mw.hasOwnProperty(kz)) { if (!heatKind || kz === heatKind) nz += mw[kz]; }
-          wsum[wk1] = (wsum[wk1] || 0) + nz;
-        }
-      }
-      var wlist = Object.keys(wsum).sort();
-      /* **자료가 없으면 줄 자체를 안 그린다** — 빈 줄은 「고장」으로 보인다.
-         옛 서버가 보낸 자료에는 이 항목이 아예 없다(다시 수집하기 전까지). */
-      var sel = document.getElementById('hm-wsel');
-      var f0 = document.getElementById('hm-from'), t0 = document.getElementById('hm-to');
-      var clr = document.getElementById('hm-wclear'), note = document.getElementById('hm-wnote');
-      if (!wlist.length) { wbox.style.display = 'none'; }
-      else if (sel) {
-        wbox.style.display = '';
-        /* 드롭다운 — **최신 주차가 위**로 온다(사장님: *"최신 주차가 기본 선택"*).
-           **건수를 함께 적는다** — 실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라
-           숫자가 없으면 골라 보고서야 빈 히트맵을 만난다. */
-        var opts = ['<option value="">전체 기간</option>'];
-        for (var wi2 = wlist.length - 1; wi2 >= 0; wi2--) {
-          var w3 = wlist[wi2];
-          opts.push('<option value="' + esc(w3) + '"' + (heatWeek === w3 ? ' selected' : '') + '>'
-            + esc(weekLabelLong(w3)) + ' (' + nf(wsum[w3]) + '건)</option>');
-        }
-        /* **「직접 지정」은 자료가 아니라 상태다** — 날짜를 손으로 고치면 여기로 온다 */
-        opts.push('<option value="custom"' + (heatWeek === 'custom' ? ' selected' : '') + '>직접 지정</option>');
-        sel.innerHTML = opts.join('');
-        sel.value = heatWeek || '';
-
-        /* 날짜 칸 — 고른 주의 범위를 **자동으로 채운다**(사장님 지시) */
-        var rg = heatWeek === 'custom' ? { from: heatFrom, to: heatTo } : weekRange(heatWeek);
-        if (f0) f0.value = rg ? rg.from : '';
-        if (t0) t0.value = rg ? rg.to : '';
-        /* 자료가 있는 범위를 넘겨 고르지 않게 막는다 — 넘기면 늘 0건이라 「고장」으로 보인다 */
-        var lo = weekRange(wlist[0]), hi = weekRange(wlist[wlist.length - 1]);
-        if (f0 && lo) { f0.min = lo.from; f0.max = hi ? hi.to : ''; }
-        if (t0 && lo) { t0.min = lo.from; t0.max = hi ? hi.to : ''; }
-
-        if (clr) clr.hidden = !heatWeek;
-        if (note) {
-          var whoW = heatWho === 'mgr' ? '매니저' : '지점';
-          note.textContent = heatWeek === 'custom'
-            ? (heatFrom && heatTo ? '직접 지정한 기간입니다 — 그 안에 든 주를 모두 셉니다.' : '시작일과 종료일을 모두 넣어 주세요.')
-            : (heatWeek ? '' : '기간을 고르면 그 기간의 ' + whoW + '만 봅니다.');
-        }
-      }
-    }
     /* ── 지점 ↔ 매니저 ─────────────────────────────────────────────────
      * **자료가 없으면 버튼을 감춘다** — 매니저 수집 전에는 눌러도 빈 히트맵이라
      * 「눌러도 아무 일이 없다」가 된다(이 화면이 이미 세운 규칙이다). */
@@ -7869,7 +8374,7 @@ function renderList() {
           + nf(n) + '곳) — ' + scopeTxt + '. <b>마우스를 올리면</b> 어느 지점인지와 양쪽 건수가 나옵니다.';
       })();
       sub.innerHTML = mgrView
-        ? '<b>매니저</b>를 봅니다 — 칸 = 사람 · 크기와 색 모두 <b>언급된 건수</b>입니다. '
+        ? '<b>매니저</b>를 봅니다 — 칸 = 사람 · <b>크기는 언급된 건수, 색은 등락</b>입니다. '
           /* **자른 사실을 밝힌다**(2026-09-03 사장님 질문). 안 밝히면 화면에 보이는 수가
              전부인 줄 안다 — 실측으로 60위가 6건이라 그 아래로 많이 잘려 있었다. */
           + (DATA.mgrAll && DATA.mgrAll > (DATA.mgrTop || []).length
@@ -7883,14 +8388,14 @@ function renderList() {
           + '이름은 후기 제목·본문에서 뽑은 것이고, <b>명부에 등록된 이름</b>이면 ✓ 가 붙습니다.'
         : week
         ? '<b>' + esc(periodLabel()) + '</b>만 봅니다 — <b>칸은 지점</b> · '
-          + '크기와 색 모두 <b>' + (heatKind ? esc(kLabel(heatKind)) + ' 건수' : '건수') + '</b>입니다(진할수록 많음). '
+          + '<b>크기는 ' + (heatKind ? esc(kLabel(heatKind)) + ' 건수' : '건수') + ', 색은 평소 주당 대비 등락</b>입니다. '
           + '<b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 안 줍니다) — 그래서 '
           + '한 주에 값이 있는 매장이 <b>7~17곳</b>뿐입니다. 0건 매장은 칸을 못 그려 빠집니다.'
           + (heatWeek === 'custom'
               ? ' <b>자료가 주 단위로만 쌓여 있어</b> 고르신 날짜에 걸친 주는 통째로 셉니다.'
               : '')
         : heatKind
-        ? '<b>' + esc(kLabel(heatKind)) + '</b> 글만 봅니다 — 칸 크기와 색 모두 <b>그 유형 건수</b>입니다(진할수록 많음). '
+        ? '<b>' + esc(kLabel(heatKind)) + '</b> 글만 봅니다 — <b>크기는 그 유형 건수, 색은 등락</b>입니다. '
           + '유형 버튼을 다시 누르면 전체로 돌아갑니다.'
         : (function () {
             var Y3 = heatYears();
@@ -7900,13 +8405,13 @@ function renderList() {
                칸은 8월인데 머리는 「2026년만 봅니다」라 화면이 두 말을 한다. */
             if (heatYear === 'mom') {
               var M9 = heatMonths();
-              return '<b>' + esc(heatMonLabel(M9.cur)) + '</b>을 봅니다 · 칸 크기와 색 = <b>건수</b>'
+              return '<b>' + esc(heatMonLabel(M9.cur)) + '</b>을 봅니다 · <b>크기는 건수, 색은 전월 대비 등락</b>'
                 + ' · 칸 안 작은 글씨가 <b>' + esc(heatMonLabel(M9.prev)) + ' → ' + esc(heatMonLabel(M9.cur)) + '</b> 입니다.'
                 + ' <b>완결된 두 달</b>만 견줍니다 — 달력의 이번 달은 며칠치뿐이라 넣으면 전 매장이 폭락으로 보입니다.'
                 + ' <b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 주지 않습니다).'
                 + lgNote;
             }
-            return '<b>' + esc(Y3.cur) + '년</b>만 봅니다 · 칸 크기와 색 = <b>건수</b>(진할수록 많음)'
+            return '<b>' + esc(Y3.cur) + '년</b>만 봅니다 · <b>크기는 건수, 색은 등락</b>(초록이 늘고 빨강이 줄어든 곳)'
               + (heatYear === 'cmp'
                   ? ' · 칸 안 작은 글씨에 <b>' + esc(Y3.prev) + '년 → ' + esc(Y3.cur) + '년</b>을 적습니다'
                   : ' · <b>' + esc(Y3.prev) + '년 대비</b>를 보시려면 오른쪽 버튼을 누르세요')
@@ -8063,12 +8568,14 @@ function renderList() {
     lgpEnsure(); lgpFillRegions(); lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();
     renderPromo();
     renderTrend();
+    renderReport();
     renderDiag();
     applyAreaColors();
     wireAreaColors();
     renderSdp();
     renderSignals();
     renderMap();
+    renderPeriodBar();
     renderHeat();
     renderMix();
     /* **자료가 온 뒤에야 「한 번 움직였다」로 친다.** 뼈대 렌더에서 세우면 정작
@@ -8220,20 +8727,18 @@ function renderList() {
 
   /* 날짜 범위 손잡이 — 입력칸 둘 + 빠른 버튼 넷. **모두 같은 두 변수만 만진다**
      (따로 두면 버튼과 칸이 다른 말을 한다). */
-  ['r-from', 'r-to'].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) el.onchange = function () {
-      if (id === 'r-from') fromDate = el.value; else toDate = el.value;
-      render();
-    };
-  });
-  Array.prototype.forEach.call(document.querySelectorAll('#range .rbtn'), function (b) {
+  /* 날짜 칸(`hm-from`/`hm-to`)은 히트맵 쪽 손잡이가 이미 걸어 두었다 —
+     여기서 또 걸면 한 번 고칠 때 두 번 그린다. 빠른 버튼만 맡는다. */
+  Array.prototype.forEach.call(document.querySelectorAll('#period .rbtn'), function (b) {
     b.onclick = function () {
       var d = Number(b.dataset.d);
-      if (!d) { fromDate = ''; toDate = ''; dateOther = false; }
-      else { fromDate = ymdAgo(d - 1); toDate = ''; }
+      dateOther = false;
+      /* **끝을 오늘로 못 박는다** — 비워 두면 「직접 지정」의 끝이 없는 상태가 되어
+         히트맵이 그 뒤 주까지 세고, 목록과 건수가 갈린다. */
+      if (!d) setPeriod('', '');
+      else setPeriod(ymdAgo(d - 1), ymdLocal(new Date()));
+      page = 1;
       render();
-      document.getElementById('list-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
   });
 

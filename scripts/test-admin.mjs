@@ -1514,7 +1514,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!x.includes('var dateOther')) {
         fail('[바이럴] 작성일 「기타」 필터가 없다 — 날짜 분류에서 뺀 글을 볼 길이 없다');
       /* 모르는 글에 날짜 범위를 거는 것은 뜻이 없다 — 함께 걸리면 늘 0건이다 */
-      } else if (!x.includes('if (dateOther) { fromDate')) {
+      /* 2026-09-09 기간이 최상단 하나로 통일되며 `setPeriod('','')` 가 그 일을 한다 —
+         **구현 문자열이 아니라 뜻으로 본다**(「기타」를 켜면 범위가 비워지는가). */
+      } else if (!/if \(dateOther\) (\{ fromDate|setPeriod\('', ''\))/.test(x)) {
         fail('[바이럴] 「기타」와 날짜 범위가 함께 걸린다 — 늘 0건이 된다');
       } else if (!x.includes('if (dateOther && r.dated) return false;')) {
         fail('[바이럴] 「기타」가 작성일 아는 글을 안 걸러낸다');
@@ -3219,7 +3221,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ③ 칩 줄 — **건수를 함께 적는다.** 한 주에 값이 있는 매장이 7~17곳뿐이라
            숫자가 없으면 눌러 보고서야 빈 히트맵을 만난다. */
-    if (!ix.includes('id="hm-weeks"')) bad.push('주차 칩 줄이 없다');
+    /* ── **기간 막대는 화면 맨 위다** (2026-09-09 사장님 지시로 옮겼다) ────────
+       *"바이럴분석기 날짜인터페이스 최상단으로 통일"*. 옛 `id="hm-weeks"`(히트맵 카드
+       안)를 찾으면 멀쩡한 화면을 「없다」고 잡는다. 지금은 `#period` 하나다. */
+    if (!ix.includes('id="period"')) bad.push('기간 막대(#period)가 없다');
+    if (ix.includes('id="hm-weeks"')) bad.push('기간 막대가 히트맵 안으로 되돌아갔다 — 같은 id 가 둘이 된다');
     if (!ix.includes("wbox.style.display = 'none'")) {
       bad.push('자료가 없을 때 칩 줄을 감추지 않는다 — 빈 줄은 고장으로 보인다');
     }
@@ -3238,7 +3244,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes('var HEAT_LO = ') || !ix.includes('var HEAT_HI = ')) bad.push('파스텔 단일 계열 색이 없다');
     if (ix.includes('rampColor(') && ix.includes('heatColor(d.g')) bad.push('칸이 아직 증감으로 칠해진다 — 색은 건수다');
     if (!ix.includes('heatColor(d.cnt, heatMax)')) bad.push('칸을 건수로 칠하지 않는다');
-    if (!ix.includes("nf(heatMin) + '건'") || !ix.includes("nf(heatMax) + '건'")) bad.push('범례가 최소·최대 건수를 안 적는다');
+    /* ── **칸 색은 등락이다** (2026-09-09 사장님 지시: *"히트맵컬러 주식처럼(재미)"*)
+       2026-09-03·09-06 의 「단일 계열(건수)」을 뒤집은 것이다. 범례가 건수를 적으면
+       그 자리에서 거짓이 되므로, **배수 축을 적는지**를 본다. */
+    if (!ix.includes("'÷' + heatSpan") || !ix.includes("'×' + heatSpan")) bad.push('범례가 등락 배수를 안 적는다');
+    if (!ix.includes('function growColor')) bad.push('등락 색 함수가 없다');
+    if (!ix.includes('growColor(d.g, heatSpan)')) bad.push('칸을 등락으로 안 칠한다');
     if (ix.includes('Math.min(Math.abs(g) / (span')) bad.push('옛 증감 색 함수가 남아 있다');
     if (!ix.includes('sc2.innerHTML')) {
       bad.push('색띠를 매번 다시 그리지 않는다 — 초기화 때는 척도가 없어 띠가 통째로 빈다');
@@ -4394,7 +4405,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ③ **누르는 것은 한 규격**을 쓴다. 칩·버튼이 제각각이면 같은 일을 하는 것이
            달라 보여, 상담사가 「이건 다른 종류인가」를 매번 판단하게 된다. */
-    ['.chip, .kchip, .wchip, .range .rbtn, .hmwk .wk', 'var(--ctl-fs)']
+    /* 셀렉터 목록은 자라난다(2026-09-09 `.period .rbtn` 이 들어왔다) — **통째로 못
+       박지 말고** 그 규칙이 살아 있는지만 본다. */
+    ['.chip, .kchip, .wchip,', '.hmwk .wk {', 'var(--ctl-fs)']
       .forEach((t) => { if (!ix.includes(t)) bad.push('공통 컨트롤 규칙(' + t.slice(0, 20) + ')이 없다'); });
     /* 옛 규격이 되살아나면 공통 규칙을 덮는다(CSS 는 나중 것이 이긴다) */
     if (/.kchip {[^}]*font-size:s*12px/.test(ix)) bad.push('kchip 이 제 크기를 다시 갖는다');
