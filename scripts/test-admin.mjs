@@ -1389,7 +1389,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } else if (g.includes('addUsage_(dead') || g.includes('addUsage_(nUnknown')) {
       fail('[바이럴] 검증을 네이버 검색 예산에 센다 — 검색이 아니라 한 바퀴 예산만 줄어든다');
     } else if (g.indexOf("var deadRun") > g.indexOf("for (i = cursor; i < STORES.length; i++)")) {
-      fail('[바이럴] 삭제 확인이 매장 훑기 뒤에 있다 — LG 비교와 같은 함정(영영 차례를 못 받는다)');
+      fail('[바이럴] 삭제 확인이 매장 훑기 뒤에 있다 — 베스트샵 비교와 같은 함정(영영 차례를 못 받는다)');
     } else if (!g.includes("if (String(v[i][11] || '')) continue;")) {
       fail('[바이럴] 매니저 순위가 삭제된 글을 계속 센다 — readAll_ 을 안 거치므로 따로 걸러야 한다');
     } else if (!g.includes('if (all[i].dead) deadList.push(all[i]); else rows.push(all[i]);')) {
@@ -1460,11 +1460,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const iRival = g.indexOf('rivalRun = collectRival');
     const iLoop  = g.indexOf('for (i = cursor; i < STORES.length; i++)');
     if (iRival < 0 || iLoop < 0) {
-      fail('[바이럴] LG 비교나 매장 훑기를 못 찾음 — 검사가 낡았다');
+      fail('[바이럴] 베스트샵 비교나 매장 훑기를 못 찾음 — 검사가 낡았다');
     } else if (iRival > iLoop) {
-      fail('[바이럴] LG 비교가 매장 훑기 뒤에 있다 — 시간을 그쪽이 다 쓰고 넘겨 영영 이어 돌지 못한다');
+      fail('[바이럴] 베스트샵 비교가 매장 훑기 뒤에 있다 — 시간을 그쪽이 다 쓰고 넘겨 영영 이어 돌지 못한다');
     } else if (!g.includes('collectRival(t0 + RIVAL_MS)')) {
-      fail('[바이럴] LG 비교가 자기 예산을 안 쓴다 — 남의 예산을 물려받으면 0개 지역을 돈다');
+      fail('[바이럴] 베스트샵 비교가 자기 예산을 안 쓴다 — 남의 예산을 물려받으면 0개 지역을 돈다');
     } else if (!g.includes('var RIVAL_MS')) {
       fail('[바이럴] RIVAL_MS 가 없다');
     } else if (!g.includes("props_().getProperty('_rivalStamp')")) {
@@ -1474,7 +1474,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* **표식이 아니라 결과로 판정한다** — `_rivalAt` 하나만 보면 한 지역만 쓰고도
        표식이 서 버려 다음 실행부터 「오늘은 했다」로 건너뛴다(실제로 그랬다). */
     } else if (!g.includes('r.rows.length < Object.keys(AREA_Q).length')) {
-      fail('[바이럴] LG 비교가 표식만 보고 건너뛴다 — 한 지역만 채워도 오늘은 끝난 것이 된다');
+      fail('[바이럴] 베스트샵 비교가 표식만 보고 건너뛴다 — 한 지역만 채워도 오늘은 끝난 것이 된다');
     } else if (!g.includes('RIVAL_TRY_MAX')) {
       fail('[바이럴] 되풀이 상한이 없다 — 한 지역이 늘 실패하면 매 실행이 헛돌아 다른 일까지 굶는다');
     /* **진단 값은 집계 캐시를 타면 안 된다**(2026-09-02에 데었다). `summary_` 의
@@ -1494,7 +1494,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } else if (!g.includes("'_rivalCur', '_rivalStamp'")) {
       fail('[바이럴] 자료를 비워도 회차 상태가 남는다 — 다음 수집이 중간부터 돈다');
     } else {
-      console.log('OK: 바이럴 LG 비교 — 매장 훑기보다 먼저 · 자기 예산 · 회차 도장 하나');
+      console.log('OK: 바이럴 베스트샵 비교 — 매장 훑기보다 먼저 · 자기 예산 · 회차 도장 하나');
     }
   }
 
@@ -1860,12 +1860,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        (2026-09-01 실측: fullAt 이 빈 문자열 · rival 이 null). 하루 한 번으로 바꾸고
        매니저·카페보다 앞에 두었다. */
     if (!/function rivalDue_()/.test(rv)) {
-      fail('[바이럴] LG 비교가 「완주한 실행」에만 매달린다 — 영영 자기 차례가 안 온다');
+      fail('[바이럴] 베스트샵 비교가 「완주한 실행」에만 매달린다 — 영영 자기 차례가 안 온다');
     } else if (/if (!stopped && !err && !over()) { try { rivalRun = collectRival/.test(rv)) {
-      fail('[바이럴] LG 비교가 아직 !stopped 에 묶여 있다');
+      fail('[바이럴] 베스트샵 비교가 아직 !stopped 에 묶여 있다');
     } else if (rv.indexOf('rivalRun = collectRival') > rv.indexOf('매니저 이름 훑기 ───')) {
-      fail('[바이럴] LG 비교가 매니저·카페 훑기보다 뒤다 — 그 앞의 148회에 시간을 다 쓴다');
-    } else console.log('OK: 바이럴 LG 비교 — 하루 한 번 · 매니저·카페보다 앞에서 돈다');
+      fail('[바이럴] 베스트샵 비교가 매니저·카페 훑기보다 뒤다 — 그 앞의 148회에 시간을 다 쓴다');
+    } else console.log('OK: 바이럴 베스트샵 비교 — 하루 한 번 · 매니저·카페보다 앞에서 돈다');
 
     /* ③-b5 **비중은 「숫자가 아니면 못 잼」이어야 한다.** `=== null` 만 보면
        undefined·NaN·빈 문자열이 새어 `undefined%` 가 화면에 찍힌다(2026-09-01 사장님
@@ -1879,8 +1879,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } else if (!vh.includes("typeof r.pct === 'number' && isFinite(r.pct)")) {
       fail('[바이럴] 비중을 숫자로 확인하지 않는다');
     } else if (!vh.includes('data-card="rival"')) {
-      fail('[바이럴] 당사 vs LG 카드에 섹션 키(data-card)가 없다 — 접이식이 열고 닫을 수 없다');
-    } else console.log('OK: 바이럴 비중 — 숫자가 아니면 못 잼 · 당사 vs LG 는 접이식 섹션이다');
+      fail('[바이럴] 당사 vs 베스트샵 카드에 섹션 키(data-card)가 없다 — 접이식이 열고 닫을 수 없다');
+    } else console.log('OK: 바이럴 비중 — 숫자가 아니면 못 잼 · 당사 vs 베스트샵 는 접이식 섹션이다');
 
     /* ③-b6 **매니저 이름 뽑기와 명부.** 프로덕션 3,000건 검증에서 오탐 일곱이 나왔고
        **여섯이 한 뿌리**였다 — 직함 뒤에 붙는 글자를 안 봤다(`프로모션`·`프로필`·
@@ -2055,7 +2055,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
          돌면 하루 21,500회로 한도를 넘어 5쪽으로 줄였다 — 네 진영에 똑같이 줄이므로
          점유율은 안 깨진다. */
       if (!rv.includes('var pageCap = Math.max(2, Math.min(RIVAL_PAGES, Number(stuck[place]) || RIVAL_PAGES));')) {
-        bad4.push('LG 비교가 도시마다 쪽 수를 조절하지 않는다 — 큰 도시는 예산에 걸려 영영 안 채워진다');
+        bad4.push('베스트샵 비교가 도시마다 쪽 수를 조절하지 않는다 — 큰 도시는 예산에 걸려 영영 안 채워진다');
       }
       if (!/if \(hard\) \{\s*stuck\[place\] = Math\.max\(2, Math\.floor\(pageCap \/ 2\)\);/.test(rv)) {
         bad4.push('시간에 걸린 도시의 쪽 수를 줄이지 않는다 — 다음에도 같은 자리에서 버린다');
@@ -2065,7 +2065,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
       /* 한도 판정이 LG 호출을 세는가 — 한도를 낮춰 두면 그만큼 그대로 초과한다 */
       if (!rv.includes('return used0 + calls + extraCalls >= limit;')) {
-        bad4.push('한도 판정이 LG 비교 호출을 안 센다 — 최대 2,640회만큼 늦게 멈춘다');
+        bad4.push('한도 판정이 베스트샵 비교 호출을 안 센다 — 최대 2,640회만큼 늦게 멈춘다');
       }
       /* 삭제 확인이 이어 도는가 — 커서가 없으면 늘 시트 앞부분만 본다 */
       if (!rv.includes("var cur0 = Number(props_().getProperty('_deadCur') || 0);")) {
@@ -2082,7 +2082,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         bad4.push('판 번호를 보지 않는다 — 결과 판정만으로는 지난번 그 변경 하나만 알아본다');
       }
       if (bad4.length) { ok = false; console.log('ERROR: [바이럴] ' + bad4.join(' · ')); }
-      else console.log('OK: 바이럴 — 큰 도시도 끝나고 · 한도가 LG 를 세고 · 삭제확인이 이어 돌고 · 판 번호로 회차를 가른다');
+      else console.log('OK: 바이럴 — 큰 도시도 끝나고 · 한도가 베스트샵 를 세고 · 삭제확인이 이어 돌고 · 판 번호로 회차를 가른다');
 
       /* ④-e **SDP(개인대리점)** — 2026-09-02 사장님 요청. 조사에서 31곳을 찾았지만
          **8곳만 싣기로 결정했다**(사장님 승인 *"의견대로 수렴"*). 그 결정이 코드에
@@ -2673,7 +2673,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         if (!prodOf || !chanOf) bad.push('prodOf_·chanOf_ 를 떼어 돌릴 수 없다 — 규칙을 검사할 수 없다');
         else {
           /* **김치냉장고를 냉장고로 또 세지 않는다** — 부분일치로 이 저장소가 여러 번 데였다 */
-          const k = prodOf('LG 베스트샵 김치냉장고 후기');
+          const k = prodOf('베스트샵 베스트샵 김치냉장고 후기');
           if (k.indexOf('김치냉장고') < 0) bad.push('김치냉장고를 못 잡는다');
           if (k.indexOf('냉장고') >= 0) bad.push('김치냉장고가 냉장고로도 세어진다 — 한 글이 두 번 잡힌다');
           /* **삼성 말과 LG 말이 한 칸이어야 견줄 수 있다** — 갈라 두면 "LG 는 스타일러를 민다" 를 못 낸다 */
@@ -2690,7 +2690,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
               bad.push(`「${t}」가 노트북으로 세어진다 — 부분일치 가드가 없다`);
             }
           });
-          if (prodOf('LG 그램 노트북 후기').indexOf('노트북') < 0) bad.push('진짜 그램을 못 잡는다 — 가드가 너무 세다');
+          if (prodOf('베스트샵 그램 노트북 후기').indexOf('노트북') < 0) bad.push('진짜 그램을 못 잡는다 — 가드가 너무 세다');
           if (prodOf('tvN 드라마 협찬').indexOf('TV') >= 0) bad.push('tvN 이 TV 로 세어진다');
           if (prodOf('삼성 TV 후기').indexOf('TV') < 0) bad.push('진짜 TV 를 못 잡는다 — 가드가 너무 세다');
           /* 한 글에 둘이 적혀 있으면 둘 다 */
@@ -2704,15 +2704,15 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         /* 화면 — 카드·박스·렌더가 다 있어야 한 벌이다 */
         if (!ix2.includes('function renderPromo(')) bad.push('renderPromo 가 없다');
         if (!ix2.includes('    renderPromo();')) bad.push('render 가 renderPromo 를 부르지 않는다');
-        if (!ix2.includes('data-sec="promo"')) bad.push('접이식 박스에 LG 홍보 경로가 없다');
-        if (!ix2.includes('data-card="promo"')) bad.push('LG 홍보 경로 카드가 없다');
+        if (!ix2.includes('data-sec="promo"')) bad.push('접이식 박스에 베스트샵 홍보 경로가 없다');
+        if (!ix2.includes('data-card="promo"')) bad.push('베스트샵 홍보 경로 카드가 없다');
         /* **`jparse_` 는 빈 칸을 `{}` 로 돌려준다** — 배열인지 보고 써야 `.forEach` 가 안 터진다 */
         if (!ix2.includes('Array.isArray(r.sample)')) bad.push('표본이 배열인지 안 보고 쓴다 — 옛 회차에서 화면이 죽는다');
         /* **없음과 아직 안 잼을 가른다** — 0 으로 그리면 「LG 가 안 민다」가 된다 */
         if (!ix2.includes('아직 안 쟀습니다')) bad.push('자료가 없을 때 「없다」와 「아직 안 쟀다」를 가르지 않는다');
 
-        if (bad.length) fail('[바이럴] LG 홍보 경로 — ' + bad.join(' · '));
-        else console.log('OK: 바이럴 LG 홍보 경로 — 채널·품목·표본 · 김치냉장고를 두 번 안 센다 · 스타일러↔에어드레서 한 칸');
+        if (bad.length) fail('[바이럴] 베스트샵 홍보 경로 — ' + bad.join(' · '));
+        else console.log('OK: 바이럴 베스트샵 홍보 경로 — 채널·품목·표본 · 김치냉장고를 두 번 안 센다 · 스타일러↔에어드레서 한 칸');
       }
       /* ⓚ **시 안쪽 확대** (2026-09-02 사장님: *"시를 눌렀을때 해당시 안에 무슨 구 가있고
          그 구에 색을 강조했으면 … 이천의경우는 읍이나 면이 되겠네요"*).
@@ -3153,7 +3153,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       }
 
       /* ⓗ **버튼** (사장님 요청) — 서버 진입점 · 화면 버튼 · 그 둘이 이어져 있는가 */
-      if (!rv.includes('function runRival()')) bad.push('runRival() 이 없다 — 화면에서 LG 비교를 돌릴 길이 없다');
+      if (!rv.includes('function runRival()')) bad.push('runRival() 이 없다 — 화면에서 베스트샵 비교를 돌릴 길이 없다');
       if (!rv.includes("props_().deleteProperty('_rivalAt');")) {
         bad.push('버튼이 오늘 표식을 지우지 않는다 — 눌러도 「오늘은 이미 했다」로 건너뛴다');
       }
@@ -3164,7 +3164,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
          *"최대한 서치기능을 함축해서 한번에 사용해야합니다"*). 그래서 검사도
          「그 버튼이 있는가」가 아니라 **「수집」이 LG 비교를 안에서 도는가**를 본다.
          `runRival()` 함수 자체는 남는다 — 예약(`_rivalWant`) 경로가 쓴다. */
-      if (ix.includes('id="runrival"')) bad.push('「LG 비교 갱신」 버튼이 되살아났다 — 「수집」에 합쳤다');
+      if (ix.includes('id="runrival"')) bad.push('「베스트샵 비교 갱신」 버튼이 되살아났다 — 「수집」에 합쳤다');
       if (!rv.includes('function runRival()')) bad.push('runRival() 이 사라졌다 — 예약 경로가 죽는다');
 
       /* ⓘ **빠진 지역을 이름으로 적는다** — 이 침묵이 사장님을 세 번 묻게 했다 */
@@ -3185,8 +3185,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       });
       if (!rv.includes('var PROD_Q = [')) bad.push('PROD_Q 표가 사라졌다 — 품목을 못 센다');
 
-      if (bad.length) fail('[바이럴] LG 비교 도시 단위 — ' + bad.join(' · '));
-      else console.log('OK: 바이럴 LG 비교 — 도시 단위로 돌고 지역으로 합산 · 버튼 · 빠진 지역을 이름으로 적는다');
+      if (bad.length) fail('[바이럴] 베스트샵 비교 도시 단위 — ' + bad.join(' · '));
+      else console.log('OK: 바이럴 베스트샵 비교 — 도시 단위로 돌고 지역으로 합산 · 버튼 · 빠진 지역을 이름으로 적는다');
     }
   }
 }
@@ -3376,20 +3376,20 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 
   /* ⑤ LG 연도 표 — 당해·직전해만 비중, 그 앞은 숫자만 */
-  if (!ix.includes('function yearTable()')) bad.push('LG 연도 표가 없다');
+  if (!ix.includes('function yearTable()')) bad.push('베스트샵 연도 표가 없다');
   if (!ix.includes("var KEEP = Number(cur) - 3;")) {
-    bad.push('LG 연도 표가 23·24년까지 줄로 적지 않는다');
+    bad.push('베스트샵 연도 표가 23·24년까지 줄로 적지 않는다');
   }
   if (!ix.includes("var live = (y === cur || y === prev);")) {
-    bad.push('LG 연도 표가 당해·직전해만 비중을 내지 않는다 — 「숫자만 보관」이 무너진다');
+    bad.push('베스트샵 연도 표가 당해·직전해만 비중을 내지 않는다 — 「숫자만 보관」이 무너진다');
   }
   /* **지우지 않는다** — LG 비교는 애초에 숫자만 저장한다 */
   if (/rollRival|purgeRival/.test(ix)) {
-    bad.push('LG 비교를 지우려 든다 — 보관하라는 지시와 어긋난다');
+    bad.push('베스트샵 비교를 지우려 든다 — 보관하라는 지시와 어긋난다');
   }
   /* ⑥ LG 증감도 겹치는 달만 */
   if (!ix.includes("if (!ym[prev + '-' + m2]) return;")) {
-    bad.push('LG 증감이 작년에 없는 달을 0 으로 센다');
+    bad.push('베스트샵 증감이 작년에 없는 달을 0 으로 센다');
   }
 
   /* ⑦ **월 집계 하한은 연 단위여야 한다** (2026-09-03 사장님 지적으로 발견)
@@ -3432,7 +3432,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const b9 = [];
 
     /* ⓐ 서버가 매장 대 매장에 월별을 담는가 — 그것이 있어야 LG 몫을 연도로 가른다 */
-    if (!gs2.includes("'queries', 'monJson']")) b9.push('매장경쟁에 monJson 칸이 없다 — 연도별 LG 몫을 낼 자료가 없다');
+    if (!gs2.includes("'queries', 'monJson']")) b9.push('매장경쟁에 monJson 칸이 없다 — 연도별 베스트샵 몫을 낼 자료가 없다');
     if (!gs2.includes('var SRIVAL_SCHEMA')) b9.push('SRIVAL_SCHEMA 가 없다 — 옛 회차에 이어 붙어 월 자료가 반쪽이 된다');
     if (!gs2.includes("got[key][lk] = pd9.length === 8 ? (pd9.slice(0, 4) + '-' + pd9.slice(4, 6)) : '';")) {
       b9.push('링크마다 월을 안 담는다 — 작성일 없는 글을 0 으로 세면 거짓이 된다');
@@ -3478,7 +3478,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
         "var heatPickY = '';",
         "var window = { __SR: {} };",
         "var DATA = { byStoreMonth: { 갑: { '2023-05': 1, '2025-03': 2, '2026-04': 5 } },"
-          + " lgPair: { 갑: 'LG갑점' } };",
+          + " lgPair: { 갑: '베스트샵갑점' } };",
         /* **의존이 늘면 함께 넘긴다** — 2026-09-07 에 짝·축을 보게 되었다 */
         "var heatYear = 'cur';",
         "function pairList(v) { return (v == null ? [] : (Array.isArray(v) ? v : [v])).filter(Boolean); }",
@@ -3489,7 +3489,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     } catch (e) { srFn = null; }
     if (!srFn) b9.push('srShare 를 떼어 돌릴 수 없다 — 계산을 검사할 수 없다');
     else {
-      const SR = { 갑: { store: '갑', shop: 'LG갑점', ours: 100, rival: 50, pct: 67, capped: false,
+      const SR = { 갑: { store: '갑', shop: '베스트샵갑점', ours: 100, rival: 50, pct: 67, capped: false,
         mon: { o: { '2023-05': 10, '2025-03': 20, '2026-04': 30 },
                r: { '2023-05': 40, '2025-03': 5, '2026-04': 10 } } } };
       /* 2026: 우리 30 vs LG 10 → 75% */
@@ -3501,14 +3501,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       const a2 = srFn.srShare('갑');
       if (!a2 || a2.pct !== 20) b9.push('고른 해를 안 따라간다: ' + JSON.stringify(a2));
       /* 옛 회차(월 자료 없음)는 전 기간으로 물러서고 그 사실을 알린다 */
-      srFn.set('2026', { 갑: { store: '갑', shop: 'LG갑점', ours: 100, rival: 50, pct: 67, capped: false, mon: null } });
+      srFn.set('2026', { 갑: { store: '갑', shop: '베스트샵갑점', ours: 100, rival: 50, pct: 67, capped: false, mon: null } });
       const a3 = srFn.srShare('갑');
       if (!a3 || a3.pct !== 67 || a3.scope !== 'all') b9.push('옛 회차에서 전 기간으로 안 물러선다: ' + JSON.stringify(a3));
       /* 상한에 닿았으면 아무 값도 내지 않는다 — 50% 로 그리면 거짓이다 */
-      srFn.set('2026', { 갑: { store: '갑', shop: 'LG갑점', ours: 2900, rival: 2900, pct: null, capped: true, mon: null } });
+      srFn.set('2026', { 갑: { store: '갑', shop: '베스트샵갑점', ours: 2900, rival: 2900, pct: null, capped: true, mon: null } });
       if (srFn.srShare('갑') !== null) b9.push('상한에 닿았는데 비중을 낸다');
       /* 그 해에 작성일을 아는 글이 없으면 「못 잼」이다 — 0% 로 그리면 「LG가 없다」가 된다 */
-      srFn.set('2024', { 갑: { store: '갑', shop: 'LG갑점', ours: 10, rival: 5, pct: 67, capped: false,
+      srFn.set('2024', { 갑: { store: '갑', shop: '베스트샵갑점', ours: 10, rival: 5, pct: 67, capped: false,
         mon: { o: { '2023-05': 3 }, r: { '2023-05': 2 } } } });
       const a4 = srFn.srShare('갑');
       if (!a4 || a4.pct !== null) b9.push('그 해 자료가 없는데 비중을 낸다: ' + JSON.stringify(a4));
@@ -3539,7 +3539,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
     if (b9.length) { ok = false; console.log('ERROR: [바이럴] 히트맵 연도 축 — ' + b9.join(' · ')); }
-    else console.log('OK: 바이럴 히트맵 연도 축 — 1년 단위 · 고른 해를 당사·LG 가 함께 따라간다');
+    else console.log('OK: 바이럴 히트맵 연도 축 — 1년 단위 · 고른 해를 당사·베스트샵 가 함께 따라간다');
   }
 
   /* ── ⑩ **자동 수집이 멈춘 것을 화면이 말한다** (2026-09-05 실측으로 필요해졌다) ────
@@ -3806,7 +3806,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ⓔ **버튼을 옮겼으면 그 버튼을 가리키던 문구도 함께 고친다** — 구조를 바꾸면
            예전 전제로 쓴 문구가 그 자리에서 거짓이 된다(이 저장소가 되풀이해 데인 종류다).
            **주석은 봐주지 않는다** — 화면 글자만 본다. */
-    ['「LG 비교 갱신」', '「매장 대 매장 수집」', '「검색 관심도 갱신」'].forEach((w) => {
+    ['「베스트샵 비교 갱신」', '「매장 대 매장 수집」', '「검색 관심도 갱신」'].forEach((w) => {
       const lines = ixB.split(/\r?\n/).filter((l) => l.includes(w) && !l.trim().startsWith('/*') && !l.trim().startsWith('*'));
       if (lines.length) bB.push('없는 버튼을 가리키는 문구가 남았다: ' + w + ' (' + lines.length + '곳)');
     });
@@ -4028,7 +4028,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
           lastRun: { ms: Date.now() }, now: Date.now(), chainOn: false, runAt: 0 };
         const norm = run(base);
         if (norm.innerHTML.indexOf('수집') < 0) bC.push('평소에 무엇을 누르라고 안 적는다');
-        if (norm.innerHTML.indexOf('LG 비교') < 0) bC.push('무엇이 남았는지 안 적는다');
+        if (norm.innerHTML.indexOf('베스트샵 비교') < 0) bC.push('무엇이 남았는지 안 적는다');
         /* **주 1회짜리가 차례가 아닌 날**(2026-09-06) — 예전 「오늘 것은 이미 다 했습니다」는
            그 자리에서 거짓이 됐다(매장 훑기는 매일 돈다). 화면은 「오늘은 매장 훑기만」과
            **다음 차례가 며칠 뒤인지**를 적어야 한다. */
@@ -4079,7 +4079,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       else if (!/rival:/.test(seg[0]) && wri) {
         /* 한쪽만 만드는데 양쪽에 쓰면 반드시 죽는다 — 가드가 있어야 한다 */
         if (!gsC.includes('if (ch && byChan[key])')) {
-          bC.push('한쪽만 있는 byChan 에 진영을 안 가리고 쓴다 — LG 글에서 죽는다');
+          bC.push('한쪽만 있는 byChan 에 진영을 안 가리고 쓴다 — 베스트샵 글에서 죽는다');
         }
       }
       /* **떼어 돌려 본다** — 문자열만 보면 가드가 헛돌아도 통과한다 */
@@ -4110,7 +4110,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     {
       const need = [
         ['자동 수집 살피기', 'var triggerFix = ensureDaily_();'],
-        ['LG 비교', 'rivalRun = collectRival('],
+        ['베스트샵 비교', 'rivalRun = collectRival('],
         ['매장 대 매장', 'srivalRun = collectStoreRival('],
         ['검색 관심도', 'trendRun = collectTrend();'],
         ['삭제된 글 확인', 'deadRun = verifyDead_('],
@@ -4179,7 +4179,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 
   if (bad.length) fail('[바이럴] 연도 축 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · LG 23/24는 숫자만');
+  else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · 베스트샵 23/24는 숫자만');
 }
 
 /* ── 매장 대 매장 — LG 짝과 1:1 (2026-09-03 사장님 지시) ────────────────────
@@ -4230,7 +4230,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
   /* **빨강도 건수 농도를 따라가야 한다** — 고정색이면 옅은 파랑 옆에서 빨강만 튄다 */
   if (!ix.includes('lgColor(d.cnt, heatMax)')) {
-    bad.push('LG 빨강이 건수 농도를 안 따라간다 — 50% 인데 LG 가 이기는 것처럼 보인다');
+    bad.push('베스트샵 빨강이 건수 농도를 안 따라간다 — 50% 인데 베스트샵 가 이기는 것처럼 보인다');
   }
   {
     const at2 = ix.indexOf('function lgColor(v, max) {');
@@ -4257,18 +4257,20 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
          * **LG 가 너무 옅어도 안 된다** — 면적을 못 읽으면 「LG 몫」이 사라진다. */
         const Lo = lumOf([Number(oh[1]), Number(oh[2]), Number(oh[3])]);
         if (!(Lo < L))
-          bad.push('당사 짙은 끝이 LG 보다 어둡지 않다 — LG 가 더 진해 먼저 눈에 띈다');
+          bad.push('당사 짙은 끝이 베스트샵 보다 어둡지 않다 — 베스트샵 가 더 진해 먼저 눈에 띈다');
         if (L > 0.55)
-          bad.push('LG 짙은 끝이 너무 옅다(휘도 ' + L.toFixed(2) + ') — 면적을 못 읽는다');
+          bad.push('베스트샵 짙은 끝이 너무 옅다(휘도 ' + L.toFixed(2) + ') — 면적을 못 읽는다');
       }
     }
   }
   /* **마우스를 올리면 어느 점인지·몇 건인지** */
-  if (!ix.includes("NLC + 'LG ' + srt.shop")) {
-    bad.push('말풍선이 LG 지점명·건수를 안 적는다');
+  /* 2026-09-09 부터 `shopLabel()` 로 꼬리의 「점」을 떼고 적는다 — **날것 변수를
+     못 박지 말 것**(지키려는 것은 「지점명을 적는가」이지 그 표현이 아니다). */
+  if (!/NLC \+ '베스트샵 ' \+ (shopLabel\()?srt\.shop/.test(ix)) {
+    bad.push('말풍선이 베스트샵 지점명·건수를 안 적는다');
   }
   /* **「아직 안 쟀다」와 「없다」는 다른 말이다** */
-  if (!ix.includes('LG 짝 비중은 아직 재지 않았습니다')) {
+  if (!ix.includes('베스트샵 짝 비중은 아직 재지 않았습니다')) {
     bad.push('자료가 없을 때 화면이 침묵한다 — 사장님이 「안 된다」로 읽는다');
   }
   /* ④ 비용을 밝힌다 — 눌러 놓고 예산이 왜 줄었는지 모르면 안 된다.
@@ -4575,17 +4577,20 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes('min-height: 36px')) bad.push('드롭다운·날짜가 한 손으로 누를 크기가 아니다');
 
     /* ③ LG 매칭 — 백화점은 같은 건물끼리만 */
-    if (!rv.includes('function lgMatchOne_(')) bad.push('LG 매칭 함수가 없다');
+    if (!rv.includes('function lgMatchOne_(')) bad.push('베스트샵 매칭 함수가 없다');
     if (!rv.includes('var DEPT_SAME_M = 250')) bad.push('같은 건물 판정 거리가 없다');
     /* **거리 매칭으로 넘기지 않는다**(사장님 지시) — 이 분기가 빠지면 2km 밖 로드샵과 짝이 된다 */
     if (!rv.includes('if (best.dist > DEPT_SAME_M)')) bad.push('백화점인데 먼 곳과 매칭한다 — 넘기지 말라는 지시였다');
     if (!rv.includes("DEPT_EXTRA = { 'AK분당': 1 }")) bad.push('AK분당 예외가 빠졌다(사장님 확인분)');
     if (!rv.includes('lgMatch: lgMatchAll_()')) bad.push('매칭 결과를 화면에 안 보낸다');
     /* 매장명·거리·유형 셋을 함께 노출 */
-    ['LG ' + "' + lgm.shop", 'lgm.dist', '같은 백화점 안', '가장 가까운 곳'].forEach((t) => {
+    /* 지점명은 2026-09-09 부터 `shopLabel()` 로 꼬리의 「점」을 떼고 적는다 —
+       **날것 변수를 못 박지 말 것**(지키려는 것은 「지점명을 적는가」다). */
+    if (!/'베스트샵 ' \+ (shopLabel\()?lgm\.shop/.test(ix)) bad.push('말풍선에 지점명이 없다');
+    ['lgm.dist', '같은 백화점 안', '가장 가까운 곳'].forEach((t) => {
       if (!ix.includes(t)) bad.push('말풍선에 ' + t.slice(0, 12) + ' 가 없다');
     });
-    if (!ix.includes('LG 매칭 없음')) bad.push('매칭 없음을 표시하지 않는다');
+    if (!ix.includes('베스트샵 매칭 없음')) bad.push('매칭 없음을 표시하지 않는다');
 
     /* ④ 단일 계열 히트맵 — **색값을 못 박지 않는다**(2026-09-06 사장님이 색을 바꾸셨다).
        값을 박아 두면 색을 갈 때마다 멀쩡한 판을 문다. 여기서는 **구조**만 본다:
@@ -4600,7 +4605,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!ix.includes('function inkOn(')) bad.push('명도 대비로 글자색을 고르지 않는다');
 
     if (bad.length) fail('[바이럴] 요구 넷 — ' + bad.join(' · '));
-    else console.log('OK: 바이럴 요구 넷 — 4종·주차UI·LG매칭·파스텔 (기존 9종 유지)');
+    else console.log('OK: 바이럴 요구 넷 — 4종·주차UI·베스트샵매칭·파스텔 (기존 9종 유지)');
   }
 }
 
@@ -4815,7 +4820,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
     /* ③ 처리했으면 내린다 — 안 내리면 매 회차가 LG 비교를 다시 돌아 매장 훑기가 굶는다 */
     if (!rv.includes("deleteProperty('_rivalWant')")) {
-      bad.push('완주해도 예약을 안 내린다 — 매 회차마다 LG 비교를 다시 돈다');
+      bad.push('완주해도 예약을 안 내린다 — 매 회차마다 베스트샵 비교를 다시 돈다');
     }
     /* ④ 화면이 예약됐다는 사실을 안다 — 안 보내면 「눌렀는데 아무 일도 없다」가 된다 */
     if (!rv.includes('d.rivalWant =')) bad.push('doGet 이 예약 상태를 안 보낸다');
@@ -4827,8 +4832,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const resetLine = (rv.match(/\['_cursor',[^\]]*\]/) || [''])[0];
     if (resetLine && !resetLine.includes('_rivalWant')) bad.push('초기화 목록에 _rivalWant 가 빠졌다');
 
-    if (bad.length) fail('[바이럴] LG 비교 예약 — ' + bad.join(' · '));
-    else console.log('OK: 바이럴 LG 비교 예약 — 막히면 예약 · 한도보다 세다 · 처리하면 내린다 · 화면이 적는다');
+    if (bad.length) fail('[바이럴] 베스트샵 비교 예약 — ' + bad.join(' · '));
+    else console.log('OK: 바이럴 베스트샵 비교 예약 — 막히면 예약 · 한도보다 세다 · 처리하면 내린다 · 화면이 적는다');
   }
 
   /* ── 쿼터를 다 썼을 때 (2026-09-04) ─────────────────────────────────────
@@ -5140,7 +5145,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
   const bad = [];
   const at = ix.indexOf("class=\"lgn\"");
-  if (at < 0) bad.push('LG 지점명 줄(.lgn)이 없다');
+  if (at < 0) bad.push('베스트샵 지점명 줄(.lgn)이 없다');
   else {
     /* 그 줄을 만드는 블록 */
     /* **주석이 늘면 창이 모자란다** — 2026-09-05 에 실물 오류를 고치며 주석을 더했더니
@@ -5150,12 +5155,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        **srShare() 를 지나간다** — 칸 색과 같은 값을 써야 빨강 면적과 적힌 건수가
        안 어긋난다(면적은 당해인데 글자는 전 기간이던 사고). */
     if (!blk.includes('var srmL = srShare(d.nm);'))
-      bad.push('LG 지점명 줄이 칸 색과 다른 값을 쓴다 — 면적과 건수가 어긋난다');
+      bad.push('베스트샵 지점명 줄이 칸 색과 다른 값을 쓴다 — 면적과 건수가 어긋난다');
     /* ①-b **잣대가 다르면 칸에 숫자를 적지 않는다**(2026-09-05 실물에서 잡음).
        갤러리아광교 칸이 「184건」(2026년)인데 그 아래 「LG 369건」(전 기간)이 나란히
        있었다 — 그대로 읽으면 거짓이다. 전 기간으로 물러선 상태에서는 면적만 둔다. */
     if (!blk.includes("if (srmL && srmL.scope === 'all') srmL = null;"))
-      bad.push('전 기간으로 물러선 LG 건수를 칸에 그대로 적는다 — 한 칸에 두 잣대다');
+      bad.push('전 기간으로 물러선 베스트샵 건수를 칸에 그대로 적는다 — 한 칸에 두 잣대다');
     if (!/var bgL = /.test(blk))
       bad.push('배경색을 지역 변수로 다시 안 낸다 — 같은 호이스팅 함정이다');
     /* ② 색은 배경 밝기가 정한다 — **문자열이 아니라 결과로 본다.**
@@ -5181,8 +5186,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!/c\.w - 8\) \/ \(lgTxt\.length/.test(blk))
       bad.push('글자 크기를 칸 폭에서 안 낸다 — 긴 이름이 칸 밖으로 나간다(실측 +87~176px)');
   }
-  if (bad.length) fail('[바이럴] 히트맵 LG 표기 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 히트맵 LG 표기 — 지점명·건수를 넓은 칸에 적고 · 색은 배경이 정하고 · 칸 안에 들어간다');
+  if (bad.length) fail('[바이럴] 히트맵 베스트샵 표기 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 히트맵 베스트샵 표기 — 지점명·건수를 넓은 칸에 적고 · 색은 배경이 정하고 · 칸 안에 들어간다');
 }
 
 /* ── 검색 관심도 — 네이버 데이터랩 (2026-09-04) ──────────────────────────
@@ -5402,7 +5407,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const bad = [];
 
   /* ⓐ 주기 상수 — 하루로 되돌리면 나눈 뜻이 없다 */
-  for (const [k, nm] of [['RIVAL_EVERY_DAYS', 'LG 비교'], ['SRIVAL_EVERY_DAYS', '매장 대 매장'],
+  for (const [k, nm] of [['RIVAL_EVERY_DAYS', '베스트샵 비교'], ['SRIVAL_EVERY_DAYS', '매장 대 매장'],
                          ['TREND_EVERY_DAYS', '검색 관심도']]) {
     const m = new RegExp('var ' + k + ' = ([0-9]+);').exec(gs);
     if (!m) bad.push(k + ' 가 없다 — ' + nm + ' 주기를 못 정한다');
@@ -5699,7 +5704,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       for (const k of ['srival', 'trend', 'dead'])
         if (body.indexOf("name === '" + k + "'") < 0) bad.push('runJob 이 ' + k + ' 를 모른다');
       if (body.indexOf("if (name === 'rival') return runRival();") < 0)
-        bad.push('runJob 이 LG 비교를 runRival 에 안 넘긴다 — 예약 장치를 잃는다');
+        bad.push('runJob 이 베스트샵 비교를 runRival 에 안 넘긴다 — 예약 장치를 잃는다');
       if (body.indexOf('LockService.getScriptLock()') < 0)
         bad.push('runJob 이 자물쇠를 안 쓴다 — 수집과 겹치면 같은 회차가 두 줄이 된다');
       /* **어떻게 보는지는 안 박는다** — `over()` 는 sweep_ 의 지역 함수라
@@ -5858,7 +5863,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
 
     /* 단조성 — 값이 크면 색도 진해야 한다 */
-    for (const [a, b, nm] of [[sLo, sHi, '당사'], [lLo, lHi, 'LG']]) {
+    for (const [a, b, nm] of [[sLo, sHi, '당사'], [lLo, lHi, '베스트샵']]) {
       let prev = 9;
       for (let i = 0; i <= 5; i++) {
         const L = lum(mix(a, b, i / 5));
@@ -5888,8 +5893,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        실측 — 지금 94:26(차 68) · 진한 청록+선명한 코랄 94:67(차 27, 시선을 나눠 가진다) ·
        옛 남색+벽돌빨강 51:69(차 −18, **LG 가 먼저 보인다**). */
     if (gap < 40)
-      bad.push('당사 채도(' + sat(sHi) + ')와 LG(' + sat(lHi) + ') 차가 ' + gap
-        + ' 뿐이다 — LG 가 시선을 나눠 가진다(40 이상이어야 한다)');
+      bad.push('당사 채도(' + sat(sHi) + ')와 베스트샵(' + sat(lHi) + ') 차가 ' + gap
+        + ' 뿐이다 — 베스트샵 가 시선을 나눠 가진다(40 이상이어야 한다)');
     /* **색상도 갈려야 한다** — 채도만 다르고 색이 같으면(진한 청록 ↔ 옅은 청록) 가운데
        경계가 그러데이션처럼 보여 「어디까지가 우리 몫인가」가 흐려진다.
        **적록 색각 거리로는 이걸 못 잡는다** — 밝기 차가 커서 거리가 크게 나온다.
@@ -5908,7 +5913,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (sep < 25)
       bad.push('적록 색각에서 두 진영 거리가 ' + Math.round(sep) + ' 이다 — 색으로도 안 갈린다');
     /* **밝은 끝이 흰색이면 작은 칸이 배경과 붙는다** — 「칸이 없다」로 보인다 */
-    for (const [c, nm] of [[sLo, '당사'], [lLo, 'LG']])
+    for (const [c, nm] of [[sLo, '당사'], [lLo, '베스트샵']])
       if (lum(c) > 0.93) bad.push(nm + ' 램프의 밝은 끝이 거의 흰색이다 — 작은 칸이 안 보인다');
   }
 
@@ -5916,16 +5921,16 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* **글자만 찾으면 안 된다** — 조건을 `if (false)` 로 바꿔도 그 글자는 남는다(실제로
      되돌려 넣어 보니 안 물렸다). 만드는 곳과 **붙이는 곳**을 함께 본다. */
   if (ix.indexOf('cg two') < 0)
-    bad.push('칸에 삼성/LG 건수를 안 적는다 — 폰에는 hover 가 없어 말풍선만으로는 안 보인다');
+    bad.push('칸에 삼성/베스트샵 건수를 안 적는다 — 폰에는 hover 가 없어 말풍선만으로는 안 보인다');
   if (ix.indexOf('if (two) {\n            lab += two;') < 0)
     bad.push('만들어 놓고 칸에 안 붙인다 — 화면에는 옛 「N건」만 뜬다');
   if (ix.indexOf('function textW(t, px)') < 0)
-    bad.push('글자 폭을 재는 함수가 없다 — 어림하면 「LG 1,20」처럼 잘리거나 들어갈 자리도 안 적는다');
+    bad.push('글자 폭을 재는 함수가 없다 — 어림하면 「베스트샵 1,20」처럼 잘리거나 들어갈 자리도 안 적는다');
   if (ix.indexOf('measureText(t).width') < 0)
     bad.push('글자 폭을 캔버스로 안 잰다');
   /* **글자색은 그 글자가 실제로 얹히는 색이 정한다** — 코랄 띠가 좁으면 LG 라벨이 틸 위다 */
   if (ix.indexOf('inkOn(lgW >= wL + 8 ? bgL : bgS)') < 0)
-    bad.push('LG 라벨을 늘 코랄 기준으로 칠한다 — 띠가 좁은 칸에서 글자가 안 읽힌다');
+    bad.push('베스트샵 라벨을 늘 코랄 기준으로 칠한다 — 띠가 좁은 칸에서 글자가 안 읽힌다');
   /* 안 들어가면 줄여 보고, 그래도 안 되면 옛 표기로 물러선다 */
   if (ix.indexOf('[0.62, 0.55, 0.48]') < 0)
     bad.push('안 들어갈 때 글자를 줄여 보지 않는다 — 네 자리 숫자인 칸만 통째로 빠진다');
@@ -5960,7 +5965,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push("안내가 아직 「빨강」이라 적는다 — 화면은 따뜻한 회색이다");
 
   if (bad.length) fail('[바이럴] 히트맵 색 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 히트맵 색 — 대비·단조성·적록 색각 재서 통과 · 칸에 삼성/LG · 문구 일치');
+  else console.log('OK: 바이럴 히트맵 색 — 대비·단조성·적록 색각 재서 통과 · 칸에 삼성/베스트샵 · 문구 일치');
 }
 
 
@@ -6091,7 +6096,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const at = ix.indexOf('id="lgp-stores"');
     const mgr = ix.indexOf('id="mgr-store"');
     if (win < 0 || mgr < 0) bad.push('관리자 팝업 앵커가 낡았다 — 담긴 자리를 잴 수 없다');
-    else if (!(at > win && at < mgr)) bad.push('LG 짝 상자가 관리자 팝업 안(매니저 명부 앞)에 없다');
+    else if (!(at > win && at < mgr)) bad.push('베스트샵 짝 상자가 관리자 팝업 안(매니저 명부 앞)에 없다');
   }
   /* **드롭다운으로 되돌아가지 않았는가** — 폰에서 Ctrl 다중선택은 사실상 불가능하다 */
   if (ix.indexOf('id="lgp-sel"') >= 0 || ix.indexOf('id="lgp-store"') >= 0)
@@ -6121,7 +6126,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* ⓑ 그리는 길에 배선했는가 — 함수만 있고 안 부르면 화면에 아무것도 안 뜬다 */
   const wire = 'lgpFillStores(); lgpFillShops(); renderLgPairs(); wireLgPairs();';
   const n = ix.split(wire).length - 1;
-  if (n < 2) bad.push('LG 짝을 그리는 길이 ' + n + '곳뿐이다 — 팝업을 열 때와 자료가 온 뒤 둘 다 그려야 한다');
+  if (n < 2) bad.push('베스트샵 짝을 그리는 길이 ' + n + '곳뿐이다 — 팝업을 열 때와 자료가 온 뒤 둘 다 그려야 한다');
   /* 칸은 다시 그려지므로 **상자에서 받아야** 한다(낱낱이 걸면 다시 그릴 때마다 사라진다).
      **범위를 함수 본문으로 좁힌다** — 같은 글자가 파일 다른 곳에도 있어 전체에서
      찾으면 지워도 통과한다(실제로 안 물었다). */
@@ -6214,8 +6219,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
-  if (bad.length) fail('[바이럴] LG 지점 짝 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 LG 지점 짝 — 관리자에서 찾는다 · 칸으로 고른다 · 저장 길 하나 · 수기/기본 구분 · 해당없음≠되돌리기');
+  if (bad.length) fail('[바이럴] 베스트샵 지점 짝 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 베스트샵 지점 짝 — 관리자에서 찾는다 · 칸으로 고른다 · 저장 길 하나 · 수기/기본 구분 · 해당없음≠되돌리기');
 }
 
 /* ── **왼쪽 삼성 · 오른쪽 LG · 지역별** (2026-09-07 사장님 지시) ────────────────
@@ -6244,15 +6249,15 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const two = rule('.lgp-two');
   if (!two) bad.push('두 칼럼 상자(.lgp-two)가 없다');
   else if (two.indexOf('grid-template-columns:1fr 1fr') < 0)
-    bad.push('.lgp-two 가 두 칼럼이 아니다 — 왼쪽 삼성 · 오른쪽 LG 가 무너진다');
+    bad.push('.lgp-two 가 두 칼럼이 아니다 — 왼쪽 삼성 · 오른쪽 베스트샵 가 무너진다');
 
   /* ⓑ **왼쪽이 삼성이다** — 순서가 뒤집히면 지시와 정반대가 된다 */
   const usAt = ix.indexOf('lgp-pane us'), lgAt = ix.indexOf('lgp-pane lg');
-  if (usAt < 0 || lgAt < 0) bad.push('삼성/LG 칼럼 표시(.lgp-pane.us · .lgp-pane.lg)가 없다');
-  else if (usAt > lgAt) bad.push('LG 칼럼이 삼성보다 왼쪽에 있다 — 사장님 지시와 반대다');
+  if (usAt < 0 || lgAt < 0) bad.push('삼성/베스트샵 칼럼 표시(.lgp-pane.us · .lgp-pane.lg)가 없다');
+  else if (usAt > lgAt) bad.push('베스트샵 칼럼이 삼성보다 왼쪽에 있다 — 사장님 지시와 반대다');
   /* **브랜드를 글자로도 적는다** — 색만으로는 색각에 따라 안 갈린다 */
   if (ix.indexOf('lgp-ph"><i></i>삼성') < 0) bad.push('왼쪽 칼럼 머리에 「삼성」이 안 적혀 있다');
-  if (ix.indexOf('lgp-ph"><i></i>LG') < 0) bad.push('오른쪽 칼럼 머리에 「LG」가 안 적혀 있다');
+  if (ix.indexOf('lgp-ph"><i></i>베스트샵') < 0) bad.push('오른쪽 칼럼 머리에 「베스트샵」가 안 적혀 있다');
 
   /* ⓒ **폰에서도 두 칼럼** — 쌓으면 「왼쪽 삼성 오른쪽 LG」가 폰에서만 사라진다 */
   {
@@ -6269,7 +6274,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
       return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
     };
-    for (const [side, nm] of [['us', '삼성'], ['lg', 'LG']]) {
+    for (const [side, nm] of [['us', '삼성'], ['lg', '베스트샵']]) {
       const css = rule('.lgp-pane.' + side + ' .lgpc.on');
       const m = /background:(#[0-9A-Fa-f]{6})/.exec(css || '');
       if (!m) { bad.push(nm + ' 칼럼의 고른 칸 색이 없다 — 양쪽이 같은 색이면 구분이 사라진다'); continue; }
@@ -6385,8 +6390,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('매장을 안 골랐을 때 여러 곳을 고를 수 있다는 것을 안 알린다');
   }
 
-  if (bad.length) fail('[바이럴] 왼쪽 삼성 · 오른쪽 LG — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 짝 고르개 — 왼쪽 삼성 · 오른쪽 LG · 지역 칩 · 폰에서도 두 칼럼 · 해당없음≠없음');
+  if (bad.length) fail('[바이럴] 왼쪽 삼성 · 오른쪽 베스트샵 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 짝 고르개 — 왼쪽 삼성 · 오른쪽 베스트샵 · 지역 칩 · 폰에서도 두 칼럼 · 해당없음≠없음');
 }
 
 /* ── **날짜가 하루 밀렸다 · 완주가 멈춤으로 읽혔다** (2026-09-06) ─────────────────
@@ -6486,7 +6491,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
 
   /* ⓐ 서버가 좌표를 보내는가 */
   if (gs.indexOf('o.push({ n: LG_SHOPS[i][0], g: LG_SHOPS[i][1], y: LG_SHOPS[i][2], x: LG_SHOPS[i][3] })') < 0)
-    bad.push('서버가 LG 지점 좌표를 안 보낸다 — 화면이 거리로 줄 세울 수 없다');
+    bad.push('서버가 베스트샵 지점 좌표를 안 보낸다 — 화면이 거리로 줄 세울 수 없다');
   if (gs.indexOf('storeGeo: STORE_GEO') < 0) bad.push('서버가 우리 매장 좌표를 안 보낸다');
 
   /* ⓑ 화면이 거리로 가르는가 — **지역 이름 매칭으로 되돌아가면 안 된다**.
@@ -6560,8 +6565,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (pv.indexOf('y: x.lat, x: x.lng') < 0) bad.push('미리보기 모의 지점에 좌표가 없다');
   }
 
-  if (bad.length) fail('[바이럴] LG 지점 거리순 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 LG 지점 거리순 — 좌표를 보낸다 · 거리로 줄 세운다 · 고른 것은 앞에 · 거리를 적는다');
+  if (bad.length) fail('[바이럴] 베스트샵 지점 거리순 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 베스트샵 지점 거리순 — 좌표를 보낸다 · 거리로 줄 세운다 · 고른 것은 앞에 · 거리를 적는다');
 }
 
 /* ── **원주에 「LG 매장이 없다」로 보이던 것** (2026-09-07 사장님 지적) ─────────────
@@ -6621,33 +6626,33 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        (당해 LG 0 · 전 기간 92건)이었고 단구는 통째로 빨강(당해 우리 0 · 전 기간 27건)이었다 */
     {
       const g1 = make({ pair: ['A'], row: { shop: 'A', ours: 951, rival: 92, mon: mon({ '2026-01': 144 }, {}) } });
-      if (!g1 || g1.pct !== null || g1.thin !== true) bad.push('LG 표본이 0인데 100% 로 칠한다 — 「완승」으로 읽힌다');
+      if (!g1 || g1.pct !== null || g1.thin !== true) bad.push('베스트샵 표본이 0인데 100% 로 칠한다 — 「완승」으로 읽힌다');
       if (!g1 || g1.allRival !== 92) bad.push('전 기간 값을 안 낸다 — 0 이 「매장이 없다」로 읽힌다');
       const g2 = make({ pair: ['A'], row: { shop: 'A', ours: 27, rival: 97, mon: mon({}, { '2026-01': 1 }) } });
       if (!g2 || g2.pct !== null || g2.thin !== true) bad.push('우리 표본이 0인데 0% 로 칠한다 — 「완패」로 읽힌다');
       /* **전 기간에도 0이면 진짜 0이다** — 그때는 비중이 맞다 */
       const g3 = make({ pair: ['A'], row: { shop: 'A', ours: 50, rival: 0, mon: mon({ '2026-01': 50 }, {}) } });
-      if (!g3 || g3.pct !== 100) bad.push('전 기간에도 LG 가 0인데 못 잼으로 뭉갠다 — 진짜 0 과 못 잼은 다르다');
+      if (!g3 || g3.pct !== 100) bad.push('전 기간에도 베스트샵 가 0인데 못 잼으로 뭉갠다 — 진짜 0 과 못 잼은 다르다');
     }
   }
 
   /* ⓔ 화면이 이유를 적는가 */
-  if (ix.indexOf('LG 후기가 없는 것이 아닙니다') < 0)
-    bad.push('LG 0건의 이유를 안 적는다 — 「매장이 없다」로 읽힌다');
+  if (ix.indexOf('베스트샵 후기가 없는 것이 아닙니다') < 0)
+    bad.push('베스트샵 0건의 이유를 안 적는다 — 「매장이 없다」로 읽힌다');
   if (ix.indexOf('짝을 바꾸셨습니다') < 0) bad.push('짝이 바뀐 사실을 말풍선이 안 적는다');
   if (ix.indexOf("'2023년~ 누적 기준'") < 0) bad.push('누적 축의 잣대를 말풍선이 안 밝힌다');
   if (ix.indexOf('한쪽이 0이라 비중을 못 잽니다') < 0)
     bad.push('한쪽만 0 인 것과 양쪽 0 인 것을 말풍선이 안 가른다');
   /* **폰에는 hover 가 없다** — 칸에도 적혀야 한다. 0 이 아니라 – 로. */
   if (ix.indexOf("(srm2.thin && !srm2.rival ? '–' : nf(srm2.rival))") < 0)
-    bad.push('칸이 못 잰 LG 를 0 으로 적는다 — 폰에서 「매장이 없다」로 읽힌다');
+    bad.push('칸이 못 잰 베스트샵 를 0 으로 적는다 — 폰에서 「매장이 없다」로 읽힌다');
   if (ix.indexOf('if (srm2 && (srm2.pct !== null || srm2.thin))') < 0)
-    bad.push('못 잰 칸에 두 라벨을 아예 안 적는다 — 폰에서 LG 가 통째로 사라진다');
+    bad.push('못 잰 칸에 두 라벨을 아예 안 적는다 — 폰에서 베스트샵 가 통째로 사라진다');
   if (ix.indexOf('var lgW = (srm2.pct === null) ? 0 : c.w') < 0)
-    bad.push('못 잰 칸에서 LG 글자를 코랄 기준으로 칠한다 — 배경이 한 색이라 안 읽힌다');
+    bad.push('못 잰 칸에서 베스트샵 글자를 코랄 기준으로 칠한다 — 배경이 한 색이라 안 읽힌다');
 
-  if (bad.length) fail('[바이럴] LG 비중 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 LG 비중 — 해당없음은 안 견준다 · 짝 바뀜을 밝힌다 · 축을 따라간다 · 한쪽 0 은 못 잼');
+  if (bad.length) fail('[바이럴] 베스트샵 비중 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 베스트샵 비중 — 해당없음은 안 견준다 · 짝 바뀜을 밝힌다 · 축을 따라간다 · 한쪽 0 은 못 잼');
 }
 
 /* ── **LG 건수가 칸에 두 번 적혔다** (2026-09-07 사장님 지적) ─────────────────────
@@ -6667,13 +6672,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const bad = [];
 
   /* 두 라벨이 있으면 건수도 「LG」 접두도 안 붙인다 */
-  if (ix.indexOf("var lgTxt = two ? '' : ('LG ' + lgn + ' ' + nf(srmL.rival) + '건');") < 0)
-    bad.push('두 라벨이 있는데 LG 지점명 줄을 또 적는다 — 칸에 우리 점명이 이미 있다');
+  if (ix.indexOf("var lgTxt = two ? '' : ('베스트샵 ' + lgn + ' ' + nf(srmL.rival) + '건');") < 0)
+    bad.push('두 라벨이 있는데 베스트샵 지점명 줄을 또 적는다 — 칸에 우리 점명이 이미 있다');
   /* 좁아서 줄일 때도 마찬가지 — 「LG 17건」으로 물러서면 또 겹친다 */
-  if (ix.indexOf("var tail = two ? '' : (nf(srmL.rival) + '건 LG ');") < 0)
+  if (ix.indexOf("var tail = two ? '' : (nf(srmL.rival) + '건 베스트샵 ');") < 0)
     bad.push('좁은 칸 폴백이 건수를 다시 붙인다');
-  if (ix.indexOf(": (two ? '' : ('LG ' + nf(srmL.rival) + '건'));") < 0)
-    bad.push('이름이 안 들어갈 때 「LG N건」으로 물러서 위 줄과 겹친다');
+  if (ix.indexOf(": (two ? '' : ('베스트샵 ' + nf(srmL.rival) + '건'));") < 0)
+    bad.push('이름이 안 들어갈 때 「베스트샵 N건」으로 물러서 위 줄과 겹친다');
   /* 빈 문자열이면 안 그린다 */
   if (ix.indexOf("if (lgTxt && lgFs >= 6.5)") < 0)
     bad.push('빈 줄을 그린다 — 이름이 안 들어가면 아예 안 적어야 한다');
