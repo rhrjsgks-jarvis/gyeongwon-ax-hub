@@ -952,6 +952,16 @@
   .rpmore > summary::before { content: "▸ "; }
   .rpmore[open] > summary::before { content: "▾ "; }
   .rpmore > div { padding-top: 4px; }
+  /* 거르개가 걸렸는지 카드가 스스로 밝힌다 — 「따른다」와 「못 따른다」를 색으로 가른다.
+     안 적으면 사장님이 위에서 기간을 골랐는데 카드 숫자가 그대로인 것을 「고장」으로 읽는다. */
+  .scopeon, .scopeoff {
+    font-size: var(--fs-mini); line-height: 1.6; border-radius: 8px;
+    padding: 6px 9px; margin: 0 0 8px;
+  }
+  .scopeon { background: #EEF3FF; color: #1F3A93; border: 1px solid #CBD9F5; }
+  .scopeon b { color: #1428A0; }
+  .scopeoff { background: #FFF6E8; color: #7A5417; border: 1px solid #F0DCB8; }
+  .scopeoff b { color: #8A5A00; }
   .rpnav { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin: 0 0 10px; }
   .rpnav select { max-width: 220px; }
   .rpwk { margin: 0 0 12px; }
@@ -1868,7 +1878,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-09-df5ff3cf';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-09-628fa7d6';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -1916,6 +1926,17 @@ var IX_VER = '2026-09-09-df5ff3cf';   /* 붙여넣기 확인용 — 주석은 �
      날짜 분류에서 제외해 주세요, 기타로 분류합니다"*). 날짜 필터는 원래 그 글들을
      빼는데, 뺀 것을 **볼 길이 없었다** — 「기타」가 그 자리다. */
   var dateOther = false;
+  /** 원본 줄의 9종 `kind` → 최상단 유형 버튼의 4종 키.
+   *  **서버 `kind4_` 와 한 글자도 달라선 안 된다** — 갈리면 목록과 히트맵이 서로
+   *  다른 글을 세고, 그 어긋남은 숫자로만 드러나 알아채기 어렵다.
+   *  `test-admin` 이 서버 소스와 대조한다. */
+  function kind4Row(k) {
+    if (k === '혼수') return 'wedding';
+    if (k === '입주') return 'movein';
+    if (k === '이사') return 'moving';
+    if (k === '모바일') return 'mobile';
+    return 'etc';
+  }
   /* ── **같은 글은 한 줄로 접는다** (2026-09-02 사장님 결정 ⓐ) ────────────
    * 주소가 같은 중복은 이미 `dedupeReviews` 가 치운다(실측 0건). 그런데 화면에
    * 중복처럼 보이는 것이 따로 있다 — **한 블로거가 같은 제목으로 여러 번 올린**
@@ -2073,6 +2094,11 @@ var IX_VER = '2026-09-09-df5ff3cf';   /* 붙여넣기 확인용 — 주석은 �
       if (storeFilter && r.storeName !== storeFilter) return false;
       if (cafeFilter && r.cafe !== cafeFilter) return false;
       if (kindFilter && r.kind !== kindFilter) return false;
+      /* **최상단 유형 버튼도 목록에 걸린다**(2026-09-09 사장님 지시 — *"상단에 날짜와
+         각종 후기유형은 하단에 모든 값을 결정하게해줘야합니다"*).
+         카드 안 9종 칩(`kindFilter`)과 **함께** 걸린다 — 둘은 잣대가 달라(9종 ↔ 4종)
+         하나가 다른 하나를 덮으면 화면이 두 말을 한다. */
+      if (heatKind && kind4Row(r.kind) !== heatKind) return false;
       /* **매니저는 한 글에 여럿일 수 있다**(mgr 이 | 로 이어진다) — 포함으로 본다.
          부분일치로 보면 「김영훈 매니저」가 「김영훈 부점장」도 문다(다른 사람일 수 있다). */
       if (mgrFilter && String(r.mgr || '').split('|').indexOf(mgrFilter) < 0) return false;
@@ -3568,12 +3594,15 @@ function wireSecs() {
    * 「AI 분석」이라 적어 놓고 규칙이면 그 자리에서 거짓이 된다. */
   var reportStore = '';   /* '' 경원영업팀 전체 · 매장 이름이면 그 지점 */
 
-  /** 그 주의 건수. `store` 가 없으면 전 매장 합. */
+  /** 그 주의 건수. `store` 가 없으면 전 매장 합.
+   *  **최상단 유형 버튼을 따른다**(2026-09-09) — 안 따르면 「혼수 후기」를 골랐는데
+   *  리포트만 전체를 세어 히트맵과 다른 숫자를 말한다. */
   function wkSum(bw, store, w) {
     var t = 0, keys = store ? [store] : Object.keys(bw), i, m, k;
     for (i = 0; i < keys.length; i++) {
       m = bw[keys[i]] && bw[keys[i]][w];
       if (!m) continue;
+      if (heatKind) { t += (m[heatKind] || 0); continue; }
       for (k in m) if (m.hasOwnProperty(k)) t += m[k];
     }
     return t;
@@ -4024,7 +4053,8 @@ function wireSecs() {
   function renderTrend() {
     var el = document.getElementById("trend"); if (!el) return;
     var sub = document.getElementById("tr-sub"), dl = document.getElementById("tr-delta");
-    var bm = DATA.byMonth || {};
+    /* **최상단 기간·유형을 따른다**(2026-09-09) — 주를 달로 묶는다. */
+    var bm = scopedByMonth();
     var keys = Object.keys(bm).sort();
     if (!keys.length) {
       el.innerHTML = "";
@@ -4117,7 +4147,9 @@ function wireSecs() {
       if (sub) sub.textContent = "지도를 그릴 수 없습니다 — 아래 안내를 봐 주세요.";
       return;
     }
-    var by = DATA.byMap || {};
+    /* **최상단 기간·유형을 따른다**(2026-09-09). `byMapStores` 가 구 → 매장 목록이라
+       매장 건수를 다시 세면 그대로 구별 합이 된다. 안 걸렸으면 서버 값 그대로. */
+    var by = scopedByGroup(DATA.byMapStores || {}, DATA.byMap || {});
     var cells = Object.keys(GW_MAP.labels);
     var max = 0, hit = 0, sum = 0;
     cells.forEach(function (c) {
@@ -4996,7 +5028,17 @@ function wireSecs() {
 
   function renderRegions() {
     var el = document.getElementById('regions'); if (!el) return;
-    var reg = DATA.byRegion || {}, by = DATA.byStore || {};
+    /* **최상단 기간·유형을 따른다**(2026-09-09 사장님 지시). 안 걸렸으면 서버 전
+       기간 값 그대로라 평소 화면은 한 글자도 안 바뀐다. */
+    var reg = DATA.byRegion || {}, by = scopedByStore();
+    /* 지역 합계도 같은 자로 낸다 — 서버 `reg[rg].n`(전 기간)을 그대로 쓰면
+       **지역 머리는 3,468건인데 그 안 매장 합은 250건**이 되어 화면이 두 말을 한다. */
+    var regN = {};
+    Object.keys(reg).forEach(function (rg0) {
+      var li = reg[rg0].stores || [], t0 = 0, i0;
+      for (i0 = 0; i0 < li.length; i0++) t0 += (by[li[i0]] || 0);
+      regN[rg0] = scoped() ? t0 : (reg[rg0].n || 0);
+    });
     var names = Object.keys(reg);
     if (!names.length) { el.innerHTML = '<div class="empty">아직 없습니다</div>'; return; }
     /* **묶음은 「영업스케치」 지역 하나뿐이다**(2026-08-31 사장님: *"지역을 경원영업팀
@@ -5006,7 +5048,7 @@ function wireSecs() {
        한때 시·군을 한 층 더 뒀는데 걷어냈다 — **시·군과 지역이 1:1이 아니다**
        (화성DSR모바일은 시·군이 화성인데 편성은 수원, 미래기술캠퍼스모바일은 시·군이
        수원인데 편성은 용인). 두 층을 겹치면 어긋난 채로 그려진다. */
-    names.sort(function (a, b) { return (reg[b].n || 0) - (reg[a].n || 0); });
+    names.sort(function (a, b) { return (regN[b] || 0) - (regN[a] || 0); });
 
     /* **정규화는 전역이다** — 지역마다 따로 하면 「같은 진하기가 다른 건수」가 되어
        화면이 거짓말을 한다(지도가 이미 그 규칙을 못 박아 두었다). 계산식도 지도와 같다. */
@@ -5024,7 +5066,7 @@ function wireSecs() {
          없는 것처럼 보였다 — 이 저장소가 「접힌 곳으로 데려가지 않는다」로 이미 세운 규칙과
          같은 종류다. `data-area` 로 어느 지역 것인지 표시해 두고 렌더가 그것을 찾는다. */
       return '<div class="rgwrap"><div class="rg"><div class="rg-h">' + esc(rg) + '지역' +
-        '<span>' + list.length + '곳 · ' + nf(reg[rg].n) + '건</span></div><div class="rg-b">' +
+        '<span>' + list.length + '곳 · ' + nf(regN[rg]) + '건</span></div><div class="rg-b">' +
         list.map(function (nm) {
           var v = by[nm] || 0;
           var tl = storeTypeLabel(nm);
@@ -5156,7 +5198,9 @@ function wireSecs() {
 
     /* ① 매장 유형별 후기 — 새로 만든 유형 심벌과 짝이다.
        **유형을 모르는 매장은 「미상」으로 따로 센다** — 로드샵에 넣으면 조용히 부풀린다. */
-    var bs = D.byStore || {}, stp = D.storeType || {}, byT = {};
+    /* **최상단 기간·유형을 따른다**(2026-09-09) — 매장 단위 칸은 다시 셀 수 있다.
+       출처(블로그/카페/웹)는 주 구분이 없어 못 따른다 — 그 절이 스스로 밝힌다. */
+    var bs = scopedByStore(), stp = D.storeType || {}, byT = {};
     Object.keys(bs).forEach(function (k) {
       var t = (stp[k] || {}).t || '미상';
       byT[t] = (byT[t] || 0) + (bs[k] || 0);
@@ -7082,6 +7126,128 @@ function renderList() {
     return { picks: picks, sum: sum, avg: avg };
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+   * 최상단 기간·유형이 **아래 카드 전부를 결정한다** (2026-09-09 사장님 지시)
+   * ══════════════════════════════════════════════════════════════════════
+   * *"상단에 날짜와 각종 후기유형은 하단에 모든 값을 결정하게해줘야합니다."*
+   *
+   * 실측으로 12개 카드 중 **기간을 따르던 것이 2개, 유형은 1개**뿐이었다. 원인은
+   * 화면이 아니라 **자료의 모양**이다 — 대부분이 서버가 전 기간으로 미리 집계한
+   * 값(`byStore`·`byMap`·`byCafe`·`rival`)을 그대로 그려, 그 안에 날짜도 유형도
+   * 없어 화면이 다시 자를 수가 없었다.
+   *
+   * **`byStoreWeek4`(매장 × 주 × 유형) 하나로 되는 것은 전부 여기서 다시 센다.**
+   *   되는 것 — 매장별 · 지도 · 지역 · 월별 추이 · 구성(유형) · 히트맵 · 리포트
+   *   안 되는 것 — 출처(블로그/카페/웹) · 카페별 · 경쟁사 · SDP · 매장 신호
+   *     (앞 둘은 주 구분이 없고, 뒤 셋은 **회차 단위라 날짜 자체가 없다**)
+   * **안 되는 카드는 되는 척하지 않고 「전 기간 기준」이라 적는다**(`scopeNote`).
+   *
+   * **한계를 반드시 알고 쓸 것** — 이 자료는 **작성일을 아는 글만** 담는다
+   * (실측 3,260 / 12,788건 = 25%). 그래서 기간이나 유형을 걸면 숫자가 확 줄어든다.
+   * 아무것도 안 걸었을 때는 **서버 전 기간 값을 그대로** 쓰는 이유가 그것이다 —
+   * 평소 화면은 지금과 한 글자도 다르지 않고, 걸었을 때만 좁아진다.
+   */
+
+  /** 지금 걸린 기간에 드는 주 목록. **기간을 안 걸었으면 전체 주**(유형만 걸 수 있다). */
+  function scopedWeeks(bw) {
+    var all = weekList(bw);
+    if (!heatWeek) return all;
+    if (heatWeek !== 'custom') return all.indexOf(heatWeek) >= 0 ? [heatWeek] : [];
+    if (!heatFrom || !heatTo) return all;
+    var lo = heatFrom < heatTo ? heatFrom : heatTo;
+    var hi = heatFrom < heatTo ? heatTo : heatFrom;
+    return all.filter(function (w) {
+      var r = weekRange(w);
+      /* 겹치기만 해도 담는다 — 주의 일부가 걸치면 그 주 자료가 그 기간에 든다 */
+      return r && r.to >= lo && r.from <= hi;
+    });
+  }
+  /** 기간이나 유형이 걸려 있는가. 둘 다 없으면 서버 전 기간 값을 그대로 쓴다. */
+  function scoped() { return !!(heatWeek || heatKind); }
+  /** 그 주 묶음의 건수(유형 필터 적용). */
+  function scopedOne(m) {
+    if (!m) return 0;
+    if (heatKind) return m[heatKind] || 0;
+    var n = 0, k;
+    for (k in m) if (m.hasOwnProperty(k)) n += m[k];
+    return n;
+  }
+  /** 매장별 건수 — **걸린 것이 없으면 서버 값 그대로**(카페 글이 안 빠진다). */
+  function scopedByStore() {
+    if (!scoped()) return DATA.byStore || {};
+    var bw = weekSrc('store'), ws = scopedWeeks(bw), out = {}, st, i;
+    for (st in bw) if (bw.hasOwnProperty(st)) {
+      var t = 0;
+      for (i = 0; i < ws.length; i++) t += scopedOne(bw[st][ws[i]]);
+      out[st] = t;
+    }
+    return out;
+  }
+  /** 지금 범위의 총 건수. */
+  function scopedTotal() {
+    if (!scoped()) return DATA.total || 0;
+    var by = scopedByStore(), t = 0, k;
+    for (k in by) if (by.hasOwnProperty(k)) t += by[k];
+    return t;
+  }
+  /** 매장 묶음(구·지역)별 합. `map` 은 {이름: [매장…]}. */
+  function scopedByGroup(map, fallback) {
+    if (!scoped()) return fallback || {};
+    var by = scopedByStore(), out = {}, g, i, list;
+    for (g in map) if (map.hasOwnProperty(g)) {
+      list = map[g] || []; var t = 0;
+      for (i = 0; i < list.length; i++) t += (by[list[i]] || 0);
+      out[g] = t;
+    }
+    return out;
+  }
+  /** 달별 건수 — 주를 달로 묶는다(주가 달을 걸치면 **시작일이 든 달**로 센다). */
+  function scopedByMonth() {
+    if (!scoped()) return DATA.byMonth || {};
+    var bw = weekSrc('store'), ws = scopedWeeks(bw), out = {}, st, i, r, mo;
+    for (i = 0; i < ws.length; i++) {
+      r = weekRange(ws[i]); if (!r) continue;
+      mo = r.from.slice(0, 7);
+      for (st in bw) if (bw.hasOwnProperty(st)) out[mo] = (out[mo] || 0) + scopedOne(bw[st][ws[i]]);
+    }
+    return out;
+  }
+  /** 유형별 건수(4종). */
+  function scopedByKind4() {
+    if (!scoped()) return DATA.byKind4 || {};
+    var bw = weekSrc('store'), ws = scopedWeeks(bw), out = {}, st, i, m, k;
+    for (st in bw) if (bw.hasOwnProperty(st)) {
+      for (i = 0; i < ws.length; i++) {
+        m = bw[st][ws[i]]; if (!m) continue;
+        for (k in m) if (m.hasOwnProperty(k)) {
+          if (heatKind && k !== heatKind) continue;
+          out[k] = (out[k] || 0) + m[k];
+        }
+      }
+    }
+    return out;
+  }
+  /** 지금 무엇으로 걸러 보고 있는지 사람 말로. 안 걸렸으면 빈 문자열. */
+  function scopeLabel() {
+    var a = [];
+    if (heatWeek) a.push(periodLabel() || '고른 기간');
+    if (heatKind) a.push(kLabel(heatKind));
+    return a.join(' · ');
+  }
+  /** **이 카드는 기간·유형을 못 따른다**고 적는 한 줄. 되는 척하지 않는다.
+   *  `why` 는 왜 못 따르는지 — 안 적으면 「고장」으로 읽힌다. */
+  function scopeNote(why) {
+    if (!scoped()) return '';
+    return '<div class="scopeoff">위 <b>' + esc(scopeLabel()) + '</b> 거르개가 여기에는 안 걸립니다 — '
+      + why + ' <b>전 기간 기준</b>입니다.</div>';
+  }
+  /** 기간·유형을 따르는 카드가 적는 한 줄 — **작성일을 아는 글만**이라는 사실을 밝힌다. */
+  function scopeOn() {
+    if (!scoped()) return '';
+    return '<div class="scopeon"><b>' + esc(scopeLabel()) + '</b>만 봅니다 — '
+      + '작성일을 아는 글만 셉니다(네이버가 카페·웹 글의 작성일을 주지 않아 전체보다 적습니다).</div>';
+  }
+
   /** 히트맵 한 줄 — 한 매장. `g` 는 **전월이 0이거나 모르면 null** 이다(0에서 늘어난
    *  것은 몇 %가 아니라 「새로 생겼다」이고, 넓이가 음수일 수도 없다). */
   function heatRows() {
@@ -8633,13 +8799,67 @@ function renderList() {
     if (c) c.onclick = function () { mgrFilter = ''; page = 1; render(); };
   }
 
+  /* ── **어느 카드가 거르개를 따르는지 화면이 밝힌다** (2026-09-09) ──────────────
+   * 사장님 지시는 *"상단에 날짜와 각종 후기유형은 하단에 모든 값을 결정하게"* 인데,
+   * **자료의 모양 때문에 못 따르는 카드가 다섯 있다** — 경쟁사·LG 홍보 경로·SDP 는
+   * 회차 단위로 모아 날짜 자체가 없고, 카페별·매장 신호는 주·유형 구분이 없다.
+   * 되는 척하면 사장님이 좁혀 놓고 그 값을 그 기간 것으로 읽는다 —
+   * **되는 카드에는 「따른다」, 안 되는 카드에는 「안 걸린다」를 적는다.**
+   *
+   * 카드 렌더 함수를 건드리지 않고 `render()` 끝에서 한 번에 붙인다 — 함수마다
+   * 넣으면 카드를 하나 더할 때 반드시 빠뜨린다(이 화면이 되풀이해 겪은 사고다). */
+  var SCOPE_OFF = [
+    ['rival', '경쟁사 자료는 <b>회차 단위</b>로 모아 글마다 날짜·유형이 없습니다.'],
+    ['promo', '같은 경쟁사 회차 자료라 글마다 날짜·유형이 없습니다.'],
+    ['sdp', '개인대리점 자료는 <b>회차 단위</b>로 모아 글마다 날짜·유형이 없습니다.'],
+    ['signal', '매장 신호는 <b>달 단위</b> 집계라 주·유형으로 못 자릅니다.'],
+    ['cafe', '카페별 집계에 날짜·유형 구분이 없습니다.'],
+  ];
+  var SCOPE_ON = ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list'];
+
+  function paintScopeNotes() {
+    var put = function (key, cls, html) {
+      var card = document.querySelector('.card[data-card="' + key + '"]');
+      if (!card) return;
+      var el = card.querySelector('.scopeon, .scopeoff');
+      if (!html) { if (el && el.parentNode) el.parentNode.removeChild(el); return; }
+      if (!el) {
+        el = document.createElement('div');
+        /* 제목·부제 **바로 아래**에 둔다 — 카드 맨 위는 제목 자리이고, 더 아래로
+           내리면 숫자를 먼저 읽고 나서야 「그 기간이 아니었다」를 알게 된다. */
+        var h = card.querySelector('.sub') || card.querySelector('h2');
+        if (!h || !h.parentNode) return;
+        h.parentNode.insertBefore(el, h.nextSibling);
+      }
+      el.className = cls;
+      el.innerHTML = html;
+    };
+    var on = scoped(), lab = on ? esc(scopeLabel()) : '';
+    var i;
+    for (i = 0; i < SCOPE_OFF.length; i++) {
+      put(SCOPE_OFF[i][0], 'scopeoff', on
+        ? '위 <b>' + lab + '</b> 거르개가 <b>여기에는 안 걸립니다</b> — '
+          + SCOPE_OFF[i][1] + ' <b>전 기간 기준</b>입니다.'
+        : '');
+    }
+    for (i = 0; i < SCOPE_ON.length; i++) {
+      put(SCOPE_ON[i], 'scopeon', on
+        ? '<b>' + lab + '</b>만 봅니다 — <b>작성일을 아는 글만</b> 셉니다'
+          + '(네이버가 카페·웹 글의 작성일을 주지 않아 전체 누적보다 적습니다).'
+        : '');
+    }
+  }
+
   function render() {
     /* **필터가 바뀌면 1쪽으로.** 필터를 바꾸는 길이 여덟(지도·매장·카페·유형·관심·기간·
        칩 해제·지도 아래 목록)이라 그 자리마다 적으면 반드시 하나를 빠뜨린다 — 빠뜨린
        곳에서는 3쪽을 보다 매장을 바꿨는데 그대로 3쪽이라 **빈 화면**이 뜬다.
        여기 한 곳에서 서명으로 본다. */
     var sig = [srcFilter, storeFilter, cafeFilter, kindFilter, watchFilter, mapFilter, monthFilter,
-      fromDate, toDate, dateOther].join("|");
+      fromDate, toDate, dateOther,
+      /* 최상단 기간·유형도 필터다(2026-09-09) — 안 넣으면 3쪽을 보다 기간을 좁혔을 때
+         그대로 3쪽이라 **빈 화면**이 뜬다. */
+      heatWeek, heatFrom, heatTo, heatKind].join("|");
     if (lastSig !== null && sig !== lastSig) page = 1;
     lastSig = sig;
   admToken = admToken || admLoad();   /* 같은 탭이면 다시 묻지 않는다 */
@@ -8673,6 +8893,8 @@ function renderList() {
     renderPeriodBar();
     renderHeat();
     renderMix();
+    /* **카드를 다 그린 뒤에** 붙인다 — 먼저 붙이면 각 카드의 innerHTML 이 덮어쓴다 */
+    paintScopeNotes();
     /* **자료가 온 뒤에야 「한 번 움직였다」로 친다.** 뼈대 렌더에서 세우면 정작
        숫자가 채워질 때는 이미 「두 번째」라 한 번도 안 움직인다. */
     if (DATA_READY) setTimeout(function () { animated = true; }, 0);

@@ -6945,5 +6945,91 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   else console.log('OK: 바이럴 매니저 이름 합치기 — 자르기 전에 이름으로 · 네 갈래 다 합산 · 말풍선이 밝힌다');
 }
 
+/* ── 최상단 기간·유형이 아래 카드를 결정한다 (2026-09-09 사장님 지시) ────────────
+ * *"상단에 날짜와 각종 후기유형은 하단에 모든 값을 결정하게해줘야합니다."*
+ *
+ * **되는 카드와 안 되는 카드를 둘 다 지킨다.** 되는 쪽만 보면 안 되는 카드가
+ * 「전 기간 기준」이라 밝히지 않은 채로 남고, 사장님이 좁혀 놓고 그 값을 그 기간
+ * 것으로 읽는다 — 이 화면이 가장 경계하는 「조용히 틀린 값」이다.
+ */
+{
+  const bad = [];
+  /* **`new URL(...).pathname` 을 쓰지 말 것** — 저장소 경로에 한글이 있어
+     `%EB%85%B8…` 로 인코딩된 채 넘어가 「파일이 없다」가 된다.
+     `fs` 는 URL 객체를 그대로 받는다(이 스위트의 다른 절과 같은 방식). */
+  const ixP = new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url);
+  const gsP = new URL('../docs/apps-script/Reviews.gs', import.meta.url);
+  if (!fs.existsSync(ixP) || !fs.existsSync(gsP)) {
+    bad.push('바이럴 파일을 못 찾았다');
+  } else {
+    const ix = fs.readFileSync(ixP, 'utf8');
+    const gs = fs.readFileSync(gsP, 'utf8');
+
+    /* ⓐ 다시 세는 손잡이가 있는가 */
+    for (const f of ['function scopedWeeks(', 'function scoped(', 'function scopedByStore(',
+                     'function scopedByGroup(', 'function scopedByMonth(', 'function scopeLabel('])
+      if (!ix.includes(f)) bad.push('없다: ' + f);
+
+    /* ⓑ **거르개가 없으면 서버 전 기간 값 그대로** — 평소 화면이 바뀌면 안 된다.
+       이 되돌림이 없으면 작성일 미상 9,528건이 통째로 사라져 숫자가 4분의 1이 된다. */
+    if (!ix.includes('if (!scoped()) return DATA.byStore || {};'))
+      bad.push('거르개가 없을 때 서버 값으로 안 물러선다 — 평소 화면이 4분의 1로 줄어든다');
+
+    /* ⓒ 되는 카드가 실제로 그 함수를 쓰는가(문자열이 아니라 자리로 본다) */
+    for (const [nm, needle] of [
+      ['매장별', 'var reg = DATA.byRegion || {}, by = scopedByStore();'],
+      ['지도', 'scopedByGroup(DATA.byMapStores || {}, DATA.byMap || {})'],
+      ['월별 추이', 'var bm = scopedByMonth();'],
+      ['구성 한눈에', 'var bs = scopedByStore(), stp = D.storeType || {}'],
+      ['후기 링크', 'if (heatKind && kind4Row(r.kind) !== heatKind) return false;'],
+      ['리포트', 'if (heatKind) { t += (m[heatKind] || 0); continue; }'],
+    ]) if (!ix.includes(needle)) bad.push(nm + ' 카드가 거르개를 안 따른다');
+
+    /* ⓓ **지역 머리와 그 안 매장 합이 같은 자를 써야 한다** — 서버 `reg[rg].n`(전 기간)을
+       그대로 적으면 「지역 3,468건인데 매장 합 250건」이 되어 화면이 두 말을 한다 */
+    if (ix.includes('nf(reg[rg].n)')) bad.push('지역 머리가 전 기간 값을 그대로 적는다');
+
+    /* ⓔ **9종 → 4종 매핑이 서버와 한 글자도 달라선 안 된다.** 갈리면 목록과 히트맵이
+       서로 다른 글을 세고, 그 어긋남은 숫자로만 드러나 알아채기 어렵다.
+       서버 `kind4_` 의 규칙을 뽑아 화면 `kind4Row` 와 대조한다. */
+    const grab = (src, fn) => {
+      const at = src.indexOf('function ' + fn + '(');
+      if (at < 0) return null;
+      /* **함수 끝을 들여쓰기로 찾는다** — 서버는 0칸 들여쓰기(`\n}`)인데 화면은
+         2칸(`\n  }`)이라, 한쪽만 보면 파일 끝까지 잡혀 기본값을 엉뚱한 줄에서 읽는다. */
+      const e1 = src.indexOf('\n}', at), e2 = src.indexOf('\n  }', at);
+      const end = (e1 < 0) ? e2 : (e2 < 0 ? e1 : Math.min(e1, e2));
+      const body = src.slice(at, end);
+      const m = [...body.matchAll(/k === '([^']+)'\) return '([^']+)'/g)].map((x) => x[1] + '=' + x[2]);
+      const dflt = /return '([^']+)';\s*$/m.exec(body.trim().split('\n').pop() || '');
+      return m.join(',') + '|' + (dflt ? dflt[1] : '?');
+    };
+    const gsRule = grab(gs, 'kind4_');
+    const ixRule = grab(ix, 'kind4Row');
+    if (!gsRule || !ixRule) bad.push('4종 매핑 규칙을 못 뽑았다 — 앵커가 낡았다');
+    else if (gsRule !== ixRule)
+      bad.push('4종 매핑이 서버와 다르다 — 서버[' + gsRule + '] 화면[' + ixRule + ']');
+
+    /* ⓕ **안 되는 카드는 「전 기간 기준」이라 적는다** — 되는 척하면 조용히 틀린다 */
+    for (const k of ['rival', 'promo', 'sdp', 'signal', 'cafe'])
+      if (!ix.includes("['" + k + "', '")) bad.push('안 걸리는 카드 안내가 없다: ' + k);
+    /* 되는 카드도 그 사실을 적는다 — 12개를 전부 덮어야 어느 카드가 반응하는지 안다 */
+    for (const k of ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list'])
+      if (!new RegExp("SCOPE_ON = \\[[^\\]]*'" + k + "'").test(ix))
+        bad.push('따르는 카드 안내가 없다: ' + k);
+
+    /* ⓖ **카드를 다 그린 뒤에 붙여야 한다** — 먼저 붙이면 innerHTML 이 덮어쓴다 */
+    if (!ix.includes('    renderMix();\n')) bad.push('renderMix 자리를 못 찾았다 — 앵커가 낡았다');
+    else if (ix.indexOf('paintScopeNotes();') < ix.indexOf('    renderMix();'))
+      bad.push('배지를 카드보다 먼저 붙인다 — innerHTML 이 덮어쓴다');
+
+    /* ⓗ 최상단 기간·유형이 **필터 서명**에 들어가야 쪽이 1로 돌아간다 */
+    if (!/var sig = \[[\s\S]{0,400}heatKind\]\.join/.test(ix))
+      bad.push('기간·유형이 필터 서명에 없다 — 3쪽을 보다 좁히면 빈 화면이 뜬다');
+  }
+  if (bad.length) fail('[바이럴] 상단 거르개 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 상단 거르개 — 되는 카드 7 · 안 되는 카드 5를 밝힌다 · 4종 매핑이 서버와 같다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
