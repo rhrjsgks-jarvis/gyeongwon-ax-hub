@@ -7016,8 +7016,20 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('4종 매핑이 서버와 다르다 — 서버[' + gsRule + '] 화면[' + ixRule + ']');
 
     /* ⓕ **안 되는 카드는 「전 기간 기준」이라 적는다** — 되는 척하면 조용히 틀린다 */
-    for (const k of ['rival', 'promo', 'sdp', 'signal', 'cafe'])
+    for (const k of ['rival', 'promo', 'sdp'])
       if (!ix.includes("['" + k + "', '")) bad.push('안 걸리는 카드 안내가 없다: ' + k);
+    /* 카페는 **서버가 주 단위 자료를 줄 때만** 따른다 — 옛 회차에는 그 칸이 없어
+       두 갈래를 다 그려야 한다(있는 척도, 없는데 감추지도 않는다). */
+    if (!ix.includes('function scopedByCafe(')) bad.push('카페를 다시 세는 함수가 없다');
+    if (!ix.includes('function cafeScoped(')) bad.push('카페가 따를 수 있는지 가르지 않는다');
+    if (!ix.includes("put('cafe', cafeScoped() ? 'scopeon' : 'scopeoff'"))
+      bad.push('카페 배지가 두 갈래를 안 가른다');
+    if (!ix.includes('byCafeWeek4')) bad.push('서버의 카페 주간 자료를 안 쓴다');
+    /* 매장 신호는 **반쯤** 따른다 — 뭉뚱그리면 안 따르는 절을 그 기간 것으로 읽는다 */
+    if (!ix.includes('SCOPE_HALF')) bad.push('반쯤 따르는 카드를 갈라 적지 않는다');
+    /* 서버가 그 칸을 실제로 내는가 — 화면만 고치면 영영 비어 있다 */
+    if (!gs.includes('byCafeWeek4: byCafeWeek4')) bad.push('서버가 카페 주간 자료를 안 보낸다');
+    if (!gs.includes('if (r.cafe) {')) bad.push('서버가 카페 주간을 안 센다');
     /* 되는 카드도 그 사실을 적는다 — 12개를 전부 덮어야 어느 카드가 반응하는지 안다 */
     for (const k of ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list'])
       if (!new RegExp("SCOPE_ON = \\[[^\\]]*'" + k + "'").test(ix))

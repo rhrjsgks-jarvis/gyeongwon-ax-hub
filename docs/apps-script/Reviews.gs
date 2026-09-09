@@ -4252,6 +4252,13 @@ function summary_() {
      `tailUnknown` 은 **옛 줄**이다(그 칸이 생기기 전에 담긴 글). 「기본 질의」와
      갈라 세어야 화면이 「모른다」를 「기본이 줬다」로 바꿔 말하지 않는다. */
   var byTail = {}, byStoreTail = {}, tailUnknown = 0;
+  /* 카페 × 주 × 4종 (2026-09-09 사장님 지시 — *"전체구조를 다 갈아엎어서라도 정보
+     조회하는 인터페이스는 통일되어야합니다"*). 「어디에 올라오나」가 최상단 기간·유형을
+     못 따르던 유일한 이유가 **주 구분이 없다**는 것이었다.
+     **재수집이 필요 없다** — 카페 이름·작성일·유형이 이미 시트에 다 있다.
+     크기는 카페 1,313곳 × 주 20 이지만 **한 주에 값이 있는 카페가 몇 곳뿐**이라
+     성긴 객체다(실측 후 크면 상위 N 으로 줄일 것). */
+  var byCafeWeek4 = {};
   /* ── **직전해 1월부터 담는다** (2026-09-03 사장님 지적으로 발견) ────────────
    * 예전에는 `now - 400일` 이었다. 급증·급감만 보던 시절에는 맞는 값이었는데,
    * 히트맵에 **연도 축**이 생기면서 그 상수가 조용히 자료를 잘랐다 —
@@ -4435,6 +4442,13 @@ function summary_() {
         if (!byStoreWeek4[r.storeName]) byStoreWeek4[r.storeName] = {};
         if (!byStoreWeek4[r.storeName][wk]) byStoreWeek4[r.storeName][wk] = {};
         byStoreWeek4[r.storeName][wk][k4] = (byStoreWeek4[r.storeName][wk][k4] || 0) + 1;
+        /* 카페 × 주 × 4종 — **이 블록 안이어야 한다.** 밖에서 세면 카페 줄의
+           발견일이 섞여 이번 주만 거대해진다(이 화면이 추이에서 두 번 데인 자리다). */
+        if (r.cafe) {
+          if (!byCafeWeek4[r.cafe]) byCafeWeek4[r.cafe] = {};
+          if (!byCafeWeek4[r.cafe][wk]) byCafeWeek4[r.cafe][wk] = {};
+          byCafeWeek4[r.cafe][wk][k4] = (byCafeWeek4[r.cafe][wk][k4] || 0) + 1;
+        }
       }
     }
     byStore[r.storeName] = (byStore[r.storeName] || 0) + 1;
@@ -4790,7 +4804,8 @@ function summary_() {
        뭉개면 「최근 7일 240건」이 그 주에 쓰인 글로 읽힌다(실제로는 25건이었다). */
     approxDay: approxDay, approxWeek: approxWeek, approxMonth: approxMonth,
     approxMon: approxMon,
-    stores: STORES.length, byStore: byStore, byCafe: byCafe, bySrc: bySrc, byDay: byDay,
+    stores: STORES.length, byStore: byStore, byCafe: byCafe, byCafeWeek4: byCafeWeek4,
+    bySrc: bySrc, byDay: byDay,
     /* 매장별 세 갈래 — 판정은 화면이 한다(문턱을 서버가 박지 않는다) */
     byStoreSrc: byStoreSrc, byStoreMonth: byStoreMonth, lastPost: lastPost,
     byTail: byTail, byStoreTail: byStoreTail, tailUnknown: tailUnknown,
@@ -6545,9 +6560,9 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-08-db6744b9';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-09-01d26860';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
-var SUM_VER = 23;   /* 21 = 매니저 주차(mgrTop[].wk4) */
+var SUM_VER = 24;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */

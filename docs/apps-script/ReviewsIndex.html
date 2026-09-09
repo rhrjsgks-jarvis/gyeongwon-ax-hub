@@ -1878,7 +1878,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-09-79334366';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-09-24947896';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -6654,7 +6654,11 @@ function renderList() {
 
   function renderSignals() {
     var el = document.getElementById("signals"); if (!el) return;
-    var bm = DATA.byStoreMonth || {}, lp = DATA.lastPost || {}, bs = DATA.byStore || {};
+    /* **최상단 기간·유형을 따른다**(2026-09-09) — 매장별 누적은 다시 셀 수 있다.
+       달별 흐름(`byStoreMonth`)과 마지막 작성일은 그대로다: 「급증·급감」과 「오래
+       조용하다」는 **전 기간 흐름을 봐야 뜻이 있는** 신호라 기간을 좁히면 신호가
+       아니라 표본 부족이 된다. 화면이 그 구분을 적는다. */
+    var bm = DATA.byStoreMonth || {}, lp = DATA.lastPost || {}, bs = scopedByStore();
     var today = (DATA.at || "").slice(0, 7);
     if (!today) { el.innerHTML = ""; return; }
     var cur = ymAdd(today, -1);                     /* 직전 완결 월 */
@@ -7230,6 +7234,23 @@ function renderList() {
     return out;
   }
   /** 유형별 건수(4종). */
+  /** 카페별 건수 — **최상단 기간·유형을 따른다**(2026-09-09).
+   *  서버가 `byCafeWeek4`(카페 × 주 × 4종)를 새로 준다. **옛 서버 자료에는 그 칸이
+   *  없다** — 그때는 전 기간 값으로 물러서고 화면이 그 사실을 적는다(있는 척하지 않는다). */
+  function scopedByCafe() {
+    var raw = DATA.byCafeWeek4;
+    if (!scoped() || !raw) return DATA.byCafe || {};
+    var ws = scopedWeeks(raw), out = {}, cf, i;
+    for (cf in raw) if (raw.hasOwnProperty(cf)) {
+      var t = 0;
+      for (i = 0; i < ws.length; i++) t += scopedOne(raw[cf][ws[i]]);
+      if (t) out[cf] = t;
+    }
+    return out;
+  }
+  /** 이 카드가 거르개를 따를 수 있는가 — 옛 서버 자료면 못 따른다. */
+  function cafeScoped() { return !!DATA.byCafeWeek4; }
+
   function scopedByKind4() {
     if (!scoped()) return DATA.byKind4 || {};
     var bw = weekSrc('store'), ws = scopedWeeks(bw), out = {}, st, i, m, k;
@@ -8829,10 +8850,14 @@ function renderList() {
     ['rival', '경쟁사 자료는 <b>회차 단위</b>로 모아 글마다 날짜·유형이 없습니다.'],
     ['promo', '같은 경쟁사 회차 자료라 글마다 날짜·유형이 없습니다.'],
     ['sdp', '개인대리점 자료는 <b>회차 단위</b>로 모아 글마다 날짜·유형이 없습니다.'],
-    ['signal', '매장 신호는 <b>달 단위</b> 집계라 주·유형으로 못 자릅니다.'],
-    ['cafe', '카페별 집계에 날짜·유형 구분이 없습니다.'],
   ];
   var SCOPE_ON = ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list'];
+  /* **반쯤 따르는 카드** — 뭐가 따르고 뭐가 안 따르는지 갈라 적는다.
+     「따른다」로 뭉뚱그리면 안 따르는 절의 숫자를 그 기간 것으로 읽는다. */
+  var SCOPE_HALF = [
+    ['signal', '<b>매장 누적</b>은 따릅니다. 다만 <b>급증·급감·마지막 작성일</b>은 '
+      + '전 기간 흐름을 봐야 뜻이 있어 그대로 둡니다 — 기간을 좁히면 신호가 아니라 표본 부족이 됩니다.'],
+  ];
 
   function paintScopeNotes() {
     var put = function (key, cls, html) {
@@ -8858,6 +8883,16 @@ function renderList() {
         ? '위 <b>' + lab + '</b> 거르개가 <b>여기에는 안 걸립니다</b> — '
           + SCOPE_OFF[i][1] + ' <b>전 기간 기준</b>입니다.'
         : '');
+    }
+    /* 카페는 **서버가 주 단위 자료를 줄 때만** 따른다(옛 회차에는 그 칸이 없다) */
+    put('cafe', cafeScoped() ? 'scopeon' : 'scopeoff', !on ? '' : (cafeScoped()
+      ? '<b>' + lab + '</b>만 봅니다 — <b>작성일을 아는 글만</b> 셉니다'
+        + '(네이버가 카페·웹 글의 작성일을 주지 않아 전체 누적보다 적습니다).'
+      : '위 <b>' + lab + '</b> 거르개가 <b>여기에는 안 걸립니다</b> — 카페별 주간 자료가 '
+        + '아직 없습니다(관리자의 「수집」을 한 번 돌리면 채워집니다). <b>전 기간 기준</b>입니다.'));
+    for (i = 0; i < SCOPE_HALF.length; i++) {
+      put(SCOPE_HALF[i][0], 'scopeon', on
+        ? '<b>' + lab + '</b> — ' + SCOPE_HALF[i][1] : '');
     }
     for (i = 0; i < SCOPE_ON.length; i++) {
       put(SCOPE_ON[i], 'scopeon', on
@@ -8958,7 +8993,7 @@ function renderList() {
        예외도 오류도 없이 조용히 빈칸이 된다(실제로 그렇게 한 번 비었다). */
     renderStoreDetail();
     renderRange();
-    bars(document.getElementById('cafes'), DATA.byCafe || {}, 12, 0, 'cafe');
+    bars(document.getElementById('cafes'), scopedByCafe(), 12, 0, 'cafe');
 
     /* **작성일을 아는 것과 모르는 것을 갈라 적는다.** 카페는 네이버가 작성일을 안 주므로
        그 줄은 우리가 처음 본 날이다 — 섞어 놓고 모른 척하면 화면이 거짓말을 한다. */
