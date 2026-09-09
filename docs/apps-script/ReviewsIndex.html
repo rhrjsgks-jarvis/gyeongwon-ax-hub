@@ -403,15 +403,15 @@
    * chip(11px) · kchip(12px) · wchip(11px·사각) · rbtn(10.5px) ·
    * wk(11.5px) · foldb(11.5px) 가 **같은 일을 하면서 크기가 다 달랐다.**
    * 누르면 걸러지는 것은 전부 이 규격을 쓴다 — 색으로만 갈린다. */
-  .chip, .kchip, .wchip, .range .rbtn, .period .rbtn, .hmwk .wk {
+  .chip, .kchip, .wchip, .range .rbtn, .period .rbtn, .period #hm-kinds .bk, .hmwk .wk {
     border: 1px solid var(--line); background: #fff; border-radius: var(--ctl-rp);
     padding: var(--ctl-py) var(--ctl-px); font-size: var(--ctl-fs);
     cursor: pointer; font-family: inherit; color: #374151; line-height: 1.35;
   }
-  .chip:hover, .kchip:hover, .wchip:hover, .range .rbtn:hover, .period .rbtn:hover, .hmwk .wk:hover {
+  .chip:hover, .kchip:hover, .wchip:hover, .range .rbtn:hover, .period .rbtn:hover, .period #hm-kinds .bk:hover, .hmwk .wk:hover {
     background: #F4F6FB; border-color: var(--blue);
   }
-  .chip.on, .kchip.on, .wchip.on, .range .rbtn.on, .period .rbtn.on, .hmwk .wk.on {
+  .chip.on, .kchip.on, .wchip.on, .range .rbtn.on, .period .rbtn.on, .period #hm-kinds .bk.on, .hmwk .wk.on {
     background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700;
   }
   .chip.on { background: var(--blue); color: #fff; border-color: var(--blue); }
@@ -1129,6 +1129,15 @@
     background: #fff; border: 1px solid var(--line); border-radius: var(--card-r, 12px);
   }
   .period .yrs { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+  /* 기간 ↔ 유형 사이 칸막이 — 둘은 **다른 것을 정한다**(언제 / 무엇을).
+     줄이 접히면 세로선이 허공에 뜨므로 폰에서는 감춘다. */
+  .period .ksep { width: 1px; height: 20px; background: var(--line); margin: 0 3px; }
+  /* 유형 버튼 — 기간 버튼과 **같은 알약 규격**을 쓰되 파랑을 뺀다(기간이 주인공이다).
+     `.bk` 가 히트맵 조작줄 규격을 들고 오므로 여기서 덮는다. */
+  .period #hm-kinds { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .period #hm-kinds .bk { color: #374151; font-weight: 600; }
+  .period #hm-kinds .bk.on { color: #fff; font-weight: 700; }
+  @media (max-width: 560px) { .period .ksep { display: none; } }
   .period .sp { margin-left: auto; }
 
   /* **건수를 함께 적는다** — 어느 주에 자료가 있는지 눌러 보기 전에 알아야 한다.
@@ -1269,6 +1278,13 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <button type="button" class="rbtn" data-d="90">90일</button>
     <button type="button" class="rbtn" data-d="0">전체</button>
     <span class="yrs" id="r-years"></span>
+    <!-- 유형 버튼 — **기간과 같은 줄로 옮겼다**(2026-09-09 사장님 지시:
+         *"히트맵안에있는 혼수후기 입주후기 이사후기 등 버튼은 모두 최상단 날짜
+         인터페이스와 동일한 위치로 이동해주세요"*).
+         **id 를 바꾸지 않는다** — 그리는 곳·손잡이가 이 이름으로 찾는다. -->
+    <span class="ksep" aria-hidden="true"></span>
+    <span class="lbl">유형</span>
+    <span id="hm-kinds"></span>
     <!-- 「전체 기간」 버튼은 없앴다(2026-09-09) — 바로 왼쪽 「전체」가 같은 일을 한다.
          같은 일을 하는 손잡이가 둘이면 어느 것을 눌러야 하는지 매번 판단하게 된다.
          `hm-wclear` 를 찾는 코드에는 null 가드가 있어 그대로 돈다. -->
@@ -1428,7 +1444,9 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <!-- 유형 거르개 (2026-09-03 사장님 요청 — *"히트맵도 혼수 입주 구분할 수 있게"*).
              자료가 오면 화면이 채운다 — 유형 목록을 여기 박지 않는다(서버가 세는 말이
              바뀌면 화면이 옛 말을 들고 있게 된다). -->
-        <span id="hm-kinds"></span>
+        <!-- 유형 버튼은 **화면 맨 위 `#period` 로 옮겼다**(2026-09-09 사장님 지시).
+             여기 남겨 두면 같은 id 가 둘이 되어 `getElementById` 가 어느 것을 집을지
+             알 수 없다 — 통째로 걷어낸다. -->
         <button type="button" class="bk" id="hm-size">크기: 건수</button>
         <!-- 연도 (2026-09-03 사장님 지시) — **기본은 당해년도만**, 누르면 작년 대비 -->
         <button type="button" class="bk" id="hm-year">작년 대비 보기</button>
@@ -1850,7 +1868,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-09-d67abe7f';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-09-df5ff3cf';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -7270,9 +7288,29 @@ function renderList() {
    * 색각 안전 팔레트가 사는 이유인 파랑↔노랑 축은 빨강↔초록을 유지하면 못 쓴다.
    * 대신 **휘도를 단조로** 만든다: 하락은 어둡게 · 중립은 중간 · 상승은 밝게.
    * 그러면 흑백으로 봐도, 색각 이상으로 봐도 방향이 남는다. */
-  var RAMP_MID = [142, 148, 159];      /* 중립 — 휘도 0.294(빨강 0.063 · 초록 0.487 사이) */
-  var RAMP_DOWN = [138, 26, 36];       /* 하락 끝 — 어두운 빨강 */
-  var RAMP_UP = [86, 208, 130];        /* 상승 끝 — 밝은 초록 */
+  /* ── **finviz(S&P 500) 팔레트** (2026-09-09 사장님 지시) ──────────────────
+   * *"지금 히트맵을 보면 이미지도 S&P 500처럼 다시 변경되지않았고"*.
+   *
+   * 색을 등락으로 바꾼 것만으로는 그 화면이 안 나왔다 — **중립이 밝았기 때문**이다.
+   * 옛 중립 rgb(142,148,159)는 휘도 0.294 라 화면 전체가 뿌옇게 뜨고, 움직인 칸이
+   * 안 도드라졌다. finviz 는 정반대다: **중립이 가장 어둡고 양 끝이 밝다.**
+   * 그래서 오른 곳과 내린 곳만 확 튄다.
+   *
+   * 값은 finviz 의 실제 구간색이다 — 중립 #414554 · 하락 끝 #F63538 ·
+   * 상승 끝 #30CC5A. **글자색은 `inkOn` 이 배경 밝기로 정하므로** 밝은 초록 칸도
+   * 검은 글자로 뒤집혀 읽힌다(대비 규칙은 그대로 지켜진다).
+   *
+   * **휘도 단조는 여기서 깨진다** — 옛 주석이 「하락 어둡게·중립 중간·상승 밝게」로
+   * 흑백·색각에서도 방향이 남게 했는데, finviz 는 중립이 골짜기라 그 성질이 없다.
+   * 사장님이 finviz 를 보고 고르신 화면이라 **그쪽을 따른다.** 대신 방향은 칸 안
+   * 작은 글씨(`평소 32.5 → 11건`)와 말풍선이 글자로 말한다 — 색만이 유일한 단서가
+   * 아니므로 색각 이상에서도 읽을 수 있다.
+   *
+   * **경쟁사 칩도 같은 자를 쓴다**(`rvColor`) — 두 벌로 두면 같은 「우세」가 두
+   * 화면에서 다른 색이 된다(이 저장소가 반복해서 데인 자리다). */
+  var RAMP_MID = [65, 69, 84];         /* 중립 #414554 — 가장 어둡다(finviz) */
+  var RAMP_DOWN = [246, 53, 56];       /* 하락 끝 #F63538 */
+  var RAMP_UP = [48, 204, 90];         /* 상승 끝 #30CC5A */
   function rampColor(m, up) {
     var tgt = up ? RAMP_UP : RAMP_DOWN;
     return 'rgb(' + RAMP_MID.map(function (b, i) { return Math.round(b + (tgt[i] - b) * m); }).join(',') + ')';
@@ -7564,6 +7602,21 @@ function renderList() {
    * 실측으로 **카드를 열기 전 옵션 0개 · 연 뒤 22개**였다. 맨 위 막대가 비어 보이면
    * 기간을 정할 길이 없는 것과 같으므로 `render()` 가 직접 부른다. */
   function renderPeriodBar() {
+    /* 유형 손잡이 — **묶음에 한 번만** 건다(버튼마다 걸면 다시 그릴 때마다 쌓인다).
+       유형을 바꾸면 히트맵만이 아니라 목록·리포트도 따라가야 하므로 `render()` 다. */
+    var kwrap = document.getElementById('hm-kinds');
+    if (kwrap && !kwrap.dataset.wired) {
+      kwrap.dataset.wired = '1';
+      kwrap.addEventListener('click', function (e) {
+        var t = e.target.closest ? e.target.closest('.bk') : null;
+        if (!t || !t.hasAttribute('data-kind')) return;
+        var v = t.getAttribute('data-kind');
+        heatKind = (heatKind === v) ? '' : v;   /* 다시 누르면 전체로 */
+        heatPath = [];
+        page = 1;
+        render();
+      });
+    }
   /* **기간 막대는 화면 맨 위에 있다**(2026-09-09) — 예전 `#hm-weeks` 는 히트맵
      카드 안이었다. 여기서 감추는 것은 **주차 드롭다운뿐**이다: 막대에는 빠른 버튼과
      연도 칩이 함께 있어 통째로 감추면 기간을 정할 길이 사라진다. */
@@ -7622,6 +7675,41 @@ function renderList() {
           : (heatWeek ? '' : '기간을 고르면 그 기간의 ' + whoW + '만 봅니다.');
       }
     }
+  var kbox = document.getElementById('hm-kinds');
+  if (kbox) {
+    /* ── 후기 4종 (2026-09-03 사장님 지시) ──────────────────────────────
+     * *"① 매니저 후기 ② 혼수 후기 ③ 입주 후기 ④ 기타 후기"*.
+     * **서버가 세어 준 `byStoreKind4` 를 쓴다** — 화면이 9종에서 다시 묶으면
+     * 매니저 후기를 가릴 수가 없다(그것은 `kind` 가 아니라 `mgr` 로 정해진다).
+     * **자료가 없으면(옛 서버) 예전 9종으로 물러선다** — 갑자기 빈 줄이 되면
+     * 「고장」으로 보인다. */
+    var use4 = !!(DATA.byStoreKind4 && DATA.kind4Names);
+    var bkAll = (use4 ? DATA.byStoreKind4 : DATA.byStoreKind) || {}, sumK = {}, kx, ky;
+    for (kx in bkAll) if (bkAll.hasOwnProperty(kx)) {
+      for (ky in bkAll[kx]) if (bkAll[kx].hasOwnProperty(ky)) sumK[ky] = (sumK[ky] || 0) + bkAll[kx][ky];
+    }
+    var ks;
+    if (use4) {
+      /* **네 칸을 늘 같은 순서로 보여준다** — 건수 순으로 두면 볼 때마다 자리가 바뀐다.
+         **0건이어도 남긴다** — 빼면 「그런 후기가 없다」가 아니라 「그런 갈래가 없다」로 읽힌다. */
+      ks = DATA.kind4Names.map(function (x) { return x[0]; });
+    } else {
+      ks = Object.keys(sumK).sort(function (a, b) { return sumK[b] - sumK[a]; }).slice(0, 6);
+      /* **고른 유형이 상위 6 밖이면 그것도 남긴다** — 안 그러면 누른 버튼이 사라진다 */
+      if (heatKind && ks.indexOf(heatKind) < 0) ks.push(heatKind);
+    }
+    /* 화면에 적는 이름 — 키(`manager`)가 아니라 사람 말(`매니저 후기`) */
+    k4name = {};
+    if (use4) DATA.kind4Names.forEach(function (x) { k4name[x[0]] = x[1]; });
+    kbox.innerHTML = ks.length
+      ? ks.map(function (k) {
+          return '<button type="button" class="bk' + (heatKind === k ? ' on' : '') + '"'
+            + ' data-kind="' + esc(k) + '" title="' + esc(kLabel(k)) + '만 보기('
+            + nf(sumK[k] || 0) + '건)">'
+            + esc(kLabel(k)) + '</button>';
+        }).join('')
+      : '';
+  }
   }
   }
 
@@ -7694,14 +7782,8 @@ function renderList() {
       bk.addEventListener('click', function () { heatPath.pop(); renderHeat(); });
       /* 유형 버튼 — **손잡이를 묶음에 한 번만 걸고 눌린 것을 찾는다**(버튼마다 걸면
          목록이 다시 그려질 때마다 손잡이가 쌓인다). */
-      var kb = document.getElementById('hm-kinds');
-      if (kb) kb.addEventListener('click', function (e) {
-        var t = e.target.closest ? e.target.closest('.bk') : null;
-        if (!t || !t.hasAttribute('data-kind')) return;
-        var v = t.getAttribute('data-kind');
-        heatKind = (heatKind === v) ? '' : v;   /* 다시 누르면 전체로 */
-        renderHeat();
-      });
+      /* 유형 손잡이는 **기간 막대 쪽에서 건다**(2026-09-09 옮겼다) —
+         여기 두면 히트맵 조작줄이 처음 그려질 때만 걸려, 막대의 버튼이 안 듣는다. */
       bs.addEventListener('click', function () {
         heatSize = heatSize === 'n' ? 'g' : 'n'; renderHeat();
       });
@@ -8180,7 +8262,10 @@ function renderList() {
           + (d.isReg ? ' · ' + d.n + '곳'
               : week
                 ? (d.noPrev ? ' · 평소를 몰라 견줄 수 없습니다'
-                    : ' · 평소 ' + d.prev.toFixed(1) + '건 → ' + periodLabel() + ' ' + d.cur + '건')
+                    /* **「평소」가 무엇인지 밝힌다**(2026-09-09 사장님 질문). 글이 있었던
+                       주만 평균한 값이라 「후기가 올라오는 주에는 보통 몇 건인가」다. */
+                    : ' · 평소(글이 있던 주의 주당 평균) ' + d.prev.toFixed(1) + '건 → '
+                      + periodLabel() + ' ' + d.cur + '건')
                 : d.year
                 ? (d.noPrev ? ' · ' + d.prevYear + '년 자료가 없습니다'
                     : ' · ' + d.prevYear + '년 ' + d.prev + '건 → ' + d.year + '년 ' + d.cur + '건')
@@ -8260,47 +8345,18 @@ function renderList() {
        **없는 것을 찾게 만들었다.** 화면이 두 말을 하면 안 된다. */
     /* **회색이 무슨 뜻인지 반드시 적는다** — 「제자리」로 읽으면 거짓이 된다.
        칸 크기는 여전히 건수라 그 사실도 함께 적는다(색만 바뀐 것이다). */
-    if (lz) lz.textContent = '칸 크기는 건수 · ' + heatSpan + '배 늘거나 줄면 색이 가장 진합니다 · 회색은 견줄 자료가 없는 곳';
+    /* **「평소」의 뜻을 범례가 적는다**(2026-09-09 사장님 질문 — *"평소가 어떤걸
+       의미하는지 궁금합니다"*). 칸 안 글씨에만 쓰고 정의를 어디에도 안 적어 두었다. */
+    if (lz) lz.textContent = '칸 크기는 건수 · ' + heatSpan + '배 늘거나 줄면 색이 가장 진합니다 · 회색은 견줄 자료가 없는 곳'
+      + (week ? ' · 「평소」는 그 매장에 글이 있던 주의 주당 평균입니다' : '');
     bs.textContent = '크기: ' + (heatSize === 'n' ? '건수' : '등락률');
     bs.classList.toggle('on', heatSize === 'g');
     /* 유형 버튼 — **화면이 목록을 박지 않고 자료에서 만든다.** 서버가 세는 말이 바뀌면
        (지금 9가지) 화면이 옛 말을 들고 있지 않게 한다. 건수 많은 순으로 상위 6개만
        — 전부 두면 조작줄이 두 줄이 되어 히트맵이 그만큼 밀린다. */
-    var kbox = document.getElementById('hm-kinds');
-    if (kbox) {
-      /* ── 후기 4종 (2026-09-03 사장님 지시) ──────────────────────────────
-       * *"① 매니저 후기 ② 혼수 후기 ③ 입주 후기 ④ 기타 후기"*.
-       * **서버가 세어 준 `byStoreKind4` 를 쓴다** — 화면이 9종에서 다시 묶으면
-       * 매니저 후기를 가릴 수가 없다(그것은 `kind` 가 아니라 `mgr` 로 정해진다).
-       * **자료가 없으면(옛 서버) 예전 9종으로 물러선다** — 갑자기 빈 줄이 되면
-       * 「고장」으로 보인다. */
-      var use4 = !!(DATA.byStoreKind4 && DATA.kind4Names);
-      var bkAll = (use4 ? DATA.byStoreKind4 : DATA.byStoreKind) || {}, sumK = {}, kx, ky;
-      for (kx in bkAll) if (bkAll.hasOwnProperty(kx)) {
-        for (ky in bkAll[kx]) if (bkAll[kx].hasOwnProperty(ky)) sumK[ky] = (sumK[ky] || 0) + bkAll[kx][ky];
-      }
-      var ks;
-      if (use4) {
-        /* **네 칸을 늘 같은 순서로 보여준다** — 건수 순으로 두면 볼 때마다 자리가 바뀐다.
-           **0건이어도 남긴다** — 빼면 「그런 후기가 없다」가 아니라 「그런 갈래가 없다」로 읽힌다. */
-        ks = DATA.kind4Names.map(function (x) { return x[0]; });
-      } else {
-        ks = Object.keys(sumK).sort(function (a, b) { return sumK[b] - sumK[a]; }).slice(0, 6);
-        /* **고른 유형이 상위 6 밖이면 그것도 남긴다** — 안 그러면 누른 버튼이 사라진다 */
-        if (heatKind && ks.indexOf(heatKind) < 0) ks.push(heatKind);
-      }
-      /* 화면에 적는 이름 — 키(`manager`)가 아니라 사람 말(`매니저 후기`) */
-      k4name = {};
-      if (use4) DATA.kind4Names.forEach(function (x) { k4name[x[0]] = x[1]; });
-      kbox.innerHTML = ks.length
-        ? ks.map(function (k) {
-            return '<button type="button" class="bk' + (heatKind === k ? ' on' : '') + '"'
-              + ' data-kind="' + esc(k) + '" title="' + esc(kLabel(k)) + '만 보기('
-              + nf(sumK[k] || 0) + '건)">'
-              + esc(kLabel(k)) + '</button>';
-          }).join('')
-        : '';
-    }
+    /* 유형 버튼은 **화면 맨 위 기간 막대에서 그린다**(2026-09-09 사장님 지시로
+       옮겼다) — `renderPeriodBar()` 를 볼 것. 여기서 그리면 히트맵 카드가 닫혀
+       있을 때 채워지지 않는다(주차 드롭다운에서 이미 겪은 사고다). */
     bmd.textContent = (heatMode === 'region') ? '전점으로 보기' : '지역별로 보기';
     /* ── 주차 칩 ─────────────────────────────────────────────────────────
      * **칩에 건수를 함께 적는다.** 실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라,
@@ -8326,7 +8382,9 @@ function renderList() {
        (`mgrTop[].kind4`)과 매니저 × 주차(`mgrTop[].wk4`)를 세어 준다.
        **감추는 것은 자료가 없을 때뿐이다** — 위에서 `wlist` 가 비면 이미 감췄다
        (옛 서버 자료에는 `wk4` 가 없다). 있는 척하지도, 없는데 감추지도 않는다. */
-    if (kbox) kbox.style.display = '';
+    /* 유형 버튼은 이제 **화면 맨 위 기간 막대**에 있어 히트맵이 보임을 정하지 않는다
+       (2026-09-09 옮겼다). 여기 남은 `kbox` 참조가 `ReferenceError` 를 던져
+       **부제가 「아직 없습니다」로 굳었다** — 실물에서 잡았다. */
     bmd.style.display = mgrView ? 'none' : '';
     var byr2 = document.getElementById('hm-year');
     if (byr2) {
@@ -8424,7 +8482,8 @@ function renderList() {
           + '이름은 후기 제목·본문에서 뽑은 것이고, <b>명부에 등록된 이름</b>이면 ✓ 가 붙습니다.'
         : week
         ? '<b>' + esc(periodLabel()) + '</b>만 봅니다 — <b>칸은 지점</b> · '
-          + '<b>크기는 ' + (heatKind ? esc(kLabel(heatKind)) + ' 건수' : '건수') + ', 색은 평소 주당 대비 등락</b>입니다. '
+          + '<b>크기는 ' + (heatKind ? esc(kLabel(heatKind)) + ' 건수' : '건수') + ', 색은 평소 대비 등락</b>입니다 '
+          + '(<b>평소</b> = 그 매장에 글이 있던 주의 <b>주당 평균</b>). '
           + '<b>작성일을 아는 글만</b> 셉니다(카페는 네이버가 작성일을 안 줍니다) — 그래서 '
           + '한 주에 값이 있는 매장이 <b>7~17곳</b>뿐입니다. 0건 매장은 칸을 못 그려 빠집니다.'
           + (heatWeek === 'custom'
