@@ -7016,14 +7016,44 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       bad.push('4종 매핑이 서버와 다르다 — 서버[' + gsRule + '] 화면[' + ixRule + ']');
 
     /* ⓕ **안 되는 카드는 「전 기간 기준」이라 적는다** — 되는 척하면 조용히 틀린다 */
-    for (const k of ['rival', 'promo', 'sdp'])
-      if (!ix.includes("['" + k + "', '")) bad.push('안 걸리는 카드 안내가 없다: ' + k);
+    /* 2026-09-09 2차 — 셋 다 수집기를 고쳐 **주 단위로 담게** 했다.
+       못 따르는 카드가 이제 없다(`SCOPE_OFF` 가 비어 있어야 한다). */
+    if (!/var SCOPE_OFF = \[\];/.test(ix))
+      bad.push('아직 못 따르는 카드를 남겨 두었다 — 셋 다 주 단위로 담게 고쳤다');
+    for (const k of ['cafe', 'rival', 'promo', 'sdp'])
+      if (!ix.includes("['" + k + "', ")) bad.push('기다리는 카드 안내가 없다: ' + k);
+    /* 서버가 그 칸을 실제로 담고·내보내는가 — 화면만 고치면 영영 비어 있다 */
+    for (const [nm, needle] of [
+      ['경쟁사 주간 그릇', 'var byWk = {};'],
+      ['경쟁사 주간 집계', 'byWk[wkR][sideK][k4R]'],
+      ['경쟁사 주간 저장', 'JSON.stringify(trimWeek_(byWk))'],
+      ['경쟁사 주간 읽기', 'mergeNum_(g.byWeek, jparse_(v[i][13]));'],
+      ['SDP 주간 그릇', 'var byWkS = {};'],
+      ['SDP 주간 저장', 'JSON.stringify(byWkS)'],
+      ['SDP 주간 읽기', 'wk4: jparse_(v[i][9])'],
+    ]) if (!gs.includes(needle)) bad.push('서버에 없다: ' + nm);
+    /* **칸을 더했으면 판 번호를 올려야 한다** — 안 올리면 옛 회차에 이어 붙어
+       값이 뒤섞인다(「평택 2,008 → 4,025」가 그 사고였다) */
+    if (!/var RIVAL_SCHEMA = 5;/.test(gs)) bad.push('경쟁사 판 번호를 안 올렸다');
+    /* 시트 한 칸(5만 자)을 넘기지 않게 줄이는가 */
+    if (!gs.includes('function trimWeek_(')) bad.push('주 자료를 줄이지 않는다 — 큰 도시에서 조용히 잘린다');
+    /* 화면이 그 자료로 다시 세는가 */
+    for (const [nm, needle] of [
+      ['경쟁사', 'function scopedRivalRows('],
+      ['SDP', 'function scopedSdpStores('],
+      ['주 키 목록', 'function scopedWeekPick('],
+    ]) if (!ix.includes(needle)) bad.push('화면에 없다: ' + nm);
+    /* **양쪽이 0 이면 「못 잼」** — 0% 로 적으면 「완패」라는 거짓이 된다 */
+    if (!ix.includes('out.pct = (o + rv) ? Math.round(o / (o + rv) * 100) : null;'))
+      bad.push('양쪽 0 을 0% 로 적는다 — 「완패」라는 거짓이 된다');
     /* 카페는 **서버가 주 단위 자료를 줄 때만** 따른다 — 옛 회차에는 그 칸이 없어
        두 갈래를 다 그려야 한다(있는 척도, 없는데 감추지도 않는다). */
     if (!ix.includes('function scopedByCafe(')) bad.push('카페를 다시 세는 함수가 없다');
     if (!ix.includes('function cafeScoped(')) bad.push('카페가 따를 수 있는지 가르지 않는다');
-    if (!ix.includes("put('cafe', cafeScoped() ? 'scopeon' : 'scopeoff'"))
-      bad.push('카페 배지가 두 갈래를 안 가른다');
+    /* 2026-09-09 2차 — 넷을 한 표(`WAIT`)로 모았다. **자료가 있을 때만 따른다**는
+       판정이 살아 있는지를 본다(구현 표현이 아니라 뜻으로). */
+    if (!ix.includes("WAIT[i][1] ? 'scopeon' : 'scopeoff'"))
+      bad.push('기다리는 카드가 두 갈래를 안 가른다');
     if (!ix.includes('byCafeWeek4')) bad.push('서버의 카페 주간 자료를 안 쓴다');
     /* 매장 신호는 **반쯤** 따른다 — 뭉뚱그리면 안 따르는 절을 그 기간 것으로 읽는다 */
     if (!ix.includes('SCOPE_HALF')) bad.push('반쯤 따르는 카드를 갈라 적지 않는다');

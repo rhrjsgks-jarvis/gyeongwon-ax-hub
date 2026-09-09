@@ -1878,7 +1878,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-09-24947896';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-09-07f6a425';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -3818,7 +3818,9 @@ function wireSecs() {
           + nf(mvDn[0].prev) + ' → ' + nf(mvDn[0].cur) + '건) — 여기부터 보셔야 합니다.');
       }
       /* 경쟁사 — **못 잰 지역은 세지 않는다**(0% 로 치면 「완패」라는 거짓이 된다) */
-      var rvv = (DATA.rival && DATA.rival.rows) || [];
+      /* **최상단 거르개를 따른다**(2026-09-09) — 요약과 카드가 다른 자를 쓰면
+         「밀리는 지역 2곳」과 카드의 색이 어긋난다. */
+      var rvv = scopedRivalRows();
       /* ── **아래 「경쟁사와 견주면」과 한 글자도 다르면 안 된다** (2026-09-09 실물에서 잡았다)
        * 처음에는 정렬 없이 첫 항목을 집고 판정도 4사 기준(`r.base`)이라, 요약이
        * *"가장 큰 곳 성남"* 이라 적고 바로 아래 진단은 *"가장 많이 밀리는 곳은 강원"*
@@ -4044,7 +4046,7 @@ function wireSecs() {
       /* 판정 식은 rvShare / rvWin 한 곳에만 — 진단과 카드가 갈리면
          같은 지역을 두고 두 말을 한다(2026-09-05). */
       var p2 = function (r) { return rvShare(r.ours, r.rival); };
-      var lose = R.rows.filter(function (r) { return okd(r) && rvWin(r.ours, r.rival) === false; })
+      var lose = scopedRivalRows().filter(function (r) { return okd(r) && rvWin(r.ours, r.rival) === false; })
         .sort(function (a, b) { return p2(a) - p2(b); });
       if (lose.length) {
         out.push(['경쟁사와 견주면',
@@ -5305,7 +5307,8 @@ function wireSecs() {
     /* 보임은 applySecs 가 정한다 */
 
     var el = document.getElementById('rival');
-    var rows = R.rows.slice().sort(function (a, b) {
+    /* **최상단 거르개를 따른다**(2026-09-09) */
+    var rows = scopedRivalRows().slice().sort(function (a, b) {
       /* 못 잰 것은 뒤로, 나머지는 우리가 뒤진 곳부터 — **먼저 볼 것이 위에 와야 한다** */
       var ok = function(r){return typeof r.pct==='number'&&isFinite(r.pct);}
       if (ok(a) !== ok(b)) return ok(a) ? -1 : 1;
@@ -5641,7 +5644,7 @@ function wireSecs() {
 function renderPromo() {
   var box = document.getElementById('promo'), sub = document.getElementById('promo-sub');
   if (!box) return;
-  var R = DATA.rival, rows = (R && R.rows) || [];
+  var R = DATA.rival, rows = scopedRivalRows();
   if (!rows.length) {
     if (sub) sub.textContent = '아직 안 쟀습니다 — 오른쪽 위 톱니바퀴에서 「수집」을 누르세요';
     box.innerHTML = '<div class="pnote">당사 vs 베스트샵 자료가 아직 없습니다. '
@@ -6616,13 +6619,16 @@ function renderList() {
        (8곳 합계 143건 규모다). 매장 자료이므로 **매장 칸(`.st`)과 같은 모양**으로 둔다 —
        화면 안에서 같은 것은 같게 보여야 눈이 헤매지 않는다. */
     var max = 0;
-    d.stores.forEach(function (x) { if (x.n > max) max = x.n; });
+    /* **최상단 거르개를 따른다**(2026-09-09). 옛 회차면 `scopedSdpStores()` 가
+       원본을 그대로 돌려주고, 화면이 「아직 주 자료가 없다」고 적는다. */
+    var sdpRows = scopedSdpStores();
+    sdpRows.forEach(function (x) { if (x.n > max) max = x.n; });
     var shade = function (v) {
       var t = 0.30 + 0.70 * (max ? v / max : 1);
       var a = [123, 145, 214], b2 = [20, 40, 160];
       return 'rgb(' + a.map(function (x2, j) { return Math.round(x2 + (b2[j] - x2) * t); }).join(',') + ')';
     };
-    var rows = '<div class="mgg">' + d.stores.map(function (x) {
+    var rows = '<div class="mgg">' + sdpRows.map(function (x) {
       return '<div class="mgc" style="background:' + shade(x.n) + '"'
         + ' title="' + esc(x.name) + ' · ' + esc(x.sigun) + ' — ' + nf(x.n) + '건'
         + '(블로그 ' + nf(x.blog) + ' · 카페 ' + nf(x.cafe) + ')'
@@ -7170,8 +7176,11 @@ function renderList() {
    */
 
   /** 지금 걸린 기간에 드는 주 목록. **기간을 안 걸었으면 전체 주**(유형만 걸 수 있다). */
-  function scopedWeeks(bw) {
-    var all = weekList(bw);
+  function scopedWeeks(bw) { return scopedWeekPick(weekList(bw)); }
+  /** 주 키 목록에서 지금 기간에 드는 것만. **매장×주 모양이 아닌 자료**(경쟁사의
+   *  `byWeek`, SDP 의 `wk4`)가 이것을 직접 쓴다 — `weekList` 에 넘기면 한 겹을
+   *  잘못 훑어 주 목록이 통째로 어긋난다. */
+  function scopedWeekPick(all) {
     if (!heatWeek) return all;
     if (heatWeek !== 'custom') return all.indexOf(heatWeek) >= 0 ? [heatWeek] : [];
     if (!heatFrom || !heatTo) return all;
@@ -7266,6 +7275,78 @@ function renderList() {
     return out;
   }
   /** 지금 무엇으로 걸러 보고 있는지 사람 말로. 안 걸렸으면 빈 문자열. */
+  /** 경쟁사 줄을 지금 기간·유형으로 다시 센다.
+   *  **옛 회차에는 `byWeek` 칸이 없다** — 그 줄은 손대지 않고 그대로 둔다
+   *  (0 으로 만들면 「밀린다」는 거짓이 된다). 화면이 어느 쪽인지 적는다. */
+  function scopedRivalRows() {
+    var R = DATA.rival;
+    if (!R || !R.rows) return [];
+    if (!scoped() || !rivalScoped()) return R.rows;
+    return R.rows.map(function (r) {
+      if (!r.byWeek) return r;
+      var ws = scopedWeekPick(Object.keys(r.byWeek)), o = 0, rv = 0, i, m;
+      for (i = 0; i < ws.length; i++) {
+        m = r.byWeek[ws[i]];
+        if (!m) continue;
+        o += scopedOne(m.o); rv += scopedOne(m.r);
+      }
+      var out = {}, k;
+      for (k in r) if (r.hasOwnProperty(k)) out[k] = r[k];
+      /* 채널도 그 기간 것으로 — 「홍보 경로」가 비중과 다른 기간을 말하면
+         한 화면이 두 말을 한다. 수집기가 **상위 8개만** 담으므로 그 안에서 센다. */
+      var ch = {}, cn;
+      for (i = 0; i < ws.length; i++) {
+        m = r.byWeek[ws[i]];
+        if (!m || !m.ch) continue;
+        for (cn in m.ch) if (m.ch.hasOwnProperty(cn)) ch[cn] = (ch[cn] || 0) + m.ch[cn];
+      }
+      out.byChan = ch;
+      /* **품목은 주별로 안 담는다** — 시트 한 칸(5만 자)을 넘긴다. 그 절이
+         스스로 「전 기간 기준」이라 적는다(있는 척하지 않는다). */
+      out.ours = o; out.rival = rv;
+      /* **양쪽이 0 이면 「못 잼」이다** — 0% 로 적으면 「완패」라는 거짓이 된다
+         (이 화면이 늘 지켜 온 규칙). */
+      out.pct = (o + rv) ? Math.round(o / (o + rv) * 100) : null;
+      return out;
+    });
+  }
+  /** 경쟁사 자료가 주 단위인가 — 옛 회차면 아니다(수집을 한 번 돌리면 채워진다). */
+  function rivalScoped() {
+    var R = DATA.rival;
+    if (!R || !R.rows || !R.rows.length) return false;
+    for (var i = 0; i < R.rows.length; i++) {
+      if (R.rows[i].byWeek && Object.keys(R.rows[i].byWeek).length) return true;
+    }
+    return false;
+  }
+  /** SDP 매장 목록을 지금 기간·유형으로. 옛 회차면 그대로. */
+  function scopedSdpStores() {
+    var S = DATA.sdp;
+    if (!S || !S.stores) return [];
+    if (!scoped() || !sdpScoped()) return S.stores;
+    return S.stores.map(function (st) {
+      if (!st.wk4) return st;
+      var ws = scopedWeekPick(Object.keys(st.wk4)), n = 0, i;
+      for (i = 0; i < ws.length; i++) n += scopedOne(st.wk4[ws[i]]);
+      var out = {}, k;
+      for (k in st) if (st.hasOwnProperty(k)) out[k] = st[k];
+      out.n = n;
+      /* **블로그·카페 갈래는 주 자료에 없다** — 있는 척하지 않고 지운다.
+         화면이 그 칸을 안 그리면 「0건」이라는 거짓이 안 나간다. */
+      out.blog = null; out.cafe = null;
+      return out;
+    }).filter(function (st) { return st.n > 0; })
+      .sort(function (a, b) { return b.n - a.n; });
+  }
+  function sdpScoped() {
+    var S = DATA.sdp;
+    if (!S || !S.stores || !S.stores.length) return false;
+    for (var i = 0; i < S.stores.length; i++) {
+      if (S.stores[i].wk4 && Object.keys(S.stores[i].wk4).length) return true;
+    }
+    return false;
+  }
+
   function scopeLabel() {
     var a = [];
     if (heatWeek) a.push(periodLabel() || '고른 기간');
@@ -8846,11 +8927,10 @@ function renderList() {
    *
    * 카드 렌더 함수를 건드리지 않고 `render()` 끝에서 한 번에 붙인다 — 함수마다
    * 넣으면 카드를 하나 더할 때 반드시 빠뜨린다(이 화면이 되풀이해 겪은 사고다). */
-  var SCOPE_OFF = [
-    ['rival', '경쟁사 자료는 <b>회차 단위</b>로 모아 글마다 날짜·유형이 없습니다.'],
-    ['promo', '같은 경쟁사 회차 자료라 글마다 날짜·유형이 없습니다.'],
-    ['sdp', '개인대리점 자료는 <b>회차 단위</b>로 모아 글마다 날짜·유형이 없습니다.'],
-  ];
+  /* 2026-09-09 — 셋 다 수집기를 고쳐 **주 단위로 담게** 했다. 다만 그 자료는
+     **다시 모아야** 생기므로(옛 회차에는 칸이 없다) 갈래를 둘로 둔다.
+     `SCOPE_OFF` 는 이제 비어 있다 — 못 따르는 카드가 없다는 뜻이다. */
+  var SCOPE_OFF = [];
   var SCOPE_ON = ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list'];
   /* **반쯤 따르는 카드** — 뭐가 따르고 뭐가 안 따르는지 갈라 적는다.
      「따른다」로 뭉뚱그리면 안 따르는 절의 숫자를 그 기간 것으로 읽는다. */
@@ -8884,12 +8964,22 @@ function renderList() {
           + SCOPE_OFF[i][1] + ' <b>전 기간 기준</b>입니다.'
         : '');
     }
-    /* 카페는 **서버가 주 단위 자료를 줄 때만** 따른다(옛 회차에는 그 칸이 없다) */
-    put('cafe', cafeScoped() ? 'scopeon' : 'scopeoff', !on ? '' : (cafeScoped()
-      ? '<b>' + lab + '</b>만 봅니다 — <b>작성일을 아는 글만</b> 셉니다'
-        + '(네이버가 카페·웹 글의 작성일을 주지 않아 전체 누적보다 적습니다).'
-      : '위 <b>' + lab + '</b> 거르개가 <b>여기에는 안 걸립니다</b> — 카페별 주간 자료가 '
-        + '아직 없습니다(관리자의 「수집」을 한 번 돌리면 채워집니다). <b>전 기간 기준</b>입니다.'));
+    /* **서버가 주 단위 자료를 줄 때만** 따른다 — 옛 회차에는 그 칸이 없다.
+       있는 척도, 없는데 감추지도 않는다(이 화면이 늘 지켜 온 규칙). */
+    var WAIT = [
+      ['cafe', cafeScoped(), '카페별 주간 자료'],
+      ['rival', rivalScoped(), '경쟁사 주간 자료'],
+      ['promo', rivalScoped(), '경쟁사 주간 자료'],
+      ['sdp', sdpScoped(), '개인대리점 주간 자료'],
+    ];
+    for (i = 0; i < WAIT.length; i++) {
+      put(WAIT[i][0], WAIT[i][1] ? 'scopeon' : 'scopeoff', !on ? '' : (WAIT[i][1]
+        ? '<b>' + lab + '</b>만 봅니다 — <b>작성일을 아는 글만</b> 셉니다'
+          + '(네이버가 카페·웹 글의 작성일을 주지 않아 전체 누적보다 적습니다).'
+          + (WAIT[i][0] === 'promo' ? ' <b>품목별은 전 기간</b>입니다 — 주별로 담으면 시트 한 칸을 넘깁니다.' : '')
+        : '위 <b>' + lab + '</b> 거르개가 <b>여기에는 안 걸립니다</b> — ' + WAIT[i][2] + '가 '
+          + '아직 없습니다(관리자의 「수집」을 한 번 돌리면 채워집니다). <b>전 기간 기준</b>입니다.'));
+    }
     for (i = 0; i < SCOPE_HALF.length; i++) {
       put(SCOPE_HALF[i][0], 'scopeon', on
         ? '<b>' + lab + '</b> — ' + SCOPE_HALF[i][1] : '');

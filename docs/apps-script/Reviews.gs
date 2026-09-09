@@ -1117,7 +1117,10 @@ function setAreaColors(map) {
 }
 
 var SHEET_SDP = 'SDP';
-var SDP_HEADER = ['at', 'store', 'sigun', 'area', 'n', 'blog', 'cafe', 'kinds', 'sample'];
+var SDP_HEADER = ['at', 'store', 'sigun', 'area', 'n', 'blog', 'cafe', 'kinds', 'sample',
+  /* 주 × 유형 (2026-09-09) — **맨 뒤에.** 가운데 끼우면 옛 줄이 한 칸씩 밀린다.
+     블로그만 든다 — 네이버가 카페 글의 작성일을 주지 않는다. */
+  'weekJson'];
 /* **적게 두드린다.** 이 항목이 답하는 것은 *"이슈가 있나"* 이지 「전수 수집」이 아니다.
    8곳 × 2갈래 × 3쪽 = **48회** — 한 바퀴 18,800회에 견주면 사실상 공짜다.
    매장 훑기처럼 꼬리말 8개를 붙이면 1,920회가 되어 한도를 위협한다. */
@@ -1158,6 +1161,9 @@ function collectSdp(deadline) {
   for (i = 0; i < SDP.length; i++) {
     if (deadline && Date.now() > deadline) { err = err || '시간'; break; }
     var s = SDP[i], seen = {}, byKind = {}, sample = [], nb = 0, nc = 0;
+    /* 주 × 유형 (2026-09-09) — **매장마다 새로 만든다.** 밖에 두면 앞 매장 값이
+       다음 매장 줄에 그대로 실린다(이 줄이 매장 하나를 담는다). */
+    var byWkS = {};
     for (k = 0; k < sdpKinds.length && !err; k++) {
       for (p = 0; p < SDP_PAGES; p++) {
         if (deadline && Date.now() > deadline) { err = err || '시간'; break; }
@@ -1178,13 +1184,23 @@ function collectSdp(deadline) {
           if (sdpKinds[k] === 'blog') nb++; else nc++;
           var kd = kindOf_(String(it.title || ''));
           byKind[kd] = (byKind[kd] || 0) + 1;
+          /* 주 × 유형 — 최상단 거르개가 이것을 본다. **블로그만** 작성일을 준다. */
+          var pdS = String(it.postdate || '');
+          if (pdS.length === 8) {
+            var wkS = isoWeek_(pdS.slice(0, 4) + '-' + pdS.slice(4, 6) + '-' + pdS.slice(6));
+            if (wkS) {
+              if (!byWkS[wkS]) byWkS[wkS] = {};
+              var k4S = kind4_({ kind: kd });
+              byWkS[wkS][k4S] = (byWkS[wkS][k4S] || 0) + 1;
+            }
+          }
           if (sample.length < 5) sample.push({ t: plain_(it.title), l: lk, s: srcName_(sdpKinds[k]) });
         }
         if (items.length < PAGE_SIZE) break;
       }
     }
     rows.push([stamp, s.name, s.sigun, s.area, nb + nc, nb, nc,
-      JSON.stringify(byKind), JSON.stringify(sample)]);
+      JSON.stringify(byKind), JSON.stringify(sample), JSON.stringify(byWkS)]);
   }
   if (rows.length) {
     sh.getRange(sh.getLastRow() + 1, 1, rows.length, SDP_HEADER.length).setValues(rows);
@@ -1223,7 +1239,10 @@ function sdp_() {
     var sp = jparse_(v[i][8]);
     stores.push({ name: nm, sigun: String(v[i][2] || ''), area: ar, n: n,
       blog: Number(v[i][5]) || 0, cafe: Number(v[i][6]) || 0,
-      self: !!selfOf[nm], sample: (sp && sp.length) ? sp : [] });
+      self: !!selfOf[nm], sample: (sp && sp.length) ? sp : [],
+      /* 주 × 유형 (2026-09-09) — **맨 뒤 칸**(9번, 0부터). 옛 회차에는 없어 빈 객체가 된다.
+         칸 번호를 손으로 적는 자리라 헤더를 고칠 때 반드시 함께 볼 것. */
+      wk4: jparse_(v[i][9]) || {} });
   }
   stores.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
   return { at: last, total: total, stores: stores, byArea: byArea, byKind: kinds,
@@ -5222,12 +5241,17 @@ var SHEET_RIVAL = '경쟁비교';
 
    **`chanJson` 은 당사 것만 담는다** — LG 는 건수만이라는 지시 그대로다. */
 var RIVAL_HEADER = ['at', 'area', 'ours', 'rival', 'pct', 'capped', 'queries',
-  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson'];
+  'srcJson', 'kindJson', 'monthJson', 'chanJson', 'prodJson', 'sampleJson',
+  /* 주 × 유형 × 진영 + 주 × 채널 (2026-09-09) — **맨 뒤에 붙인다.**
+     가운데 끼우면 옛 줄이 한 칸씩 밀려 값이 통째로 어긋난다. */
+  'weekJson'];
 /* **줄의 뜻이 바뀌면 이 번호를 올린다.** 칸을 더하거나 기존 칸의 뜻을 바꾸면 옛 회차에
    이어 붙어 값이 뒤섞인다 — 「평택 2,008 → 4,025」가 그렇게 났다. 번호가 다르면
    이어 붙지 않고 새 회차로 시작한다.
    2 = 도시 단위(한 줄에 도시 하나) + 채널 40개 + byProd·sample 칸. */
-var RIVAL_SCHEMA = 4;   /* 4 = 당사·LG 둘만(하이마트·전자랜드 제거) · 점유율이 2사 기준 */
+var RIVAL_SCHEMA = 5;   /* 5 = `weekJson`(주 × 유형 × 진영 + 주 × 채널) 추가.
+                           2026-09-09 사장님 지시로 상단 거르개를 따르게 하려면
+                           줄이 주를 담아야 한다 — 옛 회차와 섞이면 안 되므로 올린다. */
 
 /* LG 매장 브랜드 표기. **실측으로 실제 잡히는 것만 넣었다**(2026-08-31) —
    `lg베스트샵`·`베스트샵`·`lg전자베스트샵` 은 100/100 이 걸리고,
@@ -5696,6 +5720,27 @@ function topN_(obj, n) {
  * 않고 버린다** — 반쪽짜리 도시를 저장하면 그 지역 비중이 조용히 거짓이 된다.
  * 헛일이 되지만 앞 검사가 있어 드물고, 6분에 죽어 통째로 잃는 것보다 훨씬 싸다.
  */
+/** 주 자료를 시트 한 칸(5만 자)에 들어가게 줄인다.
+ *  최근 `RIVAL_WEEKS` 주만 남기고, 채널은 그 주 상위 `RIVAL_WK_CH` 개만 남긴다.
+ *  **줄인 사실이 값에 드러나야 한다** — 유형·진영 건수는 그대로 두고 채널만 자른다
+ *  (비중이 이 자료의 주인공이고 채널은 곁가지다). */
+var RIVAL_WEEKS = 26;
+var RIVAL_WK_CH = 8;
+function trimWeek_(byWk) {
+  var ks = Object.keys(byWk).sort();
+  if (ks.length > RIVAL_WEEKS) ks = ks.slice(ks.length - RIVAL_WEEKS);
+  var out = {}, i, w, m, ch, top;
+  for (i = 0; i < ks.length; i++) {
+    w = ks[i]; m = byWk[w];
+    ch = Object.keys(m.ch || {}).sort(function (a, b) { return m.ch[b] - m.ch[a]; })
+      .slice(0, RIVAL_WK_CH);
+    top = {};
+    for (var j = 0; j < ch.length; j++) top[ch[j]] = m.ch[ch[j]];
+    out[w] = { o: m.o, r: m.r, ch: top };
+  }
+  return out;
+}
+
 function collectRival(deadline) {
   var sh = sheet_(SHEET_RIVAL, RIVAL_HEADER);
   var stamp = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm');
@@ -5782,6 +5827,19 @@ function collectRival(deadline) {
        지점을 눌렀을 때 「어느 경로로 들어온 글인가」를 보는 데 쓴다. */
     var byChan = { ours: {} }, byProd = {},
         noProd = { o: 0, r: 0 }, rvSample = [];
+    /* ── **주 단위로도 센다** (2026-09-09 사장님 지시로 인터페이스 통일) ──────────
+     * 최상단 기간·유형이 이 카드에는 안 걸리던 유일한 이유가 **저장이 지역 총계**
+     * 였다는 것이다 — 세기는 이미 `byMon`·`byKind` 로 세고 있었다.
+     *
+     * `byWk[주] = { o:{유형:n}, r:{유형:n}, ch:{채널:n}, pd:{품목:{o,r}} }`
+     *
+     * **블로그만 든다** — 카페·웹은 네이버가 작성일을 주지 않는다. 다른 카드가
+     * 이미 그 제약을 그대로 안고 있고(작성일을 아는 글만 셈), 화면이 그 사실을 적는다.
+     * 여기만 다르게 하면 같은 화면이 두 잣대를 쓴다.
+     *
+     * **칸 크기를 재고 담는다** — 시트 한 칸이 5만 자다. 주 20 × (유형 5×2 +
+     * 채널·품목)이라 상한을 안 두면 큰 도시에서 조용히 잘린다. */
+    var byWk = {};
     var CH = { ours: 'o', rival: 'r' };
     hard = false;
 
@@ -5861,6 +5919,17 @@ function collectRival(deadline) {
                 var mk = pd.slice(0, 4) + '-' + pd.slice(4, 6);
                 if (!byMon[mk]) byMon[mk] = { o: 0, r: 0 };
                 byMon[mk][CH[key]]++;
+                /* 주 × 유형 × 진영 — 화면의 최상단 거르개가 이것을 본다.
+                   **`isoWeek_` 을 쓴다** — 화면·후기 집계와 같은 주 번호여야
+                   「9월 1주차」가 두 카드에서 같은 주를 가리킨다. */
+                var wkR = isoWeek_(mk.slice(0, 4) + '-' + pd.slice(4, 6) + '-' + pd.slice(6));
+                if (wkR) {
+                  if (!byWk[wkR]) byWk[wkR] = { o: {}, r: {}, ch: {}, pd: {} };
+                  var sideK = CH[key], k4R = kind4_({ kind: kd });
+                  byWk[wkR][sideK][k4R] = (byWk[wkR][sideK][k4R] || 0) + 1;
+                  /* 채널은 **당사만** 담는다(2026-09-05 지시 그대로) */
+                  if (key === 'ours' && ch) byWk[wkR].ch[ch] = (byWk[wkR].ch[ch] || 0) + 1;
+                }
               }
             }
             if (items.length < PAGE_SIZE) break;
@@ -5930,7 +5999,10 @@ function collectRival(deadline) {
          칸이 넘친다. 화면이 보여주는 것이 상위 10개 안팎이라 40이면 합산이 안 흔들린다. */
       /* **당사 채널만** — LG 는 건수만이라는 지시(2026-09-05) */
       JSON.stringify({ ours: topN_(byChan.ours, 40) }),
-      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample)
+      JSON.stringify({ prod: byProd, none: noProd }), JSON.stringify(rvSample),
+      /* 주 자료 — **칸 한도(5만 자)를 넘지 않게 줄여 담는다.** 안 줄이면 큰 도시에서
+         조용히 잘려 그 도시만 기간 필터가 안 듣는다. */
+      JSON.stringify(trimWeek_(byWk))
     ]);
     /* **도시 하나를 끝낼 때마다 커서를 적는다.** 실행이 그 뒤에 죽어도 여기까지는
        남는다 — 예전에는 함수 끝에서 한 번만 적어 6분에 죽으면 전부 잃었다. */
@@ -6226,7 +6298,10 @@ function rival_() {
     if (!by[area]) {
       by[area] = {
         area: area, ours: 0, rival: 0, capped: false, q: [],
-        bySrc: {}, byKind: {}, byMonth: {}, byChan: {}, byProd: {}, sample: []
+        bySrc: {}, byKind: {}, byMonth: {}, byChan: {}, byProd: {}, sample: [],
+        /* 주 × 유형 × 진영 (2026-09-09) — 화면 최상단 거르개가 이것을 본다.
+           **옛 회차에는 이 칸이 없다** — 그때는 비어 있고 화면이 그 사실을 적는다. */
+        byWeek: {}
       };
       order.push(area);
     }
@@ -6244,6 +6319,9 @@ function rival_() {
     mergeNum_(g.byMonth, jparse_(v[i][9]));
     mergeNum_(g.byChan, jparse_(v[i][10]));
     mergeNum_(g.byProd, jparse_(v[i][11]));
+    /* `weekJson` 은 **맨 뒤 칸**이다(13번, 0부터). 가운데에 칸을 더하면 여기가 밀린다 —
+       칸 번호를 손으로 적는 자리라 헤더를 고칠 때 반드시 함께 볼 것. */
+    mergeNum_(g.byWeek, jparse_(v[i][13]));
     var sp = jparse_(v[i][12]);
     /* 표본은 배열이라 따로 — **지역당 8건까지**(도시가 셋이어도 화면은 그대로다) */
     if (sp && sp.length) for (var sk = 0; sk < sp.length && g.sample.length < 8; sk++) g.sample.push(sp[sk]);
@@ -6560,7 +6638,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-09-01d26860';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-09-0a5d025d';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 24;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
