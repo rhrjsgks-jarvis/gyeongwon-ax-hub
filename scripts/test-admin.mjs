@@ -3231,32 +3231,23 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
     if (!ix.includes('nf(wsum[w3])')) bad.push('칩에 건수를 안 적는다');
 
-    /* ④ **평소 평균은 「글이 있었던 주」로 나눈다.** 전체 주로 나누면 선택 편향이 생겨
-           (칸이 그려진 매장은 그 주에 1건 이상이므로) **전 칸이 최대 초록**이 된다. */
-    /* **계산은 `weekAgg` 한 곳으로 옮겼다**(2026-09-06) — 매니저 보기가 같은 함수를
-       쓴다. 규칙 자체는 아래 「매니저 주차」 절이 **떼어 돌려** 검사한다. */
-    if (!ix.includes('if (!live) return null;')) {
-      bad.push('평소 평균을 0인 주까지 세어 낸다 — 그 주에 글이 있다는 이유만으로 늘 「평소보다 많다」가 된다');
-    }
+    /* ④ 「평소 평균」은 2026-09-10 에 없어졌다 — 칸이 절대 건수라 잣대가 하나다.
+       되살아나면 물린다(위 「히트맵 건수·비교」 절이 `weekAgg`·「평소 모름」을 본다). */
 
-    /* ⑤ **색 척도와 범례가 같은 값을 쓴다.** 주는 표본이 1~5건이라 ±15% 로는 통째로
-           포화되고, 범례가 ±15% 라 적혀 있으면 색을 4배로 잘못 읽는다. */
-    if (!ix.includes('var HEAT_LO = ') || !ix.includes('var HEAT_HI = ')) bad.push('파스텔 단일 계열 색이 없다');
-    if (ix.includes('rampColor(') && ix.includes('heatColor(d.g')) bad.push('칸이 아직 증감으로 칠해진다 — 색은 건수다');
-    if (!ix.includes('heatColor(d.cnt, heatMax)')) bad.push('칸을 건수로 칠하지 않는다');
-    /* ── **칸 색은 등락이다** (2026-09-09 사장님 지시: *"히트맵컬러 주식처럼(재미)"*)
-       2026-09-03·09-06 의 「단일 계열(건수)」을 뒤집은 것이다. 범례가 건수를 적으면
-       그 자리에서 거짓이 되므로, **배수 축을 적는지**를 본다. */
-    if (!ix.includes("'÷' + heatSpan") || !ix.includes("'×' + heatSpan")) bad.push('범례가 등락 배수를 안 적는다');
+    /* ⑤ **색 척도와 범례가 같은 값을 쓴다.** 기본은 건수 색(HEAT_LO→HI), 비교를 켰을
+       때만 등락(finviz, growColor)이다. 두 모드가 모두 살아 있고 모드에 따라 갈리는가. */
+    if (!ix.includes('var HEAT_LO = ') || !ix.includes('var HEAT_HI = ')) bad.push('건수 색이 없다');
     if (!ix.includes('function growColor')) bad.push('등락 색 함수가 없다');
-    if (!ix.includes('growColor(d.g, heatSpan)')) bad.push('칸을 등락으로 안 칠한다');
+    if (!ix.includes('(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatMax))')) bad.push('칸 색이 모드를 안 따른다');
     if (ix.includes('Math.min(Math.abs(g) / (span')) bad.push('옛 증감 색 함수가 남아 있다');
+    if (!ix.includes("'÷' + heatSpan") || !ix.includes("'×' + heatSpan")) bad.push('비교 범례가 등락 배수를 안 적는다');
+    if (!ix.includes("nf(heatMin) + '건'") || !ix.includes("nf(heatMax) + '건'")) bad.push('건수 범례가 최소·최대를 안 적는다');
     if (!ix.includes('sc2.innerHTML')) {
       bad.push('색띠를 매번 다시 그리지 않는다 — 초기화 때는 척도가 없어 띠가 통째로 빈다');
     }
 
     if (bad.length) fail('[바이럴] 히트맵 주차 — ' + bad.join(' · '));
-    else console.log('OK: 바이럴 히트맵 주차 — 칸은 지점 · 주차는 필터 · 평소 대비 · 척도와 범례가 같다');
+    else console.log('OK: 바이럴 히트맵 주차 — 칸은 지점 · 주차는 필터 · 색은 건수(비교 켜면 등락) · 척도와 범례가 같다');
   }
 }
 
@@ -3300,7 +3291,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* **앵커를 닫는 괄호까지 잡지 말 것** — 필드를 하나 더하면 그 자리에서 깨져
        멀쩡한 코드를 「틀렸다」고 잡는다(연도 축을 넣다 실제로 그랬다).
        **안 바뀔 조각**으로 잡고, 실어야 하는 필드를 하나씩 센다. */
-    ['store: d.store', 'known: d.known', 'year: d.year', 'prevYear: d.prevYear'].forEach(function (f) {
+    /* `year`·`prevYear` 는 2026-09-10 에 연도 축과 함께 없어졌다 — 견주기는 `prev`·`g`·`noPrev` 다 */
+    ['store: d.store', 'known: d.known', 'prev: d.prev', 'noPrev: d.noPrev', 'weekFallback: d.weekFallback'].forEach(function (f) {
       if (!ix.includes(f)) bad.push('칸에 ' + f + ' 를 안 싣는다 — 부제가 엉뚱한 글자가 된다');
     });
 
@@ -3321,225 +3313,204 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 }
 
-/* ── 히트맵 연도 축 · LG 연도별 (2026-09-03 사장님 지시) ────────────────────
- * *"히트맵에 2025년과 2026년 자료만 … 기본 화면은 2026년(당해) … 2025년 대비 증감은
- *   버튼으로"* · *"LG도 삼성스토어 수집과 동일하게 과거 총후기합은 수치로 보관하고
- *   (23년24년까지) 25년과 26년은 삼성스토어와 동일하게"*.
+/* ── 히트맵 — **절대 건수 · 견주기는 맨 위 「비교」** (2026-09-10 사장님 지시) ────────
+ * *"히트맵은 등락이 자동으로 나오고 있는 것 같은데 등락으로 표시를 해 주는 것이 아니라
+ *   절대 건수로 해 주면 됩니다. 전주대비 전월대비는 상단에 버튼 형식으로 기간이나 날짜
+ *   또는 주차를 지정할 수 있게 해 주면 됩니다."*
  *
- * **가장 위험한 것은 「같은 기간」이라는 거짓말이다.** 우리 자료는 2025-07 부터인데
- * 화면이 *"양쪽 다 1~9월"* 이라 적고 없는 여섯 달을 0으로 세어 **+368%** 를 내밀고
- * 있었다(겹치는 달만 보면 +127%). 그래서 `heatCmpMonths()` 를 **떼어 실제로 돌린다** —
- * 문자열이 있는지만 보면 규칙이 바뀌어도 통과한다. */
+ * 옛 축 넷(주차 평소 대비 · 연도 · 달 · 유형 비중)은 전부 내렸다. 칸은 위 기간의 건수
+ * 하나이고, 견주기는 `cmpMode` 가 켤 때만 `prev`·`g` 가 붙는다. **떼어 실제로 돌린다** —
+ * 문자열만 보면 규칙이 바뀌어도 통과한다.
+ *
+ * 이 블록 안의 ⑤~⑦(LG 연도 표 · 월 하한)은 그대로다 — 그쪽은 히트맵 축과 무관하다. */
 {
   const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
   const bad = [];
-
-  /* ① 겹치는 달 규칙을 떼어 돌린다 */
-  const m = ix.match(/function heatCmpMonths\(\)[\s\S]*?\n  \}/);
-  if (!m) bad.push('heatCmpMonths 가 없다 — 연도 비교가 「같은 기간」을 지킬 수 없다');
-  else {
-    const run = (bm, cur, prev) => {
-      const fn = new Function('DATA', 'heatYears',
-        m[0].replace('function heatCmpMonths()', 'return (function ()') + ')();');
-      return fn({ byStoreMonth: bm }, () => ({ cur, prev }));
-    };
-    /* 실제 프로덕션 모양 — 작년이 7월부터, 당해는 9월이 진행 중 */
-    const bm = { A: { '2025-07': 5, '2025-08': 5, '2025-09': 5,
-                      '2026-01': 9, '2026-07': 9, '2026-08': 9, '2026-09': 1 } };
-    const got = run(bm, '2026', '2025');
-    if (got.join(',') !== '07,08') {
-      bad.push('겹치는 달이 [07,08] 이어야 하는데 [' + got.join(',') + '] 이다'
-        + ' — 작년에 없는 달을 0으로 세거나 진행 중인 달을 넣고 있다');
+  const cutIx = (name) => {
+    const at = ix.indexOf('function ' + name + '(');
+    if (at < 0) return '';
+    let d = 0;
+    for (let j = ix.indexOf('{', at); j < ix.length; j++) {
+      if (ix[j] === '{') d++;
+      else if (ix[j] === '}') { d--; if (!d) return ix.slice(at, j + 1); }
     }
-    /* 두 해가 한 달도 안 겹치면 빈 배열 — 「견줄 수 없다」를 0 으로 그리지 않는다 */
-    const none = run({ A: { '2025-01': 3, '2026-08': 3, '2026-09': 1 } }, '2026', '2025');
-    if (none.length) bad.push('겹치는 달이 없는데 ' + none.length + '개를 내놓는다');
+    return '';
+  };
+
+  /* ① 옛 축이 되살아나지 않았는가 */
+  ['id="hm-yr"', 'id="hm-year"', 'id="hm-mom"', 'id="hm-size"', 'id="hm-cum"',
+   "var heatYear", "var heatSize", "var heatPickY", 'function heatCmpMonths(', 'function yearSum(',
+   "'평소 모름'", "'전월 모름'", "'작성일 모름'"].forEach((w) => {
+    if (ix.includes(w)) bad.push('옛 축이 남아 있다: ' + w + ' — 칸은 절대 건수 하나여야 한다');
+  });
+
+  /* ② 맨 위 「비교」 손잡이 — 다섯 갈래 · 직접 지정 날짜 둘 */
+  if (!ix.includes('id="hm-cmp"')) bad.push('맨 위 「비교」 묶음이 없다');
+  ['data-cmp=""', 'data-cmp="w"', 'data-cmp="m"', 'data-cmp="y"', 'data-cmp="custom"'].forEach((w) => {
+    if (!ix.includes(w)) bad.push('비교 버튼이 없다: ' + w);
+  });
+  ['id="cmp-from"', 'id="cmp-to"'].forEach((w) => { if (!ix.includes(w)) bad.push('비교 직접 지정 날짜 칸이 없다: ' + w); });
+  /* **전체 기간에서 켜면 최근 완결 주를 잡는다** — 「전체 대비 전주」는 뜻이 없다 */
+  if (!ix.includes('var lw = latestFullWeek();')) bad.push('전체 기간에서 견주기를 켜도 기간을 잡지 않는다 — 「전체 대비 전주」가 된다');
+  /* 손잡이는 묶음에 한 번만 (렌더마다 걸면 쌓인다) */
+  if (!ix.includes("cwrap.dataset.wired = '1';")) bad.push('비교 손잡이를 렌더마다 건다');
+
+  /* 상수는 **파일에서 잘라 온다** — 검사에 베껴 적으면 파일이 바뀌어도 통과한다(실제로 그랬다) */
+  const shiftLine = (ix.match(/var CMP_SHIFT = \{[^}]*\};/) || [''])[0];
+  if (!shiftLine) bad.push('CMP_SHIFT 가 없다');
+  /* ③ 견줄 기간 계산을 떼어 돌린다 — 전주 7일 · 전월 28일 · 전년 364일 · 직접 */
+  {
+    const env = [
+      "var heatWeek = '', heatFrom = '', heatTo = '', cmpMode = '', cmpFrom = '', cmpTo = '';",
+      cutIx('weekRange'), cutIx('ymdUTC'), cutIx('shiftYmd'), cutIx('curRange'),
+      shiftLine, cutIx('cmpRange'), cutIx('weekPickIn'), cutIx('cmpLabel'),
+    ].join('\n');
+    let fn = null;
+    try {
+      fn = new Function(env + ' return function (st) { heatWeek = st.w || ""; heatFrom = st.f || ""; heatTo = st.t || "";'
+        + ' cmpMode = st.c || ""; cmpFrom = st.cf || ""; cmpTo = st.ct || "";'
+        + ' return { rg: cmpRange(), lab: cmpLabel(), pick: weekPickIn(["2026-W33","2026-W34","2026-W35","2026-W36","2025-W36"], cmpRange()) }; };')();
+    } catch (e) { bad.push('견줄 기간 함수를 떼어 돌릴 수 없다: ' + e.message); }
+    if (fn) {
+      const r1 = fn({ w: '2026-W36', c: 'w' });
+      if (!r1.rg || r1.rg.from !== '2026-08-24' || r1.rg.to !== '2026-08-30') bad.push('전주 대비가 7일 앞이 아니다: ' + JSON.stringify(r1.rg));
+      if (r1.pick.join() !== '2026-W35') bad.push('전주 대비가 앞 주 하나만 골라야 하는데 ' + r1.pick.join());
+      if (r1.lab !== '8/24~8/30') bad.push('견줄 기간 표기가 다르다: ' + r1.lab);
+      const r2 = fn({ w: '2026-W36', c: 'm' });
+      if (!r2.rg || r2.rg.from !== '2026-08-03') bad.push('전월 대비가 28일 앞이 아니다: ' + JSON.stringify(r2.rg));
+      const r3 = fn({ w: '2026-W36', c: 'y' });
+      if (!r3.rg || r3.rg.from !== '2025-09-01' || r3.pick.join() !== '2025-W36') bad.push('전년 대비가 364일 앞(같은 ISO 주)이 아니다: ' + JSON.stringify(r3.rg) + ' ' + r3.pick.join());
+      /* 직접 지정 기간에서도 7일 앞이다 */
+      const r4 = fn({ w: 'custom', f: '2026-08-10', t: '2026-09-06', c: 'w' });
+      if (!r4.rg || r4.rg.from !== '2026-08-03' || r4.rg.to !== '2026-08-30') bad.push('직접 지정 기간의 전주 대비가 다르다: ' + JSON.stringify(r4.rg));
+      /* 직접 지정 견줌 — 사람이 넣은 날짜 그대로 · 거꾸로 넣어도 된다 */
+      const r5 = fn({ w: '2026-W36', c: 'custom', cf: '2026-08-16', ct: '2026-08-10' });
+      if (!r5.rg || r5.rg.from !== '2026-08-10' || r5.rg.to !== '2026-08-16') bad.push('직접 지정 견줌이 날짜를 그대로 안 쓴다: ' + JSON.stringify(r5.rg));
+      /* 기간이 없으면 견줄 기간도 없다(null) — 0 이나 빈 기간으로 그리지 않는다 */
+      const r6 = fn({ c: 'w' });
+      if (r6.rg !== null) bad.push('기간이 없는데 견줄 기간을 낸다: ' + JSON.stringify(r6.rg));
+      const r7 = fn({ w: '2026-W36' });
+      if (r7.rg !== null) bad.push('비교를 안 켰는데 견줄 기간을 낸다');
+    }
   }
 
-  /* ② 당해만 볼 때는 증감을 안 적고, 「작성일 모름」도 안 붙인다 */
-  if (!ix.includes("heatYear !== 'cmp' ? ''")) {
-    bad.push('당해만 볼 때 증감을 지우지 않는다 — 그때는 색도 건수라 두 말을 한다');
-  }
-  /* **누적 축은 내렸다**(2026-09-05) — 연도 축만 본다 */
-  if (!ix.includes("!heatKind && !d.year && !d.mon) sub2 = '작성일 모름'")) {
-    bad.push('연도 축에서 「작성일 모름」을 막지 않는다 — 그 칸은 작성일을 알아서 센 것이다');
-  }
-  /* ③ 기본은 당해년도 — 이 한 줄이 사장님 지시의 핵심이다 */
-  if (!/var heatYear = 'cur'/.test(ix)) {
-    bad.push('히트맵 기본이 당해년도가 아니다');
-  }
-  /* ④ **연도 축은 어디서나 돈다**(2026-09-05 사장님 지시로 넓혔다) — *"매니저별
-     후기순위 히트맵을 [수집기준]에 맞춰 동일하게 필터링"*. 주차를 보고 있을 때만
-     끈다(그때는 축이 주차다). */
-  if (!ix.includes("var yrAxis = !week && heatYear !== 'mom';")) {
-    bad.push('연도 축 판정이 주차·전월 대비를 안 가른다 — 잣대가 섞인다');
+  /* ④ 칸 값을 떼어 돌린다 — cnt 는 기간 건수 · prev 는 앞 기간 · 앞 기간 0 이면 g 는 null */
+  {
+    const env = [
+      "var heatWho = 'store', heatKind = '', heatWeek = '2026-W36', heatFrom = '', heatTo = '', cmpMode = 'w', cmpFrom = '', cmpTo = '';",
+      "var DATA = { byRegion: { 수원: { stores: ['갑', '을', '병'] } },",
+      "  byStore: { 갑: 500, 을: 400, 병: 300 },",
+      "  byStoreKind4: {}, kind4Names: [['a','A']],",
+      "  byStoreWeek4: { 갑: { '2026-W35': { a: 2 }, '2026-W36': { a: 6 } },",
+      "                  을: { '2026-W36': { a: 4 } },",
+      "                  병: { '2026-W35': { a: 3 } } } };",
+      cutIx('weekRange'), cutIx('ymdUTC'), cutIx('shiftYmd'), cutIx('curRange'),
+      shiftLine, cutIx('cmpRange'), cutIx('weekPickIn'),
+      cutIx('weekSrc'), cutIx('weekList'), cutIx('scopedWeekPick'), cutIx('scopedWeeks'), cutIx('scoped'),
+      cutIx('scopedOne'), cutIx('scopedByStore'), cutIx('heatRows'), 'function mgrRows() { return []; }',
+    ].join('\n');
+    let rows = null;
+    try { rows = new Function(env + ' return function (c) { cmpMode = c; return heatRows(); };')(); }
+    catch (e) { bad.push('heatRows 를 떼어 돌릴 수 없다: ' + e.message); }
+    if (rows) {
+      const R = rows('w'), by = {}; R.forEach((r) => { by[r.nm] = r; });
+      if (by.갑.cnt !== 6 || by.갑.prev !== 2 || Math.round(by.갑.g) !== 200) bad.push('갑: 6건 · 앞 주 2건 · +200% 여야 하는데 ' + JSON.stringify(by.갑));
+      if (by.을.cnt !== 4 || by.을.prev !== 0 || by.을.g !== null || !by.을.noPrev) bad.push('을: 앞 주가 0 이면 g 는 null 이어야 한다 ' + JSON.stringify(by.을));
+      if (by.병.cnt !== 0) bad.push('병: 이번 주 글이 없으면 0 이어야 한다 ' + JSON.stringify(by.병));
+      const R0 = rows(''), b0 = {}; R0.forEach((r) => { b0[r.nm] = r; });
+      if (b0.갑.prev !== null || b0.갑.g !== null) bad.push('비교를 안 켰는데 prev·g 가 있다 ' + JSON.stringify(b0.갑));
+      if (b0.갑.cnt !== 6) bad.push('비교를 꺼도 칸은 기간 건수여야 한다 ' + JSON.stringify(b0.갑));
+    }
   }
 
-  /* ⑤ LG 연도 표 — 당해·직전해만 비중, 그 앞은 숫자만 */
+  /* ⑤ 색·범례·부제가 모드를 따라간다 */
+  if (!ix.includes("(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatMax))")) {
+    bad.push('색이 모드를 안 따른다 — 기본은 건수 색, 비교를 켰을 때만 등락 색이어야 한다');
+  }
+  if (!ix.includes("if (lt) lt.textContent = '건수';")) bad.push('비교를 안 켰을 때 범례가 「건수」가 아니다');
+  if (!ix.includes("if (lt) lt.textContent = cmpName() + ' (' + cmpLabel() + ')';")) bad.push('비교를 켰을 때 범례가 무엇 대비인지 안 적는다');
+  /* 칸 부제 — 비교를 켰을 때만 「앞→지금 ±%」 · 앞 기간이 없으면 그 사실 */
+  if (!ix.includes("nf(d.prev) + '→' + nf(d.cnt) + '건 ' + heatPct(d.g)")) bad.push('칸 부제가 앞 기간 → 지금 건수를 안 적는다');
+  if (!ix.includes("cmpLabel() + ' 없음'")) bad.push('앞 기간에 글이 없을 때 그 사실을 안 적는다');
+  /* 전체 증감의 「못 낸 곳」은 **글이 있는 칸만** 센다 — 0건 칸까지 세면 「54곳을 뺐다」가 된다 */
+  if (!ix.includes('if (rows[i].cnt > 0) skip++;')) bad.push('전체 증감이 0건 칸까지 「뺐다」로 센다');
+  /* 견주기를 켰을 때는 LG 앰버 띠를 안 섞는다 — 색이 등락인데 띠가 섞이면 두 말이다 */
+  if (!ix.includes("!chan && !d.isReg && !cmpOn) {")) bad.push('비교를 켰는데도 앰버 띠를 섞는다 — 칸 색이 두 말을 한다');
+
+  /* ⑥ 매니저도 같은 규칙 — 주차 자료로 세고, 옛 서버 자료면 물러선 사실을 적는다 */
+  if (!ix.includes('if (hasMW && scoped()) cnt = sumW(t.name, ws);')) bad.push('매니저 칸이 위 기간으로 안 센다');
+  if (!ix.includes('weekFallback: !!heatWeek && !hasMW')) bad.push('매니저 주차 자료가 없을 때 물러선 사실을 안 싣는다');
+  if (!ix.includes("매니저 주차 자료가 없어 전 기간 기준입니다")) bad.push('매니저가 전 기간으로 물러섰다고 화면이 안 적는다');
+
+  /* ⑦ LG 연도 표 — 당해·직전해만 비중, 그 앞은 숫자만 (2026-09-03) — 히트맵 축과 무관하게 그대로다 */
   if (!ix.includes('function yearTable()')) bad.push('베스트샵 연도 표가 없다');
-  if (!ix.includes("var KEEP = Number(cur) - 3;")) {
-    bad.push('베스트샵 연도 표가 23·24년까지 줄로 적지 않는다');
-  }
-  if (!ix.includes("var live = (y === cur || y === prev);")) {
-    bad.push('베스트샵 연도 표가 당해·직전해만 비중을 내지 않는다 — 「숫자만 보관」이 무너진다');
-  }
-  /* **지우지 않는다** — LG 비교는 애초에 숫자만 저장한다 */
-  if (/rollRival|purgeRival/.test(ix)) {
-    bad.push('베스트샵 비교를 지우려 든다 — 보관하라는 지시와 어긋난다');
-  }
-  /* ⑥ LG 증감도 겹치는 달만 */
-  if (!ix.includes("if (!ym[prev + '-' + m2]) return;")) {
-    bad.push('베스트샵 증감이 작년에 없는 달을 0 으로 센다');
-  }
+  if (!ix.includes("var KEEP = Number(cur) - 3;")) bad.push('베스트샵 연도 표가 23·24년까지 줄로 적지 않는다');
+  if (!ix.includes("var live = (y === cur || y === prev);")) bad.push('베스트샵 연도 표가 당해·직전해만 비중을 내지 않는다 — 「숫자만 보관」이 무너진다');
+  if (/rollRival|purgeRival/.test(ix)) bad.push('베스트샵 비교를 지우려 든다 — 보관하라는 지시와 어긋난다');
+  if (!ix.includes("if (!ym[prev + '-' + m2]) return;")) bad.push('베스트샵 증감이 작년에 없는 달을 0 으로 센다');
 
-  /* ⑦ **월 집계 하한은 연 단위여야 한다** (2026-09-03 사장님 지적으로 발견)
-     'now - 400일' 이라 2026-09-03 에 2025-07 에서 잘렸다 — 작성일을 아는 2,671건 중
-     844건만 화면에 나갔고 2025년은 616건 중 249건뿐이었다. 「며칠 전」으로 잡으면
-     오늘이 며칠이냐에 따라 작년 시작이 잘려 연도 비교가 반쪽이 된다. */
+  /* ⑧ 월 집계 하한은 연 단위 · 수집 기준(MIN_YMD)에서 (2026-09-03 · 2026-09-05) */
   {
     const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
-    if (gs.includes('monthFloor = Utilities.formatDate(new Date(now.getTime() - ')) {
-      bad.push('byStoreMonth 하한이 「며칠 전」이다 — 연도 비교가 반쪽이 된다');
-    }
-    /* **2026-09-05 사장님 지시로 2023-01 까지 넓혔다** — 직전해 1월로 두면 히트맵이
-       2025-01 부터만 볼 수 있어 2023~2024 의 1,457건이 통째로 빠졌다.
-       **직전해보다 늦어지면 안 된다** — 연도 대비 축(올해 vs 작년)이 반쪽이 된다. */
-    /* **수집 기준과 같은 해여야 한다**(2026-09-05 사장님 지시). 손으로 두 번 적으면
-       한쪽만 고쳐져 화면이 「없는 해」를 그리거나 모은 자료가 화면에서 사라진다. */
-    if (!gs.includes('var MONTH_FLOOR_Y = String(MIN_YMD).slice(0, 4);')) {
-      bad.push('월별 하한이 수집 기준(MIN_YMD)에서 나오지 않는다 — 두 기준이 어긋난다');
-    }
-    if (!gs.includes("var monthFloor = (MONTH_FLOOR_Y < prevY ? MONTH_FLOOR_Y : prevY) + '-01';")) {
-      bad.push('하한이 직전해보다 늦어질 수 있다 — 연도 대비 축이 반쪽이 된다');
-    }
+    if (gs.includes('monthFloor = Utilities.formatDate(new Date(now.getTime() - ')) bad.push('byStoreMonth 하한이 「며칠 전」이다 — 연도 비교가 반쪽이 된다');
+    if (!gs.includes('var MONTH_FLOOR_Y = String(MIN_YMD).slice(0, 4);')) bad.push('월별 하한이 수집 기준(MIN_YMD)에서 나오지 않는다 — 두 기준이 어긋난다');
+    if (!gs.includes("var monthFloor = (MONTH_FLOOR_Y < prevY ? MONTH_FLOOR_Y : prevY) + '-01';")) bad.push('하한이 직전해보다 늦어질 수 있다 — 연도 대비 축이 반쪽이 된다');
   }
 
-
-  /* ── ⑨ **히트맵 연도 축 — 1년 단위 · 당해 vs 전년** (2026-09-05 사장님 지시) ────────
-   *
-   * *"[수집기준]은 23년도이후자료면 충분함, 1년단위로 볼수있게해주고, 당해와 전년
-   *   비교만하면됩니다. 당해는 드랍다운으로 주차별로 확인 할 수 있게해주면됩니다."*
-   *
-   * **어제 넣은 누적 축(2023~현재 합계)은 내렸다** — 오늘 지시가 1년 단위다.
-   * 대신 **연도 드롭다운**을 두어 어느 해든 고를 수 있고, 비교는 늘 「그 해 vs 그 전 해」다.
-   *
-   * 그리고 **당사·LG 가 같은 잣대를 쓴다** — 칸 크기·파랑은 그 해 건수, 빨강(LG 몫)도
-   * 그 해 것이다. 예전에는 빨강만 전 기간이라 한 칸에 두 잣대가 섞여 있었다.
-   */
+  /* ⑨ 베스트샵 몫(srShare)은 **위 기간을 따른다** (2026-09-10 사장님 지적 *"베스트샵 후기
+     건수 취합이 잘 안 되고 있는 것 같다"* — 취합이 아니라 당해로 자르던 잣대가 원인이었다).
+     전 기간이면 회차의 전 기간 값 그대로(칸과 같은 잣대) · 기간을 걸면 걸친 달을 더한다. */
   {
     const gs2 = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
-    const ix2 = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
-    const b9 = [];
-
-    /* ⓐ 서버가 매장 대 매장에 월별을 담는가 — 그것이 있어야 LG 몫을 연도로 가른다 */
-    if (!gs2.includes("'queries', 'monJson']")) b9.push('매장경쟁에 monJson 칸이 없다 — 연도별 베스트샵 몫을 낼 자료가 없다');
-    if (!gs2.includes('var SRIVAL_SCHEMA')) b9.push('SRIVAL_SCHEMA 가 없다 — 옛 회차에 이어 붙어 월 자료가 반쪽이 된다');
-    if (!gs2.includes("got[key][lk] = pd9.length === 8 ? (pd9.slice(0, 4) + '-' + pd9.slice(4, 6)) : '';")) {
-      b9.push('링크마다 월을 안 담는다 — 작성일 없는 글을 0 으로 세면 거짓이 된다');
-    }
-    if (!gs2.includes('mon: (mon0 && mon0.o) ? mon0 : null')) {
-      b9.push('옛 회차의 월 자료를 0 으로 채운다 — 「모른다」가 「없다」가 된다');
-    }
-
-    /* ⓑ **누적 축은 내렸다** — 되살아나면 「1년 단위」 지시와 어긋난다 */
-    ['HEAT_CUM_FROM', 'function cumSpan(', 'function yearFromSum(', 'id="hm-cum"'].forEach((w) => {
-      if (ix2.includes(w)) b9.push('누적 축이 남아 있다: ' + w + ' — 지시는 1년 단위다');
-    });
-
-    /* ⓒ 연도 드롭다운 · 전년 대비 */
-    if (!ix2.includes('id="hm-yr"')) b9.push('연도 드롭다운이 없다 — 1년 단위로 고를 길이 없다');
-    if (!ix2.includes('function yearsIn(')) b9.push('자료가 걸친 해를 못 낸다 — 없는 해를 고르게 된다');
-    if (!ix2.includes("heatPickY = this.value || '';")) b9.push('연도를 골라도 상태가 안 바뀐다');
-    /* **해를 바꾸면 주차를 푼다** — 남기면 없는 주를 고른 채가 되어 0건이 된다 */
-    {
-      const at = ix2.indexOf("heatPickY = this.value || '';");
-      const blk = at < 0 ? '' : ix2.slice(at, at + 400);
-      if (!blk.includes("heatWeek = ''")) b9.push('해를 바꿔도 주차를 안 푼다 — 없는 주를 고른 채가 된다');
-    }
-    /* **매니저·유형에서도 연도를 고를 수 있어야 한다** — 「같은 기준으로 필터링」 지시 */
-    if (!ix2.includes("byr2.style.display = (week || heatYear === 'mom') ? 'none' : '';")) {
-      b9.push('매니저·유형에서 전년 대비 버튼을 숨긴다 — 기준이 통일되지 않는다');
-    }
-
-    /* ⓓ **떼어 돌린다** — 문자열만 보면 계산이 뒤집혀도 통과한다 */
+    if (!gs2.includes("'queries', 'monJson']")) bad.push('매장경쟁에 monJson 칸이 없다 — 기간별 베스트샵 몫을 낼 자료가 없다');
+    if (!gs2.includes('var SRIVAL_SCHEMA')) bad.push('SRIVAL_SCHEMA 가 없다 — 옛 회차에 이어 붙어 월 자료가 반쪽이 된다');
+    if (!gs2.includes('mon: (mon0 && mon0.o) ? mon0 : null')) bad.push('옛 회차의 월 자료를 0 으로 채운다 — 「모른다」가 「없다」가 된다');
     let srFn = null;
     try {
-      const cutIx = (name) => {
-        const at = ix2.indexOf('function ' + name + '(');
-        if (at < 0) return '';
-        let d = 0;
-        for (let j = ix2.indexOf('{', at); j < ix2.length; j++) {
-          if (ix2[j] === '{') d++;
-          else if (ix2[j] === '}') { d--; if (!d) return ix2.slice(at, j + 1); }
-        }
-        return '';
-      };
       const env = [
-        "var heatPickY = '';",
-        "var window = { __SR: {} };",
-        "var DATA = { byStoreMonth: { 갑: { '2023-05': 1, '2025-03': 2, '2026-04': 5 } },"
-          + " lgPair: { 갑: '베스트샵갑점' } };",
-        /* **의존이 늘면 함께 넘긴다** — 2026-09-07 에 짝·축을 보게 되었다 */
-        "var heatYear = 'cur';",
+        "var window = { __SR: {} }, RG = null;",
+        "var DATA = { lgPair: { 갑: '베스트샵갑점' } };",
         "function pairList(v) { return (v == null ? [] : (Array.isArray(v) ? v : [v])).filter(Boolean); }",
-        "function heatYears() { return { cur: heatPickY || '2026', prev: String((+(heatPickY || '2026')) - 1) }; }",
+        "function curRange() { return RG; }",
       ].join('\n');
-      srFn = new Function(env + cutIx('srShare')
-        + ' return { srShare: srShare, set: function (y, sr) { heatPickY = y; window.__SR = sr; } };')();
+      srFn = new Function(env + cutIx('srShare') + ' return { srShare: srShare, set: function (sr, rg) { window.__SR = sr; RG = rg || null; } };')();
     } catch (e) { srFn = null; }
-    if (!srFn) b9.push('srShare 를 떼어 돌릴 수 없다 — 계산을 검사할 수 없다');
+    if (!srFn) bad.push('srShare 를 떼어 돌릴 수 없다 — 계산을 검사할 수 없다');
     else {
       const SR = { 갑: { store: '갑', shop: '베스트샵갑점', ours: 100, rival: 50, pct: 67, capped: false,
-        mon: { o: { '2023-05': 10, '2025-03': 20, '2026-04': 30 },
-               r: { '2023-05': 40, '2025-03': 5, '2026-04': 10 } } } };
-      /* 2026: 우리 30 vs LG 10 → 75% */
-      srFn.set('2026', SR);
+        mon: { o: { '2023-05': 10, '2025-03': 20, '2026-04': 30 }, r: { '2023-05': 40, '2025-03': 5, '2026-04': 10 } } } };
+      /* 전 기간 — 회차 값 그대로. **당해로 자르면 안 된다**(그러면 rival 10 · 옛 화면의 「–」) */
+      srFn.set(SR, null);
+      const a0 = srFn.srShare('갑');
+      if (!a0 || a0.pct !== 67 || a0.rival !== 50 || a0.scope !== 'all') bad.push('전 기간인데 회차 값을 안 쓴다: ' + JSON.stringify(a0));
+      /* 기간을 걸면 걸친 달 — 2026-04 한 달: 30 vs 10 → 75% */
+      srFn.set(SR, { from: '2026-04-06', to: '2026-04-12' });
       const a1 = srFn.srShare('갑');
-      if (!a1 || a1.pct !== 75 || a1.scope !== 'year') b9.push('그 해 몫을 안 낸다: ' + JSON.stringify(a1));
-      /* **해를 바꾸면 값도 바뀐다** — 2023: 우리 10 vs LG 40 → 20% */
-      srFn.set('2023', SR);
+      if (!a1 || a1.pct !== 75 || a1.scope !== 'period' || a1.months !== '2026-04') bad.push('기간에 걸친 달 몫을 안 낸다: ' + JSON.stringify(a1));
+      /* 두 달에 걸치면 둘을 더한다 — 2025-03 + 2026-04 는 안 걸치므로 2026-03~04 만 */
+      srFn.set(SR, { from: '2026-03-30', to: '2026-04-05' });
       const a2 = srFn.srShare('갑');
-      if (!a2 || a2.pct !== 20) b9.push('고른 해를 안 따라간다: ' + JSON.stringify(a2));
-      /* 옛 회차(월 자료 없음)는 전 기간으로 물러서고 그 사실을 알린다 */
-      srFn.set('2026', { 갑: { store: '갑', shop: '베스트샵갑점', ours: 100, rival: 50, pct: 67, capped: false, mon: null } });
+      if (!a2 || a2.months !== '2026-03~2026-04' || a2.ours !== 30) bad.push('걸친 달을 안 더한다: ' + JSON.stringify(a2));
+      /* 옛 회차(월 자료 없음) — 전 기간으로 물러서고 그 사실을 알린다 */
+      srFn.set({ 갑: { store: '갑', shop: '베스트샵갑점', ours: 100, rival: 50, pct: 67, capped: false, mon: null } }, { from: '2026-04-06', to: '2026-04-12' });
       const a3 = srFn.srShare('갑');
-      if (!a3 || a3.pct !== 67 || a3.scope !== 'all') b9.push('옛 회차에서 전 기간으로 안 물러선다: ' + JSON.stringify(a3));
+      if (!a3 || a3.pct !== 67 || a3.scope !== 'all') bad.push('옛 회차에서 전 기간으로 안 물러선다: ' + JSON.stringify(a3));
       /* 상한에 닿았으면 아무 값도 내지 않는다 — 50% 로 그리면 거짓이다 */
-      srFn.set('2026', { 갑: { store: '갑', shop: '베스트샵갑점', ours: 2900, rival: 2900, pct: null, capped: true, mon: null } });
-      if (srFn.srShare('갑') !== null) b9.push('상한에 닿았는데 비중을 낸다');
-      /* 그 해에 작성일을 아는 글이 없으면 「못 잼」이다 — 0% 로 그리면 「LG가 없다」가 된다 */
-      srFn.set('2024', { 갑: { store: '갑', shop: '베스트샵갑점', ours: 10, rival: 5, pct: 67, capped: false,
-        mon: { o: { '2023-05': 3 }, r: { '2023-05': 2 } } } });
+      srFn.set({ 갑: { store: '갑', shop: '베스트샵갑점', ours: 2900, rival: 2900, pct: null, capped: true, mon: null } }, null);
+      if (srFn.srShare('갑') !== null) bad.push('상한에 닿았는데 비중을 낸다');
+      /* 그 기간에 작성일을 아는 글이 없으면 「못 잼」이다 — 0% 로 그리면 「LG가 없다」가 된다 */
+      srFn.set({ 갑: { store: '갑', shop: '베스트샵갑점', ours: 10, rival: 5, pct: 67, capped: false, mon: { o: { '2023-05': 3 }, r: { '2023-05': 2 } } } }, { from: '2026-04-06', to: '2026-04-12' });
       const a4 = srFn.srShare('갑');
-      if (!a4 || a4.pct !== null) b9.push('그 해 자료가 없는데 비중을 낸다: ' + JSON.stringify(a4));
+      if (!a4 || a4.pct !== null) bad.push('그 기간 자료가 없는데 비중을 낸다: ' + JSON.stringify(a4));
     }
-
-    /* ── **견줄 달이 없는 해에서 검정 사각형을 그리지 않는다** (2026-09-05 실물에서 잡음)
-     *  `heatCmpMonths()` 가 빈 배열이면 `yearSum` 이 전 매장 0 을 내고 트리맵이
-     *  **화면만 한 검정 사각형** 하나를 그린다(머리는 「41곳 · 0건」). 들어가는 길이
-     *  둘이라(버튼 · 연도 드롭다운) **판정은 renderHeat 한 곳**에 있어야 한다. */
-    if (!ix.includes("if (heatYear === 'cmp' && !heatCmpMonths().length) {")) {
-      b9.push('견줄 달이 없을 때 연도 비교 축을 안 되돌린다 — 검정 사각형이 그려진다');
-    }
-    if (!ix.includes('function heatNote(')) b9.push('막은 이유를 적을 자리가 없다');
-    if (!ix.includes('id="hm-note"')) b9.push('hm-note 칸이 없다 — heatNote 가 아무 데도 안 적는다');
-    /* 되돌리는 자리에서 **이유를 적는가** — 조용히 되돌리면 「눌렀는데 안 바뀐다」가 된다 */
-    {
-      const seg = ix.slice(ix.indexOf("if (heatYear === 'cmp' && !heatCmpMonths().length) {"));
-      if (seg && seg.slice(0, 400).indexOf('heatNote(') < 0) {
-        b9.push('연도 비교를 되돌리면서 이유를 안 적는다');
-      }
-    }
-    /* 버튼도 막는다 — 눌러서 빈 화면이 되는 길을 열어 두지 않는다 */
-    if (!ix.includes('byr2.disabled = !cmpOK')) b9.push('견줄 달이 없어도 「전년 대비」 버튼이 눌린다');
-    /* **미리보기 모의에 앞 해가 있어야** 그 축을 한 번이라도 눈으로 볼 수 있다 */
-    {
-      const pv9 = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
-      if (!pv9.includes("'2025-04':")) b9.push('미리보기 모의에 앞 해가 없다 — 전년 대비 축이 한 번도 안 그려진다');
-    }
-
-    if (b9.length) { ok = false; console.log('ERROR: [바이럴] 히트맵 연도 축 — ' + b9.join(' · ')); }
-    else console.log('OK: 바이럴 히트맵 연도 축 — 1년 단위 · 고른 해를 당사·베스트샵 가 함께 따라간다');
+    /* 화면 — 칸 머리는 늘 건수이고, 베스트샵 건수는 둘째 줄이다(같은 회차의 「삼성 N」을 또 적지 않는다) */
+    if (!ix.includes("var lTxt = '베스트샵 ' + (srm2.thin && !srm2.rival ? '–' : nf(srm2.rival) + '건')")) bad.push('칸에 베스트샵 건수 줄이 없다 — 폰에서 베스트샵이 안 보인다');
+    if (ix.includes("var sTxt = '삼성 ' + (srm2.thin")) bad.push('칸에 회차의 「삼성 N」을 또 적는다 — 머리 건수와 다른 삼성 숫자가 한 칸에 둘이 된다');
+    if (!ix.includes('function heatNote(')) bad.push('막은 이유를 적을 자리가 없다');
+    if (!ix.includes('id="hm-note"')) bad.push('hm-note 칸이 없다 — heatNote 가 아무 데도 안 적는다');
+    /* **미리보기 모의에 앞 해가 있어야** 전년 대비를 한 번이라도 눈으로 볼 수 있다 */
+    const pv9 = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+    if (!pv9.includes("'2025-04':")) bad.push('미리보기 모의에 앞 해가 없다 — 전년 대비가 한 번도 안 그려진다');
   }
 
   /* ── ⑩ **자동 수집이 멈춘 것을 화면이 말한다** (2026-09-05 실측으로 필요해졌다) ────
@@ -4178,8 +4149,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
-  if (bad.length) fail('[바이럴] 연도 축 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 연도 축 — 당해 기본 · 겹치는 달만 견줌 · 베스트샵 23/24는 숫자만');
+  if (bad.length) fail('[바이럴] 히트맵 건수·비교 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 히트맵 건수·비교 — 칸은 절대 건수 · 비교는 맨 위 버튼(7·28·364일 앞) · 떼어 돌려 확인');
 }
 
 /* ── 매장 대 매장 — LG 짝과 1:1 (2026-09-03 사장님 지시) ────────────────────
@@ -4545,16 +4516,14 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (ix.includes("if (kbox) kbox.style.display = mgrView ? 'none' : '';")) {
       bad.push('매니저 보기에서 유형 버튼을 감춘다 — 필터링할 수 있어야 한다는 지시였다');
     }
-    /* **연도 축을 타면서 계산이 갈렸다**(2026-09-05) — 주차를 볼 때만 옛 월 기준이다 */
-    if (!ix.includes('if (!mgrYr) kn4 = heatKind ? ((t.kind4 || {})[heatKind] || 0) : (t.n || 0);')) {
+    /* 매니저를 **유형으로 센다** — 주차 자료가 있으면 그 안에서, 없으면 kind4 로(2026-09-10 단순화) */
+    if (!ix.includes('else if (heatKind && t.kind4) cnt = t.kind4[heatKind] || 0;')) {
       bad.push('매니저를 유형으로 안 센다');
     }
     /* **연도 × 유형을 서버가 낸다** — 없으면 유형을 걸었을 때 연도로 못 자른다 */
     if (rv.indexOf('kindY: mgrKindY[mk]') < 0 && rv.indexOf('mergeNum_(M.kindY, mgrKindY[mk]') < 0)
       bad.push('mgrTop 이 연도별 유형을 안 싣는다');
-    if (!ix.includes('else if (kY) kn4 = ((kY[MY.cur] || {})[heatKind] || 0);')) {
-      bad.push('매니저 유형을 연도로 안 자른다 — 지점 히트맵과 잣대가 다르다');
-    }
+    /* 연도 축은 2026-09-10 에 없어졌다 — 매니저도 지점과 같은 위 기간으로 센다(위 검사가 본다) */
     if (!rv.includes('byKind4: byKind4')) bad.push('4종 집계를 안 보낸다');
     /* 미지정 자료는 기타로 — 지시하신 기본 처리 */
     if (!rv.includes("return 'etc';")) bad.push('미지정을 기타로 떨어뜨리지 않는다');
@@ -5159,8 +5128,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     /* ①-b **잣대가 다르면 칸에 숫자를 적지 않는다**(2026-09-05 실물에서 잡음).
        갤러리아광교 칸이 「184건」(2026년)인데 그 아래 「LG 369건」(전 기간)이 나란히
        있었다 — 그대로 읽으면 거짓이다. 전 기간으로 물러선 상태에서는 면적만 둔다. */
-    if (!blk.includes("if (srmL && srmL.scope === 'all') srmL = null;"))
-      bad.push('전 기간으로 물러선 베스트샵 건수를 칸에 그대로 적는다 — 한 칸에 두 잣대다');
+    /* 2026-09-10 부터 LG 몫이 칸과 같은 기간을 따르므로(전 기간 ↔ 전 기간 · 기간 ↔ 걸친 달)
+       「전 기간이면 숫자를 안 적는다」는 규칙은 없어졌다. 잣대를 맞춘 곳은 srShare 검사가 본다. */
+    if (blk.includes("if (srmL && srmL.scope === 'all') srmL = null;"))
+      bad.push('전 기간 베스트샵 건수를 아직 감춘다 — 이제는 칸과 같은 잣대라 적어야 한다');
     if (!/var bgL = /.test(blk))
       bad.push('배경색을 지역 변수로 다시 안 낸다 — 같은 호이스팅 함정이다');
     /* ② 색은 배경 밝기가 정한다 — **문자열이 아니라 결과로 본다.**
@@ -5575,7 +5546,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 
   /* ⓑ 화면 — **한 함수**로 읽는가(두 벌이면 같은 주가 두 화면에서 다른 건수가 된다) */
-  for (const [fn, why] of [['function weekAgg(bw)', '주차 합계·평소 평균'],
+  /* `weekAgg`(평소 평균)는 2026-09-10 에 없어졌다 — 칸은 절대 건수라 「평소」가 없다.
+     지점·매니저가 함께 쓰는 것은 `scopedWeekPick`(기간 → 주 목록)과 `scopedOne`(유형 합)이다. */
+  for (const [fn, why] of [['function scopedWeekPick(all)', '기간 → 주 목록'],
+                           ['function scopedOne(m)', '주 묶음 건수(유형 필터)'],
                            ['function weekSrc(who)', '축별 주차 자료'],
                            ['function weekList(bw)', '주 목록']]) {
     if (ix.indexOf(fn) < 0) bad.push(`${why} 함수(${fn})가 없다`);
@@ -5584,8 +5558,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const hr = cut(ix, '  function heatRows() {');
     const mr = cut(ix, '  function mgrRows() {');
     if (!hr || !mr) bad.push('heatRows/mgrRows 를 못 떼어 냈다 — 앵커가 낡았다');
-    if (hr && hr.indexOf('weekAgg(') < 0) bad.push('지점 히트맵이 weekAgg 를 안 쓴다');
-    if (mr && mr.indexOf('weekAgg(') < 0) bad.push('매니저 히트맵이 weekAgg 를 안 쓴다 — 주차를 못 본다');
+    if (hr && hr.indexOf('scopedByStore()') < 0) bad.push('지점 히트맵이 scopedByStore 를 안 쓴다 — 매장별·지도와 다른 수가 된다');
+    if (mr && (mr.indexOf('scopedWeeks(MW)') < 0 || mr.indexOf('scopedOne(') < 0)) bad.push('매니저 히트맵이 지점과 같은 함수로 주를 안 센다');
+    if (ix.indexOf('function weekAgg(') >= 0) bad.push('weekAgg(평소 평균)가 남아 있다 — 축이 하나가 됐는데 두 벌이다');
     /* 옛 사본이 남아 있으면 두 벌이 된다 */
     if (hr && hr.indexOf('var pickWeeks = (function () {') >= 0)
       bad.push('heatRows 에 옛 주차 계산이 남았다 — 두 벌이면 갈라진다');
@@ -5602,43 +5577,29 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('기간 안내가 축을 안 따라간다 — 매니저를 보며 「지점만 봅니다」라고 적는다');
   if (ix.indexOf("cr.innerHTML = '매니저 <em>' + wtag") < 0)
     bad.push('매니저 빵부스러기가 기간을 안 적는다 — 무엇을 보고 있는지 모른다');
-  if (ix.indexOf('매니저 주차 자료가 없어 월 기준입니다') < 0)
-    bad.push('옛 서버 자료로 월에 물러섰을 때 그 사실을 안 적는다');
-  if (ix.indexOf("if (week && d.store !== undefined && c.h > 74)") < 0)
-    bad.push('매니저 칸에 「평소 대비」를 안 적는다 — 범례가 없는 글씨를 가리킨다');
+  if (ix.indexOf('매니저 주차 자료가 없어 전 기간 기준입니다') < 0)
+    bad.push('옛 서버 자료로 전 기간에 물러섰을 때 그 사실을 안 적는다');
+  if (ix.indexOf("if (cmpOn && d.store !== undefined && c.h > 74 && cmpTxt)") < 0)
+    bad.push('매니저 칸에 비교 줄을 안 적는다 — 지점과 다른 정보가 된다');
 
-  /* ⓔ **규칙을 떼어 실제로 돌려 본다** — 문자열만 보면 식이 바뀌어도 통과한다 */
+  /* ⓔ **기간 → 주 목록 규칙을 떼어 돌려 본다** — 문자열만 보면 식이 바뀌어도 통과한다 */
   {
-    const src = cut(ix, '  function weekList(bw)') + '\n' + cut(ix, '  function weekAgg(bw)')
-      + '\n' + cut(ix, '  function weekRange(w)');
-    const mk = new Function('heatWeek', 'heatKind', 'heatFrom', 'heatTo',
-      src + '; return weekAgg;');
-    const bw = {
-      A: { '2026-W30': { wedding: 2, etc: 1 }, '2026-W31': { wedding: 4 }, '2026-W33': { wedding: 6 } },
-      B: { '2026-W31': { etc: 3 } }
-    };
-    /* 한 주 — 합계와 「글이 있었던 주」 평균 */
-    let a = mk('2026-W31', '', '', '')(bw);
-    if (a.sum('A') !== 4) bad.push(`한 주 합계 ${a.sum('A')} (기대 4)`);
-    if (Math.abs(a.avg('A') - 13 / 3) > 1e-9) bad.push(`평소 평균 ${a.avg('A')} (기대 13/3 — 글이 있었던 3주)`);
-    if (a.avg('C') !== null) bad.push('자료가 없는 키의 평소는 null 이어야 한다 — 0 이면 「제자리」가 된다');
-    /* 유형을 걸면 그 유형만 */
-    a = mk('2026-W30', 'wedding', '', '')(bw);
-    if (a.sum('A') !== 2) bad.push(`유형을 건 합계 ${a.sum('A')} (기대 2)`);
-    /* 여러 주 — 평소도 그만큼 곱한다(3주치 합을 1주 평균과 견주면 늘 「3배」다) */
-    a = mk('custom', '', '2026-07-20', '2026-08-09')(bw);
-    /* **자료에 있는 주만 담는다** — W32 는 표에 없으므로 W30·W31 둘이다
-       (없는 주를 0으로 세면 평소가 묽어져 색이 거짓말을 한다). */
-    if (a.picks.length !== 2) bad.push(`걸친 주 ${a.picks.length}개 (기대 2 — W30·W31)`);
-    const one = mk('2026-W31', '', '', '')(bw);
-    if (!(a.avg('A') > one.avg('A'))) bad.push('여러 주를 골랐는데 평소를 안 곱한다 — 늘 「평소의 N배」가 된다');
-    /* 기간을 안 골랐으면 아무것도 안 센다 */
-    a = mk('', '', '', '')(bw);
-    if (a.picks.length !== 0 || a.sum('A') !== 0) bad.push('기간을 안 골랐는데 세고 있다');
+    const src = cut(ix, '  function scopedWeekPick(all)') + ';' + cut(ix, '  function weekRange(w)');
+    const mk = new Function('heatWeek', 'heatFrom', 'heatTo', src + '; return scopedWeekPick;');
+    const all = ['2026-W30', '2026-W31', '2026-W33'];
+    let a = mk('2026-W31', '', '')(all);
+    if (a.join() !== '2026-W31') bad.push('한 주를 고르면 그 주만이어야 한다: ' + a.join());
+    a = mk('custom', '2026-07-20', '2026-08-09')(all);
+    /* **자료에 있는 주만 담는다** — W32 는 표에 없으므로 W30·W31 둘이다 */
+    if (a.join() !== '2026-W30,2026-W31') bad.push('걸친 주가 W30·W31 이어야 하는데 ' + a.join());
+    a = mk('', '', '')(all);
+    if (a.length !== 3) bad.push('기간을 안 골랐으면 전체 주여야 한다(유형만 걸 수 있다)');
+    a = mk('2026-W32', '', '')(all);
+    if (a.length !== 0) bad.push('자료에 없는 주를 고르면 빈 목록이어야 한다');
   }
 
   if (bad.length) fail('[바이럴] 매니저 주차 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 매니저 주차 — 서버 wk4 · 한 함수(weekAgg) · 거르개 유지 · 화면 표기 · 규칙 6경우');
+  else console.log('OK: 바이럴 매니저 주차 — 서버 wk4 · 지점과 같은 함수 · 거르개 유지 · 화면 표기 · 기간→주 4경우');
 }
 
 
@@ -5922,8 +5883,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
      되돌려 넣어 보니 안 물렸다). 만드는 곳과 **붙이는 곳**을 함께 본다. */
   if (ix.indexOf('cg two') < 0)
     bad.push('칸에 삼성/베스트샵 건수를 안 적는다 — 폰에는 hover 가 없어 말풍선만으로는 안 보인다');
-  if (ix.indexOf('if (two) {\n            lab += two;') < 0)
-    bad.push('만들어 놓고 칸에 안 붙인다 — 화면에는 옛 「N건」만 뜬다');
+  if (ix.indexOf('              lab += two;') < 0)
+    bad.push('만들어 놓고 칸에 안 붙인다 — 화면에는 「N건」만 뜬다');
   if (ix.indexOf('function textW(t, px)') < 0)
     bad.push('글자 폭을 재는 함수가 없다 — 어림하면 「베스트샵 1,20」처럼 잘리거나 들어갈 자리도 안 적는다');
   if (ix.indexOf('measureText(t).width') < 0)
@@ -5932,7 +5893,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (ix.indexOf('inkOn(lgW >= wL + 8 ? bgL : bgS)') < 0)
     bad.push('베스트샵 라벨을 늘 코랄 기준으로 칠한다 — 띠가 좁은 칸에서 글자가 안 읽힌다');
   /* 안 들어가면 줄여 보고, 그래도 안 되면 옛 표기로 물러선다 */
-  if (ix.indexOf('[0.62, 0.55, 0.48]') < 0)
+  if (ix.indexOf('[0.55, 0.48, 0.42]') < 0)
     bad.push('안 들어갈 때 글자를 줄여 보지 않는다 — 네 자리 숫자인 칸만 통째로 빠진다');
   if (ix.indexOf('if (cand < 9) break;') < 0)
     bad.push('글자를 끝없이 줄인다 — 9px 아래는 안 읽혀 적는 뜻이 없다');
@@ -6587,18 +6548,20 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   const body = at < 0 ? '' : ix.slice(at, ix.indexOf('\n  }', at) + 4);
   if (!body) bad.push('srShare 를 못 찾았다 — 앵커가 낡았다');
   else {
+    /* **의존이 늘면 함께 넘긴다** — 2026-09-10 부터 위 기간(`curRange`)을 본다.
+       `rg` 를 안 주면 전 기간이다. */
     const make = (opt) => {
       const env = {
         window: { __SR: { X: opt.row } },
         DATA: { lgPair: { X: opt.pair } },
-        heatYear: opt.axis || 'cur',
-        heatYears: () => ({ cur: '2026', prev: '2025' }),
+        curRange: () => opt.rg || null,
         pairList: (v) => (v == null ? [] : (Array.isArray(v) ? v : [v])).filter(Boolean)
       };
-      return new Function('window', 'DATA', 'heatYear', 'heatYears', 'pairList',
-        'return (' + body.trim() + ')')(env.window, env.DATA, env.heatYear, env.heatYears, env.pairList)('X');
+      return new Function('window', 'DATA', 'curRange', 'pairList',
+        'return (' + body.trim() + ')')(env.window, env.DATA, env.curRange, env.pairList)('X');
     };
     const mon = (o, r) => ({ o: o, r: r });
+    const JAN = { from: '2026-01-05', to: '2026-01-11' };
 
     /* ⓐ **「해당없음」으로 정하신 매장은 아예 안 견준다** — 사장님 결정이다.
        실측으로 「디지털시티모바일」이 해당없음인데 옛 짝(영통점)으로 견주고 있었다. */
@@ -6608,30 +6571,30 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
     /* ⓑ **짝을 바꾸셨으면 옛 회차 값이라고 밝힌다** — 실측으로 「분당」이 그랬다 */
     {
-      const got = make({ pair: ['분당본점'], row: { shop: 'AK PLAZA 분당점', ours: 9, rival: 7, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
+      const got = make({ pair: ['분당본점'], row: { shop: 'AK PLAZA 분당점', ours: 9, rival: 7, pct: 56, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
       if (!got || got.stale !== true) bad.push('짝을 바꿨는데 옛 값이라고 안 밝힌다');
-      const same = make({ pair: ['영통점'], row: { shop: '영통점', ours: 9, rival: 7, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
+      const same = make({ pair: ['영통점'], row: { shop: '영통점', ours: 9, rival: 7, pct: 56, mon: mon({ '2026-01': 3 }, { '2026-01': 1 }) } });
       if (!same || same.stale !== false) bad.push('안 바꿨는데 바뀌었다고 한다');
     }
-    /* ⓒ **보고 있는 축을 따라간다** — 누적 축인데 당해만 세면 한 칸에 두 잣대가 섞인다 */
+    /* ⓒ **전 기간이면 회차 값 그대로, 기간을 걸면 걸친 달** (2026-09-10) — 당해로 자르던
+       옛 규칙이 「베스트샵 –」을 만들었다(LG 는 작성일을 아는 글이 거의 없다). */
     {
-      const row = { shop: 'A', ours: 99, rival: 99, mon: mon({ '2026-01': 2, '2024-01': 8 }, { '2026-01': 2, '2024-01': 8 }) };
-      const cur = make({ pair: ['A'], row: row, axis: 'cur' });
-      const cum = make({ pair: ['A'], row: row, axis: 'cum' });
-      if (!cur || cur.ours !== 2) bad.push('당해 축이 당해만 안 센다');
-      if (!cum || cum.ours !== 10) bad.push('누적 축인데 당해만 센다 — 칸 크기와 잣대가 어긋난다');
-      if (!cum || cum.scope !== 'cum') bad.push('누적 축인데 scope 가 cum 이 아니다');
+      const row = { shop: 'A', ours: 99, rival: 99, pct: 50, mon: mon({ '2026-01': 2, '2024-01': 8 }, { '2026-01': 2, '2024-01': 8 }) };
+      const all = make({ pair: ['A'], row: row });
+      if (!all || all.rival !== 99 || all.scope !== 'all') bad.push('전 기간인데 회차 값을 안 쓴다: ' + JSON.stringify(all));
+      const jan = make({ pair: ['A'], row: row, rg: JAN });
+      if (!jan || jan.ours !== 2 || jan.rival !== 2 || jan.scope !== 'period') bad.push('기간에 걸친 달만 안 센다: ' + JSON.stringify(jan));
     }
     /* ⓓ **한쪽 표본이 0인데 전 기간에는 있으면 못 잰 것이다** — 원주가 통째로 파랑
-       (당해 LG 0 · 전 기간 92건)이었고 단구는 통째로 빨강(당해 우리 0 · 전 기간 27건)이었다 */
+       (그 달 LG 0 · 전 기간 92건)이었고 단구는 통째로 빨강(그 달 우리 0 · 전 기간 27건)이었다 */
     {
-      const g1 = make({ pair: ['A'], row: { shop: 'A', ours: 951, rival: 92, mon: mon({ '2026-01': 144 }, {}) } });
+      const g1 = make({ pair: ['A'], row: { shop: 'A', ours: 951, rival: 92, pct: 91, mon: mon({ '2026-01': 144 }, {}) }, rg: JAN });
       if (!g1 || g1.pct !== null || g1.thin !== true) bad.push('베스트샵 표본이 0인데 100% 로 칠한다 — 「완승」으로 읽힌다');
       if (!g1 || g1.allRival !== 92) bad.push('전 기간 값을 안 낸다 — 0 이 「매장이 없다」로 읽힌다');
-      const g2 = make({ pair: ['A'], row: { shop: 'A', ours: 27, rival: 97, mon: mon({}, { '2026-01': 1 }) } });
+      const g2 = make({ pair: ['A'], row: { shop: 'A', ours: 27, rival: 97, pct: 22, mon: mon({}, { '2026-01': 1 }) }, rg: JAN });
       if (!g2 || g2.pct !== null || g2.thin !== true) bad.push('우리 표본이 0인데 0% 로 칠한다 — 「완패」로 읽힌다');
       /* **전 기간에도 0이면 진짜 0이다** — 그때는 비중이 맞다 */
-      const g3 = make({ pair: ['A'], row: { shop: 'A', ours: 50, rival: 0, mon: mon({ '2026-01': 50 }, {}) } });
+      const g3 = make({ pair: ['A'], row: { shop: 'A', ours: 50, rival: 0, pct: 100, mon: mon({ '2026-01': 50 }, {}) }, rg: JAN });
       if (!g3 || g3.pct !== 100) bad.push('전 기간에도 베스트샵 가 0인데 못 잼으로 뭉갠다 — 진짜 0 과 못 잼은 다르다');
     }
   }
@@ -6640,19 +6603,19 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (ix.indexOf('베스트샵 후기가 없는 것이 아닙니다') < 0)
     bad.push('베스트샵 0건의 이유를 안 적는다 — 「매장이 없다」로 읽힌다');
   if (ix.indexOf('짝을 바꾸셨습니다') < 0) bad.push('짝이 바뀐 사실을 말풍선이 안 적는다');
-  if (ix.indexOf("'2023년~ 누적 기준'") < 0) bad.push('누적 축의 잣대를 말풍선이 안 밝힌다');
+  if (ix.indexOf('월 단위 자료라 걸친 달을 셉니다') < 0) bad.push('기간 몫의 잣대(걸친 달)를 말풍선이 안 밝힌다');
   if (ix.indexOf('한쪽이 0이라 비중을 못 잽니다') < 0)
     bad.push('한쪽만 0 인 것과 양쪽 0 인 것을 말풍선이 안 가른다');
   /* **폰에는 hover 가 없다** — 칸에도 적혀야 한다. 0 이 아니라 – 로. */
-  if (ix.indexOf("(srm2.thin && !srm2.rival ? '–' : nf(srm2.rival))") < 0)
+  if (ix.indexOf("(srm2.thin && !srm2.rival ? '–' : nf(srm2.rival) + '건')") < 0)
     bad.push('칸이 못 잰 베스트샵 를 0 으로 적는다 — 폰에서 「매장이 없다」로 읽힌다');
-  if (ix.indexOf('if (srm2 && (srm2.pct !== null || srm2.thin))') < 0)
-    bad.push('못 잰 칸에 두 라벨을 아예 안 적는다 — 폰에서 베스트샵 가 통째로 사라진다');
+  if (ix.indexOf('if (srm2 && (srm2.pct !== null || srm2.thin)') < 0)
+    bad.push('못 잰 칸에 베스트샵 줄을 아예 안 적는다 — 폰에서 베스트샵 가 통째로 사라진다');
   if (ix.indexOf('var lgW = (srm2.pct === null) ? 0 : c.w') < 0)
-    bad.push('못 잰 칸에서 베스트샵 글자를 코랄 기준으로 칠한다 — 배경이 한 색이라 안 읽힌다');
+    bad.push('못 잰 칸에서 베스트샵 글자를 앰버 기준으로 칠한다 — 배경이 한 색이라 안 읽힌다');
 
   if (bad.length) fail('[바이럴] 베스트샵 비중 — ' + bad.join(' · '));
-  else console.log('OK: 바이럴 베스트샵 비중 — 해당없음은 안 견준다 · 짝 바뀜을 밝힌다 · 축을 따라간다 · 한쪽 0 은 못 잼');
+  else console.log('OK: 바이럴 베스트샵 비중 — 해당없음은 안 견준다 · 짝 바뀜을 밝힌다 · 위 기간을 따라간다 · 한쪽 0 은 못 잼');
 }
 
 /* ── **LG 건수가 칸에 두 번 적혔다** (2026-09-07 사장님 지적) ─────────────────────
@@ -6916,8 +6879,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('집계에서 이름 아닌 말을 안 거른다 — 이미 쌓인 자료에 옛 판정이 남는다');
 
   /* ⓒ 화면이 합쳐진 직함을 밝히는가 — **셋이 이어져야** 말풍선에 뜬다 */
-  if ((ix.match(/titles: t\.titles \|\| null/g) || []).length !== 2)
-    bad.push('매니저 줄에 titles 를 안 싣는다(주차 축·그 밖 두 곳이어야 한다)');
+  /* 매니저 줄을 만드는 곳이 하나로 줄었다(2026-09-10) — 그 하나가 싣는가 */
+  if ((ix.match(/titles: t\.titles \|\| null/g) || []).length < 1)
+    bad.push('매니저 줄에 titles 를 안 싣는다');
   if (ix.indexOf('titles: d.titles });') < 0)
     bad.push('items 로 옮길 때 titles 를 빠뜨린다 — 말풍선이 비는데 오류도 안 난다');
   if (ix.indexOf("d.titles.length > 1 ? ' · ' + d.titles.join('·') + ' 를 합쳤습니다'") < 0)

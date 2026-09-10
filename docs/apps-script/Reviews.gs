@@ -5579,6 +5579,12 @@ function rivalDue_() {
    * 규칙이 자물쇠 앞에서 무너져 있었다). **쿼터(`over()`)는 그대로 지킨다** —
    * 그쪽은 구글이 끊는 것이라 우리가 넘길 수 있는 선이 아니다. */
   if (String(p.getProperty('_rivalWant') || '') === '1') return true;
+  /* **판이 바뀌었으면 주기와 무관하게 차례다** (2026-09-10). RIVAL_SCHEMA 를 올리면
+     `collectRival` 은 새 회차로 시작하지만, 이 문지기는 그것을 모르고 「나흘 뒤」라고
+     막았다 — 실측으로 사장님이 붙여넣고 「수집」을 눌러도 경쟁사 셋이 「자료가 아직
+     없습니다」인 채 나흘을 기다릴 자리였다. 지금 코드가 못 읽는 자료 위에서 주기를
+     세는 것은 뜻이 없다. */
+  if (String(p.getProperty('_rivalSchema') || '') !== String(RIVAL_SCHEMA)) return true;
   if (Number(p.getProperty('_rivalTry') || 0) >= RIVAL_TRY_MAX) return false;
   /* **주 1회다**(2026-09-06 사장님 지시) — 지역 단위 총량이라 하루로는 거의 안 움직인다.
      예약(`_rivalWant`)과 시도 한도는 위에서 이미 보았다 — 사람이 부른 것은 이 문지기보다 세다. */
@@ -6597,6 +6603,8 @@ function dueInDays_(prop, days) {
 /** 매장 대 매장이 이번 차례인가(**주 1회**). 짝을 바꾸면 `setLgPair` 가 커서·도장을
  *  지우므로 그 즉시 다시 돈다 — 바뀐 짝으로 다시 재야 하기 때문이다. */
 function srivalDue_() {
+  /* 판이 바뀌었으면 주기와 무관하게 차례다 — `rivalDue_` 와 같은 이유. */
+  if (String(props_().getProperty('_srivalSchema') || '') !== String(SRIVAL_SCHEMA)) return true;
   return dueEvery_('_srivalAt', SRIVAL_EVERY_DAYS);
 }
 /** 검색 관심도가 이번 차례인가(**주 1회** — 데이터랩이 월 단위 값을 준다).
@@ -6641,7 +6649,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-10-b60380ab';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-10-48d24fe0';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 24;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
