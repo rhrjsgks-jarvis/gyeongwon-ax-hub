@@ -2990,7 +2990,7 @@ function sweep_(mode) {
     } catch (e5) { srivalRun = { error: String(e5) }; if (!err) err = 'srival:' + String(e5); }
   }
   /* 검색 관심도 — 7회짜리라 시간·한도를 거의 안 쓴다. `collectTrend` 가 `_trendAt` 을 적는다.
-     **데이터랩 전용 키가 없으면 그 안에서 오류로 끝난다** — 삼키지 않고 화면이 적는다. */
+     **DATALAB_ 속성이 비었거나 옛 시크릿이면 그 안에서 오류로 끝난다** — 삼키지 않고 화면이 적는다. */
   var trendRun = null;
   if (trendDue_() && !over() && msLeft() > 20000) {
     stage_('검색관심도 도는 중');
@@ -5379,7 +5379,10 @@ function trendCall_(groups, from, to) {
   var code = res.getResponseCode(), body = res.getContentText();
   if (code !== 200) {
     throw new Error('데이터랩 HTTP ' + code + ' — ' + String(body).slice(0, 200)
-      + (code === 401 ? ' (키가 검색 API 것이면 이 오류가 납니다 — 데이터랩 전용 키가 필요합니다)' : ''));
+      /* 401 의 뜻은 「값이 틀렸다」다 — 데이터랩은 검색 API 와 **같은** Application 키를 쓴다
+         (2026-09-04 확인). API 를 추가하면 시크릿이 재발급되므로, 그때 스크립트 속성의
+         DATALAB_CLIENT_SECRET(그리고 NAVER_CLIENT_SECRET)을 새 값으로 바꿨는지 먼저 볼 것. */
+      + (code === 401 ? ' (시크릿이 재발급됐으면 스크립트 속성 DATALAB_CLIENT_SECRET 을 새 값으로 바꿔 주세요 — 검색 API 와 같은 키입니다)' : ''));
   }
   var j = JSON.parse(body);
   return (j && j.results) || [];
@@ -6638,7 +6641,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-09-0a5d025d';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-10-b60380ab';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 24;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
