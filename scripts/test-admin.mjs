@@ -6992,10 +6992,27 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       ['경쟁사 주간 집계', 'byWk[wkR][sideK][k4R]'],
       ['경쟁사 주간 저장', 'JSON.stringify(trimWeek_(byWk))'],
       ['경쟁사 주간 읽기', 'mergeNum_(g.byWeek, jparse_(v[i][13]));'],
+      /* **읽기만으로는 안 된다 — 내려보내야 한다**(2026-09-10 배포 확인에서 잡음). 위 줄이
+         있는데도 `out.push` 에 `byWeek` 를 안 실어 새 판으로 수집을 마쳤는데 세 카드가
+         빈 채였다. */
+      ['경쟁사 주간 내려보내기', 'byWeek: r.byWeek'],
+      /* 도시를 다 못 잰 지역이 남았으면 아직 안 끝난 것 — 「6줄이니 끝」으로 읽으면 나흘을 기다린다 */
+      ['경쟁사 반쪽 지역은 미완', 'if (r.rows[hi].half) return true;'],
+      /* 검색 관심도가 한 줄도 못 모은 이유를 남기고 화면이 적는다 */
+      ['검색 관심도 실패 저장', "props_().setProperty('_trendErr', errs[0]);"],
+      ['검색 관심도 실패 내려보내기', "d.trendErr = String(props_().getProperty('_trendErr') || '');"],
       ['SDP 주간 그릇', 'var byWkS = {};'],
       ['SDP 주간 저장', 'JSON.stringify(byWkS)'],
       ['SDP 주간 읽기', 'wk4: jparse_(v[i][9])'],
     ]) if (!gs.includes(needle)) bad.push('서버에 없다: ' + nm);
+    /* 화면도 그 이유를 적는가 — 수집 체계 표의 검색 관심도 줄 */
+    if (!ix.includes("j.id === 'trend' && DATA.trendErr")) bad.push('검색 관심도 실패를 화면이 안 적는다');
+    /* **미리보기 모의에 경쟁사 주간 자료가 있어야** 그 길을 한 번이라도 눈으로 본다 —
+       없어서 서버가 그 칸을 안 싣는 것을 배포 확인 때까지 몰랐다 */
+    {
+      const pv = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+      if (!/byWeek: \{\s*'2026-W\d\d': \{ o: \{/.test(pv)) bad.push('미리보기 모의에 경쟁사 주간 자료(byWeek)가 없다');
+    }
     /* **칸을 더했으면 판 번호를 올려야 한다** — 안 올리면 옛 회차에 이어 붙어
        값이 뒤섞인다(「평택 2,008 → 4,025」가 그 사고였다) */
     if (!/var RIVAL_SCHEMA = 5;/.test(gs)) bad.push('경쟁사 판 번호를 안 올렸다');

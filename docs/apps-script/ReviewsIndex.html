@@ -1895,7 +1895,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-10-1aef9f9d';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-11-243866d1';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -2447,6 +2447,9 @@ var IX_VER = '2026-09-10-1aef9f9d';   /* 붙여넣기 확인용 — 주석은 �
                여기서 감추면 무엇이 잘못됐는지 아무도 못 본다. */
             + (j.id === 'dead' && DATA.dead && DATA.dead.err
                 ? '<div class="sub" style="color:#B91C1C;margin-top:2px">' + esc(DATA.dead.err) + '</div>' : '')
+            /* 검색 관심도가 한 줄도 못 모은 이유 — 원문 그대로(여기가 볼 사람의 자리다) */
+            + (j.id === 'trend' && DATA.trendErr
+                ? '<div class="sub" style="color:#B91C1C;margin-top:2px">' + esc(DATA.trendErr) + '</div>' : '')
           + '</td>'
         + '<td class="at">' + (isDue ? '<b>이번 차례</b>'
             : (left > 0 ? left + '일 뒤' : '—')) + '</td>'

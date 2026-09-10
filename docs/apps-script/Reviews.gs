@@ -4052,7 +4052,7 @@ function resetAll() {
     });
     /* 커서·바퀴·전체훑기 표식을 전부 처음으로 — 하나라도 남으면 새 바퀴가
        옛 자리에서 시작하거나 「이미 전부 훑었다」로 착각한다. */
-    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_rivalWant', '_deadAt', '_deadErr', '_stage', '_srivalAt', '_srivalCur', '_srivalStamp', '_trendAt']
+    ['_cursor', '_tail', '_cycleAt', '_cycleFrom', '_fullAt', '_forceFull', '_runAt', '_rivalAt', '_chainErr', '_rivalCur', '_rivalStamp', '_rivalWant', '_deadAt', '_deadErr', '_stage', '_srivalAt', '_srivalCur', '_srivalStamp', '_trendAt', '_trendErr']
       .forEach(function (k) { props_().deleteProperty(k); });
     props_().setProperty('_cursor', '0');
     sumCacheClear_();
@@ -5446,6 +5446,11 @@ function collectTrend() {
     props_().setProperty('_trendAt', stamp);
     sumCacheClear_();
   }
+  /* **실패를 남긴다**(2026-09-10) — 「수집」 안에서 돌면 반환값을 아무도 못 본다. 한 줄도
+     못 모았으면 첫 오류를 속성에 두고 화면(수집 체계 표)이 적는다. 성공하면 지운다 —
+     낡은 오류가 남아 있으면 그것이 거짓이 된다(`_deadErr` 와 같은 규칙). */
+  if (!rows.length && errs.length) props_().setProperty('_trendErr', errs[0]);
+  else if (rows.length) props_().deleteProperty('_trendErr');
   return { rows: rows.length, errors: errs,
     msg: rows.length
       ? ('검색 관심도 ' + rows.length + '줄을 모았습니다' + (errs.length ? ' (일부 실패 ' + errs.length + '건)' : '.'))
@@ -5589,9 +5594,14 @@ function rivalDue_() {
   /* **주 1회다**(2026-09-06 사장님 지시) — 지역 단위 총량이라 하루로는 거의 안 움직인다.
      예약(`_rivalWant`)과 시도 한도는 위에서 이미 보았다 — 사람이 부른 것은 이 문지기보다 세다. */
   if (dueEvery_('_rivalAt', RIVAL_EVERY_DAYS)) return true;
-  /* 표식은 섰는데 지역이 모자라면 아직 안 끝난 것이다 */
+  /* 표식은 섰는데 지역이 모자라면 아직 안 끝난 것이다. **도시를 다 못 잰 지역(`half`)도
+     안 끝난 것이다**(2026-09-10 배포 확인에서 잡음) — 강원이 춘천만 끝난 채(1/3) 줄이
+     생기자 「6줄이니 끝」으로 읽어 매장 훑기로 넘어갔고, 커서 9/11 인 채 나흘을 기다릴
+     자리였다. */
   var r = rival_();
-  return !r || !r.rows || r.rows.length < Object.keys(AREA_Q).length;
+  if (!r || !r.rows || r.rows.length < Object.keys(AREA_Q).length) return true;
+  for (var hi = 0; hi < r.rows.length; hi++) if (r.rows[hi].half) return true;
+  return false;
 }
 
 /* ── LG 는 어디에 무엇을 올리나 (2026-09-02 사장님 요청) ────────────────────
@@ -6357,7 +6367,12 @@ function rival_() {
       capped: r.capped, half: half, cities: r.q.length, wantCities: wantN,
       queries: r.q.join(' · '),
       bySrc: r.bySrc, byKind: r.byKind, byMonth: r.byMonth,
-      byChan: r.byChan, byProd: r.byProd, sample: r.sample
+      byChan: r.byChan, byProd: r.byProd, sample: r.sample,
+      /* **여기서 빠뜨리면 화면은 영영 「경쟁사 주간 자료가 아직 없습니다」다**(2026-09-10
+         배포 확인에서 잡음). 위에서 `g.byWeek` 에 합쳐 놓고 내려보내는 자리에서 안 실어,
+         새 판으로 수집을 마쳤는데도 세 카드가 빈 채였다 — `items.push` 에 필드를 빠뜨려
+         데인 그 사고의 서버판이다. 옛 회차에는 빈 객체다(화면이 그 사실을 적는다). */
+      byWeek: r.byWeek
     });
   }
   return { at: last, rows: out };
@@ -6649,7 +6664,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-10-48d24fe0';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-11-cf7889bf';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 24;   /* 21 = 매니저 주차(mgrTop[].wk4) */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
@@ -6852,6 +6867,8 @@ function freshState_(d, full) {
         dead: String(props_().getProperty('_deadAt') || ''),
         sweep: String(props_().getProperty('_fullAt') || '')
       };
+      /* 검색 관심도가 한 줄도 못 모은 이유 — 비면 실패가 없는 것이다 */
+      d.trendErr = String(props_().getProperty('_trendErr') || '');
     }
   } catch (e) { /* 못 읽어도 집계는 그대로 쓴다 */ }
   return d;
