@@ -4259,7 +4259,28 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* 이름은 한 줄 · 캔버스로 재서 줄인다 · 줄임 표기 둘(2026-09-11 사장님 지시) */
   if (!ix.includes('while (fs >= 7.5 && textW(nmShow, fs) > c.w - 6) fs -= 0.5;')) bad.push('이름이 칸을 넘치는지 재서 줄이지 않는다');
   if (ix.includes("'<br>' + esc(d.nm.slice(half))")) bad.push('이름을 아직 두 줄로 접는다 — 「용인기 / 흥」이 된다');
-  if (!ix.includes("var HEAT_SHORT = { '갤러리아광교': '갤.광교', '신세계사우스시티': '신.사시티' };")) bad.push('줄임 표기(갤.광교 · 신.사시티)가 없다');
+  /* 줄임 표기 — **사장님이 정한 24곳 그대로**(2026-09-11). 표를 떼어 돌려 열쇠가 실재하는 점명인지도 본다 */
+  {
+    const m0 = /var HEAT_SHORT = (\{[\s\S]*?\});/.exec(ix);
+    const tab = m0 ? new Function('return ' + m0[1] + ';')() : null;
+    if (!tab) bad.push('HEAT_SHORT 를 못 읽었다');
+    else {
+      const want = { '현대기아차연구소모바일': '현대기아.M', '광명기아자동차모바일': '광명기아.M', '기흥삼성SDI모바일': '기흥SDI.M',
+        '미래기술캠퍼스모바일': '미래기술.M', '디지털시티2모바일': '디시티2.M', '수원삼성전기모바일': '삼성전기.M',
+        '용인에버랜드모바일': '에버랜드.M', '기흥캠퍼스모바일': '기흥캠퍼스.M', '기흥SDR모바일': '기흥SDR.M',
+        '디지털시티모바일': '디시티.M', '신세계사우스시티': '신.사시티', '판교SDS모바일': 'SDS.M',
+        '평택캠퍼스모바일': '평캠.M', '화성캠퍼스모바일': '화캠.M', '화성DSR모바일': '화성DSR.M',
+        'KGM평택모바일': 'KGM.M', '용인처인모바일': '용인처인.M', '타임빌라스수원': '타임.수원',
+        '갤러리아광교': '갤.광교', '스타필드수원': '스타.수원', '남양모바일': '남양.M',
+        '신세계하남': '신.하남', '안양모바일': '안양.M', '이마트안양': 'E.안양' };
+      for (const k of Object.keys(want)) if (tab[k] !== want[k]) bad.push('줄임 표기가 사장님 목록과 다르다: ' + k + ' → ' + tab[k]);
+      if (Object.keys(tab).length !== Object.keys(want).length) bad.push('줄임 표기 수가 24가 아니다: ' + Object.keys(tab).length);
+      /* 열쇠는 서버 STORES 에 실재하는 점명이어야 한다 — 오타면 조용히 원래 이름이 뜬다 */
+      const sm = gs.indexOf('var STORES = ['), se = gs.indexOf('];', sm);
+      const names = [...gs.slice(sm, se).matchAll(/\['[A-Z0-9]+', '([^']+)'\]/g)].map((x) => x[1]);
+      for (const k of Object.keys(tab)) if (names.indexOf(k) < 0) bad.push('줄임 표기 열쇠가 실재하는 점명이 아니다: ' + k);
+    }
+  }
   if (!ix.includes('.hm .cell .cn { font-weight: 800; letter-spacing: -.3px; white-space: nowrap;')) bad.push('이름표가 한 줄(nowrap)이 아니다');
   if (!ix.includes('id="hm-wide"')) bad.push('와이드 버튼이 없다');
   if (!ix.includes('.hm.wide { --ar: 16 / 10;')) bad.push('와이드 비율이 16:10 이 아니다');
