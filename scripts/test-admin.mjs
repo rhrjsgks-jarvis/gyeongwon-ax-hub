@@ -1155,7 +1155,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       /* 2026-09-04 `q`(어느 질의가 이 글을 줬는가)를 맨 뒤에 더했다 — 앵커도 함께 옮긴다.
          **앞부분(…'deadN', 'deadAt')이 그대로인지**가 요점이다: 그 순서가 바뀌면
          옛 줄이 밀린다. */
-      } else if (!g.includes("'mgr', 'dateBasis', 'deadN', 'deadAt', 'q']")) {
+      /* 2026-09-11 `kw`(B2B 키워드)를 또 맨 뒤에 더했다 — 앞부분 순서가 그대로인지 본다 */
+      } else if (!g.includes("'mgr', 'dateBasis', 'deadN', 'deadAt', 'q', 'kw']")) {
         fail('[바이럴] 새 칸을 맨 뒤에 안 붙였다 — 가운데 끼우면 그 아래 옛 줄이 통째로 한 칸씩 밀린다');
       } else {
         console.log(`OK: 바이럴 시트 쓰기 ${writes}곳 모두 칸 수를 먼저 확인한다`);
@@ -2158,6 +2159,47 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       if (!scr5.includes('acol-reset')) bad6.push('기본값으로 되돌릴 길이 없다');
       if (bad6.length) { ok = false; console.log('ERROR: [바이럴] ' + bad6.join(' · ')); }
       else console.log('OK: 바이럴 지역 색 — 관리자가 바꾸고 · 지도와 아이콘이 같은 색 · 폴백과 되돌리기가 있다');
+
+      /* ④-g **여섯 색을 쏜디 팔레트로 갈았다**(2026-09-11 사장님 지시). 색값을 검사에
+         베껴 적지 않는다 — 서버 기본값을 읽어 **폴백 CSS 가 그것과 같은 색인가** · **숫자가
+         흰 바탕에서 4.5:1 을 넘는가** 를 잰다. 옛 색은 전부 어두워 숫자 대비가 우연히 통과했고,
+         밝은 기준색(터콰이즈 3.0 · 앰버 4.0)으로 갈자 그 자리가 드러났다 — 규칙(numMin)으로 막는다. */
+      const bad7 = [];
+      {
+        const mDef = /var AREA_COLOR_DEFAULT = \{([^}]*)\}/.exec(rv);
+        const def = {};
+        if (mDef) for (const m of mDef[1].matchAll(/'([^']+)':\s*'(#[0-9a-fA-F]{6})'/g)) def[m[1]] = m[2].toLowerCase();
+        const AN = { '수원': 1, '성남': 2, '용인': 3, '평택': 4, '안양': 5, '강원': 6 };
+        if (Object.keys(def).length !== 6) bad7.push('서버 기본 지역색을 못 읽었다 — 앵커가 낡았다');
+        const LAD = [[0.90, 0], [0.80, 0], [0.68, 0], [0.56, 0], [0.42, 0], [0.28, 0], [0.14, 0], [0, 0], [0, 0.20], [0, 0.38]];
+        const h2r = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+        const r2h = (c) => '#' + c.map((x) => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
+        const sh = (h, wr, br) => { let o = h2r(h).map((x) => x + (255 - x) * wr); if (br) o = o.map((x) => x * (1 - br)); return r2h(o); };
+        const wcon = (h) => { const c = h2r(h).map((x) => { const v = x / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 1.05 / (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] + 0.05); };
+        for (const a in def) {
+          const n = AN[a];
+          /* 폴백 사다리·띠·아이콘이 서버 기본값과 같은 색인가 — 옛 서버에서 지역이 두 색으로 갈리면 안 된다 */
+          if (!scr5.includes('.geo-svg path.r' + n + '.v8{fill:' + def[a] + '}')) bad7.push(a + ' 폴백 사다리 v8 이 서버 기본값과 다르다');
+          if (!scr5.includes('.st.a' + n + ' .ic { background: ' + def[a] + '; }')) bad7.push(a + ' 폴백 아이콘 색이 서버 기본값과 다르다');
+          if (!scr5.includes('.st.a' + n + '::before { background: ' + def[a] + '; }')) bad7.push(a + ' 폴백 띠 색이 서버 기본값과 다르다');
+          /* 숫자 — 폴백 CSS 의 색이 흰 바탕에서 4.5 를 넘는가 */
+          const mb = new RegExp('[.]st[.]a' + n + ' b [{] color: (#[0-9a-fA-F]{6}); [}]').exec(scr5);
+          if (!mb) bad7.push(a + ' 폴백 숫자 색이 없다');
+          else if (wcon(mb[1]) < 4.5) bad7.push(a + ' 폴백 숫자 색 ' + mb[1] + ' 이 흰 바탕에서 ' + wcon(mb[1]).toFixed(2) + ':1 — 4.5 미만');
+          /* 런타임 규칙을 떼어 돌린다 — 그 색으로 numMin 을 구했을 때 4.5 를 넘는가 */
+          let k = 7; while (k < 9 && wcon(sh(def[a], LAD[k][0], LAD[k][1])) < 4.5) k++;
+          if (wcon(sh(def[a], LAD[k][0], LAD[k][1])) < 4.5) bad7.push(a + ' 는 v10 까지 내려도 숫자가 4.5 를 못 넘는다 — 기준색이 너무 밝다');
+        }
+        /* 런타임이 그 규칙을 실제로 쓰는가 — 상수 7 로 되돌아가면 밝은 색에서 숫자가 안 읽힌다 */
+        if (!scr5.includes('function whiteContrast(hex)')) bad7.push('whiteContrast 가 없다');
+        if (!scr5.includes('LADDER[Math.max(numMin, i)]')) bad7.push('숫자 하한이 numMin 이 아니다 — 밝은 기준색에서 숫자가 안 읽힌다');
+        if (!/while \(numMin < LADDER\.length - 1[\s\S]{0,120}whiteContrast\(shade\(cols\[a\]/.test(scr5)) bad7.push('numMin 을 대비로 구하지 않는다');
+        /* 미리보기 모의가 서버 기본값을 그대로 쓰는가 — 다르면 눈으로 보는 색이 배포 색이 아니다 */
+        const pv = fs.readFileSync(new URL('./preview-reviews.mjs', import.meta.url), 'utf8');
+        for (const a in def) if (!pv.includes(a + ": '" + def[a] + "'")) bad7.push('미리보기 모의의 ' + a + ' 색이 서버 기본값과 다르다');
+      }
+      if (bad7.length) { ok = false; console.log('ERROR: [바이럴] ' + bad7.join(' · ')); }
+      else console.log('OK: 바이럴 지역 6색 — 폴백 == 서버 기본값 · 숫자가 흰 바탕에서 4.5:1 · numMin 규칙이 살아 있다');
 
       /* ── 매니저 명부 (2026-09-03 사장님 지시 — "이름과 지점만 수집") ──────────
        * **이 저장소는 public 이다.** 원본 응답에는 1,828명의 010 번호·이메일·사원번호가
@@ -3238,10 +3280,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        때만 등락(finviz, growColor)이다. 두 모드가 모두 살아 있고 모드에 따라 갈리는가. */
     if (!ix.includes('var HEAT_LO = ') || !ix.includes('var HEAT_HI = ')) bad.push('건수 색이 없다');
     if (!ix.includes('function growColor')) bad.push('등락 색 함수가 없다');
-    if (!ix.includes('(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatMax))')) bad.push('칸 색이 모드를 안 따른다');
+    if (!ix.includes('(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg))')) bad.push('칸 색이 모드를 안 따른다');
     if (ix.includes('Math.min(Math.abs(g) / (span')) bad.push('옛 증감 색 함수가 남아 있다');
     if (!ix.includes("'÷' + heatSpan") || !ix.includes("'×' + heatSpan")) bad.push('비교 범례가 등락 배수를 안 적는다');
-    if (!ix.includes("nf(heatMin) + '건'") || !ix.includes("nf(heatMax) + '건'")) bad.push('건수 범례가 최소·최대를 안 적는다');
+    /* 2026-09-11 오후 — 색이 평균 기준이 됐다. 범례가 **평균값**을 적어야 검산된다 */
+    if (!ix.includes("'평균 ' + (Math.round(heatAvg * 10) / 10) + '건 기준'")) bad.push('건수 범례가 평균값을 안 적는다');
     if (!ix.includes('sc2.innerHTML')) {
       bad.push('색띠를 매번 다시 그리지 않는다 — 초기화 때는 척도가 없어 띠가 통째로 빈다');
     }
@@ -3424,10 +3467,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 
   /* ⑤ 색·범례·부제가 모드를 따라간다 */
-  if (!ix.includes("(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatMax))")) {
+  if (!ix.includes("(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg))")) {
     bad.push('색이 모드를 안 따른다 — 기본은 건수 색, 비교를 켰을 때만 등락 색이어야 한다');
   }
-  if (!ix.includes("if (lt) lt.textContent = '건수';")) bad.push('비교를 안 켰을 때 범례가 「건수」가 아니다');
+  /* 2026-09-11 오후 — 색이 평균 기준이라 범례 머리도 「평균 N건 기준」이다 */
+  if (!ix.includes("if (lt) lt.textContent = '평균 ' + (Math.round(heatAvg * 10) / 10) + '건 기준';")) bad.push('비교를 안 켰을 때 범례가 「평균 기준」이 아니다');
   if (!ix.includes("if (lt) lt.textContent = cmpName() + ' (' + cmpLabel() + ')';")) bad.push('비교를 켰을 때 범례가 무엇 대비인지 안 적는다');
   /* 칸 부제 — 비교를 켰을 때만 「앞→지금 ±%」 · 앞 기간이 없으면 그 사실 */
   if (!ix.includes("nf(d.prev) + '→' + nf(d.cnt) + '건 ' + heatPct(d.g)")) bad.push('칸 부제가 앞 기간 → 지금 건수를 안 적는다');
@@ -3435,7 +3479,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   /* 전체 증감의 「못 낸 곳」은 **글이 있는 칸만** 센다 — 0건 칸까지 세면 「54곳을 뺐다」가 된다 */
   if (!ix.includes('if (rows[i].cnt > 0) skip++;')) bad.push('전체 증감이 0건 칸까지 「뺐다」로 센다');
   /* 견주기를 켰을 때는 LG 앰버 띠를 안 섞는다 — 색이 등락인데 띠가 섞이면 두 말이다 */
-  if (!ix.includes("!chan && !d.isReg && !cmpOn) {")) bad.push('비교를 켰는데도 앰버 띠를 섞는다 — 칸 색이 두 말을 한다');
+  /* 2026-09-11 오후 — 띠가 게이지바가 됐다. 견주기를 켰을 때 게이지를 안 그리는 조건이 살아 있는가 */
+  if (!ix.includes('!chan && !d.isReg && !cmpOn && c.h >= 30')) bad.push('비교를 켰는데도 게이지를 그린다 — 칸 색이 두 말을 한다');
 
   /* ⑥ 매니저도 같은 규칙 — 주차 자료로 세고, 옛 서버 자료면 물러선 사실을 적는다 */
   if (!ix.includes('if (hasMW && scoped()) cnt = sumW(t.name, ws);')) bad.push('매니저 칸이 위 기간으로 안 센다');
@@ -3462,7 +3507,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
      전 기간이면 회차의 전 기간 값 그대로(칸과 같은 잣대) · 기간을 걸면 걸친 달을 더한다. */
   {
     const gs2 = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
-    if (!gs2.includes("'queries', 'monJson']")) bad.push('매장경쟁에 monJson 칸이 없다 — 기간별 베스트샵 몫을 낼 자료가 없다');
+    /* 2026-09-11 `chanJson` 이 그 뒤에 붙었다 — monJson 자리가 그대로인지 본다 */
+    if (!gs2.includes("'queries', 'monJson', 'chanJson']")) bad.push('매장경쟁에 monJson 칸이 없다 — 기간별 베스트샵 몫을 낼 자료가 없다');
     if (!gs2.includes('var SRIVAL_SCHEMA')) bad.push('SRIVAL_SCHEMA 가 없다 — 옛 회차에 이어 붙어 월 자료가 반쪽이 된다');
     if (!gs2.includes('mon: (mon0 && mon0.o) ? mon0 : null')) bad.push('옛 회차의 월 자료를 0 으로 채운다 — 「모른다」가 「없다」가 된다');
     let srFn = null;
@@ -4196,12 +4242,32 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (ix.includes('function lgRows()') || ix.includes("id=\"hm-lg\"")) {
     bad.push('별도 보기 축이 남아 있다 — 칸에 통합했으므로 두 곳이 같은 말을 한다');
   }
-  if (!ix.includes('linear-gradient(90deg,')) {
-    bad.push('칸을 파랑:빨강으로 나누지 않는다');
-  }
-  /* **빨강도 건수 농도를 따라가야 한다** — 고정색이면 옅은 파랑 옆에서 빨강만 튄다 */
-  if (!ix.includes('lgColor(d.cnt, heatMax)')) {
-    bad.push('베스트샵 빨강이 건수 농도를 안 따라간다 — 50% 인데 베스트샵 가 이기는 것처럼 보인다');
+  /* ── 2026-09-11 오후 — **배경을 가르지 않고 칸 하단 게이지바**(사장님 지시). 배경은 건수
+     색 하나이고, 막대 폭이 몫이다. 옛 gradient 가 되살아나면 문다. */
+  if (ix.includes('linear-gradient(90deg,')) bad.push('칸 배경을 아직 세로로 가른다 — 게이지바로 옮겼다');
+  if (!ix.includes("gz = '<span class=\"gz\" aria-hidden=\"true\">'")) bad.push('게이지바를 안 만든다');
+  /* 2026-09-11 오후 — 게이지는 **S(삼성 블루) / X(현행 빨강)** (사장님 지시) */
+  if (!ix.includes("'<i style=\"width:' + srm.pct + '%;background:rgb(' + GAUGE_S.join(',') + ')\">' + (sW >= 12 ? '<b>S</b>' : '') + '</i>'"))
+    bad.push('게이지 당사 몫이 삼성 블루·S 표기가 아니다');
+  if (!ix.includes("(xW >= 12 ? '<b>X</b>' : '')")) bad.push('게이지 베스트샵 몫에 X 표기가 없다');
+  if (!ix.includes('var GAUGE_S = [20, 40, 160];')) bad.push('게이지 당사 색이 삼성 블루(#1428A0)가 아니다');
+  if (!ix.includes("lab + gz + '</div>'")) bad.push('게이지를 만들어 놓고 칸에 안 붙인다');
+  if (!ix.includes("(gz ? ' gzon' : '')")) bad.push('게이지가 있는 칸에 아래 여백을 안 준다 — 글자가 막대를 밟는다');
+  /* 견주기를 켰을 때는 안 그린다 · 낮은 칸에는 안 그린다 */
+  if (!ix.includes('!chan && !d.isReg && !cmpOn && c.h >= 30 && c.w >= 30')) bad.push('게이지를 견주기·낮은 칸에서도 그린다');
+  /* 와이드 16:10 */
+  /* 이름은 한 줄 · 캔버스로 재서 줄인다 · 줄임 표기 둘(2026-09-11 사장님 지시) */
+  if (!ix.includes('while (fs >= 7.5 && textW(nmShow, fs) > c.w - 6) fs -= 0.5;')) bad.push('이름이 칸을 넘치는지 재서 줄이지 않는다');
+  if (ix.includes("'<br>' + esc(d.nm.slice(half))")) bad.push('이름을 아직 두 줄로 접는다 — 「용인기 / 흥」이 된다');
+  if (!ix.includes("var HEAT_SHORT = { '갤러리아광교': '갤.광교', '신세계사우스시티': '신.사시티' };")) bad.push('줄임 표기(갤.광교 · 신.사시티)가 없다');
+  if (!ix.includes('.hm .cell .cn { font-weight: 800; letter-spacing: -.3px; white-space: nowrap;')) bad.push('이름표가 한 줄(nowrap)이 아니다');
+  if (!ix.includes('id="hm-wide"')) bad.push('와이드 버튼이 없다');
+  if (!ix.includes('.hm.wide { --ar: 16 / 10;')) bad.push('와이드 비율이 16:10 이 아니다');
+  if (!ix.includes("box.classList.toggle('wide', !!heatWide);")) bad.push('와이드 클래스를 안 건다');
+  {
+    /* **크기를 재기 전에** 비율을 맞춰야 한다 — 뒤면 옛 높이로 그린다 */
+    const a = ix.indexOf("box.classList.toggle('wide', !!heatWide);"), b = ix.indexOf('var W = box.clientWidth - 14');
+    if (a < 0 || b < 0 || a > b) bad.push('와이드 비율을 크기 잰 뒤에 맞춘다 — 옛 높이로 그린다');
   }
   {
     const at2 = ix.indexOf('function lgColor(v, max) {');
@@ -4227,8 +4293,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
          *
          * **LG 가 너무 옅어도 안 된다** — 면적을 못 읽으면 「LG 몫」이 사라진다. */
         const Lo = lumOf([Number(oh[1]), Number(oh[2]), Number(oh[3])]);
-        if (!(Lo < L))
-          bad.push('당사 짙은 끝이 베스트샵 보다 어둡지 않다 — 베스트샵 가 더 진해 먼저 눈에 띈다');
+        /* 2026-09-11 오후 — finviz 팔레트를 사장님이 그대로 고르셨다. 초록 끝(0.44)이 빨강
+           끝(0.25)보다 밝은 것이 그 팔레트 자체라 「당사가 더 어둡다」는 여기서 성립하지
+           않는다. 지키는 것은 **양쪽 다 면적을 읽을 만큼 진한가**뿐이다. */
+        if (Lo > 0.55)
+          bad.push('당사 짙은 끝이 너무 옅다(휘도 ' + Lo.toFixed(2) + ') — 면적을 못 읽는다');
         if (L > 0.55)
           bad.push('베스트샵 짙은 끝이 너무 옅다(휘도 ' + L.toFixed(2) + ') — 면적을 못 읽는다');
       }
@@ -4568,9 +4637,12 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     if (!/var HEAT_LO = \[[0-9]+, [0-9]+, [0-9]+\]/.test(ix)) bad.push('히트맵 시작색이 없다');
     if (!/var HEAT_HI = \[[0-9]+, [0-9]+, [0-9]+\]/.test(ix)) bad.push('히트맵 끝색이 없다');
     if (!ix.includes('HEAT_LO.map(function (a, i)')) bad.push('건수에 비례해 섞지 않는다');
-    /* 구간을 나누지 않는다 — v/max 그대로 */
-    if (!ix.includes('Math.max(0, Math.min(1, v / max))')) bad.push('연속 스케일이 아니다 — 구간을 나누지 말라는 지시였다');
-    if (!ix.includes('heatColor(d.cnt, heatMax)')) bad.push('칸을 건수로 칠하지 않는다');
+    /* 2026-09-11 오후 — **전체 평균 기준 양방향**(사장님 지시). 연속 스케일은 그대로다(구간을 안 나눈다) */
+    if (!ix.includes('Math.max(0, Math.min(1, Math.abs(v - avg) / avg))')) bad.push('평균 기준 연속 스케일이 아니다');
+    if (!ix.includes('var tgt = v >= avg ? HEAT_HI : HEAT_DN;')) bad.push('평균 이상/이하를 다른 색으로 안 가른다');
+    if (!ix.includes('heatColor(d.cnt, heatAvg)')) bad.push('칸을 평균 기준으로 칠하지 않는다');
+    /* 평균은 **0건 매장까지** 넣어 낸다 — 그려진 칸만으로 내면 평균이 올라간다 */
+    if (!ix.includes('for (var ai = 0; ai < pool.length; ai++) { heatAvg += (pool[ai].cnt || 0); avgN++; }')) bad.push('평균을 판 전체(0건 포함)로 안 낸다');
     if (!ix.includes('function inkOn(')) bad.push('명도 대비로 글자색을 고르지 않는다');
 
     if (bad.length) fail('[바이럴] 요구 넷 — ' + bad.join(' · '));
@@ -5017,7 +5089,8 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   if (!hm) bad.push('HEADER 를 못 찾았다');
   else {
     const cols = hm[1].split(',').map((s) => s.trim().replace(/^'|'$/g, ''));
-    if (cols[cols.length - 1] !== 'q') bad.push('q 가 HEADER 맨 뒤가 아니다 — 가운데면 옛 줄이 한 칸씩 밀린다');
+    /* q 는 15번째(0부터 14) — 2026-09-11 에 kw 가 그 뒤에 붙었다. **자리가 그대로인지**가 요점이다 */
+    if (cols[14] !== 'q') bad.push('q 가 HEADER 15번째 칸이 아니다 — 자리가 밀리면 옛 줄이 한 칸씩 어긋난다');
     /* 행을 만드는 곳이 전부 HEADER 칸 수와 맞아야 한다(assertRow_ 가 런타임에 던지지만
        배포 전에 잡는 편이 낫다). 매장 훑기·카페 훑기 두 곳이다. */
     const pushes = gs.match(/add\.push\(\[/g) || [];
@@ -5140,13 +5213,13 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const im = /var lgInk = ([^;]+);/.exec(blk);
     if (!im) bad.push('lgInk 를 정하는 곳이 없다');
     else {
+      /* 2026-09-11 오후 — 칸 글자색이 흰색 하나로 통일됐다(사장님 지시). 옅은 파랑 배경이
+         사라져(finviz 어두운 램프 + 테두리) 「고정색이면 1.01:1」이던 자리가 없어졌다.
+         **흰 계열 고정색이고 빨강 기운을 남기는가**만 본다. */
       const fn = new Function('inkOn', 'bgL', 'return ' + im[1] + ';');
-      const onDark = fn(() => '#fff', '#1428A0');
-      const onLight = fn(() => '#2A2F38', '#EEF2FF');
-      if (onDark === onLight)
-        bad.push('배경이 밝든 어둡든 같은 색이다 — 고정색은 대비 1.01:1 이 된다(실측)');
-      if (!/^#/.test(String(onDark)) || !/^#/.test(String(onLight)))
-        bad.push('lgInk 가 색을 안 돌려준다: ' + JSON.stringify([onDark, onLight]));
+      const v = fn(() => '#fff', '#1428A0');
+      if (String(v).toUpperCase() !== '#FFD9D4')
+        bad.push('베스트샵 줄 글자색이 흰 계열 고정색(#FFD9D4)이 아니다: ' + v);
     }
     if (/\.hm \.cell \.lgn \{[^}]*color:/.test(ix))
       bad.push('.lgn 에 CSS 고정색이 있다 — 칸 배경 농도가 건수를 따라 달라져 못 쓴다');
@@ -5808,27 +5881,31 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
       else if (!(th >= bMin && th <= wMax))
         bad.push('글자 뒤집는 문턱 ' + th + ' 이 창(' + bMin.toFixed(3) + '~' + wMax.toFixed(3) + ') 밖이다');
 
-      const ink = (c) => (lum(c) > th ? hx : [255, 255, 255]);
+      /* 2026-09-11 오후 — 칸 글자는 **흰색 하나**다(사장님 지시). 어두운 끝은 흰 글자로 4.5:1 을
+         넘겨야 하고, 밝은 끝은 테두리(text-shadow)가 받친다 — 그래서 여기서는 **LO 끝만** 잰다
+         (밝은 끝까지 4.5 를 요구하면 finviz 초록을 쓸 수 없다). 테두리가 있는지는 따로 본다. */
+      const ink = () => [255, 255, 255];
+      if (!/\.hm \.cell \{ text-shadow: 0 0 2px rgba\(0,0,0,\.9\)/.test(ix))
+        bad.push('칸 글자에 어두운 테두리가 없다 — 밝은 초록 위 흰 글자가 안 읽힌다');
       const ratio = (a, b) => {
         const x = lum(a), y = lum(b), hi = Math.max(x, y), lo = Math.min(x, y);
         return (hi + 0.05) / (lo + 0.05);
       };
       let worst = 99;
-      for (let i = 0; i <= 5; i++) {
-        for (const [a, b] of [[sLo, sHi], [lLo, lHi]]) {
-          const c = mix(a, b, i / 5);
-          worst = Math.min(worst, ratio(c, ink(c)));
-        }
-      }
-      if (worst < 4.5) bad.push('램프 어딘가에서 글자 대비가 ' + worst.toFixed(1) + ':1 이다(4.5 미만)');
+      for (const c of [sLo, lLo]) worst = Math.min(worst, ratio(c, ink(c)));
+      if (worst < 4.5) bad.push('램프의 어두운 끝에서 흰 글자 대비가 ' + worst.toFixed(1) + ':1 이다(4.5 미만)');
     }
 
-    /* 단조성 — 값이 크면 색도 진해야 한다 */
+    /* 단조성 — 값에 따라 밝기가 **한 방향으로만** 움직여야 한다. finviz 팔레트(2026-09-11)는
+       건수가 많을수록 **밝아지고**, 옛 파랑·틸은 어두워졌다 — 방향은 팔레트가 정하고,
+       검사는 도중에 되돌아오는지만 본다(되돌아오면 두 건수가 같은 색이 된다). */
     for (const [a, b, nm] of [[sLo, sHi, '당사'], [lLo, lHi, '베스트샵']]) {
-      let prev = 9;
-      for (let i = 0; i <= 5; i++) {
+      const dir = Math.sign(lum(b) - lum(a));
+      if (!dir) { bad.push(nm + ' 램프의 양 끝 밝기가 같다'); continue; }
+      let prev = lum(a);
+      for (let i = 1; i <= 5; i++) {
         const L = lum(mix(a, b, i / 5));
-        if (L > prev) { bad.push(nm + ' 램프가 단조롭지 않다 — 진한 칸이 더 밝아진다'); break; }
+        if (Math.sign(L - prev) === -dir) { bad.push(nm + ' 램프가 단조롭지 않다 — 도중에 밝기가 되돌아온다'); break; }
         prev = L;
       }
     }
@@ -5853,9 +5930,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        색각 이상에서 두 진영을 가르는 단서가 된다(진한 쪽 / 흐린 쪽).
        실측 — 지금 94:26(차 68) · 진한 청록+선명한 코랄 94:67(차 27, 시선을 나눠 가진다) ·
        옛 남색+벽돌빨강 51:69(차 −18, **LG 가 먼저 보인다**). */
-    if (gap < 40)
-      bad.push('당사 채도(' + sat(sHi) + ')와 베스트샵(' + sat(lHi) + ') 차가 ' + gap
-        + ' 뿐이다 — 베스트샵 가 시선을 나눠 가진다(40 이상이어야 한다)');
+    /* ── 2026-09-11 오후 — **S&P 500(finviz) 팔레트를 사장님이 그대로 고르셨다.** finviz 빨강
+       (채도 91)이 초록(62)보다 선명해 「채도 차 40」은 이 팔레트에서 성립할 수 없다.
+       지시가 규칙보다 앞선다 — 여기서는 두 진영이 **색상으로 크게 갈리는가**(아래 hueGap)만
+       본다. 옛 규칙을 되살리려면 팔레트를 함께 바꿔야 한다. */
+    void gap;
     /* **색상도 갈려야 한다** — 채도만 다르고 색이 같으면(진한 청록 ↔ 옅은 청록) 가운데
        경계가 그러데이션처럼 보여 「어디까지가 우리 몫인가」가 흐려진다.
        **적록 색각 거리로는 이걸 못 잡는다** — 밝기 차가 커서 거리가 크게 나온다.
@@ -5871,8 +5950,10 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     const hueGap = Math.round(Math.min(dh, 360 - dh));
     if (hueGap < 40)
       bad.push('두 진영의 색상이 ' + hueGap + '° 밖에 안 벌어졌다 — 경계가 그러데이션으로 보인다');
-    if (sep < 25)
-      bad.push('적록 색각에서 두 진영 거리가 ' + Math.round(sep) + ' 이다 — 색으로도 안 갈린다');
+    /* 적록 색각 — finviz 빨강↔초록은 원리적으로 못 가른다. 그래서 몫은 **칸 글자와 말풍선이
+       숫자로** 말한다(위 `cg two`). 색이 유일한 단서가 아니므로 이 거리는 보고만 한다. */
+    if (sep < 25 && hueGap < 100)
+      bad.push('적록 색각에서 두 진영 거리가 ' + Math.round(sep) + ' 이고 색상도 ' + hueGap + '° 뿐이다 — 색으로도 안 갈린다');
     /* **밝은 끝이 흰색이면 작은 칸이 배경과 붙는다** — 「칸이 없다」로 보인다 */
     for (const [c, nm] of [[sLo, '당사'], [lLo, '베스트샵']])
       if (lum(c) > 0.93) bad.push(nm + ' 램프의 밝은 끝이 거의 흰색이다 — 작은 칸이 안 보인다');
@@ -5889,9 +5970,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('글자 폭을 재는 함수가 없다 — 어림하면 「베스트샵 1,20」처럼 잘리거나 들어갈 자리도 안 적는다');
   if (ix.indexOf('measureText(t).width') < 0)
     bad.push('글자 폭을 캔버스로 안 잰다');
-  /* **글자색은 그 글자가 실제로 얹히는 색이 정한다** — 코랄 띠가 좁으면 LG 라벨이 틸 위다 */
-  if (ix.indexOf('inkOn(lgW >= wL + 8 ? bgL : bgS)') < 0)
-    bad.push('베스트샵 라벨을 늘 코랄 기준으로 칠한다 — 띠가 좁은 칸에서 글자가 안 읽힌다');
+  /* 2026-09-11 오후 — 칸 글자색은 흰색 하나(사장님 지시). 라벨도 같다 */
+  if (ix.indexOf("'<b style=\"color:#fff\">' + lTxt + '</b>'") < 0)
+    bad.push('베스트샵 라벨 글자색이 흰색이 아니다 — 칸 글자색은 하나여야 한다');
   /* 안 들어가면 줄여 보고, 그래도 안 되면 옛 표기로 물러선다 */
   if (ix.indexOf('[0.55, 0.48, 0.42]') < 0)
     bad.push('안 들어갈 때 글자를 줄여 보지 않는다 — 네 자리 숫자인 칸만 통째로 빠진다');
@@ -5922,8 +6003,11 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 
   /* ⓒ **색을 바꿨으면 그 색을 가리키는 문구도 함께 바꾼다** */
-  if (/칸의 <b style="color:[^"]*">빨강<\/b>/.test(ix))
-    bad.push("안내가 아직 「빨강」이라 적는다 — 화면은 따뜻한 회색이다");
+  /* 2026-09-11 오후 — finviz 로 돌아가 **빨강이 맞는 말**이 됐다. 옛 「오렌지」·「주황빛」이 남으면 문다 */
+  if (!ix.includes('게이지(S 삼성 블루 : X 빨강)</b>가 <b>삼성 : 베스트샵 짝 매장의 몫</b>'))
+    bad.push('안내가 게이지(S : X)를 안 적는다 — 화면과 다른 말을 한다');
+  if (/오렌지\(베스트샵\)|오른쪽 오렌지\)|주황빛/.test(ix))
+    bad.push('옛 색 이름(오렌지·주황빛)이 화면 문구에 남았다');
 
   if (bad.length) fail('[바이럴] 히트맵 색 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 히트맵 색 — 대비·단조성·적록 색각 재서 통과 · 칸에 삼성/베스트샵 · 문구 일치');
@@ -6611,8 +6695,9 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     bad.push('칸이 못 잰 베스트샵 를 0 으로 적는다 — 폰에서 「매장이 없다」로 읽힌다');
   if (ix.indexOf('if (srm2 && (srm2.pct !== null || srm2.thin)') < 0)
     bad.push('못 잰 칸에 베스트샵 줄을 아예 안 적는다 — 폰에서 베스트샵 가 통째로 사라진다');
-  if (ix.indexOf('var lgW = (srm2.pct === null) ? 0 : c.w') < 0)
-    bad.push('못 잰 칸에서 베스트샵 글자를 앰버 기준으로 칠한다 — 배경이 한 색이라 안 읽힌다');
+  /* 2026-09-11 오후 — 칸 글자색은 흰색 하나다(테두리가 받친다) */
+  if (ix.indexOf("';color:#fff\">' + lab + gz + '</div>'") < 0)
+    bad.push('칸 글자색이 흰색 하나가 아니다 — 흑백이 섞이면 통일이 깨진다');
 
   if (bad.length) fail('[바이럴] 베스트샵 비중 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 베스트샵 비중 — 해당없음은 안 견준다 · 짝 바뀜을 밝힌다 · 위 기간을 따라간다 · 한쪽 0 은 못 잼');
@@ -7057,6 +7142,213 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
   if (bad.length) fail('[바이럴] 상단 거르개 — ' + bad.join(' · '));
   else console.log('OK: 바이럴 상단 거르개 — 되는 카드 7 · 안 되는 카드 5를 밝힌다 · 4종 매핑이 서버와 같다');
+}
+
+/* ── 점장용 — 점코드 · 점 설명 · 히트맵 삼성/베스트샵 · B2B 키워드 (2026-09-11 사장님 지시) ──
+ * *"1. 점코드를 넣으면 점 상세분석 / 2. 매장신호 누르면 직원별 설명 점 설명 자세히 …
+ *  히트맵 점클릭하면 사이트별정보에도 삼성 몇건 베스트샵 몇건 / 3. DVM, 시스템에어컨,
+ *  SAC 등 키워드넣어 매장에서 얼마나 활동중인가"*
+ *
+ * **호출을 안 쓰는 설계인지까지 본다** — 키워드는 모은 후기에서 세고, 매장 대 매장 채널은
+ * 받아 온 글에서 센다. 여기서 검색을 더 부르는 코드가 생기면 그 자체가 결함이다.
+ */
+{
+  const bad = [];
+  const gs = fs.readFileSync(new URL('../docs/apps-script/Reviews.gs', import.meta.url), 'utf8');
+  const ix = fs.readFileSync(new URL('../docs/apps-script/ReviewsIndex.html', import.meta.url), 'utf8');
+  const pv = fs.readFileSync(new URL('../scripts/preview-reviews.mjs', import.meta.url), 'utf8');
+
+  /* ⓐ 시트 칸 — `kw` 는 **맨 뒤**여야 한다(가운데 끼우면 옛 줄이 한 칸씩 밀린다) */
+  {
+    const m = gs.match(/var HEADER = \[([^\]]*)\];/);
+    const cols = m ? m[1].split(',').map((x) => x.trim().replace(/'/g, '')) : [];
+    if (cols[cols.length - 1] !== 'kw') bad.push('HEADER 의 마지막 칸이 kw 가 아니다 — 가운데 끼우면 옛 줄이 밀린다');
+    /* 행을 만드는 곳이 둘 — 둘 다 16번째 칸을 넣어야 assertRow_ 가 안 던진다 */
+    if ((gs.match(/kwCell_\((c?text), KWL\)/g) || []).length < 2)
+      bad.push('행을 만드는 두 곳 중 kw 칸을 안 넣은 곳이 있다 — setValues 가 그 자리에서 던진다');
+    if (gs.indexOf("kwRaw: String(v[i][15] || '')") < 0) bad.push('readAll_ 이 kw 칸을 안 읽는다');
+    /* 훑었는데 없으면 `-` — 빈 칸과 갈라야 「옛 줄」을 셀 수 있다 */
+    if (gs.indexOf("return kwHits_(text, list).join('|') || '-';") < 0)
+      bad.push('훑었는데 없는 줄을 빈 칸으로 둔다 — 「없다」와 「안 훑었다」가 뭉개진다');
+  }
+
+  /* ⓑ 키워드 판정을 떼어 돌린다 — 영문 약어는 낱말 경계, 한글은 띄어쓰기 무시 */
+  {
+    const a = gs.indexOf('function kwHits_'), b = gs.indexOf('function kwCell_');
+    if (a < 0 || b < 0) bad.push('kwHits_ 를 못 찾았다');
+    else {
+      const f = new Function(gs.slice(a, b) + ';return kwHits_;')();
+      const L = ['DVM', '시스템에어컨', 'SAC'];
+      const t = (txt, want) => {
+        const got = f(txt, L).join(',');
+        if (got !== want) bad.push('kwHits_(「' + txt + '」) = ' + (got || '없음') + ' — 기대 ' + (want || '없음'));
+      };
+      t('시스템 에어컨 DVM 설치 후기', 'DVM,시스템에어컨');        /* 띄어쓰기 · 대문자 */
+      t('sacrifice dvmx 냉장고', '');                                /* 낱말 안에서는 안 문다 */
+      t('<b>SAC</b> 천장형, dvm.', 'DVM,SAC');                       /* 태그 · 문장부호 경계 */
+      t('냉장고 구매 후기', '');
+    }
+    /* 저장은 관리자만 · 20개 상한 · 비우면 기본 셋 */
+    const sa = gs.indexOf('function setKeywords('), sb = gs.indexOf('\n}', sa);
+    const sbody = sa < 0 ? '' : gs.slice(sa, sb);
+    if (!sbody) bad.push('setKeywords 가 없다');
+    else {
+      if (sbody.indexOf('adminOk_(token)') < 0) bad.push('setKeywords 가 관리자 토큰을 안 본다 — 화면만 잠그면 서버는 열려 있다');
+      if (sbody.indexOf('KW_MAX') < 0) bad.push('키워드 상한이 없다');
+      if (sbody.indexOf("deleteProperty('_kwList')") < 0) bad.push('비우고 저장하면 기본 셋으로 돌아가지 않는다');
+      if (sbody.indexOf('sumCacheClear_()') < 0) bad.push('목록을 바꿔도 집계 캐시를 안 버린다 — 6시간 옛 건수가 굳는다');
+    }
+    /* 검색을 더 부르지 않는다 — 키워드 절에 search_ 가 있으면 그 자체가 결함이다 */
+    const ka = gs.indexOf('var KW_DEFAULT'), kb = gs.indexOf('function mgrFind_(text)');
+    if (ka >= 0 && kb > ka && gs.slice(ka, kb).indexOf('search_(') >= 0)
+      bad.push('키워드 절이 검색을 부른다 — 호출 없이 모은 후기에서 세는 설계다');
+  }
+
+  /* ⓒ 서버가 새 칸을 낸다 · 캐시 판을 올렸다 */
+  for (const [nm, needle] of [
+    ['키워드 목록', 'kwList: KWL2, byKw: byKw, byStoreKw: byStoreKw, kwFull: kwFullN'],
+    ['매장별 매니저', 'byStoreMgr: (function () {'],
+    ['점코드', 'storeCodes: (function () {'],
+  ]) if (gs.indexOf(needle) < 0) bad.push('서버가 안 낸다: ' + nm);
+  {
+    const m = gs.match(/var SUM_VER = (\d+);/);
+    if (!m || Number(m[1]) < 25) bad.push('SUM_VER 을 안 올렸다 — 옛 집계가 6시간 굳어 새 칸이 안 보인다');
+  }
+  /* 매장별 매니저 — 이름으로 합치고(직함 무시) 채널까지 · 상위 8 */
+  if (gs.indexOf('mnm0 = mgrNameClean_(mk) || mk') < 0) bad.push('매장별 매니저를 직함 붙은 채로 센다 — mgrTop 과 다른 사람이 된다');
+  if (gs.indexOf('chan: topN_(byStoreMgr[st][nm].chan, 3)') < 0) bad.push('매장별 매니저에 채널이 없다 — "다이렉트에 N건" 을 못 적는다');
+  /* 채널 이름은 한 함수 — 매장별 채널·매니저·매장 대 매장이 같은 이름을 써야 한 표에 선다 */
+  if ((gs.match(/chanName_\(/g) || []).length < 3) bad.push('채널 이름을 한 함수로 안 쓴다 — 세 자료의 이름이 갈려 표에서 못 잇는다');
+
+  /* ⓓ 매장 대 매장 — 양쪽 채널을 **맨 뒤 칸**에 · 판 번호를 올렸다 · 읽는 칸 번호가 맞다 */
+  {
+    const m = gs.match(/var SRIVAL_HEADER = \[([^\]]*)\];/);
+    const cols = m ? m[1].split(',').map((x) => x.trim().replace(/'/g, '')) : [];
+    if (cols[cols.length - 1] !== 'chanJson') bad.push('SRIVAL_HEADER 의 마지막 칸이 chanJson 이 아니다');
+    const idx = cols.indexOf('chanJson');
+    if (idx >= 0 && gs.indexOf('var chan0 = jparse_(v[i][' + idx + ']);') < 0)
+      bad.push('storeRival_ 이 chanJson 을 ' + idx + '번 칸에서 안 읽는다 — 쓰는 칸과 읽는 칸이 어긋나면 조용히 빈다');
+    const sm = gs.match(/var SRIVAL_SCHEMA = (\d+);/);
+    if (!sm || Number(sm[1]) < 3) bad.push('SRIVAL_SCHEMA 를 안 올렸다 — 옛 회차에 이어 붙어 채널 있는 줄과 없는 줄이 섞인다');
+    if (gs.indexOf('JSON.stringify(mon9), JSON.stringify(chan9)]);') < 0) bad.push('collectStoreRival 이 chanJson 을 안 쓴다');
+    if (gs.indexOf("chan9[side9] = topN_(cb9, 12);") < 0) bad.push('채널을 상위 12로 안 자른다 — 시트 칸 5만 자가 넘친다');
+    if (gs.indexOf('c: chanNameOf_(SRCS[sj], it)') < 0) bad.push('매장 대 매장 채널 이름이 우리 채널 이름 규칙과 다르다');
+  }
+
+  /* ⓔ 화면 — 점코드 입력 · 정확히 일치할 때만 */
+  if (ix.indexOf('id="my-code"') < 0 || ix.indexOf('id="my-go"') < 0) bad.push('「내 점」 입력이 없다');
+  {
+    const a = ix.indexOf('  function resolveStore('), b = ix.indexOf('  function openStore(');
+    if (a < 0 || b < 0) bad.push('resolveStore 를 못 찾았다');
+    else {
+      const f = new Function('DATA', ix.slice(a, b) + ';return resolveStore;')({
+        storeCodes: { ZH96: '갤러리아광교', Z579: '원주' }, byStore: { '갤러리아광교': 5, '수원': 3 }
+      });
+      const t = (q, want) => { const g = f(q); if (g !== want) bad.push('resolveStore(「' + q + '」) = ' + (g || '없음') + ' — 기대 ' + (want || '없음')); };
+      t('zh96', '갤러리아광교');            /* 대소문자 무시 */
+      t('갤러리아 광교', '갤러리아광교');    /* 띄어쓰기 무시 */
+      t('원주', '원주');                    /* 코드 표에만 있는 점명(0건)도 찾는다 */
+      t('수', '');                          /* 부분 입력으로는 안 열린다 */
+      t('ZZZZ', '');
+    }
+  }
+  /* 리포트가 0건 매장을 되돌리지 않는다 — 점장이 점코드로 들어왔는데 전체로 돌아가면 「내 점이 없다」다 */
+  if (ix.indexOf('if (reportStore && names.indexOf(reportStore) < 0 && !knownStore[reportStore]) reportStore = \'\';') < 0)
+    bad.push('리포트가 0건 매장을 전체로 되돌린다');
+  /* 딥링크 — 자료가 온 **뒤에** · Apps Script 는 google.script.url 로 파라미터를 준다 */
+  {
+    const at = ix.indexOf('DATA = d; DATA_READY = true;');
+    if (at < 0 || ix.indexOf('applyDeepStore();', at) < 0 || ix.indexOf('applyDeepStore();', at) - at > 300)
+      bad.push('?store= 딥링크를 자료가 온 뒤에 안 부른다');
+    if (ix.indexOf('google.script.url.getLocation(') < 0) bad.push('Apps Script 안에서 주소 파라미터를 못 읽는다(iframe 이라 location.search 가 비어 있다)');
+  }
+
+  /* ⓕ 점 설명 — **한 함수**를 세 곳이 쓴다(지점별 분석 · 리포트 · 매장 신호) */
+  if ((ix.match(/storeNarrative\(/g) || []).length < 4) bad.push('storeNarrative 를 세 곳이 안 쓴다 — 같은 매장을 다르게 말한다');
+  {
+    const a = ix.indexOf('  function storeNarrative('), b = ix.indexOf('  function resolveStore(');
+    const body = a < 0 ? '' : ix.slice(a, b);
+    if (!body) bad.push('storeNarrative 가 없다');
+    else {
+      for (const [nm, needle] of [
+        /* 직원별·키워드는 **최상단 기간을 따르는 헬퍼**를 지나야 한다(2026-09-11 사장님 확인 요청) */
+        ['직원별', 'scopedMgrsOf(nm)'], ['베스트샵 대비', 'srShare(nm)'], ['인근 우리 점', 'distM(me.lat'],
+        ['키워드', 'scopedByStoreKw()[nm]'], ['팀 순위', '팀 \' + names.length + \'곳 중'],
+      ]) if (body.indexOf(needle) < 0) bad.push('점 설명에 없다: ' + nm);
+      /* 판정 말은 55/45 — 균형점 50 에 ±5. 51% 를 「앞선다」고 하면 다음 수집에서 뒤집힌다 */
+      if (body.indexOf("srv.pct >= 55 ? '앞서고 있습니다' : (srv.pct >= 45 ? '비슷합니다' : '밀리고 있습니다')") < 0)
+        bad.push('베스트샵 대비 판정 말의 문턱이 55/45 가 아니다');
+      /* 못 잰 것 셋을 가른다 — 해당없음 · 상한 · 아직 */
+      for (const w of ['「해당없음」으로 두어 견주지 않습니다', '검색 상한에 닿아 비중을 못 잽니다', '「없다」가 아니라 「못 쟀다」입니다'])
+        if (body.indexOf(w) < 0) bad.push('점 설명이 못 잰 이유를 안 가른다: ' + w);
+      /* 조사 — 「정자사거리과」가 실제로 떴다 */
+      if (body.indexOf("josa(prLab, '과', '와')") < 0) bad.push('베스트샵 이름 뒤 조사를 안 가른다');
+    }
+  }
+  /* 매장 신호 줄이 눌린다 · 상자에서 한 번만 받는다 */
+  if (ix.indexOf('<div class="sigrow hit" data-v="') < 0) bad.push('매장 신호 줄에 매장 표식이 없다 — 눌러도 아무 일이 없다');
+  if (ix.indexOf("d2.innerHTML = storeNarrative(nm);") < 0) bad.push('매장 신호 줄을 눌러도 점 설명이 안 펼쳐진다');
+
+  /* ⓖ 히트맵 채널 단계 — 칸에 삼성·베스트샵, 아래 표. **양쪽 0 이면 안 적는다** */
+  if (ix.indexOf('id="hm-srchan"') < 0) bad.push('삼성 vs 베스트샵 채널 표 자리가 없다');
+  if (ix.indexOf('function renderSrChan(') < 0) bad.push('renderSrChan 이 없다');
+  if (ix.indexOf('if (chan && d.sr && (d.sr.o || d.sr.r)) {') < 0)
+    bad.push('채널 칸이 양쪽 0 을 「삼성 0 · 베스트샵 0」으로 적는다 — 상위 12 밖일 뿐 0건이 아니다');
+  if (ix.indexOf("sr: srCh ? { o: (srCh.o || {})[k] || 0, r: (srCh.r || {})[k] || 0 } : null });") < 0)
+    bad.push('채널 items 에 sr 을 안 싣는다 — 이 자리에서 필드를 빠뜨리는 것이 이 화면의 고질이다');
+  /* 옛 회차(채널 칸 없음)와 자료 없음을 갈라 적는다 */
+  for (const w of ['다음 「매장 대 매장」 수집부터 채워집니다', '「없다」가 아니라 「못 쟀다」입니다'])
+    if (ix.indexOf(w) < 0) bad.push('채널 표가 못 잰 이유를 안 적는다: ' + w);
+  /* 잣대가 다르다는 것을 표가 밝힌다 */
+  if (ix.indexOf('같은 질의·같은 쪽수로 양쪽을 잰 값이라 위 칸 수와 다릅니다') < 0)
+    bad.push('채널 표가 위 칸(당사 전체 수집)과 잣대가 다르다는 것을 안 적는다');
+
+  /* ⓗ B2B 키워드 카드 · 목록 거르개 · 관리자 편집 */
+  if (ix.indexOf('data-sec="kw"') < 0 || ix.indexOf('data-card="kw"') < 0) bad.push('B2B 키워드 박스·카드가 없다');
+  if (ix.indexOf('function renderKw(') < 0 || ix.indexOf('    renderKw();') < 0) bad.push('renderKw 를 안 부른다');
+  if (ix.indexOf("if (kwFilter && (r.kw || []).indexOf(kwFilter) < 0) return false;") < 0) bad.push('목록이 키워드로 안 걸린다');
+  if (!/var sig = \[[^\]]*kwFilter/.test(ix)) bad.push('키워드가 필터 서명에 없다 — 3쪽을 보다 걸면 빈 화면이 뜬다');
+  if (ix.indexOf("if (k === 'kw') {") < 0) bad.push('박스 미리보기(secPeek)에 kw 가 없다 — 열둘이 채워진 옆에서 혼자 빈다');
+  if (ix.indexOf('.setKeywords(list, admToken);') < 0) bad.push('키워드 저장이 관리자 토큰을 안 보낸다');
+  if (ix.indexOf('id="kw-words"') < 0) bad.push('관리자에 키워드 입력이 없다');
+  /* 0건 매장을 빼되 몇 곳인지 적는다 · 본문까지 본 글 수를 밝힌다 */
+  if (ix.indexOf("'곳은 0건이라 뺐습니다'") < 0) bad.push('키워드 표가 0건 매장을 조용히 뺀다');
+  if (ix.indexOf("'건</b>은 본문까지'") < 0) bad.push('키워드 카드가 「본문까지 본 글」 수를 안 밝힌다 — 옛 글은 제목에서만 잡힌다');
+
+  /* ⓘ-0 최상단 기간·유형이 새 자료에도 걸린다(2026-09-11 사장님 확인 요청 — *"최상단에 날짜가
+     기준으로 하단에있는 모든 정보가 동기화"*). 주 단위 칸을 서버가 내고 화면이 그것으로 다시 센다 */
+  if (gs.indexOf('byStoreKwW: trimWeeks_(byStoreKwW, WEEK_KEEP),') < 0) bad.push('서버가 키워드 주차 자료를 안 낸다 — 키워드 카드가 기간을 못 따른다');
+  if (gs.indexOf('wk: keepWeeks_(byStoreMgr[st][nm].wk, WEEK_KEEP)') < 0) bad.push('서버가 매장별 매니저 주차를 안 낸다 — 직원별이 기간을 못 따른다');
+  if (!/var SCOPE_ON = \[[^\]]*'kw'/.test(ix)) bad.push('키워드 카드가 SCOPE_ON 에 없다 — 따르면서 「따른다」고 안 적는다');
+  if (ix.indexOf('function scopedByStoreKw(') < 0 || ix.indexOf('function scopedMgrsOf(') < 0) bad.push('기간을 따르는 헬퍼가 없다');
+  /* 옛 서버 자료면 전 기간으로 물러서고 **그 사실을 적는다** */
+  if (ix.indexOf('function kwScopeFallback(') < 0 || ix.indexOf('옛 서버 자료라 기간을 못 가릅니다') < 0) bad.push('옛 서버 자료에서 조용히 전 기간을 보여준다');
+  /* 채널 표는 회차 자료라 못 따른다 — 그 사실을 적는가 */
+  if (ix.indexOf('위 기간·유형 거르개가 여기에는 안 걸립니다 — 회차 전 기간') < 0) bad.push('채널 표가 기간을 못 따른다는 것을 안 적는다');
+  /* 베스트샵 이름 — 우리 표기와 같은 꼴 + 「베스트샵 」 접두(2026-09-11 사장님 지시) */
+  {
+    const a = ix.indexOf('  function shopLabel('), b = ix.indexOf('  function shopFull(');
+    const f = a < 0 || b < 0 ? null : new Function(ix.slice(a, b) + ';return shopLabel;')();
+    if (!f) bad.push('shopLabel 을 못 찾았다');
+    else for (const [q, want] of [['AK PLAZA 수원점', 'AK수원'], ['남수원점', '남수원'], ['경기광주본점', '경기광주'], ['점', '점']])
+      if (f(q) !== want) bad.push('shopLabel(「' + q + '」) = ' + f(q) + ' — 기대 ' + want);
+    if (ix.indexOf('function shopFull(') < 0 || ix.indexOf('function shopsText(') < 0) bad.push('「베스트샵 」 접두 헬퍼가 없다');
+    /* 원본 이름을 그대로 적는 곳이 남았는가 — 짝 상자·표·안내 */
+    if ((ix.match(/shops\.join\(' · '\)/g) || []).length) bad.push('베스트샵 지점 원본 이름을 그대로 적는 곳이 남았다');
+    if (ix.indexOf('베스트샵 와 견주지') >= 0) bad.push('「베스트샵 와」 — 조사가 허공에 떠 있다');
+  }
+
+  /* ⓘ 미리보기 — 서버 반환 모양 그대로 · 스텁 · 경계를 섞는다 */
+  if (pv.indexOf('setKeywords: function') < 0) bad.push('미리보기 스텁에 setKeywords 가 없다 — 저장 한 번에 화면이 죽는다');
+  for (const k of ['byStoreMgr: {', 'kwList: [', 'byStoreKw: {', 'storeCodes: {', 'kwFull:'])
+    if (pv.indexOf(k) < 0) bad.push('미리보기 모의에 없다: ' + k);
+  if ((pv.match(/chan: \{ o: \{/g) || []).length < 1) bad.push('미리보기 매장 대 매장에 채널이 없다 — 표를 한 번도 눈으로 못 본다');
+  if (pv.indexOf("{ store: '평택', shop: '남평택점', ours: 878, rival: 913, pct: 49, capped: false },") < 0)
+    bad.push('미리보기에 채널 없는 옛 회차 줄이 없다 — 「다음 수집부터」 안내를 못 본다');
+  if (pv.indexOf("'SAC': 0") < 0) bad.push('미리보기에 0건 키워드가 없다 — 「없다」를 어떻게 적는지 못 본다');
+
+  if (bad.length) fail('[바이럴] 점장용 — ' + bad.join(' · '));
+  else console.log('OK: 바이럴 점장용 — 점코드로 곧장 · 점 설명 한 함수 · 채널 표 양쪽 같은 잣대 · 키워드는 호출 0회');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');

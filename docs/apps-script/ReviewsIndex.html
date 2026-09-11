@@ -630,9 +630,9 @@
   }
   /* 카드 위 지역 색 띠 — 아이콘과 같은 색이라 지역이 두 번 보인다(멀리서도 읽힌다) */
   .st::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: #9AA4B2; }
-  .st.a1::before { background: #3d52db; } .st.a2::before { background: #9027d5; }
-  .st.a3::before { background: #b62170; } .st.a4::before { background: #9c4b1d; }
-  .st.a5::before { background: #636613; } .st.a6::before { background: #176b7c; }
+  .st.a1::before { background: #0078a7; } .st.a2::before { background: #5b6e40; }
+  .st.a3::before { background: #a66879; } .st.a4::before { background: #be6e00; }
+  .st.a5::before { background: #bf544a; } .st.a6::before { background: #25a699; }
   .st.z::before { background: #E3E7ED; }
   .st.on::before { background: rgba(255,255,255,.55); }
   .st:hover { background: #F4F6FB; }
@@ -640,8 +640,9 @@
   /* **건수는 아래 줄에 크게** — 사장님이 「00점 내려쓰기 00건」이라 지목한 그 모양이다 */
   .st b { font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums;
           letter-spacing: -.8px; margin-top: 4px; color: #5B6472; }
-  .st.a1 b { color: #3d52db; } .st.a2 b { color: #9027d5; } .st.a3 b { color: #b62170; }
-  .st.a4 b { color: #9c4b1d; } .st.a5 b { color: #636613; } .st.a6 b { color: #176b7c; }
+  /* 숫자는 흰 바탕 글자라 4.5:1 을 넘는 단계(v8~v10)를 쓴다 — applyAreaColors 의 numMin 과 같은 규칙 */
+  .st.a1 b { color: #0078a7; } .st.a2 b { color: #5b6e40; } .st.a3 b { color: #855361; }
+  .st.a4 b { color: #985800; } .st.a5 b { color: #bf544a; } .st.a6 b { color: #17675f; }
   .st.on b { color: #fff; }
   .st .u { font-weight: 600; font-size: 12px; color: #8B93A1; margin-left: 1px; }
   .st.on .u { color: rgba(255,255,255,.8); }
@@ -659,12 +660,12 @@
             align-items: center; justify-content: center; color: #fff; background: #9AA4B2;
             flex: 0 0 auto; margin: 2px 0 8px; }
   .st .ic svg { width: 32px; height: 32px; }
-  .st.a1 .ic { background: #3d52db; }   /* 수원 — 지도 r1 */
-  .st.a2 .ic { background: #9027d5; }   /* 성남 — r2 */
-  .st.a3 .ic { background: #b62170; }   /* 용인 — r3 */
-  .st.a4 .ic { background: #9c4b1d; }   /* 평택 — r4 */
-  .st.a5 .ic { background: #636613; }   /* 안양 — r5 */
-  .st.a6 .ic { background: #176b7c; }   /* 강원 — r6 */
+  .st.a1 .ic { background: #0078a7; }   /* 수원 — 지도 r1 */
+  .st.a2 .ic { background: #5b6e40; }   /* 성남 — r2 */
+  .st.a3 .ic { background: #a66879; }   /* 용인 — r3 */
+  .st.a4 .ic { background: #be6e00; }   /* 평택 — r4 */
+  .st.a5 .ic { background: #bf544a; }   /* 안양 — r5 */
+  .st.a6 .ic { background: #25a699; }   /* 강원 — r6 */
   /* 0건은 아이콘도 흐리게 — 지우지는 않는다(오늘 0건이 내일 0건은 아니다) */
   .st.z .ic { background: #E3E7ED; color: #B6BCC6; }
   /* 고른 칸은 바탕이 남색이라 아이콘을 흰 바탕에 지역색 글자로 뒤집는다 */
@@ -882,19 +883,20 @@
    * 쓴다(지수 0.6 규칙과 농도 읽는 법이 안 바뀐다). **지역마다 따로 정규화하지
    * 않는다** — 그러면 「같은 진하기가 다른 건수」가 되어 지도가 거짓말을 한다.
    *
-   * 수원은 삼성 블루 계열 그대로다(10단계가 현행 #1428A0 과 사실상 같다).
+   * 수원은 히트맵 당사 짙은 끝과 같은 아쿠아 블루(#0078a7)다 — 2026-09-11 여섯 색을
+   * 쏜디 팔레트 칩으로 갈았다(근거는 Reviews.gs 의 AREA_COLOR_DEFAULT 주석).
    *
    * **적록색약에서 6색은 원리적으로 완전히 안 갈린다**(색상환이 무너져 3무리가
-   * 된다). 그런데 무너지는 세 짝(수원↔성남 · 용인↔강원 · 평택↔안양)이 지도에서
-   * **하나도 맞닿지 않는다** — 폴리곤 인접을 실제로 계산해 확인했다. 맞닿는 넷
-   * (성남↔용인 · 성남↔평택 · 수원↔용인 · 용인↔평택)은 색약에서도 ΔE 13~47 이다.
+   * 된다). 그래서 **맞닿는 넷**(성남↔용인 · 성남↔평택 · 수원↔용인 · 용인↔평택 —
+   * 폴리곤 인접을 실제로 계산했다)만 재서 지킨다: 같은 단계끼리 적록 거리 15~30
+   * (옛 판 9~26). 용인↔안양은 색상이 22° 로 가깝지만 지도에서 맞닿지 않는다.
    * 그래도 색에만 기대지 않게 **지도에 시·군 이름**이 함께 있다. */
-  .geo-svg path.r1.v1{fill:#e7e9f6} .geo-svg path.r1.v2{fill:#d7dbf1} .geo-svg path.r1.v3{fill:#c4c9ec} .geo-svg path.r1.v4{fill:#aeb5e7} .geo-svg path.r1.v5{fill:#959fe3} .geo-svg path.r1.v6{fill:#7a87e0} .geo-svg path.r1.v7{fill:#5d6edd} .geo-svg path.r1.v8{fill:#3d52db} .geo-svg path.r1.v9{fill:#2037cb} .geo-svg path.r1.v10{fill:#16289f}
-  .geo-svg path.r2.v1{fill:#f0e7f6} .geo-svg path.r2.v2{fill:#e6d6f1} .geo-svg path.r2.v3{fill:#dbc2eb} .geo-svg path.r2.v4{fill:#cfabe6} .geo-svg path.r2.v5{fill:#c190e2} .geo-svg path.r2.v6{fill:#b372de} .geo-svg path.r2.v7{fill:#a351da} .geo-svg path.r2.v8{fill:#9027d5} .geo-svg path.r2.v9{fill:#721bac} .geo-svg path.r2.v10{fill:#581286}
-  .geo-svg path.r3.v1{fill:#f5e6ee} .geo-svg path.r3.v2{fill:#f0d4e3} .geo-svg path.r3.v3{fill:#eabfd6} .geo-svg path.r3.v4{fill:#e5a6c7} .geo-svg path.r3.v5{fill:#e088b7} .geo-svg path.r3.v6{fill:#db64a3} .geo-svg path.r3.v7{fill:#d5378b} .geo-svg path.r3.v8{fill:#b62170} .geo-svg path.r3.v9{fill:#911758} .geo-svg path.r3.v10{fill:#700f43}
-  .geo-svg path.r4.v1{fill:#f3e8e1} .geo-svg path.r4.v2{fill:#edd8cc} .geo-svg path.r4.v3{fill:#e6c4b1} .geo-svg path.r4.v4{fill:#dfae92} .geo-svg path.r4.v5{fill:#d8946c} .geo-svg path.r4.v6{fill:#d27540} .geo-svg path.r4.v7{fill:#bc5e27} .geo-svg path.r4.v8{fill:#9c4b1d} .geo-svg path.r4.v9{fill:#7c3a14} .geo-svg path.r4.v10{fill:#5f2b0d}
-  .geo-svg path.r5.v1{fill:#ebecce} .geo-svg path.r5.v2{fill:#dee0a7} .geo-svg path.r5.v3{fill:#cdd16f} .geo-svg path.r5.v4{fill:#babf38} .geo-svg path.r5.v5{fill:#a6aa2d} .geo-svg path.r5.v6{fill:#8f9323} .geo-svg path.r5.v7{fill:#797d1a} .geo-svg path.r5.v8{fill:#636613} .geo-svg path.r5.v9{fill:#4e500d} .geo-svg path.r5.v10{fill:#3b3c08}
-  .geo-svg path.r6.v1{fill:#dbedf1} .geo-svg path.r6.v2{fill:#c0e2e9} .geo-svg path.r6.v3{fill:#9dd4df} .geo-svg path.r6.v4{fill:#70c4d5} .geo-svg path.r6.v5{fill:#37b2ca} .geo-svg path.r6.v6{fill:#2a9ab1} .geo-svg path.r6.v7{fill:#208397} .geo-svg path.r6.v8{fill:#176b7c} .geo-svg path.r6.v9{fill:#105462} .geo-svg path.r6.v10{fill:#0a404a}
+  .geo-svg path.r1.v1{fill:#e6f2f6} .geo-svg path.r1.v2{fill:#cce4ed} .geo-svg path.r1.v3{fill:#add4e3} .geo-svg path.r1.v4{fill:#8fc4d8} .geo-svg path.r1.v5{fill:#6bb1cc} .geo-svg path.r1.v6{fill:#479ec0} .geo-svg path.r1.v7{fill:#248bb3} .geo-svg path.r1.v8{fill:#0078a7} .geo-svg path.r1.v9{fill:#006086} .geo-svg path.r1.v10{fill:#004a68}
+  .geo-svg path.r2.v1{fill:#eff1ec} .geo-svg path.r2.v2{fill:#dee2d9} .geo-svg path.r2.v3{fill:#cbd1c2} .geo-svg path.r2.v4{fill:#b7bfab} .geo-svg path.r2.v5{fill:#a0ab90} .geo-svg path.r2.v6{fill:#899775} .geo-svg path.r2.v7{fill:#72825b} .geo-svg path.r2.v8{fill:#5b6e40} .geo-svg path.r2.v9{fill:#495833} .geo-svg path.r2.v10{fill:#384428}
+  .geo-svg path.r3.v1{fill:#f6f0f2} .geo-svg path.r3.v2{fill:#ede1e4} .geo-svg path.r3.v3{fill:#e3cfd4} .geo-svg path.r3.v4{fill:#d8bdc4} .geo-svg path.r3.v5{fill:#cba7b1} .geo-svg path.r3.v6{fill:#bf929f} .geo-svg path.r3.v7{fill:#b27d8c} .geo-svg path.r3.v8{fill:#a66879} .geo-svg path.r3.v9{fill:#855361} .geo-svg path.r3.v10{fill:#67404b}
+  .geo-svg path.r4.v1{fill:#f9f1e6} .geo-svg path.r4.v2{fill:#f2e2cc} .geo-svg path.r4.v3{fill:#ead1ad} .geo-svg path.r4.v4{fill:#e2bf8f} .geo-svg path.r4.v5{fill:#d9ab6b} .geo-svg path.r4.v6{fill:#d09747} .geo-svg path.r4.v7{fill:#c78224} .geo-svg path.r4.v8{fill:#be6e00} .geo-svg path.r4.v9{fill:#985800} .geo-svg path.r4.v10{fill:#764400}
+  .geo-svg path.r5.v1{fill:#f9eeed} .geo-svg path.r5.v2{fill:#f2dddb} .geo-svg path.r5.v3{fill:#ebc8c5} .geo-svg path.r5.v4{fill:#e3b4af} .geo-svg path.r5.v5{fill:#da9c96} .geo-svg path.r5.v6{fill:#d1847d} .geo-svg path.r5.v7{fill:#c86c63} .geo-svg path.r5.v8{fill:#bf544a} .geo-svg path.r5.v9{fill:#99433b} .geo-svg path.r5.v10{fill:#76342e}
+  .geo-svg path.r6.v1{fill:#e9f6f5} .geo-svg path.r6.v2{fill:#d3edeb} .geo-svg path.r6.v3{fill:#b9e3de} .geo-svg path.r6.v4{fill:#9fd8d2} .geo-svg path.r6.v5{fill:#81cbc4} .geo-svg path.r6.v6{fill:#62bfb6} .geo-svg path.r6.v7{fill:#44b2a7} .geo-svg path.r6.v8{fill:#25a699} .geo-svg path.r6.v9{fill:#1e857a} .geo-svg path.r6.v10{fill:#17675f}
   .geo-svg path.sel { stroke: #111827; stroke-width: 1.8; }
   /* 라벨 — 진한 칸 위에서는 흰 글자여야 읽힌다(파랑 위 회색은 안 보인다) */
   .geo-svg text { font-size: 7.5px; text-anchor: middle; pointer-events: none; fill: #9CA3AF; }
@@ -1075,6 +1077,21 @@
               color: #fff; text-align: center; line-height: 1.15;
               padding: 2px 0; box-sizing: border-box; }
   .hm .cell.clk { cursor: pointer; }
+  /* ── **삼성 vs 베스트샵은 칸 하단 게이지바** (2026-09-11 사장님 지시) ──────────
+     예전에는 칸 배경을 세로로 갈라(왼쪽 우리 · 오른쪽 LG) 칠했다. 지금은 배경이 통째로
+     건수 색이고, **바닥에 얇은 막대**가 삼성 : 베스트샵 몫을 나눈다. 막대 홈은 어두운
+     바탕색이라 어떤 칸 색 위에서도 막대가 갈려 보인다. 글자가 막대를 안 밟게 칸 아래
+     여백을 그만큼 둔다(`.gzon`). */
+  /* S(당사·삼성 블루) / X(베스트샵·빨강) 글자를 막대 안에 — 2026-09-11 사장님 지시 */
+  .hm .cell .gz { position: absolute; left: 3px; right: 3px; bottom: 3px; height: 11px;
+                  background: #22252D; border-radius: 5px; overflow: hidden; display: flex; padding: 1px; gap: 1px; }
+  .hm .cell .gz i { display: flex; align-items: center; justify-content: center; height: 100%; border-radius: 3px; overflow: hidden; }
+  .hm .cell .gz i b { font: 800 7.5px/1 -apple-system, 'Malgun Gothic', sans-serif; color: #fff; text-shadow: none; letter-spacing: 0; }
+  .hm .cell.gzon { padding-bottom: 16px; }
+  /* ── **와이드 16:10** (2026-09-11 사장님 지시) — 정사각과 토글. 넓은 화면에서는 카드 폭을
+     다 쓴다(정사각은 `max-width` 로 높이를 화면 안에 맞추지만, 16:10 은 가로가 길어
+     같은 폭이면 높이가 낮아 화면에 든다). */
+  .hm.wide { --ar: 16 / 10; max-width: min(96vw, 1400px); }
   /* **「못 잼」에 사선 무늬를 넣었다가 되돌렸다**(2026-09-03). 중립 회색과 휘도 대비가
      1.25:1 이라 색만으로는 안 갈려서 무늬를 시도했는데, **실측으로 60칸 중 37칸(62%)이
      「못 잼」**이었다 — 예외 표시가 아니라 기본 상태라 화면 대부분이 사선이 된다.
@@ -1084,9 +1101,15 @@
   /* **긴 이름이 건수를 밀어냈다** (2026-09-05 실물에서 잡음) — 「신세계사우스시티」가
      세 줄로 접히며 아래 「20건」이 칸 밖으로 나갔다. 이름을 **두 줄로 묶고** 건수는
      줄어들지 않게 한다 — 칸에서 가장 중요한 것이 건수다(이름은 말풍선에도 있다). */
-  .hm .cell .cn { font-weight: 800; letter-spacing: -.3px;
-                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-                  overflow: hidden; max-width: 100%; }
+  /* ── **이름은 한 줄, 칸을 넘지 않는다** (2026-09-11 사장님 지시 — *"점명 텍스트가 가로 박스를
+     넘어가지않도록"*). 두 줄 접기(「용인기 / 흥」)를 없애고 **캔버스로 재서 들어갈 때까지 줄인다**.
+     긴 이름 둘은 줄임 표기(`HEAT_SHORT`)다. */
+  .hm .cell .cn { font-weight: 800; letter-spacing: -.3px; white-space: nowrap; overflow: hidden; max-width: 100%; }
+  /* ── **글자색은 흰색 하나다** (2026-09-11 사장님 지시 — *"텍스트컬러는 블랙과 화이트로
+     나뉘어져있는데 통일되어야합니다"*). finviz 도 밝은 초록 위에 흰 글자다. 밝은 칸에서 대비가
+     모자라는 몫은 **어두운 테두리(text-shadow)**가 맡는다 — 어두운 끝(#35764E)은 흰 글자로
+     4.5:1 을 넘기고, 밝은 끝(#30CC5A)은 테두리가 글자를 받친다(검사가 둘을 나눠 본다). */
+  .hm .cell { text-shadow: 0 0 2px rgba(0,0,0,.9), 0 1px 2px rgba(0,0,0,.7); }
   .hm .cell .cg, .hm .cell .cv, .hm .cell .lgn { flex-shrink: 0; }
   /* ── **칸 글자에 투명도를 주지 않는다** (2026-09-06 재서 잡았다) ─────────────
      사장님: *"텍스트가 잘 안보이는것같습니다"*. 색이 아니라 **투명도**였다 —
@@ -1151,6 +1174,49 @@
   .period #cmp-dates input:disabled { color: #4B5563; background: #F3F4F6; }
   @media (max-width: 560px) { .period .ksep { display: none; } }
   .period .sp { margin-left: auto; }
+  /* ── 내 점 (2026-09-11 사장님 지시 — *"점코드를 넣으면 점 상세분석"*) ──────────
+     점장이 자기 점코드·점명으로 곧장 들어온다. 규격은 기간 막대(.period)와 같다 —
+     같은 줄 모양이어야 「이것도 거르개다」로 읽힌다. */
+  .mystore { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 10px; padding: 9px 11px;
+    background: #fff; border: 1px solid var(--line); border-radius: var(--card-r, 12px); }
+  .mystore input { height: 30px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: var(--fs-body); width: 190px; max-width: 60vw; }
+  .mystore .hit { font-weight: 800; color: var(--blue); }
+  /* ── 점 설명 (직원별 · 베스트샵 · 인근점 · 키워드) — 지점별 분석·리포트·매장 신호가 함께 쓴다 ── */
+  .nr { margin-top: 8px; }
+  .nr h4 { font-size: var(--fs-mini); font-weight: 800; color: var(--blue); margin: 9px 0 3px; letter-spacing: -.1px; }
+  .nr h4:first-child { margin-top: 0; }
+  .nr p, .nr li { font-size: 12.5px; line-height: 1.6; color: #1F2937; }
+  .nr ul { list-style: none; }
+  .nr li { padding: 2px 0; border-bottom: 1px solid #F1F3F7; }
+  .nr li:last-child { border-bottom: 0; }
+  .nr .cx { color: var(--mute); font-size: var(--fs-mini); }
+  .nr .good { color: #12805C; font-weight: 800; }
+  .nr .even { color: #B45309; font-weight: 800; }
+  .nr .bad { color: #C8324B; font-weight: 800; }
+  /* 매장 신호 — 줄을 누르면 점 설명이 아래로 펼쳐진다 */
+  .sigrow.hit { cursor: pointer; }
+  .sigrow.hit > b::after { content: ' ▾'; font-weight: 400; color: var(--mute); font-size: 11.5px; }
+  .sigrow.hit.open > b::after { content: ' ▴'; }
+  .sigdet { margin: 4px 0 8px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: #FCFDFF; }
+  /* 히트맵 채널 단계 — 삼성 vs 베스트샵 채널 표 */
+  .srchan { margin-top: 8px; }
+  .srchan table { width: 100%; max-width: 640px; border-collapse: collapse; font-size: 12.5px; }
+  .srchan th, .srchan td { padding: 4px 6px; border-bottom: 1px solid #F1F3F7; text-align: right; font-variant-numeric: tabular-nums; }
+  .srchan th:first-child, .srchan td:first-child { text-align: left; }
+  .srchan th { font-size: var(--fs-mini); color: var(--mute); font-weight: 700; }
+  .srchan td.s { color: #0078a7; font-weight: 800; }
+  .srchan td.l { color: #8A6A2E; font-weight: 800; }
+  /* B2B 키워드 카드 */
+  .kwchips { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 8px; }
+  .kwtab { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .kwtab th, .kwtab td { padding: 4px 6px; border-bottom: 1px solid #F1F3F7; text-align: right; font-variant-numeric: tabular-nums; }
+  .kwtab th:first-child, .kwtab td:first-child { text-align: left; }
+  .kwtab th { font-size: var(--fs-mini); color: var(--mute); font-weight: 700; }
+  .kwtab td.z { color: var(--mute); }
+  .kwtab tr.st { cursor: pointer; }
+  .kwtab tr.st:hover td { background: #F5F8FF; }
+  .kwtab tr.on td { background: #EEF3FF; }
 
   /* **건수를 함께 적는다** — 어느 주에 자료가 있는지 눌러 보기 전에 알아야 한다.
      실측으로 한 주에 값이 있는 매장이 7~17곳뿐이라, 이 숫자가 없으면 빈 히트맵을 만난다. */
@@ -1328,6 +1394,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
     <span class="cntxt" id="r-note"></span>
   </div>
 
+  <!-- ── 내 점 (2026-09-11 사장님 지시) ──────────────────────────────────────
+       *"점장들도 자기점 관리용으로 — 점코드를 넣으면 점 상세분석 나오게하기"*.
+       점코드(ZH96)든 점명(갤러리아광교)이든 받는다. 주소에 `?store=ZH96` 을 붙여 열어도
+       같은 길로 간다(점장이 즐겨찾기로 둔다). -->
+  <div class="mystore" id="mystore">
+    <label class="lbl" for="my-code">내 점</label>
+    <input id="my-code" placeholder="점코드 또는 점명" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="점코드 또는 점명">
+    <button type="button" class="bk" id="my-go">점 상세분석</button>
+    <span class="cntxt" id="my-note">점코드(예: ZH96) 또는 점명을 넣으면 그 점의 리포트·직원별·베스트샵 대비·인근점이 채워집니다</span>
+  </div>
+
   <div id="status"></div>
 
   <div class="card">
@@ -1347,6 +1424,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
   <button type="button" class="sec" data-sec="mix" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4v8l5.7 5.7"/></svg></span>구성 한눈에</button>
   <button type="button" class="sec" data-sec="sdp" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9M4 9v11h16V9M4 9h16"/><path d="M9 20v-5h6v5"/><circle cx="18.5" cy="5.5" r="2.5"/></svg></span>SDP 개인대리점</button>
   <button type="button" class="sec" data-sec="signal" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20v-8M8 8a6 6 0 0 1 8 0M5 5a10 10 0 0 1 14 0"/><circle cx="12" cy="11" r="1.5"/></svg></span>매장 신호</button>
+  <button type="button" class="sec" data-sec="kw" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h7"/><circle cx="17.5" cy="16.5" r="3"/><path d="M19.8 18.8L22 21"/></svg></span>B2B 키워드</button>
   <button type="button" class="sec" data-sec="cafe" aria-pressed="false"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 9h2a2 2 0 0 1 0 4h-2M7 4v2M10 4v2M13 4v2"/></svg></span>어디에 올라오나</button>
   <!-- 관리자 (2026-09-03 사장님 지시 — *"기존에 매니저탭은 관리자항목으로(신규생성)
        넣어주세요 관리자는 비밀번호를 치고 접속하게 해야합니다"*).
@@ -1486,6 +1564,8 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
              (2026-09-10 사장님 지시 — 칸은 절대 건수, 견주기는 맨 위 「비교」 버튼).
              축이 넷(주차·연도·달·평소)이라 같은 칸이 볼 때마다 다른 뜻이었다. -->
         <button type="button" class="bk" id="hm-mode">지역별로 보기</button>
+        <!-- 와이드(16:10) ↔ 정사각 (2026-09-11 사장님 지시). 고른 것은 이 기기에 기억한다 -->
+        <button type="button" class="bk" id="hm-wide" title="칸 비율을 16:10 으로">와이드 16:10</button>
         <!-- 지점 ↔ 매니저 (2026-09-03 사장님 지시). **자료가 없으면 화면이 감춘다** —
              매니저 수집 전에는 눌러도 빈 히트맵이라 「고장」으로 보인다. -->
         <button type="button" class="bk" id="hm-who" hidden>매니저로 보기</button>
@@ -1497,6 +1577,10 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
            옛 마크업을 여기 남겨 두면 같은 id 가 둘이 되어 `getElementById` 가
            어느 것을 집을지 알 수 없다 — 통째로 걷어낸다. -->
       <div class="hm" id="hm"></div>
+      <!-- 채널 단계에서만 — 삼성 vs 베스트샵 채널별 표(2026-09-11 사장님 지시). 매장 대 매장
+           회차의 **양쪽 채널**이라 잣대가 같다(같은 질의·같은 쪽수). 위 칸(당사 수집)과는
+           잣대가 달라 표가 그 사실을 적는다. -->
+      <div class="srchan" id="hm-srchan" hidden></div>
       <div class="hmleg" id="hm-leg">
         <span id="hm-legt">전월 대비</span><b style="color:#C8324B" id="hm-legl">−15%</b>
         <span class="sc" id="hm-scale"></span><b style="color:#12805C" id="hm-legr">+15%</b>
@@ -1532,6 +1616,15 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
       <div class="sub" id="sig-sub">–</div>
       <div id="signals"></div>
     </div>
+    <!-- ── B2B 키워드 (2026-09-11 사장님 지시) ─────────────────────────────
+         *"DVM, 시스템에어컨, SAC 등 키워드넣어 매장에서 얼마나 활동중인가 확인할수있게"*.
+         **호출을 안 쓴다** — 이미 모은 후기에서 센다(제목 + 수집 이후 본문). 키워드 목록은
+         관리자에서 바꾼다. -->
+    <div class="card" data-card="kw">
+      <h2>B2B 키워드 — 매장별 활동</h2>
+      <div class="sub" id="kw-sub">–</div>
+      <div id="kwbox"></div>
+    </div>
     <div class="card" data-card="cafe">
       <h2>어디에 올라오나</h2>
       <div class="sub">카페 이름 기준입니다 · 블로그는 개인 블로그라 따로 세지 않습니다</div>
@@ -1565,6 +1658,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <div class="sub" id="list-sub">작성일을 아는 글 먼저 · 그 안에서 최신순 · 눌러서 원문 열기 · 위 막대를 누르면 그 매장·카페만</div>
         <!-- 매니저로 걸렸을 때만 나온다 — **걸린 줄 모르면 「후기가 이것뿐」으로 읽는다** -->
         <div id="list-mgr" class="lmgr" hidden></div>
+        <div id="list-kw" class="lmgr" hidden></div>
       </div>
       <button class="dl" id="csv">CSV 내려받기</button>
     </div>
@@ -1626,7 +1720,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
           <div class="pipe">
             <div><i>①</i> <b>자동 수집 살피기</b> — <b>켜 두셨을 때만</b> 살핍니다(구글이 꺼 놓았으면 다시 겁니다). 꺼 두셨으면 아무것도 하지 않습니다</div>
             <div><i>②</i> <b class="wk">주1</b> <b>베스트샵 비교</b> — 영업지역 6곳에서 당사 vs 베스트샵 후기 몫</div>
-            <div><i>③</i> <b class="wk">주1</b> <b>매장 대 매장</b> — 매장마다 베스트샵 짝 지점과 견줍니다(히트맵 오른쪽 오렌지)</div>
+            <div><i>③</i> <b class="wk">주1</b> <b>매장 대 매장</b> — 매장마다 베스트샵 짝 지점과 견줍니다(히트맵 칸 아래 게이지)</div>
             <div><i>④</i> <b class="wk">주1</b> <b>검색 관심도</b> — 네이버에서 얼마나 찾는지(데이터랩)</div>
             <div><i>⑤</i> <b class="dy">매일</b> <b>삭제된 글 확인</b> — 지워진 후기를 표시합니다(검색 호출은 안 씁니다)</div>
             <div><i>⑥</i> <b class="dy">매일</b> <b>매장 훑기</b> — 관할 매장 전부의 새 후기.
@@ -1882,6 +1976,17 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
         <div id="mgr-known"></div>
       </details>
 
+      <h3>B2B 키워드</h3>
+      <!-- 2026-09-11 사장님 지시: *"DVM, 시스템에어컨, SAC 등 키워드넣어 매장에서 얼마나
+           활동중인가 확인할수있게"*. 목록은 서버 속성(`_kwList`)이고 비우면 기본 셋으로 돌아간다.
+           **제목은 그 자리에서 다시 세지만 본문은 수집한 그때의 목록으로만 잡힌다** — 화면이 적는다. -->
+      <div class="sub" id="kwbook-sub">–</div>
+      <div class="alias-add">
+        <input id="kw-words" placeholder="키워드 (쉼표로 여럿 · 예: DVM, 시스템에어컨, SAC)" autocomplete="off" style="flex:1;min-width:220px">
+        <button id="kw-ok">저장</button>
+      </div>
+      <div id="kw-msg" class="sub"></div>
+
       <!-- **되돌릴 수 없으므로 관리자 항목 맨 뒤에 둔다** (2026-09-03) -->
       <h3>자료 비우기</h3>
       <div class="sub">모든 후기와 커서를 지우고 처음부터 다시 모읍니다.
@@ -1895,7 +2000,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-11-9e170c66';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -1925,6 +2030,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
   var DATA_READY = false;   /* 자료가 왔는가 — 화면이 「불러오는 중」과 「0건」을 가른다 */
   var srcFilter = '전체';
   var storeFilter = '';   /* 매장 막대를 눌러 걸린 값 */
+  var kwFilter = '';      /* B2B 키워드 칩을 눌러 걸린 값(2026-09-11) */
   /* 매니저 이름으로 거르기 (2026-09-03 사장님 지시 —
      *"히트맵에서 매니저이름을 클릭하면 해당후기가 보이게 해주세요"*). */
   var mgrFilter = '';
@@ -1957,12 +2063,25 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
    *  주고받는다. 여기서 바꾸는 것은 **적는 글자뿐**이다.
    *  **떼고 나서 아무것도 안 남으면 원본을 그대로 둔다** — 이 화면이 매장 이름을
    *  떼다가 「점」 한 글자만 남긴 사고를 이미 겪었다. */
+  /* ── 베스트샵 지점 이름은 **우리 매장 표기와 같은 꼴**로 (2026-09-11 사장님 지시) ────
+   * *"당사(우리매장)은 롯데수원 권선 이런식으로 끝에 점 이라고 안씌여져있습니다.
+   *  베스트샵도 동일하게 합니다. 단 베스트샵 AK수원, 베스트샵 남수원 이런식으로"*.
+   *
+   * 원본 이름(`AK PLAZA 수원점` · `롯데 타임빌라스 수원점` · `경기광주본점`)은 **열쇠**라
+   * 자료·저장에는 그대로 두고 **적을 때만** 바꾼다 — 띄어쓰기·「PLAZA」를 지우고 꼬리의
+   * 「본점」·「점」을 뗀다. 그러면 `AK수원` · `롯데타임빌라스수원` · `경기광주` 가 되어
+   * 우리 `AK수원` · `타임빌라스수원` 과 같은 결로 읽힌다.
+   * **떼고 나서 남는 것이 없으면 원래 이름을 둔다**(「점」 한 글자짜리 사고를 막는다). */
   function shopLabel(n) {
     var t = String(n == null ? '' : n).trim();
     if (!t) return '';
-    var c = t.replace(/본점$/, '').replace(/점$/, '').trim();
+    var c = t.replace(/PLAZA/gi, '').replace(/\s+/g, '').replace(/본점$/, '').replace(/점$/, '').trim();
     return c.length >= 1 ? c : t;
   }
+  /** 화면에 적는 온전한 표기 — 늘 「베스트샵 」을 앞에 붙인다(우리 매장과 한눈에 갈리게). */
+  function shopFull(n) { return '베스트샵 ' + shopLabel(n); }
+  /** 여럿 — 「베스트샵 AK수원 · 베스트샵 남수원」 */
+  function shopsText(list) { return (list || []).map(shopFull).join(' · '); }
 
   function kind4Row(k) {
     if (k === '혼수') return 'wedding';
@@ -2128,6 +2247,8 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
       if (storeFilter && r.storeName !== storeFilter) return false;
       if (cafeFilter && r.cafe !== cafeFilter) return false;
       if (kindFilter && r.kind !== kindFilter) return false;
+      /* B2B 키워드 — 서버가 줄에 붙여 준 `kw` 배열(제목 + 수집 때 본 본문) */
+      if (kwFilter && (r.kw || []).indexOf(kwFilter) < 0) return false;
       /* **최상단 유형 버튼도 목록에 걸린다**(2026-09-09 사장님 지시 — *"상단에 날짜와
          각종 후기유형은 하단에 모든 값을 결정하게해줘야합니다"*).
          카드 안 9종 칩(`kindFilter`)과 **함께** 걸린다 — 둘은 잣대가 달라(9종 ↔ 4종)
@@ -2392,7 +2513,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
     { id: 'rival', nm: '베스트샵 비교', cyc: 'w', cost: 'rival',
       why: '영업지역 6곳에서 당사 vs 베스트샵 후기 몫' },
     { id: 'srival', nm: '매장 대 매장', cyc: 'w', cost: 'srival',
-      why: '매장마다 베스트샵 짝 지점과 견줍니다(히트맵 오른쪽 오렌지)' },
+      why: '매장마다 베스트샵 짝 지점과 견줍니다(히트맵 칸 아래 게이지)' },
     { id: 'trend', nm: '검색 관심도', cyc: 'w', cost: 'trend',
       why: '네이버에서 얼마나 찾는지(데이터랩)' },
     { id: 'dead', nm: '삭제된 글 확인', cyc: 'm', cost: 'dead',
@@ -2660,7 +2781,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
           + '<span class="lgpc-n">' + esc(ls[i]) + '</span>'
           /* 칸 아래에 **지금 짝**을 적는다 — 이 칼럼이 삼성이라고 머리가 말하므로
              작은 글씨는 「이 매장에 지금 붙어 있는 LG 지점」으로 읽힌다 */
-          + '<span class="lgpc-g">' + esc(h.shops.length ? h.shops.join(' · ') : h.tag) + '</span></button>';
+          + '<span class="lgpc-g">' + esc(h.shops.length ? shopsText(h.shops) : h.tag) + '</span></button>';
       }
     }
     box.innerHTML = html || '<div class="sub">매장 목록을 아직 못 받았습니다.</div>';
@@ -2728,7 +2849,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
     var cell = function (x) {
       return '<button type="button" class="lgpc' + (lgpPick.indexOf(x.n) >= 0 ? ' on' : '')
         + '" data-shop="' + esc(x.n) + '">'
-        + '<span class="lgpc-n">' + esc(shopLabel(x.n)) + '</span>'
+        + '<span class="lgpc-n">' + esc(shopFull(x.n)) + '</span>'
         /* **거리를 적는다** — 왜 이 순서인지 눈으로 검산할 수 있어야 한다 */
         + '<span class="lgpc-g">'
         + (typeof x.m === 'number' && isFinite(x.m) ? distText(x.m) : '&nbsp;')
@@ -2753,9 +2874,9 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
       if (one) {
         var h = lgpHow(main);
         msg.innerHTML = h.shops.length
-          ? '지금 <b>' + esc(h.shops.join(' · ')) + '</b> — ' + esc(h.tag) + ' 으로 정해져 있습니다.'
+          ? '지금 <b>' + esc(shopsText(h.shops)) + '</b> — ' + esc(h.tag) + ' 으로 정해져 있습니다.'
           : (h.tag === '해당없음'
-              ? '<b>해당없음</b> 으로 정해 두셨습니다 — 이 매장은 베스트샵 와 견주지 않습니다.'
+              ? '<b>해당없음</b> 으로 정해 두셨습니다 — 이 매장은 베스트샵과 견주지 않습니다.'
               : '<b class="warn">짝이 없습니다</b>' + (h.why ? ' — ' + esc(h.why) : '') + '.');
       } else {
         /* **지금 짝이 서로 다르면 그 사실을 적는다** — 저장하면 전부 같아지므로
@@ -2763,7 +2884,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
         var lines = [], same = true, first = null;
         for (i = 0; i < lgpStores.length; i++) {
           var hh = lgpHow(lgpStores[i]);
-          var txt = hh.shops.length ? hh.shops.join(' · ') : hh.tag;
+          var txt = hh.shops.length ? shopsText(hh.shops) : hh.tag;
           if (first === null) first = txt; else if (txt !== first) same = false;
           lines.push('<b>' + esc(lgpStores[i]) + '</b> ' + esc(txt));
         }
@@ -2824,7 +2945,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
       html += '<tr><td class="nm">' + esc(rows[i].nm) + '</td>'
         /* **해당없음 줄을 경고색으로 칠하지 않는다** — 옆 칸에 이미 「해당없음」
            배지가 있어 주황이 둘이 되면 정해 두신 것이 문제로 읽힌다(실물에서 봤다) */
-        + '<td>' + (rows[i].h.shops.length ? esc(rows[i].h.shops.join(' · '))
+        + '<td>' + (rows[i].h.shops.length ? esc(shopsText(rows[i].h.shops))
             : (rows[i].h.tag === '해당없음' ? '<span class="cntxt">견주지 않음</span>'
                                             : '<b class="warn">없음</b>')) + '</td>'
         /* **자동과 수기를 가른다** — 사장님이 고치신 것이 어디인지 보여야 한다 */
@@ -2871,14 +2992,14 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
         if (undo) {
           var h = lgpHow(store);
           say(h.shops.length
-            ? '자동으로 되돌렸습니다 — <b>' + esc(h.shops.join(' · ')) + '</b> (' + esc(h.tag) + ')'
+            ? '자동으로 되돌렸습니다 — <b>' + esc(shopsText(h.shops)) + '</b> (' + esc(h.tag) + ')'
             : '<b class="warn">자동으로도 짝을 못 찾습니다.</b>');
         } else {
           /* **조사를 붙이지 않는다** — 「수원본점 로」가 된다. `josa` 는 ㄹ 받침(서울로)을
              못 가르므로 아예 조사가 없는 문장으로 둔다. */
           say((r.shops && r.shops.length)
-            ? '<b>' + esc(r.shops.join(' · ')) + '</b> — 이 짝으로 저장했습니다. <b>매장 대 매장 수집</b>을 다시 돌리면 반영됩니다.'
-            : '<b>해당없음</b> 으로 저장했습니다 — 이 매장은 베스트샵 와 견주지 않습니다.');
+            ? '<b>' + esc(shopsText(r.shops)) + '</b> — 이 짝으로 저장했습니다. <b>매장 대 매장 수집</b>을 다시 돌리면 반영됩니다.'
+            : '<b>해당없음</b> 으로 저장했습니다 — 이 매장은 베스트샵과 견주지 않습니다.');
         }
         if (done) done(true);
       })
@@ -2931,7 +3052,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
           ? '<b class="warn">' + okN + '곳은 ' + (undo ? '되돌렸고' : '저장했고') + ' '
             + failed.length + '곳은 못 했습니다</b> — ' + esc(failed.join(' · '))
           : '<b>' + okN + '곳</b>을 ' + (undo ? '자동으로 되돌렸습니다.'
-              : (list.length ? '<b>' + esc(list.join(' · ')) + '</b> 와 견주도록 저장했습니다.'
+              : (list.length ? '<b>' + esc(shopsText(list)) + '</b> — 이 짝과 견주도록 저장했습니다.'
                              : '<b>해당없음</b> 으로 저장했습니다.'))
             + ' <b>매장 대 매장 수집</b>을 다시 돌리면 반영됩니다.');
         return;
@@ -3133,6 +3254,7 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
      **0건도 적는다** — 등록했는데 후기에 한 번도 안 나오는 것이 곧 정보다.
      순위표에만 있으면 「안 나오는 사람」은 화면에서 통째로 사라진다. */
   function renderMgrBook() {
+    renderKwBook();
     var box = document.getElementById('mgr-known'); if (!box) return;
     var K = DATA.mgrKnown || [];
     var L = DATA.mgrList || {};
@@ -3193,6 +3315,52 @@ var IX_VER = '2026-09-11-852bc188';   /* 붙여넣기 확인용 — 주석은 �
       })
       /* **토큰을 함께 보낸다** — 서버가 확인한다. 화면만 잠그면 서버는 열려 있다 */
       .setManagerNames(store, names, admToken);
+  }
+
+  /* ── B2B 키워드 편집 (관리자) ─────────────────────────────────────────────
+     저장하면 서버가 다듬은 목록을 돌려주고 화면이 그것으로 다시 그린다. **건수는 집계에서
+     나오므로** 새로고침해야 표가 바뀐다 — 그 사실을 적는다. */
+  function renderKwBook() {
+    var sub = document.getElementById('kwbook-sub'), inp = document.getElementById('kw-words');
+    var KL = DATA.kwList || [];
+    if (sub) sub.innerHTML = '지금 <b>' + KL.length + '개</b>: ' + (KL.length ? esc(KL.join(' · ')) : '(기본 셋)')
+      + ' · 최대 20개 · 2~20자 · 영문 약어(DVM·SAC)는 낱말 경계로, 한글은 띄어쓰기를 무시하고 찾습니다'
+      + ' · <b>비우고 저장하면 기본 셋</b>(DVM · 시스템에어컨 · SAC)으로 돌아갑니다';
+    if (inp && !inp.value && document.activeElement !== inp) inp.value = KL.join(', ');
+  }
+  function saveKeywords(list) {
+    var msg = document.getElementById('kw-msg'), ok = document.getElementById('kw-ok');
+    if (ok) ok.disabled = true;
+    if (msg) msg.textContent = '저장하는 중입니다…';
+    if (!(window.google && google.script && google.script.run)) {
+      if (msg) msg.textContent = '미리보기에서는 저장되지 않습니다.';
+      if (ok) ok.disabled = false;
+      return;
+    }
+    google.script.run
+      .withSuccessHandler(function (r) {
+        if (ok) ok.disabled = false;
+        if (!r || !r.ok) { if (msg) msg.textContent = (r && r.error) || '저장하지 못했습니다.'; return; }
+        DATA.kwList = r.kwList || [];
+        renderKwBook(); renderKw();
+        if (msg) msg.innerHTML = '저장했습니다. <b>새로고침하면 매장별 건수가 다시 세어집니다</b>'
+          + ' — 제목은 바로 따라오고, 본문은 다음 수집부터 새 목록으로 잡힙니다.';
+      })
+      .withFailureHandler(function (e) {
+        if (ok) ok.disabled = false;
+        if (msg) msg.textContent = '저장하지 못했습니다 — ' + (e && e.message);
+      })
+      .setKeywords(list, admToken);
+  }
+  function wireKwBook() {
+    var ok = document.getElementById('kw-ok'), inp = document.getElementById('kw-words');
+    if (!ok || !inp || ok.dataset.wired) return;
+    ok.dataset.wired = '1';
+    ok.onclick = function () {
+      var list = inp.value.split(/[,·\n]/).map(function (x) { return x.trim(); }).filter(Boolean);
+      saveKeywords(list);
+    };
+    inp.onkeydown = function (e) { if (e.key === 'Enter') ok.click(); };
   }
 
   function wireMgrBook() {
@@ -3523,6 +3691,13 @@ function secPeek(k) {
     if (k === 'store') { t = topOf(D.byStore); return t ? '매장 ' + t.n + '곳 · 1위 ' + t.k + ' ' + nf(t.v) + '건' : ''; }
     if (k === 'cafe') { t = topOf(D.byCafe); return t ? '카페 ' + t.n + '곳 · 최다 ' + t.k : ''; }
     if (k === 'signal') { t = topOf(D.byStore); return t ? '매장 ' + t.n + '곳의 흐름과 마지막 후기' : ''; }
+    /* B2B 키워드 — 카드가 적는 값 그대로(전체 건수 합) */
+    if (k === 'kw') {
+      var kl = D.kwList || [], kb = D.byKw || {}, ks = 0;
+      if (!kl.length) return '';
+      kl.forEach(function (x) { ks += Number(kb[x]) || 0; });
+      return '키워드 ' + kl.length + '개 · ' + nf(ks) + '건';
+    }
     /* SDP — **갈래가 아예 없어 이 박스만 부제가 비어 있었다**(2026-09-05 실물에서 잡음).
        열두 박스가 채워진 옆에서 혼자 비면 고장으로 읽힌다. 「아직 안 쟀습니다」는
        지어낸 값이 아니라 **사실**이므로 적어도 된다(0 으로 적는 것과는 다르다). */
@@ -3707,8 +3882,15 @@ function wireSecs() {
       var names = Object.keys(by).filter(function (k) { return by[k] > 0; });
       names.sort(function (a, b) { return by[b] - by[a]; });
       /* **고른 매장이 목록에서 빠지면 전체로 되돌린다** — 안 그러면 화면 아래에
-         그 결과에 없는 지점의 리포트가 남아 화면이 거짓말을 한다. */
-      if (reportStore && names.indexOf(reportStore) < 0) reportStore = '';
+         그 결과에 없는 지점의 리포트가 남아 화면이 거짓말을 한다.
+         **다만 실재하는 매장이면 0건이어도 둔다**(2026-09-11) — 점장이 점코드로 들어왔는데
+         후기가 없다고 전체 리포트로 되돌리면 「내 점이 없다」로 읽힌다. 0건은 0건으로 적는다. */
+      var codes0 = DATA.storeCodes || {}, knownStore = {};
+      Object.keys(codes0).forEach(function (c) { knownStore[codes0[c]] = 1; });
+      Object.keys(by).forEach(function (k) { knownStore[k] = 1; });
+      if (reportStore && names.indexOf(reportStore) < 0 && !knownStore[reportStore]) reportStore = '';
+      /* 고른 0건 매장은 드롭다운에도 세운다 — 없으면 셀렉트가 빈 값으로 보인다 */
+      if (reportStore && names.indexOf(reportStore) < 0) names = names.concat([reportStore]);
       var sig = names.join('|');
       if (sel.dataset.sig !== sig) {
         sel.dataset.sig = sig;
@@ -3886,6 +4068,12 @@ function wireSecs() {
       + '(네이버가 카페·웹 글의 작성일을 주지 않습니다).'
       + (partDays ? ' <b class="warn">이번 주는 아직 ' + partDays + '일치입니다.</b>' : '')
       + '</p></div>';
+
+    /* ── 점 설명 (2026-09-11 사장님 지시) — 지점을 골랐을 때만. 접지 않는다 —
+       점장이 점코드로 들어와 가장 먼저 볼 자리다(직원별 · 베스트샵 대비 · 인근점 · 키워드). */
+    if (reportStore) {
+      html += '<div class="dsec"><h3>' + esc(reportStore) + ' 점 설명</h3>' + storeNarrative(reportStore) + '</div>';
+    }
 
     /* ── 근거 — **접어 둔다.** 지우지 않는 이유는 요약을 검산할 수 있어야 하기 때문이다 */
     var more = '';
@@ -4423,7 +4611,7 @@ function wireSecs() {
           + (paired[q.n] ? " — 우리 매장과 짝이 맺혀 있습니다" : "") + '</title></circle>';
         if (fsz) {
           h += '<text class="pinlab" x="' + q.x + '" y="' + (q.y + r * 3.1)
-            + '" style="font-size:' + fsz + 'px;fill:#C0392B">' + esc(shopLabel(q.n)) + '</text>';
+            + '" style="font-size:' + fsz + 'px;fill:#C0392B">' + esc(shopFull(q.n)) + '</text>';
         }
       }
       return h;
@@ -4838,6 +5026,12 @@ function wireSecs() {
   }
   var LADDER = [[0.90, 0], [0.80, 0], [0.68, 0], [0.56, 0], [0.42, 0],
                 [0.28, 0], [0.14, 0], [0, 0], [0, 0.20], [0, 0.38]];
+  /* 흰 바탕 위 이 색 글자의 대비(WCAG). `inkOn` 과 같은 휘도식이다. */
+  function whiteContrast(hex) {
+    var c = hex2rgb(hex); if (!c) return 21;
+    var f = c.map(function (x) { var v = x / 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    return 1.05 / (0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2] + 0.05);
+  }
   function applyAreaColors() {
     var cols = DATA.areaColors;
     if (!cols) return;                       /* 옛 서버면 CSS 폴백 그대로 */
@@ -4845,6 +5039,13 @@ function wireSecs() {
     for (a in cols) {
       if (!cols.hasOwnProperty(a) || !AREA_N[a]) continue;
       n = AREA_N[a];
+      /* **숫자는 흰 바탕 위 글자다** — 기준색(v8)이 밝으면 4.5:1 을 못 넘는다(2026-09-11
+         쏜디 팔레트로 갈며 드러났다: 터콰이즈 3.0 · 앰버 4.0). 옛 색은 전부 어두워 우연히
+         통과했던 자리다. v8 부터 아래로 내려가며 **처음 4.5 를 넘는 단계**를 숫자의 하한으로
+         삼는다 — 사다리 자체는 손대지 않는다(지도·아이콘의 농도 읽기가 안 바뀐다). */
+      var numMin = 7;
+      while (numMin < LADDER.length - 1
+             && whiteContrast(shade(cols[a], LADDER[numMin][0], LADDER[numMin][1])) < 4.5) numMin++;
       for (i = 0; i < LADDER.length; i++) {
         var c = shade(cols[a], LADDER[i][0], LADDER[i][1]);
         css.push('.geo-svg path.r' + n + '.v' + (i + 1) + '{fill:' + c + '}');
@@ -4857,10 +5058,10 @@ function wireSecs() {
         var q = '.st.a' + n + '.s' + (i + 1) + ':not(.on):not(.z)';
         css.push(q + ' .ic{background:' + c + ';color:' + inkOn(c) + '}');
         css.push(q + '::before{background:' + c + '}');
-        /* **숫자는 v7 밑으로 안 내려간다** — 흐린 칸의 숫자가 안 읽히면 그라데이션이
+        /* **숫자는 numMin 밑으로 안 내려간다** — 흐린 칸의 숫자가 안 읽히면 그라데이션이
            정보를 지우는 셈이 된다. 사장님 지시 *"텍스트가 잘 보이는 컬러로"* 그대로다. */
         css.push(q + ' b{color:'
-          + shade(cols[a], LADDER[Math.max(7, i)][0], LADDER[Math.max(7, i)][1]) + '}');
+          + shade(cols[a], LADDER[Math.max(numMin, i)][0], LADDER[Math.max(numMin, i)][1]) + '}');
       }
       css.push('.st.a' + n + ' .ic{background:' + cols[a] + '}');
     }
@@ -4942,7 +5143,7 @@ function wireSecs() {
     }
     var opt = function (x) {
       return '<option value="' + esc(x.n) + '"' + (now.indexOf(x.n) >= 0 ? " selected" : "") + '>'
-        + esc(shopLabel(x.n)) + " (" + esc(x.g) + ")</option>";
+        + esc(shopFull(x.n)) + " (" + esc(x.g) + ")</option>";
     };
     return '<div class="lgpair"><h4>경쟁 베스트샵 지점</h4>'
       + '<select id="lgsel" multiple size="6" aria-label="이 매장과 견줄 베스트샵 지점(여럿 고를 수 있습니다)">'
@@ -5006,6 +5207,9 @@ function wireSecs() {
       + '<div class="note" style="margin-top:8px">카페는 <b>카페 이름</b>, 블로그·웹은'
       + ' 출처로 묶었습니다 — 블로거 이름은 저장하지 않아 가릴 수 없습니다.'
       + '</div>'
+      /* ── 점 설명 (2026-09-11 사장님 지시) — 직원별 · 베스트샵 대비 · 인근 우리 점 · 키워드.
+         매장 신호·리포트와 **같은 함수**다 — 세 곳이 따로 적으면 같은 매장을 다르게 말한다. */
+      + storeNarrative(storeFilter)
       /* ── 경쟁 LG 지점 짝 (2026-09-03 사장님 지시) ─────────────────────────
        * *"LG지점명을 지도에 넣어주시고 제가 어느 매장과 매칭을 시킬지 변경 가능하도록"*.
        * 자동 짝은 **좌표로 낸 제안**이라(중앙값 0.26km) 틀릴 수 있다 — 사람이 고친다.
@@ -5063,6 +5267,266 @@ function wireSecs() {
       if (box && box.getAttribute('aria-pressed') !== 'true') box.click();
       if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
+  }
+
+  /* ── 점 설명 — 직원별 · 베스트샵 대비 · 인근 우리 점 · B2B 키워드 (2026-09-11 사장님 지시) ──
+   * *"신규철매니저가 다이랙트 내 이렇게 하고 있음 / 갤광은 현재 베스트샵보다 몇건 많고
+   *  아주 잘하고 있음 / 주변에 인근점(우리회사)는 이렇게하고있음"*.
+   *
+   * **세 곳(지점별 분석 · 리포트 · 매장 신호)이 이 한 함수를 쓴다.** 따로 적으면 같은
+   * 매장을 세 화면이 다르게 말한다. **여기서 새로 계산하는 값은 없다** — 순위는
+   * `scopedByStore`, 베스트샵은 `srShare`, 매니저는 서버 `byStoreMgr`, 인근점은
+   * `storeGeo` 좌표(지도·짝 고르개가 쓰는 그것)다.
+   *
+   * **판정 말은 우리 몫으로 낸다** — 55% 이상 「앞서고 있습니다」 · 45~55 「비슷합니다」 ·
+   * 45 미만 「밀리고 있습니다」. 균형점 50 에 ±5 를 두었다 — 51% 를 「앞선다」고 하면
+   * 다음 수집에서 49% 가 되어 화면이 뒤집힌다.
+   * **못 잰 것은 못 잰 것으로 적는다**(「없다」·「못 잼」·「견주지 않음」을 가른다). */
+  function storeNarrative(nm) {
+    var D = DATA || {}, by = scopedByStore(), n = by[nm] || 0, H = '';
+    /* ① 어디쯤인가 */
+    var names = Object.keys(by).filter(function (k) { return by[k] > 0; })
+      .sort(function (a, b) { return by[b] - by[a]; });
+    var rk = names.indexOf(nm) + 1;
+    var reg = areaOfStore(nm) || '';
+    var regList = ((D.byRegion || {})[reg] || {}).stores || [];
+    var regRank = regList.filter(function (k) { return (by[k] || 0) > 0; })
+      .sort(function (a, b) { return by[b] - by[a]; }).indexOf(nm) + 1;
+    var per = (typeof periodLabel === 'function' && periodLabel()) || '전 기간';
+    H += '<h4>어디쯤인가</h4><p>' + (n
+      ? '<b>' + esc(per) + ' ' + nf(n) + '건</b> — 팀 ' + names.length + '곳 중 <b>' + rk + '위</b>'
+        + (reg && regRank ? ' · ' + esc(reg) + '지역 ' + regList.length + '곳 중 <b>' + regRank + '위</b>' : '')
+      : '<b class="cx">' + esc(per) + ' 잡힌 후기가 없습니다</b>') + '</p>';
+
+    /* ② 직원별 */
+    var MS = scopedMgrsOf(nm), M = MS.list;
+    var known = {};
+    (D.mgrKnown || []).forEach(function (k) { if (k.store === nm) known[k.name] = 1; });
+    H += '<h4>직원별</h4>';
+    if (M.length) {
+      H += '<ul>' + M.map(function (m) {
+        var ch = m.chan || {}, ck = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; });
+        return '<li><b>' + esc(m.name) + '</b> 매니저' + (known[m.name] ? ' <span class="cx">✓명부</span>' : '')
+          + ' — <b>' + nf(m.n) + '건</b>'
+          + (ck.length ? ' · ' + ck.map(function (k) { return esc(k) + ' ' + nf(ch[k]); }).join(' · ') : '')
+          + '</li>';
+      }).join('') + '</ul>'
+        + '<p class="cx">후기 제목·본문에서 뽑은 이름입니다 — '
+        + (scoped() && !MS.fallback ? '<b>' + esc(per) + '</b> 건수이고 <b>채널은 전 기간</b>입니다(작성일을 아는 글만)'
+           : MS.fallback ? '<b>전 기간 기준</b>입니다(옛 서버 자료라 기간을 못 가릅니다)' : '전 기간 기준')
+        + ' · ✓는 명부에 등록된 사람입니다.</p>';
+    } else {
+      H += '<p class="cx">' + (scoped() ? esc(per) + '에는 ' : '') + '이름이 잡힌 매니저가 없습니다 — 후기에 「○○○ 매니저」처럼 적혀야 잡힙니다.</p>';
+    }
+
+    /* ③ 베스트샵 대비 */
+    H += '<h4>베스트샵과 견주면</h4>';
+    var pr = pairList((D.lgPair || {})[nm]);
+    var srv = (typeof srShare === 'function') ? srShare(nm) : null;
+    /* 회차 줄 자체 — `srShare` 는 상한에 닿은 줄을 null 로 내므로 그 이유를 여기서 가른다 */
+    var srRaw = null;
+    ((D.storeRival || {}).rows || []).forEach(function (r) { if (r.store === nm) srRaw = r; });
+    var prLab = pr.map(shopLabel).join(' · ');
+    if (!pr.length) {
+      H += '<p class="cx">이 점은 베스트샵 짝을 「해당없음」으로 두어 견주지 않습니다.</p>';
+    } else if (!srv && srRaw && srRaw.capped) {
+      H += '<p class="cx">베스트샵 ' + esc(prLab) + josa(prLab, '과', '와') + ' 당사 ' + nf(srRaw.ours) + ' vs 베스트샵 ' + nf(srRaw.rival)
+        + '건 — 한쪽이 검색 상한에 닿아 비중을 못 잽니다(둘 다 그보다 많다는 뜻입니다).</p>';
+    } else if (!srv) {
+      H += '<p class="cx">베스트샵 ' + esc(prLab) + josa(prLab, '과', '와') + ' 견줄 자료가 아직 없습니다 — 「없다」가 아니라 「못 쟀다」입니다(다음 매장 대 매장 수집부터).</p>';
+    } else if (srv.pct === null) {
+      H += '<p class="cx">베스트샵 ' + esc(shopLabel(srv.shop)) + ' — 당사 ' + nf(srv.ours) + ' vs 베스트샵 ' + nf(srv.rival)
+        + '건, ' + (srv.thin ? '한쪽이 0이라 비중을 못 잽니다' : '그 구간에 작성일을 아는 글이 없어 못 잽니다')
+        + (srv.allOurs || srv.allRival ? ' — 전 기간으로는 당사 ' + nf(srv.allOurs) + ' vs ' + nf(srv.allRival) + '건' : '') + '.</p>';
+    } else {
+      var diff = srv.ours - srv.rival;
+      var cls = srv.pct >= 55 ? 'good' : (srv.pct >= 45 ? 'even' : 'bad');
+      var say = srv.pct >= 55 ? '앞서고 있습니다' : (srv.pct >= 45 ? '비슷합니다' : '밀리고 있습니다');
+      H += '<p>베스트샵 <b>' + esc(shopLabel(srv.shop)) + '</b>보다 <b>' + nf(Math.abs(diff)) + '건 '
+        + (diff >= 0 ? '많습니다' : '적습니다') + '</b>(당사 ' + nf(srv.ours) + ' vs 베스트샵 ' + nf(srv.rival)
+        + '건 · 우리 몫 ' + srv.pct + '%) — <span class="' + cls + '">' + say + '</span>'
+        + '<span class="cx"> · ' + (srv.scope === 'period' ? esc(srv.months) + '월 기준' : '전 기간 기준')
+        + ' · 같은 질의·같은 쪽수로 양쪽을 잰 값입니다'
+        + (srv.stale ? ' · 짝을 바꾸셨습니다 — 다음 수집에서 다시 잽니다' : '') + '</span></p>';
+    }
+
+    /* ④ 인근 우리 점 */
+    H += '<h4>인근 우리 점</h4>';
+    var G = D.storeGeo || {}, me = G[nm];
+    if (me && typeof me.lat === 'number') {
+      var near = [];
+      Object.keys(G).forEach(function (o) {
+        if (o === nm || !G[o] || typeof G[o].lat !== 'number') return;
+        /* 매장 목록에 있는 곳만(좌표 표에만 남은 이름을 세지 않는다) */
+        if (by[o] === undefined && !((D.storeType || {})[o])) return;
+        near.push({ nm: o, m: distM(me.lat, me.lng, G[o].lat, G[o].lng) });
+      });
+      near.sort(function (a, b) { return a.m - b.m; });
+      near = near.slice(0, 3);
+      H += '<ul>' + near.map(function (o) {
+        var so = (typeof srShare === 'function') ? srShare(o.nm) : null;
+        return '<li><b>' + esc(o.nm) + '</b> <span class="cx">' + distText(o.m) + '</span> — ' + nf(by[o.nm] || 0) + '건'
+          + (so && so.pct !== null ? ' · 베스트샵 대비 우리 몫 ' + so.pct + '%' : '')
+          + '</li>';
+      }).join('') + '</ul>';
+    } else {
+      H += '<p class="cx">이 점의 좌표를 몰라 인근 점을 못 찾습니다.</p>';
+    }
+
+    /* ⑤ B2B 키워드 */
+    var KL = D.kwList || [], KS = scopedByStoreKw()[nm] || {};
+    if (KL.length) {
+      var anyKw = KL.some(function (k) { return KS[k] > 0; });
+      H += '<h4>B2B 키워드 활동</h4><p>' + KL.map(function (k) {
+        return '<b>' + esc(k) + '</b> ' + (KS[k] ? nf(KS[k]) + '건' : '<span class="cx">0건</span>');
+      }).join(' · ')
+        + (anyKw ? '' : ' <span class="cx">— ' + (scoped() ? esc(per) + ' ' : '') + '이 점 후기에 그 말이 없습니다</span>')
+        + '<span class="cx"> · ' + (kwScopeFallback() ? '전 기간 기준(옛 서버 자료) · ' : scoped() ? esc(per) + ' 기준 · ' : '')
+        + '제목(+수집 이후 본문)에서 찾은 것</span></p>';
+    }
+    return '<div class="nr">' + H + '</div>';
+  }
+
+  /* ── 내 점 — 점코드·점명으로 곧장 (2026-09-11 사장님 지시) ─────────────────
+   * 점코드는 대소문자 무시, 점명은 띄어쓰기 무시 · **정확히 일치할 때만**(허브의
+   * `matchStore` 와 같은 규칙 — 「수」 한 글자로 아무 점이나 열리면 안 된다). */
+  function resolveStore(text) {
+    var t = String(text || '').trim();
+    if (!t) return '';
+    var codes = DATA.storeCodes || {}, up = t.toUpperCase();
+    if (codes[up]) return codes[up];
+    var tight = t.replace(/\s+/g, ''), k;
+    var pool = {};
+    Object.keys(DATA.byStore || {}).forEach(function (x) { pool[x] = 1; });
+    Object.keys(codes).forEach(function (c) { pool[codes[c]] = 1; });
+    for (k in pool) if (pool.hasOwnProperty(k) && k.replace(/\s+/g, '') === tight) return k;
+    return '';
+  }
+  /** 그 점으로 화면을 맞춘다 — 리포트·매장별 분석을 채우고 리포트로 데려간다. */
+  function openStore(nm, code) {
+    reportStore = nm; storeFilter = nm; cafeFilter = ''; watchFilter = ''; mgrFilter = '';
+    var open = secOpen(), changed = false;
+    ['diag', 'store'].forEach(function (k) { if (open.indexOf(k) < 0) { open.push(k); changed = true; } });
+    if (changed) { secSave(open); applySecs(); }
+    render();
+    var note = document.getElementById('my-note');
+    if (note) note.innerHTML = '<span class="hit">' + esc((code ? code + ' ' : '') + nm) + '</span> — 리포트·매장별 분석을 채웠습니다';
+    var card = document.querySelector('.card[data-card="diag"]');
+    if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function wireMyStore() {
+    var go = document.getElementById('my-go'), inp = document.getElementById('my-code');
+    if (!go || !inp || go.dataset.wired) return;
+    go.dataset.wired = '1';
+    var run = function () {
+      var t = inp.value.trim(), nm = resolveStore(t), note = document.getElementById('my-note');
+      if (!nm) {
+        /* **왜 틀렸는지는 갈라 주지 않는다**(허브 접속 규칙 그대로) — 자료가 아직이면 그 사실만 */
+        if (note) note.innerHTML = !DATA_READY ? '자료를 불러오는 중입니다 — 잠시 뒤 다시 눌러 주세요'
+          : '<b class="warn">그런 점코드·점명이 없습니다</b> — 점코드(ZH96) 또는 점명(갤러리아광교)을 정확히 넣어 주세요';
+        return;
+      }
+      var codes = DATA.storeCodes || {}, code = '';
+      Object.keys(codes).forEach(function (c) { if (codes[c] === nm) code = c; });
+      openStore(nm, code);
+    };
+    go.onclick = run;
+    inp.onkeydown = function (e) { if (e.key === 'Enter') run(); };
+  }
+  /** 주소의 `?store=ZH96` — 점장이 즐겨찾기로 둔다. Apps Script 는 `google.script.url` 로
+   *  파라미터를 주고(iframe 안이라 `location.search` 가 비어 있다), 미리보기는 주소로 받는다.
+   *  **자료가 온 뒤에** 부른다 — 점명을 알아보려면 `storeCodes` 가 있어야 한다. */
+  function applyDeepStore() {
+    var done = function (q) {
+      var v = q && (q.store || q.code);
+      if (!v) return;
+      var inp = document.getElementById('my-code');
+      if (inp) inp.value = String(v);
+      var nm = resolveStore(v);
+      if (nm) {
+        var codes = DATA.storeCodes || {}, code = '';
+        Object.keys(codes).forEach(function (c) { if (codes[c] === nm) code = c; });
+        openStore(nm, code);
+      }
+    };
+    try {
+      if (window.google && google.script && google.script.url && google.script.url.getLocation) {
+        google.script.url.getLocation(function (loc) { done((loc && loc.parameter) || {}); });
+        return;
+      }
+    } catch (e) {}
+    var q = {}, m = String(location.search || '').replace(/^\?/, '').split('&');
+    m.forEach(function (p) { var i = p.indexOf('='); if (i > 0) q[decodeURIComponent(p.slice(0, i))] = decodeURIComponent(p.slice(i + 1).replace(/\+/g, ' ')); });
+    done(q);
+  }
+
+  /* ── B2B 키워드 카드 (2026-09-11 사장님 지시) ─────────────────────────────
+   * 키워드 칩(전체 건수) + 매장 × 키워드 표. **0건 매장은 빼고 몇 곳인지 적는다** —
+   * 62줄 중 대부분이 0이라 다 그리면 표가 안 읽힌다. 칩을 누르면 아래 후기 목록이
+   * 그 키워드로 걸린다 · 매장 줄을 누르면 그 매장으로. */
+  function renderKw() {
+    var box = document.getElementById('kwbox'), sub = document.getElementById('kw-sub');
+    if (!box) return;
+    var KL = DATA.kwList || [], bsk = scopedByStoreKw(), byKw = DATA.byKw || {};
+    /* 기간이 걸렸으면 전체 건수도 그 범위에서 다시 센다 — 칩과 표가 같은 수를 말해야 한다 */
+    if (scoped() && !kwScopeFallback()) {
+      byKw = {};
+      Object.keys(bsk).forEach(function (st) { KL.forEach(function (k) { if (bsk[st][k]) byKw[k] = (byKw[k] || 0) + bsk[st][k]; }); });
+    }
+    if (!KL.length) {
+      box.innerHTML = '<div class="empty">키워드가 아직 없습니다 — 자료를 불러오면 채워집니다</div>';
+      if (sub) sub.textContent = '–';
+      return;
+    }
+    var tot = 0; KL.forEach(function (k) { tot += Number(byKw[k]) || 0; });
+    if (sub) {
+      sub.innerHTML = (kwScopeFallback() ? '<b class="warn">옛 서버 자료라 기간을 못 가릅니다 — 전 기간 기준</b> · ' : '')
+        + '<b>제목</b>에서 찾은 것' + (DATA.kwFull ? ' + <b>' + nf(DATA.kwFull) + '건</b>은 본문까지' : '')
+        + ' · 호출을 쓰지 않습니다(이미 모은 후기에서 셉니다) · 키워드는 오른쪽 위 톱니바퀴에서 바꿉니다'
+        + (DATA.total && DATA.kwFull !== undefined && DATA.kwFull < DATA.total
+            ? ' · <span class="cntxt">나머지 ' + nf(DATA.total - DATA.kwFull) + '건은 옛 글이라 제목에서만 잡힙니다</span>' : '');
+    }
+    var chips = '<div class="kwchips">' + KL.map(function (k) {
+      return '<button type="button" class="chip' + (kwFilter === k ? ' on' : '') + '" data-kw="' + esc(k) + '">'
+        + esc(k) + ' <i>' + nf(byKw[k] || 0) + '</i></button>';
+    }).join('') + '</div>';
+    var stores = Object.keys(bsk).map(function (st) {
+      var t = 0; KL.forEach(function (k) { t += Number(bsk[st][k]) || 0; });
+      return { nm: st, t: t };
+    }).filter(function (x) { return x.t > 0; }).sort(function (a, b) { return b.t - a.t; });
+    var nAll = Object.keys(DATA.byStore || {}).length;
+    var tab = '';
+    if (stores.length) {
+      tab = '<table class="kwtab"><thead><tr><th>매장</th>' + KL.map(function (k) { return '<th>' + esc(k) + '</th>'; }).join('')
+        + '<th>합</th></tr></thead><tbody>'
+        + stores.map(function (x) {
+            return '<tr class="st' + (storeFilter === x.nm ? ' on' : '') + '" data-v="' + esc(x.nm) + '"><td>' + esc(x.nm) + '</td>'
+              + KL.map(function (k) { var v = bsk[x.nm][k] || 0; return '<td class="' + (v ? '' : 'z') + '">' + (v ? nf(v) : '·') + '</td>'; }).join('')
+              + '<td><b>' + nf(x.t) + '</b></td></tr>';
+          }).join('')
+        + '</tbody></table>'
+        + '<div class="mini" style="margin-top:6px">' + stores.length + '곳에 활동이 있습니다'
+        + (nAll > stores.length ? ' · 나머지 ' + (nAll - stores.length) + '곳은 0건이라 뺐습니다' : '') + '</div>';
+    } else {
+      tab = '<div class="empty">' + (tot ? '' : '아직 어느 매장 후기에도 이 키워드가 없습니다') + '</div>';
+    }
+    box.innerHTML = chips + tab;
+    if (!box.dataset.wired) {
+      box.dataset.wired = '1';
+      box.addEventListener('click', function (e) {
+        var c = e.target.closest ? e.target.closest('.chip[data-kw]') : null;
+        if (c) {
+          var k = c.getAttribute('data-kw');
+          kwFilter = kwFilter === k ? '' : k; page = 1; render();
+          return;
+        }
+        var tr = e.target.closest ? e.target.closest('tr.st') : null;
+        if (tr) {
+          var nm = tr.getAttribute('data-v');
+          storeFilter = storeFilter === nm ? '' : nm; cafeFilter = ''; watchFilter = ''; page = 1; render();
+        }
+      });
+    }
   }
 
   function renderRegions() {
@@ -6722,9 +7186,11 @@ function renderList() {
     quiet.sort(function (a, b2) { return a[1] < b2[1] ? -1 : 1; });
     quiet = quiet.slice(0, 6);
 
+    /* **줄을 누르면 점 설명이 펼쳐진다**(2026-09-11 사장님 지시 — *"매장신호 누르면
+       직원별 설명 점 설명 자세히"*). `data-v` 로 매장을 들고 있고 손잡이는 아래서 한 번에 건다. */
     function rows(list, fmt) {
       return list.map(function (r) {
-        return '<div class="sigrow"><b>' + esc(r[0]) + "</b> " + fmt(r) + pctTag(r[0]) + "</div>";
+        return '<div class="sigrow hit" data-v="' + esc(r[0]) + '"><b>' + esc(r[0]) + "</b> " + fmt(r) + pctTag(r[0]) + "</div>";
       }).join("");
     }
     var h = "";
@@ -6741,10 +7207,26 @@ function renderList() {
     if (noPost) h += '<div class="mini">작성일 있는 후기가 한 건도 없는 매장 ' + noPost
       + "곳은 뺐습니다 — 사업장 안 모바일 전용점이 대부분이라 원래 블로그 후기가 안 나옵니다.</div>";
     el.innerHTML = h;
+    /* 줄마다 걸지 않고 상자에서 받는다 — 다시 그릴 때마다 손잡이가 쌓이지 않는다 */
+    if (!el.dataset.wired) {
+      el.dataset.wired = '1';
+      el.addEventListener('click', function (e) {
+        var row = e.target.closest ? e.target.closest('.sigrow.hit') : null;
+        if (!row || !el.contains(row)) return;
+        var nm = row.getAttribute('data-v');
+        var det = row.nextElementSibling;
+        if (det && det.classList.contains('sigdet')) { det.remove(); row.classList.remove('open'); return; }
+        var d2 = document.createElement('div');
+        d2.className = 'sigdet';
+        d2.innerHTML = storeNarrative(nm);
+        row.classList.add('open');
+        row.parentNode.insertBefore(d2, row.nextSibling);
+      });
+    }
     var sub = document.getElementById("sig-sub");
     /* **「블로그 %」의 뜻을 여기 한 번만 적는다** — 예전에는 줄마다 같은 경고를 달아
        10줄 전부에 붙었다(전체 블로그 비율이 26% 라 거의 다 걸린다). */
-    if (sub) sub.innerHTML = esc(cur) + " 기준(" + esc(today) + "은 아직 진행 중) · 조용함은 "
+    if (sub) sub.innerHTML = '<b>매장 이름을 누르면</b> 그 점의 직원별 · 베스트샵 대비 · 인근 우리 점 · B2B 키워드가 펼쳐집니다 · ' + esc(cur) + " 기준(" + esc(today) + "은 아직 진행 중) · 조용함은 "
       + SIG_QUIET_DAYS + "일 · <b>작성일을 아는 글만</b> 셉니다 — 카페 글에는 작성일이 없어 이 신호에 들지 않습니다."
       + ' 줄 끝의 <span class="tag c">블로그 %</span>가 낮을수록 <b>그 매장은 카페 글 위주</b>라 이 신호를 그대로 믿기 어렵습니다.';
   }
@@ -6760,6 +7242,9 @@ function renderList() {
    * 증감은 **작성일을 아는 글**로만 낸다(카페는 네이버가 작성일을 안 준다). 안 적으면
    * 두 숫자가 안 맞는 이유를 아무도 모른다. */
   var heatMode = 'flat';    /* 'flat' 전점 한 판 · 'region' 지역 → 지점 */
+  /* 와이드(16:10)인가 — 기기에 기억한다. 막힌 환경이면 그냥 정사각으로 뜬다 */
+  var heatWide = false;
+  try { heatWide = localStorage.getItem('viral_hm_wide') === '1'; } catch (e0) {}
   /* ── 주차는 **모드가 아니라 필터**다 (2026-09-03 사장님 지시) ──────────────
    * *"내가 몇 주차를 클릭하거나 날짜를 설정하면 히트맵은 지점이 나오게 해주시면 됩니다.
    *  지금은 히트맵 자체에 주차별로 나옵니다. 원하는 부분이 이게 아닙니다."*
@@ -6807,6 +7292,8 @@ function renderList() {
    * 기간이라 필터로 두었다). 지점 히트맵과 같은 자[尺]를 쓴다: 크기 = 언급 건수,
    * 색 = 전월 대비. */
   var heatWho = 'store';    /* 'store' 지점 · 'mgr' 매니저 */
+  /* 칸 이름표의 줄임 표기(2026-09-11 사장님 지시). **칸 안에서만** — 열쇠·말풍선·다른 화면은 원래 이름이다 */
+  var HEAT_SHORT = { '갤러리아광교': '갤.광교', '신세계사우스시티': '신.사시티' };
   /* ── 어느 해를 보나 (2026-09-03 사장님 지시) ────────────────────────────
    * *"히트맵에 2025년과 2026년 자료만 반영되도록 조정 바랍니다. 다만 2025년 대비
    *  증감 볼 수 있게 해 주고(버튼으로 활성화) 기본적인 히트맵 메인화면은
@@ -7066,6 +7553,40 @@ function renderList() {
              year: yr, yearN: yn };
   }
 
+  /** 채널 단계 아래 — 삼성 vs 베스트샵 채널별 표. 양쪽 채널을 **합쳐 정렬**한다
+   *  (베스트샵만 쓰는 카페가 우리 목록에 없어도 보여야 「어디서 싸우나」가 보인다). */
+  function renderSrChan(who, srw, srCh) {
+    var el = document.getElementById('hm-srchan');
+    if (!el) return;
+    var pr = pairList((DATA.lgPair || {})[who]);
+    if (!pr.length) { el.hidden = true; el.innerHTML = ''; return; }
+    var h = '<div class="sighd">삼성 vs 베스트샵 — 채널별 <span class="cntxt" style="font-weight:500">(매장 대 매장 회차 · 같은 질의·같은 쪽수로 양쪽을 잰 값이라 위 칸 수와 다릅니다'
+      /* 회차 단위 자료라 **위 기간 거르개가 안 걸린다** — 조용히 전 기간을 보여주지 않는다 */
+      + (scoped() ? ' · <b class="warn">위 기간·유형 거르개가 여기에는 안 걸립니다 — 회차 전 기간</b>' : '') + ')</span></div>';
+    if (!srw) {
+      h += '<div class="mini">이 점의 매장 대 매장 자료가 아직 없습니다 — 「없다」가 아니라 「못 쟀다」입니다.</div>';
+    } else if (!srCh) {
+      h += '<div class="mini">이 회차에는 채널 칸이 없습니다 — 다음 「매장 대 매장」 수집부터 채워집니다.</div>';
+    } else {
+      var keys = {}, k;
+      for (k in srCh.o) if (srCh.o.hasOwnProperty(k)) keys[k] = 1;
+      for (k in srCh.r) if (srCh.r.hasOwnProperty(k)) keys[k] = 1;
+      var list = Object.keys(keys).map(function (x) {
+        return { nm: x, o: (srCh.o || {})[x] || 0, r: (srCh.r || {})[x] || 0 };
+      }).sort(function (a, b) { return (b.o + b.r) - (a.o + a.r); }).slice(0, 12);
+      var to = 0, tr = 0;
+      list.forEach(function (x) { to += x.o; tr += x.r; });
+      h += '<table><thead><tr><th>채널</th><th>삼성</th><th>베스트샵 ' + esc(shopLabel(srw.shop)) + '</th></tr></thead><tbody>'
+        + list.map(function (x) {
+            return '<tr><td>' + esc(x.nm) + '</td><td class="s">' + (x.o ? nf(x.o) : '·') + '</td><td class="l">' + (x.r ? nf(x.r) : '·') + '</td></tr>';
+          }).join('')
+        + '<tr><td><b>상위 ' + list.length + '채널 합</b></td><td class="s">' + nf(to) + '</td><td class="l">' + nf(tr) + '</td></tr>'
+        + '</tbody></table>';
+    }
+    el.innerHTML = h;
+    el.hidden = false;
+  }
+
   function heatNote(msg) {
     var el = document.getElementById('hm-note');
     if (!el) return;
@@ -7210,6 +7731,43 @@ function renderList() {
       out[st] = t;
     }
     return out;
+  }
+  /** 매장별 키워드 건수 — **최상단 기간·유형을 따른다**(2026-09-11). 걸린 것이 없으면
+   *  서버 전 기간 값 그대로(카페 글이 안 빠진다). 옛 서버 자료(`byStoreKwW` 없음)면
+   *  전 기간으로 물러서고 `kwScopeFallback` 이 그 사실을 화면에 적게 한다. */
+  function scopedByStoreKw() {
+    if (!scoped()) return DATA.byStoreKw || {};
+    var W = DATA.byStoreKwW;
+    if (!W) return DATA.byStoreKw || {};
+    var out = {}, st, ws, i, k;
+    for (st in W) if (W.hasOwnProperty(st)) {
+      ws = scopedWeekPick(Object.keys(W[st]).sort());
+      var m = {};
+      for (i = 0; i < ws.length; i++) {
+        var per = W[st][ws[i]] || {};
+        for (k in per) if (per.hasOwnProperty(k)) m[k] = (m[k] || 0) + scopedOne(per[k]);
+      }
+      for (k in m) if (m.hasOwnProperty(k) && !m[k]) delete m[k];
+      if (Object.keys(m).length) out[st] = m;
+    }
+    return out;
+  }
+  function kwScopeFallback() { return scoped() && !DATA.byStoreKwW; }
+  /** 그 매장의 매니저 — 기간이 걸렸으면 **그 기간의 건수**로 다시 세고 0건은 뺀다.
+   *  채널은 전 기간이다(주 단위로 안 담았다) — 부르는 쪽이 그 사실을 적는다. */
+  function scopedMgrsOf(nm) {
+    var M = ((DATA.byStoreMgr || {})[nm]) || [];
+    if (!scoped()) return { list: M, fallback: false };
+    var any = M.some(function (m) { return m && m.wk; });
+    if (!any) return { list: M, fallback: true };
+    var out = [];
+    M.forEach(function (m) {
+      var ws = scopedWeekPick(Object.keys(m.wk || {}).sort()), n = 0, i;
+      for (i = 0; i < ws.length; i++) n += scopedOne(m.wk[ws[i]]);
+      if (n > 0) out.push({ name: m.name, n: n, chan: m.chan });
+    });
+    out.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
+    return { list: out, fallback: false };
   }
   /** 지금 범위의 총 건수. */
   function scopedTotal() {
@@ -7563,8 +8121,35 @@ function renderList() {
    * 색상(33°)은 그대로 두고 채도만 55 로 내렸다(아래 LG_HI). 아홉 잣대 전부 통과 —
    * 최저 대비 4.59 · 약한 구간 8%(옛 9%) · 채도 차 40 · 색상차 164° · 적록 거리 64.
    * 도구 `.scratch/_pal4.mjs`(세 후보를 실물 칸으로 찍는다). */
-  var HEAT_LO = [230, 244, 255];   /* 가장 낮은 값 #e6f4ff — 흰 배경과 구분되는 만큼만 옅다 */
-  var HEAT_HI = [0, 120, 167];     /* 가장 높은 값 #0078a7 — 아쿠아 블루 짙은 끝(채도 100) */
+  /* ── **색만 S&P 500(finviz) 팔레트로** (2026-09-11 사장님 지시 — *"컬러만 S&P 500
+   * 히트맵 컬러를 다시 반영해주세요"*) ─────────────────────────────────────
+   * 같은 날 아침에 넣은 아쿠아 블루 ↔ 오렌지(쏜디)를 되돌린다. **칸의 뜻은 그대로다** —
+   * 크기·색 모두 건수(2026-09-10), 견주기는 위 「비교」. 바뀐 것은 램프 값뿐이다.
+   *
+   * 값은 finviz 의 실제 구간색이다(견주기 램프 `RAMP_*` 와 같은 표) —
+   *   당사   +1% #35764E → +3% #30CC5A  (건수가 많을수록 **밝은 초록**)
+   *   베스트샵 −1% #8B444E → −3% #F63538  (몫이 클수록 **밝은 빨강**)
+   * **양 끝을 중립(#414554)에서 시작하지 않는다** — 그러면 건수가 적은 칸에서 두 진영이
+   * 같은 회색이 되어 띠가 안 갈린다. 한 단계 안쪽(±1%)에서 시작해 적은 칸에서도
+   * 초록/빨강이 남는다.
+   *
+   * **9/6 「삼성 부각 = 채도 차 40」 규칙은 이 팔레트에 안 맞는다** — finviz 빨강(채도 91)이
+   * 초록(62)보다 선명하다. 사장님이 팔레트를 그대로 고르셨으므로 그 규칙보다 이 지시가
+   * 앞선다. 두 진영은 **색상 137°** 로 갈리고, 몫은 어차피 칸 글자(「베스트샵 M건 · 우리 P%」)
+   * 와 말풍선이 숫자로 말한다. 검사(`test-admin` 히트맵 램프)가 그 뜻으로 바뀌어 있다.
+   * **글자색은 `inkOn` 이 배경 밝기로 정하므로** 밝은 초록·빨강 칸은 검은 글자로 뒤집힌다. */
+  /* ── **전체 평균 기준 이상/이하** (2026-09-11 사장님 지시 — *"히트맵은 전체평균 기준으로
+   * 이상점 이하점 색상구분"*) ─────────────────────────────────────────────
+   * 건수 램프가 한 방향(적음 → 많음)이던 것을 **평균을 가운데 두고 양쪽**으로 바꿨다 —
+   * S&P 500 처럼 초록·빨강이 한 판에 함께 선다. 평균은 **그 판에 있는 매장 전체**(0건 포함)로
+   * 낸다. 평균에서 멀수록 진하고, **평균의 2배 이상**이면 가장 진한 초록, **0건**이면 가장
+   * 진한 빨강이다(`|v−avg| / avg` 를 1 에서 자른다 — 한 매장이 88건이라 최대로 재면 나머지가
+   * 전부 옅어진다). 값은 finviz 구간색 그대로다(견주기 램프 `RAMP_*` 와 같은 표). */
+  var HEAT_LO = [65, 69, 84];      /* 평균 — 중립 #414554 */
+  var HEAT_HI = [48, 204, 90];     /* 평균 이상 끝 #30CC5A */
+  var HEAT_DN = [246, 53, 56];     /* 평균 이하 끝 #F63538 */
+  /* 게이지바 당사 색 — **삼성 블루**(사장님 지시). 타사는 현행 빨강(LG_HI) 그대로 */
+  var GAUGE_S = [20, 40, 160];     /* #1428A0 */
   /**
    * `v` 를 `max` 에 대해 칠한다. **0~1 을 벗어나면 자른다** — 최대값을 잘못 넘기면
    * 색이 범위를 벗어나 아무 색이나 나온다.
@@ -7615,11 +8200,13 @@ function renderList() {
     /* 1.5% 미만(≈±1%)은 중립 — 소수점 흔들림에 색이 튀지 않게 한다 */
     return rampColor(Math.abs(e) < 0.02 ? 0 : 0.18 + 0.82 * t, e > 0);
   }
-  function heatColor(v, max) {
+  /** 평균(`avg`) 기준으로 칠한다 — 위면 초록, 아래면 빨강, 평균이면 중립. */
+  function heatColor(v, avg) {
     if (v === null || v === undefined) return 'rgb(214,218,224)';
-    var t = (max > 0) ? Math.max(0, Math.min(1, v / max)) : 0;
+    var t = (avg > 0) ? Math.max(0, Math.min(1, Math.abs(v - avg) / avg)) : 0;
+    var tgt = v >= avg ? HEAT_HI : HEAT_DN;
     return 'rgb(' + HEAT_LO.map(function (a, i) {
-      return Math.round(a + (HEAT_HI[i] - a) * t);
+      return Math.round(a + (tgt[i] - a) * t);
     }).join(',') + ')';
   }
   /* 점유율 → 색. **중립은 50%** 이고 25%·75% 에서 가장 진해진다.
@@ -7655,7 +8242,8 @@ function renderList() {
    * 「진한 쪽 / 흐린 쪽」으로 갈린다. 검사도 그 두 갈래를 함께 본다. */
   /* 2026-09-11 — 참조의 선셋 오렌지(#f2a74b, 채도 87)를 **채도 55 로 톤다운**한 값.
      색상 32° 그대로. 더 올리면 「삼성 부각」(채도 차 40) 이 깨진다. */
-  var LG_LO = [252, 243, 229], LG_HI = [214, 158, 92];
+  /* 2026-09-11 오후 — finviz 빨강(위 HEAT_* 주석). 옛 오렌지·토프·코랄은 되돌려 넣지 말 것 */
+  var LG_LO = [139, 68, 78], LG_HI = [246, 53, 56];
   function lgColor(v, max) {
     var t = (max > 0) ? Math.max(0, Math.min(1, v / max)) : 0;
     return 'rgb(' + LG_LO.map(function (a, i) {
@@ -8022,6 +8610,13 @@ function renderList() {
       bmd.addEventListener('click', function () {
         heatMode = heatMode === 'flat' ? 'region' : 'flat'; heatPath = []; renderHeat();
       });
+      var bwd = document.getElementById('hm-wide');
+      if (bwd) bwd.addEventListener('click', function () {
+        heatWide = !heatWide;
+        try { localStorage.setItem('viral_hm_wide', heatWide ? '1' : '0'); } catch (e1) {}
+        /* 비율이 바뀌면 칸 좌표가 전부 달라진다 — 통째로 다시 그린다 */
+        renderHeat();
+      });
       /* 「크기: 등락률」·「작년 대비」·「전월 대비」·연도 드롭다운 손잡이는 없앴다
          (2026-09-10) — 견주기는 맨 위 「비교」 버튼이고 `renderPeriodBar` 가 건다. */
 
@@ -8082,6 +8677,8 @@ function renderList() {
       });
     }
 
+    var srtab = document.getElementById('hm-srchan');
+    if (srtab) { srtab.hidden = true; srtab.innerHTML = ''; }
     var rows = heatRows();
     if (!rows.length) {
       box.innerHTML = ''; if (cr) cr.textContent = '';
@@ -8130,9 +8727,13 @@ function renderList() {
          칸의 수를 그대로 적으면 아래 칸들의 합과 어긋난다(사장님이 지적한 그 어긋남이다). */
       var chanTotal = 0;
       for (k in ch) if (ch.hasOwnProperty(k)) chanTotal += ch[k];
+      /* 매장 대 매장 회차의 양쪽 채널 — 있으면 칸에 한 줄, 아래 표로 */
+      var srw = (window.__SR || {})[who], srCh = srw && srw.chan ? srw.chan : null;
       for (k in ch) if (ch.hasOwnProperty(k)) {
-        items.push({ nm: k, v: ch[k], cnt: ch[k], k: heatChanKind(k) });
+        items.push({ nm: k, v: ch[k], cnt: ch[k], k: heatChanKind(k),
+                     sr: srCh ? { o: (srCh.o || {})[k] || 0, r: (srCh.r || {})[k] || 0 } : null });
       }
+      renderSrChan(who, srw, srCh);
     } else {
       var src;
       /* **주차를 골라도 칸은 지점이다.** `heatRows()` 가 이미 그 주의 값으로 만들어
@@ -8178,6 +8779,10 @@ function renderList() {
      다음 프레임에 다시 그린다. **숨겨져 있을 때는 되돌아간다** — 안 그러면 영원히 돈다. */
   var hcard = document.querySelector('.card[data-card="heat"]');
   if (hcard && hcard.hidden) return;
+  /* 와이드 — **크기를 재기 전에** 비율을 맞춘다(뒤에 바꾸면 옛 높이로 그린다) */
+  box.classList.toggle('wide', !!heatWide);
+  var bwd2 = document.getElementById('hm-wide');
+  if (bwd2) { bwd2.textContent = heatWide ? '정사각 1:1' : '와이드 16:10'; bwd2.classList.toggle('on', !!heatWide); }
   var W = box.clientWidth - 14, H = box.clientHeight - 14, out = [], html = '';
   if (W <= 0 || H <= 0) { requestAnimationFrame(function () { renderHeat(); }); return; }
     /* **판의 최대 건수** — 색이 여기에 비례한다(구간을 나누지 않는다).
@@ -8186,6 +8791,14 @@ function renderList() {
     heatMax = 0;
     for (var mi2 = 0; mi2 < items.length; mi2++) {
       if (items[mi2].cnt > heatMax) heatMax = items[mi2].cnt;
+    }
+    /* **전체 평균** — 지금 판에 오른 매장 전체(0건 포함, `src`)로 낸다. 그려진 칸만으로
+       내면 0건 매장이 빠져 평균이 올라가고, 「평균 이상」이 실제보다 적어진다. */
+    var heatAvg = 0, avgN = 0;
+    if (!chan) {
+      var pool = (heatMode === 'flat') ? rows : (lv === 0 ? src : (byReg[heatPath[0]] || []));
+      for (var ai = 0; ai < pool.length; ai++) { heatAvg += (pool[ai].cnt || 0); avgN++; }
+      heatAvg = avgN ? heatAvg / avgN : 0;
     }
     heatLay(items, 0, 0, W, H, out);
     out.forEach(function (c) {
@@ -8204,7 +8817,9 @@ function renderList() {
          ③ **높이 기준이 늘 3줄치**였다 — 낮고 넓은 칸은 이름 한 줄만 뜨는데도 3줄로 나눴다.
          지금은 **넓이 × 이름 길이 × 실제로 뜰 줄 수** 셋이 함께 정한다. */
       var cap = chan ? 24 : (regionTiles ? 48 : 40);
-      var nlen = Math.max(2, String(d.nm).length);
+      /* 칸에 적는 이름 — 줄임 표기가 있으면 그것(열쇠 `d.nm`·말풍선은 원래 이름) */
+      var nmShow = (!chan && HEAT_SHORT[d.nm]) || String(d.nm);
+      var nlen = Math.max(2, nmShow.length);
       /* 아래 두 줄이 실제로 뜨는지 먼저 판정한다 — 뜨는 줄 수만큼만 높이를 나눈다 */
       var line2 = c.h > 33 && c.w > 46;
       var line3 = !chan && c.h > 50 && c.w > 58;
@@ -8216,24 +8831,28 @@ function renderList() {
       /* **이름이 두 줄을 넘지 않게 한다.** 넓이만 보면 좁고 높은 칸에서 글자가 커져
          「안양본」이 세로로 한 자씩 쪼개진다(실물에서 그랬다) — 세로로 쓴 한글은
          가로보다 훨씬 읽기 나쁘다. 한 줄에 절반씩 들어갈 크기를 상한으로 둔다. */
-      /* 짧은 이름은 한 줄에 다 넣고, 5자부터 두 줄까지 허용한다 */
-      var byLine = (c.w - 6) / ((nlen <= 4 ? nlen : Math.ceil(nlen / 2)) * 0.95);
+      /* **한 줄에 다 들어가는 크기가 상한이다**(2026-09-11) — 두 줄 접기를 없앴다.
+         어림(글자당 0.95em)으로 잡고 아래서 캔버스로 재서 넘치면 더 줄인다. */
+      var byLine = (c.w - 6) / (nlen * 0.95);
       var fs = Math.min(cap, byArea, byH, byLine);
+      while (fs >= 7.5 && textW(nmShow, fs) > c.w - 6) fs -= 0.5;
       var lab = '';
       /* **너무 작으면 아예 안 적는다** — 7.5px 아래로 내려가면 읽히지도 않으면서 칸만 더럽힌다.
          이름은 툴팁에 그대로 있다(finviz 도 작은 칸에는 티커를 안 적는다). */
       if (c.w > 30 && c.h > 17 && fs >= 7.5) {
         /* **두 줄로 갈릴 이름은 우리가 고르게 나눈다.** 브라우저에 맡기면 들어가는 데까지
            채우고 넘겨 「스타필드수 / 원」처럼 한 글자만 떨어진다(실물에서 그랬다). */
-        var nmh = esc(d.nm);
-        var per = Math.floor((c.w - 6) / (fs * 0.92));
-        if (per >= 1 && per < nlen) {
-          var half = Math.ceil(nlen / 2);
-          if (half <= per) nmh = esc(d.nm.slice(0, half)) + '<br>' + esc(d.nm.slice(half));
-        }
+        var nmh = esc(nmShow);
         lab = '<span class="cn" style="font-size:' + fs.toFixed(1) + 'px">' + nmh + '</span>';
         if (c.h > 33 && c.w > 46) {
           var main = chan ? d.cnt + '건' : nf(d.cnt) + '건';
+          /* ── **채널 칸에 삼성 vs 베스트샵** (2026-09-11 사장님 지시 — *"사이트별정보에도
+             삼성 몇건 베스트샵 몇건 나눠지게"*). 매장 대 매장 회차의 양쪽 채널이다 — 머리
+             숫자(당사 전체 수집)와 잣대가 달라 **한 줄 더**로 갈라 적고 아래 표가 그 사실을 밝힌다. */
+          /* 양쪽 다 0 이면 안 적는다 — 그 채널이 회차 상위 12 밖이라는 뜻이지 「0건」이 아니다 */
+          if (chan && d.sr && (d.sr.o || d.sr.r)) {
+            main += ' <i style="font-style:normal;opacity:.85">· 삼성 ' + nf(d.sr.o) + ' · 베스트샵 ' + nf(d.sr.r) + '</i>';
+          }
           /* **머리 숫자는 늘 칸의 건수다**(2026-09-10 사장님 지시 — 절대 건수). 예전에는
              여기에 「삼성 N · 베스트샵 M」(매장 대 매장 회차 값)이 대신 들어가, 칸은
              1,419건인데 글자는 「삼성 164」라 **한 칸에 두 잣대**였다. */
@@ -8261,10 +8880,10 @@ function renderList() {
             if (fs2) {
               /* **글자색은 그 글자가 실제로 얹히는 색이 정한다** — 이 줄은 오른쪽(앰버 띠)에
                  붙는데 띠가 글자보다 좁으면 블루 위에 놓인다. */
-              var bgS = heatColor(d.cnt, heatMax), bgL = lgColor(d.cnt, heatMax);
-              var lgW = (srm2.pct === null) ? 0 : c.w * (1 - srm2.pct / 100);
+              /* 배경이 한 색(건수)이 됐다(게이지바로 옮긴 뒤) — 그 색 기준으로 글자색을 정한다 */
+              var bgS = heatColor(d.cnt, heatAvg);
               two = '<span class="cg two" style="font-size:' + fs2.toFixed(1) + 'px;justify-content:flex-end">'
-                + '<b style="color:' + inkOn(lgW >= wL + 8 ? bgL : bgS) + '">' + lTxt + '</b>'
+                + '<b style="color:#fff">' + lTxt + '</b>'
                 + '</span>';
               lab += two;
             }
@@ -8325,7 +8944,7 @@ function renderList() {
           if (srmL && srmL.pct !== null && srmL.shop && !chan && !d.isReg && !cmpOn && c.w > 96 && c.h > 66) {
             /* 우리 이름과 겹치는 앞부분을 떼면 짧아진다 — `강릉 ↔ 강릉본점` → `본점`.
                다만 **다 떼면 이름이 사라지므로**(같은 이름) 그때는 원래 것을 쓴다. */
-            var lgn = String(srmL.shop);
+            var lgn = shopLabel(srmL.shop);   /* 「AK PLAZA 분당점」 → 「AK분당」 (2026-09-11 표기 통일) */
             /* **떼고 나서 뜻이 남을 때만 뗀다**(2026-09-05 실물에서 잡음) — 광명소하 칸에
                「LG 점 3건」이 떠 있었다. 지점명이 「광명소하점」이라 매장 이름을 떼니
                「점」 한 글자가 남은 것이다. **두 글자도 안 남으면 통째로 둔다.** */
@@ -8363,8 +8982,8 @@ function renderList() {
             /* **`bg` 도 아래(5889행대)에서 선언된다** — 그대로 쓰면 호이스팅으로
                `undefined` 라 색이 안 바뀐다(`srm` 과 똑같은 함정을 연달아 밟았다).
                여기서 다시 낸다 — 같은 식이라 값이 어긋나지 않는다. */
-            var bgL = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatMax);
-            var lgInk = inkOn(bgL) === '#fff' ? '#FFD9D4' : '#9B1C10';
+            var bgL = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatAvg);
+            var lgInk = '#FFD9D4';   /* 글자색 통일(흰 계열) — 빨강 기운만 남긴다 */
             if (lgTxt && lgFs >= 6.5) lab += '<span class="lgn" style="font-size:' + lgFs.toFixed(1)
               + 'px;color:' + lgInk + '">' + esc(lgTxt) + '</span>';
           }
@@ -8440,7 +9059,7 @@ function renderList() {
          주 단위는 표본이 작아 넓게 잡는다. 채널 드릴다운은 갈래가 곧 뜻이라 그대로. */
       /* **기본은 건수 색**(2026-09-10 사장님 지시 — 절대 건수). 위 「비교」를 켰을
          때만 등락(finviz)으로 칠한다. 채널 드릴다운은 갈래가 곧 뜻이라 그대로. */
-      var bg = chan ? HEAT_CHC[d.k] : (cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatMax));
+      var bg = chan ? HEAT_CHC[d.k] : (cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg));
       /* ── **한 칸 안에 파랑 : 빨강** (2026-09-03 사장님 지시) ────────────────
        * *"지금 블루컬러는 베이스로하고있는데 LG는 지점명 안들어가도되니 레드계열로
        * 색상을 넣어서 비중을 확인해주면됩니다"*.
@@ -8455,16 +9074,24 @@ function renderList() {
          옛 회차 자료면 `scope:'all'` 로 물러서고 말풍선이 그 사실을 적는다. */
       var srm = srShare(d.nm);
       var bgStyle = 'background:' + bg;
-      /* **견주기를 켰을 때는 갈라 칠하지 않는다** — 그때 색은 등락이라 앰버 띠와 섞이면
-         칸이 두 말을 한다. LG 몫은 말풍선과 「삼성 N · 베스트샵 M」 글자가 그대로 말한다. */
-      if (srm && srm.pct !== null && !chan && !d.isReg && !cmpOn) {
-        bgStyle = 'background:linear-gradient(90deg,' + bg + ' 0 ' + srm.pct + '%,'
-          + lgColor(d.cnt, heatMax) + ' ' + srm.pct + '% 100%)';
+      /* ── **게이지바** (2026-09-11 사장님 지시 — *"삼성 vs 베스트샵 게이지바로 하단에"*) ──
+       * 배경을 가르던 것을 **칸 바닥의 막대**로 옮겼다. 초록이 우리 몫, 빨강이 베스트샵 몫이고
+       * 폭이 곧 비중이다. 배경은 통째로 건수 색이라 글자 대비가 한 색으로 정해진다.
+       * **견주기를 켰을 때는 안 그린다** — 그때 칸 색은 등락이라 몫 막대가 섞이면 두 말이다.
+       * 너무 낮은 칸(26px 미만)에는 안 그린다 — 막대가 글자를 밟는다. 몫은 말풍선이 말한다. */
+      var gz = '';
+      if (srm && srm.pct !== null && !chan && !d.isReg && !cmpOn && c.h >= 30 && c.w >= 30) {
+        /* **S 는 당사(삼성 블루) · X 는 베스트샵(현행 빨강)** — 글자는 그 몫이 12px 이상일 때만
+           (좁으면 글자가 막대를 벗어난다). 글자가 없어도 색이 말한다. */
+        var sW = (c.w - 8) * srm.pct / 100, xW = (c.w - 8) - sW;
+        gz = '<span class="gz" aria-hidden="true">'
+          + '<i style="width:' + srm.pct + '%;background:rgb(' + GAUGE_S.join(',') + ')">' + (sW >= 12 ? '<b>S</b>' : '') + '</i>'
+          + '<i style="flex:1;background:rgb(' + LG_HI.join(',') + ')">' + (xW >= 12 ? '<b>X</b>' : '') + '</i></span>';
       }
-      html += '<div class="cell' + (clk ? ' clk' : '') + '"' +
+      html += '<div class="cell' + (clk ? ' clk' : '') + (gz ? ' gzon' : '') + '"' +
         (clk ? ' data-k="' + esc(d.key) + '"' : '') +
         ' title="' + esc(tip) + '" style="left:' + (c.x + 7) + 'px;top:' + (c.y + 7) + 'px;width:' +
-        c.w + 'px;height:' + c.h + 'px;' + bgStyle + ';color:' + inkOn(bg) + '">' + lab + '</div>';
+        c.w + 'px;height:' + c.h + 'px;' + bgStyle + ';color:#fff">' + lab + gz + '</div>';
     });
     box.innerHTML = html;
 
@@ -8490,17 +9117,18 @@ function renderList() {
       if (ll) { ll.textContent = '÷' + heatSpan; ll.style.color = '#C8324B'; }
       if (lr) { lr.textContent = '×' + heatSpan; lr.style.color = '#12805C'; }
     } else {
-      if (lt) lt.textContent = '건수';
-      if (sc2) sc2.innerHTML = [0, 0.2, 0.4, 0.6, 0.8, 1].map(function (r) {
-        return '<span style="background:' + heatColor(heatMax * r, heatMax) + '"></span>';
+      /* 평균이 가운데다 — 0건(빨강) … 평균(중립) … 평균×2(초록). 값을 함께 적어 검산되게 한다 */
+      if (lt) lt.textContent = '평균 ' + (Math.round(heatAvg * 10) / 10) + '건 기준';
+      if (sc2) sc2.innerHTML = [0, 0.5, 1, 1.5, 2].map(function (r) {
+        return '<span style="background:' + heatColor(heatAvg * r, heatAvg) + '"></span>';
       }).join('');
-      if (ll) { ll.textContent = nf(heatMin) + '건'; ll.style.color = ''; }
-      if (lr) { lr.textContent = nf(heatMax) + '건'; lr.style.color = ''; }
+      if (ll) { ll.textContent = '0건'; ll.style.color = '#C8324B'; }
+      if (lr) { lr.textContent = '평균 ×2 ↑'; lr.style.color = '#12805C'; }
     }
     var lz = document.getElementById('hm-legz');
     if (lz) lz.textContent = cmpOn
       ? '칸 크기는 건수 · 색은 ' + cmpName() + ' 등락(' + heatSpan + '배 늘거나 줄면 가장 진함) · 회색은 앞 기간에 글이 없어 못 잰 곳'
-      : '칸 크기와 색이 모두 건수입니다 · 견주려면 맨 위 「비교」를 누르세요';
+      : '칸 크기는 건수 · 색은 전체 평균 기준 — 이상 초록 · 이하 빨강(0건이나 평균의 2배에서 가장 진함) · 견주려면 맨 위 「비교」를 누르세요';
     /* 유형 버튼 — **화면이 목록을 박지 않고 자료에서 만든다.** 서버가 세는 말이 바뀌면
        (지금 9가지) 화면이 옛 말을 들고 있지 않게 한다. 건수 많은 순으로 상위 6개만
        — 전부 두면 조작줄이 두 줄이 되어 히트맵이 그만큼 밀린다. */
@@ -8555,7 +9183,7 @@ function renderList() {
         var SR = DATA.storeRival;
         if (!SR || !SR.rows || !SR.rows.length) {
           return ' <b class="warn">베스트샵 짝 비중은 아직 재지 않았습니다</b> — 오른쪽 위 <b>톱니바퀴 → 「수집」</b>을'
-            + ' 누르면 칸이 <b>블루(우리) : 오렌지(베스트샵)</b> 으로 갈립니다.';
+            + ' 누르면 칸 아래 <b>게이지(S 우리 : X 베스트샵)</b>가 생깁니다.';
         }
         var n = 0, hasMon = false;
         SR.rows.forEach(function (r) { if (r.pct !== null) n++; if (r.mon) hasMon = true; });
@@ -8567,7 +9195,8 @@ function renderList() {
           : (hasMon
               ? '<b>' + esc(perTxt) + '</b>에 걸친 <b>달</b> 기준입니다(베스트샵 자료는 월 단위라 주로는 못 자릅니다)'
               : '<b class="warn">전 기간 기준</b>이라 칸과 잣대가 다릅니다 — 오른쪽 위 <b>톱니바퀴 → 「수집」</b>을 다시 누르면 달별로 갈립니다');
-        return ' 칸의 <b style="color:#8A6A2E">오렌지</b>이 <b>베스트샵 짝 매장의 몫</b>입니다('
+        /* 색 이름은 팔레트를 따라 바뀐다(2026-09-11 오후 finviz) — 글자색도 흰 바탕 대비 4.5:1 넘는 빨강 */
+        return ' 칸 아래 <b>게이지(S 삼성 블루 : X 빨강)</b>가 <b>삼성 : 베스트샵 짝 매장의 몫</b>입니다('
           + nf(n) + '곳) — ' + scopeTxt + '. <b>마우스를 올리면</b> 어느 지점인지와 양쪽 건수가 나옵니다.';
       })();
       sub.innerHTML = mgrView
@@ -8584,7 +9213,7 @@ function renderList() {
               : '')
           + '이름은 후기 제목·본문에서 뽑은 것이고, <b>명부에 등록된 이름</b>이면 ✓ 가 붙습니다.' + datedNote
         : '<b>' + esc(perTxt) + '</b>' + (heatKind ? ' · <b>' + esc(kLabel(heatKind)) + '</b>' : '')
-          + ' — <b>칸은 지점</b> · <b>크기와 색은 건수</b>입니다' + cmpTxt2 + '.'
+          + ' — <b>칸은 지점</b> · <b>크기는 건수 · 색은 전체 평균 기준 이상(초록)/이하(빨강)</b>입니다' + cmpTxt2 + '.'
           + datedNote
           + (heatWeek === 'custom' ? ' <b>자료가 주 단위로만 쌓여 있어</b> 고르신 날짜에 걸친 주는 통째로 셉니다.' : '')
           + (week ? ' 0건 매장은 칸을 못 그려 빠집니다.' : '')
@@ -8651,6 +9280,18 @@ function renderList() {
     }
   }
 
+  /** 키워드로 걸렸음을 목록 머리에 적는다 — 매니저 거르개와 같은 모양이다. */
+  function renderKwFilter() {
+    var el = document.getElementById('list-kw');
+    if (!el) return;
+    if (!kwFilter) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    el.innerHTML = '<b>' + esc(kwFilter) + '</b> 키워드가 든 후기만 봅니다'
+      + '<button type="button" class="chip" id="kw-clear">전체 후기로</button>';
+    var c = document.getElementById('kw-clear');
+    if (c) c.onclick = function () { kwFilter = ''; page = 1; render(); };
+  }
+
   /** 매니저로 걸렸음을 목록 머리에 적는다. **푸는 버튼을 함께 둔다.** */
   function renderMgrFilter() {
     var el = document.getElementById('list-mgr');
@@ -8676,7 +9317,7 @@ function renderList() {
      **다시 모아야** 생기므로(옛 회차에는 칸이 없다) 갈래를 둘로 둔다.
      `SCOPE_OFF` 는 이제 비어 있다 — 못 따르는 카드가 없다는 뜻이다. */
   var SCOPE_OFF = [];
-  var SCOPE_ON = ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list'];
+  var SCOPE_ON = ['trend', 'diag', 'map', 'store', 'heat', 'mix', 'list', 'kw'];
   /* **반쯤 따르는 카드** — 뭐가 따르고 뭐가 안 따르는지 갈라 적는다.
      「따른다」로 뭉뚱그리면 안 따르는 절의 숫자를 그 기간 것으로 읽는다. */
   var SCOPE_HALF = [
@@ -8742,7 +9383,7 @@ function renderList() {
        칩 해제·지도 아래 목록)이라 그 자리마다 적으면 반드시 하나를 빠뜨린다 — 빠뜨린
        곳에서는 3쪽을 보다 매장을 바꿨는데 그대로 3쪽이라 **빈 화면**이 뜬다.
        여기 한 곳에서 서명으로 본다. */
-    var sig = [srcFilter, storeFilter, cafeFilter, kindFilter, watchFilter, mapFilter, monthFilter,
+    var sig = [srcFilter, storeFilter, cafeFilter, kindFilter, watchFilter, mapFilter, monthFilter, kwFilter,
       fromDate, toDate, dateOther,
       /* 최상단 기간·유형도 필터다(2026-09-09) — 안 넣으면 3쪽을 보다 기간을 좁혔을 때
          그대로 3쪽이라 **빈 화면**이 뜬다. */
@@ -8753,6 +9394,8 @@ function renderList() {
   wireSecs(); applySecs(); /* 접이식 — 카드를 먼저 보이게 하고 그려야 막대·지도 폭이 0 이 아니다 */
     wireAlias();
     wireMgrBook();
+    wireKwBook();
+    wireMyStore();
     wireAdmin();
     wireAudit();
     syncPoll();
@@ -8816,6 +9459,8 @@ function renderList() {
     renderWatch();
     renderMgrs();
     renderMgrFilter();
+    renderKwFilter();
+    renderKw();
     /* **명부는 관리자 안에 있다** — 잠겨 있으면 그리지 않는다(잠금 해제 때 그린다).
        그리기 자체는 값을 새지 않지만, 잠긴 카드 안에 내용이 남아 있으면
        「잠근 것이 아니라 접어 둔 것」이 된다. */
@@ -9371,6 +10016,8 @@ function renderList() {
         DATA = d; DATA_READY = true;
         if (st) st.innerHTML = "";
         render();
+        /* `?store=ZH96` — 점장의 즐겨찾기. **자료가 온 뒤**여야 점명을 알아본다 */
+        applyDeepStore();
       })
       .withFailureHandler(function (e) {
         if (st) st.innerHTML = '<div class="note warn"><b>자료를 불러오지 못했습니다</b> — '

@@ -151,10 +151,12 @@ for (let i = 0; i < 240; i++) {
        여러 번 올린 홍보글이 158묶음 있다 — 모의에 없으면 「접기」 길을 한 번도
        지나가지 않아, 화면을 눈으로 봐도 그 자리가 비어 보인다. */
     title: (dupRow ? '[' + st + '] 위드유 웨딩박람회 일정과 혜택 안내'
-                         : '[' + st + '] 혼수가전 ' + Object.keys(KINDS)[i % 5] + ' 후기 ' + (i + 1)),
+                         : '[' + st + '] ' + (i % 9 === 0 ? ['DVM', '시스템에어컨', 'SAC'][i % 3] + ' ' : '') + '혼수가전 ' + Object.keys(KINDS)[i % 5] + ' 후기 ' + (i + 1)),
     link: 'https://example.com/p/' + i,
     cafe: src === '블로그' ? '' : CAFES[i % CAFES.length],
-    postdate: dated ? ymd.split('-').join('') : ''
+    postdate: dated ? ymd.split('-').join('') : '',
+    /* B2B 키워드(2026-09-11) — 서버가 줄에 붙여 주는 배열. 아홉 줄에 하나꼴 */
+    kw: i % 9 === 0 ? [['DVM', '시스템에어컨', 'SAC'][i % 3]] : []
   });
 }
 
@@ -328,9 +330,15 @@ const DATA = {
   storeRival: {
     at: new Date().toISOString(),
     rows: [
-      { store: '갤러리아광교', shop: '갤러리아 광교점', ours: 1185, rival: 402, pct: 75, capped: false },
+      { store: '갤러리아광교', shop: '갤러리아 광교점', ours: 1185, rival: 402, pct: 75, capped: false,
+        /* 양쪽 채널(2026-09-11) — 같은 회차·같은 질의. 베스트샵만 쓰는 카페를 하나 섞는다 */
+        chan: { o: { '다이렉트 결혼준비': 320, '네이버 블로그': 410, '웹문서': 90, '레몬테라스': 40 },
+                r: { '다이렉트 결혼준비': 60, '네이버 블로그': 180, '웹문서': 30, '엘지 베스트샵 사랑방': 22 } } },
+      /* 옛 회차 모양 — `chan` 이 없다(「다음 수집부터」 안내가 이 줄로 보인다) */
       { store: '평택', shop: '남평택점', ours: 878, rival: 913, pct: 49, capped: false },
-      { store: '원주', shop: '남원주점', ours: 664, rival: 240, pct: 73, capped: false },
+      { store: '원주', shop: '남원주점', ours: 664, rival: 240, pct: 73, capped: false,
+        chan: { o: { '네이버 블로그': 380, '원주맘 카페': 210, '웹문서': 74 },
+                r: { '네이버 블로그': 150, '원주맘 카페': 60, '웹문서': 20, '베스트샵 원주 이벤트': 10 } } },
       { store: '분당', shop: 'AK PLAZA 분당점', ours: 591, rival: 1204, pct: 33, capped: false },
       { store: '현대판교', shop: '현대 판교점', ours: 439, rival: 121, pct: 78, capped: false },
       { store: '북수원', shop: '정자사거리점', ours: 402, rival: 655, pct: 38, capped: false },
@@ -553,6 +561,46 @@ const DATA = {
     });
   })(),
   mgrFull: 380, mgrRows: 2433, mgrAll: 161, mgrOnce: 74,
+  /* ── 매장별 매니저 (2026-09-11) — 지점별 분석·리포트·매장 신호의 「직원별」이 쓴다.
+     **채널까지** 있어야 "다이렉트 결혼준비에 N건" 이 그려진다. 한 매장은 비워 둔다. */
+  byStoreMgr: {
+    '갤러리아광교': [
+      { name: '정채승', n: 12, chan: { '다이렉트 결혼준비': 7, '네이버 블로그': 4, '웹문서': 1 },
+        wk: { '2026-W36': { wedding: 2 }, '2026-W35': { wedding: 1, etc: 1 }, '2026-W33': { etc: 3 } } },
+      { name: '남수호', n: 9, chan: { '네이버 블로그': 6, '다이렉트 결혼준비': 3 }, wk: { '2026-W36': { etc: 1 } } },
+      { name: '이가온', n: 2, chan: { '레몬테라스': 2 } }
+    ],
+    '스타필드수원': [{ name: '윤현식', n: 33, chan: { '다이렉트 결혼준비': 20, '네이버 블로그': 13 } }],
+    '분당': [{ name: '신규철', n: 17, chan: { '다이렉트 결혼준비': 11, '메이크마이웨딩': 4, '네이버 블로그': 2 } }],
+    '평택': [{ name: '제창우', n: 7, chan: { '네이버 블로그': 7 } }]
+  },
+  /* ── B2B 키워드 (2026-09-11) — 목록 · 전체 · 매장별 · 본문까지 본 글 수.
+     **0건 키워드(SAC)를 하나 둔다** — 「없다」를 어떻게 적는지 보여야 한다. */
+  kwList: ['DVM', '시스템에어컨', 'SAC'],
+  byKw: { 'DVM': 9, '시스템에어컨': 14, 'SAC': 0 },
+  byStoreKw: {
+    '갤러리아광교': { 'DVM': 3, '시스템에어컨': 5 },
+    '스타필드수원': { '시스템에어컨': 4 },
+    '평택': { 'DVM': 2, '시스템에어컨': 1 },
+    '원주': { 'DVM': 4, '시스템에어컨': 4 }
+  },
+  kwFull: 212,
+  /* 키워드 × 주 × 유형 — 최상단 거르개가 여기까지 걸리는지 눈으로 본다(지점 주차와 같은 주 이름) */
+  byStoreKwW: (() => {
+    const o = {};
+    [['갤러리아광교', 'DVM', 3], ['갤러리아광교', '시스템에어컨', 5], ['스타필드수원', '시스템에어컨', 4],
+     ['평택', 'DVM', 2], ['평택', '시스템에어컨', 1], ['원주', 'DVM', 4], ['원주', '시스템에어컨', 4]].forEach(([st, k, n], i) => {
+      o[st] = o[st] || {};
+      for (let q = 0; q < n; q++) {
+        const wk = '2026-W' + String(36 - ((q + i) % 4)).padStart(2, '0');
+        o[st][wk] = o[st][wk] || {}; o[st][wk][k] = o[st][wk][k] || {};
+        o[st][wk][k][q % 2 ? 'wedding' : 'etc'] = (o[st][wk][k][q % 2 ? 'wedding' : 'etc'] || 0) + 1;
+      }
+    });
+    return o;
+  })(),
+  /* 점코드 → 점명(2026-09-11) — 「내 점」 입력이 쓴다. 실물과 같은 코드 몇 개 */
+  storeCodes: { ZH96: '갤러리아광교', ZN01: '스타필드수원', Z324: '분당', Z243: '평택', Z579: '원주', Z343: '북수원', Z451: '서수원' },
   minYmd: '2023-01-01',
   /* 옛 자료 요약 — **링크 없이 건수만** 남은 구간(2023~2024). 화면이 그 사실을
      적는지 눈으로 보려면 있어야 한다. */
@@ -609,8 +657,8 @@ if (html.indexOf('<' + '?') >= 0) {
 const stub = [
   '<script>',
   'window.__VIRAL_FIXTURE = ' + JSON.stringify(Object.assign({
-  areaColors: { 수원: '#3d52db', 성남: '#9027d5', 용인: '#b62170',
-               평택: '#9c4b1d', 안양: '#636613', 강원: '#176b7c' }
+  areaColors: { 수원: '#0078a7', 성남: '#5b6e40', 용인: '#a66879',
+               평택: '#be6e00', 안양: '#bf544a', 강원: '#25a699' }
 }, REAL)) + ';',
   'window.google = { script: { run: (function () {',
   '  var ok = null, ng = null;',
@@ -625,6 +673,8 @@ const stub = [
   '    getProgress: function () { setTimeout(function () { ok && ok({}); }, 100); },',
   '    runRival: function () { console.log("[preview] runRival (로컬이라 아무 일도 하지 않는다)"); },',
   '    setManagerNames: function () { setTimeout(function () { ok && ok({ ok: true }); }, 60); },',
+  /* 2026-09-11 — B2B 키워드 저장. **서버와 같은 모양**(kwList)으로 돌려준다 */
+  '    setKeywords: function (list) { setTimeout(function () { ok && ok({ ok: true, kwList: (list && list.length) ? list : ["DVM", "시스템에어컨", "SAC"] }); }, 60); },',
   '    setAlias: function () {}, setupTrigger: function () {},',
   '    auditStore: function (nm) { setTimeout(function () { ok && ok({ ok: true, store: nm,',
   '      reachable: 118, inSheet: 88, hit: 101, missing: 17, rate: 85.6, calls: 342,',

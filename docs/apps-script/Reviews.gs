@@ -177,7 +177,7 @@ var FULL_EVERY_DAYS = 7;
    **칸은 뒤에만 붙인다** — 가운데에 끼우면 그 아래 모든 옛 줄이 한 칸씩 밀린다.
    옛 줄은 이 칸이 비어 있고, 그것은 **「기본 질의로 들어왔다」가 아니라 「모른다」**다 —
    화면이 그 둘을 갈라 적는다. */
-var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis', 'deadN', 'deadAt', 'q'];
+var HEADER = ['date', 'store', 'storeName', 'src', 'title', 'link', 'cafe', 'postdate', 'seenAt', 'kind', 'mgr', 'dateBasis', 'deadN', 'deadAt', 'q', 'kw'];
 /** 꼬리말을 시트에 적는 말로. 빈 꼬리말(기본 질의)도 **적어야** 「모른다」와 갈린다. */
 function tailTag_(t) { return String(t || '').trim() || '기본'; }
 
@@ -303,6 +303,17 @@ function trimWeeks_(bsw, keep) {
     for (wk in bsw[st]) if (bsw[st].hasOwnProperty(wk) && live[wk]) { m[wk] = bsw[st][wk]; any = true; }
     if (any) out[st] = m;
   }
+  return out;
+}
+
+/** 한 사람·한 항목의 `{주: …}` 를 **지점 주차와 같은 창**으로 자른다(`trimWeeks_` 의 한 겹 판).
+ *  최근 `keep` 주만 남긴다 — 화면의 주 드롭다운이 지점 주차 목록으로 만들어지므로
+ *  그 밖의 주는 어차피 고를 수 없다. */
+function keepWeeks_(wkMap, keep) {
+  var ws = Object.keys(wkMap || {}).sort();
+  if (ws.length <= keep) return wkMap || {};
+  var out = {}, i;
+  for (i = ws.length - keep; i < ws.length; i++) out[ws[i]] = wkMap[ws[i]];
   return out;
 }
 
@@ -1084,9 +1095,17 @@ var SDP = [
  *
  * 기본값은 지금 지도의 v8 색 그대로다(수원은 삼성 블루 계열). 바꾼 값은 스크립트
  * 속성에 남고, **못 읽으면 기본값으로 돌아간다** — 색이 깨져 화면이 안 보이는 것보다 낫다. */
+/* 2026-09-11 사장님 지시 — 히트맵과 같은 블로그(쏜디 색조합 추천)의 색으로 통일했다.
+ * 여섯 색상이 한 팔레트에는 없어 **형제 팔레트 넷에서 칩을 그대로** 가져왔다(값을 손대지
+ * 않았다 — 되짚을 수 있어야 한다): 수원 아쿠아 블루(블루+오렌지) · 성남 올리브(올리브 카키) ·
+ * 용인 로즈 모브(더스티 아쿠아&로즈 모브) · 평택 앰버(오렌지+그린) · 안양 테라코타 레드
+ * (피치 베이지&테라코타) · 강원 터콰이즈(샌디 베이지&터콰이즈).
+ * 지도에서 맞닿는 넷(성남↔용인·성남↔평택·수원↔용인·용인↔평택)의 같은 단계 거리를 재서 옛
+ * 판과 견줬다 — 용인↔평택이 19→25(적록 9→17)로 오히려 벌어졌고 나머지는 비슷하다
+ * (`.scratch/_area6.mjs`). 수원은 히트맵 당사 짙은 끝과 같은 값이라 「같은 색 = 삼성」이 이어진다. */
 var AREA_COLOR_DEFAULT = {
-  '수원': '#3d52db', '성남': '#9027d5', '용인': '#b62170',
-  '평택': '#9c4b1d', '안양': '#636613', '강원': '#176b7c'
+  '수원': '#0078a7', '성남': '#5b6e40', '용인': '#a66879',
+  '평택': '#be6e00', '안양': '#bf544a', '강원': '#25a699'
 };
 function areaColors_() {
   var out = {}, k;
@@ -2053,6 +2072,91 @@ function setManagerNames(store, names, token) {
   return { ok: true, mgrList: tab };
 }
 
+/* ── B2B 키워드 활동 (2026-09-11 사장님 지시) ───────────────────────────────
+ * *"DVM, 시스템에어컨, SAC 등 키워드넣어 매장에서 얼마나 활동중인가 확인할수있게"*.
+ *
+ * **호출을 한 번도 안 쓴다.** 이미 모은 후기의 **제목**에서 세고, 수집할 때는
+ * **본문(description)까지** 훑어 `kw` 칸에 담는다(매니저 이름과 같은 방식 —
+ * 본문은 저장하지 않으므로 그때 뽑아 두어야 뜻이 있다).
+ *
+ * **옛 줄은 제목에서만 잡힌다** — 화면이 「N건은 본문까지, 나머지는 제목에서만」을
+ * 밝힌다(있는 척하지 않는다). 그래서 `kw` 칸은 **훑었는데 없으면 `-`** 를 적는다 —
+ * 빈 칸이면 「없다」와 「안 훑었다(옛 줄)」가 뭉개진다.
+ *
+ * **목록은 관리자가 화면에서 바꾼다**(`_kwList`). 코드에 박힌 셋은 기본값이고,
+ * 사장님이 「등」이라 하셨으므로 늘어날 자리를 둔다. **목록이 바뀌면 제목은 그 자리에서
+ * 다시 세지만, 본문은 수집한 그때의 목록으로 잡힌 것만 남는다** — 화면이 그 사실을 적는다. */
+var KW_DEFAULT = ['DVM', '시스템에어컨', 'SAC'];
+var KW_MAX = 20;
+
+/** 키워드 다듬기 — 2~20자, 앞뒤 공백 제거. 한 글자는 아무 데나 걸린다. */
+function kwClean_(s) {
+  var t = String(s || '').trim();
+  if (t.length < 2 || t.length > 20) return '';
+  return t;
+}
+
+/** 지금 쓰는 키워드 목록. 저장된 것이 없으면 기본 셋. */
+function kwList_() {
+  var list = null;
+  try { list = JSON.parse(props_().getProperty('_kwList') || 'null'); } catch (e) { list = null; }
+  if (!list || !list.length) return KW_DEFAULT.slice();
+  return list;
+}
+
+/**
+ * 글에서 걸린 키워드. **영문·숫자만인 말은 낱말 경계로 본다** — `sac` 이
+ * `sacrifice` 안에서, `dvm` 이 다른 약어 안에서 걸리면 안 된다(이 저장소가
+ * 부분일치로 되풀이해 데인 종류다). 한글은 띄어쓰기를 지우고 부분일치 —
+ * 「시스템 에어컨」과 「시스템에어컨」은 같은 말이다.
+ */
+function kwHits_(text, list) {
+  var t = String(text || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ').toLowerCase();
+  var tight = t.replace(/\s+/g, '');
+  var out = [], i, k, kl, p, hit, b, a;
+  list = list || kwList_();
+  for (i = 0; i < list.length; i++) {
+    k = list[i]; kl = String(k).toLowerCase().replace(/\s+/g, '');
+    if (!kl) continue;
+    if (/^[a-z0-9]+$/.test(kl)) {
+      p = 0; hit = false;
+      while ((p = t.indexOf(kl, p)) >= 0) {
+        b = p === 0 ? '' : t.charAt(p - 1); a = t.charAt(p + kl.length);
+        if (!/[a-z0-9]/.test(b) && !/[a-z0-9]/.test(a)) { hit = true; break; }
+        p += kl.length;
+      }
+      if (hit) out.push(k);
+    } else if (tight.indexOf(kl) >= 0) out.push(k);
+  }
+  return out;
+}
+
+/** 시트에 적을 값 — **훑었는데 없으면 `-`** (빈 칸은 「옛 줄」이다). */
+function kwCell_(text, list) {
+  return kwHits_(text, list).join('|') || '-';
+}
+
+/**
+ * 키워드 목록 저장 — 화면에서 부른다. **관리자만**(토큰을 서버가 본다).
+ * 빈 목록을 주면 기본 셋으로 돌아간다.
+ */
+function setKeywords(list, token) {
+  if (!adminOk_(token)) return { ok: false, error: '관리자 확인이 필요합니다 — 다시 로그인해 주세요.' };
+  var out = [], dup = {}, i, w;
+  list = list || [];
+  for (i = 0; i < list.length; i++) {
+    w = kwClean_(list[i]);
+    if (!w || dup[w.toLowerCase()]) continue;
+    dup[w.toLowerCase()] = 1;
+    out.push(w);
+  }
+  if (out.length > KW_MAX) return { ok: false, error: '키워드는 ' + KW_MAX + '개까지입니다.' };
+  if (out.length) props_().setProperty('_kwList', JSON.stringify(out));
+  else props_().deleteProperty('_kwList');
+  sumCacheClear_();          /* 건수는 집계에서 나오므로 다시 세야 한다 */
+  return { ok: true, kwList: kwList_() };
+}
+
 function mgrFind_(text) {
   var t = String(text || '').replace(/<[^>]+>/g, ' ').replace(/&[a-z]+;/g, ' ');
   var out = [], p, q, title, s, e, name;
@@ -2745,6 +2849,8 @@ function repairBasis_(sh) {
 function sweep_(mode) {
   var itemSheet = sheet_(SHEET_ITEMS, HEADER);
   var seen = {}, i, k, n;
+  /* B2B 키워드 목록 — 글마다 속성을 읽지 않게 한 번만 */
+  var KWL = kwList_();
   /* ── 한 갈래가 죽어도 나머지는 계속 돈다 (2026-09-01) ─────────────────────
    *
    * 웹문서(webkr)를 갈래에 더한 날, 그것이 `HTTP 500 SE99`(네이버 시스템 에러)를
@@ -3202,7 +3308,8 @@ function sweep_(mode) {
                여럿이면 세로줄로 잇는다. */
             mgrFind_(text).join('|'),
             basis, '', '',                      /* deadN · deadAt — 아직 확인 전이다 */
-            tailTag_(TAILS[ti])                 /* 이 글을 준 질의 꼬리말 */
+            tailTag_(TAILS[ti]),                /* 이 글을 준 질의 꼬리말 */
+            kwCell_(text, KWL)                  /* B2B 키워드 — 본문까지 훑은 값 */
           ]);
         }
         if (items.length < PAGE_SIZE) break;           /* 마지막 쪽이다 */
@@ -3392,7 +3499,8 @@ function sweep_(mode) {
                 kindOf_(String(cit.title || '')),
                 mgrFind_(ctext).join('|'),
                 cbasis, '', '',                  /* deadN · deadAt — 아직 확인 전이다 */
-                '카페훑기'                        /* 꼬리말이 아니라 카페 이름으로 물은 것이다 */
+                '카페훑기',                       /* 꼬리말이 아니라 카페 이름으로 물은 것이다 */
+                kwCell_(ctext, KWL)               /* B2B 키워드 — 본문까지 훑은 값 */
               ]);
               cafeAdd++;
               break;
@@ -4176,7 +4284,12 @@ function readAll_() {
       /* **어느 질의가 이 글을 줬는가** (2026-09-04, 15번째 칸). **옛 줄에는 없다** —
          빈 문자열은 「기본 질의로 들어왔다」가 아니라 **「모른다」**다. 집계가
          `tailUnknown` 으로 따로 세고 화면이 그 사실을 적는다. */
-      q: String(v[i][14] || '')
+      q: String(v[i][14] || ''),
+      /* **B2B 키워드**(2026-09-11, 16번째 칸). 수집할 때 본문까지 훑은 값이고 없으면 `-`.
+         **옛 줄은 빈 칸**이라 그때는 제목에서 그 자리에서 다시 잡는다(`summary_`).
+         `kwFull` 이 「본문까지 봤는가」다 — 화면이 그 수를 밝힌다. */
+      kwRaw: String(v[i][15] || ''),
+      kwFull: !!String(v[i][15] || '')
     });
   }
   return out;
@@ -4267,6 +4380,14 @@ function summary_() {
    * **셋 다 작성일/출처가 근거라 카페는 월 집계에 안 든다.** 화면이 그 사실을
    * 매장 줄마다 적어야 한다(그래서 byStoreSrc 를 함께 낸다). */
   var byStoreSrc = {}, byStoreMonth = {}, lastPost = {}, byStoreChanY = {};
+  /* ── B2B 키워드 (2026-09-11) ─────────────────────────────────────────────
+     제목은 **지금 목록으로 그 자리에서** 다시 센다(목록을 바꾸면 바로 따라온다).
+     본문 히트는 수집한 그때의 값(`kwRaw`)이라 **지금 목록에 있는 것만** 더한다. */
+  var KWL2 = kwList_(), byStoreKw = {}, byKw = {}, kwFullN = 0;
+  /* 키워드 × 주 × 유형(4종) — **최상단 기간·유형 거르개를 따르게**(2026-09-11 사장님
+     확인 요청). 매장 주차(`byStoreWeek4`)와 같은 창·같은 모양이라 화면이 같은 함수로 읽는다.
+     작성일을 아는 글만 든다(주차 자료의 공통 제약). */
+  var byStoreKwW = {};
   /* 질의 꼬리말별 (2026-09-04) — 매장마다 값어치 있는 꼬리말이 다르다.
      `tailUnknown` 은 **옛 줄**이다(그 칸이 생기기 전에 담긴 글). 「기본 질의」와
      갈라 세어야 화면이 「모른다」를 「기본이 줬다」로 바꿔 말하지 않는다. */
@@ -4501,8 +4622,33 @@ function summary_() {
        카페 글은 카페 이름, 그 밖은 출처 이름(블로그·웹)으로 묶는다 — 블로거 이름은
        시트에 없어(HEADER 에 그 칸이 없다) 지어낼 수 없다. **없는 것을 만들지 않는다.** */
     if (!byStoreChan[r.storeName]) byStoreChan[r.storeName] = {};
-    var chName = r.cafe ? String(r.cafe) : (r.src === '블로그' ? '네이버 블로그' : '웹문서');
+    var chName = chanName_(r);
     byStoreChan[r.storeName][chName] = (byStoreChan[r.storeName][chName] || 0) + 1;
+    /* B2B 키워드 — 글마다 한 번씩(한 글에 둘이 걸리면 둘 다 센다) */
+    var kwh = kwHits_(r.title, KWL2), kwi, kws = {};
+    for (kwi = 0; kwi < kwh.length; kwi++) kws[kwh[kwi]] = 1;
+    if (r.kwFull) {
+      kwFullN++;
+      var kwr = r.kwRaw === '-' ? [] : r.kwRaw.split('|');
+      for (kwi = 0; kwi < kwr.length; kwi++) if (kwr[kwi] && KWL2.indexOf(kwr[kwi]) >= 0) kws[kwr[kwi]] = 1;
+    }
+    /* 화면(목록 필터)이 쓴다 — 줄에 붙여 둔다 */
+    r.kw = Object.keys(kws);
+    for (kwi = 0; kwi < r.kw.length; kwi++) {
+      byKw[r.kw[kwi]] = (byKw[r.kw[kwi]] || 0) + 1;
+      if (!byStoreKw[r.storeName]) byStoreKw[r.storeName] = {};
+      byStoreKw[r.storeName][r.kw[kwi]] = (byStoreKw[r.storeName][r.kw[kwi]] || 0) + 1;
+      /* 주 × 유형 — 작성일을 아는 글만(`wk` 는 위 dated 블록에서 나온다) */
+      if (r.dated && r.date) {
+        var kwk = isoWeek_(r.date);
+        if (kwk) {
+          if (!byStoreKwW[r.storeName]) byStoreKwW[r.storeName] = {};
+          if (!byStoreKwW[r.storeName][kwk]) byStoreKwW[r.storeName][kwk] = {};
+          if (!byStoreKwW[r.storeName][kwk][r.kw[kwi]]) byStoreKwW[r.storeName][kwk][r.kw[kwi]] = {};
+          byStoreKwW[r.storeName][kwk][r.kw[kwi]][k4] = (byStoreKwW[r.storeName][kwk][r.kw[kwi]][k4] || 0) + 1;
+        }
+      }
+    }
     var a = sido_(r.store);
     /* 지도 칸 — 강원만 시로 갈린다(`mapCell_` 주석 참조) */
     var mc = mapCell_(r.store);
@@ -4552,6 +4698,12 @@ function summary_() {
    *
    * **작성일을 아는 글만** 든다(이 블록 안이다) — 지점 주차와 같은 제약이다. */
   var mgrWeek4 = {};
+  /* ── **매장별 매니저** (2026-09-11 사장님 지시 — *"신규철매니저가 다이랙트 내 이렇게
+     하고 있음"*) ────────────────────────────────────────────────────────
+     `mgrTop[].store` 는 「가장 많이 언급된 매장」 하나뿐이라 **그 매장에서 몇 건인지**를
+     못 말한다. 여기서 매장 × 사람 × 채널을 따로 센다 — 이름은 직함을 떼어 합친다
+     (`mgrTop` 과 같은 규칙). 값은 `byStoreMgr[매장] = [{name, n, chan}]` 상위 8명. */
+  var byStoreMgr = {};
   var mgrN = {}, mgrStore = {}, mgrFullN = 0, mm, mi, mk;
   for (i = 0; i < rows.length; i++) {
     if (rows[i].mgrFull) mgrFullN++;
@@ -4567,6 +4719,13 @@ function summary_() {
          서술어 조각 아홉이 순위에 올라 있었다. */
       if (MGR_NOTNAME.indexOf(mgrNameClean_(mk) || mk) >= 0) continue;
       mgrN[mk] = (mgrN[mk] || 0) + 1;
+      /* 매장 × 사람 × 채널 — 이름으로 합친다(직함이 달라도 같은 사람) */
+      var msn = rows[i].storeName, mnm0 = mgrNameClean_(mk) || mk;
+      if (!byStoreMgr[msn]) byStoreMgr[msn] = {};
+      if (!byStoreMgr[msn][mnm0]) byStoreMgr[msn][mnm0] = { n: 0, chan: {}, wk: {} };
+      byStoreMgr[msn][mnm0].n++;
+      var mch = chanName_(rows[i]);
+      byStoreMgr[msn][mnm0].chan[mch] = (byStoreMgr[msn][mnm0].chan[mch] || 0) + 1;
       if (!mgrStore[mk]) mgrStore[mk] = {};
       mgrStore[mk][rows[i].storeName] = (mgrStore[mk][rows[i].storeName] || 0) + 1;
       /* **매니저 × 유형**(2026-09-03 사장님 지시) — 「매니저로 보기」에서 혼수·입주·기타를
@@ -4594,6 +4753,12 @@ function summary_() {
         /* 주차 × 유형 — 지점과 **같은 모양**이라 화면이 같은 함수로 읽는다 */
         var mwk = isoWeek_(rows[i].date);
         if (mwk) {
+          /* 매장별 매니저도 주 × 유형을 든다 — 점 설명의 「직원별」이 최상단 기간을 따른다 */
+          var bsm = byStoreMgr[rows[i].storeName] && byStoreMgr[rows[i].storeName][mgrNameClean_(mk) || mk];
+          if (bsm) {
+            if (!bsm.wk[mwk]) bsm.wk[mwk] = {};
+            bsm.wk[mwk][mk4] = (bsm.wk[mwk][mk4] || 0) + 1;
+          }
           if (!mgrWeek4[mk]) mgrWeek4[mk] = {};
           if (!mgrWeek4[mk][mwk]) mgrWeek4[mk][mwk] = {};
           mgrWeek4[mk][mwk][mk4] = (mgrWeek4[mk][mwk][mk4] || 0) + 1;
@@ -4899,6 +5064,30 @@ function summary_() {
     /* **매니저 언급 순위**(사장님 지시). `mgrFull` 은 **본문까지 본 글 수** —
        나머지는 제목에서만 뽑은 옛 글이라 화면이 그 사실을 밝혀야 한다. */
     mgrTop: mgrTop, mgrFull: mgrFullN, mgrRows: rows.length,
+    /* **매장별 매니저 상위 8명 + 채널 상위 3**(2026-09-11). 매장 신호·지점별 분석이
+       *"신규철 매니저가 다이렉트 결혼준비에 N건"* 을 적는 자료다. */
+    byStoreMgr: (function () {
+      var o = {}, st, nm, arr;
+      for (st in byStoreMgr) if (byStoreMgr.hasOwnProperty(st)) {
+        arr = [];
+        for (nm in byStoreMgr[st]) if (byStoreMgr[st].hasOwnProperty(nm)) {
+          arr.push({ name: nm, n: byStoreMgr[st][nm].n, chan: topN_(byStoreMgr[st][nm].chan, 3),
+                     /* 주 × 유형 — 지점 주차와 **같은 창**만(창이 다르면 드롭다운의 주 목록이 갈린다) */
+                     wk: keepWeeks_(byStoreMgr[st][nm].wk, WEEK_KEEP) });
+        }
+        arr.sort(function (a, b) { return b.n - a.n || (a.name < b.name ? -1 : 1); });
+        o[st] = arr.slice(0, 8);
+      }
+      return o;
+    })(),
+    /* **B2B 키워드**(2026-09-11) — 목록 · 전체 건수 · 매장별 건수 · 본문까지 본 글 수.
+       `byKw` 가 0건인 키워드도 목록에 남긴다(「없다」가 곧 정보다). */
+    kwList: KWL2, byKw: byKw, byStoreKw: byStoreKw, kwFull: kwFullN,
+    /* 매장 × 주 × 키워드 × 유형 — 최상단 거르개용. 지점 주차와 같은 창 */
+    byStoreKwW: trimWeeks_(byStoreKwW, WEEK_KEEP),
+    /* **점코드 → 점명**(2026-09-11 사장님 지시 — *"점코드를 넣으면 점 상세분석"*).
+       점장이 자기 점코드로 들어온다. 코드는 `lib/stores.ts` 로 이미 공개된 값이다. */
+    storeCodes: (function () { var o = {}, i; for (i = 0; i < STORES.length; i++) o[STORES[i][0]] = STORES[i][1]; return o; })(),
     /* **인식된 전체 인원**과 그중 화면에 실은 수. 화면이 「N명 중 M명」을 적는다 */
     mgrAll: mgrAllN, mgrOnce: mgrOnce,
     /* 화면이 「언제부터의 글인가」를 적는다 — 상수를 화면에 또 적으면 어긋난다 */
@@ -5005,10 +5194,14 @@ var SHEET_SRIVAL = '매장경쟁';
    것은 블로그뿐**이라(카페·웹은 네이버가 안 준다) 연도로 나눌 수 있는 것은 그것뿐이다.
    **그것이 오히려 옳다** — 당사 쪽 칸도 같은 제약을 받는 자료(byStoreMonth)를 쓰므로
    **양쪽이 같은 잣대**가 된다. 화면이 그 사실을 적는다. */
-var SRIVAL_HEADER = ['at', 'store', 'shop', 'ours', 'rival', 'pct', 'capped', 'queries', 'monJson'];
+/* `chanJson` (2026-09-11 사장님 지시 — *"사이트별정보에도 삼성 몇건 베스트샵 몇건
+   나눠지게"*). **양쪽 채널별 건수** {o:{채널:n}, r:{채널:n}} 상위 12. 추가 호출 0 —
+   받아 온 글에서 채널만 센다. 이름 규칙은 우리 `byStoreChan` 과 같다(`chanNameOf_`)라
+   화면에서 한 표에 나란히 놓인다. **잣대도 같다** — 같은 회차·같은 질의·같은 판정. */
+var SRIVAL_HEADER = ['at', 'store', 'shop', 'ours', 'rival', 'pct', 'capped', 'queries', 'monJson', 'chanJson'];
 /* **줄의 뜻이 바뀌면 올린다** — 옛 회차에 이어 붙으면 월 자료가 반쪽인 채로 화면에
    나가 「그 매장만 26년 자료가 없다」가 된다(경쟁비교가 이미 데인 그 사고다). */
-var SRIVAL_SCHEMA = 2;
+var SRIVAL_SCHEMA = 3;   /* 3 = chanJson(양쪽 채널) */
 var SRIVAL_MS = 300 * 1000;              /* 6분 한도 안에서 쓸 예산 */
 var SRIVAL_PER_MS = 45 * 1000;           /* 매장 하나에 넉넉히 — 모자라면 다음 실행으로 */
 var SRIVAL_CAP = 2900;                   /* 3소스 × 10쪽 × 100 = 3,000 — 여기 닿으면 「못 잼」 */
@@ -5050,11 +5243,14 @@ function storeRival_() {
        「그 해에 없었다」와 「연도를 모른다」는 다른 말이고, 화면이 그것을 가려
        전 기간으로 물러서며 그 사실을 적는다. */
     var mon0 = jparse_(v[i][8]);
+    /* 채널(판 3부터). 옛 회차는 `null` — 화면이 「다음 수집부터」라고 적는다 */
+    var chan0 = jparse_(v[i][9]);
     rows.push({ store: String(v[i][1]), shop: String(v[i][2]),
       ours: Number(v[i][3]) || 0, rival: Number(v[i][4]) || 0,
       pct: v[i][5] === '' || v[i][5] === null ? null : Number(v[i][5]),
       capped: v[i][6] === true || String(v[i][6]) === 'true',
-      mon: (mon0 && mon0.o) ? mon0 : null });
+      mon: (mon0 && mon0.o) ? mon0 : null,
+      chan: (chan0 && chan0.o) ? chan0 : null });
   }
   return rows.length ? { at: last, rows: rows } : null;
 }
@@ -5184,7 +5380,9 @@ function collectStoreRival(reset, deadline) {
                  블로그만 `postdate` 를 준다. 없으면 빈 글자이고 **연도 집계에서 빠진다** —
                  0 으로 세면 「그 해에 없었다」가 되어 거짓이 된다. */
               var pd9 = String(it.postdate || '').replace(/[^0-9]/g, '');
-              got[key][lk] = pd9.length === 8 ? (pd9.slice(0, 4) + '-' + pd9.slice(4, 6)) : '';
+              /* 월과 채널을 함께 담는다 — 링크가 열쇠라 두 지점에 다 쓴 글도 한 번만 */
+              got[key][lk] = { m: pd9.length === 8 ? (pd9.slice(0, 4) + '-' + pd9.slice(4, 6)) : '',
+                               c: chanNameOf_(SRCS[sj], it) };
             }
             if (items.length < PAGE_SIZE) break;
           }
@@ -5198,14 +5396,21 @@ function collectStoreRival(reset, deadline) {
       var tot = o + r;
       /* **양쪽 월별.** 링크마다 담아 둔 월을 센다 — 작성일을 모르는 글(카페·웹)은
          빈 글자라 어느 달에도 안 든다. 그래서 이 표의 합은 `o`·`r` 보다 작다. */
-      var mon9 = { o: {}, r: {} };
+      var mon9 = { o: {}, r: {} }, chan9 = { o: {}, r: {} };
       ['ours', 'rival'].forEach(function (kk9) {
-        var box9 = mon9[kk9 === 'ours' ? 'o' : 'r'], gg9 = got[kk9], lk9;
-        for (lk9 in gg9) if (gg9.hasOwnProperty(lk9) && gg9[lk9]) box9[gg9[lk9]] = (box9[gg9[lk9]] || 0) + 1;
+        var side9 = kk9 === 'ours' ? 'o' : 'r';
+        var box9 = mon9[side9], cb9 = chan9[side9], gg9 = got[kk9], lk9, g9;
+        for (lk9 in gg9) if (gg9.hasOwnProperty(lk9)) {
+          g9 = gg9[lk9];
+          if (g9.m) box9[g9.m] = (box9[g9.m] || 0) + 1;
+          if (g9.c) cb9[g9.c] = (cb9[g9.c] || 0) + 1;
+        }
+        /* 채널은 상위 12 — 수백 개를 통째로 담으면 시트 칸(5만 자)이 넘친다 */
+        chan9[side9] = topN_(cb9, 12);
       });
       sh.appendRow([stamp, st, shops.join(' · '), o, r,
         (capped || tot === 0) ? '' : Math.round(o / tot * 100),
-        capped, qs.join(' | '), JSON.stringify(mon9)]);
+        capped, qs.join(' | '), JSON.stringify(mon9), JSON.stringify(chan9)]);
       wrote++;
       props.setProperty('_srivalCur', String(ui + 1));
     }
@@ -5631,6 +5836,18 @@ function plain_(s) {
 }
 
 /** 그 글이 올라온 자리. **모르면 빈 문자열** — '기타'로 뭉뚱그리면 「어디에」가 사라진다. */
+/** 시트 줄 → 화면이 묶는 채널 이름. **한 곳에서만 적는다** — 매장별 채널·매장별 매니저·
+ *  매장 대 매장이 같은 이름을 써야 화면에서 서로 이어진다. 카페는 카페 이름,
+ *  블로그·웹은 출처 이름(블로거 이름은 시트에 없다 — 지어내지 않는다). */
+function chanName_(r) {
+  return r.cafe ? String(r.cafe) : (r.src === '블로그' ? '네이버 블로그' : '웹문서');
+}
+/** 검색 응답 → 같은 규칙의 채널 이름(매장 대 매장이 쓴다). */
+function chanNameOf_(kind, it) {
+  return chanName_({ cafe: kind === 'cafearticle' ? String(it.cafename || '') : '',
+                     src: kind === 'blog' ? '블로그' : (kind === 'cafearticle' ? '카페' : '웹') });
+}
+
 function chanOf_(kind, it, link) {
   if (kind === 'cafearticle') return plain_(it.cafename);
   if (kind === 'blog') return plain_(it.bloggername);
@@ -6664,9 +6881,9 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-11-cf7889bf';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-11-4dc96045';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
-var SUM_VER = 24;   /* 21 = 매니저 주차(mgrTop[].wk4) */
+var SUM_VER = 25;   /* 25 = 매장별 매니저·B2B 키워드·점코드·매장 대 매장 채널 */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
 var SUM_CHUNK = 90000;      /* 값 한도 100KB — 여유를 둔다 */
 var SUM_TTL = 21600;        /* CacheService 최대 6시간 */
