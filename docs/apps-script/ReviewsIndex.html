@@ -2000,7 +2000,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-11-49c597ad';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-11-6fd6751f';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -5177,17 +5177,20 @@ function wireSecs() {
     /* **큰 숫자도 그 해 것이어야 한다** — 히트맵 칸이 「2026년 138건」인데 여기가
        1,185건이면 같은 화면이 두 말을 한다(사장님 지적). */
     var CH = chanOfStore(storeFilter);
-    var ch = CH.m;                          /* 채널 목록 — 히트맵 축을 따라간다 */
+    var ch = CH.m;                          /* 채널 목록 — 칸과 같은 자료 */
     var allN = by[storeFilter] || 0;        /* 전 기간 누적 */
-    var n = CH.year ? CH.yearN : allN;      /* 큰 숫자 — 히트맵 칸과 같은 값 */
+    var n = CH.total;                        /* 큰 숫자 — 히트맵 칸과 같은 값 */
     var keys = Object.keys(ch).sort(function (a, b) { return ch[b] - ch[a]; });
+    /* 채널 합이 칸 수보다 작으면(전 기간은 상위 12개만) 나머지를 「그 밖」으로 적는다 — 합이 맞아야 한다 */
+    var chSum = 0; keys.forEach(function (k) { chSum += ch[k]; });
+    var chRest = Math.max(0, n - chSum);
     var list = keys.length
       ? '<ol>' + keys.map(function (k) {
           return '<li><em>' + esc(k) + '</em><b>' + nf(ch[k]) + '</b><span class="u">건</span></li>';
-        }).join('') + '</ol>'
+        }).join('') + (chRest ? '<li><em>그 밖 채널</em><b>' + nf(chRest) + '</b><span class="u">건</span></li>' : '') + '</ol>'
       /* **0 으로 그리지 않는다** — 「채널을 모른다」와 「후기가 없다」는 다른 말이다 */
       : '<div class="note">' + (n ? '채널을 가릴 수 없는 글입니다.' : '아직 후기가 없습니다.') + '</div>';
-    el.innerHTML = '<h3>' + esc(storeFilter) + (CH.year ? ' <span class="yb">' + CH.year + '년</span>' : '') + '</h3>'
+    el.innerHTML = '<h3>' + esc(storeFilter) + (CH.scoped ? ' <span class="yb">' + esc(CH.scopeLab) + '</span>' : '') + '</h3>'
       + '<div class="big">' + nf(n) + '<span>건</span></div>'
       /* **두 숫자가 무엇인지 적는다** — 큰 숫자는 그 해, 아래 채널은 전 기간이다.
          안 적으면 138 과 1,185 가 왜 다른지 알 수 없다. */
@@ -5195,13 +5198,12 @@ function wireSecs() {
          축 자료는 작성일을 아는 글만이라 카페가 거의 빠진다 — 그 사실과 **전 기간 합**을
          함께 적어야 「우리 카페 후기가 사라졌다」로 안 읽힌다. */
       + (CH.scoped
-          ? '<div class="note">아래 채널은 <b>' + esc(CH.scopeLab) + '</b> 기준입니다 —'
-            + ' 연도로 나눌 수 있는 것은 <b>작성일을 아는 글</b>뿐이라(네이버가 카페·웹 작성일을'
+          ? '<div class="note">아래 채널은 <b>' + esc(CH.scopeLab) + '</b> 기준입니다 — 위 히트맵 칸과 같은 자료라 합이 같습니다.'
+            + ' 기간으로 나눌 수 있는 것은 <b>작성일을 아는 글</b>뿐이라(네이버가 카페·웹 작성일을'
             + ' 주지 않습니다) <b>카페가 거의 빠집니다</b>.'
             + (allN > n ? ' 전 기간으로는 <b>' + nf(allN) + '건</b>입니다.' : '') + '</div>'
-          : (CH.year && allN > n
-          ? '<div class="note">아래 채널은 <b>전 기간 ' + nf(allN) + '건</b> 기준입니다 —'
-            + ' 그 구간에 작성일을 아는 글이 없어 전 기간으로 보여드립니다.</div>'
+          : (CH.fallback
+          ? '<div class="note"><b class="warn">옛 서버 자료라 기간을 못 가릅니다</b> — 아래 채널은 <b>전 기간 ' + nf(allN) + '건</b> 기준입니다.</div>'
           : ''))
       + list
       + '<div class="note" style="margin-top:8px">카페는 <b>카페 이름</b>, 블로그·웹은'
@@ -7526,44 +7528,38 @@ function renderList() {
    *
    *  **옛 서버 자료에는 이 칸이 없다** — 그때는 예전 값으로 물러서되, 화면이
    *  「전 기간」이라고 적는다(조용히 다른 잣대를 쓰지 않는다). */
+  /* ── **드릴다운은 칸과 같은 자료로 센다** (2026-09-11 사장님 지적 — *"지점을 클릭하게되면
+   * 어느경로로 올렸는지 현재 숫자와 불일치하게나오는경우가있습니다"*) ─────────────
+   * 원인: 이 함수가 **당해년도 채널**(`byStoreChanY[cur]`)을 내고 있었다. 2026-09-05 히트맵
+   * 축이 「당해」이던 때의 결정인데, 2026-09-10 에 칸이 **전 기간 건수**로 바뀌고 기간은
+   * 위 막대에서 정하게 되면서 드릴다운만 그 자리에 남았다 — 칸 「원주 27건」(전 기간)을
+   * 누르면 「원주 2026년 24건」이 떴고, 주차를 걸어도 채널은 연도 값이었다.
+   *
+   * 지금은 **칸을 만든 그 자료**로 센다:
+   *   기간·유형 없음 → `byStoreChan`(전 기간 · 카페 포함) — 칸 = `byStore` 와 같은 줄들
+   *   기간·유형 있음 → `byStoreChanW`(매장×주×채널×유형)을 `scopedWeekPick`·`scopedOne` 으로
+   *                    — 칸 = `byStoreWeek4` 와 **같은 주·같은 유형 키**라 합이 정확히 맞는다
+   * 옛 서버 자료(`byStoreChanW` 없음)면 전 기간으로 물러서고 `fallback` 으로 밝힌다.
+   * `total` 은 칸이 적는 그 수(`scopedByStore`)다 — 채널 합이 그보다 작으면(전 기간은 상위
+   * 12개만 담는다) 부르는 쪽이 「그 밖」으로 나머지를 적는다. */
   function chanOfStore(store) {
-    /* ── **채널 목록은 축을 따라간다** (2026-09-05 사장님 지시로 뒤집었다) ────────
-     * 옛 결정(2026-09-03 B안)은 **전 기간**이었다 — 연도로 나누면 카페가 통째로
-     * 빠져 「블로그만」이 되기 때문이다(네이버가 카페·웹 작성일을 안 준다):
-     *
-     *   갤러리아광교 2026년 — 블로그 182 · 카페 2건
-     *   전 기간         — 카페 654 · 블로그 443 · 웹 99건   ← 카페가 주력이다
-     *
-     * 그런데 그 결정은 **칸과 안쪽이 다른 말을 하게** 만들었다 — 칸은 「2026년
-     * 184건」인데 들어가면 「전 기간 1,343건」이었다. 사장님 지시(2026-09-05):
-     * *"클릭해서 들어가면 26년 자료만 보이게해주세요"*.
-     *
-     * **둘 다 지킨다** — 칸은 축의 자료로 그려 합이 맞고, **전 기간 상위를 빵부스러기에
-     * 함께 적어** 「어디에서 싸우나」를 잃지 않는다. 축 자료가 한 건도 없으면 전 기간으로
-     * 물러서고 그 사실을 적는다.
-     *
-     * 언젠가 카페 작성일을 얻게 되면 이 절이 통째로 필요 없어진다. */
-    var y = (DATA.byStoreChanY || {})[store], yn = 0, yr = null;
-    if (y) {
-      yr = heatYears().cur;
-      var m2 = y[yr] || {}, k2;
-      for (k2 in m2) if (m2.hasOwnProperty(k2)) yn += m2[k2];
-    }
-    /* ── **드릴다운도 축을 따라간다** (2026-09-05 사장님 지시) ─────────────────
-     * *"클릭해서 들어가면 26년 자료만 보이게해주세요"*.
-     *
-     * 예전에는 칸이 「2026년 184건」인데 들어가면 **전 기간 1,343건**이었다 —
-     * 같은 화면이 두 말을 했다. 지금은 축의 자료를 낸다.
-     *
-     * **대가가 있다.** 연도로 나눌 수 있는 것은 **작성일을 아는 글**뿐이라
-     * 실측(갤러리아광교)으로 2026년은 **블로그 182 · 카페 2건**이고, 전 기간으로는
-     * **카페 654건이 주력**이다. 그래서 축 자료를 칸으로 그리되 **전 기간 상위를
-     * 함께 적는다** — 「어디에서 싸우나」를 잃지 않으면서 합이 맞는다. */
     var allCh = (DATA.byStoreChan || {})[store] || {};
-    var scoped = null, scopeLab = '';
-    if (y && y[yr]) { scoped = y[yr]; scopeLab = yr + '년'; }
-    return { m: scoped || allCh, all: allCh, scoped: !!scoped, scopeLab: scopeLab,
-             year: yr, yearN: yn };
+    var total = scopedByStore()[store] || 0;
+    if (!scoped()) {
+      return { m: allCh, all: allCh, scoped: false, scopeLab: '전 기간', total: total, fallback: false };
+    }
+    var W = (DATA.byStoreChanW || {});
+    if (!DATA.byStoreChanW) {
+      return { m: allCh, all: allCh, scoped: false, scopeLab: '전 기간', total: total, fallback: true };
+    }
+    var ws = scopedWeekPick(Object.keys(W[store] || {}).sort()), m = {}, i, k;
+    for (i = 0; i < ws.length; i++) {
+      var per = (W[store] || {})[ws[i]] || {};
+      for (k in per) if (per.hasOwnProperty(k)) m[k] = (m[k] || 0) + scopedOne(per[k]);
+    }
+    for (k in m) if (m.hasOwnProperty(k) && !m[k]) delete m[k];
+    return { m: m, all: allCh, scoped: true, scopeLab: (periodLabel() || '고른 기간') + (heatKind ? ' · ' + kLabel(heatKind) : ''),
+             total: total, fallback: false };
   }
 
   /** 채널 단계 아래 — 삼성 vs 베스트샵 채널별 표. 양쪽 채널을 **합쳐 정렬**한다
@@ -8371,11 +8367,9 @@ function renderList() {
     }
     if (row.length) flush();
   }
-  /* 채널 단계의 색 — **증감이 아니다.** 채널별 전월 자료가 없어 갈래(카페·블로그·웹)를 뜻한다. */
-  var HEAT_CHC = { c: 'rgb(120,86,196)', b: 'rgb(38,124,150)', w: 'rgb(96,104,122)' };
-  function heatChanKind(nm) {
-    return nm === '네이버 블로그' ? 'b' : (nm === '웹문서' ? 'w' : 'c');
-  }
+  /* 채널 단계의 색 — **다른 단계와 같은 규칙**(2026-09-11 사장님 지시 — *"모든 히트맵 구조를
+     컬러표기방법을 통일"*). 예전에는 갈래(카페·블로그·웹)마다 고정색이었다. 지금은 채널들의
+     평균을 기준으로 이상 초록 · 이하 빨강 — 전점·지역·매니저 단계와 같은 함수(`heatColor`)다. */
 
   /* 말풍선 줄바꿈 — **소스에 역슬래시를 적지 않는다**(셸·heredoc 이 먹어 실제 개행이
      되고 문법이 깨진다. 이 저장소가 여러 번 데인 함정이다). */
@@ -8727,7 +8721,8 @@ function renderList() {
     /* **매니저에는 채널 자료가 없다** — 드릴다운하면 빈 화면이 뜬다 */
     var chan = heatWho === 'mgr' ? false : (heatMode === 'flat' ? lv === 1 : lv === 2);
     var regionTiles = (heatMode === 'region' && lv === 0);
-    if (leg) leg.style.display = (chan || heatWho === 'lg') ? 'none' : '';
+    /* 범례는 모든 단계에서 같다 — 색 규칙이 하나이므로(2026-09-11) 채널 단계에서도 보인다 */
+    if (leg) leg.style.display = (heatWho === 'lg') ? 'none' : '';
 
     /* 무엇을 그릴지 */
     var items = [], drop = 0, flat0 = 0, zeroN = 0;
@@ -8743,9 +8738,12 @@ function renderList() {
       /* 매장 대 매장 회차의 양쪽 채널 — 있으면 칸에 한 줄, 아래 표로 */
       var srw = (window.__SR || {})[who], srCh = srw && srw.chan ? srw.chan : null;
       for (k in ch) if (ch.hasOwnProperty(k)) {
-        items.push({ nm: k, v: ch[k], cnt: ch[k], k: heatChanKind(k),
+        items.push({ nm: k, v: ch[k], cnt: ch[k],
                      sr: srCh ? { o: (srCh.o || {})[k] || 0, r: (srCh.r || {})[k] || 0 } : null });
       }
+      /* **칸 수와 합이 맞아야 한다** — 전 기간은 상위 12채널만 담으므로 나머지를 「그 밖」 칸으로 */
+      var chRest2 = Math.max(0, (CHW.total || 0) - chanTotal);
+      if (chRest2 > 0) { items.push({ nm: '그 밖 채널', v: chRest2, cnt: chRest2, sr: null }); chanTotal += chRest2; }
       renderSrChan(who, srw, srCh);
     } else {
       var src;
@@ -8808,8 +8806,9 @@ function renderList() {
     /* **전체 평균** — 지금 판에 오른 매장 전체(0건 포함, `src`)로 낸다. 그려진 칸만으로
        내면 0건 매장이 빠져 평균이 올라가고, 「평균 이상」이 실제보다 적어진다. */
     var heatAvg = 0, avgN = 0;
-    if (!chan) {
-      var pool = (heatMode === 'flat') ? rows : (lv === 0 ? src : (byReg[heatPath[0]] || []));
+    {
+      /* 채널 단계는 그 매장의 채널들 평균 — 다른 단계와 같은 규칙으로 칠한다 */
+      var pool = chan ? items : ((heatMode === 'flat') ? rows : (lv === 0 ? src : (byReg[heatPath[0]] || [])));
       for (var ai = 0; ai < pool.length; ai++) { heatAvg += (pool[ai].cnt || 0); avgN++; }
       heatAvg = avgN ? heatAvg / avgN : 0;
     }
@@ -8978,7 +8977,8 @@ function renderList() {
          주 단위는 표본이 작아 넓게 잡는다. 채널 드릴다운은 갈래가 곧 뜻이라 그대로. */
       /* **기본은 건수 색**(2026-09-10 사장님 지시 — 절대 건수). 위 「비교」를 켰을
          때만 등락(finviz)으로 칠한다. 채널 드릴다운은 갈래가 곧 뜻이라 그대로. */
-      var bg = chan ? HEAT_CHC[d.k] : (cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg));
+      /* 색 규칙은 단계와 무관하게 하나다(2026-09-11) — 채널 단계도 평균 기준이다 */
+      var bg = (cmpOn && !chan) ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg);
       /* ── **한 칸 안에 파랑 : 빨강** (2026-09-03 사장님 지시) ────────────────
        * *"지금 블루컬러는 베이스로하고있는데 LG는 지점명 안들어가도되니 레드계열로
        * 색상을 넣어서 비중을 확인해주면됩니다"*.
@@ -9151,13 +9151,12 @@ function renderList() {
         return ' · <span class="cntxt">전 기간으로는 ' + nf(tot9) + '건 — '
           + ks9.slice(0, 3).map(function (k) { return esc(k) + ' ' + nf(A[k]); }).join(' · ') + '건</span>';
       })();
+      /* 빵부스러기 — 칸이 적은 그 수와 같은 합이다(같은 자료). 색 규칙은 다른 단계와 같다 */
       cr.innerHTML = esc(heatPath[heatPath.length - 1]) + ' <em>'
-        + (CHW.scoped ? esc(CHW.scopeLab) + ' ' : '전 기간 ') + nf(chanTotal) + '건 · '
-        + '<b style="color:#B45309">색은 증감이 아니라 갈래입니다'
-        + (CHW.scoped
-            ? ' · 작성일을 아는 글만이라 카페가 거의 빠집니다'
-            : ' · 그 구간 자료가 없어 전 기간으로 보여드립니다')
-        + '</b>' + allTop + '</em>';
+        + esc(CHW.scopeLab) + ' ' + nf(chanTotal) + '건 · 색은 채널 평균 기준 이상(초록)/이하(빨강)'
+        + (CHW.scoped ? ' · 작성일을 아는 글만이라 카페가 거의 빠집니다' : '')
+        + (CHW.fallback ? ' · <b class="warn">옛 서버 자료라 기간을 못 가릅니다 — 전 기간입니다</b>' : '')
+        + (CHW.scoped ? allTop : '') + '</em>';
       return;
     }
     bk.textContent = '← 전체';

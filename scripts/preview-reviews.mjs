@@ -279,6 +279,29 @@ const DATA = {
     });
     return o;
   })(),
+  /* 매장 × 주 × 채널 × 유형(2026-09-11) — **주차 자료(byStoreWeek4)에서 갈라 만든다**라 두 합이
+     정확히 같다. 드릴다운이 칸과 같은 수를 말하는지 눈으로 검산하려면 합이 같아야 한다. */
+  byStoreChanW: (() => {
+    const o = {};
+    Object.entries(byStoreWeek).forEach(([n, weeks]) => {
+      o[n] = {};
+      Object.entries(weeks).forEach(([w, m]) => {
+        const tot = Object.values(m).reduce((a, b) => a + b, 0);
+        const k4 = { wedding: m['혼수'] || 0, movein: m['입주'] || 0,
+                     etc: Math.max(0, tot - (m['혼수'] || 0) - (m['입주'] || 0)) };
+        const ch = { '네이버 블로그': {}, '다이렉트결혼준비': {} };
+        Object.entries(k4).forEach(([k, v]) => {
+          if (!v) return;
+          const b = Math.ceil(v / 2), c = v - b;
+          if (b) ch['네이버 블로그'][k] = b;
+          if (c) ch['다이렉트결혼준비'][k] = c;
+        });
+        Object.keys(ch).forEach((c) => { if (!Object.keys(ch[c]).length) delete ch[c]; });
+        o[n][w] = ch;
+      });
+    });
+    return o;
+  })(),
   /* LG 매칭 — **실물 fixture 로 서버와 같은 규칙을 돌린다.** 손으로 적으면
      규칙을 고쳤을 때 미리보기만 옛 답을 보여준다. */
   lgMatch: (() => {

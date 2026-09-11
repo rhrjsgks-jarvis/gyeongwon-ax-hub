@@ -3280,7 +3280,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
        때만 등락(finviz, growColor)이다. 두 모드가 모두 살아 있고 모드에 따라 갈리는가. */
     if (!ix.includes('var HEAT_LO = ') || !ix.includes('var HEAT_HI = ')) bad.push('건수 색이 없다');
     if (!ix.includes('function growColor')) bad.push('등락 색 함수가 없다');
-    if (!ix.includes('(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg))')) bad.push('칸 색이 모드를 안 따른다');
+    if (!ix.includes('(cmpOn && !chan) ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg)')) bad.push('칸 색이 모드를 안 따른다');
     if (ix.includes('Math.min(Math.abs(g) / (span')) bad.push('옛 증감 색 함수가 남아 있다');
     if (!ix.includes("'÷' + heatSpan") || !ix.includes("'×' + heatSpan")) bad.push('비교 범례가 등락 배수를 안 적는다');
     /* 2026-09-11 오후 — 색이 평균 기준이 됐다. 범례가 **평균값**을 적어야 검산된다 */
@@ -3467,7 +3467,7 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
   }
 
   /* ⑤ 색·범례·부제가 모드를 따라간다 */
-  if (!ix.includes("(cmpOn ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg))")) {
+  if (!ix.includes("(cmpOn && !chan) ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg)")) {
     bad.push('색이 모드를 안 따른다 — 기본은 건수 색, 비교를 켰을 때만 등락 색이어야 한다');
   }
   /* 2026-09-11 오후 — 색이 평균 기준이라 범례 머리도 「평균 N건 기준」이다 */
@@ -4362,20 +4362,31 @@ if (process.env.NEXT_PUBLIC_GAS_URL) {
     }
   }
 
-  /* ⑥ **드릴다운·지점별 분석이 연도로 맞아야 한다** (2026-09-03 사장님 지적)
-     칸이 「2026년 138건」인데 눌러 들어가면 채널 합이 1,100건이 넘었다. */
-  if (!gs.includes('byStoreChanY:')) bad.push('서버가 연도별 채널을 안 보낸다');
+  /* ⑥ **드릴다운·지점별 분석은 칸과 같은 자료로 센다** (2026-09-03 사장님 지적 → 2026-09-11 재지적
+     *"어느경로로 올렸는지 현재 숫자와 불일치"*). 옛 답(당해년도 채널)은 히트맵 축이 「당해」이던
+     때의 것이라, 칸이 전 기간·위 기간으로 바뀐 뒤 그 자리만 남아 어긋났다. */
+  if (!gs.includes('byStoreChanW: trimWeeks_(byStoreChanW, WEEK_KEEP),')) bad.push('서버가 매장×주×채널 자료를 안 보낸다 — 기간을 걸면 드릴다운이 칸과 어긋난다');
   if (!ix.includes('function chanOfStore(store)')) bad.push('화면에 chanOfStore 가 없다');
-  if (ix.includes('(DATA.byStoreChan || {})[who]')) {
-    bad.push('드릴다운이 아직 전 기간 채널을 쓴다 — 칸과 두 말을 한다');
+  if (ix.includes('heatYears().cur') && /function chanOfStore[\s\S]{0,1500}heatYears\(\)\.cur/.test(ix))
+    bad.push('드릴다운이 아직 당해년도 채널을 쓴다 — 전 기간 칸(27건)을 눌렀는데 「2026년 24건」이 뜬다');
+  {
+    const a = ix.indexOf('  function chanOfStore(store) {'), b = ix.indexOf('  function renderSrChan(', a);
+    const body = a < 0 ? '' : ix.slice(a, b);
+    if (body.indexOf('var total = scopedByStore()[store] || 0;') < 0) bad.push('드릴다운의 큰 숫자가 칸과 같은 함수(scopedByStore)에서 안 나온다');
+    if (body.indexOf('scopedWeekPick(Object.keys(W[store] || {}).sort())') < 0 || body.indexOf('scopedOne(per[k])') < 0)
+      bad.push('기간·유형이 걸렸을 때 채널을 칸과 같은 주·유형으로 안 센다');
+    if (body.indexOf("fallback: true") < 0) bad.push('옛 서버 자료에서 조용히 전 기간을 보여준다');
   }
-  if (!ix.includes('var CH = chanOfStore(storeFilter);')) {
-    bad.push('지점별 분석이 연도로 안 맞는다');
-  }
+  if (!ix.includes('var CH = chanOfStore(storeFilter);')) bad.push('지점별 분석이 칸과 같은 자료를 안 쓴다');
+  /* 합이 맞아야 한다 — 전 기간은 상위 12채널만 담으므로 나머지를 「그 밖」으로 적는다 */
+  if (!ix.includes("'<li><em>그 밖 채널</em><b>' + nf(chRest) + '</b>") || !ix.includes("items.push({ nm: '그 밖 채널', v: chRest2, cnt: chRest2, sr: null });"))
+    bad.push('채널 합이 칸 수보다 작을 때 나머지를 안 적는다 — 27건 칸에 24건만 보인다');
   /* **전 기간 수도 함께 밝힌다** — 「138건」만 보면 그 매장 후기가 그만큼인 줄 안다 */
-  if (!ix.includes('아래 채널은 <b>전 기간')) {
-    bad.push('채널이 전 기간 기준임을 안 밝힌다 — 138 과 1,185 의 차이를 알 수 없다');
-  }
+  if (!ix.includes("전 기간으로는 <b>' + nf(allN) + '건</b>입니다.")) bad.push('채널이 기간 기준일 때 전 기간 합을 안 밝힌다');
+  /* 색 규칙은 단계와 무관하게 하나 — 채널 단계의 갈래 고정색이 되살아나면 문다 */
+  if (ix.includes('HEAT_CHC') || ix.includes('heatChanKind')) bad.push('채널 단계가 다른 색 규칙(갈래 고정색)을 쓴다 — 통일 지시에 어긋난다');
+  if (!ix.includes('var bg = (cmpOn && !chan) ? growColor(d.g, heatSpan) : heatColor(d.cnt, heatAvg);')) bad.push('칸 색이 단계마다 다른 식을 탄다');
+  if (!ix.includes('var pool = chan ? items : (')) bad.push('채널 단계의 평균을 채널들로 안 낸다');
   /* ⑦ **0건 문구는 뺐다**(사장님: "0건인것은 화면에서 안나와도됩니다") */
   if (ix.includes("why.push(zeroN")) {
     bad.push('0건 문구가 남아 있다');

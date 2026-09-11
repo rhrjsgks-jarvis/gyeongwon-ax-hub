@@ -4380,6 +4380,9 @@ function summary_() {
    * **셋 다 작성일/출처가 근거라 카페는 월 집계에 안 든다.** 화면이 그 사실을
    * 매장 줄마다 적어야 한다(그래서 byStoreSrc 를 함께 낸다). */
   var byStoreSrc = {}, byStoreMonth = {}, lastPost = {}, byStoreChanY = {};
+  /* 매장 × 주 × 채널 × 유형(4종) — 드릴다운이 **칸과 같은 자료**로 채널을 세게(2026-09-11).
+     지점 주차(`byStoreWeek4`)와 같은 창·같은 dated 블록이라 합이 정확히 칸과 맞는다. */
+  var byStoreChanW = {};
   /* ── B2B 키워드 (2026-09-11) ─────────────────────────────────────────────
      제목은 **지금 목록으로 그 자리에서** 다시 센다(목록을 바꾸면 바로 따라온다).
      본문 히트는 수집한 그때의 값(`kwRaw`)이라 **지금 목록에 있는 것만** 더한다. */
@@ -4542,6 +4545,15 @@ function summary_() {
         if (!byStoreChanY[r.storeName]) byStoreChanY[r.storeName] = {};
         if (!byStoreChanY[r.storeName][yKey]) byStoreChanY[r.storeName][yKey] = {};
         byStoreChanY[r.storeName][yKey][chY] = (byStoreChanY[r.storeName][yKey][chY] || 0) + 1;
+      }
+      /* 주 × 채널 × 유형 — 지점 주차와 **같은 주 이름·같은 유형 키**라 화면이 같은 함수로 읽는다 */
+      var wkc = isoWeek_(r.date);
+      if (wkc) {
+        var chW = chanName_(r), k4c = kind4_(r);
+        if (!byStoreChanW[r.storeName]) byStoreChanW[r.storeName] = {};
+        if (!byStoreChanW[r.storeName][wkc]) byStoreChanW[r.storeName][wkc] = {};
+        if (!byStoreChanW[r.storeName][wkc][chW]) byStoreChanW[r.storeName][wkc][chW] = {};
+        byStoreChanW[r.storeName][wkc][chW][k4c] = (byStoreChanW[r.storeName][wkc][chW][k4c] || 0) + 1;
       }
       if (!lastPost[r.storeName] || f > lastPost[r.storeName]) lastPost[r.storeName] = f;
     }
@@ -5043,6 +5055,8 @@ function summary_() {
     /* 4종 묶음(2026-09-03 사장님 지시) — 기존 `byKind`(9종)는 그대로 함께 나간다 */
     byKind4: byKind4, byStoreKind4: byStoreKind4,
     byStoreWeek4: trimWeeks_(byStoreWeek4, WEEK_KEEP),
+    /* 매장 × 주 × 채널 × 유형 — 드릴다운·지점별 분석이 칸과 같은 잣대로 채널을 센다(2026-09-11) */
+    byStoreChanW: trimWeeks_(byStoreChanW, WEEK_KEEP),
     /* **다섯 갈래** — 화면 버튼이 이 목록에서 만들어진다(2026-09-05) */
     kind4Names: KIND5,
     /* LG 짝 — 백화점은 같은 건물끼리만, 나머지는 최근접(위 `lgMatchOne_` 주석 참조) */
@@ -6905,7 +6919,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-11-7853a379';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-11-6de39538';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 25;   /* 25 = 매장별 매니저·B2B 키워드·점코드·매장 대 매장 채널 */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;
