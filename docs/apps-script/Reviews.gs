@@ -5236,21 +5236,36 @@ function storeRival_() {
   var v = sh.getRange(2, 1, sh.getLastRow() - 1, SRIVAL_HEADER.length).getValues();
   var last = '', i;
   for (i = 0; i < v.length; i++) { var t = cellStamp_(v[i][0]); if (t > last) last = t; }
+  /* ── **최신 회차에 없는 매장은 그 앞 회차에서 채운다** (2026-09-11 사장님 지적 —
+   * *"S vs X 게이지 바가 안 나오는 곳이 대부분"*). 회차가 여러 실행에 걸쳐 도는 동안
+   * 최신 회차만 읽으면 아직 안 돈 매장이 통째로 빈다. 채운 줄은 `prev` 에 그 회차
+   * 도장을 달아 화면(말풍선)이 「이전 회차 값」이라 밝힌다 — 조용히 섞지 않는다.
+   * 뒤에서 앞으로 훑어 **매장마다 가장 최근 줄 하나**만 남긴다. */
+  var byStore = {}, order = [];
+  var idx = [];
+  for (i = 0; i < v.length; i++) idx.push(i);
+  idx.sort(function (a, b) { var x = cellStamp_(v[a][0]), y = cellStamp_(v[b][0]); return x < y ? 1 : (x > y ? -1 : 0); });
   var rows = [];
-  for (i = 0; i < v.length; i++) {
-    if (cellStamp_(v[i][0]) !== last) continue;
+  for (var ii = 0; ii < idx.length; ii++) {
+    i = idx[ii];
+    var stamp0 = cellStamp_(v[i][0]), st0 = String(v[i][1]);
+    if (byStore[st0]) continue;
+    byStore[st0] = 1;
+    var isPrev = stamp0 !== last;
     /* **옛 회차에는 이 칸이 없다** — 그때는 빈 객체다. 0 으로 채우지 않는다:
        「그 해에 없었다」와 「연도를 모른다」는 다른 말이고, 화면이 그것을 가려
        전 기간으로 물러서며 그 사실을 적는다. */
     var mon0 = jparse_(v[i][8]);
     /* 채널(판 3부터). 옛 회차는 `null` — 화면이 「다음 수집부터」라고 적는다 */
     var chan0 = jparse_(v[i][9]);
-    rows.push({ store: String(v[i][1]), shop: String(v[i][2]),
+    rows.push({ store: st0, shop: String(v[i][2]),
       ours: Number(v[i][3]) || 0, rival: Number(v[i][4]) || 0,
       pct: v[i][5] === '' || v[i][5] === null ? null : Number(v[i][5]),
       capped: v[i][6] === true || String(v[i][6]) === 'true',
       mon: (mon0 && mon0.o) ? mon0 : null,
-      chan: (chan0 && chan0.o) ? chan0 : null });
+      chan: (chan0 && chan0.o) ? chan0 : null,
+      /* 이전 회차에서 채운 줄이면 그 도장 — 최신 회차면 빈 값 */
+      prev: isPrev ? stamp0 : '' });
   }
   return rows.length ? { at: last, rows: rows } : null;
 }
@@ -5324,6 +5339,8 @@ function collectStoreRival(reset, deadline) {
       cur = 0;
       props.setProperty('_srivalStamp', stamp);
       props.setProperty('_srivalCur', '0');
+      /* 회차가 열렸다 — 끝날 때까지 `srivalDue_` 가 주기를 안 본다 */
+      props.setProperty('_srivalOpen', '1');
     }
     var done = srivalDone_(stamp);
 
@@ -5420,7 +5437,7 @@ function collectStoreRival(reset, deadline) {
     if (calls) addUsage_(calls);
     sumCacheClear_();
     var doneAll = ui >= names.length;
-    if (doneAll) props.setProperty('_srivalAt', new Date().toISOString());
+    if (doneAll) { props.setProperty('_srivalAt', new Date().toISOString()); props.deleteProperty('_srivalOpen'); }
     /* **못 끝냈으면 스스로 이어 간다** — 사람이 여러 번 누르게 하지 않는다 */
     if (!doneAll && !err) chain_();
     return { ok: true, wrote: wrote, calls: calls, cur: ui, tot: names.length,
@@ -6837,6 +6854,13 @@ function dueInDays_(prop, days) {
 function srivalDue_() {
   /* 판이 바뀌었으면 주기와 무관하게 차례다 — `rivalDue_` 와 같은 이유. */
   if (String(props_().getProperty('_srivalSchema') || '') !== String(SRIVAL_SCHEMA)) return true;
+  /* ── **끝내지 못한 회차가 있으면 차례다** (2026-09-11 배포 확인에서 잡음) ────────
+   * 판 3으로 새 회차가 시작돼 7곳을 쓰고 시간이 다해 멈췄는데, 이어달리기가 온 다음
+   * 실행에서 **이 문지기가 「3일 뒤」라고 막았다** — 판 표식은 회차 시작 때 이미 3으로
+   * 바뀌어 위 조건이 꺼지고, `_srivalAt` 은 지난 회차 것이라 주 1회에 안 걸렸다.
+   * 그래서 최신 회차에 7곳만 있고 **39곳의 게이지가 비었다**(사장님 지적).
+   * 회차가 열려 있는 동안(`_srivalOpen`)은 주기를 안 본다. */
+  if (String(props_().getProperty('_srivalOpen') || '') === '1') return true;
   return dueEvery_('_srivalAt', SRIVAL_EVERY_DAYS);
 }
 /** 검색 관심도가 이번 차례인가(**주 1회** — 데이터랩이 월 단위 값을 준다).
@@ -6881,7 +6905,7 @@ function json_(o) {
    안 바꾸면 밖에서 볼 방법이 없어, *"배포했습니다"* → *"확정할 수 없습니다"* 왕복이
    이 세션에서만 여섯 번 있었다. `?json=1` 이 이 값을 실어 준다.
    **손으로 고치지 말 것** — `npm run stamp:gs` 가 파일 해시로 찍는다(잊을 수 없게). */
-var GS_VER = '2026-09-11-4dc96045';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
+var GS_VER = '2026-09-11-7853a379';   /* 붙여넣기 확인용 — `npm run stamp:gs` 가 찍는다(내용 해시) */
 
 var SUM_VER = 25;   /* 25 = 매장별 매니저·B2B 키워드·점코드·매장 대 매장 채널 */
 var SUM_KEY = 'viral_sum_v' + SUM_VER;

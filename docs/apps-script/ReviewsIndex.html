@@ -2000,7 +2000,7 @@ var GW_MAP = { svg: '<svg viewBox="0 0 400 305.3" class="geo-svg" xmlns="http://
 </div>
 
 <script>
-var IX_VER = '2026-09-11-8fbc59b3';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
+var IX_VER = '2026-09-11-49c597ad';   /* 붙여넣기 확인용 — 주석은 서빙 때 지워진다 */
   /* ★★ **이 자리는 「force-print」 스크립트릿이어야 한다.** 이 한 글자가 사장님이
      세 번 신고한 *"새로고침하면 전부 0건"* 의 진짜 원인이었다(2026-08-31).
 
@@ -7469,11 +7469,13 @@ function renderList() {
     /* 견주지 않기로 하신 매장은 **아예 안 그린다** — 0 으로 그리면 「LG 가 없다」가 된다 */
     if (!nowPair.length) return null;
     var stale = nowPair.indexOf(String(r.shop || '')) < 0;
+    /* 이전 회차에서 채운 줄인가(회차가 아직 여기까지 안 돌았다) — 말풍선이 밝힌다 */
+    var prevAt = r.prev || '';
     if (!r.mon) {
       /* **숫자가 아니면 못 잼이다** — === null 만 보면 undefined·NaN 이 새어
          화면에 undefined% 가 찍힌다(사장님이 이미 한 번 신고한 자리다). */
       return (typeof r.pct === 'number' && isFinite(r.pct))
-        ? { pct: r.pct, ours: r.ours, rival: r.rival, shop: r.shop, scope: 'all', stale: stale } : null;
+        ? { pct: r.pct, ours: r.ours, rival: r.rival, shop: r.shop, scope: 'all', stale: stale, prevAt: prevAt } : null;
     }
     /* ── **LG 몫은 위 기간을 따라간다** (2026-09-10 사장님 지적 — *"베스트샵 후기 건수
      * 취합이 잘 안 되고 있는 것 같다"*) ────────────────────────────────────────
@@ -7490,7 +7492,7 @@ function renderList() {
     if (!CRg) {
       return (typeof r.pct === 'number' && isFinite(r.pct))
         ? { pct: r.pct, ours: r.ours, rival: r.rival, shop: r.shop, scope: 'all', stale: stale,
-            allOurs: r.ours, allRival: r.rival }
+            allOurs: r.ours, allRival: r.rival, prevAt: prevAt }
         : null;
     }
     var mLo = CRg.from.slice(0, 7), mHi = CRg.to.slice(0, 7);
@@ -7502,7 +7504,7 @@ function renderList() {
     /* **전 기간 값을 함께 낸다** — 「그 구간 LG 0건」과 「LG 매장이 없다」는 다른 말인데
        0 만 적으면 뒤엣것으로 읽힌다(사장님이 원주에서 그렇게 읽으셨다). */
     var out = { shop: r.shop, scope: 'period', months: (mLo === mHi ? mLo : mLo + '~' + mHi),
-                stale: stale, allOurs: r.ours, allRival: r.rival };
+                stale: stale, allOurs: r.ours, allRival: r.rival, prevAt: prevAt };
     /* **양쪽 다 0 이면 「없다」가 아니라 「못 잰다」다** — 그 구간에 작성일을 아는 글이
        한 건도 없었다는 뜻이라, 오렌지를 안 그리고 말풍선이 이유를 적는다. */
     if (!t) { out.pct = null; out.ours = 0; out.rival = 0; return out; }
@@ -8837,7 +8839,11 @@ function renderList() {
       var lines = 1 + (line2 ? 1 : 0) + (line3 ? 1 : 0);
       /* 이름이 줄바꿈되므로 **넓이**로 잰다 — 한글 한 글자가 대략 0.92em × 1.15em 이고
          이름에 칸의 45% 를 준다(나머지는 아래 줄과 여백 몫). */
-      var byArea = Math.sqrt(0.45 * c.w * c.h / (nlen * 1.06));
+      /* ── **글자 크기는 칸 넓이에 비례한다** (2026-09-11 사장님 지시 — *"글씨 크기가 들쑥날쑥"*)
+         예전 식은 **이름 길이**로 나눴다(`0.45·w·h / nlen`) — 그래서 「수지」(2자)가 같은 크기 칸의
+         「북수원」(3자)보다 훨씬 컸다. 이제 넓이의 제곱근 하나로 정하고(계수 0.17 — 190×205 칸 33px ·
+         100×70 칸 14px), **한 줄에 안 들어갈 때만** 아래서 줄인다. 이름 길이는 그때만 개입한다. */
+      var byArea = 0.17 * Math.sqrt(c.w * c.h);
       var byH = c.h / (lines * 1.35 + 0.5);
       /* **이름이 두 줄을 넘지 않게 한다.** 넓이만 보면 좁고 높은 칸에서 글자가 커져
          「안양본」이 세로로 한 자씩 쪼개진다(실물에서 그랬다) — 세로로 쓴 한글은
@@ -8868,37 +8874,8 @@ function renderList() {
              여기에 「삼성 N · 베스트샵 M」(매장 대 매장 회차 값)이 대신 들어가, 칸은
              1,419건인데 글자는 「삼성 164」라 **한 칸에 두 잣대**였다. */
           lab += '<span class="cg" style="font-size:' + (fs * 0.68).toFixed(1) + 'px">' + main + '</span>';
-          /* ── **베스트샵 건수를 한 줄 더** (2026-09-06 사장님 요청 *"삼성 엘지 텍스트도
-           * 잘 보이면"* · 2026-09-10 *"베스트샵 후기 건수 취합이 잘 안 되고 있는 것 같다"*)
-           * 폰에는 hover 가 없어 말풍선만으로는 안 보인다. 우리 쪽 숫자는 위 머리가
-           * 이미 말하므로 **베스트샵 건수와 우리 몫**만 적는다(같은 회차의 당사 값을
-           * 또 적으면 머리 숫자와 다른 「삼성」이 한 칸에 둘이 된다).
-           * 못 잰 것도 적는다 — 안 적으면 「베스트샵이 없다」로 읽힌다. */
-          var srm2 = (!chan && !d.isReg && !cmpOn) ? srShare(d.nm) : null;
-          var two = null;
-          if (srm2 && (srm2.pct !== null || srm2.thin) && c.h > 50) {
-            var lTxt = '베스트샵 ' + (srm2.thin && !srm2.rival ? '–' : nf(srm2.rival) + '건')
-              + (srm2.pct === null ? '' : ' · 우리 ' + srm2.pct + '%');
-            /* **들어가는지 재고 나서 적는다**(캔버스로) — 안 재면 「베스트샵 1,20」처럼 잘린다.
-               9px 아래로는 내려가지 않는다 — 그보다 작으면 안 읽혀 적는 뜻이 없다. */
-            var fs2 = 0, wL = 0;
-            for (var fq = 0; fq < 3; fq++) {
-              var cand = fs * [0.55, 0.48, 0.42][fq];
-              if (cand < 9) break;
-              wL = textW(lTxt, cand);
-              if (wL + 10 <= c.w) { fs2 = cand; break; }
-            }
-            if (fs2) {
-              /* **글자색은 그 글자가 실제로 얹히는 색이 정한다** — 이 줄은 오른쪽(앰버 띠)에
-                 붙는데 띠가 글자보다 좁으면 블루 위에 놓인다. */
-              /* 배경이 한 색(건수)이 됐다(게이지바로 옮긴 뒤) — 그 색 기준으로 글자색을 정한다 */
-              var bgS = heatColor(d.cnt, heatAvg);
-              two = '<span class="cg two" style="font-size:' + fs2.toFixed(1) + 'px;justify-content:flex-end">'
-                + '<b style="color:#fff">' + lTxt + '</b>'
-                + '</span>';
-              lab += two;
-            }
-          }
+          /* 2026-09-11 사장님 지시(*"게이지바 위에 베스트샵 00건 이건 없어도 됩니다. 심플이즈 베스트"*)
+             — 「베스트샵 N건 · 우리 P%」 줄을 뺐다. 몫은 아래 게이지(S/X)가, 건수는 말풍선이 말한다. */
         }
         /* ── 부제 (2026-09-10 사장님 지시로 단순해졌다) ─────────────────────
            칸은 **건수**다. 견주기를 켰을 때만 「앞 기간 → 지금 (±%)」를 적는다 —
@@ -8925,79 +8902,8 @@ function renderList() {
             if (!lgm.shop) lab += '<span class="lgx" title="베스트샵 매칭 없음">✕</span>';
             else if (lgm.how === 'dept') lab += '<span class="lgd" title="같은 백화점 안 베스트샵">▣</span>';
           }
-          /* ── **빨강 쪽에도 LG 지점명과 건수를 적는다** (2026-09-04 사장님 요청) ──
-           * *"엘지부분에도 텍스트로 LG어디지점인지 삼성과 동일하게 지점명과 숫자로"*.
-           *
-           * 예전에는 *"이름이 길어 세 줄짜리 칸이 뭉갠다"* 며 말풍선에만 두었다.
-           * **재 보니 그 전제가 반만 맞다** — LG 이름은 4~12자로 우리 이름보다 짧고,
-           * 대부분 우리 지점명과 겹쳐(`강릉 ↔ 강릉본점`) 꼬리를 떼면 훨씬 짧아진다.
-           * 문제는 이름이 아니라 **칸 크기 편차**다(실측 18×34 ~ 246×459).
-           *
-           * 그래서 **넓은 칸에만** 적는다 — 이 화면이 이미 쓰는 방식 그대로다
-           * (`c.h > 33` 에서 건수를, `c.h > 50` 에서 부제를 붙이는 그 계단).
-           * **빨강 쪽에 놓아** 어느 색이 누구인지 눈으로 이어진다. */
-          /* **`srm` 을 여기서 다시 꺼낸다** — 아래 배경 그리는 곳(5872행대)의 `srm` 은
-             이 블록보다 뒤에 선언돼, 그대로 쓰면 `var` 호이스팅으로 늘 `undefined` 다
-             (실제로 그렇게 만들어 「칸이 큰데도 안 그려진다」를 겪었다. 이 저장소가
-             `lgm` 에서 이미 한 번 데인 함정이다). */
-          /* **칸 색과 같은 값을 쓴다**(2026-09-05) — 따로 읽으면 빨강 면적과 적힌
-             건수가 어긋난다(면적은 당해, 글자는 전 기간). 한 함수를 지나간다. */
-          var srmL = srShare(d.nm);
-          /* ── **잣대가 다르면 칸에 적지 않는다** (2026-09-05 실물에서 잡음) ──────────
-           * 갤러리아광교 칸이 「184건」(2026년)인데 그 아래 「LG 갤러리아 광교점 369건」
-           * (전 기간)이 나란히 있었다 — **한 칸 안에 두 잣대**다. 그대로 읽으면
-           * *"우리 184 vs LG 369"* 가 되어 거짓이다(실제 2026년 LG 는 훨씬 적다).
-           * 잣대가 같을 때만(`scope` 가 'year'·'cum') 적는다 — 전 기간으로 물러선
-           * 상태에서는 **면적만** 두고 숫자는 말풍선이 밝힌다. */
-          /* 2026-09-10 — LG 몫이 칸과 같은 기간을 따르게 되어 잣대가 안 갈린다. 전 기간이면
-             전 기간, 기간을 걸었으면 그 기간에 걸친 달이다(말풍선이 밝힌다). */
-          /* 견주기를 켰을 때는 이 줄도 안 적는다 — 그때 칸은 등락이라 LG 건수가 섞이면 두 말이다 */
-          if (srmL && srmL.pct !== null && srmL.shop && !chan && !d.isReg && !cmpOn && c.w > 96 && c.h > 66) {
-            /* 우리 이름과 겹치는 앞부분을 떼면 짧아진다 — `강릉 ↔ 강릉본점` → `본점`.
-               다만 **다 떼면 이름이 사라지므로**(같은 이름) 그때는 원래 것을 쓴다. */
-            var lgn = shopLabel(srmL.shop);   /* 「AK PLAZA 분당점」 → 「AK분당」 (2026-09-11 표기 통일) */
-            /* **떼고 나서 뜻이 남을 때만 뗀다**(2026-09-05 실물에서 잡음) — 광명소하 칸에
-               「LG 점 3건」이 떠 있었다. 지점명이 「광명소하점」이라 매장 이름을 떼니
-               「점」 한 글자가 남은 것이다. **두 글자도 안 남으면 통째로 둔다.** */
-            var lgcut = (lgn.indexOf(d.nm) === 0) ? lgn.slice(d.nm.length) : lgn;
-            if (lgcut.length >= 2 && lgcut !== '점') lgn = lgcut;
-            /* **두 라벨이 이미 건수를 말했으면 여기서는 지점명만**(2026-09-07).
-               둘 다 적으면 「삼성 160 · LG 17」 바로 아래 「LG … 17건」이 되어
-               같은 사실이 두 번이다(사장님이 「2중으로 보인다」고 지적하신 자리).
-               두 라벨이 없는 좁은 칸에서는 이 줄이 유일한 LG 정보라 건수를 남긴다. */
-            var lgTxt = two ? '' : ('베스트샵 ' + lgn + ' ' + nf(srmL.rival) + '건');
-            /* **글자 크기를 칸 폭에서 낸다** — 이름 크기의 절반으로 고정했더니
-               긴 이름(`AK PLAZA 평택점`)이 칸 밖으로 나갔다(실측 +87~176px).
-               한 줄에 들어갈 크기를 상한으로 두고, 그래도 길면 이름을 줄인다. */
-            var lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
-            if (lgFs < 7) {
-              /* 이름을 줄여 한 번 더 — 건수는 남긴다(그것이 이 줄의 요점이다) */
-              /* **너무 짧게 자르면 「LG 점 21건」이 된다**(2026-09-05 실물). 이름이
-                 4글자도 못 남으면 **이름을 통째로 빼고 건수만** 적는다 — 잘린 한 글자
-                 보다 「LG 21건」이 정직하다(어느 지점인지는 말풍선이 밝힌다). */
-              var tail = two ? '' : (nf(srmL.rival) + '건 베스트샵 ');
-              var room = Math.max(2, Math.floor((c.w - 8) / (7 * 0.62)) - tail.length);
-              if (lgn.length > room) {
-                /* **이름이 안 들어가면 이 줄을 아예 안 적는다**(두 라벨이 있을 때).
-                   「LG 17건」으로 물러서면 위 줄과 또 겹친다 — 그것이 이 수정의 요점이다. */
-                lgTxt = (room >= 4) ? ((two ? '' : '베스트샵 ') + lgn.slice(0, room) + '…' + (two ? '' : ' ' + nf(srmL.rival) + '건'))
-                                    : (two ? '' : ('베스트샵 ' + nf(srmL.rival) + '건'));
-              }
-              lgFs = Math.min(fs * 0.5, (c.w - 8) / (lgTxt.length * 0.62));
-            }
-            /* **글자색은 배경 밝기가 정한다** — 고정색을 썼더니 대비가 1.01~1.06:1 이
-               되어 통째로 안 보였다(연한 파랑 배경 위의 연한 빨강). 칸 배경은 건수에
-               따라 농도가 달라지므로 고정색은 이 화면에서 못 쓴다 — 「일일 한도」 칸에서
-               오늘 겪은 그 사고와 같은 뿌리다. `inkOn` 이 이미 그 판정을 한다.
-               **빨강 기운은 남긴다** — 그것이 「LG 것」이라는 유일한 표시다. */
-            /* **`bg` 도 아래(5889행대)에서 선언된다** — 그대로 쓰면 호이스팅으로
-               `undefined` 라 색이 안 바뀐다(`srm` 과 똑같은 함정을 연달아 밟았다).
-               여기서 다시 낸다 — 같은 식이라 값이 어긋나지 않는다. */
-            var bgL = chan ? HEAT_CHC[d.k] : heatColor(d.cnt, heatAvg);
-            var lgInk = '#FFD9D4';   /* 글자색 통일(흰 계열) — 빨강 기운만 남긴다 */
-            if (lgTxt && lgFs >= 6.5) lab += '<span class="lgn" style="font-size:' + lgFs.toFixed(1)
-              + 'px;color:' + lgInk + '">' + esc(lgTxt) + '</span>';
-          }
+          /* 2026-09-11 사장님 지시(*"심플이즈 베스트"*) — 게이지 위에 적던 「베스트샵 지점 N건」 줄을
+             뺐다. 어느 지점·몇 건인지는 말풍선(`lgvTip`)이 그대로 말한다. */
         }
       }
       var lgTip = '';
@@ -9040,6 +8946,8 @@ function renderList() {
         ? NLC + '※ 짝을 바꾸셨습니다 — 이 값은 옛 짝(' + shopLabel(srt.shop) + ')으로 잰 것입니다. '
           + '다음 「매장 대 매장」 수집에서 다시 잽니다.'
         : '';
+      /* **이전 회차에서 채운 값이면 밝힌다** — 회차가 여러 실행에 걸쳐 도는 동안 빈칸 대신 앞 회차를 쓴다 */
+      if (srt && srt.prevAt) srStale += NLC + '※ 이전 회차(' + srt.prevAt + ') 값입니다 — 이번 회차가 아직 이 매장까지 안 돌았습니다.';
       var lgvTip = srt
         ? NLC + '베스트샵 ' + shopLabel(srt.shop)
           + (srt.pct === null
