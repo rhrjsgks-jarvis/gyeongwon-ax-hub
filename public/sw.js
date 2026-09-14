@@ -420,7 +420,12 @@
  *
  * 새 자료 파일이라 여기를 안 올리면 이미 쓰던 기기가 **그 절을 아예 못 받는다.**
  */
-const CACHE_VERSION = 'axhub-v253';
+/*
+ * v254 (2026-09-14) — 롯데동탄모바일 폐점(사장님 확인) → 매장 목록에서 비활성.
+ * 컨시어지 포스터(poster-app.html)의 지점 목록 두 벌에서도 뺐다 — SWR 대상이라
+ * 여기를 안 올리면 이미 쓰던 기기에 폐점 매장이 계속 뜬다.
+ */
+const CACHE_VERSION = 'axhub-v254';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

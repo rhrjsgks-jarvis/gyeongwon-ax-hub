@@ -92,7 +92,9 @@ export const STORE_LIST: Store[] = [
   { code: 'ZH96', name: '갤러리아광교', active: 'Y' },
   { code: 'ZH97', name: 'AK분당모바일', active: 'Y' },
   { code: 'ZHA1', name: '롯데동탄', active: 'Y' },
-  { code: 'ZHA2', name: '롯데동탄모바일', active: 'Y' },
+  /* 폐점(2026-09-14 사장님 확인) — 지우지 않고 비활성으로 둔다. 옛 로그가 이 코드로 남아 있어
+     라벨이 필요하고, 지우면 그 줄이 점코드 그대로 노출된다. */
+  { code: 'ZHA2', name: '롯데동탄모바일', active: 'N' },
   { code: 'ZHB4', name: '타임빌라스수원', active: 'Y' },
   { code: 'ZIN5', name: '남양모바일', active: 'Y' },
   { code: 'ZMF6', name: '이마트안양', active: 'Y' },
