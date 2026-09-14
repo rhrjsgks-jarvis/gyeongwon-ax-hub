@@ -403,7 +403,13 @@ function hubModulesFromSource() {
  * 새로 만든 도구가 통합검색에서 안 나오면 상담사는 그것이 없는 줄 안다.
  */
 function devModulesFromSource() {
-  const src = readSrc('lib/devModules.ts');
+  const all = readSrc('lib/devModules.ts');
+  /* **DEV_MODULES 블록만** 읽는다 — 파일 뒤쪽의 CLOSED_DEV_MODULES(닫아 둔 것)까지 긁으면
+     화면에 없는 도구가 검색에 뜬다(통신향 상담기, 2026-09-14). */
+  const start = all.indexOf('export const DEV_MODULES');
+  const end = all.indexOf('\n]\n', start);
+  if (start < 0 || end < 0) throw new Error('lib/devModules.ts 에서 DEV_MODULES 블록을 찾지 못함');
+  const src = all.slice(start, end);
   const mods = [...src.matchAll(
     /href: '([^']+)',[\s\S]{0,300}?title: '([^']+)',[\s\S]{0,600}?desc: '([^']+)'/g)];
   if (!mods.length) throw new Error('lib/devModules.ts 파싱 실패 — 형식이 바뀌었는지 확인할 것');

@@ -25,10 +25,16 @@ const TELECOM_APP_URL =
   'https://telecom-plan-app-git-master-rhrjsgks-4872s-projects.vercel.app'
 
 const nextConfig = {
+  /*
+   * **통신향 상담기는 닫아 두었다**(2026-09-14 사장님 지시 — 통신향 자급제 비교계산기로
+   * 추후 업데이트 예정). rewrite 를 살려 두면 /dev/telecom/index.html 로 저쪽 앱이
+   * 그대로 열리므로 함께 껐다. 다시 열 때 아래 한 줄을 되살리고 lib/devModules.ts 의
+   * CLOSED_DEV_MODULES 항목을 DEV_MODULES 로 되돌린다.
+   *
+   *   { source: '/dev/telecom/:path*', destination: `${TELECOM_APP_URL}/:path*` },
+   */
   async rewrites() {
-    return [
-      { source: '/dev/telecom/:path*', destination: `${TELECOM_APP_URL}/:path*` },
-    ]
+    return []
   },
 }
 

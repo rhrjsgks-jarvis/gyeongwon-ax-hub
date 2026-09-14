@@ -60,6 +60,20 @@ export const DEV_MODULES: DevModule[] = [
     updated: '2026.08',
     status: 'dev',
   },
+]
+
+/*
+ * **닫아 둔 것** — 화면 어디에도 안 나온다(2026-09-14 사장님 지시: *"세일즈코파일럿 안에
+ * 통신향계산기를 닫아주세요 — 통신향 자급제 비교계산기로 추후 업데이트 예정"*).
+ *
+ * 지우지 않고 여기 두는 이유는 다시 열 때 이 항목(옛 이름·설명)이 그대로 필요해서다.
+ * `/dev/telecom` 페이지는 남겨 두되 닫힘 안내만 띄운다 — 옛 링크·검색 결과로 들어온
+ * 상담사가 404 를 보면 고장으로 읽는다. 저쪽 배포로 넘기던 rewrite(next.config.js)는 껐다.
+ *
+ * **통합검색 색인에도 넣지 않는다** — 색인 생성기가 `DEV_MODULES` 블록만 읽는다.
+ * 다시 열 때는 이 항목을 DEV_MODULES 로 되돌리고 rewrite 를 살리면 된다.
+ */
+export const CLOSED_DEV_MODULES: DevModule[] = [
   {
     /*
      * 이 저장소가 아니라 **별도 배포**다. `next.config.js` 의 rewrites 가 요청을 넘긴다.
