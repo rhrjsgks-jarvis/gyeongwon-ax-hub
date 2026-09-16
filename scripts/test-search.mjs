@@ -127,7 +127,7 @@ routes.add('/');
 // **목록을 여기 손으로 적지 않는다** — 설정에서 읽어야 둘이 어긋나지 않는다.
 const rewriteRoutes = new Set();
 for (const m of fs.readFileSync(path.join(root, 'next.config.js'), 'utf8').matchAll(/source:\s*'(\/[^']*)'/g)) {
-  const base = m[1].split('/:')[0]; // '/dev/telecom/:path*' → '/dev/telecom'
+  const base = m[1].split('/:')[0]; // '/foo/:path*' → '/foo'
   rewriteRoutes.add(base);
   rewriteRoutes.add(base.endsWith('/') ? base : base + '/');
 }
@@ -135,9 +135,8 @@ for (const m of fs.readFileSync(path.join(root, 'next.config.js'), 'utf8').match
 for (const e of entries) {
   if (e.ext) continue;
   const base = e.href.split('?')[0].split('#')[0] || '/';
-  /* rewrite 는 `/dev/telecom/:path*` 라 **그 아래 전부**가 실재하는 링크다.
-     정확히 일치로만 보면 `/dev/telecom/index.html` 이 「없는 라우트」로 잡힌다 —
-     그 주소는 끝의 슬래시를 피하려고 일부러 그렇게 적은 것이다(308 무한 왕복). */
+  /* rewrite 가 `/foo/:path*` 꼴이면 **그 아래 전부**가 실재하는 링크다 — 정확히
+     일치로만 보면 `/foo/index.html` 이 「없는 라우트」로 잡힌다(옛 통신향 상담기가 그랬다). */
   if (routes.has(base) || [...rewriteRoutes].some((r) => base === r || base.startsWith(r.replace(/\/$/, '') + '/'))) continue;
   fail(`인덱스 링크가 존재하지 않는 라우트를 가리킴: ${e.href} (${e.title})`);
   break;

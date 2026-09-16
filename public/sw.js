@@ -428,7 +428,12 @@
  * 같은 판에 **통신향 상담기를 닫았다**(사장님 지시 — 통신향 자급제 비교계산기로 추후
  * 업데이트 예정). 허브 카드·개발중 목록·통합검색 색인(search-index.json, SWR)에서 뺐다.
  */
-const CACHE_VERSION = 'axhub-v254';
+/*
+ * v255 (2026-09-16) — 통신향 상담기 **폐기** → 「통신향 · 자급제 비교계산기」(Apps Script
+ * 웹앱, /mobile-calc 에서 iframe)로 대체. 개발중 목록이 바뀌어 통합검색 색인(SWR)이
+ * 달라졌다 — 여기를 안 올리면 이미 쓰던 기기에서 새 도구가 검색에 안 잡힌다.
+ */
+const CACHE_VERSION = 'axhub-v255';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

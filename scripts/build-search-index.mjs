@@ -404,8 +404,8 @@ function hubModulesFromSource() {
  */
 function devModulesFromSource() {
   const all = readSrc('lib/devModules.ts');
-  /* **DEV_MODULES 블록만** 읽는다 — 파일 뒤쪽의 CLOSED_DEV_MODULES(닫아 둔 것)까지 긁으면
-     화면에 없는 도구가 검색에 뜬다(통신향 상담기, 2026-09-14). */
+  /* **DEV_MODULES 블록만** 읽는다 — 그 뒤에 다른 목록(한때 닫아 둔 것을 담던
+     CLOSED_DEV_MODULES 가 있었다)이 생기면 화면에 없는 도구가 검색에 뜬다. */
   const start = all.indexOf('export const DEV_MODULES');
   const end = all.indexOf('\n]\n', start);
   if (start < 0 || end < 0) throw new Error('lib/devModules.ts 에서 DEV_MODULES 블록을 찾지 못함');
@@ -415,7 +415,7 @@ function devModulesFromSource() {
   if (!mods.length) throw new Error('lib/devModules.ts 파싱 실패 — 형식이 바뀌었는지 확인할 것');
   return mods.map((m) => {
     /* 옛 이름(sub)이 있으면 함께 줍는다 — 이름을 바꿔도 예전 말로 찾던 사람이 그대로
-       찾아야 한다(허브 모듈의 sub 와 같은 장치. 통신향 상담기 ← 통신 요금제 상담 도구). */
+       찾아야 한다(허브 모듈의 sub 와 같은 장치. 통신향 · 자급제 비교계산기 ← 통신향 상담기). */
     const seg = src.slice(m.index, m.index + 900);
     const sub = (seg.match(/sub: '([^']+)'/) || [])[1] || '';
     return { href: m[1], title: m[2], desc: m[3], sub };

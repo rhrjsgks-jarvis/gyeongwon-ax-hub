@@ -1,0 +1,8 @@
+{
+  "_readme": "scripts/deploy-gs.mjs 가 읽는다. scriptId 는 편집기 주소 /projects/<id>/edit 의 <id>. files 는 저장소 파일 → 프로젝트 안 파일 이름(--pull 로 확인한 뒤 적는다). 웹앱 주소·배포 id 는 app/api/viral/route.ts 에서 읽는다.",
+  "reviews": {
+    "scriptId": "",
+    "files": {},
+    "stampNote": "바이럴분석기"
+  }
+}
