@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { logOnce } from '@/lib/logEvent'
+import { getStoreCode } from '@/lib/stores'
 import IframeModule from '@/components/IframeModule'
 
 /*
@@ -19,8 +20,14 @@ import IframeModule from '@/components/IframeModule'
  * 새 창을 여는 링크·reload 가 없어 Apps Script 샌드박스 함정(링크가 새 탭으로 열림 ·
  * reload 가 빈 화면)에 걸리지 않는 것을 소스에서 확인했다.
  *
- * **점코드는 저쪽이 따로 묻는다.** 교차 출처라 이 허브의 세션(지점)을 넘겨줄 수 없다 —
- * 저쪽 화면이 `?code=` 를 받게 고치면 그때 여기서 붙여 준다.
+ * **점코드를 주소로 넘긴다 — 저쪽이 또 묻지 않는다**(2026-09-16 사장님 지시: *"세일즈코파일럿
+ * 에서는 이미 점코드를 넣고 접속하게 됩니다 … 추가로 넣지 않게"*). 교차 출처라 세션을 직접
+ * 넘길 수는 없어 `?code=` 로 보내고, 저쪽 `doGet` 이 그것을 화면에 심어 `lookupStore` 로
+ * **다시 대조**한 뒤 자동으로 들어간다(계산기 v3.8). 그쪽 점포 목록에 없는 코드면 저쪽 점
+ * 확인 화면이 그대로 뜬다 — 여기서 짐작해 넘기지 않는다. 로그는 그 점코드로 저쪽 시트에 쌓인다.
+ *
+ * 점코드는 세션에서 읽으므로(클라이언트) **마운트 뒤에** src 를 만든다 — 먼저 맨 주소로 띄우고
+ * 나중에 바꾸면 2초짜리 화면을 두 번 받는다.
  *
  * 주소는 **배포 id 가 박힌 exec 주소**라 저쪽이 「배포 관리 → 새 버전」으로 올리는 한
  * 그대로다. 「새 배포」를 만들면 바뀌므로(QR 도 함께 무효가 된다) 그쪽 안내문이 이미
@@ -33,9 +40,16 @@ export default function MobileCalcPage() {
   /* 세션당 1회 — 그 안에서 무엇을 계산했는지는 저쪽 시트의 로그가 든다 */
   useEffect(() => { logOnce('mobileCalc', 'page_view') }, [])
 
+  const [src, setSrc] = useState<string | null>(null)
+  useEffect(() => {
+    const code = getStoreCode()
+    setSrc(code ? MOBILE_CALC_URL + '?code=' + encodeURIComponent(code) + '&from=sc' : MOBILE_CALC_URL)
+  }, [])
+  if (!src) return null
+
   return (
     <IframeModule
-      src={MOBILE_CALC_URL}
+      src={src}
       title="통신향 · 자급제 비교계산기"
       className="-m-4 lg:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
