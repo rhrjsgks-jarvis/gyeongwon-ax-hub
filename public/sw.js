@@ -433,7 +433,7 @@
  * 웹앱, /mobile-calc 에서 iframe)로 대체. 개발중 목록이 바뀌어 통합검색 색인(SWR)이
  * 달라졌다 — 여기를 안 올리면 이미 쓰던 기기에서 새 도구가 검색에 안 잡힌다.
  */
-const CACHE_VERSION = 'axhub-v255';
+const CACHE_VERSION = 'axhub-v256';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

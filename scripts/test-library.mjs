@@ -124,5 +124,30 @@ try {
 }
 if (fs.readFileSync(LIB, 'utf8') !== beforeRaw) fail('검사 뒤 공용 목록이 원래대로 돌아오지 않았다');
 
+/* ── ④ 학습 데이터로 되돌릴 키(D3)가 관문에 걸리지 않는가 ──────────
+ *
+ * 매장이 고친 벽선은 plan3d 의 학습 데이터가 된다(prep_field.py). 그러려면 항목에
+ * 어느 도면인지(planKey)가 담겨야 하는데, 관문은 '.jpg' 를 이미지가 섞인 신호로 본다.
+ * **확장자가 붙은 채 저장되면 매장 보정분이 합치는 자리에서 전부 조용히 걸러진다.**
+ * 관문을 느슨하게 하지 않고, 앱이 확장자를 떼고 적는지 본다.
+ */
+{
+  const app = fs.readFileSync(path.join(ROOT, 'public', 'place-app.html'), 'utf8');
+  const i = app.indexOf('planKey:');
+  const line = i < 0 ? '' : app.slice(i, app.indexOf('\n', i));
+  if (!line) fail('saveToLibrary 가 planKey 를 남기지 않는다 — 매장 보정분을 학습 데이터로 되돌릴 수 없다');
+  else if (!line.includes('replace(/\\.(jpe?g|png')) fail('planKey 가 확장자를 떼지 않는다 — 합치기 관문에서 전부 걸러진다');
+  else pass('planKey 는 확장자를 뗀 채 저장된다');
+  for (const k of ['imgW:', 'userEdits:']) if (!app.includes(k)) fail(`saveToLibrary 가 ${k} 를 남기지 않는다`);
+
+  const d3 = write('d3.json', { version: 1, entries: [
+    { complex: 'D3시험단지', type: '84A', region: '경기 수원', rooms: good84,
+      planKey: 'plans/c39/84B', imgW: 1200, imgH: 900, mmPerPx: 12.5, userEdits: 3 },
+  ] });
+  const out4 = run([d3, '--dry']);
+  if (!/담음 1/.test(out4)) fail('planKey 가 담긴 정상 항목이 관문에 걸렸다:\n' + out4);
+  else pass('planKey·imgW·userEdits 가 담긴 항목도 관문을 통과한다');
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

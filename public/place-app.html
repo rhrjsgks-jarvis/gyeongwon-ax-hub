@@ -1442,6 +1442,7 @@ function moveVertex(sel, wx, wy){
     if (Math.abs(pts[j][1] - y) < snap) y = pts[j][1];
   }
   pts[i] = [x, y];
+  state.userEdits = (state.userEdits || 0) + 1;
   setPartPoints(part, pts); syncWalls();
 }
 /** 벽을 수직 방향으로 민다 — 양옆 벽이 따라 늘어난다 */
@@ -1455,13 +1456,14 @@ function moveEdge(sel, dx, dy){
   const off = dx*nx + dy*ny;                          // 법선 방향 성분만 쓴다
   pts[i] = [pts[i][0] + nx*off, pts[i][1] + ny*off];
   pts[j] = [pts[j][0] + nx*off, pts[j][1] + ny*off];
+  state.userEdits = (state.userEdits || 0) + 1;
   setPartPoints(part, pts); syncWalls();
 }
 /** 벽 ↔ 개구부(문·창) */
 function toggleEdgeOpen(sel){
   const rm = roomById(sel.room); if (!rm) return;
   const w = rm.parts[sel.part].walls[sel.idx]; if (!w) return;
-  w.open = !w.open; syncWalls();
+  w.open = !w.open; state.userEdits = (state.userEdits || 0) + 1; syncWalls();
   toast(w.open ? '이 구간을 개구부(문·창)로 바꿨습니다 — 앞을 막는 가전에 주의가 붙습니다'
                : '이 구간을 벽으로 바꿨습니다 — 가전을 붙일 수 있습니다');
 }
@@ -5891,7 +5893,7 @@ function useImage(src, after){
        예전에는 이 둘만 남아 — 결과 카드 제목·하단 띠·벽선 저장이 전부 **남의 단지 이름**을
        달았다(그 카드가 고객 손에 남는 유일한 그림이다). 라이브러리 경로는 after 콜백이
        제 이름을 다시 세우므로 안 깨진다. */
-    state.complexName = null; state.typeName = null;
+    state.complexName = null; state.typeName = null; state.userEdits = 0;
     state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; state.draftMore=[]; hideDraftBar();
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
@@ -6746,6 +6748,16 @@ function saveToLibrary(region, complex, type, opts){
      * 방과 도면이 같은 자로 그려진다. 없으면 도면은 못 띄우고 방만 복원한다.
      */
     mmPerPx: state.mmPerPx || null,
+    /*
+     * **학습 데이터로 되돌릴 수 있게 어느 도면인지 남긴다**(D3, 2026-09-24).
+     * 사람이 고친 경계는 모델이 틀린 자리의 정답이다. 좌표는 mm(= 이미지 px × mmPerPx,
+     * 도면을 원점에 그리므로)라 도면 키와 이미지 크기만 있으면 픽셀 마스크로 되돌아간다.
+     * **확장자를 뗀 키로 적는다** — 합치기 관문이 '.jpg' 를 이미지가 섞인 신호로 보고
+     * 거른다(저작권 차단). 관문을 느슨하게 하지 않고 적는 쪽을 맞춘다.
+     */
+    planKey: state.planFile ? state.planFile.replace(/\.(jpe?g|png|gif|webp)$/i, '') : null,
+    imgW: state.imgW || null, imgH: state.imgH || null,
+    userEdits: state.userEdits || 0,
     rooms: state.rooms.map((r) => ({
       name: r.name,
       parts: r.parts.map((p) => ({
@@ -8736,7 +8748,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
 let __p3d = null;
 window.load3D = function () {
   if (!__p3d) __p3d = (async () => {
-const THREE = await import('./vendor/three.module.min.js');
+const THREE = await import('./vendor/three/three.js');   // 트리셰이킹 빌드 — npm run build:three (2026-09-25)
 
 const P = window.__place;
 if (P) {
@@ -9638,7 +9650,7 @@ async function swapInModel(group, it){
   const path = man[`${it.cat}|${it.size}`] || man[it.cat];
   if (!path) return;
   if (!gltfLoader){
-    const { GLTFLoader } = await import('./vendor/GLTFLoader.js');
+    const { GLTFLoader } = await import('./vendor/three/GLTFLoader.js');
     gltfLoader = new GLTFLoader();
   }
   let gltf; try { gltf = await gltfLoader.loadAsync('models/' + path); } catch { return; }
