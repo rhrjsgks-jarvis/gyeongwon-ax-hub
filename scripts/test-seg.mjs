@@ -10,6 +10,7 @@
  *   ③ 물러선다 — 등록부에서 빼거나 모델 파일이 없으면 **규칙 인식으로** 간다(상담이 멈추면 안 된다)
  *   ④ 3D — 모델이 가른 문(인방)·창(인방+유리)이 서는가
  *   ⑤ 품질 — 실제 도면에서 **방 이름 자리를 벽으로 칠한 비율**(글자오탐)이 규칙 인식보다 나쁘지 않은가
+ *   ⑦ 전용면적 어림 축척 — 길이 칸을 미리 채우는가 · 모르면 비워 두는가
  *   ⑥ 벽 편집 — 고르기·지우기·되돌리기·영역 지우기가 판정과 3D 를 함께 바꾸는가(진짜 마우스)
  *      방 이름 자리는 방 안이다(OCR 좌표, plan-names.json) — 정답 없이 매장 도면을 채점하는 잣대다
  */
@@ -168,6 +169,36 @@ for (const [label, route] of [
   else pass(`⑥ 3D 가 편집 결과 그대로 선다(문 ${d3.door} · 창 ${d3.win})`);
   if (errs.length) fail('⑥ 페이지 오류: ' + errs.join(' | '));
   await ctx.close();
+}
+
+/* ⑦ 전용면적 어림 축척 — 전용면적을 아는 도면이면 길이 입력칸을 미리 채운다(확정은 사람).
+   정답 축척을 아는 84B 에서 ±20% 안이어야 하고, 근거 문구가 붙어야 한다.
+   모르면(전용면적 없음 · 규칙 경로) **채우지 않는다** — 틀린 값보다 빈 칸이 낫다. */
+{
+  const T84 = 17.369, EX84 = 84.37;
+  const run = async (query, ex) => {
+    const ctx = await b.newContext({ viewport: { width: 1200, height: 900 } });
+    const p = await ctx.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
+    await p.goto(`${base}/place-app.html${query}`, { waitUntil: 'load' });
+    await p.waitForFunction(() => window.__place && window.__place.useImage, null, { timeout: 20000 });
+    await p.evaluate(([f, ex]) => window.__place.useImage(f, () => { window.__place.state.exclusiveM2 = ex; }), [PLAN, ex]);
+    await p.waitForFunction(() => document.querySelector('#draftbar.on #wl'), null, { timeout: 90000 });
+    const r = await p.evaluate(() => { const g = window.__place.state.measureSeg;
+      return { v: +document.getElementById('wl').value, L: Math.hypot(g.x2 - g.x1, g.y2 - g.y1), note: /전용면적 [0-9.]+㎡로 어림/.test(document.getElementById('draftbar').textContent) }; });
+    await ctx.close(); return { ...r, errs };
+  };
+  const a = await run('', EX84);
+  const ratio = a.v / (a.L * T84);
+  if (!a.note) fail('⑦ 전용면적을 아는데 어림 근거 문구가 없다');
+  else if (!(ratio > 0.8 && ratio < 1.2)) fail(`⑦ 어림 길이가 정답과 ${ratio.toFixed(3)}배 — ±20% 밖`);
+  else pass(`⑦ 전용면적 ${EX84}㎡ 로 길이 칸을 채웠다(${a.v}mm · 정답 대비 ${ratio.toFixed(3)}배)`);
+  const c = await run('', null);
+  if (c.note) fail('⑦ 전용면적을 모르는데 어림 문구가 붙었다');
+  else pass('⑦ 전용면적을 모르면 어림하지 않는다');
+  const d = await run('?seg=0', EX84);
+  if (d.note) fail(`⑦ 규칙 경로에서 어림했다(${d.v}mm) — 문·창을 모르면 바깥이 새어 틀린 값이 된다`);
+  else pass('⑦ 규칙 경로(문·창 모름)에서는 어림하지 않는다');
+  for (const x of [a, c, d]) if (x.errs.length) fail('⑦ 페이지 오류: ' + x.errs.join(' | '));
 }
 
 /* ⑤ 품질 — 실제 도면에서 방 이름 자리를 벽으로 칠했나(규칙 대 모델, 같은 도면·같은 잣대) */

@@ -1308,7 +1308,7 @@ function vedApply(b){
   const E = window.WallVec.edit;
   b.dark = E.editedMask(b._dark0, b._walls0, b.vec, b.w, b.h);
   b.vec.dark = window.WallVec.rasterize(b.vec, b.w, b.h);
-  b._faces = null; b._opens = null; b._wallCv = null; state.sealCache = null;
+  b._faces = null; b._opens = null; b._wallCv = null; b._estK = undefined; state.sealCache = null;
   b.edits = (b.edits || 0) + 1;
   if (window.Place3D && window.Place3D.isOpen) window.Place3D.rebuild();
   evaluate(); renderSide(); vedBar(); draw();
@@ -4206,10 +4206,16 @@ function toastFloat(msg){
   el.textContent = msg;
   /* **도면 위 막대가 떠 있으면 그 위로 비켜 뜬다**(2026-09-30). 알림은 바닥에서 88px 인데 막대도
      바닥에 붙어 있어, 폰에서 알림이 막대의 버튼을 덮었다(실측 390px — 「벽 추가」·「삭제」가 가려졌다). */
-  const bar = document.getElementById('draftbar');
-  const barTop = bar && bar.classList.contains('on') ? bar.getBoundingClientRect().top : 0;
-  el.style.bottom = barTop ? Math.max(88, innerHeight - barTop + 10) + 'px' : '88px';
+  /* **떠 있는 동안 막대를 따라간다** — 알림이 먼저 뜨고 막대가 뒤에 열리면(도면을 올리자마자
+     「서재 확정」 알림 → 곧바로 길이 막대) 뜨는 순간 한 번 잰 자리로는 못 비킨다(실측). */
+  const lift = () => {
+    const bar = document.getElementById('draftbar');
+    const barTop = bar && bar.classList.contains('on') ? bar.getBoundingClientRect().top : 0;
+    el.style.bottom = barTop ? Math.max(88, innerHeight - barTop + 10) + 'px' : '88px';
+    if (el.style.display !== 'none') requestAnimationFrame(lift);
+  };
   el.style.display = '';
+  lift();
   clearTimeout(toastElTimer);
   toastElTimer = setTimeout(()=>{ el.style.display = 'none'; }, 2800);
 }
@@ -5874,7 +5880,7 @@ function renderRooms(){
     <div class="room ${state.roomSel===r.id?'sel':''}" data-room="${r.id}">
       <span class="swatch" style="background:${ROOM_FILL[i%ROOM_FILL.length]}"></span>
       <input type="text" class="rn" data-rename="${r.id}" value="${esc(r.name)}" maxlength="12">
-      <span class="m">${(roomArea(r)/1e6).toFixed(1)}㎡${r.parts.length>1?` · ${r.parts.length}조각`:''}${note}</span>
+      <span class="m">${state.scaled ? (roomArea(r)/1e6).toFixed(1) + '㎡' : '크기 맞춘 뒤'}${r.parts.length>1?` · ${r.parts.length}조각`:''}${note}</span>
       <button class="del" data-del="${r.id}" title="삭제">✕</button>
     </div>`;}).join('')
     /*
@@ -6682,6 +6688,72 @@ function wallHint(name){
   return "";                     // 모르는 방이면 예시를 만들지 않는다
 }
 
+/*
+ * ── 전용면적으로 축척을 어림한다 (2026-09-30) ────────────────────────────
+ * 단지 색인이 **전용면적**(분양 공고의 공식 숫자)을 들고 있는 도면이면, 벽 안쪽 넓이(px²)와
+ * 견줘 mm/px 를 어림할 수 있다: k = √(전용면적 ÷ 안쪽 넓이).
+ *
+ * **확정하지 않고 길이 입력칸을 미리 채우기만 한다** — 축척은 사람이 확정한 값에서 온다는
+ * 원칙 그대로다. 정답 축척을 아는 도면 6장으로 재니 −14% ~ +7.5%(중앙값 0.98)였다
+ * (`.scratch/ml-lab/scale-lab.mjs`). 축척 ±10% 는 넓이 ±20% 라 확정값으로는 모자라지만,
+ * 상담사가 모르는 벽에 3,600 을 넣는 지금(실제 3,000~4,300 → ±20%)보다는 근거가 분명하다.
+ *
+ *   · 바깥 채우기는 **벽을 조금 부풀린 판**으로 한다 — 벽 틈으로 새면 집 안이 통째로 바깥이 되어
+ *     85-2 가 2.26배로 빗나갔다. 부풀린 만큼은 바깥 쪽으로 되돌린다
+ *   · 발코니를 빼지 않는다 — 확장형은 발코니가 거실과 이어져 있어 빼면 집이 통째로 빠졌다(실측)
+ *   · 건물 상자 안의 덩어리만 센다 — 첨부 평면·범례 안쪽은 넓이가 아니다
+ *   · 상식 밖이면(세대 폭 6~30m 밖 · 안쪽이 건물 상자의 5% 미만) 채우지 않는다
+ */
+function estScaleFromArea(){
+  const ex = state.exclusiveM2, m = state.baseMask;
+  if (!ex || !state.img || !m || !m.bbox) return null;
+  if (m._estK !== undefined) return m._estK;
+  const w = m.w, h = m.h, S = m.S || 1, N = w * h, bb = m.bbox;
+  const bar = new Uint8Array(N);
+  for (let i = 0; i < N; i++) bar[i] = m.dark[i] | (m.door ? m.door[i] : 0) | (m.win ? m.win[i] : 0);
+  const R = Math.max(2, Math.round(Math.max(w, h) * 0.0033));
+  const hz = new Uint8Array(N), fat = new Uint8Array(N);
+  for (let y = 0; y < h; y++){
+    let last = -1e9; for (let x = 0; x < w; x++){ if (bar[y*w+x]) last = x; if (x - last <= R) hz[y*w+x] = 1; }
+    last = 1e9; for (let x = w - 1; x >= 0; x--){ if (bar[y*w+x]) last = x; if (last - x <= R) hz[y*w+x] = 1; }
+  }
+  for (let x = 0; x < w; x++){
+    let last = -1e9; for (let y = 0; y < h; y++){ if (hz[y*w+x]) last = y; if (y - last <= R) fat[y*w+x] = 1; }
+    last = 1e9; for (let y = h - 1; y >= 0; y--){ if (hz[y*w+x]) last = y; if (last - y <= R) fat[y*w+x] = 1; }
+  }
+  const out = new Uint8Array(N), st = [];
+  const push = (i) => { if (!fat[i] && !out[i]){ out[i] = 1; st.push(i); } };
+  for (let x = 0; x < w; x++){ push(x); push((h - 1) * w + x); }
+  for (let y = 0; y < h; y++){ push(y * w); push(y * w + w - 1); }
+  while (st.length){ const i = st.pop(), x = i % w, y = (i / w) | 0;
+    if (x > 0) push(i - 1); if (x < w - 1) push(i + 1); if (y > 0) push(i - w); if (y < h - 1) push(i + w); }
+  for (let pass = 0; pass < R; pass++){            // 부풀린 만큼 바깥을 원래 벽까지 되돌린다
+    const add = [];
+    for (let i = 0; i < N; i++) if (!out[i] && !bar[i]){ const x = i % w, y = (i / w) | 0;
+      if ((x > 0 && out[i-1]) || (x < w-1 && out[i+1]) || (y > 0 && out[i-w]) || (y < h-1 && out[i+w])) add.push(i); }
+    for (const i of add) out[i] = 1;
+  }
+  const seen = new Uint8Array(N); let area = 0;
+  for (let s0 = 0; s0 < N; s0++){
+    if (bar[s0] || out[s0] || seen[s0]) continue;
+    let n = 0, sx = 0, sy = 0; seen[s0] = 1; st.push(s0);
+    while (st.length){ const i = st.pop(), x = i % w, y = (i / w) | 0; n++; sx += x; sy += y;
+      for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
+        if (j >= 0 && !bar[j] && !out[j] && !seen[j]){ seen[j] = 1; st.push(j); } }
+    const cx = sx / n, cy = sy / n;
+    if (n > N * 0.001 && cx >= bb.x0 && cx <= bb.x1 && cy >= bb.y0 && cy <= bb.y1) area += n;
+  }
+  let est = null;
+  const boxA = (bb.x1 - bb.x0) * (bb.y1 - bb.y0);
+  if (area > boxA * 0.05){
+    const k = Math.sqrt(ex * 1e6 / (area / S / S));              // mm / 이미지 px
+    const houseW = Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0) / S * k;
+    if (houseW >= 6000 && houseW <= 30000) est = k;
+  }
+  m._estK = est;
+  return est;
+}
+
 function askWallLength(segs, opts){
   /*
    * 기준 벽은 **가로 벽면 전체**다(사용자 지정).
@@ -6788,6 +6860,10 @@ function askWallLength(segs, opts){
        "현관 가로가 몇 mm 입니까?" 하고 3,600 을 미리 채워, 그대로 확정하면 축척이
        3배 넘게 틀어졌다(프로덕션 시연에서 확인). */
     const neutral = wide || !!c.picked || !!(opts && opts.house);
+    /* 전용면적으로 어림한 길이 — 있으면 방 이름 기본값(3,600)보다 먼저다. 근거가 공식 숫자라서다.
+       세대 폭 벽이든 직접 고른 벽이든 **벽 길이 × 어림 축척**이라 방을 단정하지 않는다 */
+    const estK = estScaleFromArea();
+    const estMm = estK ? Math.round(c.len * estK / 10) * 10 : 0;
     bar.innerHTML = "<div class='dl'>"
       + "<span class='area'>" + (neutral ? "이 벽의 길이가 몇 mm 입니까?" : esc(rn) + " " + way + "가 몇 mm 입니까?") + "</span>"
       + (cands.length > 1
@@ -6797,7 +6873,7 @@ function askWallLength(segs, opts){
       + "</div>"
       + "<div class='dl'>"
       /* 세대 폭이면 **미리 채우지 않는다** — 3,600 이 들어 있으면 그냥 확정을 누른다 */
-      + "<input type='number' id='wl' value='" + (neutral ? '' : (c.dir === 'v' ? 3000 : 3600)) + "' min='100' step='10' "
+      + "<input type='number' id='wl' value='" + (estMm || (neutral ? '' : (c.dir === 'v' ? 3000 : 3600))) + "' min='100' step='10' "
       + "style='width:120px;padding:6px 8px;font:600 15px ui-monospace,monospace'>"
       + "<span class='meta'>mm</span>"
       + "<span class='grow'></span>"
@@ -6831,6 +6907,7 @@ function askWallLength(segs, opts){
         : c.picked ? " <b>직접 고르신 벽</b>입니다 — 그 벽의 실제 길이를 넣어 주세요."
         : (c.dir === 'v' ? '' : wallHint(rn)))
       + (cands.length > 1 ? " 이 벽 길이를 모르시면 <b>다음</b>으로 다른 벽을 고르세요." : "")
+      + (estMm ? " <b>전용면적 " + (+state.exclusiveM2).toFixed(2) + "㎡로 어림해 미리 채웠습니다</b>(±15% 안팎) — 실제 치수를 아시면 고쳐 넣으세요." : "")
       + "</span></div>";
     draw();
     const nx = $('#wl-next');
