@@ -18,7 +18,7 @@ import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { minifyHtml } from './minify-inline.mjs';
+import { minifyHtml, splitBlocks, SPLIT_DIR } from './minify-inline.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUB = path.join(ROOT, 'public');
@@ -34,11 +34,17 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'mini-'));
 const apps = fs.readdirSync(PUB).filter((f) => f.endsWith('-app.html')).sort();
 let before = 0, after = 0;
 const fails = [];
+const splitBy = {};
 for (const f of apps) {
   const src = fs.readFileSync(path.join(PUB, f), 'utf8');
-  const { html, fails: fs2 } = await minifyHtml(src, f);
-  fails.push(...fs2); before += src.length; after += html.length;
+  const { html: mini, fails: fs2 } = await minifyHtml(src, f);
+  /* 배포 빌드와 똑같이 — 압축한 뒤 큰 자료 블록을 떼어낸다 */
+  const { html, files } = splitBlocks(mini, f);
+  fails.push(...fs2); before += src.length; after += html.length + files.reduce((n, x) => n + x.code.length, 0);
   fs.writeFileSync(path.join(tmp, f), html);
+  if (files.length) fs.mkdirSync(path.join(tmp, SPLIT_DIR), { recursive: true });
+  for (const x of files) fs.writeFileSync(path.join(tmp, SPLIT_DIR, x.name), x.code);
+  splitBy[f] = files.map((x) => x.name);
 }
 if (fails.length) fail('압축 못 한 블록: ' + fails.join(' / '));
 else pass(`① 미니앱 ${apps.length}개 전부 압축됨`);
@@ -52,6 +58,8 @@ const srv = http.createServer((q, s) => {
   const rel = m ? m[2] : u.slice(1);
   let f = path.join(PUB, rel);
   if (m && m[1] === 'm' && rel.endsWith('-app.html')) f = path.join(tmp, rel);
+  if (u.startsWith('/' + SPLIT_DIR + '/')) f = path.join(tmp, u.slice(1));
+  if (m && m[1] === 'm' && rel === 'sw.js') f = path.join(PUB, 'sw.js');
   if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { s.writeHead(404); return s.end(); }
   const ext = path.extname(f);
   const type = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' }[ext] || 'application/octet-stream';
@@ -97,6 +105,58 @@ for (const f of apps) {
   if (why.length) fail(`${f} — ${why.join(' · ')}`);
   else pass(`② ${f} 원본과 같다 (전역 함수 ${o.fns.length}개 · 화면 ${o.text.length}자${ACT[f] ? ' · ③ 동작 후 화면도 같다' : ''})`);
 }
+/* ⑤ 떼어낸 앱이 의도한 그 둘인가 — 자료가 무거운 앱만. 배치 시뮬레이터처럼 떼면 느려지는 앱은 안 뗀다 */
+{
+  const got = Object.entries(splitBy).filter(([, v]) => v.length).map(([k]) => k).sort();
+  const want = ['finder-app.html', 'test-app.html'];
+  if (JSON.stringify(got) !== JSON.stringify(want)) fail(`떼어낸 앱이 ${got.join(', ') || '없음'} — 기대는 ${want.join(', ')}(자료가 무거운 두 앱). 문턱(SPLIT_MIN)을 다시 볼 것`);
+  else pass(`⑤ 큰 자료 블록만 떼어냈다 — ${got.map((k) => splitBy[k][0]).join(', ')}`);
+  if (splitBy['place-app.html'].length) fail('배치 시뮬레이터가 떼어졌다 — 약한 전파 첫 방문이 +17% 느려진 앱이다(실측)');
+}
+
+/* ⑥ 세 가지가 한꺼번에 맞는가 — 해시 파일명은 위(⑤)에서, 헤더·서비스워커는 여기서 */
+{
+  const cfg = fs.readFileSync(path.join(ROOT, 'next.config.js'), 'utf8');
+  if (!/source:\s*'\/_split\/:path\*'[\s\S]{0,120}immutable/.test(cfg)) fail('next.config.js 가 /_split/ 에 immutable 캐시 헤더를 안 준다 — 재방문이 분리 전보다 느려진다(실측 +17%)');
+  else pass('⑥ /_split/ 에 immutable 캐시 헤더');
+  const sw = fs.readFileSync(PUB + '/sw.js', 'utf8');
+  if (!/startsWith\('\/_split\/'\)\)\s*\{\s*e\.respondWith\(cacheFirst/.test(sw)) fail('서비스워커가 /_split/ 을 캐시 우선으로 안 잡는다');
+  else pass('⑥ 서비스워커가 /_split/ 을 캐시 우선으로 잡는다');
+  const nf = sw.slice(sw.indexOf('function networkFirst'), sw.indexOf('function networkFirst') + 400);
+  const sr = sw.slice(sw.indexOf('function swr'), sw.indexOf('function swr') + 400);
+  if (!nf.includes('putWithSplit(') || !sr.includes('putWithSplit(')) fail('미니앱 HTML 을 떼어낸 자료와 한 쌍으로 캐시하지 않는 길이 있다(networkFirst·swr 둘 다 필요)');
+  else pass('⑥ 미니앱 HTML 을 떼어낸 자료와 한 쌍으로 캐시한다(networkFirst·swr)');
+}
+
+/* ⑦ 오프라인 — 실제 서비스워커로 한 번 열고, 전파를 끊고 다시 열어도 제품이 그대로 있는가.
+ *    이것이 한 쌍 캐시의 목적이다. 쌍이 깨지면 HTML 은 뜨는데 PRODUCTS 가 없다. */
+for (const f of ['finder-app.html', 'test-app.html']) {
+  const ctx = await b.newContext();
+  const p = await ctx.newPage();
+  const errs = [];
+  p.on('pageerror', (e) => errs.push(e.message));
+  await p.goto(`${base}/m/${f}`, { waitUntil: 'load' });
+  await p.evaluate(async () => { await navigator.serviceWorker.register('/sw.js', { scope: '/' }); await navigator.serviceWorker.ready; });
+  await p.reload({ waitUntil: 'load' });               // 이번 내비게이션이 서비스워커를 지나며 한 쌍을 캐시한다
+  await p.waitForTimeout(1500);
+  const online = await p.evaluate(() => document.body.innerText);
+  const ctrl = await p.evaluate(() => !!navigator.serviceWorker.controller);
+  await ctx.setOffline(true);
+  await p.reload({ waitUntil: 'load' }).catch(() => {});
+  await p.waitForTimeout(800);
+  const offline = await p.evaluate(() => document.body.innerText).catch(() => '');
+  /* 화면 글자만으로는 자료가 실렸는지 모른다(첫 화면이 짧다) — 떼어낸 블록이 만든 전역을 직접 센다 */
+  const dataN = await p.evaluate((g) => { try { return (0, eval)(g + '.length'); } catch { return -1; } }, f === 'finder-app.html' ? 'PRODUCTS' : 'Object.keys(QB)').catch(() => -1);
+  const why = [];
+  if (!ctrl) why.push('서비스워커가 페이지를 잡지 못했다');
+  if (offline !== online) why.push(`오프라인 화면이 다르다(온라인 ${online.length}자 · 오프라인 ${offline.length}자)`);
+  if (errs.length) why.push('페이지 오류: ' + errs.slice(0, 2).join(' | '));
+  if (!(dataN > 0)) why.push('오프라인에서 떼어낸 자료가 안 실렸다(' + dataN + ')');
+  if (why.length) fail(`⑦ ${f} — ${why.join(' · ')}`);
+  else pass(`⑦ ${f} 전파를 끊어도 온라인과 같은 화면(${online.length}자) · 자료 ${dataN}건 — HTML 과 떼어낸 자료가 한 쌍으로 캐시됐다`);
+  await ctx.close();
+}
+
 await b.close(); srv.close();
 fs.rmSync(tmp, { recursive: true, force: true });
 

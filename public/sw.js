@@ -433,7 +433,7 @@
  * 웹앱, /mobile-calc 에서 iframe)로 대체. 개발중 목록이 바뀌어 통합검색 색인(SWR)이
  * 달라졌다 — 여기를 안 올리면 이미 쓰던 기기에서 새 도구가 검색에 안 잡힌다.
  */
-const CACHE_VERSION = 'axhub-v256';
+const CACHE_VERSION = 'axhub-v257';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -463,7 +463,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers|compare-usp|sec-usp)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge)\.js$/;
+const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers|compare-usp|sec-usp)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge|wall-vec)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.
@@ -485,7 +485,7 @@ function swr(req) {
     cache.match(req).then((cached) => {
       const network = fetch(req)
         .then((res) => {
-          if (res && res.ok) cache.put(req, res.clone());
+          if (res && res.ok) putWithSplit(cache, req, res.clone());   // 미니앱이면 떼어낸 자료와 한 쌍으로
           return res;
         })
         .catch(() => cached);
@@ -505,11 +505,31 @@ function cacheFirst(req) {
   );
 }
 
+/*
+ * **미니앱 HTML 과 그것이 가리키는 떼어낸 자료(/_split/*)는 한 쌍으로 캐시한다**(2026-09-26).
+ * 배포 빌드가 큰 자료 블록을 `/_split/<앱>.<해시>.js` 로 떼어낸다(scripts/minify-inline.mjs).
+ * 미니앱은 iframe 안이라 **내비게이션(networkFirst)** 으로 오고, 오프라인이면 캐시된 HTML 을
+ * 내준다 — 그런데 그 HTML 이 가리키는 자료가 캐시에 없으면 **화면은 뜨는데 제품이 없다.**
+ * 그래서 HTML 을 캐시에 넣기 **전에** 그 HTML 의 /_split/ 파일부터 채운다. 자료를 못 받으면
+ * HTML 도 바꿔 넣지 않는다(옛 한 쌍이 그대로 남는다 — 반쪽짜리 새 쌍보다 낫다).
+ */
+const SPLIT_REF = /\/_split\/[\w.-]+\.js/g;
+function putWithSplit(cache, req, res) {
+  if (!/-app\.html$/.test(new URL(req.url).pathname)) return cache.put(req, res);
+  return res.clone().text().then((html) => {
+    const refs = [...new Set(html.match(SPLIT_REF) || [])];
+    return Promise.all(refs.map((u) => cache.match(u).then((hit) => hit || fetch(u).then((r) => {
+      if (!r.ok) throw new Error('split ' + r.status);
+      return cache.put(u, r);
+    })))).then(() => cache.put(req, res));
+  }).catch(() => { /* 자료를 못 받았으면 HTML 도 새로 넣지 않는다 */ });
+}
+
 function networkFirst(req) {
   return caches.open(RUNTIME).then((cache) =>
     fetch(req)
       .then((res) => {
-        if (res && res.ok) cache.put(req, res.clone());
+        if (res && res.ok) putWithSplit(cache, req, res.clone());
         return res;
       })
       .catch(() => cache.match(req))
@@ -533,6 +553,8 @@ self.addEventListener('fetch', (e) => {
    * **CDN 을 쓰지 않고 여기 두는 이유가 이것이다** — 오프라인에서도 3D 가 떠야 한다.
    */
   if (url.pathname.startsWith('/vendor/')) { e.respondWith(cacheFirst(req)); return; }
+  /* 배포 빌드가 떼어낸 미니앱 자료 — 이름에 내용 해시가 있어 캐시 우선이 맞다(vendor 와 같다) */
+  if (url.pathname.startsWith('/_split/')) { e.respondWith(cacheFirst(req)); return; }
   /*
    * **가전 3D 자산도 캐시 우선**(2026-08-18). `/models/` 는 파일 이름이 바뀌지 않는 한
    * 내용도 그대로라 캐시 우선이 맞다(vendor 와 같다). 매장 전파가 약해도 열려야 하고,

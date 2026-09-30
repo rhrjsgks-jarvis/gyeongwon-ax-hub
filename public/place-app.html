@@ -503,6 +503,7 @@
   }
 </style>
 <script src="prod-symbols.js"></script>
+<script src="wall-vec.js"></script>
 </head>
 <body>
 <div id="app">
@@ -563,6 +564,7 @@
       <button id="btn-detect">벽 자동 인식</button>
       <button id="btn-wall">벽 그리기</button>
       <button id="btn-edit" class="ghost">경계 수정</button>
+      <button id="btn-vedit" class="ghost">벽 편집</button>
       <button id="btn-auto">주방 배치 추천</button>
       <button id="btn-save" class="ghost">이 단지 저장</button>
       <button id="btn-rooms" class="ghost">방 표시</button>
@@ -1197,6 +1199,316 @@ function wallMask(){
    * 요구하면 **축척을 묻는 단계에서 벽을 못 쓴다** — 정작 그때 벽이 가장 필요하다.
    */
   return (state.img && state.baseMask) ? state.baseMask : null;
+}
+
+/*
+ * ── 벽을 모델로 읽는다 (2026-09-28) ─────────────────────────────────────
+ *
+ * 규칙(열기·닫기·띠 길이)으로 찾던 벽을 **학습된 분할 모델**로 찾는다. plan3d 에서 AI Hub
+ * 정답(벽·문·창 20만 건)으로 학습했고, 같은 잣대로 벽 재현율이 규칙의 두 배다.
+ * 이 앱의 3D 벽·놓을 수 있는 자리·자동 배치·방 채우기는 **전부 `baseMask.dark` 하나**를
+ * 읽으므로 그 출처만 바꾸면 전부가 함께 나아진다(`ensureBase` 가 갈아 끼운다).
+ *
+ *   · 모델·런타임은 등록부(models/manifest.json 의 `wallSeg`)에 있을 때만 쓴다 — 지우면 꺼진다
+ *   · 못 쓰면(오프라인 첫 방문·wasm 미지원·시간 초과) **조용히 규칙 인식으로 물러선다**.
+ *     이 경로가 있어야 매장 전파가 끊겨도 상담이 멈추지 않는다
+ *   · `?seg=0` 이면 끈다 — 규칙 경로를 검사하는 스위트(test-plans·test-real)가 쓴다
+ *   · 폰 한 스레드 기준 768px 에서 약 3초(실측, CPU 4배 느리게) — 그 사이 "벽을 읽는 중"을 띄운다
+ *
+ * 문·창도 함께 읽는다(`seg.door`·`seg.win`). 3D 는 그것으로 창과 문을 가른다.
+ */
+const SEG_LONG = 768;
+const SEG_TIMEOUT_MS = 20000;
+let segLoader = null;
+function segWanted(){ return !/[?&]seg=0\b/.test(location.search); }
+function loadSeg(){
+  if (segLoader) return segLoader;
+  segLoader = (async () => {
+    const r = await fetch('models/manifest.json');
+    const man = r.ok ? await r.json() : {};
+    const ws = man && man.wallSeg;
+    if (!ws || !ws.file || !ws.ort) return null;
+    const base = new URL(ws.ort.replace(/\/?$/, '/'), location.href).href;
+    const ort = await import(base + 'ort.wasm.min.mjs');
+    ort.env.wasm.wasmPaths = base;
+    ort.env.wasm.numThreads = 1;            // iframe 안이라 교차 출처 격리가 없다 — 한 스레드가 정직한 값이다
+    const sess = await ort.InferenceSession.create('models/' + ws.file, { executionProviders: ['wasm'] });
+    return { ort, sess, file: ws.file };
+  })().catch((e) => { console.warn('[벽 모델] 못 불러와 규칙 인식으로 간다:', e && e.message); return null; });
+  return segLoader;
+}
+/** 도면 이미지 → 칸 지도(0 배경·1 벽·2 문·3 창). 실패하면 null */
+async function runSeg(img){
+  const m = await loadSeg();
+  if (!m) return null;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const s = Math.min(1, SEG_LONG / Math.max(iw, ih));
+  const w0 = Math.max(1, Math.round(iw * s)), h0 = Math.max(1, Math.round(ih * s));
+  const W = w0 + (32 - w0 % 32) % 32, H = h0 + (32 - h0 % 32) % 32;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const cx = c.getContext('2d', { willReadFrequently: true });
+  cx.fillStyle = '#fff'; cx.fillRect(0, 0, W, H);      // 학습과 같이 흰 종이로 채운다
+  cx.drawImage(img, 0, 0, w0, h0);
+  const px = cx.getImageData(0, 0, W, H).data;
+  const P = W * H, x = new Float32Array(3 * P);
+  const MEAN = [0.485, 0.456, 0.406], SD = [0.229, 0.224, 0.225];
+  for (let i = 0; i < P; i++) for (let k = 0; k < 3; k++) x[k * P + i] = (px[i * 4 + k] / 255 - MEAN[k]) / SD[k];
+  const out = await m.sess.run({ image: new m.ort.Tensor('float32', x, [1, 3, H, W]) });
+  const L = out.logits.data, cls = new Uint8Array(w0 * h0);
+  for (let y = 0; y < h0; y++) for (let xx = 0; xx < w0; xx++){
+    const i = y * W + xx;
+    let best = 0, bv = L[i];
+    for (let k = 1; k < 4; k++){ const v = L[k * P + i]; if (v > bv){ bv = v; best = k; } }
+    cls[y * w0 + xx] = best;
+  }
+  return { w: w0, h: h0, s, cls, file: m.file };
+}
+/**
+ * 벽 선분 — `?vec=0` 이면 끈다(검사가 옛 픽셀 경로를 따로 지킬 수 있게).
+ * 선분이 너무 적으면 벡터화가 도면을 못 읽은 것이라 쓰지 않는다(픽셀 그대로가 낫다).
+ */
+function vectorizeBase(m, w, h, seg){
+  if (/[?&]vec=0(&|$)/.test(location.search) || !window.WallVec) return null;
+  try {
+    const t0 = performance.now();
+    const v = window.WallVec.vectorize({ w, h, wall: m, door: seg ? seg.door : null, win: seg ? seg.win : null });
+    if (v.walls.length < 4) return null;
+    v.ms = Math.round(performance.now() - t0);
+    v.dark = window.WallVec.rasterize(v, w, h);        // 3D 가 곧은 벽으로 세울 때 쓰는 칸 지도
+    return v;
+  } catch (e) { return null; }
+}
+/*
+ * ── 벽 편집 (2026-09-30) ────────────────────────────────────────────────
+ * 모델·규칙이 잘못 읽은 자리를 **사람이 고친다** — 첨부 평면·범례가 벽으로 서고, 창을 문으로 읽는다.
+ * 계산은 전부 `WallVec.edit`(순수 함수 · test-wallvec ⑧~⑫)이 하고 여기는 누르기·끌기·막대만 맡는다.
+ *
+ *   · 고치면 **3D(선분)와 판정(픽셀 마스크)을 함께** 바꾼다. 3D 만 고치면 "지운 벽 자리에
+ *     냉장고가 안 들어간다"가 된다. 판정은 원래 마스크에서 사라진 벽만 빼고 지금 벽을 더한다
+ *     (`editedMask`) — 손대지 않은 곳은 검증된 마스크 그대로다.
+ *   · 원래 마스크·벽은 **처음 고칠 때 한 번만** 떠 둔다(`_dark0`·`_walls0`). 다시 들어와 고쳐도
+ *     기준은 도면에서 읽은 그대로다.
+ *   · 마스크에 얹어 둔 캐시(벽면·개구부·벽 그림·방 채우기)는 고칠 때마다 버린다 — 안 버리면
+ *     자동 배치·벽 붙이기가 옛 벽을 본다.
+ */
+const VED_UNDO_MAX = 30;
+function vedBase(){ const b = wallMask(); return b && b.vec && window.WallVec && window.WallVec.edit ? b : null; }
+/** 월드(mm 또는 축척 전 이미지 px) ↔ 마스크 px */
+function vedF(b){ return (state.mmPerPx || 1) / (b.S || 1); }
+function vedThick(b){
+  const ts = b.vec.walls.map((s) => s.t).sort((p, q) => p - q);
+  return ts.length ? ts[ts.length >> 1] : 6;
+}
+function vedPush(b, snap){
+  const u = state.vEdit.undo;
+  u.push(snap || window.WallVec.edit.snapshot(b.vec));
+  if (u.length > VED_UNDO_MAX) u.shift();
+}
+function vedApply(b){
+  const E = window.WallVec.edit;
+  b.dark = E.editedMask(b._dark0, b._walls0, b.vec, b.w, b.h);
+  b.vec.dark = window.WallVec.rasterize(b.vec, b.w, b.h);
+  b._faces = null; b._opens = null; b._wallCv = null; state.sealCache = null;
+  b.edits = (b.edits || 0) + 1;
+  if (window.Place3D && window.Place3D.isOpen) window.Place3D.rebuild();
+  evaluate(); renderSide(); vedBar(); draw();
+}
+function vedStart(){
+  const b = vedBase();
+  if (!b){ toast('도면에서 벽을 먼저 읽어야 고칠 수 있습니다'); return; }
+  if (!b._dark0){ b._dark0 = b.dark; b._walls0 = JSON.parse(JSON.stringify(b.vec.walls)); }
+  hideDraftBar(); state.draft = null;
+  state.vEdit = { sel: null, add: null, undo: (state.vEdit && state.vEdit.b === b) ? state.vEdit.undo : [], b };
+  $('#bar').classList.remove('moreopen');
+  /*
+   * **읽은 벽 전부를 화면에 담는다.** 평소 화면은 집만 담아(viewBox) 첨부 평면·범례가 화면 밖에
+   * 있는데, 바로 그것이 3D 에 공중 건물로 선다 — 고칠 것이 안 보이면 못 고친다(실측 84B).
+   */
+  const f = vedF(b);
+  let x1 = 1e12, y1 = 1e12, x2 = -1e12, y2 = -1e12;
+  for (const w of b.vec.walls){
+    const t = w.t / 2, r = w.o === 'h' ? [w.a, w.c - t, w.b, w.c + t] : [w.c - t, w.a, w.c + t, w.b];
+    x1 = Math.min(x1, r[0] * f); y1 = Math.min(y1, r[1] * f); x2 = Math.max(x2, r[2] * f); y2 = Math.max(y2, r[3] * f);
+  }
+  setMode('vedit'); vedBar();
+  { const el = document.getElementById('ax-toast'); if (el) el.style.display = 'none'; }   // 앞 단계 알림이 막대를 덮지 않게
+  /* 막대에 가린 만큼 빼고 맞춘다 — 폰에서는 막대가 캔버스 아래 3분의 1을 덮는다 */
+  const cr = cv.getBoundingClientRect(), br = $('#draftbar').getBoundingClientRect();
+  if (x2 > x1) fitAll({ x1, y1, x2, y2 }, Math.max(0, cr.bottom - br.top));
+  draw();
+}
+function vedEnd(){
+  if ($('#draftbar').classList.contains('on')) popBack();
+  $('#draftbar').classList.remove('on');
+  if (state.vEdit){ state.vEdit.sel = null; state.vEdit.add = null; }
+  setMode('idle'); draw();
+}
+function vedDelete(){
+  const b = vedBase(), ve = state.vEdit;
+  if (!b || !ve || !ve.sel) return;
+  const E = window.WallVec.edit;
+  vedPush(b);
+  if (ve.sel.kind === 'w') E.removeWall(b.vec, ve.sel.i); else E.removeOpening(b.vec, ve.sel.i);
+  ve.sel = null; vedApply(b);
+}
+/** 도면 위 막대 — 무엇을 골랐는지와 할 수 있는 일만 */
+function vedBar(){
+  const b = vedBase(), ve = state.vEdit;
+  if (!b || !ve || state.mode !== 'vedit') return;
+  const bar = $('#draftbar'), v = b.vec, f = vedF(b);
+  let what = '벽이나 문·창을 누르세요 — 벽은 끌면 옮겨집니다';
+  if (ve.box) what = '지울 곳을 네모로 끌어 두르세요 — 통째로 든 벽·문·창만 지웁니다';
+  else if (ve.add) what = ve.add.length ? '끝점을 누르세요' : '새 벽의 시작점을 누르세요';
+  else if (ve.sel && ve.sel.kind === 'w' && v.walls[ve.sel.i]){
+    const s = v.walls[ve.sel.i], L = (s.b - s.a) * f;
+    what = `${s.o === 'h' ? '가로' : '세로'} 벽 ${state.scaled ? Math.round(L).toLocaleString() + 'mm' : ''} — 끌면 옮겨집니다`;
+  } else if (ve.sel && ve.sel.kind === 'o' && v.openings[ve.sel.i]){
+    what = v.openings[ve.sel.i].type === 'door' ? '문' : '창';
+  }
+  const selO = ve.sel && ve.sel.kind === 'o';
+  bar.innerHTML = `
+    <div class="dl"><span class="area">벽 편집</span><span class="meta">${esc(what)}</span><span class="grow"></span>
+      <span class="lvl">벽 ${v.walls.length} · 문 ${v.openings.filter((o) => o.type === 'door' && o.wall >= 0).length} · 창 ${v.openings.filter((o) => o.type === 'win' && o.wall >= 0).length}</span></div>
+    <div class="dl"><span class="grow"></span>
+      <button id="ve-add"${ve.add ? ' class="primary"' : ''}>${ve.add ? '추가 취소' : '벽 추가'}</button>
+      <button id="ve-box"${ve.box ? ' class="primary"' : ''}>${ve.box ? '영역 취소' : '영역 지우기'}</button>
+      <button id="ve-del"${ve.sel ? '' : ' disabled'}>삭제</button>
+      ${selO ? `<button id="ve-swap">${v.openings[ve.sel.i].type === 'door' ? '창으로' : '문으로'}</button>` : ''}
+      <button id="ve-undo"${ve.undo.length ? '' : ' disabled'}>되돌리기</button>
+      <button id="ve-done" class="primary">완료</button></div>`;
+  if (!bar.classList.contains('on')) pushBack();
+  bar.classList.add('on');
+  $('#ve-add').onclick  = ()=>{ ve.add = ve.add ? null : []; ve.box = false; ve.sel = null; vedBar(); draw(); };
+  $('#ve-box').onclick  = ()=>{ ve.box = !ve.box; ve.add = null; ve.sel = null; vedBar(); draw(); };
+  $('#ve-del').onclick  = ()=> vedDelete();
+  if (selO) $('#ve-swap').onclick = ()=>{ vedPush(b); window.WallVec.edit.toggleOpening(v, ve.sel.i); vedApply(b); };
+  $('#ve-undo').onclick = ()=>{ const s = ve.undo.pop(); if (!s) return; window.WallVec.edit.restore(v, s); ve.sel = null; vedApply(b); };
+  $('#ve-done').onclick = ()=> vedEnd();
+}
+/** 누르기 — 추가 중이면 점을 받고, 아니면 고른다. 벽을 골랐으면 끌기를 시작한다 */
+function vedDown(wx, wy, sx, sy){
+  const b = vedBase(), ve = state.vEdit;
+  if (!b || !ve) return false;
+  const E = window.WallVec.edit, f = vedF(b), mx = wx / f, my = wy / f;
+  if (ve.box){ state.drag = { vbox: true, x0: mx, y0: my, x1: mx, y1: my, sx, sy }; draw(); return true; }
+  if (ve.add){
+    ve.add.push([mx, my]);
+    if (ve.add.length === 2){
+      const [[x0, y0], [x1, y1]] = ve.add, t = vedThick(b);
+      ve.add = null;
+      const snap = E.snapshot(b.vec);
+      const i = E.addWall(b.vec, x0, y0, x1, y1, t, Math.max(3, t * 1.5));
+      if (i < 0){ toast('너무 짧습니다 — 두 점을 더 떨어뜨려 누르세요'); vedBar(); draw(); return true; }
+      vedPush(b, snap); ve.sel = { kind: 'w', i }; vedApply(b);
+    } else { vedBar(); draw(); }
+    return true;
+  }
+  const h = E.hit(b.vec, mx, my, 12 / state.zoom / f);
+  ve.sel = h ? { kind: h.kind, i: h.i } : null;
+  if (h && h.kind === 'w'){
+    const s = b.vec.walls[h.i];
+    state.drag = { ved: true, i: h.i, c0: s.c, m0: s.o === 'h' ? my : mx, sx, sy, moved: false, snap: E.snapshot(b.vec) };
+  } else {
+    state.drag = { pan: true, sx, sy, px: state.panX, py: state.panY };
+  }
+  vedBar(); draw();
+  return true;
+}
+function vedMove(wx, wy, sx, sy){
+  const b = vedBase(), d = state.drag;
+  if (!b) return;
+  if (!d.moved && Math.hypot(sx - d.sx, sy - d.sy) < TAP_SLOP) return;   // 누르기인지 끌기인지 — 손가락은 가만히 못 있는다
+  d.moved = true;
+  const f = vedF(b), s = b.vec.walls[d.i];
+  window.WallVec.edit.moveWall(b.vec, d.i, d.c0 + ((s.o === 'h' ? wy : wx) / f - d.m0));
+  draw();
+}
+/** 영역 지우기를 놓았다 — 너무 작게 끌었으면(손떨림) 아무것도 안 한다 */
+function vedBoxUp(d){
+  const b = vedBase(), ve = state.vEdit;
+  if (!b || !ve) return;
+  ve.box = false;
+  if (Math.hypot(d.x1 - d.x0, d.y1 - d.y0) * vedF(b) * state.zoom < TAP_SLOP * 2){ vedBar(); draw(); return; }
+  const snap = window.WallVec.edit.snapshot(b.vec);
+  const n = window.WallVec.edit.removeInRect(b.vec, d.x0, d.y0, d.x1, d.y1);
+  if (!n){ toast('네모 안에 통째로 든 벽이 없습니다'); vedBar(); draw(); return; }
+  vedPush(b, snap); toast('벽 ' + n + '개를 지웠습니다 — 되돌리기로 살릴 수 있습니다'); vedApply(b);
+}
+function vedUp(){
+  const b = vedBase(), d = state.drag;
+  if (b && d.moved){ vedPush(b, d.snap); vedApply(b); } else vedBar();
+}
+/** 편집 중 겹침 — 고를 수 있는 것이 보여야 고른다 */
+function drawVedit(){
+  const b = vedBase(), ve = state.vEdit;
+  if (!b || !ve) return;
+  const f = vedF(b), v = b.vec;
+  const rect = (s) => {
+    const t = (s.t || 6) / 2;
+    const r = s.o === 'h' ? [s.a, s.c - t, s.b, s.c + t] : [s.c - t, s.a, s.c + t, s.b];
+    const [x0, y0] = toScreen(r[0] * f, r[1] * f), [x1, y1] = toScreen(r[2] * f, r[3] * f);
+    return [x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0)];
+  };
+  v.walls.forEach((s, i) => {
+    const on = ve.sel && ve.sel.kind === 'w' && ve.sel.i === i, [x, y, w, h] = rect(s);
+    ctx.fillStyle = on ? 'rgba(20,40,160,.62)' : 'rgba(20,40,160,.26)';
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = on ? '#0B1A6E' : 'rgba(20,40,160,.7)'; ctx.lineWidth = on ? 2.5 : 1;
+    ctx.strokeRect(x, y, w, h);
+  });
+  v.openings.forEach((o, i) => {
+    if (o.wall < 0) return;
+    const on = ve.sel && ve.sel.kind === 'o' && ve.sel.i === i, [x, y, w, h] = rect(o);
+    ctx.fillStyle = o.type === 'door' ? 'rgba(22,163,74,.9)' : 'rgba(6,182,212,.9)';
+    ctx.fillRect(x, y, w, h);
+    if (on){ ctx.strokeStyle = '#111827'; ctx.lineWidth = 2.5; ctx.strokeRect(x - 2, y - 2, w + 4, h + 4); }
+  });
+  const d = state.drag;
+  if (d && d.vbox){
+    const [x0, y0] = toScreen(d.x0 * f, d.y0 * f), [x1, y1] = toScreen(d.x1 * f, d.y1 * f);
+    ctx.fillStyle = 'rgba(220,38,38,.08)'; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
+    ctx.strokeStyle = '#DC2626'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]);
+    ctx.strokeRect(x0, y0, x1 - x0, y1 - y0); ctx.setLineDash([]);
+  }
+  if (ve.add && ve.add.length){
+    const [sx, sy] = toScreen(ve.add[0][0] * f, ve.add[0][1] * f);
+    ctx.fillStyle = '#1428A0'; ctx.beginPath(); ctx.arc(sx, sy, 5, 0, 7); ctx.fill();
+  }
+}
+
+/** 모델 결과를 마스크 해상도로 옮긴다 → { wall, door, win } (없으면 null) */
+function segForMask(mask){
+  const seg = state.seg;
+  if (!seg || seg.img !== state.img) return null;
+  const S = mask.S || 1, k = seg.s / S;                 // 마스크 픽셀 → 원본 픽셀(÷S) → 모델 픽셀(×s)
+  const wall = new Uint8Array(mask.w * mask.h), door = new Uint8Array(mask.w * mask.h), win = new Uint8Array(mask.w * mask.h);
+  for (let y = 0; y < mask.h; y++){
+    const sy = Math.min(seg.h - 1, Math.floor((y + 0.5) * k));
+    for (let x = 0; x < mask.w; x++){
+      const sx = Math.min(seg.w - 1, Math.floor((x + 0.5) * k));
+      const c = seg.cls[sy * seg.w + sx], p = y * mask.w + x;
+      if (c === 1) wall[p] = 1; else if (c === 2) door[p] = 1; else if (c === 3) win[p] = 1;
+    }
+  }
+  return { wall, door, win };
+}
+/** 도면을 올린 직후 — 모델로 벽을 읽어 두고(시간 제한) 다음 단계로 간다. 못 읽어도 간다 */
+function readWallsThen(next){
+  state.seg = null;
+  if (!segWanted()) { next(); return; }
+  const img = state.img, t0 = performance.now();
+  toast('도면의 벽을 읽는 중입니다…');
+  let done = false;
+  const go = (seg, why) => {
+    if (done) return; done = true;
+    if (seg && state.img === img) {
+      state.seg = Object.assign(seg, { img, ms: Math.round(performance.now() - t0) });
+      state.mask = state.baseMask = null; state.sealCache = null; state.cleanCv = null;   // 새 벽으로 다시 만든다
+    } else if (why) console.warn('[벽 모델]', why, '— 규칙 인식으로 간다');
+    if (state.img === img) next();
+  };
+  setTimeout(() => go(null, SEG_TIMEOUT_MS / 1000 + '초 안에 못 읽었다'), SEG_TIMEOUT_MS);
+  runSeg(img).then((s) => go(s, s ? '' : '모델 없음'), (e) => go(null, e && e.message));
 }
 /**
  * 인식된 벽을 도면 위에 얹어 보여주는 캔버스 — **도면당 한 번만** 만들어 마스크에 얹어 둔다
@@ -2556,6 +2868,14 @@ function ensureBase(){
     ? Math.max(4, Math.round((800 / state.mmPerPx) * mask.S))
     : oldPx(0.0105);
   m = dropSpecks(m, mask.w, mask.h, speckPx);
+  /*
+   * **모델이 이 도면을 읽어 뒀으면 그 벽을 쓴다**(2026-09-28). 위 규칙 정리는 그대로 돌려
+   * 진단값(띠 포기·기울기 경고)만 얻는다. 모델 벽에도 조각 지우기는 건다 — 모델의 알려진 약점이
+   * **방 이름 글자를 벽·문으로 칠하는 것**(실제 도면 글자오탐 25.8%)인데, 글자는 작고 떨어진
+   * 덩어리라 800mm 기준 조각 지우기가 정확히 그것을 걷어낸다.
+   */
+  const seg = segForMask(mask);
+  if (seg) m = dropSpecks(seg.wall, mask.w, mask.h, speckPx);
   const bbox = structureBox(m, mask.w, mask.h);
   // 건물 안쪽 — 창의 유리선이 살아 있는 **원본** 마스크로 잡는다. 근거를 못 찾으면 null.
   const bboxArea = (bbox.x1 - bbox.x0 + 1) * (bbox.y1 - bbox.y0 + 1);
@@ -2575,8 +2895,17 @@ function ensureBase(){
                      bands: !bandsBailed, outline: usedOpen === 0 && openR > 0,
                      /* 두 신호는 **서로 다른 실패**를 잡는다 — 기울기는 입체 렌더링·글자 지면을,
                         띠 포기는 벽이 아예 없는 사진 몽타주를 잡는다. 그래서 합집합으로 본다. */
-                     tilted: (axis !== null && axis < AXIS_MIN) || bandsBailed };
-  return (state.baseMask = { w:mask.w, h:mask.h, S:mask.S, dark:m, bbox, env });
+                     tilted: (axis !== null && axis < AXIS_MIN) || bandsBailed,
+                     /* 벽을 누가 찾았나 — 모델이면 몇 ms 걸렸는지도(화면·로그가 밝힌다) */
+                     source: seg ? 'model' : 'rule', segMs: seg ? state.seg.ms : null };
+  /*
+   * **벽을 선분으로 바꿔 둔다**(2026-09-28, public/wall-vec.js). 픽셀 벽은 고칠 수도, 길이를 잴 수도
+   * 없다. 선분이면 산수가 된다. 판정(`wallAt`)은 검증된 픽셀 마스크를 그대로 쓰고, 선분은
+   * 3D 가 곧은 벽과 문·창 물체를 세우는 데 먼저 쓴다. 못 만들면 null — 예전 그림 그대로다.
+   */
+  const vec = vectorizeBase(m, mask.w, mask.h, seg);
+  if (vec) state.baseInfo.vecMs = vec.ms;
+  return (state.baseMask = { w:mask.w, h:mask.h, S:mask.S, dark:m, bbox, env, door: seg ? seg.door : null, win: seg ? seg.win : null, vec });
 }
 
 /** 지정한 반경으로 틈을 메운 마스크 (반경별로 캐시) */
@@ -3875,6 +4204,11 @@ function toastFloat(msg){
     document.body.appendChild(el);
   }
   el.textContent = msg;
+  /* **도면 위 막대가 떠 있으면 그 위로 비켜 뜬다**(2026-09-30). 알림은 바닥에서 88px 인데 막대도
+     바닥에 붙어 있어, 폰에서 알림이 막대의 버튼을 덮었다(실측 390px — 「벽 추가」·「삭제」가 가려졌다). */
+  const bar = document.getElementById('draftbar');
+  const barTop = bar && bar.classList.contains('on') ? bar.getBoundingClientRect().top : 0;
+  el.style.bottom = barTop ? Math.max(88, innerHeight - barTop + 10) + 'px' : '88px';
   el.style.display = '';
   clearTimeout(toastElTimer);
   toastElTimer = setTimeout(()=>{ el.style.display = 'none'; }, 2800);
@@ -4790,6 +5124,7 @@ function draw(){
       });
     });
   }
+  if (state.mode==='vedit') drawVedit();
   // 그리는 중인 벽
   if (state.mode==='wall' && state.wallPts.length){
     ctx.strokeStyle='#1428A0'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
@@ -5289,7 +5624,7 @@ function syncBar(){
    * 화면을 다시 안 그린 경로**에서 버튼이 옛 판정을 들고 있다(검사가 실제로 잡았다).
    */
   const sig = [state.scaled, hasPlan, hasSpace, state.rooms.length > 0,
-    state.walls.length > 0, state.items.length > 0].join("|");
+    state.walls.length > 0, state.items.length > 0, !!(state.baseMask && state.baseMask.vec)].join("|");
   if (sig === _barSig) return;
   _barSig = sig;
   const canShow  = hasPlan || state.walls.length > 0;
@@ -5305,6 +5640,7 @@ function syncBar(){
   set('#btn-scale', hasPlan,                '도면을 먼저 올려주세요');
   set('#btn-detect', hasPlan,               '도면을 먼저 올려주세요');
   set('#btn-edit',  state.rooms.length > 0, '잡은 공간이 있어야 경계를 고칠 수 있습니다');
+  set('#btn-vedit', !!(hasPlan && state.baseMask && state.baseMask.vec), '도면에서 벽을 읽은 뒤에 고칠 수 있습니다');
   set('#btn-auto',  state.scaled,           '크기를 먼저 맞춰 주세요');
   set('#btn-save',  state.rooms.length > 0, '방을 잡은 뒤에 저장할 수 있습니다');
   set('#btn-rooms', state.rooms.length > 0, '아직 잡은 공간이 없습니다');
@@ -5317,7 +5653,7 @@ function renderSide(){
      폰에서 손이 무겁다. 끄는 동안 봐야 하는 것은 하단 띠뿐이다(CLAUDE.md 가 그 띠를
      "상담 중 유일하게 봐야 하는 자리"라 적었다). 놓는 순간(pointerup) draw() 가 한 번 더
      돌아 전체가 따라잡는다. */
-  if (state.drag && (state.drag.id !== undefined || state.drag.pan || state.drag.edit)){ syncBar(); renderMini(); return; }
+  if (state.drag && (state.drag.id !== undefined || state.drag.pan || state.drag.edit || state.drag.ved || state.drag.vbox)){ syncBar(); renderMini(); return; }
   syncBar();
   renderRooms();
   renderMini();
@@ -5486,8 +5822,13 @@ function renderRooms(){
      그대로 둔다 — blur 되면 다음 렌더가 따라잡는다. */
   const ae = document.activeElement;
   if (ae && box.contains(ae) && ae.classList && ae.classList.contains('rn')) return;
+  /* **벽 편집은 벽을 읽은 도면이면 늘 꺼낸다**(2026-09-30) — 방을 못 잡아도 벽은 있다(벽이 주인공이다) */
+  const vedLink = (state.img && state.baseMask && state.baseMask.vec)
+    ? ` 벽을 잘못 읽었으면 <button id="rooms-vedit" class="ghost" style="padding:4px 8px;font-size:12px">벽 편집</button>으로 지우고 더하고 옮깁니다.` : '';
+  const wireVed = ()=>{ const vb = $('#rooms-vedit'); if (vb) vb.onclick = (e)=>{ e.stopPropagation(); $('#btn-vedit').click(); }; };
   if (!state.rooms.length){
-    box.innerHTML = '<p class="hint" style="padding:8px 10px">도면을 올리면 공간을 자동으로 잡습니다. 방을 더 잡으려면 도면에서 그 방 안쪽을 누르세요.</p>';
+    box.innerHTML = '<p class="hint" style="padding:8px 10px">도면을 올리면 공간을 자동으로 잡습니다. 방을 더 잡으려면 도면에서 그 방 안쪽을 누르세요.' + vedLink + '</p>';
+    wireVed();
     return;
   }
   /*
@@ -5548,7 +5889,8 @@ function renderRooms(){
      * 그래서 모드를 유지하는 대신 **여기서 다시 켜는 손잡이**를 둔다.
      */
     + `<p class="hint" style="padding:6px 10px 10px">못 잡은 곳이 있으면 <button id="rooms-add" class="ghost" style="padding:4px 8px;font-size:12px">+ 공간 추가</button>를 누르고 그 방 안쪽을 누르세요.`
-    + ` 경계가 어긋났으면 <button id="rooms-edit" class="ghost" style="padding:4px 8px;font-size:12px">경계 수정</button>으로 벽을 끌어 고칩니다.</p>`;
+    + ` 경계가 어긋났으면 <button id="rooms-edit" class="ghost" style="padding:4px 8px;font-size:12px">경계 수정</button>으로 벽을 끌어 고칩니다.${vedLink}</p>`;
+  wireVed();
   const ed = $('#rooms-edit');
   if (ed) ed.onclick = (e)=>{ e.stopPropagation(); $('#btn-edit').click(); };
   const ad = $('#rooms-add');
@@ -5702,10 +6044,15 @@ cv.addEventListener('pointerdown', (e)=>{
    * 가전인데 손은 그 아래 도면을 만지는 셈이라, **이동도 회전도 안 됐다**(사용자 지적).
    * 빈 곳을 눌렀을 때만 모드가 정한 일을 한다.
    */
-  const onItem = state.mode !== 'edit' && state.items.some((it)=>pointIn(corners(it), wx, wy));
+  const onItem = state.mode !== 'edit' && state.mode !== 'vedit' && state.items.some((it)=>pointIn(corners(it), wx, wy));
   if (!onItem && TAP_MODES.has(state.mode) && !(state.mode==='place' && !state.pending)){
     tap = { sx, sy, wx, wy, mode: state.mode, moved: false,
             px: state.panX, py: state.panY };
+    try { cv.setPointerCapture(e.pointerId); } catch {}
+    return;
+  }
+  /* 벽 편집 — 가전이 아니라 벽·문·창을 고른다(가전 위라도). 빈 곳은 도면 이동 */
+  if (state.mode==='vedit' && vedDown(wx, wy, sx, sy)){
     try { cv.setPointerCapture(e.pointerId); } catch {}
     return;
   }
@@ -5762,6 +6109,8 @@ cv.addEventListener('pointermove', (e)=>{
     state.panY = state.drag.py + (sy-state.drag.sy);
     draw(); return;
   }
+  if (state.drag.ved){ const [wx,wy] = toWorld(sx,sy); vedMove(wx, wy, sx, sy); return; }
+  if (state.drag.vbox){ const [wx,wy] = toWorld(sx,sy), b = vedBase(); if (b){ const f = vedF(b); state.drag.x1 = wx / f; state.drag.y1 = wy / f; } draw(); return; }
   if (state.drag.edit){
     const [wx,wy] = toWorld(sx,sy);
     const d = state.drag;
@@ -5830,6 +6179,8 @@ cv.addEventListener('pointerup', (e)=>{
     return;
   }
   const d = state.drag;
+  if (d && d.ved){ vedUp(); state.drag = null; return; }
+  if (d && d.vbox){ state.drag = null; vedBoxUp(d); return; }
   if (d && d.edit){
     if (!d.moved && d.edit.kind==='e') toggleEdgeOpen(d.edit);
     renderSide(); evaluate(); draw();
@@ -5869,6 +6220,7 @@ document.addEventListener('keydown',(e)=>{
    */
   const t = e.target;
   if (t && (t.tagName==='INPUT' || t.tagName==='TEXTAREA' || t.isContentEditable)) return;
+  if (state.mode==='vedit'){ if (e.key==='Delete'||e.key==='Backspace') vedDelete(); return; }
   if (!state.sel) return;
   const it = state.items.find((x)=>x.id===state.sel); if(!it) return;
   if (e.key==='r'||e.key==='R'){ rotateItem(it, e.shiftKey ? -1 : 1); evaluate(); draw(); }
@@ -5911,7 +6263,7 @@ function useImage(src, after){
      */
     setStep(2); draw();
     if (after) after();
-    detectHouseThenScale();   // 집 전체를 먼저 잡고 축척을 한 번만 묻는다(2026-08-15 개편)
+    readWallsThen(detectHouseThenScale);   // 모델로 벽을 읽고(못 읽으면 규칙으로) 집 전체를 잡고 축척을 한 번만 묻는다
   };
   img.onerror = ()=> toast('도면을 열지 못했습니다');
   img.src = src;
@@ -5935,6 +6287,7 @@ $('#btn-edit').onclick  = ()=>{
   if (!state.rooms.length){ toast('먼저 공간을 하나 이상 지정해주세요'); return; }
   hideDraftBar(); state.draft=null; setMode(state.mode==='edit'?'idle':'edit'); draw();
 };
+$('#btn-vedit').onclick = ()=>{ if (state.mode === 'vedit') vedEnd(); else vedStart(); };
 $('#btn-more').onclick  = ()=> $('#bar').classList.toggle('moreopen');
 /* 도면이 화면 밖으로 나갔을 때 한 번에 되돌린다 — 좁은 화면에서는 이것 말고 방법이 없다 */
 $('#btn-fit').onclick   = ()=>{ fitAll(); draw(); toast('화면에 맞췄습니다'); };
@@ -5947,9 +6300,22 @@ $('#btn-fit').onclick   = ()=>{ fitAll(); draw(); toast('화면에 맞췄습니�
  * 막대·모달을 열 때 히스토리를 한 칸 쌓아 두면 휴대폰 뒤로가기가 그것부터 소비한다.
  */
 let backDepth = 0;
+/*
+ * **날아가는 뒤로가기가 도착하기 전에는 칸을 쌓지 않는다**(2026-09-28).
+ * `history.back()` 은 비동기이고 `pushState` 는 즉시다. 막대를 닫고(뒤로) 같은 순간 새 막대를
+ * 열면(쌓기) 쌓기가 먼저 끝나고 뒤로가기가 엉뚱한 칸을 소비해, 앱이 믿는 칸 수와 실제 칸 수가
+ * 어긋난다 — 그다음 닫기가 **앱 바깥으로** 나간다(도면을 새로 올리며 축척 막대가 다시 뜰 때
+ * 실제로 났다. test-real 이 30장 중 셋째 장에서 페이지를 잃었다). 그래서 쌓기를 줄 세워 두고
+ * 뒤로가기의 popstate 가 도착하면 그때 쌓는다. 줄 서 있는 동안 닫히면 쌓지 않고 취소한다.
+ */
+let pushWait = 0;
 function pushBack(){
   backDepth++;
+  if (backQuiet > 0){ pushWait++; return; }
   try { history.pushState({ place: backDepth }, ''); } catch {}
+}
+function flushPush(){
+  while (pushWait > 0){ pushWait--; try { history.pushState({ place: backDepth - pushWait }, ''); } catch {} }
 }
 /*
  * **닫을 때 히스토리 칸도 함께 소비한다**(2026-08-30 전수조사).
@@ -5963,6 +6329,7 @@ function pushBack(){
 let backQuiet = 0, fromPop = false;
 function popBack(){
   if (fromPop) return;                    // popstate 경로는 칸이 이미 소비됐다
+  if (pushWait > 0){ pushWait--; backDepth--; return; }   // 아직 쌓지 않은 칸 — 쌓기를 취소한다
   if (backDepth > 0){ backDepth--; backQuiet++; try { history.back(); } catch {} }
 }
 /** 한 단계 물린다. 물릴 것이 있었으면 true
@@ -5983,7 +6350,7 @@ function stepBack(){
 }
 $('#btn-back').onclick  = ()=>{ if (!stepBack()) toast('더 물러설 곳이 없습니다'); };
 window.addEventListener('popstate', ()=>{
-  if (backQuiet > 0){ backQuiet--; return; }          // popBack 이 만든 이동 — 화면은 이미 닫혔다
+  if (backQuiet > 0){ backQuiet--; if (!backQuiet) flushPush(); return; }   // popBack 이 만든 이동 — 화면은 이미 닫혔다. 줄 선 쌓기를 이제 한다
   if (backDepth > 0){ backDepth--; fromPop = true; try { stepBack(); } finally { fromPop = false; } }
 });
 $('#btn-detect').onclick= ()=> startDetect();
@@ -8570,8 +8937,10 @@ function viewBox(){
 }
 
 /** 도면과 꺼내 둔 가전이 모두 보이도록 화면을 맞춘다 — 안 보이면 끌 수가 없다 */
-function fitAll(){
-  const box = viewBox();
+/** 기본은 집을 담는다(viewBox). 벽 편집은 읽은 벽 전부를 담도록 상자를 넘긴다 */
+function fitAll(over, padBottom){
+  const box = over || viewBox();
+  const pb = padBottom || 0;
   let x1 = box.x1, y1 = box.y1, x2 = box.x2, y2 = box.y2;
   for (const it of state.items){
     for (const [x,y] of corners(it)){
@@ -8581,7 +8950,7 @@ function fitAll(){
   const rect = cv.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
   const pad = 24;
-  state.zoom = Math.min((rect.width-pad*2)/((x2-x1)||1), (rect.height-pad*2)/((y2-y1)||1));
+  state.zoom = Math.min((rect.width-pad*2)/((x2-x1)||1), (rect.height-pad*2-pb)/((y2-y1)||1));
   /*
    * **가운데에 놓는다**(2026-08-29). 예전에는 좌상단 여백에 붙여 두어, 도면이 가로로 길면
    * 폰 세로 화면에서 **아래 500px 이 통째로 빈 격자**가 됐다(실측). 남는 여백 자체는
@@ -8589,7 +8958,7 @@ function fitAll(){
    */
   const cw = (x2-x1)*state.zoom, ch = (y2-y1)*state.zoom;
   state.panX = (rect.width  - cw)/2 - x1*state.zoom;
-  state.panY = (rect.height - ch)/2 - y1*state.zoom;
+  state.panY = (rect.height - pb - ch)/2 - y1*state.zoom;
 }
 
 function startManual(picks){
@@ -9030,7 +9399,9 @@ function maskWallMesh(){
   const st = P.state;
   const base = st.baseMask;
   if (!st.img || !base || !st.mmPerPx) return null;
-  const { w, h, dark } = base, S = base.S || 1, k = st.mmPerPx;
+  const { w, h } = base, S = base.S || 1, k = st.mmPerPx;
+  /* 선분이 있으면 그것을 칠한 칸 지도로 세운다 — 곧은 벽 · 일정한 두께. 없으면 픽셀 그대로 */
+  const dark = (base.vec && base.vec.dark) || base.dark;
   const D = (x, y) => (x >= 0 && y >= 0 && x < w && y < h) ? dark[y * w + x] : 0;
   const WX = (px) => M(px / S * k), TOP = M(WALL_H_MM);
   const top = { pos: [], nor: [], idx: [] }, side = { pos: [], nor: [], idx: [] };
@@ -9103,6 +9474,75 @@ function maskWallMesh(){
   g.add(mk(top, wallTopMat));
   g.add(mk(side, wallSideMat));
   g.userData.maskWall = true;
+  return g;
+}
+
+/*
+ * ── 문과 창을 가른다 (2026-09-28, 벽 모델) ──────────────────────────────────
+ *
+ * 규칙 인식은 문·창을 가를 수 없어(최고 72%) 3D 에서 둘 다 **바닥부터 천장까지 뚫린 구멍**
+ * 이었다 — 벽이 없어 보이고, 창 앞을 "트인 곳"으로 읽게 된다. 모델은 문·창을 따로 칠해 준다
+ * (AI Hub 검증 재현율 문 95.6% · 창 94.5%). 그래서:
+ *   · 문 — 트인 채 두고 **인방**(LINTEL_MM 위)만 얹는다 → "여기가 드나드는 문"
+ *   · 창 — 같은 인방 + **반투명 유리** → "여기는 창이다"(가전을 막아 놓으면 안 되는 자리)
+ *
+ * **창의 아래턱 높이는 도면에 없다** — 지어내지 않는다. 바닥부터 인방까지 유리로 그리고
+ * (국내 아파트 발코니 쪽 창이 대개 그렇다) 안내띠가 그 가정을 밝힌다.
+ * 문·창 마스크는 모델이 읽었을 때만 있다(`baseMask.door`·`.win`) — 없으면 예전 그림 그대로다.
+ */
+const glassMat = new THREE.MeshLambertMaterial({ color: 0x9CCBEA, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide });
+const openLintMat = new THREE.MeshLambertMaterial({ color: 0xE3E8EF });
+let lastOpenings = null;          // 마지막으로 세운 문·창 수(_dbg 로 읽는다)
+function maskOpeningMesh(){
+  const st = P.state, base = st.baseMask;
+  if (!st.img || !base || !st.mmPerPx || !(base.door || base.win)) return null;
+  const { w, h } = base, S = base.S || 1, k = st.mmPerPx;
+  const WX = (px) => M(px / S * k);
+  const g = new THREE.Group();
+  let nDoor = 0, nWin = 0;
+  /* 한 칸 지도를 직사각형으로 묶어 상자로 세운다(윗면 묶기와 같은 방식) */
+  const rects = (mask) => {
+    const used = new Uint8Array(w * h), out = [];
+    for (let y = 0; y < h; y++){
+      let x = 0;
+      while (x < w){
+        if (!mask[y * w + x] || used[y * w + x]) { x++; continue; }
+        let x1 = x; while (x1 + 1 < w && mask[y * w + x1 + 1] && !used[y * w + x1 + 1]) x1++;
+        let y1 = y;
+        grow: while (y1 + 1 < h){
+          for (let q = x; q <= x1; q++) if (!mask[(y1 + 1) * w + q] || used[(y1 + 1) * w + q]) break grow;
+          y1++;
+        }
+        for (let yy = y; yy <= y1; yy++) for (let q = x; q <= x1; q++) used[yy * w + q] = 1;
+        out.push([x, y, x1 + 1, y1 + 1]);
+        x = x1 + 1;
+      }
+    }
+    return out;
+  };
+  const box = (r, y0, y1, mat) => {
+    const W = Math.max(0.01, WX(r[2]) - WX(r[0])), D = Math.max(0.01, WX(r[3]) - WX(r[1])), H = M(y1 - y0);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), mat);
+    m.position.set((WX(r[0]) + WX(r[2])) / 2, M(y0) + H / 2, (WX(r[1]) + WX(r[3])) / 2);
+    return m;
+  };
+  /*
+   * **선분이 있으면 문·창 물체로 세운다.** 문 칸 지도는 여닫는 호까지 포함한 **정사각형**이라
+   * 그대로 세우면 방 안에 인방 판이 떠 있다. 물체는 벽선 위의 폭(a..b)과 그 벽의 두께를 들고 있다.
+   */
+  const ops = base.vec ? base.vec.openings.filter((o) => o.wall >= 0) : null;
+  if (ops && ops.length){
+    for (const o of ops){
+      const r = o.o === 'h' ? [o.a, o.c - o.t / 2, o.b, o.c + o.t / 2] : [o.c - o.t / 2, o.a, o.c + o.t / 2, o.b];
+      g.add(box(r, LINTEL_MM, WALL_H_MM, openLintMat));
+      if (o.type === 'win') { g.add(box(r, 0, LINTEL_MM, glassMat)); nWin++; } else nDoor++;
+    }
+  } else {
+    if (base.door) for (const r of rects(base.door)) { g.add(box(r, LINTEL_MM, WALL_H_MM, openLintMat)); nDoor++; }
+    if (base.win)  for (const r of rects(base.win))  { g.add(box(r, LINTEL_MM, WALL_H_MM, openLintMat)); g.add(box(r, 0, LINTEL_MM, glassMat)); nWin++; }
+  }
+  if (!nDoor && !nWin) return null;
+  g.userData.openings = { door: nDoor, win: nWin };
   return g;
 }
 
@@ -9929,6 +10369,9 @@ function build(refit){
   maskWallsOn = !!mw;
   if (mw){
     root.add(mw);
+    const mo = maskOpeningMesh();     // 모델이 읽었으면 문(인방)·창(인방+유리)을 가른다
+    lastOpenings = mo ? mo.userData.openings : null;
+    if (mo) root.add(mo);
     /*
      * **화면 맞춤도 벽에서 낸다.** 방에서 내면 방이 하나뿐인 도면에서 카메라가 그 방
      * 하나에 붙어 도면 전체가 안 보인다(실측: 84C 가 욕실 한 칸만 화면에 찼다).
@@ -10722,6 +11165,8 @@ function paintBar(info){
    */
   bar.innerHTML =
     `<b>3D</b> · 층고 ${WALL_H_MM.toLocaleString()}mm<span style="opacity:.55">(가정)</span>` +
+    /* 모델이 문·창을 갈랐으면 창을 유리로 그린다 — 창 아래턱 높이는 도면에 없어 바닥부터 그렸다고 밝힌다 */
+    ((P.state.baseMask && P.state.baseMask.win) ? ` · 창 <span style="opacity:.55">(유리 · 아래턱 높이는 도면에 없어 바닥부터)</span>` : '') +
     /* 벽에 건 가전을 고르면 **그 설치 높이**를 여기 적는다 — 3D 에서만 보이는 값이고,
        기본값이 가정에서 나온 것이라 숫자만 띄우면 확정처럼 읽힌다(층고와 같은 이유).
        고치는 것은 2D 하단 띠의 입력칸이다. */
@@ -10795,7 +11240,7 @@ window.Place3D = {
       pitch: +orb.pitch.toFixed(2), yaw: +orb.yaw.toFixed(2),
       tx: +orb.tx.toFixed(2), tz: +orb.tz.toFixed(2), ty: +orb.ty.toFixed(2),
       fov: cam && cam.fov, camY: cam && +cam.position.y.toFixed(2),
-      box: lastBox || null, asp: lastAsp, iso: lastIso,
+      box: lastBox || null, asp: lastAsp, iso: lastIso, openings: lastOpenings,
       eyeAt: eyeAt ? eyeAt.map((v) => +v.toFixed(2)) : null,
       rays: eyeAt ? Array.from({ length: 8 }, (_, i) => {
         const th = (i / 8) * Math.PI * 2;

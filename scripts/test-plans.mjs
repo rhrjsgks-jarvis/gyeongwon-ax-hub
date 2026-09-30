@@ -67,7 +67,7 @@ const server = http.createServer((req, res) => {
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const origin = `http://127.0.0.1:${server.address().port}`;
-await page.goto(`${origin}/place-app.html`, { waitUntil: 'domcontentloaded' });
+await page.goto(`${origin}/place-app.html?seg=0`, { waitUntil: 'domcontentloaded' });
 await page.waitForTimeout(400);
 
 for (const plan of PLANS) {

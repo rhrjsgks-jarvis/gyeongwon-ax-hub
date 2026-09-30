@@ -77,7 +77,7 @@ const hash = (s) => { let x = 2166136261; for (let i = 0; i < s.length; i++){ x 
 const sample = have.slice().sort((a, b) => hash(a.file) - hash(b.file)).slice(0, N);
 
 const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
-await page.goto('http://localhost:4630/place-app.html', { waitUntil: 'domcontentloaded' });
+await page.goto('http://localhost:4630/place-app.html?seg=0', { waitUntil: 'domcontentloaded' });
 await page.waitForTimeout(800);
 
 const rows = [];

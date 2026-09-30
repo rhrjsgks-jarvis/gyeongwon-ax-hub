@@ -7,5 +7,12 @@
     "삼성 공식 모델이 아니면 넣지 말 것. 지어낸 외형은 고객이 실물로 오해한다(CLAUDE.md).",
     "용량 예산: 품목당 1MB 안쪽. 매장 전파가 약해도 열려야 한다."
   ],
-  "models": {}
+  "models": {},
+  "wallSeg": {
+    "file": "wall-seg.a0c9ac6790.onnx",
+    "ort": "vendor/ort-1.22.0",
+    "arch": "mbv2_slim4",
+    "bytes": 2808325,
+    "note": "벽·문·창 분할 모델(plan3d). 지우면 배치 시뮬레이터가 규칙 인식으로 돌아간다."
+  }
 }
