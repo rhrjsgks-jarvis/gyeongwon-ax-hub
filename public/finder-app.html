@@ -2309,7 +2309,12 @@ setMode("kw");
      * 만드는 재료는 우리 DB 와 같다(카테고리·제품군·모델코드·사양 전문).
      */
     var base = PRODUCTS.length;
-    (j.add || []).forEach(function (p2, k) {
+    var k = 0;
+    (j.add || []).forEach(function (p2) {
+      /* **인라인에 이미 있는 모델은 다시 붙이지 않는다**(2026-10-02). 수집분 4종
+         (블루스카이 5500 · 프린터 · 업소용 냉장고 2종)이 인라인과 겹쳐 결과에 두 번 뜨고
+         종수에도 두 번 세였다 — 허브 카드·통합검색 색인은 이미 빼고 세어 4종이 어긋났다. */
+      if (byModel[p2.model]) return;
       p2.src = 'SEC'; p2.rawcat = p2.cat; p2.price = null; p2.price_lab = '';
       p2.on = []; p2.off = []; p2.usp = [];
       p2.note = '삼성닷컴 ' + (j.collectedAt || '') + ' 수집';
@@ -2325,11 +2330,15 @@ setMode("kw");
       var t = [p2.cat, p2.group, p2.model];
       for (var q = 0; q < p2.fx.length; q++) { t.push(p2.fx[q][0]); t.push(p2.fx[q][1]); }
       p2.kw = t.join(' ').toLowerCase();
-      p2.id = base + k;
+      p2.id = base + k++;
       PRODUCTS.push(p2);
     });
     syncCounts();
-    if (typeof lastResults !== 'undefined' && lastResults && lastResults.length) runSearch();
+    /* **검색어가 있으면 다시 찾는다**(2026-10-02). 예전에는 「첫 결과가 있을 때만」 다시 돌아서,
+       통합검색에서 수집분 제품을 눌러 ?q= 로 들어오면 첫 검색(자료가 붙기 전)이 0건이라
+       **영영 0건으로 남았다** — 수집분 1,270종이 전부 그 경로였다. */
+    var qEl = document.getElementById('q');
+    if (qEl && qEl.value.trim()) runSearch();
   }).catch(function () { /* 전파가 끊겨도 기존 제품은 그대로 쓴다 */ });
 })();
 
