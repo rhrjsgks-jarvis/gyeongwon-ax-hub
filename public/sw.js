@@ -437,7 +437,7 @@
  * v258 (2026-09-30) — 배치 시뮬레이터(place-app.html): 전용면적으로 축척을 어림해 길이 칸을
  * 미리 채운다 · 축척 전 공간 목록이 픽셀 넓이를 ㎡로 적던 것 · 알림이 막대를 따라 비켜 뜬다.
  */
-const CACHE_VERSION = 'axhub-v259';
+const CACHE_VERSION = 'axhub-v260';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

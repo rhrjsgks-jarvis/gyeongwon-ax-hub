@@ -61,6 +61,8 @@ async function fetchCat(c) {
       Referer: BASE + '/' + c.cat + '/',
       Accept: 'application/json',
     },
+    /* 응답이 안 오면 영원히 기다린다 — 2026-10-02 실제로 한 카테고리에서 멈췄다 */
+    signal: AbortSignal.timeout(40000),
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const txt = await res.text();
@@ -105,6 +107,23 @@ for (const c of cats) {
 }
 
 const okCats = report.filter((r) => r.ok);
+/*
+ * **이번에 받은 카테고리만 갈아 끼우고 나머지는 기존 파일에서 그대로 둔다**(2026-10-02).
+ * 예전에는 받은 것만으로 파일을 새로 써서, 한 카테고리만 다시 받거나(인자) 한 칸이
+ * 실패하면 **나머지 카테고리 USP 가 통째로 사라졌다** — 안내 문구는 「그 칸만 채워진다」인데
+ * 실제로는 덮어썼다(TV 만 다시 받았더니 2,190 → 344종이 됐다).
+ */
+const fresh = new Set(okCats.map((r) => r.cat));
+let prev = null;
+try { prev = JSON.parse(fs.readFileSync(OUT, 'utf8')); } catch { prev = null; }
+if (prev && Array.isArray(prev.items)) {
+  for (const it of prev.items) if (!fresh.has(it.cat)) items.push(it);
+  for (const r of prev.cats || []) if (!fresh.has(r.cat) && !report.some((x) => x.cat === r.cat)) report.push(r);
+  for (const r of report) if (!r.ok && !fresh.has(r.cat)) {
+    const old = (prev.cats || []).find((x) => x.cat === r.cat && x.ok);
+    if (old) r.kept = '이전 수집분 유지(' + (prev.collectedAt || '?') + ')';
+  }
+}
 const out = {
   _note: '삼성닷컴 공식 셀링포인트(uspDescList). 제조사가 제품마다 싣는 문구라 상담사가 그대로 읽어도 된다. 가격은 담지 않는다.',
   _source: BASE + '/cxhr/pf/goodsList?dispClsfNo={번호}&rows=500',
