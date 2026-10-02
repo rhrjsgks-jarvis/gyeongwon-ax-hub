@@ -15,6 +15,10 @@
 -->
 <link rel="stylesheet" href="/vendor/fonts/pretendard-variable.css" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="/vendor/fonts/pretendard-variable.css"></noscript>
+<!-- 신모델 자료(finder-extra.json)를 HTML 이 오자마자 받기 시작한다(2026-10-02). 예전에는 내장 데이터
+     스크립트까지 다 받은 뒤에야 fetch 가 나가 4G 에서 결과가 그만큼 늦었다. fetch 와 짝이 맞아야
+     재사용되므로 crossorigin="anonymous"(같은 출처 fetch 의 기본값과 같다)를 뺄 수 없다. -->
+<link rel="preload" href="finder-extra.json" as="fetch" crossorigin="anonymous">
 <style>
 :root{
   --bg:#EDF2F9; --surface:#FFFFFF; --ink:#0E1C30; --sub:#5C6C82; --line:#D8E1EE;
