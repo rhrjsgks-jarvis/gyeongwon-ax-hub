@@ -1571,7 +1571,7 @@ function rdetail(p){
  * 옮겨 적으면 그 자리에서 거짓이 된다(이 저장소의 첫 원칙).
  */
 function officialUsp(p){
-  const M = window.__SECUSP; if(!M || !p.model) return "";
+  const M = window.__SECUSP; if(!M || !p.model){ if(!M) loadSecUsp(); return ""; }
   const code = String(p.model).toUpperCase();
   let rec = M[code];
   if(!rec){
@@ -2271,14 +2271,27 @@ setMode("kw");
  * **받은 뒤 이미 펼쳐 둔 상세를 다시 그린다** — 안 그리면 딥링크로 들어와 상세가
  * 먼저 열린 경우 그 카드에만 영영 안 뜬다(`finder-extra` 가 캐시 때문에 겪은 것과
  * 같은 종류다). 실패하면 조용히 넘어간다 — 이것 때문에 검색이 막히면 안 된다. */
-(function(){
-  if (typeof fetch !== 'function') return;   /* jsdom 검사에는 fetch 가 없다 */
+/*
+ * **첫 화면과 다투지 않게 늦게 받는다**(2026-10-02). 매장 폰 조건(CPU 4배·4G)으로 재니
+ * 이 파일 해석이 547ms 로 finder-extra(836ms)와 **같은 순간에** 메인 스레드를 잡아,
+ * 통합검색에서 넘어온 결과가 그만큼 늦게 떴다. 그래서 finder-extra 를 다 붙인 뒤
+ * 한가한 틈에 받는다. **펼칠 때만 받지는 않는다** — 한 번도 안 펼친 기기는 캐시에 없어
+ * 전파가 끊긴 매장에서 그 절이 통째로 빈다. 그 전에 상세를 펼치면 그 자리에서 받는다.
+ */
+var __secUspStarted = false;
+function loadSecUsp(){
+  if (__secUspStarted || typeof fetch !== 'function') return;   /* jsdom 검사에는 fetch 가 없다 */
+  __secUspStarted = true;
   fetch('sec-usp.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
     if (!j || !j.m) return;
     window.__SECUSP = j.m;
     if (typeof openId !== 'undefined' && openId != null && typeof renderResults === 'function') renderResults();
   }).catch(function () { /* 없으면 그 절만 안 뜬다 */ });
-})();
+}
+function loadSecUspIdle(){
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(loadSecUsp, { timeout: 3000 });
+  else setTimeout(loadSecUsp, 300);
+}
 
 (function(){
   fetch('finder-extra.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
@@ -2339,7 +2352,8 @@ setMode("kw");
        **영영 0건으로 남았다** — 수집분 1,270종이 전부 그 경로였다. */
     var qEl = document.getElementById('q');
     if (qEl && qEl.value.trim()) runSearch();
-  }).catch(function () { /* 전파가 끊겨도 기존 제품은 그대로 쓴다 */ });
+    loadSecUspIdle();
+  }).catch(function () { loadSecUspIdle(); /* 전파가 끊겨도 기존 제품은 그대로 쓴다 */ });
 })();
 
 /* 허브 통합검색(/search)에서 넘어온 ?q= 딥링크 — 검색어를 채우고 즉시 실행한다 */
