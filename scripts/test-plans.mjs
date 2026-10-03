@@ -1873,8 +1873,14 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (eb) eb.click();
     window.Place3D.render();   // 카메라 위치는 다음 프레임에 놓인다 — 바로 재면 옛 자리를 잰다
     const seen = window.Place3D._dbg.seen, eyePick = window.Place3D._dbg.eye;
+    /* 결과 카드(눈높이면 위에서 본 사진을 덧붙인다)를 만든 뒤 시점이 그대로 돌아오는가 */
+    const before = window.Place3D._dbg; let cardOk = false;
+    try { const cvx = P.buildShareCanvas(); cardOk = !!(cvx && cvx.width); } catch (e) {}
+    window.Place3D.render();
+    const after = window.Place3D._dbg;
+    const viewKept = cardOk && after.mode === 'eye' && Math.abs(after.yaw - before.yaw) < 1e-6 && Math.abs(after.tx - before.tx) < 1e-6;
     window.Place3D.close();
-    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick };
+    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick, viewKept };
   });
 
   if (r.err) fail(r.err);
@@ -1885,6 +1891,8 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (r.aspWant == null || r.aspGot == null || Math.abs(r.aspWant - r.aspGot) > 0.02)
       fail(`3D 카메라가 화면 비율을 잘못 쟀다 — 캔버스 ${r.aspWant && r.aspWant.toFixed(3)} / 맞춤 ${r.aspGot} (숨긴 채 재면 1 이 나온다)`);
     else pass(`3D 카메라 맞춤이 보이는 캔버스 비율(${r.aspGot})로 계산된다`);
+    if (!r.viewKept) fail('결과 카드를 만든 뒤 눈높이 시점이 그대로 돌아오지 않는다 (위에서 본 사진을 찍고 못 되돌렸다)');
+    else pass('결과 카드를 만든 뒤에도 보던 눈높이 시점 그대로');
     if (!r.eyePick) fail('눈높이 시점이 「가전이 보이는 자리」를 고르지 않았다 (bestEyeSpot 이 돌지 않음)');
     else if (!(r.seen >= 1)) fail(`눈높이 시점에 놓은 가전이 안 보인다 (보이는 가전 ${r.seen}) — 벽 모서리를 보고 있다`);
     else pass(`눈높이 시점에 놓은 가전이 보인다 (${r.seen}대)`);
