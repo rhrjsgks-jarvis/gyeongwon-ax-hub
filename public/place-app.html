@@ -10639,7 +10639,7 @@ function build(refit){
      눈높이   — 사람이 서서 보는 높이. "우리 집 느낌"이 가장 잘 나는 각도다
      위에서   — 2D 평면도와 같은 구도. 2D ↔ 3D 를 눈으로 잇게 해 준다
    `fit` 은 방 크기에서 다시 계산한다 — 방마다 필요한 거리가 다르다. */
-let fitDist = 8, mode3 = 'iso', lastBox = null, lastAsp = null, lastIso = null;
+let fitDist = 8, mode3 = 'iso', lastBox = null, lastAsp = null, lastIso = null, lastEye = null;
 const EYE_MM = 1600;           // 서서 보는 눈높이. 한국 성인 평균 신장에서 눈까지가 대략 이 값이다
 /*
  * **화면이 세로로 길면 더 물러선다.** three 의 `fov` 는 **세로 기준**이라 가로 화각은
@@ -10753,7 +10753,9 @@ function view(name){
      * 그 뒤 두 손가락으로 좁히면 앞으로 다가온다.
      */
     orb.pitch = 0.06; orb.dist = 1e4;
-    if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; orb.yaw = bestEyeYaw(orb.tx, orb.tz); }
+    const spot = bestEyeSpot();
+    if (spot){ orb.tx = spot.x; orb.tz = spot.z; orb.yaw = spot.yaw; lastEye = { x: +spot.x.toFixed(2), z: +spot.z.toFixed(2), s: +spot.s.toFixed(2) }; }
+    else if (eyeAt){ orb.tx = eyeAt[0]; orb.tz = eyeAt[1]; orb.yaw = bestEyeYaw(orb.tx, orb.tz); lastEye = null; }
   } else if (mode3 === 'top'){
     orb.pitch = 1.44; orb.ty = 0; orb.dist = fitTop(); orb.yaw = 0;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
@@ -10836,6 +10838,79 @@ function maskRayHit(x, z, dx, dz){
  * 다만 **벽에 막힌 쪽이면 쓰지 않는다**(가전이 등 뒤 벽 너머일 수 있다).
  */
 const BACK_MIN = M(2200);   /* 등 뒤로 이만큼은 있어야 방이 보인다 */
+/** 벽까지 거리(m) — 마스크가 없으면 벽 선분으로(bestEyeYaw 의 look 과 같은 자) */
+function rayLen(x, z, dx, dz){
+  const h = maskRayHit(x, z, dx, dz);
+  if (h != null) return h;
+  let m = Infinity;
+  for (const sg of segs2d){ const t = raySeg(x, z, dx, dz, sg); if (t != null && t < m) m = t; }
+  return m === Infinity ? M(40000) : m;
+}
+/*
+ * **서는 자리와 바라볼 방향을 함께 고른다**(2026-10-03).
+ *
+ * 예전에는 「가장 넓은 방의 한가운데」에 먼저 서고 나서 방향만 골랐다. 사방 벽까지 2~3m 인
+ * 거실이면 등 뒤 여유(2.2m) 조건을 통과하는 가전이 없어 「가장 트인 쪽」으로 물러섰고,
+ * 카메라가 벽에 붙어 **모서리만 보였다**(실물 확인 — 가전 6대가 놓였는데 0대가 보였다).
+ * 폰은 화면이 좁아 좌우 시야가 ±20° 안팎이라 방향을 조금만 틀려도 가전이 빠진다.
+ *
+ * 그래서 집 안 여러 점(0.5m 간격) × 24방향을 훑어, **카메라가 실제로 설 자리**
+ * (바라보는 점에서 등 뒤 벽 300mm 앞 — clampInside 와 같은 규칙)에서 **좌우 시야 안에 들고
+ * 벽에 가리지 않는 가전**을 센다. 가장 많이 보이는 조합을 고르고, 같으면 더 넓게 보이는 쪽.
+ * 놓은 가전이 없으면 null — 예전 방식(가장 넓은 방)으로 물러선다.
+ */
+/** 카메라 (cx,cz) 가 (vx,vz) 쪽을 볼 때 좌우 시야 안에 들고 벽에 안 가리는 가전 — {n, w} */
+function eyeSeen(cx, cz, vx, vz, pts, half){
+  let n = 0, w = 0;
+  for (const p of pts){
+    const wx = p.x - cx, wz = p.z - cz, L = Math.hypot(wx, wz);
+    if (L < M(900) || L > M(12000)) continue;
+    if ((wx * vx + wz * vz) / L < Math.cos(half)) continue;          // 시야 밖
+    if (rayLen(cx, cz, wx / L, wz / L) < L - M(450)) continue;       // 벽에 가린다
+    n++; w += p.w;
+  }
+  return { n, w };
+}
+function eyePts(){
+  return P.state.items.filter((it) => !it.staged).map((it) => { const c = P.bodyCenter(it);
+    return { x: M(c[0]), z: M(c[1]), w: /TV|냉장고|에어컨|세탁|건조/.test(it.cat) ? 1.5 : 1 }; });
+}
+function eyeHalf(){
+  const el = ren && ren.domElement;
+  const asp = (el && el.clientHeight) ? el.clientWidth / el.clientHeight : ((cam && cam.aspect) || 1);
+  return Math.atan(Math.tan((72 / 2) * Math.PI / 180) * Math.max(0.3, asp)) * 0.85;
+}
+function bestEyeSpot(){
+  const its = P.state.items.filter((it) => !it.staged);
+  if (!its.length || (!roomPolysM.length && !maskWallsOn)) return null;
+  const pts = eyePts(), half = eyeHalf();
+  /* 훑을 범위 — 잡힌 방들, 없으면 가전 둘레 */
+  let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+  const grow = (x, z) => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (z < z0) z0 = z; if (z > z1) z1 = z; };
+  if (roomPolysM.length) roomPolysM.forEach((mp) => mp.forEach((p) => grow(p[0], p[1])));
+  else pts.forEach((p) => { grow(p.x - 6, p.z - 6); grow(p.x + 6, p.z + 6); });
+  const inside = (x, z) => roomPolysM.length ? roomPolysM.some((mp) => inPoly(mp, x, z)) : true;
+  const step = Math.max(0.5, Math.max(x1 - x0, z1 - z0) / 40);   // 큰 집도 1,600점 안쪽
+  let best = null;
+  for (let x = x0 + step / 2; x < x1; x += step) for (let z = z0 + step / 2; z < z1; z += step){
+    if (!inside(x, z)) continue;
+    if (maskRayHit(x, z, 1, 0) != null && maskRayHit(x, z, 1, 0) < M(150)) continue;   // 벽 속
+    for (let i = 0; i < 24; i++){
+      const th = (i / 24) * Math.PI * 2, dx = Math.sin(th), dz = Math.cos(th);
+      const back = rayLen(x, z, dx, dz);                 // 카메라는 이쪽(등 뒤)으로 물러선다
+      const d = Math.max(M(500), back - M(300));
+      const cx = x + dx * d, cz = z + dz * d, vx = -dx, vz = -dz;
+      /* **카메라도 집 안에 서야 한다** — 창 자리는 벽으로 치지 않아 등 뒤가 창이면 카메라가
+         발코니로 빠져 **유리 너머로** 보게 된다(실물에서 화면이 통째로 푸르스름했다). */
+      if (roomPolysM.length && !inside(cx, cz)) continue;
+      const score = eyeSeen(cx, cz, vx, vz, pts, half).w;
+      if (!score) continue;
+      const tie = Math.min(d, M(6000)) * 0.02;            // 같으면 더 물러서서 넓게 보이는 쪽
+      if (!best || score + tie > best.s){ best = { s: score + tie, x, z, yaw: th }; }
+    }
+  }
+  return best;
+}
 function bestEyeYaw(x, z){
   /*
    * **`clampInside` 와 같은 자를 써야 한다.** 마스크만 보면 벽선만 불러온 도면
@@ -11356,7 +11431,10 @@ window.Place3D = {
       pitch: +orb.pitch.toFixed(2), yaw: +orb.yaw.toFixed(2),
       tx: +orb.tx.toFixed(2), tz: +orb.tz.toFixed(2), ty: +orb.ty.toFixed(2),
       fov: cam && cam.fov, camY: cam && +cam.position.y.toFixed(2),
-      box: lastBox || null, asp: lastAsp, iso: lastIso, openings: lastOpenings,
+      box: lastBox || null, asp: lastAsp, iso: lastIso, eye: lastEye, openings: lastOpenings,
+      /* 지금 카메라에 실제로 들어온 가전 수 — 눈높이 자리 고르기를 재는 잣대 */
+      seen: cam ? (() => { const vx = orb.tx - cam.position.x, vz = orb.tz - cam.position.z, L = Math.hypot(vx, vz) || 1;
+        return eyeSeen(cam.position.x, cam.position.z, vx / L, vz / L, eyePts(), eyeHalf()).n; })() : null,
       eyeAt: eyeAt ? eyeAt.map((v) => +v.toFixed(2)) : null,
       rays: eyeAt ? Array.from({ length: 8 }, (_, i) => {
         const th = (i / 8) * Math.PI * 2;

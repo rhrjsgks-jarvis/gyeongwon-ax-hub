@@ -1868,8 +1868,13 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
         for (let i = 0; i < p.count; i++) pts.push([p.getX(i), p.getY(i), p.getZ(i)]);
       }
     });
+    /* 눈높이 — 놓은 가전(냉장고)이 화면에 들어오는 자리에 서는가(2026-10-03 · 예전에는 벽 모서리만 봤다) */
+    const eb = [...document.querySelectorAll('#d3bar button')].find((x) => /눈높이/.test(x.textContent));
+    if (eb) eb.click();
+    window.Place3D.render();   // 카메라 위치는 다음 프레임에 놓인다 — 바로 재면 옛 자리를 잰다
+    const seen = window.Place3D._dbg.seen, eyePick = window.Place3D._dbg.eye;
     window.Place3D.close();
-    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot };
+    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick };
   });
 
   if (r.err) fail(r.err);
@@ -1880,6 +1885,9 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (r.aspWant == null || r.aspGot == null || Math.abs(r.aspWant - r.aspGot) > 0.02)
       fail(`3D 카메라가 화면 비율을 잘못 쟀다 — 캔버스 ${r.aspWant && r.aspWant.toFixed(3)} / 맞춤 ${r.aspGot} (숨긴 채 재면 1 이 나온다)`);
     else pass(`3D 카메라 맞춤이 보이는 캔버스 비율(${r.aspGot})로 계산된다`);
+    if (!r.eyePick) fail('눈높이 시점이 「가전이 보이는 자리」를 고르지 않았다 (bestEyeSpot 이 돌지 않음)');
+    else if (!(r.seen >= 1)) fail(`눈높이 시점에 놓은 가전이 안 보인다 (보이는 가전 ${r.seen}) — 벽 모서리를 보고 있다`);
+    else pass(`눈높이 시점에 놓은 가전이 보인다 (${r.seen}대)`);
 
     /* 바닥은 y=0 평면에 있고, XZ 가 월드 (x, y)/1000 과 부호까지 같아야 한다.
        z 가 음수로 나오면 좌우 반전된 것이다. */
