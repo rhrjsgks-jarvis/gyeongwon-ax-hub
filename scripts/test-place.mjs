@@ -1838,6 +1838,29 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
 }
 
 /*
+ * [19-c] **평면도가 아닌 이미지는 단지 목록에서 숨긴다** (2026-10-03).
+ * 사람이 눈으로 확인한 목록(plans-nonplan.json, md5)이 색인 np 표시와 맞아야 한다 —
+ * 색인을 다시 만들고 표시를 잃으면 머리글 띠·사진이 다시 목록에 뜬다.
+ */
+{
+  const crypto = await import('crypto');
+  const root = path.join(__dirname, '..');
+  const np = JSON.parse(fs.readFileSync(path.join(root, 'scripts', 'fixtures', 'plans-nonplan.json'), 'utf8'));
+  const idx = JSON.parse(fs.readFileSync(path.join(root, 'public', 'plan-index.json'), 'utf8'));
+  const want = new Set(np.items.map((x) => x.md5)), got = new Set();
+  let wrong = 0;
+  for (const c of idx.complexes) for (const p of c.plans) {
+    const fp = path.join(root, 'public', p.file);
+    if (!fs.existsSync(fp)) continue;
+    const h = crypto.createHash('md5').update(fs.readFileSync(fp)).digest('hex');
+    if (want.has(h)) { got.add(h); if (!p.np) wrong++; } else if (p.np) wrong++;
+  }
+  ok2(got.size === want.size && wrong === 0, '[19-c] 색인의 「평면도 아님」 표시가 확인 목록과 맞다 (목록 ' + want.size + ' · 붙음 ' + got.size + ' · 어긋남 ' + wrong + ')');
+  const html = fs.readFileSync(path.join(root, 'public', 'place-app.html'), 'utf8');
+  ok2(html.includes('const usable = (p) => !p.np && (p.axis == null || p.axis >= AXIS_MIN);'), '[19-c] 단지 목록이 그 표시로 숨긴다');
+}
+
+/*
  * [20] **갈 방이 없으면 말해 준다** (2026-08-30).
  *
  * `defaultRoomFor` 는 용도에 맞는 방이 없으면 **조용히 `state.rooms[0]`(대개 거실)로**

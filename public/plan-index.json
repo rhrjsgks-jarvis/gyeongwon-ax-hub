@@ -1252,7 +1252,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 47,
-     "axis": 0.29
+     "axis": 0.29,
+     "np": 1
     },
     {
      "type": "T3",
@@ -1262,7 +1263,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 47,
-     "axis": 0.29
+     "axis": 0.29,
+     "np": 1
     },
     {
      "type": "T4",
@@ -1282,7 +1284,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 47,
-     "axis": 0.29
+     "axis": 0.29,
+     "np": 1
     },
     {
      "type": "T6",
@@ -1292,7 +1295,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 47,
-     "axis": 0.29
+     "axis": 0.29,
+     "np": 1
     }
    ]
   },
@@ -1330,7 +1334,8 @@
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 76,
-     "axis": 0.44
+     "axis": 0.44,
+     "np": 1
     }
    ]
   },
@@ -2438,7 +2443,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 39,
-     "axis": 0.406
+     "axis": 0.406,
+     "np": 1
     },
     {
      "type": "T2",
@@ -2890,7 +2896,8 @@
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 16,
-     "axis": 0.479
+     "axis": 0.479,
+     "np": 1
     },
     {
      "type": "139B",
@@ -2910,7 +2917,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 20,
-     "axis": 0.366
+     "axis": 0.366,
+     "np": 1
     },
     {
      "type": "84B",
@@ -2960,7 +2968,8 @@
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 16,
-     "axis": 0.479
+     "axis": 0.479,
+     "np": 1
     }
    ]
   },
@@ -3076,7 +3085,8 @@
      "exclusiveM2": 66.91,
      "rooms": 8,
      "kb": 61,
-     "axis": 0.65
+     "axis": 0.65,
+     "np": 1
     },
     {
      "type": "67-2",
@@ -3126,7 +3136,8 @@
      "exclusiveM2": 84.32,
      "rooms": 5,
      "kb": 51,
-     "axis": 0.668
+     "axis": 0.668,
+     "np": 1
     },
     {
      "type": "85-3",
@@ -3938,7 +3949,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 44,
-     "axis": 0.677
+     "axis": 0.677,
+     "np": 1
     },
     {
      "type": "100B",
@@ -3968,7 +3980,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 41,
-     "axis": 0.672
+     "axis": 0.672,
+     "np": 1
     },
     {
      "type": "62-2",
@@ -3998,7 +4011,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 48,
-     "axis": 0.652
+     "axis": 0.652,
+     "np": 1
     },
     {
      "type": "84B-2",
@@ -4234,7 +4248,8 @@
      "exclusiveM2": 84.99,
      "rooms": 6,
      "kb": 7,
-     "axis": 0.637
+     "axis": 0.637,
+     "np": 1
     },
     {
      "type": "85-4",
@@ -4254,7 +4269,8 @@
      "exclusiveM2": 105.01,
      "rooms": 6,
      "kb": 7,
-     "axis": 0.629
+     "axis": 0.629,
+     "np": 1
     },
     {
      "type": "106",
@@ -4486,7 +4502,8 @@
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 22,
-     "axis": 0.506
+     "axis": 0.506,
+     "np": 1
     }
    ]
   },
@@ -5332,7 +5349,8 @@
      "exclusiveM2": null,
      "rooms": 4,
      "kb": 46,
-     "axis": 0.746
+     "axis": 0.746,
+     "np": 1
     }
    ]
   },
@@ -5370,7 +5388,8 @@
      "exclusiveM2": 99.93,
      "rooms": 9,
      "kb": 14,
-     "axis": 0.433
+     "axis": 0.433,
+     "np": 1
     }
    ]
   },
@@ -5398,7 +5417,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 42,
-     "axis": 0.619
+     "axis": 0.619,
+     "np": 1
     }
    ]
   },
@@ -5416,7 +5436,8 @@
      "exclusiveM2": 84.99,
      "rooms": 9,
      "kb": 27,
-     "axis": 0.479
+     "axis": 0.479,
+     "np": 1
     }
    ]
   },
@@ -5500,7 +5521,8 @@
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 14,
-     "axis": 0.389
+     "axis": 0.389,
+     "np": 1
     },
     {
      "type": "T1",
@@ -5510,7 +5532,8 @@
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 14,
-     "axis": 0.389
+     "axis": 0.389,
+     "np": 1
     }
    ]
   },
@@ -5830,7 +5853,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 12,
-     "axis": 0.471
+     "axis": 0.471,
+     "np": 1
     },
     {
      "type": "T11",
@@ -5840,7 +5864,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 12,
-     "axis": 0.471
+     "axis": 0.471,
+     "np": 1
     },
     {
      "type": "T2",
@@ -5890,7 +5915,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 51,
-     "axis": 0.55
+     "axis": 0.55,
+     "np": 1
     },
     {
      "type": "T7",
@@ -6510,7 +6536,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 45,
-     "axis": 0.297
+     "axis": 0.297,
+     "np": 1
     },
     {
      "type": "T4",
@@ -6550,7 +6577,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 30,
-     "axis": 0.427
+     "axis": 0.427,
+     "np": 1
     },
     {
      "type": "T8",
@@ -6560,7 +6588,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 49,
-     "axis": 0.315
+     "axis": 0.315,
+     "np": 1
     },
     {
      "type": "T9",
@@ -6660,7 +6689,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 44,
-     "axis": 0.32
+     "axis": 0.32,
+     "np": 1
     },
     {
      "type": "T2",
@@ -6690,7 +6720,8 @@
      "exclusiveM2": null,
      "rooms": 7,
      "kb": 62,
-     "axis": 0.525
+     "axis": 0.525,
+     "np": 1
     },
     {
      "type": "T5",
@@ -6700,7 +6731,8 @@
      "exclusiveM2": null,
      "rooms": 7,
      "kb": 31,
-     "axis": 0.408
+     "axis": 0.408,
+     "np": 1
     },
     {
      "type": "T6",
@@ -6710,7 +6742,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 60,
-     "axis": 0.523
+     "axis": 0.523,
+     "np": 1
     },
     {
      "type": "T7",
@@ -6720,7 +6753,8 @@
      "exclusiveM2": null,
      "rooms": 4,
      "kb": 58,
-     "axis": 0.529
+     "axis": 0.529,
+     "np": 1
     }
    ]
   },
@@ -6944,7 +6978,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 32,
-     "axis": 0.386
+     "axis": 0.386,
+     "np": 1
     },
     {
      "type": "84B",
@@ -6974,7 +7009,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 32,
-     "axis": 0.386
+     "axis": 0.386,
+     "np": 1
     },
     {
      "type": "T2",
@@ -7100,7 +7136,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 71,
-     "axis": 0.467
+     "axis": 0.467,
+     "np": 1
     },
     {
      "type": "T8",
@@ -7110,7 +7147,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 31,
-     "axis": 0.5
+     "axis": 0.5,
+     "np": 1
     },
     {
      "type": "T9",
@@ -7120,7 +7158,8 @@
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 60,
-     "axis": 0.522
+     "axis": 0.522,
+     "np": 1
     }
    ]
   },
@@ -7186,7 +7225,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 34,
-     "axis": 0.531
+     "axis": 0.531,
+     "np": 1
     }
    ]
   },
@@ -7850,7 +7890,8 @@
      "exclusiveM2": null,
      "rooms": 7,
      "kb": 28,
-     "axis": 0.514
+     "axis": 0.514,
+     "np": 1
     }
    ]
   },
@@ -8202,7 +8243,8 @@
      "exclusiveM2": 150.89,
      "rooms": 4,
      "kb": 6,
-     "axis": 0.396
+     "axis": 0.396,
+     "np": 1
     },
     {
      "type": "182P",
@@ -8370,7 +8412,8 @@
      "exclusiveM2": null,
      "rooms": 7,
      "kb": 50,
-     "axis": 0.506
+     "axis": 0.506,
+     "np": 1
     },
     {
      "type": "84A-2",
@@ -8852,7 +8895,8 @@
      "exclusiveM2": 117.99,
      "rooms": 8,
      "kb": 33,
-     "axis": 0.651
+     "axis": 0.651,
+     "np": 1
     },
     {
      "type": "186",
@@ -8862,7 +8906,8 @@
      "exclusiveM2": 185.72,
      "rooms": 7,
      "kb": 34,
-     "axis": 0.632
+     "axis": 0.632,
+     "np": 1
     },
     {
      "type": "T1",
@@ -8872,7 +8917,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 34,
-     "axis": 0.628
+     "axis": 0.628,
+     "np": 1
     },
     {
      "type": "T2",
@@ -8882,7 +8928,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 34,
-     "axis": 0.626
+     "axis": 0.626,
+     "np": 1
     },
     {
      "type": "T3",
@@ -8892,7 +8939,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 34,
-     "axis": 0.617
+     "axis": 0.617,
+     "np": 1
     },
     {
      "type": "T6",
@@ -8902,7 +8950,8 @@
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 47,
-     "axis": 0.301
+     "axis": 0.301,
+     "np": 1
     },
     {
      "type": "T7",
@@ -9144,7 +9193,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 39,
-     "axis": 0.434
+     "axis": 0.434,
+     "np": 1
     }
    ]
   },
@@ -9274,7 +9324,8 @@
      "exclusiveM2": 84.99,
      "rooms": 8,
      "kb": 22,
-     "axis": 0.415
+     "axis": 0.415,
+     "np": 1
     },
     {
      "type": "85B",
@@ -9284,7 +9335,8 @@
      "exclusiveM2": 84.99,
      "rooms": 9,
      "kb": 21,
-     "axis": 0.443
+     "axis": 0.443,
+     "np": 1
     },
     {
      "type": "102",
@@ -9322,7 +9374,8 @@
      "exclusiveM2": 84.99,
      "rooms": 8,
      "kb": 22,
-     "axis": 0.415
+     "axis": 0.415,
+     "np": 1
     },
     {
      "type": "85B",
@@ -9332,7 +9385,8 @@
      "exclusiveM2": 84.99,
      "rooms": 9,
      "kb": 21,
-     "axis": 0.443
+     "axis": 0.443,
+     "np": 1
     },
     {
      "type": "102",
@@ -9380,7 +9434,8 @@
      "exclusiveM2": 84.84,
      "rooms": 8,
      "kb": 7,
-     "axis": 0.458
+     "axis": 0.458,
+     "np": 1
     },
     {
      "type": "85",
@@ -9390,7 +9445,8 @@
      "exclusiveM2": 84.99,
      "rooms": 9,
      "kb": 16,
-     "axis": 0.62
+     "axis": 0.62,
+     "np": 1
     },
     {
      "type": "85-4",
@@ -9400,7 +9456,8 @@
      "exclusiveM2": 84.99,
      "rooms": 8,
      "kb": 7,
-     "axis": 0.67
+     "axis": 0.67,
+     "np": 1
     },
     {
      "type": "85-5",
@@ -9420,7 +9477,8 @@
      "exclusiveM2": 84.99,
      "rooms": 6,
      "kb": 17,
-     "axis": 0.407
+     "axis": 0.407,
+     "np": 1
     },
     {
      "type": "102",
@@ -9804,7 +9862,8 @@
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 18,
-     "axis": 0.449
+     "axis": 0.449,
+     "np": 1
     },
     {
      "type": "84B",
@@ -10332,7 +10391,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 56,
-     "axis": 0.466
+     "axis": 0.466,
+     "np": 1
     },
     {
      "type": "T10",
@@ -10342,7 +10402,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 38,
-     "axis": 0.426
+     "axis": 0.426,
+     "np": 1
     },
     {
      "type": "T11",
@@ -10352,7 +10413,8 @@
      "exclusiveM2": null,
      "rooms": 8,
      "kb": 36,
-     "axis": 0.431
+     "axis": 0.431,
+     "np": 1
     },
     {
      "type": "T12",
@@ -10432,7 +10494,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 56,
-     "axis": 0.477
+     "axis": 0.477,
+     "np": 1
     },
     {
      "type": "T4",
@@ -10462,7 +10525,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 58,
-     "axis": 0.471
+     "axis": 0.471,
+     "np": 1
     },
     {
      "type": "T7",
@@ -10492,7 +10556,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 36,
-     "axis": 0.444
+     "axis": 0.444,
+     "np": 1
     }
    ]
   },
@@ -10684,7 +10749,8 @@
      "exclusiveM2": null,
      "rooms": 6,
      "kb": 16,
-     "axis": 0.258
+     "axis": 0.258,
+     "np": 1
     },
     {
      "type": "T5",
@@ -11696,7 +11762,8 @@
      "exclusiveM2": 84.44,
      "rooms": 9,
      "kb": 16,
-     "axis": 0.324
+     "axis": 0.324,
+     "np": 1
     },
     {
      "type": "85",
@@ -11726,7 +11793,8 @@
      "exclusiveM2": 99.63,
      "rooms": 9,
      "kb": 23,
-     "axis": 0.347
+     "axis": 0.347,
+     "np": 1
     },
     {
      "type": "100-3",
@@ -11766,7 +11834,8 @@
      "exclusiveM2": 99.83,
      "rooms": 8,
      "kb": 16,
-     "axis": 0.424
+     "axis": 0.424,
+     "np": 1
     },
     {
      "type": "100-4",
@@ -11814,7 +11883,8 @@
      "exclusiveM2": 99.63,
      "rooms": 9,
      "kb": 23,
-     "axis": 0.347
+     "axis": 0.347,
+     "np": 1
     },
     {
      "type": "100-3",
@@ -11854,7 +11924,8 @@
      "exclusiveM2": 99.83,
      "rooms": 8,
      "kb": 16,
-     "axis": 0.424
+     "axis": 0.424,
+     "np": 1
     },
     {
      "type": "100-4",
@@ -12014,7 +12085,8 @@
      "exclusiveM2": null,
      "rooms": 3,
      "kb": 94,
-     "axis": 0.384
+     "axis": 0.384,
+     "np": 1
     }
    ]
   },
@@ -12132,7 +12204,8 @@
      "exclusiveM2": null,
      "rooms": 9,
      "kb": 36,
-     "axis": 0.429
+     "axis": 0.429,
+     "np": 1
     },
     {
      "type": "T3",
@@ -12268,7 +12341,8 @@
      "exclusiveM2": null,
      "rooms": 5,
      "kb": 62,
-     "axis": 0.515
+     "axis": 0.515,
+     "np": 1
     },
     {
      "type": "84A",
@@ -12288,7 +12362,8 @@
      "exclusiveM2": null,
      "rooms": 4,
      "kb": 63,
-     "axis": 0.477
+     "axis": 0.477,
+     "np": 1
     },
     {
      "type": "84C",

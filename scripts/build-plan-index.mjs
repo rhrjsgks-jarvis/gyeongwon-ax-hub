@@ -173,6 +173,12 @@ const MISATTR = (() => {
   return new Set((j.items || []).map((e) => `${e.dir}/${e.file}`));
 })();
 let misOut = 0;
+/* 평면도가 아닌 이미지(사람이 확인) — md5 로 적어 두어 다시 만들어도 같은 그림에 붙는다 */
+const NONPLAN = (() => {
+  const f = path.join(__dirname, 'fixtures', 'plans-nonplan.json');
+  if (!fs.existsSync(f)) return new Set();
+  return new Set((JSON.parse(fs.readFileSync(f, 'utf8')).items || []).map((e) => e.md5));
+})();
 const grab = fs.existsSync(GRAB) ? JSON.parse(fs.readFileSync(GRAB, 'utf8')) : {};
 // 주택형·전용면적은 별도 패스에서 전 평면도에 대해 읽는다(read-types.mjs). 축척 판독은
 // 8% 만 통과하는데 이름은 전부에 필요해서다 — 화면에 "T1·T2·T3" 만 뜨면 고를 수가 없다.
@@ -461,6 +467,8 @@ for (const [dir, g] of [...groups.entries()].sort()) {
       kb: Math.round(small.buf.length / 1024) };
     /* 선이 축(0°·90°)에 몰린 정도 — 앱이 이 값으로 도면 아닌 이미지를 목록에서 숨긴다 */
     if (small.axis != null) rec.axis = +small.axis.toFixed(3);
+    /* 사람이 눈으로 확인한 「평면도 아님」(plans-nonplan.json, md5) — 목록에서 숨긴다 */
+    if (NONPLAN.has(crypto.createHash('md5').update(small.buf).digest('hex'))) rec.np = 1;
     /*
      * 축척은 확신도가 '확실'(가로·세로 사슬이 8% 안에서 일치) 또는 '보통'(한 축이지만 쌍이
      * 3개 이상)일 때만 싣는다. '낮음'은 가로와 세로가 어긋나 근거가 많은 쪽을 고른 것이라

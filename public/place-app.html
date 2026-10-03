@@ -7434,7 +7434,8 @@ async function openLibrary(){
    * 그런 단지는 그대로 두고 목록에 그 사실을 적는다(열면 화면이 다시 경고한다).
    * 실제로 두산위브더제니스는 큰 입체도 옆에 **쓸 수 있는 작은 평면도**가 함께 있었다.
    */
-  const usable = (p) => p.axis == null || p.axis >= AXIS_MIN;
+  /* 사람이 눈으로 확인한 「평면도 아님」(np) 도 같이 숨긴다(2026-10-03 · 평형 머리글 띠·사진·배치도 75장) */
+  const usable = (p) => !p.np && (p.axis == null || p.axis >= AXIS_MIN);
   const idx = rawIdx.map((c) => {
     const keep = (c.plans || []).filter(usable);
     return keep.length ? (keep.length === c.plans.length ? c : { ...c, plans: keep, hidden: c.plans.length - keep.length })

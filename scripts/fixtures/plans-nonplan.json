@@ -1,0 +1,382 @@
+{
+ "_note": "평면도가 아닌 이미지 — 단지 목록에서 숨긴다(색인 np:1). 그 단지 도면이 전부 해당하면 숨기지 않는다.",
+ "_why": "2026-10-03 — 모양이 의심스러운(아주 가늘거나 작은) 109장을 한 장씩 눈으로 확인했다. 평형 머리글·면적표 띠, 인테리어·조경 사진, 단지 배치도·KEY MAP, 안내 문구, 옵션 안내 콜라주가 75장이었다. 나머지 34장은 가늘거나 작아도 실제 평면도라 두었다. **md5(배포 이미지 내용)로 적는다** — 색인을 다시 만들어 파일 이름이 밀려도 같은 그림을 가리킨다.",
+ "checkedAt": "2026-10-03",
+ "items": [
+  {
+   "md5": "5496266956ca117fb8c6176be3dc500a",
+   "file": "plans/c11/T2.jpg",
+   "label": "c11/T2"
+  },
+  {
+   "md5": "5496266956ca117fb8c6176be3dc500a",
+   "file": "plans/c11/T3.jpg",
+   "label": "c11/T3"
+  },
+  {
+   "md5": "5496266956ca117fb8c6176be3dc500a",
+   "file": "plans/c11/T5.jpg",
+   "label": "c11/T5"
+  },
+  {
+   "md5": "5496266956ca117fb8c6176be3dc500a",
+   "file": "plans/c11/T6.jpg",
+   "label": "c11/T6"
+  },
+  {
+   "md5": "42f5f60aa1bdd2160dc6675b0b5cd74a",
+   "file": "plans/c12/T3.jpg",
+   "label": "c12/T3"
+  },
+  {
+   "md5": "1cc8dbc939ea9e8dd860071aea822ac1",
+   "file": "plans/c26/T11.jpg",
+   "label": "c26/T11"
+  },
+  {
+   "md5": "413bd76e26ae3ddeeee2aaafc188e9f8",
+   "file": "plans/c31/139A.jpg",
+   "label": "c31/139A"
+  },
+  {
+   "md5": "214b761bb3ac8bf046cebe6218d85d25",
+   "file": "plans/c31/84A.jpg",
+   "label": "c31/84A"
+  },
+  {
+   "md5": "413bd76e26ae3ddeeee2aaafc188e9f8",
+   "file": "plans/c31/T7.jpg",
+   "label": "c31/T7"
+  },
+  {
+   "md5": "d64893bdae623479371f1e0828e8b03c",
+   "file": "plans/c33/67.jpg",
+   "label": "c33/67"
+  },
+  {
+   "md5": "171de085b2d3d3bf5a73df94c47fdac2",
+   "file": "plans/c33/84.jpg",
+   "label": "c33/84"
+  },
+  {
+   "md5": "980933817a610bcb40d1aad9a0d39d0a",
+   "file": "plans/c36/100A-2.jpg",
+   "label": "c36/100A-2"
+  },
+  {
+   "md5": "135a7c9a31e438edd7a1994cae4e8c4b",
+   "file": "plans/c36/62.jpg",
+   "label": "c36/62"
+  },
+  {
+   "md5": "33bc9272a376e94951e71f0767f38bb0",
+   "file": "plans/c36/84B.jpg",
+   "label": "c36/84B"
+  },
+  {
+   "md5": "54666f7e62a4e547d6674920e4ab7711",
+   "file": "plans/c38/85-3.jpg",
+   "label": "c38/85-3"
+  },
+  {
+   "md5": "0e1b3b717ec8c4a7e68945c95ec4c803",
+   "file": "plans/c38/105.jpg",
+   "label": "c38/105"
+  },
+  {
+   "md5": "414f6f84d14c20988564e6cfa97a719a",
+   "file": "plans/c152/T5.jpg",
+   "label": "c152/T5"
+  },
+  {
+   "md5": "9a14a9bcf9ae843948f546a838103009",
+   "file": "plans/c50/84D.jpg",
+   "label": "c50/84D"
+  },
+  {
+   "md5": "3b8558cede4e5b67573ec67ab3d5064d",
+   "file": "plans/c51/100.jpg",
+   "label": "c51/100"
+  },
+  {
+   "md5": "e093f3af57694d23322731c56120553e",
+   "file": "plans/c52/84.jpg",
+   "label": "c52/84"
+  },
+  {
+   "md5": "29211d1dc1cb6f11291f74c44e7dcca2",
+   "file": "plans/c53/85.jpg",
+   "label": "c53/85"
+  },
+  {
+   "md5": "b03a236b8be2ec3dfe98ebb9a222ccf2",
+   "file": "plans/c144/18.jpg",
+   "label": "c144/18"
+  },
+  {
+   "md5": "b03a236b8be2ec3dfe98ebb9a222ccf2",
+   "file": "plans/c144/T1.jpg",
+   "label": "c144/T1"
+  },
+  {
+   "md5": "f08caec2d2f6b264de2a366c91c0ff06",
+   "file": "plans/c59/T10.jpg",
+   "label": "c59/T10"
+  },
+  {
+   "md5": "f08caec2d2f6b264de2a366c91c0ff06",
+   "file": "plans/c59/T11.jpg",
+   "label": "c59/T11"
+  },
+  {
+   "md5": "18e433f482fa2662d8b204707f6786f6",
+   "file": "plans/c59/T6.jpg",
+   "label": "c59/T6"
+  },
+  {
+   "md5": "45ca11994c1a2fa49096d16982a3c2e6",
+   "file": "plans/c66/T3.jpg",
+   "label": "c66/T3"
+  },
+  {
+   "md5": "540d5dba3a7391d7b4d1fd90feafb1b3",
+   "file": "plans/c66/T7.jpg",
+   "label": "c66/T7"
+  },
+  {
+   "md5": "9f86d5852f04f51e6ed7273850b2f18a",
+   "file": "plans/c66/T8.jpg",
+   "label": "c66/T8"
+  },
+  {
+   "md5": "f7cef6c0fb284a379b1ab103983850f7",
+   "file": "plans/c69/T1.jpg",
+   "label": "c69/T1"
+  },
+  {
+   "md5": "f7d56a4b3fc5679237eb7450adf092e8",
+   "file": "plans/c69/T4.jpg",
+   "label": "c69/T4"
+  },
+  {
+   "md5": "f125aee10a9f4653e9da7fc7565a3781",
+   "file": "plans/c69/T5.jpg",
+   "label": "c69/T5"
+  },
+  {
+   "md5": "a28b8f09b1f0d723bb09a5cfbbe7b630",
+   "file": "plans/c69/T6.jpg",
+   "label": "c69/T6"
+  },
+  {
+   "md5": "1e769d4a0c914a38e6c3d49b447bed20",
+   "file": "plans/c69/T7.jpg",
+   "label": "c69/T7"
+  },
+  {
+   "md5": "fa97270c0aee467a853c5c78dbcc21f6",
+   "file": "plans/c73/84A.jpg",
+   "label": "c73/84A"
+  },
+  {
+   "md5": "fa97270c0aee467a853c5c78dbcc21f6",
+   "file": "plans/c73/T1.jpg",
+   "label": "c73/T1"
+  },
+  {
+   "md5": "0714bc89d1fc83d791af98b0a49db81f",
+   "file": "plans/c75/T7.jpg",
+   "label": "c75/T7"
+  },
+  {
+   "md5": "4c9376a6e3f94e9c6da20f1fae7c406b",
+   "file": "plans/c75/T8.jpg",
+   "label": "c75/T8"
+  },
+  {
+   "md5": "a200cb3ad1e44d8e6e254f3b3e644270",
+   "file": "plans/c75/T9.jpg",
+   "label": "c75/T9"
+  },
+  {
+   "md5": "a7d869f34e139321d941e31a6d950864",
+   "file": "plans/c156/59.jpg",
+   "label": "c156/59"
+  },
+  {
+   "md5": "31f2364c7b9deec30c438bf38a4d7b02",
+   "file": "plans/c83/84A-2.jpg",
+   "label": "c83/84A-2"
+  },
+  {
+   "md5": "9d7279266faf6245cbca57d4413296d4",
+   "file": "plans/c87/150P.jpg",
+   "label": "c87/150P"
+  },
+  {
+   "md5": "f6941ef51251ba2e0ef7f70fa238b21f",
+   "file": "plans/c224/84A.jpg",
+   "label": "c224/84A"
+  },
+  {
+   "md5": "ddd10b72e85a41edd0c481192e5e2c8b",
+   "file": "plans/c95/118.jpg",
+   "label": "c95/118"
+  },
+  {
+   "md5": "c18054d92c72f36efe85138ee2c0fd14",
+   "file": "plans/c95/186.jpg",
+   "label": "c95/186"
+  },
+  {
+   "md5": "315491f4cf928ad9454c6dfc275ef265",
+   "file": "plans/c95/T1.jpg",
+   "label": "c95/T1"
+  },
+  {
+   "md5": "988530cbae13062d7ee1f7a44c0c04bd",
+   "file": "plans/c95/T2.jpg",
+   "label": "c95/T2"
+  },
+  {
+   "md5": "99040d07b55aad03f14de12907967c34",
+   "file": "plans/c95/T3.jpg",
+   "label": "c95/T3"
+  },
+  {
+   "md5": "d4d424562a4b5dce4a15137ba55d2a6f",
+   "file": "plans/c95/T6.jpg",
+   "label": "c95/T6"
+  },
+  {
+   "md5": "6ac1d2cbf441d3311a249ee7bfdfa7ef",
+   "file": "plans/c99/T2.jpg",
+   "label": "c99/T2"
+  },
+  {
+   "md5": "cda3aedf490322c53982ee0997160b34",
+   "file": "plans/c103/85.jpg",
+   "label": "c103/85"
+  },
+  {
+   "md5": "f871fcfa8efcc04b12a4a926fb52d68a",
+   "file": "plans/c103/85B.jpg",
+   "label": "c103/85B"
+  },
+  {
+   "md5": "cda3aedf490322c53982ee0997160b34",
+   "file": "plans/c104/85.jpg",
+   "label": "c104/85"
+  },
+  {
+   "md5": "f871fcfa8efcc04b12a4a926fb52d68a",
+   "file": "plans/c104/85B.jpg",
+   "label": "c104/85B"
+  },
+  {
+   "md5": "f3f873a9d49531c5d83ac6dba89b4bae",
+   "file": "plans/c158/85-3.jpg",
+   "label": "c158/85-3"
+  },
+  {
+   "md5": "5e6e1bc7a629ed36d7f8d617ade9a83d",
+   "file": "plans/c158/85.jpg",
+   "label": "c158/85"
+  },
+  {
+   "md5": "01ca75491b8b934dea6b39ebf8ac82cc",
+   "file": "plans/c158/85-4.jpg",
+   "label": "c158/85-4"
+  },
+  {
+   "md5": "590aac2868970903b66438358145f6de",
+   "file": "plans/c158/85-6.jpg",
+   "label": "c158/85-6"
+  },
+  {
+   "md5": "5e2c457d24cd3b019ac8ca3e0c184d8c",
+   "file": "plans/c107/84A.jpg",
+   "label": "c107/84A"
+  },
+  {
+   "md5": "ed8a76cfb5ec45990818523bcbb6a22c",
+   "file": "plans/c112/T1.jpg",
+   "label": "c112/T1"
+  },
+  {
+   "md5": "bbea297bd39e407a994dfcce4108908e",
+   "file": "plans/c112/T10.jpg",
+   "label": "c112/T10"
+  },
+  {
+   "md5": "3cb690d38f11df70bf9c6521559d85e1",
+   "file": "plans/c112/T11.jpg",
+   "label": "c112/T11"
+  },
+  {
+   "md5": "a0e98a1f50aaac7d7c58229c64829fc2",
+   "file": "plans/c112/T3.jpg",
+   "label": "c112/T3"
+  },
+  {
+   "md5": "cd57dc6eee3c3eadf7d37705596f56c2",
+   "file": "plans/c112/T6.jpg",
+   "label": "c112/T6"
+  },
+  {
+   "md5": "00e584ba6273317a4555c4b90b8f05d2",
+   "file": "plans/c112/T9.jpg",
+   "label": "c112/T9"
+  },
+  {
+   "md5": "0ecbeeb39df5353e1390d675e447bf5d",
+   "file": "plans/c117/T4.jpg",
+   "label": "c117/T4"
+  },
+  {
+   "md5": "08f90f6ca1efb9d701f970c4b4cd3d74",
+   "file": "plans/c123/84A.jpg",
+   "label": "c123/84A"
+  },
+  {
+   "md5": "140b74c7f9faf2065a46789e5aa7f8af",
+   "file": "plans/c123/100-2.jpg",
+   "label": "c123/100-2"
+  },
+  {
+   "md5": "82d80ced163df950750e56864c5e1bea",
+   "file": "plans/c123/100H.jpg",
+   "label": "c123/100H"
+  },
+  {
+   "md5": "140b74c7f9faf2065a46789e5aa7f8af",
+   "file": "plans/c124/100-2.jpg",
+   "label": "c124/100-2"
+  },
+  {
+   "md5": "82d80ced163df950750e56864c5e1bea",
+   "file": "plans/c124/100H.jpg",
+   "label": "c124/100H"
+  },
+  {
+   "md5": "664b9b1ff3484cf66cbbde8b8f2240ee",
+   "file": "plans/c130/T1.jpg",
+   "label": "c130/T1"
+  },
+  {
+   "md5": "f78b0bf4fd7a4b24a0df1220d1c2f5a0",
+   "file": "plans/c133/T2.jpg",
+   "label": "c133/T2"
+  },
+  {
+   "md5": "4c377a4148d358d28af309c80436fd15",
+   "file": "plans/c135/75-2.jpg",
+   "label": "c135/75-2"
+  },
+  {
+   "md5": "9410e1b7e570bc5252deda1d78007ac2",
+   "file": "plans/c135/84A-2.jpg",
+   "label": "c135/84A-2"
+  }
+ ]
+}
