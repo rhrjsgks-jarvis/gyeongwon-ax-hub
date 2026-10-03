@@ -1382,6 +1382,8 @@ function vedEnd(){
   $('#draftbar').classList.remove('on');
   if (state.vEdit){ state.vEdit.sel = null; state.vEdit.add = null; }
   setMode('idle'); draw();
+  /* 3D 에서 「벽 고치기」로 왔으면 다 고친 뒤 3D 로 돌려보낸다 — 고객 앞에서 손이 덜 간다 */
+  if (state.vedFrom3D){ state.vedFrom3D = false; open3D(); }
 }
 function vedDelete(){
   const b = vedBase(), ve = state.vEdit;
@@ -11417,6 +11419,9 @@ function paintBar(info){
        (에어컨 45° — 거실 모서리에 비스듬히 놓는 설치가 흔하다). 2D 와 같은 함수를 쓴다. */
     (sel ? `<button id="d3-rot">↻ ${P.rotLabel(sel.cat)}°</button>` +
            `<button id="d3-del">✕ 삭제</button>` : '') +
+    /* 벽을 잘못 읽은 자리(옵션 안내 그림이 집 옆에 선 경우 등)를 그 자리에서 고치는 손잡이(2026-10-03).
+       가전을 고르지 않았을 때만 — 띠가 세 줄로 접히면 3D 가 그만큼 가려진다. */
+    (!sel && P.state.baseMask && P.state.baseMask.vec ? `<button id="d3-ved">벽 고치기</button>` : '') +
     `<button id="d3-close">2D로</button>`;
   bar.querySelectorAll('[data-v]').forEach((b) => { b.onclick = () => view(b.dataset.v); });
   if (sel){
@@ -11437,6 +11442,8 @@ function paintBar(info){
   };
   document.getElementById('d3-tag').onclick = () => { showTags = !showTags; paintBar(build()); };
   document.getElementById('d3-close').onclick = close;
+  const vb = document.getElementById('d3-ved');
+  if (vb) vb.onclick = () => { close(); P.state.vedFrom3D = true; const b = document.getElementById('btn-vedit'); if (b) b.click(); };
   placeJoy();   // 띠 높이가 방금 바뀌었을 수 있다(버튼이 늘면 두 줄로 접힌다)
 }
 

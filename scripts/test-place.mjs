@@ -1860,6 +1860,13 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(html.includes('const usable = (p) => !p.np && (p.axis == null || p.axis >= AXIS_MIN);'), '[19-c] 단지 목록이 그 표시로 숨긴다');
 }
 
+/* [19-d] 3D 에서 벽 편집으로 갔다가 완료하면 3D 로 돌아온다 (2026-10-03) */
+{
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'place-app.html'), 'utf8');
+  ok2(html.includes('<button id="d3-ved">벽 고치기</button>'), '[19-d] 3D 안내띠에 벽 고치기가 있다');
+  ok2(html.includes('P.state.vedFrom3D = true;') && html.includes('if (state.vedFrom3D){ state.vedFrom3D = false; open3D(); }'), '[19-d] 벽 편집을 마치면 3D 로 돌아온다');
+}
+
 /*
  * [20] **갈 방이 없으면 말해 준다** (2026-08-30).
  *
