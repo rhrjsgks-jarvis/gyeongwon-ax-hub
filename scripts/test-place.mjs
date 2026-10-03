@@ -1813,8 +1813,13 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   ok2(has('넣으신 벽 길이를 확인해 주세요'), '[19] 하단 띠가 알린다');
   ok2(has('넣으신 벽 길이가 실제와 다를 수 있습니다'), '[19] 오른쪽 안내도 알린다');
   /* 근거가 없으면 판정하지 않는다 — 전용면적은 색인에서 온다 */
-  ok2(has('const ex = +state.exclusiveM2 || 0;'),
-    '[19] 전용면적을 모르면 판정하지 않는다 (색인이 주는 값이다)');
+  /* 2026-10-03 — 공시값이 없으면 주택형 숫자로 어림한다(exclusiveRef). 둘 다 없으면 0 이라
+     판정하지 않는 뜻은 그대로다. 코드 글자를 못 박지 않고 그 뜻을 본다. */
+  ok2((html.slice(html.indexOf('function scaleSanity(){'), html.indexOf('function scaleSanity(){') + 400)).includes('const ex = exclusiveRef();')
+      && html.includes('function exclusiveRef(){ return +state.exclusiveM2 || +state.exclusiveEst || 0; }'),
+    '[19] 전용면적을 모르면 판정하지 않는다 (공시값 → 주택형 어림 → 없으면 판정 안 함)');
+  ok2((html.slice(html.indexOf('function typeAreaEst('), html.indexOf('function typeAreaEst(') + 400)).includes('n >= 30'),
+    '[19] 주택형 어림은 30 미만을 쓰지 않는다 (이름이 틀린 자이 헤리티지 22·23·24)');
 }
 
 /*
@@ -1865,7 +1870,7 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   /* 같은 말을 두 번 적지 않는다 */
   const subBlock = html.slice(html.indexOf('const subText = ['), html.indexOf('].filter(Boolean).join'));
   ok2((subBlock.match(/공간 \$\{state\.rooms\.length\}곳/g) || []).length === 2
-      && subBlock.includes('전용 ${area.toFixed(1)}㎡ · 공간'),
+      && subBlock.includes('${exclusiveWord()}${area.toFixed(1)}㎡ · 공간'),
     '[21] 부제가 「공간 N곳」을 두 번 적지 않는다 (전용을 알 때와 모를 때 한 번씩)');
   ['titleFit', 'fitText(g, subText', 'fitText(g, spec'].forEach((t) => {
     ok2(has(t), '[21] ' + t.replace('fitText(g, ', '').replace(/[(,].*/, '') + ' 가 폭에 맞춰진다');

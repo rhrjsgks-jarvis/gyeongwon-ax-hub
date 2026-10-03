@@ -637,7 +637,19 @@ const knownGaps = [];
         return m ? +m[1] : 0;
       });
       out.desc = out.widths.every((w, i, a) => i === 0 || a[i - 1] >= w);
-      out.selectedIsRec = sel.selectedIndex >= 0 && /형/.test(sel.options[sel.selectedIndex].textContent);
+      /*
+       * **추천한 그 사이즈가 실제로 골라져 있는가**(2026-10-03). 예전 판정은 선택된 글자에
+       * '형' 이 있는지만 봤는데 TV 는 모든 줄이 그래서 아무것도 못 걸렀고, 그 값을 판정하는
+       * 곳도 없었다 — 추천 문구는 「TV 55형」인데 115인치가 골라지는 결함이 그대로 배포됐다.
+       * 품목마다 견준다: 미리 체크된 품목의 선택 줄 숫자 == 추천 사이즈 숫자.
+       */
+      const num = (t) => (String(t).match(/[0-9.]+/) || [''])[0];
+      out.recMismatch = Object.entries(rec).map(([c, pk]) => {
+        const s2 = document.querySelector('select[data-size="' + c + '"]');
+        if (!s2 || s2.selectedIndex < 0) return c + ': 선택 없음';
+        const want = P.state.reps[pk.i].size, got = s2.options[s2.selectedIndex].textContent;
+        return num(got) === num(want) || got.includes(want) ? null : c + ': 추천 ' + want + ' / 선택 ' + got.slice(0, 30);
+      }).filter(Boolean);
       /*
        * 상담의 첫 문장이 되는 줄이다. **개수**와 **어떤 평형 기준인지**가 둘 다 보여야
        * "84A는 보통 이 일곱 가지입니다"로 말을 시작할 수 있다. 그리고 무엇을 빼면 되는지
@@ -661,6 +673,7 @@ const knownGaps = [];
   else if (r.hasNonHome) fail('기본 목록에 업소용·빌트인·리빙 상품이 섞여 있다');
   else if (!r.hasToggle) fail('"업소용·빌트인·리빙도 보기" 토글이 없다 — 아예 못 고르게 되면 안 된다');
   else if (r.catsAll <= r.cats) fail(`토글을 켜도 카테고리가 안 늘어난다 (${r.cats} → ${r.catsAll})`);
+  else if (r.recMismatch && r.recMismatch.length) fail(`추천 사이즈가 드롭다운에 안 골라진다 — ${r.recMismatch.join(" · ")}`);
   else if (!r.desc) fail(`사이즈 목록이 큰 것부터가 아니다 (폭 ${r.widths.slice(0, 5)}…)`);
   else if (!/×/.test(r.first || '')) fail(`목록에 치수가 안 보인다 ("${r.first}")`);
   else if (!r.recCats.length) fail('전용면적을 아는데도 미리 고른 가전이 하나도 없다');
@@ -1739,15 +1752,24 @@ const knownGaps = [];
         await wait(2400);
         const twoD = (P.state.rooms || []).length;
         let info = null;
-        try { if (window.load3D) await window.load3D(); info = window.Place3D.open(); } catch (e) {}
+        let asp = null;
+        try { if (window.load3D) await window.load3D(); info = window.Place3D.open();
+          /* 처음 여는 순간의 카메라 비율 — 숨긴 채 재면 1 이 나온다(2026-10-03) */
+          const cvEl = document.getElementById('cv3');
+          asp = { want: cvEl.clientHeight ? cvEl.clientWidth / cvEl.clientHeight : null, got: window.Place3D._dbg.asp };
+        } catch (e) {}
         await wait(400);
         try { window.Place3D.close(); } catch (e) {}
-        out.push({ name: `${hit.c.complex} ${hit.p.type}`, twoD, threeD: info ? info.rooms : null });
+        out.push({ name: `${hit.c.complex} ${hit.p.type}`, twoD, threeD: info ? info.rooms : null, asp });
       }
       return { out };
     });
     if (rows.skip != null) console.log(`SKIP: 색인 축척이 실린 단지가 ${rows.skip}곳뿐이라 3장을 못 채웠다`);
     else {
+      const a0 = rows.out[0] && rows.out[0].asp;
+      if (!a0 || a0.want == null || Math.abs(a0.want - a0.got) > 0.02)
+        fail(`3D 를 처음 열 때 카메라가 화면 비율을 잘못 쟀다 — 캔버스 ${a0 && a0.want && a0.want.toFixed(3)} / 맞춤 ${a0 && a0.got} (숨긴 채 재면 1)`);
+      else pass(`3D 를 처음 열 때 카메라가 보이는 캔버스 비율(${a0.got})로 맞춘다`);
       const bad = rows.out.filter((r) => r.err || r.threeD == null || r.threeD !== r.twoD);
       const thin = rows.out.filter((r) => !r.err && r.twoD < 2);
       if (bad.length) {
@@ -1833,6 +1855,11 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     P.state.items.push({ id: 'b', cat: 'TV', label: 'TV', w: 1447, h: 830, d: 270,
       a: 0, bx: 9000, by: 9000, staged: true, warn: [], soft: [], clear: { back: 0, side: 0, front: 0 } });
     const info = window.Place3D.open();
+    /* 카메라 맞춤이 **보이는 캔버스의 실제 비율**로 계산됐는가(2026-10-03 — 숨긴 채 재서 1 로 대신 써
+       폰에서 집 양옆이 잘렸다). */
+    const cvEl = document.getElementById('cv3');
+    const aspWant = cvEl && cvEl.clientHeight ? cvEl.clientWidth / cvEl.clientHeight : null;
+    const aspGot = window.Place3D._dbg.asp;
     /* 바닥 정점을 꺼내 월드 좌표와 대조한다 */
     const pts = [];
     window.Place3D.root.traverse((o) => {
@@ -1842,7 +1869,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
       }
     });
     window.Place3D.close();
-    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen };
+    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot };
   });
 
   if (r.err) fail(r.err);
@@ -1850,6 +1877,9 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (r.info.rooms !== 1) fail(`3D: 방이 1곳이어야 하는데 ${r.info.rooms}곳`);
     else if (r.info.items !== 1) fail(`3D: 놓은 가전 1대만 서야 하는데 ${r.info.items}대 (대기 중인 것이 섞였다)`);
     else pass(`3D 보기 — 방 1곳 · 가전 1대 (대기 중 1대는 제외)`);
+    if (r.aspWant == null || r.aspGot == null || Math.abs(r.aspWant - r.aspGot) > 0.02)
+      fail(`3D 카메라가 화면 비율을 잘못 쟀다 — 캔버스 ${r.aspWant && r.aspWant.toFixed(3)} / 맞춤 ${r.aspGot} (숨긴 채 재면 1 이 나온다)`);
+    else pass(`3D 카메라 맞춤이 보이는 캔버스 비율(${r.aspGot})로 계산된다`);
 
     /* 바닥은 y=0 평면에 있고, XZ 가 월드 (x, y)/1000 과 부호까지 같아야 한다.
        z 가 음수로 나오면 좌우 반전된 것이다. */
