@@ -974,6 +974,15 @@ function nearestOnSeg(px,py,w){
  * 그러면 **벽걸이 TV 가 방 한가운데 뜬다.** 이 파일이 못 박은 *"TV 는 반드시 벽을
  * 등진다"* 가 조용히 깨지는 자리다.
  */
+/** 벽 w 의 점 n 에 붙였을 때 자리 — snapWallMounted 와 같은 규칙 */
+function snapPose(it, w, n){
+  const ang = Math.atan2(w.y2 - w.y1, w.x2 - w.x1);
+  let nx = -Math.sin(ang), ny = Math.cos(ang);
+  if ((it.bx - n.x) * nx + (it.by - n.y) * ny < 0){ nx = -nx; ny = -ny; }
+  if (w.nx != null){ nx = w.nx; ny = w.ny; }
+  const back = (it.clear && it.clear.back) || 0;
+  return { bx: n.x + nx * back, by: n.y + ny * back, a: Math.atan2(ny, nx) - Math.PI / 2 };
+}
 function snapWalls(room){
   const ws = (room ? room.parts.flatMap((p)=>p.walls) : state.walls).filter((w)=>!w.open);
   return ws.length ? ws : allWallFaces();
@@ -1011,14 +1020,45 @@ function snapToWall(px,py,item){
  * 벽이 하나도 없으면(직접 그리기 전이거나 전부 개구부) 손대지 않는다 —
  * 없는 벽을 만들어 붙이는 것보다 그대로 두고 경고가 알리는 편이 낫다.
  */
+/*
+ * **등 뒤에 실제 벽이 있는가** — 벽걸이 폭 전체에서 벽이 받치는 비율(0~1)(2026-10-03).
+ *
+ * 방 경계선이 늘 벽은 아니다. 트인 거실·주방 사이나 복도 쪽은 방 인식이 선을 그었을 뿐
+ * 도면에 벽이 없는데, 그 선에 TV 를 걸면 3D(도면 벽으로 세운다)에서 **허공에 떠 있었다**
+ * (실물 — 6.1m 짜리 방 경계선에 붙은 75인치가 거실 한가운데 기둥 옆에 섰다).
+ * 몸체 뒷면 바로 뒤(40/120/220mm)를 폭 9곳에서 훑어 도면 벽이 있는지 본다.
+ * 도면 벽을 모르면(직접 그린 벽) 1 — 판단할 근거가 없으면 막지 않는다.
+ */
+function wallBacking(it){
+  if (!wallMask()) return 1;
+  const c = Math.cos(it.a), sn = Math.sin(it.a);
+  const back = (it.clear && it.clear.back) || 0;
+  let hit = 0, n = 0;
+  for (let i = 0; i < 9; i++){
+    const x = -it.w / 2 + 60 + (it.w - 120) * (i / 8);
+    n++;
+    for (const off of [40, 120, 220]){
+      const y = -(back + off);
+      if (wallAt(it.bx + x * c - y * sn, it.by + x * sn + y * c) === 'wall'){ hit++; break; }
+    }
+  }
+  return n ? hit / n : 1;
+}
+const BACKED_MIN = 0.7;
 function snapWallMounted(it){
   if (!it || mountKind(it) !== '벽') return false;
   const walls = snapWalls(itemRoom(it));
   if (!walls.length) return false;
+  /* 방 경계에 실제 벽이 없을 수 있어 도면 벽면도 후보에 넣는다 */
+  const cands = wallMask() && walls[0] && walls[0].nx == null ? walls.concat(allWallFaces()) : walls;
   let best = null;
-  for (const w of walls){
+  for (const w of cands){
     const n = nearestOnSeg(it.bx, it.by, w);
-    if (!best || n.dist < best.n.dist) best = { w, n };
+    /* 벽이 받치는가로 먼저 가르고, 그 안에서 가까운 것 */
+    const t = Object.assign({}, it, snapPose(it, w, n));
+    const ok = wallBacking(t) >= BACKED_MIN;
+    const key = (ok ? 0 : 1e9) + n.dist;
+    if (!best || key < best.key) best = { w, n, key };
   }
   const { w, n } = best;
   const ang = Math.atan2(w.y2 - w.y1, w.x2 - w.x1);
@@ -5403,7 +5443,7 @@ function buildShareCanvas(){
   const subText = [
     /* **같은 말을 두 번 적지 않는다.** 전용면적을 모르면 첫 줄이 이미 "공간 N곳" 이라
        말하는데 그 아래 줄이 또 "공간 N곳" 이었다(실물에서 확인). */
-    area && planAreaKnown() ? `${exclusiveWord()}${area.toFixed(1)}㎡ · 공간 ${state.rooms.length}곳`
+    area && planAreaKnown() ? `${exclusiveWord()}${area.toFixed(state.exclusiveM2 ? 1 : 0)}㎡ · 공간 ${state.rooms.length}곳`
       : (state.rooms.length ? `공간 ${state.rooms.length}곳 · 넓이 합계는 겹칠 수 있어 적지 않습니다` : null),
     `가전 ${items.length}대`,
     on3d ? `3D · 층고 ${window.Place3D.WALL_H_MM.toLocaleString()}mm(가정)` : null,
@@ -8671,6 +8711,8 @@ function findSpot(item, placed){
   const okAt = (cand, strict) => {
     const body = corners(cand), cl = corners(cand, cand.clear);
     if (bodyOutside(cand)) return false;
+    /* 벽걸이는 등 뒤에 도면 벽이 있어야 한다 — 방 경계선만으로는 허공일 수 있다 */
+    if (mountKind(cand) === '벽' && wallBacking(cand) < BACKED_MIN) return false;
     for (const o of placed){
       if (overlaps(body, corners(o)) || overlaps(cl, corners(o, o.clear))) return false;
     }

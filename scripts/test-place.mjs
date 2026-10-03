@@ -1823,6 +1823,21 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
 }
 
 /*
+ * [19-b] **벽걸이는 등 뒤에 도면 벽이 있어야 한다** (2026-10-03).
+ * 방 경계선에 붙여 3D 에서 허공에 뜬 TV 를 실물에서 봤다. 자동 배치(okAt)와 붙이기
+ * (snapWallMounted) 둘 다 같은 판정을 지나야 한다 — 한쪽만 고치면 끌어 놓을 때만 고쳐진다.
+ */
+{
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'place-app.html'), 'utf8');
+  const has = (t) => html.includes(t);
+  ok2(has('function wallBacking(it){'), '[19-b] 벽 받침 판정 함수가 있다');
+  ok2(has("if (mountKind(cand) === '벽' && wallBacking(cand) < BACKED_MIN) return false;"), '[19-b] 자동 배치가 벽 받침을 본다');
+  const snap = html.slice(html.indexOf('function snapWallMounted(it){'), html.indexOf('function snapWallMounted(it){') + 900);
+  ok2(snap.includes('wallBacking(t) >= BACKED_MIN'), '[19-b] 벽에 붙일 때도 벽 받침을 본다');
+  ok2(has('if (!wallMask()) return 1;'), '[19-b] 도면 벽을 모르면 막지 않는다(직접 그린 벽)');
+}
+
+/*
  * [20] **갈 방이 없으면 말해 준다** (2026-08-30).
  *
  * `defaultRoomFor` 는 용도에 맞는 방이 없으면 **조용히 `state.rooms[0]`(대개 거실)로**
@@ -1870,7 +1885,7 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   /* 같은 말을 두 번 적지 않는다 */
   const subBlock = html.slice(html.indexOf('const subText = ['), html.indexOf('].filter(Boolean).join'));
   ok2((subBlock.match(/공간 \$\{state\.rooms\.length\}곳/g) || []).length === 2
-      && subBlock.includes('${exclusiveWord()}${area.toFixed(1)}㎡ · 공간'),
+      && subBlock.includes('${exclusiveWord()}${area.toFixed(state.exclusiveM2 ? 1 : 0)}㎡ · 공간'),
     '[21] 부제가 「공간 N곳」을 두 번 적지 않는다 (전용을 알 때와 모를 때 한 번씩)');
   ['titleFit', 'fitText(g, subText', 'fitText(g, spec'].forEach((t) => {
     ok2(has(t), '[21] ' + t.replace('fitText(g, ', '').replace(/[(,].*/, '') + ' 가 폭에 맞춰진다');
