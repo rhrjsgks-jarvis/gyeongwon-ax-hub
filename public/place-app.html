@@ -7092,45 +7092,58 @@ function estScaleFromArea(){
   const w = m.w, h = m.h, S = m.S || 1, N = w * h, bb = m.bbox;
   const bar = new Uint8Array(N);
   for (let i = 0; i < N; i++) bar[i] = m.dark[i] | (m.door ? m.door[i] : 0) | (m.win ? m.win[i] : 0);
-  const R = Math.max(2, Math.round(Math.max(w, h) * 0.0033));
-  const hz = new Uint8Array(N), fat = new Uint8Array(N);
-  for (let y = 0; y < h; y++){
-    let last = -1e9; for (let x = 0; x < w; x++){ if (bar[y*w+x]) last = x; if (x - last <= R) hz[y*w+x] = 1; }
-    last = 1e9; for (let x = w - 1; x >= 0; x--){ if (bar[y*w+x]) last = x; if (last - x <= R) hz[y*w+x] = 1; }
-  }
-  for (let x = 0; x < w; x++){
-    let last = -1e9; for (let y = 0; y < h; y++){ if (hz[y*w+x]) last = y; if (y - last <= R) fat[y*w+x] = 1; }
-    last = 1e9; for (let y = h - 1; y >= 0; y--){ if (hz[y*w+x]) last = y; if (last - y <= R) fat[y*w+x] = 1; }
-  }
-  const out = new Uint8Array(N), st = [];
-  const push = (i) => { if (!fat[i] && !out[i]){ out[i] = 1; st.push(i); } };
-  for (let x = 0; x < w; x++){ push(x); push((h - 1) * w + x); }
-  for (let y = 0; y < h; y++){ push(y * w); push(y * w + w - 1); }
-  while (st.length){ const i = st.pop(), x = i % w, y = (i / w) | 0;
-    if (x > 0) push(i - 1); if (x < w - 1) push(i + 1); if (y > 0) push(i - w); if (y < h - 1) push(i + w); }
-  for (let pass = 0; pass < R; pass++){            // 부풀린 만큼 바깥을 원래 벽까지 되돌린다
-    const add = [];
-    for (let i = 0; i < N; i++) if (!out[i] && !bar[i]){ const x = i % w, y = (i / w) | 0;
-      if ((x > 0 && out[i-1]) || (x < w-1 && out[i+1]) || (y > 0 && out[i-w]) || (y < h-1 && out[i+w])) add.push(i); }
-    for (const i of add) out[i] = 1;
-  }
-  const seen = new Uint8Array(N); let area = 0;
-  for (let s0 = 0; s0 < N; s0++){
-    if (bar[s0] || out[s0] || seen[s0]) continue;
-    let n = 0, sx = 0, sy = 0; seen[s0] = 1; st.push(s0);
-    while (st.length){ const i = st.pop(), x = i % w, y = (i / w) | 0; n++; sx += x; sy += y;
-      for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
-        if (j >= 0 && !bar[j] && !out[j] && !seen[j]){ seen[j] = 1; st.push(j); } }
-    const cx = sx / n, cy = sy / n;
-    if (n > N * 0.001 && cx >= bb.x0 && cx <= bb.x1 && cy >= bb.y0 && cy <= bb.y1) area += n;
-  }
-  let est = null;
+  const R0 = Math.max(2, Math.round(Math.max(w, h) * 0.0033));
   const boxA = (bb.x1 - bb.x0) * (bb.y1 - bb.y0);
-  if (area > boxA * 0.05){
+  /* 벽을 R 만큼 부풀려 바깥을 채우고, 남은 안쪽 넓이로 어림한다 */
+  const tryR = (R) => {
+    const hz = new Uint8Array(N), fat = new Uint8Array(N);
+    for (let y = 0; y < h; y++){
+      let last = -1e9; for (let x = 0; x < w; x++){ if (bar[y*w+x]) last = x; if (x - last <= R) hz[y*w+x] = 1; }
+      last = 1e9; for (let x = w - 1; x >= 0; x--){ if (bar[y*w+x]) last = x; if (last - x <= R) hz[y*w+x] = 1; }
+    }
+    for (let x = 0; x < w; x++){
+      let last = -1e9; for (let y = 0; y < h; y++){ if (hz[y*w+x]) last = y; if (y - last <= R) fat[y*w+x] = 1; }
+      last = 1e9; for (let y = h - 1; y >= 0; y--){ if (hz[y*w+x]) last = y; if (last - y <= R) fat[y*w+x] = 1; }
+    }
+    const out = new Uint8Array(N), st = [];
+    const push = (i) => { if (!fat[i] && !out[i]){ out[i] = 1; st.push(i); } };
+    for (let x = 0; x < w; x++){ push(x); push((h - 1) * w + x); }
+    for (let y = 0; y < h; y++){ push(y * w); push(y * w + w - 1); }
+    while (st.length){ const i = st.pop(), x = i % w, y = (i / w) | 0;
+      if (x > 0) push(i - 1); if (x < w - 1) push(i + 1); if (y > 0) push(i - w); if (y < h - 1) push(i + w); }
+    for (let pass = 0; pass < R; pass++){            // 부풀린 만큼 바깥을 원래 벽까지 되돌린다
+      const add = [];
+      for (let i = 0; i < N; i++) if (!out[i] && !bar[i]){ const x = i % w, y = (i / w) | 0;
+        if ((x > 0 && out[i-1]) || (x < w-1 && out[i+1]) || (y > 0 && out[i-w]) || (y < h-1 && out[i+w])) add.push(i); }
+      for (const i of add) out[i] = 1;
+    }
+    const seen = new Uint8Array(N); let area = 0;
+    for (let s0 = 0; s0 < N; s0++){
+      if (bar[s0] || out[s0] || seen[s0]) continue;
+      let n = 0, sx = 0, sy = 0; seen[s0] = 1; st.push(s0);
+      while (st.length){ const i = st.pop(), x = i % w, y = (i / w) | 0; n++; sx += x; sy += y;
+        for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
+          if (j >= 0 && !bar[j] && !out[j] && !seen[j]){ seen[j] = 1; st.push(j); } }
+      const cx = sx / n, cy = sy / n;
+      if (n > N * 0.001 && cx >= bb.x0 && cx <= bb.x1 && cy >= bb.y0 && cy <= bb.y1) area += n;
+    }
     const k = Math.sqrt(ex * 1e6 / (area / S / S));              // mm / 이미지 px
     const houseW = Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0) / S * k;
-    if (houseW >= 6000 && houseW <= 30000) est = k;
+    return { R, area, ratio: +(area / boxA).toFixed(3), k: +k.toFixed(2), houseW: Math.round(houseW) };
+  };
+  /*
+   * **부풀리는 반경을 사다리로 올린다**(2026-10-07). 0.33% 한 값으로는 바깥 문·발코니 창 틈으로 새어
+   * 집 안이 바깥이 되고 안쪽 넓이가 상자의 2~5% 로 떨어져 어림을 버렸다 — 전용면적을 아는 도면에서
+   * 길이 칸이 비었다(24지역 회귀에서 6장). 그러면 상담사가 3,600 을 넣고 **축척이 2~3배 틀린 채** 간다.
+   * 틈이 막힐 때까지 2배·3배로 올려 다시 재되, 안쪽이 상자의 5% 를 넘고 세대 폭이 6~30m 안일 때만 쓴다.
+   * 안전장치(틀린 값보다 빈 칸이 낫다)는 그대로다 — 사다리는 새는 경우만 건진다.
+   */
+  let est = null; const tries = [];
+  for (const mul of [1, 2, 3]){
+    const t = tryR(R0 * mul); tries.push(t);
+    if (t.area > boxA * 0.05 && t.houseW >= 6000 && t.houseW <= 30000){ est = t.k; break; }
   }
+  m._estDbg = { ex, boxA, S, bb: [bb.x0, bb.y0, bb.x1, bb.y1], tries };   // 조사용 — 왜 비었나
   m._estK = est;
   return est;
 }
@@ -9554,7 +9567,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, bodyOutside, insideFor, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
+window.__place = { state, draw, bodyOutside, insideFor, estScaleFromArea, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,
