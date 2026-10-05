@@ -2018,6 +2018,7 @@ function makeBoxRoom(w, h){
   state.mmPerPx = null;          // 도면이 없으니 이미지 축척도 없다(CLAUDE.md)
   state.scaled = true;           // 다만 **월드 단위는 mm 다** — 사용자가 확정한 값이다
   state.complexName = null; state.typeName = null; state.exclusiveM2 = null; state.exclusiveEst = null;
+  state.boxDims = { w, h };      // 결과 카드가 「4,200 × 3,600mm · 15.1㎡」 라고 적는다 — 직접 넣은 값이라 정확하다
   const seg = (x1,y1,x2,y2)=>({ x1, y1, x2, y2, open:false });
   addRoom('거실', [seg(0,0,w,0), seg(w,0,w,h), seg(w,h,0,h), seg(0,h,0,0)]);
   $('#empty').style.display = 'none';
@@ -5544,6 +5545,8 @@ function buildShareCanvas(){
     /* **같은 말을 두 번 적지 않는다.** 전용면적을 모르면 첫 줄이 이미 "공간 N곳" 이라
        말하는데 그 아래 줄이 또 "공간 N곳" 이었다(실물에서 확인). */
     area && planAreaKnown() ? `${exclusiveWord()}${area.toFixed(state.exclusiveM2 ? 1 : 0)}㎡ · 공간 ${state.rooms.length}곳`
+      /* 직접 넣은 방은 치수가 곧 사실이다 — 「겹칠 수 있어 적지 않습니다」는 인식한 방 이야기다 */
+      : state.boxDims && state.rooms.length === 1 ? `${state.boxDims.w.toLocaleString()} × ${state.boxDims.h.toLocaleString()}mm · ${(state.boxDims.w * state.boxDims.h / 1e6).toFixed(1)}㎡ (직접 입력)`
       : (state.rooms.length ? `공간 ${state.rooms.length}곳 · 넓이 합계는 겹칠 수 있어 적지 않습니다` : null),
     `가전 ${items.length}대`,
     on3d ? `3D · 층고 ${window.Place3D.WALL_H_MM.toLocaleString()}mm(가정)` : null,
@@ -6391,7 +6394,7 @@ function useImage(src, after){
        예전에는 이 둘만 남아 — 결과 카드 제목·하단 띠·벽선 저장이 전부 **남의 단지 이름**을
        달았다(그 카드가 고객 손에 남는 유일한 그림이다). 라이브러리 경로는 after 콜백이
        제 이름을 다시 세우므로 안 깨진다. */
-    state.complexName = null; state.typeName = null; state.userEdits = 0;
+    state.complexName = null; state.typeName = null; state.userEdits = 0; state.boxDims = null;
     state.walls=[]; state.rooms=[]; state.roomSel=null; state.draft=null; state.draftMore=[]; hideDraftBar();
     // 도면 전체가 화면에 들어오도록 배율을 잡는다. 이걸 안 하면 1,000px이 넘는 보통
     // 도면에서 치수선 한쪽 끝이 화면 밖으로 나가 축척을 맞출 수가 없다.
@@ -7664,7 +7667,7 @@ function loadFromLibrary(entry){
    * `scaled = true` 하나로 충분하다. 도면 이미지의 축척은 **따로** 아는 값이 있을 때만 쓴다.
    */
   state.mmPerPx = (entry && +entry.mmPerPx) || null;
-  state.scaled = true;
+  state.scaled = true; state.boxDims = null;
   for (const r of entry.rooms) {
     const room = { id: 'r' + Math.random().toString(36).slice(2, 8), name: r.name,
                    parts: r.parts.map((p) => ({ walls: p.walls.map((w) => ({ ...w })) })) };
