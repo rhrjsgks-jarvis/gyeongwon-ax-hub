@@ -870,6 +870,33 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
   if (!leak || leak.border === 0) fail('벽이 끊겼는데 바깥 유출을 감지하지 못함');
   else pass(`벽이 끊긴 도면 — 바깥 유출 감지 (border=${leak.border})`);
 
+  /* 속도 최적화(2026-10-05)가 결과를 바꾸지 않는가 — 캐시를 켠 채우기와 끈 채우기가 같아야 하고,
+     캐시는 부르는 쪽이 켤 때만 쓴다(같은 배열을 제자리에서 고친 위 경우에 옛 결과가 나오면 안 된다). */
+  const c1 = P.floodRegion(mask, 200, 150, true), c2 = P.floodRegion(mask, 70, 120, true), u1 = P.floodRegion(mask, 70, 120);
+  if (!c1 || !c2 || !u1 || c2 !== c1 || u1.count !== c1.count || u1.border !== c1.border)
+    fail('채우기 캐시가 다른 결과를 낸다 (같은 영역의 다른 점은 같은 결과여야 한다)');
+  else pass(`채우기 캐시 — 켠 것과 끈 것이 같다 (${c1.count.toLocaleString()}칸)`);
+  /* boxMorph 세로 방향을 행 단위로 바꿨다 — 옛 열 단위 방식과 칸 단위로 같아야 한다 */
+  const refMorph = (src, w, h, r, mode) => {
+    if (r <= 0) return src;
+    const want = mode === 'min', out = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let all = 1, any = 0;
+      for (let yy = Math.max(0, y - r); yy <= Math.min(h - 1, y + r); yy++)
+        for (let xx = Math.max(0, x - r); xx <= Math.min(w - 1, x + r); xx++) { const v = src[yy * w + xx]; all &= v; any |= v; }
+      out[y * w + x] = want ? all : any;
+    }
+    return out;
+  };
+  let mbad = 0;
+  for (let k = 0; k < 120; k++) {
+    const w = 3 + (k * 7) % 40, h = 3 + (k * 11) % 37, r = k % 6;
+    const src = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) src[i] = ((i * 2654435761 + k * 97) >>> 0) % 5 < 2 ? 1 : 0;
+    for (const m of ['min', 'max']) { const A = P.boxMorph(src, w, h, r, m), B = refMorph(src, w, h, r, m); for (let i = 0; i < w * h; i++) if (A[i] !== B[i]) { mbad++; break; } }
+  }
+  if (mbad) fail(`boxMorph 가 정의(사각 이웃의 최소/최대)와 다르다 — ${mbad}/240`);
+  else pass('boxMorph — 정의와 240회 전부 같다(세로 방향 행 단위 훑기)');
+
   st.items = []; st.walls = [];
 }
 

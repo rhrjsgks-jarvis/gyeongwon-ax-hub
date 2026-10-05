@@ -1277,6 +1277,20 @@ function loadSeg(){
   })().catch((e) => { console.warn('[벽 모델] 못 불러와 규칙 인식으로 간다:', e && e.message); return null; });
   return segLoader;
 }
+/*
+ * **앱이 열리면 한가한 틈에 벽 모델을 미리 받아 둔다**(2026-10-05). 예전에는 도면을 누른 뒤에야
+ * 런타임·모델(압축 후 5MB)을 받기 시작해, 매장 4G·처음 쓰는 기기에서 도면을 누르고 길이 칸이
+ * 뜨기까지 15.8초가 걸렸다(그중 받기 약 7초). 상담사가 단지를 고르는 사이에 받아 두면 그 7초가 사라진다.
+ * 두 번째부터는 서비스워커 캐시(/vendor/·/models/ 캐시 우선)라 받지 않는다.
+ * ?seg=0(규칙 경로 검사)이면 받지 않는다.
+ */
+function preloadSeg(){
+  if (!segWanted()) return;
+  const go = () => { loadSeg(); };
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(go, { timeout: 2500 });
+  else setTimeout(go, 1200);
+}
+if (document.readyState === 'complete') preloadSeg(); else window.addEventListener('load', preloadSeg, { once: true });
 /** 도면 이미지 → 칸 지도(0 배경·1 벽·2 문·3 창). 실패하면 null */
 async function runSeg(img){
   const m = await loadSeg();
@@ -2148,16 +2162,18 @@ function boxMorph(src, w, h, r, mode){
       if (add < w)  sum += src[row + add];
     }
   }
-  for (let x = 0; x < w; x++) {                      // 세로 방향
-    let sum = 0;
-    for (let y = -r; y <= r; y++) if (y >= 0 && y < h) sum += tmp[y * w + x];
-    for (let y = 0; y < h; y++) {
-      const n = Math.min(y + r, h - 1) - Math.max(y - r, 0) + 1;
-      out[y * w + x] = want ? (sum === n ? 1 : 0) : (sum > 0 ? 1 : 0);
-      const drop = y - r, add = y + r + 1;
-      if (drop >= 0) sum -= tmp[drop * w + x];
-      if (add < h)  sum += tmp[add * w + x];
-    }
+  /* 세로 방향 — **행 단위로** 훑는다(2026-10-05). 열 단위로 훑으면 한 칸마다 w 만큼 건너뛰어
+     읽어 매장 폰에서 닫기 연산이 1.4초였다. 열마다 누적합을 들고 행을 내려가면 같은 값을
+     연속된 메모리에서 읽는다 — 결과는 한 칸도 다르지 않다. */
+  const col = new Int32Array(w);
+  for (let y = 0; y <= r && y < h; y++){ const row = y * w; for (let x = 0; x < w; x++) col[x] += tmp[row + x]; }
+  for (let y = 0; y < h; y++) {
+    const n = Math.min(y + r, h - 1) - Math.max(y - r, 0) + 1, row = y * w;
+    if (want) { for (let x = 0; x < w; x++) out[row + x] = col[x] === n ? 1 : 0; }
+    else      { for (let x = 0; x < w; x++) out[row + x] = col[x] > 0 ? 1 : 0; }
+    const drop = y - r, add = y + r + 1;
+    if (drop >= 0) { const dr = drop * w; for (let x = 0; x < w; x++) col[x] -= tmp[dr + x]; }
+    if (add < h)   { const ar = add * w;  for (let x = 0; x < w; x++) col[x] += tmp[ar + x]; }
   }
   return out;
 }
@@ -2253,32 +2269,78 @@ function cleanCanvas(mask, m){
   return c;
 }
 
-/** 밝은 영역을 4방향으로 채운다. 도면 바깥까지 새어 나가면 방이 아니라고 판단한다. */
-function floodRegion(mask, sx, sy){
+/*
+ * **막힌 칸 표를 마스크마다 한 번만 만든다**(2026-10-05). 채우기는 방 찾기 한 번에 격자 36점 ×
+ * 닫기 반경 여러 단계로 수백 번 돈다. 예전에는 이웃 칸마다 판정 함수를 불러(bbox·dark·env 를
+ * 매번 다시 봄) 매장 폰 조건에서 채우기 자체 시간만 2.5초였다. 결과는 같다 — 방문 순서를
+ * 그대로 두었다(test-place 가 옛 판정과 비트 단위로 대조한다).
+ * **캐시는 부르는 쪽이 켤 때만 쓴다**(cache=true). 열쇠가 dark 배열 자체라, 같은 배열을
+ * 제자리에서 고친 뒤 다시 채우면 옛 결과가 나온다(검사가 실제로 그렇게 물었다). 방 찾기의
+ * 마스크는 sealedMask 가 새로 만든 것이라 안 바뀌어 켠다.
+ */
+const floodBlk = new WeakMap();
+const floodMemo = new WeakMap();
+function floodBlocked(mask, cache){
   const { w, h, dark } = mask;
+  const bb = mask.bbox || { x0:0, y0:0, x1:w-1, y1:h-1 };
+  const env = mask.env || null;
+  const key = bb.x0 + ',' + bb.y0 + ',' + bb.x1 + ',' + bb.y1;
+  let byKey = cache ? floodBlk.get(dark) : null;
+  if (cache && !byKey){ byKey = new Map(); floodBlk.set(dark, byKey); }
+  const hit = byKey && byKey.get(key);
+  if (hit && hit.env === env) return hit.blk;
+  const blk = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++){
+    const out = y < bb.y0 || y > bb.y1;
+    for (let x = 0, p = y * w; x < w; x++, p++)
+      blk[p] = (out || x < bb.x0 || x > bb.x1 || dark[p] || (env && !env[p])) ? 1 : 0;
+  }
+  if (byKey) byKey.set(key, { env, blk });
+  return blk;
+}
+/** 밝은 영역을 4방향으로 채운다. 도면 바깥까지 새어 나가면 방이 아니라고 판단한다. */
+function floodRegion(mask, sx, sy, cache){
+  const { w, h } = mask;
   // 도면이 그려진 범위 밖(여백)은 벽으로 본다. 여백까지 채우면 방 하나가 도면 전체가 된다.
   const bb = mask.bbox || { x0:0, y0:0, x1:w-1, y1:h-1 };
-  const env = mask.env || null;          // 건물 안쪽 (창의 유리선까지 벽으로 본 것)
-  const blocked = (x, y) => x < bb.x0 || y < bb.y0 || x > bb.x1 || y > bb.y1
-    || !!dark[y*w + x] || (env ? !env[y*w + x] : false);
-  if (sx < 0 || sy < 0 || sx >= w || sy >= h || blocked(sx, sy)) return null;
+  if (sx < 0 || sy < 0 || sx >= w || sy >= h) return null;
+  const blk = floodBlocked(mask, cache);
+  if (blk[sy * w + sx]) return null;
+  /* **같은 영역이면 다시 채우지 않는다**(2026-10-05). 방 찾기는 격자 36점 × 반경 여러 단계로
+     채우는데, 실측 358번 중 315번이 집 전체로 새는 같은 영역이었다(5,460만 칸). 그 영역 안의
+     어느 점에서 채우든 결과(칸·넓이·경계 접촉)가 똑같으므로 이미 채운 결과를 그대로 돌려준다.
+     결과는 읽기만 한다(traceContour) — 함께 써도 안전하다. */
+  const mkey = bb.x0 + ',' + bb.y0 + ',' + bb.x1 + ',' + bb.y1;
+  let list = null;
+  if (cache){
+    let byKey = floodMemo.get(mask.dark);
+    if (!byKey){ byKey = new Map(); floodMemo.set(mask.dark, byKey); }
+    list = byKey.get(mkey);
+    if (!list || list.env !== (mask.env || null)){ list = []; list.env = mask.env || null; byKey.set(mkey, list); }
+    for (const r of list) if (r.seen[sy * w + sx]) return r;
+  }
   const seen = new Uint8Array(w * h);
-  const stack = [sy * w + sx];
+  const stack = new Int32Array(w * h);
+  let sp = 0;
+  stack[sp++] = sy * w + sx;
   seen[sy * w + sx] = 1;
   let minX = sx, maxX = sx, minY = sy, maxY = sy, count = 0, border = 0;
-  while (stack.length) {
-    const p = stack.pop();
+  const bx0 = bb.x0, by0 = bb.y0, bx1 = bb.x1, by1 = bb.y1;
+  while (sp) {
+    const p = stack[--sp];
     const x = p % w, y = (p - x) / w;
     count++;
-    if (x === bb.x0 || y === bb.y0 || x === bb.x1 || y === bb.y1) border++;
+    if (x === bx0 || y === by0 || x === bx1 || y === by1) border++;
     if (x < minX) minX = x; if (x > maxX) maxX = x;
     if (y < minY) minY = y; if (y > maxY) maxY = y;
-    if (x > 0     && !seen[p - 1] && !blocked(x-1, y)) { seen[p - 1] = 1; stack.push(p - 1); }
-    if (x < w - 1 && !seen[p + 1] && !blocked(x+1, y)) { seen[p + 1] = 1; stack.push(p + 1); }
-    if (y > 0     && !seen[p - w] && !blocked(x, y-1)) { seen[p - w] = 1; stack.push(p - w); }
-    if (y < h - 1 && !seen[p + w] && !blocked(x, y+1)) { seen[p + w] = 1; stack.push(p + w); }
+    if (x > 0     && !seen[p - 1] && !blk[p - 1]) { seen[p - 1] = 1; stack[sp++] = p - 1; }
+    if (x < w - 1 && !seen[p + 1] && !blk[p + 1]) { seen[p + 1] = 1; stack[sp++] = p + 1; }
+    if (y > 0     && !seen[p - w] && !blk[p - w]) { seen[p - w] = 1; stack[sp++] = p - w; }
+    if (y < h - 1 && !seen[p + w] && !blk[p + w]) { seen[p + w] = 1; stack[sp++] = p + w; }
   }
-  return { seen, minX, maxX, minY, maxY, count, border };
+  const res = { seen, minX, maxX, minY, maxY, count, border };
+  if (list && list.length < 48) list.push(res);
+  return res;
 }
 
 /**
@@ -3130,7 +3192,7 @@ function detectRoomAt(imgX, imgY, forceR){
       if (firstWall == null || r < firstWall) firstWall = r;
       return;
     }
-    const g = floodRegion(m, sx, sy);
+    const g = floodRegion(m, sx, sy, true);   // sealedMask 가 새로 만든 마스크라 안 바뀐다 — 캐시를 써도 된다
     if (!g) return;
     if (g.count < planArea * 0.004) return;
     if (g.border > leakLimit) {
@@ -9236,7 +9298,7 @@ window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,
   openSelect, applyDeepPick,
   findSpot, autoPlace, fitAlternative, removeItem, needScale, longestHRun, askWallLength, askHouseScale, askRoomSize, makeBoxRoom, buildShareCanvas, shareResult, startManual, nextPending, placeAt, stageOutside, stackable, escapesRoom, nudgeInside, bodyCenter, planBox, inwardNormal, roomCenter, doorZoneFor, topOpenFor,
-  collisionAt, buildMask, floodRegion, regionPolygon, detectRoomAt,
+  collisionAt, buildMask, floodRegion, boxMorph, regionPolygon, detectRoomAt,
   /* 탭 처리 — 검사가 "도면을 눌렀을 때"를 사람이 누른 것과 같은 길로 재현한다 */
   modeTap, runAt,
   boxMorph, cleanWalls, cleanRadii, ensureClean, axisConcentration, structureBox, sheetBoxes, sheetBoxAt, envelopeMask, dropSpecks, components, keepBands, lineMorph, pairedFill, PAIR_MM, wallThickPx, classifyEdges, segHitsPoly, sealedMask,
