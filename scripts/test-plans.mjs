@@ -1876,6 +1876,8 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (eb) eb.click();
     window.Place3D.render();   // 카메라 위치는 다음 프레임에 놓인다 — 바로 재면 옛 자리를 잰다
     const seen = window.Place3D._dbg.seen, eyePick = window.Place3D._dbg.eye;
+    /* 눈높이 카메라가 가전 코앞(60cm 안)에 서지 않는가(2026-10-07 — TV 뒷판이 화면 절반이었다) */
+    const eyeNear = (() => { const d = window.Place3D._dbg; const cx = d.tx + d.dist * Math.cos(d.pitch) * Math.sin(d.yaw), cz = d.tz + d.dist * Math.cos(d.pitch) * Math.cos(d.yaw); return P.state.items.filter((it) => !it.staged).map((it) => { const c = P.bodyCenter(it); return +(Math.hypot(cx - c[0] / 1000, cz - c[1] / 1000) - Math.hypot(it.w, it.d) / 2000).toFixed(2); }); })();
     /* 결과 카드(눈높이면 위에서 본 사진을 덧붙인다)를 만든 뒤 시점이 그대로 돌아오는가 */
     const before = window.Place3D._dbg; let cardOk = false;
     try { const cvx = P.buildShareCanvas(); cardOk = !!(cvx && cvx.width); } catch (e) {}
@@ -1883,7 +1885,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const after = window.Place3D._dbg;
     const viewKept = cardOk && after.mode === 'eye' && Math.abs(after.yaw - before.yaw) < 1e-6 && Math.abs(after.tx - before.tx) < 1e-6;
     window.Place3D.close();
-    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick, viewKept, ndc };
+    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick, viewKept, ndc, eyeNear };
   });
 
   if (r.err) fail(r.err);
@@ -1903,6 +1905,8 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (!r.eyePick) fail('눈높이 시점이 「가전이 보이는 자리」를 고르지 않았다 (bestEyeSpot 이 돌지 않음)');
     else if (!(r.seen >= 1)) fail(`눈높이 시점에 놓은 가전이 안 보인다 (보이는 가전 ${r.seen}) — 벽 모서리를 보고 있다`);
     else pass(`눈높이 시점에 놓은 가전이 보인다 (${r.seen}대)`);
+    if (r.eyeNear && r.eyeNear.some((d) => d < 0.5)) fail(`눈높이 카메라가 가전 코앞에 선다 (몸통까지 ${r.eyeNear.join('/')}m)`);
+    else pass(`눈높이 카메라가 가전에서 떨어져 선다 (몸통까지 ${(r.eyeNear || []).join('/')}m)`);
 
     /* 바닥은 y=0 평면에 있고, XZ 가 월드 (x, y)/1000 과 부호까지 같아야 한다.
        z 가 음수로 나오면 좌우 반전된 것이다. */

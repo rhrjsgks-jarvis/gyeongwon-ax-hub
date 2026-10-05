@@ -11329,6 +11329,11 @@ function bestEyeSpot(){
       /* **카메라도 집 안에 서야 한다** — 창 자리는 벽으로 치지 않아 등 뒤가 창이면 카메라가
          발코니로 빠져 **유리 너머로** 보게 된다(실물에서 화면이 통째로 푸르스름했다). */
       if (roomPolysM.length && !inside(cx, cz)) continue;
+      /* **가전 코앞에 서지 않는다**(2026-10-07). 보이는 가전 수만 세니 TV 옆 30cm 에 서는 자리가 1등이 됐다 —
+         화면 아래 절반이 검은 TV 뒷판이었다(저장 벽선 46A 실물). 카메라가 어느 가전 몸통에서도 60cm 는 떨어진다 */
+      if (its.some((it) => { const c = P.bodyCenter(it); return Math.hypot(cx - M(c[0]), cz - M(c[1])) < Math.hypot(it.w, it.d) / 2000 + 0.6; })) continue;
+      /* **벽 모서리에 끼어 서지 않는다** — 좌우 어느 쪽이든 벽이 60cm 안이면 화면 절반이 벽이다(46B 실물) */
+      if (rayLen(cx, cz, dz, -dx) < 0.6 || rayLen(cx, cz, -dz, dx) < 0.6) continue;
       const score = eyeSeen(cx, cz, vx, vz, pts, half).w;
       if (!score) continue;
       const tie = Math.min(d, M(6000)) * 0.02;            // 같으면 더 물러서서 넓게 보이는 쪽
@@ -11857,6 +11862,13 @@ window.Place3D = {
   get isOpen(){ return on; },
   /* **재려고 낸 창구다.** 카메라가 집을 다 담는지, 벽에 붙어 있는지 같은 것은 사진만
      봐서는 못 가른다 — 값을 읽을 수 있어야 무엇을 고칠지 정해진다. 화면에는 안 쓴다. */
+  /* 화면 좌표(−1~1)에서 광선을 쏴 무엇이 맞는지 — 검사·조사용. 사진만 봐서는 「저 검은 면이 무엇인가」를 못 가른다 */
+  _hitAt(nx, ny){
+    if (!cam || !root) return null; apply(); cam.updateMatrixWorld();
+    const rc = new THREE.Raycaster(); rc.setFromCamera(new THREE.Vector2(nx, ny), cam);
+    const hs = rc.intersectObjects(root.children, true);
+    return hs.slice(0, 3).map((h) => { const o = h.object, m = Array.isArray(o.material) ? o.material[0] : o.material; return { d: +h.distance.toFixed(2), ud: Object.keys(o.userData).join(","), item: o.userData.item ? o.userData.item.label : (o.parent && o.parent.userData.item ? o.parent.userData.item.label : null), color: m && m.color ? m.color.getHexString() : null, name: o.name || "" }; });
+  },
   /* 집 상자(바닥 네 귀 + 천장 네 귀)를 지금 카메라로 투영한 화면 좌표(−1~1). 검사가 「다 담겼나」를 이것으로 센다 */
   get _boxNDC(){
     if (!cam || !lastBox) return null; apply(); cam.updateMatrixWorld();
