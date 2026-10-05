@@ -238,6 +238,18 @@
     background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;
     box-shadow:0 8px 28px rgba(0,0,0,.14);max-width:min(94%,660px)}
   #draftbar.on{display:block}
+  /* 고객 도면 자르기 — 도면 위를 통째로 덮는다(이 단계에서 볼 것은 그 그림뿐이다). 막대는 #draftbar 와 같은 모양 */
+  #cropview{position:absolute;inset:0;z-index:13;background:#FAFBFC;display:flex;flex-direction:column;overflow:hidden}
+  #cropview[hidden]{display:none}
+  #cropview canvas#cropcv{position:static;flex:none;touch-action:none;display:block}   /* #stage canvas 가 absolute 라 막대 위를 덮는다 — 여기서는 흐름에 두고 크기는 cropFit 이 준다(flex:1 이면 인라인 높이를 무시한다) */
+  #cropbar{position:absolute;left:0;right:0;bottom:0;z-index:1;background:#fff;border-top:1px solid var(--line);padding:9px 12px;box-shadow:0 -8px 28px rgba(0,0,0,.08)}
+  #cropbar .dl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  #cropbar .dl+.dl{margin-top:8px}
+  #cropbar .area{font:700 17px/1.2 system-ui;color:var(--brand)}
+  #cropbar .meta{font-size:12px;color:var(--muted)}
+  #cropbar .grow{flex:1}
+  #cropbar button{padding:7px 11px;font-size:12.5px}
+  #cropbar button.on{border-color:var(--brand);color:var(--brand)}
   #draftbar .dl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   #draftbar .dl+.dl{margin-top:8px}
   #draftbar .area{font:700 20px/1 system-ui;color:var(--brand);font-variant-numeric:tabular-nums}
@@ -623,6 +635,7 @@
         </div>
       </div>
       <div id="draftbar"></div>
+      <div id="cropview" hidden><canvas id="cropcv"></canvas><div id="cropbar"></div></div>
       <div id="mini"></div>
       <div id="modal"><div class="sheet" id="sheet"></div></div>
     </div>
@@ -6395,8 +6408,244 @@ function useImage(src, after){
 }
 $('#file').onchange = (e)=>{
   const f = e.target.files[0]; if(!f) return;
-  useImage(URL.createObjectURL(f));
+  e.target.value = '';                 // 같은 파일을 다시 골라도 onchange 가 뜨게
+  cropOpen(f);                         // 평면도 부분만 남기는 단계 → useImage
 };
+/* ───────────────────────────────────────────────────────────────
+   고객 도면 올리기 — **평면도 부분만 남기기** (2026-10-06)
+
+   고객이 보내는 도면은 책상 위에서 찍은 사진·카톡 캡처·분양 시트 통째다. 그대로 올리면
+   종이 가장자리·상태바·면적표의 긴 선이 벽이 되어 **축척 첫 후보가 도면 밖 선**이 되고
+   (원본 시트도 같다 — 단지 목록 경로는 전용면적으로 길이를 미리 채워 가려져 있었다)
+   3D 가 글자 벽으로 찬다. 실측 — 사진 그대로: 가장 큰 방 6.8㎡ · 가전 6/6 이지만 축척이
+   3.6배 틀림 / 평면도만 잘라: 14곳(2026-08-29 실측). 그래서 올린 직후 한 단계를 둔다.
+
+   · 상자는 **모델이 찾은 문·창**으로 제안한다 — 종이 가장자리·표·글자에는 문·창이 없다.
+     문·창을 못 찾으면 벽이 빽빽한 칸으로, 그것도 없으면 전체다. **제안일 뿐이고 확정은 사람**이다.
+   · 기울기는 벽 픽셀을 각도별로 투영해 가장 또렷한 각(±12°)으로 어림한다 — 축척 전이라
+     mm 는 필요 없다. 0.7° 미만이면 안 건드린다. 사진의 원근(위가 좁은)은 못 편다.
+   · 90° 돌아간 사진은 「돌리기」로 사람이 돌린다 — 벽은 가로·세로라 어느 쪽이 위인지
+     기계가 알 수 없다(글자 방향으로 알 수는 있지만 OCR 을 여기서 돌리지 않는다).
+   · 「이대로 쓰기」는 예전 경로 그대로다(자르지도 돌리지도 않는다).
+   · 단지 목록에서 연 도면은 이 단계를 지나지 않는다 — 이미 잘라 둔 그림이다.
+   ──────────────────────────────────────────────────────────── */
+const CROP_MIN_ANGLE = 0.7;
+const crop = { on: false, img: null, url: null, box: null, angle: 0, deskew: true, rot: 0, fit: null, drag: null, seg: null };
+
+/** 벽 픽셀을 각도별로 투영해 가장 또렷한 기울기(도)를 찾는다. 평면도의 벽은 두 축에 몰려 있어
+ *  바른 각에서 투영 히스토그램의 제곱합이 최대가 된다. 입력은 runSeg 결과(cls 1=벽). */
+function deskewAngle(seg, box){
+  if (!seg || !seg.cls) return 0;
+  const { w, h, cls } = seg;
+  /* box(원본 좌표)가 있으면 그 안의 벽만 본다 — 종이 가장자리·면적표 선이 투영을 흐린다 */
+  const bx0 = box ? Math.max(0, Math.floor(box.x * seg.s)) : 0, by0 = box ? Math.max(0, Math.floor(box.y * seg.s)) : 0;
+  const bx1 = box ? Math.min(w, Math.ceil((box.x + box.w) * seg.s)) : w, by1 = box ? Math.min(h, Math.ceil((box.y + box.h) * seg.s)) : h;
+  const step = Math.max(1, Math.ceil(Math.max(bx1 - bx0, by1 - by0) / 400));
+  const xs = [], ys = [];
+  for (let y = by0; y < by1; y += step) for (let x = bx0; x < bx1; x += step) if (cls[y * w + x] === 1){ xs.push(x - w / 2); ys.push(y - h / 2); }
+  if (xs.length < 200) return 0;
+  const diag = Math.hypot(w, h), N = xs.length;
+  let best = 0, bv = -1;
+  const score = (deg) => {
+    const a = deg * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    const hu = new Float64Array(Math.ceil(diag / step) + 2), hv = new Float64Array(hu.length), off = diag / 2;
+    for (let i = 0; i < N; i++){
+      const u = ((xs[i] * c + ys[i] * s) + off) / step, v = ((-xs[i] * s + ys[i] * c) + off) / step;
+      hu[u | 0]++; hv[v | 0]++;
+    }
+    let q = 0; for (let i = 0; i < hu.length; i++) q += hu[i] * hu[i] + hv[i] * hv[i];
+    return q;
+  };
+  for (let d = -12; d <= 12; d += 0.5){ const v = score(d); if (v > bv){ bv = v; best = d; } }
+  /* 주변을 0.1° 로 한 번 더 — 눈금 사이 값을 놓치지 않게 */
+  let fine = best, fv = bv;
+  for (let d = best - 0.4; d <= best + 0.4; d += 0.1){ const v = score(d); if (v > fv){ fv = v; fine = d; } }
+  return Math.abs(fine) < CROP_MIN_ANGLE ? 0 : Math.round(fine * 10) / 10;
+}
+
+/**
+ * 평면도 상자를 제안한다(모델 좌표 → 원본 좌표).
+ * 16px 칸으로 나눠 벽이 든 칸을 8방향으로 이어 **덩어리**를 만들고, 그중 **벽 칸이 가장 많은 것**이 집이다.
+ * 다만 셋을 먼저 거른다 — 실측(2026-10-06, 사진·카톡 캡처·원본 시트 7장)에서 나온 오탐이 전부 이 셋이다:
+ *   · 가로·세로가 6칸(96px) 미만 — **종이 가장자리·치수선**은 길지만 한 줄이라 한쪽이 2~5칸이다
+ *   · 칸의 15% 넘게 **꽉 찬 칸**(80% 이상 벽) — **카톡 상태바·책상 그림자**는 덩어리째 벽으로 읽힌다(집 벽은 선이라 0~11%)
+ *   · 상자 안에 문·창이 하나도 없음 — 집 안의 문·창은 정확하다(집 밖에서도 초록 띠·검은 띠를 창으로 읽지만 집이 더 크다)
+ * 밀도(벽²÷상자)로 고르는 것은 버렸다 — 곧은 한 줄이 가장 빽빽해 종이 가장자리가 이긴다.
+ */
+function cropSuggest(seg, iw, ih){
+  const whole = { x: 0, y: 0, w: iw, h: ih, how: 'whole' };
+  if (!seg || !seg.cls) return whole;
+  const { w, h, cls, s } = seg, C = 16, cw = Math.ceil(w / C), ch = Math.ceil(h / C);
+  const wl = new Uint16Array(cw * ch), dw = new Uint16Array(cw * ch);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ const k = cls[y * w + x]; if (!k) continue; const ci = ((y / C) | 0) * cw + ((x / C) | 0); if (k === 1) wl[ci]++; else dw[ci]++; }
+  const MIN = C * C / 12, SOLID = C * C * 0.8, lab = new Int32Array(cw * ch).fill(-1), comps = [];
+  for (let cy = 0; cy < ch; cy++) for (let cx = 0; cx < cw; cx++){
+    const c0 = cy * cw + cx; if (wl[c0] < MIN || lab[c0] >= 0) continue;
+    const id = comps.length, st = [c0]; lab[c0] = id;
+    const comp = { px: 0, solid: 0, x0: cx, y0: cy, x1: cx, y1: cy, n: 0 };
+    while (st.length){
+      const c = st.pop(), y = (c / cw) | 0, x = c - y * cw;
+      comp.px += wl[c]; comp.n++; if (wl[c] > SOLID) comp.solid++;
+      if (x < comp.x0) comp.x0 = x; if (x > comp.x1) comp.x1 = x; if (y < comp.y0) comp.y0 = y; if (y > comp.y1) comp.y1 = y;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++){
+        const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= cw || ny >= ch) continue;
+        const nc = ny * cw + nx; if (wl[nc] >= MIN && lab[nc] < 0){ lab[nc] = id; st.push(nc); }
+      }
+    }
+    comps.push(comp);
+  }
+  if (!comps.length) return whole;
+  for (const c of comps){ let d = 0; for (let y = c.y0; y <= c.y1; y++) for (let x = c.x0; x <= c.x1; x++) d += dw[y * cw + x]; c.dwBox = d; c.bw = c.x1 - c.x0 + 1; c.bh = c.y1 - c.y0 + 1; }
+  const ok = comps.filter((c) => c.n >= 12 && c.bw >= 6 && c.bh >= 6 && c.solid <= c.n * 0.15 && c.dwBox > 0);
+  if (!ok.length) return whole;
+  ok.sort((a, b) => b.n - a.n || b.dwBox - a.dwBox);
+  /* **가까운 조각을 합친다** — 사진은 원근·그림자로 집의 벽이 몇 조각으로 갈려 가장 큰 조각이 집의
+     절반일 수 있다(실측: 59D 사진이 오른쪽 절반만). 지금 상자의 긴 변 1/3 안에 있는 조각을 거두어
+     상자를 넓히고, 넓어졌으면 다시 본다. 면적표는 그보다 멀거나 위 관문에서 이미 떨어진다. */
+  const bb = { x0: ok[0].x0, y0: ok[0].y0, x1: ok[0].x1, y1: ok[0].y1 };
+  const used = new Set([ok[0]]);
+  for (let grew = true; grew;){
+    grew = false;
+    const D = Math.max(2, Math.round(Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0) / 3));
+    for (const c of ok){
+      if (used.has(c)) continue;
+      const gx = Math.max(0, Math.max(bb.x0, c.x0) - Math.min(bb.x1, c.x1)), gy = Math.max(0, Math.max(bb.y0, c.y0) - Math.min(bb.y1, c.y1));
+      if (gx > D || gy > D) continue;
+      used.add(c); grew = true;
+      bb.x0 = Math.min(bb.x0, c.x0); bb.y0 = Math.min(bb.y0, c.y0); bb.x1 = Math.max(bb.x1, c.x1); bb.y1 = Math.max(bb.y1, c.y1);
+    }
+  }
+  const how = 'door';
+  /* 바깥벽 두께·그림자 여유 — 긴 변의 4%(최소 한 칸) */
+  const pad = Math.max(C, Math.round(Math.max(bb.x1 - bb.x0, bb.y1 - bb.y0) * C * 0.04));
+  const x = Math.max(0, bb.x0 * C - pad), y = Math.max(0, bb.y0 * C - pad);
+  const x2 = Math.min(w, (bb.x1 + 1) * C + pad), y2 = Math.min(h, (bb.y1 + 1) * C + pad);
+  const k = 1 / s;
+  return { x: Math.round(x * k), y: Math.round(y * k), w: Math.round((x2 - x) * k), h: Math.round((y2 - y) * k), how };
+}
+
+/** 돌리고(90° 단위 + 기울기) 잘라 새 이미지를 만든다. box 는 돌린 그림 기준 좌표 */
+function cropApply(img, rot, angle, box){
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const quarter = ((rot % 360) + 360) % 360, swap = quarter === 90 || quarter === 270;
+  const rw = swap ? ih : iw, rh = swap ? iw : ih;
+  const bx = Math.max(0, Math.round(box.x)), by = Math.max(0, Math.round(box.y));
+  const bw = Math.max(8, Math.min(rw - bx, Math.round(box.w))), bh = Math.max(8, Math.min(rh - by, Math.round(box.h)));
+  const scale = Math.min(1, 2000 / Math.max(bw, bh));     // 긴 변 2000px 로 묶는다 — 인식 상한이 1,200px 이라 더 커도 쓸 데가 없다
+  const c = document.createElement('canvas'); c.width = Math.round(bw * scale); c.height = Math.round(bh * scale);
+  const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);   // 돌리며 비는 귀퉁이는 흰 종이다
+  x.scale(scale, scale); x.translate(-bx, -by);
+  x.translate(rw / 2, rh / 2); x.rotate((quarter - angle) * Math.PI / 180); x.translate(-iw / 2, -ih / 2);
+  x.drawImage(img, 0, 0);
+  return c;
+}
+
+function cropRotatedSize(){
+  const swap = crop.rot === 90 || crop.rot === 270;
+  return { w: swap ? crop.img.naturalHeight : crop.img.naturalWidth, h: swap ? crop.img.naturalWidth : crop.img.naturalHeight };
+}
+function cropFit(){
+  const v = $('#cropview'), cv2 = $('#cropcv');
+  const r = v.getBoundingClientRect(), barH = $('#cropbar').getBoundingClientRect().height || 0;
+  const W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round(r.height - barH));
+  cv2.width = W * devicePixelRatio; cv2.height = H * devicePixelRatio; cv2.style.width = W + 'px'; cv2.style.height = H + 'px';
+  const sz = cropRotatedSize(), m = 14;
+  const k = Math.min((W - 2 * m) / sz.w, (H - 2 * m) / sz.h);
+  crop.fit = { k, ox: (W - sz.w * k) / 2, oy: (H - sz.h * k) / 2, W, H };
+}
+function cropDraw(){
+  if (!crop.on) return;
+  const cv2 = $('#cropcv'), x = cv2.getContext('2d'), f = crop.fit, sz = cropRotatedSize();
+  x.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  x.clearRect(0, 0, f.W, f.H);
+  x.save(); x.translate(f.ox, f.oy); x.scale(f.k, f.k);
+  x.translate(sz.w / 2, sz.h / 2); x.rotate((crop.rot - (crop.deskew ? crop.angle : 0)) * Math.PI / 180);
+  x.drawImage(crop.img, -crop.img.naturalWidth / 2, -crop.img.naturalHeight / 2);
+  x.restore();
+  const b = crop.box, X = f.ox + b.x * f.k, Y = f.oy + b.y * f.k, Wd = b.w * f.k, Hd = b.h * f.k;
+  x.fillStyle = 'rgba(17,24,39,.42)';
+  x.beginPath(); x.rect(0, 0, f.W, f.H); x.rect(X, Y, Wd, Hd); x.fill('evenodd');
+  x.strokeStyle = '#1428A0'; x.lineWidth = 2; x.strokeRect(X, Y, Wd, Hd);
+  x.fillStyle = '#1428A0';
+  for (const [cx, cy] of [[X, Y], [X + Wd, Y], [X, Y + Hd], [X + Wd, Y + Hd]]){ x.beginPath(); x.arc(cx, cy, 11, 0, Math.PI * 2); x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 2; x.stroke(); }
+}
+function cropBar(){
+  const bar = $('#cropbar'), a = crop.angle;
+  bar.innerHTML = "<div class='dl'><span class='area'>평면도 부분만 남겨 주세요</span>"
+    + "<span class='grow'></span><span class='meta'>" + (!crop.seg && crop.box.how === 'whole' && crop.finding ? '평면도 자리를 찾는 중입니다…' : crop.box.how === 'door' ? '벽·문·창이 있는 자리로 잡았습니다' : crop.box.how === 'whole' ? '평면도를 못 찾았습니다 — 상자를 맞춰 주세요' : '') + "</span></div>"
+    + "<div class='dl'><span class='meta'>모서리를 끌어 맞추고 확정을 누르세요 — 책상·면적표·글자는 빼는 편이 정확합니다</span></div>"
+    + "<div class='dl'><button id='cr-rot'>↻ 90° 돌리기</button>"
+    + (a ? "<button id='cr-skew' class='" + (crop.deskew ? 'on' : '') + "'>기울기 " + (a > 0 ? '+' : '') + a + "° " + (crop.deskew ? '바로잡음 ✓' : '그대로') + "</button>" : '')
+    + "<span class='grow'></span><button id='cr-raw'>이대로 쓰기</button><button id='cr-ok' class='primary'>확정</button></div>";
+  $('#cr-rot').onclick = () => { crop.rot = (crop.rot + 90) % 360; const sz = cropRotatedSize(); crop.box = { x: 0, y: 0, w: sz.w, h: sz.h, how: crop.box.how === 'whole' ? 'whole' : 'rot' }; cropFit(); cropDraw(); };
+  const sk = $('#cr-skew'); if (sk) sk.onclick = () => { crop.deskew = !crop.deskew; cropBar(); cropDraw(); };
+  $('#cr-raw').onclick = () => { const u = crop.url; cropClose(); useImage(u); };
+  $('#cr-ok').onclick = () => {
+    const c = cropApply(crop.img, crop.rot, crop.deskew ? crop.angle : 0, crop.box);
+    const changed = crop.rot || (crop.deskew && crop.angle) || crop.box.w < cropRotatedSize().w - 2 || crop.box.h < cropRotatedSize().h - 2;
+    cropClose();
+    useImage(changed ? c.toDataURL('image/jpeg', 0.92) : crop.url);
+  };
+}
+function cropOpen(file){
+  const url = URL.createObjectURL(file), img = new Image();
+  img.onload = async () => {
+    Object.assign(crop, { on: true, img, url, rot: 0, deskew: true, angle: 0, drag: null, seg: null, finding: true });
+    crop.box = { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight, how: 'whole' };
+    $('#cropview').hidden = false; $('#empty').style.display = 'none';
+    cropBar(); cropFit(); cropDraw();
+    pushBack();
+    let seg = null;
+    try { seg = segWanted() ? await Promise.race([runSeg(img), new Promise((r) => setTimeout(() => r(null), SEG_TIMEOUT_MS))]) : null; } catch (_) { seg = null; }
+    if (!crop.on || crop.img !== img) return;        // 그 사이 닫혔다
+    crop.seg = seg; crop.finding = false;
+    const sug = cropSuggest(seg, img.naturalWidth, img.naturalHeight);
+    crop.angle = deskewAngle(seg, sug.how === 'whole' ? null : sug);
+    if (crop.rot === 0) crop.box = sug;             // 사람이 이미 돌렸으면 제안을 덮어쓰지 않는다
+    cropBar(); cropFit(); cropDraw();
+  };
+  img.onerror = () => { toast('도면을 열지 못했습니다'); };
+  img.src = url;
+}
+function cropClose(){
+  if (!crop.on) return;
+  crop.on = false; $('#cropview').hidden = true;
+  popBack();
+  if (!state.img) $('#empty').style.display = '';
+}
+/* 상자 조작 — 모서리를 잡으면 그 모서리만, 안쪽을 잡으면 통째로 옮긴다. 손가락은 24px 안이면 잡힌다 */
+(() => {
+  const cv2 = $('#cropcv');
+  const pt = (e) => { const r = cv2.getBoundingClientRect(), f = crop.fit; return { x: (e.clientX - r.left - f.ox) / f.k, y: (e.clientY - r.top - f.oy) / f.k }; };
+  cv2.addEventListener('pointerdown', (e) => {
+    if (!crop.on) return;
+    const p = pt(e), b = crop.box, R = 24 / crop.fit.k;
+    const corners = { nw: [b.x, b.y], ne: [b.x + b.w, b.y], sw: [b.x, b.y + b.h], se: [b.x + b.w, b.y + b.h] };
+    let hit = null;
+    for (const k in corners) if (Math.hypot(p.x - corners[k][0], p.y - corners[k][1]) <= R) hit = k;
+    if (!hit && p.x > b.x && p.x < b.x + b.w && p.y > b.y && p.y < b.y + b.h) hit = 'move';
+    if (!hit) return;
+    crop.drag = { hit, p, box: { ...b } };
+    try { cv2.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  cv2.addEventListener('pointermove', (e) => {
+    if (!crop.on || !crop.drag) return;
+    const p = pt(e), d = crop.drag, b0 = d.box, sz = cropRotatedSize(), dx = p.x - d.p.x, dy = p.y - d.p.y, MIN = 40;
+    let x0 = b0.x, y0 = b0.y, x1 = b0.x + b0.w, y1 = b0.y + b0.h;
+    if (d.hit === 'move'){ x0 += dx; x1 += dx; y0 += dy; y1 += dy; const sx = Math.min(0, sz.w - x1) - Math.min(0, x0), sy = Math.min(0, sz.h - y1) - Math.min(0, y0); x0 += sx; x1 += sx; y0 += sy; y1 += sy; }
+    else {
+      if (d.hit.includes('w')) x0 = Math.min(x1 - MIN, Math.max(0, x0 + dx)); else x1 = Math.max(x0 + MIN, Math.min(sz.w, x1 + dx));
+      if (d.hit.includes('n')) y0 = Math.min(y1 - MIN, Math.max(0, y0 + dy)); else y1 = Math.max(y0 + MIN, Math.min(sz.h, y1 + dy));
+    }
+    crop.box = { x: x0, y: y0, w: x1 - x0, h: y1 - y0, how: 'hand' };
+    cropDraw();
+  });
+  const up = () => { crop.drag = null; };
+  cv2.addEventListener('pointerup', up); cv2.addEventListener('pointercancel', up);
+  window.addEventListener('resize', () => { if (crop.on){ cropFit(); cropDraw(); } });
+})();
 /*
  * **길이 입력 막대를 먼저 닫는다**(2026-08-20). 막대가 떠 있는 동안에는 `wallPickFn` 이
  * 켜져 있어 `modeTap` 맨 앞에서 탭을 가로챈다 — 두 점 보정으로 들어와도 **도면을 눌러도
@@ -6461,6 +6710,7 @@ function popBack(){
  *  **위에 떠 있는 것부터 닫는다** — 모달(z:20)이 서랍(z:15)보다 위라, 서랍에서 시트를
  *  열었을 때 예전 순서(서랍 먼저)로는 화면을 덮은 시트가 남고 그 뒤의 서랍이 닫혔다. */
 function stepBack(){
+  if (crop.on){ cropClose(); return true; }
   if ($('#modal').classList.contains('on')){ closeSheet(); return true; }
   if ($('#side').classList.contains('on')){ $('#side').classList.remove('on'); return true; }
   if ($('#draftbar').classList.contains('on')){
@@ -9292,7 +9542,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
+window.__place = { state, draw, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,

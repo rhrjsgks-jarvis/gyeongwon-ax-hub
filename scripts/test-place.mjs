@@ -2030,5 +2030,56 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
     '[24] parts[0] 을 그대로 쓰는 자리가 남아 있지 않다');
 }
 
+// ── [25] 고객 도면 올리기 — 평면도 부분만 남기기 (2026-10-06) ──────────────────
+// 사진·캡처를 그대로 올리면 종이 가장자리·상태바·면적표가 벽이 되어 축척 첫 후보가 도면 밖 선이
+// 된다. 올린 직후 자르기 단계가 들어가고, 상자 제안은 **벽 덩어리 중 가장 큰 것**이며 종이
+// 가장자리(한 줄)·검은 띠(꽉 찬 칸)·문·창 없는 덩어리는 거른다. 기울기는 벽 투영으로 어림한다.
+{
+  const has = (t) => html.includes(t);
+  ok2(has("cropOpen(f);") && !has("useImage(URL.createObjectURL(f));\n};"),
+    '[25] 파일을 올리면 useImage 가 아니라 자르기 단계로 간다');
+  ok2(has("if (crop.on){ cropClose(); return true; }"), '[25] 뒤로가기가 자르기 화면부터 닫는다');
+  ok2(typeof P.cropSuggest === 'function' && typeof P.deskewAngle === 'function' && typeof P.cropApply === 'function',
+    '[25] 제안·기울기·자르기 함수가 노출돼 있다');
+
+  /* 모델 분류를 흉내 낸 칸 지도 — 집(가는 벽 격자 + 문·창) · 왼쪽 가장자리 한 줄 · 위 검은 띠 · 작은 표 */
+  const w = 480, h = 480, cls = new Uint8Array(w * h);
+  const rect = (x0, y0, x1, y1, k) => { for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) cls[y * w + x] = k; };
+  rect(0, 0, w, 40, 1);                     // 검은 띠(상태바) — 꽉 찬 칸
+  rect(2, 40, 6, h, 1);                     // 종이 가장자리 — 세로 한 줄
+  rect(380, 60, 440, 100, 1);               // 작은 표 테두리 — 문·창 없음
+  for (let y = 120; y < 420; y += 60) rect(160, y, 360, y + 5, 1);   // 집 가로벽
+  for (let x = 160; x < 370; x += 50) rect(x, 120, x + 5, 420, 1);   // 집 세로벽
+  rect(200, 120, 230, 125, 3); rect(300, 415, 330, 420, 3);          // 창
+  rect(260, 180, 262, 200, 2);                                       // 문
+  const seg = { w, h, s: 0.5, cls };
+  const sug = P.cropSuggest(seg, w * 2, h * 2);
+  /* 원본 좌표(÷s)로 돌아온다 — 집 160..365 × 120..420 에 여유를 더한 상자여야 한다 */
+  const inHouse = sug.x <= 320 && sug.y <= 240 && sug.x + sug.w >= 730 && sug.y + sug.h >= 840;
+  /* 표(760..880 × 120..200)·띠(y<80)·가장자리(x<12)가 상자 밖이어야 한다 — 여유(긴 변 4%+칸 반올림)는 봐준다 */
+  const notJunk = sug.y > 120 && sug.x > 20 && sug.x + sug.w < 800;
+  ok2(sug.how === 'door' && inHouse && notJunk,
+    `[25] 제안 상자가 집이다 — 상태바·종이 가장자리·표를 뺀다 (${JSON.stringify(sug)})`);
+  const bare = new Uint8Array(w * h); const seg0 = { w, h, s: 1, cls: bare };
+  ok2(P.cropSuggest(seg0, w, h).how === 'whole', '[25] 벽이 없으면 전체를 제안한다');
+  ok2(P.cropSuggest(null, 100, 50).how === 'whole', '[25] 모델이 없으면 전체를 제안한다');
+
+  /* 기울기 — 격자를 4° 돌려 그린 칸 지도에서 4° 근처가 나와야 하고, 바른 격자는 0 이어야 한다 */
+  const grid = (deg) => { const c = new Uint8Array(w * h), a = deg * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ const u = (x - w / 2) * cs + (y - h / 2) * sn, v = -(x - w / 2) * sn + (y - h / 2) * cs;
+      if (Math.abs(u) > 180 || Math.abs(v) > 180) continue; if (Math.abs(((u % 60) + 60) % 60) < 4 || Math.abs(((v % 60) + 60) % 60) < 4) c[y * w + x] = 1; }
+    return { w, h, s: 1, cls: c }; };
+  const a4 = P.deskewAngle(grid(4)), a0 = P.deskewAngle(grid(0)), am = P.deskewAngle(grid(-6));
+  ok2(Math.abs(a4 - 4) <= 0.6 && Math.abs(am + 6) <= 0.6 && a0 === 0,
+    `[25] 기울기 어림 — 4°→${a4} · -6°→${am} · 0°→${a0}`);
+  ok2(P.deskewAngle(grid(0.4)) === 0, '[25] 0.7° 미만은 건드리지 않는다');
+  /* 자르기 결과 크기 — 90° 돌리면 가로세로가 바뀌고, 상자는 돌린 그림 기준이다 */
+  const fake = { naturalWidth: 400, naturalHeight: 300 };
+  const c1 = P.cropApply(fake, 0, 0, { x: 10, y: 20, w: 200, h: 100 });
+  const c2 = P.cropApply(fake, 90, 0, { x: 0, y: 0, w: 300, h: 400 });
+  ok2(c1.width === 200 && c1.height === 100 && c2.width === 300 && c2.height === 400,
+    `[25] 잘라낸 그림 크기 — ${c1.width}×${c1.height} · 90° ${c2.width}×${c2.height}`);
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

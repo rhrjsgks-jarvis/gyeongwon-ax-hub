@@ -501,6 +501,10 @@ try {
     const f = page.frameLocator('iframe');
     await f.locator('#file').setInputFiles(fixture);
     await page.waitForTimeout(900);
+    /* 올린 직후 「평면도 부분만 남기기」가 뜬다(2026-10-06) — 아래 검사는 원본 그대로를 보므로 「이대로 쓰기」로 지난다 */
+    const cropShown = await f.locator('#cropview').isVisible().catch(() => false);
+    if (!cropShown) fail('고객 도면을 올렸는데 자르기 단계가 뜨지 않음');
+    else { pass('도면을 올리면 평면도 자르기 단계가 먼저 뜬다'); await f.locator('#cr-raw').click(); await page.waitForTimeout(900); }
 
     const st = await page.evaluate(() => {
       const w = document.querySelector('iframe').contentWindow;
@@ -602,6 +606,7 @@ try {
     const f = page.frameLocator('iframe');
     await f.locator('#file').setInputFiles(fixture);
     await page.waitForTimeout(900);
+    if (await f.locator('#cropview').isVisible().catch(() => false)) { await f.locator('#cr-raw').click(); await page.waitForTimeout(900); }
 
     const r = await page.evaluate(() => {
       const w = document.querySelector('iframe').contentWindow;
