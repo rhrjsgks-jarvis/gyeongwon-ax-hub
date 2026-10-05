@@ -1732,7 +1732,13 @@ function bodyProbes(it, pad){
  * 수백 개 훑으므로 대부분은 모서리에서 걸러진다.
  */
 function bodyOutside(it, pad){
-  for (const [x, y] of corners(it, pad)) if (!placeable(it, x, y)) return true;
+  /* 싼 검사의 모서리도 **들인 모서리**다(2026-10-06). 맨 모서리로 보면 이격 0인 제품(에어컨 back:0)은
+     뒷면이 방 경계선 위에 놓여 짝수-홀수 판정이 뒤집힌다 — 직접 입력한 4,200×3,600 방에서 벽 세 면이
+     비어 있는데 에어컨이 「자리 없음」이었다. 위 bodyProbes 가 10mm 들이는 것과 같은 이유·같은 값이다. */
+  const p = pad || { back:0, side:0, front:0 };
+  const eps = Math.min(PROBE_INSET, it.w/4, it.d/4);
+  const inset = { back: p.back - eps, side: p.side - eps, front: p.front - eps };
+  for (const [x, y] of corners(it, inset)) if (!placeable(it, x, y)) return true;
   for (const [x, y] of bodyProbes(it, pad)) if (!placeable(it, x, y)) return true;
   return false;
 }
@@ -9545,7 +9551,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
+window.__place = { state, draw, bodyOutside, insideFor, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,
@@ -11082,6 +11088,42 @@ function fitTop(){
  * 맞춤 거리(bestIsoYaw)와 실제 카메라(view)가 **같은 각도**를 써야 집이 화면에 맞는다.
  */
 function isoPitch(asp){ return asp != null && asp < 1 ? 1.05 : 0.85; }
+/*
+ * **상자 여덟 모서리를 실제로 투영해 거리를 잰다**(2026-10-06). 예전 어림(가로폭·세로높이 × 1.15)은
+ * 큰 집에서는 맞았지만 **4.2×3.6m 방에서는 벽 높이(2.3m)가 상자에 견줘 커서** 가까운 쪽 벽 윗선과
+ * 바닥 앞선이 화면 밖으로 나갔다(실물: 냉장고·세탁기가 오른쪽에서 잘림). 점마다 "이 점이 화면에
+ * 들어오려면 카메라가 얼마나 멀어야 하는가"는 닫힌 식이다 — 가로·세로 각각 |옆|/tan − 깊이.
+ * 아래쪽은 안내띠·조이스틱이 먹으므로(좁은 화면 약 1/4) 그만큼 덜 쓴다.
+ */
+function fitDistFor(yaw, pitch, ty, asp){
+  const vf = (((cam && cam.fov) || 52) * Math.PI) / 180;
+  const tv = Math.tan(vf / 2), th = tv * Math.max(0.2, asp);
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const dx = cp * Math.sin(yaw), dy = sp, dz = cp * Math.cos(yaw);          // 바라보는 점 → 카메라
+  const fx = -dx, fy = -dy, fz = -dz;                                         // 앞
+  let rx = -fz, rz = fx; const rl = Math.hypot(rx, rz) || 1; rx /= rl; rz /= rl;   // 오른쪽 = 앞 × 위(0,1,0) = (−fz, 0, fx)
+  const ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;                 // 위 = 오른쪽 × 앞 (yaw 0·pitch p 에서 (0, cos p, −sin p) 가 나와야 한다)
+  const H = M(WALL_H_MM), cx = lastBox.x / 2, cz = lastBox.z / 2;
+  /* 쓸 수 있는 세로 띠 [−botK, topK] 를 **같은 폭의 대칭 띠**로 바꿔 거리를 재고, 그 띠의 가운데
+     (화면 중심보다 (topK−botK)/2 위)에 집이 오도록 바라보는 점을 카메라의 위 방향으로 옮긴다(shift).
+     옮겨도 깊이는 안 변한다(위 ⟂ 앞). 안 옮기면 좁은 화면에서 위 1/3 이 비고 집이 작아진다. */
+  const narrow = asp < 1, botK = narrow ? 0.55 : 0.9, topK = 0.95, sideK = 0.95;
+  const vK = (topK + botK) / 2, vMid = (topK - botK) / 2;
+  let need = 0;
+  const pts = [];
+  for (const px of [0, lastBox.x]) for (const py of [0, H]) for (const pz of [0, lastBox.z]){
+    const vx = px - cx, vy = py - ty, vz = pz - cz;
+    const depth0 = vx * fx + vy * fy + vz * fz;                              // dist 를 더하면 카메라 기준 깊이
+    const r = vx * rx + vz * rz, u = vx * ux + vy * uy + vz * uz;
+    pts.push([depth0, u]);
+    need = Math.max(need, Math.abs(r) / (th * sideK) - depth0, Math.abs(u) / (tv * vK) - depth0);
+  }
+  const dist = Math.max(3, need * 1.04);
+  let lo = 1e9, hi = -1e9;
+  for (const [d0, u] of pts){ const a = u / (dist + d0); if (a < lo) lo = a; if (a > hi) hi = a; }
+  const shift = ((lo + hi) / 2 - vMid * tv) * dist;                         // 양수면 집이 띠 가운데보다 위에 있다 → 바라보는 점을 올린다
+  return { dist, shift, up: [ux, uy, uz] };
+}
 function bestIsoYaw(){
   if (!lastBox || !lastBox.x || !lastBox.z) return { yaw: -0.7, dist: fitForScreen(), asp: null };
   const el = ren && ren.domElement;
@@ -11111,8 +11153,9 @@ function bestIsoYaw(){
     /* 화면 가로에 놓이는 폭 · 세로에 놓이는 높이(깊이는 pitch 로 눌린다) */
     const wide = lastBox.x * c + lastBox.z * s;
     const tall = (lastBox.x * s + lastBox.z * c) * sp + wallH * cp;
-    const need = Math.max((wide / 2) / (t * Math.max(0.2, asp)), (tall / 2) / t) * 1.15;
-    if (!best || need < best.dist) best = { yaw, dist: Math.max(3, need), wide, tall, asp };
+    const tyGuess = asp < 1 ? -Math.min(wallH * 0.55, lastBox.z * 0.10) : wallH * 0.35;   // view() 가 쓰는 값과 같아야 한다
+    const fit = fitDistFor(yaw, pitch, tyGuess, asp);
+    if (!best || fit.dist < best.dist) best = { yaw, dist: fit.dist, wide, tall, asp, shift: fit.shift, up: fit.up, ty: tyGuess };
   }
   lastAsp = +asp.toFixed(3);
   lastIso = { yaw: +best.yaw.toFixed(2), wide: +best.wide.toFixed(1), tall: +best.tall.toFixed(1) };
@@ -11158,6 +11201,8 @@ function view(name){
     orb.ty = narrow ? -drop : M(WALL_H_MM) * 0.35;
     orb.dist = iso.dist; orb.yaw = iso.yaw;
     if (ctr){ orb.tx = ctr[0]; orb.tz = ctr[1]; }
+    /* 여덟 모서리를 투영해 잰 경우 — 집이 쓸 수 있는 띠의 가운데에 오도록 바라보는 점을 옮긴다(fitDistFor 주석) */
+    if (iso.up && ctr){ const k = iso.shift || 0; orb.tx = ctr[0] + iso.up[0] * k; orb.ty = iso.ty + iso.up[1] * k; orb.tz = ctr[1] + iso.up[2] * k; }
   }
 }
 
@@ -11812,6 +11857,13 @@ window.Place3D = {
   get isOpen(){ return on; },
   /* **재려고 낸 창구다.** 카메라가 집을 다 담는지, 벽에 붙어 있는지 같은 것은 사진만
      봐서는 못 가른다 — 값을 읽을 수 있어야 무엇을 고칠지 정해진다. 화면에는 안 쓴다. */
+  /* 집 상자(바닥 네 귀 + 천장 네 귀)를 지금 카메라로 투영한 화면 좌표(−1~1). 검사가 「다 담겼나」를 이것으로 센다 */
+  get _boxNDC(){
+    if (!cam || !lastBox) return null; apply(); cam.updateMatrixWorld();
+    const H = M(WALL_H_MM), out = [];
+    for (const x of [0, lastBox.x]) for (const y of [0, H]) for (const z of [0, lastBox.z]){ const v = new THREE.Vector3(x, y, z).project(cam); out.push([+v.x.toFixed(3), +v.y.toFixed(3)]); }
+    return out;
+  },
   get _dbg(){
     return { mode: mode3, fit: +fitDist.toFixed(2), dist: +orb.dist.toFixed(2),
       pitch: +orb.pitch.toFixed(2), yaw: +orb.yaw.toFixed(2),

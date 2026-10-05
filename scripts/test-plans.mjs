@@ -1860,6 +1860,9 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const cvEl = document.getElementById('cv3');
     const aspWant = cvEl && cvEl.clientHeight ? cvEl.clientWidth / cvEl.clientHeight : null;
     const aspGot = window.Place3D._dbg.asp;
+    /* 둘러보기 시점이 집 상자(바닥·천장 여덟 귀)를 화면 안에 다 담는가(2026-10-06 — 4.2×3.6 방에서 벽 높이 때문에 오른쪽이 잘렸다) */
+    window.Place3D.render();
+    const ndc = window.Place3D._boxNDC;
     /* 바닥 정점을 꺼내 월드 좌표와 대조한다 */
     const pts = [];
     window.Place3D.root.traverse((o) => {
@@ -1880,7 +1883,7 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     const after = window.Place3D._dbg;
     const viewKept = cardOk && after.mode === 'eye' && Math.abs(after.yaw - before.yaw) < 1e-6 && Math.abs(after.tx - before.tx) < 1e-6;
     window.Place3D.close();
-    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick, viewKept };
+    return { info, pts: pts.slice(0, 24), open: window.Place3D.isOpen, aspWant, aspGot, seen, eyePick, viewKept, ndc };
   });
 
   if (r.err) fail(r.err);
@@ -1891,6 +1894,10 @@ await page.evaluate(() => (window.load3D ? window.load3D() : null));
     if (r.aspWant == null || r.aspGot == null || Math.abs(r.aspWant - r.aspGot) > 0.02)
       fail(`3D 카메라가 화면 비율을 잘못 쟀다 — 캔버스 ${r.aspWant && r.aspWant.toFixed(3)} / 맞춤 ${r.aspGot} (숨긴 채 재면 1 이 나온다)`);
     else pass(`3D 카메라 맞춤이 보이는 캔버스 비율(${r.aspGot})로 계산된다`);
+    const outNDC = (r.ndc || []).filter(([x, y]) => Math.abs(x) > 1 || y > 1 || y < -1);
+    if (!r.ndc) fail('3D 상자 투영 창구(_boxNDC)가 없다');
+    else if (outNDC.length) fail(`둘러보기 시점에서 집 상자 귀 ${outNDC.length}/8 이 화면 밖이다 (${JSON.stringify(outNDC.slice(0, 3))})`);
+    else pass('둘러보기 시점이 집 상자 여덟 귀를 전부 화면 안에 담는다');
     if (!r.viewKept) fail('결과 카드를 만든 뒤 눈높이 시점이 그대로 돌아오지 않는다 (위에서 본 사진을 찍고 못 되돌렸다)');
     else pass('결과 카드를 만든 뒤에도 보던 눈높이 시점 그대로');
     if (!r.eyePick) fail('눈높이 시점이 「가전이 보이는 자리」를 고르지 않았다 (bestEyeSpot 이 돌지 않음)');

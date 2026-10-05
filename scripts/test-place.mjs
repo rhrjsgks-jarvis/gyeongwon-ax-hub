@@ -1468,6 +1468,12 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     if (P.escapesRoom(fr)) fail('벽에 딱 붙여 놓았는데 막았다 (오탐) — 경계선 위 점 판정이 흔들린다');
     else pass('오탐 없음 — 방 한가운데·벽에 딱 붙이기 둘 다 통과');
   }
+  /* 이격 0 인 제품(에어컨 back:0)은 뒷면이 경계선 **위에** 놓인다 — 싼 모서리 검사도 들여야 한다(2026-10-06).
+     직접 입력한 4,200×3,600 방에서 벽 세 면이 비어 있는데 에어컨이 「자리 없음」이었다 */
+  /* 오른쪽 벽(x=3000)에 등을 대고 방 안을 본다(a=π/2) — 실제로 걸린 자리가 오른쪽 벽이었다(위쪽 벽은 옛 판정도 통과한다) */
+  const ac = put({ cat: '에어컨', label: '에어컨', bx: 3000, by: 1500, a: Math.PI / 2, w: 360, d: 330, room: rA.id, clear: { back: 0, side: 0, front: 0 } });
+  if (P.bodyOutside(ac)) fail('이격 0 제품을 벽에 딱 붙였는데 「밖」으로 본다 — 맨 모서리가 경계선 위라 판정이 뒤집힌다');
+  else { ac.bx = 3025; if (!P.bodyOutside(ac)) fail('벽 밖으로 25mm 나갔는데 통과했다'); else pass('이격 0 제품 — 경계선 위는 통과, 25mm 밖은 막는다'); }
   fr.bx = 9000;
   if (!P.escapesRoom(fr)) fail('집 밖인데 통과했다');
   else if (P.collisionAt(fr) === '벽을 가로지릅니다') fail('집 밖인데 "벽을 가로지릅니다"로 알린다');
