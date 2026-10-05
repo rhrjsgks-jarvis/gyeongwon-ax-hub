@@ -6483,10 +6483,9 @@ function deskewAngle(seg, box){
  *   · 상자 안에 문·창이 하나도 없음 — 집 안의 문·창은 정확하다(집 밖에서도 초록 띠·검은 띠를 창으로 읽지만 집이 더 크다)
  * 밀도(벽²÷상자)로 고르는 것은 버렸다 — 곧은 한 줄이 가장 빽빽해 종이 가장자리가 이긴다.
  */
-function cropSuggest(seg, iw, ih){
-  const whole = { x: 0, y: 0, w: iw, h: ih, how: 'whole' };
-  if (!seg || !seg.cls) return whole;
-  const { w, h, cls, s } = seg, C = 16, cw = Math.ceil(w / C), ch = Math.ceil(h / C);
+/** 모델 칸 지도를 16px 칸으로 나눠 벽 덩어리를 센다 — cropSuggest(상자 제안)가 쓴다 */
+function wallClusters(seg){
+  const { w, h, cls } = seg, C = 16, cw = Math.ceil(w / C), ch = Math.ceil(h / C);
   const wl = new Uint16Array(cw * ch), dw = new Uint16Array(cw * ch);
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ const k = cls[y * w + x]; if (!k) continue; const ci = ((y / C) | 0) * cw + ((x / C) | 0); if (k === 1) wl[ci]++; else dw[ci]++; }
   const MIN = C * C / 12, SOLID = C * C * 0.8, lab = new Int32Array(cw * ch).fill(-1), comps = [];
@@ -6505,8 +6504,15 @@ function cropSuggest(seg, iw, ih){
     }
     comps.push(comp);
   }
-  if (!comps.length) return whole;
   for (const c of comps){ let d = 0; for (let y = c.y0; y <= c.y1; y++) for (let x = c.x0; x <= c.x1; x++) d += dw[y * cw + x]; c.dwBox = d; c.bw = c.x1 - c.x0 + 1; c.bh = c.y1 - c.y0 + 1; }
+  return { comps, lab, C, cw, ch };
+}
+function cropSuggest(seg, iw, ih){
+  const whole = { x: 0, y: 0, w: iw, h: ih, how: 'whole' };
+  if (!seg || !seg.cls) return whole;
+  const { w, h, s } = seg;
+  const { comps, C } = wallClusters(seg);
+  if (!comps.length) return whole;
   const ok = comps.filter((c) => c.n >= 12 && c.bw >= 6 && c.bh >= 6 && c.solid <= c.n * 0.15 && c.dwBox > 0);
   if (!ok.length) return whole;
   ok.sort((a, b) => b.n - a.n || b.dwBox - a.dwBox);
@@ -6535,6 +6541,15 @@ function cropSuggest(seg, iw, ih){
   return { x: Math.round(x * k), y: Math.round(y * k), w: Math.round((x2 - x) * k), h: Math.round((y2 - y) * k), how };
 }
 
+/*
+ * **첨부 평면 자동 걷기는 세 번째 방식도 버렸다**(2026-10-07). 벽 덩어리를 묶어 집 묶음에서 두 칸 넘게
+ * 떨어지고 상자 넓이가 1/4 미만인 묶음을 걷게 했더니 — 코퍼스 40장 중 22장에서 걷었고 실물로 보니
+ * **진짜 벽을 지웠다**: 100A 는 확장 거실·침실1 벽(점선 경계로 집이 두 묶음이 된다), 60 은 현관·복도,
+ * 디에트르 84B 는 침실2·3(가변형 벽체)이 걷히고 정작 그 시트의 「기본형」 축소도는 남았다.
+ * 2026-10-03 의 mainUnitKeep 과 같은 병이다 — 어떤 덩어리 규칙으로도 「이 벽이 집 것인가」를 못 가른다.
+ * 걷는 것은 사람이 한다(3D 「벽 고치기」· 올리기 「평면도 부분만 남기기」). 다시 시도하지 말 것.
+ * 덩어리 계산(wallClusters)은 상자 제안이 쓰므로 남긴다.
+ */
 /** 돌리고(90° 단위 + 기울기) 잘라 새 이미지를 만든다. box 는 돌린 그림 기준 좌표 */
 function cropApply(img, rot, angle, box){
   const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
@@ -9567,7 +9582,7 @@ loadReps();
 // 테스트에서 직접 호출할 수 있도록 노출한다(다른 모듈과 같은 방식)
 // draw 를 함께 내보낸다 — 상태를 코드로 바꾼 뒤 화면을 다시 그려 눈으로 확인해야 할 때가 있다
 // (도면 인식 결과를 캡처해 보는 도구가 이걸 쓴다).
-window.__place = { state, draw, bodyOutside, insideFor, estScaleFromArea, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
+window.__place = { state, draw, bodyOutside, insideFor, estScaleFromArea, wallClusters, cropOpen, cropClose, cropSuggest, deskewAngle, cropApply, crop, corners, overlaps, snapToWall, evaluate, rotStep, rotLabel, rotateItem, insideRoom, wallLoop, roomLoops, loopOfWalls, open3D, clearFor,
   doorOpenFor, doorReach, doorLeaves, doorHits, retagRoom, detectAllRooms, gapProbes, hitsOther, toast,
   mountable, mountKind, defaultMountH, mountWhy, mountTag, clearsVertically, EYE_MM, CEIL_MM, COUNTER_MM, SILL_MM,
   mainPart, alignUnderTV, tvFor, applyMountH, SB_GAP_MM, snapWallMounted, fridgeLayout, fridgeRows, burnerCount,

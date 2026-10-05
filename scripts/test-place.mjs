@@ -2069,7 +2069,6 @@ const ok2 = (c, m) => (c ? pass(m) : fail(m));
   const bare = new Uint8Array(w * h); const seg0 = { w, h, s: 1, cls: bare };
   ok2(P.cropSuggest(seg0, w, h).how === 'whole', '[25] 벽이 없으면 전체를 제안한다');
   ok2(P.cropSuggest(null, 100, 50).how === 'whole', '[25] 모델이 없으면 전체를 제안한다');
-
   /* 기울기 — 격자를 4° 돌려 그린 칸 지도에서 4° 근처가 나와야 하고, 바른 격자는 0 이어야 한다 */
   const grid = (deg) => { const c = new Uint8Array(w * h), a = deg * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++){ const u = (x - w / 2) * cs + (y - h / 2) * sn, v = -(x - w / 2) * sn + (y - h / 2) * cs;
