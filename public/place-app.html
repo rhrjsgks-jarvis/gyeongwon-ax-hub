@@ -11861,7 +11861,8 @@ window.Place3D = {
   get _boxNDC(){
     if (!cam || !lastBox) return null; apply(); cam.updateMatrixWorld();
     const H = M(WALL_H_MM), out = [];
-    for (const x of [0, lastBox.x]) for (const y of [0, H]) for (const z of [0, lastBox.z]){ const v = new THREE.Vector3(x, y, z).project(cam); out.push([+v.x.toFixed(3), +v.y.toFixed(3)]); }
+    const cx = ctr ? ctr[0] : lastBox.x / 2, cz = ctr ? ctr[1] : lastBox.z / 2;   // lastBox 는 크기다 — 집은 원점에서 시작하지 않는다(저장된 벽선)
+    for (const x of [cx - lastBox.x / 2, cx + lastBox.x / 2]) for (const y of [0, H]) for (const z of [cz - lastBox.z / 2, cz + lastBox.z / 2]){ const v = new THREE.Vector3(x, y, z).project(cam); out.push([+v.x.toFixed(3), +v.y.toFixed(3)]); }
     return out;
   },
   get _dbg(){

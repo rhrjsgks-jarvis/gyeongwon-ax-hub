@@ -481,8 +481,38 @@ self.addEventListener('activate', (e) => {
         keys.filter((k) => !k.startsWith(CACHE_VERSION)).map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
+      .then(() => warmOpenClients())
   );
 });
+
+/*
+ * **첫 방문에 열어 둔 화면은 그 자리에서 캐시에 넣는다**(2026-10-07).
+ * 서비스워커는 자기를 설치한 그 방문의 요청은 가로채지 못한다 — 그래서 예전에는 **처음 연 기기가
+ * 전파를 잃으면 아무것도 안 열렸다**(실측: /place 를 한 번 열고 끊으면 reload 가 ERR_FAILED, 두 번째
+ * 방문 뒤에야 열렸다). "한 번 본 화면은 열린다"는 약속이 첫 방문에는 거짓이었다.
+ * 1MB 를 미리 받지 않는다는 결정(install 주석)은 그대로다 — **지금 열려 있는 창**(iframe 포함)의
+ * 문서와 그 문서가 부르는 스크립트·스타일만 넣는다. 그 파일들은 방금 받은 것이라 HTTP 캐시에서 온다.
+ */
+const ASSET_REF = /\/(?:_next\/static|vendor|_split)\/[^"'()\s<>]+/g;
+function warmOpenClients() {
+  return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) =>
+    caches.open(RUNTIME).then((cache) => Promise.all(cs.map((c) => {
+      let u; try { u = new URL(c.url); } catch { return null; }
+      if (u.origin !== self.location.origin || u.pathname.startsWith('/api/')) return null;
+      const req = new Request(u.pathname + u.search, { mode: 'same-origin' });
+      return fetch(req).then((res) => {
+        if (!res || !res.ok) return;
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('text/html')) return cache.put(req, res);
+        return res.clone().text().then((html) => {
+          const refs = [...new Set(html.match(ASSET_REF) || [])];
+          return Promise.all(refs.map((r) => cache.match(r).then((hit) => hit || fetch(r).then((rr) => { if (rr.ok) return cache.put(r, rr); }).catch(() => {}))))
+            .then(() => putWithSplit(cache, req, res));
+        });
+      }).catch(() => {});
+    })))
+  ).catch(() => {});
+}
 
 function swr(req) {
   return caches.open(RUNTIME).then((cache) =>

@@ -157,6 +157,26 @@ for (const f of ['finder-app.html', 'test-app.html']) {
   await ctx.close();
 }
 
+/* ⑧ 첫 방문에 열어 둔 화면 — 서비스워커가 설치되자마자(reload 없이) 전파를 끊어도 그 화면이 열리는가.
+ *    서비스워커는 자기를 설치한 방문의 요청을 못 가로채므로, activate 에서 **지금 열린 창**을 캐시에
+ *    넣어야 한다(warmOpenClients). 안 넣으면 처음 연 기기가 전파를 잃는 순간 아무것도 안 열린다. */
+{
+  const ctx = await b.newContext();
+  const p = await ctx.newPage();
+  await p.goto(`${base}/m/place-app.html`, { waitUntil: 'load' });
+  await p.evaluate(async () => { await navigator.serviceWorker.register('/sw.js', { scope: '/' }); await navigator.serviceWorker.ready; });
+  await p.waitForTimeout(2500);                        // activate → 열린 창을 캐시에 넣는 시간
+  const online = await p.evaluate(() => document.body.innerText);
+  await ctx.setOffline(true);
+  const st = await p.reload({ waitUntil: 'load' }).then((r) => r && r.status()).catch((e) => 'ERR ' + e.message.slice(0, 40));
+  await p.waitForTimeout(800);
+  const offline = await p.evaluate(() => document.body.innerText).catch(() => '');
+  const app = await p.evaluate(() => !!(window.__place && window.__place.state)).catch(() => false);
+  if (st !== 200 || offline !== online || !app) fail(`⑧ 첫 방문만 하고 전파를 끊으면 안 열린다 — ${st} · 앱 ${app} · 글자 ${online.length}/${offline.length}`);
+  else pass('⑧ 첫 방문에 열어 둔 화면은 reload 없이 전파를 끊어도 열린다(activate 가 열린 창을 캐시에 넣는다)');
+  await ctx.close();
+}
+
 await b.close(); srv.close();
 fs.rmSync(tmp, { recursive: true, force: true });
 
