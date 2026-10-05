@@ -17441,7 +17441,9 @@ function pickBalanced(cats,core,n){
   const used={};
   const take=(cat)=>{
     const seen=used[cat]||(used[cat]=[]);
-    const pool=(QB[cat]||[]).filter(q=>!seen.includes(q));
+    /* 질문문이 같은 문항은 한 시험에 한 번만 — 자동 생성 비교 문항이 품목이 달라도 같은 말을 쓴다
+       (「다음 중 주사율이 가장 큰 모델은?」 TV·갤럭시북, 실측 6쌍). 응시자가 같은 질문을 두 번 받으면 안 된다 */
+    const pool=(QB[cat]||[]).filter(q=>!seen.includes(q)&&!out.some(o=>o.q===q.q));
     if(!pool.length)return null;
     const q=pool[Math.floor(Math.random()*pool.length)];
     seen.push(q);return prepareQ(q,cat);

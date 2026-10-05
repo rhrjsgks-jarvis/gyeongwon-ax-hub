@@ -427,6 +427,8 @@
     #mini{display:block}
     /* 초안·축척 막대가 요약 띠에 가리지 않게 위로 올린다 */
     #draftbar{bottom:58px;left:8px;right:8px;transform:none;max-width:none}
+    /* 자르기 막대도 같은 이유 — 허브 하단 바로가기 바가 그 자리를 덮는다(E2E 가 잡았다: 「확정」이 안 눌렸다) */
+    #cropbar{bottom:58px}
   }
   @media (max-width:760px){
     /*
@@ -6547,8 +6549,9 @@ function cropRotatedSize(){
 }
 function cropFit(){
   const v = $('#cropview'), cv2 = $('#cropcv');
-  const r = v.getBoundingClientRect(), barH = $('#cropbar').getBoundingClientRect().height || 0;
-  const W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round(r.height - barH));
+  const r = v.getBoundingClientRect(), br = $('#cropbar').getBoundingClientRect();
+  /* 캔버스는 막대 **윗선까지**다 — 좁은 화면에서 막대가 58px 위로 올라가므로(하단 바로가기 바) 높이가 아니라 자리를 본다 */
+  const W = Math.max(1, Math.round(r.width)), H = Math.max(1, Math.round((br.height ? br.top : r.bottom) - r.top));
   cv2.width = W * devicePixelRatio; cv2.height = H * devicePixelRatio; cv2.style.width = W + 'px'; cv2.style.height = H + 'px';
   const sz = cropRotatedSize(), m = 14;
   const k = Math.min((W - 2 * m) / sz.w, (H - 2 * m) / sz.h);
