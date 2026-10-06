@@ -6952,18 +6952,32 @@ function commitWalls(){
  * 같은 y 허용오차는 벽 두께 정도다. 이 시점에는 축척이 없어 mm 로 잡을 수 없으므로
  * 방 짧은 변의 2%(최소 2px)로 둔다 — 도면 이미지에서 벽 선 굵기가 대개 3~9px 다.
  */
+/**
+ * 벽 조각을 런으로 잇는 공통 자 — `longestHRun`·`wallRuns`·`runAt` 셋이 같은 규칙을 써야
+ * 축척 기준 벽·다른 벽 고르기·누른 벽이 서로 다른 길이를 말하지 않는다(2026-10-07 에 세 곳에
+ * 흩어져 있던 같은 여섯 줄을 모았다). 같은 y 허용오차는 축척 전이라 mm 로 못 잡는다 —
+ * **방 짧은 변의 2%(최소 2px)**, 도면의 벽 선 굵기가 대개 3~9px 이다.
+ */
+function runTol(segs){
+  const xs = segs.flatMap((q)=>[q.x1,q.x2]), ys = segs.flatMap((q)=>[q.y1,q.y2]);
+  const short = Math.min(Math.max(...xs)-Math.min(...xs), Math.max(...ys)-Math.min(...ys));
+  return Math.max(2, short * 0.02);
+}
+/** `dir` 축의 조각인가(`ok`) · a 의 끝점이 b 의 시작점이고 같은 선 위인가(`joins`) */
+function runOps(dir, tol){
+  const flat  = (q) => dir === 'h' ? Math.abs(q.y2 - q.y1) : Math.abs(q.x2 - q.x1);
+  const along = (q) => dir === 'h' ? Math.abs(q.x2 - q.x1) : Math.abs(q.y2 - q.y1);
+  const mid   = (q) => dir === 'h' ? (q.y1 + q.y2) / 2 : (q.x1 + q.x2) / 2;
+  const ok    = (q) => flat(q) <= tol && along(q) > tol;
+  const joins = (a, b) => ok(a) && ok(b) && Math.abs(mid(a) - mid(b)) <= tol
+    && Math.hypot(a.x2 - b.x1, a.y2 - b.y1) <= tol;
+  return { ok, joins };
+}
 function longestHRun(segs){
   const n = segs.length;
   if (!n) return null;
-  const xs = segs.flatMap((q)=>[q.x1,q.x2]), ys = segs.flatMap((q)=>[q.y1,q.y2]);
-  const short = Math.min(Math.max(...xs)-Math.min(...xs), Math.max(...ys)-Math.min(...ys));
-  const tol = Math.max(2, short * 0.02);
-  const isH   = (q) => Math.abs(q.y2 - q.y1) <= tol && Math.abs(q.x2 - q.x1) > tol;
-  const midY  = (q) => (q.y1 + q.y2) / 2;
-  // a 의 끝점이 b 의 시작점이고, 같은 높이의 가로 조각인가
-  const joins = (a, b) => isH(a) && isH(b)
-    && Math.abs(midY(a) - midY(b)) <= tol
-    && Math.hypot(a.x2 - b.x1, a.y2 - b.y1) <= tol;
+  const tol = runTol(segs);
+  const { ok: isH, joins } = runOps('h', tol);   // a 의 끝점이 b 의 시작점이고, 같은 높이의 가로 조각인가
 
   let start = -1;
   for (let i = 0; i < n; i++){
@@ -6998,17 +7012,10 @@ function longestHRun(segs){
 function wallRuns(segs){
   const n = segs.length;
   if (!n) return [];
-  const xs = segs.flatMap((q)=>[q.x1,q.x2]), ys = segs.flatMap((q)=>[q.y1,q.y2]);
-  const short = Math.min(Math.max(...xs)-Math.min(...xs), Math.max(...ys)-Math.min(...ys));
-  const tol = Math.max(2, short * 0.02);
+  const tol = runTol(segs);
   const out = [];
   for (const dir of ['h', 'v']){
-    const flat = (q) => dir === 'h' ? Math.abs(q.y2 - q.y1) : Math.abs(q.x2 - q.x1);
-    const along = (q) => dir === 'h' ? Math.abs(q.x2 - q.x1) : Math.abs(q.y2 - q.y1);
-    const mid   = (q) => dir === 'h' ? (q.y1 + q.y2) / 2 : (q.x1 + q.x2) / 2;
-    const ok    = (q) => flat(q) <= tol && along(q) > tol;
-    const joins = (a, b) => ok(a) && ok(b) && Math.abs(mid(a) - mid(b)) <= tol
-      && Math.hypot(a.x2 - b.x1, a.y2 - b.y1) <= tol;
+    const { ok, joins } = runOps(dir, tol);
     let start = -1;
     for (let i = 0; i < n; i++) if (!joins(segs[(i - 1 + n) % n], segs[i])) { start = i; break; }
     if (start < 0) continue;
@@ -7043,9 +7050,7 @@ function wallRuns(segs){
 function runAt(segs, wx, wy, tolPx){
   const n = segs && segs.length;
   if (!n) return null;
-  const xs = segs.flatMap((q)=>[q.x1,q.x2]), ys = segs.flatMap((q)=>[q.y1,q.y2]);
-  const short = Math.min(Math.max(...xs)-Math.min(...xs), Math.max(...ys)-Math.min(...ys));
-  const tol = Math.max(2, short * 0.02);
+  const tol = runTol(segs);
   /* 누른 자리에서 가장 가까운 조각 */
   let hit = -1, best = Infinity;
   segs.forEach((q, i) => { const d = nearestOnSeg(wx, wy, q).dist; if (d < best) { best = d; hit = i; } });
@@ -7054,12 +7059,7 @@ function runAt(segs, wx, wy, tolPx){
   const dir = Math.abs(q0.y2 - q0.y1) <= tol && Math.abs(q0.x2 - q0.x1) > tol ? 'h'
             : Math.abs(q0.x2 - q0.x1) <= tol && Math.abs(q0.y2 - q0.y1) > tol ? 'v' : null;
   if (!dir) return null;                                  // 대각선 조각은 이어 붙일 규칙이 없다
-  const flat  = (q) => dir === 'h' ? Math.abs(q.y2 - q.y1) : Math.abs(q.x2 - q.x1);
-  const along = (q) => dir === 'h' ? Math.abs(q.x2 - q.x1) : Math.abs(q.y2 - q.y1);
-  const mid   = (q) => dir === 'h' ? (q.y1 + q.y2) / 2 : (q.x1 + q.x2) / 2;
-  const ok    = (q) => flat(q) <= tol && along(q) > tol;
-  const joins = (a, b) => ok(a) && ok(b) && Math.abs(mid(a) - mid(b)) <= tol
-    && Math.hypot(a.x2 - b.x1, a.y2 - b.y1) <= tol;
+  const { ok, joins } = runOps(dir, tol);
   if (!ok(q0)) return null;
   /* 뒤로 · 앞으로 걸어 나간다. 한 바퀴를 넘지 않도록 n 번으로 막는다 */
   let s = hit, e = hit;

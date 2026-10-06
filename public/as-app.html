@@ -398,6 +398,10 @@ const RB = {
 };
 
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* 찾은 글자를 <mark> 로 표시하는 함수를 만든다 — 왜 이 줄이 나왔는지 눈으로 확인돼야 신뢰가 된다.
+   물류센터·이전설치·B2B 세 목록이 같은 규칙을 써야 하므로 한 곳에 둔다(2026-10-07 에 세 벌을 모았다) */
+const hlOf = s => t => { const e = esc(t); if (!s) return e;
+  return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
 const keys = Object.keys(DB);
 let cur = keys[0];
 
@@ -1204,8 +1208,7 @@ function renderMid(key){
   const box = pane.querySelector(`#mq-${key}`); if (!box) return;
   const list = pane.querySelector(`#ml-${key}`); if (!list) return;
   const s = (box.value || '').trim().toLowerCase();
-  const hl = t => { const e = esc(t); if (!s) return e;
-    return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
+  const hl = hlOf(s);
   const hit = MID.filter(m => !s || (m.g + m.tc + m.a).toLowerCase().includes(s));
   list.innerHTML = hit.length ? hit.map(m=>
     `<div class="ct lg" style="cursor:default">
@@ -1382,8 +1385,7 @@ function renderCenters(){
     (!s || (c.t + c.code + c.n + c.a + c.kw.join(' ') + opsText(c)).toLowerCase().includes(s)));
 
   /* 찾은 글자를 표시해 준다 — 왜 이 센터가 나왔는지 눈으로 확인돼야 신뢰가 된다 */
-  const hl = t => { const e = esc(t); if (!s) return e;
-    return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
+  const hl = hlOf(s);
 
   list.innerHTML = hit.length ? hit.map(c=>
     `<div class="ct lg">
@@ -1603,8 +1605,6 @@ function revealSvcBody(){
  */
 function renderB2B(){
   const pane = document.getElementById('contactPane');
-  const hlOf = s => t => { const e = esc(t); if (!s) return e;
-    return e.replace(new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m=>`<mark>${m}</mark>`); };
 
   const draw = (qid, id, rows, what) => {
     const box = pane.querySelector(qid), list = pane.querySelector(id);

@@ -56,6 +56,7 @@
     "test:coupon": "node scripts/test-coupon.mjs",
     "build:svc": "node scripts/build-svc.mjs",
     "audit:library": "node scripts/audit-library.mjs",
+    "audit:code": "node scripts/audit-code.mjs",
     "build:owncompare": "node scripts/build-own-compare.mjs",
     "test:owncompare": "node scripts/test-own-compare.mjs",
     "build:uspcards": "node scripts/build-usp-cards.mjs",
