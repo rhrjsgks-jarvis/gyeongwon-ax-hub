@@ -45,6 +45,23 @@ export default function MobileCalcPage() {
     const code = getStoreCode()
     setSrc(code ? MOBILE_CALC_URL + '?code=' + encodeURIComponent(code) + '&from=sc' : MOBILE_CALC_URL)
   }, [])
+  /*
+   * **폰에서 하단 버튼이 탭바에 덮이던 것**(2026-10-07 사장님: *"하단에 버튼들이 짤려보입니다"*).
+   * 다른 미니앱은 iframe 을 탭바 아래까지 채우고 탭바 높이를 `--ax-tabbar` 로 알려 받아 비키지만,
+   * 이 계산기는 **다른 출처(Apps Script)** 라 그 postMessage 가 닿지 않는다(받는 코드도 없다).
+   * 그래서 여기서는 iframe 을 **탭바 위에서 끝낸다** — 높이 = 화면 − 머리글(60) − 탭바(실측, PC 는 0).
+   * `100vh` 는 폰 주소창이 보일 때 실제 보이는 화면보다 커서 맨 아래가 또 잘리므로 `100dvh` 로 잰다.
+   */
+  const [tabbar, setTabbar] = useState(0)
+  useEffect(() => {
+    const measure = () => {
+      const nav = document.querySelector<HTMLElement>('nav[data-tabbar]')
+      setTabbar(nav && getComputedStyle(nav).display !== 'none' ? nav.offsetHeight : 0)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
   if (!src) return null
 
   return (
@@ -52,7 +69,7 @@ export default function MobileCalcPage() {
       src={src}
       title="통신향 · 자급제 비교계산기"
       className="-m-4 lg:-m-6"
-      style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
+      style={{ height: `calc(100dvh - ${60 + tabbar}px)`, marginBottom: '-6rem' }}
     />
   )
 }
