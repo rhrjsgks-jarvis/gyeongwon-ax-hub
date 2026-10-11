@@ -2,7 +2,7 @@
  "_note": "삼성닷컴 공식 셀링포인트(uspDescList). 제조사가 제품마다 싣는 문구라 상담사가 그대로 읽어도 된다. 기능 비교의 `on` 과 섞지 않는다 — 그쪽은 개수가 그대로 종합 스코어라 한쪽만 늘리면 점수가 조작된다.",
  "_source": "scripts/fixtures/sec-usp.json (삼성닷컴 goodsList API)",
  "_tool": "node scripts/build-compare-usp.mjs",
- "collectedAt": "2026-10-02",
+ "collectedAt": "2026-10-11",
  "models": {
   "BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W": {
    "usp": [

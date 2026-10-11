@@ -935,6 +935,13 @@ const CAT_QUERIES = {
       ['갤럭시 북6 프로 (35.6cm) Core™ Ultra X7 / 1TB NVMe SSD, Copilot+ PC', false],
       ['프리미엄 100℃ 열풍건조+ 빌트인 (595×815×572mm)', false],
       ['Infinite AI 공기청정기 (80㎡+33㎡, S 필터)', false],
+      /* 모델명 끝의 + 는 이름이다 — 이 예외가 없어 30종이 검색에서 빠져 있었다(2026-10-12) */
+      ['갤럭시 탭 S12+ 5G', false],
+      ['갤럭시 탭 S10 FE+ (Wi-Fi)', false],
+      ['갤럭시 S26+ 자급제 (삼성닷컴/삼성 강남 전용컬러)', false],
+      ['갤럭시 탭 A11+ 5G', false],
+      ['블루스카이 5500 (60㎡)+필터', true],
+      ['갤럭시 탭 S12+ 5G + 북커버', true],
     ];
     for (const [g, want] of pkCase) {
       const got = window.isPackage({ group: g });
