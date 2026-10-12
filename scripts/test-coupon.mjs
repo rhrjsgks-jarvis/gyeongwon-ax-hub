@@ -52,6 +52,8 @@ function install(sheets) {
     flush: () => {},
   }
   globalThis.LockService = { getScriptLock: () => ({ tryLock: () => true, releaseLock: () => {} }) }
+  const store = {}
+  globalThis.CacheService = { getScriptCache: () => ({ get: (k) => store[k] ?? null, put: (k, v) => { store[k] = v } }) }
   globalThis.HtmlService = {
     createTemplateFromFile: () => { throw new Error('no file') },
     createHtmlOutput: (h) => h,
@@ -105,15 +107,18 @@ console.log('\n[4] 머리글은 쿠폰으로 세지 않는다')
   ok(getAvailableTypes()[0].total === 4, '머리글 줄을 빼고 4장으로 센다')
 }
 
-console.log('\n[5] 뽑으면 그 자리에서 `사용` 이 된다')
+console.log('\n[5] 뽑기만으로는 시트가 안 바뀐다 — 사용확인을 눌러야 `사용` 이 된다')
 {
   const s = makeSheet('버즈4쿠폰', CODES.map((c) => [c, '미사용', '']))
   install([s]); load()
   const r = drawCoupon('버즈4쿠폰')
   ok(r.success && CODES.indexOf(r.couponNumber) !== -1, '쿠폰이 하나 나온다')
-  ok(s._cells[r.rowIndex - 1][1] === '사용', '그 줄이 곧바로 `사용` 으로 바뀐다')
+  ok(s._cells[r.rowIndex - 1][1] === '미사용', '뽑아도 시트는 `미사용` 그대로다')
+  ok(getAvailableTypes()[0].count === 3, '보류 중인 한 장은 잔여에서 빠진다')
+  confirmUse(r.couponType, r.rowIndex, r.couponNumber)
+  ok(s._cells[r.rowIndex - 1][1] === '사용', '사용확인을 누르면 `사용` 이 된다')
   ok(s._cells[r.rowIndex - 1][2] instanceof Date, '시각이 찍힌다')
-  ok(getAvailableTypes()[0].count === 3, '잔여가 한 장 준다')
+  ok(getAvailableTypes()[0].count === 3, '확정 뒤에도 잔여는 3장이다')
 }
 
 console.log('\n[6] **같은 쿠폰이 두 번 나오지 않는다** (고객에게 같은 번호가 가는 사고)')
@@ -124,7 +129,7 @@ console.log('\n[6] **같은 쿠폰이 두 번 나오지 않는다** (고객에�
   for (let i = 0; i < 4; i++) got.push(drawCoupon('버즈4쿠폰').couponNumber)
   ok(new Set(got).size === 4, `네 번 뽑아 네 장이 다 다르다 (${new Set(got).size}/4)`)
   const more = drawCoupon('버즈4쿠폰')
-  ok(!more.success && more.soldOut, '다 나가면 소진으로 답한다')
+  ok(!more.success && more.soldOut, '다 보류되면 소진으로 답한다')
 }
 
 console.log('\n[7] 취소하면 되살아난다 · 시각도 지운다')
@@ -134,12 +139,11 @@ console.log('\n[7] 취소하면 되살아난다 · 시각도 지운다')
   const r = drawCoupon('버즈4쿠폰')
   const back = cancelDraw(r.couponType, r.rowIndex, r.couponNumber)
   ok(back.success, '취소가 성공한다')
-  ok(s._cells[r.rowIndex - 1][1] === '미사용', '`미사용` 으로 되돌아간다')
-  ok(s._cells[r.rowIndex - 1][2] === '', '시각을 지운다 (안 지우면 나간 것으로 오해한다)')
+  ok(s._cells[r.rowIndex - 1][1] === '미사용' && s._cells[r.rowIndex - 1][2] === '', '시트는 그대로 `미사용` 이다')
   ok(getAvailableTypes()[0].count === 4, '잔여가 원래대로 돌아온다')
 }
 
-console.log('\n[8] 사용완료는 여러 번 눌러도 같다')
+console.log('\n[8] 사용확인은 여러 번 눌러도 같다')
 {
   const s = makeSheet('버즈4쿠폰', CODES.map((c) => [c, '미사용', '']))
   install([s]); load()
@@ -156,9 +160,20 @@ console.log('\n[9] 줄이 밀려도 쿠폰번호로 다시 찾는다')
   install([s]); load()
   const r = drawCoupon('버즈4쿠폰')
   const wrongRow = (r.rowIndex % 4) + 1        // 엉뚱한 줄 번호를 넘긴다
-  cancelDraw(r.couponType, wrongRow, r.couponNumber)
-  ok(s._cells[r.rowIndex - 1][1] === '미사용', '번호로 찾아 제 줄을 되돌린다')
-  ok(getAvailableTypes()[0].count === 4, '엉뚱한 줄을 건드리지 않았다')
+  confirmUse(r.couponType, wrongRow, r.couponNumber)
+  ok(s._cells[r.rowIndex - 1][1] === '사용', '번호로 찾아 제 줄을 사용 처리한다')
+  ok(getAvailableTypes()[0].count === 3, '엉뚱한 줄을 건드리지 않았다')
+
+  console.log('\n[9-b] 확인 없이 30분이 지나면 보류가 풀린다')
+  const s2 = makeSheet('버즈4쿠폰', CODES.map((c) => [c, '미사용', '']))
+  install([s2]); load()
+  const realNow = Date.now
+  drawCoupon('버즈4쿠폰')
+  ok(getAvailableTypes()[0].count === 3, '보류 중에는 3장')
+  Date.now = () => realNow() + 31 * 60 * 1000
+  const after = getAvailableTypes()[0].count
+  Date.now = realNow
+  ok(after === 4, `30분 뒤에는 다시 4장이다 (실제: ${after})`)
 }
 
 console.log('\n[10] 못 읽은 것과 소진을 구분한다 (화면이 거짓말하지 않게)')
@@ -191,7 +206,8 @@ console.log('\n[12] 화면과 스크립트가 같은 함수를 본다')
   ok(missing.length === 0, `화면이 부르는 ${calls.length}개가 전부 있다` + (missing.length ? ` — 없음: ${missing}` : ''))
   ok(!/storeInput|findStoreCode|getStoreList/.test(html), '화면에 매장명 입력이 남아 있지 않다')
   /* 화면 문구가 동작과 어긋나면 상담사가 반대로 행동한다 */
-  ok(html.includes('이미 사용 처리'), '경고 문구가 지금 동작(뽑는 즉시 사용)과 맞는다')
+  ok(html.includes('사용 처리 전') && html.includes('사용확인') && !html.includes('이미 사용 처리'),
+     '경고 문구가 지금 동작(사용확인을 눌러야 사용)과 맞는다')
 }
 
 console.log('\n[13] 바코드 — 그려 놓고 **되읽어서** 대조한다')

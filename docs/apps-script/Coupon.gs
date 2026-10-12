@@ -197,6 +197,28 @@ function readRows_(sheet) {
   return { cols: cols, rows: out };
 }
 
+/* ── 임시 보류 (2026-10-12 사장님 지시) ──────────────────────
+ * *"쿠폰을 사용확인 클릭을 해야지만 사용처리되도록"* — 뽑기만 해서는 시트를 바꾸지 않는다.
+ * 그러면 같은 번호가 두 고객에게 나갈 수 있으므로 **뽑은 쿠폰을 캐시에 잠깐 보류**한다.
+ * 시트 상태는 `미사용`·`사용` 둘뿐 그대로이고, 보류는 시트에 보이지 않는다.
+ * 사용확인 → 시트 `사용` + 보류 해제 · 취소 → 보류만 해제 · 아무것도 안 눌렀다 → 30분 뒤 저절로 풀린다.
+ */
+var HOLD_MS = 30 * 60 * 1000;
+var HOLD_KEY = 'coupon_holds';
+
+function holds_() {
+  var raw = CacheService.getScriptCache().get(HOLD_KEY);
+  var h = {};
+  try { h = raw ? JSON.parse(raw) : {}; } catch (e) { h = {}; }
+  var now = Date.now(), out = {};
+  Object.keys(h).forEach(function (k) { if (now - h[k] < HOLD_MS) out[k] = h[k]; });
+  return out;
+}
+function saveHolds_(h) {
+  CacheService.getScriptCache().put(HOLD_KEY, JSON.stringify(h), 21600);
+}
+function holdKey_(type, code) { return type + '|' + code; }
+
 /* ── 화면이 부르는 것 ────────────────────────────────────── */
 
 /**
@@ -210,8 +232,8 @@ function getAvailableTypes(ignoredStore) {
        적는데, 그건 거짓말이다 — 쿠폰은 멀쩡히 있고 우리가 못 읽은 것이다.
        실제로 그렇게 떠서 사장님이 "안 열립니다"라고 하셨다. */
     if (!read.cols) return { type: s.getName(), count: 0, total: 0, unreadable: true };
-    var count = 0;
-    read.rows.forEach(function (r) { if (r.free) count++; });
+    var count = 0, h = holds_();
+    read.rows.forEach(function (r) { if (r.free && !h[holdKey_(s.getName(), r.code)]) count++; });
     return { type: s.getName(), count: count, total: read.rows.length };
   });
 }
@@ -240,16 +262,15 @@ function drawCoupon(a, b) {
     if (!read.cols) {
       return { success: false, message: '시트에서 쿠폰번호 열을 찾지 못했습니다. 「' + type + '」 탭을 확인해 주세요.' };
     }
-    var rows = read.rows.filter(function (r) { return r.free; });
+    var held = holds_();
+    var rows = read.rows.filter(function (r) { return r.free && !held[holdKey_(type, r.code)]; });
     if (!rows.length) return { success: false, message: '소진', soldOut: true };
 
-    /* **뽑는 순간 바로 `사용`으로 바꾼다.** 상태가 둘뿐이라 잡아 둘 자리가 없고,
-       무엇보다 이래야 **같은 번호가 두 고객에게 나가지 않는다.** 안내하지 않았으면
-       화면의 「취소」가 `미사용` 으로 되돌린다. */
+    /* **뽑기만으로는 시트를 바꾸지 않는다** — 「사용확인」을 눌러야 `사용`이 된다.
+       그 사이 같은 번호가 또 나가지 않게 캐시에 보류만 해 둔다. */
     var pick = rows[Math.floor(Math.random() * rows.length)];
-    sheet.getRange(pick.row, read.cols.state).setValue(STATE_USED);
-    sheet.getRange(pick.row, read.cols.time).setValue(new Date());
-    SpreadsheetApp.flush();
+    held[holdKey_(type, pick.code)] = Date.now();
+    saveHolds_(held);
 
     return {
       success: true,
@@ -271,12 +292,25 @@ function drawCoupon(a, b) {
  * 중간에 무엇이 잘못돼 상태가 어긋났을 때 여기서 바로잡히고, 여러 번 눌러도 결과가 같다.
  */
 function confirmUse(type, rowIndex, couponNumber) {
-  return setState_(type, rowIndex, couponNumber, STATE_USED);
+  var res = setState_(type, rowIndex, couponNumber, STATE_USED);
+  if (res.success) releaseHold_(type, couponNumber);
+  return res;
+}
+
+function releaseHold_(type, couponNumber) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return;
+  try {
+    var h = holds_();
+    delete h[holdKey_(type, String(couponNumber || '').trim())];
+    saveHolds_(h);
+  } finally { lock.releaseLock(); }
 }
 
 /** 안내하지 않았다 — 풀로 되돌린다. **이 버튼을 눌러야 쿠폰이 되살아난다.** */
 function cancelDraw(type, rowIndex, couponNumber) {
-  return setState_(type, rowIndex, couponNumber, STATE_FREE);
+  releaseHold_(type, couponNumber);
+  return { success: true };
 }
 
 /**

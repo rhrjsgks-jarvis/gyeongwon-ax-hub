@@ -281,11 +281,11 @@
         -->
         <div class="warn-box">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.2 2.8 19.5h18.4L12 4.2Z"/><path d="M12 10v3.6"/><path d="M12 16.6h.01"/></svg></div>
-          <div class="txt">이 쿠폰은 <em>이미 사용 처리</em>되었습니다.<br>
-          고객에게 <em>안내하지 않으셨다면</em> 아래 「취소」를 눌러 주세요 — 그래야 쿠폰이 되살아납니다.</div>
+          <div class="txt">아직 <em>사용 처리 전</em>입니다.<br>
+          고객에게 안내한 뒤 아래 <em>「사용확인」</em>을 눌러야 사용 처리됩니다. 누르지 않으면 30분 뒤 다시 쓸 수 있게 풀립니다.</div>
         </div>
         <div class="ticket-actions">
-          <button class="btn-used" id="confirmBtn">✓ 사용완료 처리하기</button>
+          <button class="btn-used" id="confirmBtn">✓ 사용확인</button>
           <button class="btn-cancel" id="cancelBtn">고객에게 안내하지 않음 (취소)</button>
         </div>
       </div>
@@ -597,7 +597,7 @@
 
   el('cancelBtn').addEventListener('click', function(){
     if(!currentDraw) return;
-    if(!confirm('이 쿠폰을 고객에게 안내하지 않으셨나요?\n\n취소하면 쿠폰이 미사용 상태로 돌아갑니다.\n이미 고객에게 번호를 알려주셨다면 "취소"가 아니라\n"사용완료 처리하기"를 눌러주세요.')){
+    if(!confirm('이 쿠폰을 고객에게 안내하지 않으셨나요?\n\n취소하면 쿠폰이 미사용 상태로 남습니다.\n이미 고객에게 번호를 알려주셨다면 "취소"가 아니라\n"사용확인"을 눌러주세요.')){
       return;
     }
     var d = currentDraw;
