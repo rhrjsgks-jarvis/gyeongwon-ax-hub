@@ -774,7 +774,7 @@ export default function AdminPage() {
  * 자료는 Apps Script 웹앱의 `?json=1` 에서 받는다. **수집·저장·화면이 전부 구글
  * 안에서 끝나므로**(전산PC 에서 Vercel 이 막힌다) 이쪽은 읽기만 한다.
  */
-const VIRAL_URL = 'https://script.google.com/macros/s/AKfycbyfiNnGIrydVPOOs5BlcsMCgKFtv2EWfWQFjEqU1lZGNFHYoonRW2CTkwOi5-aPG4Q/exec'
+const VIRAL_URL = 'https://script.google.com/macros/s/AKfycbxRS4K9xnTtAAsMhDqCskpxvQCbbeKbEJ98lSSlw5aP627ZA79p5AzmsBNMaq0x5iA/exec'   // 2026-10-13 New 바이럴분석기(관리자 코드 로그인)
 
 type ViralData = {
   ok?: boolean

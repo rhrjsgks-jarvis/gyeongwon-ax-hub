@@ -11,10 +11,13 @@ import { NextResponse } from 'next/server'
  */
 export const dynamic = 'force-dynamic'
 
-/* 주소는 공개 링크라 코드에 둔다(시크릿쿠폰·컨시어지가 이미 그렇다).
-   네이버 API 키는 그쪽 스크립트 속성에만 있고 이 저장소에는 없다. */
+/* 2026-10-13 구 바이럴분석기(보관 · 9/11 자료에서 멈춤) → **New 바이럴분석기의 허브 요약 창구**로 전환.
+   New 는 빌드 때 이 카드와 같은 모양(ViralData)의 요약을 만들어 두고, 열쇠가 맞는 요청에만 돌려준다
+   (`?hub=<열쇠>` — 구버전 `?json=1` 은 열쇠 없이 공개였다). 열쇠는 Vercel 환경변수 VIRAL_HUB_KEY 에만 둔다.
+   주소는 공개 링크라 코드에 둔다(시크릿쿠폰·컨시어지가 이미 그렇다). */
 const VIRAL_GAS_URL =
-  'https://script.google.com/macros/s/AKfycbyfiNnGIrydVPOOs5BlcsMCgKFtv2EWfWQFjEqU1lZGNFHYoonRW2CTkwOi5-aPG4Q/exec'
+  'https://script.google.com/macros/s/AKfycbxRS4K9xnTtAAsMhDqCskpxvQCbbeKbEJ98lSSlw5aP627ZA79p5AzmsBNMaq0x5iA/exec'
+const VIRAL_HUB_KEY = process.env.VIRAL_HUB_KEY || ''
 
 /* 관리자 화면은 몇 사람만 보므로 짧은 캐시로 족하다. Apps Script 왕복이
    1~3초라 연속 새로고침을 즉시 응답하는 값어치가 있다(로그 프록시와 같은 판단). */
@@ -27,6 +30,8 @@ let cache: Cached | null = null
 const TTL_MS = 5 * 60_000
 
 export async function GET(req: Request) {
+  /* 열쇠가 없으면 부르지 않는다 — 부르면 New 가 거절하고 화면은 「불러오지 못했습니다」만 띄운다. 원인을 그대로 적는다 */
+  if (!VIRAL_HUB_KEY) return NextResponse.json({ ok: false, error: 'VIRAL_HUB_KEY 환경변수 미설정' })
   /* 사람이 「다시 시도」를 누른 것은 캐시를 건너뛴다 — 버튼이 약속한 일을 해야 한다 */
   const fresh = new URL(req.url).searchParams.get('fresh') === '1'
   if (!fresh && cache && Date.now() - cache.at < TTL_MS) {
@@ -48,7 +53,7 @@ export async function GET(req: Request) {
 
          그래서 **인스턴스 사이에 공유되는 Vercel Data Cache**(Next 의 fetch 캐시)를
          함께 쓴다. 「지금 수집」 직후처럼 사람이 새로고침을 요구한 때만 건너뛴다. */
-      const res = await fetch(`${VIRAL_GAS_URL}?json=1`, {
+      const res = await fetch(`${VIRAL_GAS_URL}?hub=${encodeURIComponent(VIRAL_HUB_KEY)}`, {
         ...(fresh ? { cache: 'no-store' as const } : { next: { revalidate: 300 } }),
         redirect: 'follow',
         signal: AbortSignal.timeout(ms),
