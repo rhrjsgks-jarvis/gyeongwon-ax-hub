@@ -78,7 +78,8 @@
     "build:seg": "node scripts/build-seg.mjs",
     "test:wallvec": "node scripts/test-wallvec.mjs",
     "build:careplans": "node scripts/build-care-plans.mjs",
-    "collect:care": "node scripts/collect-care-subs.mjs"
+    "collect:care": "node scripts/collect-care-subs.mjs",
+    "audit:careclip": "node scripts/audit-care-clip.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

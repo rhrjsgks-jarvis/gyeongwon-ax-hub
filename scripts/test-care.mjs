@@ -677,6 +677,24 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     fail('공유 카드 탭 대응 검사 실패: ' + e.message);
   }
 
+  /* 옛 「12개월형 / 36개월형」 자료·화면이 되살아나지 않는다 — 구독 지면이 있는 품목은 CARE_PLANS 하나가 출처다 */
+  {
+    const left = ['plan12', 'total12', 'render12', 'curTypeA', 'type-tab'].filter((w) => html.includes(w));
+    if (left.length) fail(`옛 12/36개월형 자료·코드가 남아 있다: ${left.join(', ')}`);
+    else console.log('OK: 옛 12/36개월형 자료·코드 없음');
+  }
+
+  /* 섹션 안쪽 여백 — 회차 칩·탭·사진이 카드 끝에 붙어 잘리던 것(2026-10-15 사장님 지적) */
+  {
+    const bad = [];
+    if (!/\.fold-pad\{padding:/.test(html)) bad.push('.fold-pad 규칙 없음');
+    if (!/'<div class="fold-pad">' \+ rd \+ '<\/div>'/.test(html)) bad.push('회차 섹션이 여백 상자를 안 거친다');
+    if (/\.round-pill\.on\{outline/.test(html)) bad.push('고른 회차 칩이 outline 이라 카드 밖으로 나간다');
+    if (!/\.vtabs\{display:grid/.test(html)) bad.push('회차 탭이 폭에 맞춰 나뉘지 않는다');
+    if (bad.length) fail('잘림 방지: ' + bad.join(' · '));
+    else console.log('OK: 섹션 여백 · 회차 탭 격자 · 고른 칩 안쪽 테두리');
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })();
