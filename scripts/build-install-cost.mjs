@@ -26,17 +26,32 @@ const norm = (s) => String(s).toLowerCase().replace(/,(?=\d)/g, '').replace(/\s+
  * 아니라 **그 줄로** 데려가야 하기 때문이다. 글자로 찾으면 같은 금액(`100,000`)이 여러
  * 줄에 있을 때 엉뚱한 데로 간다. 키는 `탭:품목:절번호:행번호` 라 화면이 그대로 찾아 쓴다.
  */
+/*
+ * **현장에서 부르는 말을 검색어에만 더한다.** 원문은 「수작업 운반비」라 적는데 매장은
+ * 「양중비」라 부른다(2026-10-15 사장님 표현). 화면 글자(t)는 원문 그대로 두고 k 에만 붙인다 —
+ * 원문에 없는 말을 화면에 적으면 그 자리에서 출처를 잃는다.
+ */
+const ALIAS = [[/수작업 운반/, '양중비 양중 인력운반']];
 const rows = [];
 const add = (tab, cat, sec, text, id) => {
-  const t = norm(text);
+  let t = norm(text);
+  const sc = norm(sec);
+  /* 절 제목은 「수작업 운반」으로 **시작할 때만** 본다 — 케어플러스는 「특수장비 · 수작업
+     운반비」 한 절에 사다리차·스카이가 함께 있어, 제목으로 걸면 사다리차 줄까지 양중비가 된다 */
+  ALIAS.forEach(([re, w]) => {
+    if (re.test(t) || new RegExp('^' + re.source).test(sc)) t += ' ' + w;
+  });
   if (t.length > 1) rows.push({ tab, cat, sec, t: text, k: t, id });
 };
 
 /* ① 신규 설치 추가비 (삼성전자로지텍) */
 const newInstall = src.categories.map((c) => {
-  c.sections.forEach((s, si) =>
+  c.sections.forEach((s, si) => {
     s.grid.slice(s.headRows).forEach((r, ri) =>
-      add('new', c.key, s.title, r.filter(Boolean).join(' · '), `new:${c.key}:${si}:${ri}`)));
+      add('new', c.key, s.title, r.filter(Boolean).join(' · '), `new:${c.key}:${si}:${ri}`));
+    /* 표 밖 각주도 찾혀야 한다 — 「엘리베이터」·「반품」은 각주에만 있다. 누르면 그 절의 첫 줄로 간다 */
+    if (s.foot) add('new', c.key, s.title, s.foot, `new:${c.key}:${si}:0`);
+  });
   return c;
 });
 

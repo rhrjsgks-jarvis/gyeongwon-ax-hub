@@ -8,8 +8,8 @@
  *      (`search-index`·`size-reps` 와 같은 규칙. fixture 만 고치고 빌드를 안 돌리면 여기서 걸린다.)
  *  [2] **골든값** — 원문에서 눈으로 확인한 금액 몇 개를 못 박는다. 표가 435행이라
  *      한 칸이 밀려도 눈에 안 띈다.
- *  [3] **신규 설치 ↔ 이전설치를 섞지 않는가** — 사다리차가 신규는 무상, 이전설치는
- *      36,300원이다. 이 구분이 무너지면 상담에서 정반대로 안내하게 된다.
+ *  [3] **특수장비·수작업 운반비('26.10월 개편)** — 옛 「신규 무상 / 이전설치 36,300원」이
+ *      층수별 단가로 바뀌었다. 옛 「무상」이 되살아나면 상담에서 정반대로 안내하게 된다.
  *  [4] **격자가 반듯한가** — 열이 어긋난 표는 값이 옆 칸으로 밀린 것이다.
  *  [5] **출처·확인일이 화면에 나오는가** — 근거 없는 금액을 띄우지 않는다는 이 저장소의 원칙.
  *  [6] **설치 전 준비의 그림과 글** — 원문 그림 6장을 옮겨 왔다. 파일이 실제로 있는가 ·
@@ -74,20 +74,40 @@ GOLD_CARE.forEach(([g, s, l, v]) => {
 });
 
 /* ── [3] 신규 ↔ 이전설치를 섞지 않는가 ────────────────── */
-console.log('\n[3] 신규 설치와 이전설치는 단가가 다르다');
-const ladNew = (() => {
-  const c = D.newInstall.categories.find((x) => x.key === 'ac');
-  const s = c.sections.find((x) => x.title.includes('사다리차'));
-  return { s, row: s.grid.slice(s.headRows).find((r) => r[0].includes('일반 사다리차')) };
-})();
-ok(!!ladNew.row && ladNew.row.includes('무상'),
-   '신규 설치의 일반 사다리차는 무상이다');
-ok(!!ladNew.row && ladNew.row.includes('36,300'),
-   '같은 표가 이전설치 36,300원도 함께 보여준다(둘을 나란히 적는다)');
-ok(ladNew.s.grid.slice(0, ladNew.s.headRows).some((r) => r.join(' ').includes('신제품 설치')),
-   '머리글이 「신제품 설치 / 이전설치」로 갈려 있다');
-ok(findCare('common', '사다리차', '사다리차 사용').includes('36,300'),
-   '이전설치 쪽 사다리차는 36,300원이다');
+/*
+ * 2026-10-15 개편 — 사다리차가 「신제품 무상 / 이전설치 36,300원」에서 **전 제품 층수별
+ * 단가**로 바뀌었고 수작업 운반비(양중비)가 생겼다. 두 출처가 같은 단가를 적는다.
+ * 옛 「무상」이 되살아나면 매장이 고객에게 "사다리차는 무료입니다"라고 말하게 된다.
+ */
+console.log('\n[3] 특수장비 · 수작업 운반비 (\'26.10월 개편)');
+const sp = D.newInstall.categories.find((x) => x.key === 'sp');
+ok(!!sp, '신규 설치에 「특수장비 · 수작업 운반비」 품목이 있다');
+const GOLD_SP = [
+  ['사다리차', '1층~6층', '55,000'], ['사다리차', '19층 이상', '150,000'],
+  ['스카이', '~2시간 이내', '190,000'],
+  ['수작업 운반비', '~50kg 이하', '무료'],
+  ['수작업 운반비', '50kg 초과 ~ 100kg 이하', '69,000'],
+  ['수작업 운반비', '100kg 초과', '120,000'],
+];
+GOLD_SP.forEach(([s, l, v]) => {
+  const row = sp ? findNew('sp', s, l) : '';
+  ok(row.includes(v), `특수장비 ${s} · ${l} = ${v}${row ? '' : ' (행을 못 찾음)'}`);
+});
+ok(!D.newInstall.categories.find((x) => x.key === 'ac').sections.some((s) => s.title.includes('사다리차')),
+   '에어컨의 옛 「사다리차 사용(26.2월~)」 표(신제품 무상)가 남아 있지 않다');
+ok(!JSON.stringify(D.newInstall.categories).includes('신제품 설치 시 무상'),
+   '「신제품 설치 시 무상」 각주가 남아 있지 않다');
+ok(findCare('common', '특수장비', '사다리차 · 1~6층').includes('55,000'),
+   '이전설치(케어플러스) 사다리차 1~6층도 55,000원이다 — 두 출처가 같다');
+ok(findCare('common', '특수장비', '100kg 초과').includes('120,000'),
+   '이전설치(케어플러스) 수작업 운반비 100kg 초과 120,000원');
+ok(!JSON.stringify(D.careplus).includes('36,300'), '케어플러스 옛 사다리차 36,300원이 남아 있지 않다');
+const yj = D.index.filter((r) => r.k.includes('양중비'));
+ok(yj.length >= 3 && yj.every((r) => r.t.indexOf('양중') < 0)
+     && !yj.some((r) => /사다리|스카이/.test(r.t)),
+   `「양중비」로 찾으면 수작업 운반비가 나온다(${yj.length}줄) — 화면 글자에는 원문만 적는다`);
+ok(D.index.some((r) => r.k.includes('반품') && r.id.startsWith('new:sp:')),
+   '표 밖 각주(인력운반이 어려우면 반품)도 검색된다');
 
 /* ── [4] 격자가 반듯한가 ─────────────────────────────── */
 console.log('\n[4] 표 격자');
@@ -129,11 +149,12 @@ ok(notes >= 50, `이전설치 비고 ${notes}건 (밀려 있던 때는 0건이�
 ok(D.careplus.groups.find((g) => g.key === 'ac').sections[1].rows[0].note.includes('자재비'),
    '에어컨 앵글의 비고가 "설치비 + 자재비 기준…" 으로 붙어 있다');
 ok(D.careplus.groups.find((g) => g.key === 'common').sections[0].rows
-     .some((r) => r.note === '회당비용'), '사다리차 "회당비용" 이 비고 자리에 있다');
+     .some((r) => !r.label && (r.note || '').includes('포장 상태 무게')), '수작업 운반비 무게 기준이 주석 줄로 남아 있다');
 /* 표 밖 각주 — 표만 옮기면 사라지는 조건이다 */
-ok(D.newInstall.categories.find((c) => c.key === 'ac').sections
-     .some((s) => (s.foot || '').includes('신제품 설치 시 무상')),
-   '사다리차 절의 표 밖 각주(신제품 설치 시 무상)를 담았다');
+ok(sp && sp.sections.some((s) => (s.foot || '').includes('50kg을 초과하는 중량물')),
+   '수작업 운반비 절의 표 밖 각주(부과 조건)를 담았다');
+ok(sp && sp.sections.some((s) => (s.foot || '').includes('70인치 이상 TV')),
+   '사다리차 절에 특수장비 필요 환경을 담았다');
 
 /* ── [5]~[8] 화면 ────────────────────────────────────── */
 console.log('\n[5] 화면');
