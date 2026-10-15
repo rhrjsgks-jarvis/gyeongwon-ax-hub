@@ -20,29 +20,31 @@ function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
 // PRODUCTS 배열(public/care-app.html)과 동일 순서/구성 — DATA 유무·onlyPlan·듀얼플랜 여부를 함께 기록.
 // 2026-08-30 — 콤보·세탁기·건조기·냉장고의 12개월형이 실제로 있는데 onlyPlan:'36' 이
 // 감추고 있었다(건조기는 자료까지 이미 있었다). 넷 다 듀얼 플랜으로 바뀌었다.
+/*
+ * 2026-10-15 — 「12개월형 / 36개월형」이 유형(방문케어 프리미엄·라이트·셀프케어) × 주기로 바뀌었다.
+ * `types` 는 삼성닷컴 구독 지면(scripts/fixtures/care-subs.json)에 실제로 있는 유형이다 — 화면 탭과 같아야 한다.
+ */
 const ALL_PRODUCTS = [
-  { key: 'aircon',           name: '에어컨',              hasData: true,  onlyPlan: null, dual: true,  typeAB: true  },
-  { key: 'aicombo',          name: 'AI콤보',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
-  { key: 'washer',           name: '세탁기',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
-  { key: 'dryer',            name: '건조기',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
-  { key: 'fridge',           name: '냉장고',               hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
-  { key: 'dish',             name: '식기세척기',           hasData: true,  onlyPlan: null, dual: true,  rounds12: 6 },
-  { key: 'dresser',          name: '에어드레서',           hasData: true,  onlyPlan: null, dual: true,  single12: true },
-  { key: 'airpur_reusable',  name: '공기청정기(리유저블)', hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
-  { key: 'airpur_s',         name: '공기청정기(S필터)',    hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
-  { key: 'purifier_under',   name: '언더싱크 정수기',      hasData: true,  onlyPlan: '12', dual: false, rounds12: 6 },
+  { key: 'aircon',           name: '에어컨',              hasData: true,  types: ['premium','lite'] },
+  { key: 'aicombo',          name: 'AI콤보',               hasData: true,  types: ['premium'] },
+  { key: 'washer',           name: '세탁기',               hasData: true,  types: ['premium'] },
+  { key: 'dryer',            name: '건조기',               hasData: true,  types: ['premium'] },
+  { key: 'fridge',           name: '냉장고',               hasData: true,  types: ['premium','lite'] },
+  { key: 'dish',             name: '식기세척기',           hasData: true,  types: ['premium'] },
+  { key: 'dresser',          name: '에어드레서',           hasData: true,  types: ['premium','self'] },
+  { key: 'airpur_reusable',  name: '공기청정기(리유저블)', hasData: true,  types: ['premium'] },
+  { key: 'airpur_s',         name: '공기청정기(S필터)',    hasData: true,  types: ['premium','self'] },
+  { key: 'purifier_under',   name: '언더싱크 정수기',      hasData: true,  types: ['premium','self'] },
   /* 2026-08-30 — 한 카드에 묶여 있던 둘을 갈랐다. 카운터탑은 방문케어가 있는데
      얼음정수기와 묶여 통째로 「자가관리」로 떠 있었다(회차표는 아직 못 받아 DATA 없음). */
   { key: 'purifier_counter', name: '카운터탑 정수기', hasData: false, onlyPlan: null, dual: false },
   { key: 'purifier_ice',     name: '얼음정수기',     hasData: false, onlyPlan: null, dual: false },
-  { key: 'vacuum',           name: '로봇청소기',           hasData: true,  onlyPlan: '12', dual: false, single12: true },
-  // 김치냉장고는 12·36개월형이 다 있다. 예전에 36개월 전용으로 적어 뒀는데 삼성닷컴 대조에서 틀린 것으로 확인됐다
-  { key: 'kimchi',           name: '김치냉장고',           hasData: true,  onlyPlan: null, dual: true  },
-  /* 2026-08-30 — 삼성닷컴이 방문케어(36/12개월)를 파는데 우리는 「미대상·자가관리」라
-     적고 있었다. 이제 12·36 두 플랜을 다 가진 정상 케어 상품이다. */
-  { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  onlyPlan: null, dual: true, rounds12: 6 },
-  { key: 'microwave',        name: '전자레인지/오븐',      hasData: true,  onlyPlan: '36', dual: false },
-  { key: 'soundbar',         name: '사운드바',             hasData: true,  onlyPlan: '36', dual: false },
+  { key: 'vacuum',           name: '로봇청소기',           hasData: true,  types: ['premium','self'] },
+  { key: 'kimchi',           name: '김치냉장고',           hasData: true,  types: ['premium','lite','self'] },
+  { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  types: ['premium','lite'] },
+  /* 자가관리 안내 — 요금제가 없다(옛 회차 경로를 그대로 탄다) */
+  { key: 'microwave',        name: '전자레인지/오븐',      hasData: true,  types: [] },
+  { key: 'soundbar',         name: '사운드바',             hasData: true,  types: [] },
   /*
    * 모바일 구독 3종 — **회차 구조가 없다**(방문 기사가 없다). `st:'mx'` 라 회차표 경로를
    * 타지 않고 `buildMobileSub` 이 그린다. 개요 화면에서 '자가관리'(na-card)로 표시하면
@@ -182,9 +184,17 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
       const srcRow = doc.querySelector('.src-wrap .src-row');
       if (!srcRow || !srcRow.textContent.trim()) fail(`[${p.key}] missing source row text`);
 
-      const planTabs = doc.querySelectorAll('.plan-tab').length;
-      if (p.dual && planTabs !== 2) fail(`[${p.key}] expected 2 plan-tabs (dual plan), got ${planTabs}`);
-      if (!p.dual && planTabs !== 0) fail(`[${p.key}] expected no plan-tabs (single plan), got ${planTabs}`);
+      /* 유형 탭 = 원문에 있는 유형 그대로(순서 프리미엄 → 라이트 → 셀프케어) */
+      const tabTypes = [...doc.querySelectorAll('.plan-tab.ptype')].map((el) => el.dataset.ptype);
+      const planTabs = tabTypes.length;
+      if (tabTypes.join(',') !== p.types.join(',')) fail(`[${p.key}] 유형 탭 ${tabTypes.join(',') || '(없음)'} — 원문은 ${p.types.join(',') || '(없음)'}`);
+      if (p.types.length) {
+        /* 섹션(접이식)과 O/X 표가 있어야 한다 — 상담사가 차이를 한눈에 보는 자리 */
+        if (doc.querySelectorAll('#body .fold').length < 7) fail(`[${p.key}] 접이식 섹션이 모자란다`);
+        const oxCols = doc.querySelectorAll('[data-fold="ox"] table.ox tr:first-child th').length - 1;
+        if (oxCols !== p.types.length) fail(`[${p.key}] O/X 표 칸이 ${oxCols} — 유형 ${p.types.length}개와 같아야 한다`);
+        if (!doc.querySelector('[data-fold="notes"] li')) fail(`[${p.key}] 원문 유의사항 섹션이 없다`);
+      }
 
       const sellCard = doc.getElementById('sellCard');
       if (!sellCard) fail(`[${p.key}] missing #sellCard (selling points)`);
@@ -196,43 +206,79 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     }
   }
 
-  // ── 3. 듀얼플랜(12/36) 전환: aircon / dish / dresser ──
-  for (const key of ['aircon', 'dish', 'dresser']) {
+  // ── 3. 유형 × 주기 전환 — 전 품목, 모든 탭·주기를 눌러 본다 ──
+  const click = (el) => el.dispatchEvent(new window.Event('click', { bubbles: true }));
+  for (const p of ALL_PRODUCTS.filter((x) => x.types && x.types.length)) {
     try {
-      window.switchToCare(key);
-      const tab36 = [...doc.querySelectorAll('.plan-tab')].find((el) => el.dataset.plan === '36');
-      if (!tab36) { fail(`[${key}] plan-tab 36 not found`); continue; }
-      tab36.dispatchEvent(new window.Event('click', { bubbles: true }));
-      const vtabs36 = doc.querySelectorAll('.vtab');
-      if (vtabs36.length !== 2) fail(`[${key}] plan36: expected 2 vtabs, got ${vtabs36.length}`);
-      if (doc.querySelectorAll('.items .item').length === 0) fail(`[${key}] plan36: no items rendered`);
-      if (hasBadText(bodyEl.innerHTML)) fail(`[${key}] plan36 render contains undefined/NaN`);
-
-      const tab12 = [...doc.querySelectorAll('.plan-tab')].find((el) => el.dataset.plan === '12');
-      tab12.dispatchEvent(new window.Event('click', { bubbles: true }));
-      if (doc.querySelectorAll('.items .item').length === 0) fail(`[${key}] plan12: no items rendered after switching back`);
-      console.log(`[${key}] OK plan12<->plan36 toggle`);
+      window.switchToCare(p.key);
+      let combos = 0;
+      for (const t of p.types) {
+        click(doc.querySelector(`.plan-tab.ptype[data-ptype="${t}"]`));
+        const cycles = [...doc.querySelectorAll('.cyc-b')].map((b) => b.dataset.plan);
+        for (const pk of (cycles.length ? cycles : [null])) {
+          if (pk) click(doc.querySelector(`.cyc-b[data-plan="${pk}"]`));
+          combos++;
+          const nv = doc.querySelectorAll('.vtab').length;
+          const want = +window.eval(`DATA['${p.key}'].plans[curPlan].rounds.length`);
+          if (nv !== want) fail(`[${p.key}] ${t}/${pk} 회차 탭 ${nv}개 — 자료는 ${want}회`);
+          if (!doc.querySelectorAll('.items .item').length) fail(`[${p.key}] ${t}/${pk} 회차 내용이 비었다`);
+          if (hasBadText(bodyEl.innerHTML)) fail(`[${p.key}] ${t}/${pk} 화면에 undefined/NaN`);
+        }
+      }
+      console.log(`[${p.key}] OK 유형·주기 ${combos}가지 전환`);
     } catch (e) {
-      fail(`[${key}] plan toggle threw: ${e.message}`);
+      fail(`[${p.key}] 유형·주기 전환 중 예외: ${e.message}`);
     }
   }
 
-  // ── 4. A/B 타입 전환 (aircon 전용) ──
+  /*
+   * ── 3-b. 원문 회차 골든 — 삼성 「구독케어 자세히 보기」 표에서 눈으로 확인한 값 ──
+   * 품목마다 세척 시점이 다르다. 한 규칙으로 뭉개면(예: 모든 품목 3·6년차 세척) 여기서 물린다.
+   */
+  const R = (k, pk) => JSON.parse(window.eval(`JSON.stringify(DATA['${k}'].plans['${pk}'] ? DATA['${k}'].plans['${pk}'].rounds.map(r=>r.label+':'+r.badge) : null)`));
+  const GOLD = [
+    ['aircon', 'P12', '3년차:전문 세척', '6년차:전문 세척'],
+    ['aircon', 'L12', '3년차:기본 세척', '6년차:기본 세척'],
+    ['fridge', 'P12', '3년차:전문세척 (내부 및 후면)', '6년차:종합점검/케어'],
+    ['fridge', 'P36', '3년차:종합점검/케어', '6년차:전문세척 (내부 및 후면)'],
+    ['washer', 'P12', '3년차:초음파 세척', '6년차:종합점검/케어'],
+    ['induction', 'P12', '3년차:종합점검/케어 + 상판교체'],
+    ['vacuum', 'P12', '3년차:배터리 교체 + 종합점검/소모품 교체'],
+    ['kimchi', 'S12', '1년차:고내탈취필터 배송'],
+  ];
+  for (const [k, pk, ...must] of GOLD) {
+    const r = R(k, pk);
+    if (!r) { fail(`[${k}] ${pk} 요금제가 없다`); continue; }
+    for (const m of must) if (!r.includes(m)) fail(`[${k}] ${pk} 에 「${m}」 회차가 없다 — ${r.join(' | ')}`);
+  }
+  /* 있는 것 / 없는 것 — 없는 조합을 만들어 내면 안 된다 */
+  const has = (k, pk) => window.eval(`!!(DATA['${k}'].plans && DATA['${k}'].plans['${pk}'])`);
+  if (!has('induction', 'L36')) fail('[induction] 라이트 36개월 주기가 원문에 있는데 없다');
+  for (const k of ['aircon', 'fridge', 'kimchi']) if (has(k, 'L36')) fail(`[${k}] 라이트 36개월은 원문에 없다`);
+  if (has('airpur_reusable', 'S12') || has('airpur_reusable', 'S6')) fail('[airpur_reusable] 리유저블은 셀프케어 선택 불가(원문)');
+  for (const k of ['airpur_s', 'purifier_under', 'airpur_reusable']) if (!has(k, 'P6')) fail(`[${k}] 6개월 주기가 원문에 있는데 없다`);
+  if (has('vacuum', 'P36')) fail('[vacuum] 로봇청소기는 36개월 주기가 없다(5년형·12개월)');
+  /* 에어컨 라이트에는 냉매 점검·열교환기 고압세척이 **없다** — O/X 의 핵심 차이 */
+  window.switchToCare('aircon');
+  const oxTxt = doc.querySelector('[data-fold="ox"]').textContent;
+  if (!/열교환기 고압세척/.test(oxTxt) || !/핵심 차이/.test(doc.querySelector('[data-fold="ox"]').innerHTML)) fail('[aircon] O/X 에 핵심 차이(열교환기 고압세척)가 없다');
+  if (ok) console.log('OK: 원문 회차 골든 · 없는 조합 미생성');
+
+  // ── 4. 접기/펴기 — 모두 접기·하나 열기·다시 그려도 상태 유지 ──
   try {
-    window.switchToCare('aircon'); // curPlan resets to '12'
-    const typeTabs = doc.querySelectorAll('.type-tab');
-    if (typeTabs.length !== 2) fail(`[aircon] expected 2 type-tabs, got ${typeTabs.length}`);
-    const tabB = [...typeTabs].find((el) => el.dataset.type === 'B');
-    tabB.dispatchEvent(new window.Event('click', { bubbles: true }));
-    const hdText = doc.querySelector('.card-hd .chd-t')?.textContent || '';
-    if (!hdText.includes('B타입')) fail(`[aircon] after B타입 click, card header = "${hdText}"`);
-    const tabA = [...doc.querySelectorAll('.type-tab')].find((el) => el.dataset.type === 'A');
-    tabA.dispatchEvent(new window.Event('click', { bubbles: true }));
-    const hdText2 = doc.querySelector('.card-hd .chd-t')?.textContent || '';
-    if (!hdText2.includes('A타입')) fail(`[aircon] after A타입 click, card header = "${hdText2}"`);
-    console.log('OK: aircon A타입<->B타입 toggle');
+    window.switchToCare('fridge');
+    click(doc.querySelector('.fold-bar[data-scope="care"] .fold-all[data-all="0"]'));
+    if (doc.querySelectorAll('#body .fold.on').length) fail('모두 접기 후에도 열린 섹션이 있다');
+    click(doc.querySelector('[data-fold="terms"] > .fold-h'));
+    if (!doc.querySelector('[data-fold="terms"]').classList.contains('on')) fail('섹션 머리를 눌러도 안 열린다');
+    click(doc.querySelector('.plan-tab.ptype[data-ptype="lite"]')); /* 다시 그린다 */
+    if (!doc.querySelector('[data-fold="terms"]').classList.contains('on')) fail('유형을 바꾸면 열어 둔 섹션이 닫힌다');
+    if (doc.querySelector('[data-fold="ox"]').classList.contains('on')) fail('닫아 둔 섹션이 다시 그릴 때 열린다');
+    click(doc.querySelector('.fold-bar[data-scope="care"] .fold-all[data-all="1"]'));
+    if (doc.querySelectorAll('#body .fold:not(.on)').length) fail('모두 펼치기 후에도 닫힌 섹션이 있다');
+    if (ok) console.log('OK: 접기/펴기 (모두 접기 · 하나 열기 · 다시 그려도 유지 · 모두 펼치기)');
   } catch (e) {
-    fail('aircon type-tab toggle threw: ' + e.message);
+    fail('접기/펴기 검사 예외: ' + e.message);
   }
 
   // ── 5. 회차(vtab) 순회 — dish plan12 (6회차) ──
@@ -276,11 +322,16 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const html = pane.innerHTML;
     if (hasBadText(html)) fail('bluepass pane contains undefined/NaN');
 
-    // 6가지 + 에어컨 전용 2가지 = 8장
+    /* 2026-10-15 「새로워진 블루패스」 — 네 갈래 12가지 + 에어컨 전용 2가지 = 14장, 스페셜 패스 2종 */
     const tiles = pane.querySelectorAll('.bp-i').length;
-    if (tiles !== 8) fail(`bluepass: expected 8 tiles (6 + aircon 2), got ${tiles}`);
-    if (!/모두 <b>6가지<\/b>/.test(html)) fail('bluepass: 개수 문장(6가지)이 데이터와 어긋난다');
+    if (tiles !== 14) fail(`bluepass: 타일 14장(12 + 에어컨 2)이어야 하는데 ${tiles}장`);
+    if (!/<b>12가지<\/b>/.test(html)) fail('bluepass: 개수 문장(12가지)이 데이터와 어긋난다');
     if (!/에어컨은 <b>2가지<\/b>/.test(html)) fail('bluepass: 에어컨 개수 문장(2가지)이 데이터와 어긋난다');
+    const grp = [...pane.querySelectorAll('.fold .bp-gk')].map((e) => e.textContent).join(',');
+    if (grp !== '설치,스마트한 경험,맞춤 케어,안심 A/S') fail(`bluepass: 갈래가 원문(설치·스마트한 경험·맞춤 케어·안심 A/S)과 다르다 — ${grp}`);
+    if (pane.querySelectorAll('.sp').length !== 2) fail('bluepass: 스페셜 패스(신혼·이지케어) 2종이 아니다');
+    /* 처음에는 전부 접혀 있어야 끌어내리지 않는다 */
+    if (pane.querySelectorAll('.fold.on').length) fail('bluepass: 처음부터 펼쳐진 섹션이 있다');
 
     // 조건이 라벨로 갈려 화면에 실제로 나오는지 — 뭉쳐 두면 상담 중에 안 읽힌다
     for (const label of ['대상', '필요', '제외', '비용']) {
@@ -298,13 +349,21 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
      * **검사가 근거 없는 값을 붙들면 고치는 쪽이 실패한다.**
      * 아래는 원문 조건 불릿 다섯과 게이트 문장 그대로다.
      */
+    /*
+     * 2026-10-15 개편 원문(「블루패스 유의 사항」·패스 유의사항)에서 옮긴 조건.
+     * **A/S 패스트트랙 하절기 제외는 이제 원문에 있다** — 8/30 판에는 없어서 지웠던 조건이다.
+     */
     const MUST = [
-      '냉장고 / 김치냉장고 / 세탁기 / 건조기 / 에어컨 / TV 중 택 1',   // 하나 더 서비스
-      '냉장고, 김치냉장고, 에어드레서, 건조기, 세탁기, TV 중 일부 모델 대상', // 시간맞춤 설치
-      '유상옵션',                                                      // 오늘보장 설치는 무료가 아니다
-      '일반에어컨(D+1일내), 가정용 시스템에어컨(D+5일내) 설치 보장',    // 최우선 설치
-      '설치 이슈로 인한 냉매 누설 및 당사 제품/배관 시공 완료 제품에 한함', // 냉매 안심케어
-      'AI 올인원 2.0 구독 고객에게만 제공되는 서비스입니다',            // 스마트 요금제는 블루패스가 없다
+      '냉장고 · 김치냉장고 · 세탁기 · 건조기 · 에어컨 · TV 중 1품목',       // 하나 더 서비스
+      'TV 75인치 이상 전 모델',                                           // 시간맞춤 설치 대상
+      '추가 비용 발생(유상 옵션)',                                         // 오늘보장 설치
+      '하절기(6~8월) 운영 제외',                                           // A/S 패스트트랙
+      '일반에어컨 D+1일 내, 가정용 시스템에어컨 D+5일 내',                 // 최우선 설치
+      '당사가 제품/배관 시공을 완료한 제품에 한함',                         // 냉매 안심케어
+      '파손 수리비의 75% 지원',                                           // 파손보상
+      '구독 방문케어 2건 이상 동시 구매',                                   // 신혼 패스
+      '계약 체결일에 만 70세 이상',                                        // 이지케어 패스
+      'AI 올인원 2.0 구독 고객에게만 제공되는 서비스입니다',                // 스마트 요금제는 블루패스가 없다
     ];
     for (const s of MUST) {
       if (!html.includes(s)) fail(`bluepass: 조건 문구가 사라졌다 — '${s}'`);
@@ -461,26 +520,24 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
      * 로봇청소기는 5년형·12개월 전용이라 회차가 5회다.
      */
     const prodSel = doc.querySelectorAll('.tl-sel')[0];
-    prodSel.value = 'aicombo';                       // 먼저 듀얼 플랜 제품에서 36을 골라 둔다
+    prodSel.value = 'aicombo';                       // 먼저 36개월 주기를 골라 둔다
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    doc.querySelectorAll('.tl-sel')[1].value = '36';
+    doc.querySelectorAll('.tl-sel')[1].value = 'P36';
     doc.querySelectorAll('.tl-sel')[1].dispatchEvent(new window.Event('change', { bubbles: true }));
-    prodSel.value = 'vacuum';                        // 12개월 전용으로 넘어간다
+    prodSel.value = 'vacuum';                        // 36개월이 없는 제품으로 넘어간다
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
     const circlesOnly = stops();
-    if (circlesOnly !== 5) fail(`timeline: 로봇청소기는 12개월 전용 5년형이라 5회여야 하는데 ${circlesOnly}회`);
+    if (circlesOnly !== 5) fail(`timeline: 로봇청소기는 5년형·12개월이라 5회여야 하는데 ${circlesOnly}회`);
     const planOpts = [...doc.querySelectorAll('.tl-sel')[1].querySelectorAll('option')].map((o) => o.value);
-    if (planOpts.length !== 1 || planOpts[0] !== '12') fail(`timeline: 로봇청소기 플랜 선택지는 12 하나여야 하는데 ${planOpts.join(',')}`);
+    if (planOpts.join(',') !== 'P12,S12') fail(`timeline: 로봇청소기 선택지는 프리미엄 12·셀프케어 12 둘이어야 하는데 ${planOpts.join(',')}`);
 
-    /* 사용자가 신고한 그 조합 — AI콤보 36개월형은 2회여야 한다.
-       2026-08-30 부터 콤보는 12개월형도 있으므로 **36을 골라서** 본다
-       (예전에는 36 전용이라 고를 필요가 없었다). */
+    /* 사용자가 신고한 그 조합 — AI콤보 36개월 주기는 2회여야 한다 */
     prodSel.value = 'aicombo';
     prodSel.dispatchEvent(new window.Event('change', { bubbles: true }));
-    doc.querySelectorAll('.tl-sel')[1].value = '36';
+    doc.querySelectorAll('.tl-sel')[1].value = 'P36';
     doc.querySelectorAll('.tl-sel')[1].dispatchEvent(new window.Event('change', { bubbles: true }));
     const circlesCombo = stops();
-    if (circlesCombo !== 2) fail(`timeline: AI콤보 36개월형은 2회여야 하는데 ${circlesCombo}회 (구독 6년 ÷ 36개월)`);
+    if (circlesCombo !== 2) fail(`timeline: AI콤보 36개월 주기는 2회여야 하는데 ${circlesCombo}회 (구독 6년 ÷ 36개월)`);
 
     console.log('OK: timeline mode (default circles, product/plan select switching)');
   } catch (e) {
@@ -536,21 +593,19 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     const DATA = JSON.parse(window.eval('JSON.stringify(DATA)'));
     let n = 0;
     for (const [k, d] of Object.entries(DATA)) {
-      if (d.contract === '자가관리') continue;
-      for (const pl of ['12', '36']) {
-        if (!d['plan' + pl]) continue;
+      if (d.contract === '자가관리' || !d.plans) continue;
+      for (const pl of Object.keys(d.plans)) {
+        const cyc = d.plans[pl].cycle;
         const sched = JSON.parse(window.eval(`JSON.stringify(careSchedule(DATA['${k}'],'${pl}'))`));
-        if (!sched.length) { fail(`[${k}] plan${pl} 에서 회차 일정을 못 만들었다 — 타임라인이 비어 보인다`); continue; }
+        if (!sched.length) { fail(`[${k}] ${pl} 에서 회차 일정을 못 만들었다 — 타임라인이 비어 보인다`); continue; }
         const months = sched.map((x) => x.month);
-        const cm = String(d.contract || '').match(/(\d+)\s*개월/);
-        if (!cm) { fail(`[${k}] contract 에서 계약기간을 못 읽는다 — "${d.contract}"`); continue; }
-        const contractM = +cm[1];
-        const expect = Math.floor(contractM / +pl);
-        if (months.some((m, i) => i && m <= months[i - 1])) fail(`[${k}] plan${pl} 회차가 오름차순이 아니다 — ${months.join(',')}`);
-        else if (months[months.length - 1] > contractM) fail(`[${k}] plan${pl} 마지막 회차 ${months[months.length - 1]}개월 — 계약 ${contractM}개월을 넘는다`);
-        else if (months.length !== expect) fail(`[${k}] plan${pl} 은 ${months.length}회 — 계약 ${contractM}개월 ÷ ${pl}개월이면 ${expect}회여야 한다 (${months.join(',')})`);
+        const contractM = d.plans[pl].maxTerm * 12;
+        const expect = Math.floor(contractM / cyc);
+        if (months.some((m, i) => i && m <= months[i - 1])) fail(`[${k}] ${pl} 회차가 오름차순이 아니다 — ${months.join(',')}`);
+        else if (months[months.length - 1] > contractM) fail(`[${k}] ${pl} 마지막 회차 ${months[months.length - 1]}개월 — 계약 ${contractM}개월을 넘는다`);
+        else if (months.length !== expect) fail(`[${k}] ${pl} 은 ${months.length}회 — 계약 ${contractM}개월 ÷ ${cyc}개월이면 ${expect}회여야 한다 (${months.join(',')})`);
         else {
-          const label = d['total' + pl];
+          const label = d.plans[pl].total;
           const said = label && String(label).match(/(\d+)\s*회/);
           if (said && +said[1] !== months.length) fail(`[${k}] plan${pl} 안내는 "${label}" 인데 일정은 ${months.length}회`);
           else if (sched.some((x) => !x.kind)) fail(`[${k}] plan${pl} 에 케어 종류가 없는 회차가 있다 — 무엇이 나가는지 못 적는다`);
@@ -607,7 +662,8 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     /* 화면(#bluepassPane)에 뜬 혜택 제목이 카드에도 다 있는가 — 빈 껍데기를 내보내지 않는다 */
     const onScreen = [...window.document.querySelectorAll('#bluepassPane .bp-t, #bluepassPane h3, #bluepassPane .bp-nm')]
       /* 화면 제목 앞에는 순번 배지("1A/S 패스트트랙")가 붙는다 — 떼고 비교한다 */
-      .map((e) => e.textContent.trim().replace(/^\d+/, '')).filter(Boolean);
+      /* 꼬리표(「일부 품목 한정」 등)는 제목이 아니다 — 떼고 비교한다 */
+      .map((e) => { const c = e.cloneNode(true); c.querySelectorAll('.bp-tag').forEach((t) => t.remove()); return c.textContent.trim().replace(/^\d+/, ''); }).filter(Boolean);
     const missing = onScreen.filter((t) => !bpRows.includes(t));
     if (bpRows.length < 6) fail(`[공유] 블루패스 카드가 ${bpRows.length}줄뿐 — 혜택이 빠졌다`);
     else if (onScreen.length && missing.length) fail(`[공유] 화면에 있는 혜택이 카드에 없다: ${missing.join(', ')}`);

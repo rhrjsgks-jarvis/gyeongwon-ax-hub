@@ -65,6 +65,83 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 .pico{font-size:21px;margin-bottom:4px}.pnm{font-size:14px;font-weight:800}
 .psub{font-size:10.5px;color:#9aa0a6;line-height:1.5;margin-top:3px}
 .plan-tab.blue .psub,.plan-tab.teal .psub{color:#475569}
+.pdiff{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#f2f6fd;color:#1e293b;font-size:12.5px;line-height:1.55}
+.cyc{display:flex;gap:8px;margin:10px 0 0;flex-wrap:wrap}
+.cyc-b{flex:1;min-width:130px;border:1.5px solid #d6dbe6;background:#fff;border-radius:999px;padding:8px 10px;font-size:12.5px;font-weight:700;color:#334155;cursor:pointer}
+.cyc-b.on{border-color:#0D1B7A;background:#0D1B7A;color:#fff}
+.cyc-b small{font-weight:500;opacity:.8}
+.round-pill[data-round]{cursor:pointer}
+.round-pill.on{outline:2px solid #1428A0}
+.term-t{width:100%;border-collapse:collapse;font-size:12px;line-height:1.45}
+.term-t th,.term-t td{border-top:1px solid #eef0f4;padding:7px 6px;text-align:left;vertical-align:top}
+.term-t th{color:#64748b;font-weight:700}
+.term-t td:first-child{white-space:nowrap;font-weight:700;color:#0D1B7A}
+.ox{width:100%;border-collapse:collapse;font-size:12.5px;line-height:1.4}
+.ox th{background:#f4f6fb;color:#334155;font-weight:800;padding:8px 6px;text-align:center;border-bottom:2px solid #dfe5f1}
+.ox th.cur{background:#0D1B7A;color:#fff}
+.ox td{border-bottom:1px solid #eef0f4;padding:8px 6px;vertical-align:middle}
+.ox td.k{font-weight:600;color:#1e293b}
+.ox tr.key td.k{color:#0D1B7A}
+.ox tr.key td.k::after{content:'핵심 차이';margin-left:5px;font-size:10.5px;font-weight:800;color:#b42318;background:#fdecea;border-radius:6px;padding:1px 5px;white-space:nowrap}
+.ox td.v{text-align:center;width:30%;vertical-align:middle}
+.ox td.cur{background:#f2f6fd}
+.ox-o,.ox-x{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font:900 13px/1 Arial,sans-serif;margin:0 auto}
+.ox-o{background:#1428A0;color:#fff}.ox-x{background:#e5e7eb;color:#6b7280}
+.ox-s{display:block;margin-top:4px;font-size:11.5px;color:#475569;line-height:1.35}
+.ox tr.grp td{background:#fafbfd;font-size:11.5px;font-weight:800;color:#64748b;padding:6px}
+.plan-tabs.three{grid-template-columns:repeat(3,1fr);gap:7px}.plan-tabs.three .pnm{font-size:13px}.plan-tabs.three .psub{font-size:11px}
+.plan-tabs.one{grid-template-columns:1fr}
+.ox3 td.v,.ox3 th{width:22%}
+.tt-h{font-size:12.5px;font-weight:800;color:#0D1B7A;margin:10px 0 6px}
+.tt-w{overflow-x:auto}
+.tt{width:100%;border-collapse:collapse;font-size:11.5px;text-align:center;min-width:330px;table-layout:fixed}
+.tt th:first-child,.tt td:first-child{width:44px}
+.tt th{color:#64748b;font-weight:700;padding:6px 2px;border-bottom:2px solid #dfe5f1}
+.tt td{border-bottom:1px solid #eef0f4;padding:7px 2px;line-height:1.35;color:#1e293b}
+.tt td:first-child{font-weight:800;color:#0D1B7A;white-space:nowrap}
+.tt td.sp{background:#fff4e5;font-weight:700;color:#9a3412}
+.tt td.na{background:#f8fafc}.tt td.nv{color:#cbd5e1}
+.sn{padding:6px 18px 14px 30px;font-size:12.5px;line-height:1.6;color:#334155}.sn li{margin-top:4px}
+.cyc-m{width:100%;border-collapse:collapse;font-size:12.5px;text-align:center}
+.cyc-m th,.cyc-m td{border-bottom:1px solid #eef0f4;padding:8px 4px}
+.cyc-m th{color:#64748b;font-weight:700}
+.cyc-m td.k{text-align:left;font-weight:700;color:#1e293b}
+.cyc-m .o{color:#1428A0;font-weight:900}.cyc-m .x{color:#9ca3af}
+.cyc-n{margin-top:8px;font-size:12px;color:#475569;line-height:1.55}
+.pitch{padding:4px 13px 13px}.pitch .pr{border-left:4px solid #0D1B7A;background:#f5f7fc;border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:13px;line-height:1.6;color:#1e293b}
+.pitch .pr.l{border-left-color:#2563EB}.pitch .pr.s{border-left-color:#64748b}.pitch .pr-h{display:block;font-size:12px;font-weight:800;color:#0D1B7A;margin-bottom:3px}.pitch .pr b{color:#0D1B7A}.pitch .pl{margin:2px 0 0 16px;padding:0}.pitch .pl li{margin-top:3px}
+.pitch .pk{font-size:12.5px;font-weight:700;color:#0D1B7A;padding:2px 2px 0}
+.bp-tag{margin-left:6px;font-size:10.5px;font-weight:700;color:#1259c3;background:#eaf1fd;border-radius:6px;padding:1px 6px;vertical-align:middle;white-space:nowrap}
+.fold{margin-top:12px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(20,30,60,.05)}
+.fold-h{width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;background:none;border:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.fold-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fold-t{font-size:14px;font-weight:800;color:#0D1B7A;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fold-s{font-size:12px;color:#64748b;line-height:1.45}
+.fold-c{flex:none;width:28px;height:28px;border-radius:50%;background:#eef2fb;position:relative}
+.fold-c::before{content:'';position:absolute;left:10px;top:8px;width:7px;height:7px;border-right:2px solid #1428A0;border-bottom:2px solid #1428A0;transform:rotate(45deg)}
+.fold.on>.fold-h .fold-c::before{top:11px;transform:rotate(-135deg)}
+.fold-b{display:none;border-top:1px solid #eef0f4}
+.fold.on>.fold-b{display:block}
+.fold-b>.card,.fold-b>.bnf{margin-top:0;border-radius:0;box-shadow:none}
+.fold-b .cimg-h{display:none}
+.fold-bar{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
+.fold-all{border:1.5px solid #d6dbe6;background:#fff;color:#334155;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.fold.dk{background:rgba(255,255,255,.08);box-shadow:none;border:1px solid rgba(255,255,255,.18)}
+.fold.dk>.fold-h .fold-t{color:#fff}.fold.dk>.fold-h .fold-s{color:rgba(255,255,255,.75)}
+.fold.dk>.fold-h .fold-c{background:rgba(255,255,255,.16)}.fold.dk>.fold-h .fold-c::before{border-color:#fff}
+.fold.dk>.fold-b{border-top-color:rgba(255,255,255,.14);padding:0 10px 10px}
+.fold.dk .sp{margin-top:10px}
+.bp-wrap .fold-bar .fold-all{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.bp-grp{margin-top:16px}.bp-gh{font-size:14.5px;font-weight:800;color:#fff;display:flex;align-items:center;gap:7px}
+.bp-gk{background:#fff;color:#0D1B7A;font-size:11.5px;border-radius:999px;padding:2px 10px}
+.bp-gd{font-size:12px;color:rgba(255,255,255,.82);margin:4px 0 8px;line-height:1.55}
+.sp-wrap{margin-top:16px}.sp{border:1.5px solid #e3e8f2;border-radius:14px;overflow:hidden;margin-top:10px;background:#fff}
+.sp-top{display:flex;gap:10px;align-items:center;padding:10px;background:#f5f7fc}.sp-top img{width:120px;height:80px;object-fit:cover;object-position:88% center;border-radius:8px;flex:none}
+.sp-t{font-size:15px;font-weight:800;color:#0D1B7A}.sp-s{font-size:12px;color:#1259c3;font-weight:700;margin-top:2px}.sp-d{font-size:12px;color:#334155;margin-top:3px;line-height:1.5}
+.sp-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:10px}
+.sp-i{border:1px solid #eef0f4;border-radius:10px;padding:8px;font-size:12px}.sp-i img{width:100%;height:80px;object-fit:cover;border-radius:7px;margin-bottom:6px}
+.sp-it{font-weight:800;color:#1e293b}.sp-id{color:#334155;margin-top:2px;line-height:1.5}.sp-in{margin-top:5px;color:#64748b;font-size:11.5px;line-height:1.5}
+.sp-c{padding:0 12px 12px;font-size:12px;color:#334155;line-height:1.6}.sp-c ul{margin:4px 0 0 16px;padding:0}
 .type-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 0 0}
 .type-tab{position:relative;border:2px solid #ececf0;background:#fff;border-radius:16px;padding:15px 8px 12px;text-align:center;cursor:pointer;transition:all .18s}
 .type-tab.blue{border-color:#1259c3;background:#f2f6fd}
@@ -318,10 +395,10 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
       <div class="hd-ico">🛡️</div>
       <div>
         <div class="hd-t">삼성 AI구독 케어 안내</div>
-        <div class="hd-s">전 품목 케어 서비스 정보 · 12개월형 / 36개월형</div>
+        <div class="hd-s">전 품목 케어 서비스 정보 · 방문케어 프리미엄 / 라이트 · 셀프케어</div>
       </div>
     </div>
-    <div class="hd-pill">📎 <b>삼성닷컴 공식</b> + <b>AI구독클럽 브로슈어 2026.06</b> 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
+    <div class="hd-pill">📎 <b>삼성닷컴 공식</b> 구독 지면 2026.10.15 원문 기반 &nbsp;|&nbsp; ✅ 공식확인 &nbsp;🔵 현장확인필요</div>
   </div>
 <!--
   탭 순서가 곧 상담 순서다 — 블루패스(왜 삼성인가) → 모델선택(무엇을 살까)
@@ -353,7 +430,7 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
   <div class="bd" id="body"></div>
 </div>
 <div class="btm">
-  <span>2026.08.30 기준</span>
+  <span>2026.10.15 기준</span>
   <b>📞 1588-6084</b>
 </div>
 <script src="back-kit.js"></script>
@@ -446,35 +523,43 @@ const CARE_IMGS = {
  "aircon": [
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img01.jpg",
-   "l": "전문 분해 세척 모습"
+   "l": "전문 분해 세척 모습",
+   "t": ["premium"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img02.jpg",
-   "l": "실외기 냉매 점검 하는 모습"
+   "l": "실외기 냉매 점검 하는 모습",
+   "t": ["premium"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img03.jpg",
-   "l": "냉각 팬 세척 모습"
+   "l": "냉각 팬 세척 모습",
+   "t": ["premium","lite"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img04.jpg",
-   "l": "열교환기 고압 세척 모습"
+   "l": "열교환기 고압 세척 모습",
+   "t": ["premium"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img05.jpg",
-   "l": "외부 UV 케어 하는 모습"
+   "l": "외부 UV 케어 하는 모습",
+   "t": ["premium"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img06.jpg",
-   "l": "무상수리 서비스 하는 모습"
+   "l": "무상수리 서비스 하는 모습",
+   "t": ["premium","lite"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img07.jpg",
-   "l": "필터 세척 모습"
+   "l": "필터 세척 모습",
+   "t": ["premium","lite"]
   },
   {
    "s": "https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img08.jpg",
-   "l": "스마트 진단 하는 모습"
+   "l": "스마트 진단 하는 모습",
+   "t": ["premium"]
   }
  ],
  "fridge": [
@@ -799,6 +884,11 @@ const CARE_IMGS = {
  ]
 };
 
+/* CARE-PLANS:BEGIN — scripts/build-care-plans.mjs 가 만든다. 손으로 고치지 말 것 */
+/* 원문 2026-10-15 · samsung.com AI 구독 제품 구독 지면(subscribe2-d2c) — 구독케어 블록·방문케어/셀프케어 탭·구독케어 자세히 보기 표 */
+const CARE_PLANS = {"aircon":{"title":"에어컨","kinds":{"기본점검/케어":["필터 클리닝","실내기 외관 UV 케어"],"종합점검/케어":["종합점검(스마트 진단 툴)","에어컨 냉매 및 누수 점검","필터 클리닝","실내기 외관 UV 케어"],"기본 세척":["기본점검","송풍구/냉각 팬 클리닝"],"전문 세척":["종합점검","송풍구/냉각 팬 세척","열교환기 고압세척"]},"kindNm":{},"deliver":[],"reinstall":true,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"전문 세척","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"전문 세척","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"전문 세척","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"전문 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"전문 세척","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["전문 세척"],"badge":"전문 세척","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["전문 세척"],"badge":"전문 세척","bc":"btl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"전문 세척","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["전문 세척"],"badge":"전문 세척","bc":"btl"}],"total":"총 2회","maxTerm":6},"L12":{"type":"lite","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"기본점검/케어","n":1}],"2":[{"kind":"기본점검/케어","n":1}],"3":[{"kind":"기본 세척","n":1}]},"4":{"1":[{"kind":"기본점검/케어","n":1}],"2":[{"kind":"기본점검/케어","n":1}],"3":[{"kind":"기본점검/케어","n":1}],"4":[{"kind":"기본 세척","n":1}]},"5":{"1":[{"kind":"기본점검/케어","n":1}],"2":[{"kind":"기본점검/케어","n":1}],"3":[{"kind":"기본점검/케어","n":1}],"4":[{"kind":"기본점검/케어","n":1}],"5":[{"kind":"기본 세척","n":1}]},"6":{"1":[{"kind":"기본점검/케어","n":1}],"2":[{"kind":"기본점검/케어","n":1}],"3":[{"kind":"기본 세척","n":1}],"4":[{"kind":"기본점검/케어","n":1}],"5":[{"kind":"기본점검/케어","n":1}],"6":[{"kind":"기본 세척","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["기본점검/케어"],"badge":"기본점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["기본점검/케어"],"badge":"기본점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["기본 세척"],"badge":"기본 세척","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["기본점검/케어"],"badge":"기본점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["기본점검/케어"],"badge":"기본점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["기본 세척"],"badge":"기본 세척","bc":"btl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img01.jpg","l":"전문 분해 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img02.jpg","l":"실외기 냉매 점검","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img03.jpg","l":"냉각 팬 세척","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img04.jpg","l":"열교환기 고압 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img05.jpg","l":"외부 UV 케어","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img07.jpg","l":"필터 세척","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]}],"hiddenImgs":[{"type":"lite","l":"실외기 냉매 점검"},{"type":"lite","l":"스마트 진단"}],"heads":{"premium":"분해 세척으로 속바람부터 쾌적하게! 전문가에게 맡길케어","lite":"속바람부터 쾌적하게! 전문가에게 맡길케어"},"notes":["* 전문세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.","* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)","* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.","* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.","* 재설치 서비스는 26년 3월 3일 신규 가입 고객부터 적용됩니다.","* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다."],"url":"https://www.samsung.com/sec/ai-subs-living/AF90H19D35WRT-subscribe2-d2c/AF90H19D35WRT/"},"washer":{"title":"세탁기 (일반 · 드럼)","kinds":{"종합점검/케어":["종합점검(스마트 진단 툴)","세탁조 관리(UV 케어)","도어 고무패킹 클리닝","세제함/배수필터 클리닝"],"초음파 세척":["세탁조 초음파 세척","내부 고압세척","세탁조 탈취"]},"kindNm":{},"deliver":[],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["초음파 세척"],"badge":"초음파 세척","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"초음파 세척","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["초음파 세척"],"badge":"초음파 세척","bc":"btl"}],"total":"총 2회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img01.jpg","l":"초음파 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img02.jpg","l":"세탁조 오염 확인","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img03.jpg","l":"고압 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img05.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img03.jpg","l":"UV 케어","t":["premium"]}],"hiddenImgs":[],"heads":{"premium":"분해 없는 초음파 세척! 전문가에게 맡길케어"},"notes":["* 초음파 세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.","* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-living/WF90F25ADS-subscribe2-d2c/WF90F25ADS/"},"aicombo":{"title":"세탁기 (콤보)","kinds":{"종합점검/케어":["종합점검(스마트 진단 툴)","세탁조 관리(UV 케어)","도어 고무패킹/배수필터 클리닝","열교환기 클리닝(브러시/청소기)"],"초음파 세척":["세탁조 초음파 세척","내부 고압세척","세탁조 탈취","열교환기 클리닝(브러시/청소기)"]},"kindNm":{},"deliver":[],"reinstall":true,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"초음파 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["초음파 세척"],"badge":"초음파 세척","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"초음파 세척","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["초음파 세척"],"badge":"초음파 세척","bc":"btl"}],"total":"총 2회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img01.jpg","l":"초음파 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img02.jpg","l":"세탁조 오염 확인","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img03.jpg","l":"고압 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img04.jpg","l":"열교환기 청소","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img05.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img03.jpg","l":"UV 케어","t":["premium"]}],"hiddenImgs":[],"heads":{"premium":"분해 없는 초음파 세척! 전문가에게 맡길케어"},"notes":["* 초음파 세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.","* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)","* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.","* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.","* 재설치 서비스는 26년 3월 3일 신규 가입 고객부터 적용됩니다.","* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다."],"url":"https://www.samsung.com/sec/ai-subs-living/WD90H25AHS-subscribe2-d2c/WD90H25AHS/"},"fridge":{"title":"냉장고 (일반형/양문형)","kinds":{"종합점검/케어":["종합점검(스마트 진단 툴)","가스켓 세척 / 오일도포","도어 외관 클리닝","탈취필터 교체","외관 UV 케어"],"전문 세척":["기계실 청소","UV 케어","도어 외관 클리닝"]},"kindNm":{"전문 세척":"전문세척 (내부 및 후면)"},"deliver":[],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"전문 세척","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"전문 세척","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"전문 세척","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"전문 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["전문 세척"],"badge":"전문세척 (내부 및 후면)","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"전문 세척","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["전문 세척"],"badge":"전문세척 (내부 및 후면)","bc":"btl"}],"total":"총 2회","maxTerm":6},"L12":{"type":"lite","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img01.jpg","l":"기계실 청소","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg","l":"스마트 진단","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg","l":"도어 이물질 클리닝","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg","l":"외부 UV 케어","t":["premium","lite"]}],"hiddenImgs":[],"heads":{"premium":"제품 속까지 신선하게! 전문가에게 맡길케어","lite":"제품 속까지 신선하게! 전문가에게 맡길케어"},"notes":["* 전문세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.","* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-kitchen/RM70H91RMA-subscribe2-d2c/RM70H91RMA/"},"dryer":{"title":"건조기","kinds":{"종합점검/케어":["종합점검(스마트 진단 툴)","열교환기 세척(브러시/청소기)","먼지필터 세척","배수통 세척","습도센서 청소","도어/가스켓 청소","외관 클리닝"]},"kindNm":{},"deliver":[],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 2회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img01.jpg","l":"열교환기 청소","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img05.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]}],"hiddenImgs":[{"type":"premium","l":"필터 세척"}],"heads":{"premium":"언제나 건조는 뽀송하게! 전문가에게 맡길케어"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-living/DV80H20DDW-subscribe2-d2c/DV80H20DDW/"},"kimchi":{"title":"김치냉장고 3, 4도어 공용 (필터 1종)","kinds":{"종합점검/케어":["종합점검(스마트 진단 툴)","가스켓 세척 / 오일도포","도어 외관 클리닝","탈취필터 교체","UV 케어"],"전문 세척":["기계실 청소","UV 케어","도어 외관 클리닝"],"고내탈취필터 배송":["고내탈취필터 (3개/1세트)"]},"kindNm":{},"deliver":["고내탈취필터 배송"],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"전문 세척","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"전문 세척","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"전문 세척","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"전문 세척","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["전문 세척"],"badge":"전문 세척","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"전문 세척","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["전문 세척"],"badge":"전문 세척","bc":"btl"}],"total":"총 2회","maxTerm":6},"L12":{"type":"lite","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"S12":{"type":"self","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"고내탈취필터 배송","n":1}],"2":[{"kind":"고내탈취필터 배송","n":1}],"3":[{"kind":"고내탈취필터 배송","n":1}]},"4":{"1":[{"kind":"고내탈취필터 배송","n":1}],"2":[{"kind":"고내탈취필터 배송","n":1}],"3":[{"kind":"고내탈취필터 배송","n":1}],"4":[{"kind":"고내탈취필터 배송","n":1}]},"5":{"1":[{"kind":"고내탈취필터 배송","n":1}],"2":[{"kind":"고내탈취필터 배송","n":1}],"3":[{"kind":"고내탈취필터 배송","n":1}],"4":[{"kind":"고내탈취필터 배송","n":1}],"5":[{"kind":"고내탈취필터 배송","n":1}]},"6":{"1":[{"kind":"고내탈취필터 배송","n":1}],"2":[{"kind":"고내탈취필터 배송","n":1}],"3":[{"kind":"고내탈취필터 배송","n":1}],"4":[{"kind":"고내탈취필터 배송","n":1}],"5":[{"kind":"고내탈취필터 배송","n":1}],"6":[{"kind":"고내탈취필터 배송","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["고내탈취필터 배송"],"badge":"고내탈취필터 배송","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["고내탈취필터 배송"],"badge":"고내탈취필터 배송","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["고내탈취필터 배송"],"badge":"고내탈취필터 배송","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["고내탈취필터 배송"],"badge":"고내탈취필터 배송","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["고내탈취필터 배송"],"badge":"고내탈취필터 배송","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["고내탈취필터 배송"],"badge":"고내탈취필터 배송","bc":"bbl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img01.jpg","l":"기계실 청소","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg","l":"스마트 진단","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg","l":"도어 이물질 클리닝","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg","l":"외부 UV 케어","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/39/slide_self_img01.jpg","l":"배송받은 필터 교체","t":["self"]}],"hiddenImgs":[],"heads":{"premium":"제품 속까지 신선하게! 전문가에게 맡길케어","lite":"제품 속까지 신선하게! 전문가에게 맡길케어","self":"교체 시기에 알아서 집으로! 필터 교체도 내 손으로 쉽게"},"notes":["* 전문세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.","* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-kitchen/kimchi-stand-rk70f58m1zg-d2c-subscribe2-D2C/RK70F58M1ZG/"},"dish":{"title":"식기세척기","kinds":{"종합점검/필터 세척":["종합점검(스마트 진단 툴)","음식물 거름망 필터 세척","세척 날개 세척","마이크로 필터 교체","내부 노즐 클리닝 및 UV 케어"]},"kindNm":{},"deliver":[],"reinstall":true,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}]},"4":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}],"4":[{"kind":"종합점검/필터 세척","n":1}]},"5":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}],"4":[{"kind":"종합점검/필터 세척","n":1}],"5":[{"kind":"종합점검/필터 세척","n":1}]},"6":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}],"4":[{"kind":"종합점검/필터 세척","n":1}],"5":[{"kind":"종합점검/필터 세척","n":1}],"6":[{"kind":"종합점검/필터 세척","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/필터 세척","n":1}],"6":[{"kind":"종합점검/필터 세척","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"}],"total":"총 2회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img01.jpg","l":"음식물 거름망 필터 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img02.jpg","l":"마이크로 필터 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img03.jpg","l":"세척 날개 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img04.jpg","l":"내부 스팀","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img07.jpg","l":"내부 UV 케어","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]}],"hiddenImgs":[],"heads":{"premium":"입에 닿는 식기 안심되게! 전문가에게 맡길케어"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)","* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.","* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.","* 재설치 서비스는 26년 9월 1일 신규 가입 고객부터 적용됩니다.","* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다.","* 빌트인 모델의 하부장 리폼은 재설치 신청 전 고객 사전 준비가 필요합니다."],"url":"https://www.samsung.com/sec/ai-subs-kitchen/DW90F79P1USWS-subscribe2-d2c/DW90F79P1USWS/"},"induction":{"title":"인덕션","kinds":{"종합점검/케어":["동작 점검","상판 세척","틈새 케어","UV 케어"],"상판교체":["상판교체 (3년차 1회)"]},"kindNm":{},"deliver":[],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1},{"kind":"상판교체","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1},{"kind":"상판교체","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1},{"kind":"상판교체","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1},{"kind":"상판교체","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/케어","상판교체"],"badge":"종합점검/케어 + 상판교체","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1},{"kind":"상판교체","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어","상판교체"],"badge":"종합점검/케어 + 상판교체","bc":"btl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 2회","maxTerm":6},"L12":{"type":"lite","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}]},"4":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}]},"5":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}]},"6":{"1":[{"kind":"종합점검/케어","n":1}],"2":[{"kind":"종합점검/케어","n":1}],"3":[{"kind":"종합점검/케어","n":1}],"4":[{"kind":"종합점검/케어","n":1}],"5":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 6회","maxTerm":6},"L36":{"type":"lite","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/케어","n":1}],"6":[{"kind":"종합점검/케어","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/케어"],"badge":"종합점검/케어","bc":"bbl"}],"total":"총 2회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/45/slide_lite_img01.jpg","l":"상판 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img02.jpg","l":"이물질 제거","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img04.jpg","l":"UV 케어","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img03.jpg","l":"최대 6년 무상수리서비스","t":["premium","lite"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img01.jpg","l":"상판 얼룩 제거","t":["lite"]}],"hiddenImgs":[{"type":"premium","l":"상판 얼룩 제거"}],"heads":{"premium":"얼룩 걱정 없이 반짝이게! 전문가에게 맡길케어","lite":"얼룩 걱정 없이 반짝이게! 전문가에게 맡길케어"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-kitchen/CC80H63E1HS-subscribe2-d2c/CC80H63E1HS/"},"dresser":{"title":"에어드레서","kinds":{"종합점검/필터 교체":["종합점검(스마트 진단 툴)","필터 교체","내부 스팀 및 UV 케어","외관 클리닝 및 UV 케어","피톤치드 연무","급배수통 세척"],"소모품 배송":["미세먼지 집진필터 (1세트)","아로마시트 (20매)"]},"kindNm":{},"deliver":["소모품 배송"],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}]},"4":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}]},"5":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}],"5":[{"kind":"종합점검/필터 교체","n":1}]},"6":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}],"5":[{"kind":"종합점검/필터 교체","n":1}],"6":[{"kind":"종합점검/필터 교체","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"}],"total":"총 6회","maxTerm":6},"P36":{"type":"premium","cycle":36,"terms":[6],"sched":{"6":{"3":[{"kind":"종합점검/필터 교체","n":1}],"6":[{"kind":"종합점검/필터 교체","n":1}]}},"rounds":[{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"}],"total":"총 2회","maxTerm":6},"S12":{"type":"self","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}]},"4":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}],"4":[{"kind":"소모품 배송","n":1}]},"5":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}],"4":[{"kind":"소모품 배송","n":1}],"5":[{"kind":"소모품 배송","n":1}]},"6":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}],"4":[{"kind":"소모품 배송","n":1}],"5":[{"kind":"소모품 배송","n":1}],"6":[{"kind":"소모품 배송","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img01.jpg","l":"필터 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img02.jpg","l":"내부 스팀","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img03.jpg","l":"내부 UV 케어","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img04.jpg","l":"피톤치드 연무","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img05.jpg","l":"외부 도어 광택","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img07.jpg","l":"필터 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img01.jpg","l":"물 보충통 청소","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img02.jpg","l":"물 보충통 연결부 청소","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img03.jpg","l":"미세먼지 필터 교체","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img04.jpg","l":"보푸라기 필터 청소","t":["self"]}],"hiddenImgs":[],"heads":{"premium":"속부터 산뜻한 의류관리! 전문가에게 맡길케어","self":"교체 시기에 알아서 집으로! 필터/소모품 교체도 내 손으로 쉽게"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-living/DF90H24R5C-subscribe2-d2c/DF90H24R5C/"},"airpur_s":{"title":"공기청정기 (S필터)","kinds":{"종합점검/필터 교체":["종합점검(부스터 모드)","필터 교체","센서부 점검 및 클리닝","내부 팬 및 외관 클리닝"],"필터 배송":["필터 (1세트)"]},"kindNm":{},"deliver":["필터 배송"],"reinstall":false,"plans":{"P6":{"type":"premium","cycle":6,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}]},"4":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}],"4":[{"kind":"종합점검/필터 교체","n":2}]},"5":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}],"4":[{"kind":"종합점검/필터 교체","n":2}],"5":[{"kind":"종합점검/필터 교체","n":2}]},"6":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}],"4":[{"kind":"종합점검/필터 교체","n":2}],"5":[{"kind":"종합점검/필터 교체","n":2}],"6":[{"kind":"종합점검/필터 교체","n":2}]}},"rounds":[{"label":"1회차","month":"6개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"2회차","month":"12개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"3회차","month":"18개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"4회차","month":"24개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"5회차","month":"30개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"6회차","month":"36개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"7회차","month":"42개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"8회차","month":"48개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"9회차","month":"54개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"10회차","month":"60개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"11회차","month":"66개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"12회차","month":"72개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"}],"total":"총 12회","maxTerm":6},"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}]},"4":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}]},"5":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}],"5":[{"kind":"종합점검/필터 교체","n":1}]},"6":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}],"5":[{"kind":"종합점검/필터 교체","n":1}],"6":[{"kind":"종합점검/필터 교체","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"}],"total":"총 6회","maxTerm":6},"S6":{"type":"self","cycle":6,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"필터 배송","n":2}],"2":[{"kind":"필터 배송","n":2}],"3":[{"kind":"필터 배송","n":2}]},"4":{"1":[{"kind":"필터 배송","n":2}],"2":[{"kind":"필터 배송","n":2}],"3":[{"kind":"필터 배송","n":2}],"4":[{"kind":"필터 배송","n":2}]},"5":{"1":[{"kind":"필터 배송","n":2}],"2":[{"kind":"필터 배송","n":2}],"3":[{"kind":"필터 배송","n":2}],"4":[{"kind":"필터 배송","n":2}],"5":[{"kind":"필터 배송","n":2}]},"6":{"1":[{"kind":"필터 배송","n":2}],"2":[{"kind":"필터 배송","n":2}],"3":[{"kind":"필터 배송","n":2}],"4":[{"kind":"필터 배송","n":2}],"5":[{"kind":"필터 배송","n":2}],"6":[{"kind":"필터 배송","n":2}]}},"rounds":[{"label":"1회차","month":"6개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"2회차","month":"12개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"3회차","month":"18개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"4회차","month":"24개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"5회차","month":"30개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"6회차","month":"36개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"7회차","month":"42개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"8회차","month":"48개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"9회차","month":"54개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"10회차","month":"60개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"11회차","month":"66개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"12회차","month":"72개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"}],"total":"총 12회","maxTerm":6},"S12":{"type":"self","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"필터 배송","n":1}],"2":[{"kind":"필터 배송","n":1}],"3":[{"kind":"필터 배송","n":1}]},"4":{"1":[{"kind":"필터 배송","n":1}],"2":[{"kind":"필터 배송","n":1}],"3":[{"kind":"필터 배송","n":1}],"4":[{"kind":"필터 배송","n":1}]},"5":{"1":[{"kind":"필터 배송","n":1}],"2":[{"kind":"필터 배송","n":1}],"3":[{"kind":"필터 배송","n":1}],"4":[{"kind":"필터 배송","n":1}],"5":[{"kind":"필터 배송","n":1}]},"6":{"1":[{"kind":"필터 배송","n":1}],"2":[{"kind":"필터 배송","n":1}],"3":[{"kind":"필터 배송","n":1}],"4":[{"kind":"필터 배송","n":1}],"5":[{"kind":"필터 배송","n":1}],"6":[{"kind":"필터 배송","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["필터 배송"],"badge":"필터 배송","bc":"bbl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img01.jpg","l":"부스터 팬 클리닝","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img02.jpg","l":"상단 토출구 분해 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img03.jpg","l":"새 S필터 장착","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img04.jpg","l":"센서 부 점검 청소","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img05.jpg","l":"외부 UV 케어","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img07.jpg","l":"새 S필터 비닐 제거","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img01.jpg","l":"사용한 S필터 분리","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img02.jpg","l":"새 필터 비닐 제거","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img03.jpg","l":"새 S필터 교체","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img04.jpg","l":"모드 리셋","t":["self"]}],"hiddenImgs":[],"heads":{"premium":"공기의 시작부터 청정하게! 전문가에게 맡길케어","self":"교체 시기에 알아서 집으로! 필터 교체도 내 손으로 쉽게"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-living/AP90H10163UDD-subscribe2-d2c/AP90H10163UDD/"},"airpur_reusable":{"title":"공기청정기 (리유저블)","kinds":{"종합점검/필터 세척":["종합점검(스마트 진단 툴)","필터 세척","센서부 점검 및 클리닝","내부 팬 및 외관 클리닝"]},"kindNm":{},"deliver":[],"reinstall":false,"plans":{"P6":{"type":"premium","cycle":6,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 세척","n":2}],"2":[{"kind":"종합점검/필터 세척","n":2}],"3":[{"kind":"종합점검/필터 세척","n":2}]},"4":{"1":[{"kind":"종합점검/필터 세척","n":2}],"2":[{"kind":"종합점검/필터 세척","n":2}],"3":[{"kind":"종합점검/필터 세척","n":2}],"4":[{"kind":"종합점검/필터 세척","n":2}]},"5":{"1":[{"kind":"종합점검/필터 세척","n":2}],"2":[{"kind":"종합점검/필터 세척","n":2}],"3":[{"kind":"종합점검/필터 세척","n":2}],"4":[{"kind":"종합점검/필터 세척","n":2}],"5":[{"kind":"종합점검/필터 세척","n":2}]},"6":{"1":[{"kind":"종합점검/필터 세척","n":2}],"2":[{"kind":"종합점검/필터 세척","n":2}],"3":[{"kind":"종합점검/필터 세척","n":2}],"4":[{"kind":"종합점검/필터 세척","n":2}],"5":[{"kind":"종합점검/필터 세척","n":2}],"6":[{"kind":"종합점검/필터 세척","n":2}]}},"rounds":[{"label":"1회차","month":"6개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"2회차","month":"12개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"3회차","month":"18개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"4회차","month":"24개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"5회차","month":"30개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"6회차","month":"36개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"7회차","month":"42개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"8회차","month":"48개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"9회차","month":"54개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"10회차","month":"60개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"11회차","month":"66개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"12회차","month":"72개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"}],"total":"총 12회","maxTerm":6},"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}]},"4":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}],"4":[{"kind":"종합점검/필터 세척","n":1}]},"5":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}],"4":[{"kind":"종합점검/필터 세척","n":1}],"5":[{"kind":"종합점검/필터 세척","n":1}]},"6":{"1":[{"kind":"종합점검/필터 세척","n":1}],"2":[{"kind":"종합점검/필터 세척","n":1}],"3":[{"kind":"종합점검/필터 세척","n":1}],"4":[{"kind":"종합점검/필터 세척","n":1}],"5":[{"kind":"종합점검/필터 세척","n":1}],"6":[{"kind":"종합점검/필터 세척","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 세척"],"badge":"종합점검/필터 세척","bc":"bbl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img01.jpg","l":"부스터 팬 클리닝","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img02.jpg","l":"상단 토출구 분해 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img03.jpg","l":"리유저블 필터 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img04.jpg","l":"센서 부 점검 청소","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img05.jpg","l":"외부 UV 케어","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]}],"hiddenImgs":[],"heads":{"premium":"공기의 시작부터 청정하게! 전문가에게 맡길케어"},"notes":["* Infinite AI 공기청정기(리유저블)은 셀프케어 선택이 불가합니다.","* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"],"url":"https://www.samsung.com/sec/ai-subs-living/AP90H10198UDD-subscribe2-d2c/AP90H10198UDD/"},"vacuum":{"title":"로봇청소기","kinds":{"종합점검/소모품 교체":["종합점검(스마트 진단 툴)","[본체] 먼지통 클리닝 및 필터 교체","[본체] 바퀴 클리닝","[본체] 롤러 소모품 교체","[본체] 스팀용 물걸레 교체 및 추가 제공","[본체] 외관 클리닝","[본체] 사이드 브러시 교체","[스테이션] 먼지봉투 교체"],"배터리 교체":["본체 배터리 교체 (구독 기간 내 총 1회)"],"소모품 배송":["먼지봉투 (5매)","물걸레 (2쌍 4매)"]},"kindNm":{},"deliver":["소모품 배송"],"reinstall":false,"plans":{"P12":{"type":"premium","cycle":12,"terms":[3,4,5],"sched":{"3":{"1":[{"kind":"종합점검/소모품 교체","n":1}],"2":[{"kind":"종합점검/소모품 교체","n":1}],"3":[{"kind":"배터리 교체","n":1},{"kind":"종합점검/소모품 교체","n":1}]},"4":{"1":[{"kind":"종합점검/소모품 교체","n":1}],"2":[{"kind":"종합점검/소모품 교체","n":1}],"3":[{"kind":"배터리 교체","n":1},{"kind":"종합점검/소모품 교체","n":1}],"4":[{"kind":"종합점검/소모품 교체","n":1}]},"5":{"1":[{"kind":"종합점검/소모품 교체","n":1}],"2":[{"kind":"종합점검/소모품 교체","n":1}],"3":[{"kind":"배터리 교체","n":1},{"kind":"종합점검/소모품 교체","n":1}],"4":[{"kind":"종합점검/소모품 교체","n":1}],"5":[{"kind":"종합점검/소모품 교체","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/소모품 교체"],"badge":"종합점검/소모품 교체","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/소모품 교체"],"badge":"종합점검/소모품 교체","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["배터리 교체","종합점검/소모품 교체"],"badge":"배터리 교체 + 종합점검/소모품 교체","bc":"btl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/소모품 교체"],"badge":"종합점검/소모품 교체","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/소모품 교체"],"badge":"종합점검/소모품 교체","bc":"bbl"}],"total":"총 5회","maxTerm":5},"S12":{"type":"self","cycle":12,"terms":[3,4,5],"sched":{"3":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}]},"4":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}],"4":[{"kind":"소모품 배송","n":1}]},"5":{"1":[{"kind":"소모품 배송","n":1}],"2":[{"kind":"소모품 배송","n":1}],"3":[{"kind":"소모품 배송","n":1}],"4":[{"kind":"소모품 배송","n":1}],"5":[{"kind":"소모품 배송","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["소모품 배송"],"badge":"소모품 배송","bc":"bbl"}],"total":"총 5회","maxTerm":5}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img01.jpg","l":"배터리 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img02.jpg","l":"물걸레 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img03.jpg","l":"사이드 브러시 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img04_v2.jpg","l":"모터 필터 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img06.jpg","l":"최대 5년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img07.jpg","l":"청정스테이션 먼지봉투 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img09.jpg","l":"롤러 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_self_img01.jpg","l":"먼지 통 분리","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_self_img06_v2.jpg","l":"모터 필터 청소","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_self_img05.jpg","l":"배송받은 먼지봉투 교체","t":["self"]}],"hiddenImgs":[],"heads":{"premium":"뛰어난 청소능력 오래도록! 전문가에게 맡길케어","self":"교체 시기에 알아서 집으로! 소모품 교체도 내 손으로 쉽게"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)","* 변색으로 인한 노즐 교체는 수행되지 않습니다."],"url":"https://www.samsung.com/sec/ai-subs-living/VR90F01SAG98CS-subscribe2-d2c/VR90F01SAG98CS/"},"purifier_under":{"title":"정수기 (언더싱크)","kinds":{"종합점검/필터 교체":["종합점검(스마트 진단 툴)","정수필터 교체","모듈 클리닝","토출구 코크 세척","내외부 클리닝","필터 커버 세척","센서 및 누수 진단"],"정수필터 배송":["정수필터 (1세트)"]},"kindNm":{},"deliver":["정수필터 배송"],"reinstall":true,"plans":{"P6":{"type":"premium","cycle":6,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}]},"4":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}],"4":[{"kind":"종합점검/필터 교체","n":2}]},"5":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}],"4":[{"kind":"종합점검/필터 교체","n":2}],"5":[{"kind":"종합점검/필터 교체","n":2}]},"6":{"1":[{"kind":"종합점검/필터 교체","n":2}],"2":[{"kind":"종합점검/필터 교체","n":2}],"3":[{"kind":"종합점검/필터 교체","n":2}],"4":[{"kind":"종합점검/필터 교체","n":2}],"5":[{"kind":"종합점검/필터 교체","n":2}],"6":[{"kind":"종합점검/필터 교체","n":2}]}},"rounds":[{"label":"1회차","month":"6개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"2회차","month":"12개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"3회차","month":"18개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"4회차","month":"24개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"5회차","month":"30개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"6회차","month":"36개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"7회차","month":"42개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"8회차","month":"48개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"9회차","month":"54개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"10회차","month":"60개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"11회차","month":"66개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"12회차","month":"72개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"}],"total":"총 12회","maxTerm":6},"P12":{"type":"premium","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}]},"4":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}]},"5":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}],"5":[{"kind":"종합점검/필터 교체","n":1}]},"6":{"1":[{"kind":"종합점검/필터 교체","n":1}],"2":[{"kind":"종합점검/필터 교체","n":1}],"3":[{"kind":"종합점검/필터 교체","n":1}],"4":[{"kind":"종합점검/필터 교체","n":1}],"5":[{"kind":"종합점검/필터 교체","n":1}],"6":[{"kind":"종합점검/필터 교체","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["종합점검/필터 교체"],"badge":"종합점검/필터 교체","bc":"bbl"}],"total":"총 6회","maxTerm":6},"S6":{"type":"self","cycle":6,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"정수필터 배송","n":2}],"2":[{"kind":"정수필터 배송","n":2}],"3":[{"kind":"정수필터 배송","n":2}]},"4":{"1":[{"kind":"정수필터 배송","n":2}],"2":[{"kind":"정수필터 배송","n":2}],"3":[{"kind":"정수필터 배송","n":2}],"4":[{"kind":"정수필터 배송","n":2}]},"5":{"1":[{"kind":"정수필터 배송","n":2}],"2":[{"kind":"정수필터 배송","n":2}],"3":[{"kind":"정수필터 배송","n":2}],"4":[{"kind":"정수필터 배송","n":2}],"5":[{"kind":"정수필터 배송","n":2}]},"6":{"1":[{"kind":"정수필터 배송","n":2}],"2":[{"kind":"정수필터 배송","n":2}],"3":[{"kind":"정수필터 배송","n":2}],"4":[{"kind":"정수필터 배송","n":2}],"5":[{"kind":"정수필터 배송","n":2}],"6":[{"kind":"정수필터 배송","n":2}]}},"rounds":[{"label":"1회차","month":"6개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"2회차","month":"12개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"3회차","month":"18개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"4회차","month":"24개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"5회차","month":"30개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"6회차","month":"36개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"7회차","month":"42개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"8회차","month":"48개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"9회차","month":"54개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"10회차","month":"60개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"11회차","month":"66개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"12회차","month":"72개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"}],"total":"총 12회","maxTerm":6},"S12":{"type":"self","cycle":12,"terms":[3,4,5,6],"sched":{"3":{"1":[{"kind":"정수필터 배송","n":1}],"2":[{"kind":"정수필터 배송","n":1}],"3":[{"kind":"정수필터 배송","n":1}]},"4":{"1":[{"kind":"정수필터 배송","n":1}],"2":[{"kind":"정수필터 배송","n":1}],"3":[{"kind":"정수필터 배송","n":1}],"4":[{"kind":"정수필터 배송","n":1}]},"5":{"1":[{"kind":"정수필터 배송","n":1}],"2":[{"kind":"정수필터 배송","n":1}],"3":[{"kind":"정수필터 배송","n":1}],"4":[{"kind":"정수필터 배송","n":1}],"5":[{"kind":"정수필터 배송","n":1}]},"6":{"1":[{"kind":"정수필터 배송","n":1}],"2":[{"kind":"정수필터 배송","n":1}],"3":[{"kind":"정수필터 배송","n":1}],"4":[{"kind":"정수필터 배송","n":1}],"5":[{"kind":"정수필터 배송","n":1}],"6":[{"kind":"정수필터 배송","n":1}]}},"rounds":[{"label":"1년차","month":"12개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"2년차","month":"24개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"3년차","month":"36개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"4년차","month":"48개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"5년차","month":"60개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"},{"label":"6년차","month":"72개월차","kinds":["정수필터 배송"],"badge":"정수필터 배송","bc":"bbl"}],"total":"총 6회","maxTerm":6}},"imgs":[{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img01.jpg","l":"필터 교체","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img02.jpg","l":"모듈 클리닝","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img03.jpg","l":"내부 클리닝","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img04.jpg","l":"토출구 분해 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img05.jpg","l":"외부 UV 케어","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img06.jpg","l":"최대 6년 무상수리서비스","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img07.jpg","l":"필터 커버 세척","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img08.jpg","l":"스마트 진단","t":["premium"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img01.jpg","l":"필터 분리","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img02.jpg","l":"내부 물기 제거","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img03.jpg","l":"물받이 청소","t":["self"]},{"s":"https://images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img04.jpg","l":"새 필터 뚜껑 오픈 후 교체","t":["self"]}],"hiddenImgs":[],"heads":{"premium":"물 한 방울까지 깨끗하게! 전문가에게 맡길케어","self":"교체 시기에 알아서 집으로! 필터 교체도 내 손으로 쉽게"},"notes":["* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.","* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)","* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.","* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.","* 재설치 서비스는 26년 3월 3일 신규 가입 고객부터 적용됩니다.","* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다."],"url":"https://www.samsung.com/sec/ai-subs-kitchen/RWP54421BF6M-subscribe2-d2c/RWP54421BF6M/"}};
+/* CARE-PLANS:END */
+
 const DATA = {
   dryer:{
     name:"건조기", icon:"♨️",
@@ -856,59 +946,47 @@ const DATA = {
   /* ▼ 수정: aircon: { 키 추가 (기존 코드에서 누락되어 SyntaxError 발생) */
   aircon:{
     name:"에어컨", icon:"❄️",
-    contract:"72개월(6년형)", terms:"6년 / 5년 / 4년 / 3년", total12:"총 6회", total36:"총 2회",
-    src:"✅ samsung.com AI구독 에어컨 공식 제품 페이지 (AF90H19D35WRT)",
-    plan12:{
-      typeA:{
-        label:"A타입", sub:"기본점검·케어",
-        color:"#2563EB", grad:"linear-gradient(90deg,#1428A0,#3730a3)",
-        rounds:["1회차(12개월)","2회차(24개월)","4회차(48개월)","5회차(60개월)"],
-        badge:"4회 동일", bc:"bbl",
-        items:[
-          {ico:"✅",nm:"에어컨 냉매 및 누수 점검",det:"냉매 압력 정상 범위 측정, 냉매 누수 여부 점검",tag:"to",tt:"삼성닷컴 공식"},
-          {ico:"✅",nm:"필터 클리닝",det:"에어필터 탈거 후 세척·건조, 재장착 완료",tag:"to",tt:"삼성닷컴 공식"},
-          {ico:"✅",nm:"실내기 외관 UV 케어",det:"자외선 장비로 실내기 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
-        ],
-        note:{c:"#2563EB",t:"1·2·4·5회차(12·24·48·60개월차) 동일하게 '기본점검·케어' 진행"}
-      },
-      typeB:{
-        label:"B타입", sub:"기본 세척",
-        color:"#0D1B7A", grad:"linear-gradient(90deg,#0D1B7A,#1428A0)",
-        rounds:["3회차(36개월)","6회차(72개월)"],
-        badge:"2회 동일", bc:"btl",
-        items:[
-          {ico:"✅",nm:"기본 점검",det:"에어컨 냉난방 기본 작동 상태 및 주요 기능 점검",tag:"to",tt:"삼성닷컴 공식"},
-          {ico:"✅",nm:"송풍구 클리닝",det:"실내기 토출구(송풍구) 오염물·먼지 제거",tag:"to",tt:"삼성닷컴 공식"},
-          {ico:"✅",nm:"냉방 팬 클리닝",det:"냉방 팬 표면 오염물 제거 및 클리닝",tag:"to",tt:"삼성닷컴 공식"},
-        ],
-        note:{c:"#f59e0b",t:"3·6회차(36·72개월차) 동일하게 '기본 세척' 진행\n⚠️ 전문 분해 세척이 아닌 기본 세척 서비스입니다."}
-      }
+    contract:"72개월(6년형)", terms:"6년 / 5년 / 4년 / 3년",
+    src:"✅ samsung.com AI구독 에어컨 구독 제품 페이지 (AF90H19D35WRT) — 2026.10.15 확인",
+    /*
+     * **방문케어가 「프리미엄 / 라이트」 둘로 갈렸다**(삼성닷컴 2026.10 현행).
+     * 옛 「12개월형(A 기본점검·케어 + B 기본 세척)」은 지금 **라이트**이고,
+     * 옛 「36개월형(종합점검·케어 + 전문 세척)」은 **프리미엄 36개월 주기**다.
+     * **프리미엄 12개월 주기**는 예전 자료에 아예 없었다.
+     * 가르는 것은 열교환기 고압 세척 — 삼성닷컴 FAQ 원문 *"열교환기 고압 세척 서비스 제공 여부가 가장 큰 차이점"*.
+     * 회차 구성은 구독 지면의 「구독케어 자세히 보기」 표(6년형) 그대로다.
+     */
+    planDiff:"가르는 것은 <b>열교환기 고압세척</b>입니다 — 프리미엄은 종합점검·케어 + 전문 세척, 라이트는 기본점검·케어 + 기본 세척입니다.",
+    planNote:"전문 세척이 제공되는 회차에는 종합점검·케어가 제공되지 않습니다.",
+    /* 프리미엄 36개월 · 라이트 36개월이 있는지 — 같은 표의 행 그대로(라이트에는 36개월 행이 없다) */
+    noCycle:[{type:"lite", cycle:36, why:"라이트는 12개월 주기만 있습니다"}],
+    repairOnly:"케어 없이 「무상수리서비스」만 가입하는 유형도 있습니다(3·4·5·6년) — 방문은 없습니다.",
+    /*
+     * O/X — **원문 정의에서만** 매긴다.
+     *   프리미엄 = 종합점검·케어(스마트 진단 툴·냉매 및 누수 점검·필터 클리닝·실내기 외관 UV) + 전문 세척(종합점검·송풍구/냉각 팬 세척·열교환기 고압세척)
+     *   라이트   = 기본점검·케어(필터 클리닝·실내기 외관 UV) + 기본 세척(기본점검·송풍구/냉각 팬 클리닝)
+     * 라이트 슬라이드에서 「실외기 냉매 점검」「스마트 진단」은 원문 HTML 에서 **주석으로 빠져 있다** — 라이트에 없다는 뜻이다.
+     * 「시간맞춤 세척」(신혼 패스)은 원문이 *"전문세척이 포함된 방문케어 이용 고객에 한해"* 라 프리미엄만이다.
+     */
+    compare:[
+      {g:"정기 점검 (매년 1회)", k:"스마트 진단 툴 종합점검", P:["O","전용 진단 툴로 전체 성능·기능 점검"], L:["X","기본점검만"], key:true},
+      {g:"정기 점검 (매년 1회)", k:"냉매 및 누수 점검 (실외기 냉매 점검)", P:["O",""], L:["X",""], key:true},
+      {g:"정기 점검 (매년 1회)", k:"필터 클리닝", P:["O",""], L:["O",""]},
+      {g:"정기 점검 (매년 1회)", k:"실내기 외관 UV 케어", P:["O",""], L:["O",""]},
+      {g:"세척 (3·6년차)", k:"세척 종류", P:["","<b>전문 세척</b> (분해)"], L:["","<b>기본 세척</b> (분해 없음)"]},
+      {g:"세척 (3·6년차)", k:"송풍구 · 냉각 팬", P:["O","분해 세척"], L:["O","표면 클리닝"]},
+      {g:"세척 (3·6년차)", k:"열교환기 고압세척", P:["O","먼지·곰팡이 고압 세정"], L:["X",""], key:true},
+      {g:"공통", k:"무상수리서비스 (구독 기간 내)", P:["O","최대 6년"], L:["O","최대 6년"]},
+      {g:"공통", k:"재설치 (구독 기간 중 1회)", P:["O","설치 기본비"], L:["O","설치 기본비"]},
+      {g:"공통", k:"방문 주기", P:["","<b>12개월</b> 또는 <b>36개월</b>(6년형만)"], L:["","<b>12개월</b>만"]},
+      {g:"블루패스 (올인원 2.0)", k:"신혼 패스 「시간맞춤 세척」", P:["O","전문세척 회차를 야간·주말로"], L:["X","전문세척이 없어 대상 아님"]},
+    ],
+    pitch:{
+      premium:"1·2·4·5년차에는 전문가가 스마트 진단 툴로 종합점검하고 냉매·누수까지 봐 드립니다. 3·6년차에는 에어컨을 분해해 송풍구·냉각 팬을 세척하고 열교환기까지 고압 세척해 속바람까지 깨끗하게 해 드립니다. 6년형은 36개월 주기(3년차 종합점검·케어, 6년차 전문 세척)로도 고르실 수 있습니다.",
+      lite:"1·2·4·5년차에는 방문해 필터를 클리닝하고 실내기 외관을 UV 케어해 드립니다. 3·6년차에는 송풍구와 냉각 팬을 분해 없이 기본 세척해 드립니다. 스마트 진단 툴 종합점검·냉매 점검·분해 세척·열교환기 고압세척은 들어 있지 않고, 방문은 12개월 주기만 있습니다.",
+      pick:"「속까지 분해 세척」을 원하시면 프리미엄, 「정기 관리와 기본 세척이면 충분」하시면 라이트입니다."
     },
-    plan36:{
-      rounds:[
-        {
-          label:"1회차", month:"36개월차",
-          grad:"linear-gradient(90deg,#1428A0,#2563EB)", badge:"종합점검·케어", bc:"bbl",
-          items:[
-            {ico:"✅",nm:"종합점검 (Smart 진단 Tool)",det:"삼성 전용 스마트 진단 툴을 이용한 에어컨 전체 성능·기능 종합 점검",tag:"to",tt:"삼성닷컴 공식"},
-            {ico:"✅",nm:"에어컨 냉매 및 누수 점검",det:"냉매 압력 정상 범위 측정, 냉매 누수 여부 점검",tag:"to",tt:"삼성닷컴 공식"},
-            {ico:"✅",nm:"필터 클리닝",det:"에어필터 탈거 후 세척·건조, 재장착 완료",tag:"to",tt:"삼성닷컴 공식"},
-            {ico:"✅",nm:"실내기 외관 UV 케어",det:"자외선 장비로 실내기 외관 UV 살균 처리",tag:"to",tt:"삼성닷컴 공식"},
-          ],
-          note:{c:"#2563EB",t:"1회차(36개월)와 2회차(72개월) 케어 내용이 다릅니다."}
-        },
-        {
-          label:"2회차", month:"72개월차",
-          grad:"linear-gradient(90deg,#0D1B7A,#1428A0)", badge:"전문 세척", bc:"btl",
-          items:[
-            {ico:"✅",nm:"냉각 팬 세척",det:"실내기 냉각 팬 전문 세척으로 이물질·오염물 제거",tag:"to",tt:"삼성닷컴 공식"},
-            {ico:"✅",nm:"열교환기 고압세척",det:"열교환기에 흡착된 먼지·곰팡이 고압 세정, 냉방 효율 복원",tag:"to",tt:"삼성닷컴 공식"},
-          ],
-          note:{c:"#0D1B7A",t:"2회차(72개월)는 '전문 세척'으로 냉각 팬 세척 + 열교환기 고압세척이 수행됩니다."}
-        }
-      ]
-    },
-    includes:["무상수리서비스 (구독 기간 내 제공)","재설치 서비스 (구독 기간 내 1회 · 26년 3월 3일 신규 가입 고객부터)","일정 변경 가능 (최초 수행 예정일로부터 60일 이내 · 연기만 가능하며 당기기는 불가)"],
+    includes:["무상수리서비스 (구독 기간 내 제공)","재설치 서비스 (구독 기간 내 1회 · 설치 기본비에 한함)","일정 변경 가능 (최초 수행 예정일로부터 60일 이내 · 연기만 가능하며 당기기는 불가)"],
     excludes:["케어 회차 소멸 — 최초 수행 예정일로부터 60일이 지나거나, 60일 이내 연속 2회 이상 부재 시","고객 과실 손상","서비스 유형 변경 불가 (방문↔셀프)"]
   },
 
@@ -2020,6 +2098,14 @@ function closeDrop(){
 
 /* ────────────────── 요약 타일 ────────────────── */
 function buildSummary(d){
+  if(d.plans){
+    const p = d.plans[curPlan] || d.plans[defaultPlan(d)];
+    return [
+      {l:'계약기간', v:d.contract},
+      {l:'선택한 요금제', v:PLAN_TYPE[p.type].short},
+      {l:'방문', v:'매 '+p.cycle+'개월 · '+p.total}
+    ];
+  }
   if(d.onlyPlan === '12') return [
     {l:'계약기간', v:d.contract},
     {l:'총 방문',  v:d.total12},
@@ -2172,6 +2258,300 @@ function render36(d){
   return out;
 }
 
+
+/* ═══════════════ 요금제 — 방문케어 프리미엄 / 라이트 / 셀프케어 (2026-10 삼성닷컴 개편) ═══════════════
+ * 「12개월형 / 36개월형」이 유형(프리미엄·라이트·셀프케어) × 주기(6·12·36개월)로 바뀌었다.
+ * 자료는 CARE_PLANS(빌드 산출물 — scripts/build-care-plans.mjs)에서 오고 applyCarePlans() 가
+ * DATA 에 얹는다. 키는 P12·P36·L12·S6 꼴이고 회차표·요약·혜택·타임라인·개요가 전부 이 키 하나를 지나간다.
+ */
+const PLAN_TYPE = {
+  premium:{ nm:'방문케어 프리미엄', short:'프리미엄', bg:'linear-gradient(90deg,#0D1B7A,#1428A0)' },
+  lite:   { nm:'방문케어 라이트',   short:'라이트',   bg:'linear-gradient(90deg,#1428A0,#2563EB)' },
+  self:   { nm:'셀프케어',          short:'셀프케어', bg:'linear-gradient(90deg,#334155,#64748b)' }
+};
+const TYPE_ORDER = ['premium','lite','self'];
+function planKeys(d){ return d && d.plans ? Object.keys(d.plans) : null; }
+/* 기본은 프리미엄 12개월 — 상담에서 가장 먼저 나오는 조합이다 */
+function defaultPlan(d){
+  const k = planKeys(d);
+  if (!k) return (d && d.onlyPlan) || '12';
+  return k.includes('P12') ? 'P12' : k[0];
+}
+function planName(d, k){ const p = d.plans[k]; return PLAN_TYPE[p.type].short + ' · ' + p.cycle + '개월 주기'; }
+function typesOf(d){ return TYPE_ORDER.filter(t => planKeys(d).some(k => d.plans[k].type === t)); }
+function typeKinds(d, type){
+  const ks = planKeys(d).filter(k => d.plans[k].type === type);
+  return [...new Set(ks.flatMap(k => d.plans[k].rounds.flatMap(r => r.kinds || [r.badge])))];
+}
+function kindName(d, k){ return (d.kindNm && d.kindNm[k]) || k; }
+function kindItems(d, k){ return (d.kindsDef && d.kindsDef[k]) || []; }
+function isDeliver(d, k){ return (d.deliver || []).includes(k); }
+
+/* CARE_PLANS → DATA. 옛 12/36개월형 자료(plan12/plan36/onlyPlan/total*)는 지운다 — 남겨 두면 어딘가에서 옛 회차가 다시 그려진다 */
+function applyCarePlans(){
+  if (typeof CARE_PLANS === 'undefined') return;
+  Object.entries(CARE_PLANS).forEach(([key, C]) => {
+    const d = DATA[key]; if (!d) return;
+    ['plan12','plan36','onlyPlan','total12','total36','termRows'].forEach(f => delete d[f]);
+    d.kindsDef = C.kinds; d.kindNm = C.kindNm; d.deliver = C.deliver; d.reinstall = C.reinstall;
+    d.srcNotes = C.notes; d.heads = C.heads; d.srcUrl = C.url;
+    const maxT = Math.max(...Object.values(C.plans).map(p => p.maxTerm));
+    d.contract = (maxT * 12) + '개월(' + maxT + '년형)';
+    const allT = [...new Set(Object.values(C.plans).flatMap(p => p.terms))].sort((a,b)=>b-a);
+    d.terms = allT.map(t => t + '년').join(' / ');
+    d.src = '✅ samsung.com AI 구독 ' + (C.title || d.name) + ' 구독 지면 — 2026.10.15 원문 대조';
+    d.plans = {};
+    Object.entries(C.plans).forEach(([pk, p]) => {
+      d.plans[pk] = {
+        type: p.type, cycle: p.cycle, terms: p.terms, total: p.total, maxTerm: p.maxTerm, sched: p.sched,
+        only6: p.terms.length === 1 && p.terms[0] === 6,
+        rounds: p.rounds.map(r => ({
+          label: r.label, month: r.month, kinds: r.kinds, badge: r.kinds.map(k => kindName(d, k)).join(' + '), bc: r.bc,
+          grad: r.bc === 'btl' ? 'linear-gradient(90deg,#0D1B7A,#1428A0)' : (p.type === 'self' ? 'linear-gradient(90deg,#334155,#64748b)' : 'linear-gradient(90deg,#1428A0,#2563EB)'),
+          items: r.kinds.flatMap(k => kindItems(d, k).map(nm => ({
+            ico: isDeliver(d, k) ? '📦' : '✅', nm,
+            det: isDeliver(d, k) ? '방문 없이 택배로 보내 드립니다' : kindName(d, k),
+            tag: 'to', tt: '삼성닷컴 공식' })))
+        }))
+      };
+    });
+    CARE_IMGS[key] = C.imgs.map(x => ({ s: x.s, l: x.l, t: x.t }));
+  });
+}
+
+/* ── 프리미엄 vs 라이트 vs 셀프케어 — O/X ──
+ * 두 칸 이상을 **늘 함께** 그린다. 칸 값은 원문 정의(케어 종류 → 항목)로만 만든다 — 여기서 새로 판단하지 않는다.
+ * 에어컨처럼 손으로 다듬은 표(d.compare)가 있으면 그것을 쓴다.
+ */
+function oxRows(d){
+  const types = typesOf(d);
+  if (d.compare) return d.compare.map(r => ({ g:r.g, k:r.k, key:r.key, v:{ premium:r.P, lite:r.L, self:r.S } }));
+  const has = {};
+  types.forEach(t => { has[t] = new Set(typeKinds(d, t).flatMap(k => kindItems(d, k))); });
+  const rows = [], seen = new Set();
+  Object.keys(d.kindsDef || {}).forEach(k => {
+    const g = isDeliver(d, k) ? '셀프케어 배송 소모품' : kindName(d, k);
+    kindItems(d, k).forEach(it => {
+      if (seen.has(it)) return; seen.add(it);
+      const v = {}; types.forEach(t => { v[t] = [has[t].has(it) ? 'O' : 'X', '']; });
+      const key = types.includes('lite') && v.premium && v.premium[0] === 'O' && v.lite[0] === 'X';
+      rows.push({ g, k: it, key, v });
+    });
+  });
+  /* 공통 줄 — 방문 여부 · 주기 · 횟수 · 무상수리 · 재설치 */
+  const cyc = (t) => planKeys(d).filter(k => d.plans[k].type === t).map(k => d.plans[k].cycle + '개월' + (d.plans[k].only6 ? '(6년형만)' : '')).join(' / ');
+  const cnt = (t) => { const k = planKeys(d).find(k => d.plans[k].type === t && d.plans[k].cycle === 12) || planKeys(d).find(k => d.plans[k].type === t); return d.plans[k].maxTerm + '년형 ' + d.plans[k].total; };
+  const V = (f) => { const v = {}; types.forEach(t => { v[t] = f(t); }); return v; };
+  rows.push({ g:'공통', k:'전문가 방문', v:V(t => t === 'self' ? ['X','방문 없이 배송'] : ['O','']) });
+  rows.push({ g:'공통', k: types.includes('self') ? '방문·배송 주기' : '방문 주기', v:V(t => ['', '<b>' + cyc(t) + '</b>']) });
+  rows.push({ g:'공통', k:'횟수 (가장 긴 계약)', v:V(t => ['', cnt(t)]) });
+  const maxT = Math.max(...planKeys(d).map(k => d.plans[k].maxTerm));
+  rows.push({ g:'공통', k:'무상수리서비스 (구독 기간 내)', v:V(() => ['O', '최대 ' + maxT + '년']) });
+  if (d.reinstall) rows.push({ g:'공통', k:'재설치 (구독 기간 중 1회)', v:V(t => t === 'self' ? ['X','방문케어 가입 고객만'] : ['O','설치 기본비']) });
+  return rows;
+}
+function oxCell(v){
+  if (!v) return '<span class="ox-s">—</span>';
+  /* 첫 칸이 비면 O/X 가 아니라 **값을 적는 줄**이다(방문 주기·횟수) */
+  const mark = v[0] === 'O' ? '<span class="ox-o">O</span>' : v[0] === 'X' ? '<span class="ox-x">X</span>' : '';
+  return mark + (v[1] ? '<span class="ox-s">' + v[1] + '</span>' : '');
+}
+function oxTable(d, curType){
+  const types = typesOf(d);
+  let g = '';
+  const rows = oxRows(d).map(r => {
+    let head = '';
+    if (r.g !== g) { g = r.g; head = '<tr class="grp"><td colspan="' + (types.length + 1) + '">' + g + '</td></tr>'; }
+    return head + '<tr' + (r.key ? ' class="key"' : '') + '><td class="k">' + r.k + '</td>'
+      + types.map(t => '<td class="v' + (curType === t ? ' cur' : '') + '">' + oxCell(r.v[t]) + '</td>').join('') + '</tr>';
+  }).join('');
+  return '<div style="padding:4px 13px 13px"><table class="ox' + (types.length > 2 ? ' ox3' : '') + '"><tr><th></th>'
+    + types.map(t => '<th class="' + (curType === t ? 'cur' : '') + '">' + PLAN_TYPE[t].short + '</th>').join('')
+    + '</tr>' + rows + '</table></div>';
+}
+function nKey(d){ return oxRows(d).filter(r => r.key).length; }
+
+/* ── 설명 멘트 — 원문 회차를 그대로 문장으로 ── */
+function yearsText(ys){ return ys.join('·') + '년차'; }
+function pitchFor(d, t){
+  const ks = planKeys(d).filter(k => d.plans[k].type === t);
+  const k = ks.find(k => d.plans[k].cycle === 12) || ks[0];
+  const p = d.plans[k];
+  const alt = ks.filter(x => x !== k).map(x => d.plans[x]);
+  const altTxt = alt.length ? ' · 다른 주기: ' + alt.map(a => '매 ' + a.cycle + '개월(' + a.terms.join('·') + '년형, ' + a.total + ')').join(', ') : '';
+  if (t === 'self') {
+    const items = typeKinds(d, t).flatMap(x => kindItems(d, x)).join(', ');
+    return '전문가 방문 없이 매 ' + p.cycle + '개월 집으로 배송 — <b>' + items + '</b><br>받으신 소모품은 고객님이 직접 교체하십니다.' + altTxt;
+  }
+  if (p.cycle === 6) {
+    return '<ul class="pl"><li>매 6개월(연 2회) 방문 — ' + typeKinds(d, t).map(x => '<b>' + kindName(d, x) + '</b>: ' + kindItems(d, x).join(', ')).join(' / ') + '</li></ul>' + altTxt.replace(/^ · /, '');
+  }
+  /* 해마다 무엇이 오는지 케어 종류별로 묶는다 — 원문 표 그대로 */
+  const by = {};
+  Object.entries(p.sched[p.maxTerm]).forEach(([y, es]) => es.forEach(e => { (by[e.kind] = by[e.kind] || []).push(+y); }));
+  return '<ul class="pl">' + Object.entries(by).map(([kind, ys]) => '<li>' + ys.join('·') + '년차 — <b>' + kindName(d, kind) + '</b>: ' + kindItems(d, kind).join(', ') + '</li>').join('')
+    + '</ul>매 ' + p.cycle + '개월 · ' + p.maxTerm + '년형 기준' + altTxt;
+}
+function pitchCard(d){
+  const types = typesOf(d);
+  const P = d.pitch || {};
+  let pick = P.pick || '';
+  if (!pick && types.includes('lite')) {
+    const only = oxRows(d).filter(r => r.key).map(r => r.k);
+    if (only.length) pick = '「' + only.join('·') + '」까지 원하시면 프리미엄, 정기 점검이면 충분하시면 라이트입니다.';
+  }
+  if (!pick && types.includes('self')) pick = '전문가 손을 원하시면 방문케어 프리미엄, 소모품만 받아 직접 교체하시려면 셀프케어입니다.';
+  return '<div class="pitch">' + types.map(t => '<div class="pr' + (t === 'lite' ? ' l' : t === 'self' ? ' s' : '') + '"><span class="pr-h">' + PLAN_TYPE[t].nm + '</span>' + (P[t] || pitchFor(d, t)) + '</div>').join('')
+    + (pick ? '<div class="pk">👉 ' + pick + '</div>' : '') + '</div>';
+}
+
+/* ── 주기 구분 — 유형 × 주기를 계약기간별 O/X 로. 없는 조합도 적는다 ── */
+function cycleMatrix(d){
+  const T = [3,4,5,6];
+  const lines = planKeys(d).map(k => {
+    const p = d.plans[k];
+    return '<tr><td class="k">' + PLAN_TYPE[p.type].short + ' · ' + p.cycle + '개월</td>'
+      + T.map(t => p.terms.includes(t) ? '<td class="o">O</td>' : '<td class="x">X</td>').join('')
+      + '<td>' + p.total + '<br><small>(' + p.maxTerm + '년형)</small></td></tr>';
+  }).join('');
+  const notes = [];
+  const types = typesOf(d);
+  const only6 = planKeys(d).filter(k => d.plans[k].only6).map(k => PLAN_TYPE[d.plans[k].type].short + ' ' + d.plans[k].cycle + '개월');
+  if (only6.length) notes.push('<b>' + only6.join(', ') + '</b> 주기는 <b>6년형에서만</b> 고를 수 있습니다.');
+  if (!types.includes('lite')) notes.push('이 제품에는 <b>방문케어 라이트가 없습니다</b>.');
+  if (!types.includes('self')) notes.push('이 제품 구독 지면에는 <b>셀프케어가 없습니다</b>.');
+  if (d.noCycle) d.noCycle.forEach(x => notes.push(x.why + '.'));
+  if (d.repairOnly) notes.push(d.repairOnly);
+  return '<div style="padding:4px 13px 13px"><table class="cyc-m"><tr><th></th>' + T.map(t => '<th>' + t + '년</th>').join('') + '<th>횟수</th></tr>'
+    + lines + '</table>' + (notes.length ? '<div class="cyc-n">' + notes.join('<br>') + '</div>' : '') + '</div>';
+}
+
+/* ── 계약기간별 — 삼성 「구독케어 자세히 보기」 표를 그대로 다시 그린다(고른 유형만) ── */
+function termTables(d, type){
+  const short = (k) => kindName(d, k).replace(/\s*\(.*\)$/, '');
+  return planKeys(d).filter(k => d.plans[k].type === type).map(k => {
+    const p = d.plans[k];
+    const yrs = Array.from({ length: Math.max(...p.terms) }, (_, i) => i + 1);
+    const rows = p.terms.slice().sort().map(t => {
+      const s = p.sched[t];
+      return '<tr><td>' + t + '년형</td>' + yrs.map(y => {
+        if (y > t) return '<td class="na"></td>';
+        const es = s[y] || [];
+        if (!es.length) return '<td class="nv">—</td>';
+        return '<td' + (es.some(e => /세척|교체|상판|배터리|배송/.test(e.kind) && !/^종합점검/.test(e.kind)) ? ' class="sp"' : '') + '>'
+          + es.map(e => short(e.kind) + (e.n > 1 ? ' ×' + e.n : '')).join('<br>') + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    return '<div class="tt-h">' + PLAN_TYPE[type].short + ' · ' + p.cycle + '개월 주기</div>'
+      + '<div class="tt-w"><table class="tt"><tr><th></th>' + yrs.map(y => '<th>' + y + '년차</th>').join('') + '</tr>' + rows + '</table></div>';
+  }).join('');
+}
+
+/*
+ * 접었다 폈다 — 섹션 묶음(2026-10-15 사장님: *"내용이 너무 길어 드래그해야 되니 접었다 폈다 …
+ * 섹션을 구분해서 여러 개로"*).
+ * <details> 를 쓰지 않는다 — 기본 화살표가 기기마다 다르게 생기고 화면 캡처(공유)에서 흔들린다.
+ * 열고 닫을 때 **다시 그리지 않는다**(클래스만 바꾼다) — 다시 그리면 화면이 맨 위로 튄다.
+ * 상태는 이 세션 동안 기억한다(FOLD) — 요금제·회차를 바꿔 다시 그려도 열어 둔 것이 그대로다.
+ */
+const FOLD = {};
+function fold(id, title, sub, html, defOpen, cls){
+  const open = (id in FOLD) ? FOLD[id] : !!defOpen;
+  return `<section class="fold${open?' on':''}${cls?' '+cls:''}" data-fold="${id}">
+    <button type="button" class="fold-h" aria-expanded="${open}">
+      <span class="fold-tx"><span class="fold-t">${title}</span>${sub?`<span class="fold-s">${sub}</span>`:''}</span>
+      <span class="fold-c" aria-hidden="true"></span>
+    </button>
+    <div class="fold-b">${html}</div>
+  </section>`;
+}
+/* 모두 펼치기 / 모두 접기 — 한 화면의 접이식 전부를 한 번에 */
+function foldBar(scope){
+  return `<div class="fold-bar" data-scope="${scope}">
+    <button type="button" class="fold-all" data-all="1">모두 펼치기</button>
+    <button type="button" class="fold-all" data-all="0">모두 접기</button>
+  </div>`;
+}
+function setFold(sec, on){
+  sec.classList.toggle('on', on);
+  const b = sec.querySelector(':scope > .fold-h');
+  if (b) b.setAttribute('aria-expanded', on);
+  FOLD[sec.dataset.fold] = on;
+}
+function wireFolds(root){
+  if (!root) return;
+  root.querySelectorAll('.fold > .fold-h').forEach(b => b.addEventListener('click', () => {
+    const sec = b.parentElement; setFold(sec, !sec.classList.contains('on'));
+  }));
+  root.querySelectorAll('.fold-all').forEach(b => b.addEventListener('click', () => {
+    const on = b.dataset.all === '1';
+    root.querySelectorAll('.fold').forEach(sec => setFold(sec, on));
+  }));
+}
+
+function renderPlans(d){
+  if(!d.plans[curPlan]) curPlan = defaultPlan(d);
+  const cur = d.plans[curPlan];
+  const types = typesOf(d);
+  let out = '';
+
+  /* ① 유형 탭 — **접지 않는다**. 아래 섹션 전부가 이 선택을 따른다 */
+  out += '<div class="plan-tabs' + (types.length > 2 ? ' three' : types.length === 1 ? ' one' : '') + '">';
+  types.forEach(t => {
+    const ks = planKeys(d).filter(k => d.plans[k].type === t);
+    const k12 = ks.find(k => d.plans[k].cycle === 12) || ks[0];
+    const active = cur.type === t;
+    out += `<div class="plan-tab ptype ${active ? (t==='lite'?'blue':'teal') : ''}" data-ptype="${t}">
+      <div class="ptag" style="background:${PLAN_TYPE[t].bg}">${d.plans[k12].total} ${t==='self'?'배송':'방문'}</div>
+      <div class="pnm">${PLAN_TYPE[t].nm}</div>
+      <div class="psub">${typeKinds(d, t).map(k => kindName(d, k).replace(/\s*\(.*\)$/,'')).join(' + ')}<br>${ks.map(k => '매 ' + d.plans[k].cycle + '개월').join(' / ')}</div>
+    </div>`;
+  });
+  out += '</div>';
+  /* 무엇이 갈리나 — 손으로 다듬은 문장(d.planDiff)이 없으면 O/X 의 핵심 차이에서 만든다 */
+  let diff = d.planDiff || '';
+  if (!diff && types.includes('lite')) {
+    const only = oxRows(d).filter(r => r.key).map(r => r.k);
+    if (only.length) diff = '프리미엄과 라이트를 가르는 것은 <b>' + only.join(' · ') + '</b>입니다 — 라이트에는 없습니다.';
+  }
+  if (types.includes('self')) diff += (diff ? '<br>' : '') + '<b>셀프케어</b>는 전문가 방문 없이 소모품만 집으로 보내 드리는 유형입니다.';
+  if (types.length === 1) diff += (diff ? '<br>' : '') + '이 제품은 <b>' + PLAN_TYPE[types[0]].nm + '</b>만 있습니다(라이트·셀프케어 없음).';
+  if (diff) out += `<div class="pdiff">${diff}</div>`;
+
+  /* ② 섹션 — 상담 순서: 무엇이 다른가 → 어떻게 말하나 → 회차 → 주기 → 기간 → 유의사항 */
+  const nk = nKey(d);
+  out += fold('ox', '⚖️ ' + types.map(t => PLAN_TYPE[t].short).join(' vs ') + ' — 무엇을 해 주나',
+    (nk ? '핵심 차이 ' + nk + '가지 · ' : '') + '유형별 O/X', oxTable(d, cur.type), true);
+  out += fold('pitch', '🗣️ 고객에게 이렇게 설명하세요', types.map(t => PLAN_TYPE[t].short).join(' · ') + ' 설명 멘트', pitchCard(d), true);
+
+  if(!cur.rounds[curRound]) curRound = 0;
+  let rd = '';
+  const sameType = planKeys(d).filter(k => d.plans[k].type === cur.type);
+  if(sameType.length > 1){
+    rd += '<div class="cyc">' + sameType.map(k => {
+      const p = d.plans[k];
+      return `<button class="cyc-b${k===curPlan?' on':''}" data-plan="${k}">매 ${p.cycle}개월 · ${p.total}${p.only6?' <small>(6년형만)</small>':''}</button>`;
+    }).join('') + '</div>';
+  }
+  rd += `<div class="round-pills" style="padding:10px 0 2px">${cur.rounds.map((r,i) => `<span class="round-pill${r.bc==='btl'?' star':''}${i===curRound?' on':''}" data-round="${i}">${r.label} ${r.badge}</span>`).join('')}</div>`;
+  rd += '<div class="vtabs">' + cur.rounds.map((r,i) => `<div class="vtab${curRound===i?' on':''}" data-round="${i}">
+      <div class="vtn">${r.label}</div><div class="vtm">${r.month}</div></div>`).join('') + '</div>';
+  const cr = cur.rounds[curRound];
+  rd += `<div class="card">
+    <div class="card-hd" style="${gradStyle(cr.grad)}">
+      <span class="chd-t">${cur.type==='self'?'📦':'🔧'} ${cr.label} — ${cr.month}</span>
+      <span class="chip">${cr.badge}</span>
+    </div>
+    <div class="items">${itemsHtml(cr.items)}</div>
+  </div>`;
+  out += fold('rounds', (cur.type==='self'?'📦 회차별 배송 내용':'🔧 회차별 케어 내용'), planName(d, curPlan) + ' · ' + cur.maxTerm + '년형 ' + cur.total, rd, true);
+
+  out += fold('cycle', '🗓️ 주기 구분 — 6 · 12 · 36개월이 어느 유형에 있나', [...new Set(planKeys(d).map(k => d.plans[k].cycle + '개월'))].join(' · '), cycleMatrix(d), false);
+  out += fold('terms', '📅 계약기간별 구성 — ' + PLAN_TYPE[cur.type].short, cur.terms.join('·') + '년형 · 삼성 「구독케어 자세히 보기」 표', '<div style="padding:4px 13px 13px">' + termTables(d, cur.type) + '</div>', false);
+  if (d.srcNotes && d.srcNotes.length) out += fold('notes', '⚠️ 꼭 알려 드릴 유의사항', '삼성닷컴 원문 ' + d.srcNotes.length + '가지', '<ul class="sn">' + d.srcNotes.map(n => '<li>' + n.replace(/^\*\s*/,'') + '</li>').join('') + '</ul>', false);
+  return out;
+}
+
 /* ────────────────── 포함/제외·범례·출처 ────────────────── */
 
 /**
@@ -2184,11 +2564,19 @@ function render36(d){
 function prodIcon(key, fallback){ return prodSymbol(key, fallback); }
 
 function buildCareImgs(key){
-  const list = CARE_IMGS[key];
+  let list = CARE_IMGS[key];
   if (!list || !list.length) return '';
+  /* 요금제가 갈린 제품은 **고른 유형의 사진만** — 라이트 고객에게 열교환기 고압세척 사진을 보이면 약속이 된다 */
+  const d = DATA[key];
+  let head = '📸 방문케어는 이렇게 진행됩니다';
+  if (d && d.plans && d.plans[curPlan] && list.some(x => x.t)) {
+    const ty = d.plans[curPlan].type;
+    list = list.filter(x => !x.t || x.t.includes(ty));
+    head = '📸 ' + PLAN_TYPE[ty].nm + '는 이렇게 진행됩니다 (' + list.length + '장)';
+  }
   return `
   <div class="card cimg-wrap">
-    <div class="cimg-h">📸 방문케어는 이렇게 진행됩니다</div>
+    <div class="cimg-h">${head}</div>
     <div class="cimg-s">삼성닷컴 구독 서비스 안내의 실제 작업 사진입니다 — 고객에게 그대로 보여 주세요.</div>
     <div class="cimg-grid">
       ${list.map(x=>`<div class="cimg"><img src="${x.s}" alt="${x.l}" loading="lazy"><div class="cap">${x.l}</div></div>`).join('')}
@@ -2222,54 +2610,129 @@ function buildCareImgs(key){
  */
 const BLUEPASS = {
   /*
-   * **문구는 원문 그대로다**(2026-08-30 사장님 지시로 전수 대조).
-   * `t` = 원문 타일 아랫줄(이름) · `s` = **원문 윗줄** · `d` = 원문 본문.
-   * 예전에는 `s`·`d` 를 우리가 지어 썼는데 사장님이 *"어색한 것"* 이라 하셨고,
-   * 실제로 원문 쪽이 자연스럽고 공식이다.
+   * **「새로워진 블루패스」로 통째로 개편됐다**(삼성닷컴 가이드 2026.10.15 확인).
+   * 예전 여섯 장(8/30 대조판)이 네 갈래 12가지로 바뀌었다 —
+   *   설치 · 스마트한 경험 · 맞춤 케어 · 안심 A/S.
+   * 새로 생긴 것: 구독가전 재설치 · 월간 AI 리포트(유상) · 방문케어/셀프케어 · 배터리 교체 ·
+   *   무상수리서비스 · 파손보상. 그리고 **스페셜 패스**(신혼 패스 · 이지케어 패스).
    *
-   * **조건(target·need·except·cost)은 원문 불릿이 있는 다섯 개에만 붙는다.**
-   * 예전에는 근거 없는 조건이 다섯 개 더 붙어 있었다 — 특히
-   *   · A/S 패스트트랙 "하절기(6~9월)는 운영 제외" → 원문에 없다. **혜택을 스스로 깎는 말**이다
-   *   · 시간맞춤 설치 "설치비가 추가될 수 있음" → 원문은 **"추가 비용 없이"** 라고 적는다(정반대)
-   *   · AI 사전케어 target/need · 하나더 need · 스마트싱스 except → 원문에 없다
-   * 되살리려면 원문에서 그 문장을 먼저 찾을 것.
+   * `t` = 원문 타일 이름 · `s` = 원문 부제 · `tag` = 원문 타일 꼬리표(일부 품목 한정·유상 옵션…).
+   * 조건(target·need·except·cost)은 **원문 「블루패스 유의 사항」 문장에서만** 가져왔다.
    *
-   * `img` 는 원문 타일 배경 그림이다(사장님 요청 "이미지도 차용"). `<img>` 가 아니라
-   * **CSS 배경**으로 붙어 있어 지면에서 배경까지 훑어야 찾힌다.
+   * **A/S 패스트트랙 「하절기(6~8월) 제외」는 이제 원문에 있다** — 8/30 판에는 없어서 지웠던
+   * 조건인데, 개편된 원문이 타일 꼬리표와 유의사항 두 곳에 적는다. 상담에서 빼먹지 말 것.
    */
-  src: '✅ samsung.com AI 구독클럽 가이드 · 블루패스 서비스 — 2026.08.30 문구·이미지 전수 대조',
+  src: '✅ samsung.com AI 구독 가이드 · 새로워진 블루패스 · 블루패스 유의 사항 — 2026.10.15 원문 대조',
   gate: '블루패스 서비스는 AI 올인원 2.0 구독 고객에게만 제공되는 서비스입니다. (AI 스마트로 가입하면 무상수리서비스만 선택할 수 있습니다.)',
-  items: [
-    { ic:'fast',  t:'A/S 패스트트랙',   s:'구독 회원은 A/S도 특별하게', img:'care-img/pass_bg01_pc.jpg',
-      d:'A/S까지 책임질게요. 모든 구독 제품을 횟수 제한 없이 일반 주문 고객보다 빠르게 수리 받을 수 있어요.' },
-    { ic:'alert', t:'AI 사전케어 알림',  s:'AI가 제품 이상을 미리 진단하는', img:'care-img/pass_bg02_pc.jpg',
-      d:'AI가 제품에 문제가 생기기 전에 미리 알려주고 수리가 필요하면 전화 안내 후 방문 수리 접수까지. 구독 제품은 AI가 매일 점검 중!' },
-    { ic:'plus',  t:'하나 더 서비스',    s:'사용 중인 제품까지 케어 받는', img:'care-img/pass_bg05_pc.jpg',
-      d:'기존에 사용하시던 삼성 제품이 있으신가요? 방문케어를 신청하셨다면 추가 1개 품목 간단 점검해 드릴게요.',
-      target:'냉장고 / 김치냉장고 / 세탁기 / 건조기 / 에어컨 / TV 중 택 1',
-      need:'스마트싱스 연결, 제품 점검 등 간단 점검 서비스 제공' },
-    { ic:'clock', t:'시간맞춤 설치',     s:'원하는 시간에 편하게 설치하는', img:'care-img/pass_bg04_pc.jpg',
-      d:'프리미엄 제품은 설치도 프리미엄으로! 추가 비용 없이 고객님이 편하신 시간에 설치해 드릴게요.',
-      target:'냉장고, 김치냉장고, 에어드레서, 건조기, 세탁기, TV 중 일부 모델 대상' },
-    { ic:'today', t:'오늘보장 설치',     s:'오전에 주문하고 오후에 받는', img:'care-img/pass_bg03_pc.jpg',
-      d:'급하게 필요하거나, 바로 써보고 싶은 제품이 있다면 오전에 주문하고 오늘 설치할 수 있어요.',
-      cost:'유상옵션' },
-    { ic:'things',t:'스마트싱스 세팅',   s:'AI 홈을 간편하게 완성해 주는', img:'care-img/pass_bg06_pc.jpg',
-      d:'AI 제품을 구독했다면 제대로 활용해야죠. 설치 후 스마트 싱스 연결까지 도와 드리니 AI 홈 만들기도 어렵지 않아요.' },
+  lead: 'AI 제품을 사용하는 모든 순간, 믿을 수 있는 전문 엔지니어가 관리해요',
+  groups: [
+    { k:'install', h:'설치', s:'설치도 내 일정에 딱 맞게', d:'번거롭고 신경 쓸 것 많은 설치는 이제 그만! 편한 시간에 설치 받고, 필요할 때 재설치까지 믿고 맡겨보세요.' },
+    { k:'smart',   h:'스마트한 경험', s:'스마트한 경험으로 일상을 편리하게', d:'구독 제품 설치 시 스마트싱스 연결까지 도와드려요. AI 구독으로 달라지는 가전 생활을 경험해보세요.' },
+    { k:'care',    h:'맞춤 케어', s:'새것처럼 유지하는 맞춤 케어', d:'제품을 더 오래, 더 편리하게 사용하고 싶다면? 내 상황과 제품에 맞는 케어를 자유롭게 선택해 관리 받으세요.' },
+    { k:'as',      h:'안심 A/S', s:'고장 걱정 없는 안심 A/S', d:'구독기간 내내 무상수리는 기본! 횟수 제한 없는 빠른 A/S와 파손보상으로 안심할 수 있어요.' },
   ],
-  /* 에어컨 전용 혜택 둘. **항상 덧붙인다** — 갈리는 것은 붙이느냐가 아니라 머리글 문구다
-     (`buildBluePass` 의 `eh`): 에어컨을 고른 상태면 "이 제품에는", 아니면 "에어컨에만".
-     상담 시작 화면에서 "에어컨은 두 가지가 더 붙는다"를 먼저 알려야 하므로 숨기지 않는다.
-     원문은 두 타일의 제목이 **똑같이** 「설치부터 관리까지 특별하게 / 에어컨 블루패스」라
-     본문으로만 갈린다 — 우리는 상담에서 부르기 쉽게 이름을 나눠 붙였다(그 사실을 여기 적어 둔다). */
+  items: [
+    { g:'install', ic:'clock', t:'시간맞춤 설치', s:'내 일정에 맞춰 편한 시간에 설치', tag:'일부 품목 한정', img:'care-img/pass_slide_img_pc_01.jpg',
+      d:'',
+      target:'냉장고 · 김치냉장고 · 에어드레서 · 건조기 전 모델 · 세탁기(콤보 제외) 전 모델 · TV 75인치 이상 전 모델',
+      except:'품목별 재고·배송 기사 상황에 따라 제한될 수 있음 · 주문 시 지정한 제품에만 적용(함께 산 다른 제품은 보장 안 됨)',
+      cost:'무상 — 단, 설치환경·여건에 따라 설치비가 추가될 수 있음' },
+    { g:'install', ic:'reset', t:'구독가전 재설치', s:'이사/인테리어 시 재설치도 안전하게', tag:'일부 품목 한정', img:'care-img/pass_slide_img_pc_02.jpg',
+      d:'이사하거나 인테리어할 때 구독 기간 중 1회 다시 설치해 드려요.',
+      target:'일반에어컨 · 원바디 · AI 콤보 · 정수기 · 식기세척기의 방문케어 가입 고객 / TV(177cm 이상) · 창문형 에어컨 구독 고객(창문형은 매년 1회, 마지막 연차 제외)',
+      need:'구독 기간 중 1회 · 수행일 5일 전까지 사전접수 · 유선 상담으로 일정 조정 · 식기세척기는 하부장 리폼이 필요하면 고객이 미리 준비',
+      except:'26년 3월 3일 신규 가입부터(식기세척기는 26년 9월 1일부터) · 설치 불가 장소로 판단되면 제한 · 야간·공휴일은 물류센터 사정에 따라 불가 · 쓰지 않아도 환급 없음 · 양도 불가',
+      cost:'설치 기본비만 제공 — 설치환경 추가비·철거·운반은 별도 비용' },
+    { g:'install', ic:'today', t:'오늘보장 설치', s:'오전에 주문하면 오후에 설치 보장', tag:'유상 옵션', img:'care-img/pass_slide_img_pc_03.jpg',
+      d:'',
+      except:'품목별 재고·배송 기사 상황에 따라 제한될 수 있음 · 주문 시 지정한 제품에만 적용',
+      cost:'추가 비용 발생(유상 옵션)' },
+    { g:'smart', ic:'things', t:'스마트싱스 세팅', s:'스마트싱스 연결로 나만의 AI 홈 완성', img:'care-img/pass_slide_img_pc2_01.jpg',
+      d:'구독 제품 설치 시 스마트싱스 연결까지 도와드려요.',
+      except:'설치 불가 환경 등 현장 상황에 따라 제공이 불가할 수 있음' },
+    { g:'smart', ic:'alert', t:'AI 사전케어 알림', s:'제품 이상 진단부터 A/S 접수까지', tag:'일부 품목 한정', img:'care-img/pass_slide_img_pc2_02.jpg',
+      d:'',
+      target:'구독케어 대상 제품 중 일부 품목(삼성전자 사정에 따라 변경될 수 있음)',
+      need:'SmartThings 앱 설치 후 제품 연결' },
+    { g:'smart', ic:'report', t:'월간 AI 리포트', s:'생활 패턴 분석 후 에너지 절약 꿀팁까지', tag:'유상 옵션', img:'care-img/pass_slide_img_pc2_03.jpg',
+      d:'',
+      cost:'유상 옵션 — 금액·대상은 원문에 없음(상담 시 확인)' },
+    { g:'care', ic:'plus', t:'하나 더 서비스', s:'기존 제품 1개 더 간단 점검 제공', tag:'일부 품목 한정', img:'care-img/pass_slide_img_pc3_01.jpg',
+      d:'방문케어를 신청하셨다면 쓰던 삼성 제품 1개를 더 간단 점검해 드려요.',
+      target:'냉장고 · 김치냉장고 · 세탁기 · 건조기 · 에어컨 · TV 중 1품목',
+      need:'스마트싱스 연결, 제품 점검 등 간단점검 제공',
+      except:'삼성전자 제품에 한함 · 보유 현황에 따라 제한될 수 있음' },
+    { g:'care', ic:'care', t:'방문케어/셀프케어', s:'내 상황에 따라 케어도 자유롭게', tag:'일부 품목 한정', img:'care-img/pass_slide_img_pc3_02.jpg',
+      d:'무상수리서비스 · 셀프케어 · 방문케어 라이트 · 방문케어 프리미엄 중에서 고를 수 있어요.',
+      target:'품목마다 고를 수 있는 유형이 다름 — 「제품별 케어」 탭에서 확인',
+      need:'전문가 케어(기본 세척)는 방문케어 라이트 에어컨 · 전문가 케어(전문 세척)는 방문케어 프리미엄 냉장고·세탁기·에어컨 · 상판 교체는 방문케어 프리미엄 인덕션' },
+    { g:'care', ic:'battery', t:'배터리 교체', s:'배터리 걱정 없이 오래도록 편리하게', tag:'PC, 로봇청소기', img:'care-img/pass_slide_img_pc3_03.jpg',
+      d:'',
+      target:'PC — 24개월차 · 로봇청소기 — 36개월차' },
+    { g:'as', ic:'repair', t:'무상수리서비스', s:'구독기간 내내 고장 걱정 없이 안심', img:'care-img/pass_slide_img_pc4_01.jpg',
+      d:'',
+      need:'정상적인 사용 환경에서 생긴 성능·기능상 고장',
+      except:'신규 구독 가입 시에만 제공 · 고객 부주의·사용상 주의 미준수로 인한 고장·훼손 제외 · 제품 본체만(소모품·액세서리 제외)' },
+    { g:'as', ic:'fast', t:'A/S 패스트트랙', s:'기다릴 필요 없이 빠르게 수리', tag:'하절기(6-8월) 제외', img:'care-img/pass_slide_img_pc4_02.jpg',
+      d:'',
+      target:'전품목',
+      except:'하절기(6~8월) 운영 제외 · A/S 상황에 따라 제한될 수 있음' },
+    { g:'as', ic:'shield', t:'파손보상', s:'횟수 제한 없이 든든하게 보장', tag:'PC, 태블릿', img:'care-img/pass_slide_img_pc4_03.jpg',
+      d:'우연한 파손을 횟수 제한 없이 보장해요(Samsung Care+).',
+      target:'갤럭시 북 · 갤럭시 탭',
+      need:'공식 서비스센터에서 자기부담금 결제 후 잔여 수리비 보상',
+      cost:'파손 수리비의 75% 지원 · 최소 자기부담금 3만원' },
+  ],
+  /* 에어컨 전용 둘 — 「블루패스 유의 사항」 원문에 그대로 남아 있다(2026.10.15). */
   aircon: [
     { ic:'clock', t:'최우선 설치',   s:'설치부터 관리까지 특별하게', img:'care-img/pass_bg07_pc.jpg',
       d:'에어컨 블루패스 설치 지정일 보장으로 빠르게 설치해 드려요.',
-      target:'일반에어컨(D+1일내), 가정용 시스템에어컨(D+5일내) 설치 보장',
-      except:'제주 및 도서 산간 지역 제외 · 성수기(5~8월) 변경 가능' },
+      target:'에어컨 AI 올인원 2.0 구독 고객(26년 5월 15일~) · 일반에어컨 D+1일 내, 가정용 시스템에어컨 D+5일 내',
+      except:'성수기(5~8월)는 재고·설치 기사 상황에 따라 제한·변경될 수 있음 · 제주 및 도서 산간 지역 제한' },
     { ic:'fast',  t:'냉매 안심케어', s:'설치부터 관리까지 특별하게', img:'care-img/pass_bg08_pc.jpg',
-      d:'냉매 누설시 구독기간 내내 무료 충전해 드려요. 에어컨 블루패스로, 최대 6년 안심 구독하세요.',
-      need:'설치 이슈로 인한 냉매 누설 및 당사 제품/배관 시공 완료 제품에 한함' },
+      d:'설치 이슈로 냉매가 새면 구독기간 내내 무료로 충전해 드려요.',
+      need:'당사가 제품/배관 시공을 완료한 제품에 한함' },
+  ],
+  /*
+   * 스페셜 패스 — 「블루패스만의 특별한 패스 시리즈」. 조건은 각 패스 유의사항 원문 그대로다.
+   * **신혼 패스 「쉬운 시작 안내」 시점이 지면 두 곳에서 다르다**(타일 5개월차 / 유의사항 4개월차).
+   * 한쪽을 골라 적으면 근거 없이 정하는 일이라 둘 다 밝힌다.
+   */
+  special: [
+    { k:'wedding', t:'신혼 패스', s:'삼성 AI 구독이 신혼을 지킨다', img:'care-img/special_top_banner_pc_01_v1.jpg',
+      d:'살림 초보 신혼부부를 위해 세척, 점검 모두 꼼꼼하게 챙겨드려요.',
+      items:[
+        { t:'쉬운 시작 안내', d:'블루패스 혜택과 제품 상담까지, 전화로 꼼꼼하게 안내해드려요.', img:'care-img/wedding_item_pc_01.jpg',
+          note:'별도 신청 없이 설치 후 해피콜 — 지면 위쪽은 5개월차, 유의사항은 4개월차로 적혀 있음 · 3회 이상 연결 안 되면 미제공 · 제품 수와 무관하게 총 1회' },
+        { t:'시간맞춤 세척', d:'바쁜 맞벌이 부부를 위해 야간/주말도 OK! 원하는 시간에 세척 서비스를 받을 수 있어요.', img:'care-img/wedding_item_pc_02.jpg',
+          note:'전문세척이 포함된 방문케어 이용 고객만 · 전문세척 회차 도래 60일 이내에 고객센터 신청(평일 9~18시) · 일정이 마감되면 희망 시간대 불가' },
+        { t:'이사 후 종합점검', d:'이사 후에는 전문가가 직접 방문해 점검해드려요.', img:'care-img/wedding_item_pc_03.jpg',
+          note:'냉장고 · 김치냉장고 · 세탁기 · 건조기 · 일반에어컨(SAC 제외) 1회 + 보유 삼성 제품 1대 추가(구독 여부 무관) · 27년 4월 이후 삼성닷컴 신청 · 고객 결제 후 삼성전자 멤버십 포인트 환급' },
+        { t:'가구 원복', d:'전월세집도 걱정 없이! 제품 철거 후에도 깔끔하게 마무리해드려요.', img:'care-img/wedding_item_pc_04.jpg',
+          note:'식기세척기(장 원복) · 로봇청소기(장 원복) · 정수기(타공부 인조상판 메움) 각 1회 · 27년 4월 이후 신청 · 고객 결제 후 포인트 환급(10만원 한도, 초과분 고객 부담) · 삼성전자로지텍 시공 현장만(사설 인테리어로 바뀌면 불가)' },
+      ],
+      conds:[
+        '삼성스토어(백화점 포함)에서 구독 방문케어 2건 이상 동시 구매',
+        '구매 전 혼수클럽 가입 신청 + 승인 완료 · 최종 대상자 확정',
+        '판매 상담사 문자 수신 후 7일 내 구독 구매 · 혼수클럽 유지 기간(가입월로부터 4개월) 내 구매',
+        '구매 후 90일 내 증빙 제출 · 동시 구매 전 제품 6개월 내 배송 완료',
+        '일부 제품을 중도 해지하면 남은 제품이 조건을 만족해야 계속 이용 가능',
+      ] },
+    { k:'easy', t:'이지케어 패스', s:'만 70세 이상에게는 — 익숙한 일상은 더 편안하게', img:'care-img/special_top_banner_pc_02_v1.jpg',
+      d:'복잡한 기능은 쉽게, 궁금한 점은 친절하게, 일상을 더 편안하게.',
+      items:[
+        { t:'쉬운 시작 안내', d:'설치 후 5개월 차에 전화로 제품 사용법과 연차별 케어를 눈높이에 맞게 안내합니다.', img:'care-img/easy_item_pc_01_v2.jpg',
+          note:'정책상 3회 발신 · 3일 연속 연락 두절이면 종료될 수 있음' },
+        { t:'안심 케어콜', d:'구독 시작 후 정기적으로 전화해 소모품 교체와 계절 관리 팁을 먼저 알려드립니다.', img:'care-img/easy_item_pc_02_v2.jpg',
+          note:'회차별 3회 발신 · 2회 연속 부재면 종료될 수 있음' },
+        { t:'맞춤 응대 상담', d:'시니어 프렌들리한 상담원이 더 친절하고 자세하게 궁금한 점을 풀어드립니다.', img:'care-img/easy_item_pc_03_v2.jpg' },
+      ],
+      conds:[
+        '계약 체결일에 만 70세 이상(가입 시 인증한 법적 생년월일 기준) — 구독 중 70세가 되는 경우는 대상 아님',
+        '2026년 9월 28일 이후 신규 가입 고객부터(소급 없음)',
+        '구독 계약자 본인만 — 실사용자 포함 제3자 양도 불가',
+        '무상 부가 혜택 — 통화 미수신으로 못 받아도 구독료 감면·환불 없음',
+      ] },
   ],
 };
 
@@ -2289,6 +2752,12 @@ const BP_ICONS = {
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.2V12l3.2 2.2"/>',
   today: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.8h17"/><path d="M8 3.5v3M16 3.5v3"/><path d="M9.5 14.6l1.8 1.8 3.4-3.4"/>',
   things:'<path d="M12 19.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/><path d="M8.1 13a5.5 5.5 0 0 1 7.8 0"/><path d="M5 9.6a10.3 10.3 0 0 1 14 0"/>',
+  reset: '<path d="M4.5 12a7.5 7.5 0 0 1 13-5.1L19.5 9"/><path d="M19.5 4.5V9H15"/><path d="M19.5 12a7.5 7.5 0 0 1-13 5.1L4.5 15"/><path d="M4.5 19.5V15H9"/>',
+  report:'<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 15.5v-3M12 15.5v-6M15 15.5v-4.5"/>',
+  care:  '<path d="M12 20s-7.5-4.5-7.5-10a4.3 4.3 0 0 1 7.5-2.9A4.3 4.3 0 0 1 19.5 10c0 5.5-7.5 10-7.5 10Z"/>',
+  battery:'<rect x="3.5" y="7.5" width="15" height="9" rx="2"/><path d="M20.5 10.5v3"/><path d="M7 12h3M8.5 10.5v3"/>',
+  repair:'<path d="M14.5 4.5a4 4 0 0 0 4.9 5L12 17a2.1 2.1 0 1 1-3-3l7.5-7.4a4 4 0 0 0-2-2.1Z"/>',
+  shield:'<path d="M12 3.5 19 6v5.5c0 4.2-3 7.6-7 9-4-1.4-7-4.8-7-9V6l7-2.5Z"/><path d="M9 12l2.2 2.2L15.5 10"/>',
 };
 function bpIcon(k){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"'
@@ -2310,9 +2779,9 @@ function bpTile(x, n){
       ${pic}
       <div class="bp-ic">${bpIcon(x.ic)}</div>
       <div class="bp-tx">
-        <div class="bp-t"><span class="bp-n">${n}</span>${x.t}</div>
+        <div class="bp-t"><span class="bp-n">${n}</span>${x.t}${x.tag?`<span class="bp-tag">${x.tag}</span>`:''}</div>
         ${x.s?`<div class="bp-s">${x.s}</div>`:''}
-        <div class="bp-d">${x.d}</div>
+        ${x.d?`<div class="bp-d">${x.d}</div>`:""}
         ${bpConds(x)}
       </div>
     </div>`;
@@ -2320,30 +2789,50 @@ function bpTile(x, n){
 
 function buildBluePass(key){
   const B = BLUEPASS;
-  /* 에어컨 전용 두 가지 — 에어컨 상세에서도, 품목을 안 고른 메인에서도 보여 준다 */
   const eh = key === 'aircon'
     ? '에어컨 블루패스 — 이 제품에는 두 가지가 더 붙습니다'
     : '에어컨 블루패스 — 에어컨에만 두 가지가 더 붙습니다';
-  const extra = B.aircon.length
-    ? `<div class="bp-extra">
-         <div class="bp-eh">${eh}</div>
-         <div class="bp-g">${B.aircon.map((x,i)=>bpTile(x,i+1)).join('')}</div>
-       </div>` : '';
   /*
-   * 개수를 먼저 한 문장으로 말한다 — 배치 시뮬레이터 추천 문구와 같은 이유다.
-   * 카드가 여섯 장 늘어서 있으면 "몇 가지인지"가 안 보이고, 상담은 그 숫자에서 시작한다.
-   * 하드코딩하지 않고 배열 길이에서 뽑는다 — 항목이 늘면 문장이 따라온다.
+   * 갈래(설치·스마트한 경험·맞춤 케어·안심 A/S)로 묶는다 — 원문 지면이 그렇게 나누고,
+   * 열두 장을 한 줄로 늘어놓으면 상담사가 "어디에 무엇이 있는지"를 못 찾는다.
+   * 번호는 갈래를 가로질러 이어 붙인다 — "열두 가지 중 몇 번째"로 짚어 말할 수 있게.
    */
+  let n = 0;
+  const groups = (B.groups || []).map(g => {
+    const its = B.items.filter(x => x.g === g.k);
+    if (!its.length) return '';
+    const from = n + 1;
+    const body = `<div class="bp-gd">${g.d}</div><div class="bp-g">${its.map(x => bpTile(x, ++n)).join('')}</div>`;
+    return fold('bp-' + g.k, `<span class="bp-gk">${g.h}</span>${g.s}`,
+      from + '~' + n + ' · ' + its.map(x => x.t).join(' · '), body, false, 'dk');
+  }).join('');
+  const extra = B.aircon.length
+    ? fold('bp-aircon', eh, B.aircon.map(x => x.t).join(' · '),
+        `<div class="bp-g">${B.aircon.map((x,i)=>bpTile(x,i+1)).join('')}</div>`, false, 'dk') : '';
+  const special = (B.special || []).length ? `<div class="sp-wrap">
+      <div class="bp-eh">스페셜 패스 — 블루패스만의 특별한 패스 시리즈</div>
+      ${B.special.map(p => fold('sp-' + p.k, p.t, p.s + ' · ' + p.items.map(x => x.t).join(' · '), `<div class="sp">
+        <div class="sp-top"><img src="${p.img}" alt="" loading="lazy">
+          <div class="sp-tt"><div class="sp-t">${p.t}</div><div class="sp-s">${p.s}</div><div class="sp-d">${p.d}</div></div></div>
+        <div class="sp-g">${p.items.map(it => `<div class="sp-i">
+          ${it.img ? `<img src="${it.img}" alt="" loading="lazy">` : ''}
+          <div class="sp-it">${it.t}</div><div class="sp-id">${it.d}</div>
+          ${it.note ? `<div class="sp-in">${it.note}</div>` : ''}</div>`).join('')}</div>
+        <div class="sp-c"><b>대상 조건</b><ul>${p.conds.map(c => `<li>${c}</li>`).join('')}</ul></div>
+      </div>`, false, 'dk')).join('')}
+    </div>` : '';
   return `
   <div class="card bp-wrap">
     <div class="bp-h">
       <span class="bp-badge">BLUE PASS</span>
-      <span class="bp-hh">삼성전자만의 특별한 혜택, 블루패스</span>
+      <span class="bp-hh">새로워진 블루패스</span>
     </div>
-    <div class="bp-sub">구독에 블루패스를 더하다 — 설치부터 관리까지, 삼성전자만의 서비스입니다.
-      모두 <b>${B.items.length}가지</b>이고, 에어컨은 <b>${B.aircon.length}가지</b>가 더 붙습니다.</div>
-    <div class="bp-g">${B.items.map((x,i)=>bpTile(x,i+1)).join('')}</div>
+    <div class="bp-sub">${B.lead} — 네 갈래 <b>${B.items.length}가지</b>이고, 에어컨은 <b>${B.aircon.length}가지</b>가 더 붙습니다.
+      조건에 맞으면 <b>스페셜 패스 ${(B.special||[]).length}종</b>(신혼·이지케어)이 더해집니다.</div>
+    ${foldBar('bp')}
+    ${groups}
     ${extra}
+    ${special}
     <div class="bp-gate">꼭 확인 — ${B.gate}</div>
     <div class="bp-src">${B.src}</div>
   </div>`;
@@ -2363,7 +2852,8 @@ function buildBenefits(d, key){
    * 한쪽만 띄우면 상담사가 나머지를 못 보고 "2회짜리"로 안내한다 — buildSummary 와 같은 기준으로 나눈다.
    */
   const n = (v)=> String(v).replace(/^총\s*/,'');
-  if (d.onlyPlan === '12' && d.total12)      tiles.push({ t:'방문케어', k:n(d.total12), d:'매 12개월 · 전문가 방문 점검·세척' });
+  if (d.plans) tiles.push({ t:'방문케어', k:'프리미엄 · 라이트', d:'유형 선택 — ' + ['premium','lite'].filter(t=>planKeys(d).some(k=>d.plans[k].type===t)).map(t=>PLAN_TYPE[t].short+' '+typeKinds(d,t).join('+')).join(' / ') });
+  else if (d.onlyPlan === '12' && d.total12)      tiles.push({ t:'방문케어', k:n(d.total12), d:'매 12개월 · 전문가 방문 점검·세척' });
   else if (d.onlyPlan === '36' && d.total36) tiles.push({ t:'방문케어', k:n(d.total36), d:'매 36개월 · 전문가 방문 점검·세척' });
   else if (d.total12 && d.total36)           tiles.push({ t:'방문케어', k:'주기 선택', d:`12개월형 ${n(d.total12)} · 36개월형 ${n(d.total36)}` });
   else if (d.total12 || d.total36)           tiles.push({ t:'방문케어', k:n(d.total12 || d.total36), d:'전문가가 방문해 점검·세척' });
@@ -2598,7 +3088,7 @@ function render(){
       curCat  = pickedCat = el.dataset.key;
       curRound = 0; curTypeA = true;
       const dd = DATA[curCat];
-      curPlan = dd?.onlyPlan || '12';
+      curPlan = defaultPlan(dd);
       closeDrop();
       render();
       revealBody();
@@ -2638,15 +3128,21 @@ function render(){
 
   /* 요약 타일 */
   /* 혜택 카드 — 회차표보다 **먼저** 보여준다. 상담은 "구독하면 뭘 받느냐"로 시작한다 */
-  out += buildBenefits(d, curCat);
+  if (d.plans) {
+    /* 위에 「모두 펼치기/접기」 — 섹션이 여럿이라 한 번에 여닫는 손잡이가 있어야 끌어내리지 않는다 */
+    out += foldBar('care');
+    const bnf = buildBenefits(d, curCat);
+    if (bnf) out += fold('bnf', '🎁 구독하면 받는 것', '무상수리 · 방문케어 · 재설치 · 일정 변경', bnf, false, 'fold-bnf');
+  } else out += buildBenefits(d, curCat);
 
   const cells = buildSummary(d);
   out += `<div class="sumrow">
     ${cells.map(c=>`<div class="si"><div class="sl">${c.l}</div><div class="sv">${c.v}</div></div>`).join('')}
   </div>`;
 
-  /* 플랜 탭 (12·36 둘 다 있을 때) */
-  if(!d.onlyPlan){
+  /* 플랜 탭 (12·36 둘 다 있을 때) — 새 요금제(d.plans)는 renderPlans 가 그린다 */
+  if(d.plans){ out += renderPlans(d); }
+  else if(!d.onlyPlan){
     /*
      * **탭 부제를 박아 두지 않는다.** 예전에는 12개월 탭에 늘 `A타입 4회+B타입 2회` 가
      * 붙었는데 그 구조인 제품은 **에어컨 하나뿐**이라, 식기세척기·에어드레서·김치냉장고
@@ -2680,15 +3176,25 @@ function render(){
   }
 
   /* 본문 */
-  out += curPlan === '12' ? render12(d) : render36(d);
-  out += buildTail(d);
-
-  out += buildCareImgs(curCat);
+  if(!d.plans) out += curPlan === '12' ? render12(d) : render36(d);
+  if (d.plans) {
+    out += fold('tail', '📋 포함 · 제외 · 출처', '무상수리·일정 변경·회차 소멸 조건', buildTail(d), false);
+    const imgs = buildCareImgs(curCat);
+    if (imgs) {
+      const ty = d.plans[curPlan].type;
+      const nImg = (CARE_IMGS[curCat]||[]).filter(x => !x.t || x.t.includes(ty)).length;
+      out += fold('imgs', '📸 ' + PLAN_TYPE[ty].nm + (ty==='self'?' — 이렇게 직접 교체합니다':' 현장 사진'), nImg + '장' + (d.heads && d.heads[ty] ? ' · ' + d.heads[ty] : ''), imgs, false);
+    }
+  } else {
+    out += buildTail(d);
+    out += buildCareImgs(curCat);
+  }
   out += renderSelling(curCat);
   body.innerHTML = out;
+  wireFolds(body);
 
   /* 이벤트 바인딩 */
-  document.querySelectorAll('.plan-tab').forEach(el => {
+  document.querySelectorAll('.plan-tab:not(.ptype)').forEach(el => {
     el.addEventListener('click', () => {
       curPlan = el.dataset.plan; curRound = 0; curTypeA = true; render();
     });
@@ -2698,12 +3204,22 @@ function render(){
       curTypeA = el.dataset.type === 'A'; render();
     });
   });
-  document.querySelectorAll('.vtab').forEach(el => {
+  document.querySelectorAll('.vtab, .round-pill[data-round]').forEach(el => {
     el.addEventListener('click', () => {
       curRound = +el.dataset.round; render();
     });
   });
+  document.querySelectorAll('.plan-tab.ptype').forEach(el => {
+    el.addEventListener('click', () => {
+      curPlan = planKeys(d).find(k => d.plans[k].type === el.dataset.ptype); curRound = 0; render();
+    });
+  });
+  document.querySelectorAll('.cyc-b').forEach(el => {
+    el.addEventListener('click', () => { curPlan = el.dataset.plan; curRound = 0; render(); });
+  });
 }
+
+applyCarePlans();
 
 /* ────────────────── 초기화 (DOM 준비 후) ────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -2720,7 +3236,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* 초기 렌더 */
   const initD = DATA[curCat];
-  curPlan = initD?.onlyPlan || '12';
+  curPlan = defaultPlan(initD);
   render();
   /*
    * 열면 블루패스부터 — 상담은 "삼성으로 구독하면 뭐가 다르냐"에서 시작하지,
@@ -2950,7 +3466,9 @@ function setMode(m){
  * `pickedCat` 을 쓰는 이유는 위 선언부에 적어 두었다(기본값을 고른 것으로 읽으면 안 된다).
  */
 function renderBluePass(){
-  document.getElementById('bluepassPane').innerHTML = buildBluePass(pickedCat);
+  const pane = document.getElementById('bluepassPane');
+  pane.innerHTML = buildBluePass(pickedCat);
+  wireFolds(pane);
 }
 
 /* ═══════════════ OVERVIEW ═══════════════ */
@@ -2977,6 +3495,8 @@ function renderOverview(){
     let pills = '';
     if(isMx){
       pills = '<span class="ov-pill p12">' + (p.st==='ai2' ? '올인원 2.0' : '갤럭시 AI 구독클럽') + '</span>';
+    } else if(isDone && d && d.plans){
+      ['premium','lite'].filter(t=>planKeys(d).some(k=>d.plans[k].type===t)).forEach(t=>{ pills += '<span class="ov-pill '+(t==='premium'?'p36':'p12')+'">'+PLAN_TYPE[t].short+'</span>'; });
     } else if(isDone && d){
       if(d.onlyPlan==='12') pills += '<span class="ov-pill p12">12개월형</span>';
       else if(d.onlyPlan==='36') pills += '<span class="ov-pill p36">36개월형</span>';
@@ -3020,7 +3540,7 @@ function switchToCare(key){
   const idx = PRODUCTS.findIndex(p=>p.key===key);
   if(idx>=0){
     curCat = pickedCat = key;
-    curPlan = DATA[key]?.onlyPlan || '12';
+    curPlan = defaultPlan(DATA[key]);
     curRound = 0;
     curTypeA = true;
   }
@@ -3065,7 +3585,7 @@ function switchToCare(key){
  * 개월수는 두 모양 모두 문구에서 읽는다("36개월차" · "3회차(36개월)").
  */
 function careSchedule(d, pl){
-  const plan = (d||{})['plan'+pl];
+  const plan = (d && d.plans) ? d.plans[pl] : (d||{})['plan'+pl];
   if(!plan) return [];
   const num = (s)=>{ const m = String(s).match(/(\d+)\s*개월/); return m ? +m[1] : null; };
   const out = [];
@@ -3109,8 +3629,9 @@ function renderTimeline(){
   if(!done.some(p=>p.key===tlKey) && done.length) tlKey = done[0].key;
   const d = DATA[tlKey]||{};
   const plans = [];
-  if(!d.onlyPlan||d.onlyPlan==='12') plans.push('12');
-  if(d.plan36 && (!d.onlyPlan||d.onlyPlan==='36')) plans.push('36');
+  if(d.plans) plans.push(...planKeys(d));
+  else if(!d.onlyPlan||d.onlyPlan==='12') plans.push('12');
+  if(!d.plans && d.plan36 && (!d.onlyPlan||d.onlyPlan==='36')) plans.push('36');
   /*
    * **고른 플랜이 이 제품에 없으면 있는 것으로 되돌린다.** tlPlan 은 화면 전역이라
    * 36개월 전용 제품(AI콤보·세탁기·건조기·냉장고)으로 넘어와도 '12' 인 채 남는다.
@@ -3121,7 +3642,7 @@ function renderTimeline(){
 
   // <option> 은 텍스트만 담는다 — SVG 심벌을 못 넣으므로 제품명만 쓴다
   let prodOpts = done.map(p=>'<option value="'+p.key+'" '+(p.key===tlKey?'selected':'')+'>'+p.name+'</option>').join('');
-  let planOpts = plans.map(pl=>'<option value="'+pl+'" '+(pl===tlPlan?'selected':'')+'>매 '+pl+'개월형</option>').join('');
+  let planOpts = plans.map(pl=>'<option value="'+pl+'" '+(pl===tlPlan?'selected':'')+'>'+(d.plans ? planName(d,pl) : '매 '+pl+'개월형')+'</option>').join('');
   /* 연도도 박지 않는다 — 6년 계약이라 앞뒤로 넉넉히 편다(지난 상담을 되짚을 수 있게 뒤로 2년) */
   const tlY0 = new Date().getFullYear();
   let yearOpts = Array.from({length:11},(_,i)=>tlY0-2+i).map(y=>'<option value="'+y+'" '+(y===tlYear?'selected':'')+'>'+y+'년</option>').join('');
@@ -3291,8 +3812,8 @@ function careShareBuild(){
   });
   sections.unshift({ h: '구독 조건', rows: [
     ['계약기간', d.contract || ''],
-    ['방문 주기', '매 ' + pl + '개월형'],
-    ['총 방문', (d['total' + pl] || (sched.length + '회')) ],
+    ['방문 주기', d.plans ? planName(d, pl) : '매 ' + pl + '개월형'],
+    ['총 방문', d.plans ? d.plans[pl].total : (d['total' + pl] || (sched.length + '회')) ],
   ] });
 
   return {
@@ -3301,7 +3822,7 @@ function careShareBuild(){
     sections: sections,
     note: (d.src ? d.src.replace(/^✅\s*/, '출처 — ') + ' · ' : '')
       + '실제 제공 항목은 제품·계약 조건에 따라 달라질 수 있습니다.',
-    filename: 'AI구독케어_' + d.name.replace(/[\\/:*?"<>|]/g, '') + '_' + pl + '개월형',
+    filename: 'AI구독케어_' + d.name.replace(/[\\/:*?"<>|]/g, '') + '_' + (d.plans ? planName(d, pl).replace(/[\s·]+/g,'') : pl + '개월형'),
   };
 }
 

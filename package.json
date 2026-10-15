@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test:install": "node scripts/test-install.mjs",
     "test:finder": "node scripts/test-finder.mjs",
-    "test:care": "node scripts/test-care.mjs",
+    "test:care": "node scripts/build-care-plans.mjs --check && node scripts/test-care.mjs",
     "test:as": "node scripts/test-as.mjs",
     "test:compare": "node scripts/test-compare.mjs",
     "test:levelup": "node scripts/test-levelup.mjs",
@@ -76,7 +76,9 @@
     "test:minify": "node scripts/test-minify.mjs",
     "test:seg": "node scripts/test-seg.mjs",
     "build:seg": "node scripts/build-seg.mjs",
-    "test:wallvec": "node scripts/test-wallvec.mjs"
+    "test:wallvec": "node scripts/test-wallvec.mjs",
+    "build:careplans": "node scripts/build-care-plans.mjs",
+    "collect:care": "node scripts/collect-care-subs.mjs"
   },
   "dependencies": {
     "next": "^14.2.35",

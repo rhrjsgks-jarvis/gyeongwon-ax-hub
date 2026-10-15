@@ -1,0 +1,6080 @@
+{
+ "_source": "samsung.com AI 구독 제품 구독 지면(subscribe2-d2c) — 구독케어 블록·방문케어/셀프케어 탭·구독케어 자세히 보기 표",
+ "_collectedAt": "2026-10-15",
+ "_tool": ".scratch/subs/care-extract.mjs (로컬 전용 · 브라우저로 렌더해 뽑는다)",
+ "products": {
+  "aircon": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/AF90H19D35WRT-subscribe2-d2c/AF90H19D35WRT/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n에어컨\n구독케어\n기본점검 · 케어\n필터 클리닝, 실내기 외관 UV 케어\n종합점검 · 케어\n종합점검(스마트 진단 툴), 에어컨 냉매 및 누수 점검, 필터 클리닝, 실내기 외관 UV 케어\n기본 세척\n기본점검, 송풍구/냉각 팬 클리닝\n전문 세척\n종합점검, 송풍구/냉각 팬 세척, 열교환기 고압세척\n무상수리서비스\n구독 기간 내 제공\n재설치 서비스\n구독 기간 내 1회 제공\n방문케어 프리미엄\n방문케어 라이트\n분해 세척으로 속바람부터 쾌적하게!\n전문가에게 맡길케어\n전문 분해 세척\n실외기 냉매 점검\n냉각 팬 세척\n열교환기 고압 세척\n외부 UV 케어\n최대 6년 무상수리서비스\n필터 세척\n스마트 진단\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "분해 세척으로 속바람부터 쾌적하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img01.jpg",
+       "alt": "전문 분해 세척 모습",
+       "dt": "전문 분해 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img02.jpg",
+       "alt": "실외기 냉매 점검 하는 모습",
+       "dt": "실외기 냉매 점검"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img03.jpg",
+       "alt": "냉각 팬 세척 모습",
+       "dt": "냉각 팬 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img04.jpg",
+       "alt": "열교환기 고압 세척 모습",
+       "dt": "열교환기 고압 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img05.jpg",
+       "alt": "외부 UV 케어 하는 모습",
+       "dt": "외부 UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img06.jpg",
+       "alt": "무상수리서비스 하는 모습",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img07.jpg",
+       "alt": "필터 세척 모습",
+       "dt": "필터 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img08.jpg",
+       "alt": "스마트 진단 하는 모습",
+       "dt": "스마트 진단"
+      }
+     ]
+    },
+    {
+     "label": "방문케어 라이트",
+     "h4": "속바람부터 쾌적하게!전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": true,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img02.jpg",
+       "alt": "실외기 냉매 점검 하는 모습",
+       "dt": "실외기 냉매 점검"
+      },
+      {
+       "hidden": true,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img08.jpg",
+       "alt": "스마트 진단 하는 모습",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img03.jpg",
+       "alt": "냉각 팬 세척 모습",
+       "dt": "냉각 팬 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img07.jpg",
+       "alt": "필터 세척 모습",
+       "dt": "필터 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/01/slide_visit_img06.jpg",
+       "alt": "무상수리서비스 하는 모습",
+       "dt": "최대 6년 무상수리서비스"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2, 3년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2, 3, 4년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "방문케어 라이트",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "기본점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "기본세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "기본점검/케어 연 1회 1, 2, 3년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "기본세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "기본점검/케어 연 1회 1, 2, 3, 4년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "기본세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "기본점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "기본세척 1회",
+        "span": 1
+       },
+       {
+        "x": "기본점검/케어 연 1회 4, 5년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "기본세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 전문세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)",
+    "* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.",
+    "* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.",
+    "* 재설치 서비스는 26년 3월 3일 신규 가입 고객부터 적용됩니다.",
+    "* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다."
+   ]
+  },
+  "washer": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/WF90F25ADS-subscribe2-d2c/WF90F25ADS/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n세탁기 (일반 · 드럼)\n구독케어\n종합점검 · 케어\n종합점검(스마트 진단 툴), 세탁조 관리(UV 케어),\n도어 고무패킹 클리닝, 세제함/배수필터 클리닝\n초음파 세척\n세탁조 초음파 세척, 내부 고압세척, 세탁조 탈취\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n분해 없는 초음파 세척!\n전문가에게 맡길케어\n초음파 세척\n세탁조 오염 확인\n고압 세척\n스마트 진단\n최대 6년 무상수리서비스\nUV 케어\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "분해 없는 초음파 세척! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "초음파 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "세탁조 오염 확인"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "고압 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/02/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "UV 케어"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5, 6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 초음파 세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "aicombo": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/WD90H25AHS-subscribe2-d2c/WD90H25AHS/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n세탁기 (콤보)\n구독케어\n종합점검 · 케어\n종합점검(스마트 진단 툴), 세탁조 관리(UV 케어),\n도어 고무패킹/배수필터 클리닝, 열교환기 클리닝(브러시/청소기)\n초음파 세척\n세탁조 초음파 세척, 내부 고압세척, 세탁조 탈취, 열교환기 클리닝(브러시/청소기)\n무상수리서비스\n구독 기간 내 제공\n재설치 서비스\n구독 기간 내 1회 제공\n방문케어 프리미엄\n분해 없는 초음파 세척!\n전문가에게 맡길케어\n초음파 세척\n세탁조 오염 확인\n고압 세척\n열교환기 청소\n최대 6년 무상수리서비스\n스마트 진단\nUV 케어\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "분해 없는 초음파 세척! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "초음파 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "세탁조 오염 확인"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "고압 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "열교환기 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/03/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "UV 케어"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5, 6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "초음파 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 초음파 세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)",
+    "* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.",
+    "* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.",
+    "* 재설치 서비스는 26년 3월 3일 신규 가입 고객부터 적용됩니다.",
+    "* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다."
+   ]
+  },
+  "fridge": {
+   "url": "https://www.samsung.com/sec/ai-subs-kitchen/RM70H91RMA-subscribe2-d2c/RM70H91RMA/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n냉장고 (일반형/양문형)\n구독케어\n종합점검 · 케어\n종합점검(스마트 진단 툴), 가스켓 세척 / 오일도포,\n도어 외관 클리닝, 탈취필터 교체, 외관 UV 케어\n전문세척 (내부 및 후면)\n기계실 청소, UV 케어, 도어 외관 클리닝\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n방문케어 라이트\n제품 속까지 신선하게!\n전문가에게 맡길케어\n기계실 청소\n스마트 진단\n도어 이물질 클리닝\n최대 6년 무상수리서비스\n외부 UV 케어\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "제품 속까지 신선하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "기계실 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "도어 이물질 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      }
+     ]
+    },
+    {
+     "label": "방문케어 라이트",
+     "h4": "제품 속까지 신선하게!전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "도어 이물질 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2, 3년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2, 3, 4년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5, 6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "방문케어 라이트",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 전문세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "dryer": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/DV80H20DDW-subscribe2-d2c/DV80H20DDW/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n건조기\n구독케어\n종합점검 · 케어\n종합점검(스마트 진단 툴), 열교환기 세척(브러시/청소기),\n먼지필터 세척, 배수통 세척, 습도센서 청소, 도어/가스켓 청소, 외관 클리닝\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n언제나 건조는 뽀송하게!\n전문가에게 맡길케어\n열교환기 청소\n스마트 진단\n최대 6년 무상수리서비스\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "언제나 건조는 뽀송하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": true,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "필터 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "열교환기 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/06/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "kimchi": {
+   "url": "https://www.samsung.com/sec/ai-subs-kitchen/kimchi-stand-rk70f58m1zg-d2c-subscribe2-D2C/RK70F58M1ZG/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n김치냉장고 3, 4도어\n공용 (필터 1종)\n구독케어\n종합점검 · 케어\n종합점검(스마트 진단 툴), 가스켓 세척 / 오일도포,\n도어 외관 클리닝, 탈취필터 교체, UV 케어\n전문세척\n기계실 청소, UV 케어, 도어 외관 클리닝\n셀프케어\n소모품 정기 배송\n- 고내탈취필터 (3개/1세트)\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n방문케어 라이트\n셀프케어\n제품 속까지 신선하게!\n전문가에게 맡길케어\n기계실 청소\n스마트 진단\n도어 이물질 클리닝\n최대 6년 무상수리서비스\n외부 UV 케어\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "제품 속까지 신선하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "기계실 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "도어 이물질 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      }
+     ]
+    },
+    {
+     "label": "방문케어 라이트",
+     "h4": "제품 속까지 신선하게!전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "도어 이물질 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/05/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      }
+     ]
+    },
+    {
+     "label": "셀프케어",
+     "h4": "교체 시기에 알아서 집으로!필터 교체도 내 손으로 쉽게",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/39/slide_self_img01.jpg",
+       "alt": "",
+       "dt": "배송받은 필터 교체"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2, 3년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2, 3, 4년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 1, 2년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 4, 5, 6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "전문세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "방문케어 라이트",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "셀프케어",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "고내탈취필터 배송 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "고내탈취필터 배송 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "고내탈취필터 배송 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "고내탈취필터 배송 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 전문세척이 제공되는 회차에는 종합점검 · 케어가 제공되지 않습니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "dish": {
+   "url": "https://www.samsung.com/sec/ai-subs-kitchen/DW90F79P1USWS-subscribe2-d2c/DW90F79P1USWS/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n식기세척기\n구독케어\n종합점검 · 필터 세척\n종합점검(스마트 진단 툴), 음식물 거름망 필터 세척, 세척 날개 세척,\n마이크로 필터 교체, 내부 노즐 클리닝 및 UV 케어\n무상수리서비스\n구독 기간 내 제공\n재설치 서비스\n구독 기간 내 1회 제공\n방문케어 프리미엄\n입에 닿는 식기 안심되게!\n전문가에게 맡길케어\n음식물 거름망 필터 세척\n마이크로 필터 교체\n세척 날개 세척\n내부 스팀\n최대 6년 무상수리서비스\n내부 UV 케어\n스마트 진단\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "입에 닿는 식기 안심되게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "음식물 거름망 필터 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "마이크로 필터 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "세척 날개 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "내부 스팀"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "내부 UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/20/slide_visit_img08.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)",
+    "* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.",
+    "* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.",
+    "* 재설치 서비스는 26년 9월 1일 신규 가입 고객부터 적용됩니다.",
+    "* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다.",
+    "* 빌트인 모델의 하부장 리폼은 재설치 신청 전 고객 사전 준비가 필요합니다."
+   ]
+  },
+  "induction": {
+   "url": "https://www.samsung.com/sec/ai-subs-kitchen/CC80H63E1HS-subscribe2-d2c/CC80H63E1HS/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n인덕션\n구독케어\n종합점검 · 케어\n동작 점검, 상판 세척, 틈새 케어, UV 케어, 상판교체 (3년차 1회)\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n방문케어 라이트\n얼룩 걱정 없이 반짝이게!\n전문가에게 맡길케어\n상판 교체\n이물질 제거\nUV 케어\n최대 6년 무상수리서비스\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "얼룩 걱정 없이 반짝이게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": true,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "상판 얼룩 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/45/slide_lite_img01.jpg",
+       "alt": "",
+       "dt": "상판 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "이물질 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      }
+     ]
+    },
+    {
+     "label": "방문케어 라이트",
+     "h4": "얼룩 걱정 없이 반짝이게!전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "상판 얼룩 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "이물질 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/13/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 3회상판교체 3년차 총 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 4회상판교체 3년차 총 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 5회상판교체 3년차 총 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 6회상판교체 3년차 총 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회상판교체 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "방문케어 라이트",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/케어 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "dresser": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/DF90H24R5C-subscribe2-d2c/DF90H24R5C/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n에어드레서\n구독케어\n종합점검 · 필터 교체\n종합점검(스마트 진단 툴), 필터 교체, 내부 스팀 및 UV 케어,\n외관 클리닝 및 UV 케어, 피톤치드 연무, 급배수통 세척\n셀프케어\n소모품 정기 배송\n- 미세먼지 집진필터 (1세트)\n- 아로마시트 (20매)\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n셀프케어\n속부터 산뜻한 의류관리!\n전문가에게 맡길케어\n필터 교체\n내부 스팀\n내부 UV 케어\n피톤치드 연무\n외부 도어 광택\n최대 6년 무상수리서비스\n필터 세척\n스마트 진단\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "속부터 산뜻한 의류관리! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "필터 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "내부 스팀"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "내부 UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "피톤치드 연무"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "외부 도어 광택"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "필터 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_visit_img08.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      }
+     ]
+    },
+    {
+     "label": "셀프케어",
+     "h4": "교체 시기에 알아서 집으로!필터/소모품 교체도 내 손으로 쉽게",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img01.jpg",
+       "alt": "",
+       "dt": "물 보충통 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img02.jpg",
+       "alt": "",
+       "dt": "물 보충통 연결부 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img03.jpg",
+       "alt": "",
+       "dt": "미세먼지 필터 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/07/slide_self_img04.jpg",
+       "alt": "",
+       "dt": "보푸라기 필터 청소"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 36개월",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 1회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "셀프케어",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "airpur_s": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/AP90H10163UDD-subscribe2-d2c/AP90H10163UDD/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n공기청정기\n구독케어\n종합점검 · 필터 교체\n종합점검(부스터 모드), 필터 교체, 센서부 점검 및 클리닝, 내부 팬 및 외관 클리닝\n셀프케어\n소모품 정기 배송\n- 필터 (1세트)\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n셀프케어\n공기의 시작부터 청정하게!\n전문가에게 맡길케어\n부스터 팬 클리닝\n상단 토출구 분해 세척\n새 S필터 장착\n센서 부 점검 청소\n외부 UV 케어\n최대 6년 무상수리서비스\n새 S필터 비닐 제거\n스마트 진단\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "공기의 시작부터 청정하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "부스터 팬 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "상단 토출구 분해 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "새 S필터 장착"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "센서 부 점검 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "새 S필터 비닐 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img08.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      }
+     ]
+    },
+    {
+     "label": "셀프케어",
+     "h4": "교체 시기에 알아서 집으로!필터 교체도 내 손으로 쉽게",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img01.jpg",
+       "alt": "",
+       "dt": "사용한 S필터 분리"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img02.jpg",
+       "alt": "",
+       "dt": "새 필터 비닐 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img03.jpg",
+       "alt": "",
+       "dt": "새 S필터 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_self_img04.jpg",
+       "alt": "",
+       "dt": "모드 리셋"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 8회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 10회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 12회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "셀프케어",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 2회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 2회 총 8회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 2회 총 10회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 2회 총 12회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "필터 배송 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "airpur_reusable": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/AP90H10198UDD-subscribe2-d2c/AP90H10198UDD/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n공기청정기\n(리유저블)\n구독케어\n종합점검 · 필터 세척\n종합점검(스마트 진단 툴), 필터 세척, 센서부 점검 및 클리닝, 내부 팬 및 외관 클리닝\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n공기의 시작부터 청정하게!\n전문가에게 맡길케어\n부스터 팬 클리닝\n상단 토출구 분해 세척\n리유저블 필터 세척\n센서 부 점검 청소\n외부 UV 케어\n최대 6년 무상수리서비스\n스마트 진단\n* Infinite AI 공기청정기(리유저블)은 셀프케어 선택이 불가합니다.\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "공기의 시작부터 청정하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "부스터 팬 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "상단 토출구 분해 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "리유저블 필터 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "센서 부 점검 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/11/slide_visit_img08.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 2회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 2회 총 8회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 2회 총 10회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 2회 총 12회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 세척 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* Infinite AI 공기청정기(리유저블)은 셀프케어 선택이 불가합니다.",
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)"
+   ]
+  },
+  "vacuum": {
+   "url": "https://www.samsung.com/sec/ai-subs-living/VR90F01SAG98CS-subscribe2-d2c/VR90F01SAG98CS/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n로봇청소기\n구독케어\n종합점검 · 소모품 교체\n종합점검(스마트 진단 툴)\n[로봇청소기 본체] 먼지통 클리닝 및 필터 교체, 바퀴 클리닝, 롤러 소모품 교체,\n스팀용 물걸레 교체 및 추가 제공, 외관 클리닝, 사이드 브러시 교체,\n본체 배터리 교체(구독 기간 내 총 1회)\n[스테이션] 먼지봉투 교체\n셀프케어\n소모품 정기 배송\n- 먼지봉투 (5매), 물걸레 (2쌍 4매)\n무상수리서비스\n구독 기간 내 제공\n방문케어 프리미엄\n셀프케어\n뛰어난 청소능력 오래도록!\n전문가에게 맡길케어\n배터리 교체\n물걸레 교체\n사이드 브러시 교체\n모터 필터 교체\n최대 5년 무상수리서비스\n청정스테이션 먼지봉투 교체\n스마트 진단\n롤러 교체\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "뛰어난 청소능력 오래도록! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "배터리 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "물걸레 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "사이드 브러시 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img04_v2.jpg",
+       "alt": "",
+       "dt": "모터 필터 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 5년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "청정스테이션 먼지봉투 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img08.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_visit_img09.jpg",
+       "alt": "",
+       "dt": "롤러 교체"
+      }
+     ]
+    },
+    {
+     "label": "셀프케어",
+     "h4": "교체 시기에 알아서 집으로!소모품 교체도 내 손으로 쉽게",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_self_img01.jpg",
+       "alt": "",
+       "dt": "먼지 통 분리"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_self_img06_v2.jpg",
+       "alt": "",
+       "dt": "모터 필터 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/10/slide_self_img05.jpg",
+       "alt": "",
+       "dt": "배송받은 먼지봉투 교체"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 7
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/소모품 교체 연 1회 총 3회 * 3년차: 배터리 교체 (총 1회에 한함)",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/소모품 교체 연 1회 총 4회 * 3년차: 배터리 교체 (총 1회에 한함)",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/소모품 교체 연 1회 총 5회 * 3년차: 배터리 교체 (총 1회에 한함)",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 7
+       }
+      ]
+     ]
+    },
+    {
+     "h": "셀프케어",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 7
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "소모품 배송 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 7
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)",
+    "* 변색으로 인한 노즐 교체는 수행되지 않습니다."
+   ]
+  },
+  "purifier_under": {
+   "url": "https://www.samsung.com/sec/ai-subs-kitchen/RWP54421BF6M-subscribe2-d2c/RWP54421BF6M/",
+   "block": "삼성 AI 구독으로 더 오래, 더 편리하게\n정수기\n구독케어\n종합점검 · 필터 교체\n종합점검(스마트 진단 툴), 정수필터 교체, 모듈 클리닝,\n토출구 코크 세척, 내외부 클리닝, 필터 커버 세척, 센서 및 누수 진단\n셀프케어\n소모품 정기 배송\n- 정수필터 (1세트)\n무상수리서비스\n구독 기간 내 제공\n재설치 서비스\n구독 기간 내 1회 제공\n방문케어 프리미엄\n셀프케어\n물 한 방울까지 깨끗하게!\n전문가에게 맡길케어\n필터 교체\n모듈 클리닝\n내부 클리닝\n토출구 분해 세척\n외부 UV 케어\n최대 6년 무상수리서비스\n필터 커버 세척\n스마트 진단\n* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며,\n상세 내역은 아래 '",
+   "tabs": [
+    {
+     "label": "방문케어 프리미엄",
+     "h4": "물 한 방울까지 깨끗하게! 전문가에게 맡길케어",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img01.jpg",
+       "alt": "",
+       "dt": "필터 교체"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img02.jpg",
+       "alt": "",
+       "dt": "모듈 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img03.jpg",
+       "alt": "",
+       "dt": "내부 클리닝"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img04.jpg",
+       "alt": "",
+       "dt": "토출구 분해 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img05.jpg",
+       "alt": "",
+       "dt": "외부 UV 케어"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img06.jpg",
+       "alt": "",
+       "dt": "최대 6년 무상수리서비스"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img07.jpg",
+       "alt": "",
+       "dt": "필터 커버 세척"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_visit_img08.jpg",
+       "alt": "",
+       "dt": "스마트 진단"
+      }
+     ]
+    },
+    {
+     "label": "셀프케어",
+     "h4": "교체 시기에 알아서 집으로!필터 교체도 내 손으로 쉽게",
+     "slides": [
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img01.jpg",
+       "alt": "",
+       "dt": "필터 분리"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img02.jpg",
+       "alt": "",
+       "dt": "내부 물기 제거"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img03.jpg",
+       "alt": "",
+       "dt": "물받이 청소"
+      },
+      {
+       "hidden": false,
+       "src": "//images.samsung.com/kdp/static/pd/subscription_service/new2/22/slide_self_img04.jpg",
+       "alt": "",
+       "dt": "새 필터 뚜껑 오픈 후 교체"
+      }
+     ]
+    }
+   ],
+   "tables": [
+    {
+     "h": "방문케어 프리미엄",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 8회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 10회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 2회 총 12회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "종합점검/필터 교체 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    },
+    {
+     "h": "셀프케어",
+     "rows": [
+      [
+       {
+        "x": "기간 / 주기",
+        "span": 1
+       },
+       {
+        "x": "1년차",
+        "span": 1
+       },
+       {
+        "x": "2년차",
+        "span": 1
+       },
+       {
+        "x": "3년차",
+        "span": 1
+       },
+       {
+        "x": "4년차",
+        "span": 1
+       },
+       {
+        "x": "5년차",
+        "span": 1
+       },
+       {
+        "x": "6년차",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ],
+      [
+       {
+        "x": "3년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 2회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "3년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 1회 총 3회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 2회 총 8회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "4년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 1회 총 4회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 2회 총 10회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "5년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 1회 총 5회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 6개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 2회 총 12회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "6년형 12개월",
+        "span": 1
+       },
+       {
+        "x": "정수필터 배송 연 1회 총 6회",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       },
+       {
+        "x": "",
+        "span": 1
+       }
+      ],
+      [
+       {
+        "x": "",
+        "span": 8
+       }
+      ]
+     ]
+    }
+   ],
+   "notes": [
+    "* 가입하신 요금제의 유형/기간/주기에 따라 제공되는 서비스의 내역은 상이할 수 있으며, 상세 내역은 아래 '구독케어 자세히 보기'를 확인하시기 바랍니다.",
+    "* 무상수리서비스는 정상적인 사용 환경에서 발생한 제품의 성능 또는 기능상의 고장에 대해 제공되며, 고객 부주의나 사용상 주의 사항 미준수로 인한 고장, 훼손 등은 제외됩니다.",
+    "* 무상수리서비스는 제품 본체에 한해 제공됩니다. (소모품/액세서리 제외)",
+    "* 재설치 서비스는 재설치 서비스가 포함된 구독 제품에 대해서만 제공되며, 구독 기간 중 1회만 제공됩니다.",
+    "* 재설치 서비스는 설치 기본비(재설치)에 한해 제공되며, 제품 설치 환경에 따라 추가 비용이 발생할 수 있습니다. 철거 및 운반 희망 시에는 별도 비용이 발생합니다.",
+    "* 재설치 서비스는 26년 3월 3일 신규 가입 고객부터 적용됩니다.",
+    "* 재설치는 철거 등 별도의 사전 작업 없이, 제품 분리 후 바로 설치 가능한 경우에 한하여 가능합니다."
+   ]
+  }
+ }
+}
