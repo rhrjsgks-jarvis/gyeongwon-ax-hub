@@ -2334,7 +2334,9 @@ function oxRows(d){
     kindItems(d, k).forEach(it => {
       if (seen.has(it)) return; seen.add(it);
       const v = {}; types.forEach(t => { v[t] = [has[t].has(it) ? 'O' : 'X', '']; });
-      const key = types.includes('lite') && v.premium && v.premium[0] === 'O' && v.lite[0] === 'X';
+      /* 라이트에도 같은 이름을 품은 항목이 있으면(냉장고 「UV 케어」 ↔ 「외관 UV 케어」) 핵심 차이로 내세우지 않는다 — 「라이트엔 UV 케어가 없다」로 잘못 읽힌다 */
+      const key = types.includes('lite') && v.premium && v.premium[0] === 'O' && v.lite[0] === 'X'
+        && ![...has.lite].some(x => x !== it && x.includes(it));
       rows.push({ g, k: it, key, v });
     });
   });
