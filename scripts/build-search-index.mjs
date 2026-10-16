@@ -196,6 +196,25 @@ function flatten(v, out = []) {
    */
   const AI2 = literal(html, /\nconst AI2_SUB = (\{[\s\S]*?\n\});/, 'care-app.html 의 AI2_SUB');
   const ai2Kw = flatten(AI2).join(' ') + ' pc 노트북 태블릿 구독 올인원 갤럭시북 갤럭시탭 구독케어 파손보상';
+  /*
+   * **2026-10-15 개편분(방문케어 프리미엄·라이트·셀프케어)은 DATA 가 아니라 `CARE_PLANS` 에 있다.**
+   * 그걸 안 담아 「셀프케어」·「라이트」·「종합점검/케어」가 품목에 따라 안 찾혔다(2026-10-16 확인).
+   * 유형 이름(PLAN_TYPE) · 케어 종류와 그 항목 · 주기 · 유의사항을 품목마다 붙인다.
+   */
+  const PLANS = JSON.parse(html.match(/\nconst CARE_PLANS = (\{.*?\});\n/)[1]);
+  const PTYPE = literal(html, /\nconst PLAN_TYPE = (\{[\s\S]*?\n\});/, 'care-app.html 의 PLAN_TYPE');
+  const planKw = (key) => {
+    const p = PLANS[key];
+    if (!p) return '';
+    const plans = Object.values(p.plans || {});
+    return [
+      ...new Set(plans.map((q) => `${PTYPE[q.type]?.nm || ''} ${PTYPE[q.type]?.short || ''}`)),
+      ...new Set(plans.map((q) => `${q.cycle}개월 주기 ${q.cycle}개월형`)),
+      ...Object.entries(p.kinds || {}).map(([k, items]) => `${k} ${items.join(' ')}`),
+      ...flatten(p.heads || []),
+      ...flatten(p.notes || []),
+    ].join(' ');
+  };
   if (m) {
     const re = /\{key:"([^"]+)",\s*name:"([^"]+)",[^}]*?desc:"([^"]*)"[^}]*?st:"([^"]*)"/g;
     let x;
@@ -204,10 +223,15 @@ function flatten(v, out = []) {
       add({ t: 'care', m: 'care', title: x[2], sub: `AI구독 케어 · ${x[3]}`,
         kw: [x[2], x[3],
           isAi2 ? ai2Kw : isMx ? mxKw : '케어십 구독 care 방문케어 자가관리 무상수리',
-          ...(isMx || isAi2 ? [] : flatten(DATA[x[1]]))].join(' '),
+          ...(isMx || isAi2 ? [] : flatten(DATA[x[1]])), planKw(x[1])].join(' '),
         href: `/care?cat=${encodeURIComponent(x[1])}` });
     }
   }
+  /* 블루패스 — 앱 첫 화면이 곧 블루패스라 `/care` 로 보낸다. 타일·조건·스페셜 패스까지 */
+  const BP = literal(html, /\nconst BLUEPASS = (\{[\s\S]*?\n\});/, 'care-app.html 의 BLUEPASS');
+  add({ t: 'care', m: 'care', title: '블루패스', sub: 'AI구독 케어 · 구독 혜택 12가지 · 스페셜 패스',
+    kw: ['블루패스 bluepass 구독 혜택 스페셜 패스', ...flatten(BP)].join(' '),
+    href: '/care?mode=bluepass' });
 }
 
 // ── 5. AS 관련 정보: 품목별 보증 · 물류센터 · 이전설치 협력사 ──
@@ -324,13 +348,21 @@ function flatten(v, out = []) {
 {
   const IC = JSON.parse(fs.readFileSync(pub('install-cost.json'), 'utf8'));
   const link = (tab, cat) => `/install-cost?tab=${tab}${cat ? `&cat=${encodeURIComponent(cat)}` : ''}`;
+  /*
+   * **앱 검색창이 쓰는 검색어(`index[].k`)를 그대로 가져온다.** 표 글자를 여기서 따로 엮으면
+   * 앱 쪽에 더한 것 — 현장 말(「양중비」)·표 밖 각주·비고 — 이 허브에서만 빠진다.
+   * 2026-10-16 실제로 앱에서는 「양중비」 8건이 찾히는데 통합검색은 0건이었다.
+   */
+  const secKw = (tab, cat, sec) =>
+    IC.index.filter((r) => r.tab === tab && r.cat === cat && r.sec === sec).map((r) => r.k).join(' ');
 
   for (const c of IC.newInstall.categories) {
     for (const s of c.sections) {
       const body = s.grid.slice(s.headRows).map((r) => r.filter(Boolean).join(' ')).join(' ');
       add({ t: 'cost', m: 'installcost', title: `${c.name} ${s.title}`,
         sub: `신규 설치 추가비 · ${s.grid.length - s.headRows}행`,
-        kw: [c.name, s.title, '설치비 추가설치비 신규설치 견적 단가 로지텍', body].join(' '),
+        kw: [c.name, s.title, '설치비 추가설치비 신규설치 견적 단가 로지텍', body,
+          secKw('new', c.key, s.title)].join(' '),
         href: link('new', c.key) });
     }
   }
@@ -339,7 +371,8 @@ function flatten(v, out = []) {
       const body = s.rows.map((r) => r.note || [r.label, ...r.values].join(' ')).join(' ');
       add({ t: 'cost', m: 'installcost', title: `${g.name} ${s.title}`,
         sub: `이전설치 · ${s.rows.length}행`,
-        kw: [g.name, s.title, '이전설치 재설치 철거 케어플러스 할증 사다리차 이동거리 단가', body].join(' '),
+        kw: [g.name, s.title, '이전설치 재설치 철거 케어플러스 할증 사다리차 이동거리 단가', body,
+          secKw('care', g.key, s.title)].join(' '),
         href: link('care', g.key) });
     }
   }

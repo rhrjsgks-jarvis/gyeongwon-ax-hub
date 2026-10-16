@@ -2193,8 +2193,10 @@ document.addEventListener('DOMContentLoaded', () => {
    * 직접 만지지 않아야 사람이 눌렀을 때와 결과가 같다.
    * 없는 키가 오면 아무것도 하지 않는다 — 기본 화면이 그대로 열린다.
    */
-  const dl = new URLSearchParams(location.search).get('cat');
+  const qs = new URLSearchParams(location.search);
+  const dl = qs.get('cat');
   if (dl && PRODUCTS.some(p => p.key === dl)) switchToCare(dl);
+  else if (qs.get('mode') === 'bluepass') setMode('bluepass');
 });
 
 
