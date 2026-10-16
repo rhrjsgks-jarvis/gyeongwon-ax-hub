@@ -375,8 +375,51 @@
     return h2c;
   }
 
+  /*
+   * ── 다 만든 그림을 내보내는 자리 (2026-10-16 「깜빡이며 공유가 안 된다」) ──
+   *
+   * navigator.share 는 **방금 사람이 누른 직후**에만 열린다(브라우저의 사용자 활성화).
+   * 그런데 화면을 담는 데 폰에서 몇 초가 걸려, 다 담았을 때는 그 권한이 끝나 있어
+   * 공유가 거부되고 → 내려받기로 넘어가며 화면이 번쩍였다. 그래서:
+   *  ① 아직 권한이 살아 있으면 곧장 공유창을 연다
+   *  ② 끝났거나 거부되면 「공유하기」 한 번을 더 받는다 — 그 누름이 새 권한이 된다
+   *  ③ 공유를 못 하는 기기면 그때 내려받는다
+   */
+  function deliver(blob, name, title) {
+    var file = null;
+    try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
+    var canFile = !!(file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] }));
+    if (!canFile) { download(blob, name); return Promise.resolve(true); }
+    var share = function () {
+      return navigator.share({ files: [file], title: title || '' }).then(function () { return true; });
+    };
+    var ask = function () {
+      return new Promise(function (res) {
+        sheet('화면을 담았습니다', '아래 버튼을 누르면 공유창이 열립니다', [
+          { label: '공유하기', primary: true, onClick: function () {
+            share().then(function () { res(true); }, function (err) {
+              if (err && err.name === 'AbortError') return res(true);
+              download(blob, name); res(true);
+            });
+          } },
+          { label: '이미지로 저장', onClick: function () { download(blob, name); res(true); } },
+        ]);
+      });
+    };
+    var ua = navigator.userActivation;
+    if (ua && !ua.isActive) return ask();
+    return share().catch(function (err) {
+      if (err && err.name === 'AbortError') return true;
+      return ask();   /* 권한이 끝났거나 막혔다 — 내려받기로 바로 넘기지 않고 한 번 더 묻는다 */
+    });
+  }
+
   /** 지금 화면을 처음부터 끝까지 한 장으로. filename 은 저장 이름. */
+  var busy = false;
   function captureScreen(filename) {
+    /* 담는 중에 또 누르면 캡처가 겹쳐 화면이 거듭 번쩍인다 — 하나만 돈다 */
+    if (busy) return Promise.resolve(false);
+    busy = true;
     toast('화면을 담는 중입니다…');
     return loadH2C().then(function (H) {
       var doc = document.documentElement, body = document.body;
@@ -418,21 +461,14 @@
     }).then(function (cv) {
       return new Promise(function (res) {
         cv.toBlob(function (blob) {
+          busy = false;
           if (!blob) { toast('이미지를 만들지 못했습니다'); return res(false); }
           var name = (filename || '세일즈코파일럿') + '.png';
-          var file = null;
-          try { file = new File([blob], name, { type: 'image/png' }); } catch (e) {}
-          if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-            navigator.share({ files: [file], title: filename || '' })
-              .catch(function (err) { if (!err || err.name !== 'AbortError') download(blob, name); })
-              .then(function () { res(true); }, function () { res(true); });
-            return;
-          }
-          download(blob, name);
-          res(true);
+          deliver(blob, name, filename).then(function () { res(true); }, function () { res(true); });
         }, 'image/png');
       });
     }).catch(function () {
+      busy = false;
       toast('화면을 담지 못했습니다');
       return false;
     });

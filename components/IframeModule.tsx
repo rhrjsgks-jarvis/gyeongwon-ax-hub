@@ -127,6 +127,9 @@ export default function IframeModule({
         src={src}
         title={title}
         onLoad={() => setLoaded(true)}
+        /* 공유(navigator.share)·복사는 iframe 안에서 돈다. 허용을 안 주면 브라우저가 거부해
+           공유창 대신 내려받기로 넘어가며 화면이 번쩍였다(2026-10-16 사장님 지적) */
+        allow="web-share; clipboard-write"
         className="w-full h-full border-0"
         suppressHydrationWarning
       />
