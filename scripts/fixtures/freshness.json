@@ -1,0 +1,131 @@
+{
+  "_about": "자료 최신화 점검 대장 — scripts/check-freshness.mjs 가 읽는다. checkedAt 은 '이 날 원문과 대조해 맞았다'는 증언이다. 대조하지 않고 날짜만 올리지 말 것.",
+  "items": [
+    {
+      "key": "lineup",
+      "name": "제품 라인업",
+      "everyDays": 30,
+      "checkedAt": "",
+      "where": "모델파인더·통합검색",
+      "source": "samsung.com/sec cxhr/pf/goodsList",
+      "how": "점검 스킬 → 라인업 대조"
+    },
+    {
+      "key": "usp",
+      "name": "제조사 셀링포인트",
+      "everyDays": 30,
+      "checkedAt": "2026-10-12",
+      "where": "타사비교·모델파인더",
+      "source": "goodsList uspDescList",
+      "how": "npm run fetch:usp && npm run build:usp"
+    },
+    {
+      "key": "care",
+      "name": "구독케어 회차·유형",
+      "everyDays": 30,
+      "checkedAt": "2026-10-15",
+      "where": "AI구독 케어 안내",
+      "source": "samsung.com 구독케어 자세히 보기",
+      "how": "subs-care-collect 스킬"
+    },
+    {
+      "key": "bluepass",
+      "name": "블루패스",
+      "everyDays": 30,
+      "checkedAt": "2026-10-15",
+      "where": "AI구독 케어 안내",
+      "source": "samsung.com/sec/ai-subs/guide/",
+      "how": "subs-care-collect 스킬"
+    },
+    {
+      "key": "subs-mx",
+      "name": "모바일·PC 구독",
+      "everyDays": 30,
+      "checkedAt": "",
+      "where": "AI구독 케어 안내",
+      "source": "samsung.com 갤럭시 구독클럽·올인원 2.0",
+      "how": "점검 스킬 → 구독 대조"
+    },
+    {
+      "key": "cost-logitech",
+      "name": "신규설치 추가비",
+      "everyDays": 30,
+      "checkedAt": "2026-10-15",
+      "where": "설치비용",
+      "source": "삼성전자로지텍 설치 전 통합안내 (robots 금지 — 지정 지면만 수작업)",
+      "how": "node .scratch/selc-yangjung.mjs (지정 8곳)"
+    },
+    {
+      "key": "cost-careplus",
+      "name": "이전설치 비용",
+      "everyDays": 30,
+      "checkedAt": "2026-10-15",
+      "where": "설치비용",
+      "source": "삼성닷컴 케어플러스 이전설치",
+      "how": "node .scratch/selc-yangjung.mjs"
+    },
+    {
+      "key": "as-warranty",
+      "name": "보증·부품보유기간",
+      "everyDays": 90,
+      "checkedAt": "2026-10-16",
+      "where": "AS 관련 정보",
+      "source": "samsungsvc.co.kr/info/fee?tab=assure",
+      "how": "점검 스킬 → AS 대조"
+    },
+    {
+      "key": "as-membership",
+      "name": "멤버십 무상수리 연장",
+      "everyDays": 90,
+      "checkedAt": "2026-10-16",
+      "where": "AS 관련 정보",
+      "source": "samsung.com/sec/membership/membershipBluecare/",
+      "how": "점검 스킬 → AS 대조"
+    },
+    {
+      "key": "svc-centers",
+      "name": "서비스센터",
+      "everyDays": 90,
+      "checkedAt": "2026-10-16",
+      "where": "AS 센터 찾기",
+      "source": "api.samsungsvc.co.kr centerList",
+      "how": "node scripts/svc-collect.mjs → 검토 후 fixture 로 → npm run build:svc"
+    },
+    {
+      "key": "install-guide",
+      "name": "설치환경 규격",
+      "everyDays": 90,
+      "checkedAt": "",
+      "where": "제품별 설치환경 가이드",
+      "source": "samsung.com 설치가이드 지면",
+      "how": "점검 스킬 → 설치환경 대조"
+    },
+    {
+      "key": "catalog",
+      "name": "삼성스토어 카탈로그",
+      "everyDays": 60,
+      "checkedAt": "2026-10-16",
+      "where": "모델파인더 스펙",
+      "source": "samsungstore.com/event/catalog.sesc (격월호)",
+      "how": "점검 스킬 → 카탈로그 대조"
+    },
+    {
+      "key": "lg",
+      "name": "LG 카탈로그·모델",
+      "everyDays": 60,
+      "checkedAt": "",
+      "where": "타사비교",
+      "source": "bestshop.lge.co.kr · apiv2.lge.co.kr",
+      "how": "점검 스킬 → 카탈로그 대조"
+    },
+    {
+      "key": "logistics",
+      "name": "물류센터 관할·연락처",
+      "everyDays": 180,
+      "checkedAt": "2026-08-11",
+      "where": "AS 연락처·협력사",
+      "source": "사내 배포본(사장님 제공) — 웹 출처 없음",
+      "how": "새 배포본을 받으면 반영"
+    }
+  ]
+}

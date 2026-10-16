@@ -25,6 +25,9 @@ try {
   if (s.ahead != null && s.ahead >= DEPLOY_AT) {
     out.push('[배포] 미푸시가 기준(10커밋)을 넘었다 — 테스트를 돌리고 묻지 말고 올릴 것.');
   }
+  if (s.stale && s.stale.length) {
+    out.push(`[최신화] 원문 대조 기한이 지난 자료 ${s.stale.length}건(${s.stale.join(', ')}) — 응답 끝에 한 줄로 알릴 것. 절차: refresh-audit 스킬 · npm run check:fresh`);
+  }
   out.push('[표시 규칙] 응답 맨 위에 🟢진행중/🔴막힘 · n/m(%) 막대 · 끝난 것 / 다음 것을 적는다.');
 
   process.stdout.write(out.join('\n'));

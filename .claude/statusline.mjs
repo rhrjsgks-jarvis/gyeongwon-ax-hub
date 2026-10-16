@@ -58,8 +58,19 @@ export function status() {
     } catch { /* mtime 을 못 읽어도 문구는 띄운다 */ }
   }
 
+  /* 자료 최신화 점검 — 기한이 지난 출처 수(scripts/check-freshness.mjs 와 같은 규칙) */
+  let stale = [];
+  try {
+    const L = JSON.parse(read('scripts/fixtures/freshness.json') || '{"items":[]}');
+    const now = Date.now();
+    stale = L.items.filter((it) => {
+      const t = it.checkedAt ? new Date(it.checkedAt + 'T00:00:00').getTime() : NaN;
+      return !Number.isFinite(t) || Math.floor((now - t) / 86400000) > it.everyDays;
+    }).map((it) => it.name);
+  } catch { /* 대장이 깨져도 상태줄은 뜬다 */ }
+
   return {
-    branch, ahead,
+    branch, ahead, stale,
     version: v ? v[1] : null,
     cache: cache ? cache[1] : null,
     versionMismatch: !!(v && cache && v[1] !== cache[1]),
@@ -86,6 +97,7 @@ export function line() {
   else if (s.version) parts.push(s.version);
 
   if (s.lock) parts.push(`🔒${s.lock}`);
+  if (s.stale.length) parts.push(`🗓점검 ${s.stale.length}건 기한`);
   if (s.now) parts.push(s.now + ageText(s.nowAgeMin));
 
   return parts.join('  ·  ');
