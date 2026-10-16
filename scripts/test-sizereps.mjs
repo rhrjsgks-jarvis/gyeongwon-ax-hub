@@ -69,6 +69,8 @@ for (const r of reps) {
   // 키친핏 1도어 **세트 구성**은 같은 캐비닛을 옆으로 이어 붙인 것이라 폭 > 높이가 정상이다
   // (4세트 = 2,495 × 1,855mm). 업소용 냉장고를 뺀 것과 같은 이유.
   if (r.set) continue;
+  // 뚜껑형 김치냉장고(RP*)는 위로 여는 궤짝형이라 폭 ≥ 높이가 정상이다 — 삼성닷컴 RP20C3111EG 925 × 923 × 702mm(2026-10-16)
+  if (r.cat === '김치냉장고' && /^RP/.test(r.model || '')) continue;
   const b = r.parts.find((p) => p.part.startsWith('본체')) || r.parts[0];
   if (b.h <= b.w) {
     fail(`${r.cat} ${r.size} ${r.model}: 높이(${b.h}) <= 폭(${b.w}) — 축이 뒤바뀐 것으로 의심 (${b.label} = ${b.raw})`);
