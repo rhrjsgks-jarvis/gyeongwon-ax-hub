@@ -96,6 +96,15 @@ button.b.on{border-color:var(--blue);background:#eef2ff;color:var(--blue)}
 button.b:disabled{opacity:.45;cursor:default}
 .empty{text-align:center;color:var(--muted);font-size:12.5px;padding:26px 10px;line-height:1.7}
 .src{font-size:10.5px;color:var(--muted);line-height:1.6;margin-top:10px}
+/* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
+   고르는 칸(품목군·검색·목록·버튼)은 빼고 **비교표와 출처만** 싣는다. */
+@media print{
+  body{background:#fff!important}
+  .topbar,.wrap>.card:first-child{display:none!important}
+  .topbar-in,.wrap{max-width:none!important;padding:0!important}
+  #out{border:1px solid #D1D5DB!important;box-shadow:none!important}
+  tr{break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -356,6 +365,11 @@ function sync(){
 window.ownCompareShareBuild = function(){
   return (cur || '당사제품') + '_비교_' + picked.length + '개';
 };
+/* share-kit 은 {filename, title} 을 받는다 — 문자열을 넘기면 이름이 빈다(타사비교에서 겪었다) */
+function ownCompareShare(){
+  return { app: '당사제품 비교', title: (cur || '당사제품') + ' 비교',
+    subtitle: picked.length + '개 제품', filename: window.ownCompareShareBuild() };
+}
 
 /* ── 배선 ─────────────────────────────────────────────────────── */
 $('#cat').addEventListener('change', function(){
@@ -401,6 +415,7 @@ load().then(function(){
   $('#out').innerHTML = '<div class="empty">자료를 불러오지 못했습니다.<br>'
     + '잠시 뒤 다시 열어 주세요. (' + esc(e && e.message) + ')</div>';
 });
+if (typeof mountShareButton === 'function') mountShareButton(ownCompareShare);
 </script>
 </body>
 </html>

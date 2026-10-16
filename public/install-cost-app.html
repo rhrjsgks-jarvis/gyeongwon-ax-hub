@@ -206,6 +206,18 @@
     .prepgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
   }
   .empty{text-align:center;color:#9aa0a6;font-size:12.5px;padding:26px 10px;line-height:1.7}
+  /* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
+     검색·탭·품목 칩은 빼고 **고른 품목의 표만** 싣는다. 표가 잘리지 않게 칸 단위로 끊는다. */
+  @media print{
+    body{background:#fff!important}
+    .topbar,.sbar,.tabs,.chipwrap{display:none!important}
+    .wrap{max-width:none!important;padding:0!important}
+    .src a,.foot a{color:inherit;text-decoration:none}
+    .sec,.safe,.pit,li{break-inside:avoid}
+    .secs{display:block!important}
+    .shot{max-width:none;border-color:#D1D5DB}
+    .shot img{max-height:95mm;object-fit:contain}
+  }
 </style>
 </head>
 <body>
@@ -618,6 +630,24 @@ fetch('install-cost.json').then(function (r) { return r.json(); }).then(function
     '<div class="empty">자료를 불러오지 못했습니다.<br>연결을 확인하고 새로고침해 주세요.</div>';
 });
 
+
+/* 공유·인쇄 — 화면을 그대로 담는다(share-kit). 무엇을 보고 있었는지 제목·파일 이름에 남긴다 */
+function costShareBuild() {
+  if (!D) return null;
+  var tabNm = { new: '신규 설치 추가비', care: '이전 · 재설치 · 철거', prep: '설치 전 준비' }[TAB];
+  var list = TAB === 'new' ? D.newInstall.categories : TAB === 'care' ? D.careplus.groups : null;
+  var c = list ? (list.filter(function (x) { return x.key === CAT[TAB]; })[0] || list[0]) : null;
+  var t = c ? c.name : tabNm;
+  return { app: '세일즈 코파일럿 · 설치비용 · 사전준비', title: t, subtitle: c ? tabNm : '',
+    printNote: '', filename: '설치비용_' + String(t).replace(/[\/:*?"<>|\s·]+/g, '') };
+}
+/* 인쇄 직전 — 접어 둔 표도 펼친다(종이는 펼 수가 없다). 끝나면 접어 둔 것만 되접는다 */
+window.SK_PRINT_PREP = function () {
+  var shut = [].filter.call(document.querySelectorAll('details.sec'), function (d) { return !d.open; });
+  shut.forEach(function (d) { d.open = true; });
+  return function () { shut.forEach(function (d) { d.open = false; }); };
+};
+if (typeof mountShareButton === 'function') mountShareButton(costShareBuild);
 /* 테스트가 들여다보는 손잡이 */
 window.__cost = {
   get data() { return D; }, go: go,

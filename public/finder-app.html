@@ -270,6 +270,22 @@ table.spec tr:last-child td{border-bottom:none}
 
   /* PC 대응 — 넓은 화면에서 본문이 폰 폭 그대로라 화면 한가운데 좁은 기둥으로 보였다
      (2026-08-11 사용자 지적). 좁은 화면 값은 그대로 두고 넓은 화면에서만 늘린다. */
+  /* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
+     검색창·예시·정렬은 빼고, **펼친 제품이 있으면 그 제품만**, 없으면 결과 목록을 싣는다. */
+  @media print{
+    body{background:#fff!important}
+    .topbar,.shero,#kwBox,#aiBox,.sortrow,#parseBar{display:none!important}
+    .wrap{max-width:none!important;padding:0!important}
+    #rHost:has(.rmain[aria-expanded="true"]) .rcard:not(:has(.rmain[aria-expanded="true"])){display:none!important}
+    .rcard{border-color:#D1D5DB!important;box-shadow:none!important}
+    .footer{display:none!important}
+    /* 스펙표는 두 단으로 — 한 단이면 40줄이 한 쪽을 넘는다 */
+    table.spec tbody{display:grid;grid-template-columns:1fr 1fr;column-gap:14px}
+    table.spec tr{display:grid;grid-template-columns:42% 58%;break-inside:avoid}
+    table.spec td{font-size:10px;padding:3px 5px;width:auto!important;max-width:none!important;word-break:keep-all}
+    /* 「미탑재 — 과장 안내 주의」는 상담사 경고라 종이에 싣지 않는다 */
+    .rdetail h5:has(+ .flagrow .flg.no),.flagrow:has(.flg.no){display:none!important}
+  }
   @media(min-width:1024px){ .wrap,.topbar-in { max-width:960px } }
   @media(min-width:1440px){ .wrap,.topbar-in { max-width:1140px } }
 </style>

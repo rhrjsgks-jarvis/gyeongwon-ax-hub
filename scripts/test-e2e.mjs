@@ -291,7 +291,7 @@ try {
      * 매장 전파가 약하면 그것도 안 됐다. 고객에게 비교 결과를 보여주는 것이 존재 이유인
      * 앱에서 결과를 남길 길이 하나도 없었던 셈이다.
      */
-    const hdr = () => mp.evaluate(() => !!document.querySelector('header button[aria-label="이 화면 공유하기"]'));
+    const hdr = () => mp.evaluate(() => !!document.querySelector('header button[aria-label="이 화면 공유·인쇄"]'));
     let miss = [];
     /*
      * **외부 도메인 자원도 같은 순회에서 함께 본다.** 매장 전파가 약해도 열려야 해서
@@ -363,7 +363,10 @@ try {
       w.URL.createObjectURL = (b) => { w.__blob = b; return orig(b); };
       if (w.navigator.share) w.navigator.share = () => Promise.reject(new Error('no share'));
     });
-    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유하기"]').click());
+    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유·인쇄"]').click());
+    /* 공유 버튼은 「이미지로 공유 / 인쇄」를 고르게 한다(2026-10-16) — 이미지 쪽을 누른다 */
+    await mp.waitForFunction(() => !!document.querySelector('iframe').contentWindow.document.querySelector('.sk-b.primary'), { timeout: 8000 }).catch(() => {});
+    await mp.evaluate(() => { const b = document.querySelector('iframe').contentWindow.document.querySelector('.sk-b.primary'); if (b) b.click(); });
     await mp.waitForFunction(() => !!document.querySelector('iframe').contentWindow.__blob, { timeout: 40000 })
       .catch(() => {});
     const shot = await mp.evaluate(async () => {
@@ -396,7 +399,10 @@ try {
       if (w.navigator.share) w.navigator.share = () => Promise.reject(new Error('no share'));
     });
     await mp.waitForTimeout(900);
-    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유하기"]').click());
+    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유·인쇄"]').click());
+    /* 공유 버튼은 「이미지로 공유 / 인쇄」를 고르게 한다(2026-10-16) — 이미지 쪽을 누른다 */
+    await mp.waitForFunction(() => !!document.querySelector('iframe').contentWindow.document.querySelector('.sk-b.primary'), { timeout: 8000 }).catch(() => {});
+    await mp.evaluate(() => { const b = document.querySelector('iframe').contentWindow.document.querySelector('.sk-b.primary'); if (b) b.click(); });
     await mp.waitForFunction(() => !!document.querySelector('iframe').contentWindow.__blob, { timeout: 90000 })
       .catch(() => {});
     const long = await mp.evaluate(async () => {
@@ -411,6 +417,29 @@ try {
     else if (long.h > LIMIT || long.w > LIMIT) fail(`캔버스 한 변이 한도를 넘었다 — ${long.w}×${long.h}px (빈 그림이 나간다)`);
     else if (long.h < long.pageH * 0.95 && long.h < LIMIT * 0.97) fail(`긴 화면이 잘렸다 — ${long.h}px (화면 길이 ${long.pageH}px)`);
     else pass(`공유 → 가장 긴 화면도 한 장 (${long.w}×${long.h}px · 화면 길이 ${long.pageH}px · 한 변 한도 ${LIMIT}px 이내)`);
+
+    /*
+     * **인쇄** (2026-10-16 사장님 지시 — 공유 버튼을 인쇄와 연동, 출력물은 앱마다 맞게).
+     * 공유 → 「인쇄」 를 누르면 미니앱만 인쇄되고, 머리에 품목·지점이, 고르는 칸은 감춰져야 한다.
+     */
+    await mp.goto(BASE + '/install?cat=' + encodeURIComponent('세탁기·콤보'), { waitUntil: 'networkidle' });
+    await mp.waitForTimeout(1500);
+    await mp.evaluate(() => { const w = document.querySelector('iframe').contentWindow; w.__printed = 0; w.print = () => { w.__printed++; }; });
+    await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유·인쇄"]').click());
+    await mp.waitForFunction(() => [...document.querySelector('iframe').contentWindow.document.querySelectorAll('.sk-b')].some((b) => /인쇄/.test(b.textContent)), { timeout: 8000 }).catch(() => {});
+    await mp.evaluate(() => { const b = [...document.querySelector('iframe').contentWindow.document.querySelectorAll('.sk-b')].find((x) => /인쇄/.test(x.textContent)); if (b) b.click(); });
+    await mp.waitForFunction(() => document.querySelector('iframe').contentWindow.__printed > 0, { timeout: 8000 }).catch(() => {});
+    const pr = await mp.evaluate(() => {
+      const w = document.querySelector('iframe').contentWindow, d = w.document;
+      const h = d.getElementById('sk-print-head');
+      return { printed: w.__printed, ttl: h ? h.querySelector('.ttl').textContent : null, meta: h ? h.querySelector('.meta').textContent : '',
+        css: !!d.getElementById('sharekit-print-css'), kakao: !!d.querySelector('.act-btn.kakao') };
+    });
+    if (!pr.printed) fail('공유 → 인쇄를 눌러도 인쇄가 열리지 않는다');
+    else if (pr.ttl !== '세탁기·콤보') fail(`인쇄 머리 제목이 품목이 아니다 — ${pr.ttl}`);
+    else if (!/출력 \d{4}-\d\d-\d\d/.test(pr.meta)) fail(`인쇄 머리에 출력일이 없다 — ${pr.meta}`);
+    else if (pr.kakao) fail('설치환경에 카카오 공유 버튼이 남아 있다(2026-10-16 삭제 지시)');
+    else pass(`공유 → 인쇄 (머리 「${pr.ttl}」 · ${pr.meta})`);
 
     // three.js 는 3D 를 켤 때만 받는다
     const got = [];

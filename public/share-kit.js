@@ -474,6 +474,134 @@
     });
   }
 
+
+  /*
+   * ── 인쇄 (2026-10-16 사장님 지시 — *"공유버튼을 인쇄하는것과 연동해주고 출력물을
+   *    각 인터페이스에 맞게 디자인해주세요"*) ──
+   *
+   * 매장 전산 태블릿이 프린터에 물려 있어 **고객에게 종이로 건넬 수 있게** 됐다.
+   * 공유 버튼 하나가 「이미지로 공유 / 인쇄」 둘을 고르게 한다 — 버튼을 하나 더 두면
+   * 헤더가 좁은 폰에서 넘친다.
+   *
+   * 인쇄는 **화면을 사진 찍지 않고 브라우저 인쇄로 한다** — 벡터라 글자가 선명하고
+   * A4 쪽 나눔을 브라우저가 한다(시험지 출력기가 PDF 버튼 대신 인쇄를 고른 것과 같은 이유).
+   * iframe 안에서 window.print() 를 부르면 **그 미니앱만** 인쇄된다(헤더·사이드바 없이).
+   *
+   * 앱마다 다른 것은 둘뿐이다:
+   *   · 그 앱 <style> 안의 `@media print` — 무엇을 감추고 어떻게 놓을지
+   *   · `window.SK_PRINT_PREP()` — 인쇄 직전에 할 일(접힌 것 펼치기 등). 되돌릴 함수를 돌려준다
+   * 공통으로 하는 일(머리·꼬리·A4 여백·우리 UI 감추기)은 여기 한 곳이다.
+   */
+  var printStore = '';
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function nowText() {
+    var d = new Date();   /* 현지 시각 — toISOString 은 UTC 라 오전에 전날로 찍힌다 */
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate())
+      + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function injectPrintCss() {
+    if (document.getElementById('sharekit-print-css')) return;
+    var st = document.createElement('style');
+    st.id = 'sharekit-print-css';
+    st.textContent = [
+      '#sk-print-head,#sk-print-foot{display:none}',
+      '@page{size:A4;margin:11mm 10mm 12mm}',
+      '@media print{',
+      '  html,body{background:#fff!important}',
+      '  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}',
+      '  #sk-share,.sk-dim,.sk-toast,.toast,.sk-noprint,body>footer{display:none!important}',
+      '  #sk-print-head,#sk-print-foot{display:block!important}',
+      '  #sk-print-head{margin:0 0 12px;font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;color:#111827}',
+      '  #sk-print-head .bar{display:flex;justify-content:space-between;align-items:center;',
+      '    border-bottom:2.5px solid #1428A0;padding:0 0 6px;font-size:10.5px;color:#4B5563}',
+      '  #sk-print-head .brand{font-weight:800;color:#1428A0;letter-spacing:.01em;font-size:11px}',
+      '  #sk-print-head .ttl{font-size:21px;font-weight:800;margin:10px 0 2px;color:#0B1220;letter-spacing:-.01em}',
+      '  #sk-print-head .sub{font-size:11.5px;color:#4B5563}',
+      '  #sk-print-foot{margin-top:14px;padding-top:7px;border-top:1px solid #D1D5DB;',
+      '    font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;font-size:9.5px;line-height:1.55;color:#6B7280;',
+      '    break-inside:avoid}',
+      '  #sk-print-foot b{color:#374151}',
+      '  img,table,tr,figure,.sk-keep{break-inside:avoid}',
+      '  h1,h2,h3,.sk-h{break-after:avoid}',
+      '}',
+    ].join('\n');
+    (document.head || document.documentElement).appendChild(st);
+  }
+  function setText(el, sel, v) { var x = el.querySelector(sel); if (x) x.textContent = v || ''; }
+  function printScreen(o) {
+    o = o || {};
+    injectPrintCss();
+    var head = document.getElementById('sk-print-head');
+    if (!head) {
+      head = document.createElement('div');
+      head.id = 'sk-print-head';
+      head.innerHTML = '<div class="bar"><span class="brand">SAMSUNG 세일즈 코파일럿</span><span class="meta"></span></div>'
+        + '<div class="ttl"></div><div class="sub"></div>';
+      document.body.insertBefore(head, document.body.firstChild);
+    }
+    var foot = document.getElementById('sk-print-foot');
+    if (!foot) {
+      foot = document.createElement('div');
+      foot.id = 'sk-print-foot';
+      document.body.appendChild(foot);
+    }
+    /* 앱 이름은 build 의 app(「세일즈 코파일럿 · 」 접두는 머리 띠에 이미 있다) → 없으면 문서 제목 */
+    var app = String(o.app || document.title || '').replace(/^세일즈 코파일럿\s*·\s*/, '').replace(/\s*—\s*세일즈 코파일럿$/, '');
+    var title = o.title || app;
+    setText(head, '.meta', '출력 ' + nowText() + (printStore ? ' · ' + printStore : ''));
+    setText(head, '.ttl', title);
+    setText(head, '.sub', title === app ? (o.subtitle || '') : app + (o.subtitle ? ' · ' + o.subtitle : ''));
+    foot.innerHTML = '';
+    /* 앱이 출처 상자를 본문에 이미 인쇄하면 printNote:'' 로 꼬리에서 뺀다(같은 말을 두 번 적지 않는다) */
+    var note = o.printNote != null ? o.printNote : o.note;
+    if (note) { var n = document.createElement('div'); n.textContent = note; foot.appendChild(n); }
+    var d = document.createElement('div');
+    d.innerHTML = '<b>상담 참고용 출력물입니다.</b> 가격·혜택·설치 조건은 바뀔 수 있으니 확정 전 삼성닷컴·고객센터(1588-3366)로 확인하세요.';
+    foot.appendChild(d);
+
+    /* 앱별 준비(접힌 것 펼치기 등) — 실패해도 인쇄는 한다 */
+    var undo = null;
+    try { if (typeof global.SK_PRINT_PREP === 'function') undo = global.SK_PRINT_PREP(o); } catch (e) {}
+    /* PDF 로 저장할 때 파일 이름이 문서 제목에서 온다 */
+    var oldTitle = document.title;
+    if (o.filename) document.title = o.filename;
+    var done = false;
+    var restore = function () {
+      if (done) return; done = true;
+      document.title = oldTitle;
+      try { if (typeof undo === 'function') undo(); } catch (e) {}
+      global.removeEventListener('afterprint', restore);
+    };
+    global.addEventListener('afterprint', restore);
+    /*
+     * **늦게 받는 그림(loading=lazy)은 인쇄에서 빈칸이 된다** — 화면 밖 그림은 아직 안 받았다.
+     * 전부 받게 하고 다 올 때까지(최대 3초) 기다렸다 인쇄한다. 설치환경 규격도가 그렇다.
+     */
+    var imgs = Array.prototype.slice.call(document.images);
+    imgs.forEach(function (im) { if (im.loading === 'lazy') im.loading = 'eager'; });
+    var waits = imgs.filter(function (im) { return !im.complete; }).map(function (im) {
+      return new Promise(function (r) { im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true }); });
+    });
+    if (waits.length) toast('인쇄 준비 중입니다…');
+    Promise.race([Promise.all(waits), new Promise(function (r) { setTimeout(r, 3000); })]).then(function () {
+     setTimeout(function () {
+      try { global.print(); } catch (e) { toast('인쇄를 열지 못했습니다'); }
+      /* afterprint 를 안 주는 브라우저가 있다 — print() 가 막는 동안 기다렸다 되돌린다 */
+      setTimeout(restore, 1500);
+     }, 120);
+    });
+  }
+
+  /** 공유 버튼을 누르면 고른다 — 이미지로 공유 / 인쇄 */
+  function chooseAction(build) {
+    var o = null;
+    try { o = build && build(); } catch (e) {}
+    sheet('이 화면을', '공유하거나 인쇄합니다', [
+      { label: '이미지로 공유', primary: true, onClick: function () { captureScreen(o && o.filename); } },
+      { label: '인쇄 · PDF 저장 (A4)', onClick: function () { printScreen(o || {}); } },
+    ]);
+  }
+
   /**
    * build() 는 **저장 이름**을 짓는 데만 쓴다(무엇을 보고 있었는지 파일명에 남기려고).
    * 그림 자체는 언제나 화면 그대로다.
@@ -495,11 +623,7 @@
     b.id = 'sk-share'; b.type = 'button';
     b.textContent = label || '공유';
     b.style.top = (stickyBottom() + 8) + 'px';
-    b.addEventListener('click', function () {
-      var o = null;
-      try { o = build && build(); } catch (e) {}
-      captureScreen(o && o.filename);
-    });
+    b.addEventListener('click', function () { chooseAction(build); });
     document.body.appendChild(b);
     /* 화면을 돌리면 바 높이가 달라진다 */
     window.addEventListener('resize', function () { b.style.top = (stickyBottom() + 8) + 'px'; });
@@ -542,6 +666,7 @@
       if (e.data.sk === 'share-ping') { tell(); return; }
       /* 바깥 버튼을 누르면 이 안에서 찍는다 — 찍을 화면이 여기 있다 */
       if (e.data.sk !== 'share-click') return;
+      if (typeof e.data.store === 'string') printStore = e.data.store;
       b.click();
     });
     /* 헤더가 맡으므로 안쪽 버튼은 감춘다 — 같은 일을 하는 버튼이 둘 보이면 헷갈린다 */
@@ -576,8 +701,9 @@
     sheet: sheet, closeSheet: closeSheet, toast: toast, copyText: copyText,
     contactSheet: contactSheet, wireContacts: wireContacts,
     buildCard: buildCard, shareCard: shareCard, mountShareButton: mountShareButton,
-    captureScreen: captureScreen,
+    captureScreen: captureScreen, printScreen: printScreen,
   };
+  global.printScreen = printScreen;
   global.captureScreen = captureScreen;
   global.contactSheet = contactSheet;
   global.wireContacts = wireContacts;

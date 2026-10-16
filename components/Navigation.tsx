@@ -191,7 +191,8 @@ export default function Navigation() {
   function share() {
     // 카드를 그리는 데 필요한 DOM 이 미니앱 안에 있으므로, 만들기는 그쪽에 맡긴다
     const f = document.querySelector('iframe')
-    f?.contentWindow?.postMessage({ sk: 'share-click' }, window.location.origin)
+    // 인쇄물 머리에 지점명을 적는다 — 미니앱은 매장 목록을 모르므로 이름을 함께 넘긴다
+    f?.contentWindow?.postMessage({ sk: 'share-click', store: store ? storeName(store) || store : '' }, window.location.origin)
   }
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
@@ -299,8 +300,8 @@ export default function Navigation() {
             <button
               type="button"
               onClick={share}
-              aria-label="이 화면 공유하기"
-              title="이 화면 공유하기"
+              aria-label="이 화면 공유·인쇄"
+              title="이 화면 공유·인쇄"
               className="flex items-center justify-center rounded-full text-white"
               style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.18)' }}
             >

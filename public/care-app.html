@@ -369,6 +369,52 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 
   /* PC 대응 — 넓은 화면에서 본문이 폰 폭 그대로라 화면 한가운데 좁은 기둥으로 보였다
      (2026-08-11 사용자 지적). 좁은 화면 값은 그대로 두고 넓은 화면에서만 늘린다. */
+
+/* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
+   접힌 섹션은 **전부 펼쳐** 인쇄한다(종이는 펼 수가 없다). 회차는 고른 한 회차가 아니라
+   **그 플랜의 전 회차**를 나란히 싣는다(SK_PRINT_PREP 가 만든다). 고르는 손잡이는 뺀다. */
+.pr-only{display:none}
+@media print{
+  body{background:#fff!important}
+  .wrap{max-width:none!important;padding:0!important}
+  .hd,.mode-tabs,.cat-wrap>.cat-btn,.drop,.btm,.fold-bar,.fold-c,.cyc,.round-pills,.vtabs,.plan-tab:not(.blue):not(.teal),#tlGo{display:none!important}
+  .fold{box-shadow:none;border:1px solid #D1D5DB;border-radius:8px;margin-top:8px;break-inside:auto}
+  .fold-h{padding:7px 10px;break-after:avoid}
+  .fold-t{font-size:12.5px}
+  .fold-s{font-size:10px}
+  .fold>.fold-b{display:block!important}
+  .fold-pad{padding:2px 9px 9px}
+  .card,.bnf,.sp,.ox,.pitch{break-inside:avoid}
+  .fold[data-fold=rounds] .fold-pad>.card:not(.pr-round){display:none}
+  .pr-only{display:block}
+  .pr-rounds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .pr-round{margin-top:0!important;break-inside:avoid;border:1px solid #D1D5DB!important;border-radius:8px}
+  .pr-round .card-hd{padding:6px 9px}
+  .pr-round .chd-t{font-size:11.5px}
+  .pr-round .items{font-size:10.5px;padding:2px 9px 6px}
+  .pr-round .item{padding:4px 0;gap:6px}
+  .pr-round .inm{font-size:11px}
+  .pr-round .idet{font-size:9.5px}
+  .pr-round .itag{display:none}
+  .cimg-wrap img{max-height:60mm;object-fit:contain}
+  .sell-body{display:block!important}
+  #catDrop{display:none!important}
+  /* 블루패스 — 화면은 남색 바탕이지만 종이에는 잉크가 너무 든다. 흰 바탕 + 남색 테두리로,
+     사진은 띠처럼 얇게(3:1) 줄여 혜택 글이 주인공이 되게 한다 */
+  .bp-wrap{background:#fff!important;color:#111827!important;border:1.5px solid #1428A0;padding:10px 12px!important;margin:8px 0!important;break-inside:auto}
+  .bp-hh,.bp-t,.bp-sub b{color:#0B1220!important}
+  .bp-sub,.bp-s,.bp-gd{color:#4B5563!important}
+  .bp-d,.bp-cv{color:#1F2937!important}
+  .bp-eh{color:#B45309!important}
+  .bp-src{color:#6B7280!important}
+  .bp-badge,.bp-gk{background:#1428A0!important;color:#fff!important}
+  .bp-i{background:#F8FAFC!important;border:1px solid #D1D5DB!important;break-inside:avoid}
+  .bp-cond{border-top-color:#E5E7EB!important}
+  .bp-gate{background:#F1F5F9!important;color:#1F2937!important}
+  .bp-i.haspic .bp-img{aspect-ratio:3/1!important}
+  .fold.dk{background:#fff!important;border:1px solid #D1D5DB!important}
+  .fold.dk>.fold-h .fold-t{color:#0D1B7A!important}.fold.dk>.fold-h .fold-s{color:#4B5563!important}
+}
   @media(min-width:1024px){ .wrap,.btm { max-width:960px } }
   @media(min-width:1440px){ .wrap,.btm { max-width:1140px } }
 </style>
@@ -2777,6 +2823,7 @@ function careShareBuild(){
   return {
     app: '세일즈 코파일럿 · AI구독 케어 안내',
     title: d.name,
+    subtitle: (d.plans ? planName(d, pl) : '') + (d.contract ? ' · 계약 ' + d.contract : ''),
     sections: sections,
     note: (d.src ? d.src.replace(/^✅\s*/, '출처 — ') + ' · ' : '')
       + '실제 제공 항목은 제품·계약 조건에 따라 달라질 수 있습니다.',
@@ -2837,6 +2884,26 @@ function syncCareShareBtn(){
   b.style.display = ok ? '' : 'none';
 }
 
+
+/* 인쇄 직전 — 회차표에 **전 회차**를 싣는다(화면은 고른 한 회차만 보인다). 되돌릴 함수를 돌려준다 */
+window.SK_PRINT_PREP = function(){
+  const added = [];
+  try {
+    if (curMode === 'care') {
+      const d = DATA[curCat], cur = d && d.plans && d.plans[curPlan];
+      const pad = document.querySelector('.fold[data-fold="rounds"] .fold-pad');
+      if (cur && pad) {
+        const box = document.createElement('div');
+        box.className = 'pr-only pr-rounds';
+        box.innerHTML = cur.rounds.map(r => `<div class="card pr-round">
+          <div class="card-hd" style="${gradStyle(r.grad)}"><span class="chd-t">${cur.type==='self'?'📦':'🔧'} ${r.label} — ${r.month}</span><span class="chip">${r.badge}</span></div>
+          <div class="items">${itemsHtml(r.items)}</div></div>`).join('');
+        pad.appendChild(box); added.push(box);
+      }
+    }
+  } catch (e) {}
+  return function(){ added.forEach(el => el.remove()); };
+};
 if (typeof mountShareButton === 'function') { mountShareButton(careShareBuild); syncCareShareBtn(); }
 </script>
 </body>

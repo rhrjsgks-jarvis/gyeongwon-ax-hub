@@ -286,6 +286,19 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
   /* PC 대응 — 넓은 화면에서 본문이 폰 폭 그대로라 화면 한가운데 좁은 기둥으로 보였다
      (2026-08-11 사용자 지적). 좁은 화면 값은 그대로 두고 넓은 화면에서만 늘린다. */
+  /* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
+     고르는 단계(①②)와 버튼은 빼고 **비교 결과만** 싣는다. 비교표·기능표는 칸이 잘리지 않게 끊는다. */
+  @media print{
+    body{background:#fff!important}
+    header,.tab-bar,#tab-db main>.card:first-child,#model-section,.action-row,#tab-url .card:first-child{display:none!important}
+    main{max-width:none!important;padding:0!important;margin:0!important}
+    .card{border:1px solid #D1D5DB!important;box-shadow:none!important;break-inside:auto;margin-bottom:8px}
+    .card-title{break-after:avoid}
+    tr,.feat-row,.sp-item,.script-item{break-inside:avoid}
+    /* 응대 스크립트·열위 대응전략은 **상담사용**이다 — 고객 손에 들어갈 수 있는 종이에는 싣지 않는다 */
+    #counter-wrap,.card:has(#scripts){display:none!important}
+    #res-title,#res-subtitle{display:none!important}
+  }
   @media(min-width:1024px){ main { max-width:960px } }
   @media(min-width:1440px){ main { max-width:1140px } }
 </style>
@@ -2679,7 +2692,12 @@ function backDone(){ if (window.Back) Back.done(); }
  * 배율·캔버스 한도·navigator.share 폴백도 그쪽에 이미 들어 있다. */
 function shareFilename(){ return `타사비교_${currentCat||'결과'}`; }
 /** share-kit 의 mountShareButton 은 `{filename}` 을 돌려받는다 — 문자열을 넘기면 이름이 빈다 */
-function compareShareBuild(){ return { filename: shareFilename() }; }
+function compareShareBuild(){
+  /* 인쇄 머리에 비교 제목을 그대로 쓴다 — 화면 결과 머리와 같은 말이어야 한다 */
+  const t = (document.getElementById('res-title') || {}).textContent || '';
+  const st = (document.getElementById('res-subtitle') || {}).textContent || '';
+  return { filename: shareFilename(), title: t.trim() || '타사비교', subtitle: st.trim() };
+}
 function savePng() {
   const el = document.getElementById('result-db');
   if(!el || !el.classList.contains('visible')){ toast('먼저 비교를 실행하세요.'); return; }
