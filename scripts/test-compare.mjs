@@ -1251,6 +1251,24 @@ function resetUrlTabInputs() {
       /* ⑥ 자료를 실제로 그리는가 — 파일만 있고 화면이 안 읽으면 아무 일도 안 난다 */
       if (!rawHtml.includes('renderOfficialUsp')) bad.push('화면이 공식 셀링포인트를 그리지 않는다');
       if (!rawHtml.includes('compare-usp.json')) bad.push('화면이 자료를 받지 않는다');
+
+      /* ⑦ **반박된 주장은 공식 문구여도 안 싣는다** (2026-10-16). 콤보 공식 USP 의
+            「세탁 25kg, 건조 20kg 국내 최대 용량」은 LG 워시콤보 FC2521*X6C(세탁 25 / 건조 21kg)가
+            반박한다 — [10-c] 가 `on` 에서 지운 그 주장이다. build-usp.mjs 의 REFUTED 가 빼며,
+            두 출력(타사비교 · 제품 상세검색) 모두에 남았으면 실패다. 좁게 본다 — 두 조건이 함께일 때만. */
+      const refutedLine = (l) => /국내\s*최대/.test(l) && /건조\s*20\s*kg/i.test(l);
+      const leakCmp = Object.entries(models).filter(([, r]) => (r.usp || []).some(refutedLine)).map(([n]) => n);
+      if (leakCmp.length) bad.push('반박된 「건조 20kg 국내 최대」 문구가 타사비교에 남았다: ' + leakCmp[0]);
+      const litePath = new URL('../public/sec-usp.json', import.meta.url);
+      if (fs.existsSync(litePath)) {
+        const lite = JSON.parse(fs.readFileSync(litePath, 'utf8')).m || {};
+        const leakLite = Object.keys(lite).filter((k) => (lite[k].u || []).some(refutedLine));
+        if (leakLite.length) bad.push('반박된 「건조 20kg 국내 최대」 문구가 sec-usp.json 에 남았다: ' + leakLite[0]);
+      }
+      /* 그 가드가 콤보의 **다른** 공식 문구까지 지우지 않았는가 — 넓게 지우면 절이 통째로 빈다 */
+      const combo = Object.entries(models).find(([n]) => /WD90H25AHS/.test(n));
+      if (combo && !(combo[1].usp || []).some((l) => /ONE 솔루션/.test(l)))
+        bad.push('콤보 공식 문구가 통째로 지워졌다 — REFUTED 가 너무 넓다');
     }
     if (bad.length) fail('[20] 공식 셀링포인트: ' + bad.join(' / '));
     else console.log('[20] 공식 셀링포인트 — `on` 에 안 섞임 · 출처 밝힘 · 평점은 참고임을 적음 OK');

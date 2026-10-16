@@ -43,7 +43,12 @@ const OUT = path.join(ROOT, 'scripts', 'fixtures', 'sec-usp.json');
 
 const only = process.argv[2] || '';
 const cat = JSON.parse(fs.readFileSync(CAT_FILE, 'utf8'));
-const cats = (cat.categories || []).filter((c) => !only || c.cat === only);
+/* sec-catalog(2026-08-17)에 없던 칸 — 조리기기(오븐·전자레인지·후드)는 그 뒤에 생긴 카테고리라
+   목록 fixture 를 건드리지 않고 여기서만 더한다. 제품 상세검색이 2026-10-16 부터 이 칸을 싣는다. */
+const EXTRA_CATS = [{ cat: 'cooking', dispClsfNo: '36030000' }];
+const cats = [...(cat.categories || []),
+  ...EXTRA_CATS.filter((e) => !(cat.categories || []).some((c) => c.cat === e.cat))]
+  .filter((c) => !only || c.cat === only);
 if (!cats.length) {
   console.error('카테고리를 못 찾았습니다:', only || '(전체)');
   process.exit(1);

@@ -240,6 +240,22 @@ const box = (bx, by, w, d, a = 0) => ({ bx, by, w, d, a });
     fail('구형 14mm 근거가 설치환경 가이드에 없음');
   } else pass('에어드레서 모델 세대별 좌우 이격 (현행 2.5mm / 구형 Bespoke 14mm)');
 
+  /* 2026-10-16 규격도 개정 — 비Bespoke 에어드레서(popguide3/4 v3) 좌우 5mm,
+     Bespoke AI 콤보(aicombo_guide_pc v6) 후면 25mm, Infinite AI 콤보 후면 50mm·도어 오픈 1,460mm. */
+  {
+    const nb = P.clearFor('에어드레서', '본체', 'DF10T9700BG');
+    const nb2 = P.clearFor('에어드레서', '본체', 'DF60T8700BG');
+    const combo = P.clearFor('세탁기·콤보', '본체', 'WD90H25AHS');
+    const inf = P.clearFor('세탁기·콤보', '본체', 'WD99F25AHR');
+    if (nb.side !== 5 || nb2.side !== 5) fail(`비Bespoke 에어드레서 좌우 이격이 ${nb.side}/${nb2.side} (기대 5 — popguide3/4 v3)`);
+    else if (!install.includes('(DF10T9700BG·DF60T8700BG)은 5mm')) fail('비Bespoke 5mm 근거가 설치환경 가이드에 없다');
+    else if (combo.back !== 25) fail(`Bespoke AI 콤보 후면 이격이 ${combo.back} (기대 25 — aicombo_guide_pc v6)`);
+    else if (!install.includes('후면 이격 25mm · 설치 최소 거리 795mm')) fail('콤보 후면 25mm 근거가 설치환경 가이드에 없다');
+    else if (inf.back !== 50 || inf.front !== 1460 - 865) fail(`Infinite AI 콤보 이격이 후면 ${inf.back}·전면 ${inf.front} (기대 50/595)`);
+    else if (!install.includes('깊이 865mm(도어 오픈 시 1,460mm)')) fail('Infinite AI 콤보 근거가 설치환경 가이드에 없다');
+    else pass('2026-10-16 개정 — 비Bespoke 에어드레서 5mm · Bespoke AI 콤보 후면 25mm · Infinite AI 콤보 후면 50mm');
+  }
+
   /*
    * 세탁기 — **라인업마다 이격이 다르다**(2026-08-30 전수 조사에서 잡혔다).
    * 기본값(좌우 20 · 후면 50)이 맞는 것은 드럼(WF·WW)과 콤보(WD)뿐이고,

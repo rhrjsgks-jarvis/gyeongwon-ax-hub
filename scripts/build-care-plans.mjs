@@ -151,6 +151,7 @@ function buildProduct(key, P) {
     imgs, hiddenImgs: hidden, heads,
     notes: P.notes.filter(n => !/^\* 가입하신 요금제의 유형/.test(n)),
     url: P.url,
+    at: P.at || SRC._collectedAt,
   };
 }
 

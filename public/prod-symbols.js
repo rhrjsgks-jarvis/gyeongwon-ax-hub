@@ -208,6 +208,8 @@
     airpur_reusable: 'airpur', airpur_s: 'airpur',
     purifier_under: 'purifier', purifier_counter: 'purifier_top', purifier_ice: 'purifier_top',
     induction: 'induction', microwave: 'microwave', soundbar: 'soundbar',
+    /* AI구독 케어 2026-10-16 추가 품목 — 시스템에어컨 전용 심벌이 없어 에어컨 그림을 쓴다 */
+    sac: 'aircon', dehum: 'dehumid', tv: 'tv', monitor: 'monitor',
     /*
      * **AI구독 케어의 모바일·PC·태블릿**(2026-08-14 추가). `prodIcon(p.key, p.icon)` 이
      * **키**를 넘기는데 아래 RULES 는 한글 이름(`태블릿`·`노트북`)을 보므로
@@ -215,7 +217,7 @@
      * 심벌 자체는 이미 있었다 — 매핑만 빠져 있었다.
      * 새 제품 키를 추가하면 여기도 함께 넣을 것(`test-care` 가 검사한다).
      */
-    mx_fold8u: 'phone', mx_fold8: 'phone', mx_flip8: 'phone',
+    mx_fold8u: 'phone', mx_fold8: 'phone', mx_flip8: 'phone', mx_s26fe: 'phone',
     /* AS 앱의 하만 품목 — 브랜드 이름이라 아래 RULES 어디에도 안 걸린다.
        스피커·사운드바·이어폰·헤드폰을 아우르므로 오디오를 뜻하는 soundbar 를 쓴다. */
     'JBL·하만카돈·AKG': 'soundbar',

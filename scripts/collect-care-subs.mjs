@@ -32,7 +32,13 @@ const T = {
   airpur_s:'ai-subs-living/AP90H10163UDD-subscribe2-d2c/AP90H10163UDD/',
   vacuum:'ai-subs-living/VR90F01SAG98CS-subscribe2-d2c/VR90F01SAG98CS/',
   purifier_under:'ai-subs-kitchen/RWP54421BF6M-subscribe2-d2c/RWP54421BF6M/',
+  /* 2026-10-16 추가 — 가이드 「품목별 맞춤 케어」 표에 방문케어 프리미엄이 있는 품목 */
+  sac:'ai-subs-living/AJ30CSS4P36SSY-subscribe2-d2c/AJ30CSS4P36SSY/',
+  dehum:'ai-subs-living/AY70H23100GVD-subscribe2-d2c/AY70H23100GVD/',
 };
+/* 사진 탭이 원래 없는 지면 — 제습기는 표·정의만 있고 유형 탭(사진)이 없다(2026-10-16 확인).
+   여기 없는 품목은 탭이 비면 지면 구조가 바뀐 것으로 보고 쓰지 않는다. */
+const NO_TABS = new Set(['dehum']);
 const only = process.argv[2] ? process.argv[2].split(',') : Object.keys(T);
 const b = await chromium.launch();
 const FIX = 'scripts/fixtures/care-subs.json';
@@ -74,8 +80,8 @@ const fx = fs.existsSync(FIX) ? JSON.parse(fs.readFileSync(FIX,'utf8')) : { prod
 let n = 0;
 for (const [k, v] of Object.entries(out)) {
   /* 반쪽은 쓰지 않는다 — 표나 탭이 비면 지면 구조가 바뀐 것이다 */
-  if (!v.tabs.length || !v.tables.length || !v.block) { console.log('✗', k, '— 표/탭/정의가 비어 옛 값을 둔다'); continue; }
-  fx.products[k] = { url:'https://www.samsung.com/sec/'+v.url, block:v.block.trim(), tabs:v.tabs, tables:v.tables.map(t=>({h:t.h,rows:t.rows})), notes:v.notes.map(x=>x.replace(/\s*\n\s*/g,' ')) };
+  if ((!v.tabs.length && !NO_TABS.has(k)) || !v.tables.length || !v.block) { console.log('✗', k, '— 표/탭/정의가 비어 옛 값을 둔다'); continue; }
+  fx.products[k] = { url:'https://www.samsung.com/sec/'+v.url, at:new Date().toLocaleDateString('sv-SE'), block:v.block.trim(), tabs:v.tabs, tables:v.tables.map(t=>({h:t.h,rows:t.rows})), notes:v.notes.map(x=>x.replace(/\s*\n\s*/g,' ')) };
   n++;
 }
 fx._collectedAt = new Date().toLocaleDateString('sv-SE');

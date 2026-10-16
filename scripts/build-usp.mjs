@@ -27,6 +27,32 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const usp = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/fixtures/sec-usp.json'), 'utf8'));
 const items = usp.items || [];
+
+/* 묶음 판정은 finder-merge.js 한 곳에 있다(제품 상세검색·당사제품 비교와 같은 규칙).
+   묶음 SKU 의 USP 둘째·셋째 줄은 **구성품 문구**라(「스팀용 청정스테이션 먼지봉투」 ·
+   「스팀용 다회용포」) 단품 모델에 붙이면 셀링포인트가 아닌 말이 화면에 뜬다(2026-10-16
+   VR70F00SGG 가 접두 일치로 VR70F00SGG98C 묶음을 물었다). */
+const mergeSrc = fs.readFileSync(path.join(ROOT, 'public/finder-merge.js'), 'utf8');
+const AX = new Function('window', mergeSrc + '; return window.AX_FILL;')({});
+const isPkg = (x) => !!(AX && AX.isPackage && AX.isPackage({ group: x.name }));
+
+/*
+ * ── 반박된 주장 — 공식 문구여도 싣지 않는다 ────────────────────────────────
+ * 삼성닷컴 공식 USP 라도 **경쟁사 실물이 반박하는 문장**은 상담사가 그대로 읽으면
+ * 현장에서 뒤집힌다. 타사비교 `on` 에서 같은 주장을 이미 지웠다(test-compare [10-c]).
+ * **좁게 잡는다** — 조건이 모두 맞는 줄만 뺀다. 다른 공식 문구는 건드리지 않는다.
+ * 검사(test-compare [20])가 두 출력 파일에 그 문장이 남았는지 본다.
+ */
+const REFUTED = [
+  {
+    /* 「세탁 25kg, 건조 20kg 국내 최대 용량」 — LG 워시콤보 FC2521*X6C 가 세탁 25 / 건조 21kg 이다 */
+    all: [/국내\s*최대/, /건조\s*20\s*kg/i],
+    why: 'LG 워시콤보 FC2521*X6C 세탁 25 / 건조 21kg (LG 베스트샵 카탈로그 2026-07)',
+  },
+];
+const refuted = (line) => REFUTED.some((r) => r.all.every((re) => re.test(String(line))));
+const cleanUsp = (arr) => (arr || []).filter((l) => !refuted(l));
+let refutedDropped = 0;
 const html = fs.readFileSync(path.join(ROOT, 'public/compare-app.html'), 'utf8');
 
 /* ── 타사비교 DB 를 꺼낸다 ────────────────────────────────────────────────
@@ -46,8 +72,15 @@ function readDB() {
 }
 const DB = readDB();
 
+/* 같은 코드가 목록에 두 번 실리기도 한다(WD90H25AHS — 첫 줄은 USP 가 비었다).
+   **USP 가 있는 쪽을 남긴다** — 나중 것이 무조건 이기면 빈 줄이 덮을 수 있다. */
 const byCode = new Map();
-items.forEach((x) => { if (x.code) byCode.set(String(x.code).toUpperCase(), x); });
+items.forEach((x) => {
+  if (!x.code) return;
+  const k = String(x.code).toUpperCase();
+  const prev = byCode.get(k);
+  if (!prev || (!(prev.usp || []).length && (x.usp || []).length)) byCode.set(k, x);
+});
 
 /* 이름에서 모델코드를 뽑는다 — 대문자 두 자로 시작하는 가장 긴 덩어리 */
 function codeOf(name) {
@@ -64,24 +97,30 @@ function match(name, cat) {
   if (code) {
     if (byCode.has(code)) return { hit: byCode.get(code), how: 'exact' };
     const c = code.replace(/[*]/g, '');
-    const p = items.find((x) => {
+    /* 접두 후보 중 **묶음이 아닌 것만**, 그중 코드가 가장 짧은(=본체에 가까운) 것.
+       단품이 없고 묶음뿐이면 담지 않는다 — 구성품 문구를 셀링포인트로 내밀 수는 없다. */
+    const ps = items.filter((x) => {
       const xc = String(x.code || '').toUpperCase();
-      return xc && (xc.startsWith(c) || c.startsWith(xc));
-    });
-    if (p) return { hit: p, how: 'prefix' };
+      return xc && (xc.startsWith(c) || c.startsWith(xc)) && !isPkg(x) && (x.usp || []).length;
+    }).sort((a, b) => String(a.code).length - String(b.code).length);
+    if (ps.length) return { hit: ps[0], how: 'prefix' };
     return null;
   }
   /* 코드가 없는 것(스마트폰)은 이름으로 — **모델명이 통째로 들어 있을 때만** 인정한다.
      부분일치로 느슨하게 보면 `S26` 이 `S26 Ultra` 를 물어 다른 제품 문구가 붙는다. */
-  const n = norm(name).replace(/\d+gb/g, '').trim();
-  const key = n.split(' ').filter((w) => w && w !== 'galaxy').join(' ');
+  /* 판매 채널(자급제·통신사폰·사업자향)·괄호 설명·용량을 떼고 **모델명이 통째로 같을 때만** 인정한다
+     (`S26` ↔ `갤럭시 S26 자급제 (삼성닷컴/…)`). 부분일치로 보면 `S26` 이 `S26 울트라` 를 문다. */
+  const bare = (s) => norm(String(s).replace(/\([^)]*\)/g, ' ')).replace(/\d+gb/g, ' ')
+    .replace(/울트라/g, 'ultra').split(' ')
+    .filter((w) => w && !/^(galaxy|갤럭시|자급제|통신사폰|사업자향)$/.test(w)).join(' ');
+  const key = bare(name);
   if (!key) return null;
-  const cands = items.filter((x) => {
-    const xn = norm(x.name).replace(/\d+gb/g, '');
-    return xn.includes(key);
-  });
-  /* 후보가 여럿이면 담지 않는다 — 어느 것인지 확정할 수 없다 */
-  if (cands.length !== 1) return null;
+  const cands = items.filter((x) => x.cat === 'smartphones' && !isPkg(x) && bare(x.name) === key);
+  if (!cands.length) return null;
+  /* 같은 모델의 채널 SKU(자급제·전용컬러·통신사폰)가 여럿이면 **문구가 모두 같을 때만**
+     인정한다 — 다르면 어느 것을 실을지 확정할 수 없다 */
+  const sig = (x) => JSON.stringify(x.usp || []);
+  if (!cands.every((x) => sig(x) === sig(cands[0]))) return null;
   return { hit: cands[0], how: 'name' };
 }
 
@@ -90,9 +129,11 @@ const report = { exact: 0, prefix: 0, name: 0, miss: [] };
 for (const [cat, v] of Object.entries(DB)) {
   for (const m of (v.samsung || [])) {
     const r = match(m.name, cat);
-    if (!r || !(r.hit.usp || []).length) { report.miss.push(cat + ' · ' + m.name); continue; }
+    const u = r ? cleanUsp(r.hit.usp) : [];
+    if (r) refutedDropped += (r.hit.usp || []).length - u.length;
+    if (!r || !u.length) { report.miss.push(cat + ' · ' + m.name); continue; }
     report[r.how]++;
-    const row = { usp: r.hit.usp, src: r.hit.code };
+    const row = { usp: u, src: r.hit.code };
     if (r.hit.grade) { row.grade = r.hit.grade; row.reviews = r.hit.reviews; }
     if (r.how !== 'exact') row.how = r.how;
     out[m.name] = row;
@@ -121,7 +162,8 @@ const lite = {};
 for (const x of items) {
   if (!x.code) continue;
   const row = {};
-  if ((x.usp || []).length) row.u = x.usp;
+  const u = cleanUsp(x.usp);
+  if (u.length) row.u = u;
   if (x.grade) { row.g = x.grade; row.r = x.reviews; }
   if (Object.keys(row).length) lite[String(x.code).toUpperCase()] = row;
 }
@@ -141,6 +183,7 @@ console.log('② 제품 상세검색 — ' + Object.keys(lite).length + '종 · 
 console.log();
 console.log('① 타사비교 삼성 ' + total + '종 중 ' + n + '종에 공식 셀링포인트를 담았습니다');
 console.log('  정확 일치 ' + report.exact + ' · 접두 ' + report.prefix + ' · 이름 ' + report.name);
+console.log('  반박된 주장으로 뺀 줄 (타사비교) ' + refutedDropped + '개 — REFUTED');
 console.log('  평점 있음 ' + Object.values(out).filter((x) => x.grade).length + '종');
 console.log('  → public/compare-usp.json ' + Math.round(fs.statSync(OUT).size / 1024) + 'KB');
 if (report.miss.length) {

@@ -13,7 +13,7 @@ description: 삼성닷컴 AI 구독 「구독케어」(방문케어 프리미엄
 
 ## 1. 품목별 구독케어 수집
 ```
-npm run collect:care                      # 13개 품목 전부
+npm run collect:care                      # 15개 품목 전부 (2026-10-16 시스템에어컨·제습기 추가)
 npm run collect:care -- fridge,kimchi     # 일부만
 ```
 - `scripts/collect-care-subs.mjs` → `scripts/fixtures/care-subs.json`(품목별 원문: 정의 문단 · 탭별 사진 · 회차표 칸 · 유의사항)

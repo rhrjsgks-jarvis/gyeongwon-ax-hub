@@ -1,7 +1,7 @@
 {
  "_note": "2026-09-01 사장님 지시로 시험지의 가전 문항을 신규 44개 모델로 갈았다. 네 갈래(모델 사양·설치환경·설치 비용·셀링포인트) 모두 커밋된 원문에서만 값을 가져오며 지어낸 수치가 없다. npm run build:nmq 로 다시 만든다. 레벨업 챌린지 앱(QB)은 건드리지 않는다 — 시험 도구만 이 파일을 읽는다.",
  "_source": "scripts/fixtures/usp-models.json · public/finder-app.html(PRODUCTS) · public/finder-extra.json · public/install-app.html(INSTALL_DB) · public/install-cost.json",
- "count": 592,
+ "count": 602,
  "items": [
   {
    "cat": "TV",
@@ -35,6 +35,21 @@
   },
   {
    "cat": "TV",
+   "q": "삼성 Crystal UHD UH9000(KU98UH9000FXKR)의 주사율로 올바른 것은?",
+   "opts": [
+    "165Hz",
+    "144 Hz (VRR Support)",
+    "120Hz",
+    "60Hz"
+   ],
+   "ans": 1,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "Crystal UHD UH9000(KU98UH9000FXKR)의 주사율은 144 Hz (VRR Support)이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
    "q": "삼성 2026 Mini LED MH80 (214cm)(KU85MH80AFXKR)의 주사율로 올바른 것은?",
    "opts": [
     "165Hz",
@@ -62,21 +77,6 @@
    "nm": 1,
    "fam": "spec",
    "exp": "OLED SH85(KQ83SH85AEXKR)의 주사율은 120Hz이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
-  },
-  {
-   "cat": "TV",
-   "q": "삼성 Crystal UHD UH9000(KU98UH9000FXKR)의 주사율로 올바른 것은?",
-   "opts": [
-    "165Hz",
-    "144 Hz (VRR Support)",
-    "120Hz",
-    "60Hz"
-   ],
-   "ans": 1,
-   "lv": "상",
-   "nm": 1,
-   "fam": "spec",
-   "exp": "Crystal UHD UH9000(KU98UH9000FXKR)의 주사율은 144 Hz (VRR Support)이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -205,7 +205,7 @@
     "70",
     "30",
     "60",
-    "20"
+    "40 W"
    ],
    "ans": 0,
    "lv": "상",
@@ -220,7 +220,7 @@
     "70",
     "60",
     "30",
-    "20"
+    "40 W"
    ],
    "ans": 2,
    "lv": "상",
@@ -235,13 +235,28 @@
     "70",
     "30",
     "60",
-    "20"
+    "40 W"
    ],
    "ans": 2,
    "lv": "상",
    "nm": 1,
    "fam": "spec",
    "exp": "OLED SH93(KQ83SH93AEXKR)의 사운드출력(RMS)은 60이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 사운드출력(RMS)으로 올바른 것은?",
+   "opts": [
+    "70",
+    "30",
+    "40 W",
+    "60"
+   ],
+   "ans": 2,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 사운드출력(RMS)은 40 W이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -323,15 +338,60 @@
    "q": "삼성 The Frame(KQ98LSH03EFXKR)의 HDMI으로 올바른 것은?",
    "opts": [
     "4",
+    "5",
     "3",
-    "1",
-    "5"
+    "1"
    ],
    "ans": 0,
    "lv": "상",
    "nm": 1,
    "fam": "spec",
    "exp": "The Frame(KQ98LSH03EFXKR)의 HDMI는 4이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 HDMI으로 올바른 것은?",
+   "opts": [
+    "5",
+    "4",
+    "3",
+    "1"
+   ],
+   "ans": 0,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 HDMI는 5이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 Crystal UHD UH8000(KU85UH8000FXKR)의 HDMI으로 올바른 것은?",
+   "opts": [
+    "4",
+    "5",
+    "3",
+    "1"
+   ],
+   "ans": 2,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "Crystal UHD UH8000(KU85UH8000FXKR)의 HDMI는 3이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2025 The Movingstyle(KU27LSFM7AXXKR)의 HDMI으로 올바른 것은?",
+   "opts": [
+    "4",
+    "1",
+    "5",
+    "3"
+   ],
+   "ans": 1,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2025 The Movingstyle(KU27LSFM7AXXKR)의 HDMI는 1이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -392,6 +452,21 @@
    "nm": 1,
    "fam": "spec",
    "exp": "2026 OLED SH93 (195cm)(KQ77SH93AFXKR)의 정격소비전력은 660 W이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 정격소비전력으로 올바른 것은?",
+   "opts": [
+    "450 W",
+    "340 W",
+    "800 W",
+    "300 W"
+   ],
+   "ans": 3,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 정격소비전력은 300 W이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -617,6 +692,21 @@
    "nm": 1,
    "fam": "spec",
    "exp": "2026 OLED SH93 (195cm)(KQ77SH93AFXKR)의 평균소비전력은 208.3 W이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 평균소비전력으로 올바른 것은?",
+   "opts": [
+    "250.0 W",
+    "176.2 W",
+    "106.6 W",
+    "219.0 W"
+   ],
+   "ans": 0,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 평균소비전력은 250.0 W이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -857,6 +947,21 @@
    "nm": 1,
    "fam": "spec",
    "exp": "2026 OLED SH93 (195cm)(KQ77SH93AFXKR)의 스탠드 포함 (kg)은 36.6 kg이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 스탠드 포함 (kg)으로 올바른 것은?",
+   "opts": [
+    "40 kg",
+    "34.7 kg",
+    "32.2 kg",
+    "42.1 kg"
+   ],
+   "ans": 3,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 스탠드 포함 (kg)은 42.1 kg이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -1115,6 +1220,21 @@
   },
   {
    "cat": "TV",
+   "q": "삼성 2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 스탠드 제외 (kg)로 올바른 것은?",
+   "opts": [
+    "37.9 kg",
+    "34 kg",
+    "31.7 kg",
+    "41.2 kg"
+   ],
+   "ans": 3,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)의 스탠드 제외 (kg)는 41.2 kg이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
    "q": "삼성 2026 Mini LED MH80 (214cm)(KU85MH80AFXKR)의 스탠드 제외 (kg)로 올바른 것은?",
    "opts": [
     "37.9 kg",
@@ -1297,10 +1417,10 @@
    "cat": "TV",
    "q": "삼성 OLED SH85(KQ83SH85AEXKR)의 리모컨 종류로 올바른 것은?",
    "opts": [
+    "TM2661H",
     "TM2280A",
-    "TM2561E",
     "TM2660H",
-    "TM2560E"
+    "TM2561E"
    ],
    "ans": 2,
    "lv": "상",
@@ -1312,91 +1432,16 @@
    "cat": "TV",
    "q": "삼성 2026 Micro RGB RH9G (214cm)(KMR85RH9GAFXKR)의 리모컨 종류로 올바른 것은?",
    "opts": [
-    "TM2280A",
+    "TM2661H",
     "TM2660",
-    "TM2561E",
-    "TM2560E"
+    "TM2280A",
+    "TM2561E"
    ],
    "ans": 1,
    "lv": "상",
    "nm": 1,
    "fam": "spec",
    "exp": "2026 Micro RGB RH9G (214cm)(KMR85RH9GAFXKR)의 리모컨 종류는 TM2660이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
-  },
-  {
-   "cat": "TV",
-   "q": "삼성 Crystal UHD UH9000(KU98UH9000FXKR)의 리모컨 종류로 올바른 것은?",
-   "opts": [
-    "TM2660H",
-    "TM2561E",
-    "TM2280A",
-    "TM2560E"
-   ],
-   "ans": 2,
-   "lv": "상",
-   "nm": 1,
-   "fam": "spec",
-   "exp": "Crystal UHD UH9000(KU98UH9000FXKR)의 리모컨 종류는 TM2280A이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
-  },
-  {
-   "cat": "TV",
-   "q": "삼성 2025 The Movingstyle(KU27LSFM7AXXKR)의 리모컨 종류로 올바른 것은?",
-   "opts": [
-    "TM2660H",
-    "TM2280A",
-    "TM2561E",
-    "TM2560E"
-   ],
-   "ans": 2,
-   "lv": "상",
-   "nm": 1,
-   "fam": "spec",
-   "exp": "2025 The Movingstyle(KU27LSFM7AXXKR)의 리모컨 종류는 TM2561E이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
-  },
-  {
-   "cat": "TV",
-   "q": "삼성 Micro RGB MRF95 (115형)(KMR115MRF95XKR)의 리모컨 종류로 올바른 것은?",
-   "opts": [
-    "TM2660H",
-    "TM2560E",
-    "TM2280A",
-    "TM2561E"
-   ],
-   "ans": 1,
-   "lv": "상",
-   "nm": 1,
-   "fam": "spec",
-   "exp": "Micro RGB MRF95 (115형)(KMR115MRF95XKR)의 리모컨 종류는 TM2560E이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
-  },
-  {
-   "cat": "TV",
-   "q": "삼성 Neo QLED 4K QNH70(KQ85QNH70AFXKR)의 리모컨 종류로 올바른 것은?",
-   "opts": [
-    "TM2660H",
-    "TM2280",
-    "TM2561E",
-    "TM2560E"
-   ],
-   "ans": 1,
-   "lv": "상",
-   "nm": 1,
-   "fam": "spec",
-   "exp": "Neo QLED 4K QNH70(KQ85QNH70AFXKR)의 리모컨 종류는 TM2280이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
-  },
-  {
-   "cat": "TV",
-   "q": "삼성 Crystal UHD UH8000(KU85UH8000FXKR)의 리모컨 종류로 올바른 것은?",
-   "opts": [
-    "TM2660H",
-    "TM2240A",
-    "TM2280A",
-    "TM2561E"
-   ],
-   "ans": 1,
-   "lv": "상",
-   "nm": 1,
-   "fam": "spec",
-   "exp": "Crystal UHD UH8000(KU85UH8000FXKR)의 리모컨 종류는 TM2240A이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -1412,6 +1457,81 @@
    "nm": 1,
    "fam": "spec",
    "exp": "The Frame(KQ98LSH03EFXKR)의 리모컨 종류는 TM2661H이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 Crystal UHD UH9000(KU98UH9000FXKR)의 리모컨 종류로 올바른 것은?",
+   "opts": [
+    "TM2660H",
+    "TM2661H",
+    "TM2280A",
+    "TM2561E"
+   ],
+   "ans": 2,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "Crystal UHD UH9000(KU98UH9000FXKR)의 리모컨 종류는 TM2280A이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 2025 The Movingstyle(KU27LSFM7AXXKR)의 리모컨 종류로 올바른 것은?",
+   "opts": [
+    "TM2660H",
+    "TM2661H",
+    "TM2561E",
+    "TM2280A"
+   ],
+   "ans": 2,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "2025 The Movingstyle(KU27LSFM7AXXKR)의 리모컨 종류는 TM2561E이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 Micro RGB MRF95 (115형)(KMR115MRF95XKR)의 리모컨 종류로 올바른 것은?",
+   "opts": [
+    "TM2660H",
+    "TM2560E",
+    "TM2661H",
+    "TM2280A"
+   ],
+   "ans": 1,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "Micro RGB MRF95 (115형)(KMR115MRF95XKR)의 리모컨 종류는 TM2560E이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 Neo QLED 4K QNH70(KQ85QNH70AFXKR)의 리모컨 종류로 올바른 것은?",
+   "opts": [
+    "TM2660H",
+    "TM2280",
+    "TM2661H",
+    "TM2561E"
+   ],
+   "ans": 1,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "Neo QLED 4K QNH70(KQ85QNH70AFXKR)의 리모컨 종류는 TM2280이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
+  },
+  {
+   "cat": "TV",
+   "q": "삼성 Crystal UHD UH8000(KU85UH8000FXKR)의 리모컨 종류로 올바른 것은?",
+   "opts": [
+    "TM2660H",
+    "TM2240A",
+    "TM2661H",
+    "TM2280A"
+   ],
+   "ans": 1,
+   "lv": "상",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "Crystal UHD UH8000(KU85UH8000FXKR)의 리모컨 종류는 TM2240A이다. 오답은 같은 품목 신규 모델의 실제 값이거나 근사값이다. (근거: 모델파인더 DB — 카탈로그·삼성닷컴 사양)"
   },
   {
    "cat": "TV",
@@ -2799,14 +2919,14 @@
    "opts": [
     "OLED SH93(KQ83SH93AEXKR)",
     "The Frame(KQ98LSH03EFXKR)",
-    "2026 Mini LED MH80 (214cm)(KU85MH80AFXKR)",
-    "OLED SH85(KQ83SH85AEXKR)"
+    "Crystal UHD UH9000(KU98UH9000FXKR)",
+    "2026 Mini LED MH80 (214cm)(KU85MH80AFXKR)"
    ],
    "ans": 0,
    "lv": "중",
    "nm": 1,
    "fam": "spec",
-   "exp": "KQ83SH93AEXKR 165Hz / KQ98LSH03EFXKR 144Hz / KU85MH80AFXKR 144 Hz (VRR 지원) / KQ83SH85AEXKR 120Hz. 가장 큰 것은 KQ83SH93AEXKR(165Hz)다. (근거: 모델파인더 DB)"
+   "exp": "KQ83SH93AEXKR 165Hz / KQ98LSH03EFXKR 144Hz / KU98UH9000FXKR 144 Hz (VRR Support) / KU85MH80AFXKR 144 Hz (VRR 지원). 가장 큰 것은 KQ83SH93AEXKR(165Hz)다. (근거: 모델파인더 DB)"
   },
   {
    "cat": "TV",
@@ -2815,13 +2935,28 @@
     "OLED SH95(KQ83SH95AEXKR)",
     "Neo QLED 4K QNH80(KQ100QNH80FXKR)",
     "OLED SH93(KQ83SH93AEXKR)",
-    "Crystal UHD UH8000(KU85UH8000FXKR)"
+    "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)"
    ],
    "ans": 0,
    "lv": "중",
    "nm": 1,
    "fam": "spec",
-   "exp": "KQ83SH95AEXKR 70 / KQ100QNH80FXKR 30 / KQ83SH93AEXKR 60 / KU85UH8000FXKR 20. 가장 큰 것은 KQ83SH95AEXKR(70)다. (근거: 모델파인더 DB)"
+   "exp": "KQ83SH95AEXKR 70 / KQ100QNH80FXKR 30 / KQ83SH93AEXKR 60 / KQ85LSH03WFXKR 40 W. 가장 큰 것은 KQ83SH95AEXKR(70)다. (근거: 모델파인더 DB)"
+  },
+  {
+   "cat": "TV",
+   "q": "다음 신규 모델 중 HDMI가 가장 큰 것은?",
+   "opts": [
+    "The Frame(KQ98LSH03EFXKR)",
+    "2026 The Frame Pro (214cm)(KQ85LSH03WFXKR)",
+    "Crystal UHD UH8000(KU85UH8000FXKR)",
+    "2025 The Movingstyle(KU27LSFM7AXXKR)"
+   ],
+   "ans": 1,
+   "lv": "중",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "KQ98LSH03EFXKR 4 / KQ85LSH03WFXKR 5 / KU85UH8000FXKR 3 / KU27LSFM7AXXKR 1. 가장 큰 것은 KQ85LSH03WFXKR(5)다. (근거: 모델파인더 DB)"
   },
   {
    "cat": "TV",
@@ -2882,6 +3017,21 @@
    "nm": 1,
    "fam": "spec",
    "exp": "KMR85RH95AFXKR 37.9 kg / KMR85RH85AFXKR 34 kg / KQ77SH95AFXKR 31.7 kg / KQ77SH93AFXKR 34.8 kg. 가장 큰 것은 KMR85RH95AFXKR(37.9 kg)다. (근거: 모델파인더 DB)"
+  },
+  {
+   "cat": "TV",
+   "q": "다음 신규 모델 중 리모컨 종류가 가장 큰 것은?",
+   "opts": [
+    "OLED SH85(KQ83SH85AEXKR)",
+    "2026 Micro RGB RH9G (214cm)(KMR85RH9GAFXKR)",
+    "The Frame(KQ98LSH03EFXKR)",
+    "Crystal UHD UH9000(KU98UH9000FXKR)"
+   ],
+   "ans": 2,
+   "lv": "중",
+   "nm": 1,
+   "fam": "spec",
+   "exp": "KQ83SH85AEXKR TM2660H / KMR85RH9GAFXKR TM2660 / KQ98LSH03EFXKR TM2661H / KU98UH9000FXKR TM2280A. 가장 큰 것은 KQ98LSH03EFXKR(TM2661H)다. (근거: 모델파인더 DB)"
   },
   {
    "cat": "TV",
@@ -4750,13 +4900,13 @@
     "수돗물 — 잔류 염소로 필터 수명이 짧아짐",
     "정수된 물 — 재여과로 미네랄이 과다 제거됨",
     "온수 급수 — 필터 재질이 열에 약함",
-    "지하수 — UF(초미세여과) 필터 성능상 부적합"
+    "지하수 — 지하수 사용 환경에서는 설치 불가"
    ],
    "ans": 3,
    "lv": "중",
    "nm": 1,
    "fam": "install",
-   "exp": "UF 필터를 쓰므로 지하수는 필터 성능상 부적합하고, 지하수를 급수원으로 쓰는 환경에서는 설치가 부적합하다. (근거: 설치환경 가이드 「정수기」)"
+   "exp": "삼성닷컴 설치가이드 원문 — 지하수를 급수원으로 사용하는 환경에서는 설치가 불가하다(2026-10-16 원문 대조로 문구 갱신). (근거: 설치환경 가이드 「정수기」)"
   },
   {
    "cat": "정수기",
@@ -5161,7 +5311,7 @@
    "lv": "상",
    "nm": 1,
    "fam": "install",
-   "exp": "구형 Bespoke 블루 라인만 14mm 이고 현재 판매 라인업은 2.5mm 다. 15mm·25mm 는 후면·상단 이격이다. (근거: 설치환경 가이드 「에어드레서」)"
+   "exp": "구형 Bespoke 블루 라인은 14mm, 비Bespoke DF10T9700BG·DF60T8700BG 는 5mm, 현재 판매 Bespoke 라인은 2.5mm 다. 15mm·25mm 는 후면·상단 이격이다. (근거: 설치환경 가이드 「에어드레서」)"
   },
   {
    "cat": "에어드레서",

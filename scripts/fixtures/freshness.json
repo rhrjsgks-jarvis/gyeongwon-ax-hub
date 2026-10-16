@@ -5,7 +5,7 @@
       "key": "lineup",
       "name": "제품 라인업",
       "everyDays": 30,
-      "checkedAt": "",
+      "checkedAt": "2026-10-16",
       "where": "모델파인더·통합검색",
       "source": "samsung.com/sec cxhr/pf/goodsList",
       "how": "점검 스킬 → 라인업 대조"
@@ -14,7 +14,7 @@
       "key": "usp",
       "name": "제조사 셀링포인트",
       "everyDays": 30,
-      "checkedAt": "2026-10-12",
+      "checkedAt": "2026-10-16",
       "where": "타사비교·모델파인더",
       "source": "goodsList uspDescList",
       "how": "npm run fetch:usp && npm run build:usp"
@@ -41,7 +41,7 @@
       "key": "subs-mx",
       "name": "모바일·PC 구독",
       "everyDays": 30,
-      "checkedAt": "",
+      "checkedAt": "2026-10-16",
       "where": "AI구독 케어 안내",
       "source": "samsung.com 갤럭시 구독클럽·올인원 2.0",
       "how": "점검 스킬 → 구독 대조"
@@ -95,7 +95,7 @@
       "key": "install-guide",
       "name": "설치환경 규격",
       "everyDays": 90,
-      "checkedAt": "",
+      "checkedAt": "2026-10-16",
       "where": "제품별 설치환경 가이드",
       "source": "samsung.com 설치가이드 지면",
       "how": "점검 스킬 → 설치환경 대조"

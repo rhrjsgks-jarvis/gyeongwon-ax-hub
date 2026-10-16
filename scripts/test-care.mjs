@@ -42,9 +42,15 @@ const ALL_PRODUCTS = [
   { key: 'vacuum',           name: '로봇청소기',           hasData: true,  types: ['premium','self'] },
   { key: 'kimchi',           name: '김치냉장고',           hasData: true,  types: ['premium','lite','self'] },
   { key: 'induction',        name: '인덕션/전기레인지',    hasData: true,  types: ['premium','lite'] },
+  /* 2026-10-16 — 가이드 품목 표에 방문케어 프리미엄이 있는 둘을 구독 지면에서 수집해 넣었다 */
+  { key: 'sac',              name: '시스템에어컨',         hasData: true,  types: ['premium'] },
+  { key: 'dehum',            name: '제습기',               hasData: true,  types: ['premium'] },
   /* 자가관리 안내 — 요금제가 없다(옛 회차 경로를 그대로 탄다) */
   { key: 'microwave',        name: '전자레인지/오븐',      hasData: true,  types: [] },
   { key: 'soundbar',         name: '사운드바',             hasData: true,  types: [] },
+  /* 2026-10-16 — 가이드 표상 무상수리서비스만 있는 TV·모니터(회차표 없음 · naNote 로 사실만 적는다) */
+  { key: 'tv',               name: 'TV',                   hasData: false, onlyPlan: null, dual: false },
+  { key: 'monitor',          name: '모니터',               hasData: false, onlyPlan: null, dual: false },
   /*
    * 모바일 구독 3종 — **회차 구조가 없다**(방문 기사가 없다). `st:'mx'` 라 회차표 경로를
    * 타지 않고 `buildMobileSub` 이 그린다. 개요 화면에서 '자가관리'(na-card)로 표시하면
@@ -53,19 +59,21 @@ const ALL_PRODUCTS = [
   { key: 'mx_fold8u',        name: '갤럭시 Z 폴드8 울트라', hasData: false, onlyPlan: null, dual: false, mx: true },
   { key: 'mx_fold8',         name: '갤럭시 Z 폴드8',        hasData: false, onlyPlan: null, dual: false, mx: true },
   { key: 'mx_flip8',         name: '갤럭시 Z 플립8',        hasData: false, onlyPlan: null, dual: false, mx: true },
+  /* 2026-10-16 원문 대조 — S26 FE 가 구독 대상에 들어왔다 */
+  { key: 'mx_s26fe',         name: '갤럭시 S26 FE',         hasData: false, onlyPlan: null, dual: false, mx: true },
   /*
    * PC·태블릿 2종 — **스마트폰과 다른 상품이다**(AI 구독클럽 올인원 2.0).
    * 구독케어(무상수리+파손보상)가 구독에 포함되고 잔존가 보장·민팃 반납이 없다.
    * 셋을 섞으면 상담에서 그대로 틀린 설명이 되므로 아래에서 **서로 섞이지 않는지**도 본다.
    */
   { key: 'ai2_book6',        name: '갤럭시 북6 시리즈',     hasData: false, onlyPlan: null, dual: false, mx: true, ai2: true },
-  { key: 'ai2_tabs11',       name: '갤럭시 탭 S11 시리즈',  hasData: false, onlyPlan: null, dual: false, mx: true, ai2: true },
+  { key: 'ai2_tabs11',       name: '갤럭시 탭 S10~S12 시리즈', hasData: false, onlyPlan: null, dual: false, mx: true, ai2: true },
 ];
 
 // 타임라인 모드에 노출되는(=st:'done') 제품 키. TL_MONTHS(care-app.html)에 정의된 키와 일치해야 함.
 /* 2026-08-30 — 인덕션이 들어왔다. 삼성닷컴이 방문케어를 파는데 우리는 「미대상」이라
    적고 있었다(현행 구독 SKU 8종). 새 제품을 done 으로 올리면 여기도 함께 넣을 것. */
-const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser','airpur_reusable','airpur_s','purifier_under','vacuum','kimchi','induction'];
+const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser','airpur_reusable','airpur_s','purifier_under','vacuum','kimchi','induction','sac','dehum'];
 
 (async () => {
   /*
