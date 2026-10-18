@@ -442,7 +442,12 @@
  * 구독 응대 스크립트의 출처 없는 금액 정리 · 가구장 리폼 원문 링크 · 제품 비고 칸 개발 메모 정리.
  * svc-refurb.json 을 SWR 에 넣었다.
  */
-const CACHE_VERSION = 'axhub-v280';
+/*
+ * v281 (2026-10-18) — 삼성닷컴 대조 판정 보류 124건 정리: Music Studio·Frame 4종의 사운드바·우퍼
+ * 오기 바로잡음 · 사운드바 배치 치수를 Q시리즈 실측으로 · 전자레인지·프로젝터·모니터·프린터·
+ * 김치냉장고 값 원문화 · 타사비교 QNH70 85인치 패널 60Hz.
+ */
+const CACHE_VERSION = 'axhub-v281';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
