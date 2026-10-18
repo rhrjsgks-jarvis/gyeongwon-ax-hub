@@ -280,6 +280,24 @@
   #centerPane:has(#svcbody:not(:empty)) #svclist{display:none!important}
   #contactPane:has(details.grp[open]) details.grp:not([open]){display:none!important}
   details.grp>summary{list-style:none}
+  /* ── 수리비 탭 ── */
+  .fee-eq{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:8px 0 10px;font-size:12.5px;font-weight:700}
+  .fee-eq span{background:#EEF2FF;color:#1428A0;border-radius:8px;padding:5px 8px}
+  .fee-eq i{font-style:normal;color:#9aa0a6}
+  .fee-eq b{background:#1428A0;color:#fff;border-radius:8px;padding:5px 9px}
+  .fee-t{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:12.5px}
+  .fee-t th{background:#F3F5FB;color:#374151;font-weight:700;padding:7px 6px;text-align:left;border-bottom:1px solid #e5e7eb}
+  .fee-t th span{display:block;font-size:11.5px;font-weight:500;color:#6b7280}
+  .fee-t td{padding:8px 6px;border-bottom:1px solid #f1f2f4;vertical-align:top}
+  .fee-t td b{color:#1428A0}
+  .fee-t td span{display:block;font-size:11.5px;color:#6b7280;margin-top:2px;word-break:break-all}
+  .rf-t td:nth-child(2),.rf-t td:nth-child(3){white-space:nowrap;text-align:right}
+  .fee-ul{margin:8px 0 4px;padding-left:18px;font-size:12.5px;line-height:1.6;color:#374151}
+  .fee-ul li{margin-bottom:3px}
+  .fee-h{font-size:12.5px;font-weight:800;margin:12px 0 2px}
+  .fee-h span{font-weight:500;color:#6b7280;font-size:11.5px}
+  .fee-in{margin:10px 0;font-size:12.5px;line-height:1.6}
+  .rfq{border:1px solid #d6dbe8;background:#fff;margin:2px 0 8px}
   .card,.ct,.svcc,table,tr{break-inside:avoid}
 }
   @media(min-width:1024px){ .wrap,.topbar-in,.sbar-in { max-width:960px } }
@@ -312,6 +330,7 @@
 <div class="mode-tabs" id="modeTabs">
   <div class="mode-tab on" data-tab="as" onclick="setTab('as')"><span class="mt-ico">🛡️</span>AS기간</div>
   <!-- **가운데에 둔다**(2026-08-27 사장님 지시) — 상담 흐름이 "보증기간 → 어디로 가나 → 누구에게 거나" 순이다 -->
+  <div class="mode-tab" data-tab="fee" onclick="setTab('fee')"><span class="mt-ico">💰</span>수리비</div>
   <div class="mode-tab" data-tab="center" onclick="setTab('center')"><span class="mt-ico">📍</span>AS센터 찾기</div>
   <div class="mode-tab" data-tab="contact" onclick="setTab('contact')"><span class="mt-ico">📞</span>연락처·협력사</div>
 </div>
@@ -322,6 +341,7 @@
     <div class="cats" id="cats"></div>
     <div id="body"></div>
   </div>
+  <div id="feePane" style="display:none"></div>
   <div id="centerPane" style="display:none"></div>
   <div id="contactPane" style="display:none"></div>
 </div>
@@ -1690,6 +1710,10 @@ function searchDocs(){
         const b = document.getElementById('svcq'); if (b){ b.value = svcName(x); renderSvcList(); }
         revealBody(); } });
   }
+  out.push({ kind:'수리비', title:'출장비 · 수리비(기술료) · 부품비',
+    sub:'평절기 기본 28,000원 · 성수기 기본 33,000원 — 삼성전자서비스 원문',
+    kw:'수리비 출장비 기술료 공임 공임비 부품비 부품값 부품가격 리퍼 리퍼부품 유상수리 무상수리 할증 야간 휴일 성수기 평절기 서비스요금 요금 비용 얼마 ' + FEE.trip.rules.join(' ') + ' ' + FEE.trip.always.join(' ') + ' ' + FEE.labor.join(' '),
+    go(){ setTab('fee'); revealFee(); } });
   for (const g of CONTACTS) for (const c of g.items) {
     out.push({ kind:'연락처', title:c.t, sub:`${c.n} · ${c.d}`,
       kw:`${c.t} ${c.n} ${c.d} ${g.g} 연락처 전화번호`,
@@ -1900,12 +1924,197 @@ function revealBody(){
   if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+/*
+ * ── 수리비 탭 (2026-10-18 사장님 지시) ──
+ *
+ * *"삼성전자서비스에서 나오는 비용관련 일체 — 기본적인 수리비와 공임비 … 상세내역도 표시
+ * (삼성전자서비스와 링크표시) 출처와 링크는 필수"*.
+ *
+ * **원문에 적힌 문장만 싣는다.** 출처는 삼성전자서비스 「요금안내」 네 탭과 「고객 자가수리」 FAQ다
+ * (2026-10-18 원문 확인 · robots 는 `Allow: /` 이고 막는 것은 `?q=` 검색 지면뿐이다).
+ *
+ * **품목별 기술료(공임) 금액표는 삼성전자서비스가 공개하지 않는다** — 원문이 *"수리비 기준표를
+ * 따릅니다"* 라고만 적고 표 자체는 어디에도 없다. 그래서 지어내지 않고 **공개하지 않는다는 사실**을
+ * 화면이 적는다(비교표의 「미공개」 와 같은 규칙). 공개된 것 중 금액이 있는 것은 출장비와
+ * **리퍼부품 가격**(휴대폰·컴퓨터·TV/모니터 3,095건, `svc-refurb.json`)뿐이다.
+ */
+const FEE_SRC = {
+  service:  ['서비스요금 산정기준', 'https://www.samsungsvc.co.kr/info/fee?tab=service'],
+  assure:   ['보증기간 산정기준',   'https://www.samsungsvc.co.kr/info/fee?tab=assure'],
+  price:    ['리퍼부품 가격검색',   'https://www.samsungsvc.co.kr/info/fee?tab=price'],
+  conflict: ['소비자분쟁 해결기준', 'https://www.samsungsvc.co.kr/info/fee?tab=conflict'],
+  self:     ['고객 자가수리 — 자주 묻는 질문', 'https://www.samsungsvc.co.kr/info/self-repair'],
+};
+const FEE_AT = '2026-10-18';
+const FEE = {
+  total: '서비스 요금은 출장비, 부품비, 수리비(기술료)의 합계액으로 구성되며 각 요금의 결정은 다음과 같습니다.',
+  totalNote: '출장 수리 시 출장비 외 정확한 비용은 엔지니어가 제품 점검 후 설명 받으실 수 있는 점 양해 부탁드립니다.',
+  trip: {
+    what: '「유상수리」 대상으로 엔지니어가 출장 시 청구되는 비용입니다.',
+    /* [시기, 기본, 할증] — 원문 「ㆍ평절기(1~5, 9~12월) : 기본 출장비 28,000원, 할증 출장비 33,000원」 */
+    rows: [['평절기 (1~5, 9~12월)', '28,000원', '33,000원'], ['성수기 (6~8월)', '33,000원', '38,000원']],
+    rules: [
+      '출장비는 거리에 관계 없이 적용됩니다. 단, 평일 18시 이후, 휴일(토/일/공휴일/대체휴일)은 할증 출장비를 적용합니다.',
+      '안전한 서비스를 위해 2인 이상의 엔지니어가 방문할 수 있습니다.(서비스 요금은 1인 방문시와 동일)',
+    ],
+    always: [
+      '유상 수리 비용을 안내받은 후 수리를 취소(포기)하는 경우',
+      '제품의 고장이 아니거나, 단순 소모품 교체가 필요한 경우',
+      '삼성전자 제품이 아닌 타사제품인 경우',
+      '제품 자체의 고장이 아닌 외부적인 요인인 경우 (설치환경, 전파, 통신 장애 등)',
+    ],
+  },
+  part: '수리 시 부품 교체를 할 경우 소요되는 부품가격을 말합니다. 부품비는 부가세 10 % 가 포함된 가격입니다.',
+  labor: [
+    '수리비는 유료 수리 시 부품비를 제외한 기술료를 말하며 수리 시 소요시간, 난이도 등을 감안하여 산정한 수리비 기준표를 따릅니다.',
+    '수리비 비용은 요청 시점에 따라 변동될 수 있습니다',
+  ],
+  laborFaq: [
+    '서비스센터에서 새 부품으로 교체해야 하는 경우 부품비와 기술료가 청구되며, 새 부품을 사용하지 않고 수리하는 경우 기술료만 청구됩니다.',
+    '주방/리빙 가전제품의 경우 1588-3366을 통해 접수하시면 전문 엔지니어 방문 가능합니다. (별도의 출장비 발생)',
+    'S23 디스플레이 부품의 센터방문 수리시 고장 부위에 한해 전문장비로 단품단위 수리가 진행되나, 자가수리의 경우에는 전문장비 활용이 불가하여 세트 제품(디스플레이+프레임+배터리)으로만 판매가 되고 있습니다. 서비스 센터방문시, 고장 부품단위 수리로 자가수리시 보다 저렴한 비용으로 수리가 가능합니다.',
+  ],
+  free: [
+    '품질보증기간 이내에 정상적인 사용 상태에서 발생한 성능 · 기능상의 고장인 경우',
+    '부품을 사용하지 않고 수리한 경우 수리한 날부터 2개월 이내에 정상적으로 제품을 사용하는 과정에서 그 수리한 부분에 종전과 동일한 고장(동일 부위 고장)이 재발한 경우',
+    '일반부품: 수리한 날부터 12개월 이내에 정상적으로 제품을 사용하는 과정에서 동일한 부품이 재고장 발생 시',
+    '핵심부품: 핵심부품의 보증기간 이내에 부품을 교체하거나 부품을 무상으로 교체한 경우 수리한 날부터 2개월(유상 교체의 경우 12개월) 이내에 정상적으로 제품을 사용하는 과정에서 동일한 부품이 재고장 발생 시',
+    '리퍼부품 교체시 수리한 날로부터 1년 이내에 교체한 부품에 대하여 고장이 재발할 경우 무상으로 수리합니다.',
+  ],
+  freeNote: '다만, 일반/핵심부품의 보증기간 경과 후 무상으로 수리가 이루어진 경우 또는 이전 유상수리에서 수리비를 할인 받은 경우에는 소비자분쟁해결기준 상의 무상수리 기간 2개월이 적용됩니다.',
+  /* [갈래, [사유…]] — 원문 「2. 유상수리 대상」 표 그대로 */
+  paid: [
+    ['보증이후', ['무상보증 기간이 경과된 제품']],
+    ['보증이내', ['제품 고장이 아닌 고객 요청에 의한 제품 점검 (보증기간 내라도 유상 수리)']],
+    ['고객요청', ['제품의 점검(분해하지 않고 진행한 점검 포함) 및 조정 또는 사용 설명을 요청하는 경우',
+                  '제품 내부의 먼지 및 이물 제거(세척/청소)를 요청하는 경우']],
+    ['제품설치', ['신제품 초기 설치 후, 추가로 제품을 연결하거나 재설치를 요청하는 경우',
+                  '홈쇼핑, 인터넷 등에서 자가 구입 후 제품 설치를 요청하는 경우',
+                  '제품의 이동, 이사 등으로 인해 설치/연결을 요청하는 경우']],
+    ['타사요인', ['제품 자체의 문제가 아니고 외부 환경(인터넷, 안테나, 유선 신호 등)에 의해 고장이 발생한 경우',
+                  '타사 제품 (소프트웨어 포함)으로 인해 고장이 발생한 경우']],
+    ['고객 부주의', ['떨어뜨림 등 외부 충격에 의해 손상, 고장이 발생한 경우',
+                    '사용설명서에 명시된 올바른 제품 사용 주의사항을 지키지 않아 고장이 발생한 경우',
+                    '제품에 명시된 전기 용량을 틀리게 사용하여 고장이 발생한 경우',
+                    '삼성전자 서비스센터(엔지니어) 외 임의로 수리/개조에 의해 고장이 발생한 경우']],
+    ['소모성', ['소모성 부품의 보증기간 및 수명이 다한 경우 (배터리, 형광등, 헤드, 필터류, 램프류, 토너, 잉크 등)',
+                '당사에서 지정하지 않은 소모품이나 옵션품을 사용하여 고장이 발생한 경우']],
+    ['천재지변', ['천재 지변(낙뢰, 화재, 지진, 풍수해, 해일 등)으로 인해 고장이 발생한 경우']],
+  ],
+  refurb: [
+    '리퍼부품이란, 기존 제품에서 회수된 부품으로서 일정한 가공 과정 등을 거침으로써 성능과 품질이 신부품과 동등한 상태로 개선된 부품을 의미합니다.',
+    '휴대폰, 컴퓨터, TV/모니터 제품의 리퍼 부품 가격에 한 해 정보가 제공됩니다.',
+    '조회된 부품 가격 정보는 실제 수리 시점에 부담하시는 가격과 다를 수 있습니다. (수리비 제외)',
+    '조회된 부품 가격 정보는 공급 여부와 관계없이 제공되므로, 실제 수리 시 재고가 없을 수 있습니다.',
+  ],
+};
+
+const feeSrc = (k) => `<div class="src">출처 — 삼성전자서비스 <a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a> · ${FEE_AT} 원문 확인</div>`;
+const feeList = (arr) => `<ul class="fee-ul">${arr.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+
+let RF = null, rfKind = 0, rfLoading = false;
+function renderFee(){
+  const pane = document.getElementById('feePane');
+  const T = FEE.trip;
+  let h = `<div class="sub">삼성전자서비스 <b>유상 수리 요금</b>은 출장비 · 부품비 · 수리비(기술료) 셋을 더한 값입니다.
+    아래는 삼성전자서비스 원문 그대로이며, 각 카드 아래 링크로 원문을 열 수 있습니다.</div>`;
+
+  h += `<div class="card"><h2>💰 요금 구성</h2>
+    <div class="fee-eq"><span>출장비</span><i>+</i><span>부품비</span><i>+</i><span>수리비(기술료)</span><i>=</i><b>서비스 요금</b></div>
+    <div class="why">${esc(FEE.total)}</div>
+    <div class="note">${esc(FEE.totalNote)}</div>${feeSrc('service')}</div>`;
+
+  h += `<div class="card"><h2>🚚 출장비</h2><div class="why">${esc(T.what)}</div>
+    <table class="fee-t"><thead><tr><th>시기</th><th>기본</th><th>할증<span>평일 18시 이후 · 휴일</span></th></tr></thead>
+    <tbody>${T.rows.map(r => `<tr><td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td><td><b>${esc(r[2])}</b></td></tr>`).join('')}</tbody></table>
+    ${feeList(T.rules)}
+    <div class="fee-h">수리·보증기간과 무관하게 출장비가 청구되는 경우</div>
+    <ol class="fee-ul">${T.always.map(t => `<li>${esc(t)}</li>`).join('')}</ol>${feeSrc('service')}</div>`;
+
+  h += `<div class="card"><h2>🔧 수리비 (기술료 · 공임)</h2>
+    ${feeList(FEE.labor)}
+    <div class="card warn fee-in"><b>품목별 기술료 금액표는 공개되어 있지 않습니다.</b>
+      원문은 「수리비 기준표를 따릅니다」라고만 적고 표 자체는 싣지 않습니다. 정확한 금액은
+      <b>엔지니어가 제품 점검 후 안내</b>합니다 — 화면에 없는 금액을 짐작해 말하지 마세요.</div>
+    <div class="fee-h">원문 FAQ에서 확인되는 것</div>${feeList(FEE.laborFaq)}
+    ${feeSrc('service')}${feeSrc('self')}</div>`;
+
+  h += `<div class="card"><h2>🧾 부품비 · 리퍼부품 가격</h2><div class="why">${esc(FEE.part)}</div>
+    ${feeList(FEE.refurb)}
+    <div class="fee-h">리퍼부품 가격 찾기 <span>(원, 부가세 포함 · 수리비 제외)</span></div>
+    <div class="chips" id="rfKinds">${['휴대폰','컴퓨터','TV/모니터'].map((k, i) =>
+      `<button type="button" class="chip${i === rfKind ? ' on' : ''}" data-rk="${i}">${k}</button>`).join('')}</div>
+    <input class="sq rfq" id="rfq" placeholder="모델명 (예: SM-F700N · NT930 · LH55)" autocomplete="off">
+    <div id="rfOut"></div>${feeSrc('price')}</div>`;
+
+  h += `<div class="card"><h2>✅ 무상 수리 기준</h2>${feeList(FEE.free)}
+    <div class="note">※ ${esc(FEE.freeNote)}</div>${feeSrc('service')}</div>`;
+
+  h += `<div class="card"><h2>⚠ 유상 수리 대상</h2>
+    ${FEE.paid.map(([g, arr]) => `<div class="row"><div class="n">${esc(g)}<div class="d">${arr.map(esc).join('<br>')}</div></div></div>`).join('')}
+    ${feeSrc('service')}</div>`;
+
+  h += `<div class="src">삼성전자서비스 요금 원문 — ${['service','assure','price','conflict','self'].map(k =>
+    `<a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a>`).join(' · ')}</div>`;
+
+  pane.innerHTML = h;
+  if (typeof upgradeEmoji === 'function') upgradeEmoji(pane);
+  pane.querySelectorAll('#rfKinds .chip').forEach(b => b.onclick = () => {
+    rfKind = Number(b.dataset.rk);
+    pane.querySelectorAll('#rfKinds .chip').forEach(x => x.classList.toggle('on', x === b));
+    renderRefurb();
+  });
+  const q = document.getElementById('rfq');
+  q.oninput = renderRefurb;
+  renderRefurb();
+}
+
+/* 리퍼부품 3,095건(254KB)은 이 탭을 열 때 받는다 — 앱을 열 때마다 받을 이유가 없다 */
+function revealFee(){
+  const el = document.getElementById('feePane');
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function renderRefurb(){
+  const out = document.getElementById('rfOut'); if (!out) return;
+  if (!RF) {
+    out.innerHTML = '<div class="why">가격 자료를 불러오는 중…</div>';
+    if (!rfLoading && typeof fetch === 'function') {
+      rfLoading = true;
+      fetch('svc-refurb.json').then(r => r.json()).then(j => { RF = j; renderRefurb(); })
+        .catch(() => { rfLoading = false; out.innerHTML = '<div class="unk">가격 자료를 받지 못했습니다 — 아래 원문 링크에서 찾아 주세요.</div>'; });
+    }
+    return;
+  }
+  const q = (document.getElementById('rfq').value || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (q.length < 3) {
+    const n = RF.rows.filter(r => r[0] === rfKind).length;
+    out.innerHTML = `<div class="why">${esc(RF.kinds[rfKind])} 리퍼부품 ${n.toLocaleString()}건 — 모델명을 세 글자 이상 넣으면 찾습니다. (${esc(RF.collectedAt)} 원문 수집)</div>`;
+    return;
+  }
+  const hit = RF.rows.filter(r => r[0] === rfKind && r[1].toUpperCase().includes(q));
+  if (!hit.length) {
+    out.innerHTML = `<div class="unk">「${esc(q)}」 리퍼부품 가격이 원문에 없습니다.</div>
+      <div class="why">원문은 리퍼부품이 있는 모델만 싣습니다 — 최신 모델은 대부분 없습니다. 신품 부품 가격은 엔지니어 점검 후 안내됩니다.</div>`;
+    return;
+  }
+  const won = (v) => v == null ? '없음' : v.toLocaleString() + '원';
+  const shown = hit.slice(0, 60);
+  out.innerHTML = `<div class="why">${hit.length.toLocaleString()}건${hit.length > shown.length ? ` 중 ${shown.length}건 — 모델명을 더 넣어 좁히세요` : ''}</div>
+    <table class="fee-t rf-t"><thead><tr><th>모델 · 부품</th><th>신품</th><th>리퍼</th></tr></thead><tbody>
+    ${shown.map(r => `<tr><td><b>${esc(r[1])}</b> · ${esc(r[2])}<span>${esc(r[3])} ${esc(r[4])}${r[7] ? ' · ' + esc(r[7]) : ''}</span></td>
+      <td>${won(r[5])}</td><td><b>${won(r[6])}</b></td></tr>`).join('')}</tbody></table>`;
+}
+
 let curTab = 'as';
 function setTab(t){
   curTab = t;
   document.querySelectorAll('.mode-tab').forEach(el=>el.classList.toggle('on', el.dataset.tab === t));
   document.getElementById('asPane').style.display = t === 'as' ? '' : 'none';
   document.getElementById('centerPane').style.display = t === 'center' ? '' : 'none';
+  document.getElementById('feePane').style.display = t === 'fee' ? '' : 'none';
+  if (t === 'fee') renderFee();
+  /* 수리비 탭도 통으로 1회 — 리퍼부품 검색은 글자마다 도는 화면이라 낱낱이 세지 않는다 */
+  if (t === 'fee' && window.AX_LOG) AX_LOG('as', 'tab_switch', '수리비', true);
   document.getElementById('contactPane').style.display = t === 'contact' ? '' : 'none';
   if (t === 'contact') renderContacts();
   if (t === 'center') renderSvcCenters();
@@ -1955,7 +2164,7 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
 
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, HARMAN, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
+window.__as = { FEE, FEE_SRC, loadRefurb(j){ RF = j; renderRefurb(); }, DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, HARMAN, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
   openGroup,
   /* 딥링크가 착지하는지 검사하려면 **앱이 실제로 내놓는** 제목을 봐야 한다.
      데이터에서 제목을 다시 만들어 대조하던 검사는 색인과 사이좋게 틀린 채로 통과했다

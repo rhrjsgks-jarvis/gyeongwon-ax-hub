@@ -262,6 +262,12 @@ function flatten(v, out = []) {
   add({ t: 'category', m: 'as', title: `멤버십 ${ROYAL.grade}`, sub: ROYAL.benefit,
     kw: [...flatten(ROYAL), '멤버십 등급 연장 무상수리 로열'].join(' '), href: asLink(`멤버십 ${ROYAL.grade}`) });
 
+  // 수리비 탭(2026-10-18) — 「출장비 얼마죠」로 찾아야 한다. 제목은 앱 searchDocs 의 제목과 같아야 딥링크가 착지한다
+  add({ t: 'category', m: 'as', title: '출장비 · 수리비(기술료) · 부품비',
+    sub: '삼성전자서비스 유상 수리 요금 — 평절기 기본 출장비 28,000원 · 성수기 33,000원',
+    kw: '수리비 출장비 기술료 공임 공임비 부품비 부품값 부품가격 리퍼 리퍼부품 유상수리 무상수리 서비스요금 할증 야간 휴일 성수기 평절기 삼성전자서비스 요금 비용',
+    href: asLink('출장비 · 수리비(기술료) · 부품비') });
+
   for (const [cat, d] of Object.entries(DBA)) {
     add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
       sub: `무상보증 ${d.base}${d.hold ? ` · 부품보유 ${d.hold}년` : ''}`,

@@ -249,6 +249,8 @@ for (const [file, needle] of deepLinks) {
   (MID || []).forEach((m) => titles.add(`${m.g} (중앙에너지)`));
   if (ROYAL) titles.add(`멤버십 ${ROYAL.grade}`);
   titles.add('물류 VOC 본사 창구');
+  /* 수리비 탭 — 앱 searchDocs 에 그 제목 그대로 있을 때만 착지한다(2026-10-18) */
+  if (html.includes("title:'출장비 · 수리비(기술료) · 부품비'")) titles.add('출장비 · 수리비(기술료) · 부품비');
 
   const bad = entries.filter((e) => e.m === 'as' && e.href.startsWith('/as?q='))
     .map((e) => decodeURIComponent(e.href.slice('/as?q='.length)))

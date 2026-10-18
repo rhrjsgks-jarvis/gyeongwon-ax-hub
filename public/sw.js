@@ -437,7 +437,12 @@
  * v258 (2026-09-30) — 배치 시뮬레이터(place-app.html): 전용면적으로 축척을 어림해 길이 칸을
  * 미리 채운다 · 축척 전 공간 목록이 픽셀 넓이를 ㎡로 적던 것 · 알림이 막대를 따라 비켜 뜬다.
  */
-const CACHE_VERSION = 'axhub-v279';
+/*
+ * v280 (2026-10-18) — AS 관련 정보에 「수리비」 탭(출장비·기술료·리퍼부품가 3,095건, 원문 링크) ·
+ * 구독 응대 스크립트의 출처 없는 금액 정리 · 가구장 리폼 원문 링크 · 제품 비고 칸 개발 메모 정리.
+ * svc-refurb.json 을 SWR 에 넣었다.
+ */
+const CACHE_VERSION = 'axhub-v280';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스
@@ -467,7 +472,7 @@ const RUNTIME = `${CACHE_VERSION}-runtime`;
  * 시작할 때 받아 붙이는 자료다 — 인라인에 넣으면 그 지면이 2.65MB 가 되어 매장 폰에서
  * 파싱만 3초가 걸린다. 캐시에 없으면 **전파가 끊긴 매장에서 새 제품이 통째로 사라진다.**
  */
-const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers|compare-usp|sec-usp)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge|wall-vec)\.js$/;
+const SWR = /\/(finder|compare|own-compare|install|install-cost|care|quiz|test|place|as|poster)-app\.html$|\/(search-(index|detail)|size-reps|plan-library|plan-index|plan-names|finder-extra|finder-core|install-cost|svc-centers|svc-refurb|compare-usp|sec-usp)\.json$|\/(share-kit|prod-symbols|back-kit|finder-merge|wall-vec)\.js$/;
 
 self.addEventListener('install', (e) => {
   // 미리 받아두지 않는다. 첫 방문에 1MB를 강제로 받게 하면 오히려 느려진다.

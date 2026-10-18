@@ -514,13 +514,13 @@ pass('싱크장 리폼 골든 3건');
 // [7-e] 화면 — 탭이 셋이고, 이전설치 탭이 렌더되며 관할 검색이 걸리는가
 {
   const tabs = doc.querySelectorAll('.mode-tab');
-  /* **AS센터 찾기가 가운데다**(2026-08-27 사장님 지시) — 상담 흐름이
-     "보증기간 → 어디로 가나 → 누구에게 거나" 순이다. 순서까지 검사한다. */
-  const want = ['as', 'center', 'contact'];
+  /* 수리비 탭(2026-10-18 사장님 지시)이 AS기간 바로 뒤에 붙었다 — 「보증 → 보증이 끝나면 얼마 →
+     어디로 가나 → 누구에게 거나」. AS센터·연락처의 상대 순서는 그대로다. */
+  const want = ['as', 'fee', 'center', 'contact'];
   const got = [...tabs].map((t) => t.dataset.tab);
-  if (got.length !== 3) fail(`탭이 ${got.length}개 — AS기간 · AS센터 찾기 · 연락처 셋이어야 한다`);
-  else if (got.join(',') !== want.join(',')) fail(`탭 순서가 ${got.join('·')} — AS센터가 가운데여야 한다`);
-  else pass('탭 3개 · AS센터 찾기가 가운데');
+  if (got.length !== 4) fail(`탭이 ${got.length}개 — AS기간 · 수리비 · AS센터 찾기 · 연락처 넷이어야 한다`);
+  else if (got.join(',') !== want.join(',')) fail(`탭 순서가 ${got.join('·')} — ${want.join('·')} 여야 한다`);
+  else pass('탭 4개 · AS기간 → 수리비 → AS센터 찾기 → 연락처');
 
   /* 연락처 탭은 **세 묶음으로 접혀** 있다(2026-08-11 사용자 요청 — 다 펼쳐 두면 예순 줄이
      넘어 상담 중에 못 읽는다). 기본은 닫힘이고 눌러야 열린다. */
@@ -1456,6 +1456,74 @@ pass('상황실·업무·운영 골든 5건');
       else pass(`「어디로 가면 되나」 경로 ${W.length}개 · 강조 ${hot}개`);
     }
   }
+}
+
+
+/*
+ * ── [16] 수리비 탭 (2026-10-18 사장님 지시) ──
+ * 「출처와 링크는 필수」 — 카드마다 삼성전자서비스 원문 링크가 있어야 하고,
+ * 금액은 원문에서 눈으로 옮긴 값이라 흔들리면 회귀다. 기술료 금액표는 원문이 공개하지
+ * 않으므로 **지어낸 금액이 없다는 것**과 **공개하지 않는다고 적는다는 것**을 함께 본다.
+ */
+{
+  const F = A.FEE;
+  const T = F && F.trip && F.trip.rows;
+  const golden = [['평절기 (1~5, 9~12월)', '28,000원', '33,000원'], ['성수기 (6~8월)', '33,000원', '38,000원']];
+  if (!T || JSON.stringify(T) !== JSON.stringify(golden)) fail('출장비 골든값이 원문(평절기 28,000/33,000 · 성수기 33,000/38,000)과 다르다');
+  else pass('출장비 골든값 4개 = 원문');
+
+  A.tab = 'fee';
+  const pane = doc.querySelector('#feePane');
+  if (pane.style.display === 'none') fail('수리비 탭을 눌렀는데 화면이 안 보인다');
+  const cards = [...pane.querySelectorAll(':scope > .card')];
+  const noSrc = cards.filter((c) => !c.querySelector('.src a[href^="https://www.samsungsvc.co.kr/"]'));
+  if (cards.length < 6) fail(`수리비 카드가 ${cards.length}장 — 요금구성·출장비·기술료·부품비·무상·유상 여섯이어야 한다`);
+  else if (noSrc.length) fail(`출처 링크가 없는 카드 ${noSrc.length}장 — 「출처와 링크는 필수」`);
+  else pass(`수리비 카드 ${cards.length}장 전부 삼성전자서비스 원문 링크`);
+
+  const txt = pane.textContent;
+  if (!/기술료 금액표는 공개되어 있지 않습니다/.test(txt)) fail('기술료 금액표가 공개되지 않는다는 사실을 화면이 적지 않는다');
+  else pass('기술료 금액표 미공개를 밝힌다');
+  /* 원문에 없는 「N만원」 꼴 금액이 섞이면 안 된다(구독 응대 스크립트에서 걷어낸 그 종류) */
+  if (/\d+\s*~\s*\d+\s*만\s*원/.test(txt)) fail('수리비 탭에 출처 없는 「N~M만원」 금액이 있다');
+  else pass('출처 없는 금액 범위 없음');
+
+  for (const k of ['service', 'price', 'self']) {
+    if (!pane.querySelector(`a[href="${A.FEE_SRC[k][1]}"]`)) fail(`원문 링크 ${k} 가 화면에 없다`);
+  }
+
+  /* 리퍼부품 — 자료 파일이 원문 모양을 지키는가, 그리고 검색이 실제로 찾는가 */
+  const RF = JSON.parse(fs.readFileSync(new URL('../public/svc-refurb.json', import.meta.url), 'utf8'));
+  const bad = RF.rows.filter((r) => r.length !== 8 || !(r[0] >= 0 && r[0] <= 2) || !r[1] || (r[5] !== null && !(r[5] > 0)) || (r[6] !== null && !(r[6] > 0)));
+  /* 리퍼가가 신품가보다 비싼 줄이 원문에 2건 있다(아답터 등) — 원문 그대로 두고 알리기만 한다 */
+  const odd = RF.rows.filter((r) => r[6] > r[5]).length;
+  if (odd) console.log(`NOTE: 리퍼가 > 신품가 ${odd}건 — 원문 표기 그대로`);
+  if (RF.rows.length < 1000) fail(`리퍼부품이 ${RF.rows.length}건뿐이다`);
+  else if (bad.length) fail(`리퍼부품 ${bad.length}건이 모양이 어긋난다(칸 수·가격 없음) — 예: ${JSON.stringify(bad[0])}`);
+  else if (RF.src !== A.FEE_SRC.price[1]) fail('리퍼부품 자료의 출처가 리퍼부품 가격검색 원문 주소가 아니다');
+  else pass(`리퍼부품 ${RF.rows.length.toLocaleString()}건 — 모양 · 출처 주소`);
+  const g = RF.rows.find((r) => r[3] === 'GH82-22209D');
+  if (!g || g[5] !== 524000 || g[6] !== 366000) fail('골든 SM-F700N 부품 GH82-22209D 가 신품 524,000 · 리퍼 366,000 이 아니다');
+  else pass('리퍼 골든값 GH82-22209D 신품 524,000 · 리퍼 366,000');
+
+  A.loadRefurb(RF);
+  const q = pane.querySelector('#rfq');
+  q.value = 'SM-F700N';
+  q.dispatchEvent(new window.Event('input'));
+  const rows = pane.querySelectorAll('#rfOut tbody tr');
+  if (!rows.length) fail('리퍼부품 검색 SM-F700N 이 아무것도 못 찾는다');
+  else if (!/524,000원/.test(pane.querySelector('#rfOut').textContent)) fail('리퍼부품 검색 결과에 신품가 524,000원이 안 보인다');
+  else pass(`리퍼부품 검색 SM-F700N → ${rows.length}건`);
+
+  /* 상단 검색이 「출장비」로 수리비 탭에 데려가는가 */
+  A.tab = 'as';
+  const sq = doc.querySelector('#sq');
+  sq.value = '출장비';
+  sq.dispatchEvent(new window.Event('input'));
+  const hit = [...doc.querySelectorAll('#sres .sr')].find((el) => /출장비/.test(el.textContent));
+  if (!hit) fail('상단 검색 「출장비」 결과가 없다');
+  else { hit.click(); if (A.tab !== 'fee') fail(`「출장비」를 눌렀는데 탭이 ${A.tab}`); else pass('상단 검색 「출장비」 → 수리비 탭'); }
+  A.tab = 'as';
 }
 
 
