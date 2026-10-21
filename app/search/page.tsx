@@ -29,7 +29,6 @@ type Detail = {
   spec?: [string, string][]
   on?: string[]
   off?: string[]
-  price?: number | null
   note?: string
   usp?: string[]
 }
@@ -93,9 +92,6 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
             )}
           </p>
         </div>
-        <span className="text-sm font-bold shrink-0" style={{ color: '#1428A0' }}>
-          {d.price == null ? '가격 문의' : `${d.price}만원`}
-        </span>
       </div>
 
       {d.note && <p className="px-3 pt-2 text-[11px] text-amber-700 flex items-start gap-1"><Icon name="warn" size={12} className="flex-shrink-0 mt-0.5" /> <span>{d.note}</span></p>}

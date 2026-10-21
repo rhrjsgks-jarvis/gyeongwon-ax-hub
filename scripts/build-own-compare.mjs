@@ -12,7 +12,7 @@
  * 조금만 바뀌어도 조용히 빈 값이 되고, 그러면 비교 목록에서 574종이 통째로 사라진다.
  * jsdom 으로 앱을 띄워 `PRODUCTS` 를 그대로 꺼낸다(다른 빌드 스크립트와 같은 방식).
  *
- * **담는 것은 비교에 쓰는 다섯뿐이다** — cat · group · model · price · fx.
+ * **담는 것은 비교에 쓰는 다섯뿐이다** — cat · group · model · fx.
  * `kw` 는 담지 않는다(fx 를 소문자로 베낀 글이라 파일이 두 배가 된다 — CLAUDE.md 규칙).
  */
 import fs from 'node:fs';
@@ -48,7 +48,6 @@ if (!Array.isArray(P) || !P.length) {
 
 const slim = P.map((p) => ({
   cat: p.cat, group: p.group, model: p.model,
-  price: p.price === undefined ? null : p.price,
   fx: p.fx || [],
 })).filter((p) => p.cat && p.model);
 

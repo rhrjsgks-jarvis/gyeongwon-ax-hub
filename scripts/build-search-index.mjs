@@ -63,7 +63,6 @@ const add = (e) => entries.push({ ...e, kw: `${e.kw} ${e.title}` });
       spec: (p.fx || []).filter((f) => f[1]),
       on: p.on || [],
       off: p.off || [],
-      price: p.price ?? null,
       note: p.note || '',
       usp: p.usp || [],
       catOk: !!p.cat_ok,
@@ -516,7 +515,7 @@ for (const e of entries) {
 // /search는 첫 진입에 경량본만 받고, 사용자가 결과를 펼칠 때 상세를 한 번 더 받는다.
 // 매장에서 폰으로 쓰는 도구라 첫 로딩에 상세 스펙(160KB 이상)까지 받을 이유가 없다.
 // 두 파일의 배열 인덱스가 같은 항목을 가리키므로(i 필드) 순서를 바꾸지 말 것.
-const DETAIL_KEYS = ['spec', 'on', 'off', 'price', 'note', 'usp'];
+const DETAIL_KEYS = ['spec', 'on', 'off', 'note', 'usp'];
 const light = [];
 const detail = [];
 entries.forEach((e, i) => {

@@ -429,10 +429,15 @@ function resetUrlTabInputs() {
     assertTrue(has('식기세척기', 'dryType'), '식기세척기 건조 방식 항목 누락');
     assertTrue(has('인덕션', 'kw') && has('인덕션', 'cutout'), '인덕션 출력·타공 항목 누락');
 
-    /* 가격은 비교표에서 뺐다(위 참조). 데이터의 `price` 값은 남아 있어야 한다 —
-       되살릴 수 있어야 하고 대응전략 문구가 근거로 쓴다. */
-    assertTrue(DB['냉장고'].samsung.some((m) => typeof m.price === 'number'),
-      '데이터의 price 값까지 지워졌다 — 화면에서 빼는 것과 데이터에서 지우는 것은 다른 일이다');
+    /* 2026-10-21 사장님 지시로 **데이터에서도 지웠다** — 가격은 정책 사항이라 앱에 싣지 않는다.
+       (옛 결정 「데이터의 price 는 남긴다」를 뒤집었다.) 응대 문구에도 제품 가격이 없어야 한다. */
+    for (const cat of Object.keys(DB)) {
+      const all = [...DB[cat].samsung, ...Object.values(DB[cat].competitors || {}).flat()];
+      const p = all.find((m) => m && m.price != null);
+      assertTrue(!p, `"${cat}" 모델에 price 가 남아 있다 (${p && p.name})`);
+      const words = JSON.stringify([DB[cat].counter || [], DB[cat].scripts || [], DB[cat].strategies || []]);
+      assertTrue(!/[0-9][0-9,.]*s*만s*원/.test(words), `"${cat}" 응대 문구에 금액이 남아 있다`);
+    }
 
     window.switchTab('db');
     window.selectCat('인덕션');
@@ -482,8 +487,8 @@ function resetUrlTabInputs() {
      */
     window.selectCat('TV');
     const optTexts = [...val('sel-comp').querySelectorAll('option')].map((o) => o.textContent);
-    assertTrue(optTexts.some((t) => t.includes('86MRGB96BKA') && t.includes('가격 문의')),
-      '가격 미확인 모델이 "가격 문의"로 표기되지 않음');
+    assertTrue(!optTexts.some((t) => /가격 문의|만원/.test(t)),
+      '드롭다운에 가격 표기가 남아 있다');
     val('sel-comp').value = String(optTexts.findIndex((t) => t.includes('86MRGB96BKA')));
     window.renderResult();
     assertTrue(![...val('spec-table').querySelectorAll('.spec-label')].some((td) => td.textContent.includes('가격')),

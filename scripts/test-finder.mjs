@@ -255,14 +255,16 @@ const CAT_QUERIES = {
         if (doc.querySelector('#rHost .rdetail')) fail('toggleDetail 재호출 후에도 .rdetail이 닫히지 않음');
       }
     }
-    window.setSort('asc');
+    window.setSort('new');
     const sortBtns = [...doc.querySelectorAll('#sortRow .sbtn')];
     const onBtn = sortBtns.find((b) => b.classList.contains('on'));
-    if (!onBtn || !onBtn.textContent.includes('낮은')) fail('setSort("asc") 후 정렬 버튼 상태가 갱신되지 않음');
-    const prices = [...doc.querySelectorAll('#rHost .rmeta b')].map((el) => parseFloat(el.textContent));
-    for (let i = 1; i < prices.length; i++) {
-      if (prices[i] < prices[i - 1]) { fail(`가격 오름차순 정렬 실패: ${prices[i - 1]} -> ${prices[i]}`); break; }
-    }
+    if (!onBtn || !onBtn.textContent.includes('최신')) fail('setSort("new") 후 정렬 버튼 상태가 갱신되지 않음');
+    /* 가격은 싣지 않는다(2026-10-21 사장님 지시 — 가격은 정책 사항) — 정렬·카드·데이터 어디에도 없어야 한다 */
+    if (sortBtns.some((b) => /가격/.test(b.textContent))) fail('정렬 버튼에 가격순이 남아 있다');
+    if (/가격 문의|출시가|만원/.test(doc.getElementById('rHost').textContent)) fail('결과 카드에 가격 표기가 남아 있다');
+    const priced = [...CE_MX, ...HARMAN].filter((p) => p.price != null || (p.price_lab || '') !== '');
+    if (priced.length) fail(`제품 데이터에 가격이 ${priced.length}건 남아 있다 (예: ${priced[0].model})`);
+    else console.log('  가격 없음 — 정렬·카드·데이터 ✓');
   } catch (e) {
     fail(`카드 토글/정렬 검증 중 예외: ${e.message}`);
   }
@@ -286,6 +288,10 @@ const CAT_QUERIES = {
 
   // ═══ 8. AI 추천 플로우 (자연어 → 카테고리 감지 → Step2 → 최종 추천) ═══
   console.log('── 8. AI 추천 플로우 ──');
+  /* 가격은 앱에서 지웠다(2026-10-21). AI 추천은 감춰 둔 기능이고 가격 위에 서 있어 지금 자료로는
+   * 돌 수 없다 — 엔진이 썩지 않게 **이 검사 안에서만** 결정적인 가짜 가격을 넣고 돌린 뒤 되돌린다.
+   * 실제 화면에는 어떤 가격도 실리지 않는다(6번이 지킨다). */
+  window.eval('PRODUCTS.forEach(function(p){ p.__realPrice = p.price; p.price = 50 + ((p.id * 37) % 40) * 10; })');
   try {
     window.setMode('ai');
 
@@ -528,6 +534,7 @@ const CAT_QUERIES = {
   }
 
   // ═══ 10. 카테고리 전수 검색 (51개: CE/MX 27 + 리빙 9 + 데이코 1 + Harman 14) — 0건 카테고리 없는지 ═══
+  window.eval('PRODUCTS.forEach(function(p){ p.price = p.__realPrice; delete p.__realPrice; })');
   console.log('── 10. 카테고리 전수 검색 (50개) ──');
   const catNames = Object.keys(CAT_QUERIES);
   console.log('총 카테고리 수:', catNames.length, '(기대: 51 = CE/MX 27 + 리빙 9 + 데이코 1 + Harman 14)');
@@ -991,11 +998,17 @@ const CAT_QUERIES = {
 
     /* 숫자 안의 쉼표를 통째로 공백으로 바꾸던 탓에 "1,200만원 이하"가 **200만원**으로
      * 읽혔다 — 0건도 아니고 조용히 틀린 답을 내밀었다. */
-    for (const [q, want] of [['1,000만 이하 TV', 1000], ['1,200만원 이하 TV', 1200], ['1000만 이하 TV', 1000]]) {
-      const got = window.parseQuery(q).budgetMax;
-      if (got !== want) fail(`"${q}" 예산 해석 ${got}만원, 기대 ${want}만원 — 숫자 안의 쉼표를 지워야 한다`);
+    /* 가격을 싣지 않으므로 예산은 조건이 아니다 — 말해도 결과가 줄지 않고, 그 사실을 적는다.
+     * 쉼표가 든 예산(1,200만원)도 통째로 걸러져야 「200」 같은 조각이 조건으로 남지 않는다. */
+    const tvN = models('TV').length;
+    for (const q of ['1,000만 이하 TV', '1,200만원 이하 TV', '1000만 이하 TV', '200~300만원 TV']) {
+      const P = window.parseQuery(q);
+      if (!P.budgetSaid) fail(`"${q}" 예산 말을 알아보지 못했다`);
+      if (P.budgetMax != null || P.budgetMin != null) fail(`"${q}" 가 예산 조건을 걸었다 — 가격이 없어 0건이 된다`);
+      const n = models(q).length;
+      if (n !== tvN) fail(`"${q}" → ${n}종, "TV"(${tvN}종)와 같아야 한다`);
     }
-    console.log('  쉼표가 든 예산을 바르게 읽는다 (1,200만원 → 1200) ✓');
+    console.log(`  예산을 말해도 조건으로 안 쓴다 (TV ${tvN}종 그대로) ✓`);
   }
 
   /* ═══ 14. 화면에 적는 이름과 수치 ═══
