@@ -1145,6 +1145,25 @@ API 가 후기 수·평점을 주는지 확인해야 한다). 받는다면 **양
   LG 홈봇 RONi는 "최대 흡입력 30W"만, 로보킹은 "진공도 10,000 Pa"만 적는다. 단위가 같은 값끼리만
   비교 행에 넣을 것(그래서 로봇청소기는 `pa`만 넣고 W는 넣지 않았다).
 
+### 9·10월호 대조 (2026-10-21, v284) — **PDF 를 직접 받는다**
+
+- **분할 업로드가 필요 없어졌다.** 베스트샵 `/product/catalog/list` 가 최신 호 뷰어 주소를 주고,
+  뷰어 HTML 에 PDF 링크가 그대로 있다 — `lge.co.kr/kr/ebook/2026/august/best/best/catImage/661/20260910_best_catalogue.pdf`
+  (182쪽 · 18MB). `pdftotext -layout` 로 **모델코드는 읽히지만 한글은 글꼴 때문에 깨진다** — 이름 대조는 못 하고 코드 대조만 된다.
+- **「카탈로그에 없다」를 단종으로 읽지 않는다 — LG 공식몰 검색 API 의 `modelStatusCode` 로 가른다.**
+  `apiv2.lge.co.kr/searchsvc/ajax/v1/search/product?keyword=` 는 **Origin·Referer 를 붙이면 curl 로도 된다.**
+  67종 대조 — 카탈로그 일치 45 · 접두만 6 · 미수록 15 → 몰 상태로 갈랐다:
+
+  | 판정 | 모델 | 처리 |
+  |---|---|---|
+  | DISCONTINUED / NOT_FOR_SALE | AX9884WE · 16Z90SP · 16T90SP · DUBJ4EL · BEI3QEBLO | **뺐다** |
+  | 몰·카탈로그 어디에도 없음 | FX21GAC · FX25GNC · WTK14VG2BGA · FQ16DCBSE2U · FQ18HDBBE2S | **뺐다**(8월부터 검색 0건이던 것) |
+  | ACTIVE (카탈로그만 미수록) | S834MEE111 · T873MEE111 · H876GBB011 · T876MEE1H1 · FH25ESEFX · SQ10GJ1WAS · R585WKA1 · Z490MEEF12 · SC5GMR52CS | 그대로 |
+  | SOLD_OUT · 카탈로그에 새 코드 | 86QNED86AKA → 카탈로그 `86QNED86BKA` | **그대로 두고 남김** — 새 코드의 사양을 받기 전에는 바꾸지 않는다 |
+  | 후속 코드가 ACTIVE | BEI3QEBLO → `BEI3QEBLOE` | 사양 미확인이라 넣지 않았다 |
+
+  도구 `.scratch/refresh/lg0910.mjs`(코드 대조) · `lg0910-drop.mjs`(`name:'` 로 시작하는 항목만 지우고 크기 상한을 건다).
+
 ### 대조로 드러난 "현장에서 반박당하는 문구" — 되살리지 말 것
 
 타사 카탈로그를 보는 진짜 이유가 이것이다. 우리 셀링포인트가 사실인지 확인하는 것.
