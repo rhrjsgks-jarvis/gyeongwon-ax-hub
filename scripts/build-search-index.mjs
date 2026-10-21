@@ -272,13 +272,19 @@ function flatten(v, out = []) {
      부품 이름 묶기(색상 떼기)는 앱의 partBase 와 같은 규칙이다. */
   const PK = JSON.parse(read('svc-parts.json'));
   const partBase = (n) => n.replace(/_[^_,]*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim() || n;
-  const KIND_WORD = ['휴대폰 스마트폰 갤럭시', '휴대폰 스마트폰 폴더블 갤럭시 z', '태블릿 갤럭시탭 탭'];
+  const KIND_WORD = ['휴대폰 스마트폰 갤럭시', '휴대폰 스마트폰 폴더블 갤럭시 z', '태블릿 갤럭시탭 탭',
+    'pc 노트북 갤럭시북 갤럭시 북 북프로 키보드 터치패드 팬 fan 스피커 케이스', 'pc 모니터 스탠드 받침대 목 하단'];
   const bySeries = new Map();
+  /* 노트북 겸용 부품(「갤럭시 북3/북4 프로」)은 따로 한 줄을 세우지 않고 세대마다 넣는다 —
+     2~4개짜리 줄이 열 개 넘게 늘어서면 「북4 수리비」 결과가 흩어진다. 앱의 pkGens 와 같은 규칙이다. */
+  const pkGens = (r) => (r[0] === 3 && r[1].includes('/'))
+    ? [...new Set((r[1].match(/북\d*/g) || []).map((t) => '갤럭시 ' + (t === '북' ? '북' : t) + ' 프로'))] : [r[1].trim()];
   for (const r of PK.rows) {
-    const s = r[1].trim();
-    const key = r[0] + '|' + s;
-    if (!bySeries.has(key)) bySeries.set(key, { kind: r[0], series: s, rows: [] });
-    bySeries.get(key).rows.push(r);
+    for (const s of pkGens(r)) {
+      const key = r[0] + '|' + s;
+      if (!bySeries.has(key)) bySeries.set(key, { kind: r[0], series: s, rows: [] });
+      bySeries.get(key).rows.push(r);
+    }
   }
   for (const { kind, series, rows } of bySeries.values()) {
     const label = series === '기타 제품' ? `${['스마트폰', '폴더블', '태블릿'][kind]} 기타 모델` : series;

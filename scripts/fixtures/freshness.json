@@ -93,12 +93,12 @@
     },
     {
       "key": "svc-fee",
-      "name": "수리비·출장비·휴대폰 부품가",
+      "name": "수리비·출장비·휴대폰·PC 부품가",
       "everyDays": 30,
       "checkedAt": "2026-10-18",
       "where": "AS 관련 정보 → 수리비",
       "source": "samsungsvc.co.kr/info/fee (service·price 탭) · /info/self-repair",
-      "how": ".scratch/svcfee/collect.mjs·selfparts2.mjs(브라우저 안 fetch) → node scripts/build-svc-parts.mjs <selfparts-all.json> · 출장비 문구는 as-app.html 의 FEE"
+      "how": ".scratch/svcfee/collect.mjs·selfparts2.mjs·pcparts.mjs(브라우저 안 fetch · 노트북·모니터는 pcparts 를 selfparts-all.json 에 합친다) → node scripts/build-svc-parts.mjs <selfparts-all.json> · 출장비 문구는 as-app.html 의 FEE"
     },
     {
       "key": "install-guide",

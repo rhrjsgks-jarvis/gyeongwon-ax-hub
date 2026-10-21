@@ -1,5 +1,5 @@
 /*
- * 삼성전자서비스 휴대폰·태블릿 부품 가격 → public/svc-parts.json
+ * 삼성전자서비스 휴대폰·태블릿·PC(노트북·모니터) 부품 가격 → public/svc-parts.json
  *   node scripts/build-svc-parts.mjs <수집본 selfparts-all.json>
  *
  * 원본은 소모품샵 「고객 자가수리」(https://www.samsungsvc.co.kr/shop/product?category=175707397)가
@@ -18,17 +18,28 @@ const src = process.argv[2];
 if (!src) { console.error('사용법: node scripts/build-svc-parts.mjs <selfparts-all.json>'); process.exit(1); }
 const raw = JSON.parse(fs.readFileSync(src, 'utf8'));
 
-const KINDS = ['스마트폰(S, A)', '스마트폰(폴더블)', '태블릿'];
+const KINDS = ['스마트폰(S, A)', '스마트폰(폴더블)', '태블릿', '노트북', '모니터'];
+/* PC(2026-10-21 사장님: *"PC관련 수리비와 부품값도"*) — 원문 분류가 「갤럭시 북 Pro 시리즈」 하나뿐이라
+   153건이 한 덩어리가 된다. 부품명 머리(「북6 프로 배터리」의 「북6 프로」)로 세대를 가른다.
+   여러 세대 겸용(「북3/북4 프로」)은 그 표기 그대로 둔다 — 한쪽으로 몰면 다른 세대에서 안 보인다. */
+const pcSeries = (k, r) => {
+  if (k === '노트북') {
+    const m = String(r.name || '').match(/^(\S*북\S*(?:\s?프로)?(?:\/\S+)*)/);
+    return m ? '갤럭시 ' + m[1].replace(/^북프로/, '북 프로') : String(r.series || '');
+  }
+  if (k === '모니터') return '모니터 스탠드';
+  return String(r.series || '');
+};
 const num = (v) => (typeof v === 'number' && v > 0 ? v : null);
 // 부품명에서 부품번호 꼬리(「 / GH81-…」)와 「,SELF KIT」 를 걷는다 — 부품번호는 따로 싣는다
 // 「,SELF KIT」 뒤에 적용 모델이 한 번 더 붙은 이름도 있다(「…PBA_,SELF KIT, SM-F976N」)
-const clean = (s) => String(s || '').replace(/\s*\/\s*GH[0-9A-Z-]+\s*$/, '').replace(/,?\s*SELF(\s+KIT)?.*$/i, '').replace(/_+$/, '').trim();
+const clean = (s) => String(s || '').replace(/\s*\/\s*(?:GH|BA|BN)[0-9A-Z-]+\s*$/, '').replace(/,?\s*SELF(\s+KIT)?.*$/i, '').replace(/_+$/, '').replace(/ {2,}/g, ' ').trim();
 const rows = [];
 for (const k of KINDS) {
   for (const r of raw.items[k] || []) {
     rows.push([
       KINDS.indexOf(k),
-      String(r.series || '').trim(),
+      pcSeries(k, r).trim(),
       String(r.svcModel || '').trim(),
       String(r.part || '').trim(),
       clean(r.name),

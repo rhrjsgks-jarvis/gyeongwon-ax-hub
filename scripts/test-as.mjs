@@ -1509,13 +1509,14 @@ pass('상황실·업무·운영 골든 5건');
 
   /* 휴대폰·태블릿 정품 부품가(소모품샵 「고객 자가수리」, 2026-10-21) — 모양 · 골든 · 검색 */
   const PK = JSON.parse(fs.readFileSync(new URL('../public/svc-parts.json', import.meta.url), 'utf8'));
-  const pkBad = PK.rows.filter((r) => r.length !== 8 || !(r[0] >= 0 && r[0] <= 2) || !r[4] || !(r[5] > 0) || (r[6] !== null && !(r[6] > 0)) || /SELF|_$/.test(r[4]));
+  const pkBad = PK.rows.filter((r) => r.length !== 8 || !(r[0] >= 0 && r[0] <= 4) || !r[4] || !(r[5] > 0) || (r[6] !== null && !(r[6] > 0)) || /SELF|_$/.test(r[4]));
   const pkOdd = PK.rows.filter((r) => r[6] > r[5]).length;   // 원문에 반납가 > 판매가가 15건 있다 — 그대로 두고 알린다
   if (pkOdd) console.log(`NOTE: 부품가 반납 후 > 판매가 ${pkOdd}건 — 원문 표기 그대로`);
   if (PK.rows.length < 800) fail(`부품가가 ${PK.rows.length}건뿐이다`);
   else if (pkBad.length) fail(`부품가 ${pkBad.length}건 모양이 어긋난다 — 예: ${JSON.stringify(pkBad[0])}`);
   else if (PK.src !== A.FEE_SRC.parts[1]) fail('부품가 자료의 출처가 소모품샵 고객 자가수리 주소가 아니다');
-  else pass(`휴대폰·태블릿 부품가 ${PK.rows.length}건 — 모양 · 출처 주소`);
+  else if (PK.rows.filter((r) => r[0] === 3).length < 100 || !PK.rows.some((r) => r[0] === 4)) fail('PC 부품가(노트북·모니터)가 빠졌다');
+  else pass(`휴대폰·태블릿·PC 부품가 ${PK.rows.length}건(노트북 ${PK.rows.filter((r) => r[0] === 3).length} · 모니터 ${PK.rows.filter((r) => r[0] === 4).length}) — 모양 · 출처 주소`);
   const pg = PK.rows.find((r) => r[3] === 'GH81-23705A');
   if (!pg || pg[5] !== 301000 || pg[6] !== 235000) fail('골든 S20+ 디스플레이 GH81-23705A 가 판매가 301,000 · 반납 후 235,000 이 아니다');
   else pass('부품가 골든 GH81-23705A 301,000 · 반납 후 235,000');
@@ -1529,6 +1530,15 @@ pass('상황실·업무·운영 골든 5건');
   else if (!/MAIN DISPLAY/.test(pkt) || !/940,000원/.test(pkt)) fail('「폴드8」 결과에 메인 디스플레이 940,000원이 안 보인다');
   else if ([...pkRows].some((tr) => !tr.querySelector('td b') || !tr.querySelector('td b').textContent.trim())) fail('부품가 결과에 이름이 빈 줄이 있다');
   else pass(`부품가 검색 「폴드8」 → ${pkRows.length}줄 (색상 묶음)`);
+  /* PC — 「북6」 로 노트북 칸이 켜지고 · 겸용 부품(「갤럭시 북3/북4 프로」)이 「갤럭시 북4 프로」 에서도 나와야 한다 */
+  pq.value = '북6'; pq.dispatchEvent(new window.Event('input'));
+  const b6on = pane.querySelector('#pkKinds .chip.on');
+  if (!pane.querySelectorAll('#pkOut tbody tr').length || !/배터리/.test(pane.querySelector('#pkOut').textContent)) fail('부품가 검색 「북6」 이 노트북 배터리를 못 찾는다');
+  else if (!b6on || b6on.textContent !== '노트북') fail('「북6」 을 찾았는데 노트북 칩이 안 켜진다');
+  else pass('부품가 검색 「북6」 → 노트북 칸');
+  pq.value = '갤럭시 북4 프로'; pq.dispatchEvent(new window.Event('input'));
+  if (!pane.querySelector('#pkOut').textContent.includes('북3/북4 프로')) fail('「갤럭시 북4 프로」 에 겸용 부품(북3/북4 프로)이 안 나온다');
+  else pass('노트북 겸용 부품이 세대마다 찾힌다');
 
   /* 수리비 서식이 인쇄 전용 블록 안에 들어가면 화면에서 표·칩·목록이 맨 글자로 겹쳐 보인다(2026-10-21 실제로 그랬다) */
   const css = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n');

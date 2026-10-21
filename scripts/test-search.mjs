@@ -272,7 +272,9 @@ for (const [file, needle] of deepLinks) {
   // 휴대폰 수리비(부품가) — 「폴드8 수리비」 로 그 시리즈 부품가가 나와야 한다(2026-10-21 사장님 지시)
   {
     const PKS = new Set(JSON.parse(fs.readFileSync(path.join(root, 'public', 'svc-parts.json'), 'utf8')).rows.map((r) => r[1].trim()));
-    for (const [q, want] of [['폴드8 수리비', '폴드8 수리비'], ['S26 액정', '갤럭시S26 수리비'], ['플립7 부품가격', '플립7 수리비'], ['탭 S9 배터리', '갤럭시 탭 S9 시리즈 수리비']]) {
+    for (const [q, want] of [['폴드8 수리비', '폴드8 수리비'], ['S26 액정', '갤럭시S26 수리비'], ['플립7 부품가격', '플립7 수리비'], ['탭 S9 배터리', '갤럭시 탭 S9 시리즈 수리비'],
+      // PC(2026-10-21 사장님: *"PC관련 수리비와 부품값도"*)
+      ['북6 수리비', '갤럭시 북6 프로 수리비'], ['갤럭시북4 배터리', '갤럭시 북4 프로 수리비'], ['모니터 스탠드 부품', '모니터 스탠드 수리비']]) {
       const got = find(q);
       if (!got.some((e) => e.title.startsWith(want))) fail(`"${q}" 에서 「${want} …」 가 안 나온다 (상위: ${got.slice(0, 3).map((e) => e.title).join(' · ')})`);
     }

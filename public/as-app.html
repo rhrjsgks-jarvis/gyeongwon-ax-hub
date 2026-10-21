@@ -1937,7 +1937,7 @@ function revealBody(){
  * **품목별 기술료(공임) 금액표는 삼성전자서비스가 공개하지 않는다** — 원문이 *"수리비 기준표를
  * 따릅니다"* 라고만 적고 표 자체는 어디에도 없다. 그래서 지어내지 않고 **공개하지 않는다는 사실**을
  * 화면이 적는다(비교표의 「미공개」 와 같은 규칙). 공개된 것 중 금액이 있는 것은 출장비와
- * **휴대폰·태블릿 정품 부품가**(소모품샵 고객 자가수리 995건, `svc-parts.json`)뿐이다. 리퍼부품 가격 검색은
+ * **휴대폰·태블릿·PC 정품 부품가**(소모품샵 고객 자가수리 1,175건 — 노트북·모니터는 2026-10-21 더했다, `svc-parts.json`)뿐이다. 리퍼부품 가격 검색은
  * 2026-10-21 사장님 지시로 뺐다 — *"리퍼부품은 고객센터 별도문의"* (재고·공급에 따라 수리 시점 가격이 달라진다).
  */
 const FEE_SRC = {
@@ -2017,7 +2017,7 @@ const FEE_AT_OF = { parts: '2026-10-21' };
 const feeSrc = (k) => `<div class="src">출처 — 삼성전자서비스 <a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a> · ${FEE_AT_OF[k] || FEE_AT} 원문 확인</div>`;
 const feeList = (arr) => `<ul class="fee-ul">${arr.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
 
-/* 휴대폰·태블릿 정품 부품가(소모품샵 「고객 자가수리」 995건, svc-parts.json) — 이 탭을 열 때 받는다 */
+/* 휴대폰·태블릿·PC 정품 부품가(소모품샵 「고객 자가수리」 1,175건, svc-parts.json) — 이 탭을 열 때 받는다 */
 let PK = null, pkKind = 0, pkLoading = false;
 /* 수리비 탭은 카드가 일곱이라 폰에서 한참 끌어내려야 했다(2026-10-21 사장님:
    *"카테고리별로 묶어서 버튼타입으로"*). AS기간과 같은 칸 버튼으로 고르고 **고른 카드 하나만** 보인다.
@@ -2027,7 +2027,7 @@ const FEE_SECS = [
   ['total', '💰', '요금 구성'],
   ['trip',  '🚚', '출장비'],
   ['labor', '🔧', '수리비(기술료)'],
-  ['parts', '📱', '휴대폰 부품가'],
+  ['parts', '📱', '휴대폰·PC 부품가'],
   ['part',  '🧾', '부품비 · 리퍼'],
   ['free',  '✅', '무상 수리 기준'],
   ['paid',  '⚠', '유상 수리 대상'],
@@ -2051,15 +2051,16 @@ function feeCard(k){
       <b>엔지니어가 제품 점검 후 안내</b>합니다 — 화면에 없는 금액을 짐작해 말하지 마세요.</div>
     <div class="fee-h">원문 FAQ에서 확인되는 것</div>${feeList(FEE.laborFaq)}
     ${feeSrc('service')}${feeSrc('self')}</div>`;
-  if (k === 'parts') return `<div class="card"><h2>📱 휴대폰·태블릿 부품 가격</h2>
+  if (k === 'parts') return `<div class="card"><h2>📱 휴대폰·태블릿·PC 부품 가격</h2>
     <div class="why">삼성전자서비스 소모품샵 「고객 자가수리」에서 파는 <b>정품 부품</b>의 가격입니다. 원문은
       「수리용 자재/공구는 전국 서비스센터에서도 동일하게 구매 가능」이라고 적습니다.</div>
     <div class="note">센터에 맡기면 이 부품비에 <b>수리비(기술료)</b>가 더해집니다(「요금 구성」). 「반납 시」는 사용불량
-      부품을 반납하면 적용되는 원문 최종가입니다. 원문은 모델별 예상 수리비를 AI CS Bot 에서 안내합니다.</div>
+      부품을 반납하면 적용되는 원문 최종가입니다. 원문은 모델별 예상 수리비를 AI CS Bot 에서 안내합니다.
+      PC 는 원문이 <b>갤럭시 북 Pro 시리즈 노트북</b>과 <b>모니터 스탠드</b>만 싣습니다 — 그 밖의 PC·모니터 부품은 고객센터 1588-3366 으로 안내하세요.</div>
     <div class="fee-h">모델로 찾기 <span>(원 · 정품 부품가 · 기술료 제외)</span></div>
-    <div class="chips" id="pkKinds">${['스마트폰 S·A','폴더블','태블릿'].map((x, i) =>
+    <div class="chips" id="pkKinds">${['스마트폰 S·A','폴더블','태블릿','노트북','모니터'].map((x, i) =>
       `<button type="button" class="chip${i === pkKind ? ' on' : ''}" data-pk="${i}">${x}</button>`).join('')}</div>
-    <input class="sq rfq" id="pkq" placeholder="모델·시리즈 (예: 폴드8 · S26 · SM-F971N)" autocomplete="off">
+    <input class="sq rfq" id="pkq" placeholder="모델·시리즈 (예: 폴드8 · S26 · 북6 프로 · NT960XJG)" autocomplete="off">
     <div id="pkOut"></div>${feeSrc('parts')}</div>`;
   if (k === 'part') return `<div class="card"><h2>🧾 부품비 · 리퍼부품</h2><div class="why">${esc(FEE.part)}</div>
     <div class="card warn fee-in"><b>리퍼부품 가격은 고객센터에 따로 문의해 주세요.</b>
@@ -2105,6 +2106,10 @@ function renderFee(){
 /* 색상만 다른 부품을 한 줄로 묶는다 — 「폴드8, MAIN DISPLAY_GREEN SHADOW」 · 「… (클라우드 화이트)」 */
 const partBase = (n) => n.replace(/_[^_,]*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim() || n;
 const pkNorm = (t) => String(t || '').toUpperCase().replace(/[\s,·]/g, '');
+/* 노트북 겸용 부품(시리즈 「갤럭시 북3/북4 프로」)은 세대마다 찾혀야 한다 — 「갤럭시 북4 프로」로 찾아도 나온다.
+   통합검색 색인(build-search-index.mjs)이 같은 규칙으로 세대마다 넣는다. */
+const pkGens = (r) => (r[0] === 3 && r[1].includes('/'))
+  ? [...new Set((r[1].match(/북\d*/g) || []).map(t => '갤럭시 ' + (t === '북' ? '북' : t) + ' 프로'))] : [r[1].trim()];
 function renderParts(){
   const out = document.getElementById('pkOut'); if (!out) return;
   if (!PK) {
@@ -2119,14 +2124,14 @@ function renderParts(){
   const mine = PK.rows.filter(r => r[0] === pkKind);
   const q = pkNorm(document.getElementById('pkq').value);
   if (q.length < 2) {
-    const series = [...new Set(mine.map(r => r[1]))];
+    const series = [...new Set(mine.flatMap(pkGens))];
     out.innerHTML = `<div class="why">${mine.length.toLocaleString()}개 부품 · 시리즈를 누르거나 모델명을 두 글자 이상 넣으세요. (${esc(PK.collectedAt)} 원문 수집)</div>
       <div class="chips">${series.map(x => `<button type="button" class="chip" data-ps="${esc(x)}">${esc(x.trim())}</button>`).join('')}</div>`;
     out.querySelectorAll('[data-ps]').forEach(b => b.onclick = () => { document.getElementById('pkq').value = b.dataset.ps.trim(); renderParts(); });
     return;
   }
   /* 글자로 찾을 때는 칸과 무관하게 전부에서 — 「폴드8」을 S·A 칸에서 쳐도 나와야 한다 */
-  const hit = PK.rows.filter(r => pkNorm(r[1] + r[2] + r[4]).includes(q));
+  const hit = PK.rows.filter(r => pkNorm(pkGens(r).join('') + r[1] + r[2] + r[4]).includes(q));
   /* 찾은 것이 한 종류(폴더블 등)면 위 칩도 그쪽으로 — 「폴드8」 인데 S·A 가 켜져 있으면 화면이 두 말을 한다 */
   const kinds = new Set(hit.map(r => r[0]));
   if (kinds.size === 1) { pkKind = [...kinds][0]; document.querySelectorAll('#pkKinds .chip').forEach((x, i) => x.classList.toggle('on', i === pkKind)); }
