@@ -267,6 +267,33 @@ function flatten(v, out = []) {
     kw: '수리비 출장비 기술료 공임 공임비 부품비 부품값 부품가격 리퍼 리퍼부품 유상수리 무상수리 서비스요금 할증 야간 휴일 성수기 평절기 삼성전자서비스 요금 비용',
     href: asLink('출장비 · 수리비(기술료) · 부품비') });
 
+  /* 휴대폰·태블릿 정품 부품가(2026-10-21) — 「폴드8 수리비」 로 찾아야 한다(사장님 지시).
+     시리즈마다 한 줄. 누르면 AS 앱 수리비 탭의 부품가 검색이 그 시리즈로 열린다(`?pk=`).
+     부품 이름 묶기(색상 떼기)는 앱의 partBase 와 같은 규칙이다. */
+  const PK = JSON.parse(read('svc-parts.json'));
+  const partBase = (n) => n.replace(/_[^_,]*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim() || n;
+  const KIND_WORD = ['휴대폰 스마트폰 갤럭시', '휴대폰 스마트폰 폴더블 갤럭시 z', '태블릿 갤럭시탭 탭'];
+  const bySeries = new Map();
+  for (const r of PK.rows) {
+    const s = r[1].trim();
+    const key = r[0] + '|' + s;
+    if (!bySeries.has(key)) bySeries.set(key, { kind: r[0], series: s, rows: [] });
+    bySeries.get(key).rows.push(r);
+  }
+  for (const { kind, series, rows } of bySeries.values()) {
+    const label = series === '기타 제품' ? `${['스마트폰', '폴더블', '태블릿'][kind]} 기타 모델` : series;
+    const disp = rows.filter((r) => /디스플레이|DISPLAY|SCREEN|OCTA/i.test(r[4])).sort((a, b) => b[5] - a[5])[0];
+    const won = (v) => v.toLocaleString() + '원';
+    const parts = new Set(rows.map((r) => partBase(r[4])));
+    add({ t: 'category', m: 'as', title: `${label} 수리비 · 부품 가격`,
+      sub: (disp ? `${partBase(disp[4])} ${won(disp[5])}${disp[6] ? `(반납 시 ${won(disp[6])})` : ''} 등 ` : '')
+        + `${parts.size}개 부품 · 정품 부품가(기술료 별도)`,
+      kw: [series, series.replace(/^갤럭시\s*/, ''), series.replace(/\s+/g, ''), KIND_WORD[kind],
+        '수리비 수리비용 부품 부품값 부품가격 액정 액정값 화면 디스플레이 배터리 후면커버 뒷판 자가수리 정품부품 삼성전자서비스',
+        ...new Set(rows.map((r) => r[2])), ...parts].join(' '),
+      href: '/as?pk=' + encodeURIComponent(series) });
+  }
+
   for (const [cat, d] of Object.entries(DBA)) {
     add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
       sub: `무상보증 ${d.base}${d.hold ? ` · 부품보유 ${d.hold}년` : ''}`,

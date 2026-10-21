@@ -1475,45 +1475,70 @@ pass('상황실·업무·운영 골든 5건');
   A.tab = 'fee';
   const pane = doc.querySelector('#feePane');
   if (pane.style.display === 'none') fail('수리비 탭을 눌렀는데 화면이 안 보인다');
-  const cards = [...pane.querySelectorAll(':scope > .card')];
-  const noSrc = cards.filter((c) => !c.querySelector('.src a[href^="https://www.samsungsvc.co.kr/"]'));
-  if (cards.length < 6) fail(`수리비 카드가 ${cards.length}장 — 요금구성·출장비·기술료·부품비·무상·유상 여섯이어야 한다`);
-  else if (noSrc.length) fail(`출처 링크가 없는 카드 ${noSrc.length}장 — 「출처와 링크는 필수」`);
-  else pass(`수리비 카드 ${cards.length}장 전부 삼성전자서비스 원문 링크`);
+  /* 2026-10-21 — 카드 일곱을 칸 버튼으로 고른다(사장님: *"카테고리별로 묶어서 버튼타입으로"*).
+     칸마다 눌러 그 카드만 보이는가 · 카드마다 원문 링크가 있는가를 본다. */
+  const tiles = [...pane.querySelectorAll('#feeCats .cat')];
+  if (tiles.length !== 7) fail(`수리비 칸이 ${tiles.length}개 — 일곱이어야 한다`);
+  let allTxt = '';
+  const noSrc = [];
+  for (let i = 0; i < tiles.length; i++) {
+    pane.querySelectorAll('#feeCats .cat')[i].click();
+    const cards = [...pane.querySelectorAll('#feeBody > .card')];
+    if (cards.length !== 1) fail(`칸 ${i + 1} 을 눌렀는데 카드가 ${cards.length}장`);
+    if (!pane.querySelectorAll('#feeCats .cat')[i].classList.contains('on')) fail(`칸 ${i + 1} 이 켜짐 표시가 안 된다`);
+    if (cards[0] && !cards[0].querySelector('.src a[href^="https://www.samsungsvc.co.kr/"]')) noSrc.push(i + 1);
+    allTxt += pane.textContent;
+  }
+  if (noSrc.length) fail(`출처 링크가 없는 카드: ${noSrc.join(', ')}번 — 「출처와 링크는 필수」`);
+  else pass(`수리비 칸 ${tiles.length}개 — 누르면 그 카드 하나만 · 전부 원문 링크`);
+  if (pane.querySelector('#rfq')) fail('리퍼부품 가격 검색이 남아 있다 — 고객센터 별도 문의로 바꿨다');
+  pane.querySelectorAll('#feeCats .cat')[4].click();
+  if (!/고객센터에 따로 문의/.test(pane.textContent) || !pane.querySelector('[data-tel="15883366"]')) fail('리퍼부품 칸이 고객센터 1588-3366 문의를 안내하지 않는다');
+  else pass('리퍼부품 → 고객센터 1588-3366 별도 문의');
 
-  const txt = pane.textContent;
+  const txt = allTxt;
   if (!/기술료 금액표는 공개되어 있지 않습니다/.test(txt)) fail('기술료 금액표가 공개되지 않는다는 사실을 화면이 적지 않는다');
   else pass('기술료 금액표 미공개를 밝힌다');
   /* 원문에 없는 「N만원」 꼴 금액이 섞이면 안 된다(구독 응대 스크립트에서 걷어낸 그 종류) */
   if (/\d+\s*~\s*\d+\s*만\s*원/.test(txt)) fail('수리비 탭에 출처 없는 「N~M만원」 금액이 있다');
   else pass('출처 없는 금액 범위 없음');
-
-  for (const k of ['service', 'price', 'self']) {
+  for (const k of ['service', 'parts', 'self']) {
     if (!pane.querySelector(`a[href="${A.FEE_SRC[k][1]}"]`)) fail(`원문 링크 ${k} 가 화면에 없다`);
   }
+  pane.querySelectorAll('#feeCats .cat')[3].click();   // 휴대폰 부품가 칸을 열어 둔 채 아래 검사로
 
-  /* 리퍼부품 — 자료 파일이 원문 모양을 지키는가, 그리고 검색이 실제로 찾는가 */
-  const RF = JSON.parse(fs.readFileSync(new URL('../public/svc-refurb.json', import.meta.url), 'utf8'));
-  const bad = RF.rows.filter((r) => r.length !== 8 || !(r[0] >= 0 && r[0] <= 2) || !r[1] || (r[5] !== null && !(r[5] > 0)) || (r[6] !== null && !(r[6] > 0)));
-  /* 리퍼가가 신품가보다 비싼 줄이 원문에 2건 있다(아답터 등) — 원문 그대로 두고 알리기만 한다 */
-  const odd = RF.rows.filter((r) => r[6] > r[5]).length;
-  if (odd) console.log(`NOTE: 리퍼가 > 신품가 ${odd}건 — 원문 표기 그대로`);
-  if (RF.rows.length < 1000) fail(`리퍼부품이 ${RF.rows.length}건뿐이다`);
-  else if (bad.length) fail(`리퍼부품 ${bad.length}건이 모양이 어긋난다(칸 수·가격 없음) — 예: ${JSON.stringify(bad[0])}`);
-  else if (RF.src !== A.FEE_SRC.price[1]) fail('리퍼부품 자료의 출처가 리퍼부품 가격검색 원문 주소가 아니다');
-  else pass(`리퍼부품 ${RF.rows.length.toLocaleString()}건 — 모양 · 출처 주소`);
-  const g = RF.rows.find((r) => r[3] === 'GH82-22209D');
-  if (!g || g[5] !== 524000 || g[6] !== 366000) fail('골든 SM-F700N 부품 GH82-22209D 가 신품 524,000 · 리퍼 366,000 이 아니다');
-  else pass('리퍼 골든값 GH82-22209D 신품 524,000 · 리퍼 366,000');
+  /* 휴대폰·태블릿 정품 부품가(소모품샵 「고객 자가수리」, 2026-10-21) — 모양 · 골든 · 검색 */
+  const PK = JSON.parse(fs.readFileSync(new URL('../public/svc-parts.json', import.meta.url), 'utf8'));
+  const pkBad = PK.rows.filter((r) => r.length !== 8 || !(r[0] >= 0 && r[0] <= 2) || !r[4] || !(r[5] > 0) || (r[6] !== null && !(r[6] > 0)) || /SELF|_$/.test(r[4]));
+  const pkOdd = PK.rows.filter((r) => r[6] > r[5]).length;   // 원문에 반납가 > 판매가가 15건 있다 — 그대로 두고 알린다
+  if (pkOdd) console.log(`NOTE: 부품가 반납 후 > 판매가 ${pkOdd}건 — 원문 표기 그대로`);
+  if (PK.rows.length < 800) fail(`부품가가 ${PK.rows.length}건뿐이다`);
+  else if (pkBad.length) fail(`부품가 ${pkBad.length}건 모양이 어긋난다 — 예: ${JSON.stringify(pkBad[0])}`);
+  else if (PK.src !== A.FEE_SRC.parts[1]) fail('부품가 자료의 출처가 소모품샵 고객 자가수리 주소가 아니다');
+  else pass(`휴대폰·태블릿 부품가 ${PK.rows.length}건 — 모양 · 출처 주소`);
+  const pg = PK.rows.find((r) => r[3] === 'GH81-23705A');
+  if (!pg || pg[5] !== 301000 || pg[6] !== 235000) fail('골든 S20+ 디스플레이 GH81-23705A 가 판매가 301,000 · 반납 후 235,000 이 아니다');
+  else pass('부품가 골든 GH81-23705A 301,000 · 반납 후 235,000');
+  A.loadParts(PK);
+  const pq = pane.querySelector('#pkq');
+  pq.value = '폴드8';   // 스마트폰 S·A 칸이 켜진 채여도 찾아야 한다
+  pq.dispatchEvent(new window.Event('input'));
+  const pkt = pane.querySelector('#pkOut').textContent;
+  const pkRows = pane.querySelectorAll('#pkOut tbody tr');
+  if (!pkRows.length) fail('부품가 검색 「폴드8」이 아무것도 못 찾는다');
+  else if (!/MAIN DISPLAY/.test(pkt) || !/940,000원/.test(pkt)) fail('「폴드8」 결과에 메인 디스플레이 940,000원이 안 보인다');
+  else if ([...pkRows].some((tr) => !tr.querySelector('td b') || !tr.querySelector('td b').textContent.trim())) fail('부품가 결과에 이름이 빈 줄이 있다');
+  else pass(`부품가 검색 「폴드8」 → ${pkRows.length}줄 (색상 묶음)`);
 
-  A.loadRefurb(RF);
-  const q = pane.querySelector('#rfq');
-  q.value = 'SM-F700N';
-  q.dispatchEvent(new window.Event('input'));
-  const rows = pane.querySelectorAll('#rfOut tbody tr');
-  if (!rows.length) fail('리퍼부품 검색 SM-F700N 이 아무것도 못 찾는다');
-  else if (!/524,000원/.test(pane.querySelector('#rfOut').textContent)) fail('리퍼부품 검색 결과에 신품가 524,000원이 안 보인다');
-  else pass(`리퍼부품 검색 SM-F700N → ${rows.length}건`);
+  /* 수리비 서식이 인쇄 전용 블록 안에 들어가면 화면에서 표·칩·목록이 맨 글자로 겹쳐 보인다(2026-10-21 실제로 그랬다) */
+  const css = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n');
+  const pIdx = css.search(/@media print\s*\{/);   // 주석 속 「@media print」 글자는 건너뛴다
+  let depth = 0, pEnd = -1;
+  for (let i = css.indexOf('{', pIdx); i < css.length; i++) { if (css[i] === '{') depth++; else if (css[i] === '}') { depth--; if (!depth) { pEnd = i; break; } } }
+  const inPrint = css.slice(pIdx, pEnd);
+  const outside = css.slice(0, pIdx) + css.slice(pEnd);
+  if (/\.fee-t\s*\{/.test(inPrint) || !/\.fee-t\s*\{/.test(outside) || !/\.fee-eq\s*\{/.test(outside)) fail('수리비 서식(.fee-t·.fee-eq)이 @media print 안에만 있다 — 화면에서 안 먹는다');
+  else pass('수리비 서식이 화면에도 적용된다(@media print 밖)');
 
   /* 상단 검색이 「출장비」로 수리비 탭에 데려가는가 */
   A.tab = 'as';

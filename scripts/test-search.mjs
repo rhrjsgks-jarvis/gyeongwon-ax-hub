@@ -269,6 +269,18 @@ for (const [file, needle] of deepLinks) {
     return entries.filter((e) => cs.every((c) => hits(e.kw, c)));
   };
 
+  // 휴대폰 수리비(부품가) — 「폴드8 수리비」 로 그 시리즈 부품가가 나와야 한다(2026-10-21 사장님 지시)
+  {
+    const PKS = new Set(JSON.parse(fs.readFileSync(path.join(root, 'public', 'svc-parts.json'), 'utf8')).rows.map((r) => r[1].trim()));
+    for (const [q, want] of [['폴드8 수리비', '폴드8 수리비'], ['S26 액정', '갤럭시S26 수리비'], ['플립7 부품가격', '플립7 수리비'], ['탭 S9 배터리', '갤럭시 탭 S9 시리즈 수리비']]) {
+      const got = find(q);
+      if (!got.some((e) => e.title.startsWith(want))) fail(`"${q}" 에서 「${want} …」 가 안 나온다 (상위: ${got.slice(0, 3).map((e) => e.title).join(' · ')})`);
+    }
+    const pkBad = entries.filter((e) => e.href.startsWith('/as?pk=')).map((e) => decodeURIComponent(e.href.slice(7))).filter((s) => !PKS.has(s));
+    if (pkBad.length) fail(`부품가 딥링크 ${pkBad.length}건이 자료에 없는 시리즈를 가리킨다: ${pkBad.slice(0, 3).join(' · ')}`);
+    else console.log(`OK: 「폴드8 수리비」 등 부품가 검색 · 딥링크 ${entries.filter((e) => e.href.startsWith('/as?pk=')).length}건`);
+  }
+
   // 줄여 부르는 말 → 정식 명칭이 걸려야 한다
   for (const [q, needle] of [
     ['식세기', '식기세척기'],
