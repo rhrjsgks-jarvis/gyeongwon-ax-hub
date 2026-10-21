@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 import SearchTrends from '@/components/SearchTrends'
+import SearchBox from '@/components/SearchBox'
 import QRCode from '@/components/QRCode'
 import { APP_VERSION, versionLabel } from '@/lib/version'
 import { DEV_MODULES } from '@/lib/devModules'
@@ -635,28 +636,15 @@ export default function Home() {
       </div>
 
       {/* 통합검색 — 제품·카테고리·기능을 한 번에 찾아 해당 모듈로 연결한다 */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          const v = query.trim()
-          if (v) router.push(`/search?q=${encodeURIComponent(v)}`)
-        }}
-        className="flex gap-2 mb-6"
-      >
-        <input
+      <div className="flex mb-6">
+        <SearchBox
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={setQuery}
+          onSubmit={(v) => router.push(`/search?q=${encodeURIComponent(v)}`)}
           placeholder="통합검색 — 제품명·모델코드·기능 (예: 무풍, 김치냉장고, RM90H91B1W)"
-          className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-400"
+          inputClassName="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-400"
         />
-        <button
-          type="submit"
-          className="px-4 md:px-5 rounded-xl text-sm font-bold text-white shrink-0"
-          style={{ background: '#1428A0' }}
-        >
-          검색
-        </button>
-      </form>
+      </div>
 
       {/* 지금 팀이 많이 찾는 것 — 검색어·도구 순위(2026-08-28 사장님 요청).
           자료가 없거나 얇으면 스스로 안 그린다. */}

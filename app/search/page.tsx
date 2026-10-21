@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { logEvent } from '@/lib/logEvent'
 import Icon, { IconName } from '@/components/Icon'
 import { parseQuery, hits, ignoredWords, type Condition } from '@/lib/searchTerms'
+import SearchBox from '@/components/SearchBox'
 
 // 인덱스는 두 파일로 나뉜다(scripts/build-search-index.mjs 참고).
 //  - search-index.json  : 검색에 필요한 필드만 담은 경량본. 첫 진입에 받는다.
@@ -150,6 +151,19 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
   )
 }
 
+/*
+ * **묶음 안은 제목이 친 말을 많이 담은 순으로**(2026-10-21). 예전에는 색인 순서 그대로라
+ * 「모니터 수리비」 에서 휴대폰 부품가 스무 줄이 「모니터 스탠드 수리비」 보다 먼저 나왔다
+ * (휴대폰 줄도 '화면·디스플레이' 로 '모니터' 에 걸린다). 걸리는 것은 그대로 두고 **순서만** 바꾼다.
+ * 한 글자 낱말(「북」)도 센다 — 조건에서는 빠지지만 순서를 가르는 데는 쓸모가 있다.
+ */
+function rankByTitle(items: Entry[], q: string): Entry[] {
+  const words = q.toLowerCase().split(/\s+/).map((w) => w.replace(/[^0-9a-z가-힣]/g, '')).filter(Boolean)
+  if (!words.length) return items
+  const score = (e: Entry) => { const t = e.title.toLowerCase().replace(/\s+/g, ''); return words.filter((w) => t.includes(w)).length }
+  return items.map((e, i) => ({ e, i, s: score(e) })).sort((a, b) => b.s - a.s || a.i - b.i).map((x) => x.e)
+}
+
 function SearchResults() {
   const params = useSearchParams()
   const router = useRouter()
@@ -251,7 +265,7 @@ function SearchResults() {
     }
 
     const groups = MODULE_ORDER
-      .map((m) => ({ m, items: all.filter((e) => e.m === m) }))
+      .map((m) => ({ m, items: rankByTitle(all.filter((e) => e.m === m), q) }))
       .filter((g) => g.items.length > 0)
     return { conds, groups, per, dropped, soft }
   }, [index, q])
@@ -259,11 +273,6 @@ function SearchResults() {
   const grouped = found ? found.groups : null
   const total = grouped ? grouped.reduce((s, g) => s + g.items.length, 0) : 0
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault()
-    const v = input.trim()
-    if (v) router.push(`/search?q=${encodeURIComponent(v)}`)
-  }
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -273,22 +282,16 @@ function SearchResults() {
         <span className="text-gray-600">통합검색</span>
       </div>
 
-      <form onSubmit={submit} className="flex gap-2 mb-2">
-        <input
+      <div className="flex mb-2">
+        <SearchBox
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={setInput}
+          onSubmit={(v) => router.push(`/search?q=${encodeURIComponent(v)}`)}
           placeholder="예: 무풍 에어컨 1등급 / 식세기 이전설치 / 냉장고 키친핏"
           autoFocus
-          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
+          inputClassName="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
         />
-        <button
-          type="submit"
-          className="px-5 rounded-xl text-sm font-bold text-white shrink-0"
-          style={{ background: '#1428A0' }}
-        >
-          검색
-        </button>
-      </form>
+      </div>
       <p className="text-[11px] text-gray-400 mb-5 px-1">
         조건을 <b className="text-gray-500">띄어쓰기로 여러 개</b> 넣으면 모두 맞는 것만 남습니다. 줄여 쓴 말도 알아듣습니다(식세기·김냉·로청·안방).
       </p>

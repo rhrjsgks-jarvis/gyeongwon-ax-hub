@@ -78,7 +78,10 @@ if (entries.length < 300) fail(`인덱스 항목이 비정상적으로 적음(${
   if (!fs.existsSync(sw)) fail('public/sw.js가 없음 — 오프라인 캐시가 동작하지 않는다');
   else {
     const src = fs.readFileSync(sw, 'utf8');
-    if (!/search-\(index\|detail\)/.test(src)) fail('sw.js가 검색 인덱스를 캐시 대상에 넣지 않음');
+    // 색인·상세·자동완성 셋 다 SWR 로 잡혀야 한다(자동완성은 2026-10-21 추가)
+    const m = src.match(/search-\(([a-z|]+)\)/);
+    const cached = m ? m[1].split('|') : [];
+    if (!['index', 'detail', 'suggest'].every((k) => cached.includes(k))) fail('sw.js가 검색 인덱스·상세·자동완성을 캐시 대상에 넣지 않음');
     else if (!src.includes("startsWith('/api/')")) fail('sw.js가 /api 요청을 캐시에서 제외하지 않음 — 로그·인증이 굳는다');
     else console.log('OK: 서비스워커 캐시 규칙(인덱스 포함 / API 제외)');
     const reg = fs.readFileSync(path.join(root, 'components', 'ServiceWorker.tsx'), 'utf8');
@@ -274,7 +277,7 @@ for (const [file, needle] of deepLinks) {
     const PKS = new Set(JSON.parse(fs.readFileSync(path.join(root, 'public', 'svc-parts.json'), 'utf8')).rows.map((r) => r[1].trim()));
     for (const [q, want] of [['폴드8 수리비', '폴드8 수리비'], ['S26 액정', '갤럭시S26 수리비'], ['플립7 부품가격', '플립7 수리비'], ['탭 S9 배터리', '갤럭시 탭 S9 시리즈 수리비'],
       // PC(2026-10-21 사장님: *"PC관련 수리비와 부품값도"*)
-      ['북6 수리비', '갤럭시 북6 프로 수리비'], ['갤럭시북4 배터리', '갤럭시 북4 프로 수리비'], ['모니터 스탠드 부품', '모니터 스탠드 수리비']]) {
+      ['북6 수리비', '갤럭시 북6 프로 노트북 수리비'], ['갤럭시북4 배터리', '갤럭시 북4 프로 노트북 수리비'], ['노트북 수리비', '갤럭시 북6 프로 노트북 수리비'], ['컴퓨터 수리비', '모니터 스탠드 수리비'], ['모니터 스탠드 부품', '모니터 스탠드 수리비']]) {
       const got = find(q);
       if (!got.some((e) => e.title.startsWith(want))) fail(`"${q}" 에서 「${want} …」 가 안 나온다 (상위: ${got.slice(0, 3).map((e) => e.title).join(' · ')})`);
     }

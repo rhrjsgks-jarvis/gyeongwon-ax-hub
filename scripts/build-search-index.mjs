@@ -273,7 +273,7 @@ function flatten(v, out = []) {
   const PK = JSON.parse(read('svc-parts.json'));
   const partBase = (n) => n.replace(/_[^_,]*$/, '').replace(/\s*\([^)]*\)\s*$/, '').trim() || n;
   const KIND_WORD = ['휴대폰 스마트폰 갤럭시', '휴대폰 스마트폰 폴더블 갤럭시 z', '태블릿 갤럭시탭 탭',
-    'pc 노트북 갤럭시북 갤럭시 북 북프로 키보드 터치패드 팬 fan 스피커 케이스', 'pc 모니터 스탠드 받침대 목 하단'];
+    'pc 컴퓨터 노트북 갤럭시북 갤럭시 북 북프로 키보드 터치패드 팬 fan 스피커 케이스', 'pc 컴퓨터 모니터 스탠드 받침대 목 하단'];
   const bySeries = new Map();
   /* 노트북 겸용 부품(「갤럭시 북3/북4 프로」)은 따로 한 줄을 세우지 않고 세대마다 넣는다 —
      2~4개짜리 줄이 열 개 넘게 늘어서면 「북4 수리비」 결과가 흩어진다. 앱의 pkGens 와 같은 규칙이다. */
@@ -287,7 +287,7 @@ function flatten(v, out = []) {
     }
   }
   for (const { kind, series, rows } of bySeries.values()) {
-    const label = series === '기타 제품' ? `${['스마트폰', '폴더블', '태블릿'][kind]} 기타 모델` : series;
+    const label = series === '기타 제품' ? `${['스마트폰', '폴더블', '태블릿'][kind]} 기타 모델` : kind === 3 ? `${series} 노트북` : series;
     const disp = rows.filter((r) => /디스플레이|DISPLAY|SCREEN|OCTA/i.test(r[4])).sort((a, b) => b[5] - a[5])[0];
     const won = (v) => v.toLocaleString() + '원';
     const parts = new Set(rows.map((r) => partBase(r[4])));
@@ -570,8 +570,20 @@ entries.forEach((e, i) => {
 const out = { generatedFrom: 'scripts/build-search-index.mjs', count: entries.length, entries: light };
 fs.writeFileSync(pub('search-index.json'), JSON.stringify(out));
 fs.writeFileSync(pub('search-detail.json'), JSON.stringify({ count: detail.length, entries: detail }));
+/* 검색창 자동완성(2026-10-21 사장님 요청) — 제목·모듈·주소만 담은 작은 목록.
+   허브 검색창이 자동완성 하나 하려고 1MB 넘는 색인을 받으면 안 된다. 같은 제목은 한 번만. */
+{
+  const seen = new Set();
+  const sug = [];
+  for (const e of light) {
+    if (!e.title || seen.has(e.title)) continue;
+    seen.add(e.title);
+    sug.push([e.title, e.m, e.href]);
+  }
+  fs.writeFileSync(pub('search-suggest.json'), JSON.stringify({ count: sug.length, s: sug }));
+}
 const kb = (f) => Math.round(fs.statSync(pub(f)).size / 1024);
-console.log(`  경량 인덱스 ${kb('search-index.json')}KB / 상세 ${kb('search-detail.json')}KB (${detail.length}건, 펼칠 때 지연 로드)`);
+console.log(`  자동완성 ${kb('search-suggest.json')}KB · 경량 인덱스 ${kb('search-index.json')}KB / 상세 ${kb('search-detail.json')}KB (${detail.length}건, 펼칠 때 지연 로드)`);
 
 const byModule = {};
 for (const e of entries) byModule[e.m] = (byModule[e.m] || 0) + 1;

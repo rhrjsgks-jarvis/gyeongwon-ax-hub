@@ -513,6 +513,32 @@ try {
     page.off('response', onRes);
   }
 
+  // ── 4-a. 검색창 자동완성(2026-10-21) — 허브가 미리 받지 않고 · 치면 뜨고 · 고르면 그 항목으로 간다 ──
+  {
+    const fetched = [];
+    const onRes = (r) => { if (new URL(r.url()).pathname === '/search-suggest.json') fetched.push(1); };
+    page.on('response', onRes);
+    // /search 는 검색어가 든 채 자동 포커스다 — 들어오자마자 목록이 결과를 덮으면 안 된다
+    if (await page.locator('#sbx-list').count()) fail('/search 에 들어오자마자 자동완성 목록이 결과를 덮는다');
+    else pass('/search 진입 시 자동완성 목록이 닫혀 있다');
+    await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1200);
+    if (fetched.length) fail('허브를 열기만 했는데 자동완성 목록을 받았다 — 눌렀을 때 받아야 한다');
+    const box = page.locator('input[role="combobox"]').first();
+    await box.click();
+    await box.fill('북6');
+    await page.waitForTimeout(1200);
+    const opts = await page.locator('#sbx-list [role="option"]').allTextContents();
+    if (!opts.some((t) => t.includes('갤럭시 북6 프로 노트북 수리비'))) fail(`「북6」 자동완성에 노트북 수리비가 없다: ${opts.slice(0, 4).join(' / ')}`);
+    else {
+      await page.locator('#sbx-list [role="option"]', { hasText: '갤럭시 북6 프로 노트북 수리비' }).first().click();
+      await page.waitForURL(/\/as\?pk=/, { timeout: 8000 }).catch(() => {});
+      if (!/\/as\?pk=/.test(page.url())) fail(`자동완성을 골랐는데 그 항목으로 안 갔다: ${page.url()}`);
+      else pass(`자동완성 「북6」 → ${opts.length - 1}개 후보 · 고르면 AS 부품가로 바로 간다`);
+    }
+    page.off('response', onRes);
+  }
+
   // ── 4-b. 배치 시뮬레이터: 도면 업로드 → 축척 보정 ──
   // 이 경로는 파일 업로드와 canvas 좌표가 얽혀 있어 jsdom으로 검사할 수 없다.
   // 실제로 두 번 막혔던 지점이라 브라우저에서 지킨다:
