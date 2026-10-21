@@ -1009,9 +1009,12 @@ const DB = {
          * 85인치(=214cm)는 대상이라 삼성 KQ85QNH80 에는 1등급이 있다 — 같은 급으로 보이지만
          * 제도 기준이 갈리는 자리다.
          */
-        { name:'LG QNED evo AI 86인치 (86QNED86AKA)', 
-          on:['QNED 미니LED','α7 5세대 AI 프로세서','돌비비전IQ','돌비 애트모스','HDMI 2.1','VRR 144Hz'],
-          specs:{ size:86, res:'4K', panel:'QNED(미니LED)', hz:120, as:2, brightness:1200 , dim:'1,928 × 1,108 × 30.9'} },
+        /* 2026-10-21 9·10월호 대조: 2025년형 86QNED86AKA(판매 종료) → 2026년형 86QNED86BKA(2026-04 출시).
+           사양은 LG 사양 API(MD10793837) 원문. 옛 줄의 「α7 5세대」는 AKA 에서도 틀린 값이었다(알파8 Gen2).
+           밝기 1200 은 「인접 모델값 잠정 적용」이라 LG 원문에 없어 뺐다. */
+        { name:'LG QNED evo AI 86인치 (86QNED86BKA)', 
+          on:['QNED 미니LED (프리시젼 디밍)','알파8 AI 프로세서 Gen3','돌비비전','돌비 애트모스','HDMI 2.1','VRR 144Hz'],
+          specs:{ size:86, res:'4K', panel:'QNED(미니LED)', hz:120, as:2, dim:'1,928 × 1,108 × 30.9'} },
         { name:'LG OLED evo C6 65인치 (OLED65C6)', 
           on:['OLED 패널','알파11 AI 프로세서','돌비 비전IQ','돌비 애트모스','게이밍 허브','165Hz 게이밍'],
           specs:{ size:65, res:'4K', panel:'OLED', hz:165, as:2, brightness:1400, eGrade:4, dim:'1,441 × 826 × 45.1' } },
@@ -1882,6 +1885,11 @@ const DB = {
           specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'580 × 520 × 59' } },
         { name:'LG 디오스 오브제컬렉션 인덕션 빌트인(와이드존) BEF3AMB4', 
           on:['와이드존','부스터'],
+          specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'575 × 515 × 59' } },
+        /* 2026-10-21: BEI3QEBLO(단종) 의 후속 코드. LG 사양 API(MD10630843) — 3구 · 3,400W · 쿼드인버터 ·
+           타공 560 × 480 · 575 × 515 × 59 · 1등급(2025-07 출시). 옛 줄과 사양이 같다. */
+        { name:'LG 디오스 인덕션 빌트인 BEI3QEBLOE', 
+          on:['부스터','쿼드인버터','잠금·온도·시간·출력 제어'],
           specs:{ burner:3, as:1, kw:3.4, cutout:'560 × 480', size:'575 × 515 × 59' } },
       ]
     },

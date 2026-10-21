@@ -107,7 +107,7 @@ say(key(cq) === key(buildLGQuestions()),
   const stale = bank.items.filter(q => q.div === 'CE' && !q.lg && !q.nm && !q.b2b && q.type !== 'policy');
   say(stale.length === 0, `시험 은행에 남은 옛 가전 문항 ${stale.length}개`
     + (stale.length ? ` — 예: "${stale[0].q.slice(0, 50)}"` : ''));
-  say(bank.nmTotal >= 300 && bank.lgTotal === 85,
+  say(bank.nmTotal >= 300 && bank.lgTotal >= 70,  // 개수는 타사비교 LG 모델에 따라 움직인다(2026-10-21 단종 정리로 85 → 81)
     `신규 모델 ${bank.nmTotal}문항 · LG 비교 ${bank.lgTotal}문항(유지)`);
 
   /* **앱과 시험 도구가 같은 은행을 본다**(2026-09-02 사장님 지시: *"시험지 출력기와
