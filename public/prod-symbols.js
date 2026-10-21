@@ -356,7 +356,7 @@
     '📎': 'clip', '⚖': 'scale', '🧭': 'compass', '⚙': 'gear', '🌱': 'sprout', '⏱': 'timer', '⏰': 'timer', '⌛': 'timer',
     /* 품목 — 같은 품목이면 앱이 달라도 같은 그림이어야 한다 */
     '🧊': 'fridge', '🥬': 'kimchi', '🫧': 'washer', '🧺': 'washer', '👗': 'dresser',
-    '🍽': 'dish', '🍳': 'induction', '📺': 'tv', '📱': 'phone', '💻': 'laptop',
+    '🍽': 'dish', '🍳': 'induction', '📺': 'tv', '📱': 'phone', '📲': 'tablet', '💻': 'laptop',
     '❄': 'aircon', '🔊': 'soundbar', '🧹': 'stick', '📻': 'microwave', '🚰': 'purifier',
     '🤖': 'robot', '🛡': 'shield', '🚚': 'truck',
   };

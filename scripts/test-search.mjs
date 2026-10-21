@@ -281,7 +281,7 @@ for (const [file, needle] of deepLinks) {
       const got = find(q);
       if (!got.some((e) => e.title.startsWith(want))) fail(`"${q}" 에서 「${want} …」 가 안 나온다 (상위: ${got.slice(0, 3).map((e) => e.title).join(' · ')})`);
     }
-    const pkBad = entries.filter((e) => e.href.startsWith('/as?pk=')).map((e) => decodeURIComponent(e.href.slice(7))).filter((s) => !PKS.has(s));
+    const pkBad = entries.filter((e) => e.href.startsWith('/as?pk=')).map((e) => new URLSearchParams(e.href.slice(4))).filter((u) => !PKS.has(u.get('pk')) || !/^[0-4]$/.test(u.get('pkk') || '')).map((u) => u.toString());
     if (pkBad.length) fail(`부품가 딥링크 ${pkBad.length}건이 자료에 없는 시리즈를 가리킨다: ${pkBad.slice(0, 3).join(' · ')}`);
     else console.log(`OK: 「폴드8 수리비」 등 부품가 검색 · 딥링크 ${entries.filter((e) => e.href.startsWith('/as?pk=')).length}건`);
   }

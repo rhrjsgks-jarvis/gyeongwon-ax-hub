@@ -1478,7 +1478,10 @@ pass('상황실·업무·운영 골든 5건');
   /* 2026-10-21 — 카드 일곱을 칸 버튼으로 고른다(사장님: *"카테고리별로 묶어서 버튼타입으로"*).
      칸마다 눌러 그 카드만 보이는가 · 카드마다 원문 링크가 있는가를 본다. */
   const tiles = [...pane.querySelectorAll('#feeCats .cat')];
-  if (tiles.length !== 7) fail(`수리비 칸이 ${tiles.length}개 — 일곱이어야 한다`);
+  /* 부품가는 휴대폰·태블릿·PC 세 칸(2026-10-21 사장님 지시) — 칸 아홉 */
+  if (tiles.length !== 9) fail(`수리비 칸이 ${tiles.length}개 — 아홉이어야 한다`);
+  const tileOf = (name) => [...pane.querySelectorAll('#feeCats .cat')].find((el) => el.textContent.includes(name));
+  for (const n of ['휴대폰 부품가', '태블릿 부품가', 'PC 부품가']) if (!tileOf(n)) fail(`「${n}」 칸이 없다`);
   let allTxt = '';
   const noSrc = [];
   for (let i = 0; i < tiles.length; i++) {
@@ -1492,7 +1495,7 @@ pass('상황실·업무·운영 골든 5건');
   if (noSrc.length) fail(`출처 링크가 없는 카드: ${noSrc.join(', ')}번 — 「출처와 링크는 필수」`);
   else pass(`수리비 칸 ${tiles.length}개 — 누르면 그 카드 하나만 · 전부 원문 링크`);
   if (pane.querySelector('#rfq')) fail('리퍼부품 가격 검색이 남아 있다 — 고객센터 별도 문의로 바꿨다');
-  pane.querySelectorAll('#feeCats .cat')[4].click();
+  tileOf('부품비 · 리퍼').click();
   if (!/고객센터에 따로 문의/.test(pane.textContent) || !pane.querySelector('[data-tel="15883366"]')) fail('리퍼부품 칸이 고객센터 1588-3366 문의를 안내하지 않는다');
   else pass('리퍼부품 → 고객센터 1588-3366 별도 문의');
 
@@ -1505,7 +1508,7 @@ pass('상황실·업무·운영 골든 5건');
   for (const k of ['service', 'parts', 'self']) {
     if (!pane.querySelector(`a[href="${A.FEE_SRC[k][1]}"]`)) fail(`원문 링크 ${k} 가 화면에 없다`);
   }
-  pane.querySelectorAll('#feeCats .cat')[3].click();   // 휴대폰 부품가 칸을 열어 둔 채 아래 검사로
+  tileOf('휴대폰 부품가').click();   // 휴대폰 부품가 칸을 열어 둔 채 아래 검사로
 
   /* 휴대폰·태블릿 정품 부품가(소모품샵 「고객 자가수리」, 2026-10-21) — 모양 · 골든 · 검색 */
   const PK = JSON.parse(fs.readFileSync(new URL('../public/svc-parts.json', import.meta.url), 'utf8'));
@@ -1521,7 +1524,7 @@ pass('상황실·업무·운영 골든 5건');
   if (!pg || pg[5] !== 301000 || pg[6] !== 235000) fail('골든 S20+ 디스플레이 GH81-23705A 가 판매가 301,000 · 반납 후 235,000 이 아니다');
   else pass('부품가 골든 GH81-23705A 301,000 · 반납 후 235,000');
   A.loadParts(PK);
-  const pq = pane.querySelector('#pkq');
+  let pq = pane.querySelector('#pkq');
   pq.value = '폴드8';   // 스마트폰 S·A 칸이 켜진 채여도 찾아야 한다
   pq.dispatchEvent(new window.Event('input'));
   const pkt = pane.querySelector('#pkOut').textContent;
@@ -1531,6 +1534,13 @@ pass('상황실·업무·운영 골든 5건');
   else if ([...pkRows].some((tr) => !tr.querySelector('td b') || !tr.querySelector('td b').textContent.trim())) fail('부품가 결과에 이름이 빈 줄이 있다');
   else pass(`부품가 검색 「폴드8」 → ${pkRows.length}줄 (색상 묶음)`);
   /* PC — 「북6」 로 노트북 칸이 켜지고 · 겸용 부품(「갤럭시 북3/북4 프로」)이 「갤럭시 북4 프로」 에서도 나와야 한다 */
+  /* 칸이 갈렸다 — 휴대폰 칸에서 「북6」 을 치면 PC 칸을 가리켜야 한다 */
+  pq.value = '북6'; pq.dispatchEvent(new window.Event('input'));
+  if (!/「PC 부품가」 칸에 있습니다/.test(pane.querySelector('#pkOut').textContent)) fail('휴대폰 칸에서 「북6」 을 쳤는데 PC 칸을 안내하지 않는다');
+  else pass('휴대폰 칸에서 노트북을 찾으면 「PC 부품가」 칸을 안내한다');
+  tileOf('PC 부품가').click();
+  pq = pane.querySelector('#pkq');
+  if ([...pane.querySelectorAll('#pkKinds .chip')].map((b) => b.textContent).join() !== '노트북,모니터') fail('PC 칸의 칩이 노트북·모니터가 아니다');
   pq.value = '북6'; pq.dispatchEvent(new window.Event('input'));
   const b6on = pane.querySelector('#pkKinds .chip.on');
   if (!pane.querySelectorAll('#pkOut tbody tr').length || !/배터리/.test(pane.querySelector('#pkOut').textContent)) fail('부품가 검색 「북6」 이 노트북 배터리를 못 찾는다');
@@ -1539,6 +1549,14 @@ pass('상황실·업무·운영 골든 5건');
   pq.value = '갤럭시 북4 프로'; pq.dispatchEvent(new window.Event('input'));
   if (!pane.querySelector('#pkOut').textContent.includes('북3/북4 프로')) fail('「갤럭시 북4 프로」 에 겸용 부품(북3/북4 프로)이 안 나온다');
   else pass('노트북 겸용 부품이 세대마다 찾힌다');
+  /* 적용 모델이 열 개 넘게 붙어도 앞 셋 + 「외 N개」 */
+  if (!/외 [0-9]+개/.test(pane.querySelector('#pkOut').textContent)) fail('노트북 부품의 긴 적용 모델 목록이 줄지 않는다');
+  else pass('긴 적용 모델 목록 → 앞 3개 외 N개');
+  tileOf('태블릿 부품가').click();
+  if (pane.querySelector('#pkKinds')) fail('태블릿 칸에 칩이 있다 — 한 종류라 필요 없다');
+  pq = pane.querySelector('#pkq'); pq.value = '탭 S9'; pq.dispatchEvent(new window.Event('input'));
+  if (!pane.querySelectorAll('#pkOut tbody tr').length) fail('태블릿 칸 「탭 S9」 이 아무것도 못 찾는다');
+  else pass('태블릿 칸 「탭 S9」 검색');
 
   /* 수리비 서식이 인쇄 전용 블록 안에 들어가면 화면에서 표·칩·목록이 맨 글자로 겹쳐 보인다(2026-10-21 실제로 그랬다) */
   const css = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n');

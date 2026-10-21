@@ -297,7 +297,8 @@ function flatten(v, out = []) {
       kw: [series, series.replace(/^갤럭시\s*/, ''), series.replace(/\s+/g, ''), KIND_WORD[kind],
         '수리비 수리비용 부품 부품값 부품가격 액정 액정값 화면 디스플레이 배터리 후면커버 뒷판 자가수리 정품부품 삼성전자서비스',
         ...new Set(rows.map((r) => r[2])), ...parts].join(' '),
-      href: '/as?pk=' + encodeURIComponent(series) });
+      // pkk = 구분 번호 — 「기타 제품」 처럼 같은 시리즈 이름이 여러 칸에 있어 이름만으로는 칸(휴대폰·태블릿·PC)을 못 고른다
+      href: '/as?pk=' + encodeURIComponent(series) + '&pkk=' + kind });
   }
 
   for (const [cat, d] of Object.entries(DBA)) {
