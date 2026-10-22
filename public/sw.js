@@ -447,7 +447,7 @@
  * 오기 바로잡음 · 사운드바 배치 치수를 Q시리즈 실측으로 · 전자레인지·프로젝터·모니터·프린터·
  * 김치냉장고 값 원문화 · 타사비교 QNH70 85인치 패널 60Hz.
  */
-const CACHE_VERSION = 'axhub-v290';
+const CACHE_VERSION = 'axhub-v291';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

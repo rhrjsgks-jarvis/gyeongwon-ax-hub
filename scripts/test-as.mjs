@@ -528,7 +528,7 @@ pass('싱크장 리폼 골든 3건');
   const mp = doc.querySelector('#contactPane');
   /* **묶음은 품목·업무 단위로 쪼갠다**(2026-08-11 사용자 요청). 상담사는 "정수기 이전설치
      어디죠"로 찾지 "B2B 협력사가 뭐죠"로 찾지 않는다. 담당이 갈리는 단위가 곧 찾는 단위다. */
-  const WANT = 'g-as,g-hm,g-lg,g-mv,g-sink,g-ind,g-wat,g-hood,g-sac,g-it';
+  const WANT = 'g-as,g-hm,g-lg,g-mv,g-sink,g-ind,g-wat,g-hood,g-sac,g-new,g-it';
   const grps = [...mp.querySelectorAll('.grp')];
   if (grps.map((g) => g.id).join(',') !== WANT) {
     fail(`묶음이 [${grps.map((g) => g.id).join(',')}] — [${WANT}] 여야 한다`);
@@ -538,7 +538,10 @@ pass('싱크장 리폼 골든 3건');
   // 열어 보지 않고도 무엇이 얼마나 있는지 알아야 한다
   for (const [id, n] of [['g-as', A.CONTACTS.reduce((a, g) => a + g.items.length, 0)],
                          ['g-hm', 1], ['g-lg', A.CENTERS.length], ['g-mv', B.length], ['g-sink', S.length],
-                         ['g-ind', 1], ['g-wat', 1], ['g-hood', 1], ['g-sac', 1], ['g-it', IT.length]]) {
+                         ['g-ind', 1], ['g-wat', 1], ['g-hood', 1], ['g-sac', 1],
+                         /* 신규 설치 협력사(2026-10-22) — 설치비용 앱 자료에서 번호 있는 줄을 센다 */
+                         ['g-new', JSON.parse(fs.readFileSync(new URL('../public/install-cost.json', import.meta.url), 'utf8')).newInstall.categories.find((c) => c.key === 'rf').sections.filter((x) => x.moved === 'as-contact').flatMap((x) => x.grid.slice(x.headRows)).filter((r) => r[1]).length],
+                         ['g-it', IT.length]]) {
     const el = mp.querySelector(`#${id} .gc`);
     if (!el) { fail(`${id} 묶음이 없다`); continue; }
     if (el.textContent !== `${n}건`) fail(`${id} 묶음 제목의 건수가 "${el.textContent}" — "${n}건" 이어야 한다`);

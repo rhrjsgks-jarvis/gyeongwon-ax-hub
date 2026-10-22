@@ -421,6 +421,9 @@ function render() {
       + '<br>' + esc(c.note) + ' · 확인 ' + esc(D.collectedAt)
       + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div>'
       + '<div class="secs">' + c.sections.map(function (s, i) {
+          /* 연락처 절은 AS 관련 정보 › 연락처 로 옮겼다(2026-10-22) — 여기는 그리로 가는 길만 */
+          if (s.moved === 'as-contact') return '<div class="sec moved" data-id="new:' + c.key + ':' + i + ':0"><b>' + esc(s.title) + '</b>'
+            + '<div class="foot2">연락처는 <a href="/as?grp=g-new" target="_top">AS 관련 정보 › 연락처 › 신규 설치 협력사</a> 묶음에 모았습니다.</div></div>';
           var n = normalizeGrid(s);
           return section(s.title, n.rows.filter(function(r){ return !(r.note && !r.label); }).length /* 각주 줄(주석)은 항목이 아니다 — 2026-08-30 */, listOf(n, 'new:' + c.key + ':' + i), s.foot, isWide(n));
         }).join('') + '</div>';

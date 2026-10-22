@@ -44,6 +44,11 @@ const add = (tab, cat, sec, text, id) => {
   if (t.length > 1) rows.push({ tab, cat, sec, t: text, k: t, id });
 };
 
+/* 연락처 절은 AS 관련 정보 › 연락처 › 「신규 설치 협력사」 묶음이 보여준다(2026-10-22 중복 정리).
+   자료는 여기(한 벌)에 두고 AS 앱이 install-cost.json 을 읽는다 — 이 앱 화면에는 그리로 가는 안내만 남긴다. */
+const MOVED_TO_AS = /^\[어디로 접수하나\] (신규 설치 — 인덕션 설치사|리폼·기타 문의)/;
+src.categories.forEach((c) => c.sections.forEach((x) => { if (MOVED_TO_AS.test(x.title)) x.moved = 'as-contact'; }));
+
 /* ① 신규 설치 추가비 (삼성전자로지텍) */
 const newInstall = src.categories.map((c) => {
   c.sections.forEach((s, si) => {
@@ -54,6 +59,31 @@ const newInstall = src.categories.map((c) => {
   });
   return c;
 });
+
+/*
+ * ── 특수장비 · 수작업 운반비는 한 표다(2026-10-22 사장님 「중복 정리 모두 진행」) ──
+ * '26.10월 개편으로 로지텍(신규 설치)과 케어플러스(이전설치) 원문이 **같은 단가**를 적는다. 두 벌로 두면
+ * 언젠가 한쪽만 고쳐진다 — 케어플러스 쪽 값 줄은 신규 설치 표(sp)에서 옮겨 와 같은 표기로 맞춘다.
+ * 원문(fixture)은 그대로 두고 **빌드가 두 원문의 숫자가 같은지 대조한다** — 다르면 멈춘다(어느 쪽이 바뀐 것이니
+ * 사람이 보고 정해야 한다). 표기만 다른 곳: 4시간 초과 「실비」(로지텍) ↔ 「현장 협의」(케어플러스) · ~50kg 「무료」 ↔ 「-」.
+ */
+{
+  const sp = src.categories.find((c) => c.key === 'sp');
+  const cm = src.careplus.groups.find((g) => g.key === 'common');
+  const si = cm ? cm.sections.findIndex((x) => /특수장비/.test(x.title)) : -1;
+  if (!sp || si < 0) throw new Error('특수장비 표(신규 sp · 케어플러스 common)를 못 찾았다');
+  const nums = (arr) => arr.map((v) => String(v).replace(/[^0-9]/g, '')).filter(Boolean);
+  const spRows = sp.sections.flatMap((x) => x.grid.slice(x.headRows)
+    .filter((r) => !/크레인|지게차|리프트/.test(r[0]))
+    .map((r) => [x.title.replace(/\s*\(VAT 포함\)/, '').replace(/^스카이$/, '스카이차'), r[0], r[1]]));
+  const cs = cm.sections[si];
+  const valRows = cs.rows.filter((r) => r.label);
+  const a = nums(spRows.map((r) => r[2])).join(','), b = nums(valRows.map((r) => r.values[0])).join(',');
+  if (valRows.length !== spRows.length || a !== b) throw new Error(`특수장비 단가가 두 원문에서 다르다 — 로지텍 [${a}] · 케어플러스 [${b}]`);
+  let k = 0;
+  cs.rows = cs.rows.map((r) => (r.label ? { ...r, label: `${spRows[k][0]} · ${spRows[k][1]}`, values: [spRows[k++][2]] } : r));
+  cs.foot = [cs.foot, '신규 설치(로지텍)와 이전설치(케어플러스)가 같은 단가 — 한 표로 맞췄다(빌드가 두 원문을 대조한다)'].filter(Boolean).join(' · ');
+}
 
 /* ② 이전설치 (삼성케어플러스) */
 /*

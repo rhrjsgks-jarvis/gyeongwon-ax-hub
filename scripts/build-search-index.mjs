@@ -314,6 +314,15 @@ function flatten(v, out = []) {
         ...new Set(rows.map((r) => r[2])), ...rows.map((r) => r[3])].join(' '),
       href: '/as?fs=consum&ck=' + ki });
   });
+  {
+    const rf = JSON.parse(fs.readFileSync(pub('install-cost.json'), 'utf8')).newInstall.categories.find((c) => c.key === 'rf');
+    const cs = rf ? rf.sections.filter((x) => x.moved === 'as-contact') : [];
+    if (cs.length !== 2) throw new Error('신규 설치 협력사 연락처 절(moved)이 둘이 아니다 — build:installcost 를 먼저 돌릴 것');
+    add({ t: 'category', m: 'as', title: '신규 설치 협력사 연락처 (인덕션 설치사 · 후드장 리폼 · 인테리어핏)',
+      sub: '새로 산 제품 설치 — 다설 · 중앙에너지 · 에스엘피 · 아이시티 · 후드장 리폼 · 인테리어핏',
+      kw: ['신규설치 신규 설치 협력사 설치사 인덕션설치 후드장 리폼 인테리어핏 연락처 전화', ...cs.flatMap((x) => x.grid.flat())].join(' '),
+      href: '/as?grp=g-new' });
+  }
   add({ t: 'category', m: 'as', title: '교환 · 환불 기준 (소비자분쟁해결기준)',
     sub: '구입 10일 이내 교환·환급 · 1개월 이내 교환·무상수리 · 보증 경과 후 수리 불가 시 감가 + 10%',
     kw: '교환 환불 환급 반품 교환기준 환불기준 소비자분쟁해결기준 분쟁 감가상각 내용연수 수리불가 동일하자 리퍼폰 분실 부품없음 구입가',

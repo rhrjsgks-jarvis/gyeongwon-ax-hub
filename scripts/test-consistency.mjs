@@ -246,5 +246,27 @@ if (ok) {
   }
 }
 
+/*
+ * ── 대표번호 오타 — 원본 한 곳(scripts/fixtures/official-tel.json, 2026-10-22 중복 정리) ──
+ * 1588-3366 같은 대표번호가 앱 여러 곳(설치환경 13 · 구독케어 6 · AS · 설치비용 …)에 손으로 적혀 있다.
+ * 값이 같은 동안은 괜찮지만 한 곳에 오타가 나면(1588-3336) 그 화면만 틀린 번호를 안내한다.
+ * 원본 번호와 **한 자리만 다른 번호**가 앱에 있으면 오타로 본다 — 물류센터 1577-39xx 처럼
+ * 원래 비슷한 번호들은 원본 목록에 없으니 서로 걸리지 않는다.
+ */
+{
+  const OFF = Object.keys(JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'official-tel.json'), 'utf8')).tel);
+  const near = (a, b) => a.length === b.length && a !== b && [...a].filter((ch, i) => ch !== b[i]).length === 1;
+  const files = fs.readdirSync(pub('')).filter((f) => /-app\.html$|^install-cost\.json$/.test(f));
+  const bad = [];
+  for (const f of files) {
+    const nums = read(f).match(/\b1[5-8][0-9]{2}-[0-9]{4}\b/g) || [];
+    for (const n of new Set(nums)) { const o = OFF.find((x) => near(n, x)); if (o && !OFF.includes(n)) bad.push(`${f}: ${n} (원본 ${o} 의 오타?)`); }
+  }
+  const missing = OFF.filter((n) => !files.some((f) => read(f).includes(n)));
+  if (bad.length) fail(`대표번호 오타로 보이는 번호: ${bad.join(' · ')}`);
+  else if (missing.length) fail(`원본 대표번호가 어느 앱에도 없다(목록이 낡았다): ${missing.join(' · ')}`);
+  else console.log(`OK: 대표번호 ${OFF.length}개 — 앱 ${files.length}곳에 오타 없음(원본 official-tel.json)`);
+}
+
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);

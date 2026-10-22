@@ -97,7 +97,7 @@ ok(!D.newInstall.categories.find((x) => x.key === 'ac').sections.some((s) => s.t
    '에어컨의 옛 「사다리차 사용(26.2월~)」 표(신제품 무상)가 남아 있지 않다');
 ok(!JSON.stringify(D.newInstall.categories).includes('신제품 설치 시 무상'),
    '「신제품 설치 시 무상」 각주가 남아 있지 않다');
-ok(findCare('common', '특수장비', '사다리차 · 1~6층').includes('55,000'),
+ok(findCare('common', '특수장비', '사다리차 · 1층~6층').includes('55,000'),
    '이전설치(케어플러스) 사다리차 1~6층도 55,000원이다 — 두 출처가 같다');
 ok(findCare('common', '특수장비', '100kg 초과').includes('120,000'),
    '이전설치(케어플러스) 수작업 운반비 100kg 초과 120,000원');
