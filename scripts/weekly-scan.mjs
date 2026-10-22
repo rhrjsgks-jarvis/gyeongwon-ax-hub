@@ -1,8 +1,8 @@
 /*
  * 주간 자동 점검 — 매주 원문을 다시 받아 세일즈 코파일럿 자료를 최신으로 맞춘다(2026-10-22 사장님:
  * *"일주일에 한번 스캔하여 업데이트하는 방식"*).
- *   node scripts/weekly-scan.mjs            실제로 돈다(수집 → 빌드 → 검사 → 커밋·push → 텔레그램 보고)
- *   node scripts/weekly-scan.mjs --dry      수집·빌드·검사까지만. 커밋·push·보고 없음
+ *   node scripts/weekly-scan.mjs            실제로 돈다(수집 → 빌드 → 검사 → 커밋·push → 보고 파일)
+ *   node scripts/weekly-scan.mjs --dry      수집·빌드·검사까지만. 커밋·push 없음
  *   node scripts/weekly-scan.mjs --only svc-consum,svc-fee-trip
  *
  * Windows 작업 스케줄러가 매주 월요일 07:00 에 부른다(scripts/register-weekly-scan.ps1).
@@ -173,16 +173,6 @@ const text = lines.join('\n');
 console.log(text);
 fs.writeFileSync(`${WORK}/last-report.txt`, text);
 
-if (!DRY) {
-  const env = {};
-  try { for (const l of fs.readFileSync('.env.local', 'utf8').split(/\r?\n/)) { const m = l.match(/^\s*([A-Z_]+)\s*=\s*(.*)\s*$/); if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, ''); } } catch {}
-  const token = process.env.TELEGRAM_BOT_TOKEN || env.TELEGRAM_BOT_TOKEN;
-  const chats = String(process.env.TELEGRAM_ALLOWED_CHAT_IDS || env.TELEGRAM_ALLOWED_CHAT_IDS || '').split(',').map((s) => s.trim()).filter(Boolean);
-  if (token && chats.length) {
-    for (const id of chats) {
-      try { await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ chat_id: id, text, disable_web_page_preview: true }) }); }
-      catch (e) { console.error('텔레그램 보고 실패:', e.message); }
-    }
-  } else console.error('텔레그램 설정(.env.local)이 없어 보고는 화면·파일로만 남겼습니다');
-}
+/* 보고는 .scratch/weekly/last-report.txt 에 남는다. Claude Code 세션 맥락 훅(.claude/status-context.mjs)이
+   점검 뒤 3일 동안 그 첫 줄을 올려 사용자에게 알린다 — 텔레그램 연동은 2026-10-22 사장님 지시로 걷어냈다. */
 process.exit(report.failed.length ? 2 : 0);

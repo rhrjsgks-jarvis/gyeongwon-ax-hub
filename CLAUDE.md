@@ -6092,7 +6092,25 @@ MX(휴대폰·웨어러블·갤럭시탭·갤럭시북) 310문항도 그대로�
 | 결과물 | `tools/시험지출력기.html` · `tools/레벨업챌린지_시험.html` (**직접 고치지 말 것 — 다음 빌드가 덮는다**) |
 | 매장 안내 | `tools/README.md` |
 
-## 텔레그램 원격 조종 (`scripts/telegram-bot.mjs`, `npm run bot`)
+## 텔레그램 원격 조종 — **걷어냈다 (2026-10-22)**
+
+> 사장님 지시: *"텔레그램은 과거 리모트 기능을 몰랐을 때 썼던 기능입니다. 텔레그램 연동은 제거해도 됩니다."*
+>
+> **걷어낸 것**
+> - `scripts/telegram-bot.mjs` · `test-telegram.mjs`
+> - npm `bot` · `test:telegram` 스크립트
+> - 주간 점검의 텔레그램 보고
+> - 돌던 봇 프로세스
+>
+> **주간 점검 보고**는 `.scratch/weekly/last-report.txt` 에 남는다. 맥락 훅(`.claude/status-context.mjs`)이 점검 뒤 3일 동안 그 첫 줄을 `[주간점검]` 으로 올린다.
+>
+> **작업 자물쇠(`scripts/agent-lock.mjs`)는 남긴다** — 로컬 세션 훅이 여전히 쓴다.
+>
+> `.env.local` 의 `TELEGRAM_*` 값은 더 쓰지 않는다. 봇 토큰은 BotFather 에서 폐기하면 된다.
+>
+> **아래는 옛 기록이다. 되살리지 말 것.**
+
+### (옛 기록) 텔레그램 원격 조종 (`scripts/telegram-bot.mjs`, `npm run bot`)
 
 휴대폰에서 **로컬 PC 의** Claude Code 에 명령을 내린다. 앱에 들어가는 기능이 아니라 개발 도구다
 (Vercel 배포와 무관하고, 봇을 안 띄우면 저장소에 아무 영향이 없다).
@@ -11146,7 +11164,6 @@ node scripts/test-sizereps.mjs  # 사이즈별 대표모델: 재생성 대조, �
 node scripts/test-install-cost.mjs   # 설치비용·사전준비: 재생성 대조, 금액 골든 12건, 신규↔이전설치 구분, 표 격자, 검색, 개인정보 미포함
 node scripts/test-as.mjs        # AS 관련 정보: 골든값 7품목, 근거 없는 값 미생성, 출처 링크, 물류센터 21곳, 이전설치 20행·개인정보 미포함, 상단 검색
 node scripts/test-place.mjs     # 배치 시뮬레이터: 기하(회전·SAT 겹침·벽 스냅 법선·방 안팎), 이격거리 원문 대조, 자동 배치
-node scripts/test-telegram.mjs  # 텔레그램 봇: fail-closed 시작, 도구 제한, 위험요청 확인, 4096자 분할, 토큰 유출 경로
 node scripts/test-plans.mjs     # (브라우저) 도면 코퍼스 8벌 전수 인식 — 누른 자리별 방 넓이(㎡) 대조
 node scripts/test-real.mjs      # (브라우저) 실제 분양 도면 30장 — 품질 지표·개구부 짝비교
 node scripts/test-e2e.mjs       # (브라우저) 프로덕션 빌드를 띄워 렌더·인증 게이트·지연 로드 확인

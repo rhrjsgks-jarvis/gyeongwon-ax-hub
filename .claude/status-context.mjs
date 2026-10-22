@@ -28,6 +28,17 @@ try {
   if (s.stale && s.stale.length) {
     out.push(`[최신화] 원문 대조 기한이 지난 자료 ${s.stale.length}건(${s.stale.join(', ')}) — 응답 끝에 한 줄로 알릴 것. 절차: refresh-audit 스킬 · npm run check:fresh`);
   }
+  /* 주간 자동 점검 보고(scripts/weekly-scan.mjs) — 텔레그램을 걷어낸 뒤(2026-10-22) 보고는 여기로 온다.
+     점검 뒤 3일 동안 맥락에 올려 내가 사용자에게 알리게 한다. */
+  try {
+    const fs = await import('node:fs');
+    const rp = new URL('../.scratch/weekly/last-report.txt', import.meta.url);
+    const st = fs.statSync(rp);
+    if (Date.now() - st.mtimeMs < 3 * 86400e3) {
+      const head = fs.readFileSync(rp, 'utf8').split('\n')[0];
+      out.push(`[주간점검] ${head} — 응답에서 사용자에게 바뀐 것·실패한 것을 짧게 알릴 것(전문: .scratch/weekly/last-report.txt)`);
+    }
+  } catch { /* 보고가 없으면 아무 말도 안 한다 */ }
   out.push('[표시 규칙] 응답 맨 위에 🟢진행중/🔴막힘 · n/m(%) 막대 · 끝난 것 / 다음 것을 적는다.');
 
   process.stdout.write(out.join('\n'));
