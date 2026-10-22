@@ -3616,7 +3616,7 @@
    "lv": "상",
    "nm": 1,
    "fam": "install",
-   "exp": "Infinite Line 은 각 5mm, Bespoke 는 각 12mm 다. 10mm 는 페어 조합 시 제품 간 간격이다. (근거: 설치환경 가이드 「냉장고 1도어」)"
+   "exp": "Infinite Line 은 각 5mm 다. Bespoke 핸들형은 각 12mm, 신형 Bespoke 핸들 없음(RR40* 계열)은 각 4mm 다. 10mm 는 페어 조합 시 제품 간 간격이다(신형 Bespoke 핸들 없음은 6mm). (근거: 설치환경 가이드 「냉장고 1도어」)"
   },
   {
    "cat": "냉장고",

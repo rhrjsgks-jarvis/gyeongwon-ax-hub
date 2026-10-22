@@ -138,9 +138,8 @@ export const INSTALL_QUESTIONS = [
   { src: '냉장고 1도어', lv: '상',
     q: '1도어 키친핏 냉장고의 좌우 이격(냉장고장 내측)이 라인업별로 갈리는데, Infinite Line 의 값은?',
     ans: '각 5mm', bad: ['각 4mm', '각 10mm', '각 12mm'],
-    badIn: ['12mm', '10mm'],
-    badNot: ['각 4mm'],
-    exp: 'Infinite Line 은 각 5mm, Bespoke 는 각 12mm 다. 10mm 는 페어 조합 시 제품 간 간격이다.' },
+    badIn: ['12mm', '10mm', '각 4mm'],
+    exp: 'Infinite Line 은 각 5mm 다. Bespoke 핸들형은 각 12mm, 신형 Bespoke 핸들 없음(RR40* 계열)은 각 4mm 다. 10mm 는 페어 조합 시 제품 간 간격이다(신형 Bespoke 핸들 없음은 6mm).' },
 
   { src: '냉장고 1도어', lv: '중',
     q: '1도어 냉장고의 도어 오픈 각도가 라인업에 따라 갈린다. 올바른 조합은?',
