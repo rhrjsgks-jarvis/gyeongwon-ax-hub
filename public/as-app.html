@@ -287,6 +287,14 @@
   .fee-h{font-size:12.5px;font-weight:800;margin:12px 0 2px}
   .fee-h span{font-weight:500;color:#6b7280;font-size:11.5px}
   .fee-in{margin:10px 0;font-size:12.5px;line-height:1.6}
+  /* 수리비 분류 탭(2026-10-22 B안) — 칸이 12개로 늘어 폰에서 칸만 한 화면을 먹지 않게 셋으로 가른다 */
+  .fee-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:#E5E7EB;border-radius:11px;padding:3px;margin-bottom:9px}
+  .fee-seg button{border:0;background:transparent;border-radius:9px;padding:8px 2px;font:inherit;font-size:12.5px;font-weight:700;color:#374151;cursor:pointer}
+  #csLines{margin:4px 0 8px}
+  #csLines .cat{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:inherit}
+  #csLines .cat .d{display:block;font-size:11.5px;font-weight:500;color:#6b7280;margin-top:2px}
+  #csLines .cat.on .d{color:#dbe2ff}
+  .fee-seg button.on{background:#fff;color:#1428A0;box-shadow:0 1px 2px rgba(0,0,0,.08)}
   .rfq{border:1px solid #d6dbe8;background:#fff;margin:2px 0 8px}
 
 /* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
@@ -1947,6 +1955,9 @@ const FEE_SRC = {
   conflict: ['소비자분쟁 해결기준', 'https://www.samsungsvc.co.kr/info/fee?tab=conflict'],
   self:     ['고객 자가수리 — 자주 묻는 질문', 'https://www.samsungsvc.co.kr/info/self-repair'],
   parts:    ['소모품샵 고객 자가수리 부품', 'https://www.samsungsvc.co.kr/shop/product?category=175707397'],
+  consum:   ['소모품샵 가전 소모품', 'https://www.samsungsvc.co.kr/shop/product?category=10422'],
+  careplus: ['Samsung Care+ 가전/TV', 'https://www.samsungsvc.co.kr/info/carePlus'],
+  lcd:      ['스마트폰 액정 단품 수리 안내', 'https://www.samsungsvc.co.kr/notice/3031587'],
 };
 const FEE_AT = '2026-10-18';
 const FEE = {
@@ -2012,8 +2023,58 @@ const FEE = {
   ],
 };
 
+/* 소비자분쟁해결기준(공정거래위원회 고시) 별표 Ⅱ — 원문 「요금안내 › 소비자분쟁 해결기준」 표를 순서 그대로.
+   [분쟁유형, 해결기준] — 문구를 다듬지 않는다(교환·환불은 틀리면 그대로 분쟁이다). */
+const CONFLICT = {
+  rows: [
+    ['구입 후 10일 이내에 정상적인 사용 상태에서 발생한 성능·기능상의 하자로 수리를 요할 때', '제품 교환 또는 구입가 환급'],
+    ['구입 후 1개월 이내에 정상적인 사용 상태에서 발생한 성능·기능상의 하자로 중요한 수리를 요할 때', '제품 교환 또는 무상수리'],
+    ['품질보증기간 이내 — 하자 발생 시 / 수리 불가능 시 / 교환 불가능 시 / 교환된 제품이 1개월 이내에 중요한 수리를 요할 때', '무상수리 / 제품 교환 또는 구입가 환급 / 구입가 환급 / 구입가 환급'],
+    ['품질보증기간 경과 후 수리 불가능 시', '정액 감가상각한 금액에 10%를 가산하여 환급 (부품보유기간(내용연수)에 한정)'],
+    ['소비자가 수리 의뢰한 제품을 사업자가 분실한 경우 — 품질보증기간 이내 / 경과', '제품 교환 또는 구입가 환급 / 정액 감가상각한 금액에 10% 가산 환급 (최고한도 : 구입가격)'],
+    ['부품보유기간 이내에 수리용 부품을 보유하고 있지 않아 발생한 피해 — 보증기간 이내 정상 사용 하자 / 보증기간 이내 소비자 고의·과실 / 보증기간 경과 후(2018년 2월 28일 이후 구입)', '제품 교환 또는 구입가 환급 / 유상 수리에 해당하는 금액 징수 후 제품 교환 / 정액 감가상각한 잔여 금액에 구입가 10%를 가산하여 환급'],
+    ['제품 구입 시 운송과정에서 발생된 피해', '제품 교환 (전문 운송기관에 위탁한 경우 판매자가 운송사에 구상권 행사)'],
+    ['사업자가 제품설치 중 발생한 피해', '제품 교환'],
+  ],
+  calc: ['감가상각방법 : 정액법, 내용연수는 품목별 내용연수표(월할계산) 적용', '감가상각비 = (사용연수 ÷ 내용연수) × 구입가', '감가상각 잔여금 = 구입가 − 감가상각비'],
+  notes: [
+    '품질보증기간 이내에 동일하자에 대해 2회까지 수리하였으나 하자가 재발하는 경우, 또는 여러 부위 하자에 대해 4회까지 수리하였으나 하자가 재발하는 경우는 수리 불가능한 것으로 봅니다.',
+    '리퍼폰 교환은 무상수리로 봅니다.',
+    '품질보증기간 이내에 수리를 요청했으나 사업자 사정으로 늦어져 보증기간을 넘겨 완료된 경우, 보증기간 경과 여부는 수리가 접수된 날을 기준으로 판단합니다.',
+  ],
+};
+/* Samsung Care+ 가전/TV — 원문 지면에는 **가격이 없다**. 상품 내용만 옮기고 가격은 전용 콜센터로 안내한다. */
+const CAREPLUS = {
+  what: '에어컨, 세탁기, 냉장고부터 TV까지 삼성전자 가전제품을 구매/사용하시는 고객 누구나 구매 가능한 전문 케어서비스입니다. (유료)',
+  items: [
+    ['전문 세척', '에어컨(스탠드/벽걸이/천정형) · 세탁기(전자동/드럼) · 냉장고(김치냉장고)', '제품을 분해하여 내부에 숨어 있는 이물질과 곰팡이 세균까지 세척 · 삼성전자서비스 파트너사 엔지니어'],
+    ['필터 케어', '공기청정기 · 건조기 · 에어드레서 · 정수기냉장고 · 식기세척기 · 정수기', '살균/클리닝 · 종합점검 · 연 1회 필터 무상 교체(에어드레서-미세먼지 필터, 건조기-올인원 필터, 공기청정기-집진 필터) · 삼성전자서비스 엔지니어'],
+    ['이전 설치', '에어컨 · TV · AV · 건조기 · 세탁기 · 냉장고 · 식기세척기 · 에어드레서 · 슈드레서 · 공기청정기 · 청소기 · 비데 · 전기레인지 · 정수기 (14대 가전)', '철거 · 재설치 · 이전 설치(철거~이동~재설치) · 로지텍 설치 전문 기사'],
+  ],
+  sac: '시스템에어컨(학교·병원·오피스·매장)의 유지보수·세척은 삼성전자로지텍이 맡습니다.',
+  /* 모바일·PC Care+ 자기부담금 — AI구독 케어 앱에서 옮겨 왔다(2026-10-22 사장님: *"케어플러스 관련 금액이 있다면
+     한곳으로 통일"*). 문구는 그 앱이 2026-10-16 삼성닷컴 원문과 대조한 것 그대로다. */
+  mobile: {
+    head: 'New 갤럭시 AI 구독클럽 — Samsung Care+ 포함(가입 후 60일 이내 IMEI 입력으로 활성화)',
+    rows: [
+      ['파손', 'Z 시리즈 파손 서비스 요금의 30% · S 시리즈 25% (최소 3만 원)'],
+      ['분실 (36개월형만)', 'Z 시리즈 보상 단말 기준가의 30% · S 시리즈 25% — 정확한 분실 자기부담금은 삼성케어플러스 전용 콜센터 1566-4590'],
+      ['횟수', '36개월형 분실/파손은 12개월마다 1회씩 최대 3회 분실보상'],
+    ],
+    src: 'samsung.com/sec/ai-subs/galaxyclub/guide/ · 2026-10-16 원문 대조',
+  },
+  pc: {
+    head: 'AI 구독클럽 올인원 2.0 (노트북·태블릿) — 무상수리서비스 + 파손보상 포함',
+    rows: [['파손', '파손 서비스 요금의 25% 자기부담금 (최소 3만 원) · 북6 지면 「삼성케어플러스 파손보상 최대 48개월」']],
+    src: 'samsung.com/sec 갤럭시 북6 · 탭 S11 구독 지면 · 2026-10-16 원문 대조',
+  },
+};
+/* 케어플러스 칸 안의 네 갈래 — 이전설치 요금은 install-cost.json(설치비용 앱과 같은 자료)을 읽는다 */
+const CP_VIEWS = [['svc', '가전/TV 유료 서비스'], ['move', '이전·재설치·철거 요금'], ['mobile', '모바일 자기부담금'], ['pc', 'PC·태블릿 자기부담금']];
+let cpView = 'svc', cpGroup = '', IC = null, icLoading = false;
+
 /* 부품가는 다른 날 받았다 — 출처 날짜를 갈라 적는다 */
-const FEE_AT_OF = { parts: '2026-10-21' };
+const FEE_AT_OF = { parts: '2026-10-21', consum: '2026-10-22', careplus: '2026-10-22', conflict: '2026-10-22', lcd: '2026-10-22' };
 const feeSrc = (k) => `<div class="src">출처 — 삼성전자서비스 <a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a> · ${FEE_AT_OF[k] || FEE_AT} 원문 확인</div>`;
 const feeList = (arr) => `<ul class="fee-ul">${arr.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
 
@@ -2035,10 +2096,26 @@ const FEE_SECS = [
   ['phone',  '📱', '휴대폰 부품가'],
   ['tablet', '📲', '태블릿 부품가'],
   ['pc',     '💻', 'PC 부품가'],
+  ['consum', '🛒', '가전 소모품가'],
   ['part',  '🧾', '부품비 · 리퍼'],
   ['free',  '✅', '무상 수리 기준'],
   ['paid',  '⚠', '유상 수리 대상'],
+  ['conflict', '⚖', '교환 · 환불 기준'],
+  ['careplus', '💧', '케어플러스 유료'],
 ];
+/* 분류 탭 셋(2026-10-22 사장님 B안). 칸이 12개라 한꺼번에 깔면 폰에서 칸만 한 화면을 먹는다 —
+   무엇을 보러 왔는지로 먼저 가르고 그 분류의 칸만 보인다. 칸 이름은 FEE_SECS 한 곳에만 적는다. */
+const FEE_GROUPS = [
+  ['rule',  '요금 기준',   ['total', 'trip', 'labor', 'free', 'paid']],
+  ['parts', '부품 가격',   ['phone', 'tablet', 'pc', 'consum', 'part']],
+  ['comp',  '보상 · 서비스', ['conflict', 'careplus']],
+];
+const feeGrpOf = (k) => (FEE_GROUPS.find(g => g[2].includes(k)) || FEE_GROUPS[0])[0];
+/* 가전 소모품가(svc-consum.json) — 이 칸을 열 때 받는다 */
+let CS = null, csKind = 0, csLine = '', csLoading = false;
+/* 같은 제품 라인(공기청정기 · 스탠드에어컨 · 건조기 · 토너 …) — 하위분류의 첫 토막이다.
+   2026-10-22 사장님: *"동일라인끼리 버튼으로 만들어서 들어가게 해줘야 너무 길어지지 않는다"* */
+const csLineOf = (r) => (r[1] || '기타').split(' · ')[0];
 function feeCard(k){
   const T = FEE.trip;
   if (k === 'total') return `<div class="card"><h2>💰 요금 구성</h2>
@@ -2057,7 +2134,7 @@ function feeCard(k){
       원문은 「수리비 기준표를 따릅니다」라고만 적고 표 자체는 싣지 않습니다. 정확한 금액은
       <b>엔지니어가 제품 점검 후 안내</b>합니다 — 화면에 없는 금액을 짐작해 말하지 마세요.</div>
     <div class="fee-h">원문 FAQ에서 확인되는 것</div>${feeList(FEE.laborFaq)}
-    ${feeSrc('service')}${feeSrc('self')}</div>`;
+    ${feeSrc('service')}${feeSrc('self')}${feeSrc('lcd')}</div>`;
   if (PK_GROUP[k]) {
     const grp = PK_GROUP[k];
     const head = { phone: ['📱', '휴대폰 부품 가격', '폴드8 · S26 · SM-F971N'], tablet: ['📲', '태블릿 부품 가격', '탭 S9 · SM-X710'], pc: ['💻', 'PC 부품 가격', '북6 프로 · NT960XJG · 모니터 D700'] }[k];
@@ -2073,6 +2150,25 @@ function feeCard(k){
     <input class="sq rfq" id="pkq" placeholder="모델·시리즈 (예: ${head[2]})" autocomplete="off">
     <div id="pkOut"></div>${feeSrc('parts')}</div>`;
   }
+  if (k === 'consum') return `<div class="card"><h2>🛒 가전 소모품 가격</h2>
+    <div class="why">삼성전자서비스 소모품샵에서 파는 <b>정품 소모품</b>(필터 · 리모컨 · 호스 · 청소기 브러시·배터리 · 토너 등) 가격입니다.
+      유상 수리 대상 「소모성 부품」(필터류 · 배터리 · 토너 등)이 이 값입니다.</div>
+    <div class="note">엔지니어가 방문해 교체하면 이 값에 <b>출장비</b>가 더해집니다 — 「단순 소모품 교체」는 보증기간과 무관하게 출장비가 청구됩니다(「출장비」 칸).</div>
+    <div class="chips" id="csKinds"></div>
+    <div class="cats" id="csLines"></div>
+    <input class="sq rfq" id="csq" placeholder="모델·품명·부품번호 (예: 필터 · AX90 · DB94-07195F)" autocomplete="off">
+    <div id="csOut"></div>${feeSrc('consum')}</div>`;
+  if (k === 'conflict') { const C = CONFLICT; return `<div class="card"><h2>⚖ 교환 · 환불 기준</h2>
+    <div class="why">공정거래위원회 고시 <b>소비자분쟁해결기준</b>의 품목별 해결기준입니다. 수리 대신 교환·환불이 되는지가 여기서 갈립니다.</div>
+    <table class="fee-t"><thead><tr><th>분쟁 유형</th><th>해결 기준</th></tr></thead>
+    <tbody>${C.rows.map(r => `<tr><td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td></tr>`).join('')}</tbody></table>
+    <div class="fee-h">감가상각 계산</div>${feeList(C.calc)}
+    <div class="note">품목별 내용연수는 <b>AS기간</b> 탭의 「부품보유기간(내용연수)」 값입니다.</div>
+    <div class="fee-h">함께 적힌 기준</div>${feeList(C.notes)}${feeSrc('conflict')}</div>`; }
+  if (k === 'careplus') return `<div class="card"><h2>💧 Samsung Care+ 요금</h2>
+    <div class="why">세일즈 코파일럿 안의 <b>케어플러스 금액은 모두 이 칸</b>에 있습니다 — 가전/TV 유료 서비스 · 이전설치 요금 · 모바일·PC 자기부담금.</div>
+    <div class="chips" id="cpViews">${CP_VIEWS.map(([v, t]) => `<button type="button" class="chip${v === cpView ? ' on' : ''}" data-cv="${v}">${esc(t)}</button>`).join('')}</div>
+    <div id="cpOut">${cpBody()}</div></div>`;
   if (k === 'part') return `<div class="card"><h2>🧾 부품비 · 리퍼부품</h2><div class="why">${esc(FEE.part)}</div>
     <div class="card warn fee-in"><b>리퍼부품 가격은 고객센터에 따로 문의해 주세요.</b>
       리퍼부품(회수 부품을 신부품과 동등하게 개선한 부품)은 재고·공급 여부에 따라 수리 시점 가격이 달라 화면에 싣지 않습니다.
@@ -2089,13 +2185,22 @@ function renderFee(){
   const pane = document.getElementById('feePane');
   let h = `<div class="sub">삼성전자서비스 <b>유상 수리 요금</b>은 출장비 · 부품비 · 수리비(기술료) 셋을 더한 값입니다.
     아래 칸을 누르면 그 내용만 보입니다 — 전부 삼성전자서비스 원문이고 카드 아래 링크로 원문을 열 수 있습니다.</div>`;
-  h += `<div class="cats" id="feeCats">${FEE_SECS.map(([k, e, t]) =>
+  const grp = feeGrpOf(feeSec);
+  h += `<div class="fee-seg" id="feeSeg" role="tablist">${FEE_GROUPS.map(([g, t]) =>
+    `<button type="button" role="tab" aria-selected="${g === grp}" class="${g === grp ? 'on' : ''}" data-fg="${g}">${esc(t)}</button>`).join('')}</div>`;
+  h += `<div class="cats" id="feeCats">${FEE_SECS.filter(([k]) => FEE_GROUPS.find(g => g[0] === grp)[2].includes(k)).map(([k, e, t]) =>
     `<div class="cat${k === feeSec ? ' on' : ''}" data-fs="${k}"><span class="ci">${e}</span>${esc(t)}</div>`).join('')}</div>`;
   h += `<div id="feeBody">${feeCard(feeSec)}</div>`;
   h += `<div class="src">삼성전자서비스 요금 원문 — ${['service','assure','parts','conflict','self'].map(k =>
     `<a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a>`).join(' · ')}</div>`;
   pane.innerHTML = h;
   if (typeof upgradeEmoji === 'function') upgradeEmoji(pane);
+  pane.querySelectorAll('#feeSeg button').forEach(b => b.onclick = () => {
+    if (b.dataset.fg === feeGrpOf(feeSec)) return;
+    feeSec = FEE_GROUPS.find(g => g[0] === b.dataset.fg)[2][0];   // 분류를 바꾸면 그 분류 첫 칸
+    if (PK_GROUP[feeSec]) pkKind = PK_GROUP[feeSec][0];
+    renderFee();
+  });
   pane.querySelectorAll('#feeCats .cat').forEach(el => el.onclick = () => {
     feeSec = el.dataset.fs;
     if (PK_GROUP[feeSec] && !PK_GROUP[feeSec].includes(pkKind)) pkKind = PK_GROUP[feeSec][0];
@@ -2114,6 +2219,83 @@ function renderFee(){
     document.getElementById('pkq').oninput = renderParts;
     renderParts();
   }
+  if (feeSec === 'consum') { document.getElementById('csq').oninput = renderConsum; renderConsum(); }
+  if (feeSec === 'careplus') wireCp();
+}
+
+/* 케어플러스 칸 본문 — 갈래마다 원문 출처를 따로 적는다(출처가 셋이다) */
+function cpBody(){
+  const P = CAREPLUS;
+  if (cpView === 'svc') return `<div class="why">${esc(P.what)}</div>
+    ${P.items.map(([t, who, d]) => `<div class="row"><div class="n">${esc(t)}<div class="d"><b>${esc(who)}</b><br>${esc(d)}</div></div></div>`).join('')}
+    <div class="card warn fee-in"><b>세척 · 필터 케어 가격은 원문 지면에 없습니다.</b> 삼성케어플러스 가전/TV 콜센터
+      <a href="tel:15884190" data-tel="15884190"><b>1588-4190</b></a> · 삼성스토어 매장 · 삼성닷컴에서 확인해 주세요.
+      이전설치 요금은 위 「이전·재설치·철거 요금」에 있습니다.</div>
+    <div class="note">${esc(P.sac)}</div>${feeSrc('careplus')}`;
+  if (cpView === 'mobile' || cpView === 'pc') { const M = P[cpView]; return `<div class="why"><b>${esc(M.head)}</b></div>
+    <table class="fee-t"><thead><tr><th>구분</th><th>자기부담금</th></tr></thead>
+    <tbody>${M.rows.map(r => `<tr><td>${esc(r[0])}</td><td><b>${esc(r[1])}</b></td></tr>`).join('')}</tbody></table>
+    <div class="note">구독 조건 전체(기간 · 잔존가 · 해지)는 <b>AI구독 케어 안내</b> 앱에 있습니다. 자기부담금 문의 — 삼성케어플러스 전용 콜센터
+      <a href="tel:15664590" data-tel="15664590"><b>1566-4590</b></a></div>
+    <div class="src">출처 — ${esc(M.src)}</div>`; }
+  /* 이전·재설치·철거 — 설치비용 앱이 쓰던 그 자료(install-cost.json · careplus) */
+  if (!IC) {
+    if (!icLoading && typeof fetch === 'function') {
+      icLoading = true;
+      fetch('install-cost.json').then(r => r.json()).then(j => { IC = j; const o = document.getElementById('cpOut'); if (o) { o.innerHTML = cpBody(); wireCp(); } })
+        .catch(() => { icLoading = false; const o = document.getElementById('cpOut'); if (o) o.innerHTML = '<div class="unk">요금 자료를 받지 못했습니다 — 연결을 확인해 주세요.</div>'; });
+    }
+    return '<div class="why">요금 자료를 불러오는 중…</div>';
+  }
+  const C = IC.careplus, gs = C.groups;
+  const g = gs.find(x => x.key === cpGroup) || gs[0];
+  cpGroup = g.key;
+  return `<div class="why">${esc(C.note)}</div>
+    <div class="chips" id="cpGroups">${gs.map(x => `<button type="button" class="chip${x.key === g.key ? ' on' : ''}" data-cg="${esc(x.key)}">${esc(x.name)}</button>`).join('')}</div>
+    ${g.sections.map(sec => `<div class="fee-h">${esc(sec.title)} <span>${sec.rows.length}건</span></div>
+      <table class="fee-t rf-t"><thead><tr>${sec.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>
+      ${sec.rows.map(r => `<tr><td>${esc(r.label)}${r.note ? `<span>${esc(r.note)}</span>` : ''}</td>${r.values.map(v => `<td><b>${esc(v)}</b></td>`).join('')}</tr>`).join('')}</tbody></table>
+      ${sec.foot ? `<div class="note">※ ${esc(sec.foot)}</div>` : ''}`).join('')}
+    <div class="src">출처 — 삼성닷컴 <a href="${esc(C.source)}" target="_blank" rel="noopener">${esc(C.title)}</a> · ${esc(C.collectedAt)} 원문 확인</div>`;
+}
+function wireCp(){
+  const pane = document.getElementById('feePane');
+  pane.querySelectorAll('#cpViews .chip').forEach(b => b.onclick = () => { cpView = b.dataset.cv; renderFee(); });
+  pane.querySelectorAll('#cpGroups .chip').forEach(b => b.onclick = () => { cpGroup = b.dataset.cg; const o = document.getElementById('cpOut'); o.innerHTML = cpBody(); wireCp(); });
+}
+
+/* 가전 소모품가 — 갈래 칩 + 검색. 글자로 찾을 때는 갈래와 무관하게 전부에서 찾는다(부품가 칸과 같은 규칙) */
+function renderConsum(){
+  const out = document.getElementById('csOut'), ks = document.getElementById('csKinds'); if (!out) return;
+  if (!CS) {
+    out.innerHTML = '<div class="why">가격 자료를 불러오는 중…</div>';
+    if (!csLoading && typeof fetch === 'function') {
+      csLoading = true;
+      fetch('svc-consum.json').then(r => r.json()).then(j => { CS = j; renderConsum(); })
+        .catch(() => { csLoading = false; out.innerHTML = '<div class="unk">가격 자료를 받지 못했습니다 — 아래 원문 링크에서 찾아 주세요.</div>'; });
+    }
+    return;
+  }
+  const raw = document.getElementById('csq').value, q = pkNorm(raw);
+  const searching = q.length >= 2;
+  const hit = searching ? CS.rows.filter(r => pkNorm(r[1] + r[2] + r[3] + r[6]).includes(q)) : CS.rows.filter(r => r[0] === csKind && csLineOf(r) === csLine);
+  if (searching) { const kinds = new Set(hit.map(r => r[0])); if (kinds.size === 1) csKind = [...kinds][0]; }
+  ks.innerHTML = CS.kinds.map((t, i) => `<button type="button" class="chip${i === csKind && !searching ? ' on' : ''}" data-ck="${i}">${esc(t)}</button>`).join('');
+  ks.querySelectorAll('.chip').forEach(b => b.onclick = () => { csKind = Number(b.dataset.ck); csLine = ''; document.getElementById('csq').value = ''; renderConsum(); });
+  /* 라인 버튼 — 갈래를 고르면 그 안의 라인만 칸으로 보이고, 라인을 눌러야 목록이 펼쳐진다 */
+  const ls = document.getElementById('csLines');
+  const lines = new Map();
+  CS.rows.filter(r => r[0] === csKind).forEach(r => lines.set(csLineOf(r), (lines.get(csLineOf(r)) || 0) + 1));
+  ls.hidden = searching;
+  ls.innerHTML = [...lines].map(([t, n]) => `<button type="button" class="cat${t === csLine ? ' on' : ''}" data-cl="${esc(t)}">${esc(t)}<span class="d">${n}개</span></button>`).join('');
+  ls.querySelectorAll('.cat').forEach(b => b.onclick = () => { csLine = csLine === b.dataset.cl ? '' : b.dataset.cl; renderConsum(); });
+  if (!searching && !csLine) { out.innerHTML = '<div class="why">위에서 제품 라인을 누르면 그 라인의 소모품 가격이 펼쳐집니다. 모델·부품번호를 알면 아래 검색이 더 빠릅니다.</div>'; return; }
+  if (!hit.length) { out.innerHTML = `<div class="unk">「${esc(raw)}」 소모품이 원문 목록에 없습니다.</div><div class="why">원문 소모품샵이 싣는 품목만 있습니다. 그 밖의 부품은 엔지니어 점검 후 안내됩니다.</div>`; return; }
+  const list = [...hit].sort((a, b) => a[0] - b[0] || (a[1] > b[1] ? 1 : a[1] < b[1] ? -1 : b[4] - a[4]));   // 갈래 순 → 하위분류 → 비싼 순
+  const shown = searching ? list.slice(0, 40) : list;   // 글자 검색은 40줄까지(폰에서 끝없이 늘어난다) · 라인을 골랐으면 그 라인 전부
+  out.innerHTML = `<div class="why">${list.length.toLocaleString()}개${!searching ? ` · ${esc(CS.kinds[csKind])} › ${esc(csLine)}` : ''}${list.length > shown.length ? ` 중 ${shown.length}개 — 모델·품명을 더 넣어 좁히세요` : ''} · (${esc(CS.collectedAt)} 원문 수집)</div>
+    <table class="fee-t rf-t"><thead><tr><th>품명 · 분류 · 적용 모델</th><th>판매가</th></tr></thead><tbody>
+    ${shown.map(r => `<tr><td><b>${esc(r[2])}</b><span>${esc(r[1] || CS.kinds[r[0]])} · ${esc(r[3])}${r[5] ? ' · 일시품절' : ''}${r[6] ? ' · ' + esc(pkModels(r[6])) : ''}</span></td><td><b>${r[4] == null ? '—' : r[4].toLocaleString() + '원'}</b></td></tr>`).join('')}</tbody></table>`;
 }
 
 /* 색상만 다른 부품을 한 줄로 묶는다 — 「폴드8, MAIN DISPLAY_GREEN SHADOW」 · 「… (클라우드 화이트)」 */
@@ -2245,6 +2427,21 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
     }
     return;
   }
+  const fsk = new URLSearchParams(location.search).get('fs');
+  if (fsk && FEE_SECS.some(x => x[0] === fsk)) {
+    feeSec = fsk;
+    const ck = Number(new URLSearchParams(location.search).get('ck'));
+    if (fsk === 'consum' && ck >= 0 && ck < 7) csKind = ck;
+    const cpv = new URLSearchParams(location.search).get('cpv');
+    if (fsk === 'careplus' && CP_VIEWS.some(v => v[0] === cpv)) { cpView = cpv; cpGroup = new URLSearchParams(location.search).get('cpg') || ''; }
+    setTab('fee');
+    const cq = new URLSearchParams(location.search).get('cq');
+    const inp = document.getElementById('csq');
+    if (cq && inp) { inp.value = cq; renderConsum(); }
+    const b = document.getElementById('feeBody');
+    if (b && b.scrollIntoView) setTimeout(() => b.scrollIntoView({ block: 'start' }), 60);
+    return;
+  }
   const q = new URLSearchParams(location.search).get('q');
   if (!q) return;
   if (!DOCS) DOCS = searchDocs();
@@ -2256,7 +2453,7 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
 
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
 if (typeof mountShareButton === 'function') mountShareButton(shareBuild);
-window.__as = { FEE, FEE_SRC, loadParts(j){ PK = j; renderParts(); }, partBase, DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, HARMAN, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
+window.__as = { FEE, FEE_SRC, FEE_SECS, FEE_GROUPS, CONFLICT, CAREPLUS, loadParts(j){ PK = j; renderParts(); }, loadConsum(j){ CS = j; renderConsum(); }, loadIC(j){ IC = j; }, CP_VIEWS, partBase, DB, ROYAL, RB, CONTACTS, CENTERS, OPS, VOC_HQ, HARMAN, B2B, B2B_IT, SINK, B2B_NATION, MID, GROUPS,
   openGroup,
   /* 딥링크가 착지하는지 검사하려면 **앱이 실제로 내놓는** 제목을 봐야 한다.
      데이터에서 제목을 다시 만들어 대조하던 검사는 색인과 사이좋게 틀린 채로 통과했다

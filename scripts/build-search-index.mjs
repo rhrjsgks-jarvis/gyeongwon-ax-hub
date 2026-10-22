@@ -296,10 +296,32 @@ function flatten(v, out = []) {
         + `${parts.size}개 부품 · 정품 부품가(기술료 별도)`,
       kw: [series, series.replace(/^갤럭시\s*/, ''), series.replace(/\s+/g, ''), KIND_WORD[kind],
         '수리비 수리비용 부품 부품값 부품가격 액정 액정값 화면 디스플레이 배터리 후면커버 뒷판 자가수리 정품부품 삼성전자서비스',
-        ...new Set(rows.map((r) => r[2])), ...parts].join(' '),
+        ...new Set(rows.map((r) => r[2])), ...parts, ...rows.map((r) => r[3])].join(' '),   // 부품번호(GH81-…)로도 — 자동완성 최상위 규칙
       // pkk = 구분 번호 — 「기타 제품」 처럼 같은 시리즈 이름이 여러 칸에 있어 이름만으로는 칸(휴대폰·태블릿·PC)을 못 고른다
       href: '/as?pk=' + encodeURIComponent(series) + '&pkk=' + kind });
   }
+
+  /* 가전 소모품가(소모품샵 가전 7갈래, 2026-10-22) — 「에어컨 필터 가격」 「청소기 배터리 가격」 으로 찾아야 한다.
+     갈래마다 한 줄. 누르면 AS 앱 수리비 탭 「가전 소모품가」 칸이 그 갈래로 열린다(`?fs=consum&ck=`). */
+  const CSM = JSON.parse(read('svc-consum.json'));
+  CSM.kinds.forEach((kind, ki) => {
+    const rows = CSM.rows.filter((r) => r[0] === ki);
+    const subs = [...new Set(rows.map((r) => r[1]).filter(Boolean))];
+    const lo = Math.min(...rows.map((r) => r[4])), hi = Math.max(...rows.map((r) => r[4]));
+    add({ t: 'category', m: 'as', title: `${kind} 소모품 가격`,
+      sub: `${rows.length}개 · ${lo.toLocaleString()}~${hi.toLocaleString()}원 · 필터·리모컨 등 정품 소모품가`,
+      kw: [kind, kind.replace(/·/g, ' '), ...subs, '소모품 소모품값 소모품가격 가격 부품값 정품 수리비 삼성전자서비스',
+        ...new Set(rows.map((r) => r[2])), ...rows.map((r) => r[3])].join(' '),
+      href: '/as?fs=consum&ck=' + ki });
+  });
+  add({ t: 'category', m: 'as', title: '교환 · 환불 기준 (소비자분쟁해결기준)',
+    sub: '구입 10일 이내 교환·환급 · 1개월 이내 교환·무상수리 · 보증 경과 후 수리 불가 시 감가 + 10%',
+    kw: '교환 환불 환급 반품 교환기준 환불기준 소비자분쟁해결기준 분쟁 감가상각 내용연수 수리불가 동일하자 리퍼폰 분실 부품없음 구입가',
+    href: '/as?fs=conflict' });
+  add({ t: 'category', m: 'as', title: '케어플러스 가전/TV 유료 서비스',
+    sub: '전문 세척 · 필터 케어 · 이전 설치 — 가격은 1588-4190',
+    kw: '케어플러스 삼성케어플러스 samsung care+ 전문세척 세척 분해세척 에어컨세척 세탁기세척 필터케어 이전설치 유료서비스 1588-4190',
+    href: '/as?fs=careplus' });
 
   for (const [cat, d] of Object.entries(DBA)) {
     add({ t: 'category', m: 'as', title: `${cat} 보증기간`,
@@ -408,11 +430,12 @@ function flatten(v, out = []) {
   for (const g of IC.careplus.groups) {
     for (const s of g.sections) {
       const body = s.rows.map((r) => r.note || [r.label, ...r.values].join(' ')).join(' ');
-      add({ t: 'cost', m: 'installcost', title: `${g.name} ${s.title}`,
-        sub: `이전설치 · ${s.rows.length}행`,
+      /* 케어플러스 금액은 AS 관련 정보 › 수리비 › 케어플러스 칸 한 곳에(2026-10-22) — 그리로 보낸다 */
+      add({ t: 'cost', m: 'as', title: `${g.name} ${s.title}`,
+        sub: `케어플러스 이전설치 · ${s.rows.length}행`,
         kw: [g.name, s.title, '이전설치 재설치 철거 케어플러스 할증 사다리차 이동거리 단가', body,
           secKw('care', g.key, s.title)].join(' '),
-        href: link('care', g.key) });
+        href: '/as?fs=careplus&cpv=move&cpg=' + encodeURIComponent(g.key) });
     }
   }
   // 안전한 사용준비 — 화면에 있는 말로 못 찾으면 검색이 아니다(AS 앱에서 배운 것)
@@ -574,12 +597,18 @@ fs.writeFileSync(pub('search-detail.json'), JSON.stringify({ count: detail.lengt
 /* 검색창 자동완성(2026-10-21 사장님 요청) — 제목·모듈·주소만 담은 작은 목록.
    허브 검색창이 자동완성 하나 하려고 1MB 넘는 색인을 받으면 안 된다. 같은 제목은 한 번만. */
 {
-  const seen = new Set();
+  /* ★ 최상위 규칙(2026-10-22): 모든 정보는 자동완성으로 찾을 수 있어야 한다 — 넷째 칸에 대표 낱말
+     (kw 에서 제목에 없는 낱말)을 담아 품명·모델·부품번호로도 걸리게 한다. 같은 제목이면 낱말을 합친다. */
+  const at = new Map();
   const sug = [];
   for (const e of light) {
-    if (!e.title || seen.has(e.title)) continue;
-    seen.add(e.title);
-    sug.push([e.title, e.m, e.href]);
+    if (!e.title) continue;
+    const tl = e.title.toLowerCase();
+    const extra = String(e.kw || '').split(' ').filter((t) => t.length >= 2 && !tl.includes(t));
+    if (at.has(e.title)) { const row = at.get(e.title); row[3] = [...new Set([...row[3].split(' ').filter(Boolean), ...extra])].join(' '); continue; }
+    const row = [e.title, e.m, e.href, [...new Set(extra)].join(' ')];
+    at.set(e.title, row);
+    sug.push(row);
   }
   fs.writeFileSync(pub('search-suggest.json'), JSON.stringify({ count: sug.length, s: sug }));
 }

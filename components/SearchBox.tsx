@@ -14,13 +14,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-type Sug = [string, string, string]   // [제목, 모듈, 주소]
+import { rankSuggest, type Sug } from '../lib/suggest'
 
 const MOD_LABEL: Record<string, string> = {
   finder: '모델파인더', compare: '타사비교', install: '설치환경', installcost: '설치비용',
   as: 'AS', place: '배치', care: '구독케어', hub: '도구',
 }
-const MAX = 8
 
 let cache: Sug[] | null = null
 let loading: Promise<Sug[]> | null = null
@@ -33,28 +32,6 @@ function loadSuggest(): Promise<Sug[]> {
       .catch(() => { loading = null; return [] as Sug[] })
   }
   return loading
-}
-
-const norm = (s: string) => s.toLowerCase().replace(/[\s·,()/\-]/g, '')
-
-/* 앞이 맞는 것 → 낱말 앞이 맞는 것 → 어디든 들어 있는 것 → 친 낱말이 모두 들어 있는 것. 같으면 짧은 제목 먼저 */
-export function rankSuggest(list: Sug[], q: string): Sug[] {
-  const nq = norm(q)
-  if (!nq) return []
-  const words = q.toLowerCase().split(/\s+/).map(norm).filter(Boolean)
-  const scored: [number, Sug][] = []
-  for (const s of list) {
-    const t = s[0].toLowerCase()
-    const nt = norm(t)
-    let sc = -1
-    if (nt.startsWith(nq)) sc = 0
-    else if (t.split(/[\s·,()/]+/).some((w) => norm(w).startsWith(nq))) sc = 1
-    else if (nt.includes(nq)) sc = 2
-    else if (words.length > 1 && words.every((w) => nt.includes(w))) sc = 3
-    if (sc >= 0) scored.push([sc, s])
-  }
-  scored.sort((a, b) => a[0] - b[0] || a[1][0].length - b[1][0].length)
-  return scored.slice(0, MAX).map((x) => x[1])
 }
 
 export default function SearchBox({

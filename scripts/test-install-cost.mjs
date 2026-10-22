@@ -184,9 +184,10 @@ let drawn = 0, feet = 0;
 D.newInstall.categories.forEach((c) => { win.__cost.go('new', c.key, null);
   drawn += win.document.querySelectorAll('#body .nt').length;
   feet += win.document.querySelectorAll('#body .foot2').length; });
-D.careplus.groups.forEach((g) => { win.__cost.go('care', g.key, null);
-  drawn += win.document.querySelectorAll('#body .nt').length; });
-ok(drawn >= 90, `비고가 화면에 ${drawn}줄 그려진다`);
+/* 케어플러스 이전설치 표는 AS 관련 정보 › 수리비 › 케어플러스 칸으로 옮겼다(2026-10-22) — 신규 설치 비고만 센다 */
+ok(drawn >= 40, `비고가 화면에 ${drawn}줄 그려진다`);
+ok(!win.document.querySelector('.tab[data-tab="care"]'), '「이전 · 재설치 · 철거」 탭이 없다 — 케어플러스 금액은 AS 케어플러스 칸 한 곳');
+ok(/fs=careplus&cpv=move/.test(win.document.documentElement.innerHTML), '옛 이전설치 링크·검색 결과는 AS 케어플러스 칸으로 보낸다');
 
 /*
  * **품목마다 화면 짜임이 같아야 한다**(사장님 지적 — 식기세척기만 1열로 나왔다).
@@ -199,7 +200,6 @@ const wideOf = (tab, key) => { win.__cost.go(tab, key, null);
 ok(wideOf('new', 'dw') === 1, '식기세척기(절 1개·47행)가 두 단을 쓴다');
 ok(wideOf('new', 'el') >= 1, '전기레인지(19행)가 두 단을 쓴다');
 ok(wideOf('new', 'ac') === 0, '에어컨은 절이 여럿이라 카드 단위로 흐른다(줄은 안 나눈다)');
-ok(wideOf('care', 'wash') >= 1, '이전설치 세탁기 추가설치비(46행)가 두 단을 쓴다');
 ok(feet >= 1, `절 각주가 화면에 ${feet}개 그려진다`);
 
 win.__cost.go('prep');
@@ -247,7 +247,7 @@ ok(win.__cost.search('가').length === 0, '한 글자는 조건으로 쓰지 않
  * 표까지만 가고 말면 435행 중에서 다시 눈으로 찾아야 한다. `jump()` 는 첫 결과를 눌러
  * 실제로 강조된 줄의 글을 돌려주므로, **찾은 말이 그 줄에 있는지**로 확인할 수 있다.
  */
-[['천공', '15,000'], ['야간 할증료', '33,000'], ['멀티탭', '멀티탭']].forEach(function ([q, want]) {
+[['천공', '15,000'], ['멀티탭', '멀티탭']].forEach(function ([q, want]) {
   const landed = win.__cost.jump(q);
   ok(!!landed && landed.indexOf(want) >= 0,
     `"${q}" 검색 → 그 줄로 이동 (${landed ? landed.slice(0, 40) : '이동 못 함'})`);

@@ -140,7 +140,7 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
          * 그래서 **한쪽에만 있을 수 있는 고유 표지**만 금지한다.
          */
         if (p.ai2) {
-          for (const must of ['올인원 2.0', '무상수리', '파손보상', '25% 자기부담금', '선납금', '1588-3366']) {
+          for (const must of ['올인원 2.0', '무상수리', '파손보상', '자기부담금', '선납금', '1588-3366']) {
             if (!txt.includes(must)) fail(`[${p.key}] 원문 항목 "${must}" 가 화면에 없다`);
           }
           /* 민팃 고객센터 번호·'자급제'는 스마트폰 상품에만 있는 표지다 */

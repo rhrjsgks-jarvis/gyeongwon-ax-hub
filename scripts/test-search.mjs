@@ -284,6 +284,33 @@ for (const [file, needle] of deepLinks) {
     const pkBad = entries.filter((e) => e.href.startsWith('/as?pk=')).map((e) => new URLSearchParams(e.href.slice(4))).filter((u) => !PKS.has(u.get('pk')) || !/^[0-4]$/.test(u.get('pkk') || '')).map((u) => u.toString());
     if (pkBad.length) fail(`부품가 딥링크 ${pkBad.length}건이 자료에 없는 시리즈를 가리킨다: ${pkBad.slice(0, 3).join(' · ')}`);
     else console.log(`OK: 「폴드8 수리비」 등 부품가 검색 · 딥링크 ${entries.filter((e) => e.href.startsWith('/as?pk=')).length}건`);
+    // 가전 소모품가 · 교환·환불 · 케어플러스(2026-10-22 B안) — 누르면 그 칸이 열려야 한다(?fs=)
+    for (const [q, want] of [['에어컨 필터 가격', '에어컨·공기청정기 소모품 가격'], ['청소기 배터리 가격', '청소기 소모품 가격'], ['토너 가격', '프린터·복합기 소모품 가격'],
+      ['DB94-07195F', '에어컨·공기청정기 소모품 가격'], ['교환 환불 기준', '교환 · 환불 기준'], ['케어플러스 세척', '케어플러스 가전/TV 유료 서비스']]) {
+      const got = find(q);
+      if (!got.some((e) => e.title.startsWith(want))) fail(`"${q}" 에서 「${want}」 가 안 나온다 (상위: ${got.slice(0, 3).map((e) => e.title).join(' · ')})`);
+    }
+    const fsBad = entries.filter((e) => e.href.startsWith('/as?fs=')).filter((e) => !/^\/as\?fs=(consum&ck=[0-6]|conflict|careplus(&cpv=move&cpg=[a-z]+)?)$/.test(e.href));
+    if (fsBad.length) fail(`수리비 칸 딥링크가 어긋난다: ${fsBad.map((e) => e.href).join(' · ')}`);
+    else console.log(`OK: 가전 소모품가 · 교환·환불 · 케어플러스 검색 · 딥링크 ${entries.filter((e) => e.href.startsWith('/as?fs=')).length}건`);
+  }
+
+  /* ★ 최상위 규칙(2026-10-22 사장님) — 세일즈 코파일럿의 모든 정보는 검색창 **자동완성**으로 찾을 수 있어야 한다.
+     ① 색인 항목은 전부 자동완성에 있다 ② 제목에 없는 품명·부품번호·칸 이름으로도 자동완성 상위에 뜬다.
+     새 자료를 넣으면 그 자료의 대표 질의를 아래 표에 더할 것. */
+  {
+    const { rankSuggest } = await import('../lib/suggest.ts');
+    const SUG = JSON.parse(fs.readFileSync(path.join(root, 'public', 'search-suggest.json'), 'utf8')).s;
+    const titles = new Set(SUG.map((r) => r[0]));
+    const missing = entries.filter((e) => e.title && !titles.has(e.title));
+    if (missing.length) fail(`자동완성에 없는 색인 항목 ${missing.length}건 — 예: ${missing.slice(0, 3).map((e) => e.title).join(' · ')}`);
+    if (SUG.some((r) => typeof r[3] !== 'string')) fail('자동완성에 대표 낱말 칸(넷째)이 없다 — 제목으로만 찾힌다');
+    const AC = [['헤파 필터', '에어컨·공기청정기 소모품 가격'], ['DB94-07195F', '에어컨·공기청정기 소모품 가격'], ['토너', '프린터·복합기 소모품 가격'],
+      ['GH81-23705A', '수리비'], ['폴드8 수리비', '폴드8 수리비'], ['교환 환불', '교환 · 환불 기준'], ['케어플러스', '케어플러스'],
+      ['출장비', '출장비'], ['멀티탭', ''], ['수원 물류센터', ''], ['냉장고 보증기간', '냉장고 보증기간']];
+    const acBad = AC.filter(([q, want]) => { const got = rankSuggest(SUG, q); return !got.length || (want && !got.some((r) => r[0].includes(want))); });
+    if (acBad.length) fail(`자동완성이 못 찾는 질의: ${acBad.map(([q]) => q).join(' · ')}`);
+    else console.log(`OK: ★ 자동완성 — 색인 ${entries.length}건 전부 · 대표 질의 ${AC.length}건(품명·부품번호·칸 이름)`);
   }
 
   // 줄여 부르는 말 → 정식 명칭이 걸려야 한다

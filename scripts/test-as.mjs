@@ -1477,23 +1477,41 @@ pass('상황실·업무·운영 골든 5건');
   if (pane.style.display === 'none') fail('수리비 탭을 눌렀는데 화면이 안 보인다');
   /* 2026-10-21 — 카드 일곱을 칸 버튼으로 고른다(사장님: *"카테고리별로 묶어서 버튼타입으로"*).
      칸마다 눌러 그 카드만 보이는가 · 카드마다 원문 링크가 있는가를 본다. */
-  const tiles = [...pane.querySelectorAll('#feeCats .cat')];
-  /* 부품가는 휴대폰·태블릿·PC 세 칸(2026-10-21 사장님 지시) — 칸 아홉 */
-  if (tiles.length !== 9) fail(`수리비 칸이 ${tiles.length}개 — 아홉이어야 한다`);
-  const tileOf = (name) => [...pane.querySelectorAll('#feeCats .cat')].find((el) => el.textContent.includes(name));
-  for (const n of ['휴대폰 부품가', '태블릿 부품가', 'PC 부품가']) if (!tileOf(n)) fail(`「${n}」 칸이 없다`);
+  /* 2026-10-22 B안 — 분류 탭 셋(요금 기준 / 부품 가격 / 보상·서비스)을 고르면 그 분류의 칸만 보인다.
+     칸은 모두 12개(가전 소모품가 · 교환·환불 기준 · 케어플러스 유료 추가). 칸을 누르려면 그 분류부터 연다. */
+  const segs = () => [...pane.querySelectorAll('#feeSeg button')];
+  if (segs().map((b) => b.textContent).join('|') !== '요금 기준|부품 가격|보상 · 서비스') fail('수리비 분류 탭이 「요금 기준 · 부품 가격 · 보상·서비스」 셋이 아니다');
+  if (A.FEE_SECS.length !== 12) fail(`수리비 칸이 ${A.FEE_SECS.length}개 — 열둘이어야 한다`);
+  const inGroups = A.FEE_GROUPS.flatMap((g) => g[2]);
+  if (inGroups.length !== A.FEE_SECS.length || A.FEE_SECS.some(([k]) => !inGroups.includes(k))) fail('어느 분류에도 안 든 칸(또는 두 분류에 든 칸)이 있다 — 그 칸은 화면에서 영영 못 연다');
+  const tileOf = (name) => {
+    const key = (A.FEE_SECS.find((x) => x[2].includes(name)) || [])[0];
+    const g = A.FEE_GROUPS.findIndex((x) => x[2].includes(key));
+    if (g >= 0 && !segs()[g].classList.contains('on')) segs()[g].click();
+    return [...pane.querySelectorAll('#feeCats .cat')].find((el) => el.textContent.includes(name));
+  };
+  for (const n of ['휴대폰 부품가', '태블릿 부품가', 'PC 부품가', '가전 소모품가', '교환 · 환불 기준', '케어플러스 유료']) if (!tileOf(n)) fail(`「${n}」 칸이 없다`);
   let allTxt = '';
   const noSrc = [];
-  for (let i = 0; i < tiles.length; i++) {
-    pane.querySelectorAll('#feeCats .cat')[i].click();
-    const cards = [...pane.querySelectorAll('#feeBody > .card')];
-    if (cards.length !== 1) fail(`칸 ${i + 1} 을 눌렀는데 카드가 ${cards.length}장`);
-    if (!pane.querySelectorAll('#feeCats .cat')[i].classList.contains('on')) fail(`칸 ${i + 1} 이 켜짐 표시가 안 된다`);
-    if (cards[0] && !cards[0].querySelector('.src a[href^="https://www.samsungsvc.co.kr/"]')) noSrc.push(i + 1);
-    allTxt += pane.textContent;
+  let gi = 0;
+  for (const [, , keys] of A.FEE_GROUPS) {
+    segs()[gi].click();
+    const shown = [...pane.querySelectorAll('#feeCats .cat')];
+    if (shown.length !== keys.length) fail(`분류 ${gi + 1} 의 칸이 ${shown.length}개 — ${keys.length}개여야 한다`);
+    if (!segs()[gi].classList.contains('on')) fail(`분류 ${gi + 1} 이 켜짐 표시가 안 된다`);
+    for (let i = 0; i < shown.length; i++) {
+      pane.querySelectorAll('#feeCats .cat')[i].click();
+      const cards = [...pane.querySelectorAll('#feeBody > .card')];
+      if (cards.length !== 1) fail(`${keys[i]} 칸을 눌렀는데 카드가 ${cards.length}장`);
+      if (!pane.querySelectorAll('#feeCats .cat')[i].classList.contains('on')) fail(`${keys[i]} 칸이 켜짐 표시가 안 된다`);
+      if (!segs()[gi].classList.contains('on')) fail(`${keys[i]} 칸을 눌렀더니 분류 탭이 바뀌었다`);
+      if (cards[0] && !cards[0].querySelector('.src a[href^="https://www.samsungsvc.co.kr/"]')) noSrc.push(keys[i]);
+      allTxt += pane.textContent;
+    }
+    gi++;
   }
-  if (noSrc.length) fail(`출처 링크가 없는 카드: ${noSrc.join(', ')}번 — 「출처와 링크는 필수」`);
-  else pass(`수리비 칸 ${tiles.length}개 — 누르면 그 카드 하나만 · 전부 원문 링크`);
+  if (noSrc.length) fail(`출처 링크가 없는 카드: ${noSrc.join(', ')} — 「출처와 링크는 필수」`);
+  else pass(`수리비 분류 3 · 칸 ${A.FEE_SECS.length}개 — 분류마다 그 칸만 · 누르면 그 카드 하나만 · 전부 원문 링크`);
   if (pane.querySelector('#rfq')) fail('리퍼부품 가격 검색이 남아 있다 — 고객센터 별도 문의로 바꿨다');
   tileOf('부품비 · 리퍼').click();
   if (!/고객센터에 따로 문의/.test(pane.textContent) || !pane.querySelector('[data-tel="15883366"]')) fail('리퍼부품 칸이 고객센터 1588-3366 문의를 안내하지 않는다');
@@ -1557,6 +1575,55 @@ pass('상황실·업무·운영 골든 5건');
   pq = pane.querySelector('#pkq'); pq.value = '탭 S9'; pq.dispatchEvent(new window.Event('input'));
   if (!pane.querySelectorAll('#pkOut tbody tr').length) fail('태블릿 칸 「탭 S9」 이 아무것도 못 찾는다');
   else pass('태블릿 칸 「탭 S9」 검색');
+
+  /* 가전 소모품가(소모품샵 가전 7갈래, 2026-10-22) — 모양 · 골든 · 갈래 칩 · 검색 */
+  const CS = JSON.parse(fs.readFileSync(new URL('../public/svc-consum.json', import.meta.url), 'utf8'));
+  const csBad = CS.rows.filter((r) => r.length !== 7 || !(r[0] >= 0 && r[0] < CS.kinds.length) || !r[2] || !(r[4] > 0) || / \/ [0-9A-Z-]{6,}$/.test(r[2]));
+  if (CS.rows.length < 300) fail(`가전 소모품이 ${CS.rows.length}건뿐이다`);
+  else if (csBad.length) fail(`가전 소모품 ${csBad.length}건 모양이 어긋난다 — 예: ${JSON.stringify(csBad[0])}`);
+  else if (CS.kinds.some((k, i) => !CS.rows.some((r) => r[0] === i))) fail('비어 있는 소모품 갈래가 있다');
+  else if (CS.src !== A.FEE_SRC.consum[1]) fail('소모품 자료의 출처가 소모품샵 주소가 아니다');
+  else pass(`가전 소모품 ${CS.rows.length}건 · 갈래 ${CS.kinds.length} — 모양 · 출처 주소`);
+  const cg = CS.rows.find((r) => r[3] === 'DB94-07195F');
+  if (!cg || cg[4] !== 40000 || !/헤파/.test(cg[2])) fail('골든 공기청정기 헤파 필터 DB94-07195F 가 40,000원이 아니다');
+  else pass('소모품 골든 DB94-07195F 헤파 필터 40,000원');
+  tileOf('가전 소모품가').click();
+  A.loadConsum(CS);
+  if ([...pane.querySelectorAll('#csKinds .chip')].length !== CS.kinds.length) fail('소모품 갈래 칩 수가 자료와 다르다');
+  const csq = pane.querySelector('#csq');
+  csq.value = 'DB94-07195F'; csq.dispatchEvent(new window.Event('input'));
+  if (!/40,000원/.test(pane.querySelector('#csOut').textContent)) fail('소모품 검색 「DB94-07195F」 가 40,000원을 못 찾는다');
+  else pass('소모품 검색 — 부품번호로 찾는다');
+  csq.value = '청소기 배터리'; csq.dispatchEvent(new window.Event('input'));
+  if (!pane.querySelectorAll('#csOut tbody tr').length) fail('소모품 검색 「청소기 배터리」 가 아무것도 못 찾는다');
+
+  /* 교환·환불 — 원문 7가지(+보증 경과 1줄 = 8줄) · 감가상각식 · 출처 */
+  tileOf('교환 · 환불 기준').click();
+  const ct = pane.querySelector('#feeBody').textContent;
+  if (A.CONFLICT.rows.length !== 8) fail(`교환·환불 기준 줄이 ${A.CONFLICT.rows.length}개 — 원문 별표 Ⅱ 는 8줄`);
+  else if (!/구입 후 10일 이내/.test(ct) || !/10%를 가산/.test(ct) || !/\(사용연수 ÷ 내용연수\) × 구입가/.test(ct)) fail('교환·환불 카드에 10일 교환·10% 가산·감가상각식이 안 보인다');
+  else pass('교환·환불 기준 8줄 · 감가상각식');
+  /* 케어플러스 — 가격을 지어내지 않고 콜센터로 */
+  tileOf('케어플러스 유료').click();
+  const pt = pane.querySelector('#feeBody').textContent;
+  if (!/가격은 원문 지면에 없습니다/.test(pt) || !pane.querySelector('[data-tel="15884190"]')) fail('케어플러스 카드가 가격 없음과 1588-4190 을 안내하지 않는다');
+  else if (/[0-9],[0-9]{3}원/.test(pt)) fail('케어플러스 카드에 원문에 없는 금액이 있다');
+  else pass('케어플러스 유료 3상품 · 가격은 1588-4190 안내(금액 없음)');
+  /* 케어플러스 금액은 이 칸 한 곳(2026-10-22 사장님) — 이전설치 요금 · 모바일·PC 자기부담금 */
+  if (A.CP_VIEWS.map((v) => v[0]).join() !== 'svc,move,mobile,pc') fail('케어플러스 칸 갈래가 서비스·이전설치·모바일·PC 넷이 아니다');
+  const IC = JSON.parse(fs.readFileSync(new URL('../public/install-cost.json', import.meta.url), 'utf8'));
+  A.loadIC(IC);
+  [...pane.querySelectorAll('#cpViews .chip')].find((b) => b.dataset.cv === 'move').click();
+  const mv = pane.querySelector('#cpOut');
+  if (pane.querySelectorAll('#cpGroups .chip').length !== IC.careplus.groups.length) fail('이전설치 품목 칩 수가 자료와 다르다');
+  else if (!/313,000/.test(mv.textContent) || !mv.querySelector('a[href="' + IC.careplus.source + '"]')) fail('이전설치 에어컨 스탠드 313,000원 또는 삼성닷컴 출처가 안 보인다');
+  else pass(`케어플러스 이전설치 요금 ${IC.careplus.groups.length}품목 — 설치비용 앱과 같은 자료`);
+  [...pane.querySelectorAll('#cpViews .chip')].find((b) => b.dataset.cv === 'mobile').click();
+  if (!/S 시리즈 25%/.test(pane.querySelector('#cpOut').textContent)) fail('모바일 Care+ 자기부담금(S 시리즈 25%)이 안 보인다');
+  else pass('모바일·PC Care+ 자기부담금이 케어플러스 칸에 있다');
+  const careApp = fs.readFileSync(new URL('../public/care-app.html', import.meta.url), 'utf8');
+  if (/파손 서비스 요금의 <b>(25|30)%/.test(careApp)) fail('AI구독 케어 앱에 Care+ 자기부담금 금액이 남아 있다 — 케어플러스 칸 한 곳으로');
+  else pass('AI구독 케어 앱은 금액 대신 케어플러스 칸을 가리킨다');
 
   /* 수리비 서식이 인쇄 전용 블록 안에 들어가면 화면에서 표·칩·목록이 맨 글자로 겹쳐 보인다(2026-10-21 실제로 그랬다) */
   const css = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n');

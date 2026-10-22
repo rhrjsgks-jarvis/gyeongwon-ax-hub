@@ -30,6 +30,8 @@ const pcSeries = (k, r) => {
   if (k === '모니터') return '모니터 스탠드';
   return String(r.series || '');
 };
+/* 줄 순서를 고정한다 — API 가 매번 다른 순서로 주어, 그대로면 값이 같아도 주간 점검이 「바뀜」으로 잡는다 */
+const cmp = (x, y) => (x < y ? -1 : x > y ? 1 : 0);
 const num = (v) => (typeof v === 'number' && v > 0 ? v : null);
 // 부품명에서 부품번호 꼬리(「 / GH81-…」)와 「,SELF KIT」 를 걷는다 — 부품번호는 따로 싣는다
 // 「,SELF KIT」 뒤에 적용 모델이 한 번 더 붙은 이름도 있다(「…PBA_,SELF KIT, SM-F976N」)
@@ -49,6 +51,7 @@ for (const k of KINDS) {
     ]);
   }
 }
+rows.sort((a, b) => a[0] - b[0] || cmp(a[1], b[1]) || cmp(a[3], b[3]) || cmp(a[4], b[4]));
 if (rows.length < 800) throw new Error('부품이 ' + rows.length + '건뿐이다 — 수집이 덜 됐다');
 if (rows.some((r) => r[5] == null)) throw new Error('판매가가 없는 줄이 있다');
 

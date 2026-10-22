@@ -245,7 +245,6 @@
 
 <div class="tabs" id="tabs">
   <button class="tab on" data-tab="new"><span class="tb-ico ci" data-label="공구">🔧</span>신규 설치 추가비</button>
-  <button class="tab" data-tab="care"><span class="tb-ico ci" data-label="트럭">🚚</span>이전 · 재설치 · 철거</button>
   <button class="tab" data-tab="prep"><span class="tb-ico ci" data-label="플러그">🔌</span>설치 전 준비</button>
 </div>
 
@@ -428,20 +427,6 @@ function render() {
     return;
   }
 
-  if (TAB === 'care') {
-    var gs = D.careplus.groups, k = CAT.care || gs[0].key;
-    var g = gs.filter(function (x) { return x.key === k; })[0] || gs[0];
-    el.innerHTML = chips(gs, g.key, 'care')
-      + '<div class="src"><b>' + esc(D.careplus.title) + '</b> — ' + esc(D.careplus.note)
-      + '<br>출처 삼성닷컴 케어플러스 · 확인 ' + esc(D.careplus.collectedAt)
-      + ' · <a href="' + esc(D.careplus.source) + '" target="_blank" rel="noopener">원문 보기</a></div>'
-      + '<div class="secs">' + g.sections.map(function (s, i) {
-          var n = normalizeRows(s);
-          return section(s.title, n.rows.length, listOf(n, 'care:' + g.key + ':' + i), s.foot, isWide(n));
-        }).join('') + '</div>';
-    return;
-  }
-
   /*
    * 설치 전 준비 — 원문 지면의 **그림과 글을 함께** 싣는다(2026-08-20 사장님 요청).
    * 예전에는 멀티탭 글만 있고 나머지 두 지면은 "그림이라 못 옮겼습니다"로 링크만 뒀는데,
@@ -504,7 +489,7 @@ function runSearch() {
     });
   }
 
-  var TABN = { new: '신규 설치 추가비', care: '이전 · 재설치 · 철거', prep: '설치 전 준비' };
+  var TABN = { new: '신규 설치 추가비', care: '케어플러스 이전설치 → AS 관련 정보', prep: '설치 전 준비' };
   var head = hit.length
     ? '결과 ' + hit.length + '건 — 누르면 그 자리로 갑니다'
       + (dropped.length ? ' · 없는 말이라 뺐습니다: ' + dropped.map(esc).join(', ') : '')
@@ -537,7 +522,15 @@ function hl(text, toks) {
  * 검색 결과를 누르면 **탭·품목·그 줄까지** 데려간다. 찾아 주기만 하고 두면 결국 다시 뒤진다.
  * 줄은 글자가 아니라 **키**로 찾는다 — 같은 금액이 여러 줄에 있어 글자로는 못 가른다.
  */
+/* 케어플러스 이전설치 요금은 AS 관련 정보 › 수리비 › 케어플러스 칸으로 옮겼다(2026-10-22 사장님:
+   *"케어플러스 관련 금액이 있다면 한곳으로 통일"*). 자료(install-cost.json · careplus)는 그대로 여기 있고
+   그쪽이 읽는다. 검색 결과·옛 링크로 이 탭을 찾으면 그 칸으로 보낸다 — 앱 바깥(허브)째로 옮긴다. */
+function toCareplus(cat) {
+  var u = '/as?fs=careplus&cpv=move' + (cat ? '&cpg=' + encodeURIComponent(cat) : '');
+  try { (window.top || window).location.href = u; } catch (e) { location.href = u; }
+}
 function go(tab, cat, target) {
+  if (tab === 'care') { closeDrop(); toCareplus(cat); return; }
   TAB = tab; if (cat) CAT[tab] = cat;
   [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t.dataset.tab === tab); });
   closeDrop();
@@ -614,7 +607,8 @@ fetch('install-cost.json').then(function (r) { return r.json(); }).then(function
   D = j;
   var p = new URLSearchParams(location.search);
   var t = p.get('tab');
-  if (t && ['new', 'care', 'prep'].indexOf(t) >= 0) { TAB = t; if (p.get('cat')) CAT[t] = p.get('cat'); }
+  if (t === 'care') { toCareplus(p.get('cat')); return; }
+  if (t && ['new', 'prep'].indexOf(t) >= 0) { TAB = t; if (p.get('cat')) CAT[t] = p.get('cat'); }
   [].forEach.call(document.querySelectorAll('.tab'), function (x) { x.classList.toggle('on', x.dataset.tab === TAB); });
   render();
   /* 통합검색에서 `?q=` 로 들어오면 그 말로 바로 찾아 첫 결과로 데려간다 */
@@ -634,8 +628,8 @@ fetch('install-cost.json').then(function (r) { return r.json(); }).then(function
 /* 공유·인쇄 — 화면을 그대로 담는다(share-kit). 무엇을 보고 있었는지 제목·파일 이름에 남긴다 */
 function costShareBuild() {
   if (!D) return null;
-  var tabNm = { new: '신규 설치 추가비', care: '이전 · 재설치 · 철거', prep: '설치 전 준비' }[TAB];
-  var list = TAB === 'new' ? D.newInstall.categories : TAB === 'care' ? D.careplus.groups : null;
+  var tabNm = { new: '신규 설치 추가비', prep: '설치 전 준비' }[TAB];
+  var list = TAB === 'new' ? D.newInstall.categories : null;
   var c = list ? (list.filter(function (x) { return x.key === CAT[TAB]; })[0] || list[0]) : null;
   var t = c ? c.name : tabNm;
   return { app: '세일즈 코파일럿 · 설치비용 · 사전준비', title: t, subtitle: c ? tabNm : '',
