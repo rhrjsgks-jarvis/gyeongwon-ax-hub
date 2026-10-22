@@ -450,6 +450,25 @@ function resetUrlTabInputs() {
     assertTrue(!rowLabels.some((t) => t.includes('가격')), '비교표에 가격 행이 렌더된다 — 성능만 견준다');
     assertTrue(rowLabels.some((t) => t.includes('전체 출력')), '비교표에 전체 출력 행이 렌더되지 않음');
     console.log(`[10] 비교항목 확충 OK — 인덕션 ${rowLabels.length}행 렌더`);
+
+    /* 「다른 값만 보기」(2026-10-22) — 같은 값 줄을 접고, 몇 줄 접었는지 밝히고, 다른 줄은 남겨야 한다 */
+    {
+      const t = val('spec-table'), b = val('spec-diff'), n = val('spec-diff-n');
+      const same = t.querySelectorAll('tr[data-same]').length;
+      const all = t.querySelectorAll('tr').length;
+      const sameReal = [...t.querySelectorAll('tr[data-same]')].every((tr) => { const v = [...tr.querySelectorAll('.spec-val')].map((td) => td.textContent.replace(/[SABCDE]급/g, '').trim()); return v[0] === v[1]; });
+      assertTrue(!!b && same > 0, '인덕션 비교에 같은 값 줄이 표시(data-same)되지 않는다');
+      assertTrue(sameReal, '「같은 값」으로 표시된 줄의 두 값이 실제로 다르다');
+      const wasOn = t.classList.contains('only-diff');
+      if (wasOn) b.click();
+      b.click();
+      assertTrue(t.classList.contains('only-diff') && b.getAttribute('aria-pressed') === 'true', '「다른 값만 보기」를 눌러도 켜지지 않는다');
+      assertTrue(n.textContent.includes(`${same}줄을 접었습니다`), `접은 줄 수를 밝히지 않는다(${n.textContent})`);
+      assertTrue(all - same > 1, '다른 값 줄까지 접혔다');
+      b.click();
+      assertTrue(!t.classList.contains('only-diff'), '다시 눌러도 꺼지지 않는다');
+      console.log(`[10-d] 다른 값만 보기 — 인덕션 ${all}줄 중 같은 값 ${same}줄 접기·풀기 OK`);
+    }
   }
 
   // ══════════════════════════════════════════

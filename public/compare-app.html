@@ -88,6 +88,13 @@ select:focus{border-color:var(--primary);}
 .spec-table th.samsung-col{color:var(--navy);background:var(--navy-l);}
 .spec-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .spec-table tr:last-child td{border-bottom:none;}
+/* 「다른 값만 보기」(2026-10-22) — 두 모델 값이 글자 그대로 같은 줄을 접는다. 실측으로 비교 줄의 34%가 같은 값이다
+   (인덕션 80% · 세탁기 54%). GitHub·npm 의 비교표 도구들이 공통으로 갖춘 기능이고 당사제품 비교에는 이미 있다. */
+.spec-table.only-diff tr[data-same]{display:none;}
+.spec-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 10px;}
+.spec-tools button{border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12px;font-weight:700;color:var(--gray);cursor:pointer;}
+.spec-tools button.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+.spec-tools span{font-size:11.5px;color:var(--gray);}
 /*
  * S~E 등급 배지. **색은 S→E 로 한 줄기**여야 눈이 순서를 읽는다 —
  * 항목마다 다른 색을 쓰면 등급이 아니라 분류로 보인다.
@@ -388,6 +395,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
     <!-- 스펙 비교표 -->
     <div class="card">
       <div class="card-title">📊 핵심 스펙 비교</div>
+      <div class="spec-tools"><button type="button" id="spec-diff" aria-pressed="false">다른 값만 보기</button><span id="spec-diff-n"></span></div>
       <div style="overflow-x:auto;">
         <table class="spec-table" id="spec-table"></table>
       </div>
@@ -2373,6 +2381,22 @@ var ELEC_CASES = [
 
 /* `#elecCost` 를 채운다. 감춰져 있어도(hidden) 내용은 만들어 둔다 —
    열 때 따로 손볼 것이 없어야 하고, 테스트가 계산을 검사할 수 있어야 한다. */
+/* 「다른 값만 보기」 — 켜면 같은 값 줄을 접고 몇 줄 접었는지 밝힌다(조용히 숨기지 않는다).
+   고른 상태는 이 기기에 기억한다(막힌 환경이면 그냥 꺼진 채로 시작한다). */
+let specOnlyDiff = false;
+try { specOnlyDiff = localStorage.getItem('cmp_only_diff') === '1'; } catch (e) {}
+function applySpecDiff(sameN){
+  const t = document.getElementById('spec-table'), b = document.getElementById('spec-diff'), n = document.getElementById('spec-diff-n');
+  if (!t || !b) return;
+  if (typeof sameN === 'number') t.dataset.same = String(sameN);
+  const k = Number(t.dataset.same || 0);
+  t.classList.toggle('only-diff', specOnlyDiff);
+  b.classList.toggle('on', specOnlyDiff);
+  b.setAttribute('aria-pressed', String(specOnlyDiff));
+  b.hidden = !k;   // 같은 값 줄이 없으면 누를 일이 없다
+  n.textContent = !k ? '' : specOnlyDiff ? `같은 값 ${k}줄을 접었습니다` : `두 모델이 같은 값인 줄 ${k}개`;
+  if (!b.dataset.wired) { b.dataset.wired = '1'; b.onclick = () => { specOnlyDiff = !specOnlyDiff; try { localStorage.setItem('cmp_only_diff', specOnlyDiff ? '1' : '0'); } catch (e) {} applySpecDiff(); }; }
+}
 function renderElecCost(sam, comp) {
   const box = document.getElementById('elecCost');
   if (!box) return;
@@ -2431,6 +2455,7 @@ function renderResult() {
     <th class="samsung-col" style="width:35%">🔵 삼성</th>
     <th style="width:35%">${escHtml(currentBrand)}</th>
   </tr>`;
+  let sameN = 0;
   items.forEach(it=>{
     const sv = specValue(sam, it.key);
     const cv = specValue(comp, it.key);
@@ -2478,7 +2503,9 @@ function renderResult() {
     const gC = (unknown || nameTie) ? null : gC0;
     const badge = (g) => g ? `<span class="badge-grade g-${g}">${g}급</span>` : '';
     const plain = !gS && !gC;   // 등급을 못 매기는 행은 '참고'
-    rows += `<tr class="${plain ? 'spec-row-tie' : rowClass}">
+    const same = String(sv).trim() === String(cv).trim();   // 글자 그대로 같은 줄 — 「다른 값만 보기」가 접는다
+    if (same) sameN++;
+    rows += `<tr class="${plain ? 'spec-row-tie' : rowClass}"${same ? ' data-same="1"' : ''}>
       <td class="spec-label">${escHtml(it.label)}${plain ? '<span class="spec-note">참고</span>' : ''}</td>
       <td class="spec-val">${escHtml(fmtSpec(sv))}${escHtml(unitOf(sv,it.unit))} ${badge(gS)}</td>
       <td class="spec-val">${escHtml(fmtSpec(cv))}${escHtml(unitOf(cv,it.unit))} ${badge(gC)}</td>
@@ -2495,6 +2522,7 @@ function renderResult() {
     이름(칩셋·패널)은 잴 수치가 없어 등급 없음</span>
   </td></tr>`;
   document.getElementById('spec-table').innerHTML = rows;
+  applySpecDiff(sameN);
   renderElecCost(sam, comp);
 
   // 기능 비교
