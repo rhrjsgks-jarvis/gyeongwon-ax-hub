@@ -30,7 +30,8 @@ const WORK = '.scratch/weekly';
 fs.mkdirSync(WORK, { recursive: true });
 
 const run = (cmd, args, opt = {}) => {
-  const r = spawnSync(cmd, args, { encoding: 'utf8', shell: process.platform === 'win32', timeout: opt.timeout || 20 * 60e3, env: { ...process.env, ...(opt.env || {}) } });
+  /* 셸은 npm 에만 — git 을 셸로 돌리면 윈도우에서 커밋 메시지가 띄어쓰기마다 쪼개져 「pathspec '갱신'」 으로 실패한다(첫 실행에서 실제로 그랬다) */
+  const r = spawnSync(cmd, args, { encoding: 'utf8', shell: process.platform === 'win32' && cmd === 'npm', timeout: opt.timeout || 20 * 60e3, env: { ...process.env, ...(opt.env || {}) } });
   return { code: r.status, out: (r.stdout || '') + (r.stderr || ''), err: r.error };
 };
 const git = (...a) => run('git', a);
@@ -70,14 +71,31 @@ const behind = Number(git('rev-list', '--count', 'HEAD..origin/main').out.trim()
 if (!dirty && behind && !DRY) git('pull', '--ff-only');
 const canCommit = !dirty && !DRY;
 
-const hashOf = (f) => (fs.existsSync(f) ? fs.readFileSync(f).toString('base64').length + ':' + git('hash-object', f).out.trim() : 'none');
+/* 「바뀜」은 **내용**으로 가른다 — 수집 날짜(collectedAt · at)·수집 기록(_로 시작하는 머리 칸)·키 순서만 달라진 것은
+   바뀐 것이 아니다. 첫 실행에서 부품가·센터·구독케어가 날짜만 달라 「바뀜」으로 잡혔다. 그런 파일은 되돌려 커밋에 안 싣는다. */
+const DATE_KEYS = /^(_?collectedAt|at|checkedAt)$/;
+const canon = (v, top) => {
+  if (Array.isArray(v)) return v.map((x) => canon(x, false));
+  if (v && typeof v === 'object') {
+    const o = {};
+    for (const k of Object.keys(v).sort()) { if (DATE_KEYS.test(k) || (top && k.startsWith('_'))) continue; o[k] = canon(v[k], false); }
+    return o;
+  }
+  return v;
+};
+const hashOf = (f) => {
+  if (!fs.existsSync(f)) return 'none';
+  const t = fs.readFileSync(f, 'utf8');
+  if (f.endsWith('.json')) { try { return JSON.stringify(canon(JSON.parse(t), true)); } catch { /* 깨진 JSON 은 글자 그대로 */ } }
+  return t.replace(/20\d\d-\d\d-\d\d/g, '');
+};
 for (const st of STAGES) {
   if (ONLY && !ONLY.includes(st.key)) continue;
   const before = Object.fromEntries(st.files.map((f) => [f, hashOf(f)]));
   let fail = null, out = '';
   for (const [cmd, args] of st.steps) {
     const r = run(cmd, args, { env: st.env });
-    out = r.out;
+    out += r.out;   // 앞 단계(수집기) 출력도 모아야 오류 알림이 잡힌다
     if (st.check && r.code === 3) { report.alerts.push(`${st.name}: ${tail(r.out, 1)} — 손으로 반영`); break; }
     if (r.code !== 0) { fail = `${tail(r.out)}${r.err ? ' ' + r.err.message : ''}`; break; }
   }
@@ -87,7 +105,10 @@ for (const st of STAGES) {
     continue;
   }
   const moved = st.files.filter((f) => hashOf(f) !== before[f]);
-  if (moved.length) report.changed.push({ name: st.name, files: moved, note: tail(out, 1), fresh: st.fresh });
+  for (const f of st.files) if (!moved.includes(f)) git('checkout', '--', f);   // 날짜만 바뀐 파일은 되돌린다(커밋 소음)
+  /* 수집기가 일부 원문을 못 받고도 이전 값으로 넘어간 경우(구독케어가 그런다) — 출력에 남은 오류를 알린다 */
+  if (/ECONN|ETIMEDOUT|socket hang up|TLSSocket|Error:/i.test(out)) report.alerts.push(`${st.name}: 원문 일부를 못 받아 그 항목은 이전 값을 유지했습니다`);
+  if (moved.length) report.changed.push({ name: st.name, files: moved, note: moved.map((f) => path.basename(f)).join(' · ') + ' 내용 변경', fresh: st.fresh });
   else if (!st.check || !report.alerts.some((a) => a.startsWith(st.name))) report.same.push(st.name);
   if (st.fresh.length) st.okFresh = true;
 }

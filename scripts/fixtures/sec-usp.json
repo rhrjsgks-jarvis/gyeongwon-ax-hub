@@ -2,7 +2,7 @@
  "_note": "삼성닷컴 공식 셀링포인트(uspDescList). 제조사가 제품마다 싣는 문구라 상담사가 그대로 읽어도 된다. 가격은 담지 않는다.",
  "_source": "https://www.samsung.com/sec/cxhr/pf/goodsList?dispClsfNo={번호}&rows=500",
  "_tool": "scripts/fetch-sec-usp.mjs (로컬 전용)",
- "collectedAt": "2026-10-16",
+ "collectedAt": "2026-10-22",
  "cats": [
   {
    "cat": "smartphones",
@@ -19,8 +19,8 @@
   {
    "cat": "galaxybook",
    "ok": true,
-   "n": 52,
-   "usp": 50
+   "n": 53,
+   "usp": 52
   },
   {
    "cat": "watches",
@@ -55,8 +55,8 @@
   {
    "cat": "harman-life-style-audio",
    "ok": true,
-   "n": 72,
-   "usp": 72
+   "n": 73,
+   "usp": 73
   },
   {
    "cat": "refrigerators",
@@ -85,8 +85,8 @@
   {
    "cat": "washers-and-dryers",
    "ok": true,
-   "n": 193,
-   "usp": 192
+   "n": 187,
+   "usp": 186
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -121,8 +121,8 @@
   {
    "cat": "monitors",
    "ok": true,
-   "n": 201,
-   "usp": 198
+   "n": 189,
+   "usp": 186
   },
   {
    "cat": "printers",
@@ -160,7 +160,7 @@
     "대화면으로 확장되는 멀티태스킹 AI경험"
    ],
    "grade": 4.9,
-   "reviews": 1315
+   "reviews": 1333
   },
   {
    "cat": "smartphones",
@@ -172,7 +172,7 @@
     "대화면으로 확장되는 멀티태스킹 AI경험"
    ],
    "grade": 4.9,
-   "reviews": 488
+   "reviews": 494
   },
   {
    "cat": "smartphones",
@@ -184,7 +184,7 @@
     "대화면으로 확장되는 멀티태스킹 AI경험"
    ],
    "grade": 4.9,
-   "reviews": 1439
+   "reviews": 1458
   },
   {
    "cat": "smartphones",
@@ -196,7 +196,7 @@
     "고해상도 5천만 화소 듀얼 카메라"
    ],
    "grade": 4.9,
-   "reviews": 5556
+   "reviews": 5671
   },
   {
    "cat": "smartphones",
@@ -208,7 +208,7 @@
     "고해상도 5천만 화소 듀얼 카메라"
    ],
    "grade": 4.9,
-   "reviews": 2263
+   "reviews": 2289
   },
   {
    "cat": "smartphones",
@@ -220,7 +220,7 @@
     "고해상도 5천만 화소 듀얼 카메라"
    ],
    "grade": 4.9,
-   "reviews": 5971
+   "reviews": 6089
   },
   {
    "cat": "smartphones",
@@ -232,7 +232,7 @@
     "유니크한 플렉스캠 촬영 경험"
    ],
    "grade": 4.9,
-   "reviews": 367
+   "reviews": 376
   },
   {
    "cat": "smartphones",
@@ -266,7 +266,7 @@
     "뛰어난 내구성과 더욱 슬림해진 디자인"
    ],
    "grade": 4.9,
-   "reviews": 15306
+   "reviews": 15338
   },
   {
    "cat": "smartphones",
@@ -278,7 +278,7 @@
     "뛰어난 내구성과 더욱 슬림해진 디자인"
    ],
    "grade": 4.9,
-   "reviews": 8792
+   "reviews": 8804
   },
   {
    "cat": "smartphones",
@@ -290,7 +290,7 @@
     "뛰어난 내구성과 더욱 슬림해진 디자인"
    ],
    "grade": 4.9,
-   "reviews": 16083
+   "reviews": 16116
   },
   {
    "cat": "smartphones",
@@ -302,7 +302,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 3618
+   "reviews": 3633
   },
   {
    "cat": "smartphones",
@@ -314,7 +314,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 2113
+   "reviews": 2123
   },
   {
    "cat": "smartphones",
@@ -326,7 +326,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 3782
+   "reviews": 3797
   },
   {
    "cat": "smartphones",
@@ -338,7 +338,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 4098
+   "reviews": 4121
   },
   {
    "cat": "smartphones",
@@ -350,7 +350,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 1903
+   "reviews": 1909
   },
   {
    "cat": "smartphones",
@@ -362,7 +362,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 4284
+   "reviews": 4308
   },
   {
    "cat": "smartphones",
@@ -373,8 +373,8 @@
     "강력한 퍼포먼스",
     "프리미엄 디자인"
    ],
-   "grade": 4.8,
-   "reviews": 52
+   "grade": 4.7,
+   "reviews": 59
   },
   {
    "cat": "smartphones",
@@ -385,12 +385,12 @@
     "강력한 퍼포먼스",
     "프리미엄 디자인"
    ],
-   "grade": 4.8,
-   "reviews": 53
+   "grade": 4.7,
+   "reviews": 60
   },
   {
    "cat": "smartphones",
-   "code": "SM-F966NDBPKOO",
+   "code": "SM-F966NZKPKOO",
    "name": "갤럭시 Z 폴드7 자급제",
    "usp": [
     "정교한 설계로 완성한 초슬림&초경량 디자인",
@@ -398,7 +398,7 @@
     "대화면과 폴더블 폼팩터로 확장되는 멀티태스킹 AI 경험"
    ],
    "grade": 4.8,
-   "reviews": 1276
+   "reviews": 1280
   },
   {
    "cat": "smartphones",
@@ -410,7 +410,7 @@
     "대화면과 폴더블 폼팩터로 확장되는 멀티태스킹 AI 경험"
    ],
    "grade": 4.9,
-   "reviews": 556
+   "reviews": 558
   },
   {
    "cat": "smartphones",
@@ -426,7 +426,7 @@
   },
   {
    "cat": "smartphones",
-   "code": "SM-F766NLGEKOO",
+   "code": "SM-F766NLGAKOO",
    "name": "갤럭시 Z 플립7 자급제 (삼성닷컴/삼성 강남 전용컬러)",
    "usp": [
     "슬림해진 베젤과 몰입감을 높여주는 새로워진 커버 디스플레이",
@@ -434,7 +434,7 @@
     "플렉스윈도우로 양손이 자유로운 Voice AI 경험"
    ],
    "grade": 4.8,
-   "reviews": 1584
+   "reviews": 1586
   },
   {
    "cat": "smartphones",
@@ -450,7 +450,7 @@
   },
   {
    "cat": "smartphones",
-   "code": "SM-S937NZKWKOO",
+   "code": "SM-S937NZSBKOO",
    "name": "갤럭시 S25 엣지 자급제",
    "usp": [
     "S시리즈 사상 가장 슬림한 디자인과 견고한 내구성",
@@ -482,7 +482,7 @@
     "가볍고 슬림해진 디자인에 티타늄으로 완성한 내구성"
    ],
    "grade": 4.9,
-   "reviews": 3925
+   "reviews": 3926
   },
   {
    "cat": "smartphones",
@@ -506,7 +506,7 @@
     "가볍고 슬림해진 디자인에 티타늄으로 완성한 내구성"
    ],
    "grade": 4.9,
-   "reviews": 4265
+   "reviews": 4266
   },
   {
    "cat": "smartphones",
@@ -530,7 +530,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 1672
+   "reviews": 1673
   },
   {
    "cat": "smartphones",
@@ -542,7 +542,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.9,
-   "reviews": 3077
+   "reviews": 3079
   },
   {
    "cat": "smartphones",
@@ -554,7 +554,7 @@
     "슬림한 디자인에 더욱 견고해진 내구성"
    ],
    "grade": 4.8,
-   "reviews": 1971
+   "reviews": 1973
   },
   {
    "cat": "smartphones",
@@ -578,7 +578,7 @@
     "업그레이드 된 성능, 뛰어난 게이밍 퍼포먼스"
    ],
    "grade": 4.8,
-   "reviews": 1123
+   "reviews": 1125
   },
   {
    "cat": "smartphones",
@@ -590,7 +590,7 @@
     "업그레이드 된 성능, 뛰어난 게이밍 퍼포먼스"
    ],
    "grade": 4.8,
-   "reviews": 1181
+   "reviews": 1183
   },
   {
    "cat": "smartphones",
@@ -602,7 +602,7 @@
     "OIS 적용 50MP 카메라"
    ],
    "grade": 4.8,
-   "reviews": 254
+   "reviews": 262
   },
   {
    "cat": "smartphones",
@@ -614,7 +614,7 @@
     "OIS 적용 50MP 카메라"
    ],
    "grade": 4.8,
-   "reviews": 256
+   "reviews": 264
   },
   {
    "cat": "smartphones",
@@ -646,7 +646,7 @@
     "5,000mAh의 대용량 배터리"
    ],
    "grade": 4.7,
-   "reviews": 735
+   "reviews": 736
   },
   {
    "cat": "smartphones",
@@ -658,7 +658,7 @@
     "5,000mAh의 대용량 배터리"
    ],
    "grade": 4.7,
-   "reviews": 783
+   "reviews": 785
   },
   {
    "cat": "smartphones",
@@ -670,7 +670,7 @@
     "5,000mAh의 대용량 배터리"
    ],
    "grade": 4.7,
-   "reviews": 1001
+   "reviews": 1002
   },
   {
    "cat": "smartphones",
@@ -682,7 +682,7 @@
     "5,000mAh의 대용량 배터리"
    ],
    "grade": 4.7,
-   "reviews": 1016
+   "reviews": 1017
   },
   {
    "cat": "smartphones",
@@ -1198,7 +1198,7 @@
     "대화면과 폴더블 폼팩터로 확장되는 멀티태스킹 AI 경험"
    ],
    "grade": 4.9,
-   "reviews": 442
+   "reviews": 443
   },
   {
    "cat": "smartphones",
@@ -1234,7 +1234,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -1246,7 +1246,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -1258,7 +1258,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 127
+   "reviews": 182
   },
   {
    "cat": "tablets",
@@ -1270,7 +1270,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 5,
-   "reviews": 57
+   "reviews": 74
   },
   {
    "cat": "tablets",
@@ -1282,7 +1282,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 2550
+   "reviews": 2553
   },
   {
    "cat": "tablets",
@@ -1294,7 +1294,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 2550
+   "reviews": 2553
   },
   {
    "cat": "tablets",
@@ -1306,7 +1306,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1318,7 +1318,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1330,7 +1330,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1342,7 +1342,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1354,7 +1354,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1366,7 +1366,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1378,7 +1378,7 @@
     "필기에서 드로잉까지 새로워진 S펜 하나로"
    ],
    "grade": 4.9,
-   "reviews": 859
+   "reviews": 863
   },
   {
    "cat": "tablets",
@@ -1390,7 +1390,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 903
+   "reviews": 905
   },
   {
    "cat": "tablets",
@@ -1402,7 +1402,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 903
+   "reviews": 905
   },
   {
    "cat": "tablets",
@@ -1414,7 +1414,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 903
+   "reviews": 905
   },
   {
    "cat": "tablets",
@@ -1426,7 +1426,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 903
+   "reviews": 905
   },
   {
    "cat": "tablets",
@@ -1438,7 +1438,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 903
+   "reviews": 905
   },
   {
    "cat": "tablets",
@@ -1570,7 +1570,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.9,
-   "reviews": 107
+   "reviews": 108
   },
   {
    "cat": "tablets",
@@ -1582,7 +1582,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.9,
-   "reviews": 107
+   "reviews": 108
   },
   {
    "cat": "tablets",
@@ -1594,7 +1594,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.9,
-   "reviews": 107
+   "reviews": 108
   },
   {
    "cat": "tablets",
@@ -1606,7 +1606,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.9,
-   "reviews": 107
+   "reviews": 108
   },
   {
    "cat": "tablets",
@@ -1618,7 +1618,7 @@
     "AI 기능으로 다양한 작업을 더 쉽고 빠르게"
    ],
    "grade": 4.9,
-   "reviews": 107
+   "reviews": 108
   },
   {
    "cat": "tablets",
@@ -1678,7 +1678,7 @@
     "하드웨어 성능 강화로 멀티태스킹도 끊김없이 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 1663
+   "reviews": 1666
   },
   {
    "cat": "tablets",
@@ -1690,7 +1690,7 @@
     "하드웨어 성능 강화로 멀티태스킹도 끊김없이 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 1663
+   "reviews": 1666
   },
   {
    "cat": "tablets",
@@ -1702,7 +1702,7 @@
     "하드웨어 성능 강화로 멀티태스킹도 끊김없이 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 1663
+   "reviews": 1666
   },
   {
    "cat": "tablets",
@@ -1714,7 +1714,7 @@
     "하드웨어 성능 강화로 멀티태스킹도 끊김없이 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 1663
+   "reviews": 1666
   },
   {
    "cat": "tablets",
@@ -1726,7 +1726,7 @@
     "하드웨어 성능 강화로 멀티태스킹도 끊김없이 빠르게"
    ],
    "grade": 4.8,
-   "reviews": 1663
+   "reviews": 1666
   },
   {
    "cat": "tablets",
@@ -1842,7 +1842,7 @@
     "최신 AP의 향상된 성능으로 끊김없이 오래 사용"
    ],
    "grade": 4.9,
-   "reviews": 3025
+   "reviews": 3031
   },
   {
    "cat": "tablets",
@@ -1914,7 +1914,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 127
+   "reviews": 182
   },
   {
    "cat": "tablets",
@@ -1926,7 +1926,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 127
+   "reviews": 182
   },
   {
    "cat": "tablets",
@@ -1938,7 +1938,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 127
+   "reviews": 182
   },
   {
    "cat": "tablets",
@@ -1950,7 +1950,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 127
+   "reviews": 182
   },
   {
    "cat": "tablets",
@@ -1962,7 +1962,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 5,
-   "reviews": 57
+   "reviews": 74
   },
   {
    "cat": "tablets",
@@ -1974,7 +1974,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 5,
-   "reviews": 57
+   "reviews": 74
   },
   {
    "cat": "tablets",
@@ -1986,7 +1986,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 5,
-   "reviews": 57
+   "reviews": 74
   },
   {
    "cat": "tablets",
@@ -1998,7 +1998,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 5,
-   "reviews": 57
+   "reviews": 74
   },
   {
    "cat": "tablets",
@@ -2010,7 +2010,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -2022,7 +2022,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -2034,7 +2034,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -2046,7 +2046,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -2058,7 +2058,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -2070,7 +2070,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 138
+   "reviews": 192
   },
   {
    "cat": "tablets",
@@ -2082,7 +2082,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -2094,7 +2094,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -2106,7 +2106,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -2118,7 +2118,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -2130,7 +2130,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -2142,7 +2142,7 @@
     "최신 AP와 향상된 발열관리로 끊김없는 성능"
    ],
    "grade": 4.9,
-   "reviews": 78
+   "reviews": 95
   },
   {
    "cat": "tablets",
@@ -2240,27 +2240,15 @@
   },
   {
    "cat": "galaxybook",
-   "code": "NT740VJK-KC51G",
-   "name": "갤럭시 북6 (35.6cm) Core™ 5 / 256GB NVMe SSD",
+   "code": "NT960UJH-XC94Y",
+   "name": "갤럭시 북6 울트라 (40.6cm)<br> Core™ Ultra 9 / 2TB NVMe SSD, <br>Copilot+ PC",
    "usp": [
-    "Intel® Core™ 프로세서 시리즈 3",
-    "일상 작업을 위한 최적의 퍼포먼스",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 5,
-   "reviews": 2
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT740VJK-KC38G",
-   "name": "갤럭시 북6 (35.6cm) Core™ 3 / 256GB NVMe SSD",
-   "usp": [
-    "Intel® Core™ 프로세서 시리즈 3",
-    "일상 작업을 위한 최적의 퍼포먼스",
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "NVIDIA® Geforce® RTX™ 50 시리즈",
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.9,
-   "reviews": 51
+   "reviews": 137
   },
   {
    "cat": "galaxybook",
@@ -2272,7 +2260,175 @@
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.9,
-   "reviews": 1003
+   "reviews": 1012
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KC51G",
+   "name": "갤럭시 북6 프로 (40.6cm) <br>Core™ Ultra 5 / 512GB NVMe SSD,<br> Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 208
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT940XJG-KC51G",
+   "name": "갤럭시 북6 프로 (35.6cm) <br>Core™ Ultra 5 / 512GB NVMe SSD,<br> Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 76
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960UJH-XC94Y",
+   "name": "갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "NVIDIA® Geforce® RTX™ 50 시리즈",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 137
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960UJH-XD72Y",
+   "name": "갤럭시 북6 울트라 (40.6cm) <br> Core™ Ultra 7 / 1TB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "NVIDIA® Geforce® RTX™ 50 시리즈",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.8,
+   "reviews": 295
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960UJH-XD72Y",
+   "name": "갤럭시 북6 울트라 (40.6cm) <br> Core™ Ultra 7 / 1TB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "NVIDIA® Geforce® RTX™ 50 시리즈",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.8,
+   "reviews": 295
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KD72G",
+   "name": "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 1TB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 1012
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KL72G",
+   "name": "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 512GB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 1012
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KC51G",
+   "name": "갤럭시 북6 프로 (40.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 208
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KC71G",
+   "name": "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 512GB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 208
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KC71S",
+   "name": "갤럭시 북6 프로 (40.6cm)  <br>Core™ Ultra X7 / 512GB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 208
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT940XJG-KC51G",
+   "name": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 76
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT940XJG-KC51S",
+   "name": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 76
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT940XJG-KL72S",
+   "name": "갤럭시 북6 프로 (35.6cm)<br>Core™ Ultra X7 / 512GB NVMe SSD, <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 193
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT940XJG-KL72S",
+   "name": "갤럭시 북6 프로 (35.6cm)<br>Core™ Ultra X7 / 512GB NVMe SSD, <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 193
   },
   {
    "cat": "galaxybook",
@@ -2284,7 +2440,7 @@
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.9,
-   "reviews": 51
+   "reviews": 53
   },
   {
    "cat": "galaxybook",
@@ -2308,175 +2464,31 @@
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.9,
-   "reviews": 51
+   "reviews": 53
   },
   {
    "cat": "galaxybook",
-   "code": "NT960UJH-XC94Y",
-   "name": "갤럭시 북6 울트라 (40.6cm) Core™ Ultra 9 / 2TB NVMe SSD, Copilot+ PC",
+   "code": "NT740VJK-KC51G",
+   "name": "갤럭시 북6 (35.6cm) Core™ 5 / 256GB NVMe SSD",
    "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "NVIDIA® Geforce® RTX™ 50 시리즈",
+    "Intel® Core™ 프로세서 시리즈 3",
+    "일상 작업을 위한 최적의 퍼포먼스",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 5,
+   "reviews": 2
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT740VJK-KC38G",
+   "name": "갤럭시 북6 (35.6cm) Core™ 3 / 256GB NVMe SSD",
+   "usp": [
+    "Intel® Core™ 프로세서 시리즈 3",
+    "일상 작업을 위한 최적의 퍼포먼스",
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.9,
-   "reviews": 134
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960UJH-XD72Y",
-   "name": "갤럭시 북6 울트라 (40.6cm) <br> Core™ Ultra 7 / 1TB NVMe SSD,  <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "NVIDIA® Geforce® RTX™ 50 시리즈",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.7,
-   "reviews": 290
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960UJH-XC94Y",
-   "name": "갤럭시 북6 울트라 (40.6cm)<br> Core™ Ultra 9 / 2TB NVMe SSD, <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "NVIDIA® Geforce® RTX™ 50 시리즈",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 134
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960UJH-XD72Y",
-   "name": "갤럭시 북6 울트라 (40.6cm) <br> Core™ Ultra 7 / 1TB NVMe SSD,  <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "NVIDIA® Geforce® RTX™ 50 시리즈",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.7,
-   "reviews": 290
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960XJG-KD72G",
-   "name": "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 1TB NVMe SSD,  <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 1003
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960XJG-KL72G",
-   "name": "갤럭시 북6 프로 (40.6cm) <br> Core™ Ultra X7 / 512GB NVMe SSD,  <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 1003
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960XJG-KC51G",
-   "name": "갤럭시 북6 프로 (40.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 204
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT960XJG-KC51G",
-   "name": "갤럭시 북6 프로 (40.6cm) <br>Core™ Ultra 5 / 512GB NVMe SSD,<br> Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 204
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT940XJG-KC51G",
-   "name": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 73
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT940XJG-KC51S",
-   "name": "갤럭시 북6 프로 (35.6cm) Core™ Ultra 5 / 512GB NVMe SSD, Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 73
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT940XJG-KL72S",
-   "name": "갤럭시 북6 프로 (35.6cm)<br>Core™ Ultra X7 / 512GB NVMe SSD, <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 192
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT940XJG-KC51G",
-   "name": "갤럭시 북6 프로 (35.6cm) <br>Core™ Ultra 5 / 512GB NVMe SSD,<br> Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 73
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT940XJG-KL72S",
-   "name": "갤럭시 북6 프로 (35.6cm)<br>Core™ Ultra X7 / 512GB NVMe SSD, <br>Copilot+ PC",
-   "usp": [
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "Dynamic® AMOLED 2X 터치 스크린",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.9,
-   "reviews": 192
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT760VJG-KC51G",
-   "name": "갤럭시 북6 (40.6cm) Core™ Ultra 5 / 256GB NVMe SSD, Copilot+ PC",
-   "usp": [
-    "Intel® Core™ Ultra 프로세서 시리즈 3",
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.8,
-   "reviews": 150
+   "reviews": 53
   },
   {
    "cat": "galaxybook",
@@ -2488,19 +2500,31 @@
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.8,
-   "reviews": 150
+   "reviews": 152
   },
   {
    "cat": "galaxybook",
-   "code": "NT760VJG-KC51G",
-   "name": "갤럭시 북6 (40.6cm) <br>Core™ Ultra 5 / 256GB NVMe SSD, <br>Copilot+ PC",
+   "code": "NT760VJG-KC51S",
+   "name": "갤럭시 북6 (40.6cm) <br>Core™ Ultra 5 / 256GB NVMe SSD,<br> Copilot+ PC",
    "usp": [
     "Intel® Core™ Ultra 프로세서 시리즈 3",
     "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
    "grade": 4.8,
-   "reviews": 150
+   "reviews": 152
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT760VJG-KP51G",
+   "name": "갤럭시 북6 (40.6cm) <br>Core™ Ultra 5 / 512GB NVMe SSD, <br>Copilot+ PC",
+   "usp": [
+    "Intel® Core™ Ultra 프로세서 시리즈 3",
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.6,
+   "reviews": 108
   },
   {
    "cat": "galaxybook",
@@ -2512,7 +2536,7 @@
     "AI로 강화된 갤럭시 연결 경험"
    ],
    "grade": 4.9,
-   "reviews": 2349
+   "reviews": 2350
   },
   {
    "cat": "galaxybook",
@@ -2524,7 +2548,7 @@
     "AI로 강화된 갤럭시 연결 경험"
    ],
    "grade": 4.9,
-   "reviews": 2349
+   "reviews": 2350
   },
   {
    "cat": "galaxybook",
@@ -2535,8 +2559,8 @@
     "고해상도와 터치 기능이 만난 다이내믹 아몰레드 2X 터치 스크린",
     "PC, 폰, 태블릿을 하나로, 더 강력해진 Galaxy Eco System"
    ],
-   "grade": 4.8,
-   "reviews": 2571
+   "grade": 4.9,
+   "reviews": 2574
   },
   {
    "cat": "galaxybook",
@@ -2548,7 +2572,7 @@
     "하루 종일 지속되는 배터리"
    ],
    "grade": 4.9,
-   "reviews": 3060
+   "reviews": 3063
   },
   {
    "cat": "galaxybook",
@@ -2559,8 +2583,8 @@
     "고해상도와 터치 기능이 만난 다이내믹 아몰레드 2X 터치 스크린",
     "PC, 폰, 태블릿을 하나로, 더 강력해진 Galaxy Eco System"
    ],
-   "grade": 4.8,
-   "reviews": 2571
+   "grade": 4.9,
+   "reviews": 2574
   },
   {
    "cat": "galaxybook",
@@ -2572,7 +2596,7 @@
     "갤럭시 연결로 강화된 AI 경험"
    ],
    "grade": 4.8,
-   "reviews": 408
+   "reviews": 412
   },
   {
    "cat": "galaxybook",
@@ -2584,7 +2608,7 @@
     "갤럭시 연결로 강화된 AI 경험"
    ],
    "grade": 4.8,
-   "reviews": 408
+   "reviews": 412
   },
   {
    "cat": "galaxybook",
@@ -2596,14 +2620,7 @@
     "갤럭시 연결로 강화된 AI 경험"
    ],
    "grade": 4.7,
-   "reviews": 98
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT750XHD-KD72G",
-   "name": "갤럭시 북5 (39.6cm) Core™ Ultra 7 / 512GB NVMe SSD",
-   "grade": 4.8,
-   "reviews": 178
+   "reviews": 99
   },
   {
    "cat": "galaxybook",
@@ -2615,7 +2632,7 @@
     "갤럭시 연결로 강화된 AI 경험"
    ],
    "grade": 4.8,
-   "reviews": 408
+   "reviews": 412
   },
   {
    "cat": "galaxybook",
@@ -2627,7 +2644,7 @@
     "갤럭시 연결로 강화된 AI 경험"
    ],
    "grade": 4.7,
-   "reviews": 98
+   "reviews": 99
   },
   {
    "cat": "galaxybook",
@@ -2670,7 +2687,7 @@
     "하루 종일 지속되는 배터리"
    ],
    "grade": 4.9,
-   "reviews": 3060
+   "reviews": 3063
   },
   {
    "cat": "galaxybook",
@@ -2683,6 +2700,18 @@
    ],
    "grade": 4.9,
    "reviews": 47
+  },
+  {
+   "cat": "galaxybook",
+   "code": "NT960XJG-KD72S",
+   "name": "갤럭시 북6 프로 (40.6cm)  <br>Core™ Ultra X7 / 1TB NVMe SSD,  <br>Copilot+ PC",
+   "usp": [
+    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
+    "Dynamic® AMOLED 2X 터치 스크린",
+    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
+   ],
+   "grade": 4.9,
+   "reviews": 1012
   },
   {
    "cat": "galaxybook",
@@ -2707,18 +2736,6 @@
    ],
    "grade": 4.9,
    "reviews": 73
-  },
-  {
-   "cat": "galaxybook",
-   "code": "NT760VJG-KP51G",
-   "name": "갤럭시 북6 (40.6cm) <br>Core™ Ultra 5 / 512GB NVMe SSD, <br>Copilot+ PC",
-   "usp": [
-    "Intel® Core™ Ultra 프로세서 시리즈 3",
-    "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
-    "학습과 업무를 도와주는 네비게이터 Galaxy AI"
-   ],
-   "grade": 4.6,
-   "reviews": 107
   },
   {
    "cat": "galaxybook",
@@ -2787,8 +2804,8 @@
     "다중 작업도 원활하게 지원하는 Intel® Core™ 프로세서",
     "PC,  폰, 태블릿을 하나로 연결하는 Galaxy Eco System"
    ],
-   "grade": 4.6,
-   "reviews": 162
+   "grade": 4.7,
+   "reviews": 163
   },
   {
    "cat": "galaxybook",
@@ -2836,7 +2853,7 @@
     "얇고 고급스럽게 슬림하고 가벼운 디자인"
    ],
    "grade": 4.9,
-   "reviews": 170
+   "reviews": 171
   },
   {
    "cat": "galaxybook",
@@ -2860,7 +2877,7 @@
     "더 빠르고, 더 실용적인 손목 위 AI 경험"
    ],
    "grade": 4.9,
-   "reviews": 1215
+   "reviews": 1238
   },
   {
    "cat": "watches",
@@ -2872,7 +2889,7 @@
     "더 빠르고, 더 실용적인 손목 위 AI 경험"
    ],
    "grade": 4.8,
-   "reviews": 1290
+   "reviews": 1322
   },
   {
    "cat": "watches",
@@ -2884,7 +2901,7 @@
     "프리미엄 디자인, 편안한 착용감"
    ],
    "grade": 4.9,
-   "reviews": 1774
+   "reviews": 1791
   },
   {
    "cat": "watches",
@@ -2896,7 +2913,7 @@
     "나를 위한 맞춤형 헬스 코치"
    ],
    "grade": 4.8,
-   "reviews": 2544
+   "reviews": 2549
   },
   {
    "cat": "watches",
@@ -2908,7 +2925,7 @@
     "나를 위한 맞춤형 헬스 코치"
    ],
    "grade": 4.8,
-   "reviews": 2032
+   "reviews": 2036
   },
   {
    "cat": "watches",
@@ -2920,7 +2937,7 @@
     "나를 위한 맞춤형 헬스 코치"
    ],
    "grade": 4.8,
-   "reviews": 3585
+   "reviews": 3589
   },
   {
    "cat": "watches",
@@ -2944,7 +2961,7 @@
     "나를 위한 맞춤형 헬스 코치"
    ],
    "grade": 4.8,
-   "reviews": 1298
+   "reviews": 1299
   },
   {
    "cat": "watches",
@@ -2992,7 +3009,7 @@
     "Galaxy AI 기반 건강 인사이트"
    ],
    "grade": 4.8,
-   "reviews": 4910
+   "reviews": 4909
   },
   {
    "cat": "watches",
@@ -3052,7 +3069,7 @@
     "야외활동에 특화된 스마트 네비게이션"
    ],
    "grade": 4.8,
-   "reviews": 4670
+   "reviews": 4672
   },
   {
    "cat": "watches",
@@ -3112,7 +3129,7 @@
     "갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI"
    ],
    "grade": 4.8,
-   "reviews": 6107
+   "reviews": 6145
   },
   {
    "cat": "buds",
@@ -3124,7 +3141,7 @@
     "갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI"
    ],
    "grade": 4.9,
-   "reviews": 3487
+   "reviews": 3498
   },
   {
    "cat": "buds",
@@ -3136,7 +3153,7 @@
     "갤럭시 유저만이 누릴 수 있는 강력한 Galaxy AI"
    ],
    "grade": 4.7,
-   "reviews": 1154
+   "reviews": 1160
   },
   {
    "cat": "buds",
@@ -3147,8 +3164,8 @@
     "향상된 오디오 성능과 ANC",
     "음성 명령으로 편리한 Gemini 실행"
    ],
-   "grade": 4.7,
-   "reviews": 863
+   "grade": 4.8,
+   "reviews": 869
   },
   {
    "cat": "buds",
@@ -3160,7 +3177,7 @@
     "듣기 모드 지원 AI 실시간 통역"
    ],
    "grade": 4.5,
-   "reviews": 7458
+   "reviews": 7459
   },
   {
    "cat": "buds",
@@ -3172,7 +3189,7 @@
     "듣기 모드 지원 AI 실시간 통역"
    ],
    "grade": 4.7,
-   "reviews": 5549
+   "reviews": 5551
   },
   {
    "cat": "buds",
@@ -3352,7 +3369,7 @@
     "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드"
    ],
    "grade": 4.7,
-   "reviews": 681
+   "reviews": 691
   },
   {
    "cat": "tvs",
@@ -3364,7 +3381,7 @@
     "Micro RGB Precision Color 100"
    ],
    "grade": 4.8,
-   "reviews": 293
+   "reviews": 297
   },
   {
    "cat": "tvs",
@@ -3376,7 +3393,7 @@
     "모션 터보 144Hz"
    ],
    "grade": 4.8,
-   "reviews": 275
+   "reviews": 282
   },
   {
    "cat": "tvs",
@@ -3388,7 +3405,7 @@
     "터치 인터랙션으로 완성한 스타일"
    ],
    "grade": 4.9,
-   "reviews": 270
+   "reviews": 274
   },
   {
    "cat": "tvs",
@@ -3422,7 +3439,9 @@
     "Mini LED",
     "퓨어 스펙트럼 컬러",
     "다이내믹 사운드 팩"
-   ]
+   ],
+   "grade": 3,
+   "reviews": 1
   },
   {
    "cat": "tvs",
@@ -3458,19 +3477,19 @@
     "Micro RGB Precision Color 100"
    ],
    "grade": 4.7,
-   "reviews": 406
+   "reviews": 427
   },
   {
    "cat": "tvs",
-   "code": "KMR85RH9GAFXKR",
-   "name": "2026 Micro RGB RH9G (214cm)",
+   "code": "KMR75RH9G-9",
+   "name": "2026 Micro RGB RH9G (189cm)+11.1.4ch 사운드바 Q990F",
    "usp": [
     "Micro RGB 기술",
     "Micro RGB AI 엔진",
-    "Micro RGB Precision Color 100"
+    "트루 11.1.4채널 풀 서라운드"
    ],
-   "grade": 4.8,
-   "reviews": 293
+   "grade": 4.7,
+   "reviews": 165
   },
   {
    "cat": "tvs",
@@ -3482,7 +3501,7 @@
     "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드"
    ],
    "grade": 4.8,
-   "reviews": 184
+   "reviews": 186
   },
   {
    "cat": "tvs",
@@ -3494,7 +3513,7 @@
     "3.1채널 사운드"
    ],
    "grade": 4.7,
-   "reviews": 520
+   "reviews": 524
   },
   {
    "cat": "tvs",
@@ -3506,7 +3525,7 @@
     "진짜 QLED"
    ],
    "grade": 4.7,
-   "reviews": 688
+   "reviews": 693
   },
   {
    "cat": "tvs",
@@ -3518,19 +3537,7 @@
     "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드"
    ],
    "grade": 4.7,
-   "reviews": 208
-  },
-  {
-   "cat": "tvs",
-   "code": "KU85MH80AFXKR",
-   "name": "2026 Mini LED MH80 (214cm)",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "Mini LED",
-    "모션 터보 144Hz"
-   ],
-   "grade": 4.8,
-   "reviews": 275
+   "reviews": 213
   },
   {
    "cat": "tvs",
@@ -3542,19 +3549,7 @@
     "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드"
    ],
    "grade": 4.7,
-   "reviews": 681
-  },
-  {
-   "cat": "tvs",
-   "code": "KU85MH75AFXKR",
-   "name": "2026 Mini LED MH75 (214cm)",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "Mini LED",
-    "삼성 Knox 보안"
-   ],
-   "grade": 4.8,
-   "reviews": 839
+   "reviews": 691
   },
   {
    "cat": "tvs",
@@ -3566,7 +3561,7 @@
     "어느 곳에 배치해도 감각적인 탈부착형 스탠드"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "tvs",
@@ -3578,7 +3573,7 @@
     "어느 곳에 배치해도 감각적인 탈부착형 스탠드"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "tvs",
@@ -3590,7 +3585,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.7,
-   "reviews": 175
+   "reviews": 178
   },
   {
    "cat": "tvs",
@@ -3602,7 +3597,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 179
+   "reviews": 182
   },
   {
    "cat": "tvs",
@@ -3614,7 +3609,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.7,
-   "reviews": 175
+   "reviews": 178
   },
   {
    "cat": "tvs",
@@ -3626,7 +3621,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 179
+   "reviews": 182
   },
   {
    "cat": "tvs",
@@ -3638,67 +3633,55 @@
     "터치 인터랙션으로 완성한 스타일"
    ],
    "grade": 4.9,
-   "reviews": 270
+   "reviews": 274
   },
   {
    "cat": "tvs",
-   "code": "KU50MH70-2W",
-   "name": "무빙스타일 Mini LED (MH70) (125cm) 스탠다드",
+   "code": "KMR100RH85FXKR",
+   "name": "2026 Micro RGB RH85 (252cm)",
    "usp": [
-    "Samsung Vision AI 컴패니언",
-    "Mini LED",
-    "자유로움, 부드러움 그리고 유연함"
-   ],
-   "grade": 4.8,
-   "reviews": 61
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ42SH90-1W",
-   "name": "무빙스타일 OLED (SH90) (105cm) 라이트",
-   "usp": [
-    "빛 반사 걱정 없는, 무반사 기술",
-    "얼티밋 게이밍 팩",
-    "자유로움, 부드러움 그리고 유연함"
-   ],
-   "grade": 5,
-   "reviews": 47
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ48SH85-1B",
-   "name": "무빙스타일 OLED (SH85) (120cm) 라이트",
-   "usp": [
-    "OLED HDR",
-    "프리미엄 게이밍 팩",
-    "자유로움, 부드러움 그리고 유연함"
-   ],
-   "grade": 4.8,
-   "reviews": 12
-  },
-  {
-   "cat": "tvs",
-   "code": "KU55MH80-2W",
-   "name": "무빙스타일 Mini LED (MH80) (138cm) 스탠다드",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "Mini LED",
-    "자유로움, 부드러움 그리고 유연함"
+    "Micro RGB 기술",
+    "Micro RGB AI 엔진",
+    "Micro RGB Precision Color 100"
    ],
    "grade": 4.9,
-   "reviews": 27
+   "reviews": 21
   },
   {
    "cat": "tvs",
-   "code": "KU43MH70-1W",
-   "name": "무빙스타일 Mini LED (MH70) (108cm) 라이트",
+   "code": "KMR85RH9GAFXKR",
+   "name": "2026 Micro RGB RH9G (214cm)",
+   "usp": [
+    "Micro RGB 기술",
+    "Micro RGB AI 엔진",
+    "Micro RGB Precision Color 100"
+   ],
+   "grade": 4.8,
+   "reviews": 297
+  },
+  {
+   "cat": "tvs",
+   "code": "KQ100QNH80FXKR",
+   "name": "2026 Neo QLED QNH80 (252cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "퀀텀 Mini LED",
+    "모션 터보 144Hz"
+   ],
+   "grade": 4.8,
+   "reviews": 259
+  },
+  {
+   "cat": "tvs",
+   "code": "KU85MH80AFXKR",
+   "name": "2026 Mini LED MH80 (214cm)",
    "usp": [
     "Samsung Vision AI 컴패니언",
     "Mini LED",
-    "자유로움, 부드러움 그리고 유연함"
+    "모션 터보 144Hz"
    ],
-   "grade": 4.7,
-   "reviews": 118
+   "grade": 4.8,
+   "reviews": 282
   },
   {
    "cat": "tvs",
@@ -3738,15 +3721,15 @@
   },
   {
    "cat": "tvs",
-   "code": "KMR100RH85FXKR",
-   "name": "2026 Micro RGB RH85 (252cm)",
+   "code": "KU85MH75AFXKR",
+   "name": "2026 Mini LED MH75 (214cm)",
    "usp": [
-    "Micro RGB 기술",
-    "Micro RGB AI 엔진",
-    "Micro RGB Precision Color 100"
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "삼성 Knox 보안"
    ],
-   "grade": 4.9,
-   "reviews": 21
+   "grade": 4.8,
+   "reviews": 853
   },
   {
    "cat": "tvs",
@@ -3758,7 +3741,7 @@
     "어느 곳에 배치해도 감각적인 탈부착형 스탠드"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "tvs",
@@ -3830,7 +3813,7 @@
     "어느 곳에 배치해도 감각적인 탈부착형 스탠드"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "tvs",
@@ -3842,7 +3825,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.7,
-   "reviews": 175
+   "reviews": 178
   },
   {
    "cat": "tvs",
@@ -3855,18 +3838,6 @@
    ],
    "grade": 4.8,
    "reviews": 5
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ65SH90AFXKR",
-   "name": "2026 OLED SH90 (163cm)",
-   "usp": [
-    "빛 반사 걱정 없는, 무반사 기술",
-    "얼티밋 게이밍 팩",
-    "레이저슬림 디자인"
-   ],
-   "grade": 4.8,
-   "reviews": 113
   },
   {
    "cat": "tvs",
@@ -3906,18 +3877,6 @@
   },
   {
    "cat": "tvs",
-   "code": "KU55MH75-2W",
-   "name": "무빙스타일 Mini LED (MH75) (138cm) 스탠다드",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "Mini LED",
-    "자유로움, 부드러움 그리고 유연함"
-   ],
-   "grade": 4.6,
-   "reviews": 43
-  },
-  {
-   "cat": "tvs",
    "code": "KU85UH8500FXKR",
    "name": "2026 Crystal UHD UH8500 (214cm)",
    "usp": [
@@ -3926,7 +3885,7 @@
     "다이내믹 사운드 팩"
    ],
    "grade": 4.7,
-   "reviews": 38
+   "reviews": 40
   },
   {
    "cat": "tvs",
@@ -3950,7 +3909,7 @@
     "Micro RGB Precision Color 100"
    ],
    "grade": 4.7,
-   "reviews": 406
+   "reviews": 427
   },
   {
    "cat": "tvs",
@@ -3986,7 +3945,7 @@
     "진짜 QLED"
    ],
    "grade": 4.7,
-   "reviews": 688
+   "reviews": 693
   },
   {
    "cat": "tvs",
@@ -3998,7 +3957,7 @@
     "삼성 Knox 보안"
    ],
    "grade": 4.7,
-   "reviews": 200
+   "reviews": 201
   },
   {
    "cat": "tvs",
@@ -4010,7 +3969,43 @@
     "삼성 Knox 보안"
    ],
    "grade": 4.8,
-   "reviews": 839
+   "reviews": 853
+  },
+  {
+   "cat": "tvs",
+   "code": "KQ42SH90-1W",
+   "name": "무빙스타일 OLED (SH90) (105cm) 라이트",
+   "usp": [
+    "빛 반사 걱정 없는, 무반사 기술",
+    "얼티밋 게이밍 팩",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 5,
+   "reviews": 47
+  },
+  {
+   "cat": "tvs",
+   "code": "KQ48SH85-1B",
+   "name": "무빙스타일 OLED (SH85) (120cm) 라이트",
+   "usp": [
+    "OLED HDR",
+    "프리미엄 게이밍 팩",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.8,
+   "reviews": 12
+  },
+  {
+   "cat": "tvs",
+   "code": "KQ55QNH70-1W",
+   "name": "무빙스타일 Neo QLED (QNH70) (138cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "퀀텀 Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.9,
+   "reviews": 19
   },
   {
    "cat": "tvs",
@@ -4022,7 +4017,7 @@
     "트루 3.1.1 몰입형 사운드"
    ],
    "grade": 5,
-   "reviews": 23
+   "reviews": 24
   },
   {
    "cat": "tvs",
@@ -4034,7 +4029,7 @@
     "분리와 이동이 자유로운 스타일"
    ],
    "grade": 5,
-   "reviews": 51
+   "reviews": 52
   },
   {
    "cat": "tvs",
@@ -4046,7 +4041,7 @@
     "10억 개의 컬러로 풍부한 표현 퀀텀닷 컬러볼륨 100%"
    ],
    "grade": 4.7,
-   "reviews": 182
+   "reviews": 183
   },
   {
    "cat": "tvs",
@@ -4058,7 +4053,55 @@
     "안심하고 사용할 수 있는 TV 삼성 Knox 보안"
    ],
    "grade": 4.6,
-   "reviews": 49
+   "reviews": 51
+  },
+  {
+   "cat": "tvs",
+   "code": "KU43MH70-1W",
+   "name": "무빙스타일 Mini LED (MH70) (108cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.7,
+   "reviews": 119
+  },
+  {
+   "cat": "tvs",
+   "code": "KU50MH70-1W",
+   "name": "무빙스타일 Mini LED (MH70) (125cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.8,
+   "reviews": 61
+  },
+  {
+   "cat": "tvs",
+   "code": "KU55MH75-1W",
+   "name": "무빙스타일 Mini LED (MH75) (138cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.6,
+   "reviews": 45
+  },
+  {
+   "cat": "tvs",
+   "code": "KU55MH80-1W",
+   "name": "무빙스타일 Mini LED (MH80) (138cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.9,
+   "reviews": 28
   },
   {
    "cat": "tvs",
@@ -4070,7 +4113,7 @@
     "분리와 이동이 자유로운 스타일"
    ],
    "grade": 4.7,
-   "reviews": 73
+   "reviews": 74
   },
   {
    "cat": "tvs",
@@ -4082,7 +4125,7 @@
     "분리와 이동이 자유로운 스타일"
    ],
    "grade": 4.7,
-   "reviews": 71
+   "reviews": 73
   },
   {
    "cat": "tvs",
@@ -4106,7 +4149,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.7,
-   "reviews": 175
+   "reviews": 178
   },
   {
    "cat": "tvs",
@@ -4144,6 +4187,18 @@
   },
   {
    "cat": "tvs",
+   "code": "KQ55QNH70-1W",
+   "name": "무빙스타일 Neo QLED (QNH70) (138cm) 라이트",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "퀀텀 Mini LED",
+    "자유로움, 부드러움 그리고 유연함"
+   ],
+   "grade": 4.9,
+   "reviews": 19
+  },
+  {
+   "cat": "tvs",
    "code": "KQ55SH85-1B",
    "name": "무빙스타일 OLED (SH85) (138cm) 라이트",
    "usp": [
@@ -4176,12 +4231,12 @@
     "자유로움, 부드러움 그리고 유연함"
    ],
    "grade": 4.7,
-   "reviews": 118
+   "reviews": 119
   },
   {
    "cat": "tvs",
-   "code": "KU50MH70-2B",
-   "name": "무빙스타일 Mini LED (MH70) (125cm) 스탠다드",
+   "code": "KU50MH70-1W",
+   "name": "무빙스타일 Mini LED (MH70) (125cm) 라이트",
    "usp": [
     "Samsung Vision AI 컴패니언",
     "Mini LED",
@@ -4192,15 +4247,25 @@
   },
   {
    "cat": "tvs",
-   "code": "KU55MH75-2W",
-   "name": "무빙스타일 Mini LED (MH75) (138cm) 스탠다드",
+   "code": "KU55MH75-1W",
+   "name": "무빙스타일 Mini LED (MH75) (138cm) 라이트",
    "usp": [
     "Samsung Vision AI 컴패니언",
     "Mini LED",
     "자유로움, 부드러움 그리고 유연함"
    ],
    "grade": 4.6,
-   "reviews": 43
+   "reviews": 45
+  },
+  {
+   "cat": "tvs",
+   "code": "KQ100QNH8093L7",
+   "name": "2026 Neo QLED QNH80 (252cm)+2025 The Movingstyle+9.1.4ch 사운드바 Q930H",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "분리와 이동이 자유로운 스타일",
+    "트루 9.1.4ch 풀 서라운드"
+   ]
   },
   {
    "cat": "tvs",
@@ -4236,7 +4301,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 178
+   "reviews": 186
   },
   {
    "cat": "tvs",
@@ -4248,7 +4313,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 179
+   "reviews": 182
   },
   {
    "cat": "tvs",
@@ -4262,25 +4327,15 @@
   },
   {
    "cat": "tvs",
-   "code": "KQ100QNH8093L7",
-   "name": "2026 Neo QLED QNH80 (252cm)+2025 The Movingstyle+9.1.4ch 사운드바 Q930H",
+   "code": "KQ55SH90AFXKR",
+   "name": "2026 OLED SH90 (138cm)",
    "usp": [
-    "Samsung Vision AI 컴패니언",
-    "분리와 이동이 자유로운 스타일",
-    "트루 9.1.4ch 풀 서라운드"
-   ]
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ100QNH80FXKR",
-   "name": "2026 Neo QLED QNH80 (252cm)",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "퀀텀 Mini LED",
-    "모션 터보 144Hz"
+    "빛 반사 걱정 없는, 무반사 기술",
+    "얼티밋 게이밍 팩",
+    "레이저슬림 디자인"
    ],
    "grade": 4.8,
-   "reviews": 256
+   "reviews": 113
   },
   {
    "cat": "tvs",
@@ -4292,7 +4347,7 @@
     "부훌렉 도트 디자인"
    ],
    "grade": 4.9,
-   "reviews": 182
+   "reviews": 183
   },
   {
    "cat": "tvs",
@@ -4304,7 +4359,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 110
+   "reviews": 111
   },
   {
    "cat": "tvs",
@@ -4328,7 +4383,7 @@
     "LaserSlim 디자인"
    ],
    "grade": 4.8,
-   "reviews": 168
+   "reviews": 169
   },
   {
    "cat": "tvs",
@@ -4339,18 +4394,8 @@
     "Floatlayer 디자인",
     "얼티밋 게이밍 팩"
    ],
-   "grade": 5,
-   "reviews": 82
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ85QNH990FXKR",
-   "name": "2026 Neo QLED 8K QNH990 (214cm)",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "퀀텀 Mini LED Pro",
-    "3세대 AI 8K 프로세서"
-   ]
+   "grade": 4.9,
+   "reviews": 84
   },
   {
    "cat": "tvs",
@@ -4372,7 +4417,7 @@
     "삼성 Knox 보안"
    ],
    "grade": 4.7,
-   "reviews": 200
+   "reviews": 201
   },
   {
    "cat": "tvs",
@@ -4384,7 +4429,7 @@
     "부훌렉 도트 디자인"
    ],
    "grade": 4.7,
-   "reviews": 212
+   "reviews": 215
   },
   {
    "cat": "tvs",
@@ -4396,7 +4441,7 @@
     "트루 3.1.1 몰입형 사운드"
    ],
    "grade": 4.7,
-   "reviews": 150
+   "reviews": 154
   },
   {
    "cat": "tvs",
@@ -4432,7 +4477,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 178
+   "reviews": 186
   },
   {
    "cat": "tvs",
@@ -4444,7 +4489,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 179
+   "reviews": 182
   },
   {
    "cat": "tvs",
@@ -4476,7 +4521,7 @@
     "모션 터보 144Hz"
    ],
    "grade": 4.8,
-   "reviews": 256
+   "reviews": 259
   },
   {
    "cat": "tvs",
@@ -4500,7 +4545,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 110
+   "reviews": 111
   },
   {
    "cat": "tvs",
@@ -4512,7 +4557,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 110
+   "reviews": 111
   },
   {
    "cat": "tvs",
@@ -4536,7 +4581,7 @@
     "트루 9.1.4ch 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 110
+   "reviews": 111
   },
   {
    "cat": "tvs",
@@ -4548,7 +4593,7 @@
     "LaserSlim 디자인"
    ],
    "grade": 4.8,
-   "reviews": 168
+   "reviews": 169
   },
   {
    "cat": "tvs",
@@ -4559,18 +4604,8 @@
     "Floatlayer 디자인",
     "얼티밋 게이밍 팩"
    ],
-   "grade": 5,
-   "reviews": 82
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ85QNH990FXKR",
-   "name": "2026 Neo QLED 8K QNH990 (214cm)",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "퀀텀 Mini LED Pro",
-    "3세대 AI 8K 프로세서"
-   ]
+   "grade": 4.9,
+   "reviews": 84
   },
   {
    "cat": "tvs",
@@ -4594,18 +4629,6 @@
   },
   {
    "cat": "tvs",
-   "code": "KMR75RH9G-9",
-   "name": "2026 Micro RGB RH9G (189cm)+11.1.4ch 사운드바 Q990F",
-   "usp": [
-    "Micro RGB 기술",
-    "Micro RGB AI 엔진",
-    "트루 11.1.4채널 풀 서라운드"
-   ],
-   "grade": 4.7,
-   "reviews": 161
-  },
-  {
-   "cat": "tvs",
    "code": "KQ85QNF70B-6",
    "name": "2025 Neo QLED QNF70 (214cm)+3.1ch 사운드바 B650F",
    "usp": [
@@ -4614,7 +4637,7 @@
     "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드"
    ],
    "grade": 4.9,
-   "reviews": 216
+   "reviews": 217
   },
   {
    "cat": "tvs",
@@ -4642,18 +4665,6 @@
   },
   {
    "cat": "tvs",
-   "code": "KQ55QNH70-1W",
-   "name": "무빙스타일 Neo QLED (QNH70) (138cm) 라이트",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "퀀텀 Mini LED",
-    "자유로움, 부드러움 그리고 유연함"
-   ],
-   "grade": 4.9,
-   "reviews": 19
-  },
-  {
-   "cat": "tvs",
    "code": "KQ75QNF900-9",
    "name": "2025 Neo QLED 8K QNF900 (189cm) (솔라셀 리모트 미포함)+9.1.4ch 사운드바 Q930F",
    "usp": [
@@ -4662,7 +4673,7 @@
     "최상의 몰입감을 위한 트루 11.1.5채널 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -4674,7 +4685,7 @@
     "몰입감을 극대화하는 부드러운 플레이 모션 터보 144Hz"
    ],
    "grade": 4.8,
-   "reviews": 419
+   "reviews": 420
   },
   {
    "cat": "tvs",
@@ -4687,18 +4698,6 @@
    ],
    "grade": 4.7,
    "reviews": 34
-  },
-  {
-   "cat": "tvs",
-   "code": "KQ55QNH70-1W",
-   "name": "무빙스타일 Neo QLED (QNH70) (138cm) 라이트",
-   "usp": [
-    "Samsung Vision AI 컴패니언",
-    "퀀텀 Mini LED",
-    "자유로움, 부드러움 그리고 유연함"
-   ],
-   "grade": 4.9,
-   "reviews": 19
   },
   {
    "cat": "tvs",
@@ -4726,13 +4725,35 @@
   },
   {
    "cat": "tvs",
+   "code": "KQ85QNH990FXKR",
+   "name": "2026 Neo QLED 8K QNH990 (214cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "퀀텀 Mini LED Pro",
+    "3세대 AI 8K 프로세서"
+   ]
+  },
+  {
+   "cat": "tvs",
+   "code": "KQ85QNH990FXKR",
+   "name": "2026 Neo QLED 8K QNH990 (214cm)",
+   "usp": [
+    "Samsung Vision AI 컴패니언",
+    "퀀텀 Mini LED Pro",
+    "3세대 AI 8K 프로세서"
+   ]
+  },
+  {
+   "cat": "tvs",
    "code": "KU50MH60-1W",
    "name": "무빙스타일 Mini LED (MH60) (125cm) 라이트",
    "usp": [
     "Mini LED",
     "퓨어 스펙트럼 컬러",
     "자유로움, 부드러움 그리고 유연함"
-   ]
+   ],
+   "grade": 3,
+   "reviews": 1
   },
   {
    "cat": "tvs",
@@ -4766,7 +4787,7 @@
     "한층 강력해진 밝기와 대비 OLED HDR"
    ],
    "grade": 4.7,
-   "reviews": 274
+   "reviews": 276
   },
   {
    "cat": "tvs",
@@ -4802,7 +4823,7 @@
     "어느 곳에 배치해도 감각적인 탈부착형 스탠드"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "tvs",
@@ -4862,7 +4883,7 @@
     "부훌렉 도트 디자인"
    ],
    "grade": 4.8,
-   "reviews": 63
+   "reviews": 64
   },
   {
    "cat": "tvs",
@@ -4910,7 +4931,7 @@
     "트루 3.1.1 몰입형 사운드"
    ],
    "grade": 4.9,
-   "reviews": 83
+   "reviews": 84
   },
   {
    "cat": "tvs",
@@ -5042,7 +5063,7 @@
     "놓는 순간 원하는 위치에 자동으로 맞춰주는 오토 스크린 세팅"
    ],
    "grade": 4.5,
-   "reviews": 29
+   "reviews": 30
   },
   {
    "cat": "tvs",
@@ -5150,7 +5171,7 @@
     "놓는 순간 원하는 위치에 자동으로 맞춰주는 오토 스크린 세팅"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -5234,7 +5255,7 @@
     "사이드 스피커로 확장되는 실감나는 사운드 5.1채널 사운드"
    ],
    "grade": 4.9,
-   "reviews": 143
+   "reviews": 144
   },
   {
    "cat": "tvs",
@@ -5246,7 +5267,7 @@
     "놓는 순간 원하는 위치에 자동으로 맞춰주는 오토 스크린 세팅"
    ],
    "grade": 4.7,
-   "reviews": 162
+   "reviews": 163
   },
   {
    "cat": "tvs",
@@ -5258,7 +5279,7 @@
     "놓는 순간 원하는 위치에 자동으로 맞춰주는 오토 스크린 세팅"
    ],
    "grade": 4.9,
-   "reviews": 123
+   "reviews": 124
   },
   {
    "cat": "tvs",
@@ -5446,7 +5467,7 @@
     "디테일까지 살아있는 트루 9.1.4채널 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -5632,7 +5653,7 @@
     "디테일까지 살아있는 트루 9.1.4채널 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -5644,7 +5665,7 @@
     "최상의 몰입감을 위한 트루 11.1.4채널 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -5746,7 +5767,7 @@
     "한층 강화된 화질로 더 선명하게 OLED HDR Pro"
    ],
    "grade": 4.8,
-   "reviews": 127
+   "reviews": 128
   },
   {
    "cat": "tvs",
@@ -5926,7 +5947,7 @@
     "세계적인 작품을 우리집에서 편안하게 감상하는 아트 스토어"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -5938,7 +5959,7 @@
     "세계적인 작품을 우리집에서 편안하게 감상하는 아트 스토어"
    ],
    "grade": 4.8,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "tvs",
@@ -6070,7 +6091,7 @@
     "공간을 돋보이게 완성하는 우아함 슬림 디자인"
    ],
    "grade": 4.8,
-   "reviews": 590
+   "reviews": 591
   },
   {
    "cat": "tvs",
@@ -6094,7 +6115,7 @@
     "최상의 몰입감을 위한 트루 11.1.4채널 풀 서라운드"
    ],
    "grade": 4.7,
-   "reviews": 120
+   "reviews": 124
   },
   {
    "cat": "tvs",
@@ -6106,7 +6127,7 @@
     "자유로움, 부드러움 그리고 유연함"
    ],
    "grade": 4.8,
-   "reviews": 229
+   "reviews": 230
   },
   {
    "cat": "tvs",
@@ -6142,7 +6163,7 @@
     "자유로움, 부드러움 그리고 유연함"
    ],
    "grade": 4.9,
-   "reviews": 69
+   "reviews": 70
   },
   {
    "cat": "tvs",
@@ -6356,7 +6377,7 @@
     "트루 11.1.4채널 풀 서라운드"
    ],
    "grade": 4.8,
-   "reviews": 92
+   "reviews": 93
   },
   {
    "cat": "tvs",
@@ -6368,7 +6389,7 @@
     "트루 11.1.4채널 풀 서라운드"
    ],
    "grade": 5,
-   "reviews": 48
+   "reviews": 49
   },
   {
    "cat": "tvs",
@@ -6439,8 +6460,8 @@
     "섬세하고 정확하게 포착하는 디테일 퀀텀 매트릭스 테크놀로지 플러스",
     "좋아하는 콘텐츠를 실감나는 사운드와 함께 Dolby Atmos"
    ],
-   "grade": 4.6,
-   "reviews": 27
+   "grade": 4.7,
+   "reviews": 29
   },
   {
    "cat": "tvs",
@@ -6464,7 +6485,7 @@
     "내장형 센터 스피커가 완성하는 또렷한 사운드 3.1채널 사운드"
    ],
    "grade": 4.8,
-   "reviews": 145
+   "reviews": 146
   },
   {
    "cat": "tvs",
@@ -6476,7 +6497,7 @@
     "빛과 어둠의 차이를 아는 생생한 디테일 퀀텀 매트릭스 테크놀로지 슬림"
    ],
    "grade": 4.8,
-   "reviews": 215
+   "reviews": 216
   },
   {
    "cat": "tvs",
@@ -6666,7 +6687,7 @@
     "놓는 순간 원하는 위치에 자동으로 맞춰주는 오토 스크린 세팅"
    ],
    "grade": 4.9,
-   "reviews": 152
+   "reviews": 153
   },
   {
    "cat": "tvs",
@@ -6822,7 +6843,7 @@
     "자유로움, 부드러움 그리고 유연함"
    ],
    "grade": 4.9,
-   "reviews": 285
+   "reviews": 286
   },
   {
    "cat": "tvs",
@@ -7610,7 +7631,7 @@
     "Q 심포니"
    ],
    "grade": 5,
-   "reviews": 35
+   "reviews": 36
   },
   {
    "cat": "samsung-audio",
@@ -7622,7 +7643,7 @@
     "Dolby Atmos® 무선 연결"
    ],
    "grade": 4.7,
-   "reviews": 27
+   "reviews": 30
   },
   {
    "cat": "samsung-audio",
@@ -7682,7 +7703,7 @@
     "Q 심포니"
    ],
    "grade": 5,
-   "reviews": 35
+   "reviews": 36
   },
   {
    "cat": "samsung-audio",
@@ -7694,6 +7715,18 @@
     "Dolby Atmos® 무선 연결"
    ],
    "grade": 4.7,
+   "reviews": 30
+  },
+  {
+   "cat": "samsung-audio",
+   "code": "HW-S60D/KR",
+   "name": "5.0 ch 사운드바 S60D",
+   "usp": [
+    "콤팩트한 디자인에 담긴 강력한 서라운드 사운드 All-in-one 5.0 ch 사운드",
+    "무선으로 연결되는 Dolby Atmos 사운드바 Dolby Atmos 무선 연결 기능",
+    "사운드바와 TV의 황홀한 하모니 Q 심포니"
+   ],
+   "grade": 4.8,
    "reviews": 27
   },
   {
@@ -7706,7 +7739,7 @@
     "Q 심포니"
    ],
    "grade": 4.8,
-   "reviews": 163
+   "reviews": 164
   },
   {
    "cat": "samsung-audio",
@@ -7718,7 +7751,7 @@
     "Q 심포니"
    ],
    "grade": 4.8,
-   "reviews": 163
+   "reviews": 164
   },
   {
    "cat": "samsung-audio",
@@ -7807,18 +7840,6 @@
    ],
    "grade": 4.8,
    "reviews": 28
-  },
-  {
-   "cat": "samsung-audio",
-   "code": "HW-S60D/KR",
-   "name": "5.0 ch 사운드바 S60D",
-   "usp": [
-    "콤팩트한 디자인에 담긴 강력한 서라운드 사운드 All-in-one 5.0 ch 사운드",
-    "무선으로 연결되는 Dolby Atmos 사운드바 Dolby Atmos 무선 연결 기능",
-    "사운드바와 TV의 황홀한 하모니 Q 심포니"
-   ],
-   "grade": 4.8,
-   "reviews": 27
   },
   {
    "cat": "samsung-audio",
@@ -8137,7 +8158,7 @@
     "낮부터 밤까지 이어지는 최대 12시간 재생"
    ],
    "grade": 5,
-   "reviews": 5
+   "reviews": 6
   },
   {
    "cat": "harman-life-style-audio",
@@ -8173,7 +8194,7 @@
     "야외 활동에 강한 강력한 방수, 방진 설계"
    ],
    "grade": 4.9,
-   "reviews": 23
+   "reviews": 24
   },
   {
    "cat": "harman-life-style-audio",
@@ -8209,7 +8230,7 @@
     "방수, 방진 기능 IP68"
    ],
    "grade": 5,
-   "reviews": 11
+   "reviews": 12
   },
   {
    "cat": "harman-life-style-audio",
@@ -8243,7 +8264,7 @@
     "다중 스피커 연결이 가능한 Stereo & Auracast™"
    ],
    "grade": 4.8,
-   "reviews": 23
+   "reviews": 24
   },
   {
    "cat": "harman-life-style-audio",
@@ -8298,8 +8319,20 @@
     "JBL 헤리티지가 가미된 아이코닉 디자인",
     "내장 Wi-Fi를 통한 고선명도 음악 스트리밍"
    ],
-   "grade": 4.7,
-   "reviews": 21
+   "grade": 4.6,
+   "reviews": 16
+  },
+  {
+   "cat": "harman-life-style-audio",
+   "code": "JBLAUTH200WHTAS",
+   "name": "JBL Authentics 200 블루투스/Wi-Fi 스피커",
+   "usp": [
+    "강력하고 뛰어난 스테레오 사운드",
+    "JBL 헤리티지가 가미된 아이코닉 디자인",
+    "내장 Wi-Fi를 통한 고선명도 음악 스트리밍"
+   ],
+   "grade": 5,
+   "reviews": 5
   },
   {
    "cat": "harman-life-style-audio",
@@ -8311,7 +8344,7 @@
     "푸쉬-락 시스템으로 교체 가능한 액세서리"
    ],
    "grade": 5,
-   "reviews": 67
+   "reviews": 68
   },
   {
    "cat": "harman-life-style-audio",
@@ -8395,7 +8428,7 @@
   },
   {
    "cat": "harman-life-style-audio",
-   "code": "JBLCLIP5BLK",
+   "code": "JBLCLIP5BLKO",
    "name": "JBL CLIP 5 블루투스 스피커",
    "usp": [
     "업그레이드 된 일체형 클립",
@@ -8415,7 +8448,7 @@
     "야외 활동에 강한 강력한 방수, 방진 설계"
    ],
    "grade": 5,
-   "reviews": 5
+   "reviews": 9
   },
   {
    "cat": "harman-life-style-audio",
@@ -8625,7 +8658,7 @@
     "야외 활동에 강한 강력한 방수, 방진 설계"
    ],
    "grade": 4.9,
-   "reviews": 23
+   "reviews": 24
   },
   {
    "cat": "harman-life-style-audio",
@@ -8881,7 +8914,7 @@
     "대용량 배터리로 스마트폰 충전까지"
    ],
    "grade": 4.9,
-   "reviews": 270
+   "reviews": 274
   },
   {
    "cat": "harman-life-style-audio",
@@ -8950,7 +8983,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 66
+   "reviews": 68
   },
   {
    "cat": "refrigerators",
@@ -8962,7 +8995,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성인식"
    ],
    "grade": 4.9,
-   "reviews": 49
+   "reviews": 53
   },
   {
    "cat": "refrigerators",
@@ -8974,7 +9007,7 @@
     "감각적인 스타일의 리얼 플랫 도어"
    ],
    "grade": 4.8,
-   "reviews": 304
+   "reviews": 307
   },
   {
    "cat": "refrigerators",
@@ -8986,7 +9019,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -8998,7 +9031,7 @@
     "에너지 효율을 높여주는 AI 인버터 컴프레서"
    ],
    "grade": 4.8,
-   "reviews": 683
+   "reviews": 694
   },
   {
    "cat": "refrigerators",
@@ -9034,7 +9067,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 470
+   "reviews": 473
   },
   {
    "cat": "refrigerators",
@@ -9045,8 +9078,8 @@
     "자주 사용하는 냉장실은 위에 상냉장 하냉동의 편리한 구조",
     "칸칸마다 시원한 냉기 전달 멀티 냉각 시스템"
    ],
-   "grade": 4.8,
-   "reviews": 170
+   "grade": 4.7,
+   "reviews": 171
   },
   {
    "cat": "refrigerators",
@@ -9058,7 +9091,7 @@
     "스마트한 키친 라이프의 시작 패밀리허브"
    ],
    "grade": 4.9,
-   "reviews": 129
+   "reviews": 132
   },
   {
    "cat": "refrigerators",
@@ -9070,7 +9103,37 @@
     "스마트한 키친 라이프의 시작 패밀리허브"
    ],
    "grade": 4.9,
-   "reviews": 129
+   "reviews": 132
+  },
+  {
+   "cat": "refrigerators",
+   "code": "RM70H63R1A",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ]
+  },
+  {
+   "cat": "refrigerators",
+   "code": "RM70H63R1Z",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ]
+  },
+  {
+   "cat": "refrigerators",
+   "code": "RM70H63R1ZG",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ]
   },
   {
    "cat": "refrigerators",
@@ -9130,7 +9193,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 300
+   "reviews": 304
   },
   {
    "cat": "refrigerators",
@@ -9142,7 +9205,7 @@
     "에너지 효율을 높여주는 AI 인버터 컴프레서"
    ],
    "grade": 4.8,
-   "reviews": 683
+   "reviews": 694
   },
   {
    "cat": "refrigerators",
@@ -9154,7 +9217,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -9174,11 +9237,11 @@
    "name": "Bespoke AI 하이브리드 4도어 키친핏 Max 609L (푸드 쇼케이스)",
    "usp": [
     "새로운 기술로 완성된 키친핏 Max",
-    "평소엔 효율적으로 필요할 땐 강력하게 AI 하이브리드 쿨링",
+    "평소엔 효율적으로 필요할 땐 강력하게 하이브리드 쿨링",
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 66
+   "reviews": 68
   },
   {
    "cat": "refrigerators",
@@ -9202,7 +9265,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 243
+   "reviews": 244
   },
   {
    "cat": "refrigerators",
@@ -9238,7 +9301,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 104
+   "reviews": 105
   },
   {
    "cat": "refrigerators",
@@ -9250,7 +9313,7 @@
     "감각적인 스타일의 리얼 플랫 도어"
    ],
    "grade": 4.8,
-   "reviews": 289
+   "reviews": 291
   },
   {
    "cat": "refrigerators",
@@ -9281,8 +9344,8 @@
     "자주 사용하는 냉장실은 위에 상냉장 하냉동의 편리한 구조",
     "칸칸마다 시원한 냉기 전달 멀티 냉각 시스템"
    ],
-   "grade": 4.8,
-   "reviews": 170
+   "grade": 4.7,
+   "reviews": 171
   },
   {
    "cat": "refrigerators",
@@ -9294,7 +9357,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 470
+   "reviews": 473
   },
   {
    "cat": "refrigerators",
@@ -9305,8 +9368,8 @@
     "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간",
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
-   "grade": 4.8,
-   "reviews": 48
+   "grade": 4.7,
+   "reviews": 49
   },
   {
    "cat": "refrigerators",
@@ -9354,7 +9417,7 @@
     "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간"
    ],
    "grade": 4.7,
-   "reviews": 348
+   "reviews": 349
   },
   {
    "cat": "refrigerators",
@@ -9366,7 +9429,7 @@
     "가까이 가면 환하게 안을 볼 수 있는 투명 도어"
    ],
    "grade": 4.8,
-   "reviews": 390
+   "reviews": 393
   },
   {
    "cat": "refrigerators",
@@ -9378,7 +9441,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 339
+   "reviews": 341
   },
   {
    "cat": "refrigerators",
@@ -9390,7 +9453,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성인식"
    ],
    "grade": 4.9,
-   "reviews": 49
+   "reviews": 53
   },
   {
    "cat": "refrigerators",
@@ -9414,7 +9477,7 @@
     "평소엔 효율적으로 필요할 땐 강력하게 하이브리드 쿨링"
    ],
    "grade": 4.9,
-   "reviews": 33
+   "reviews": 34
   },
   {
    "cat": "refrigerators",
@@ -9450,7 +9513,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 139
+   "reviews": 142
   },
   {
    "cat": "refrigerators",
@@ -9462,7 +9525,7 @@
     "재료 본연의 맛을 지켜주는, ±0.5 ℃ 미세정온"
    ],
    "grade": 4.7,
-   "reviews": 45
+   "reviews": 46
   },
   {
    "cat": "refrigerators",
@@ -9544,7 +9607,7 @@
     "감각적인 스타일의 리얼 플랫 도어"
    ],
    "grade": 4.8,
-   "reviews": 304
+   "reviews": 307
   },
   {
    "cat": "refrigerators",
@@ -9568,7 +9631,7 @@
     "감각적인 스타일의 리얼 플랫 도어"
    ],
    "grade": 4.8,
-   "reviews": 289
+   "reviews": 291
   },
   {
    "cat": "refrigerators",
@@ -9652,7 +9715,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 203
+   "reviews": 206
   },
   {
    "cat": "refrigerators",
@@ -9700,7 +9763,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -9712,7 +9775,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -9724,7 +9787,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -9736,7 +9799,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -9748,7 +9811,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 629
+   "reviews": 635
   },
   {
    "cat": "refrigerators",
@@ -9772,7 +9835,7 @@
     "에너지 효율을 높여주는 AI 인버터 컴프레서"
    ],
    "grade": 4.8,
-   "reviews": 683
+   "reviews": 694
   },
   {
    "cat": "refrigerators",
@@ -9784,7 +9847,7 @@
     "평소엔 효율적으로 필요할 땐 강력하게 하이브리드 쿨링"
    ],
    "grade": 4.9,
-   "reviews": 33
+   "reviews": 34
   },
   {
    "cat": "refrigerators",
@@ -9796,7 +9859,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 300
+   "reviews": 304
   },
   {
    "cat": "refrigerators",
@@ -9808,7 +9871,7 @@
     "가까이 가면 환하게 안을 볼 수 있는 투명 도어"
    ],
    "grade": 4.8,
-   "reviews": 390
+   "reviews": 393
   },
   {
    "cat": "refrigerators",
@@ -9820,7 +9883,7 @@
     "가까이 가면 환하게 안을 볼 수 있는 투명 도어"
    ],
    "grade": 4.8,
-   "reviews": 390
+   "reviews": 393
   },
   {
    "cat": "refrigerators",
@@ -9832,7 +9895,7 @@
     "가까이 가면 환하게 안을 볼 수 있는 투명 도어"
    ],
    "grade": 4.8,
-   "reviews": 390
+   "reviews": 393
   },
   {
    "cat": "refrigerators",
@@ -9844,7 +9907,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 339
+   "reviews": 341
   },
   {
    "cat": "refrigerators",
@@ -9856,7 +9919,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 339
+   "reviews": 341
   },
   {
    "cat": "refrigerators",
@@ -9868,7 +9931,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 237
+   "reviews": 238
   },
   {
    "cat": "refrigerators",
@@ -9880,7 +9943,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 237
+   "reviews": 238
   },
   {
    "cat": "refrigerators",
@@ -9892,7 +9955,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 339
+   "reviews": 341
   },
   {
    "cat": "refrigerators",
@@ -9904,7 +9967,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.6,
-   "reviews": 207
+   "reviews": 208
   },
   {
    "cat": "refrigerators",
@@ -9928,7 +9991,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 243
+   "reviews": 244
   },
   {
    "cat": "refrigerators",
@@ -9988,7 +10051,7 @@
     "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간"
    ],
    "grade": 4.7,
-   "reviews": 348
+   "reviews": 349
   },
   {
    "cat": "refrigerators",
@@ -10000,7 +10063,7 @@
     "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간"
    ],
    "grade": 4.7,
-   "reviews": 348
+   "reviews": 349
   },
   {
    "cat": "refrigerators",
@@ -10023,8 +10086,8 @@
     "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간",
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
-   "grade": 4.8,
-   "reviews": 48
+   "grade": 4.7,
+   "reviews": 49
   },
   {
    "cat": "refrigerators",
@@ -10036,7 +10099,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 104
+   "reviews": 105
   },
   {
    "cat": "refrigerators",
@@ -10048,7 +10111,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 104
+   "reviews": 105
   },
   {
    "cat": "refrigerators",
@@ -10060,7 +10123,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 470
+   "reviews": 473
   },
   {
    "cat": "refrigerators",
@@ -10072,7 +10135,7 @@
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
    "grade": 4.8,
-   "reviews": 470
+   "reviews": 473
   },
   {
    "cat": "refrigerators",
@@ -10156,7 +10219,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 160
+   "reviews": 163
   },
   {
    "cat": "refrigerators",
@@ -10179,8 +10242,8 @@
     "자동 문열림으로 편리하게 오토 오픈 도어",
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
-   "grade": 4.6,
-   "reviews": 38
+   "grade": 4.7,
+   "reviews": 40
   },
   {
    "cat": "refrigerators",
@@ -10192,7 +10255,7 @@
     "감각적인 스타일의 리얼 플랫 도어"
    ],
    "grade": 4.8,
-   "reviews": 289
+   "reviews": 291
   },
   {
    "cat": "refrigerators",
@@ -10275,8 +10338,8 @@
     "자주 사용하는 냉장실은 위에 상냉장 하냉동의 편리한 구조",
     "칸칸마다 시원한 냉기 전달 멀티 냉각 시스템"
    ],
-   "grade": 4.8,
-   "reviews": 170
+   "grade": 4.7,
+   "reviews": 171
   },
   {
    "cat": "refrigerators",
@@ -10288,7 +10351,7 @@
     "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
    ],
    "grade": 4.8,
-   "reviews": 170
+   "reviews": 171
   },
   {
    "cat": "refrigerators",
@@ -10348,7 +10411,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 300
+   "reviews": 304
   },
   {
    "cat": "refrigerators",
@@ -10372,7 +10435,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 160
+   "reviews": 163
   },
   {
    "cat": "refrigerators",
@@ -10396,7 +10459,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 160
+   "reviews": 163
   },
   {
    "cat": "refrigerators",
@@ -10408,7 +10471,7 @@
     "재료 본연의 맛을 지켜주는, ±0.5℃ 미세정온"
    ],
    "grade": 4.7,
-   "reviews": 45
+   "reviews": 46
   },
   {
    "cat": "refrigerators",
@@ -10564,7 +10627,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 203
+   "reviews": 206
   },
   {
    "cat": "refrigerators",
@@ -10576,7 +10639,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 203
+   "reviews": 206
   },
   {
    "cat": "refrigerators",
@@ -10612,7 +10675,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 203
+   "reviews": 206
   },
   {
    "cat": "refrigerators",
@@ -10624,7 +10687,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 203
+   "reviews": 206
   },
   {
    "cat": "refrigerators",
@@ -10649,36 +10712,6 @@
    ],
    "grade": 4,
    "reviews": 4
-  },
-  {
-   "cat": "refrigerators",
-   "code": "RM70H63R1A",
-   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
-   "usp": [
-    "새로운 기술로 완성된 키친핏 Max",
-    "더욱 넉넉하게 사용하는 640L 이상 대용량",
-    "에너지 소비량을 절감하는 AI 절약 모드"
-   ]
-  },
-  {
-   "cat": "refrigerators",
-   "code": "RM70H63R1Z",
-   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
-   "usp": [
-    "새로운 기술로 완성된 키친핏 Max",
-    "더욱 넉넉하게 사용하는 640L 이상 대용량",
-    "에너지 소비량을 절감하는 AI 절약 모드"
-   ]
-  },
-  {
-   "cat": "refrigerators",
-   "code": "RM70H63R1ZG",
-   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
-   "usp": [
-    "새로운 기술로 완성된 키친핏 Max",
-    "더욱 넉넉하게 사용하는 640L 이상 대용량",
-    "에너지 소비량을 절감하는 AI 절약 모드"
-   ]
   },
   {
    "cat": "refrigerators",
@@ -10728,6 +10761,30 @@
   },
   {
    "cat": "refrigerators",
+   "code": "RT53DG7A1CWW",
+   "name": "냉장고 525L",
+   "usp": [
+    "냉기를 따로따로 더 신선하게 독립냉각",
+    "라이프스타일에 맞춰 바꿀 수 있는 스마트 변온모드",
+    "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
+   ],
+   "grade": 4.7,
+   "reviews": 120
+  },
+  {
+   "cat": "refrigerators",
+   "code": "RT62A7049S9",
+   "name": "냉장고 615L",
+   "usp": [
+    "냉기를 따로따로 더 신선하게 독립냉각",
+    "냉동실도 내 맘대로 스마트 변온모드",
+    "원하는 곳에 착! 프리스탠딩 아이스메이커"
+   ],
+   "grade": 4.8,
+   "reviews": 137
+  },
+  {
+   "cat": "refrigerators",
    "code": "RZ70H32UN0011",
    "name": "Bespoke AI 냉동고 1도어 키친핏 318L (우열림/열림방향 가변, 냉동전용)",
    "usp": [
@@ -10740,6 +10797,16 @@
   },
   {
    "cat": "refrigerators",
+   "code": "RM70H63R1A",
+   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
+   "usp": [
+    "새로운 기술로 완성된 키친핏 Max",
+    "더욱 넉넉하게 사용하는 640L 이상 대용량",
+    "에너지 소비량을 절감하는 AI 절약 모드"
+   ]
+  },
+  {
+   "cat": "refrigerators",
    "code": "RR40C7985APW6",
    "name": "Bespoke AI 냉장고 1도어 키친핏 409L (좌열림, 냉장전용)",
    "usp": [
@@ -10748,7 +10815,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 160
+   "reviews": 163
   },
   {
    "cat": "refrigerators",
@@ -10760,7 +10827,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 237
+   "reviews": 238
   },
   {
    "cat": "refrigerators",
@@ -10772,7 +10839,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.6,
-   "reviews": 207
+   "reviews": 208
   },
   {
    "cat": "refrigerators",
@@ -10783,8 +10850,8 @@
     "자동 문열림으로 편리하게 오토 오픈 도어",
     "식재료 수납의 정석 푸드 쇼케이스"
    ],
-   "grade": 4.6,
-   "reviews": 38
+   "grade": 4.7,
+   "reviews": 40
   },
   {
    "cat": "refrigerators",
@@ -10844,31 +10911,7 @@
     "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
    ],
    "grade": 4.8,
-   "reviews": 170
-  },
-  {
-   "cat": "refrigerators",
-   "code": "RT53DG7A1CWW",
-   "name": "냉장고 525L",
-   "usp": [
-    "냉기를 따로따로 더 신선하게 독립냉각",
-    "라이프스타일에 맞춰 바꿀 수 있는 스마트 변온모드",
-    "얼음을 간편하고 깨끗하게 트위스트 아이스메이커"
-   ],
-   "grade": 4.7,
-   "reviews": 120
-  },
-  {
-   "cat": "refrigerators",
-   "code": "RT62A7049S9",
-   "name": "냉장고 615L",
-   "usp": [
-    "냉기를 따로따로 더 신선하게 독립냉각",
-    "냉동실도 내 맘대로 스마트 변온모드",
-    "원하는 곳에 착! 프리스탠딩 아이스메이커"
-   ],
-   "grade": 4.8,
-   "reviews": 137
+   "reviews": 171
   },
   {
    "cat": "refrigerators",
@@ -10962,16 +11005,6 @@
   },
   {
    "cat": "refrigerators",
-   "code": "RM70H63R1A",
-   "name": "Bespoke AI 냉장고 4도어 키친핏 Max 640L",
-   "usp": [
-    "새로운 기술로 완성된 키친핏 Max",
-    "더욱 넉넉하게 사용하는 640L 이상 대용량",
-    "에너지 소비량을 절감하는 AI 절약 모드"
-   ]
-  },
-  {
-   "cat": "refrigerators",
    "code": "RB33A3662AP",
    "name": "Bespoke 냉장고 2도어 키친핏 333L",
    "usp": [
@@ -10992,7 +11025,7 @@
     "공간 효율을 높이는 설계로 더 깊어진 선반과 900L 이상 대용량 수납공간"
    ],
    "grade": 4.7,
-   "reviews": 350
+   "reviews": 351
   },
   {
    "cat": "refrigerators",
@@ -11040,7 +11073,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 135
+   "reviews": 138
   },
   {
    "cat": "refrigerators",
@@ -11052,7 +11085,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 66
+   "reviews": 68
   },
   {
    "cat": "refrigerators",
@@ -11100,7 +11133,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "refrigerators",
@@ -11112,7 +11145,7 @@
     "에너지 소비량을 최대 25%까지 절감 AI절약모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "refrigerators",
@@ -11136,7 +11169,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "refrigerators",
@@ -11148,7 +11181,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 159
+   "reviews": 161
   },
   {
    "cat": "refrigerators",
@@ -11160,7 +11193,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 90
+   "reviews": 91
   },
   {
    "cat": "refrigerators",
@@ -11192,7 +11225,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "refrigerators",
@@ -11204,7 +11237,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 159
+   "reviews": 161
   },
   {
    "cat": "refrigerators",
@@ -11216,7 +11249,7 @@
     "에너지 소비량을 절감하는 AI 절약 모드"
    ],
    "grade": 4.7,
-   "reviews": 264
+   "reviews": 267
   },
   {
    "cat": "refrigerators",
@@ -11650,7 +11683,7 @@
     "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
    ],
    "grade": 4.8,
-   "reviews": 117
+   "reviews": 119
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11686,7 +11719,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 195
+   "reviews": 196
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11698,7 +11731,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.8,
-   "reviews": 155
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11710,7 +11743,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.9,
-   "reviews": 124
+   "reviews": 126
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11758,7 +11791,7 @@
     "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
    ],
    "grade": 4.8,
-   "reviews": 117
+   "reviews": 119
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11818,7 +11851,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 195
+   "reviews": 196
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11830,7 +11863,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 48
+   "reviews": 49
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11842,7 +11875,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 195
+   "reviews": 196
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11854,7 +11887,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 5,
-   "reviews": 13
+   "reviews": 14
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11866,7 +11899,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.8,
-   "reviews": 155
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11878,7 +11911,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.8,
-   "reviews": 155
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -11890,7 +11923,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.9,
-   "reviews": 124
+   "reviews": 126
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12002,7 +12035,7 @@
     "냉장고 안 김치냄새 섞일 걱정 없는 냄새케어 안심 김치통"
    ],
    "grade": 4.8,
-   "reviews": 117
+   "reviews": 119
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12026,7 +12059,7 @@
     "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
    ],
    "grade": 5,
-   "reviews": 37
+   "reviews": 38
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12038,7 +12071,7 @@
     "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
    ],
    "grade": 5,
-   "reviews": 37
+   "reviews": 38
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12062,7 +12095,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.9,
-   "reviews": 124
+   "reviews": 126
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12074,7 +12107,7 @@
     "냉기를 꽉 잡아 아삭하고 신선하게 메탈쿨링"
    ],
    "grade": 4.9,
-   "reviews": 115
+   "reviews": 117
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12098,7 +12131,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 195
+   "reviews": 196
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12110,7 +12143,7 @@
     "음성으로 더 쉽고 편리하게 빅스비 음성 인식"
    ],
    "grade": 4.8,
-   "reviews": 195
+   "reviews": 196
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12278,7 +12311,7 @@
     "사용패턴에 맞춰 적정 온도를 유지하는 AI 정온 모드"
    ],
    "grade": 5,
-   "reviews": 37
+   "reviews": 38
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12314,7 +12347,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.9,
-   "reviews": 60
+   "reviews": 62
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12325,8 +12358,8 @@
     "필요에 따라 보관하는 전문 맞춤 모드",
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
    ],
-   "grade": 4.7,
-   "reviews": 61
+   "grade": 4.6,
+   "reviews": 63
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12350,7 +12383,7 @@
     "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
    ],
    "grade": 4.7,
-   "reviews": 82
+   "reviews": 83
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12362,7 +12395,7 @@
     "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
    ],
    "grade": 4.7,
-   "reviews": 82
+   "reviews": 83
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12386,7 +12419,7 @@
     "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
    ],
    "grade": 4.8,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12398,7 +12431,7 @@
     "음식 신선도 유지와 냄새까지 덜어주는 프레쉬 필터"
    ],
    "grade": 4.8,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12421,8 +12454,8 @@
     "필요에 따라 보관하는 전문 맞춤 모드",
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3 ℃ 초미세정온"
    ],
-   "grade": 4.7,
-   "reviews": 61
+   "grade": 4.6,
+   "reviews": 63
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12434,7 +12467,7 @@
     "필요에 따라 보관하는 칸칸칸 맞춤 보관"
    ],
    "grade": 5,
-   "reviews": 165
+   "reviews": 169
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12446,7 +12479,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 109
+   "reviews": 111
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12458,7 +12491,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 109
+   "reviews": 111
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12506,7 +12539,7 @@
     "필요에 따라 보관하는 칸칸칸 맞춤 보관"
    ],
    "grade": 5,
-   "reviews": 165
+   "reviews": 169
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12518,7 +12551,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 109
+   "reviews": 111
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12626,7 +12659,7 @@
     "필요에 따라 보관하는 칸칸칸 맞춤 보관"
    ],
    "grade": 5,
-   "reviews": 165
+   "reviews": 169
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12638,7 +12671,7 @@
     "필요에 따라 보관하는 칸칸칸 맞춤 보관"
    ],
    "grade": 5,
-   "reviews": 165
+   "reviews": 169
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12650,7 +12683,7 @@
     "필요에 따라 보관하는 칸칸칸 맞춤 보관"
    ],
    "grade": 5,
-   "reviews": 165
+   "reviews": 169
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12662,7 +12695,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 109
+   "reviews": 111
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12674,7 +12707,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 109
+   "reviews": 111
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12722,7 +12755,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12734,7 +12767,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12746,7 +12779,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12758,7 +12791,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12830,7 +12863,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12842,7 +12875,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12854,7 +12887,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12866,7 +12899,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 47
+   "reviews": 48
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12878,7 +12911,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12984,7 +13017,7 @@
     "필요에 따라 보관하는 칸칸칸 맞춤 보관"
    ],
    "grade": 5,
-   "reviews": 165
+   "reviews": 169
   },
   {
    "cat": "kimchi-refrigerators",
@@ -12996,7 +13029,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 109
+   "reviews": 111
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13056,7 +13089,7 @@
     "한 번의 터치로 더 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 156
+   "reviews": 157
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13092,7 +13125,7 @@
     "힘들이지 않고 편리하게, 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 135
+   "reviews": 138
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13146,7 +13179,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13158,7 +13191,7 @@
     "에너지 소비량을 최대 25%까지 절감 AI절약모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13218,7 +13251,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 66
+   "reviews": 68
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13254,7 +13287,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13266,7 +13299,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 159
+   "reviews": 161
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13278,7 +13311,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 90
+   "reviews": 91
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13300,7 +13333,7 @@
     "에너지 소비량을 최대 25%까지 절감하는 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 161
+   "reviews": 162
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13312,7 +13345,7 @@
     "자동 문열림으로 편리하게 오토 오픈 도어"
    ],
    "grade": 4.9,
-   "reviews": 159
+   "reviews": 161
   },
   {
    "cat": "kimchi-refrigerators",
@@ -13538,7 +13571,7 @@
     "다양한 식재료 본연의 맛을 지켜주는 ±0.3℃ 초미세정온"
    ],
    "grade": 4.8,
-   "reviews": 53
+   "reviews": 54
   },
   {
    "cat": "dishwashers",
@@ -13562,7 +13595,7 @@
     "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
    ],
    "grade": 4.7,
-   "reviews": 394
+   "reviews": 396
   },
   {
    "cat": "dishwashers",
@@ -13574,7 +13607,7 @@
     "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
    ],
    "grade": 4.7,
-   "reviews": 394
+   "reviews": 396
   },
   {
    "cat": "dishwashers",
@@ -13586,7 +13619,7 @@
     "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
    ],
    "grade": 4.7,
-   "reviews": 394
+   "reviews": 396
   },
   {
    "cat": "dishwashers",
@@ -13598,7 +13631,7 @@
     "나에게 맞춘 키친테리어 Bespoke 디자인"
    ],
    "grade": 4.8,
-   "reviews": 774
+   "reviews": 781
   },
   {
    "cat": "dishwashers",
@@ -13622,7 +13655,7 @@
     "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
    ],
    "grade": 4.7,
-   "reviews": 394
+   "reviews": 396
   },
   {
    "cat": "dishwashers",
@@ -13634,7 +13667,7 @@
     "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
    ],
    "grade": 4.8,
-   "reviews": 34
+   "reviews": 35
   },
   {
    "cat": "dishwashers",
@@ -13694,7 +13727,7 @@
     "물방울까지 뽀송하게 건조 열풍건조 100℃+"
    ],
    "grade": 4.6,
-   "reviews": 54
+   "reviews": 55
   },
   {
    "cat": "dishwashers",
@@ -13706,7 +13739,7 @@
     "나에게 맞춘 키친테리어 Bespoke 디자인"
    ],
    "grade": 4.8,
-   "reviews": 774
+   "reviews": 781
   },
   {
    "cat": "dishwashers",
@@ -13718,7 +13751,7 @@
     "효율적인 구조로 많은 그릇도 걱정 없이 대용량 맞춤 선반"
    ],
    "grade": 4.8,
-   "reviews": 34
+   "reviews": 35
   },
   {
    "cat": "dishwashers",
@@ -13766,7 +13799,7 @@
     "물방울까지 뽀송하게 건조 열풍건조 100℃+"
    ],
    "grade": 4.6,
-   "reviews": 54
+   "reviews": 55
   },
   {
    "cat": "dishwashers",
@@ -13802,7 +13835,7 @@
     "4단 입체 물살 강력세척"
    ],
    "grade": 4.7,
-   "reviews": 38
+   "reviews": 39
   },
   {
    "cat": "dishwashers",
@@ -13833,8 +13866,8 @@
     "99.999% 고온직수 파워살균 젖병까지 안심 세척",
     "나에게 맞춘 키친테리어 Bespoke 디자인"
    ],
-   "grade": 4.7,
-   "reviews": 79
+   "grade": 4.8,
+   "reviews": 80
   },
   {
    "cat": "dishwashers",
@@ -13869,8 +13902,8 @@
     "99.999% 고온직수 파워살균 젖병까지 안심 세척",
     "나에게 맞춘 키친테리어 Bespoke 디자인"
    ],
-   "grade": 4.7,
-   "reviews": 79
+   "grade": 4.8,
+   "reviews": 80
   },
   {
    "cat": "dishwashers",
@@ -13881,8 +13914,8 @@
     "99.999% 고온직수 파워살균 젖병까지 안심 세척",
     "나에게 맞춘 키친테리어 Bespoke 디자인"
    ],
-   "grade": 4.7,
-   "reviews": 79
+   "grade": 4.8,
+   "reviews": 80
   },
   {
    "cat": "dishwashers",
@@ -13926,7 +13959,7 @@
     "어디에 올려도 균일하고 강력한 화력 콰트로 플렉스존"
    ],
    "grade": 4.8,
-   "reviews": 534
+   "reviews": 536
   },
   {
    "cat": "electric-range",
@@ -13938,7 +13971,7 @@
     "많은 요리도 한 번에 3,400W 초고화력 빠른 조리 All MAX 부스트"
    ],
    "grade": 4.7,
-   "reviews": 690
+   "reviews": 702
   },
   {
    "cat": "electric-range",
@@ -13950,7 +13983,7 @@
     "많은 요리도 한 번에 3,400W 초고화력 빠른 조리 All MAX 부스트"
    ],
    "grade": 4.7,
-   "reviews": 690
+   "reviews": 702
   },
   {
    "cat": "electric-range",
@@ -13998,7 +14031,7 @@
     "LCD 대화형 알림창과 더 넒어진 패널로 간편하게"
    ],
    "grade": 4.8,
-   "reviews": 228
+   "reviews": 230
   },
   {
    "cat": "electric-range",
@@ -14034,7 +14067,7 @@
     "전체 화구 사용으로 많은 요리도 한번에 3,400W 초고화력"
    ],
    "grade": 4.8,
-   "reviews": 163
+   "reviews": 164
   },
   {
    "cat": "electric-range",
@@ -14058,7 +14091,7 @@
     "숨겨진 덕트 키트로 주방을 더 깔끔하게"
    ],
    "grade": 4.8,
-   "reviews": 9
+   "reviews": 10
   },
   {
    "cat": "electric-range",
@@ -14082,7 +14115,7 @@
     "LCD 대화형 알림창과 더 넒어진 패널로 간편하게"
    ],
    "grade": 4.8,
-   "reviews": 228
+   "reviews": 230
   },
   {
    "cat": "electric-range",
@@ -14094,7 +14127,7 @@
     "전체 화구 사용으로 많은 요리도 한번에 3,300W 초고화력"
    ],
    "grade": 5,
-   "reviews": 11
+   "reviews": 12
   },
   {
    "cat": "electric-range",
@@ -14106,7 +14139,7 @@
     "숨겨진 덕트 키트로 주방을 더 깔끔하게"
    ],
    "grade": 4.8,
-   "reviews": 9
+   "reviews": 10
   },
   {
    "cat": "electric-range",
@@ -14118,7 +14151,7 @@
     "전체 화구 사용으로 많은 요리도 한번에 3,400W 초고화력"
    ],
    "grade": 4.8,
-   "reviews": 163
+   "reviews": 164
   },
   {
    "cat": "electric-range",
@@ -14178,7 +14211,7 @@
     "최대 7,400W의 강력한 화력으로  더 빠르고 완성도 있는 조리"
    ],
    "grade": 4.8,
-   "reviews": 9
+   "reviews": 10
   },
   {
    "cat": "electric-range",
@@ -14190,7 +14223,7 @@
     "다양한 조합의 2가지 요리도 동시에"
    ],
    "grade": 4.8,
-   "reviews": 356
+   "reviews": 361
   },
   {
    "cat": "electric-range",
@@ -14238,7 +14271,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1651
+   "reviews": 1684
   },
   {
    "cat": "washers-and-dryers",
@@ -14250,14 +14283,14 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
    "code": "WD90H25AHS",
    "name": "Bespoke AI 콤보 25/20kg (177.8mm LCD)",
    "grade": 4.9,
-   "reviews": 1654
+   "reviews": 1688
   },
   {
    "cat": "washers-and-dryers",
@@ -14269,7 +14302,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1654
+   "reviews": 1688
   },
   {
    "cat": "washers-and-dryers",
@@ -14281,7 +14314,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1654
+   "reviews": 1688
   },
   {
    "cat": "washers-and-dryers",
@@ -14305,7 +14338,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14317,7 +14350,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14329,7 +14362,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1654
+   "reviews": 1688
   },
   {
    "cat": "washers-and-dryers",
@@ -14341,7 +14374,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14353,7 +14386,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14365,7 +14398,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14377,7 +14410,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14389,7 +14422,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14401,7 +14434,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14413,7 +14446,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14425,7 +14458,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14437,7 +14470,7 @@
     "AI가 알아서 최적의 코스로 AI 맞춤+"
    ],
    "grade": 4.8,
-   "reviews": 509
+   "reviews": 524
   },
   {
    "cat": "washers-and-dryers",
@@ -14449,7 +14482,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1651
+   "reviews": 1684
   },
   {
    "cat": "washers-and-dryers",
@@ -14461,7 +14494,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1651
+   "reviews": 1684
   },
   {
    "cat": "washers-and-dryers",
@@ -14473,7 +14506,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 1651
+   "reviews": 1684
   },
   {
    "cat": "washers-and-dryers",
@@ -14485,7 +14518,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14497,7 +14530,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14509,7 +14542,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14521,7 +14554,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14533,7 +14566,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14545,7 +14578,7 @@
     "AI 콤보 한 대로 단 89분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   {
    "cat": "washers-and-dryers",
@@ -14557,7 +14590,7 @@
     "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
    ],
    "grade": 4.9,
-   "reviews": 45
+   "reviews": 46
   },
   {
    "cat": "washers-and-dryers",
@@ -14569,7 +14602,7 @@
     "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
    ],
    "grade": 4.9,
-   "reviews": 358
+   "reviews": 359
   },
   {
    "cat": "washers-and-dryers",
@@ -14617,7 +14650,7 @@
     "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
    ],
    "grade": 4.9,
-   "reviews": 358
+   "reviews": 359
   },
   {
    "cat": "washers-and-dryers",
@@ -14749,7 +14782,7 @@
     "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
    ],
    "grade": 4.9,
-   "reviews": 45
+   "reviews": 46
   },
   {
    "cat": "washers-and-dryers",
@@ -14845,7 +14878,7 @@
     "강력한 직수로 열교환기 자동 세척 직수 파워 오토 클린"
    ],
    "grade": 4.9,
-   "reviews": 45
+   "reviews": 46
   },
   {
    "cat": "washers-and-dryers",
@@ -14857,7 +14890,7 @@
     "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
    ],
    "grade": 4.8,
-   "reviews": 994
+   "reviews": 995
   },
   {
    "cat": "washers-and-dryers",
@@ -14869,7 +14902,7 @@
     "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
    ],
    "grade": 4.8,
-   "reviews": 994
+   "reviews": 995
   },
   {
    "cat": "washers-and-dryers",
@@ -14940,8 +14973,8 @@
     "건조 후 문이 열려 습기 걱정 없는 오토 오픈 도어",
     "세탁물에 맞게 적정 세제를 알아서 세제자동투입"
    ],
-   "grade": 4.9,
-   "reviews": 287
+   "grade": 4.8,
+   "reviews": 293
   },
   {
    "cat": "washers-and-dryers",
@@ -14953,7 +14986,7 @@
     "부담을 확 줄인 에너지 소비 AI 에너지 절약"
    ],
    "grade": 4.8,
-   "reviews": 113
+   "reviews": 115
   },
   {
    "cat": "washers-and-dryers",
@@ -14989,7 +15022,7 @@
     "부담을 확 줄인 에너지 소비 AI 에너지 절약"
    ],
    "grade": 4.8,
-   "reviews": 113
+   "reviews": 115
   },
   {
    "cat": "washers-and-dryers",
@@ -15013,7 +15046,7 @@
     "직관적이고 편리한 다이얼 스크린"
    ],
    "grade": 4.9,
-   "reviews": 93
+   "reviews": 94
   },
   {
    "cat": "washers-and-dryers",
@@ -15025,7 +15058,7 @@
     "세탁물에 맞게 적정 세제를 알아서 세제자동투입"
    ],
    "grade": 4.8,
-   "reviews": 93
+   "reviews": 94
   },
   {
    "cat": "washers-and-dryers",
@@ -15038,30 +15071,6 @@
    ],
    "grade": 5,
    "reviews": 10
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "WF80H24ADS",
-   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
-   "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
-    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
-    "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
-   ],
-   "grade": 4.8,
-   "reviews": 93
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "WF80H24BDW",
-   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
-   "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
-    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
-    "직관적이고 편리한 스마트 다이얼"
-   ],
-   "grade": 4.9,
-   "reviews": 101
   },
   {
    "cat": "washers-and-dryers",
@@ -15169,7 +15178,7 @@
     "부담을 확 줄인 에너지 소비 AI 에너지 절약"
    ],
    "grade": 4.8,
-   "reviews": 113
+   "reviews": 115
   },
   {
    "cat": "washers-and-dryers",
@@ -15181,55 +15190,7 @@
     "부담을 확 줄인 에너지 소비 AI 에너지 절약"
    ],
    "grade": 4.8,
-   "reviews": 113
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "WF80H24ADS",
-   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
-   "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
-    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
-    "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
-   ],
-   "grade": 4.8,
-   "reviews": 93
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "WF80H24ADW",
-   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
-   "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
-    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
-    "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
-   ],
-   "grade": 4.8,
-   "reviews": 93
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "WF80H24BDS",
-   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
-   "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
-    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
-    "직관적이고 편리한 스마트 다이얼"
-   ],
-   "grade": 4.9,
-   "reviews": 101
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "WF80H24BDW",
-   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
-   "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
-    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
-    "직관적이고 편리한 스마트 다이얼"
-   ],
-   "grade": 4.9,
-   "reviews": 101
+   "reviews": 115
   },
   {
    "cat": "washers-and-dryers",
@@ -15241,7 +15202,7 @@
     "세탁부터 탈수까지 알아서 AI 맞춤세탁"
    ],
    "grade": 4.9,
-   "reviews": 334
+   "reviews": 336
   },
   {
    "cat": "washers-and-dryers",
@@ -15253,7 +15214,7 @@
     "세탁·건조 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 392
+   "reviews": 397
   },
   {
    "cat": "washers-and-dryers",
@@ -15265,7 +15226,7 @@
     "세탁부터 탈수까지 알아서 AI 맞춤세탁"
    ],
    "grade": 4.9,
-   "reviews": 334
+   "reviews": 336
   },
   {
    "cat": "washers-and-dryers",
@@ -15277,7 +15238,7 @@
     "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 392
+   "reviews": 397
   },
   {
    "cat": "washers-and-dryers",
@@ -15289,7 +15250,7 @@
     "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 392
+   "reviews": 397
   },
   {
    "cat": "washers-and-dryers",
@@ -15301,19 +15262,19 @@
     "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 392
+   "reviews": 397
   },
   {
    "cat": "washers-and-dryers",
-   "code": "WF90F25ADY",
-   "name": "Bespoke AI 세탁기 25kg (177.8mm LCD)",
+   "code": "DV90F22CDS",
+   "name": "Bespoke AI 건조기 22kg (177.8mm LCD)",
    "usp": [
-    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
+    "옷감 특성에 맞춰 섬세하게 AI 맞춤건조+",
     "손끝에서 시작하고 음성으로 완성되는 AI 홈",
-    "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
+    "건조 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 392
+   "reviews": 267
   },
   {
    "cat": "washers-and-dryers",
@@ -15324,20 +15285,8 @@
     "손끝에서 시작하고 음성으로 완성되는 AI 홈",
     "건조 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
-   "grade": 4.9,
-   "reviews": 262
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "DV90F22CDS",
-   "name": "Bespoke AI 건조기 22kg (177.8mm LCD)",
-   "usp": [
-    "옷감 특성에 맞춰 섬세하게 AI 맞춤건조+",
-    "손끝에서 시작하고 음성으로 완성되는 AI 홈",
-    "건조 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
-   ],
-   "grade": 4.9,
-   "reviews": 262
+   "grade": 4.8,
+   "reviews": 267
   },
   {
    "cat": "washers-and-dryers",
@@ -15360,8 +15309,8 @@
     "사계절 이불에 맞춰 더 꼼꼼하고 빠르게 AI 이불 세탁/건조",
     "에너지를 절약하는 확실한 방법 AI 에너지 절약"
    ],
-   "grade": 4.8,
-   "reviews": 206
+   "grade": 4.9,
+   "reviews": 207
   },
   {
    "cat": "washers-and-dryers",
@@ -15373,7 +15322,7 @@
     "정밀 센서로 정확하고 빠르게 쾌속건조"
    ],
    "grade": 4.9,
-   "reviews": 74
+   "reviews": 75
   },
   {
    "cat": "washers-and-dryers",
@@ -15385,7 +15334,7 @@
     "정밀센서로 정확하고 빠르게 AI 맞춤건조"
    ],
    "grade": 4.9,
-   "reviews": 190
+   "reviews": 192
   },
   {
    "cat": "washers-and-dryers",
@@ -15397,7 +15346,7 @@
     "옷감 특성에 맞춰 섬세하게 AI 맞춤건조"
    ],
    "grade": 4.9,
-   "reviews": 360
+   "reviews": 361
   },
   {
    "cat": "washers-and-dryers",
@@ -15409,7 +15358,7 @@
     "옷감 특성에 맞춰 섬세하게 AI 맞춤건조"
    ],
    "grade": 4.8,
-   "reviews": 123
+   "reviews": 124
   },
   {
    "cat": "washers-and-dryers",
@@ -15421,7 +15370,7 @@
     "옷감 특성에 맞춰 섬세하게 AI 맞춤건조"
    ],
    "grade": 4.8,
-   "reviews": 309
+   "reviews": 310
   },
   {
    "cat": "washers-and-dryers",
@@ -15457,7 +15406,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 246
+   "reviews": 249
   },
   {
    "cat": "washers-and-dryers",
@@ -15469,7 +15418,7 @@
     "입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
    ],
    "grade": 4.7,
-   "reviews": 371
+   "reviews": 374
   },
   {
    "cat": "washers-and-dryers",
@@ -15505,7 +15454,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 41
+   "reviews": 42
   },
   {
    "cat": "washers-and-dryers",
@@ -15517,7 +15466,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 431
+   "reviews": 435
   },
   {
    "cat": "washers-and-dryers",
@@ -15553,7 +15502,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 309
+   "reviews": 310
   },
   {
    "cat": "washers-and-dryers",
@@ -15565,7 +15514,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 123
+   "reviews": 124
   },
   {
    "cat": "washers-and-dryers",
@@ -15577,7 +15526,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 361
+   "reviews": 362
   },
   {
    "cat": "washers-and-dryers",
@@ -15589,7 +15538,7 @@
     "에너지 절약 하는 확실한 방법 AI 에너지 절약"
    ],
    "grade": 4.9,
-   "reviews": 74
+   "reviews": 75
   },
   {
    "cat": "washers-and-dryers",
@@ -15649,7 +15598,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 246
+   "reviews": 249
   },
   {
    "cat": "washers-and-dryers",
@@ -15661,7 +15610,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 246
+   "reviews": 249
   },
   {
    "cat": "washers-and-dryers",
@@ -15721,7 +15670,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 41
+   "reviews": 42
   },
   {
    "cat": "washers-and-dryers",
@@ -15733,7 +15682,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 41
+   "reviews": 42
   },
   {
    "cat": "washers-and-dryers",
@@ -15745,7 +15694,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 431
+   "reviews": 435
   },
   {
    "cat": "washers-and-dryers",
@@ -15757,7 +15706,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 309
+   "reviews": 310
   },
   {
    "cat": "washers-and-dryers",
@@ -15769,7 +15718,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 309
+   "reviews": 310
   },
   {
    "cat": "washers-and-dryers",
@@ -15781,7 +15730,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 123
+   "reviews": 124
   },
   {
    "cat": "washers-and-dryers",
@@ -15793,7 +15742,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 123
+   "reviews": 124
   },
   {
    "cat": "washers-and-dryers",
@@ -15805,7 +15754,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 361
+   "reviews": 362
   },
   {
    "cat": "washers-and-dryers",
@@ -15817,19 +15766,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 361
-  },
-  {
-   "cat": "washers-and-dryers",
-   "code": "DV20CB8600BW",
-   "name": "Bespoke AI 건조기 20kg",
-   "usp": [
-    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
-    "정밀센서로 정확하고 빠르게 AI 맞춤 건조",
-    "옷감 손상 걱정 없이 골고루 자연의 좋은 건조"
-   ],
-   "grade": 4.8,
-   "reviews": 201
+   "reviews": 362
   },
   {
    "cat": "washers-and-dryers",
@@ -15845,18 +15782,6 @@
   },
   {
    "cat": "washers-and-dryers",
-   "code": "DV20CB8600BW",
-   "name": "Bespoke AI 건조기 20kg",
-   "usp": [
-    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
-    "정밀센서로 정확하고 빠르게 AI 맞춤 건조",
-    "옷감 손상 걱정 없이 골고루 자연의 좋은 건조"
-   ],
-   "grade": 4.8,
-   "reviews": 201
-  },
-  {
-   "cat": "washers-and-dryers",
    "code": "DV21DG8600BE",
    "name": "AI 건조기 21kg",
    "usp": [
@@ -15865,7 +15790,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 246
+   "reviews": 249
   },
   {
    "cat": "washers-and-dryers",
@@ -15877,7 +15802,7 @@
     "입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
    ],
    "grade": 4.7,
-   "reviews": 371
+   "reviews": 374
   },
   {
    "cat": "washers-and-dryers",
@@ -15889,7 +15814,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 431
+   "reviews": 435
   },
   {
    "cat": "washers-and-dryers",
@@ -15901,7 +15826,7 @@
     "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
    ],
    "grade": 4.8,
-   "reviews": 994
+   "reviews": 995
   },
   {
    "cat": "washers-and-dryers",
@@ -15913,7 +15838,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.8,
-   "reviews": 345
+   "reviews": 358
   },
   {
    "cat": "washers-and-dryers",
@@ -15925,7 +15850,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.8,
-   "reviews": 309
+   "reviews": 310
   },
   {
    "cat": "washers-and-dryers",
@@ -15937,7 +15862,7 @@
     "에너지를 절약하는 확실한 방법 AI 절약 모드"
    ],
    "grade": 4.9,
-   "reviews": 361
+   "reviews": 362
   },
   {
    "cat": "washers-and-dryers",
@@ -15973,7 +15898,7 @@
     "에너지 절약 하는 확실한 방법 AI 에너지 절약"
    ],
    "grade": 4.9,
-   "reviews": 74
+   "reviews": 75
   },
   {
    "cat": "washers-and-dryers",
@@ -15997,7 +15922,7 @@
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
    "grade": 4.8,
-   "reviews": 345
+   "reviews": 358
   },
   {
    "cat": "washers-and-dryers",
@@ -16009,7 +15934,31 @@
     "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
    ],
    "grade": 4.8,
-   "reviews": 951
+   "reviews": 952
+  },
+  {
+   "cat": "washers-and-dryers",
+   "code": "WF80H24ADS",
+   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
+   "usp": [
+    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
+    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
+    "세탁 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
+   ],
+   "grade": 4.8,
+   "reviews": 94
+  },
+  {
+   "cat": "washers-and-dryers",
+   "code": "WF80H24BDW",
+   "name": "Bespoke AI 세탁기 24kg (71.1mm LCD+다이얼)",
+   "usp": [
+    "AI로 세탁부터 탈수까지 똑똑하고 섬세하게 AI 맞춤세탁+",
+    "세탁물에 맞게 적정 세제를 알아서 세제자동투입",
+    "직관적이고 편리한 스마트 다이얼"
+   ],
+   "grade": 4.9,
+   "reviews": 102
   },
   {
    "cat": "washers-and-dryers",
@@ -16021,7 +15970,7 @@
     "세탁·건조 후 알아서 문이 열려 습기 걱정 없는 오토 오픈 도어"
    ],
    "grade": 4.8,
-   "reviews": 188
+   "reviews": 190
   },
   {
    "cat": "washers-and-dryers",
@@ -16046,6 +15995,18 @@
    ],
    "grade": 4.9,
    "reviews": 27
+  },
+  {
+   "cat": "washers-and-dryers",
+   "code": "DV20CB8600BW",
+   "name": "Bespoke AI 건조기 20kg",
+   "usp": [
+    "평생보증(디지털 인버터 모터 & 컴프레서 무상수리)",
+    "정밀센서로 정확하고 빠르게 AI 맞춤 건조",
+    "옷감 손상 걱정 없이 골고루 자연의 좋은 건조"
+   ],
+   "grade": 4.8,
+   "reviews": 201
   },
   {
    "cat": "washers-and-dryers",
@@ -16081,7 +16042,7 @@
     "사계절 이불을 깨끗하게 AI 이불건조"
    ],
    "grade": 4.9,
-   "reviews": 56
+   "reviews": 57
   },
   {
    "cat": "washers-and-dryers",
@@ -16093,7 +16054,7 @@
     "제트샷과 입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
    ],
    "grade": 4.9,
-   "reviews": 170
+   "reviews": 171
   },
   {
    "cat": "washers-and-dryers",
@@ -16117,7 +16078,7 @@
     "제트샷과 입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
    ],
    "grade": 4.9,
-   "reviews": 104
+   "reviews": 106
   },
   {
    "cat": "washers-and-dryers",
@@ -16129,7 +16090,7 @@
     "제트샷과 입체돌풍물살로 빠르고 강력하게 입체돌풍세탁"
    ],
    "grade": 4.7,
-   "reviews": 281
+   "reviews": 285
   },
   {
    "cat": "washers-and-dryers",
@@ -16164,8 +16125,8 @@
     "세탁 25kg, 건조 20kg 국내 최대 용량",
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
-   "grade": 4.8,
-   "reviews": 1630
+   "grade": 4.9,
+   "reviews": 1666
   },
   {
    "cat": "washers-and-dryers",
@@ -16176,8 +16137,8 @@
     "세탁 25kg, 건조 20kg 국내 최대 용량",
     "AI 콤보 한 대로 단 69분 만에 끝내는 세탁 라이프"
    ],
-   "grade": 4.8,
-   "reviews": 1626
+   "grade": 4.9,
+   "reviews": 1661
   },
   {
    "cat": "washers-and-dryers",
@@ -16189,7 +16150,7 @@
     "세탁물에 맞게 적정 세제를 알아서 세제자동투입"
    ],
    "grade": 5,
-   "reviews": 6
+   "reviews": 7
   },
   {
    "cat": "washers-and-dryers",
@@ -16270,8 +16231,8 @@
     "손끝에서 시작하고 음성으로 완성되는 AI 홈",
     "세탁물에 맞게 적정 세제를 알아서 AI 세제자동투입"
    ],
-   "grade": 4.7,
-   "reviews": 132
+   "grade": 4.6,
+   "reviews": 134
   },
   {
    "cat": "washers-and-dryers",
@@ -16282,8 +16243,8 @@
     "손끝에서 시작하고 음성으로 완성되는 AI 홈",
     "세탁물에 맞게 적정 세제를 알아서 AI 세제자동투입"
    ],
-   "grade": 4.7,
-   "reviews": 132
+   "grade": 4.6,
+   "reviews": 134
   },
   {
    "cat": "washers-and-dryers",
@@ -16391,7 +16352,7 @@
     "바람과 스팀으로 매일 새 옷처럼 듀얼에어워시 & 듀얼제트스팀"
    ],
    "grade": 4.8,
-   "reviews": 440
+   "reviews": 454
   },
   {
    "cat": "washers-and-dryers",
@@ -16403,7 +16364,7 @@
     "다림질 없는 일상의 시작 주름집중케어"
    ],
    "grade": 4.9,
-   "reviews": 1349
+   "reviews": 1374
   },
   {
    "cat": "washers-and-dryers",
@@ -16415,7 +16376,7 @@
     "다림질 없는 일상의 시작 주름집중케어"
    ],
    "grade": 4.9,
-   "reviews": 92
+   "reviews": 94
   },
   {
    "cat": "washers-and-dryers",
@@ -16487,7 +16448,7 @@
     "한눈에 보여주고 자연스럽게 대화하는 AI 홈"
    ],
    "grade": 4.8,
-   "reviews": 754
+   "reviews": 755
   },
   {
    "cat": "washers-and-dryers",
@@ -16559,7 +16520,7 @@
     "3중 필터로 먼지 쌓일 틈 없는 트리플집진케어"
    ],
    "grade": 4.8,
-   "reviews": 122
+   "reviews": 126
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16571,7 +16532,7 @@
     "3중 필터로 먼지 쌓일 틈 없는 트리플집진케어"
    ],
    "grade": 4.9,
-   "reviews": 278
+   "reviews": 283
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16631,7 +16592,7 @@
     "3중 필터로 먼지 쌓일 틈 없는 트리플집진케어"
    ],
    "grade": 4.8,
-   "reviews": 122
+   "reviews": 126
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16643,7 +16604,7 @@
     "3중 필터로 먼지 쌓일 틈 없는 트리플집진케어"
    ],
    "grade": 4.8,
-   "reviews": 122
+   "reviews": 126
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16655,7 +16616,7 @@
     "3중 필터로 먼지 쌓일 틈 없는 트리플집진케어"
    ],
    "grade": 4.8,
-   "reviews": 122
+   "reviews": 126
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16667,7 +16628,7 @@
     "3중 필터로 먼지 쌓일 틈 없는 트리플집진케어"
    ],
    "grade": 4.9,
-   "reviews": 278
+   "reviews": 283
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16775,7 +16736,7 @@
     "바람과 스팀으로 매일 새 옷처럼 듀얼에어워시 & 듀얼제트스팀"
    ],
    "grade": 4.8,
-   "reviews": 440
+   "reviews": 454
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16787,7 +16748,7 @@
     "다림질 없는 일상의 시작 주름집중케어"
    ],
    "grade": 4.9,
-   "reviews": 1349
+   "reviews": 1374
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16799,7 +16760,7 @@
     "다림질 없는 일상의 시작 주름집중케어"
    ],
    "grade": 4.9,
-   "reviews": 92
+   "reviews": 94
   },
   {
    "cat": "airdressers-and-shoedressers",
@@ -16847,7 +16808,7 @@
     "관리가 편해 더욱 위생적인 이지케어 4단계"
    ],
    "grade": 4.8,
-   "reviews": 1384
+   "reviews": 1387
   },
   {
    "cat": "air-conditioners",
@@ -16927,7 +16888,7 @@
     "스탠드 색상: 미스티 그레이, 벽걸이 색상: 화이트"
    ],
    "grade": 4.8,
-   "reviews": 295
+   "reviews": 296
   },
   {
    "cat": "air-conditioners",
@@ -16938,7 +16899,7 @@
     "스탠드 색상: 미스티 그레이, 벽걸이 색상: 화이트"
    ],
    "grade": 4.8,
-   "reviews": 295
+   "reviews": 296
   },
   {
    "cat": "air-conditioners",
@@ -16950,7 +16911,7 @@
     "AI가 알아서 관리하는 Bixby Care"
    ],
    "grade": 4.8,
-   "reviews": 407
+   "reviews": 409
   },
   {
    "cat": "air-conditioners",
@@ -17021,7 +16982,7 @@
     "스탠드 색상: 에센셜 화이트, 벽걸이 색상: 화이트"
    ],
    "grade": 4.9,
-   "reviews": 410
+   "reviews": 414
   },
   {
    "cat": "air-conditioners",
@@ -17032,7 +16993,7 @@
     "스탠드 색상: 에센셜 화이트, 벽걸이 색상: 화이트"
    ],
    "grade": 4.9,
-   "reviews": 410
+   "reviews": 414
   },
   {
    "cat": "air-conditioners",
@@ -17136,7 +17097,7 @@
     "스탠드 색상: 에센셜 플럼, 벽걸이 색상: 화이트"
    ],
    "grade": 4.9,
-   "reviews": 64
+   "reviews": 66
   },
   {
    "cat": "air-conditioners",
@@ -17157,8 +17118,8 @@
     "냉방면적(81.8/18.7㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 슬림디자인, 심리스디자인, 청정",
     "스탠드 색상: 에센셜 화이트, 벽걸이 색상: 화이트"
    ],
-   "grade": 4.4,
-   "reviews": 16
+   "grade": 4.5,
+   "reviews": 18
   },
   {
    "cat": "air-conditioners",
@@ -17170,7 +17131,7 @@
     "화이트"
    ],
    "grade": 4.7,
-   "reviews": 608
+   "reviews": 609
   },
   {
    "cat": "air-conditioners",
@@ -17182,7 +17143,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 336
+   "reviews": 339
   },
   {
    "cat": "air-conditioners",
@@ -17206,7 +17167,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "air-conditioners",
@@ -17218,7 +17179,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 237
+   "reviews": 238
   },
   {
    "cat": "air-conditioners",
@@ -17266,7 +17227,7 @@
     "바디 색상(화이트), 패널(그레이)"
    ],
    "grade": 4.7,
-   "reviews": 165
+   "reviews": 166
   },
   {
    "cat": "air-conditioners",
@@ -17421,7 +17382,7 @@
     "스탠드 색상: 에센셜 플럼, 벽걸이 색상: 화이트"
    ],
    "grade": 4.9,
-   "reviews": 64
+   "reviews": 66
   },
   {
    "cat": "air-conditioners",
@@ -17442,8 +17403,8 @@
     "냉방면적(81.8/18.7㎡), AI모션바람, 무풍콤보, 무풍, AI절약, 슬림디자인, 심리스디자인, 청정",
     "스탠드 색상: 에센셜 화이트, 벽걸이 색상: 화이트"
    ],
-   "grade": 4.4,
-   "reviews": 16
+   "grade": 4.5,
+   "reviews": 18
   },
   {
    "cat": "air-conditioners",
@@ -17455,7 +17416,7 @@
     "화이트"
    ],
    "grade": 4.7,
-   "reviews": 608
+   "reviews": 609
   },
   {
    "cat": "air-conditioners",
@@ -17467,7 +17428,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 336
+   "reviews": 339
   },
   {
    "cat": "air-conditioners",
@@ -17491,7 +17452,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   {
    "cat": "air-conditioners",
@@ -17503,7 +17464,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 237
+   "reviews": 238
   },
   {
    "cat": "air-conditioners",
@@ -17551,7 +17512,7 @@
     "바디 색상(화이트), 패널(그레이)"
    ],
    "grade": 4.7,
-   "reviews": 165
+   "reviews": 166
   },
   {
    "cat": "air-conditioners",
@@ -18675,7 +18636,7 @@
     "습도를 조절하면서 에너지까지 절약해주는 쾌적제습"
    ],
    "grade": 4.8,
-   "reviews": 93
+   "reviews": 94
   },
   {
    "cat": "air-conditioners",
@@ -18890,7 +18851,7 @@
     "Wi-Fi 내장형, 조합률:119%"
    ],
    "grade": 4.6,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "system-air-conditioners",
@@ -18902,7 +18863,7 @@
     "조합률 : 119%, 프리미엄 리모컨 1개 구성"
    ],
    "grade": 4.6,
-   "reviews": 26
+   "reviews": 27
   },
   {
    "cat": "system-air-conditioners",
@@ -18926,7 +18887,7 @@
     "Infinite Line, 조합률 : 128%"
    ],
    "grade": 4.9,
-   "reviews": 41
+   "reviews": 44
   },
   {
    "cat": "system-air-conditioners",
@@ -18938,7 +18899,7 @@
     "Infinite Line, 조합률 : 128%"
    ],
    "grade": 4.9,
-   "reviews": 41
+   "reviews": 44
   },
   {
    "cat": "system-air-conditioners",
@@ -18950,7 +18911,7 @@
     "조합률 : 128%, Wi-Fi 내장형, 솔라셀 리모컨 1개 구성"
    ],
    "grade": 4.9,
-   "reviews": 41
+   "reviews": 44
   },
   {
    "cat": "system-air-conditioners",
@@ -18985,8 +18946,8 @@
     "실외기  :  면적 132㎡, 용량 14.5kW",
     "조합률 : 119%, Wi-Fi 내장형, 솔라셀 리모컨 1개 구성"
    ],
-   "grade": 5,
-   "reviews": 10
+   "grade": 4.9,
+   "reviews": 13
   },
   {
    "cat": "system-air-conditioners",
@@ -18997,8 +18958,8 @@
     "실외기 : 면적 131.8㎡, 용량 14.5kW",
     "Infinite Line, 조합률 : 119%"
    ],
-   "grade": 5,
-   "reviews": 10
+   "grade": 4.9,
+   "reviews": 13
   },
   {
    "cat": "system-air-conditioners",
@@ -19009,8 +18970,8 @@
     "실외기 : 면적 131.8㎡, 용량 14.5kW",
     "Infinite Line, 조합률 : 119%"
    ],
-   "grade": 5,
-   "reviews": 10
+   "grade": 4.9,
+   "reviews": 13
   },
   {
    "cat": "system-air-conditioners",
@@ -19310,7 +19271,7 @@
     "거실용 : Infinite Line, 조합률 : 128%"
    ],
    "grade": 4.8,
-   "reviews": 18
+   "reviews": 21
   },
   {
    "cat": "system-air-conditioners",
@@ -19322,7 +19283,7 @@
     "거실용 : Infinite Line, 조합률 : 128%"
    ],
    "grade": 4.8,
-   "reviews": 18
+   "reviews": 21
   },
   {
    "cat": "system-air-conditioners",
@@ -19425,8 +19386,8 @@
     "실외기 : 면적 83.6㎡, 용량 9.2kW",
     "Infinite Line, 조합률 : 113%"
    ],
-   "grade": 5,
-   "reviews": 7
+   "grade": 4.9,
+   "reviews": 10
   },
   {
    "cat": "system-air-conditioners",
@@ -19437,8 +19398,8 @@
     "실외기 : 면적 83.6㎡, 용량 9.2kW",
     "Infinite Line, 조합률 : 113%"
    ],
-   "grade": 5,
-   "reviews": 7
+   "grade": 4.9,
+   "reviews": 10
   },
   {
    "cat": "system-air-conditioners",
@@ -19498,7 +19459,7 @@
     "거실용 : Infinite Line, 조합률 : 119%"
    ],
    "grade": 4.6,
-   "reviews": 12
+   "reviews": 15
   },
   {
    "cat": "system-air-conditioners",
@@ -19510,7 +19471,7 @@
     "거실용 : Infinite Line, 조합률 : 119%"
    ],
    "grade": 4.6,
-   "reviews": 12
+   "reviews": 15
   },
   {
    "cat": "system-air-conditioners",
@@ -19649,8 +19610,8 @@
     "실외기  :  면적 83.6㎡, 용량 9.2kW",
     "거실용 : 인피니트, 조합률 : 125%"
    ],
-   "grade": 5,
-   "reviews": 4
+   "grade": 4.9,
+   "reviews": 7
   },
   {
    "cat": "system-air-conditioners",
@@ -19785,8 +19746,8 @@
     "실외기  :  면적 83.6㎡, 용량 9.2kW",
     "거실용 : 인피니트, 조합률 : 125%"
    ],
-   "grade": 5,
-   "reviews": 4
+   "grade": 4.9,
+   "reviews": 7
   },
   {
    "cat": "system-air-conditioners",
@@ -19875,8 +19836,8 @@
     "실외기  :  면적 100㎡, 용량 11kW",
     "거실용 : Infinite Line, 조합률 : 115%"
    ],
-   "grade": 4.1,
-   "reviews": 8
+   "grade": 4.3,
+   "reviews": 11
   },
   {
    "cat": "system-air-conditioners",
@@ -19887,8 +19848,8 @@
     "실외기 : 면적 154.5㎡, 용량 17.0kW",
     "Infinite Line, 조합률 : 125%"
    ],
-   "grade": 5,
-   "reviews": 6
+   "grade": 4.9,
+   "reviews": 9
   },
   {
    "cat": "system-air-conditioners",
@@ -19899,8 +19860,8 @@
     "실외기 : 면적 154.5㎡, 용량 17.0kW",
     "Infinite Line, 조합률 : 125%"
    ],
-   "grade": 5,
-   "reviews": 6
+   "grade": 4.9,
+   "reviews": 9
   },
   {
    "cat": "system-air-conditioners",
@@ -19911,8 +19872,8 @@
     "실외기  :  면적 100㎡, 용량 11kW",
     "거실용 : Infinite Line, 조합률 : 115%"
    ],
-   "grade": 4.1,
-   "reviews": 8
+   "grade": 4.3,
+   "reviews": 11
   },
   {
    "cat": "system-air-conditioners",
@@ -19923,8 +19884,8 @@
     "실외기  :  면적 100㎡, 용량 11kW",
     "거실용 : Infinite Line, 조합률 : 115%"
    ],
-   "grade": 4.1,
-   "reviews": 8
+   "grade": 4.3,
+   "reviews": 11
   },
   {
    "cat": "system-air-conditioners",
@@ -20464,8 +20425,8 @@
     "실외기 : 14.5kW, 면적 : 131.8㎡",
     "AI기능 추가, 조합률 : 103%"
    ],
-   "grade": 5,
-   "reviews": 4
+   "grade": 4.9,
+   "reviews": 7
   },
   {
    "cat": "system-air-conditioners",
@@ -20627,7 +20588,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 252
+   "reviews": 253
   },
   {
    "cat": "air-cleaner",
@@ -20639,7 +20600,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 128
+   "reviews": 132
   },
   {
    "cat": "air-cleaner",
@@ -20651,7 +20612,7 @@
     "더욱 강력해진 일체형 S 필터"
    ],
    "grade": 4.8,
-   "reviews": 204
+   "reviews": 205
   },
   {
    "cat": "air-cleaner",
@@ -20663,7 +20624,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.9,
-   "reviews": 149
+   "reviews": 153
   },
   {
    "cat": "air-cleaner",
@@ -20674,8 +20635,8 @@
     "더욱 강력해진 일체형 S 필터",
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
-   "grade": 4.8,
-   "reviews": 76
+   "grade": 4.7,
+   "reviews": 80
   },
   {
    "cat": "air-cleaner",
@@ -20687,7 +20648,7 @@
     "나의 일상에 맞춰 실내 공기를 관리해주는 AI 루틴"
    ],
    "grade": 4.9,
-   "reviews": 120
+   "reviews": 121
   },
   {
    "cat": "air-cleaner",
@@ -20699,7 +20660,7 @@
     "손쉬운 필터 교체"
    ],
    "grade": 4.8,
-   "reviews": 234
+   "reviews": 236
   },
   {
    "cat": "air-cleaner",
@@ -20711,7 +20672,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 252
+   "reviews": 253
   },
   {
    "cat": "air-cleaner",
@@ -20723,7 +20684,7 @@
     "더욱 강력해진 일체형 S 필터"
    ],
    "grade": 4.8,
-   "reviews": 204
+   "reviews": 205
   },
   {
    "cat": "air-cleaner",
@@ -20735,7 +20696,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 128
+   "reviews": 132
   },
   {
    "cat": "air-cleaner",
@@ -20747,7 +20708,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 174
+   "reviews": 175
   },
   {
    "cat": "air-cleaner",
@@ -20759,7 +20720,7 @@
     "손쉬운 필터 교체"
    ],
    "grade": 4.8,
-   "reviews": 234
+   "reviews": 236
   },
   {
    "cat": "air-cleaner",
@@ -20770,8 +20731,8 @@
     "더욱 강력해진 일체형 S 필터",
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
-   "grade": 4.8,
-   "reviews": 76
+   "grade": 4.7,
+   "reviews": 80
   },
   {
    "cat": "air-cleaner",
@@ -20783,7 +20744,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.9,
-   "reviews": 149
+   "reviews": 153
   },
   {
    "cat": "air-cleaner",
@@ -20795,7 +20756,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 128
+   "reviews": 132
   },
   {
    "cat": "air-cleaner",
@@ -20807,7 +20768,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 252
+   "reviews": 253
   },
   {
    "cat": "air-cleaner",
@@ -20819,7 +20780,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.9,
-   "reviews": 149
+   "reviews": 153
   },
   {
    "cat": "air-cleaner",
@@ -20831,7 +20792,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 75
+   "reviews": 79
   },
   {
    "cat": "air-cleaner",
@@ -20843,7 +20804,7 @@
     "쉽게 분리하고 간편하게 폐기 가능한 분리형 필터"
    ],
    "grade": 4.7,
-   "reviews": 74
+   "reviews": 78
   },
   {
    "cat": "air-cleaner",
@@ -20855,7 +20816,7 @@
     "나의 일상에 맞춰 실내 공기를 관리해주는 AI 루틴"
    ],
    "grade": 4.9,
-   "reviews": 103
+   "reviews": 104
   },
   {
    "cat": "air-cleaner",
@@ -20867,7 +20828,7 @@
     "손쉬운 필터 교체"
    ],
    "grade": 4.8,
-   "reviews": 199
+   "reviews": 201
   },
   {
    "cat": "air-cleaner",
@@ -20879,7 +20840,7 @@
     "큰 먼지부터 초미세먼지까지 한번에 제거"
    ],
    "grade": 4.9,
-   "reviews": 115
+   "reviews": 116
   },
   {
    "cat": "air-cleaner",
@@ -20891,7 +20852,7 @@
     "손쉬운 필터 교체"
    ],
    "grade": 4.8,
-   "reviews": 203
+   "reviews": 205
   },
   {
    "cat": "air-cleaner",
@@ -20903,7 +20864,7 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "grade": 4.8,
-   "reviews": 252
+   "reviews": 253
   },
   {
    "cat": "air-cleaner",
@@ -20963,7 +20924,7 @@
     "Knox 보안 기술 적용으로 검증된 보안"
    ],
    "grade": 4.7,
-   "reviews": 1057
+   "reviews": 1082
   },
   {
    "cat": "vacuum-cleaners",
@@ -20975,7 +20936,7 @@
     "Knox 보안 기술 적용으로 검증된 보안"
    ],
    "grade": 4.7,
-   "reviews": 1057
+   "reviews": 1082
   },
   {
    "cat": "vacuum-cleaners",
@@ -20987,7 +20948,7 @@
     "Knox 보안 기술 적용으로 검증된 보안"
    ],
    "grade": 4.7,
-   "reviews": 1754
+   "reviews": 1784
   },
   {
    "cat": "vacuum-cleaners",
@@ -20999,7 +20960,7 @@
     "Knox 보안 기술 적용으로 검증된 보안"
    ],
    "grade": 4.7,
-   "reviews": 1754
+   "reviews": 1784
   },
   {
    "cat": "vacuum-cleaners",
@@ -21047,7 +21008,7 @@
     "1cm 장애물을 감지하여 끊김 없는 효율적인 청소"
    ],
    "grade": 4.8,
-   "reviews": 110
+   "reviews": 112
   },
   {
    "cat": "vacuum-cleaners",
@@ -21059,7 +21020,7 @@
     "1cm 장애물을 감지하여 끊김 없는 효율적인 청소"
    ],
    "grade": 4.8,
-   "reviews": 110
+   "reviews": 112
   },
   {
    "cat": "vacuum-cleaners",
@@ -21143,7 +21104,7 @@
     "좁은 틈의 먼지까지 손쉽게 청소 가능한  에어 블로워"
    ],
    "grade": 4.8,
-   "reviews": 208
+   "reviews": 211
   },
   {
    "cat": "vacuum-cleaners",
@@ -21155,7 +21116,7 @@
     "좁은 틈의 먼지까지 손쉽게 청소 가능한  에어 블로워"
    ],
    "grade": 4.8,
-   "reviews": 172
+   "reviews": 173
   },
   {
    "cat": "vacuum-cleaners",
@@ -21171,7 +21132,7 @@
   },
   {
    "cat": "vacuum-cleaners",
-   "code": "VS28D950HCA",
+   "code": "VS28D950HCB",
    "name": "Bespoke AI 제트 Lite 고온 세척 브러시 패키지",
    "usp": [
     "2.31kg 무게로 가볍고 최대 280W 흡입력",
@@ -21183,18 +21144,6 @@
   },
   {
    "cat": "vacuum-cleaners",
-   "code": "VS28D950AIW",
-   "name": "Bespoke AI 제트 Lite 280W",
-   "usp": [
-    "2.31kg 무게로 가볍고 최대 280W 흡입력",
-    "청소 환경을 감지해 최적의 흡입력을 구현하는 AI 모드 2.0",
-    "가볍고 슬림한 디자인으로 편안한 청소 액티브 슬림 브러시"
-   ],
-   "grade": 4.8,
-   "reviews": 263
-  },
-  {
-   "cat": "vacuum-cleaners",
    "code": "VS70H18GVG",
    "name": "제트 핏 물걸레 브러시 패키지",
    "usp": [
@@ -21203,7 +21152,7 @@
     "청소기를 깔끔하게 보관하고 충전하는 스탠딩 거치대"
    ],
    "grade": 4.7,
-   "reviews": 157
+   "reviews": 161
   },
   {
    "cat": "vacuum-cleaners",
@@ -21215,7 +21164,7 @@
     "청소기를 깔끔하게 보관하고 충전하는 스탠딩 거치대"
    ],
    "grade": 4.9,
-   "reviews": 47
+   "reviews": 48
   },
   {
    "cat": "vacuum-cleaners",
@@ -21240,6 +21189,18 @@
    ],
    "grade": 4.8,
    "reviews": 17
+  },
+  {
+   "cat": "vacuum-cleaners",
+   "code": "VS28D950AIA",
+   "name": "Bespoke AI 제트 Lite 280W",
+   "usp": [
+    "2.31kg 무게로 가볍고 최대 280W 흡입력",
+    "청소 환경을 감지해 최적의 흡입력을 구현하는 AI 모드 2.0",
+    "가볍고 슬림한 디자인으로 편안한 청소 액티브 슬림 브러시"
+   ],
+   "grade": 4.8,
+   "reviews": 266
   },
   {
    "cat": "vacuum-cleaners",
@@ -21275,7 +21236,7 @@
     "가볍고 슬림한 디자인으로 편안한 청소 액티브 슬림 브러시"
    ],
    "grade": 4.8,
-   "reviews": 344
+   "reviews": 345
   },
   {
    "cat": "vacuum-cleaners",
@@ -21287,7 +21248,7 @@
     "가볍고 슬림한 디자인으로 편안한 청소 액티브 슬림 브러시"
    ],
    "grade": 4.8,
-   "reviews": 233
+   "reviews": 235
   },
   {
    "cat": "vacuum-cleaners",
@@ -21407,7 +21368,7 @@
     "회전 물걸레와 디지털 인버터 모터로 강력한 청소성능"
    ],
    "grade": 4.6,
-   "reviews": 917
+   "reviews": 920
   },
   {
    "cat": "vacuum-cleaners",
@@ -21419,7 +21380,7 @@
     "청결하고 꼼꼼하게 청소하는 침구 브러시"
    ],
    "grade": 4.8,
-   "reviews": 171
+   "reviews": 172
   },
   {
    "cat": "vacuum-cleaners",
@@ -21447,6 +21408,18 @@
   },
   {
    "cat": "monitors",
+   "code": "LS32HG802SKXKR",
+   "name": "오디세이 OLED G8 G80SH 4K 240Hz (LS32HG802S)",
+   "usp": [
+    "QD-OLED in 4K · 글레어 프리 · OLED세이프가드+",
+    "0.03ms 응답속도(GtG) · VESA DisplayHDR 트루블랙500",
+    "팬톤인증 · DP 2.1&USB-C"
+   ],
+   "grade": 4.8,
+   "reviews": 91
+  },
+  {
+   "cat": "monitors",
    "code": "LS40H852TAKXKR",
    "name": "뷰피니티 S8 S85TH 5K2K WUHD (LS40H852)",
    "usp": [
@@ -21456,6 +21429,18 @@
    ],
    "grade": 5,
    "reviews": 8
+  },
+  {
+   "cat": "monitors",
+   "code": "LS27C900PAKXKR",
+   "name": "뷰피니티 S9 S90PC 5K 스마트 (LS27C900)",
+   "usp": [
+    "99 % DCI-P3 옵션의 뛰어난 채도 5K 해상도",
+    "Windows는 물론 Mac에서도 5K 즐기기 Thunderbolt 4",
+    "눈의 피로를 줄여주는 플리커 프리"
+   ],
+   "grade": 4.1,
+   "reviews": 48
   },
   {
    "cat": "monitors",
@@ -21479,7 +21464,19 @@
     "정확한 색 표현으로 사실감 넘치는 플레이"
    ],
    "grade": 4.9,
-   "reviews": 103
+   "reviews": 104
+  },
+  {
+   "cat": "monitors",
+   "code": "LS27FG600SKXKR",
+   "name": "오디세이 OLED G6 G60SF QHD 500Hz (LS27FG600S)",
+   "usp": [
+    "세계최초 500Hz QD-OLED 모니터",
+    "OLED세이프가드+, OLED 3년 무상보증, 글레어프리",
+    "정확한 색 표현으로 사실감 넘치는 플레이"
+   ],
+   "grade": 4.9,
+   "reviews": 104
   },
   {
    "cat": "monitors",
@@ -21495,6 +21492,18 @@
   },
   {
    "cat": "monitors",
+   "code": "LS32DG702EKXKR",
+   "name": "오디세이 G7 G70D 4K 144Hz 스마트 (LS32DG702)",
+   "usp": [
+    "눈앞에 펼쳐지는 궁극의 비주얼 4K UHD",
+    "화면을 가득 채우는 생생한 컬러 빠른 IPS",
+    "최적의 재생 빈도수로 매끄러운 플레이 144Hz 주사율"
+   ],
+   "grade": 4.7,
+   "reviews": 106
+  },
+  {
+   "cat": "monitors",
    "code": "LS43FM1E3UKXKR",
    "name": "2025 스마트모니터 M1 M1EF 4K 화이트 (LS43FM1E3)",
    "usp": [
@@ -21503,7 +21512,7 @@
     "삼성 Knox 보안, 멀티 컨트롤, AirPlay 지원"
    ],
    "grade": 4.8,
-   "reviews": 198
+   "reviews": 200
   },
   {
    "cat": "monitors",
@@ -21519,39 +21528,37 @@
   },
   {
    "cat": "monitors",
-   "code": "LS27HG610SKXKR",
-   "name": "오디세이 OLED G6 G61SH QHD 240Hz (LS27HG610S)",
+   "code": "LS32FM703U-1WE",
+   "name": "무빙스타일 M7 (80cm) 라이트",
    "usp": [
-    "QD-OLED in QHD · 글레어프리 · OLED세이프가드",
-    "240Hz 주사율 · 0.03ms 응답속도(GtG)",
-    "팬톤인증 · 피봇 · 높이조절 스탠드"
-   ],
-   "grade": 4.9,
-   "reviews": 24
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32FM703UKXKR",
-   "name": "2025 스마트모니터 M7 M70F 4K 화이트 (LS32FM703)",
-   "usp": [
-    "좋아하는 OTT 콘텐츠를 바로 플레이, 스마트 TV 앱",
-    "클릭 투 써치, AVA 기능",
-    "삼성 Knox 보안, 멀티 컨트롤, AirPlay 지원"
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "4K AI 스마트 모니터 M7 + 무빙스탠드 (TV튜너 없음)",
+    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
    ],
    "grade": 4.8,
-   "reviews": 672
+   "reviews": 589
   },
   {
    "cat": "monitors",
-   "code": "LS32H700EAKXKR",
-   "name": "뷰피니티 S7 S70H 4K 블랙 (LS32H700)",
+   "code": "LS37D800UAKXKR",
+   "name": "뷰피니티 S8 S80UD 4K USB-C (LS37D800U)",
    "usp": [
-    "4K UHD 해상도 · HDR10",
-    "178˚ 광시야각 · DP & HDMI 다중 포트",
-    "아이 세이버 모드 · 삼성 디스플레이 매니저"
+    "USB-C로 간편한 데이터 전송 및 충전",
+    "TÜV 인증 인텔리전트 아이 케어",
+    "간편 설치 스탠드 · 높이 조절/틸트/스위블"
    ],
-   "grade": 5,
-   "reviews": 11
+   "grade": 4.8,
+   "reviews": 194
+  },
+  {
+   "cat": "monitors",
+   "code": "LS34HG552EKXKR",
+   "name": "오디세이 G5 G55H UWQHD 180Hz (LS34HG552)",
+   "usp": [
+    "Ultra WQHD 해상도(21:9) · 1000R 커브드 화면",
+    "180Hz 주사율 · 1ms 응답속도(GtG) · AMD 프리싱크",
+    "HDR10 · 블랙 이퀄라이저 · 오토 소스 스위치"
+   ]
   },
   {
    "cat": "monitors",
@@ -21575,7 +21582,7 @@
     "이지커넥션(E/C) · 인체공학적 스탠드(높이조절, 피봇)"
    ],
    "grade": 5,
-   "reviews": 44
+   "reviews": 45
   },
   {
    "cat": "monitors",
@@ -21587,7 +21594,7 @@
     "이지커넥션(E/C) · 인체공학적 스탠드(높이조절, 피봇)"
    ],
    "grade": 5,
-   "reviews": 44
+   "reviews": 45
   },
   {
    "cat": "monitors",
@@ -21603,42 +21610,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS34H550GAKXKR",
-   "name": "뷰피니티 S5 S55GH UWQHD 120Hz (LS34H550)",
-   "usp": [
-    "Ultra WQHD 해상도(21:9) · 1800R 커브드 화면",
-    "HDR10 · 120Hz 주사율 · AMD 프리싱크 프리미엄",
-    "게임모드 · 아이세이버 모드 · 다중 연결 포트"
-   ],
-   "grade": 5,
-   "reviews": 1
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32DG304EKXKR",
-   "name": "오디세이 G3 G30D FHD 180Hz (LS32DG304)",
-   "usp": [
-    "빈틈을 놓치지 않는 실시간 반응 속도 180Hz 주사율, 1ms 응답속도(MPRT)",
-    "화려한 액션도 끊김 걱정 없이 플레이 AMD FreeSync",
-    "다양한 게임에서 정확히 조준 가상 조준점"
-   ],
-   "grade": 4.7,
-   "reviews": 93
-  },
-  {
-   "cat": "monitors",
-   "code": "LS27HG314EKXKR",
-   "name": "에센셜 모니터 G3 G31H FHD 144Hz (LS27HG314)",
-   "usp": [
-    "FHD 해상도 · IPS패널",
-    "144Hz 주사율 · 1ms 응답속도 · AMD 프리싱크",
-    "게임모드 · 눈 보호 모드 · 다중 연결 포트(DP/HDMI)"
-   ],
-   "grade": 4.2,
-   "reviews": 5
-  },
-  {
-   "cat": "monitors",
    "code": "LS32FM503EKXKR",
    "name": "2025 스마트모니터 M5 M50F FHD 웜 화이트 (LS32FM503)",
    "usp": [
@@ -21651,6 +21622,30 @@
   },
   {
    "cat": "monitors",
+   "code": "LS34H550GAKXKR",
+   "name": "뷰피니티 S5 S55GH UWQHD 120Hz (LS34H550)",
+   "usp": [
+    "Ultra WQHD 해상도(21:9) · 1800R 커브드 화면",
+    "HDR10 · 120Hz 주사율 · AMD 프리싱크 프리미엄",
+    "게임모드 · 아이세이버 모드 · 다중 연결 포트"
+   ],
+   "grade": 5,
+   "reviews": 1
+  },
+  {
+   "cat": "monitors",
+   "code": "LS32D396GAKXKR",
+   "name": "에센셜 모니터 S3 S39GD FHD 100Hz 커브드 (LS32D396)",
+   "usp": [
+    "'완전한 집중을 위한 곡선형 1500R 커브드 스크린",
+    "한층 더 부드럽고 생동감 있는 화면, 100Hz 주사율",
+    "스피커 내장 · 눈 보호 모드 & 플리커 프리"
+   ],
+   "grade": 4.8,
+   "reviews": 51
+  },
+  {
+   "cat": "monitors",
    "code": "LS27FG504EKXKR",
    "name": "오디세이 G5 G50F QHD 180Hz (LS27FG504)",
    "usp": [
@@ -21659,19 +21654,7 @@
     "HDR10 · 피봇/높이조절 스탠드"
    ],
    "grade": 4.8,
-   "reviews": 207
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32FG504EKXKR",
-   "name": "오디세이 G5 G50F QHD 180Hz (LS32FG504)",
-   "usp": [
-    "QHD 해상도 · 고속 IPS 패널",
-    "180Hz 주사율 · 1ms 응답속도(GtG)",
-    "HDR10 · 피봇/높이조절 스탠드"
-   ],
-   "grade": 4.8,
-   "reviews": 207
+   "reviews": 209
   },
   {
    "cat": "monitors",
@@ -21683,19 +21666,7 @@
     "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
    ],
    "grade": 4.8,
-   "reviews": 608
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32FM702U-1BE",
-   "name": "무빙스타일 M7 (80cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "4K AI 스마트 모니터 M7 + 무빙스탠드 (TV튜너 없음)",
-    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
-   ],
-   "grade": 4.8,
-   "reviews": 585
+   "reviews": 612
   },
   {
    "cat": "monitors",
@@ -21707,7 +21678,7 @@
     "정교하고 깔끔한 심리스 디자인"
    ],
    "grade": 4.8,
-   "reviews": 192
+   "reviews": 193
   },
   {
    "cat": "monitors",
@@ -21719,7 +21690,7 @@
     "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
    ],
    "grade": 4.8,
-   "reviews": 585
+   "reviews": 589
   },
   {
    "cat": "monitors",
@@ -21735,15 +21706,15 @@
   },
   {
    "cat": "monitors",
-   "code": "LS27FM503E-1ME",
+   "code": "LS27FM502E-1BE",
    "name": "무빙스타일 M5 (68.6cm) 라이트",
    "usp": [
     "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
     "FHD 스마트 모니터 M5 + 무빙스탠드 (TV튜너 없음)",
     "스마트TV 앱, 게이밍 허브, 화면 미러링 지원"
    ],
-   "grade": 4,
-   "reviews": 26
+   "grade": 4.1,
+   "reviews": 27
   },
   {
    "cat": "monitors",
@@ -21755,7 +21726,19 @@
     "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
    ],
    "grade": 4.8,
-   "reviews": 121
+   "reviews": 122
+  },
+  {
+   "cat": "monitors",
+   "code": "LS32FM1E3U-1WE",
+   "name": "무빙스타일 M1 (80cm) 라이트",
+   "usp": [
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "좋아하는 장면을 더욱 디테일하게 감상, 4K UHD 해상도",
+    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
+   ],
+   "grade": 4.9,
+   "reviews": 113
   },
   {
    "cat": "monitors",
@@ -21771,18 +21754,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS32FM1E3U-1WE",
-   "name": "무빙스타일 M1 (80cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "좋아하는 장면을 더욱 디테일하게 감상, 4K UHD 해상도",
-    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
-   ],
-   "grade": 4.9,
-   "reviews": 112
-  },
-  {
-   "cat": "monitors",
    "code": "LS32HG802EDGEL",
    "name": "오디세이 OLED G80SH 4K + 무빙스타일 Edge 라이트",
    "usp": [
@@ -21791,7 +21762,7 @@
     "무빙스타일 Edge 라이트, 4K 해상도 4면 이븐 베젤 스마트TV앱"
    ],
    "grade": 4.8,
-   "reviews": 70
+   "reviews": 71
   },
   {
    "cat": "monitors",
@@ -21803,19 +21774,7 @@
     "무빙스타일 Edge 라이트, 4K 해상도 4면 이븐 베젤 스마트TV앱"
    ],
    "grade": 4.8,
-   "reviews": 82
-  },
-  {
-   "cat": "monitors",
-   "code": "LS27C900PAKXKR",
-   "name": "뷰피니티 S9 S90PC 5K 스마트 (LS27C900)",
-   "usp": [
-    "99 % DCI-P3 옵션의 뛰어난 채도 5K 해상도",
-    "Windows는 물론 Mac에서도 5K 즐기기 Thunderbolt 4",
-    "눈의 피로를 줄여주는 플리커 프리"
-   ],
-   "grade": 4.1,
-   "reviews": 48
+   "reviews": 83
   },
   {
    "cat": "monitors",
@@ -21827,7 +21786,7 @@
     "게임을 승리로 이끄는 게임 모드"
    ],
    "grade": 4.7,
-   "reviews": 48
+   "reviews": 49
   },
   {
    "cat": "monitors",
@@ -21851,7 +21810,7 @@
     "뷰피니티 S60UD, QHD 해상도 · IPS패널 · USB-C · 인체공학적 스탠드"
    ],
    "grade": 4.9,
-   "reviews": 47
+   "reviews": 49
   },
   {
    "cat": "monitors",
@@ -21863,7 +21822,7 @@
     "블랙 이퀄라이저 & 자동 소스 스위치"
    ],
    "grade": 4.8,
-   "reviews": 207
+   "reviews": 209
   },
   {
    "cat": "monitors",
@@ -21875,19 +21834,7 @@
     "G-Sync 호환 · 피봇 · 높이조절 스탠드"
    ],
    "grade": 5,
-   "reviews": 20
-  },
-  {
-   "cat": "monitors",
-   "code": "LS27FG700EKXKR",
-   "name": "오디세이 G7 G70F 4K 180Hz 듀얼모드 (LS27FG700)",
-   "usp": [
-    "4K UHD 해상도 · 고속 IPS 패널",
-    "4K 180Hz & FHD 360Hz 듀얼모드 · 1ms 응답속도(GtG)",
-    "G-Sync 호환 · 피봇 · 높이조절 스탠드"
-   ],
-   "grade": 4.7,
-   "reviews": 106
+   "reviews": 22
   },
   {
    "cat": "monitors",
@@ -21927,6 +21874,18 @@
   },
   {
    "cat": "monitors",
+   "code": "LS27HG314EKXKR",
+   "name": "에센셜 모니터 G3 G31H FHD 144Hz (LS27HG314)",
+   "usp": [
+    "FHD 해상도 · IPS패널",
+    "144Hz 주사율 · 1ms 응답속도 · AMD 프리싱크",
+    "게임모드 · 눈 보호 모드 · 다중 연결 포트(DP/HDMI)"
+   ],
+   "grade": 4.2,
+   "reviews": 5
+  },
+  {
+   "cat": "monitors",
    "code": "LS27HG400EKXKR",
    "name": "오디세이 G4 G40H FHD 300Hz (LS27HG400)",
    "usp": [
@@ -21936,6 +21895,18 @@
    ],
    "grade": 5,
    "reviews": 1
+  },
+  {
+   "cat": "monitors",
+   "code": "LS27HG610SKXKR",
+   "name": "오디세이 OLED G6 G61SH QHD 240Hz (LS27HG610S)",
+   "usp": [
+    "QD-OLED in QHD · 글레어프리 · OLED세이프가드",
+    "240Hz 주사율 · 0.03ms 응답속도(GtG)",
+    "팬톤인증 · 피봇 · 높이조절 스탠드"
+   ],
+   "grade": 4.9,
+   "reviews": 25
   },
   {
    "cat": "monitors",
@@ -21963,6 +21934,18 @@
   },
   {
    "cat": "monitors",
+   "code": "LS32B800PXKXKR",
+   "name": "뷰피니티 S8 S80PB 4K HDR600 USB-C (LS32B800)",
+   "usp": [
+    "전문가 수준의 색상 구현, DCI-P3 98%",
+    "VESA HDR600 · 대낮에도 선명한 매트 디스플레이",
+    "USB-C 지원 · 높이 조절/틸트/스위블"
+   ],
+   "grade": 4.7,
+   "reviews": 39
+  },
+  {
+   "cat": "monitors",
    "code": "LS32CG554EKXKR",
    "name": "오디세이 G5 G55C QHD 165Hz 커브드 (LS32CG554)",
    "usp": [
@@ -21975,18 +21958,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS32D396GAKXKR",
-   "name": "에센셜 모니터 S3 S39GD FHD 100Hz 커브드 (LS32D396)",
-   "usp": [
-    "'완전한 집중을 위한 곡선형 1500R 커브드 스크린",
-    "한층 더 부드럽고 생동감 있는 화면, 100Hz 주사율",
-    "스피커 내장 · 눈 보호 모드 & 플리커 프리"
-   ],
-   "grade": 4.8,
-   "reviews": 50
-  },
-  {
-   "cat": "monitors",
    "code": "LS32D604UAKXKR",
    "name": "뷰피니티 S6 S60UD QHD USB-C (LS32D604U)",
    "usp": [
@@ -21996,6 +21967,18 @@
    ],
    "grade": 4.7,
    "reviews": 52
+  },
+  {
+   "cat": "monitors",
+   "code": "LS32DG304EKXKR",
+   "name": "오디세이 G3 G30D FHD 180Hz (LS32DG304)",
+   "usp": [
+    "빈틈을 놓치지 않는 실시간 반응 속도 180Hz 주사율, 1ms 응답속도(MPRT)",
+    "화려한 액션도 끊김 걱정 없이 플레이 AMD FreeSync",
+    "다양한 게임에서 정확히 조준 가상 조준점"
+   ],
+   "grade": 4.7,
+   "reviews": 93
   },
   {
    "cat": "monitors",
@@ -22019,7 +22002,19 @@
     "팬톤 인증 · 코어라이팅+ · 높이 조절 · 피봇 지원"
    ],
    "grade": 4.8,
-   "reviews": 150
+   "reviews": 152
+  },
+  {
+   "cat": "monitors",
+   "code": "LS32FM703UKXKR",
+   "name": "2025 스마트모니터 M7 M70F 4K 화이트 (LS32FM703)",
+   "usp": [
+    "좋아하는 OTT 콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "클릭 투 써치, AVA 기능",
+    "삼성 Knox 보안, 멀티 컨트롤, AirPlay 지원"
+   ],
+   "grade": 4.8,
+   "reviews": 676
   },
   {
    "cat": "monitors",
@@ -22041,19 +22036,9 @@
     "QHD 해상도 · 고속 IPS 패널",
     "200Hz 주사율 · 1ms 응답속도(GtG) · AMD 프리싱크",
     "HDR10 · 블랙 이퀄라이저 · 오토 소스 스위치"
-   ]
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32HG802SKXKR",
-   "name": "오디세이 OLED G8 G80SH 4K 240Hz (LS32HG802S)",
-   "usp": [
-    "QD-OLED in 4K · 글레어 프리 · OLED세이프가드+",
-    "0.03ms 응답속도(GtG) · VESA DisplayHDR 트루블랙500",
-    "팬톤인증 · DP 2.1&USB-C"
    ],
-   "grade": 4.8,
-   "reviews": 90
+   "grade": 5,
+   "reviews": 1
   },
   {
    "cat": "monitors",
@@ -22093,28 +22078,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS34HG552EKXKR",
-   "name": "오디세이 G5 G55H UWQHD 180Hz (LS34HG552)",
-   "usp": [
-    "Ultra WQHD 해상도(21:9) · 1000R 커브드 화면",
-    "180Hz 주사율 · 1ms 응답속도(GtG) · AMD 프리싱크",
-    "HDR10 · 블랙 이퀄라이저 · 오토 소스 스위치"
-   ]
-  },
-  {
-   "cat": "monitors",
-   "code": "LS37D800UAKXKR",
-   "name": "뷰피니티 S8 S80UD 4K USB-C (LS37D800U)",
-   "usp": [
-    "USB-C로 간편한 데이터 전송 및 충전",
-    "TÜV 인증 인텔리전트 아이 케어",
-    "간편 설치 스탠드 · 높이 조절/틸트/스위블"
-   ],
-   "grade": 4.8,
-   "reviews": 193
-  },
-  {
-   "cat": "monitors",
    "code": "LS37FG750EKXKR",
    "name": "오디세이 G7 G75F 4K 165Hz (LS37FG750)",
    "usp": [
@@ -22124,6 +22087,30 @@
    ],
    "grade": 4.7,
    "reviews": 27
+  },
+  {
+   "cat": "monitors",
+   "code": "LS40FG750EKXKR",
+   "name": "오디세이 G7 G75F 5K2K 180Hz (LS40FG750)",
+   "usp": [
+    "100.6cm 커브드 WUHD의 더욱 넓고 세밀한 화면이 선사하는 몰입감",
+    "또렷하게 찾아내는 어둠 속 숨겨진 디테일",
+    "최소화된 지연 시간으로 즐기는 빠른 액션"
+   ],
+   "grade": 5,
+   "reviews": 49
+  },
+  {
+   "cat": "monitors",
+   "code": "LS40H852TAKXKR",
+   "name": "뷰피니티 S8 S85TH 5K2K WUHD (LS40H852)",
+   "usp": [
+    "21:9 화면비 커브드 WUHD · HDR10+",
+    "144Hz 주사율 · 인텔리전트아이케어 · SDM",
+    "빌트인 스피커 · 이지커넥션 · 썬더볼트5"
+   ],
+   "grade": 5,
+   "reviews": 8
   },
   {
    "cat": "monitors",
@@ -22159,7 +22146,7 @@
     "거침없는 플레이를 위한 즉각적인 액션 144Hz 주사율"
    ],
    "grade": 4.7,
-   "reviews": 33
+   "reviews": 35
   },
   {
    "cat": "monitors",
@@ -22170,8 +22157,8 @@
     "빛 반사 방해 걱정 없는 또렷함 OLED 글레어 프리",
     "신속하고 부드러운 게임 플레이 240 Hz 주사율"
    ],
-   "grade": 4.7,
-   "reviews": 147
+   "grade": 4.8,
+   "reviews": 149
   },
   {
    "cat": "monitors",
@@ -22223,18 +22210,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS27FG530EKXKR",
-   "name": "오디세이 G5 G53F QHD 200Hz (LS27FG530)",
-   "usp": [
-    "QHD 해상도 & IPS 패널",
-    "200Hz 주사율 & 1ms 응답속도(MPRT)",
-    "블랙 이퀄라이저 & 자동 소스 스위치"
-   ],
-   "grade": 4.8,
-   "reviews": 207
-  },
-  {
-   "cat": "monitors",
    "code": "LS27FG600EKXKR",
    "name": "오디세이 G6 G60F QHD 350Hz (LS27FG600)",
    "usp": [
@@ -22243,19 +22218,7 @@
     "G-Sync 호환 · 피봇 · 높이조절 스탠드"
    ],
    "grade": 5,
-   "reviews": 20
-  },
-  {
-   "cat": "monitors",
-   "code": "LS27FG600SKXKR",
-   "name": "오디세이 OLED G6 G60SF QHD 500Hz (LS27FG600S)",
-   "usp": [
-    "세계최초 500Hz QD-OLED 모니터",
-    "OLED세이프가드+, OLED 3년 무상보증, 글레어프리",
-    "정확한 색 표현으로 사실감 넘치는 플레이"
-   ],
-   "grade": 4.9,
-   "reviews": 103
+   "reviews": 22
   },
   {
    "cat": "monitors",
@@ -22268,30 +22231,6 @@
    ],
    "grade": 3.4,
    "reviews": 10
-  },
-  {
-   "cat": "monitors",
-   "code": "LS27H700EAKXKR",
-   "name": "뷰피니티 S7 S70H 4K 블랙 (LS27H700)",
-   "usp": [
-    "4K UHD 해상도 · IPS패널 · HDR10",
-    "178˚ 광시야각 · DP & HDMI 다중 포트",
-    "아이 세이버 모드 · 삼성 디스플레이 매니저"
-   ],
-   "grade": 5,
-   "reviews": 11
-  },
-  {
-   "cat": "monitors",
-   "code": "LS27H802UAKXKR",
-   "name": "뷰피니티 S8 S80UH 4K USB-C (LS27H802U)",
-   "usp": [
-    "4K UHD 해상도 · IPS패널 · HDR10 · USB-C 90W",
-    "아이 세이버 모드 · 삼성 디스플레이 매니저",
-    "이지커넥션(E/C) · 인체공학적 스탠드(높이조절, 피봇)"
-   ],
-   "grade": 5,
-   "reviews": 44
   },
   {
    "cat": "monitors",
@@ -22315,7 +22254,7 @@
     "팬톤인증 · 피봇 · 높이조절 스탠드"
    ],
    "grade": 4.9,
-   "reviews": 24
+   "reviews": 25
   },
   {
    "cat": "monitors",
@@ -22331,18 +22270,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS32B800PXKXKR",
-   "name": "뷰피니티 S8 S80PB 4K HDR600 USB-C (LS32B800)",
-   "usp": [
-    "전문가 수준의 색상 구현, DCI-P3 98%",
-    "VESA HDR600 · 대낮에도 선명한 매트 디스플레이",
-    "USB-C 지원 · 높이 조절/틸트/스위블"
-   ],
-   "grade": 4.7,
-   "reviews": 39
-  },
-  {
-   "cat": "monitors",
    "code": "LS32CG554EKXKR",
    "name": "오디세이 G5 G55C QHD 165Hz 커브드 (LS32CG554)",
    "usp": [
@@ -22355,66 +22282,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS32DM503E-1WE",
-   "name": "무빙스타일 M5 (80.1cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "FHD 스마트 모니터 M5 + 무빙스탠드 (TV튜너 없음)",
-    "스마트TV 앱, 게이밍 허브, 화면 미러링 지원"
-   ],
-   "grade": 4.9,
-   "reviews": 176
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32FM700M-1ME",
-   "name": "무빙스타일 Edge (80cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "좋아하는 OTT콘텐츠를 바로 플레이, 스마트 TV 앱",
-    "정교하고 깔끔한 심리스 디자인"
-   ],
-   "grade": 4.8,
-   "reviews": 192
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32FM702U-2BE",
-   "name": "무빙스타일 M7 (80cm) 스탠다드",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "좋아하는 장면을 더욱 디테일하게 감상, 4K UHD 해상도",
-    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
-   ],
-   "grade": 4.8,
-   "reviews": 585
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32FM703U-1WE",
-   "name": "무빙스타일 M7 (80cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "4K AI 스마트 모니터 M7 + 무빙스탠드 (TV튜너 없음)",
-    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
-   ],
-   "grade": 4.8,
-   "reviews": 585
-  },
-  {
-   "cat": "monitors",
-   "code": "LS32HG732SKXKR",
-   "name": "오디세이 OLED G7 G73SH 4K 165Hz (LS32HG732S)",
-   "usp": [
-    "OLED in 4K · VESA DisplayHDR 트루블랙400",
-    "4K 165Hz/FHD 330Hz 듀얼모드 · 0.03ms 응답속도(GtG)",
-    "팬톤인증 · HDR10+게이밍 · 인체공학적 스탠드"
-   ],
-   "grade": 5,
-   "reviews": 9
-  },
-  {
-   "cat": "monitors",
    "code": "LS32HG802SKXKR",
    "name": "오디세이 OLED G8 G80SH 4K 240Hz (LS32HG802S)",
    "usp": [
@@ -22423,7 +22290,7 @@
     "팬톤인증 · DP 2.1&USB-C"
    ],
    "grade": 4.8,
-   "reviews": 90
+   "reviews": 91
   },
   {
    "cat": "monitors",
@@ -22483,7 +22350,7 @@
     "간편 설치 스탠드 · 높이 조절/틸트/스위블"
    ],
    "grade": 4.8,
-   "reviews": 193
+   "reviews": 194
   },
   {
    "cat": "monitors",
@@ -22499,42 +22366,6 @@
   },
   {
    "cat": "monitors",
-   "code": "LS40FG750EKXKR",
-   "name": "오디세이 G7 G75F 5K2K 180Hz (LS40FG750)",
-   "usp": [
-    "100.6cm 커브드 WUHD의 더욱 넓고 세밀한 화면이 선사하는 몰입감",
-    "또렷하게 찾아내는 어둠 속 숨겨진 디테일",
-    "최소화된 지연 시간으로 즐기는 빠른 액션"
-   ],
-   "grade": 5,
-   "reviews": 49
-  },
-  {
-   "cat": "monitors",
-   "code": "LS43FM702U-1BE",
-   "name": "무빙스타일 M7 (107.9cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "4K AI 스마트 모니터 M7 + 무빙스탠드 (TV튜너 없음)",
-    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
-   ],
-   "grade": 4.8,
-   "reviews": 608
-  },
-  {
-   "cat": "monitors",
-   "code": "LS43FM703U-1WE",
-   "name": "무빙스타일 M7 (107.9cm) 라이트",
-   "usp": [
-    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "4K AI 스마트 모니터 M7 + 무빙스탠드 (TV튜너 없음)",
-    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
-   ],
-   "grade": 4.8,
-   "reviews": 608
-  },
-  {
-   "cat": "monitors",
    "code": "LS49DG910SKXKR",
    "name": "오디세이 OLED G9 G91SD DQHD 144Hz (LS49DG910)",
    "usp": [
@@ -22543,7 +22374,7 @@
     "거침없는 플레이를 위한 즉각적인 액션 144Hz 주사율"
    ],
    "grade": 4.7,
-   "reviews": 33
+   "reviews": 35
   },
   {
    "cat": "monitors",
@@ -22554,8 +22385,8 @@
     "빛 반사 방해 걱정 없는 또렷함 OLED 글레어 프리",
     "신속하고 부드러운 게임 플레이 240 Hz 주사율"
    ],
-   "grade": 4.7,
-   "reviews": 147
+   "grade": 4.8,
+   "reviews": 149
   },
   {
    "cat": "monitors",
@@ -22595,7 +22426,7 @@
   },
   {
    "cat": "monitors",
-   "code": "LS32DM502E-1BE",
+   "code": "LS32DM503E-1WE",
    "name": "무빙스타일 M5 (80.1cm) 라이트",
    "usp": [
     "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
@@ -22607,39 +22438,27 @@
   },
   {
    "cat": "monitors",
-   "code": "LS32DM502E-2BE",
-   "name": "무빙스타일 M5 (80.1cm) 스탠다드",
+   "code": "LS32FM700M-1ME",
+   "name": "무빙스타일 Edge (80cm) 라이트",
    "usp": [
     "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
-    "FHD 스마트 모니터 M5 + 무빙스탠드 (TV튜너 없음)",
-    "스마트TV 앱, 게이밍 허브, 화면 미러링 지원"
+    "좋아하는 OTT콘텐츠를 바로 플레이, 스마트 TV 앱",
+    "정교하고 깔끔한 심리스 디자인"
    ],
-   "grade": 4.9,
-   "reviews": 176
+   "grade": 4.8,
+   "reviews": 193
   },
   {
    "cat": "monitors",
-   "code": "LS40H852TAKXKR",
-   "name": "뷰피니티 S8 S85TH 5K2K WUHD (LS40H852)",
+   "code": "LS43FM703U-1WE",
+   "name": "무빙스타일 M7 (107.9cm) 라이트",
    "usp": [
-    "21:9 화면비 커브드 WUHD · HDR10+",
-    "144Hz 주사율 · 인텔리전트아이케어 · SDM",
-    "빌트인 스피커 · 이지커넥션 · 썬더볼트5"
+    "삼성전자 로지텍 직접 설치로 믿을 수 있는 사용 환경",
+    "4K AI 스마트 모니터 M7 + 무빙스탠드 (TV튜너 없음)",
+    "스마트 TV 앱 지원, HDMI+USB-C 케이블 포함"
    ],
-   "grade": 5,
-   "reviews": 8
-  },
-  {
-   "cat": "monitors",
-   "code": "LS49CG954EKXKR",
-   "name": "오디세이 G9 G95C DQHD 240Hz (LS49CG954)",
-   "usp": [
-    "완벽한 몰입의 시작 1000 R 곡률 대화면",
-    "세계 정상급 성능 240 Hz 주사율",
-    "VESA CERTIFIED DisplayHDR™ 1000"
-   ],
-   "grade": 4.9,
-   "reviews": 38
+   "grade": 4.8,
+   "reviews": 612
   },
   {
    "cat": "monitors",
@@ -22683,7 +22502,7 @@
     "팬톤인증 · DP 2.1&USB-C"
    ],
    "grade": 4.8,
-   "reviews": 86
+   "reviews": 87
   },
   {
    "cat": "monitors",
@@ -22743,7 +22562,7 @@
     "어떤 공간에서든 스타일리시하게, 초슬림 디자인"
    ],
    "grade": 4.9,
-   "reviews": 500
+   "reviews": 501
   },
   {
    "cat": "monitors",
@@ -22779,7 +22598,7 @@
     "4K AI 업스케일링pro, AVA pro 기능"
    ],
    "grade": 4.4,
-   "reviews": 36
+   "reviews": 37
   },
   {
    "cat": "monitors",
@@ -23318,7 +23137,7 @@
     "스탠드 기둥 속 공간 활용"
    ],
    "grade": 5,
-   "reviews": 40
+   "reviews": 41
   },
   {
    "cat": "monitors",
@@ -23330,7 +23149,7 @@
     "스탠드 기둥 속 공간 활용"
    ],
    "grade": 4.8,
-   "reviews": 180
+   "reviews": 185
   },
   {
    "cat": "monitors",
@@ -23804,7 +23623,7 @@
     "누구나 쉽게 Wi-Fi 기능으로 스마트하게 프린팅"
    ],
    "grade": 4.5,
-   "reviews": 70
+   "reviews": 71
   },
   {
    "cat": "printers",
@@ -23828,7 +23647,7 @@
     "마음껏 사용해도 부담 없는 경제적인 출력비용"
    ],
    "grade": 4.6,
-   "reviews": 131
+   "reviews": 132
   },
   {
    "cat": "printers",
@@ -23912,7 +23731,7 @@
     "800 MHz CPU와 128 MB 메모리의 빠른 처리 속도"
    ],
    "grade": 4.7,
-   "reviews": 128
+   "reviews": 129
   },
   {
    "cat": "printers",
@@ -25174,7 +24993,7 @@
     "터치 한 번으로 출력! NFC로 출력을 간편하게",
     "Dual CPU의 장착으로 빨라진 출력속도"
    ],
-   "grade": 4,
+   "grade": 5,
    "reviews": 1
   },
   {
@@ -25229,7 +25048,9 @@
     "필요한 순간마다 압도적인 속도",
     "최적화된 설계로 탁월한 전력 제어",
     "선택의 고민을 덜어주는 넉넉한 저장 공간"
-   ]
+   ],
+   "grade": 5,
+   "reviews": 1
   },
   {
    "cat": "memory-storage",
@@ -25265,7 +25086,7 @@
     "간편한 호환으로 더욱 빨라진 일상"
    ],
    "grade": 5,
-   "reviews": 2
+   "reviews": 4
   },
   {
    "cat": "memory-storage",
@@ -25289,7 +25110,7 @@
     "어디서든 믿고 사용하는 호환성"
    ],
    "grade": 4.9,
-   "reviews": 96
+   "reviews": 97
   },
   {
    "cat": "memory-storage",
@@ -25736,7 +25557,7 @@
     "스마트싱스로 기기등록하고 삼성헬스 앱으로 데이터 연동"
    ],
    "grade": 4.5,
-   "reviews": 32
+   "reviews": 33
   },
   {
    "cat": "smartthings-accessories",
@@ -25761,15 +25582,15 @@
    "cat": "smartthings-accessories",
    "code": "IA70001-T1C01",
    "name": "스마트싱스 전용 ThingsOne T1 홈카메라 (홈캠)",
-   "grade": 4.4,
-   "reviews": 43
+   "grade": 4.3,
+   "reviews": 44
   },
   {
    "cat": "smartthings-accessories",
    "code": "CGM-ST-002",
    "name": "케어센스 에어 연속 혈당측정기(삼성헬스 연동) 1개(15일용)",
-   "grade": 4.2,
-   "reviews": 29
+   "grade": 4.3,
+   "reviews": 30
   },
   {
    "cat": "smartthings-accessories",
@@ -25781,7 +25602,7 @@
     "고성능 BLDC모터"
    ],
    "grade": 3.9,
-   "reviews": 41
+   "reviews": 42
   },
   {
    "cat": "smartthings-accessories",
@@ -25795,7 +25616,7 @@
    "code": "IA70001-SCT01",
    "name": "ThingsOne 싱스원 스마트 카드태그 (갤럭시 스마트싱스 전용)",
    "grade": 4.9,
-   "reviews": 41
+   "reviews": 42
   },
   {
    "cat": "smartthings-accessories",
@@ -25863,7 +25684,7 @@
    "code": "PSDSP200",
    "name": "AI하틴루 에스필로우 [릴렉스]",
    "grade": 4.2,
-   "reviews": 95
+   "reviews": 96
   },
   {
    "cat": "smartthings-accessories",
@@ -25909,7 +25730,7 @@
     "스마트싱스로 기기등록하고 삼성헬스 앱으로 데이터 연동"
    ],
    "grade": 4.4,
-   "reviews": 396
+   "reviews": 397
   },
   {
    "cat": "smartthings-accessories",
@@ -26020,6 +25841,26 @@
   },
   {
    "cat": "smartthings-accessories",
+   "code": "NF082K07-40LS",
+   "name": "나노리프 4D LED 라이트 스트립 조명 165cm (TV 및 모니터용)",
+   "usp": [
+    "몰입감 있는 4가지 스크린 미러 모드",
+    "1,600만개 색상으로 정확한 화면 색상 표현",
+    "스마트싱스 앱으로 간편한 제어"
+   ]
+  },
+  {
+   "cat": "smartthings-accessories",
+   "code": "NF082K07-52LS",
+   "name": "나노리프 4D LED 라이트 스트립 조명 216cm (TV 및 모니터용)",
+   "usp": [
+    "몰입감 있는 4가지 스크린 미러 모드",
+    "1,600만개 색상으로 정확한 화면 색상 표현",
+    "스마트싱스 앱으로 간편한 제어"
+   ]
+  },
+  {
+   "cat": "smartthings-accessories",
    "code": "IM6001-V4P03",
    "name": "ThingsOne 싱스원 스마트 홈 허브 (V4, 스마트싱스 전용)",
    "grade": 4.8,
@@ -26061,7 +25902,9 @@
    "usp": [
     "벽면에 부착하면 스위치, 떼어내면 리모컨",
     "나만의 모드를 설정가능"
-   ]
+   ],
+   "grade": 5,
+   "reviews": 1
   },
   {
    "cat": "smartthings-accessories",
@@ -26132,8 +25975,8 @@
     "풀 스테인리스 노즐로 보다 청결하게",
     "물청소가 가능한 IPX5 본체, IPX7 조작부 방수 등급"
    ],
-   "grade": 4.3,
-   "reviews": 18
+   "grade": 4.1,
+   "reviews": 22
   },
   {
    "cat": "smartthings-accessories",
@@ -26157,7 +26000,7 @@
     "회전형으로 360° 집 구석구석 모니터링"
    ],
    "grade": 4.7,
-   "reviews": 30
+   "reviews": 31
   },
   {
    "cat": "smartthings-accessories",
@@ -26234,7 +26077,7 @@
     "실내 온도계가 필요 없는 온도 감지"
    ],
    "grade": 4.7,
-   "reviews": 55
+   "reviews": 56
   },
   {
    "cat": "smartthings-accessories",
@@ -26586,28 +26429,8 @@
     "UV살균 + 저온 가열로 이중 살균 안심",
     "스마트폰으로 간편하게 조절 가능한 가습기"
    ],
-   "grade": 4.3,
-   "reviews": 16
-  },
-  {
-   "cat": "smartthings-accessories",
-   "code": "NF082K07-40LS",
-   "name": "나노리프 4D LED 라이트 스트립 조명 165cm (TV 및 모니터용)",
-   "usp": [
-    "몰입감 있는 4가지 스크린 미러 모드",
-    "1,600만개 색상으로 정확한 화면 색상 표현",
-    "스마트싱스 앱으로 간편한 제어"
-   ]
-  },
-  {
-   "cat": "smartthings-accessories",
-   "code": "NF082K07-52LS",
-   "name": "나노리프 4D LED 라이트 스트립 조명 216cm (TV 및 모니터용)",
-   "usp": [
-    "몰입감 있는 4가지 스크린 미러 모드",
-    "1,600만개 색상으로 정확한 화면 색상 표현",
-    "스마트싱스 앱으로 간편한 제어"
-   ]
+   "grade": 4.4,
+   "reviews": 17
   },
   {
    "cat": "smartthings-accessories",
@@ -26667,7 +26490,7 @@
     "케이스로 더욱 안전하고 편리한 휴대"
    ],
    "grade": 4.8,
-   "reviews": 1015
+   "reviews": 1016
   },
   {
    "cat": "smartthings-accessories",
@@ -26727,7 +26550,19 @@
     "어디에 올려도 균일하고 강력한 화력 콰트로 플렉스존"
    ],
    "grade": 4.8,
-   "reviews": 534
+   "reviews": 536
+  },
+  {
+   "cat": "cooking",
+   "code": "NQ50T8539BK",
+   "name": "Bespoke 콤팩트 오븐 50L",
+   "usp": [
+    "더 빠르고 고르게 조리되는 듀얼 팬",
+    "기름 없이도 바삭하게 에어프라이",
+    "편리하고 세련된 디자인 대화면 LCD와 다이얼"
+   ],
+   "grade": 4.6,
+   "reviews": 24
   },
   {
    "cat": "cooking",
@@ -26751,7 +26586,7 @@
     "많은 요리도 한 번에 3,400W 초고화력 빠른 조리 All MAX 부스트"
    ],
    "grade": 4.7,
-   "reviews": 690
+   "reviews": 702
   },
   {
    "cat": "cooking",
@@ -26763,7 +26598,7 @@
     "더 쉽고, 입맛에 딱 맞게 스마트쿡"
    ],
    "grade": 4.8,
-   "reviews": 630
+   "reviews": 633
   },
   {
    "cat": "cooking",
@@ -26775,7 +26610,19 @@
     "더 쉽고, 입맛에 딱 맞게 스마트쿡"
    ],
    "grade": 4.7,
-   "reviews": 369
+   "reviews": 371
+  },
+  {
+   "cat": "cooking",
+   "code": "NV75T9879CD",
+   "name": "Infinite Line 빌트인 전기오븐 75L",
+   "usp": [
+    "상/하단 동시 조리 가능한 듀얼 쿡",
+    "기름 없이도 바삭하게 에어프라이",
+    "겉은 바삭, 속은 촉촉 고메 베이퍼"
+   ],
+   "grade": 3,
+   "reviews": 2
   },
   {
    "cat": "cooking",
@@ -26799,7 +26646,7 @@
     "많은 요리도 한 번에 3,400W 초고화력 빠른 조리 All MAX 부스트"
    ],
    "grade": 4.7,
-   "reviews": 690
+   "reviews": 702
   },
   {
    "cat": "cooking",
@@ -26839,6 +26686,18 @@
   },
   {
    "cat": "cooking",
+   "code": "NQ50T9539BD",
+   "name": "Infinite Line 콤팩트 오븐 50L",
+   "usp": [
+    "두개의 회전팬으로 빠르게 듀얼 팬",
+    "기름 없이도 바삭하게 에어프라이",
+    "겉은 바삭, 속은 촉촉 고메 베이퍼"
+   ],
+   "grade": 4.2,
+   "reviews": 6
+  },
+  {
+   "cat": "cooking",
    "code": "NK90B8770AG",
    "name": "Bespoke AI 후드 Air",
    "usp": [
@@ -26859,7 +26718,7 @@
     "다양한 조합의 2가지 요리도 동시에"
    ],
    "grade": 4.8,
-   "reviews": 356
+   "reviews": 361
   },
   {
    "cat": "cooking",
@@ -26875,18 +26734,6 @@
   },
   {
    "cat": "cooking",
-   "code": "NQ50T8539BK",
-   "name": "Bespoke 콤팩트 오븐 50L",
-   "usp": [
-    "더 빠르고 고르게 조리되는 듀얼 팬",
-    "기름 없이도 바삭하게 에어프라이",
-    "편리하고 세련된 디자인 대화면 LCD와 다이얼"
-   ],
-   "grade": 4.6,
-   "reviews": 23
-  },
-  {
-   "cat": "cooking",
    "code": "MO22A7797CV2",
    "name": "Bespoke 큐커 멀티 22L",
    "usp": [
@@ -26895,7 +26742,7 @@
     "큐커 하나로 4-in-1 다재다능쿡"
    ],
    "grade": 4.8,
-   "reviews": 433
+   "reviews": 434
   },
   {
    "cat": "cooking",
@@ -26911,30 +26758,6 @@
   },
   {
    "cat": "cooking",
-   "code": "NV75T9879CD",
-   "name": "Infinite Line 빌트인 전기오븐 75L",
-   "usp": [
-    "상/하단 동시 조리 가능한 듀얼 쿡",
-    "기름 없이도 바삭하게 에어프라이",
-    "겉은 바삭, 속은 촉촉 고메 베이퍼"
-   ],
-   "grade": 3,
-   "reviews": 2
-  },
-  {
-   "cat": "cooking",
-   "code": "NQ50T9539BD",
-   "name": "Infinite Line 콤팩트 오븐 50L",
-   "usp": [
-    "두개의 회전팬으로 빠르게 듀얼 팬",
-    "기름 없이도 바삭하게 에어프라이",
-    "겉은 바삭, 속은 촉촉 고메 베이퍼"
-   ],
-   "grade": 4.2,
-   "reviews": 6
-  },
-  {
-   "cat": "cooking",
    "code": "MG23T5018CC",
    "name": "Bespoke 전자레인지 23L (그릴 프라이)",
    "usp": [
@@ -26943,7 +26766,7 @@
     "다양한 컬러 세련된 글라스 감성디자인"
    ],
    "grade": 4.9,
-   "reviews": 329
+   "reviews": 330
   },
   {
    "cat": "cooking",
@@ -26955,7 +26778,7 @@
     "골고루 빠르게 가열하는 3면 입체 가열"
    ],
    "grade": 4.8,
-   "reviews": 241
+   "reviews": 242
   },
   {
    "cat": "cooking",
@@ -27015,7 +26838,7 @@
     "더 쉽고, 입맛에 닥 맞게 조리 가능한 맞춤요리"
    ],
    "grade": 4.8,
-   "reviews": 662
+   "reviews": 665
   }
  ]
 }

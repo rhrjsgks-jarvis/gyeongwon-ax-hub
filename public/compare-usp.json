@@ -2,7 +2,7 @@
  "_note": "삼성닷컴 공식 셀링포인트(uspDescList). 제조사가 제품마다 싣는 문구라 상담사가 그대로 읽어도 된다. 기능 비교의 `on` 과 섞지 않는다 — 그쪽은 개수가 그대로 종합 스코어라 한쪽만 늘리면 점수가 조작된다.",
  "_source": "scripts/fixtures/sec-usp.json (삼성닷컴 goodsList API)",
  "_tool": "node scripts/build-compare-usp.mjs",
- "collectedAt": "2026-10-16",
+ "collectedAt": "2026-10-22",
  "models": {
   "BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W": {
    "usp": [
@@ -12,7 +12,7 @@
    ],
    "src": "RM90H91B1W",
    "grade": 4.9,
-   "reviews": 33
+   "reviews": 34
   },
   "BESPOKE AI 4도어 (902L) RM70F90M1GD": {
    "usp": [
@@ -22,7 +22,7 @@
    ],
    "src": "RM70F90M1GD",
    "grade": 4.8,
-   "reviews": 470
+   "reviews": 473
   },
   "BESPOKE 4도어 에센셜 (874L) RF85DB90F1AP": {
    "usp": [
@@ -42,7 +42,7 @@
    ],
    "src": "RS84DB5002CW",
    "grade": 4.8,
-   "reviews": 304
+   "reviews": 307
   },
   "BESPOKE AI 콤보 프리히트 7인치 LCD (세탁25+건조20kg) WD90H25AHS": {
    "usp": [
@@ -51,7 +51,7 @@
    ],
    "src": "WD90H25AHS",
    "grade": 4.9,
-   "reviews": 1654
+   "reviews": 1688
   },
   "BESPOKE AI 콤보 프리히트 기본형 (세탁25+건조20kg) WD90H25BHY": {
    "usp": [
@@ -60,7 +60,7 @@
    ],
    "src": "WD90H25BHY",
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   "BESPOKE 그랑데 AI 세탁기 (21kg) WF21CB6650BW": {
    "usp": [
@@ -70,7 +70,7 @@
    ],
    "src": "WF21CB6650BW",
    "grade": 4.9,
-   "reviews": 334
+   "reviews": 336
   },
   "AI 세탁기 (21kg) WF21DG6650BW": {
    "usp": [
@@ -80,7 +80,7 @@
    ],
    "src": "WF21DG6650BW",
    "grade": 4.8,
-   "reviews": 309
+   "reviews": 310
   },
   "AI 무풍콤보 벽걸이 (11평) AR60F11D11WT": {
    "usp": [
@@ -90,7 +90,7 @@
    ],
    "src": "AR60F11D11WT",
    "grade": 4.8,
-   "reviews": 237
+   "reviews": 238
   },
   "AI 무풍콤보 벽걸이 (9평) AR60F09D11WT": {
    "usp": [
@@ -100,7 +100,7 @@
    ],
    "src": "AR60F09D11WT",
    "grade": 4.8,
-   "reviews": 173
+   "reviews": 174
   },
   "AI 무풍콤보 벽걸이 (7평) AR60F07D12WT": {
    "usp": [
@@ -110,7 +110,7 @@
    ],
    "src": "AR60F07D12WT",
    "grade": 4.8,
-   "reviews": 336
+   "reviews": 339
   },
   "2026 Micro RGB R95H 85인치 (KMR85RH95AFXKR)": {
    "usp": [
@@ -120,7 +120,7 @@
    ],
    "src": "KMR85RH95AFXKR",
    "grade": 4.7,
-   "reviews": 406
+   "reviews": 427
   },
   "2026 Neo QLED QNH70 85인치 (KQ85QNH70)": {
    "usp": [
@@ -130,7 +130,7 @@
    ],
    "src": "KQ85QNH70AFXKR",
    "grade": 4.7,
-   "reviews": 688,
+   "reviews": 693,
    "how": "prefix"
   },
   "비스포크 AI 제트 400W (VS90F40CSG)": {
@@ -141,17 +141,7 @@
    ],
    "src": "VS90F40CSG",
    "grade": 4.8,
-   "reviews": 172
-  },
-  "비스포크 AI 제트 Lite 280W (VS28D950AIW)": {
-   "usp": [
-    "2.31kg 무게로 가볍고 최대 280W 흡입력",
-    "청소 환경을 감지해 최적의 흡입력을 구현하는 AI 모드 2.0",
-    "가볍고 슬림한 디자인으로 편안한 청소 액티브 슬림 브러시"
-   ],
-   "src": "VS28D950AIW",
-   "grade": 4.8,
-   "reviews": 263
+   "reviews": 173
   },
   "Galaxy S26 Ultra (256GB)": {
    "usp": [
@@ -161,7 +151,7 @@
    ],
    "src": "SM-S948NZVBKOO",
    "grade": 4.9,
-   "reviews": 15306,
+   "reviews": 15338,
    "how": "name"
   },
   "Galaxy S26+ (256GB)": {
@@ -172,7 +162,7 @@
    ],
    "src": "SM-S947NZVAKOO",
    "grade": 4.9,
-   "reviews": 3618,
+   "reviews": 3633,
    "how": "name"
   },
   "Galaxy S26 (256GB)": {
@@ -183,7 +173,7 @@
    ],
    "src": "SM-S942NZVEKOO",
    "grade": 4.9,
-   "reviews": 4098,
+   "reviews": 4121,
    "how": "name"
   },
   "Galaxy 퀀텀6 (128GB)": {
@@ -205,7 +195,7 @@
    ],
    "src": "SM-A366NZAAKOO",
    "grade": 4.7,
-   "reviews": 1001,
+   "reviews": 1002,
    "how": "name"
   },
   "BESPOKE AI 콤보 프리히트 7인치 LCD (일체형, 세탁25+건조20kg) WD90H25AHS": {
@@ -215,7 +205,7 @@
    ],
    "src": "WD90H25AHS",
    "grade": 4.9,
-   "reviews": 1654
+   "reviews": 1688
   },
   "BESPOKE AI 콤보 프리히트 기본형 (일체형, 세탁25+건조20kg) WD90H25BHY": {
    "usp": [
@@ -224,7 +214,7 @@
    ],
    "src": "WD90H25BHY",
    "grade": 4.9,
-   "reviews": 114
+   "reviews": 116
   },
   "Bespoke AI 식기세척기 빌트인 (14인용, 컵 맞춤 세척) DW90F79P1U01S": {
    "usp": [
@@ -254,7 +244,7 @@
    ],
    "src": "NT960UJH-XC94Y",
    "grade": 4.9,
-   "reviews": 134,
+   "reviews": 137,
    "how": "prefix"
   },
   "Galaxy Book6 Pro (16인치) NT960XJG": {
@@ -265,7 +255,7 @@
    ],
    "src": "NT960XJG-KD72G",
    "grade": 4.9,
-   "reviews": 1003,
+   "reviews": 1012,
    "how": "prefix"
   },
   "Galaxy Book6 Pro (14인치) NT940XJG": {
@@ -276,7 +266,7 @@
    ],
    "src": "NT940XJG-KC51G",
    "grade": 4.9,
-   "reviews": 73,
+   "reviews": 76,
    "how": "prefix"
   },
   "Galaxy Book6 (16인치) NT760VJG": {
@@ -285,9 +275,9 @@
     "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
-   "src": "NT760VJG-KC51G",
+   "src": "NT760VJG-KC51S",
    "grade": 4.8,
-   "reviews": 150,
+   "reviews": 152,
    "how": "prefix"
   },
   "AI 김치플러스 4도어 490L(냄새케어 김치통) RK70F49F1DD": {
@@ -298,7 +288,7 @@
    ],
    "src": "RK70F49F1DD",
    "grade": 4.8,
-   "reviews": 117
+   "reviews": 119
   },
   "AI 김치플러스 4도어 490L RQ49DB94H2AP": {
    "usp": [
@@ -318,7 +308,7 @@
    ],
    "src": "DF90H24R5C",
    "grade": 4.9,
-   "reviews": 278
+   "reviews": 283
   },
   "비스포크 AI 에어드레서 대용량 5~9벌 DF24CB9900CR": {
    "usp": [
@@ -358,7 +348,7 @@
    ],
    "src": "AP90F08163UDD",
    "grade": 4.8,
-   "reviews": 204
+   "reviews": 205
   },
   "Infinite AI 공기청정기 (33㎡, S필터, 1등급) AP90H03163UGD": {
    "usp": [
@@ -367,8 +357,8 @@
     "실내 공기질까지 학습해 맞춰주는 맞춤 청정 AI+"
    ],
    "src": "AP90H03163UGD",
-   "grade": 4.8,
-   "reviews": 76
+   "grade": 4.7,
+   "reviews": 80
   },
   "블루스카이 5500 (60㎡) AP70F06103RVD": {
    "usp": [
@@ -378,7 +368,7 @@
    ],
    "src": "AP70F06103RVD",
    "grade": 4.9,
-   "reviews": 120
+   "reviews": 121
   },
   "비스포크 AI 공기청정기 (33㎡, UV LED 살균) AP90H03193EGD": {
    "usp": [
@@ -388,7 +378,7 @@
    ],
    "src": "AP90H03193EGD",
    "grade": 4.9,
-   "reviews": 149
+   "reviews": 153
   },
   "블루스카이 3100 (33㎡) AP70F03102RVD": {
    "usp": [
@@ -398,7 +388,7 @@
    ],
    "src": "AP70F03102RVD",
    "grade": 4.8,
-   "reviews": 234
+   "reviews": 236
   }
  }
 }
