@@ -196,17 +196,38 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
  * **`screen` 으로 묶는다** — A4 인쇄 폭(약 718px)이 이 경계에 걸려, 묶지 않으면 종이에 두 단 격자가 나간다.
  */
 @media screen and (min-width:720px){
-  main{max-width:1180px!important;display:grid;grid-template-columns:minmax(250px,31%) minmax(0,1fr);
+  main{max-width:1180px!important;display:grid;grid-template-columns:220px minmax(0,1fr);
     gap:16px;align-items:start;padding:18px 20px}
-  main>.card:first-child{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:auto}
-  main>.card:first-child .cats{grid-template-columns:repeat(3,1fr);gap:6px}
+  main>.card:first-child{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:auto;padding:8px}
+  /* 단계 메뉴(2026-10-23 사장님 승인 시안) — 타일·형태 칩 대신 대분류 → 중분류로 밀려 들어간다 */
+  main>.card:first-child>.card-title,main>.card:first-child .cats,main>.card:first-child .cat-vars,
+  main>.card:first-child .cat-search,#cat-search-empty{display:none!important}
+  .dmenu{display:block;overflow:hidden}
   #result{display:block}
   #result:not(.visible)>*{display:none}
-  #result::before{content:'② 설치 요건';display:block;font-size:12px;font-weight:700;color:var(--gray);
-    letter-spacing:.5px;margin:2px 0 10px}
-  #result:not(.visible)::before{content:'② 왼쪽에서 품목을 고르세요';background:#fff;border:1.5px dashed var(--border);
-    border-radius:var(--radius);padding:28px 18px;text-align:center;font-size:13px}
 }
+@media (max-width:719px){.dmenu{display:none}}
+.dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
+.dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+/* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
+.dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+  border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;
+  padding:9px 10px;margin-bottom:6px;border-radius:10px;cursor:pointer;box-shadow:0 0 0 4px #fff}
+.dm-back:hover{background:#E0E7FF}
+.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
+  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+.dm-it:hover{background:#F3F5FA}
+.dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
+.dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0}
+.dm-it .ci svg{width:18px;height:18px}
+.dm-it .nm{flex:1;min-width:0;word-break:keep-all}
+.dm-it .ar{color:#9CA3AF;font-size:13px}
+.dm-it:focus-visible,.dm-back:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+@keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ax-in{animation:axIn .18s ease-out}
+@media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
+@media print{.dmenu{display:none!important}}
 @media screen and (min-width:1000px){
   #main-content{column-count:2;column-gap:12px}
   #main-content>*{break-inside:avoid;-webkit-column-break-inside:avoid}
@@ -234,6 +255,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <input type="text" class="cat-search" id="cat-search" placeholder="키워드 검색 (예: 키친핏, 4도어, 페어, 로봇청소기)"
              oninput="filterCats(this.value)">
       <!-- 타일은 INSTALL_DB 에서 세워 그린다(renderCats) — 손으로 적어 두면 DB 와 어긋난다 -->
+      <nav class="dmenu" id="dmenu" aria-label="품목 단계 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
       <div class="cats" id="cats"></div>
       <div class="cat-vars" id="cat-vars"></div>
       <div class="cat-search-empty" id="cat-search-empty">검색 결과가 없습니다.</div>
@@ -1383,6 +1405,52 @@ function renderCats() {
     };
   });
 }
+/*
+ * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 「단계메뉴 좋습니다」) ──
+ * 대분류(품목)를 누르면 메뉴가 왼쪽으로 밀리며 중분류(형태)가 나온다. 아래 단계가 없는 품목은 누르면 바로 펼친다.
+ * 폰(719px 이하)은 타일 그대로다 — 이 메뉴는 CSS 로 태블릿에서만 보인다.
+ */
+let dmTile = '', dmPushed = false;
+/* 기기 뒤로가기(제스처·하드키)도 메뉴를 한 단계 올린다 — 단계를 열 때 back-kit 에 한 칸 쌓는다 */
+function dmUp() { dmTile = ''; dmPushed = false; renderDrill(); dmFocus(); }
+function dmOpen(tile) {
+  if (dmTile === tile) return;
+  dmTile = tile;
+  if (window.Back && !dmPushed) { dmPushed = true; Back.open(dmUp, () => !!dmTile); }
+}
+function renderDrill() {
+  const st = document.getElementById('dm-stack');
+  if (!st) return;
+  const curTile = currentCat ? tileOf(currentCat) : '';
+  const lv0 = '<div class="dm-lvl"' + (dmTile ? ' aria-hidden="true"' : '') + '><div class="dm-t">품목</div>'
+    + tiles().map((t) => {
+      const vs = variantsOf(t), grouped = vs.length > 1 || vs[0] !== t;
+      return '<button type="button" class="dm-it' + (curTile === t && !grouped ? ' on' : '') + '" data-tile="' + escAttr(t) + '"'
+        + (grouped ? ' data-group="1"' : '') + (dmTile ? ' tabindex="-1"' : '') + '>'
+        + '<span class="ci">' + (grouped ? tileIcon(t) : catIcon(t)) + '</span><span class="nm">' + escHtml(catLabel(t)) + '</span>'
+        + (grouped ? '<span class="ar">›</span>' : '') + '</button>';
+    }).join('') + '</div>';
+  const lv1 = dmTile ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 품목으로</button><div class="dm-t">' + escHtml(dmTile) + '</div>'
+    + variantsOf(dmTile).map((k) => '<button type="button" class="dm-it' + (k === currentCat ? ' on' : '') + '" data-cat="' + escAttr(k) + '">'
+      + '<span class="ci">' + catIcon(k) + '</span><span class="nm">' + escHtml(varLabel(k)) + '</span></button>').join('') + '</div>' : '';
+  st.innerHTML = lv0 + lv1;
+  st.style.transform = dmTile ? 'translateX(-100%)' : 'none';
+}
+function dmFocus() {
+  const lv = document.querySelectorAll('#dm-stack .dm-lvl');
+  const f = lv.length && lv[lv.length - 1].querySelector('.dm-back, .dm-it');
+  if (f) f.focus({ preventScroll: true });
+}
+document.addEventListener('click', function (e) {
+  const st = document.getElementById('dm-stack');
+  if (!st || !st.contains(e.target)) return;
+  if (e.target.closest('.dm-back')) { const was = dmPushed; dmUp(); if (was && window.Back) Back.done(); return; }
+  const b = e.target.closest('.dm-it'); if (!b) return;
+  if (b.dataset.group) { dmOpen(b.dataset.tile); renderDrill(); dmFocus(); return; }
+  selectCat(b.dataset.cat || b.dataset.tile);
+});
+function isTabletWide() { return !!(window.matchMedia && matchMedia('screen and (min-width:720px)').matches); }
+
 /* 형태 칸 — 고른 품목이 묶음이면 그 형태들을, 검색 중이면 친 말에 맞는 형태를 띄운다 */
 function renderVars(list, cur, head) {
   const box = document.getElementById('cat-vars');
@@ -1506,6 +1574,11 @@ function selectCat(cat) {
   renderPrep(cat);
 
   document.getElementById('result').classList.add('visible');
+  /* 단계 메뉴 — 형태가 있는 품목이면 그 단계를 열어 둔다(딥링크로 들어와도 어디인지 보이게) */
+  if (tileOf(cat) !== cat || variantsOf(tileOf(cat)).length > 1) dmOpen(tileOf(cat));
+  else if (dmTile) { const was = dmPushed; dmTile = ''; dmPushed = false; if (was && window.Back) Back.done(); }
+  renderDrill();
+  const rs = document.getElementById('result'); rs.classList.remove('ax-in'); void rs.offsetWidth; rs.classList.add('ax-in');
   const wide = window.matchMedia && matchMedia('screen and (min-width:720px)').matches;
   if (!wide) document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -1617,7 +1690,9 @@ renderCats();
   if (prep && !cat) {
     const to = prep === 'safety' ? '세탁기·콤보' : ((PREP_CAT[prep] || [])[0]);
     if (to && INSTALL_DB[to]) { selectCat(to); renderPrep(to, p.get('pid') || prep); }
-  }
+  }  /* 태블릿은 고르기 전 빈 오른쪽을 두지 않는다 — 첫 품목의 첫 형태를 미리 연다(딥링크가 있으면 그쪽) */
+  if (!currentCat && isTabletWide()) selectCat(variantsOf(tiles()[0])[0] || tiles()[0]);
+  renderDrill();
 })();
 
 /*
