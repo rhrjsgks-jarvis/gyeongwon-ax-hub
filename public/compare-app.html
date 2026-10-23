@@ -322,7 +322,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   #tab-db main{max-width:1180px!important;display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
   .cmp-side{display:contents}
   .cmp-side>.card:first-child{display:none!important}
-  #tab-db .dmenu{display:block;grid-column:1;grid-row:1/span 2;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;
+  #tab-db .dmenu{display:block;grid-column:1;grid-row:1/span 2;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:hidden;--dm-h:calc(100vh - 40px);
     background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;margin:0}
   #model-section{grid-column:2;grid-row:1;margin:0}
   #model-section .compare-btn{display:none}
@@ -332,6 +332,14 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 .dmenu{overflow:hidden}
 .dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
 .dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+/* 상하 드래그(2026-10-23 사장님 지적 — 「상하작동시 다같이 움직이면서 잘 작동이 안 됩니다」).
+   예전에는 메뉴 상자 하나가 단계 둘을 함께 스크롤해서, 숨은 단계까지 같이 움직이고 끝에 닿으면 화면 전체가 끌려갔다.
+   지금은 **보이는 단계만** 제 안에서 스크롤하고(숨은 단계는 높이 0), 끝에 닿아도 바깥으로 넘기지 않는다. */
+@media screen and (min-width:720px){
+  .dm-stack{align-items:flex-start}
+  .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
+}
 .dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
 .dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
   color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}

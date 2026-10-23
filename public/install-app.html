@@ -198,7 +198,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 @media screen and (min-width:720px){
   main{max-width:1180px!important;display:grid;grid-template-columns:220px minmax(0,1fr);
     gap:16px;align-items:start;padding:18px 20px}
-  main>.card:first-child{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:auto;padding:8px}
+  main>.card:first-child{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:hidden;padding:8px;--dm-h:calc(100vh - 40px)}
   /* 단계 메뉴(2026-10-23 사장님 승인 시안) — 타일·형태 칩 대신 대분류 → 중분류로 밀려 들어간다 */
   main>.card:first-child>.card-title,main>.card:first-child .cats,main>.card:first-child .cat-vars,
   main>.card:first-child .cat-search,#cat-search-empty{display:none!important}
@@ -209,6 +209,14 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 @media (max-width:719px){.dmenu{display:none}}
 .dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
 .dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+/* 상하 드래그(2026-10-23 사장님 지적 — 「상하작동시 다같이 움직이면서 잘 작동이 안 됩니다」).
+   예전에는 메뉴 상자 하나가 단계 둘을 함께 스크롤해서, 숨은 단계까지 같이 움직이고 끝에 닿으면 화면 전체가 끌려갔다.
+   지금은 **보이는 단계만** 제 안에서 스크롤하고(숨은 단계는 높이 0), 끝에 닿아도 바깥으로 넘기지 않는다. */
+@media screen and (min-width:720px){
+  .dm-stack{align-items:flex-start}
+  .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
+}
 /* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
 .dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
   border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;

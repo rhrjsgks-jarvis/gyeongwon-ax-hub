@@ -419,6 +419,19 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
   .bp-i.haspic .bp-img{aspect-ratio:3/1!important}
   .fold.dk{background:#fff!important;border:1px solid #D1D5DB!important}
   .fold.dk>.fold-h .fold-t{color:#0D1B7A!important}.fold.dk>.fold-h .fold-s{color:#4B5563!important}
+  /* 타임라인(2026-10-23 사장님 지적 — 「인쇄 UI 로 나오지 않고 그냥 두 장으로 나뉜다」).
+     고르는 칸·「다시 선택하기」는 빼고 「구독 시작」 한 줄로 대신하며, 회차는 두 단 · 회차 중간에서 안 잘린다 */
+  .wrap,#timelinePane{background:#fff!important}
+  .wrap{min-height:0!important}   /* 화면용 100vh 가 남으면 꼬리말이 빈 둘째 장으로 밀린다 */
+  #timelinePane .tl-ctrl{display:none!important}
+  .tl-pr{font-size:11.5px;font-weight:800;color:#0D1B7A;margin:2px 0 4px}
+  .tl-bar{padding:2px 0 4px;break-inside:avoid}
+  .tl-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0}
+  .tl-item{margin:0;border:1px solid #D1D5DB;border-radius:8px;padding:7px 9px;gap:8px;break-inside:avoid}
+  .tl-dot{width:26px;height:26px;font-size:10px}
+  .tl-round{font-size:11.5px}.tl-date{font-size:10px}
+  .tl-items{margin-top:4px;gap:3px}.tl-items b{font-size:10.5px}.tl-items span{font-size:9.5px}
+  .tl-note{font-size:9.5px;padding:5px 7px}
 }
   @media(min-width:1024px){ .wrap,.btm { max-width:960px } }
   @media(min-width:1440px){ .wrap,.btm { max-width:1140px } }
@@ -2815,6 +2828,7 @@ function renderTimeline(){
       '<div class="tl-row"><select class="tl-sel" onchange="tlYear=+this.value;renderTimeline()">'+yearOpts+'</select>' +
       '<select class="tl-sel" style="flex:.5" onchange="tlMonth=+this.value;renderTimeline()">'+monthOpts+'</select></div>' +
     '</div>' +
+    '<div class="pr-only tl-pr">구독 시작 '+tlYear+'년 '+tlMonth+'월 기준</div>' +
     '<div class="tl-bar">'+bar+'</div>' +
     /* 비례 축을 없애며 빨간 점선도 없앴다. 지난 방문은 회색 점으로 갈리므로 그렇게 적는다 —
        없는 표시를 설명하는 안내가 남아 있으면 화면이 거짓말을 한다. */

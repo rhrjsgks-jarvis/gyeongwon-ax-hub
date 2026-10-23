@@ -806,3 +806,32 @@
   global.shareCard = shareCard;
   global.mountShareButton = mountShareButton;
 })(window);
+
+/*
+ * ── 태블릿 단계 메뉴 높이 맞춤 (2026-10-23 사장님 지적 — 「상하작동시 다같이 움직이면서 잘 작동이 안 됩니다」) ──
+ * 단계마다 제 안에서 스크롤하고 끝에 닿아도 화면 전체를 끌지 않는다(각 앱 CSS 의 .dm-lvl).
+ * 그러면 화면을 올리기 전에는 메뉴 아래쪽이 창 밖에 걸려 닿을 수 없으므로, **지금 보이는 높이**를
+ * --dm-h 로 알려 준다. 메뉴가 없는 앱·폰 폭에서는 아무 일도 하지 않는다.
+ */
+(function () {
+  var raf = 0;
+  function fit() {
+    raf = 0;
+    var ms = document.querySelectorAll('.dmenu');
+    for (var i = 0; i < ms.length; i++) {
+      var m = ms[i];
+      if (!m.offsetParent || window.innerWidth < 720) { m.style.removeProperty('--dm-h'); continue; }
+      /* 화면 확대(허브의 「가」 단추 — html 에 zoom)가 걸려 있으면 잰 값은 확대된 화면 기준이다.
+         CSS px 로 되돌려 넣는다 — 안 그러면 확대만큼 또 커져 메뉴 아래가 창 밖으로 나간다 */
+      var z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+      var top = Math.max(0, m.getBoundingClientRect().top);
+      m.style.setProperty('--dm-h', Math.max(160, Math.round((window.innerHeight - top - 24) / z)) + 'px');
+    }
+  }
+  function ask() { if (!raf) raf = (window.requestAnimationFrame || function (f) { return setTimeout(f, 16); })(fit); }
+  window.addEventListener('scroll', ask, { passive: true });
+  window.addEventListener('resize', ask);
+  document.addEventListener('click', function () { setTimeout(ask, 0); }, true);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ask); else ask();
+  setTimeout(ask, 600);
+})();

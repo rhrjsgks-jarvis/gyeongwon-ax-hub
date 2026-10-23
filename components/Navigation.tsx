@@ -10,6 +10,7 @@ import FeedbackButton from './FeedbackButton'
 import HeaderSearch from './HeaderSearch'
 import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
 import { isFullscreen, fullscreenSupported, enterFullscreen, exitFullscreen } from '@/lib/fullscreen'
+import { getZoom, nextZoom, setZoom, ZOOM_EVENT, ZOOM_PATHS } from '@/lib/viewZoom'
 
 /*
  * 전체화면 단추 (2026-10-23 사장님 — QR·즐겨찾기로 여는 브라우저 탭에서 전체화면).
@@ -34,6 +35,37 @@ function useMinWidth(px: number): boolean {
     return () => { m.removeEventListener ? m.removeEventListener('change', f) : m.removeListener(f) }
   }, [px])
   return ok
+}
+
+/*
+ * 보기 크기 단추 (2026-10-23 사장님 승인 시안) — 누를 때마다 100 → 115 → 130 → 100%.
+ * 앱 내용(iframe)만 키운다(lib/viewZoom.ts · IframeModule). 태블릿 폭·미니앱 화면에서만 그린다.
+ * 지금 크기를 글자로 적는다 — 몇 번 눌렀는지 세지 않아도 어디쯤인지 보인다.
+ */
+function ZoomButton({ pathname }: { pathname: string }) {
+  const wide = useMinWidth(720)
+  const [z, setZ] = useState(1)
+  useEffect(() => {
+    setZ(getZoom())
+    const f = () => setZ(getZoom())
+    window.addEventListener(ZOOM_EVENT, f)
+    return () => window.removeEventListener(ZOOM_EVENT, f)
+  }, [])
+  if (!wide || !ZOOM_PATHS.includes(pathname)) return null
+  const pct = Math.round(z * 100)
+  return (
+    <button
+      type="button"
+      onClick={() => setZoom(nextZoom(z))}
+      aria-label={`보기 크기 ${pct}% — 누르면 바뀝니다`}
+      title="보기 크기 (100 → 115 → 130%)"
+      className="flex items-center justify-center rounded-full shrink-0 font-extrabold"
+      style={{ height: 30, padding: '0 10px', fontSize: 12.5, gap: 3,
+        background: z === 1 ? 'rgba(255,255,255,0.18)' : '#fff', color: z === 1 ? '#fff' : '#1428A0' }}
+    >
+      <span style={{ fontSize: 14 }}>가</span>{pct}%
+    </button>
+  )
 }
 
 function FullscreenButton() {
@@ -387,6 +419,7 @@ export default function Navigation() {
           {/* 개발자 문의 — 떠 있던 버튼을 여기로 옮겼다(FeedbackButton 주석 참조) */}
           <FeedbackButton />
           <FullscreenButton />
+          <ZoomButton pathname={pathname} />
           {canShare && (
             <button
               type="button"

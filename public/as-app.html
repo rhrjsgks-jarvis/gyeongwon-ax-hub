@@ -324,7 +324,7 @@
   #asPane>.sub,#feePane>.sub,#feePane>.src,#cpPane>.sub,#cpPane>.src{grid-column:1/-1;margin-bottom:0}
   #asPane>#cats,#feeSeg,#feeCats,#cpViews{display:none!important}
   #asPane>.dmenu,#feePane>.dmenu,#cpPane>.dmenu{grid-column:1;grid-row:2;position:sticky;top:64px;margin:0;
-    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:calc(100vh - 84px);overflow:auto;display:block}
+    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:calc(100vh - 84px);overflow:hidden;display:block;--dm-h:calc(100vh - 100px)}
   #asPane>#body,#feePane>#feeBody,#cpPane>#feeBody{grid-column:2;grid-row:2;min-width:0}
   /* 센터 · 연락처 팝업 */
   .pop-dim{position:fixed;inset:0;background:rgba(11,18,32,.42);z-index:90}
@@ -348,6 +348,14 @@
 @media (max-width:719px){.dmenu{display:none}}
 .dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
 .dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+/* 상하 드래그(2026-10-23 사장님 지적 — 「상하작동시 다같이 움직이면서 잘 작동이 안 됩니다」).
+   예전에는 메뉴 상자 하나가 단계 둘을 함께 스크롤해서, 숨은 단계까지 같이 움직이고 끝에 닿으면 화면 전체가 끌려갔다.
+   지금은 **보이는 단계만** 제 안에서 스크롤하고(숨은 단계는 높이 0), 끝에 닿아도 바깥으로 넘기지 않는다. */
+@media screen and (min-width:720px){
+  .dm-stack{align-items:flex-start}
+  .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
+}
 /* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
 .dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
   border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;
@@ -1785,7 +1793,13 @@ function openPop(cls, onClose){
   closePop(true);
   document.body.classList.add(cls);
   const dim = document.createElement('div'); dim.className = 'pop-dim sk-noprint'; dim.id = 'popDim';
-  dim.addEventListener('click', () => closePop());
+  /* 바깥에서 왼쪽 메뉴를 누르면 닫고 그 항목까지 누른 것으로 넘긴다 — 한 번 더 누르게 하지 않는다(2026-10-23) */
+  dim.addEventListener('click', e => {
+    closePop();
+    const t = document.elementFromPoint(e.clientX, e.clientY);
+    const hit = t && t.closest && t.closest('.dmenu .dm-it, .dmenu .dm-back');
+    if (hit) hit.click();
+  });
   const x = document.createElement('button'); x.type = 'button'; x.className = 'pop-x sk-noprint'; x.id = 'popX';
   x.setAttribute('aria-label', '닫기'); x.textContent = '✕';
   x.addEventListener('click', () => closePop());

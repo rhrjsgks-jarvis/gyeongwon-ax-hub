@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { logEvent, logOnce, LogModule, LogAction } from '@/lib/logEvent'
+import { zoomFor, ZOOM_EVENT } from '@/lib/viewZoom'
 
 /* 미니앱이 보내오는 값은 바깥에서 들어오는 값이다 — 아는 이름만 받는다 */
 const ALLOWED_MODULE = new Set<string>([
@@ -111,6 +112,34 @@ export default function IframeModule({
     window.addEventListener('resize', send)
     return () => { clearInterval(t); window.removeEventListener('resize', send) }
   }, [])
+
+  /*
+   * **보기 크기(화면 확대)를 미니앱에 건다** (2026-10-23, lib/viewZoom.ts).
+   * 같은 출처라 부모가 iframe 문서에 직접 `zoom` 을 준다 — 앱마다 고칠 필요가 없다.
+   * 문서가 새로 뜰 때마다(딥링크 재로드 포함) 다시 걸고, 단추·폭이 바뀌면 바로 따라간다.
+   */
+  useEffect(() => {
+    const apply = () => {
+      try {
+        const d = ref.current?.contentDocument
+        if (!d?.documentElement) return
+        const z = zoomFor(src)
+        d.documentElement.style.zoom = z === 1 ? '' : String(z)
+      } catch { /* 다른 출처면 건드릴 수 없다 — 그대로 둔다 */ }
+    }
+    const el = ref.current
+    apply()
+    el?.addEventListener('load', apply)
+    window.addEventListener(ZOOM_EVENT, apply)
+    window.addEventListener('resize', apply)
+    const t = setInterval(apply, 1000)          // 늦게 뜬 문서·로드 이벤트를 놓친 경우 — 멱등이다
+    return () => {
+      el?.removeEventListener('load', apply)
+      window.removeEventListener(ZOOM_EVENT, apply)
+      window.removeEventListener('resize', apply)
+      clearInterval(t)
+    }
+  }, [src])
 
   return (
     <div className={`relative ${className || ''}`} style={style}>
