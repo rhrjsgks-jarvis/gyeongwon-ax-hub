@@ -122,8 +122,7 @@
   /* 가전 접수 여부는 칸에 남긴다 — 모바일 전용 센터로 TV 고객을 보내면 그대로 헛걸음이다 */
   .svcc .svcc-h{display:block;font-size:10px;font-weight:700;color:#1428A0;margin-top:2px}
   .svcc .svcc-h.m{color:#9aa0a6;font-weight:600}
-  .svcc.on{background:#1428A0;border-color:#1428A0;color:#fff}
-  .svcc.on .svcc-g,.svcc.on .svcc-h{color:#fff;opacity:.85}
+  .svcc.on .svcc-g{color:#3B4A8C}
   /* **안내문에 규칙이 아예 없었다** — 그래서 본문 기본 글씨(16px 검정)로 떠 AS기간 탭의
      `.sub`(12.5px 회색)와 무게가 달랐다. 헛걸음을 막는 문장이라 지우지 않고, 옅은 파란
      상자로 눈에 남기되 글씨 크기는 이 앱의 안내 글씨에 맞춘다. */
@@ -131,9 +130,10 @@
     border:1px solid #dbe2ff;border-radius:10px;padding:9px 11px;margin-bottom:10px;word-break:keep-all}
   mark{background:#FEF3C7;color:inherit;border-radius:3px;padding:0 1px}
   .cat:hover{border-color:#c7d2fe}
-  .cat.on{background:#1428A0;border-color:#1428A0;color:#fff}
-  /* 심벌은 기본색이 삼성 블루라 선택된 남색 타일에서 안 보인다 — 흰색으로 뒤집는다 */
-  .cat.on .ci .psym{color:#fff}
+  /* **고른 칸은 파란 테두리다**(2026-10-23 사장님 지시 — *"버튼선택은 파란테두리형태로 방식통일"*).
+     남색으로 칠하던 것을 옅은 파랑 바탕 + 삼성 블루 테두리로 바꿨다. 테두리 굵기를 바꾸면 칸이
+     1px 밀리므로 안쪽 그림자로 두 겹을 만든다. 심벌은 파랑 그대로 둔다(바탕이 옅어 보인다). */
+  .cat.on,.svcc.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
   .card h2{font-size:14px;font-weight:800;margin:0 0 3px;display:flex;align-items:center;gap:6px}
   .big{font-size:27px;font-weight:800;color:#1428A0;line-height:1.15;margin:4px 0 2px}
@@ -294,12 +294,63 @@
   #csLines .cat{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:inherit}
   #csLines .cat .d{display:block;font-size:11.5px;font-weight:500;color:#6b7280;margin-top:2px}
   #csLines .cat.on .d{color:#dbe2ff}
-  .fee-seg button.on{background:#fff;color:#1428A0;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .fee-seg button.on{background:#fff;color:#1428A0;box-shadow:inset 0 0 0 1.5px #1428A0}
   .rfq{border:1px solid #d6dbe8;background:#fff;margin:2px 0 8px}
 
 /* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
    고르는 손잡이(검색·탭·품목 칸·지역 칩)는 빼고 **고른 결과만** 싣는다.
    센터는 하나를 골랐으면 그 센터만, 연락처는 **펼쳐 둔 묶음만** 싣는다(다 실으면 10쪽이 넘는다). */
+/*
+ * ── 태블릿 화면 (2026-10-23 사장님 지시 — *"삼성스토어 요금계산기 참고해서 태블릿용 UX로"*) ──
+ *
+ * 요금계산기가 720px 부터 쓰는 방식을 따른다 — 번호 붙은 칸(①②)과 여러 단.
+ * 폰(719px 이하)은 지금 그대로다 — 매장 기기가 폰인 경우도 있다.
+ *
+ *   · **고르는 것은 왼쪽, 결과는 오른쪽**(AS기간 · 수리비). 위아래로 쌓으면 품목 35칸이
+ *     화면 절반을 먹어 결과를 보려면 내려야 하고, 다른 품목을 고르려면 다시 올라와야 했다.
+ *   · **센터 상세 · 연락처 묶음은 팝업**이다. 하나를 골라 자세히 보고 닫고 돌아오는 정보라
+ *     목록 아래에 펼치면 목록에서 멀어진다(센터 목록 44곳 아래로 상세가 내려갔다).
+ */
+@media (min-width:720px){
+  .wrap{padding:18px 20px 60px}
+  .wrap,.topbar-in,.sbar-in{max-width:1180px!important}
+  .sub{padding-right:0}
+  #asPane,#feePane{grid-template-columns:minmax(250px,31%) minmax(0,1fr);gap:16px;align-items:start}
+  #asPane{display:grid}
+  #feePane:not([style*="none"]){display:grid}
+  #asPane>.sub,#feePane>.sub,#feePane>.src{grid-column:1/-1;margin-bottom:0}
+  /* ① 왼쪽 칸 — 위에 붙어 있어 결과를 내려 읽는 동안에도 다른 품목을 바로 고른다 */
+  #cats,#feeCats{position:sticky;top:64px;margin:0;grid-template-columns:repeat(3,1fr);gap:6px;
+    background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;
+    max-height:calc(100vh - 84px);overflow:auto}
+  #cats::before,#feeCats::before,#body::before,#feeBody::before{grid-column:1/-1;column-span:all;display:block;
+    font-size:13px;font-weight:800;color:#0B1220;margin:0 0 8px}
+  #cats::before{content:'① 품목'}
+  #feeCats::before{content:'① 항목'}
+  #body::before{content:'② 기간'}
+  #feeBody::before{content:'② 내용'}
+  #body:empty::before{content:'② 왼쪽에서 품목을 고르세요';color:#6b7280;font-weight:600}
+  #feePane>#feeSeg{grid-column:1;grid-row:2;margin:0}
+  #feePane>#feeCats{grid-column:1;grid-row:3;top:64px}
+  #feePane>#feeBody{grid-column:2;grid-row:2/span 2}
+  #body,#feeBody{min-width:0}
+  /* 센터 · 연락처 팝업 */
+  .pop-dim{position:fixed;inset:0;background:rgba(11,18,32,.42);z-index:90}
+  body.svc-pop #svcbody:not(:empty){position:fixed;z-index:91;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(640px,calc(100vw - 48px));max-height:calc(100vh - 80px);overflow:auto;
+    background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(11,18,32,.28);padding:6px 4px}
+  body.grp-pop .grps>details.grp[open]{position:fixed;z-index:91;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(760px,calc(100vw - 48px));max-height:calc(100vh - 80px);overflow:auto;margin:0;
+    box-shadow:0 18px 50px rgba(11,18,32,.28)}
+  body.grp-pop .grps>details.grp[open]>summary{position:sticky;top:0;background:#fff;z-index:1;border-bottom:1px solid #eef0f4}
+  .pop-x{position:fixed;z-index:92;width:40px;height:40px;border-radius:99px;border:1.5px solid #1428A0;
+    background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
+}
+/* 넓은 태블릿 가로(1000px~) — 결과 칸을 두 단으로 */
+@media (min-width:1000px){
+  #body{column-count:2;column-gap:12px}
+  #body>*{break-inside:avoid}
+}
 @media print{
   body{background:#fff!important}
   .topbar,.sbar,.mode-tabs,#cats,#asPane>.sub,#svcq,#centerPane .chips,#svccnt{display:none!important}
@@ -1671,8 +1722,54 @@ function renderSvcList(){
 /* 고른 센터의 상세로 데려간다 — AS기간이 품목을 고르면 `revealBody()` 로 본문을 보여주는 것과 같다 */
 function revealSvcBody(){
   const el = document.getElementById('svcbody');
+  if (isTablet()) { openPop('svc-pop', closeSvcPop); return; }
   if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
 }
+/*
+ * ── 태블릿 팝업 (2026-10-23) ── 화면에 하나만 뜬다. 닫는 길은 넷 —
+ * ✕ · 바깥 · Esc · 뒤로가기(back-kit). 하나뿐이면 그 하나가 막혔을 때 갇힌다.
+ */
+function isTablet(){ return window.matchMedia && matchMedia('(min-width:720px)').matches; }
+let popClose = null;
+function openPop(cls, onClose){
+  closePop(true);
+  document.body.classList.add(cls);
+  const dim = document.createElement('div'); dim.className = 'pop-dim sk-noprint'; dim.id = 'popDim';
+  dim.addEventListener('click', () => closePop());
+  const x = document.createElement('button'); x.type = 'button'; x.className = 'pop-x sk-noprint'; x.id = 'popX';
+  x.setAttribute('aria-label', '닫기'); x.textContent = '✕';
+  x.addEventListener('click', () => closePop());
+  document.body.append(dim, x);
+  popClose = () => { document.body.classList.remove(cls); dim.remove(); x.remove(); onClose && onClose(); };
+  requestAnimationFrame(placePopX);
+  if (window.Back) Back.open(() => closePop(true), () => !!popClose);
+}
+function placePopX(){
+  const x = document.getElementById('popX');
+  const box = document.querySelector('body.svc-pop #svcbody, body.grp-pop .grps>details.grp[open]');
+  if (!x || !box) return;
+  const r = box.getBoundingClientRect();
+  x.style.left = (r.right - 20) + 'px'; x.style.top = (r.top - 20) + 'px';
+}
+function closePop(silent){
+  if (!popClose) return;
+  const f = popClose; popClose = null; f();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && popClose) closePop(); });
+window.addEventListener('resize', () => { if (popClose && !isTablet()) closePop(); else placePopX(); });
+function closeSvcPop(){ svcPick = null; renderB2B(); }
+/* 연락처 묶음 — 태블릿에서는 펼치는 대신 팝업으로 띄운다. 한 번에 하나만 열린다 */
+document.addEventListener('toggle', e => {
+  const d = e.target;
+  if (!(d instanceof HTMLDetailsElement) || !d.classList.contains('grp') || !d.closest('.grps')) return;
+  if (!isTablet()) return;
+  if (d.open) {
+    document.querySelectorAll('.grps>details.grp[open]').forEach(o => { if (o !== d) o.open = false; });
+    openPop('grp-pop', () => { d.open = false; });
+  } else if (popClose && document.body.classList.contains('grp-pop') && !document.querySelector('.grps>details.grp[open]')) {
+    closePop();
+  }
+}, true);
 
 /*
  * 관할 검색 — 물류센터와 같은 방식이다(원문 `a` 까지 훑고, 찾은 글자를 표시한다).

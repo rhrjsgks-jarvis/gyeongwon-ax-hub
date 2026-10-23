@@ -592,13 +592,102 @@
     });
   }
 
+  /*
+   * ── 인쇄할 것 고르기 (2026-10-23 사장님 지시 — *"인쇄 시 체크박스 선택해서 어떤 정보를
+   *    인쇄할지 선택 가능하게"*) ──
+   *
+   * 화면에 보이는 **제목 달린 덩어리**를 목록으로 띄우고 체크를 푼 것은 인쇄에서 뺀다.
+   * 앱마다 따로 짜지 않는다 — 앱이 `data-print="이름"` 을 달아 두면 그것을 쓰고, 없으면
+   * 제목(h2·h3·summary)이 있는 카드를 찾는다. 하나뿐이면 묻지 않고 바로 인쇄한다.
+   * 뺀 것은 `sk-noprint`(인쇄에서 숨김)를 붙였다가 인쇄가 끝나면 걷는다.
+   */
+  function printParts() {
+    var seen = [], out = [];
+    var vis = function (el) { return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length); };
+    var tagged = Array.prototype.slice.call(document.querySelectorAll('[data-print]')).filter(vis);
+    var cands = tagged.length ? tagged
+      : Array.prototype.slice.call(document.querySelectorAll('.card, details.grp[open], details.sec, details.fold, .sec, .fold')).filter(vis);
+    cands.forEach(function (el) {
+      if (el.closest('.sk-dim')) return;
+      if (seen.some(function (p) { return p.contains(el) || el.contains(p); })) return;   /* 바깥·안쪽이 겹치면 바깥 하나만 */
+      var label = el.getAttribute('data-print');
+      if (!label) {
+        var h = el.querySelector('h2, h3, summary, .card-title, .sec-t, .hd');
+        /* 제목 옆 배지(「대상」 등)가 붙어 읽히지 않게 조각마다 띄어 잇는다 */
+        label = h ? Array.prototype.map.call(h.childNodes, function (n) { return (n.textContent || '').trim(); })
+          .filter(Boolean).join(' ').replace(/\s+/g, ' ') : '';
+      }
+      if (!label) return;
+      seen.push(el);
+      out.push({ el: el, label: label.length > 40 ? label.slice(0, 40) + '…' : label });
+    });
+    return out;
+  }
+  function pickPrint(o) {
+    var parts = printParts();
+    if (parts.length < 2) { printScreen(o); return; }
+    closeSheet();
+    injectCss();
+    if (!document.getElementById('sk-pick-css')) {
+      var st = document.createElement('style'); st.id = 'sk-pick-css';
+      st.textContent = '.sk-pick{max-height:52vh;overflow:auto;margin:4px 0 12px;display:grid;gap:6px}'
+        + '.sk-pick label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:11px;'
+        + 'font-size:14px;font-weight:600;color:#1F2937;cursor:pointer;background:#fff}'
+        + '.sk-pick label.on{border-color:#1428A0;background:#EEF2FF;color:#1428A0}'
+        + '.sk-pick input{width:18px;height:18px;accent-color:#1428A0;flex:0 0 auto;margin:0}'
+        + '.sk-pick-all{display:flex;gap:8px;margin:0 0 6px}'
+        + '.sk-pick-all button{border:1.5px solid #D1D5DB;background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:700;color:#374151;cursor:pointer}';
+      document.head.appendChild(st);
+    }
+    var dim = document.createElement('div'); dim.className = 'sk-dim';
+    var box = document.createElement('div'); box.className = 'sk-sheet';
+    box.innerHTML = '<div class="sk-t">인쇄할 내용</div><div class="sk-n">체크한 것만 A4 로 나갑니다</div>'
+      + '<div class="sk-pick-all"><button type="button" data-a="1">모두 선택</button><button type="button" data-a="0">모두 해제</button></div>'
+      + '<div class="sk-pick"></div>';
+    var list = box.querySelector('.sk-pick');
+    parts.forEach(function (p, i) {
+      var l = document.createElement('label'); l.className = 'on';
+      var c = document.createElement('input'); c.type = 'checkbox'; c.checked = true; c.dataset.i = i;
+      c.addEventListener('change', function () { l.className = c.checked ? 'on' : ''; });
+      l.appendChild(c); l.appendChild(document.createTextNode(p.label));
+      list.appendChild(l);
+    });
+    box.querySelectorAll('.sk-pick-all button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        list.querySelectorAll('input').forEach(function (c) { c.checked = b.dataset.a === '1'; c.dispatchEvent(new Event('change')); });
+      });
+    });
+    var go = document.createElement('button'); go.type = 'button'; go.className = 'sk-b primary'; go.textContent = '인쇄 · PDF 저장 (A4)';
+    go.addEventListener('click', function () {
+      var off = [];
+      list.querySelectorAll('input').forEach(function (c) { if (!c.checked) off.push(parts[+c.dataset.i].el); });
+      if (off.length === parts.length) { toast('하나 이상 골라 주세요'); return; }
+      off.forEach(function (el) { el.classList.add('sk-noprint', 'sk-picked-off'); });
+      closeSheet();
+      var undoPick = function () {
+        off.forEach(function (el) { el.classList.remove('sk-noprint', 'sk-picked-off'); });
+        global.removeEventListener('afterprint', undoPick);
+      };
+      global.addEventListener('afterprint', undoPick);
+      setTimeout(undoPick, 4000);   /* afterprint 를 안 주는 브라우저 */
+      printScreen(o);
+    });
+    var cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'sk-b'; cancel.textContent = '취소';
+    cancel.addEventListener('click', closeSheet);
+    box.appendChild(go); box.appendChild(cancel);
+    dim.appendChild(box);
+    dim.addEventListener('click', function (e) { if (e.target === dim) closeSheet(); });
+    document.body.appendChild(dim);
+    if (global.Back) global.Back.open(closeSheet, sheetOpen);
+  }
+
   /** 공유 버튼을 누르면 고른다 — 이미지로 공유 / 인쇄 */
   function chooseAction(build) {
     var o = null;
     try { o = build && build(); } catch (e) {}
     sheet('이 화면을', '공유하거나 인쇄합니다', [
       { label: '이미지로 공유', primary: true, onClick: function () { captureScreen(o && o.filename); } },
-      { label: '인쇄 · PDF 저장 (A4)', onClick: function () { printScreen(o || {}); } },
+      { label: '인쇄 · PDF 저장 (A4)', onClick: function () { setTimeout(function () { pickPrint(o || {}); }, 0); } },
     ]);
   }
 
@@ -701,7 +790,7 @@
     sheet: sheet, closeSheet: closeSheet, toast: toast, copyText: copyText,
     contactSheet: contactSheet, wireContacts: wireContacts,
     buildCard: buildCard, shareCard: shareCard, mountShareButton: mountShareButton,
-    captureScreen: captureScreen, printScreen: printScreen,
+    captureScreen: captureScreen, printScreen: printScreen, pickPrint: pickPrint, printParts: printParts,
   };
   global.printScreen = printScreen;
   global.captureScreen = captureScreen;
