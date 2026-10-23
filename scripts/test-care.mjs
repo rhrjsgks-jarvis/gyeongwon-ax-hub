@@ -272,7 +272,8 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
   if (!/열교환기 고압세척/.test(oxTxt) || !/핵심 차이/.test(doc.querySelector('[data-fold="ox"]').innerHTML)) fail('[aircon] O/X 에 핵심 차이(열교환기 고압세척)가 없다');
   /* 「핵심 차이」는 라이트에 정말 없는 것만 — 냉장고 「UV 케어」는 라이트에도 「외관 UV 케어」가 있어 빼야 한다 */
   const keyRows = JSON.parse(window.eval(`JSON.stringify(oxRows(DATA['fridge']).filter(r=>r.key).map(r=>r.k))`));
-  if (keyRows.join(',') !== '기계실 청소') fail(`[fridge] 핵심 차이가 「기계실 청소」 하나여야 하는데 ${keyRows.join(', ')}`);
+  /* 2026-10-23 원문 — 전문세척에 「내부 세척」이 더해졌다(라이트에는 없다) */
+  if (keyRows.join(',') !== '내부 세척,기계실 청소') fail(`[fridge] 핵심 차이가 「내부 세척·기계실 청소」여야 하는데 ${keyRows.join(', ')}`);
   if (ok) console.log('OK: 원문 회차 골든 · 없는 조합 미생성 · 핵심 차이');
 
   // ── 4. 접기/펴기 — 모두 접기·하나 열기·다시 그려도 상태 유지 ──
