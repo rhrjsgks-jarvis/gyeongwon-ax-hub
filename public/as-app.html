@@ -58,6 +58,8 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     color:#9aa0a6;border-bottom:2px solid transparent;transition:all .15s}
   .mode-tab.on{color:#1428A0;border-bottom-color:#1428A0}
+  .mode-tab .mt-x{display:none}
+  @media (min-width:720px){ .mode-tab{font-size:12px} .mode-tab .mt-x{display:inline} }
   .mt-ico{display:block;font-size:15px;margin-bottom:2px;line-height:1}
   .ctg{font-size:11px;font-weight:800;color:#6b7280;margin:12px 0 5px;letter-spacing:.02em}
   .ctg:first-of-type{margin-top:4px}
@@ -99,7 +101,7 @@
   .chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
   .chip{padding:5px 11px;border:1px solid #e5e7eb;border-radius:99px;background:#fff;
     font-size:11.5px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit}
-  .chip.on{background:#1428A0;border-color:#1428A0;color:#fff}
+  .chip.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}   /* 고른 칸 = 파란 테두리(2026-10-23) */
   .cnt{font-size:11px;color:#9aa0a6;margin-top:8px}
   /*
    * AS센터 — **AS기간의 품목 칸과 같은 규격이다**(2026-08-27 사장님 지시:
@@ -311,14 +313,16 @@
  *   · **센터 상세 · 연락처 묶음은 팝업**이다. 하나를 골라 자세히 보고 닫고 돌아오는 정보라
  *     목록 아래에 펼치면 목록에서 멀어진다(센터 목록 44곳 아래로 상세가 내려갔다).
  */
-@media (min-width:720px){
+@media screen and (min-width:720px){
   .wrap{padding:18px 20px 60px}
   .wrap,.topbar-in,.sbar-in{max-width:1180px!important}
   .sub{padding-right:0}
-  #asPane,#feePane{grid-template-columns:minmax(250px,31%) minmax(0,1fr);gap:16px;align-items:start}
+  #asPane,#feePane,#cpPane{grid-template-columns:minmax(250px,31%) minmax(0,1fr);gap:16px;align-items:start}
   #asPane{display:grid}
-  #feePane:not([style*="none"]){display:grid}
-  #asPane>.sub,#feePane>.sub,#feePane>.src{grid-column:1/-1;margin-bottom:0}
+  #feePane:not([style*="none"]),#cpPane:not([style*="none"]){display:grid}
+  #asPane>.sub,#feePane>.sub,#feePane>.src,#cpPane>.sub,#cpPane>.src{grid-column:1/-1;margin-bottom:0}
+  #cpPane>#feeCats{grid-column:1;grid-row:2;top:64px}
+  #cpPane>#feeBody{grid-column:2;grid-row:2}
   /* ① 왼쪽 칸 — 위에 붙어 있어 결과를 내려 읽는 동안에도 다른 품목을 바로 고른다 */
   #cats,#feeCats{position:sticky;top:64px;margin:0;grid-template-columns:repeat(3,1fr);gap:6px;
     background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;
@@ -347,7 +351,7 @@
     background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
 }
 /* 넓은 태블릿 가로(1000px~) — 결과 칸을 두 단으로 */
-@media (min-width:1000px){
+@media screen and (min-width:1000px){
   #body{column-count:2;column-gap:12px}
   #body>*{break-inside:avoid}
 }
@@ -391,6 +395,9 @@
   <div class="mode-tab on" data-tab="as" onclick="setTab('as')"><span class="mt-ico">🛡️</span>AS기간</div>
   <!-- **가운데에 둔다**(2026-08-27 사장님 지시) — 상담 흐름이 "보증기간 → 어디로 가나 → 누구에게 거나" 순이다 -->
   <div class="mode-tab" data-tab="fee" onclick="setTab('fee')"><span class="mt-ico">💰</span>수리비</div>
+  <!-- 「보상·서비스」를 수리비 3단계 안에서 꺼내 탭으로 올렸다(2026-10-23 사장님 승인 — 이전설치 요금이
+       AS › 수리비 › 보상·서비스 › 케어플러스 › 4번째 칸에 숨어 있었다). 폰에서는 「케어플러스」만 보인다 -->
+  <div class="mode-tab" data-tab="cp" onclick="setTab('cp')"><span class="mt-ico">💧</span><span class="mt-l">케어플러스<span class="mt-x">·이전설치</span></span></div>
   <div class="mode-tab" data-tab="center" onclick="setTab('center')"><span class="mt-ico">📍</span>AS센터 찾기</div>
   <div class="mode-tab" data-tab="contact" onclick="setTab('contact')"><span class="mt-ico">📞</span>연락처·협력사</div>
 </div>
@@ -402,6 +409,7 @@
     <div id="body"></div>
   </div>
   <div id="feePane" style="display:none"></div>
+  <div id="cpPane" style="display:none"></div>
   <div id="centerPane" style="display:none"></div>
   <div id="contactPane" style="display:none"></div>
 </div>
@@ -1022,8 +1030,8 @@ function renderBody(){
  * 확인 못 한 값은 카드에도 그대로 "확인 필요"로 나간다 — 화면과 다른 말을 하면 안 된다. */
 function shareBuild(){
   /* 센터·연락처 탭에서는 품목이 아니라 그 탭이 제목이다(인쇄 머리가 엉뚱한 품목을 적지 않게) */
-  if (curTab === 'center' || curTab === 'contact') {
-    const t = curTab === 'center' ? 'AS센터 찾기' : '연락처 · 협력사';
+  if (curTab === 'center' || curTab === 'contact' || curTab === 'fee' || curTab === 'cp') {
+    const t = { center:'AS센터 찾기', contact:'연락처 · 협력사', fee:'수리비', cp:'케어플러스 · 이전설치' }[curTab];
     return { app:"세일즈 코파일럿 · AS 관련 정보", title:t, printNote:'',
       filename:"AS_" + t.replace(/[\s·]+/g,'') };
   }
@@ -1262,16 +1270,10 @@ const GROUPS = [
     s:'수리·교환은 수원 1곳 — 접수는 전국 삼성전자서비스' },
   { id:'g-lg',   sym:'truck',  ico:'🚚', t:'물류 모음',                 n:CENTERS.length,
     s:'배송 · 설치 관할 센터 · 상황실 · VOC' },
-  { id:'g-mv',   sym:'move',   ico:'🔧', t:'빌트인 가전 이전설치 관할',   n:B2B.length,
-    s:'접수 순서 · 권역 협력사 (냉장고 · 세탁기 · 식기세척기 등)' },
-  /* 아래 넷은 품목이 곧 묶음이라 **그 품목의 심벌을 그대로** 쓴다 —
-     상담사가 앱을 옮겨 다녀도 같은 그림이 같은 품목을 가리켜야 눈이 안 헤맨다 */
-  { id:'g-sink', sym:'dish',      ico:'🍽️', t:'식기세척기 싱크장 리폼',      n:SINK.length,
-    s:'이전설치와 담당이 다릅니다 — 리폼이 먼저입니다' },
-  { id:'g-ind',  sym:'induction', ico:'🍳', t:'인덕션 이전설치',            n:1, s:'중앙에너지 — 전국' },
-  { id:'g-wat',  sym:'purifier',  ico:'🚰', t:'정수기 이전설치',            n:1, s:'중앙에너지 — 전국' },
-  { id:'g-hood', sym:'hood',      ico:'🌬️', t:'후드 이전설치',              n:1, s:'중앙에너지 — 후드 전용 회선' },
-  { id:'g-sac',  sym:'aircon',    ico:'❄️', t:'시스템에어컨 천장형 이전설치', n:1, s:'티지이엔지 — 전국' },
+  /* **이전설치 · 리폼 여섯 묶음을 하나로**(2026-10-23 사장님 승인 — 1줄짜리 묶음 넷이 따로 서 있어
+     묶음이 11개였다). 안에서 품목 칸으로 고른다. 옛 id(g-ind 등)는 MV_OLD 가 이 묶음 + 칸으로 잇는다 */
+  { id:'g-mv',   sym:'move',   ico:'🔧', t:'이전설치 · 리폼',   n:B2B.length + SINK.length + 4,
+    s:'빌트인 가전 · 인덕션 · 정수기 · 후드 · 시스템에어컨 · 싱크장 리폼' },
   /* 신규 설치 협력사 — 설치비용 앱에 있던 연락처 절을 옮겼다(2026-10-22 중복 정리). 자료는 install-cost.json 한 벌 */
   { id:'g-new',  sym:'tool',      ico:'🔧', t:'신규 설치 협력사',           n:5,   // 번호 있는 줄 수 — test-as 가 install-cost.json 과 대조한다
     s:'인덕션 설치사 · 후드장 리폼 · 인테리어핏 — 새로 산 제품 설치' },
@@ -1398,36 +1400,30 @@ function renderContacts(){
            xline(VOC_HQ, '물류 VOC 본사')}</span></span>
          <span class="ct-n">${telx(VOC_HQ.n, '물류 VOC 본사', null, true)}</span></div></div>`);
 
-  /* ③ 빌트인 가전 이전설치 — **접수 순서를 맨 위에.** 번호만 알면 사고가 난다 */
+  /* ③ 이전설치 · 리폼 — 품목 칸 여섯. 칸마다 예전 묶음의 내용을 **그대로** 담는다 */
+  const mvp = (k, html) => `<div class="mvp" data-mvk="${k}"${k === mvKey ? '' : ' hidden'}>${html}</div>`;
   h += grp(g['g-mv'],
-    `<div class="card warn"><h2>⚠ 식기세척기 이전설치 — 리폼이 먼저입니다</h2>
+    `<div class="chips" id="mvchips" role="tablist">${MV_TABS.map(([k, t]) =>
+       `<button type="button" class="chip${k === mvKey ? ' on' : ''}" data-mvk="${k}">${esc(t)}</button>`).join('')}</div>`
+    + mvp('mv', `<div class="card warn"><h2>⚠ 식기세척기 이전설치 — 리폼이 먼저입니다</h2>
        ${B2B_STEPS.map((t,i)=>`<div class="step"><span class="sn">${i+1}</span><span class="st">${
          telify(t, '싱크장 리폼 문의')}</span></div>`).join('')}
        <div class="note">${B2B_CAUTION}</div></div>
      <div class="card"><h2>권역 협력사 <span class="pill">${B2B.length}개 센터</span></h2>
        <div class="why" style="margin-bottom:9px">고객이 <b>이사 갈 주소</b>로 담당 협력사를 찾습니다.</div>
        <input class="lgq" id="b2bq" placeholder="지역 · 협력사 · 센터명으로 찾기" autocomplete="off">
-       <div id="b2blist"></div></div>`);
-
-  /* ④ 싱크장 리폼 */
-  h += grp(g['g-sink'],
-    `<div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> —
+       <div id="b2blist"></div></div>`)
+    + mvp('sink', `<div class="why" style="margin-bottom:9px">리폼은 이전설치와 <b>담당이 다릅니다</b> —
        위 관할표가 아니라 여기서 찾으세요. <b>리폼이 안 돼 있으면 이전설치 접수보다 먼저입니다.</b></div>
      ${SINK.map(x=>`<div class="ct lg">
        <span class="ct-b"><b>${esc(x.p)}</b><span class="ct-d">${areaLines(x.a)}${
          x.n2 ? opsRow('이전설치', telx(x.n2, `${x.p} 이전설치 문의`)) : ''}${
          xline(x, `${x.p} 싱크장 리폼`)}</span></span>
-       <span class="ct-n">${telx(x.n, `${x.p} 싱크장 리폼`, null, true)}</span></div>`).join('')}`);
-
-  /* ⑤⑥⑦ 인덕션 · 정수기 · 후드 — 담당은 같지만 번호가 갈리고, 상담사는 품목으로 찾는다 */
-  for (const [id, key] of [['g-ind','ind'], ['g-wat','wat'], ['g-hood','hood']]) {
-    h += grp(g[id], `<div class="card">${natCard(nat(key))}</div>${midTable(key)}`);
-  }
-
-  /* ⑧ 시스템에어컨 천장형 */
-  h += grp(g['g-sac'],
-    `<div class="why" style="margin-bottom:9px">천장형 <b>이전설치 문의를 받으면 이 번호를 안내</b>해야 합니다.</div>
-     <div class="card">${natCard(nat('sac'))}</div>`);
+       <span class="ct-n">${telx(x.n, `${x.p} 싱크장 리폼`, null, true)}</span></div>`).join('')}`)
+    /* 인덕션 · 정수기 · 후드 — 담당은 같지만 번호가 갈리고, 상담사는 품목으로 찾는다 */
+    + ['ind', 'wat', 'hood'].map(key => mvp(key, `<div class="card">${natCard(nat(key))}</div>${midTable(key)}`)).join('')
+    + mvp('sac', `<div class="why" style="margin-bottom:9px">천장형 <b>이전설치 문의를 받으면 이 번호를 안내</b>해야 합니다.</div>
+     <div class="card">${natCard(nat('sac'))}</div>`));
 
   /* ⑧-2 신규 설치 협력사 — 설치비용 앱(install-cost.json)의 「어디로 접수하나」 연락처 절을 그대로 읽는다 */
   h += grp(g['g-new'],
@@ -1458,6 +1454,7 @@ function renderContacts(){
   wire('#itq', renderB2B);
   pane.querySelectorAll('[data-mid]').forEach(el =>
     el.addEventListener('input', () => renderMid(el.dataset.mid)));
+  pane.querySelectorAll('#mvchips .chip').forEach(el => el.onclick = () => setMv(el.dataset.mvk));
   pane.querySelectorAll('#lgchips .chip').forEach(el=>el.onclick=()=>{
     pane.querySelectorAll('#lgchips .chip').forEach(x=>x.classList.toggle('on', x===el));
     renderCenters();
@@ -1489,8 +1486,20 @@ function renderContacts(){
  * 상단 검색에서 고른 결과가 **접힌 묶음 안에 있으면 아무 일도 안 일어난 것처럼 보인다** —
  * 찾아 준 뜻이 없어지므로, 열고 화면까지 옮긴다.
  */
+/* 이전설치 · 리폼 묶음 안의 품목 칸 — 칸 이름은 여기 한 곳 */
+const MV_TABS = [['mv', '빌트인 가전'], ['ind', '인덕션'], ['wat', '정수기'], ['hood', '후드'], ['sac', '시스템에어컨'], ['sink', '식기세척기 싱크장 리폼']];
+/* 합치기 전 묶음 id → 합친 묶음의 칸. 옛 링크(?grp=g-ind)와 상단 검색이 그대로 그 자리로 간다 */
+const MV_OLD = { 'g-sink':'sink', 'g-ind':'ind', 'g-wat':'wat', 'g-hood':'hood', 'g-sac':'sac' };
+let mvKey = 'mv';
+function setMv(k){
+  mvKey = k;
+  document.querySelectorAll('#mvchips .chip').forEach(x => x.classList.toggle('on', x.dataset.mvk === k));
+  document.querySelectorAll('#g-mv .mvp').forEach(x => { x.hidden = x.dataset.mvk !== k; });
+}
 function openGroup(id){
+  if (MV_OLD[id]) { mvKey = MV_OLD[id]; id = 'g-mv'; } else if (id === 'g-mv') mvKey = 'mv';
   setTab('contact');
+  setMv(mvKey);
   const el = document.getElementById(id);
   if (!el) return;
   el.open = true;
@@ -2233,9 +2242,12 @@ const FEE_SECS = [
 const FEE_GROUPS = [
   ['rule',  '요금 기준',   ['total', 'trip', 'labor', 'free', 'paid']],
   ['parts', '부품 가격',   ['phone', 'tablet', 'pc', 'consum', 'part']],
-  ['comp',  '보상 · 서비스', ['conflict', 'careplus']],
+  /* 넷째 칸 = 어느 탭에 서는가. 이 분류는 2026-10-23 수리비에서 꺼내 「케어플러스·이전설치」 탭으로 올렸다.
+     칸 이름·분류는 여기 한 곳 그대로라 옛 딥링크(?fs=careplus · ?fs=conflict)가 그 탭으로 간다 */
+  ['comp',  '케어플러스 · 이전설치', ['careplus', 'conflict'], 'cp'],
 ];
 const feeGrpOf = (k) => (FEE_GROUPS.find(g => g[2].includes(k)) || FEE_GROUPS[0])[0];
+const feeTabOf = (k) => (FEE_GROUPS.find(g => g[2].includes(k)) || FEE_GROUPS[0])[3] || 'fee';
 /* 가전 소모품가(svc-consum.json) — 이 칸을 열 때 받는다 */
 let CS = null, csKind = 0, csLine = '', csLoading = false;
 /* 같은 제품 라인(공기청정기 · 스탠드에어컨 · 건조기 · 토너 …) — 하위분류의 첫 토막이다.
@@ -2307,16 +2319,25 @@ function feeCard(k){
   return '';
 }
 function renderFee(){
-  const pane = document.getElementById('feePane');
-  let h = `<div class="sub">삼성전자서비스 <b>유상 수리 요금</b>은 출장비 · 부품비 · 수리비(기술료) 셋을 더한 값입니다.
+  /* 두 탭(수리비 · 케어플러스·이전설치)이 같은 그리기를 쓴다. 칸 id(#feeCats·#feeBody·#pkq…)가 같으므로
+     **안 보이는 쪽은 비운다** — 둘 다 남아 있으면 getElementById 가 엉뚱한 탭의 칸을 집는다 */
+  const tab = curTab === 'cp' ? 'cp' : 'fee';
+  const groups = FEE_GROUPS.filter(g => (g[3] || 'fee') === tab);
+  if (feeTabOf(feeSec) !== tab) feeSec = groups[0][2][0];
+  const pane = document.getElementById(tab === 'cp' ? 'cpPane' : 'feePane');
+  document.getElementById(tab === 'cp' ? 'feePane' : 'cpPane').innerHTML = '';
+  let h = tab === 'cp'
+    ? `<div class="sub"><b>Samsung Care+ 유료 서비스 · 이전·재설치·철거 요금 · 모바일/PC 자기부담금</b>과
+      제품 <b>교환 · 환불 기준</b>입니다. 금액은 이 탭 한 곳에만 둡니다 — 전부 원문이고 카드 아래 링크로 원문을 열 수 있습니다.</div>`
+    : `<div class="sub">삼성전자서비스 <b>유상 수리 요금</b>은 출장비 · 부품비 · 수리비(기술료) 셋을 더한 값입니다.
     아래 칸을 누르면 그 내용만 보입니다 — 전부 삼성전자서비스 원문이고 카드 아래 링크로 원문을 열 수 있습니다.</div>`;
   const grp = feeGrpOf(feeSec);
-  h += `<div class="fee-seg" id="feeSeg" role="tablist">${FEE_GROUPS.map(([g, t]) =>
+  if (groups.length > 1) h += `<div class="fee-seg" id="feeSeg" role="tablist">${groups.map(([g, t]) =>
     `<button type="button" role="tab" aria-selected="${g === grp}" class="${g === grp ? 'on' : ''}" data-fg="${g}">${esc(t)}</button>`).join('')}</div>`;
   h += `<div class="cats" id="feeCats">${FEE_SECS.filter(([k]) => FEE_GROUPS.find(g => g[0] === grp)[2].includes(k)).map(([k, e, t]) =>
     `<div class="cat${k === feeSec ? ' on' : ''}" data-fs="${k}"><span class="ci">${e}</span>${esc(t)}</div>`).join('')}</div>`;
   h += `<div id="feeBody">${feeCard(feeSec)}</div>`;
-  h += `<div class="src">삼성전자서비스 요금 원문 — ${['service','assure','parts','conflict','self'].map(k =>
+  if (tab === 'fee') h += `<div class="src">삼성전자서비스 요금 원문 — ${['service','assure','parts','conflict','self'].map(k =>
     `<a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a>`).join(' · ')}</div>`;
   pane.innerHTML = h;
   if (typeof upgradeEmoji === 'function') upgradeEmoji(pane);
@@ -2384,7 +2405,7 @@ function cpBody(){
     <div class="src">출처 — 삼성닷컴 <a href="${esc(C.source)}" target="_blank" rel="noopener">${esc(C.title)}</a> · ${esc(C.collectedAt)} 원문 확인</div>`;
 }
 function wireCp(){
-  const pane = document.getElementById('feePane');
+  const pane = document.getElementById(curTab === 'cp' ? 'cpPane' : 'feePane');   // 케어플러스 칸은 2026-10-23 부터 cpPane 에 선다
   pane.querySelectorAll('#cpViews .chip').forEach(b => b.onclick = () => { cpView = b.dataset.cv; renderFee(); });
   pane.querySelectorAll('#cpGroups .chip').forEach(b => b.onclick = () => { cpGroup = b.dataset.cg; const o = document.getElementById('cpOut'); o.innerHTML = cpBody(); wireCp(); });
 }
@@ -2479,7 +2500,7 @@ function renderParts(){
 }
 
 function revealFee(){
-  const el = document.getElementById('feePane');
+  const el = document.getElementById(curTab === 'cp' ? 'cpPane' : 'feePane');
   if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 let curTab = 'as';
@@ -2489,7 +2510,9 @@ function setTab(t){
   document.getElementById('asPane').style.display = t === 'as' ? '' : 'none';
   document.getElementById('centerPane').style.display = t === 'center' ? '' : 'none';
   document.getElementById('feePane').style.display = t === 'fee' ? '' : 'none';
-  if (t === 'fee') renderFee();
+  document.getElementById('cpPane').style.display = t === 'cp' ? '' : 'none';
+  if (t === 'fee' || t === 'cp') renderFee();
+  if (t === 'cp' && window.AX_LOG) AX_LOG('as', 'tab_switch', '케어플러스·이전설치', true);
   /* 수리비 탭도 통으로 1회 — 리퍼부품 검색은 글자마다 도는 화면이라 낱낱이 세지 않는다 */
   if (t === 'fee' && window.AX_LOG) AX_LOG('as', 'tab_switch', '수리비', true);
   document.getElementById('contactPane').style.display = t === 'contact' ? '' : 'none';
@@ -2553,7 +2576,7 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
     return;
   }
   const gk = new URLSearchParams(location.search).get('grp');
-  if (gk && GROUPS.some(x => x.id === gk)) { openGroup(gk); return; }
+  if (gk && (GROUPS.some(x => x.id === gk) || MV_OLD[gk])) { openGroup(gk); return; }
   const fsk = new URLSearchParams(location.search).get('fs');
   if (fsk && FEE_SECS.some(x => x[0] === fsk)) {
     feeSec = fsk;
@@ -2561,7 +2584,7 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
     if (fsk === 'consum' && ck >= 0 && ck < 7) csKind = ck;
     const cpv = new URLSearchParams(location.search).get('cpv');
     if (fsk === 'careplus' && CP_VIEWS.some(v => v[0] === cpv)) { cpView = cpv; cpGroup = new URLSearchParams(location.search).get('cpg') || ''; }
-    setTab('fee');
+    setTab(feeTabOf(fsk));
     const cq = new URLSearchParams(location.search).get('cq');
     const inp = document.getElementById('csq');
     if (cq && inp) { inp.value = cq; renderConsum(); }

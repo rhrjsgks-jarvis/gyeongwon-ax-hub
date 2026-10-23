@@ -87,7 +87,8 @@ button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:
 .sortrow::-webkit-scrollbar{display:none}
 .sbtn{flex:0 0 auto;font-size:12px;font-weight:700;padding:7px 12px;border-radius:99px;background:var(--surface);
   border:1px solid var(--line);color:var(--sub)}
-.sbtn.on{background:var(--deep);border-color:var(--deep);color:#fff}
+/* 고른 칸 = 파란 테두리(2026-10-23 사장님 지시 — 전 앱 선택 방식 통일) */
+.sbtn.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}
 .rlist{display:flex;flex-direction:column;gap:10px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .rmain{width:100%;text-align:left;padding:14px 16px 12px;display:block}
@@ -159,7 +160,7 @@ table.spec tr:last-child td{border-bottom:none}
 .cat-chip{display:flex;align-items:center;gap:6px;padding:8px 13px;border:2px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600;color:#444;transition:all .15s;user-select:none}
 /* 제품 심벌은 글자와 같은 크기면 작아 보인다 — 이모지가 차지하던 만큼 키운다 */
 .cat-chip .ci{font-size:1.35em;display:flex;align-items:center}
-.cat-chip.on{border-color:#1428A0;background:#f0f3ff;color:#1428A0;font-weight:700;box-shadow:0 0 0 2px #1428A040}
+.cat-chip.on{border-color:#1428A0;background:#EEF2FF;color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1px #1428A0}
 .cat-chip:has(input:checked){border-color:#1428A0;background:#f0f3ff;color:#1428A0}
 /* cat-chip input removed */
 .cat-src{font-size:10px;font-weight:700;padding:2px 5px;border-radius:4px;margin-left:2px}
@@ -183,7 +184,7 @@ table.spec tr:last-child td{border-bottom:none}
 .feat-title{font-size:12px;font-weight:600;color:#888;margin-bottom:6px}
 .feat-grid{display:flex;flex-wrap:wrap;gap:6px}
 .feat-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border:1.5px solid #ddd;border-radius:16px;cursor:pointer;font-size:12px;color:#555;transition:all .15s;user-select:none}
-.feat-chip.on{border-color:#1428A0;background:#f0f3ff;color:#1428A0;font-weight:700}
+.feat-chip.on{border-color:#1428A0;background:#EEF2FF;color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1px #1428A0}
 .feat-chip input{display:none}
 .total-bar{position:sticky;bottom:0;background:#1428A0;color:#fff;padding:14px 16px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;margin-top:4px}
 .total-bar-label{font-size:13px;opacity:.85}
@@ -288,6 +289,46 @@ table.spec tr:last-child td{border-bottom:none}
   }
   @media(min-width:1024px){ .wrap,.topbar-in { max-width:960px } }
   @media(min-width:1440px){ .wrap,.topbar-in { max-width:1140px } }
+/*
+ * ── 품목 칸 (2026-10-23 사장님 승인안 — *"모델파인더 카테고리 57개가 화면에 없음 → 첫 화면에 품목 칸"*) ──
+ * 검색어를 몰라도 눌러서 둘러본다. 칸은 자료의 카테고리에서 만들고(손으로 적지 않는다),
+ * 하만 오디오·리빙 제휴·스마트폰 갈래처럼 잘게 갈린 것은 한 칸으로 묶는다.
+ */
+#catHost{margin:14px 0 4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.fc-t{font-size:13px;font-weight:800;color:var(--ink,#0B1220);margin:0 0 6px}
+.fc-gh{font-size:11.5px;font-weight:800;color:#0D1B7A;margin:10px 0 5px}
+.fc-gh small{font-weight:500;color:var(--sub)}
+.fc-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.fc{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 4px;font:inherit;font-size:12px;font-weight:600;
+  color:#374151;cursor:pointer;text-align:center;line-height:1.3;word-break:keep-all}
+.fc .ci{display:block;margin-bottom:3px;line-height:1}
+.fc .ci .psym{width:20px;height:20px;margin:0 auto;color:#1428A0}
+.fc small{display:block;font-size:10.5px;font-weight:500;color:var(--sub);margin-top:1px}
+.fc:hover{border-color:#c7d2fe}
+.fc.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}
+.fc-back{border:1.5px solid #1428A0;background:#fff;color:#1428A0;border-radius:99px;padding:3px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;margin-right:6px}
+.rd-hd{display:none}
+/* 폰 — 결과가 있으면 품목 칸을 접는다(결과가 칸 밑으로 밀리지 않게). 「품목으로 찾기」로 다시 연다 */
+@media screen and (max-width:719px){ .wrap.has-res #catHost{display:none} }
+@media screen and (min-width:720px){ .fc-back{display:none} }
+/* 태블릿 — 왼쪽 품목 칸(고정) · 오른쪽 검색과 결과 */
+@media screen and (min-width:720px){
+  .wrap,.topbar-in{max-width:1180px!important}
+  .wrap{display:grid;grid-template-columns:minmax(250px,30%) minmax(0,1fr);column-gap:18px;align-items:start}
+  .wrap>*{grid-column:2;min-width:0}
+  .wrap>#catHost{grid-column:1;grid-row:1/span 30;position:sticky;top:14px;max-height:calc(100vh - 28px);overflow:auto;margin-top:18px}
+  .fc-g{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* 상세는 팝업 — 펼치면 목록이 그만큼 밀려 다른 제품과 견주기 어려웠다 */
+  .rcard .rdetail{position:fixed;z-index:91;left:50%;top:40px;transform:translateX(-50%);width:min(760px,calc(100vw - 48px));
+    max-height:calc(100vh - 80px);overflow:auto;background:var(--surface);border-radius:16px;box-shadow:0 18px 50px rgba(11,18,32,.28);padding:18px 20px}
+  .rd-hd{display:block;position:sticky;top:-18px;background:var(--surface);margin:-18px -20px 10px;padding:16px 20px 10px;border-bottom:1px solid var(--line);
+    font-size:15px;font-weight:800}
+  .rd-hd small{display:block;font-size:12px;font-weight:600;color:var(--sub);margin-top:2px}
+  .fp-dim{position:fixed;inset:0;background:rgba(11,18,32,.42);z-index:90}
+  .fp-x{position:fixed;z-index:92;top:20px;left:calc(50% + min(380px, 50vw - 24px) - 20px);width:40px;height:40px;border-radius:99px;
+    border:1.5px solid #1428A0;background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
+}
+@media print{ #catHost,.fp-dim,.fp-x{display:none!important} .rcard .rdetail{position:static!important;transform:none!important;box-shadow:none!important;max-height:none!important;width:auto!important} }
 </style>
 </head>
 <body>
@@ -346,6 +387,7 @@ table.spec tr:last-child td{border-bottom:none}
     </div>
     <div class="exrow" id="exRow"></div>
   </div>
+  <div id="catHost" aria-label="품목으로 찾기"></div>
 
   <div id="aiBox" class="hidden">
     <div class="searchbox">
@@ -1396,6 +1438,7 @@ function runSearch(){
   const raw = ($("q").value||"").trim();
   $("aiHost").innerHTML = "";
   if(!raw){ toast("키워드를 입력하세요"); return; }
+  browseAll = false; browseKey = ''; renderCatHost();
   const P = parseQuery(raw);
   // 검색을 먼저 돌린다 — "DB 에 없어 뺀 말"이 그 안에서 판정되고, 해석 바가 그걸 보여준다
   lastResults = search(P);
@@ -1502,7 +1545,9 @@ function yearChip(p){
 }
 
 function renderResults(){
-  const list = sorted().slice(0,15);
+  const list = browseAll ? sorted() : sorted().slice(0,15);
+  const w = document.querySelector('.wrap'); if (w) w.classList.toggle('has-res', lastResults.length > 0 || !!browseKey);
+  setTimeout(syncDetailPop, 0);
   /*
    * **화면에 없는 제품이 공유 카드로 나가지 않게 한다**(2026-08-11 사용자 지적:
    * *"공유 눌렀을 때 현재 페이지가 공유되어야 하는데 다른 내용이 자꾸 나온다"*).
@@ -1514,7 +1559,7 @@ function renderResults(){
   syncShareBtn();
   /* 묶음 상품은 `search()` 가 후보에서 빼므로 여기 남는 것은 전부 단품이다 */
   const rc = $("resCount");
-  if(rc) rc.textContent = `${lastResults.length}종 매칭 · 상위 ${list.length}종`;
+  if(rc) rc.textContent = browseAll ? `${lastResults.length}종 · 최신순` : `${lastResults.length}종 매칭 · 상위 ${list.length}종`;
   if(!lastResults.length){
     $("rHost").innerHTML = `<div class="empty"><b>매칭 결과가 없습니다.</b><br>키워드를 줄이거나 치수 조건을 완화해 보세요.<br>예: "무풍 에어컨" / "폭 920 냉장고" / "노트북 200만 이하"</div>`;
     return;
@@ -1578,6 +1623,7 @@ function noteText(n){
 function rdetail(p){
   const fx = p.fx.filter(([k])=>k!=="등급");
   return `<div class="rdetail">
+    <div class="rd-hd">${esc(p.group||p.cat)}<small>${esc(p.cat)} · ${esc(p.model)}</small></div>
     <h5>스펙 (DB 검증값)</h5>
     <table class="spec">${fx.map(([k,v])=>`<tr><td>${specLabel(k)}</td><td>${esc(v)}</td></tr>`).join("")}
       ${noteText(p.note)?`<tr><td>비고</td><td>${esc(noteText(p.note))}</td></tr>`:""}</table>
@@ -1621,6 +1667,80 @@ function officialUsp(p){
  * 뒤로가기가 그것부터 접는다(back-kit.js). 펼친 것은 언제나 하나(`openId`)라 스택도 하나다.
  */
 function closeDetail(){ if (openId == null) return; openId = null; renderResults(); syncShareBtn(); }
+/* 태블릿 팝업의 바깥 · ✕ · Esc — 사람이 상세를 다시 누른 것과 같은 길(toggleDetail)로 닫는다(뒤로가기 칸도 함께 정리된다) */
+function isTablet(){ return !!(window.matchMedia && matchMedia('screen and (min-width:720px)').matches); }
+function syncDetailPop(){
+  const want = openId != null && isTablet();
+  let dim = document.getElementById('fpDim'), x = document.getElementById('fpX');
+  if (!want) { if (dim) dim.remove(); if (x) x.remove(); return; }
+  if (!dim) {
+    dim = document.createElement('div'); dim.id = 'fpDim'; dim.className = 'fp-dim sk-noprint';
+    dim.addEventListener('click', () => { if (openId != null) toggleDetail(openId); });
+    x = document.createElement('button'); x.id = 'fpX'; x.type = 'button'; x.className = 'fp-x sk-noprint';
+    x.setAttribute('aria-label', '닫기'); x.textContent = '✕';
+    x.addEventListener('click', () => { if (openId != null) toggleDetail(openId); });
+    document.body.append(dim, x);
+  }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && openId != null && isTablet()) toggleDetail(openId); });
+
+/*
+ * ── 품목 칸 ── 자료의 카테고리 → 칸(잘게 갈린 갈래는 묶는다) → 묶음(주방·세탁 …).
+ * 누르면 그 칸의 제품을 **전부** 최신순으로 보인다(검색 결과는 상위 15종이지만 둘러보기는 다 보여야 한다).
+ */
+let browseAll = false, browseKey = '';
+const FC_FAM = [
+  ['주방', /냉장고|냉동고|김치|식기|인덕션|전기레인지|전자레인지|오븐|정수기|후드|데이코/],
+  ['세탁 · 의류', /세탁|건조|드레서/],
+  ['냉난방 · 공기', /에어컨|공기청정|제습/],
+  ['청소', /청소기/],
+  ['TV · 오디오', /^TV|사운드바|프로젝터|하만|스피커/],
+  ['모바일', /^(스마트폰|태블릿|워치|버즈|링|핏|XR)$/],
+  ['PC · IT', /노트북|모니터|데스크탑|SSD|프린터/],
+  ['리빙 제휴', /리빙/],
+];
+function fcTile(cat){
+  if (/^(JBL|Harman|AKG)/.test(cat)) return 'JBL · 하만카돈 · AKG';
+  if (/^리빙/.test(cat)) return '리빙 제휴상품';
+  if (/^스마트폰/.test(cat)) return '스마트폰';
+  return cat;
+}
+function fcTiles(){
+  const by = {};
+  PRODUCTS.forEach(p => { if (isPackage(p)) return; const t = fcTile(p.cat); (by[t] = by[t] || { n: 0, cats: new Set() }).n++; by[t].cats.add(p.cat); });
+  return by;
+}
+function renderCatHost(){
+  const host = $("catHost"); if (!host) return;
+  const by = fcTiles();
+  const fams = FC_FAM.map(([f, re]) => [f, Object.keys(by).filter(t => re.test(t))]);
+  const used = new Set(fams.flatMap(x => x[1]));
+  const rest = Object.keys(by).filter(t => !used.has(t));
+  if (rest.length) fams.push(['기타', rest]);
+  host.innerHTML = '<div class="fc-t">① 품목으로 찾기</div>' + fams.filter(x => x[1].length).map(([f, ts]) =>
+    '<div class="fc-gh">' + esc(f) + '</div><div class="fc-g">' + ts.map(t =>
+      '<button type="button" class="fc' + (t === browseKey ? ' on' : '') + '" data-fc="' + esc(t) + '"><span class="ci">'
+      + (typeof prodSymbol === 'function' ? prodSymbol(t, '') : '') + '</span>' + esc(t) + '<small>' + by[t].n + '종</small></button>').join('') + '</div>').join('');
+  host.querySelectorAll('.fc').forEach(b => b.addEventListener('click', () => browseCat(b.dataset.fc)));
+}
+function browseCat(t){
+  const by = fcTiles(); if (!by[t]) return;
+  const cats = by[t].cats;
+  browseKey = t; browseAll = true; openId = null;
+  $("q").value = ''; $("aiHost").innerHTML = ''; $("noticeHost").innerHTML = '';
+  lastResults = PRODUCTS.filter(p => cats.has(p.cat) && !isPackage(p)).map(p => ({ p, sc: 1, hits: [] }));
+  $("parseBar").innerHTML = '<button type="button" class="fc-back" onclick="showCats()">☰ 품목</button>'
+    + '<span class="ptag cat">' + esc('품목: ' + t) + '</span><span class="rescount" id="resCount"></span>';
+  sortMode = 'new';
+  renderCatHost(); renderSortRow(); renderResults();
+  if (window.AX_LOG) AX_LOG('finder', 'result_open', '품목:' + t, true);
+}
+/* 폰 — 결과 위 「☰ 품목」 을 누르면 칸으로 돌아간다 */
+function showCats(){
+  browseKey = ''; browseAll = false; lastResults = []; openId = null;
+  $("parseBar").innerHTML = ''; renderSortRow(); renderResults(); renderCatHost();
+  const h = $("catHost"); if (h && h.scrollIntoView) h.scrollIntoView({ block: 'start' });
+}
 function toggleDetail(id){
   const wasOpen = openId != null;
   const opening = openId !== id;
@@ -2266,6 +2386,8 @@ function kwHeroText(){
   return `기능·치수·카테고리를 자유롭게 섞어 입력하세요. ${countText()}에서 찾아드립니다.`;
 }
 function syncCounts(){
+  /* 품목 칸의 종수도 함께 — 삼성닷컴 수집분이 붙으면 칸마다 늘어난다 */
+  if (typeof renderCatHost === "function") renderCatHost();
   $("brandCount").textContent = `전 라인업 ${totalN().toLocaleString()}종`;
   /*
    * **히어로 문구도 함께 고친다.** 예전에는 여기서 `heroSub2` 를 찾았는데 **그런 id 가
@@ -2278,6 +2400,7 @@ function syncCounts(){
 }
 syncCounts();
 setMode("kw");
+renderCatHost();
 
 /*
  * ── 삼성닷컴 수집분을 붙인다 (`finder-extra.json`, 2026-08-17) ──────────

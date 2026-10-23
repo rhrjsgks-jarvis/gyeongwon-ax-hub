@@ -447,13 +447,19 @@ function flatten(v, out = []) {
         href: '/as?fs=careplus&cpv=move&cpg=' + encodeURIComponent(g.key) });
     }
   }
-  // 안전한 사용준비 — 화면에 있는 말로 못 찾으면 검색이 아니다(AS 앱에서 배운 것)
-  add({ t: 'cost', m: 'installcost', title: IC.safety.title,
-    sub: `대상 ${IC.safety.targets.join(' · ')}`,
+  // 안전한 사용준비 — 화면에 있는 말로 못 찾으면 검색이 아니다(AS 앱에서 배운 것).
+  // **설치환경 가이드 품목 안으로 옮겼다**(2026-10-23 사장님 승인) — 자료는 install-cost.json 그대로, 주소만 그쪽이다.
+  add({ t: 'cost', m: 'install', title: IC.safety.title,
+    sub: `설치 전 준비 · 대상 ${IC.safety.targets.join(' · ')}`,
     kw: ['멀티탭 콘센트 정격 16A 220V 4000W 과부하 누전 차단 화재 설치 전 준비 안전',
-      IC.safety.targets.join(' '), IC.safety.ok.items.join(' '), IC.safety.no.items.join(' '),
-      IC.safety.lines.join(' ')].join(' '),
-    href: link('prep') });
+      IC.safety.targets.join(' '), IC.safety.ok.items.map((i) => i.t || i).join(' '),
+      IC.safety.no.items.map((i) => i.t || i).join(' '), IC.safety.lines.join(' ')].join(' '),
+    href: '/install?prep=safety' });
+  for (const c of IC.prepMore || []) {
+    add({ t: 'cost', m: 'install', title: c.title, sub: '설치 전 준비',
+      kw: [c.title, '설치 전 준비 유의사항 설치 불가', c.lead, ...(c.items || []).map((x) => x.t + ' ' + x.d)].join(' '),
+      href: '/install?prep=' + encodeURIComponent(c.key) });
+  }
 }
 
 // ── 5. 허브 모듈·외부 링크 (수동 정의 — 소스가 app/page.tsx라 여기서 별도 관리) ──

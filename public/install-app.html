@@ -42,11 +42,43 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
   font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:var(--text);
   word-break:keep-all;line-height:1.35;}
 .cat:hover{border-color:#c7d2fe;}
-.cat.on{background:var(--primary);border-color:var(--primary);color:#fff;}
+/* **고른 칸은 파란 테두리다**(2026-10-23 사장님 — *"버튼선택은 파란테두리형태로 방식통일"*).
+   남색 채움을 옅은 파랑 바탕 + 삼성 블루 테두리로 바꿨다. 테두리 굵기를 바꾸면 칸이 1px 밀리므로
+   안쪽 그림자로 두 겹을 만든다. 심벌은 파랑 그대로다(바탕이 옅어 보인다). AS 앱과 같은 값이다. */
+.cat.on{background:var(--primary-l);border-color:var(--primary);color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary);}
 .cat .ci{display:block;margin-bottom:4px;line-height:1;}
 .cat .ci .psym{width:22px;height:22px;margin:0 auto;}
-/* 심벌은 기본색이 삼성 블루라 선택된 남색 타일에서 안 보인다 — 흰색으로 뒤집는다 */
-.cat.on .ci .psym{color:#fff;}
+/* 냉장고 형태 칸(2026-10-23) — 냉장고 타일 8개를 「냉장고」 하나로 묶고 고른 뒤 형태를 고른다.
+   INSTALL_DB 키는 그대로다(배치 시뮬레이터 · 검사가 원문 이름으로 인용한다). */
+.cat-vars{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cat-vars:empty{display:none}
+.cat-vars .vh{flex:0 0 100%;font-size:11.5px;font-weight:700;color:var(--gray)}
+.cat-var{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 12px;font:inherit;
+  font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;word-break:keep-all}
+.cat-var.on{background:var(--primary-l);border-color:var(--primary);color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+/* 설치 전 준비(멀티탭 · 안전 안내) — 설치비용 앱에서 옮겨 왔다(2026-10-23). 자료는 install-cost.json 한 벌 */
+.prep-card .tg{font-size:12.5px;color:#374151;line-height:1.65;margin-bottom:10px}
+.prep-card .tg b{color:var(--primary)}
+.prep-yn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+@media(max-width:460px){.prep-yn{grid-template-columns:1fr}}
+.prep-yn>div{border-radius:10px;padding:10px 11px}
+.prep-yn .y{background:#EEF2FF;border:1px solid #dbe3ff}
+.prep-yn .n{background:#FEF2F2;border:1px solid #fde0e0}
+.prep-yn h4{margin:0 0 5px;font-size:12px}
+.prep-yn .y h4{color:var(--primary)}
+.prep-yn .n h4{color:#B91C1C}
+.prep-yn ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.7;color:#374151}
+.prep-yn .spec{margin-top:6px;font-size:13px;font-weight:800;color:var(--primary)}
+.prep-lines{margin:0 0 8px;padding-left:16px;font-size:12.5px;line-height:1.8;color:#374151}
+.prep-it{border-top:1px solid #f1f3f6;padding:9px 0 3px}
+.prep-it:first-of-type{border-top:0}
+.prep-it .pt{font-size:13px;font-weight:800;line-height:1.5;margin-bottom:3px}
+.prep-it .pd{font-size:12.5px;color:#4b5563;line-height:1.65}
+.prep-shot{display:block;margin:8px 0 4px;border:1px solid #eef0f4;border-radius:10px;overflow:hidden;max-width:460px}
+.prep-shot img{display:block;width:100%;height:auto}
+.prep-foot{font-size:11.5px;color:var(--gray);margin-top:6px}
+.prep-foot a{color:var(--primary)}
+.prep-hit{outline:2.5px solid var(--primary);outline-offset:3px;border-radius:8px}
 @media(max-width:520px){.cats{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}}
 .type-chip.clickable{cursor:pointer;transition:all .15s;}
 .type-chip.clickable:hover{background:var(--primary);color:#fff;}
@@ -155,6 +187,31 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 }
   @media(min-width:1024px){ main { max-width:960px } }
   @media(min-width:1440px){ main { max-width:1140px } }
+/*
+ * ── 태블릿 화면 (2026-10-23 사장님 — *"삼성스토어 요금계산기 참고해서 태블릿용 UX로"*) ──
+ * 요금계산기가 720px 부터 쓰는 방식 — 번호 붙은 칸(①②)과 여러 단. 폰(719px 이하)은 그대로다.
+ *   · **고르는 것은 왼쪽(①, 제자리 고정), 결과는 오른쪽(②)**. 위아래로 쌓으면 품목 칸이 화면 위를
+ *     다 먹어 결과를 보려면 내려야 하고, 다른 품목을 고르려면 다시 올라와야 했다.
+ *   · 1000px 부터 결과 카드를 두 단으로 흘린다.
+ * **`screen` 으로 묶는다** — A4 인쇄 폭(약 718px)이 이 경계에 걸려, 묶지 않으면 종이에 두 단 격자가 나간다.
+ */
+@media screen and (min-width:720px){
+  main{max-width:1180px!important;display:grid;grid-template-columns:minmax(250px,31%) minmax(0,1fr);
+    gap:16px;align-items:start;padding:18px 20px}
+  main>.card:first-child{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:auto}
+  main>.card:first-child .cats{grid-template-columns:repeat(3,1fr);gap:6px}
+  #result{display:block}
+  #result:not(.visible)>*{display:none}
+  #result::before{content:'② 설치 요건';display:block;font-size:12px;font-weight:700;color:var(--gray);
+    letter-spacing:.5px;margin:2px 0 10px}
+  #result:not(.visible)::before{content:'② 왼쪽에서 품목을 고르세요';background:#fff;border:1.5px dashed var(--border);
+    border-radius:var(--radius);padding:28px 18px;text-align:center;font-size:13px}
+}
+@media screen and (min-width:1000px){
+  #main-content{column-count:2;column-gap:12px}
+  #main-content>*{break-inside:avoid;-webkit-column-break-inside:avoid}
+  #main-content>.disclaimer{column-span:all;-webkit-column-span:all}
+}
 </style>
 </head>
 <body>
@@ -176,6 +233,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
              oninput="filterCats(this.value)">
       <!-- 타일은 INSTALL_DB 에서 세워 그린다(renderCats) — 손으로 적어 두면 DB 와 어긋난다 -->
       <div class="cats" id="cats"></div>
+      <div class="cat-vars" id="cat-vars"></div>
       <div class="cat-search-empty" id="cat-search-empty">검색 결과가 없습니다.</div>
     </div>
   </div>
@@ -189,29 +247,31 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
     <div id="na-wrap"></div>
 
     <div id="main-content">
-      <div class="card">
+      <div class="card" data-print="설치 유형·공간 요건">
         <div class="sec-title">📐 설치 유형·공간 요건</div>
         <div class="type-chip-row" id="type-chips"></div>
         <table class="spec-table" id="space-table"></table>
       </div>
 
-      <div class="card" id="image-card">
+      <div class="card" id="image-card" data-print="공식 설치가이드 이미지">
         <div class="sec-title">🖼️ 삼성닷컴 공식 설치가이드 이미지</div>
         <div class="img-gallery" id="img-gallery"></div>
       </div>
       <a class="source-link-btn" id="source-link-btn" href="#" target="_blank" rel="noopener">🔗 삼성닷컴 원본 설치가이드 페이지 열기</a>
 
-      <div class="card">
+      <div class="card" data-print="전기·급배수 요건">
         <div class="sec-title">🔌 전기·급배수 요건</div>
         <table class="spec-table" id="utility-table"></table>
       </div>
 
-      <div class="card">
+      <div class="card" data-print="설치 전 확인 체크리스트">
         <div class="sec-title">✅ 설치 전 확인 체크리스트</div>
         <ul class="check-list" id="check-list"></ul>
       </div>
 
       <div id="caution-wrap"></div>
+
+      <div id="prep-wrap"></div>
 
       <div class="source-box" id="source-box"></div>
 
@@ -219,7 +279,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
         <button class="act-btn copy" onclick="copyChecklist()">📋 체크리스트 복사</button>
       </div>
 
-      <div class="memo-box print-only">
+      <div class="memo-box print-only" data-print="설치 실측 메모">
         <h4>설치 실측 메모</h4>
         <div class="memo-line"><span>고객명</span></div>
         <div class="memo-line"><span>설치 장소</span></div>
@@ -898,7 +958,7 @@ const INSTALL_DB = {
       '설치 유형(빌트인/트루빌트인/세미빌트인/프리스탠딩/카운터탑)에 맞는 최소 공간 규격 충족 여부 확인',
       '급수호스(기본 3.0m / 최대 4.0~5.0m)·배수호스(기본 2.0~2.5m / 최대 2.0~4.5m) 범위 안인지 확인',
       '수압 0.04~1.0 MPa 확인',
-      '멀티탭 기준(과부하·누전차단형 · 16A · 220V 이상 · 3구 이상 불가)과 그림은 설치비용 · 사전준비 앱의 「설치 전 준비」에 원문 그대로 있습니다.',
+      '멀티탭 기준(과부하·누전차단형 · 16A · 220V 이상 · 3구 이상 불가)과 그림은 아래 「설치 전 준비」 칸에 원문 그대로 있습니다.',
       '콘센트가 전원선 1.5m 이내인지, 멀티탭이면 개별스위치 없음·2구 이하·접지·과부하/누전차단·16A 이상(1대만 연결)인지 확인',
       '전기레인지·가스레인지 등 열원과 이격 거리(30cm 이상) 확인',
       '빌트인 걸레받이 커팅 필요 여부 사전 확인(예: 깊이 90mm일 때 높이 97mm 이상이면 커팅)',
@@ -1145,7 +1205,7 @@ const INSTALL_DB = {
       '상판 타공 확인 — 카운터탑 급수 10mm+배수 10mm(상판 40mm 이하) / 빌트인 메인 25mm(40mm 이하)+서브 15mm(30mm 이하)',
       '빌트인 본체가 하부장에 들어가는지 확인(상하 170×490×405mm / 좌우 340×490×230mm)',
       '지하수 사용 여부 확인(지하수 사용 조건에서는 설치 불가)',
-      '멀티탭 기준(과부하·누전차단형 · 16A · 220V 이상 · 3구 이상 불가)과 그림은 설치비용 · 사전준비 앱의 「설치 전 준비」에 원문 그대로 있습니다.',
+      '멀티탭 기준(과부하·누전차단형 · 16A · 220V 이상 · 3구 이상 불가)과 그림은 아래 「설치 전 준비」 칸에 원문 그대로 있습니다.',
       '수압(정압 1.5~8.4kgf/㎠ + 동압 1.5kgf/㎠ 이상, 1.5kgf/㎠ 이하 설치 불가)과 온수 모델의 단독 콘센트(220V·16A 이상, 20A 차단기) 확인',
       '배수관 없는 독립 아일랜드 식탁·급배수관이 외부에 노출되는 구조가 아닌지 확인',
       '베란다 설치 위치가 아닌지 확인',
@@ -1288,17 +1348,53 @@ function catIcon(cat) {
   return sym || (d && d.emoji) || '';
 }
 
+/*
+ * ── 냉장고는 칸 하나 (2026-10-23 사장님 승인 — 분류 진단 「합치기」) ──
+ * 냉장고 형태 8가지가 타일 8개로 늘어서 있었다(24칸 중 3분의 1). 「냉장고」 한 칸으로 묶고,
+ * 고르면 아래에 형태 칸이 뜬다. **DB 키는 그대로다** — 딥링크(?cat=냉장고 4도어 키친핏)·색인·
+ * 배치 시뮬레이터가 그 이름을 쓴다. 묶음은 이름 앞머리로 가른다(손으로 목록을 적지 않는다).
+ */
+const TILE_GROUP = [['냉장고', (k) => k.indexOf('냉장고 ') === 0]];
+function tileOf(cat) { const g = TILE_GROUP.find((x) => x[1](cat)); return g ? g[0] : cat; }
+function variantsOf(tile) { return Object.keys(INSTALL_DB).filter((k) => tileOf(k) === tile); }
+function varLabel(k) { return k.replace(/^냉장고 /, '').replace(/ 설치$/, ''); }
+function tileIcon(tile) {
+  const sym = (typeof prodSymbol === 'function') ? prodSymbol(tile, null) : null;
+  return sym || catIcon(variantsOf(tile)[0] || tile);
+}
+const lastVariant = {};
+function tiles() { const out = []; Object.keys(INSTALL_DB).forEach((k) => { const t = tileOf(k); if (out.indexOf(t) < 0) out.push(t); }); return out; }
 function renderCats() {
   const box = document.getElementById('cats');
   if (!box) return;
-  box.innerHTML = Object.keys(INSTALL_DB).map(function(cat) {
-    return '<div class="cat' + (cat === currentCat ? ' on' : '') + '"'
-      + ' data-cat="' + escAttr(cat) + '" data-kw="' + escAttr(CAT_KW[cat] || '') + '">'
-      + '<span class="ci">' + catIcon(cat) + '</span>' + escHtml(catLabel(cat)) + '</div>';
+  box.innerHTML = tiles().map(function(tile) {
+    const vs = variantsOf(tile), grouped = vs.length > 1 || vs[0] !== tile;
+    const kw = vs.map((k) => k + ' ' + (CAT_KW[k] || '')).join(' ');
+    return '<div class="cat' + (currentCat && tileOf(currentCat) === tile ? ' on' : '') + '"'
+      + ' data-cat="' + escAttr(tile) + '"' + (grouped ? ' data-group="1"' : '') + ' data-kw="' + escAttr(kw) + '">'
+      + '<span class="ci">' + (grouped ? tileIcon(tile) : catIcon(tile)) + '</span>' + escHtml(catLabel(tile)) + '</div>';
   }).join('');
   box.querySelectorAll('.cat').forEach(function(el) {
-    el.onclick = function(){ selectCat(el.dataset.cat); };
+    el.onclick = function(){
+      const t = el.dataset.cat;
+      selectCat(el.dataset.group ? (lastVariant[t] || variantsOf(t)[0]) : t);
+    };
   });
+}
+/* 형태 칸 — 고른 품목이 묶음이면 그 형태들을, 검색 중이면 친 말에 맞는 형태를 띄운다 */
+function renderVars(list, cur, head) {
+  const box = document.getElementById('cat-vars');
+  if (!box) return;
+  if (!list.length) { box.innerHTML = ''; return; }
+  box.innerHTML = (head ? '<span class="vh">' + escHtml(head) + '</span>' : '')
+    + list.map((k) => '<button type="button" class="cat-var' + (k === cur ? ' on' : '') + '" data-cat="' + escAttr(k) + '">'
+      + escHtml(varLabel(k)) + '</button>').join('');
+  box.querySelectorAll('.cat-var').forEach((b) => { b.onclick = () => selectCat(b.dataset.cat); });
+}
+function varsForCurrent() {
+  if (!currentCat) return renderVars([], null);
+  const t = tileOf(currentCat), vs = variantsOf(t);
+  renderVars(vs.length > 1 ? vs : [], currentCat, t + ' 형태');
 }
 
 /* 검색은 타일을 걸러 낸다 — 예전 드롭다운을 걸러 내던 것과 판정 규칙이 같다.
@@ -1306,13 +1402,21 @@ function renderCats() {
 function filterCats(query) {
   const q = (query || '').trim().toLowerCase();
   let visible = 0;
+  const vhit = [];
   document.querySelectorAll('#cats .cat').forEach(function(el) {
     const cat = el.dataset.cat;
     const hay = (cat + ' ' + catLabel(cat) + ' ' + (el.dataset.kw || '')).toLowerCase();
     const match = !q || hay.includes(q);
     el.style.display = match ? '' : 'none';
     if (match) visible++;
+    /* 묶음 타일이 걸렸으면 **어느 형태가 걸렸는지**를 바로 아래 칸으로 보여준다 — 「키친핏」을 쳤는데
+       「냉장고」 칸만 남으면 다시 눌러 형태를 찾아야 한다 */
+    if (q && match && el.dataset.group) variantsOf(cat).forEach((k) => {
+      if ((k + ' ' + (CAT_KW[k] || '')).toLowerCase().includes(q)) vhit.push(k);
+    });
   });
+  if (q) renderVars(vhit, currentCat, vhit.length ? '찾은 형태' : '');
+  else varsForCurrent();
   document.getElementById('cat-search-empty').style.display = (q && visible === 0) ? 'block' : 'none';
 }
 
@@ -1342,7 +1446,8 @@ function selectCat(cat) {
 
   /* 고른 타일에 표시를 남기고, 검색은 풀어 목록을 되돌린다 —
      고른 뒤에도 걸러진 채로 두면 "다른 것도 있었는데" 하고 다시 지워야 한다. */
-  document.querySelectorAll('#cats .cat').forEach(function(el){ el.classList.toggle('on', el.dataset.cat === cat); });
+  if (tileOf(cat) !== cat) lastVariant[tileOf(cat)] = cat;
+  document.querySelectorAll('#cats .cat').forEach(function(el){ el.classList.toggle('on', el.dataset.cat === tileOf(cat)); });
   const searchInput = document.getElementById('cat-search');
   if (searchInput) searchInput.value = '';
   filterCats('');
@@ -1370,7 +1475,7 @@ function selectCat(cat) {
 
     const cautions = d.cautions || [];
     document.getElementById('caution-wrap').innerHTML = cautions.length ? `
-      <div class="caution-card">
+      <div class="caution-card" data-print="설치 불가·주의 사항">
         <h3>⚠️ 설치 불가·주의 사항</h3>
         ${cautions.map(c=>`<div class="caution-item"><span class="caution-icon">⚠️</span><span>${c}</span></div>`).join('')}
       </div>` : '';
@@ -1396,10 +1501,70 @@ function selectCat(cat) {
     const srcBtn = document.getElementById('source-link-btn');
     srcBtn.href = d.sourceUrl || 'https://www.samsung.com/sec/buying-guide/';
   }
+  renderPrep(cat);
 
   document.getElementById('result').classList.add('visible');
-  document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+  const wide = window.matchMedia && matchMedia('screen and (min-width:720px)').matches;
+  if (!wide) document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
 }
+
+/*
+ * ── 설치 전 준비 (2026-10-23 사장님 승인 — 설치비용 앱 「설치 전 준비」 탭을 이리로 옮겼다) ──
+ * 「설치 전에 무엇을 확인하나」는 이 앱이 하는 일이라 품목을 고르면 그 품목에 해당하는 것만 붙인다.
+ * **자료는 install-cost.json 한 벌**이다(설치비용 앱이 만들고 이 앱은 읽기만 한다 — 사본을 두지 않는다).
+ * 대상 품목은 자료의 `safety.targets` 가 정한다(세탁기 → 「세탁기·콤보」처럼 앞머리로 잇는다).
+ */
+let IC = null, icReq = null;
+function loadIC() {
+  if (IC) return Promise.resolve(IC);
+  if (typeof fetch !== 'function') return Promise.resolve(null);
+  if (!icReq) icReq = fetch('install-cost.json').then((r) => r.json()).then((j) => (IC = j))
+    .catch(() => { icReq = null; return null; });
+  return icReq;
+}
+/* 안내 지면 → 품목. 키는 install-cost.json 의 prepMore[].key 다 */
+const PREP_CAT = { aircon: ['에어컨'], dishwash: ['식기세척기'], reform: ['식기세척기'] };
+function prepItemsFor(cat, J) {
+  const out = [];
+  if (J.safety && (J.safety.targets || []).some((t) => cat === t || cat.indexOf(t) === 0)) out.push('safety');
+  (J.prepMore || []).forEach((c) => { if ((PREP_CAT[c.key] || []).indexOf(cat) >= 0) out.push(c.key); });
+  return out;
+}
+function prepHtml(key, J) {
+  const e = escHtml, date = J.collectedAt ? '확인 ' + e(J.collectedAt) + ' · ' : '';
+  if (key === 'safety') {
+    const sf = J.safety;
+    return '<div class="card prep-card" id="prep-safety" data-print="' + e(sf.title) + '"><div class="sec-title">🔌 ' + e(sf.title) + '</div>'
+      + '<div class="tg">대상제품 <b>' + sf.targets.map(e).join(' · ') + '</b></div>'
+      + '<div class="prep-yn"><div class="y"><h4>' + e(sf.ok.label) + '</h4><ul>' + sf.ok.items.map((i) => '<li>' + e(i.t) + '</li>').join('')
+      + '</ul><div class="spec">' + e(sf.ok.spec) + '</div></div><div class="n"><h4>' + e(sf.no.label) + '</h4><ul>'
+      + sf.no.items.map((i) => '<li>' + e(i.t) + '</li>').join('') + '</ul></div></div>'
+      + '<ul class="prep-lines">' + sf.lines.map((l, i) => '<li data-id="prep:line:' + i + '">' + e(l) + '</li>').join('') + '</ul>'
+      + '<div class="prep-foot">' + date + '<a href="' + e(sf.url) + '" target="_blank" rel="noopener">원문 보기</a></div></div>';
+  }
+  const c = (J.prepMore || []).find((x) => x.key === key);
+  if (!c) return '';
+  return '<div class="card prep-card" id="prep-' + e(key) + '" data-print="' + e(c.title) + '"><div class="sec-title">📋 ' + e(c.title) + '</div>'
+    + '<div class="tg">' + e(c.lead) + '</div>'
+    + (c.img ? '<a class="prep-shot" href="' + e(c.img) + '" target="_blank" rel="noopener"><img src="' + e(c.img) + '" alt="' + e(c.imgAlt || c.title) + '" loading="lazy"></a>' : '')
+    + c.items.map((x, i) => '<div class="prep-it" data-id="prep:' + e(key) + ':' + i + '"><div class="pt">' + e(x.t) + '</div><div class="pd">' + e(x.d) + '</div>'
+      + (x.img ? '<a class="prep-shot" href="' + e(x.img) + '" target="_blank" rel="noopener"><img src="' + e(x.img) + '" alt="' + e(x.t) + '" loading="lazy"></a>' : '')
+      + '</div>').join('')
+    + '<div class="prep-foot">' + date + '<a href="' + e(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div></div>';
+}
+function renderPrep(cat, focus) {
+  const wrap = document.getElementById('prep-wrap');
+  if (!wrap) return Promise.resolve();
+  wrap.innerHTML = '';
+  return loadIC().then((J) => {
+    if (!J || currentCat !== cat) return;
+    wrap.innerHTML = prepItemsFor(cat, J).map((k) => prepHtml(k, J)).join('');
+    if (!focus) return;
+    const el = wrap.querySelector('[data-id="' + String(focus).replace(/"/g, '') + '"]') || document.getElementById('prep-' + focus);
+    if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('prep-hit'); setTimeout(() => el.classList.remove('prep-hit'), 1600); }
+  });
+}
+window.__install = { tileOf, variantsOf, prepItemsFor, renderPrep, loadIC, setIC: (j) => { IC = j; } };
 
 function buildChecklistText() {
   const d = INSTALL_DB[currentCat];
@@ -1442,8 +1607,15 @@ renderCats();
 
 /* 허브 통합검색(/search)에서 넘어온 ?cat= 딥링크 — 해당 카테고리를 바로 연다 */
 (function(){
-  const cat = new URLSearchParams(location.search).get('cat');
+  const p = new URLSearchParams(location.search);
+  const cat = p.get('cat');
   if(cat && INSTALL_DB[cat]) selectCat(cat);
+  /* 설치비용 앱의 옛 「설치 전 준비」 링크·검색 결과(?prep=safety|aircon|dishwash|reform) */
+  const prep = p.get('prep');
+  if (prep && !cat) {
+    const to = prep === 'safety' ? '세탁기·콤보' : ((PREP_CAT[prep] || [])[0]);
+    if (to && INSTALL_DB[to]) { selectCat(to); renderPrep(to, p.get('pid') || prep); }
+  }
 })();
 
 /*
@@ -1486,7 +1658,7 @@ function syncInstallShareBtn(){
    (2026-08-11: 21개인데 "(20종)"으로 적혀 있었다). */
 (function(){
   const el = document.getElementById('cat-count-title');
-  if (el) el.textContent = '① 카테고리 검색 · 선택 (' + Object.keys(INSTALL_DB).length + '종)';
+  if (el) el.textContent = '① 카테고리 검색 · 선택 (' + tiles().length + '종)';
 })();
 if (typeof mountShareButton === 'function') { mountShareButton(installShareBuild); syncInstallShareBtn(); }
 </script>

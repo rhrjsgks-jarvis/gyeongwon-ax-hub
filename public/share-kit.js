@@ -625,8 +625,14 @@
   }
   function pickPrint(o) {
     var parts = printParts();
-    if (parts.length < 2) { printScreen(o); return; }
-    closeSheet();
+    if (parts.length < 2) { closeSheet(); printScreen(o); return; }
+    /*
+     * **열려 있는 시트를 그 자리에서 바꿔 쓴다.** 닫고 새로 열면 닫기가 뒤로가기 한 칸을
+     * 늦게 소비하는 사이 새 시트가 칸을 쌓아, 허브(iframe) 안에서는 「인쇄」를 누르는 순간
+     * 한 칸이 더 빠져 앱 밖으로 나가 버렸다(E2E 가 잡았다). 뒤로가기 칸은 처음 시트 것 하나만 쓴다.
+     */
+    var reuse = document.querySelector('.sk-dim');
+    if (!reuse) closeSheet();
     injectCss();
     if (!document.getElementById('sk-pick-css')) {
       var st = document.createElement('style'); st.id = 'sk-pick-css';
@@ -639,8 +645,8 @@
         + '.sk-pick-all button{border:1.5px solid #D1D5DB;background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:700;color:#374151;cursor:pointer}';
       document.head.appendChild(st);
     }
-    var dim = document.createElement('div'); dim.className = 'sk-dim';
-    var box = document.createElement('div'); box.className = 'sk-sheet';
+    var dim = reuse || document.createElement('div'); dim.className = 'sk-dim';
+    var box = (reuse && reuse.querySelector('.sk-sheet')) || document.createElement('div'); box.className = 'sk-sheet';
     box.innerHTML = '<div class="sk-t">인쇄할 내용</div><div class="sk-n">체크한 것만 A4 로 나갑니다</div>'
       + '<div class="sk-pick-all"><button type="button" data-a="1">모두 선택</button><button type="button" data-a="0">모두 해제</button></div>'
       + '<div class="sk-pick"></div>';
@@ -675,6 +681,7 @@
     var cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'sk-b'; cancel.textContent = '취소';
     cancel.addEventListener('click', closeSheet);
     box.appendChild(go); box.appendChild(cancel);
+    if (reuse) return;   /* 바깥 누르기·뒤로가기는 처음 시트가 이미 걸어 두었다 */
     dim.appendChild(box);
     dim.addEventListener('click', function (e) { if (e.target === dim) closeSheet(); });
     document.body.appendChild(dim);
@@ -687,7 +694,7 @@
     try { o = build && build(); } catch (e) {}
     sheet('이 화면을', '공유하거나 인쇄합니다', [
       { label: '이미지로 공유', primary: true, onClick: function () { captureScreen(o && o.filename); } },
-      { label: '인쇄 · PDF 저장 (A4)', onClick: function () { setTimeout(function () { pickPrint(o || {}); }, 0); } },
+      { label: '인쇄 · PDF 저장 (A4)', keepOpen: true, onClick: function () { pickPrint(o || {}); } },
     ]);
   }
 

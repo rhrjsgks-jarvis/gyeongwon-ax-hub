@@ -46,7 +46,7 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   /* 색인에는 41건이 있는데 이 표에 없어 **결과가 통째로 안 그려졌다**(2026-08-30 전수조사).
      조건 칩은 색인 전체로 세므로 "N건"인데 아래는 "없습니다"가 되는 조합이었다.
      새 모듈을 색인에 넣으면 **여기(META·ORDER)도 함께** — 한쪽만 고치면 조용히 버려진다. */
-  installcost: { label: '설치비용 · 사전준비', icon: 'bolt', color: '#B45309' },
+  installcost: { label: '설치비용', icon: 'bolt', color: '#B45309' },
   hub:     { label: '허브 기능',        icon: 'home',     color: '#475569' },
 }
 /*

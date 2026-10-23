@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>설치비용 · 사전준비</title>
+<title>설치비용</title>
 <link rel="stylesheet" href="/vendor/fonts/pretendard-variable.css" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="/vendor/fonts/pretendard-variable.css"></noscript>
 <style>
@@ -70,7 +70,14 @@
   .chip{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 13px;font-size:13px;
     font-weight:600;cursor:pointer;color:#374151;font-family:inherit;transition:.12s;
     white-space:nowrap;flex:0 0 auto}
-  .chip.on{background:#1428A0;border-color:#1428A0;color:#fff}
+  /* 고른 칩은 파란 테두리(2026-10-23 사장님 — 전 앱 통일). 굵기 대신 안쪽 그림자로 두 겹 — 칸이 밀리지 않는다 */
+  .chip.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}
+  /* 가구장 리폼 하위 칸(2026-10-23) — 표 35개가 한 칸에 있어 묶음([한눈에] …)으로 나눴다 */
+  .subchips{margin-top:-6px}
+  .subchips .chip{padding:6px 11px;font-size:12.5px}
+  .moved-note{font-size:12px;color:#4b5563;background:#fff;border:1px dashed #d6dae3;border-radius:10px;
+    padding:9px 12px;margin-bottom:12px;line-height:1.6}
+  .moved-note a{color:#1428A0;font-weight:700}
   @media(min-width:600px){.chips{flex-wrap:wrap;overflow:visible}}
 
   .src{font-size:12px;color:#6b7280;line-height:1.65;background:#fff;border:1px solid #eceef2;
@@ -134,6 +141,13 @@
   .r .v .u{font-size:11px;font-weight:600;color:#9aa0a6;margin-left:2px}
   .r .v.free{color:#1428A0}
   .r .v.soft{font-size:13px;font-weight:700;color:#6b7280}
+  /* 값이 금액이 아니라 긴 문장이면 이름 아래로 내린다(2026-10-23) — 줄바꿈 없는 값 칸이 이름 칸을
+     한 글자 폭으로 눌러 「[확인 못 한 것]」 표가 폰에서 세로로 한 글자씩 읽혔다(390px 실측) */
+  .r.stack{display:block}
+  .r.stack .vlong{font-size:13px;color:#374151;line-height:1.65;margin-top:3px}
+  .r.stack .nm:empty{display:none}
+  .r.stack .nm:empty+.vlong{margin-top:0}
+  .tabs[hidden]{display:none}
   /* 값이 여럿인 표(이전설치·재설치·철거 / 신제품·이전) — 이름 아래에 나란히 세운다 */
   /* 시공 사진 — 줄 왼쪽에 작게. 커지면 표가 아니라 화보가 된다 */
   .r .shot{width:58px;height:58px;flex:none;border-radius:8px;object-fit:cover;
@@ -225,8 +239,8 @@
   <div class="topbar-in">
     <div class="hd-ico ci" data-label="영수증">🧾</div>
     <div>
-      <div class="hd-t">설치비용 · 사전준비</div>
-      <div class="hd-s">신규 설치 추가비 · 이전설치 · 안전한 사용준비</div>
+      <div class="hd-t">설치비용</div>
+      <div class="hd-s">신규 설치 추가비 · 특수장비 · 가구장 리폼</div>
     </div>
   </div>
 </div>
@@ -237,15 +251,14 @@
 -->
 <div class="sbar">
   <div class="sbar-in">
-    <input id="sq" type="search" placeholder="사다리차 · 타공 · 앵글 · 멀티탭 · 이전설치…" autocomplete="off">
+    <input id="sq" type="search" placeholder="사다리차 · 타공 · 앵글 · 냉장고장 · 인테리어핏…" autocomplete="off">
     <button class="sclr ci" id="sclr" hidden aria-label="지우기" data-label="x">✖</button>
     <div class="sdrop" id="sdrop" hidden></div>
   </div>
 </div>
 
-<div class="tabs" id="tabs">
+<div class="tabs" id="tabs" hidden>
   <button class="tab on" data-tab="new"><span class="tb-ico ci" data-label="공구">🔧</span>신규 설치 추가비</button>
-  <button class="tab" data-tab="prep"><span class="tb-ico ci" data-label="플러그">🔌</span>설치 전 준비</button>
 </div>
 
 <div class="wrap" id="body"><div class="empty">불러오는 중…</div></div>
@@ -263,7 +276,7 @@
  * 인라인으로 넣지 않은 이유는 145KB 라 미니앱 파싱 시간에 그대로 얹히기 때문이고,
  * 서비스워커가 SWR 로 잡아 매장 전파가 약해도 열린다.
  */
-var D = null, TAB = 'new', CAT = {}, Q = '';
+var D = null, TAB = 'new', CAT = { sub: {} }, Q = '';
 
 var esc = function (s) { return String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
@@ -374,6 +387,12 @@ function listOf(n, pfx) {
   return '<div class="rows">' + n.rows.map(function (r, ri) {
     var id = ' data-id="' + pfx + ':' + ri + '"';
     if (r.only) return '<div class="r only"' + id + '>' + esc(r.only) + '</div>';
+    var v0 = r.vals[0] || '';
+    if (!multi && v0.length > 24 && !MONEY.test(v0) && !FREE.test(v0)) {
+      return '<div class="r stack"' + id + '>' + shot(r)
+        + '<div class="nm">' + esc(r.name) + '</div><div class="vlong">' + esc(v0) + '</div>'
+        + (r.note ? '<div class="nt">' + esc(r.note) + '</div>' : '') + '</div>';
+    }
     if (!multi) {
       return '<div class="r"' + id + '>' + shot(r)
         + '<div class="nm">' + esc(r.name)
@@ -409,6 +428,13 @@ function chips(list, cur, tab) {
   }).join('') + '</div></div>';
 }
 
+/* 절 제목의 [묶음] 머리 — 가구장 리폼 절 35개가 이 머리로 일곱 묶음이 된다 */
+function grpOf(title) { var m = /^\[([^\]]+)\]\s*/.exec(title || ''); return m ? m[1] : ''; }
+function stripGrp(title) { return String(title || '').replace(/^\[[^\]]+\]\s*/, ''); }
+function groupsOf(c) {
+  var g = []; c.sections.forEach(function (x) { var k = grpOf(x.title); if (k && g.indexOf(k) < 0) g.push(k); });
+  return g;
+}
 function render() {
   var el = document.getElementById('body');
   if (!D) { el.innerHTML = '<div class="empty">불러오는 중…</div>'; return; }
@@ -416,58 +442,31 @@ function render() {
   if (TAB === 'new') {
     var cats = D.newInstall.categories, key = CAT.new || cats[0].key;
     var c = cats.filter(function (x) { return x.key === key; })[0] || cats[0];
+    /* 묶음 머리가 둘 이상인 품목은 하위 칸으로 나눈다(지금은 가구장 리폼) */
+    var gs = groupsOf(c), g = gs.length > 1 ? (gs.indexOf(CAT.sub[c.key]) >= 0 ? CAT.sub[c.key] : gs[0]) : '';
     el.innerHTML = chips(cats, c.key, 'new')
+      + (g ? '<div class="chipwrap subchips"><div class="chips">' + gs.map(function (x) {
+          return '<button class="chip' + (x === g ? ' on' : '') + '" data-sub="' + esc(x) + '" data-cat="' + c.key + '">' + esc(x) + '</button>';
+        }).join('') + '</div></div>' : '')
+      + '<div class="moved-note">멀티탭 안전 기준 · 에어컨 안전 안내 · 식기세척기 유의사항 등 <b>설치 전 준비</b>는 '
+      + '<a href="/install" target="_top">제품별 설치환경 가이드</a>의 각 품목 안으로 옮겼습니다.</div>'
       + '<div class="src"><b>' + esc(D.newInstall.title) + '</b> — ' + esc(D.newInstall.note)
       + '<br>' + esc(c.note) + ' · 확인 ' + esc(D.collectedAt)
       + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div>'
       + '<div class="secs">' + c.sections.map(function (s, i) {
+          if (g && grpOf(s.title) !== g) return '';
+          var title = g ? stripGrp(s.title) : s.title;
           /* 연락처 절은 AS 관련 정보 › 연락처 로 옮겼다(2026-10-22) — 여기는 그리로 가는 길만 */
-          if (s.moved === 'as-contact') return '<div class="sec moved" data-id="new:' + c.key + ':' + i + ':0"><b>' + esc(s.title) + '</b>'
+          if (s.moved === 'as-contact') return '<div class="sec moved" data-id="new:' + c.key + ':' + i + ':0"><b>' + esc(title) + '</b>'
             + '<div class="foot2">연락처는 <a href="/as?grp=g-new" target="_top">AS 관련 정보 › 연락처 › 신규 설치 협력사</a> 묶음에 모았습니다.</div></div>';
           var n = normalizeGrid(s);
-          return section(s.title, n.rows.filter(function(r){ return !(r.note && !r.label); }).length /* 각주 줄(주석)은 항목이 아니다 — 2026-08-30 */, listOf(n, 'new:' + c.key + ':' + i), s.foot, isWide(n));
+          return section(title, n.rows.filter(function(r){ return !(r.note && !r.label); }).length /* 각주 줄(주석)은 항목이 아니다 — 2026-08-30 */, listOf(n, 'new:' + c.key + ':' + i), s.foot, isWide(n));
         }).join('') + '</div>';
     return;
   }
 
-  /*
-   * 설치 전 준비 — 원문 지면의 **그림과 글을 함께** 싣는다(2026-08-20 사장님 요청).
-   * 예전에는 멀티탭 글만 있고 나머지 두 지면은 "그림이라 못 옮겼습니다"로 링크만 뒀는데,
-   * 그 두 지면이 **설치 불가 조건·필요 공간·타공 기준**을 담고 있어 상담에서 바로 쓰인다.
-   * 그림은 펼쳐 보여주고, 글은 옮겨 적어 검색에 걸리게 한다.
-   */
-  var sf = D.safety, ico = function (x) {
-    return x.img ? '<img class="ic" src="' + esc(x.img) + '" alt="" loading="lazy">' : '';
-  };
-  el.innerHTML = '<div class="safe"><h3>' + esc(sf.title) + '</h3>'
-    + '<div class="tg" data-id="prep:targets">대상제품 <b>' + sf.targets.map(esc).join(' · ') + '</b></div>'
-    + '<div class="yn"><div class="y" data-id="prep:ok"><h4>' + esc(sf.ok.label) + '</h4><ul class="icl">'
-    + sf.ok.items.map(function (i) { return '<li>' + ico(i) + '<span>' + esc(i.t) + '</span></li>'; }).join('')
-    + '</ul><div class="spec">' + esc(sf.ok.spec) + '</div></div>'
-    + '<div class="n" data-id="prep:no"><h4>' + esc(sf.no.label) + '</h4><ul class="icl">'
-    + sf.no.items.map(function (i) { return '<li>' + ico(i) + '<span>' + esc(i.t) + '</span></li>'; }).join('')
-    + '</ul></div></div>'
-    + '<ul class="lines">' + sf.lines.map(function (l, i) {
-        return '<li data-id="prep:line:' + i + '">' + esc(l) + '</li>'; }).join('') + '</ul>'
-    + '<div class="warnbox">멀티탭 정격용량을 넘겨 쓰면 화재 위험이 있습니다. 전원은 벽면 콘센트에 제품 단독으로 꽂는 것이 원칙입니다.</div>'
-    + '<div class="foot">확인 ' + esc(D.collectedAt)
-    + ' · <a href="' + esc(sf.url) + '" target="_blank" rel="noopener">원문 보기</a></div></div>'
-    + (D.prepMore || []).map(function (c) {
-        return '<div class="safe" data-id="prep:' + esc(c.key) + '"><h3>' + esc(c.title) + '</h3>'
-          + '<div class="tg">' + esc(c.lead) + '</div>'
-          + (c.img ? '<a class="shot" href="' + esc(c.img) + '" target="_blank" rel="noopener">'
-              + '<img src="' + esc(c.img) + '" alt="' + esc(c.imgAlt || c.title) + '" loading="lazy"></a>' : '')
-          + '<div class="prepgrid">' + c.items.map(function (x, i) {
-              return '<div class="pit" data-id="prep:' + esc(c.key) + ':' + i + '">'
-                + '<div class="pt">' + esc(x.t) + '</div>'
-                + '<div class="pd">' + esc(x.d) + '</div>'
-                + (x.img ? '<a class="shot" href="' + esc(x.img) + '" target="_blank" rel="noopener">'
-                    + '<img src="' + esc(x.img) + '" alt="' + esc(x.t) + '" loading="lazy"></a>' : '')
-                + '</div>';
-            }).join('') + '</div>'
-          + '<div class="foot">확인 ' + esc(D.collectedAt)
-          + ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">원문 보기</a></div></div>';
-      }).join('');
+  /* 「설치 전 준비」는 제품별 설치환경 가이드로 옮겼다(2026-10-23 사장님 승인) — 여기로 오면 그리로 보낸다 */
+  toInstallPrep(CAT.prep);
 }
 
 /* ── 검색 ────────────────────────────────────────────────
@@ -492,7 +491,7 @@ function runSearch() {
     });
   }
 
-  var TABN = { new: '신규 설치 추가비', care: '케어플러스 이전설치 → AS 관련 정보', prep: '설치 전 준비' };
+  var TABN = { new: '신규 설치 추가비', care: '케어플러스 이전설치 → AS 관련 정보', prep: '설치 전 준비 → 설치환경 가이드' };
   var head = hit.length
     ? '결과 ' + hit.length + '건 — 누르면 그 자리로 갑니다'
       + (dropped.length ? ' · 없는 말이라 뺐습니다: ' + dropped.map(esc).join(', ') : '')
@@ -532,9 +531,22 @@ function toCareplus(cat) {
   var u = '/as?fs=careplus&cpv=move' + (cat ? '&cpg=' + encodeURIComponent(cat) : '');
   try { (window.top || window).location.href = u; } catch (e) { location.href = u; }
 }
+/* 설치 전 준비(멀티탭 · 안전 안내) → 설치환경 가이드의 그 품목. 키는 install-cost.json 의 safety / prepMore[].key */
+function toInstallPrep(key, target) {
+  var u = '/install?prep=' + encodeURIComponent(key || 'safety') + (target ? '&pid=' + encodeURIComponent(target) : '');
+  try { (window.top || window).location.href = u; } catch (e) { location.href = u; }
+}
 function go(tab, cat, target) {
   if (tab === 'care') { closeDrop(); toCareplus(cat); return; }
+  if (tab === 'prep') { closeDrop(); toInstallPrep(cat, target); return; }
   TAB = tab; if (cat) CAT[tab] = cat;
+  /* 검색 결과가 하위 칸 안의 절이면 그 칸을 먼저 연다 — 닫힌 칸 안으로 데려가면 아무 일도 없어 보인다 */
+  var tm = /^new:([^:]+):(\d+)/.exec(String(target || ''));
+  if (tm && D) {
+    var tc = D.newInstall.categories.filter(function (x) { return x.key === tm[1]; })[0];
+    var sec = tc && tc.sections[+tm[2]];
+    if (sec && grpOf(sec.title)) CAT.sub[tc.key] = grpOf(sec.title);
+  }
   [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t.dataset.tab === tab); });
   closeDrop();
   render();
@@ -578,6 +590,7 @@ document.getElementById('tabs').addEventListener('click', function (e) {
 });
 document.getElementById('body').addEventListener('click', function (e) {
   var chip = e.target.closest('.chip');
+  if (chip && chip.dataset.sub) { CAT.sub[chip.dataset.cat] = chip.dataset.sub; render(); return; }
   if (chip) { CAT[chip.dataset.tab] = chip.dataset.cat; render(); }
 });
 var drop = document.getElementById('sdrop');
@@ -611,7 +624,8 @@ fetch('install-cost.json').then(function (r) { return r.json(); }).then(function
   var p = new URLSearchParams(location.search);
   var t = p.get('tab');
   if (t === 'care') { toCareplus(p.get('cat')); return; }
-  if (t && ['new', 'prep'].indexOf(t) >= 0) { TAB = t; if (p.get('cat')) CAT[t] = p.get('cat'); }
+  if (t === 'prep') { toInstallPrep(p.get('cat')); return; }
+  if (t === 'new') { TAB = t; if (p.get('cat')) CAT[t] = p.get('cat'); }
   [].forEach.call(document.querySelectorAll('.tab'), function (x) { x.classList.toggle('on', x.dataset.tab === TAB); });
   render();
   /* 통합검색에서 `?q=` 로 들어오면 그 말로 바로 찾아 첫 결과로 데려간다 */
@@ -634,8 +648,9 @@ function costShareBuild() {
   var tabNm = { new: '신규 설치 추가비', prep: '설치 전 준비' }[TAB];
   var list = TAB === 'new' ? D.newInstall.categories : null;
   var c = list ? (list.filter(function (x) { return x.key === CAT[TAB]; })[0] || list[0]) : null;
-  var t = c ? c.name : tabNm;
-  return { app: '세일즈 코파일럿 · 설치비용 · 사전준비', title: t, subtitle: c ? tabNm : '',
+  var sub = c && CAT.sub[c.key] && groupsOf(c).length > 1 ? CAT.sub[c.key] : '';
+  var t = c ? c.name + (sub ? ' · ' + sub : '') : tabNm;
+  return { app: '세일즈 코파일럿 · 설치비용', title: t, subtitle: c ? tabNm : '',
     printNote: '', filename: '설치비용_' + String(t).replace(/[\/:*?"<>|\s·]+/g, '') };
 }
 /* 인쇄 직전 — 접어 둔 표도 펼친다(종이는 펼 수가 없다). 끝나면 접어 둔 것만 되접는다 */

@@ -11,7 +11,7 @@ export default function InstallCostPage() {
   return (
     <IframeModule
       src="/install-cost-app.html"
-      title="설치비용 · 사전준비"
+      title="설치비용"
       className="-m-4 lg:-m-6"
       style={{ height: 'calc(100vh - 60px)', marginBottom: '-6rem' }}
     />

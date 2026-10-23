@@ -181,9 +181,15 @@ ok(text().includes('원문 보기') && text().includes(D.collectedAt),
 
 /* 자료에 비고가 있어도 화면이 안 그리면 소용없다 — 실제로 그려진 줄을 센다 */
 let drawn = 0, feet = 0;
+/* 하위 칸(가구장 리폼 [묶음])이 있으면 칸마다 눌러 센다 — 한 칸만 보면 나머지 절이 안 세어진다 */
 D.newInstall.categories.forEach((c) => { win.__cost.go('new', c.key, null);
-  drawn += win.document.querySelectorAll('#body .nt').length;
-  feet += win.document.querySelectorAll('#body .foot2').length; });
+  const subs = [...win.document.querySelectorAll('#body .subchips .chip')].map((b) => b.dataset.sub);
+  (subs.length ? subs : [null]).forEach((g) => {
+    if (g) win.document.querySelector('#body .subchips .chip[data-sub="' + g + '"]').click();
+    drawn += win.document.querySelectorAll('#body .nt').length;
+    feet += win.document.querySelectorAll('#body .foot2').length;
+  });
+});
 /* 케어플러스 이전설치 표는 AS 관련 정보 › 수리비 › 케어플러스 칸으로 옮겼다(2026-10-22) — 신규 설치 비고만 센다 */
 ok(drawn >= 40, `비고가 화면에 ${drawn}줄 그려진다`);
 ok(!win.document.querySelector('.tab[data-tab="care"]'), '「이전 · 재설치 · 철거」 탭이 없다 — 케어플러스 금액은 AS 케어플러스 칸 한 곳');
@@ -202,10 +208,38 @@ ok(wideOf('new', 'el') >= 1, '전기레인지(19행)가 두 단을 쓴다');
 ok(wideOf('new', 'ac') === 0, '에어컨은 절이 여럿이라 카드 단위로 흐른다(줄은 안 나눈다)');
 ok(feet >= 1, `절 각주가 화면에 ${feet}개 그려진다`);
 
-win.__cost.go('prep');
-ok(text().includes('16A') && text().includes('4000W'), '멀티탭 기준(16A · 4000W)이 화면에 있다');
-ok(text().includes('화재'), '정격 초과 시 화재 위험을 밝힌다');
-ok(D.safety.targets.every((t) => text().includes(t)), '대상제품 5종을 모두 적는다');
+/*
+ * ── 가구장 리폼 하위 칸 (2026-10-23 사장님 승인) ── 표 35개가 한 칸에 있어 [묶음] 머리로 나눴다.
+ * 칸 수 = 자료의 묶음 수(세어서 견준다) · 한 번에 한 묶음만 보인다 · 화면 제목에 [머리]가 남지 않는다.
+ */
+{
+  const rfc = D.newInstall.categories.find((c) => c.key === 'rf');
+  const groups = [...new Set(rfc.sections.map((x) => (/^\[([^\]]+)\]/.exec(x.title) || [])[1]).filter(Boolean))];
+  win.__cost.go('new', 'rf', null);
+  win.document.querySelector('#body .subchips .chip').click();   /* 앞 검사가 고른 칸이 남아 있다 — 첫 칸으로 */
+  const subs = [...win.document.querySelectorAll('#body .subchips .chip')].map((b) => b.dataset.sub);
+  ok(subs.length === groups.length && groups.length >= 5, `가구장 리폼 하위 칸 ${subs.length}개 = 자료의 묶음 ${groups.length}개`);
+  const shown = win.document.querySelectorAll('#body .secs > .sec').length;
+  const want = rfc.sections.filter((x) => x.title.indexOf('[' + groups[0] + ']') === 0).length;
+  ok(shown === want, `첫 칸(${groups[0]})의 절만 보인다 — ${shown} / 기대 ${want}`);
+  ok(![...win.document.querySelectorAll('#body .sec summary')].some((x) => /^\[/.test(x.textContent.trim())),
+    '절 제목에 [묶음] 머리가 남지 않는다(칸 이름이 이미 말한다)');
+}
+/* 고른 칩은 파란 테두리(2026-10-23 전 앱 통일) — 남색 채움으로 되돌아가면 문다 */
+ok(/\.chip\.on\{[^}]*inset 0 0 0 1px #1428A0/.test(html) && !/\.chip\.on\{background:#1428A0/.test(html),
+  '고른 칩이 파란 테두리다');
+/* 긴 문장 값은 이름 아래로 — 「[확인 못 한 것]」 표가 폰에서 한 글자씩 세로로 읽히던 결함 */
+win.__cost.go('new', 'rf', null);
+win.document.querySelector('#body .subchips .chip[data-sub="확인 못 한 것"]').click();
+ok(win.document.querySelectorAll('#body .r.stack .vlong').length >= 2, '긴 문장 값이 이름 아래 줄로 내려간다');
+
+/*
+ * ── 설치 전 준비는 설치환경 가이드로 옮겼다 (2026-10-23 사장님 승인) ──
+ * 탭이 없어졌고, 옛 링크(?tab=prep)·검색 결과는 그리로 보낸다. 화면 검사는 test-install 이 한다.
+ */
+ok(!win.document.querySelector('.tab[data-tab="prep"]'), '「설치 전 준비」 탭이 없다 — 설치환경 가이드의 품목 안으로 옮겼다');
+ok(/\/install\?prep=/.test(html) && /target="_top">제품별 설치환경 가이드/.test(html), '옛 링크·검색 결과는 설치환경 가이드로 보내고, 화면에 그 길을 한 줄 적는다');
+ok(!/이전설치 · 안전한 사용준비/.test(html), '머리 부제가 없는 탭(이전설치)을 말하지 않는다');
 
 /* ── [6] 설치 전 준비 — 그림과 글을 함께 담았는가 ────────
  * 사장님 요청으로 원문 지면의 그림 6장을 옮겨 왔다. 두 가지를 함께 지킨다:
@@ -231,7 +265,7 @@ const blobPrep = JSON.stringify(cards);
 [['타공', '싱크대 상판 타공'], ['베란다', '설치 불가 위치'], ['아일랜드', '설치 불가 위치'],
  ['55.5', '필요 공간'], ['접근금지', '에어컨 안전'], ['매립장', '싱크장 리폼']]
   .forEach(([w, why]) => ok(blobPrep.includes(w), `${why} — "${w}" 가 글로 들어 있다`));
-ok(text().includes('설치가 불가합니다'), '설치 불가 조건이 화면에 나온다');
+ok(blobPrep.includes('설치가 불가합니다'), '설치 불가 조건이 자료에 있다(화면은 설치환경 가이드 — test-install 이 본다)');
 ok(!/옮기지 못했습니다/.test(text()), '"못 옮겼다" 안내가 남아 있지 않다(이제 옮겼다)');
 
 console.log('\n[7] 검색');
@@ -247,7 +281,8 @@ ok(win.__cost.search('가').length === 0, '한 글자는 조건으로 쓰지 않
  * 표까지만 가고 말면 435행 중에서 다시 눈으로 찾아야 한다. `jump()` 는 첫 결과를 눌러
  * 실제로 강조된 줄의 글을 돌려주므로, **찾은 말이 그 줄에 있는지**로 확인할 수 있다.
  */
-[['천공', '15,000'], ['멀티탭', '멀티탭']].forEach(function ([q, want]) {
+/* 「몰딩」은 가구장 리폼의 하위 칸 안 줄이다 — 닫힌 칸 안으로도 데려가는지 본다 */
+[['천공', '15,000'], ['몰딩', '몰딩']].forEach(function ([q, want]) {
   const landed = win.__cost.jump(q);
   ok(!!landed && landed.indexOf(want) >= 0,
     `"${q}" 검색 → 그 줄로 이동 (${landed ? landed.slice(0, 40) : '이동 못 함'})`);

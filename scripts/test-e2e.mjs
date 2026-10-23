@@ -260,13 +260,14 @@ try {
     });
     /* 배치 시뮬레이터는 2026-08-17 에 '개발중인 서비스'(사이드바 최하단, 잠금)로 내려가
        하단 바로가기에서 빠졌다 — 잠긴 도구를 하단 탭에 두면 눌러도 비밀번호만 뜬다. */
-    const want = ['허브', '통합검색', '제품 상담 도구', '교육', 'AS 관련 정보'];
+    /* 2026-10-23 태블릿 개편 — '제품 상담 도구'를 셋으로 나누고, AS 단독 칸을 '설치 · AS' 분류로 바꿨다 */
+    const want = ['허브', '통합검색', '제품 정보', '교육', '설치 · AS'];
     if (JSON.stringify(labels) !== JSON.stringify(want)) fail(`하단 바로가기 순서가 다르다 — ${labels.join(' · ')}`);
     else pass(`하단 바로가기 순서 (${labels.join(' · ')})`);
 
     /* 분류 탭은 **허브에 있는 상태에서 눌러도** 그 섹션이 펼쳐져야 한다.
        Next 의 <Link> 는 해시만 다른 이동에서 hashchange 를 일으키지 않아 접힌 채였다. */
-    for (const [label, id] of [['제품 상담 도구', 'tools'], ['교육', 'edu']]) {
+    for (const [label, id] of [['제품 정보', 'product'], ['교육', 'edu'], ['설치 · AS', 'install-as']]) {
       await mp.goto(BASE, { waitUntil: 'networkidle' });
       const before = await mp.evaluate((id) => document.getElementById(id).innerText.replace(/\s+/g, '').length, id);
       await mp.evaluate((label) => {
@@ -428,6 +429,9 @@ try {
     await mp.evaluate(() => document.querySelector('header button[aria-label="이 화면 공유·인쇄"]').click());
     await mp.waitForFunction(() => [...document.querySelector('iframe').contentWindow.document.querySelectorAll('.sk-b')].some((b) => /인쇄/.test(b.textContent)), { timeout: 8000 }).catch(() => {});
     await mp.evaluate(() => { const b = [...document.querySelector('iframe').contentWindow.document.querySelectorAll('.sk-b')].find((x) => /인쇄/.test(x.textContent)); if (b) b.click(); });
+    /* 인쇄할 내용을 고르는 창(2026-10-23)이 뜨면 그대로(전부 체크) 인쇄를 누른다 */
+    await mp.waitForTimeout(400);
+    await mp.evaluate(() => { const d = document.querySelector('iframe').contentWindow.document; if (d.querySelector('.sk-pick')) { const g = d.querySelector('.sk-dim .sk-b.primary'); if (g) g.click(); } });
     await mp.waitForFunction(() => document.querySelector('iframe').contentWindow.__printed > 0, { timeout: 8000 }).catch(() => {});
     const pr = await mp.evaluate(() => {
       const w = document.querySelector('iframe').contentWindow, d = w.document;
@@ -848,7 +852,7 @@ try {
      * 메뉴·카드·자료가 뒤에 비치면 지점을 안 넣고도 쓸 수 있는 것처럼 보이고,
      * 무엇보다 아무나 열어 그대로 읽을 수 있다.
      */
-    const leak = ['통합검색', '제품 상담 도구', 'AS 관련 정보', '레벨업 챌린지', '사용현황 대시보드']
+    const leak = ['통합검색', '제품 정보', 'AS 관련 정보', '레벨업 챌린지', '사용현황 대시보드']
       .filter((w) => gateText.includes(w));
     if (leak.length) fail(`들어오기 전에 허브 내용이 드러난다: ${leak.join(', ')}`);
     else pass('들어오기 전에는 허브 내용이 드러나지 않는다');
@@ -1033,15 +1037,16 @@ try {
                    : fail('두 번째 뒤로가기에서 묻지 않는다 — 재무장이 안 된다');
     await xp.getByRole('button', { name: '아니오' }).click(); await xp.waitForTimeout(400);
 
+    /* 하단 탭의 AS 단독 칸이 '설치 · AS' 분류(/#install-as)로 바뀌어(2026-10-23) 다른 지면으로 가는 탭은 통합검색을 쓴다 */
     const beforeLen = await xp.evaluate(() => history.length);
-    await xp.click('a[href="/as"]'); await xp.waitForTimeout(2200);
+    await xp.click('nav[data-tabbar] a[href="/search"]'); await xp.waitForTimeout(2200);
     await xp.goBack(); await xp.waitForTimeout(900);
     (!(await asks()) && new URL(xp.url()).pathname === '/')
       ? pass('미니앱에서 뒤로가기 → 묻지 않고 홈으로 (표식 칸에 선 것뿐이다)')
       : fail('미니앱에서 뒤로가기 했는데 종료를 물었다 — 표식 판정이 깨졌다');
 
     for (let i = 0; i < 3; i++) {
-      await xp.click('a[href="/as"]'); await xp.waitForTimeout(1500);
+      await xp.click('nav[data-tabbar] a[href="/search"]'); await xp.waitForTimeout(1500);
       await xp.goBack(); await xp.waitForTimeout(800);
     }
     const afterLen = await xp.evaluate(() => history.length);

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { getStoreCode, setStoreCode, matchStore, isTestStore, clearLegacyStore } from '@/lib/stores'
 import SamsungWordmark from './SamsungWordmark'
+import { autoFullscreenOnEntry } from '@/lib/fullscreen'
 
 /*
  * **점코드 또는 점명을 쳐야 들어간다**(2026-08-20 사장님 결정 —
@@ -68,6 +69,8 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
       setErr('확인되지 않습니다. 다시 입력해 주세요.')
       return
     }
+    /* 「확인」을 누른 이 순간이 전체화면을 허락받을 수 있는 유일한 때다(lib/fullscreen.ts) */
+    autoFullscreenOnEntry()
     setStoreCode(hit.code)
     setCode(hit.code)
     setErr('')

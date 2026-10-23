@@ -1135,6 +1135,28 @@ const CAT_QUERIES = {
     else console.log('  자료·렌더·카탈로그 USP 와 분리 ✓');
   }
 
+  /* ═══ 품목 칸 (2026-10-23 승인안) — 첫 화면에서 눌러 둘러본다. 칸은 자료에서 만들고, 누르면 그 칸 제품을 전부 ═══ */
+  {
+    console.log('── 품목 칸 ──');
+    window.showCats();
+    const tiles = [...doc.querySelectorAll('#catHost .fc')];
+    const names = tiles.map(t => t.dataset.fc);
+    const bad = [];
+    if (tiles.length < 20) bad.push('품목 칸이 ' + tiles.length + '개뿐');
+    if (!names.includes('냉장고') || !names.includes('JBL · 하만카돈 · AKG') || !names.includes('스마트폰')) bad.push('묶음 칸(냉장고·하만·스마트폰)이 없다: ' + names.slice(0, 8).join(','));
+    const split = names.filter(n => n !== 'JBL · 하만카돈 · AKG' && /^(JBL|Harman|AKG) |^리빙 (안마|비데)|^스마트폰\(/.test(n));
+    if (split.length) bad.push('잘게 갈린 갈래가 칸으로 따로 나왔다: ' + split.join(','));
+    const want = window.eval("PRODUCTS.filter(p => p.cat === '냉장고' && !isPackage(p)).length");
+    window.browseCat('냉장고');
+    const shown = doc.querySelectorAll('#rHost .rcard').length;
+    if (shown !== want) bad.push(`냉장고 칸을 눌렀는데 ${shown}종 — 자료에는 ${want}종(전부 보여야 한다)`);
+    if (!doc.querySelector('#catHost .fc.on')) bad.push('누른 칸이 파란 테두리(on)로 표시되지 않는다');
+    doc.getElementById('q').value = '냉장고 4도어'; window.runSearch();
+    if (doc.querySelectorAll('#rHost .rcard').length > 15) bad.push('검색은 상위 15종이어야 하는데 둘러보기 상태가 남았다');
+    if (bad.length) fail('품목 칸: ' + bad.join(' / '));
+    else console.log(`  칸 ${tiles.length}개 · 냉장고 ${want}종 전부 · 검색으로 돌아오면 15종 ✓`);
+  }
+
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);
 })().catch((e) => {

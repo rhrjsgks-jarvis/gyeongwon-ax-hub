@@ -8,6 +8,71 @@ import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
 import FeedbackButton from './FeedbackButton'
 import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
+import { isFullscreen, fullscreenSupported, enterFullscreen, exitFullscreen } from '@/lib/fullscreen'
+
+/*
+ * 전체화면 단추 (2026-10-23 사장님 — QR·즐겨찾기로 여는 브라우저 탭에서 전체화면).
+ * 지점 「확인」이 손가락 기기에서 한 번 자동으로 요청하고(StorePicker), 새로고침·가장자리
+ * 쓸기로 풀리면 이 단추로 다시 켠다. **지원하지 않는 곳(아이폰 사파리)·설치형 앱에서는
+ * 아예 안 그린다** — 눌러도 아무 일이 없는 단추가 가장 나쁘다.
+ * 공유·문의 아이콘과 같은 모양(30px · 흰색 18%)이다 — 같은 줄에서 하나만 달라 보이면 안 된다.
+ */
+/*
+ * 폭 문턱을 JS 로 잰다 — **Tailwind 의 `min-[380px]:` 같은 임의 폭 변형이 이 저장소에서는 안 만들어진다.**
+ * `lg` 를 raw 미디어(가로로 든 900px 포함)로 정의해 두어 Tailwind 가 임의 min/max 변형을 꺼 버린다
+ * (클래스를 써도 CSS 가 없어 조용히 무시된다 — 실측으로 390px 에서도 단추가 사라졌다).
+ */
+function useMinWidth(px: number): boolean {
+  const [ok, setOk] = useState(true)
+  useEffect(() => {
+    if (!window.matchMedia) return
+    const m = window.matchMedia(`(min-width: ${px}px)`)
+    const f = () => setOk(m.matches)
+    f()
+    m.addEventListener ? m.addEventListener('change', f) : m.addListener(f)
+    return () => { m.removeEventListener ? m.removeEventListener('change', f) : m.removeListener(f) }
+  }, [px])
+  return ok
+}
+
+function FullscreenButton() {
+  /* 380px 아래(320·360 기기)에서는 감춘다 — 지점 칸이 SAMSUNG 글자를 덮었다(실측 53·13px 겹침).
+     그 기기도 지점 「확인」 때 자동으로 한 번 켜진다 */
+  const wide = useMinWidth(380)
+  const [show, setShow] = useState(false)
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    const mm = (q: string) => !!window.matchMedia && window.matchMedia(q).matches
+    const installed = mm('(display-mode: standalone)') || mm('(display-mode: fullscreen)')
+    setShow(fullscreenSupported() && !installed)
+    const sync = () => setOn(isFullscreen())
+    sync()
+    document.addEventListener('fullscreenchange', sync)
+    document.addEventListener('webkitfullscreenchange', sync)
+    return () => {
+      document.removeEventListener('fullscreenchange', sync)
+      document.removeEventListener('webkitfullscreenchange', sync)
+    }
+  }, [])
+  if (!show || !wide) return null
+  const label = on ? '전체화면 끄기' : '전체화면'
+  return (
+    <button
+      type="button"
+      onClick={() => (on ? exitFullscreen() : enterFullscreen())}
+      aria-label={label}
+      title={label}
+      className="flex items-center justify-center rounded-full text-white shrink-0"
+      style={{ width: 30, height: 30, background: 'rgba(255,255,255,0.18)' }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {on
+          ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+          : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}
+      </svg>
+    </button>
+  )
+}
 
 /*
  * **지금 보고 있는 화면인가** — 경로는 글자가 아니라 **마디(segment)** 로 본다.
@@ -35,16 +100,33 @@ const NAV_ENTRY = [
 
 // 데스크탑 사이드바 전용 그룹 — 허브 메인 섹션 구성과 동일하게 유지
 const NAV_GROUPS = [
+  /*
+   * 「제품 상담 도구」를 셋으로 나눴다(2026-10-23 사장님 승인 — 태블릿 개편안). 허브 MODULE_GROUPS 와 짝이다.
+   * 그룹 심벌은 안의 항목과 겹치지 않게 고른다(제품 정보 bulb · 설치·AS check · 구독 케어 star).
+   */
   {
-    title: '제품 상담 도구',
-    icon: 'chat' as IconName,
+    title: '제품 정보',
+    icon: 'bulb' as IconName,
     items: [
       { href: '/finder',          label: '모델파인더',     icon: 'finder' as IconName },
-      { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
       { href: '/compare',         label: '타사비교',         icon: 'compare' as IconName },
+      { href: 'https://www.samsungstore.com/event/catalog.sesc?menu=w110', label: '모바일 카탈로그', icon: 'catalog' as IconName },
+    ],
+  },
+  {
+    title: '설치 · AS',
+    icon: 'check' as IconName,
+    items: [
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
+      { href: '/install-cost',     label: '설치비용', icon: 'bolt' as IconName },
       { href: '/as',               label: 'AS 관련 정보',     icon: 'warranty' as IconName },
-      { href: '/install-cost',     label: '설치비용 · 사전준비', icon: 'bolt' as IconName },
+    ],
+  },
+  {
+    title: '구독 케어',
+    icon: 'star' as IconName,
+    items: [
+      { href: '/care',            label: 'AI구독 케어',         icon: 'care' as IconName },
     ],
   },
   {
@@ -105,9 +187,10 @@ const DEV_LINK = { href: '/dev', label: '개발 중인 서비스', icon: 'build'
 const NAV_ITEMS = [
   { href: '/',       label: '허브',           icon: 'home' as IconName },
   { href: '/search', label: '통합검색',        icon: 'search' as IconName },
-  { href: '/#tools', label: '제품 상담 도구',   icon: 'finder' as IconName },
-  { href: '/#edu',   label: '교육',           icon: 'quiz' as IconName },
-  { href: '/as',     label: 'AS 관련 정보',    icon: 'warranty' as IconName },
+  { href: '/#product',    label: '제품 정보',   icon: 'finder' as IconName },
+  { href: '/#edu',        label: '교육',        icon: 'quiz' as IconName },
+  /* AS 앱 하나만 올라가 있던 칸을 「설치 · AS」 분류로 바꿨다(2026-10-23) — 하단 바는 분류로 들어가는 문이다 */
+  { href: '/#install-as', label: '설치 · AS',   icon: 'install' as IconName },
 ]
 
 export default function Navigation() {
@@ -159,6 +242,8 @@ export default function Navigation() {
    * 누르면 다시 고를 수 있다.
    */
   const [store, setStore] = useState('')
+  /* 360px 아래에서는 지점 칸을 60px 로 — 74px 이면 SAMSUNG 글자에 걸친다(320px 실측) */
+  const chipNarrow = !useMinWidth(360)
   useEffect(() => {
     const read = () => setStore(getStoreCode())
     read()
@@ -282,7 +367,7 @@ export default function Navigation() {
                  잘리면 「경원영업팀…」만 남아 **경고가 통째로 사라진다**(실물에서 그랬다).
                  매장명은 눌러서 볼 수 있지만 이 경고는 볼 길이 없다. 본사는 몇 사람만
                  쓰는 상태라 그 폭을 내주어도 매장 화면이 좁아지지 않는다. */
-              isTestStore(store) ? '' : 'max-w-[74px] sm:max-w-none'
+              isTestStore(store) ? '' : chipNarrow ? 'max-w-[60px]' : 'max-w-[74px] sm:max-w-none'
             }`}
             style={{
               /* 테스트점은 **다른 색으로 표시한다** — 로그가 안 쌓이는 상태인데 평소와
@@ -296,6 +381,7 @@ export default function Navigation() {
           <span className="hidden lg:inline text-white text-xs opacity-60">경원영업팀</span>
           {/* 개발자 문의 — 떠 있던 버튼을 여기로 옮겼다(FeedbackButton 주석 참조) */}
           <FeedbackButton />
+          <FullscreenButton />
           {canShare && (
             <button
               type="button"
@@ -329,7 +415,7 @@ export default function Navigation() {
         {NAV_ITEMS.map((item) => {
           const active = isActive(pathname, item.href)
           /*
-           * 분류 탭('제품 상담 도구'·'교육')은 **평범한 `<a>`** 로 둔다.
+           * 분류 탭('제품 정보'·'교육'·'설치 · AS')은 **평범한 `<a>`** 로 둔다.
            * Next 의 `<Link>` 는 해시만 다른 이동에서 `hashchange` 를 일으키지 않아,
            * 허브에 있는 상태에서 누르면 **주소만 바뀌고 섹션이 접힌 채 그대로**였다
            * (2026-08-11 실측). 브라우저에 맡기면 같은 화면에서는 hashchange 가,
@@ -403,15 +489,20 @@ export default function Navigation() {
                   <div className="flex flex-col gap-0.5">
                     {group.items.map((item) => {
                       const active = isActive(pathname, item.href)
+                      /* 바깥 주소(모바일 카탈로그)는 새 창으로 — 같은 창이면 앱을 벗어난다 */
+                      const ext = /^https?:/.test(item.href)
                       return (
                         <Link
                           key={item.href}
                           href={item.href}
+                          {...(ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                           className="flex items-center gap-3 pl-6 pr-3 py-2 rounded-xl text-[14px] font-medium no-underline transition-all"
                           style={{
                             background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                             color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
                             fontWeight: active ? 700 : 500,
+                            /* 고른 것은 파란 테두리 — 미니앱의 고른 칸과 같은 규칙(2026-10-23) */
+                            boxShadow: active ? 'inset 0 0 0 1.5px var(--color-primary)' : 'none',
                           }}
                         >
                           <Icon name={item.icon} size={19} />

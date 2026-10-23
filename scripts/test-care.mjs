@@ -423,9 +423,14 @@ const DONE_KEYS = ['aircon','aicombo','washer','dryer','fridge','dish','dresser'
     if (doc.getElementById('overviewPane').style.display === 'none') fail('overview mode: overviewPane should be visible');
     if (doc.getElementById('body').style.display !== 'none') fail('overview mode: care body should be hidden');
     if (doc.querySelector('.cat-wrap').style.display !== 'none') fail('overview mode: cat-wrap should be hidden');
-    const cards = doc.querySelectorAll('.ov-card');
+    const cards = doc.querySelectorAll('#overviewPane .ov-card');
     if (cards.length !== ALL_PRODUCTS.length) fail(`overview: expected ${ALL_PRODUCTS.length} ov-cards, got ${cards.length}`);
-    const naCards = doc.querySelectorAll('.ov-card.na-card').length;
+    /* 모델 묶음 넷(2026-10-23 승인안) — 회차형 가전 · 무상수리·기타 · 모바일 · PC·태블릿, 합이 전체와 같다 */
+    const ghs = [...doc.querySelectorAll('#overviewPane .ov-gh')].map(x => x.textContent);
+    if (ghs.length !== 4 || !/회차형 가전/.test(ghs[0]) || !/모바일/.test(ghs.join(' ')) || !/PC/.test(ghs.join(' ')))
+      fail('overview: 모델 묶음 제목 넷이 아니다 — ' + ghs.join(' | '));
+    if (!doc.getElementById('careSide')) fail('태블릿 왼쪽 모델 목록(#careSide)이 없다');
+    const naCards = doc.querySelectorAll('#overviewPane .ov-card.na-card').length;
     const expectedNa = ALL_PRODUCTS.filter((p) => !DONE_KEYS.includes(p.key) && !p.mx).length;
     if (naCards !== expectedNa) fail(`overview: expected ${expectedNa} na-cards, got ${naCards}`);
 

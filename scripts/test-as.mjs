@@ -516,11 +516,13 @@ pass('싱크장 리폼 골든 3건');
   const tabs = doc.querySelectorAll('.mode-tab');
   /* 수리비 탭(2026-10-18 사장님 지시)이 AS기간 바로 뒤에 붙었다 — 「보증 → 보증이 끝나면 얼마 →
      어디로 가나 → 누구에게 거나」. AS센터·연락처의 상대 순서는 그대로다. */
-  const want = ['as', 'fee', 'center', 'contact'];
+  /* 「케어플러스·이전설치」(2026-10-23 사장님 승인)가 수리비 바로 뒤에 섰다 — 수리비 3단계 안의
+     「보상·서비스」를 꺼내 올린 것이다. 이전설치 요금이 4단계 아래 숨어 있었다. */
+  const want = ['as', 'fee', 'cp', 'center', 'contact'];
   const got = [...tabs].map((t) => t.dataset.tab);
-  if (got.length !== 4) fail(`탭이 ${got.length}개 — AS기간 · 수리비 · AS센터 찾기 · 연락처 넷이어야 한다`);
+  if (got.length !== 5) fail(`탭이 ${got.length}개 — AS기간 · 수리비 · 케어플러스 · AS센터 찾기 · 연락처 다섯이어야 한다`);
   else if (got.join(',') !== want.join(',')) fail(`탭 순서가 ${got.join('·')} — ${want.join('·')} 여야 한다`);
-  else pass('탭 4개 · AS기간 → 수리비 → AS센터 찾기 → 연락처');
+  else pass('탭 5개 · AS기간 → 수리비 → 케어플러스·이전설치 → AS센터 찾기 → 연락처');
 
   /* 연락처 탭은 **세 묶음으로 접혀** 있다(2026-08-11 사용자 요청 — 다 펼쳐 두면 예순 줄이
      넘어 상담 중에 못 읽는다). 기본은 닫힘이고 눌러야 열린다. */
@@ -528,17 +530,18 @@ pass('싱크장 리폼 골든 3건');
   const mp = doc.querySelector('#contactPane');
   /* **묶음은 품목·업무 단위로 쪼갠다**(2026-08-11 사용자 요청). 상담사는 "정수기 이전설치
      어디죠"로 찾지 "B2B 협력사가 뭐죠"로 찾지 않는다. 담당이 갈리는 단위가 곧 찾는 단위다. */
-  const WANT = 'g-as,g-hm,g-lg,g-mv,g-sink,g-ind,g-wat,g-hood,g-sac,g-new,g-it';
+  /* 이전설치·리폼 여섯 묶음은 하나(g-mv)로 합쳤다(2026-10-23 사장님 승인 — 1줄짜리 묶음 넷이 따로 서 있었다).
+     품목 단위로 찾는 것은 그대로다 — 묶음 안 품목 칸이 그 일을 한다(아래 [7-e2]). */
+  const WANT = 'g-as,g-hm,g-lg,g-mv,g-new,g-it';
   const grps = [...mp.querySelectorAll('.grp')];
   if (grps.map((g) => g.id).join(',') !== WANT) {
     fail(`묶음이 [${grps.map((g) => g.id).join(',')}] — [${WANT}] 여야 한다`);
-  } else pass(`연락처 탭 묶음 ${grps.length}개 (AS·수리 / 하만 오디오 / 물류 / 빌트인 / 리폼 / 인덕션 / 정수기 / 후드 / 시스템에어컨 / IT)`);
+  } else pass(`연락처 탭 묶음 ${grps.length}개 (AS·수리 / 하만 오디오 / 물류 / 이전설치·리폼 / 신규 설치 / IT)`);
   if (grps.some((g) => g.open)) fail('묶음이 기본으로 펼쳐져 있다 — 눌러야 열려야 한다');
   else pass('묶음 기본 접힘');
   // 열어 보지 않고도 무엇이 얼마나 있는지 알아야 한다
   for (const [id, n] of [['g-as', A.CONTACTS.reduce((a, g) => a + g.items.length, 0)],
-                         ['g-hm', 1], ['g-lg', A.CENTERS.length], ['g-mv', B.length], ['g-sink', S.length],
-                         ['g-ind', 1], ['g-wat', 1], ['g-hood', 1], ['g-sac', 1],
+                         ['g-hm', 1], ['g-lg', A.CENTERS.length], ['g-mv', B.length + S.length + 4],   // 빌트인 + 리폼 + 전국 담당 넷
                          /* 신규 설치 협력사(2026-10-22) — 설치비용 앱 자료에서 번호 있는 줄을 센다 */
                          ['g-new', JSON.parse(fs.readFileSync(new URL('../public/install-cost.json', import.meta.url), 'utf8')).newInstall.categories.find((c) => c.key === 'rf').sections.filter((x) => x.moved === 'as-contact').flatMap((x) => x.grid.slice(x.headRows)).filter((r) => r[1]).length],
                          ['g-it', IT.length]]) {
@@ -546,7 +549,26 @@ pass('싱크장 리폼 골든 3건');
     if (!el) { fail(`${id} 묶음이 없다`); continue; }
     if (el.textContent !== `${n}건`) fail(`${id} 묶음 제목의 건수가 "${el.textContent}" — "${n}건" 이어야 한다`);
   }
-  pass('묶음 제목에 건수 표기 (6·1·21·20·4·1·1·1·1·12)');
+  pass('묶음 제목에 건수 표기 (6·1·21·28·5·12)');
+
+  /* [7-e2] 이전설치·리폼 묶음 안 품목 칸 — 여섯 칸 · 한 번에 한 칸만 보인다 · 예전 내용이 그대로 있다 */
+  {
+    const chips = [...mp.querySelectorAll('#mvchips .chip')];
+    const names = chips.map((c) => c.textContent).join('|');
+    if (names !== '빌트인 가전|인덕션|정수기|후드|시스템에어컨|식기세척기 싱크장 리폼') fail(`이전설치·리폼 품목 칸이 [${names}]`);
+    const shown = () => [...mp.querySelectorAll('#g-mv .mvp')].filter((p) => !p.hidden).map((p) => p.dataset.mvk);
+    if (shown().join() !== 'mv') fail(`처음에 보이는 칸이 [${shown()}] — 빌트인 가전 하나여야 한다`);
+    chips[5].click();
+    if (shown().join() !== 'sink' || !chips[5].classList.contains('on')) fail('싱크장 리폼 칸을 눌렀는데 그 칸만 보이지 않는다');
+    else if (mp.querySelectorAll('#g-mv .mvp[data-mvk="sink"] .ct').length !== S.length) fail('싱크장 리폼 칸에 협력사가 다 없다');
+    chips[0].click();
+    /* 옛 묶음 id 로 열어도 합친 묶음의 그 칸으로 간다(?grp=g-ind · 상단 검색) */
+    A.openGroup('g-hood');
+    if (!doc.querySelector('#g-mv').open || shown().join() !== 'hood') fail('openGroup(\'g-hood\') 가 이전설치·리폼 묶음의 후드 칸을 열지 않는다');
+    else pass('이전설치·리폼 품목 칸 6개 · 한 칸씩 · 옛 묶음 id(g-hood 등)도 그 칸으로');
+    doc.querySelector('#g-mv').open = false;
+    mp.querySelector('#mvchips .chip').click();
+  }
 
   /* '아직 등록되지 않은 연락처' 카드는 없앴다 — 비워 뒀던 둘이 실제로 채워졌기 때문이다.
      채운 자료 옆에 "미등록"이 남아 있으면 그 자료까지 미등록으로 읽힌다. */
@@ -670,12 +692,12 @@ pass('싱크장 리폼 골든 3건');
   // 고르면 그 탭으로 데려가는가
   /* 고른 결과가 **접힌 묶음 안에 있으면 아무 일도 안 일어난 것처럼 보인다** —
      찾아 준 뜻이 없어지므로 탭 전환 + 묶음 펼침 + 목록 필터가 함께 걸려야 한다. */
-  for (const [q, needle, gid, listId] of [
-    ['청주', /대양빌텍/, 'g-mv', '#b2blist'],
+  for (const [q, needle, gid, listId, mvWant] of [
+    ['청주', /대양빌텍/, 'g-mv', '#b2blist', 'mv'],
     ['수원', /평택TC/, 'g-lg', '#lglist'],
     ['삼성전자서비스', /삼성전자서비스/, 'g-as', null],
-    ['정수기 이전설치', /정수기 이전설치/, 'g-wat', null],
-    ['광주지사', /광주지사/, 'g-ind', null],
+    ['정수기 이전설치', /정수기 이전설치/, 'g-mv', null, 'wat'],
+    ['광주지사', /광주지사/, 'g-mv', null, 'ind'],
   ]) {
     A.tab = 'as';
     for (const g of doc.querySelectorAll('.grp')) g.open = false;
@@ -687,6 +709,9 @@ pass('싱크장 리폼 골든 3건');
     btn.click();
     if (A.tab !== 'contact') fail(`'${q}' 를 눌렀는데 탭이 ${A.tab} — contact 로 가야 한다`);
     else if (!doc.querySelector(`#${gid}`).open) fail(`'${q}' 를 눌렀는데 ${gid} 묶음이 안 열렸다`);
+    else if (mvWant && ![...doc.querySelectorAll('#g-mv .mvp')].some((p) => !p.hidden && p.dataset.mvk === mvWant)) {
+      fail(`'${q}' 를 눌렀는데 이전설치·리폼 묶음의 ${mvWant} 칸이 아니다`);
+    }
     else if (listId && doc.querySelectorAll(`${listId} .ct`).length !== 1) {
       fail(`'${q}' 를 눌렀는데 ${listId} 가 ${doc.querySelectorAll(`${listId} .ct`).length}건 — 1건으로 좁혀져야 한다`);
     } else continue;
@@ -1483,38 +1508,53 @@ pass('상황실·업무·운영 골든 5건');
   /* 2026-10-22 B안 — 분류 탭 셋(요금 기준 / 부품 가격 / 보상·서비스)을 고르면 그 분류의 칸만 보인다.
      칸은 모두 12개(가전 소모품가 · 교환·환불 기준 · 케어플러스 유료 추가). 칸을 누르려면 그 분류부터 연다. */
   const segs = () => [...pane.querySelectorAll('#feeSeg button')];
-  if (segs().map((b) => b.textContent).join('|') !== '요금 기준|부품 가격|보상 · 서비스') fail('수리비 분류 탭이 「요금 기준 · 부품 가격 · 보상·서비스」 셋이 아니다');
+  /* 2026-10-23 — 「보상·서비스」(교환·환불 · 케어플러스)는 수리비에서 꺼내 「케어플러스·이전설치」 탭으로 올렸다.
+     수리비 탭에는 분류가 둘 남고, 그 분류는 넷째 칸('cp')으로 어느 탭에 서는지를 밝힌다. */
+  if (segs().map((b) => b.textContent).join('|') !== '요금 기준|부품 가격') fail('수리비 분류 탭이 「요금 기준 · 부품 가격」 둘이 아니다');
+  const cpGrp = A.FEE_GROUPS.find((g) => g[3] === 'cp');
+  if (!cpGrp || cpGrp[2].join() !== 'careplus,conflict') fail('교환·환불 · 케어플러스 칸이 「케어플러스·이전설치」 탭 분류에 없다');
   if (A.FEE_SECS.length !== 12) fail(`수리비 칸이 ${A.FEE_SECS.length}개 — 열둘이어야 한다`);
   const inGroups = A.FEE_GROUPS.flatMap((g) => g[2]);
   if (inGroups.length !== A.FEE_SECS.length || A.FEE_SECS.some(([k]) => !inGroups.includes(k))) fail('어느 분류에도 안 든 칸(또는 두 분류에 든 칸)이 있다 — 그 칸은 화면에서 영영 못 연다');
+  const cpPane = doc.querySelector('#cpPane');
+  /* 그 칸이 선 탭으로 가서 칸을 찾는다 — 수리비 탭이면 분류 탭도 연다 */
   const tileOf = (name) => {
     const key = (A.FEE_SECS.find((x) => x[2].includes(name)) || [])[0];
-    const g = A.FEE_GROUPS.findIndex((x) => x[2].includes(key));
+    const grp = A.FEE_GROUPS.find((x) => x[2].includes(key));
+    if (grp && grp[3] === 'cp') { A.tab = 'cp'; return [...cpPane.querySelectorAll('#feeCats .cat')].find((el) => el.textContent.includes(name)); }
+    A.tab = 'fee';
+    const g = A.FEE_GROUPS.filter((x) => !x[3]).indexOf(grp);
     if (g >= 0 && !segs()[g].classList.contains('on')) segs()[g].click();
     return [...pane.querySelectorAll('#feeCats .cat')].find((el) => el.textContent.includes(name));
   };
   for (const n of ['휴대폰 부품가', '태블릿 부품가', 'PC 부품가', '가전 소모품가', '교환 · 환불 기준', '케어플러스 유료']) if (!tileOf(n)) fail(`「${n}」 칸이 없다`);
+  /* 두 탭은 칸 id 가 같다 — 안 보이는 탭은 비워야 getElementById 가 엉뚱한 칸을 집지 않는다 */
+  A.tab = 'cp';
+  if (pane.innerHTML !== '' || !cpPane.querySelector('#feeCats') || cpPane.querySelector('#feeSeg')) fail('케어플러스 탭에서 수리비 화면이 안 비거나 분류 탭이 남는다');
+  A.tab = 'fee';
+  if (cpPane.innerHTML !== '') fail('수리비 탭에서 케어플러스 화면이 안 빈다');
   let allTxt = '';
   const noSrc = [];
-  let gi = 0;
-  for (const [, , keys] of A.FEE_GROUPS) {
-    segs()[gi].click();
-    const shown = [...pane.querySelectorAll('#feeCats .cat')];
-    if (shown.length !== keys.length) fail(`분류 ${gi + 1} 의 칸이 ${shown.length}개 — ${keys.length}개여야 한다`);
-    if (!segs()[gi].classList.contains('on')) fail(`분류 ${gi + 1} 이 켜짐 표시가 안 된다`);
+  for (const grp of A.FEE_GROUPS) {
+    const keys = grp[2];
+    const P = grp[3] === 'cp' ? cpPane : pane;
+    if (grp[3] === 'cp') A.tab = 'cp';
+    else { A.tab = 'fee'; segs()[A.FEE_GROUPS.filter((x) => !x[3]).indexOf(grp)].click(); }
+    const shown = [...P.querySelectorAll('#feeCats .cat')];
+    if (shown.length !== keys.length) fail(`분류 ${grp[1]} 의 칸이 ${shown.length}개 — ${keys.length}개여야 한다`);
+    if (!grp[3] && !segs()[A.FEE_GROUPS.filter((x) => !x[3]).indexOf(grp)].classList.contains('on')) fail(`분류 ${grp[1]} 이 켜짐 표시가 안 된다`);
     for (let i = 0; i < shown.length; i++) {
-      pane.querySelectorAll('#feeCats .cat')[i].click();
-      const cards = [...pane.querySelectorAll('#feeBody > .card')];
+      P.querySelectorAll('#feeCats .cat')[i].click();
+      const cards = [...P.querySelectorAll('#feeBody > .card')];
       if (cards.length !== 1) fail(`${keys[i]} 칸을 눌렀는데 카드가 ${cards.length}장`);
-      if (!pane.querySelectorAll('#feeCats .cat')[i].classList.contains('on')) fail(`${keys[i]} 칸이 켜짐 표시가 안 된다`);
-      if (!segs()[gi].classList.contains('on')) fail(`${keys[i]} 칸을 눌렀더니 분류 탭이 바뀌었다`);
+      if (!P.querySelectorAll('#feeCats .cat')[i].classList.contains('on')) fail(`${keys[i]} 칸이 켜짐 표시가 안 된다`);
       if (cards[0] && !cards[0].querySelector('.src a[href^="https://www.samsungsvc.co.kr/"]')) noSrc.push(keys[i]);
-      allTxt += pane.textContent;
+      allTxt += P.textContent;
     }
-    gi++;
   }
+  A.tab = 'fee';
   if (noSrc.length) fail(`출처 링크가 없는 카드: ${noSrc.join(', ')} — 「출처와 링크는 필수」`);
-  else pass(`수리비 분류 3 · 칸 ${A.FEE_SECS.length}개 — 분류마다 그 칸만 · 누르면 그 카드 하나만 · 전부 원문 링크`);
+  else pass(`수리비 분류 2 + 케어플러스 탭 · 칸 ${A.FEE_SECS.length}개 — 분류마다 그 칸만 · 누르면 그 카드 하나만 · 원문 링크`);
   if (pane.querySelector('#rfq')) fail('리퍼부품 가격 검색이 남아 있다 — 고객센터 별도 문의로 바꿨다');
   tileOf('부품비 · 리퍼').click();
   if (!/고객센터에 따로 문의/.test(pane.textContent) || !pane.querySelector('[data-tel="15883366"]')) fail('리퍼부품 칸이 고객센터 1588-3366 문의를 안내하지 않는다');
@@ -1600,33 +1640,36 @@ pass('상황실·업무·운영 골든 5건');
   csq.value = '청소기 배터리'; csq.dispatchEvent(new window.Event('input'));
   if (!pane.querySelectorAll('#csOut tbody tr').length) fail('소모품 검색 「청소기 배터리」 가 아무것도 못 찾는다');
 
+  /* 교환·환불 · 케어플러스 — 「케어플러스·이전설치」 탭(2026-10-23)에 있다 */
   /* 교환·환불 — 원문 7가지(+보증 경과 1줄 = 8줄) · 감가상각식 · 출처 */
   tileOf('교환 · 환불 기준').click();
-  const ct = pane.querySelector('#feeBody').textContent;
+  const ct = cpPane.querySelector('#feeBody').textContent;
   if (A.CONFLICT.rows.length !== 8) fail(`교환·환불 기준 줄이 ${A.CONFLICT.rows.length}개 — 원문 별표 Ⅱ 는 8줄`);
   else if (!/구입 후 10일 이내/.test(ct) || !/10%를 가산/.test(ct) || !/\(사용연수 ÷ 내용연수\) × 구입가/.test(ct)) fail('교환·환불 카드에 10일 교환·10% 가산·감가상각식이 안 보인다');
   else pass('교환·환불 기준 8줄 · 감가상각식');
+  if (A.tab !== 'cp') fail('교환·환불 칸을 고르면 「케어플러스·이전설치」 탭이어야 한다');
   /* 케어플러스 — 가격을 지어내지 않고 콜센터로 */
   tileOf('케어플러스 유료').click();
-  const pt = pane.querySelector('#feeBody').textContent;
-  if (!/가격은 원문 지면에 없습니다/.test(pt) || !pane.querySelector('[data-tel="15884190"]')) fail('케어플러스 카드가 가격 없음과 1588-4190 을 안내하지 않는다');
+  const pt = cpPane.querySelector('#feeBody').textContent;
+  if (!/가격은 원문 지면에 없습니다/.test(pt) || !cpPane.querySelector('[data-tel="15884190"]')) fail('케어플러스 카드가 가격 없음과 1588-4190 을 안내하지 않는다');
   else if (/[0-9],[0-9]{3}원/.test(pt)) fail('케어플러스 카드에 원문에 없는 금액이 있다');
   else pass('케어플러스 유료 3상품 · 가격은 1588-4190 안내(금액 없음)');
   /* 케어플러스 금액은 이 칸 한 곳(2026-10-22 사장님) — 이전설치 요금 · 모바일·PC 자기부담금 */
   if (A.CP_VIEWS.map((v) => v[0]).join() !== 'svc,move,mobile,pc') fail('케어플러스 칸 갈래가 서비스·이전설치·모바일·PC 넷이 아니다');
   const IC = JSON.parse(fs.readFileSync(new URL('../public/install-cost.json', import.meta.url), 'utf8'));
   A.loadIC(IC);
-  [...pane.querySelectorAll('#cpViews .chip')].find((b) => b.dataset.cv === 'move').click();
-  const mv = pane.querySelector('#cpOut');
-  if (pane.querySelectorAll('#cpGroups .chip').length !== IC.careplus.groups.length) fail('이전설치 품목 칩 수가 자료와 다르다');
+  [...cpPane.querySelectorAll('#cpViews .chip')].find((b) => b.dataset.cv === 'move').click();
+  const mv = cpPane.querySelector('#cpOut');
+  if (cpPane.querySelectorAll('#cpGroups .chip').length !== IC.careplus.groups.length) fail('이전설치 품목 칩 수가 자료와 다르다');
   else if (!/313,000/.test(mv.textContent) || !mv.querySelector('a[href="' + IC.careplus.source + '"]')) fail('이전설치 에어컨 스탠드 313,000원 또는 삼성닷컴 출처가 안 보인다');
   else pass(`케어플러스 이전설치 요금 ${IC.careplus.groups.length}품목 — 설치비용 앱과 같은 자료`);
-  [...pane.querySelectorAll('#cpViews .chip')].find((b) => b.dataset.cv === 'mobile').click();
-  if (!/S 시리즈 25%/.test(pane.querySelector('#cpOut').textContent)) fail('모바일 Care+ 자기부담금(S 시리즈 25%)이 안 보인다');
+  [...cpPane.querySelectorAll('#cpViews .chip')].find((b) => b.dataset.cv === 'mobile').click();
+  if (!/S 시리즈 25%/.test(cpPane.querySelector('#cpOut').textContent)) fail('모바일 Care+ 자기부담금(S 시리즈 25%)이 안 보인다');
   else pass('모바일·PC Care+ 자기부담금이 케어플러스 칸에 있다');
   const careApp = fs.readFileSync(new URL('../public/care-app.html', import.meta.url), 'utf8');
   if (/파손 서비스 요금의 <b>(25|30)%/.test(careApp)) fail('AI구독 케어 앱에 Care+ 자기부담금 금액이 남아 있다 — 케어플러스 칸 한 곳으로');
   else pass('AI구독 케어 앱은 금액 대신 케어플러스 칸을 가리킨다');
+  A.tab = 'fee';
 
   /* 수리비 서식이 인쇄 전용 블록 안에 들어가면 화면에서 표·칩·목록이 맨 글자로 겹쳐 보인다(2026-10-21 실제로 그랬다) */
   const css = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('\n');

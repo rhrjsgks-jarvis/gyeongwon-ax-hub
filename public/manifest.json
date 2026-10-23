@@ -4,10 +4,11 @@
   "description": "경원영업팀 매장 상담 지원 도구 — 매장 상담의 모든 답을 한 곳에",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["fullscreen", "standalone"],
   "background_color": "#1428A0",
   "theme_color": "#1428A0",
   "lang": "ko",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "/icons/icon-192.png",

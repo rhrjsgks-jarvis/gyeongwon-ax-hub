@@ -37,7 +37,13 @@ type ModuleCard = {
 
 const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
   {
-    title: '제품 상담 도구',
+    /*
+     * 「제품 상담 도구」 7개를 셋으로 나눴다(2026-10-23 사장님 승인 — 태블릿 개편안).
+     * 한 묶음에 일곱이면 무엇이 어디 있는지 안 보인다. 찾는 질문이 다르다 —
+     * 「이 제품 어때요」(제품 정보) · 「들어가나요·고장 나면」(설치 · AS) · 「구독하면 뭘 받나요」(구독 케어).
+     * 사이드바 NAV_GROUPS 와 짝이다 — 한쪽만 고치면 화면마다 다른 말을 한다.
+     */
+    title: '제품 정보',
     modules: [
       {
         href: '/finder',
@@ -46,16 +52,6 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         /* 옛 이름 — 제목 아래 작은 줄로 내린다(괄호로 한 줄에 붙이면 지저분하다) */
         sub: '제품 상세검색',
         desc: '치수·기능 조건으로 좁히는 전문 검색 — CE·MX·리빙·Harman 전 제품(1,952종)',
-        color: '#1428A0',
-        bg: '#EEF2FF',
-        updated: '2026.08',
-        status: 'live',
-      },
-      {
-        href: '/care',
-        icon: 'care',
-        title: 'AI구독 케어 안내',
-        desc: '제품별 구독 기간·주기에 따라 받는 케어 서비스 안내',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.08',
@@ -83,17 +79,32 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         external: true,
         logKey: 'catalog',
       },
+    ],
+  },
+  {
+    title: '설치 · AS',
+    modules: [
       {
         href: '/install',
         icon: 'install',
         title: '제품별 설치환경 가이드',
-        desc: '카테고리별 설치 공간·전기/급배수 요건 즉시 확인',
+        desc: '품목별 설치 공간·전기/급배수 요건 + 설치 전 준비(멀티탭 16A 안전 기준)',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.07',
         status: 'live',
       },
-            {
+      {
+        href: '/install-cost',
+        icon: 'bolt',
+        title: '설치비용',
+        desc: '신규 설치 추가비 + 특수장비(사다리차·스카이·양중비) + 가구장 리폼(인테리어핏 정찰제·냉장고장 규격·품목별 타공) · 이전설치 요금은 AS 관련 정보 › 케어플러스',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.08',
+        status: 'live',
+      },
+      {
         href: '/as',
         icon: 'warranty',
         title: 'AS 관련 정보',
@@ -103,17 +114,21 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
         updated: '2026.08',
         status: 'live',
       },
+    ],
+  },
+  {
+    title: '구독 케어',
+    modules: [
       {
-        href: '/install-cost',
-        icon: 'bolt',
-        title: '설치비용 · 사전준비',
-        desc: '신규 설치 추가비 + 가구장 리폼(인테리어핏 정찰제 6품목·냉장고장 규격·품목별 타공) + 사다리차·양중비 + 설치 전 준비(멀티탭 16A) · 이전설치 요금은 AS 관련 정보 › 케어플러스',
+        href: '/care',
+        icon: 'care',
+        title: 'AI구독 케어 안내',
+        desc: '제품별 구독 기간·주기에 따라 받는 케어 서비스 안내',
         color: '#1428A0',
         bg: '#EEF2FF',
         updated: '2026.08',
         status: 'live',
       },
-
     ],
   },
   {
@@ -289,7 +304,9 @@ const COUPON_LINKS = [
  * ANCHOR_SECTION 에도 함께 넣어야 모바일에서 접힌 섹션이 펼쳐진다.
  */
 const SECTION_ID: Record<string, string> = {
-  '제품 상담 도구': 'tools',
+  '제품 정보': 'product',
+  '설치 · AS': 'install-as',
+  '구독 케어': 'care',
   '교육': 'edu',
   '매장운영 도구': 'store',
 }
@@ -550,7 +567,10 @@ export default function Home() {
   const ANCHOR_SECTION: Record<string, string> = {
     coupon: '매장운영 도구',
     concierge: '매장운영 도구',
-    tools: '제품 상담 도구',
+    product: '제품 정보',
+    'install-as': '설치 · AS',
+    care: '구독 케어',
+    tools: '제품 정보',   // 옛 주소(/#tools) — 저장해 둔 링크가 깨지지 않게
     edu: '교육',
     store: '매장운영 도구',
   }

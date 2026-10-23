@@ -46,8 +46,12 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
    3열 고정을 버린 이유: PC 에서 본문이 1,140px 까지 넓어져 **타일 하나가 290px** 이 됐다.
    `auto-fill` 은 화면이 넓어지면 열을 늘려 폰 3열 · PC 8열이 된다. */
 .cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:4px;}
-.cat-btn{background:var(--primary-l);border:1.5px solid var(--primary-m);border-radius:11px;padding:9px 6px;font-size:12.5px;font-weight:600;color:var(--primary);cursor:pointer;text-align:center;transition:.12s;line-height:1.35;word-break:keep-all;}
-.cat-btn:hover,.cat-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+/* 고른 칸 = 파란 테두리(2026-10-23 사장님 지시 — 전 앱 선택 방식 통일). 예전 주황 칸은 「타사비교만 부각색」
+   규칙 때문이었는데, 선택 방식을 하나로 맞추라는 오늘 지시가 그 규칙을 대신한다. 주황은 우위 강조에만 남는다. */
+.cat-btn{background:#fff;border:1px solid var(--border);border-radius:11px;padding:9px 6px;font-size:12.5px;font-weight:600;color:#374151;cursor:pointer;text-align:center;transition:.12s;line-height:1.35;word-break:keep-all;}
+.cat-btn .ci .psym{color:var(--navy)!important}
+.cat-btn:hover{border-color:#c7d2fe;}
+.cat-btn.active{background:var(--navy-l);color:var(--navy);border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);}
 .cat-btn .ci{display:block;margin-bottom:4px;line-height:1;}
 /* 심벌 기본색이 삼성 블루라 주황 글자 옆에서 혼자 파랗게 남는다(실측으로 그랬다).
    `currentColor` 로 두면 평소엔 주황, 고른 타일에서는 흰색으로 글자를 따라간다. */
@@ -68,10 +72,10 @@ select:focus{border-color:var(--primary);}
 
 .comp-brand-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
 .brand-chip{background:#f3f4f6;border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);transition:all .15s;white-space:nowrap;}
-.brand-chip.active{background:var(--navy-l);border-color:var(--navy);color:var(--navy);}
+.brand-chip.active{background:var(--navy-l);border-color:var(--navy);color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);}
 
-.compare-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
-.compare-btn:hover{background:#1428A0;}
+.compare-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:-.2px;}
+.compare-btn:hover{background:#0D1B7A;}
 .compare-btn:active{transform:scale(.98);}
 
 /* ── 비교 결과 ── */
@@ -93,7 +97,7 @@ select:focus{border-color:var(--primary);}
 .spec-table.only-diff tr[data-same]{display:none;}
 .spec-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 10px;}
 .spec-tools button{border:1px solid var(--border);background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12px;font-weight:700;color:var(--gray);cursor:pointer;}
-.spec-tools button.on{background:var(--navy);border-color:var(--navy);color:#fff;}
+.spec-tools button.on{background:var(--navy-l);border-color:var(--navy);color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);}
 .spec-tools span{font-size:11.5px;color:var(--gray);}
 /*
  * S~E 등급 배지. **색은 S→E 로 한 줄기**여야 눈이 순서를 읽는다 —
@@ -297,7 +301,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
      고르는 단계(①②)와 버튼은 빼고 **비교 결과만** 싣는다. 비교표·기능표는 칸이 잘리지 않게 끊는다. */
   @media print{
     body{background:#fff!important}
-    header,.tab-bar,#tab-db main>.card:first-child,#model-section,.action-row,#tab-url .card:first-child{display:none!important}
+    header,.tab-bar,#tab-db .cmp-side,#model-section,.action-row,#tab-url .card:first-child{display:none!important}
     main{max-width:none!important;padding:0!important;margin:0!important}
     .card{border:1px solid #D1D5DB!important;box-shadow:none!important;break-inside:auto;margin-bottom:8px}
     .card-title{break-after:avoid}
@@ -308,6 +312,28 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   }
   @media(min-width:1024px){ main { max-width:960px } }
   @media(min-width:1440px){ main { max-width:1140px } }
+/*
+ * ── 태블릿 (2026-10-23 사장님 승인 — 요금계산기 방식) ──
+ * 즉시비교: 왼쪽에 ① 카테고리 · ② 모델(고정), 오른쪽에 결과. 1200px 부터 결과 칸을 두 단으로(그 아래는 비교표가 눌린다).
+ * 폰(719px 이하)은 지금 그대로 위아래로 쌓인다.
+ */
+@media screen and (min-width:720px){
+  #tab-db main{max-width:1180px!important;display:grid;grid-template-columns:minmax(260px,32%) minmax(0,1fr);gap:16px;align-items:start}
+  .cmp-side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+  .cmp-side .cat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cmp-side .model-row{display:block}
+  .cmp-side .model-group+.model-group{margin-top:12px}
+  #result-db{min-width:0;grid-column:2}
+  #result-db:not(.visible)+*{grid-column:1/-1}
+  #tab-db main::after{content:'② 왼쪽에서 카테고리와 모델을 고르면 여기에 비교 결과가 나옵니다';grid-column:2;grid-row:1;
+    font-size:13px;color:var(--gray);font-weight:600;padding:18px 4px}
+  #tab-db main:has(#result-db.visible)::after{display:none}
+}
+@media screen and (min-width:1200px){
+  #result-db.visible{column-count:2;column-gap:14px}
+  #result-db>*{break-inside:avoid}
+  #result-db>.result-header{column-span:all}
+}
 </style>
 <script src="back-kit.js"></script>
 <script src="prod-symbols.js"></script>
@@ -344,6 +370,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <div id="tab-db">
 <main>
 
+  <div class="cmp-side">
   <!-- STEP 1: 카테고리 -->
   <div class="card">
     <div class="card-title">① 카테고리 선택</div>
@@ -381,6 +408,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       </div>
     </div>
     <button class="compare-btn" onclick="renderResult()">⚡ 지금 바로 비교</button>
+  </div>
   </div>
 
   <!-- 결과 -->

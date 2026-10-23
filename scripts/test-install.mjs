@@ -60,9 +60,18 @@ const expectedImageCounts = {
 
   const rows = doc.querySelectorAll('#cats .cat');
   console.log('total tiles:', rows.length);
-  if (rows.length !== allCats.length) {
-    console.log(`ERROR: expected ${allCats.length} tiles, got ${rows.length}`);
+  /*
+   * **냉장고는 칸 하나다**(2026-10-23 사장님 승인 — 분류 진단 「합치기」). 냉장고 형태 8가지를
+   * 「냉장고」 한 칸으로 묶고 고르면 형태 칸이 뜬다. 타일 수 = DB 키를 앞머리로 묶은 수(세어서 견준다).
+   */
+  const fridgeKeys = allCats.filter((c) => c.indexOf('냉장고 ') === 0);
+  const expectTiles = allCats.length - fridgeKeys.length + 1;
+  if (rows.length !== expectTiles) {
+    console.log(`ERROR: expected ${expectTiles} tiles (냉장고 ${fridgeKeys.length}종을 한 칸으로), got ${rows.length}`);
     ok = false;
+  }
+  if ([...rows].some((r) => r.dataset.cat.indexOf('냉장고 ') === 0)) {
+    console.log('ERROR: 냉장고 형태가 타일로 따로 나와 있다 — 「냉장고」 한 칸이어야 한다'); ok = false;
   }
 
   const removedCats = ['스마트폰', '노트북'];
@@ -99,6 +108,56 @@ const expectedImageCounts = {
     }
   }
 
+  /* 냉장고 형태 칸 — 형태를 고르면 「냉장고」 칸이 켜지고 형태 칸 8개 중 그것만 켜진다 */
+  window.selectCat('냉장고 4도어 키친핏');
+  {
+    const on = [...doc.querySelectorAll('#cats .cat.on')].map((r) => r.dataset.cat);
+    const vars = [...doc.querySelectorAll('#cat-vars .cat-var')];
+    const von = vars.filter((b) => b.classList.contains('on')).map((b) => b.dataset.cat);
+    if (on.join() !== '냉장고') { console.log('ERROR: 형태를 골랐는데 「냉장고」 칸이 안 켜진다 —', on); ok = false; }
+    if (vars.length !== fridgeKeys.length) { console.log(`ERROR: 냉장고 형태 칸 ${vars.length}개 (기대 ${fridgeKeys.length})`); ok = false; }
+    if (von.join() !== '냉장고 4도어 키친핏') { console.log('ERROR: 고른 형태만 켜져야 한다 —', von); ok = false; }
+    window.selectCat('세탁기·콤보');
+    if (doc.querySelectorAll('#cat-vars .cat-var').length) { console.log('ERROR: 묶음 아닌 품목에 형태 칸이 남았다'); ok = false; }
+    /* 「냉장고」 칸을 다시 누르면 마지막에 본 형태로 */
+    [...doc.querySelectorAll('#cats .cat')].find((r) => r.dataset.cat === '냉장고').click();
+    if (doc.getElementById('res-title').textContent.indexOf('냉장고 4도어 키친핏') < 0) {
+      console.log('ERROR: 「냉장고」 칸이 마지막에 본 형태로 돌아가지 않는다'); ok = false;
+    }
+    /* 「키친핏」을 치면 「냉장고」 칸이 남고 걸린 형태가 형태 칸에 뜬다 */
+    window.filterCats('키친핏');
+    const found = [...doc.querySelectorAll('#cat-vars .cat-var')].map((b) => b.dataset.cat);
+    if (!found.length || !found.every((k) => k.indexOf('키친핏') >= 0)) { console.log('ERROR: 「키친핏」 검색이 형태를 안 띄운다 —', found); ok = false; }
+    window.filterCats('');
+    console.log(`OK: 냉장고 ${fridgeKeys.length}종 → 칸 1개 + 형태 칸 (검색 「키친핏」 → ${found.length}개)`);
+  }
+
+  /*
+   * ── 설치 전 준비 (2026-10-23 사장님 승인 — 설치비용 앱에서 옮겨 왔다) ──
+   * 자료는 install-cost.json 한 벌이다. 대상 품목에만 붙고 아닌 품목에는 안 붙는다.
+   */
+  {
+    const IC = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'public', 'install-cost.json'), 'utf8'));
+    window.__install.setIC(IC);
+    const prepOf = async (cat) => { window.selectCat(cat); await window.__install.renderPrep(cat);
+      return [...doc.querySelectorAll('#prep-wrap .prep-card')].map((x) => x.id); };
+    const wash = await prepOf('세탁기·콤보');
+    const wtxt = doc.getElementById('prep-wrap').textContent;
+    if (wash.join() !== 'prep-safety') { console.log('ERROR: 세탁기에 멀티탭 기준이 안 붙는다 —', wash); ok = false; }
+    if (!(wtxt.includes('16A') && wtxt.includes('4000W') && wtxt.includes('화재'))) { console.log('ERROR: 멀티탭 기준(16A · 4000W · 화재)이 화면에 없다'); ok = false; }
+    if (!IC.safety.targets.every((t) => wtxt.includes(t))) { console.log('ERROR: 대상제품을 다 적지 않는다'); ok = false; }
+    const dw = await prepOf('식기세척기');
+    if (!['prep-safety', 'prep-dishwash', 'prep-reform'].every((id) => dw.includes(id))) { console.log('ERROR: 식기세척기 준비 안내가 빠졌다 —', dw); ok = false; }
+    if (!doc.getElementById('prep-wrap').textContent.includes('설치가 불가합니다')) { console.log('ERROR: 설치 불가 조건이 화면에 없다'); ok = false; }
+    const ac = await prepOf('에어컨');
+    if (!ac.includes('prep-aircon')) { console.log('ERROR: 에어컨 고객안전 안내가 안 붙는다 —', ac); ok = false; }
+    const tv = await prepOf('TV');
+    if (tv.length) { console.log('ERROR: 대상 아닌 TV 에 설치 전 준비가 붙었다 —', tv); ok = false; }
+    const sac = await prepOf('시스템에어컨');
+    if (sac.includes('prep-safety')) { console.log('ERROR: 「에어컨」 대상이 시스템에어컨까지 물었다(앞머리 판정)'); ok = false; }
+    console.log(`OK: 설치 전 준비 — 세탁기 ${wash.length} · 식기세척기 ${dw.length} · 에어컨 ${ac.length} · TV 0`);
+  }
+
   window.filterCats('인덕션');
   let visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
   console.log('search "인덕션" visible:', visible.map((r) => r.dataset.cat));
@@ -127,6 +186,15 @@ const expectedImageCounts = {
   visible = [...doc.querySelectorAll('#cats .cat')].filter((r) => r.style.display !== 'none');
   console.log('search "스마트폰" (removed cat) visible count:', visible.length);
   if (visible.length !== 0) { console.log('ERROR: removed cat should not match search'); ok = false; }
+
+  /* 태블릿(≥720px)은 왼쪽 목록 · 오른쪽 결과 — **screen 으로 묶여 있어야** A4 인쇄(약 718px 폭)에 격자가 안 나간다 */
+  {
+    const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'install-app.html'), 'utf8');
+    if (!/@media screen and \(min-width:720px\)\{\s*main\{[^}]*display:grid/.test(src)) { console.log('ERROR: 태블릿 두 칸 배치가 screen 으로 묶여 있지 않다'); ok = false; }
+    if (!/\.cat\.on\{[^}]*box-shadow:inset 0 0 0 1px var\(--primary\)/.test(src) || /\.cat\.on\{background:var\(--primary\)/.test(src)) {
+      console.log('ERROR: 고른 칸이 파란 테두리가 아니다(전 앱 통일 2026-10-23)'); ok = false;
+    }
+  }
 
   // 화면에 적힌 카테고리 개수가 DB 와 같은가 — 박아 두면 늘려도 옛 숫자가 남는다
   // (2026-08-11: 실제 21개인데 "(20종)"으로 적혀 있었다)
