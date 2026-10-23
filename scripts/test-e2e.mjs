@@ -736,7 +736,9 @@ try {
     const fr = bp.frames().find((f) => f.url().includes('as-app.html'));
     if (!fr) fail('AS 미니앱 프레임을 찾지 못함');
     else {
-      await fr.fill('#sq', '냉장고');
+      /* 허브 안에서는 AS 상단 검색칸을 감춘다(2026-10-23 통합검색 일원화) — 칸에 직접 칠 수 없어
+         앱이 내놓은 search() 로 같은 길(runSearch → 결과 열림 → Back.open)을 지난다 */
+      await fr.evaluate(() => window.__as.search('냉장고'));
       await bp.waitForTimeout(400);
       const opened = await fr.evaluate(() => document.body.classList.contains('sres-open'));
       /*

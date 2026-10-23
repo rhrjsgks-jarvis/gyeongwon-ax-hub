@@ -367,6 +367,8 @@
   @media(min-width:1024px){ .wrap,.topbar-in,.sbar-in { max-width:960px } }
   @media(min-width:1440px){ .wrap,.topbar-in,.sbar-in { max-width:1140px } }
 </style>
+<script>/* 허브 안(iframe)이면 표시 — 검색은 허브 맨 위 통합검색 하나가 맡아 이 앱의 검색칸을 감춘다(2026-10-23) */try{if(self!==top)document.documentElement.classList.add('ax-embed')}catch(e){document.documentElement.classList.add('ax-embed')}</script>
+<style>.ax-embed:not(.ax-showsearch) #sbar,.ax-embed #svcq,.ax-embed #lgq,.ax-embed #b2bq,.ax-embed #itq,.ax-embed input[id^="mq-"]{display:none!important}</style>
 </head>
 <body>
 <div class="topbar">
@@ -1850,7 +1852,9 @@ function searchDocs(){
          178곳에서 유일하기 때문이다. */
       go(){ setTab('center'); svcSido = x.sd; svcHomeOnly = false; svcPick = x.id;
         renderSvcCenters();
-        const b = document.getElementById('svcq'); if (b){ b.value = svcName(x); renderSvcList(); }
+        /* 허브 안에서는 센터 칸 검색이 감춰져 있어(통합검색 일원화) 거기 글자를 넣으면 지울 길 없이 목록이 한 곳으로 묶인다 */
+        const b = document.getElementById('svcq');
+        if (b && !document.documentElement.classList.contains('ax-embed')){ b.value = svcName(x); renderSvcList(); }
         revealBody(); } });
   }
   out.push({ kind:'수리비', title:'출장비 · 수리비(기술료) · 부품비',
@@ -2535,7 +2539,18 @@ renderCats(); renderBody(); wireSearch();
    (센터 탭을 누르면 그때 다시 받는다). */
 /* **`fetch` 가 없는 환경이 있다** — jsdom 검사가 그렇다. 가드 없이 부르면 여기서 스크립트가
    죽어 아래 `window.__as` 노출까지 막힌다(실제로 검사가 통째로 깨졌다). */
-if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).then(j=>{ SVC = j; }).catch(()=>{});
+if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).then(j=>{ SVC = j; openSvcLink(); }).catch(()=>{});
+/* 통합검색 딥링크 `?svc=<센터 이름>`(2026-10-23) — 센터 180곳이 통합검색 색인에 들어가며 생긴 길이다.
+   센터 목록은 늦게 오므로 받은 뒤에 연다. 이름은 화면에 적히는 svcName(178곳에서 유일). */
+function openSvcLink(){
+  const sv = new URLSearchParams(location.search).get('svc');
+  if (!sv || !SVC) return false;
+  const x = (SVC.items || []).find(i => svcName(i) === sv);
+  if (!x) return false;
+  setTab('center'); svcSido = x.sd; svcHomeOnly = false; svcPick = x.id;
+  renderSvcCenters(); revealBody();
+  return true;
+}
 
 /*
  * ── 통합검색 딥링크 (`?q=…`) ──
@@ -2598,7 +2613,8 @@ if (typeof fetch === 'function') fetch('svc-centers.json').then(r=>r.json()).the
   const hit = DOCS.find(d => d.title === q);
   if (hit) { hit.go(); return; }
   const inp = document.getElementById('sq');
-  if (inp) { inp.value = q; runSearch(); }
+  /* 허브 안에서는 이 칸이 감춰져 있다 — 정확히 맞는 항목이 없어 이 칸으로 찾을 때만 보이게 한다(결과가 숨은 칸에 갇히지 않게) */
+  if (inp) { document.documentElement.classList.add('ax-showsearch'); inp.value = q; runSearch(); }
 })();
 
 /* 공유 버튼은 한 번만 붙인다 — 렌더 안에서 부르면 품목을 눌러야 생긴다 */
@@ -2611,7 +2627,7 @@ window.__as = { FEE, FEE_SRC, FEE_SECS, FEE_GROUPS, CONFLICT, CAREPLUS, loadPart
   searchDocs,
   /* AS센터 목록은 `fetch` 로 오는데 jsdom 에는 fetch 가 없다 — 검사가 직접 넣어 준다.
      이걸 안 열어 두면 센터 탭 전체가 검사 밖에 남는다(한글이 자모로 쪼개지던 버그가 그렇게 지나갔다). */
-  loadSvc(j){ SVC = j; renderSvcCenters(); },
+  loadSvc(j){ SVC = j; renderSvcCenters(); }, openSvcLink,
   renderSvcList, svcName,
   get cur(){ return cur; }, set cur(v){ cur=v; renderCats(); renderBody(); },
   get tab(){ return curTab; }, set tab(v){ setTab(v); },

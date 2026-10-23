@@ -35,7 +35,7 @@ function loadSuggest(): Promise<Sug[]> {
 }
 
 export default function SearchBox({
-  value, onChange, onSubmit, placeholder, autoFocus, inputClassName,
+  value, onChange, onSubmit, placeholder, autoFocus, inputClassName, onDark,
 }: {
   value: string
   onChange: (v: string) => void
@@ -43,6 +43,8 @@ export default function SearchBox({
   placeholder: string
   autoFocus?: boolean
   inputClassName: string
+  /** 남색 헤더 위에 놓일 때 — 검색 단추를 흰 바탕으로(남색 위 남색 단추는 안 보인다) */
+  onDark?: boolean
 }) {
   const router = useRouter()
   const [list, setList] = useState<Sug[] | null>(cache)
@@ -96,8 +98,8 @@ export default function SearchBox({
         />
         <button
           type="submit"
-          className="px-4 md:px-5 rounded-xl text-sm font-bold text-white shrink-0"
-          style={{ background: '#1428A0' }}
+          className={onDark ? 'px-3 rounded-lg text-sm font-bold shrink-0' : 'px-4 md:px-5 rounded-xl text-sm font-bold text-white shrink-0'}
+          style={onDark ? { background: '#fff', color: '#1428A0' } : { background: '#1428A0' }}
         >
           검색
         </button>

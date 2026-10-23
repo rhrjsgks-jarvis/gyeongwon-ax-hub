@@ -7,6 +7,7 @@ import SamsungWordmark from './SamsungWordmark'
 import Icon, { IconName } from './Icon'
 import { versionLabel } from '@/lib/version'
 import FeedbackButton from './FeedbackButton'
+import HeaderSearch from './HeaderSearch'
 import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
 import { isFullscreen, fullscreenSupported, enterFullscreen, exitFullscreen } from '@/lib/fullscreen'
 
@@ -195,6 +196,7 @@ const NAV_ITEMS = [
 
 export default function Navigation() {
   const pathname = usePathname()
+  const searchWide = useMinWidth(720)
   const router = useRouter()
 
   /*
@@ -341,6 +343,9 @@ export default function Navigation() {
           </span>
         </Link>
         </div>
+        {/* 통합검색 — 모든 화면 맨 위(2026-10-23 사장님: 「검색은 한곳에서 · 검색창은 항상 최상단」).
+            허브·/search 는 본문 맨 위에 큰 칸이 있어 감춘다 */}
+        {pathname !== '/' && pathname !== '/search' && searchWide && <HeaderSearch wide />}
         {/* 오른쪽 — 팀 이름은 왼쪽으로 밀고 그 자리에 공유 아이콘을 고정한다 */}
         <div className="flex items-center gap-2.5">
           {/* 버전 — 미니앱을 보고 있을 때도 최신인지 확인돼야 해서 상단바에 함께 둔다.

@@ -369,6 +369,18 @@ function flatten(v, out = []) {
     add({ t: 'contact', m: 'as', title: `${m.g} (중앙에너지)`, sub: `${m.tc} · ${m.a}`,
       kw: [m.g, m.tc, m.a, '중앙에너지 인덕션 정수기 후드 지사 설치 관할'].join(' '), href: asLink(`${m.g} (중앙에너지)`) });
   }
+  /*
+   * 삼성전자서비스 센터(AS센터 찾기) — 2026-10-23 통합검색 일원화로 들어왔다.
+   * 예전에는 AS 앱 안 검색칸만 이 센터들을 찾았는데, 그 칸을 허브 안에서 감추면서
+   * 통합검색이 맡지 않으면 센터를 찾을 길이 사라진다(최상위 규칙). `?svc=` 로 그 센터를 바로 연다.
+   */
+  const SVCJ = JSON.parse(read('svc-centers.json'));
+  for (const x of SVCJ.items) {
+    const name = String(x.full || '').replace(/^삼성전자\s+/, '');
+    add({ t: 'center', m: 'as', title: name, sub: `${x.sd} ${x.sg} · ${x.ad}${x.home ? ' · 가전 접수' : ' · 모바일만'}`,
+      kw: [x.nm, x.full, x.sd, x.sg, x.ad, x.tel || '', ...(x.it || []), 'as센터 서비스센터 수리 위치 주소 센터'].join(' '),
+      href: `/as?svc=${encodeURIComponent(name)}` });
+  }
 }
 
 // ── 6. 배치 시뮬레이터: 사이즈별 대표 규격 ──
