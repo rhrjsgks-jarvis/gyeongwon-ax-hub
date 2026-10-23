@@ -1779,7 +1779,7 @@ function renderDrill(){
     + fams.map(([f, ts]) => '<button type="button" class="dm-it" data-fam="' + esc(f) + '"' + (dmFam ? ' tabindex="-1"' : '') + '>'
       + '<span class="ci">' + sym(ts[0]) + '</span><span class="nm">' + esc(f) + '</span><span class="ar">›</span></button>').join('') + '</div>';
   const cur = fams.find(x => x[0] === dmFam);
-  const lv1 = cur ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 품목 묶음으로</button><div class="dm-t">' + esc(cur[0]) + '</div>'
+  const lv1 = cur ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 뒤로가기</button><div class="dm-t">' + esc(cur[0]) + '</div>'
     + cur[1].map(t => '<button type="button" class="dm-it' + (t === browseKey ? ' on' : '') + '" data-fc="' + esc(t) + '">'
       + '<span class="ci">' + sym(t) + '</span><span class="nm">' + esc(t) + '</span><span class="ct">' + by[t].n + '종</span></button>').join('') + '</div>' : '';
   st.innerHTML = lv0 + lv1;

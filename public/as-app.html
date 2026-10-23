@@ -954,13 +954,12 @@ function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, ''
  * 폰(719px 이하)은 지금 칸 그대로다 — 이 메뉴는 CSS 로 태블릿에서만 보인다.
  *   levels = [{ title, back, items:[{ k, nm, ic, kids, on }] }] · 마지막 단계가 보인다.
  */
-function dmJosa(w){ const c = String(w).replace(/[^가-힣]+$/, '').slice(-1); if (!c) return '로';
-  const j = (c.charCodeAt(0) - 0xAC00) % 28; return (j === 0 || j === 8) ? '로' : '으로'; }
+/* 뒤로가기 단추 이름은 네 앱 모두 「‹ 뒤로가기」(2026-10-23 사장님 — 「품목 묶음으로」보다 직관적) */
 function dmHtml(id, levels){
   const last = levels.length - 1;
   return `<div class="dm-stack" style="transform:${last ? `translateX(-${last * 100}%)` : 'none'}">` + levels.map((lv, d) =>
     `<div class="dm-lvl"${d < last ? ' aria-hidden="true"' : ''}>`
-    + (lv.back ? `<button type="button" class="dm-back" data-dm="${id}" data-back="1"${d < last ? ' tabindex="-1"' : ''}>‹ ${esc(lv.back)}${dmJosa(lv.back)}</button>` : '')
+    + (lv.back ? `<button type="button" class="dm-back" data-dm="${id}" data-back="1"${d < last ? ' tabindex="-1"' : ''}>‹ 뒤로가기</button>` : '')
     + `<div class="dm-t">${esc(lv.title)}</div>`
     + lv.items.map(it => `<button type="button" class="dm-it${it.on ? ' on' : ''}" data-dm="${id}" data-k="${esc(it.k)}"${it.kids ? ' data-kids="1"' : ''}${d < last ? ' tabindex="-1"' : ''}>`
       + `<span class="ci">${it.ic || ''}</span><span class="nm">${esc(it.nm)}</span>${it.kids ? '<span class="ar">›</span>' : ''}</button>`).join('')

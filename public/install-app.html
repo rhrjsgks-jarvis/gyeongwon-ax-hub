@@ -1430,7 +1430,7 @@ function renderDrill() {
         + '<span class="ci">' + (grouped ? tileIcon(t) : catIcon(t)) + '</span><span class="nm">' + escHtml(catLabel(t)) + '</span>'
         + (grouped ? '<span class="ar">›</span>' : '') + '</button>';
     }).join('') + '</div>';
-  const lv1 = dmTile ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 품목으로</button><div class="dm-t">' + escHtml(dmTile) + '</div>'
+  const lv1 = dmTile ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 뒤로가기</button><div class="dm-t">' + escHtml(dmTile) + '</div>'
     + variantsOf(dmTile).map((k) => '<button type="button" class="dm-it' + (k === currentCat ? ' on' : '') + '" data-cat="' + escAttr(k) + '">'
       + '<span class="ci">' + catIcon(k) + '</span><span class="nm">' + escHtml(varLabel(k)) + '</span></button>').join('') + '</div>' : '';
   st.innerHTML = lv0 + lv1;
