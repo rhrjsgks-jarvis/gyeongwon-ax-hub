@@ -317,27 +317,15 @@
   .wrap{padding:18px 20px 60px}
   .wrap,.topbar-in,.sbar-in{max-width:1180px!important}
   .sub{padding-right:0}
-  #asPane,#feePane,#cpPane{grid-template-columns:minmax(250px,31%) minmax(0,1fr);gap:16px;align-items:start}
+  /* 단계 메뉴(2026-10-23 사장님 승인 시안 — 설치환경과 같은 규격) — 왼쪽 220px 메뉴 · 오른쪽 내용 */
+  #asPane,#feePane,#cpPane{grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
   #asPane{display:grid}
   #feePane:not([style*="none"]),#cpPane:not([style*="none"]){display:grid}
   #asPane>.sub,#feePane>.sub,#feePane>.src,#cpPane>.sub,#cpPane>.src{grid-column:1/-1;margin-bottom:0}
-  #cpPane>#feeCats{grid-column:1;grid-row:2;top:64px}
-  #cpPane>#feeBody{grid-column:2;grid-row:2}
-  /* ① 왼쪽 칸 — 위에 붙어 있어 결과를 내려 읽는 동안에도 다른 품목을 바로 고른다 */
-  #cats,#feeCats{position:sticky;top:64px;margin:0;grid-template-columns:repeat(3,1fr);gap:6px;
-    background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px;
-    max-height:calc(100vh - 84px);overflow:auto}
-  #cats::before,#feeCats::before,#body::before,#feeBody::before{grid-column:1/-1;column-span:all;display:block;
-    font-size:13px;font-weight:800;color:#0B1220;margin:0 0 8px}
-  #cats::before{content:'① 품목'}
-  #feeCats::before{content:'① 항목'}
-  #body::before{content:'② 기간'}
-  #feeBody::before{content:'② 내용'}
-  #body:empty::before{content:'② 왼쪽에서 품목을 고르세요';color:#6b7280;font-weight:600}
-  #feePane>#feeSeg{grid-column:1;grid-row:2;margin:0}
-  #feePane>#feeCats{grid-column:1;grid-row:3;top:64px}
-  #feePane>#feeBody{grid-column:2;grid-row:2/span 2}
-  #body,#feeBody{min-width:0}
+  #asPane>#cats,#feeSeg,#feeCats,#cpViews{display:none!important}
+  #asPane>.dmenu,#feePane>.dmenu,#cpPane>.dmenu{grid-column:1;grid-row:2;position:sticky;top:64px;margin:0;
+    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:calc(100vh - 84px);overflow:auto;display:block}
+  #asPane>#body,#feePane>#feeBody,#cpPane>#feeBody{grid-column:2;grid-row:2;min-width:0}
   /* 센터 · 연락처 팝업 */
   .pop-dim{position:fixed;inset:0;background:rgba(11,18,32,.42);z-index:90}
   body.svc-pop #svcbody:not(:empty){position:fixed;z-index:91;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -351,11 +339,35 @@
     background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
 }
 /* 넓은 태블릿 가로(1000px~) — 결과 칸을 두 단으로 */
-@media screen and (min-width:1000px){
+@media screen and (min-width:1180px){
   #body{column-count:2;column-gap:12px}
   #body>*{break-inside:avoid}
 }
+/* ── 단계 메뉴 공통(설치환경과 같은 값) ── */
+.dmenu{overflow:hidden}
+@media (max-width:719px){.dmenu{display:none}}
+.dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
+.dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+/* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
+.dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+  border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;
+  padding:9px 10px;margin-bottom:6px;border-radius:10px;cursor:pointer;box-shadow:0 0 0 4px #fff}
+.dm-back:hover{background:#E0E7FF}
+.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
+  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+.dm-it:hover{background:#F3F5FA}
+.dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
+.dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0;font-size:15px;line-height:1}
+.dm-it .ci svg{width:18px;height:18px}
+.dm-it .nm{flex:1;min-width:0;word-break:keep-all}
+.dm-it .ar{color:#9CA3AF;font-size:13px}
+.dm-it:focus-visible,.dm-back:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+@keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ax-in{animation:axIn .18s ease-out}
+@media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
 @media print{
+  .dmenu{display:none!important}
   body{background:#fff!important}
   .topbar,.sbar,.mode-tabs,#cats,#asPane>.sub,#svcq,#centerPane .chips,#svccnt{display:none!important}
   .wrap{max-width:none!important;padding:0!important}
@@ -407,6 +419,7 @@
   <div id="asPane">
     <div class="sub">품목을 고르면 <b>무상보증 · 핵심부품 · 부품보유기간</b>을 한눈에 봅니다.
       삼성전자서비스 <b>보증기간 산정기준</b> 원문 그대로이며, 원문에 없는 항목은 비워 둡니다.</div>
+    <nav class="dmenu" id="asMenu" aria-label="AS기간 품목 메뉴"></nav>
     <div class="cats" id="cats"></div>
     <div id="body"></div>
   </div>
@@ -935,7 +948,33 @@ const RULES = [
  */
 function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, '') : '') || ''; }
 
+/*
+ * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 설치환경과 같은 규격) ──
+ * 대분류 → 중분류로 왼쪽으로 밀려 들어가고, 아래 단계가 없는 줄은 누르면 바로 오른쪽에 펼친다.
+ * 폰(719px 이하)은 지금 칸 그대로다 — 이 메뉴는 CSS 로 태블릿에서만 보인다.
+ *   levels = [{ title, back, items:[{ k, nm, ic, kids, on }] }] · 마지막 단계가 보인다.
+ */
+function dmJosa(w){ const c = String(w).replace(/[^가-힣]+$/, '').slice(-1); if (!c) return '로';
+  const j = (c.charCodeAt(0) - 0xAC00) % 28; return (j === 0 || j === 8) ? '로' : '으로'; }
+function dmHtml(id, levels){
+  const last = levels.length - 1;
+  return `<div class="dm-stack" style="transform:${last ? `translateX(-${last * 100}%)` : 'none'}">` + levels.map((lv, d) =>
+    `<div class="dm-lvl"${d < last ? ' aria-hidden="true"' : ''}>`
+    + (lv.back ? `<button type="button" class="dm-back" data-dm="${id}" data-back="1"${d < last ? ' tabindex="-1"' : ''}>‹ ${esc(lv.back)}${dmJosa(lv.back)}</button>` : '')
+    + `<div class="dm-t">${esc(lv.title)}</div>`
+    + lv.items.map(it => `<button type="button" class="dm-it${it.on ? ' on' : ''}" data-dm="${id}" data-k="${esc(it.k)}"${it.kids ? ' data-kids="1"' : ''}${d < last ? ' tabindex="-1"' : ''}>`
+      + `<span class="ci">${it.ic || ''}</span><span class="nm">${esc(it.nm)}</span>${it.kids ? '<span class="ar">›</span>' : ''}</button>`).join('')
+    + '</div>').join('') + '</div>';
+}
+function dmFocus(host){ const lv = host ? host.querySelectorAll('.dm-lvl') : []; const f = lv.length && lv[lv.length - 1].querySelector('.dm-back, .dm-it'); if (f) f.focus({ preventScroll: true }); }
+function axIn(el){ if (!el) return; el.classList.remove('ax-in'); void el.offsetWidth; el.classList.add('ax-in'); }
+function renderAsMenu(){
+  const m = document.getElementById('asMenu'); if (!m) return;
+  m.innerHTML = dmHtml('as', [{ title: '품목', items: keys.map(k => ({ k, nm: k, ic: catIcon(k), on: k === cur })) }]);
+}
+
 function renderCats(){
+  renderAsMenu();
   document.getElementById('cats').innerHTML = keys.map(k=>
     `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
   document.querySelectorAll('#cats .cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); revealBody();
@@ -944,6 +983,7 @@ function renderCats(){
 }
 
 function renderBody(){
+  axIn(document.getElementById('body'));
   const d = DB[cur];
   let h = '';
 
@@ -2338,6 +2378,7 @@ function renderFee(){
   const grp = feeGrpOf(feeSec);
   if (groups.length > 1) h += `<div class="fee-seg" id="feeSeg" role="tablist">${groups.map(([g, t]) =>
     `<button type="button" role="tab" aria-selected="${g === grp}" class="${g === grp ? 'on' : ''}" data-fg="${g}">${esc(t)}</button>`).join('')}</div>`;
+  h += `<nav class="dmenu" id="feeMenu" aria-label="${tab === 'cp' ? '케어플러스·이전설치' : '수리비'} 단계 메뉴">${feeMenuHtml(tab, groups)}</nav>`;
   h += `<div class="cats" id="feeCats">${FEE_SECS.filter(([k]) => FEE_GROUPS.find(g => g[0] === grp)[2].includes(k)).map(([k, e, t]) =>
     `<div class="cat${k === feeSec ? ' on' : ''}" data-fs="${k}"><span class="ci">${e}</span>${esc(t)}</div>`).join('')}</div>`;
   h += `<div id="feeBody">${feeCard(feeSec)}</div>`;
@@ -2371,7 +2412,62 @@ function renderFee(){
   }
   if (feeSec === 'consum') { document.getElementById('csq').oninput = renderConsum; renderConsum(); }
   if (feeSec === 'careplus') wireCp();
+  axIn(document.getElementById('feeBody'));
 }
+/*
+ * 수리비: 분류(요금 기준 · 부품 가격) → 항목.  케어플러스·이전설치: 항목 → (케어플러스 유료면) 네 갈래.
+ * 열린 단계 — feeView: '' = 분류 단계, 그 밖 = 그 분류. cpMenu: '' = 항목 단계, 'careplus' = 네 갈래.
+ * 처음·딥링크는 지금 고른 것이 있는 단계를 열어 둔다(설치환경이 냉장고 형태 단계를 열고 시작하는 것과 같다).
+ */
+let feeView = null, cpMenu = null, feeDmPushed = false, cpDmPushed = false;
+const feeLabel = (k) => (FEE_SECS.find(x => x[0] === k) || [k, '', k]);
+function feeMenuHtml(tab, groups){
+  if (tab === 'cp') {
+    if (cpMenu === null) cpMenu = feeSec === 'careplus' ? 'careplus' : '';
+    const lv0 = { title: '케어플러스·이전설치', items: groups[0][2].map(k => { const [, e, t] = feeLabel(k);
+      return { k, nm: t, ic: e, kids: k === 'careplus', on: k === feeSec && k !== 'careplus' }; }) };
+    if (!cpMenu) return dmHtml('cp', [lv0]);
+    return dmHtml('cp', [lv0, { title: feeLabel('careplus')[2], back: '케어플러스·이전설치',
+      items: CP_VIEWS.map(([v, t]) => ({ k: v, nm: t, ic: '·', on: feeSec === 'careplus' && v === cpView })) }]);
+  }
+  if (feeView === null || (feeView !== '' && !groups.some(g => g[0] === feeView))) feeView = feeGrpOf(feeSec);
+  const lv0 = { title: '수리비', items: groups.map(([g, t, ks]) => ({ k: g, nm: t, ic: feeLabel(ks[0])[1], kids: true })) };
+  if (!feeView) return dmHtml('fee', [lv0]);
+  const g = groups.find(x => x[0] === feeView);
+  return dmHtml('fee', [lv0, { title: g[1], back: '수리비',
+    items: g[2].map(k => { const [, e, t] = feeLabel(k); return { k, nm: t, ic: e, on: k === feeSec }; }) }]);
+}
+function asMenuClick(e){
+  const b = e.target.closest('[data-dm]'); if (!b || !b.closest('.dmenu')) return;
+  const id = b.dataset.dm, k = b.dataset.k, back = !!b.dataset.back;
+  if (id === 'as') {
+    cur = k; renderCats(); renderBody(); revealBody();
+    if (window.AX_LOG) AX_LOG('as', 'result_open', cur, true);
+    return;
+  }
+  if (id === 'fee') {
+    if (back) { const was = feeDmPushed; feeView = ''; feeDmPushed = false; renderFee(); dmFocus(document.getElementById('feeMenu')); if (was && window.Back) Back.done(); return; }
+    if (b.dataset.kids) {   // 분류 → 항목 단계로 민다(오른쪽 내용은 그대로)
+      feeView = k; renderFee(); dmFocus(document.getElementById('feeMenu'));
+      if (window.Back && !feeDmPushed) { feeDmPushed = true; Back.open(() => { feeView = ''; feeDmPushed = false; if (curTab === 'fee') renderFee(); }, () => !!feeView); }
+      return;
+    }
+    feeSec = k;
+    if (PK_GROUP[feeSec] && !PK_GROUP[feeSec].includes(pkKind)) pkKind = PK_GROUP[feeSec][0];
+    renderFee(); return;
+  }
+  if (id === 'cp') {
+    if (back) { const was = cpDmPushed; cpMenu = ''; cpDmPushed = false; renderFee(); dmFocus(document.getElementById('feeMenu')); if (was && window.Back) Back.done(); return; }
+    if (b.dataset.kids) {
+      cpMenu = k; renderFee(); dmFocus(document.getElementById('feeMenu'));
+      if (window.Back && !cpDmPushed) { cpDmPushed = true; Back.open(() => { cpMenu = ''; cpDmPushed = false; if (curTab === 'cp') renderFee(); }, () => !!cpMenu); }
+      return;
+    }
+    if (cpMenu === 'careplus' && CP_VIEWS.some(v => v[0] === k)) { feeSec = 'careplus'; cpView = k; renderFee(); return; }
+    feeSec = k; renderFee();
+  }
+}
+document.addEventListener('click', asMenuClick);
 
 /* 케어플러스 칸 본문 — 갈래마다 원문 출처를 따로 적는다(출처가 셋이다) */
 function cpBody(){

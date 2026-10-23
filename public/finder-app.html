@@ -314,10 +314,12 @@ table.spec tr:last-child td{border-bottom:none}
 /* 태블릿 — 왼쪽 품목 칸(고정) · 오른쪽 검색과 결과 */
 @media screen and (min-width:720px){
   .wrap,.topbar-in{max-width:1180px!important}
-  .wrap{display:grid;grid-template-columns:minmax(250px,30%) minmax(0,1fr);column-gap:18px;align-items:start}
+  .wrap{display:grid;grid-template-columns:220px minmax(0,1fr);column-gap:16px;align-items:start}
   .wrap>*{grid-column:2;min-width:0}
-  .wrap>#catHost{grid-column:1;grid-row:1/span 30;position:sticky;top:14px;max-height:calc(100vh - 28px);overflow:auto;margin-top:18px}
-  .fc-g{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* 단계 메뉴(2026-10-23 사장님 승인 시안) — 품목 묶음 → 품목으로 밀려 들어간다. 타일 칸은 폰 전용으로 남긴다 */
+  .wrap>#catHost{display:none!important}
+  .wrap>.dmenu{grid-column:1;grid-row:1/span 30;display:block;overflow:auto;position:sticky;top:12px;max-height:calc(100vh - 24px);
+    margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px}
   /* 상세는 팝업 — 펼치면 목록이 그만큼 밀려 다른 제품과 견주기 어려웠다 */
   .rcard .rdetail{position:fixed;z-index:91;left:50%;top:40px;transform:translateX(-50%);width:min(760px,calc(100vw - 48px));
     max-height:calc(100vh - 80px);overflow:auto;background:var(--surface);border-radius:16px;box-shadow:0 18px 50px rgba(11,18,32,.28);padding:18px 20px}
@@ -328,6 +330,36 @@ table.spec tr:last-child td{border-bottom:none}
   .fp-x{position:fixed;z-index:92;top:20px;left:calc(50% + min(380px, 50vw - 24px) - 20px);width:40px;height:40px;border-radius:99px;
     border:1.5px solid #1428A0;background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
 }
+/* 결과 카드 두 단 — 오른쪽 칸이 760px 남짓 될 때부터 */
+@media screen and (min-width:1040px){
+  .rlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+  .rlist>.empty{grid-column:1/-1}
+}
+/* ── 단계 메뉴 — 기준 구현은 install-app.html(같은 클래스·같은 값) ── */
+.dmenu{display:block;overflow:hidden}
+@media (max-width:719px){.dmenu{display:none}}
+.dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
+.dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+/* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
+.dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+  border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;
+  padding:9px 10px;margin-bottom:6px;border-radius:10px;cursor:pointer;box-shadow:0 0 0 4px #fff}
+.dm-back:hover{background:#E0E7FF}
+.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
+  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+.dm-it:hover{background:#F3F5FA}
+.dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
+.dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0}
+.dm-it .ci svg,.dm-it .ci .psym{width:18px;height:18px}
+.dm-it .nm{flex:1;min-width:0;word-break:keep-all}
+.dm-it .ar{color:#9CA3AF;font-size:13px}
+.dm-it .ct{color:#9CA3AF;font-size:11.5px;font-weight:500;white-space:nowrap}
+.dm-it:focus-visible,.dm-back:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+@keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ax-in{animation:axIn .18s ease-out}
+@media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
+@media print{.dmenu{display:none!important}}
 @media print{ #catHost,.fp-dim,.fp-x{display:none!important} .rcard .rdetail{position:static!important;transform:none!important;box-shadow:none!important;max-height:none!important;width:auto!important} }
 </style>
 <script>/* 허브 안(iframe)이면 표시 — 검색은 허브 맨 위 통합검색 하나가 맡아 이 앱의 검색칸을 감춘다(2026-10-23) */try{if(self!==top)document.documentElement.classList.add('ax-embed')}catch(e){document.documentElement.classList.add('ax-embed')}</script>
@@ -389,6 +421,7 @@ table.spec tr:last-child td{border-bottom:none}
     </div>
     <div class="exrow" id="exRow"></div>
   </div>
+  <nav class="dmenu" id="dmenu" aria-label="품목 단계 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
   <div id="catHost" aria-label="품목으로 찾기"></div>
 
   <div id="aiBox" class="hidden">
@@ -1712,18 +1745,65 @@ function fcTiles(){
   PRODUCTS.forEach(p => { if (isPackage(p)) return; const t = fcTile(p.cat); (by[t] = by[t] || { n: 0, cats: new Set() }).n++; by[t].cats.add(p.cat); });
   return by;
 }
-function renderCatHost(){
-  const host = $("catHost"); if (!host) return;
-  const by = fcTiles();
+/* 품목 묶음 → 품목 — 타일 칸(폰)과 단계 메뉴(태블릿)가 같은 묶음을 쓴다 */
+function fcFams(by){
+  by = by || fcTiles();
   const fams = FC_FAM.map(([f, re]) => [f, Object.keys(by).filter(t => re.test(t))]);
   const used = new Set(fams.flatMap(x => x[1]));
   const rest = Object.keys(by).filter(t => !used.has(t));
   if (rest.length) fams.push(['기타', rest]);
+  return fams.filter(x => x[1].length);
+}
+/*
+ * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 기준 구현 install-app.html) ──
+ * 품목 묶음을 누르면 메뉴가 왼쪽으로 밀리며 품목이 나오고, 품목을 누르면 오른쪽에 제품이 펼쳐진다.
+ * 기기 뒤로가기도 한 단계 올린다(back-kit). 폰(719px 이하)은 타일 칸 그대로다.
+ */
+let dmFam = '', dmPushed = false;
+function dmUp(){ dmFam = ''; dmPushed = false; renderDrill(); dmFocus(); }
+function dmOpen(f){
+  if (dmFam === f) return;
+  dmFam = f;
+  if (window.Back && !dmPushed) { dmPushed = true; Back.open(dmUp, () => !!dmFam); }
+}
+function dmFocus(){
+  const lv = document.querySelectorAll('#dm-stack .dm-lvl');
+  const f = lv.length && lv[lv.length - 1].querySelector('.dm-back, .dm-it');
+  if (f) f.focus({ preventScroll: true });
+}
+function renderDrill(){
+  const st = $("dm-stack"); if (!st) return;
+  const by = fcTiles(), fams = fcFams(by);
+  const sym = (t) => (typeof prodSymbol === 'function' ? prodSymbol(t, '') : '');
+  const lv0 = '<div class="dm-lvl"' + (dmFam ? ' aria-hidden="true"' : '') + '><div class="dm-t">품목 묶음</div>'
+    + fams.map(([f, ts]) => '<button type="button" class="dm-it" data-fam="' + esc(f) + '"' + (dmFam ? ' tabindex="-1"' : '') + '>'
+      + '<span class="ci">' + sym(ts[0]) + '</span><span class="nm">' + esc(f) + '</span><span class="ar">›</span></button>').join('') + '</div>';
+  const cur = fams.find(x => x[0] === dmFam);
+  const lv1 = cur ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 품목 묶음으로</button><div class="dm-t">' + esc(cur[0]) + '</div>'
+    + cur[1].map(t => '<button type="button" class="dm-it' + (t === browseKey ? ' on' : '') + '" data-fc="' + esc(t) + '">'
+      + '<span class="ci">' + sym(t) + '</span><span class="nm">' + esc(t) + '</span><span class="ct">' + by[t].n + '종</span></button>').join('') + '</div>' : '';
+  st.innerHTML = lv0 + lv1;
+  st.style.transform = cur ? 'translateX(-100%)' : 'none';
+}
+document.addEventListener('click', function (e) {
+  const st = $("dm-stack");
+  if (!st || !st.contains(e.target)) return;
+  if (e.target.closest('.dm-back')) { const was = dmPushed; dmUp(); if (was && window.Back) Back.done(); return; }
+  const b = e.target.closest('.dm-it'); if (!b) return;
+  if (b.dataset.fam) { dmOpen(b.dataset.fam); renderDrill(); dmFocus(); return; }
+  if (b.dataset.fc) browseCat(b.dataset.fc);
+});
+function isTabletWide(){ return !!(window.matchMedia && matchMedia('screen and (min-width:720px)').matches); }
+function renderCatHost(){
+  const host = $("catHost"); if (!host) return;
+  const by = fcTiles();
+  const fams = fcFams(by);
   host.innerHTML = '<div class="fc-t">① 품목으로 찾기</div>' + fams.filter(x => x[1].length).map(([f, ts]) =>
     '<div class="fc-gh">' + esc(f) + '</div><div class="fc-g">' + ts.map(t =>
       '<button type="button" class="fc' + (t === browseKey ? ' on' : '') + '" data-fc="' + esc(t) + '"><span class="ci">'
       + (typeof prodSymbol === 'function' ? prodSymbol(t, '') : '') + '</span>' + esc(t) + '<small>' + by[t].n + '종</small></button>').join('') + '</div>').join('');
   host.querySelectorAll('.fc').forEach(b => b.addEventListener('click', () => browseCat(b.dataset.fc)));
+  renderDrill();
 }
 function browseCat(t){
   const by = fcTiles(); if (!by[t]) return;
@@ -1734,7 +1814,10 @@ function browseCat(t){
   $("parseBar").innerHTML = '<button type="button" class="fc-back" onclick="showCats()">☰ 품목</button>'
     + '<span class="ptag cat">' + esc('품목: ' + t) + '</span><span class="rescount" id="resCount"></span>';
   sortMode = 'new';
+  /* 단계 메뉴 — 그 품목의 묶음 단계를 열어 둔다(딥링크·처음 열기로 들어와도 어디인지 보이게) */
+  const fam = fcFams().find(x => x[1].includes(t)); if (fam) dmOpen(fam[0]);
   renderCatHost(); renderSortRow(); renderResults();
+  const rh = $("rHost"); if (rh) { rh.classList.remove('ax-in'); void rh.offsetWidth; rh.classList.add('ax-in'); }
   if (window.AX_LOG) AX_LOG('finder', 'result_open', '품목:' + t, true);
 }
 /* 폰 — 결과 위 「☰ 품목」 을 누르면 칸으로 돌아간다 */
@@ -2503,6 +2586,7 @@ function loadSecUspIdle(){
        **영영 0건으로 남았다** — 수집분 1,270종이 전부 그 경로였다. */
     var qEl = document.getElementById('q');
     if (qEl && qEl.value.trim()) runSearch();
+    else if (browseKey) browseCat(browseKey);   /* 수집분이 붙으면 보고 있던 품목도 새 종수로 */
     loadSecUspIdle();
   }).catch(function () { loadSecUspIdle(); /* 전파가 끊겨도 기존 제품은 그대로 쓴다 */ });
 })();
@@ -2511,6 +2595,9 @@ function loadSecUspIdle(){
 (function(){
   const q = new URLSearchParams(location.search).get('q');
   if(q){ $("q").value = q; runSearch(); }
+  /* 태블릿은 오른쪽을 비워 두지 않는다 — 첫 묶음의 첫 품목을 미리 연다(?q= 딥링크면 그 결과를 둔다) */
+  else if (isTabletWide() && !browseKey) { const f = fcFams()[0]; if (f) browseCat(f[1][0]); }
+  renderDrill();
 })();
 </script>
 <script>

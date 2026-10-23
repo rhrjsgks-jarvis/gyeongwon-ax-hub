@@ -313,22 +313,38 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   @media(min-width:1024px){ main { max-width:960px } }
   @media(min-width:1440px){ main { max-width:1140px } }
 /*
- * ── 태블릿 (2026-10-23 사장님 승인 — 요금계산기 방식) ──
- * 즉시비교: 왼쪽에 ① 카테고리 · ② 모델(고정), 오른쪽에 결과. 1200px 부터 결과 칸을 두 단으로(그 아래는 비교표가 눌린다).
- * 폰(719px 이하)은 지금 그대로 위아래로 쌓인다.
+ * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 설치환경과 같은 규격, 기준 구현 install-app.html) ──
+ * 왼쪽 220px = 카테고리 단계 메뉴(한 단계 — 아래 단계가 없어 누르면 바로 펼친다), 오른쪽 = ② 모델 고르기 + 비교 결과 전체 폭.
+ * 태블릿에서는 카테고리·모델을 바꾸는 즉시 비교를 그린다(「지금 바로 비교」 단추가 할 일이 없어 감춘다).
+ * 폰(719px 이하)은 지금 그대로 위아래로 쌓인다. **`screen` 으로 묶는다** — A4 인쇄 폭이 이 경계에 걸린다.
  */
 @media screen and (min-width:720px){
-  #tab-db main{max-width:1180px!important;display:grid;grid-template-columns:minmax(260px,32%) minmax(0,1fr);gap:16px;align-items:start}
-  .cmp-side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
-  .cmp-side .cat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .cmp-side .model-row{display:block}
-  .cmp-side .model-group+.model-group{margin-top:12px}
-  #result-db{min-width:0;grid-column:2}
-  #result-db:not(.visible)+*{grid-column:1/-1}
-  #tab-db main::after{content:'② 왼쪽에서 카테고리와 모델을 고르면 여기에 비교 결과가 나옵니다';grid-column:2;grid-row:1;
-    font-size:13px;color:var(--gray);font-weight:600;padding:18px 4px}
-  #tab-db main:has(#result-db.visible)::after{display:none}
+  #tab-db main{max-width:1180px!important;display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
+  .cmp-side{display:contents}
+  .cmp-side>.card:first-child{display:none!important}
+  #tab-db .dmenu{display:block;grid-column:1;grid-row:1/span 2;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;
+    background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;margin:0}
+  #model-section{grid-column:2;grid-row:1;margin:0}
+  #model-section .compare-btn{display:none}
+  #result-db{min-width:0;grid-column:2;grid-row:2}
 }
+@media (max-width:719px){.dmenu{display:none}}
+.dmenu{overflow:hidden}
+.dm-stack{display:flex;width:100%;transition:transform .24s ease-out}
+.dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
+  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+.dm-it:hover{background:#F3F5FA}
+.dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
+.dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0;margin:0}
+.dm-it .ci svg{width:18px;height:18px}
+.dm-it .nm{flex:1;min-width:0;word-break:keep-all}
+.dm-it:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+@keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ax-in{animation:axIn .18s ease-out}
+@media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
+@media print{.dmenu{display:none!important}}
 @media screen and (min-width:1200px){
   #result-db.visible{column-count:2;column-gap:14px}
   #result-db>*{break-inside:avoid}
@@ -371,6 +387,7 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 <main>
 
   <div class="cmp-side">
+  <nav class="dmenu" id="dmenu" aria-label="카테고리 단계 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
   <!-- STEP 1: 카테고리 -->
   <div class="card">
     <div class="card-title">① 카테고리 선택</div>
@@ -2130,7 +2147,8 @@ function selectCat(cat) {
   bc.querySelectorAll('.brand-chip').forEach(c=>{ c.onclick = ()=>selectBrand(brands[+c.dataset.bi]); });
 
   updateCompetitors();
-  document.getElementById('model-section').scrollIntoView({behavior:'smooth',block:'center'});
+  renderDrill();
+  if (!isTabletWide()) document.getElementById('model-section').scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function selectBrand(b) {
@@ -2171,7 +2189,38 @@ function updateCompetitors() {
     });
     if (bestIdx >= 0) sc.value = String(bestIdx);
   }
+  /* 태블릿 — 고르는 즉시 비교를 그린다(오른쪽이 비지 않게, 「지금 바로 비교」 단추는 감춰 둔다) */
+  if (isTabletWide() && comps.length) renderResult();
 }
+
+/*
+ * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 설치환경과 같은 규격) ──
+ * 카테고리는 한 단계라 누르면 바로 오른쪽에 펼친다. 이름·아이콘은 기존 카테고리 단추에서 읽는다(목록을 두 벌 적지 않는다).
+ */
+function isTabletWide() { return !!(window.matchMedia && matchMedia('screen and (min-width:720px)').matches); }
+function drillCats() {
+  return [].map.call(document.querySelectorAll('.cmp-side .cat-btn'), function (b) {
+    const m = (b.getAttribute('onclick') || '').match(/selectCat\('([^']+)'\)/);
+    const ci = b.querySelector('.ci');
+    const label = (b.textContent || '').replace(ci ? ci.textContent : '', '').trim();
+    return m ? { cat: m[1], label: label, icon: ci ? ci.innerHTML : '' } : null;
+  }).filter(Boolean);
+}
+function renderDrill() {
+  const st = document.getElementById('dm-stack');
+  if (!st) return;
+  st.innerHTML = '<div class="dm-lvl"><div class="dm-t">카테고리</div>' + drillCats().map(function (c) {
+    const sym = (typeof prodSymbol === 'function') ? prodSymbol(c.label, null) : null;
+    return '<button type="button" class="dm-it' + (c.cat === currentCat ? ' on' : '') + '" data-cat="' + escHtml(c.cat) + '">'
+      + '<span class="ci">' + (sym || c.icon) + '</span><span class="nm">' + escHtml(c.label) + '</span></button>';
+  }).join('') + '</div>';
+}
+document.addEventListener('click', function (e) {
+  const st = document.getElementById('dm-stack');
+  if (!st || !st.contains(e.target)) return;
+  const b = e.target.closest('.dm-it'); if (!b) return;
+  selectCat(b.dataset.cat);
+});
 
 /* 스펙 값 조회. price는 specs가 아니라 모델 객체 최상위에 있어 따로 읽는다
    (모든 모델이 이미 갖고 있는 값이라 전 카테고리 비교표에 바로 쓸 수 있다). */
@@ -2660,8 +2709,10 @@ function renderResult() {
   lastResultText = buildTextResult(sam, comp, d, samOnly, compOnly, scoreS, scoreC);
   lastComparison = { cat: currentCat, brand: currentBrand, d, sam, comp, samOnly, compOnly, scoreS, scoreC };
 
-  document.getElementById('result-db').classList.add('visible');
-  document.getElementById('result-db').scrollIntoView({behavior:'smooth',block:'start'});
+  const rdb = document.getElementById('result-db');
+  rdb.classList.add('visible');
+  if (isTabletWide()) { rdb.classList.remove('ax-in'); void rdb.offsetWidth; rdb.classList.add('ax-in'); }
+  else rdb.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function buildTextResult(sam, comp, d, samOnly, compOnly, sS, sC) {
@@ -3242,6 +3293,8 @@ renderHistory();
 (function(){
   const cat = new URLSearchParams(location.search).get('cat');
   if(cat && DB[cat]){ switchTab('db'); selectCat(cat); }
+  else if (!currentCat && isTabletWide() && ROUTE_MODE !== 'url') { const f = drillCats()[0]; if (f && DB[f.cat]) selectCat(f.cat); }
+  renderDrill();
 })();
 
 /* 공유 — 다른 앱과 같은 자리에서 같은 방식으로 배선한다(as·care·finder·install 과 동일).

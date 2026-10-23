@@ -1692,6 +1692,22 @@ pass('상황실·업무·운영 골든 5건');
   A.tab = 'as';
 }
 
+/* ── 태블릿 단계 메뉴(2026-10-23 사장님 승인 — 설치환경과 같은 규격) ──
+   AS기간: 품목 / 수리비: 분류 → 항목 / 케어플러스: 항목 → 네 갈래. 옛 왼쪽 칸 격자가 되살아나면 문다. */
+{
+  const tb = html.slice(html.indexOf('@media screen and (min-width:720px){'));
+  const tblk = tb.slice(0, tb.indexOf('\n}\n'));
+  if (!/grid-template-columns:220px minmax\(0,1fr\)/.test(tblk)) fail('단계 메뉴 — 태블릿이 220px 메뉴 격자가 아니다');
+  else pass('단계 메뉴 — 태블릿 220px 메뉴 + 오른쪽 내용');
+  if (/#cats,#feeCats\{position:sticky/.test(tblk) || /content:'② 왼쪽에서/.test(html)) fail('단계 메뉴 — 옛 왼쪽 칸 격자가 되살아났다');
+  else pass('단계 메뉴 — 옛 왼쪽 칸 격자 없음');
+  for (const id of ['asMenu']) if (!html.includes(`id="${id}"`)) fail(`단계 메뉴 — #${id} 없음`);
+  for (const fn of ['function dmHtml(', 'function feeMenuHtml(', 'function asMenuClick(', 'Back.open(() => { feeView', 'Back.open(() => { cpMenu'])
+    if (!html.includes(fn)) fail(`단계 메뉴 — ${fn} 없음`);
+  if (!/\.dm-back\{position:sticky/.test(html)) fail('단계 메뉴 — 뒤로가기 단추가 맨 위에 붙어 있지 않다');
+  if (!/@media \(max-width:719px\)\{\.dmenu\{display:none\}\}/.test(html)) fail('단계 메뉴 — 폰에서 감추는 규칙이 없다');
+  else pass('단계 메뉴 — 뒤로가기 단추 · 기기 뒤로가기 · 폰은 그대로');
+}
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
 process.exit(ok ? 0 : 1);
