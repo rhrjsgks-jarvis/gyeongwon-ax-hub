@@ -61,3 +61,7 @@ body {
            hover:bg-[#0D1B7A] transition-colors duration-150;
   }
 }
+
+/* 메뉴 접기(☰, lib/navCollapse.ts) — 접히면 공통 사이드바를 거두고 본문이 폭을 다 쓴다 */
+html[data-navc="1"] .ax-gside { display: none !important; }
+html[data-navc="1"] .ax-main { padding-left: 0 !important; }

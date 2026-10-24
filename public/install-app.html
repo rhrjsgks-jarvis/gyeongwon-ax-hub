@@ -217,11 +217,6 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
 }
-/* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
-.dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
-  border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;
-  padding:9px 10px;margin-bottom:6px;border-radius:10px;cursor:pointer;box-shadow:0 0 0 4px #fff}
-.dm-back:hover{background:#E0E7FF}
 .dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
 .dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
   color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
@@ -231,7 +226,32 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 .dm-it .ci svg{width:18px;height:18px}
 .dm-it .nm{flex:1;min-width:0;word-break:keep-all}
 .dm-it .ar{color:#9CA3AF;font-size:13px}
-.dm-it:focus-visible,.dm-back:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+.dm-it:focus-visible,.dm-pin:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+/* 사이드바 네비게이션(2026-10-24 사장님 승인 시안) — 품목 전체가 한 목록에 늘 보이고, 묶음 품목은 그 자리에서 펼친다 */
+.dm-it.grp.has{color:#1428A0;font-weight:700}
+.dm-it.sub{padding:7px 10px 7px 37px;font-size:13.5px}
+.dm-pin{display:none;width:100%;margin-bottom:6px;border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;
+  font-weight:800;font-size:13.5px;padding:8px 10px;border-radius:10px;cursor:pointer}
+/* 경로(브레드크럼) — 내용 맨 위. 태블릿에서만 */
+.crumb{display:none}
+@media screen and (min-width:720px){
+  .crumb{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 10px;font-size:13.5px;font-weight:700;color:#5B6476}
+  .crumb button{border:0;background:transparent;font:inherit;color:#1428A0;padding:4px 6px;border-radius:7px;cursor:pointer}
+  .crumb button:hover{background:#EEF2FF}
+  .crumb b{color:#0B1220;padding:4px 2px}
+  .crumb .x{color:#C3CAD8}
+  /* ☰ 로 접힘 — 공통 사이드바와 함께 앱 메뉴도 거두고 내용이 폭을 다 쓴다. 메뉴는 서랍으로 연다 */
+  html.ax-navc main{grid-template-columns:minmax(0,1fr)}
+  html.ax-navc main>.card:first-child{position:fixed;top:0;left:0;bottom:0;z-index:60;width:272px;max-height:none;margin:0;
+    border-radius:0 14px 14px 0;padding:10px 8px;transform:translateX(-110%);transition:transform .2s ease-out;
+    box-shadow:6px 0 24px rgba(11,18,32,.22);visibility:hidden}
+  html.ax-navc.ax-drawer main>.card:first-child{transform:none;visibility:visible}
+  html.ax-navc .dm-pin{display:block}
+  #navscrim{display:none}
+  html.ax-navc.ax-drawer #navscrim{display:block;position:fixed;inset:0;z-index:55;background:rgba(11,18,32,.35)}
+}
+@media screen and (min-width:1200px){html.ax-navc #main-content{column-count:3}}
+@media (prefers-reduced-motion:reduce){html.ax-navc main>.card:first-child{transition:none}}
 @keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .ax-in{animation:axIn .18s ease-out}
 @media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
@@ -263,14 +283,17 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
       <input type="text" class="cat-search" id="cat-search" placeholder="키워드 검색 (예: 키친핏, 4도어, 페어, 로봇청소기)"
              oninput="filterCats(this.value)">
       <!-- 타일은 INSTALL_DB 에서 세워 그린다(renderCats) — 손으로 적어 두면 DB 와 어긋난다 -->
-      <nav class="dmenu" id="dmenu" aria-label="품목 단계 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
+      <button type="button" class="dm-pin" id="dm-pin">메뉴 펼쳐 두기</button>
+      <nav class="dmenu" id="dmenu" aria-label="품목 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
       <div class="cats" id="cats"></div>
       <div class="cat-vars" id="cat-vars"></div>
       <div class="cat-search-empty" id="cat-search-empty">검색 결과가 없습니다.</div>
     </div>
   </div>
 
+  <div id="navscrim"></div>
   <div id="result">
+    <nav class="crumb" id="crumb" aria-label="지금 위치"></nav>
     <div class="result-header">
       <h2 id="res-title">설치환경 안내</h2>
       <p id="res-subtitle"></p>
@@ -1414,48 +1437,105 @@ function renderCats() {
   });
 }
 /*
- * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 「단계메뉴 좋습니다」) ──
- * 대분류(품목)를 누르면 메뉴가 왼쪽으로 밀리며 중분류(형태)가 나온다. 아래 단계가 없는 품목은 누르면 바로 펼친다.
+ * ── 태블릿 사이드바 네비게이션 (2026-10-24 사장님 승인 시안 — 단계 메뉴를 대신한다) ──
+ * 품목 전체가 한 목록에 늘 보이고, 묶음 품목(냉장고)을 누르면 그 자리에서 형태가 펼쳐진다(한 번에 하나만).
+ * 단계를 밀고 당기지 않으므로 뒤로가기 기록이 필요 없다 — 기기 뒤로가기는 ☰ 로 연 서랍을 닫는 데만 쓴다.
  * 폰(719px 이하)은 타일 그대로다 — 이 메뉴는 CSS 로 태블릿에서만 보인다.
  */
-let dmTile = '', dmPushed = false;
-/* 기기 뒤로가기(제스처·하드키)도 메뉴를 한 단계 올린다 — 단계를 열 때 back-kit 에 한 칸 쌓는다 */
-function dmUp() { dmTile = ''; dmPushed = false; renderDrill(); dmFocus(); }
-function dmOpen(tile) {
-  if (dmTile === tile) return;
-  dmTile = tile;
-  if (window.Back && !dmPushed) { dmPushed = true; Back.open(dmUp, () => !!dmTile); }
-}
+let dmTile = '';
+function dmOpen(tile) { dmTile = tile; }
 function renderDrill() {
   const st = document.getElementById('dm-stack');
   if (!st) return;
   const curTile = currentCat ? tileOf(currentCat) : '';
-  const lv0 = '<div class="dm-lvl"' + (dmTile ? ' aria-hidden="true"' : '') + '><div class="dm-t">품목</div>'
+  st.innerHTML = '<div class="dm-lvl"><div class="dm-t">품목</div>'
     + tiles().map((t) => {
-      const vs = variantsOf(t), grouped = vs.length > 1 || vs[0] !== t;
-      return '<button type="button" class="dm-it' + (curTile === t && !grouped ? ' on' : '') + '" data-tile="' + escAttr(t) + '"'
-        + (grouped ? ' data-group="1"' : '') + (dmTile ? ' tabindex="-1"' : '') + '>'
+      const vs = variantsOf(t), grouped = vs.length > 1 || vs[0] !== t, open = grouped && dmTile === t;
+      let h = '<button type="button" class="dm-it' + (grouped ? ' grp' : '') + (curTile === t ? (grouped ? ' has' : ' on') : '') + '"'
+        + ' data-tile="' + escAttr(t) + '"' + (grouped ? ' data-group="1" aria-expanded="' + open + '"' : '') + '>'
         + '<span class="ci">' + (grouped ? tileIcon(t) : catIcon(t)) + '</span><span class="nm">' + escHtml(catLabel(t)) + '</span>'
-        + (grouped ? '<span class="ar">›</span>' : '') + '</button>';
+        + (grouped ? '<span class="ar">' + (open ? '▾' : '›') + '</span>' : '') + '</button>';
+      if (open) h += vs.map((k) => '<button type="button" class="dm-it sub' + (k === currentCat ? ' on' : '') + '" data-cat="' + escAttr(k) + '">'
+        + '<span class="nm">' + escHtml(varLabel(k)) + '</span></button>').join('');
+      return h;
     }).join('') + '</div>';
-  const lv1 = dmTile ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 뒤로가기</button><div class="dm-t">' + escHtml(dmTile) + '</div>'
-    + variantsOf(dmTile).map((k) => '<button type="button" class="dm-it' + (k === currentCat ? ' on' : '') + '" data-cat="' + escAttr(k) + '">'
-      + '<span class="ci">' + catIcon(k) + '</span><span class="nm">' + escHtml(varLabel(k)) + '</span></button>').join('') + '</div>' : '';
-  st.innerHTML = lv0 + lv1;
-  st.style.transform = dmTile ? 'translateX(-100%)' : 'none';
-}
-function dmFocus() {
-  const lv = document.querySelectorAll('#dm-stack .dm-lvl');
-  const f = lv.length && lv[lv.length - 1].querySelector('.dm-back, .dm-it');
-  if (f) f.focus({ preventScroll: true });
+  st.style.transform = 'none';
 }
 document.addEventListener('click', function (e) {
   const st = document.getElementById('dm-stack');
   if (!st || !st.contains(e.target)) return;
-  if (e.target.closest('.dm-back')) { const was = dmPushed; dmUp(); if (was && window.Back) Back.done(); return; }
   const b = e.target.closest('.dm-it'); if (!b) return;
-  if (b.dataset.group) { dmOpen(b.dataset.tile); renderDrill(); dmFocus(); return; }
+  if (b.dataset.group) { dmTile = dmTile === b.dataset.tile ? '' : b.dataset.tile; renderDrill(); return; }
   selectCat(b.dataset.cat || b.dataset.tile);
+});
+
+/*
+ * ── ☰ 메뉴 접기 · 서랍 (허브 머리의 ☰ — lib/navCollapse.ts 가 신호를 보낸다) ──
+ * 접힘이면 메뉴를 거두고 내용이 폭을 다 쓴다. 다시 ☰ 를 누르거나 맨 위 경로를 누르면 메뉴가 서랍으로 덮여 나온다.
+ * 고르면 저절로 닫히고, 바깥·Esc·기기 뒤로가기로도 닫힌다. 「메뉴 펼쳐 두기」는 접기를 푼다(부모에게 알린다).
+ */
+let navDrawerPushed = false;
+function navCollapsed() { return document.documentElement.classList.contains('ax-navc'); }
+function navRefit() { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }
+function drawerOpen() {
+  if (!navCollapsed()) return;
+  document.documentElement.classList.add('ax-drawer');
+  if (window.Back && !navDrawerPushed) { navDrawerPushed = true; Back.open(drawerClose, () => document.documentElement.classList.contains('ax-drawer')); }
+  navRefit();
+  const on = document.querySelector('#dm-stack .dm-it.on') || document.querySelector('#dm-stack .dm-it.has') || document.querySelector('#dm-stack .dm-it');
+  if (on) { on.scrollIntoView({ block: 'nearest' }); on.focus({ preventScroll: true }); }
+}
+function drawerClose() {
+  const was = document.documentElement.classList.contains('ax-drawer');
+  document.documentElement.classList.remove('ax-drawer');
+  navDrawerPushed = false;
+  return was;
+}
+function drawerDone() { const p = navDrawerPushed; if (drawerClose() && p && window.Back) Back.done(); }
+function setNavcLocal(on) {
+  const r = document.documentElement;
+  if (r.classList.contains('ax-navc') === on) return;
+  r.classList.toggle('ax-navc', on);
+  if (!on) drawerDone();
+  navRefit();
+}
+window.addEventListener('message', function (e) {
+  if (e.origin !== location.origin) return;
+  const d = e.data;
+  if (!d) return;
+  if (d.sk === 'navc') setNavcLocal(!!d.on);
+  else if (d.sk === 'navc-drawer') drawerOpen();
+});
+document.addEventListener('click', function (e) {
+  if (e.target.id === 'navscrim') { drawerDone(); return; }
+  if (e.target.id === 'dm-pin') {
+    drawerDone(); setNavcLocal(false);
+    try { parent.postMessage({ sk: 'navc-set', on: false }, location.origin); } catch (x) {}
+  }
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.documentElement.classList.contains('ax-drawer')) drawerDone(); });
+
+/* 맨 위 경로 — 「설치환경 › 냉장고 › 4도어 키친핏」. 앞 단계를 누르면 메뉴가 그 자리를 펼친 채 열린다 */
+function renderCrumb() {
+  const box = document.getElementById('crumb');
+  if (!box) return;
+  if (!currentCat) { box.innerHTML = ''; return; }
+  const t = tileOf(currentCat), grouped = t !== currentCat || variantsOf(t).length > 1;
+  const sep = '<span class="x">›</span>';
+  box.innerHTML = '<button type="button" data-crumb="">설치환경</button>' + sep
+    + (grouped ? '<button type="button" data-crumb="' + escAttr(t) + '">' + escHtml(catLabel(t)) + '</button>' + sep
+      + '<b>' + escHtml(varLabel(currentCat)) + '</b>'
+      : '<b>' + escHtml(catLabel(currentCat)) + '</b>');
+}
+document.addEventListener('click', function (e) {
+  const b = e.target.closest && e.target.closest('#crumb button'); if (!b) return;
+  dmTile = b.dataset.crumb || '';
+  renderDrill();
+  if (navCollapsed()) drawerOpen();
+  else {
+    const f = document.querySelector(dmTile ? '#dm-stack .dm-it[data-tile="' + CSS.escape(dmTile) + '"]' : '#dm-stack .dm-it');
+    if (f) { f.scrollIntoView({ block: 'nearest' }); f.focus({ preventScroll: true }); }
+  }
 });
 function isTabletWide() { return !!(window.matchMedia && matchMedia('screen and (min-width:720px)').matches); }
 
@@ -1582,10 +1662,11 @@ function selectCat(cat) {
   renderPrep(cat);
 
   document.getElementById('result').classList.add('visible');
-  /* 단계 메뉴 — 형태가 있는 품목이면 그 단계를 열어 둔다(딥링크로 들어와도 어디인지 보이게) */
-  if (tileOf(cat) !== cat || variantsOf(tileOf(cat)).length > 1) dmOpen(tileOf(cat));
-  else if (dmTile) { const was = dmPushed; dmTile = ''; dmPushed = false; if (was && window.Back) Back.done(); }
+  /* 사이드바 — 형태가 있는 품목이면 그 자리를 펼쳐 둔다(딥링크로 들어와도 어디인지 보이게). 서랍이면 닫는다 */
+  dmTile = (tileOf(cat) !== cat || variantsOf(tileOf(cat)).length > 1) ? tileOf(cat) : '';
   renderDrill();
+  renderCrumb();
+  drawerDone();
   const rs = document.getElementById('result'); rs.classList.remove('ax-in'); void rs.offsetWidth; rs.classList.add('ax-in');
   const wide = window.matchMedia && matchMedia('screen and (min-width:720px)').matches;
   if (!wide) document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});

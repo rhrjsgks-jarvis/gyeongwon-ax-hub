@@ -11,6 +11,7 @@ import HeaderSearch from './HeaderSearch'
 import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
 import { isFullscreen, fullscreenSupported, enterFullscreen, exitFullscreen } from '@/lib/fullscreen'
 import { getZoom, nextZoom, setZoom, ZOOM_EVENT, ZOOM_PATHS } from '@/lib/viewZoom'
+import { getNavc, setNavc, NAVC_EVENT, NAVC_DRAWER_EVENT, NAVC_PATHS } from '@/lib/navCollapse'
 
 /*
  * 전체화면 단추 (2026-10-23 사장님 — QR·즐겨찾기로 여는 브라우저 탭에서 전체화면).
@@ -64,6 +65,43 @@ function ZoomButton({ pathname }: { pathname: string }) {
         background: z === 1 ? 'rgba(255,255,255,0.18)' : '#fff', color: z === 1 ? '#fff' : '#1428A0' }}
     >
       <span style={{ fontSize: 14 }}>가</span>{pct}%
+    </button>
+  )
+}
+
+/*
+ * 메뉴 접기 단추 ☰ (2026-10-24 사장님 승인 시안 — lib/navCollapse.ts).
+ * 펼침이면 공통 사이드바와 앱 메뉴를 함께 접고, 접힘이면 앱 메뉴를 서랍으로 연다.
+ * 접힘 상태는 html[data-navc] 로 걸어 공통 사이드바·본문 여백을 CSS 가 거둔다(globals.css).
+ */
+function NavToggle({ pathname }: { pathname: string }) {
+  const wide = useMinWidth(720)
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    setOn(getNavc())
+    const f = () => setOn(getNavc())
+    window.addEventListener(NAVC_EVENT, f)
+    return () => window.removeEventListener(NAVC_EVENT, f)
+  }, [])
+  const active = wide && NAVC_PATHS.includes(pathname)
+  useEffect(() => {
+    const el = document.documentElement
+    if (active && on) el.dataset.navc = '1'
+    else delete el.dataset.navc
+  }, [active, on])
+  if (!active) return null
+  return (
+    <button
+      type="button"
+      onClick={() => { if (on) window.dispatchEvent(new CustomEvent(NAVC_DRAWER_EVENT)); else setNavc(true) }}
+      aria-label={on ? '메뉴 열기' : '메뉴 접기 — 내용을 넓게 봅니다'}
+      title={on ? '메뉴 열기' : '메뉴 접기'}
+      className="flex items-center justify-center rounded-full text-white mr-1.5 shrink-0"
+      style={{ width: 30, height: 30, background: on ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.18)' }}
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
     </button>
   )
 }
@@ -356,6 +394,7 @@ export default function Navigation() {
             <Icon name="back" size={17} />
           </button>
         )}
+        <NavToggle pathname={pathname} />
         <Link href="/" className="flex items-center gap-2 text-white no-underline">
           {/* 공식 워드마크 — 글꼴로 친 "SAMSUNG" 은 글자 모양이 달라 로고가 아니다 */}
           <SamsungWordmark height={17} />
@@ -481,7 +520,7 @@ export default function Navigation() {
       </nav>
 
       {/* 사이드바 (데스크탑) */}
-      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
+      <aside className="ax-gside hidden lg:flex fixed left-0 top-0 bottom-0 w-56 flex-col pt-16 pb-4 bg-white border-r border-gray-200 z-40">
         {/* 통합검색을 '제품 상담 도구' 그룹에 넣었더니 상단 검색창·하단 탭과 겹쳐
             한 화면에 셋이 됐다(2026-08-11 사용자 지적: *"너무 중복입니다"*). */}
         <div className="px-3 py-4 flex flex-col gap-1">

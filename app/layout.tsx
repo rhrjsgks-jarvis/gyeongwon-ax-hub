@@ -71,7 +71,7 @@ export default function RootLayout({
           <ExitGuard />
           <Navigation />
           <main
-            className="pt-[60px] lg:pl-56 min-h-screen"
+            className="ax-main pt-[60px] lg:pl-56 min-h-screen"
             style={{ background: 'var(--color-bg)' }}
           >
             <div className="p-4 lg:p-6 pb-24 lg:pb-6">

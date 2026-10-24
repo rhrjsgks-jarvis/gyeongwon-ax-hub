@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { logEvent, logOnce, LogModule, LogAction } from '@/lib/logEvent'
 import { zoomFor, ZOOM_EVENT } from '@/lib/viewZoom'
+import { getNavc, setNavc, NAVC_EVENT, NAVC_DRAWER_EVENT } from '@/lib/navCollapse'
 
 /* 미니앱이 보내오는 값은 바깥에서 들어오는 값이다 — 아는 이름만 받는다 */
 const ALLOWED_MODULE = new Set<string>([
@@ -111,6 +112,40 @@ export default function IframeModule({
     const t = setInterval(send, 1000)          // 미니앱이 늦게 뜨는 경우 — 받는 쪽은 멱등이다
     window.addEventListener('resize', send)
     return () => { clearInterval(t); window.removeEventListener('resize', send) }
+  }, [])
+
+  /*
+   * **메뉴 접기(☰)를 미니앱에 알린다** (2026-10-24, lib/navCollapse.ts).
+   * 접힘 여부는 몇 번이고 보내도 같은 결과라(멱등) 늦게 뜬 문서를 위해 1초마다 다시 보낸다.
+   * 서랍 열기는 한 번만 보낸다. 미니앱이 「메뉴 펼쳐 두기」를 누르면 거꾸로 알려 온다.
+   */
+  useEffect(() => {
+    const post = (msg: object) => {
+      try { ref.current?.contentWindow?.postMessage(msg, window.location.origin) } catch { /* 아직 못 받으면 다음 기회에 */ }
+    }
+    const send = () => post({ sk: 'navc', on: window.innerWidth >= 720 && getNavc() })
+    const drawer = () => post({ sk: 'navc-drawer' })
+    function onMsg(e: MessageEvent) {
+      if (e.origin !== window.location.origin) return
+      const d = e.data as { sk?: string; on?: boolean }
+      if (d && d.sk === 'navc-set' && typeof d.on === 'boolean') setNavc(d.on)
+    }
+    const el = ref.current
+    send()
+    const t = setInterval(send, 1000)
+    window.addEventListener(NAVC_EVENT, send)
+    window.addEventListener(NAVC_DRAWER_EVENT, drawer)
+    window.addEventListener('resize', send)
+    window.addEventListener('message', onMsg)
+    el?.addEventListener('load', send)
+    return () => {
+      clearInterval(t)
+      window.removeEventListener(NAVC_EVENT, send)
+      window.removeEventListener(NAVC_DRAWER_EVENT, drawer)
+      window.removeEventListener('resize', send)
+      window.removeEventListener('message', onMsg)
+      el?.removeEventListener('load', send)
+    }
   }, [])
 
   /*
