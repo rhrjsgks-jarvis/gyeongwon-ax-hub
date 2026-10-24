@@ -62,12 +62,12 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="max-w-sm mx-auto pt-24 px-4">
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm text-center">
+      <div className="bg-white rounded-[14px] border border-gray-100 p-6 shadow-sm text-center">
         <div className="mb-2 flex justify-center"><Icon name="lock" size={28} style={{ color: '#1428A0' }} /></div>
-        <h1 className="font-bold text-gray-800 mb-1">관리자 인증</h1>
-        <p className="text-xs text-gray-400 mb-4">
+        <h1 className="font-bold text-[#0b1220] mb-1">관리자 인증</h1>
+        <p className="text-xs text-[#9ca3af] mb-4">
           사용현황 대시보드[관리자용]는 비밀번호로 보호됩니다<br />
-          <span className="text-[10px]">인증은 브라우저를 닫으면 해제되고, 2시간 뒤 다시 물어봅니다</span>
+          <span className="text-xs">인증은 브라우저를 닫으면 해제되고, 2시간 뒤 다시 물어봅니다</span>
         </p>
         <input
           type="password"
@@ -76,7 +76,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
           onKeyDown={e => { if (e.key === 'Enter') submit() }}
           placeholder="비밀번호"
           autoFocus
-          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:border-blue-400"
+          className="w-full border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] mb-2 focus:outline-none focus:border-blue-400"
         />
         {error === 'wrong' && <p className="text-xs text-red-500 mb-2">비밀번호가 올바르지 않습니다</p>}
         {error === 'locked' && (
@@ -87,7 +87,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         <button
           onClick={submit}
           disabled={checking || !pw}
-          className="w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+          className="w-full py-2.5 rounded-[10px] text-[13.5px] font-bold text-white disabled:opacity-50"
           style={{ background: '#1428A0' }}
         >
           입장하기
@@ -119,22 +119,22 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   hub:     { label: '허브 검색·건의',   icon: 'search',   color: '#1428A0' },
   /* '통합검색'이라 적혀 있었다 — 지금 통합검색은 /search 고 /finder 는 「모델파인더」다.
      lib/trends.ts 가 이 어긋남을 알고 우회하고 있었다(그 주석도 함께 정리했다). */
-  finder: { label: '모델파인더',        icon: 'finder',   color: '#2563EB' },
+  finder: { label: '모델파인더',        icon: 'finder',   color: '#1428A0' },
   care:    { label: 'AI구독 케어',         icon: 'care',     color: '#059669' },
   compare: { label: '타사비교 가이드', icon: 'compare',  color: '#D97706' },
   install: { label: '설치환경 가이드',  icon: 'install',  color: '#B45309' },
   /* 아래 셋은 MODULE_META 에 아예 없어서 사용 현황에 한 줄도 안 잡히고 있었다
      (2026-08-11 발견). 운영 중인 모듈이 통계에서 통째로 빠지면 "안 쓴다"로 읽힌다. */
   as:      { label: 'AS 관련 정보',     icon: 'warranty', color: '#0D9488' },
-  installcost: { label: '설치비용', icon: 'bolt', color: '#0369A1' },
-  place:   { label: '가전 배치 시뮬레이터', icon: 'place',    color: '#4F46E5' },
-  test:    { label: '레벨업 챌린지',    icon: 'quiz',     color: '#7C3AED' },
+  installcost: { label: '설치비용', icon: 'bolt', color: '#1428A0' },
+  place:   { label: '가전 배치 시뮬레이터', icon: 'place',    color: '#1428A0' },
+  test:    { label: '레벨업 챌린지',    icon: 'quiz',     color: '#1428A0' },
   quiz:    { label: 'URL 퀴즈',        icon: 'target',   color: '#DC2626' },
   concierge: { label: '컨시어지 프로그램', icon: 'ticket',   color: '#DB2777' },
-  poster:  { label: '컨시어지 접수 포스터', icon: 'printer',  color: '#9333EA' },
+  poster:  { label: '컨시어지 접수 포스터', icon: 'printer',  color: '#1428A0' },
   /* 2026-08-30 신설 — LogModule 에 추가하면 여기도 함께 넣어야 사용 현황에 잡힌다
      (그러지 않으면 한 줄도 안 잡혀 '안 쓰는 모듈'로 읽힌다) */
-  ownCompare: { label: '당사제품 비교',  icon: 'compare',  color: '#7C3AED' },
+  ownCompare: { label: '당사제품 비교',  icon: 'compare',  color: '#1428A0' },
   mobileCalc: { label: '통신향 · 자급제 비교계산기', icon: 'phone', color: '#1428A0' },
   board:   { label: '자유게시판',       icon: 'chat',     color: '#1428A0' },
   coupon:  { label: '시크릿쿠폰',      icon: 'coupon',   color: '#DC2626' },
@@ -142,7 +142,7 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
 
   // ── 운영 종료·통합 (목록에서는 감춘다) ──
   compareInstant: { label: '즉시비교 (타사비교로 통합)', icon: 'bolt', color: '#B45309', retired: true },
-  planner: { label: '패키지 플래너 (운영 종료)', icon: 'doc', color: '#0891B2', retired: true },
+  planner: { label: '패키지 플래너 (운영 종료)', icon: 'doc', color: '#1428A0', retired: true },
 }
 
 /** 화면에 세우는 모듈 — 운영 중인 것만. */
@@ -221,9 +221,9 @@ export default function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unlocked])
 
-  if (!gateChecked) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
+  if (!gateChecked) return <div className="p-6 text-[#9ca3af] text-[13.5px]">로딩 중…</div>
   if (!unlocked) return <AdminGate onUnlock={() => setUnlocked(true)} />
-  if (!loaded) return <div className="p-6 text-gray-400 text-sm">로딩 중…</div>
+  if (!loaded) return <div className="p-6 text-[#9ca3af] text-[13.5px]">로딩 중…</div>
 
   const toggleStore = (code: string) =>
     setOpenStores((prev) => {
@@ -304,15 +304,15 @@ export default function AdminPage() {
   return (
     <div className="max-w-2xl mx-auto pb-12">
       <div
-        className="rounded-2xl p-4 mb-5 text-white"
+        className="rounded-[14px] p-4 mb-5 text-white"
         style={{ background: 'linear-gradient(135deg, #1428A0, #2563EB)' }}
       >
         <div className="flex items-center gap-2 mb-1">
           <Icon name="dashboard" size={20} style={{ color: '#1428A0' }} />
-          <span className="font-bold text-base">사용현황 대시보드[관리자용]</span>
+          <span className="font-bold text-[15px]">사용현황 대시보드[관리자용]</span>
           <button
             onClick={() => { lockNow(); setUnlocked(false) }}
-            className="ml-auto text-[11px] font-bold rounded-lg px-2.5 py-1"
+            className="ml-auto text-xs font-bold rounded-[10px] px-2.5 py-1"
             style={{ background: 'rgba(255,255,255,0.18)' }}
           >
             잠그기
@@ -321,18 +321,18 @@ export default function AdminPage() {
         <p className="text-xs text-blue-200">
           세일즈 코파일럿 · 사용 현황 · {teamWide ? '팀 전체 집계 (Google Sheets 연동)' : 'localStorage 기반 · 이 기기에서만 누적'}
         </p>
-        <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
+        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
           허브 메인화면 조회수 · 본사(경원영업팀) 접속은 집계에서 제외됩니다 — 진입은 사용이 아니고, 본사 조작은 매장 사용이 아닙니다
         </p>
         {/* 언제 받은 자료인지 밝히고, 한 번에 다시 받는 손잡이를 준다 */}
         <div className="flex items-center gap-2 mt-2">
-          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
             {freshLabel}
           </span>
           <button
             onClick={() => load(true)}
             disabled={reloading}
-            className="text-[10px] font-bold rounded-lg px-2 py-0.5 disabled:opacity-50"
+            className="text-xs font-bold rounded-[10px] px-2 py-0.5 disabled:opacity-50"
             style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
           >
             {reloading ? '새로 받는 중…' : '새로 고침'}
@@ -343,11 +343,11 @@ export default function AdminPage() {
       {/* 팀 전체를 못 받았으면 **0 을 그대로 두지 않고 그렇게 적는다.**
           예전에는 조용히 이 기기 기록으로 내려앉아 숫자만 이상해 보였다. */}
       {teamFailed && (
-        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 flex items-start gap-2.5">
+        <div className="mb-4 rounded-[14px] border border-amber-200 bg-amber-50 p-3.5 flex items-start gap-2.5">
           <Icon name="warn" size={16} className="mt-0.5 shrink-0" style={{ color: '#B45309' }} />
           <div className="flex-1">
             <p className="text-xs font-bold text-amber-900">팀 전체 자료를 불러오지 못했습니다</p>
-            <p className="text-[11px] text-amber-800 mt-0.5">
+            <p className="text-xs text-amber-800 mt-0.5">
               지금 보이는 숫자는 <b>이 기기에 남은 기록</b>입니다. 구글 시트 응답이 늦어질 때 생기며,
               다시 불러오면 대개 해결됩니다.
             </p>
@@ -355,7 +355,7 @@ export default function AdminPage() {
           <button
             onClick={() => load(true)}
             disabled={reloading}
-            className="shrink-0 text-[11px] font-bold rounded-lg px-2.5 py-1.5 text-white disabled:opacity-50"
+            className="shrink-0 text-xs font-bold rounded-[10px] px-2.5 py-1.5 text-white disabled:opacity-50"
             style={{ background: '#B45309' }}
           >
             {reloading ? '불러오는 중…' : '다시 불러오기'}
@@ -384,18 +384,18 @@ export default function AdminPage() {
         <Section title={`배치 시뮬레이터 — 상담이 어디까지 갔나 (${funnel.opened}세션)`}>
           <div className="space-y-1.5">
             {funnel.steps.map((s) => (
-              <div key={s.name} className="flex items-center gap-2 text-sm">
-                <span className="w-12 shrink-0 text-gray-600">{s.name}</span>
-                <div className="flex-1 h-4 bg-gray-100 rounded overflow-hidden">
-                  <div className="h-full rounded" style={{ width: `${s.pct}%`, background: '#1428A0' }} />
+              <div key={s.name} className="flex items-center gap-2 text-[13.5px]">
+                <span className="w-12 shrink-0 text-[#5b6476]">{s.name}</span>
+                <div className="flex-1 h-4 bg-gray-100 rounded-md overflow-hidden">
+                  <div className="h-full rounded-md" style={{ width: `${s.pct}%`, background: '#1428A0' }} />
                 </div>
-                <span className="w-20 shrink-0 text-right tabular-nums text-gray-700">
+                <span className="w-20 shrink-0 text-right tabular-nums text-[#374151]">
                   {s.n}세션 {s.pct}%
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-[#9ca3af]">
             여는 것과 실제로 쓰는 것 사이가 어디서 끊기는지 봅니다. 세션당 한 번씩만 셉니다.
           </p>
         </Section>
@@ -410,14 +410,14 @@ export default function AdminPage() {
         <Section title={`인식이 약한 도면 (${weakPlans.length}장)`}>
           <div className="space-y-1">
             {weakPlans.slice(0, 12).map((w) => (
-              <div key={w.who} className="flex items-center gap-2 text-sm">
-                <span className="flex-1 truncate text-gray-700">{w.who}</span>
-                <span className="shrink-0 tabular-nums text-gray-500">공간 {w.rooms} · 벽면 {w.faces}</span>
-                <span className="shrink-0 w-14 text-right tabular-nums text-gray-400">{w.sess}세션</span>
+              <div key={w.who} className="flex items-center gap-2 text-[13.5px]">
+                <span className="flex-1 truncate text-[#374151]">{w.who}</span>
+                <span className="shrink-0 tabular-nums text-[#5b6476]">공간 {w.rooms} · 벽면 {w.faces}</span>
+                <span className="shrink-0 w-14 text-right tabular-nums text-[#9ca3af]">{w.sess}세션</span>
               </div>
             ))}
           </div>
-          <p className="mt-2 text-xs text-gray-400">
+          <p className="mt-2 text-xs text-[#9ca3af]">
             공간을 3곳 이하로 잡은 도면입니다. 벽면이 많은데 공간이 적으면 벽은 잡혔다는 뜻이라
             배치·3D 는 됩니다.
           </p>
@@ -432,7 +432,7 @@ export default function AdminPage() {
         */}
       <Section title={`점별 사용 현황 (${byStore.length}곳)`}>
         {byStore.length === 0 ? (
-          <p className="text-sm text-gray-400">아직 기록이 없습니다.</p>
+          <p className="text-[13.5px] text-[#9ca3af]">아직 기록이 없습니다.</p>
         ) : (
           <div className="space-y-1">
             {/*
@@ -478,7 +478,7 @@ export default function AdminPage() {
             return (
               <div key={key}>
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs font-normal text-gray-700">
+                  <span className="text-xs font-normal text-[#374151]">
                     <Icon name={meta.icon} size={13} className="inline-block align-[-2px] mr-1" /> {meta.label}
                   </span>
                   <span className="text-xs font-bold" style={{ color: meta.color }}>{count}회</span>
@@ -503,7 +503,7 @@ export default function AdminPage() {
           /* 모듈 이름은 적지 않는다 — 가려 달라고 한 것을 각주로 되살리면 뜻이 없다.
              건수만 밝혀 "목록 합계 ≠ 총계"가 오류로 보이지 않게 한다. */
           return (
-            <p className="text-[10px] text-gray-400 mt-3 leading-relaxed">
+            <p className="text-xs text-[#9ca3af] mt-3 leading-relaxed">
               운영이 끝났거나 다른 모듈로 통합된 과거 로그 {n}건은 목록에서 제외했습니다 —
               총계와 CSV 에는 그대로 포함됩니다.
             </p>
@@ -529,7 +529,7 @@ export default function AdminPage() {
                   title={d.date + ': ' + d.count + '회'}
                 />
                 <span
-                  className="text-[9px] text-gray-400"
+                  className="text-xs text-[#9ca3af]"
                   style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
                 >
                   {d.date.slice(5)}
@@ -542,18 +542,18 @@ export default function AdminPage() {
 
       <Section title="최근 활동">
         {recent.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center py-4">아직 기록된 활동이 없습니다</p>
+          <p className="text-xs text-[#9ca3af] text-center py-4">아직 기록된 활동이 없습니다</p>
         ) : (
           <div className="space-y-1.5">
             {recent.map((ev, i) => {
-              const meta = MODULE_META[ev.module] || { icon: 'doc' as IconName, label: ev.module, color: '#666' }
+              const meta = MODULE_META[ev.module] || { icon: 'doc' as IconName, label: ev.module, color: '#5b6476' }
               const t = new Date(ev.ts + 9 * 3600000).toISOString().replace('T', ' ').slice(0, 16)
               return (
                 <div key={i} className="flex items-center gap-2 text-xs">
-                  <span className="text-gray-400 w-28 shrink-0">{t}</span>
+                  <span className="text-[#9ca3af] w-28 shrink-0">{t}</span>
                   <Icon name={meta.icon} size={14} style={{ color: meta.color }} />
                   <span className="font-normal" style={{ color: meta.color }}>{meta.label}</span>
-                  <span className="text-gray-400">
+                  <span className="text-[#9ca3af]">
                     · {ev.action}{ev.extra ? ' (' + ev.extra + ')' : ''}
                   </span>
                 </div>
@@ -566,7 +566,7 @@ export default function AdminPage() {
       <div className="flex gap-2 mt-4">
         <button
           onClick={() => exportCsv(logs)}
-          className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
+          className="flex-1 py-2.5 rounded-[10px] text-[13.5px] font-bold text-white"
           style={{ background: '#1428A0' }}
         >
           CSV 내보내기 ({logs.length}건)
@@ -579,14 +579,14 @@ export default function AdminPage() {
                 setLogs([])
               }
             }}
-            className="py-2.5 px-4 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50"
+            className="py-2.5 px-4 rounded-[10px] text-[13.5px] font-bold text-red-600 border border-red-200 bg-red-50"
           >
             초기화
           </button>
         )}
       </div>
 
-      <p className="text-[10px] text-gray-400 text-center mt-3">
+      <p className="text-xs text-[#9ca3af] text-center mt-3">
         {teamWide
           ? '팀원 전체 기기의 사용 로그를 Google Sheets에서 집계한 데이터입니다.'
           : '이 데이터는 현재 기기 브라우저에만 저장됩니다 · Google Apps Script 연동 시 팀 전체 집계 가능'}
@@ -595,12 +595,12 @@ export default function AdminPage() {
       {/* AI 효과 정량화 섹션 */}
       <div className="mt-5">
         <div
-          className="rounded-2xl p-4 mb-3 text-white"
+          className="rounded-[14px] p-4 mb-3 text-white"
           style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
         >
           <div className="flex items-center gap-2 mb-1">
             <Icon name="dashboard" size={20} style={{ color: '#1428A0' }} />
-            <span className="font-bold text-base">AI 업무 효율화 효과</span>
+            <span className="font-bold text-[15px]">AI 업무 효율화 효과</span>
           </div>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.8)' }}>
             세일즈 코파일럿 도입 전·후 업무 시간 비교 (팀원 1인 기준)
@@ -609,25 +609,25 @@ export default function AdminPage() {
 
         <div className="space-y-2.5">
           {ROI_DATA.map((item) => (
-            <div key={item.key} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+            <div key={item.key} className="bg-white rounded-[14px] border border-gray-100 p-4 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Icon name={item.icon} size={18} style={{ color: '#1428A0' }} />
-                  <span className="text-sm font-bold text-gray-800">{item.label}</span>
+                  <span className="text-[13.5px] font-bold text-[#0b1220]">{item.label}</span>
                 </div>
                 <span
-                  className="text-sm font-bold rounded-full px-2.5 py-0.5"
+                  className="text-[13.5px] font-bold rounded-full px-2.5 py-0.5"
                   style={{ background: '#dcfce7', color: '#15803d' }}
                 >
                   {item.saving}% 절감
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-xs text-gray-500">
+              <div className="flex items-center gap-3 text-xs text-[#5b6476]">
                 <div className="flex items-center gap-1.5">
                   <Icon name="timer" size={13} className="text-red-400" />
-                  <span>기존: <b className="text-gray-700">{item.before}</b></span>
+                  <span>기존: <b className="text-[#374151]">{item.before}</b></span>
                 </div>
-                <span className="text-gray-300">→</span>
+                <span className="text-[#d1d5db]">→</span>
                 <div className="flex items-center gap-1.5">
                   <Icon name="bolt" size={13} className="text-green-500" />
                   <span>AI: <b className="text-green-700">{item.after}</b></span>
@@ -645,7 +645,7 @@ export default function AdminPage() {
 
         {/* 누적 절감 추산 */}
         <div
-          className="rounded-2xl p-4 mt-3"
+          className="rounded-[14px] p-4 mt-3"
           style={{ background: 'linear-gradient(135deg, #1e3a5f, #1428A0)' }}
         >
           <div className="flex items-center justify-between gap-2">
@@ -656,7 +656,7 @@ export default function AdminPage() {
             <button
               onClick={() => load(true)}
               disabled={reloading}
-              className="shrink-0 text-[10px] font-bold rounded-lg px-2 py-0.5 disabled:opacity-50"
+              className="shrink-0 text-xs font-bold rounded-[10px] px-2 py-0.5 disabled:opacity-50"
               style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
             >
               {reloading ? '새로 받는 중…' : '새로 고침'}
@@ -670,14 +670,14 @@ export default function AdminPage() {
           {/* **한 덩어리로 읽혀야 하는 조각은 묶는다**(`whitespace-nowrap`). 폰 390px 에서
               `영업 500명` 의 「명」이 혼자 다음 줄로 떨어져 있었다 — 숫자와 단위가 갈리면
               읽다 멈칫한다(AS 앱이 라벨 칸을 세워 적는 것과 같은 이유). */}
-          <p className="text-[10px] text-blue-300 mt-0.5">
+          <p className="text-xs text-blue-300 mt-0.5">
             <span className="whitespace-nowrap">기록된 {logs.length.toLocaleString()}건 중 <b className="text-blue-200">최근 30일 {last30.toLocaleString()}건</b></span>
             {logs.length > last30 && <span className="text-blue-400 whitespace-nowrap"> (30일보다 오래된 {(logs.length - last30).toLocaleString()}건 제외)</span>}
             <span className="whitespace-nowrap">{' · '}영업 {SALES_HEADCOUNT}명</span>
           </p>
-          <p className="text-[9px] text-blue-400 mt-0.5">{freshLabel}</p>
+          <p className="text-xs text-blue-400 mt-0.5">{freshLabel}</p>
           {/* 가정을 밝히고 셋을 나란히 둔다 — 하나만 적으면 측정값처럼 읽힌다 */}
-          <p className="text-[9px] text-blue-300 mt-0.5 mb-2">
+          <p className="text-xs text-blue-300 mt-0.5 mb-2">
             1건당 아끼는 시간은 <b className="text-blue-200">가정</b>입니다 — 2·3·5분을 나란히 봅니다
             <span className="text-blue-400"> (가운데가 발표자료 기준)</span>
           </p>
@@ -687,16 +687,16 @@ export default function AdminPage() {
               return (
                 <div
                   key={m}
-                  className="text-center rounded-xl py-1.5"
+                  className="text-center rounded-[10px] py-1.5"
                   style={base ? { background: 'rgba(255,255,255,0.13)' } : undefined}
                 >
-                  <p className={`text-xl font-bold ${base ? 'text-white' : 'text-blue-100'}`}>
+                  <p className={`text-[22px] font-bold ${base ? 'text-white' : 'text-blue-100'}`}>
                     {savedHoursAt(m).toLocaleString()}h
                   </p>
-                  <p className="text-[10px] text-blue-200 mt-0.5">1건 {m}분 기준</p>
+                  <p className="text-xs text-blue-200 mt-0.5">1건 {m}분 기준</p>
                   {/* 팀 합만 적으면 `190h` 가 1인당으로 오해된다 — 옛 타일이 실제로
                       `36h+ / 팀원 1인` 이라 적고 있었다(2026-08-26 사장님 요청). */}
-                  <p className="text-[9px] text-blue-300 mt-0.5">1인 {fmtPerHead(perHeadMin(m))}</p>
+                  <p className="text-xs text-blue-300 mt-0.5">1인 {fmtPerHead(perHeadMin(m))}</p>
                 </div>
               )
             })}
@@ -706,10 +706,10 @@ export default function AdminPage() {
               점선 테두리·화살표·"예측입니다" 셋이 그 일을 한다. 실측 옆에 같은 모양으로
               두면 둘 다 측정값처럼 읽힌다(비교표의 `없음`/`미공개` 와 같은 규칙). */}
           <div
-            className="mt-2.5 rounded-xl px-3 py-2"
+            className="mt-2.5 rounded-[10px] px-3 py-2"
             style={{ border: '1px dashed rgba(255,255,255,0.35)', background: 'rgba(0,0,0,0.12)' }}
           >
-            <p className="text-[10px] font-bold text-blue-100">
+            <p className="text-xs font-bold text-blue-100">
               만약 1인이 <b className="text-white">하루 1회</b> 쓴다면
               <span className="font-normal text-blue-300"> · 영업일 {WORKDAYS}일 · 1건 {BASE_MIN}분 기준</span>
             </p>
@@ -722,15 +722,15 @@ export default function AdminPage() {
                 ),
               ].map((r) => (
                 <div key={r.k} className="text-center">
-                  <p className="text-[9px] text-blue-300">{r.k}</p>
-                  <p className="text-[11px] text-blue-200 mt-0.5">
+                  <p className="text-xs text-blue-300">{r.k}</p>
+                  <p className="text-xs text-blue-200 mt-0.5">
                     {r.now} <span className="text-blue-400">→</span>{' '}
-                    <b className="text-white text-[13px]">{r.goal}</b>
+                    <b className="text-white text-[13.5px]">{r.goal}</b>
                   </p>
                 </div>
               ))}
             </div>
-            <p className="text-[9px] text-blue-300 mt-1.5">
+            <p className="text-xs text-blue-300 mt-1.5">
               ※ <b className="text-blue-200">예측입니다</b> — 측정값이 아닙니다
               {goalMultiple !== null && ` (지금의 ${goalMultiple.toFixed(1)}배)`}
             </p>
@@ -745,9 +745,9 @@ export default function AdminPage() {
               { num: QUIZ_BANK_TOTAL.toLocaleString() + '문', label: '문제은행', sub: '레벨업 챌린지 · 시험지' },
             ].map((s) => (
               <div key={s.label} className="text-center">
-                <p className="text-lg font-bold text-white">{s.num}</p>
-                <p className="text-[10px] text-blue-200 mt-0.5">{s.label}</p>
-                <p className="text-[9px] text-blue-300">{s.sub}</p>
+                <p className="text-[17px] font-bold text-white">{s.num}</p>
+                <p className="text-xs text-blue-200 mt-0.5">{s.label}</p>
+                <p className="text-xs text-blue-300">{s.sub}</p>
               </div>
             ))}
           </div>
@@ -831,18 +831,18 @@ function ViralSection() {
   return (
     <div className="mt-5">
       <div className="flex items-center justify-between gap-2 mb-2">
-        <h2 className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+        <h2 className="text-[13.5px] font-bold text-[#0b1220] flex items-center gap-1.5">
           <Icon name="chat" size={15} style={{ color: '#0F766E' }} /> 경원영업팀 바이럴분석
         </h2>
         <a
           href={VIRAL_URL} target="_blank" rel="noreferrer"
-          className="text-[11px] font-bold rounded-lg px-2.5 py-1 text-white"
+          className="text-xs font-bold rounded-[10px] px-2.5 py-1 text-white"
           style={{ background: '#0F766E' }}
         >
           대시보드 열기
         </a>
       </div>
-      <p className="text-[11px] text-gray-400 mb-2.5">
+      <p className="text-xs text-[#9ca3af] mb-2.5">
         네이버 블로그·카페(다이렉트웨딩 · 메이크마이웨딩 · 레몬테라스 · 요즘웨딩 · 맘카페 · 입주카페)에
         올라온 우리 매장 후기 · 매일 새벽 자동 수집
         {/* **무엇을 세지 않았는지 적는다.** 카페 글은 네이버가 작성일을 아예 안 줘서
@@ -856,11 +856,11 @@ function ViralSection() {
         {d?.minDate && d?.maxDate ? ' · 작성일 범위 ' + d.minDate + ' ~ ' + d.maxDate : ''}
       </p>
 
-      {state === 'loading' && <div className="text-xs text-gray-400 py-6 text-center">불러오는 중…</div>}
+      {state === 'loading' && <div className="text-xs text-[#9ca3af] py-6 text-center">불러오는 중…</div>}
 
       {/* **못 받았으면 0 을 그리지 않고 그렇게 적는다** — 이 저장소가 로그에서 이미 데인 자리다*/}
       {state === 'fail' && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[11px] text-amber-800">
+        <div className="rounded-[14px] border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-800">
           <b className="text-amber-900">바이럴 자료를 불러오지 못했습니다.</b> 아직 연동 전이거나
           Apps Script 응답이 늦을 때 그렇습니다 — 위 <b>「대시보드 열기」</b>로 직접 확인할 수 있습니다.
           <button onClick={load} className="ml-2 underline font-bold">다시 시도</button>
@@ -874,9 +874,9 @@ function ViralSection() {
               { n: d.day, l: '오늘' }, { n: d.week, l: '최근 7일' },
               { n: d.month, l: '최근 30일' }, { n: d.total, l: '전체 누적' },
             ].map((k) => (
-              <div key={k.l} className="bg-white rounded-xl border border-gray-100 p-2.5 text-center">
-                <p className="text-xl font-bold" style={{ color: '#0F766E' }}>{(k.n || 0).toLocaleString()}</p>
-                <p className="text-[10px] text-gray-400 font-bold mt-0.5">{k.l}</p>
+              <div key={k.l} className="bg-white rounded-[10px] border border-gray-100 p-2.5 text-center">
+                <p className="text-[22px] font-bold" style={{ color: '#0F766E' }}>{(k.n || 0).toLocaleString()}</p>
+                <p className="text-xs text-[#9ca3af] font-bold mt-0.5">{k.l}</p>
               </div>
             ))}
           </div>
@@ -885,18 +885,18 @@ function ViralSection() {
               설치후기인지 유형별로 구분"*). **제목의 말로만 가른다** — 카페 이름을 함께
               봤더니 다이렉트웨딩 카페의 「설치 후기」가 「혼수」가 됐다(실물 표본에서 잡았다). */}
           {kinds.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-3.5 mb-3">
-              <p className="text-xs font-bold text-gray-700 mb-0.5">후기 유형</p>
-              <p className="text-[10px] text-gray-400 mb-2">제목의 말로 가릅니다 · 못 가른 것은 「기타」</p>
+            <div className="bg-white rounded-[14px] border border-gray-100 p-3.5 mb-3">
+              <p className="text-xs font-bold text-[#374151] mb-0.5">후기 유형</p>
+              <p className="text-xs text-[#9ca3af] mb-2">제목의 말로 가릅니다 · 못 가른 것은 「기타」</p>
               <div className="flex flex-wrap gap-1.5">
                 {kinds.map(([k, v]) => (
                   <span
                     key={k}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-[11px] text-gray-600"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-2.5 py-1 text-xs text-[#5b6476]"
                   >
                     {k}
-                    <b className="text-[12px]" style={{ color: '#0F766E' }}>{v.toLocaleString()}</b>
-                    <span className="text-[9px] text-gray-400">
+                    <b className="text-xs" style={{ color: '#0F766E' }}>{v.toLocaleString()}</b>
+                    <span className="text-xs text-[#9ca3af]">
                       {kindTotal ? Math.round((v / kindTotal) * 100) : 0}%
                     </span>
                   </span>
@@ -906,18 +906,18 @@ function ViralSection() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-white rounded-2xl border border-gray-100 p-3.5">
-              <p className="text-xs font-bold text-gray-700 mb-0.5">매장별 상위</p>
+            <div className="bg-white rounded-[14px] border border-gray-100 p-3.5">
+              <p className="text-xs font-bold text-[#374151] mb-0.5">매장별 상위</p>
               {/* **몇 곳 중 몇 곳인지 적는다** — 65곳을 전부 수집하므로 아직 0건인 곳이 있다.
                   감추는 것과 없는 것은 다른 말이라, 안 적으면 "우리 매장이 없다"로 읽힌다 */}
-              <p className="text-[10px] text-gray-400 mb-2">전점 {d.stores}곳 · 후기가 잡힌 곳 {hit}곳</p>
+              <p className="text-xs text-[#9ca3af] mb-2">전점 {d.stores}곳 · 후기가 잡힌 곳 {hit}곳</p>
               {/* **0건도 흐리게 남긴다** — 감추면 "우리 매장이 없다"로 읽힌다.
                   오늘 0건이라고 내일도 0건인 것은 아니다. */}
               <div className="max-h-64 overflow-y-auto pr-1">
                 {regions.map(([rg, v]) => (
                   <div key={rg} className="mb-2">
-                    <p className="text-[10px] font-bold mb-1" style={{ color: '#0F766E' }}>
-                      {rg}<span className="font-normal text-gray-400 ml-1">
+                    <p className="text-xs font-bold mb-1" style={{ color: '#0F766E' }}>
+                      {rg}<span className="font-normal text-[#9ca3af] ml-1">
                         {v.stores.length}곳 · {(v.n || 0).toLocaleString()}건</span>
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -929,11 +929,11 @@ function ViralSection() {
                           return (
                             <span
                               key={nm}
-                              className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] ${
-                                c ? 'border-gray-200 text-gray-600' : 'border-gray-100 text-gray-300'
+                              className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs ${
+                                c ? 'border-gray-200 text-[#5b6476]' : 'border-gray-100 text-[#d1d5db]'
                               }`}
                             >
-                              {nm}<b className={c ? 'text-gray-800' : 'text-gray-300'}>{c}</b>
+                              {nm}<b className={c ? 'text-[#0b1220]' : 'text-[#d1d5db]'}>{c}</b>
                             </span>
                           )
                         })}
@@ -943,37 +943,37 @@ function ViralSection() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 p-3.5">
-              <p className="text-xs font-bold text-gray-700 mb-0.5">어디에 올라오나</p>
-              <p className="text-[10px] text-gray-400 mb-2">
+            <div className="bg-white rounded-[14px] border border-gray-100 p-3.5">
+              <p className="text-xs font-bold text-[#374151] mb-0.5">어디에 올라오나</p>
+              <p className="text-xs text-[#9ca3af] mb-2">
                 블로그 {(d.bySrc?.['블로그'] || 0).toLocaleString()} · 카페 {(d.bySrc?.['카페'] || 0).toLocaleString()}
                 {' · '}카페 {Object.keys(d.byCafe || {}).length}곳
               </p>
               {cafes.map(([name, n]) => (
                 <div key={name} className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] text-gray-600 flex-1 truncate" title={name}>{name}</span>
-                  <span className="text-[10px] text-gray-400 tabular-nums">{n}</span>
+                  <span className="text-xs text-[#5b6476] flex-1 truncate" title={name}>{name}</span>
+                  <span className="text-xs text-[#9ca3af] tabular-nums">{n}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-3.5 mt-3">
-            <p className="text-xs font-bold text-gray-700 mb-2">최근 후기</p>
+          <div className="bg-white rounded-[14px] border border-gray-100 p-3.5 mt-3">
+            <p className="text-xs font-bold text-[#374151] mb-2">최근 후기</p>
             {(d.recent || []).slice(0, 8).map((r) => (
               <a
                 key={r.link} href={r.link} target="_blank" rel="noreferrer"
                 className="block py-1.5 border-t border-gray-50 first:border-t-0 hover:opacity-70"
               >
-                <p className="text-[12px] font-bold text-gray-800 truncate">{r.title}</p>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-xs font-bold text-[#0b1220] truncate">{r.title}</p>
+                <p className="text-xs text-[#9ca3af]">
                   <span className="font-bold" style={{ color: '#0F766E' }}>{r.src}</span>
                   {r.kind ? ' · ' + r.kind : ''}
                   {' · '}{r.storeName}{r.cafe ? ' · ' + r.cafe : ''}{' · '}{ymd(r.date || r.foundAt)}
                 </p>
               </a>
             ))}
-            <p className="text-[10px] text-gray-400 mt-2">
+            <p className="text-xs text-[#9ca3af] mt-2">
               전체 목록·매장별 링크·CSV 내려받기는 <b>「대시보드 열기」</b>에서 볼 수 있습니다.
             </p>
           </div>
@@ -985,12 +985,12 @@ function ViralSection() {
 
 function KpiCard({ label, value, icon, color }: { label: string; value: number; icon: IconName; color: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+    <div className="bg-white rounded-[14px] border border-gray-100 p-4 shadow-sm">
       <div className="flex items-center gap-1.5 mb-1">
         <Icon name={icon} size={16} style={{ color }} />
-        <span className="text-xs text-gray-500">{label}</span>
+        <span className="text-xs text-[#5b6476]">{label}</span>
       </div>
-      <p className="text-2xl font-bold" style={{ color }}>{value.toLocaleString()}</p>
+      <p className="text-[22px] font-bold" style={{ color }}>{value.toLocaleString()}</p>
     </div>
   )
 }
@@ -1023,17 +1023,17 @@ function StoreRow({
 
   return (
     <div
-      className="rounded-xl overflow-hidden"
+      className="rounded-[10px] overflow-hidden"
       style={{ background: open ? '#F8FAFF' : 'transparent', border: open ? '1px solid #E4E9F7' : '1px solid transparent' }}
     >
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
-        className="w-full flex items-center gap-2.5 px-2 py-2 text-left rounded-xl hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center gap-2.5 px-2 py-2 text-left rounded-[10px] hover:bg-gray-50 transition-colors"
       >
         <span
-          className="shrink-0 text-[10px] w-3 text-gray-400 transition-transform"
+          className="shrink-0 text-xs w-3 text-[#9ca3af] transition-transform"
           style={{ transform: open ? 'rotate(90deg)' : 'none' }}
           aria-hidden
         >
@@ -1049,7 +1049,7 @@ function StoreRow({
         >
           {name}
         </span>
-        <span className="text-[10px] w-14 shrink-0 text-gray-400 tracking-wide truncate">{sub}</span>
+        <span className="text-xs w-14 shrink-0 text-[#9ca3af] tracking-wide truncate">{sub}</span>
         <span className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
           <span
             className="block h-full rounded-full"
@@ -1070,29 +1070,29 @@ function StoreRow({
       {open && (
         <div className="px-2 pb-2.5 pl-7">
           {shown.length === 0 ? (
-            <p className="text-[11px] text-gray-400 py-1">기록된 사용이 없습니다.</p>
+            <p className="text-xs text-[#9ca3af] py-1">기록된 사용이 없습니다.</p>
           ) : (
             <div className="space-y-1.5 pt-1">
               {shown.map((r) => {
-                const meta = MODULE_META[r.module] || { label: r.module, icon: 'doc' as IconName, color: '#888' }
+                const meta = MODULE_META[r.module] || { label: r.module, icon: 'doc' as IconName, color: '#9ca3af' }
                 return (
                   <div key={r.module} className="flex items-center gap-2">
                     <Icon name={meta.icon} size={12} style={{ color: meta.color, flexShrink: 0 }} />
-                    <span className="text-[11px] w-28 shrink-0 truncate text-gray-600">{meta.label}</span>
+                    <span className="text-xs w-28 shrink-0 truncate text-[#5b6476]">{meta.label}</span>
                     <span className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                       <span
                         className="block h-full rounded-full"
                         style={{ width: `${Math.round((r.count / top) * 100)}%`, background: meta.color }}
                       />
                     </span>
-                    <span className="text-[11px] font-bold w-10 text-right tabular-nums text-gray-700">
+                    <span className="text-xs font-bold w-10 text-right tabular-nums text-[#374151]">
                       {r.count.toLocaleString()}
                     </span>
                   </div>
                 )
               })}
               {hidden > 0 && (
-                <p className="text-[10px] text-gray-400 pt-1">
+                <p className="text-xs text-[#9ca3af] pt-1">
                   운영 종료 모듈 {hidden}종 {hiddenN.toLocaleString()}건은 목록에서 제외했습니다.
                 </p>
               )}
@@ -1106,8 +1106,8 @@ function StoreRow({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm mb-3">
-      <h3 className="text-sm font-bold text-gray-700 mb-3">{title}</h3>
+    <div className="bg-white rounded-[14px] border border-gray-100 p-4 shadow-sm mb-3">
+      <h3 className="text-[13.5px] font-bold text-[#374151] mb-3">{title}</h3>
       {children}
     </div>
   )

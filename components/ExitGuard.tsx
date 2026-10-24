@@ -133,15 +133,15 @@ export default function ExitGuard() {
         role="dialog"
         aria-modal="true"
       >
-        <p className="text-[15px] font-bold text-gray-900">세일즈 코파일럿을 종료했습니다</p>
+        <p className="text-[15px] font-bold text-[#0b1220]">세일즈 코파일럿을 종료했습니다</p>
         {/* **왜 창이 안 닫히는지 사실대로 적는다** — 화면이 남아 있는데 말이 없으면 고장으로 읽힌다 */}
-        <p className="text-[12.5px] leading-relaxed text-gray-500">
+        <p className="text-xs leading-relaxed text-[#5b6476]">
           이 화면은 닫으셔도 됩니다.<br />설치해서 쓰실 때는 홈 버튼으로 나가시면 됩니다.
         </p>
         <button
           type="button"
           onClick={() => { setBye(false); arm() }}
-          className="mt-1 rounded-xl px-5 py-2.5 text-[14px] font-bold text-white"
+          className="mt-1 rounded-[10px] px-5 py-2.5 text-[13.5px] font-bold text-white"
           style={{ background: 'var(--color-primary)' }}
         >
           다시 시작
@@ -161,11 +161,11 @@ export default function ExitGuard() {
       className="fixed inset-0 z-[100] flex items-center justify-center p-5"
       style={{ background: 'rgba(17,24,39,.45)' }}
     >
-      <div className="w-full max-w-[320px] rounded-2xl bg-white p-5 shadow-xl">
-        <h2 id="ax-exit-t" className="text-[16px] font-bold leading-snug text-gray-900">
+      <div className="w-full max-w-[320px] rounded-[14px] bg-white p-5 shadow-xl">
+        <h2 id="ax-exit-t" className="text-[15px] font-bold leading-snug text-[#0b1220]">
           세일즈 코파일럿을 종료하시겠습니까?
         </h2>
-        <p className="mt-1.5 text-[12.5px] leading-relaxed text-gray-500">
+        <p className="mt-1.5 text-xs leading-relaxed text-[#5b6476]">
           실수로 뒤로가기를 누르셨을 수 있습니다.
         </p>
         <div className="mt-4 flex gap-2">
@@ -174,14 +174,14 @@ export default function ExitGuard() {
             ref={noRef}
             type="button"
             onClick={stay}
-            className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-[14px] font-bold text-gray-700"
+            className="flex-1 rounded-[10px] border border-gray-200 bg-white py-2.5 text-[13.5px] font-bold text-[#374151]"
           >
             아니오
           </button>
           <button
             type="button"
             onClick={leave}
-            className="flex-1 rounded-xl py-2.5 text-[14px] font-bold text-white"
+            className="flex-1 rounded-[10px] py-2.5 text-[13.5px] font-bold text-white"
             style={{ background: 'var(--color-primary)' }}
           >
             예, 종료

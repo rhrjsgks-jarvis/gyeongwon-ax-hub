@@ -98,7 +98,7 @@ export default function SearchBox({
         />
         <button
           type="submit"
-          className={onDark ? 'px-3 rounded-lg text-sm font-bold shrink-0' : 'px-4 md:px-5 rounded-xl text-sm font-bold text-white shrink-0'}
+          className={onDark ? 'px-3 rounded-[10px] text-[13.5px] font-bold shrink-0' : 'px-4 md:px-5 rounded-[10px] text-[13.5px] font-bold text-white shrink-0'}
           style={onDark ? { background: '#fff', color: '#1428A0' } : { background: '#1428A0' }}
         >
           검색
@@ -108,7 +108,7 @@ export default function SearchBox({
         <ul
           id="sbx-list"
           role="listbox"
-          className="absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+          className="absolute left-0 right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-[10px] shadow-lg overflow-hidden"
         >
           {items.map((s, i) => (
             <li
@@ -117,17 +117,17 @@ export default function SearchBox({
               aria-selected={i === hi}
               onMouseDown={(e) => { e.preventDefault(); go(s) }}
               onMouseEnter={() => setHi(i)}
-              className={`flex items-center gap-2 px-3.5 py-2.5 text-sm cursor-pointer ${i === hi ? 'bg-blue-50' : ''}`}
+              className={`flex items-center gap-2 px-3.5 py-2.5 text-[13.5px] cursor-pointer ${i === hi ? 'bg-blue-50' : ''}`}
             >
-              <span className="flex-1 min-w-0 truncate text-gray-800">{s[0]}</span>
-              <span className="shrink-0 text-[11.5px] text-gray-400">{MOD_LABEL[s[1]] || ''}</span>
+              <span className="flex-1 min-w-0 truncate text-[#0b1220]">{s[0]}</span>
+              <span className="shrink-0 text-xs text-[#9ca3af]">{MOD_LABEL[s[1]] || ''}</span>
             </li>
           ))}
           <li
             role="option"
             aria-selected={false}
             onMouseDown={(e) => { e.preventDefault(); setOpen(false); const v = value.trim(); if (v) onSubmit(v) }}
-            className="px-3.5 py-2 text-[12px] text-blue-700 bg-gray-50 border-t border-gray-100 cursor-pointer"
+            className="px-3.5 py-2 text-xs text-blue-700 bg-gray-50 border-t border-gray-100 cursor-pointer"
           >
             「{value.trim()}」 전체 검색 결과 보기
           </li>

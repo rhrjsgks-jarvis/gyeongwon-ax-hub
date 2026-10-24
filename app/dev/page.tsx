@@ -20,7 +20,7 @@ import { DEV_MODULES } from '@/lib/devModules'
 export default function DevPage() {
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-lg font-bold text-gray-800 mb-1">개발 중인 서비스</h1>
+      <h1 className="text-[17px] font-bold text-[#0b1220] mb-1">개발 중인 서비스</h1>
       {/*
         **자물쇠를 지우고 그 자리에 부탁을 적는다**(2026-08-17 사용자 요청:
         *"이제 잠금을 해제했기 때문에 자물쇠 마크는 필요없습니다. 차라리 어플 만져보고
@@ -30,10 +30,10 @@ export default function DevPage() {
         상담사가 열어 보지도 않는다. 이 칸에 바라는 것은 정반대다 — 써 보고 알려 주는 것.
         보낼 곳은 **이미 헤더에 있는 개발자 문의**(💬)라 새 통로를 만들지 않는다.
       */}
-      <p className="text-xs text-gray-400 mb-5 flex items-start gap-1.5">
+      <p className="text-xs text-[#9ca3af] mb-5 flex items-start gap-1.5">
         <Icon name="bulb" size={13} style={{ opacity: 0.7, flexShrink: 0, marginTop: 1 }} />
         <span>
-          자유롭게 만져 보시고 <b className="text-gray-500">개선 아이디어를 보내 주세요</b> — 오른쪽 위
+          자유롭게 만져 보시고 <b className="text-[#5b6476]">개선 아이디어를 보내 주세요</b> — 오른쪽 위
           <Icon name="chat" size={11} style={{ display: 'inline', margin: '0 3px', verticalAlign: '-1px' }} />
           개발자 문의로 받습니다. 아직 다듬는 중이라 값이 바뀔 수 있으니 고객에게 그대로 읽지는 마세요.
         </span>
@@ -43,16 +43,16 @@ export default function DevPage() {
           <Link
             key={m.href}
             href={m.href}
-            className="block bg-white rounded-2xl p-4 shadow-sm no-underline"
+            className="block bg-white rounded-[14px] p-4 shadow-sm no-underline"
           >
             <div className="flex items-center gap-2 mb-1.5">
-              <span className="flex items-center justify-center rounded-xl" style={{ width: 34, height: 34, background: m.bg }}>
+              <span className="flex items-center justify-center rounded-[10px]" style={{ width: 34, height: 34, background: m.bg }}>
                 <Icon name={m.icon as IconName} size={18} style={{ color: m.color }} />
               </span>
-              <span className="text-sm font-bold text-gray-800">{m.title}</span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>구축중</span>
+              <span className="text-[13.5px] font-bold text-[#0b1220]">{m.title}</span>
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>구축중</span>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">{m.desc}</p>
+            <p className="text-xs text-[#5b6476] leading-relaxed">{m.desc}</p>
           </Link>
         ))}
       </div>

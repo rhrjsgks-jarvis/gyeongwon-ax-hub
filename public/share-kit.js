@@ -48,21 +48,21 @@
       '.sk-dim{position:fixed;inset:0;background:rgba(15,20,35,.45);z-index:9000;display:flex;',
       '  align-items:center;justify-content:center;padding:16px;animation:sk-fade .14s ease-out}',
       '@keyframes sk-fade{from{opacity:0}to{opacity:1}}',
-      '.sk-sheet{background:#fff;width:100%;max-width:400px;border-radius:16px;',
+      '.sk-sheet{background:#fff;width:100%;max-width:400px;border-radius:14px;',
       '  padding:18px 16px;animation:sk-pop .18s ease-out;',
       '  max-height:100%;overflow-y:auto}',
       /* 가운데 팝업이라 아래에서 올라오는 대신 살짝 커지며 나타난다 */
       '@keyframes sk-pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}',
-      '.sk-t{font-size:14px;font-weight:700;margin-bottom:2px}',
-      '.sk-n{font-size:20px;font-weight:700;color:#1428A0;letter-spacing:-.01em;margin-bottom:14px}',
-      '.sk-b{display:block;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:11px;',
-      '  padding:13px;font-size:14px;font-weight:700;margin-bottom:8px;cursor:pointer;color:#16181b;',
+      '.sk-t{font-size:13.5px;font-weight:700;margin-bottom:2px}',
+      '.sk-n{font-size:22px;font-weight:700;color:#1428A0;letter-spacing:-.01em;margin-bottom:14px}',
+      '.sk-b{display:block;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:10px;',
+      '  padding:13px;font-size:13.5px;font-weight:700;margin-bottom:8px;cursor:pointer;color:#0b1220;',
       '  font-family:inherit;text-align:center;text-decoration:none}',
       '.sk-b.primary{background:#1428A0;border-color:#1428A0;color:#fff}',
       '.sk-b:active{opacity:.85}',
       '.sk-toast{position:fixed;left:50%;bottom:24%;transform:translateX(-50%);z-index:9100;',
       '  background:rgba(20,24,32,.92);color:#fff;padding:10px 16px;border-radius:10px;',
-      '  font-size:13px;font-weight:700;pointer-events:none}',
+      '  font-size:13.5px;font-weight:700;pointer-events:none}',
     ].join('');
     (document.head || document.documentElement).appendChild(st);
   }
@@ -511,14 +511,14 @@
       '  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}',
       '  #sk-share,.sk-dim,.sk-toast,.toast,.sk-noprint,body>footer{display:none!important}',
       '  #sk-print-head,#sk-print-foot{display:block!important}',
-      '  #sk-print-head{margin:0 0 12px;font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;color:#111827}',
+      '  #sk-print-head{margin:0 0 12px;font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;color:#0b1220}',
       '  #sk-print-head .bar{display:flex;justify-content:space-between;align-items:center;',
-      '    border-bottom:2.5px solid #1428A0;padding:0 0 6px;font-size:10.5px;color:#4B5563}',
-      '  #sk-print-head .brand{font-weight:700;color:#1428A0;letter-spacing:.01em;font-size:11px}',
-      '  #sk-print-head .ttl{font-size:21px;font-weight:700;margin:10px 0 2px;color:#0B1220;letter-spacing:-.01em}',
-      '  #sk-print-head .sub{font-size:11.5px;color:#4B5563}',
+      '    border-bottom:2.5px solid #1428A0;padding:0 0 6px;font-size:12px;color:#5B6476}',
+      '  #sk-print-head .brand{font-weight:700;color:#1428A0;letter-spacing:.01em;font-size:12px}',
+      '  #sk-print-head .ttl{font-size:22px;font-weight:700;margin:10px 0 2px;color:#0B1220;letter-spacing:-.01em}',
+      '  #sk-print-head .sub{font-size:12px;color:#5B6476}',
       '  #sk-print-foot{margin-top:14px;padding-top:7px;border-top:1px solid #D1D5DB;',
-      '    font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;font-size:9.5px;line-height:1.55;color:#6B7280;',
+      '    font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;font-size:12px;line-height:1.55;color:#5B6476;',
       '    break-inside:avoid}',
       '  #sk-print-foot b{color:#374151}',
       '  img,table,tr,figure,.sk-keep{break-inside:avoid}',
@@ -637,12 +637,12 @@
     if (!document.getElementById('sk-pick-css')) {
       var st = document.createElement('style'); st.id = 'sk-pick-css';
       st.textContent = '.sk-pick{max-height:52vh;overflow:auto;margin:4px 0 12px;display:grid;gap:6px}'
-        + '.sk-pick label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:11px;'
-        + 'font-size:14px;font-weight:700;color:#1F2937;cursor:pointer;background:#fff}'
+        + '.sk-pick label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:10px;'
+        + 'font-size:13.5px;font-weight:700;color:#0B1220;cursor:pointer;background:#fff}'
         + '.sk-pick label.on{border-color:#1428A0;background:#EEF2FF;color:#1428A0}'
         + '.sk-pick input{width:18px;height:18px;accent-color:#1428A0;flex:0 0 auto;margin:0}'
         + '.sk-pick-all{display:flex;gap:8px;margin:0 0 6px}'
-        + '.sk-pick-all button{border:1.5px solid #D1D5DB;background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:700;color:#374151;cursor:pointer}';
+        + '.sk-pick-all button{border:1.5px solid #D1D5DB;background:#fff;border-radius:99px;padding:5px 12px;font:inherit;font-size:12px;font-weight:700;color:#374151;cursor:pointer}';
       document.head.appendChild(st);
     }
     var dim = reuse || document.createElement('div'); dim.className = 'sk-dim';
@@ -711,7 +711,7 @@
      * 읽힌다 — 남색 버튼이면 남색 바 위에서 사라진다(AS 타일에서 겪은 것과 같다).
      */
     st.textContent = '#sk-share{position:fixed;right:12px;z-index:8000;background:#fff;color:#1428A0;'
-      + 'border:1.5px solid #1428A0;border-radius:99px;padding:8px 15px;font-size:13px;font-weight:700;'
+      + 'border:1.5px solid #1428A0;border-radius:99px;padding:8px 15px;font-size:13.5px;font-weight:700;'
       + 'font-family:inherit;cursor:pointer;box-shadow:0 2px 10px rgba(14,28,48,.16)}'
       + '#sk-share:active{background:#EEF2FF}';
     document.head.appendChild(st);
@@ -861,7 +861,7 @@
     + '.crumb{display:none}#navscrim{display:none}'
     + '@media screen and (min-width:720px){'
     + '.crumb:not(:empty){display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 10px;font-size:13.5px;font-weight:700;color:#5B6476}'
-    + '.crumb button{border:0;background:transparent;font:inherit;color:#1428A0;padding:4px 6px;border-radius:7px;cursor:pointer}'
+    + '.crumb button{border:0;background:transparent;font:inherit;color:#1428A0;padding:4px 6px;border-radius:6px;cursor:pointer}'
     + '.crumb button:hover{background:#EEF2FF}.crumb b{color:#0B1220;padding:4px 2px}.crumb .x{color:#C3CAD8}'
     + 'html.ax-navc body .ax-navbox{position:fixed!important;top:0!important;left:0!important;bottom:0!important;z-index:60!important;'
     + 'width:272px!important;max-height:none!important;margin:0!important;border-radius:0 14px 14px 0!important;padding:10px 8px!important;'

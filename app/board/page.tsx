@@ -124,7 +124,7 @@ export default function BoardPage() {
           </div>
           <div>
             <div className="text-[17px] font-bold leading-tight">자유게시판</div>
-            <div className="text-[11.5px] mt-0.5" style={{ color: '#c7d2fe' }}>
+            <div className="text-xs mt-0.5" style={{ color: '#c7d2fe' }}>
               공지·정보·질문·건의 — 경원영업팀이 함께 적는 자리
             </div>
           </div>
@@ -133,13 +133,13 @@ export default function BoardPage() {
 
       <div className="max-w-[840px] mx-auto px-4 py-4 pb-24">
         {/* 글쓰기 */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
-          <p className="text-[11px] font-bold text-gray-400 mb-2">글쓰기</p>
+        <div className="bg-white rounded-[14px] border border-gray-100 p-4 mb-4">
+          <p className="text-xs font-bold text-[#9ca3af] mb-2">글쓰기</p>
           <div className="flex gap-2 mb-2">
             {TOPICS.map((t) => (
               <button key={t} onClick={() => setTopic(t)}
-                className={`px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
-                  topic === t ? 'text-white border-transparent' : 'text-gray-500 border-gray-200 bg-white'
+                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                  topic === t ? 'text-white border-transparent' : 'text-[#5b6476] border-gray-200 bg-white'
                 }`}
                 style={topic === t ? { background: TOPIC_COLOR[t] } : undefined}>
                 {t}
@@ -148,23 +148,23 @@ export default function BoardPage() {
           </div>
           <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={80}
             placeholder="제목"
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:border-blue-400" />
+            className="w-full border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] mb-2 focus:outline-none focus:border-blue-400" />
           <textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={2000} rows={4}
             placeholder="내용 — 매장에서 있었던 일, 공유하고 싶은 정보, 궁금한 것, 무엇이든 적어주세요"
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 focus:outline-none focus:border-blue-400 resize-y" />
+            className="w-full border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] mb-2 focus:outline-none focus:border-blue-400 resize-y" />
           <div className="flex gap-2 items-center">
             <input value={author} onChange={(e) => setAuthor(e.target.value)} maxLength={20}
               placeholder="이름 (선택)"
-              className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
-            <span className="text-[11px] text-gray-400 shrink-0">{store.current.name || '지점 미확인'}</span>
+              className="flex-1 border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-blue-400" />
+            <span className="text-xs text-[#9ca3af] shrink-0">{store.current.name || '지점 미확인'}</span>
             <button onClick={submit} disabled={sending}
-              className="shrink-0 px-5 py-2.5 rounded-xl text-white text-sm font-bold disabled:opacity-50"
+              className="shrink-0 px-5 py-2.5 rounded-[10px] text-white text-[13.5px] font-bold disabled:opacity-50"
               style={{ background: '#1428A0' }}>
               {sending ? '등록 중…' : '등록'}
             </button>
           </div>
           {notice && (
-            <p className={`mt-2 text-[12px] font-bold ${notice.ok ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`mt-2 text-xs font-bold ${notice.ok ? 'text-green-600' : 'text-red-600'}`}>
               {notice.msg}
             </p>
           )}
@@ -172,22 +172,22 @@ export default function BoardPage() {
 
         {/* 연결 상태 — 실패를 빈 게시판처럼 보이게 하지 않는다 */}
         {!connected && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 text-[12.5px] leading-relaxed text-amber-800">
+          <div className="bg-amber-50 border border-amber-200 rounded-[14px] p-4 mb-4 text-xs leading-relaxed text-amber-800">
             <b>게시판 시트가 아직 연결되지 않았습니다</b> ({reason}).<br />
-            연결 방법: <code className="text-[11px]">docs/apps-script/Board.gs</code> 를 새 Google 시트의
+            연결 방법: <code className="text-xs">docs/apps-script/Board.gs</code> 를 새 Google 시트의
             Apps Script 로 배포하고, 그 /exec 주소를 Vercel 환경변수 <b>BOARD_GAS_URL</b> 에 넣은 뒤
             재배포하면 됩니다 (사용 로그 시트를 연동했던 것과 같은 절차입니다).
           </div>
         )}
         {stale && (
-          <p className="text-[11px] text-amber-600 mb-2">시트 연결이 느려 마지막으로 받아 둔 목록을 보여드리고 있습니다.</p>
+          <p className="text-xs text-amber-600 mb-2">시트 연결이 느려 마지막으로 받아 둔 목록을 보여드리고 있습니다.</p>
         )}
 
         {/* 목록 */}
         {posts === null ? (
-          <p className="text-center text-gray-400 text-sm py-10">불러오는 중…</p>
+          <p className="text-center text-[#9ca3af] text-[13.5px] py-10">불러오는 중…</p>
         ) : posts.length === 0 && connected ? (
-          <p className="text-center text-gray-400 text-sm py-10">아직 글이 없습니다 — 첫 글을 적어주세요.</p>
+          <p className="text-center text-[#9ca3af] text-[13.5px] py-10">아직 글이 없습니다 — 첫 글을 적어주세요.</p>
         ) : (
           <div className="flex flex-col gap-2">
             {posts.map((p, i) => {
@@ -195,21 +195,21 @@ export default function BoardPage() {
               const long = p.body.length > 120 || p.body.split('\n').length > 3
               return (
                 <button key={`${p.ts}-${i}`} onClick={() => setOpenIdx(open ? null : i)}
-                  className="text-left bg-white rounded-2xl border border-gray-100 p-4 hover:border-blue-200 transition-colors">
+                  className="text-left bg-white rounded-[14px] border border-gray-100 p-4 hover:border-blue-200 transition-colors">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
                       style={{ background: TOPIC_COLOR[p.topic] || '#475569' }}>{p.topic || '자유'}</span>
-                    <span className="text-sm font-bold text-gray-800 flex-1 min-w-0 truncate">{p.title}</span>
+                    <span className="text-[13.5px] font-bold text-[#0b1220] flex-1 min-w-0 truncate">{p.title}</span>
                   </div>
                   {/* 글 내용은 남이 쓴 글 — 텍스트로만 그린다(React 기본 이스케이프) */}
-                  <p className={`text-[13px] text-gray-600 whitespace-pre-wrap leading-relaxed ${
+                  <p className={`text-[13.5px] text-[#5b6476] whitespace-pre-wrap leading-relaxed ${
                     open ? '' : 'line-clamp-3'}`}>{p.body}</p>
                   {long && (
-                    <p className="text-[11px] font-bold mt-1" style={{ color: '#1428A0' }}>
+                    <p className="text-xs font-bold mt-1" style={{ color: '#1428A0' }}>
                       {open ? '접기 ▲' : '더 보기 ▼'}
                     </p>
                   )}
-                  <p className="text-[11px] text-gray-400 mt-2">
+                  <p className="text-xs text-[#9ca3af] mt-2">
                     {p.storeName || p.store || '지점 미상'}{p.author ? ` · ${p.author}` : ''} · {when(p.ts)}
                   </p>
                 </button>
@@ -218,7 +218,7 @@ export default function BoardPage() {
           </div>
         )}
 
-        <p className="text-[10.5px] text-gray-300 mt-5 leading-relaxed">
+        <p className="text-xs text-[#d1d5db] mt-5 leading-relaxed">
           글 삭제·수정이 필요하면 관리자에게 말씀해주세요 — 게시판 시트에서 지울 수 있습니다.
           지점명은 접속하신 지점으로 자동으로 붙습니다.
         </p>

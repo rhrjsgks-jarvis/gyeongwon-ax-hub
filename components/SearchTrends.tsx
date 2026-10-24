@@ -58,7 +58,7 @@ function Chip({ rank, label, onClick }: { rank: number; label: string; onClick: 
       {hot && (
         <span
           className="inline-flex items-center justify-center rounded-full font-bold shrink-0"
-          style={{ width: 16, height: 16, fontSize: 10, background: '#1428A0', color: '#fff' }}
+          style={{ width: 16, height: 16, fontSize: 12, background: '#1428A0', color: '#fff' }}
         >
           {rank}
         </span>
@@ -87,10 +87,10 @@ export default function SearchTrends() {
   if (keywords.length < MIN_SHOW && tools.length < MIN_SHOW) return null
 
   return (
-    <div className="-mt-3 mb-6 rounded-xl border border-gray-100 bg-white px-3 py-2.5">
+    <div className="-mt-3 mb-6 rounded-[10px] border border-gray-100 bg-white px-3 py-2.5">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold" style={{ color: '#1428A0' }}>지금 많이 찾는 것</span>
-        <span className="text-[11px] text-gray-400">{WINDOW_LABEL[data.window || 'week']}</span>
+        <span className="text-xs text-[#9ca3af]">{WINDOW_LABEL[data.window || 'week']}</span>
       </div>
 
       {keywords.length >= MIN_SHOW && (
@@ -138,7 +138,7 @@ export default function SearchTrends() {
 function Row({ label, mode, children }: { label: string; mode: 'wrap' | 'scroll'; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2 py-0.5">
-      <span className="text-[11px] text-gray-400 w-9 shrink-0 leading-6">{label}</span>
+      <span className="text-xs text-[#9ca3af] w-9 shrink-0 leading-6">{label}</span>
       {mode === 'wrap' ? (
         <div className="flex flex-wrap gap-1.5 py-0.5">{children}</div>
       ) : (

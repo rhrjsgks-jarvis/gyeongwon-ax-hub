@@ -17,26 +17,26 @@ export default function ModulePage({
   return (
     <div className="max-w-3xl mx-auto">
       {/* 브레드크럼 */}
-      <div className="flex items-center gap-2 text-xs text-gray-400 mb-4">
-        <Link href="/" className="hover:text-gray-600 no-underline inline-flex items-center gap-1"><Icon name="home" size={13} /> 허브</Link>
+      <div className="flex items-center gap-2 text-xs text-[#9ca3af] mb-4">
+        <Link href="/" className="hover:text-[#5b6476] no-underline inline-flex items-center gap-1"><Icon name="home" size={13} /> 허브</Link>
         <span>›</span>
         <span style={{ color }}>{title}</span>
       </div>
 
       {/* 모듈 헤더 */}
       <div
-        className="rounded-2xl p-5 mb-5 text-white"
+        className="rounded-[14px] p-5 mb-5 text-white"
         style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)` }}
       >
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{icon}</span>
+          <span className="text-[27px]">{icon}</span>
           <div>
-            <h1 className="text-xl font-bold">{title}</h1>
-            <p className="text-sm opacity-80 mt-0.5">{desc}</p>
+            <h1 className="text-[22px] font-bold">{title}</h1>
+            <p className="text-[13.5px] opacity-80 mt-0.5">{desc}</p>
           </div>
         </div>
         {status === 'building' && (
-          <div className="mt-3 bg-white/20 rounded-xl px-3 py-2 text-xs">
+          <div className="mt-3 bg-white/20 rounded-[10px] px-3 py-2 text-xs">
             현재 구축 중입니다. 곧 사용 가능합니다.
           </div>
         )}
@@ -44,14 +44,14 @@ export default function ModulePage({
 
       {/* 콘텐츠 */}
       {children ?? (
-        <div className="bg-white rounded-2xl p-8 text-center border border-gray-100">
+        <div className="bg-white rounded-[14px] p-8 text-center border border-gray-100">
           <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
+            className="w-16 h-16 rounded-[14px] flex items-center justify-center text-[27px] mx-auto mb-4"
             style={{ background: bg }}
           >
             {icon}
           </div>
-          <p className="text-gray-400 text-sm">
+          <p className="text-[#9ca3af] text-[13.5px]">
             {status === 'building'
               ? '이 모듈은 현재 구축 중입니다.'
               : '콘텐츠를 이식 중입니다.'}

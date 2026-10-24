@@ -71,18 +71,18 @@ export default function FeedbackButton() {
           onClick={() => status === 'idle' && close()}
         >
           <div
-            className="bg-white rounded-t-2xl md:rounded-2xl w-full md:w-96 p-5 shadow-xl"
+            className="bg-white rounded-t-2xl md:rounded-[14px] w-full md:w-96 p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {status === 'sent' ? (
               <div className="text-center py-6">
                 <p className="mb-2 flex justify-center"><Icon name="check" size={30} style={{ color: '#059669' }} /></p>
-                <p className="text-sm font-bold text-gray-700">감사합니다! 담당자에게 전달되었습니다.</p>
+                <p className="text-[13.5px] font-bold text-[#374151]">감사합니다! 담당자에게 전달되었습니다.</p>
               </div>
             ) : (
               <>
-                <h3 className="font-bold text-sm text-gray-800 mb-1 flex items-center gap-1.5"><Icon name="chat" size={15} style={{ color: '#1428A0' }} /> 건의사항 보내기</h3>
-                <p className="text-xs text-gray-400 mb-3">
+                <h3 className="font-bold text-[13.5px] text-[#0b1220] mb-1 flex items-center gap-1.5"><Icon name="chat" size={15} style={{ color: '#1428A0' }} /> 건의사항 보내기</h3>
+                <p className="text-xs text-[#9ca3af] mb-3">
                   세일즈 코파일럿 사용 중 불편한 점이나 아이디어를 자유롭게 남겨주세요.
                 </p>
                 <textarea
@@ -92,14 +92,14 @@ export default function FeedbackButton() {
                   rows={4}
                   autoFocus
                   disabled={status === 'sending'}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 resize-none focus:outline-none focus:border-blue-400 disabled:opacity-60"
+                  className="w-full border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] mb-2 resize-none focus:outline-none focus:border-blue-400 disabled:opacity-60"
                 />
                 <input
                   value={contact}
                   onChange={(e) => setContact(e.target.value)}
                   placeholder="연락처 (선택, 회신이 필요하면)"
                   disabled={status === 'sending'}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-3 focus:outline-none focus:border-blue-400 disabled:opacity-60"
+                  className="w-full border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] mb-3 focus:outline-none focus:border-blue-400 disabled:opacity-60"
                 />
                 {status === 'error' && (
                   <p className="text-xs text-red-500 mb-3">
@@ -111,7 +111,7 @@ export default function FeedbackButton() {
                     type="button"
                     onClick={close}
                     disabled={status === 'sending'}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-500 border border-gray-200 disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-[10px] text-[13.5px] font-bold text-[#5b6476] border border-gray-200 disabled:opacity-50"
                   >
                     취소
                   </button>
@@ -119,7 +119,7 @@ export default function FeedbackButton() {
                     type="button"
                     onClick={submit}
                     disabled={!message.trim() || status === 'sending'}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-[10px] text-[13.5px] font-bold text-white disabled:opacity-50"
                     style={{ background: '#1428A0' }}
                   >
                     {status === 'sending' ? '전송 중…' : status === 'error' ? '다시 시도' : '보내기'}

@@ -57,10 +57,10 @@ function Form({ title, onUnlock }: { title: string; onUnlock: () => void }) {
   }
 
   return (
-    <div className="max-w-sm mx-auto mt-16 bg-white rounded-2xl shadow-sm p-6 text-center">
+    <div className="max-w-sm mx-auto mt-16 bg-white rounded-[14px] shadow-sm p-6 text-center">
       <p className="flex justify-center mb-3"><Icon name="lock" size={30} style={{ color: '#1428A0' }} /></p>
-      <h1 className="text-base font-bold text-gray-800 mb-1">{title}</h1>
-      <p className="text-xs text-gray-400 mb-5">
+      <h1 className="text-[15px] font-bold text-[#0b1220] mb-1">{title}</h1>
+      <p className="text-xs text-[#9ca3af] mb-5">
         아직 다듬는 중인 도구입니다. 값이 바뀌거나 화면이 달라질 수 있으니 고객에게 그대로 읽지 마세요.
       </p>
       <input
@@ -70,7 +70,7 @@ function Form({ title, onUnlock }: { title: string; onUnlock: () => void }) {
         onKeyDown={(e) => { if (e.key === 'Enter' && pw && !checking) submit() }}
         placeholder="비밀번호"
         autoFocus
-        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm mb-2 text-center focus:outline-none focus:border-blue-400"
+        className="w-full border border-gray-200 rounded-[10px] px-3 py-2.5 text-[13.5px] mb-2 text-center focus:outline-none focus:border-blue-400"
       />
       {error === 'wrong' && <p className="text-xs text-red-500 mb-2">비밀번호가 다릅니다.</p>}
       {error === 'locked' && <p className="text-xs text-red-500 mb-2">시도가 많습니다 — 10분 뒤 다시 시도해주세요.</p>}
@@ -78,7 +78,7 @@ function Form({ title, onUnlock }: { title: string; onUnlock: () => void }) {
         type="button"
         onClick={submit}
         disabled={!pw || checking}
-        className="w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+        className="w-full py-2.5 rounded-[10px] text-[13.5px] font-bold text-white disabled:opacity-50"
         style={{ background: '#1428A0' }}
       >
         {checking ? '확인 중…' : '들어가기'}

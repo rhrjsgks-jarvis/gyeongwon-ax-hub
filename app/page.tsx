@@ -346,7 +346,7 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
     <div className="module-card group">
       <div className="flex items-start justify-between mb-2 md:mb-3 gap-1">
         <div
-          className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center text-base md:text-xl shrink-0"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-[10px] md:rounded-[10px] flex items-center justify-center text-[15px] md:text-[22px] shrink-0"
           style={{ background: mod.bg, color: mod.color }}
         >
           <Icon name={mod.icon} size={20} className="md:hidden" />
@@ -363,19 +363,19 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
         `test-admin` 이 문자열로, 통합검색 색인이 카드 제목으로 들고 있다. 자르는 것은
         **화면에서만** 한다(사이드바도 같은 방식이다).
       */}
-      <h2 className="font-bold text-sm md:text-base mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
+      <h2 className="font-bold text-[13.5px] md:text-[15px] mb-1 group-hover:text-[#1428A0] transition-colors leading-snug">
         {mod.title.replace(/\s*\[.*$/, '')}
-        {mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-gray-300" />}
+        {mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-[#d1d5db]" />}
         {/\[(.+)\]/.test(mod.title) && (
-          <span className="block text-[11px] font-bold text-gray-400 mt-0.5">
+          <span className="block text-xs font-bold text-[#9ca3af] mt-0.5">
             {(mod.title.match(/\[(.+)\]/) || [])[1]}
           </span>
         )}
       </h2>
       {/* 옛 이름이 있는 모듈만 한 줄 더 — 없는 모듈은 이 줄이 아예 안 그려진다 */}
-      {mod.sub && <p className="text-[10px] md:text-[11px] text-gray-400 font-normal -mt-0.5 mb-1">{mod.sub}</p>}
-      <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
-      <p className="text-[10px] text-gray-300 font-normal">DB {mod.updated} 기준</p>
+      {mod.sub && <p className="text-xs md:text-xs text-[#9ca3af] font-normal -mt-0.5 mb-1">{mod.sub}</p>}
+      <p className="text-xs md:text-xs text-[#5b6476] leading-relaxed mb-2">{mod.desc}</p>
+      <p className="text-xs text-[#d1d5db] font-normal">DB {mod.updated} 기준</p>
     </div>
   )
 
@@ -442,17 +442,17 @@ function LinkListCard({
   const sortedStores = stores ? [...stores].sort((a, b) => a.name.localeCompare(b.name, 'ko')) : []
 
   return (
-    <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
-      <h3 className="font-bold text-sm text-gray-700 mb-0.5 flex items-center gap-1.5"><Icon name={icon} size={16} style={{ color: '#1428A0' }} /> {title}</h3>
-      <p className="text-[10px] text-gray-300 font-normal mb-3">{subtitle}</p>
+    <div id={id} className="bg-white rounded-[14px] p-4 border border-gray-100 scroll-mt-20">
+      <h3 className="font-bold text-[13.5px] text-[#374151] mb-0.5 flex items-center gap-1.5"><Icon name={icon} size={16} style={{ color: '#1428A0' }} /> {title}</h3>
+      <p className="text-xs text-[#d1d5db] font-normal mb-3">{subtitle}</p>
       {stores && stores.length > 0 && (
         <div className="mb-3 pb-3 border-b border-gray-100">
-          <p className="text-[10px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="store" size={12} /> 매장별로 확인하기</p>
+          <p className="text-xs font-bold text-[#9ca3af] mb-1.5 flex items-center gap-1"><Icon name="store" size={12} /> 매장별로 확인하기</p>
           <select
             value={storeCode}
             onChange={(e) => setStoreCode(e.target.value)}
-            className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 ${
-              storeCode ? 'border-gray-200 text-gray-700' : 'border-blue-300 text-blue-700 font-bold'
+            className={`w-full border rounded-[10px] px-3 py-2.5 text-[13.5px] focus:outline-none focus:border-blue-400 ${
+              storeCode ? 'border-gray-200 text-[#374151]' : 'border-blue-300 text-blue-700 font-bold'
             }`}
           >
             <option value="">지점명 선택하기</option>
@@ -478,42 +478,42 @@ function LinkListCard({
                한 번 연 것이 두 건이 된다(실측: 포스터가 그랬다). 외부 링크만 여기서 쌓는다. */
             onClick={() => !l.internal && logEvent(l.log || logKey, 'page_view')}
           >
-            <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
+            <div className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 hover:bg-gray-50 transition-colors">
               <Icon name={l.icon} size={17} className="flex-shrink-0" style={{ color: '#1428A0' }} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-800">{l.label}</p>
-                <p className="text-xs text-gray-400">{l.desc}</p>
+                <p className="text-[13.5px] font-bold text-[#0b1220]">{l.label}</p>
+                <p className="text-xs text-[#9ca3af]">{l.desc}</p>
               </div>
-              <Icon name="external" size={12} className="text-gray-300" />
+              <Icon name="external" size={12} className="text-[#d1d5db]" />
             </div>
           </a>
         ))}
         {!storeReady && (
-          <p className="text-[11px] text-blue-600 px-3 pt-1">
+          <p className="text-xs text-blue-600 px-3 pt-1">
             위에서 지점명을 먼저 선택하면 해당 매장 정보로 연결됩니다.
           </p>
         )}
       </div>
       {usage && usage.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-[10px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="book" size={12} /> 사용 방법</p>
+          <p className="text-xs font-bold text-[#9ca3af] mb-1.5 flex items-center gap-1"><Icon name="book" size={12} /> 사용 방법</p>
           <div className="flex flex-col gap-1">
             {usage.map((u) => (
               <div key={u.step} className="flex items-start gap-2">
                 <span
-                  className="shrink-0 mt-0.5 text-[9px] font-bold text-white rounded-full w-4 h-4 flex items-center justify-center"
+                  className="shrink-0 mt-0.5 text-xs font-bold text-white rounded-full w-4 h-4 flex items-center justify-center"
                   style={{ background: '#1428A0' }}
                 >
                   {u.step}
                 </span>
-                <p className="text-xs text-gray-500 leading-relaxed">{u.text}</p>
+                <p className="text-xs text-[#5b6476] leading-relaxed">{u.text}</p>
               </div>
             ))}
           </div>
         </div>
       )}
       {note && (
-        <div className="mt-3 rounded-xl px-3 py-2.5" style={{ background: '#EFF6FF' }}>
+        <div className="mt-3 rounded-[10px] px-3 py-2.5" style={{ background: '#EFF6FF' }}>
           <p className="text-xs text-blue-700 leading-relaxed flex items-start gap-1.5"><Icon name="bulb" size={13} className="flex-shrink-0 mt-0.5" /> <span>{note}</span></p>
         </div>
       )}
@@ -534,9 +534,9 @@ function AccordionHeader({
       onClick={onClick}
       className="w-full flex items-center justify-between mb-2 px-1 text-left"
     >
-      <h3 className="font-bold text-sm text-gray-700">{title}</h3>
+      <h3 className="font-bold text-[13.5px] text-[#374151]">{title}</h3>
       <span
-        className="text-[10px] text-gray-400 transition-transform md:hidden"
+        className="text-xs text-[#9ca3af] transition-transform md:hidden"
         style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
       >
         ▼
@@ -637,8 +637,8 @@ export default function Home() {
     <div className="max-w-3xl xl:max-w-5xl 2xl:max-w-6xl mx-auto">
       {/* 헤더 */}
       <div className="mb-4">
-        <p className="text-xs text-gray-400 mb-1 min-h-4">{todayStr}</p>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-baseline gap-2">
+        <p className="text-xs text-[#9ca3af] mb-1 min-h-4">{todayStr}</p>
+        <h1 className="text-[22px] font-bold text-[#0b1220] flex items-baseline gap-2">
           세일즈 코파일럿
           {/*
             버전 — 매장 기기는 서비스워커가 캐시를 들고 있어 "배포했는데 화면이 그대로"가
@@ -646,13 +646,13 @@ export default function Home() {
             이름을 이겨서는 안 되므로 작고 흐리게 둔다(심플 이즈 베스트).
           */}
           <span
-            className="text-[11px] font-bold text-gray-400 tracking-wide"
+            className="text-xs font-bold text-[#9ca3af] tracking-wide"
             title={`화면에 뜬 판이 최신인지 확인용 — 서비스워커 캐시 ${APP_VERSION}`}
           >
             {versionLabel()}
           </span>
         </h1>
-        <p className="text-sm text-gray-500 mt-1">매장 상담의 모든 답을 한 곳에</p>
+        <p className="text-[13.5px] text-[#5b6476] mt-1">매장 상담의 모든 답을 한 곳에</p>
       </div>
 
       {/* 통합검색 — 제품·카테고리·기능을 한 번에 찾아 해당 모듈로 연결한다 */}
@@ -662,7 +662,7 @@ export default function Home() {
           onChange={setQuery}
           onSubmit={(v) => router.push(`/search?q=${encodeURIComponent(v)}`)}
           placeholder="통합검색 — 제품명·모델코드·기능 (예: 무풍, 김치냉장고, RM90H91B1W)"
-          inputClassName="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-400"
+          inputClassName="flex-1 min-w-0 border border-gray-200 rounded-[10px] px-4 py-3 text-[13.5px] bg-white focus:outline-none focus:border-blue-400"
         />
       </div>
 
@@ -721,7 +721,7 @@ export default function Home() {
       </div>
 
       {/* 상황별 도구 추천 */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+      <div className="bg-white rounded-[14px] p-4 border border-gray-100 mb-4">
         <AccordionHeader
           title="상황별 도구 추천"
           isOpen={!!openSections['tips']}
@@ -730,11 +730,11 @@ export default function Home() {
         <div className={`${openSections['tips'] ? 'flex' : 'hidden'} md:flex flex-col gap-1`}>
           {TIPS.map((tip, i) => (
             <Link key={i} href={tip.href} className="no-underline">
-              <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
+              <div className="flex items-center gap-3 rounded-[10px] px-3 py-2.5 hover:bg-gray-50 transition-colors">
                 <Icon name={tip.icon} size={16} className="flex-shrink-0" style={{ color: '#1428A0' }} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-400">{tip.situation}</p>
-                  <p className="text-sm font-bold" style={{ color: '#1428A0' }}>→ {tip.tool}</p>
+                  <p className="text-xs text-[#9ca3af]">{tip.situation}</p>
+                  <p className="text-[13.5px] font-bold" style={{ color: '#1428A0' }}>→ {tip.tool}</p>
                 </div>
               </div>
             </Link>
@@ -743,7 +743,7 @@ export default function Home() {
       </div>
 
       {/* 팀 공유 */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+      <div className="bg-white rounded-[14px] p-4 border border-gray-100 mb-4">
         <AccordionHeader
           title="팀에 공유하기"
           isOpen={!!openSections['qr']}
@@ -752,14 +752,14 @@ export default function Home() {
         <div className={`${openSections['qr'] ? 'flex' : 'hidden'} md:flex gap-4 items-center`}>
           <QRCode
             text={HUB_URL}
-            className="w-[88px] h-[88px] rounded-xl border border-gray-100 shrink-0"
+            className="w-[88px] h-[88px] rounded-[10px] border border-gray-100 shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-400 mb-0.5">경원영업팀 세일즈 코파일럿</p>
-            <p className="text-xs font-bold text-gray-700 mb-3 truncate">{HUB_URL.replace('https://', '')}</p>
+            <p className="text-xs text-[#9ca3af] mb-0.5">경원영업팀 세일즈 코파일럿</p>
+            <p className="text-xs font-bold text-[#374151] mb-3 truncate">{HUB_URL.replace('https://', '')}</p>
             <button
               onClick={handleCopy}
-              className="w-full py-2 rounded-xl text-sm font-bold text-white transition-colors"
+              className="w-full py-2 rounded-[10px] text-[13.5px] font-bold text-white transition-colors"
               style={{ background: copied ? '#059669' : '#1428A0' }}
             >
               {copied ? <span className="inline-flex items-center gap-1"><Icon name="check" size={14} /> 복사됨!</span> : <span className="inline-flex items-center gap-1"><Icon name="link" size={14} /> 링크 복사</span>}
@@ -769,7 +769,7 @@ export default function Home() {
       </div>
 
       {/* 빠른 시작 가이드 */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 mb-4">
+      <div className="bg-white rounded-[14px] p-4 border border-gray-100 mb-4">
         <AccordionHeader
           title="처음이라면 — 4가지 도구"
           isOpen={!!openSections['guide']}
@@ -779,12 +779,12 @@ export default function Home() {
           {GUIDE.map((g) => (
             <div key={g.step} className="flex items-start gap-3">
               <span
-                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white"
                 style={{ background: '#1428A0' }}
               >
                 {g.step}
               </span>
-              <p className="text-xs text-gray-600 leading-relaxed pt-0.5">{g.text}</p>
+              <p className="text-xs text-[#5b6476] leading-relaxed pt-0.5">{g.text}</p>
             </div>
           ))}
         </div>

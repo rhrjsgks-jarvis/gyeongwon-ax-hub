@@ -44,20 +44,20 @@ body {
 /* 스크롤바 */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 6px; }
 
 @layer components {
   /* 모바일은 2열 그리드라 카드 폭이 좁다 — 여백을 줄이고 md 이상에서 기존 크기로 복귀 */
   .module-card {
-    @apply bg-white rounded-2xl p-3.5 md:p-5 h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer border border-gray-100;
+    @apply bg-white rounded-[14px] p-3.5 md:p-5 h-full transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer border border-gray-100;
   }
 
   .badge {
-    @apply inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold;
+    @apply inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-xs md:text-xs font-bold;
   }
 
   .btn-primary {
-    @apply bg-[#1428A0] text-white px-4 py-2 rounded-xl font-bold text-sm
+    @apply bg-[#1428A0] text-white px-4 py-2 rounded-[10px] font-bold text-[13.5px]
            hover:bg-[#0D1B7A] transition-colors duration-150;
   }
 }

@@ -42,12 +42,12 @@ const MODULE_META: Record<string, { label: string; icon: IconName; color: string
   compare: { label: '타사비교',         icon: 'compare',  color: '#EA580C' },
   care:    { label: 'AI구독 케어',         icon: 'care',     color: '#059669' },
   as:      { label: 'AS 관련 정보',      icon: 'warranty', color: '#0D9488' },
-  place:   { label: '배치 시뮬레이터',   icon: 'place',    color: '#7C3AED' },
+  place:   { label: '배치 시뮬레이터',   icon: 'place',    color: '#1428A0' },
   /* 색인에는 41건이 있는데 이 표에 없어 **결과가 통째로 안 그려졌다**(2026-08-30 전수조사).
      조건 칩은 색인 전체로 세므로 "N건"인데 아래는 "없습니다"가 되는 조합이었다.
      새 모듈을 색인에 넣으면 **여기(META·ORDER)도 함께** — 한쪽만 고치면 조용히 버려진다. */
   installcost: { label: '설치비용', icon: 'bolt', color: '#B45309' },
-  hub:     { label: '허브 기능',        icon: 'home',     color: '#475569' },
+  hub:     { label: '허브 기능',        icon: 'home',     color: '#5b6476' },
 }
 /*
  * **'허브 기능'(앱 자체를 여는 링크)은 맨 뒤다.**
@@ -70,7 +70,7 @@ const MAX_PER_MODULE = 12
 function SpecDetail({ e, detail }: { e: Entry; detail: Detail | null }) {
   if (!detail) {
     return (
-      <div className="mx-2.5 mb-2 rounded-xl border border-blue-100 px-3 py-4 text-center text-xs text-gray-400" style={{ background: '#F8FAFF' }}>
+      <div className="mx-2.5 mb-2 rounded-[10px] border border-blue-100 px-3 py-4 text-center text-xs text-[#9ca3af]" style={{ background: '#F8FAFF' }}>
         상세 스펙 불러오는 중…
       </div>
     )
@@ -80,14 +80,14 @@ function SpecDetail({ e, detail }: { e: Entry; detail: Detail | null }) {
 
 function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
   return (
-    <div className="mx-2.5 mb-2 rounded-xl border border-blue-100 overflow-hidden" style={{ background: '#F8FAFF' }}>
+    <div className="mx-2.5 mb-2 rounded-[10px] border border-blue-100 overflow-hidden" style={{ background: '#F8FAFF' }}>
       <div className="px-3 py-2.5 border-b border-blue-100 flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] text-gray-400">{e.sub}</p>
-          <p className="text-base font-bold text-gray-800 break-all">
+          <p className="text-xs text-[#9ca3af]">{e.sub}</p>
+          <p className="text-[15px] font-bold text-[#0b1220] break-all">
             {e.title}
             {e.catOk && (
-              <span className="ml-2 align-middle text-[10px] font-bold px-1.5 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-700">
+              <span className="ml-2 align-middle text-xs font-bold px-1.5 py-0.5 rounded-md border border-emerald-300 bg-emerald-50 text-emerald-700">
                 카탈로그 동일모델
               </span>
             )}
@@ -95,14 +95,14 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
         </div>
       </div>
 
-      {d.note && <p className="px-3 pt-2 text-[11px] text-amber-700 flex items-start gap-1"><Icon name="warn" size={12} className="flex-shrink-0 mt-0.5" /> <span>{d.note}</span></p>}
+      {d.note && <p className="px-3 pt-2 text-xs text-amber-700 flex items-start gap-1"><Icon name="warn" size={12} className="flex-shrink-0 mt-0.5" /> <span>{d.note}</span></p>}
 
-      <table className="w-full text-[13px]">
+      <table className="w-full text-[13.5px]">
         <tbody>
           {(d.spec || []).map(([k, v], i) => (
             <tr key={i} className="border-b border-blue-50 last:border-0">
-              <th className="text-left align-top font-bold text-gray-500 px-3 py-1.5 w-[38%] break-keep">{k}</th>
-              <td className="text-gray-800 px-3 py-1.5 break-all">{v}</td>
+              <th className="text-left align-top font-bold text-[#5b6476] px-3 py-1.5 w-[38%] break-keep">{k}</th>
+              <td className="text-[#0b1220] px-3 py-1.5 break-all">{v}</td>
             </tr>
           ))}
         </tbody>
@@ -110,20 +110,20 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
 
       {!!(d.on && d.on.length) && (
         <div className="px-3 py-2.5 border-t border-blue-100">
-          <p className="text-[11px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="check" size={12} /> 지원 기능</p>
+          <p className="text-xs font-bold text-[#9ca3af] mb-1.5 flex items-center gap-1"><Icon name="check" size={12} /> 지원 기능</p>
           <div className="flex flex-wrap gap-1">
             {d.on.map((f, i) => (
-              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-white border border-blue-200 text-blue-700">{f}</span>
+              <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-white border border-blue-200 text-blue-700">{f}</span>
             ))}
           </div>
         </div>
       )}
       {!!(d.off && d.off.length) && (
         <div className="px-3 pb-2.5">
-          <p className="text-[11px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="x" size={12} /> 미지원</p>
+          <p className="text-xs font-bold text-[#9ca3af] mb-1.5 flex items-center gap-1"><Icon name="x" size={12} /> 미지원</p>
           <div className="flex flex-wrap gap-1">
             {d.off.map((f, i) => (
-              <span key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">{f}</span>
+              <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-[#9ca3af]">{f}</span>
             ))}
           </div>
         </div>
@@ -131,10 +131,10 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
 
       {!!(d.usp && d.usp.length) && (
         <div className="px-3 py-2.5 border-t border-blue-100">
-          <p className="text-[11px] font-bold text-amber-600 mb-1.5 flex items-center gap-1"><Icon name="star" size={12} /> 핵심 키워드 · USP</p>
+          <p className="text-xs font-bold text-amber-600 mb-1.5 flex items-center gap-1"><Icon name="star" size={12} /> 핵심 키워드 · USP</p>
           <div className="flex flex-wrap gap-1">
             {d.usp.map((f, i) => (
-              <span key={i} className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
+              <span key={i} className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
             ))}
           </div>
         </div>
@@ -142,7 +142,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
 
       <div className="px-3 pb-3">
         <Link href={e.href} className="no-underline">
-          <span className="inline-block text-[12px] font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1428A0' }}>
+          <span className="inline-block text-xs font-bold px-3 py-1.5 rounded-[10px] text-white" style={{ background: '#1428A0' }}>
             모델파인더에서 열기 →
           </span>
         </Link>
@@ -276,10 +276,10 @@ function SearchResults() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-        <Link href="/" className="hover:text-gray-600 no-underline inline-flex items-center gap-1"><Icon name="home" size={13} /> 허브</Link>
+      <div className="flex items-center gap-2 text-xs text-[#9ca3af] mb-3">
+        <Link href="/" className="hover:text-[#5b6476] no-underline inline-flex items-center gap-1"><Icon name="home" size={13} /> 허브</Link>
         <span>›</span>
-        <span className="text-gray-600">통합검색</span>
+        <span className="text-[#5b6476]">통합검색</span>
       </div>
 
       <div className="flex mb-2">
@@ -289,17 +289,17 @@ function SearchResults() {
           onSubmit={(v) => router.push(`/search?q=${encodeURIComponent(v)}`)}
           placeholder="예: 무풍 에어컨 1등급 / 식세기 이전설치 / 냉장고 키친핏"
           autoFocus
-          inputClassName="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400"
+          inputClassName="flex-1 min-w-0 border border-gray-200 rounded-[10px] px-4 py-3 text-[13.5px] focus:outline-none focus:border-blue-400"
         />
       </div>
-      <p className="text-[11px] text-gray-400 mb-5 px-1">
-        조건을 <b className="text-gray-500">띄어쓰기로 여러 개</b> 넣으면 모두 맞는 것만 남습니다. 줄여 쓴 말도 알아듣습니다(식세기·김냉·로청·안방).
+      <p className="text-xs text-[#9ca3af] mb-5 px-1">
+        조건을 <b className="text-[#5b6476]">띄어쓰기로 여러 개</b> 넣으면 모두 맞는 것만 남습니다. 줄여 쓴 말도 알아듣습니다(식세기·김냉·로청·안방).
       </p>
 
       {/* 자연어로 물으면 '몇'·'수원은' 같은 말이 섞인다. 무엇을 뺐는지 밝힌다 */}
       {q && found && (ignoredWords(q).length > 0 || (found.dropped.length > 0 && total > 0)) && (
-        <p className="text-[11px] text-gray-400 mb-2 px-1">
-          <span className="text-gray-500">
+        <p className="text-xs text-[#9ca3af] mb-2 px-1">
+          <span className="text-[#5b6476]">
             {[...ignoredWords(q), ...(total > 0 ? found.dropped : [])].join(' · ')}
           </span>
           {' '}은(는) 앱 안에 없는 말이라 빼고 찾았습니다.
@@ -308,7 +308,7 @@ function SearchResults() {
 
       {/* 함께 걸면 0건이라 하나를 빼고 찾은 경우 — 결과보다 먼저, 눈에 띄게 밝힌다 */}
       {q && found && found.soft.length > 0 && total > 0 && (
-        <p className="text-[11px] mb-2 px-1 text-amber-700">
+        <p className="text-xs mb-2 px-1 text-amber-700">
           <b>{found.soft.join(' · ')}</b>
           {' '}까지 함께 맞는 자료는 없어, 그 조건은 <b>빼고</b> 찾았습니다.
         </p>
@@ -320,52 +320,52 @@ function SearchResults() {
           {found.per.map((p) => (
             <span
               key={p.c.raw}
-              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
+              className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
                 p.n ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-red-50 border-red-200 text-red-600'
               }`}
             >
               {p.c.raw} {p.n ? `${p.n}건` : '0건'}
             </span>
           ))}
-          <span className="text-[11px] text-gray-400 px-1 py-1">→ 모두 만족 <b className="text-gray-700">{total}건</b></span>
+          <span className="text-xs text-[#9ca3af] px-1 py-1">→ 모두 만족 <b className="text-[#374151]">{total}건</b></span>
         </div>
       )}
 
       {!q ? (
-        <p className="text-sm text-gray-400 text-center py-10">검색어를 입력해주세요.</p>
+        <p className="text-[13.5px] text-[#9ca3af] text-center py-10">검색어를 입력해주세요.</p>
       ) : !grouped ? (
-        <p className="text-sm text-gray-400 text-center py-10">검색 중…</p>
+        <p className="text-[13.5px] text-[#9ca3af] text-center py-10">검색 중…</p>
       ) : total === 0 ? (
         <div className="text-center py-10">
-          <p className="text-sm text-gray-500 mb-1">&ldquo;{q}&rdquo; 검색 결과가 없습니다.</p>
+          <p className="text-[13.5px] text-[#5b6476] mb-1">&ldquo;{q}&rdquo; 검색 결과가 없습니다.</p>
           {found && found.per.every((p) => !p.n) ? (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[#9ca3af]">
               앱 안에 없는 말입니다 —{' '}
               <b className="text-red-500">{found.per.map((p) => p.c.raw).join(' · ')}</b>
             </p>
           ) : found && found.conds.length > 2 ? (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[#9ca3af]">
               조건이 <b>{found.conds.length}가지</b>입니다 — 하나만 빼서는 맞는 자료가 없습니다.
               위 칩에서 건수가 적은 조건을 빼고 다시 물어보세요.
             </p>
           ) : (
-            <p className="text-xs text-gray-400">제품명·모델코드·카테고리·기능명으로 검색해보세요.</p>
+            <p className="text-xs text-[#9ca3af]">제품명·모델코드·카테고리·기능명으로 검색해보세요.</p>
           )}
         </div>
       ) : (
         <>
-          <p className="text-xs text-gray-400 mb-3">
-            <b className="text-gray-700">{q}</b> · 총 {total}건
+          <p className="text-xs text-[#9ca3af] mb-3">
+            <b className="text-[#374151]">{q}</b> · 총 {total}건
           </p>
           <div className="flex flex-col gap-4">
             {grouped.map((g) => {
               const meta = MODULE_META[g.m]
               const shown = g.items.slice(0, MAX_PER_MODULE)
               return (
-                <div key={g.m} className="bg-white rounded-2xl p-4 border border-gray-100">
-                  <h2 className="font-bold text-sm mb-2.5" style={{ color: meta.color }}>
+                <div key={g.m} className="bg-white rounded-[14px] p-4 border border-gray-100">
+                  <h2 className="font-bold text-[13.5px] mb-2.5" style={{ color: meta.color }}>
                     <Icon name={meta.icon} size={13} className="inline-block align-[-2px] mr-1" /> {meta.label}
-                    <span className="text-gray-300 font-normal ml-1.5">{g.items.length}건</span>
+                    <span className="text-[#d1d5db] font-normal ml-1.5">{g.items.length}건</span>
                   </h2>
                   <div className="flex flex-col gap-0.5">
                     {shown.map((e, i) => {
@@ -382,12 +382,12 @@ function SearchResults() {
                               onClick={() => { loadDetails(); setOpenKey(open ? null : key) }}
                               className="w-full text-left"
                             >
-                              <div className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors ${open ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                              <div className={`flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 transition-colors ${open ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-bold text-gray-800 truncate">{e.title}</p>
-                                  <p className="text-[11px] text-gray-400 truncate">{e.sub}</p>
+                                  <p className="text-[13.5px] font-bold text-[#0b1220] truncate">{e.title}</p>
+                                  <p className="text-xs text-[#9ca3af] truncate">{e.sub}</p>
                                 </div>
-                                <span className="text-gray-400 text-[11px] shrink-0">
+                                <span className="text-[#9ca3af] text-xs shrink-0">
                                   {open ? '닫기 ▲' : '상세 ▼'}
                                 </span>
                               </div>
@@ -397,14 +397,14 @@ function SearchResults() {
                         )
                       }
                       const body = (
-                        <div className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 hover:bg-gray-50 transition-colors">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-gray-800 truncate">
-                              {e.title}{e.ext && <Icon name="external" size={11} className="inline-block align-[-1px] ml-1 text-gray-300" />}
+                            <p className="text-[13.5px] font-bold text-[#0b1220] truncate">
+                              {e.title}{e.ext && <Icon name="external" size={11} className="inline-block align-[-1px] ml-1 text-[#d1d5db]" />}
                             </p>
-                            <p className="text-[11px] text-gray-400 truncate">{e.sub}</p>
+                            <p className="text-xs text-[#9ca3af] truncate">{e.sub}</p>
                           </div>
-                          <span className="text-gray-300 text-xs shrink-0">›</span>
+                          <span className="text-[#d1d5db] text-xs shrink-0">›</span>
                         </div>
                       )
                       return e.ext ? (
@@ -415,7 +415,7 @@ function SearchResults() {
                     })}
                   </div>
                   {g.items.length > shown.length && (
-                    <p className="text-[11px] text-gray-400 px-2.5 pt-1.5">
+                    <p className="text-xs text-[#9ca3af] px-2.5 pt-1.5">
                       외 {g.items.length - shown.length}건 — {meta.label}에서 더 보기
                     </p>
                   )}
@@ -431,7 +431,7 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<p className="text-sm text-gray-400 text-center py-10">로딩 중…</p>}>
+    <Suspense fallback={<p className="text-[13.5px] text-[#9ca3af] text-center py-10">로딩 중…</p>}>
       <SearchResults />
     </Suspense>
   )

@@ -43,7 +43,7 @@ export default function HeaderSearch({ wide }: { wide: boolean }) {
         onSubmit={(v) => { router.push(`/search?q=${encodeURIComponent(v)}`); setQ('') }}
         placeholder="통합검색 — 제품·모델코드·AS·설치·요금 무엇이든"
         onDark
-        inputClassName="flex-1 min-w-0 rounded-lg px-3 py-1.5 text-sm bg-white text-gray-900 border-0 focus:outline-none"
+        inputClassName="flex-1 min-w-0 rounded-[10px] px-3 py-1.5 text-[13.5px] bg-white text-[#0b1220] border-0 focus:outline-none"
       />
     </div>
   )

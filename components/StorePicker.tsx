@@ -103,18 +103,18 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
         data-form-type="other"
         placeholder="지점명 or 점코드를 입력해주세요"
         aria-label="점코드 또는 지점명"
-        className="w-full rounded-xl border px-3 py-3 text-[15px] outline-none"
+        className="w-full rounded-[10px] border px-3 py-3 text-[15px] outline-none"
         style={{
           borderColor: err ? '#fca5a5' : '#e5e7eb',
           background: err ? '#fff5f5' : '#fafbfc',
         }}
       />
-      {err && <p className="mt-2 text-[12px] text-red-500">{err}</p>}
+      {err && <p className="mt-2 text-xs text-red-500">{err}</p>}
       <button
         type="button"
         onClick={submit}
         disabled={!q.trim()}
-        className="mt-3 w-full rounded-xl py-3 text-[15px] font-bold text-white disabled:opacity-40"
+        className="mt-3 w-full rounded-[10px] py-3 text-[15px] font-bold text-white disabled:opacity-40"
         style={{ background: '#1428A0' }}
       >
         확인
@@ -142,7 +142,7 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 mb-5" style={{ color: '#1428A0' }}>
             <SamsungWordmark height={15} />
             <span
-              className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+              className="text-xs font-bold px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(20,40,160,.08)', color: '#1428A0' }}
             >
               세일즈 코파일럿
@@ -154,10 +154,10 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
             "어떤 앱인가"이지 "무엇을 넣어야 하는가"가 아니다.
             앱 이름·로고·메뉴만 없고 물음과 이유는 그대로다.
           */}
-          <h2 className="text-lg font-bold" style={{ color: '#1428A0' }}>
+          <h2 className="text-[17px] font-bold" style={{ color: '#1428A0' }}>
             어느 매장인가요?
           </h2>
-          <p className="mt-1.5 mb-4 text-xs leading-relaxed text-gray-500">
+          <p className="mt-1.5 mb-4 text-xs leading-relaxed text-[#5b6476]">
             매장별 사용 현황을 모으는 데 씁니다.
             <br />점코드 또는 지점명을 입력해야 시작할 수 있습니다.
           </p>
@@ -186,17 +186,17 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
         style={{ borderRadius: '18px 18px 0 0' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-bold mb-3" style={{ color: '#1428A0' }}>지점 바꾸기</h2>
+        <h2 className="text-[15px] font-bold mb-3" style={{ color: '#1428A0' }}>지점 바꾸기</h2>
         {field}
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="mt-2 w-full text-[13px] font-bold text-gray-400 py-2"
+          className="mt-2 w-full text-[13.5px] font-bold text-[#9ca3af] py-2"
         >
           닫기
         </button>
         {code && (
-          <p className="mt-2 text-[11px] text-center text-gray-400">
+          <p className="mt-2 text-xs text-center text-[#9ca3af]">
             지금 {isTestStore(code) ? '경원영업팀 (로그 미기록)' : `${code} 로 접속 중`}
           </p>
         )}
