@@ -18,7 +18,7 @@ const APPS = [
   ['install', 'public/install-app.html', /html\.ax-navc main\{grid-template-columns:minmax\(0,1fr\)\}/],
   ['finder', 'public/finder-app.html', /html\.ax-navc \.wrap\{grid-template-columns:minmax\(0,1fr\)\}/],
   ['compare', 'public/compare-app.html', /html\.ax-navc #tab-db main\{grid-template-columns:minmax\(0,1fr\)\}/],
-  ['as', 'public/as-app.html', /html\.ax-navc #asPane,html\.ax-navc #feePane,html\.ax-navc #cpPane\{grid-template-columns:minmax\(0,1fr\)\}/],
+  ['as', 'public/as-app.html', /html\.ax-navc \.wrap\{grid-template-columns:minmax\(0,1fr\)\}/],
 ];
 const nav = read('lib/navCollapse.ts');
 for (const [name, file, layout] of APPS) {

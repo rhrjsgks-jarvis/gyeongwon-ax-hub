@@ -1701,10 +1701,13 @@ pass('상황실·업무·운영 골든 5건');
   else pass('단계 메뉴 — 태블릿 220px 메뉴 + 오른쪽 내용');
   if (/#cats,#feeCats\{position:sticky/.test(tblk) || /content:'② 왼쪽에서/.test(html)) fail('단계 메뉴 — 옛 왼쪽 칸 격자가 되살아났다');
   else pass('단계 메뉴 — 옛 왼쪽 칸 격자 없음');
-  for (const id of ['asMenu']) if (!html.includes(`id="${id}"`)) fail(`단계 메뉴 — #${id} 없음`);
-  /* 2026-10-24 사이드바로 바뀌었다 — 분류는 그 자리에서 펼치고(뒤로가기 단추·단계 밀기 없음), 서랍·경로는 test-navc.mjs */
-  for (const fn of ['function dmHtml(', 'function feeMenuHtml(', 'function feeCrumb(', 'function asMenuClick(', 'feeView = feeView === k', 'cpMenu = cpMenu === k'])
-    if (!html.includes(fn)) fail(`단계 메뉴 — ${fn} 없음`);
+  /* 2026-10-24 사장님 A안 — 위쪽 탭 5개가 사이드바 맨 위 단계가 됐다(탭마다 서던 메뉴·탭 줄은 태블릿에서 없앴다).
+     서랍·경로 배선은 test-navc.mjs */
+  if (!html.includes('id="asNav"')) fail('사이드바 — #asNav 없음');
+  for (const fn of ['function renderNav(', 'function renderCrumb(', 'function navClick(', "['center', 'place', 'AS센터 찾기']", "['contact', 'phone', '연락처·협력사']"])
+    if (!html.includes(fn)) fail(`사이드바 — ${fn} 없음`);
+  if (!/\.mode-tabs\{display:none!important\}/.test(tblk)) fail('사이드바 — 태블릿에서 위쪽 탭 줄이 남아 있다');
+  if (/id="(asMenu|feeMenu)"/.test(html)) fail('사이드바 — 탭마다 따로 서던 메뉴가 되살아났다');
   if (!/@media \(max-width:719px\)\{\.dmenu\{display:none\}\}/.test(html)) fail('단계 메뉴 — 폰에서 감추는 규칙이 없다');
   else pass('사이드바 — 분류는 그 자리에서 펼침 · 경로 · 폰은 그대로');
 }

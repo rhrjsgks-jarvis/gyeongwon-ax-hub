@@ -317,20 +317,19 @@
   .wrap{padding:18px 20px 60px}
   .wrap,.topbar-in,.sbar-in{max-width:1180px!important}
   .sub{padding-right:0}
-  /* 단계 메뉴(2026-10-23 사장님 승인 시안 — 설치환경과 같은 규격) — 왼쪽 220px 메뉴 · 오른쪽 내용 */
-  #asPane,#feePane,#cpPane{grid-template-columns:220px minmax(0,1fr);gap:16px;align-items:start}
-  #asPane{display:grid}
-  #feePane:not([style*="none"]),#cpPane:not([style*="none"]){display:grid}
-  #asPane>.sub,#feePane>.sub,#feePane>.src,#cpPane>.sub,#cpPane>.src{grid-column:1/-1;margin-bottom:0}
-  #asPane>#cats,#feeSeg,#feeCats,#cpViews{display:none!important}
-  #asPane>.dmenu,#feePane>.dmenu,#cpPane>.dmenu{grid-column:1;grid-row:2/span 2;position:sticky;top:64px;margin:0;
-    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:calc(100vh - 84px);overflow:hidden;display:block;--dm-h:calc(100vh - 100px)}
-  #asPane>#body,#feePane>#feeBody,#cpPane>#feeBody{grid-column:2;grid-row:3;min-width:0}
-  #asPane>.crumb,#feePane>.crumb,#cpPane>.crumb{grid-column:2;grid-row:2;margin:0}
+  /* 사이드바 하나(2026-10-24 사장님 A안) — 위쪽 탭 5개가 사이드바 첫 줄 다섯이 된다. 왼쪽 220px 메뉴 · 오른쪽 내용.
+     탭마다 따로 서던 메뉴(AS기간 · 수리비 · 케어플러스)와 위쪽 탭 줄(56px)을 없앤다. 폰은 탭 그대로 */
+  .mode-tabs{display:none!important}
+  .wrap{display:grid;grid-template-columns:220px minmax(0,1fr);column-gap:16px;align-items:start}
+  .wrap>*{grid-column:2;min-width:0}
+  .wrap>#asNav{grid-column:1;grid-row:1/span 9;position:sticky;top:12px;margin:0;display:block;
+    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:calc(100vh - 24px);overflow:hidden;--dm-h:calc(100vh - 40px)}
+  #asPane>#cats,#feeSeg,#feeCats,#cpViews,#svcchips{display:none!important}
+  #asPane>.sub,#feePane>.sub,#cpPane>.sub{margin-bottom:10px}
+  .wrap>.crumb{margin:0 0 10px}
   /* ☰ 로 접힘(2026-10-24 사장님 승인 시안) — 메뉴는 서랍(share-kit.js AxNav), 내용이 폭을 다 쓴다 */
-  html.ax-navc #asPane,html.ax-navc #feePane,html.ax-navc #cpPane{grid-template-columns:minmax(0,1fr)}
-  html.ax-navc #asPane>#body,html.ax-navc #feePane>#feeBody,html.ax-navc #cpPane>#feeBody,
-  html.ax-navc #asPane>.crumb,html.ax-navc #feePane>.crumb,html.ax-navc #cpPane>.crumb{grid-column:1}
+  html.ax-navc .wrap{grid-template-columns:minmax(0,1fr)}
+  html.ax-navc .wrap>*{grid-column:1}
   /* 센터 · 연락처 팝업 */
   .pop-dim{position:fixed;inset:0;background:rgba(11,18,32,.42);z-index:90}
   body.svc-pop #svcbody:not(:empty){position:fixed;z-index:91;left:50%;top:50%;transform:translate(-50%,-50%);
@@ -371,6 +370,10 @@
 .dm-it .nm{flex:1;min-width:0;word-break:keep-all}
 .dm-it .ar{color:#9CA3AF;font-size:13px}
 .dm-it:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+.dm-it.grp2{padding-left:37px;font-size:13.5px;font-weight:600}
+.dm-it.l3{padding:7px 10px 7px 52px;font-size:13px}
+.dm-note{font-size:12px;color:#9CA3AF;padding:4px 10px 6px 37px}
+.dm-it .cnt{color:#9CA3AF;font-size:11.5px;font-weight:500;white-space:nowrap}
 @keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .ax-in{animation:axIn .18s ease-out}
 @media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
@@ -424,11 +427,11 @@
   <div class="mode-tab" data-tab="contact" onclick="setTab('contact')"><span class="mt-ico">📞</span>연락처·협력사</div>
 </div>
 <div class="wrap">
+  <nav class="dmenu ax-navbox" id="asNav" aria-label="AS 메뉴"></nav>
+  <nav class="crumb" id="crumb" aria-label="지금 위치"></nav>
   <div id="asPane">
     <div class="sub">품목을 고르면 <b>무상보증 · 핵심부품 · 부품보유기간</b>을 한눈에 봅니다.
       삼성전자서비스 <b>보증기간 산정기준</b> 원문 그대로이며, 원문에 없는 항목은 비워 둡니다.</div>
-    <nav class="crumb" id="asCrumb" aria-label="지금 위치"></nav>
-    <nav class="dmenu ax-navbox" id="asMenu" aria-label="AS기간 품목 메뉴"></nav>
     <div class="cats" id="cats"></div>
     <div id="body"></div>
   </div>
@@ -957,33 +960,9 @@ const RULES = [
  */
 function catIcon(k){ return (typeof prodSymbol === 'function' ? prodSymbol(k, '') : '') || ''; }
 
-/*
- * ── 태블릿 사이드바 네비게이션 (2026-10-24 사장님 승인 시안 — 기준 구현 install-app.html) ──
- * 항목 전체가 한 목록에 늘 보이고, 아래 칸이 있는 줄(수리비 분류 · 케어플러스 유료)은 그 자리에서 펼친다.
- * 단계를 밀고 당기지 않으므로 메뉴용 뒤로가기 칸이 없다. ☰ 접기·서랍·경로는 share-kit.js(AxNav).
- * 폰(719px 이하)은 지금 칸 그대로다 — 이 메뉴는 CSS 로 태블릿에서만 보인다.
- *   items = [{ k, nm, ic, on, kids:[{ k, nm, on }], open }] — kids 가 있으면 펼침 줄
- */
-function dmHtml(id, title, items){
-  return `<div class="dm-stack"><div class="dm-lvl"><div class="dm-t">${esc(title)}</div>` + items.map(it => {
-    const g = !!it.kids;
-    let h = `<button type="button" class="dm-it${g ? ' grp' : ''}${it.on ? (g ? ' has' : ' on') : ''}" data-dm="${id}" data-k="${esc(it.k)}"`
-      + `${g ? ` data-kids="1" aria-expanded="${!!it.open}"` : ''}><span class="ci">${it.ic || ''}</span><span class="nm">${esc(it.nm)}</span>`
-      + `${g ? `<span class="ar">${it.open ? '▾' : '›'}</span>` : ''}</button>`;
-    if (g && it.open) h += it.kids.map(c => `<button type="button" class="dm-it sub${c.on ? ' on' : ''}" data-dm="${id}" data-sub="1" data-k="${esc(c.k)}">`
-      + `<span class="nm">${esc(c.nm)}</span></button>`).join('');
-    return h;
-  }).join('') + '</div></div>';
-}
 function axIn(el){ if (!el) return; el.classList.remove('ax-in'); void el.offsetWidth; el.classList.add('ax-in'); }
-function renderAsMenu(){
-  const m = document.getElementById('asMenu'); if (!m) return;
-  m.innerHTML = dmHtml('as', '품목', keys.map(k => ({ k, nm: k, ic: catIcon(k), on: k === cur })));
-  if (window.AxNav) AxNav.crumb('asCrumb', [['AS 관련 정보', ''], ['AS기간', ''], [cur]]);
-}
-
 function renderCats(){
-  renderAsMenu();
+  renderNav();
   document.getElementById('cats').innerHTML = keys.map(k=>
     `<div class="cat${k===cur?' on':''}" data-k="${esc(k)}"><span class="ci">${catIcon(k)}</span>${esc(k)}</div>`).join('');
   document.querySelectorAll('#cats .cat').forEach(el=>el.onclick=()=>{ cur = el.dataset.k; renderCats(); renderBody(); revealBody();
@@ -1675,6 +1654,7 @@ function renderSvcCenters(){
      입력칸을 건드리지 않으니 커서도 조합도 그대로 남는다. */
   if (box) box.oninput = renderSvcList;
   renderSvcList();
+  renderNav();                  // 센터 자료가 오면 시·도가 사이드바에 생긴다 · 칩으로 바꾼 시·도도 따라간다
 }
 
 /*
@@ -2393,15 +2373,13 @@ function renderFee(){
   const grp = feeGrpOf(feeSec);
   if (groups.length > 1) h += `<div class="fee-seg" id="feeSeg" role="tablist">${groups.map(([g, t]) =>
     `<button type="button" role="tab" aria-selected="${g === grp}" class="${g === grp ? 'on' : ''}" data-fg="${g}">${esc(t)}</button>`).join('')}</div>`;
-  h += `<nav class="crumb" id="feeCrumb" aria-label="지금 위치"></nav>`;
-  h += `<nav class="dmenu ax-navbox" id="feeMenu" aria-label="${tab === 'cp' ? '케어플러스·이전설치' : '수리비'} 메뉴">${feeMenuHtml(tab, groups)}</nav>`;
   h += `<div class="cats" id="feeCats">${FEE_SECS.filter(([k]) => FEE_GROUPS.find(g => g[0] === grp)[2].includes(k)).map(([k, e, t]) =>
     `<div class="cat${k === feeSec ? ' on' : ''}" data-fs="${k}"><span class="ci">${e}</span>${esc(t)}</div>`).join('')}</div>`;
   h += `<div id="feeBody">${feeCard(feeSec)}</div>`;
   if (tab === 'fee') h += `<div class="src">삼성전자서비스 요금 원문 — ${['service','assure','parts','conflict','self'].map(k =>
     `<a href="${FEE_SRC[k][1]}" target="_blank" rel="noopener">${esc(FEE_SRC[k][0])}</a>`).join(' · ')}</div>`;
   pane.innerHTML = h;
-  feeCrumb(tab, groups);
+  renderNav();
   if (typeof upgradeEmoji === 'function') upgradeEmoji(pane);
   pane.querySelectorAll('#feeSeg button').forEach(b => b.onclick = () => {
     if (b.dataset.fg === feeGrpOf(feeSec)) return;
@@ -2436,57 +2414,114 @@ function renderFee(){
  * 열린 단계 — feeView: '' = 분류 단계, 그 밖 = 그 분류. cpMenu: '' = 항목 단계, 'careplus' = 네 갈래.
  * 처음·딥링크는 지금 고른 것이 있는 단계를 열어 둔다(설치환경이 냉장고 형태 단계를 열고 시작하는 것과 같다).
  */
-let feeView = null, cpMenu = null;
+let feeView = null, cpMenu = null;   // 사이드바에서 펼친 수리비 분류 · 케어플러스 유료(null = 처음 — 고른 칸이 있는 곳을 연다)
 const feeLabel = (k) => (FEE_SECS.find(x => x[0] === k) || [k, '', k]);
-function feeMenuHtml(tab, groups){
-  if (tab === 'cp') {
-    if (cpMenu === null) cpMenu = feeSec === 'careplus' ? 'careplus' : '';
-    return dmHtml('cp', '케어플러스·이전설치', groups[0][2].map(k => { const [, e, t] = feeLabel(k);
-      return k === 'careplus'
-        ? { k, nm: t, ic: e, on: feeSec === k, open: cpMenu === k, kids: CP_VIEWS.map(([v, vt]) => ({ k: v, nm: vt, on: feeSec === k && v === cpView })) }
-        : { k, nm: t, ic: e, on: feeSec === k }; }));
-  }
-  if (feeView === null || (feeView !== '' && !groups.some(g => g[0] === feeView))) feeView = feeGrpOf(feeSec);
-  return dmHtml('fee', '수리비', groups.map(([g, t, ks]) => ({ k: g, nm: t, ic: feeLabel(ks[0])[1], on: ks.includes(feeSec), open: feeView === g,
-    kids: ks.map(k => ({ k, nm: feeLabel(k)[2], on: k === feeSec })) })));
+/*
+ * ── 태블릿 사이드바 하나 (2026-10-24 사장님 A안 — 위쪽 탭 5개를 사이드바 맨 위 단계로) ──
+ * AS기간 › 품목 · 수리비 › 분류 › 칸 · 케어플러스·이전설치 › 칸(케어플러스 유료 › 네 갈래) · AS센터 찾기 › 시·도 · 연락처 › 묶음.
+ * 줄을 누르면 그 자리에서 펼치고(한 번에 하나), 끝 칸을 누르면 그 탭으로 가서 오른쪽에 펼친다.
+ * 단계를 밀고 당기지 않으므로 메뉴용 뒤로가기 칸이 없다. ☰ 접기·서랍·경로는 share-kit.js(AxNav).
+ * 폰(719px 이하)은 위쪽 탭 + 칸 그대로다 — 이 메뉴는 CSS 로 태블릿에서만 보인다.
+ */
+const NAV_TOP = [['as', 'shield', 'AS기간'], ['fee', 'labor', '수리비'], ['cp', 'water', '케어플러스·이전설치'],
+  ['center', 'place', 'AS센터 찾기'], ['contact', 'phone', '연락처·협력사']];
+const NAV_ICO = { as:'🛡️', fee:'💰', cp:'💧', center:'📍', contact:'📞' };
+let navTop = null;              // 펼친 맨 위 줄 — 처음에는 지금 탭
+const navTopLabel = (t) => (NAV_TOP.find(x => x[0] === t) || [t, '', t])[2];
+function svcSidos(){
+  if (!SVC) return [];
+  return [...new Set(SVC.items.map(x=>x.sd))]
+    .sort((a,b)=>SVC.items.filter(x=>x.sd===b).length - SVC.items.filter(x=>x.sd===a).length);
 }
-/* 맨 위 경로 — 「AS 관련 정보 › 수리비 › 부품 가격 › 휴대폰 부품가」. 분류를 누르면 메뉴가 그 자리를 펼친 채 열린다 */
-function feeCrumb(tab, groups){
+function navBtn(cls, label, data, opts){
+  opts = opts || {};
+  return `<button type="button" class="dm-it ${cls}" ${data}${opts.exp != null ? ` aria-expanded="${opts.exp}"` : ''}>`
+    + (opts.ic != null ? `<span class="ci">${opts.ic}</span>` : '') + `<span class="nm">${esc(label)}</span>`
+    + (opts.ct ? `<span class="cnt">${opts.ct}</span>` : '')
+    + (opts.exp != null ? `<span class="ar">${opts.exp ? '▾' : '›'}</span>` : '') + '</button>';
+}
+function renderNav(){
+  const m = document.getElementById('asNav'); if (!m) return;
+  if (navTop === null) navTop = curTab;
+  if (feeView === null) feeView = feeTabOf(feeSec) === 'fee' ? feeGrpOf(feeSec) : '';
+  if (cpMenu === null) cpMenu = feeSec === 'careplus' ? 'careplus' : '';
+  let h = '<div class="dm-stack"><div class="dm-lvl"><div class="dm-t">AS 관련 정보</div>';
+  NAV_TOP.forEach(([t, , nm]) => {
+    const open = navTop === t, here = curTab === t;
+    h += navBtn('grp' + (here ? ' has' : ''), nm, `data-nt="${t}"`, { exp: open, ic: NAV_ICO[t] });
+    if (!open) return;
+    if (t === 'as') h += keys.map(k => navBtn('sub' + (here && k === cur ? ' on' : ''), k, `data-nv="as" data-k="${esc(k)}"`)).join('');
+    if (t === 'fee') FEE_GROUPS.filter(g => (g[3] || 'fee') === 'fee').forEach(([g, gt, ks]) => {
+      const o = feeView === g;
+      h += navBtn('grp2' + (here && ks.includes(feeSec) ? ' has' : ''), gt, `data-nfg="${g}"`, { exp: o });
+      if (o) h += ks.map(k => navBtn('l3' + (here && k === feeSec ? ' on' : ''), feeLabel(k)[2], `data-nv="fee" data-k="${k}"`)).join('');
+    });
+    if (t === 'cp') FEE_GROUPS.filter(g => g[3] === 'cp')[0][2].forEach(k => {
+      if (k === 'careplus') {
+        const o = cpMenu === 'careplus';
+        h += navBtn('grp2' + (here && feeSec === k ? ' has' : ''), feeLabel(k)[2], 'data-ncp="careplus"', { exp: o });
+        if (o) h += CP_VIEWS.map(([v, vt]) => navBtn('l3' + (here && feeSec === k && v === cpView ? ' on' : ''), vt, `data-nv="cpv" data-k="${v}"`)).join('');
+      } else h += navBtn('sub' + (here && feeSec === k ? ' on' : ''), feeLabel(k)[2], `data-nv="cp" data-k="${k}"`);
+    });
+    if (t === 'center') {
+      const sds = svcSidos();
+      if (!sds.length) h += '<div class="dm-note">센터 자료를 불러오면 시·도가 나옵니다.</div>';
+      h += sds.map(sd => navBtn('sub' + (here && sd === svcSido ? ' on' : ''), sd, `data-nv="center" data-k="${esc(sd)}"`,
+        { ct: SVC.items.filter(x => x.sd === sd).length + '곳' })).join('');
+    }
+    if (t === 'contact') h += GROUPS.map(g => navBtn('sub', g.t, `data-nv="contact" data-k="${g.id}"`)).join('');
+  });
+  m.innerHTML = h + '</div></div>';
+  renderCrumb();
+}
+/* 맨 위 경로 — 「AS 관련 정보 › 수리비 › 부품 가격 › 휴대폰 부품가」. 앞 단계를 누르면 메뉴가 그 자리를 펼친 채 열린다 */
+function renderCrumb(){
   if (!window.AxNav) return;
-  const [, , t] = feeLabel(feeSec);
-  if (tab === 'cp') {
+  const root = ['AS 관련 정보', 'root'], top = [navTopLabel(curTab), curTab];
+  let parts;
+  if (curTab === 'as') parts = [root, top, [cur]];
+  else if (curTab === 'fee') { const g = FEE_GROUPS.find(x => x[2].includes(feeSec)); parts = [root, top, [g[1], 'fee:' + g[0]], [feeLabel(feeSec)[2]]]; }
+  else if (curTab === 'cp') {
     const v = feeSec === 'careplus' ? CP_VIEWS.find(x => x[0] === cpView) : null;
-    AxNav.crumb('feeCrumb', [['AS 관련 정보', ''], ['케어플러스·이전설치', ''], ...(v ? [[t, 'careplus'], [v[1]]] : [[t]])],
-      k => { if (k) { cpMenu = k; renderFee(); } });
-    return;
+    parts = [root, top, ...(v ? [[feeLabel(feeSec)[2], 'cp:careplus'], [v[1]]] : [[feeLabel(feeSec)[2]]])];
   }
-  const g = groups.find(x => x[2].includes(feeSec));
-  AxNav.crumb('feeCrumb', [['AS 관련 정보', ''], ['수리비', ''], ...(g ? [[g[1], g[0]]] : []), [t]],
-    k => { if (k) { feeView = k; renderFee(); } });
+  else if (curTab === 'center') parts = [root, top, [svcSido]];
+  else parts = [root, [navTopLabel(curTab)]];
+  AxNav.crumb('crumb', parts, k => {
+    if (k === 'root') navTop = '';
+    else if (k.startsWith('fee:')) { navTop = 'fee'; feeView = k.slice(4); }
+    else if (k === 'cp:careplus') { navTop = 'cp'; cpMenu = 'careplus'; }
+    else navTop = k;
+    renderNav();
+  });
 }
-function asMenuClick(e){
-  const b = e.target.closest('[data-dm]'); if (!b || !b.closest('.dmenu')) return;
-  const id = b.dataset.dm, k = b.dataset.k, sub = !!b.dataset.sub;
-  const done = () => { if (window.AxNav) AxNav.done(); };
-  if (id === 'as') {
-    cur = k; renderCats(); renderBody(); revealBody(); done();
+function navClick(e){
+  const b = e.target.closest('#asNav [data-nt], #asNav [data-nfg], #asNav [data-ncp], #asNav [data-nv]'); if (!b) return;
+  const d = b.dataset, done = () => { renderNav(); if (window.AxNav) AxNav.done(); };
+  if (d.nt) { navTop = navTop === d.nt ? '' : d.nt; if (d.nt === 'center' && !SVC) renderSvcCenters(); renderNav(); return; }
+  if (d.nfg) { feeView = feeView === d.nfg ? '' : d.nfg; renderNav(); return; }
+  if (d.ncp) { cpMenu = cpMenu === d.ncp ? '' : d.ncp; renderNav(); return; }
+  const k = d.k;
+  if (d.nv === 'as') {
+    cur = k; if (curTab !== 'as') setTab('as'); renderCats(); renderBody(); revealBody();
     if (window.AX_LOG) AX_LOG('as', 'result_open', cur, true);
-    return;
+    return done();
   }
-  if (id === 'fee') {
-    if (b.dataset.kids) { feeView = feeView === k ? '' : k; renderFee(); return; }   // 분류 줄 — 그 자리에서 펼치고 접는다
-    feeSec = k;
+  if (d.nv === 'fee' || d.nv === 'cp' || d.nv === 'cpv') {
+    if (d.nv === 'cpv') { feeSec = 'careplus'; cpView = k; } else feeSec = k;
     if (PK_GROUP[feeSec] && !PK_GROUP[feeSec].includes(pkKind)) pkKind = PK_GROUP[feeSec][0];
-    renderFee(); done(); return;
+    const tab = d.nv === 'fee' ? 'fee' : 'cp';
+    if (curTab !== tab) setTab(tab); else renderFee();
+    return done();
   }
-  if (id === 'cp') {
-    if (b.dataset.kids) { cpMenu = cpMenu === k ? '' : k; renderFee(); return; }
-    /* 케어플러스 유료의 네 갈래 — 'pc' 가 수리비 칸 열쇠와 겹쳐 data-sub 로 가른다 */
-    if (sub && CP_VIEWS.some(v => v[0] === k)) { feeSec = 'careplus'; cpView = k; renderFee(); done(); return; }
-    feeSec = k; renderFee(); done();
+  if (d.nv === 'center') {
+    svcSido = k; const box = document.getElementById('svcq'); if (box) box.value = '';
+    if (curTab !== 'center') setTab('center'); else renderSvcCenters();
+    return done();
   }
+  if (d.nv === 'contact') { openGroup(k); return done(); }
 }
-document.addEventListener('click', asMenuClick);
+document.addEventListener('click', navClick);
 
 /* 케어플러스 칸 본문 — 갈래마다 원문 출처를 따로 적는다(출처가 셋이다) */
 function cpBody(){
@@ -2646,6 +2681,7 @@ function setTab(t){
   /* 공유 카드는 AS 기간 내용이라 다른 탭에서는 감춘다 — 엉뚱한 것이 나가면 안 된다 */
   const sb = document.getElementById('sk-share');
   if (sb) sb.style.display = t === 'as' ? '' : 'none';
+  navTop = t; renderNav();
 }
 
 renderCats(); renderBody(); wireSearch();

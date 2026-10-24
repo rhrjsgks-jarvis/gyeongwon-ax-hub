@@ -5244,7 +5244,11 @@ R(5km)보다 커서 **틈이 남는데 화면에는 아무 표시도 안 난다*
   접힘 배치 CSS(`html.ax-navc …{grid-template-columns:minmax(0,1fr)}`) · 고른 뒤 `AxNav.done()` · `AxNav.crumb(상자, [[이름, 열쇠]…], 누르면)`.
   - 「메뉴 펼쳐 두기」는 서랍을 열 때 share-kit 이 상자 맨 위에 넣는다 — AS 처럼 메뉴를 innerHTML 로 다시 그리는 앱이 있어서다.
   - AS 는 탭마다 메뉴가 있어(AS기간 · 수리비 · 케어플러스) **보이는 상자**가 서랍이 된다. 메뉴가 없는 탭(센터 찾기·연락처)에서는 서랍이 안 열린다.
-  - AS 위쪽 탭 5개는 **그대로 두었다** — 탭을 사이드바로 옮기는 것은 승인받지 않은 화면 변경이다.
+  - **v302 — AS 위쪽 탭 5개를 사이드바 맨 위 단계로 옮겼다**(2026-10-24 사장님 A안 승인, 시안 artifact Syav3NuWHHYK5GFd2qzstq).
+    태블릿에서는 `.mode-tabs` 를 감추고 `.wrap` 맨 앞 `#asNav` 하나가 AS기간 › 품목 · 수리비 › 분류 › 칸 · 케어플러스·이전설치 ›
+    (케어플러스 유료 › 네 갈래) · AS센터 찾기 › 시·도 · 연락처 › 묶음을 담는다(`renderNav` · `navClick`). 탭마다 서던 메뉴(asMenu·feeMenu)는 없앴다.
+    경로도 `.wrap` 맨 앞 `#crumb` 하나다. 끝 칸을 누르면 그 탭으로 간다(`setTab`) — 폰은 탭 + 칸 그대로.
+    실물 `.scratch/tab/asnav.mjs`(다섯 갈래를 끝까지 · 접기 · 서랍 · 폰).
   - AS 케어플러스의 네 갈래 열쇠 `pc` 가 수리비 칸 열쇠와 겹쳐 하위 줄은 `data-sub` 로 가른다.
   - share-kit 의 메뉴 높이 맞춤은 `offsetParent` 가 아니라 `getClientRects()` 로 본다 — 서랍(position:fixed)은 offsetParent 가 비어 높이를 못 쟀다.
   - 검사 `npm run test:navc`(네 앱 배선) · 실물 `.scratch/tab/navc4.mjs`(네 앱 + AS 수리비 탭을 펼침·고르기·접기·서랍·경로·뒤로가기·펼쳐 두기).
