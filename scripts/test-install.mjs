@@ -277,21 +277,7 @@ const expectedImageCounts = {
   }
   }
 
-  /* 사이드바 네비게이션 + ☰ 접기 + 경로 (2026-10-24 사장님 승인 시안) */
-  {
-    const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'install-app.html'), 'utf8');
-    const bad = [];
-    if (/class="dm-back"|dm-back/.test(src)) bad.push('단계 메뉴의 뒤로가기 단추가 되살아났다(사이드바는 단계를 밀고 당기지 않는다)');
-    if (/translateX\(-100%\)/.test(src)) bad.push('메뉴를 옆으로 미는 단계 전환이 남아 있다');
-    if (!/id="crumb"/.test(src) || !/function renderCrumb/.test(src)) bad.push('맨 위 경로(브레드크럼)가 없다');
-    if (!/html\.ax-navc main\{grid-template-columns:minmax\(0,1fr\)\}/.test(src)) bad.push('☰ 로 접혔을 때 내용이 폭을 다 쓰지 않는다');
-    if (!/sk === 'navc-drawer'/.test(src) || !/id="dm-pin"/.test(src)) bad.push('서랍 열기·메뉴 펼쳐 두기 배선이 없다');
-    if (!/Back\.open\(drawerClose/.test(src)) bad.push('서랍을 기기 뒤로가기로 닫을 수 없다');
-    const nav = fs.readFileSync(path.join(__dirname, '..', 'lib', 'navCollapse.ts'), 'utf8');
-    if (!/NAVC_PATHS = \[[^\]]*'\/install'/.test(nav)) bad.push("navCollapse.ts 의 NAVC_PATHS 에 '/install' 이 없다 — ☰ 가 안 뜬다");
-    if (bad.length) { ok = false; bad.forEach((m) => console.log('FAIL: ' + m)); }
-    else console.log('OK: 사이드바 네비게이션 · ☰ 접기 · 경로 배선');
-  }
+  /* 사이드바 네비게이션 + ☰ 접기 + 경로 — 네 앱 공용이라 scripts/test-navc.mjs 가 본다 */
 
   console.log(ok ? 'ALL PASS' : 'SOME FAILED');
   process.exit(ok ? 0 : 1);

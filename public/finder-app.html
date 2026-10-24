@@ -348,11 +348,6 @@ table.spec tr:last-child td{border-bottom:none}
   .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
 }
-/* 뒤로가기 — 메뉴 맨 위 큰 단추(2026-10-23 사장님 ①안). 메뉴를 스크롤해도 맨 위에 붙어 있다 */
-.dm-back{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
-  border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;font-weight:800;font-size:14px;
-  padding:9px 10px;margin-bottom:6px;border-radius:10px;cursor:pointer;box-shadow:0 0 0 4px #fff}
-.dm-back:hover{background:#E0E7FF}
 .dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
 .dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
   color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
@@ -363,11 +358,18 @@ table.spec tr:last-child td{border-bottom:none}
 .dm-it .nm{flex:1;min-width:0;word-break:keep-all}
 .dm-it .ar{color:#9CA3AF;font-size:13px}
 .dm-it .ct{color:#9CA3AF;font-size:11.5px;font-weight:500;white-space:nowrap}
-.dm-it:focus-visible,.dm-back:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+.dm-it:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
 @keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .ax-in{animation:axIn .18s ease-out}
 @media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}
 @media print{.dmenu{display:none!important}}
+/* 사이드바 네비게이션 + ☰ 접기(2026-10-24 사장님 승인 시안) — 서랍·경로 모양은 share-kit.js(AxNav) 공용. 여기는 접힘 배치만 */
+@media screen and (min-width:720px){
+  html.ax-navc .wrap{grid-template-columns:minmax(0,1fr)}
+  html.ax-navc .wrap>*{grid-column:1}
+  html.ax-navc .wrap>.crumb{margin-top:14px}
+}
+@media screen and (min-width:1200px){html.ax-navc .rlist{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media print{ #catHost,.fp-dim,.fp-x{display:none!important} .rcard .rdetail{position:static!important;transform:none!important;box-shadow:none!important;max-height:none!important;width:auto!important} }
 </style>
 <script>/* 허브 안(iframe)이면 표시 — 검색은 허브 맨 위 통합검색 하나가 맡아 이 앱의 검색칸을 감춘다(2026-10-23) */try{if(self!==top)document.documentElement.classList.add('ax-embed')}catch(e){document.documentElement.classList.add('ax-embed')}</script>
@@ -429,7 +431,7 @@ table.spec tr:last-child td{border-bottom:none}
     </div>
     <div class="exrow" id="exRow"></div>
   </div>
-  <nav class="dmenu" id="dmenu" aria-label="품목 단계 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
+  <nav class="dmenu ax-navbox" id="dmenu" aria-label="품목 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
   <div id="catHost" aria-label="품목으로 찾기"></div>
 
   <div id="aiBox" class="hidden">
@@ -441,6 +443,7 @@ table.spec tr:last-child td{border-bottom:none}
     <div class="aihint">자연어 문장을 AI가 해석해 전 라인업에서 추천합니다. (Claude 환경에서 동작 — 오프라인 시 키워드 모드 사용)</div>
   </div>
 
+  <nav class="crumb" id="crumb" aria-label="지금 위치"></nav>
   <div class="parsebar" id="parseBar"></div>
   <div id="noticeHost"></div>
   <div id="aiHost"></div>
@@ -1716,7 +1719,7 @@ function passToMenu(e){
   const dim = e.currentTarget || e.target;          // 닫기가 막 끝나도 이 막이 아직 남아 있을 수 있다 — 먼저 걷는다
   if (dim && dim.style) dim.style.display = 'none';
   const t = document.elementFromPoint(e.clientX, e.clientY);
-  const hit = t && t.closest && t.closest('.dmenu .dm-it, .dmenu .dm-back');
+  const hit = t && t.closest && t.closest('.dmenu .dm-it');
   if (hit) hit.click();
 }
 function syncDetailPop(){
@@ -1772,43 +1775,40 @@ function fcFams(by){
   return fams.filter(x => x[1].length);
 }
 /*
- * ── 태블릿 단계 메뉴 (2026-10-23 사장님 승인 — 기준 구현 install-app.html) ──
- * 품목 묶음을 누르면 메뉴가 왼쪽으로 밀리며 품목이 나오고, 품목을 누르면 오른쪽에 제품이 펼쳐진다.
- * 기기 뒤로가기도 한 단계 올린다(back-kit). 폰(719px 이하)은 타일 칸 그대로다.
+ * ── 태블릿 사이드바 네비게이션 (2026-10-24 사장님 승인 시안 — 기준 구현 install-app.html) ──
+ * 품목 묶음 전체가 한 목록에 늘 보이고, 묶음을 누르면 그 자리에서 품목이 펼쳐진다(한 번에 하나).
+ * 단계를 밀고 당기지 않으므로 메뉴용 뒤로가기 칸이 없다. ☰ 접기·서랍·경로는 share-kit.js(AxNav).
+ * 폰(719px 이하)은 타일 칸 그대로다.
  */
-let dmFam = '', dmPushed = false;
-function dmUp(){ dmFam = ''; dmPushed = false; renderDrill(); dmFocus(); }
-function dmOpen(f){
-  if (dmFam === f) return;
-  dmFam = f;
-  if (window.Back && !dmPushed) { dmPushed = true; Back.open(dmUp, () => !!dmFam); }
-}
-function dmFocus(){
-  const lv = document.querySelectorAll('#dm-stack .dm-lvl');
-  const f = lv.length && lv[lv.length - 1].querySelector('.dm-back, .dm-it');
-  if (f) f.focus({ preventScroll: true });
-}
+let dmFam = '';
 function renderDrill(){
   const st = $("dm-stack"); if (!st) return;
   const by = fcTiles(), fams = fcFams(by);
   const sym = (t) => (typeof prodSymbol === 'function' ? prodSymbol(t, '') : '');
-  const lv0 = '<div class="dm-lvl"' + (dmFam ? ' aria-hidden="true"' : '') + '><div class="dm-t">품목 묶음</div>'
-    + fams.map(([f, ts]) => '<button type="button" class="dm-it" data-fam="' + esc(f) + '"' + (dmFam ? ' tabindex="-1"' : '') + '>'
-      + '<span class="ci">' + sym(ts[0]) + '</span><span class="nm">' + esc(f) + '</span><span class="ar">›</span></button>').join('') + '</div>';
-  const cur = fams.find(x => x[0] === dmFam);
-  const lv1 = cur ? '<div class="dm-lvl"><button type="button" class="dm-back">‹ 뒤로가기</button><div class="dm-t">' + esc(cur[0]) + '</div>'
-    + cur[1].map(t => '<button type="button" class="dm-it' + (t === browseKey ? ' on' : '') + '" data-fc="' + esc(t) + '">'
-      + '<span class="ci">' + sym(t) + '</span><span class="nm">' + esc(t) + '</span><span class="ct">' + by[t].n + '종</span></button>').join('') + '</div>' : '';
-  st.innerHTML = lv0 + lv1;
-  st.style.transform = cur ? 'translateX(-100%)' : 'none';
+  st.innerHTML = '<div class="dm-lvl"><div class="dm-t">품목</div>'
+    + fams.map(([f, ts]) => {
+      const open = dmFam === f, has = ts.includes(browseKey);
+      let h = '<button type="button" class="dm-it grp' + (has ? ' has' : '') + '" data-fam="' + esc(f) + '" aria-expanded="' + open + '">'
+        + '<span class="ci">' + sym(ts[0]) + '</span><span class="nm">' + esc(f) + '</span><span class="ar">' + (open ? '▾' : '›') + '</span></button>';
+      if (open) h += ts.map(t => '<button type="button" class="dm-it sub' + (t === browseKey ? ' on' : '') + '" data-fc="' + esc(t) + '">'
+        + '<span class="nm">' + esc(t) + '</span><span class="ct">' + by[t].n + '종</span></button>').join('');
+      return h;
+    }).join('') + '</div>';
+  st.style.transform = 'none';
+  renderCrumbF();
+}
+/* 맨 위 경로 — 「모델파인더 › 주방 › 냉장고」. 앞 단계를 누르면 메뉴가 그 자리를 펼친 채 열린다 */
+function renderCrumbF(){
+  if (!window.AxNav) return;
+  const fam = browseKey ? fcFams().find(x => x[1].includes(browseKey)) : null;
+  AxNav.crumb('crumb', fam ? [['모델파인더', ''], [fam[0], fam[0]], [browseKey]] : null, k => { dmFam = k; renderDrill(); });
 }
 document.addEventListener('click', function (e) {
   const st = $("dm-stack");
   if (!st || !st.contains(e.target)) return;
-  if (e.target.closest('.dm-back')) { const was = dmPushed; dmUp(); if (was && window.Back) Back.done(); return; }
   const b = e.target.closest('.dm-it'); if (!b) return;
-  if (b.dataset.fam) { dmOpen(b.dataset.fam); renderDrill(); dmFocus(); return; }
-  if (b.dataset.fc) browseCat(b.dataset.fc);
+  if (b.dataset.fam) { dmFam = dmFam === b.dataset.fam ? '' : b.dataset.fam; renderDrill(); return; }
+  if (b.dataset.fc) { browseCat(b.dataset.fc); if (window.AxNav) AxNav.done(); }
 });
 function isTabletWide(){ return !!(window.matchMedia && matchMedia('screen and (min-width:720px)').matches); }
 function renderCatHost(){
@@ -1832,7 +1832,7 @@ function browseCat(t){
     + '<span class="ptag cat">' + esc('품목: ' + t) + '</span><span class="rescount" id="resCount"></span>';
   sortMode = 'new';
   /* 단계 메뉴 — 그 품목의 묶음 단계를 열어 둔다(딥링크·처음 열기로 들어와도 어디인지 보이게) */
-  const fam = fcFams().find(x => x[1].includes(t)); if (fam) dmOpen(fam[0]);
+  const fam = fcFams().find(x => x[1].includes(t)); if (fam) dmFam = fam[0];
   renderCatHost(); renderSortRow(); renderResults();
   const rh = $("rHost"); if (rh) { rh.classList.remove('ax-in'); void rh.offsetWidth; rh.classList.add('ax-in'); }
   if (window.AX_LOG) AX_LOG('finder', 'result_open', '품목:' + t, true);

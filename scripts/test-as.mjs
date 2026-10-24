@@ -1702,11 +1702,11 @@ pass('상황실·업무·운영 골든 5건');
   if (/#cats,#feeCats\{position:sticky/.test(tblk) || /content:'② 왼쪽에서/.test(html)) fail('단계 메뉴 — 옛 왼쪽 칸 격자가 되살아났다');
   else pass('단계 메뉴 — 옛 왼쪽 칸 격자 없음');
   for (const id of ['asMenu']) if (!html.includes(`id="${id}"`)) fail(`단계 메뉴 — #${id} 없음`);
-  for (const fn of ['function dmHtml(', 'function feeMenuHtml(', 'function asMenuClick(', 'Back.open(() => { feeView', 'Back.open(() => { cpMenu'])
+  /* 2026-10-24 사이드바로 바뀌었다 — 분류는 그 자리에서 펼치고(뒤로가기 단추·단계 밀기 없음), 서랍·경로는 test-navc.mjs */
+  for (const fn of ['function dmHtml(', 'function feeMenuHtml(', 'function feeCrumb(', 'function asMenuClick(', 'feeView = feeView === k', 'cpMenu = cpMenu === k'])
     if (!html.includes(fn)) fail(`단계 메뉴 — ${fn} 없음`);
-  if (!/\.dm-back\{position:sticky/.test(html)) fail('단계 메뉴 — 뒤로가기 단추가 맨 위에 붙어 있지 않다');
   if (!/@media \(max-width:719px\)\{\.dmenu\{display:none\}\}/.test(html)) fail('단계 메뉴 — 폰에서 감추는 규칙이 없다');
-  else pass('단계 메뉴 — 뒤로가기 단추 · 기기 뒤로가기 · 폰은 그대로');
+  else pass('사이드바 — 분류는 그 자리에서 펼침 · 경로 · 폰은 그대로');
 }
 
 console.log(ok ? 'ALL PASS' : 'SOME FAILED');
