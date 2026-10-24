@@ -15,7 +15,7 @@
 const KEY = 'axhub_navc'
 export const NAVC_EVENT = 'ax-navc'
 export const NAVC_DRAWER_EVENT = 'ax-navc-drawer'
-export const NAVC_PATHS = ['/install', '/as', '/finder', '/compare']
+export const NAVC_PATHS = ['/install', '/as', '/finder', '/compare', '/care', '/install-cost']
 
 let mem = false
 

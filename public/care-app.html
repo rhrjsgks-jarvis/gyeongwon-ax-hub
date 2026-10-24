@@ -440,23 +440,36 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
  * 케어정보는 왼쪽 모델 목록(고정) · 오른쪽 케어 내용. 위 드롭다운은 태블릿에서 감춘다(같은 일을 한다).
  * 접이식은 태블릿에서 기본 펼침이고(fold()), 1000px 부터 두 단으로 놓는다. 폰은 그대로다.
  */
+/* ── 사이드바 줄 공통 모양(설치환경과 같은 값) — 서랍·경로·펼침 줄 모양은 share-kit.js(AxNav) ── */
+.dmenu{display:none}
+.dm-stack{display:flex;width:100%}
+.dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+@media screen and (min-width:720px){
+  .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+}
+.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
+  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+.dm-it:hover{background:#F3F5FA}
+.dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
+.dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0;font-size:15px;line-height:1}
+.dm-it .ci svg,.dm-it .ci .psym{width:18px;height:18px}
+.dm-it .nm{flex:1;min-width:0;word-break:keep-all}
+.dm-it .ar{color:#9CA3AF;font-size:13px}
+.dm-it:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+@media print{.dmenu{display:none!important}}
 #careSide{display:none}
 @media screen and (min-width:720px){
   .wrap,.btm{max-width:1180px!important}
-  #carePane{display:grid;grid-template-columns:minmax(250px,30%) minmax(0,1fr);gap:16px;align-items:start;padding:0 16px}
+  #carePane{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start;padding:0 16px}
   #carePane[hidden]{display:none}
-  #careSide{display:block;position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:auto;
-    background:#fff;border:1px solid #ecedf1;border-radius:14px;padding:4px 0 6px;margin-top:14px}
-  #careSide::before{content:'① 모델';display:block;padding:10px 14px 0;font-size:13px;font-weight:800;color:#0B1220}
-  #careSide .ov-gh{padding:10px 12px 0}
-  #careSide .ov-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:6px 10px 6px}
-  #careSide .ov-card{padding:7px 3px;font-size:11.5px}
-  #careSide .ov-nm{font-size:11.5px;margin:0}
-  #careSide .ov-ico .psym{width:18px;height:18px}
-  #careSide .ov-pills{display:none}
+  /* 사이드바(2026-10-24 — 설치환경·AS 와 같은 방식) — 모델 묶음 넷이 한 목록에 늘 보이고 묶음은 그 자리에서 펼친다 */
+  #careSide{display:block;position:sticky;top:64px;max-height:calc(100vh - 84px);overflow:hidden;--dm-h:calc(100vh - 100px);
+    background:#fff;border:1px solid #ecedf1;border-radius:14px;padding:8px;margin-top:14px}
+  html.ax-navc #carePane{grid-template-columns:minmax(0,1fr)}
+  #carePane .crumb:not(:empty){margin:14px 0 0}
   #carePane .cat-wrap{display:none!important}
   #carePane #body{min-width:0}
-  #carePane #body::before{content:'② 케어 내용';display:block;margin:14px 0 0;font-size:13px;font-weight:800;color:#0B1220}
   #overviewPane .ov-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
 }
 @media screen and (min-width:1000px){
@@ -494,8 +507,9 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-ser
 <div id="overviewPane" style="display:none"></div>
 <div id="timelinePane" style="display:none"></div>
   <div id="carePane">
-  <aside id="careSide" aria-label="모델 목록"></aside>
+  <aside class="dmenu ax-navbox" id="careSide" aria-label="모델 메뉴"></aside>
   <div>
+  <nav class="crumb" id="crumb" aria-label="지금 위치"></nav>
   <div class="cat-wrap">
     <div class="cat-btn" id="catBtn">
       <div class="cat-btn-l">
@@ -2616,12 +2630,35 @@ function ovGrouped(cardOf){
       + ps.map(cardOf).join('') + '</div>';
   }).join('');
 }
-/* 태블릿 왼쪽 목록 — 모델선택 탭과 같은 칸을 같은 묶음으로 쓴다 */
+/*
+ * ── 태블릿 사이드바 (2026-10-24 — 설치환경·AS 와 같은 방식, 기준 구현 install-app.html) ──
+ * 모델 묶음 넷(모델선택 탭과 같은 OV_GROUPS)이 한 목록에 늘 보이고, 묶음을 누르면 그 자리에서 모델이 펼쳐진다.
+ * ☰ 접기·서랍·경로는 share-kit.js(AxNav). 폰은 위 드롭다운 그대로다.
+ */
+let careOpen = null;
 function renderSide(){
   const el = document.getElementById('careSide');
   if (!el) return;
-  el.innerHTML = ovGrouped(p => ovCard(p, p.key === curCat, true));
+  const curP = PRODUCTS.find(p => p.key === curCat), curG = curP ? ovGroupOf(curP) : '';
+  if (careOpen === null) careOpen = curG;
+  el.innerHTML = '<div class="dm-stack"><div class="dm-lvl"><div class="dm-t">모델</div>' + OV_GROUPS.map(([g, t]) => {
+    const ps = PRODUCTS.filter(p => ovGroupOf(p) === g);
+    if (!ps.length) return '';
+    const open = careOpen === g;
+    let h = '<button type="button" class="dm-it grp' + (g === curG ? ' has' : '') + '" data-cg="' + g + '" aria-expanded="' + open + '">'
+      + '<span class="ci">' + prodIcon(ps[0].key, ps[0].icon) + '</span><span class="nm">' + t + '</span><span class="ar">' + (open ? '▾' : '›') + '</span></button>';
+    if (open) h += ps.map(p => '<button type="button" class="dm-it sub' + (p.key === curCat ? ' on' : '') + '" data-ck="' + p.key + '"><span class="nm">' + p.name + '</span></button>').join('');
+    return h;
+  }).join('') + '</div></div>';
+  if (window.AxNav) AxNav.crumb('crumb', curP ? [['구독 케어', ''], [OV_GROUPS.find(x => x[0] === curG)[1], curG], [curP.name]] : null,
+    k => { careOpen = k; renderSide(); });
 }
+document.addEventListener('click', e => {
+  const side = document.getElementById('careSide');
+  const b = side && e.target.closest && e.target.closest('#careSide .dm-it'); if (!b) return;
+  if (b.dataset.cg) { careOpen = careOpen === b.dataset.cg ? '' : b.dataset.cg; renderSide(); return; }
+  if (b.dataset.ck) { switchToCare(b.dataset.ck); if (window.AxNav) AxNav.done(); }
+});
 function renderOverview(){
   const el = document.getElementById('overviewPane');
   let html = '<div class="ov-lead">품목을 고르면 그 제품의 케어 내용을 볼 수 있습니다</div>';

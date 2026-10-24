@@ -1,5 +1,5 @@
 /*
- * 사이드바 네비게이션 + ☰ 접기 + 맨 위 경로 — 네 앱 공용 배선 (2026-10-24 사장님 승인 시안)
+ * 사이드바 네비게이션 + ☰ 접기 + 맨 위 경로 — 여섯 앱 공용 배선 (2026-10-24 사장님 승인 시안)
  *
  * 서랍·덮개·경로 모양은 share-kit.js(AxNav) 한 곳에 있고, 앱은 셋만 한다:
  *   메뉴 상자에 class="ax-navbox" · 접힘 배치(CSS) · 고른 뒤 AxNav.done() · 경로는 AxNav.crumb.
@@ -19,6 +19,8 @@ const APPS = [
   ['finder', 'public/finder-app.html', /html\.ax-navc \.wrap\{grid-template-columns:minmax\(0,1fr\)\}/],
   ['compare', 'public/compare-app.html', /html\.ax-navc #tab-db main\{grid-template-columns:minmax\(0,1fr\)\}/],
   ['as', 'public/as-app.html', /html\.ax-navc \.wrap\{grid-template-columns:minmax\(0,1fr\)\}/],
+  ['care', 'public/care-app.html', /html\.ax-navc #carePane\{grid-template-columns:minmax\(0,1fr\)\}/],
+  ['install-cost', 'public/install-cost-app.html', /html\.ax-navc \.wrap\{grid-template-columns:minmax\(0,1fr\)\}/],
 ];
 const nav = read('lib/navCollapse.ts');
 for (const [name, file, layout] of APPS) {
@@ -43,5 +45,5 @@ if (!/var b = box\(\); if \(!b\) return;/.test(kit)) bad.push('share-kit.js: 메
 if (/!m\.offsetParent \|\|/.test(kit)) bad.push('share-kit.js: 서랍(fixed)의 메뉴 높이를 못 잰다(offsetParent 판정)');
 
 if (bad.length) { bad.forEach((m) => console.log('FAIL: ' + m)); console.log('SOME FAILED'); process.exit(1); }
-console.log('OK: 네 앱 사이드바 · ☰ 접기 · 경로 배선');
+console.log('OK: 여섯 앱 사이드바 · ☰ 접기 · 경로 배선');
 console.log('ALL PASS');

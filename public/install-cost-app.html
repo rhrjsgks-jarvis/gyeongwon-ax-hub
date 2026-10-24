@@ -220,6 +220,34 @@
     .prepgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
   }
   .empty{text-align:center;color:#9aa0a6;font-size:12.5px;padding:26px 10px;line-height:1.7}
+/* ── 사이드바 줄 공통 모양(설치환경과 같은 값) — 서랍·경로·펼침 줄 모양은 share-kit.js(AxNav) ── */
+.dmenu{display:none}
+.dm-stack{display:flex;width:100%}
+.dm-lvl{flex:0 0 100%;min-width:0;box-sizing:border-box}
+@media screen and (min-width:720px){
+  .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+}
+.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
+  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+.dm-it:hover{background:#F3F5FA}
+.dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
+.dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0;font-size:15px;line-height:1}
+.dm-it .ci svg,.dm-it .ci .psym{width:18px;height:18px}
+.dm-it .nm{flex:1;min-width:0;word-break:keep-all}
+.dm-it .ar{color:#9CA3AF;font-size:13px}
+.dm-it:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
+@media print{.dmenu{display:none!important}}
+/* 태블릿 사이드바(2026-10-24 — 설치환경·AS 와 같은 방식) — 왼쪽 품목 메뉴 · 오른쪽 표. 위 칩은 태블릿에서 감춘다. 폰은 그대로 */
+@media screen and (min-width:720px){
+  .wrap{max-width:1180px!important;display:grid;grid-template-columns:220px minmax(0,1fr);column-gap:16px;align-items:start}
+  .wrap>*{grid-column:2;min-width:0}
+  .wrap>#icNav{grid-column:1;grid-row:1/span 9;display:block;position:sticky;top:12px;margin:0;
+    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:8px;max-height:calc(100vh - 24px);overflow:hidden;--dm-h:calc(100vh - 40px)}
+  #body .chipwrap{display:none}
+  html.ax-navc .wrap{grid-template-columns:minmax(0,1fr)}
+  html.ax-navc .wrap>*{grid-column:1}
+}
   /* ── 인쇄 (A4) — 공유 버튼 → 「인쇄」. 머리·꼬리는 share-kit 이 붙인다 ──
      검색·탭·품목 칩은 빼고 **고른 품목의 표만** 싣는다. 표가 잘리지 않게 칸 단위로 끊는다. */
   @media print{
@@ -263,7 +291,11 @@
   <button class="tab on" data-tab="new"><span class="tb-ico ci" data-label="공구">🔧</span>신규 설치 추가비</button>
 </div>
 
-<div class="wrap" id="body"><div class="empty">불러오는 중…</div></div>
+<div class="wrap" id="icWrap">
+  <nav class="dmenu ax-navbox" id="icNav" aria-label="설치비용 메뉴"><div class="dm-stack" id="dm-stack"></div></nav>
+  <nav class="crumb" id="crumb" aria-label="지금 위치"></nav>
+  <div id="body"><div class="empty">불러오는 중…</div></div>
+</div>
 
 <!-- **이모지를 쓰지 않는다** — 이 저장소 규칙(OS 마다 모양이 다르고 삼성 블루와
      무관한 색이 튀며 키우면 뭉갠다). 이 앱만 규칙 밖에 있어 2026-08-31 사장님 지시로
@@ -437,9 +469,49 @@ function groupsOf(c) {
   var g = []; c.sections.forEach(function (x) { var k = grpOf(x.title); if (k && g.indexOf(k) < 0) g.push(k); });
   return g;
 }
+/*
+ * ── 태블릿 사이드바 (2026-10-24 — 설치환경·AS 와 같은 방식, 기준 구현 install-app.html) ──
+ * 품목 다섯이 한 목록에 늘 보이고, 하위 칸이 있는 품목(가구장 리폼)은 그 자리에서 펼친다.
+ * ☰ 접기·서랍·경로는 share-kit.js(AxNav). 폰은 위 칩 그대로다.
+ */
+var navOpen = null;
+function curNewCat() {
+  var cats = D.newInstall.categories, key = CAT.new || cats[0].key;
+  return cats.filter(function (x) { return x.key === key; })[0] || cats[0];
+}
+function curSub(c) { var gs = groupsOf(c); return gs.length > 1 ? (gs.indexOf(CAT.sub[c.key]) >= 0 ? CAT.sub[c.key] : gs[0]) : ''; }
+function renderNav() {
+  var st = document.getElementById('dm-stack');
+  if (!st || !D) return;
+  var c0 = curNewCat(), g0 = curSub(c0);
+  if (navOpen === null) navOpen = g0 ? c0.key : '';
+  st.innerHTML = '<div class="dm-lvl"><div class="dm-t">' + esc(D.newInstall.title) + '</div>'
+    + D.newInstall.categories.map(function (c) {
+      var gs = groupsOf(c), grp = gs.length > 1, open = grp && navOpen === c.key, here = c.key === c0.key;
+      var h = '<button type="button" class="dm-it' + (grp ? ' grp' : '') + (here ? (grp ? ' has' : ' on') : '') + '" data-nc="' + esc(c.key) + '"'
+        + (grp ? ' data-grp="1" aria-expanded="' + open + '"' : '') + '><span class="ci">' + esc(c.icon || '') + '</span>'
+        + '<span class="nm">' + esc(c.name) + '</span>' + (grp ? '<span class="ar">' + (open ? '▾' : '›') + '</span>' : '') + '</button>';
+      if (open) h += gs.map(function (x) {
+        return '<button type="button" class="dm-it sub' + (here && x === g0 ? ' on' : '') + '" data-nc="' + esc(c.key) + '" data-ns="' + esc(x) + '"><span class="nm">' + esc(x) + '</span></button>';
+      }).join('');
+      return h;
+    }).join('') + '</div>';
+  if (window.AxNav) AxNav.crumb('crumb', [['설치비용', ''], g0 ? [c0.name, c0.key] : [c0.name]].concat(g0 ? [[g0]] : []),
+    function (k) { navOpen = k; renderNav(); });
+}
+document.getElementById('icNav').addEventListener('click', function (e) {
+  var b = e.target.closest('.dm-it'); if (!b) return;
+  if (b.dataset.grp) { navOpen = navOpen === b.dataset.nc ? '' : b.dataset.nc; renderNav(); return; }
+  CAT.new = b.dataset.nc;
+  if (b.dataset.ns) CAT.sub[b.dataset.nc] = b.dataset.ns;
+  TAB = 'new'; render(); window.scrollTo(0, 0);
+  if (window.AxNav) AxNav.done();
+});
+
 function render() {
   var el = document.getElementById('body');
   if (!D) { el.innerHTML = '<div class="empty">불러오는 중…</div>'; return; }
+  renderNav();
 
   if (TAB === 'new') {
     var cats = D.newInstall.categories, key = CAT.new || cats[0].key;
