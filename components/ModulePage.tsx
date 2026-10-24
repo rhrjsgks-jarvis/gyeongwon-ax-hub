@@ -31,7 +31,7 @@ export default function ModulePage({
         <div className="flex items-center gap-3">
           <span className="text-3xl">{icon}</span>
           <div>
-            <h1 className="text-xl font-black">{title}</h1>
+            <h1 className="text-xl font-bold">{title}</h1>
             <p className="text-sm opacity-80 mt-0.5">{desc}</p>
           </div>
         </div>

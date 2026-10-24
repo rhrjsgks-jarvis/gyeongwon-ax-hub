@@ -53,11 +53,11 @@ body {
   }
 
   .badge {
-    @apply inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-semibold;
+    @apply inline-flex items-center px-2 md:px-2.5 py-0.5 rounded-full text-[10px] md:text-xs font-bold;
   }
 
   .btn-primary {
-    @apply bg-[#1428A0] text-white px-4 py-2 rounded-xl font-semibold text-sm
+    @apply bg-[#1428A0] text-white px-4 py-2 rounded-xl font-bold text-sm
            hover:bg-[#0D1B7A] transition-colors duration-150;
   }
 }

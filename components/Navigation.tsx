@@ -60,7 +60,7 @@ function ZoomButton({ pathname }: { pathname: string }) {
       onClick={() => setZoom(nextZoom(z))}
       aria-label={`보기 크기 ${pct}% — 누르면 바뀝니다`}
       title="보기 크기 (100 → 115 → 130%)"
-      className="flex items-center justify-center rounded-full shrink-0 font-extrabold"
+      className="flex items-center justify-center rounded-full shrink-0 font-bold"
       style={{ height: 30, padding: '0 10px', fontSize: 12.5, gap: 3,
         background: z === 1 ? 'rgba(255,255,255,0.18)' : '#fff', color: z === 1 ? '#fff' : '#1428A0' }}
     >
@@ -407,7 +407,7 @@ export default function Navigation() {
             (재려면 `node .scratch/_hdrfit.mjs` — fixed 요소라 scrollWidth 로는 안 잡힌다)
           */}
           <span
-            className="hidden sm:inline text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap"
+            className="hidden sm:inline text-xs font-normal px-2 py-0.5 rounded-full whitespace-nowrap"
             style={{ background: 'rgba(255,255,255,0.2)' }}
           >
             세일즈 코파일럿
@@ -438,7 +438,7 @@ export default function Navigation() {
             /* 긴 이름(현대기아차연구소모바일 11자)이 320px 에서 공유 아이콘을 밀어냈다.
                **감추지 않고 줄인다** — 로그가 이 값으로 쌓이므로 사라지면 안 된다.
                눌러서 전체 이름을 볼 수 있다 */
-            className={`text-white text-[11px] font-semibold rounded-full px-2 py-0.5 truncate ${
+            className={`text-white text-[11px] font-bold rounded-full px-2 py-0.5 truncate ${
               /* **본사 칩은 줄이지 않는다** — 그 글자 전체가 「로그 미기록」이라는 경고라,
                  잘리면 「경원영업팀…」만 남아 **경고가 통째로 사라진다**(실물에서 그랬다).
                  매장명은 눌러서 볼 수 있지만 이 경고는 볼 길이 없다. 본사는 몇 사람만
@@ -507,7 +507,7 @@ export default function Navigation() {
               style={{ color: active ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
             >
               <Icon name={item.icon} size={19} />
-              <span className="text-[9px] font-medium leading-tight break-keep px-0.5">{item.label}</span>
+              <span className="text-[9px] font-normal leading-tight break-keep px-0.5">{item.label}</span>
               {active && (
                 <span
                   className="absolute bottom-0 w-5 h-0.5 rounded-full"
@@ -530,7 +530,7 @@ export default function Navigation() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium no-underline transition-all"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-normal no-underline transition-all"
                 style={{
                   background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                   color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -551,7 +551,7 @@ export default function Navigation() {
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.title)}
-                  className="w-full flex items-center gap-3 px-3 mb-1 py-2 rounded-xl text-[14px] font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 mb-1 py-2 rounded-xl text-[14px] font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
                 >
                   <Icon name={group.icon} size={19} />
                   <span className="flex-1 text-left">{group.title}</span>
@@ -573,7 +573,7 @@ export default function Navigation() {
                           key={item.href}
                           href={item.href}
                           {...(ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                          className="flex items-center gap-3 pl-6 pr-3 py-2 rounded-xl text-[14px] font-medium no-underline transition-all"
+                          className="flex items-center gap-3 pl-6 pr-3 py-2 rounded-xl text-[14px] font-normal no-underline transition-all"
                           style={{
                             background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                             color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -605,7 +605,7 @@ export default function Navigation() {
           <div className="pt-2 border-t border-gray-100">
             <Link
               href={DEV_LINK.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium no-underline transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-normal no-underline transition-all"
               style={{
                 background: isActive(pathname, DEV_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                 color: isActive(pathname, DEV_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -617,7 +617,7 @@ export default function Navigation() {
             </Link>
             <Link
               href={ADMIN_LINK.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium no-underline transition-all"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-normal no-underline transition-all"
               style={{
                 background: isActive(pathname, ADMIN_LINK.href) ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
                 color: isActive(pathname, ADMIN_LINK.href) ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -635,14 +635,14 @@ export default function Navigation() {
               */}
               <span className="leading-tight">
                 {ADMIN_LINK.label.replace(/\[.*$/, '')}
-                <span className="block text-[11px] font-medium opacity-60">관리자용</span>
+                <span className="block text-[11px] font-normal opacity-60">관리자용</span>
               </span>
             </Link>
           </div>
         </div>
         <div className="mt-auto px-4 py-3 mx-3 rounded-xl bg-gray-50 text-xs text-gray-400 text-center shrink-0">
           경원영업팀 AX 경진대회<br />
-          <span className="font-semibold text-gray-500">2026</span>
+          <span className="font-bold text-gray-500">2026</span>
         </div>
       </aside>
     </>

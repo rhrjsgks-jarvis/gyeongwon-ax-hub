@@ -23,7 +23,7 @@
   .topbar-in{max-width:840px;margin:0 auto;display:flex;align-items:center;gap:10px}
   .hd-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);
     display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
-  .hd-t{font-size:17px;font-weight:800;line-height:1.25}
+  .hd-t{font-size:17px;font-weight:700;line-height:1.25}
   .hd-s{font-size:11.5px;color:#c7d2fe;margin-top:2px;line-height:1.4}
   .wrap{max-width:840px;margin:0 auto;padding:16px 14px 60px}
   /* 오른쪽 위 공유 버튼(share-kit)이 이 안내문 위에 떠서 첫 줄을 덮고 있었다(실측 확인).
@@ -33,7 +33,7 @@
   #body{scroll-margin-top:56px}
   .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;margin-bottom:16px}
   .cat{border:1px solid #e5e7eb;background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
-    font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:#374151}
+    font-weight:700;text-align:center;cursor:pointer;transition:.12s;color:#374151}
   /* 아이콘 크기는 AI구독 케어와 같은 값(22px)으로 맞춘다 — 앱을 넘겨 볼 때 같은 무게로 읽힌다 */
   .cat .ci{display:block;margin-bottom:4px;line-height:1}
   .cat .ci .psym{width:22px;height:22px;margin:0 auto}
@@ -42,7 +42,7 @@
   .rule{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid #f1f3f6}
   .rule:first-of-type{border-top:0}
   .rl{flex:0 0 auto;min-width:56px;text-align:center;border-radius:6px;padding:2px 6px;
-    font-size:10.5px;font-weight:800;line-height:1.5}
+    font-size:10.5px;font-weight:700;line-height:1.5}
   .rl.ok{background:#EEF2FF;color:#1428A0}
   .rl.need{background:#E0F2FE;color:#0D1B7A}
   .rl.warn{background:#FEF3C7;color:#B45309}
@@ -61,7 +61,7 @@
   .mode-tab .mt-x{display:none}
   @media (min-width:720px){ .mode-tab{font-size:12px} .mode-tab .mt-x{display:inline} }
   .mt-ico{display:block;font-size:15px;margin-bottom:2px;line-height:1}
-  .ctg{font-size:11px;font-weight:800;color:#6b7280;margin:12px 0 5px;letter-spacing:.02em}
+  .ctg{font-size:11px;font-weight:700;color:#6b7280;margin:12px 0 5px;letter-spacing:.02em}
   .ctg:first-of-type{margin-top:4px}
   .ct{display:flex;align-items:center;gap:10px;justify-content:space-between;
     padding:9px 11px;margin-bottom:5px;border:1px solid #e5e7eb;border-radius:10px;
@@ -71,11 +71,11 @@
   .ct-b{display:flex;flex-direction:column;min-width:0}
   .ct-b b{font-size:12.5px;font-weight:700}
   .ct-d{font-size:11px;color:#6b7280;margin-top:1px}
-  .ct-n{flex:0 0 auto;font-size:13px;font-weight:800;color:#1428A0;letter-spacing:-.01em}
+  .ct-n{flex:0 0 auto;font-size:13px;font-weight:700;color:#1428A0;letter-spacing:-.01em}
   /* 번호 하나 = 누를 수 있는 조각. 한 줄에 번호가 여럿인 곳(상황실·운영·VOC·물류)에서
      대표번호 하나만 눌리던 것을 고쳤다 — 걸 수 없는 번호를 적어 두면 받아적게 된다 */
   button.telx{border:0;background:transparent;padding:1px 5px;margin:0 -5px;border-radius:6px;
-    font-family:inherit;font-size:11.5px;font-weight:800;color:#1428A0;letter-spacing:-.01em;
+    font-family:inherit;font-size:11.5px;font-weight:700;color:#1428A0;letter-spacing:-.01em;
     cursor:pointer;text-align:left;white-space:nowrap}
   button.telx:active{background:#EEF2FF}
   button.telx.big{font-size:13px}
@@ -90,7 +90,7 @@
   .ct.lg .ct-d{white-space:normal;word-break:keep-all;line-height:1.5;margin-top:3px}
   /* 관할 — 시·도마다 한 줄. 라벨 폭을 고정해 시·도가 세로로 정렬돼 눈으로 훑인다 */
   .ar{display:block;margin-top:2px}
-  .ar b{display:inline-block;min-width:30px;margin-right:5px;font-weight:800;color:#6b7280}
+  .ar b{display:inline-block;min-width:30px;margin-right:5px;font-weight:700;color:#6b7280}
   .ar-x{display:block;margin-top:2px}
   .ct-tag{font-size:10px;font-weight:700;color:#6b7280;background:#f1f3f6;
     border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:1px}
@@ -119,11 +119,11 @@
   /* **짧은 이름을 쓰지 말 것** — `.sn` 은 이 앱이 접수 순서의 **단계 번호 원**
      (19px 원 + 남색 배경)으로 이미 쓰고 있어, 그대로 두면 센터 이름이 그 원 안에 갇혀
      첫 글자만 보인다(실제로 그렇게 났다). 이름에 자기 자리를 박는다. */
-  .svcc .svcc-n{display:block;font-size:12.5px;font-weight:600;line-height:1.35;word-break:keep-all}
+  .svcc .svcc-n{display:block;font-size:12.5px;font-weight:700;line-height:1.35;word-break:keep-all}
   .svcc .svcc-g{display:block;font-size:10.5px;color:#9aa0a6;margin-top:3px}
   /* 가전 접수 여부는 칸에 남긴다 — 모바일 전용 센터로 TV 고객을 보내면 그대로 헛걸음이다 */
   .svcc .svcc-h{display:block;font-size:10px;font-weight:700;color:#1428A0;margin-top:2px}
-  .svcc .svcc-h.m{color:#9aa0a6;font-weight:600}
+  .svcc .svcc-h.m{color:#9aa0a6;font-weight:700}
   .svcc.on .svcc-g{color:#3B4A8C}
   /* **안내문에 규칙이 아예 없었다** — 그래서 본문 기본 글씨(16px 검정)로 떠 AS기간 탭의
      `.sub`(12.5px 회색)와 무게가 달랐다. 헛걸음을 막는 문장이라 지우지 않고, 옅은 파란
@@ -137,18 +137,18 @@
      1px 밀리므로 안쪽 그림자로 두 겹을 만든다. 심벌은 파랑 그대로 둔다(바탕이 옅어 보인다). */
   .cat.on,.svcc.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:15px 16px;margin-bottom:11px}
-  .card h2{font-size:14px;font-weight:800;margin:0 0 3px;display:flex;align-items:center;gap:6px}
-  .big{font-size:27px;font-weight:800;color:#1428A0;line-height:1.15;margin:4px 0 2px}
+  .card h2{font-size:14px;font-weight:700;margin:0 0 3px;display:flex;align-items:center;gap:6px}
+  .big{font-size:27px;font-weight:700;color:#1428A0;line-height:1.15;margin:4px 0 2px}
   .why{font-size:12px;color:#6b7280;line-height:1.5}
   .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
     padding:9px 0;border-bottom:1px solid #f1f2f4}
   .row:last-child{border-bottom:0}
   .row .n{font-size:13px;font-weight:700;flex:1}
-  .row .v{font-size:14px;font-weight:800;color:#1428A0;white-space:nowrap}
+  .row .v{font-size:14px;font-weight:700;color:#1428A0;white-space:nowrap}
   .row .d{font-size:11.5px;color:#6b7280;line-height:1.5;margin-top:2px;font-weight:400}
   .warn{background:#FFFBEB;border-color:#FDE68A}
   .warn h2{color:#B45309}
-  .unk{font-size:12.5px;color:#B45309;font-weight:600}
+  .unk{font-size:12.5px;color:#B45309;font-weight:700}
   .note{font-size:11.5px;color:#6b7280;line-height:1.6;margin-top:8px;padding-top:8px;border-top:1px dashed #e5e7eb}
   .src{font-size:11px;color:#9aa0a6;line-height:1.6;margin-top:14px}
   .src a{color:#1428A0}
@@ -169,7 +169,7 @@
     padding:7px 9px;border-radius:9px;background:#F9FAFB;border:1px solid #f1f2f4}
   .way.hot{background:#EEF2FF;border-color:#c7d2fe}
   .way .wn{flex:0 0 auto;width:17px;height:17px;border-radius:99px;background:#e5e7eb;
-    color:#6b7280;font-size:10px;font-weight:800;display:flex;align-items:center;
+    color:#6b7280;font-size:10px;font-weight:700;display:flex;align-items:center;
     justify-content:center;margin-top:1px}
   .way.hot .wn{background:#1428A0;color:#fff}
   .way b{font-weight:700;color:#111827}
@@ -201,7 +201,7 @@
   .sr{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:9px;
     background:transparent;text-align:left;cursor:pointer;font-family:inherit}
   .sr:hover,.sr:focus{background:#EEF2FF;outline:none}
-  .sr-k{flex:0 0 auto;font-size:10px;font-weight:800;color:#1428A0;background:#EEF2FF;
+  .sr-k{flex:0 0 auto;font-size:10px;font-weight:700;color:#1428A0;background:#EEF2FF;
     border-radius:5px;padding:2px 6px}
   .sr-b{min-width:0;flex:1}
   .sr-b b{display:block;font-size:12.5px;font-weight:700}
@@ -211,14 +211,14 @@
   /* 뺀 말을 밝히는 줄 — 조용히 빼면 왜 이 결과인지 알 수 없다 */
   .sr-note{padding:8px 10px;font-size:11.5px;color:#B45309;background:#FFFBEB;
     border-bottom:1px solid #FDE68A;line-height:1.45}
-  .shd{font-size:10.5px;font-weight:800;color:#9aa0a6;padding:7px 10px 3px}
+  .shd{font-size:10.5px;font-weight:700;color:#9aa0a6;padding:7px 10px 3px}
 
   /* 이전설치·빌트인 — 협력사 한 곳이 여러 센터를 맡아 관할이 길다. 물류센터 카드와 같은 모양 */
   /* 연락처는 세 묶음으로 접어 둔다 — 다 펼쳐 두면 목록이 예순 줄이라 상담 중에 못 읽는다.
      찾는 것은 위 검색창이 하므로, 여기서는 눌러 펼치는 것으로 충분하다. */
   .grp{background:#fff;border:1px solid #e5e7eb;border-radius:14px;margin-bottom:11px;overflow:hidden}
   .grp>summary{list-style:none;cursor:pointer;padding:15px 16px;display:flex;align-items:center;gap:9px;
-    font-size:14px;font-weight:800}
+    font-size:14px;font-weight:700}
   .grp>summary::-webkit-details-marker{display:none}
   .grp>summary .gi{font-size:17px;line-height:1;flex:0 0 auto}
   /*
@@ -246,8 +246,8 @@
   @media (max-width:359px){ .grps{grid-template-columns:1fr} }
   /* 제목과 부제는 줄을 나눈다 — 한 줄로 붙으면 "AS·수리 모음AS 접수…" 로 읽힌다 */
   .grp>summary .gt{min-width:0;flex:1}
-  .grp>summary .gt b{display:block;font-weight:800}
-  .grp>summary .gt span{display:block;font-size:11px;font-weight:500;color:#6b7280;margin-top:2px}
+  .grp>summary .gt b{display:block;font-weight:700}
+  .grp>summary .gt span{display:block;font-size:11px;font-weight:400;color:#6b7280;margin-top:2px}
   .grp>summary .gc{flex:0 0 auto;font-size:11px;font-weight:700;color:#6b7280;white-space:nowrap;
     background:#f1f3f6;border-radius:99px;padding:2px 9px}
   .grp>summary .gv{font-size:13px;color:#9aa0a6;transition:transform .15s}
@@ -259,14 +259,14 @@
   .grp-b .card.warn{border:1px solid #FDE68A;border-radius:12px;padding:13px 14px}
   .grp-b h2{font-size:13px}
 
-  .pt{font-size:12.5px;font-weight:800;color:#1428A0}
+  .pt{font-size:12.5px;font-weight:700;color:#1428A0}
   /* 원문에 따로 적힌 번호(물류전화 등) — 대표번호와 헷갈리지 않게 한 단 작게 적는다 */
   .xn{display:inline-block;margin-top:2px;font-size:11px;color:#4b5563}
   .xn b{color:#1428A0;font-weight:700}
   .step{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-top:1px solid #f1f3f6}
   .step:first-of-type{border-top:0}
   .sn{flex:0 0 auto;width:19px;height:19px;border-radius:99px;background:#1428A0;color:#fff;
-    font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+    font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
   .st{font-size:12px;line-height:1.6;color:#374151;min-width:0}
 
   /* PC 대응 — 넓은 화면에서 본문이 폰 폭 그대로라 화면 한가운데 좁은 기둥으로 보였다
@@ -279,22 +279,22 @@
   .fee-eq b{background:#1428A0;color:#fff;border-radius:8px;padding:5px 9px}
   .fee-t{width:100%;border-collapse:collapse;margin:10px 0 6px;font-size:12.5px}
   .fee-t th{background:#F3F5FB;color:#374151;font-weight:700;padding:7px 6px;text-align:left;border-bottom:1px solid #e5e7eb}
-  .fee-t th span{display:block;font-size:11.5px;font-weight:500;color:#6b7280}
+  .fee-t th span{display:block;font-size:11.5px;font-weight:400;color:#6b7280}
   .fee-t td{padding:8px 6px;border-bottom:1px solid #f1f2f4;vertical-align:top}
   .fee-t td b{color:#1428A0}
   .fee-t td span{display:block;font-size:11.5px;color:#6b7280;margin-top:2px;word-break:break-all}
   .rf-t td:nth-child(2),.rf-t td:nth-child(3){white-space:nowrap;text-align:right}
   .fee-ul{margin:8px 0 4px;padding-left:18px;font-size:12.5px;line-height:1.6;color:#374151}
   .fee-ul li{margin-bottom:3px}
-  .fee-h{font-size:12.5px;font-weight:800;margin:12px 0 2px}
-  .fee-h span{font-weight:500;color:#6b7280;font-size:11.5px}
+  .fee-h{font-size:12.5px;font-weight:700;margin:12px 0 2px}
+  .fee-h span{font-weight:400;color:#6b7280;font-size:11.5px}
   .fee-in{margin:10px 0;font-size:12.5px;line-height:1.6}
   /* 수리비 분류 탭(2026-10-22 B안) — 칸이 12개로 늘어 폰에서 칸만 한 화면을 먹지 않게 셋으로 가른다 */
   .fee-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:#E5E7EB;border-radius:11px;padding:3px;margin-bottom:9px}
   .fee-seg button{border:0;background:transparent;border-radius:9px;padding:8px 2px;font:inherit;font-size:12.5px;font-weight:700;color:#374151;cursor:pointer}
   #csLines{margin:4px 0 8px}
-  #csLines .cat{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:inherit}
-  #csLines .cat .d{display:block;font-size:11.5px;font-weight:500;color:#6b7280;margin-top:2px}
+  #csLines .cat{font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;color:inherit}
+  #csLines .cat .d{display:block;font-size:11.5px;font-weight:400;color:#6b7280;margin-top:2px}
   #csLines .cat.on .d{color:#dbe2ff}
   .fee-seg button.on{background:#fff;color:#1428A0;box-shadow:inset 0 0 0 1.5px #1428A0}
   .rfq{border:1px solid #d6dbe8;background:#fff;margin:2px 0 8px}
@@ -340,7 +340,7 @@
     box-shadow:0 18px 50px rgba(11,18,32,.28)}
   body.grp-pop .grps>details.grp[open]>summary{position:sticky;top:0;background:#fff;z-index:1;border-bottom:1px solid #eef0f4}
   .pop-x{position:fixed;z-index:92;width:40px;height:40px;border-radius:99px;border:1.5px solid #1428A0;
-    background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
+    background:#fff;color:#1428A0;font:inherit;font-size:18px;font-weight:700;cursor:pointer}
 }
 /* 넓은 태블릿 가로(1000px~) — 결과 칸을 두 단으로 */
 @media screen and (min-width:1180px){
@@ -360,9 +360,9 @@
   .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
 }
-.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-t{font-size:11.5px;font-weight:700;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
 .dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
-  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+  color:#4B5563;font:inherit;font-size:14px;font-weight:400;text-align:left;cursor:pointer;box-sizing:border-box}
 .dm-it:hover{background:#F3F5FA}
 .dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
 .dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0;font-size:15px;line-height:1}
@@ -370,10 +370,10 @@
 .dm-it .nm{flex:1;min-width:0;word-break:keep-all}
 .dm-it .ar{color:#9CA3AF;font-size:13px}
 .dm-it:focus-visible{outline:2px solid #1428A0;outline-offset:1px}
-.dm-it.grp2{padding-left:37px;font-size:13.5px;font-weight:600}
+.dm-it.grp2{padding-left:37px;font-size:13.5px;font-weight:700}
 .dm-it.l3{padding:7px 10px 7px 52px;font-size:13px}
 .dm-note{font-size:12px;color:#9CA3AF;padding:4px 10px 6px 37px}
-.dm-it .cnt{color:#9CA3AF;font-size:11.5px;font-weight:500;white-space:nowrap}
+.dm-it .cnt{color:#9CA3AF;font-size:11.5px;font-weight:400;white-space:nowrap}
 @keyframes axIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .ax-in{animation:axIn .18s ease-out}
 @media (prefers-reduced-motion:reduce){.dm-stack{transition:none}.ax-in{animation:none}}

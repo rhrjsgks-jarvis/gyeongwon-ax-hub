@@ -53,8 +53,8 @@
       '  max-height:100%;overflow-y:auto}',
       /* 가운데 팝업이라 아래에서 올라오는 대신 살짝 커지며 나타난다 */
       '@keyframes sk-pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}',
-      '.sk-t{font-size:14px;font-weight:800;margin-bottom:2px}',
-      '.sk-n{font-size:20px;font-weight:800;color:#1428A0;letter-spacing:-.01em;margin-bottom:14px}',
+      '.sk-t{font-size:14px;font-weight:700;margin-bottom:2px}',
+      '.sk-n{font-size:20px;font-weight:700;color:#1428A0;letter-spacing:-.01em;margin-bottom:14px}',
       '.sk-b{display:block;width:100%;border:1px solid #e5e7eb;background:#fff;border-radius:11px;',
       '  padding:13px;font-size:14px;font-weight:700;margin-bottom:8px;cursor:pointer;color:#16181b;',
       '  font-family:inherit;text-align:center;text-decoration:none}',
@@ -62,7 +62,7 @@
       '.sk-b:active{opacity:.85}',
       '.sk-toast{position:fixed;left:50%;bottom:24%;transform:translateX(-50%);z-index:9100;',
       '  background:rgba(20,24,32,.92);color:#fff;padding:10px 16px;border-radius:10px;',
-      '  font-size:13px;font-weight:600;pointer-events:none}',
+      '  font-size:13px;font-weight:700;pointer-events:none}',
     ].join('');
     (document.head || document.documentElement).appendChild(st);
   }
@@ -514,8 +514,8 @@
       '  #sk-print-head{margin:0 0 12px;font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;color:#111827}',
       '  #sk-print-head .bar{display:flex;justify-content:space-between;align-items:center;',
       '    border-bottom:2.5px solid #1428A0;padding:0 0 6px;font-size:10.5px;color:#4B5563}',
-      '  #sk-print-head .brand{font-weight:800;color:#1428A0;letter-spacing:.01em;font-size:11px}',
-      '  #sk-print-head .ttl{font-size:21px;font-weight:800;margin:10px 0 2px;color:#0B1220;letter-spacing:-.01em}',
+      '  #sk-print-head .brand{font-weight:700;color:#1428A0;letter-spacing:.01em;font-size:11px}',
+      '  #sk-print-head .ttl{font-size:21px;font-weight:700;margin:10px 0 2px;color:#0B1220;letter-spacing:-.01em}',
       '  #sk-print-head .sub{font-size:11.5px;color:#4B5563}',
       '  #sk-print-foot{margin-top:14px;padding-top:7px;border-top:1px solid #D1D5DB;',
       '    font-family:Pretendard,-apple-system,"Segoe UI",sans-serif;font-size:9.5px;line-height:1.55;color:#6B7280;',
@@ -638,7 +638,7 @@
       var st = document.createElement('style'); st.id = 'sk-pick-css';
       st.textContent = '.sk-pick{max-height:52vh;overflow:auto;margin:4px 0 12px;display:grid;gap:6px}'
         + '.sk-pick label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid #E5E7EB;border-radius:11px;'
-        + 'font-size:14px;font-weight:600;color:#1F2937;cursor:pointer;background:#fff}'
+        + 'font-size:14px;font-weight:700;color:#1F2937;cursor:pointer;background:#fff}'
         + '.sk-pick label.on{border-color:#1428A0;background:#EEF2FF;color:#1428A0}'
         + '.sk-pick input{width:18px;height:18px;accent-color:#1428A0;flex:0 0 auto;margin:0}'
         + '.sk-pick-all{display:flex;gap:8px;margin:0 0 6px}'
@@ -711,7 +711,7 @@
      * 읽힌다 — 남색 버튼이면 남색 바 위에서 사라진다(AS 타일에서 겪은 것과 같다).
      */
     st.textContent = '#sk-share{position:fixed;right:12px;z-index:8000;background:#fff;color:#1428A0;'
-      + 'border:1.5px solid #1428A0;border-radius:99px;padding:8px 15px;font-size:13px;font-weight:800;'
+      + 'border:1.5px solid #1428A0;border-radius:99px;padding:8px 15px;font-size:13px;font-weight:700;'
       + 'font-family:inherit;cursor:pointer;box-shadow:0 2px 10px rgba(14,28,48,.16)}'
       + '#sk-share:active{background:#EEF2FF}';
     document.head.appendChild(st);
@@ -856,7 +856,7 @@
     + '.dm-it.grp.has{color:#1428A0;font-weight:700}'
     + '.dm-it.sub{padding:7px 10px 7px 37px;font-size:13.5px}'
     + '.dm-pin{display:none;width:100%;margin-bottom:6px;border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;'
-    + 'font-weight:800;font-size:13.5px;padding:8px 10px;border-radius:10px;cursor:pointer}'
+    + 'font-weight:700;font-size:13.5px;padding:8px 10px;border-radius:10px;cursor:pointer}'
     + '.dm-pin:focus-visible{outline:2px solid #1428A0;outline-offset:1px}'
     + '.crumb{display:none}#navscrim{display:none}'
     + '@media screen and (min-width:720px){'

@@ -63,7 +63,7 @@ function Chip({ rank, label, onClick }: { rank: number; label: string; onClick: 
           {rank}
         </span>
       )}
-      <span className="truncate font-medium">{label}</span>
+      <span className="truncate font-normal">{label}</span>
     </button>
   )
 }

@@ -101,7 +101,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
         <tbody>
           {(d.spec || []).map(([k, v], i) => (
             <tr key={i} className="border-b border-blue-50 last:border-0">
-              <th className="text-left align-top font-semibold text-gray-500 px-3 py-1.5 w-[38%] break-keep">{k}</th>
+              <th className="text-left align-top font-bold text-gray-500 px-3 py-1.5 w-[38%] break-keep">{k}</th>
               <td className="text-gray-800 px-3 py-1.5 break-all">{v}</td>
             </tr>
           ))}
@@ -134,7 +134,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
           <p className="text-[11px] font-bold text-amber-600 mb-1.5 flex items-center gap-1"><Icon name="star" size={12} /> 핵심 키워드 · USP</p>
           <div className="flex flex-wrap gap-1">
             {d.usp.map((f, i) => (
-              <span key={i} className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
+              <span key={i} className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700">{f}</span>
             ))}
           </div>
         </div>
@@ -142,7 +142,7 @@ function SpecDetailBody({ e, d }: { e: Entry; d: Detail }) {
 
       <div className="px-3 pb-3">
         <Link href={e.href} className="no-underline">
-          <span className="inline-block text-[12px] font-semibold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1428A0' }}>
+          <span className="inline-block text-[12px] font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1428A0' }}>
             모델파인더에서 열기 →
           </span>
         </Link>
@@ -320,7 +320,7 @@ function SearchResults() {
           {found.per.map((p) => (
             <span
               key={p.c.raw}
-              className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
+              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${
                 p.n ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-red-50 border-red-200 text-red-600'
               }`}
             >
@@ -365,7 +365,7 @@ function SearchResults() {
                 <div key={g.m} className="bg-white rounded-2xl p-4 border border-gray-100">
                   <h2 className="font-bold text-sm mb-2.5" style={{ color: meta.color }}>
                     <Icon name={meta.icon} size={13} className="inline-block align-[-2px] mr-1" /> {meta.label}
-                    <span className="text-gray-300 font-medium ml-1.5">{g.items.length}건</span>
+                    <span className="text-gray-300 font-normal ml-1.5">{g.items.length}건</span>
                   </h2>
                   <div className="flex flex-col gap-0.5">
                     {shown.map((e, i) => {
@@ -384,7 +384,7 @@ function SearchResults() {
                             >
                               <div className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 transition-colors ${open ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-gray-800 truncate">{e.title}</p>
+                                  <p className="text-sm font-bold text-gray-800 truncate">{e.title}</p>
                                   <p className="text-[11px] text-gray-400 truncate">{e.sub}</p>
                                 </div>
                                 <span className="text-gray-400 text-[11px] shrink-0">
@@ -399,7 +399,7 @@ function SearchResults() {
                       const body = (
                         <div className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 hover:bg-gray-50 transition-colors">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 truncate">
+                            <p className="text-sm font-bold text-gray-800 truncate">
                               {e.title}{e.ext && <Icon name="external" size={11} className="inline-block align-[-1px] ml-1 text-gray-300" />}
                             </p>
                             <p className="text-[11px] text-gray-400 truncate">{e.sub}</p>

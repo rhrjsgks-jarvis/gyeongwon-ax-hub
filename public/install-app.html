@@ -39,7 +39,7 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .cat-search-empty{display:none;margin-top:6px;padding:14px;text-align:center;font-size:12.5px;color:var(--gray);border:1.5px dashed var(--border);border-radius:12px;}
 .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px;}
 .cat{border:1px solid var(--border);background:#fff;border-radius:11px;padding:9px 6px;font-size:12.5px;
-  font-weight:600;text-align:center;cursor:pointer;transition:.12s;color:var(--text);
+  font-weight:700;text-align:center;cursor:pointer;transition:.12s;color:var(--text);
   word-break:keep-all;line-height:1.35;}
 .cat:hover{border-color:#c7d2fe;}
 /* **고른 칸은 파란 테두리다**(2026-10-23 사장님 — *"버튼선택은 파란테두리형태로 방식통일"*).
@@ -54,7 +54,7 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .cat-vars:empty{display:none}
 .cat-vars .vh{flex:0 0 100%;font-size:11.5px;font-weight:700;color:var(--gray)}
 .cat-var{border:1px solid var(--border);background:#fff;border-radius:999px;padding:7px 12px;font:inherit;
-  font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;word-break:keep-all}
+  font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer;word-break:keep-all}
 .cat-var.on{background:var(--primary-l);border-color:var(--primary);color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
 /* 설치 전 준비(멀티탭 · 안전 안내) — 설치비용 앱에서 옮겨 왔다(2026-10-23). 자료는 install-cost.json 한 벌 */
 .prep-card .tg{font-size:12.5px;color:#374151;line-height:1.65;margin-bottom:10px}
@@ -68,11 +68,11 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .prep-yn .y h4{color:var(--primary)}
 .prep-yn .n h4{color:#B91C1C}
 .prep-yn ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.7;color:#374151}
-.prep-yn .spec{margin-top:6px;font-size:13px;font-weight:800;color:var(--primary)}
+.prep-yn .spec{margin-top:6px;font-size:13px;font-weight:700;color:var(--primary)}
 .prep-lines{margin:0 0 8px;padding-left:16px;font-size:12.5px;line-height:1.8;color:#374151}
 .prep-it{border-top:1px solid #f1f3f6;padding:9px 0 3px}
 .prep-it:first-of-type{border-top:0}
-.prep-it .pt{font-size:13px;font-weight:800;line-height:1.5;margin-bottom:3px}
+.prep-it .pt{font-size:13px;font-weight:700;line-height:1.5;margin-bottom:3px}
 .prep-it .pd{font-size:12.5px;color:#4b5563;line-height:1.65}
 .prep-shot{display:block;margin:8px 0 4px;border:1px solid #eef0f4;border-radius:10px;overflow:hidden;max-width:460px}
 .prep-shot img{display:block;width:100%;height:auto}
@@ -87,7 +87,7 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 #result.visible{display:block;}
 
 .result-header{background:linear-gradient(135deg,var(--navy) 0%,#1e40af 100%);color:#fff;border-radius:12px;padding:16px;margin-bottom:14px;}
-.result-header h2{font-size:16px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:7px;}
+.result-header h2{font-size:16px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:7px;}
 /* 제목의 심벌 — 타일과 같은 그림이되 제목 글자에 맞춰 조금 크게 */
 .result-header h2 .res-ci{display:inline-flex;line-height:1;flex:0 0 auto;}
 /* 심벌 기본색이 삼성 블루라 남색 머리띠 위에서 묻힌다 — 흰색으로 뒤집는다
@@ -97,7 +97,7 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 
 .na-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:16px;margin-bottom:14px;font-size:13px;color:#7c2d12;line-height:1.6;}
 
-.sec-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.sec-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
 /* `width:100%` 만으로는 좁은 화면에서 표가 넘친다 — 기본 `table-layout:auto` 는 칸을
    **내용의 최소폭**에 맞춰 벌리기 때문이다. 실측으로 세탁기·콤보 사양표가 폰(390px)에서
    407px 이 되어 가로 스크롤이 생겼다("가로 넘침 전 해상도 0건"이 이 저장소의 불변식이다).
@@ -117,7 +117,7 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 .check-ico{flex-shrink:0;font-size:14px;margin-top:1px;}
 
 .caution-card{background:#fff8f0;border:1.5px solid #fed7aa;border-radius:12px;padding:14px;margin-bottom:14px;}
-.caution-card h3{font-size:13px;font-weight:800;color:#c2410c;margin-bottom:10px;}
+.caution-card h3{font-size:13px;font-weight:700;color:#c2410c;margin-bottom:10px;}
 .caution-item{display:flex;gap:8px;margin-bottom:7px;font-size:12.5px;align-items:flex-start;line-height:1.55;}
 .caution-item:last-child{margin-bottom:0;}
 .caution-icon{flex-shrink:0;font-size:14px;}
@@ -144,7 +144,7 @@ main{padding:18px 16px;max-width:620px;margin:0 auto;}
 
 footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s ease;pointer-events:none;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a2e;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;z-index:9999;transition:transform .3s ease;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);}
 
   /* PC 대응 — 넓은 화면에서 본문이 폰 폭 그대로라 화면 한가운데 좁은 기둥으로 보였다
@@ -217,9 +217,9 @@ footer{text-align:center;padding:22px 20px;font-size:11.5px;color:#9ca3af;}
   .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
   .dm-lvl[aria-hidden="true"]{max-height:0;overflow:hidden}
 }
-.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-t{font-size:11.5px;font-weight:700;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
 .dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
-  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+  color:#4B5563;font:inherit;font-size:14px;font-weight:400;text-align:left;cursor:pointer;box-sizing:border-box}
 .dm-it:hover{background:#F3F5FA}
 .dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
 .dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0}

@@ -31,7 +31,7 @@ export default function PlacePage() {
   return (
     <div className="-m-4 lg:-m-6">
       <div
-        className="flex items-center justify-center gap-1.5 text-[11px] font-semibold"
+        className="flex items-center justify-center gap-1.5 text-[11px] font-bold"
         style={{ height: BAR_PX, background: '#FEF3C7', color: '#92400E' }}
       >
         <Icon name="bulb" size={11} style={{ opacity: 0.8, flexShrink: 0 }} />

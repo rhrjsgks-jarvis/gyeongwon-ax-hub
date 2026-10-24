@@ -77,7 +77,7 @@ export default function FeedbackButton() {
             {status === 'sent' ? (
               <div className="text-center py-6">
                 <p className="mb-2 flex justify-center"><Icon name="check" size={30} style={{ color: '#059669' }} /></p>
-                <p className="text-sm font-semibold text-gray-700">감사합니다! 담당자에게 전달되었습니다.</p>
+                <p className="text-sm font-bold text-gray-700">감사합니다! 담당자에게 전달되었습니다.</p>
               </div>
             ) : (
               <>
@@ -111,7 +111,7 @@ export default function FeedbackButton() {
                     type="button"
                     onClick={close}
                     disabled={status === 'sending'}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-500 border border-gray-200 disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-500 border border-gray-200 disabled:opacity-50"
                   >
                     취소
                   </button>
@@ -119,7 +119,7 @@ export default function FeedbackButton() {
                     type="button"
                     onClick={submit}
                     disabled={!message.trim() || status === 'sending'}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
                     style={{ background: '#1428A0' }}
                   >
                     {status === 'sending' ? '전송 중…' : status === 'error' ? '다시 시도' : '보내기'}

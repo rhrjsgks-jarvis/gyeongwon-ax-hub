@@ -17,7 +17,7 @@
   .topbar-in{max-width:840px;margin:0 auto;display:flex;align-items:center;gap:10px}
   .hd-ico{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.16);
     display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
-  .hd-t{font-size:17px;font-weight:800;line-height:1.25}
+  .hd-t{font-size:17px;font-weight:700;line-height:1.25}
   .hd-s{font-size:11.5px;color:#c7d2fe;margin-top:2px;line-height:1.4}
   .wrap{max-width:840px;margin:0 auto;padding:14px 14px 60px}
   @media(min-width:1024px){.topbar-in,.wrap{max-width:960px}}
@@ -68,7 +68,7 @@
     scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .chips::-webkit-scrollbar{display:none}
   .chip{border:1px solid #e5e7eb;background:#fff;border-radius:999px;padding:8px 13px;font-size:13px;
-    font-weight:600;cursor:pointer;color:#374151;font-family:inherit;transition:.12s;
+    font-weight:700;cursor:pointer;color:#374151;font-family:inherit;transition:.12s;
     white-space:nowrap;flex:0 0 auto}
   /* 고른 칩은 파란 테두리(2026-10-23 사장님 — 전 앱 통일). 굵기 대신 안쪽 그림자로 두 겹 — 칸이 밀리지 않는다 */
   .chip.on{background:#EEF2FF;border-color:#1428A0;color:#1428A0;box-shadow:inset 0 0 0 1px #1428A0}
@@ -96,7 +96,7 @@
   @media(min-width:900px){.secs{column-count:2}}
   .sec{background:#fff;border:1px solid #eceef2;border-radius:12px;margin-bottom:12px;overflow:hidden;
     break-inside:avoid;-webkit-column-break-inside:avoid;box-shadow:0 1px 2px rgba(16,24,40,.04)}
-  .sec>summary{cursor:pointer;list-style:none;padding:12px 14px;font-size:14px;font-weight:800;
+  .sec>summary{cursor:pointer;list-style:none;padding:12px 14px;font-size:14px;font-weight:700;
     color:#1f2937;display:flex;align-items:center;gap:8px;background:#fcfcfe;
     border-bottom:1px solid #f1f3f6}
   .sec:not([open])>summary{border-bottom-color:transparent}
@@ -135,10 +135,10 @@
     transition:background .12s}
   @media(hover:hover){.r:hover{background:#fafbff}}
   .r:last-child{border-bottom:0}
-  .r .nm{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:#1f2937;line-height:1.5}
-  .r .v{flex:0 0 auto;font-size:15px;font-weight:800;color:#111827;white-space:nowrap;
+  .r .nm{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:#1f2937;line-height:1.5}
+  .r .v{flex:0 0 auto;font-size:15px;font-weight:700;color:#111827;white-space:nowrap;
     font-variant-numeric:tabular-nums}
-  .r .v .u{font-size:11px;font-weight:600;color:#9aa0a6;margin-left:2px}
+  .r .v .u{font-size:11px;font-weight:700;color:#9aa0a6;margin-left:2px}
   .r .v.free{color:#1428A0}
   .r .v.soft{font-size:13px;font-weight:700;color:#6b7280}
   /* 값이 금액이 아니라 긴 문장이면 이름 아래로 내린다(2026-10-23) — 줄바꿈 없는 값 칸이 이름 칸을
@@ -159,12 +159,12 @@
     padding:6px 9px;min-width:0}
   .vs i{display:block;font-style:normal;font-size:10.5px;font-weight:700;color:#9aa0a6;
     margin-bottom:1px;letter-spacing:.02em}
-  .vs b{font-size:14.5px;font-weight:800;color:#111827;font-variant-numeric:tabular-nums}
+  .vs b{font-size:14.5px;font-weight:700;color:#111827;font-variant-numeric:tabular-nums}
   .vs b.free{color:#1428A0}
   .vs b.soft{font-size:12.5px;font-weight:700;color:#6b7280}
   .r .nt{font-size:11.5px;color:#6b7280;line-height:1.6;margin-top:5px}
   .foot2{font-size:11.5px;color:#92400E;background:#FEF9E7;border-top:1px solid #f4ead0;
-    padding:8px 13px;line-height:1.6;font-weight:600}
+    padding:8px 13px;line-height:1.6;font-weight:700}
   .r.only{color:#6b7280;font-size:11.5px;background:#fbfcfe;line-height:1.6;display:block}
   /* 검색으로 찾아온 줄 — 잠깐 강조했다가 가라앉는다 */
   .hit{animation:hit 2.6s ease-out}
@@ -193,22 +193,22 @@
   .yn .y h4{color:#1428A0}
   .yn .n h4{color:#B91C1C}
   .yn ul{margin:0;padding-left:16px;font-size:13px;line-height:1.75;color:#374151}
-  .yn .spec{margin-top:7px;font-size:13.5px;font-weight:800;color:#1428A0}
+  .yn .spec{margin-top:7px;font-size:13.5px;font-weight:700;color:#1428A0}
   .lines{margin:0;padding-left:16px;font-size:13px;line-height:1.85;color:#374151}
   .lines li::marker{color:#1428A0}
   .warnbox{margin-top:11px;background:#FEF3C7;border:1px solid #fde68a;border-radius:10px;
-    padding:10px 12px;font-size:12.5px;color:#92400E;line-height:1.6;font-weight:600}
+    padding:10px 12px;font-size:12.5px;color:#92400E;line-height:1.6;font-weight:700}
   .foot{font-size:11.5px;color:#6b7280;margin-top:10px;line-height:1.6}
   .foot a{color:#1428A0}
   /* 멀티탭 가능/불가 — 지면의 그림을 그대로 붙인다. 글보다 그림이 먼저 읽힌다 */
   .icl{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
   .icl li{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.72);
-    border-radius:9px;padding:5px 9px 5px 5px;font-size:12.5px;color:#374151;font-weight:600}
+    border-radius:9px;padding:5px 9px 5px 5px;font-size:12.5px;color:#374151;font-weight:700}
   .icl .ic{width:30px;height:30px;object-fit:contain;flex:0 0 auto}
   /* 설치 전 준비 카드 안의 항목 — 제목 · 설명 · 그림 순서로 세운다 */
   .pit{border-top:1px solid #f1f3f6;padding:11px 0 3px}
   .pit:first-of-type{border-top:0}
-  .pt{font-size:13.5px;font-weight:800;color:#1f2937;line-height:1.5;margin-bottom:4px}
+  .pt{font-size:13.5px;font-weight:700;color:#1f2937;line-height:1.5;margin-bottom:4px}
   .pd{font-size:12.5px;color:#4b5563;line-height:1.7}
   /* 그림은 누르면 원본 크기로 열린다 — 매장에서 고객에게 확대해 보여준다 */
   .shot{display:block;margin:9px 0 4px;border:1px solid #eef0f4;border-radius:10px;overflow:hidden;
@@ -227,9 +227,9 @@
 @media screen and (min-width:720px){
   .dm-lvl{max-height:var(--dm-h,calc(100vh - 40px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 }
-.dm-t{font-size:11.5px;font-weight:800;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
+.dm-t{font-size:11.5px;font-weight:700;color:#0D1B7A;letter-spacing:.04em;padding:6px 10px 4px}
 .dm-it{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-radius:10px;background:transparent;
-  color:#4B5563;font:inherit;font-size:14px;font-weight:500;text-align:left;cursor:pointer;box-sizing:border-box}
+  color:#4B5563;font:inherit;font-size:14px;font-weight:400;text-align:left;cursor:pointer;box-sizing:border-box}
 .dm-it:hover{background:#F3F5FA}
 .dm-it.on{background:rgba(20,40,160,.08);color:#1428A0;font-weight:700;box-shadow:inset 0 0 0 1.5px #1428A0}
 .dm-it .ci{flex:none;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#1428A0;font-size:15px;line-height:1}

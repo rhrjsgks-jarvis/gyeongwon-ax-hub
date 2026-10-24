@@ -142,7 +142,7 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2 mb-5" style={{ color: '#1428A0' }}>
             <SamsungWordmark height={15} />
             <span
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+              className="text-[11px] font-bold px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(20,40,160,.08)', color: '#1428A0' }}
             >
               세일즈 코파일럿
@@ -154,7 +154,7 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
             "어떤 앱인가"이지 "무엇을 넣어야 하는가"가 아니다.
             앱 이름·로고·메뉴만 없고 물음과 이유는 그대로다.
           */}
-          <h2 className="text-lg font-extrabold" style={{ color: '#1428A0' }}>
+          <h2 className="text-lg font-bold" style={{ color: '#1428A0' }}>
             어느 매장인가요?
           </h2>
           <p className="mt-1.5 mb-4 text-xs leading-relaxed text-gray-500">
@@ -186,12 +186,12 @@ export default function StoreGate({ children }: { children: React.ReactNode }) {
         style={{ borderRadius: '18px 18px 0 0' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-extrabold mb-3" style={{ color: '#1428A0' }}>지점 바꾸기</h2>
+        <h2 className="text-base font-bold mb-3" style={{ color: '#1428A0' }}>지점 바꾸기</h2>
         {field}
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="mt-2 w-full text-[13px] font-semibold text-gray-400 py-2"
+          className="mt-2 w-full text-[13px] font-bold text-gray-400 py-2"
         >
           닫기
         </button>

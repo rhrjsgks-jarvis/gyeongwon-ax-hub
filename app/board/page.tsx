@@ -123,7 +123,7 @@ export default function BoardPage() {
             <Icon name="chat" size={20} />
           </div>
           <div>
-            <div className="text-[17px] font-extrabold leading-tight">자유게시판</div>
+            <div className="text-[17px] font-bold leading-tight">자유게시판</div>
             <div className="text-[11.5px] mt-0.5" style={{ color: '#c7d2fe' }}>
               공지·정보·질문·건의 — 경원영업팀이 함께 적는 자리
             </div>
@@ -134,7 +134,7 @@ export default function BoardPage() {
       <div className="max-w-[840px] mx-auto px-4 py-4 pb-24">
         {/* 글쓰기 */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4">
-          <p className="text-[11px] font-extrabold text-gray-400 mb-2">글쓰기</p>
+          <p className="text-[11px] font-bold text-gray-400 mb-2">글쓰기</p>
           <div className="flex gap-2 mb-2">
             {TOPICS.map((t) => (
               <button key={t} onClick={() => setTopic(t)}
@@ -164,7 +164,7 @@ export default function BoardPage() {
             </button>
           </div>
           {notice && (
-            <p className={`mt-2 text-[12px] font-semibold ${notice.ok ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`mt-2 text-[12px] font-bold ${notice.ok ? 'text-green-600' : 'text-red-600'}`}>
               {notice.msg}
             </p>
           )}
@@ -197,7 +197,7 @@ export default function BoardPage() {
                 <button key={`${p.ts}-${i}`} onClick={() => setOpenIdx(open ? null : i)}
                   className="text-left bg-white rounded-2xl border border-gray-100 p-4 hover:border-blue-200 transition-colors">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full text-white"
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
                       style={{ background: TOPIC_COLOR[p.topic] || '#475569' }}>{p.topic || '자유'}</span>
                     <span className="text-sm font-bold text-gray-800 flex-1 min-w-0 truncate">{p.title}</span>
                   </div>

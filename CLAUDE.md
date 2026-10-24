@@ -5203,7 +5203,13 @@ R(5km)보다 커서 **틈이 남는데 화면에는 아무 표시도 안 난다*
 - 설치형: manifest `display_override:["fullscreen","standalone"]` · `orientation:"any"`(세로 고정이라 태블릿 가로가 안 돌았다).
 - **Tailwind 임의 폭 변형(`min-[380px]:`)은 이 저장소에서 CSS 가 안 만들어진다**(`lg` 가 raw 미디어라서). 폭 문턱은 `useMinWidth`.
 
-**하지 않은 것** — 삼성 ONE 폰트(한글 0자 · 라이선스, 아래 「삼성 폰트」 절) · 굵기 체계(700/400, 따로 비포/애프터 후).
+**하지 않은 것** — 삼성 ONE 폰트(한글 0자 · 라이선스, 아래 「삼성 폰트」 절).
+
+**글씨 굵기는 두 가지뿐이다 — 제목·강조 700 / 나머지 400** (2026-10-24 사장님 「모든 규칙을 통일합니다」, v304 · 전후 사진 artifact 5MXV8Djqhhf9QFwhWrJJqj).
+한 화면에 400·500·600·700·800·900 이 섞여 있던 것을 600 이상 → 700, 그 아래 → 400 으로 정리했다(298곳 · 허브 app·components · 미니앱 public 의 html·js · 캔버스 글꼴 · Tailwind 굵기 클래스).
+- 새 화면을 만들면 `node scripts/unify-weights.mjs` 를 한 번 돌린다(멱등). `npm run test:weights`(npm test 안)가 700/400 밖의 값을 문다.
+- `font-medium`·`font-semibold`·`font-extrabold`·`font-black` 을 새로 쓰지 말 것 — `font-normal`·`font-bold` 둘만.
+- 빼 둔 것: `SamsungWordmark.tsx`(주석이 「font-black 으로 친 글자는 로고가 아니다」는 설명) · `sw.js` · `tools/`(인쇄용 시험지 — 화면이 아니다).
 
 ## 검색 일원화 · 단계 메뉴 (2026-10-23, v295 — 사장님 승인)
 

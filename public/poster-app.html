@@ -29,7 +29,7 @@ body{background:#5A6272;font-family:var(--sans);padding:24px 12px 80px}
 
 /* ── 화면 전용 도구막대 ───────────────────────── */
 .bar{max-width:210mm;margin:0 auto 20px;background:#fff;border-radius:14px;padding:20px 22px}
-.bar h1{font-size:17px;font-weight:800;margin-bottom:4px}
+.bar h1{font-size:17px;font-weight:700;margin-bottom:4px}
 .bar p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
 .bar .grid{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .fld{flex:1;min-width:200px}
@@ -59,19 +59,19 @@ body{background:#5A6272;font-family:var(--sans);padding:24px 12px 80px}
 .cnr.d{bottom:16mm;right:16mm;border-bottom-width:.35mm;border-right-width:.35mm}
 
 .eyebrow{display:flex;align-items:center;justify-content:center;gap:2.6mm;
-  font-family:var(--mono);font-size:2.6mm;font-weight:600;letter-spacing:.22em;color:var(--muted)}
+  font-family:var(--mono);font-size:2.6mm;font-weight:700;letter-spacing:.22em;color:var(--muted)}
 .eyebrow i{width:2mm;height:2mm;border-radius:50%;background:var(--signal);flex:0 0 2mm}
 
-h2.mega{text-align:center;font-size:15.6mm;font-weight:900;line-height:1.08;
+h2.mega{text-align:center;font-size:15.6mm;font-weight:700;line-height:1.08;
   letter-spacing:-.05em;margin:5.4mm 0 3mm}
-p.lead{text-align:center;font-size:4.2mm;font-weight:500;color:var(--muted);margin-bottom:5mm}
+p.lead{text-align:center;font-size:4.2mm;font-weight:400;color:var(--muted);margin-bottom:5mm}
 
 .card{background:var(--card);border-radius:2.8mm;overflow:hidden}
 .band{background:var(--queue);color:#fff;display:flex;align-items:center;
   padding:0 9.5mm;height:12mm}
-.band .t{font-size:6.6mm;font-weight:900;letter-spacing:-.03em}
+.band .t{font-size:6.6mm;font-weight:700;letter-spacing:-.03em}
 .band .ar{margin:0 3.4mm;color:#9AB6FF;font-size:4mm}
-.band .r{margin-left:auto;font-size:2.9mm;color:#B2CAFF;font-weight:500}
+.band .r{margin-left:auto;font-size:2.9mm;color:#B2CAFF;font-weight:400}
 
 .cbody{display:flex;align-items:center;justify-content:center;gap:12.5mm;padding:5mm 9mm 0}
 .qrcol{text-align:center}
@@ -80,7 +80,7 @@ p.lead{text-align:center;font-size:4.2mm;font-weight:500;color:var(--muted);marg
 .qrbox:hover::after{content:'클릭 또는 드래그해서 QR 교체';position:absolute;inset:0;
   background:rgba(14,23,38,.82);color:#fff;font-size:3.2mm;font-weight:700;
   display:flex;align-items:center;justify-content:center;border-radius:1.5mm;text-align:center;padding:4mm}
-.tearcap{text-align:center;font-size:5.2mm;font-weight:800;letter-spacing:-.03em;padding:4.6mm 0 5.4mm}
+.tearcap{text-align:center;font-size:5.2mm;font-weight:700;letter-spacing:-.03em;padding:4.6mm 0 5.4mm}
 
 ol.steps{list-style:none;position:relative;padding-top:3.8mm}
 ol.steps::before{content:'';position:absolute;left:2.85mm;top:6.6mm;bottom:9mm;
@@ -88,9 +88,9 @@ ol.steps::before{content:'';position:absolute;left:2.85mm;top:6.6mm;bottom:9mm;
 ol.steps li{position:relative;padding-left:11mm;margin-bottom:8.4mm}
 ol.steps li:last-child{margin-bottom:0}
 ol.steps .n{position:absolute;left:0;top:0;width:5.7mm;height:5.7mm;border-radius:50%;
-  background:var(--ink);color:#fff;font-family:var(--mono);font-size:3.1mm;font-weight:600;
+  background:var(--ink);color:#fff;font-family:var(--mono);font-size:3.1mm;font-weight:700;
   display:flex;align-items:center;justify-content:center}
-ol.steps b{display:block;font-size:5.6mm;font-weight:900;letter-spacing:-.03em;line-height:1;margin-top:-.4mm}
+ol.steps b{display:block;font-size:5.6mm;font-weight:700;letter-spacing:-.03em;line-height:1;margin-top:-.4mm}
 ol.steps em{display:block;font-style:normal;font-size:3.2mm;color:var(--muted);margin-top:2.2mm}
 
 .perf{position:relative;height:0;margin:5.5mm 0 0;
@@ -102,7 +102,7 @@ ol.steps em{display:block;font-style:normal;font-size:3.2mm;color:var(--muted);m
 
 .warn{background:var(--wash);border-left:1.2mm solid var(--signal);border-radius:1.8mm;
   padding:3.2mm 6mm;text-align:center;margin-top:4.4mm;color:var(--burn)}
-.warn strong{display:block;font-size:5.6mm;font-weight:900;letter-spacing:-.03em}
+.warn strong{display:block;font-size:5.6mm;font-weight:700;letter-spacing:-.03em}
 .warn span{display:block;font-size:3.4mm;margin-top:1.8mm}
 
 .exp{border:.35mm solid var(--rule);border-left:1.2mm solid var(--rule);border-radius:1.8mm;
@@ -744,7 +744,7 @@ var STORES = [{"code":"ZN01","name":"스타필드수원"},{"code":"ZHA7","name":
       /* 자동으로 채웠다는 것을 화면이 밝힌다 — 조용히 채우면 남의 지점으로 뽑을 수 있다 */
       var note = document.createElement('div');
       note.id = 'store-auto';
-      note.style.cssText = 'margin:6px 0 0;font-size:12px;color:#1428A0;font-weight:600';
+      note.style.cssText = 'margin:6px 0 0;font-size:12px;color:#1428A0;font-weight:700';
       note.textContent = fromCard
         ? '「매장별로 확인하기」에서 고르신 지점으로 맞췄습니다 — 다른 지점이 필요하면 위에서 바꾸세요.'
         : '접속하신 지점으로 채웠습니다 — 다른 지점 포스터가 필요하면 위에서 바꾸세요.';

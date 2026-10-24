@@ -78,7 +78,7 @@ function Form({ title, onUnlock }: { title: string; onUnlock: () => void }) {
         type="button"
         onClick={submit}
         disabled={!pw || checking}
-        className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+        className="w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
         style={{ background: '#1428A0' }}
       >
         {checking ? '확인 중…' : '들어가기'}

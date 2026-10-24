@@ -141,7 +141,7 @@ export default function ExitGuard() {
         <button
           type="button"
           onClick={() => { setBye(false); arm() }}
-          className="mt-1 rounded-xl px-5 py-2.5 text-[14px] font-semibold text-white"
+          className="mt-1 rounded-xl px-5 py-2.5 text-[14px] font-bold text-white"
           style={{ background: 'var(--color-primary)' }}
         >
           다시 시작
@@ -174,14 +174,14 @@ export default function ExitGuard() {
             ref={noRef}
             type="button"
             onClick={stay}
-            className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-[14px] font-semibold text-gray-700"
+            className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-[14px] font-bold text-gray-700"
           >
             아니오
           </button>
           <button
             type="button"
             onClick={leave}
-            className="flex-1 rounded-xl py-2.5 text-[14px] font-semibold text-white"
+            className="flex-1 rounded-xl py-2.5 text-[14px] font-bold text-white"
             style={{ background: 'var(--color-primary)' }}
           >
             예, 종료

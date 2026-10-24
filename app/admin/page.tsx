@@ -87,7 +87,7 @@ function AdminGate({ onUnlock }: { onUnlock: () => void }) {
         <button
           onClick={submit}
           disabled={checking || !pw}
-          className="w-full py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50"
+          className="w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
           style={{ background: '#1428A0' }}
         >
           입장하기
@@ -312,7 +312,7 @@ export default function AdminPage() {
           <span className="font-bold text-base">사용현황 대시보드[관리자용]</span>
           <button
             onClick={() => { lockNow(); setUnlocked(false) }}
-            className="ml-auto text-[11px] font-semibold rounded-lg px-2.5 py-1"
+            className="ml-auto text-[11px] font-bold rounded-lg px-2.5 py-1"
             style={{ background: 'rgba(255,255,255,0.18)' }}
           >
             잠그기
@@ -332,7 +332,7 @@ export default function AdminPage() {
           <button
             onClick={() => load(true)}
             disabled={reloading}
-            className="text-[10px] font-semibold rounded-lg px-2 py-0.5 disabled:opacity-50"
+            className="text-[10px] font-bold rounded-lg px-2 py-0.5 disabled:opacity-50"
             style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
           >
             {reloading ? '새로 받는 중…' : '새로 고침'}
@@ -355,7 +355,7 @@ export default function AdminPage() {
           <button
             onClick={() => load(true)}
             disabled={reloading}
-            className="shrink-0 text-[11px] font-semibold rounded-lg px-2.5 py-1.5 text-white disabled:opacity-50"
+            className="shrink-0 text-[11px] font-bold rounded-lg px-2.5 py-1.5 text-white disabled:opacity-50"
             style={{ background: '#B45309' }}
           >
             {reloading ? '불러오는 중…' : '다시 불러오기'}
@@ -478,7 +478,7 @@ export default function AdminPage() {
             return (
               <div key={key}>
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-xs font-medium text-gray-700">
+                  <span className="text-xs font-normal text-gray-700">
                     <Icon name={meta.icon} size={13} className="inline-block align-[-2px] mr-1" /> {meta.label}
                   </span>
                   <span className="text-xs font-bold" style={{ color: meta.color }}>{count}회</span>
@@ -552,7 +552,7 @@ export default function AdminPage() {
                 <div key={i} className="flex items-center gap-2 text-xs">
                   <span className="text-gray-400 w-28 shrink-0">{t}</span>
                   <Icon name={meta.icon} size={14} style={{ color: meta.color }} />
-                  <span className="font-medium" style={{ color: meta.color }}>{meta.label}</span>
+                  <span className="font-normal" style={{ color: meta.color }}>{meta.label}</span>
                   <span className="text-gray-400">
                     · {ev.action}{ev.extra ? ' (' + ev.extra + ')' : ''}
                   </span>
@@ -566,7 +566,7 @@ export default function AdminPage() {
       <div className="flex gap-2 mt-4">
         <button
           onClick={() => exportCsv(logs)}
-          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+          className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
           style={{ background: '#1428A0' }}
         >
           CSV 내보내기 ({logs.length}건)
@@ -579,7 +579,7 @@ export default function AdminPage() {
                 setLogs([])
               }
             }}
-            className="py-2.5 px-4 rounded-xl text-sm font-semibold text-red-600 border border-red-200 bg-red-50"
+            className="py-2.5 px-4 rounded-xl text-sm font-bold text-red-600 border border-red-200 bg-red-50"
           >
             초기화
           </button>
@@ -656,7 +656,7 @@ export default function AdminPage() {
             <button
               onClick={() => load(true)}
               disabled={reloading}
-              className="shrink-0 text-[10px] font-semibold rounded-lg px-2 py-0.5 disabled:opacity-50"
+              className="shrink-0 text-[10px] font-bold rounded-lg px-2 py-0.5 disabled:opacity-50"
               style={{ background: 'rgba(255,255,255,0.18)', color: '#fff' }}
             >
               {reloading ? '새로 받는 중…' : '새로 고침'}
@@ -836,7 +836,7 @@ function ViralSection() {
         </h2>
         <a
           href={VIRAL_URL} target="_blank" rel="noreferrer"
-          className="text-[11px] font-semibold rounded-lg px-2.5 py-1 text-white"
+          className="text-[11px] font-bold rounded-lg px-2.5 py-1 text-white"
           style={{ background: '#0F766E' }}
         >
           대시보드 열기
@@ -863,7 +863,7 @@ function ViralSection() {
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-[11px] text-amber-800">
           <b className="text-amber-900">바이럴 자료를 불러오지 못했습니다.</b> 아직 연동 전이거나
           Apps Script 응답이 늦을 때 그렇습니다 — 위 <b>「대시보드 열기」</b>로 직접 확인할 수 있습니다.
-          <button onClick={load} className="ml-2 underline font-semibold">다시 시도</button>
+          <button onClick={load} className="ml-2 underline font-bold">다시 시도</button>
         </div>
       )}
 
@@ -876,7 +876,7 @@ function ViralSection() {
             ].map((k) => (
               <div key={k.l} className="bg-white rounded-xl border border-gray-100 p-2.5 text-center">
                 <p className="text-xl font-bold" style={{ color: '#0F766E' }}>{(k.n || 0).toLocaleString()}</p>
-                <p className="text-[10px] text-gray-400 font-semibold mt-0.5">{k.l}</p>
+                <p className="text-[10px] text-gray-400 font-bold mt-0.5">{k.l}</p>
               </div>
             ))}
           </div>
@@ -965,9 +965,9 @@ function ViralSection() {
                 key={r.link} href={r.link} target="_blank" rel="noreferrer"
                 className="block py-1.5 border-t border-gray-50 first:border-t-0 hover:opacity-70"
               >
-                <p className="text-[12px] font-semibold text-gray-800 truncate">{r.title}</p>
+                <p className="text-[12px] font-bold text-gray-800 truncate">{r.title}</p>
                 <p className="text-[10px] text-gray-400">
-                  <span className="font-semibold" style={{ color: '#0F766E' }}>{r.src}</span>
+                  <span className="font-bold" style={{ color: '#0F766E' }}>{r.src}</span>
                   {r.kind ? ' · ' + r.kind : ''}
                   {' · '}{r.storeName}{r.cafe ? ' · ' + r.cafe : ''}{' · '}{ymd(r.date || r.foundAt)}
                 </p>
@@ -1085,7 +1085,7 @@ function StoreRow({
                         style={{ width: `${Math.round((r.count / top) * 100)}%`, background: meta.color }}
                       />
                     </span>
-                    <span className="text-[11px] font-semibold w-10 text-right tabular-nums text-gray-700">
+                    <span className="text-[11px] font-bold w-10 text-right tabular-nums text-gray-700">
                       {r.count.toLocaleString()}
                     </span>
                   </div>

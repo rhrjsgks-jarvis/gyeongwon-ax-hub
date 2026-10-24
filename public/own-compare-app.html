@@ -33,7 +33,7 @@ body{margin:0;background:var(--bg);color:var(--fg);
 .tb-ico{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.18);
   display:flex;align-items:center;justify-content:center;flex:none}
 .tb-ico svg{width:19px;height:19px}
-.brand b{display:block;font-size:15px;font-weight:800;line-height:1.3}
+.brand b{display:block;font-size:15px;font-weight:700;line-height:1.3}
 .brand span{display:block;font-size:11px;opacity:.75;line-height:1.4}
 
 .wrap{max-width:840px;margin:0 auto;padding:14px 16px 40px}
@@ -41,7 +41,7 @@ body{margin:0;background:var(--bg);color:var(--fg);
 @media(min-width:1440px){ .topbar-in,.wrap{max-width:1140px} }
 
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:12px}
-.lab{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
+.lab{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.02em}
 select,input[type=search]{width:100%;padding:10px 12px;font-size:14px;font-family:inherit;
   border:1px solid var(--line);border-radius:11px;background:#fff;color:inherit}
 select:focus,input:focus{outline:none;border-color:var(--blue)}
@@ -54,10 +54,10 @@ select:focus,input:focus{outline:none;border-color:var(--blue)}
 .pbox:hover{background:#f3f5f8}
 .pbox.on{border-color:var(--blue);background:#EEF2FF;box-shadow:inset 0 0 0 1px var(--blue)}
 .pbox .pn{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
-  font-size:12.5px;font-weight:600;line-height:1.35;word-break:keep-all}
+  font-size:12.5px;font-weight:700;line-height:1.35;word-break:keep-all}
 .pbox .pm{display:block;font-size:10px;color:var(--muted);margin-top:3px}
 .pbox .pk{position:absolute;top:5px;right:6px;width:17px;height:17px;border-radius:50%;
-  background:var(--blue);color:#fff;font-size:10px;font-weight:800;line-height:17px;display:none}
+  background:var(--blue);color:#fff;font-size:10px;font-weight:700;line-height:17px;display:none}
 .pbox.on .pk{display:block}
 
 .picked{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
@@ -65,7 +65,7 @@ select:focus,input:focus{outline:none;border-color:var(--blue)}
   color:var(--blue);border-radius:999px;padding:5px 8px 5px 10px;font-size:11.5px;font-weight:700}
 .chip button{border:0;background:none;color:var(--blue);font-size:14px;line-height:1;cursor:pointer;padding:0 2px}
 .hint{font-size:11.5px;color:var(--muted);line-height:1.6}
-.warn{font-size:11.5px;color:#B45309;font-weight:600}
+.warn{font-size:11.5px;color:#B45309;font-weight:700}
 
 /* 비교표 — 넘치면 표 안에서만 굴린다(본문이 밀리면 안 된다).
    **세로 한도가 있어야 머리글 sticky 가 선다** — 없으면 스크롤 조상이 문서가 되어
@@ -73,7 +73,7 @@ select:focus,input:focus{outline:none;border-color:var(--blue)}
 .tblwrap{overflow:auto;max-height:72vh;-webkit-overflow-scrolling:touch}
 table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:max(100%,520px)}
 th,td{border-bottom:1px solid var(--line);padding:8px 9px;vertical-align:top;text-align:left}
-thead th{position:sticky;top:0;background:#fff;font-size:11.5px;font-weight:800;z-index:1;
+thead th{position:sticky;top:0;background:#fff;font-size:11.5px;font-weight:700;z-index:1;
   border-bottom:2px solid var(--blue)}
 tbody th{font-weight:700;color:var(--muted);font-size:11.5px;white-space:nowrap;
   position:sticky;left:0;background:#fff;
@@ -82,7 +82,7 @@ tbody th{font-weight:700;color:var(--muted);font-size:11.5px;white-space:nowrap;
   box-shadow:2px 0 0 var(--line)}
 /* 열 번호 칩 — 위의 「고른 것」 칩과 같은 번호라 끌다가도 몇 번째인지 잇는다 */
 .cno{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
-  border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;
+  border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:700;
   margin-right:5px;vertical-align:1px}
 tr.diff td{background:#fffbeb}
 tr.diff th{background:#fffbeb}
@@ -327,7 +327,7 @@ function renderTable(){
     var big = flip ? p.model : shortName(p);
     var small = flip ? shortName(p) : p.model;
     return '<th><span class="cno">' + (i + 1) + '</span>' + esc(big)
-      + '<br><span style="font-weight:600;color:var(--muted)">' + esc(small) + '</span></th>';
+      + '<br><span style="font-weight:700;color:var(--muted)">' + esc(small) + '</span></th>';
   }).join('') + '</tr>';
   /* 가격은 싣지 않는다(2026-10-21 사장님 지시) */
   var body = use.map(function(r){

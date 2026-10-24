@@ -367,15 +367,15 @@ function ModuleTile({ mod }: { mod: ModuleCard }) {
         {mod.title.replace(/\s*\[.*$/, '')}
         {mod.external && <Icon name="external" size={12} className="inline-block align-[-1px] ml-1 text-gray-300" />}
         {/\[(.+)\]/.test(mod.title) && (
-          <span className="block text-[11px] font-semibold text-gray-400 mt-0.5">
+          <span className="block text-[11px] font-bold text-gray-400 mt-0.5">
             {(mod.title.match(/\[(.+)\]/) || [])[1]}
           </span>
         )}
       </h2>
       {/* 옛 이름이 있는 모듈만 한 줄 더 — 없는 모듈은 이 줄이 아예 안 그려진다 */}
-      {mod.sub && <p className="text-[10px] md:text-[11px] text-gray-400 font-medium -mt-0.5 mb-1">{mod.sub}</p>}
+      {mod.sub && <p className="text-[10px] md:text-[11px] text-gray-400 font-normal -mt-0.5 mb-1">{mod.sub}</p>}
       <p className="text-[11px] md:text-xs text-gray-500 leading-relaxed mb-2">{mod.desc}</p>
-      <p className="text-[10px] text-gray-300 font-medium">DB {mod.updated} 기준</p>
+      <p className="text-[10px] text-gray-300 font-normal">DB {mod.updated} 기준</p>
     </div>
   )
 
@@ -444,7 +444,7 @@ function LinkListCard({
   return (
     <div id={id} className="bg-white rounded-2xl p-4 border border-gray-100 scroll-mt-20">
       <h3 className="font-bold text-sm text-gray-700 mb-0.5 flex items-center gap-1.5"><Icon name={icon} size={16} style={{ color: '#1428A0' }} /> {title}</h3>
-      <p className="text-[10px] text-gray-300 font-medium mb-3">{subtitle}</p>
+      <p className="text-[10px] text-gray-300 font-normal mb-3">{subtitle}</p>
       {stores && stores.length > 0 && (
         <div className="mb-3 pb-3 border-b border-gray-100">
           <p className="text-[10px] font-bold text-gray-400 mb-1.5 flex items-center gap-1"><Icon name="store" size={12} /> 매장별로 확인하기</p>
@@ -452,7 +452,7 @@ function LinkListCard({
             value={storeCode}
             onChange={(e) => setStoreCode(e.target.value)}
             className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 ${
-              storeCode ? 'border-gray-200 text-gray-700' : 'border-blue-300 text-blue-700 font-semibold'
+              storeCode ? 'border-gray-200 text-gray-700' : 'border-blue-300 text-blue-700 font-bold'
             }`}
           >
             <option value="">지점명 선택하기</option>
@@ -481,7 +481,7 @@ function LinkListCard({
             <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors">
               <Icon name={l.icon} size={17} className="flex-shrink-0" style={{ color: '#1428A0' }} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800">{l.label}</p>
+                <p className="text-sm font-bold text-gray-800">{l.label}</p>
                 <p className="text-xs text-gray-400">{l.desc}</p>
               </div>
               <Icon name="external" size={12} className="text-gray-300" />
@@ -638,7 +638,7 @@ export default function Home() {
       {/* 헤더 */}
       <div className="mb-4">
         <p className="text-xs text-gray-400 mb-1 min-h-4">{todayStr}</p>
-        <h1 className="text-2xl font-black text-gray-900 flex items-baseline gap-2">
+        <h1 className="text-2xl font-bold text-gray-900 flex items-baseline gap-2">
           세일즈 코파일럿
           {/*
             버전 — 매장 기기는 서비스워커가 캐시를 들고 있어 "배포했는데 화면이 그대로"가
@@ -646,7 +646,7 @@ export default function Home() {
             이름을 이겨서는 안 되므로 작고 흐리게 둔다(심플 이즈 베스트).
           */}
           <span
-            className="text-[11px] font-semibold text-gray-400 tracking-wide"
+            className="text-[11px] font-bold text-gray-400 tracking-wide"
             title={`화면에 뜬 판이 최신인지 확인용 — 서비스워커 캐시 ${APP_VERSION}`}
           >
             {versionLabel()}
@@ -734,7 +734,7 @@ export default function Home() {
                 <Icon name={tip.icon} size={16} className="flex-shrink-0" style={{ color: '#1428A0' }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-400">{tip.situation}</p>
-                  <p className="text-sm font-semibold" style={{ color: '#1428A0' }}>→ {tip.tool}</p>
+                  <p className="text-sm font-bold" style={{ color: '#1428A0' }}>→ {tip.tool}</p>
                 </div>
               </div>
             </Link>
@@ -756,10 +756,10 @@ export default function Home() {
           />
           <div className="flex-1 min-w-0">
             <p className="text-xs text-gray-400 mb-0.5">경원영업팀 세일즈 코파일럿</p>
-            <p className="text-xs font-semibold text-gray-700 mb-3 truncate">{HUB_URL.replace('https://', '')}</p>
+            <p className="text-xs font-bold text-gray-700 mb-3 truncate">{HUB_URL.replace('https://', '')}</p>
             <button
               onClick={handleCopy}
-              className="w-full py-2 rounded-xl text-sm font-semibold text-white transition-colors"
+              className="w-full py-2 rounded-xl text-sm font-bold text-white transition-colors"
               style={{ background: copied ? '#059669' : '#1428A0' }}
             >
               {copied ? <span className="inline-flex items-center gap-1"><Icon name="check" size={14} /> 복사됨!</span> : <span className="inline-flex items-center gap-1"><Icon name="link" size={14} /> 링크 복사</span>}
@@ -779,7 +779,7 @@ export default function Home() {
           {GUIDE.map((g) => (
             <div key={g.step} className="flex items-start gap-3">
               <span
-                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white"
+                className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
                 style={{ background: '#1428A0' }}
               >
                 {g.step}

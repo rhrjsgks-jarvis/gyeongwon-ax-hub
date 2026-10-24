@@ -50,7 +50,7 @@ export default function DevPage() {
                 <Icon name={m.icon as IconName} size={18} style={{ color: m.color }} />
               </span>
               <span className="text-sm font-bold text-gray-800">{m.title}</span>
-              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>구축중</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#FEF3C7', color: '#92400E' }}>구축중</span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">{m.desc}</p>
           </Link>
