@@ -2,7 +2,7 @@
  "_note": "삼성닷컴 공식 셀링포인트(uspDescList). 제조사가 제품마다 싣는 문구라 상담사가 그대로 읽어도 된다. 기능 비교의 `on` 과 섞지 않는다 — 그쪽은 개수가 그대로 종합 스코어라 한쪽만 늘리면 점수가 조작된다.",
  "_source": "scripts/fixtures/sec-usp.json (삼성닷컴 goodsList API)",
  "_tool": "node scripts/build-compare-usp.mjs",
- "collectedAt": "2026-10-22",
+ "collectedAt": "2026-10-25",
  "models": {
   "BESPOKE AI 패밀리허브 4도어 (864L) RM90H91B1W": {
    "usp": [
@@ -42,7 +42,7 @@
    ],
    "src": "RS84DB5002CW",
    "grade": 4.8,
-   "reviews": 307
+   "reviews": 309
   },
   "BESPOKE AI 콤보 프리히트 7인치 LCD (세탁25+건조20kg) WD90H25AHS": {
    "usp": [
@@ -51,7 +51,7 @@
    ],
    "src": "WD90H25AHS",
    "grade": 4.9,
-   "reviews": 1688
+   "reviews": 1700
   },
   "BESPOKE AI 콤보 프리히트 기본형 (세탁25+건조20kg) WD90H25BHY": {
    "usp": [
@@ -60,7 +60,7 @@
    ],
    "src": "WD90H25BHY",
    "grade": 4.9,
-   "reviews": 116
+   "reviews": 118
   },
   "BESPOKE 그랑데 AI 세탁기 (21kg) WF21CB6650BW": {
    "usp": [
@@ -80,7 +80,7 @@
    ],
    "src": "WF21DG6650BW",
    "grade": 4.8,
-   "reviews": 310
+   "reviews": 311
   },
   "AI 무풍콤보 벽걸이 (11평) AR60F11D11WT": {
    "usp": [
@@ -90,7 +90,7 @@
    ],
    "src": "AR60F11D11WT",
    "grade": 4.8,
-   "reviews": 238
+   "reviews": 239
   },
   "AI 무풍콤보 벽걸이 (9평) AR60F09D11WT": {
    "usp": [
@@ -120,7 +120,7 @@
    ],
    "src": "KMR85RH95AFXKR",
    "grade": 4.7,
-   "reviews": 427
+   "reviews": 432
   },
   "2026 Neo QLED QNH70 85인치 (KQ85QNH70)": {
    "usp": [
@@ -130,7 +130,7 @@
    ],
    "src": "KQ85QNH70AFXKR",
    "grade": 4.7,
-   "reviews": 693,
+   "reviews": 698,
    "how": "prefix"
   },
   "비스포크 AI 제트 400W (VS90F40CSG)": {
@@ -151,7 +151,7 @@
    ],
    "src": "SM-S948NZVBKOO",
    "grade": 4.9,
-   "reviews": 15338,
+   "reviews": 15352,
    "how": "name"
   },
   "Galaxy S26+ (256GB)": {
@@ -162,7 +162,7 @@
    ],
    "src": "SM-S947NZVAKOO",
    "grade": 4.9,
-   "reviews": 3633,
+   "reviews": 3640,
    "how": "name"
   },
   "Galaxy S26 (256GB)": {
@@ -173,7 +173,7 @@
    ],
    "src": "SM-S942NZVEKOO",
    "grade": 4.9,
-   "reviews": 4121,
+   "reviews": 4135,
    "how": "name"
   },
   "Galaxy 퀀텀6 (128GB)": {
@@ -195,7 +195,7 @@
    ],
    "src": "SM-A366NZAAKOO",
    "grade": 4.7,
-   "reviews": 1002,
+   "reviews": 1003,
    "how": "name"
   },
   "BESPOKE AI 콤보 프리히트 7인치 LCD (일체형, 세탁25+건조20kg) WD90H25AHS": {
@@ -205,7 +205,7 @@
    ],
    "src": "WD90H25AHS",
    "grade": 4.9,
-   "reviews": 1688
+   "reviews": 1700
   },
   "BESPOKE AI 콤보 프리히트 기본형 (일체형, 세탁25+건조20kg) WD90H25BHY": {
    "usp": [
@@ -214,7 +214,7 @@
    ],
    "src": "WD90H25BHY",
    "grade": 4.9,
-   "reviews": 116
+   "reviews": 118
   },
   "Bespoke AI 식기세척기 빌트인 (14인용, 컵 맞춤 세척) DW90F79P1U01S": {
    "usp": [
@@ -244,7 +244,7 @@
    ],
    "src": "NT960UJH-XC94Y",
    "grade": 4.9,
-   "reviews": 137,
+   "reviews": 138,
    "how": "prefix"
   },
   "Galaxy Book6 Pro (16인치) NT960XJG": {
@@ -255,7 +255,7 @@
    ],
    "src": "NT960XJG-KD72G",
    "grade": 4.9,
-   "reviews": 1012,
+   "reviews": 1014,
    "how": "prefix"
   },
   "Galaxy Book6 Pro (14인치) NT940XJG": {
@@ -266,7 +266,7 @@
    ],
    "src": "NT940XJG-KC51G",
    "grade": 4.9,
-   "reviews": 76,
+   "reviews": 77,
    "how": "prefix"
   },
   "Galaxy Book6 (16인치) NT760VJG": {
@@ -275,9 +275,9 @@
     "완벽한 퍼포먼스를 위한 새로운 디자인과 설계",
     "학습과 업무를 도와주는 네비게이터 Galaxy AI"
    ],
-   "src": "NT760VJG-KC51S",
-   "grade": 4.8,
-   "reviews": 152,
+   "src": "NT760VJG-KP51G",
+   "grade": 4.6,
+   "reviews": 109,
    "how": "prefix"
   },
   "AI 김치플러스 4도어 490L(냄새케어 김치통) RK70F49F1DD": {
@@ -308,7 +308,7 @@
    ],
    "src": "DF90H24R5C",
    "grade": 4.9,
-   "reviews": 283
+   "reviews": 285
   },
   "비스포크 AI 에어드레서 대용량 5~9벌 DF24CB9900CR": {
    "usp": [
@@ -348,7 +348,7 @@
    ],
    "src": "AP90F08163UDD",
    "grade": 4.8,
-   "reviews": 205
+   "reviews": 207
   },
   "Infinite AI 공기청정기 (33㎡, S필터, 1등급) AP90H03163UGD": {
    "usp": [
@@ -368,7 +368,7 @@
    ],
    "src": "AP70F06103RVD",
    "grade": 4.9,
-   "reviews": 121
+   "reviews": 122
   },
   "비스포크 AI 공기청정기 (33㎡, UV LED 살균) AP90H03193EGD": {
    "usp": [
@@ -378,7 +378,7 @@
    ],
    "src": "AP90H03193EGD",
    "grade": 4.9,
-   "reviews": 153
+   "reviews": 155
   },
   "블루스카이 3100 (33㎡) AP70F03102RVD": {
    "usp": [
@@ -388,7 +388,7 @@
    ],
    "src": "AP70F03102RVD",
    "grade": 4.8,
-   "reviews": 236
+   "reviews": 237
   }
  }
 }

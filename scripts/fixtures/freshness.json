@@ -14,7 +14,7 @@
       "key": "usp",
       "name": "제조사 셀링포인트",
       "everyDays": 30,
-      "checkedAt": "2026-10-22",
+      "checkedAt": "2026-10-26",
       "where": "타사비교·모델파인더",
       "source": "goodsList uspDescList",
       "how": "npm run fetch:usp && npm run build:usp"
@@ -23,7 +23,7 @@
       "key": "care",
       "name": "구독케어 회차·유형",
       "everyDays": 30,
-      "checkedAt": "2026-10-22",
+      "checkedAt": "2026-10-26",
       "where": "AI구독 케어 안내",
       "source": "samsung.com 구독케어 자세히 보기",
       "how": "subs-care-collect 스킬"
@@ -86,7 +86,7 @@
       "key": "svc-centers",
       "name": "서비스센터",
       "everyDays": 90,
-      "checkedAt": "2026-10-22",
+      "checkedAt": "2026-10-26",
       "where": "AS 센터 찾기",
       "source": "api.samsungsvc.co.kr centerList",
       "how": "node scripts/svc-collect.mjs → 검토 후 fixture 로 → npm run build:svc"
@@ -95,7 +95,7 @@
       "key": "svc-fee",
       "name": "수리비·출장비·휴대폰·PC 부품가",
       "everyDays": 30,
-      "checkedAt": "2026-10-22",
+      "checkedAt": "2026-10-26",
       "where": "AS 관련 정보 → 수리비",
       "source": "samsungsvc.co.kr/info/fee (service·price 탭) · /info/self-repair",
       "how": ".scratch/svcfee/collect.mjs·selfparts2.mjs·pcparts.mjs(브라우저 안 fetch · 노트북·모니터는 pcparts 를 selfparts-all.json 에 합친다) → node scripts/build-svc-parts.mjs <selfparts-all.json> · 출장비 문구는 as-app.html 의 FEE"
