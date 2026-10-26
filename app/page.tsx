@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { HIDDEN } from '@/lib/hidden'   // 잠시 감춘 도구(시크릿쿠폰 — 2026-10-27)
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { logEvent, LogModule } from '@/lib/logEvent'
@@ -683,14 +684,14 @@ export default function Home() {
             </div>
             {group.title === '매장운영 도구' && (
               <div className={`${isOpen ? 'flex' : 'hidden'} md:flex flex-col gap-3 mt-3`}>
-                <LinkListCard
+                {!HIDDEN.coupon && <LinkListCard
                   id="coupon"
                   icon="coupon"
                   title="쿠폰 배포 프로그램"
                   subtitle="매장 쿠폰 재고·발급현황 관리"
                   links={COUPON_LINKS}
                   logKey="coupon"
-                />
+                />}
                 <LinkListCard
                   id="concierge"
                   icon="ticket"

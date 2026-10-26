@@ -14,6 +14,7 @@
 
 import { normalize } from './searchTerms.ts'
 import type { LogEvent } from './logEvent.ts'
+import { HIDDEN } from './hidden.ts'
 
 /* ── 도구 이름·주소 ───────────────────────────────────────────────
  * **여기 적힌 이름은 허브 카드 제목과 같아야 한다.** 이 저장소가 허브 카드 개수·앱
@@ -97,6 +98,7 @@ export function topTools(logs: LogEvent[], since: number, top = TOP_N): ToolTren
     if (ev.action !== 'page_view') continue
     const info = TOOL_INFO[ev.module]
     if (!info) continue                       // 허브 진입·운영 종료 모듈은 세지 않는다
+    if ((HIDDEN as Record<string, boolean>)[ev.module]) continue   // 잠시 감춘 도구는 「지금 많이 찾는 것」에도 안 띄운다
     ;(seen[ev.module] = seen[ev.module] || new Set()).add(ev.uid || String(ev.ts))
   }
   return Object.entries(seen)

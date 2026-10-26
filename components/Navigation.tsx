@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { HIDDEN } from '@/lib/hidden'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import SamsungWordmark from './SamsungWordmark'
@@ -222,7 +223,7 @@ const NAV_GROUPS = [
     title: '매장운영 도구',
     icon: 'store' as IconName,
     items: [
-      { href: '/#coupon',    label: '쿠폰 배포 프로그램', icon: 'coupon' as IconName },
+      ...(HIDDEN.coupon ? [] : [{ href: '/#coupon', label: '쿠폰 배포 프로그램', icon: 'coupon' as IconName }]),   // 잠시 감춤(lib/hidden.ts)
       { href: '/#concierge', label: '컨시어지',        icon: 'ticket' as IconName },
     ],
   },

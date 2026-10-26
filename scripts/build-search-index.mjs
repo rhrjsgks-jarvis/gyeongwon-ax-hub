@@ -15,6 +15,7 @@ import { fileURLToPath } from 'url';
 // "1,853"으로 색인되고 "1853"으로 찾아 영영 안 걸린다. 그래서 규칙을 한 파일에 둔다.
 // (그래서 이 스크립트는 --experimental-strip-types 로 돈다 — package.json 참고)
 import { normalize } from '../lib/searchTerms.ts';
+import { HIDDEN } from '../lib/hidden.ts';   // 잠시 감춘 도구는 색인·자동완성에서 뺀다
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pub = (f) => path.join(__dirname, '..', 'public', f);
@@ -581,7 +582,7 @@ const MODULES = [
   { title: '컨시어지 프로그램', sub: '매장 대기접수·전광판 (지점 선택 필요)', kw: '컨시어지 대기 접수 전광판 concierge 🏬 매장운영 도구', href: '/#concierge' },
   // 접수 포스터는 컨시어지 카드 안의 링크라 허브 카드·사이드바 어디에도 없다 — 여기서만 색인된다.
   { title: '컨시어지 접수 포스터', sub: '매장 접수 QR 포스터 — 인쇄용', kw: '포스터 접수 qr 인쇄 컨시어지 poster 매장운영 도구', href: '/poster' },
-  { title: '쿠폰 배포 프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true },
+  ...(HIDDEN.coupon ? [] : [{ title: '쿠폰 배포 프로그램', sub: '매장 쿠폰 재고·발급현황', kw: '쿠폰 시크릿쿠폰 coupon 발급 🏬 매장운영 도구', href: couponHref(), ext: true }]),
 ];
 for (const mod of MODULES) {
   add({ t: 'module', m: 'hub', title: mod.title, sub: mod.sub, kw: `${mod.title} ${mod.kw}`, href: mod.href, ext: !!mod.ext });

@@ -36,10 +36,10 @@ console.log('\n[2] 도구 — 세션 수로 센다(누가 많이 눌렀는가가
 {
   const logs = [
     ...Array.from({ length: 20 }, () => ev('compare', 'page_view', 'u1')),   // 한 사람이 20번
-    ...['a', 'b', 'c'].map((u) => ev('coupon', 'page_view', u)),             // 세 사람이 한 번씩
+    ...['a', 'b', 'c'].map((u) => ev('as', 'page_view', u)),                 // 세 사람이 한 번씩(쿠폰은 lib/hidden.ts 로 감춰 둠)
   ]
   const t = topTools(logs, TODAY)
-  ok(t[0].module === 'coupon' && t[0].n === 3, '세 사람(3) 이 한 사람 20번을 이긴다')
+  ok(t[0].module === 'as' && t[0].n === 3, '세 사람(3) 이 한 사람 20번을 이긴다')
   ok(t[1].module === 'compare' && t[1].n === 1, '한 사람은 몇 번을 눌러도 1 이다')
 }
 
