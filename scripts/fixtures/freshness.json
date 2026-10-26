@@ -5,7 +5,7 @@
       "key": "lineup",
       "name": "제품 라인업",
       "everyDays": 30,
-      "checkedAt": "2026-10-16",
+      "checkedAt": "2026-10-27",
       "where": "모델파인더·통합검색",
       "source": "samsung.com/sec cxhr/pf/goodsList",
       "how": "점검 스킬 → 라인업 대조"
@@ -23,7 +23,7 @@
       "key": "care",
       "name": "구독케어 회차·유형",
       "everyDays": 30,
-      "checkedAt": "2026-10-26",
+      "checkedAt": "2026-10-27",
       "where": "AI구독 케어 안내",
       "source": "samsung.com 구독케어 자세히 보기",
       "how": "subs-care-collect 스킬"
@@ -32,7 +32,7 @@
       "key": "bluepass",
       "name": "블루패스",
       "everyDays": 30,
-      "checkedAt": "2026-10-15",
+      "checkedAt": "2026-10-27",
       "where": "AI구독 케어 안내",
       "source": "samsung.com/sec/ai-subs/guide/",
       "how": "subs-care-collect 스킬"
