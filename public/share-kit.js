@@ -838,41 +838,44 @@
 })();
 
 /*
- * ── 사이드바 접기(☰) · 서랍 · 맨 위 경로 — 네 앱 공용 (2026-10-24 사장님 승인 시안) ──
+ * ── 메뉴 자리 하나 · ☰ 로만 여닫기 · 맨 위 경로 — 여섯 앱 공용 (2026-10-29 사장님 승인 시안 2차) ──
  * 허브 머리의 ☰(lib/navCollapse.ts → IframeModule)가 신호를 보낸다.
- *   {sk:'navc', on}      접힘이면 html.ax-navc — 앱 메뉴(.ax-navbox)를 거두고 내용이 폭을 다 쓴다
- *   {sk:'navc-drawer'}   접힘에서 ☰ 를 다시 누름 → 메뉴를 내용 위로 덮어 연다(html.ax-drawer)
- *   {sk:'navc-set', on}  서랍 맨 위 「메뉴 펼쳐 두기」 → 부모에게 접기를 풀어 달라고 알린다
- * 서랍은 고르면(앱이 AxNav.done()) · 바깥 · Esc · 기기 뒤로가기로 닫힌다.
+ *   {sk:'navc', on, g}  on = 앱 메뉴(.ax-navbox)를 거둔다 — 메뉴가 닫혔거나 그 자리에 전체 메뉴가 섰을 때.
+ *                       g  = 공통 사이드바가 있는 폭이라 「‹ 전체 메뉴」 단추를 띄울 수 있다
+ *   {sk:'navc-sheet'}   「‹ 전체 메뉴」를 누름 → 부모에게 메뉴 자리를 전체 메뉴로 바꿔 달라고 알린다
  *
- * **앱마다 복사하지 않는다** — 서랍을 여닫는 길이 앱마다 갈리면 한 곳만 고쳐 어긋난다.
- * 앱이 할 일은 셋뿐이다: 메뉴 상자에 class="ax-navbox" · 내용 칸의 접힘 배치(CSS) ·
- * 고른 뒤 AxNav.done() · 경로는 AxNav.crumb(상자, [[이름, 열쇠]...], 누르면 할 일).
- * 레이아웃(그리드 열)은 앱마다 달라 앱 CSS 에 둔다. 여기는 서랍·덮개·경로·펼침 줄만.
+ * **열고 닫기는 부모의 ☰ 만 한다.** 예전의 서랍(고르면·바깥을 누르면 저절로 닫힘)은 없앴다 —
+ * 사장님 지시: *"메뉴바를 눌렀을 때만 닫히도록"*. AxNav.open·done 은 앱들이 아직 부르므로 남기되 아무 일도 안 한다.
+ * **메뉴 자리는 하나다** — 앱 메뉴가 들어갈 때는 왼쪽으로 밀려 들어가고, 나올 때는 왼쪽에서 밀려 나온다.
+ *
+ * **앱마다 복사하지 않는다.** 앱이 할 일: 메뉴 상자에 class="ax-navbox" · 내용 칸의 접힘 배치(CSS) ·
+ * 경로는 AxNav.crumb(상자, [[이름, 열쇠]...], 누르면 할 일).
  */
 (function () {
-  var R = document.documentElement, pushed = false, onCrumb = null;
+  var R = document.documentElement, onCrumb = null, inT = 0;
   var css = ''
     + '.dm-it.grp.has{color:#1428A0;font-weight:700}'
     + '.dm-it.sub{padding:7px 10px 7px 37px;font-size:13.5px}'
-    + '.dm-pin{display:none;width:100%;margin-bottom:6px;border:1.5px solid #1428A0;background:#EEF2FF;color:#1428A0;font:inherit;'
-    + 'font-weight:700;font-size:13.5px;padding:8px 10px;border-radius:10px;cursor:pointer}'
-    + '.dm-pin:focus-visible{outline:2px solid #1428A0;outline-offset:1px}'
-    + '.crumb{display:none}#navscrim{display:none}'
+    + '.dm-all{display:none;width:100%;margin-bottom:8px;border:1px solid #E5E7EB;background:#fff;color:#1428A0;font:inherit;'
+    + 'font-weight:700;font-size:13.5px;padding:8px 10px;border-radius:10px;cursor:pointer;text-align:left}'
+    + '.dm-all:hover{background:#EEF2FF}.dm-all:focus-visible{outline:2px solid #1428A0;outline-offset:1px}'
+    + '.crumb{display:none}'
     + '@media screen and (min-width:720px){'
     + '.crumb:not(:empty){display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 10px;font-size:13.5px;font-weight:700;color:#5B6476}'
     + '.crumb button{border:0;background:transparent;font:inherit;color:#1428A0;padding:4px 6px;border-radius:6px;cursor:pointer}'
     + '.crumb button:hover{background:#EEF2FF}.crumb b{color:#0B1220;padding:4px 2px}.crumb .x{color:#C3CAD8}'
+    /* 거둘 때 — 자리에서 빼 왼쪽으로 밀어 넣는다(보이지도 Tab 이 들어가지도 않는다) */
     + 'html.ax-navc body .ax-navbox{position:fixed!important;top:0!important;left:0!important;bottom:0!important;z-index:60!important;'
-    + 'width:272px!important;max-height:none!important;margin:0!important;border-radius:0 14px 14px 0!important;padding:10px 8px!important;'
-    + 'background:#fff!important;overflow:hidden!important;transform:translateX(-110%)!important;transition:transform .2s ease-out;'
-    + 'box-shadow:6px 0 24px rgba(11,18,32,.22);visibility:hidden!important;box-sizing:border-box}'
-    + 'html.ax-navc.ax-drawer body .ax-navbox{transform:none!important;visibility:visible!important}'
-    + 'html.ax-navc .dm-pin{display:block}'
-    + 'html.ax-navc.ax-drawer #navscrim{display:block;position:fixed;inset:0;z-index:55;background:rgba(11,18,32,.35)}'
+    + 'width:272px!important;max-height:none!important;margin:0!important;padding:10px 8px!important;'
+    + 'background:#fff!important;overflow:hidden!important;transform:translateX(-110%)!important;transition:transform .3s ease,visibility .3s;'
+    + 'visibility:hidden!important;box-sizing:border-box}'
+    /* 들일 때 — 왼쪽에서 밀려 나온다 */
+    + 'html.ax-navin body .ax-navbox{animation:axNavIn .3s ease-out}'
+    + '@keyframes axNavIn{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}'
+    + 'html.ax-navg .dm-all{display:block}'
     + '}'
-    + '@media (prefers-reduced-motion:reduce){html.ax-navc body .ax-navbox{transition:none}}'
-    + '@media print{.crumb,.dm-pin,#navscrim{display:none!important}}';
+    + '@media (prefers-reduced-motion:reduce){html.ax-navc body .ax-navbox{transition:none}html.ax-navin body .ax-navbox{animation:none}}'
+    + '@media print{.crumb,.dm-all{display:none!important}}';
   function addCss() {
     if (document.getElementById('ax-nav-css')) return;
     var st = document.createElement('style'); st.id = 'ax-nav-css'; st.textContent = css;
@@ -880,7 +883,6 @@
   }
   addCss();
   function collapsed() { return R.classList.contains('ax-navc'); }
-  function isOpen() { return R.classList.contains('ax-drawer'); }
   function refit() { try { window.dispatchEvent(new Event('resize')); } catch (e) {} }
   /* 지금 보이는 메뉴 상자 — AS 처럼 탭마다 메뉴가 있으면 보이는 탭의 것 */
   function box() {
@@ -888,65 +890,60 @@
     for (var i = 0; i < bs.length; i++) if (bs[i].getClientRects().length) return bs[i];
     return null;
   }
-  /* 「메뉴 펼쳐 두기」 — 메뉴를 다시 그리는 앱이 있어(innerHTML) 열 때마다 있는지 보고 넣는다 */
-  function ensurePin(b) {
-    if (!b || b.querySelector('.dm-pin')) return;
-    var p = document.createElement('button'); p.type = 'button'; p.className = 'dm-pin'; p.textContent = '메뉴 펼쳐 두기';
-    b.insertBefore(p, b.firstChild);
-  }
-  function scrim() {
-    if (document.getElementById('navscrim') || !document.body) return;
-    var d = document.createElement('div'); d.id = 'navscrim'; d.className = 'sk-noprint'; document.body.appendChild(d);
+  /* 「‹ 전체 메뉴」 — 메뉴를 다시 그리는 앱이 있어(innerHTML) 신호마다·누를 때마다 있는지 보고 넣는다 */
+  function ensureAll() {
+    var bs = document.querySelectorAll('.ax-navbox');
+    for (var i = 0; i < bs.length; i++) {
+      var b = bs[i];
+      if (b.querySelector('.dm-all')) continue;
+      var p = document.createElement('button'); p.type = 'button'; p.className = 'dm-all sk-noprint'; p.textContent = '‹ 전체 메뉴';
+      b.insertBefore(p, b.firstChild);
+    }
   }
   function focusIn(b) {
     if (!b) return;
     var on = b.querySelector('.dm-it.on') || b.querySelector('.dm-it.has') || b.querySelector('.dm-it');
-    if (on) { try { on.scrollIntoView({ block: 'nearest' }); on.focus({ preventScroll: true }); } catch (e) {} }
+    if (on) { try { on.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
   }
-  function close() { var was = isOpen(); R.classList.remove('ax-drawer'); pushed = false; return was; }
-  function open() {
-    if (!collapsed()) return;
-    var b = box(); if (!b) return;          // 메뉴가 없는 탭(AS 센터 찾기 등)에서는 덮개만 뜨지 않게
-    scrim(); ensurePin(b);
-    R.classList.add('ax-drawer');
-    if (window.Back && !pushed) { pushed = true; Back.open(close, isOpen); }
-    refit(); focusIn(b);
-  }
-  /* 고른 뒤·바깥·Esc — 쌓아 둔 뒤로가기 칸도 함께 정리한다 */
-  function done() { var p = pushed; if (close() && p && window.Back) Back.done(); }
   function setLocal(on) {
     if (collapsed() === on) return;
     R.classList.toggle('ax-navc', on);
-    if (!on) done();
+    if (!on) {                              // 나올 때만 밀려 나오는 움직임을 준다
+      R.classList.add('ax-navin'); clearTimeout(inT);
+      inT = setTimeout(function () { R.classList.remove('ax-navin'); }, 360);
+    }
     refit();
   }
+  /* 서랍은 없앴다 — 앱들이 부르는 이름만 남긴다(고른 뒤 AxNav.done() 를 불러도 메뉴는 그대로다) */
+  function open() {}
+  function done() {}
   window.addEventListener('message', function (e) {
     if (e.origin !== location.origin) return;
     var d = e.data; if (!d) return;
-    if (d.sk === 'navc') setLocal(!!d.on);
-    else if (d.sk === 'navc-drawer') open();
+    if (d.sk === 'navc') {
+      setLocal(!!d.on);
+      R.classList.toggle('ax-navg', !!d.g);
+      ensureAll();
+    }
   });
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
-    if (t.id === 'navscrim') { done(); return; }
-    if (t.closest('.dm-pin')) {
-      done(); setLocal(false);
-      try { parent.postMessage({ sk: 'navc-set', on: false }, location.origin); } catch (x) {}
+    if (t.closest('.dm-all')) {
+      try { parent.postMessage({ sk: 'navc-sheet' }, location.origin); } catch (x) {}
       return;
     }
     var cb = t.closest('.crumb button');
     if (cb) {
       if (onCrumb) onCrumb(cb.getAttribute('data-crumb') || '');
-      if (collapsed()) open(); else focusIn(box());
+      if (!collapsed()) focusIn(box());      // 닫혀 있으면 열지 않는다 — 여는 것은 ☰ 만 한다
       return;
     }
-    /* 서랍 안에서 묶음을 펼치면 앱이 메뉴를 다시 그린다 — 펼쳐 두기 단추를 되살린다 */
-    if (isOpen()) setTimeout(function () { ensurePin(box()); }, 0);
+    /* 묶음을 펼치면 앱이 메뉴를 다시 그린다 — 「‹ 전체 메뉴」를 되살린다 */
+    setTimeout(ensureAll, 0);
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) done(); });
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  /* 맨 위 경로 — parts = [[이름, 열쇠], …] 마지막이 지금 위치(굵게). 앞 것을 누르면 fn(열쇠) 뒤 메뉴가 열린다 */
+  /* 맨 위 경로 — parts = [[이름, 열쇠], …] 마지막이 지금 위치(굵게). 앞 것을 누르면 fn(열쇠) */
   function crumb(el, parts, fn) {
     if (typeof el === 'string') el = document.getElementById(el);
     if (!el) return;

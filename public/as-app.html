@@ -2745,7 +2745,7 @@ function openSvcLink(){
   if (gk && (GROUPS.some(x => x.id === gk) || MV_OLD[gk])) { openGroup(gk); return; }
   const fsk = new URLSearchParams(location.search).get('fs');
   if (fsk && FEE_SECS.some(x => x[0] === fsk)) {
-    feeSec = fsk;
+    feeSec = fsk; feeView = null;   /* 메뉴가 그 칸의 묶음(예: 부품 가격)을 펼치게 — 첫 렌더가 정해 둔 묶음을 버린다 */
     const ck = Number(new URLSearchParams(location.search).get('ck'));
     if (fsk === 'consum' && ck >= 0 && ck < 7) csKind = ck;
     const cpv = new URLSearchParams(location.search).get('cpv');

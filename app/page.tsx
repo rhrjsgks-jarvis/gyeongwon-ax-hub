@@ -118,6 +118,55 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
     ],
   },
   {
+    /*
+     * 부품·소모품 바로가기 (2026-10-29 사장님 승인 시안). 자료는 AS 관련 정보 › 수리비 그대로이고
+     * 여기는 그 칸을 바로 여는 문이다(?fs=). 사이드바 NAV_GROUPS 의 같은 이름 그룹과 짝이다.
+     */
+    title: '부품 · 소모품',
+    modules: [
+      {
+        href: '/as?fs=phone',
+        icon: 'phone',
+        title: '휴대폰 부품가',
+        desc: '갤럭시 S·A · 폴더블 자가수리 부품 판매가·반납가 (삼성전자서비스 원문)',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.10',
+        status: 'live',
+      },
+      {
+        href: '/as?fs=tablet',
+        icon: 'tablet',
+        title: '태블릿 부품가',
+        desc: '갤럭시 탭 자가수리 부품 판매가·반납가',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.10',
+        status: 'live',
+      },
+      {
+        href: '/as?fs=pc',
+        icon: 'laptop',
+        title: 'PC 부품가',
+        desc: '갤럭시 북 Pro 시리즈 · 모니터 스탠드 부품가',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.10',
+        status: 'live',
+      },
+      {
+        href: '/as?fs=consum',
+        icon: 'filter',
+        title: '가전 소모품가',
+        desc: '공기청정기·에어컨·냉장고 등 필터·소모품 가격 — 같은 라인끼리 묶어 찾기',
+        color: '#1428A0',
+        bg: '#EEF2FF',
+        updated: '2026.10',
+        status: 'live',
+      },
+    ],
+  },
+  {
     title: '구독 케어',
     modules: [
       {
@@ -307,6 +356,7 @@ const COUPON_LINKS = [
 const SECTION_ID: Record<string, string> = {
   '제품 정보': 'product',
   '설치 · AS': 'install-as',
+  '부품 · 소모품': 'parts',
   '구독 케어': 'care',
   '교육': 'edu',
   '매장운영 도구': 'store',
@@ -570,6 +620,7 @@ export default function Home() {
     concierge: '매장운영 도구',
     product: '제품 정보',
     'install-as': '설치 · AS',
+    parts: '부품 · 소모품',
     care: '구독 케어',
     tools: '제품 정보',   // 옛 주소(/#tools) — 저장해 둔 링크가 깨지지 않게
     edu: '교육',

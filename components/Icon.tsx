@@ -17,6 +17,7 @@ export type IconName =
   | 'build' | 'external' | 'store' | 'book' | 'bulb' | 'link' | 'check' | 'warn' | 'chevron'
   | 'x' | 'star' | 'lock' | 'eye' | 'user' | 'doc' | 'puzzle' | 'download' | 'trash'
   | 'timer' | 'bolt' | 'printer' | 'phone' | 'ruler' | 'back'
+  | 'tablet' | 'laptop' | 'filter'
 
 const P: Record<IconName, React.ReactNode> = {
   /* 허브 — 집 */
@@ -99,6 +100,12 @@ const P: Record<IconName, React.ReactNode> = {
   phone: <><rect x="7" y="2.5" width="10" height="19" rx="2.2" /><path d="M10.6 5.3h2.8" /><path d="M10.5 18.7h3" /></>,
   /* 치수 — 삼각자 */
   ruler: <><path d="M3.5 14.5 14.5 3.5l6 6-11 11-6-6Z" /><path d="M7.5 10.5 9.5 12.5M10.5 7.5 12.5 9.5M13.5 4.5 15.5 6.5" /></>,
+  /* 태블릿 부품가 — 폰보다 넓은 판(폰과 나란히 서도 갈려 보이게 가로가 넓다) */
+  tablet: <><rect x="4.5" y="3.5" width="15" height="17" rx="2" /><path d="M10.5 17.5h3" /></>,
+  /* PC 부품가 — 노트북(화면 + 바닥판) */
+  laptop: <><rect x="5" y="5" width="14" height="10" rx="1.3" /><path d="M2.5 18.5h19" /></>,
+  /* 가전 소모품가 — 필터(격자 판) */
+  filter: <><rect x="4.5" y="4.5" width="15" height="15" rx="1.6" /><path d="M9.5 4.5v15M14.5 4.5v15M4.5 12h15" /></>,
 }
 
 export default function Icon({

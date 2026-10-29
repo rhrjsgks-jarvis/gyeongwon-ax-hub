@@ -12,7 +12,7 @@ import HeaderSearch from './HeaderSearch'
 import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
 import { isFullscreen, fullscreenSupported, enterFullscreen, exitFullscreen } from '@/lib/fullscreen'
 import { getZoom, nextZoom, setZoom, ZOOM_EVENT, ZOOM_PATHS } from '@/lib/viewZoom'
-import { getNavc, setNavc, NAVC_EVENT, NAVC_DRAWER_EVENT, NAVC_PATHS } from '@/lib/navCollapse'
+import { getNavc, setNavc, getSheet, setSheet, isAppPath, navView, NAVC_EVENT, LG_QUERY } from '@/lib/navCollapse'
 
 /*
  * 전체화면 단추 (2026-10-23 사장님 — QR·즐겨찾기로 여는 브라우저 탭에서 전체화면).
@@ -71,38 +71,67 @@ function ZoomButton({ pathname }: { pathname: string }) {
 }
 
 /*
- * 메뉴 접기 단추 ☰ (2026-10-24 사장님 승인 시안 — lib/navCollapse.ts).
- * 펼침이면 공통 사이드바와 앱 메뉴를 함께 접고, 접힘이면 앱 메뉴를 서랍으로 연다.
- * 접힘 상태는 html[data-navc] 로 걸어 공통 사이드바·본문 여백을 CSS 가 거둔다(globals.css).
+ * 메뉴 단추 ☰ (2026-10-29 사장님 승인 시안 2차 — lib/navCollapse.ts).
+ * **누를 때마다 열림 ↔ 닫힘, 그것만 한다.** 항목을 고르거나 본문을 눌러도 메뉴는 그대로다.
+ * 메뉴 자리는 하나라, 무엇이 보일지(전체 메뉴 / 앱 메뉴)는 navView 가 정하고
+ * 공통 사이드바는 html[data-gside] 로 걸어 CSS 가 들이고 낸다(globals.css).
+ * 글자(「메뉴 닫기/열기」)는 1280px 이상에서만 — 그보다 좁으면 머리 줄이 넘친다.
  */
-function NavToggle({ pathname }: { pathname: string }) {
-  const wide = useMinWidth(720)
-  const [on, setOn] = useState(false)
+function useNavState(pathname: string) {
+  const lgWide = useMedia(LG_QUERY)
+  const [closed, setClosed] = useState(false)
+  const [sheet, setSh] = useState(getSheet())
   useEffect(() => {
-    setOn(getNavc())
-    const f = () => setOn(getNavc())
+    const f = () => { setClosed(getNavc()); setSh(getSheet()) }
+    f()
     window.addEventListener(NAVC_EVENT, f)
     return () => window.removeEventListener(NAVC_EVENT, f)
   }, [])
-  const active = wide && NAVC_PATHS.includes(pathname)
+  return { lgWide, closed, sheet, view: navView(pathname, closed, sheet, lgWide) }
+}
+
+function useMedia(q: string): boolean {
+  const [ok, setOk] = useState(true)
+  useEffect(() => {
+    if (!window.matchMedia) return
+    const m = window.matchMedia(q)
+    const f = () => setOk(m.matches)
+    f()
+    m.addEventListener ? m.addEventListener('change', f) : m.addListener(f)
+    return () => { m.removeEventListener ? m.removeEventListener('change', f) : m.removeListener(f) }
+  }, [q])
+  return ok
+}
+
+function NavToggle({ pathname }: { pathname: string }) {
+  const wide = useMinWidth(720)
+  const label = useMinWidth(1280)
+  const { lgWide, closed, view } = useNavState(pathname)
+  /* 공통 사이드바를 들일지 — 숨길 때만 표시를 단다(없으면 평소대로 lg:flex) */
   useEffect(() => {
     const el = document.documentElement
-    if (active && on) el.dataset.navc = '1'
-    else delete el.dataset.navc
-  }, [active, on])
-  if (!active) return null
+    if (lgWide && !view.global) el.dataset.gside = '0'
+    else delete el.dataset.gside
+  }, [lgWide, view.global])
+  /* 공통 사이드바가 있는 폭이면 모든 화면, 그보다 좁으면 앱 메뉴가 있는 화면만 */
+  if (!(lgWide || (wide && isAppPath(pathname)))) return null
+  const txt = closed ? '메뉴 열기' : '메뉴 닫기'
   return (
     <button
       type="button"
-      onClick={() => { if (on) window.dispatchEvent(new CustomEvent(NAVC_DRAWER_EVENT)); else setNavc(true) }}
-      aria-label={on ? '메뉴 열기' : '메뉴 접기 — 내용을 넓게 봅니다'}
-      title={on ? '메뉴 열기' : '메뉴 접기'}
+      data-navtoggle
+      onClick={() => setNavc(!closed)}
+      aria-label={txt}
+      aria-expanded={!closed}
+      title={txt}
       className="flex items-center justify-center rounded-full text-white mr-1.5 shrink-0"
-      style={{ width: 30, height: 30, background: on ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.18)' }}
+      style={{ height: 30, minWidth: 30, padding: label ? '0 11px 0 8px' : 0, gap: 5, fontSize: 12,
+        background: closed ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.18)' }}
     >
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
         <path d="M4 7h16M4 12h16M4 17h16" />
       </svg>
+      {label && <span>{txt}</span>}
     </button>
   )
 }
@@ -158,7 +187,12 @@ function FullscreenButton() {
  * 한 곳만 고치면 나머지에서 또 난다(이 저장소가 허브 카드 수·앱 버전에서 반복해서
  * 데인 그 종류다).
  */
-function isActive(pathname: string, href: string): boolean {
+function isActive(pathname: string, href: string, search = ''): boolean {
+  /* ?fs= 처럼 쿼리로 칸을 여는 바로가기 — 같은 경로이고 그 쿼리가 지금 주소에 있을 때만 켠다 */
+  if (href.includes('?')) {
+    const [hp, hq] = href.split('?')
+    return pathname === hp && new URLSearchParams(search).toString().includes(hq)
+  }
   if (href.includes('#') || href === '/') return pathname === href
   return pathname === href || pathname.startsWith(href + '/')
 }
@@ -192,6 +226,19 @@ const NAV_GROUPS = [
       { href: '/install',         label: '설치환경 가이드',   icon: 'install' as IconName },
       { href: '/install-cost',     label: '설치비용', icon: 'bolt' as IconName },
       { href: '/as',               label: 'AS 관련 정보',     icon: 'warranty' as IconName },
+    ],
+  },
+  {
+    /* 부품·소모품 바로가기 (2026-10-29 사장님 승인 시안). 지금은 AS 관련 정보 → 수리비 → 칸으로
+       세 번 들어가야 했다. AS 앱이 이미 칸을 바로 여는 주소(?fs=)를 갖고 있어 링크만 건다.
+       허브 MODULE_GROUPS 의 같은 이름 섹션과 짝이다. 그룹 심벌 puzzle(부품) — 안의 항목과 겹치지 않는다 */
+    title: '부품 · 소모품',
+    icon: 'puzzle' as IconName,
+    items: [
+      { href: '/as?fs=phone',  label: '휴대폰 부품가', icon: 'phone' as IconName },
+      { href: '/as?fs=tablet', label: '태블릿 부품가', icon: 'tablet' as IconName },
+      { href: '/as?fs=pc',     label: 'PC 부품가',     icon: 'laptop' as IconName },
+      { href: '/as?fs=consum', label: '가전 소모품가', icon: 'filter' as IconName },
     ],
   },
   {
@@ -354,6 +401,43 @@ export default function Navigation() {
     // 인쇄물 머리에 지점명을 적는다 — 미니앱은 매장 목록을 모르므로 이름을 함께 넘긴다
     f?.contentWindow?.postMessage({ sk: 'share-click', store: store ? storeName(store) || store : '' }, window.location.origin)
   }
+  /*
+   * ── 메뉴 자리 하나 (lib/navCollapse.ts) ─────────────────────────
+   * 화면을 옮기면 그 화면의 메뉴가 자리에 선다 — 앱 화면이면 앱 메뉴, 아니면 전체 메뉴.
+   * 열림/닫힘은 건드리지 않는다(그것은 ☰ 만 바꾼다).
+   */
+  const [search, setSearch] = useState('')
+  useEffect(() => {
+    setSheet(isAppPath(pathname) ? 'a' : 'g')
+    setSearch(window.location.search)
+  }, [pathname])
+  useEffect(() => {
+    const f = () => setSearch(window.location.search)
+    window.addEventListener('ax-deeplink', f)
+    window.addEventListener('popstate', f)
+    return () => { window.removeEventListener('ax-deeplink', f); window.removeEventListener('popstate', f) }
+  }, [])
+  /*
+   * 전체 메뉴에서 항목을 누를 때 — 앱 화면(›)으로 가면 앱 메뉴로 바꿔 끼운다.
+   * **지금 보고 있는 앱을 다시 누르면** 주소가 같아 Next 가 아무 일도 안 하므로 메뉴만 바꾼다.
+   * 같은 앱의 다른 칸(?fs=)이면 주소만 바꾸고 iframe 에 그 칸을 다시 열라고 알린다(IframeModule).
+   */
+  function onNavClick(e: React.MouseEvent, href: string) {
+    if (/^https?:/.test(href) || href.includes('#')) return
+    const [hp, hq] = href.split('?')
+    if (isAppPath(hp)) setSheet('a')
+    if (hp !== pathname) return
+    e.preventDefault()
+    if (hq && '?' + hq !== window.location.search) {
+      window.history.pushState(window.history.state, '', href)
+      window.dispatchEvent(new CustomEvent('ax-deeplink', { detail: hq }))
+    }
+  }
+  /* ?fs= 바로가기가 켜졌으면 같은 앱의 맨 링크(AS 관련 정보)는 끈다 — 둘이 함께 켜지면 어디 있는지 헷갈린다 */
+  const queryHit = (href: string) => NAV_GROUPS.some((g) => g.items.some((it) =>
+    it.href.includes('?') && it.href.split('?')[0] === href && isActive(pathname, it.href, search)))
+  const navActive = (href: string) => isActive(pathname, href, search) && !(!href.includes('?') && queryHit(href))
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
     NAV_GROUPS.forEach((group) => {
@@ -568,7 +652,9 @@ export default function Navigation() {
                 {isOpen && (
                   <div className="flex flex-col gap-0.5">
                     {group.items.map((item) => {
-                      const active = isActive(pathname, item.href)
+                      const active = navActive(item.href)
+                      /* 앱 메뉴가 따로 있는 화면 — 고르면 메뉴가 그 앱 메뉴로 바뀐다는 표시(›) */
+                      const hasMenu = isAppPath(item.href.split('?')[0])
                       /* 바깥 주소(모바일 카탈로그)는 새 창으로 — 같은 창이면 앱을 벗어난다 */
                       const ext = /^https?:/.test(item.href)
                       return (
@@ -576,6 +662,7 @@ export default function Navigation() {
                           key={item.href}
                           href={item.href}
                           {...(ext ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                          onClick={(e) => onNavClick(e, item.href)}
                           className="flex items-center gap-3 pl-6 pr-3 py-2 rounded-[10px] text-[13.5px] font-normal no-underline transition-all"
                           style={{
                             background: active ? 'rgba(20, 40, 160, 0.08)' : 'transparent',
@@ -586,7 +673,8 @@ export default function Navigation() {
                           }}
                         >
                           <Icon name={item.icon} size={19} />
-                          <span>{item.label}</span>
+                          <span className="flex-1">{item.label}</span>
+                          {hasMenu && <span aria-hidden="true" className="text-[#9ca3af]">›</span>}
                         </Link>
                       )
                     })}

@@ -62,6 +62,14 @@ body {
   }
 }
 
-/* 메뉴 접기(☰, lib/navCollapse.ts) — 접히면 공통 사이드바를 거두고 본문이 폭을 다 쓴다 */
-html[data-navc="1"] .ax-gside { display: none !important; }
-html[data-navc="1"] .ax-main { padding-left: 0 !important; }
+/*
+ * 메뉴 자리 하나(☰, lib/navCollapse.ts — 2026-10-29). 공통 사이드바는 닫혔거나 앱 메뉴가
+ * 그 자리에 섰을 때 왼쪽으로 들어가고(data-gside="0") 본문이 폭을 다 쓴다.
+ * display:none 으로 끄지 않고 밀어 넣는다 — 들어가고 나오는 것이 보여야 무엇이 바뀌었는지 안다.
+ * visibility 를 함께 거둬 숨은 사이드바에 Tab 키가 들어가지 않게 한다.
+ */
+.ax-gside { transition: transform .3s ease, visibility .3s; }
+.ax-main { transition: padding-left .3s ease; }
+html[data-gside="0"] .ax-gside { transform: translateX(-100%); visibility: hidden; }
+html[data-gside="0"] .ax-main { padding-left: 0 !important; }
+@media (prefers-reduced-motion: reduce) { .ax-gside, .ax-main { transition: none; } }

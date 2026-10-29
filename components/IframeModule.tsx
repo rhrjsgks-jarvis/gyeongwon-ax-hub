@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { logEvent, logOnce, LogModule, LogAction } from '@/lib/logEvent'
 import { zoomFor, ZOOM_EVENT } from '@/lib/viewZoom'
-import { getNavc, setNavc, NAVC_EVENT, NAVC_DRAWER_EVENT } from '@/lib/navCollapse'
+import { getNavc, getSheet, setSheet, navView, NAVC_EVENT, LG_QUERY } from '@/lib/navCollapse'
 
 /* 미니앱이 보내오는 값은 바깥에서 들어오는 값이다 — 아는 이름만 받는다 */
 const ALLOWED_MODULE = new Set<string>([
@@ -115,38 +115,57 @@ export default function IframeModule({
   }, [])
 
   /*
-   * **메뉴 접기(☰)를 미니앱에 알린다** (2026-10-24, lib/navCollapse.ts).
-   * 접힘 여부는 몇 번이고 보내도 같은 결과라(멱등) 늦게 뜬 문서를 위해 1초마다 다시 보낸다.
-   * 서랍 열기는 한 번만 보낸다. 미니앱이 「메뉴 펼쳐 두기」를 누르면 거꾸로 알려 온다.
+   * **앱 메뉴를 보일지 미니앱에 알린다** (2026-10-29 메뉴 자리 하나 — lib/navCollapse.ts).
+   *   {sk:'navc', on, g}  on = 앱 메뉴를 거둔다(닫힘이거나 전체 메뉴가 그 자리에 섬) · g = 「‹ 전체 메뉴」를 띄울 수 있다
+   * 몇 번이고 보내도 같은 결과라(멱등) 늦게 뜬 문서를 위해 1초마다 다시 보낸다.
+   * 미니앱이 「‹ 전체 메뉴」를 누르면 {sk:'navc-sheet'} 로 알려 오고, 메뉴 자리를 전체 메뉴로 바꾼다.
+   * 열림/닫힘은 여기서 바꾸지 않는다 — 그것은 머리의 ☰ 만 한다.
    */
   useEffect(() => {
     const post = (msg: object) => {
       try { ref.current?.contentWindow?.postMessage(msg, window.location.origin) } catch { /* 아직 못 받으면 다음 기회에 */ }
     }
-    const send = () => post({ sk: 'navc', on: window.innerWidth >= 720 && getNavc() })
-    const drawer = () => post({ sk: 'navc-drawer' })
+    const send = () => {
+      const lg = !!window.matchMedia && window.matchMedia(LG_QUERY).matches
+      const v = navView(window.location.pathname, getNavc(), getSheet(), lg)
+      post({ sk: 'navc', on: window.innerWidth >= 720 && !v.appMenu, g: v.canGlobal })
+    }
     function onMsg(e: MessageEvent) {
       if (e.origin !== window.location.origin) return
-      const d = e.data as { sk?: string; on?: boolean }
-      if (d && d.sk === 'navc-set' && typeof d.on === 'boolean') setNavc(d.on)
+      const d = e.data as { sk?: string }
+      if (d && d.sk === 'navc-sheet') setSheet('g')
     }
     const el = ref.current
     send()
     const t = setInterval(send, 1000)
     window.addEventListener(NAVC_EVENT, send)
-    window.addEventListener(NAVC_DRAWER_EVENT, drawer)
     window.addEventListener('resize', send)
     window.addEventListener('message', onMsg)
     el?.addEventListener('load', send)
     return () => {
       clearInterval(t)
       window.removeEventListener(NAVC_EVENT, send)
-      window.removeEventListener(NAVC_DRAWER_EVENT, drawer)
       window.removeEventListener('resize', send)
       window.removeEventListener('message', onMsg)
       el?.removeEventListener('load', send)
     }
   }, [])
+
+  /*
+   * **같은 앱 안의 다른 칸으로 가는 바로가기**(사이드바 「휴대폰 부품가」 → /as?fs=phone 를 /as 에서 누름).
+   * 경로가 같아 이 컴포넌트가 다시 마운트되지 않으므로 위 딥링크 처리가 돌지 않는다.
+   * 사이드바가 주소를 바꾼 뒤 알려 오면 그 쿼리로 미니앱을 다시 연다.
+   */
+  useEffect(() => {
+    function onDeep(e: Event) {
+      const qs = (e as CustomEvent<string>).detail
+      if (!qs || !ref.current) return
+      setLoaded(false)
+      ref.current.src = src + (src.includes('?') ? '&' : '?') + qs
+    }
+    window.addEventListener('ax-deeplink', onDeep)
+    return () => window.removeEventListener('ax-deeplink', onDeep)
+  }, [src])
 
   /*
    * **보기 크기(화면 확대)를 미니앱에 건다** (2026-10-23, lib/viewZoom.ts).
