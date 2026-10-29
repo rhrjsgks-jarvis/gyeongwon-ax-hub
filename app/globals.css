@@ -63,13 +63,22 @@ body {
 }
 
 /*
- * 메뉴 자리 하나(☰, lib/navCollapse.ts — 2026-10-29). 공통 사이드바는 닫혔거나 앱 메뉴가
- * 그 자리에 섰을 때 왼쪽으로 들어가고(data-gside="0") 본문이 폭을 다 쓴다.
- * display:none 으로 끄지 않고 밀어 넣는다 — 들어가고 나오는 것이 보여야 무엇이 바뀌었는지 안다.
- * visibility 를 함께 거둬 숨은 사이드바에 Tab 키가 들어가지 않게 한다.
+ * 메뉴 자리 하나(☰, lib/navCollapse.ts — 2026-10-29). **모든 메뉴가 같은 움직임**이다(사장님 지시 —
+ * *"모든 영역에서 작동되는 모션이 같아야 합니다"*). 앱 메뉴(share-kit.js AxNav)도 같은 값을 쓴다:
+ *   들어갈 때 — 메뉴가 제자리에서 왼쪽으로 0.25초 밀려 사라지고, 다 들어간 뒤 내용이 넓어진다
+ *   나올 때   — 내용 자리가 먼저 나고 메뉴가 왼쪽에서 0.25초 밀려 나온다
+ *   바꿔 끼울 때(data-gdelay) — 옛 메뉴가 다 들어간 다음 새 메뉴가 나온다
+ * 메뉴는 자기 자리(머리 아래)에서만 움직인다 — 머리·제목 띠를 덮지 않는다.
+ * display:none 으로 끄지 않는다 — 들어가고 나오는 것이 보여야 무엇이 바뀌었는지 안다.
  */
-.ax-gside { transition: transform .3s ease, visibility .3s; }
-.ax-main { transition: padding-left .3s ease; }
-html[data-gside="0"] .ax-gside { transform: translateX(-100%); visibility: hidden; }
-html[data-gside="0"] .ax-main { padding-left: 0 !important; }
-@media (prefers-reduced-motion: reduce) { .ax-gside, .ax-main { transition: none; } }
+.ax-gside { transition: transform .25s ease, opacity .25s ease, visibility 0s linear 0s; }
+html[data-gside="0"] .ax-gside {
+  transform: translateX(-100%); opacity: 0; visibility: hidden;
+  transition: transform .25s ease, opacity .25s ease, visibility 0s linear .25s;
+}
+html[data-gside="0"] .ax-main { padding-left: 0 !important; transition: padding-left 0s linear .25s; }
+html[data-gdelay] .ax-gside { transition-delay: .25s, .25s, .25s; }
+html[data-gdelay] .ax-main { transition: padding-left 0s linear .25s; }
+@media (prefers-reduced-motion: reduce) {
+  .ax-gside, html[data-gside="0"] .ax-gside, html[data-gdelay] .ax-gside, html[data-gside="0"] .ax-main, html[data-gdelay] .ax-main { transition: none; }
+}

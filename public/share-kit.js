@@ -852,7 +852,9 @@
  * 경로는 AxNav.crumb(상자, [[이름, 열쇠]...], 누르면 할 일).
  */
 (function () {
-  var R = document.documentElement, onCrumb = null, inT = 0;
+  var R = document.documentElement, onCrumb = null, inT = 0, want = null, first = true;
+  /* 움직임 값은 공통 사이드바(app/globals.css)와 같다 — 모든 메뉴가 같은 모션이어야 한다(2026-10-29 사장님) */
+  var MS = 250;
   var css = ''
     + '.dm-it.grp.has{color:#1428A0;font-weight:700}'
     + '.dm-it.sub{padding:7px 10px 7px 37px;font-size:13.5px}'
@@ -864,17 +866,16 @@
     + '.crumb:not(:empty){display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 10px;font-size:13.5px;font-weight:700;color:#5B6476}'
     + '.crumb button{border:0;background:transparent;font:inherit;color:#1428A0;padding:4px 6px;border-radius:6px;cursor:pointer}'
     + '.crumb button:hover{background:#EEF2FF}.crumb b{color:#0B1220;padding:4px 2px}.crumb .x{color:#C3CAD8}'
-    /* 거둘 때 — 자리에서 빼 왼쪽으로 밀어 넣는다(보이지도 Tab 이 들어가지도 않는다) */
-    + 'html.ax-navc body .ax-navbox{position:fixed!important;top:0!important;left:0!important;bottom:0!important;z-index:60!important;'
-    + 'width:272px!important;max-height:none!important;margin:0!important;padding:10px 8px!important;'
-    + 'background:#fff!important;overflow:hidden!important;transform:translateX(-110%)!important;transition:transform .3s ease,visibility .3s;'
-    + 'visibility:hidden!important;box-sizing:border-box}'
-    /* 들일 때 — 왼쪽에서 밀려 나온다 */
-    + 'html.ax-navin body .ax-navbox{animation:axNavIn .3s ease-out}'
-    + '@keyframes axNavIn{from{transform:translateX(-24px);opacity:0}to{transform:none;opacity:1}}'
+    /* 거둔 뒤 — 자리에서 뺀다. 들어가는 움직임은 그 전에 제자리에서 끝난다(머리·제목 띠를 덮지 않는다) */
+    + 'html.ax-navc body .ax-navbox{display:none!important}'
+    /* 들어갈 때 · 나올 때 — 제자리에서 왼쪽으로 0.25초(공통 사이드바와 같은 값) */
+    + 'html.ax-navout body .ax-navbox{animation:axNavOut .25s ease forwards}'
+    + 'html.ax-navin body .ax-navbox{animation:axNavIn .25s ease}'
+    + '@keyframes axNavOut{to{transform:translateX(-100%);opacity:0}}'
+    + '@keyframes axNavIn{from{transform:translateX(-100%);opacity:0}to{transform:none;opacity:1}}'
     + 'html.ax-navg .dm-all{display:block}'
     + '}'
-    + '@media (prefers-reduced-motion:reduce){html.ax-navc body .ax-navbox{transition:none}html.ax-navin body .ax-navbox{animation:none}}'
+    + '@media (prefers-reduced-motion:reduce){html.ax-navout body .ax-navbox,html.ax-navin body .ax-navbox{animation:none}}'
     + '@media print{.crumb,.dm-all{display:none!important}}';
   function addCss() {
     if (document.getElementById('ax-nav-css')) return;
@@ -905,14 +906,31 @@
     var on = b.querySelector('.dm-it.on') || b.querySelector('.dm-it.has') || b.querySelector('.dm-it');
     if (on) { try { on.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
   }
-  function setLocal(on) {
-    if (collapsed() === on) return;
-    R.classList.toggle('ax-navc', on);
-    if (!on) {                              // 나올 때만 밀려 나오는 움직임을 준다
-      R.classList.add('ax-navin'); clearTimeout(inT);
-      inT = setTimeout(function () { R.classList.remove('ax-navin'); }, 360);
+  /*
+   * 들일까 낼까 — 같은 신호가 1초마다 다시 오므로(멱등) 바라는 상태가 바뀔 때만 움직인다.
+   *   들어감: 제자리에서 밀려 들어간 뒤(0.25초) 자리를 뺀다 → 내용이 넓어진다
+   *   나옴  : 자리를 먼저 내고 밀려 나온다. swap(전체 메뉴 → 앱 메뉴)이면 전체 메뉴가 다 들어간 뒤에 나온다
+   * 문서가 처음 뜰 때의 첫 신호는 움직이지 않고 바로 맞춘다 — 화면을 열 때마다 메뉴가 들락거리면 안 된다.
+   */
+  function setLocal(on, swap) {
+    if (want === on) return;
+    want = on;
+    clearTimeout(inT);
+    R.classList.remove('ax-navout', 'ax-navin');
+    var instant = first || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    first = false;
+    if (on) {
+      if (instant || collapsed() || !box()) { R.classList.add('ax-navc'); refit(); return; }
+      R.classList.add('ax-navout');
+      inT = setTimeout(function () { R.classList.remove('ax-navout'); R.classList.add('ax-navc'); refit(); }, MS);
+    } else {
+      if (instant) { R.classList.remove('ax-navc'); refit(); return; }
+      var show = function () {
+        R.classList.remove('ax-navc'); R.classList.add('ax-navin'); refit();
+        inT = setTimeout(function () { R.classList.remove('ax-navin'); }, MS + 20);
+      };
+      if (swap) inT = setTimeout(show, MS); else show();
     }
-    refit();
   }
   /* 서랍은 없앴다 — 앱들이 부르는 이름만 남긴다(고른 뒤 AxNav.done() 를 불러도 메뉴는 그대로다) */
   function open() {}
@@ -921,7 +939,7 @@
     if (e.origin !== location.origin) return;
     var d = e.data; if (!d) return;
     if (d.sk === 'navc') {
-      setLocal(!!d.on);
+      setLocal(!!d.on, !!d.swap);
       R.classList.toggle('ax-navg', !!d.g);
       ensureAll();
     }

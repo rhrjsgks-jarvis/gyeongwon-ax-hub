@@ -125,10 +125,13 @@ export default function IframeModule({
     const post = (msg: object) => {
       try { ref.current?.contentWindow?.postMessage(msg, window.location.origin) } catch { /* 아직 못 받으면 다음 기회에 */ }
     }
+    /* 바꿔 끼우기(전체 메뉴 → 앱 메뉴)면 swap 을 실어 보낸다 — 앱 메뉴가 전체 메뉴가 다 들어간 뒤 나온다 */
+    let prevGlobal = false
     const send = () => {
       const lg = !!window.matchMedia && window.matchMedia(LG_QUERY).matches
       const v = navView(window.location.pathname, getNavc(), getSheet(), lg)
-      post({ sk: 'navc', on: window.innerWidth >= 720 && !v.appMenu, g: v.canGlobal })
+      post({ sk: 'navc', on: window.innerWidth >= 720 && !v.appMenu, g: v.canGlobal, swap: prevGlobal && v.appMenu })
+      prevGlobal = v.global
     }
     function onMsg(e: MessageEvent) {
       if (e.origin !== window.location.origin) return

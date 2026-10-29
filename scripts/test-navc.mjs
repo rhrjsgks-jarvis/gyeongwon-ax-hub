@@ -70,6 +70,12 @@ for (const k of ['phone', 'tablet', 'pc', 'consum']) {
 }
 
 
+/* 모든 메뉴가 같은 움직임 · 머리를 덮지 않는다 (2026-10-29 사장님 — 닫힐 때 앱 메뉴가 제목 띠를 덮었다) */
+if (has(kit, 'ax-navbox{position:fixed')) bad.push('share-kit.js: 앱 메뉴가 화면 전체 높이로 떠 머리·제목 띠를 덮는다 — 제자리에서 움직여야 한다');
+if (!has(kit, 'var MS = 250') || !has(kit, 'axNavOut .25s ease') || !has(kit, 'axNavIn .25s ease')) bad.push('share-kit.js: 앱 메뉴 움직임이 0.25초 ease 가 아니다 — 공통 사이드바와 같아야 한다');
+if (!has(css, 'transform .25s ease, opacity .25s ease')) bad.push('globals.css: 공통 사이드바 움직임이 0.25초 ease(밀림+흐려짐)가 아니다 — 앱 메뉴와 같아야 한다');
+if (!has(css, 'translateX(-100%); opacity: 0') || !has(kit, 'transform:translateX(-100%);opacity:0')) bad.push('같은 방향·같은 모양(왼쪽으로 100% · 흐려짐)이 아니다');
+
 if (bad.length) { bad.forEach((m) => console.log('FAIL: ' + m)); console.log('SOME FAILED'); process.exit(1); }
 console.log('OK: 여섯 앱 사이드바 · ☰ 접기 · 경로 배선');
 console.log('ALL PASS');

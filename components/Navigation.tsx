@@ -108,11 +108,20 @@ function NavToggle({ pathname }: { pathname: string }) {
   const label = useMinWidth(1280)
   const { lgWide, closed, view } = useNavState(pathname)
   /* 공통 사이드바를 들일지 — 숨길 때만 표시를 단다(없으면 평소대로 lg:flex) */
+  /* 바꿔 끼우기(앱 메뉴 → 전체 메뉴)면 옛 메뉴가 다 들어간 뒤 나오게 늦춘다(globals.css data-gdelay) */
+  const prevApp = useRef(view.appMenu)
   useEffect(() => {
     const el = document.documentElement
     if (lgWide && !view.global) el.dataset.gside = '0'
-    else delete el.dataset.gside
-  }, [lgWide, view.global])
+    else {
+      if (prevApp.current && view.global) {
+        el.dataset.gdelay = '1'
+        setTimeout(() => { delete el.dataset.gdelay }, 600)
+      }
+      delete el.dataset.gside
+    }
+    prevApp.current = view.appMenu
+  }, [lgWide, view.global, view.appMenu])
   /* 공통 사이드바가 있는 폭이면 모든 화면, 그보다 좁으면 앱 메뉴가 있는 화면만 */
   if (!(lgWide || (wide && isAppPath(pathname)))) return null
   const txt = closed ? '메뉴 열기' : '메뉴 닫기'
