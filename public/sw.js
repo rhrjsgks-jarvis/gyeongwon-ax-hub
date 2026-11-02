@@ -447,7 +447,11 @@
  * 오기 바로잡음 · 사운드바 배치 치수를 Q시리즈 실측으로 · 전자레인지·프로젝터·모니터·프린터·
  * 김치냉장고 값 원문화 · 타사비교 QNH70 85인치 패널 60Hz.
  */
-const CACHE_VERSION = 'axhub-v309';
+/*
+ * v310 (2026-11-02) — 「구독계산기」 섹션 신설(Apps Script 웹앱 iframe, /subs-calc) ·
+ * 「통신향자급제상담도구」 → 「휴대폰계산기」 이름 변경. 색인·자동완성(SWR)이 바뀌었다.
+ */
+const CACHE_VERSION = 'axhub-v310';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

@@ -258,13 +258,22 @@ const NAV_GROUPS = [
     ],
   },
   {
-    /* 제품 상담 도구 바로 아래 별도 그룹 (2026-09-16 사장님 지시). 허브의 같은 이름 섹션과 짝이다.
+    /* 구독계산기 — 구독 케어와 휴대폰계산기 사이 (2026-11-02 사장님 지시). 허브의 같은 이름 섹션과 짝이다.
+       그룹 심벌 timer(기간) · 항목 ticket — 안의 항목과 겹치지 않게 */
+    title: '구독계산기',
+    icon: 'timer' as IconName,
+    items: [
+      { href: '/subs-calc', label: '구독계산기', icon: 'ticket' as IconName },
+    ],
+  },
+  {
+    /* 「휴대폰계산기」(옛 「통신향자급제상담도구」 · 2026-11-02 이름 변경). 제품 상담 도구 바로 아래 별도 그룹 (2026-09-16 사장님 지시). 허브의 같은 이름 섹션과 짝이다.
        그룹 심벌은 안의 항목과 겹치지 않게 — 그룹은 계산기(`ruler` 는 자 · 여기선 '재다'의 뜻),
        항목은 휴대폰(`phone`). 같으면 사이드바에서 그룹과 항목이 한 그림으로 보인다. */
-    title: '통신향자급제상담도구',
+    title: '휴대폰계산기',
     icon: 'ruler' as IconName,
     items: [
-      { href: '/mobile-calc', label: '통신향 · 자급제 비교계산기', icon: 'phone' as IconName },
+      { href: '/mobile-calc', label: '휴대폰계산기', icon: 'phone' as IconName },
     ],
   },
   {
