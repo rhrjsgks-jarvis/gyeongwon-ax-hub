@@ -36,7 +36,7 @@ type ModuleCard = {
   logKey?: LogModule
 }
 
-const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
+const MODULE_GROUPS: { title: string; direct?: boolean; modules: ModuleCard[] }[] = [
   {
     /*
      * 「제품 상담 도구」 7개를 셋으로 나눴다(2026-10-23 사장님 승인 — 태블릿 개편안).
@@ -188,6 +188,8 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
      * 사이드바 `NAV_GROUPS` 의 같은 이름 그룹과 짝이다.
      */
     title: '구독계산기',
+    /* 카드 하나뿐 — 섹션을 펼치지 않고 제목 줄이 바로 그 도구로 간다(2026-11-02 사장님 지시) */
+    direct: true,
     modules: [
       {
         href: '/subs-calc',
@@ -211,6 +213,8 @@ const MODULE_GROUPS: { title: string; modules: ModuleCard[] }[] = [
      * 이름 그룹(`NAV_GROUPS`)과 짝이다 — 한쪽만 고치면 화면마다 다른 말을 한다.
      */
     title: '휴대폰계산기',
+    /* 카드 하나뿐 — 섹션을 펼치지 않고 제목 줄이 바로 그 도구로 간다(2026-11-02 사장님 지시) */
+    direct: true,
     modules: [
       {
         /*
@@ -746,6 +750,18 @@ export default function Home() {
       {/* 모듈 그리드 (섹션별) — 모바일: 클릭해야 펼쳐지는 아코디언 / 데스크탑: 항상 펼침 */}
       {MODULE_GROUPS.map((group) => {
         const isOpen = !!openSections[group.title]
+        if (group.direct) {
+          return (
+            <Link
+              key={group.title}
+              href={group.modules[0].href}
+              className="mb-5 w-full flex items-center justify-between px-1 no-underline"
+            >
+              <h3 className="font-bold text-[13.5px] text-[#374151]">{group.title}</h3>
+              <span aria-hidden="true" className="text-[15px] text-[#9ca3af]">›</span>
+            </Link>
+          )
+        }
         return (
           <div key={group.title} id={SECTION_ID[group.title]} className="mb-5 scroll-mt-20">
             <AccordionHeader title={group.title} isOpen={isOpen} onClick={() => toggleSection(group.title)} />

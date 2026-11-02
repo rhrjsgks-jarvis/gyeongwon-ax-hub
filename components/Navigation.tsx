@@ -262,6 +262,8 @@ const NAV_GROUPS = [
        그룹 심벌 timer(기간) · 항목 ticket — 안의 항목과 겹치지 않게 */
     title: '구독계산기',
     icon: 'timer' as IconName,
+    /* 항목이 하나뿐이라 펼치지 않고 바로 들어간다(2026-11-02 사장님: *"대분류중분류없이 바로 들어가게"*) */
+    direct: true,
     items: [
       { href: '/subs-calc', label: '구독계산기', icon: 'ticket' as IconName },
     ],
@@ -272,6 +274,8 @@ const NAV_GROUPS = [
        항목은 휴대폰(`phone`). 같으면 사이드바에서 그룹과 항목이 한 그림으로 보인다. */
     title: '휴대폰계산기',
     icon: 'ruler' as IconName,
+    /* 항목이 하나뿐이라 펼치지 않고 바로 들어간다(2026-11-02 사장님: *"대분류중분류없이 바로 들어가게"*) */
+    direct: true,
     items: [
       { href: '/mobile-calc', label: '휴대폰계산기', icon: 'phone' as IconName },
     ],
@@ -651,6 +655,27 @@ export default function Navigation() {
         <div className="px-3 pt-3 mt-2 border-t border-gray-100 flex-1 overflow-y-auto flex flex-col gap-3">
           {NAV_GROUPS.map((group) => {
             const isOpen = !!openGroups[group.title]
+            /* 바로 가는 그룹 — 그룹 줄 자체가 그 항목으로 가는 링크다(접고 펴는 단계가 없다) */
+            if ('direct' in group && group.direct) {
+              const item = group.items[0]
+              const active = navActive(item.href)
+              return (
+                <Link
+                  key={group.title}
+                  href={item.href}
+                  onClick={(e) => onNavClick(e, item.href)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-[13.5px] font-bold no-underline transition-colors hover:bg-gray-50"
+                  style={{
+                    background: active ? 'rgba(20, 40, 160, 0.08)' : undefined,
+                    color: active ? 'var(--color-primary)' : '#5b6476',
+                    boxShadow: active ? 'inset 0 0 0 1.5px var(--color-primary)' : 'none',
+                  }}
+                >
+                  <Icon name={group.icon} size={19} />
+                  <span className="flex-1 text-left">{group.title}</span>
+                </Link>
+              )
+            }
             return (
               <div key={group.title}>
                 <button

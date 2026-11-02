@@ -451,7 +451,10 @@
  * v310 (2026-11-02) — 「구독계산기」 섹션 신설(Apps Script 웹앱 iframe, /subs-calc) ·
  * 「통신향자급제상담도구」 → 「휴대폰계산기」 이름 변경. 색인·자동완성(SWR)이 바뀌었다.
  */
-const CACHE_VERSION = 'axhub-v310';
+/*
+ * v311 (2026-11-02) — 구독계산기·휴대폰계산기는 허브·사이드바에서 펼치지 않고 바로 들어간다.
+ */
+const CACHE_VERSION = 'axhub-v311';
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
 // stale-while-revalidate 대상 — 모듈 미니앱과 검색 인덱스

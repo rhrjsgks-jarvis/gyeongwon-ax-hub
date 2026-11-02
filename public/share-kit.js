@@ -974,3 +974,13 @@
   }
   window.AxNav = { open: open, done: done, collapsed: collapsed, crumb: crumb };
 })();
+
+/* 터치 한 번에 바로 반응하게 (2026-11-02) — 허브 globals.css 와 같은 규칙을 미니앱에도.
+   두 번 눌러 확대(더블탭 줌)를 꺼서 브라우저가 첫 탭을 붙들지 않게 한다. 손가락 확대·스크롤은 그대로다. */
+(function () {
+  try {
+    var st = document.createElement('style');
+    st.textContent = 'html{touch-action:manipulation;-webkit-tap-highlight-color:rgba(20,40,160,.12)}';
+    (document.head || document.documentElement).appendChild(st);
+  } catch (e) { /* 스타일을 못 넣어도 앱은 그대로 돈다 */ }
+})();

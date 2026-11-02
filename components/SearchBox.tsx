@@ -116,7 +116,9 @@ export default function SearchBox({
               role="option"
               aria-selected={i === hi}
               onMouseDown={(e) => { e.preventDefault(); go(s) }}
-              onMouseEnter={() => setHi(i)}
+              /* 마우스일 때만 강조를 옮긴다 — 아이폰은 터치 때도 mouseenter 를 보내는데, 그때 화면(강조)이
+                 바뀌면 그 탭을 「미리보기」로 보고 클릭을 버려 두 번 눌러야 들어간다(2026-11-02) */
+              onPointerEnter={(e) => { if (e.pointerType === 'mouse') setHi(i) }}
               className={`flex items-center gap-2 px-3.5 py-2.5 text-[13.5px] cursor-pointer ${i === hi ? 'bg-blue-50' : ''}`}
             >
               <span className="flex-1 min-w-0 truncate text-[#0b1220]">{s[0]}</span>

@@ -1,6 +1,8 @@
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  /* hover: 는 마우스가 있는 기기에서만 — 터치 기기에 눌린 뒤 색이 남아(「끈적이는 hover」) 고른 것처럼 보이던 것(2026-11-02) */
+  future: { hoverOnlyWhenSupported: true },
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
