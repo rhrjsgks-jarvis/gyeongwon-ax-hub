@@ -10,6 +10,7 @@ import { versionLabel } from '@/lib/version'
 import FeedbackButton from './FeedbackButton'
 import HeaderSearch from './HeaderSearch'
 import { getStoreCode, storeName, isTestStore } from '@/lib/stores'
+import { openCalcWindow } from '@/lib/calcApps'
 import { isFullscreen, fullscreenSupported, enterFullscreen, exitFullscreen } from '@/lib/fullscreen'
 import { getZoom, nextZoom, setZoom, ZOOM_EVENT, ZOOM_PATHS } from '@/lib/viewZoom'
 import { getNavc, setNavc, getSheet, setSheet, isAppPath, navView, NAVC_EVENT, LG_QUERY } from '@/lib/navCollapse'
@@ -663,7 +664,8 @@ export default function Navigation() {
                 <Link
                   key={group.title}
                   href={item.href}
-                  onClick={(e) => onNavClick(e, item.href)}
+                  /* 계산기 둘은 새 창으로 연다(2026-11-02 사장님 지시) — 이 화면은 그대로 둔다 */
+                  onClick={(e) => { if (openCalcWindow(item.href)) { e.preventDefault(); return } onNavClick(e, item.href) }}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-[10px] text-[13.5px] font-bold no-underline transition-colors hover:bg-gray-50"
                   style={{
                     background: active ? 'rgba(20, 40, 160, 0.08)' : undefined,

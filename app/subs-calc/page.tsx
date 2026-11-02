@@ -12,11 +12,9 @@ import AppsScriptCalc from '@/components/AppsScriptCalc'
  *
  * 저쪽 `doGet` 이 `setXFrameOptionsMode(ALLOWALL)` 이라 iframe 이 된다(소스 확인).
  * 주소는 `~/rental/config/deploy.json` 의 `webappUrl` 과 같다 — 배포 id 가 박힌 exec 주소라
- * 「새 버전」으로 올리는 한 그대로이고, 「새 배포」를 만들면 여기 상수 하나를 바꾼다.
+ * 「새 버전」으로 올리는 한 그대로이고, 「새 배포」를 만들면 `lib/calcApps.ts` 한 곳을 바꾼다.
+ * 허브·사이드바에서는 새 창으로 열린다 — 이 화면은 검색 결과·옛 링크로 곧장 왔을 때 쓰인다.
  */
-const SUBS_CALC_URL =
-  'https://script.google.com/macros/s/AKfycbwBFvbLj0DwgWtmuETTkjLCMQ1tLx_kUIYVnBpgnMAGN2lLhyQI6Cn6NcJGsoUp1rQ/exec'
-
 export default function SubsCalcPage() {
-  return <AppsScriptCalc url={SUBS_CALC_URL} title="구독계산기" logKey="subsCalc" />
+  return <AppsScriptCalc route="/subs-calc" />
 }

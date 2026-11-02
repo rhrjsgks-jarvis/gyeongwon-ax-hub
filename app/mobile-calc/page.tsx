@@ -28,13 +28,11 @@ import AppsScriptCalc from '@/components/AppsScriptCalc'
  *
  * 주소는 **배포 id 가 박힌 exec 주소**라 저쪽이 「배포 관리 → 새 버전」으로 올리는 한
  * 그대로다. 「새 배포」를 만들면 바뀌므로(QR 도 함께 무효가 된다) 그쪽 안내문이 이미
- * 그것을 경고하고 있다. 바꿔야 하면 아래 상수 하나다.
+ * 그것을 경고하고 있다. 바꿔야 하면 `lib/calcApps.ts` 한 곳이다.
+ * 허브·사이드바에서는 새 창으로 열린다 — 이 화면은 검색 결과·옛 링크로 곧장 왔을 때 쓰인다.
  *
  * 점코드 넘기기·탭바 비키기·로그는 구독계산기와 함께 `components/AppsScriptCalc.tsx` 가 맡는다.
  */
-const MOBILE_CALC_URL =
-  'https://script.google.com/macros/s/AKfycbyY09aCq_pSARMAYXkeRK9jEtnx23v_puU5gdCxUXIrhkT74oSLy6ONyNVmpaIJhAc/exec'
-
 export default function MobileCalcPage() {
-  return <AppsScriptCalc url={MOBILE_CALC_URL} title="휴대폰계산기" logKey="mobileCalc" />
+  return <AppsScriptCalc route="/mobile-calc" />
 }

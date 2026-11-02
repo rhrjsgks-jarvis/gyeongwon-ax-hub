@@ -12,6 +12,7 @@ import QRCode from '@/components/QRCode'
 import { APP_VERSION, versionLabel } from '@/lib/version'
 import { DEV_MODULES } from '@/lib/devModules'
 import { STORE_LIST, getStoreCode } from '@/lib/stores'
+import { openCalcWindow } from '@/lib/calcApps'
 
 /*
  * 배포 주소. **`salescopilot.vercel.app` 은 쓸 수 없다** — 이미 다른 사람의 앱이 그 이름을
@@ -755,6 +756,8 @@ export default function Home() {
             <Link
               key={group.title}
               href={group.modules[0].href}
+              /* 계산기 둘은 새 창으로 연다(2026-11-02 사장님 지시) */
+              onClick={(e) => { if (openCalcWindow(group.modules[0].href)) e.preventDefault() }}
               className="mb-5 w-full flex items-center justify-between px-1 no-underline"
             >
               <h3 className="font-bold text-[13.5px] text-[#374151]">{group.title}</h3>
