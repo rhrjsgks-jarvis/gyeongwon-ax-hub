@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { logEvent, logOnce, LogModule, LogAction } from '@/lib/logEvent'
 import { zoomFor, ZOOM_EVENT } from '@/lib/viewZoom'
+import { isFullscreen } from '@/lib/fullscreen'
 import { getNavc, getSheet, setSheet, navView, NAVC_EVENT, LG_QUERY } from '@/lib/navCollapse'
 
 /* 미니앱이 보내오는 값은 바깥에서 들어오는 값이다 — 아는 이름만 받는다 */
@@ -198,8 +199,133 @@ export default function IframeModule({
     }
   }, [src])
 
+  /*
+   * **전체화면에서 두 손가락 확대** (2026-11-03 사장님 — *"전체화면보기상태에서 화면을 확대 축소가
+   * 안되는것같습니다 … 고객에게 가끔 화면을 확대해서 보여줘야"*).
+   *
+   * 크롬은 Fullscreen API 로 들어간 페이지의 확대 비율을 1 로 못 박는다 — 우리가 막은 것이 아니라
+   * 브라우저 규칙이라 설정으로는 못 푼다. 그래서 전체화면일 때만 **돋보기를 직접 돌린다**:
+   *   · 두 손가락 = 확대·축소(손가락 사이가 중심, 최대 400%)
+   *   · 확대된 동안 한 손가락 = 끌어 보기(가로는 돋보기 창, 세로는 돋보기 창 → 끝나면 문서 스크롤)
+   *   · 105% 아래로 줄이면 원래대로 · 오른쪽 위 「원래대로」
+   * 「가」(CSS zoom)와 다르다 — 그쪽은 글자를 키워 다시 배치하고, 이쪽은 그림·규격도까지 그대로 키운다.
+   * **iframe 요소 자체를 키운다**(transform) — 문서 안에 걸면 position:fixed 인 팝업·메뉴가 깨진다.
+   * 전체화면이 아니면 손대지 않는다 — 브라우저의 두 손가락 확대가 그대로 돈다.
+   * 배치 시뮬레이터는 제 확대·3D 조작이 있어 빼고, 다른 출처(계산기)는 문서에 손이 안 닿는다.
+   */
+  const boxRef = useRef<HTMLDivElement>(null)
+  const magRef = useRef(1)
+  const [mag, setMag] = useState(1)
+  const resetMag = useRef<() => void>(() => {})
+  useEffect(() => {
+    if (/place-app|^https?:/.test(src)) return
+    const el = ref.current, box = boxRef.current
+    if (!el || !box) return
+    const MAX = 4
+    const active = () => isFullscreen() || (!!window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches)
+    const setS = (s: number) => {
+      magRef.current = s
+      el.style.transformOrigin = '0 0'
+      el.style.transform = s === 1 ? '' : `scale(${s})`
+      setMag(Math.round(s * 20) / 20)
+    }
+    const reset = () => { setS(1); box.scrollLeft = 0; box.scrollTop = 0 }
+    resetMag.current = reset
+    let doc: Document | null = null
+    let pinch: { x: number; y: number; d: number } | null = null
+    let pan: { x: number; y: number } | null = null
+    const two = (t: TouchList) => ({
+      x: (t[0].clientX + t[1].clientX) / 2,
+      y: (t[0].clientY + t[1].clientY) / 2,
+      d: Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY) || 1,
+    })
+    const onStart = (e: TouchEvent) => {
+      if (!active()) return
+      if (e.touches.length >= 2) { pinch = two(e.touches); pan = null; e.preventDefault() }
+      else if (e.touches.length === 1 && magRef.current > 1) pan = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    }
+    const onMove = (e: TouchEvent) => {
+      if (!active()) return
+      const s0 = magRef.current
+      if (pinch && e.touches.length >= 2) {
+        /* 터치 좌표는 iframe 안 좌표라 iframe 을 키워도 바뀌지 않는다 — 화면 위치 = s × 좌표 − 창 스크롤 */
+        const m = two(e.touches)
+        const s1 = Math.min(MAX, Math.max(1, s0 * m.d / pinch.d))
+        const fx = s0 * m.x - box.scrollLeft, fy = s0 * m.y - box.scrollTop
+        setS(s1)
+        box.scrollLeft = s1 * pinch.x - fx
+        box.scrollTop = s1 * pinch.y - fy
+        pinch = m
+        e.preventDefault()
+      } else if (pan && e.touches.length === 1 && s0 > 1) {
+        const t = e.touches[0]
+        const dx = (t.clientX - pan.x) * s0, dy = (t.clientY - pan.y) * s0
+        box.scrollLeft -= dx
+        const before = box.scrollTop
+        box.scrollTop -= dy
+        const rest = -dy - (box.scrollTop - before)
+        /* 돋보기 창이 끝에 닿으면 나머지는 문서를 굴린다 — 긴 화면의 아래쪽도 볼 수 있게 */
+        if (rest && doc?.scrollingElement) doc.scrollingElement.scrollTop += rest / s0
+        pan = { x: t.clientX, y: t.clientY }
+        e.preventDefault()
+      }
+    }
+    const onEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinch = null
+      if (e.touches.length === 1 && magRef.current > 1) pan = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      if (e.touches.length === 0) {
+        pan = null
+        if (magRef.current > 1 && magRef.current < 1.05) reset()
+      }
+    }
+    const detach = () => {
+      if (!doc) return
+      doc.removeEventListener('touchstart', onStart)
+      doc.removeEventListener('touchmove', onMove)
+      doc.removeEventListener('touchend', onEnd)
+      doc.removeEventListener('touchcancel', onEnd)
+      doc = null
+    }
+    const attach = () => {
+      let d: Document | null = null
+      try { d = el.contentDocument } catch { return }
+      if (!d || d === doc) return
+      detach()
+      doc = d
+      d.addEventListener('touchstart', onStart, { passive: false })
+      d.addEventListener('touchmove', onMove, { passive: false })
+      d.addEventListener('touchend', onEnd)
+      d.addEventListener('touchcancel', onEnd)
+    }
+    /* 새 화면이 뜨면(딥링크 재로드 포함) 원래 크기로 — 확대된 채 다른 화면이 뜨면 어디를 보는지 모른다 */
+    const onLoad = () => { reset(); attach() }
+    const onFs = () => { if (!active()) reset() }
+    attach()
+    const t = setInterval(attach, 1000)          // 늦게 뜬 문서·load 를 놓친 경우 — 같은 문서면 아무 일도 안 한다
+    el.addEventListener('load', onLoad)
+    document.addEventListener('fullscreenchange', onFs)
+    window.addEventListener('resize', reset)
+    return () => {
+      clearInterval(t)
+      detach()
+      el.removeEventListener('load', onLoad)
+      document.removeEventListener('fullscreenchange', onFs)
+      window.removeEventListener('resize', reset)
+    }
+  }, [src])
+
   return (
     <div className={`relative ${className || ''}`} style={style}>
+      {mag > 1 && (
+        <button
+          type="button"
+          onClick={() => resetMag.current()}
+          className="absolute top-2 right-2 z-20 px-3 py-1.5 rounded-full text-[13.5px] font-bold text-white shadow"
+          style={{ background: 'rgba(20,40,160,.88)' }}
+        >
+          확대 {Math.round(mag * 100)}% · 원래대로
+        </button>
+      )}
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
           <div
@@ -208,6 +334,8 @@ export default function IframeModule({
           />
         </div>
       )}
+      {/* 돋보기 창 — overflow:hidden 이라 손으로는 안 굴러가고 위 처리만 굴린다(두 길이 겹치지 않게) */}
+      <div ref={boxRef} className="w-full h-full overflow-hidden">
       <iframe
         ref={ref}
         src={src}
@@ -219,6 +347,7 @@ export default function IframeModule({
         className="w-full h-full border-0"
         suppressHydrationWarning
       />
+      </div>
     </div>
   )
 }
